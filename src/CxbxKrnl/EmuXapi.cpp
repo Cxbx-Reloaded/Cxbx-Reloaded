@@ -945,6 +945,27 @@ LPVOID WINAPI XTL::EMUPATCH(ConvertThreadToFiber)
 }
 
 // ******************************************************************
+// * patch: QueryPerformanceCounter
+// ******************************************************************
+BOOL WINAPI XTL::EMUPATCH(QueryPerformanceCounter)
+(
+	LARGE_INTEGER * lpPerformanceCount
+)
+{
+	FUNC_EXPORTS;
+	
+		//if (g_PatchCpuFrequency) 
+		//{
+			//lpPerformanceCount->QuadPart = (LONGLONG)__rdtsc();
+			//return TRUE;
+		
+		//}
+	
+		lpPerformanceCount->QuadPart = xboxkrnl::KeQueryPerformanceCounter();
+	return TRUE;
+}
+
+// ******************************************************************
 // * patch: QueueUserAPC
 // ******************************************************************
 DWORD WINAPI XTL::EMUPATCH(QueueUserAPC)

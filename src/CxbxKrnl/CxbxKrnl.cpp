@@ -730,7 +730,7 @@ void PatchRdtscInstruction()
 
 		printf("INIT: Searching for rdtsc in section %s\n", CxbxKrnl_Xbe->m_szSectionName[sectionIndex]);
 		xbaddr startAddr = CxbxKrnl_Xbe->m_SectionHeader[sectionIndex].dwVirtualAddr;
-		//rdtsx is two byts instruction, it needs at least one op byte after it to finish a function, so the endAddr need to substract 3 bytes.
+		//rdtsc is two bytes instruction, it needs at least one opcode byte after it to finish a function, so the endAddr need to substract 3 bytes.
 		xbaddr endAddr = startAddr + CxbxKrnl_Xbe->m_SectionHeader[sectionIndex].dwSizeofRaw-3;
 		for (xbaddr addr = startAddr; addr <= endAddr; addr++) 
 		{
@@ -770,14 +770,14 @@ void PatchRdtscInstruction()
 				}
 				if (i>= sizeof_rdtsc_pattern)
 				{
-					//no patter matched, keep record for detections we treat as non-rdtsc for future debugging.
+					//no pattern matched, keep record for detections we treat as non-rdtsc for future debugging.
 					printf("Skipped potential rdtsc: Unknown opcode pattern  0x%.2X, @ 0x%.8X\n", next_byte, (DWORD)addr);
 				}
 			}
 		}
 	}
 
-	printf("INIT: Done patching rdtsc, total %d rdtsc patched\n", g_RdtscPatches.size());
+	printf("INIT: Done patching rdtsc, total %d rdtsc instructions patched\n", g_RdtscPatches.size());
 }
 
 void CxbxKrnlMain(int argc, char* argv[])
@@ -1363,7 +1363,9 @@ __declspec(noreturn) void CxbxKrnlInit
 	ApplyMediaPatches();
 
 	if(g_PatchCpuFrequency)
+	{ 
 		PatchRdtscInstruction();
+	}
 
 	// Setup per-title encryption keys
 	SetupPerTitleKeys();
