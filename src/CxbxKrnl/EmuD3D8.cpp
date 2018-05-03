@@ -2574,7 +2574,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_GetDisplayFieldStatus)(X_D3DFIELD_STATUS *pF
 // ******************************************************************
 // * patch: D3DDevice_BeginPush
 // TODO: Find a test case and verify this
-// At least one XDK has this as return VOID with a second input parameter.
+// Starting from XDK 4531, this changed to 1 parameter only.
 // Is this definition incorrect, or did it change at some point?
 // ******************************************************************
 PDWORD WINAPI XTL::EMUPATCH(D3DDevice_BeginPush)(DWORD Count)
@@ -2595,6 +2595,34 @@ PDWORD WINAPI XTL::EMUPATCH(D3DDevice_BeginPush)(DWORD Count)
     g_pPrimaryPB = pRet;
 
     return pRet;
+}
+
+// ******************************************************************
+// * patch: D3DDevice_BeginPush2
+// TODO: Find a test case and verify this: RalliSport Challenge XDK 4134
+// For XDK before 4531
+// ******************************************************************
+VOID WINAPI XTL::EMUPATCH(D3DDevice_BeginPush2)(DWORD Count, DWORD** ppPush)
+{
+	FUNC_EXPORTS
+
+		LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Count)
+		LOG_FUNC_ARG(ppPush)
+		LOG_FUNC_END;
+
+	if (g_pPrimaryPB != nullptr)
+	{
+		EmuWarning("D3DDevice_BeginPush called without D3DDevice_EndPush in between?!");
+		delete[] g_pPrimaryPB; // prevent a memory leak
+	}
+
+	DWORD *pRet = new DWORD[Count];
+
+	g_dwPrimaryPBCount = Count;
+	g_pPrimaryPB = pRet;
+
+	*ppPush=pRet;
 }
 
 // ******************************************************************
