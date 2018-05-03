@@ -2613,7 +2613,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_BeginPush2)(DWORD Count, DWORD** ppPush)
 
 	if (g_pPrimaryPB != nullptr)
 	{
-		EmuWarning("D3DDevice_BeginPush called without D3DDevice_EndPush in between?!");
+		EmuWarning("D3DDevice_BeginPush2 called without D3DDevice_EndPush in between?!");
 		delete[] g_pPrimaryPB; // prevent a memory leak
 	}
 
