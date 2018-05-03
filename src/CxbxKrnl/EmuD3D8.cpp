@@ -2001,6 +2001,11 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
                     g_EmuCDPD.BehaviorFlags |= D3DCREATE_MULTITHREADED;
                 #endif
 
+				// For some reason, D3DFMT_D16_LOCKABLE as the AudoDepthStencil causes CreateDevice to fail...
+				if (g_EmuCDPD.HostPresentationParameters.AutoDepthStencilFormat == XTL::D3DFMT_D16_LOCKABLE) {
+					g_EmuCDPD.HostPresentationParameters.AutoDepthStencilFormat = XTL::D3DFMT_D16;
+				}
+
                 // redirect to windows Direct3D
                 g_EmuCDPD.hRet = g_pDirect3D->CreateDevice(
                     g_EmuCDPD.Adapter,
