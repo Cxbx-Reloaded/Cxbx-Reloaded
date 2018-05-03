@@ -583,7 +583,7 @@ void PrintCurrentConfigurationLog()
 		printf("Disable Pixel Shaders: %s\n", g_DisablePixelShaders == 1 ? "On" : "Off");
 		printf("Uncap Framerate: %s\n", g_UncapFramerate == 1 ? "On" : "Off");
 		printf("Run Xbox threads on all cores: %s\n", g_UseAllCores == 1 ? "On" : "Off");
-		printf("Patch CPU Frequency (rdtsc): %s\n", g_PatchCpuFrequency == 1 ? "On" : "Off");
+		printf("Skip RDTSC Patching: %s\n", g_SkipRdtscPatching == 1 ? "On" : "Off");
 		printf("Scale Xbox to host viewport (and back): %s\n", g_ScaleViewport == 1 ? "On" : "Off");
 	}
 
@@ -708,7 +708,7 @@ const uint8_t rdtsc_pattern[] = {
 };
 const int sizeof_rdtsc_pattern = sizeof(rdtsc_pattern);
 
-void PatchRdtscInstruction()
+void PatchRdtscInstructions()
 {
 	uint8_t rdtsc[2] = { 0x0F, 0x31 };
 	DWORD sizeOfImage = CxbxKrnl_XbeHeader->dwSizeofImage;
@@ -1200,8 +1200,8 @@ __declspec(noreturn) void CxbxKrnlInit
 		g_UncapFramerate = !!HackEnabled;
 		g_EmuShared->GetUseAllCores(&HackEnabled);
 		g_UseAllCores = !!HackEnabled;
-		g_EmuShared->GetPatchCpuFrequency(&HackEnabled);
-		g_PatchCpuFrequency = !!HackEnabled;
+		g_EmuShared->GetSkipRdtscPatching(&HackEnabled);
+		g_SkipRdtscPatching = !!HackEnabled;
 		g_EmuShared->GetScaleViewport(&HackEnabled);
 		g_ScaleViewport = !!HackEnabled;
 	}
@@ -1366,9 +1366,9 @@ __declspec(noreturn) void CxbxKrnlInit
 	// See: https://multimedia.cx/eggs/xbox-sphinx-protocol/
 	ApplyMediaPatches();
 
-	if(g_PatchCpuFrequency)
+	if(!g_SkipRdtscPatching)
 	{ 
-		PatchRdtscInstruction();
+		PatchRdtscInstructions();
 	}
 
 	// Setup per-title encryption keys

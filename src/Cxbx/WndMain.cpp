@@ -225,9 +225,9 @@ WndMain::WndMain(HINSTANCE x_hInstance) :
 			}
 
 			dwType = REG_DWORD; dwSize = sizeof(DWORD);
-			result = RegQueryValueEx(hKey, "HackPatchCpuFrequency", NULL, &dwType, (PBYTE)&m_PatchCpuFrequency, &dwSize);
+			result = RegQueryValueEx(hKey, "HackSkipRdtscPatching", NULL, &dwType, (PBYTE)&m_SkipRdtscPatching, &dwSize);
 			if (result != ERROR_SUCCESS) {
-				m_PatchCpuFrequency = 0;
+				m_SkipRdtscPatching = 0;
 			}
 
 			dwType = REG_DWORD; dwSize = sizeof(DWORD);
@@ -396,7 +396,7 @@ WndMain::~WndMain()
 			RegSetValueEx(hKey, "HackUseAllCores", 0, dwType, (PBYTE)&m_UseAllCores, dwSize);
 
 			dwType = REG_DWORD; dwSize = sizeof(DWORD);
-			RegSetValueEx(hKey, "HackPatchCpuFrequency", 0, dwType, (PBYTE)&m_PatchCpuFrequency, dwSize);
+			RegSetValueEx(hKey, "HackSkipRdtscPatching", 0, dwType, (PBYTE)&m_SkipRdtscPatching, dwSize);
 
 			dwType = REG_DWORD; dwSize = sizeof(DWORD);
 			RegSetValueEx(hKey, "HackScaleViewport", 0, dwType, (PBYTE)&m_ScaleViewport, dwSize);
@@ -1366,8 +1366,8 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 				RefreshMenus();
 				break;
 
-			case ID_HACKS_PATCHCPUFREQUENCY:
-				m_PatchCpuFrequency = !m_PatchCpuFrequency;
+			case ID_HACKS_SKIPRDTSCPATCHING:
+				m_SkipRdtscPatching = !m_SkipRdtscPatching;
 				RefreshMenus();
 				break;
 
@@ -1804,8 +1804,8 @@ void WndMain::RefreshMenus()
 			chk_flag = (m_UseAllCores) ? MF_CHECKED : MF_UNCHECKED;
 			CheckMenuItem(settings_menu, ID_HACKS_RUNXBOXTHREADSONALLCORES, chk_flag);
 
-			chk_flag = (m_PatchCpuFrequency) ? MF_CHECKED : MF_UNCHECKED;
-			CheckMenuItem(settings_menu, ID_HACKS_PATCHCPUFREQUENCY, chk_flag);
+			chk_flag = (m_SkipRdtscPatching) ? MF_CHECKED : MF_UNCHECKED;
+			CheckMenuItem(settings_menu, ID_HACKS_SKIPRDTSCPATCHING, chk_flag);
       
 			chk_flag = (m_ScaleViewport) ? MF_CHECKED : MF_UNCHECKED;
 			CheckMenuItem(settings_menu, ID_HACKS_SCALEVIEWPORT, chk_flag);
@@ -2182,7 +2182,7 @@ void WndMain::StartEmulation(HWND hwndParent, DebuggerState LocalDebuggerState /
 	g_EmuShared->SetDisablePixelShaders(&m_DisablePixelShaders);
 	g_EmuShared->SetUncapFramerate(&m_UncapFramerate);
 	g_EmuShared->SetUseAllCores(&m_UseAllCores);
-	g_EmuShared->SetPatchCpuFrequency(&m_PatchCpuFrequency);
+	g_EmuShared->SetSkipRdtscPatching(&m_SkipRdtscPatching);
 	g_EmuShared->SetScaleViewport(&m_ScaleViewport);
 
 	if (m_ScaleViewport) {

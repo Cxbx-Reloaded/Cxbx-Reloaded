@@ -1096,10 +1096,6 @@ XBSYSAPI EXPORTNUM(126) xboxkrnl::ULONGLONG NTAPI xboxkrnl::KeQueryPerformanceCo
 	ULONGLONG ret;
 	::LARGE_INTEGER PerformanceCounter;
 	//no matter rdtsc is patched or not, we should always return a scaled performance counter here.
-	/*if (g_PatchCpuFrequency) 
-	{
-		RETURN((ULONGLONG)__rdtsc());
-	}*/
 
 	// Dxbx note : Xbox actually uses the RDTSC machine code instruction for this,
 	// and we we're bound to a single core, so we could do that too, but on Windows
