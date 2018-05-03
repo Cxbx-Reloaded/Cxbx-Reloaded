@@ -128,6 +128,8 @@ class EmuShared : public Mutex
 		void SetUseAllCores(int* value) { Lock(); m_UseAllCores = *value; Unlock(); }
 		void GetPatchCpuFrequency(int* value) { Lock(); *value = m_PatchCpuFrequeny; Unlock(); }
 		void SetPatchCpuFrequency(int* value) { Lock(); m_PatchCpuFrequeny = *value; Unlock(); }
+		void GetScaleViewport(int* value) { Lock(); *value = m_ScaleViewport; Unlock(); }
+		void SetScaleViewport(int* value) { Lock(); m_ScaleViewport = *value; Unlock(); }
 
 		// ******************************************************************
 		// * MSpF/Benchmark values Accessors
@@ -202,6 +204,7 @@ class EmuShared : public Mutex
 		bool		 m_bMultiXbeFlag;
 		bool		 m_bDebugging;
 		int          m_LedSequence[4];
+		int          m_ScaleViewport;
 };
 
 // ******************************************************************
