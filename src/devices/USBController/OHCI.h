@@ -40,6 +40,47 @@
 #include <stdint.h>
 #include "Cxbx.h"
 
+
+// Abbreviations used:
+// OHCI: Open Host Controller Interface; the standard used on the xbox to comunicate with the usb devices
+// HC: Host Controller; the hardware which interfaces with the usb device and the usb driver
+// HCD: Host Controller Driver; software which talks to the HC, it's linked in the xbe
+
+
+// These macros are used to access the bits in the various registers
+// HcControl
+#define OHCI_CTL_CBSR                       ((1<<0)|(1<<1))  // ControlBulkServiceRatio
+#define OHCI_CTL_PLE                        (1<<2)           // PeriodicListEnable
+#define OHCI_CTL_IE                         (1<<3)           // IsochronousEnable
+#define OHCI_CTL_CLE                        (1<<4)           // ControlListEnable
+#define OHCI_CTL_BLE                        (1<<5)           // BulkListEnable
+#define OHCI_CTL_HCFS                       ((1<<6)|(1<<7))  // HostControllerFunctionalState
+#define OHCI_CTL_IR                         (1<<8)           // InterruptRouting
+#define OHCI_CTL_RWC                        (1<<9)           // RemoteWakeupConnected
+#define OHCI_CTL_RWE                        (1<<10)          // RemoteWakeupEnable
+// HcInterruptEnable, HcInterruptDisable
+#define OHCI_INTR_MASTER_INTERRUPT_ENABLED  (1<<31)          // MasterInterruptEnable
+// HcRhDescriptorA
+#define OHCI_RHA_PSM                        (1<<8)           // PowerSwitchingMode
+#define OHCI_RHA_NPS                        (1<<9)           // NoPowerSwitching
+#define OHCI_RHA_DT                         (1<<10)          // DeviceType
+#define OHCI_RHA_OCPM                       (1<<11)          // OverCurrentProtectionMode
+#define OHCI_RHA_NOCP                       (1<<12)          // NoOverCurrentProtection
+
+// Struct describing the status of a usb port
+struct USBPort {
+	//USBDevice* device;
+	//TODO
+};
+
+// Small struct used to hold the HcRhPortStatus register and the usb port status
+typedef struct _OHCIPort
+{
+	USBPort port;
+	uint32_t HcRhPortStatus;
+}
+OHCIPort;
+
 // All these registers are well documented in the OHCI standard
 typedef struct _OHCI_Registers
 {
@@ -71,10 +112,19 @@ typedef struct _OHCI_Registers
 	uint32_t HcRhDescriptorA;
 	uint32_t HcRhDescriptorB;
 	uint32_t HcRhStatus;
-	uint32_t HcRhPortStatus1; // 2 ports per HC, for a total of 4 USB ports
-	uint32_t HcRhPortStatus2;
+	OHCIPort RhPort[2]; // 2 ports per HC, for a total of 4 USB ports
 }
 OHCI_Registers;
+
+// enum indicating the current HC state
+typedef enum _USB_State
+{
+	USB_Reset       = 0x00,
+	USB_Resume      = 0x40,
+	USB_Operational = 0x80,
+	USB_Suspend     = 0xC0,
+}
+USB_State;
 
 
 /* OHCI class representing the state of the HC */
@@ -86,13 +136,15 @@ class OHCI_State
 		// destructor
 		~OHCI_State() {}
 		// read a register
-		uint32_t ReadRegister(xbaddr addr);
+		uint32_t HC_ReadRegister(xbaddr addr);
 		// write a register
-		void WriteRegister(xbaddr addr, uint32_t value);
+		void HC_WriteRegister(xbaddr addr, uint32_t value);
+		// reset the HC to the default state
+		void HC_Reset(USB_State new_state);
 
 	private:
 		// all the registers available on the OHCI standard
-		OHCI_Registers Registers;
+		OHCI_Registers HC_Registers;
 };
 
 extern OHCI_State* g_pHostController1;

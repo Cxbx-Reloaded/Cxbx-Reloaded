@@ -51,7 +51,12 @@ void USBDevice::Init(unsigned int address)
 	m_DeviceId = 0x01C2;
 	m_VendorId = PCI_VENDOR_ID_NVIDIA;
 
-	// TODO: construct the OHCI object
+	g_pHostController1 = new OHCI_State;
+	g_pHostController2 = new OHCI_State;
+
+	// We can use the USB_Reset state to also cold boot the HC during initialization
+	g_pHostController1->HC_Reset(USB_Reset);
+	g_pHostController2->HC_Reset(USB_Reset);
 }
 
 uint32_t USBDevice::MMIORead(int barIndex, uint32_t addr, unsigned size)
@@ -62,11 +67,11 @@ uint32_t USBDevice::MMIORead(int barIndex, uint32_t addr, unsigned size)
 	// Figure out the correct OHCI object and read the register
 	if (addr >= USB1_BASE) {
 		// USB1 queried
-		return g_pHostController2->ReadRegister(addr);
+		return g_pHostController2->HC_ReadRegister(addr);
 	}
 
 	// USB0 queried
-	return g_pHostController1->ReadRegister(addr);
+	return g_pHostController1->HC_ReadRegister(addr);
 }
 
 void USBDevice::MMIOWrite(int barIndex, uint32_t addr, uint32_t value, unsigned size)
@@ -77,10 +82,10 @@ void USBDevice::MMIOWrite(int barIndex, uint32_t addr, uint32_t value, unsigned 
 	// Figure out the correct OHCI object and write the value to the register
 	if (addr >= USB1_BASE) {
 		// USB1 queried
-		g_pHostController2->WriteRegister(addr, value);
+		g_pHostController2->HC_WriteRegister(addr, value);
 		return;
 	}
 
 	// USB0 queried
-	g_pHostController1->WriteRegister(addr, value);
+	g_pHostController1->HC_WriteRegister(addr, value);
 }
