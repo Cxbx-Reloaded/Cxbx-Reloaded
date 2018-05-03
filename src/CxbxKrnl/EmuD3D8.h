@@ -154,6 +154,11 @@ VOID WINAPI EMUPATCH(D3DDevice_GetDisplayFieldStatus)
 PDWORD WINAPI EMUPATCH(D3DDevice_BeginPush)(DWORD Count);
 
 // ******************************************************************
+// * patch: D3DDevice_BeginPush2  //two arg version for xdk before 4531
+// ******************************************************************
+VOID WINAPI EMUPATCH(D3DDevice_BeginPush2)(DWORD Count, DWORD **ppPush);
+
+// ******************************************************************
 // * patch: D3DDevice_EndPush
 // ******************************************************************
 VOID WINAPI EMUPATCH(D3DDevice_EndPush)(DWORD *pPush);

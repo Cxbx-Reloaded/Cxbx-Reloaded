@@ -501,9 +501,9 @@ OOVPA_XREF(D3D_MakeRequestedSpace, 4134, 28, // Also for 4361, 4627
 OOVPA_END;
 
 // ******************************************************************
-// * D3DDevice_BeginPush
+// * D3DDevice_BeginPush2
 // ******************************************************************
-OOVPA_NO_XREF(D3DDevice_BeginPush, 4134, 10)
+OOVPA_NO_XREF(D3DDevice_BeginPush2, 4134, 10)
 
         { 0x00, 0x56 },
         { 0x07, 0x6A },
