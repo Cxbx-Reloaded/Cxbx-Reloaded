@@ -677,8 +677,33 @@ void PatchRdtsc(xbaddr addr)
 	g_RdtscPatches.push_back(addr);
 }
 
-#include "distorm.h"
-bool EmuX86_DecodeOpcode(const uint8_t *Eip, _DInst &info);
+const uint8_t rdtsc_pattern[] = {
+	0x89,//{0x0F,0x31,0x89 },
+	0xC3,//{ 0x0F,0x31,0xC3 },
+	0x8B,//{ 0x0F,0x31,0x8B },   //one false positive in Sonic Rider .text 88 5C 0F 31
+	0xB9,//{ 0x0F,0x31,0xB9 },
+	0xC7,//{ 0x0F,0x31,0xC7 },
+	0x8D,//{ 0x0F,0x31,0x8D },
+	0x68,//{ 0x0F,0x31,0x68 },
+	0x5A,//{ 0x0F,0x31,0x5A },
+	0x29,//{ 0x0F,0x31,0x29},
+	0xF3,//{ 0x0F,0x31,0xF3 },
+	0xE9,//{ 0x0F,0x31,0xE9 },
+	0x2B,//{ 0x0F,0x31,0x2B },
+	0x50,//{ 0x0F,0x31,0x50 },	// 0x50 only used in ExaSkeleton .text , but encounter false positive in RalliSport .text 83 E2 0F 31
+	0x0F,//{ 0x0F,0x31,0x0F },
+	0x3B,//{ 0x0F,0x31,0x3B },
+	0xD9,//{ 0x0F,0x31,0xD9 },
+	0x57,//{ 0x0F,0x31,0x57 },
+	0xB9,//{ 0x0F,0x31,0xB9 },
+	0x85,//{ 0x0F,0x31,0x85 },
+	0x83,//{ 0x0F,0x31,0x83 },
+	0x33,//{ 0x0F,0x31,0x33 },
+	0xF7,//{ 0x0F,0x31,0xF7 },
+	0x8A,//{ 0x0F,0x31,0xF7 }, // 8A and 56 only apears in RalliSport 2 .text , need to watch whether any future false positive.
+	0x56//{ 0x0F,0x31,0xF7 }	//
+};
+const int sizeof_rdtsc_pattern = sizeof(rdtsc_pattern);
 
 void PatchRdtscInstruction()
 {
@@ -690,47 +715,68 @@ void PatchRdtscInstruction()
 		if (!CxbxKrnl_Xbe->m_SectionHeader[sectionIndex].dwFlags.bExecutable) {
 			continue;
 		}
-		
+
 		// Skip some segments known to never contain rdtsc (to avoid false positives)
-		if (std::string(CxbxKrnl_Xbe->m_szSectionName[sectionIndex]) == "DSOUND" 
-			|| std::string(CxbxKrnl_Xbe->m_szSectionName[sectionIndex]) == "XGRPH" 
-			|| std::string(CxbxKrnl_Xbe->m_szSectionName[sectionIndex]) == ".data" 
-			|| std::string(CxbxKrnl_Xbe->m_szSectionName[sectionIndex]) == ".rdata") {
+		if (std::string(CxbxKrnl_Xbe->m_szSectionName[sectionIndex]) == "DSOUND"
+			|| std::string(CxbxKrnl_Xbe->m_szSectionName[sectionIndex]) == "XGRPH"
+			|| std::string(CxbxKrnl_Xbe->m_szSectionName[sectionIndex]) == ".data"
+			|| std::string(CxbxKrnl_Xbe->m_szSectionName[sectionIndex]) == ".rdata"
+			|| std::string(CxbxKrnl_Xbe->m_szSectionName[sectionIndex]) == "XMV"
+			|| std::string(CxbxKrnl_Xbe->m_szSectionName[sectionIndex]) == "XONLINE"
+			|| std::string(CxbxKrnl_Xbe->m_szSectionName[sectionIndex]) == "MDLPL") {
 			continue;
 		}
 
 		printf("INIT: Searching for rdtsc in section %s\n", CxbxKrnl_Xbe->m_szSectionName[sectionIndex]);
 		xbaddr startAddr = CxbxKrnl_Xbe->m_SectionHeader[sectionIndex].dwVirtualAddr;
-		xbaddr endAddr = startAddr + CxbxKrnl_Xbe->m_SectionHeader[sectionIndex].dwSizeofRaw;
-		for (xbaddr addr = startAddr; addr < endAddr; addr++) {
-			if (memcmp((void*)addr, rdtsc, 2) == 0) {
-				// Found potential rdtsc instruction, check for validity by disassembling the following instruction
-				_DInst info;
-				if (!EmuX86_DecodeOpcode((uint8_t*)(addr + 2), info)) {
-					continue;
-				}
+		//rdtsx is two byts instruction, it needs at least one op byte after it to finish a function, so the endAddr need to substract 3 bytes.
+		xbaddr endAddr = startAddr + CxbxKrnl_Xbe->m_SectionHeader[sectionIndex].dwSizeofRaw-3;
+		for (xbaddr addr = startAddr; addr <= endAddr; addr++) 
+		{
+			if (memcmp((void*)addr, rdtsc, 2) == 0) 
+			{
+				uint8_t next_byte = *(uint8_t*)(addr + 2);
+				// If the following byte matches the known pattern.
+				int i = 0;
+				for (i = 0; i<sizeof_rdtsc_pattern; i++) 
+				{
+					if (next_byte == rdtsc_pattern[i]) 
+					{
+						if (next_byte == 0x8B)
+						{
+							if (*(uint8_t*)(addr - 2) == 0x88 && *(uint8_t*)(addr - 1) == 0x5C)
+							{
+								printf("Skipped false positive: rdtsc pattern  0x%.2X, @ 0x%.8X\n", next_byte, (DWORD)addr);
+								continue;
+							}
 
-				// If the following opcode is a single-byte opcode, check for it's validity
-				if (info.size == 1) {
-					uint8_t opcodeByteValue = *(uint8_t*)(addr + 2);
-					if (opcodeByteValue == 0xC3 || opcodeByteValue == 0x57) {
+						}
+						if (next_byte == 0x50)
+						{
+							if (*(uint8_t*)(addr - 2) == 0x83 && *(uint8_t*)(addr - 1) == 0xE2)
+							{
+								printf("Skipped false positive: rdtsc pattern  0x%.2X, @ 0x%.8X\n", next_byte, (DWORD)addr);
+								continue;
+							}
+
+						}
 						PatchRdtsc(addr);
+						//the first for loop already increment addr per loop. we only increment one more time so the addr will point to the byte next to the found rdtsc instruction. this is important since there is at least one case that two rdtsc instructions are next to each other.
 						addr += 1;
-						continue;
-					}	
-
-					EmuWarning("Skipped potential rdtsc: Unknown opcode pattern @ 0x%.8X\n", (DWORD)addr);
-					continue;
+						//if a match found, break the pattern matching loop and keep looping addr for next rdtsc.
+						break;
+					}
 				}
-
-				// If the following opcode is multi-bye, we can assume it was valid
-				PatchRdtsc(addr);
-				addr += 1;
+				if (i>= sizeof_rdtsc_pattern)
+				{
+					//no patter matched, keep record for detections we treat as non-rdtsc for future debugging.
+					printf("Skipped potential rdtsc: Unknown opcode pattern  0x%.2X, @ 0x%.8X\n", next_byte, (DWORD)addr);
+				}
 			}
 		}
 	}
 
-	printf("INIT: Done patching rdtsc\n");
+	printf("INIT: Done patching rdtsc, total %d rdtsc patched\n", g_RdtscPatches.size());
 }
 
 void CxbxKrnlMain(int argc, char* argv[])
