@@ -221,7 +221,7 @@ class WndMain : public Wnd
 		int		m_DisablePixelShaders;
 		int		m_UncapFramerate;
 		int		m_UseAllCores;
-		int		m_PatchCpuFrequency;
+		int		m_SkipRdtscPatching;
 		int     m_ScaleViewport;
 
         // ******************************************************************

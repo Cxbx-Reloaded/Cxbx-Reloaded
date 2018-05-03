@@ -954,15 +954,7 @@ BOOL WINAPI XTL::EMUPATCH(QueryPerformanceCounter)
 {
 	FUNC_EXPORTS;
 	
-		//if the rdtsc is patched, we shall keep using scaled PerformanceCounter.
-		/*if (g_PatchCpuFrequency) 
-		{
-			lpPerformanceCount->QuadPart = (LONGLONG)__rdtsc();
-			return TRUE;
-		
-		}*/
-	
-		lpPerformanceCount->QuadPart = xboxkrnl::KeQueryPerformanceCounter();
+	lpPerformanceCount->QuadPart = xboxkrnl::KeQueryPerformanceCounter();
 	return TRUE;
 }
 

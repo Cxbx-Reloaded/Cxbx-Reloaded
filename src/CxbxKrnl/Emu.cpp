@@ -67,7 +67,7 @@ bool g_XInputEnabled = false;
 bool g_DisablePixelShaders = false;
 bool g_UncapFramerate = false;
 bool g_UseAllCores = false;
-bool g_PatchCpuFrequency = false;
+bool g_SkipRdtscPatching = false;
 bool g_ScaleViewport = false;
 
 // Delta added to host SystemTime, used in xboxkrnl::KeQuerySystemTime and xboxkrnl::NtSetSystemTime
@@ -236,7 +236,7 @@ extern int EmuException(LPEXCEPTION_POINTERS e)
 	else
 	{
 		// Check if this exception came from rdtsc, but only whe g_PatchCpuFrequency hack is set.
-		if (e->ExceptionRecord->ExceptionCode == STATUS_PRIVILEGED_INSTRUCTION && g_PatchCpuFrequency )
+		if (e->ExceptionRecord->ExceptionCode == STATUS_PRIVILEGED_INSTRUCTION && !g_SkipRdtscPatching )
 		{
 			if (IsRdtscInstruction(e->ContextRecord->Eip)) {
 				LARGE_INTEGER PerformanceCount;
