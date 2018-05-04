@@ -37,6 +37,8 @@
 #include "xxhash32.h"
 #include <condition_variable>
 
+#define LOG_PREFIX "D3D8"
+
 // prevent name collisions
 namespace xboxkrnl
 {
@@ -1317,8 +1319,6 @@ VOID CxbxReleaseBackBufferLock()
 // Direct3D initialization (called before emulation begins)
 VOID XTL::EmuD3DInit()
 {
-	LOG_INIT; // Allows use of DEBUG_D3DRESULT
-
 	// create the create device proxy thread
 	{
 		DWORD dwThreadId;
@@ -1345,9 +1345,9 @@ VOID XTL::EmuD3DInit()
             CxbxKrnlCleanup("Could not initialize Direct3D8!");
 
         g_pDirect3D->GetDeviceCaps(g_EmuCDPD.Adapter, g_EmuCDPD.DeviceType, &g_D3DCaps);
-		LOG_FUNC_RESULT(g_D3DCaps);
-    }
 
+		std::cout << "Host D3DCaps " << _log_sanitize(g_D3DCaps) << "\n";
+    }
 }
 
 // cleanup Direct3D
