@@ -159,7 +159,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_BeginPush
 // ******************************************************************
-OOVPA_NO_XREF(D3DDevice_BeginPush, 4531, 10)
+OOVPA_NO_XREF(D3DDevice_BeginPush, 4531, 12)
 
 		{ 0x00, 0x56 },
 		{ 0x07, 0x6A },
@@ -172,4 +172,6 @@ OOVPA_NO_XREF(D3DDevice_BeginPush, 4531, 10)
 		{ 0x15, 0x50 },
 		{ 0x16, 0x56 },
 		{ 0x17, 0xE8 },
+		{ 0x1D, 0xC2 },
+		{ 0x1E, 0x04 },
 OOVPA_END;
