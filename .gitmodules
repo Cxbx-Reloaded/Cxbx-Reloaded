@@ -7,3 +7,6 @@
 [submodule "import/d3d8to9"]
 	path = import/d3d8to9
 	url = https://github.com/Cxbx-Reloaded/d3d8to9
+[submodule "import/XbSymbolDatabase"]
+	path = import/XbSymbolDatabase
+	url = https://github.com/Cxbx-Reloaded/XbSymbolDatabase.git

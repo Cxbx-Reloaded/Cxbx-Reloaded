@@ -44,7 +44,8 @@
 #include "EmuXTL.h"
 #include "EmuShared.h"
 #include "CxbxDebugger.h"
-#include "HLEDataBase.h"
+#pragma comment(lib, "XbSymbolDatabase.lib")
+#include "../../import/XbSymbolDatabase/XbSymbolDatabase.h"
 #include "HLEIntercept.h"
 #include "xxhash32.h"
 #include <Shlwapi.h>
@@ -69,9 +70,6 @@ uint32 g_BuildVersion = 0;
 bool bLLE_APU = false; // Set this to true for experimental APU (sound) LLE
 bool bLLE_GPU = false; // Set this to true for experimental GPU (graphics) LLE
 bool bLLE_JIT = false; // Set this to true for experimental JIT
-
-bool bXRefFirstPass; // For search speed optimization, set in EmuHLEIntercept, read in EmuLocateFunction
-uint32 UnResolvedXRefs; // Tracks XRef location, used (read/write) in EmuHLEIntercept and EmuLocateFunction
 
 void* GetXboxFunctionPointer(std::string functionName)
 {
@@ -102,6 +100,7 @@ void* GetXboxFunctionPointer(std::string functionName)
 	return nullptr;
 }
 
+// NOTE: GetDetectedSymbolName do not get to be in XbSymbolDatabase, get symbol string in Cxbx project only.
 std::string GetDetectedSymbolName(xbaddr address, int *symbolOffset)
 {
 	std::string result = "";
@@ -133,6 +132,7 @@ std::string GetDetectedSymbolName(xbaddr address, int *symbolOffset)
 	return "unknown";
 }
 
+// NOTE: GetEmuPatchAddr do not get to be in XbSymbolDatabase, perform patch check in Cxbx project only.
 void *GetEmuPatchAddr(std::string aFunctionName)
 {
 	std::string patchName = "XTL::EmuPatch_" + aFunctionName;
@@ -140,6 +140,7 @@ void *GetEmuPatchAddr(std::string aFunctionName)
 	return addr;
 }
 
+// NOTE: VerifySymbolAddressAgainstXRef do not get to be in XbSymbolDatabase, perform verification in Cxbx project only.
 bool VerifySymbolAddressAgainstXRef(char *SymbolName, xbaddr Address, int XRef)
 {
     // Temporary verification - is XREF_D3DTSS_TEXCOORDINDEX derived correctly?
@@ -182,6 +183,7 @@ public:
     }
 };
 
+// NOTE: EmuHLEIntercept do not get to be in XbSymbolDatabase, do the intecept in Cxbx project only.
 void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 {
 	Xbe::LibraryVersion *pLibraryVersion = (Xbe::LibraryVersion*)pXbeHeader->dwLibraryVersionsAddr;
@@ -221,7 +223,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 		// Verify the version of the cache file against the HLE Database	
 		const uint32 HLECacheHash = GetPrivateProfileInt("Info", "HLECacheHash", 0, filename.c_str());
 
-		if (HLECacheHash == GetHLEDataBaseHash()) {
+		if (HLECacheHash == GetSymbolDataBaseHash()) {
 			char buffer[SHRT_MAX] = { 0 };
 			char* bufferPtr = buffer;
 
@@ -445,11 +447,8 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
                         xbaddr upper = pXbeHeader->dwBaseAddr + pXbeHeader->dwSizeofImage;
                         xbaddr pFunc = (xbaddr)nullptr;
 
-                        if (BuildVersion >= 3911 && BuildVersion < 4034) {
-                            pFunc = EmuLocateFunction((OOVPA*)&D3DDevice_SetRenderState_CullMode_3911, lower, upper);
-                        } else {
-                            pFunc = EmuLocateFunction((OOVPA*)&D3DDevice_SetRenderState_CullMode_4034, lower, upper);
-                        }
+                        // TODO: Fix this...
+                        //pFunc = XRefDataBase[XREF_D3DDevice_SetRenderState_CullMode];
 
                         // locate D3DDeferredRenderState
                         if(pFunc != (xbaddr)nullptr) {
@@ -534,7 +533,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
                         // locate D3DDeferredTextureState
                         {
                             pFunc = (xbaddr)nullptr;
-
+                            /*
                             if(BuildVersion >= 3911 && BuildVersion < 4034)
                                 pFunc = EmuLocateFunction((OOVPA*)&D3DDevice_SetTextureState_TexCoordIndex_3911, lower, upper);
                             else if(BuildVersion >= 4034 && BuildVersion < 4242)
@@ -543,7 +542,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
                                 pFunc = EmuLocateFunction((OOVPA*)&D3DDevice_SetTextureState_TexCoordIndex_4242, lower, upper);
                             else if(BuildVersion >= 4627)
                                 pFunc = EmuLocateFunction((OOVPA*)&D3DDevice_SetTextureState_TexCoordIndex_4627, lower, upper);
-
+                            */
 							if (pFunc != (xbaddr)nullptr) {
 								xbaddr DerivedAddr_D3DTSS_TEXCOORDINDEX = NULL;
 								int Decrement = 0x70; // TODO : Rename into something understandable
@@ -588,7 +587,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
                             xbaddr pFunc = NULL;
                             int OOVPA_version;
                             int iCodeOffsetFor_g_Stream = 0x22; // verified for 4361, 4627, 5344, 5558, 5659, 5788, 5849, 5933
-
+                            /*
                             if (BuildVersion >= 4034) {
                                 OOVPA_version = 4034;
                                 pFunc = EmuLocateFunction((OOVPA*)&D3DDevice_SetStreamSource_4034, lower, upper);
@@ -597,7 +596,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
                                 pFunc = EmuLocateFunction((OOVPA*)&D3DDevice_SetStreamSource_3911, lower, upper);
                                 iCodeOffsetFor_g_Stream = 0x23; // verified for 3911
                             }
-
+                            */
                             if (pFunc != NULL) {
                                 printf("HLE: Located 0x%.08X -> D3DDevice_SetStreamSource_%d\n", pFunc, OOVPA_version);
 
@@ -625,6 +624,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 						xbaddr pFunc = (xbaddr)nullptr;
 
                         {
+                            /*
 							pFunc = EmuLocateFunction((OOVPA*)&D3DDevice_SetRenderState_CullMode_1045, lower, upper);
 							pXRefOffset = 0x2D; // verified for 3925
 							if(pFunc == (xbaddr)nullptr) {
@@ -639,6 +639,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 								pFunc = EmuLocateFunction((OOVPA*)&D3DDevice_SetRenderState_CullMode_1053, lower, upper);
 								pXRefOffset = 0x35;
 							}
+                            */
                         }
                         // locate D3DDeferredRenderState
                         if(pFunc != (xbaddr)nullptr)
@@ -755,7 +756,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
                         // locate D3DDeferredTextureState
                         {
                             pFunc = (xbaddr)nullptr;
-
+                            /*
 							{ // verified for 3925
 								pFunc = EmuLocateFunction((OOVPA*)&D3DDevice_SetTextureState_TexCoordIndex_0_2039, lower, upper);
 								pXRefOffset = 0x08;
@@ -780,7 +781,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 									pXRefOffset = 0x19;
 								}
 							}
-
+                            */
 							if (pFunc != (xbaddr)nullptr) {
 								xbaddr DerivedAddr_D3DTSS_TEXCOORDINDEX = NULL;
 								int Decrement = 0x70; // TODO : Rename into something understandable
@@ -822,7 +823,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
                             xbaddr pFunc = NULL;
                             int OOVPA_version;
                             int iCodeOffsetFor_g_Stream = 0x22; // verified for 4432, 4627, 5344, 5558, 5849
-
+                            /*
                             if (BuildVersion > 4039) {
                                 OOVPA_version = 4034; // TODO Verify
                                 pFunc = EmuLocateFunction((OOVPA*)&D3DDevice_SetStreamSource_1044, lower, upper);
@@ -842,7 +843,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
                                 pFunc = EmuLocateFunction((OOVPA*)&D3DDevice_SetStreamSource_1039, lower, upper);
                                 iCodeOffsetFor_g_Stream = 0x47;
                             }
-
+                            */
                             if (pFunc != NULL) {
                                 printf("HLE: Located 0x%.08X -> D3DDevice_SetStreamSource_%d\n", pFunc, OOVPA_version);
 
@@ -867,21 +868,21 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 
                 //Initialize library scan against HLE database we want to search for address of patches and xreferences.
                 bool bPrintSkip = true;
-                for (uint32 d2 = 0; d2 < HLEDataBaseCount; d2++) {
-                    if (strcmp(LibraryName.c_str(), HLEDataBase[d2].LibSec.library) == 0) {
+                for (uint32 d2 = 0; d2 < SymbolDBListCount; d2++) {
+                    if (strcmp(LibraryName.c_str(), SymbolDBList[d2].LibSec.library) == 0) {
                         for (uint32 v = 0; v < pXbeHeader->dwSections; v++) {
                             SectionName.assign((char*)pSectionHeaders[v].dwSectionNameAddr, (char*)pSectionHeaders[v].dwSectionNameAddr + 8);
 
                             //Initialize a matching specific section is currently pair with library in order to scan specific section only.
                             //By doing this method will reduce false detection dramatically. If it had happened before.
                             for (uint32 d3 = 0; d3 < PAIRSCANSEC_MAX; d3++) {
-                                if (HLEDataBase[d2].LibSec.section[d3] != NULL && strcmp(SectionName.c_str(), HLEDataBase[d2].LibSec.section[d3]) == 0) {
+                                if (SymbolDBList[d2].LibSec.section[d3] != NULL && strcmp(SectionName.c_str(), SymbolDBList[d2].LibSec.section[d3]) == 0) {
                                     pSectionScan = pSectionHeaders + v;
 
                                     if (bPrintSkip) printf("Found\n");
                                     bPrintSkip = false;
 
-                                    EmuInstallPatches(HLEDataBase[d2].OovpaTable, HLEDataBase[d2].OovpaTableCount, pSectionScan, BuildVersion);
+                                    EmuInstallPatches(SymbolDBList[d2].OovpaTable, SymbolDBList[d2].OovpaTableCount, pSectionScan, BuildVersion);
                                     break;
                                 }
                             }
@@ -909,7 +910,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 
 	// Write the HLE Database version string
 	{
-		std::string HLECacheHashString = std::to_string(GetHLEDataBaseHash());
+		std::string HLECacheHashString = std::to_string(GetSymbolDataBaseHash());
 		WritePrivateProfileString("Info", "HLECacheHash", HLECacheHashString.c_str(), filename.c_str());
 	}
 
@@ -945,68 +946,10 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 	}
 }
 
+// NOTE: EmuInstallPatch do not get to be in XbSymbolDatabase, do the patches in Cxbx project only.
 inline void EmuInstallPatch(std::string FunctionName, xbaddr FunctionAddr, void *Patch)
 {
 	g_FunctionHooks[FunctionName].Install((void*)(FunctionAddr), Patch);
-}
-
-inline void GetXRefEntry(OOVPA *oovpa, int index, OUT uint32 &xref, OUT uint08 &offset)
-{
-	// Note : These are stored swapped by the XREF_ENTRY macro, hence this difference from GetOovpaEntry :
-	xref = (uint32)((LOOVPA<1>*)oovpa)->Lovp[index].Offset;
-	offset = ((LOOVPA<1>*)oovpa)->Lovp[index].Value;
-}
-
-inline void GetOovpaEntry(OOVPA *oovpa, int index, OUT uint32 &offset, OUT uint08 &value)
-{
-	offset = (uint32)((LOOVPA<1>*)oovpa)->Lovp[index].Offset;
-	value = ((LOOVPA<1>*)oovpa)->Lovp[index].Value;
-}
-
-boolean CompareOOVPAToAddress(OOVPA *Oovpa, xbaddr cur)
-{
-	uint32 v = 0; // verification counter
-
-	// Check all XRefs, stop if any does not match
-	for (; v < Oovpa->XRefCount; v++)
-	{
-		uint32 XRef;
-		uint08 Offset;
-
-		// get currently registered (un)known address
-		GetXRefEntry(Oovpa, v, XRef, Offset);
-		xbaddr XRefAddr = XRefDataBase[XRef];
-		// Undetermined XRef cannot be checked yet
-		// (EmuLocateFunction already checked this, but this check
-		// is cheap enough to keep, and keep this function generic).
-		if (XRefAddr == XREF_ADDR_UNDETERMINED)
-			return false;
-
-		// Don't verify an xref that has to be (but isn't yet) derived
-		if (XRefAddr == XREF_ADDR_DERIVE)
-			continue;
-
-		xbaddr ActualAddr = *(xbaddr*)(cur + Offset);
-		// check if PC-relative or direct reference matches XRef
-		if ((ActualAddr + cur + Offset + 4 != XRefAddr) && (ActualAddr != XRefAddr))
-			return false;
-	}
-
-	// Check all (Offset,Value)-pairs, stop if any does not match
-	for (; v < Oovpa->Count; v++)
-	{
-		uint32 Offset;
-		uint08 ExpectedValue;
-
-		// get offset + value pair
-		GetOovpaEntry(Oovpa, v, Offset, ExpectedValue);
-		uint08 ActualValue = *(uint08*)(cur + Offset);
-		if (ActualValue != ExpectedValue)
-			return false;
-	}
-
-	// all offsets matched
-	return true;
 }
 
 void EmuRegisterSymbol(OOVPATable *OovpaTable, xbaddr pFunc)
@@ -1089,88 +1032,7 @@ void EmuRegisterSymbol(OOVPATable *OovpaTable, xbaddr pFunc)
     printf(output.str().c_str());
 }
 
-// locate the given function, searching within lower and upper bounds
-xbaddr EmuLocateFunction(OOVPA *Oovpa, xbaddr lower, xbaddr upper)
-{
-    // skip out if this is an unnecessary search
-    if (!bXRefFirstPass && Oovpa->XRefCount == XRefZero && Oovpa->XRefSaveIndex == XRefNoSaveIndex)
-        return (xbaddr)nullptr;
-
-    uint32_t derive_indices = 0;
-    // Check all XRefs are known (if not, don't do a useless scan) :
-    for (uint32 v = 0; v < Oovpa->XRefCount; v++) {
-        uint32 XRef;
-        uint08 Offset;
-
-        // get currently registered (un)known address
-        GetXRefEntry(Oovpa, v, XRef, Offset);
-        xbaddr XRefAddr = XRefDataBase[XRef];
-        // Undetermined XRef cannot be checked yet
-        if (XRefAddr == XREF_ADDR_UNDETERMINED)
-            // Skip this scan over the address range
-            return (xbaddr)nullptr;
-
-        // Don't verify an xref that has to be (but isn't yet) derived
-        if (XRefAddr == XREF_ADDR_DERIVE) {
-            // Mark (up to index 32) which xref needs to be derived
-            derive_indices |= (1 << v);
-            continue;
-        }
-    }
-
-    // correct upper bound with highest Oovpa offset
-    uint32 count = Oovpa->Count;
-    {
-        uint32 Offset;
-        uint08 Value; // ignored
-
-        GetOovpaEntry(Oovpa, count - 1, Offset, Value);
-        upper -= Offset;
-    }
-
-    // search all of the image memory
-    for (xbaddr cur = lower; cur < upper; cur++)
-        if (CompareOOVPAToAddress(Oovpa, cur)) {
-
-            while (derive_indices > 0) {
-                uint32 XRef;
-                uint08 Offset;
-                DWORD derive_index;
-
-                // Extract an index from the indices mask :
-                _BitScanReverse(&derive_index, derive_indices); // MSVC intrinsic; GCC has __builtin_clz
-                derive_indices ^= (1 << derive_index);
-
-                // get currently registered (un)known address
-                GetXRefEntry(Oovpa, derive_index, XRef, Offset);
-
-                // Calculate the address where the XRef resides
-                xbaddr XRefAddr = cur + Offset;
-                // Read the address it points to
-                XRefAddr = *((xbaddr*)XRefAddr);
-
-                /* For now assume it's a direct reference;
-                // TODO : Check if it's PC-relative reference?
-                if (XRefAddr + cur + Offset + 4 < XBE_MAX_VA)
-                XRefAddr = XRefAddr + cur + Offset + 4;
-                */
-
-                // Does the address seem valid?
-                if (XRefAddr < XBE_MAX_VA) {
-                    // save and count the derived address
-                    UnResolvedXRefs--;
-                    XRefDataBase[XRef] = XRefAddr;
-                    printf("Derived OOVPA!\n");
-                }
-            }
-
-            return cur;
-        }
-
-    // found nothing
-    return (xbaddr)nullptr;
-}
-
+// NOTE: EmuInstallPatches do not get to be in XbSymbolDatabase, do the patches in Cxbx project only.
 // install function interception wrappers
 void EmuInstallPatches(OOVPATable *OovpaTable, uint32 OovpaTableCount, Xbe::SectionHeader *pSectionHeader, uint16_t buildVersion)
 {

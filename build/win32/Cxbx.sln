@@ -5,6 +5,7 @@ VisualStudioVersion = 15.0.27130.2026
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Cxbx", "Cxbx.vcxproj", "{E7A72D3D-5810-4078-A243-348B59726365}"
 	ProjectSection(ProjectDependencies) = postProject
+		{B8D9AFC2-B38F-4714-846D-8A2754F076C9} = {B8D9AFC2-B38F-4714-846D-8A2754F076C9}
 		{7EE21ADA-3B02-4CD6-A891-C2257A54B061} = {7EE21ADA-3B02-4CD6-A891-C2257A54B061}
 		{2171C0E8-4915-49B9-AC23-A484FA08C126} = {2171C0E8-4915-49B9-AC23-A484FA08C126}
 	EndProjectSection
@@ -23,6 +24,8 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Debugger", "Debugger", "{174CB14E-34E3-422F-9A99-DBE88FF0EFBB}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "d3d8to9", "..\..\import\d3d8to9\d3d8to9.vcxproj", "{7EE21ADA-3B02-4CD6-A891-C2257A54B061}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "XbSymbolDatabase", "..\..\import\XbSymbolDatabase\xbSymbolDatabase.vcxproj", "{B8D9AFC2-B38F-4714-846D-8A2754F076C9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
