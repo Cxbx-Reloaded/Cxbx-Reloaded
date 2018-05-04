@@ -1317,6 +1317,8 @@ VOID CxbxReleaseBackBufferLock()
 // Direct3D initialization (called before emulation begins)
 VOID XTL::EmuD3DInit()
 {
+	LOG_INIT; // Allows use of DEBUG_D3DRESULT
+
 	// create the create device proxy thread
 	{
 		DWORD dwThreadId;
@@ -1343,6 +1345,7 @@ VOID XTL::EmuD3DInit()
             CxbxKrnlCleanup("Could not initialize Direct3D8!");
 
         g_pDirect3D->GetDeviceCaps(g_EmuCDPD.Adapter, g_EmuCDPD.DeviceType, &g_D3DCaps);
+		LOG_FUNC_RESULT(g_D3DCaps);
     }
 
 }

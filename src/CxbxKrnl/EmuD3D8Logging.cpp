@@ -156,6 +156,115 @@ ENUM2STR_END_and_LOGRENDER(D3DPOOL)
 // Host D3D LOGRENDER(Type) implementations
 //
 
+ENUM2STR_START(D3DDEVTYPE)
+	ENUM2STR_CASE(D3DDEVTYPE_REF)
+	ENUM2STR_CASE(D3DDEVTYPE_SW)
+	ENUM2STR_CASE(D3DDEVTYPE_HAL)
+#ifdef CXBX_USE_D3D9
+	ENUM2STR_CASE(D3DDEVTYPE_NULLREF)
+#endif
+ENUM2STR_END_and_LOGRENDER(D3DDEVTYPE)
+
+#ifdef CXBX_USE_D3D9
+LOGRENDER(D3DVSHADERCAPS2_0)
+{
+	return os
+		LOGRENDER_MEMBER(Caps)
+		LOGRENDER_MEMBER(DynamicFlowControlDepth)
+		LOGRENDER_MEMBER(NumTemps)
+		LOGRENDER_MEMBER(StaticFlowControlDepth);
+}
+
+LOGRENDER(D3DPSHADERCAPS2_0)
+{
+	return os
+		LOGRENDER_MEMBER(Caps)
+		LOGRENDER_MEMBER(DynamicFlowControlDepth)
+		LOGRENDER_MEMBER(NumTemps)
+		LOGRENDER_MEMBER(StaticFlowControlDepth)
+		LOGRENDER_MEMBER(NumInstructionSlots);
+}
+#endif
+
+LOGRENDER(D3DCAPS)
+{
+	return os
+		LOGRENDER_MEMBER(DeviceType)
+		LOGRENDER_MEMBER(AdapterOrdinal)
+		LOGRENDER_MEMBER(Caps)
+		LOGRENDER_MEMBER(Caps2)
+		LOGRENDER_MEMBER(Caps3)
+		LOGRENDER_MEMBER(PresentationIntervals)
+		LOGRENDER_MEMBER(CursorCaps)
+		LOGRENDER_MEMBER(DevCaps)
+		LOGRENDER_MEMBER(PrimitiveMiscCaps)
+		LOGRENDER_MEMBER(RasterCaps)
+		LOGRENDER_MEMBER(ZCmpCaps)
+		LOGRENDER_MEMBER(SrcBlendCaps)
+		LOGRENDER_MEMBER(DestBlendCaps)
+		LOGRENDER_MEMBER(AlphaCmpCaps)
+		LOGRENDER_MEMBER(ShadeCaps)
+		LOGRENDER_MEMBER(TextureCaps)
+		LOGRENDER_MEMBER(TextureFilterCaps)
+		LOGRENDER_MEMBER(CubeTextureFilterCaps)
+		LOGRENDER_MEMBER(VolumeTextureFilterCaps)
+		LOGRENDER_MEMBER(TextureAddressCaps)
+		LOGRENDER_MEMBER(VolumeTextureAddressCaps)
+		LOGRENDER_MEMBER(LineCaps)
+		LOGRENDER_MEMBER(MaxTextureWidth)
+		LOGRENDER_MEMBER(MaxTextureHeight)
+		LOGRENDER_MEMBER(MaxVolumeExtent)
+		LOGRENDER_MEMBER(MaxTextureRepeat)
+		LOGRENDER_MEMBER(MaxTextureAspectRatio)
+		LOGRENDER_MEMBER(MaxAnisotropy)
+		LOGRENDER_MEMBER(MaxVertexW)
+		LOGRENDER_MEMBER(GuardBandLeft)
+		LOGRENDER_MEMBER(GuardBandTop)
+		LOGRENDER_MEMBER(GuardBandRight)
+		LOGRENDER_MEMBER(GuardBandBottom)
+		LOGRENDER_MEMBER(ExtentsAdjust)
+		LOGRENDER_MEMBER(StencilCaps)
+		LOGRENDER_MEMBER(FVFCaps)
+		LOGRENDER_MEMBER(TextureOpCaps)
+		LOGRENDER_MEMBER(MaxTextureBlendStages)
+		LOGRENDER_MEMBER(MaxSimultaneousTextures)
+		LOGRENDER_MEMBER(VertexProcessingCaps)
+		LOGRENDER_MEMBER(MaxActiveLights)
+		LOGRENDER_MEMBER(MaxUserClipPlanes)
+		LOGRENDER_MEMBER(MaxVertexBlendMatrices)
+		LOGRENDER_MEMBER(MaxVertexBlendMatrixIndex)
+		LOGRENDER_MEMBER(MaxPointSize)
+		LOGRENDER_MEMBER(MaxPrimitiveCount)
+		LOGRENDER_MEMBER(MaxVertexIndex)
+		LOGRENDER_MEMBER(MaxStreams)
+		LOGRENDER_MEMBER(MaxStreamStride)
+		LOGRENDER_MEMBER(VertexShaderVersion)
+		LOGRENDER_MEMBER(MaxVertexShaderConst)
+		LOGRENDER_MEMBER(PixelShaderVersion)
+#ifndef CXBX_USE_D3D9
+		LOGRENDER_MEMBER(MaxPixelShaderValue)
+#else
+		LOGRENDER_MEMBER(PixelShader1xMaxValue)
+		LOGRENDER_MEMBER(DevCaps2)
+		LOGRENDER_MEMBER(MaxNpatchTessellationLevel)
+		LOGRENDER_MEMBER(Reserved5)
+		LOGRENDER_MEMBER(MasterAdapterOrdinal)
+		LOGRENDER_MEMBER(AdapterOrdinalInGroup)
+		LOGRENDER_MEMBER(NumberOfAdaptersInGroup)
+		LOGRENDER_MEMBER(DeclTypes)
+		LOGRENDER_MEMBER(NumSimultaneousRTs)
+		LOGRENDER_MEMBER(StretchRectFilterCaps)
+		LOGRENDER_MEMBER(VS20Caps)
+		LOGRENDER_MEMBER(PS20Caps)
+		LOGRENDER_MEMBER(VertexTextureFilterCaps)
+		LOGRENDER_MEMBER(MaxVShaderInstructionsExecuted)
+		LOGRENDER_MEMBER(MaxPShaderInstructionsExecuted)
+		LOGRENDER_MEMBER(MaxVertexShader30InstructionSlots)
+		LOGRENDER_MEMBER(MaxPixelShader30InstructionSlots)
+#endif
+		;
+}
+
 LOGRENDER(D3DLOCKED_RECT)
 {
 	return os
