@@ -244,12 +244,12 @@ extern void XTL::EmuExecutePushBufferRaw
 		}
 		DWORD dwCount = (*pdwPushData >> 18);
         DWORD dwMethod = (*pdwPushData & 0x3FFFF);
-		DWORD bInc = *pdwPushData & 0x40000000;
+		DWORD bNoInc = *pdwPushData & 0x40000000;
 		
-		if (bInc != 0)
+		if (bNoInc != 0)
 		{
-			dwCount &= ~(bInc>>18);
-			bInc = 1;
+			dwCount &= ~(bNoInc>>18);
+			bNoInc = 1;
 		}
 		
 		//always increase pdwPushData after we retrive the pushbuffer Data, so it always points to the next unhandled DWORD.
@@ -545,7 +545,7 @@ extern void XTL::EmuExecutePushBufferRaw
 			dwCount *= 2;
 			//if no increment is not set, then there is one WORD less then the total dwCount*2 WORD data.
 			//this definition is purely my guess, need confirmation.
-			if (bInc ==0 )
+			if (bNoInc ==0 )
 			{
 				dwCount -= 1;
 			}
