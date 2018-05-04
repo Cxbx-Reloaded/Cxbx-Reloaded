@@ -4748,6 +4748,9 @@ void CreateHostResource(XTL::X_D3DResource *pResource, int iTextureStage, DWORD 
 						PCFormat = EmuXB2PC_D3DFormat(X_Format);
 					}
 				}
+
+				// Avoid using this as a depth-texture (since we're falling back on a RGB format now)
+				D3DUsage &= ~D3DUSAGE_DEPTHSTENCIL;
 			}
 		}
 
