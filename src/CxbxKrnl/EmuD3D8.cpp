@@ -3372,6 +3372,8 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_GetViewportOffsetAndScale)
 		LOG_FUNC_END;
 
 	LOG_TEST_CASE("D3DDevice_GetViewportOffsetAndScale"); // Get us some test-cases
+	// Test case : NBA LIVE 2005
+	// Test case : Prince of Persia : T2T
 	// Test case : Spongebob - Battle for Bikini Bottom
 
 #if 0
