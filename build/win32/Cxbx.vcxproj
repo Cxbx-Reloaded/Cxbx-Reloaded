@@ -325,7 +325,6 @@
     <ClInclude Include="..\..\src\CxbxKrnl\EmuXTL.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\gloffscreen\glextensions.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\gloffscreen\gloffscreen.h" />
-    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\HLEIntercept.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\LibRc4.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\OOVPA.h" />

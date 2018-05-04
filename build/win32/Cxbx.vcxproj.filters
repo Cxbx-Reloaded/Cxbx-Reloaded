@@ -151,9 +151,6 @@
     <ClCompile Include="..\..\src\CxbxKrnl\EmuXOnline.cpp">
       <Filter>Emulator</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\CxbxKrnl\HLEDataBase.cpp">
-      <Filter>Emulator</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\CxbxKrnl\HLEIntercept.cpp">
       <Filter>Emulator</Filter>
     </ClCompile>
@@ -392,9 +389,6 @@
       <Filter>Emulator</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\CxbxKrnl\EmuXTL.h">
-      <Filter>Emulator</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase.h">
       <Filter>Emulator</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\CxbxKrnl\HLEIntercept.h">
