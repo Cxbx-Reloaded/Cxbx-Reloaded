@@ -300,20 +300,22 @@ extern void XTL::EmuExecutePushBufferRaw
 			case  0x1818 : // NVPB_InlineVertexArray, parameter size= dwCount*DWORD, represent D3DFVF data. NV097_INLINE_ARRAY
         
 				//DWORD vertex data array, 
-				//To be used as a replacement for DrawVerticesUP, the caller needs to set the vertex format using IDirect3DDevice8::SetVertexShader before calling BeginPush. All attributes in the vertex format must be padded DWORD multiples, and the vertex attributes must be specified in the canonical FVF ordering (position followed by weight, normal, diffuse, and so on).
+				//To be used as a replacement for DrawPrimitivesUP, the caller needs to set the vertex format using IDirect3DDevice8::SetVertexShader before calling BeginPush. All attributes in the vertex format must be padded DWORD multiples, and the vertex attributes must be specified in the canonical FVF ordering (position followed by weight, normal, diffuse, and so on).
 				pVertexData = pdwPushData;
 				
 
 				// retrieve vertex shader
 				DWORD dwVertexShader; 
 				dwVertexShader = g_CurrentXboxVertexShaderHandle;
-
+				
 				if (VshHandleIsVertexShader(dwVertexShader)) 
 				{
-					CxbxKrnlCleanup("Non-FVF Vertex Shaders not yet supported for PushBuffer emulation!");
-					dwVertexShader = 0;
+					//CxbxKrnlCleanup("Non-FVF Vertex Shaders not yet supported for PushBuffer emulation!");
+					EmuWarning("Non-FVF Vertex Shaders not yet supported for PushBuffer emulation!");
+					//dwVertexShader = 0;
 				}
-				else if(dwVertexShader == 0)
+				//else if(dwVertexShader == 0)
+				if (dwVertexShader == 0)
 				{
 					EmuWarning("FVF Vertex Shader is null");
 					dwVertexShader = -1;
@@ -399,9 +401,20 @@ extern void XTL::EmuExecutePushBufferRaw
 				//move pushpuffer to the end of vertex data.
 				pdwPushData += dwCount;
 				break;
-			
+					//I really have no idea how this code work. it seems to be very buggy. don't really understand it. this method is for ELEMENT32, but the code is meant for 16 bit Index???
 			case 0x1808 : // NVPB_FixLoop, Index Array Data, . NV097_ARRAY_ELEMENT32
-        
+				//current indexed buffer processing doesn't support xbox extention PrimitiveType.
+				if ((XBPrimitiveType == X_D3DPT_LINELOOP)|| (XBPrimitiveType == X_D3DPT_QUADLIST) || (XBPrimitiveType == X_D3DPT_QUADSTRIP) || (XBPrimitiveType == X_D3DPT_POLYGON))
+				{
+					EmuWarning("PushBuffer Processing with unsupported PrimitiveType! (%d)", (DWORD)XBPrimitiveType);
+					//CxbxKrnlCleanup("XTL_EmuD3DDevice_DrawIndexedVertices : X_D3DPT_LINELOOP not unsupported yet!");
+					// TODO : Close line-loops using a final single line, drawn from the end to the start vertex
+					pdwPushData += dwCount;
+					break;
+				}
+				//this code is buggy, close the emu here and warn users to issue this as a test case.
+				CxbxKrnlCleanup("push-buffer processing doesn't support method 0x1808 correctly, report to developers!");
+
 				#ifdef _DEBUG_TRACK_PB
 				if(bShowPB)
 				{
@@ -410,7 +423,7 @@ extern void XTL::EmuExecutePushBufferRaw
 					printf("  Index Array Data...\n");
 
 					WORD *pwVal;
-					pwVal = (WORD*)(pdwPushData + 1);
+					pwVal = (WORD*)(pdwPushData);
 
 					for(uint s=0;s<dwCount;s++)
 					{
@@ -425,7 +438,7 @@ extern void XTL::EmuExecutePushBufferRaw
 				#endif
 				//the pdwPushData is increased pointing to the first unhandled DWORD already, no need to add offset
 				WORD *pwVal;
-				pwVal = (WORD*)pdwPushData; //(pdwPushData + 1);
+				pwVal = (WORD*)pdwPushData; 
 
 				//!!!!!!don't understand this loop, the pIBMem[] is only 4 WORD, how can we copy the data with known size into it?******************************
 				for(uint mi=0;mi<dwCount;mi++)
@@ -471,7 +484,7 @@ extern void XTL::EmuExecutePushBufferRaw
 					if(FAILED(hRet))
 						CxbxKrnlCleanup("Unable to create index buffer for PushBuffer emulation (0x1808, dwCount : %d)", dwCount);
 
-					// copy index data
+					// copy index data, !!! for unsupported Primitive Types, the indexed buffer shall be patched as the vertex buffer as well.
 					{
 						WORD *pData=0;
 
@@ -542,17 +555,26 @@ extern void XTL::EmuExecutePushBufferRaw
 #endif
 					}
 				}
-				// this needs to be checked. don't know the dwCount is for DWORD count or WORD count, and whether the increment flag will affect it or not.
+				// the dwCount should be the DWORD data counts.
 				pdwPushData += dwCount;
 				break;
 
 			case  0x1800 : // NVPB_InlineIndexArray,   NV097_ARRAY_ELEMENT16
-        
-				//points pIndexData to the first parameter.
+				//current indexed buffer processing doesn't support xbox extention PrimitiveType.
+				if ((XBPrimitiveType == X_D3DPT_LINELOOP) || (XBPrimitiveType == X_D3DPT_QUADLIST) || (XBPrimitiveType == X_D3DPT_QUADSTRIP) || (XBPrimitiveType == X_D3DPT_POLYGON))
+				{
+					EmuWarning("PushBuffer Processing with unsupported PrimitiveType! (%d)", (DWORD)XBPrimitiveType);
+					//CxbxKrnlCleanup("XTL_EmuD3DDevice_DrawIndexedVertices : X_D3DPT_LINELOOP not unsupported yet!");
+					// TODO : Close line-loops using a final single line, drawn from the end to the start vertex
+					pdwPushData += dwCount;
+					break;
+				}
+				//point pIndexData to the first parameter.
 				pIndexData = pdwPushData;
-				pdwPushData += dwCount;
+				DWORD dwWordCount;
+				DWORD dwByteCount;
 				//multiply dwCount from DWORD count to WORD count
-				dwCount *= 2;
+				dwWordCount=dwCount *2;
 				//if no increment is not set, then there is one WORD less then the total dwCount*2 WORD data.
 				//this definition is purely my guess, need confirmation.
 				if (bNoInc ==0 )
@@ -560,6 +582,7 @@ extern void XTL::EmuExecutePushBufferRaw
 					dwCount -= 1;
 				}
 
+				dwByteCount = dwWordCount * 2;
 
 				#ifdef _DEBUG_TRACK_PB
 				if(bShowPB)
@@ -626,7 +649,7 @@ extern void XTL::EmuExecutePushBufferRaw
 					HRESULT hRet;
 
 					// TODO: depreciate maxIBSize after N milliseconds..then N milliseconds later drop down to new highest
-					if(dwCount*2 > maxIBSize)
+					if(dwByteCount > maxIBSize)
 					{
 						if(pIndexBuffer != 0)
 						{
@@ -641,13 +664,13 @@ extern void XTL::EmuExecutePushBufferRaw
 						// https://msdn.microsoft.com/en-us/library/windows/desktop/bb172625(v=vs.85).aspx
 						// "Buffers created with D3DPOOL_DEFAULT that do not specify D3DUSAGE_WRITEONLY may suffer a severe performance penalty."
 						const DWORD D3DUsage = D3DUSAGE_DYNAMIC | D3DUSAGE_WRITEONLY;
-						hRet = g_pD3DDevice->CreateIndexBuffer(dwCount*2, D3DUsage, D3DFMT_INDEX16, D3DPool, &pIndexBuffer
+						hRet = g_pD3DDevice->CreateIndexBuffer(dwByteCount*2, D3DUsage, D3DFMT_INDEX16, D3DPool, &pIndexBuffer
 	#ifdef CXBX_USE_D3D9
 							, nullptr
 	#endif
 						);
 
-						maxIBSize = dwCount*2;
+						maxIBSize = dwByteCount;
 					}
 					else
 					{
@@ -657,19 +680,19 @@ extern void XTL::EmuExecutePushBufferRaw
 					if(FAILED(hRet))
 						CxbxKrnlCleanup("Unable to create index buffer for PushBuffer emulation (0x1800, dwCount : %d)", dwCount);
 
-					// copy index data
+					// copy index data !!! for unsupported Primitive Types, the indexed buffer shall be patched as the vertex buffer as well.
 					{
 						WORD *pData=0;
 
-						pIndexBuffer->Lock(0, dwCount*2, (UCHAR**)&pData, NULL);
+						pIndexBuffer->Lock(0, dwByteCount, (UCHAR**)&pData, NULL);
 						// something wrong, the pIndexData was never initialized. perhaps it shall be point to the first unhandled pdwPushData DWORD?
-						memcpy(pData, pIndexData, dwCount*2);
+						memcpy(pData, pIndexData, dwByteCount);
 
 						// remember last 2 indices
-						if(dwCount >= 2)
+						if(dwWordCount >= 2)
 						{
-							pIBMem[0] = pData[dwCount - 2];
-							pIBMem[1] = pData[dwCount - 1];
+							pIBMem[0] = pData[dwWordCount - 2];
+							pIBMem[1] = pData[dwWordCount - 1];
 						}
 						else
 						{
@@ -681,10 +704,10 @@ extern void XTL::EmuExecutePushBufferRaw
 
 					// render indexed vertices
 					{
-						UINT PrimitiveCount = EmuD3DVertex2PrimitiveCount(XBPrimitiveType, dwCount);
+						UINT PrimitiveCount = EmuD3DVertex2PrimitiveCount(XBPrimitiveType, dwWordCount);
 						VertexPatchDesc VPDesc;
 
-						VPDesc.dwVertexCount = dwCount;
+						VPDesc.dwVertexCount = dwWordCount;
 						VPDesc.XboxPrimitiveType = XBPrimitiveType;
 						VPDesc.dwHostPrimitiveCount = PrimitiveCount;
 						VPDesc.dwStartVertex = 0;
@@ -736,8 +759,8 @@ extern void XTL::EmuExecutePushBufferRaw
 #endif
 					}
 				}
-
-				//pdwPushData--;
+				//point pdwPushData to the next unprocessed DWORD
+				pdwPushData += dwCount;
 				break;
 
 			case 0x00000100 :  //No Operation, followed parameters are no use. this operation triggers DPC which is not implemented in HLE
