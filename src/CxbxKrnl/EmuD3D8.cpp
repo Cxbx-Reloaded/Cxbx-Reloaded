@@ -1346,7 +1346,17 @@ VOID XTL::EmuD3DInit()
 
         g_pDirect3D->GetDeviceCaps(g_EmuCDPD.Adapter, g_EmuCDPD.DeviceType, &g_D3DCaps);
 
-		std::cout << "Host D3DCaps " << _log_sanitize(g_D3DCaps) << "\n";
+		// Dump Host D3DCaps to log unconditionally
+#ifdef _DEBUG_TRACE // TODO : Get the next line compiling under release builds too - it failes with:
+		/*
+		error LNK2019: unresolved external symbol
+		"class std::basic_ostream<char,struct std::char_traits<char> > & __cdecl
+		XTL::operator<<(class std::basic_ostream<char,struct std::char_traits<char> > &,struct XTL::_D3DCAPS8 const &)"
+		(??6XTL@@YAAAV?$basic_ostream@DU?$char_traits@D@std@@@std@@AAV12@ABU_D3DCAPS8@0@@Z)
+		referenced in function "void __cdecl XTL::EmuD3DInit(void)" (?EmuD3DInit@XTL@@YAXXZ)
+		*/
+		std::cout << "Host D3DCaps : " << g_D3DCaps << "\n";
+#endif
     }
 }
 
@@ -1932,7 +1942,7 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
                     if(g_EmuCDPD.HostPresentationParameters.Windowed)
                     {
 						const char* resolution = g_XBVideo.GetVideoResolution();
-						if (2 != sscanf(resolution, "%d x %d", &g_EmuCDPD.HostPresentationParameters.BackBufferWidth, &g_EmuCDPD.HostPresentationParameters.BackBufferHeight)) {
+						if (2 != sscanf(resolution, "%u x %u", &g_EmuCDPD.HostPresentationParameters.BackBufferWidth, &g_EmuCDPD.HostPresentationParameters.BackBufferHeight)) {
 							DbgPrintf("EmuCreateDeviceProxy: Couldn't parse resolution : %s.\n", resolution);
 						}
 						else {
@@ -1951,10 +1961,10 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
                     }
                     else
                     {
-                        char szBackBufferFormat[16];
+                        char szBackBufferFormat[16] = {};
 
 						const char* resolution = g_XBVideo.GetVideoResolution();
-						if (4 != sscanf(resolution, "%d x %d %*dbit %s (%d hz)",
+						if (4 != sscanf(resolution, "%u x %u %*dbit %s (%u hz)",
 							&g_EmuCDPD.HostPresentationParameters.BackBufferWidth,
 							&g_EmuCDPD.HostPresentationParameters.BackBufferHeight,
 							szBackBufferFormat,
@@ -2870,7 +2880,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SelectVertexShader)
 		LOG_FUNC_ARG(Address)
 		LOG_FUNC_END;
 
-	HRESULT hRet;
+	HRESULT hRet = D3D_OK;
 
 	// Address always indicates a previously loaded vertex shader slot (from where the program is used).
 	// Handle can be null if the current Xbox VertexShader is assigned
@@ -2908,7 +2918,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SelectVertexShader)
         else
         {
             EmuWarning("g_VertexShaderSlots[%d] = 0", Address);
-			hRet = D3D_OK;
 		}
     }
 
@@ -5217,7 +5226,7 @@ void CreateHostResource(XTL::X_D3DResource *pResource, int iTextureStage, DWORD 
 		XTL::X_D3DPushBuffer *pPushBuffer = (XTL::X_D3DPushBuffer*)pResource;
 
 		// create push buffer
-		DWORD dwSize = g_VMManager.QuerySize(VirtualAddr);
+		dwSize = g_VMManager.QuerySize(VirtualAddr);
 		if (dwSize == 0) {
 			// TODO: once this is known to be working, remove the warning
 			EmuWarning("Push buffer allocation size unknown");
@@ -8615,7 +8624,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_GetBackMaterial)
 	// TODO: HACK: This is wrong, but better than nothing, right?
 	if (pMaterial)
 	{
-		HRESULT hRet = g_pD3DDevice->GetMaterial(pMaterial);
+		hRet = g_pD3DDevice->GetMaterial(pMaterial);
 		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->GetMaterial");
 	}
 
@@ -8657,7 +8666,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_GetMaterial)
 
 	if (pMaterial)
 	{
-		HRESULT hRet = g_pD3DDevice->GetMaterial(pMaterial);
+		hRet = g_pD3DDevice->GetMaterial(pMaterial);
 		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->GetMaterial");
 	}
 
