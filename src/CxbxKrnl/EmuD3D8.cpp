@@ -1347,17 +1347,10 @@ VOID XTL::EmuD3DInit()
         g_pDirect3D->GetDeviceCaps(g_EmuCDPD.Adapter, g_EmuCDPD.DeviceType, &g_D3DCaps);
 
 		// Dump Host D3DCaps to log unconditionally
-#ifdef _DEBUG_TRACE // TODO : Get the next line compiling under release builds too - it failes with:
-		/*
-		error LNK2019: unresolved external symbol
-		"class std::basic_ostream<char,struct std::char_traits<char> > & __cdecl
-		XTL::operator<<(class std::basic_ostream<char,struct std::char_traits<char> > &,struct XTL::_D3DCAPS8 const &)"
-		(??6XTL@@YAAAV?$basic_ostream@DU?$char_traits@D@std@@@std@@AAV12@ABU_D3DCAPS8@0@@Z)
-		referenced in function "void __cdecl XTL::EmuD3DInit(void)" (?EmuD3DInit@XTL@@YAXXZ)
-		*/
+		std::cout << "----------------------------------------\n";
 		std::cout << "Host D3DCaps : " << g_D3DCaps << "\n";
-#endif
-    }
+		std::cout << "----------------------------------------\n";
+	}
 }
 
 // cleanup Direct3D
