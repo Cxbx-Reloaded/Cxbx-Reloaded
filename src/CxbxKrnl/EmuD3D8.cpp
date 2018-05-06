@@ -2909,7 +2909,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SelectVertexShader)
     if(VshHandleIsVertexShader(Handle))
     {
         CxbxVertexShader *pVertexShader = MapXboxVertexShaderHandleToCxbxVertexShader(Handle);
-        hRet = g_pD3DDevice->SetVertexShader(pVertexShader->Handle);
+		hRet = g_pD3DDevice->SetVertexShader(pVertexShader->Handle);
 		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetVertexShader(VshHandleIsVertexShader)");
     }
     else if(Handle == NULL)
@@ -5102,7 +5102,7 @@ void CreateHostResource(XTL::X_D3DResource *pResource, int iTextureStage, DWORD 
 					dwDstRowPitch = LockedRect.Pitch;
 					dwDstSlicePitch = 0;
 				}
-							else if (CacheFormat != 0) // Do we need to convert to ARGB?
+
 				uint8_t *pSrc = (uint8_t *)VirtualAddr + dwMipOffset;
 
 				// Do we need to convert to ARGB?
@@ -5129,8 +5129,6 @@ void CreateHostResource(XTL::X_D3DResource *pResource, int iTextureStage, DWORD 
 				}
 				else if (bCompressed) {
 					memcpy(pDst, pSrc, dwMipSize);
-									memcpy(LockedRect.pBits, pSrc + dwCompressedOffset, dwCompressedSize >> (level * 2));
-									dwCompressedOffset += (dwCompressedSize >> (level * 2));
 				}
 				else {
 					/* TODO : // Let DirectX convert the surface (including palette formats) :
@@ -6890,9 +6888,9 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexShader)
 
 #ifdef CXBX_USE_D3D9
 	hRet = g_pD3DDevice->SetVertexShader(nullptr);
-	hRet = g_pD3DDevice->SetFVF(RealHandle);
+	hRet = g_pD3DDevice->SetFVF(HostVertexShaderHandle);
 #else
-	hRet = g_pD3DDevice->SetVertexShader(RealHandle);
+	hRet = g_pD3DDevice->SetVertexShader(HostVertexShaderHandle);
 #endif
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetVertexShader");    
 }
@@ -6996,7 +6994,7 @@ void CxbxAssureQuadListD3DIndexBuffer(UINT NrOfQuadVertices)
 		// Put quadlist-to-triangle-list index mappings into this buffer :
 		XTL::INDEX16* pIndexBufferData = nullptr;
 		hRet = pQuadToTriangleD3DIndexBuffer->Lock(0, uiIndexBufferSize, (BYTE **)&pIndexBufferData, D3DLOCK_DISCARD);
-		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateIndexBuffer");
+		DEBUG_D3DRESULT(hRet, "pQuadToTriangleD3DIndexBuffer->Lock");
 
 		if (pIndexBufferData == nullptr)
 			CxbxKrnlCleanup("CxbxAssureQuadListD3DIndexBuffer : Could not lock index buffer!");
@@ -7007,8 +7005,12 @@ void CxbxAssureQuadListD3DIndexBuffer(UINT NrOfQuadVertices)
 	}
 
 	// Activate the new native index buffer :
+#ifdef CXBX_USE_D3D9
+	hRet = g_pD3DDevice->SetIndices(pQuadToTriangleD3DIndexBuffer);
+#else
 	hRet = g_pD3DDevice->SetIndices(pQuadToTriangleD3DIndexBuffer, 0);
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateIndexBuffer");
+#endif
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetIndices");
 
 	if (FAILED(hRet))
 		CxbxKrnlCleanup("CxbxAssureQuadListD3DIndexBuffer : SetIndices Failed!"); // +DxbxD3DErrorString(hRet));
@@ -7039,12 +7041,18 @@ void CxbxDrawIndexedClosingLine(XTL::INDEX16 LowIndex, XTL::INDEX16 HighIndex)
 	hRet = pClosingLineLoopIndexBuffer->Unlock();
 	DEBUG_D3DRESULT(hRet, "pClosingLineLoopIndexBuffer->Unlock");
 
+#ifdef CXBX_USE_D3D9
+	hRet = g_pD3DDevice->SetIndices(pClosingLineLoopIndexBuffer);
+#else
 	hRet = g_pD3DDevice->SetIndices(pClosingLineLoopIndexBuffer, 0);
+#endif
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetIndices");
 
-	hRet = g_pD3DDevice->DrawIndexedPrimitive
-	(
+	hRet = g_pD3DDevice->DrawIndexedPrimitive(
 		XTL::D3DPT_LINELIST,
+#ifdef CXBX_USE_D3D9
+		g_CachedIndexBase, // ??
+#endif
 		LowIndex, // minIndex
 		HighIndex - LowIndex + 1, // NumVertexIndices
 		0, // startIndex
@@ -7088,7 +7096,8 @@ void XTL::CxbxDrawIndexed(CxbxDrawContext &DrawContext, INDEX16 *pIndexData)
 	assert(pIndexData != nullptr);
 	assert(IsValidCurrentShader());
 
-	CxbxUpdateActiveIndexBuffer(pIndexData, DrawContext.dwVertexCount);
+	DWORD indexBase = 0;
+	CxbxUpdateActiveIndexBuffer(pIndexData, &indexBase, DrawContext.dwVertexCount);
 	CxbxVertexBufferConverter VertexBufferConverter = {};
 	VertexBufferConverter.Apply(&DrawContext);
 	if (DrawContext.XboxPrimitiveType == X_D3DPT_QUADLIST) {
@@ -7132,6 +7141,9 @@ void XTL::CxbxDrawIndexed(CxbxDrawContext &DrawContext, INDEX16 *pIndexData)
 		// Primitives other than X_D3DPT_QUADLIST can be drawn using one DrawIndexedPrimitive call :
 		HRESULT hRet = g_pD3DDevice->DrawIndexedPrimitive(
 			EmuXB2PC_D3DPrimitiveType(DrawContext.XboxPrimitiveType),
+#ifdef CXBX_USE_D3D9
+			g_CachedIndexBase, // ??
+#endif
 			/* MinVertexIndex = */0,
 			/* NumVertices = */DrawContext.dwVertexCount, // TODO : g_EmuD3DActiveStreamSizes[0], // Note : ATI drivers are especially picky about this -
 			// NumVertices should be the span of covered vertices in the active vertex buffer (TODO : Is stream 0 correct?)

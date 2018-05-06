@@ -819,7 +819,12 @@ VOID XTL::EmuFlushIVB()
 	HRESULT hRet;
 
 	if (bFVF) {
+#ifdef CXBX_USE_D3D9
+		g_pD3DDevice->SetVertexShader(nullptr);
+		hRet = g_pD3DDevice->SetFVF(dwCurFVF);
+#else
 		hRet = g_pD3DDevice->SetVertexShader(dwCurFVF);
+#endif
 		//DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetVertexShader");
 	}
 
