@@ -419,8 +419,9 @@ extern void XTL::EmuExecutePushBufferRaw
 							DrawContext.XboxPrimitiveType = XboxPrimitiveType;
 							DrawContext.dwVertexCount = EmuD3DIndexCountToVertexCount(XboxPrimitiveType, uiIndexCount);
 							DrawContext.hVertexShader = g_CurrentXboxVertexShaderHandle;
+							DrawContext.pIndexData = pIBMem; // Used by GetVertexBufferSize
 
-							CxbxDrawIndexed(DrawContext, pIBMem);
+							CxbxDrawIndexed(DrawContext);
                         }
                     }
                 }
@@ -525,8 +526,9 @@ extern void XTL::EmuExecutePushBufferRaw
 							DrawContext.XboxPrimitiveType = XboxPrimitiveType;
 							DrawContext.dwVertexCount = EmuD3DIndexCountToVertexCount(XboxPrimitiveType, dwIndexCount);
 							DrawContext.hVertexShader = g_CurrentXboxVertexShaderHandle;
+							DrawContext.pIndexData = pIndexData; // Used by GetVertexBufferSize
 
-							CxbxDrawIndexed(DrawContext, pIndexData);
+							CxbxDrawIndexed(DrawContext);
 						}
 					}
                 }

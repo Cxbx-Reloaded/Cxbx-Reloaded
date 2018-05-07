@@ -219,7 +219,7 @@ size_t GetVertexBufferSize(DWORD dwVertexCount, DWORD dwStride, PWORD pIndexData
 	// The highest index we see can be used to determine the vertex buffer size
 	DWORD highestVertexIndex = 0;
 	for (DWORD i = 0; i < dwVertexCount; i++) {
-		if (pIndexData[i] > highestVertexIndex) {
+		if (highestVertexIndex < pIndexData[i]) {
 			highestVertexIndex = pIndexData[i];
 		}
 	}

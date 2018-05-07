@@ -7100,17 +7100,19 @@ void WalkIndexBuffer(XTL::INDEX16 &LowIndex, XTL::INDEX16 &HighIndex, XTL::INDEX
 
 // Requires assigned pIndexData
 // Called by D3DDevice_DrawIndexedVertices and EmuExecutePushBufferRaw (twice)
-void XTL::CxbxDrawIndexed(CxbxDrawContext &DrawContext, INDEX16 *pIndexData)
+void XTL::CxbxDrawIndexed(CxbxDrawContext &DrawContext)
 {
 	LOG_INIT // Allows use of DEBUG_D3DRESULT
 
 	assert(DrawContext.dwStartVertex == 0);
-	assert(pIndexData != nullptr);
+	assert(DrawContext.pIndexData != nullptr);
 	assert(IsValidCurrentShader());
 
-	CxbxUpdateActiveIndexBuffer(pIndexData, DrawContext.dwVertexCount);
+	CxbxUpdateActiveIndexBuffer(DrawContext.pIndexData, DrawContext.dwVertexCount);
+
 	CxbxVertexBufferConverter VertexBufferConverter = {};
 	VertexBufferConverter.Apply(&DrawContext);
+
 	if (DrawContext.XboxPrimitiveType == X_D3DPT_QUADLIST) {
 		UINT uiStartIndex = 0;
 		int iNumVertices = (int)DrawContext.dwVertexCount;
@@ -7125,13 +7127,13 @@ void XTL::CxbxDrawIndexed(CxbxDrawContext &DrawContext, INDEX16 *pIndexData)
 			// Determine highest and lowest index in use :
 			INDEX16 LowIndex;
 			INDEX16 HighIndex;
-			WalkIndexBuffer(LowIndex, HighIndex, &pIndexData[uiStartIndex], VERTICES_PER_QUAD);
+			WalkIndexBuffer(LowIndex, HighIndex, &(DrawContext.pIndexData[uiStartIndex]), VERTICES_PER_QUAD);
 
 			// Emulate a quad by drawing each as a fan of 2 triangles
 			HRESULT hRet = g_pD3DDevice->DrawIndexedPrimitive(
 				D3DPT_TRIANGLEFAN,
 #ifdef CXBX_USE_D3D9 
-				g_XboxBaseVertexIndex,
+				DrawContext.dwIndexBase,
 #endif
 				LowIndex, // minIndex
 				HighIndex - LowIndex + 1, // NumVertices
@@ -7149,13 +7151,13 @@ void XTL::CxbxDrawIndexed(CxbxDrawContext &DrawContext, INDEX16 *pIndexData)
 		//Walk through index buffer
 		// Determine highest and lowest index in use :
 		INDEX16 LowIndex, HighIndex;
-		WalkIndexBuffer(LowIndex,  HighIndex, pIndexData, DrawContext.dwVertexCount);
+		WalkIndexBuffer(LowIndex,  HighIndex, DrawContext.pIndexData, DrawContext.dwVertexCount);
 
 		// Primitives other than X_D3DPT_QUADLIST can be drawn using one DrawIndexedPrimitive call :
 		HRESULT hRet = g_pD3DDevice->DrawIndexedPrimitive(
 			EmuXB2PC_D3DPrimitiveType(DrawContext.XboxPrimitiveType),
 #ifdef CXBX_USE_D3D9
-			g_XboxBaseVertexIndex,
+			DrawContext.dwIndexBase,
 #endif
 			/* MinVertexIndex = */LowIndex,
 			/* NumVertices = */HighIndex-LowIndex+1,//using index vertex span here.  // TODO : g_EmuD3DActiveStreamSizes[0], // Note : ATI drivers are especially picky about this -
@@ -7169,8 +7171,8 @@ void XTL::CxbxDrawIndexed(CxbxDrawContext &DrawContext, INDEX16 *pIndexData)
 			// Close line-loops using a final single line, drawn from the end to the start vertex
 			LOG_TEST_CASE("X_D3DPT_LINELOOP");
 			// Read the end and start index from the supplied index data
-			INDEX16 LowIndex = pIndexData[0];
-			INDEX16 HighIndex = pIndexData[DrawContext.dwHostPrimitiveCount];
+			INDEX16 LowIndex = DrawContext.pIndexData[0];
+			INDEX16 HighIndex = DrawContext.pIndexData[DrawContext.dwHostPrimitiveCount];
 			// If needed, swap so highest index is higher than lowest (duh)
 			if (HighIndex < LowIndex) {
 				HighIndex ^= LowIndex;
@@ -7538,7 +7540,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVertices)
 
 		// Test case JSRF draws all geometry through this function (only sparks are drawn via another method)
 		// using X_D3DPT_TRIANGLELIST and X_D3DPT_TRIANGLESTRIP PrimitiveType
-		CxbxDrawIndexed(DrawContext, (INDEX16*)pIndexData);
+		CxbxDrawIndexed(DrawContext);
 	}
 
 	// Execute callback procedure
