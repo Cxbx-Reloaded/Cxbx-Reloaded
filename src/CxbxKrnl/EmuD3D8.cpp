@@ -7138,14 +7138,28 @@ void XTL::CxbxDrawIndexed(CxbxDrawContext &DrawContext, INDEX16 *pIndexData)
 		}
 	}
 	else {
+		//Walk through index buffer
+		INDEX16* pWalkIndexData = (INDEX16*)pIndexData;
+		int iIndexCounts = (int)DrawContext.dwVertexCount; 
+		// Determine highest and lowest index in use :
+		INDEX16 LowIndex = pWalkIndexData[0];
+		INDEX16 HighIndex = LowIndex;
+		for (int i = 1; i < iIndexCounts; i++) {
+			INDEX16 Index = pWalkIndexData[i];
+			if (LowIndex > Index)
+				LowIndex = Index;
+			if (HighIndex < Index)
+				HighIndex = Index;
+		}
+		
 		// Primitives other than X_D3DPT_QUADLIST can be drawn using one DrawIndexedPrimitive call :
 		HRESULT hRet = g_pD3DDevice->DrawIndexedPrimitive(
 			EmuXB2PC_D3DPrimitiveType(DrawContext.XboxPrimitiveType),
 #ifdef CXBX_USE_D3D9
 			g_CachedIndexBase, // ??
 #endif
-			/* MinVertexIndex = */0,
-			/* NumVertices = */DrawContext.dwVertexCount, // TODO : g_EmuD3DActiveStreamSizes[0], // Note : ATI drivers are especially picky about this -
+			/* MinVertexIndex = */LowIndex,
+			/* NumVertices = */HighIndex-LowIndex+1,//using index vertex span here.  // TODO : g_EmuD3DActiveStreamSizes[0], // Note : ATI drivers are especially picky about this -
 			// NumVertices should be the span of covered vertices in the active vertex buffer (TODO : Is stream 0 correct?)
 			DrawContext.dwStartVertex,
 			DrawContext.dwHostPrimitiveCount);
@@ -7192,10 +7206,25 @@ void XTL::CxbxDrawPrimitiveUP(CxbxDrawContext &DrawContext)
 		INDEX16 *pIndexData = CxbxAssureQuadListIndexBuffer(DrawContext.dwVertexCount);
 		// Convert quad vertex-count to triangle vertex count :
 		UINT PrimitiveCount = DrawContext.dwHostPrimitiveCount * TRIANGLES_PER_QUAD;
+		
+		//walk through index buffer
+		INDEX16* pWalkIndexData = (INDEX16*)pIndexData;
+		int iIndexCounts = (int)DrawContext.dwVertexCount+ (int)DrawContext.dwVertexCount/2; //we use a new index buffer to draw the QUAD List, the index buffer index counts differes from original Vertex count.
+		// Determine highest and lowest index in use :
+		INDEX16 LowIndex = pWalkIndexData[0];
+		INDEX16 HighIndex = LowIndex;
+		for (int i = 1; i < iIndexCounts; i++) {
+			INDEX16 Index = pWalkIndexData[i];
+			if (LowIndex > Index)
+				LowIndex = Index;
+			if (HighIndex < Index)
+				HighIndex = Index;
+		}
+
 		HRESULT hRet = g_pD3DDevice->DrawIndexedPrimitiveUP(
 			D3DPT_TRIANGLELIST, // Draw indexed triangles instead of quads
-			0, // MinVertexIndex
-			DrawContext.dwVertexCount, // NumVertexIndices
+			LowIndex, // MinVertexIndex
+			HighIndex-LowIndex+1, // NumVertexIndices
 			PrimitiveCount,
 			pIndexData,
 			D3DFMT_INDEX16,
@@ -7573,7 +7602,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVerticesUP)
 		CxbxDrawContext DrawContext = {};
 
 		DrawContext.XboxPrimitiveType = PrimitiveType;
-		DrawContext.dwVertexCount = VertexCount;
+		DrawContext.dwVertexCount = VertexCount; 
 		DrawContext.pXboxVertexStreamZeroData = pVertexStreamZeroData;
 		DrawContext.uiXboxVertexStreamZeroStride = VertexStreamZeroStride;
 		DrawContext.hVertexShader = g_CurrentXboxVertexShaderHandle;
@@ -7621,11 +7650,25 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVerticesUP)
 			g_dwPrimPerFrame += VertexCount / VERTICES_PER_QUAD * TRIANGLES_PER_QUAD;
 		}
 		else {
+			//walk through the index buffer
+			INDEX16* pWalkIndexData = (INDEX16*)pIndexData;
+			int iIndexCounts = (int)VertexCount;
+				// Determine highest and lowest index in use :
+			INDEX16 LowIndex = pWalkIndexData[0];
+			INDEX16 HighIndex = LowIndex;
+			for (int i = 1; i < iIndexCounts; i++) {
+				INDEX16 Index = pWalkIndexData[i];
+				if (LowIndex > Index)
+					LowIndex = Index;
+				if (HighIndex < Index)
+					HighIndex = Index;
+			}
+			
 			// LOG_TEST_CASE("DrawIndexedPrimitiveUP"); // Test-case : Burnout, Namco Museum 50th Anniversary
 			HRESULT hRet = g_pD3DDevice->DrawIndexedPrimitiveUP(
 				EmuXB2PC_D3DPrimitiveType(DrawContext.XboxPrimitiveType),
-				0, // MinVertexIndex
-				DrawContext.dwVertexCount, // NumVertexIndices
+				LowIndex, // MinVertexIndex
+				HighIndex-LowIndex+1, //this shall be Vertex Spans DrawContext.dwVertexCount, // NumVertexIndices
 				DrawContext.dwHostPrimitiveCount,
 				pIndexData,
 				D3DFMT_INDEX16,
