@@ -7086,6 +7086,24 @@ void CxbxDrawIndexedClosingLineUP(XTL::INDEX16 LowIndex, XTL::INDEX16 HighIndex,
 }
 
 // TODO : Move to own file
+//Walk through index buffer
+void WalkIndexBuffer(UINT16 & LowIndex, UINT16 & HighIndex, void * pIndexDataInput,DWORD dwVertexCount)
+{
+	int iIndexCounts = (int)dwVertexCount;
+	// Determine highest and lowest index in use 
+	UINT16 * pIndexData = (UINT16*)pIndexDataInput;
+	LowIndex = pIndexData[0];
+	HighIndex = LowIndex;
+	for (int i = 1; i < iIndexCounts; i++) {
+		UINT16 Index = pIndexData[i];
+		if (LowIndex > Index)
+			LowIndex = Index;
+		if (HighIndex < Index)
+			HighIndex = Index;
+	}
+	return;
+}
+
 // Requires assigned pIndexData
 // Called by D3DDevice_DrawIndexedVertices and EmuExecutePushBufferRaw (twice)
 void XTL::CxbxDrawIndexed(CxbxDrawContext &DrawContext, INDEX16 *pIndexData)
@@ -7139,19 +7157,9 @@ void XTL::CxbxDrawIndexed(CxbxDrawContext &DrawContext, INDEX16 *pIndexData)
 	}
 	else {
 		//Walk through index buffer
-		INDEX16* pWalkIndexData = (INDEX16*)pIndexData;
-		int iIndexCounts = (int)DrawContext.dwVertexCount; 
 		// Determine highest and lowest index in use :
-		INDEX16 LowIndex = pWalkIndexData[0];
-		INDEX16 HighIndex = LowIndex;
-		for (int i = 1; i < iIndexCounts; i++) {
-			INDEX16 Index = pWalkIndexData[i];
-			if (LowIndex > Index)
-				LowIndex = Index;
-			if (HighIndex < Index)
-				HighIndex = Index;
-		}
-		
+		INDEX16 LowIndex, HighIndex;
+		WalkIndexBuffer( LowIndex,  HighIndex, pIndexData, DrawContext.dwVertexCount);
 		// Primitives other than X_D3DPT_QUADLIST can be drawn using one DrawIndexedPrimitive call :
 		HRESULT hRet = g_pD3DDevice->DrawIndexedPrimitive(
 			EmuXB2PC_D3DPrimitiveType(DrawContext.XboxPrimitiveType),
@@ -7208,18 +7216,9 @@ void XTL::CxbxDrawPrimitiveUP(CxbxDrawContext &DrawContext)
 		UINT PrimitiveCount = DrawContext.dwHostPrimitiveCount * TRIANGLES_PER_QUAD;
 		
 		//walk through index buffer
-		INDEX16* pWalkIndexData = (INDEX16*)pIndexData;
-		int iIndexCounts = (int)DrawContext.dwVertexCount+ (int)DrawContext.dwVertexCount/2; //we use a new index buffer to draw the QUAD List, the index buffer index counts differes from original Vertex count.
-		// Determine highest and lowest index in use :
-		INDEX16 LowIndex = pWalkIndexData[0];
-		INDEX16 HighIndex = LowIndex;
-		for (int i = 1; i < iIndexCounts; i++) {
-			INDEX16 Index = pWalkIndexData[i];
-			if (LowIndex > Index)
-				LowIndex = Index;
-			if (HighIndex < Index)
-				HighIndex = Index;
-		}
+		INDEX16 LowIndex, HighIndex;
+		WalkIndexBuffer(LowIndex, HighIndex,pIndexData, DrawContext.dwVertexCount);
+
 
 		HRESULT hRet = g_pD3DDevice->DrawIndexedPrimitiveUP(
 			D3DPT_TRIANGLELIST, // Draw indexed triangles instead of quads
@@ -7651,19 +7650,9 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVerticesUP)
 		}
 		else {
 			//walk through the index buffer
-			INDEX16* pWalkIndexData = (INDEX16*)pIndexData;
-			int iIndexCounts = (int)VertexCount;
-				// Determine highest and lowest index in use :
-			INDEX16 LowIndex = pWalkIndexData[0];
-			INDEX16 HighIndex = LowIndex;
-			for (int i = 1; i < iIndexCounts; i++) {
-				INDEX16 Index = pWalkIndexData[i];
-				if (LowIndex > Index)
-					LowIndex = Index;
-				if (HighIndex < Index)
-					HighIndex = Index;
-			}
-			
+			INDEX16 LowIndex, HighIndex;
+			WalkIndexBuffer( LowIndex,  HighIndex, pIndexData, DrawContext.dwVertexCount);
+
 			// LOG_TEST_CASE("DrawIndexedPrimitiveUP"); // Test-case : Burnout, Namco Museum 50th Anniversary
 			HRESULT hRet = g_pD3DDevice->DrawIndexedPrimitiveUP(
 				EmuXB2PC_D3DPrimitiveType(DrawContext.XboxPrimitiveType),
