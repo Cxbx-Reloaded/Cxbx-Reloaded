@@ -2285,7 +2285,6 @@ void CxbxRemoveIndexBuffer(PWORD pData)
 void CxbxUpdateActiveIndexBuffer
 (
 	PWORD         pIndexData,
-	PDWORD		  pIndexBase,	
 	UINT          IndexCount
 )
 {
@@ -2348,15 +2347,12 @@ void CxbxUpdateActiveIndexBuffer
 		indexBuffer.pHostIndexBuffer->Unlock();
 	}
 
-	
-	*pIndexBase = g_XboxBaseVertexIndex;
-
 	// Activate the new native index buffer :
 #ifdef CXBX_USE_D3D9
 	HRESULT hRet = g_pD3DDevice->SetIndices(indexBuffer.pHostIndexBuffer);
-	// Note : *pIndexBase is moved to DrawIndexedPrimitive
+	// Note : Under Direct3D 9, the BaseVertexIndex argument is moved towards DrawIndexedPrimitive
 #else
-	HRESULT hRet = g_pD3DDevice->SetIndices(indexBuffer.pHostIndexBuffer, *pIndexBase);
+	HRESULT hRet = g_pD3DDevice->SetIndices(indexBuffer.pHostIndexBuffer, g_XboxBaseVertexIndex);
 #endif
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetIndices");
 
@@ -7045,7 +7041,7 @@ void CxbxDrawIndexedClosingLine(XTL::INDEX16 LowIndex, XTL::INDEX16 HighIndex)
 #ifdef CXBX_USE_D3D9
 	hRet = g_pD3DDevice->SetIndices(pClosingLineLoopIndexBuffer);
 #else
-	hRet = g_pD3DDevice->SetIndices(pClosingLineLoopIndexBuffer, 0);
+	hRet = g_pD3DDevice->SetIndices(pClosingLineLoopIndexBuffer, g_XboxBaseVertexIndex);
 #endif
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetIndices");
 
@@ -7088,21 +7084,18 @@ void CxbxDrawIndexedClosingLineUP(XTL::INDEX16 LowIndex, XTL::INDEX16 HighIndex,
 
 // TODO : Move to own file
 //Walk through index buffer
-void WalkIndexBuffer(UINT16 & LowIndex, UINT16 & HighIndex, void * pIndexDataInput,DWORD dwVertexCount)
+void WalkIndexBuffer(XTL::INDEX16 &LowIndex, XTL::INDEX16 &HighIndex, XTL::INDEX16 *pIndexData, DWORD dwIndexCount)
 {
-	int iIndexCounts = (int)dwVertexCount;
 	// Determine highest and lowest index in use 
-	UINT16 * pIndexData = (UINT16*)pIndexDataInput;
 	LowIndex = pIndexData[0];
 	HighIndex = LowIndex;
-	for (int i = 1; i < iIndexCounts; i++) {
-		UINT16 Index = pIndexData[i];
+	for (uint i = 1; i < dwIndexCount; i++) {
+		XTL::INDEX16 Index = pIndexData[i];
 		if (LowIndex > Index)
 			LowIndex = Index;
 		if (HighIndex < Index)
 			HighIndex = Index;
 	}
-	return;
 }
 
 // Requires assigned pIndexData
@@ -7115,8 +7108,7 @@ void XTL::CxbxDrawIndexed(CxbxDrawContext &DrawContext, INDEX16 *pIndexData)
 	assert(pIndexData != nullptr);
 	assert(IsValidCurrentShader());
 
-	DWORD indexBase = 0;
-	CxbxUpdateActiveIndexBuffer(pIndexData, &indexBase, DrawContext.dwVertexCount);
+	CxbxUpdateActiveIndexBuffer(pIndexData, DrawContext.dwVertexCount);
 	CxbxVertexBufferConverter VertexBufferConverter = {};
 	VertexBufferConverter.Apply(&DrawContext);
 	if (DrawContext.XboxPrimitiveType == X_D3DPT_QUADLIST) {
@@ -7131,19 +7123,16 @@ void XTL::CxbxDrawIndexed(CxbxDrawContext &DrawContext, INDEX16 *pIndexData)
 		// Test-case : XDK Samples (Billboard, BumpLens, DebugKeyboard, Gamepad, Lensflare, PerfTest?VolumeLight, PointSprites, Tiling, VolumeFog, VolumeSprites, etc)
 		while (iNumVertices >= VERTICES_PER_QUAD) {
 			// Determine highest and lowest index in use :
-			INDEX16 LowIndex = pIndexData[uiStartIndex];
-			INDEX16 HighIndex = LowIndex;
-			for (int i = 1; i < VERTICES_PER_QUAD; i++) {
-				INDEX16 Index = pIndexData[i];
-				if (LowIndex > Index)
-					LowIndex = Index;
-				if (HighIndex < Index)
-					HighIndex = Index;
-			}
+			INDEX16 LowIndex;
+			INDEX16 HighIndex;
+			WalkIndexBuffer(LowIndex, HighIndex, &pIndexData[uiStartIndex], VERTICES_PER_QUAD);
+
 			// Emulate a quad by drawing each as a fan of 2 triangles
 			HRESULT hRet = g_pD3DDevice->DrawIndexedPrimitive(
 				D3DPT_TRIANGLEFAN,
-//{ $IFDEF DXBX_USE_D3D9 } {BaseVertexIndex = }0, { $ENDIF }
+#ifdef CXBX_USE_D3D9 
+				g_XboxBaseVertexIndex,
+#endif
 				LowIndex, // minIndex
 				HighIndex - LowIndex + 1, // NumVertices
 				uiStartIndex,
@@ -7160,7 +7149,8 @@ void XTL::CxbxDrawIndexed(CxbxDrawContext &DrawContext, INDEX16 *pIndexData)
 		//Walk through index buffer
 		// Determine highest and lowest index in use :
 		INDEX16 LowIndex, HighIndex;
-		WalkIndexBuffer( LowIndex,  HighIndex, pIndexData, DrawContext.dwVertexCount);
+		WalkIndexBuffer(LowIndex,  HighIndex, pIndexData, DrawContext.dwVertexCount);
+
 		// Primitives other than X_D3DPT_QUADLIST can be drawn using one DrawIndexedPrimitive call :
 		HRESULT hRet = g_pD3DDevice->DrawIndexedPrimitive(
 			EmuXB2PC_D3DPrimitiveType(DrawContext.XboxPrimitiveType),
@@ -7218,16 +7208,15 @@ void XTL::CxbxDrawPrimitiveUP(CxbxDrawContext &DrawContext)
 		
 		//walk through index buffer
 		INDEX16 LowIndex, HighIndex;
-		WalkIndexBuffer(LowIndex, HighIndex,pIndexData, DrawContext.dwVertexCount);
-
+		WalkIndexBuffer(LowIndex, HighIndex, pIndexData, DrawContext.dwVertexCount);
 
 		HRESULT hRet = g_pD3DDevice->DrawIndexedPrimitiveUP(
 			D3DPT_TRIANGLELIST, // Draw indexed triangles instead of quads
 			LowIndex, // MinVertexIndex
-			HighIndex-LowIndex+1, // NumVertexIndices
+			HighIndex - LowIndex + 1, // NumVertexIndices
 			PrimitiveCount,
 			pIndexData,
-			D3DFMT_INDEX16,
+			D3DFMT_INDEX16, // IndexDataFormat
 			DrawContext.pHostVertexStreamZeroData,
 			DrawContext.uiHostVertexStreamZeroStride
 		);
@@ -7537,15 +7526,14 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVertices)
     if(!g_bVBSkipStream)
     #endif
 	if (IsValidCurrentShader()) {
-		DWORD indexBase = 0;
-		CxbxUpdateActiveIndexBuffer(pIndexData, &indexBase, VertexCount);
+		CxbxUpdateActiveIndexBuffer(pIndexData, VertexCount);
 
 		CxbxDrawContext DrawContext = {};
 
 		DrawContext.XboxPrimitiveType = PrimitiveType;
 		DrawContext.dwVertexCount = VertexCount;
 		DrawContext.hVertexShader = g_CurrentXboxVertexShaderHandle;
-		DrawContext.dwIndexBase = indexBase; // Used by GetVertexBufferSize
+		DrawContext.dwIndexBase = g_XboxBaseVertexIndex; // Used by GetVertexBufferSize
 		DrawContext.pIndexData = pIndexData; // Used by GetVertexBufferSize
 
 		// Test case JSRF draws all geometry through this function (only sparks are drawn via another method)
@@ -7621,15 +7609,9 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVerticesUP)
 			int iNumVertices = (int)VertexCount;
 			while (iNumVertices >= VERTICES_PER_QUAD) {
 				// Determine highest and lowest index in use :
-				INDEX16 LowIndex = pWalkIndexData[0];
-				INDEX16 HighIndex = LowIndex;
-				for (int i = 1; i < VERTICES_PER_QUAD; i++) {
-					INDEX16 Index = pWalkIndexData[i];
-					if (LowIndex > Index)
-						LowIndex = Index;
-					if (HighIndex < Index)
-						HighIndex = Index;
-				}
+				INDEX16 LowIndex;
+				INDEX16 HighIndex;
+				WalkIndexBuffer(LowIndex, HighIndex, pWalkIndexData, VERTICES_PER_QUAD);
 				// Emulate a quad by drawing each as a fan of 2 triangles
 				HRESULT hRet = g_pD3DDevice->DrawIndexedPrimitiveUP(
 					D3DPT_TRIANGLEFAN, // Draw a triangle-fan instead of a quad
@@ -7637,7 +7619,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVerticesUP)
 					HighIndex - LowIndex + 1, // NumVertexIndices
 					TRIANGLES_PER_QUAD, // primCount = Draw 2 triangles
 					pWalkIndexData,
-					D3DFMT_INDEX16,
+					D3DFMT_INDEX16, // IndexDataFormat
 					DrawContext.pHostVertexStreamZeroData,
 					DrawContext.uiHostVertexStreamZeroStride
 				);
@@ -7650,18 +7632,18 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVerticesUP)
 			g_dwPrimPerFrame += VertexCount / VERTICES_PER_QUAD * TRIANGLES_PER_QUAD;
 		}
 		else {
-			//walk through the index buffer
+			// Walk through the index buffer
 			INDEX16 LowIndex, HighIndex;
-			WalkIndexBuffer( LowIndex,  HighIndex, pIndexData, DrawContext.dwVertexCount);
+			WalkIndexBuffer(LowIndex, HighIndex, (INDEX16*)pIndexData, DrawContext.dwVertexCount);
 
 			// LOG_TEST_CASE("DrawIndexedPrimitiveUP"); // Test-case : Burnout, Namco Museum 50th Anniversary
 			HRESULT hRet = g_pD3DDevice->DrawIndexedPrimitiveUP(
 				EmuXB2PC_D3DPrimitiveType(DrawContext.XboxPrimitiveType),
 				LowIndex, // MinVertexIndex
-				HighIndex-LowIndex+1, //this shall be Vertex Spans DrawContext.dwVertexCount, // NumVertexIndices
+				HighIndex - LowIndex + 1, //this shall be Vertex Spans DrawContext.dwVertexCount, // NumVertexIndices
 				DrawContext.dwHostPrimitiveCount,
 				pIndexData,
-				D3DFMT_INDEX16,
+				D3DFMT_INDEX16, // IndexDataFormat
 				DrawContext.pHostVertexStreamZeroData,
 				DrawContext.uiHostVertexStreamZeroStride
 			);
