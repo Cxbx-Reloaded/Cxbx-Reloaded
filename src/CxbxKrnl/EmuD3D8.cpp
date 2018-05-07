@@ -7517,6 +7517,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVertices)
 		DrawContext.dwVertexCount = VertexCount;
 		DrawContext.hVertexShader = g_CurrentXboxVertexShaderHandle;
 		DrawContext.dwIndexBase = indexBase; // Used by GetVertexBufferSize
+		DrawContext.pIndexData = pIndexData; // Used by GetVertexBufferSize
 
 		// Test case JSRF draws all geometry through this function (only sparks are drawn via another method)
 		// using X_D3DPT_TRIANGLELIST and X_D3DPT_TRIANGLESTRIP PrimitiveType
