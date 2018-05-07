@@ -2674,7 +2674,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_BeginVisibilityTest)()
 
 // LTCG specific D3DDevice_EndVisibilityTest function...
 // This uses a custom calling convention where parameter is passed in EAX
-// UNTESTED - Need test-case!
+// Test-case: Test Drive: Eve of Destruction
 HRESULT __stdcall XTL::EMUPATCH(D3DDevice_EndVisibilityTest_0)
 (
 )
@@ -2687,7 +2687,6 @@ HRESULT __stdcall XTL::EMUPATCH(D3DDevice_EndVisibilityTest_0)
 		mov Index, eax
 	}
 
-	LOG_TEST_CASE("Validate this function!");
 	return EMUPATCH(D3DDevice_EndVisibilityTest)(Index);
 }
 
