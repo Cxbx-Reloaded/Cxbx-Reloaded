@@ -44,7 +44,7 @@
 // TODO: Find somewhere to put this that doesn't conflict with XTL::
 extern void EmuUpdateActiveTextureStages();
 #ifdef CXBX_USE_D3D9
-extern DWORD g_CachedIndexBase;
+extern DWORD g_XboxBaseVertexIndex;
 #endif
 
 uint32  XTL::g_dwPrimaryPBCount = 0;

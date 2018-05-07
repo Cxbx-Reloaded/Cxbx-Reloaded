@@ -163,6 +163,9 @@ static BOOL                         g_fYuvEnabled = FALSE;
 static DWORD                        g_dwVertexShaderUsage = 0;
 static DWORD                        g_VertexShaderSlots[136];
 
+DWORD g_XboxBaseVertexIndex = 0;
+
+
 // Active D3D Vertex Streams (and strides)
 XTL::X_D3DVertexBuffer*g_D3DStreams[16];
 UINT g_D3DStreamStrides[16];
@@ -2279,8 +2282,6 @@ void CxbxRemoveIndexBuffer(PWORD pData)
 	// HACK: Never Free
 }
 
-DWORD g_CachedIndexBase = 0;
-
 void CxbxUpdateActiveIndexBuffer
 (
 	PWORD         pIndexData,
@@ -2342,13 +2343,13 @@ void CxbxUpdateActiveIndexBuffer
 		}
 
 		DbgPrintf("CxbxUpdateActiveIndexBuffer: Copying %d indices (D3DFMT_INDEX16)\n", IndexCount);
-		memcpy(pData, pIndexData, IndexCount * 2);
+		memcpy(pData, pIndexData, IndexCount * sizeof(XTL::INDEX16));
 
 		indexBuffer.pHostIndexBuffer->Unlock();
 	}
 
 	
-	*pIndexBase = g_CachedIndexBase;
+	*pIndexBase = g_XboxBaseVertexIndex;
 
 	// Activate the new native index buffer :
 #ifdef CXBX_USE_D3D9
@@ -2476,7 +2477,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_SetIndices)
 		LOG_FUNC_END;
 
 	// Cache the base vertex index then call the Xbox function
-	g_CachedIndexBase = BaseVertexIndex;
+	g_XboxBaseVertexIndex = BaseVertexIndex;
 
 	XB_trampoline(HRESULT, WINAPI, D3DDevice_SetIndices, (X_D3DIndexBuffer*, UINT));
 	RETURN(XB_D3DDevice_SetIndices(pIndexData, BaseVertexIndex));
@@ -7051,7 +7052,7 @@ void CxbxDrawIndexedClosingLine(XTL::INDEX16 LowIndex, XTL::INDEX16 HighIndex)
 	hRet = g_pD3DDevice->DrawIndexedPrimitive(
 		XTL::D3DPT_LINELIST,
 #ifdef CXBX_USE_D3D9
-		g_CachedIndexBase, // ??
+		g_XboxBaseVertexIndex,
 #endif
 		LowIndex, // minIndex
 		HighIndex - LowIndex + 1, // NumVertexIndices
@@ -7164,7 +7165,7 @@ void XTL::CxbxDrawIndexed(CxbxDrawContext &DrawContext, INDEX16 *pIndexData)
 		HRESULT hRet = g_pD3DDevice->DrawIndexedPrimitive(
 			EmuXB2PC_D3DPrimitiveType(DrawContext.XboxPrimitiveType),
 #ifdef CXBX_USE_D3D9
-			g_CachedIndexBase, // ??
+			g_XboxBaseVertexIndex,
 #endif
 			/* MinVertexIndex = */LowIndex,
 			/* NumVertices = */HighIndex-LowIndex+1,//using index vertex span here.  // TODO : g_EmuD3DActiveStreamSizes[0], // Note : ATI drivers are especially picky about this -
