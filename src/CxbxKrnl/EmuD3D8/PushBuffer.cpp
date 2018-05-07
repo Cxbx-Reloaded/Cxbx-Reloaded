@@ -441,8 +441,6 @@ extern void XTL::EmuExecutePushBufferRaw
 				dwCount -= 1;
 			}
 
-            pIndexData = (INDEX16*)(++pdwPushData);
-
             #ifdef _DEBUG_TRACK_PB
             if (bShowPB) {
                 printf("  NVPB_InlineIndexArray(0x%p, %u)...\n", pIndexData, dwCount);
