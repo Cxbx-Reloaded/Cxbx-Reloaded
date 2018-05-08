@@ -7151,7 +7151,7 @@ void XTL::CxbxDrawIndexed(CxbxDrawContext &DrawContext)
 		//Walk through index buffer
 		// Determine highest and lowest index in use :
 		INDEX16 LowIndex, HighIndex;
-		WalkIndexBuffer(LowIndex,  HighIndex, DrawContext.pIndexData, DrawContext.dwVertexCount);
+		WalkIndexBuffer(LowIndex,  HighIndex, &(DrawContext.pIndexData[DrawContext.dwStartVertex]), DrawContext.dwVertexCount);
 
 		// Primitives other than X_D3DPT_QUADLIST can be drawn using one DrawIndexedPrimitive call :
 		HRESULT hRet = g_pD3DDevice->DrawIndexedPrimitive(
