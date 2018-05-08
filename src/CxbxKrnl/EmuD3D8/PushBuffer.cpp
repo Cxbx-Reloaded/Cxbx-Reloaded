@@ -306,10 +306,9 @@ extern void XTL::EmuExecutePushBufferRaw
 
 			if (VshHandleIsVertexShader(dwVertexShader)) 
 			{
-                CxbxKrnlCleanup("Non-FVF Vertex Shaders not yet supported for PushBuffer emulation!");
-                dwVertexShader = 0;
+                EmuWarning("Non-FVF Vertex Shaders not yet supported for PushBuffer emulation!");
             }
-            else if(dwVertexShader == 0)
+            if(dwVertexShader == 0)
             {
                 EmuWarning("FVF Vertex Shader is null");
                 dwVertexShader = -1;
