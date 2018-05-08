@@ -7378,15 +7378,15 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawVertices)
 		DrawContext.dwVertexCount = VertexCount;
 		DrawContext.dwStartVertex = StartVertex;
 		DrawContext.hVertexShader = g_CurrentXboxVertexShaderHandle;
-		if (StartVertex > 0) {
-			// LOG_TEST_CASE("StartVertex > 0"); // Test case : XDK Sample (PlayField)
-			DrawContext.dwStartVertex = StartVertex; // Breakpoint location for testing. 
-		}
-
 		CxbxVertexBufferConverter VertexBufferConverter = {};
 		VertexBufferConverter.Apply(&DrawContext);
 		if (DrawContext.XboxPrimitiveType == X_D3DPT_QUADLIST) {
 			// LOG_TEST_CASE("X_D3DPT_QUADLIST"); // ?X-Marbles and XDK Sample (Cartoon, ?maybe PlayField?) hits this case
+			if (StartVertex > 0) {
+				LOG_TEST_CASE("X_D3DPT_QUADLIST StartVertex > 0");
+				DrawContext.dwStartVertex = StartVertex; // Breakpoint location for testing. 
+			}
+
 			// Draw quadlists using a single 'quad-to-triangle mapping' index buffer :
 			// Assure & activate that special index buffer :
 			CxbxAssureQuadListD3DIndexBuffer(/*NrOfQuadVertices=*/DrawContext.dwVertexCount);
@@ -7412,6 +7412,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawVertices)
 			g_dwPrimPerFrame += primCount;
 		}
 		else {
+			// if (StartVertex > 0) LOG_TEST_CASE("StartVertex > 0 (non-quad)"); // Verified test case : XDK Sample (PlayField)
 			HRESULT hRet = g_pD3DDevice->DrawPrimitive(
 				EmuXB2PC_D3DPrimitiveType(DrawContext.XboxPrimitiveType),
 				DrawContext.dwStartVertex,
