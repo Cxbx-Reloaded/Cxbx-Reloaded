@@ -7051,7 +7051,7 @@ void CxbxDrawIndexedClosingLine(XTL::INDEX16 LowIndex, XTL::INDEX16 HighIndex)
 		g_XboxBaseVertexIndex,
 #endif
 		LowIndex, // minIndex
-		HighIndex - LowIndex + 1, // NumVertexIndices
+		(HighIndex - LowIndex) + 1, // NumVertexIndices
 		0, // startIndex
 		1 // primCount
 	);
@@ -7070,7 +7070,7 @@ void CxbxDrawIndexedClosingLineUP(XTL::INDEX16 LowIndex, XTL::INDEX16 HighIndex,
 	HRESULT hRet = g_pD3DDevice->DrawIndexedPrimitiveUP(
 		XTL::D3DPT_LINELIST,
 		LowIndex, // MinVertexIndex
-		HighIndex - LowIndex + 1, // NumVertexIndices,
+		(HighIndex - LowIndex) + 1, // NumVertexIndices,
 		1, // PrimitiveCount,
 		CxbxClosingLineIndices, // pIndexData
 		XTL::D3DFMT_INDEX16, // IndexDataFormat
@@ -7136,7 +7136,7 @@ void XTL::CxbxDrawIndexed(CxbxDrawContext &DrawContext)
 				DrawContext.dwIndexBase,
 #endif
 				LowIndex, // minIndex
-				HighIndex - LowIndex + 1, // NumVertices
+				(HighIndex - LowIndex) + 1, // NumVertices
 				uiStartIndex,
 				TRIANGLES_PER_QUAD // primCount = Draw 2 triangles
 			);
@@ -7160,7 +7160,7 @@ void XTL::CxbxDrawIndexed(CxbxDrawContext &DrawContext)
 			DrawContext.dwIndexBase,
 #endif
 			/* MinVertexIndex = */LowIndex,
-			/* NumVertices = */HighIndex-LowIndex+1,//using index vertex span here.  // TODO : g_EmuD3DActiveStreamSizes[0], // Note : ATI drivers are especially picky about this -
+			/* NumVertices = */(HighIndex - LowIndex) + 1,//using index vertex span here.  // TODO : g_EmuD3DActiveStreamSizes[0], // Note : ATI drivers are especially picky about this -
 			// NumVertices should be the span of covered vertices in the active vertex buffer (TODO : Is stream 0 correct?)
 			DrawContext.dwStartVertex,
 			DrawContext.dwHostPrimitiveCount);
@@ -7208,16 +7208,15 @@ void XTL::CxbxDrawPrimitiveUP(CxbxDrawContext &DrawContext)
 		// Convert quad vertex-count to triangle vertex count :
 		UINT PrimitiveCount = DrawContext.dwHostPrimitiveCount * TRIANGLES_PER_QUAD;
 
-		//Scale the index vertexes counts for newly created triangle list index buffer.
-		DWORD dwIndexCount = DrawContext.dwVertexCount + DrawContext.dwVertexCount / 2;
-		//walk through index buffer
-		INDEX16 LowIndex, HighIndex;
-		WalkIndexBuffer(LowIndex, HighIndex, pIndexData, dwIndexCount);
+		// Instead of calling WalkIndexBuffer on pQuadToTriangleIndexBuffer,
+		// we can derive the LowIndex and HighIndexes ourselves here
+		INDEX16 LowIndex = 0;
+		INDEX16 HighIndex = DrawContext.dwVertexCount;
 
 		HRESULT hRet = g_pD3DDevice->DrawIndexedPrimitiveUP(
 			D3DPT_TRIANGLELIST, // Draw indexed triangles instead of quads
 			LowIndex, // MinVertexIndex
-			HighIndex - LowIndex + 1, // NumVertexIndices
+			(HighIndex - LowIndex) + 1, // NumVertexIndices
 			PrimitiveCount,
 			pIndexData,
 			D3DFMT_INDEX16, // IndexDataFormat
@@ -7404,7 +7403,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawVertices)
 				0, // BaseVertexIndex
 #endif
 				LowIndex, // minIndex
-				HighIndex - LowIndex + 1, // NumVertices,
+				(HighIndex - LowIndex) + 1, // NumVertices,
 				startIndex,
 				primCount
 			);
@@ -7620,7 +7619,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVerticesUP)
 				HRESULT hRet = g_pD3DDevice->DrawIndexedPrimitiveUP(
 					D3DPT_TRIANGLEFAN, // Draw a triangle-fan instead of a quad
 					LowIndex, // MinVertexIndex
-					HighIndex - LowIndex + 1, // NumVertexIndices
+					(HighIndex - LowIndex) + 1, // NumVertexIndices
 					TRIANGLES_PER_QUAD, // primCount = Draw 2 triangles
 					pWalkIndexData,
 					D3DFMT_INDEX16, // IndexDataFormat
@@ -7644,7 +7643,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVerticesUP)
 			HRESULT hRet = g_pD3DDevice->DrawIndexedPrimitiveUP(
 				EmuXB2PC_D3DPrimitiveType(DrawContext.XboxPrimitiveType),
 				LowIndex, // MinVertexIndex
-				HighIndex - LowIndex + 1, //this shall be Vertex Spans DrawContext.dwVertexCount, // NumVertexIndices
+				(HighIndex - LowIndex) + 1, //this shall be Vertex Spans DrawContext.dwVertexCount, // NumVertexIndices
 				DrawContext.dwHostPrimitiveCount,
 				pIndexData,
 				D3DFMT_INDEX16, // IndexDataFormat
