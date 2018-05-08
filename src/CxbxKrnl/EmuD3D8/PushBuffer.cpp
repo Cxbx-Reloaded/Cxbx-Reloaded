@@ -300,13 +300,16 @@ extern void XTL::EmuExecutePushBufferRaw
             pVertexData = pdwPushData;
 			//move pushpuffer to the end of vertex data.
             pdwPushData += dwCount;
-
+			if (dwCount == 0) {
+				continue;
+			}
             // retrieve vertex shader
 			DWORD dwVertexShader = g_CurrentXboxVertexShaderHandle;
 
 			if (VshHandleIsVertexShader(dwVertexShader)) 
 			{
                 EmuWarning("Non-FVF Vertex Shaders not yet supported for PushBuffer emulation!");
+				continue;
             }
             if(dwVertexShader == 0)
             {
