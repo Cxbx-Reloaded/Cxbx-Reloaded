@@ -7209,7 +7209,7 @@ void XTL::CxbxDrawPrimitiveUP(CxbxDrawContext &DrawContext)
 		UINT PrimitiveCount = DrawContext.dwHostPrimitiveCount * TRIANGLES_PER_QUAD;
 
 		//Scale the index vertexes counts for newly created triangle list index buffer.
-		DWORD dwIndexCount= DrawContext.dwVertexCount+ DrawContext.dwVertexCount/2.
+		DWORD dwIndexCount = DrawContext.dwVertexCount + DrawContext.dwVertexCount / 2;
 		//walk through index buffer
 		INDEX16 LowIndex, HighIndex;
 		WalkIndexBuffer(LowIndex, HighIndex, pIndexData, dwIndexCount);
