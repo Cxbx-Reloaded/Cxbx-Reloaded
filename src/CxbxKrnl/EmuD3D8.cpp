@@ -7207,10 +7207,12 @@ void XTL::CxbxDrawPrimitiveUP(CxbxDrawContext &DrawContext)
 		INDEX16 *pIndexData = CxbxAssureQuadListIndexBuffer(DrawContext.dwVertexCount);
 		// Convert quad vertex-count to triangle vertex count :
 		UINT PrimitiveCount = DrawContext.dwHostPrimitiveCount * TRIANGLES_PER_QUAD;
-		
+
+		//Scale the index vertexes counts for newly created triangle list index buffer.
+		DWORD dwIndexCount= DrawContext.dwVertexCount+ DrawContext.dwVertexCount/2.
 		//walk through index buffer
 		INDEX16 LowIndex, HighIndex;
-		WalkIndexBuffer(LowIndex, HighIndex, pIndexData, DrawContext.dwVertexCount);
+		WalkIndexBuffer(LowIndex, HighIndex, pIndexData, dwIndexCount);
 
 		HRESULT hRet = g_pD3DDevice->DrawIndexedPrimitiveUP(
 			D3DPT_TRIANGLELIST, // Draw indexed triangles instead of quads
