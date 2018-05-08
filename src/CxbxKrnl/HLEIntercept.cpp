@@ -237,11 +237,6 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 	printf("*******************************************************************************\n");
 	printf("\n");
 
-    static bool test = 1;
-    while (test) {
-        test = 1;
-    }
-
 	// Make sure the HLE Cache directory exists
 	std::string cachePath = std::string(szFolder_CxbxReloadedData) + "\\HLECache\\";
 	int result = SHCreateDirectoryEx(nullptr, cachePath.c_str(), nullptr);
