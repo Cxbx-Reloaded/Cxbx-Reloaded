@@ -437,7 +437,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
         }
 
         // TODO: Is this enough for alias? We need to verify it.
-        if ((XbLibScan & XbSymbolLib_D3D8) > 0 || (XbLibScan & XbSymbolLib_D3D8LTCG)) {
+        if ((XbLibScan & XbSymbolLib_D3D8) > 0 || (XbLibScan & XbSymbolLib_D3D8LTCG) > 0) {
             g_BuildVersion = xdkVersion;
         }
 #if 0 // NOTE: This is a note for what we should do for above.
@@ -522,6 +522,7 @@ inline void EmuInstallPatch(std::string FunctionName, xbaddr FunctionAddr, void 
 	g_FunctionHooks[FunctionName].Install((void*)(FunctionAddr), Patch);
 }
 
+#if 0 // TODO: Need to move this into XbSymbolDatabase for depth verification usage.
 #ifdef _DEBUG_TRACE
 
 struct HLEVerifyContext {
@@ -738,3 +739,4 @@ void VerifyHLEDataBase()
     VerifyHLEDataBaseAgainst(&context);
 }
 #endif // _DEBUG_TRACE
+#endif
