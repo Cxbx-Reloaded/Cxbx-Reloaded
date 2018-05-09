@@ -4923,6 +4923,22 @@ void CreateHostResource(XTL::X_D3DResource *pResource, int iTextureStage, DWORD 
 		// Create the surface/volume/(volume/cube/)texture
 		switch (XboxResourceType) {
 		case XTL::X_D3DRTYPE_SURFACE: {
+#if 0 // TODO : Get this to work (test case Dolphin turns black with this enabled)
+			if (D3DUsage & D3DUSAGE_RENDERTARGET) {
+				hRet = g_pD3DDevice->CreateRenderTarget(dwWidth, dwHeight, PCFormat,
+					g_EmuCDPD.HostPresentationParameters.MultiSampleType,
+#ifdef CXBX_USE_D3D9
+					0, // MultisampleQuality
+#endif
+					true, // Lockable
+					&pNewHostSurface
+#ifdef CXBX_USE_D3D9
+					, nullptr, // pSharedHandle
+#endif
+				);
+				DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateRenderTarget");
+			} else
+#endif
 			if (D3DUsage & D3DUSAGE_DEPTHSTENCIL) {
 				hRet = g_pD3DDevice->CreateDepthStencilSurface(dwWidth, dwHeight, PCFormat,
 					g_EmuCDPD.HostPresentationParameters.MultiSampleType, 
@@ -7897,6 +7913,15 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderTarget)
 #else
 	hRet = g_pD3DDevice->SetRenderTarget(pHostRenderTarget, pHostDepthStencil);
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetRenderTarget");
+#if 0 // tmp test
+	if ((hRet != D3D_OK) && pHostDepthStencil) {
+		// HACK : retry a failed SetRenderTarget without a depth-stencil
+		// (obviously, this will cause render issues, but the lack
+		// of render-target itself is even less desirable, so ...)
+		hRet = g_pD3DDevice->SetRenderTarget(pHostRenderTarget, nullptr);
+		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetRenderTarget");
+	}
+#endif
 #endif
 }
 
