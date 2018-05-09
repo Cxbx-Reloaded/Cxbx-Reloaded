@@ -7218,10 +7218,25 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVerticesUP)
 	// TODO : Call unpatched D3DDevice_SetStateUP();
 
 	CxbxUpdateNativeD3DResources();
-	//for unsupported Primitive Types, skip rendering.
-	if ((PrimitiveType == X_D3DPT_LINELOOP) || (PrimitiveType == X_D3DPT_QUADLIST)) {
-		EmuWarning("D3DDevice_DrawIndexedVerticesUP Error! Unsupported PrimitiveType! (%d)", (DWORD)PrimitiveType);
-	}else if (IsValidCurrentShader()) {
+
+	// For unsupported Primitive Types, fallback to simplified rendering.
+	switch (PrimitiveType) {
+	case X_D3DPT_LINELOOP: {
+		EmuWarning("D3DDevice_DrawIndexedVerticesUP Error! X_D3DPT_LINELOOP unsupported, falling back to X_D3DPT_LINESTRIP");
+		// This looses the closing line - an acceptable tradeoff
+		PrimitiveType = X_D3DPT_LINESTRIP;
+		break;
+	}
+	case X_D3DPT_QUADLIST: {
+		EmuWarning("D3DDevice_DrawIndexedVerticesUP Error! X_D3DPT_QUADLIST unsupported, falling back to X_D3DPT_TRIANGLEFAN");
+		// This shows only the first quad - I guess that's better than nothing
+		PrimitiveType = X_D3DPT_TRIANGLEFAN;
+		VertexCount = 4;
+		break;
+	}
+	}
+	
+	if (IsValidCurrentShader()) {
 		VertexPatchDesc VPDesc;
 
 		VPDesc.XboxPrimitiveType = PrimitiveType;
