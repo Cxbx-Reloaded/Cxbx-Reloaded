@@ -2038,6 +2038,14 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
                     CxbxKrnlCleanup("IDirect3D::CreateDevice failed");
 
 				// Which texture formats does this device support?
+				memset(g_bSupportsFormatSurface, false, sizeof(g_bSupportsFormatSurface));
+				memset(g_bSupportsFormatSurfaceRenderTarget, false, sizeof(g_bSupportsFormatSurfaceRenderTarget));
+				memset(g_bSupportsFormatSurfaceDepthStencil, false, sizeof(g_bSupportsFormatSurfaceDepthStencil));
+				memset(g_bSupportsFormatTexture, false, sizeof(g_bSupportsFormatTexture));
+				memset(g_bSupportsFormatTextureRenderTarget, false, sizeof(g_bSupportsFormatTextureRenderTarget));
+				memset(g_bSupportsFormatTextureDepthStencil, false, sizeof(g_bSupportsFormatTextureDepthStencil));
+				memset(g_bSupportsFormatVolumeTexture, false, sizeof(g_bSupportsFormatVolumeTexture));
+				memset(g_bSupportsFormatCubeTexture, false, sizeof(g_bSupportsFormatCubeTexture));
 				for (int X_Format = XTL::X_D3DFMT_L8; X_Format <= XTL::X_D3DFMT_LIN_R8G8B8A8; X_Format++) {
 					// Only process Xbox formats that are directly mappable to host
 					if (!XTL::EmuXBFormatRequiresConversionToARGB((XTL::X_D3DFORMAT)X_Format)) {
@@ -2045,46 +2053,46 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
 						XTL::D3DFORMAT PCFormat = XTL::EmuXB2PC_D3DFormat((XTL::X_D3DFORMAT)X_Format);
 						if (PCFormat != XTL::D3DFMT_UNKNOWN) {
 							// Index with Xbox D3DFormat, because host FourCC codes are too big to be used as indices
-							g_bSupportsFormatSurface[X_Format] =
-								(D3D_OK == g_pDirect3D->CheckDeviceFormat(
+							if (D3D_OK == g_pDirect3D->CheckDeviceFormat(
 									g_EmuCDPD.Adapter, g_EmuCDPD.DeviceType,
 									g_EmuCDPD.HostPresentationParameters.BackBufferFormat, 0,
-									XTL::D3DRTYPE_SURFACE, PCFormat));
-							g_bSupportsFormatSurfaceRenderTarget[X_Format] =
-								(D3D_OK == g_pDirect3D->CheckDeviceFormat(
+									XTL::D3DRTYPE_SURFACE, PCFormat))
+								g_bSupportsFormatSurface[X_Format] = true;
+							if (D3D_OK == g_pDirect3D->CheckDeviceFormat(
 									g_EmuCDPD.Adapter, g_EmuCDPD.DeviceType,
 									g_EmuCDPD.HostPresentationParameters.BackBufferFormat, D3DUSAGE_RENDERTARGET,
-									XTL::D3DRTYPE_SURFACE, PCFormat));
-							g_bSupportsFormatSurfaceDepthStencil[X_Format] =
-								(D3D_OK == g_pDirect3D->CheckDeviceFormat(
+									XTL::D3DRTYPE_SURFACE, PCFormat))
+								g_bSupportsFormatSurfaceRenderTarget[X_Format] = true;
+							if (D3D_OK == g_pDirect3D->CheckDeviceFormat(
 									g_EmuCDPD.Adapter, g_EmuCDPD.DeviceType,
 									g_EmuCDPD.HostPresentationParameters.BackBufferFormat, D3DUSAGE_DEPTHSTENCIL,
-									XTL::D3DRTYPE_SURFACE, PCFormat));
-							g_bSupportsFormatTexture[X_Format] = 
-								(D3D_OK == g_pDirect3D->CheckDeviceFormat(
+									XTL::D3DRTYPE_SURFACE, PCFormat))
+								g_bSupportsFormatSurfaceDepthStencil[X_Format] = true;
+							if (D3D_OK == g_pDirect3D->CheckDeviceFormat(
 									g_EmuCDPD.Adapter, g_EmuCDPD.DeviceType,
 									g_EmuCDPD.HostPresentationParameters.BackBufferFormat, 0,
-									XTL::D3DRTYPE_TEXTURE, PCFormat));
-							g_bSupportsFormatTextureRenderTarget[X_Format] =
-								(D3D_OK == g_pDirect3D->CheckDeviceFormat(
+									XTL::D3DRTYPE_TEXTURE, PCFormat))
+								g_bSupportsFormatTexture[X_Format] = true;
+							if (D3D_OK == g_pDirect3D->CheckDeviceFormat(
 									g_EmuCDPD.Adapter, g_EmuCDPD.DeviceType,
 									g_EmuCDPD.HostPresentationParameters.BackBufferFormat, D3DUSAGE_RENDERTARGET,
-									XTL::D3DRTYPE_TEXTURE, PCFormat));
-							g_bSupportsFormatTextureDepthStencil[X_Format] =
-								(D3D_OK == g_pDirect3D->CheckDeviceFormat(
+									XTL::D3DRTYPE_TEXTURE, PCFormat))
+								g_bSupportsFormatTextureRenderTarget[X_Format] = true;
+							if (D3D_OK == g_pDirect3D->CheckDeviceFormat(
 									g_EmuCDPD.Adapter, g_EmuCDPD.DeviceType,
 									g_EmuCDPD.HostPresentationParameters.BackBufferFormat, D3DUSAGE_DEPTHSTENCIL,
-									XTL::D3DRTYPE_TEXTURE, PCFormat));
-							g_bSupportsFormatVolumeTexture[X_Format] =
-								(D3D_OK == g_pDirect3D->CheckDeviceFormat(
+									XTL::D3DRTYPE_TEXTURE, PCFormat))
+								g_bSupportsFormatTextureDepthStencil[X_Format] = true;
+							if (D3D_OK == g_pDirect3D->CheckDeviceFormat(
 									g_EmuCDPD.Adapter, g_EmuCDPD.DeviceType,
 									g_EmuCDPD.HostPresentationParameters.BackBufferFormat, 0,
-									XTL::D3DRTYPE_VOLUMETEXTURE, PCFormat));
-							g_bSupportsFormatCubeTexture[X_Format] =
-								(D3D_OK == g_pDirect3D->CheckDeviceFormat(
+									XTL::D3DRTYPE_VOLUMETEXTURE, PCFormat))
+								g_bSupportsFormatVolumeTexture[X_Format] = true;
+							if (D3D_OK == g_pDirect3D->CheckDeviceFormat(
 									g_EmuCDPD.Adapter, g_EmuCDPD.DeviceType,
 									g_EmuCDPD.HostPresentationParameters.BackBufferFormat, 0,
-									XTL::D3DRTYPE_CUBETEXTURE, PCFormat));
+									XTL::D3DRTYPE_CUBETEXTURE, PCFormat))
+								g_bSupportsFormatCubeTexture[X_Format] = true;
 						}
 					}
 				}
@@ -5033,6 +5041,9 @@ void CreateHostResource(XTL::X_D3DResource *pResource, int iTextureStage, DWORD 
 		} // switch XboxResourceType
 
 		DWORD D3DLockFlags = D3DLOCK_NOSYSLOCK; // Note : D3DLOCK_DISCARD is only valid for D3DUSAGE_DYNAMIC
+
+		D3DLockFlags |= D3DLOCK_DISCARD; // tmp test
+
 		DWORD dwCubeFaceOffset = 0;
 		DWORD dwCubeFaceSize = 0;
 		XTL::D3DCUBEMAP_FACES last_face = (bCubemap) ? XTL::D3DCUBEMAP_FACE_NEGATIVE_Z : XTL::D3DCUBEMAP_FACE_POSITIVE_X;
@@ -7211,7 +7222,7 @@ void XTL::CxbxDrawPrimitiveUP(CxbxDrawContext &DrawContext)
 		// Instead of calling WalkIndexBuffer on pQuadToTriangleIndexBuffer,
 		// we can derive the LowIndex and HighIndexes ourselves here
 		INDEX16 LowIndex = 0;
-		INDEX16 HighIndex = DrawContext.dwVertexCount;
+		INDEX16 HighIndex = (INDEX16)(DrawContext.dwVertexCount - 1);
 
 		HRESULT hRet = g_pD3DDevice->DrawIndexedPrimitiveUP(
 			D3DPT_TRIANGLELIST, // Draw indexed triangles instead of quads
