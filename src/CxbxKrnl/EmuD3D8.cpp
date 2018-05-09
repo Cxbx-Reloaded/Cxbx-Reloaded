@@ -7074,7 +7074,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVertices)
 
 				if (VPDesc.XboxPrimitiveType == X_D3DPT_LINELOOP)
 				{
-					EmuWarning("Unsupported PrimitiveType! (%d)", (DWORD)PrimitiveType);
+					EmuWarning("D3DDevice_DrawIndexedVertices error! Unsupported PrimitiveType! (%d)", (DWORD)PrimitiveType);
 					//CxbxKrnlCleanup("XTL_EmuD3DDevice_DrawIndexedVertices : X_D3DPT_LINELOOP not unsupported yet!");
 					// TODO : Close line-loops using a final single line, drawn from the end to the start vertex
 				}
@@ -7131,11 +7131,10 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVerticesUP)
 	// TODO : Call unpatched D3DDevice_SetStateUP();
 
 	CxbxUpdateNativeD3DResources();
-
-    if( (PrimitiveType == X_D3DPT_LINELOOP) || (PrimitiveType == X_D3DPT_QUADLIST) )
-        EmuWarning("Unsupported PrimitiveType! (%d)", (DWORD)PrimitiveType);
-
-    if (IsValidCurrentShader()) {
+	//for unsupported Primitive Types, skip rendering.
+	if ((PrimitiveType == X_D3DPT_LINELOOP) || (PrimitiveType == X_D3DPT_QUADLIST)) {
+		EmuWarning("D3DDevice_DrawIndexedVerticesUP Error! Unsupported PrimitiveType! (%d)", (DWORD)PrimitiveType);
+	}else if (IsValidCurrentShader()) {
 		VertexPatchDesc VPDesc;
 
 		VPDesc.XboxPrimitiveType = PrimitiveType;
