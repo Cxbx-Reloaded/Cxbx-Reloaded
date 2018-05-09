@@ -4704,13 +4704,18 @@ void CreateHostResource(XTL::X_D3DResource *pResource, int iTextureStage, DWORD 
 		DWORD D3DUsage = 0;
 		XTL::D3DPOOL D3DPool = XTL::D3DPOOL_MANAGED; // TODO : Nuance D3DPOOL where/when needed
 
+		if (g_D3DCaps.Caps2 & D3DCAPS2_DYNAMICTEXTURES) {
+			D3DUsage |= D3DUSAGE_DYNAMIC;
+			D3DPool = XTL::D3DPOOL_DEFAULT;
+		}
+
 		if (EmuXBFormatIsDepthBuffer(X_Format)) {
-			D3DUsage = D3DUSAGE_DEPTHSTENCIL;
+			D3DUsage |= D3DUSAGE_DEPTHSTENCIL;
 			D3DPool = XTL::D3DPOOL_DEFAULT;
 		}
 		else if (pPixelContainer == g_pXboxRenderTarget) {
 			if (EmuXBFormatIsRenderTarget(X_Format))
-				D3DUsage = D3DUSAGE_RENDERTARGET;
+				D3DUsage |= D3DUSAGE_RENDERTARGET;
 			else
 				EmuWarning("Updating RenderTarget %s with an incompatible format!", ResourceTypeName);
 		}
@@ -4724,6 +4729,10 @@ void CreateHostResource(XTL::X_D3DResource *pResource, int iTextureStage, DWORD 
 			PCFormat = XTL::D3DFMT_A8R8G8B8;
 		}
 		else {
+			// TODO : Nuance the following, because the Direct3D 8 docs states
+			// CheckDeviceFormat is needed when D3DUSAGE_RENDERTARGET or
+			// D3DUSAGE_DYNAMNIC is specified.
+
 			// Otherwise, lookup resource type and accompanying 'SupportedFormat' array
 			bool *pbSupportedFormats = g_bSupportsFormatTexture;
 
@@ -5040,9 +5049,12 @@ void CreateHostResource(XTL::X_D3DResource *pResource, int iTextureStage, DWORD 
 		}
 		} // switch XboxResourceType
 
-		DWORD D3DLockFlags = D3DLOCK_NOSYSLOCK; // Note : D3DLOCK_DISCARD is only valid for D3DUSAGE_DYNAMIC
-
-		D3DLockFlags |= D3DLOCK_DISCARD; // tmp test
+		DWORD D3DLockFlags = D3DLOCK_NOSYSLOCK;
+		
+		// D3DLOCK_DISCARD is only valid for D3DUSAGE_DYNAMIC
+		if (g_D3DCaps.Caps2 & D3DCAPS2_DYNAMICTEXTURES) {
+			D3DLockFlags |= D3DLOCK_DISCARD;
+		}
 
 		DWORD dwCubeFaceOffset = 0;
 		DWORD dwCubeFaceSize = 0;
