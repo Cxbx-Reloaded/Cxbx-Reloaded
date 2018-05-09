@@ -318,7 +318,7 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
 	UINT uiHostVertexStride;
 	DWORD dwHostVertexDataSize;
 	uint08 *pHostVertexData;
-	IDirect3DVertexBuffer8 *pNewHostVertexBuffer = nullptr;
+	IDirect3DVertexBuffer *pNewHostVertexBuffer = nullptr;
 
     if (pDrawContext->pXboxVertexStreamZeroData != xbnullptr) {
 		// There should only be one stream (stream zero) in this case
@@ -370,7 +370,7 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
 		dwHostVertexDataSize = uiVertexCount * uiHostVertexStride;
 		GetCachedVertexBufferObject(pXboxVertexBuffer->Data, dwHostVertexDataSize, &pNewHostVertexBuffer);
 
-        if (FAILED(pNewHostVertexBuffer->Lock(0, 0, &pHostVertexData, D3DLOCK_DISCARD))) {
+        if (FAILED(pNewHostVertexBuffer->Lock(0, 0, (D3DLockData **)&pHostVertexData, D3DLOCK_DISCARD))) {
             CxbxKrnlCleanup("Couldn't lock the new buffer");
         }
 

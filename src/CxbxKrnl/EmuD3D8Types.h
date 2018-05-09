@@ -69,6 +69,7 @@
 #define Direct3DCreate			 Direct3DCreate9
 #define D3DXAssembleShader		 D3DXCompileShader
 #define FullScreen_PresentationInterval PresentationInterval // a field in D3DPRESENT_PARAMETERS
+#define D3DLockData              void
 
 #define D3DADAPTER_IDENTIFIER    D3DADAPTER_IDENTIFIER9
 #define D3DCAPS                  D3DCAPS9
@@ -110,6 +111,7 @@ typedef D3DVIEWPORT9 X_D3DVIEWPORT8;
 #define Direct3DCreate			 Direct3DCreate8
 #define DXGetErrorString         DXGetErrorString8A
 #define DXGetErrorDescription    DXGetErrorDescription8A
+#define D3DLockData              BYTE
 
 #define D3DADAPTER_IDENTIFIER    D3DADAPTER_IDENTIFIER8
 #define D3DCAPS                  D3DCAPS8

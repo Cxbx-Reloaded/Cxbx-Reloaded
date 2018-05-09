@@ -149,9 +149,9 @@ static XTL::D3DSWAPDATA				g_SwapData = {0};
 static DWORD						g_SwapLast = 0;
 
 // cached Direct3D state variable(s)
-static XTL::IDirect3DIndexBuffer8  *pClosingLineLoopIndexBuffer = nullptr;
+static XTL::IDirect3DIndexBuffer   *pClosingLineLoopIndexBuffer = nullptr;
 
-static XTL::IDirect3DIndexBuffer8  *pQuadToTriangleD3DIndexBuffer = nullptr;
+static XTL::IDirect3DIndexBuffer   *pQuadToTriangleD3DIndexBuffer = nullptr;
 static UINT                         QuadToTriangleD3DIndexBuffer_Size = 0; // = NrOfQuadVertices
 
 static XTL::INDEX16                *pQuadToTriangleIndexBuffer = nullptr;
@@ -2341,7 +2341,7 @@ void CxbxUpdateActiveIndexBuffer
 			D3DPool,
 			&indexBuffer.pHostIndexBuffer
 #ifdef CXBX_USE_D3D9
-			, nullptr
+			, nullptr // pSharedHandle
 #endif
 		);
 		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateIndexBuffer");
@@ -2358,7 +2358,7 @@ void CxbxUpdateActiveIndexBuffer
 		indexBuffer.Hash = uiHash;
 
 		// Update the host index buffer
-		BYTE* pData = nullptr;
+		D3DLockData* pData = nullptr;
 		indexBuffer.pHostIndexBuffer->Lock(0, 0, &pData, D3DLOCK_DISCARD);
 		if (pData == nullptr) {
 			CxbxKrnlCleanup("CxbxUpdateActiveIndexBuffer: Could not lock index buffer!");
@@ -7061,7 +7061,11 @@ void CxbxAssureQuadListD3DIndexBuffer(UINT NrOfQuadVertices)
 			D3DUSAGE_WRITEONLY,
 			XTL::D3DFMT_INDEX16,
 			XTL::D3DPOOL_MANAGED,
-			&pQuadToTriangleD3DIndexBuffer);
+			&pQuadToTriangleD3DIndexBuffer
+#ifdef CXBX_USE_D3D9
+			, nullptr // pSharedHandle
+#endif
+		);
 		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateIndexBuffer");
 
 		if (FAILED(hRet))
@@ -7069,7 +7073,7 @@ void CxbxAssureQuadListD3DIndexBuffer(UINT NrOfQuadVertices)
 
 		// Put quadlist-to-triangle-list index mappings into this buffer :
 		XTL::INDEX16* pIndexBufferData = nullptr;
-		hRet = pQuadToTriangleD3DIndexBuffer->Lock(0, uiIndexBufferSize, (BYTE **)&pIndexBufferData, D3DLOCK_DISCARD);
+		hRet = pQuadToTriangleD3DIndexBuffer->Lock(0, uiIndexBufferSize, (D3DLockData **)&pIndexBufferData, D3DLOCK_DISCARD);
 		DEBUG_D3DRESULT(hRet, "pQuadToTriangleD3DIndexBuffer->Lock");
 
 		if (pIndexBufferData == nullptr)
@@ -7102,13 +7106,22 @@ void CxbxDrawIndexedClosingLine(XTL::INDEX16 LowIndex, XTL::INDEX16 HighIndex)
 
 	const UINT uiIndexBufferSize = sizeof(XTL::INDEX16) * 2; // 4 bytes needed for 2 indices
 	if (pClosingLineLoopIndexBuffer == nullptr) {
-		hRet = g_pD3DDevice->CreateIndexBuffer(uiIndexBufferSize, D3DUSAGE_WRITEONLY, XTL::D3DFMT_INDEX16, XTL::D3DPOOL_DEFAULT, &pClosingLineLoopIndexBuffer);
+		hRet = g_pD3DDevice->CreateIndexBuffer(
+			uiIndexBufferSize, 
+			D3DUSAGE_WRITEONLY, 
+			XTL::D3DFMT_INDEX16, 
+			XTL::D3DPOOL_DEFAULT, 
+			&pClosingLineLoopIndexBuffer
+#ifdef CXBX_USE_D3D9
+			, nullptr // pSharedHandle
+#endif
+		);
 		if (FAILED(hRet))
 			CxbxKrnlCleanup("Unable to create pClosingLineLoopIndexBuffer for D3DPT_LINELOOP emulation");
 	}
 
 	XTL::INDEX16 *pCxbxClosingLineLoopIndexBufferData = nullptr;
-	hRet = pClosingLineLoopIndexBuffer->Lock(0, uiIndexBufferSize, (BYTE **)(&pCxbxClosingLineLoopIndexBufferData), D3DLOCK_DISCARD);
+	hRet = pClosingLineLoopIndexBuffer->Lock(0, uiIndexBufferSize, (D3DLockData **)(&pCxbxClosingLineLoopIndexBufferData), D3DLOCK_DISCARD);
 	DEBUG_D3DRESULT(hRet, "pClosingLineLoopIndexBuffer->Lock");
 
 	pCxbxClosingLineLoopIndexBufferData[0] = LowIndex;
@@ -7875,8 +7888,16 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderTarget)
 	g_pXboxDepthStencil = pNewZStencil;
     pHostDepthStencil = GetHostSurface(g_pXboxDepthStencil);
 
-    HRESULT hRet = g_pD3DDevice->SetRenderTarget(pHostRenderTarget, pHostDepthStencil);
+	HRESULT hRet;
+#ifdef CXBX_USE_D3D9
+	hRet = g_pD3DDevice->SetRenderTarget(0, pHostRenderTarget);
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetRenderTarget");
+	hRet = g_pD3DDevice->SetDepthStencilSurface(pHostDepthStencil);
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetDepthStencilSurface");
+#else
+	hRet = g_pD3DDevice->SetRenderTarget(pHostRenderTarget, pHostDepthStencil);
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetRenderTarget");
+#endif
 }
 
 // LTCG specific D3DDevice_SetPalette function...

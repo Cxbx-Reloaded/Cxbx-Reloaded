@@ -461,7 +461,7 @@ extern void XTL::EmuExecutePushBufferRaw
 
                 D3DVERTEXBUFFER_DESC VBDesc;
 
-                BYTE *pVBData = 0;
+				D3DLockData *pVBData = nullptr;
                 UINT  uiStride;
 
                 // retrieve stream data
@@ -590,7 +590,7 @@ void DbgDumpMesh(WORD *pIndexData, DWORD dwCount)
 
     XTL::D3DVERTEXBUFFER_DESC VBDesc;
 
-    BYTE *pVBData = 0;
+    BYTE *pVBData = nullptr;
     UINT  uiStride;
 
     // retrieve stream data
@@ -611,7 +611,7 @@ void DbgDumpMesh(WORD *pIndexData, DWORD dwCount)
     pActiveVB->Unlock();
 
     // grab ptr
-    pActiveVB->Lock(0, 0, &pVBData, D3DLOCK_READONLY);
+    pActiveVB->Lock(0, 0, (D3DLockData **)&pVBData, D3DLOCK_READONLY);
 
     // print out stream data
     {
