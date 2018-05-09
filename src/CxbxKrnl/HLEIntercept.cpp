@@ -51,8 +51,6 @@
 #include <Shlwapi.h>
 #include <subhook.h>
 
-xbaddr XbSymbolLocateFunction(OOVPA *Oovpa, xbaddr lower, xbaddr upper);
-void  EmuInstallPatches(OOVPATable *OovpaTable, uint32 OovpaTableSize, Xbe::SectionHeader *pSectionHeader, uint16_t buildVersion);
 inline void EmuInstallPatch(std::string FunctionName, xbaddr FunctionAddr, void *Patch);
 
 #include <shlobj.h>
@@ -261,9 +259,35 @@ void CDECL EmuRegisterSymbol(const char* library_name, const char* symbol_name, 
         }
     }
 #endif
+    // Retrieve the associated patch, if any is available
+    void* addr = GetEmuPatchAddr(symbol_name);
+
+    if (addr != nullptr) {
+        EmuInstallPatch(symbol_name, func_addr, addr);
+        output << "\t*PATCHED*";
+    }
 
     output << "\n";
     printf(output.str().c_str());
+}
+
+// TODO: Move this into a function rather than duplicating from HLE scanning code
+void EmuD3D_Init_DeferredStates()
+{
+    XTL::EmuD3DDeferredRenderState = (DWORD*)g_SymbolAddresses["D3DDeferredRenderState"];
+    XTL::EmuD3DDeferredTextureState = (DWORD*)g_SymbolAddresses["D3DDeferredTextureState"];
+
+    if (XTL::EmuD3DDeferredRenderState != nullptr) {
+        for (int v = 0; v < 44; v++) {
+            XTL::EmuD3DDeferredRenderState[v] = XTL::X_D3DRS_UNK;
+        }
+    }
+    if (XTL::EmuD3DDeferredTextureState != nullptr) {
+        for (int s = 0; s < 4; s++) {
+            for (int v = 0; v < 32; v++)
+                XTL::EmuD3DDeferredTextureState[v + s * 32] = X_D3DTSS_UNK;
+        }
+    }
 }
 
 // NOTE: EmuHLEIntercept do not get to be in XbSymbolDatabase, do the intecept in Cxbx project only.
@@ -381,22 +405,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 				EmuWarning("D3DDEVICE was not found!");
 			}
 
-			XTL::EmuD3DDeferredRenderState = (DWORD*)g_SymbolAddresses["D3DDeferredRenderState"];
-			XTL::EmuD3DDeferredTextureState = (DWORD*)g_SymbolAddresses["D3DDeferredTextureState"];
-			g_pD3DDevice = (XTL::IDirect3DDevice8*)g_SymbolAddresses["D3DDEVICE"];
-
-			// TODO: Move this into a function rather than duplicating from HLE scanning code
-			if (XTL::EmuD3DDeferredRenderState != nullptr) {
-				for (int v = 0; v<44; v++) {
-					XTL::EmuD3DDeferredRenderState[v] = XTL::X_D3DRS_UNK;
-				}
-
-				for (int s = 0; s<4; s++) {
-					for (int v = 0; v<32; v++)
-						XTL::EmuD3DDeferredTextureState[v + s * 32] = X_D3DTSS_UNK;
-				}
-			}
-		
+            EmuD3D_Init_DeferredStates();
 
 			g_HLECacheUsed = true;
 		}
@@ -474,6 +483,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 
         XbSymbolScan(pXbeHeader, EmuRegisterSymbol);
 
+        EmuD3D_Init_DeferredStates();
     }
 
 	printf("\n");
