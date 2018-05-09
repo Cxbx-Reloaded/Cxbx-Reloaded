@@ -202,7 +202,11 @@ VOID WINAPI EMUPATCH(D3DDevice_LoadVertexShader)
     DWORD                       Address
 );
 
-VOID __stdcall EMUPATCH(D3DDevice_LoadVertexShader_4)();
+VOID __stdcall EMUPATCH(D3DDevice_LoadVertexShader_0)();
+VOID WINAPI EMUPATCH(D3DDevice_LoadVertexShader_4)
+(
+    DWORD                       Address
+);
 
 // ******************************************************************
 // * patch: D3DDevice_SelectVertexShader
@@ -214,7 +218,10 @@ VOID WINAPI EMUPATCH(D3DDevice_SelectVertexShader)
 );
 
 VOID __stdcall EMUPATCH(D3DDevice_SelectVertexShader_0)();
-VOID __stdcall EMUPATCH(D3DDevice_SelectVertexShader_4)();
+VOID __stdcall EMUPATCH(D3DDevice_SelectVertexShader_4)
+(
+    DWORD                       Address
+);
 
 // ******************************************************************
 // * patch: D3D_KickOffAndWaitForIdle
@@ -973,6 +980,7 @@ VOID WINAPI EMUPATCH(D3DDevice_SetTextureState_TexCoordIndex)
     DWORD Value
 );
 
+VOID __stdcall EMUPATCH(D3DDevice_SetTextureState_TexCoordIndex_0)();
 VOID WINAPI EMUPATCH(D3DDevice_SetTextureState_TexCoordIndex_4)
 (
     DWORD Value
@@ -1004,7 +1012,10 @@ VOID WINAPI EMUPATCH(D3DDevice_SetTextureState_BorderColor)
 );
 
 VOID EMUPATCH(D3DDevice_SetTextureState_BorderColor_0)();
-VOID __stdcall EMUPATCH(D3DDevice_SetTextureState_BorderColor_4)();
+VOID WINAPI EMUPATCH(D3DDevice_SetTextureState_BorderColor_4)
+(
+    DWORD Value
+);
 
 // ******************************************************************
 // * patch: D3DDevice_SetTextureState_ColorKeyColor
@@ -1016,6 +1027,10 @@ VOID WINAPI EMUPATCH(D3DDevice_SetTextureState_ColorKeyColor)
 );
 
 VOID EMUPATCH(D3DDevice_SetTextureState_ColorKeyColor_0)();
+VOID __stdcall EMUPATCH(D3DDevice_SetTextureState_ColorKeyColor_4)
+(
+    DWORD Value
+);
 
 // ******************************************************************
 // * patch: D3DDevice_SetTextureState_BumpEnv
@@ -1329,6 +1344,12 @@ VOID WINAPI EMUPATCH(D3DDevice_SetStreamSource)
 
 VOID WINAPI EMUPATCH(D3DDevice_SetStreamSource_4)
 (
+    UINT                Stride
+);
+
+VOID WINAPI EMUPATCH(D3DDevice_SetStreamSource_8)
+(
+    X_D3DVertexBuffer  *pStreamData,
     UINT                Stride
 );
 

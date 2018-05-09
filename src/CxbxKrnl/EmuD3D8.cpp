@@ -2747,29 +2747,56 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_GetVisibilityTestResult)
 
     return D3D_OK;
 }
-
 // LTCG specific D3DDevice_LoadVertexShader function...
-// This uses a custom calling convention where parameter is passed in EAX
-// Test-case: Ninja Gaiden
-VOID __stdcall XTL::EMUPATCH(D3DDevice_LoadVertexShader_4)
+// This uses a custom calling convention where parameter is passed in EAX, ECX
+// Test-case: Aggressive Inline
+VOID __stdcall XTL::EMUPATCH(D3DDevice_LoadVertexShader_0)
 (
 )
 {
 	FUNC_EXPORTS;
 
-	static uint32 returnAddr;
-
-#ifdef _DEBUG_TRACE
-		__asm add esp, 4
-#endif
+    DWORD                       Handle;
+    DWORD                       Address;
 
 	__asm {
-		pop returnAddr
-		push eax
-		call EmuPatch_D3DDevice_LoadVertexShader
-		mov eax, 0
-		push returnAddr
-		ret
+		mov Address, eax
+		mov Handle, ecx
+	}
+
+	return EMUPATCH(D3DDevice_LoadVertexShader)(Handle, Address);
+}
+
+// This uses a custom calling convention where parameter is passed in EAX
+// Test-case: Ninja Gaiden
+VOID WINAPI XTL::EMUPATCH(D3DDevice_LoadVertexShader_4)
+(
+    DWORD                       Address
+)
+{
+	FUNC_EXPORTS
+
+	DWORD           Handle;
+	__asm mov Handle, eax;
+
+	//LOG_FUNC_BEGIN
+	//	LOG_FUNC_ARG(Handle)
+	//	LOG_FUNC_ARG(Address)
+	//	LOG_FUNC_END;
+	DbgPrintf("D3DDevice_LoadVertexShader_4(Handle : %d Address : %08x);\n", Handle, Address);
+
+	// Handle is always address of an Xbox VertexShader struct, or-ed with 1 (X_D3DFVF_RESERVED0)
+	// An Xbox VertexShader contains : a 'Vshd' signature, flags, a size, a program (and constants)
+	// Address is the slot (offset) from which the program must be written onwards (as whole DWORDS)
+	// D3DDevice_LoadVertexShader pushes the program contained in the Xbox VertexShader struct to the NV2A
+    if(Address < 136 && VshHandleIsVertexShader(Handle))
+    {
+        VERTEX_SHADER *pVertexShader = (VERTEX_SHADER *)(VshHandleGetVertexShader(Handle))->Handle;
+        for (DWORD i = Address; i < pVertexShader->Size; i++)
+        {
+            // TODO: This seems very fishy
+            g_VertexShaderSlots[i] = Handle;
+        }
 	}
 }
 
@@ -2826,29 +2853,18 @@ VOID __stdcall XTL::EMUPATCH(D3DDevice_SelectVertexShader_0)
 
 // LTCG specific D3DDevice_SelectVertexShader function...
 // This uses a custom calling convention where parameter is passed in EAX
-// UNTESTED - Need test-case!
+// Test-case: Aggressive Inline
 VOID __stdcall XTL::EMUPATCH(D3DDevice_SelectVertexShader_4)
 (
+    DWORD                       Address
 )
 {
-	FUNC_EXPORTS;
+	FUNC_EXPORTS
 
-	static uint32 returnAddr;
+	DWORD           Handle;
+	__asm mov Handle, eax;
 
-#ifdef _DEBUG_TRACE
-		__asm add esp, 4
-#endif
-
-	__asm {
-		pop returnAddr
-		push eax
-		call EmuPatch_D3DDevice_SelectVertexShader
-		mov eax, 0
-		push returnAddr
-	}
-
-	LOG_TEST_CASE("Validate this function!");
-	return;
+	return EMUPATCH(D3DDevice_SelectVertexShader)(Handle, Address);
 }
 
 // ******************************************************************
@@ -5465,6 +5481,25 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVerticalBlankCallback)
 }
 
 // LTCG specific D3DDevice_SetTextureState_TexCoordIndex function...
+// This uses a custom calling convention where parameter is passed in EDI, EAX
+// Test-case: Ski Racing 2006
+VOID __stdcall XTL::EMUPATCH(D3DDevice_SetTextureState_TexCoordIndex_0)
+(
+)
+{
+	FUNC_EXPORTS;
+
+	DWORD Stage;
+	DWORD Value;
+
+	__asm {
+		mov Stage, edi
+		mov Value, eax
+	}
+
+	return EMUPATCH(D3DDevice_SetTextureState_TexCoordIndex)(Stage, Value);
+}
+
 // This uses a custom calling convention where parameter is passed in ESI
 // Test-case: Metal Wolf Chaos
 VOID WINAPI XTL::EMUPATCH(D3DDevice_SetTextureState_TexCoordIndex_4)
@@ -5585,29 +5620,32 @@ VOID XTL::EMUPATCH(D3DDevice_SetTextureState_BorderColor_0)
 	return EMUPATCH(D3DDevice_SetTextureState_BorderColor)(Stage, Value);
 }
 
-// LTCG specific D3DDevice_SetTextureState_BorderColor function...
 // This uses a custom calling convention where parameter is passed in EAX
+// TODO: Log function is not working due lost parameter in EAX.
 // Test-case: Murakumo
-VOID __stdcall XTL::EMUPATCH(D3DDevice_SetTextureState_BorderColor_4)
+VOID WINAPI XTL::EMUPATCH(D3DDevice_SetTextureState_BorderColor_4)
 (
+    DWORD Value
 )
 {
-	FUNC_EXPORTS;
+	FUNC_EXPORTS
 
-	static uint32 returnAddr;
+    DWORD Stage;
+	__asm mov Stage, eax;
 
-#ifdef _DEBUG_TRACE
-		__asm add esp, 4
+	//LOG_FUNC_BEGIN
+	//	LOG_FUNC_ARG(Stage)
+	//	LOG_FUNC_ARG(Value)
+	//	LOG_FUNC_END;
+	DbgPrintf("D3DDevice_SetTextureState_BorderColor_4(Stage : %d Value : %d);\n", Stage, Value);
+
+    HRESULT hRet;
+#ifdef CXBX_USE_D3D9
+	hRet = g_pD3DDevice->SetSamplerState(Stage, D3DSAMP_BORDERCOLOR, Value);
+#else
+    hRet = g_pD3DDevice->SetTextureStageState(Stage, D3DTSS_BORDERCOLOR, Value);
 #endif
-
-	__asm {
-		pop returnAddr
-		push eax
-		call EmuPatch_D3DDevice_SetTextureState_BorderColor
-		mov eax, 0
-		push returnAddr
-		ret
-	}
+	//DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetTextureStageState");
 }
 
 // ******************************************************************
@@ -5651,6 +5689,21 @@ VOID XTL::EMUPATCH(D3DDevice_SetTextureState_ColorKeyColor_0)
 		mov Stage, esi
 		mov Value, ebx
 	}
+
+	return EMUPATCH(D3DDevice_SetTextureState_ColorKeyColor)(Stage, Value);
+}
+
+// This uses a custom calling convention where parameter is passed in EAX
+// Test-case: Murakumo
+VOID WINAPI XTL::EMUPATCH(D3DDevice_SetTextureState_ColorKeyColor_4)
+(
+    DWORD Value
+)
+{
+	FUNC_EXPORTS
+
+    DWORD Stage;
+	__asm mov Stage, eax;
 
 	return EMUPATCH(D3DDevice_SetTextureState_ColorKeyColor)(Stage, Value);
 }
@@ -5719,7 +5772,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetTextureState_BumpEnv_8)
 
 	//DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetTextureStageState");
 }
-
 
 // ******************************************************************
 // * patch: D3DDevice_SetTextureState_BumpEnv
@@ -6625,6 +6677,41 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetStreamSource_4)
 	// This should stop us having to patch GetStreamSource!
 	//XB_trampoline(VOID, WINAPI, D3DDevice_SetStreamSource_4, (UINT, X_D3DVertexBuffer*, UINT));
 	//XB_D3DDevice_SetStreamSource_4(StreamNumber, pStreamData, Stride);
+
+	if (StreamNumber < 16) {
+		g_D3DStreams[StreamNumber] = pStreamData;
+		g_D3DStreamStrides[StreamNumber] = Stride;
+	}
+}
+
+// This uses a custom calling convention where parameter is passed in EAX
+// TODO: XB_trampoline plus Log function is not working due lost parameter in EAX.
+// Test-case: Superman - The Man Of Steel
+VOID WINAPI XTL::EMUPATCH(D3DDevice_SetStreamSource_8)
+(
+    X_D3DVertexBuffer  *pStreamData,
+    UINT                Stride
+)
+{
+	FUNC_EXPORTS
+
+    UINT                StreamNumber;
+
+	__asm {
+		mov StreamNumber, eax
+	}
+
+	//LOG_FUNC_BEGIN
+	//	LOG_FUNC_ARG(StreamNumber)
+	//	LOG_FUNC_ARG(pStreamData)
+	//	LOG_FUNC_ARG(Stride)
+	//	LOG_FUNC_END;
+	DbgPrintf("D3DDevice_SetStreamSource_8(StreamNumber : %08X pStreamData : %08X Stride : %08X);\n", StreamNumber, pStreamData, Stride);
+
+	// Forward to Xbox implementation
+	// This should stop us having to patch GetStreamSource!
+	//XB_trampoline(VOID, WINAPI, D3DDevice_SetStreamSource_8, (X_D3DVertexBuffer*, UINT));
+	//XB_D3DDevice_SetStreamSource_8(pStreamData, Stride);
 
 	if (StreamNumber < 16) {
 		g_D3DStreams[StreamNumber] = pStreamData;
