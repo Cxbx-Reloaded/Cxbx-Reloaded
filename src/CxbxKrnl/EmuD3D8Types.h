@@ -714,6 +714,11 @@ struct X_D3DCubeTexture : public X_D3DBaseTexture
 
 };
 
+struct X_D3DVolume : public X_D3DPixelContainer
+{
+	X_D3DBaseTexture *Parent;
+};
+
 struct X_D3DSurface : public X_D3DPixelContainer
 {
 	X_D3DBaseTexture *Parent;

@@ -966,6 +966,13 @@ XTL::IDirect3DTexture *GetHostTexture(XTL::X_D3DResource *pXboxResource, int iTe
 	// TODO : Check for 1 face (and 2 dimensions)?
 }
 
+XTL::IDirect3DVolumeTexture *GetHostVolumeTexture(XTL::X_D3DResource *pXboxResource, int iTextureStage = 0)
+{
+	return (XTL::IDirect3DVolumeTexture *)GetHostBaseTexture(pXboxResource, iTextureStage);
+
+	// TODO : Check for 1 face (and 2 dimensions)?
+}
+
 XTL::IDirect3DIndexBuffer *GetHostIndexBuffer(XTL::X_D3DResource *pXboxResource)
 {
 	if (pXboxResource == NULL)
@@ -1006,6 +1013,14 @@ void SetHostVolumeTexture(XTL::X_D3DResource *pXboxResource, XTL::IDirect3DVolum
 	assert(GetXboxCommonResourceType(pXboxResource) == X_D3DCOMMON_TYPE_TEXTURE);
 
 	SetHostResource(pXboxResource, (XTL::IDirect3DResource*)pHostVolumeTexture);
+}
+
+void SetHostVolume(XTL::X_D3DResource *pXboxResource, XTL::IDirect3DVolume *pHostVolume)
+{
+	assert(pXboxResource != NULL);
+	assert(GetXboxCommonResourceType(pXboxResource) == X_D3DCOMMON_TYPE_TEXTURE);
+
+	SetHostResource(pXboxResource, (XTL::IDirect3DResource*)pHostVolume);
 }
 
 void SetHostIndexBuffer(XTL::X_D3DResource *pXboxResource, XTL::IDirect3DIndexBuffer *pHostIndexBuffer)
@@ -4695,13 +4710,14 @@ void CreateHostResource(XTL::X_D3DResource *pResource, int iTextureStage, DWORD 
 	}
 
 	case XTL::X_D3DRTYPE_SURFACE: {
-#if 1 // for surfaces with a parent texture, map these to a host texture first
 		XTL::X_D3DSurface *pXboxSurface = (XTL::X_D3DSurface *)pResource;
-		if (pXboxSurface->Parent) {
-			XTL::IDirect3DTexture *pHostParentTexture = GetHostTexture(pXboxSurface->Parent, iTextureStage);
-			UINT SurfaceLevel = 0; // TODO : Derive actual level based on data address-delta to parent
+		XTL::X_D3DTexture *pParentXboxTexture = (pXboxSurface) ? (XTL::X_D3DTexture *)pXboxSurface->Parent : xbnullptr;
+		if (pParentXboxTexture) {
+			// For surfaces with a parent texture, map these to a host texture first
+			XTL::IDirect3DTexture *pParentHostTexture = GetHostTexture(pParentXboxTexture, iTextureStage);
+			UINT SurfaceLevel = 0; // TODO : Derive actual level based on pXboxSurface->Data delta to pParentXboxTexture->Data
 			XTL::IDirect3DSurface *pNewHostSurface;
-			HRESULT hRet = pHostParentTexture->GetSurfaceLevel(SurfaceLevel, &pNewHostSurface);
+			HRESULT hRet = pParentHostTexture->GetSurfaceLevel(SurfaceLevel, &pNewHostSurface);
 			DEBUG_D3DRESULT(hRet, "pHostParentTexture->GetSurfaceLevel");
 			if (hRet == D3D_OK) {
 				SetHostSurface(pXboxSurface, pNewHostSurface);
@@ -4712,10 +4728,30 @@ void CreateHostResource(XTL::X_D3DResource *pResource, int iTextureStage, DWORD 
 
 			EmuWarning("Failed getting host surface level - falling through to regular surface creation");
 		}
-#endif
 		// fall through
 	}
-	case XTL::X_D3DRTYPE_VOLUME:
+	case XTL::X_D3DRTYPE_VOLUME: {
+		// Note : Use and check for null, since X_D3DRTYPE_SURFACE might fall through here (by design) 
+		XTL::X_D3DVolume *pXboxVolume = (XboxResourceType == XTL::X_D3DRTYPE_VOLUME) ? (XTL::X_D3DVolume *)pResource : xbnullptr;
+		XTL::X_D3DVolumeTexture *pParentXboxVolumeTexture = (pXboxVolume) ? (XTL::X_D3DVolumeTexture *)pXboxVolume->Parent : xbnullptr;
+		if (pParentXboxVolumeTexture) {
+			// For volumes with a parent volume texture, map these to a host volume texture first
+			XTL::IDirect3DVolumeTexture *pParentHostVolumeTexture = GetHostVolumeTexture(pParentXboxVolumeTexture, iTextureStage);
+			UINT VolumeLevel = 0; // TODO : Derive actual level based on pXboxVolume->Data delta to pParentXboxVolumeTexture->Data
+			XTL::IDirect3DVolume *pNewHostVolume;
+			HRESULT hRet = pParentHostVolumeTexture->GetVolumeLevel(VolumeLevel, &pNewHostVolume);
+			DEBUG_D3DRESULT(hRet, "pParentHostVolumeTexture->GetVolumeLevel");
+			if (hRet == D3D_OK) {
+				SetHostVolume(pXboxVolume, pNewHostVolume);
+				DbgPrintf("CreateHostResource : Successfully created volume level (%u, 0x%.08X, 0x%.08X)\n",
+					VolumeLevel, pResource, pNewHostVolume);
+				return;
+			}
+
+			EmuWarning("Failed getting host volume level - falling through to regular volume creation");
+		}
+		// fall through
+	}
 	case XTL::X_D3DRTYPE_TEXTURE:
 	case XTL::X_D3DRTYPE_VOLUMETEXTURE:
 	case XTL::X_D3DRTYPE_CUBETEXTURE: {
