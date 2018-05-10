@@ -45,6 +45,7 @@ namespace xboxkrnl
     #include <xboxkrnl/xboxkrnl.h>
 };
 
+#include "../../import/XbSymbolDatabase/XbSymbolDatabase.h" // for XREF_ADDR_DERIVE
 #include "CxbxUtil.h"
 #include "CxbxVersion.h"
 #include "CxbxKrnl.h"
@@ -2392,8 +2393,9 @@ HRESULT WINAPI XTL::EMUPATCH(Direct3D_CreateDevice_4)
 	HRESULT hRet = XB_Direct3D_CreateDevice_4(pPresentationParameters);
 
 	// Set g_XboxD3DDevice to point to the Xbox D3D Device
-	if ((DWORD*)XRefDataBase[XREF_D3DDEVICE] != nullptr && ((DWORD)XRefDataBase[XREF_D3DDEVICE]) != XREF_ADDR_DERIVE) {
-		g_XboxD3DDevice = *((DWORD**)XRefDataBase[XREF_D3DDEVICE]);
+    xbaddr dwD3DDevice = g_SymbolAddresses["D3DDEVICE"];
+	if (dwD3DDevice != xbnull && dwD3DDevice != XREF_ADDR_DERIVE) {
+		g_XboxD3DDevice = *((DWORD**)dwD3DDevice);
 	}
 
 	return hRet;
@@ -2443,8 +2445,9 @@ HRESULT WINAPI XTL::EMUPATCH(Direct3D_CreateDevice_16)
 	HRESULT hRet = XB_Direct3D_CreateDevice_16(Adapter, DeviceType, hFocusWindow, pPresentationParameters);
 
 	// Set g_XboxD3DDevice to point to the Xbox D3D Device
-	if ((DWORD*)XRefDataBase[XREF_D3DDEVICE] != nullptr && ((DWORD)XRefDataBase[XREF_D3DDEVICE]) != XREF_ADDR_DERIVE) {
-		g_XboxD3DDevice = *((DWORD**)XRefDataBase[XREF_D3DDEVICE]);
+    xbaddr dwD3DDevice = g_SymbolAddresses["D3DDEVICE"];
+	if (dwD3DDevice != xbnull && dwD3DDevice != XREF_ADDR_DERIVE) {
+		g_XboxD3DDevice = *((DWORD**)dwD3DDevice);
 	}
 
 	return hRet;
@@ -2522,8 +2525,9 @@ HRESULT WINAPI XTL::EMUPATCH(Direct3D_CreateDevice)
 	HRESULT hRet = XB_Direct3D_CreateDevice(Adapter, DeviceType, hFocusWindow, BehaviorFlags, pPresentationParameters, ppReturnedDeviceInterface);
 
 	// Set g_XboxD3DDevice to point to the Xbox D3D Device
-	if ((DWORD*)XRefDataBase[XREF_D3DDEVICE] != nullptr && ((DWORD)XRefDataBase[XREF_D3DDEVICE]) != XREF_ADDR_DERIVE) {
-		g_XboxD3DDevice = *((DWORD**)XRefDataBase[XREF_D3DDEVICE]);
+    xbaddr dwD3DDevice = g_SymbolAddresses["D3DDEVICE"];
+	if (dwD3DDevice != xbnull && dwD3DDevice != XREF_ADDR_DERIVE) {
+		g_XboxD3DDevice = *((DWORD**)dwD3DDevice);
 	}
 
 	return hRet;
