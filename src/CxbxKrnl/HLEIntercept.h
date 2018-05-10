@@ -49,8 +49,8 @@ void* GetXboxFunctionPointer(std::string functionName);
 
 // Declares an unpatched Xbox function trampoline, callable by name (with a 'XB_' prefix attached)
 #define XB_trampoline(ret, conv, name, arguments) \
-	typedef ret(conv *XB_##name##_t)arguments; \
-	static XB_##name##_t XB_##name = (XB_##name##_t)GetXboxFunctionPointer(#name);
+    typedef ret(conv *XB_##name##_t)arguments; \
+    static XB_##name##_t XB_##name = (XB_##name##_t)GetXboxFunctionPointer(#name);
 
 #ifdef _DEBUG_TRACE
 void VerifyHLEDataBase();

@@ -71,71 +71,71 @@ bool bLLE_JIT = false; // Set this to true for experimental JIT
 
 void* GetXboxFunctionPointer(std::string functionName)
 {
-	if (g_FunctionHooks.find(functionName) != g_FunctionHooks.end()) {
-		return g_FunctionHooks[functionName].GetTrampoline();
-	}
+    if (g_FunctionHooks.find(functionName) != g_FunctionHooks.end()) {
+        return g_FunctionHooks[functionName].GetTrampoline();
+    }
 
-	// If we got here, the function wasn't patched, so we can just look it up the HLE cache
-	// and return the correct offset
-	auto symbol = g_SymbolAddresses.find(functionName);
-	if (symbol != g_SymbolAddresses.end()) {
-		return (void*)symbol->second;
-	}
-	
-	// No function was matched, however, it is currently possible for a symbol to exist 
-	// and be suffixed with _UNPATCHED. (Due to the HLE Database UNPATCHED flag)
-	// In this case, the above will fail despite us actually knowing the location of the symbol
-	// So do the check (again) with the _UNPATCHED suffix
-	// NOTE: A proper solution would be to completely separate the OOVPA table and Patch
-	// flags: Perhaps renaming HLEDatabase to SymbolDatabase, then having a separate PatchTable
-	// file, mapping symbol names to patch functions.
-	symbol = g_SymbolAddresses.find(functionName + "_UNPATCHED");
-	if (symbol != g_SymbolAddresses.end()) {
-		return (void*)symbol->second;
-	}
+    // If we got here, the function wasn't patched, so we can just look it up the HLE cache
+    // and return the correct offset
+    auto symbol = g_SymbolAddresses.find(functionName);
+    if (symbol != g_SymbolAddresses.end()) {
+        return (void*)symbol->second;
+    }
+    
+    // No function was matched, however, it is currently possible for a symbol to exist 
+    // and be suffixed with _UNPATCHED. (Due to the HLE Database UNPATCHED flag)
+    // In this case, the above will fail despite us actually knowing the location of the symbol
+    // So do the check (again) with the _UNPATCHED suffix
+    // NOTE: A proper solution would be to completely separate the OOVPA table and Patch
+    // flags: Perhaps renaming HLEDatabase to SymbolDatabase, then having a separate PatchTable
+    // file, mapping symbol names to patch functions.
+    symbol = g_SymbolAddresses.find(functionName + "_UNPATCHED");
+    if (symbol != g_SymbolAddresses.end()) {
+        return (void*)symbol->second;
+    }
 
-	// Finally, if none of the above were matched, return nullptr
-	return nullptr;
+    // Finally, if none of the above were matched, return nullptr
+    return nullptr;
 }
 
 // NOTE: GetDetectedSymbolName do not get to be in XbSymbolDatabase, get symbol string in Cxbx project only.
 std::string GetDetectedSymbolName(xbaddr address, int *symbolOffset)
 {
-	std::string result = "";
-	int closestMatch = MAXINT;
+    std::string result = "";
+    int closestMatch = MAXINT;
 
-	for (auto it = g_SymbolAddresses.begin(); it != g_SymbolAddresses.end(); ++it) {
-		xbaddr symbolAddr = (*it).second;
-		if (symbolAddr == NULL)
-			continue;
+    for (auto it = g_SymbolAddresses.begin(); it != g_SymbolAddresses.end(); ++it) {
+        xbaddr symbolAddr = (*it).second;
+        if (symbolAddr == NULL)
+            continue;
 
-		if (symbolAddr <= address)
-		{
-			int distance = address - symbolAddr;
-			if (closestMatch > distance)
-			{
-				closestMatch = distance;
-				result = (*it).first;
-			}
-		}
-	}
+        if (symbolAddr <= address)
+        {
+            int distance = address - symbolAddr;
+            if (closestMatch > distance)
+            {
+                closestMatch = distance;
+                result = (*it).first;
+            }
+        }
+    }
 
-	if (closestMatch < MAXINT)
-	{
-		*symbolOffset = closestMatch;
-		return result;
-	}
+    if (closestMatch < MAXINT)
+    {
+        *symbolOffset = closestMatch;
+        return result;
+    }
 
-	*symbolOffset = 0;
-	return "unknown";
+    *symbolOffset = 0;
+    return "unknown";
 }
 
 // NOTE: GetEmuPatchAddr do not get to be in XbSymbolDatabase, perform patch check in Cxbx project only.
 void *GetEmuPatchAddr(std::string aFunctionName)
 {
-	std::string patchName = "XTL::EmuPatch_" + aFunctionName;
-	void* addr = GetProcAddress(GetModuleHandle(NULL), patchName.c_str());
-	return addr;
+    std::string patchName = "XTL::EmuPatch_" + aFunctionName;
+    void* addr = GetProcAddress(GetModuleHandle(NULL), patchName.c_str());
+    return addr;
 }
 
 // NOTE: VerifySymbolAddressAgainstXRef do not get to be in XbSymbolDatabase, perform verification in Cxbx project only.
@@ -324,141 +324,141 @@ void EmuD3D_Init_DeferredStates()
 // NOTE: EmuHLEIntercept do not get to be in XbSymbolDatabase, do the intecept in Cxbx project only.
 void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 {
-	Xbe::LibraryVersion *pLibraryVersion = (Xbe::LibraryVersion*)pXbeHeader->dwLibraryVersionsAddr;
+    Xbe::LibraryVersion *pLibraryVersion = (Xbe::LibraryVersion*)pXbeHeader->dwLibraryVersionsAddr;
 
     printf("\n");
-	printf("*******************************************************************************\n");
-	printf("* Cxbx-Reloaded High Level Emulation database\n");
-	printf("*******************************************************************************\n");
-	printf("\n");
+    printf("*******************************************************************************\n");
+    printf("* Cxbx-Reloaded High Level Emulation database\n");
+    printf("*******************************************************************************\n");
+    printf("\n");
 
-	// Make sure the HLE Cache directory exists
-	std::string cachePath = std::string(szFolder_CxbxReloadedData) + "\\HLECache\\";
-	int result = SHCreateDirectoryEx(nullptr, cachePath.c_str(), nullptr);
-	if ((result != ERROR_SUCCESS) && (result != ERROR_ALREADY_EXISTS)) {
-		CxbxKrnlCleanup("Couldn't create Cxbx-Reloaded HLECache folder!");
-	}
+    // Make sure the HLE Cache directory exists
+    std::string cachePath = std::string(szFolder_CxbxReloadedData) + "\\HLECache\\";
+    int result = SHCreateDirectoryEx(nullptr, cachePath.c_str(), nullptr);
+    if ((result != ERROR_SUCCESS) && (result != ERROR_ALREADY_EXISTS)) {
+        CxbxKrnlCleanup("Couldn't create Cxbx-Reloaded HLECache folder!");
+    }
 
-	// Hash the loaded XBE's header, use it as a filename
-	uint32_t uiHash = XXHash32::hash((void*)&CxbxKrnl_Xbe->m_Header, sizeof(Xbe::Header), 0);
-	std::stringstream sstream;
-	char tAsciiTitle[40] = "Unknown";
-	setlocale(LC_ALL, "English");
-	wcstombs(tAsciiTitle, g_pCertificate->wszTitleName, sizeof(tAsciiTitle));
-	std::string szTitleName(tAsciiTitle);
-	CxbxKrnl_Xbe->PurgeBadChar(szTitleName);
-	sstream << cachePath << szTitleName << "-" << std::hex << uiHash << ".ini";
-	std::string filename = sstream.str();
+    // Hash the loaded XBE's header, use it as a filename
+    uint32_t uiHash = XXHash32::hash((void*)&CxbxKrnl_Xbe->m_Header, sizeof(Xbe::Header), 0);
+    std::stringstream sstream;
+    char tAsciiTitle[40] = "Unknown";
+    setlocale(LC_ALL, "English");
+    wcstombs(tAsciiTitle, g_pCertificate->wszTitleName, sizeof(tAsciiTitle));
+    std::string szTitleName(tAsciiTitle);
+    CxbxKrnl_Xbe->PurgeBadChar(szTitleName);
+    sstream << cachePath << szTitleName << "-" << std::hex << uiHash << ".ini";
+    std::string filename = sstream.str();
 
     // This will fire when we exit this function scope; either after detecting a previous cache file, or when one is created
     CxbxDebuggerScopedMessage hleCacheFilename(filename);
 
-	if (PathFileExists(filename.c_str())) {
-		printf("Found HLE Cache File: %08X.ini\n", uiHash);
+    if (PathFileExists(filename.c_str())) {
+        printf("Found HLE Cache File: %08X.ini\n", uiHash);
 
-		g_BuildVersion = GetPrivateProfileInt("Libs", "D3D8_BuildVersion", 0, filename.c_str());
+        g_BuildVersion = GetPrivateProfileInt("Libs", "D3D8_BuildVersion", 0, filename.c_str());
 
-		// Verify the version of the cache file against the HLE Database	
-		const uint32 HLECacheHash = GetPrivateProfileInt("Info", "HLECacheHash", 0, filename.c_str());
+        // Verify the version of the cache file against the HLE Database    
+        const uint32 HLECacheHash = GetPrivateProfileInt("Info", "HLECacheHash", 0, filename.c_str());
 
-		if (HLECacheHash == XbSymbolLibraryVersion()) {
-			char buffer[SHRT_MAX] = { 0 };
-			char* bufferPtr = buffer;
+        if (HLECacheHash == XbSymbolLibraryVersion()) {
+            char buffer[SHRT_MAX] = { 0 };
+            char* bufferPtr = buffer;
 
-			printf("Using HLE Cache\n");
+            printf("Using HLE Cache\n");
 
-			GetPrivateProfileSection("Symbols", buffer, sizeof(buffer), filename.c_str());
+            GetPrivateProfileSection("Symbols", buffer, sizeof(buffer), filename.c_str());
 
-			// Parse the .INI file into the map of symbol addresses
-			while (strlen(bufferPtr) > 0) {
-				std::string ini_entry(bufferPtr);
+            // Parse the .INI file into the map of symbol addresses
+            while (strlen(bufferPtr) > 0) {
+                std::string ini_entry(bufferPtr);
 
-				auto separator = ini_entry.find('=');
-				std::string key = ini_entry.substr(0, separator);
-				std::string value = ini_entry.substr(separator + 1, std::string::npos);
-				uint32_t addr = strtol(value.c_str(), 0, 16);
+                auto separator = ini_entry.find('=');
+                std::string key = ini_entry.substr(0, separator);
+                std::string value = ini_entry.substr(separator + 1, std::string::npos);
+                uint32_t addr = strtol(value.c_str(), 0, 16);
 
-				g_SymbolAddresses[key] = addr;
-				bufferPtr += strlen(bufferPtr) + 1;
-			}
+                g_SymbolAddresses[key] = addr;
+                bufferPtr += strlen(bufferPtr) + 1;
+            }
 
-			// Iterate through the map of symbol addresses, calling GetEmuPatchAddr on all functions.	
-			for (auto it = g_SymbolAddresses.begin(); it != g_SymbolAddresses.end(); ++it) {
-				std::string functionName = (*it).first;
-				xbaddr location = (*it).second;
+            // Iterate through the map of symbol addresses, calling GetEmuPatchAddr on all functions.    
+            for (auto it = g_SymbolAddresses.begin(); it != g_SymbolAddresses.end(); ++it) {
+                std::string functionName = (*it).first;
+                xbaddr location = (*it).second;
 
-				std::stringstream output;
-				output << "HLECache: 0x" << std::setfill('0') << std::setw(8) << std::hex << location
-					<< " -> " << functionName;
-				void* pFunc = GetEmuPatchAddr(functionName);
-				if (pFunc != nullptr)
-				{
-					// skip entries that weren't located at all
-					if (location == NULL)
-					{
-						output << "\t(not patched)";
-					}
-					// Prevent patching illegal addresses
-					else if (location < XBE_IMAGE_BASE)
-					{
-						output << "\t*ADDRESS TOO LOW!*";
-					}
-					else if (location > g_SystemMaxMemory)
-					{
-						output << "\t*ADDRESS TOO HIGH!*";
-					}
-					else
-					{
-						EmuInstallPatch(functionName, location, pFunc);
-						output << "\t*PATCHED*";
-					}
-				}
-				else
-				{
-					if (location != NULL)
-						output << "\t(no patch)";
-				}
+                std::stringstream output;
+                output << "HLECache: 0x" << std::setfill('0') << std::setw(8) << std::hex << location
+                    << " -> " << functionName;
+                void* pFunc = GetEmuPatchAddr(functionName);
+                if (pFunc != nullptr)
+                {
+                    // skip entries that weren't located at all
+                    if (location == NULL)
+                    {
+                        output << "\t(not patched)";
+                    }
+                    // Prevent patching illegal addresses
+                    else if (location < XBE_IMAGE_BASE)
+                    {
+                        output << "\t*ADDRESS TOO LOW!*";
+                    }
+                    else if (location > g_SystemMaxMemory)
+                    {
+                        output << "\t*ADDRESS TOO HIGH!*";
+                    }
+                    else
+                    {
+                        EmuInstallPatch(functionName, location, pFunc);
+                        output << "\t*PATCHED*";
+                    }
+                }
+                else
+                {
+                    if (location != NULL)
+                        output << "\t(no patch)";
+                }
 
-				output << "\n";
-				printf(output.str().c_str());
-			}
+                output << "\n";
+                printf(output.str().c_str());
+            }
 
-			// Fix up Render state and Texture States
-			if (g_SymbolAddresses.find("D3DDeferredRenderState") == g_SymbolAddresses.end()) {
-				EmuWarning("EmuD3DDeferredRenderState was not found!");
-			}
-			
-			if (g_SymbolAddresses.find("D3DDeferredTextureState") == g_SymbolAddresses.end()) {
-				EmuWarning("EmuD3DDeferredTextureState was not found!");
-			}
+            // Fix up Render state and Texture States
+            if (g_SymbolAddresses.find("D3DDeferredRenderState") == g_SymbolAddresses.end()) {
+                EmuWarning("EmuD3DDeferredRenderState was not found!");
+            }
+            
+            if (g_SymbolAddresses.find("D3DDeferredTextureState") == g_SymbolAddresses.end()) {
+                EmuWarning("EmuD3DDeferredTextureState was not found!");
+            }
 
-			if (g_SymbolAddresses.find("D3DDEVICE") == g_SymbolAddresses.end()) {
-				EmuWarning("D3DDEVICE was not found!");
-			}
+            if (g_SymbolAddresses.find("D3DDEVICE") == g_SymbolAddresses.end()) {
+                EmuWarning("D3DDEVICE was not found!");
+            }
 
             EmuD3D_Init_DeferredStates();
 
-			g_HLECacheUsed = true;
-		}
+            g_HLECacheUsed = true;
+        }
 
-		// If g_SymbolAddresses didn't get filled, the HLE cache is invalid
-		if (g_SymbolAddresses.empty()) {
-			printf("HLE Cache file is outdated and will be regenerated\n");
-			g_HLECacheUsed = false;
-		}
-	}
+        // If g_SymbolAddresses didn't get filled, the HLE cache is invalid
+        if (g_SymbolAddresses.empty()) {
+            printf("HLE Cache file is outdated and will be regenerated\n");
+            g_HLECacheUsed = false;
+        }
+    }
 
-	// If the HLE Cache was used, skip symbol searching/patching
-	if (g_HLECacheUsed) {
-		return;
-	}
+    // If the HLE Cache was used, skip symbol searching/patching
+    if (g_HLECacheUsed) {
+        return;
+    }
 
-	//
+    //
     // initialize Microsoft XDK emulation
     //
     if(pLibraryVersion != 0)
     {
-		printf("HLE: Detected Microsoft XDK application...\n");
+        printf("HLE: Detected Microsoft XDK application...\n");
 
         uint32 dwLibraryVersions = pXbeHeader->dwLibraryVersions;
 
@@ -519,50 +519,50 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
         EmuD3D_Init_DeferredStates();
     }
 
-	printf("\n");
+    printf("\n");
 
-	// Write the HLE Database version string
-	{
-		std::string HLECacheHashString = std::to_string(XbSymbolLibraryVersion());
-		WritePrivateProfileString("Info", "HLECacheHash", HLECacheHashString.c_str(), filename.c_str());
-	}
+    // Write the HLE Database version string
+    {
+        std::string HLECacheHashString = std::to_string(XbSymbolLibraryVersion());
+        WritePrivateProfileString("Info", "HLECacheHash", HLECacheHashString.c_str(), filename.c_str());
+    }
 
-	// Write the Certificate Details to the cache file
-	WritePrivateProfileString("Certificate", "Name", tAsciiTitle, filename.c_str());
+    // Write the Certificate Details to the cache file
+    WritePrivateProfileString("Certificate", "Name", tAsciiTitle, filename.c_str());
 
-	std::stringstream titleId;
-	titleId << std::hex << g_pCertificate->dwTitleId;
-	WritePrivateProfileString("Certificate", "TitleID", titleId.str().c_str(), filename.c_str());
+    std::stringstream titleId;
+    titleId << std::hex << g_pCertificate->dwTitleId;
+    WritePrivateProfileString("Certificate", "TitleID", titleId.str().c_str(), filename.c_str());
 
-	std::stringstream region;
-	region << std::hex << g_pCertificate->dwGameRegion;
-	WritePrivateProfileString("Certificate", "Region", region.str().c_str(), filename.c_str());
+    std::stringstream region;
+    region << std::hex << g_pCertificate->dwGameRegion;
+    WritePrivateProfileString("Certificate", "Region", region.str().c_str(), filename.c_str());
 
-	// Write Library Details
-	for (uint i = 0; i < pXbeHeader->dwLibraryVersions; i++)	{
-		std::string LibraryName(pLibraryVersion[i].szName, pLibraryVersion[i].szName + 8);
-		std::stringstream buildVersion;
-		buildVersion << pLibraryVersion[i].wBuildVersion;
+    // Write Library Details
+    for (uint i = 0; i < pXbeHeader->dwLibraryVersions; i++)    {
+        std::string LibraryName(pLibraryVersion[i].szName, pLibraryVersion[i].szName + 8);
+        std::stringstream buildVersion;
+        buildVersion << pLibraryVersion[i].wBuildVersion;
 
-		WritePrivateProfileString("Libs", LibraryName.c_str(), buildVersion.str().c_str(), filename.c_str());
-	}
+        WritePrivateProfileString("Libs", LibraryName.c_str(), buildVersion.str().c_str(), filename.c_str());
+    }
 
-	std::stringstream buildVersion;
-	buildVersion << g_BuildVersion;
-	WritePrivateProfileString("Libs", "D3D8_BuildVersion", buildVersion.str().c_str(), filename.c_str());
+    std::stringstream buildVersion;
+    buildVersion << g_BuildVersion;
+    WritePrivateProfileString("Libs", "D3D8_BuildVersion", buildVersion.str().c_str(), filename.c_str());
 
-	// Write the found symbol addresses into the cache file
-	for(auto it = g_SymbolAddresses.begin(); it != g_SymbolAddresses.end(); ++it) {
-		std::stringstream cacheAddress;
-		cacheAddress << std::hex << (*it).second;
-		WritePrivateProfileString("Symbols", (*it).first.c_str(), cacheAddress.str().c_str(), filename.c_str());
-	}
+    // Write the found symbol addresses into the cache file
+    for(auto it = g_SymbolAddresses.begin(); it != g_SymbolAddresses.end(); ++it) {
+        std::stringstream cacheAddress;
+        cacheAddress << std::hex << (*it).second;
+        WritePrivateProfileString("Symbols", (*it).first.c_str(), cacheAddress.str().c_str(), filename.c_str());
+    }
 }
 
 // NOTE: EmuInstallPatch do not get to be in XbSymbolDatabase, do the patches in Cxbx project only.
 inline void EmuInstallPatch(std::string FunctionName, xbaddr FunctionAddr, void *Patch)
 {
-	g_FunctionHooks[FunctionName].Install((void*)(FunctionAddr), Patch);
+    g_FunctionHooks[FunctionName].Install((void*)(FunctionAddr), Patch);
 }
 
 #if 0 // TODO: Need to move this into XbSymbolDatabase for depth verification usage.
