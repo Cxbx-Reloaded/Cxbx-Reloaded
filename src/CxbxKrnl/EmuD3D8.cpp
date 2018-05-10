@@ -2824,7 +2824,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_LoadVertexShader_4)
 	// D3DDevice_LoadVertexShader pushes the program contained in the Xbox VertexShader struct to the NV2A
     if(Address < 136 && VshHandleIsVertexShader(Handle))
     {
-        VERTEX_SHADER *pVertexShader = (VERTEX_SHADER *)(VshHandleGetVertexShader(Handle))->Handle;
+		CxbxVertexShader *pVertexShader = MapXboxVertexShaderHandleToCxbxVertexShader(Handle);
         for (DWORD i = Address; i < pVertexShader->Size; i++)
         {
             // TODO: This seems very fishy
