@@ -182,20 +182,51 @@ public:
     }
 };
 
-void CDECL EmuRegisterSymbol(const char* library_name, const char* symbol_name, uint32_t func_addr, uint32_t revision)
+void CDECL EmuOutputMessage(xb_output_message mFlag, 
+                            const char* message)
+{
+    switch (mFlag) {
+        case XB_OUTPUT_MESSAGE_INFO: {
+            printf("%s\n", message);
+            break;
+        }
+        case XB_OUTPUT_MESSAGE_WARN: {
+            EmuWarning("%s", message);
+            break;
+        }
+        case XB_OUTPUT_MESSAGE_ERROR: {
+            CxbxKrnlCleanup("%s", message);
+            break;
+        }
+        case XB_OUTPUT_MESSAGE_DEBUG:
+        default: {
+#ifdef _DEBUG_TRACE
+            printf("%s\n", message);
+#endif
+
+            break;
+        }
+    }
+}
+
+void CDECL EmuRegisterSymbol(const char* library_str,
+                             uint32_t library_flag,
+                             const char* symbol_str,
+                             uint32_t func_addr,
+                             uint32_t revision)
 {
     // Ignore registered symbol in current database.
-    uint32_t hasSymbol = g_SymbolAddresses[symbol_name];
+    uint32_t hasSymbol = g_SymbolAddresses[symbol_str];
     if (hasSymbol != 0)
         return;
 
     // Now that we found the address, store it (regardless if we patch it or not)
-    g_SymbolAddresses[symbol_name] = func_addr;
+    g_SymbolAddresses[symbol_str] = func_addr;
 
     // Output some details
     std::stringstream output;
     output << "HLE: 0x" << std::setfill('0') << std::setw(8) << std::hex << func_addr
-        << " -> " << symbol_name << " " << std::dec << revision;
+        << " -> " << symbol_str << " " << std::dec << revision;
 
 #if 0 // TODO: XbSymbolDatabase - Need to create a structure for patch and stuff.
     bool IsXRef = OovpaTable->Oovpa->XRefSaveIndex != XRefNoSaveIndex;
@@ -260,10 +291,10 @@ void CDECL EmuRegisterSymbol(const char* library_name, const char* symbol_name, 
     }
 #endif
     // Retrieve the associated patch, if any is available
-    void* addr = GetEmuPatchAddr(symbol_name);
+    void* addr = GetEmuPatchAddr(symbol_str);
 
     if (addr != nullptr) {
-        EmuInstallPatch(symbol_name, func_addr, addr);
+        EmuInstallPatch(symbol_str, func_addr, addr);
         output << "\t*PATCHED*";
     }
 
@@ -480,6 +511,8 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
             }
         }
 #endif
+
+        XbSymbolSetOutputMessage(EmuOutputMessage);
 
         XbSymbolScan(pXbeHeader, EmuRegisterSymbol);
 
