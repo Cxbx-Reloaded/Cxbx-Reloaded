@@ -55,7 +55,6 @@ namespace xboxkrnl
 #include "ResourceTracker.h"
 #include "VMManager.h" // for g_VMManager
 #include "EmuXTL.h"
-#include "HLEDatabase.h"
 #include "Logging.h"
 #include "EmuD3D8Logging.h"
 #include "HLEIntercept.h" // for bLLE_GPU
