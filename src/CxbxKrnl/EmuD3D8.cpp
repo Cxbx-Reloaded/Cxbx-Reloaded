@@ -3388,10 +3388,33 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_GetViewportOffsetAndScale)
 		LOG_FUNC_ARG(pScale)
 		LOG_FUNC_END;
 
-	LOG_TEST_CASE("D3DDevice_GetViewportOffsetAndScale"); // Get us some test-cases
+	// LOG_TEST_CASE("D3DDevice_GetViewportOffsetAndScale"); // Get us some test-cases
+	// Test case : 007: From Russia with Love
+	// Test case : Army Men® : Sarge's War
+	// Test case : BeatDown - Fists of Vengeance
+	// Test case : Big Mutha Truckers
+	// Test case : Big Mutha Truckers 2
+	// Test case : Classified : The Sentinel Crisis
+	// Test case : Cold Fear
+	// Test case : Commandos SF
+	// Test case : Darkwatch
+	// Test case : Dr.Muto
+	// Test case : GTA : Vice City
+	// Test case : Jacked
+	// Test case : Madagascar
+	// Test case : Max Payne 2
 	// Test case : NBA LIVE 2005
-	// Test case : Prince of Persia : T2T
+	// Test case : NFS : Underground
+	// Test case : NFS : Underground 2
+	// Test case : PoP : The Sands of Time
+	// Test case : Prince of Persia : T2T - see #1109 (comment)
+	// Test case : RPM Tuning
+	// Test case : Street Racing Syndicate
 	// Test case : Spongebob - Battle for Bikini Bottom
+	// Test case : The Incredibles : Rise of the Underminer
+	// Test case : The SpongeBob SquarePants Movie
+	// Test case : TMNT(R)2
+	// Test case : TMNT(R)3
 
 #if 0
     float fScaleX = 1.0f;
