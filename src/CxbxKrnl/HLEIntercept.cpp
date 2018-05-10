@@ -358,7 +358,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 
         g_BuildVersion = GetPrivateProfileInt("Libs", "D3D8_BuildVersion", 0, filename.c_str());
 
-        // Verify the version of the cache file against the HLE Database    
+        // Verify the version of the cache file against the HLE Database
         const uint32 HLECacheHash = GetPrivateProfileInt("Info", "HLECacheHash", 0, filename.c_str());
 
         if (HLECacheHash == XbSymbolLibraryVersion()) {
@@ -382,7 +382,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
                 bufferPtr += strlen(bufferPtr) + 1;
             }
 
-            // Iterate through the map of symbol addresses, calling GetEmuPatchAddr on all functions.    
+            // Iterate through the map of symbol addresses, calling GetEmuPatchAddr on all functions.
             for (auto it = g_SymbolAddresses.begin(); it != g_SymbolAddresses.end(); ++it) {
                 std::string functionName = (*it).first;
                 xbaddr location = (*it).second;
@@ -539,7 +539,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
     WritePrivateProfileString("Certificate", "Region", region.str().c_str(), filename.c_str());
 
     // Write Library Details
-    for (uint i = 0; i < pXbeHeader->dwLibraryVersions; i++)    {
+    for (uint i = 0; i < pXbeHeader->dwLibraryVersions; i++) {
         std::string LibraryName(pLibraryVersion[i].szName, pLibraryVersion[i].szName + 8);
         std::stringstream buildVersion;
         buildVersion << pLibraryVersion[i].wBuildVersion;
