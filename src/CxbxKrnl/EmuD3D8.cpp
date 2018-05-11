@@ -4033,6 +4033,7 @@ VOID __fastcall XTL::EMUPATCH(D3DDevice_SwitchTexture)
 		// Switch Texture updates the data pointer of an active texture using pushbuffer commands
 		// assert(EmuD3DActiveTexture[Stage] != xbnullptr);
 		LOG_TEST_CASE("Using CxbxActiveTextureCopies");
+		// test-case : Need For Speed Most Wanted
 
 		// Update data and format separately, instead of via GetDataFromXboxResource()
 		CxbxActiveTextureCopies[Stage].Common = EmuD3DActiveTexture[Stage]->Common;
@@ -4576,11 +4577,11 @@ DWORD XTL::EMUPATCH(D3DDevice_Swap_0)
 DWORD WINAPI XTL::EMUPATCH(D3DDevice_Swap)
 (
 	DWORD Flags
-	)
+)
 {
 	FUNC_EXPORTS
 
-		LOG_FUNC_ONE_ARG(Flags);
+	LOG_FUNC_ONE_ARG(Flags);
 
 	// TODO: Ensure this flag is always the same across library versions
 	if (Flags != 0)
@@ -7501,6 +7502,9 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawVertices)
 			// LOG_TEST_CASE("X_D3DPT_QUADLIST"); // ?X-Marbles and XDK Sample (Cartoon, ?maybe PlayField?) hits this case
 			if (StartVertex > 0) {
 				LOG_TEST_CASE("X_D3DPT_QUADLIST StartVertex > 0");
+				// test-case : BLiNX: the time sweeper
+				// test-case : Halo - Combat Evolved
+				// test-case : Worms 3D Special Edition
 				DrawContext.dwStartVertex = StartVertex; // Breakpoint location for testing. 
 			}
 
