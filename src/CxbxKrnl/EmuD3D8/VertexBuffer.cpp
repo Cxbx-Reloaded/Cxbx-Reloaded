@@ -204,27 +204,24 @@ XTL::CxbxVertexBufferConverter::~CxbxVertexBufferConverter()
 	}
 }
 
-size_t GetVertexBufferSize(DWORD dwVertexCount, DWORD dwStride, PWORD pIndexData, DWORD dwOffset, DWORD dwIndexBase)
+size_t GetVerticesInBuffer(DWORD dwOffset, DWORD dwVertexCount, PWORD pIndexData, DWORD dwIndexBase)
 {	
-	// If we are drawing from an offset, we know that the vertex count must have offset vertices
-	// before the first drawn vertices
-	dwVertexCount += dwOffset;
-
-	// If this is not an indexed draw, the size is simply VertexCount * Stride
 	if (pIndexData == nullptr) {
-		return dwVertexCount * dwStride;
+		// If we are drawing from an offset, we know that the vertex count must have offset vertices
+		// before the first drawn vertices
+		return dwOffset + dwVertexCount;
 	}
 
 	// We are an indexed draw, so we have to parse the index buffer
 	// The highest index we see can be used to determine the vertex buffer size
 	DWORD highestVertexIndex = 0;
 	for (DWORD i = 0; i < dwVertexCount; i++) {
-		if (highestVertexIndex < pIndexData[i]) {
-			highestVertexIndex = pIndexData[i];
+		if (highestVertexIndex < pIndexData[dwOffset + i]) {
+			highestVertexIndex = pIndexData[dwOffset + i];
 		}
 	}
 
-	return (highestVertexIndex + dwIndexBase + 1) * dwStride;		
+	return dwIndexBase + highestVertexIndex + 1;
 }
 
 int CountActiveD3DStreams()
@@ -271,17 +268,23 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
 )
 {
 	bool bVshHandleIsFVF = VshHandleIsFVF(pDrawContext->hVertexShader);
+	DWORD XboxFVF = bVshHandleIsFVF ? pDrawContext->hVertexShader : 0;
+	// Texture normalization can only be set for FVF shaders
 	bool bNeedTextureNormalization = false;
 	struct { int NrTexCoords; bool bTexIsLinear; int Width; int Height; int Depth; } pActivePixelContainer[X_D3DTS_STAGECOUNT] = { 0 };
 
 	if (bVshHandleIsFVF) {
-		DWORD dwTexN = (pDrawContext->hVertexShader & D3DFVF_TEXCOUNT_MASK) >> D3DFVF_TEXCOUNT_SHIFT;
+		DWORD dwTexN = (XboxFVF & D3DFVF_TEXCOUNT_MASK) >> D3DFVF_TEXCOUNT_SHIFT;
+		if (dwTexN > X_D3DTS_STAGECOUNT) {
+			LOG_TEST_CASE("FVF,dwTexN > X_D3DTS_STAGECOUNT");
+		}
+
 		// Check for active linear textures.
 		//X_D3DBaseTexture *pLinearBaseTexture[X_D3DTS_STAGECOUNT];
 		for (uint i = 0; i < X_D3DTS_STAGECOUNT; i++) {
 			// Only normalize coordinates used by the FVF shader :
 			if (i + 1 <= dwTexN) {
-				pActivePixelContainer[i].NrTexCoords = DxbxFVF_GetNumberOfTextureCoordinates(pDrawContext->hVertexShader, i);
+				pActivePixelContainer[i].NrTexCoords = DxbxFVF_GetNumberOfTextureCoordinates(XboxFVF, i);
 				// TODO : Use GetXboxBaseTexture()
 				X_D3DBaseTexture *pXboxBaseTexture = EmuD3DActiveTexture[i];
 				if (pXboxBaseTexture != xbnullptr) {
@@ -292,7 +295,7 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
 						bNeedTextureNormalization = true;
 						// Remember linearity, width and height :
 						pActivePixelContainer[i].bTexIsLinear = true;
-						// TODO : Use DecodeD3DSize
+						// TODO : Use DecodeD3DSize or GetPixelContainerWidth + GetPixelContainerHeight
 						pActivePixelContainer[i].Width = (pXboxBaseTexture->Size & X_D3DSIZE_WIDTH_MASK) + 1;
 						pActivePixelContainer[i].Height = ((pXboxBaseTexture->Size & X_D3DSIZE_HEIGHT_MASK) >> X_D3DSIZE_HEIGHT_SHIFT) + 1;
 						// TODO : Support 3D textures
@@ -308,7 +311,7 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
 	}
 
 	bool bNeedVertexPatching = (pVertexShaderStreamInfo != nullptr && pVertexShaderStreamInfo->NeedPatch);
-	bool bNeedRHWReset = bVshHandleIsFVF && ((pDrawContext->hVertexShader & D3DFVF_POSITION_MASK) == D3DFVF_XYZRHW);
+	bool bNeedRHWReset = bVshHandleIsFVF && ((XboxFVF & D3DFVF_POSITION_MASK) == D3DFVF_XYZRHW);
 	bool bNeedStreamCopy = bNeedTextureNormalization || bNeedVertexPatching || bNeedRHWReset;
 
 	uint08 *pXboxVertexData;
@@ -328,9 +331,8 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
 
 		pXboxVertexData = (uint08 *)pDrawContext->pXboxVertexStreamZeroData;
 		uiXboxVertexStride = pDrawContext->uiXboxVertexStreamZeroStride;
-		uiXboxVertexDataSize = pDrawContext->uiSize;
-
-		uiVertexCount = uiXboxVertexDataSize / uiXboxVertexStride;
+		uiVertexCount = pDrawContext->VerticesInBuffer; 
+		uiXboxVertexDataSize = uiVertexCount * uiXboxVertexStride;
 
 		uiHostVertexStride = (bNeedVertexPatching) ? pVertexShaderStreamInfo->HostVertexStride : uiXboxVertexStride;
 		dwHostVertexDataSize = uiVertexCount * uiHostVertexStride;
@@ -358,10 +360,10 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
 		}
 
 		uiXboxVertexStride = g_D3DStreamStrides[uiStream];
-		uiXboxVertexDataSize = pDrawContext->uiSize;
+		uiVertexCount = pDrawContext->VerticesInBuffer;
 
         // Set a new (exact) vertex count
-		uiVertexCount = uiXboxVertexDataSize / uiXboxVertexStride;
+		uiXboxVertexDataSize = uiVertexCount * uiXboxVertexStride;
 		// Dxbx note : Don't overwrite pDrawContext.dwVertexCount with uiVertexCount, because an indexed draw
 		// can (and will) use less vertices than the supplied nr of indexes. Thix fixes
 		// the missing parts in the CompressedVertices sample (in Vertex shader mode).
@@ -522,7 +524,7 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
 
 		// Locate texture coordinate offset in vertex structure.
 		if (bNeedTextureNormalization) {
-			uiTextureCoordinatesByteOffsetInVertex = XTL::DxbxFVFToVertexSizeInBytes(pDrawContext->hVertexShader, /*bIncludeTextures=*/false);
+			uiTextureCoordinatesByteOffsetInVertex = XTL::DxbxFVFToVertexSizeInBytes(XboxFVF, /*bIncludeTextures=*/false);
 		}
 
 		for (uint32 uiVertex = 0; uiVertex < uiVertexCount; uiVertex++) {
@@ -620,11 +622,10 @@ void XTL::CxbxVertexBufferConverter::Apply(CxbxDrawContext *pDrawContext)
     }
 
     for(UINT uiStream = 0; uiStream < m_uiNbrStreams; uiStream++) {
-		pDrawContext->uiSize = GetVertexBufferSize(
-			pDrawContext->dwVertexCount, 
-			pDrawContext->pXboxVertexStreamZeroData == nullptr ? g_D3DStreamStrides[uiStream] : pDrawContext->uiXboxVertexStreamZeroStride,
-			pDrawContext->pIndexData, 
+		pDrawContext->VerticesInBuffer = GetVerticesInBuffer(
 			pDrawContext->dwStartVertex,
+			pDrawContext->dwVertexCount,
+			pDrawContext->pIndexData, 
 			pDrawContext->dwIndexBase
 		);
 

@@ -48,7 +48,7 @@ typedef struct _CxbxDrawContext
     IN     DWORD                 hVertexShader;
 	IN	   PWORD				 pIndexData;
 	IN	   DWORD				 dwIndexBase;
-	IN	   size_t				 uiSize;
+	IN	   size_t				 VerticesInBuffer;
     // Data if Draw...UP call
     IN PVOID                     pXboxVertexStreamZeroData;
     IN UINT                      uiXboxVertexStreamZeroStride;
