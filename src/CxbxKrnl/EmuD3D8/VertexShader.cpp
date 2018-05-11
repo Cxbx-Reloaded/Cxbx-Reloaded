@@ -2054,7 +2054,7 @@ static void VshConvertToken_STREAMDATA_REG(DWORD          *pToken,
 	pCurrentElement->XboxType = XboxVertexElementDataType;
 	pCurrentElement->HostByteSize = HostVertexElementByteSize;
 	pPatchData->pCurrentVertexShaderStreamInfo->NumberOfVertexElements++;
-	pPatchData->pCurrentVertexShaderStreamInfo->NeedPatch = NeedPatching;
+	pPatchData->pCurrentVertexShaderStreamInfo->NeedPatch |= NeedPatching;
 
     *pToken = D3DVSD_REG(HostVertexRegister, HostVertexElementDataType);
 

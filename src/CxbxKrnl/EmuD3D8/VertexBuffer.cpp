@@ -316,7 +316,6 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
 
 	uint08 *pXboxVertexData;
 	UINT uiXboxVertexStride;
-	UINT uiXboxVertexDataSize;
 	UINT uiVertexCount;
 	UINT uiHostVertexStride;
 	DWORD dwHostVertexDataSize;
@@ -332,8 +331,6 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
 		pXboxVertexData = (uint08 *)pDrawContext->pXboxVertexStreamZeroData;
 		uiXboxVertexStride = pDrawContext->uiXboxVertexStreamZeroStride;
 		uiVertexCount = pDrawContext->VerticesInBuffer; 
-		uiXboxVertexDataSize = uiVertexCount * uiXboxVertexStride;
-
 		uiHostVertexStride = (bNeedVertexPatching) ? pVertexShaderStreamInfo->HostVertexStride : uiXboxVertexStride;
 		dwHostVertexDataSize = uiVertexCount * uiHostVertexStride;
 		if (bNeedStreamCopy) {
@@ -360,10 +357,8 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
 		}
 
 		uiXboxVertexStride = g_D3DStreamStrides[uiStream];
-		uiVertexCount = pDrawContext->VerticesInBuffer;
-
         // Set a new (exact) vertex count
-		uiXboxVertexDataSize = uiVertexCount * uiXboxVertexStride;
+		uiVertexCount = pDrawContext->VerticesInBuffer;
 		// Dxbx note : Don't overwrite pDrawContext.dwVertexCount with uiVertexCount, because an indexed draw
 		// can (and will) use less vertices than the supplied nr of indexes. Thix fixes
 		// the missing parts in the CompressedVertices sample (in Vertex shader mode).
@@ -384,7 +379,7 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
 	    // assert(bNeedStreamCopy || "bNeedVertexPatching implies bNeedStreamCopy (but copies via conversions");
 		for (uint32 uiVertex = 0; uiVertex < uiVertexCount; uiVertex++) {
 			uint08 *pXboxVertex = &pXboxVertexData[uiVertex * uiXboxVertexStride];
-			FLOAT *pHostVertexAsFloat = (FLOAT*)&pHostVertexData[uiVertex * uiHostVertexStride];
+			FLOAT *pHostVertexAsFloat = (FLOAT*)(&pHostVertexData[uiVertex * uiHostVertexStride]);
 			for (UINT uiElement = 0; uiElement < pVertexShaderStreamInfo->NumberOfVertexElements; uiElement++) {
 				// Dxbx note : The following code handles only the D3DVSDT enums that need conversion;
 				// All other cases are catched by the memcpy in the default-block.
@@ -516,8 +511,7 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
 
 	// Xbox FVF shaders are identical to host Direct3D 8.1, however
 	// texture coordinates may need normalization if used with linear textures.
-	if (bNeedTextureNormalization || bNeedRHWReset)
-	{
+	if (bNeedTextureNormalization || bNeedRHWReset) {
 		// assert(bVshHandleIsFVF);
 
 		UINT uiTextureCoordinatesByteOffsetInVertex = 0;
@@ -525,6 +519,11 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
 		// Locate texture coordinate offset in vertex structure.
 		if (bNeedTextureNormalization) {
 			uiTextureCoordinatesByteOffsetInVertex = XTL::DxbxFVFToVertexSizeInBytes(XboxFVF, /*bIncludeTextures=*/false);
+			if (bNeedVertexPatching) {
+				LOG_TEST_CASE("Potential xbox vs host texture-offset difference! (bNeedVertexPatching within bNeedTextureNormalization)");
+			}
+			// As long as vertices aren't resized / patched up until the texture coordinates,
+			// the uiTextureCoordinatesByteOffsetInVertex on host will match Xbox 
 		}
 
 		for (uint32 uiVertex = 0; uiVertex < uiVertexCount; uiVertex++) {
@@ -590,7 +589,7 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
 #endif
 	pPatchedStream->uiCachedXboxVertexStride = uiXboxVertexStride;
 #if 0 // new
-	pPatchedStream->uiCachedXboxVertexDataSize = uiXboxVertexDataSize; // TODO : For hashing & caching purposes
+	pPatchedStream->uiCachedXboxVertexDataSize = uiVertexCount * uiXboxVertexStride; // TODO : For hashing & caching purposes
 #endif
 	pPatchedStream->uiCachedHostVertexStride = uiHostVertexStride;
 	pPatchedStream->bCacheIsStreamZeroDrawUP = (pDrawContext->pXboxVertexStreamZeroData != NULL);
