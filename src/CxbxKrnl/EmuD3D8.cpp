@@ -1,4 +1,4 @@
-// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+ï»¿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
 // PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 // ******************************************************************
 // *
@@ -3418,7 +3418,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_GetViewportOffsetAndScale)
 
 	// LOG_TEST_CASE("D3DDevice_GetViewportOffsetAndScale"); // Get us some test-cases
 	// Test case : 007: From Russia with Love
-	// Test case : Army Men® : Sarge's War
+	// Test case : Army Men?: Sarge's War
 	// Test case : BeatDown - Fists of Vengeance
 	// Test case : Big Mutha Truckers
 	// Test case : Big Mutha Truckers 2
@@ -4761,8 +4761,9 @@ void CreateHostResource(XTL::X_D3DResource *pResource, int iTextureStage, DWORD 
 		XTL::D3DPOOL D3DPool = XTL::D3DPOOL_MANAGED; // TODO : Nuance D3DPOOL where/when needed
 
 		if (g_D3DCaps.Caps2 & D3DCAPS2_DYNAMICTEXTURES) {
-			D3DUsage |= D3DUSAGE_DYNAMIC;
-			D3DPool = XTL::D3DPOOL_DEFAULT;
+			//these two lines must marked out to fix the fading black regression. leave either one single line of code will introduce further regresson.
+            //D3DUsage |= D3DUSAGE_DYNAMIC;
+			//D3DPool = XTL::D3DPOOL_DEFAULT;
 		}
 
 		if (EmuXBFormatIsDepthBuffer(X_Format)) {
