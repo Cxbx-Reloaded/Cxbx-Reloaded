@@ -124,6 +124,16 @@ Global
 		{7EE21ADA-3B02-4CD6-A891-C2257A54B061}.Release|Win32.ActiveCfg = Release|Win32
 		{7EE21ADA-3B02-4CD6-A891-C2257A54B061}.Release|Win32.Build.0 = Release|Win32
 		{7EE21ADA-3B02-4CD6-A891-C2257A54B061}.Release|x64.ActiveCfg = Release|Win32
+		{B8D9AFC2-B38F-4714-846D-8A2754F076C9}.Debug_Direct3D9|Any CPU.ActiveCfg = Release|Win32
+		{B8D9AFC2-B38F-4714-846D-8A2754F076C9}.Debug_Direct3D9|Any CPU.Build.0 = Release|Win32
+		{B8D9AFC2-B38F-4714-846D-8A2754F076C9}.Debug_Direct3D9|Win32.ActiveCfg = Debug|Win32
+		{B8D9AFC2-B38F-4714-846D-8A2754F076C9}.Debug_Direct3D9|Win32.Build.0 = Debug|Win32
+		{B8D9AFC2-B38F-4714-846D-8A2754F076C9}.Debug|Any CPU.ActiveCfg = Debug|Win32
+		{B8D9AFC2-B38F-4714-846D-8A2754F076C9}.Debug|Win32.ActiveCfg = Debug|Win32
+		{B8D9AFC2-B38F-4714-846D-8A2754F076C9}.Debug|Win32.Build.0 = Debug|Win32
+		{B8D9AFC2-B38F-4714-846D-8A2754F076C9}.Release|Any CPU.ActiveCfg = Release|Win32
+		{B8D9AFC2-B38F-4714-846D-8A2754F076C9}.Release|Win32.ActiveCfg = Release|x64
+		{B8D9AFC2-B38F-4714-846D-8A2754F076C9}.Release|Win32.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
