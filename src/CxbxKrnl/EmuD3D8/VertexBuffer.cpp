@@ -350,7 +350,7 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
 			HRESULT hRet = g_pD3DDevice->SetStreamSource(uiStream, nullptr, 0);
 //			DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetStreamSource");
 			if (FAILED(hRet)) {
-				CxbxKrnlCleanup("g_pD3DDevice->SetStreamSource(uiStream, nullptr, 0)\n");
+				EmuWarning("g_pD3DDevice->SetStreamSource(uiStream, nullptr, 0)");
 			}
 
 			return;
@@ -407,7 +407,7 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
 					((SHORT *)pHostVertexAsFloat)[0] = ((SHORT*)pXboxVertex)[0];
 					((SHORT *)pHostVertexAsFloat)[1] = ((SHORT*)pXboxVertex)[1];
 					((SHORT *)pHostVertexAsFloat)[2] = ((SHORT*)pXboxVertex)[2];
-					((SHORT *)pHostVertexAsFloat)[3] = 0x01;
+					((SHORT *)pHostVertexAsFloat)[3] = 0x01; // Turok verified (character disappears when this is 32767)
 					pXboxVertex += 3 * sizeof(SHORT);
 					break;
 				}
