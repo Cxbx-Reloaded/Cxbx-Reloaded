@@ -45,7 +45,6 @@ namespace xboxkrnl
     #include <xboxkrnl/xboxkrnl.h>
 };
 
-#include "../../import/XbSymbolDatabase/XbSymbolDatabase.h" // for XREF_ADDR_DERIVE
 #include "CxbxUtil.h"
 #include "CxbxVersion.h"
 #include "CxbxKrnl.h"
@@ -2394,7 +2393,7 @@ HRESULT WINAPI XTL::EMUPATCH(Direct3D_CreateDevice_4)
 
 	// Set g_XboxD3DDevice to point to the Xbox D3D Device
     xbaddr dwD3DDevice = g_SymbolAddresses["D3DDEVICE"];
-	if (dwD3DDevice != xbnull && dwD3DDevice != XREF_ADDR_DERIVE) {
+	if (dwD3DDevice != xbnull) {
 		g_XboxD3DDevice = *((DWORD**)dwD3DDevice);
 	}
 
@@ -2446,7 +2445,7 @@ HRESULT WINAPI XTL::EMUPATCH(Direct3D_CreateDevice_16)
 
 	// Set g_XboxD3DDevice to point to the Xbox D3D Device
     xbaddr dwD3DDevice = g_SymbolAddresses["D3DDEVICE"];
-	if (dwD3DDevice != xbnull && dwD3DDevice != XREF_ADDR_DERIVE) {
+	if (dwD3DDevice != xbnull) {
 		g_XboxD3DDevice = *((DWORD**)dwD3DDevice);
 	}
 
@@ -2526,7 +2525,7 @@ HRESULT WINAPI XTL::EMUPATCH(Direct3D_CreateDevice)
 
 	// Set g_XboxD3DDevice to point to the Xbox D3D Device
     xbaddr dwD3DDevice = g_SymbolAddresses["D3DDEVICE"];
-	if (dwD3DDevice != xbnull && dwD3DDevice != XREF_ADDR_DERIVE) {
+	if (dwD3DDevice != xbnull) {
 		g_XboxD3DDevice = *((DWORD**)dwD3DDevice);
 	}
 
