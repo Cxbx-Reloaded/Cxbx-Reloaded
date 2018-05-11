@@ -206,18 +206,19 @@ XTL::CxbxVertexBufferConverter::~CxbxVertexBufferConverter()
 
 size_t GetVerticesInBuffer(DWORD dwOffset, DWORD dwVertexCount, PWORD pIndexData, DWORD dwIndexBase)
 {	
+	// If we are drawing from an offset, we know that the vertex count must have offset vertices
+	// before the first drawn vertices
+	dwVertexCount += dwOffset;
 	if (pIndexData == nullptr) {
-		// If we are drawing from an offset, we know that the vertex count must have offset vertices
-		// before the first drawn vertices
-		return dwOffset + dwVertexCount;
+		return dwVertexCount;
 	}
 
 	// We are an indexed draw, so we have to parse the index buffer
 	// The highest index we see can be used to determine the vertex buffer size
 	DWORD highestVertexIndex = 0;
 	for (DWORD i = 0; i < dwVertexCount; i++) {
-		if (highestVertexIndex < pIndexData[dwOffset + i]) {
-			highestVertexIndex = pIndexData[dwOffset + i];
+		if (highestVertexIndex < pIndexData[i]) {
+			highestVertexIndex = pIndexData[i];
 		}
 	}
 
@@ -613,21 +614,21 @@ void XTL::CxbxVertexBufferConverter::Apply(CxbxDrawContext *pDrawContext)
 	if ((pDrawContext->XboxPrimitiveType < X_D3DPT_POINTLIST) || (pDrawContext->XboxPrimitiveType > X_D3DPT_POLYGON))
 		CxbxKrnlCleanup("Unknown primitive type: 0x%.02X\n", pDrawContext->XboxPrimitiveType);
 
-    // Get the number of streams
-    m_uiNbrStreams = GetNbrStreams(pDrawContext);
-
     if (VshHandleIsVertexShader(pDrawContext->hVertexShader)) {
         m_pVertexShaderInfo = &(MapXboxVertexShaderHandleToCxbxVertexShader(pDrawContext->hVertexShader)->VertexShaderInfo);
     }
 
-    for(UINT uiStream = 0; uiStream < m_uiNbrStreams; uiStream++) {
-		pDrawContext->VerticesInBuffer = GetVerticesInBuffer(
-			pDrawContext->dwStartVertex,
-			pDrawContext->dwVertexCount,
-			pDrawContext->pIndexData, 
-			pDrawContext->dwIndexBase
-		);
+	pDrawContext->VerticesInBuffer = GetVerticesInBuffer(
+		pDrawContext->dwStartVertex,
+		pDrawContext->dwVertexCount,
+		pDrawContext->pIndexData, 
+		pDrawContext->dwIndexBase
+	);
 
+    // Get the number of streams
+    m_uiNbrStreams = GetNbrStreams(pDrawContext);
+
+    for(UINT uiStream = 0; uiStream < m_uiNbrStreams; uiStream++) {
 		// TODO: Check for cached vertex buffer, and use it if possible
 
 		ConvertStream(pDrawContext, uiStream);
