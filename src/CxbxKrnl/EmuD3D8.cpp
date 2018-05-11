@@ -4760,11 +4760,17 @@ void CreateHostResource(XTL::X_D3DResource *pResource, int iTextureStage, DWORD 
 		DWORD D3DUsage = 0;
 		XTL::D3DPOOL D3DPool = XTL::D3DPOOL_MANAGED; // TODO : Nuance D3DPOOL where/when needed
 
+#if 0 // jackchen : this must be marked out to fix a fading black regression.
+		// PatrickvL : The following tries to switch over to using dynamic textures,
+		// since these can always be locked (which is quite helpfull for doing updates).
+		// Addendum : Alas, this prevents locking anything else but the first mipmap level,
+		// turning all others black. (Spotted by Cakelancelot and disabled by jackchen)
 		if (g_D3DCaps.Caps2 & D3DCAPS2_DYNAMICTEXTURES) {
-			//these two lines must marked out to fix the fading black regression. leave either one single line of code will introduce further regresson.
-            //D3DUsage |= D3DUSAGE_DYNAMIC;
-			//D3DPool = XTL::D3DPOOL_DEFAULT;
+			// jackchen : leave either one single line of code will introduce further regresson.
+            D3DUsage |= D3DUSAGE_DYNAMIC;
+			D3DPool = XTL::D3DPOOL_DEFAULT;
 		}
+#endif
 
 		if (EmuXBFormatIsDepthBuffer(X_Format)) {
 			D3DUsage |= D3DUSAGE_DEPTHSTENCIL;
@@ -5123,10 +5129,12 @@ void CreateHostResource(XTL::X_D3DResource *pResource, int iTextureStage, DWORD 
 		} // switch XboxResourceType
 
 		DWORD D3DLockFlags = D3DLOCK_NOSYSLOCK;
-		
+
 		// D3DLOCK_DISCARD is only valid for D3DUSAGE_DYNAMIC
 		if (g_D3DCaps.Caps2 & D3DCAPS2_DYNAMICTEXTURES) {
-			D3DLockFlags |= D3DLOCK_DISCARD;
+			if (D3DUsage & D3DUSAGE_DYNAMIC) {
+				D3DLockFlags |= D3DLOCK_DISCARD;
+			}
 		}
 
 		DWORD dwCubeFaceOffset = 0;
@@ -7707,6 +7715,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVerticesUP)
 		DrawContext.pXboxVertexStreamZeroData = pVertexStreamZeroData;
 		DrawContext.uiXboxVertexStreamZeroStride = VertexStreamZeroStride;
 		DrawContext.hVertexShader = g_CurrentXboxVertexShaderHandle;
+		// Don't set DrawContext.pIndexData = (INDEX16*)pIndexData; // Used by GetVerticesInBuffer
 
 		CxbxVertexBufferConverter VertexBufferConverter = {};
 		VertexBufferConverter.Apply(&DrawContext);
