@@ -2073,7 +2073,7 @@ XBSYSAPI EXPORTNUM(317) xboxkrnl::VOID NTAPI xboxkrnl::RtlUpperString
 
 	DestinationString->Length = (USHORT)length;
 	while (length > 0) {
-		*pDst++ = toupper(*pSrc++);
+		*pDst++ = RtlUpperChar(*pSrc++);
 		length--;
 	}
 }
