@@ -36,6 +36,10 @@
 
 #include "CxbxKrnl.h"
 
+#define VERTICES_PER_TRIANGLE 3
+#define VERTICES_PER_QUAD 4
+#define TRIANGLES_PER_QUAD 2
+
 // simple render state encoding lookup table
 #define X_D3DRSSE_UNK 0x7fffffff
 extern CONST DWORD EmuD3DRenderStateSimpleEncoded[174];
@@ -237,6 +241,11 @@ inline D3DPRIMITIVETYPE EmuXB2PC_D3DPrimitiveType(X_D3DPRIMITIVETYPE PrimitiveTy
         return D3DPT_FORCE_DWORD;
 
     return EmuPrimitiveTypeLookup[PrimitiveType];
+}
+
+inline int EmuD3DIndexCountToVertexCount(X_D3DPRIMITIVETYPE XboxPrimitiveType, int IndexCount)
+{
+	return IndexCount;
 }
 
 extern void EmuUnswizzleBox

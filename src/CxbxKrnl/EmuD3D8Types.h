@@ -69,6 +69,7 @@
 #define Direct3DCreate			 Direct3DCreate9
 #define D3DXAssembleShader		 D3DXCompileShader
 #define FullScreen_PresentationInterval PresentationInterval // a field in D3DPRESENT_PARAMETERS
+#define D3DLockData              void
 
 #define D3DADAPTER_IDENTIFIER    D3DADAPTER_IDENTIFIER9
 #define D3DCAPS                  D3DCAPS9
@@ -110,6 +111,7 @@ typedef D3DVIEWPORT9 X_D3DVIEWPORT8;
 #define Direct3DCreate			 Direct3DCreate8
 #define DXGetErrorString         DXGetErrorString8A
 #define DXGetErrorDescription    DXGetErrorDescription8A
+#define D3DLockData              BYTE
 
 #define D3DADAPTER_IDENTIFIER    D3DADAPTER_IDENTIFIER8
 #define D3DCAPS                  D3DCAPS8
@@ -484,7 +486,7 @@ typedef struct _X_PixelShader
 } X_PixelShader;
 
 // These structures are used by Cxbx, not by the Xbox!!!
-typedef struct _PixelShader_ 
+typedef struct _CxbxPixelShader 
 {
 	//IDirect3DPixelShader9* pShader;
 	//ID3DXConstantTable *pConstantTable;
@@ -507,26 +509,43 @@ typedef struct _PixelShader_
 	DWORD dwStageMap[TEXTURE_STAGES];
 
 }
-PIXEL_SHADER;
+CxbxPixelShader;
 
-typedef struct _STREAM_DYNAMIC_PATCH_
+typedef struct _CxbxVertexShaderStreamElement
+{
+	UINT XboxType; // The stream data types (xbox)
+	UINT HostByteSize; // The stream data sizes (pc)
+}
+CxbxVertexShaderStreamElement;
+
+/* See typedef struct _D3DVERTEXELEMENT9
+{
+	WORD    Stream;     // Stream index
+	WORD    Offset;     // Offset in the stream in bytes
+	BYTE    Type;       // Data type
+	BYTE    Method;     // Processing method
+	BYTE    Usage;      // Semantics
+	BYTE    UsageIndex; // Semantic index
+} D3DVERTEXELEMENT9, *LPD3DVERTEXELEMENT9;
+*/
+
+typedef struct _CxbxVertexShaderStreamInfo
 {
     BOOL  NeedPatch;       // This is to know whether it's data which must be patched
-    DWORD ConvertedStride;
-    DWORD NbrTypes;        // Number of the stream data types
-    UINT  *pTypes;         // The stream data types (xbox)
-	UINT  *pSizes;         // The stream data sizes (pc)
+    DWORD HostVertexStride;
+    DWORD NumberOfVertexElements;        // Number of the stream data types
+	CxbxVertexShaderStreamElement VertexElements[32];
 }
-STREAM_DYNAMIC_PATCH;
+CxbxVertexShaderStreamInfo;
 
-typedef struct _VERTEX_DYNAMIC_PATCH_
+typedef struct _CxbxVertexShaderInfo
 {
-    UINT                         NbrStreams; // The number of streams the vertex shader uses
-    STREAM_DYNAMIC_PATCH        *pStreamPatches;
+    UINT                       NumberOfVertexStreams; // The number of streams the vertex shader uses
+    CxbxVertexShaderStreamInfo VertexStreams[16];
 }
-VERTEX_DYNAMIC_PATCH;
+CxbxVertexShaderInfo;
 
-typedef struct _VERTEX_SHADER
+typedef struct _CxbxVertexShader
 {
     DWORD Handle;
 
@@ -541,9 +560,9 @@ typedef struct _VERTEX_SHADER
     DWORD                 Status;
 
     // Needed for dynamic stream patching
-    VERTEX_DYNAMIC_PATCH  VertexDynamicPatch;
+    CxbxVertexShaderInfo  VertexShaderInfo;
 }
-VERTEX_SHADER;
+CxbxVertexShader;
 
 struct X_D3DResource
 {
@@ -695,6 +714,11 @@ struct X_D3DVolumeTexture : public X_D3DBaseTexture
 struct X_D3DCubeTexture : public X_D3DBaseTexture
 {
 
+};
+
+struct X_D3DVolume : public X_D3DPixelContainer
+{
+	X_D3DBaseTexture *Parent;
 };
 
 struct X_D3DSurface : public X_D3DPixelContainer
@@ -1177,6 +1201,8 @@ const int X_D3DVSDT_FLOAT2H     = 0x72; // xbox ext. 3D float that expands to (v
 const int X_D3DVSDT_NONE        = 0x02; // xbox ext. nsp
 
 const int MAX_NBR_STREAMS = 16;
+
+typedef WORD INDEX16;
 
 #define X_D3DVSD_TOKENTYPESHIFT   29
 #define X_D3DVSD_TOKENTYPEMASK    (7 << X_D3DVSD_TOKENTYPESHIFT)

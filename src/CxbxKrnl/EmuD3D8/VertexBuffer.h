@@ -39,62 +39,59 @@
 
 #define MAX_NBR_STREAMS 16
 
-typedef struct _VertexPatchDesc
+typedef struct _CxbxDrawContext
 {
     IN     X_D3DPRIMITIVETYPE    XboxPrimitiveType;
     IN     DWORD                 dwVertexCount;
     IN     DWORD                 dwStartVertex; // Only D3DDevice_DrawVertices sets this (potentially higher than default 0)
     // The current vertex shader, used to identify the streams
     IN     DWORD                 hVertexShader;
-	IN	   PWORD				 pIndexData = nullptr;
-	IN	   DWORD				 dwIndexBase = 0;
-	IN	   size_t				 uiSize;
+	IN	   PWORD				 pIndexData;
+	IN	   DWORD				 dwIndexBase;
+	IN	   size_t				 VerticesInBuffer;
     // Data if Draw...UP call
     IN PVOID                     pXboxVertexStreamZeroData;
     IN UINT                      uiXboxVertexStreamZeroStride;
 	// Values to be used on host
+	OUT PVOID                    pHostVertexStreamZeroData;
+	OUT UINT                     uiHostVertexStreamZeroStride;
     OUT DWORD                    dwHostPrimitiveCount;
 }
-VertexPatchDesc;
+CxbxDrawContext;
 
-typedef struct _PATCHEDSTREAM
+typedef struct _CxbxPatchedStream
 {
-    XTL::X_D3DVertexBuffer *pOriginalStream;
-    XTL::IDirect3DVertexBuffer *pPatchedStream;
-    UINT                    uiOrigStride;
-    UINT                    uiNewStride;
-} PATCHEDSTREAM;
+    UINT                    uiCachedXboxVertexStride;
+    UINT                    uiCachedHostVertexStride;
+    bool                    bCacheIsStreamZeroDrawUP;
+    void                   *pCachedHostVertexStreamZeroData;
+    bool                    bCachedHostVertexStreamZeroDataIsAllocated;
+    XTL::IDirect3DVertexBuffer *pCachedHostVertexBuffer;
+} CxbxPatchedStream;
 
-class VertexPatcher
+class CxbxVertexBufferConverter
 {
     public:
-        VertexPatcher();
-       ~VertexPatcher();
+        CxbxVertexBufferConverter();
+       ~CxbxVertexBufferConverter();
 
-        bool Apply(VertexPatchDesc *pPatchDesc, bool *pbFatalError);
+        void Apply(CxbxDrawContext *pPatchDesc);
     private:
 
         UINT m_uiNbrStreams;
-        PATCHEDSTREAM m_pStreams[MAX_NBR_STREAMS];
+        CxbxPatchedStream m_PatchedStreams[MAX_NBR_STREAMS];
 
         PVOID m_pNewVertexStreamZeroData;
 
-        bool m_bPatched;
         bool m_bAllocatedStreamZeroData;
 
-        VERTEX_DYNAMIC_PATCH *m_pDynamicPatch;
+        XTL::CxbxVertexShaderInfo *m_pVertexShaderInfo;
 
         // Returns the number of streams of a patch
-        UINT GetNbrStreams(VertexPatchDesc *pPatchDesc);
+        UINT GetNbrStreams(CxbxDrawContext *pPatchDesc);
 
         // Patches the types of the stream
-        bool PatchStream(VertexPatchDesc *pPatchDesc, UINT uiStream);
-
-        // Normalize texture coordinates in FVF stream if needed
-        bool NormalizeTexCoords(VertexPatchDesc *pPatchDesc, UINT uiStream);
-
-        // Patches the primitive of the stream
-        bool PatchPrimitive(VertexPatchDesc *pPatchDesc, UINT uiStream);
+        void ConvertStream(CxbxDrawContext *pPatchDesc, UINT uiStream);
 };
 
 // inline vertex buffer emulation

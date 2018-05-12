@@ -4239,9 +4239,9 @@ VOID XTL::DxbxUpdateActivePixelShader() // NOPATCH
 
   HRESULT Result = D3D_OK;
 
-  // TODO: Is this even right? he first RenderState is PSAlpha,
+  // TODO: Is this even right? The first RenderState is PSAlpha,
   // The pixel shader is stored in pDevice->m_pPixelShader
-  // For now, we still patch SetPixleShader and read from there...
+  // For now, we still patch SetPixelShader and read from there...
   //DWORD *XTL_D3D__RenderState = XTL::EmuMappedD3DRenderState[0];
   //pPSDef = (XTL::X_D3DPIXELSHADERDEF*)(XTL_D3D__RenderState);
 	  pPSDef = g_D3DActivePixelShader != nullptr ? g_D3DActivePixelShader->pPSDef : nullptr;
