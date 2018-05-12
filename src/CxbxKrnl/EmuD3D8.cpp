@@ -4716,6 +4716,15 @@ void CreateHostResource(XTL::X_D3DResource *pResource, int iTextureStage, DWORD 
 		if (pParentXboxTexture) {
 			XTL::IDirect3DBaseTexture *pParentHostBaseTexture = GetHostBaseTexture(pParentXboxTexture, iTextureStage);
 			switch (pParentHostBaseTexture->GetType()) {
+			case XTL::D3DRTYPE_VOLUMETEXTURE: {
+				// TODO
+				break;
+			}
+			case XTL::D3DRTYPE_CUBETEXTURE: {
+				// TODO
+				// test-case : Burnout
+				break;
+			}
 			case XTL::D3DRTYPE_TEXTURE: {
 				// For surfaces with a parent texture, map these to a host texture first
 				XTL::IDirect3DTexture *pParentHostTexture = (XTL::IDirect3DTexture *)pParentHostBaseTexture;
@@ -4729,8 +4738,10 @@ void CreateHostResource(XTL::X_D3DResource *pResource, int iTextureStage, DWORD 
 						SurfaceLevel, pResource, pNewHostSurface);
 					return;
 				}
+				break;
 			}
 			}
+
 			EmuWarning("Failed getting host surface level - falling through to regular surface creation");
 		}
 		// fall through
