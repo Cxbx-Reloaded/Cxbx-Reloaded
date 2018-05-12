@@ -2279,7 +2279,14 @@ static void EmuVerifyResourceIsRegistered(XTL::X_D3DResource *pResource, int iTe
 
 	auto key = GetHostResourceKey(pResource);
 	if (std::find(g_RegisteredResources.begin(), g_RegisteredResources.end(), key) != g_RegisteredResources.end()) {
-		if (!HostResourceRequiresUpdate(key, dwSize)) {
+        //check if the same key existed in the HostResource map already. if there is a old pXboxResource in the map with the same key but different resource address, it must be freed first.
+        auto it = g_HostResources.find(key);
+        if (it != g_HostResources.end() && (it->second.pXboxResource != pResource)) {
+            //printf("EmuVerifyResourceIsRegistered passed in XboxResource collipse HostResource map!! key : %llX , map pXboxResource : %08X , passed in pResource : %08X \n", key, it->second.pXboxResource, pResource);
+            FreeHostResource(key);
+        }
+        else
+        if (!HostResourceRequiresUpdate(key, dwSize)) {
 			return;
 		}
 
