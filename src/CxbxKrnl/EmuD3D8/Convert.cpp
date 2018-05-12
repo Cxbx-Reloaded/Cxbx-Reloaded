@@ -944,12 +944,12 @@ static const FormatInfo FormatInfos[] = {
 	/* 0x3F X_D3DFMT_LIN_A8B8G8R8 */ { 32, Linear, A8B8G8R8, XTL::D3DFMT_A8B8G8R8  }, // Note : D3DFMT_A8B8G8R8=32 D3DFMT_Q8W8V8U8=63 // TODO : Needs testcase.
 #else // Direct3D8 :
 	/* 0x2B X_D3DFMT_F24S8        */ { 32, Swzzld, NoCmpnts, XTL::D3DFMT_D24S8     , DepthBuffer, "X_D3DFMT_F24S8 -> D3DFMT_D24S8" }, // HACK : PC doesn't have D3DFMT_F24S8 (Float vs Int)
-	/* 0x2C X_D3DFMT_D16          */ { 16, Swzzld, NoCmpnts, XTL::D3DFMT_D16_LOCKABLE, DepthBuffer }, // Note : D3DFMT_D16 is always lockable on Xbox, D3DFMT_D16 on host is not.
-	/* 0x2D X_D3DFMT_F16          */ { 16, Swzzld, NoCmpnts, XTL::D3DFMT_D16_LOCKABLE, DepthBuffer, "X_D3DFMT_F16 -> D3DFMT_D16" }, // HACK : PC doesn't have D3DFMT_F16 (Float vs Int)
+	/* 0x2C X_D3DFMT_D16          */ { 16, Swzzld, NoCmpnts, XTL::D3DFMT_D16, DepthBuffer }, // Note : D3DFMT_D16 is always lockable on Xbox, D3DFMT_D16 on host is not.
+	/* 0x2D X_D3DFMT_F16          */ { 16, Swzzld, NoCmpnts, XTL::D3DFMT_D16, DepthBuffer, "X_D3DFMT_F16 -> D3DFMT_D16" }, // HACK : PC doesn't have D3DFMT_F16 (Float vs Int)
 	/* 0x2E X_D3DFMT_LIN_D24S8    */ { 32, Linear, NoCmpnts, XTL::D3DFMT_D24S8     , DepthBuffer },
 	/* 0x2F X_D3DFMT_LIN_F24S8    */ { 32, Linear, NoCmpnts, XTL::D3DFMT_D24S8     , DepthBuffer, "X_D3DFMT_LIN_F24S8 -> D3DFMT_D24S8" }, // HACK : PC doesn't have D3DFMT_F24S8 (Float vs Int)
-	/* 0x30 X_D3DFMT_LIN_D16      */ { 16, Linear, NoCmpnts, XTL::D3DFMT_D16_LOCKABLE, DepthBuffer }, // Note : D3DFMT_D16 is always lockable on Xbox, D3DFMT_D16 on host is not.
-	/* 0x31 X_D3DFMT_LIN_F16      */ { 16, Linear, NoCmpnts, XTL::D3DFMT_D16_LOCKABLE, DepthBuffer, "X_D3DFMT_LIN_F16 -> D3DFMT_D16" }, // HACK : PC doesn't have D3DFMT_F16 (Float vs Int)
+	/* 0x30 X_D3DFMT_LIN_D16      */ { 16, Linear, NoCmpnts, XTL::D3DFMT_D16, DepthBuffer }, // Note : D3DFMT_D16 is always lockable on Xbox, D3DFMT_D16 on host is not.
+	/* 0x31 X_D3DFMT_LIN_F16      */ { 16, Linear, NoCmpnts, XTL::D3DFMT_D16, DepthBuffer, "X_D3DFMT_LIN_F16 -> D3DFMT_D16" }, // HACK : PC doesn't have D3DFMT_F16 (Float vs Int)
 	/* 0x32 X_D3DFMT_L16          */ { 16, Swzzld, _____L16, XTL::D3DFMT_A8L8      , Texture, "X_D3DFMT_L16 -> D3DFMT_A8L8" },
 	/* 0x33 X_D3DFMT_V16U16       */ { 32, Swzzld, NoCmpnts, XTL::D3DFMT_V16U16    },
 	/* 0x34 undefined             */ {},
@@ -1147,9 +1147,12 @@ XTL::X_D3DFORMAT XTL::EmuPC2XB_D3DFormat(D3DFORMAT Format)
 		break; // Linear
 			   //        Result := X_D3DFMT_L8; // Swizzled
 
-	case D3DFMT_D16: case D3DFMT_D16_LOCKABLE:
+	case D3DFMT_D16: // Swizzled
+		return X_D3DFMT_D16;
+		break;
+	case D3DFMT_D16_LOCKABLE: // Swizzled
 		result = X_D3DFMT_D16_LOCKABLE;
-		break; // Swizzled
+		break; 
 
 	case D3DFMT_UNKNOWN:
 		result = ((X_D3DFORMAT)0xffffffff);

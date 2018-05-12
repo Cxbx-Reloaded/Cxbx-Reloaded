@@ -156,6 +156,7 @@ static UINT                         QuadToTriangleD3DIndexBuffer_Size = 0; // = 
 static XTL::INDEX16                *pQuadToTriangleIndexBuffer = nullptr;
 static UINT                         QuadToTriangleIndexBuffer_Size = 0; // = NrOfQuadVertices
 
+static XTL::X_D3DSurface		   *g_XboxBackBufferSurface = NULL;
 static XTL::X_D3DSurface           *g_pXboxRenderTarget = NULL;
 static XTL::X_D3DSurface           *g_pXboxDepthStencil = NULL;
 static BOOL                         g_fYuvEnabled = FALSE;
@@ -4601,8 +4602,23 @@ DWORD WINAPI XTL::EMUPATCH(D3DDevice_Swap)
 			EmuWarning("XTL::EmuD3DDevice_Swap: Flags != 0");
 
 	CxbxReleaseBackBufferLock();
-
 	g_pD3DDevice->EndScene();
+
+	// Blit the Xbox BackBuffer to the Host
+	if (g_XboxBackBufferSurface != NULL) {
+		auto pXboxBackBufferHostSurface = GetHostSurface(g_XboxBackBufferSurface);
+
+		// Now we can fetch the host backbuffer
+		XTL::IDirect3DSurface *pCurrentHostBackBuffer = nullptr;
+		g_pD3DDevice->GetBackBuffer(0, D3DBACKBUFFER_TYPE_MONO, &pCurrentHostBackBuffer);
+		if (pCurrentHostBackBuffer && pXboxBackBufferHostSurface) {
+			HRESULT hRet = D3DXLoadSurfaceFromSurface(pCurrentHostBackBuffer, nullptr, nullptr, pXboxBackBufferHostSurface, nullptr, nullptr, D3DX_DEFAULT, 0);
+			if (hRet != D3D_OK) {
+				EmuWarning("FAILED: %X", hRet);
+			}
+		}
+	}
+
 	HRESULT hRet = g_pD3DDevice->Present(0, 0, 0, 0);
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->Present");
 	hRet = g_pD3DDevice->BeginScene();
@@ -4958,7 +4974,6 @@ void CreateHostResource(XTL::X_D3DResource *pResource, int iTextureStage, DWORD 
 		// Create the surface/volume/(volume/cube/)texture
 		switch (XboxResourceType) {
 		case XTL::X_D3DRTYPE_SURFACE: {
-#if 0 // TODO : Get this to work (test case Dolphin turns black with this enabled)
 			if (D3DUsage & D3DUSAGE_RENDERTARGET) {
 				hRet = g_pD3DDevice->CreateRenderTarget(dwWidth, dwHeight, PCFormat,
 					g_EmuCDPD.HostPresentationParameters.MultiSampleType,
@@ -4973,7 +4988,6 @@ void CreateHostResource(XTL::X_D3DResource *pResource, int iTextureStage, DWORD 
 				);
 				DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateRenderTarget");
 			} else
-#endif
 			if (D3DUsage & D3DUSAGE_DEPTHSTENCIL) {
 				hRet = g_pD3DDevice->CreateDepthStencilSurface(dwWidth, dwHeight, PCFormat,
 					g_EmuCDPD.HostPresentationParameters.MultiSampleType, 
@@ -7935,6 +7949,17 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderTarget)
 	IDirect3DSurface *pHostRenderTarget = nullptr;
 	IDirect3DSurface *pHostDepthStencil = nullptr;
 
+	// In Xbox titles, CreateDevice calls SetRenderTarget for the back buffer
+	// We can use this to determine the Xbox backbuffer surface for later use!
+	if (g_XboxBackBufferSurface == NULL) {
+		g_XboxBackBufferSurface = pRenderTarget;
+	}
+
+	// If we got a null, set the Xbox Render Target to the Xbox Backbuffer
+	if (pRenderTarget == NULL) {
+		pRenderTarget = g_XboxBackBufferSurface;
+	}
+
 	// The current render target is only replaced if it's passed in here non-null
     if (pRenderTarget != NULL) {
 		g_pXboxRenderTarget = pRenderTarget;
@@ -7954,15 +7979,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderTarget)
 #else
 	hRet = g_pD3DDevice->SetRenderTarget(pHostRenderTarget, pHostDepthStencil);
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetRenderTarget");
-#if 0 // tmp test
-	if ((hRet != D3D_OK) && pHostDepthStencil) {
-		// HACK : retry a failed SetRenderTarget without a depth-stencil
-		// (obviously, this will cause render issues, but the lack
-		// of render-target itself is even less desirable, so ...)
-		hRet = g_pD3DDevice->SetRenderTarget(pHostRenderTarget, nullptr);
-		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetRenderTarget");
-	}
-#endif
 #endif
 }
 
