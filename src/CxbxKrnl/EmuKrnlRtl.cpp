@@ -1285,10 +1285,21 @@ XBSYSAPI EXPORTNUM(296) xboxkrnl::CHAR NTAPI xboxkrnl::RtlLowerChar
 )
 {
 	LOG_FUNC_ONE_ARG(Character);
+	
+	BYTE CharCode = (BYTE)Character;
 
-	CHAR ret = tolower(Character);
+	if (CharCode >= 'A' && CharCode <= 'Z')
+	{
+		CharCode ^= 0x20;
+	}
 
-	RETURN(ret);
+	// Latin alphabet (ISO 8859-1)
+	else if (CharCode >= 0xc0 && CharCode <= 0xde && CharCode != 0xd7)
+	{
+		CharCode ^= 0x20;
+	}
+
+	RETURN((CHAR)CharCode);
 }
 
 // ******************************************************************
@@ -2018,9 +2029,25 @@ XBSYSAPI EXPORTNUM(316) xboxkrnl::CHAR NTAPI xboxkrnl::RtlUpperChar
 {
 	LOG_FUNC_ONE_ARG(Character);
 
-	CHAR ret = toupper(Character);
+	BYTE CharCode = (BYTE)Character;
+	
+	if (CharCode >= 'a' && CharCode <= 'z')
+	{
+		CharCode ^= 0x20;
+	}
+	
+	// Latin alphabet (ISO 8859-1)
+	else if (CharCode >= 0xe0 && CharCode <= 0xfe && CharCode != 0xf7)
+	{
+		CharCode ^= 0x20;
+	}
 
-	RETURN(ret);
+	else if (CharCode == 0xFF)
+	{
+		CharCode = '?';
+	}
+	
+	RETURN((CHAR)CharCode);
 }
 
 // ******************************************************************
@@ -2046,7 +2073,7 @@ XBSYSAPI EXPORTNUM(317) xboxkrnl::VOID NTAPI xboxkrnl::RtlUpperString
 
 	DestinationString->Length = (USHORT)length;
 	while (length > 0) {
-		*pDst++ = toupper(*pSrc++);
+		*pDst++ = RtlUpperChar(*pSrc++);
 		length--;
 	}
 }
