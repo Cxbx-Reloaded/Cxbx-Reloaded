@@ -4714,19 +4714,23 @@ void CreateHostResource(XTL::X_D3DResource *pResource, int iTextureStage, DWORD 
 		XTL::X_D3DSurface *pXboxSurface = (XTL::X_D3DSurface *)pResource;
 		XTL::X_D3DTexture *pParentXboxTexture = (pXboxSurface) ? (XTL::X_D3DTexture *)pXboxSurface->Parent : xbnullptr;
 		if (pParentXboxTexture) {
-			// For surfaces with a parent texture, map these to a host texture first
-			XTL::IDirect3DTexture *pParentHostTexture = GetHostTexture(pParentXboxTexture, iTextureStage);
-			UINT SurfaceLevel = 0; // TODO : Derive actual level based on pXboxSurface->Data delta to pParentXboxTexture->Data
-			XTL::IDirect3DSurface *pNewHostSurface;
-			HRESULT hRet = pParentHostTexture->GetSurfaceLevel(SurfaceLevel, &pNewHostSurface);
-			DEBUG_D3DRESULT(hRet, "pHostParentTexture->GetSurfaceLevel");
-			if (hRet == D3D_OK) {
-				SetHostSurface(pXboxSurface, pNewHostSurface);
-				DbgPrintf("CreateHostResource : Successfully created surface level (%u, 0x%.08X, 0x%.08X)\n",
-					SurfaceLevel, pResource, pNewHostSurface);
-				return;
+			XTL::IDirect3DBaseTexture *pParentHostBaseTexture = GetHostBaseTexture(pParentXboxTexture, iTextureStage);
+			switch (pParentHostBaseTexture->GetType()) {
+			case XTL::D3DRTYPE_TEXTURE: {
+				// For surfaces with a parent texture, map these to a host texture first
+				XTL::IDirect3DTexture *pParentHostTexture = (XTL::IDirect3DTexture *)pParentHostBaseTexture;
+				UINT SurfaceLevel = 0; // TODO : Derive actual level based on pXboxSurface->Data delta to pParentXboxTexture->Data
+				XTL::IDirect3DSurface *pNewHostSurface;
+				HRESULT hRet = pParentHostTexture->GetSurfaceLevel(SurfaceLevel, &pNewHostSurface);
+				DEBUG_D3DRESULT(hRet, "pHostParentTexture->GetSurfaceLevel");
+				if (hRet == D3D_OK) {
+					SetHostSurface(pXboxSurface, pNewHostSurface);
+					DbgPrintf("CreateHostResource : Successfully created surface level (%u, 0x%.08X, 0x%.08X)\n",
+						SurfaceLevel, pResource, pNewHostSurface);
+					return;
+				}
 			}
-
+			}
 			EmuWarning("Failed getting host surface level - falling through to regular surface creation");
 		}
 		// fall through
