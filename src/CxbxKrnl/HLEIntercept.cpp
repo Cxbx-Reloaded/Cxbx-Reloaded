@@ -423,15 +423,15 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
             }
 
             // Fix up Render state and Texture States
-            if (g_SymbolAddresses.find("D3DDeferredRenderState") == g_SymbolAddresses.end()) {
+            if (g_SymbolAddresses["D3DDeferredRenderState"] == 0) {
                 EmuWarning("EmuD3DDeferredRenderState was not found!");
             }
             
-            if (g_SymbolAddresses.find("D3DDeferredTextureState") == g_SymbolAddresses.end()) {
+            if (g_SymbolAddresses["D3DDeferredTextureState"] == 0) {
                 EmuWarning("EmuD3DDeferredTextureState was not found!");
             }
 
-            if (g_SymbolAddresses.find("D3DDEVICE") == g_SymbolAddresses.end()) {
+            if (g_SymbolAddresses["D3DDEVICE"] == 0) {
                 EmuWarning("D3DDEVICE was not found!");
             }
 
