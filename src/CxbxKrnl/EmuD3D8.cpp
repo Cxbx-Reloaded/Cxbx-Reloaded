@@ -113,6 +113,14 @@ static DWORD						g_CallbackParam;		// Callback param
 static BOOL                         g_bHasDepthStencil = FALSE;  // Does device have a Depth/Stencil Buffer?
 static DWORD						g_dwPrimPerFrame = 0;	// Number of primitives within one frame
 
+struct {
+	XTL::X_D3DSurface *pSurface;
+	RECT SrcRect;
+	RECT DstRect;
+	BOOL EnableColorKey;
+	XTL::D3DCOLOR ColorKey;
+} g_OverlayProxy;
+
 // D3D based variables
 static GUID                         g_ddguid;               // DirectDraw driver GUID
 static XTL::IDirect3D              *g_pDirect3D = nullptr;
@@ -1323,24 +1331,6 @@ uint8 *XTL::ConvertD3DTextureToARGB(
 	// NOTE : Caller must take ownership!
 	return pDst;
 }
-
-VOID CxbxReleaseBackBufferLock()
-{
-	XTL::IDirect3DSurface *pBackBuffer = nullptr;
-
-	if (D3D_OK == g_pD3DDevice->GetBackBuffer(
-#ifdef CXBX_USE_D3D9
-		0, // iSwapChain
-#endif
-		0, XTL::D3DBACKBUFFER_TYPE_MONO, &pBackBuffer))
-	{
-		assert(pBackBuffer != nullptr);
-
-		pBackBuffer->UnlockRect(); // remove old lock
-		pBackBuffer->Release();
-	}
-}
-
 
 // Direct3D initialization (called before emulation begins)
 VOID XTL::EmuD3DInit()
@@ -4601,26 +4591,106 @@ DWORD WINAPI XTL::EMUPATCH(D3DDevice_Swap)
 		if (Flags != CXBX_SWAP_PRESENT_FORWARD) // Avoid a warning when forwarded
 			EmuWarning("XTL::EmuD3DDevice_Swap: Flags != 0");
 
-	CxbxReleaseBackBufferLock();
-	g_pD3DDevice->EndScene();
+	// Fetch the host backbuffer
+	XTL::IDirect3DSurface *pCurrentHostBackBuffer = nullptr;
+	HRESULT hRet = g_pD3DDevice->GetBackBuffer(
+#ifdef CXBX_USE_D3D9
+		0, // iSwapChain
+#endif
+		0, XTL::D3DBACKBUFFER_TYPE_MONO, &pCurrentHostBackBuffer);
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->GetBackBuffer - Unable to get backbuffer surface!");
+	if (hRet == D3D_OK) {
+		assert(pCurrentHostBackBuffer != nullptr);
 
-	// Blit the Xbox BackBuffer to the Host
-	if (g_XboxBackBufferSurface != NULL) {
+		pCurrentHostBackBuffer->UnlockRect(); // remove any old lock
+
 		auto pXboxBackBufferHostSurface = GetHostSurface(g_XboxBackBufferSurface);
-
-		// Now we can fetch the host backbuffer
-		XTL::IDirect3DSurface *pCurrentHostBackBuffer = nullptr;
-		g_pD3DDevice->GetBackBuffer(0, D3DBACKBUFFER_TYPE_MONO, &pCurrentHostBackBuffer);
-		if (pCurrentHostBackBuffer && pXboxBackBufferHostSurface) {
-			HRESULT hRet = D3DXLoadSurfaceFromSurface(pCurrentHostBackBuffer, nullptr, nullptr, pXboxBackBufferHostSurface, nullptr, nullptr, D3DX_DEFAULT, 0);
+		if (pXboxBackBufferHostSurface) {
+			// Blit Xbox BackBuffer to host BackBuffer
+			hRet = D3DXLoadSurfaceFromSurface(pCurrentHostBackBuffer, nullptr, nullptr, pXboxBackBufferHostSurface, nullptr, nullptr, D3DX_DEFAULT, 0);
 			if (hRet != D3D_OK) {
-				EmuWarning("FAILED: %X", hRet);
+				EmuWarning("Couldn't blit Xbox BackBuffer to host BackBuffer : %X", hRet);
 			}
 		}
+
+		if (g_OverlayProxy.pSurface && g_fYuvEnabled) {
+
+			// Blit Xbox overlay to host backbuffer
+			uint08 *pOverlayData = (uint08*)GetDataFromXboxResource(g_OverlayProxy.pSurface);
+			UINT OverlayWidth, OverlayHeight, OverlayDepth, OverlayRowPitch, OverlaySlicePitch;
+			CxbxGetPixelContainerMeasures(
+				(XTL::X_D3DPixelContainer *)g_OverlayProxy.pSurface,
+				0, // dwMipMapLevel
+				&OverlayWidth, &OverlayHeight, &OverlayDepth, &OverlayRowPitch, &OverlaySlicePitch);
+
+			RECT EmuSourRect;
+			RECT EmuDestRect;
+
+			if (g_OverlayProxy.SrcRect.right > 0) {
+				EmuSourRect = g_OverlayProxy.SrcRect;
+			}
+			else {
+				SetRect(&EmuSourRect, 0, 0, OverlayWidth, OverlayHeight);
+			}
+
+			if (g_OverlayProxy.DstRect.right > 0) {
+				// If there's a destination rectangle given, copy that into our local variable :
+				EmuDestRect = g_OverlayProxy.DstRect;
+			}
+			else {
+				GetClientRect(g_hEmuWindow, &EmuDestRect);
+			}
+
+			// load the YUY2 into the backbuffer
+
+			// Get backbuffer dimenions; TODO : remember this once, at creation/resize time
+			D3DSURFACE_DESC BackBufferDesc;
+			pCurrentHostBackBuffer->GetDesc(&BackBufferDesc);
+#if 0
+			// Limit the width and height of the output to the backbuffer dimensions.
+			// This will (hopefully) prevent exceptions in Blinx - The Time Sweeper
+			// (see https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/issues/285)
+			{
+				// Use our (bounded) copy when bounds exceed :
+				if (EmuDestRect.right > (LONG)BackBufferDesc.Width) {
+					EmuDestRect.right = (LONG)BackBufferDesc.Width;
+					DstRect = &EmuDestRect;
+				}
+
+				if (EmuDestRect.bottom > (LONG)BackBufferDesc.Height) {
+					EmuDestRect.bottom = (LONG)BackBufferDesc.Height;
+					DstRect = &EmuDestRect;
+				}
+			}
+#endif
+			// Use D3DXLoadSurfaceFromMemory() to do conversion, stretching and filtering
+			// avoiding the need for YUY2toARGB() (might become relevant when porting to D3D9 or OpenGL)
+			// see https://msdn.microsoft.com/en-us/library/windows/desktop/bb172902(v=vs.85).aspx
+			hRet = D3DXLoadSurfaceFromMemory(
+				/* pDestSurface = */ pCurrentHostBackBuffer,
+				/* pDestPalette = */ nullptr, // Palette not needed for YUY2
+				/* pDestRect = */ &EmuDestRect,
+				/* pSrcMemory = */ pOverlayData, // Source buffer
+				/* SrcFormat = */ D3DFMT_YUY2,
+				/* SrcPitch = */ OverlayRowPitch,
+				/* pSrcPalette = */ nullptr, // Palette not needed for YUY2
+				/* SrcRect = */ &EmuSourRect,
+				/* Filter = */ D3DX_FILTER_POINT, // Dxbx note : D3DX_FILTER_LINEAR gives a smoother image, but 'bleeds' across borders
+				/* ColorKey = */ g_OverlayProxy.EnableColorKey ? g_OverlayProxy.ColorKey : 0);
+			DEBUG_D3DRESULT(hRet, "D3DXLoadSurfaceFromMemory - UpdateOverlay could not convert buffer!\n");
+			if (hRet != D3D_OK) {
+				EmuWarning("Couldn't blit Xbox overlay to host BackBuffer : %X", hRet);
+			}
+		}
+
+		pCurrentHostBackBuffer->Release();
 	}
 
-	HRESULT hRet = g_pD3DDevice->Present(0, 0, 0, 0);
+	g_pD3DDevice->EndScene();
+
+	hRet = g_pD3DDevice->Present(0, 0, 0, 0);
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->Present");
+
 	hRet = g_pD3DDevice->BeginScene();
 
 	if (!g_UncapFramerate) {
@@ -5515,16 +5585,16 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_EnableOverlay)
 // ******************************************************************
 VOID WINAPI XTL::EMUPATCH(D3DDevice_UpdateOverlay)
 (
-    X_D3DSurface *pSurface,
-    CONST RECT   *SrcRect,
-    CONST RECT   *DstRect,
-    BOOL          EnableColorKey,
-    D3DCOLOR      ColorKey
-)
+	X_D3DSurface *pSurface,
+	CONST RECT   *SrcRect,
+	CONST RECT   *DstRect,
+	BOOL          EnableColorKey,
+	D3DCOLOR      ColorKey
+	)
 {
 	FUNC_EXPORTS
 
-	LOG_FUNC_BEGIN
+		LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pSurface)
 		LOG_FUNC_ARG(SrcRect)
 		LOG_FUNC_ARG(DstRect)
@@ -5532,93 +5602,22 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_UpdateOverlay)
 		LOG_FUNC_ARG(ColorKey)
 		LOG_FUNC_END;
 
-	if (!g_fYuvEnabled) {
-		return;
+	g_OverlayProxy = {};
+	g_OverlayProxy.pSurface = pSurface;
+	if (SrcRect)
+		g_OverlayProxy.SrcRect = *SrcRect;
+	if (DstRect)
+		g_OverlayProxy.DstRect = *DstRect;
+	g_OverlayProxy.EnableColorKey = EnableColorKey;
+	g_OverlayProxy.ColorKey = ColorKey;
+
+	// Update overlay if present was not called since the last call to
+	// EmuD3DDevice_UpdateOverlay.
+	if (g_OverlaySwap != g_SwapData.Swap - 1) {
+		EMUPATCH(D3DDevice_Swap)(CXBX_SWAP_PRESENT_FORWARD);
 	}
 
-	if (pSurface == NULL) {
-		EmuWarning("pSurface == NULL!");
-	} else {
-		uint08 *pOverlayData = (uint08*)GetDataFromXboxResource(pSurface);
-		UINT OverlayWidth, OverlayHeight, OverlayDepth, OverlayRowPitch, OverlaySlicePitch;
-		CxbxGetPixelContainerMeasures(
-			(XTL::X_D3DPixelContainer *)pSurface,
-			0, // dwMipMapLevel
-			&OverlayWidth, &OverlayHeight, &OverlayDepth, &OverlayRowPitch, &OverlaySlicePitch);
-
-		RECT EmuSourRect;
-		RECT EmuDestRect;
-
-		if (SrcRect != NULL) {
-			EmuSourRect = *SrcRect;
-		} else {
-			SetRect(&EmuSourRect, 0, 0, OverlayWidth, OverlayHeight);
-		}
-
-		if (DstRect != NULL) {
-			// If there's a destination rectangle given, copy that into our local variable :
-			EmuDestRect = *DstRect;
-		} else {
-			GetClientRect(g_hEmuWindow, &EmuDestRect);
-		}
-
-		IDirect3DSurface *pCurrentHostBackBuffer = nullptr;
-		HRESULT hRet = g_pD3DDevice->GetBackBuffer(
-#ifdef CXBX_USE_D3D9
-			0, // iSwapChain
-#endif
-			0, D3DBACKBUFFER_TYPE_MONO, &pCurrentHostBackBuffer);
-		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->GetBackBuffer - Unable to get backbuffer surface!");
-
-		// if we obtained the backbuffer, load the YUY2 into the backbuffer
-		if (SUCCEEDED(hRet)) {
-			// Get backbuffer dimenions; TODO : remember this once, at creation/resize time
-			D3DSURFACE_DESC BackBufferDesc;
-			pCurrentHostBackBuffer->GetDesc(&BackBufferDesc);
-
-			// Limit the width and height of the output to the backbuffer dimensions.
-			// This will (hopefully) prevent exceptions in Blinx - The Time Sweeper
-			// (see https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/issues/285)
-			{
-				// Use our (bounded) copy when bounds exceed :
-				if (EmuDestRect.right > (LONG)BackBufferDesc.Width) {
-					EmuDestRect.right = (LONG)BackBufferDesc.Width;
-					DstRect = &EmuDestRect;
-				}
-
-				if (EmuDestRect.bottom > (LONG)BackBufferDesc.Height) {
-					EmuDestRect.bottom = (LONG)BackBufferDesc.Height;
-					DstRect = &EmuDestRect;
-				}
-			}
-
-			// Use D3DXLoadSurfaceFromMemory() to do conversion, stretching and filtering
-			// avoiding the need for YUY2toARGB() (might become relevant when porting to D3D9 or OpenGL)
-			// see https://msdn.microsoft.com/en-us/library/windows/desktop/bb172902(v=vs.85).aspx
-			hRet = D3DXLoadSurfaceFromMemory(
-				/* pDestSurface = */ pCurrentHostBackBuffer,
-				/* pDestPalette = */ nullptr, // Palette not needed for YUY2
-				/* pDestRect = */DstRect, // Either the unmodified original (can be NULL) or a pointer to our local variable
-				/* pSrcMemory = */ pOverlayData, // Source buffer
-				/* SrcFormat = */ D3DFMT_YUY2,
-				/* SrcPitch = */ OverlayRowPitch,
-				/* pSrcPalette = */ nullptr, // Palette not needed for YUY2
-				/* SrcRect = */ &EmuSourRect,
-				/* Filter = */ D3DX_FILTER_POINT, // Dxbx note : D3DX_FILTER_LINEAR gives a smoother image, but 'bleeds' across borders
-				/* ColorKey = */ EnableColorKey ? ColorKey : 0);
-			DEBUG_D3DRESULT(hRet, "D3DXLoadSurfaceFromMemory - UpdateOverlay could not convert buffer!\n");
-
-			pCurrentHostBackBuffer->Release();
-		}
-
-		// Update overlay if present was not called since the last call to
-		// EmuD3DDevice_UpdateOverlay.
-		if (g_OverlaySwap != g_SwapData.Swap - 1) {
-			EMUPATCH(D3DDevice_Swap)(CXBX_SWAP_PRESENT_FORWARD);
-		}
-
-		g_OverlaySwap = g_SwapData.Swap;
-	}   
+	g_OverlaySwap = g_SwapData.Swap;
 }
 
 // ******************************************************************
