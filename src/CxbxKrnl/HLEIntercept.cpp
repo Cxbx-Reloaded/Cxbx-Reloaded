@@ -81,18 +81,6 @@ void* GetXboxFunctionPointer(std::string functionName)
     if (symbol != g_SymbolAddresses.end()) {
         return (void*)symbol->second;
     }
-    
-    // No function was matched, however, it is currently possible for a symbol to exist 
-    // and be suffixed with _UNPATCHED. (Due to the HLE Database UNPATCHED flag)
-    // In this case, the above will fail despite us actually knowing the location of the symbol
-    // So do the check (again) with the _UNPATCHED suffix
-    // NOTE: A proper solution would be to completely separate the OOVPA table and Patch
-    // flags: Perhaps renaming HLEDatabase to SymbolDatabase, then having a separate PatchTable
-    // file, mapping symbol names to patch functions.
-    symbol = g_SymbolAddresses.find(functionName + "_UNPATCHED");
-    if (symbol != g_SymbolAddresses.end()) {
-        return (void*)symbol->second;
-    }
 
     // Finally, if none of the above were matched, return nullptr
     return nullptr;
