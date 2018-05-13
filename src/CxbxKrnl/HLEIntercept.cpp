@@ -81,18 +81,6 @@ void* GetXboxFunctionPointer(std::string functionName)
     if (symbol != g_SymbolAddresses.end()) {
         return (void*)symbol->second;
     }
-    
-    // No function was matched, however, it is currently possible for a symbol to exist 
-    // and be suffixed with _UNPATCHED. (Due to the HLE Database UNPATCHED flag)
-    // In this case, the above will fail despite us actually knowing the location of the symbol
-    // So do the check (again) with the _UNPATCHED suffix
-    // NOTE: A proper solution would be to completely separate the OOVPA table and Patch
-    // flags: Perhaps renaming HLEDatabase to SymbolDatabase, then having a separate PatchTable
-    // file, mapping symbol names to patch functions.
-    symbol = g_SymbolAddresses.find(functionName + "_UNPATCHED");
-    if (symbol != g_SymbolAddresses.end()) {
-        return (void*)symbol->second;
-    }
 
     // Finally, if none of the above were matched, return nullptr
     return nullptr;
@@ -220,9 +208,6 @@ void CDECL EmuRegisterSymbol(const char* library_str,
     if (hasSymbol != 0)
         return;
 
-    // Now that we found the address, store it (regardless if we patch it or not)
-    g_SymbolAddresses[symbol_str] = func_addr;
-
     // Output some details
     std::stringstream output;
     output << "HLE: 0x" << std::setfill('0') << std::setw(8) << std::hex << func_addr
@@ -290,14 +275,28 @@ void CDECL EmuRegisterSymbol(const char* library_str,
         }
     }
 #endif
-    // Retrieve the associated patch, if any is available
-    void* addr = GetEmuPatchAddr(symbol_str);
 
-    if (addr != nullptr) {
-        EmuInstallPatch(symbol_str, func_addr, addr);
-        output << "\t*PATCHED*";
+    // NOTE: Alternate fix, however it will not register symbols just like the original method did.
+    //       We need to create an array for symbol, patch, library type, etc structure.
+    //       Then we can replace checks below into permanent solution.
+    if (bLLE_APU && ((library_flag & XbSymbolLib_XACTENG) || (library_flag & XbSymbolLib_DSOUND) > 0)) {
+        // Do nothing if emulating LLE APU
+    } else if (bLLE_GPU && ((library_flag & XbSymbolLib_XGRAPHC) || (library_flag & XbSymbolLib_D3D8) || (library_flag & XbSymbolLib_D3D8LTCG) > 0)) {
+        // Do nothing if emulating LLE GPU
+    } else {
+        // Or else check if patch exist then patch it.
+
+        // Now that we found the address, store it (regardless if we patch it or not)
+        g_SymbolAddresses[symbol_str] = func_addr;
+
+        // Retrieve the associated patch, if any is available
+        void* addr = GetEmuPatchAddr(symbol_str);
+
+        if (addr != nullptr) {
+            EmuInstallPatch(symbol_str, func_addr, addr);
+            output << "\t*PATCHED*";
+        }
     }
-
     output << "\n";
     printf(output.str().c_str());
 }
@@ -424,15 +423,15 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
             }
 
             // Fix up Render state and Texture States
-            if (g_SymbolAddresses.find("D3DDeferredRenderState") == g_SymbolAddresses.end()) {
+            if (g_SymbolAddresses["D3DDeferredRenderState"] == 0) {
                 EmuWarning("EmuD3DDeferredRenderState was not found!");
             }
             
-            if (g_SymbolAddresses.find("D3DDeferredTextureState") == g_SymbolAddresses.end()) {
+            if (g_SymbolAddresses["D3DDeferredTextureState"] == 0) {
                 EmuWarning("EmuD3DDeferredTextureState was not found!");
             }
 
-            if (g_SymbolAddresses.find("D3DDEVICE") == g_SymbolAddresses.end()) {
+            if (g_SymbolAddresses["D3DDEVICE"] == 0) {
                 EmuWarning("D3DDEVICE was not found!");
             }
 
