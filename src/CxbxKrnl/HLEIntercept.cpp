@@ -220,9 +220,6 @@ void CDECL EmuRegisterSymbol(const char* library_str,
     if (hasSymbol != 0)
         return;
 
-    // Now that we found the address, store it (regardless if we patch it or not)
-    g_SymbolAddresses[symbol_str] = func_addr;
-
     // Output some details
     std::stringstream output;
     output << "HLE: 0x" << std::setfill('0') << std::setw(8) << std::hex << func_addr
@@ -290,14 +287,28 @@ void CDECL EmuRegisterSymbol(const char* library_str,
         }
     }
 #endif
-    // Retrieve the associated patch, if any is available
-    void* addr = GetEmuPatchAddr(symbol_str);
 
-    if (addr != nullptr) {
-        EmuInstallPatch(symbol_str, func_addr, addr);
-        output << "\t*PATCHED*";
+    // NOTE: Alternate fix, however it will not register symbols just like the original method did.
+    //       We need to create an array for symbol, patch, library type, etc structure.
+    //       Then we can replace checks below into permanent solution.
+    if (bLLE_APU && ((library_flag & XbSymbolLib_XACTENG) || (library_flag & XbSymbolLib_DSOUND) > 0)) {
+        // Do nothing if emulating LLE APU
+    } else if (bLLE_GPU && ((library_flag & XbSymbolLib_XGRAPHC) || (library_flag & XbSymbolLib_D3D8) || (library_flag & XbSymbolLib_D3D8LTCG) > 0)) {
+        // Do nothing if emulating LLE GPU
+    } else {
+        // Or else check if patch exist then patch it.
+
+        // Now that we found the address, store it (regardless if we patch it or not)
+        g_SymbolAddresses[symbol_str] = func_addr;
+
+        // Retrieve the associated patch, if any is available
+        void* addr = GetEmuPatchAddr(symbol_str);
+
+        if (addr != nullptr) {
+            EmuInstallPatch(symbol_str, func_addr, addr);
+            output << "\t*PATCHED*";
+        }
     }
-
     output << "\n";
     printf(output.str().c_str());
 }
