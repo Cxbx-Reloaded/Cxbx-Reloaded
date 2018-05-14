@@ -4619,11 +4619,19 @@ DWORD WINAPI XTL::EMUPATCH(D3DDevice_Swap)
 				/* pSrcRect = */ nullptr,
 				/* Filter = */ D3DX_DEFAULT,
 				/* ColorKey = */ 0);
-			if (hRet == D3D_OK) {
-				LOG_TEST_CASE("Curiously, D3DXLoadSurfaceFromSurface never succeeds, but we still get output!?!");
+			if (BackBufferDesc.MultiSampleType != D3DMULTISAMPLE_NONE) {
+				if (hRet != D3D_OK) {
+					// D3DXLoadSurfaceFromSurface fails for MultiSample backbuffers, but curiously we still get output!?!
+					// In any case, don't log failure on each swap
+				}
+				else {
+					LOG_TEST_CASE("D3DXLoadSurfaceFromSurface succeeded for MultiSample backbuffer!");
+				}
 			}
 			else {
-				// Avoid logging this each frame : EmuWarning("Couldn't blit Xbox BackBuffer to host BackBuffer : %X", hRet);
+				if (hRet != D3D_OK) {
+					EmuWarning("Couldn't blit Xbox BackBuffer to host BackBuffer : %X", hRet);
+				}
 			}
 		}
 
@@ -4695,8 +4703,8 @@ DWORD WINAPI XTL::EMUPATCH(D3DDevice_Swap)
 						/* pSrcRect = */ &EmuSourRect,
 						/* Filter = */ D3DX_FILTER_POINT, // Dxbx note : D3DX_FILTER_LINEAR gives a smoother image, but 'bleeds' across borders
 						/* ColorKey = */ g_OverlayProxy.EnableColorKey ? g_OverlayProxy.ColorKey : 0);
-					if (hRet != D3D_OK) {
-						EmuWarning("Couldn't blit Xbox overlay to host BackBuffer : %X", hRet);
+					if (hRet == D3D_OK) {
+						LOG_TEST_CASE("D3DXLoadSurfaceFromSurface(Overlay) succeeded for MultiSample backbuffer!");
 					}
 				}
 			}
