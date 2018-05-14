@@ -1079,7 +1079,7 @@ XTL::D3DFORMAT XTL::EmuXB2PC_D3DFormat(X_D3DFORMAT Format)
 	return D3DFMT_UNKNOWN;
 }
 
-XTL::X_D3DFORMAT XTL::EmuPC2XB_D3DFormat(D3DFORMAT Format, bool bPreferLinear = true)
+XTL::X_D3DFORMAT XTL::EmuPC2XB_D3DFormat(D3DFORMAT Format, bool bPreferLinear)
 {
 	X_D3DFORMAT result;
     switch(Format)
