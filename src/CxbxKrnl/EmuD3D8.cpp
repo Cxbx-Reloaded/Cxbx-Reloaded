@@ -1932,17 +1932,16 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
 					}
 
                     // TODO: Support Xbox extensions if possible
-                    if(g_EmuCDPD.XboxPresentationParameters.MultiSampleType != 0)
-                    {
-                        EmuWarning("MultiSampleType 0x%.08X is not supported!", g_EmuCDPD.XboxPresentationParameters.MultiSampleType);
-
-                        g_EmuCDPD.HostPresentationParameters.MultiSampleType = XTL::D3DMULTISAMPLE_NONE;
-
+                    if(g_EmuCDPD.XboxPresentationParameters.MultiSampleType != 0) {
                         // TODO: Check card for multisampling abilities
-            //            if(g_EmuCDPD.XboxPresentationParameters.MultiSampleType == X_D3DMULTISAMPLE_2_SAMPLES_MULTISAMPLE_QUINCUNX) // = 0x00001121
-            //                g_EmuCDPD.HostPresentationParameters.MultiSampleType = D3DMULTISAMPLE_2_SAMPLES;
-            //            else
-            //                CxbxKrnlCleanup("Unknown MultiSampleType (0x%.08X)", g_EmuCDPD.XboxPresentationParameters.MultiSampleType);
+                        if(g_EmuCDPD.XboxPresentationParameters.MultiSampleType == XTL::X_D3DMULTISAMPLE_2_SAMPLES_MULTISAMPLE_QUINCUNX) // = 0x00001121 = 4385
+							// Test-case : Galleon
+                            g_EmuCDPD.HostPresentationParameters.MultiSampleType = XTL::D3DMULTISAMPLE_2_SAMPLES;
+						else {
+							// CxbxKrnlCleanup("Unknown MultiSampleType (0x%.08X)", g_EmuCDPD.XboxPresentationParameters.MultiSampleType);
+							EmuWarning("MultiSampleType 0x%.08X is not supported!", g_EmuCDPD.XboxPresentationParameters.MultiSampleType);
+							g_EmuCDPD.HostPresentationParameters.MultiSampleType = XTL::D3DMULTISAMPLE_NONE;
+						}
                     }
 
                     g_EmuCDPD.HostPresentationParameters.Flags = D3DPRESENTFLAG_LOCKABLE_BACKBUFFER;
@@ -4604,6 +4603,10 @@ DWORD WINAPI XTL::EMUPATCH(D3DDevice_Swap)
 
 		pCurrentHostBackBuffer->UnlockRect(); // remove any old lock
 
+		// Get backbuffer dimenions; TODO : remember this once, at creation/resize time
+		D3DSURFACE_DESC BackBufferDesc;
+		pCurrentHostBackBuffer->GetDesc(&BackBufferDesc);
+
 		auto pXboxBackBufferHostSurface = GetHostSurface(g_XboxBackBufferSurface);
 		if (pXboxBackBufferHostSurface) {
 			// Blit Xbox BackBuffer to host BackBuffer
@@ -4652,10 +4655,6 @@ DWORD WINAPI XTL::EMUPATCH(D3DDevice_Swap)
 			}
 
 			// load the YUY2 into the backbuffer
-
-			// Get backbuffer dimenions; TODO : remember this once, at creation/resize time
-			D3DSURFACE_DESC BackBufferDesc;
-			pCurrentHostBackBuffer->GetDesc(&BackBufferDesc);
 
 			// Limit the width and height of the output to the backbuffer dimensions.
 			// This will (hopefully) prevent exceptions in Blinx - The Time Sweeper
