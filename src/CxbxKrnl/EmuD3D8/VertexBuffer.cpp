@@ -162,7 +162,13 @@ void ActivatePatchedStream
 		pDrawContext->uiHostVertexStreamZeroStride = pPatchedStream->uiCachedHostVertexStride;
 	}
 	else {
-		HRESULT hRet = g_pD3DDevice->SetStreamSource(uiStream, pPatchedStream->pCachedHostVertexBuffer, pPatchedStream->uiCachedHostVertexStride);
+		HRESULT hRet = g_pD3DDevice->SetStreamSource(
+			uiStream, 
+			pPatchedStream->pCachedHostVertexBuffer, 
+#ifdef CXBX_USE_D3D9
+			0, // OffsetInBytes
+#endif
+			pPatchedStream->uiCachedHostVertexStride);
 		//DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetStreamSource");
 		if (FAILED(hRet)) {
 			CxbxKrnlCleanup("Failed to set the type patched buffer as the new stream source!\n");
@@ -348,7 +354,13 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
 		XTL::X_D3DVertexBuffer *pXboxVertexBuffer = g_D3DStreams[uiStream];
         pXboxVertexData = (uint08*)GetDataFromXboxResource(pXboxVertexBuffer);
 		if (pXboxVertexData == NULL) {
-			HRESULT hRet = g_pD3DDevice->SetStreamSource(uiStream, nullptr, 0);
+			HRESULT hRet = g_pD3DDevice->SetStreamSource(
+				uiStream, 
+				nullptr, 
+#ifdef CXBX_USE_D3D9
+				0, // OffsetInBytes
+#endif
+				0);
 //			DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetStreamSource");
 			if (FAILED(hRet)) {
 				EmuWarning("g_pD3DDevice->SetStreamSource(uiStream, nullptr, 0)");

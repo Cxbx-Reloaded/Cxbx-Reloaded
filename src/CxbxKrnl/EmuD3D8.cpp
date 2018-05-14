@@ -4617,7 +4617,7 @@ DWORD WINAPI XTL::EMUPATCH(D3DDevice_Swap)
 				/* pSrcSurface = */ pXboxBackBufferHostSurface,
 				/* pSrcPalette = */ nullptr,
 				/* pSrcRect = */ nullptr,
-				/* Filter = */ D3DX_DEFAULT,
+				/* Filter = */ D3DX_FILTER_POINT,//D3DX_DEFAULT,
 				/* ColorKey = */ 0);
 			if (BackBufferDesc.MultiSampleType != D3DMULTISAMPLE_NONE) {
 				if (hRet != D3D_OK) {
@@ -5130,7 +5130,7 @@ void CreateHostResource(XTL::X_D3DResource *pResource, DWORD D3DUsage, int iText
 			}
 			else {
 #ifdef CXBX_USE_D3D9
-				D3DPool = D3DPOOL_SYSTEMMEM;
+				D3DPool = XTL::D3DPOOL_SYSTEMMEM;
 				hRet = g_pD3DDevice->CreateOffscreenPlainSurface(dwWidth, dwHeight, PCFormat, D3DPool, &pNewHostSurface, nullptr);
 				DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateOffscreenPlainSurface");
 #else
