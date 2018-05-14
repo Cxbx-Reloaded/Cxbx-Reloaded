@@ -4610,9 +4610,20 @@ DWORD WINAPI XTL::EMUPATCH(D3DDevice_Swap)
 		auto pXboxBackBufferHostSurface = GetHostSurface(g_XboxBackBufferSurface);
 		if (pXboxBackBufferHostSurface) {
 			// Blit Xbox BackBuffer to host BackBuffer
-			hRet = D3DXLoadSurfaceFromSurface(pCurrentHostBackBuffer, nullptr, nullptr, pXboxBackBufferHostSurface, nullptr, nullptr, D3DX_DEFAULT, 0);
-			if (hRet != D3D_OK) {
-				EmuWarning("Couldn't blit Xbox BackBuffer to host BackBuffer : %X", hRet);
+			hRet = D3DXLoadSurfaceFromSurface(
+				/* pDestSurface = */ pCurrentHostBackBuffer,
+				/* pDestPalette = */ nullptr,
+				/* pDestRect = */ nullptr,
+				/* pSrcSurface = */ pXboxBackBufferHostSurface,
+				/* pSrcPalette = */ nullptr,
+				/* pSrcRect = */ nullptr,
+				/* Filter = */ D3DX_DEFAULT,
+				/* ColorKey = */ 0);
+			if (hRet == D3D_OK) {
+				LOG_TEST_CASE("Curiously, D3DXLoadSurfaceFromSurface never succeeds, but we still get output!?!");
+			}
+			else {
+				// Avoid logging this each frame : EmuWarning("Couldn't blit Xbox BackBuffer to host BackBuffer : %X", hRet);
 			}
 		}
 
@@ -4670,23 +4681,45 @@ DWORD WINAPI XTL::EMUPATCH(D3DDevice_Swap)
 				}
 			}
 
-			// Use D3DXLoadSurfaceFromMemory() to do conversion, stretching and filtering
-			// avoiding the need for YUY2toARGB() (might become relevant when porting to D3D9 or OpenGL)
-			// see https://msdn.microsoft.com/en-us/library/windows/desktop/bb172902(v=vs.85).aspx
-			hRet = D3DXLoadSurfaceFromMemory(
-				/* pDestSurface = */ pCurrentHostBackBuffer,
-				/* pDestPalette = */ nullptr,
-				/* pDestRect = */ &EmuDestRect,
-				/* pSrcMemory = */ pOverlayData, // Source buffer
-				/* SrcFormat = */ PCFormat,
-				/* SrcPitch = */ OverlayRowPitch,
-				/* pSrcPalette = */ nullptr,
-				/* SrcRect = */ &EmuSourRect,
-				/* Filter = */ D3DX_FILTER_POINT, // Dxbx note : D3DX_FILTER_LINEAR gives a smoother image, but 'bleeds' across borders
-				/* ColorKey = */ g_OverlayProxy.EnableColorKey ? g_OverlayProxy.ColorKey : 0);
-			DEBUG_D3DRESULT(hRet, "D3DXLoadSurfaceFromMemory - UpdateOverlay could not convert buffer!\n");
-			if (hRet != D3D_OK) {
-				EmuWarning("Couldn't blit Xbox overlay to host BackBuffer : %X", hRet);
+			if (BackBufferDesc.MultiSampleType != D3DMULTISAMPLE_NONE) {
+				auto pXboxOverlayHostSurface = GetHostSurface(&g_OverlayProxy.Surface);
+
+				if (pXboxOverlayHostSurface) {
+					// Blit Xbox overlay to host BackBuffer
+					hRet = D3DXLoadSurfaceFromSurface(
+						/* pDestSurface = */ pCurrentHostBackBuffer,
+						/* pDestPalette = */ nullptr,
+						/* pDestRect = */ &EmuDestRect,
+						/* pSrcSurface = */ pXboxOverlayHostSurface,
+						/* pSrcPalette = */ nullptr,
+						/* pSrcRect = */ &EmuSourRect,
+						/* Filter = */ D3DX_FILTER_POINT, // Dxbx note : D3DX_FILTER_LINEAR gives a smoother image, but 'bleeds' across borders
+						/* ColorKey = */ g_OverlayProxy.EnableColorKey ? g_OverlayProxy.ColorKey : 0);
+					if (hRet != D3D_OK) {
+						EmuWarning("Couldn't blit Xbox overlay to host BackBuffer : %X", hRet);
+					}
+				}
+			}
+			else {
+				// Use D3DXLoadSurfaceFromMemory() to do conversion, stretching and filtering
+				// avoiding the need for YUY2toARGB() (might become relevant when porting to D3D9 or OpenGL)
+				// see https://msdn.microsoft.com/en-us/library/windows/desktop/bb172902(v=vs.85).aspx
+				hRet = D3DXLoadSurfaceFromMemory(
+					/* pDestSurface = */ pCurrentHostBackBuffer,
+					/* pDestPalette = */ nullptr,
+					/* pDestRect = */ &EmuDestRect,
+					/* pSrcMemory = */ pOverlayData, // Source buffer
+					/* SrcFormat = */ PCFormat,
+					/* SrcPitch = */ OverlayRowPitch,
+					/* pSrcPalette = */ nullptr,
+					/* pSrcRect = */ &EmuSourRect, // This parameter cannot be NULL
+					/* Filter = */ D3DX_FILTER_POINT, // Dxbx note : D3DX_FILTER_LINEAR gives a smoother image, but 'bleeds' across borders
+					/* ColorKey = */ g_OverlayProxy.EnableColorKey ? g_OverlayProxy.ColorKey : 0);
+
+				DEBUG_D3DRESULT(hRet, "D3DXLoadSurfaceFromMemory - UpdateOverlay could not convert buffer!\n");
+				if (hRet != D3D_OK) {
+					EmuWarning("Couldn't blit Xbox overlay to host BackBuffer : %X", hRet);
+				}
 			}
 		}
 
