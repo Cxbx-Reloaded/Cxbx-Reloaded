@@ -39,8 +39,8 @@
 #include "CxbxKrnl/EmuXTL.h"
 
 // deferred state lookup tables
-DWORD *XTL::EmuD3DDeferredRenderState;
-DWORD *XTL::EmuD3DDeferredTextureState;
+DWORD *XTL::EmuD3DDeferredRenderState = nullptr;
+DWORD *XTL::EmuD3DDeferredTextureState = nullptr;
 
 extern uint32 g_BuildVersion;
 
