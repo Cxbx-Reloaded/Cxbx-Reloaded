@@ -85,7 +85,7 @@ static DWORD WINAPI                 EmuRenderWindow(LPVOID);
 static DWORD WINAPI                 EmuCreateDeviceProxy(LPVOID);
 static LRESULT WINAPI               EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 static DWORD WINAPI                 EmuUpdateTickCount(LPVOID);
-static inline void                  EmuVerifyResourceIsRegistered(XTL::X_D3DResource *pResource, int iTextureStage, DWORD dwSize);
+static inline void                  EmuVerifyResourceIsRegistered(XTL::X_D3DResource *pResource, DWORD D3DUsage, int iTextureStage, DWORD dwSize);
 static void							UpdateCurrentMSpFAndFPS(); // Used for benchmarking/fps count
 
 // Static Variable(s)
@@ -807,12 +807,12 @@ void ForceResourceRehash(XTL::X_D3DResource* pXboxResource)
 	}
 }
 
-XTL::IDirect3DResource *GetHostResource(XTL::X_D3DResource *pXboxResource, int iTextureStage = 0)
+XTL::IDirect3DResource *GetHostResource(XTL::X_D3DResource *pXboxResource, DWORD D3DUsage = 0, int iTextureStage = 0)
 {
 	if (pXboxResource == NULL || pXboxResource->Data == NULL)
 		return nullptr;
 
-	EmuVerifyResourceIsRegistered(pXboxResource, iTextureStage, /*dwSize=*/0);
+	EmuVerifyResourceIsRegistered(pXboxResource, D3DUsage, iTextureStage, /*dwSize=*/0);
 
 	if (pXboxResource->Lock == X_D3DRESOURCE_LOCK_PALETTE)
 		return nullptr;
@@ -943,7 +943,7 @@ void SetHostResource(XTL::X_D3DResource* pXboxResource, XTL::IDirect3DResource* 
 	g_HostResources[key] = hostResourceInfo;
 }
 
-XTL::IDirect3DSurface *GetHostSurface(XTL::X_D3DResource *pXboxResource)
+XTL::IDirect3DSurface *GetHostSurface(XTL::X_D3DResource *pXboxResource, DWORD D3DUsage = 0)
 {
 	if (pXboxResource == NULL)
 		return nullptr;
@@ -951,10 +951,10 @@ XTL::IDirect3DSurface *GetHostSurface(XTL::X_D3DResource *pXboxResource)
 	if (GetXboxCommonResourceType(pXboxResource) != X_D3DCOMMON_TYPE_SURFACE) // Allows breakpoint below
 		assert(GetXboxCommonResourceType(pXboxResource) == X_D3DCOMMON_TYPE_SURFACE);
 
-	return (XTL::IDirect3DSurface*) GetHostResource(pXboxResource);
+	return (XTL::IDirect3DSurface*) GetHostResource(pXboxResource, D3DUsage);
 }
 
-XTL::IDirect3DBaseTexture *GetHostBaseTexture(XTL::X_D3DResource *pXboxResource, int iTextureStage = 0)
+XTL::IDirect3DBaseTexture *GetHostBaseTexture(XTL::X_D3DResource *pXboxResource, DWORD D3DUsage = 0, int iTextureStage = 0)
 {
 	if (pXboxResource == NULL)
 		return nullptr;
@@ -964,19 +964,19 @@ XTL::IDirect3DBaseTexture *GetHostBaseTexture(XTL::X_D3DResource *pXboxResource,
 		// Burnout hits this case (retreiving a surface instead of a texture)
 	}
 
-	return (XTL::IDirect3DBaseTexture*)GetHostResource(pXboxResource, iTextureStage);
+	return (XTL::IDirect3DBaseTexture*)GetHostResource(pXboxResource, D3DUsage, iTextureStage);
 }
 
 XTL::IDirect3DTexture *GetHostTexture(XTL::X_D3DResource *pXboxResource, int iTextureStage = 0)
 {
-	return (XTL::IDirect3DTexture *)GetHostBaseTexture(pXboxResource, iTextureStage);
+	return (XTL::IDirect3DTexture *)GetHostBaseTexture(pXboxResource, 0, iTextureStage);
 
 	// TODO : Check for 1 face (and 2 dimensions)?
 }
 
 XTL::IDirect3DVolumeTexture *GetHostVolumeTexture(XTL::X_D3DResource *pXboxResource, int iTextureStage = 0)
 {
-	return (XTL::IDirect3DVolumeTexture *)GetHostBaseTexture(pXboxResource, iTextureStage);
+	return (XTL::IDirect3DVolumeTexture *)GetHostBaseTexture(pXboxResource, 0, iTextureStage);
 
 	// TODO : Check for 1 face (and 2 dimensions)?
 }
@@ -2261,8 +2261,8 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
 }
 
 // check if a resource has been registered yet (if not, register it)
-void CreateHostResource(XTL::X_D3DResource *pResource, int iTextureStage, DWORD dwSize); // Forward declartion to prevent restructure of code
-static void EmuVerifyResourceIsRegistered(XTL::X_D3DResource *pResource, int iTextureStage = 0, DWORD dwSize = 0)
+void CreateHostResource(XTL::X_D3DResource *pResource, DWORD D3DUsage, int iTextureStage, DWORD dwSize); // Forward declartion to prevent restructure of code
+static void EmuVerifyResourceIsRegistered(XTL::X_D3DResource *pResource, DWORD D3DUsage = 0, int iTextureStage = 0, DWORD dwSize = 0)
 {
 	// Skip resources without data
 	if (pResource->Data == NULL)
@@ -2284,7 +2284,7 @@ static void EmuVerifyResourceIsRegistered(XTL::X_D3DResource *pResource, int iTe
 		FreeHostResource(key);
 	}
 
-	CreateHostResource(pResource, iTextureStage, dwSize);
+	CreateHostResource(pResource, D3DUsage, iTextureStage, dwSize);
         
 	g_RegisteredResources.push_back(key);
 }
@@ -4765,7 +4765,7 @@ DWORD WINAPI XTL::EMUPATCH(D3DDevice_Swap)
 }
 
 // Was patch: IDirect3DResource8_Register
-void CreateHostResource(XTL::X_D3DResource *pResource, int iTextureStage, DWORD dwSize)
+void CreateHostResource(XTL::X_D3DResource *pResource, DWORD D3DUsage, int iTextureStage, DWORD dwSize)
 {
 
 	// DO NOT FUNC_EXPORTS!
@@ -4820,7 +4820,7 @@ void CreateHostResource(XTL::X_D3DResource *pResource, int iTextureStage, DWORD 
 		XTL::X_D3DSurface *pXboxSurface = (XTL::X_D3DSurface *)pResource;
 		XTL::X_D3DTexture *pParentXboxTexture = (pXboxSurface) ? (XTL::X_D3DTexture *)pXboxSurface->Parent : xbnullptr;
 		if (pParentXboxTexture) {
-			XTL::IDirect3DBaseTexture *pParentHostBaseTexture = GetHostBaseTexture(pParentXboxTexture, iTextureStage);
+			XTL::IDirect3DBaseTexture *pParentHostBaseTexture = GetHostBaseTexture(pParentXboxTexture, D3DUsage, iTextureStage);
 			switch (pParentHostBaseTexture->GetType()) {
 			case XTL::D3DRTYPE_VOLUMETEXTURE: {
 				// TODO
@@ -4879,7 +4879,6 @@ void CreateHostResource(XTL::X_D3DResource *pResource, int iTextureStage, DWORD 
 	case XTL::X_D3DRTYPE_CUBETEXTURE: {
 		XTL::X_D3DPixelContainer *pPixelContainer = (XTL::X_D3DPixelContainer*)pResource;
 		XTL::X_D3DFORMAT X_Format = GetXboxPixelContainerFormat(pPixelContainer);
-		DWORD D3DUsage = 0;
 		XTL::D3DPOOL D3DPool = XTL::D3DPOOL_MANAGED; // TODO : Nuance D3DPOOL where/when needed
 
 #if 0 // jackchen : this must be marked out to fix a fading black regression.
@@ -4889,14 +4888,12 @@ void CreateHostResource(XTL::X_D3DResource *pResource, int iTextureStage, DWORD 
 		// turning all others black. (Spotted by Cakelancelot and disabled by jackchen)
 		if (g_D3DCaps.Caps2 & D3DCAPS2_DYNAMICTEXTURES) {
 			// jackchen : leave either one single line of code will introduce further regresson.
-            D3DUsage |= D3DUSAGE_DYNAMIC;
-			D3DPool = XTL::D3DPOOL_DEFAULT;
+			D3DUsage |= D3DUSAGE_DYNAMIC;
 		}
 #endif
 
 		if (EmuXBFormatIsDepthBuffer(X_Format)) {
 			D3DUsage |= D3DUSAGE_DEPTHSTENCIL;
-			D3DPool = XTL::D3DPOOL_DEFAULT;
 		}
 		else if (pPixelContainer == g_pXboxRenderTarget) {
 			if (EmuXBFormatIsRenderTarget(X_Format))
@@ -5005,6 +5002,17 @@ void CreateHostResource(XTL::X_D3DResource *pResource, int iTextureStage, DWORD 
 				// Avoid using this as a depth-texture (since we're falling back on a RGB format now)
 				D3DUsage &= ~D3DUSAGE_DEPTHSTENCIL;
 			}
+		}
+
+		// Update D3DPool accordingly to the active D3DUsage flags
+		if (D3DUsage & D3DUSAGE_DEPTHSTENCIL) {
+			D3DPool = XTL::D3DPOOL_DEFAULT;
+		}
+		if (D3DUsage & D3DUSAGE_RENDERTARGET) {
+			D3DPool = XTL::D3DPOOL_DEFAULT;
+		}
+		if (D3DUsage & D3DUSAGE_DYNAMIC) {
+			D3DPool = XTL::D3DPOOL_DEFAULT;
 		}
 
 		// Interpret Width/Height/BPP
@@ -7970,12 +7978,12 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderTarget)
 	// The current render target is only replaced if it's passed in here non-null
     if (pRenderTarget != NULL) {
 		g_pXboxRenderTarget = pRenderTarget;
-		pHostRenderTarget = GetHostSurface(g_pXboxRenderTarget);
+		pHostRenderTarget = GetHostSurface(g_pXboxRenderTarget, D3DUSAGE_RENDERTARGET);
     }
 
 	// The currenct depth stencil is always replaced by whats passed in here (even a null)
 	g_pXboxDepthStencil = pNewZStencil;
-    pHostDepthStencil = GetHostSurface(g_pXboxDepthStencil);
+    pHostDepthStencil = GetHostSurface(g_pXboxDepthStencil, D3DUSAGE_DEPTHSTENCIL);
 
 	HRESULT hRet;
 #ifdef CXBX_USE_D3D9
