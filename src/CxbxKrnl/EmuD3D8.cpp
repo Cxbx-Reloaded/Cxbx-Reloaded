@@ -114,7 +114,7 @@ static BOOL                         g_bHasDepthStencil = FALSE;  // Does device 
 static DWORD						g_dwPrimPerFrame = 0;	// Number of primitives within one frame
 
 struct {
-	XTL::X_D3DSurface *pSurface;
+	XTL::X_D3DSurface Surface;
 	RECT SrcRect;
 	RECT DstRect;
 	BOOL EnableColorKey;
@@ -167,7 +167,7 @@ static UINT                         QuadToTriangleIndexBuffer_Size = 0; // = NrO
 static XTL::X_D3DSurface		   *g_XboxBackBufferSurface = NULL;
 static XTL::X_D3DSurface           *g_pXboxRenderTarget = NULL;
 static XTL::X_D3DSurface           *g_pXboxDepthStencil = NULL;
-static BOOL                         g_fYuvEnabled = FALSE;
+static bool                         g_bColorSpaceConvertYuvToRgb = false;
 static DWORD                        g_dwVertexShaderUsage = 0;
 static DWORD                        g_VertexShaderSlots[136];
 
@@ -4613,13 +4613,23 @@ DWORD WINAPI XTL::EMUPATCH(D3DDevice_Swap)
 			}
 		}
 
-		if (g_OverlayProxy.pSurface && g_fYuvEnabled) {
+		// Is there an overlay to be presented too?
+		if (g_OverlayProxy.Surface.Common) {
+
+			X_D3DFORMAT X_Format = GetXboxPixelContainerFormat(&g_OverlayProxy.Surface);
+			if (X_Format != X_D3DFMT_YUY2) {
+				LOG_TEST_CASE("Xbox overlay surface isn't using X_D3DFMT_YUY2");
+			}
+
+			// Interpret the Xbox overlay data (depending the color space conversion render state)
+			// as either YUV or RGB format (note that either one must be a 3 bytes per pixel format)
+			D3DFORMAT PCFormat = g_bColorSpaceConvertYuvToRgb ? D3DFMT_R8G8B8 : D3DFMT_YUY2;
 
 			// Blit Xbox overlay to host backbuffer
-			uint08 *pOverlayData = (uint08*)GetDataFromXboxResource(g_OverlayProxy.pSurface);
+			uint08 *pOverlayData = (uint08*)GetDataFromXboxResource(&g_OverlayProxy.Surface);
 			UINT OverlayWidth, OverlayHeight, OverlayDepth, OverlayRowPitch, OverlaySlicePitch;
 			CxbxGetPixelContainerMeasures(
-				(XTL::X_D3DPixelContainer *)g_OverlayProxy.pSurface,
+				&g_OverlayProxy.Surface,
 				0, // dwMipMapLevel
 				&OverlayWidth, &OverlayHeight, &OverlayDepth, &OverlayRowPitch, &OverlaySlicePitch);
 
@@ -4646,7 +4656,7 @@ DWORD WINAPI XTL::EMUPATCH(D3DDevice_Swap)
 			// Get backbuffer dimenions; TODO : remember this once, at creation/resize time
 			D3DSURFACE_DESC BackBufferDesc;
 			pCurrentHostBackBuffer->GetDesc(&BackBufferDesc);
-#if 0
+
 			// Limit the width and height of the output to the backbuffer dimensions.
 			// This will (hopefully) prevent exceptions in Blinx - The Time Sweeper
 			// (see https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/issues/285)
@@ -4654,26 +4664,24 @@ DWORD WINAPI XTL::EMUPATCH(D3DDevice_Swap)
 				// Use our (bounded) copy when bounds exceed :
 				if (EmuDestRect.right > (LONG)BackBufferDesc.Width) {
 					EmuDestRect.right = (LONG)BackBufferDesc.Width;
-					DstRect = &EmuDestRect;
 				}
 
 				if (EmuDestRect.bottom > (LONG)BackBufferDesc.Height) {
 					EmuDestRect.bottom = (LONG)BackBufferDesc.Height;
-					DstRect = &EmuDestRect;
 				}
 			}
-#endif
+
 			// Use D3DXLoadSurfaceFromMemory() to do conversion, stretching and filtering
 			// avoiding the need for YUY2toARGB() (might become relevant when porting to D3D9 or OpenGL)
 			// see https://msdn.microsoft.com/en-us/library/windows/desktop/bb172902(v=vs.85).aspx
 			hRet = D3DXLoadSurfaceFromMemory(
 				/* pDestSurface = */ pCurrentHostBackBuffer,
-				/* pDestPalette = */ nullptr, // Palette not needed for YUY2
+				/* pDestPalette = */ nullptr,
 				/* pDestRect = */ &EmuDestRect,
 				/* pSrcMemory = */ pOverlayData, // Source buffer
-				/* SrcFormat = */ D3DFMT_YUY2,
+				/* SrcFormat = */ PCFormat,
 				/* SrcPitch = */ OverlayRowPitch,
-				/* pSrcPalette = */ nullptr, // Palette not needed for YUY2
+				/* pSrcPalette = */ nullptr,
 				/* SrcRect = */ &EmuSourRect,
 				/* Filter = */ D3DX_FILTER_POINT, // Dxbx note : D3DX_FILTER_LINEAR gives a smoother image, but 'bleeds' across borders
 				/* ColorKey = */ g_OverlayProxy.EnableColorKey ? g_OverlayProxy.ColorKey : 0);
@@ -5575,9 +5583,12 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_EnableOverlay)
 	FUNC_EXPORTS
 
 	LOG_FUNC_ONE_ARG(Enable);
-	g_fYuvEnabled = Enable;
-
-	// We can safely ignore this, as long as we properly handle UpdateOverlay
+	
+	// The Xbox D3DDevice_EnableOverlay call merely resets the active
+	// NV2A overlay state, it doesn't actually enable or disable anything.
+	// Thus, we should just reset our overlay state here too. A title will
+	// show new overlay data via D3DDevice_UpdateOverlay (see below).
+	g_OverlayProxy = {};
 }
 
 // ******************************************************************
@@ -5590,11 +5601,11 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_UpdateOverlay)
 	CONST RECT   *DstRect,
 	BOOL          EnableColorKey,
 	D3DCOLOR      ColorKey
-	)
+)
 {
 	FUNC_EXPORTS
 
-		LOG_FUNC_BEGIN
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pSurface)
 		LOG_FUNC_ARG(SrcRect)
 		LOG_FUNC_ARG(DstRect)
@@ -5602,22 +5613,27 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_UpdateOverlay)
 		LOG_FUNC_ARG(ColorKey)
 		LOG_FUNC_END;
 
+	// Reset and remember the overlay arguments, so our D3DDevice_Swap patch
+	// can correctly show this overlay surface data.
 	g_OverlayProxy = {};
-	g_OverlayProxy.pSurface = pSurface;
-	if (SrcRect)
-		g_OverlayProxy.SrcRect = *SrcRect;
-	if (DstRect)
-		g_OverlayProxy.DstRect = *DstRect;
-	g_OverlayProxy.EnableColorKey = EnableColorKey;
-	g_OverlayProxy.ColorKey = ColorKey;
+	if (pSurface) {
+		g_OverlayProxy.Surface = *pSurface;
+		if (SrcRect)
+			g_OverlayProxy.SrcRect = *SrcRect;
 
-	// Update overlay if present was not called since the last call to
-	// EmuD3DDevice_UpdateOverlay.
-	if (g_OverlaySwap != g_SwapData.Swap - 1) {
-		EMUPATCH(D3DDevice_Swap)(CXBX_SWAP_PRESENT_FORWARD);
+		if (DstRect)
+			g_OverlayProxy.DstRect = *DstRect;
+
+		g_OverlayProxy.EnableColorKey = EnableColorKey;
+		g_OverlayProxy.ColorKey = ColorKey;
+		// Update overlay if present was not called since the last call to
+		// EmuD3DDevice_UpdateOverlay.
+		if (g_OverlaySwap != g_SwapData.Swap - 1) {
+			EMUPATCH(D3DDevice_Swap)(CXBX_SWAP_PRESENT_FORWARD);
+		}
+
+		g_OverlaySwap = g_SwapData.Swap;
 	}
-
-	g_OverlaySwap = g_SwapData.Swap;
 }
 
 // ******************************************************************
@@ -6645,15 +6661,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderState_YuvEnable)
 
 	LOG_FUNC_ONE_ARG(Enable);
 
-    // HACK: Display YUV surface by using an overlay.
-    if(Enable != g_fYuvEnabled)
-    {
-        g_fYuvEnabled = Enable;
-
-        EmuWarning("EmuD3DDevice_SetRenderState_YuvEnable using overlay!");
-        
-		EMUPATCH(D3DDevice_EnableOverlay)(g_fYuvEnabled);
-    }
+    g_bColorSpaceConvertYuvToRgb = (Enable != FALSE);
 }
 
 // LTCG specific D3DDevice_SetTransform function...
