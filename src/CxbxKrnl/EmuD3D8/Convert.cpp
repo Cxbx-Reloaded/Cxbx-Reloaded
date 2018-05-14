@@ -922,12 +922,12 @@ static const FormatInfo FormatInfos[] = {
 	/* 0x2A X_D3DFMT_D24S8        */ { 32, Swzzld, NoCmpnts, XTL::D3DFMT_D24S8     , DepthBuffer },
 #ifdef CXBX_USE_D3D9
 	/* 0x2B X_D3DFMT_F24S8        */ { 32, Swzzld, NoCmpnts, XTL::D3DFMT_D24FS8    , DepthBuffer },
-	/* 0x2C X_D3DFMT_D16          */ { 16, Swzzld, NoCmpnts, XTL::D3DFMT_D16_LOCKABLE, DepthBuffer }, // Note : D3DFMT_D16 is always lockable on Xbox, D3DFMT_D16 on host is not.
-	/* 0x2D X_D3DFMT_F16          */ { 16, Swzzld, NoCmpnts, XTL::D3DFMT_D16_LOCKABLE, DepthBuffer, "X_D3DFMT_F16 -> D3DFMT_D16" }, // HACK : PC doesn't have D3DFMT_F16 (Float vs Int) // TODO : Use D3DFMT_R16F?
+	/* 0x2C X_D3DFMT_D16          */ { 16, Swzzld, NoCmpnts, XTL::D3DFMT_D16       , DepthBuffer }, // Note : X_D3DFMT_D16 is always lockable on Xbox, D3DFMT_D16 on host is not, but D3DFMT_D16_LOCKABLE often fails SetRenderTarget.
+	/* 0x2D X_D3DFMT_F16          */ { 16, Swzzld, NoCmpnts, XTL::D3DFMT_D16       , DepthBuffer, "X_D3DFMT_F16 -> D3DFMT_D16" }, // HACK : PC doesn't have D3DFMT_F16 (Float vs Int) // TODO : Use D3DFMT_R16F?
 	/* 0x2E X_D3DFMT_LIN_D24S8    */ { 32, Linear, NoCmpnts, XTL::D3DFMT_D24S8     , DepthBuffer },
 	/* 0x2F X_D3DFMT_LIN_F24S8    */ { 32, Linear, NoCmpnts, XTL::D3DFMT_D24FS8    , DepthBuffer },
-	/* 0x30 X_D3DFMT_LIN_D16      */ { 16, Linear, NoCmpnts, XTL::D3DFMT_D16_LOCKABLE, DepthBuffer }, // Note : D3DFMT_D16 is always lockable on Xbox, D3DFMT_D16 on host is not.
-	/* 0x31 X_D3DFMT_LIN_F16      */ { 16, Linear, NoCmpnts, XTL::D3DFMT_D16_LOCKABLE, DepthBuffer, "X_D3DFMT_LIN_F16 -> D3DFMT_D16" }, // HACK : PC doesn't have D3DFMT_F16 (Float vs Int) // TODO : Use D3DFMT_R16F?
+	/* 0x30 X_D3DFMT_LIN_D16      */ { 16, Linear, NoCmpnts, XTL::D3DFMT_D16       , DepthBuffer }, // Note : X_D3DFMT_D16 is always lockable on Xbox, D3DFMT_D16 on host is not, but D3DFMT_D16_LOCKABLE often fails SetRenderTarget.
+	/* 0x31 X_D3DFMT_LIN_F16      */ { 16, Linear, NoCmpnts, XTL::D3DFMT_D16       , DepthBuffer, "X_D3DFMT_LIN_F16 -> D3DFMT_D16" }, // HACK : PC doesn't have D3DFMT_F16 (Float vs Int) // TODO : Use D3DFMT_R16F?
 	/* 0x32 X_D3DFMT_L16          */ { 16, Swzzld, _____L16, XTL::D3DFMT_L16       },
 	/* 0x33 X_D3DFMT_V16U16       */ { 32, Swzzld, NoCmpnts, XTL::D3DFMT_V16U16    },
 	/* 0x34 undefined             */ {},
@@ -944,12 +944,12 @@ static const FormatInfo FormatInfos[] = {
 	/* 0x3F X_D3DFMT_LIN_A8B8G8R8 */ { 32, Linear, A8B8G8R8, XTL::D3DFMT_A8B8G8R8  }, // Note : D3DFMT_A8B8G8R8=32 D3DFMT_Q8W8V8U8=63 // TODO : Needs testcase.
 #else // Direct3D8 :
 	/* 0x2B X_D3DFMT_F24S8        */ { 32, Swzzld, NoCmpnts, XTL::D3DFMT_D24S8     , DepthBuffer, "X_D3DFMT_F24S8 -> D3DFMT_D24S8" }, // HACK : PC doesn't have D3DFMT_F24S8 (Float vs Int)
-	/* 0x2C X_D3DFMT_D16          */ { 16, Swzzld, NoCmpnts, XTL::D3DFMT_D16, DepthBuffer }, // Note : D3DFMT_D16 is always lockable on Xbox, D3DFMT_D16 on host is not.
-	/* 0x2D X_D3DFMT_F16          */ { 16, Swzzld, NoCmpnts, XTL::D3DFMT_D16, DepthBuffer, "X_D3DFMT_F16 -> D3DFMT_D16" }, // HACK : PC doesn't have D3DFMT_F16 (Float vs Int)
+	/* 0x2C X_D3DFMT_D16          */ { 16, Swzzld, NoCmpnts, XTL::D3DFMT_D16       , DepthBuffer }, // Note : X_D3DFMT_D16 is always lockable on Xbox, D3DFMT_D16 on host is not, but D3DFMT_D16_LOCKABLE often fails SetRenderTarget.
+	/* 0x2D X_D3DFMT_F16          */ { 16, Swzzld, NoCmpnts, XTL::D3DFMT_D16       , DepthBuffer, "X_D3DFMT_F16 -> D3DFMT_D16" }, // HACK : PC doesn't have D3DFMT_F16 (Float vs Int)
 	/* 0x2E X_D3DFMT_LIN_D24S8    */ { 32, Linear, NoCmpnts, XTL::D3DFMT_D24S8     , DepthBuffer },
 	/* 0x2F X_D3DFMT_LIN_F24S8    */ { 32, Linear, NoCmpnts, XTL::D3DFMT_D24S8     , DepthBuffer, "X_D3DFMT_LIN_F24S8 -> D3DFMT_D24S8" }, // HACK : PC doesn't have D3DFMT_F24S8 (Float vs Int)
-	/* 0x30 X_D3DFMT_LIN_D16      */ { 16, Linear, NoCmpnts, XTL::D3DFMT_D16, DepthBuffer }, // Note : D3DFMT_D16 is always lockable on Xbox, D3DFMT_D16 on host is not.
-	/* 0x31 X_D3DFMT_LIN_F16      */ { 16, Linear, NoCmpnts, XTL::D3DFMT_D16, DepthBuffer, "X_D3DFMT_LIN_F16 -> D3DFMT_D16" }, // HACK : PC doesn't have D3DFMT_F16 (Float vs Int)
+	/* 0x30 X_D3DFMT_LIN_D16      */ { 16, Linear, NoCmpnts, XTL::D3DFMT_D16       , DepthBuffer }, // Note : X_D3DFMT_D16 is always lockable on Xbox, D3DFMT_D16 on host is not, but D3DFMT_D16_LOCKABLE often fails SetRenderTarget.
+	/* 0x31 X_D3DFMT_LIN_F16      */ { 16, Linear, NoCmpnts, XTL::D3DFMT_D16       , DepthBuffer, "X_D3DFMT_LIN_F16 -> D3DFMT_D16" }, // HACK : PC doesn't have D3DFMT_F16 (Float vs Int)
 	/* 0x32 X_D3DFMT_L16          */ { 16, Swzzld, _____L16, XTL::D3DFMT_A8L8      , Texture, "X_D3DFMT_L16 -> D3DFMT_A8L8" },
 	/* 0x33 X_D3DFMT_V16U16       */ { 32, Swzzld, NoCmpnts, XTL::D3DFMT_V16U16    },
 	/* 0x34 undefined             */ {},
@@ -1079,7 +1079,7 @@ XTL::D3DFORMAT XTL::EmuXB2PC_D3DFormat(X_D3DFORMAT Format)
 	return D3DFMT_UNKNOWN;
 }
 
-XTL::X_D3DFORMAT XTL::EmuPC2XB_D3DFormat(D3DFORMAT Format)
+XTL::X_D3DFORMAT XTL::EmuPC2XB_D3DFormat(D3DFORMAT Format, bool bPreferLinear = true)
 {
 	X_D3DFORMAT result;
     switch(Format)
@@ -1091,91 +1091,69 @@ XTL::X_D3DFORMAT XTL::EmuPC2XB_D3DFormat(D3DFORMAT Format)
 		result = X_D3DFMT_UYVY;
 		break;
 	case D3DFMT_R5G6B5:
-		result = X_D3DFMT_LIN_R5G6B5;
-		break; // Linear
-			   //      Result := X_D3DFMT_R5G6B5; // Swizzled
-
+		result = bPreferLinear ? X_D3DFMT_LIN_R5G6B5 : X_D3DFMT_R5G6B5;
+		break;
 	case D3DFMT_D24S8:
-		result = X_D3DFMT_D24S8;
-		break; // Swizzled
-
+		result = bPreferLinear ? X_D3DFMT_LIN_D24S8 : X_D3DFMT_D24S8;
+		break;
 	case D3DFMT_DXT5:
-		result = X_D3DFMT_DXT5;
-		break; // Compressed
-
+		result = X_D3DFMT_DXT5; // Compressed
+		break;
 	case D3DFMT_DXT4:
-		result = X_D3DFMT_DXT4; // Same as X_D3DFMT_DXT5
-		break; // Compressed
-
+		result = X_D3DFMT_DXT4;  // Compressed // Same as X_D3DFMT_DXT5
+		break;
 	case D3DFMT_DXT3:
-		result = X_D3DFMT_DXT3;
-		break; // Compressed
-
+		result = X_D3DFMT_DXT3; // Compressed
+		break;
 	case D3DFMT_DXT2:
-		result = X_D3DFMT_DXT2; // Same as X_D3DFMT_DXT3
-		break; // Compressed
-
+		result = X_D3DFMT_DXT2; // Compressed // Same as X_D3DFMT_DXT3
+		break;
 	case D3DFMT_DXT1:
-		result = X_D3DFMT_DXT1;
-		break; // Compressed
-
+		result = X_D3DFMT_DXT1; // Compressed
+		break;
 	case D3DFMT_A1R5G5B5:
-		result = X_D3DFMT_LIN_A1R5G5B5;
-		break; // Linear
-
+		result = bPreferLinear ? X_D3DFMT_LIN_A1R5G5B5 : X_D3DFMT_A1R5G5B5;
+		break;
 	case D3DFMT_X8R8G8B8:
-		result = X_D3DFMT_LIN_X8R8G8B8;
-		break; // Linear
-			   //      Result := X_D3DFMT_X8R8G8B8; // Swizzled
-
+		result = bPreferLinear ? X_D3DFMT_LIN_X8R8G8B8 : X_D3DFMT_X8R8G8B8;
+		break;
 	case D3DFMT_A8R8G8B8:
-		//      Result := X_D3DFMT_LIN_A8R8G8B8; // Linear
-		result = X_D3DFMT_A8R8G8B8;
+		result = bPreferLinear ? X_D3DFMT_LIN_A8R8G8B8 : X_D3DFMT_A8R8G8B8;
 		break;
 	case D3DFMT_A4R4G4B4:
-		result = X_D3DFMT_LIN_A4R4G4B4;
-		break; // Linear
-			   //      Result := X_D3DFMT_A4R4G4B4; // Swizzled
-	case D3DFMT_X1R5G5B5:	// Linear
-		result = X_D3DFMT_LIN_X1R5G5B5;
+		result = bPreferLinear ? X_D3DFMT_LIN_A4R4G4B4 : X_D3DFMT_A4R4G4B4;
+		break;
+	case D3DFMT_X1R5G5B5:
+		result = bPreferLinear ? X_D3DFMT_LIN_X1R5G5B5 : X_D3DFMT_X1R5G5B5;
 		break;
 	case D3DFMT_A8:
-		result = X_D3DFMT_A8;
+		result = bPreferLinear ? X_D3DFMT_LIN_A8 : X_D3DFMT_A8;
 		break;
 	case D3DFMT_L8:
-		result = X_D3DFMT_LIN_L8;
-		break; // Linear
-			   //        Result := X_D3DFMT_L8; // Swizzled
-
-	case D3DFMT_D16: // Swizzled
-		return X_D3DFMT_D16;
+		result = bPreferLinear ? X_D3DFMT_LIN_L8 : X_D3DFMT_L8;
 		break;
-	case D3DFMT_D16_LOCKABLE: // Swizzled
+	case D3DFMT_D16:
+		result = bPreferLinear ? X_D3DFMT_LIN_D16 : X_D3DFMT_D16;
+		break;
+	case D3DFMT_D16_LOCKABLE:
 		result = X_D3DFMT_D16_LOCKABLE;
 		break; 
-
 	case D3DFMT_UNKNOWN:
-		result = ((X_D3DFORMAT)0xffffffff);
+		result = ((X_D3DFORMAT)0xffffffff); // TODO : return X_D3DFMT_UNKNOWN ?
 		break;
-
-		// Dxbx additions :
-
+	// Dxbx additions :
 	case D3DFMT_L6V5U5:
-		result = X_D3DFMT_L6V5U5;
-		break; // Swizzled
-
+		result = bPreferLinear ? X_D3DFMT_LIN_L6V5U5 : X_D3DFMT_L6V5U5;
+		break;
 	case D3DFMT_V8U8:
-		result = X_D3DFMT_V8U8;
-		break; // Swizzled
-
+		result = bPreferLinear ? X_D3DFMT_LIN_V8U8 : X_D3DFMT_V8U8;
+		break;
 	case D3DFMT_V16U16:
-		result = X_D3DFMT_V16U16;
-		break; // Swizzled
-
+		result = bPreferLinear ? X_D3DFMT_LIN_V16U16 : X_D3DFMT_V16U16;
+		break;
 	case D3DFMT_VERTEXDATA:
 		result = X_D3DFMT_VERTEXDATA;
 		break;
-
 	default:
 		CxbxKrnlCleanup("EmuPC2XB_D3DFormat: Unknown Format (%d)", Format);
     }
