@@ -1917,7 +1917,7 @@ static void VshConvertToken_STREAMDATA_REG(DWORD          *pToken,
 
     XTL::DWORD VertexRegister = VshGetVertexRegister(*pToken);
     XTL::DWORD HostVertexRegister;
-	BOOL NeedPatching = FALSE;
+	XTL::BOOL NeedPatching = FALSE;
 
     DbgVshPrintf("\t\tD3DVSD_REG(");
     HostVertexRegister = Xb2PCRegisterType(VertexRegister, IsFixedFunction);
