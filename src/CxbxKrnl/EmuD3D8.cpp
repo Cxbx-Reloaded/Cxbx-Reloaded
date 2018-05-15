@@ -1931,7 +1931,10 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
 						g_EmuCDPD.HostPresentationParameters.BackBufferCount = 1;
 					}
 
-                    // TODO: Support Xbox extensions if possible
+                    // We ignore multisampling! Why? Because if the title uses multisampling (and therfore has a larger than screen backbuffer)
+					// That still works, and we stretch it to fit the host backbuffer anyway, preserving the effect (for the most part)
+					g_EmuCDPD.HostPresentationParameters.MultiSampleType = XTL::D3DMULTISAMPLE_NONE;
+					/*
                     if(g_EmuCDPD.XboxPresentationParameters.MultiSampleType != 0) {
                         // TODO: Check card for multisampling abilities
                         if(g_EmuCDPD.XboxPresentationParameters.MultiSampleType == XTL::X_D3DMULTISAMPLE_2_SAMPLES_MULTISAMPLE_QUINCUNX) // = 0x00001121 = 4385
@@ -1942,7 +1945,7 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
 							EmuWarning("MultiSampleType 0x%.08X is not supported!", g_EmuCDPD.XboxPresentationParameters.MultiSampleType);
 							g_EmuCDPD.HostPresentationParameters.MultiSampleType = XTL::D3DMULTISAMPLE_NONE;
 						}
-                    }
+                    }*/
 
                     g_EmuCDPD.HostPresentationParameters.Flags = D3DPRESENTFLAG_LOCKABLE_BACKBUFFER;
 
@@ -4610,6 +4613,8 @@ DWORD WINAPI XTL::EMUPATCH(D3DDevice_Swap)
 		// Get backbuffer dimenions; TODO : remember this once, at creation/resize time
 		D3DSURFACE_DESC BackBufferDesc;
 		pCurrentHostBackBuffer->GetDesc(&BackBufferDesc);
+		RECT EmuDestRect;
+		SetRect(&EmuDestRect, 0, 0, BackBufferDesc.Width, BackBufferDesc.Height);
 
 		const DWORD LoadSurfaceFilter = D3DX_DEFAULT; // == D3DX_FILTER_TRIANGLE | D3DX_FILTER_DITHER
 		// Previously we used D3DX_FILTER_POINT here, but that gave jagged edges in Dashboard.
@@ -4624,28 +4629,17 @@ DWORD WINAPI XTL::EMUPATCH(D3DDevice_Swap)
 				/* pDestRect = */ nullptr,
 				/* pSrcSurface = */ pXboxBackBufferHostSurface,
 				/* pSrcPalette = */ nullptr,
-				/* pSrcRect = */ nullptr,
+				/* pSrcRect = */ &EmuDestRect,
 				/* Filter = */ LoadSurfaceFilter,
 				/* ColorKey = */ 0);
-			if (BackBufferDesc.MultiSampleType != D3DMULTISAMPLE_NONE) {
-				if (hRet != D3D_OK) {
-					// D3DXLoadSurfaceFromSurface fails for MultiSample backbuffers, but curiously we still get output!?!
-					// In any case, don't log failure on each swap
-				}
-				else {
-					LOG_TEST_CASE("D3DXLoadSurfaceFromSurface succeeded for MultiSample backbuffer!");
-				}
-			}
-			else {
-				if (hRet != D3D_OK) {
-					EmuWarning("Couldn't blit Xbox BackBuffer to host BackBuffer : %X", hRet);
-				}
+
+			if (hRet != D3D_OK) {
+				EmuWarning("Couldn't blit Xbox BackBuffer to host BackBuffer : %X", hRet);
 			}
 		}
 
 		// Is there an overlay to be presented too?
 		if (g_OverlayProxy.Surface.Common) {
-
 			X_D3DFORMAT X_Format = GetXboxPixelContainerFormat(&g_OverlayProxy.Surface);
 			if (X_Format != X_D3DFMT_YUY2) {
 				LOG_TEST_CASE("Xbox overlay surface isn't using X_D3DFMT_YUY2");
@@ -4664,7 +4658,6 @@ DWORD WINAPI XTL::EMUPATCH(D3DDevice_Swap)
 				&OverlayWidth, &OverlayHeight, &OverlayDepth, &OverlayRowPitch, &OverlaySlicePitch);
 
 			RECT EmuSourRect;
-			RECT EmuDestRect;
 
 			if (g_OverlayProxy.SrcRect.right > 0) {
 				EmuSourRect = g_OverlayProxy.SrcRect;
@@ -4676,9 +4669,6 @@ DWORD WINAPI XTL::EMUPATCH(D3DDevice_Swap)
 			if (g_OverlayProxy.DstRect.right > 0) {
 				// If there's a destination rectangle given, copy that into our local variable :
 				EmuDestRect = g_OverlayProxy.DstRect;
-			}
-			else {
-				GetClientRect(g_hEmuWindow, &EmuDestRect);
 			}
 
 			// load the YUY2 into the backbuffer
@@ -4697,45 +4687,24 @@ DWORD WINAPI XTL::EMUPATCH(D3DDevice_Swap)
 				}
 			}
 
-			if (BackBufferDesc.MultiSampleType != D3DMULTISAMPLE_NONE) {
-				auto pXboxOverlayHostSurface = GetHostSurface(&g_OverlayProxy.Surface);
+			// Use D3DXLoadSurfaceFromMemory() to do conversion, stretching and filtering
+			// avoiding the need for YUY2toARGB() (might become relevant when porting to D3D9 or OpenGL)
+			// see https://msdn.microsoft.com/en-us/library/windows/desktop/bb172902(v=vs.85).aspx
+			hRet = D3DXLoadSurfaceFromMemory(
+				/* pDestSurface = */ pCurrentHostBackBuffer,
+				/* pDestPalette = */ nullptr,
+				/* pDestRect = */ &EmuDestRect,
+				/* pSrcMemory = */ pOverlayData, // Source buffer
+				/* SrcFormat = */ PCFormat,
+				/* SrcPitch = */ OverlayRowPitch,
+				/* pSrcPalette = */ nullptr,
+				/* pSrcRect = */ &EmuSourRect, // This parameter cannot be NULL
+				/* Filter = */ LoadSurfaceFilter,
+				/* ColorKey = */ g_OverlayProxy.EnableColorKey ? g_OverlayProxy.ColorKey : 0);
 
-				if (pXboxOverlayHostSurface) {
-					// Blit Xbox overlay to host BackBuffer
-					hRet = D3DXLoadSurfaceFromSurface(
-						/* pDestSurface = */ pCurrentHostBackBuffer,
-						/* pDestPalette = */ nullptr,
-						/* pDestRect = */ &EmuDestRect,
-						/* pSrcSurface = */ pXboxOverlayHostSurface,
-						/* pSrcPalette = */ nullptr,
-						/* pSrcRect = */ &EmuSourRect,
-						/* Filter = */ LoadSurfaceFilter,
-						/* ColorKey = */ g_OverlayProxy.EnableColorKey ? g_OverlayProxy.ColorKey : 0);
-					if (hRet == D3D_OK) {
-						LOG_TEST_CASE("D3DXLoadSurfaceFromSurface(Overlay) succeeded for MultiSample backbuffer!");
-					}
-				}
-			}
-			else {
-				// Use D3DXLoadSurfaceFromMemory() to do conversion, stretching and filtering
-				// avoiding the need for YUY2toARGB() (might become relevant when porting to D3D9 or OpenGL)
-				// see https://msdn.microsoft.com/en-us/library/windows/desktop/bb172902(v=vs.85).aspx
-				hRet = D3DXLoadSurfaceFromMemory(
-					/* pDestSurface = */ pCurrentHostBackBuffer,
-					/* pDestPalette = */ nullptr,
-					/* pDestRect = */ &EmuDestRect,
-					/* pSrcMemory = */ pOverlayData, // Source buffer
-					/* SrcFormat = */ PCFormat,
-					/* SrcPitch = */ OverlayRowPitch,
-					/* pSrcPalette = */ nullptr,
-					/* pSrcRect = */ &EmuSourRect, // This parameter cannot be NULL
-					/* Filter = */ LoadSurfaceFilter,
-					/* ColorKey = */ g_OverlayProxy.EnableColorKey ? g_OverlayProxy.ColorKey : 0);
-
-				DEBUG_D3DRESULT(hRet, "D3DXLoadSurfaceFromMemory - UpdateOverlay could not convert buffer!\n");
-				if (hRet != D3D_OK) {
-					EmuWarning("Couldn't blit Xbox overlay to host BackBuffer : %X", hRet);
-				}
+			DEBUG_D3DRESULT(hRet, "D3DXLoadSurfaceFromMemory - UpdateOverlay could not convert buffer!\n");
+			if (hRet != D3D_OK) {
+				EmuWarning("Couldn't blit Xbox overlay to host BackBuffer : %X", hRet);
 			}
 		}
 
