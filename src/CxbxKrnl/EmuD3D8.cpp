@@ -1931,8 +1931,10 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
 						g_EmuCDPD.HostPresentationParameters.BackBufferCount = 1;
 					}
 
-                    // We ignore multisampling! Why? Because if the title uses multisampling (and therfore has a larger than screen backbuffer)
-					// That still works, and we stretch it to fit the host backbuffer anyway, preserving the effect (for the most part)
+                    // We ignore multisampling completely for now
+					// It causes issues with backbuffer locking.
+					// NOTE: It is possible to fix multisampling by having the host backbuffer normal size, the Xbox backbuffer being multisamples
+					// and scaling that way, but that can be done as a future PR
 					g_EmuCDPD.HostPresentationParameters.MultiSampleType = XTL::D3DMULTISAMPLE_NONE;
 					/*
                     if(g_EmuCDPD.XboxPresentationParameters.MultiSampleType != 0) {
@@ -2396,6 +2398,9 @@ HRESULT WINAPI XTL::EMUPATCH(Direct3D_CreateDevice_4)
 		LOG_FUNC_ARG(pPresentationParameters)
 		LOG_FUNC_END;
 
+	// HACK: Disable multisampling... See comment in CreateDevice proxy for more info
+	pPresentationParameters->MultiSampleType = XTL::X_D3DMULTISAMPLE_NONE;
+
 	// create default device *before* calling Xbox Direct3D_CreateDevice trampline
 	// to avoid hitting EMUPATCH'es that need a valid g_pD3DDevice
 	{
@@ -2450,6 +2455,9 @@ HRESULT WINAPI XTL::EMUPATCH(Direct3D_CreateDevice_16)
 		LOG_FUNC_ARG(hFocusWindow)
 		LOG_FUNC_ARG(pPresentationParameters)
 		LOG_FUNC_END;
+
+	// HACK: Disable multisampling... See comment in CreateDevice proxy for more info
+	pPresentationParameters->MultiSampleType = XTL::X_D3DMULTISAMPLE_NONE;
 
 	// create default device *before* calling Xbox Direct3D_CreateDevice trampline
 	// to avoid hitting EMUPATCH'es that need a valid g_pD3DDevice
@@ -2530,7 +2538,9 @@ HRESULT WINAPI XTL::EMUPATCH(Direct3D_CreateDevice)
 		LOG_FUNC_ARG(ppReturnedDeviceInterface)
 		LOG_FUNC_END;
 
-	
+	// HACK: Disable multisampling... See comment in CreateDevice proxy for more info
+	pPresentationParameters->MultiSampleType = XTL::X_D3DMULTISAMPLE_NONE;
+
 	// create default device *before* calling Xbox Direct3D_CreateDevice trampline
 	// to avoid hitting EMUPATCH'es that need a valid g_pD3DDevice
 	{
