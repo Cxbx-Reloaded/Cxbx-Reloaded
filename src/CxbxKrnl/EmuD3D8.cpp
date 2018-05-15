@@ -4623,9 +4623,7 @@ DWORD WINAPI XTL::EMUPATCH(D3DDevice_Swap)
 		// Get backbuffer dimenions; TODO : remember this once, at creation/resize time
 		D3DSURFACE_DESC BackBufferDesc;
 		pCurrentHostBackBuffer->GetDesc(&BackBufferDesc);
-		RECT EmuDestRect;
-		SetRect(&EmuDestRect, 0, 0, BackBufferDesc.Width, BackBufferDesc.Height);
-
+		
 		const DWORD LoadSurfaceFilter = D3DX_DEFAULT; // == D3DX_FILTER_TRIANGLE | D3DX_FILTER_DITHER
 		// Previously we used D3DX_FILTER_POINT here, but that gave jagged edges in Dashboard.
 		// Dxbx note : D3DX_FILTER_LINEAR gives a smoother image, but 'bleeds' across borders
@@ -4639,7 +4637,7 @@ DWORD WINAPI XTL::EMUPATCH(D3DDevice_Swap)
 				/* pDestRect = */ nullptr,
 				/* pSrcSurface = */ pXboxBackBufferHostSurface,
 				/* pSrcPalette = */ nullptr,
-				/* pSrcRect = */ &EmuDestRect,
+				/* pSrcRect = */ nullptr,
 				/* Filter = */ LoadSurfaceFilter,
 				/* ColorKey = */ 0);
 
@@ -4668,6 +4666,7 @@ DWORD WINAPI XTL::EMUPATCH(D3DDevice_Swap)
 				&OverlayWidth, &OverlayHeight, &OverlayDepth, &OverlayRowPitch, &OverlaySlicePitch);
 
 			RECT EmuSourRect;
+			RECT EmuDestRect;
 
 			if (g_OverlayProxy.SrcRect.right > 0) {
 				EmuSourRect = g_OverlayProxy.SrcRect;
