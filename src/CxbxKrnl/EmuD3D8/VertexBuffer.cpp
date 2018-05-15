@@ -579,6 +579,7 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
 							break;
 						case 3:
 							LOG_TEST_CASE("Normalize 3D");
+							// Test case : HeatShimmer
 							pVertexUVData[0] /= pActivePixelContainer[i].Width;
 							pVertexUVData[1] /= pActivePixelContainer[i].Height;
 							pVertexUVData[2] /= pActivePixelContainer[i].Depth;

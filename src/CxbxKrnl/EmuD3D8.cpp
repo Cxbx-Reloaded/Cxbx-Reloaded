@@ -3262,8 +3262,11 @@ bool GetHostRenderTargetDimensions(DWORD *pHostWidth, DWORD *pHostHeight)
 
 	// Emulate field-rendering not by halving the host backbuffer, but by faking
 	// the host backbuffer to half-height, which results in a correct viewport scale :
-	if (g_EmuCDPD.XboxPresentationParameters.Flags & X_D3DPRESENTFLAG_FIELD) {
-		HostRenderTarget_Desc.Height /= 2;
+	if (g_pXboxRenderTarget == g_XboxBackBufferSurface) {
+		if (g_EmuCDPD.XboxPresentationParameters.Flags & X_D3DPRESENTFLAG_FIELD) {
+			// Test case : XDK Sample FieldRender
+			HostRenderTarget_Desc.Height /= 2;
+		}
 	}
 
 	*pHostWidth = HostRenderTarget_Desc.Width;
@@ -4036,6 +4039,7 @@ VOID __fastcall XTL::EMUPATCH(D3DDevice_SwitchTexture)
 		// assert(EmuD3DActiveTexture[Stage] != xbnullptr);
 		LOG_TEST_CASE("Using CxbxActiveTextureCopies");
 		// test-case : Need For Speed Most Wanted
+		// test-case : Call of Duty 2: Big Red One
 
 		// Update data and format separately, instead of via GetDataFromXboxResource()
 		CxbxActiveTextureCopies[Stage].Common = EmuD3DActiveTexture[Stage]->Common;
@@ -4607,6 +4611,10 @@ DWORD WINAPI XTL::EMUPATCH(D3DDevice_Swap)
 		D3DSURFACE_DESC BackBufferDesc;
 		pCurrentHostBackBuffer->GetDesc(&BackBufferDesc);
 
+		const DWORD LoadSurfaceFilter = D3DX_DEFAULT; // == D3DX_FILTER_TRIANGLE | D3DX_FILTER_DITHER
+		// Previously we used D3DX_FILTER_POINT here, but that gave jagged edges in Dashboard.
+		// Dxbx note : D3DX_FILTER_LINEAR gives a smoother image, but 'bleeds' across borders
+
 		auto pXboxBackBufferHostSurface = GetHostSurface(g_XboxBackBufferSurface);
 		if (pXboxBackBufferHostSurface) {
 			// Blit Xbox BackBuffer to host BackBuffer
@@ -4617,7 +4625,7 @@ DWORD WINAPI XTL::EMUPATCH(D3DDevice_Swap)
 				/* pSrcSurface = */ pXboxBackBufferHostSurface,
 				/* pSrcPalette = */ nullptr,
 				/* pSrcRect = */ nullptr,
-				/* Filter = */ D3DX_FILTER_POINT,//D3DX_DEFAULT,
+				/* Filter = */ LoadSurfaceFilter,
 				/* ColorKey = */ 0);
 			if (BackBufferDesc.MultiSampleType != D3DMULTISAMPLE_NONE) {
 				if (hRet != D3D_OK) {
@@ -4701,7 +4709,7 @@ DWORD WINAPI XTL::EMUPATCH(D3DDevice_Swap)
 						/* pSrcSurface = */ pXboxOverlayHostSurface,
 						/* pSrcPalette = */ nullptr,
 						/* pSrcRect = */ &EmuSourRect,
-						/* Filter = */ D3DX_FILTER_POINT, // Dxbx note : D3DX_FILTER_LINEAR gives a smoother image, but 'bleeds' across borders
+						/* Filter = */ LoadSurfaceFilter,
 						/* ColorKey = */ g_OverlayProxy.EnableColorKey ? g_OverlayProxy.ColorKey : 0);
 					if (hRet == D3D_OK) {
 						LOG_TEST_CASE("D3DXLoadSurfaceFromSurface(Overlay) succeeded for MultiSample backbuffer!");
@@ -4721,7 +4729,7 @@ DWORD WINAPI XTL::EMUPATCH(D3DDevice_Swap)
 					/* SrcPitch = */ OverlayRowPitch,
 					/* pSrcPalette = */ nullptr,
 					/* pSrcRect = */ &EmuSourRect, // This parameter cannot be NULL
-					/* Filter = */ D3DX_FILTER_POINT, // Dxbx note : D3DX_FILTER_LINEAR gives a smoother image, but 'bleeds' across borders
+					/* Filter = */ LoadSurfaceFilter,
 					/* ColorKey = */ g_OverlayProxy.EnableColorKey ? g_OverlayProxy.ColorKey : 0);
 
 				DEBUG_D3DRESULT(hRet, "D3DXLoadSurfaceFromMemory - UpdateOverlay could not convert buffer!\n");
@@ -8027,8 +8035,16 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderTarget)
 
 	HRESULT hRet;
 #ifdef CXBX_USE_D3D9
-	hRet = g_pD3DDevice->SetRenderTarget(0, pHostRenderTarget);
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetRenderTarget");
+	// Mimick Direct3D 8 SetRenderTarget by only setting render target if non-null
+	if (pHostRenderTarget) {
+		hRet = g_pD3DDevice->SetRenderTarget(/*RenderTargetIndex=*/0, pHostRenderTarget);
+		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetRenderTarget");
+		if (FAILED(hRet)) {
+			// If Direct3D 9 SetRenderTarget failed, skip setting depth stencil
+			return hRet;
+		}
+	}
+
 	hRet = g_pD3DDevice->SetDepthStencilSurface(pHostDepthStencil);
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetDepthStencilSurface");
 #else
