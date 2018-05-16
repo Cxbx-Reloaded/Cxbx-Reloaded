@@ -57,7 +57,7 @@ void glo_readpixels(GLenum gl_format, GLenum gl_type,
     GLubyte *b = (GLubyte *) data;
     GLubyte *c = &((GLubyte *) data)[stride * (height - 1)];
     GLubyte *tmp = (GLubyte *) malloc(width * bytes_per_pixel);
-    int irow;
+    unsigned int irow;
 
     glReadPixels(0, 0, width, height, gl_format, gl_type, data);
 

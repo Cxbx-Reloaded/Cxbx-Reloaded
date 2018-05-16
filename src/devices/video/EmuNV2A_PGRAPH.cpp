@@ -2837,7 +2837,7 @@ static void pgraph_shader_update_constants(PGRAPHState *pg,
 {
 	assert(pg->opengl_enabled);
 
-	int i, j;
+	unsigned int i, j;
 
     /* update combiner constants */
     for (i = 0; i<= 8; i++) {
@@ -2969,8 +2969,8 @@ static void pgraph_shader_update_constants(PGRAPHState *pg,
 
         /* estimate the viewport by assuming it matches the surface ... */
         //FIXME: Get surface dimensions?
-        float m11 = 0.5 * pg->surface_shape.clip_width;
-        float m22 = -0.5 * pg->surface_shape.clip_height;
+        float m11 = 0.5f * pg->surface_shape.clip_width;
+        float m22 = -0.5f * pg->surface_shape.clip_height;
         float m33 = zclip_max - zclip_min;
         //float m41 = m11;
         //float m42 = -m22;
@@ -3021,7 +3021,7 @@ static void pgraph_bind_shaders(PGRAPHState *pg)
 {
 	assert(pg->opengl_enabled);
 
-	int i, j;
+	unsigned int i, j;
 
     bool vertex_program = GET_MASK(pg->regs[NV_PGRAPH_CSV0_D],
                                    NV_PGRAPH_CSV0_D_MODE) == 2;
@@ -3744,7 +3744,7 @@ static void pgraph_bind_textures(NV2AState *d)
         } else {
             if (dimensionality >= 2) {
                 unsigned int w = width, h = height;
-                int level;
+                unsigned int level;
                 if (f.gl_format != 0) {
                     for (level = 0; level < levels; level++) {
                         w = MAX(w, 1); h = MAX(h, 1);

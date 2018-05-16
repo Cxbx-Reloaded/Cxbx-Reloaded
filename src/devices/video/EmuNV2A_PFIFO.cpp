@@ -78,7 +78,7 @@ DEVICE_READ32(PFIFO)
 		break;
 	case NV_PFIFO_CACHE1_DMA_SUBROUTINE:
 		result = d->pfifo.cache1.subroutine_return
-			| d->pfifo.cache1.subroutine_active;
+			| (xbaddr)d->pfifo.cache1.subroutine_active;
 		break;
 	case NV_PFIFO_CACHE1_PULL0: {
 		qemu_mutex_lock(&d->pfifo.cache1.cache_lock);

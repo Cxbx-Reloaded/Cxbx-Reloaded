@@ -700,7 +700,7 @@ void vsh_translate(uint16_t version,
     qstring_append(header, vsh_header);
 
     bool has_final = false;
-    int slot;
+    unsigned int slot;
     for (slot=0; slot < length; slot++) {
         const uint32_t* cur_token = &tokens[slot * VSH_TOKEN_SIZE];
         QString *token_str = decode_token(cur_token);

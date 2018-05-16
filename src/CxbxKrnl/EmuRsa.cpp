@@ -1011,7 +1011,7 @@ void grammarsquareg(giant a)
 {
 	unsigned int	cur_term;
 	unsigned int	prod, carry = 0, temp;
-	int	asize = abs(a->sign), max = asize * 2 - 1;
+	unsigned int	asize = abs(a->sign), max = asize * 2 - 1;
 	unsigned short	*ptr = a->n, *ptr1, *ptr2;
 	giant scratch;
 
