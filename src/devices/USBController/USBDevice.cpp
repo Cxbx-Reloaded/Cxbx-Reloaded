@@ -51,12 +51,14 @@ void USBDevice::Init(unsigned int address)
 	m_DeviceId = 0x01C2;
 	m_VendorId = PCI_VENDOR_ID_NVIDIA;
 
-	g_pHostController1 = new OHCI_State;
-	g_pHostController2 = new OHCI_State;
+	if (address == USB0_BASE) {
+		g_pHostController1 = new OHCI_State;
+		g_pHostController1->HC_ChangeState(USB_Reset);
+		return;
+	}
 
-	// We can use the USB_Reset state to also cold boot the HC during initialization
-	g_pHostController1->HC_Reset(USB_Reset);
-	g_pHostController2->HC_Reset(USB_Reset);
+	g_pHostController2 = new OHCI_State;
+	g_pHostController2->HC_ChangeState(USB_Reset);
 }
 
 uint32_t USBDevice::MMIORead(int barIndex, uint32_t addr, unsigned size)

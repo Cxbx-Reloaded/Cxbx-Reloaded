@@ -332,6 +332,7 @@
     <ClInclude Include="..\..\src\CxbxKrnl\PoolManager.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\ReservedMemory.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\ResourceTracker.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\Timer.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\VMManager.h" />
     <ClInclude Include="..\..\src\CxbxVersion.h" />
     <ClInclude Include="..\..\src\Cxbx\CxbxXbdm.h" />
@@ -636,6 +637,7 @@
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug_Direct3D9|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
+    <ClCompile Include="..\..\src\CxbxKrnl\Timer.cpp" />
     <ClCompile Include="..\..\src\CxbxKrnl\VMManager.cpp" />
     <ClCompile Include="..\..\src\Cxbx\CxbxXbdm.cpp" />
     <ClCompile Include="..\..\src\Cxbx\DlgAbout.cpp" />

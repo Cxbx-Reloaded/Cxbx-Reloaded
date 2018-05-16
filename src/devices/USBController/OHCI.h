@@ -140,7 +140,7 @@ class OHCI_State
 		// write a register
 		void HC_WriteRegister(xbaddr addr, uint32_t value);
 		// reset the HC to the default state
-		void HC_Reset(USB_State new_state);
+		void HC_ChangeState(USB_State new_state);
 
 	private:
 		// all the registers available on the OHCI standard

@@ -42,7 +42,7 @@ OHCI_State* g_pHostController1 = nullptr;
 OHCI_State* g_pHostController2 = nullptr;
 
 
-void OHCI_State::HC_Reset(USB_State new_state)
+void OHCI_State::HC_ChangeState(USB_State new_state)
 {
 	// The usb state can be USB_Suspend if it is a software reset, and USB_Reset if it is a hardware
 	// reset or cold boot
@@ -59,8 +59,8 @@ void OHCI_State::HC_Reset(USB_State new_state)
 	else {
 		HC_Registers.HcControl &= (OHCI_CTL_IR | OHCI_CTL_RWC);
 	}
-	HC_Registers.HcControl = ~OHCI_CTL_HCFS;
-	HC_Registers.HcControl = new_state;
+	HC_Registers.HcControl &= ~OHCI_CTL_HCFS;
+	HC_Registers.HcControl |= new_state;
 	HC_Registers.HcCommandStatus = 0;
 	HC_Registers.HcInterruptStatus = 0;
 	HC_Registers.HcInterruptEnable = OHCI_INTR_MASTER_INTERRUPT_ENABLED; // enable interrupts
@@ -73,7 +73,6 @@ void OHCI_State::HC_Reset(USB_State new_state)
 
 	HC_Registers.HcFmInterval = 0;
 	HC_Registers.HcFmInterval |= (0x2778 << 16); // TBD according to the standard, using what XQEMU sets (FSLargestDataPacket)
-	HC_Registers.HcFmInterval |= (0 << 31);      // redundant, but we'll do it for the sake of completeness (FrameIntervalToggle)
 	HC_Registers.HcFmInterval |= 0x2EDF;         // bit-time of a frame. 1 frame = 1 ms (FrameInterval)
 	HC_Registers.HcFmRemaining = 0;
 	HC_Registers.HcFmNumber = 0;
@@ -90,5 +89,5 @@ void OHCI_State::HC_Reset(USB_State new_state)
 		//}
 	}
 
-	DbgPrintf("usb-ohci: Reset\n");
+	DbgPrintf("Usb-Ohci: Reset\n");
 }
