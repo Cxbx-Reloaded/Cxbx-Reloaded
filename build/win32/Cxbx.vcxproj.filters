@@ -627,6 +627,12 @@
     <None Include="..\..\src\devices\video\EmuNV2A_USER.cpp">
       <Filter>Hardware\Video</Filter>
     </None>
+    <None Include="..\..\src\.editorconfig">
+      <Filter>Code Format\src</Filter>
+    </None>
+    <None Include="..\..\resource\.editorconfig">
+      <Filter>Code Format\resource</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="GUI">
@@ -655,6 +661,15 @@
     </Filter>
     <Filter Include="Hardware\X86">
       <UniqueIdentifier>{9efb9cfc-2731-4edb-8dd0-36950b0263df}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Code Format">
+      <UniqueIdentifier>{0e125cbe-fb2e-41ef-a381-6effd9fabd35}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Code Format\src">
+      <UniqueIdentifier>{26a58e10-09ca-4605-86f8-552e5a9aa2e3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Code Format\resource">
+      <UniqueIdentifier>{6bbc2463-25dc-4f07-bf9e-38d6216d036a}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
