@@ -77,7 +77,7 @@ extern BOOL EmuXBFormatIsDepthBuffer(X_D3DFORMAT Format);
 extern D3DFORMAT EmuXB2PC_D3DFormat(X_D3DFORMAT Format);
 
 // convert from pc to xbox color formats
-extern X_D3DFORMAT EmuPC2XB_D3DFormat(D3DFORMAT Format);
+extern X_D3DFORMAT EmuPC2XB_D3DFormat(D3DFORMAT Format, bool bPreferLinear = true);
 
 // convert from xbox to pc d3d lock flags
 extern DWORD EmuXB2PC_D3DLock(DWORD Flags);
