@@ -4628,6 +4628,9 @@ DWORD WINAPI XTL::EMUPATCH(D3DDevice_Swap)
 			if (g_OverlayProxy.DstRect.right > 0) {
 				// If there's a destination rectangle given, copy that into our local variable :
 				EmuDestRect = g_OverlayProxy.DstRect;
+			} else {
+				// Should this be our backbuffer size rather than the actual window size?
+				GetClientRect(g_hEmuWindow, &EmuDestRect);
 			}
 
 			// load the YUY2 into the backbuffer
