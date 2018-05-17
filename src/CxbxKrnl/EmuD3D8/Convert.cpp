@@ -766,9 +766,9 @@ static __inline void YuvPixel(uint8 y, uint8 u, uint8 v,
 	int yg = yuvconstants->kYToRgb[0];
 
 	uint32 y1 = (uint32)(y * 0x0101 * yg) >> 16;
-	*b = Clamp((int32)(-(u * ub) + y1 + bb) >> 6);
-	*g = Clamp((int32)(-(u * ug + v * vg) + y1 + bg) >> 6);
-	*r = Clamp((int32)(-(v * vr) + y1 + br) >> 6);
+	*b = (uint8)Clamp((int32)(-(u * ub) + y1 + bb) >> 6);
+	*g = (uint8)Clamp((int32)(-(u * ug + v * vg) + y1 + bg) >> 6);
+	*r = (uint8)Clamp((int32)(-(v * vr) + y1 + br) >> 6);
 }
 
 void ____YUY2ToARGBRow_C(const uint8* src_yuy2,

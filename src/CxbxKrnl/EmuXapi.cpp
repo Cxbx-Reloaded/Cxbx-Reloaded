@@ -253,7 +253,7 @@ DWORD WINAPI XTL::EMUPATCH(XGetDevices)
 
 	// If this is for getting  gamepad devices, and no gamepad was previously detected, connect one
 	if (DeviceType == gDeviceType_Gamepad && DeviceType->CurrentConnected == 0) {
-		for (int i = 0; i < total_xinput_gamepad; i++)
+		for (unsigned int i = 0; i < total_xinput_gamepad; i++)
 		{
 			DeviceType->CurrentConnected |= 1<<i;
 		}

@@ -227,7 +227,7 @@ static void append_skinning_code(QString* str, bool mix,
             }
         } else {
             /* Individual matrices */
-            int i;
+            unsigned int i;
             for (i = 0; i < count; i++) {
                 char c = "xyzw"[i];
                 qstring_append_fmt(str, "%s += (%s * %s%d * weight.%c).%s;\n",
