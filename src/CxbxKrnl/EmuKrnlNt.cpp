@@ -162,7 +162,11 @@ XBSYSAPI EXPORTNUM(187) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtClose
             CxbxDebugger::ReportFileClosed(Handle);
         }
 
-		ret = NtDll::NtClose(Handle);
+		// Prevent exceptions when using invalid NTHandle
+		DWORD flags = 0;
+		if (GetHandleInformation(Handle, &flags) != 0) {
+			ret = NtDll::NtClose(Handle);
+		}
     }
 
 	RETURN(ret);
