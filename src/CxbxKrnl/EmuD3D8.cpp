@@ -7966,6 +7966,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderTarget)
 	// The currenct depth stencil is always replaced by whats passed in here (even a null)
 	g_pXboxDepthStencil = pNewZStencil;
     pHostDepthStencil = GetHostSurface(g_pXboxDepthStencil, D3DUSAGE_DEPTHSTENCIL);
+	g_bHasDepthStencil = pHostDepthStencil != nullptr;
 
 	HRESULT hRet;
 #ifdef CXBX_USE_D3D9
