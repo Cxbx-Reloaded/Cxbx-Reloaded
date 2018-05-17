@@ -68,10 +68,94 @@ XTL::PXPP_DEVICE_TYPE gDeviceType_Gamepad = nullptr;
 #include "EmuXTL.h"
 
 
-XTL::XB_POLLING_PARAMETERS_HANDLE g_pph[4];
-XTL::XB_XINPUT_POLLING_PARAMETERS g_pp[4];
+XTL::X_POLLING_PARAMETERS_HANDLE g_pph[4];
+XTL::X_XINPUT_POLLING_PARAMETERS g_pp[4];
+//for host connected gamepad
 DWORD total_xinput_gamepad = 0;
+//global bridge for xbox controller to host, 4 elements for 4 ports.
+XTL::X_CONTROLLER_HOST_BRIDGE g_XboxControllerHostBridge[4] = {};
+//global xbox xinput device info from interpreting device table.
+std::vector<XTL::X_XINPUT_DEVICE_INFO> g_XboxInputDeviceInfo;
 
+//look for xbox Device info from global info vector, and return the found index. return -1 for not found.
+int FindDeviceInfoIndexByXboxType(UCHAR ucType)
+{
+    int i;
+    for (i = 0; i < g_XboxInputDeviceInfo.size(); i++) {
+        if (g_XboxInputDeviceInfo[i].ucType == ucType) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+//look for xbox Device info from global info vector, and return the found index. return -1 for not found.
+int FindDeviceInfoIndexByDeviceType(XTL::PXPP_DEVICE_TYPE DeviceType)
+{
+    int i;
+    for (i = 0; i < g_XboxInputDeviceInfo.size(); i++) {
+        if (g_XboxInputDeviceInfo[i].DeviceType == DeviceType) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+//init XboxControllerHostBridge's content, also put interpreted data from device table to it.
+//this is called in the end of SetupXboxDeviceTypes(), later we'll move this code to accept user configuration.
+void InitXboxControllerHostBridge(void)
+{
+    if (g_XInputEnabled)
+    {
+        //query the total connected xinput gamepad.
+        total_xinput_gamepad = XTL::XInputGamepad_Connected();
+    }
+    else
+    {
+        //using keyboard, we set the game pad count to 1
+        total_xinput_gamepad = 1;
+    }
+    
+    int port;
+    for (port = 0; port < 4; port++) {
+        if (g_XInputEnabled && port < total_xinput_gamepad) {
+            //Host using Xinput, setup bridge per host xinput controller count.
+            g_XboxControllerHostBridge[port].dwHostType = 1;
+            g_XboxControllerHostBridge[port].dwHostInputIndex = port;
+        }
+        else {
+            //using directinput for xbox port 0
+            if (port == 0) {
+                g_XboxControllerHostBridge[port].dwHostType = 2;
+                g_XboxControllerHostBridge[port].dwHostInputIndex = 0;
+            }
+            else {
+                //not Xinput, nor directinput, host connection set to 0, not connected.
+                g_XboxControllerHostBridge[port].dwHostType = 0;
+                g_XboxControllerHostBridge[port].dwHostInputIndex = 0;
+            }
+        }
+        g_XboxControllerHostBridge[port].dwXboxPort = port;
+        //xbox device handle set to 0 before being open.
+        g_XboxControllerHostBridge[port].hXboxDevice = 0;
+        //default xbox controller type to gamepad.
+        g_XboxControllerHostBridge[port].XboxDeviceInfo.ucType = X_XINPUT_DEVTYPE_GAMEPAD;
+        int index;
+        //find corresponding XboxDeviceInfo
+        index=FindDeviceInfoIndexByXboxType(g_XboxControllerHostBridge[port].XboxDeviceInfo.ucType);
+        if (index == -1) {
+            printf("XboxControllerHostBridge XboxDeviceInfo.ucType: %d not found in global XboxInputDeviceInfo vector!\n", g_XboxControllerHostBridge[port].XboxDeviceInfo.ucType);
+        }
+        //copy XboxDeviceInfo from the global vector.
+        g_XboxControllerHostBridge[port].XboxDeviceInfo.ucSubType = g_XboxInputDeviceInfo[index].ucSubType;
+        g_XboxControllerHostBridge[port].XboxDeviceInfo.DeviceType = g_XboxInputDeviceInfo[index].DeviceType;
+        g_XboxControllerHostBridge[port].XboxDeviceInfo.ucInputStateSize = g_XboxInputDeviceInfo[index].ucInputStateSize;
+        g_XboxControllerHostBridge[port].XboxDeviceInfo.ucFeedbackSize = g_XboxInputDeviceInfo[index].ucFeedbackSize;
+        //these two members are not used yet.
+        g_XboxControllerHostBridge[port].pXboxState = 0;
+        g_XboxControllerHostBridge[port].pXboxFeedbackHeader = 0;
+    }
+}
 void SetupXboxDeviceTypes()
 {
 	// If we don't yet have the offset to gDeviceType_Gamepad, work it out!
@@ -105,16 +189,46 @@ void SetupXboxDeviceTypes()
 				}
 
 				printf("----------------------------------------\n");
-				printf("DeviceTable[%u]->ucType = %d\n", i, deviceTable[i]->ucType);
+				printf("DeviceTable[%u]->ucType = %d, ucSubType = %d\n", i, deviceTable[i]->ucType, deviceTable[i]->ucSubType);
 				printf("DeviceTable[%u]->XppType = 0x%08X (", i, deviceTable[i]->XppType);
 
-				switch (deviceTable[i]->ucType) {
-				case 1:
+                XTL::X_XINPUT_DEVICE_INFO CurrentInfo = {};
+                CurrentInfo.ucType = deviceTable[i]->ucType;
+                CurrentInfo.ucSubType = deviceTable[i]->ucSubType;
+                CurrentInfo.DeviceType = deviceTable[i]->XppType;
+                CurrentInfo.ucInputStateSize = deviceTable[i]->pInputStateDesc->ucSize;
+                CurrentInfo.ucFeedbackSize = deviceTable[i]->pFeedbackDesc->ucSize;
+                //store the DeviceInfo in global vector.
+                g_XboxInputDeviceInfo.push_back(CurrentInfo);
+
+                switch (deviceTable[i]->ucType) {
+				case X_XINPUT_DEVTYPE_GAMEPAD:
 					gDeviceType_Gamepad = deviceTable[i]->XppType;
 					printf("XDEVICE_TYPE_GAMEPAD)\n");
 					break;
+                case X_XINPUT_DEVTYPE_GAMEPAD_ALT:
+                    printf("XDEVICE_TYPE_GAMEPAD_ALT)\n");
+                    break;
+                case X_XINPUT_DEVTYPE_WHEEL:
+                    printf("XDEVICE_TYPE_WHEEL)\n");
+                    break;
+                case X_XINPUT_DEVTYPE_ARCADE_STICK:
+                    printf("XDEVICE_TYPE_ARCADE_STICK)\n");
+                    break;
+                case X_XINPUT_DEVTYPE_DIGITAL_ARCADE_STICK:
+                    printf("XDEVICE_TYPE_DIGITAL_ARCADE_STICK)\n");
+                    break;
+                case X_XINPUT_DEVTYPE_FLIGHT_STICK:
+                    printf("XDEVICE_TYPE_FLIGHT_STICK)\n");
+                    break;
+                case X_XINPUT_DEVTYPE_SNOWBOARD:
+                    printf("XDEVICE_TYPE_SNOWBOARD)\n");
+                    break;
+                case X_XINPUT_DEVTYPE_STEELBATALION:
+                    printf("XDEVICE_TYPE_STEELBATALION)\n");
+                    break;
 				default:
-					printf("Unknown)\n");
+					printf("Unknown device type)\n");
 					break;
 				}
 			}
@@ -135,6 +249,7 @@ void SetupXboxDeviceTypes()
 		}
 
 		printf("XAPI: XDEVICE_TYPE_GAMEPAD Found at 0x%08X\n", gDeviceType_Gamepad);
+        InitXboxControllerHostBridge();
 	}
 }
 
@@ -153,7 +268,6 @@ VOID WINAPI XTL::EMUPATCH(XInitDevices)
 		LOG_FUNC_ARG(dwPreallocTypeCount)
 		LOG_FUNC_ARG((DWORD)PreallocTypes)
 		LOG_FUNC_END;
-
     for(int v=0;v<XINPUT_SETSTATE_SLOTS;v++)
     {
         g_pXInputSetStateStatus[v].hDevice = 0;
@@ -252,7 +366,7 @@ DWORD WINAPI XTL::EMUPATCH(XGetDevices)
 	DeviceType->PreviousConnected = DeviceType->CurrentConnected;
 
 	// If this is for getting  gamepad devices, and no gamepad was previously detected, connect one
-	if (DeviceType == gDeviceType_Gamepad && DeviceType->CurrentConnected == 0) {
+/*	if (DeviceType == gDeviceType_Gamepad && DeviceType->CurrentConnected == 0) {
 		for (unsigned int i = 0; i < total_xinput_gamepad; i++)
 		{
 			DeviceType->CurrentConnected |= 1<<i;
@@ -260,12 +374,23 @@ DWORD WINAPI XTL::EMUPATCH(XGetDevices)
 		DeviceType->ChangeConnected = DeviceType->CurrentConnected ;
 		ret = DeviceType->CurrentConnected;
 	}
-
+*/
+    int index = FindDeviceInfoIndexByDeviceType(DeviceType);
+    int port;
+    if (DeviceType->CurrentConnected == 0) {
+        for (port = 0; port < 4; port++) {
+            //if the host controller is connected and the xbox DeviceType matches. set the CurrentConnected flag.
+            if (g_XboxControllerHostBridge[port].XboxDeviceInfo.DeviceType == DeviceType && g_XboxControllerHostBridge[port].dwHostType>0) {
+                DeviceType->CurrentConnected |= 1 << port;
+            }
+        }
+    }
 	// JSRF Hack: Don't set the ChangeConnected flag. Without this, JSRF hard crashes 
 	// TODO: Why is this still needed? 
-	if (TitleIsJSRF()) {
+	if (DeviceType == gDeviceType_Gamepad && TitleIsJSRF()) {
 		DeviceType->ChangeConnected = 0;
 	}
+    ret = DeviceType->CurrentConnected;
 
 	xboxkrnl::KfLowerIrql(oldIrql);
 
@@ -297,12 +422,24 @@ BOOL WINAPI XTL::EMUPATCH(XGetDeviceChanges)
 	BOOL ret = FALSE;
 
 	// If this is a gamepad, and no gamepad was previously detected, connect one
-	if (DeviceType == gDeviceType_Gamepad && DeviceType->CurrentConnected == 0) {
+/*	if (DeviceType == gDeviceType_Gamepad && DeviceType->CurrentConnected == 0) {
 		DeviceType->CurrentConnected = 1;
 		DeviceType->ChangeConnected = 1;		
 	}
+*/
+    // If this device type was not previously detected, connect one (or more)
+    int port;
+    if (DeviceType->CurrentConnected == 0) {
+        for (port = 0; port < 4; port++) {
+            //if the host controller is connected and the xbox DeviceType matches. set the CurrentConnected flag.
+            if (g_XboxControllerHostBridge[port].XboxDeviceInfo.DeviceType == DeviceType && g_XboxControllerHostBridge[port].dwHostType>0) {
+                DeviceType->CurrentConnected |= 1 << port;
+            }
+        }
+        DeviceType->ChangeConnected = DeviceType->CurrentConnected;
+    }
 
-	// JSRF Hack: Don't set the ChangeConnected flag. Without this, JSRF hard crashes 
+    // JSRF Hack: Don't set the ChangeConnected flag. Without this, JSRF hard crashes 
 	// TODO: Why is this still needed? 
 	if (TitleIsJSRF()) {
 		DeviceType->ChangeConnected = 0;
@@ -342,7 +479,7 @@ HANDLE WINAPI XTL::EMUPATCH(XInputOpen)
     IN PXPP_DEVICE_TYPE             DeviceType,
     IN DWORD                        dwPort,
     IN DWORD                        dwSlot,
-    IN PXB_XINPUT_POLLING_PARAMETERS   pPollingParameters OPTIONAL
+    IN PX_XINPUT_POLLING_PARAMETERS   pPollingParameters OPTIONAL
 )
 {
 	FUNC_EXPORTS
@@ -354,19 +491,19 @@ HANDLE WINAPI XTL::EMUPATCH(XInputOpen)
 		LOG_FUNC_ARG(pPollingParameters)
 		LOG_FUNC_END;
 
-    XB_POLLING_PARAMETERS_HANDLE *pph = 0;
+    X_POLLING_PARAMETERS_HANDLE *pph = 0;
 	//rever back to return handle  for port 0~3, this is for multi controller support.
     if(dwPort >= 0 && (dwPort <= total_xinput_gamepad))
     {
         if(g_hInputHandle[dwPort] == 0)
         {
-            pph = (XB_POLLING_PARAMETERS_HANDLE*) &g_pph[dwPort];	// new XB_POLLING_PARAMETERS_HANDLE();
+            pph = (X_POLLING_PARAMETERS_HANDLE*) &g_pph[dwPort];	// new XB_POLLING_PARAMETERS_HANDLE();
 
             if(pPollingParameters != NULL)
             {
-                pph->pPollingParameters = (XB_XINPUT_POLLING_PARAMETERS*) &g_pp[dwPort]; // new XINPUT_POLLING_PARAMETERS();
+                pph->pPollingParameters = (X_XINPUT_POLLING_PARAMETERS*) &g_pp[dwPort]; // new XINPUT_POLLING_PARAMETERS();
 
-                memcpy(pph->pPollingParameters, pPollingParameters, sizeof(XB_XINPUT_POLLING_PARAMETERS));
+                memcpy(pph->pPollingParameters, pPollingParameters, sizeof(X_XINPUT_POLLING_PARAMETERS));
             }
             else
             {
@@ -377,16 +514,16 @@ HANDLE WINAPI XTL::EMUPATCH(XInputOpen)
         }
         else
         {
-            pph = (XB_POLLING_PARAMETERS_HANDLE*)g_hInputHandle[dwPort];
+            pph = (X_POLLING_PARAMETERS_HANDLE*)g_hInputHandle[dwPort];
 
             if(pPollingParameters != 0)
             {
                 if(pph->pPollingParameters == 0)
                 {
-                    pph->pPollingParameters = (XB_XINPUT_POLLING_PARAMETERS*) &g_pp[dwPort]; // new XINPUT_POLLING_PARAMETERS();
+                    pph->pPollingParameters = (X_XINPUT_POLLING_PARAMETERS*) &g_pp[dwPort]; // new XINPUT_POLLING_PARAMETERS();
                 }
 
-                memcpy(pph->pPollingParameters, pPollingParameters, sizeof(XB_XINPUT_POLLING_PARAMETERS));
+                memcpy(pph->pPollingParameters, pPollingParameters, sizeof(X_XINPUT_POLLING_PARAMETERS));
             }
             else
             {
@@ -404,7 +541,17 @@ HANDLE WINAPI XTL::EMUPATCH(XInputOpen)
 
 	g_bXInputOpenCalled = true;
 
-	RETURN((HANDLE)pph);
+	//RETURN((HANDLE)pph);
+    //code above are not used at all, in future we might remove them.
+    if (dwPort >= 0 && dwPort < 4) {
+        //check if the bridged xbox controller at this port matches the DeviceType, if matches, setup the device handle and return it.
+        if (g_XboxControllerHostBridge[dwPort].XboxDeviceInfo.DeviceType == DeviceType) {
+            g_XboxControllerHostBridge[dwPort].hXboxDevice = &g_XboxControllerHostBridge[dwPort];
+            return g_XboxControllerHostBridge[dwPort].hXboxDevice;
+        }
+    }
+
+    return 0;
 }
 
 // ******************************************************************
@@ -419,7 +566,7 @@ VOID WINAPI XTL::EMUPATCH(XInputClose)
 
 	LOG_FUNC_ONE_ARG(hDevice);
 
-    XB_POLLING_PARAMETERS_HANDLE *pph = (XB_POLLING_PARAMETERS_HANDLE*)hDevice;
+    X_POLLING_PARAMETERS_HANDLE *pph = (X_POLLING_PARAMETERS_HANDLE*)hDevice;
 	DWORD dwPort = pph->dwPort;
 	//NULL out the input handle corresponds to port.
 	g_hInputHandle[dwPort] = 0;
@@ -447,7 +594,16 @@ VOID WINAPI XTL::EMUPATCH(XInputClose)
         delete pph;
 		*/
     }
-    
+
+    //above code is not used at all, in future we might remove them.
+    //reset hXboxDevice handle if it matches the hDevice
+    int port;
+    for(port=0;port<4;port++){
+        if (g_XboxControllerHostBridge[dwPort].hXboxDevice == hDevice) {
+            g_XboxControllerHostBridge[dwPort].hXboxDevice=0;
+            break;
+        }
+    }
 }
 
 // ******************************************************************
@@ -462,7 +618,7 @@ DWORD WINAPI XTL::EMUPATCH(XInputPoll)
 
 	LOG_FUNC_ONE_ARG(hDevice);
 
-    XB_POLLING_PARAMETERS_HANDLE *pph = (XB_POLLING_PARAMETERS_HANDLE*)hDevice;
+/*    X_POLLING_PARAMETERS_HANDLE *pph = (X_POLLING_PARAMETERS_HANDLE*)hDevice;
 
     //
     // Poll input
@@ -478,7 +634,7 @@ DWORD WINAPI XTL::EMUPATCH(XInputPoll)
 
             g_pXInputSetStateStatus[v].dwLatency = 0;
 
-            XTL::PXB_XINPUT_FEEDBACK pFeedback = (XTL::PXB_XINPUT_FEEDBACK)g_pXInputSetStateStatus[v].pFeedback;
+            XTL::PX_XINPUT_FEEDBACK pFeedback = (XTL::PX_XINPUT_FEEDBACK)g_pXInputSetStateStatus[v].pFeedback;
 
             if(pFeedback == 0)
                 continue;
@@ -498,6 +654,27 @@ DWORD WINAPI XTL::EMUPATCH(XInputPoll)
             }
         }
     }
+*/
+    int port;
+    for (port = 0; port<4; port++) {
+        if (g_XboxControllerHostBridge[port].hXboxDevice == hDevice) {
+            if (g_XboxControllerHostBridge[port].pXboxFeedbackHeader != 0) {
+                if (g_XboxControllerHostBridge[port].pXboxFeedbackHeader->dwStatus != ERROR_SUCCESS) {
+                    if (g_XboxControllerHostBridge[port].pXboxFeedbackHeader->hEvent != 0)
+                    {
+                        SetEvent(g_XboxControllerHostBridge[port].pXboxFeedbackHeader->hEvent);
+                    }
+                    g_XboxControllerHostBridge[port].pXboxFeedbackHeader->dwStatus = ERROR_SUCCESS;
+                    break;
+                }
+            }
+            else {
+                break;
+            }
+        }
+    }
+
+
 
 	RETURN(ERROR_SUCCESS);
 }
@@ -508,7 +685,7 @@ DWORD WINAPI XTL::EMUPATCH(XInputPoll)
 DWORD WINAPI XTL::EMUPATCH(XInputGetCapabilities)
 (
     IN  HANDLE               hDevice,
-    OUT PXB_XINPUT_CAPABILITIES pCapabilities
+    OUT PX_XINPUT_CAPABILITIES pCapabilities
 )
 {
 	FUNC_EXPORTS
@@ -520,22 +697,38 @@ DWORD WINAPI XTL::EMUPATCH(XInputGetCapabilities)
 
     DWORD ret = ERROR_DEVICE_NOT_CONNECTED;
 
-    XB_POLLING_PARAMETERS_HANDLE *pph = (XB_POLLING_PARAMETERS_HANDLE*)hDevice;
+    X_POLLING_PARAMETERS_HANDLE *pph = (X_POLLING_PARAMETERS_HANDLE*)hDevice;
 
-    if(pph != NULL)
+/*    if(pph != NULL)
     {
         DWORD dwPort = pph->dwPort;
 		//return gamepad capabilities for port 0~3.
         if(dwPort >= 0 && dwPort<=total_xinput_gamepad)
         {
-            pCapabilities->SubType = XINPUT_DEVSUBTYPE_GC_GAMEPAD;
+            pCapabilities->SubType = X_XINPUT_DEVSUBTYPE_GC_GAMEPAD;
 			pCapabilities->In.Gamepad = {};
 			pCapabilities->Out.Rumble = {};
 
             ret = ERROR_SUCCESS;
         }
     }
-
+*/
+    //above code is not used any more, could be removed.
+    //find XboxControllerHostBridge per hDevice, and fill the Capabilities Structure per Device Info
+    int port;
+    for (port = 0; port < 4; port++) {
+        if (g_XboxControllerHostBridge[port].hXboxDevice == hDevice) {
+            pCapabilities->SubType = g_XboxControllerHostBridge[port].XboxDeviceInfo.ucSubType;
+            //ready to set the In and Out structure in pCapabilities, shall set all bit to 1 for enabling the capabilities.
+            UCHAR * pCapa = (UCHAR *)(&pCapabilities->In);
+            
+            memset( pCapa,
+                    0xFF,
+                    g_XboxControllerHostBridge[port].XboxDeviceInfo.ucInputStateSize + g_XboxControllerHostBridge[port].XboxDeviceInfo.ucFeedbackSize);
+            break;
+        }
+    }
+    ret = ERROR_SUCCESS;
 	RETURN(ret);
 }
 
@@ -545,7 +738,7 @@ DWORD WINAPI XTL::EMUPATCH(XInputGetCapabilities)
 DWORD WINAPI XTL::EMUPATCH(XInputGetState)
 (
     IN  HANDLE         hDevice,
-    OUT PXB_XINPUT_STATE  pState
+    OUT PX_XINPUT_STATE  pState
 )
 {
 	FUNC_EXPORTS
@@ -557,7 +750,8 @@ DWORD WINAPI XTL::EMUPATCH(XInputGetState)
 
     DWORD ret = ERROR_INVALID_HANDLE;
 
-    XB_POLLING_PARAMETERS_HANDLE *pph = (XB_POLLING_PARAMETERS_HANDLE*)hDevice;
+    /*
+    X_POLLING_PARAMETERS_HANDLE *pph = (X_POLLING_PARAMETERS_HANDLE*)hDevice;
 
     if(pph != NULL)
     {
@@ -591,7 +785,34 @@ DWORD WINAPI XTL::EMUPATCH(XInputGetState)
     }
 	else
 		EmuWarning("EmuXInputGetState(): pph == NULL!");
+    */
+    //above code is not used at all, in future we might remove them.
+    //get input state if hXboxDevice matches hDevice
+    int port;
+    for (port = 0; port<4; port++) {
+        if (g_XboxControllerHostBridge[port].hXboxDevice == hDevice) {
+            
+            //for xinput, we query the state corresponds to port.
+            switch (g_XboxControllerHostBridge[port].dwHostType) {
+            case 1://using XInput
+                EmuXInputPCPoll(port, pState);
+                ret = ERROR_SUCCESS;
+                break;
+            case 2://using directinput
+                EmuDInputPoll(pState);
+                ret = ERROR_SUCCESS;
+                break;
+            case 0x80://using virtual SteelBatalion Controller
+                printf("SBC get state!\n");
+                break;
+            default:
+                break;
+            }
 
+            break;
+        }
+    }
+    
 	RETURN(ret);
 }
 
@@ -601,7 +822,7 @@ DWORD WINAPI XTL::EMUPATCH(XInputGetState)
 DWORD WINAPI XTL::EMUPATCH(XInputSetState)
 (
     IN     HANDLE           hDevice,
-    IN OUT PXB_XINPUT_FEEDBACK pFeedback
+    IN OUT PX_XINPUT_FEEDBACK pFeedback
 )
 {
 	FUNC_EXPORTS
@@ -612,8 +833,8 @@ DWORD WINAPI XTL::EMUPATCH(XInputSetState)
 		LOG_FUNC_END;
 
     DWORD ret = ERROR_IO_PENDING;
-
-    XB_POLLING_PARAMETERS_HANDLE *pph = (XB_POLLING_PARAMETERS_HANDLE*)hDevice;
+/*
+    X_POLLING_PARAMETERS_HANDLE *pph = (X_POLLING_PARAMETERS_HANDLE*)hDevice;
 
     if(pph != NULL)
     {
@@ -674,6 +895,35 @@ DWORD WINAPI XTL::EMUPATCH(XInputSetState)
 		{
 			XTL::EmuXInputSetState(pph->dwPort, pFeedback);
 		}
+    }
+    */
+
+    //above code is not used at all, in future we might remove them.
+    //reset hXboxDevice handle if it matches the hDevice
+    int port;
+    for (port = 0; port<4; port++) {
+        if (g_XboxControllerHostBridge[port].hXboxDevice == hDevice) {
+            if (g_XboxControllerHostBridge[port].pXboxFeedbackHeader == 0) {
+                g_XboxControllerHostBridge[port].pXboxFeedbackHeader = &pFeedback->Header;
+                g_XboxControllerHostBridge[port].dwLatency = 0;
+                pFeedback->Header.dwStatus = ERROR_IO_PENDING;
+                ret = ERROR_IO_PENDING;
+                //set XInput State if host type is Xinput.
+                switch (g_XboxControllerHostBridge[port].dwHostType) {
+                case 1://using XInput
+                    XTL::EmuXInputSetState(port, pFeedback);
+                    break;
+                case 2://using directinput
+                    break;
+                case 0x80://using virtual SteelBatalion Controller
+                    printf("SBC setstate!\n");
+                    break;
+                default:
+                    break;
+                }
+                break;
+            }
+        }
     }
 
 	RETURN(ret);
