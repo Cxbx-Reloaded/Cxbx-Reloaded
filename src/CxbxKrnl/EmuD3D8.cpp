@@ -3157,33 +3157,36 @@ XTL::X_D3DSurface* WINAPI XTL::EMUPATCH(D3DDevice_GetBackBuffer2)
 	}
 
 	auto pCopySrcSurface = GetHostSurface(pXboxBackBuffer, D3DUSAGE_RENDERTARGET);
+	if (pCopySrcSurface == nullptr) {
+		EmuWarning("Failed to get Host Resource for Xbox Back Buffer");
+		return pXboxBackBuffer;
+	}
 
 	D3DLOCKED_RECT copyLockedRect;
 	HRESULT hRet = pCopySrcSurface->LockRect(&copyLockedRect, NULL, D3DLOCK_READONLY);
 	if (hRet != D3D_OK) {
 		EmuWarning("Could not lock Host Resource for Xbox Back Buffer");
+		return pXboxBackBuffer;
 	}
-	else {
-		D3DSURFACE_DESC copySurfaceDesc;
 
-		hRet = pCopySrcSurface->GetDesc(&copySurfaceDesc);
-		if (hRet != D3D_OK) {
-			EmuWarning("Could not get Xbox Back Buffer Host Surface Desc");
-		}
-		else {
+	D3DSURFACE_DESC copySurfaceDesc;
+
+	hRet = pCopySrcSurface->GetDesc(&copySurfaceDesc);
+	if (hRet != D3D_OK) {
+		EmuWarning("Could not get Xbox Back Buffer Host Surface Desc");
+	} else {
 #ifdef CXBX_USE_D3D9
-			DWORD Size = copyLockedRect.Pitch * copySurfaceDesc.Height; // TODO : What about mipmap levels?
+		DWORD Size = copyLockedRect.Pitch * copySurfaceDesc.Height; // TODO : What about mipmap levels?
 #else
-			DWORD Size = copySurfaceDesc.Size;
+		DWORD Size = copySurfaceDesc.Size;
 #endif
-			// Finally, do the copy from the converted host resource to the xbox resource
-			memcpy((void*)GetDataFromXboxResource(pXboxBackBuffer), copyLockedRect.pBits, Size);
-		}
-
-		pCopySrcSurface->UnlockRect();
+		// Finally, do the copy from the converted host resource to the xbox resource
+		memcpy((void*)GetDataFromXboxResource(pXboxBackBuffer), copyLockedRect.pBits, Size);
 	}
 
-    return pXboxBackBuffer;
+	pCopySrcSurface->UnlockRect();
+
+	return pXboxBackBuffer;
 #endif // COPY_BACKBUFFER_TO_XBOX_SURFACE
 }
 
