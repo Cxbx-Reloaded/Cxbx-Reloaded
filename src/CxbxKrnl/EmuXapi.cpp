@@ -121,25 +121,31 @@ void InitXboxControllerHostBridge(void)
         if (g_XInputEnabled && port < total_xinput_gamepad) {
             //Host using Xinput, setup bridge per host xinput controller count.
             g_XboxControllerHostBridge[port].dwHostType = 1;
-            g_XboxControllerHostBridge[port].dwHostInputIndex = port;
+            g_XboxControllerHostBridge[port].dwHostPort = port;
+            //default xbox controller type to gamepad.
+            g_XboxControllerHostBridge[port].XboxDeviceInfo.ucType = X_XINPUT_DEVTYPE_GAMEPAD;
+
         }
         else {
             //using directinput for xbox port 0
             if (port == 0) {
                 g_XboxControllerHostBridge[port].dwHostType = 2;
-                g_XboxControllerHostBridge[port].dwHostInputIndex = 0;
+                g_XboxControllerHostBridge[port].dwHostPort = 0;
+                //default xbox controller type to gamepad.
+                g_XboxControllerHostBridge[port].XboxDeviceInfo.ucType = X_XINPUT_DEVTYPE_GAMEPAD;
+
             }
             else {
                 //not Xinput, nor directinput, host connection set to 0, not connected.
                 g_XboxControllerHostBridge[port].dwHostType = 0;
-                g_XboxControllerHostBridge[port].dwHostInputIndex = 0;
+                g_XboxControllerHostBridge[port].dwHostPort = 0;
+                //set all unused port to GAMEPAD
+                g_XboxControllerHostBridge[port].XboxDeviceInfo.ucType = X_XINPUT_DEVTYPE_GAMEPAD;
             }
         }
         g_XboxControllerHostBridge[port].dwXboxPort = port;
         //xbox device handle set to 0 before being open.
         g_XboxControllerHostBridge[port].hXboxDevice = 0;
-        //default xbox controller type to gamepad.
-        g_XboxControllerHostBridge[port].XboxDeviceInfo.ucType = X_XINPUT_DEVTYPE_GAMEPAD;
         int index;
         //find corresponding XboxDeviceInfo
         index=FindDeviceInfoIndexByXboxType(g_XboxControllerHostBridge[port].XboxDeviceInfo.ucType);
@@ -240,6 +246,16 @@ void SetupXboxDeviceTypes()
 			if (XInputOpenAddr != nullptr) {
 				printf("XAPI: Deriving XDEVICE_TYPE_GAMEPAD from XInputOpen (0x%08X)\n", XInputOpenAddr);
 				gDeviceType_Gamepad = *(XTL::PXPP_DEVICE_TYPE*)((uint32_t)XInputOpenAddr + 0x0B);
+
+                //only have one GAMEPAD device type. setup global DeviceInfo vector accordingly.
+                XTL::X_XINPUT_DEVICE_INFO CurrentInfo = {};
+                CurrentInfo.ucType = X_XINPUT_DEVTYPE_GAMEPAD;
+                CurrentInfo.ucSubType = X_XINPUT_DEVSUBTYPE_GC_GAMEPAD;
+                CurrentInfo.DeviceType = gDeviceType_Gamepad;
+                CurrentInfo.ucInputStateSize = sizeof(XTL::X_XINPUT_GAMEPAD);
+                CurrentInfo.ucFeedbackSize = sizeof(XTL::X_XINPUT_RUMBLE);
+                //store the DeviceInfo in global vector.
+                g_XboxInputDeviceInfo.push_back(CurrentInfo);
 			}
 		}
 
@@ -268,7 +284,7 @@ VOID WINAPI XTL::EMUPATCH(XInitDevices)
 		LOG_FUNC_ARG(dwPreallocTypeCount)
 		LOG_FUNC_ARG((DWORD)PreallocTypes)
 		LOG_FUNC_END;
-    for(int v=0;v<XINPUT_SETSTATE_SLOTS;v++)
+/*    for(int v=0;v<XINPUT_SETSTATE_SLOTS;v++)
     {
         g_pXInputSetStateStatus[v].hDevice = 0;
         g_pXInputSetStateStatus[v].dwLatency = 0;
@@ -279,7 +295,7 @@ VOID WINAPI XTL::EMUPATCH(XInitDevices)
     {
         g_hInputHandle[v] = 0;
     }
-	
+*/	
 	if (g_XInputEnabled)
 	{
 		//query the total connected xinput gamepad.
@@ -493,7 +509,7 @@ HANDLE WINAPI XTL::EMUPATCH(XInputOpen)
 
     X_POLLING_PARAMETERS_HANDLE *pph = 0;
 	//rever back to return handle  for port 0~3, this is for multi controller support.
-    if(dwPort >= 0 && (dwPort <= total_xinput_gamepad))
+/*    if(dwPort >= 0 && (dwPort <= total_xinput_gamepad))
     {
         if(g_hInputHandle[dwPort] == 0)
         {
@@ -538,14 +554,14 @@ HANDLE WINAPI XTL::EMUPATCH(XInputOpen)
 
         pph->dwPort = dwPort;
     }
-
+*/
 	g_bXInputOpenCalled = true;
 
 	//RETURN((HANDLE)pph);
     //code above are not used at all, in future we might remove them.
     if (dwPort >= 0 && dwPort < 4) {
         //check if the bridged xbox controller at this port matches the DeviceType, if matches, setup the device handle and return it.
-        if (g_XboxControllerHostBridge[dwPort].XboxDeviceInfo.DeviceType == DeviceType) {
+        if (g_XboxControllerHostBridge[dwPort].XboxDeviceInfo.DeviceType == DeviceType && g_XboxControllerHostBridge[dwPort].dwHostType!=0) {
             g_XboxControllerHostBridge[dwPort].hXboxDevice = &g_XboxControllerHostBridge[dwPort];
             return g_XboxControllerHostBridge[dwPort].hXboxDevice;
         }
@@ -795,7 +811,7 @@ DWORD WINAPI XTL::EMUPATCH(XInputGetState)
             //for xinput, we query the state corresponds to port.
             switch (g_XboxControllerHostBridge[port].dwHostType) {
             case 1://using XInput
-                EmuXInputPCPoll(port, pState);
+                EmuXInputPCPoll(g_XboxControllerHostBridge[port].dwHostPort, pState);
                 ret = ERROR_SUCCESS;
                 break;
             case 2://using directinput
@@ -903,7 +919,7 @@ DWORD WINAPI XTL::EMUPATCH(XInputSetState)
     int port;
     for (port = 0; port<4; port++) {
         if (g_XboxControllerHostBridge[port].hXboxDevice == hDevice) {
-            if (g_XboxControllerHostBridge[port].pXboxFeedbackHeader == 0) {
+            //if (g_XboxControllerHostBridge[port].pXboxFeedbackHeader == 0) {
                 g_XboxControllerHostBridge[port].pXboxFeedbackHeader = &pFeedback->Header;
                 g_XboxControllerHostBridge[port].dwLatency = 0;
                 pFeedback->Header.dwStatus = ERROR_IO_PENDING;
@@ -922,7 +938,7 @@ DWORD WINAPI XTL::EMUPATCH(XInputSetState)
                     break;
                 }
                 break;
-            }
+            //}
         }
     }
 

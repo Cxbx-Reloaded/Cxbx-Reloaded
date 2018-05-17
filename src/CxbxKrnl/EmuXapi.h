@@ -384,9 +384,9 @@ typedef struct _X_CONTROLLER_HOST_BRIDGE
                                                 //1 connect with XInput,
                                                 //2 connect with directinput,
                                                 //3 or above connect virtual custom controller
-    DWORD                   dwHostInputIndex;   //index of the host input device being bridged.
-                                                //if hostinputtype==1 for using XInput, and hostinputindex==2,
-                                                //then bridge to XInput player 3 (index started from 0).
+    DWORD                   dwHostPort;         //port of the host input device being bridged.
+                                                //if hostinputtype==1 for using XInput, and hostport==2,
+                                                //then bridge to XInput player 3 (port started from 0).
 
     //members listed below comes from interpreting xbe device table 
     X_XINPUT_DEVICE_INFO    XboxDeviceInfo;
