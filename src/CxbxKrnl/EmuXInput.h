@@ -40,11 +40,11 @@ DWORD XInputGamepad_Connected(void);
 // ******************************************************************
 // * patch: XInputPCPoll
 // ******************************************************************
-void EmuXInputPCPoll( DWORD dwPort, XTL::PXINPUT_STATE Controller );
+void EmuXInputPCPoll( DWORD dwPort, XTL::PXB_XINPUT_STATE Controller );
 
 // ******************************************************************
 // * Native implementation of XInputSetState
 // ******************************************************************
-void EmuXInputSetState(DWORD dwPort, XTL::PXINPUT_FEEDBACK Feedback);
+void EmuXInputSetState(DWORD dwPort, XTL::PXB_XINPUT_FEEDBACK Feedback);
 
 #endif

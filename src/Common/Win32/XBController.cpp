@@ -476,7 +476,7 @@ void XBController::ListenBegin(HWND hwnd)
 // ******************************************************************
 // * func: XBController::ListenPoll
 // ******************************************************************
-void XBController::ListenPoll(XTL::XINPUT_STATE *Controller)
+void XBController::ListenPoll(XTL::XB_XINPUT_STATE *Controller)
 {
     if(Controller == NULL)
         return;

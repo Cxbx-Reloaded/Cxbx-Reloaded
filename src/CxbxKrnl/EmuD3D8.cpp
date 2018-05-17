@@ -1771,7 +1771,7 @@ static DWORD WINAPI EmuUpdateTickCount(LPVOID)
 
                 g_pXInputSetStateStatus[v].dwLatency = 0;
 
-                XTL::PXINPUT_FEEDBACK pFeedback = (XTL::PXINPUT_FEEDBACK)g_pXInputSetStateStatus[v].pFeedback;
+                XTL::PXB_XINPUT_FEEDBACK pFeedback = (XTL::PXB_XINPUT_FEEDBACK)g_pXInputSetStateStatus[v].pFeedback;
 
                 if(pFeedback == 0)
                     continue;

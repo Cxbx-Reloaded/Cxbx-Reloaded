@@ -48,7 +48,7 @@
 // ******************************************************************
 // * Static Variable(s)
 // ******************************************************************
-static XINPUT_STATE		g_Controller;
+static XINPUT_STATE		g_Controller;//global controller input state for host.
 static BOOL				g_bXInputInitialized = FALSE;
 
 //
@@ -76,7 +76,7 @@ DWORD XTL::XInputGamepad_Connected(void)
 // ******************************************************************
 // * patch: XInputPCPoll
 // ******************************************************************
-void XTL::EmuXInputPCPoll( DWORD dwPort,XTL::PXINPUT_STATE Controller )
+void XTL::EmuXInputPCPoll( DWORD dwPort,XTL::PXB_XINPUT_STATE pXB_Controller )
 {
 	//
 	// Get the PC's XInput values
@@ -86,74 +86,74 @@ void XTL::EmuXInputPCPoll( DWORD dwPort,XTL::PXINPUT_STATE Controller )
 		return;
 
 	//Packet# must be updated to trigger the xbe processing the input state.
-	Controller->dwPacketNumber = g_Controller.dwPacketNumber;
+	pXB_Controller->dwPacketNumber = g_Controller.dwPacketNumber;
 
 	//
 	// Now convert those values to Xbox XInput
 	//
 	// Analog Sticks
-	Controller->Gamepad.sThumbLX = g_Controller.Gamepad.sThumbLX;
-	Controller->Gamepad.sThumbLY = g_Controller.Gamepad.sThumbLY;
-	Controller->Gamepad.sThumbRX = g_Controller.Gamepad.sThumbRX;
-	Controller->Gamepad.sThumbRY = g_Controller.Gamepad.sThumbRY;
+	pXB_Controller->Gamepad.sThumbLX = g_Controller.Gamepad.sThumbLX;
+	pXB_Controller->Gamepad.sThumbLY = g_Controller.Gamepad.sThumbLY;
+	pXB_Controller->Gamepad.sThumbRX = g_Controller.Gamepad.sThumbRX;
+	pXB_Controller->Gamepad.sThumbRY = g_Controller.Gamepad.sThumbRY;
 
 	// Analog Buttons
-	Controller->Gamepad.bAnalogButtons[XB_XINPUT_GAMEPAD_A] = (g_Controller.Gamepad.wButtons & XINPUT_GAMEPAD_A) ? 255 : 0;
-	Controller->Gamepad.bAnalogButtons[XB_XINPUT_GAMEPAD_B] = (g_Controller.Gamepad.wButtons & XINPUT_GAMEPAD_B) ? 255 : 0;
-	Controller->Gamepad.bAnalogButtons[XB_XINPUT_GAMEPAD_X] = (g_Controller.Gamepad.wButtons & XINPUT_GAMEPAD_X) ? 255 : 0;
-	Controller->Gamepad.bAnalogButtons[XB_XINPUT_GAMEPAD_Y] = (g_Controller.Gamepad.wButtons & XINPUT_GAMEPAD_Y) ? 255 : 0;
-	Controller->Gamepad.bAnalogButtons[XB_XINPUT_GAMEPAD_WHITE] = (g_Controller.Gamepad.wButtons & XINPUT_GAMEPAD_LEFT_SHOULDER) ? 255 : 0;
-	Controller->Gamepad.bAnalogButtons[XB_XINPUT_GAMEPAD_BLACK] = (g_Controller.Gamepad.wButtons & XINPUT_GAMEPAD_RIGHT_SHOULDER) ? 255 : 0;
-	Controller->Gamepad.bAnalogButtons[XB_XINPUT_GAMEPAD_LEFT_TRIGGER] = g_Controller.Gamepad.bLeftTrigger;
-	Controller->Gamepad.bAnalogButtons[XB_XINPUT_GAMEPAD_RIGHT_TRIGGER] = g_Controller.Gamepad.bRightTrigger;
+	pXB_Controller->Gamepad.bAnalogButtons[XB_XINPUT_GAMEPAD_A] = (g_Controller.Gamepad.wButtons & XINPUT_GAMEPAD_A) ? 255 : 0;
+	pXB_Controller->Gamepad.bAnalogButtons[XB_XINPUT_GAMEPAD_B] = (g_Controller.Gamepad.wButtons & XINPUT_GAMEPAD_B) ? 255 : 0;
+	pXB_Controller->Gamepad.bAnalogButtons[XB_XINPUT_GAMEPAD_X] = (g_Controller.Gamepad.wButtons & XINPUT_GAMEPAD_X) ? 255 : 0;
+	pXB_Controller->Gamepad.bAnalogButtons[XB_XINPUT_GAMEPAD_Y] = (g_Controller.Gamepad.wButtons & XINPUT_GAMEPAD_Y) ? 255 : 0;
+	pXB_Controller->Gamepad.bAnalogButtons[XB_XINPUT_GAMEPAD_WHITE] = (g_Controller.Gamepad.wButtons & XINPUT_GAMEPAD_LEFT_SHOULDER) ? 255 : 0;
+	pXB_Controller->Gamepad.bAnalogButtons[XB_XINPUT_GAMEPAD_BLACK] = (g_Controller.Gamepad.wButtons & XINPUT_GAMEPAD_RIGHT_SHOULDER) ? 255 : 0;
+	pXB_Controller->Gamepad.bAnalogButtons[XB_XINPUT_GAMEPAD_LEFT_TRIGGER] = g_Controller.Gamepad.bLeftTrigger;
+	pXB_Controller->Gamepad.bAnalogButtons[XB_XINPUT_GAMEPAD_RIGHT_TRIGGER] = g_Controller.Gamepad.bRightTrigger;
 
 	// Digital Buttons
 	if (g_Controller.Gamepad.wButtons & XINPUT_GAMEPAD_BACK) {
-		Controller->Gamepad.wButtons |= XB_XINPUT_GAMEPAD_BACK;
+		pXB_Controller->Gamepad.wButtons |= XB_XINPUT_GAMEPAD_BACK;
 	} else {
-		Controller->Gamepad.wButtons &= ~XB_XINPUT_GAMEPAD_BACK;
+		pXB_Controller->Gamepad.wButtons &= ~XB_XINPUT_GAMEPAD_BACK;
 	}
 
 	if (g_Controller.Gamepad.wButtons & XINPUT_GAMEPAD_START) {
-		Controller->Gamepad.wButtons |= XB_XINPUT_GAMEPAD_START;
+		pXB_Controller->Gamepad.wButtons |= XB_XINPUT_GAMEPAD_START;
 	} else {
-		Controller->Gamepad.wButtons &= ~XB_XINPUT_GAMEPAD_START;
+		pXB_Controller->Gamepad.wButtons &= ~XB_XINPUT_GAMEPAD_START;
 	}
 
 	if (g_Controller.Gamepad.wButtons & XINPUT_GAMEPAD_LEFT_THUMB) {
-		Controller->Gamepad.wButtons |= XB_XINPUT_GAMEPAD_LEFT_THUMB;
+		pXB_Controller->Gamepad.wButtons |= XB_XINPUT_GAMEPAD_LEFT_THUMB;
 	} else {
-		Controller->Gamepad.wButtons &= ~XB_XINPUT_GAMEPAD_LEFT_THUMB;
+		pXB_Controller->Gamepad.wButtons &= ~XB_XINPUT_GAMEPAD_LEFT_THUMB;
 	}
 
 	if (g_Controller.Gamepad.wButtons & XINPUT_GAMEPAD_RIGHT_THUMB) {
-		Controller->Gamepad.wButtons |= XB_XINPUT_GAMEPAD_RIGHT_THUMB;
+		pXB_Controller->Gamepad.wButtons |= XB_XINPUT_GAMEPAD_RIGHT_THUMB;
 	} else {
-		Controller->Gamepad.wButtons &= ~XB_XINPUT_GAMEPAD_RIGHT_THUMB;
+		pXB_Controller->Gamepad.wButtons &= ~XB_XINPUT_GAMEPAD_RIGHT_THUMB;
 	}
 
 	if (g_Controller.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_UP) {
-		Controller->Gamepad.wButtons |= XB_XINPUT_GAMEPAD_DPAD_UP;
+		pXB_Controller->Gamepad.wButtons |= XB_XINPUT_GAMEPAD_DPAD_UP;
 	} else {
-		Controller->Gamepad.wButtons &= ~XB_XINPUT_GAMEPAD_DPAD_UP;
+		pXB_Controller->Gamepad.wButtons &= ~XB_XINPUT_GAMEPAD_DPAD_UP;
 	}
 
 	if (g_Controller.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_DOWN) {
-		Controller->Gamepad.wButtons |= XB_XINPUT_GAMEPAD_DPAD_DOWN;
+		pXB_Controller->Gamepad.wButtons |= XB_XINPUT_GAMEPAD_DPAD_DOWN;
 	} else {
-		Controller->Gamepad.wButtons &= ~XB_XINPUT_GAMEPAD_DPAD_DOWN;
+		pXB_Controller->Gamepad.wButtons &= ~XB_XINPUT_GAMEPAD_DPAD_DOWN;
 	}
 
 	if (g_Controller.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_LEFT) {
-		Controller->Gamepad.wButtons |= XB_XINPUT_GAMEPAD_DPAD_LEFT;
+		pXB_Controller->Gamepad.wButtons |= XB_XINPUT_GAMEPAD_DPAD_LEFT;
 	} else {
-		Controller->Gamepad.wButtons &= ~XB_XINPUT_GAMEPAD_DPAD_LEFT;
+		pXB_Controller->Gamepad.wButtons &= ~XB_XINPUT_GAMEPAD_DPAD_LEFT;
 	}
 
 	if (g_Controller.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_RIGHT) {
-		Controller->Gamepad.wButtons |= XB_XINPUT_GAMEPAD_DPAD_RIGHT;
+		pXB_Controller->Gamepad.wButtons |= XB_XINPUT_GAMEPAD_DPAD_RIGHT;
 	} else {
-		Controller->Gamepad.wButtons &= ~XB_XINPUT_GAMEPAD_DPAD_RIGHT;
+		pXB_Controller->Gamepad.wButtons &= ~XB_XINPUT_GAMEPAD_DPAD_RIGHT;
 	}
 }
 
@@ -161,7 +161,7 @@ void XTL::EmuXInputPCPoll( DWORD dwPort,XTL::PXINPUT_STATE Controller )
 // ******************************************************************
 // * Native implementation of XInputSetState
 // ******************************************************************
-void XTL::EmuXInputSetState(DWORD dwPort, XTL::PXINPUT_FEEDBACK Feedback)
+void XTL::EmuXInputSetState(DWORD dwPort, XTL::PXB_XINPUT_FEEDBACK Feedback)
 {
 	XINPUT_VIBRATION FrameVibration =
 	{

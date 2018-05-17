@@ -68,8 +68,8 @@ XTL::PXPP_DEVICE_TYPE gDeviceType_Gamepad = nullptr;
 #include "EmuXTL.h"
 
 
-XTL::POLLING_PARAMETERS_HANDLE g_pph[4];
-XTL::XINPUT_POLLING_PARAMETERS g_pp[4];
+XTL::XB_POLLING_PARAMETERS_HANDLE g_pph[4];
+XTL::XB_XINPUT_POLLING_PARAMETERS g_pp[4];
 DWORD total_xinput_gamepad = 0;
 
 void SetupXboxDeviceTypes()
@@ -342,7 +342,7 @@ HANDLE WINAPI XTL::EMUPATCH(XInputOpen)
     IN PXPP_DEVICE_TYPE             DeviceType,
     IN DWORD                        dwPort,
     IN DWORD                        dwSlot,
-    IN PXINPUT_POLLING_PARAMETERS   pPollingParameters OPTIONAL
+    IN PXB_XINPUT_POLLING_PARAMETERS   pPollingParameters OPTIONAL
 )
 {
 	FUNC_EXPORTS
@@ -354,19 +354,19 @@ HANDLE WINAPI XTL::EMUPATCH(XInputOpen)
 		LOG_FUNC_ARG(pPollingParameters)
 		LOG_FUNC_END;
 
-    POLLING_PARAMETERS_HANDLE *pph = 0;
+    XB_POLLING_PARAMETERS_HANDLE *pph = 0;
 	//rever back to return handle  for port 0~3, this is for multi controller support.
     if(dwPort >= 0 && (dwPort <= total_xinput_gamepad))
     {
         if(g_hInputHandle[dwPort] == 0)
         {
-            pph = (POLLING_PARAMETERS_HANDLE*) &g_pph[dwPort];	// new POLLING_PARAMETERS_HANDLE();
+            pph = (XB_POLLING_PARAMETERS_HANDLE*) &g_pph[dwPort];	// new XB_POLLING_PARAMETERS_HANDLE();
 
             if(pPollingParameters != NULL)
             {
-                pph->pPollingParameters = (XINPUT_POLLING_PARAMETERS*) &g_pp[dwPort]; // new XINPUT_POLLING_PARAMETERS();
+                pph->pPollingParameters = (XB_XINPUT_POLLING_PARAMETERS*) &g_pp[dwPort]; // new XINPUT_POLLING_PARAMETERS();
 
-                memcpy(pph->pPollingParameters, pPollingParameters, sizeof(XINPUT_POLLING_PARAMETERS));
+                memcpy(pph->pPollingParameters, pPollingParameters, sizeof(XB_XINPUT_POLLING_PARAMETERS));
             }
             else
             {
@@ -377,16 +377,16 @@ HANDLE WINAPI XTL::EMUPATCH(XInputOpen)
         }
         else
         {
-            pph = (POLLING_PARAMETERS_HANDLE*)g_hInputHandle[dwPort];
+            pph = (XB_POLLING_PARAMETERS_HANDLE*)g_hInputHandle[dwPort];
 
             if(pPollingParameters != 0)
             {
                 if(pph->pPollingParameters == 0)
                 {
-                    pph->pPollingParameters = (XINPUT_POLLING_PARAMETERS*) &g_pp[dwPort]; // new XINPUT_POLLING_PARAMETERS();
+                    pph->pPollingParameters = (XB_XINPUT_POLLING_PARAMETERS*) &g_pp[dwPort]; // new XINPUT_POLLING_PARAMETERS();
                 }
 
-                memcpy(pph->pPollingParameters, pPollingParameters, sizeof(XINPUT_POLLING_PARAMETERS));
+                memcpy(pph->pPollingParameters, pPollingParameters, sizeof(XB_XINPUT_POLLING_PARAMETERS));
             }
             else
             {
@@ -419,7 +419,7 @@ VOID WINAPI XTL::EMUPATCH(XInputClose)
 
 	LOG_FUNC_ONE_ARG(hDevice);
 
-    POLLING_PARAMETERS_HANDLE *pph = (POLLING_PARAMETERS_HANDLE*)hDevice;
+    XB_POLLING_PARAMETERS_HANDLE *pph = (XB_POLLING_PARAMETERS_HANDLE*)hDevice;
 	DWORD dwPort = pph->dwPort;
 	//NULL out the input handle corresponds to port.
 	g_hInputHandle[dwPort] = 0;
@@ -462,7 +462,7 @@ DWORD WINAPI XTL::EMUPATCH(XInputPoll)
 
 	LOG_FUNC_ONE_ARG(hDevice);
 
-    POLLING_PARAMETERS_HANDLE *pph = (POLLING_PARAMETERS_HANDLE*)hDevice;
+    XB_POLLING_PARAMETERS_HANDLE *pph = (XB_POLLING_PARAMETERS_HANDLE*)hDevice;
 
     //
     // Poll input
@@ -478,7 +478,7 @@ DWORD WINAPI XTL::EMUPATCH(XInputPoll)
 
             g_pXInputSetStateStatus[v].dwLatency = 0;
 
-            XTL::PXINPUT_FEEDBACK pFeedback = (XTL::PXINPUT_FEEDBACK)g_pXInputSetStateStatus[v].pFeedback;
+            XTL::PXB_XINPUT_FEEDBACK pFeedback = (XTL::PXB_XINPUT_FEEDBACK)g_pXInputSetStateStatus[v].pFeedback;
 
             if(pFeedback == 0)
                 continue;
@@ -508,7 +508,7 @@ DWORD WINAPI XTL::EMUPATCH(XInputPoll)
 DWORD WINAPI XTL::EMUPATCH(XInputGetCapabilities)
 (
     IN  HANDLE               hDevice,
-    OUT PXINPUT_CAPABILITIES pCapabilities
+    OUT PXB_XINPUT_CAPABILITIES pCapabilities
 )
 {
 	FUNC_EXPORTS
@@ -520,7 +520,7 @@ DWORD WINAPI XTL::EMUPATCH(XInputGetCapabilities)
 
     DWORD ret = ERROR_DEVICE_NOT_CONNECTED;
 
-    POLLING_PARAMETERS_HANDLE *pph = (POLLING_PARAMETERS_HANDLE*)hDevice;
+    XB_POLLING_PARAMETERS_HANDLE *pph = (XB_POLLING_PARAMETERS_HANDLE*)hDevice;
 
     if(pph != NULL)
     {
@@ -545,7 +545,7 @@ DWORD WINAPI XTL::EMUPATCH(XInputGetCapabilities)
 DWORD WINAPI XTL::EMUPATCH(XInputGetState)
 (
     IN  HANDLE         hDevice,
-    OUT PXINPUT_STATE  pState
+    OUT PXB_XINPUT_STATE  pState
 )
 {
 	FUNC_EXPORTS
@@ -557,7 +557,7 @@ DWORD WINAPI XTL::EMUPATCH(XInputGetState)
 
     DWORD ret = ERROR_INVALID_HANDLE;
 
-    POLLING_PARAMETERS_HANDLE *pph = (POLLING_PARAMETERS_HANDLE*)hDevice;
+    XB_POLLING_PARAMETERS_HANDLE *pph = (XB_POLLING_PARAMETERS_HANDLE*)hDevice;
 
     if(pph != NULL)
     {
@@ -601,7 +601,7 @@ DWORD WINAPI XTL::EMUPATCH(XInputGetState)
 DWORD WINAPI XTL::EMUPATCH(XInputSetState)
 (
     IN     HANDLE           hDevice,
-    IN OUT PXINPUT_FEEDBACK pFeedback
+    IN OUT PXB_XINPUT_FEEDBACK pFeedback
 )
 {
 	FUNC_EXPORTS
@@ -613,7 +613,7 @@ DWORD WINAPI XTL::EMUPATCH(XInputSetState)
 
     DWORD ret = ERROR_IO_PENDING;
 
-    POLLING_PARAMETERS_HANDLE *pph = (POLLING_PARAMETERS_HANDLE*)hDevice;
+    XB_POLLING_PARAMETERS_HANDLE *pph = (XB_POLLING_PARAMETERS_HANDLE*)hDevice;
 
     if(pph != NULL)
     {

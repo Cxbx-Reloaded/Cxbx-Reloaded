@@ -115,7 +115,7 @@ typedef PTHREAD_START_ROUTINE LPTHREAD_START_ROUTINE;
 // ******************************************************************
 // * XINPUT_POLLING_PARAMETERS
 // ******************************************************************
-typedef struct _XINPUT_POLLING_PARAMETERS
+typedef struct _XB_XINPUT_POLLING_PARAMETERS
 {
     BYTE       fAutoPoll        : 1;
     BYTE       fInterruptOut    : 1;
@@ -124,18 +124,18 @@ typedef struct _XINPUT_POLLING_PARAMETERS
     BYTE       bOutputInterval;
     BYTE       ReservedMBZ2;
 }
-XINPUT_POLLING_PARAMETERS, *PXINPUT_POLLING_PARAMETERS;
+XB_XINPUT_POLLING_PARAMETERS, *PXB_XINPUT_POLLING_PARAMETERS;
 
 // ******************************************************************
 // * POLLING_PARAMETERS_HANDLE
 // ******************************************************************
-typedef struct _POLLING_PARAMETERS_HANDLE
+typedef struct _XB_POLLING_PARAMETERS_HANDLE
 {
-    XINPUT_POLLING_PARAMETERS *pPollingParameters;
+    XB_XINPUT_POLLING_PARAMETERS *pPollingParameters;
 
     DWORD dwPort;
 }
-POLLING_PARAMETERS_HANDLE, *PPOLLING_PARAMETERS_HANDLE;
+XB_POLLING_PARAMETERS_HANDLE, *PXB_POLLING_PARAMETERS_HANDLE;
 
 // ******************************************************************
 // * XPP_DEVICE_TYPE
@@ -149,14 +149,41 @@ typedef struct _XPP_DEVICE_TYPE
 XPP_DEVICE_TYPE, *PXPP_DEVICE_TYPE;
 
 // ******************************************************************
+// * XPP_DEVICE_INPUTSTATE_DESC
+// ******************************************************************
+typedef struct _XPP_DEVICE_INPUTSTATE_DESC
+{
+    unsigned char ucLength;//length of InputState, doesn't include the dwPacketNumber, seems DWORD aligned.
+    unsigned char * pInputState;//pointer to InputState
+    unsigned char ucUnknown[3];//for DWORD align
+}
+XPP_DEVICE_INPUTSTATE_DESC, *PXPP_DEVICE_INPUTSTATE_DESC;
+
+// ******************************************************************
+// * XPP_DEVICE_FEEDBACK_DESC
+// ******************************************************************
+typedef struct _XPP_DEVICE_FEEDBACK_DESC
+{
+    unsigned char ucLength;//length of Feedback, not include Feedback_Header,  seems DWORD aligned.
+    unsigned char * pFeedback;//pointer to Feedback
+    unsigned char ucUnknown[3];//for DWORD align
+}
+XPP_DEVICE_FEEDBACK_DESC, *PXPP_DEVICE_FEEDBACK_DESC;
+
+// ******************************************************************
 // * XID_TYPE_INFORMATION
 // ******************************************************************
 typedef struct _XID_TYPE_INFORMATION
 {
 	UCHAR				ucType;
-	UCHAR				ucUnknown[3];
-	PXPP_DEVICE_TYPE    XppType;
-	DWORD				dwUnknown[5];
+    UCHAR				ucSubType;
+	UCHAR				ucUnknown[2];//probably for DWORD align
+	PXPP_DEVICE_TYPE    XppType;//pointer to DeviceType structure.
+    PXPP_DEVICE_INPUTSTATE_DESC pInputStateDesc;//pointer to InputStateDesc structure
+    PXPP_DEVICE_FEEDBACK_DESC pFeedbackDesc;//pointer to FeedbackDesc structure
+    DWORD *             pConstant;//always 0x0801
+    void *              pFunction;//unknown function for device related process
+    DWORD				dwEndZero;//last DWROD, always 0
 } XID_TYPE_INFORMATION, *PXID_TYPE_INFORMATION;
 
 // ******************************************************************
@@ -170,9 +197,9 @@ typedef struct _XDEVICE_PREALLOC_TYPE
 XDEVICE_PREALLOC_TYPE, *PXDEVICE_PREALLOC_TYPE;
 
 // ******************************************************************
-// * XINPUT_GAMEPAD
+// * XINPUT_GAMEPAD for xbox, xbox's GAMEPAD struc differs from PC's
 // ******************************************************************
-typedef struct _XINPUT_GAMEPAD
+typedef struct _XB_XINPUT_GAMEPAD
 {
     WORD    wButtons;
     BYTE    bAnalogButtons[8];
@@ -181,39 +208,39 @@ typedef struct _XINPUT_GAMEPAD
     SHORT   sThumbRX;
     SHORT   sThumbRY;
 }
-XINPUT_GAMEPAD, *PXINPUT_GAMEPAD;
+XB_XINPUT_GAMEPAD, *PXB_XINPUT_GAMEPAD;
 
 // ******************************************************************
 // * XINPUT_RUMBLE
 // ******************************************************************
-typedef struct _XINPUT_RUMBLE
+typedef struct _XB_XINPUT_RUMBLE
 {
     WORD   wLeftMotorSpeed;
     WORD   wRightMotorSpeed;
 }
-XINPUT_RUMBLE, *PXINPUT_RUMBLE;
+XB_XINPUT_RUMBLE, *PXB_XINPUT_RUMBLE;
 
 // ******************************************************************
 // * XINPUT_CAPABILITIES
 // ******************************************************************
-typedef struct _XINPUT_CAPABILITIES
+typedef struct _XB_XINPUT_CAPABILITIES
 {
     BYTE SubType;
     WORD Reserved;
 
     union
     {
-        XINPUT_GAMEPAD Gamepad;
+        XB_XINPUT_GAMEPAD Gamepad;
     }
     In;
 
     union
     {
-        XINPUT_RUMBLE Rumble;
+        XB_XINPUT_RUMBLE Rumble;
     }
     Out;
 }
-XINPUT_CAPABILITIES, *PXINPUT_CAPABILITIES;
+XB_XINPUT_CAPABILITIES, *PXB_XINPUT_CAPABILITIES;
 
 // ******************************************************************
 // * Device SubTypes
@@ -227,18 +254,18 @@ XINPUT_CAPABILITIES, *PXINPUT_CAPABILITIES;
 #define XINPUT_DEVSUBTYPE_GC_SNOWBOARD            0x40
 
 // ******************************************************************
-// * XINPUT_STATE
+// * XINPUT_STATE for xbox, xbox uses different Gamepad struce.
 // ******************************************************************
-typedef struct _XINPUT_STATE
+typedef struct _XB_XINPUT_STATE
 {
     DWORD dwPacketNumber;
 
     union
     {
-        XINPUT_GAMEPAD Gamepad;
+        XB_XINPUT_GAMEPAD Gamepad;
     };
 }
-XINPUT_STATE, *PXINPUT_STATE;
+XB_XINPUT_STATE, *PXB_XINPUT_STATE;
 
 // ******************************************************************
 // * offsets into analog button array
@@ -280,21 +307,21 @@ XINPUT_FEEDBACK_HEADER, *PXINPUT_FEEDBACK_HEADER;
 // ******************************************************************
 // * XINPUT_FEEDBACK
 // ******************************************************************
-typedef struct _XINPUT_FEEDBACK
+typedef struct _XB_XINPUT_FEEDBACK
 {
     XINPUT_FEEDBACK_HEADER Header;
 
     union
     {
-        XINPUT_RUMBLE Rumble;
+        XB_XINPUT_RUMBLE Rumble;
     };
 }
-XINPUT_FEEDBACK, *PXINPUT_FEEDBACK;
+XB_XINPUT_FEEDBACK, *PXB_XINPUT_FEEDBACK;
 
 // ******************************************************************
 // * XBGAMEPAD
 // ******************************************************************
-struct XBGAMEPAD : public XINPUT_GAMEPAD
+struct XBGAMEPAD : public XB_XINPUT_GAMEPAD
 {
 	FLOAT      fX1;
 	FLOAT      fY1;
@@ -304,9 +331,9 @@ struct XBGAMEPAD : public XINPUT_GAMEPAD
 	BOOL       bLastAnalogButtons[8];
 	WORD       wPressedButtons;
 	BOOL       bPressedAnalogButtons[8];
-	XINPUT_RUMBLE	Rumble;
-	XINPUT_FEEDBACK	Feedback;
-	XINPUT_CAPABILITIES caps;
+	XB_XINPUT_RUMBLE	Rumble;
+	XB_XINPUT_FEEDBACK	Feedback;
+	XB_XINPUT_CAPABILITIES caps;
 	HANDLE     hDevice;
 	BOOL       bInserted;
 	BOOL       bRemoved;
@@ -435,7 +462,7 @@ HANDLE WINAPI EMUPATCH(XInputOpen)
     IN PXPP_DEVICE_TYPE             DeviceType,
     IN DWORD                        dwPort,
     IN DWORD                        dwSlot,
-    IN PXINPUT_POLLING_PARAMETERS   pPollingParameters OPTIONAL
+    IN PXB_XINPUT_POLLING_PARAMETERS   pPollingParameters OPTIONAL
 );
 
 // ******************************************************************
@@ -460,7 +487,7 @@ DWORD WINAPI EMUPATCH(XInputPoll)
 DWORD WINAPI EMUPATCH(XInputGetCapabilities)
 (
     IN  HANDLE               hDevice,
-    OUT PXINPUT_CAPABILITIES pCapabilities
+    OUT PXB_XINPUT_CAPABILITIES pCapabilities
 );
 
 // ******************************************************************
@@ -469,7 +496,7 @@ DWORD WINAPI EMUPATCH(XInputGetCapabilities)
 DWORD WINAPI EMUPATCH(XInputGetState)
 (
     IN  HANDLE         hDevice,
-    OUT PXINPUT_STATE  pState
+    OUT PXB_XINPUT_STATE  pState
 );
 
 // ******************************************************************
@@ -478,7 +505,7 @@ DWORD WINAPI EMUPATCH(XInputGetState)
 DWORD WINAPI EMUPATCH(XInputSetState)
 (
     IN     HANDLE           hDevice,
-    IN OUT PXINPUT_FEEDBACK pFeedback
+    IN OUT PXB_XINPUT_FEEDBACK pFeedback
 );
 
 

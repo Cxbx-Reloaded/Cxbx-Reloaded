@@ -75,12 +75,12 @@ DWORD dwPacketNumber_DirectInput = 0;
 // ******************************************************************
 // * XTL::EmuDInputPoll
 // ******************************************************************
-void XTL::EmuDInputPoll(XTL::PXINPUT_STATE Controller)
+void XTL::EmuDInputPoll(XTL::PXB_XINPUT_STATE pXB_Controller)
 {
-    g_XBController.ListenPoll(Controller);
+    g_XBController.ListenPoll(pXB_Controller);
 	//increment of emulated PacketNumber and report back to Controller.
 	dwPacketNumber_DirectInput++;
-	Controller->dwPacketNumber = dwPacketNumber_DirectInput;
+	pXB_Controller->dwPacketNumber = dwPacketNumber_DirectInput;
 
     if(g_XBController.HasError())
         MessageBox(NULL, g_XBController.GetError().c_str(), "Cxbx-Reloaded [*UNHANDLED!*]", MB_OK);  // TODO: Handle this!
