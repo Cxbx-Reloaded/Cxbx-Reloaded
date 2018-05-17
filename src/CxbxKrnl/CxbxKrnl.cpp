@@ -1239,7 +1239,9 @@ __declspec(noreturn) void CxbxKrnlInit
 
 	// for unicode conversions
 	setlocale(LC_ALL, "English");
+	// Initialize time-related variables for the kernel and the timers
 	CxbxInitPerformanceCounters();
+	Timer_Init();
 #ifdef _DEBUG
 //	CxbxPopupMessage("Attach a Debugger");
 //  Debug child processes using https://marketplace.visualstudio.com/items?itemName=GreggMiskelly.MicrosoftChildProcessDebuggingPowerTool

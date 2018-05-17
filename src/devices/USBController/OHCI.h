@@ -39,6 +39,8 @@
 
 #include <stdint.h>
 #include "Cxbx.h"
+#include "USBDevice.h"
+#include "..\CxbxKrnl\Timer.h"
 
 
 // Abbreviations used:
@@ -67,16 +69,21 @@
 #define OHCI_RHA_OCPM                       (1<<11)          // OverCurrentProtectionMode
 #define OHCI_RHA_NOCP                       (1<<12)          // NoOverCurrentProtection
 
-// Struct describing the status of a usb port
-struct USBPort {
-	//USBDevice* device;
-	//TODO
-};
+
+// enum indicating the current HC state
+typedef enum _OHCI_State
+{
+	Reset = 0x00,
+	Resume = 0x40,
+	Operational = 0x80,
+	Suspend = 0xC0,
+}
+OHCI_State;
 
 // Small struct used to hold the HcRhPortStatus register and the usb port status
 typedef struct _OHCIPort
 {
-	USBPort port;
+	USBPort Port;
 	uint32_t HcRhPortStatus;
 }
 OHCIPort;
@@ -116,38 +123,46 @@ typedef struct _OHCI_Registers
 }
 OHCI_Registers;
 
-// enum indicating the current HC state
-typedef enum _USB_State
-{
-	USB_Reset       = 0x00,
-	USB_Resume      = 0x40,
-	USB_Operational = 0x80,
-	USB_Suspend     = 0xC0,
-}
-USB_State;
-
 
 /* OHCI class representing the state of the HC */
-class OHCI_State
+class OHCI
 {
 	public:
 		// constructor
-		OHCI_State() {}
+		OHCI(USBDevice* UsbObj);
 		// destructor
-		~OHCI_State() {}
+		~OHCI() {}
 		// read a register
-		uint32_t HC_ReadRegister(xbaddr addr);
+		uint32_t OHCI_ReadRegister(xbaddr Addr);
 		// write a register
-		void HC_WriteRegister(xbaddr addr, uint32_t value);
-		// reset the HC to the default state
-		void HC_ChangeState(USB_State new_state);
+		void OHCI_WriteRegister(xbaddr Addr, uint32_t Value);
+		// switch the HC to the reset state
+		void OHCI_StateReset();
+
 
 	private:
 		// all the registers available on the OHCI standard
-		OHCI_Registers HC_Registers;
+		OHCI_Registers Registers;
+		// end-of-frame timer
+		TimerObject* pEndOfFrameTimer;
+		// the duration of a usb frame
+		uint64_t UsbFrameTime;
+		// ticks per usb tick
+		uint64_t TicksPerUsbTick;
+		// the usb device instance of this HC
+		USBDevice* UsbInstance;
+		// usb packet
+		USBPacket UsbPacket;
+
+		// end-of-frame callback wrapper
+		static void OHCI_FrameBoundaryWrapper(void* pVoid);
+		// end-of-frame callback function
+		void OHCI_FrameBoundaryWorker();
+		// initialize packet struct
+		void USB_PacketInit(USBPacket* packet);
 };
 
-extern OHCI_State* g_pHostController1;
-extern OHCI_State* g_pHostController2;
+extern OHCI* g_pHostController1;
+extern OHCI* g_pHostController2;
 
 #endif

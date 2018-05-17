@@ -50,7 +50,7 @@
 
 // Vector storing all the timers created
 static std::vector<TimerObject*> TimerList;
-// The frequency of the high resolution timer of the host
+// The frequency of the high resolution clock of the host
 static uint64_t ClockFrequency;
 
 
@@ -161,7 +161,7 @@ void Timer_Start(TimerObject* Timer, uint64_t Expire_MS)
 	std::thread(ClockThread, Timer).detach();
 }
 
-// Retrives the frequency of the high resolution timer of the host
+// Retrives the frequency of the high resolution clock of the host
 void Timer_Init()
 {
 	LARGE_INTEGER freq;

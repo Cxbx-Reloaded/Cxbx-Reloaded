@@ -37,12 +37,46 @@
 #include "OHCI.h"
 #include "..\CxbxKrnl\CxbxKrnl.h"
 
+#define USB_HZ 12000000
+
+
+typedef enum _USB_SPEED
+{
+	USB_SPEED_MASK_LOW =  1 << 0,
+	USB_SPEED_MASK_FULL = 1 << 1,
+}
+USB_SPEED;
+
 // global pointers to the two USB host controllers available on the Xbox
-OHCI_State* g_pHostController1 = nullptr;
-OHCI_State* g_pHostController2 = nullptr;
+OHCI* g_pHostController1 = nullptr;
+OHCI* g_pHostController2 = nullptr;
 
 
-void OHCI_State::HC_ChangeState(USB_State new_state)
+OHCI::OHCI(USBDevice* UsbObj)
+{
+	UsbInstance = UsbObj;
+
+	for (int i = 0; i < 2; i++) {
+		UsbInstance->USB_RegisterPort(&Registers.RhPort[i].Port, this, i, USB_SPEED_MASK_LOW | USB_SPEED_MASK_FULL);
+	}
+	USB_PacketInit(&UsbPacket);
+
+	// Create the end-of-frame timer. Let's try a factor of 50 (1 virtual ms -> 50 real ms)
+	pEndOfFrameTimer = Timer_Create(OHCI_FrameBoundaryWrapper, this, 50);
+
+	UsbFrameTime = 1000000ULL; // 1 ms
+	TicksPerUsbTick = 1000000000ULL / USB_HZ; // 83
+
+	// Do a hardware reset
+	OHCI_StateReset();
+}
+
+void OHCI::OHCI_FrameBoundaryWrapper(void* pVoid)
+{
+	static_cast<OHCI*>(pVoid)->OHCI_FrameBoundaryWorker();
+}
+
+void OHCI::OHCI_StateReset()
 {
 	// The usb state can be USB_Suspend if it is a software reset, and USB_Reset if it is a hardware
 	// reset or cold boot
@@ -50,39 +84,34 @@ void OHCI_State::HC_ChangeState(USB_State new_state)
 	// TODO: stop all the list processing here
 
 	// Reset all registers
-	if (new_state == USB_Reset) {
-		// Remark: the standard says that RemoteWakeupConnected bit should be set during POST, cleared during hw reset
-		// and ignored during a sw reset. However, VBox sets it on hw reset and XQEMU clears it. Considering that the Xbox
-		// doesn't do POST, I will clear it.
-		HC_Registers.HcControl = 0;
-	}
-	else {
-		HC_Registers.HcControl &= (OHCI_CTL_IR | OHCI_CTL_RWC);
-	}
-	HC_Registers.HcControl &= ~OHCI_CTL_HCFS;
-	HC_Registers.HcControl |= new_state;
-	HC_Registers.HcCommandStatus = 0;
-	HC_Registers.HcInterruptStatus = 0;
-	HC_Registers.HcInterruptEnable = OHCI_INTR_MASTER_INTERRUPT_ENABLED; // enable interrupts
+	// Remark: the standard says that RemoteWakeupConnected bit should be set during POST, cleared during hw reset
+	// and ignored during a sw reset. However, VBox sets it on hw reset and XQEMU clears it. Considering that the Xbox
+	// doesn't do POST, I will clear it.
+	Registers.HcControl = 0;
+	Registers.HcControl &= ~OHCI_CTL_HCFS;
+	Registers.HcControl |= Reset;
+	Registers.HcCommandStatus = 0;
+	Registers.HcInterruptStatus = 0;
+	Registers.HcInterruptEnable = OHCI_INTR_MASTER_INTERRUPT_ENABLED; // enable interrupts
 
-	HC_Registers.HcHCCA = 0;
-	HC_Registers.HcPeriodCurrentED = 0;
-	HC_Registers.HcControlHeadED = HC_Registers.HcControlCurrentED = 0;
-	HC_Registers.HcBulkHeadED = HC_Registers.HcBulkCurrentED = 0;
-	HC_Registers.HcDoneHead = 0;
+	Registers.HcHCCA = 0;
+	Registers.HcPeriodCurrentED = 0;
+	Registers.HcControlHeadED = Registers.HcControlCurrentED = 0;
+	Registers.HcBulkHeadED = Registers.HcBulkCurrentED = 0;
+	Registers.HcDoneHead = 0;
 
-	HC_Registers.HcFmInterval = 0;
-	HC_Registers.HcFmInterval |= (0x2778 << 16); // TBD according to the standard, using what XQEMU sets (FSLargestDataPacket)
-	HC_Registers.HcFmInterval |= 0x2EDF;         // bit-time of a frame. 1 frame = 1 ms (FrameInterval)
-	HC_Registers.HcFmRemaining = 0;
-	HC_Registers.HcFmNumber = 0;
-	HC_Registers.HcPeriodicStart = 0;
+	Registers.HcFmInterval = 0;
+	Registers.HcFmInterval |= (0x2778 << 16); // TBD according to the standard, using what XQEMU sets (FSLargestDataPacket)
+	Registers.HcFmInterval |= 0x2EDF; // bit-time of a frame. 1 frame = 1 ms (FrameInterval)
+	Registers.HcFmRemaining = 0;
+	Registers.HcFmNumber = 0;
+	Registers.HcPeriodicStart = 0;
 
-	HC_Registers.HcRhDescriptorA = OHCI_RHA_NPS | 2; // The xbox lacks the hw to switch off the power on the ports and has 2 ports per HC
-	HC_Registers.HcRhDescriptorB = 0; // The attached devices are removable and use PowerSwitchingMode to control the power on the ports
+	Registers.HcRhDescriptorA = OHCI_RHA_NPS | 2; // The xbox lacks the hw to switch off the power on the ports and has 2 ports per HC
+	Registers.HcRhDescriptorB = 0; // The attached devices are removable and use PowerSwitchingMode to control the power on the ports
 	for (int i = 0; i < 2; i++)
 	{
-		OHCIPort* Port = &HC_Registers.RhPort[i];
+		OHCIPort* Port = &Registers.RhPort[i];
 		Port->HcRhPortStatus = 0;
 		//if (Port->port.device && Port->port.device->attached) {
 			//usb_port_reset(&Port->port);
@@ -90,4 +119,13 @@ void OHCI_State::HC_ChangeState(USB_State new_state)
 	}
 
 	DbgPrintf("Usb-Ohci: Reset\n");
+}
+
+void OHCI::USB_PacketInit(USBPacket* packet)
+{
+	IOVector* vec = &packet->IoVec;
+	vec->IoVec = new IoVec;
+	vec->IoVecNumber = 0;
+	vec->AllocNumber = 1;
+	vec->Size = 0;
 }
