@@ -60,7 +60,7 @@ DWORD XTL::XInputGamepad_Connected(void)
 	DWORD gamepad_connected = 0;
 	for (DWORD i = 0; i< 4; i++)
 	{
-		ZeroMemory(&g_Controller, sizeof(::XINPUT_STATE));
+		ZeroMemory(&g_Controller, sizeof(XINPUT_STATE));
 
 		// query each port for gamepad state
 		dwResult = XInputGetState(i, &g_Controller);
