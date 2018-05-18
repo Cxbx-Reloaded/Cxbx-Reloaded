@@ -2274,6 +2274,13 @@ static void EmuVerifyResourceIsRegistered(XTL::X_D3DResource *pResource, DWORD D
 
 	auto key = GetHostResourceKey(pResource);
 	if (std::find(g_RegisteredResources.begin(), g_RegisteredResources.end(), key) != g_RegisteredResources.end()) {
+		// Don't trash RenderTargets
+		// this fixes an issue where CubeMaps were broken because the surface Set in GetCubeMapSurface
+		// would be overwritten by the surface created in SetRenderTarget
+		if (D3DUsage == D3DUSAGE_RENDERTARGET) {
+			return;
+		}
+
         //check if the same key existed in the HostResource map already. if there is a old pXboxResource in the map with the same key but different resource address, it must be freed first.
         auto it = g_HostResources.find(key);
         if (it != g_HostResources.end() && (it->second.pXboxResource != pResource)) {
@@ -4556,8 +4563,7 @@ DWORD WINAPI XTL::EMUPATCH(D3DDevice_Swap)
 	LOG_FUNC_ONE_ARG(Flags);
 
 	// TODO: Ensure this flag is always the same across library versions
-	if (Flags != 0)
-		if (Flags != CXBX_SWAP_PRESENT_FORWARD) // Avoid a warning when forwarded
+	if (Flags != 0 && Flags != CXBX_SWAP_PRESENT_FORWARD)
 			EmuWarning("XTL::EmuD3DDevice_Swap: Flags != 0");
 
 	// Fetch the host backbuffer
@@ -4584,6 +4590,9 @@ DWORD WINAPI XTL::EMUPATCH(D3DDevice_Swap)
 		auto pXboxBackBufferHostSurface = GetHostSurface(g_XboxBackBufferSurface);
 		if (pXboxBackBufferHostSurface) {
 			// Blit Xbox BackBuffer to host BackBuffer
+			// TODO: This could be much faster if we used the XboxBackBufferSurface as a texture and blitted with a fullscreen quad
+			// This way, the scaling/format conversion would be handled by the GPU instead
+			// If we were using native D3D9, we could just use StretchRects instead, but D3D8 doesn't have that feature!
 			hRet = D3DXLoadSurfaceFromSurface(
 				/* pDestSurface = */ pCurrentHostBackBuffer,
 				/* pDestPalette = */ nullptr,
@@ -7925,6 +7934,105 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_LightEnable)
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->LightEnable");    
 
     return hRet;
+}
+
+// NOTE: NOT A PATCH
+// This is the code common to both GetCubeMapSurface/GetCubeMapSurface2
+__declspec(noinline) HRESULT D3DCubeTexture_GetCubeMapSurfaceCommon
+(
+	XTL::X_D3DCubeTexture*	pThis,
+	XTL::D3DCUBEMAP_FACES	FaceType,
+	XTL::UINT				Level,
+	XTL::X_D3DSurface**		ppCubeMapSurface
+)
+{
+	// Now ppCubeMapSurface correctly points to an Xbox surface, while pThis points to an Xbox Cube Texture
+	// We can use this to tie the host resourcse for both together, allowing Cube Mapping actually work!
+	auto pHostCubeTexture = (XTL::IDirect3DCubeTexture*)GetHostResource(pThis, D3DUSAGE_RENDERTARGET);
+	XTL::IDirect3DSurface* pHostCubeMapSurface;
+	XTL::HRESULT hRet = pHostCubeTexture->GetCubeMapSurface(FaceType, Level, &pHostCubeMapSurface);
+	if (FAILED(hRet)) {
+		return hRet;
+	}
+
+	// Tie the Xbox CubeMapSurface and the host CubeMapSurface together
+	SetHostSurface(*ppCubeMapSurface, pHostCubeMapSurface);
+
+	// HACK:  we need to add the resource to the RegisteredResources array to stop it being overwritten later
+	// This happens because GetHostResource (in SetRenderTarget) calls EmuVerifyResourceIsRegistered and
+	// overwrites it with a new surface...
+	// This could be fixed by NOT having a RegisteredResources array and using a single HostResources structure for everything.
+	auto key = GetHostResourceKey(*ppCubeMapSurface);
+	if (std::find(g_RegisteredResources.begin(), g_RegisteredResources.end(), key) == g_RegisteredResources.end()) {
+		g_RegisteredResources.push_back(key);
+	}
+
+	return hRet;
+}
+
+// ******************************************************************
+// * patch: IDirect3DCubeTexture8_GetCubeMapSurface
+// ******************************************************************
+HRESULT WINAPI XTL::EMUPATCH(D3DCubeTexture_GetCubeMapSurface)
+(
+	X_D3DCubeTexture*	pThis,
+	D3DCUBEMAP_FACES	FaceType,
+	UINT				Level,
+	X_D3DSurface**		ppCubeMapSurface
+)
+{
+	FUNC_EXPORTS
+
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(pThis)
+		LOG_FUNC_ARG(FaceType)
+		LOG_FUNC_ARG(Level)
+		LOG_FUNC_ARG(ppCubeMapSurface)
+		LOG_FUNC_END;
+
+	// First, we need to fetch the Xbox cubemap surface via a trampoline
+	HRESULT hRet;
+	XB_trampoline(HRESULT, WINAPI, D3DCubeTexture_GetCubeMapSurface, (X_D3DCubeTexture*, D3DCUBEMAP_FACES, UINT, X_D3DSurface**));
+	hRet = XB_D3DCubeTexture_GetCubeMapSurface(pThis, FaceType, Level, ppCubeMapSurface);
+
+	// If the Xbox call failed, we must fail too
+	if (FAILED(hRet)) {
+		RETURN(hRet);
+	}
+
+	hRet = D3DCubeTexture_GetCubeMapSurfaceCommon(pThis, FaceType, Level, ppCubeMapSurface);
+	RETURN(hRet);
+}
+
+// ******************************************************************
+// * patch: IDirect3DCubeTexture8_GetCubeMapSurface2
+// ******************************************************************
+XTL::X_D3DSurface* WINAPI XTL::EMUPATCH(D3DCubeTexture_GetCubeMapSurface2)
+(
+	X_D3DCubeTexture*	pThis,
+	D3DCUBEMAP_FACES	FaceType,
+	UINT				Level
+)
+{
+	FUNC_EXPORTS
+
+		LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(pThis)
+		LOG_FUNC_ARG(FaceType)
+		LOG_FUNC_ARG(Level)
+		LOG_FUNC_END;
+
+	// First, we need to fetch the Xbox cubemap surface via a trampoline
+	XB_trampoline(X_D3DSurface*, WINAPI, D3DCubeTexture_GetCubeMapSurface2, (X_D3DCubeTexture*, D3DCUBEMAP_FACES, UINT));
+	X_D3DSurface* pCubeMapSurface = XB_D3DCubeTexture_GetCubeMapSurface2(pThis, FaceType, Level);
+
+	// If the Xbox call failed, we must fail too
+	if (pCubeMapSurface == nullptr) {
+		RETURN(NULL);
+	}
+
+	D3DCubeTexture_GetCubeMapSurfaceCommon(pThis, FaceType, Level, &pCubeMapSurface);
+	return pCubeMapSurface;
 }
 
 // ******************************************************************
