@@ -160,6 +160,8 @@ extern xboxkrnl::XBOX_EEPROM *EEPROM;
 
 extern xboxkrnl::ULONG XboxFactoryGameRegion;
 
+extern void EmuEEPROMReset(xboxkrnl::XBOX_EEPROM* eeprom);
+
 void gen_section_CRCs(xboxkrnl::XBOX_EEPROM*);
 
 #if defined(__cplusplus)

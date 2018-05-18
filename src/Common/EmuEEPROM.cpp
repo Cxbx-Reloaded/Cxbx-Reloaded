@@ -177,21 +177,7 @@ xboxkrnl::XBOX_EEPROM *CxbxRestoreEEPROM(char *szFilePath_EEPROM_bin)
 
 	if (NeedsInitialization)
 	{
-		memset(pEEPROM, 0, EEPROM_SIZE);
-
-		// TODO: Make these configurable or autodetect of some sort :
-		pEEPROM->UserSettings.Language = XC_LANGUAGE_ENGLISH;  // = English
-		pEEPROM->UserSettings.VideoFlags = AV_FLAGS_NORMAL;   // = Use XDK defaults
-		pEEPROM->UserSettings.AudioFlags = XC_AUDIO_FLAGS_STEREO;   // = Stereo, no AC3, no DTS
-		pEEPROM->UserSettings.ParentalControlGames = XC_PC_ESRB_ALL; // = XC_PC_ESRB_ALL
-		pEEPROM->UserSettings.ParentalControlMovies = XC_PC_MAX; // = XC_PRTL_CRTL_MAX
-		pEEPROM->UserSettings.MiscFlags = 0;  // No automatic power down
-		pEEPROM->FactorySettings.AVRegion = AV_STANDARD_NTSC_M | AV_FLAGS_60Hz;
-		memcpy(&pEEPROM->FactorySettings.SerialNumber, "Cxbx-R      ", 12);
-		pEEPROM->EncryptedSettings.GameRegion = XC_GAME_REGION_NA;
-		xboxkrnl::XcHMAC(xboxkrnl::XboxEEPROMKey, 16, pEEPROM->EncryptedSettings.Confounder, 8, pEEPROM->EncryptedSettings.HDKey, 20,
-			pEEPROM->EncryptedSettings.Checksum);
-
+		EmuEEPROMReset(pEEPROM);
 		XboxFactoryGameRegion = pEEPROM->EncryptedSettings.GameRegion;
 
         // This must be done last to include all initialized data in the CRC
@@ -219,4 +205,31 @@ xboxkrnl::XBOX_EEPROM *CxbxRestoreEEPROM(char *szFilePath_EEPROM_bin)
 	}
 
 	return pEEPROM;
+}
+
+void EmuEEPROMReset(xboxkrnl::XBOX_EEPROM* eeprom)
+{
+	memset(eeprom, 0, sizeof(xboxkrnl::XBOX_EEPROM));
+
+	// Set Factory Settings
+	eeprom->FactorySettings.AVRegion = AV_STANDARD_NTSC_M | AV_FLAGS_60Hz;
+	memcpy(eeprom->FactorySettings.SerialNumber, "Cxbx-R      ", 12);
+	// TODO: Ethernet Address
+	// TODO: Online Key
+
+	// Encrypted Section
+	eeprom->EncryptedSettings.GameRegion = XC_GAME_REGION_NA;
+	// TODO: HDD Key
+	xboxkrnl::XcHMAC(xboxkrnl::XboxEEPROMKey, 16, eeprom->EncryptedSettings.Confounder, 8, eeprom->EncryptedSettings.HDKey, 20, eeprom->EncryptedSettings.Checksum);
+
+	// User Settings
+	eeprom->UserSettings.Language = XC_LANGUAGE_ENGLISH;  // = English
+	eeprom->UserSettings.VideoFlags = AV_FLAGS_NORMAL;   // = Use XDK defaults
+	eeprom->UserSettings.AudioFlags = XC_AUDIO_FLAGS_STEREO;   // = Stereo, no AC3, no DTS
+	eeprom->UserSettings.ParentalControlGames = XC_PC_ESRB_ALL; // = XC_PC_ESRB_ALL
+	eeprom->UserSettings.ParentalControlMovies = XC_PC_MAX; // = XC_PRTL_CRTL_MAX
+	eeprom->UserSettings.MiscFlags = 0;  // No automatic power down
+
+	// TODO: Online Settings
+	// TODO: TimeZone Settings
 }
