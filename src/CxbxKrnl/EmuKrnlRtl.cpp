@@ -101,6 +101,8 @@ static void InitHostCriticalSection(xboxkrnl::PRTL_CRITICAL_SECTION xbox_crit_se
     CRITICAL_SECTION host_crit_section;
     InitializeCriticalSection(&host_crit_section);
     add_critical_section(xbox_crit_section, host_crit_section);
+    //Initalize the host event for the critical section
+    KeInitializeEvent((xboxkrnl::PRKEVENT)xbox_crit_section, (xboxkrnl::EVENT_TYPE)xboxkrnl::NotificationEvent, FALSE);
 }
 
 static void EnterHostCriticalSection(xboxkrnl::PRTL_CRITICAL_SECTION xbox_crit_section)
@@ -730,13 +732,18 @@ XBSYSAPI EXPORTNUM(277) xboxkrnl::VOID NTAPI xboxkrnl::RtlEnterCriticalSection
     }
     else {
         if(CriticalSection->OwningThread != thread) {
-            KeWaitForSingleObject(
+            NTSTATUS result;
+            result = KeWaitForSingleObject(
                 (PVOID)CriticalSection,
                 (KWAIT_REASON)0,
                 (KPROCESSOR_MODE)0,
                 (BOOLEAN)0,
                 (PLARGE_INTEGER)0
             );
+            if(!NT_SUCCESS(result))
+            {
+                CxbxKrnlCleanup("Waiting for event of a critical section returned %lx.", result);
+            };
             CriticalSection->OwningThread = thread;
             CriticalSection->RecursionCount = 1;
         }
