@@ -8028,7 +8028,7 @@ XTL::X_D3DSurface* WINAPI XTL::EMUPATCH(D3DCubeTexture_GetCubeMapSurface2)
 
 	// If the Xbox call failed, we must fail too
 	if (pCubeMapSurface == nullptr) {
-		RETURN(nullptr);
+		RETURN(NULL);
 	}
 
 	D3DCubeTexture_GetCubeMapSurfaceCommon(pThis, FaceType, Level, &pCubeMapSurface);
