@@ -3483,6 +3483,10 @@ static void pgraph_update_surface(NV2AState *d, bool upload,
 {
     PGRAPHState *pg = &d->pgraph;
 
+	if (!pg->opengl_enabled) {
+		return;
+	}
+
     pg->surface_shape.z_format = GET_MASK(pg->regs[NV_PGRAPH_SETUPRASTER],
                                           NV_PGRAPH_SETUPRASTER_Z_FORMAT);
 
@@ -3496,35 +3500,34 @@ static void pgraph_update_surface(NV2AState *d, bool upload,
 
         pg->surface_color.buffer_dirty = true;
         pg->surface_zeta.buffer_dirty = true;
-		if (pg->opengl_enabled) {
-			glFramebufferTexture2D(GL_FRAMEBUFFER,
-								   GL_COLOR_ATTACHMENT0,
-								   GL_TEXTURE_2D,
-								   0, 0);
 
-			if (pg->gl_color_buffer) {
-				glDeleteTextures(1, &pg->gl_color_buffer);
-				pg->gl_color_buffer = 0;
-			}
+		glFramebufferTexture2D(GL_FRAMEBUFFER,
+								GL_COLOR_ATTACHMENT0,
+								GL_TEXTURE_2D,
+								0, 0);
 
-			glFramebufferTexture2D(GL_FRAMEBUFFER,
-								   GL_DEPTH_ATTACHMENT,
-								   GL_TEXTURE_2D,
-								   0, 0);
-			glFramebufferTexture2D(GL_FRAMEBUFFER,
-								   GL_DEPTH_STENCIL_ATTACHMENT,
-								   GL_TEXTURE_2D,
-								   0, 0);
-
-			if (pg->gl_zeta_buffer) {
-				glDeleteTextures(1, &pg->gl_zeta_buffer);
-				pg->gl_zeta_buffer = 0;
-			}
+		if (pg->gl_color_buffer) {
+			glDeleteTextures(1, &pg->gl_color_buffer);
+			pg->gl_color_buffer = 0;
 		}
 
-        memcpy(&pg->last_surface_shape, &pg->surface_shape,
-               sizeof(SurfaceShape));
-    }
+		glFramebufferTexture2D(GL_FRAMEBUFFER,
+								GL_DEPTH_ATTACHMENT,
+								GL_TEXTURE_2D,
+								0, 0);
+		glFramebufferTexture2D(GL_FRAMEBUFFER,
+								GL_DEPTH_STENCIL_ATTACHMENT,
+								GL_TEXTURE_2D,
+								0, 0);
+
+		if (pg->gl_zeta_buffer) {
+			glDeleteTextures(1, &pg->gl_zeta_buffer);
+			pg->gl_zeta_buffer = 0;
+		}
+	}
+
+    memcpy(&pg->last_surface_shape, &pg->surface_shape,
+            sizeof(SurfaceShape));
 
     if ((color_write || (!upload && pg->surface_color.write_enabled_cache))
         && (upload || pg->surface_color.draw_dirty)) {
@@ -3907,8 +3910,6 @@ static void pgraph_get_surface_dimensions(PGRAPHState *pg,
 static void pgraph_update_memory_buffer(NV2AState *d, hwaddr addr, hwaddr size,
                                         bool f)
 {
-	assert(d->pgraph.opengl_enabled);
-
 	glBindBuffer(GL_ARRAY_BUFFER, d->pgraph.gl_memory_buffer);
 
 	hwaddr end = TARGET_PAGE_ALIGN(addr + size);
