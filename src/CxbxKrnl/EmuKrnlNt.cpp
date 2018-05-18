@@ -969,10 +969,18 @@ XBSYSAPI EXPORTNUM(206) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueueApcThread
 		LOG_FUNC_ARG(ApcReserved)
 		LOG_FUNC_END;
 
-	// TODO: Not too sure how this one works.  If there's any special *magic* that needs to be
-	//		 done, let me know!
+    // In order to queue an APC thread, you MUST duplicate the handle with the appropriate 
+    // permissions.  If you don't, then NtQueueApcThread (and QueueUserAPC) will fail.
+    // Metal Slug 3 needs this functionality to work, or else it will hang.
+    // 
+    // TODO: Use NtDuplicateObject instead?
+
+	HANDLE hApcThread = NULL; 
+    if( !DuplicateHandle(g_CurrentProcessHandle, ThreadHandle, g_CurrentProcessHandle, &hApcThread, THREAD_SET_CONTEXT, FALSE, 0 ) )
+		EmuWarning( "DuplicateHandle failed!" );
+
 	NTSTATUS ret = NtDll::NtQueueApcThread(
-		(NtDll::HANDLE)ThreadHandle,
+		(NtDll::HANDLE)hApcThread,
 		(NtDll::PIO_APC_ROUTINE)ApcRoutine,
 		ApcRoutineContext,
 		(NtDll::PIO_STATUS_BLOCK)ApcStatusBlock,
