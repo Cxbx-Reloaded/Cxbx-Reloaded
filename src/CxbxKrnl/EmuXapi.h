@@ -211,6 +211,112 @@ typedef struct _X_XINPUT_GAMEPAD
 X_XINPUT_GAMEPAD, *PX_XINPUT_GAMEPAD;
 
 // ******************************************************************
+// * X_SBC_GAMEPAD for xbox SteelBatalion GAMEPAD struc 
+// ******************************************************************
+typedef struct _X_SBC_GAMEPAD {
+    WORD    wButtons[3];
+    SHORT   sAimingX;
+    SHORT   sAimingY;
+    SHORT   sRotationLever;
+    SHORT   sSightChangeX;
+    SHORT   sSightChangeY;
+    WORD    wLeftPedal;
+    WORD    wMiddlePedal;
+    WORD    wRightPedal;
+    UCHAR   ucTunerDial;//low nibble
+    UCHAR   ucGearLever;
+}
+X_SBC_GAMEPAD, *PX_SBC_GAMEPAD;
+
+// ******************************************************************
+// * masks for digital buttons of X_SBC_GAMEPAD
+// ******************************************************************
+
+#define    X_SBC_GAMEPAD_W0_RIGHTJOYMAINWEAPON      0x0001
+#define    X_SBC_GAMEPAD_W0_RIGHTJOYFIRE            0x0002
+#define    X_SBC_GAMEPAD_W0_RIGHTJOYLOCKON          0x0004
+#define    X_SBC_GAMEPAD_W0_EJECT                   0x0008
+#define    X_SBC_GAMEPAD_W0_COCKPITHATCH            0x0010
+#define    X_SBC_GAMEPAD_W0_IGNITION                0x0020
+#define    X_SBC_GAMEPAD_W0_START                   0x0040
+#define    X_SBC_GAMEPAD_W0_MULTIMONOPENCLOSE       0x0080
+#define    X_SBC_GAMEPAD_W0_MULTIMONMAPZOOMINOUT    0x0100
+#define    X_SBC_GAMEPAD_W0_MULTIMONMODESELECT      0x0200
+#define    X_SBC_GAMEPAD_W0_MULTIMONSUBMONITOR      0x0400
+#define    X_SBC_GAMEPAD_W0_MAINMONZOOMIN           0x0800
+#define    X_SBC_GAMEPAD_W0_MAINMONZOOMOUT          0x1000
+#define    X_SBC_GAMEPAD_W0_FUNCTIONFSS             0x2000
+#define    X_SBC_GAMEPAD_W0_FUNCTIONMANIPULATOR     0x4000
+#define    X_SBC_GAMEPAD_W0_FUNCTIONLINECOLORCHANGE 0x8000
+#define    X_SBC_GAMEPAD_W1_WASHING                 0x0001
+#define    X_SBC_GAMEPAD_W1_EXTINGUISHER            0x0002
+#define    X_SBC_GAMEPAD_W1_CHAFF                   0x0004
+#define    X_SBC_GAMEPAD_W1_FUNCTIONTANKDETACH      0x0008
+#define    X_SBC_GAMEPAD_W1_FUNCTIONOVERRIDE        0x0010
+#define    X_SBC_GAMEPAD_W1_FUNCTIONNIGHTSCOPE      0x0020
+#define    X_SBC_GAMEPAD_W1_FUNCTIONF1              0x0040
+#define    X_SBC_GAMEPAD_W1_FUNCTIONF2              0x0080
+#define    X_SBC_GAMEPAD_W1_FUNCTIONF3              0x0100
+#define    X_SBC_GAMEPAD_W1_WEAPONCONMAIN           0x0200
+#define    X_SBC_GAMEPAD_W1_WEAPONCONSUB            0x0400
+#define    X_SBC_GAMEPAD_W1_WEAPONCONMAGAZINE       0x0800
+#define    X_SBC_GAMEPAD_W1_COMM1                   0x1000
+#define    X_SBC_GAMEPAD_W1_COMM2                   0x2000
+#define    X_SBC_GAMEPAD_W1_COMM3                   0x4000
+#define    X_SBC_GAMEPAD_W1_COMM4                   0x8000
+#define    X_SBC_GAMEPAD_W2_COMM5                   0x0001
+#define    X_SBC_GAMEPAD_W2_LEFTJOYSIGHTCHANGE      0x0002
+#define    X_SBC_GAMEPAD_W2_TOGGLEFILTERCONTROL     0x0004
+#define    X_SBC_GAMEPAD_W2_TOGGLEOXYGENSUPPLY      0x0008
+#define    X_SBC_GAMEPAD_W2_TOGGLEFUELFLOWRATE      0x0010
+#define    X_SBC_GAMEPAD_W2_TOGGLEBUFFREMATERIAL    0x0020
+#define    X_SBC_GAMEPAD_W2_TOGGLEVTLOCATION        0x0040
+
+// ******************************************************************
+// * enum for feedback status variables of X_SBC_FEEDBACK, it's a byte array after FeedbackHeader, each variable take 1 nibble, that's half byte.
+// ******************************************************************
+#define    X_SBC_FEEDBACK_EMERGENCYEJECT            0
+#define    X_SBC_FEEDBACK_COCKPITHATCH              1
+#define    X_SBC_FEEDBACK_IGNITION                  2
+#define    X_SBC_FEEDBACK_START                     3
+#define    X_SBC_FEEDBACK_OPENCLOSE                 4
+#define    X_SBC_FEEDBACK_MAPZOOMINOUT              5
+#define    X_SBC_FEEDBACK_MODESELECT                6
+#define    X_SBC_FEEDBACK_SUBMONITORMODESELECT      7
+#define    X_SBC_FEEDBACK_MAINMONITORZOOMIN         8
+#define    X_SBC_FEEDBACK_MAINMONITORZOOMOUT        9
+#define    X_SBC_FEEDBACK_FORECASTSHOOTINGSYSTEM    10
+#define    X_SBC_FEEDBACK_MANIPULATOR               11
+#define    X_SBC_FEEDBACK_LINECOLORCHANGE           12
+#define    X_SBC_FEEDBACK_WASHING                   13
+#define    X_SBC_FEEDBACK_EXTINGUISHER              14
+#define    X_SBC_FEEDBACK_CHAFF                     15
+#define    X_SBC_FEEDBACK_TANKDETACH                16
+#define    X_SBC_FEEDBACK_OVERRIDE                  17
+#define    X_SBC_FEEDBACK_NIGHTSCOPE                18
+#define    X_SBC_FEEDBACK_F1                        19
+#define    X_SBC_FEEDBACK_F2                        20
+#define    X_SBC_FEEDBACK_F3                        21
+#define    X_SBC_FEEDBACK_MAINWEAPONCONTROL         22
+#define    X_SBC_FEEDBACK_SUBWEAPONCONTROL          23
+#define    X_SBC_FEEDBACK_MAGAZINECHANGE            24
+#define    X_SBC_FEEDBACK_COMM1                     25
+#define    X_SBC_FEEDBACK_COMM2                     26
+#define    X_SBC_FEEDBACK_COMM3                     27
+#define    X_SBC_FEEDBACK_COMM4                     28
+#define    X_SBC_FEEDBACK_COMM5                     29
+#define    X_SBC_FEEDBACK_UNKNOWN                   30
+#define    X_SBC_FEEDBACK_GEARR                     31
+#define    X_SBC_FEEDBACK_GEARN                     32
+#define    X_SBC_FEEDBACK_GEAR1                     33
+#define    X_SBC_FEEDBACK_GEAR2                     34
+#define    X_SBC_FEEDBACK_GEAR3                     35
+#define    X_SBC_FEEDBACK_GEAR4                     36
+#define    X_SBC_FEEDBACK_GEAR5                     37
+
+#define    X_SBC_FEEDBACK_MAX                       38
+
+// ******************************************************************
 // * XINPUT_RUMBLE
 // ******************************************************************
 typedef struct _X_XINPUT_RUMBLE
