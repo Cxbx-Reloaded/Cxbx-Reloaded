@@ -7938,7 +7938,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_LightEnable)
 
 // NOTE: NOT A PATCH
 // This is the code common to both GetCubeMapSurface/GetCubeMapSurface2
-__declspec(noinline) HRESULT D3DCubeTexture_GetCubeMapSurfaceCommon
+HRESULT D3DCubeTexture_GetCubeMapSurfaceCommon
 (
 	XTL::X_D3DCubeTexture*	pThis,
 	XTL::D3DCUBEMAP_FACES	FaceType,
@@ -7947,8 +7947,8 @@ __declspec(noinline) HRESULT D3DCubeTexture_GetCubeMapSurfaceCommon
 )
 {
 	// Now ppCubeMapSurface correctly points to an Xbox surface, while pThis points to an Xbox Cube Texture
-	// We can use this to tie the host resourcse for both together, allowing Cube Mapping actually work!
-	auto pHostCubeTexture = (XTL::IDirect3DCubeTexture*)GetHostResource(pThis, D3DUSAGE_RENDERTARGET);
+	// We can use this to tie the host resources for both together, allowing Cube Mapping actually work!
+	auto pHostCubeTexture = (XTL::IDirect3DCubeTexture*)GetHostResource(pThis, XTL::EmuXBFormatIsRenderTarget(GetXboxPixelContainerFormat(pThis)) ? D3DUSAGE_RENDERTARGET : 0);
 	XTL::IDirect3DSurface* pHostCubeMapSurface;
 	XTL::HRESULT hRet = pHostCubeTexture->GetCubeMapSurface(FaceType, Level, &pHostCubeMapSurface);
 	if (FAILED(hRet)) {
