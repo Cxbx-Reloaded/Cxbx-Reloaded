@@ -4584,6 +4584,9 @@ DWORD WINAPI XTL::EMUPATCH(D3DDevice_Swap)
 		auto pXboxBackBufferHostSurface = GetHostSurface(g_XboxBackBufferSurface);
 		if (pXboxBackBufferHostSurface) {
 			// Blit Xbox BackBuffer to host BackBuffer
+			// TODO: This could be much faster if we used the XboxBackBufferSurface as a texture and blitted with a fullscreen quad
+			// This way, the scaling/format conversion would be handled by the GPU instead
+			// If we were using native D3D9, we could just use StretchRects instead, but D3D8 doesn't have that feature!
 			hRet = D3DXLoadSurfaceFromSurface(
 				/* pDestSurface = */ pCurrentHostBackBuffer,
 				/* pDestPalette = */ nullptr,
