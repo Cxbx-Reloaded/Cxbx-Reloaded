@@ -637,7 +637,15 @@ XBSYSAPI EXPORTNUM(108) xboxkrnl::VOID NTAPI xboxkrnl::KeInitializeEvent
 	// TODO: This doesn't check for events that are already initialized
 	// This shouldn't happen, except on shoddily coded titles so we
 	// ignore it for now
-	HANDLE hostEvent = CreateEvent(NULL, FALSE, SignalState, NULL);
+	HANDLE hostEvent;
+	if (Type == NotificationEvent)
+	{
+		hostEvent = CreateEvent(NULL, TRUE, SignalState, NULL);
+	}
+	else {
+		hostEvent = CreateEvent(NULL, FALSE, SignalState, NULL);
+	}
+
 	g_KeEventHandles[Event] = hostEvent;
 }
 
@@ -1509,7 +1517,16 @@ XBSYSAPI EXPORTNUM(145) xboxkrnl::LONG NTAPI xboxkrnl::KeSetEvent
 	if (g_KeEventHandles.find(Event) == g_KeEventHandles.end()) {
 		EmuWarning("KeSetEvent called on a non-existant event. Creating it!");
 		// TODO: Find out why some XDKs do not call KeInitializeEvent first
-		KeInitializeEvent(Event, NotificationEvent, TRUE);
+
+		//We can check the event type from the internal structure, see https://www.geoffchappell.com/studies/windows/km/ntoskrnl/structs/kobjects.htm?tx=111
+		if (Event->Header.Type & 0x7F == 0x01)
+		{
+			KeInitializeEvent(Event, NotificationEvent, TRUE);
+		}
+		else {
+			KeInitializeEvent(Event, SynchronizationEvent, TRUE);
+		}
+
 	} else {
 		SetEvent(g_KeEventHandles[Event]);
 	}
