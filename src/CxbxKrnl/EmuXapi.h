@@ -217,14 +217,14 @@ typedef struct _X_SBC_GAMEPAD {
     WORD    wButtons[3];
     SHORT   sAimingX;
     SHORT   sAimingY;
-    SHORT   sRotationLever;
+    SHORT   sRotationLever;//maybe only high byte was used.
     SHORT   sSightChangeX;
     SHORT   sSightChangeY;
-    WORD    wLeftPedal;
-    WORD    wMiddlePedal;
-    WORD    wRightPedal;
-    UCHAR   ucTunerDial;//low nibble
-    UCHAR   ucGearLever;
+    WORD    wLeftPedal;//maybe only high byte was used.
+    WORD    wMiddlePedal;//maybe only high byte was used.
+    WORD    wRightPedal;//maybe only high byte was used.
+    UCHAR   ucTunerDial;//low nibble, The 9 o'clock postion is 0, and the 6 o'clock position is 12. The blank area between the 6 and 9 o'clock positions is 13, 14, and 15 clockwise.
+    UCHAR   ucGearLever;//GearLever 1~5 for gear 1~5, 7~13 for gear R,N,1~5, 15 for gear R. we use the continues range from 7~13
 }
 X_SBC_GAMEPAD, *PX_SBC_GAMEPAD;
 
