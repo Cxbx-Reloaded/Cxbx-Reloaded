@@ -233,9 +233,9 @@ typedef enum _CxbxMsgDlgIcon {
     CxbxMsgDlgIcon_Error,
     CxbxMsgDlgIcon_Unknown
 
-} CxbxPopupMsgIcon;
+} CxbxMsgDlgIcon;
 
-void CxbxPopupMessage(CxbxPopupMsgIcon icon, const char *message, ...);
+void CxbxPopupMessage(CxbxMsgDlgIcon icon, const char *message, ...);
 
 #define LOG_TEST_CASE(message) do { static bool bPopupShown = false; \
     if (!bPopupShown) { bPopupShown = true; \

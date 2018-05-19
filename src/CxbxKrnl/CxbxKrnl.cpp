@@ -489,7 +489,7 @@ HANDLE CxbxRestorePageTablesMemory(char* szFilePath_page_tables)
 
 #pragma optimize("", off)
 
-void CxbxPopupMessage(CxbxPopupMsgIcon icon, const char *message, ...)
+void CxbxPopupMessage(CxbxMsgDlgIcon icon, const char *message, ...)
 {
 	char Buffer[1024];
 	va_list argp;
