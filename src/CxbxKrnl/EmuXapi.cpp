@@ -216,7 +216,7 @@ bool TitleIsJSRF()
 		wcstombs(tAsciiTitle, g_pCertificate->wszTitleName, sizeof(tAsciiTitle));
 
 		if (_strnicmp(tAsciiTitle, "Jet Set Radio", 13) == 0) {
-			CxbxPopupMessage("Detected JSRF by name, not title ID, please report that [%08X] should be added to the list", g_pCertificate->dwTitleId);
+			CxbxPopupMessage(CxbxMsgDlgIcon_Info, "Detected JSRF by name, not title ID, please report that [%08X] should be added to the list", g_pCertificate->dwTitleId);
 			result = true;
 		}
 	}
