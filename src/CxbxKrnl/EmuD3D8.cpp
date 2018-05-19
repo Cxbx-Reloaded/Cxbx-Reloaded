@@ -517,7 +517,7 @@ VOID XTL::CxbxInitWindow(bool bFullInit)
 		if (hRenderWindowThread == NULL) {
 			char szBuffer[1024] = { 0 };
 			sprintf(szBuffer, "Creating EmuRenderWindowThread Failed: %08X", GetLastError());
-			CxbxPopupMessage(szBuffer);
+			CxbxPopupMessage(CxbxMsgDlgIcon_Error, szBuffer);
 			EmuShared::Cleanup();
 			ExitProcess(0);
 		}

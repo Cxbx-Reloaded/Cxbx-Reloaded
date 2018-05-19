@@ -303,7 +303,7 @@ XBSYSAPI EXPORTNUM(264) xboxkrnl::VOID NTAPI xboxkrnl::RtlAssert
 		LOG_FUNC_ARG(Message)
 		LOG_FUNC_END;
 
-	CxbxPopupMessage("RtlAssert() raised by emulated program - consult Debug log");
+	CxbxPopupMessage(CxbxMsgDlgIcon_Warn, "RtlAssert() raised by emulated program - consult Debug log");
 }
 
 // ******************************************************************
