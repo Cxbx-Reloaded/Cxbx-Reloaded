@@ -633,12 +633,13 @@ DWORD WINAPI XTL::EMUPATCH(XInputSetState)
 
                 if(pFeedback->Header.dwStatus == ERROR_SUCCESS)
                 {
+                    //If the device was succesfully added to polling before, recycle the request
+                    g_pXInputSetStateStatus[v].pFeedback = pFeedback;
+                    pFeedback->Header.dwStatus = ERROR_IO_PENDING;
+                }
+                else {
+                    //Ignore this request as another one is already pending
                     ret = ERROR_SUCCESS;
-
-                    // remove from slot
-                    g_pXInputSetStateStatus[v].hDevice = NULL;
-                    g_pXInputSetStateStatus[v].pFeedback = NULL;
-                    g_pXInputSetStateStatus[v].dwLatency = 0;
                 }
             }
         }
