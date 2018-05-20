@@ -223,7 +223,7 @@
       </HeaderFileName>
     </Midl>
     <ClCompile>
-      <Optimization>Full</Optimization>
+      <Optimization>Disabled</Optimization>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <AdditionalIncludeDirectories>..\..\src;..\..\src\Common;..\..\src\Common\Win32\;%(AdditionalIncludeDirectories);..\..\import\OpenXDK\include;..\..\import\distorm\include;..\..\import\glew-2.0.0\include;..\..\src\Common\Win32;..\..\import\subhook\</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>NOMINMAX;_WIN32_WINNT=0x0601;WIN32;NDEBUG;_WINDOWS;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -343,6 +343,7 @@
     <ClInclude Include="..\..\src\CxbxKrnl\EmuShared.h" />
     <ClInclude Include="..\..\src\Common\Error.h" />
     <ClInclude Include="..\..\src\Common\Win32\Mutex.h" />
+    <ClInclude Include="..\..\src\Cxbx\DlgXboxControllerPortMapping.h" />
     <ClInclude Include="..\..\src\Cxbx\ResCxbx.h" />
     <ClInclude Include="..\..\src\Cxbx\Wnd.h" />
     <ClInclude Include="..\..\src\Cxbx\WndMain.h" />
@@ -371,6 +372,7 @@
     <ClInclude Include="..\..\src\devices\video\swizzle.h" />
     <ClInclude Include="..\..\src\devices\video\vga.h" />
     <ClInclude Include="..\..\src\devices\Xbox.h" />
+    <ClInclude Include="DlgXboxControllerPortMapping.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\CONTRIBUTORS" />
@@ -378,6 +380,7 @@
     <None Include="..\..\README.md" />
     <None Include="..\..\resource\.editorconfig" />
     <None Include="..\..\resource\Logo.bmp" />
+    <None Include="..\..\resource\ribbon1.mfcribbon-ms" />
     <None Include="..\..\resource\Splash.jpg" />
     <None Include="..\..\src\.editorconfig" />
     <None Include="..\..\src\devices\video\EmuNV2A_DEBUG.cpp" />
@@ -665,6 +668,7 @@
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
+    <ClCompile Include="..\..\src\Cxbx\DlgXboxControllerPortMapping.cpp" />
     <ClCompile Include="..\..\src\Cxbx\WinMain.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug_Direct3D9|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
