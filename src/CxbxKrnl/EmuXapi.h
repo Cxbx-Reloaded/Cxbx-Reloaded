@@ -472,7 +472,10 @@ typedef struct _X_XINPUT_DEVICE_INFO
 }
 X_XINPUT_DEVICE_INFO, *PX_XINPUT_DEVICE_INFO;
 
-
+#define X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_NOTCONNECT      0x00000000
+#define X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_XINPUT         0x00000001
+#define X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_DINPUT         0x00000002
+#define X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_VIRTUAL_SBC    0x00000080
 
 //this structure is for use of tracking the xbox controllers assigned to 4 ports.
 //user can specify the corresponding host input device
@@ -1016,6 +1019,9 @@ VOID WINAPI EMUPATCH(OutputDebugStringA)
 	IN LPCSTR lpOutputString
 );
 
+extern void SetXboxPortToHostPort(DWORD dwXboxPort, DWORD dwHostType, DWORD dwHostPort);
+
+extern void GetXboxPortToHostPort(DWORD dwXboxPort, DWORD &dwHostType, DWORD &dwHostPort);
 // s+
 /* not necessary?
 // ******************************************************************

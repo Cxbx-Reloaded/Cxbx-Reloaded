@@ -1,6 +1,6 @@
 ﻿//{{NO_DEPENDENCIES}}
 // Microsoft Visual C++ generated include file.
-// Used by C:\Users\anonymous\Documents\xbox\Cxbx-Reloaded\resource\Cxbx.rc
+// Used by C:\Users\jack\Source\Repos\Cxbx-Reloaded\resource\Cxbx.rc
 //
 #define IDI_CXBX                        101
 #define IDB_SPLASH                      102
@@ -17,6 +17,7 @@
 #define IDR_CONTRIBUTORS                121
 #define IDR_COPYING                     122
 #define IDS_UEM                         123
+#define IDD_CONTROLLER_HOST_MAPPING     131
 #define IDC_SET_X                       1000
 #define IDC_SET_Y                       1001
 #define IDC_SET_A                       1002
@@ -59,32 +60,66 @@
 #define IDC_ABOUT                       1056
 #define IDC_TAB1                        1057
 #define IDC_AC_ACCEPT                   1058
+#define IDC_XBOX_PORT_0                 1158
 #define IDC_AC_CANCEL                   1059
+#define IDC_HOST_NOTCONNECT_0_0         1159
 #define IDC_AC_AUDIO_ADAPTER            1060
+#define IDC_HOST_XINPUT_0_0             1160
+#define IDC_HOST_XINPUT_0_1             1161
 #define IDC_AC_PCM                      1062
+#define IDC_HOST_XINPUT_0_2             1162
 #define IDC_AC_XADPCM                   1063
+#define IDC_HOST_XINPUT_0_3             1163
 #define IDC_AC_UNKNOWN_CODEC            1064
+#define IDC_HOST_DINPUT_0_0             1164
 #define IDC_EE_CONFOUNDER               1065
+#define IDC_HOST_VIRTUAL_SBC_0_0        1165
 #define IDC_EE_HDDKEY                   1066
+#define IDC_XBOX_PORT_1                 1166
 #define IDC_EE_XBOX_REGION              1067
+#define IDC_HOST_NOTCONNECT_1_0         1167
 #define IDC_EE_SERIAL_NUMBER            1068
+#define IDC_HOST_XINPUT_1_0             1168
 #define IDC_EE_MAC_ADDRESS              1069
+#define IDC_HOST_XINPUT_1_1             1169
 #define IDC_EE_ONLINE_KEY               1070
+#define IDC_HOST_XINPUT_1_2             1170
 #define IDC_EE_AVREGION                 1071
+#define IDC_HOST_XINPUT_1_3             1171
 #define IDC_EE_LANGUAGE                 1072
+#define IDC_HOST_DINPUT_1_0             1172
 #define IDC_EE_AVSETTINGS               1073
+#define IDC_HOST_VIRTUAL_SBC_1_0        1173
 #define IDC_EE_AUDIOSETTINGS            1074
+#define IDC_XBOX_PORT_2                 1174
 #define IDC_EE_GAME_PRTL_CRTL           1075
+#define IDC_HOST_NOTCONNECT_2_0         1175
 #define IDC_EE_PRTL_PASS                1076
+#define IDC_HOST_XINPUT_2_0             1176
 #define IDC_EE_MOVIE_PRTL_CRTL          1077
+#define IDC_HOST_XINPUT_2_1             1177
 #define IDC_EE_DVDREGION                1078
+#define IDC_HOST_XINPUT_2_2             1178
 #define IDC_EE_ACCEPT                   1079
+#define IDC_HOST_XINPUT_2_3             1179
 #define IDC_EE_CANCEL                   1080
+#define IDC_HOST_DINPUT_2_0             1180
 #define IDC_EE_RESET                    1081
+#define IDC_HOST_VIRTUAL_SBC_2_0        1181
 #define IDC_EE_PAL60HZ                  1082
+#define IDC_XBOX_PORT_3                 1182
 #define IDC_EE_480P                     1083
+#define IDC_HOST_NOTCONNECT_3_0         1183
 #define IDC_EE_720P                     1084
+#define IDC_HOST_XINPUT_3_0             1184
 #define IDC_EE_1080I                    1085
+#define IDC_HOST_XINPUT_3_1             1185
+#define IDC_HOST_XINPUT_3_2             1186
+#define IDC_HOST_XINPUT_3_3             1187
+#define IDC_HOST_DINPUT_3_0             1188
+#define IDC_HOST_VIRTUAL_SBC_3_0        1189
+#define IDC_HOST_APPLY                  1190
+#define IDC_HOST_CANCEL                 1191
 #define ID_FILE_EXIT                    40005
 #define ID_HELP_ABOUT                   40008
 #define ID_EMULATION_START              40009
@@ -136,15 +171,16 @@
 #define ID_HACKS_RUNXBOXTHREADSONALLCORES 40098
 #define ID_HACKS_SKIPRDTSCPATCHING      40099
 #define ID_HACKS_SCALEVIEWPORT          40100
+#define ID_SETTINGS_CONFIG_XBOX_CONTROLLER_MAPPING 40101
 #define IDC_STATIC                      -1
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        131
-#define _APS_NEXT_COMMAND_VALUE         40097
-#define _APS_NEXT_CONTROL_VALUE         1058
+#define _APS_NEXT_RESOURCE_VALUE        133
+#define _APS_NEXT_COMMAND_VALUE         40102
+#define _APS_NEXT_CONTROL_VALUE         1200
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

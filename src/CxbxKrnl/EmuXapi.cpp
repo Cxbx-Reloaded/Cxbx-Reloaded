@@ -77,6 +77,23 @@ XTL::X_CONTROLLER_HOST_BRIDGE g_XboxControllerHostBridge[4] = {};
 //global xbox xinput device info from interpreting device table.
 std::vector<XTL::X_XINPUT_DEVICE_INFO> g_XboxInputDeviceInfo;
 
+DWORD g_XboxPortMapHostType[] = { 1,1,1,1 };
+DWORD g_XboxPortMapHostPort[] = {0,1,2,3};
+//Set HostType and HostPort setting from global array per xbox port. The setted value will take effect from next time xbe loading.
+void SetXboxPortToHostPort(DWORD dwXboxPort, DWORD dwHostType, DWORD dwHostPort)
+{
+    //set host type and host port in global array per xbox port, will be used when xbe get reloaded.
+    //only host type and host port can be set in this time. because the xbox DeviceType can only be determined when loading the xbe.
+    g_XboxPortMapHostType[dwXboxPort] = dwHostType;
+    g_XboxPortMapHostPort[dwXboxPort] = dwHostPort;
+}
+//retrieve HostType and HostPort setting from global array per xbox port.
+void GetXboxPortToHostPort(DWORD dwXboxPort, DWORD &dwHostType, DWORD &dwHostPort)
+{
+    //get Host Type and Host Port per xbox port
+    dwHostType = g_XboxPortMapHostType[dwXboxPort];
+    dwHostPort = g_XboxPortMapHostPort[dwXboxPort];
+}
 //look for xbox Device info from global info vector, and return the found index. return -1 for not found.
 int FindDeviceInfoIndexByXboxType(UCHAR ucType)
 {
@@ -105,49 +122,28 @@ int FindDeviceInfoIndexByDeviceType(XTL::PXPP_DEVICE_TYPE DeviceType)
 //this is called in the end of SetupXboxDeviceTypes(), later we'll move this code to accept user configuration.
 void InitXboxControllerHostBridge(void)
 {
-    if (g_XInputEnabled)
-    {
-        //query the total connected xinput gamepad.
-        total_xinput_gamepad = XTL::XInputGamepad_Connected();
-    }
-    else
-    {
-        //using keyboard, we set the game pad count to 1
-        total_xinput_gamepad = 1;
-    }
+    total_xinput_gamepad = XTL::XInputGamepad_Connected();
     
     int port;
     for (port = 0; port < 4; port++) {
-        if (g_XInputEnabled && port < total_xinput_gamepad) {
-            //Host using Xinput, setup bridge per host xinput controller count.
-            g_XboxControllerHostBridge[port].dwHostType = 1;
-            g_XboxControllerHostBridge[port].dwHostPort = port;
-            //default xbox controller type to gamepad.
-            g_XboxControllerHostBridge[port].XboxDeviceInfo.ucType = X_XINPUT_DEVTYPE_GAMEPAD;
-        }
-        else {
-            //using directinput for xbox port 0
-            if (port == 0) {
-                g_XboxControllerHostBridge[port].dwHostType = 2;
-                g_XboxControllerHostBridge[port].dwHostPort = 0;
-                //default xbox controller type to gamepad.
-                g_XboxControllerHostBridge[port].XboxDeviceInfo.ucType = X_XINPUT_DEVTYPE_GAMEPAD;
-
+        g_XboxControllerHostBridge[port].dwHostType = g_XboxPortMapHostType[port];
+        g_XboxControllerHostBridge[port].dwHostPort = g_XboxPortMapHostPort[port];
+        g_XboxControllerHostBridge[port].XboxDeviceInfo.ucType = X_XINPUT_DEVTYPE_GAMEPAD;
+        switch (g_XboxPortMapHostType[port]) {
+        case X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_XINPUT:
+            //disconnect to host if the host port of xinput exceeds the total xinput controller connected to host.
+            if (g_XboxControllerHostBridge[port].dwHostPort >= total_xinput_gamepad) {
+                g_XboxControllerHostBridge[port].dwHostType = X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_NOTCONNECT;
+                printf("InitXboxControllerHostBridge: Host XInput port greater then total xinut controller connected. disconnect xbox port from host!\n");
             }
-            else {
-                //not Xinput, nor directinput, host connection set to 0, not connected.
-                g_XboxControllerHostBridge[port].dwHostType = 0;
-                g_XboxControllerHostBridge[port].dwHostPort = 0;
-                //set all unused port to GAMEPAD
-                g_XboxControllerHostBridge[port].XboxDeviceInfo.ucType = X_XINPUT_DEVTYPE_GAMEPAD;
-            }
-        }
-        //testing virtual SteelBatalion Controller connected at host port 0
-        if (port == 0) {
-            g_XboxControllerHostBridge[port].dwHostType = X_XINPUT_DEVTYPE_STEELBATALION;
-            g_XboxControllerHostBridge[port].dwHostPort = 0;
-            //set all unused port to GAMEPAD
+            break;
+        case X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_DINPUT:
+            break;
+        case X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_VIRTUAL_SBC:
             g_XboxControllerHostBridge[port].XboxDeviceInfo.ucType = X_XINPUT_DEVTYPE_STEELBATALION;
+            break;
+        default:
+            break
         }
         g_XboxControllerHostBridge[port].dwXboxPort = port;
         //xbox device handle set to 0 before being open.
@@ -1044,23 +1040,23 @@ DWORD WINAPI XTL::EMUPATCH(XInputGetState)
             
             //for xinput, we query the state corresponds to port.
             switch (g_XboxControllerHostBridge[port].dwHostType) {
-            case 1://using XInput
+            case X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_XINPUT://using XInput
                 EmuXInputPCPoll(g_XboxControllerHostBridge[port].dwHostPort, pState);
                 ret = ERROR_SUCCESS;
                 break;
-            case 2://using directinput
+            case X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_DINPUT://using directinput
                 EmuDInputPoll(pState);
                 ret = ERROR_SUCCESS;
                 break;
-            case 0x80://using virtual SteelBatalion Controller
-                printf("SBC get state!\n");
-                XTL::X_XINPUT_STATE  XInputState, DirectInputState;
-                XInputState = {};
-                DirectInputState = {};
-                EmuXInputPCPoll(0, &XInputState);
-                EmuDInputPoll(&DirectInputState);
-                pState->dwPacketNumber = XInputState.dwPacketNumber;
-                EmuSBCGetState(XTL::PX_SBC_GAMEPAD(&pState->Gamepad), &XInputState.Gamepad, &DirectInputState.Gamepad);
+            case X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_VIRTUAL_SBC://using virtual SteelBatalion Controller
+                //printf("SBC get state!\n");
+                XTL::X_XINPUT_STATE  InputState0, InputState1;
+                InputState0 = {};
+                InputState1 = {};
+                EmuXInputPCPoll(0, &InputState0);
+                EmuDInputPoll(&InputState1);
+                pState->dwPacketNumber = InputState0.dwPacketNumber;
+                EmuSBCGetState(XTL::PX_SBC_GAMEPAD(&pState->Gamepad), &InputState0.Gamepad, &InputState1.Gamepad);
                 break;
             default:
                 break;
