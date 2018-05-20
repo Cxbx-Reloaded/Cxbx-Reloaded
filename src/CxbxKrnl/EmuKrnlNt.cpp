@@ -969,14 +969,25 @@ XBSYSAPI EXPORTNUM(206) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueueApcThread
 		LOG_FUNC_ARG(ApcReserved)
 		LOG_FUNC_END;
 
-	// TODO: Not too sure how this one works.  If there's any special *magic* that needs to be
-	//		 done, let me know!
+	// In order for NtQueueApcThread or QueueUserAPC to work, you must... I repeat...
+	// YOU MUST duplicate the handle with the appropriate permissions first!  So far,
+	// the only game that I know of using this is Metal Slug 3, and it won't launch
+	// without it.  Other SNK games might use it also, beware.
+
+	// TODO: Use our implementation of NtDuplicateObject instead? 
+
+	HANDLE hApcThread = NULL;
+	if(!DuplicateHandle(g_CurrentProcessHandle, ThreadHandle, g_CurrentProcessHandle, &hApcThread, THREAD_SET_CONTEXT,FALSE,0))
+		EmuWarning("DuplicateHandle failed!");
+
+
 	NTSTATUS ret = NtDll::NtQueueApcThread(
-		(NtDll::HANDLE)ThreadHandle,
+		(NtDll::HANDLE)hApcThread,
 		(NtDll::PIO_APC_ROUTINE)ApcRoutine,
 		ApcRoutineContext,
 		(NtDll::PIO_STATUS_BLOCK)ApcStatusBlock,
 		ApcReserved);
+
 
 	if (FAILED(ret))
 		EmuWarning("NtQueueApcThread failed!");
