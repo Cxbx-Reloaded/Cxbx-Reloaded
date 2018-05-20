@@ -51,9 +51,9 @@ static WPARAM wXboxToHostTypePORT[4][7] = {
     { IDC_HOST_NOTCONNECT_1_0 ,IDC_HOST_XINPUT_1_0,IDC_HOST_XINPUT_1_1,IDC_HOST_XINPUT_1_2,IDC_HOST_XINPUT_1_3,IDC_HOST_DINPUT_1_0,IDC_HOST_VIRTUAL_SBC_1_0 },
     { IDC_HOST_NOTCONNECT_2_0 ,IDC_HOST_XINPUT_2_0,IDC_HOST_XINPUT_2_1,IDC_HOST_XINPUT_2_2,IDC_HOST_XINPUT_2_3,IDC_HOST_DINPUT_2_0,IDC_HOST_VIRTUAL_SBC_2_0 },
     { IDC_HOST_NOTCONNECT_3_0 ,IDC_HOST_XINPUT_3_0,IDC_HOST_XINPUT_3_1,IDC_HOST_XINPUT_3_2,IDC_HOST_XINPUT_3_3,IDC_HOST_DINPUT_3_0,IDC_HOST_VIRTUAL_SBC_3_0 }
-}
+};
 
-VOID ShowXboxControllerPortMappingConfig(HWND hwnd)
+void ShowXboxControllerPortMappingConfig(HWND hwnd)
 {
     /*! reset changes flag */
     g_bHasChanges = FALSE;
@@ -71,12 +71,12 @@ INT_PTR CALLBACK DlgXboxControllerPortMappingProc(HWND hWndDlg, UINT uMsg, WPARA
             /*! set window icon */
             SetClassLong(hWndDlg, GCL_HICON, (LONG)LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_CXBX)));
             //Init dialog selections per global array contenst.
-            XTL::DOWRD port = 0;
+            XTL::DWORD port = 0;
             int index = 0;
             XTL::DWORD dwHostType = 1;
             XTL::DWORD dwHostPort = 0;
             for (port = 0; port < 4; port++) {
-                GetXboxPortToHostPort(port, dwHostType, dwHostPort);
+                XTL::GetXboxPortToHostPort(port, dwHostType, dwHostPort);
                 switch (dwHostType) {
                 case X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_NOTCONNECT:
                     index = 0;

@@ -143,7 +143,7 @@ void InitXboxControllerHostBridge(void)
             g_XboxControllerHostBridge[port].XboxDeviceInfo.ucType = X_XINPUT_DEVTYPE_STEELBATALION;
             break;
         default:
-            break
+            break;
         }
         g_XboxControllerHostBridge[port].dwXboxPort = port;
         //xbox device handle set to 0 before being open.
