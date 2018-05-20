@@ -1782,12 +1782,15 @@ static DWORD WINAPI EmuUpdateTickCount(LPVOID)
 
                 if(pFeedback->Header.dwStatus != ERROR_SUCCESS)
                 {
+                    pFeedback->Header.dwStatus = ERROR_SUCCESS;
+
                     if(pFeedback->Header.hEvent != 0)
                     {
                         SetEvent(pFeedback->Header.hEvent);
                     }
 
-                    pFeedback->Header.dwStatus = ERROR_SUCCESS;
+                    //Make sure we don't check the pFeedback again, as it could be freed by the game
+                    g_pXInputSetStateStatus[v].pFeedback = 0;
                 }
             }
         }
