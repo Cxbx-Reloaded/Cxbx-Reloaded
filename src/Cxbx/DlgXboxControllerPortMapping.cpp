@@ -35,9 +35,8 @@
 // ******************************************************************
 
 #include "CxbxKrnl/EmuShared.h"
-#include "CxbxKrnl/EmuXapi.h"
-
 #include "DlgXboxControllerPortMapping.h"
+#include "Windowsx.h"
 #include "ResCxbx.h"
 
 #include <cstdio>
@@ -70,6 +69,8 @@ INT_PTR CALLBACK DlgXboxControllerPortMappingProc(HWND hWndDlg, UINT uMsg, WPARA
         {
             /*! set window icon */
             SetClassLong(hWndDlg, GCL_HICON, (LONG)LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_CXBX)));
+            //Load saved configuration from registry.
+            XTL::Load("Software\\Cxbx-Reloaded\\XboxPortHostMapping");//"Software\\Cxbx-Reloaded\\XboxPortHostMapping"
             //Init dialog selections per global array contenst.
             XTL::DWORD port = 0;
             int index = 0;
@@ -95,6 +96,7 @@ INT_PTR CALLBACK DlgXboxControllerPortMappingProc(HWND hWndDlg, UINT uMsg, WPARA
                     index = 0;
                     break;
                 }
+                Button_SetCheck(GetDlgItem(hWndDlg, wXboxToHostTypePORT[port][index]), BST_CHECKED);
                 PostMessage(hWndDlg, WM_COMMAND, wXboxToHostTypePORT[port][index], 0);
             }
 
@@ -134,6 +136,11 @@ INT_PTR CALLBACK DlgXboxControllerPortMappingProc(HWND hWndDlg, UINT uMsg, WPARA
             switch(LOWORD(wParam))
             {
             case IDC_HOST_CANCEL:
+                EndDialog(hWndDlg, wParam);
+                break;
+            case IDC_HOST_APPLY:
+                //save configuration to registry.
+                XTL::Save("Software\\Cxbx-Reloaded\\XboxPortHostMapping");
                 EndDialog(hWndDlg, wParam);
                 break;
             //set host type and host port in global array xbox to host bridge for xbox port 0

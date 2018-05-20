@@ -1022,6 +1022,15 @@ VOID WINAPI EMUPATCH(OutputDebugStringA)
 extern void SetXboxPortToHostPort(DWORD dwXboxPort, DWORD dwHostType, DWORD dwHostPort);
 
 extern void GetXboxPortToHostPort(DWORD dwXboxPort, DWORD &dwHostType, DWORD &dwHostPort);
+// ******************************************************************
+// * Load Configuration from Registry
+// ******************************************************************
+extern void Load(const char *szRegistryKey);
+
+// ******************************************************************
+// * Save Configuration from Registry
+// ******************************************************************
+extern void Save(const char *szRegistryKey);
 // s+
 /* not necessary?
 // ******************************************************************

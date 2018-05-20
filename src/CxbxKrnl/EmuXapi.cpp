@@ -79,8 +79,121 @@ std::vector<XTL::X_XINPUT_DEVICE_INFO> g_XboxInputDeviceInfo;
 
 DWORD g_XboxPortMapHostType[] = { 1,1,1,1 };
 DWORD g_XboxPortMapHostPort[] = {0,1,2,3};
+
+
+
+void XTL::Load(const char *szRegistryKey)
+{
+    {
+        DWORD   dwDisposition, dwType, dwSize;
+        HKEY    hKey;
+
+        if (RegCreateKeyEx(HKEY_CURRENT_USER, szRegistryKey, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_QUERY_VALUE, NULL, &hKey, &dwDisposition) == ERROR_SUCCESS)
+        {
+            dwType = REG_DWORD; dwSize = sizeof(DWORD);
+            LSTATUS result;
+            result = RegQueryValueEx(hKey, "XboxPort0HostType", NULL, &dwType, (PBYTE)&g_XboxPortMapHostType[0], &dwSize);
+            if (result != ERROR_SUCCESS) {
+                //default to use XInput
+                g_XboxPortMapHostType[0] = 1;
+            }
+
+            dwType = REG_DWORD; dwSize = sizeof(DWORD);
+            result = RegQueryValueEx(hKey, "XboxPort0HostPort", NULL, &dwType, (PBYTE)&g_XboxPortMapHostPort[0], &dwSize);
+            if (result != ERROR_SUCCESS) {
+                g_XboxPortMapHostPort[0] = 0;
+            }
+
+            dwType = REG_DWORD; dwSize = sizeof(DWORD);
+            result = RegQueryValueEx(hKey, "XboxPort1HostType", NULL, &dwType, (PBYTE)&g_XboxPortMapHostType[1], &dwSize);
+            if (result != ERROR_SUCCESS) {
+                //default to use XInput
+                g_XboxPortMapHostType[1] = 1;
+            }
+
+            dwType = REG_DWORD; dwSize = sizeof(DWORD);
+            result = RegQueryValueEx(hKey, "XboxPort1HostPort", NULL, &dwType, (PBYTE)&g_XboxPortMapHostPort[1], &dwSize);
+            if (result != ERROR_SUCCESS) {
+                g_XboxPortMapHostPort[1] = 1;
+            }
+
+            dwType = REG_DWORD; dwSize = sizeof(DWORD);
+            result = RegQueryValueEx(hKey, "XboxPort2HostType", NULL, &dwType, (PBYTE)&g_XboxPortMapHostType[2], &dwSize);
+            if (result != ERROR_SUCCESS) {
+                //default to use XInput
+                g_XboxPortMapHostType[2] = 1;
+            }
+
+            dwType = REG_DWORD; dwSize = sizeof(DWORD);
+            result = RegQueryValueEx(hKey, "XboxPort2HostPort", NULL, &dwType, (PBYTE)&g_XboxPortMapHostPort[2], &dwSize);
+            if (result != ERROR_SUCCESS) {
+                g_XboxPortMapHostPort[2] = 2;
+            }
+
+            dwType = REG_DWORD; dwSize = sizeof(DWORD);
+            result = RegQueryValueEx(hKey, "XboxPort3HostType", NULL, &dwType, (PBYTE)&g_XboxPortMapHostType[3], &dwSize);
+            if (result != ERROR_SUCCESS) {
+                //default to use XInput
+                g_XboxPortMapHostType[3] = 1;
+            }
+
+            dwType = REG_DWORD; dwSize = sizeof(DWORD);
+            result = RegQueryValueEx(hKey, "XboxPort3HostPort", NULL, &dwType, (PBYTE)&g_XboxPortMapHostPort[3], &dwSize);
+            if (result != ERROR_SUCCESS) {
+                g_XboxPortMapHostPort[3] = 3;
+            }
+
+            RegCloseKey(hKey);
+        }
+    }
+}
+
+// ******************************************************************
+// * func: XTL::Save
+// ******************************************************************
+void XTL::Save(const char *szRegistryKey)
+{
+    // ******************************************************************
+    // * Save Configuration to Registry
+    // ******************************************************************
+    //if (g_SaveOnExit) {
+        DWORD   dwDisposition, dwType, dwSize;
+        HKEY    hKey;
+
+        if (RegCreateKeyEx(HKEY_CURRENT_USER, szRegistryKey, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_SET_VALUE, NULL, &hKey, &dwDisposition) == ERROR_SUCCESS)
+        {
+            dwType = REG_DWORD; dwSize = sizeof(DWORD);
+            RegSetValueEx(hKey, "XboxPort0HostType", 0, dwType, (PBYTE)&g_XboxPortMapHostType[0], dwSize);
+
+            dwType = REG_DWORD; dwSize = sizeof(DWORD);
+            RegSetValueEx(hKey, "XboxPort0HostPort", 0, dwType, (PBYTE)&g_XboxPortMapHostPort[0], dwSize);
+
+            dwType = REG_DWORD; dwSize = sizeof(DWORD);
+            RegSetValueEx(hKey, "XboxPort1HostType", 0, dwType, (PBYTE)&g_XboxPortMapHostType[1], dwSize);
+
+            dwType = REG_DWORD; dwSize = sizeof(DWORD);
+            RegSetValueEx(hKey, "XboxPort1HostPort", 0, dwType, (PBYTE)&g_XboxPortMapHostPort[1], dwSize);
+
+            dwType = REG_DWORD; dwSize = sizeof(DWORD);
+            RegSetValueEx(hKey, "XboxPort2HostType", 0, dwType, (PBYTE)&g_XboxPortMapHostType[2], dwSize);
+
+            dwType = REG_DWORD; dwSize = sizeof(DWORD);
+            RegSetValueEx(hKey, "XboxPort2HostPort", 0, dwType, (PBYTE)&g_XboxPortMapHostPort[2], dwSize);
+
+            dwType = REG_DWORD; dwSize = sizeof(DWORD);
+            RegSetValueEx(hKey, "XboxPort3HostType", 0, dwType, (PBYTE)&g_XboxPortMapHostType[3], dwSize);
+
+            dwType = REG_DWORD; dwSize = sizeof(DWORD);
+            RegSetValueEx(hKey, "XboxPort3HostPort", 0, dwType, (PBYTE)&g_XboxPortMapHostPort[3], dwSize);
+
+
+            RegCloseKey(hKey);
+        }
+    //}
+}
+
 //Set HostType and HostPort setting from global array per xbox port. The setted value will take effect from next time xbe loading.
-void SetXboxPortToHostPort(DWORD dwXboxPort, DWORD dwHostType, DWORD dwHostPort)
+void XTL::SetXboxPortToHostPort(DWORD dwXboxPort, DWORD dwHostType, DWORD dwHostPort)
 {
     //set host type and host port in global array per xbox port, will be used when xbe get reloaded.
     //only host type and host port can be set in this time. because the xbox DeviceType can only be determined when loading the xbe.
@@ -88,7 +201,7 @@ void SetXboxPortToHostPort(DWORD dwXboxPort, DWORD dwHostType, DWORD dwHostPort)
     g_XboxPortMapHostPort[dwXboxPort] = dwHostPort;
 }
 //retrieve HostType and HostPort setting from global array per xbox port.
-void GetXboxPortToHostPort(DWORD dwXboxPort, DWORD &dwHostType, DWORD &dwHostPort)
+void XTL::GetXboxPortToHostPort(DWORD dwXboxPort, DWORD &dwHostType, DWORD &dwHostPort)
 {
     //get Host Type and Host Port per xbox port
     dwHostType = g_XboxPortMapHostType[dwXboxPort];
@@ -122,6 +235,8 @@ int FindDeviceInfoIndexByDeviceType(XTL::PXPP_DEVICE_TYPE DeviceType)
 //this is called in the end of SetupXboxDeviceTypes(), later we'll move this code to accept user configuration.
 void InitXboxControllerHostBridge(void)
 {
+    //load host type and port configuration from registry.
+    XTL::Load("Software\\Cxbx-Reloaded\\XboxPortHostMapping");
     total_xinput_gamepad = XTL::XInputGamepad_Connected();
     
     int port;
