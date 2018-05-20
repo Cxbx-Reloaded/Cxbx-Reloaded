@@ -349,37 +349,19 @@ typedef struct _X_XINPUT_CAPABILITIES
 X_XINPUT_CAPABILITIES, *PX_XINPUT_CAPABILITIES;
 
 // ******************************************************************
-// * Device SubTypes //this could be wrong, might be xbox device type
-// ******************************************************************
-/*
-#define XINPUT_DEVSUBTYPE_GC_GAMEPAD              0x01
-#define XINPUT_DEVSUBTYPE_GC_GAMEPAD_ALT          0x02
-#define XINPUT_DEVSUBTYPE_GC_WHEEL                0x10
-#define XINPUT_DEVSUBTYPE_GC_ARCADE_STICK         0x20
-#define XINPUT_DEVSUBTYPE_GC_DIGITAL_ARCADE_STICK 0x21
-#define XINPUT_DEVSUBTYPE_GC_FLIGHT_STICK         0x30
-#define XINPUT_DEVSUBTYPE_GC_SNOWBOARD            0x40
-*/
-
-// ******************************************************************
 // * Device XBOX Input Device Types 
 // ******************************************************************
-
+// accroding to XDK document, all game controller use 0x01 GAMEPAD device type. then specify the subtype in returned Capabilities when XInputGetCapabilities called.
 #define X_XINPUT_DEVTYPE_GAMEPAD              0x01
-#define X_XINPUT_DEVTYPE_GAMEPAD_ALT          0x02
-#define X_XINPUT_DEVTYPE_WHEEL                0x10
-#define X_XINPUT_DEVTYPE_ARCADE_STICK         0x20
-#define X_XINPUT_DEVTYPE_DIGITAL_ARCADE_STICK 0x21
-#define X_XINPUT_DEVTYPE_FLIGHT_STICK         0x30
-#define X_XINPUT_DEVTYPE_SNOWBOARD            0x40
+// SteelBatalion controller is the only one with special device type other than 1.
 #define X_XINPUT_DEVTYPE_STEELBATALION        0x80
 
-#define X_XINPUT_DEVTYPE_TOTAL                8
-
 // ******************************************************************
-// * Device XBOX Input Device SubTypes, for use in XINPUT_CAPABILITIES
+// * Device XBOX Input Device SubTypes, this table is purely my asseumption. the alphabetical order with index starting from 0 matches the 0x04 subtype in DeviceGampepad. but it seems wrong.
+// * this is the 2nd byte in DeviceInfo, right next to DEVTYPE. disable this table since we have table from xbox.h.
 // ******************************************************************
 
+/*
 #define X_XINPUT_DEVSUBTYPE_GC_ARCADE_STICK            0x0 //Arcade style joystick
 #define X_XINPUT_DEVSUBTYPE_GC_DIGITAL_ARCADE_STICK    0x1 //Arcade style joystick, and buttons that are normally analog instead return 0 or 255 only
 #define X_XINPUT_DEVSUBTYPE_GC_FISHING_ROD             0x2 //Fishing rod controller
@@ -390,7 +372,24 @@ X_XINPUT_CAPABILITIES, *PX_XINPUT_CAPABILITIES;
 #define X_XINPUT_DEVSUBTYPE_GC_RADIO_FLIGHT_CONTROL    0x7 //Wireless flight controller
 #define X_XINPUT_DEVSUBTYPE_GC_SNOWBOARD               0x8 //Snowboard controller
 #define X_XINPUT_DEVSUBTYPE_GC_WHEEL                   0x9 //Wheel
+*/
 
+// ******************************************************************
+// * Device XBOX Input Device SubTypes, for use in XINPUT_CAPABILITIES, this table comes from XDK xbox.h
+// ******************************************************************
+//it's strange that general GAMEPAD uses subtype 0x04.
+#define X_XINPUT_DEVSUBTYPE_GC_GAMEPAD              0x01 
+//SteelBatallion controller uses subtype 0x02
+#define X_XINPUT_DEVSUBTYPE_GC_GAMEPAD_ALT          0x02
+#define X_XINPUT_DEVSUBTYPE_GC_WHEEL                0x10
+#define X_XINPUT_DEVSUBTYPE_GC_ARCADE_STICK         0x20
+#define X_XINPUT_DEVSUBTYPE_GC_DIGITAL_ARCADE_STICK 0x21
+#define X_XINPUT_DEVSUBTYPE_GC_FLIGHT_STICK         0x30
+#define X_XINPUT_DEVSUBTYPE_GC_SNOWBOARD            0x40
+#define X_XINPUT_DEVSUBTYPE_GC_LIGHTGUN             0x50
+#define X_XINPUT_DEVSUBTYPE_GC_RADIO_FLIGHT_CONTROL 0x60
+#define X_XINPUT_DEVSUBTYPE_GC_FISHING_ROD          0x70
+#define X_XINPUT_DEVSUBTYPE_GC_DANCEPAD             0x80
 
 // ******************************************************************
 // * XINPUT_STATE for xbox, xbox uses different Gamepad struce.
