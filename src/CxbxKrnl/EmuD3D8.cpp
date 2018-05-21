@@ -9466,3 +9466,49 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_GetMaterial)
     }
 }
 
+// LTCG specific D3DDevice_SetPixelShaderConstant function...
+// This uses a custom calling convention where parameter is passed in ECX, EAX
+// TODO: Log function is not working due lost parameter in EAX.
+// Test-case: Otogi 2, Ninja Gaiden: Black
+VOID WINAPI XTL::EMUPATCH(D3DDevice_SetPixelShaderConstant_4)
+(
+    CONST PVOID pConstantData
+)
+{
+    FUNC_EXPORTS
+
+    DWORD       Register;
+    DWORD       ConstantCount;
+
+    __asm {
+        mov Register, ecx
+        mov ConstantCount, eax
+    }
+
+    //LOG_FUNC_BEGIN
+    //    LOG_FUNC_ARG(Register)
+    //    LOG_FUNC_ARG(pConstantData)
+    //    LOG_FUNC_ARG(ConstantCount)
+    //    LOG_FUNC_END;
+    DbgPrintf("D3DDevice_SetPixelShaderConstant_4(Register : %d pConstantData : %08X ConstantCount : %d);\n", Register, pConstantData, ConstantCount);
+
+    // TODO: This hack is necessary for Vertex Shaders on XDKs prior to 4361, but if this
+    // causes problems with pixel shaders, feel free to comment out the hack below.
+    if(g_BuildVersion <= 4361)
+        Register += 96;
+
+    HRESULT hRet = g_pD3DDevice->SetPixelShaderConstant
+    (
+        Register,
+        pConstantData,
+        ConstantCount
+    );
+    //DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetPixelShaderConstant");
+
+    if(FAILED(hRet))
+    {
+        EmuWarning("We're lying about setting a pixel shader constant!");
+
+        hRet = D3D_OK;
+    }
+}
