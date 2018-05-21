@@ -53,6 +53,8 @@ namespace xboxkrnl
 #include "EmuFS.h"
 #include "EmuShared.h"
 #include "HLEIntercept.h"
+#include "Cxbx/DlgVirtualSBCFeedback.h"
+#include "Windef.h"
 #include <vector>
 
 // XInputSetState status waiters
@@ -333,24 +335,6 @@ void SetupXboxDeviceTypes()
 					gDeviceType_Gamepad = deviceTable[i]->XppType;
 					printf("XDEVICE_TYPE_GAMEPAD)\n");
 					break;
-                case X_XINPUT_DEVTYPE_GAMEPAD_ALT:
-                    printf("XDEVICE_TYPE_GAMEPAD_ALT)\n");
-                    break;
-                case X_XINPUT_DEVTYPE_WHEEL:
-                    printf("XDEVICE_TYPE_WHEEL)\n");
-                    break;
-                case X_XINPUT_DEVTYPE_ARCADE_STICK:
-                    printf("XDEVICE_TYPE_ARCADE_STICK)\n");
-                    break;
-                case X_XINPUT_DEVTYPE_DIGITAL_ARCADE_STICK:
-                    printf("XDEVICE_TYPE_DIGITAL_ARCADE_STICK)\n");
-                    break;
-                case X_XINPUT_DEVTYPE_FLIGHT_STICK:
-                    printf("XDEVICE_TYPE_FLIGHT_STICK)\n");
-                    break;
-                case X_XINPUT_DEVTYPE_SNOWBOARD:
-                    printf("XDEVICE_TYPE_SNOWBOARD)\n");
-                    break;
                 case X_XINPUT_DEVTYPE_STEELBATALION:
                     printf("XDEVICE_TYPE_STEELBATALION)\n");
                     break;
@@ -683,11 +667,25 @@ HANDLE WINAPI XTL::EMUPATCH(XInputOpen)
     if (dwPort >= 0 && dwPort < 4) {
         //check if the bridged xbox controller at this port matches the DeviceType, if matches, setup the device handle and return it.
         if (g_XboxControllerHostBridge[dwPort].XboxDeviceInfo.DeviceType == DeviceType && g_XboxControllerHostBridge[dwPort].dwHostType!=0) {
+            //create the dialog for virtual SteelBatallion controller feedback status.
+            if(g_XboxControllerHostBridge[dwPort].dwHostType==X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_VIRTUAL_SBC){
+                int CreateDlg;
+            
+                CreateDlg = ShowVirtualSBCFeedback(g_hEmuWindow);
+                //CreateDlg = ShowVirtualSBCFeedback(NULL);
+                if (CreateDlg <= 0) {
+                    //do not open the port since we're not able to show feedback.
+                    printf("XInputOpen: failed to create Feedback dialog for virtual SteelBatallion controller for xbox port %d!\n",dwPort);
+                    g_XboxControllerHostBridge[dwPort].dwHostType == X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_NOTCONNECT;
+                    return 0;
+                }
+            }
             g_XboxControllerHostBridge[dwPort].hXboxDevice = &g_XboxControllerHostBridge[dwPort];
             return g_XboxControllerHostBridge[dwPort].hXboxDevice;
         }
+        
     }
-
+    
     return 0;
 }
 
@@ -1514,7 +1512,8 @@ DWORD WINAPI XTL::EMUPATCH(XInputSetState)
                     break;
                 case 0x80://using virtual SteelBatalion Controller
                     printf("SBC setstate!\n");
-                    EmuXSBCSetState((UCHAR *)&pFeedback->Rumble);
+                    //EmuXSBCSetState((UCHAR *)&pFeedback->Rumble);
+                    UpdateVirtualSBCFeedbackDlg((UCHAR *)&pFeedback->Rumble);
                     break;
                 default:
                     break;

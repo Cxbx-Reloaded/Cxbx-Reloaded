@@ -34,6 +34,7 @@
 // *
 // ******************************************************************
 #include "Wnd.h"
+#include "Cxbx/DlgVirtualSBCFeedback.h"
 #include "ResCxbx.h"
 
 // ******************************************************************
@@ -126,9 +127,12 @@ cleanup:;
             UnregisterClass(m_classname, m_hInstance);
             return false;
         }
-
-        TranslateMessage(&msg);
-        DispatchMessage(&msg);
+        HWND hDlgVSBCFeedback = GetDlgVirtualSBCFeedbackHandle();
+        if (!IsWindow(hDlgVSBCFeedback) || !IsDialogMessage(hDlgVSBCFeedback, &msg))
+        {
+            TranslateMessage(&msg);
+            DispatchMessage(&msg);
+        }
     }
 
     return true;
