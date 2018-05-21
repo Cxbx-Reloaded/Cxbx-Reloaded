@@ -2902,8 +2902,8 @@ VOID __stdcall XTL::EMUPATCH(D3DDevice_SelectVertexShader_0)
     DWORD                       Address;
 
 	__asm {
-		mov Address, eax
-		mov Handle, ebx
+		mov Handle, eax
+		mov Address, ebx
 	}
 
 	return EMUPATCH(D3DDevice_SelectVertexShader)(Handle, Address);
