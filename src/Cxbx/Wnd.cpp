@@ -127,12 +127,8 @@ cleanup:;
             UnregisterClass(m_classname, m_hInstance);
             return false;
         }
-        HWND hDlgVSBCFeedback = GetDlgVirtualSBCFeedbackHandle();
-        if (!IsWindow(hDlgVSBCFeedback) || !IsDialogMessage(hDlgVSBCFeedback, &msg))
-        {
-            TranslateMessage(&msg);
-            DispatchMessage(&msg);
-        }
+        TranslateMessage(&msg);
+        DispatchMessage(&msg);
     }
 
     return true;

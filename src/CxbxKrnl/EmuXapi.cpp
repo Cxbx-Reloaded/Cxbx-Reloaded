@@ -669,9 +669,7 @@ HANDLE WINAPI XTL::EMUPATCH(XInputOpen)
         if (g_XboxControllerHostBridge[dwPort].XboxDeviceInfo.DeviceType == DeviceType && g_XboxControllerHostBridge[dwPort].dwHostType!=0) {
             //create the dialog for virtual SteelBatallion controller feedback status.
             if(g_XboxControllerHostBridge[dwPort].dwHostType==X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_VIRTUAL_SBC){
-                int CreateDlg;
-            
-                CreateDlg = ShowVirtualSBCFeedback(g_hEmuWindow);
+                int CreateDlg = ShowVirtualSBCFeedback(NULL);
                 //CreateDlg = ShowVirtualSBCFeedback(NULL);
                 if (CreateDlg <= 0) {
                     //do not open the port since we're not able to show feedback.

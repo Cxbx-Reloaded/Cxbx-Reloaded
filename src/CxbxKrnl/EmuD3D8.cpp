@@ -59,6 +59,7 @@ namespace xboxkrnl
 #include "EmuD3D8Logging.h"
 #include "HLEIntercept.h" // for bLLE_GPU
 #include "Cxbx\\ResCxbx.h"
+#include "Cxbx\\DlgVirtualSBCFeedback.h"
 
 #include <assert.h>
 #include <process.h>
@@ -1749,6 +1750,37 @@ static DWORD WINAPI EmuUpdateTickCount(LPVOID)
     {
         xboxkrnl::KeTickCount = timeGetTime();	
 		SwitchToThread();
+        //process the modeless dialog's message here.
+        MSG msg;
+        BOOL bRet;
+        /* MSDN example code for modeless dialog message processing in parent.
+        while ((bRet = GetMessage(&msg, NULL, 0, 0)) != 0)
+        {
+            if (bRet == -1)
+            {
+                // Handle the error and possibly exit
+            }
+            else if (!IsWindow(hwndGoto) || !IsDialogMessage(hwndGoto, &msg))
+            {
+                TranslateMessage(&msg);
+                DispatchMessage(&msg);
+            }
+        }
+        */
+        if (PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE))
+        {
+            if (!GetMessage(&msg, NULL, 0, 0))
+            {
+                //UnregisterClass(m_classname, m_hInstance);
+                return false;
+            }
+            HWND hDlgVSBCFeedback = GetDlgVirtualSBCFeedbackHandle();
+            if (!IsWindow(hDlgVSBCFeedback) || !IsDialogMessage(hDlgVSBCFeedback, &msg))
+            {
+                TranslateMessage(&msg);
+                DispatchMessage(&msg);
+            }
+        }
 
         //
         // Poll input
