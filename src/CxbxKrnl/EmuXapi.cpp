@@ -53,7 +53,7 @@ namespace xboxkrnl
 #include "EmuFS.h"
 #include "EmuShared.h"
 #include "HLEIntercept.h"
-#include "Cxbx/DlgVirtualSBCFeedback.h"
+#include "CxbxVSBC/CxbxVSBC.h"
 #include "Windef.h"
 #include <vector>
 
@@ -64,7 +64,20 @@ extern XInputSetStateStatus g_pXInputSetStateStatus[XINPUT_SETSTATE_SLOTS] = {0}
 extern HANDLE g_hInputHandle[XINPUT_HANDLE_SLOTS] = {0};
 
 bool g_bXInputOpenCalled = false;
+bool g_bCxbxVSBCLoaded = false;
+HINSTANCE g_module;
+typedef int (FAR WINAPI *PFARPROC1)(int);
+typedef int (FAR WINAPI *PFARPROC2)(UCHAR*);
+typedef int (NEAR WINAPI *PNEARPROC1)(int);
+typedef int (NEAR WINAPI *PNEARPROC2)(UCHAR*);
+typedef int (WINAPI *PPROC)();
 
+PFARPROC2 fnCxbxVSBCSetState;
+PFARPROC2 fnCxbxVSBCGetState;
+PFARPROC1 fnCxbxVSBCOpen;
+//typedef DWORD(*fnCxbxVSBCOpen)(HWND);
+//typedef DWORD(*fnCxbxVSBCSetState)(UCHAR *);
+//typedef DWORD(*fnCxbxVSBCGetState)(UCHAR *);
 XTL::PXPP_DEVICE_TYPE gDeviceType_Gamepad = nullptr;
 
 #include "EmuXTL.h"
@@ -669,14 +682,28 @@ HANDLE WINAPI XTL::EMUPATCH(XInputOpen)
         if (g_XboxControllerHostBridge[dwPort].XboxDeviceInfo.DeviceType == DeviceType && g_XboxControllerHostBridge[dwPort].dwHostType!=0) {
             //create the dialog for virtual SteelBatallion controller feedback status.
             if(g_XboxControllerHostBridge[dwPort].dwHostType==X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_VIRTUAL_SBC){
-                int CreateDlg = ShowVirtualSBCFeedback(NULL);
-                //CreateDlg = ShowVirtualSBCFeedback(NULL);
-                if (CreateDlg <= 0) {
-                    //do not open the port since we're not able to show feedback.
-                    printf("XInputOpen: failed to create Feedback dialog for virtual SteelBatallion controller for xbox port %d!\n",dwPort);
-                    g_XboxControllerHostBridge[dwPort].dwHostType == X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_NOTCONNECT;
-                    return 0;
+                //if DLL not loaded yet, load it.
+                if (g_bCxbxVSBCLoaded != true) {
+
+                    g_module = LoadLibrary(TEXT("CxbxVSBC.dll"));
+                    if (g_module != 0) {
+                        g_bCxbxVSBCLoaded = true;
+                    }
                 }
+                if(g_module!=0&& fnCxbxVSBCOpen==0){
+                    fnCxbxVSBCSetState = (PFARPROC2)GetProcAddress(g_module, "VSBCSetState");
+                    fnCxbxVSBCGetState = (PFARPROC2)GetProcAddress(g_module, "VSBCGetState");
+                    fnCxbxVSBCOpen = (PFARPROC1)GetProcAddress(g_module, "VSBCOpen");
+                }
+                
+                if (fnCxbxVSBCOpen == 0) {
+                    printf("EmuXapi: EmuXInputOpen: GetPRocAddress VSBCOpen failed!\n");
+                }
+                else {
+                    (*fnCxbxVSBCOpen)(X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_VIRTUAL_SBC);
+                }
+                //DWORD dwVXBCOpenResult = CxbxVSBC::MyCxbxVSBC::VSBCOpen(X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_VIRTUAL_SBC);
+
             }
             g_XboxControllerHostBridge[dwPort].hXboxDevice = &g_XboxControllerHostBridge[dwPort];
             return g_XboxControllerHostBridge[dwPort].hXboxDevice;
@@ -1179,236 +1206,7 @@ DWORD WINAPI XTL::EMUPATCH(XInputGetState)
     
 	RETURN(ret);
 }
-char * StatusBar[] = {
-    "                 ",
-    "=                ",
-    "==               ",
-    "===              ",
-    "====             ",
-    "=====            ",
-    "======           ",
-    "=======          ",
-    "========         ",
-    "=========        ",
-    "==========       ",
-    "===========      ",
-    "============     ",
-    "=============    ",
-    "==============   ",
-    "===============  ",
-    "================ ",
-    "=================",
-};
 
-HANDLE StdHandle;
-
-void EmuXSBCSetState(UCHAR * pXboxSBCFeedback)
-{
-    CONSOLE_SCREEN_BUFFER_INFO coninfo;
-
-    if (StdHandle == 0) {
-        if (AllocConsole())
-        {
-            StdHandle = GetStdHandle(STD_OUTPUT_HANDLE);
-            GetConsoleScreenBufferInfo(StdHandle, &coninfo);
-            coninfo.dwSize.Y = SHRT_MAX - 1; // = 32767-1 = 32766 = maximum value that works
-            SetConsoleScreenBufferSize(StdHandle, coninfo.dwSize);
-            SetConsoleTitle("Cxbx-Reloaded : Virtual SteelBatalion Controller");
-            SetConsoleTextAttribute(StdHandle, FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_RED);
-        }
-    }
-    else
-    {
-        freopen("CONOUT$", "wt", stdout);
-        freopen("CONIN$", "rt", stdin);
-        system("cls");
-        DWORD NibbleIndex=0,ByteIndex=0,FeedbackStatus=0;
-        COORD coordScreen;
-        for(NibbleIndex=0;NibbleIndex<X_SBC_FEEDBACK_MAX;NibbleIndex++){
-            ByteIndex = NibbleIndex >> 1;
-            //UCHAR temp=XTL::XboxSBCFeedbackNames[ByteIndex];
-            UCHAR temp = pXboxSBCFeedback[ByteIndex];
-            if (NibbleIndex % 2 > 0) {
-                FeedbackStatus = (temp & 0xF0) >> 4;
-            }
-            else
-            {
-                FeedbackStatus = (temp & 0x0F);
-            }
-            coordScreen.X = 0;
-            coordScreen.Y = NibbleIndex;
-            SetConsoleCursorPosition(StdHandle, coordScreen);
-            printf("%2d: %24s : %2d :%16s                  ", NibbleIndex, XboxSBCFeedbackNames[NibbleIndex], FeedbackStatus, StatusBar[FeedbackStatus]);
-
-        }
-/*        if (XboxSBCGamepad.wButtons[0] &= X_SBC_GAMEPAD_W0_RIGHTJOYMAINWEAPON) {
-            XboxSBCGamepad.wButtons[0] |= X_SBC_GAMEPAD_W0_RIGHTJOYMAINWEAPON;
-        }
-        else {
-            XboxSBCGamepad.wButtons[0] &= ~X_SBC_GAMEPAD_W0_RIGHTJOYMAINWEAPON;
-        }
-
-        if (XboxSBCGamepad.wButtons[0] &= X_SBC_GAMEPAD_W0_RIGHTJOYFIRE) {
-            XboxSBCGamepad.wButtons[0] |= X_SBC_GAMEPAD_W0_RIGHTJOYFIRE;
-        }
-        else {
-            XboxSBCGamepad.wButtons[0] &= ~X_SBC_GAMEPAD_W0_RIGHTJOYFIRE;
-        }
-
-        if (XboxSBCGamepad.wButtons[0] &= X_SBC_GAMEPAD_W0_RIGHTJOYLOCKON) {
-            XboxSBCGamepad.wButtons[0] |= X_SBC_GAMEPAD_W0_RIGHTJOYLOCKON;
-        }
-        else {
-            XboxSBCGamepad.wButtons[0] &= ~X_SBC_GAMEPAD_W0_RIGHTJOYLOCKON;
-        }
-
-        if (XboxSBCGamepad.wButtons[2] &= X_SBC_GAMEPAD_W1_WEAPONCONMAGAZINE) {
-            XboxSBCGamepad.wButtons[2] |= X_SBC_GAMEPAD_W1_WEAPONCONMAGAZINE;
-        }
-        else {
-            XboxSBCGamepad.wButtons[2] &= ~X_SBC_GAMEPAD_W1_WEAPONCONMAGAZINE;
-        }
-
-        if (XboxSBCGamepad.ucGearLever < 16) {
-
-        }
-
-        if (XboxSBCGamepad.ucGearLever > 239) {
-            XboxSBCGamepad.ucGearLever = XboxSBCGamepad.ucGearLever;
-        }
-
-        if (XboxSBCGamepad.wButtons[2] &= X_SBC_GAMEPAD_W2_TOGGLEFILTERCONTROL) {//Dip Switch ToggleFilterControl
-            if (XboxSBCGamepad.wButtons[2] & X_SBC_GAMEPAD_W2_TOGGLEFILTERCONTROL) {
-                XboxSBCGamepad.wButtons[2] &= ~X_SBC_GAMEPAD_W2_TOGGLEFILTERCONTROL;
-            }
-            else {
-                XboxSBCGamepad.wButtons[2] |= X_SBC_GAMEPAD_W2_TOGGLEFILTERCONTROL;
-            }
-        }
-
-        if (XboxSBCGamepad.wButtons[0] &= X_SBC_GAMEPAD_W0_START) {
-            XboxSBCGamepad.wButtons[0] |= X_SBC_GAMEPAD_W0_START;
-        }
-        else {
-            XboxSBCGamepad.wButtons[0] &= ~X_SBC_GAMEPAD_W0_START;
-        }
-
-        if (pXIGamepad->wButtons & X_XINPUT_GAMEPAD_LEFT_THUMB) {//Center Sight Change
-            XboxSBCGamepad.wButtons[2] |= X_SBC_GAMEPAD_W2_LEFTJOYSIGHTCHANGE;
-        }
-        else {
-            XboxSBCGamepad.wButtons[2] &= ~X_SBC_GAMEPAD_W2_LEFTJOYSIGHTCHANGE;
-        }
-        /* //not used
-        if (pXIGamepad->wButtons & X_XINPUT_GAMEPAD_RIGHT_THUMB) {
-        XboxSBCGamepad.wButtons |= X_XINPUT_GAMEPAD_RIGHT_THUMB;
-        }
-        else {
-        XboxSBCGamepad.wButtons &= ~X_XINPUT_GAMEPAD_RIGHT_THUMB;
-        }
-        //
-        if (pXIGamepad->wButtons & X_XINPUT_GAMEPAD_DPAD_UP) {//Dip Switch ToggleOxygenSupply
-            if (XboxSBCGamepad.wButtons[2] & X_SBC_GAMEPAD_W2_TOGGLEOXYGENSUPPLY) {
-                XboxSBCGamepad.wButtons[2] &= ~X_SBC_GAMEPAD_W2_TOGGLEOXYGENSUPPLY;
-            }
-            else {
-                XboxSBCGamepad.wButtons[2] |= X_SBC_GAMEPAD_W2_TOGGLEOXYGENSUPPLY;
-            }
-        }
-
-        if (pXIGamepad->wButtons & X_XINPUT_GAMEPAD_DPAD_DOWN) {//Dip Switch ToggleBuffreMaterial
-            if (XboxSBCGamepad.wButtons[2] & X_SBC_GAMEPAD_W2_TOGGLEBUFFREMATERIAL) {
-                XboxSBCGamepad.wButtons[2] &= ~X_SBC_GAMEPAD_W2_TOGGLEBUFFREMATERIAL;
-            }
-            else {
-                XboxSBCGamepad.wButtons[2] |= X_SBC_GAMEPAD_W2_TOGGLEBUFFREMATERIAL;
-            }
-        }
-
-        if (pXIGamepad->wButtons & X_XINPUT_GAMEPAD_DPAD_LEFT) {//Dip Switch ToggleVTLocation
-            if (XboxSBCGamepad.wButtons[2] & X_SBC_GAMEPAD_W2_TOGGLEVTLOCATION) {
-                XboxSBCGamepad.wButtons[2] &= ~X_SBC_GAMEPAD_W2_TOGGLEVTLOCATION;
-            }
-            else {
-                XboxSBCGamepad.wButtons[2] |= X_SBC_GAMEPAD_W2_TOGGLEVTLOCATION;
-            }
-        }
-
-        if (pXIGamepad->wButtons & X_XINPUT_GAMEPAD_DPAD_RIGHT) {//Dip Switch ToggleFuelFlowRate
-            if (XboxSBCGamepad.wButtons[2] & X_SBC_GAMEPAD_W2_TOGGLEFUELFLOWRATE) {
-                XboxSBCGamepad.wButtons[2] &= ~X_SBC_GAMEPAD_W2_TOGGLEFUELFLOWRATE;
-            }
-            else {
-                XboxSBCGamepad.wButtons[2] |= X_SBC_GAMEPAD_W2_TOGGLEFUELFLOWRATE;
-            }
-        }
-
-        //additional input from 2nd input, default using directinput
-        if (pDIGamepad->bAnalogButtons[X_XINPUT_GAMEPAD_A]>0) {
-            XboxSBCGamepad.wButtons[0] |= X_SBC_GAMEPAD_W0_START;
-        }
-        else {
-            XboxSBCGamepad.wButtons[0] &= ~X_SBC_GAMEPAD_W0_START;
-        }
-        if (pDIGamepad->bAnalogButtons[X_XINPUT_GAMEPAD_B]>0) {
-            XboxSBCGamepad.wButtons[0] |= X_SBC_GAMEPAD_W0_IGNITION;
-        }
-        else {
-            XboxSBCGamepad.wButtons[0] &= ~X_SBC_GAMEPAD_W0_IGNITION;
-        }
-        if (pDIGamepad->bAnalogButtons[X_XINPUT_GAMEPAD_X]>0) {
-            XboxSBCGamepad.wButtons[0] |= X_SBC_GAMEPAD_W0_EJECT;
-        }
-        else {
-            XboxSBCGamepad.wButtons[0] &= ~X_SBC_GAMEPAD_W0_EJECT;
-        }
-        if (pDIGamepad->bAnalogButtons[X_XINPUT_GAMEPAD_Y]>0) {
-            XboxSBCGamepad.wButtons[2] |= X_SBC_GAMEPAD_W0_COCKPITHATCH;
-        }
-        else {
-            pSBCGamepad->wButtons[2] &= ~X_SBC_GAMEPAD_W0_COCKPITHATCH;
-        }
-*/
-        coordScreen.X = 0;
-        coordScreen.Y=40;
-        SetConsoleCursorPosition(StdHandle, coordScreen);
-        printf("SBCGamepad.wButton[0]=0x%8X \n", (DWORD)XboxSBCGamepad.wButtons[0]);
-        coordScreen.Y = 41;
-        SetConsoleCursorPosition(StdHandle, coordScreen);
-        printf("SBCGamepad.wButton[1]=0x%8X \n", (DWORD)XboxSBCGamepad.wButtons[1]);
-        coordScreen.Y = 42;
-        SetConsoleCursorPosition(StdHandle, coordScreen);
-        printf("SBCGamepad.wButton[2]=0x%8X \n", (DWORD)XboxSBCGamepad.wButtons[2]);
-        coordScreen.Y = 43;
-        SetConsoleCursorPosition(StdHandle, coordScreen);
-        printf("SBCGamepad.wLeftPedal=0x%8X \n", (DWORD)XboxSBCGamepad.wLeftPedal);
-        coordScreen.Y = 44;
-        SetConsoleCursorPosition(StdHandle, coordScreen);
-        printf("SBCGamepad.wRightPedal=0x%8X \n", (DWORD)XboxSBCGamepad.wRightPedal);
-        coordScreen.Y = 45;
-        SetConsoleCursorPosition(StdHandle, coordScreen);
-        printf("SBCGamepad.sAimingX=0x%8X \n", (DWORD)XboxSBCGamepad.sAimingX);
-        coordScreen.Y = 46;
-        SetConsoleCursorPosition(StdHandle, coordScreen);
-        printf("SBCGamepad.sAimingY=0x%8X \n", (DWORD)XboxSBCGamepad.sAimingY);
-        coordScreen.Y = 47;
-        SetConsoleCursorPosition(StdHandle, coordScreen);
-        printf("SBCGamepad.sSightChangeX=0x%8X \n", (DWORD)XboxSBCGamepad.sSightChangeX);
-        coordScreen.Y = 48;
-        SetConsoleCursorPosition(StdHandle, coordScreen);
-        printf("SBCGamepad.sSightChangeY=0x%8X \n", (DWORD)XboxSBCGamepad.sSightChangeY);
-        coordScreen.Y = 49;
-        SetConsoleCursorPosition(StdHandle, coordScreen);
-        printf("SBCGamepad.ucGearLever=0x8%X \n", (DWORD)XboxSBCGamepad.ucGearLever);
-        coordScreen.Y = 50;
-        SetConsoleCursorPosition(StdHandle, coordScreen);
-        printf("size of SBCGamepad = %d \n", sizeof(XboxSBCGamepad));
-
-        freopen("nul", "w", stdout);
-        //FreeConsole();
-    }
-
-}
 // ******************************************************************
 // * patch: InputSetState
 // ******************************************************************
@@ -1509,9 +1307,24 @@ DWORD WINAPI XTL::EMUPATCH(XInputSetState)
                 case 2://using directinput
                     break;
                 case 0x80://using virtual SteelBatalion Controller
-                    printf("SBC setstate!\n");
+                    //printf("SBC setstate!\n");
                     //EmuXSBCSetState((UCHAR *)&pFeedback->Rumble);
-                    UpdateVirtualSBCFeedbackDlg((UCHAR *)&pFeedback->Rumble);
+                    //UpdateVirtualSBCFeedbackDlg((UCHAR *)&pFeedback->Rumble);
+                    DWORD dwVXBCSetStateResult;
+                    if (g_module != 0 && fnCxbxVSBCSetState == 0) {
+                        fnCxbxVSBCSetState = (PFARPROC2)GetProcAddress(g_module, "VSBCSetState");
+                        //fnCxbxVSBCGetState = (PFARPROC2)GetProcAddress(g_module, "VSBCGetState");
+                        //fnCxbxVSBCOpen = (PFARPROC1)GetProcAddress(g_module, "VSBCOpen");
+                    }
+                    if (fnCxbxVSBCSetState == 0) {
+                        printf("EmuXapi: EmuXInputSetState: GetPRocAddress VSBCSetState failed!\n");
+                    }
+                    else {
+                        (*fnCxbxVSBCSetState)((UCHAR *)&pFeedback->Rumble);
+                    }
+
+                    
+                    //dwVXBCSetStateResult = CxbxVSBC::MyCxbxVSBC::VSBCSetState((UCHAR *)&pFeedback->Rumble);
                     break;
                 default:
                     break;

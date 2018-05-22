@@ -33,10 +33,12 @@
 // *  All rights reserved
 // *
 // ******************************************************************
+#include "stdafx.h"
 
-#include "CxbxKrnl/EmuShared.h"
+//#include "CxbxKrnl/EmuShared.h"
 #include "DlgVirtualSBCFeedback.h"
 #include "CxbxKrnl/EmuXapi.h"
+#include "Winuser.h"
 #include "Windowsx.h"
 #include "Commctrl.h"
 #include "ResCxbx.h"
@@ -44,12 +46,13 @@
 #include <cstdio>
 
 /*! windows dialog procedure */
-static INT_PTR CALLBACK DlgVirtualSBCFeedbackProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+static LRESULT CALLBACK DlgVirtualSBCFeedbackProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 /*! changes flag */
 static BOOL g_bHasChanges = FALSE;
 //handle for this dialog, one one dialog is available for visturl SteelBatallion controller.
 HWND g_hDlgVirtualSBCFeedback = 0;
+
 HWND GetDlgVirtualSBCFeedbackHandle(void)
 {
     return g_hDlgVirtualSBCFeedback;
@@ -124,6 +127,29 @@ void UpdateVirtualSBCFeedbackDlg(UCHAR * pXboxSBCFeedback) {
         );
     };
 }
+static DWORD WINAPI WndVirtualSBCFeedbackThread(LPVOID)
+{
+    while (true) {
+        MSG msg;
+        BOOL bRet;
+        if (PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE)) {
+            if (!GetMessage(&msg, NULL, 0, 0))
+            {
+                //UnregisterClass(m_classname, m_hInstance);
+                //return false;
+                ;
+            }
+            HWND hDlgVSBCFeedback = GetDlgVirtualSBCFeedbackHandle();
+            if (!IsWindow(hDlgVSBCFeedback) || !IsDialogMessage(hDlgVSBCFeedback, &msg))
+            {
+                TranslateMessage(&msg);
+                DispatchMessage(&msg);
+            }
+        }
+    }
+
+}
+
 
 int ShowVirtualSBCFeedback(HWND hwnd)
 {
@@ -139,11 +165,31 @@ int ShowVirtualSBCFeedback(HWND hwnd)
     //nResult=DialogBox(GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_VIRTUAL_SBC_FEEDBACK), hwnd, DlgVirtualSBCFeedbackProc);
     if (!IsWindow(g_hDlgVirtualSBCFeedback))
     {
+        /*
         g_hDlgVirtualSBCFeedback = CreateDialog(NULL,
                                                 MAKEINTRESOURCE(IDD_VIRTUAL_SBC_FEEDBACK),
                                                 hwnd,
                                                 (DLGPROC)DlgVirtualSBCFeedbackProc);
         ShowWindow(g_hDlgVirtualSBCFeedback, SW_SHOW);
+        UpdateWindow(g_hDlgVirtualSBCFeedback);
+        */
+        //create message loop thread;
+        DWORD dwThreadId;
+        HWND hwndParent = GetDesktopWindow();
+        DWORD dwStyle = WS_POPUP; //DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION;// WS_POPUP;
+        RECT windowRect = { 0 };
+        g_hDlgVirtualSBCFeedback = CreateDialog(NULL,
+            MAKEINTRESOURCE(IDD_VIRTUAL_SBC_FEEDBACK),
+            0,
+            (DLGPROC)DlgVirtualSBCFeedbackProc);
+        
+        ShowWindow(g_hDlgVirtualSBCFeedback, SW_SHOW);
+        UpdateWindow(g_hDlgVirtualSBCFeedback);
+        HANDLE hThread = CreateThread(NULL, NULL, WndVirtualSBCFeedbackThread, NULL, NULL, &dwThreadId);
+        // We set the priority of this thread a bit higher, to assure reliable timing :
+        //SetThreadPriority(hThread, THREAD_PRIORITY_ABOVE_NORMAL);
+
+        //CxbxKrnlRegisterThread(hThread);
         //SetFocus(hwnd);
     }
     if (nResult == 0) {
@@ -159,7 +205,7 @@ int ShowVirtualSBCFeedback(HWND hwnd)
     
 }
 
-INT_PTR CALLBACK DlgVirtualSBCFeedbackProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK DlgVirtualSBCFeedbackProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     switch(uMsg)
     {
@@ -241,12 +287,14 @@ INT_PTR CALLBACK DlgVirtualSBCFeedbackProc(HWND hWndDlg, UINT uMsg, WPARAM wPara
             }
             /*! set default focus to X button */
             //SetFocus(GetDlgItem(hWndDlg, IDC_HOST_APPLY));
+            return true;
         }
-        break;
-
+        
+        case WM_DESTROY:
         case WM_CLOSE:
         {
             /*! if changes have been made, check if the user wants to save them */
+            /*
             if(g_bHasChanges)
             {
                 int ret = MessageBox(hWndDlg, "Do you wish to apply your changes?", "Cxbx-Reloaded", MB_ICONQUESTION | MB_YESNOCANCEL);
@@ -262,145 +310,31 @@ INT_PTR CALLBACK DlgVirtualSBCFeedbackProc(HWND hWndDlg, UINT uMsg, WPARAM wPara
                 }
                 break;
             }
-
-            PostMessage(hWndDlg, WM_COMMAND, IDC_INPUT_CONFIG_CANCEL, 0);
+            */
+            //PostMessage(hWndDlg, WM_COMMAND, IDC_INPUT_CONFIG_CANCEL, 0);
+            DestroyWindow(hWndDlg);
+            g_hDlgVirtualSBCFeedback = 0;
         }
-        break;
+        return true;
 
         case WM_COMMAND:
         {
             HWND hWndButton = GetDlgItem(hWndDlg, LOWORD(wParam));
-            /*
+            
             switch(LOWORD(wParam))
             {
-            case IDC_HOST_CANCEL:
-                //EndDialog(hWndDlg, wParam);
-                break;
-            case IDC_HOST_APPLY:
-                //save configuration to registry.
-                //XTL::Save("Software\\Cxbx-Reloaded\\XboxPortHostMapping");
-                //EndDialog(hWndDlg, wParam);
-                break;
-            //set host type and host port in global array xbox to host bridge for xbox port 0
-            case IDC_HOST_NOTCONNECT_0_0:
-                XTL::SetXboxPortToHostPort(0, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_NOTCONNECT, 0);
-                g_bHasChanges = TRUE;
-                break;
-            case IDC_HOST_XINPUT_0_0:
-                XTL::SetXboxPortToHostPort(0, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_XINPUT, 0);
-                g_bHasChanges = TRUE;
-                break;
-            case IDC_HOST_XINPUT_0_1:
-                XTL::SetXboxPortToHostPort(0, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_XINPUT, 1);
-                g_bHasChanges = TRUE;
-                break;
-            case IDC_HOST_XINPUT_0_2:
-                XTL::SetXboxPortToHostPort(0, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_XINPUT, 2);
-                g_bHasChanges = TRUE;
-                break;
-            case IDC_HOST_XINPUT_0_3:
-                XTL::SetXboxPortToHostPort(0, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_XINPUT, 3);
-                g_bHasChanges = TRUE;
-                break;
-            case IDC_HOST_DINPUT_0_0:
-                XTL::SetXboxPortToHostPort(0, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_DINPUT, 0);
-                g_bHasChanges = TRUE;
-                break;
-            case IDC_HOST_VIRTUAL_SBC_0_0:
-                XTL::SetXboxPortToHostPort(0, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_VIRTUAL_SBC, 0);
-                g_bHasChanges = TRUE;
-                break;
-                //set host type and host port in global array xbox to host bridge for xbox port 1
-            case IDC_HOST_NOTCONNECT_1_0:
-                XTL::SetXboxPortToHostPort(1, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_NOTCONNECT, 0);
-                g_bHasChanges = TRUE;
-                break;
-            case IDC_HOST_XINPUT_1_0:
-                XTL::SetXboxPortToHostPort(1, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_XINPUT, 0);
-                g_bHasChanges = TRUE;
-                break;
-            case IDC_HOST_XINPUT_1_1:
-                XTL::SetXboxPortToHostPort(1, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_XINPUT, 1);
-                g_bHasChanges = TRUE;
-                break;
-            case IDC_HOST_XINPUT_1_2:
-                XTL::SetXboxPortToHostPort(1, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_XINPUT, 2);
-                g_bHasChanges = TRUE;
-                break;
-            case IDC_HOST_XINPUT_1_3:
-                XTL::SetXboxPortToHostPort(1, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_XINPUT, 3);
-                g_bHasChanges = TRUE;
-                break;
-            case IDC_HOST_DINPUT_1_0:
-                XTL::SetXboxPortToHostPort(1, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_DINPUT, 0);
-                g_bHasChanges = TRUE;
-                break;
-            case IDC_HOST_VIRTUAL_SBC_1_0:
-                XTL::SetXboxPortToHostPort(1, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_VIRTUAL_SBC, 0);
-                g_bHasChanges = TRUE;
-                break;
-                //set host type and host port in global array xbox to host bridge for xbox port 2
-            case IDC_HOST_NOTCONNECT_2_0:
-                XTL::SetXboxPortToHostPort(2, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_NOTCONNECT, 0);
-                g_bHasChanges = TRUE;
-                break;
-            case IDC_HOST_XINPUT_2_0:
-                XTL::SetXboxPortToHostPort(2, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_XINPUT, 0);
-                g_bHasChanges = TRUE;
-                break;
-            case IDC_HOST_XINPUT_2_1:
-                XTL::SetXboxPortToHostPort(2, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_XINPUT, 1);
-                g_bHasChanges = TRUE;
-                break;
-            case IDC_HOST_XINPUT_2_2:
-                XTL::SetXboxPortToHostPort(2, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_XINPUT, 2);
-                g_bHasChanges = TRUE;
-                break;
-            case IDC_HOST_XINPUT_2_3:
-                XTL::SetXboxPortToHostPort(2, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_XINPUT, 3);
-                g_bHasChanges = TRUE;
-                break;
-            case IDC_HOST_DINPUT_2_0:
-                XTL::SetXboxPortToHostPort(2, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_DINPUT, 0);
-                g_bHasChanges = TRUE;
-                break;
-            case IDC_HOST_VIRTUAL_SBC_2_0:
-                XTL::SetXboxPortToHostPort(2, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_VIRTUAL_SBC, 0);
-                g_bHasChanges = TRUE;
-                break;
-                //set host type and host port in global array xbox to host bridge for xbox port 3
-            case IDC_HOST_NOTCONNECT_3_0:
-                XTL::SetXboxPortToHostPort(3, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_NOTCONNECT, 0);
-                g_bHasChanges = TRUE;
-                break;
-            case IDC_HOST_XINPUT_3_0:
-                XTL::SetXboxPortToHostPort(3, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_XINPUT, 0);
-                g_bHasChanges = TRUE;
-                break;
-            case IDC_HOST_XINPUT_3_1:
-                XTL::SetXboxPortToHostPort(3, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_XINPUT, 1);
-                g_bHasChanges = TRUE;
-                break;
-            case IDC_HOST_XINPUT_3_2:
-                XTL::SetXboxPortToHostPort(3, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_XINPUT, 2);
-                g_bHasChanges = TRUE;
-                break;
-            case IDC_HOST_XINPUT_3_3:
-                XTL::SetXboxPortToHostPort(3, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_XINPUT, 3);
-                g_bHasChanges = TRUE;
-                break;
-            case IDC_HOST_DINPUT_3_0:
-                XTL::SetXboxPortToHostPort(3, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_DINPUT, 0);
-                g_bHasChanges = TRUE;
-                break;
-            case IDC_HOST_VIRTUAL_SBC_3_0:
-                XTL::SetXboxPortToHostPort(3, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_VIRTUAL_SBC, 0);
-                g_bHasChanges = TRUE;
-                break;
+            //case IDC_HOST_CANCEL:
+              //  //EndDialog(hWndDlg, wParam);
+                //break;
+            default :
+            return FALSE ;
             }
-            */
+            
+            return true;
         }
-        break;
+
+        
+    
     }
     return FALSE;
 }

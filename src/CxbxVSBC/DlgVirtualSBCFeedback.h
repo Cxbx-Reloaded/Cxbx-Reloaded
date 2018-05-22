@@ -35,9 +35,11 @@
 #define DLGVIRTUALSBCFEEDBAC_H
 
 #include <windows.h>
-
+namespace DlgVSBCFeedback
+{
 /*! show controller configuration dialog */
 extern int ShowVirtualSBCFeedback(HWND hwnd);
 extern void UpdateVirtualSBCFeedbackDlg(UCHAR * pXboxSBCFeedback);
 extern HWND GetDlgVirtualSBCFeedbackHandle(void);
+}
 #endif
