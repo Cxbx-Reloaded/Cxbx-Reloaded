@@ -640,7 +640,6 @@
     <None Include="..\..\resource\.editorconfig">
       <Filter>Code Format\resource</Filter>
     </None>
-    <None Include="..\..\resource\ribbon1.mfcribbon-ms" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="GUI">

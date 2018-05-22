@@ -380,7 +380,6 @@
     <None Include="..\..\README.md" />
     <None Include="..\..\resource\.editorconfig" />
     <None Include="..\..\resource\Logo.bmp" />
-    <None Include="..\..\resource\ribbon1.mfcribbon-ms" />
     <None Include="..\..\resource\Splash.jpg" />
     <None Include="..\..\src\.editorconfig" />
     <None Include="..\..\src\devices\video\EmuNV2A_DEBUG.cpp" />
