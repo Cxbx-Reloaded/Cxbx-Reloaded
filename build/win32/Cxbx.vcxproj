@@ -101,7 +101,7 @@
       </HeaderFileName>
     </Midl>
     <ClCompile>
-      <Optimization>Disabled</Optimization>
+      <Optimization>Full</Optimization>
       <AdditionalIncludeDirectories>..\..\src\Common;..\..\src;..\..\src\Common\Win32;%(AdditionalIncludeDirectories);..\..\import\OpenXDK\include;..\..\import\distorm\include;..\..\import\glew-2.0.0\include;..\..\import\subhook\</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>NOMINMAX;_WIN32_WINNT=0x0601;WIN32;_DEBUG;_WINDOWS;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -162,7 +162,7 @@
       </HeaderFileName>
     </Midl>
     <ClCompile>
-      <Optimization>Disabled</Optimization>
+      <Optimization>Full</Optimization>
       <AdditionalIncludeDirectories>..\..\src\Common;..\..\src;..\..\src\Common\Win32;%(AdditionalIncludeDirectories);..\..\import\OpenXDK\include;..\..\import\distorm\include;..\..\import\glew-2.0.0\include;..\..\import\subhook\</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>CXBX_USE_D3D9;NOMINMAX;_WIN32_WINNT=0x0601;WIN32;_DEBUG;_WINDOWS;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -223,7 +223,7 @@
       </HeaderFileName>
     </Midl>
     <ClCompile>
-      <Optimization>Disabled</Optimization>
+      <Optimization>Full</Optimization>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <AdditionalIncludeDirectories>..\..\src;..\..\src\Common;..\..\src\Common\Win32\;%(AdditionalIncludeDirectories);..\..\import\OpenXDK\include;..\..\import\distorm\include;..\..\import\glew-2.0.0\include;..\..\src\Common\Win32;..\..\import\subhook\</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>NOMINMAX;_WIN32_WINNT=0x0601;WIN32;NDEBUG;_WINDOWS;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
