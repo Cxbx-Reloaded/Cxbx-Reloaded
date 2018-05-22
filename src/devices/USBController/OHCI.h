@@ -60,14 +60,30 @@
 #define OHCI_CTL_IR                         (1<<8)           // InterruptRouting
 #define OHCI_CTL_RWC                        (1<<9)           // RemoteWakeupConnected
 #define OHCI_CTL_RWE                        (1<<10)          // RemoteWakeupEnable
+// HcCommandStatus
+#define OHCI_STATUS_HCR                     (1<<0)           // HostControllerReset
+#define OHCI_STATUS_CLF                     (1<<1)           // ControlListFilled
+#define OHCI_STATUS_BLF                     (1<<2)           // BulkListFilled
+#define OHCI_STATUS_OCR                     (1<<3)           // OwnershipChangeRequest
+#define OHCI_STATUS_SOC                     ((1<<6)|(1<<7))  // SchedulingOverrunCount
 // HcInterruptEnable, HcInterruptDisable
 #define OHCI_INTR_MASTER_INTERRUPT_ENABLED  (1<<31)          // MasterInterruptEnable
+// HcHCCA
+#define OHCI_HCCA_MASK                      0xFFFFFF00       // HCCA mask
+// HcControlHeadED
+#define OHCI_EDPTR_MASK                     0xFFFFFFF0       // endpoint descriptor mask
+// HcFmInterval
+#define OHCI_FMI_FI                         0x00003FFF       // FrameInterval
+#define OHCI_FMI_FIT                        0x80000000       // FrameIntervalToggle
 // HcRhDescriptorA
+#define OHCI_RHA_RW_MASK                    0x00000000       // Mask of supported features
 #define OHCI_RHA_PSM                        (1<<8)           // PowerSwitchingMode
 #define OHCI_RHA_NPS                        (1<<9)           // NoPowerSwitching
 #define OHCI_RHA_DT                         (1<<10)          // DeviceType
 #define OHCI_RHA_OCPM                       (1<<11)          // OverCurrentProtectionMode
 #define OHCI_RHA_NOCP                       (1<<12)          // NoOverCurrentProtection
+// HcRhPortStatus
+#define OHCI_PORT_PPS                       (1<<8)
 
 
 // enum indicating the current HC state
@@ -96,8 +112,7 @@ typedef struct _OHCI_Registers
 	uint32_t HcControl;
 	uint32_t HcCommandStatus;
 	uint32_t HcInterruptStatus;
-	uint32_t HcInterruptEnable;
-	uint32_t HcInterruptDisable;
+	uint32_t HcInterrupt; // HcInterruptEnable/Disable are the same so we can merge them together
 
 	// Memory Pointer partition
 	uint32_t HcHCCA;
@@ -159,7 +174,7 @@ class OHCI
 		// end-of-frame callback function
 		void OHCI_FrameBoundaryWorker();
 		// initialize packet struct
-		void USB_PacketInit(USBPacket* packet);
+		void OHCI_PacketInit(USBPacket* packet);
 };
 
 extern OHCI* g_pHostController1;

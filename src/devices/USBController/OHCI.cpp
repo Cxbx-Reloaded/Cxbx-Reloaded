@@ -59,7 +59,7 @@ OHCI::OHCI(USBDevice* UsbObj)
 	for (int i = 0; i < 2; i++) {
 		UsbInstance->USB_RegisterPort(&Registers.RhPort[i].Port, this, i, USB_SPEED_MASK_LOW | USB_SPEED_MASK_FULL);
 	}
-	USB_PacketInit(&UsbPacket);
+	OHCI_PacketInit(&UsbPacket);
 
 	// Create the end-of-frame timer. Let's try a factor of 50 (1 virtual ms -> 50 real ms)
 	pEndOfFrameTimer = Timer_Create(OHCI_FrameBoundaryWrapper, this, 50);
@@ -87,12 +87,13 @@ void OHCI::OHCI_StateReset()
 	// Remark: the standard says that RemoteWakeupConnected bit should be set during POST, cleared during hw reset
 	// and ignored during a sw reset. However, VBox sets it on hw reset and XQEMU clears it. Considering that the Xbox
 	// doesn't do POST, I will clear it.
+	Registers.HcRevision = 0x10;
 	Registers.HcControl = 0;
 	Registers.HcControl &= ~OHCI_CTL_HCFS;
 	Registers.HcControl |= Reset;
 	Registers.HcCommandStatus = 0;
 	Registers.HcInterruptStatus = 0;
-	Registers.HcInterruptEnable = OHCI_INTR_MASTER_INTERRUPT_ENABLED; // enable interrupts
+	Registers.HcInterrupt = OHCI_INTR_MASTER_INTERRUPT_ENABLED; // enable interrupts
 
 	Registers.HcHCCA = 0;
 	Registers.HcPeriodCurrentED = 0;
@@ -118,14 +119,251 @@ void OHCI::OHCI_StateReset()
 		//}
 	}
 
-	DbgPrintf("Usb-Ohci: Reset\n");
+	DbgPrintf("Ohci: Reset event.\n");
 }
 
-void OHCI::USB_PacketInit(USBPacket* packet)
+void OHCI::OHCI_PacketInit(USBPacket* packet)
 {
 	IOVector* vec = &packet->IoVec;
 	vec->IoVec = new IoVec;
 	vec->IoVecNumber = 0;
 	vec->AllocNumber = 1;
 	vec->Size = 0;
+}
+
+uint32_t OHCI::OHCI_ReadRegister(xbaddr Addr)
+{
+	uint32_t ret = 0xFFFFFFFF;
+
+	if (Addr & 3) {
+		// The standard allows only aligned reads to the registers
+		DbgPrintf("Ohci: Unaligned read. Ignoring.\n");
+		return ret;
+	}
+	else {
+		switch (Addr >> 2) // read the register
+		{
+			case 0: // HcRevision
+				ret = Registers.HcRevision;
+				break;
+
+			case 1: // HcControl
+				ret = Registers.HcControl;
+				break;
+
+			case 2: // HcCommandStatus
+				ret = Registers.HcCommandStatus;
+				break;
+
+			case 3: // HcInterruptStatus
+				ret = Registers.HcInterruptStatus;
+				break;
+
+			case 4: // HcInterruptEnable
+			case 5: // HcInterruptDisable
+				ret = Registers.HcInterrupt;
+				break;
+
+			case 6: // HcHCCA
+				ret = Registers.HcHCCA;
+				break;
+
+			case 7: // HcPeriodCurrentED
+				ret = Registers.HcPeriodCurrentED;
+				break;
+
+			case 8: // HcControlHeadED
+				ret = Registers.HcControlHeadED;
+				break;
+
+			case 9: // HcControlCurrentED
+				ret = Registers.HcControlCurrentED;
+				break;
+
+			case 10: // HcBulkHeadED
+				ret = Registers.HcBulkHeadED;
+				break;
+
+			case 11: // HcBulkCurrentED
+				ret = Registers.HcBulkCurrentED;
+				break;
+
+			case 12: // HcDoneHead
+				ret = Registers.HcDoneHead;
+				break;
+
+			case 13: // HcFmInterval
+				ret = Registers.HcFmInterval;
+				break;
+
+			case 14: // HcFmRemaining
+				// TODO
+				break;
+
+			case 15: // HcFmNumber
+				ret = Registers.HcFmNumber;
+				break;
+
+			case 16: // HcPeriodicStart
+				ret = Registers.HcPeriodicStart;
+				break;
+
+			case 17: // HcLSThreshold
+				ret = Registers.HcLSThreshold;
+				break;
+
+			case 18: // HcRhDescriptorA
+				ret = Registers.HcRhDescriptorA;
+				break;
+
+			case 19: // HcRhDescriptorB
+				ret = Registers.HcRhDescriptorB;
+				break;
+
+			case 20: // HcRhStatus
+				ret = Registers.HcRhStatus;
+				break;
+
+			// Always report that the port power is on since the Xbox cannot switch off the electrical current to it
+			case 21: // RhPort 0
+				ret = Registers.RhPort[0].HcRhPortStatus | OHCI_PORT_PPS;
+				break;
+
+			case 22: // RhPort 1
+				ret = Registers.RhPort[1].HcRhPortStatus | OHCI_PORT_PPS;
+				break;
+
+			default:
+				DbgPrintf("Ohci: Read register operation with bad offset %u. Ignoring.\n", Addr >> 2);
+		}
+		return ret;
+	}
+}
+
+void OHCI::OHCI_WriteRegister(xbaddr Addr, uint32_t Value)
+{
+	if (Addr & 3) {
+		// The standard allows only aligned writes to the registers
+		DbgPrintf("Ohci: Unaligned write. Ignoring.\n");
+		return;
+	}
+	else {
+		switch (Addr >> 2)
+		{
+			case 0: // HcRevision
+				// This register is read-only
+				break;
+
+			case 1: // HcControl
+				// TODO
+				break;
+
+			case 2: // HcCommandStatus
+			{
+				// SOC is read-only
+				Value &= ~OHCI_STATUS_SOC;
+
+				// From the standard: "The Host Controller must ensure that bits written as ‘1’ become set
+				// in the register while bits written as ‘0’ remain unchanged in the register."
+				Registers.HcCommandStatus |= Value;
+
+				if (Registers.HcCommandStatus & OHCI_STATUS_HCR) {
+					// Do a hardware reset
+					OHCI_StateReset();
+				}
+			}
+			break;
+
+			case 3: // HcInterruptStatus
+				// TODO
+				break;
+
+			case 4: // HcInterruptEnable
+				// TODO
+				break;
+
+			case 5: // HcInterruptDisable
+				// TODO
+				break;
+
+			case 6: // HcHCCA
+				// The standard says the minimum alignment is 256 bytes and so bits 0 through 7 are always zero
+				Registers.HcHCCA = Value & OHCI_HCCA_MASK;
+				break;
+
+			case 7: // HcPeriodCurrentED
+				// This register is read-only
+				break;
+
+			case 8: // HcControlHeadED
+				Registers.HcControlHeadED = Value & OHCI_EDPTR_MASK;
+				break;
+
+			case 9: // HcControlCurrentED
+				Registers.HcControlCurrentED = Value & OHCI_EDPTR_MASK;
+				break;
+
+			case 10: // HcBulkHeadED
+				Registers.HcBulkHeadED = Value & OHCI_EDPTR_MASK;
+				break;
+
+			case 11: // HcBulkCurrentED
+				Registers.HcBulkCurrentED = Value & OHCI_EDPTR_MASK;
+				break;
+
+			case 12: // HcDoneHead
+				// This register is read-only
+				break;
+
+			case 13: // HcFmInterval
+			{
+				if ((Value & OHCI_FMI_FIT) != (Registers.HcFmInterval & OHCI_FMI_FIT)) {
+					DbgPrintf("Ohci: Changing frame interval duration. New value is %u\n", Value & OHCI_FMI_FI);
+				}
+				Registers.HcFmInterval = Value & ~0xC000;
+			}
+			break;
+
+			case 14: // HcFmRemaining
+				// This register is read-only
+				break;
+
+			case 15: // HcFmNumber
+				// This register is read-only
+				break;
+
+			case 16: // HcPeriodicStart
+				Registers.HcPeriodicStart = Value & 0x3FFF;
+				break;
+
+			case 17: // HcLSThreshold
+				Registers.HcLSThreshold = Value & 0xFFF;
+				break;
+
+			case 18: // HcRhDescriptorA
+				Registers.HcRhDescriptorA &= ~OHCI_RHA_RW_MASK;
+				Registers.HcRhDescriptorA |= Value & OHCI_RHA_RW_MASK; // ??
+				break;
+
+			case 19: // HcRhDescriptorB
+				// Don't do anything, the attached devices are all removable and PowerSwitchingMode is always 0
+				break;
+
+			case 20: // HcRhStatus
+				// TODO
+				break;
+
+			case 21: // RhPort 0
+				// TODO
+				break;
+
+			case 22: // RhPort 1
+				// TODO
+				break;
+
+			default:
+				DbgPrintf("Ohci: Write register operation with bad offset %u. Ignoring.\n", Addr >> 2);
+				break;
+		}
+	}
 }
