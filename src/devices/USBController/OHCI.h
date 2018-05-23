@@ -83,7 +83,7 @@
 #define OHCI_RHA_OCPM                       (1<<11)          // OverCurrentProtectionMode
 #define OHCI_RHA_NOCP                       (1<<12)          // NoOverCurrentProtection
 // HcRhPortStatus
-#define OHCI_PORT_PPS                       (1<<8)
+#define OHCI_PORT_PPS                       (1<<8)           // PortPowerStatus
 
 
 // enum indicating the current HC state
@@ -139,7 +139,7 @@ typedef struct _OHCI_Registers
 OHCI_Registers;
 
 
-/* OHCI class representing the state of the HC */
+// OHCI class representing the state of the HC
 class OHCI
 {
 	public:
@@ -151,15 +151,15 @@ class OHCI
 		uint32_t OHCI_ReadRegister(xbaddr Addr);
 		// write a register
 		void OHCI_WriteRegister(xbaddr Addr, uint32_t Value);
-		// switch the HC to the reset state
-		void OHCI_StateReset();
 
 
 	private:
 		// all the registers available on the OHCI standard
 		OHCI_Registers Registers;
 		// end-of-frame timer
-		TimerObject* pEndOfFrameTimer;
+		TimerObject* pEOFtimer;
+		// time at which a SOF was sent
+		uint64_t SOFtime;
 		// the duration of a usb frame
 		uint64_t UsbFrameTime;
 		// ticks per usb tick
@@ -169,12 +169,22 @@ class OHCI
 		// usb packet
 		USBPacket UsbPacket;
 
-		// end-of-frame callback wrapper
+		// EOF callback wrapper
 		static void OHCI_FrameBoundaryWrapper(void* pVoid);
-		// end-of-frame callback function
+		// EOF callback function
 		void OHCI_FrameBoundaryWorker();
 		// initialize packet struct
 		void OHCI_PacketInit(USBPacket* packet);
+		// change usb state mode
+		void OHCI_ChangeState(uint32_t Value);
+		// switch the HC to the reset state
+		void OHCI_StateReset();
+		// start sending SOF tokens across the usb bus
+		void OHCI_BusStart();
+		// stop sending SOF tokens across the usb bus
+		void OHCI_BusStop();
+		// generate a SOF event, and start a timer for EOF
+		void OHCI_SOF();
 };
 
 extern OHCI* g_pHostController1;

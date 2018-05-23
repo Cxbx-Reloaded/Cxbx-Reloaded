@@ -80,7 +80,7 @@ static inline uint64_t Muldiv64(uint64_t a, uint32_t b, uint32_t c)
 }
 
 // Returns the current time of the timer
-static inline uint64_t GetTime_NS(TimerObject* Timer)
+inline uint64_t GetTime_NS(TimerObject* Timer)
 {
 	LARGE_INTEGER li;
 	QueryPerformanceCounter(&li);
@@ -117,12 +117,12 @@ void ClockThread(TimerObject* Timer)
 
 	while (true) {
 		if (GetTime_NS(Timer) > NewExpireTime) {
+			if (Timer->Exit.load()) {
+				Timer_Destroy(Timer);
+				return;
+			}
 			Timer->Callback(Timer->Opaque);
 			NewExpireTime = GetNextExpireTime(Timer);
-		}
-		if (Timer->Exit.load()) {
-			Timer_Destroy(Timer);
-			return;
 		}
 	}
 }

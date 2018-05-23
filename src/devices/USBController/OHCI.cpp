@@ -36,6 +36,7 @@
 
 #include "OHCI.h"
 #include "..\CxbxKrnl\CxbxKrnl.h"
+#include "..\CxbxKrnl\Emu.h" // For EmuWarning
 
 #define USB_HZ 12000000
 
@@ -60,9 +61,6 @@ OHCI::OHCI(USBDevice* UsbObj)
 		UsbInstance->USB_RegisterPort(&Registers.RhPort[i].Port, this, i, USB_SPEED_MASK_LOW | USB_SPEED_MASK_FULL);
 	}
 	OHCI_PacketInit(&UsbPacket);
-
-	// Create the end-of-frame timer. Let's try a factor of 50 (1 virtual ms -> 50 real ms)
-	pEndOfFrameTimer = Timer_Create(OHCI_FrameBoundaryWrapper, this, 50);
 
 	UsbFrameTime = 1000000ULL; // 1 ms
 	TicksPerUsbTick = 1000000000ULL / USB_HZ; // 83
@@ -122,6 +120,68 @@ void OHCI::OHCI_StateReset()
 	DbgPrintf("Ohci: Reset event.\n");
 }
 
+void OHCI::OHCI_BusStart()
+{
+	// Create the end-of-frame timer. Let's try a factor of 50 (1 virtual ms -> 50 real ms)
+	pEOFtimer = Timer_Create(OHCI_FrameBoundaryWrapper, this, 50);
+
+	DbgPrintf("Ohci: Operational event\n");
+
+	// SOF event
+	OHCI_SOF();
+}
+
+void OHCI::OHCI_BusStop()
+{
+	if (pEOFtimer) {
+		// Delete existing EOF timer
+		Timer_Exit(pEOFtimer);
+	}
+	pEOFtimer = nullptr;
+}
+
+void OHCI::OHCI_SOF()
+{
+	SOFtime = GetTime_NS(pEOFtimer); // set current SOF time
+	Timer_Start(pEOFtimer, SOFtime + UsbFrameTime); // make timer expire at SOF + 1 virtual ms from now
+	// TODO: interrupt
+}
+
+void OHCI::OHCI_ChangeState(uint32_t Value)
+{
+	uint32_t OldState = Registers.HcControl & OHCI_CTL_HCFS;
+	Registers.HcControl = Value;
+	uint32_t NewState = Registers.HcControl & OHCI_CTL_HCFS;
+
+	// no state change
+	if (OldState == NewState) {
+		return;
+	}
+
+	switch (NewState)
+	{
+		case Operational:
+			OHCI_BusStart();
+			break;
+
+		case Suspend:
+			OHCI_BusStop();
+			DbgPrintf("Ohci: Suspend event\n");
+			break;
+
+		case Resume:
+			DbgPrintf("Ohci: Resume event\n");
+			break;
+
+		case Reset:
+			OHCI_StateReset();
+			break;
+
+		default:
+			EmuWarning("Ohci: Unknown USB state mode!");
+	}
+}
+
 void OHCI::OHCI_PacketInit(USBPacket* packet)
 {
 	IOVector* vec = &packet->IoVec;
@@ -137,7 +197,7 @@ uint32_t OHCI::OHCI_ReadRegister(xbaddr Addr)
 
 	if (Addr & 3) {
 		// The standard allows only aligned reads to the registers
-		DbgPrintf("Ohci: Unaligned read. Ignoring.\n");
+		EmuWarning("Ohci: Unaligned read. Ignoring.");
 		return ret;
 	}
 	else {
@@ -234,7 +294,7 @@ uint32_t OHCI::OHCI_ReadRegister(xbaddr Addr)
 				break;
 
 			default:
-				DbgPrintf("Ohci: Read register operation with bad offset %u. Ignoring.\n", Addr >> 2);
+				EmuWarning("Ohci: Read register operation with bad offset %u. Ignoring.", Addr >> 2);
 		}
 		return ret;
 	}
@@ -244,7 +304,7 @@ void OHCI::OHCI_WriteRegister(xbaddr Addr, uint32_t Value)
 {
 	if (Addr & 3) {
 		// The standard allows only aligned writes to the registers
-		DbgPrintf("Ohci: Unaligned write. Ignoring.\n");
+		EmuWarning("Ohci: Unaligned write. Ignoring.");
 		return;
 	}
 	else {
@@ -255,7 +315,7 @@ void OHCI::OHCI_WriteRegister(xbaddr Addr, uint32_t Value)
 				break;
 
 			case 1: // HcControl
-				// TODO
+				OHCI_ChangeState(Value);
 				break;
 
 			case 2: // HcCommandStatus
@@ -362,8 +422,7 @@ void OHCI::OHCI_WriteRegister(xbaddr Addr, uint32_t Value)
 				break;
 
 			default:
-				DbgPrintf("Ohci: Write register operation with bad offset %u. Ignoring.\n", Addr >> 2);
-				break;
+				EmuWarning("Ohci: Write register operation with bad offset %u. Ignoring.", Addr >> 2);
 		}
 	}
 }
