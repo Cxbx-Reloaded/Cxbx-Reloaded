@@ -8087,7 +8087,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderTarget)
 		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetRenderTarget");
 		if (FAILED(hRet)) {
 			// If Direct3D 9 SetRenderTarget failed, skip setting depth stencil
-			return hRet;
+			return;
 		}
 	}
 
@@ -9497,10 +9497,18 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetPixelShaderConstant_4)
     if(g_BuildVersion <= 4361)
         Register += 96;
 
+#ifdef CXBX_USE_D3D9
+	HRESULT hRet = g_pD3DDevice->SetPixelShaderConstantF
+#else
     HRESULT hRet = g_pD3DDevice->SetPixelShaderConstant
+#endif
     (
         Register,
+#ifdef CXBX_USE_D3D9
+		(float*)pConstantData,
+#else
         pConstantData,
+#endif
         ConstantCount
     );
     //DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetPixelShaderConstant");

@@ -53,7 +53,7 @@ VSH_SHADER_HEADER;
 extern DWORD EmuRecompileVshDeclaration
 (
     DWORD                *pDeclaration,
-    DWORD               **ppRecompiledDeclaration,
+    D3DVERTEXELEMENT    **ppRecompiledDeclaration,
     DWORD                *pDeclarationSize,
     boolean               IsFixedFunction,
     XTL::CxbxVertexShaderInfo *pVertexShaderInfo

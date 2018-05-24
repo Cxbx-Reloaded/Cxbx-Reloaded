@@ -392,127 +392,168 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
 	    // assert(bNeedStreamCopy || "bNeedVertexPatching implies bNeedStreamCopy (but copies via conversions");
 		for (uint32 uiVertex = 0; uiVertex < uiVertexCount; uiVertex++) {
 			uint08 *pXboxVertex = &pXboxVertexData[uiVertex * uiXboxVertexStride];
-			FLOAT *pHostVertexAsFloat = (FLOAT*)(&pHostVertexData[uiVertex * uiHostVertexStride]);
+			uint08 *pHostVertex = &pHostVertexData[uiVertex * uiHostVertexStride];
 			for (UINT uiElement = 0; uiElement < pVertexShaderStreamInfo->NumberOfVertexElements; uiElement++) {
+				FLOAT *pXboxVertexAsFloat = (FLOAT*)pXboxVertex;
+				SHORT *pXboxVertexAsShort = (SHORT*)pXboxVertex;
+				BYTE *pXboxVertexAsByte = (BYTE*)pXboxVertex;
+				int XboxElementSizeInBytes = pVertexShaderStreamInfo->VertexElements[uiElement].HostByteSize;
+				FLOAT *pHostVertexAsFloat = (FLOAT*)pHostVertex;
+				SHORT *pHostVertexAsShort = (SHORT*)pHostVertex;
+#if CXBX_USE_D3D9
+				BYTE *pHostVertexAsByte = (BYTE*)pHostVertex;
+#endif
 				// Dxbx note : The following code handles only the D3DVSDT enums that need conversion;
 				// All other cases are catched by the memcpy in the default-block.
 				switch (pVertexShaderStreamInfo->VertexElements[uiElement].XboxType) {
+				case X_D3DVSDT_NORMSHORT1: { // 0x11:
+					// Test-cases : Halo - Combat Evolved
+					XboxElementSizeInBytes = 1 * sizeof(SHORT);
+#if CXBX_USE_D3D9	// Make it SHORT2N
+					pHostVertexAsShort[0] = pXboxVertexAsShort[0];
+					pHostVertexAsShort[1] = 0;
+#else				// Make it FLOAT1
+					pHostVertexAsFloat[0] = ((FLOAT)pXboxVertexAsShort[0]) / 32767.0f;
+					//pHostVertexAsFloat[1] = 0.0f; // Would be needed for FLOAT2
+#endif
+					break;
+				}
+#if !CXBX_USE_D3D9 // No need for patching in D3D9
+				case X_D3DVSDT_NORMSHORT2: { // 0x21: // Make it FLOAT2
+					// Test-cases : Baldur's Gate: Dark Alliance 2, F1 2002, Gun, Halo - Combat Evolved, Scrapland 
+					XboxElementSizeInBytes = 2 * sizeof(SHORT);
+					pHostVertexAsFloat[0] = ((FLOAT)pXboxVertexAsShort[0]) / 32767.0f;
+					pHostVertexAsFloat[1] = ((FLOAT)pXboxVertexAsShort[1]) / 32767.0f;
+					break;
+				}
+#endif
+				case X_D3DVSDT_NORMSHORT3: { // 0x31:
+					// Test-cases : Cel Damage, Constantine, Destroy All Humans!
+					XboxElementSizeInBytes = 3 * sizeof(SHORT);
+#if CXBX_USE_D3D9	// Make it SHORT4N
+					pHostVertexAsShort[0] = pXboxVertexAsShort[0];
+					pHostVertexAsShort[1] = pXboxVertexAsShort[1];
+					pHostVertexAsShort[2] = pXboxVertexAsShort[2];
+					pHostVertexAsShort[3] = 32767; // TODO : verify
+#else				// Make it FLOAT3
+					pHostVertexAsFloat[0] = ((FLOAT)pXboxVertexAsShort[0]) / 32767.0f;
+					pHostVertexAsFloat[1] = ((FLOAT)pXboxVertexAsShort[1]) / 32767.0f;
+					pHostVertexAsFloat[2] = ((FLOAT)pXboxVertexAsShort[2]) / 32767.0f;
+#endif
+					break;
+				}
+#if !CXBX_USE_D3D9 // No need for patching in D3D9
+				case X_D3DVSDT_NORMSHORT4: { // 0x41: // Make it FLOAT4
+					// Test-cases : Judge Dredd: Dredd vs Death, NHL Hitz 2002, Silent Hill 2, Sneakers, Tony Hawk Pro Skater 4
+					XboxElementSizeInBytes = 4 * sizeof(SHORT);
+					pHostVertexAsFloat[0] = ((FLOAT)pXboxVertexAsShort[0]) / 32767.0f;
+					pHostVertexAsFloat[1] = ((FLOAT)pXboxVertexAsShort[1]) / 32767.0f;
+					pHostVertexAsFloat[2] = ((FLOAT)pXboxVertexAsShort[2]) / 32767.0f;
+					pHostVertexAsFloat[3] = ((FLOAT)pXboxVertexAsShort[3]) / 32767.0f;
+					break;
+				}
+#endif
 				case X_D3DVSDT_NORMPACKED3: { // 0x16: // Make it FLOAT3
-					// Hit by Dashboard
+					// Test-cases : Dashboard
+					XboxElementSizeInBytes = 1 * sizeof(int32);
 					int32 iPacked = ((int32 *)pXboxVertex)[0];
 					// Cxbx note : to make each component signed, two need to be shifted towards the sign-bit first :
 					pHostVertexAsFloat[0] = ((FLOAT)((iPacked << 21) >> 21)) / 1023.0f;
 					pHostVertexAsFloat[1] = ((FLOAT)((iPacked << 10) >> 21)) / 1023.0f;
 					pHostVertexAsFloat[2] = ((FLOAT)((iPacked      ) >> 22)) / 511.0f;
-					pXboxVertex += 1 * sizeof(int32);
 					break;
 				}
 				case X_D3DVSDT_SHORT1: { // 0x15: // Make it SHORT2 and set the second short to 0
-					//memcpy(pHostVertexAsFloat, pXboxVertex, pVertexShaderStreamInfo->VertexElements[uiElement].HostByteSize);
-					((SHORT *)pHostVertexAsFloat)[0] = ((SHORT*)pXboxVertex)[0];
-					((SHORT *)pHostVertexAsFloat)[1] = 0x00;
-					pXboxVertex += 1 * sizeof(SHORT);
+					XboxElementSizeInBytes = 1 * sizeof(SHORT);
+					//memcpy(pHostVertexAsFloat, pXboxVertex, XboxElementSizeInBytes);
+					pHostVertexAsShort[0] = pXboxVertexAsShort[0];
+					pHostVertexAsShort[1] = 0x00;
 					break;
 				}
 				case X_D3DVSDT_SHORT3: { // 0x35: // Make it a SHORT4 and set the fourth short to 1
-					// Hit by Turok
-					//memcpy(pHostVertexAsFloat, pXboxVertex, pVertexShaderStreamInfo->VertexElements[uiElement].HostByteSize);
-					((SHORT *)pHostVertexAsFloat)[0] = ((SHORT*)pXboxVertex)[0];
-					((SHORT *)pHostVertexAsFloat)[1] = ((SHORT*)pXboxVertex)[1];
-					((SHORT *)pHostVertexAsFloat)[2] = ((SHORT*)pXboxVertex)[2];
-					((SHORT *)pHostVertexAsFloat)[3] = 0x01; // Turok verified (character disappears when this is 32767)
-					pXboxVertex += 3 * sizeof(SHORT);
+					// Test-cases : Turok
+					XboxElementSizeInBytes = 3 * sizeof(SHORT);
+					//memcpy(pHostVertexAsFloat, pXboxVertex, XboxElementSizeInBytes);
+					pHostVertexAsShort[0] = pXboxVertexAsShort[0];
+					pHostVertexAsShort[1] = pXboxVertexAsShort[1];
+					pHostVertexAsShort[2] = pXboxVertexAsShort[2];
+					pHostVertexAsShort[3] = 0x01; // Turok verified (character disappears when this is 32767)
 					break;
 				}
-				case X_D3DVSDT_PBYTE1: { // 0x14:  // Make it FLOAT1
-					pHostVertexAsFloat[0] = ((FLOAT)((BYTE*)pXboxVertex)[0]) / 255.0f;
-					pXboxVertex += 1 * sizeof(BYTE);
+				case X_D3DVSDT_PBYTE1: { // 0x14:
+					XboxElementSizeInBytes = 1 * sizeof(BYTE);
+#if CXBX_USE_D3D9	// Make it UBYTE4N
+					pHostVertexAsByte[0] = pXboxVertexAsByte[0];
+					pHostVertexAsByte[1] = 0;
+					pHostVertexAsByte[2] = 0;
+					pHostVertexAsByte[3] = 255; // TODO : Verify
+#else				// Make it FLOAT1
+					pHostVertexAsFloat[0] = ((FLOAT)pXboxVertexAsByte[0]) / 255.0f;
+#endif
 					break;
 				}
-				case X_D3DVSDT_PBYTE2: { // 0x24:  // Make it FLOAT2
-					pHostVertexAsFloat[0] = ((FLOAT)((BYTE*)pXboxVertex)[0]) / 255.0f;
-					pHostVertexAsFloat[1] = ((FLOAT)((BYTE*)pXboxVertex)[1]) / 255.0f;
-					pXboxVertex += 2 * sizeof(BYTE);
+				case X_D3DVSDT_PBYTE2: { // 0x24:
+					XboxElementSizeInBytes = 2 * sizeof(BYTE);
+#if CXBX_USE_D3D9	// Make it UBYTE4N
+					pHostVertexAsByte[0] = pXboxVertexAsByte[0];
+					pHostVertexAsByte[1] = pXboxVertexAsByte[1];
+					pHostVertexAsByte[2] = 0;
+					pHostVertexAsByte[3] = 255; // TODO : Verify
+#else				// Make it FLOAT2
+					pHostVertexAsFloat[0] = ((FLOAT)pXboxVertexAsByte[0]) / 255.0f;
+					pHostVertexAsFloat[1] = ((FLOAT)pXboxVertexAsByte[1]) / 255.0f;
+#endif
 					break;
 				}
-				case X_D3DVSDT_PBYTE3: { // 0x34: // Make it FLOAT3
-					// Hit by Turok
-					pHostVertexAsFloat[0] = ((FLOAT)((BYTE*)pXboxVertex)[0]) / 255.0f;
-					pHostVertexAsFloat[1] = ((FLOAT)((BYTE*)pXboxVertex)[1]) / 255.0f;
-					pHostVertexAsFloat[2] = ((FLOAT)((BYTE*)pXboxVertex)[2]) / 255.0f;
-					pXboxVertex += 3 * sizeof(BYTE);
+				case X_D3DVSDT_PBYTE3: { // 0x34:
+					// Test-cases : Turok
+					XboxElementSizeInBytes = 3 * sizeof(BYTE);
+#if CXBX_USE_D3D9	// Make it UBYTE4N
+					pHostVertexAsByte[0] = pXboxVertexAsByte[0];
+					pHostVertexAsByte[1] = pXboxVertexAsByte[1];
+					pHostVertexAsByte[2] = pXboxVertexAsByte[2];
+					pHostVertexAsByte[3] = 255; // TODO : Verify
+#else				// Make it FLOAT3
+					pHostVertexAsFloat[0] = ((FLOAT)pXboxVertexAsByte[0]) / 255.0f;
+					pHostVertexAsFloat[1] = ((FLOAT)pXboxVertexAsByte[1]) / 255.0f;
+					pHostVertexAsFloat[2] = ((FLOAT)pXboxVertexAsByte[2]) / 255.0f;
+#endif
 					break;
 				}
+#if !CXBX_USE_D3D9 // No need for patching in D3D9
 				case X_D3DVSDT_PBYTE4: { // 0x44: // Make it FLOAT4
 					// Hit by Jet Set Radio Future
-					pHostVertexAsFloat[0] = ((FLOAT)((BYTE*)pXboxVertex)[0]) / 255.0f;
-					pHostVertexAsFloat[1] = ((FLOAT)((BYTE*)pXboxVertex)[1]) / 255.0f;
-					pHostVertexAsFloat[2] = ((FLOAT)((BYTE*)pXboxVertex)[2]) / 255.0f;
-					pHostVertexAsFloat[3] = ((FLOAT)((BYTE*)pXboxVertex)[3]) / 255.0f;
-					pXboxVertex += 4 * sizeof(BYTE);
-					break;
-				}
-				case X_D3DVSDT_NORMSHORT1: { // 0x11: // Make it FLOAT1
-					// Test-cases : Halo - Combat Evolved
-
-					pHostVertexAsFloat[0] = ((FLOAT)((SHORT*)pXboxVertex)[0]) / 32767.0f;
-					//pHostVertexAsFloat[1] = 0.0f; // Would be needed for FLOAT2
-					pXboxVertex += 1 * sizeof(SHORT);
-					break;
-				}
-#if !DXBX_USE_D3D9 // No need for patching in D3D9
-				case X_D3DVSDT_NORMSHORT2: { // 0x21: // Make it FLOAT2
-					// Test-cases : Baldur's Gate: Dark Alliance 2, F1 2002, Gun, Halo - Combat Evolved, Scrapland 
-					pHostVertexAsFloat[0] = ((FLOAT)((SHORT*)pXboxVertex)[0]) / 32767.0f;
-					pHostVertexAsFloat[1] = ((FLOAT)((SHORT*)pXboxVertex)[1]) / 32767.0f;
-					pXboxVertex += 2 * sizeof(SHORT);
-					break;
-				}
-#endif
-				case X_D3DVSDT_NORMSHORT3: { // 0x31: // Make it FLOAT3
-					// Test-cases : Cel Damage, Constantine, Destroy All Humans!
-					pHostVertexAsFloat[0] = ((FLOAT)((SHORT*)pXboxVertex)[0]) / 32767.0f;
-					pHostVertexAsFloat[1] = ((FLOAT)((SHORT*)pXboxVertex)[1]) / 32767.0f;
-					pHostVertexAsFloat[2] = ((FLOAT)((SHORT*)pXboxVertex)[2]) / 32767.0f;
-					pXboxVertex += 3 * sizeof(SHORT);
-					break;
-				}
-#if !DXBX_USE_D3D9 // No need for patching in D3D9
-				case X_D3DVSDT_NORMSHORT4: { // 0x41: // Make it FLOAT4
-					LOG_TEST_CASE("X_D3DVSDT_NORMSHORT4"); // UNTESTED - Need test-case!
-					pHostVertexAsFloat[0] = ((FLOAT)((SHORT*)pXboxVertex)[0]) / 32767.0f;
-					pHostVertexAsFloat[1] = ((FLOAT)((SHORT*)pXboxVertex)[1]) / 32767.0f;
-					pHostVertexAsFloat[2] = ((FLOAT)((SHORT*)pXboxVertex)[2]) / 32767.0f;
-					pHostVertexAsFloat[3] = ((FLOAT)((SHORT*)pXboxVertex)[3]) / 32767.0f;
-					pXboxVertex += 4 * sizeof(SHORT);
+					XboxElementSizeInBytes = 4 * sizeof(BYTE);
+					pHostVertexAsFloat[0] = ((FLOAT)pXboxVertexAsByte[0]) / 255.0f;
+					pHostVertexAsFloat[1] = ((FLOAT)pXboxVertexAsByte[1]) / 255.0f;
+					pHostVertexAsFloat[2] = ((FLOAT)pXboxVertexAsByte[2]) / 255.0f;
+					pHostVertexAsFloat[3] = ((FLOAT)pXboxVertexAsByte[3]) / 255.0f;
 					break;
 				}
 #endif
 				case X_D3DVSDT_FLOAT2H: { // 0x72: // Make it FLOAT4 and set the third float to 0.0
-					pHostVertexAsFloat[0] = ((FLOAT*)pXboxVertex)[0];
-					pHostVertexAsFloat[1] = ((FLOAT*)pXboxVertex)[1];
+					XboxElementSizeInBytes = 3 * sizeof(FLOAT);
+					pHostVertexAsFloat[0] = pXboxVertexAsFloat[0];
+					pHostVertexAsFloat[1] = pXboxVertexAsFloat[1];
 					pHostVertexAsFloat[2] = 0.0f;
-					pHostVertexAsFloat[3] = ((FLOAT*)pXboxVertex)[2];
-					pXboxVertex += 3 * sizeof(FLOAT);
+					pHostVertexAsFloat[3] = pXboxVertexAsFloat[2];
 					break;
 				}
-				/*TODO
-				case X_D3DVSDT_NONE: { // 0x02:
-					printf("D3DVSDT_NONE / xbox ext. nsp /");
-					dwNewDataType = 0xFF;
+				case X_D3DVSDT_NONE: { // 0x02: // Skip it
+					LOG_TEST_CASE("X_D3DVSDT_NONE");
 					break;
 				}
-				*/
 				default: {
 					// Generic 'conversion' - just make a copy :
-					memcpy(pHostVertexAsFloat, pXboxVertex, pVertexShaderStreamInfo->VertexElements[uiElement].HostByteSize);
-					pXboxVertex += pVertexShaderStreamInfo->VertexElements[uiElement].HostByteSize;
+					memcpy(pHostVertex, pXboxVertex, XboxElementSizeInBytes);
 					break;
 				}
 				} // switch
 
-				// Increment the new pointer :
-				pHostVertexAsFloat = (FLOAT*)((uintptr_t)pHostVertexAsFloat + pVertexShaderStreamInfo->VertexElements[uiElement].HostByteSize);
+				// Increment the Xbox pointer :
+				pXboxVertex += XboxElementSizeInBytes;
+				// Increment the host pointer :
+				pHostVertex += pVertexShaderStreamInfo->VertexElements[uiElement].HostByteSize;
 			} // for NumberOfVertexElements
 		} // for uiVertexCount
     }
