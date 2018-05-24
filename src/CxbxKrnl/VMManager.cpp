@@ -2114,9 +2114,10 @@ xboxkrnl::NTSTATUS VMManager::XbVirtualMemoryStatistics(VAddr addr, xboxkrnl::PM
 	// NOTE: we count the first 64K block below 0x10000 and the reserved area in the memory placeholder after the xbe image as free areas
 	// TODO: should allocations made by Allocate be visible to this function or not?
 
-	if (addr < LOWEST_USER_ADDRESS || (addr >= XBE_IMAGE_BASE + ROUND_UP_4K(CxbxKrnl_Xbe->m_Header.dwSizeofImage) && addr < XBE_MAX_VA)
-		|| (it != m_MemoryRegionArray[UserRegion].RegionMap.end() && it->second.type == FreeVma))
-	{
+	if (addr < LOWEST_USER_ADDRESS
+		|| (addr >= XBE_IMAGE_BASE + ROUND_UP_4K(CxbxKrnl_Xbe->m_Header.dwSizeofImage) && addr < XBE_MAX_VA)
+		|| (it != m_MemoryRegionArray[UserRegion].RegionMap.end() && it->second.type == FreeVma)) {
+
 		if (addr < LOWEST_USER_ADDRESS)
 		{
 			RegionSize = LOWEST_USER_ADDRESS - ROUND_DOWN_4K(addr);
@@ -2144,15 +2145,10 @@ xboxkrnl::NTSTATUS VMManager::XbVirtualMemoryStatistics(VAddr addr, xboxkrnl::PM
 	CurrentProtect = 0;
 	InitialProtect = it->second.permissions;
 
-	if (PointerPde->Hardware.Valid != 0)
-	{
-		if (PointerPte->Default != 0)
-		{
-			CurrentState = XBOX_MEM_COMMIT;
-			PermissionsOfFirstPte = (PointerPte->Default & PTE_VALID_PROTECTION_MASK);
-			CurrentProtect = ConvertPteToXboxProtection(PointerPte->Default);
-		}
-		CurrentState = XBOX_MEM_RESERVE;
+	if (PointerPde->Hardware.Valid != 0 && PointerPte->Default != 0) {
+		CurrentState = XBOX_MEM_COMMIT;
+		PermissionsOfFirstPte = (PointerPte->Default & PTE_VALID_PROTECTION_MASK);
+		CurrentProtect = ConvertPteToXboxProtection(PointerPte->Default);
 	}
 	else { CurrentState = XBOX_MEM_RESERVE; }
 
