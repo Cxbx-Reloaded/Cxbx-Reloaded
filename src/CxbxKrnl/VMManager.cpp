@@ -2143,8 +2143,7 @@ xboxkrnl::NTSTATUS VMManager::XbVirtualMemoryStatistics(VAddr addr, xboxkrnl::PM
 	CurrentProtect = 0;
 	InitialProtect = it->second.permissions;
 
-	if (PointerPde->Hardware.Valid != 0 & PointerPte->Default != 0)
-	{
+	if (PointerPde->Hardware.Valid != 0 && PointerPte->Default != 0) {
 		CurrentState = XBOX_MEM_COMMIT;
 		PermissionsOfFirstPte = (PointerPte->Default & PTE_VALID_PROTECTION_MASK);
 		CurrentProtect = ConvertPteToXboxProtection(PointerPte->Default);
