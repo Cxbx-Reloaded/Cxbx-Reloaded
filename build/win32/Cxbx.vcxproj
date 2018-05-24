@@ -327,13 +327,13 @@
     <ClInclude Include="..\..\src\CxbxKrnl\gloffscreen\gloffscreen.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\HLEIntercept.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\LibRc4.h" />
-    <ClInclude Include="..\..\src\CxbxKrnl\OOVPA.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\PhysicalMemory.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\PoolManager.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\ReservedMemory.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\ResourceTracker.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\VMManager.h" />
     <ClInclude Include="..\..\src\CxbxVersion.h" />
+    <ClInclude Include="..\..\src\Cxbx\CxbxXbdm.h" />
     <ClInclude Include="..\..\src\Cxbx\DlgAbout.h" />
     <ClInclude Include="..\..\src\Cxbx\DlgAudioConfig.h" />
     <ClInclude Include="..\..\src\Cxbx\DlgControllerConfig.h" />
@@ -630,6 +630,7 @@
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="..\..\src\CxbxKrnl\VMManager.cpp" />
+    <ClCompile Include="..\..\src\Cxbx\CxbxXbdm.cpp" />
     <ClCompile Include="..\..\src\Cxbx\DlgAbout.cpp" />
     <ClCompile Include="..\..\src\Cxbx\DlgAudioConfig.cpp" />
     <ClCompile Include="..\..\src\Cxbx\DlgControllerConfig.cpp">
