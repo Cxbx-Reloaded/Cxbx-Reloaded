@@ -36,6 +36,7 @@
 
 #include "CxbxKrnl/EmuShared.h"
 #include "DlgXboxControllerPortMapping.h"
+#include "../Common/Win32/XBPortMapping.h"
 #include "Windowsx.h"
 #include "ResCxbx.h"
 
@@ -70,14 +71,14 @@ INT_PTR CALLBACK DlgXboxControllerPortMappingProc(HWND hWndDlg, UINT uMsg, WPARA
             /*! set window icon */
             SetClassLong(hWndDlg, GCL_HICON, (LONG)LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_CXBX)));
             //Load saved configuration from registry.
-            XTL::Load("Software\\Cxbx-Reloaded\\XboxPortHostMapping");//"Software\\Cxbx-Reloaded\\XboxPortHostMapping"
+            XBPortMappingLoad("Software\\Cxbx-Reloaded\\XboxPortHostMapping");//"Software\\Cxbx-Reloaded\\XboxPortHostMapping"
             //Init dialog selections per global array contenst.
             XTL::DWORD port = 0;
             int index = 0;
             XTL::DWORD dwHostType = 1;
             XTL::DWORD dwHostPort = 0;
             for (port = 0; port < 4; port++) {
-                XTL::GetXboxPortToHostPort(port, dwHostType, dwHostPort);
+                GetXboxPortToHostPort(port, dwHostType, dwHostPort);
                 switch (dwHostType) {
                 case X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_NOTCONNECT:
                     index = 0;
@@ -140,123 +141,123 @@ INT_PTR CALLBACK DlgXboxControllerPortMappingProc(HWND hWndDlg, UINT uMsg, WPARA
                 break;
             case IDC_HOST_APPLY:
                 //save configuration to registry.
-                XTL::Save("Software\\Cxbx-Reloaded\\XboxPortHostMapping");
+                XBPortMappingSave("Software\\Cxbx-Reloaded\\XboxPortHostMapping");
                 EndDialog(hWndDlg, wParam);
                 break;
             //set host type and host port in global array xbox to host bridge for xbox port 0
             case IDC_HOST_NOTCONNECT_0_0:
-                XTL::SetXboxPortToHostPort(0, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_NOTCONNECT, 0);
+                SetXboxPortToHostPort(0, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_NOTCONNECT, 0);
                 g_bHasChanges = TRUE;
                 break;
             case IDC_HOST_XINPUT_0_0:
-                XTL::SetXboxPortToHostPort(0, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_XINPUT, 0);
+                SetXboxPortToHostPort(0, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_XINPUT, 0);
                 g_bHasChanges = TRUE;
                 break;
             case IDC_HOST_XINPUT_0_1:
-                XTL::SetXboxPortToHostPort(0, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_XINPUT, 1);
+                SetXboxPortToHostPort(0, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_XINPUT, 1);
                 g_bHasChanges = TRUE;
                 break;
             case IDC_HOST_XINPUT_0_2:
-                XTL::SetXboxPortToHostPort(0, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_XINPUT, 2);
+                SetXboxPortToHostPort(0, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_XINPUT, 2);
                 g_bHasChanges = TRUE;
                 break;
             case IDC_HOST_XINPUT_0_3:
-                XTL::SetXboxPortToHostPort(0, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_XINPUT, 3);
+                SetXboxPortToHostPort(0, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_XINPUT, 3);
                 g_bHasChanges = TRUE;
                 break;
             case IDC_HOST_DINPUT_0_0:
-                XTL::SetXboxPortToHostPort(0, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_DINPUT, 0);
+                SetXboxPortToHostPort(0, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_DINPUT, 0);
                 g_bHasChanges = TRUE;
                 break;
             case IDC_HOST_VIRTUAL_SBC_0_0:
-                XTL::SetXboxPortToHostPort(0, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_VIRTUAL_SBC, 0);
+                SetXboxPortToHostPort(0, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_VIRTUAL_SBC, 0);
                 g_bHasChanges = TRUE;
                 break;
                 //set host type and host port in global array xbox to host bridge for xbox port 1
             case IDC_HOST_NOTCONNECT_1_0:
-                XTL::SetXboxPortToHostPort(1, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_NOTCONNECT, 0);
+                SetXboxPortToHostPort(1, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_NOTCONNECT, 0);
                 g_bHasChanges = TRUE;
                 break;
             case IDC_HOST_XINPUT_1_0:
-                XTL::SetXboxPortToHostPort(1, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_XINPUT, 0);
+                SetXboxPortToHostPort(1, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_XINPUT, 0);
                 g_bHasChanges = TRUE;
                 break;
             case IDC_HOST_XINPUT_1_1:
-                XTL::SetXboxPortToHostPort(1, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_XINPUT, 1);
+                SetXboxPortToHostPort(1, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_XINPUT, 1);
                 g_bHasChanges = TRUE;
                 break;
             case IDC_HOST_XINPUT_1_2:
-                XTL::SetXboxPortToHostPort(1, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_XINPUT, 2);
+                SetXboxPortToHostPort(1, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_XINPUT, 2);
                 g_bHasChanges = TRUE;
                 break;
             case IDC_HOST_XINPUT_1_3:
-                XTL::SetXboxPortToHostPort(1, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_XINPUT, 3);
+                SetXboxPortToHostPort(1, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_XINPUT, 3);
                 g_bHasChanges = TRUE;
                 break;
             case IDC_HOST_DINPUT_1_0:
-                XTL::SetXboxPortToHostPort(1, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_DINPUT, 0);
+                SetXboxPortToHostPort(1, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_DINPUT, 0);
                 g_bHasChanges = TRUE;
                 break;
             case IDC_HOST_VIRTUAL_SBC_1_0:
-                XTL::SetXboxPortToHostPort(1, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_VIRTUAL_SBC, 0);
+                SetXboxPortToHostPort(1, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_VIRTUAL_SBC, 0);
                 g_bHasChanges = TRUE;
                 break;
                 //set host type and host port in global array xbox to host bridge for xbox port 2
             case IDC_HOST_NOTCONNECT_2_0:
-                XTL::SetXboxPortToHostPort(2, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_NOTCONNECT, 0);
+                SetXboxPortToHostPort(2, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_NOTCONNECT, 0);
                 g_bHasChanges = TRUE;
                 break;
             case IDC_HOST_XINPUT_2_0:
-                XTL::SetXboxPortToHostPort(2, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_XINPUT, 0);
+                SetXboxPortToHostPort(2, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_XINPUT, 0);
                 g_bHasChanges = TRUE;
                 break;
             case IDC_HOST_XINPUT_2_1:
-                XTL::SetXboxPortToHostPort(2, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_XINPUT, 1);
+                SetXboxPortToHostPort(2, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_XINPUT, 1);
                 g_bHasChanges = TRUE;
                 break;
             case IDC_HOST_XINPUT_2_2:
-                XTL::SetXboxPortToHostPort(2, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_XINPUT, 2);
+                SetXboxPortToHostPort(2, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_XINPUT, 2);
                 g_bHasChanges = TRUE;
                 break;
             case IDC_HOST_XINPUT_2_3:
-                XTL::SetXboxPortToHostPort(2, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_XINPUT, 3);
+                SetXboxPortToHostPort(2, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_XINPUT, 3);
                 g_bHasChanges = TRUE;
                 break;
             case IDC_HOST_DINPUT_2_0:
-                XTL::SetXboxPortToHostPort(2, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_DINPUT, 0);
+                SetXboxPortToHostPort(2, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_DINPUT, 0);
                 g_bHasChanges = TRUE;
                 break;
             case IDC_HOST_VIRTUAL_SBC_2_0:
-                XTL::SetXboxPortToHostPort(2, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_VIRTUAL_SBC, 0);
+                SetXboxPortToHostPort(2, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_VIRTUAL_SBC, 0);
                 g_bHasChanges = TRUE;
                 break;
                 //set host type and host port in global array xbox to host bridge for xbox port 3
             case IDC_HOST_NOTCONNECT_3_0:
-                XTL::SetXboxPortToHostPort(3, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_NOTCONNECT, 0);
+                SetXboxPortToHostPort(3, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_NOTCONNECT, 0);
                 g_bHasChanges = TRUE;
                 break;
             case IDC_HOST_XINPUT_3_0:
-                XTL::SetXboxPortToHostPort(3, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_XINPUT, 0);
+                SetXboxPortToHostPort(3, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_XINPUT, 0);
                 g_bHasChanges = TRUE;
                 break;
             case IDC_HOST_XINPUT_3_1:
-                XTL::SetXboxPortToHostPort(3, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_XINPUT, 1);
+                SetXboxPortToHostPort(3, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_XINPUT, 1);
                 g_bHasChanges = TRUE;
                 break;
             case IDC_HOST_XINPUT_3_2:
-                XTL::SetXboxPortToHostPort(3, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_XINPUT, 2);
+                SetXboxPortToHostPort(3, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_XINPUT, 2);
                 g_bHasChanges = TRUE;
                 break;
             case IDC_HOST_XINPUT_3_3:
-                XTL::SetXboxPortToHostPort(3, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_XINPUT, 3);
+                SetXboxPortToHostPort(3, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_XINPUT, 3);
                 g_bHasChanges = TRUE;
                 break;
             case IDC_HOST_DINPUT_3_0:
-                XTL::SetXboxPortToHostPort(3, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_DINPUT, 0);
+                SetXboxPortToHostPort(3, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_DINPUT, 0);
                 g_bHasChanges = TRUE;
                 break;
             case IDC_HOST_VIRTUAL_SBC_3_0:
-                XTL::SetXboxPortToHostPort(3, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_VIRTUAL_SBC, 0);
+                SetXboxPortToHostPort(3, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_VIRTUAL_SBC, 0);
                 g_bHasChanges = TRUE;
                 break;
             }

@@ -284,6 +284,7 @@
     <ClInclude Include="..\..\src\Common\Win32\Threads.h" />
     <ClInclude Include="..\..\src\Common\CxbxDebugger.h" />
     <ClInclude Include="..\..\src\Common\Win32\XBAudio.h" />
+    <ClInclude Include="..\..\src\Common\Win32\XBPortMapping.h" />
     <ClInclude Include="..\..\src\Common\XADPCM.h" />
     <ClInclude Include="..\..\src\Common\XbePrinter.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\crc32c.h" />
@@ -418,6 +419,7 @@
     <ClCompile Include="..\..\src\Common\Win32\Threads.cpp" />
     <ClCompile Include="..\..\src\Common\CxbxDebugger.cpp" />
     <ClCompile Include="..\..\src\Common\Win32\XBAudio.cpp" />
+    <ClCompile Include="..\..\src\Common\Win32\XBPortMapping.cpp" />
     <ClCompile Include="..\..\src\Common\XbePrinter.cpp" />
     <ClCompile Include="..\..\src\CxbxKrnl\crc32c.cpp" />
     <ClCompile Include="..\..\src\CxbxKrnl\EmuD3D8Logging.cpp" />
