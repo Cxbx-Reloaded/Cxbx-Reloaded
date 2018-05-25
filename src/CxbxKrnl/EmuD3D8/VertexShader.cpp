@@ -1990,154 +1990,158 @@ static void VshConvertToken_STREAMDATA_REG(
     XTL::DWORD HostVertexElementDataType = 0;
 	XTL::DWORD HostVertexElementByteSize = 0;
 
-    switch(XboxVertexElementDataType)
-    {
+	switch (XboxVertexElementDataType)
+	{
 	case X_D3DVSDT_FLOAT1: // 0x12:
-        DbgVshPrintf("D3DVSDT_FLOAT1");
+		DbgVshPrintf("D3DVSDT_FLOAT1");
 		HostVertexElementDataType = D3DDECLTYPE_FLOAT1;
-		HostVertexElementByteSize = 1*sizeof(FLOAT);
-        break;
+		HostVertexElementByteSize = 1 * sizeof(FLOAT);
+		break;
 	case X_D3DVSDT_FLOAT2: // 0x22:
-        DbgVshPrintf("D3DVSDT_FLOAT2");
+		DbgVshPrintf("D3DVSDT_FLOAT2");
 		HostVertexElementDataType = D3DDECLTYPE_FLOAT2;
-		HostVertexElementByteSize = 2*sizeof(FLOAT);
-        break;
+		HostVertexElementByteSize = 2 * sizeof(FLOAT);
+		break;
 	case X_D3DVSDT_FLOAT3: // 0x32:
-        DbgVshPrintf("D3DVSDT_FLOAT3");
+		DbgVshPrintf("D3DVSDT_FLOAT3");
 		HostVertexElementDataType = D3DDECLTYPE_FLOAT3;
-		HostVertexElementByteSize = 3*sizeof(FLOAT);
-        break;
+		HostVertexElementByteSize = 3 * sizeof(FLOAT);
+		break;
 	case X_D3DVSDT_FLOAT4: // 0x42:
-        DbgVshPrintf("D3DVSDT_FLOAT4");
+		DbgVshPrintf("D3DVSDT_FLOAT4");
 		HostVertexElementDataType = D3DDECLTYPE_FLOAT4;
-		HostVertexElementByteSize = 4*sizeof(FLOAT);
-        break;
+		HostVertexElementByteSize = 4 * sizeof(FLOAT);
+		break;
 	case X_D3DVSDT_D3DCOLOR: // 0x40:
-        DbgVshPrintf("D3DVSDT_D3DCOLOR");
+		DbgVshPrintf("D3DVSDT_D3DCOLOR");
 		HostVertexElementDataType = D3DDECLTYPE_D3DCOLOR;
-		HostVertexElementByteSize = 1*sizeof(D3DCOLOR);
-        break;
+		HostVertexElementByteSize = 1 * sizeof(D3DCOLOR);
+		break;
 	case X_D3DVSDT_SHORT2: // 0x25:
-        DbgVshPrintf("D3DVSDT_SHORT2");
+		DbgVshPrintf("D3DVSDT_SHORT2");
 		HostVertexElementDataType = D3DDECLTYPE_SHORT2;
-		HostVertexElementByteSize = 2*sizeof(XTL::SHORT);
-        break;
+		HostVertexElementByteSize = 2 * sizeof(XTL::SHORT);
+		break;
 	case X_D3DVSDT_SHORT4: // 0x45:
-        DbgVshPrintf("D3DVSDT_SHORT4");
+		DbgVshPrintf("D3DVSDT_SHORT4");
 		HostVertexElementDataType = D3DDECLTYPE_SHORT4;
-		HostVertexElementByteSize = 4*sizeof(XTL::SHORT);
-        break;
+		HostVertexElementByteSize = 4 * sizeof(XTL::SHORT);
+		break;
 	case X_D3DVSDT_NORMSHORT1: // 0x11:
-        DbgVshPrintf("D3DVSDT_NORMSHORT1 /* xbox ext. */");
+		DbgVshPrintf("D3DVSDT_NORMSHORT1 /* xbox ext. */");
 #if CXBX_USE_D3D9
 		HostVertexElementDataType = D3DDECLTYPE_SHORT2N;
-		HostVertexElementByteSize = 2*sizeof(SHORT);
+		HostVertexElementByteSize = 2 * sizeof(SHORT);
 #else
 		HostVertexElementDataType = D3DDECLTYPE_FLOAT1;
-		HostVertexElementByteSize = 1*sizeof(FLOAT);
+		HostVertexElementByteSize = 1 * sizeof(FLOAT);
 #endif
-        NeedPatching = TRUE;
-        break;
+		NeedPatching = TRUE;
+		break;
 	case X_D3DVSDT_NORMSHORT2: // 0x21:
 #if CXBX_USE_D3D9
 		DbgVshPrintf("D3DVSDT_NORMSHORT2");
 		HostVertexElementDataType = D3DDECLTYPE_SHORT2N;
-		HostVertexElementByteSize = 2*sizeof(SHORT);
+		HostVertexElementByteSize = 2 * sizeof(SHORT);
 		// No need for patching in D3D9
 #else
 		DbgVshPrintf("D3DVSDT_NORMSHORT2 /* xbox ext. */");
-        HostVertexElementDataType = D3DDECLTYPE_FLOAT2;
-		HostVertexElementByteSize = 2*sizeof(FLOAT);
-        NeedPatching = TRUE;
+		HostVertexElementDataType = D3DDECLTYPE_FLOAT2;
+		HostVertexElementByteSize = 2 * sizeof(FLOAT);
+		NeedPatching = TRUE;
 #endif
 		break;
 	case X_D3DVSDT_NORMSHORT3: // 0x31:
-        DbgVshPrintf("D3DVSDT_NORMSHORT3 /* xbox ext. */");
+		DbgVshPrintf("D3DVSDT_NORMSHORT3 /* xbox ext. */");
 #if CXBX_USE_D3D9
 		HostVertexElementDataType = D3DDECLTYPE_SHORT4N;
-		HostVertexElementByteSize = 4*sizeof(SHORT);
+		HostVertexElementByteSize = 4 * sizeof(SHORT);
 #else
 		HostVertexElementDataType = D3DDECLTYPE_FLOAT3;
-		HostVertexElementByteSize = 3*sizeof(FLOAT);
+		HostVertexElementByteSize = 3 * sizeof(FLOAT);
 #endif
-        NeedPatching = TRUE;
-        break;
+		NeedPatching = TRUE;
+		break;
 	case X_D3DVSDT_NORMSHORT4: // 0x41:
 #if CXBX_USE_D3D9
 		DbgVshPrintf("D3DVSDT_NORMSHORT4");
 		HostVertexElementDataType = D3DDECLTYPE_SHORT4N;
-		HostVertexElementByteSize = 4*sizeof(SHORT);
+		HostVertexElementByteSize = 4 * sizeof(SHORT);
 		// No need for patching in D3D9
 #else
 		DbgVshPrintf("D3DVSDT_NORMSHORT4 /* xbox ext. */");
-        HostVertexElementDataType = D3DDECLTYPE_FLOAT4;
-		HostVertexElementByteSize = 4*sizeof(FLOAT);
-        NeedPatching = TRUE;
+		HostVertexElementDataType = D3DDECLTYPE_FLOAT4;
+		HostVertexElementByteSize = 4 * sizeof(FLOAT);
+		NeedPatching = TRUE;
 #endif
-        break;
+		break;
 	case X_D3DVSDT_NORMPACKED3: // 0x16:
-        DbgVshPrintf("D3DVSDT_NORMPACKED3 /* xbox ext. */");
+		DbgVshPrintf("D3DVSDT_NORMPACKED3 /* xbox ext. */");
 		HostVertexElementDataType = D3DDECLTYPE_FLOAT3;
-		HostVertexElementByteSize = 3*sizeof(FLOAT);
-        NeedPatching = TRUE;
-        break;
+		HostVertexElementByteSize = 3 * sizeof(FLOAT);
+		NeedPatching = TRUE;
+		break;
 	case X_D3DVSDT_SHORT1: // 0x15:
-        DbgVshPrintf("D3DVSDT_SHORT1 /* xbox ext. */");
-        HostVertexElementDataType = D3DDECLTYPE_SHORT2;
-		HostVertexElementByteSize = 2*sizeof(XTL::SHORT);
-        NeedPatching = TRUE;
-        break;
+		DbgVshPrintf("D3DVSDT_SHORT1 /* xbox ext. */");
+		HostVertexElementDataType = D3DDECLTYPE_SHORT2;
+		HostVertexElementByteSize = 2 * sizeof(XTL::SHORT);
+		NeedPatching = TRUE;
+		break;
 	case X_D3DVSDT_SHORT3: // 0x35:
-        DbgVshPrintf("D3DVSDT_SHORT3 /* xbox ext. */");
-        HostVertexElementDataType = D3DDECLTYPE_SHORT4;
-		HostVertexElementByteSize = 4*sizeof(XTL::SHORT);
-        NeedPatching = TRUE;
-        break;
+		DbgVshPrintf("D3DVSDT_SHORT3 /* xbox ext. */");
+		HostVertexElementDataType = D3DDECLTYPE_SHORT4;
+		HostVertexElementByteSize = 4 * sizeof(XTL::SHORT);
+		NeedPatching = TRUE;
+		break;
 	case X_D3DVSDT_PBYTE1: // 0x14:
-        DbgVshPrintf("D3DVSDT_PBYTE1 /* xbox ext. */");
+		DbgVshPrintf("D3DVSDT_PBYTE1 /* xbox ext. */");
 #if CXBX_USE_D3D9
 		HostVertexElementDataType = D3DDECLTYPE_UBYTE4N;
-		HostVertexElementByteSize = 4*sizeof(BYTE);
+		HostVertexElementByteSize = 4 * sizeof(BYTE);
 #else
-        HostVertexElementDataType = D3DDECLTYPE_FLOAT1;
-		HostVertexElementByteSize = 1*sizeof(FLOAT);
+		HostVertexElementDataType = D3DDECLTYPE_FLOAT1;
+		HostVertexElementByteSize = 1 * sizeof(FLOAT);
 #endif
 		NeedPatching = TRUE;
-        break;
+		break;
 	case X_D3DVSDT_PBYTE2: // 0x24:
-        DbgVshPrintf("D3DVSDT_PBYTE2 /* xbox ext. */");
+		DbgVshPrintf("D3DVSDT_PBYTE2 /* xbox ext. */");
 #if CXBX_USE_D3D9
 		HostVertexElementDataType = D3DDECLTYPE_UBYTE4N;
-		HostVertexElementByteSize = 4*sizeof(BYTE);
+		HostVertexElementByteSize = 4 * sizeof(BYTE);
 #else
 		HostVertexElementDataType = D3DDECLTYPE_FLOAT2;
-		HostVertexElementByteSize = 2*sizeof(FLOAT);
+		HostVertexElementByteSize = 2 * sizeof(FLOAT);
 #endif
-        NeedPatching = TRUE;
-        break;
+		NeedPatching = TRUE;
+		break;
 	case X_D3DVSDT_PBYTE3: // 0x34:
-        DbgVshPrintf("D3DVSDT_PBYTE3 /* xbox ext. */");
+		DbgVshPrintf("D3DVSDT_PBYTE3 /* xbox ext. */");
 #if CXBX_USE_D3D9
 		HostVertexElementDataType = D3DDECLTYPE_UBYTE4N;
-		HostVertexElementByteSize = 4*sizeof(BYTE);
+		HostVertexElementByteSize = 4 * sizeof(BYTE);
 #else
 		HostVertexElementDataType = D3DDECLTYPE_FLOAT3;
-		HostVertexElementByteSize = 3*sizeof(FLOAT);
+		HostVertexElementByteSize = 3 * sizeof(FLOAT);
 #endif
-        NeedPatching = TRUE;
-        break;
+		NeedPatching = TRUE;
+		break;
 	case X_D3DVSDT_PBYTE4: // 0x44: // Hit by Panzer
 #if CXBX_USE_D3D9
-        DbgVshPrintf("D3DVSDT_PBYTE4");
-		HostVertexElementDataType = D3DDECLTYPE_UBYTE4N;
-		HostVertexElementByteSize = 4*sizeof(BYTE);
-		// No need for patching in D3D9
-#else
-        DbgVshPrintf("D3DVSDT_PBYTE4 /* xbox ext. */");
-        HostVertexElementDataType = D3DDECLTYPE_FLOAT4;
-		HostVertexElementByteSize = 4*sizeof(FLOAT);
-		NeedPatching = TRUE;
+		if (g_D3DCaps.DeclTypes & D3DDTCAPS_UBYTE4N) {
+			DbgVshPrintf("D3DVSDT_PBYTE4");
+			HostVertexElementDataType = D3DDECLTYPE_UBYTE4N;
+			HostVertexElementByteSize = 4 * sizeof(BYTE);
+			// No need for patching when D3D9 supports D3DDECLTYPE_UBYTE4N
+		}
+		else
 #endif
+		{
+			DbgVshPrintf("D3DVSDT_PBYTE4 /* xbox ext. */");
+			HostVertexElementDataType = D3DDECLTYPE_FLOAT4;
+			HostVertexElementByteSize = 4 * sizeof(FLOAT);
+			NeedPatching = TRUE;
+		}
 		break;
 	case X_D3DVSDT_FLOAT2H: // 0x72:
         DbgVshPrintf("D3DVSDT_FLOAT2H /* xbox ext. */");
@@ -2148,7 +2152,7 @@ static void VshConvertToken_STREAMDATA_REG(
 	case X_D3DVSDT_NONE: // 0x02:
 		DbgVshPrintf("D3DVSDT_NONE /* xbox ext. */");
         HostVertexElementDataType = D3DDECLTYPE_UNUSED;
-        NeedPatching = TRUE;
+        // NeedPatching = TRUE; // TODO : This seems to cause regressions?
         break;
     default:
         DbgVshPrintf("Unknown data type for D3DVSD_REG: 0x%02X\n", XboxVertexElementDataType);

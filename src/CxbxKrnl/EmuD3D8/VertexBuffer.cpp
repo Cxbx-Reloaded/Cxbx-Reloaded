@@ -268,6 +268,16 @@ UINT XTL::CxbxVertexBufferConverter::GetNbrStreams(CxbxDrawContext *pDrawContext
     return 0;
 }
 
+inline FLOAT NormShortToFloat(const SHORT value)
+{
+	return ((FLOAT)value) / 32767.0f;
+}
+
+inline FLOAT ByteToFloat(const BYTE value)
+{
+	return ((FLOAT)value) / 255.0f;
+}
+
 void XTL::CxbxVertexBufferConverter::ConvertStream
 (
 	CxbxDrawContext *pDrawContext,
@@ -391,18 +401,14 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
 	if (bNeedVertexPatching) {
 	    // assert(bNeedStreamCopy || "bNeedVertexPatching implies bNeedStreamCopy (but copies via conversions");
 		for (uint32 uiVertex = 0; uiVertex < uiVertexCount; uiVertex++) {
-			uint08 *pXboxVertex = &pXboxVertexData[uiVertex * uiXboxVertexStride];
-			uint08 *pHostVertex = &pHostVertexData[uiVertex * uiHostVertexStride];
+			uint08 *pXboxVertexAsByte = &pXboxVertexData[uiVertex * uiXboxVertexStride];
+			uint08 *pHostVertexAsByte = &pHostVertexData[uiVertex * uiHostVertexStride];
 			for (UINT uiElement = 0; uiElement < pVertexShaderStreamInfo->NumberOfVertexElements; uiElement++) {
-				FLOAT *pXboxVertexAsFloat = (FLOAT*)pXboxVertex;
-				SHORT *pXboxVertexAsShort = (SHORT*)pXboxVertex;
-				BYTE *pXboxVertexAsByte = (BYTE*)pXboxVertex;
+				FLOAT *pXboxVertexAsFloat = (FLOAT*)pXboxVertexAsByte;
+				SHORT *pXboxVertexAsShort = (SHORT*)pXboxVertexAsByte;
 				int XboxElementByteSize = pVertexShaderStreamInfo->VertexElements[uiElement].HostByteSize;
-				FLOAT *pHostVertexAsFloat = (FLOAT*)pHostVertex;
-				SHORT *pHostVertexAsShort = (SHORT*)pHostVertex;
-#if CXBX_USE_D3D9
-				BYTE *pHostVertexAsByte = (BYTE*)pHostVertex;
-#endif
+				FLOAT *pHostVertexAsFloat = (FLOAT*)pHostVertexAsByte;
+				SHORT *pHostVertexAsShort = (SHORT*)pHostVertexAsByte;
 				// Dxbx note : The following code handles only the D3DVSDT enums that need conversion;
 				// All other cases are catched by the memcpy in the default-block.
 				switch (pVertexShaderStreamInfo->VertexElements[uiElement].XboxType) {
@@ -413,7 +419,7 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
 					pHostVertexAsShort[0] = pXboxVertexAsShort[0];
 					pHostVertexAsShort[1] = 0;
 #else				// Make it FLOAT1
-					pHostVertexAsFloat[0] = ((FLOAT)pXboxVertexAsShort[0]) / 32767.0f;
+					pHostVertexAsFloat[0] = NormShortToFloat(pXboxVertexAsShort[0]);
 					//pHostVertexAsFloat[1] = 0.0f; // Would be needed for FLOAT2
 #endif
 					break;
@@ -422,8 +428,8 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
 				case X_D3DVSDT_NORMSHORT2: { // 0x21: // Make it FLOAT2
 					// Test-cases : Baldur's Gate: Dark Alliance 2, F1 2002, Gun, Halo - Combat Evolved, Scrapland 
 					XboxElementByteSize = 2 * sizeof(SHORT);
-					pHostVertexAsFloat[0] = ((FLOAT)pXboxVertexAsShort[0]) / 32767.0f;
-					pHostVertexAsFloat[1] = ((FLOAT)pXboxVertexAsShort[1]) / 32767.0f;
+					pHostVertexAsFloat[0] = NormShortToFloat(pXboxVertexAsShort[0]);
+					pHostVertexAsFloat[1] = NormShortToFloat(pXboxVertexAsShort[1]);
 					break;
 				}
 #endif
@@ -436,9 +442,9 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
 					pHostVertexAsShort[2] = pXboxVertexAsShort[2];
 					pHostVertexAsShort[3] = 32767; // TODO : verify
 #else				// Make it FLOAT3
-					pHostVertexAsFloat[0] = ((FLOAT)pXboxVertexAsShort[0]) / 32767.0f;
-					pHostVertexAsFloat[1] = ((FLOAT)pXboxVertexAsShort[1]) / 32767.0f;
-					pHostVertexAsFloat[2] = ((FLOAT)pXboxVertexAsShort[2]) / 32767.0f;
+					pHostVertexAsFloat[0] = NormShortToFloat(pXboxVertexAsShort[0]);
+					pHostVertexAsFloat[1] = NormShortToFloat(pXboxVertexAsShort[1]);
+					pHostVertexAsFloat[2] = NormShortToFloat(pXboxVertexAsShort[2]);
 #endif
 					break;
 				}
@@ -446,17 +452,17 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
 				case X_D3DVSDT_NORMSHORT4: { // 0x41: // Make it FLOAT4
 					// Test-cases : Judge Dredd: Dredd vs Death, NHL Hitz 2002, Silent Hill 2, Sneakers, Tony Hawk Pro Skater 4
 					XboxElementByteSize = 4 * sizeof(SHORT);
-					pHostVertexAsFloat[0] = ((FLOAT)pXboxVertexAsShort[0]) / 32767.0f;
-					pHostVertexAsFloat[1] = ((FLOAT)pXboxVertexAsShort[1]) / 32767.0f;
-					pHostVertexAsFloat[2] = ((FLOAT)pXboxVertexAsShort[2]) / 32767.0f;
-					pHostVertexAsFloat[3] = ((FLOAT)pXboxVertexAsShort[3]) / 32767.0f;
+					pHostVertexAsFloat[0] = NormShortToFloat(pXboxVertexAsShort[0]);
+					pHostVertexAsFloat[1] = NormShortToFloat(pXboxVertexAsShort[1]);
+					pHostVertexAsFloat[2] = NormShortToFloat(pXboxVertexAsShort[2]);
+					pHostVertexAsFloat[3] = NormShortToFloat(pXboxVertexAsShort[3]);
 					break;
 				}
 #endif
 				case X_D3DVSDT_NORMPACKED3: { // 0x16: // Make it FLOAT3
 					// Test-cases : Dashboard
 					XboxElementByteSize = 1 * sizeof(int32);
-					int32 iPacked = ((int32 *)pXboxVertex)[0];
+					int32 iPacked = ((int32 *)pXboxVertexAsByte)[0];
 					// Cxbx note : to make each component signed, two need to be shifted towards the sign-bit first :
 					pHostVertexAsFloat[0] = ((FLOAT)((iPacked << 21) >> 21)) / 1023.0f;
 					pHostVertexAsFloat[1] = ((FLOAT)((iPacked << 10) >> 21)) / 1023.0f;
@@ -465,19 +471,19 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
 				}
 				case X_D3DVSDT_SHORT1: { // 0x15: // Make it SHORT2 and set the second short to 0
 					XboxElementByteSize = 1 * sizeof(SHORT);
-					//memcpy(pHostVertexAsFloat, pXboxVertex, XboxElementByteSize);
+					//memcpy(pHostVertexAsFloat, pXboxVertexAsByte, XboxElementByteSize);
 					pHostVertexAsShort[0] = pXboxVertexAsShort[0];
-					pHostVertexAsShort[1] = 0x00;
+					pHostVertexAsShort[1] = 0;
 					break;
 				}
 				case X_D3DVSDT_SHORT3: { // 0x35: // Make it a SHORT4 and set the fourth short to 1
 					// Test-cases : Turok
 					XboxElementByteSize = 3 * sizeof(SHORT);
-					//memcpy(pHostVertexAsFloat, pXboxVertex, XboxElementByteSize);
+					//memcpy(pHostVertexAsFloat, pXboxVertexAsByte, XboxElementByteSize);
 					pHostVertexAsShort[0] = pXboxVertexAsShort[0];
 					pHostVertexAsShort[1] = pXboxVertexAsShort[1];
 					pHostVertexAsShort[2] = pXboxVertexAsShort[2];
-					pHostVertexAsShort[3] = 0x01; // Turok verified (character disappears when this is 32767)
+					pHostVertexAsShort[3] = 1; // Turok verified (character disappears when this is 32767)
 					break;
 				}
 				case X_D3DVSDT_PBYTE1: { // 0x14:
@@ -488,7 +494,7 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
 					pHostVertexAsByte[2] = 0;
 					pHostVertexAsByte[3] = 255; // TODO : Verify
 #else				// Make it FLOAT1
-					pHostVertexAsFloat[0] = ((FLOAT)pXboxVertexAsByte[0]) / 255.0f;
+					pHostVertexAsFloat[0] = ByteToFloat(pXboxVertexAsByte[0]);
 #endif
 					break;
 				}
@@ -500,8 +506,8 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
 					pHostVertexAsByte[2] = 0;
 					pHostVertexAsByte[3] = 255; // TODO : Verify
 #else				// Make it FLOAT2
-					pHostVertexAsFloat[0] = ((FLOAT)pXboxVertexAsByte[0]) / 255.0f;
-					pHostVertexAsFloat[1] = ((FLOAT)pXboxVertexAsByte[1]) / 255.0f;
+					pHostVertexAsFloat[0] = ByteToFloat(pXboxVertexAsByte[0]);
+					pHostVertexAsFloat[1] = ByteToFloat(pXboxVertexAsByte[1]);
 #endif
 					break;
 				}
@@ -514,23 +520,32 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
 					pHostVertexAsByte[2] = pXboxVertexAsByte[2];
 					pHostVertexAsByte[3] = 255; // TODO : Verify
 #else				// Make it FLOAT3
-					pHostVertexAsFloat[0] = ((FLOAT)pXboxVertexAsByte[0]) / 255.0f;
-					pHostVertexAsFloat[1] = ((FLOAT)pXboxVertexAsByte[1]) / 255.0f;
-					pHostVertexAsFloat[2] = ((FLOAT)pXboxVertexAsByte[2]) / 255.0f;
+					pHostVertexAsFloat[0] = ByteToFloat(pXboxVertexAsByte[0]);
+					pHostVertexAsFloat[1] = ByteToFloat(pXboxVertexAsByte[1]);
+					pHostVertexAsFloat[2] = ByteToFloat(pXboxVertexAsByte[2]);
 #endif
 					break;
 				}
-#if !CXBX_USE_D3D9 // No need for patching in D3D9
-				case X_D3DVSDT_PBYTE4: { // 0x44: // Make it FLOAT4
+				case X_D3DVSDT_PBYTE4: { // 0x44:
 					// Hit by Jet Set Radio Future
-					XboxElementByteSize = 4 * sizeof(BYTE);
-					pHostVertexAsFloat[0] = ((FLOAT)pXboxVertexAsByte[0]) / 255.0f;
-					pHostVertexAsFloat[1] = ((FLOAT)pXboxVertexAsByte[1]) / 255.0f;
-					pHostVertexAsFloat[2] = ((FLOAT)pXboxVertexAsByte[2]) / 255.0f;
-					pHostVertexAsFloat[3] = ((FLOAT)pXboxVertexAsByte[3]) / 255.0f;
+#if CXBX_USE_D3D9
+					if (g_D3DCaps.DeclTypes & D3DDTCAPS_UBYTE4N) {
+						// No need for patching when D3D9 supports D3DDECLTYPE_UBYTE4N
+						// TODO : goto default; // ??
+						memcpy(pHostVertexAsByte, pXboxVertexAsByte, XboxElementByteSize);
+					}
+					else
+#endif
+					{
+						// Make it FLOAT4
+						XboxElementByteSize = 4 * sizeof(BYTE);
+						pHostVertexAsFloat[0] = ByteToFloat(pXboxVertexAsByte[0]);
+						pHostVertexAsFloat[1] = ByteToFloat(pXboxVertexAsByte[1]);
+						pHostVertexAsFloat[2] = ByteToFloat(pXboxVertexAsByte[2]);
+						pHostVertexAsFloat[3] = ByteToFloat(pXboxVertexAsByte[3]);
+					}
 					break;
 				}
-#endif
 				case X_D3DVSDT_FLOAT2H: { // 0x72: // Make it FLOAT4 and set the third float to 0.0
 					XboxElementByteSize = 3 * sizeof(FLOAT);
 					pHostVertexAsFloat[0] = pXboxVertexAsFloat[0];
@@ -545,15 +560,15 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
 				}
 				default: {
 					// Generic 'conversion' - just make a copy :
-					memcpy(pHostVertex, pXboxVertex, XboxElementByteSize);
+					memcpy(pHostVertexAsByte, pXboxVertexAsByte, XboxElementByteSize);
 					break;
 				}
 				} // switch
 
 				// Increment the Xbox pointer :
-				pXboxVertex += XboxElementByteSize;
+				pXboxVertexAsByte += XboxElementByteSize;
 				// Increment the host pointer :
-				pHostVertex += pVertexShaderStreamInfo->VertexElements[uiElement].HostByteSize;
+				pHostVertexAsByte += pVertexShaderStreamInfo->VertexElements[uiElement].HostByteSize;
 			} // for NumberOfVertexElements
 		} // for uiVertexCount
     }
