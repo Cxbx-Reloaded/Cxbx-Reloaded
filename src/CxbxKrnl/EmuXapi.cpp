@@ -427,7 +427,7 @@ BOOL WINAPI XTL::EMUPATCH(XGetDeviceChanges)
 	LOG_FUNC_END;
 
 	BOOL ret = FALSE;
-
+    //OLD_XINPUT
 	// If this is a gamepad, and no gamepad was previously detected, connect one
 /*	if (DeviceType == gDeviceType_Gamepad && DeviceType->CurrentConnected == 0) {
 		DeviceType->CurrentConnected = 1;
@@ -499,7 +499,8 @@ HANDLE WINAPI XTL::EMUPATCH(XInputOpen)
 		LOG_FUNC_END;
 
     X_POLLING_PARAMETERS_HANDLE *pph = 0;
-	//rever back to return handle  for port 0~3, this is for multi controller support.
+    //OLD_XINPUT
+    //rever back to return handle  for port 0~3, this is for multi controller support.
 /*    if(dwPort >= 0 && (dwPort <= total_xinput_gamepad))
     {
         if(g_hInputHandle[dwPort] == 0)
@@ -618,7 +619,8 @@ VOID WINAPI XTL::EMUPATCH(XInputClose)
                 g_pXInputSetStateStatus[v].dwLatency = 0;
             }
         }
-		/*
+        //OLD_XINPUT
+        /*
         if(pph->pPollingParameters != NULL)
         {
             delete pph->pPollingParameters;
@@ -650,7 +652,7 @@ DWORD WINAPI XTL::EMUPATCH(XInputPoll)
 	FUNC_EXPORTS
 
 	LOG_FUNC_ONE_ARG(hDevice);
-
+    //OLD_XINPUT
 /*    X_POLLING_PARAMETERS_HANDLE *pph = (X_POLLING_PARAMETERS_HANDLE*)hDevice;
 
     //
@@ -731,7 +733,7 @@ DWORD WINAPI XTL::EMUPATCH(XInputGetCapabilities)
     DWORD ret = ERROR_DEVICE_NOT_CONNECTED;
 
     X_POLLING_PARAMETERS_HANDLE *pph = (X_POLLING_PARAMETERS_HANDLE*)hDevice;
-
+    //OLD_XINPUT
 /*    if(pph != NULL)
     {
         DWORD dwPort = pph->dwPort;
@@ -884,7 +886,7 @@ void EmuSBCGetState(XTL::PX_SBC_GAMEPAD pSBCGamepad, XTL::PX_XINPUT_GAMEPAD pXIG
             pSBCGamepad->ucGearLever ++;
         }
     }
-
+    //OLD_XINPUT
     /* //not used, don't duplicate the handling for same setting of pXIGamepad's members, later one will over write privous one.
     if (pXIGamepad->wButtons & X_XINPUT_GAMEPAD_START) {
         pSBCGamepad->wButtons[0] |= X_SBC_GAMEPAD_W0_START;
@@ -899,6 +901,7 @@ void EmuSBCGetState(XTL::PX_SBC_GAMEPAD pSBCGamepad, XTL::PX_XINPUT_GAMEPAD pXIG
     else {
         pSBCGamepad->wButtons[2] &= ~X_SBC_GAMEPAD_W2_LEFTJOYSIGHTCHANGE;
     }
+    //OLD_XINPUT
     /* //not used
     if (pXIGamepad->wButtons & X_XINPUT_GAMEPAD_RIGHT_THUMB) {
         pSBCGamepad->wButtons |= X_XINPUT_GAMEPAD_RIGHT_THUMB;
@@ -1006,7 +1009,7 @@ DWORD WINAPI XTL::EMUPATCH(XInputGetState)
 		LOG_FUNC_END;
 
     DWORD ret = ERROR_INVALID_HANDLE;
-
+    //OLD_XINPUT
     /*
     X_POLLING_PARAMETERS_HANDLE *pph = (X_POLLING_PARAMETERS_HANDLE*)hDevice;
 
@@ -1097,6 +1100,7 @@ DWORD WINAPI XTL::EMUPATCH(XInputSetState)
 		LOG_FUNC_END;
 
     DWORD ret = ERROR_IO_PENDING;
+    //OLD_XINPUT
 /*
     X_POLLING_PARAMETERS_HANDLE *pph = (X_POLLING_PARAMETERS_HANDLE*)hDevice;
 
