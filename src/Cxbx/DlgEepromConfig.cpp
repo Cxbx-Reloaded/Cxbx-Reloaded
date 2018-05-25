@@ -464,7 +464,7 @@ INT_PTR CALLBACK DlgEepromConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPA
 				{
 					if (g_bHasChanges) {
 						WriteEepromInMemory(hWndDlg);
-						std::basic_ofstream<uint8_t> EepromFile(szFilePath_EEPROM_bin, std::ios::out);
+						std::basic_ofstream<uint8_t> EepromFile(szFilePath_EEPROM_bin, std::ios::binary);
 						if (EepromFile.is_open()) {
 							EepromFile.write(reinterpret_cast<uint8_t*>(pEEPROM_GUI), EEPROM_SIZE);
 							EepromFile.close();
