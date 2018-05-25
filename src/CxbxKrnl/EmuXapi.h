@@ -351,31 +351,13 @@ X_XINPUT_CAPABILITIES, *PX_XINPUT_CAPABILITIES;
 // ******************************************************************
 // * Device XBOX Input Device Types 
 // ******************************************************************
-// accroding to XDK document, all game controller use 0x01 GAMEPAD device type. then specify the subtype in returned Capabilities when XInputGetCapabilities called.
+// all game controller use 0x01 GAMEPAD device type. then specify the subtype in returned Capabilities when XInputGetCapabilities called.
 #define X_XINPUT_DEVTYPE_GAMEPAD              0x01
 // SteelBatalion controller is the only one with special device type other than 1.
 #define X_XINPUT_DEVTYPE_STEELBATALION        0x80
 
 // ******************************************************************
-// * Device XBOX Input Device SubTypes, this table is purely my asseumption. the alphabetical order with index starting from 0 matches the 0x04 subtype in DeviceGampepad. but it seems wrong.
-// * this is the 2nd byte in DeviceInfo, right next to DEVTYPE. disable this table since we have table from xbox.h.
-// ******************************************************************
-
-/*
-#define X_XINPUT_DEVSUBTYPE_GC_ARCADE_STICK            0x0 //Arcade style joystick
-#define X_XINPUT_DEVSUBTYPE_GC_DIGITAL_ARCADE_STICK    0x1 //Arcade style joystick, and buttons that are normally analog instead return 0 or 255 only
-#define X_XINPUT_DEVSUBTYPE_GC_FISHING_ROD             0x2 //Fishing rod controller
-#define X_XINPUT_DEVSUBTYPE_GC_FLIGHT_STICK            0x3 //Joystick designed for flight games
-#define X_XINPUT_DEVSUBTYPE_GC_GAMEPAD                 0x4 //Gamepad
-#define X_XINPUT_DEVSUBTYPE_GC_GAMEPAD_ALT             0x5 //Gamepad, alternate configuration
-#define X_XINPUT_DEVSUBTYPE_GC_LIGHTGUN                0x6 //Lightgun
-#define X_XINPUT_DEVSUBTYPE_GC_RADIO_FLIGHT_CONTROL    0x7 //Wireless flight controller
-#define X_XINPUT_DEVSUBTYPE_GC_SNOWBOARD               0x8 //Snowboard controller
-#define X_XINPUT_DEVSUBTYPE_GC_WHEEL                   0x9 //Wheel
-*/
-
-// ******************************************************************
-// * Device XBOX Input Device SubTypes, for use in XINPUT_CAPABILITIES, this table comes from XDK xbox.h
+// * Device XBOX Input Device SubTypes, for use in XINPUT_CAPABILITIES
 // ******************************************************************
 //it's strange that general GAMEPAD uses subtype 0x04.
 #define X_XINPUT_DEVSUBTYPE_GC_GAMEPAD              0x01 
