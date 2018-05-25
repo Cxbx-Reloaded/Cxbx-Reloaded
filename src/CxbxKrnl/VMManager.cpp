@@ -2105,6 +2105,28 @@ xboxkrnl::NTSTATUS VMManager::XbVirtualMemoryStatistics(VAddr addr, xboxkrnl::PM
 		return STATUS_INVALID_PARAMETER;
 	}
 
+	// If it's not in the XBE, report actual host allocations
+	// The game will see allocations it didn't make, but at least it has a chance to
+	// not try to allocate memory our emulator already occupied.
+	if (addr > XBE_IMAGE_BASE + ROUND_UP_4K(CxbxKrnl_Xbe->m_Header.dwSizeofImage))
+	{
+		MEMORY_BASIC_INFORMATION info;
+		if (VirtualQuery((void*)addr, &info, sizeof(info)))
+		{
+			memory_statistics->AllocationBase = info.AllocationBase;
+			memory_statistics->AllocationProtect = info.AllocationProtect;
+			memory_statistics->BaseAddress = info.BaseAddress;
+			memory_statistics->Protect = info.Protect;
+			memory_statistics->RegionSize = info.RegionSize;
+			memory_statistics->State = info.State;
+			memory_statistics->Type = info.Type;
+			return STATUS_SUCCESS;
+		}
+		else {
+			return STATUS_INVALID_PARAMETER;
+		}
+	}
+
 	Lock();
 
 	// Locate the vma containing the supplied address
