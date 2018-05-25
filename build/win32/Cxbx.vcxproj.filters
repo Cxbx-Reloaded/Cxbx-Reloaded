@@ -286,6 +286,9 @@
     </ClCompile>
     <ClCompile Include="..\..\src\Common\Win32\XBPortMapping.cpp">
       <Filter>Emulator</Filter>
+    </ClCompile>    
+    <ClCompile Include="ClCompile Include="..\..\src\Cxbx\CxbxXbdm.cpp">
+      <Filter>Kernel</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
