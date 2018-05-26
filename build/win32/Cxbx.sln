@@ -27,7 +27,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "d3d8to9", "..\..\import\d3d
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "XbSymbolDatabase", "..\..\import\XbSymbolDatabase\xbSymbolDatabase.vcxproj", "{B8D9AFC2-B38F-4714-846D-8A2754F076C9}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CxbxVSBC", "..\..\src\CxbxVSBC\CxbxVSBC.vcxproj", "{EFA81330-D410-4232-9A0C-1D8B91B6FFFF}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CxbxVSBC", "CxbxVSBC.vcxproj", "{EFA81330-D410-4232-9A0C-1D8B91B6FFFF}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
