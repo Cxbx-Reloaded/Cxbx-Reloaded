@@ -43,6 +43,7 @@ namespace xboxkrnl
 };
 
 #include "CxbxKrnl.h"
+#include "Cxbx\CxbxXbdm.h" // For Cxbx_LibXbdmThunkTable
 #include "CxbxVersion.h"
 #include "Emu.h"
 #include "EmuX86.h"
@@ -803,6 +804,47 @@ void PatchRdtscInstructions()
 	printf("INIT: Done patching rdtsc, total %d rdtsc instructions patched\n", g_RdtscPatches.size());
 }
 
+void MapThunkTable(uint32_t* kt, uint32* pThunkTable)
+{
+    const bool SendDebugReports = (pThunkTable == CxbxKrnl_KernelThunkTable) && CxbxDebugger::CanReport();
+
+	uint32_t* kt_tbl = (uint32_t*)kt;
+	int i = 0;
+	while (kt_tbl[i] != 0) {
+		int t = kt_tbl[i] & 0x7FFFFFFF;
+		kt_tbl[i] = pThunkTable[t];
+        if (SendDebugReports) {
+            // TODO: Update CxbxKrnl_KernelThunkTable to include symbol names
+            std::string importName = "KernelImport_" + std::to_string(t);
+            CxbxDebugger::ReportKernelPatch(importName.c_str(), kt_tbl[i]);
+        }
+		i++;
+	}
+}
+
+typedef struct {
+	xbaddr ThunkAddr;
+	xbaddr LibNameAddr;
+} XbeImportEntry;
+
+void ImportLibraries(XbeImportEntry *pImportDirectory)
+{
+	// assert(pImportDirectory);
+
+	while (pImportDirectory->LibNameAddr && pImportDirectory->ThunkAddr) {
+		std::wstring LibName = std::wstring((wchar_t*)pImportDirectory->LibNameAddr);
+
+		if (LibName == L"xbdm.dll") {
+			MapThunkTable((uint32_t *)pImportDirectory->ThunkAddr, Cxbx_LibXbdmThunkTable);
+		}
+		else {
+			printf("LOAD : Skipping unrecognized import library : %s\n", LibName.c_str());
+		}
+
+		pImportDirectory++;
+	}
+}
+
 void CxbxKrnlMain(int argc, char* argv[])
 {
 	// Skip '/load' switch
@@ -1042,27 +1084,12 @@ void CxbxKrnlMain(int argc, char* argv[])
 	uint32_t kt = CxbxKrnl_Xbe->m_Header.dwKernelImageThunkAddr;
 	kt ^= XOR_KT_KEY[g_XbeType];
 
-    const bool SendDebugReports = CxbxDebugger::CanReport();
-
 	// Process the Kernel thunk table to map Kernel function calls to their actual address :
-	{
-		uint32_t* kt_tbl = (uint32_t*)kt;
-		int i = 0;
-		while (kt_tbl[i] != 0) {
-			int t = kt_tbl[i] & 0x7FFFFFFF;
-            
-			kt_tbl[i] = CxbxKrnl_KernelThunkTable[t];
+	MapThunkTable((uint32_t*)kt, CxbxKrnl_KernelThunkTable);
 
-            if (SendDebugReports)
-            {
-                // TODO: Update CxbxKrnl_KernelThunkTable to include symbol names
-                std::string importName = "KernelImport_" + std::to_string(t);
-
-                CxbxDebugger::ReportKernelPatch(importName.c_str(), kt_tbl[i]);
-            }
-
-			i++;
-		}
+	// Does this xbe import any other libraries?
+	if (CxbxKrnl_Xbe->m_Header.dwNonKernelImportDirAddr) {
+		ImportLibraries((XbeImportEntry*)CxbxKrnl_Xbe->m_Header.dwNonKernelImportDirAddr);
 	}
 
 	// Launch the XBE :
