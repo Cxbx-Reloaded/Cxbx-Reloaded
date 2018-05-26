@@ -14,7 +14,7 @@
 @pushd %BUILD_PATH%
 
 :: Add Cxbx binaries
-@call %ZIP_APP% u %ARTIFACT_PATH% Cxbx.exe glew32.dll subhook.dll d3d8.dll
+@call %ZIP_APP% u %ARTIFACT_PATH% Cxbx.exe glew32.dll subhook.dll d3d8.dll CxbxVSBC.dll
 
 :: Add debugger binaries
 @call %ZIP_APP% u %ARTIFACT_PATH% CxbxDebugger.exe capstone.dll cs_x86.dll
