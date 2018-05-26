@@ -562,7 +562,6 @@
     <ClInclude Include="..\..\src\CxbxKrnl\PoolManager.h">
       <Filter>Emulator</Filter>
     </ClInclude>
-    <ClInclude Include="DlgXboxControllerPortMapping.h" />
     <ClInclude Include="..\..\src\Cxbx\DlgXboxControllerPortMapping.h">
       <Filter>GUI</Filter>
     </ClInclude>
