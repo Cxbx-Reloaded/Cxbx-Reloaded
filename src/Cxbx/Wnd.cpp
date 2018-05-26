@@ -126,7 +126,7 @@ cleanup:;
             UnregisterClass(m_classname, m_hInstance);
             return false;
         }
-        
+
         TranslateMessage(&msg);
         DispatchMessage(&msg);
     }
