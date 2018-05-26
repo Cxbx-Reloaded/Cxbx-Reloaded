@@ -88,7 +88,7 @@ XBSYSAPI EXPORTNUM(184) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtAllocateVirtualMemo
 		LOG_FUNC_ARG(AllocationSize)
 		LOG_FUNC_ARG_TYPE(ALLOCATION_TYPE, AllocationType)
 		LOG_FUNC_ARG_TYPE(PROTECTION_TYPE, Protect)
-		LOG_FUNC_END;
+	LOG_FUNC_END;
 
 	NTSTATUS ret = g_VMManager.XbAllocateVirtualMemory((VAddr*)BaseAddress, ZeroBits, (size_t*)AllocationSize,
 		AllocationType, Protect);
@@ -160,12 +160,12 @@ XBSYSAPI EXPORTNUM(187) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtClose
 
 		LOG_UNIMPLEMENTED(); // TODO : Base this on the Ob* functions
 	}
-	else
-	{
-		if (CxbxDebugger::CanReport())
-		{
-			CxbxDebugger::ReportFileClosed(Handle);
-		}
+    else
+    {
+        if (CxbxDebugger::CanReport())
+        {
+            CxbxDebugger::ReportFileClosed(Handle);
+        }
 
 		// Prevent exceptions when using invalid NTHandle
 		DWORD flags = 0;
@@ -181,7 +181,7 @@ XBSYSAPI EXPORTNUM(187) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtClose
 				g_DuplicateHandles.erase(Handle);
 			}
 		}
-	}
+    }
 
 	RETURN(ret);
 }
@@ -243,27 +243,27 @@ XBSYSAPI EXPORTNUM(189) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateEvent
 		LOG_FUNC_ARG(InitialState)
 		LOG_FUNC_END;
 
-	/*
+/*
 	NTSTATUS Status;
 
 	if ((EventType != NotificationEvent) && (EventType != SynchronizationEvent)) {
-	Status = STATUS_INVALID_PARAMETER;
+		Status = STATUS_INVALID_PARAMETER;
 	}
 	else {
-	PKEVENT Event;
+		PKEVENT Event;
 
-	Status = ObCreateObject(&ExEventObjectType, ObjectAttributes, sizeof(KEVENT), (PVOID *)&Event);
-	if (NT_SUCCESS(Status)) {
-	KeInitializeEvent(Event, EventType, InitialState);
-	Status = ObInsertObject(Event, ObjectAttributes, 0, EventHandle);
-	}
+		Status = ObCreateObject(&ExEventObjectType, ObjectAttributes, sizeof(KEVENT), (PVOID *)&Event);
+		if (NT_SUCCESS(Status)) {
+			KeInitializeEvent(Event, EventType, InitialState);
+			Status = ObInsertObject(Event, ObjectAttributes, 0, EventHandle);
+		}
 	}
 
 	RETURN(Status);
-	*/
+*/
 	LOG_INCOMPLETE(); // TODO : Verify arguments, use ObCreateObject, KeInitializeEvent and ObInsertObject instead of this:
 
-					  // initialize object attributes
+	// initialize object attributes
 	NativeObjectAttributes nativeObjectAttributes;
 	CxbxObjectAttributesToNT(ObjectAttributes, /*var*/nativeObjectAttributes);
 
@@ -354,7 +354,7 @@ XBSYSAPI EXPORTNUM(191) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateIoCompletion
 		LOG_FUNC_ARG(DesiredAccess)
 		LOG_FUNC_ARG(ObjectAttributes)
 		LOG_FUNC_ARG(Count)
-		LOG_FUNC_END;
+	LOG_FUNC_END;
 
 	LOG_UNIMPLEMENTED();
 
@@ -377,27 +377,27 @@ XBSYSAPI EXPORTNUM(192) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateMutant
 		LOG_FUNC_ARG(InitialOwner)
 		LOG_FUNC_END;
 
-	/*
+/*
 	NTSTATUS Status;
 
 	if (!verify arguments) {
-	Status = STATUS_INVALID_PARAMETER;
+		Status = STATUS_INVALID_PARAMETER;
 	}
 	else {
-	PKMUTANT Mutant;
+		PKMUTANT Mutant;
 
-	Status = ObCreateObject(&ExMutantObjectType, ObjectAttributes, sizeof(KMUTANT), (PVOID *)&Mutant);
-	if (NT_SUCCESS(Status)) {
-	KeInitializeMutant(Mutant, InitialOwner);
-	Status = ObInsertObject(Mutant, ObjectAttributes, 0, /*OUT* /MutantHandle);
-	}
+		Status = ObCreateObject(&ExMutantObjectType, ObjectAttributes, sizeof(KMUTANT), (PVOID *)&Mutant);
+		if (NT_SUCCESS(Status)) {
+			KeInitializeMutant(Mutant, InitialOwner);
+			Status = ObInsertObject(Mutant, ObjectAttributes, 0, /*OUT* /MutantHandle);
+		}
 	}
 
 	RETURN(Status);
-	*/
+*/
 	LOG_INCOMPLETE(); // TODO : Verify arguments, use ObCreateObject, KeInitializeMutant and ObInsertObject instead of this:
 
-					  // initialize object attributes
+	// initialize object attributes
 	NativeObjectAttributes nativeObjectAttributes;
 	CxbxObjectAttributesToNT(ObjectAttributes, /*var*/nativeObjectAttributes);
 
@@ -451,27 +451,27 @@ XBSYSAPI EXPORTNUM(193) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateSemaphore
 		LOG_FUNC_ARG(MaximumCount)
 		LOG_FUNC_END;
 
-	/*
+/*
 	NTSTATUS Status;
 
 	if (!verify arguments) {
-	Status = STATUS_INVALID_PARAMETER;
+		Status = STATUS_INVALID_PARAMETER;
 	}
 	else {
-	PKSEMAPHORE Semaphore;
+		PKSEMAPHORE Semaphore;
 
-	Status = ObCreateObject(&ExSemaphoreObjectType, ObjectAttributes, sizeof(KSEMAPHORE), (PVOID *)&Semaphore);
-	if (NT_SUCCESS(Status)) {
-	KeInitializeSemaphore(Semaphore, InitialCount, /*Limit=* /MaximumCount);
-	Status = ObInsertObject(Semaphore, ObjectAttributes, 0, /*OUT* /SemaphoreHandle);
-	}
+		Status = ObCreateObject(&ExSemaphoreObjectType, ObjectAttributes, sizeof(KSEMAPHORE), (PVOID *)&Semaphore);
+		if (NT_SUCCESS(Status)) {
+			KeInitializeSemaphore(Semaphore, InitialCount, /*Limit=* /MaximumCount);
+			Status = ObInsertObject(Semaphore, ObjectAttributes, 0, /*OUT* /SemaphoreHandle);
+		}
 	}
 
 	RETURN(Status);
-	*/
+*/
 	LOG_INCOMPLETE(); // TODO : Verify arguments, use ObCreateObject, KeInitializeSemaphore and ObInsertObject instead of this:
 
-					  // TODO : Is this the correct ACCESS_MASK? :
+	// TODO : Is this the correct ACCESS_MASK? :
 	const ACCESS_MASK DesiredAccess = SEMAPHORE_ALL_ACCESS;
 
 	NativeObjectAttributes nativeObjectAttributes;
@@ -524,27 +524,27 @@ XBSYSAPI EXPORTNUM(194) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateTimer
 		LOG_FUNC_ARG(TimerType)
 		LOG_FUNC_END;
 
-	/*
+/*
 	NTSTATUS Status;
 
 	if (!verify arguments) {
-	Status = STATUS_INVALID_PARAMETER;
+		Status = STATUS_INVALID_PARAMETER;
 	}
 	else {
-	PKTIMER Timer;
+		PKTIMER Timer;
 
-	Status = ObCreateObject(&ExTimerType, ObjectAttributes, sizeof(KTIMER), (PVOID *)&Timer);
-	if (NT_SUCCESS(Status)) {
-	KeInitializeTimerEx(Timer, TimerType);
-	Status = ObInsertObject(Timer, ObjectAttributes, 0, /*OUT* /TimerHandle);
-	}
+		Status = ObCreateObject(&ExTimerType, ObjectAttributes, sizeof(KTIMER), (PVOID *)&Timer);
+		if (NT_SUCCESS(Status)) {
+			KeInitializeTimerEx(Timer, TimerType);
+			Status = ObInsertObject(Timer, ObjectAttributes, 0, /*OUT* /TimerHandle);
+		}
 	}
 
 	RETURN(Status);
-	*/
+*/
 	LOG_INCOMPLETE(); // TODO : Verify arguments, use ObCreateObject, KeInitializeTimerEx and ObInsertObject instead of this:
 
-					  // TODO : Is this the correct ACCESS_MASK? :
+	// TODO : Is this the correct ACCESS_MASK? :
 	const ACCESS_MASK DesiredAccess = TIMER_ALL_ACCESS;
 
 	NativeObjectAttributes nativeObjectAttributes;
@@ -592,7 +592,7 @@ XBSYSAPI EXPORTNUM(195) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtDeleteFile
 
 	if (FAILED(ret))
 		EmuWarning("NtDeleteFile Failed!");
-
+	
 	RETURN(ret);
 }
 
@@ -658,7 +658,7 @@ XBSYSAPI EXPORTNUM(196) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtDeviceIoControlFile
 
 		XboxPartitionTable partitionTable = CxbxGetPartitionTable();
 		int partitionNumber = CxbxGetPartitionNumberFromHandle(FileHandle);
-
+		
 		// Now we read from the partition table, to fill in the partitionInfo struct
 		partitioninfo->PartitionNumber = partitionNumber;
 		partitioninfo->StartingOffset.QuadPart = partitionTable.TableEntries[partitionNumber - 1].LBAStart * 512;
@@ -695,20 +695,20 @@ XBSYSAPI EXPORTNUM(197) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtDuplicateObject
 	if (IsEmuHandle(SourceHandle)) {
 		EmuHandle* iEmuHandle = HandleToEmuHandle(SourceHandle);
 		ret = iEmuHandle->NtDuplicateObject(TargetHandle, Options);
-		/*
+/*
 		PVOID Object;
 
 		ret = ObReferenceObjectByHandle(SourceHandle, /*ObjectType=* /NULL, &Object);
 		if (NT_SUCCESS(ret)) {
-		if (ObpIsFlagSet(Options, DUPLICATE_CLOSE_SOURCE))
-		NtClose(SourceHandle);
+			if (ObpIsFlagSet(Options, DUPLICATE_CLOSE_SOURCE))
+				NtClose(SourceHandle);
 
-		status = ObOpenObjectByPointer(Object, OBJECT_TO_OBJECT_HEADER(Object)->Type, /*OUT* /TargetHandle);
-		ObDereferenceObject(Object);
+			status = ObOpenObjectByPointer(Object, OBJECT_TO_OBJECT_HEADER(Object)->Type, /*OUT* /TargetHandle);
+			ObDereferenceObject(Object);
 		}
 		else
-		*TargetHandle = NULL;
-		*/
+			*TargetHandle = NULL;
+*/
 	}
 	else
 	{
@@ -747,7 +747,7 @@ XBSYSAPI EXPORTNUM(198) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtFlushBuffersFile
 		LOG_FUNC_ARG_OUT(IoStatusBlock)
 		LOG_FUNC_END;
 	NTSTATUS ret = STATUS_SUCCESS;
-
+	
 	if (IsEmuHandle(FileHandle)) 
 		LOG_UNIMPLEMENTED();
 	else
@@ -773,7 +773,7 @@ XBSYSAPI EXPORTNUM(199) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtFreeVirtualMemory
 		LOG_FUNC_ARG(BaseAddress)
 		LOG_FUNC_ARG(FreeSize)
 		LOG_FUNC_ARG_TYPE(ALLOCATION_TYPE, FreeType)
-		LOG_FUNC_END;
+	LOG_FUNC_END;
 
 	NTSTATUS ret = g_VMManager.XbFreeVirtualMemory((VAddr*)BaseAddress, (size_t*)FreeSize, FreeType);
 
@@ -813,13 +813,13 @@ XBSYSAPI EXPORTNUM(200) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtFsControlFile
 	NTSTATUS ret = STATUS_INVALID_PARAMETER;
 
 	switch (FsControlCode) {
-	case 0x00090020: // FSCTL_DISMOUNT_VOLUME 
-		int partitionNumber = CxbxGetPartitionNumberFromHandle(FileHandle);
-		if (partitionNumber > 0) {
-			CxbxFormatPartitionByHandle(FileHandle);
-			ret = STATUS_SUCCESS;
-		}
-		break;
+		case 0x00090020: // FSCTL_DISMOUNT_VOLUME 
+			int partitionNumber = CxbxGetPartitionNumberFromHandle(FileHandle);
+			if (partitionNumber > 0) {
+				CxbxFormatPartitionByHandle(FileHandle);
+				ret = STATUS_SUCCESS;
+			}
+			break;
 	}
 
 	LOG_UNIMPLEMENTED();
@@ -927,7 +927,7 @@ XBSYSAPI EXPORTNUM(204) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtProtectVirtualMemor
 		LOG_FUNC_ARG(RegionSize)
 		LOG_FUNC_ARG_TYPE(PROTECTION_TYPE, NewProtect)
 		LOG_FUNC_ARG_OUT(OldProtect)
-		LOG_FUNC_END;
+	LOG_FUNC_END;
 
 
 	DWORD Perms = NewProtect;
@@ -1023,8 +1023,6 @@ XBSYSAPI EXPORTNUM(206) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueueApcThread
 			(NtDll::PIO_STATUS_BLOCK)ApcStatusBlock,
 			ApcReserved);
 	}
-
-
 	if (FAILED(ret))
 		EmuWarning("NtQueueApcThread failed!");
 
@@ -1151,7 +1149,7 @@ XBSYSAPI EXPORTNUM(208) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryDirectoryObjec
 		LOG_FUNC_ARG(RestartScan)
 		LOG_FUNC_ARG(Context)
 		LOG_FUNC_ARG_OUT(ReturnedLength)
-		LOG_FUNC_END;
+	LOG_FUNC_END;
 
 	LOG_UNIMPLEMENTED();
 
@@ -1271,7 +1269,7 @@ XBSYSAPI EXPORTNUM(211) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryInformationFil
 				return STATUS_INVALID_PARAMETER;   // TODO: what's the appropriate error code to return here?
 		}
 	} while (ret == STATUS_BUFFER_OVERFLOW);
-
+	
 	// Convert and copy NT data to the given Xbox struct
 	NTSTATUS convRet = NTToXboxFileInformation(ntFileInfo, FileInformation, FileInformationClass, Length);
 
@@ -1301,7 +1299,7 @@ XBSYSAPI EXPORTNUM(212) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryIoCompletion
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(IoCompletionHandle)
 		LOG_FUNC_ARG_OUT(IoCompletionInformation)
-		LOG_FUNC_END;
+	LOG_FUNC_END;
 
 	LOG_UNIMPLEMENTED();
 
@@ -1454,7 +1452,7 @@ XBSYSAPI EXPORTNUM(217) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryVirtualMemory
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(BaseAddress)
 		LOG_FUNC_ARG_OUT(Buffer)
-		LOG_FUNC_END;
+	LOG_FUNC_END;
 
 	if (!Buffer)
 	{
@@ -1476,7 +1474,7 @@ XBSYSAPI EXPORTNUM(217) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryVirtualMemory
 		DbgPrintf("   Buffer->Type              = 0x%.08X\n", Buffer->Type);
 	}
 
-#if 0
+	#if 0
 	if (FAILED(ret)) {
 		EmuWarning("NtQueryVirtualMemory failed (%s)!", NtStatusToString(ret));
 
@@ -1500,7 +1498,7 @@ XBSYSAPI EXPORTNUM(217) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryVirtualMemory
 			DbgPrintf("KRNL: NtQueryVirtualMemory: Applied fix for Forza Motorsport!\n");
 		}
 	}
-#endif
+	#endif
 
 	RETURN(ret);
 }
@@ -1554,26 +1552,26 @@ XBSYSAPI EXPORTNUM(218) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryVolumeInformat
 	// This may differ than the xbox buffer size so we also need to handle conversions!
 	ULONG HostBufferSize = 0;
 	switch ((DWORD)FileInformationClass) {
-	case FileFsVolumeInformation:
-		// Reserve a large enough buffer for the file information 
-		// including the variable length path field
-		HostBufferSize = sizeof(NtDll::FILE_FS_VOLUME_INFORMATION) + MAX_PATH;
-		break;
-	case FileFsLabelInformation:
-		HostBufferSize = sizeof(NtDll::FILE_FS_LABEL_INFORMATION);
-		break;
-	case FileFsDeviceInformation:
-		HostBufferSize = sizeof(NtDll::FILE_FS_DEVICE_INFORMATION);
-		break;
-	case FileFsAttributeInformation:
-		HostBufferSize = sizeof(NtDll::FILE_FS_ATTRIBUTE_INFORMATION);
-		break;
-	case FileFsFullSizeInformation:
-		HostBufferSize = sizeof(NtDll::FILE_FS_FULL_SIZE_INFORMATION);
-		break;
-	case FileFsObjectIdInformation:
-		HostBufferSize = sizeof(NtDll::FILE_FS_OBJECTID_INFORMATION);
-		break;
+		case FileFsVolumeInformation:
+			// Reserve a large enough buffer for the file information 
+			// including the variable length path field
+			HostBufferSize = sizeof(NtDll::FILE_FS_VOLUME_INFORMATION) + MAX_PATH;
+			break;
+		case FileFsLabelInformation:
+			HostBufferSize = sizeof(NtDll::FILE_FS_LABEL_INFORMATION);
+			break;
+		case FileFsDeviceInformation:
+			HostBufferSize = sizeof(NtDll::FILE_FS_DEVICE_INFORMATION);
+			break;
+		case FileFsAttributeInformation:
+			HostBufferSize = sizeof(NtDll::FILE_FS_ATTRIBUTE_INFORMATION);
+			break;
+		case FileFsFullSizeInformation:
+			HostBufferSize = sizeof(NtDll::FILE_FS_FULL_SIZE_INFORMATION);
+			break;
+		case FileFsObjectIdInformation:
+			HostBufferSize = sizeof(NtDll::FILE_FS_OBJECTID_INFORMATION);
+			break;
 	}
 
 	PVOID NativeFileInformation = _aligned_malloc(HostBufferSize, 8);
@@ -1587,25 +1585,25 @@ XBSYSAPI EXPORTNUM(218) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryVolumeInformat
 	// Convert Xbox NativeFileInformation to FileInformation
 	if (ret == STATUS_SUCCESS) {
 		switch ((DWORD)FileInformationClass) {
-		case FileFsVolumeInformation: {
-			PFILE_FS_VOLUME_INFORMATION XboxVolumeInfo = (PFILE_FS_VOLUME_INFORMATION)FileInformation;
-			NtDll::PFILE_FS_VOLUME_INFORMATION HostVolumeInfo = (NtDll::PFILE_FS_VOLUME_INFORMATION)NativeFileInformation;
+				case FileFsVolumeInformation: {
+					PFILE_FS_VOLUME_INFORMATION XboxVolumeInfo = (PFILE_FS_VOLUME_INFORMATION)FileInformation;
+					NtDll::PFILE_FS_VOLUME_INFORMATION HostVolumeInfo = (NtDll::PFILE_FS_VOLUME_INFORMATION)NativeFileInformation;
 
-			// Most options can just be directly copied to the Xbox version, only the strings differ
-			XboxVolumeInfo->VolumeCreationTime.QuadPart = HostVolumeInfo->VolumeCreationTime.QuadPart;
-			XboxVolumeInfo->VolumeSerialNumber = HostVolumeInfo->VolumeSerialNumber;
-			XboxVolumeInfo->VolumeLabelLength = HostVolumeInfo->VolumeLabelLength;
-			XboxVolumeInfo->SupportsObjects = HostVolumeInfo->SupportsObjects;
+					// Most options can just be directly copied to the Xbox version, only the strings differ
+					XboxVolumeInfo->VolumeCreationTime.QuadPart = HostVolumeInfo->VolumeCreationTime.QuadPart;
+					XboxVolumeInfo->VolumeSerialNumber = HostVolumeInfo->VolumeSerialNumber;
+					XboxVolumeInfo->VolumeLabelLength = HostVolumeInfo->VolumeLabelLength;
+					XboxVolumeInfo->SupportsObjects = HostVolumeInfo->SupportsObjects;
 
-			// Convert strings to the Xbox format 
-			wcstombs(XboxVolumeInfo->VolumeLabel, HostVolumeInfo->VolumeLabel, HostVolumeInfo->VolumeLabelLength);
-		}
-									  break;
-		default:
-			// For all other types, just do a memcpy and hope for the best!
-			EmuWarning("NtQueryVolumeInformationFile: Unknown FileInformationClass");
-			memcpy_s(FileInformation, Length, NativeFileInformation, HostBufferSize);
-			break;
+					// Convert strings to the Xbox format 
+					wcstombs(XboxVolumeInfo->VolumeLabel, HostVolumeInfo->VolumeLabel, HostVolumeInfo->VolumeLabelLength);
+				}
+				break;
+			default:
+				// For all other types, just do a memcpy and hope for the best!
+				EmuWarning("NtQueryVolumeInformationFile: Unknown FileInformationClass");
+				memcpy_s(FileInformation, Length, NativeFileInformation, HostBufferSize);
+				break;
 		}
 	}
 
@@ -1668,9 +1666,9 @@ XBSYSAPI EXPORTNUM(219) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtReadFile
 		(NtDll::LARGE_INTEGER*)ByteOffset,
 		/*Key=*/nullptr);
 
-	if (FAILED(ret)) {
-		EmuWarning("NtReadFile Failed! (0x%.08X)", ret);
-	}
+    if (FAILED(ret)) {
+        EmuWarning("NtReadFile Failed! (0x%.08X)", ret);
+    }
 
 	RETURN(ret);
 }
@@ -1699,7 +1697,7 @@ XBSYSAPI EXPORTNUM(220) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtReadFileScatter
 		LOG_FUNC_ARG(SegmentArray)
 		LOG_FUNC_ARG(Length)
 		LOG_FUNC_ARG(ByteOffset)
-		LOG_FUNC_END;
+	LOG_FUNC_END;
 
 	LOG_UNIMPLEMENTED();
 
@@ -1774,7 +1772,7 @@ XBSYSAPI EXPORTNUM(223) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtRemoveIoCompletion
 		LOG_FUNC_ARG_OUT(ApcContext)
 		LOG_FUNC_ARG_OUT(IoStatusBlock)
 		LOG_FUNC_ARG(Timeout)
-		LOG_FUNC_END;
+	LOG_FUNC_END;
 
 	LOG_UNIMPLEMENTED();
 
@@ -1849,7 +1847,7 @@ XBSYSAPI EXPORTNUM(226) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtSetInformationFile
 		LOG_FUNC_ARG(Length)
 		LOG_FUNC_ARG(FileInformationClass)
 		LOG_FUNC_END;
-
+	
 	XboxToNTFileInformation(convertedFileInfo, FileInformation, FileInformationClass, &Length);
 
 	NTSTATUS ret = NtDll::NtSetInformationFile(
@@ -1880,7 +1878,7 @@ XBSYSAPI EXPORTNUM(227) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtSetIoCompletion
 		LOG_FUNC_ARG(ApcContext)
 		LOG_FUNC_ARG(IoStatus)
 		LOG_FUNC_ARG(IoStatusInformation)
-		LOG_FUNC_END;
+	LOG_FUNC_END;
 
 	LOG_UNIMPLEMENTED();
 
@@ -1911,7 +1909,7 @@ XBSYSAPI EXPORTNUM(228) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtSetSystemTime
 		LARGE_INTEGER HostSystemTime;
 		GetSystemTimeAsFileTime((LPFILETIME)&HostSystemTime); // Available since Windows 2000 (NOT on XP!)
 
-															  // Is the previous time requested?
+		// Is the previous time requested?
 		if (PreviousTime != NULL)
 			// Apply current HostSystemTimeDelta, same as in xboxkrnl::KeQuerySystemTime :
 			PreviousTime->QuadPart = HostSystemTime.QuadPart + HostSystemTimeDelta.QuadPart;
@@ -1991,7 +1989,7 @@ XBSYSAPI EXPORTNUM(230) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtSignalAndWaitForSin
 		LOG_FUNC_ARG(WaitMode)
 		LOG_FUNC_ARG(Alertable)
 		LOG_FUNC_ARG(Timeout)
-		LOG_FUNC_END;
+	LOG_FUNC_END;
 
 	LOG_UNIMPLEMENTED();
 
@@ -2059,9 +2057,9 @@ XBSYSAPI EXPORTNUM(232) xboxkrnl::VOID NTAPI xboxkrnl::NtUserIoApcDispatcher
 // ******************************************************************
 XBSYSAPI EXPORTNUM(233) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtWaitForSingleObject
 (
-	IN  HANDLE  Handle,
-	IN  BOOLEAN Alertable,
-	IN  PLARGE_INTEGER   Timeout
+    IN  HANDLE  Handle,
+    IN  BOOLEAN Alertable,
+    IN  PLARGE_INTEGER   Timeout
 )
 {
 	LOG_FORWARD("KeWaitForMultipleObjects");
@@ -2167,7 +2165,7 @@ XBSYSAPI EXPORTNUM(236) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtWriteFile
 		u64 Offset = ~0;
 		if (ByteOffset)
 			Offset = ByteOffset->QuadPart;
-
+		
 		CxbxDebugger::ReportFileWrite(FileHandle, Length, Offset);
 	}
 
@@ -2212,7 +2210,7 @@ XBSYSAPI EXPORTNUM(237) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtWriteFileGather
 		LOG_FUNC_ARG(SegmentArray)
 		LOG_FUNC_ARG(Length)
 		LOG_FUNC_ARG(ByteOffset)
-		LOG_FUNC_END;
+	LOG_FUNC_END;
 
 	LOG_UNIMPLEMENTED();
 
