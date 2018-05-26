@@ -116,5 +116,3 @@ LAST_GIT_VERSION
 
 # git mergetool backup
 *.orig
-/src/CxbxVSBC/Debug
-/src/CxbxVSBC/Release
