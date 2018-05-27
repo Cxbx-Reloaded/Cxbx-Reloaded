@@ -35,8 +35,7 @@
 // ******************************************************************
 
 #include "OHCI.h"
-#include "..\CxbxKrnl\CxbxKrnl.h"
-#include "..\CxbxKrnl\Emu.h" // For EmuWarning
+#include "CxbxKrnl\EmuKrnl.h"  // For HalSystemInterrupt
 
 #define USB_HZ 12000000
 
@@ -53,9 +52,10 @@ OHCI* g_pHostController1 = nullptr;
 OHCI* g_pHostController2 = nullptr;
 
 
-OHCI::OHCI(USBDevice* UsbObj)
+OHCI::OHCI(USBDevice* UsbObj, int Irq)
 {
 	UsbInstance = UsbObj;
+	Irq_n = Irq;
 
 	for (int i = 0; i < 2; i++) {
 		UsbInstance->USB_RegisterPort(&Registers.RhPort[i].Port, this, i, USB_SPEED_MASK_LOW | USB_SPEED_MASK_FULL);
@@ -91,7 +91,7 @@ void OHCI::OHCI_StateReset()
 	Registers.HcControl |= Reset;
 	Registers.HcCommandStatus = 0;
 	Registers.HcInterruptStatus = 0;
-	Registers.HcInterrupt = OHCI_INTR_MASTER_INTERRUPT_ENABLED; // enable interrupts
+	Registers.HcInterrupt = OHCI_INTR_MIE; // enable interrupts
 
 	Registers.HcHCCA = 0;
 	Registers.HcPeriodCurrentED = 0;
@@ -144,7 +144,7 @@ void OHCI::OHCI_SOF()
 {
 	SOFtime = GetTime_NS(pEOFtimer); // set current SOF time
 	Timer_Start(pEOFtimer, SOFtime + UsbFrameTime); // make timer expire at SOF + 1 virtual ms from now
-	// TODO: interrupt
+	OHCI_SetInterrupt(OHCI_INTR_SF);
 }
 
 void OHCI::OHCI_ChangeState(uint32_t Value)
@@ -323,8 +323,8 @@ void OHCI::OHCI_WriteRegister(xbaddr Addr, uint32_t Value)
 				// SOC is read-only
 				Value &= ~OHCI_STATUS_SOC;
 
-				// From the standard: "The Host Controller must ensure that bits written as ‘1’ become set
-				// in the register while bits written as ‘0’ remain unchanged in the register."
+				// From the standard: "The Host Controller must ensure that bits written as 1 become set
+				// in the register while bits written as 0 remain unchanged in the register."
 				Registers.HcCommandStatus |= Value;
 
 				if (Registers.HcCommandStatus & OHCI_STATUS_HCR) {
@@ -335,15 +335,18 @@ void OHCI::OHCI_WriteRegister(xbaddr Addr, uint32_t Value)
 			break;
 
 			case 3: // HcInterruptStatus
-				// TODO
+				Registers.HcInterruptStatus &= ~Value;
+				OHCI_UpdateInterrupt();
 				break;
 
 			case 4: // HcInterruptEnable
-				// TODO
+				Registers.HcInterrupt |= Value;
+				OHCI_UpdateInterrupt();
 				break;
 
 			case 5: // HcInterruptDisable
-				// TODO
+				Registers.HcInterrupt &= ~Value;
+				OHCI_UpdateInterrupt();
 				break;
 
 			case 6: // HcHCCA
@@ -425,4 +428,18 @@ void OHCI::OHCI_WriteRegister(xbaddr Addr, uint32_t Value)
 				EmuWarning("Ohci: Write register operation with bad offset %u. Ignoring.", Addr >> 2);
 		}
 	}
+}
+
+void OHCI::OHCI_UpdateInterrupt()
+{
+	if ((Registers.HcInterrupt & OHCI_INTR_MIE) && (Registers.HcInterruptStatus & Registers.HcInterrupt)) {
+		HalSystemInterrupts[Irq_n].Assert(true);
+	}
+	else { HalSystemInterrupts[Irq_n].Assert(false); }
+}
+
+void OHCI::OHCI_SetInterrupt(uint32_t Value)
+{
+	Registers.HcInterruptStatus |= Value;
+	OHCI_UpdateInterrupt();
 }

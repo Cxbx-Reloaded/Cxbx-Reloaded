@@ -35,6 +35,7 @@
 // ******************************************************************
 
 #include "USBDevice.h"
+#include "OHCI.h"
 #include <assert.h>
 
 
@@ -52,11 +53,11 @@ void USBDevice::Init(unsigned int address)
 	m_VendorId = PCI_VENDOR_ID_NVIDIA;
 
 	if (address == USB0_BASE) {
-		g_pHostController1 = new OHCI(this);
+		g_pHostController1 = new OHCI(this, 1);
 		return;
 	}
 
-	g_pHostController2 = new OHCI(this);
+	g_pHostController2 = new OHCI(this, 9);
 }
 
 uint32_t USBDevice::MMIORead(int barIndex, uint32_t addr, unsigned size)

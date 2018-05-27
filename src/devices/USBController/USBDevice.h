@@ -37,7 +37,6 @@
 #define USBDEVICE_H_
 
 #include "..\PCIDevice.h"
-#include "OHCI.h"
 
 
 // This is a linux struct for vectored I/O. See readv() and writev()

@@ -37,7 +37,6 @@
 #ifndef OHCI_H_
 #define OHCI_H_
 
-#include <stdint.h>
 #include "Cxbx.h"
 #include "USBDevice.h"
 #include "..\CxbxKrnl\Timer.h"
@@ -66,8 +65,10 @@
 #define OHCI_STATUS_BLF                     (1<<2)           // BulkListFilled
 #define OHCI_STATUS_OCR                     (1<<3)           // OwnershipChangeRequest
 #define OHCI_STATUS_SOC                     ((1<<6)|(1<<7))  // SchedulingOverrunCount
+// HcInterruptStatus
+#define OHCI_INTR_SF                        (1<<2)           // Start of frame
 // HcInterruptEnable, HcInterruptDisable
-#define OHCI_INTR_MASTER_INTERRUPT_ENABLED  (1<<31)          // MasterInterruptEnable
+#define OHCI_INTR_MIE                       (1<<31)          // MasterInterruptEnable
 // HcHCCA
 #define OHCI_HCCA_MASK                      0xFFFFFF00       // HCCA mask
 // HcControlHeadED
@@ -144,7 +145,7 @@ class OHCI
 {
 	public:
 		// constructor
-		OHCI(USBDevice* UsbObj);
+		OHCI(USBDevice* UsbObj, int Irqn);
 		// destructor
 		~OHCI() {}
 		// read a register
@@ -168,6 +169,8 @@ class OHCI
 		USBDevice* UsbInstance;
 		// usb packet
 		USBPacket UsbPacket;
+		// irq number
+		int Irq_n;
 
 		// EOF callback wrapper
 		static void OHCI_FrameBoundaryWrapper(void* pVoid);
@@ -185,6 +188,10 @@ class OHCI
 		void OHCI_BusStop();
 		// generate a SOF event, and start a timer for EOF
 		void OHCI_SOF();
+		// change interrupt status
+		void OHCI_UpdateInterrupt();
+		// fire an interrupt
+		void OHCI_SetInterrupt(uint32_t Value);
 };
 
 extern OHCI* g_pHostController1;
