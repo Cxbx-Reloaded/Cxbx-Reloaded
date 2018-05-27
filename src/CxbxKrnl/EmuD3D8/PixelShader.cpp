@@ -4338,10 +4338,15 @@ VOID XTL::DxbxUpdateActivePixelShader() // NOPATCH
         // TODO : Avoid the following setter if it's no different from the previous update (this might speed things up)
         // Set the value locally in this register :
 #ifdef CXBX_USE_D3D9
-        g_pD3DDevice->SetPixelShaderConstantF(Register_, (float*)(&fColor), 1);
+        g_pD3DDevice->SetPixelShaderConstantF
 #else
-		g_pD3DDevice->SetPixelShaderConstant(Register_, &fColor, 1);
+		g_pD3DDevice->SetPixelShaderConstant
 #endif
+		(
+			Register_, 
+			(PixelShaderConstantType*)(&fColor),
+			1
+		);
       }
     }
   }

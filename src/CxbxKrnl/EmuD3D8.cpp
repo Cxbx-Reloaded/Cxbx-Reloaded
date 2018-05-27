@@ -9504,11 +9504,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetPixelShaderConstant_4)
 #endif
     (
         Register,
-#ifdef CXBX_USE_D3D9
-		(float*)pConstantData,
-#else
-        pConstantData,
-#endif
+		(PixelShaderConstantType*)pConstantData,
         ConstantCount
     );
     //DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetPixelShaderConstant");
