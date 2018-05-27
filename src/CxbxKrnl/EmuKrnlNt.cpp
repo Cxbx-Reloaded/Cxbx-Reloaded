@@ -1024,7 +1024,11 @@ XBSYSAPI EXPORTNUM(206) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueueApcThread
 			ApcReserved);
 	}
 	if (FAILED(ret))
+	{
 		EmuWarning("NtQueueApcThread failed!");
+		CloseHandle( g_DuplicateHandles[ThreadHandle] );
+		g_DuplicateHandles.erase( ThreadHandle );
+	}
 
 	RETURN(ret);
 }
