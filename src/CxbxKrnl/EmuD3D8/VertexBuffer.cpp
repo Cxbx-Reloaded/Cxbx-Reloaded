@@ -466,12 +466,12 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
 					// Cxbx note : to make each component signed, two need to be shifted towards the sign-bit first :
 					pHostVertexAsFloat[0] = ((FLOAT)((iPacked << 21) >> 21)) / 1023.0f;
 					pHostVertexAsFloat[1] = ((FLOAT)((iPacked << 10) >> 21)) / 1023.0f;
-					pHostVertexAsFloat[2] = ((FLOAT)((iPacked      ) >> 22)) / 511.0f;
+					pHostVertexAsFloat[2] = ((FLOAT)((iPacked) >> 22)) / 511.0f;
 					break;
 				}
 				case X_D3DVSDT_SHORT1: { // 0x15: // Make it SHORT2 and set the second short to 0
 					XboxElementByteSize = 1 * sizeof(SHORT);
-					//memcpy(pHostVertexAsFloat, pXboxVertexAsByte, XboxElementByteSize);
+					//memcpy(pHostVertexAsByte, pXboxVertexAsByte, XboxElementByteSize);
 					pHostVertexAsShort[0] = pXboxVertexAsShort[0];
 					pHostVertexAsShort[1] = 0;
 					break;
@@ -479,7 +479,7 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
 				case X_D3DVSDT_SHORT3: { // 0x35: // Make it a SHORT4 and set the fourth short to 1
 					// Test-cases : Turok
 					XboxElementByteSize = 3 * sizeof(SHORT);
-					//memcpy(pHostVertexAsFloat, pXboxVertexAsByte, XboxElementByteSize);
+					//memcpy(pHostVertexAsByte, pXboxVertexAsByte, XboxElementByteSize);
 					pHostVertexAsShort[0] = pXboxVertexAsShort[0];
 					pHostVertexAsShort[1] = pXboxVertexAsShort[1];
 					pHostVertexAsShort[2] = pXboxVertexAsShort[2];
@@ -488,42 +488,59 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
 				}
 				case X_D3DVSDT_PBYTE1: { // 0x14:
 					XboxElementByteSize = 1 * sizeof(BYTE);
-#if CXBX_USE_D3D9	// Make it UBYTE4N
-					pHostVertexAsByte[0] = pXboxVertexAsByte[0];
-					pHostVertexAsByte[1] = 0;
-					pHostVertexAsByte[2] = 0;
-					pHostVertexAsByte[3] = 255; // TODO : Verify
-#else				// Make it FLOAT1
-					pHostVertexAsFloat[0] = ByteToFloat(pXboxVertexAsByte[0]);
+#if CXBX_USE_D3D9
+					if (g_D3DCaps.DeclTypes & D3DDTCAPS_UBYTE4N) {
+						// Make it UBYTE4N
+						pHostVertexAsByte[0] = pXboxVertexAsByte[0];
+						pHostVertexAsByte[1] = 0;
+						pHostVertexAsByte[2] = 0;
+						pHostVertexAsByte[3] = 255; // TODO : Verify
+					}
+					else
 #endif
+					{
+						// Make it FLOAT1
+						pHostVertexAsFloat[0] = ByteToFloat(pXboxVertexAsByte[0]);
+					}
 					break;
 				}
 				case X_D3DVSDT_PBYTE2: { // 0x24:
 					XboxElementByteSize = 2 * sizeof(BYTE);
-#if CXBX_USE_D3D9	// Make it UBYTE4N
-					pHostVertexAsByte[0] = pXboxVertexAsByte[0];
-					pHostVertexAsByte[1] = pXboxVertexAsByte[1];
-					pHostVertexAsByte[2] = 0;
-					pHostVertexAsByte[3] = 255; // TODO : Verify
-#else				// Make it FLOAT2
-					pHostVertexAsFloat[0] = ByteToFloat(pXboxVertexAsByte[0]);
-					pHostVertexAsFloat[1] = ByteToFloat(pXboxVertexAsByte[1]);
+#if CXBX_USE_D3D9
+					if (g_D3DCaps.DeclTypes & D3DDTCAPS_UBYTE4N) {
+						// Make it UBYTE4N
+						pHostVertexAsByte[0] = pXboxVertexAsByte[0];
+						pHostVertexAsByte[1] = pXboxVertexAsByte[1];
+						pHostVertexAsByte[2] = 0;
+						pHostVertexAsByte[3] = 255; // TODO : Verify
+					}
+					else
 #endif
-					break;
+					{
+						// Make it FLOAT2
+						pHostVertexAsFloat[0] = ByteToFloat(pXboxVertexAsByte[0]);
+						pHostVertexAsFloat[1] = ByteToFloat(pXboxVertexAsByte[1]);
+					}					break;
 				}
 				case X_D3DVSDT_PBYTE3: { // 0x34:
 					// Test-cases : Turok
 					XboxElementByteSize = 3 * sizeof(BYTE);
-#if CXBX_USE_D3D9	// Make it UBYTE4N
-					pHostVertexAsByte[0] = pXboxVertexAsByte[0];
-					pHostVertexAsByte[1] = pXboxVertexAsByte[1];
-					pHostVertexAsByte[2] = pXboxVertexAsByte[2];
-					pHostVertexAsByte[3] = 255; // TODO : Verify
-#else				// Make it FLOAT3
-					pHostVertexAsFloat[0] = ByteToFloat(pXboxVertexAsByte[0]);
-					pHostVertexAsFloat[1] = ByteToFloat(pXboxVertexAsByte[1]);
-					pHostVertexAsFloat[2] = ByteToFloat(pXboxVertexAsByte[2]);
+#if CXBX_USE_D3D9
+					if (g_D3DCaps.DeclTypes & D3DDTCAPS_UBYTE4N) {
+						// Make it UBYTE4N
+						pHostVertexAsByte[0] = pXboxVertexAsByte[0];
+						pHostVertexAsByte[1] = pXboxVertexAsByte[1];
+						pHostVertexAsByte[2] = pXboxVertexAsByte[2];
+						pHostVertexAsByte[3] = 255; // TODO : Verify
+					}
+					else
 #endif
+					{
+						// Make it FLOAT3
+						pHostVertexAsFloat[0] = ByteToFloat(pXboxVertexAsByte[0]);
+						pHostVertexAsFloat[1] = ByteToFloat(pXboxVertexAsByte[1]);
+						pHostVertexAsFloat[2] = ByteToFloat(pXboxVertexAsByte[2]);
+					}
 					break;
 				}
 				case X_D3DVSDT_PBYTE4: { // 0x44:
@@ -532,7 +549,12 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
 					if (g_D3DCaps.DeclTypes & D3DDTCAPS_UBYTE4N) {
 						// No need for patching when D3D9 supports D3DDECLTYPE_UBYTE4N
 						// TODO : goto default; // ??
-						memcpy(pHostVertexAsByte, pXboxVertexAsByte, XboxElementByteSize);
+						//assert(XboxElementByteSize == 4 * sizeof(BYTE));
+						//memcpy(pHostVertexAsByte, pXboxVertexAsByte, XboxElementByteSize);
+						pHostVertexAsByte[0] = pXboxVertexAsByte[0];
+						pHostVertexAsByte[1] = pXboxVertexAsByte[1];
+						pHostVertexAsByte[2] = pXboxVertexAsByte[2];
+						pHostVertexAsByte[3] = pXboxVertexAsByte[3];
 					}
 					else
 #endif
