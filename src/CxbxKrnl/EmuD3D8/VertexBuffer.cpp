@@ -415,25 +415,43 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
 				case X_D3DVSDT_NORMSHORT1: { // 0x11:
 					// Test-cases : Halo - Combat Evolved
 					XboxElementByteSize = 1 * sizeof(SHORT);
-#if CXBX_USE_D3D9	// Make it SHORT2N
-					pHostVertexAsShort[0] = pXboxVertexAsShort[0];
-					pHostVertexAsShort[1] = 0;
-#else				// Make it FLOAT1
-					pHostVertexAsFloat[0] = NormShortToFloat(pXboxVertexAsShort[0]);
-					//pHostVertexAsFloat[1] = 0.0f; // Would be needed for FLOAT2
+#if CXBX_USE_D3D9
+					if (g_D3DCaps.DeclTypes & D3DDTCAPS_SHORT2N) {
+						// Make it SHORT2N
+						pHostVertexAsShort[0] = pXboxVertexAsShort[0];
+						pHostVertexAsShort[1] = 0;
+					}
+					else
 #endif
+					{
+						// Make it FLOAT1
+						pHostVertexAsFloat[0] = NormShortToFloat(pXboxVertexAsShort[0]);
+						//pHostVertexAsFloat[1] = 0.0f; // Would be needed for FLOAT2
+					}
 					break;
 				}
-#if !CXBX_USE_D3D9 // No need for patching in D3D9
 				case X_D3DVSDT_NORMSHORT2: { // 0x21:
 					// Test-cases : Baldur's Gate: Dark Alliance 2, F1 2002, Gun, Halo - Combat Evolved, Scrapland 
 					XboxElementByteSize = 2 * sizeof(SHORT);
-					// Make it FLOAT2
-					pHostVertexAsFloat[0] = NormShortToFloat(pXboxVertexAsShort[0]);
-					pHostVertexAsFloat[1] = NormShortToFloat(pXboxVertexAsShort[1]);
+#if CXBX_USE_D3D9
+					if (g_D3DCaps.DeclTypes & D3DDTCAPS_SHORT2N) {
+						// No need for patching when D3D9 supports D3DDECLTYPE_SHORT2N
+						// TODO : goto default; // ??
+						//assert(XboxElementByteSize == 2 * sizeof(SHORT));
+						//memcpy(pHostVertexAsByte, pXboxVertexAsByte, XboxElementByteSize);
+						// Make it SHORT2N
+						pHostVertexAsShort[0] = pXboxVertexAsShort[0];
+						pHostVertexAsShort[1] = pXboxVertexAsShort[1];
+					}
+					else
+#endif
+					{
+						// Make it FLOAT2
+						pHostVertexAsFloat[0] = NormShortToFloat(pXboxVertexAsShort[0]);
+						pHostVertexAsFloat[1] = NormShortToFloat(pXboxVertexAsShort[1]);
+					}
 					break;
 				}
-#endif
 				case X_D3DVSDT_NORMSHORT3: { // 0x31:
 					// Test-cases : Cel Damage, Constantine, Destroy All Humans!
 					XboxElementByteSize = 3 * sizeof(SHORT);
@@ -569,6 +587,7 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
 				}
 				case X_D3DVSDT_PBYTE4: { // 0x44:
 					// Hit by Jet Set Radio Future
+					XboxElementByteSize = 4 * sizeof(BYTE);
 #if CXBX_USE_D3D9
 					if (g_D3DCaps.DeclTypes & D3DDTCAPS_UBYTE4N) {
 						// No need for patching when D3D9 supports D3DDECLTYPE_UBYTE4N
@@ -585,7 +604,6 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
 #endif
 					{
 						// Make it FLOAT4
-						XboxElementByteSize = 4 * sizeof(BYTE);
 						pHostVertexAsFloat[0] = ByteToFloat(pXboxVertexAsByte[0]);
 						pHostVertexAsFloat[1] = ByteToFloat(pXboxVertexAsByte[1]);
 						pHostVertexAsFloat[2] = ByteToFloat(pXboxVertexAsByte[2]);
