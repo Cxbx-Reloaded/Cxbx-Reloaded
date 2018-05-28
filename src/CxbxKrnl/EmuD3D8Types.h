@@ -1208,6 +1208,18 @@ const int MAX_NBR_STREAMS = 16;
 
 typedef WORD INDEX16;
 
+typedef enum _X_D3DVSD_TOKENTYPE
+{
+	X_D3DVSD_TOKEN_NOP = 0,           // NOP or extension
+	X_D3DVSD_TOKEN_STREAM,            // stream selector
+	X_D3DVSD_TOKEN_STREAMDATA,        // stream data definition (map to vertex input memory)
+	X_D3DVSD_TOKEN_TESSELLATOR,       // vertex input memory from tessellator
+	X_D3DVSD_TOKEN_CONSTMEM,          // constant memory from shader
+	X_D3DVSD_TOKEN_EXT,               // extension
+	X_D3DVSD_TOKEN_END = 7,           // end-of-array (requires all DWORD bits to be 1)
+	X_D3DVSD_FORCE_DWORD = 0x7fffffff,// force 32-bit size enum
+} X_D3DVSD_TOKENTYPE;
+
 #define X_D3DVSD_TOKENTYPESHIFT   29
 #define X_D3DVSD_TOKENTYPEMASK    (7 << X_D3DVSD_TOKENTYPESHIFT)
 
@@ -1243,5 +1255,7 @@ typedef WORD INDEX16;
 
 #define X_D3DVSD_EXTINFOSHIFT 0
 #define X_D3DVSD_EXTINFOMASK (0xFFFFFF << X_D3DVSD_EXTINFOSHIFT)
+
+#define X_D3DVSD_END() 0xFFFFFFFF
 
 #endif

@@ -284,6 +284,10 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
     UINT             uiStream
 )
 {
+#if CXBX_USE_D3D9
+	extern XTL::D3DCAPS g_D3DCaps;
+#endif
+
 	bool bVshHandleIsFVF = VshHandleIsFVF(pDrawContext->hVertexShader);
 	DWORD XboxFVF = bVshHandleIsFVF ? pDrawContext->hVertexShader : 0;
 	// Texture normalization can only be set for FVF shaders
@@ -586,7 +590,7 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
 					break;
 				}
 				case X_D3DVSDT_PBYTE4: { // 0x44:
-					// Hit by Jet Set Radio Future
+					// Test-case : Jet Set Radio Future
 					XboxElementByteSize = 4 * sizeof(BYTE);
 #if CXBX_USE_D3D9
 					if (g_D3DCaps.DeclTypes & D3DDTCAPS_UBYTE4N) {
@@ -621,6 +625,7 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
 					break;
 				}
 				case X_D3DVSDT_NONE: { // 0x02: // Skip it
+					// Test-case : WWE RAW2
 					LOG_TEST_CASE("X_D3DVSDT_NONE");
 					break;
 				}

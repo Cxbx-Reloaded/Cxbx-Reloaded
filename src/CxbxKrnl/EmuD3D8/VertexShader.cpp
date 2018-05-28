@@ -1816,20 +1816,34 @@ static DWORD VshConvertToken_CONSTMEM(
 	XTL::D3DVERTEXELEMENT *pRecompiled
 )
 {
+    using namespace XTL;
+
     // D3DVSD_CONST
     DbgVshPrintf("\tD3DVSD_CONST(");
 
     DWORD ConstantAddress = (*pToken & X_D3DVSD_CONSTADDRESSMASK) >> X_D3DVSD_CONSTADDRESSSHIFT;
     DWORD Count           = (*pToken & X_D3DVSD_CONSTCOUNTMASK) >> X_D3DVSD_CONSTCOUNTSHIFT;
-
     DbgVshPrintf("%d, %d),\n", ConstantAddress, Count);
 
-    //pToken = D3DVSD_CONST(ConstantAddress, Count);
+#ifdef CXBX_USE_D3D9
+	// TODO
+#else
+	*pRecompiled = D3DVSD_CONST(ConstantAddress, Count);
+#endif
 
     for (uint i = 0; i < Count; i++)
     {
+		pToken++;
+		pRecompiled++;
+
         DbgVshPrintf("\t0x%08X,\n", pToken);
+#ifdef CXBX_USE_D3D9
+		// TODO
+#else
+		*pRecompiled = *pToken;
+#endif
     }
+
     return Count;
 }
 
@@ -1903,10 +1917,18 @@ static void VshConvertToken_STREAM(
 	CxbxVertexShaderPatch *pPatchData
 )
 {
+    using namespace XTL;
+
     // D3DVSD_STREAM_TESS
     if(*pToken & X_D3DVSD_STREAMTESSMASK)
     {
         DbgVshPrintf("\tD3DVSD_STREAM_TESS(),\n");
+
+#ifdef CXBX_USE_D3D9
+		// TODO
+#else
+		*pRecompiled = D3DVSD_STREAM_TESS();
+#endif
     }
     // D3DVSD_STREAM
     else
@@ -1924,7 +1946,13 @@ static void VshConvertToken_STREAM(
 		// Dxbx note : Use Dophin(s), FieldRender, MatrixPaletteSkinning and PersistDisplay as a testcase
 
         DbgVshPrintf("\tD3DVSD_STREAM(%u),\n", StreamNumber);
-		
+
+#ifdef CXBX_USE_D3D9
+		// TODO
+#else
+		*pRecompiled = D3DVSD_STREAM(StreamNumber);
+#endif
+
 		pPatchData->pVertexShaderInfoToSet->NumberOfVertexStreams++;
 		// TODO : Keep a bitmask for all StreamNumber's seen?
     }
@@ -1939,7 +1967,12 @@ static void VshConvertToken_STREAMDATA_SKIP(
 
     XTL::DWORD SkipCount = (*pToken & X_D3DVSD_SKIPCOUNTMASK) >> X_D3DVSD_SKIPCOUNTSHIFT;
     DbgVshPrintf("\tD3DVSD_SKIP(%d),\n", SkipCount);
-	// No need to convert; D3DVSD_SKIP is encoded identically on host Direct3D8.
+#ifdef CXBX_USE_D3D9
+	// TODO : Expand on the setting of this TESSNORMAL output register element :
+#else
+	// D3DVSD_SKIP is encoded identically on host Direct3D8.
+	*pRecompiled = D3DVSD_SKIP(SkipCount);
+#endif
 }
 
 static void VshConvertToken_STREAMDATA_SKIPBYTES(
@@ -1950,12 +1983,17 @@ static void VshConvertToken_STREAMDATA_SKIPBYTES(
     using namespace XTL;
 
     XTL::DWORD SkipBytesCount = (*pToken & X_D3DVSD_SKIPCOUNTMASK) >> X_D3DVSD_SKIPCOUNTSHIFT;
+
     DbgVshPrintf("\tD3DVSD_SKIPBYTES(%d), /* xbox ext. */\n", SkipBytesCount);
-    if(SkipBytesCount % sizeof(XTL::DWORD))
-    {
+    if (SkipBytesCount % sizeof(XTL::DWORD)) {
         EmuWarning("D3DVSD_SKIPBYTES can't be converted to D3DVSD_SKIP, not divisble by 4.");
     }
-    *pToken = D3DVSD_SKIP(SkipBytesCount / sizeof(XTL::DWORD));
+
+#ifdef CXBX_USE_D3D9
+	// TODO
+#else
+	*pRecompiled = D3DVSD_SKIP(SkipBytesCount / sizeof(XTL::DWORD));
+#endif
 }
 
 static void VshConvertToken_STREAMDATA_REG(
@@ -1966,6 +2004,10 @@ static void VshConvertToken_STREAMDATA_REG(
 )
 {
     using namespace XTL;
+
+#if CXBX_USE_D3D9
+	extern XTL::D3DCAPS g_D3DCaps;
+#endif
 
 #if !CXBX_USE_D3D9 // For simpler support for both Direct3D 8 and 9, use these '9' constants in below '8' code paths too:
 #define	D3DDECLTYPE_FLOAT1 D3DVSDT_FLOAT1
@@ -2154,7 +2196,8 @@ static void VshConvertToken_STREAMDATA_REG(
 		}
 		NeedPatching = TRUE;
 		break;
-	case X_D3DVSDT_PBYTE4: // 0x44: // Hit by Panzer
+	case X_D3DVSDT_PBYTE4: // 0x44:
+		// Test-case : Panzer
 #if CXBX_USE_D3D9
 		if (g_D3DCaps.DeclTypes & D3DDTCAPS_UBYTE4N) {
 			DbgVshPrintf("D3DVSDT_PBYTE4");
@@ -2194,7 +2237,11 @@ static void VshConvertToken_STREAMDATA_REG(
 	pPatchData->pCurrentVertexShaderStreamInfo->NumberOfVertexElements++;
 	pPatchData->pCurrentVertexShaderStreamInfo->NeedPatch |= NeedPatching;
 
-    *pToken = D3DVSD_REG(HostVertexRegister, HostVertexElementDataType);
+#ifdef CXBX_USE_D3D9
+	// TODO
+#else
+	*pRecompiled = D3DVSD_REG(HostVertexRegister, HostVertexElementDataType);
+#endif
 
     pPatchData->pCurrentVertexShaderStreamInfo->HostVertexStride += HostVertexElementByteSize;
 
@@ -2242,25 +2289,25 @@ static DWORD VshRecompileToken(
 
     switch(VshGetTokenType(*pToken))
     {
-    case D3DVSD_TOKEN_NOP:
+    case X_D3DVSD_TOKEN_NOP:
         VshConvertToken_NOP(pToken, pRecompiled);
         break;
-    case D3DVSD_TOKEN_STREAM:
+    case X_D3DVSD_TOKEN_STREAM:
     {
         VshConvertToken_STREAM(pToken, pRecompiled, pPatchData);
         break;
     }
-    case D3DVSD_TOKEN_STREAMDATA:
+    case X_D3DVSD_TOKEN_STREAMDATA:
     {
         VshConvertToken_STREAMDATA(pToken, pRecompiled, IsFixedFunction, pPatchData);
         break;
     }
-    case D3DVSD_TOKEN_TESSELLATOR:
+    case X_D3DVSD_TOKEN_TESSELLATOR:
     {
         VshConvertToken_TESSELATOR(pToken, pRecompiled, IsFixedFunction);
         break;
     }
-    case D3DVSD_TOKEN_CONSTMEM:
+    case X_D3DVSD_TOKEN_CONSTMEM:
     {
         Step = VshConvertToken_CONSTMEM(pToken, pRecompiled);
         break;
@@ -2360,10 +2407,10 @@ extern HRESULT XTL::EmuRecompileVshFunction
 	bool declaredRegisters[13];
 	DWORD* pDeclToken = pRecompiledDeclaration;
 	do {
-		DWORD regNum = *pDeclToken & D3DVSD_VERTEXREGMASK;
+		DWORD regNum = *pDeclToken & X_D3DVSD_VERTEXREGMASK;
 		declaredRegisters[regNum] = true;
 		pDeclToken++;
-	} while (*pDeclToken != D3DVSD_END());
+	} while (*pDeclToken != X_D3DVSD_END());
 
     // TODO: support this situation..
     if(pFunction == NULL)

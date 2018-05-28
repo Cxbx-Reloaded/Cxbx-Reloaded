@@ -124,7 +124,7 @@ struct {
 // D3D based variables
 static GUID                         g_ddguid;               // DirectDraw driver GUID
 static XTL::IDirect3D              *g_pDirect3D = nullptr;
-static XTL::D3DCAPS                 g_D3DCaps;              // Direct3D Caps
+static XTL::D3DCAPS                 g_D3DCaps = {};         // Direct3D Caps
 
 // wireframe toggle
 static int                          g_iWireframe    = 0;
@@ -7555,6 +7555,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawVertices)
 				// test-case : BLiNX: the time sweeper
 				// test-case : Halo - Combat Evolved
 				// test-case : Worms 3D Special Edition
+				// test-case : XDK sample Lensflare 
 				DrawContext.dwStartVertex = StartVertex; // Breakpoint location for testing. 
 			}
 
