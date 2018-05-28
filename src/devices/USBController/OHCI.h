@@ -66,7 +66,15 @@
 #define OHCI_STATUS_OCR                     (1<<3)           // OwnershipChangeRequest
 #define OHCI_STATUS_SOC                     ((1<<6)|(1<<7))  // SchedulingOverrunCount
 // HcInterruptStatus
+#define OHCI_INTR_SO                        (1<<0)           // Scheduling overrun
+#define OHCI_INTR_WD                        (1<<1)           // HcDoneHead writeback
 #define OHCI_INTR_SF                        (1<<2)           // Start of frame
+#define OHCI_INTR_RD                        (1<<3)           // Resume detect
+#define OHCI_INTR_UE                        (1<<4)           // Unrecoverable error
+#define OHCI_INTR_FNO                       (1<<5)           // Frame number overflow
+#define OHCI_INTR_RHSC                      (1<<6)           // Root hub status change
+#define OHCI_INTR_OC                        (1<<30)          // Ownership change
+#define OHCI_INTR_MIE                       (1<<31)          // Master Interrupt Enable
 // HcInterruptEnable, HcInterruptDisable
 #define OHCI_INTR_MIE                       (1<<31)          // MasterInterruptEnable
 // HcHCCA
@@ -84,8 +92,20 @@
 #define OHCI_RHA_OCPM                       (1<<11)          // OverCurrentProtectionMode
 #define OHCI_RHA_NOCP                       (1<<12)          // NoOverCurrentProtection
 // HcRhPortStatus
+#define OHCI_PORT_CCS                       (1<<0)           // CurrentConnectStatus
+#define OHCI_PORT_PES                       (1<<1)           // PortEnableStatus
+#define OHCI_PORT_PSS                       (1<<2)           // PortSuspendStatus
+#define OHCI_PORT_POCI                      (1<<3)           // PortOverCurrentIndicator
+#define OHCI_PORT_PRS                       (1<<4)           // PortResetStatus
 #define OHCI_PORT_PPS                       (1<<8)           // PortPowerStatus
-
+#define OHCI_PORT_LSDA                      (1<<9)           // LowSpeedDeviceAttached
+#define OHCI_PORT_CSC                       (1<<16)          // ConnectStatusChange
+#define OHCI_PORT_PESC                      (1<<17)          // PortEnableStatusChange
+#define OHCI_PORT_PSSC                      (1<<18)          // PortSuspendStatusChange
+#define OHCI_PORT_OCIC                      (1<<19)          // PortOverCurrentIndicatorChange
+#define OHCI_PORT_PRSC                      (1<<20)          // PortResetStatusChange
+#define OHCI_PORT_WTC                       (OHCI_PORT_CSC|OHCI_PORT_PESC|OHCI_PORT_PSSC \
+                                                          |OHCI_PORT_OCIC|OHCI_PORT_PRSC)
 
 // enum indicating the current HC state
 typedef enum _OHCI_State
@@ -100,7 +120,7 @@ OHCI_State;
 // Small struct used to hold the HcRhPortStatus register and the usb port status
 typedef struct _OHCIPort
 {
-	USBPort Port;
+	USBPort UsbPort;
 	uint32_t HcRhPortStatus;
 }
 OHCIPort;
@@ -135,6 +155,8 @@ typedef struct _OHCI_Registers
 	uint32_t HcRhDescriptorA;
 	uint32_t HcRhDescriptorB;
 	uint32_t HcRhStatus;
+	// I have some doubts here. Both XQEMU and OpenXbox set 4 ports per HC, for a total of 8 usb ports.
+	// Could it be becasue each gamepad can host 2 memory units?
 	OHCIPort RhPort[2]; // 2 ports per HC, for a total of 4 USB ports
 }
 OHCI_Registers;
@@ -145,7 +167,7 @@ class OHCI
 {
 	public:
 		// constructor
-		OHCI(USBDevice* UsbObj, int Irqn);
+		OHCI(int Irqn);
 		// destructor
 		~OHCI() {}
 		// read a register
@@ -165,8 +187,6 @@ class OHCI
 		uint64_t UsbFrameTime;
 		// ticks per usb tick
 		uint64_t TicksPerUsbTick;
-		// the usb device instance of this HC
-		USBDevice* UsbInstance;
 		// usb packet
 		USBPacket UsbPacket;
 		// irq number
@@ -192,9 +212,27 @@ class OHCI
 		void OHCI_UpdateInterrupt();
 		// fire an interrupt
 		void OHCI_SetInterrupt(uint32_t Value);
-};
+		//
+		void OHCI_StopEndpoints();
+		// update ohci registers during a device detach
+		void OHCI_Detach(USBPort* Port);
 
-extern OHCI* g_pHostController1;
-extern OHCI* g_pHostController2;
+		// register a port with the HC
+		void USB_RegisterPort(USBPort* Port, int Index, int SpeedMask);
+		//
+		void USB_DeviceEPstopped(USBDev* Dev, USBEndpoint* EP);
+		// reset a usb port
+		void USB_PortReset(USBPort* Port);
+		// a device is attched
+		void Attach(USBPort* port);
+		// a device is detached
+		void USB_Detach(USBPort* port);
+		// a device downstream from the device attached to the port (attached through a hub) is detached
+		void ChildDetach(USBPort* port, USBDev* child);
+		// TODO
+		void Wakeup(USBPort* port);
+		// TODO
+		void Complete(USBPort* port, USBPacket *p);
+};
 
 #endif

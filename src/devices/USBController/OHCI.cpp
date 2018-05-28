@@ -47,18 +47,13 @@ typedef enum _USB_SPEED
 }
 USB_SPEED;
 
-// global pointers to the two USB host controllers available on the Xbox
-OHCI* g_pHostController1 = nullptr;
-OHCI* g_pHostController2 = nullptr;
 
-
-OHCI::OHCI(USBDevice* UsbObj, int Irq)
+OHCI::OHCI(int Irq)
 {
-	UsbInstance = UsbObj;
 	Irq_n = Irq;
 
 	for (int i = 0; i < 2; i++) {
-		UsbInstance->USB_RegisterPort(&Registers.RhPort[i].Port, this, i, USB_SPEED_MASK_LOW | USB_SPEED_MASK_FULL);
+		USB_RegisterPort(&Registers.RhPort[i].UsbPort, i, USB_SPEED_MASK_LOW | USB_SPEED_MASK_FULL);
 	}
 	OHCI_PacketInit(&UsbPacket);
 
@@ -79,7 +74,7 @@ void OHCI::OHCI_StateReset()
 	// The usb state can be USB_Suspend if it is a software reset, and USB_Reset if it is a hardware
 	// reset or cold boot
 
-	// TODO: stop all the list processing here
+	OHCI_BusStop();
 
 	// Reset all registers
 	// Remark: the standard says that RemoteWakeupConnected bit should be set during POST, cleared during hw reset
@@ -112,10 +107,12 @@ void OHCI::OHCI_StateReset()
 	{
 		OHCIPort* Port = &Registers.RhPort[i];
 		Port->HcRhPortStatus = 0;
-		//if (Port->port.device && Port->port.device->attached) {
-			//usb_port_reset(&Port->port);
-		//}
+		if (Port->UsbPort.Dev && Port->UsbPort.Dev->Attached) {
+			USB_PortReset(&Port->UsbPort);
+		}
 	}
+
+	OHCI_StopEndpoints();
 
 	DbgPrintf("Ohci: Reset event.\n");
 }
@@ -442,4 +439,83 @@ void OHCI::OHCI_SetInterrupt(uint32_t Value)
 {
 	Registers.HcInterruptStatus |= Value;
 	OHCI_UpdateInterrupt();
+}
+
+void OHCI::OHCI_StopEndpoints()
+{
+	USBDev* dev;
+	int i, j;
+
+	for (i = 0; i < 2; i++) {
+		dev = Registers.RhPort[i].UsbPort.Dev;
+		if (dev && dev->Attached) {
+			USB_DeviceEPstopped(dev, &dev->EP_ctl);
+			for (j = 0; j < USB_MAX_ENDPOINTS; j++) {
+				USB_DeviceEPstopped(dev, &dev->EP_in[j]);
+				USB_DeviceEPstopped(dev, &dev->EP_out[j]);
+			}
+		}
+	}
+}
+
+void OHCI::OHCI_Detach(USBPort* Port)
+{
+	OHCIPort* port = &Registers.RhPort[Port->PortIndex];
+	uint32_t old_state = port->HcRhPortStatus;
+
+	ohci_async_cancel_device(Port->Dev);
+
+	// set connect status
+	if (port->HcRhPortStatus & OHCI_PORT_CCS) {
+		port->HcRhPortStatus &= ~OHCI_PORT_CCS;
+		port->HcRhPortStatus |= OHCI_PORT_CSC;
+	}
+	// disable port
+	if (port->HcRhPortStatus & OHCI_PORT_PES) {
+		port->HcRhPortStatus &= ~OHCI_PORT_PES;
+		port->HcRhPortStatus |= OHCI_PORT_PESC;
+	}
+
+	DbgPrintf("Ohci: Detached port %d\n", Port->PortIndex);
+
+	if (old_state != port->HcRhPortStatus) {
+		OHCI_SetInterrupt(OHCI_INTR_RHSC);
+	}
+}
+
+void OHCI::USB_RegisterPort(USBPort* Port, int Index, int SpeedMask)
+{
+	Port->PortIndex = Index;
+	Port->SpeedMask = SpeedMask;
+	Port->HubCount = 0;
+	std::snprintf(Port->Path, sizeof(Port->Path), "%d", Index + 1);
+}
+
+void OHCI::USB_DeviceEPstopped(USBDev* Dev, USBEndpoint* EP)
+{
+	// This seems to be a nop in XQEMU since it doesn't assign the EP_Stopped function (it's nullptr)
+	USBDeviceClass* klass = USB_DEVICE_GET_CLASS(Dev);
+	if (klass->EP_Stopped) {
+		klass->EP_Stopped(Dev, EP);
+	}
+}
+
+void OHCI::USB_PortReset(USBPort* Port)
+{
+	USBDev* dev = Port->Dev;
+
+	assert(dev != nullptr);
+	USB_Detach(Port);
+	usb_attach(port);
+	usb_device_reset(dev);
+}
+
+void OHCI::USB_Detach(USBPort* Port)
+{
+	USBDev* dev = Port->Dev;
+
+	assert(dev != nullptr);
+	assert(dev->State != USB_STATE_NOTATTACHED);
+	OHCI_Detach(Port);
+	dev->State = USB_STATE_NOTATTACHED;
 }

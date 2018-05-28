@@ -37,7 +37,23 @@
 #define USBDEVICE_H_
 
 #include "..\PCIDevice.h"
+#include <assert.h>
 
+#define USB_MAX_ENDPOINTS  15
+#define USB_MAX_INTERFACES 16
+
+#define USB_STATE_NOTATTACHED 0
+#define USB_STATE_ATTACHED    1
+
+typedef enum USBPacketState {
+	USB_PACKET_UNDEFINED = 0,
+	USB_PACKET_SETUP,
+	USB_PACKET_QUEUED,
+	USB_PACKET_ASYNC,
+	USB_PACKET_COMPLETE,
+	USB_PACKET_CANCELED,
+}
+USBPacketState;
 
 // This is a linux struct for vectored I/O. See readv() and writev()
 typedef struct _IoVec
@@ -56,6 +72,20 @@ typedef struct _IOVector
 }
 IOVector;
 
+typedef struct _USBEndpoint
+{
+	uint8_t nr;
+	uint8_t pid;
+	uint8_t type;
+	uint8_t ifnum;
+	int max_packet_size;
+	bool pipeline;
+	bool halted;
+	USBDev *dev;
+	//QTAILQ_HEAD(, USBPacket) queue;
+}
+USBEndpoint;
+
 // definition of a USB device
 typedef struct _USBDev
 {
@@ -73,9 +103,9 @@ typedef struct _USBDev
 	uint8_t addr;
 	char product_desc[32];
 	int auto_attach;
-	int attached;
+	int Attached; // device is attached
 
-	int32_t state;
+	int32_t State; // current state of device
 	uint8_t setup_buf[8];
 	uint8_t data_buf[4096];
 	int32_t remote_wakeup;
@@ -83,9 +113,9 @@ typedef struct _USBDev
 	int32_t setup_len;
 	int32_t setup_index;
 
-	USBEndpoint ep_ctl;
-	USBEndpoint ep_in[USB_MAX_ENDPOINTS];
-	USBEndpoint ep_out[USB_MAX_ENDPOINTS];
+	USBEndpoint EP_ctl;
+	USBEndpoint EP_in[USB_MAX_ENDPOINTS];
+	USBEndpoint EP_out[USB_MAX_ENDPOINTS];
 
 	//QLIST_HEAD(, USBDescString) strings;
 	const USBDesc *usb_desc; // Overrides class usb_desc if not NULL
@@ -99,19 +129,56 @@ typedef struct _USBDev
 }
 USBDev;
 
-typedef struct _USBEndpoint
+typedef struct USBDeviceClass
 {
-	uint8_t nr;
-	uint8_t pid;
-	uint8_t type;
-	uint8_t ifnum;
-	int max_packet_size;
-	bool pipeline;
-	bool halted;
-	USBDevice *dev;
-	//QTAILQ_HEAD(, USBPacket) queue;
+	DeviceClass parent_class;
+
+	int(*init)(USBDev *dev);
+
+	// Walk (enabled) downstream ports, check for a matching device.
+	// Only hubs implement this.
+	USBDev *(*find_device)(USBDev *dev, uint8_t addr);
+
+	// Called when a packet is canceled.
+	void(*cancel_packet)(USBDev *dev, USBPacket *p);
+
+	// Called when device is destroyed.
+	void(*handle_destroy)(USBDev *dev);
+
+	// Attach the device
+	void(*handle_attach)(USBDev *dev);
+
+	// Reset the device
+	void(*handle_reset)(USBDev *dev);
+
+	// Process control request.
+	// Called from handle_packet().
+	// Status gets stored in p->status, and if p->status == USB_RET_SUCCESS
+	// then the number of bytes transferred is stored in p->actual_length
+	void(*handle_control)(USBDev *dev, USBPacket *p, int request, int value,
+		int index, int length, uint8_t *data);
+
+	// Process data transfers (both BULK and ISOC).
+	// Called from handle_packet().
+	// Status gets stored in p->status, and if p->status == USB_RET_SUCCESS
+	// then the number of bytes transferred is stored in p->actual_length
+	void(*handle_data)(USBDev *dev, USBPacket *p);
+
+	void(*set_interface)(USBDev *dev, int Interface,
+		int alt_old, int alt_new);
+
+	// Called when the hcd is done queuing packets for an endpoint, only
+	// necessary for devices which can return USB_RET_ADD_TO_QUEUE.
+	void(*flush_ep_queue)(USBDev *dev, USBEndpoint *ep);
+
+	// Called by the hcd to let the device know the queue for an endpoint
+	// has been unlinked / stopped. Optional may be NULL.
+	void(*EP_Stopped)(USBDev* Dev, USBEndpoint* EP);
+
+	const char *product_desc;
+	const USBDesc *usb_desc;
 }
-USBEndpoint;
+USBDeviceClass;
 
 // Structure used to hold information about an active USB packet
 typedef struct _USBPacket
@@ -137,23 +204,12 @@ USBPacket;
 
 // Struct describing the status of a usb port
 typedef struct _USBPort {
-	USBDev *Dev;
+	USBDev* Dev;     // usb device (if present)
 	int SpeedMask;   // usb speeds supported
 	int HubCount;    // number of hubs attached
 	char Path[16];   // the number of the port
-	OHCI* Opaque;    // OHCI* to let USBPort access it
-	int PortIndex;   // internal port index, may be used with the Opaque
+	int PortIndex;   // internal port index
 	//QTAILQ_ENTRY(USBPort) next;
-	// a device is attched
-	void Attach(USBPort* port);
-	// a device is detached
-	void Detach(USBPort* port);
-	// a device downstream from the device attached to the port (attached through a hub) is detached
-	void ChildDetach(USBPort* port, USBDev* child);
-	// TODO
-	void Wakeup(USBPort* port);
-	// TODO
-	void Complete(USBPort* port, USBPacket *p);
 }
 USBPort;
 
@@ -174,9 +230,10 @@ class USBDevice : public PCIDevice {
 		uint32_t MMIORead(int barIndex, uint32_t addr, unsigned size);
 		void MMIOWrite(int barIndex, uint32_t addr, uint32_t value, unsigned size);
 
-		// USB specific functions
-		// register a port with the HC
-		void USB_RegisterPort(USBPort* Port, OHCI* Obj, int Index, int SpeedMask);
+
+		// pointers to the two USB host controllers available on the Xbox
+		OHCI* m_pHostController1 = nullptr;
+		OHCI* m_pHostController2 = nullptr;
 };
 
 #endif

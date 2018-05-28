@@ -36,7 +36,6 @@
 
 #include "USBDevice.h"
 #include "OHCI.h"
-#include <assert.h>
 
 
 void USBDevice::Init(unsigned int address)
@@ -53,11 +52,11 @@ void USBDevice::Init(unsigned int address)
 	m_VendorId = PCI_VENDOR_ID_NVIDIA;
 
 	if (address == USB0_BASE) {
-		g_pHostController1 = new OHCI(this, 1);
+		m_pHostController1 = new OHCI(1);
 		return;
 	}
 
-	g_pHostController2 = new OHCI(this, 9);
+	m_pHostController2 = new OHCI(9);
 }
 
 uint32_t USBDevice::MMIORead(int barIndex, uint32_t addr, unsigned size)
@@ -66,13 +65,13 @@ uint32_t USBDevice::MMIORead(int barIndex, uint32_t addr, unsigned size)
 	assert(barIndex == 0);
 
 	// Figure out the correct OHCI object and read the register
-	if (addr >= USB1_BASE) {
-		// USB1 queried
-		return g_pHostController2->OHCI_ReadRegister(addr);
+	if (addr >= USB0_BASE) {
+		// USB0 queried
+		return m_pHostController1->OHCI_ReadRegister(addr);
 	}
 
-	// USB0 queried
-	return g_pHostController1->OHCI_ReadRegister(addr);
+	// USB1 queried
+	return m_pHostController2->OHCI_ReadRegister(addr);
 }
 
 void USBDevice::MMIOWrite(int barIndex, uint32_t addr, uint32_t value, unsigned size)
@@ -81,21 +80,12 @@ void USBDevice::MMIOWrite(int barIndex, uint32_t addr, uint32_t value, unsigned 
 	assert(barIndex == 0);
 
 	// Figure out the correct OHCI object and write the value to the register
-	if (addr >= USB1_BASE) {
-		// USB1 queried
-		g_pHostController2->OHCI_WriteRegister(addr, value);
+	if (addr >= USB0_BASE) {
+		// USB0 queried
+		m_pHostController1->OHCI_WriteRegister(addr, value);
 		return;
 	}
 
-	// USB0 queried
-	g_pHostController1->OHCI_WriteRegister(addr, value);
-}
-
-void USBDevice::USB_RegisterPort(USBPort* Port, OHCI* Obj, int Index, int SpeedMask)
-{
-	Port->Opaque = Obj;
-	Port->PortIndex = Index;
-	Port->SpeedMask = SpeedMask;
-	Port->HubCount = 0;
-	std::snprintf(Port->Path, sizeof(Port->Path), "%d", Index + 1);
+	// USB1 queried
+	m_pHostController2->OHCI_WriteRegister(addr, value);
 }
