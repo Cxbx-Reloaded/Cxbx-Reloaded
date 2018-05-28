@@ -1924,7 +1924,7 @@ void WndMain::UpdateCaption()
 		char sMenu[32];
 		mii.dwTypeData = &sMenu[0];
 
-		if (m_bIsStarted) { 
+		if (m_bIsStarted) {
 			if (g_EmuShared != NULL) {
 				float currentFPSVal = 0;
 				float currentMSpFVal = 0;
