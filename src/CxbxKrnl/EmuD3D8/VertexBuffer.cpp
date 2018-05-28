@@ -268,9 +268,19 @@ UINT XTL::CxbxVertexBufferConverter::GetNbrStreams(CxbxDrawContext *pDrawContext
     return 0;
 }
 
+inline FLOAT PackedIntToFloat(const int value, const FLOAT PosFactor, const FLOAT NegFactor)
+{
+	if (value >= 0) {
+		return ((FLOAT)value) / PosFactor;
+	}
+	else {
+		return ((FLOAT)value) / NegFactor;
+	}
+}
+
 inline FLOAT NormShortToFloat(const SHORT value)
 {
-	return ((FLOAT)value) / 32767.0f;
+	return PackedIntToFloat((int)value, 32767.0f, 32768.0f);
 }
 
 inline FLOAT ByteToFloat(const BYTE value)
@@ -507,11 +517,20 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
 					// Test-cases : Dashboard
 					XboxElementByteSize = 1 * sizeof(int32);
 					// Make it FLOAT3
-					int32 iPacked = ((int32 *)pXboxVertexAsByte)[0];
-					// Cxbx note : to make each component signed, two need to be shifted towards the sign-bit first :
-					pHostVertexAsFloat[0] = ((FLOAT)((iPacked << 21) >> 21)) / 1023.0f;
-					pHostVertexAsFloat[1] = ((FLOAT)((iPacked << 10) >> 21)) / 1023.0f;
-					pHostVertexAsFloat[2] = ((FLOAT)((iPacked) >> 22)) / 511.0f;
+					union {
+						int32 value;
+						struct {
+							int x : 11;
+							int y : 11;
+							int z : 10;
+						};
+					} NormPacked3;
+
+					NormPacked3.value = ((int32 *)pXboxVertexAsByte)[0];
+
+					pHostVertexAsFloat[0] = PackedIntToFloat(NormPacked3.x, 1023.0f, 1024.f);
+					pHostVertexAsFloat[1] = PackedIntToFloat(NormPacked3.y, 1023.0f, 1024.f);
+					pHostVertexAsFloat[2] = PackedIntToFloat(NormPacked3.z, 511.0f, 512.f);
 					break;
 				}
 				case X_D3DVSDT_SHORT1: { // 0x15:
