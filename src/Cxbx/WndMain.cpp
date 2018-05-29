@@ -2328,9 +2328,18 @@ void WndMain::DrawLedBitmap(HWND hwnd, bool bdefault)
 	HMENU hMenu = GetMenu(hwnd);
 	int ActiveLEDColor;
 
-	// When so requested, or when not emulating, draw a black bitmap
+	MENUITEMINFO mii = { 0 };
+	mii.cbSize = sizeof(mii);
+	mii.fMask = MIIM_FTYPE | MIIM_BITMAP | MIIM_STRING;
+	char flagString[10] = "LLE-";
+	mii.dwTypeData = &flagString[0];
+	mii.fType = MFT_RIGHTJUSTIFY;
+	mii.hbmpItem = m_LedBmp;
+
+	// When so requested, or when not emulating, draw a black bitmap and hide LLE flags string
 	if (bdefault || !m_bIsStarted) {
 		ActiveLEDColor = XBOX_LED_COLOUR_OFF;
+		sprintf(flagString, " ");
 	}
 	else { // draw colored bitmap
 		int LedSequence[4] = { XBOX_LED_COLOUR_OFF, XBOX_LED_COLOUR_OFF, XBOX_LED_COLOUR_OFF, XBOX_LED_COLOUR_OFF };
@@ -2341,6 +2350,20 @@ void WndMain::DrawLedBitmap(HWND hwnd, bool bdefault)
 		// Select active color and cycle through all 4 phases in the sequence
 		ActiveLEDColor = LedSequence[LedSequenceOffset & 3];
 		++LedSequenceOffset;
+
+		// Set LLE flags string based on selected LLE flags
+		if (m_FlagsLLE & LLE_APU) {
+			strcat(flagString, "A");
+		}
+		if (m_FlagsLLE & LLE_GPU) {
+			strcat(flagString, "G");
+		}
+		if (m_FlagsLLE & LLE_JIT) {
+			strcat(flagString, "J");
+		}
+		if (m_FlagsLLE == 0) {
+			sprintf(flagString, "HLE");
+		}
 	}
 
 	SelectObject(m_LedDC, m_Brushes[ActiveLEDColor]);
@@ -2350,11 +2373,6 @@ void WndMain::DrawLedBitmap(HWND hwnd, bool bdefault)
 	Rectangle(m_LedDC, 0, 0, m_xBmp, m_yBmp);
 	m_LedBmp = (HBITMAP)SelectObject(m_LedDC, m_OriLed);
 
-	MENUITEMINFO mii = { 0 };
-	mii.cbSize = sizeof(mii);
-	mii.fMask = MIIM_FTYPE | MIIM_BITMAP;
-	mii.fType = MFT_RIGHTJUSTIFY;
-	mii.hbmpItem = m_LedBmp;
 	SetMenuItemInfo(hMenu, ID_LED, FALSE, &mii);
 
 	DrawMenuBar(hwnd);
