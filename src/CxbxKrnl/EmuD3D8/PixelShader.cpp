@@ -4107,10 +4107,9 @@ PSH_RECOMPILED_SHADER XTL_EmuRecompilePshDef(XTL::X_D3DPIXELSHADERDEF *pPSDef)
 	uint32 PSVersion = D3DPS_VERSION(1, 3); // Use pixel shader model 1.3 by default
 
 #if 0 // Once PS.1.4 can be generated, enable this :
-	XTL::D3DCAPS g_D3DCaps = {};
-	if (g_pD3DDevice->GetDeviceCaps(&g_D3DCaps) == D3D_OK) {
-		PSVersion = g_D3DCaps.PixelShaderVersion;
-	}
+	extern XTL::D3DCAPS g_D3DCaps;
+
+	PSVersion = g_D3DCaps.PixelShaderVersion;
 #endif
 	// TODO : Make the pixel shader version configurable
 
@@ -4338,10 +4337,15 @@ VOID XTL::DxbxUpdateActivePixelShader() // NOPATCH
         // TODO : Avoid the following setter if it's no different from the previous update (this might speed things up)
         // Set the value locally in this register :
 #ifdef CXBX_USE_D3D9
-        g_pD3DDevice->SetPixelShaderConstantF(Register_, (float*)(&fColor), 1);
+        g_pD3DDevice->SetPixelShaderConstantF
 #else
-		g_pD3DDevice->SetPixelShaderConstant(Register_, &fColor, 1);
+		g_pD3DDevice->SetPixelShaderConstant
 #endif
+		(
+			Register_, 
+			(PixelShaderConstantType*)(&fColor),
+			1
+		);
       }
     }
   }

@@ -124,7 +124,7 @@ struct {
 // D3D based variables
 static GUID                         g_ddguid;               // DirectDraw driver GUID
 static XTL::IDirect3D              *g_pDirect3D = nullptr;
-static XTL::D3DCAPS                 g_D3DCaps;              // Direct3D Caps
+static XTL::D3DCAPS                 g_D3DCaps = {};         // Direct3D Caps
 
 // wireframe toggle
 static int                          g_iWireframe    = 0;
@@ -7579,6 +7579,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawVertices)
 				// test-case : BLiNX: the time sweeper
 				// test-case : Halo - Combat Evolved
 				// test-case : Worms 3D Special Edition
+				// test-case : XDK sample Lensflare 
 				DrawContext.dwStartVertex = StartVertex; // Breakpoint location for testing. 
 			}
 
@@ -8111,7 +8112,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderTarget)
 		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetRenderTarget");
 		if (FAILED(hRet)) {
 			// If Direct3D 9 SetRenderTarget failed, skip setting depth stencil
-			return hRet;
+			return;
 		}
 	}
 
@@ -9521,10 +9522,14 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetPixelShaderConstant_4)
     if(g_BuildVersion <= 4361)
         Register += 96;
 
+#ifdef CXBX_USE_D3D9
+	HRESULT hRet = g_pD3DDevice->SetPixelShaderConstantF
+#else
     HRESULT hRet = g_pD3DDevice->SetPixelShaderConstant
+#endif
     (
         Register,
-        pConstantData,
+		(PixelShaderConstantType*)pConstantData,
         ConstantCount
     );
     //DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetPixelShaderConstant");

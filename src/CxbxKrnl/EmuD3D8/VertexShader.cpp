@@ -44,6 +44,10 @@
 
 #include <unordered_map>
 
+#ifdef CXBX_USE_VS30
+//#define CXBX_USE_VS30 // Separate the port to Vertex Shader model 3.0 from the port to Direct3D9
+#endif
+
 // ****************************************************************************
 // * Vertex shader function recompiler
 // ****************************************************************************
@@ -55,6 +59,11 @@
 #define VERSION_XVSW                   0x77 // Xbox vertex read/write shader
 #define VSH_XBOX_MAX_INSTRUCTION_COUNT 136  // The maximum Xbox shader instruction count
 #define VSH_MAX_INTERMEDIATE_COUNT     1024 // The maximum number of intermediate format slots
+
+#define X_D3DVSD_MASK_TESSUV 0x10000000
+#define X_D3DVSD_MASK_SKIP 0x10000000 // Skips (normally) dwords
+#define X_D3DVSD_MASK_SKIPBYTES 0x08000000 // Skips bytes (no, really?!)
+#define X_D3DVSD_STREAMTESSMASK (1 << 28)
 
 typedef enum _VSH_SWIZZLE
 {
@@ -785,7 +794,11 @@ static void VshWriteShader(VSH_XBOX_SHADER *pShader,
     switch(pShader->ShaderHeader.Version)
     {
         case VERSION_VS:
+#ifdef CXBX_USE_VS30
+            DisassemblyPos += sprintf(pDisassembly + DisassemblyPos, "vs.3.0\n");
+#else
             DisassemblyPos += sprintf(pDisassembly + DisassemblyPos, "vs.1.1\n");
+#endif
             break;
         case VERSION_XVS:
             DisassemblyPos += sprintf(pDisassembly + DisassemblyPos, "xvs.1.1\n");
@@ -1629,7 +1642,7 @@ static DWORD VshGetDeclarationSize(DWORD *pDeclaration)
     {
         Pos++;
     }
-    return (Pos + 1) * sizeof(DWORD);
+    return Pos + 1;
 }
 
 #ifndef CXBX_USE_D3D9
@@ -1785,7 +1798,10 @@ static inline DWORD VshGetVertexStream(DWORD Token)
     return (Token & X_D3DVSD_STREAMNUMBERMASK) >> X_D3DVSD_STREAMNUMBERSHIFT;
 }
 
-static void VshConvertToken_NOP(DWORD *pToken)
+static void VshConvertToken_NOP(
+	DWORD *pToken,
+	XTL::D3DVERTEXELEMENT *pRecompiled
+)
 {
     // D3DVSD_NOP
     if(*pToken != DEF_VSH_NOP)
@@ -1795,33 +1811,52 @@ static void VshConvertToken_NOP(DWORD *pToken)
     DbgVshPrintf("\tD3DVSD_NOP(),\n");
 }
 
-static DWORD VshConvertToken_CONSTMEM(DWORD *pToken)
+static DWORD VshConvertToken_CONSTMEM(
+	DWORD *pToken,
+	XTL::D3DVERTEXELEMENT *pRecompiled
+)
 {
+    using namespace XTL;
+
     // D3DVSD_CONST
     DbgVshPrintf("\tD3DVSD_CONST(");
 
     DWORD ConstantAddress = (*pToken & X_D3DVSD_CONSTADDRESSMASK) >> X_D3DVSD_CONSTADDRESSSHIFT;
     DWORD Count           = (*pToken & X_D3DVSD_CONSTCOUNTMASK) >> X_D3DVSD_CONSTCOUNTSHIFT;
-
     DbgVshPrintf("%d, %d),\n", ConstantAddress, Count);
 
-    //pToken = D3DVSD_CONST(ConstantAddress, Count);
+#ifdef CXBX_USE_D3D9
+	// TODO
+#else
+	*pRecompiled = D3DVSD_CONST(ConstantAddress, Count);
+#endif
 
     for (uint i = 0; i < Count; i++)
     {
+		pToken++;
+		pRecompiled++;
+
         DbgVshPrintf("\t0x%08X,\n", pToken);
+#ifdef CXBX_USE_D3D9
+		// TODO
+#else
+		*pRecompiled = *pToken;
+#endif
     }
+
     return Count;
 }
 
-static void VshConverToken_TESSELATOR(DWORD   *pToken,
-                                      boolean IsFixedFunction)
+static void VshConvertToken_TESSELATOR(
+	DWORD *pToken,
+	XTL::D3DVERTEXELEMENT *pRecompiled,
+	boolean IsFixedFunction
+)
 {
     using namespace XTL;
 
     // TODO: Investigate why Xb2PCRegisterType is only used for fixed function vertex shaders
-    // D3DVSD_TESSUV
-    if(*pToken & 0x10000000)
+    if(*pToken & X_D3DVSD_MASK_TESSUV)
     {
         XTL::DWORD VertexRegister    = VshGetVertexRegister(*pToken);
         XTL::DWORD NewVertexRegister = VertexRegister;
@@ -1830,8 +1865,14 @@ static void VshConverToken_TESSELATOR(DWORD   *pToken,
 		NewVertexRegister = Xb2PCRegisterType(VertexRegister, IsFixedFunction);
         DbgVshPrintf("),\n");
 
-        *pToken = D3DVSD_TESSUV(NewVertexRegister);
-    }
+#ifdef CXBX_USE_D3D9
+		// TODO : Expand on the setting of this TESSUV register element :
+		pRecompiled->Usage = D3DDECLUSAGE(NewVertexRegister);
+		pRecompiled->UsageIndex = 0; // TODO : Get Index from Xb2PCRegisterType
+#else
+		*pRecompiled = D3DVSD_TESSUV(NewVertexRegister);
+#endif
+	}
     // D3DVSD_TESSNORMAL
     else
     {
@@ -1844,10 +1885,23 @@ static void VshConverToken_TESSELATOR(DWORD   *pToken,
         DbgVshPrintf("\tD3DVSD_TESSNORMAL(");
         NewVertexRegisterIn = Xb2PCRegisterType(VertexRegisterIn, IsFixedFunction);
         DbgVshPrintf(", ");
+#ifdef CXBX_USE_D3D9
+		// TODO : Expand on the setting of this TESSNORMAL input register element :
+		pRecompiled->Usage = D3DDECLUSAGE(NewVertexRegisterIn);
+		pRecompiled->UsageIndex = 0; // TODO : Get Index from Xb2PCRegisterType
+#endif
         NewVertexRegisterOut = Xb2PCRegisterType(VertexRegisterOut, IsFixedFunction);
         DbgVshPrintf("),\n");
-        *pToken = D3DVSD_TESSNORMAL(NewVertexRegisterIn, NewVertexRegisterOut);
-    }
+
+#ifdef CXBX_USE_D3D9
+		// TODO : Expand on the setting of this TESSNORMAL output register element :
+		pRecompiled++;
+		pRecompiled->Usage = D3DDECLUSAGE(NewVertexRegisterOut);
+		pRecompiled->UsageIndex = 0; // TODO : Get Index from Xb2PCRegisterType
+#else
+        *pRecompiled = D3DVSD_TESSNORMAL(NewVertexRegisterIn, NewVertexRegisterOut);
+#endif
+	}
 }
 
 static void VshEndPreviousStreamPatch(CxbxVertexShaderPatch *pPatchData)
@@ -1857,13 +1911,24 @@ static void VshEndPreviousStreamPatch(CxbxVertexShaderPatch *pPatchData)
     }
 }
 
-static void VshConvertToken_STREAM(DWORD          *pToken,
-                                   CxbxVertexShaderPatch *pPatchData)
+static void VshConvertToken_STREAM(
+	DWORD          *pToken,
+	XTL::D3DVERTEXELEMENT *pRecompiled,
+	CxbxVertexShaderPatch *pPatchData
+)
 {
+    using namespace XTL;
+
     // D3DVSD_STREAM_TESS
-    if(*pToken & D3DVSD_STREAMTESSMASK)
+    if(*pToken & X_D3DVSD_STREAMTESSMASK)
     {
         DbgVshPrintf("\tD3DVSD_STREAM_TESS(),\n");
+
+#ifdef CXBX_USE_D3D9
+		// TODO
+#else
+		*pRecompiled = D3DVSD_STREAM_TESS();
+#endif
     }
     // D3DVSD_STREAM
     else
@@ -1881,39 +1946,79 @@ static void VshConvertToken_STREAM(DWORD          *pToken,
 		// Dxbx note : Use Dophin(s), FieldRender, MatrixPaletteSkinning and PersistDisplay as a testcase
 
         DbgVshPrintf("\tD3DVSD_STREAM(%u),\n", StreamNumber);
-		
+
+#ifdef CXBX_USE_D3D9
+		// TODO
+#else
+		*pRecompiled = D3DVSD_STREAM(StreamNumber);
+#endif
+
 		pPatchData->pVertexShaderInfoToSet->NumberOfVertexStreams++;
 		// TODO : Keep a bitmask for all StreamNumber's seen?
     }
 }
 
-static void VshConvertToken_STREAMDATA_SKIP(DWORD *pToken)
+static void VshConvertToken_STREAMDATA_SKIP(
+	DWORD *pToken,
+	XTL::D3DVERTEXELEMENT *pRecompiled
+)
 {
     using namespace XTL;
 
     XTL::DWORD SkipCount = (*pToken & X_D3DVSD_SKIPCOUNTMASK) >> X_D3DVSD_SKIPCOUNTSHIFT;
     DbgVshPrintf("\tD3DVSD_SKIP(%d),\n", SkipCount);
-	// No need to convert; D3DVSD_SKIP is encoded identically on host Direct3D8.
+#ifdef CXBX_USE_D3D9
+	// TODO : Expand on the setting of this TESSNORMAL output register element :
+#else
+	// D3DVSD_SKIP is encoded identically on host Direct3D8.
+	*pRecompiled = D3DVSD_SKIP(SkipCount);
+#endif
 }
 
-static void VshConvertToken_STREAMDATA_SKIPBYTES(DWORD *pToken)
+static void VshConvertToken_STREAMDATA_SKIPBYTES(
+	DWORD *pToken,
+	XTL::D3DVERTEXELEMENT *pRecompiled
+)
 {
     using namespace XTL;
 
     XTL::DWORD SkipBytesCount = (*pToken & X_D3DVSD_SKIPCOUNTMASK) >> X_D3DVSD_SKIPCOUNTSHIFT;
+
     DbgVshPrintf("\tD3DVSD_SKIPBYTES(%d), /* xbox ext. */\n", SkipBytesCount);
-    if(SkipBytesCount % sizeof(XTL::DWORD))
-    {
+    if (SkipBytesCount % sizeof(XTL::DWORD)) {
         EmuWarning("D3DVSD_SKIPBYTES can't be converted to D3DVSD_SKIP, not divisble by 4.");
     }
-    *pToken = D3DVSD_SKIP(SkipBytesCount / sizeof(XTL::DWORD));
+
+#ifdef CXBX_USE_D3D9
+	// TODO
+#else
+	*pRecompiled = D3DVSD_SKIP(SkipBytesCount / sizeof(XTL::DWORD));
+#endif
 }
 
-static void VshConvertToken_STREAMDATA_REG(DWORD          *pToken,
-                                           boolean         IsFixedFunction,
-                                           CxbxVertexShaderPatch *pPatchData)
+static void VshConvertToken_STREAMDATA_REG(
+	DWORD *pToken,
+	XTL::D3DVERTEXELEMENT *pRecompiled,
+	boolean IsFixedFunction,
+	CxbxVertexShaderPatch *pPatchData
+)
 {
     using namespace XTL;
+
+#if CXBX_USE_D3D9
+	extern XTL::D3DCAPS g_D3DCaps;
+#endif
+
+#if !CXBX_USE_D3D9 // For simpler support for both Direct3D 8 and 9, use these '9' constants in below '8' code paths too:
+#define	D3DDECLTYPE_FLOAT1 D3DVSDT_FLOAT1
+#define	D3DDECLTYPE_FLOAT2 D3DVSDT_FLOAT2
+#define	D3DDECLTYPE_FLOAT3 D3DVSDT_FLOAT3
+#define	D3DDECLTYPE_FLOAT4 D3DVSDT_FLOAT4
+#define	D3DDECLTYPE_D3DCOLOR D3DVSDT_D3DCOLOR
+#define	D3DDECLTYPE_SHORT2 D3DVSDT_SHORT2
+#define	D3DDECLTYPE_SHORT4 D3DVSDT_SHORT4
+#define	D3DDECLTYPE_UNUSED 0xFF
+#endif
 
     XTL::DWORD VertexRegister = VshGetVertexRegister(*pToken);
     XTL::DWORD HostVertexRegister;
@@ -1927,122 +2032,198 @@ static void VshConvertToken_STREAMDATA_REG(DWORD          *pToken,
     XTL::DWORD HostVertexElementDataType = 0;
 	XTL::DWORD HostVertexElementByteSize = 0;
 
-    switch(XboxVertexElementDataType)
-    {
+	switch (XboxVertexElementDataType)
+	{
 	case X_D3DVSDT_FLOAT1: // 0x12:
-        DbgVshPrintf("D3DVSDT_FLOAT1");
-        HostVertexElementDataType = D3DVSDT_FLOAT1;
-		HostVertexElementByteSize = 1*sizeof(FLOAT);
-        break;
+		DbgVshPrintf("D3DVSDT_FLOAT1");
+		HostVertexElementDataType = D3DDECLTYPE_FLOAT1;
+		HostVertexElementByteSize = 1 * sizeof(FLOAT);
+		break;
 	case X_D3DVSDT_FLOAT2: // 0x22:
-        DbgVshPrintf("D3DVSDT_FLOAT2");
-        HostVertexElementDataType = D3DVSDT_FLOAT2;
-		HostVertexElementByteSize = 2*sizeof(FLOAT);
-        break;
+		DbgVshPrintf("D3DVSDT_FLOAT2");
+		HostVertexElementDataType = D3DDECLTYPE_FLOAT2;
+		HostVertexElementByteSize = 2 * sizeof(FLOAT);
+		break;
 	case X_D3DVSDT_FLOAT3: // 0x32:
-        DbgVshPrintf("D3DVSDT_FLOAT3");
-        HostVertexElementDataType = D3DVSDT_FLOAT3;
-		HostVertexElementByteSize = 3*sizeof(FLOAT);
-        break;
+		DbgVshPrintf("D3DVSDT_FLOAT3");
+		HostVertexElementDataType = D3DDECLTYPE_FLOAT3;
+		HostVertexElementByteSize = 3 * sizeof(FLOAT);
+		break;
 	case X_D3DVSDT_FLOAT4: // 0x42:
-        DbgVshPrintf("D3DVSDT_FLOAT4");
-        HostVertexElementDataType = D3DVSDT_FLOAT4;
-		HostVertexElementByteSize = 4*sizeof(FLOAT);
-        break;
+		DbgVshPrintf("D3DVSDT_FLOAT4");
+		HostVertexElementDataType = D3DDECLTYPE_FLOAT4;
+		HostVertexElementByteSize = 4 * sizeof(FLOAT);
+		break;
 	case X_D3DVSDT_D3DCOLOR: // 0x40:
-        DbgVshPrintf("D3DVSDT_D3DCOLOR");
-        HostVertexElementDataType = D3DVSDT_D3DCOLOR;
-		HostVertexElementByteSize = sizeof(D3DCOLOR);
-        break;
+		DbgVshPrintf("D3DVSDT_D3DCOLOR");
+		HostVertexElementDataType = D3DDECLTYPE_D3DCOLOR;
+		HostVertexElementByteSize = 1 * sizeof(D3DCOLOR);
+		break;
 	case X_D3DVSDT_SHORT2: // 0x25:
-        DbgVshPrintf("D3DVSDT_SHORT2");
-        HostVertexElementDataType = D3DVSDT_SHORT2;
-		HostVertexElementByteSize = 2*sizeof(XTL::SHORT);
-        break;
+		DbgVshPrintf("D3DVSDT_SHORT2");
+		HostVertexElementDataType = D3DDECLTYPE_SHORT2;
+		HostVertexElementByteSize = 2 * sizeof(XTL::SHORT);
+		break;
 	case X_D3DVSDT_SHORT4: // 0x45:
-        DbgVshPrintf("D3DVSDT_SHORT4");
-        HostVertexElementDataType = D3DVSDT_SHORT4;
-		HostVertexElementByteSize = 4*sizeof(XTL::SHORT);
-        break;
+		DbgVshPrintf("D3DVSDT_SHORT4");
+		HostVertexElementDataType = D3DDECLTYPE_SHORT4;
+		HostVertexElementByteSize = 4 * sizeof(XTL::SHORT);
+		break;
 	case X_D3DVSDT_NORMSHORT1: // 0x11:
-        DbgVshPrintf("D3DVSDT_NORMSHORT1 /* xbox ext. */");
-        HostVertexElementDataType = D3DVSDT_FLOAT1; // TODO -oDxbx : Is it better to use D3DVSDT_NORMSHORT2 in Direct3D9 ?
-		HostVertexElementByteSize = sizeof(FLOAT);
-        NeedPatching = TRUE;
-        break;
-	case X_D3DVSDT_NORMSHORT2: // 0x21:
-        DbgVshPrintf("D3DVSDT_NORMSHORT2 /* xbox ext. */");
-        HostVertexElementDataType = D3DVSDT_FLOAT2;
-		HostVertexElementByteSize = 2*sizeof(FLOAT);
-        NeedPatching = TRUE;
-        break;
-	case X_D3DVSDT_NORMSHORT3: // 0x31:
-        DbgVshPrintf("D3DVSDT_NORMSHORT3 /* xbox ext. nsp */");
-        HostVertexElementDataType = D3DVSDT_FLOAT3; // TODO -oDxbx : Is it better to use D3DVSDT_NORMSHORT4 in Direct3D9 ?
-		HostVertexElementByteSize = 3*sizeof(FLOAT);
-        NeedPatching = TRUE;
-        break;
-	case X_D3DVSDT_NORMSHORT4: // 0x41:
-        DbgVshPrintf("D3DVSDT_NORMSHORT4 /* xbox ext. */");
-        HostVertexElementDataType = D3DVSDT_FLOAT4;
-		HostVertexElementByteSize = 4*sizeof(FLOAT);
-        NeedPatching = TRUE;
-        break;
-	case X_D3DVSDT_NORMPACKED3: // 0x16:
-        DbgVshPrintf("D3DVSDT_NORMPACKED3 /* xbox ext. nsp */");
-        HostVertexElementDataType = D3DVSDT_FLOAT3;
-		HostVertexElementByteSize = 3*sizeof(FLOAT);
-        NeedPatching = TRUE;
-        break;
-	case X_D3DVSDT_SHORT1: // 0x15:
-        DbgVshPrintf("D3DVSDT_SHORT1 /* xbox ext. nsp */");
-        HostVertexElementDataType = D3DVSDT_SHORT2;
-		HostVertexElementByteSize = 2*sizeof(XTL::SHORT);
-        NeedPatching = TRUE;
-        break;
-	case X_D3DVSDT_SHORT3: // 0x35:
-        DbgVshPrintf("D3DVSDT_SHORT3 /* xbox ext. nsp */");
-        HostVertexElementDataType = D3DVSDT_SHORT4;
-		HostVertexElementByteSize = 4*sizeof(XTL::SHORT);
-        NeedPatching = TRUE;
-        break;
-	case X_D3DVSDT_PBYTE1: // 0x14:
-        DbgVshPrintf("D3DVSDT_PBYTE1 /* xbox ext. nsp */");
-        HostVertexElementDataType = D3DVSDT_FLOAT1; // TODO -oDxbx : Is it better to use D3DVSDT_NORMSHORT2 in Direct3D9 ?
-		HostVertexElementByteSize = 1*sizeof(FLOAT);
-        NeedPatching = TRUE;
-        break;
-	case X_D3DVSDT_PBYTE2: // 0x24:
-        DbgVshPrintf("D3DVSDT_PBYTE2 /* xbox ext. nsp */");
-        HostVertexElementDataType = D3DVSDT_FLOAT2; // TODO -oDxbx : Is it better to use D3DVSDT_NORMSHORT2 in Direct3D9 ?
-		HostVertexElementByteSize = 2*sizeof(FLOAT);
-        NeedPatching = TRUE;
-        break;
-	case X_D3DVSDT_PBYTE3: // 0x34:
-        DbgVshPrintf("D3DVSDT_PBYTE3 /* xbox ext. nsp */");
-        HostVertexElementDataType = D3DVSDT_FLOAT3; // TODO -oDxbx : Is it better to use D3DVSDT_NORMSHORT4 in Direct3D9 ?
-		HostVertexElementByteSize = 3*sizeof(FLOAT);
-        NeedPatching = TRUE;
-        break;
-	case X_D3DVSDT_PBYTE4: // 0x44: // Hit by Panzer
-        DbgVshPrintf("D3DVSDT_PBYTE4 /* xbox ext. */");
-        HostVertexElementDataType = D3DVSDT_FLOAT4; // TODO -oDxbx : Is it better to use D3DVSDT_NORMSHORT4 or D3DDECLTYPE_UBYTE4N (if in caps) in Direct3D9 ?
-		HostVertexElementByteSize = 4*sizeof(FLOAT);
+		DbgVshPrintf("D3DVSDT_NORMSHORT1 /* xbox ext. */");
+#if CXBX_USE_D3D9
+		if (g_D3DCaps.DeclTypes & D3DDTCAPS_SHORT2N) {
+			HostVertexElementDataType = D3DDECLTYPE_SHORT2N;
+			HostVertexElementByteSize = 2 * sizeof(SHORT);
+		}
+		else
+#endif
+		{
+			HostVertexElementDataType = D3DDECLTYPE_FLOAT1;
+			HostVertexElementByteSize = 1 * sizeof(FLOAT);
+		}
 		NeedPatching = TRUE;
+		break;
+	case X_D3DVSDT_NORMSHORT2: // 0x21:
+#if CXBX_USE_D3D9
+		if (g_D3DCaps.DeclTypes & D3DDTCAPS_SHORT2N) {
+			DbgVshPrintf("D3DVSDT_NORMSHORT2");
+			HostVertexElementDataType = D3DDECLTYPE_SHORT2N;
+			HostVertexElementByteSize = 2 * sizeof(SHORT);
+			// No need for patching in D3D9
+		}
+		else
+#endif
+		{
+			DbgVshPrintf("D3DVSDT_NORMSHORT2 /* xbox ext. */");
+			HostVertexElementDataType = D3DDECLTYPE_FLOAT2;
+			HostVertexElementByteSize = 2 * sizeof(FLOAT);
+			NeedPatching = TRUE;
+		}
+		break;
+	case X_D3DVSDT_NORMSHORT3: // 0x31:
+		DbgVshPrintf("D3DVSDT_NORMSHORT3 /* xbox ext. */");
+#if CXBX_USE_D3D9
+		if (g_D3DCaps.DeclTypes & D3DDTCAPS_SHORT4N) {
+			HostVertexElementDataType = D3DDECLTYPE_SHORT4N;
+			HostVertexElementByteSize = 4 * sizeof(SHORT);
+		}
+		else
+#endif
+		{
+			HostVertexElementDataType = D3DDECLTYPE_FLOAT3;
+			HostVertexElementByteSize = 3 * sizeof(FLOAT);
+		}
+		NeedPatching = TRUE;
+		break;
+	case X_D3DVSDT_NORMSHORT4: // 0x41:
+#if CXBX_USE_D3D9
+		if (g_D3DCaps.DeclTypes & D3DDTCAPS_SHORT4N) {
+			DbgVshPrintf("D3DVSDT_NORMSHORT4");
+			HostVertexElementDataType = D3DDECLTYPE_SHORT4N;
+			HostVertexElementByteSize = 4 * sizeof(SHORT);
+			// No need for patching in D3D9
+		}
+		else
+#endif
+		{
+			DbgVshPrintf("D3DVSDT_NORMSHORT4 /* xbox ext. */");
+			HostVertexElementDataType = D3DDECLTYPE_FLOAT4;
+			HostVertexElementByteSize = 4 * sizeof(FLOAT);
+			NeedPatching = TRUE;
+		}
+		break;
+	case X_D3DVSDT_NORMPACKED3: // 0x16:
+		DbgVshPrintf("D3DVSDT_NORMPACKED3 /* xbox ext. */");
+		HostVertexElementDataType = D3DDECLTYPE_FLOAT3;
+		HostVertexElementByteSize = 3 * sizeof(FLOAT);
+		NeedPatching = TRUE;
+		break;
+	case X_D3DVSDT_SHORT1: // 0x15:
+		DbgVshPrintf("D3DVSDT_SHORT1 /* xbox ext. */");
+		HostVertexElementDataType = D3DDECLTYPE_SHORT2;
+		HostVertexElementByteSize = 2 * sizeof(XTL::SHORT);
+		NeedPatching = TRUE;
+		break;
+	case X_D3DVSDT_SHORT3: // 0x35:
+		DbgVshPrintf("D3DVSDT_SHORT3 /* xbox ext. */");
+		HostVertexElementDataType = D3DDECLTYPE_SHORT4;
+		HostVertexElementByteSize = 4 * sizeof(XTL::SHORT);
+		NeedPatching = TRUE;
+		break;
+	case X_D3DVSDT_PBYTE1: // 0x14:
+		DbgVshPrintf("D3DVSDT_PBYTE1 /* xbox ext. */");
+#if CXBX_USE_D3D9
+		if (g_D3DCaps.DeclTypes & D3DDTCAPS_UBYTE4N) {
+			HostVertexElementDataType = D3DDECLTYPE_UBYTE4N;
+			HostVertexElementByteSize = 4 * sizeof(BYTE);
+		}
+		else
+#endif
+		{
+			HostVertexElementDataType = D3DDECLTYPE_FLOAT1;
+			HostVertexElementByteSize = 1 * sizeof(FLOAT);
+		}
+		NeedPatching = TRUE;
+		break;
+	case X_D3DVSDT_PBYTE2: // 0x24:
+		DbgVshPrintf("D3DVSDT_PBYTE2 /* xbox ext. */");
+#if CXBX_USE_D3D9
+		if (g_D3DCaps.DeclTypes & D3DDTCAPS_UBYTE4N) {
+			HostVertexElementDataType = D3DDECLTYPE_UBYTE4N;
+			HostVertexElementByteSize = 4 * sizeof(BYTE);
+		}
+		else
+#endif
+		{
+			HostVertexElementDataType = D3DDECLTYPE_FLOAT2;
+			HostVertexElementByteSize = 2 * sizeof(FLOAT);
+		}
+		NeedPatching = TRUE;
+		break;
+	case X_D3DVSDT_PBYTE3: // 0x34:
+		DbgVshPrintf("D3DVSDT_PBYTE3 /* xbox ext. */");
+#if CXBX_USE_D3D9
+		if (g_D3DCaps.DeclTypes & D3DDTCAPS_UBYTE4N) {
+			HostVertexElementDataType = D3DDECLTYPE_UBYTE4N;
+			HostVertexElementByteSize = 4 * sizeof(BYTE);
+		}
+		else
+#endif
+		{
+			HostVertexElementDataType = D3DDECLTYPE_FLOAT3;
+			HostVertexElementByteSize = 3 * sizeof(FLOAT);
+		}
+		NeedPatching = TRUE;
+		break;
+	case X_D3DVSDT_PBYTE4: // 0x44:
+		// Test-case : Panzer
+#if CXBX_USE_D3D9
+		if (g_D3DCaps.DeclTypes & D3DDTCAPS_UBYTE4N) {
+			DbgVshPrintf("D3DVSDT_PBYTE4");
+			HostVertexElementDataType = D3DDECLTYPE_UBYTE4N;
+			HostVertexElementByteSize = 4 * sizeof(BYTE);
+			// No need for patching when D3D9 supports D3DDECLTYPE_UBYTE4N
+		}
+		else
+#endif
+		{
+			DbgVshPrintf("D3DVSDT_PBYTE4 /* xbox ext. */");
+			HostVertexElementDataType = D3DDECLTYPE_FLOAT4;
+			HostVertexElementByteSize = 4 * sizeof(FLOAT);
+			NeedPatching = TRUE;
+		}
 		break;
 	case X_D3DVSDT_FLOAT2H: // 0x72:
         DbgVshPrintf("D3DVSDT_FLOAT2H /* xbox ext. */");
-        HostVertexElementDataType = D3DVSDT_FLOAT4;
+        HostVertexElementDataType = D3DDECLTYPE_FLOAT4;
 		HostVertexElementByteSize = 4*sizeof(FLOAT);
         NeedPatching = TRUE;
         break;
 	case X_D3DVSDT_NONE: // 0x02:
-        DbgVshPrintf("D3DVSDT_NONE /* xbox ext. nsp */");
-#if CXBX_USE_D3D9
-		HostVertexElementDataType = D3DVSDT_NONE;
-#endif
-	    // TODO -oDxbx: Use D3DVSD_NOP ?
-        HostVertexElementDataType = 0xFF;
+		DbgVshPrintf("D3DVSDT_NONE /* xbox ext. */");
+        HostVertexElementDataType = D3DDECLTYPE_UNUSED;
+        // NeedPatching = TRUE; // TODO : This seems to cause regressions?
         break;
     default:
         DbgVshPrintf("Unknown data type for D3DVSD_REG: 0x%02X\n", XboxVertexElementDataType);
@@ -2056,46 +2237,51 @@ static void VshConvertToken_STREAMDATA_REG(DWORD          *pToken,
 	pPatchData->pCurrentVertexShaderStreamInfo->NumberOfVertexElements++;
 	pPatchData->pCurrentVertexShaderStreamInfo->NeedPatch |= NeedPatching;
 
-    *pToken = D3DVSD_REG(HostVertexRegister, HostVertexElementDataType);
+#ifdef CXBX_USE_D3D9
+	// TODO
+#else
+	*pRecompiled = D3DVSD_REG(HostVertexRegister, HostVertexElementDataType);
+#endif
 
     pPatchData->pCurrentVertexShaderStreamInfo->HostVertexStride += HostVertexElementByteSize;
 
     DbgVshPrintf("),\n");
 
-    if(HostVertexElementDataType == 0xFF)
+    if(HostVertexElementDataType == D3DDECLTYPE_UNUSED)
     {
         EmuWarning("/* WARNING: Fatal type mismatch, no fitting type! */");
     }
 }
 
-#define D3DVSD_MASK_TESSUV 0x10000000
-#define D3DVSD_MASK_SKIP 0x10000000 // Skips (normally) dwords
-#define D3DVSD_MASK_SKIPBYTES 0x08000000 // Skips bytes (no, really?!)
-
-
-static void VshConvertToken_STREAMDATA(DWORD          *pToken,
-                                       boolean         IsFixedFunction,
-                                       CxbxVertexShaderPatch *pPatchData)
+static void VshConvertToken_STREAMDATA(
+	DWORD          *pToken,
+	XTL::D3DVERTEXELEMENT *pRecompiled,
+	boolean         IsFixedFunction,
+	CxbxVertexShaderPatch *pPatchData
+)
 {
     using namespace XTL;
-	if (*pToken & D3DVSD_MASK_SKIP)
+	if (*pToken & X_D3DVSD_MASK_SKIP)
 	{
 		// For D3D9, use D3DDECLTYPE_UNUSED ?
-		if (*pToken & D3DVSD_MASK_SKIPBYTES) {
-			VshConvertToken_STREAMDATA_SKIPBYTES(pToken);
+		if (*pToken & X_D3DVSD_MASK_SKIPBYTES) {
+			VshConvertToken_STREAMDATA_SKIPBYTES(pToken, pRecompiled);
 		} else {
-			VshConvertToken_STREAMDATA_SKIP(pToken);
+			VshConvertToken_STREAMDATA_SKIP(pToken, pRecompiled);
 		}
 	}
 	else // D3DVSD_REG
     {
-        VshConvertToken_STREAMDATA_REG(pToken, IsFixedFunction, pPatchData);
+        VshConvertToken_STREAMDATA_REG(pToken, pRecompiled, IsFixedFunction, pPatchData);
     }
 }
 
-static DWORD VshRecompileToken(DWORD          *pToken,
-                               boolean         IsFixedFunction,
-                               CxbxVertexShaderPatch *pPatchData)
+static DWORD VshRecompileToken(
+	DWORD          *pToken,
+	XTL::D3DVERTEXELEMENT *&pRecompiled,
+	boolean         IsFixedFunction,
+	CxbxVertexShaderPatch *pPatchData
+)
 {
     using namespace XTL;
 
@@ -2103,27 +2289,27 @@ static DWORD VshRecompileToken(DWORD          *pToken,
 
     switch(VshGetTokenType(*pToken))
     {
-    case D3DVSD_TOKEN_NOP:
-        VshConvertToken_NOP(pToken);
+    case X_D3DVSD_TOKEN_NOP:
+        VshConvertToken_NOP(pToken, pRecompiled);
         break;
-    case D3DVSD_TOKEN_STREAM:
+    case X_D3DVSD_TOKEN_STREAM:
     {
-        VshConvertToken_STREAM(pToken, pPatchData);
-        break;
-    }
-    case D3DVSD_TOKEN_STREAMDATA:
-    {
-        VshConvertToken_STREAMDATA(pToken, IsFixedFunction, pPatchData);
+        VshConvertToken_STREAM(pToken, pRecompiled, pPatchData);
         break;
     }
-    case D3DVSD_TOKEN_TESSELLATOR:
+    case X_D3DVSD_TOKEN_STREAMDATA:
     {
-        VshConverToken_TESSELATOR(pToken, IsFixedFunction);
+        VshConvertToken_STREAMDATA(pToken, pRecompiled, IsFixedFunction, pPatchData);
         break;
     }
-    case D3DVSD_TOKEN_CONSTMEM:
+    case X_D3DVSD_TOKEN_TESSELLATOR:
     {
-        Step = VshConvertToken_CONSTMEM(pToken);
+        VshConvertToken_TESSELATOR(pToken, pRecompiled, IsFixedFunction);
+        break;
+    }
+    case X_D3DVSD_TOKEN_CONSTMEM:
+    {
+        Step = VshConvertToken_CONSTMEM(pToken, pRecompiled);
         break;
     }
     default:
@@ -2137,7 +2323,7 @@ static DWORD VshRecompileToken(DWORD          *pToken,
 DWORD XTL::EmuRecompileVshDeclaration
 (
     DWORD                *pDeclaration,
-    DWORD               **ppRecompiledDeclaration,
+	D3DVERTEXELEMENT    **ppRecompiledDeclaration,
     DWORD                *pDeclarationSize,
     boolean               IsFixedFunction,
     CxbxVertexShaderInfo *pVertexShaderInfo
@@ -2153,8 +2339,19 @@ DWORD XTL::EmuRecompileVshDeclaration
 
     // Calculate size of declaration
     DWORD DeclarationSize = VshGetDeclarationSize(pDeclaration);
-    DWORD *pRecompiled = (DWORD *)malloc(DeclarationSize);
+#ifdef CXBX_USE_D3D9
+	// For Direct3D9, we need to reserve at least twice the number of elements, as one token can generate two registers (in and out) :
+	DeclarationSize *= sizeof(D3DVERTEXELEMENT) * 2;
+#else
+	// For Direct3D8, tokens are the same size as on Xbox (DWORD) and are translated in-place :
+	DeclarationSize *= sizeof(DWORD);
+#endif
+	D3DVERTEXELEMENT *pRecompiled = (D3DVERTEXELEMENT *)malloc(DeclarationSize);
+#ifdef CXBX_USE_D3D9
+	memset(pRecompiled, 0, DeclarationSize);
+#else
     memcpy(pRecompiled, pDeclaration, DeclarationSize);
+#endif
 	uint8_t *pRecompiledBufferOverflow = ((uint8_t*)pRecompiled) + DeclarationSize;
     *ppRecompiledDeclaration = pRecompiled;
     *pDeclarationSize = DeclarationSize;
@@ -2164,16 +2361,19 @@ DWORD XTL::EmuRecompileVshDeclaration
 
     DbgVshPrintf("DWORD dwVSHDecl[] =\n{\n");
 
-    while (*pRecompiled != DEF_VSH_END)
+    while (*pDeclaration != DEF_VSH_END)
     {
 		if ((uint8*)pRecompiled >= pRecompiledBufferOverflow) {
 			DbgVshPrintf("Detected buffer-overflow, breaking out...\n");
 			break;
 		}
 
-        DWORD Step = VshRecompileToken(pRecompiled, IsFixedFunction, &PatchData);
-        pRecompiled += Step;
-    }
+        DWORD Step = VshRecompileToken(pDeclaration, pRecompiled, IsFixedFunction, &PatchData);
+		pDeclaration += Step;
+#ifndef CXBX_USE_D3D9
+		pRecompiled += Step;
+#endif
+	}
 
 	VshEndPreviousStreamPatch(&PatchData);
     DbgVshPrintf("\tD3DVSD_END()\n};\n");
@@ -2207,10 +2407,10 @@ extern HRESULT XTL::EmuRecompileVshFunction
 	bool declaredRegisters[13];
 	DWORD* pDeclToken = pRecompiledDeclaration;
 	do {
-		DWORD regNum = *pDeclToken & D3DVSD_VERTEXREGMASK;
+		DWORD regNum = *pDeclToken & X_D3DVSD_VERTEXREGMASK;
 		declaredRegisters[regNum] = true;
 		pDeclToken++;
-	} while (*pDeclToken != D3DVSD_END());
+	} while (*pDeclToken != X_D3DVSD_END());
 
     // TODO: support this situation..
     if(pFunction == NULL)
