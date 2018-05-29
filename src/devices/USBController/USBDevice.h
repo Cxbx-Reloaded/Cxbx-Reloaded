@@ -44,6 +44,7 @@
 
 #define USB_STATE_NOTATTACHED 0
 #define USB_STATE_ATTACHED    1
+#define USB_STATE_DEFAULT     2
 
 typedef enum USBPacketState {
 	USB_PACKET_UNDEFINED = 0,
@@ -100,7 +101,7 @@ typedef struct _USBDev
 	int speed;
 	// Supported speeds, not in info because it may be variable (hostdevs)
 	int speedmask;
-	uint8_t addr;
+	uint8_t Addr; // device address
 	char product_desc[32];
 	int auto_attach;
 	int Attached; // device is attached
@@ -108,7 +109,7 @@ typedef struct _USBDev
 	int32_t State; // current state of device
 	uint8_t setup_buf[8];
 	uint8_t data_buf[4096];
-	int32_t remote_wakeup;
+	int32_t RemoteWakeup; // wakeup flag
 	int32_t setup_state;
 	int32_t setup_len;
 	int32_t setup_index;

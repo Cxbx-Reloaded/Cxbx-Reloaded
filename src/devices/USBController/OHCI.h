@@ -91,6 +91,13 @@
 #define OHCI_RHA_DT                         (1<<10)          // DeviceType
 #define OHCI_RHA_OCPM                       (1<<11)          // OverCurrentProtectionMode
 #define OHCI_RHA_NOCP                       (1<<12)          // NoOverCurrentProtection
+// HcRhStatus
+#define OHCI_RHS_LPS                        (1<<0)           // LocalPowerStatus
+#define OHCI_RHS_OCI                        (1<<1)           // OverCurrentIndicator
+#define OHCI_RHS_DRWE                       (1<<15)          // DeviceRemoteWakeupEnable
+#define OHCI_RHS_LPSC                       (1<<16)          // LocalPowerStatusChange
+#define OHCI_RHS_OCIC                       (1<<17)          // OverCurrentIndicatorChange
+#define OHCI_RHS_CRWE                       (1<<31)          // ClearRemoteWakeupEnable
 // HcRhPortStatus
 #define OHCI_PORT_CCS                       (1<<0)           // CurrentConnectStatus
 #define OHCI_PORT_PES                       (1<<1)           // PortEnableStatus
@@ -190,7 +197,7 @@ class OHCI
 		// usb packet
 		USBPacket UsbPacket;
 		// irq number
-		int Irq_n;
+		int IrqNum;
 
 		// EOF callback wrapper
 		static void OHCI_FrameBoundaryWrapper(void* pVoid);
@@ -214,8 +221,19 @@ class OHCI
 		void OHCI_SetInterrupt(uint32_t Value);
 		//
 		void OHCI_StopEndpoints();
+		// update ohci registers during a device attach
+		void OHCI_Attach(USBPort* Port);
 		// update ohci registers during a device detach
 		void OHCI_Detach(USBPort* Port);
+		// set root hub status
+		void OHCI_SetHubStatus(uint32_t Value);
+		// update power related bits in HcRhPortStatus
+		void OHCI_PortPower(int i, int p);
+		// set root hub port status
+		void OHCI_PortSetStatus(int PortNum, uint32_t Value);
+		// set a flag in a port status register but only set it if the port is connected,
+		// if not set ConnectStatusChange flag; if flag is enabled return 1
+		int OHCI_PortSetIfConnected(int i, uint32_t Value);
 
 		// register a port with the HC
 		void USB_RegisterPort(USBPort* Port, int Index, int SpeedMask);
@@ -224,7 +242,7 @@ class OHCI
 		// reset a usb port
 		void USB_PortReset(USBPort* Port);
 		// a device is attched
-		void Attach(USBPort* port);
+		void USB_Attach(USBPort* port);
 		// a device is detached
 		void USB_Detach(USBPort* port);
 		// a device downstream from the device attached to the port (attached through a hub) is detached
@@ -233,6 +251,8 @@ class OHCI
 		void Wakeup(USBPort* port);
 		// TODO
 		void Complete(USBPort* port, USBPacket *p);
+		// reset a device
+		void USB_DeviceReset(USBDev* dev);
 };
 
 #endif

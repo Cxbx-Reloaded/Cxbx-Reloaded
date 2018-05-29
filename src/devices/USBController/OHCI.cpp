@@ -39,6 +39,9 @@
 
 #define USB_HZ 12000000
 
+#define USB_SPEED_LOW   0
+#define USB_SPEED_FULL  1
+
 
 typedef enum _USB_SPEED
 {
@@ -50,7 +53,7 @@ USB_SPEED;
 
 OHCI::OHCI(int Irq)
 {
-	Irq_n = Irq;
+	IrqNum = Irq;
 
 	for (int i = 0; i < 2; i++) {
 		USB_RegisterPort(&Registers.RhPort[i].UsbPort, i, USB_SPEED_MASK_LOW | USB_SPEED_MASK_FULL);
@@ -114,7 +117,7 @@ void OHCI::OHCI_StateReset()
 
 	OHCI_StopEndpoints();
 
-	DbgPrintf("Ohci: Reset event.\n");
+	DbgPrintf("Ohci: Reset mode event.\n");
 }
 
 void OHCI::OHCI_BusStart()
@@ -122,7 +125,7 @@ void OHCI::OHCI_BusStart()
 	// Create the end-of-frame timer. Let's try a factor of 50 (1 virtual ms -> 50 real ms)
 	pEOFtimer = Timer_Create(OHCI_FrameBoundaryWrapper, this, 50);
 
-	DbgPrintf("Ohci: Operational event\n");
+	DbgPrintf("Ohci: Operational mode event\n");
 
 	// SOF event
 	OHCI_SOF();
@@ -163,11 +166,11 @@ void OHCI::OHCI_ChangeState(uint32_t Value)
 
 		case Suspend:
 			OHCI_BusStop();
-			DbgPrintf("Ohci: Suspend event\n");
+			DbgPrintf("Ohci: Suspend mode event\n");
 			break;
 
 		case Resume:
-			DbgPrintf("Ohci: Resume event\n");
+			DbgPrintf("Ohci: Resume mode event\n");
 			break;
 
 		case Reset:
@@ -175,7 +178,7 @@ void OHCI::OHCI_ChangeState(uint32_t Value)
 			break;
 
 		default:
-			EmuWarning("Ohci: Unknown USB state mode!");
+			EmuWarning("Ohci: Unknown USB mode!");
 	}
 }
 
@@ -410,15 +413,15 @@ void OHCI::OHCI_WriteRegister(xbaddr Addr, uint32_t Value)
 				break;
 
 			case 20: // HcRhStatus
-				// TODO
+				OHCI_SetHubStatus(Value);
 				break;
 
 			case 21: // RhPort 0
-				// TODO
+				OHCI_PortSetStatus(0, Value);
 				break;
 
 			case 22: // RhPort 1
-				// TODO
+				OHCI_PortSetStatus(1, Value);
 				break;
 
 			default:
@@ -430,9 +433,9 @@ void OHCI::OHCI_WriteRegister(xbaddr Addr, uint32_t Value)
 void OHCI::OHCI_UpdateInterrupt()
 {
 	if ((Registers.HcInterrupt & OHCI_INTR_MIE) && (Registers.HcInterruptStatus & Registers.HcInterrupt)) {
-		HalSystemInterrupts[Irq_n].Assert(true);
+		HalSystemInterrupts[IrqNum].Assert(true);
 	}
-	else { HalSystemInterrupts[Irq_n].Assert(false); }
+	else { HalSystemInterrupts[IrqNum].Assert(false); }
 }
 
 void OHCI::OHCI_SetInterrupt(uint32_t Value)
@@ -458,6 +461,133 @@ void OHCI::OHCI_StopEndpoints()
 	}
 }
 
+void OHCI::OHCI_SetHubStatus(uint32_t Value)
+{
+	uint32_t old_state;
+
+	old_state = Registers.HcRhStatus;
+
+	// write 1 to clear OCIC
+	if (Value & OHCI_RHS_OCIC) {
+		Registers.HcRhStatus &= ~OHCI_RHS_OCIC;
+	}
+
+	if (Value & OHCI_RHS_LPS) {
+		int i;
+
+		for (i = 0; i < 2; i++) {
+			OHCI_PortPower(i, 0);
+		}	
+		DbgPrintf("Ohci: powered down all ports\n");
+	}
+
+	if (Value & OHCI_RHS_LPSC) {
+		int i;
+
+		for (i = 0; i < 2; i++) {
+			OHCI_PortPower(i, 1);
+		}	
+		DbgPrintf("Ohci: powered up all ports\n");
+	}
+
+	if (Value & OHCI_RHS_DRWE) {
+		Registers.HcRhStatus |= OHCI_RHS_DRWE;
+	}
+
+	if (Value & OHCI_RHS_CRWE) {
+		Registers.HcRhStatus &= ~OHCI_RHS_DRWE;
+	}
+
+	if (old_state != Registers.HcRhStatus) {
+		OHCI_SetInterrupt(OHCI_INTR_RHSC);
+	}	
+}
+
+void OHCI::OHCI_PortPower(int i, int p)
+{
+	if (p) {
+		Registers.RhPort[i].HcRhPortStatus |= OHCI_PORT_PPS;
+	}
+	else {
+		Registers.RhPort[i].HcRhPortStatus &= ~(OHCI_PORT_PPS |
+			OHCI_PORT_CCS |
+			OHCI_PORT_PSS |
+			OHCI_PORT_PRS);
+	}
+}
+
+void OHCI::OHCI_PortSetStatus(int PortNum, uint32_t Value)
+{
+	uint32_t old_state;
+	OHCIPort* port;
+
+	port = &Registers.RhPort[PortNum];
+	old_state = port->HcRhPortStatus;
+
+	// Write to clear CSC, PESC, PSSC, OCIC, PRSC
+	if (Value & OHCI_PORT_WTC) {
+		port->HcRhPortStatus &= ~(Value & OHCI_PORT_WTC);
+	}
+
+	if (Value & OHCI_PORT_CCS) {
+		port->HcRhPortStatus &= ~OHCI_PORT_PES;
+	}
+
+	OHCI_PortSetIfConnected(PortNum, Value & OHCI_PORT_PES);
+
+	if (OHCI_PortSetIfConnected(PortNum, Value & OHCI_PORT_PSS)) {
+		DbgPrintf("Ohci: port %d: SUSPEND\n", PortNum);
+	}
+
+	if (OHCI_PortSetIfConnected(PortNum, Value & OHCI_PORT_PRS)) {
+		DbgPrintf("Ohci: port %d: RESET\n", PortNum);
+		USB_DeviceReset(port->UsbPort.Dev);
+		port->HcRhPortStatus &= ~OHCI_PORT_PRS;
+		// ??? Should this also set OHCI_PORT_PESC
+		port->HcRhPortStatus |= OHCI_PORT_PES | OHCI_PORT_PRSC;
+	}
+
+	// Invert order here to ensure in ambiguous case, device is powered up...
+	if (Value & OHCI_PORT_LSDA) {
+		OHCI_PortPower(PortNum, 0);
+	}
+
+	if (Value & OHCI_PORT_PPS) {
+		OHCI_PortPower(PortNum, 1);
+	}	
+
+	if (old_state != port->HcRhPortStatus) {
+		OHCI_SetInterrupt(OHCI_INTR_RHSC);
+	}
+}
+
+int OHCI::OHCI_PortSetIfConnected(int i, uint32_t Value)
+{
+	int ret = 1;
+
+	// writing a 0 has no effect
+	if (Value == 0) {
+		return 0;
+	}
+
+	// If CurrentConnectStatus is cleared we set ConnectStatusChange
+	if (!(Registers.RhPort[i].HcRhPortStatus & OHCI_PORT_CCS)) {
+		Registers.RhPort[i].HcRhPortStatus |= OHCI_PORT_CSC;
+		if (Registers.HcRhStatus & OHCI_RHS_DRWE) {
+			// TODO: CSC is a wakeup event
+		}
+		return 0;
+	}
+
+	if (Registers.RhPort[i].HcRhPortStatus & Value)
+		ret = 0;
+
+	// set the bit
+	Registers.RhPort[i].HcRhPortStatus |= Value;
+
+	return ret;
+}
+
 void OHCI::OHCI_Detach(USBPort* Port)
 {
 	OHCIPort* port = &Registers.RhPort[Port->PortIndex];
@@ -477,6 +607,34 @@ void OHCI::OHCI_Detach(USBPort* Port)
 	}
 
 	DbgPrintf("Ohci: Detached port %d\n", Port->PortIndex);
+
+	if (old_state != port->HcRhPortStatus) {
+		OHCI_SetInterrupt(OHCI_INTR_RHSC);
+	}
+}
+
+void OHCI::OHCI_Attach(USBPort* Port)
+{
+	OHCIPort* port = &Registers.RhPort[Port->PortIndex];
+	uint32_t old_state = port->HcRhPortStatus;
+
+	// set connect status
+	port->HcRhPortStatus |= OHCI_PORT_CCS | OHCI_PORT_CSC;
+
+	// update speed
+	if (port->UsbPort.Dev->speed == USB_SPEED_LOW) {
+		port->HcRhPortStatus |= OHCI_PORT_LSDA;
+	}
+	else {
+		port->HcRhPortStatus &= ~OHCI_PORT_LSDA;
+	}
+
+	// notify of remote-wakeup
+	if ((Registers.HcControl & OHCI_CTL_HCFS) == Suspend) {
+		OHCI_SetInterrupt(OHCI_INTR_RD);
+	}
+
+	DbgPrintf("Ohci: Attached port %d\n", Port->PortIndex);
 
 	if (old_state != port->HcRhPortStatus) {
 		OHCI_SetInterrupt(OHCI_INTR_RHSC);
@@ -506,8 +664,8 @@ void OHCI::USB_PortReset(USBPort* Port)
 
 	assert(dev != nullptr);
 	USB_Detach(Port);
-	usb_attach(port);
-	usb_device_reset(dev);
+	USB_Attach(Port);
+	USB_DeviceReset(dev);
 }
 
 void OHCI::USB_Detach(USBPort* Port)
@@ -518,4 +676,28 @@ void OHCI::USB_Detach(USBPort* Port)
 	assert(dev->State != USB_STATE_NOTATTACHED);
 	OHCI_Detach(Port);
 	dev->State = USB_STATE_NOTATTACHED;
+}
+
+void OHCI::USB_Attach(USBPort* Port)
+{
+	USBDev *dev = Port->Dev;
+
+	assert(dev != nullptr);
+	assert(dev->Attached);
+	assert(dev->State == USB_STATE_NOTATTACHED);
+	OHCI_Attach(Port);
+	dev->State = USB_STATE_ATTACHED;
+	usb_device_handle_attach(dev);
+}
+
+void OHCI::USB_DeviceReset(USBDev* dev)
+{
+	if (dev == nullptr || !dev->Attached) {
+		return;
+	}
+
+	dev->RemoteWakeup = 0;
+	dev->Addr = 0;
+	dev->State = USB_STATE_DEFAULT;
+	usb_device_handle_reset(dev);
 }
