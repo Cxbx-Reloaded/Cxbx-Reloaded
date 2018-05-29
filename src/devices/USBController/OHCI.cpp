@@ -53,15 +53,15 @@ USB_SPEED;
 
 OHCI::OHCI(int Irq)
 {
-	IrqNum = Irq;
+	m_IrqNum = Irq;
 
 	for (int i = 0; i < 2; i++) {
-		USB_RegisterPort(&Registers.RhPort[i].UsbPort, i, USB_SPEED_MASK_LOW | USB_SPEED_MASK_FULL);
+		USB_RegisterPort(&m_Registers.RhPort[i].UsbPort, i, USB_SPEED_MASK_LOW | USB_SPEED_MASK_FULL);
 	}
-	OHCI_PacketInit(&UsbPacket);
+	OHCI_PacketInit(&m_UsbPacket);
 
-	UsbFrameTime = 1000000ULL; // 1 ms
-	TicksPerUsbTick = 1000000000ULL / USB_HZ; // 83
+	m_UsbFrameTime = 1000000ULL; // 1 ms
+	m_TicksPerUsbTick = 1000000000ULL / USB_HZ; // 83
 
 	// Do a hardware reset
 	OHCI_StateReset();
@@ -83,32 +83,32 @@ void OHCI::OHCI_StateReset()
 	// Remark: the standard says that RemoteWakeupConnected bit should be set during POST, cleared during hw reset
 	// and ignored during a sw reset. However, VBox sets it on hw reset and XQEMU clears it. Considering that the Xbox
 	// doesn't do POST, I will clear it.
-	Registers.HcRevision = 0x10;
-	Registers.HcControl = 0;
-	Registers.HcControl &= ~OHCI_CTL_HCFS;
-	Registers.HcControl |= Reset;
-	Registers.HcCommandStatus = 0;
-	Registers.HcInterruptStatus = 0;
-	Registers.HcInterrupt = OHCI_INTR_MIE; // enable interrupts
+	m_Registers.HcRevision = 0x10;
+	m_Registers.HcControl = 0;
+	m_Registers.HcControl &= ~OHCI_CTL_HCFS;
+	m_Registers.HcControl |= Reset;
+	m_Registers.HcCommandStatus = 0;
+	m_Registers.HcInterruptStatus = 0;
+	m_Registers.HcInterrupt = OHCI_INTR_MIE; // enable interrupts
 
-	Registers.HcHCCA = 0;
-	Registers.HcPeriodCurrentED = 0;
-	Registers.HcControlHeadED = Registers.HcControlCurrentED = 0;
-	Registers.HcBulkHeadED = Registers.HcBulkCurrentED = 0;
-	Registers.HcDoneHead = 0;
+	m_Registers.HcHCCA = 0;
+	m_Registers.HcPeriodCurrentED = 0;
+	m_Registers.HcControlHeadED = m_Registers.HcControlCurrentED = 0;
+	m_Registers.HcBulkHeadED = m_Registers.HcBulkCurrentED = 0;
+	m_Registers.HcDoneHead = 0;
 
-	Registers.HcFmInterval = 0;
-	Registers.HcFmInterval |= (0x2778 << 16); // TBD according to the standard, using what XQEMU sets (FSLargestDataPacket)
-	Registers.HcFmInterval |= 0x2EDF; // bit-time of a frame. 1 frame = 1 ms (FrameInterval)
-	Registers.HcFmRemaining = 0;
-	Registers.HcFmNumber = 0;
-	Registers.HcPeriodicStart = 0;
+	m_Registers.HcFmInterval = 0;
+	m_Registers.HcFmInterval |= (0x2778 << 16); // TBD according to the standard, using what XQEMU sets (FSLargestDataPacket)
+	m_Registers.HcFmInterval |= 0x2EDF; // bit-time of a frame. 1 frame = 1 ms (FrameInterval)
+	m_Registers.HcFmRemaining = 0;
+	m_Registers.HcFmNumber = 0;
+	m_Registers.HcPeriodicStart = 0;
 
-	Registers.HcRhDescriptorA = OHCI_RHA_NPS | 2; // The xbox lacks the hw to switch off the power on the ports and has 2 ports per HC
-	Registers.HcRhDescriptorB = 0; // The attached devices are removable and use PowerSwitchingMode to control the power on the ports
+	m_Registers.HcRhDescriptorA = OHCI_RHA_NPS | 2; // The xbox lacks the hw to switch off the power on the ports and has 2 ports per HC
+	m_Registers.HcRhDescriptorB = 0; // The attached devices are removable and use PowerSwitchingMode to control the power on the ports
 	for (int i = 0; i < 2; i++)
 	{
-		OHCIPort* Port = &Registers.RhPort[i];
+		OHCIPort* Port = &m_Registers.RhPort[i];
 		Port->HcRhPortStatus = 0;
 		if (Port->UsbPort.Dev && Port->UsbPort.Dev->Attached) {
 			USB_PortReset(&Port->UsbPort);
@@ -123,7 +123,7 @@ void OHCI::OHCI_StateReset()
 void OHCI::OHCI_BusStart()
 {
 	// Create the end-of-frame timer. Let's try a factor of 50 (1 virtual ms -> 50 real ms)
-	pEOFtimer = Timer_Create(OHCI_FrameBoundaryWrapper, this, 50);
+	m_pEOFtimer = Timer_Create(OHCI_FrameBoundaryWrapper, this, 50);
 
 	DbgPrintf("Ohci: Operational mode event\n");
 
@@ -133,25 +133,25 @@ void OHCI::OHCI_BusStart()
 
 void OHCI::OHCI_BusStop()
 {
-	if (pEOFtimer) {
+	if (m_pEOFtimer) {
 		// Delete existing EOF timer
-		Timer_Exit(pEOFtimer);
+		Timer_Exit(m_pEOFtimer);
 	}
-	pEOFtimer = nullptr;
+	m_pEOFtimer = nullptr;
 }
 
 void OHCI::OHCI_SOF()
 {
-	SOFtime = GetTime_NS(pEOFtimer); // set current SOF time
-	Timer_Start(pEOFtimer, SOFtime + UsbFrameTime); // make timer expire at SOF + 1 virtual ms from now
+	m_SOFtime = GetTime_NS(m_pEOFtimer); // set current SOF time
+	Timer_Start(m_pEOFtimer, m_SOFtime + m_UsbFrameTime); // make timer expire at SOF + 1 virtual ms from now
 	OHCI_SetInterrupt(OHCI_INTR_SF);
 }
 
 void OHCI::OHCI_ChangeState(uint32_t Value)
 {
-	uint32_t OldState = Registers.HcControl & OHCI_CTL_HCFS;
-	Registers.HcControl = Value;
-	uint32_t NewState = Registers.HcControl & OHCI_CTL_HCFS;
+	uint32_t OldState = m_Registers.HcControl & OHCI_CTL_HCFS;
+	m_Registers.HcControl = Value;
+	uint32_t NewState = m_Registers.HcControl & OHCI_CTL_HCFS;
 
 	// no state change
 	if (OldState == NewState) {
@@ -204,56 +204,56 @@ uint32_t OHCI::OHCI_ReadRegister(xbaddr Addr)
 		switch (Addr >> 2) // read the register
 		{
 			case 0: // HcRevision
-				ret = Registers.HcRevision;
+				ret = m_Registers.HcRevision;
 				break;
 
 			case 1: // HcControl
-				ret = Registers.HcControl;
+				ret = m_Registers.HcControl;
 				break;
 
 			case 2: // HcCommandStatus
-				ret = Registers.HcCommandStatus;
+				ret = m_Registers.HcCommandStatus;
 				break;
 
 			case 3: // HcInterruptStatus
-				ret = Registers.HcInterruptStatus;
+				ret = m_Registers.HcInterruptStatus;
 				break;
 
 			case 4: // HcInterruptEnable
 			case 5: // HcInterruptDisable
-				ret = Registers.HcInterrupt;
+				ret = m_Registers.HcInterrupt;
 				break;
 
 			case 6: // HcHCCA
-				ret = Registers.HcHCCA;
+				ret = m_Registers.HcHCCA;
 				break;
 
 			case 7: // HcPeriodCurrentED
-				ret = Registers.HcPeriodCurrentED;
+				ret = m_Registers.HcPeriodCurrentED;
 				break;
 
 			case 8: // HcControlHeadED
-				ret = Registers.HcControlHeadED;
+				ret = m_Registers.HcControlHeadED;
 				break;
 
 			case 9: // HcControlCurrentED
-				ret = Registers.HcControlCurrentED;
+				ret = m_Registers.HcControlCurrentED;
 				break;
 
 			case 10: // HcBulkHeadED
-				ret = Registers.HcBulkHeadED;
+				ret = m_Registers.HcBulkHeadED;
 				break;
 
 			case 11: // HcBulkCurrentED
-				ret = Registers.HcBulkCurrentED;
+				ret = m_Registers.HcBulkCurrentED;
 				break;
 
 			case 12: // HcDoneHead
-				ret = Registers.HcDoneHead;
+				ret = m_Registers.HcDoneHead;
 				break;
 
 			case 13: // HcFmInterval
-				ret = Registers.HcFmInterval;
+				ret = m_Registers.HcFmInterval;
 				break;
 
 			case 14: // HcFmRemaining
@@ -261,36 +261,36 @@ uint32_t OHCI::OHCI_ReadRegister(xbaddr Addr)
 				break;
 
 			case 15: // HcFmNumber
-				ret = Registers.HcFmNumber;
+				ret = m_Registers.HcFmNumber;
 				break;
 
 			case 16: // HcPeriodicStart
-				ret = Registers.HcPeriodicStart;
+				ret = m_Registers.HcPeriodicStart;
 				break;
 
 			case 17: // HcLSThreshold
-				ret = Registers.HcLSThreshold;
+				ret = m_Registers.HcLSThreshold;
 				break;
 
 			case 18: // HcRhDescriptorA
-				ret = Registers.HcRhDescriptorA;
+				ret = m_Registers.HcRhDescriptorA;
 				break;
 
 			case 19: // HcRhDescriptorB
-				ret = Registers.HcRhDescriptorB;
+				ret = m_Registers.HcRhDescriptorB;
 				break;
 
 			case 20: // HcRhStatus
-				ret = Registers.HcRhStatus;
+				ret = m_Registers.HcRhStatus;
 				break;
 
 			// Always report that the port power is on since the Xbox cannot switch off the electrical current to it
 			case 21: // RhPort 0
-				ret = Registers.RhPort[0].HcRhPortStatus | OHCI_PORT_PPS;
+				ret = m_Registers.RhPort[0].HcRhPortStatus | OHCI_PORT_PPS;
 				break;
 
 			case 22: // RhPort 1
-				ret = Registers.RhPort[1].HcRhPortStatus | OHCI_PORT_PPS;
+				ret = m_Registers.RhPort[1].HcRhPortStatus | OHCI_PORT_PPS;
 				break;
 
 			default:
@@ -325,9 +325,9 @@ void OHCI::OHCI_WriteRegister(xbaddr Addr, uint32_t Value)
 
 				// From the standard: "The Host Controller must ensure that bits written as 1 become set
 				// in the register while bits written as 0 remain unchanged in the register."
-				Registers.HcCommandStatus |= Value;
+				m_Registers.HcCommandStatus |= Value;
 
-				if (Registers.HcCommandStatus & OHCI_STATUS_HCR) {
+				if (m_Registers.HcCommandStatus & OHCI_STATUS_HCR) {
 					// Do a hardware reset
 					OHCI_StateReset();
 				}
@@ -335,23 +335,23 @@ void OHCI::OHCI_WriteRegister(xbaddr Addr, uint32_t Value)
 			break;
 
 			case 3: // HcInterruptStatus
-				Registers.HcInterruptStatus &= ~Value;
+				m_Registers.HcInterruptStatus &= ~Value;
 				OHCI_UpdateInterrupt();
 				break;
 
 			case 4: // HcInterruptEnable
-				Registers.HcInterrupt |= Value;
+				m_Registers.HcInterrupt |= Value;
 				OHCI_UpdateInterrupt();
 				break;
 
 			case 5: // HcInterruptDisable
-				Registers.HcInterrupt &= ~Value;
+				m_Registers.HcInterrupt &= ~Value;
 				OHCI_UpdateInterrupt();
 				break;
 
 			case 6: // HcHCCA
 				// The standard says the minimum alignment is 256 bytes and so bits 0 through 7 are always zero
-				Registers.HcHCCA = Value & OHCI_HCCA_MASK;
+				m_Registers.HcHCCA = Value & OHCI_HCCA_MASK;
 				break;
 
 			case 7: // HcPeriodCurrentED
@@ -359,19 +359,19 @@ void OHCI::OHCI_WriteRegister(xbaddr Addr, uint32_t Value)
 				break;
 
 			case 8: // HcControlHeadED
-				Registers.HcControlHeadED = Value & OHCI_EDPTR_MASK;
+				m_Registers.HcControlHeadED = Value & OHCI_EDPTR_MASK;
 				break;
 
 			case 9: // HcControlCurrentED
-				Registers.HcControlCurrentED = Value & OHCI_EDPTR_MASK;
+				m_Registers.HcControlCurrentED = Value & OHCI_EDPTR_MASK;
 				break;
 
 			case 10: // HcBulkHeadED
-				Registers.HcBulkHeadED = Value & OHCI_EDPTR_MASK;
+				m_Registers.HcBulkHeadED = Value & OHCI_EDPTR_MASK;
 				break;
 
 			case 11: // HcBulkCurrentED
-				Registers.HcBulkCurrentED = Value & OHCI_EDPTR_MASK;
+				m_Registers.HcBulkCurrentED = Value & OHCI_EDPTR_MASK;
 				break;
 
 			case 12: // HcDoneHead
@@ -380,10 +380,10 @@ void OHCI::OHCI_WriteRegister(xbaddr Addr, uint32_t Value)
 
 			case 13: // HcFmInterval
 			{
-				if ((Value & OHCI_FMI_FIT) != (Registers.HcFmInterval & OHCI_FMI_FIT)) {
+				if ((Value & OHCI_FMI_FIT) != (m_Registers.HcFmInterval & OHCI_FMI_FIT)) {
 					DbgPrintf("Ohci: Changing frame interval duration. New value is %u\n", Value & OHCI_FMI_FI);
 				}
-				Registers.HcFmInterval = Value & ~0xC000;
+				m_Registers.HcFmInterval = Value & ~0xC000;
 			}
 			break;
 
@@ -396,16 +396,16 @@ void OHCI::OHCI_WriteRegister(xbaddr Addr, uint32_t Value)
 				break;
 
 			case 16: // HcPeriodicStart
-				Registers.HcPeriodicStart = Value & 0x3FFF;
+				m_Registers.HcPeriodicStart = Value & 0x3FFF;
 				break;
 
 			case 17: // HcLSThreshold
-				Registers.HcLSThreshold = Value & 0xFFF;
+				m_Registers.HcLSThreshold = Value & 0xFFF;
 				break;
 
 			case 18: // HcRhDescriptorA
-				Registers.HcRhDescriptorA &= ~OHCI_RHA_RW_MASK;
-				Registers.HcRhDescriptorA |= Value & OHCI_RHA_RW_MASK; // ??
+				m_Registers.HcRhDescriptorA &= ~OHCI_RHA_RW_MASK;
+				m_Registers.HcRhDescriptorA |= Value & OHCI_RHA_RW_MASK; // ??
 				break;
 
 			case 19: // HcRhDescriptorB
@@ -432,15 +432,15 @@ void OHCI::OHCI_WriteRegister(xbaddr Addr, uint32_t Value)
 
 void OHCI::OHCI_UpdateInterrupt()
 {
-	if ((Registers.HcInterrupt & OHCI_INTR_MIE) && (Registers.HcInterruptStatus & Registers.HcInterrupt)) {
-		HalSystemInterrupts[IrqNum].Assert(true);
+	if ((m_Registers.HcInterrupt & OHCI_INTR_MIE) && (m_Registers.HcInterruptStatus & m_Registers.HcInterrupt)) {
+		HalSystemInterrupts[m_IrqNum].Assert(true);
 	}
-	else { HalSystemInterrupts[IrqNum].Assert(false); }
+	else { HalSystemInterrupts[m_IrqNum].Assert(false); }
 }
 
 void OHCI::OHCI_SetInterrupt(uint32_t Value)
 {
-	Registers.HcInterruptStatus |= Value;
+	m_Registers.HcInterruptStatus |= Value;
 	OHCI_UpdateInterrupt();
 }
 
@@ -450,7 +450,7 @@ void OHCI::OHCI_StopEndpoints()
 	int i, j;
 
 	for (i = 0; i < 2; i++) {
-		dev = Registers.RhPort[i].UsbPort.Dev;
+		dev = m_Registers.RhPort[i].UsbPort.Dev;
 		if (dev && dev->Attached) {
 			USB_DeviceEPstopped(dev, &dev->EP_ctl);
 			for (j = 0; j < USB_MAX_ENDPOINTS; j++) {
@@ -465,11 +465,11 @@ void OHCI::OHCI_SetHubStatus(uint32_t Value)
 {
 	uint32_t old_state;
 
-	old_state = Registers.HcRhStatus;
+	old_state = m_Registers.HcRhStatus;
 
 	// write 1 to clear OCIC
 	if (Value & OHCI_RHS_OCIC) {
-		Registers.HcRhStatus &= ~OHCI_RHS_OCIC;
+		m_Registers.HcRhStatus &= ~OHCI_RHS_OCIC;
 	}
 
 	if (Value & OHCI_RHS_LPS) {
@@ -491,14 +491,14 @@ void OHCI::OHCI_SetHubStatus(uint32_t Value)
 	}
 
 	if (Value & OHCI_RHS_DRWE) {
-		Registers.HcRhStatus |= OHCI_RHS_DRWE;
+		m_Registers.HcRhStatus |= OHCI_RHS_DRWE;
 	}
 
 	if (Value & OHCI_RHS_CRWE) {
-		Registers.HcRhStatus &= ~OHCI_RHS_DRWE;
+		m_Registers.HcRhStatus &= ~OHCI_RHS_DRWE;
 	}
 
-	if (old_state != Registers.HcRhStatus) {
+	if (old_state != m_Registers.HcRhStatus) {
 		OHCI_SetInterrupt(OHCI_INTR_RHSC);
 	}	
 }
@@ -506,10 +506,10 @@ void OHCI::OHCI_SetHubStatus(uint32_t Value)
 void OHCI::OHCI_PortPower(int i, int p)
 {
 	if (p) {
-		Registers.RhPort[i].HcRhPortStatus |= OHCI_PORT_PPS;
+		m_Registers.RhPort[i].HcRhPortStatus |= OHCI_PORT_PPS;
 	}
 	else {
-		Registers.RhPort[i].HcRhPortStatus &= ~(OHCI_PORT_PPS |
+		m_Registers.RhPort[i].HcRhPortStatus &= ~(OHCI_PORT_PPS |
 			OHCI_PORT_CCS |
 			OHCI_PORT_PSS |
 			OHCI_PORT_PRS);
@@ -521,7 +521,7 @@ void OHCI::OHCI_PortSetStatus(int PortNum, uint32_t Value)
 	uint32_t old_state;
 	OHCIPort* port;
 
-	port = &Registers.RhPort[PortNum];
+	port = &m_Registers.RhPort[PortNum];
 	old_state = port->HcRhPortStatus;
 
 	// Write to clear CSC, PESC, PSSC, OCIC, PRSC
@@ -571,26 +571,26 @@ int OHCI::OHCI_PortSetIfConnected(int i, uint32_t Value)
 	}
 
 	// If CurrentConnectStatus is cleared we set ConnectStatusChange
-	if (!(Registers.RhPort[i].HcRhPortStatus & OHCI_PORT_CCS)) {
-		Registers.RhPort[i].HcRhPortStatus |= OHCI_PORT_CSC;
-		if (Registers.HcRhStatus & OHCI_RHS_DRWE) {
+	if (!(m_Registers.RhPort[i].HcRhPortStatus & OHCI_PORT_CCS)) {
+		m_Registers.RhPort[i].HcRhPortStatus |= OHCI_PORT_CSC;
+		if (m_Registers.HcRhStatus & OHCI_RHS_DRWE) {
 			// TODO: CSC is a wakeup event
 		}
 		return 0;
 	}
 
-	if (Registers.RhPort[i].HcRhPortStatus & Value)
+	if (m_Registers.RhPort[i].HcRhPortStatus & Value)
 		ret = 0;
 
 	// set the bit
-	Registers.RhPort[i].HcRhPortStatus |= Value;
+	m_Registers.RhPort[i].HcRhPortStatus |= Value;
 
 	return ret;
 }
 
 void OHCI::OHCI_Detach(USBPort* Port)
 {
-	OHCIPort* port = &Registers.RhPort[Port->PortIndex];
+	OHCIPort* port = &m_Registers.RhPort[Port->PortIndex];
 	uint32_t old_state = port->HcRhPortStatus;
 
 	ohci_async_cancel_device(Port->Dev);
@@ -615,7 +615,7 @@ void OHCI::OHCI_Detach(USBPort* Port)
 
 void OHCI::OHCI_Attach(USBPort* Port)
 {
-	OHCIPort* port = &Registers.RhPort[Port->PortIndex];
+	OHCIPort* port = &m_Registers.RhPort[Port->PortIndex];
 	uint32_t old_state = port->HcRhPortStatus;
 
 	// set connect status
@@ -630,7 +630,7 @@ void OHCI::OHCI_Attach(USBPort* Port)
 	}
 
 	// notify of remote-wakeup
-	if ((Registers.HcControl & OHCI_CTL_HCFS) == Suspend) {
+	if ((m_Registers.HcControl & OHCI_CTL_HCFS) == Suspend) {
 		OHCI_SetInterrupt(OHCI_INTR_RD);
 	}
 

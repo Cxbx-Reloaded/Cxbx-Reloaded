@@ -185,19 +185,19 @@ class OHCI
 
 	private:
 		// all the registers available on the OHCI standard
-		OHCI_Registers Registers;
+		OHCI_Registers m_Registers;
 		// end-of-frame timer
-		TimerObject* pEOFtimer;
+		TimerObject* m_pEOFtimer;
 		// time at which a SOF was sent
-		uint64_t SOFtime;
+		uint64_t m_SOFtime;
 		// the duration of a usb frame
-		uint64_t UsbFrameTime;
+		uint64_t m_UsbFrameTime;
 		// ticks per usb tick
-		uint64_t TicksPerUsbTick;
+		uint64_t m_TicksPerUsbTick;
 		// usb packet
-		USBPacket UsbPacket;
+		USBPacket m_UsbPacket;
 		// irq number
-		int IrqNum;
+		int m_IrqNum;
 
 		// EOF callback wrapper
 		static void OHCI_FrameBoundaryWrapper(void* pVoid);
