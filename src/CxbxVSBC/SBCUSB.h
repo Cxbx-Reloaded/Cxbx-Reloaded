@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <conio.h>
-#include "../../import/libusbK/includes/libusbk.h"
+#include "libusbk.h"
 
 #ifndef __SBCUSB_H_
 #define __SBCUSB_H_
