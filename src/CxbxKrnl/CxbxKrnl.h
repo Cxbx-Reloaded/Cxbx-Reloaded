@@ -154,7 +154,7 @@ extern "C" {
 #define XBOX_FLASH_ROM_BASE      0xFFF00000
 #define XBOX_FLASH_ROM_SIZE      0x00100000 // - 0xFFFFFFF
 
-#define LOWEST_USER_ADDRESS      0x00010000
+#define LOWEST_USER_ADDRESS      XBE_IMAGE_BASE // = 0x10000
 #define HIGHEST_USER_ADDRESS     0x7FFEFFFF
 #define HIGHEST_VMA_ADDRESS      HIGHEST_USER_ADDRESS - X64KB // for NtAllocateVirtualMemory
 #define USER_MEMORY_SIZE         HIGHEST_USER_ADDRESS - LOWEST_USER_ADDRESS + 1 // 0x7FFE0000 = 2 GiB - 128 KiB
@@ -227,11 +227,19 @@ enum {
 #define XBOX_MEM_NOZERO             0x800000 // Replaces MEM_ROTATE on WinXP+
 #define XBOX_MEM_IMAGE              0x1000000 // ?
 
-void CxbxPopupMessage(const char *message, ...);
+typedef enum _CxbxMsgDlgIcon {
+    CxbxMsgDlgIcon_Info=0,
+    CxbxMsgDlgIcon_Warn,
+    CxbxMsgDlgIcon_Error,
+    CxbxMsgDlgIcon_Unknown
+
+} CxbxMsgDlgIcon;
+
+void CxbxPopupMessage(CxbxMsgDlgIcon icon, const char *message, ...);
 
 #define LOG_TEST_CASE(message) do { static bool bPopupShown = false; \
     if (!bPopupShown) { bPopupShown = true; \
-    CxbxPopupMessage("Please report that %s shows this test-case: %s\nIn %s (%s line %d)", \
+    CxbxPopupMessage(CxbxMsgDlgIcon_Info, "Please report that %s shows this test-case: %s\nIn %s (%s line %d)", \
     CxbxKrnl_Xbe->m_szAsciiTitle, message, __func__, __FILE__, __LINE__); } } while(0)
 // was g_pCertificate->wszTitleName
 

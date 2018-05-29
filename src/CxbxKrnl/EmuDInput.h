@@ -50,6 +50,6 @@ extern void EmuDInputCleanup();
 // ******************************************************************
 // * patch: DInputPoll
 // ******************************************************************
-extern void EmuDInputPoll(PXINPUT_STATE Controller);
+extern void EmuDInputPoll(PX_XINPUT_STATE Controller);
 
 #endif

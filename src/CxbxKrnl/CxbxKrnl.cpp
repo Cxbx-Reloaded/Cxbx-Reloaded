@@ -43,6 +43,7 @@ namespace xboxkrnl
 };
 
 #include "CxbxKrnl.h"
+#include "Cxbx\CxbxXbdm.h" // For Cxbx_LibXbdmThunkTable
 #include "CxbxVersion.h"
 #include "Emu.h"
 #include "EmuX86.h"
@@ -489,17 +490,38 @@ HANDLE CxbxRestorePageTablesMemory(char* szFilePath_page_tables)
 
 #pragma optimize("", off)
 
-void CxbxPopupMessage(const char *message, ...)
+void CxbxPopupMessage(CxbxMsgDlgIcon icon, const char *message, ...)
 {
 	char Buffer[1024];
 	va_list argp;
+    UINT uType = MB_OK | MB_TOPMOST | MB_SETFOREGROUND;
+
+    switch (icon) {
+        case CxbxMsgDlgIcon_Warn: {
+            uType |= MB_ICONWARNING;
+            break;
+        }
+        case CxbxMsgDlgIcon_Error: {
+            uType |= MB_ICONERROR;
+            break;
+        }
+        case CxbxMsgDlgIcon_Info: {
+            uType |= MB_ICONINFORMATION;
+            break;
+        }
+        case CxbxMsgDlgIcon_Unknown:
+        default: {
+            uType |= MB_ICONQUESTION;
+            break;
+        }
+    }
 
 	va_start(argp, message);
 	vsprintf(Buffer, message, argp);
 	va_end(argp);
 
 	EmuWarning("Popup : %s\n", Buffer);
-	MessageBox(NULL, Buffer, TEXT("Cxbx-Reloaded"), MB_OK | MB_ICONEXCLAMATION | MB_TOPMOST | MB_SETFOREGROUND);
+	MessageBox(NULL, Buffer, TEXT("Cxbx-Reloaded"), uType);
 }
 
 void PrintCurrentConfigurationLog()
@@ -782,6 +804,47 @@ void PatchRdtscInstructions()
 	printf("INIT: Done patching rdtsc, total %d rdtsc instructions patched\n", g_RdtscPatches.size());
 }
 
+void MapThunkTable(uint32_t* kt, uint32* pThunkTable)
+{
+    const bool SendDebugReports = (pThunkTable == CxbxKrnl_KernelThunkTable) && CxbxDebugger::CanReport();
+
+	uint32_t* kt_tbl = (uint32_t*)kt;
+	int i = 0;
+	while (kt_tbl[i] != 0) {
+		int t = kt_tbl[i] & 0x7FFFFFFF;
+		kt_tbl[i] = pThunkTable[t];
+        if (SendDebugReports) {
+            // TODO: Update CxbxKrnl_KernelThunkTable to include symbol names
+            std::string importName = "KernelImport_" + std::to_string(t);
+            CxbxDebugger::ReportKernelPatch(importName.c_str(), kt_tbl[i]);
+        }
+		i++;
+	}
+}
+
+typedef struct {
+	xbaddr ThunkAddr;
+	xbaddr LibNameAddr;
+} XbeImportEntry;
+
+void ImportLibraries(XbeImportEntry *pImportDirectory)
+{
+	// assert(pImportDirectory);
+
+	while (pImportDirectory->LibNameAddr && pImportDirectory->ThunkAddr) {
+		std::wstring LibName = std::wstring((wchar_t*)pImportDirectory->LibNameAddr);
+
+		if (LibName == L"xbdm.dll") {
+			MapThunkTable((uint32_t *)pImportDirectory->ThunkAddr, Cxbx_LibXbdmThunkTable);
+		}
+		else {
+			printf("LOAD : Skipping unrecognized import library : %s\n", LibName.c_str());
+		}
+
+		pImportDirectory++;
+	}
+}
+
 void CxbxKrnlMain(int argc, char* argv[])
 {
 	// Skip '/load' switch
@@ -882,14 +945,14 @@ void CxbxKrnlMain(int argc, char* argv[])
 		// verify base of code of our executable is 0x00001000
 		if (ExeNtHeader->OptionalHeader.BaseOfCode != CXBX_BASE_OF_CODE)
 		{
-			CxbxPopupMessage("Cxbx-Reloaded executuable requires it's base of code to be 0x00001000");
+			CxbxPopupMessage(CxbxMsgDlgIcon_Error, "Cxbx-Reloaded executuable requires it's base of code to be 0x00001000");
 			return; // TODO : Halt(0); 
 		}
 
 		// verify virtual_memory_placeholder is located at 0x00011000
 		if ((UINT_PTR)(&(virtual_memory_placeholder[0])) != (XBE_IMAGE_BASE + CXBX_BASE_OF_CODE))
 		{
-			CxbxPopupMessage("virtual_memory_placeholder is not loaded to base address 0x00011000 (which is a requirement for Xbox emulation)");
+			CxbxPopupMessage(CxbxMsgDlgIcon_Error, "virtual_memory_placeholder is not loaded to base address 0x00011000 (which is a requirement for Xbox emulation)");
 			return; // TODO : Halt(0); 
 		}
 
@@ -930,7 +993,7 @@ void CxbxKrnlMain(int argc, char* argv[])
 	EEPROM = CxbxRestoreEEPROM(szFilePath_EEPROM_bin);
 	if (EEPROM == nullptr)
 	{
-		CxbxPopupMessage("Couldn't init EEPROM!");
+		CxbxPopupMessage(CxbxMsgDlgIcon_Error, "Couldn't init EEPROM!");
 		return; // TODO : Halt(0); 
 	}
 
@@ -1021,27 +1084,12 @@ void CxbxKrnlMain(int argc, char* argv[])
 	uint32_t kt = CxbxKrnl_Xbe->m_Header.dwKernelImageThunkAddr;
 	kt ^= XOR_KT_KEY[g_XbeType];
 
-    const bool SendDebugReports = CxbxDebugger::CanReport();
-
 	// Process the Kernel thunk table to map Kernel function calls to their actual address :
-	{
-		uint32_t* kt_tbl = (uint32_t*)kt;
-		int i = 0;
-		while (kt_tbl[i] != 0) {
-			int t = kt_tbl[i] & 0x7FFFFFFF;
-            
-			kt_tbl[i] = CxbxKrnl_KernelThunkTable[t];
+	MapThunkTable((uint32_t*)kt, CxbxKrnl_KernelThunkTable);
 
-            if (SendDebugReports)
-            {
-                // TODO: Update CxbxKrnl_KernelThunkTable to include symbol names
-                std::string importName = "KernelImport_" + std::to_string(t);
-
-                CxbxDebugger::ReportKernelPatch(importName.c_str(), kt_tbl[i]);
-            }
-
-			i++;
-		}
+	// Does this xbe import any other libraries?
+	if (CxbxKrnl_Xbe->m_Header.dwNonKernelImportDirAddr) {
+		ImportLibraries((XbeImportEntry*)CxbxKrnl_Xbe->m_Header.dwNonKernelImportDirAddr);
 	}
 
 	// Launch the XBE :
@@ -1450,7 +1498,7 @@ __declspec(noreturn) void CxbxKrnlCleanup(const char *szErrorMessage, ...)
         vsprintf(szBuffer2, szErrorMessage, argp);
         va_end(argp);
 
-		CxbxPopupMessage("Received Fatal Message:\n\n* %s\n", szBuffer2); // Will also DbgPrintf
+		CxbxPopupMessage(CxbxMsgDlgIcon_Error, "Received Fatal Message:\n\n* %s\n", szBuffer2); // Will also DbgPrintf
     }
 
     printf("[0x%.4X] MAIN: Terminating Process\n", GetCurrentThreadId());
@@ -1666,11 +1714,11 @@ void CxbxPrintUEMInfo(ULONG ErrorCode)
 	if (it != UEMErrorTable.end())
 	{
 		std::string ErrorMessage = "Fatal error. " + it->second + ". This error screen will persist indefinitely. Stop the emulation to close it";
-		CxbxPopupMessage(ErrorMessage.c_str());
+		CxbxPopupMessage(CxbxMsgDlgIcon_Error, ErrorMessage.c_str());
 	}
 	else
 	{
-		CxbxPopupMessage("Unknown fatal error. This error screen will persist indefinitely. Stop the emulation to close it");
+		CxbxPopupMessage(CxbxMsgDlgIcon_Error, "Unknown fatal error. This error screen will persist indefinitely. Stop the emulation to close it");
 	}
 }
 

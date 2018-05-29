@@ -223,7 +223,7 @@
       </HeaderFileName>
     </Midl>
     <ClCompile>
-      <Optimization>Full</Optimization>
+      <Optimization>MaxSpeed</Optimization>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <AdditionalIncludeDirectories>..\..\src;..\..\src\Common;..\..\src\Common\Win32\;%(AdditionalIncludeDirectories);..\..\import\OpenXDK\include;..\..\import\distorm\include;..\..\import\glew-2.0.0\include;..\..\src\Common\Win32;..\..\import\subhook\</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>NOMINMAX;_WIN32_WINNT=0x0601;WIN32;NDEBUG;_WINDOWS;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -233,15 +233,17 @@
       <BrowseInformation>false</BrowseInformation>
       <WarningLevel>Level3</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <MinimalRebuild>true</MinimalRebuild>
-      <ExceptionHandling>Sync</ExceptionHandling>
+      <ExceptionHandling>SyncCThrow</ExceptionHandling>
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <ControlFlowGuard>false</ControlFlowGuard>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <FloatingPointModel>Precise</FloatingPointModel>
+      <WholeProgramOptimization>true</WholeProgramOptimization>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -264,6 +266,7 @@
       <LargeAddressAware>true</LargeAddressAware>
       <StackReserveSize>65536</StackReserveSize>
       <StackCommitSize>65536</StackCommitSize>
+      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
     </Link>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
@@ -284,6 +287,7 @@
     <ClInclude Include="..\..\src\Common\Win32\Threads.h" />
     <ClInclude Include="..\..\src\Common\CxbxDebugger.h" />
     <ClInclude Include="..\..\src\Common\Win32\XBAudio.h" />
+    <ClInclude Include="..\..\src\Common\Win32\XBPortMapping.h" />
     <ClInclude Include="..\..\src\Common\XADPCM.h" />
     <ClInclude Include="..\..\src\Common\XbePrinter.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\crc32c.h" />
@@ -327,13 +331,13 @@
     <ClInclude Include="..\..\src\CxbxKrnl\gloffscreen\gloffscreen.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\HLEIntercept.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\LibRc4.h" />
-    <ClInclude Include="..\..\src\CxbxKrnl\OOVPA.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\PhysicalMemory.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\PoolManager.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\ReservedMemory.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\ResourceTracker.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\VMManager.h" />
     <ClInclude Include="..\..\src\CxbxVersion.h" />
+    <ClInclude Include="..\..\src\Cxbx\CxbxXbdm.h" />
     <ClInclude Include="..\..\src\Cxbx\DlgAbout.h" />
     <ClInclude Include="..\..\src\Cxbx\DlgAudioConfig.h" />
     <ClInclude Include="..\..\src\Cxbx\DlgControllerConfig.h" />
@@ -343,6 +347,7 @@
     <ClInclude Include="..\..\src\CxbxKrnl\EmuShared.h" />
     <ClInclude Include="..\..\src\Common\Error.h" />
     <ClInclude Include="..\..\src\Common\Win32\Mutex.h" />
+    <ClInclude Include="..\..\src\Cxbx\DlgXboxControllerPortMapping.h" />
     <ClInclude Include="..\..\src\Cxbx\ResCxbx.h" />
     <ClInclude Include="..\..\src\Cxbx\Wnd.h" />
     <ClInclude Include="..\..\src\Cxbx\WndMain.h" />
@@ -371,13 +376,16 @@
     <ClInclude Include="..\..\src\devices\video\swizzle.h" />
     <ClInclude Include="..\..\src\devices\video\vga.h" />
     <ClInclude Include="..\..\src\devices\Xbox.h" />
+    <ClInclude Include="DlgXboxControllerPortMapping.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\CONTRIBUTORS" />
     <None Include="..\..\COPYING" />
     <None Include="..\..\README.md" />
+    <None Include="..\..\resource\.editorconfig" />
     <None Include="..\..\resource\Logo.bmp" />
     <None Include="..\..\resource\Splash.jpg" />
+    <None Include="..\..\src\.editorconfig" />
     <None Include="..\..\src\devices\video\EmuNV2A_DEBUG.cpp" />
     <None Include="..\..\src\devices\video\EmuNV2A_PBUS.cpp" />
     <None Include="..\..\src\devices\video\EmuNV2A_PCOUNTER.cpp" />
@@ -414,6 +422,7 @@
     <ClCompile Include="..\..\src\Common\Win32\Threads.cpp" />
     <ClCompile Include="..\..\src\Common\CxbxDebugger.cpp" />
     <ClCompile Include="..\..\src\Common\Win32\XBAudio.cpp" />
+    <ClCompile Include="..\..\src\Common\Win32\XBPortMapping.cpp" />
     <ClCompile Include="..\..\src\Common\XbePrinter.cpp" />
     <ClCompile Include="..\..\src\CxbxKrnl\crc32c.cpp" />
     <ClCompile Include="..\..\src\CxbxKrnl\EmuD3D8Logging.cpp" />
@@ -436,6 +445,7 @@
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug_Direct3D9|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <WholeProgramOptimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</WholeProgramOptimization>
     </ClCompile>
     <ClCompile Include="..\..\src\CxbxKrnl\DbgConsole.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -628,6 +638,7 @@
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="..\..\src\CxbxKrnl\VMManager.cpp" />
+    <ClCompile Include="..\..\src\Cxbx\CxbxXbdm.cpp" />
     <ClCompile Include="..\..\src\Cxbx\DlgAbout.cpp" />
     <ClCompile Include="..\..\src\Cxbx\DlgAudioConfig.cpp" />
     <ClCompile Include="..\..\src\Cxbx\DlgControllerConfig.cpp">
@@ -663,6 +674,7 @@
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
+    <ClCompile Include="..\..\src\Cxbx\DlgXboxControllerPortMapping.cpp" />
     <ClCompile Include="..\..\src\Cxbx\WinMain.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug_Direct3D9|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>

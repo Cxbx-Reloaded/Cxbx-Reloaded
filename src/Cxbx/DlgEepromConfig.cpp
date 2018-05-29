@@ -464,7 +464,7 @@ INT_PTR CALLBACK DlgEepromConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPA
 				{
 					if (g_bHasChanges) {
 						WriteEepromInMemory(hWndDlg);
-						std::basic_ofstream<uint8_t> EepromFile(szFilePath_EEPROM_bin, std::ios::out);
+						std::basic_ofstream<uint8_t> EepromFile(szFilePath_EEPROM_bin, std::ios::binary);
 						if (EepromFile.is_open()) {
 							EepromFile.write(reinterpret_cast<uint8_t*>(pEEPROM_GUI), EEPROM_SIZE);
 							EepromFile.close();
@@ -481,14 +481,7 @@ INT_PTR CALLBACK DlgEepromConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPA
 				{
 					g_bHasChanges = true;
 					std::memset(pEEPROM_GUI, 0, EEPROM_SIZE);
-					pEEPROM_GUI->UserSettings.Language = XC_LANGUAGE_ENGLISH;  // = English
-					pEEPROM_GUI->UserSettings.VideoFlags = AV_FLAGS_NORMAL;   // = Use XDK defaults
-					pEEPROM_GUI->UserSettings.AudioFlags = XC_AUDIO_FLAGS_STEREO;   // = Stereo, no AC3, no DTS
-					pEEPROM_GUI->UserSettings.ParentalControlGames = XC_PC_ESRB_ALL; // = XC_PC_ESRB_ALL
-					pEEPROM_GUI->UserSettings.ParentalControlMovies = XC_PC_MAX; // = XC_PRTL_CRTL_MAX
-					pEEPROM_GUI->UserSettings.MiscFlags = 0;  // No automatic power down
-					pEEPROM_GUI->FactorySettings.AVRegion = AV_STANDARD_NTSC_M | AV_FLAGS_60Hz;
-					pEEPROM_GUI->EncryptedSettings.GameRegion = XC_GAME_REGION_NA;
+					EmuEEPROMReset(pEEPROM_GUI);
 
 					char* DefaultStringsArray[] = { "0000000000000000", "00000000000000000000000000000000", "000000000000000000000000",
 					"000000000000", "00000000000000000000000000000000", "00000000" };

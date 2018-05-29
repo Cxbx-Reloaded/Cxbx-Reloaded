@@ -132,7 +132,7 @@ class XBController : public Error
         // * Listening
         // ******************************************************************
         void ListenBegin(HWND hwnd);
-        void ListenPoll(XTL::XINPUT_STATE *Controller);
+        void ListenPoll(XTL::X_XINPUT_STATE *Controller);
         void ListenEnd();
 
         // ******************************************************************

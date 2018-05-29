@@ -283,16 +283,16 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreate)
         // clear sound buffer cache
         vector_ds_buffer::iterator ppDSBuffer = g_pDSoundBufferCache.begin();
         for (; ppDSBuffer != g_pDSoundBufferCache.end();) {
-            while (XTL::EMUPATCH(IDirectSoundBuffer_Release)((*ppDSBuffer))) {};
-            ppDSBuffer = g_pDSoundBufferCache.erase(ppDSBuffer);
+            while (XTL::EMUPATCH(IDirectSoundBuffer_Release)((*ppDSBuffer)) != 0) {};
+            ppDSBuffer = g_pDSoundBufferCache.begin();
         }
         g_pDSoundBufferCache.reserve(X_DIRECTSOUND_CACHE_MAX);
 
         // clear sound stream cache
         vector_ds_stream::iterator ppDSStream = g_pDSoundStreamCache.begin();
         for (; ppDSStream != g_pDSoundStreamCache.end();) {
-            while (XTL::EMUPATCH(CDirectSoundStream_Release)((*ppDSStream)));
-            ppDSStream = g_pDSoundStreamCache.erase(ppDSStream);
+            while (XTL::EMUPATCH(CDirectSoundStream_Release)((*ppDSStream)) != 0);
+            ppDSStream = g_pDSoundStreamCache.begin();
         }
         g_pDSoundStreamCache.reserve(X_DIRECTSOUND_CACHE_MAX);
 

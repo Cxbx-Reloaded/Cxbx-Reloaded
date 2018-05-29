@@ -64,6 +64,11 @@ namespace NtDll
 #pragma warning(default:4005)
 #include <assert.h>
 
+#include <unordered_map>
+
+// Used to keep track of duplicate handles created by NtQueueApcThread()
+std::unordered_map<HANDLE, HANDLE>	g_DuplicateHandles;
+
 
 // ******************************************************************
 // * 0x00B8 - NtAllocateVirtualMemory()
@@ -162,7 +167,20 @@ XBSYSAPI EXPORTNUM(187) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtClose
             CxbxDebugger::ReportFileClosed(Handle);
         }
 
-		ret = NtDll::NtClose(Handle);
+		// Prevent exceptions when using invalid NTHandle
+		DWORD flags = 0;
+		if (GetHandleInformation(Handle, &flags) != 0) {
+			ret = NtDll::NtClose(Handle);
+
+			// Delete duplicate threads created by our implementation of NtQueueApcThread()
+			if( GetHandleInformation( g_DuplicateHandles[Handle], &flags ) != 0 )
+			{
+				DbgPrintf( "Closing duplicate handle...\n" );
+
+				CloseHandle( g_DuplicateHandles[Handle] );
+				g_DuplicateHandles.erase(Handle);
+			}
+		}
     }
 
 	RETURN(ret);
@@ -965,8 +983,18 @@ XBSYSAPI EXPORTNUM(206) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueueApcThread
 		LOG_FUNC_ARG(ApcReserved)
 		LOG_FUNC_END;
 
-	// TODO: Not too sure how this one works.  If there's any special *magic* that needs to be
-	//		 done, let me know!
+	// In order for NtQueueApcThread or QueueUserAPC to work, you must... I repeat...
+	// YOU MUST duplicate the handle with the appropriate permissions first!  So far,
+	// the only game that I know of using this is Metal Slug 3, and it won't launch
+	// without it.  Other SNK games might use it also, beware.
+
+	// TODO: Use our implementation of NtDuplicateObject instead? 
+
+	HANDLE hApcThread = NULL;
+
+	// Just to be safe, let's see if the appropriate permissions are even set for the
+	// target thread first...
+
 	NTSTATUS ret = NtDll::NtQueueApcThread(
 		(NtDll::HANDLE)ThreadHandle,
 		(NtDll::PIO_APC_ROUTINE)ApcRoutine,
@@ -974,8 +1002,33 @@ XBSYSAPI EXPORTNUM(206) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueueApcThread
 		(NtDll::PIO_STATUS_BLOCK)ApcStatusBlock,
 		ApcReserved);
 
+	if( FAILED( ret ) )
+	{
+		EmuWarning( "Duplicating handle with THREAD_SET_CONTEXT..." );
+
+		// If we get here, then attempt to duplicate the thread.
+		if(!DuplicateHandle(g_CurrentProcessHandle, ThreadHandle, g_CurrentProcessHandle, &hApcThread, THREAD_SET_CONTEXT,FALSE,0))
+			EmuWarning("DuplicateHandle failed!");
+		else
+		{
+			g_DuplicateHandles[ThreadHandle] = hApcThread;	// Save this thread because we'll need to de-reference it later
+			DbgPrintf( "DuplicateHandle returned 0x%X (ThreadId)\n", hApcThread, GetThreadId( hApcThread ) );
+		}
+
+
+		ret = NtDll::NtQueueApcThread(
+			(NtDll::HANDLE)hApcThread,
+			(NtDll::PIO_APC_ROUTINE)ApcRoutine,
+			ApcRoutineContext,
+			(NtDll::PIO_STATUS_BLOCK)ApcStatusBlock,
+			ApcReserved);
+	}
 	if (FAILED(ret))
+	{
 		EmuWarning("NtQueueApcThread failed!");
+		CloseHandle( g_DuplicateHandles[ThreadHandle] );
+		g_DuplicateHandles.erase( ThreadHandle );
+	}
 
 	RETURN(ret);
 }

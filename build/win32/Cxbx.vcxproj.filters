@@ -281,6 +281,15 @@
     <ClCompile Include="..\..\src\CxbxKrnl\PoolManager.cpp">
       <Filter>Emulator</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\Cxbx\DlgXboxControllerPortMapping.cpp">
+      <Filter>GUI</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\Common\Win32\XBPortMapping.cpp">
+      <Filter>Emulator</Filter>
+    </ClCompile>    
+    <ClCompile Include="..\..\src\Cxbx\CxbxXbdm.cpp">
+      <Filter>Kernel</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\Cxbx\DlgControllerConfig.h">
@@ -398,9 +407,6 @@
       <Filter>Emulator</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\Common\Logging.h">
-      <Filter>Emulator</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\CxbxKrnl\OOVPA.h">
       <Filter>Emulator</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\CxbxKrnl\ResourceTracker.h">
@@ -529,6 +535,9 @@
     <ClInclude Include="..\..\src\CxbxKrnl\EmuKrnlAvModes.h">
       <Filter>Kernel</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\Cxbx\CxbxXbdm.h">
+      <Filter>Kernel</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\src\CxbxKrnl\gloffscreen\glextensions.h">
       <Filter>Hardware\Video\gloffscreen</Filter>
     </ClInclude>
@@ -551,6 +560,12 @@
       <Filter>GUI</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\CxbxKrnl\PoolManager.h">
+      <Filter>Emulator</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Cxbx\DlgXboxControllerPortMapping.h">
+      <Filter>GUI</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Common\Win32\XBPortMapping.h">
       <Filter>Emulator</Filter>
     </ClInclude>
   </ItemGroup>
@@ -627,6 +642,12 @@
     <None Include="..\..\src\devices\video\EmuNV2A_USER.cpp">
       <Filter>Hardware\Video</Filter>
     </None>
+    <None Include="..\..\src\.editorconfig">
+      <Filter>Code Format\src</Filter>
+    </None>
+    <None Include="..\..\resource\.editorconfig">
+      <Filter>Code Format\resource</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="GUI">
@@ -655,6 +676,15 @@
     </Filter>
     <Filter Include="Hardware\X86">
       <UniqueIdentifier>{9efb9cfc-2731-4edb-8dd0-36950b0263df}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Code Format">
+      <UniqueIdentifier>{0e125cbe-fb2e-41ef-a381-6effd9fabd35}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Code Format\src">
+      <UniqueIdentifier>{26a58e10-09ca-4605-86f8-552e5a9aa2e3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Code Format\resource">
+      <UniqueIdentifier>{6bbc2463-25dc-4f07-bf9e-38d6216d036a}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
