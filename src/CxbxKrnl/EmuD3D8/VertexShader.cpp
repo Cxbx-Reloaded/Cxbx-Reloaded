@@ -2404,7 +2404,7 @@ extern HRESULT XTL::EmuRecompileVshFunction
 	// Build an array of registers that are declared
 	// This is used to remove instructions that haven't been declared
 	// as they cause CreateVertexShader to fail
-	bool declaredRegisters[13];
+	bool declaredRegisters[13] = { false };
 	DWORD* pDeclToken = pRecompiledDeclaration;
 	do {
 		DWORD regNum = *pDeclToken & X_D3DVSD_VERTEXREGMASK;

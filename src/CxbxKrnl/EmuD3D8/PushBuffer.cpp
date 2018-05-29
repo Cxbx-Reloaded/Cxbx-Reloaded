@@ -205,9 +205,7 @@ extern void XTL::EmuExecutePushBufferRaw
 
     X_D3DPRIMITIVETYPE  XboxPrimitiveType = X_D3DPT_INVALID;
 
-    // TODO: This technically should be enabled
-    XTL::EmuUpdateDeferredStates();
-	EmuUpdateActiveTextureStages();
+	CxbxUpdateNativeD3DResources();
 
     #ifdef _DEBUG_TRACK_PB
     bool bShowPB = false;
