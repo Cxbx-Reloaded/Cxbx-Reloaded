@@ -50,8 +50,8 @@
 #define IDC_CONFIGURE_ALL               1030
 #define IDC_BTN_EJECT                   1030
 #define IDC_BUTTON2                     1031
-#define IDC_BTN_COCKIT_HATCH            1031
-#define IDC_BTN_IGINITION               1032
+#define IDC_BTN_COCKPIT_HATCH           1031
+#define IDC_BTN_IGNITION                1032
 #define IDC_BTN_START                   1033
 #define IDC_CV_FULLSCREEN               1034
 #define IDC_BTN_ZOOM_IN                 1034
@@ -63,9 +63,9 @@
 #define IDC_BTN_OPEN_CLOSE              1038
 #define IDC_BTN_MAP_ZOON_IN_OUT         1039
 #define IDC_VC_ACCEPT                   1040
-#define IDC_BTN_MAIN_WAPON_CONTROL      1040
+#define IDC_BTN_MAIN_WEAPON_CONTROL     1040
 #define IDC_VC_CANCEL                   1041
-#define IDC_BTN_SUB_WAPON_CONTROL       1041
+#define IDC_BTN_SUB_WEAPON_CONTROL      1041
 #define IDC_CV_VSYNC                    1042
 #define IDC_BTN_EXTINGUISHER            1042
 #define IDC_BTN_MAGAZINE_CHANGE         1043
@@ -171,7 +171,7 @@
 #define IDC_FILT_CONTROL_SYSTEM         1217
 #define IDC_PB_EJECT                    1218
 #define IDC_PB_COCKPIT_HATCH            1219
-#define IDC_PB_IGINITION                1220
+#define IDC_PB_IGNITION                 1220
 #define IDC_PB_START                    1221
 #define IDC_PB_GEARLEVER_5              1222
 #define IDC_PB_GEARLEVER_1              1223
@@ -186,10 +186,10 @@
 #define IDC_PB_COM3                     1232
 #define IDC_PB_COM4                     1233
 #define IDC_PB_WASHING                  1234
-#define IDC_PB_MAIN_WAPON_CONTROL       1235
+#define IDC_PB_MAIN_WEAPON_CONTROL      1235
 #define IDC_PB_EXTINGUISHER             1236
 #define IDC_PB_SUB                      1237
-#define IDC_PB_SUB_WAPON_CONTROL        1237
+#define IDC_PB_SUB_WEAPON_CONTROL       1237
 #define IDC_PB_CHAFF                    1238
 #define IDC_PB_MAGAZINE_CHANGE          1239
 #define IDC_PB_FUNC1                    1240
