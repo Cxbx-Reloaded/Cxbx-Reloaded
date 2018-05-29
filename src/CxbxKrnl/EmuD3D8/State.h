@@ -53,4 +53,6 @@ extern DWORD *EmuD3DDeferredTextureState;
 
 extern void EmuUpdateDeferredStates();
 
+extern void CxbxUpdateNativeD3DResources();
+
 #endif

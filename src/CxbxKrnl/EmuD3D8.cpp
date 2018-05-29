@@ -7468,7 +7468,7 @@ void EmuUpdateActiveTextureStages()
 	}
 }
 
-void CxbxUpdateNativeD3DResources()
+void XTL::CxbxUpdateNativeD3DResources()
 {
 	EmuUpdateActiveTextureStages();
 
