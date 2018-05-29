@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->EmuDInput.h
+// *   Cxbx->Win32->Common->XBPortMapping.h
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -31,25 +31,25 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#ifndef EMUDINPUT_H
-#define EMUDINPUT_H
+#ifndef XBPORTMAPPING_H
+#define XBPORTMAPPING_H
 
-#define DIRECTINPUT_VERSION 0x0800
-#include <dinput.h>
+#include "../CxbxKrnl/EmuXapi.h"
+
+extern void SetXboxPortToHostPort(DWORD dwXboxPort, DWORD dwHostType, DWORD dwHostPort);
+
+extern void GetXboxPortToHostPort(DWORD dwXboxPort, DWORD &dwHostType, DWORD &dwHostPort);
+
+extern DWORD GetXboxPortMapHostType(DWORD dwXboxPort);
+
+extern DWORD GetXboxPortMapHostPort(DWORD dwXboxPort);
+// ******************************************************************
+// * Load Configuration from Registry
+// ******************************************************************
+extern void XBPortMappingLoad(const char *szRegistryKey);
 
 // ******************************************************************
-// * patch: DInputInit
+// * Save Configuration from Registry
 // ******************************************************************
-extern bool EmuDInputInit();
-
-// ******************************************************************
-// * patch: DInputCleanup
-// ******************************************************************
-extern void EmuDInputCleanup();
-
-// ******************************************************************
-// * patch: DInputPoll
-// ******************************************************************
-extern void EmuDInputPoll(PX_XINPUT_STATE Controller);
-
+extern void XBPortMappingSave(const char *szRegistryKey);
 #endif

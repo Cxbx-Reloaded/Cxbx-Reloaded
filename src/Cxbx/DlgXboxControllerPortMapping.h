@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->EmuDInput.h
+// *   Cxbx->Cxbx->DlgControllerConfig.h
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -31,25 +31,12 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#ifndef EMUDINPUT_H
-#define EMUDINPUT_H
+#ifndef DLGXBOXCONTROLLERPORTMAPPING_H
+#define DLGXBOXCONTROLLERPORTMAPPING_H
 
-#define DIRECTINPUT_VERSION 0x0800
-#include <dinput.h>
+#include <windows.h>
 
-// ******************************************************************
-// * patch: DInputInit
-// ******************************************************************
-extern bool EmuDInputInit();
-
-// ******************************************************************
-// * patch: DInputCleanup
-// ******************************************************************
-extern void EmuDInputCleanup();
-
-// ******************************************************************
-// * patch: DInputPoll
-// ******************************************************************
-extern void EmuDInputPoll(PX_XINPUT_STATE Controller);
+/*! show controller configuration dialog */
+extern VOID ShowXboxControllerPortMappingConfig(HWND hwnd);
 
 #endif

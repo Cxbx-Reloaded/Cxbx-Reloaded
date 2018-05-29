@@ -281,6 +281,12 @@
     <ClCompile Include="..\..\src\CxbxKrnl\PoolManager.cpp">
       <Filter>Emulator</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\Cxbx\DlgXboxControllerPortMapping.cpp">
+      <Filter>GUI</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\Common\Win32\XBPortMapping.cpp">
+      <Filter>Emulator</Filter>
+    </ClCompile>    
     <ClCompile Include="..\..\src\Cxbx\CxbxXbdm.cpp">
       <Filter>Kernel</Filter>
     </ClCompile>
@@ -554,6 +560,12 @@
       <Filter>GUI</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\CxbxKrnl\PoolManager.h">
+      <Filter>Emulator</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Cxbx\DlgXboxControllerPortMapping.h">
+      <Filter>GUI</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Common\Win32\XBPortMapping.h">
       <Filter>Emulator</Filter>
     </ClInclude>
   </ItemGroup>

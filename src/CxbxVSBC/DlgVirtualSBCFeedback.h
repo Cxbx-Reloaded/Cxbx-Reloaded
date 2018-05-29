@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->EmuDInput.h
+// *   Cxbx->Cxbx->DlgControllerConfig.h
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -31,25 +31,15 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#ifndef EMUDINPUT_H
-#define EMUDINPUT_H
+#ifndef DLGVIRTUALSBCFEEDBAC_H
+#define DLGVIRTUALSBCFEEDBAC_H
 
-#define DIRECTINPUT_VERSION 0x0800
-#include <dinput.h>
-
-// ******************************************************************
-// * patch: DInputInit
-// ******************************************************************
-extern bool EmuDInputInit();
-
-// ******************************************************************
-// * patch: DInputCleanup
-// ******************************************************************
-extern void EmuDInputCleanup();
-
-// ******************************************************************
-// * patch: DInputPoll
-// ******************************************************************
-extern void EmuDInputPoll(PX_XINPUT_STATE Controller);
-
+#include <windows.h>
+namespace DlgVSBCFeedback
+{
+/*! show controller configuration dialog */
+extern int ShowVirtualSBCFeedback(HWND hwnd);
+extern void UpdateVirtualSBCFeedbackDlg(UCHAR * pXboxSBCFeedback);
+extern HWND GetDlgVirtualSBCFeedbackHandle(void);
+}
 #endif

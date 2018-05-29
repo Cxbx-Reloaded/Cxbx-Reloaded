@@ -1749,13 +1749,12 @@ static DWORD WINAPI EmuUpdateTickCount(LPVOID)
     {
         xboxkrnl::KeTickCount = timeGetTime();	
 		SwitchToThread();
-
         //
         // Poll input
         //
-
-        {
-            int v;
+        int port;
+        for (port = 0; port < 4;port++) {
+/*            int v;
 
             for(v=0;v<XINPUT_SETSTATE_SLOTS;v++)
             {
@@ -1771,7 +1770,7 @@ static DWORD WINAPI EmuUpdateTickCount(LPVOID)
 
                 g_pXInputSetStateStatus[v].dwLatency = 0;
 
-                XTL::PXINPUT_FEEDBACK pFeedback = (XTL::PXINPUT_FEEDBACK)g_pXInputSetStateStatus[v].pFeedback;
+                XTL::PX_XINPUT_FEEDBACK pFeedback = (XTL::PX_XINPUT_FEEDBACK)g_pXInputSetStateStatus[v].pFeedback;
 
                 if(pFeedback == 0)
                     continue;
@@ -1793,6 +1792,31 @@ static DWORD WINAPI EmuUpdateTickCount(LPVOID)
                     g_pXInputSetStateStatus[v].pFeedback = 0;
                 }
             }
+            */
+
+            //code above is not used, could be removed.
+            extern XTL::X_CONTROLLER_HOST_BRIDGE g_XboxControllerHostBridge[4];
+            if (g_XboxControllerHostBridge[port].hXboxDevice == 0)
+                continue;
+            if (g_XboxControllerHostBridge[port].pXboxFeedbackHeader == 0)
+                continue;
+            DWORD dwLatency = g_XboxControllerHostBridge[port].dwLatency++;
+
+            if (dwLatency < XINPUT_SETSTATE_LATENCY)
+                continue;
+
+            g_XboxControllerHostBridge[port].dwLatency = 0;
+
+            if (g_XboxControllerHostBridge[port].pXboxFeedbackHeader->dwStatus != ERROR_SUCCESS)
+            {
+                if (g_XboxControllerHostBridge[port].pXboxFeedbackHeader->hEvent != 0)
+                {
+                    SetEvent(g_XboxControllerHostBridge[port].pXboxFeedbackHeader->hEvent);
+                }
+
+                g_XboxControllerHostBridge[port].pXboxFeedbackHeader->dwStatus = ERROR_SUCCESS;
+            }
+
         }
 
 		// If VBlank Interval has passed, trigger VBlank callback
