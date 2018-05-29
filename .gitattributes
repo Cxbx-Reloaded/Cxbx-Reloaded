@@ -17,3 +17,7 @@
 *.PDF	 diff=astextplain
 *.rtf	 diff=astextplain
 *.RTF	 diff=astextplain
+
+# Microsoft Visual C++ generated resource script with forced Unicode
+*.RC	binary
+*.rc	binary
