@@ -46,11 +46,11 @@
 static INT_PTR CALLBACK DlgXboxControllerPortMappingProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 /*! changes flag */
 static BOOL g_bHasChanges = FALSE;
-static WPARAM wXboxToHostTypePORT[4][7] = {
-    { IDC_HOST_NOTCONNECT_0_0 ,IDC_HOST_XINPUT_0_0,IDC_HOST_XINPUT_0_1,IDC_HOST_XINPUT_0_2,IDC_HOST_XINPUT_0_3,IDC_HOST_DINPUT_0_0,IDC_HOST_VIRTUAL_SBC_0_0 },
-    { IDC_HOST_NOTCONNECT_1_0 ,IDC_HOST_XINPUT_1_0,IDC_HOST_XINPUT_1_1,IDC_HOST_XINPUT_1_2,IDC_HOST_XINPUT_1_3,IDC_HOST_DINPUT_1_0,IDC_HOST_VIRTUAL_SBC_1_0 },
-    { IDC_HOST_NOTCONNECT_2_0 ,IDC_HOST_XINPUT_2_0,IDC_HOST_XINPUT_2_1,IDC_HOST_XINPUT_2_2,IDC_HOST_XINPUT_2_3,IDC_HOST_DINPUT_2_0,IDC_HOST_VIRTUAL_SBC_2_0 },
-    { IDC_HOST_NOTCONNECT_3_0 ,IDC_HOST_XINPUT_3_0,IDC_HOST_XINPUT_3_1,IDC_HOST_XINPUT_3_2,IDC_HOST_XINPUT_3_3,IDC_HOST_DINPUT_3_0,IDC_HOST_VIRTUAL_SBC_3_0 }
+static WPARAM wXboxToHostTypePORT[4][8] = {
+    { IDC_HOST_NOTCONNECT_0_0 ,IDC_HOST_XINPUT_0_0,IDC_HOST_XINPUT_0_1,IDC_HOST_XINPUT_0_2,IDC_HOST_XINPUT_0_3,IDC_HOST_DINPUT_0_0,IDC_HOST_VIRTUAL_SBC_0_0,IDC_HOST_USB_SBC_0_0 },
+    { IDC_HOST_NOTCONNECT_1_0 ,IDC_HOST_XINPUT_1_0,IDC_HOST_XINPUT_1_1,IDC_HOST_XINPUT_1_2,IDC_HOST_XINPUT_1_3,IDC_HOST_DINPUT_1_0,IDC_HOST_VIRTUAL_SBC_1_0,IDC_HOST_USB_SBC_1_0 },
+    { IDC_HOST_NOTCONNECT_2_0 ,IDC_HOST_XINPUT_2_0,IDC_HOST_XINPUT_2_1,IDC_HOST_XINPUT_2_2,IDC_HOST_XINPUT_2_3,IDC_HOST_DINPUT_2_0,IDC_HOST_VIRTUAL_SBC_2_0,IDC_HOST_USB_SBC_2_0 },
+    { IDC_HOST_NOTCONNECT_3_0 ,IDC_HOST_XINPUT_3_0,IDC_HOST_XINPUT_3_1,IDC_HOST_XINPUT_3_2,IDC_HOST_XINPUT_3_3,IDC_HOST_DINPUT_3_0,IDC_HOST_VIRTUAL_SBC_3_0,IDC_HOST_USB_SBC_3_0 }
 };
 
 void ShowXboxControllerPortMappingConfig(HWND hwnd)
@@ -80,17 +80,20 @@ INT_PTR CALLBACK DlgXboxControllerPortMappingProc(HWND hWndDlg, UINT uMsg, WPARA
             for (port = 0; port < 4; port++) {
                 GetXboxPortToHostPort(port, dwHostType, dwHostPort);
                 switch (dwHostType) {
-                case X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_NOTCONNECT:
+                case X_CONTROLLER_HOST_BRIDGE_HOSTTYPE_NOTCONNECT:
                     index = 0;
                     break;
-                case X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_XINPUT:
+                case X_CONTROLLER_HOST_BRIDGE_HOSTTYPE_XINPUT:
                     index = 1 + dwHostPort;
                     break;
-                case X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_DINPUT:
+                case X_CONTROLLER_HOST_BRIDGE_HOSTTYPE_DINPUT:
                     index = 5;
                     break;
-                case X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_VIRTUAL_SBC:
+                case X_CONTROLLER_HOST_BRIDGE_HOSTTYPE_VIRTUAL_SBC:
                     index = 6;
+                    break;
+                case X_CONTROLLER_HOST_BRIDGE_HOSTTYPE_USB_SBC:
+                    index = 7;
                     break;
 
                 default:
@@ -146,118 +149,134 @@ INT_PTR CALLBACK DlgXboxControllerPortMappingProc(HWND hWndDlg, UINT uMsg, WPARA
                 break;
             //set host type and host port in global array xbox to host bridge for xbox port 0
             case IDC_HOST_NOTCONNECT_0_0:
-                SetXboxPortToHostPort(0, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_NOTCONNECT, 0);
+                SetXboxPortToHostPort(0, X_CONTROLLER_HOST_BRIDGE_HOSTTYPE_NOTCONNECT, 0);
                 g_bHasChanges = TRUE;
                 break;
             case IDC_HOST_XINPUT_0_0:
-                SetXboxPortToHostPort(0, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_XINPUT, 0);
+                SetXboxPortToHostPort(0, X_CONTROLLER_HOST_BRIDGE_HOSTTYPE_XINPUT, 0);
                 g_bHasChanges = TRUE;
                 break;
             case IDC_HOST_XINPUT_0_1:
-                SetXboxPortToHostPort(0, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_XINPUT, 1);
+                SetXboxPortToHostPort(0, X_CONTROLLER_HOST_BRIDGE_HOSTTYPE_XINPUT, 1);
                 g_bHasChanges = TRUE;
                 break;
             case IDC_HOST_XINPUT_0_2:
-                SetXboxPortToHostPort(0, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_XINPUT, 2);
+                SetXboxPortToHostPort(0, X_CONTROLLER_HOST_BRIDGE_HOSTTYPE_XINPUT, 2);
                 g_bHasChanges = TRUE;
                 break;
             case IDC_HOST_XINPUT_0_3:
-                SetXboxPortToHostPort(0, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_XINPUT, 3);
+                SetXboxPortToHostPort(0, X_CONTROLLER_HOST_BRIDGE_HOSTTYPE_XINPUT, 3);
                 g_bHasChanges = TRUE;
                 break;
             case IDC_HOST_DINPUT_0_0:
-                SetXboxPortToHostPort(0, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_DINPUT, 0);
+                SetXboxPortToHostPort(0, X_CONTROLLER_HOST_BRIDGE_HOSTTYPE_DINPUT, 0);
                 g_bHasChanges = TRUE;
                 break;
             case IDC_HOST_VIRTUAL_SBC_0_0:
-                SetXboxPortToHostPort(0, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_VIRTUAL_SBC, 0);
+                SetXboxPortToHostPort(0, X_CONTROLLER_HOST_BRIDGE_HOSTTYPE_VIRTUAL_SBC, 0);
+                g_bHasChanges = TRUE;
+                break;
+            case IDC_HOST_USB_SBC_0_0:
+                SetXboxPortToHostPort(0, X_CONTROLLER_HOST_BRIDGE_HOSTTYPE_USB_SBC, 0);
                 g_bHasChanges = TRUE;
                 break;
                 //set host type and host port in global array xbox to host bridge for xbox port 1
             case IDC_HOST_NOTCONNECT_1_0:
-                SetXboxPortToHostPort(1, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_NOTCONNECT, 0);
+                SetXboxPortToHostPort(1, X_CONTROLLER_HOST_BRIDGE_HOSTTYPE_NOTCONNECT, 0);
                 g_bHasChanges = TRUE;
                 break;
             case IDC_HOST_XINPUT_1_0:
-                SetXboxPortToHostPort(1, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_XINPUT, 0);
+                SetXboxPortToHostPort(1, X_CONTROLLER_HOST_BRIDGE_HOSTTYPE_XINPUT, 0);
                 g_bHasChanges = TRUE;
                 break;
             case IDC_HOST_XINPUT_1_1:
-                SetXboxPortToHostPort(1, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_XINPUT, 1);
+                SetXboxPortToHostPort(1, X_CONTROLLER_HOST_BRIDGE_HOSTTYPE_XINPUT, 1);
                 g_bHasChanges = TRUE;
                 break;
             case IDC_HOST_XINPUT_1_2:
-                SetXboxPortToHostPort(1, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_XINPUT, 2);
+                SetXboxPortToHostPort(1, X_CONTROLLER_HOST_BRIDGE_HOSTTYPE_XINPUT, 2);
                 g_bHasChanges = TRUE;
                 break;
             case IDC_HOST_XINPUT_1_3:
-                SetXboxPortToHostPort(1, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_XINPUT, 3);
+                SetXboxPortToHostPort(1, X_CONTROLLER_HOST_BRIDGE_HOSTTYPE_XINPUT, 3);
                 g_bHasChanges = TRUE;
                 break;
             case IDC_HOST_DINPUT_1_0:
-                SetXboxPortToHostPort(1, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_DINPUT, 0);
+                SetXboxPortToHostPort(1, X_CONTROLLER_HOST_BRIDGE_HOSTTYPE_DINPUT, 0);
                 g_bHasChanges = TRUE;
                 break;
             case IDC_HOST_VIRTUAL_SBC_1_0:
-                SetXboxPortToHostPort(1, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_VIRTUAL_SBC, 0);
+                SetXboxPortToHostPort(1, X_CONTROLLER_HOST_BRIDGE_HOSTTYPE_VIRTUAL_SBC, 0);
+                g_bHasChanges = TRUE;
+                break;
+            case IDC_HOST_USB_SBC_1_0:
+                SetXboxPortToHostPort(1, X_CONTROLLER_HOST_BRIDGE_HOSTTYPE_USB_SBC, 0);
                 g_bHasChanges = TRUE;
                 break;
                 //set host type and host port in global array xbox to host bridge for xbox port 2
             case IDC_HOST_NOTCONNECT_2_0:
-                SetXboxPortToHostPort(2, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_NOTCONNECT, 0);
+                SetXboxPortToHostPort(2, X_CONTROLLER_HOST_BRIDGE_HOSTTYPE_NOTCONNECT, 0);
                 g_bHasChanges = TRUE;
                 break;
             case IDC_HOST_XINPUT_2_0:
-                SetXboxPortToHostPort(2, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_XINPUT, 0);
+                SetXboxPortToHostPort(2, X_CONTROLLER_HOST_BRIDGE_HOSTTYPE_XINPUT, 0);
                 g_bHasChanges = TRUE;
                 break;
             case IDC_HOST_XINPUT_2_1:
-                SetXboxPortToHostPort(2, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_XINPUT, 1);
+                SetXboxPortToHostPort(2, X_CONTROLLER_HOST_BRIDGE_HOSTTYPE_XINPUT, 1);
                 g_bHasChanges = TRUE;
                 break;
             case IDC_HOST_XINPUT_2_2:
-                SetXboxPortToHostPort(2, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_XINPUT, 2);
+                SetXboxPortToHostPort(2, X_CONTROLLER_HOST_BRIDGE_HOSTTYPE_XINPUT, 2);
                 g_bHasChanges = TRUE;
                 break;
             case IDC_HOST_XINPUT_2_3:
-                SetXboxPortToHostPort(2, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_XINPUT, 3);
+                SetXboxPortToHostPort(2, X_CONTROLLER_HOST_BRIDGE_HOSTTYPE_XINPUT, 3);
                 g_bHasChanges = TRUE;
                 break;
             case IDC_HOST_DINPUT_2_0:
-                SetXboxPortToHostPort(2, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_DINPUT, 0);
+                SetXboxPortToHostPort(2, X_CONTROLLER_HOST_BRIDGE_HOSTTYPE_DINPUT, 0);
                 g_bHasChanges = TRUE;
                 break;
             case IDC_HOST_VIRTUAL_SBC_2_0:
-                SetXboxPortToHostPort(2, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_VIRTUAL_SBC, 0);
+                SetXboxPortToHostPort(2, X_CONTROLLER_HOST_BRIDGE_HOSTTYPE_VIRTUAL_SBC, 0);
+                g_bHasChanges = TRUE;
+                break;
+            case IDC_HOST_USB_SBC_2_0:
+                SetXboxPortToHostPort(2, X_CONTROLLER_HOST_BRIDGE_HOSTTYPE_USB_SBC, 0);
                 g_bHasChanges = TRUE;
                 break;
                 //set host type and host port in global array xbox to host bridge for xbox port 3
             case IDC_HOST_NOTCONNECT_3_0:
-                SetXboxPortToHostPort(3, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_NOTCONNECT, 0);
+                SetXboxPortToHostPort(3, X_CONTROLLER_HOST_BRIDGE_HOSTTYPE_NOTCONNECT, 0);
                 g_bHasChanges = TRUE;
                 break;
             case IDC_HOST_XINPUT_3_0:
-                SetXboxPortToHostPort(3, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_XINPUT, 0);
+                SetXboxPortToHostPort(3, X_CONTROLLER_HOST_BRIDGE_HOSTTYPE_XINPUT, 0);
                 g_bHasChanges = TRUE;
                 break;
             case IDC_HOST_XINPUT_3_1:
-                SetXboxPortToHostPort(3, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_XINPUT, 1);
+                SetXboxPortToHostPort(3, X_CONTROLLER_HOST_BRIDGE_HOSTTYPE_XINPUT, 1);
                 g_bHasChanges = TRUE;
                 break;
             case IDC_HOST_XINPUT_3_2:
-                SetXboxPortToHostPort(3, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_XINPUT, 2);
+                SetXboxPortToHostPort(3, X_CONTROLLER_HOST_BRIDGE_HOSTTYPE_XINPUT, 2);
                 g_bHasChanges = TRUE;
                 break;
             case IDC_HOST_XINPUT_3_3:
-                SetXboxPortToHostPort(3, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_XINPUT, 3);
+                SetXboxPortToHostPort(3, X_CONTROLLER_HOST_BRIDGE_HOSTTYPE_XINPUT, 3);
                 g_bHasChanges = TRUE;
                 break;
             case IDC_HOST_DINPUT_3_0:
-                SetXboxPortToHostPort(3, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_DINPUT, 0);
+                SetXboxPortToHostPort(3, X_CONTROLLER_HOST_BRIDGE_HOSTTYPE_DINPUT, 0);
                 g_bHasChanges = TRUE;
                 break;
             case IDC_HOST_VIRTUAL_SBC_3_0:
-                SetXboxPortToHostPort(3, X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_VIRTUAL_SBC, 0);
+                SetXboxPortToHostPort(3, X_CONTROLLER_HOST_BRIDGE_HOSTTYPE_VIRTUAL_SBC, 0);
+                g_bHasChanges = TRUE;
+                break;
+            case IDC_HOST_USB_SBC_3_0:
+                SetXboxPortToHostPort(3, X_CONTROLLER_HOST_BRIDGE_HOSTTYPE_USB_SBC, 0);
                 g_bHasChanges = TRUE;
                 break;
             }

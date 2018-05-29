@@ -1,6 +1,6 @@
 ﻿//{{NO_DEPENDENCIES}}
 // Microsoft Visual C++ generated include file.
-// Used by C:\Work\Cxbx-Reloaded\resource\Cxbx.rc
+// Used by C:\Users\jack\Source\Repos\Cxbx-Reloaded\resource\Cxbx.rc
 //
 #define IDI_CXBX                        101
 #define IDB_SPLASH                      102
@@ -151,6 +151,10 @@
 #define IDC_HOST_VIRTUAL_SBC_3_0        1189
 #define IDC_HOST_APPLY                  1190
 #define IDC_HOST_CANCEL                 1191
+#define IDC_HOST_USB_SBC_0_0            1192
+#define IDC_HOST_USB_SBC_1_0            1193
+#define IDC_HOST_USB_SBC_2_0            1194
+#define IDC_HOST_USB_SBC_3_0            1195
 #define IDC_LEFTBLOCK                   1200
 #define IDC_LEFTBLOCK2                  1201
 #define IDC_RIGHTBLOCK                  1202
