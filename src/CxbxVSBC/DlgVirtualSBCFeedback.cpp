@@ -205,6 +205,7 @@ namespace DlgVSBCFeedback
 
             //reset the dialog handle, redundant.
             //g_hDlgVirtualSBCFeedback = 0;
+            EndDialog(hWndDlg, wParam);
             break;
         }
         //return true;

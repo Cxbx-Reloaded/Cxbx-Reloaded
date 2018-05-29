@@ -91,6 +91,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;NDEBUG;CXBXVSBC_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>C:\Users\jack\Source\Repos\Cxbx-Reloaded\import\libusbK\includes;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -98,6 +99,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ModuleDefinitionFile>CxbxVSBC.def</ModuleDefinitionFile>
+      <AdditionalLibraryDirectories>C:\Users\jack\Source\Repos\Cxbx-Reloaded\import\libusbK\lib\x86;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -107,11 +109,13 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;CXBXVSBC_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>C:\Users\jack\Source\Repos\Cxbx-Reloaded\import\libusbK\includes;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ModuleDefinitionFile>CxbxVSBC.def</ModuleDefinitionFile>
+      <AdditionalLibraryDirectories>C:\Users\jack\Source\Repos\Cxbx-Reloaded\import\libusbK\lib\x86;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -155,11 +159,13 @@
     <ClCompile Include="..\..\src\CxbxVSBC\CxbxVSBC.cpp" />
     <ClCompile Include="..\..\src\CxbxVSBC\DlgVirtualSBCFeedback.cpp" />
     <ClCompile Include="..\..\src\CxbxVSBC\dllmain.cpp" />
+    <ClCompile Include="..\..\src\CxbxVSBC\SBCUSB.c" />
     <ClCompile Include="..\..\src\CxbxVSBC\stdafx.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\CxbxVSBC\CxbxVSBC.h" />
     <ClInclude Include="..\..\src\CxbxVSBC\DlgVirtualSBCFeedback.h" />
+    <ClInclude Include="..\..\src\CxbxVSBC\SBCUSB.h" />
     <ClInclude Include="..\..\src\CxbxVSBC\stdafx.h" />
     <ClInclude Include="..\..\src\CxbxVSBC\targetver.h" />
   </ItemGroup>

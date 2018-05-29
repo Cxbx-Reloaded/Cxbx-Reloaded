@@ -5,7 +5,8 @@
 #endif#pragma once
 //#include <windef.h>
 //#include "../CxbxKrnl/EmuXapi.h"
-#define X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_VIRTUAL_SBC 0x80
+#define X_CONTROLLER_HOST_BRIDGE_HOSTTYPE_VIRTUAL_SBC   0x80
+#define X_CONTROLLER_HOST_BRIDGE_HOSTTYPE_USB_SBC       0x81
 /*
 extern "C" static CXBXVSBC_API DWORD VSBCGetState(UCHAR * pSBCGamepad);
 extern "C" static CXBXVSBC_API DWORD VSBCSetState(UCHAR * pSBCFeedback);
@@ -29,9 +30,11 @@ namespace CxbxVSBC
 
         static __declspec(dllexport) int __stdcall WINAPI VSBCOpen(DWORD dwVSBCType);
 
-        // open SBC, initialize virtual controller and dialog
-        // static CXBXVSBC_API DWORD VSBCOpen(DWORD dwVSBCType);
+        // Close SBC, 
 
+        static __declspec(dllexport) int __stdcall WINAPI VSBCClose(DWORD dwVSBCType);
+
+        
         // Show the VSBC dialog
         static __declspec(dllexport) int __stdcall WINAPI VSBCShow(void);
         
