@@ -65,7 +65,7 @@ uint32_t USBDevice::MMIORead(int barIndex, uint32_t addr, unsigned size)
 	assert(barIndex == 0);
 
 	// Figure out the correct OHCI object and read the register
-	if (addr >= USB0_BASE) {
+	if (addr < USB1_BASE) {
 		// USB0 queried
 		return m_pHostController1->OHCI_ReadRegister(addr);
 	}
@@ -80,7 +80,7 @@ void USBDevice::MMIOWrite(int barIndex, uint32_t addr, uint32_t value, unsigned 
 	assert(barIndex == 0);
 
 	// Figure out the correct OHCI object and write the value to the register
-	if (addr >= USB0_BASE) {
+	if (addr < USB1_BASE) {
 		// USB0 queried
 		m_pHostController1->OHCI_WriteRegister(addr, value);
 		return;

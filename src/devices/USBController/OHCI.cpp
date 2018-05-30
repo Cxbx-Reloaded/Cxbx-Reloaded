@@ -72,6 +72,120 @@ void OHCI::OHCI_FrameBoundaryWrapper(void* pVoid)
 	static_cast<OHCI*>(pVoid)->OHCI_FrameBoundaryWorker();
 }
 
+void OHCI::OHCI_FrameBoundaryWorker()
+{
+	OHCI_HCCA hcca;
+
+	if (OHCI_ReadHCCA(m_Registers.HcHCCA, &hcca)) {
+		EmuWarning("Ohci: HCCA read error at physical address 0x%X", m_Registers.HcHCCA);
+		OHCI_FatalError();
+		return;
+	}
+
+	// Process all the lists at the end of the frame
+	if (m_Registers.HcControl & OHCI_CTL_PLE) {
+		int n = m_Registers.HcFmNumber & 0x1f;
+		ohci_service_ed_list(ohci, le32_to_cpu(hcca.intr[n]), 0);
+	}
+
+	// Cancel all pending packets if either of the lists has been disabled
+	if (ohci->old_ctl & (~ohci->ctl) & (OHCI_CTL_BLE | OHCI_CTL_CLE)) {
+		if (ohci->async_td) {
+			usb_cancel_packet(&ohci->usb_packet);
+			ohci->async_td = 0;
+		}
+		OHCI_StopEndpoints();
+	}
+	ohci->old_ctl = ohci->ctl;
+	ohci_process_lists(ohci, 0);
+
+	// Stop if UnrecoverableError happened or OHCI_SOF will crash
+	if (m_Registers.HcInterruptStatus & OHCI_INTR_UE) {
+		return;
+	}
+
+	// From the standard: "This bit is loaded from the FrameIntervalToggle field of
+	// HcFmInterval whenever FrameRemaining reaches 0."
+	m_Registers.HcFmRemaining = (m_Registers.HcFmRemaining & ~OHCI_FMR_FRT) | (m_Registers.HcFmInterval & OHCI_FMI_FIT);
+
+	// Increment frame number
+	m_Registers.HcFmNumber = (m_Registers.HcFmNumber + 1) & 0xFFFF; // prevent overflow
+	hcca.HccaFrameNumber = m_Registers.HcFmNumber; // dropped big -> little endian conversion from XQEMU
+
+	if (m_DoneCount == 0 && !(m_Registers.HcInterruptStatus & OHCI_INTR_WD)) {
+		if (!m_Registers.HcDoneHead) {
+			// From the standard: "This is set to zero whenever HC writes the content of this
+			// register to HCCA. It also sets the WritebackDoneHead of HcInterruptStatus."
+			CxbxKrnlCleanup("Ohci: HcDoneHead is zero but WritebackDoneHead interrupt is not set!\n");
+		}
+
+		if (m_Registers.HcInterrupt & m_Registers.HcInterruptStatus) {
+			// From the standard: "The least significant bit of this entry is set to 1 to indicate whether an
+			// unmasked HcInterruptStatus was set when HccaDoneHead was written." It's tecnically incorrect to
+			// do this to HcDoneHead instead of HccaDoneHead however it doesn't matter since HcDoneHead is
+			// zeroed below
+			m_Registers.HcDoneHead |= 1;
+		}
+
+		hcca.HccaDoneHead = m_Registers.HcDoneHead; // dropped big -> little endian conversion from XQEMU
+		m_Registers.HcDoneHead = 0;
+		m_DoneCount = 7;
+		OHCI_SetInterrupt(OHCI_INTR_WD);
+	}
+
+	if (m_DoneCount != 7 && m_DoneCount != 0) {
+		// decrease DelayInterrupt counter
+		m_DoneCount--;
+	}
+
+	// Do SOF stuff here
+	OHCI_SOF();
+
+	// Writeback HCCA
+	if (OHCI_WriteHCCA(m_Registers.HcHCCA, &hcca)) {
+		EmuWarning("Ohci: HCCA write error at physical address 0x%X", m_Registers.HcHCCA);
+		OHCI_FatalError();
+	}
+}
+
+void OHCI::OHCI_FatalError()
+{
+	// According to the standard, an OHCI will stop operating, and set itself into error state
+	// (which can be queried by MMIO). Instead of calling directly CxbxKrnlCleanup, we let the
+	// HCD know the problem so it can try to solve it
+
+	OHCI_SetInterrupt(OHCI_INTR_UE);
+	OHCI_BusStop();
+}
+
+bool OHCI::OHCI_ReadHCCA(uint32_t Paddr, OHCI_HCCA* Hcca)
+{
+	// ergo720: I disassembled various xbe's of my games and discovered that the shared memory between
+	// HCD and HC is allocated with MmAllocateContiguousMemory which means we can access it from
+	// the contiguous region. Hopefully XDK revisions didn't alter this...
+
+	if (Paddr != xbnull) {
+		std::memcpy(Hcca, reinterpret_cast<void*>(Paddr + CONTIGUOUS_MEMORY_BASE), sizeof(OHCI_HCCA));
+		return false;
+	}
+
+	return true; // error
+}
+
+bool OHCI::OHCI_WriteHCCA(uint32_t Paddr, OHCI_HCCA* Hcca)
+{
+	if (Paddr != xbnull) {
+		// We need to calculate the offset of the HccaFrameNumber member to avoid overwriting HccaInterrruptTable
+		size_t OffsetoOfFrameNumber = offsetof(OHCI_HCCA, HccaFrameNumber);
+
+		std::memcpy(reinterpret_cast<void*>(Paddr + OffsetoOfFrameNumber + CONTIGUOUS_MEMORY_BASE),
+			reinterpret_cast<uint8_t*>(Hcca) + OffsetoOfFrameNumber, 8);
+		return false;
+	}
+
+	return true; // error
+}
+
 void OHCI::OHCI_StateReset()
 {
 	// The usb state can be USB_Suspend if it is a software reset, and USB_Reset if it is a hardware
@@ -114,6 +228,7 @@ void OHCI::OHCI_StateReset()
 			USB_PortReset(&Port->UsbPort);
 		}
 	}
+	m_DoneCount = 7;
 
 	OHCI_StopEndpoints();
 
@@ -122,7 +237,7 @@ void OHCI::OHCI_StateReset()
 
 void OHCI::OHCI_BusStart()
 {
-	// Create the end-of-frame timer. Let's try a factor of 50 (1 virtual ms -> 50 real ms)
+	// Create the EOF timer. Let's try a factor of 50 (1 virtual ms -> 50 real ms)
 	m_pEOFtimer = Timer_Create(OHCI_FrameBoundaryWrapper, this, 50);
 
 	DbgPrintf("Ohci: Operational mode event\n");

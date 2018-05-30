@@ -46,9 +46,12 @@
 // OHCI: Open Host Controller Interface; the standard used on the xbox to comunicate with the usb devices
 // HC: Host Controller; the hardware which interfaces with the usb device and the usb driver
 // HCD: Host Controller Driver; software which talks to the HC, it's linked in the xbe
+// SOF: start of frame; the beginning of a USB-defined frame
+// EOF: end of frame; the end of a USB-defined frame
+// TD: transfer descriptor; a memory structure used by the HC to transfer a block of data to/from a device endpoint
 
 
-// These macros are used to access the bits in the various registers
+// These macros are used to access the bits of the various registers
 // HcControl
 #define OHCI_CTL_CBSR                       ((1<<0)|(1<<1))  // ControlBulkServiceRatio
 #define OHCI_CTL_PLE                        (1<<2)           // PeriodicListEnable
@@ -66,15 +69,14 @@
 #define OHCI_STATUS_OCR                     (1<<3)           // OwnershipChangeRequest
 #define OHCI_STATUS_SOC                     ((1<<6)|(1<<7))  // SchedulingOverrunCount
 // HcInterruptStatus
-#define OHCI_INTR_SO                        (1<<0)           // Scheduling overrun
-#define OHCI_INTR_WD                        (1<<1)           // HcDoneHead writeback
-#define OHCI_INTR_SF                        (1<<2)           // Start of frame
-#define OHCI_INTR_RD                        (1<<3)           // Resume detect
-#define OHCI_INTR_UE                        (1<<4)           // Unrecoverable error
-#define OHCI_INTR_FNO                       (1<<5)           // Frame number overflow
-#define OHCI_INTR_RHSC                      (1<<6)           // Root hub status change
-#define OHCI_INTR_OC                        (1<<30)          // Ownership change
-#define OHCI_INTR_MIE                       (1<<31)          // Master Interrupt Enable
+#define OHCI_INTR_SO                        (1<<0)           // SchedulingOverrun
+#define OHCI_INTR_WD                        (1<<1)           // WritebackDoneHead
+#define OHCI_INTR_SF                        (1<<2)           // StartofFrame
+#define OHCI_INTR_RD                        (1<<3)           // ResumeDetected
+#define OHCI_INTR_UE                        (1<<4)           // UnrecoverableError
+#define OHCI_INTR_FNO                       (1<<5)           // FrameNumberOverflow
+#define OHCI_INTR_RHSC                      (1<<6)           // RootHubStatusChange
+#define OHCI_INTR_OC                        (1<<30)          // OwnershipChange
 // HcInterruptEnable, HcInterruptDisable
 #define OHCI_INTR_MIE                       (1<<31)          // MasterInterruptEnable
 // HcHCCA
@@ -84,6 +86,9 @@
 // HcFmInterval
 #define OHCI_FMI_FI                         0x00003FFF       // FrameInterval
 #define OHCI_FMI_FIT                        0x80000000       // FrameIntervalToggle
+// HcFmRemaining
+#define OHCI_FMR_FR                         0x00003FFF       // FrameRemaining
+#define OHCI_FMR_FRT                        0x80000000       // FrameRemainingToggle
 // HcRhDescriptorA
 #define OHCI_RHA_RW_MASK                    0x00000000       // Mask of supported features
 #define OHCI_RHA_PSM                        (1<<8)           // PowerSwitchingMode
@@ -124,6 +129,15 @@ typedef enum _OHCI_State
 }
 OHCI_State;
 
+// Host Controller Communications Area
+typedef struct _OHCI_HCCA
+{
+	uint32_t HccaInterrruptTable[32];
+	uint16_t HccaFrameNumber, HccaPad1;
+	uint32_t HccaDoneHead;
+}
+OHCI_HCCA;
+
 // Small struct used to hold the HcRhPortStatus register and the usb port status
 typedef struct _OHCIPort
 {
@@ -140,7 +154,8 @@ typedef struct _OHCI_Registers
 	uint32_t HcControl;
 	uint32_t HcCommandStatus;
 	uint32_t HcInterruptStatus;
-	uint32_t HcInterrupt; // HcInterruptEnable/Disable are the same so we can merge them together
+	// HcInterruptEnable/Disable are the same so we can merge them together
+	uint32_t HcInterrupt;
 
 	// Memory Pointer partition
 	uint32_t HcHCCA;
@@ -162,7 +177,7 @@ typedef struct _OHCI_Registers
 	uint32_t HcRhDescriptorA;
 	uint32_t HcRhDescriptorB;
 	uint32_t HcRhStatus;
-	// I have some doubts here. Both XQEMU and OpenXbox set 4 ports per HC, for a total of 8 usb ports.
+	// ergo720: I have some doubts here. Both XQEMU and OpenXbox set 4 ports per HC, for a total of 8 usb ports.
 	// Could it be becasue each gamepad can host 2 memory units?
 	OHCIPort RhPort[2]; // 2 ports per HC, for a total of 4 USB ports
 }
@@ -196,13 +211,20 @@ class OHCI
 		uint64_t m_TicksPerUsbTick;
 		// usb packet
 		USBPacket m_UsbPacket;
+		// ergo720: I believe it's the value of HcControl in the last frame
+		uint32_t old_ctl;
 		// irq number
 		int m_IrqNum;
+		// ergo720: I think it's the DelayInterrupt flag in a TD
+		// -> num of frames to wait before generating an interrupt for this TD
+		int m_DoneCount;
 
 		// EOF callback wrapper
 		static void OHCI_FrameBoundaryWrapper(void* pVoid);
 		// EOF callback function
 		void OHCI_FrameBoundaryWorker();
+		// inform the HCD that we got a problem here...
+		void OHCI_FatalError();
 		// initialize packet struct
 		void OHCI_PacketInit(USBPacket* packet);
 		// change usb state mode
@@ -234,6 +256,10 @@ class OHCI
 		// set a flag in a port status register but only set it if the port is connected,
 		// if not set ConnectStatusChange flag; if flag is enabled return 1
 		int OHCI_PortSetIfConnected(int i, uint32_t Value);
+		// read the HCCA structure in memory
+		bool OHCI_ReadHCCA(uint32_t Paddr, OHCI_HCCA* Hcca);
+		// write the HCCA structure in memory
+		bool OHCI_WriteHCCA(uint32_t Paddr, OHCI_HCCA* Hcca);
 
 		// register a port with the HC
 		void USB_RegisterPort(USBPort* Port, int Index, int SpeedMask);
