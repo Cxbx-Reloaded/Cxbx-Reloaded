@@ -76,9 +76,10 @@ typedef int (WINAPI *PPROC)();
 PFARPROC2 fnCxbxVSBCSetState;
 PFARPROC2 fnCxbxVSBCGetState;
 PFARPROC1 fnCxbxVSBCOpen;
-//typedef DWORD(*fnCxbxVSBCOpen)(HWND);
-//typedef DWORD(*fnCxbxVSBCSetState)(UCHAR *);
-//typedef DWORD(*fnCxbxVSBCGetState)(UCHAR *);
+PFARPROC1 fnCxbxVSBCClose;
+
+DWORD g_dwDummyPktNum = 0;
+
 XTL::PXPP_DEVICE_TYPE gDeviceType_Gamepad = nullptr;
 
 #include "EmuXTL.h"
@@ -133,16 +134,19 @@ void InitXboxControllerHostBridge(void)
         g_XboxControllerHostBridge[port].dwHostPort = GetXboxPortMapHostPort(port);
         g_XboxControllerHostBridge[port].XboxDeviceInfo.ucType = X_XINPUT_DEVTYPE_GAMEPAD;
         switch (GetXboxPortMapHostType(port)) {
-        case X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_XINPUT:
+        case X_CONTROLLER_HOST_BRIDGE_HOSTTYPE_XINPUT:
             //disconnect to host if the host port of xinput exceeds the total xinput controller connected to host.
             if (g_XboxControllerHostBridge[port].dwHostPort >= total_xinput_gamepad) {
-                g_XboxControllerHostBridge[port].dwHostType = X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_NOTCONNECT;
+                g_XboxControllerHostBridge[port].dwHostType = X_CONTROLLER_HOST_BRIDGE_HOSTTYPE_NOTCONNECT;
                 printf("InitXboxControllerHostBridge: Host XInput port greater then total xinut controller connected. disconnect xbox port from host!\n");
             }
             break;
-        case X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_DINPUT:
+        case X_CONTROLLER_HOST_BRIDGE_HOSTTYPE_DINPUT:
             break;
-        case X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_VIRTUAL_SBC:
+        case X_CONTROLLER_HOST_BRIDGE_HOSTTYPE_VIRTUAL_SBC:
+            g_XboxControllerHostBridge[port].XboxDeviceInfo.ucType = X_XINPUT_DEVTYPE_STEELBATALION;
+            break;
+        case X_CONTROLLER_HOST_BRIDGE_HOSTTYPE_USB_SBC:
             g_XboxControllerHostBridge[port].XboxDeviceInfo.ucType = X_XINPUT_DEVTYPE_STEELBATALION;
             break;
         default:
@@ -553,9 +557,9 @@ HANDLE WINAPI XTL::EMUPATCH(XInputOpen)
     //code above are not used at all, in future we might remove them.
     if (dwPort >= 0 && dwPort < 4) {
         //check if the bridged xbox controller at this port matches the DeviceType, if matches, setup the device handle and return it.
-        if (g_XboxControllerHostBridge[dwPort].XboxDeviceInfo.DeviceType == DeviceType && g_XboxControllerHostBridge[dwPort].dwHostType!=0) {
+        if (g_XboxControllerHostBridge[dwPort].XboxDeviceInfo.DeviceType == DeviceType && g_XboxControllerHostBridge[dwPort].dwHostType != 0) {
             //create the dialog for virtual SteelBatallion controller feedback status.
-            if(g_XboxControllerHostBridge[dwPort].dwHostType==X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_VIRTUAL_SBC){
+            if (g_XboxControllerHostBridge[dwPort].dwHostType == X_CONTROLLER_HOST_BRIDGE_HOSTTYPE_VIRTUAL_SBC) {
                 //if DLL not loaded yet, load it.
                 if (g_bCxbxVSBCLoaded != true) {
 
@@ -564,27 +568,54 @@ HANDLE WINAPI XTL::EMUPATCH(XInputOpen)
                         g_bCxbxVSBCLoaded = true;
                     }
                 }
-                if(g_module!=0&& fnCxbxVSBCOpen==0){
+                if (g_module != 0 && fnCxbxVSBCOpen == 0) {
                     fnCxbxVSBCSetState = (PFARPROC2)GetProcAddress(g_module, "VSBCSetState");
                     fnCxbxVSBCGetState = (PFARPROC2)GetProcAddress(g_module, "VSBCGetState");
                     fnCxbxVSBCOpen = (PFARPROC1)GetProcAddress(g_module, "VSBCOpen");
+                    fnCxbxVSBCClose = (PFARPROC1)GetProcAddress(g_module, "VSBCClose");
                 }
-                
+
                 if (fnCxbxVSBCOpen == 0) {
                     printf("EmuXapi: EmuXInputOpen: GetPRocAddress VSBCOpen failed!\n");
                 }
                 else {
-                    (*fnCxbxVSBCOpen)(X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_VIRTUAL_SBC);
+                    (*fnCxbxVSBCOpen)(X_CONTROLLER_HOST_BRIDGE_HOSTTYPE_VIRTUAL_SBC);
                 }
-                //DWORD dwVXBCOpenResult = CxbxVSBC::MyCxbxVSBC::VSBCOpen(X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_VIRTUAL_SBC);
+                //DWORD dwVXBCOpenResult = CxbxVSBC::MyCxbxVSBC::VSBCOpen(X_CONTROLLER_HOST_BRIDGE_HOSTTYPE_VIRTUAL_SBC);
 
             }
+            else
+                if (g_XboxControllerHostBridge[dwPort].dwHostType == X_CONTROLLER_HOST_BRIDGE_HOSTTYPE_USB_SBC) {
+                    //if DLL not loaded yet, load it.
+                    if (g_bCxbxVSBCLoaded != true) {
+
+                        g_module = LoadLibrary(TEXT("CxbxVSBC.dll"));
+                        if (g_module != 0) {
+                            g_bCxbxVSBCLoaded = true;
+                        }
+                    }
+                    if (g_module != 0 && fnCxbxVSBCOpen == 0) {
+                        fnCxbxVSBCSetState = (PFARPROC2)GetProcAddress(g_module, "VSBCSetState");
+                        fnCxbxVSBCGetState = (PFARPROC2)GetProcAddress(g_module, "VSBCGetState");
+                        fnCxbxVSBCOpen = (PFARPROC1)GetProcAddress(g_module, "VSBCOpen");
+                        fnCxbxVSBCClose = (PFARPROC1)GetProcAddress(g_module, "VSBCClose");
+                    }
+
+                    if (fnCxbxVSBCOpen == 0) {
+                        printf("EmuXapi: EmuXInputOpen: GetPRocAddress VSBCOpen failed!\n");
+                    }
+                    else {
+                        (*fnCxbxVSBCOpen)(X_CONTROLLER_HOST_BRIDGE_HOSTTYPE_USB_SBC);
+                    }
+                    //DWORD dwVXBCOpenResult = CxbxVSBC::MyCxbxVSBC::VSBCOpen(X_CONTROLLER_HOST_BRIDGE_HOSTTYPE_VIRTUAL_SBC);
+
+                }
             g_XboxControllerHostBridge[dwPort].hXboxDevice = &g_XboxControllerHostBridge[dwPort];
             return g_XboxControllerHostBridge[dwPort].hXboxDevice;
         }
-        
+
     }
-    
+
     return 0;
 }
 
@@ -633,9 +664,19 @@ VOID WINAPI XTL::EMUPATCH(XInputClose)
     //above code is not used at all, in future we might remove them.
     //reset hXboxDevice handle if it matches the hDevice
     int port;
-    for(port=0;port<4;port++){
+    for (port = 0; port<4; port++) {
         if (g_XboxControllerHostBridge[dwPort].hXboxDevice == hDevice) {
-            g_XboxControllerHostBridge[dwPort].hXboxDevice=0;
+            g_XboxControllerHostBridge[dwPort].hXboxDevice = 0;
+            if (g_XboxControllerHostBridge[dwPort].dwHostType == X_CONTROLLER_HOST_BRIDGE_HOSTTYPE_VIRTUAL_SBC) {
+                if (fnCxbxVSBCClose != 0) {
+                    (*fnCxbxVSBCClose)(X_CONTROLLER_HOST_BRIDGE_HOSTTYPE_VIRTUAL_SBC);
+                }
+            }
+            if (g_XboxControllerHostBridge[dwPort].dwHostType == X_CONTROLLER_HOST_BRIDGE_HOSTTYPE_USB_SBC) {
+                if (fnCxbxVSBCClose != 0) {
+                    (*fnCxbxVSBCClose)(X_CONTROLLER_HOST_BRIDGE_HOSTTYPE_USB_SBC);
+                }
+            }
             break;
         }
     }
@@ -919,7 +960,8 @@ void EmuSBCGetState(XTL::PX_SBC_GAMEPAD pSBCGamepad, XTL::PX_XINPUT_GAMEPAD pXIG
     else {
         pSBCGamepad->wButtons[0] &= ~X_SBC_GAMEPAD_W0_START;
     }
-    // Iginition is Toggle Switch
+    // Ignition is not Toggle Switch
+    /*
     if (pDIGamepad->bAnalogButtons[X_XINPUT_GAMEPAD_B]>0) {
         if (pSBCGamepad->wButtons[0] & X_SBC_GAMEPAD_W0_IGNITION) {
             pSBCGamepad->wButtons[0] &= ~X_SBC_GAMEPAD_W0_IGNITION;
@@ -928,14 +970,21 @@ void EmuSBCGetState(XTL::PX_SBC_GAMEPAD pSBCGamepad, XTL::PX_XINPUT_GAMEPAD pXIG
             pSBCGamepad->wButtons[0] |= X_SBC_GAMEPAD_W0_IGNITION;
         }
     }
-
+    */
+    if (pDIGamepad->bAnalogButtons[X_XINPUT_GAMEPAD_B]>0) {
+        pSBCGamepad->wButtons[0] |= X_SBC_GAMEPAD_W0_IGNITION;
+    }
+    else {
+        pSBCGamepad->wButtons[0] &= ~X_SBC_GAMEPAD_W0_IGNITION;
+    }
     if (pDIGamepad->bAnalogButtons[X_XINPUT_GAMEPAD_X]>0) {
         pSBCGamepad->wButtons[0] |= X_SBC_GAMEPAD_W0_EJECT;
     }
     else {
         pSBCGamepad->wButtons[0] &= ~X_SBC_GAMEPAD_W0_EJECT;
     }
-    // CockpitHatch is Toggle Switch
+    // CockpitHatch is not Toggle Switch
+    /*
     if (pDIGamepad->bAnalogButtons[X_XINPUT_GAMEPAD_Y]>0) {
         if (pSBCGamepad->wButtons[0] & X_SBC_GAMEPAD_W0_COCKPITHATCH) {
             pSBCGamepad->wButtons[0] &= ~X_SBC_GAMEPAD_W0_COCKPITHATCH;
@@ -944,7 +993,13 @@ void EmuSBCGetState(XTL::PX_SBC_GAMEPAD pSBCGamepad, XTL::PX_XINPUT_GAMEPAD pXIG
             pSBCGamepad->wButtons[0] |= X_SBC_GAMEPAD_W0_COCKPITHATCH;
         }
     }
-
+    */
+    if (pDIGamepad->bAnalogButtons[X_XINPUT_GAMEPAD_Y]>0) {
+        pSBCGamepad->wButtons[0] |= X_SBC_GAMEPAD_W0_COCKPITHATCH;
+    }
+    else {
+        pSBCGamepad->wButtons[0] &= ~X_SBC_GAMEPAD_W0_COCKPITHATCH;
+    }
     if (pDIGamepad->wButtons & X_XINPUT_GAMEPAD_BACK) {//Toggle Switch ToggleFilterControl
         if (pSBCGamepad->wButtons[2] & X_SBC_GAMEPAD_W2_TOGGLEFILTERCONTROL) {
             pSBCGamepad->wButtons[2] &= ~X_SBC_GAMEPAD_W2_TOGGLEFILTERCONTROL;
@@ -1054,23 +1109,37 @@ DWORD WINAPI XTL::EMUPATCH(XInputGetState)
             
             //for xinput, we query the state corresponds to port.
             switch (g_XboxControllerHostBridge[port].dwHostType) {
-            case X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_XINPUT://using XInput
+            case X_CONTROLLER_HOST_BRIDGE_HOSTTYPE_XINPUT://using XInput
                 EmuXInputPCPoll(g_XboxControllerHostBridge[port].dwHostPort, pState);
                 ret = ERROR_SUCCESS;
                 break;
-            case X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_DINPUT://using directinput
+            case X_CONTROLLER_HOST_BRIDGE_HOSTTYPE_DINPUT://using directinput
                 EmuDInputPoll(pState);
                 ret = ERROR_SUCCESS;
                 break;
-            case X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_VIRTUAL_SBC://using virtual SteelBatalion Controller
+            case X_CONTROLLER_HOST_BRIDGE_HOSTTYPE_VIRTUAL_SBC://using virtual SteelBatalion Controller
                 //printf("SBC get state!\n");
                 XTL::X_XINPUT_STATE  InputState0, InputState1;
                 InputState0 = {};
                 InputState1 = {};
                 EmuXInputPCPoll(0, &InputState0);
                 EmuDInputPoll(&InputState1);
-                pState->dwPacketNumber = InputState0.dwPacketNumber;
+                pState->dwPacketNumber = ++g_dwDummyPktNum;
                 EmuSBCGetState(XTL::PX_SBC_GAMEPAD(&pState->Gamepad), &InputState0.Gamepad, &InputState1.Gamepad);
+                break;
+            case X_CONTROLLER_HOST_BRIDGE_HOSTTYPE_USB_SBC://using virtual SteelBatalion Controller
+                                                           //printf("SBC setstate!\n");
+                DWORD dwVXBCSetStateResult;
+                if (g_module != 0 && fnCxbxVSBCSetState == 0) {
+                    fnCxbxVSBCGetState = (PFARPROC2)GetProcAddress(g_module, "VSBCGetState");
+                }
+                if (fnCxbxVSBCGetState == 0) {
+                    printf("EmuXapi: EmuXInputGetState: GetPRocAddress USB VSBCGetState failed!\n");
+                }
+                else {
+                    (*fnCxbxVSBCGetState)((UCHAR *)&pState->Gamepad);
+                    pState->dwPacketNumber = ++g_dwDummyPktNum;
+                }
                 break;
             default:
                 break;
@@ -1177,31 +1246,35 @@ DWORD WINAPI XTL::EMUPATCH(XInputSetState)
                 pFeedback->Header.dwStatus = ERROR_IO_PENDING;
                 ret = ERROR_IO_PENDING;
                 //set XInput State if host type is Xinput.
+                DWORD dwVXBCSetStateResult;
                 switch (g_XboxControllerHostBridge[port].dwHostType) {
-                case 1://using XInput
+                case X_CONTROLLER_HOST_BRIDGE_HOSTTYPE_XINPUT://using XInput
                     XTL::EmuXInputSetState(port, pFeedback);
                     break;
-                case 2://using directinput
+                case X_CONTROLLER_HOST_BRIDGE_HOSTTYPE_DINPUT://using directinput
                     break;
-                case 0x80://using virtual SteelBatalion Controller
+                case X_CONTROLLER_HOST_BRIDGE_HOSTTYPE_VIRTUAL_SBC://using virtual SteelBatalion Controller
                     //printf("SBC setstate!\n");
-                    //EmuXSBCSetState((UCHAR *)&pFeedback->Rumble);
-                    //UpdateVirtualSBCFeedbackDlg((UCHAR *)&pFeedback->Rumble);
-                    DWORD dwVXBCSetStateResult;
                     if (g_module != 0 && fnCxbxVSBCSetState == 0) {
                         fnCxbxVSBCSetState = (PFARPROC2)GetProcAddress(g_module, "VSBCSetState");
-                        //fnCxbxVSBCGetState = (PFARPROC2)GetProcAddress(g_module, "VSBCGetState");
-                        //fnCxbxVSBCOpen = (PFARPROC1)GetProcAddress(g_module, "VSBCOpen");
                     }
                     if (fnCxbxVSBCSetState == 0) {
-                        printf("EmuXapi: EmuXInputSetState: GetPRocAddress VSBCSetState failed!\n");
+                        printf("EmuXapi: EmuXInputSetState: GetPRocAddress VIRTUAL VSBCSetState failed!\n");
                     }
                     else {
                         (*fnCxbxVSBCSetState)((UCHAR *)&pFeedback->Rumble);
                     }
-
-                    
-                    //dwVXBCSetStateResult = CxbxVSBC::MyCxbxVSBC::VSBCSetState((UCHAR *)&pFeedback->Rumble);
+                    break;
+                case X_CONTROLLER_HOST_BRIDGE_HOSTTYPE_USB_SBC://using virtual SteelBatalion Controller
+                    if (g_module != 0 && fnCxbxVSBCSetState == 0) {
+                        fnCxbxVSBCSetState = (PFARPROC2)GetProcAddress(g_module, "VSBCSetState");
+                    }
+                    if (fnCxbxVSBCSetState == 0) {
+                        printf("EmuXapi: EmuXInputSetState: GetPRocAddress USB VSBCSetState failed!\n");
+                    }
+                    else {
+                        (*fnCxbxVSBCSetState)((UCHAR *)&pFeedback->Rumble);
+                    }
                     break;
                 default:
                     break;

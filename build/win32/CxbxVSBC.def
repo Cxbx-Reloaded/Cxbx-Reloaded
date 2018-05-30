@@ -5,6 +5,7 @@ EXPORTS
 VSBCGetState
 VSBCSetState
 VSBCOpen
+VSBCClose
 VSBCShow
 VSBCHide
 

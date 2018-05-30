@@ -65,7 +65,7 @@ namespace DlgVSBCFeedback
     int DlgItemIDArray[] = {
         IDC_PB_EJECT,
         IDC_PB_COCKPIT_HATCH,
-        IDC_PB_IGINITION,
+        IDC_PB_IGNITION,
         IDC_PB_START,
         IDC_PB_OPEN_CLOSE,
         IDC_PB_MAP_ZOOM_IN_OUT,
@@ -85,8 +85,8 @@ namespace DlgVSBCFeedback
         IDC_PB_FUNC1,
         IDC_PB_FUNC2,
         IDC_PB_FUNC3,
-        IDC_PB_MAIN_WAPON_CONTROL,
-        IDC_PB_SUB_WAPON_CONTROL,
+        IDC_PB_MAIN_WEAPON_CONTROL,
+        IDC_PB_SUB_WEAPON_CONTROL,
         IDC_PB_MAGAZINE_CHANGE,
         IDC_PB_COM1,
         IDC_PB_COM2,
@@ -205,6 +205,7 @@ namespace DlgVSBCFeedback
 
             //reset the dialog handle, redundant.
             //g_hDlgVirtualSBCFeedback = 0;
+            EndDialog(hWndDlg, wParam);
             break;
         }
         //return true;

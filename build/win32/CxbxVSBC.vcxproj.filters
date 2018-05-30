@@ -27,6 +27,9 @@
     <ClCompile Include="..\..\src\CxbxVSBC\stdafx.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\CxbxVSBC\SBCUSB.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\CxbxVSBC\CxbxVSBC.h">
@@ -39,6 +42,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\CxbxVSBC\targetver.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\CxbxVSBC\SBCUSB.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
