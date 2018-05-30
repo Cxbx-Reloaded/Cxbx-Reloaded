@@ -7,6 +7,27 @@
 #define MAX_TRANSFER_SIZE		4096
 #define MAX_PENDING_TRANSFERS	128
 #define MAX_PENDING_IO			3
+
+// ******************************************************************
+// * X_SBC_GAMEPAD for xbox SteelBatalion GAMEPAD struc 
+// ******************************************************************
+typedef struct _X_SBC_GAMEPAD {
+    WORD    wButtons[3];
+    SHORT   sAimingX;
+    SHORT   sAimingY;
+    SHORT   sRotationLever;//maybe only high byte was used.
+    SHORT   sSightChangeX;
+    SHORT   sSightChangeY;
+    WORD    wLeftPedal;//maybe only high byte was used.
+    WORD    wMiddlePedal;//maybe only high byte was used.
+    WORD    wRightPedal;//maybe only high byte was used.
+    UCHAR   ucTunerDial;//low nibble, The 9 o'clock postion is 0, and the 6 o'clock position is 12. The blank area between the 6 and 9 o'clock positions is 13, 14, and 15 clockwise.
+    UCHAR   ucGearLever;//GearLever 1~5 for gear 1~5, 7~13 for gear R,N,1~5, 15 for gear R. we use the continues range from 7~13
+}
+X_SBC_GAMEPAD, *PX_SBC_GAMEPAD;
+
+PX_SBC_GAMEPAD g_pSBCGamepad;
+
 /// The byte buffer that the raw control data is stored
 /// </summary>
 UCHAR rawControlData[26];
@@ -21,9 +42,9 @@ KUSB_DRIVER_API		Usb;
 DATA_COUNTER_STATS	Dcs;
 KLST_HANDLE g_deviceList = NULL;
 KLST_DEVINFO_HANDLE g_deviceInfo = NULL;
-KUSB_HANDLE g_usbHandle = NULL;
-KSTM_HANDLE streamHandleRead = NULL;
-KSTM_HANDLE streamHandleWrite = NULL;
+static KUSB_HANDLE g_usbHandle = NULL;
+static KSTM_HANDLE streamHandleRead = NULL;
+static KSTM_HANDLE streamHandleWrite = NULL;
 
 DWORD SBCUSB_Init(void)
 {
@@ -125,44 +146,6 @@ DWORD SBCUSB_Init(void)
     */
     //success = Bench_Configure(usbHandle, BM_COMMAND_SET_TEST, 0, &Usb, &testType);
 
-    /*
-    Initialize a new stream handle.
-    */
-    success = StmK_Init(
-        &streamHandleRead,
-        usbHandle,
-        READ_EP_ADDRESS,
-        MAX_TRANSFER_SIZE,
-        MAX_PENDING_TRANSFERS,
-        MAX_PENDING_IO,
-        NULL,
-        KSTM_FLAG_NONE);
-    if (!success)
-    {
-        errorCode = GetLastError();
-        printf("StmK_Init failed with Read handle. ErrorCode: %08Xh\n", errorCode);
-        return errorCode;
-    }
-
-    /*
-    Initialize a new stream handle.
-    */
-    success = StmK_Init(
-        &streamHandleWrite,
-        usbHandle,
-        WRITE_EP_ADDRESS,
-        MAX_TRANSFER_SIZE,
-        MAX_PENDING_TRANSFERS,
-        MAX_PENDING_IO,
-        NULL,
-        KSTM_FLAG_NONE);
-    if (!success)
-    {
-        errorCode = GetLastError();
-        printf("StmK_Init failed with Write handle. ErrorCode: %08Xh\n", errorCode);
-        return errorCode;
-    }
-
     g_usbHandle=usbHandle;
 
     g_deviceList = deviceList;
@@ -175,7 +158,29 @@ BOOL SBCUSB_GetState(UCHAR * pSBCGamepad)
     BOOL success;
     DWORD errorCode = ERROR_SUCCESS;
     DWORD transferLength = 0;
-	/*
+
+    /*
+    Initialize a new stream handle.
+    */
+    if(streamHandleRead==0){
+        success = StmK_Init(
+            &streamHandleRead,
+            g_usbHandle,
+            READ_EP_ADDRESS,
+            MAX_TRANSFER_SIZE,
+            MAX_PENDING_TRANSFERS,
+            MAX_PENDING_IO,
+            NULL,
+            KSTM_FLAG_NONE);
+        if (!success)
+        {
+            errorCode = GetLastError();
+            printf("StmK_Init failed with Read handle. ErrorCode: %08Xh\n", errorCode);
+            return errorCode;
+        }
+
+    }
+    /*
 	Start the stream.
 	*/
 	success = StmK_Start(streamHandleRead);
@@ -197,6 +202,7 @@ BOOL SBCUSB_GetState(UCHAR * pSBCGamepad)
 	{
         //copy input data to gamepad structure. 24 bytes total
         memcpy(pSBCGamepad, rawControlData+2, 24);
+        g_pSBCGamepad= rawControlData + 2;
         transferLength += length;
 	}
 	else
@@ -262,6 +268,11 @@ BOOL SBCUSB_GetState(UCHAR * pSBCGamepad)
 	}
 	printf("[Stop Stream] successful!\n");
 
+    // Free the stream handle.
+//    if (streamHandleRead)
+//    {
+//        StmK_Free(streamHandleRead);
+//    }
 
 
 	return errorCode;
@@ -272,6 +283,29 @@ BOOL SBCUSB_SetState(UCHAR * pSBCFeedback)
     BOOL success;
     DWORD errorCode = ERROR_SUCCESS;
     DWORD transferLength = 0;
+
+
+    /*
+    Initialize a new stream handle.
+    */
+    if(streamHandleWrite==0){
+        success = StmK_Init(
+            &streamHandleWrite,
+            g_usbHandle,
+            WRITE_EP_ADDRESS,
+            MAX_TRANSFER_SIZE,
+            MAX_PENDING_TRANSFERS,
+            MAX_PENDING_IO,
+            NULL,
+            KSTM_FLAG_NONE);
+        if (!success)
+        {
+            errorCode = GetLastError();
+            printf("StmK_Init failed with Write handle. ErrorCode: %08Xh\n", errorCode);
+            return errorCode;
+        }
+    }
+
     /*
     Start the stream.
     */
@@ -359,7 +393,11 @@ BOOL SBCUSB_SetState(UCHAR * pSBCFeedback)
     }
     printf("[Stop Stream] successful!\n");
 
-
+    // Free the stream handle.
+//    if (streamHandleWrite)
+//    {
+//        StmK_Free(streamHandleWrite);
+//    }
 
     return errorCode;
 }

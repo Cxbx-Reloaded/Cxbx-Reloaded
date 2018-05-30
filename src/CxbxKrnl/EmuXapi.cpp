@@ -78,6 +78,8 @@ PFARPROC2 fnCxbxVSBCGetState;
 PFARPROC1 fnCxbxVSBCOpen;
 PFARPROC1 fnCxbxVSBCClose;
 
+DWORD g_dwDummyPktNum = 0;
+
 XTL::PXPP_DEVICE_TYPE gDeviceType_Gamepad = nullptr;
 
 #include "EmuXTL.h"
@@ -1108,7 +1110,7 @@ DWORD WINAPI XTL::EMUPATCH(XInputGetState)
                 InputState1 = {};
                 EmuXInputPCPoll(0, &InputState0);
                 EmuDInputPoll(&InputState1);
-                pState->dwPacketNumber = InputState0.dwPacketNumber;
+                pState->dwPacketNumber = ++g_dwDummyPktNum;
                 EmuSBCGetState(XTL::PX_SBC_GAMEPAD(&pState->Gamepad), &InputState0.Gamepad, &InputState1.Gamepad);
                 break;
             case X_CONTROLLER_HOST_BRIDGE_HOSTTYPE_USB_SBC://using virtual SteelBatalion Controller
@@ -1122,6 +1124,7 @@ DWORD WINAPI XTL::EMUPATCH(XInputGetState)
                 }
                 else {
                     (*fnCxbxVSBCGetState)((UCHAR *)&pState->Gamepad);
+                    pState->dwPacketNumber = ++g_dwDummyPktNum;
                 }
                 break;
             default:
