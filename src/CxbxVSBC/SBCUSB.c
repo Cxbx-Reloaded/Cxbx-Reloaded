@@ -141,11 +141,6 @@ DWORD SBCUSB_Init(void)
     }
     printf("Device opened successfully!\n");
 
-    /*
-    Configure the benchmark test test type.
-    */
-    //success = Bench_Configure(usbHandle, BM_COMMAND_SET_TEST, 0, &Usb, &testType);
-
     g_usbHandle=usbHandle;
 
     g_deviceList = deviceList;
@@ -159,51 +154,13 @@ BOOL SBCUSB_GetState(UCHAR * pSBCGamepad)
     DWORD errorCode = ERROR_SUCCESS;
     DWORD transferLength = 0;
 
-    /*
-    Initialize a new stream handle.
-    */
-    if(streamHandleRead==0){
-        success = StmK_Init(
-            &streamHandleRead,
-            g_usbHandle,
-            READ_EP_ADDRESS,
-            MAX_TRANSFER_SIZE,
-            MAX_PENDING_TRANSFERS,
-            MAX_PENDING_IO,
-            NULL,
-            KSTM_FLAG_NONE);
-        if (!success)
-        {
-            errorCode = GetLastError();
-            printf("StmK_Init failed with Read handle. ErrorCode: %08Xh\n", errorCode);
-            return errorCode;
-        }
-
-    }
-    /*
-	Start the stream.
-	*/
-	success = StmK_Start(streamHandleRead);
-	if (!success)
-	{
-		errorCode = GetLastError();
-		printf("StmK_Start failed. ErrorCode: %08Xh\n", errorCode);
-        return errorCode;
-	}
-	printf("[Start Read Stream] successful!\n");
-
-	mDcs_Init(&Dcs);
-
-	ULONG length;
-    success = StmK_Read(streamHandleRead, rawControlData, 0, sizeof(rawControlData), &length);
-	//success = StmK_Write(streamHandleWrite, myBuffer, 0, sizeof(myBuffer), &length);
-
+    success = Usb.ReadPipe(g_usbHandle, READ_EP_ADDRESS, rawControlData, sizeof(rawControlData), &transferLength, NULL);
 	if (success)
 	{
         //copy input data to gamepad structure. 24 bytes total
         memcpy(pSBCGamepad, rawControlData+2, 24);
         g_pSBCGamepad= rawControlData + 2;
-        transferLength += length;
+        //transferLength += length;
 	}
 	else
 	{
@@ -253,28 +210,8 @@ BOOL SBCUSB_GetState(UCHAR * pSBCGamepad)
 			Sleep(100);
 		}
         */
-	}
-
-
-	/*
-	Stop the stream.
-	*/
-	success = StmK_Stop(streamHandleRead, 0);
-	if (!success)
-	{
-		errorCode = GetLastError();
-		printf("StmK_Stop failed. ErrorCode: %08Xh\n", errorCode);
-        return errorCode;
-	}
-	printf("[Stop Stream] successful!\n");
-
-    // Free the stream handle.
-//    if (streamHandleRead)
-//    {
-//        StmK_Free(streamHandleRead);
-//    }
-
-
+        errorCode = GetLastError();
+    }
 	return errorCode;
 }
 
@@ -283,48 +220,10 @@ BOOL SBCUSB_SetState(UCHAR * pSBCFeedback)
     BOOL success;
     DWORD errorCode = ERROR_SUCCESS;
     DWORD transferLength = 0;
-
-
-    /*
-    Initialize a new stream handle.
-    */
-    if(streamHandleWrite==0){
-        success = StmK_Init(
-            &streamHandleWrite,
-            g_usbHandle,
-            WRITE_EP_ADDRESS,
-            MAX_TRANSFER_SIZE,
-            MAX_PENDING_TRANSFERS,
-            MAX_PENDING_IO,
-            NULL,
-            KSTM_FLAG_NONE);
-        if (!success)
-        {
-            errorCode = GetLastError();
-            printf("StmK_Init failed with Write handle. ErrorCode: %08Xh\n", errorCode);
-            return errorCode;
-        }
-    }
-
-    /*
-    Start the stream.
-    */
-    success = StmK_Start(streamHandleWrite);
-    if (!success)
-    {
-        errorCode = GetLastError();
-        printf("StmK_Start failed. ErrorCode: %08Xh\n", errorCode);
-        return errorCode;
-    }
-    printf("[Start Write Stream] successful!\n");
-
-    mDcs_Init(&Dcs);
-
     ULONG length;
-    //success = StmK_Read(streamHandleRead, rawControlData, 0, sizeof(rawControlData), &length);
     //copy feedback data to rawLEDData, total 20 bytes, but only 19 bytes are known.
     memcpy(rawLEDData + 2, pSBCFeedback, 20);
-    success = StmK_Write(streamHandleWrite, rawLEDData, 0, sizeof(rawLEDData), &length);
+    success = Usb.WritePipe(g_usbHandle, WRITE_EP_ADDRESS, rawLEDData, sizeof(rawLEDData), &length, NULL);
 
     if (success)
     {
@@ -378,27 +277,8 @@ BOOL SBCUSB_SetState(UCHAR * pSBCFeedback)
         Sleep(100);
         }
         */
-    }
-
-
-    /*
-    Stop the stream.
-    */
-    success = StmK_Stop(streamHandleWrite, 0);
-    if (!success)
-    {
         errorCode = GetLastError();
-        printf("StmK_Stop failed. ErrorCode: %08Xh\n", errorCode);
-        return errorCode;
     }
-    printf("[Stop Stream] successful!\n");
-
-    // Free the stream handle.
-//    if (streamHandleWrite)
-//    {
-//        StmK_Free(streamHandleWrite);
-//    }
-
     return errorCode;
 }
 

@@ -960,7 +960,7 @@ void EmuSBCGetState(XTL::PX_SBC_GAMEPAD pSBCGamepad, XTL::PX_XINPUT_GAMEPAD pXIG
     else {
         pSBCGamepad->wButtons[0] &= ~X_SBC_GAMEPAD_W0_START;
     }
-    // Iginition is not Toggle Switch
+    // Ignition is not Toggle Switch
     /*
     if (pDIGamepad->bAnalogButtons[X_XINPUT_GAMEPAD_B]>0) {
         if (pSBCGamepad->wButtons[0] & X_SBC_GAMEPAD_W0_IGNITION) {
