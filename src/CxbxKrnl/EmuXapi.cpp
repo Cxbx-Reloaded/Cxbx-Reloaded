@@ -960,7 +960,8 @@ void EmuSBCGetState(XTL::PX_SBC_GAMEPAD pSBCGamepad, XTL::PX_XINPUT_GAMEPAD pXIG
     else {
         pSBCGamepad->wButtons[0] &= ~X_SBC_GAMEPAD_W0_START;
     }
-    // Iginition is Toggle Switch
+    // Iginition is not Toggle Switch
+    /*
     if (pDIGamepad->bAnalogButtons[X_XINPUT_GAMEPAD_B]>0) {
         if (pSBCGamepad->wButtons[0] & X_SBC_GAMEPAD_W0_IGNITION) {
             pSBCGamepad->wButtons[0] &= ~X_SBC_GAMEPAD_W0_IGNITION;
@@ -969,14 +970,21 @@ void EmuSBCGetState(XTL::PX_SBC_GAMEPAD pSBCGamepad, XTL::PX_XINPUT_GAMEPAD pXIG
             pSBCGamepad->wButtons[0] |= X_SBC_GAMEPAD_W0_IGNITION;
         }
     }
-
+    */
+    if (pDIGamepad->bAnalogButtons[X_XINPUT_GAMEPAD_B]>0) {
+        pSBCGamepad->wButtons[0] |= X_SBC_GAMEPAD_W0_IGNITION;
+    }
+    else {
+        pSBCGamepad->wButtons[0] &= ~X_SBC_GAMEPAD_W0_IGNITION;
+    }
     if (pDIGamepad->bAnalogButtons[X_XINPUT_GAMEPAD_X]>0) {
         pSBCGamepad->wButtons[0] |= X_SBC_GAMEPAD_W0_EJECT;
     }
     else {
         pSBCGamepad->wButtons[0] &= ~X_SBC_GAMEPAD_W0_EJECT;
     }
-    // CockpitHatch is Toggle Switch
+    // CockpitHatch is not Toggle Switch
+    /*
     if (pDIGamepad->bAnalogButtons[X_XINPUT_GAMEPAD_Y]>0) {
         if (pSBCGamepad->wButtons[0] & X_SBC_GAMEPAD_W0_COCKPITHATCH) {
             pSBCGamepad->wButtons[0] &= ~X_SBC_GAMEPAD_W0_COCKPITHATCH;
@@ -985,7 +993,13 @@ void EmuSBCGetState(XTL::PX_SBC_GAMEPAD pSBCGamepad, XTL::PX_XINPUT_GAMEPAD pXIG
             pSBCGamepad->wButtons[0] |= X_SBC_GAMEPAD_W0_COCKPITHATCH;
         }
     }
-
+    */
+    if (pDIGamepad->bAnalogButtons[X_XINPUT_GAMEPAD_Y]>0) {
+        pSBCGamepad->wButtons[0] |= X_SBC_GAMEPAD_W0_COCKPITHATCH;
+    }
+    else {
+        pSBCGamepad->wButtons[0] &= ~X_SBC_GAMEPAD_W0_COCKPITHATCH;
+    }
     if (pDIGamepad->wButtons & X_XINPUT_GAMEPAD_BACK) {//Toggle Switch ToggleFilterControl
         if (pSBCGamepad->wButtons[2] & X_SBC_GAMEPAD_W2_TOGGLEFILTERCONTROL) {
             pSBCGamepad->wButtons[2] &= ~X_SBC_GAMEPAD_W2_TOGGLEFILTERCONTROL;
