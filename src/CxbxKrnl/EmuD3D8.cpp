@@ -5040,8 +5040,6 @@ void CreateHostResource(XTL::X_D3DResource *pResource, DWORD D3DUsage, int iText
 
 		if (dwDepth != 1) {
 			LOG_TEST_CASE("CreateHostResource : Depth != 1");
-			EmuWarning("Unsupported depth (%d) - resetting to 1 for now", dwDepth);
-			dwDepth = 1;
 		}
 
 		// The following is necessary for DXT* textures (4x4 blocks minimum)
