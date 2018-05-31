@@ -162,7 +162,6 @@ static XTL::INDEX16                *pQuadToTriangleIndexBuffer = nullptr;
 static UINT                         QuadToTriangleIndexBuffer_Size = 0; // = NrOfQuadVertices
 
 static XTL::X_D3DSurface		   *g_XboxBackBufferSurface = NULL;
-static XTL::D3DFORMAT			   g_HostBackBufferFormat = XTL::D3DFMT_X8R8G8B8; // Most common format, will be overwritten at runtime if incorrect
 static XTL::X_D3DSurface           *g_pXboxRenderTarget = NULL;
 static XTL::X_D3DSurface           *g_pXboxDepthStencil = NULL;
 static bool                         g_bColorSpaceConvertYuvToRgb = false;
@@ -2061,9 +2060,6 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
 
                 if(FAILED(g_EmuCDPD.hRet))
                     CxbxKrnlCleanup("IDirect3D::CreateDevice failed");
-
-				// Store BackBuffer Format
-				g_HostBackBufferFormat = g_EmuCDPD.HostPresentationParameters.BackBufferFormat;
 
 				// Which texture formats does this device support?
 				memset(g_bSupportsFormatSurface, false, sizeof(g_bSupportsFormatSurface));
@@ -4976,7 +4972,7 @@ void CreateHostResource(XTL::X_D3DResource *pResource, DWORD D3DUsage, int iText
 
 				// If, and ONLY if this is the default backbuffer, make sure the format matches the host backbuffer
 				if (pResource == g_XboxBackBufferSurface) {
-					PCFormat = g_HostBackBufferFormat;
+					PCFormat = g_EmuCDPD.HostPresentationParameters.BackBufferFormat;;
 				}
 			}
 			else {
