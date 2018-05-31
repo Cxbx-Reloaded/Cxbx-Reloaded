@@ -727,7 +727,6 @@ void *GetDataFromXboxResource(XTL::X_D3DResource *pXboxResource)
 }
 
 typedef struct {
-	bool hasHostResource = false;
 	XTL::IDirect3DResource* pHostResource = nullptr;
 	XTL::X_D3DResource* pXboxResource = nullptr;
 	DWORD dwXboxResourceType = 0;
@@ -782,7 +781,7 @@ void FreeHostResource(resource_key_t key)
 	// Release the host resource and remove it from the list
 	auto hostResourceIterator = g_XboxDirect3DResources.find(key);
 	if (hostResourceIterator != g_XboxDirect3DResources.end()) {
-		if (hostResourceIterator->second.hasHostResource && hostResourceIterator->second.pHostResource) {
+		if (hostResourceIterator->second.pHostResource) {
 			(hostResourceIterator->second.pHostResource)->Release();
 		}
 
@@ -794,7 +793,7 @@ void ForceResourceRehash(XTL::X_D3DResource* pXboxResource)
 {
 	auto key = GetHostResourceKey(pXboxResource);
 	auto it = g_XboxDirect3DResources.find(key);
-	if (it != g_XboxDirect3DResources.end() && it->second.hasHostResource) {
+	if (it != g_XboxDirect3DResources.end() && it->second.pHostResource) {
 		it->second.forceRehash = true;
 	}
 }
@@ -811,7 +810,7 @@ XTL::IDirect3DResource *GetHostResource(XTL::X_D3DResource *pXboxResource, DWORD
 
 	auto key = GetHostResourceKey(pXboxResource);
 	auto it = g_XboxDirect3DResources.find(key);
-	if (it == g_XboxDirect3DResources.end() || !it->second.hasHostResource) {
+	if (it == g_XboxDirect3DResources.end() || !it->second.pHostResource) {
 		EmuWarning("GetHostResource: Resource not registered or does not have a host counterpart!");
 		return nullptr;
 	}
@@ -861,7 +860,7 @@ size_t GetXboxResourceSize(XTL::X_D3DResource* pXboxResource)
 bool HostResourceRequiresUpdate(resource_key_t key, DWORD dwSize)
 {
 	auto it = g_XboxDirect3DResources.find(key);
-	if (it == g_XboxDirect3DResources.end() || !it->second.hasHostResource) {
+	if (it == g_XboxDirect3DResources.end() || !it->second.pXboxResource) {
 		return false;
 	}
 
@@ -917,7 +916,7 @@ void SetHostResource(XTL::X_D3DResource* pXboxResource, XTL::IDirect3DResource* 
 	auto key = GetHostResourceKey(pXboxResource);
 	auto& resourceInfo = g_XboxDirect3DResources[key];	// Implicitely inserts a new entry if not already existing
 
-	if (resourceInfo.hasHostResource) {
+	if (resourceInfo.pHostResource) {
 		EmuWarning("SetHostResource: Overwriting an existing host resource");
 	}
 
@@ -931,7 +930,6 @@ void SetHostResource(XTL::X_D3DResource* pXboxResource, XTL::IDirect3DResource* 
 	resourceInfo.lastUpdate = std::chrono::high_resolution_clock::now();
 	resourceInfo.nextHashTime = resourceInfo.lastUpdate + resourceInfo.hashLifeTime;
 	resourceInfo.forceRehash = false;
-	resourceInfo.hasHostResource = true;
 }
 
 XTL::IDirect3DSurface *GetHostSurface(XTL::X_D3DResource *pXboxResource, DWORD D3DUsage = 0)
@@ -1870,7 +1868,7 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
                 g_pD3DDevice->EndScene();
 
 				for (auto &hostResourceIterator : g_XboxDirect3DResources) {
-					if (hostResourceIterator.second.hasHostResource && hostResourceIterator.second.pHostResource) {
+					if (hostResourceIterator.second.pHostResource) {
 						(hostResourceIterator.second.pHostResource)->Release();
 					}
 				}
@@ -2305,7 +2303,7 @@ static void EmuVerifyResourceIsRegistered(XTL::X_D3DResource *pResource, DWORD D
 
         //check if the same key existed in the HostResource map already. if there is a old pXboxResource in the map with the same key but different resource address, it must be freed first.
         
-        if (it->second.hasHostResource && (it->second.pXboxResource != pResource)) {
+        if (it->second.pXboxResource != pResource) {
             //printf("EmuVerifyResourceIsRegistered passed in XboxResource collipse HostResource map!! key : %llX , map pXboxResource : %08X , passed in pResource : %08X \n", key, it->second.pXboxResource, pResource);
             FreeHostResource(key);
         }
@@ -2317,7 +2315,6 @@ static void EmuVerifyResourceIsRegistered(XTL::X_D3DResource *pResource, DWORD D
 		FreeHostResource(key);
 	} else {
 		resource_info_t newResource;
-		newResource.hasHostResource = false;
 		g_XboxDirect3DResources[key] = newResource;
 	}
 
