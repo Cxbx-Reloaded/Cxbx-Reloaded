@@ -593,7 +593,7 @@ X_D3DIndexBuffer * WINAPI EMUPATCH(D3DDevice_CreateIndexBuffer2)(UINT Length);
 // ******************************************************************
 // * patch: D3DDevice_SetIndices
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(D3DDevice_SetIndices)
+VOID WINAPI EMUPATCH(D3DDevice_SetIndices)
 (
     X_D3DIndexBuffer   *pIndexData,
     UINT                BaseVertexIndex

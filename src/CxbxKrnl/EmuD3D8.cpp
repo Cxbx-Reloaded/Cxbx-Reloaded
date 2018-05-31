@@ -2518,7 +2518,7 @@ HRESULT WINAPI XTL::EMUPATCH(Direct3D_CreateDevice_16)
 // ******************************************************************
 // * patch: D3DDevice_SetIndices
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(D3DDevice_SetIndices)
+VOID WINAPI XTL::EMUPATCH(D3DDevice_SetIndices)
 (
 	X_D3DIndexBuffer   *pIndexData,
 	UINT                BaseVertexIndex
@@ -2534,8 +2534,8 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_SetIndices)
 	// Cache the base vertex index then call the Xbox function
 	g_XboxBaseVertexIndex = BaseVertexIndex;
 
-	XB_trampoline(HRESULT, WINAPI, D3DDevice_SetIndices, (X_D3DIndexBuffer*, UINT));
-	RETURN(XB_D3DDevice_SetIndices(pIndexData, BaseVertexIndex));
+	XB_trampoline(VOID, WINAPI, D3DDevice_SetIndices, (X_D3DIndexBuffer*, UINT));
+	XB_D3DDevice_SetIndices(pIndexData, BaseVertexIndex);
 }
 
 // ******************************************************************
@@ -3499,74 +3499,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetShaderConstantMode)
 	LOG_FUNC_ONE_ARG(Mode);
 
     g_VertexShaderConstantMode = Mode;
-}
-
-// ******************************************************************
-// * patch: D3DDevice_GetRenderTarget
-// ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(D3DDevice_GetRenderTarget)
-(
-    X_D3DSurface  **ppRenderTarget
-)
-{
-	FUNC_EXPORTS
-
-	LOG_FORWARD("D3DDevice_GetRenderTarget2");
-
-	*ppRenderTarget = EMUPATCH(D3DDevice_GetRenderTarget2)();
-
-    return D3D_OK;
-}
-
-// ******************************************************************
-// * patch: D3DDevice_GetRenderTarget2
-// ******************************************************************
-XTL::X_D3DSurface * WINAPI XTL::EMUPATCH(D3DDevice_GetRenderTarget2)()
-{
-	FUNC_EXPORTS
-
-	LOG_FUNC();
-
-	X_D3DSurface *result = g_pXboxRenderTarget;
-
-	if (result)
-		result->Common++; // EMUPATCH(D3DResource_AddRef)(result);
-
-    RETURN(result);
-}
-
-// ******************************************************************
-// * patch: D3DDevice_GetDepthStencilSurface
-// ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(D3DDevice_GetDepthStencilSurface)
-(
-    X_D3DSurface  **ppZStencilSurface
-)
-{
-	FUNC_EXPORTS
-
-	LOG_FORWARD("D3DDevice_GetDepthStencilSurface2");
-
-    *ppZStencilSurface = EMUPATCH(D3DDevice_GetDepthStencilSurface2)();
-
-    return D3D_OK;
-}
-
-// ******************************************************************
-// * patch: D3DDevice_GetDepthStencilSurface2
-// ******************************************************************
-XTL::X_D3DSurface * WINAPI XTL::EMUPATCH(D3DDevice_GetDepthStencilSurface2)()
-{
-	FUNC_EXPORTS
-
-	LOG_FUNC();
-
-	X_D3DSurface *result = g_pXboxDepthStencil;
-
-	if (result)
-		result->Common++; // EMUPATCH(D3DResource_AddRef)(result);
-		
-	RETURN(result);
 }
 
 // ******************************************************************
@@ -9155,75 +9087,6 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_SetRenderState_SampleAlpha)
 		
 
 	return D3D_OK;
-}
-
-// ******************************************************************
-// * patch: D3DDevice_SetRenderState_Deferred
-// ******************************************************************
-VOID __fastcall XTL::EMUPATCH(D3DDevice_SetRenderState_Deferred)
-(
-	DWORD State,
-	DWORD Value
-)
-{
-	FUNC_EXPORTS
-
-	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(State)
-		LOG_FUNC_ARG(Value)
-		LOG_FUNC_END;
-
-	// TODO: HACK: Technically, this function doesn't need to be emulated.
-	// The location of EmuD3DDeferredRenderState for 3911 isn't correct and at
-	// the time of writing, I don't understand how to fix it.  Until then, 
-	// I'm going to implement this in a reckless manner.  When the offset for
-	// EmuD3DDeferredRenderState is fixed for 3911, this function should be
-	// obsolete!
-
-	if( State > 81 && State < 116 )
-		EmuD3DDeferredRenderState[State-82] = Value;
-	else
-		CxbxKrnlCleanup("Unknown Deferred RenderState! (%d)\n", State);
-
-	/*
-	XDK 3911 Deferred RenderState values
-	D3DRS_FOGENABLE                 = 82,   // TRUE to enable fog blending 
-    D3DRS_FOGTABLEMODE              = 83,   // D3DFOGMODE 
-    D3DRS_FOGSTART                  = 84,   // float fog start (for both vertex and pixel fog) 
-    D3DRS_FOGEND                    = 85,   // float fog end      
-    D3DRS_FOGDENSITY                = 86,   // float fog density  
-    D3DRS_RANGEFOGENABLE            = 87,   // TRUE to enable range-based fog 
-    D3DRS_WRAP0                     = 88,   // D3DWRAP* flags (D3DWRAP_U, D3DWRAPCOORD_0, etc.) for 1st texture coord.
-    D3DRS_WRAP1                     = 89,   // D3DWRAP* flags (D3DWRAP_U, D3DWRAPCOORD_0, etc.) for 2nd texture coord. 
-    D3DRS_WRAP2                     = 90,   // D3DWRAP* flags (D3DWRAP_U, D3DWRAPCOORD_0, etc.) for 3rd texture coord. 
-    D3DRS_WRAP3                     = 91,   // D3DWRAP* flags (D3DWRAP_U, D3DWRAPCOORD_0, etc.) for 4th texture coord. 
-    D3DRS_LIGHTING                  = 92,   // TRUE to enable lighting
-    D3DRS_SPECULARENABLE            = 93,   // TRUE to enable specular 
-    D3DRS_LOCALVIEWER               = 94,   // TRUE to enable camera-relative specular highlights
-    D3DRS_COLORVERTEX               = 95,   // TRUE to enable per-vertex color
-    D3DRS_BACKSPECULARMATERIALSOURCE= 96,   // D3DMATERIALCOLORSOURCE (Xbox extension)
-    D3DRS_BACKDIFFUSEMATERIALSOURCE = 97,   // D3DMATERIALCOLORSOURCE (Xbox extension)
-    D3DRS_BACKAMBIENTMATERIALSOURCE = 98,   // D3DMATERIALCOLORSOURCE (Xbox extension)
-    D3DRS_BACKEMISSIVEMATERIALSOURCE= 99,   // D3DMATERIALCOLORSOURCE (Xbox extension)
-    D3DRS_SPECULARMATERIALSOURCE    = 100,  // D3DMATERIALCOLORSOURCE 
-    D3DRS_DIFFUSEMATERIALSOURCE     = 101,  // D3DMATERIALCOLORSOURCE 
-    D3DRS_AMBIENTMATERIALSOURCE     = 102,  // D3DMATERIALCOLORSOURCE 
-    D3DRS_EMISSIVEMATERIALSOURCE    = 103,  // D3DMATERIALCOLORSOURCE 
-    D3DRS_BACKAMBIENT               = 104,  // D3DCOLOR (Xbox extension)
-    D3DRS_AMBIENT                   = 105,  // D3DCOLOR 
-    D3DRS_POINTSIZE                 = 106,  // float point size 
-    D3DRS_POINTSIZE_MIN             = 107,  // float point size min threshold 
-    D3DRS_POINTSPRITEENABLE         = 108,  // TRUE to enable point sprites
-    D3DRS_POINTSCALEENABLE          = 109,  // TRUE to enable point size scaling
-    D3DRS_POINTSCALE_A              = 110,  // float point attenuation A value 
-    D3DRS_POINTSCALE_B              = 111,  // float point attenuation B value 
-    D3DRS_POINTSCALE_C              = 112,  // float point attenuation C value 
-    D3DRS_POINTSIZE_MAX             = 113,  // float point size max threshold 
-    D3DRS_PATCHEDGESTYLE            = 114,  // D3DPATCHEDGESTYLE
-    D3DRS_PATCHSEGMENTS             = 115,  // DWORD number of segments per edge when drawing patches
-	*/
-
-		
 }
 
 // ******************************************************************
