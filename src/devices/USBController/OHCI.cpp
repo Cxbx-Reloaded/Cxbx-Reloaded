@@ -158,7 +158,7 @@ void OHCI::OHCI_FatalError()
 	OHCI_BusStop();
 }
 
-bool OHCI::OHCI_ReadHCCA(uint32_t Paddr, OHCI_HCCA* Hcca)
+bool OHCI::OHCI_ReadHCCA(xbaddr Paddr, OHCI_HCCA* Hcca)
 {
 	// ergo720: I disassembled various xbe's of my games and discovered that the shared memory between
 	// HCD and HC is allocated with MmAllocateContiguousMemory which means we can access it from
@@ -172,14 +172,14 @@ bool OHCI::OHCI_ReadHCCA(uint32_t Paddr, OHCI_HCCA* Hcca)
 	return true; // error
 }
 
-bool OHCI::OHCI_WriteHCCA(uint32_t Paddr, OHCI_HCCA* Hcca)
+bool OHCI::OHCI_WriteHCCA(xbaddr Paddr, OHCI_HCCA* Hcca)
 {
 	if (Paddr != xbnull) {
 		// We need to calculate the offset of the HccaFrameNumber member to avoid overwriting HccaInterrruptTable
-		size_t OffsetoOfFrameNumber = offsetof(OHCI_HCCA, HccaFrameNumber);
+		size_t OffsetOfFrameNumber = offsetof(OHCI_HCCA, HccaFrameNumber);
 
-		std::memcpy(reinterpret_cast<void*>(Paddr + OffsetoOfFrameNumber + CONTIGUOUS_MEMORY_BASE),
-			reinterpret_cast<uint8_t*>(Hcca) + OffsetoOfFrameNumber, 8);
+		std::memcpy(reinterpret_cast<void*>(Paddr + OffsetOfFrameNumber + CONTIGUOUS_MEMORY_BASE),
+			reinterpret_cast<uint8_t*>(Hcca) + OffsetOfFrameNumber, 8);
 		return false;
 	}
 
@@ -312,7 +312,7 @@ uint32_t OHCI::OHCI_ReadRegister(xbaddr Addr)
 
 	if (Addr & 3) {
 		// The standard allows only aligned reads to the registers
-		EmuWarning("Ohci: Unaligned read. Ignoring.");
+		DbgPrintf("Ohci: Unaligned read. Ignoring.");
 		return ret;
 	}
 	else {
@@ -372,7 +372,7 @@ uint32_t OHCI::OHCI_ReadRegister(xbaddr Addr)
 				break;
 
 			case 14: // HcFmRemaining
-				// TODO
+				ret = OHCI_GetFrameRemaining();
 				break;
 
 			case 15: // HcFmNumber
@@ -419,7 +419,7 @@ void OHCI::OHCI_WriteRegister(xbaddr Addr, uint32_t Value)
 {
 	if (Addr & 3) {
 		// The standard allows only aligned writes to the registers
-		EmuWarning("Ohci: Unaligned write. Ignoring.");
+		DbgPrintf("Ohci: Unaligned write. Ignoring.");
 		return;
 	}
 	else {
@@ -559,6 +559,29 @@ void OHCI::OHCI_SetInterrupt(uint32_t Value)
 	OHCI_UpdateInterrupt();
 }
 
+uint32_t OHCI::OHCI_GetFrameRemaining()
+{
+	uint16_t frame;
+	uint64_t ticks;
+
+	if ((m_Registers.HcControl & OHCI_CTL_HCFS) != Operational) {
+		return m_Registers.HcFmRemaining & OHCI_FMR_FRT;
+	}
+
+	// Being in USB operational state guarantees that m_pEOFtimer and m_SOFtime were set already
+	ticks = GetTime_NS(m_pEOFtimer) - m_SOFtime;
+
+	// Avoid Muldiv64 if possible
+	if (ticks >= m_UsbFrameTime) {
+		return m_Registers.HcFmRemaining & OHCI_FMR_FRT;
+	}
+
+	ticks = Muldiv64(1, ticks, m_TicksPerUsbTick);
+	frame = static_cast<uint16_t>((m_Registers.HcFmInterval & OHCI_FMI_FI) - ticks);
+
+	return (m_Registers.HcFmRemaining & OHCI_FMR_FRT) | frame;
+}
+
 void OHCI::OHCI_StopEndpoints()
 {
 	USBDev* dev;
@@ -694,8 +717,9 @@ int OHCI::OHCI_PortSetIfConnected(int i, uint32_t Value)
 		return 0;
 	}
 
-	if (m_Registers.RhPort[i].HcRhPortStatus & Value)
+	if (m_Registers.RhPort[i].HcRhPortStatus & Value) {
 		ret = 0;
+	}	
 
 	// set the bit
 	m_Registers.RhPort[i].HcRhPortStatus |= Value;
@@ -715,6 +739,7 @@ void OHCI::OHCI_Detach(USBPort* Port)
 		port->HcRhPortStatus &= ~OHCI_PORT_CCS;
 		port->HcRhPortStatus |= OHCI_PORT_CSC;
 	}
+
 	// disable port
 	if (port->HcRhPortStatus & OHCI_PORT_PES) {
 		port->HcRhPortStatus &= ~OHCI_PORT_PES;

@@ -418,6 +418,7 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\src\Common\Cxbx.cpp" />
     <ClCompile Include="..\..\src\Common\Win32\InlineFunc.cpp" />
     <ClCompile Include="..\..\src\Common\Win32\Threads.cpp" />
     <ClCompile Include="..\..\src\Common\CxbxDebugger.cpp" />

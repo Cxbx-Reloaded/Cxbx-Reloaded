@@ -34,6 +34,8 @@
 #ifndef CXBX_H
 #define CXBX_H
 
+#include <stdint.h>
+
 #define FUNC_EXPORTS __pragma(comment(linker, "/EXPORT:" __FUNCTION__ "=" __FUNCDNAME__))
 
 /*! \name primitive typedefs */
@@ -156,5 +158,8 @@ extern volatile bool g_bPrintfOn;
 #else
 #define CxbxSetThreadName(Name)
 #endif
+
+// Compute (a*b)/c with a 96 bit intermediate result
+inline uint64_t Muldiv64(uint64_t a, uint32_t b, uint32_t c);
 
 #endif

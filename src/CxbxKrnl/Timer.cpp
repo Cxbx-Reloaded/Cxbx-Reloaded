@@ -38,6 +38,7 @@
 #include <thread>
 #include <vector>
 #include "Timer.h"
+#include "Cxbx.h"
 
 
 #define CLOCK_REALTIME 0
@@ -54,31 +55,6 @@ static std::vector<TimerObject*> TimerList;
 static uint64_t ClockFrequency;
 
 
-// Disable a compiler warning relative to uint64_t -> uint32_t conversions in Muldiv64. This function is taken from
-// XQEMU so it should be safe regardless
-#pragma warning(push)
-#pragma warning(disable: 4244)
-
-// Compute (a*b)/c with a 96 bit intermediate result
-static inline uint64_t Muldiv64(uint64_t a, uint32_t b, uint32_t c)
-{
-	union {
-		uint64_t ll;
-		struct {
-			uint32_t low, high;
-		} l;
-	} u, res;
-	uint64_t rl, rh;
-
-	u.ll = a;
-	rl = (uint64_t)u.l.low * (uint64_t)b;
-	rh = (uint64_t)u.l.high * (uint64_t)b;
-	rh += (rl >> 32);
-	res.l.high = rh / c;
-	res.l.low = (((rh % c) << 32) + (rl & 0xffffffff)) / c;
-	return res.ll;
-}
-
 // Returns the current time of the timer
 inline uint64_t GetTime_NS(TimerObject* Timer)
 {
@@ -87,8 +63,6 @@ inline uint64_t GetTime_NS(TimerObject* Timer)
 	uint64_t Ret = Muldiv64(li.QuadPart, SCALE_S, ClockFrequency);
 	return Timer->Type == CLOCK_REALTIME ? Ret : Ret / Timer->SlowdownFactor;
 }
-
-#pragma warning(pop)
 
 // Calculates the next expire time of the timer
 static inline uint64_t GetNextExpireTime(TimerObject* Timer)

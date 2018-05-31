@@ -241,6 +241,8 @@ class OHCI
 		void OHCI_UpdateInterrupt();
 		// fire an interrupt
 		void OHCI_SetInterrupt(uint32_t Value);
+		// calculate frame time remaining
+		uint32_t OHCI_GetFrameRemaining();
 		//
 		void OHCI_StopEndpoints();
 		// update ohci registers during a device attach
