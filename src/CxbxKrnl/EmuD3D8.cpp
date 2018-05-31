@@ -134,9 +134,6 @@ extern uint32						g_BuildVersion;
 
 typedef uint64_t resource_key_t;
 
-// resource caching for _Register
-std::vector<resource_key_t> g_RegisteredResources;
-
 extern void UpdateFPSCounter();
 
 // current active index buffer
@@ -729,6 +726,7 @@ void *GetDataFromXboxResource(XTL::X_D3DResource *pXboxResource)
 }
 
 typedef struct {
+	bool hasHostResource = false;
 	XTL::IDirect3DResource* pHostResource = nullptr;
 	XTL::X_D3DResource* pXboxResource = nullptr;
 	DWORD dwXboxResourceType = 0;
@@ -739,9 +737,9 @@ typedef struct {
 	std::chrono::time_point<std::chrono::high_resolution_clock> nextHashTime;
 	std::chrono::milliseconds hashLifeTime = 1ms;
     std::chrono::time_point<std::chrono::high_resolution_clock> lastUpdate;
-} host_resource_info_t;
+} resource_info_t;
 
-std::unordered_map <resource_key_t, host_resource_info_t> g_HostResources;
+std::unordered_map <resource_key_t, resource_info_t> g_XboxDirect3DResources;
 
 bool IsResourceAPixelContainer(XTL::X_D3DResource* pXboxResource)
 {
@@ -780,29 +778,22 @@ resource_key_t GetHostResourceKey(XTL::X_D3DResource* pXboxResource)
 
 void FreeHostResource(resource_key_t key)
 {
-	// Cleanup RegisteredResources array
-	auto registeredResourceIterator = std::find(g_RegisteredResources.begin(), g_RegisteredResources.end(), key);
-	// We can remove this soon, after a little more cleanup
-	if (registeredResourceIterator != g_RegisteredResources.end()) {
-		g_RegisteredResources.erase(registeredResourceIterator);
-	}
-
 	// Release the host resource and remove it from the list
-	auto hostResourceIterator = g_HostResources.find(key);
-	if (hostResourceIterator != g_HostResources.end()) {
-		if (hostResourceIterator->second.pHostResource) {
+	auto hostResourceIterator = g_XboxDirect3DResources.find(key);
+	if (hostResourceIterator != g_XboxDirect3DResources.end()) {
+		if (hostResourceIterator->second.hasHostResource && hostResourceIterator->second.pHostResource) {
 			(hostResourceIterator->second.pHostResource)->Release();
 		}
 
-		g_HostResources.erase(hostResourceIterator);
+		g_XboxDirect3DResources.erase(hostResourceIterator);
 	}
 }
 
 void ForceResourceRehash(XTL::X_D3DResource* pXboxResource)
 {
 	auto key = GetHostResourceKey(pXboxResource);
-	auto it = g_HostResources.find(key);
-	if (it != g_HostResources.end()) {
+	auto it = g_XboxDirect3DResources.find(key);
+	if (it != g_XboxDirect3DResources.end() && it->second.hasHostResource) {
 		it->second.forceRehash = true;
 	}
 }
@@ -818,9 +809,9 @@ XTL::IDirect3DResource *GetHostResource(XTL::X_D3DResource *pXboxResource, DWORD
 		return nullptr;
 
 	auto key = GetHostResourceKey(pXboxResource);
-	auto it = g_HostResources.find(key);
-	if (it == g_HostResources.end()) {
-		EmuWarning("EmuResource is not a valid pointer!");
+	auto it = g_XboxDirect3DResources.find(key);
+	if (it == g_XboxDirect3DResources.end() || !it->second.hasHostResource) {
+		EmuWarning("GetHostResource: Resource not registered or does not have a host counterpart!");
 		return nullptr;
 	}
 
@@ -868,8 +859,8 @@ size_t GetXboxResourceSize(XTL::X_D3DResource* pXboxResource)
 
 bool HostResourceRequiresUpdate(resource_key_t key, DWORD dwSize)
 {
-	auto it = g_HostResources.find(key);
-	if (it == g_HostResources.end()) {
+	auto it = g_XboxDirect3DResources.find(key);
+	if (it == g_XboxDirect3DResources.end() || !it->second.hasHostResource) {
 		return false;
 	}
 
@@ -923,24 +914,23 @@ bool HostResourceRequiresUpdate(resource_key_t key, DWORD dwSize)
 void SetHostResource(XTL::X_D3DResource* pXboxResource, XTL::IDirect3DResource* pHostResource, DWORD dwSize = 0)
 {
 	auto key = GetHostResourceKey(pXboxResource);
-	auto it = g_HostResources.find(key);
-	if (it != g_HostResources.end()) {
+	auto& resourceInfo = g_XboxDirect3DResources[key];	// Implicitely inserts a new entry if not already existing
+
+	if (resourceInfo.hasHostResource) {
 		EmuWarning("SetHostResource: Overwriting an existing host resource");
 	}
 
-	host_resource_info_t hostResourceInfo;
-	hostResourceInfo.pHostResource = pHostResource;
-	hostResourceInfo.pXboxResource = pXboxResource;
-	hostResourceInfo.dwXboxResourceType = GetXboxCommonResourceType(pXboxResource);
-	hostResourceInfo.pXboxData = GetDataFromXboxResource(pXboxResource);
-	hostResourceInfo.szXboxDataSize = dwSize > 0 ? dwSize : GetXboxResourceSize(pXboxResource);
-	hostResourceInfo.hash = XXHash32::hash(hostResourceInfo.pXboxData, hostResourceInfo.szXboxDataSize, 0);
-	hostResourceInfo.hashLifeTime = 1ms;
-    hostResourceInfo.lastUpdate = std::chrono::high_resolution_clock::now();
-	hostResourceInfo.nextHashTime = hostResourceInfo.lastUpdate + hostResourceInfo.hashLifeTime;
-	hostResourceInfo.forceRehash = false;
-
-	g_HostResources[key] = hostResourceInfo;
+	resourceInfo.pHostResource = pHostResource;
+	resourceInfo.pXboxResource = pXboxResource;
+	resourceInfo.dwXboxResourceType = GetXboxCommonResourceType(pXboxResource);
+	resourceInfo.pXboxData = GetDataFromXboxResource(pXboxResource);
+	resourceInfo.szXboxDataSize = dwSize > 0 ? dwSize : GetXboxResourceSize(pXboxResource);
+	resourceInfo.hash = XXHash32::hash(resourceInfo.pXboxData, resourceInfo.szXboxDataSize, 0);
+	resourceInfo.hashLifeTime = 1ms;
+	resourceInfo.lastUpdate = std::chrono::high_resolution_clock::now();
+	resourceInfo.nextHashTime = resourceInfo.lastUpdate + resourceInfo.hashLifeTime;
+	resourceInfo.forceRehash = false;
+	resourceInfo.hasHostResource = true;
 }
 
 XTL::IDirect3DSurface *GetHostSurface(XTL::X_D3DResource *pXboxResource, DWORD D3DUsage = 0)
@@ -1878,12 +1868,12 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
 
                 g_pD3DDevice->EndScene();
 
-				for (auto &hostResourceIterator : g_HostResources) {
-					if (hostResourceIterator.second.pHostResource) {
+				for (auto &hostResourceIterator : g_XboxDirect3DResources) {
+					if (hostResourceIterator.second.hasHostResource && hostResourceIterator.second.pHostResource) {
 						(hostResourceIterator.second.pHostResource)->Release();
 					}
 				}
-				g_HostResources.clear();
+				g_XboxDirect3DResources.clear();
 
 				// TODO: ensure all other resources are cleaned up too
 
@@ -2300,7 +2290,8 @@ static void EmuVerifyResourceIsRegistered(XTL::X_D3DResource *pResource, DWORD D
 		return;
 
 	auto key = GetHostResourceKey(pResource);
-	if (std::find(g_RegisteredResources.begin(), g_RegisteredResources.end(), key) != g_RegisteredResources.end()) {
+	auto it = g_XboxDirect3DResources.find(key);
+	if (it != g_XboxDirect3DResources.end()) {
 		// Don't trash RenderTargets
 		// this fixes an issue where CubeMaps were broken because the surface Set in GetCubeMapSurface
 		// would be overwritten by the surface created in SetRenderTarget
@@ -2309,8 +2300,8 @@ static void EmuVerifyResourceIsRegistered(XTL::X_D3DResource *pResource, DWORD D
 		}
 
         //check if the same key existed in the HostResource map already. if there is a old pXboxResource in the map with the same key but different resource address, it must be freed first.
-        auto it = g_HostResources.find(key);
-        if (it != g_HostResources.end() && (it->second.pXboxResource != pResource)) {
+        
+        if (it->second.hasHostResource && (it->second.pXboxResource != pResource)) {
             //printf("EmuVerifyResourceIsRegistered passed in XboxResource collipse HostResource map!! key : %llX , map pXboxResource : %08X , passed in pResource : %08X \n", key, it->second.pXboxResource, pResource);
             FreeHostResource(key);
         }
@@ -2320,11 +2311,13 @@ static void EmuVerifyResourceIsRegistered(XTL::X_D3DResource *pResource, DWORD D
 		}
 
 		FreeHostResource(key);
+	} else {
+		resource_info_t newResource;
+		newResource.hasHostResource = false;
+		g_XboxDirect3DResources[key] = newResource;
 	}
 
 	CreateHostResource(pResource, D3DUsage, iTextureStage, dwSize);
-        
-	g_RegisteredResources.push_back(key);
 }
 
 typedef struct {
@@ -5047,6 +5040,8 @@ void CreateHostResource(XTL::X_D3DResource *pResource, DWORD D3DUsage, int iText
 
 		if (dwDepth != 1) {
 			LOG_TEST_CASE("CreateHostResource : Depth != 1");
+			EmuWarning("Unsupported depth (%d) - resetting to 1 for now", dwDepth);
+			dwDepth = 1;
 		}
 
 		// The following is necessary for DXT* textures (4x4 blocks minimum)
@@ -7983,15 +7978,6 @@ HRESULT D3DCubeTexture_GetCubeMapSurfaceCommon
 
 	// Tie the Xbox CubeMapSurface and the host CubeMapSurface together
 	SetHostSurface(*ppCubeMapSurface, pHostCubeMapSurface);
-
-	// HACK:  we need to add the resource to the RegisteredResources array to stop it being overwritten later
-	// This happens because GetHostResource (in SetRenderTarget) calls EmuVerifyResourceIsRegistered and
-	// overwrites it with a new surface...
-	// This could be fixed by NOT having a RegisteredResources array and using a single HostResources structure for everything.
-	auto key = GetHostResourceKey(*ppCubeMapSurface);
-	if (std::find(g_RegisteredResources.begin(), g_RegisteredResources.end(), key) == g_RegisteredResources.end()) {
-		g_RegisteredResources.push_back(key);
-	}
 
 	return hRet;
 }
