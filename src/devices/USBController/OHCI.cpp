@@ -139,7 +139,7 @@ void OHCI::OHCI_FrameBoundaryWorker()
 	}
 
 	// Do SOF stuff here
-	OHCI_SOF();
+	OHCI_SOF(false);
 
 	// Writeback HCCA
 	if (OHCI_WriteHCCA(m_Registers.HcHCCA, &hcca)) {
@@ -243,7 +243,7 @@ void OHCI::OHCI_BusStart()
 	DbgPrintf("Ohci: Operational mode event\n");
 
 	// SOF event
-	OHCI_SOF();
+	OHCI_SOF(true);
 }
 
 void OHCI::OHCI_BusStop()
@@ -255,10 +255,16 @@ void OHCI::OHCI_BusStop()
 	m_pEOFtimer = nullptr;
 }
 
-void OHCI::OHCI_SOF()
+void OHCI::OHCI_SOF(bool bCreate)
 {
-	m_SOFtime = GetTime_NS(m_pEOFtimer); // set current SOF time
-	Timer_Start(m_pEOFtimer, m_SOFtime + m_UsbFrameTime); // make timer expire at SOF + 1 virtual ms from now
+	// set current SOF time
+	m_SOFtime = GetTime_NS(m_pEOFtimer);
+
+	// make timer expire at SOF + 1 virtual ms from now
+	if (bCreate) {
+		Timer_Start(m_pEOFtimer, m_UsbFrameTime);
+	}
+
 	OHCI_SetInterrupt(OHCI_INTR_SF);
 }
 

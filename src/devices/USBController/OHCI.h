@@ -236,7 +236,7 @@ class OHCI
 		// stop sending SOF tokens across the usb bus
 		void OHCI_BusStop();
 		// generate a SOF event, and start a timer for EOF
-		void OHCI_SOF();
+		void OHCI_SOF(bool bCreate);
 		// change interrupt status
 		void OHCI_UpdateInterrupt();
 		// fire an interrupt
@@ -259,9 +259,9 @@ class OHCI
 		// if not set ConnectStatusChange flag; if flag is enabled return 1
 		int OHCI_PortSetIfConnected(int i, uint32_t Value);
 		// read the HCCA structure in memory
-		bool OHCI_ReadHCCA(uint32_t Paddr, OHCI_HCCA* Hcca);
+		bool OHCI_ReadHCCA(xbaddr Paddr, OHCI_HCCA* Hcca);
 		// write the HCCA structure in memory
-		bool OHCI_WriteHCCA(uint32_t Paddr, OHCI_HCCA* Hcca);
+		bool OHCI_WriteHCCA(xbaddr Paddr, OHCI_HCCA* Hcca);
 
 		// register a port with the HC
 		void USB_RegisterPort(USBPort* Port, int Index, int SpeedMask);
