@@ -176,7 +176,7 @@ XPP_DEVICE_FEEDBACK_DESC, *PXPP_DEVICE_FEEDBACK_DESC;
 typedef struct _XID_TYPE_INFORMATION
 {
 	UCHAR				ucType;
-    UCHAR				ucSubType;
+    BYTE				bRemainingHandles;
 	UCHAR				ucUnknown[2];//probably for DWORD align
 	PXPP_DEVICE_TYPE    XppType;//pointer to DeviceType structure.
     PXPP_DEVICE_INPUTSTATE_DESC pInputStateDesc;//pointer to InputStateDesc structure
