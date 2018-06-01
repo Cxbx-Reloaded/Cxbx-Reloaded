@@ -200,12 +200,11 @@ void SetupXboxDeviceTypes()
 				}
 
 				printf("----------------------------------------\n");
-				printf("DeviceTable[%u]->ucType = %d, ucSubType = %d\n", i, deviceTable[i]->ucType, deviceTable[i]->ucSubType);
+				printf("DeviceTable[%u]->ucType = %d\n", i, deviceTable[i]->ucType);
 				printf("DeviceTable[%u]->XppType = 0x%08X (", i, deviceTable[i]->XppType);
 
                 XTL::X_XINPUT_DEVICE_INFO CurrentInfo = {};
                 CurrentInfo.ucType = deviceTable[i]->ucType;
-                CurrentInfo.ucSubType = deviceTable[i]->ucSubType;
                 CurrentInfo.DeviceType = deviceTable[i]->XppType;
                 if (deviceTable[i]->pInputStateDesc!=0) {
                     CurrentInfo.ucInputStateSize = deviceTable[i]->pInputStateDesc->ucSize;
@@ -213,21 +212,24 @@ void SetupXboxDeviceTypes()
                 if(deviceTable[i]->pFeedbackDesc!=0){
                     CurrentInfo.ucFeedbackSize = deviceTable[i]->pFeedbackDesc->ucSize;
                 }
-                //store the DeviceInfo in global vector.
-                g_XboxInputDeviceInfo.push_back(CurrentInfo);
 
                 switch (deviceTable[i]->ucType) {
 				case X_XINPUT_DEVTYPE_GAMEPAD:
 					gDeviceType_Gamepad = deviceTable[i]->XppType;
+					CurrentInfo.ucSubType = X_XINPUT_DEVSUBTYPE_GC_GAMEPAD;
 					printf("XDEVICE_TYPE_GAMEPAD)\n");
 					break;
                 case X_XINPUT_DEVTYPE_STEELBATALION:
                     printf("XDEVICE_TYPE_STEELBATALION)\n");
+					CurrentInfo.ucSubType = X_XINPUT_DEVSUBTYPE_GC_GAMEPAD_ALT;
                     break;
 				default:
 					printf("Unknown device type)\n");
-					break;
+					continue;
 				}
+
+				//store the DeviceInfo in global vector.
+				g_XboxInputDeviceInfo.push_back(CurrentInfo);
 			}
 		} else {
 			// XDKs without GetTypeInformation have the GamePad address hardcoded in XInputOpen
@@ -760,10 +762,12 @@ DWORD WINAPI XTL::EMUPATCH(XInputGetCapabilities)
             memset( pCapa,
                     0xFF,
                     g_XboxControllerHostBridge[port].XboxDeviceInfo.ucInputStateSize + g_XboxControllerHostBridge[port].XboxDeviceInfo.ucFeedbackSize);
+
+			ret = ERROR_SUCCESS;
             break;
         }
     }
-    ret = ERROR_SUCCESS;
+    
 	RETURN(ret);
 }
 
