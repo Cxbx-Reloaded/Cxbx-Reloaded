@@ -6083,7 +6083,8 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderState_FillMode)
 
     DWORD dwFillMode;
 
-	g_CurrentFillMode = EmuXB2PC_D3DFILLMODE(Value);
+	if(Value != 0)
+		g_CurrentFillMode = EmuXB2PC_D3DFILLMODE(Value);
 
     if(g_iWireframe == 0)
         dwFillMode = g_CurrentFillMode;
