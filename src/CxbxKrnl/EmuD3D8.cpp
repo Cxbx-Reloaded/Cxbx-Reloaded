@@ -7998,6 +7998,9 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderTarget)
 	IDirect3DSurface *pHostRenderTarget = nullptr;
 	IDirect3DSurface *pHostDepthStencil = nullptr;
 
+	XB_trampoline(void, WINAPI, D3DDevice_SetRenderTarget, (X_D3DSurface*, X_D3DSurface*));
+	XB_D3DDevice_SetRenderTarget(pRenderTarget, pNewZStencil);
+
 	// In Xbox titles, CreateDevice calls SetRenderTarget for the back buffer
 	// We can use this to determine the Xbox backbuffer surface for later use!
 	if (g_XboxBackBufferSurface == NULL) {
