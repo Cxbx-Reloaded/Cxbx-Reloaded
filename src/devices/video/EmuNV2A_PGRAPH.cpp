@@ -2634,12 +2634,15 @@ static void pgraph_method_log(unsigned int subchannel,
 	static unsigned int last = 0;
 	static unsigned int count = 0;
 
+	extern const char *NV2AMethodToString(DWORD dwMethod); // implemented in PushBuffer.cpp
+
 	if (last == 0x1800 && method != last) {
-		NV2A_GL_DPRINTF(true, "d->pgraph method (%d) 0x%08X * %d",
-						subchannel, last, count);
+		const char* method_name = NV2AMethodToString(last); // = 'NV2A_VB_ELEMENT_U16'
+		NV2A_GL_DPRINTF(true, "d->pgraph method (%d) 0x%08X %s * %d",
+						subchannel, last, method_name, count);
 	}
 	if (method != 0x1800) {
-		const char* method_name = NULL;
+		const char* method_name = NV2AMethodToString(method);
 		unsigned int nmethod = 0;
 		switch (graphics_class) {
 		case NV_KELVIN_PRIMITIVE:
