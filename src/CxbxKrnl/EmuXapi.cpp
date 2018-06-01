@@ -748,7 +748,7 @@ DWORD WINAPI XTL::EMUPATCH(XInputGetCapabilities)
 
             ret = ERROR_SUCCESS;
         }
-    }ccccc
+    }
 */
     //above code is not used any more, could be removed.
     //find XboxControllerHostBridge per hDevice, and fill the Capabilities Structure per Device Info
