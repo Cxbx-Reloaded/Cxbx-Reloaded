@@ -359,7 +359,7 @@ X_XINPUT_CAPABILITIES, *PX_XINPUT_CAPABILITIES;
 // ******************************************************************
 // * Device XBOX Input Device SubTypes, for use in XINPUT_CAPABILITIES
 // ******************************************************************
-//it's strange that general GAMEPAD uses subtype 0x04.
+//general GAMEPAD uses subtype 0x01.
 #define X_XINPUT_DEVSUBTYPE_GC_GAMEPAD              0x01 
 //SteelBatallion controller uses subtype 0x02
 #define X_XINPUT_DEVSUBTYPE_GC_GAMEPAD_ALT          0x02
