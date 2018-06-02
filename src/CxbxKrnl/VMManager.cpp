@@ -169,6 +169,12 @@ dashboard from non-retail xbe?");
 	// Reserve the xbe image memory. Doing this now allows us to avoid calling XbAllocateVirtualMemory later
 	ConstructVMA(XBE_IMAGE_BASE, ROUND_UP_4K(CxbxKrnl_Xbe->m_Header.dwSizeofImage), UserRegion, ReservedVma, false, XBOX_PAGE_READWRITE);
 
+	// ergo720: another hack. On 128 MiB systems, also reserve the 64 MiB following the memory placeholder so that the VMManager
+	// is forbidden from making allocations there and the LLE OHCI can distinguish identity mapped addresses from contiguous addresses.
+	// Once LLE CPU and MMU are implemented, this can be removed
+	if (g_bIsRetail != true) {
+		ConstructVMA(XBE_IMAGE_BASE + XBE_MAX_VA, XBOX_MEMORY_SIZE, UserRegion, ReservedVma, true);
+	}
 
 	if (g_bIsChihiro) {
 		printf(LOG_PREFIX " Page table for Chihiro arcade initialized!\n");
@@ -2401,8 +2407,36 @@ PAddr VMManager::TranslateVAddrToPAddr(const VAddr addr)
 
 	PAddr PAddr;
 	PMMPTE PointerPte;
+	MemoryRegionType Type = COUNTRegion;
 
 	Lock();
+
+	// ergo720: boring, this hack identity maps allocations served by VirtualAlloc to keep the LLE OHCI working (see OHCI_ReadHCCA
+	// for more details). Once LLE CPU and MMU are implemented, this can be removed
+
+	if (IS_USER_ADDRESS(addr)) { Type = UserRegion; }
+	else if (IS_PHYSICAL_ADDRESS(addr)) { Type = ContiguousRegion; }
+	else if (IS_SYSTEM_ADDRESS(addr)) { Type = SystemRegion; }
+	else if (IS_DEVKIT_ADDRESS(addr)) { Type = DevkitRegion; }
+
+	if (Type != COUNTRegion && Type != ContiguousRegion) {
+		if (IsValidVirtualAddress(addr)) {
+			if (Type == UserRegion) {
+				EmuWarning("Applying identity mapping hack to allocation at address 0x%X", addr);
+				Unlock();
+				RETURN(addr); // committed pages in the user region always use VirtualAlloc
+			}
+			VMAIter it = GetVMAIterator(addr, Type);
+			if (it != m_MemoryRegionArray[Type].RegionMap.end() && it->second.type != FreeVma && it->second.bFragmented) {
+				EmuWarning("Applying identity mapping hack to allocation at address 0x%X", addr);
+				Unlock();
+				RETURN(addr); // committed pages in the system-devkit regions can use VirtualAlloc because of fragmentation
+			}
+		}
+		else {
+			goto InvalidAddress;
+		}
+	}
 
 	PointerPte = GetPdeAddress(addr);
 	if (PointerPte->Hardware.Valid == 0) { // invalid pde -> addr is invalid
