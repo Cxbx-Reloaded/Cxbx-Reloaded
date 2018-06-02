@@ -37,6 +37,91 @@
 #include "OHCI.h"
 #include "CxbxKrnl\EmuKrnl.h"  // For HalSystemInterrupt
 
+/* These macros are used to access the bits of the various registers */
+// HcControl
+#define OHCI_CTL_CBSR                       ((1<<0)|(1<<1))  // ControlBulkServiceRatio
+#define OHCI_CTL_PLE                        (1<<2)           // PeriodicListEnable
+#define OHCI_CTL_IE                         (1<<3)           // IsochronousEnable
+#define OHCI_CTL_CLE                        (1<<4)           // ControlListEnable
+#define OHCI_CTL_BLE                        (1<<5)           // BulkListEnable
+#define OHCI_CTL_HCFS                       ((1<<6)|(1<<7))  // HostControllerFunctionalState
+#define OHCI_CTL_IR                         (1<<8)           // InterruptRouting
+#define OHCI_CTL_RWC                        (1<<9)           // RemoteWakeupConnected
+#define OHCI_CTL_RWE                        (1<<10)          // RemoteWakeupEnable
+// HcCommandStatus
+#define OHCI_STATUS_HCR                     (1<<0)           // HostControllerReset
+#define OHCI_STATUS_CLF                     (1<<1)           // ControlListFilled
+#define OHCI_STATUS_BLF                     (1<<2)           // BulkListFilled
+#define OHCI_STATUS_OCR                     (1<<3)           // OwnershipChangeRequest
+#define OHCI_STATUS_SOC                     ((1<<6)|(1<<7))  // SchedulingOverrunCount
+// HcInterruptStatus
+#define OHCI_INTR_SO                        (1<<0)           // SchedulingOverrun
+#define OHCI_INTR_WD                        (1<<1)           // WritebackDoneHead
+#define OHCI_INTR_SF                        (1<<2)           // StartofFrame
+#define OHCI_INTR_RD                        (1<<3)           // ResumeDetected
+#define OHCI_INTR_UE                        (1<<4)           // UnrecoverableError
+#define OHCI_INTR_FNO                       (1<<5)           // FrameNumberOverflow
+#define OHCI_INTR_RHSC                      (1<<6)           // RootHubStatusChange
+#define OHCI_INTR_OC                        (1<<30)          // OwnershipChange
+// HcInterruptEnable, HcInterruptDisable
+#define OHCI_INTR_MIE                       (1<<31)          // MasterInterruptEnable
+// HcHCCA
+#define OHCI_HCCA_MASK                      0xFFFFFF00       // HCCA mask
+// HcFmInterval
+#define OHCI_FMI_FI                         0x00003FFF       // FrameInterval
+#define OHCI_FMI_FIT                        0x80000000       // FrameIntervalToggle
+// HcFmRemaining
+#define OHCI_FMR_FR                         0x00003FFF       // FrameRemaining
+#define OHCI_FMR_FRT                        0x80000000       // FrameRemainingToggle
+// HcRhDescriptorA
+#define OHCI_RHA_RW_MASK                    0x00000000       // Mask of supported features
+#define OHCI_RHA_PSM                        (1<<8)           // PowerSwitchingMode
+#define OHCI_RHA_NPS                        (1<<9)           // NoPowerSwitching
+#define OHCI_RHA_DT                         (1<<10)          // DeviceType
+#define OHCI_RHA_OCPM                       (1<<11)          // OverCurrentProtectionMode
+#define OHCI_RHA_NOCP                       (1<<12)          // NoOverCurrentProtection
+// HcRhStatus
+#define OHCI_RHS_LPS                        (1<<0)           // LocalPowerStatus
+#define OHCI_RHS_OCI                        (1<<1)           // OverCurrentIndicator
+#define OHCI_RHS_DRWE                       (1<<15)          // DeviceRemoteWakeupEnable
+#define OHCI_RHS_LPSC                       (1<<16)          // LocalPowerStatusChange
+#define OHCI_RHS_OCIC                       (1<<17)          // OverCurrentIndicatorChange
+#define OHCI_RHS_CRWE                       (1<<31)          // ClearRemoteWakeupEnable
+// HcRhPortStatus
+#define OHCI_PORT_CCS                       (1<<0)           // CurrentConnectStatus
+#define OHCI_PORT_PES                       (1<<1)           // PortEnableStatus
+#define OHCI_PORT_PSS                       (1<<2)           // PortSuspendStatus
+#define OHCI_PORT_POCI                      (1<<3)           // PortOverCurrentIndicator
+#define OHCI_PORT_PRS                       (1<<4)           // PortResetStatus
+#define OHCI_PORT_PPS                       (1<<8)           // PortPowerStatus
+#define OHCI_PORT_LSDA                      (1<<9)           // LowSpeedDeviceAttached
+#define OHCI_PORT_CSC                       (1<<16)          // ConnectStatusChange
+#define OHCI_PORT_PESC                      (1<<17)          // PortEnableStatusChange
+#define OHCI_PORT_PSSC                      (1<<18)          // PortSuspendStatusChange
+#define OHCI_PORT_OCIC                      (1<<19)          // PortOverCurrentIndicatorChange
+#define OHCI_PORT_PRSC                      (1<<20)          // PortResetStatusChange
+#define OHCI_PORT_WTC                       (OHCI_PORT_CSC|OHCI_PORT_PESC|OHCI_PORT_PSSC \
+                                                          |OHCI_PORT_OCIC|OHCI_PORT_PRSC)
+
+/* Bitfields for the first word of an ED */
+#define OHCI_ED_FA_SHIFT  0
+#define OHCI_ED_FA_MASK   (0x7F<<OHCI_ED_FA_SHIFT)
+#define OHCI_ED_EN_SHIFT  7
+#define OHCI_ED_EN_MASK   (0xF<<OHCI_ED_EN_SHIFT)
+#define OHCI_ED_D_SHIFT   11
+#define OHCI_ED_D_MASK    (3<<OHCI_ED_D_SHIFT)
+#define OHCI_ED_S         (1<<13)
+#define OHCI_ED_K         (1<<14)                     // sKip
+#define OHCI_ED_F         (1<<15)                     // Format
+#define OHCI_ED_MPS_SHIFT 16
+#define OHCI_ED_MPS_MASK  (0x7FF<<OHCI_ED_MPS_SHIFT)
+
+/* Flags in the HeadP field of an ED */
+#define OHCI_ED_H         1                           // Halted
+
+/* Mask for the four least significant bits in an ED address */
+#define OHCI_DPTR_MASK    0xFFFFFFF0
+
 #define USB_HZ 12000000
 
 #define USB_SPEED_LOW   0
@@ -84,8 +169,10 @@ void OHCI::OHCI_FrameBoundaryWorker()
 
 	// Process all the lists at the end of the frame
 	if (m_Registers.HcControl & OHCI_CTL_PLE) {
-		int n = m_Registers.HcFmNumber & 0x1f;
-		ohci_service_ed_list(ohci, le32_to_cpu(hcca.intr[n]), 0);
+		// From the standard: "The head pointer used for a particular frame is determined by using the last 5 bits of the
+		// Frame Counter as an offset into the interrupt array within the HCCA."
+		int n = m_Registers.HcFmNumber & 0x1F;
+		OHCI_ServiceEDlist(hcca.HccaInterrruptTable[n], 0); // dropped little -> big endian conversion from XQEMU
 	}
 
 	// Cancel all pending packets if either of the lists has been disabled
@@ -160,9 +247,14 @@ void OHCI::OHCI_FatalError()
 
 bool OHCI::OHCI_ReadHCCA(xbaddr Paddr, OHCI_HCCA* Hcca)
 {
-	// ergo720: I disassembled various xbe's of my games and discovered that the shared memory between
-	// HCD and HC is allocated with MmAllocateContiguousMemory which means we can access it from
-	// the contiguous region. Hopefully XDK revisions didn't alter this...
+	// ergo720: there could be a peculiar problem if the shared memory between HCD and HC is allocated by the
+	// VMManager with VirtualAlloc: the physical allocation would not reside in memory.bin and if we tried to
+	// access the physical address of it, we would access an empty page. In practice, I disassembled various
+	// xbe's of my games and discovered that this shared memory is allocated with MmAllocateContiguousMemory
+	// which means we can access it from the contiguous region just fine (lucky)
+	// ... provided that XDK revisions didn't alter this
+
+	// NOTE: this shared memory contains the HCCA + EDs and TDs
 
 	if (Paddr != xbnull) {
 		std::memcpy(Hcca, reinterpret_cast<void*>(Paddr + CONTIGUOUS_MEMORY_BASE), sizeof(OHCI_HCCA));
@@ -184,6 +276,114 @@ bool OHCI::OHCI_WriteHCCA(xbaddr Paddr, OHCI_HCCA* Hcca)
 	}
 
 	return true; // error
+}
+
+bool OHCI::OHCI_ReadED(xbaddr Paddr, OHCI_ED* Ed)
+{
+	return OHCI_GetDwords(Paddr, reinterpret_cast<uint32_t*>(Ed), sizeof(*Ed) >> 2); // ED is 16 bytes large
+}
+
+bool OHCI::OHCI_WriteED(xbaddr Paddr, OHCI_ED* Ed)
+{
+	// According to the standard, only the HeadP field is writable by the HC, so we'll write just that
+	size_t OffsetOfHeadP = offsetof(OHCI_ED, HeadP);
+
+	return OHCI_WriteDwords(Paddr + OffsetOfHeadP, reinterpret_cast<uint32_t*>(reinterpret_cast<uint8_t*>(Ed) + OffsetOfHeadP), 1);
+}
+
+bool OHCI::OHCI_GetDwords(xbaddr Paddr, uint32_t* Buffer, int Number)
+{
+	if (Paddr != xbnull) {
+		for (int i = 0; i < Number; i++, Buffer++, Paddr += sizeof(*Buffer)) {
+			std::memcpy(Buffer, reinterpret_cast<void*>(Paddr + CONTIGUOUS_MEMORY_BASE), 4); // dropped little -> big endian conversion from XQEMU
+		}
+		return false;
+	}
+
+	return true; // error
+}
+
+bool OHCI::OHCI_WriteDwords(xbaddr Paddr, uint32_t* Buffer, int Number)
+{
+	if (Paddr != xbnull) {
+		for (int i = 0; i < Number; i++, Buffer++, Paddr += sizeof(*Buffer)) {
+			std::memcpy(reinterpret_cast<void*>(Paddr + CONTIGUOUS_MEMORY_BASE), Buffer, 4); // dropped big -> little endian conversion from XQEMU
+		}
+		return false;
+	}
+
+	return true; // error
+}
+
+int OHCI::OHCI_ServiceEDlist(xbaddr Head, int Completion)
+{
+	OHCI_ED ed;
+	xbaddr next_ed;
+	xbaddr current;
+	int active;
+
+	active = 0;
+
+	if (Head == xbnull) {
+		// no ED here, nothing to do
+		return 0;
+	}
+
+	for (current = Head; current; current = next_ed) {
+		if (OHCI_ReadED(current, &ed)) {
+			EmuWarning("Ohci: ED read error at physical address 0x%X", current);
+			OHCI_FatalError();
+			return 0;
+		}
+
+		// From the standard "An Endpoint Descriptor (ED) is a 16-byte, memory resident structure that must be aligned to a
+		// 16-byte boundary."
+		next_ed = ed.NextED & OHCI_DPTR_MASK;
+
+		if ((ed.HeadP & OHCI_ED_H) || (ed.Flags & OHCI_ED_K)) { // halted or skip
+			// Cancel pending packets for ED that have been paused
+			xbaddr addr = ed.HeadP & OHCI_DPTR_MASK;
+			if (AsyncTD && addr == AsyncTD) {
+				usb_cancel_packet(&ohci->usb_packet);
+				AsyncTD = xbnull;
+				USB_DeviceEPstopped(m_UsbPacket.Endpoint->Dev, m_UsbPacket.Endpoint);
+			}
+			continue;
+		}
+
+		while ((ed.HeadP & OHCI_DPTR_MASK) != ed.TailP) { // a TD is available to be processed
+#ifdef DEBUG_PACKET
+			DPRINTF("ED @ 0x%.8x fa=%u en=%u d=%u s=%u k=%u f=%u mps=%u "
+				"h=%u c=%u\n  head=0x%.8x tailp=0x%.8x next=0x%.8x\n", cur,
+				OHCI_BM(ed.flags, ED_FA), OHCI_BM(ed.flags, ED_EN),
+				OHCI_BM(ed.flags, ED_D), (ed.flags & OHCI_ED_S) != 0,
+				(ed.flags & OHCI_ED_K) != 0, (ed.flags & OHCI_ED_F) != 0,
+				OHCI_BM(ed.flags, ED_MPS), (ed.head & OHCI_ED_H) != 0,
+				(ed.head & OHCI_ED_C) != 0, ed.head & OHCI_DPTR_MASK,
+				ed.tail & OHCI_DPTR_MASK, ed.next & OHCI_DPTR_MASK);
+#endif
+			active = 1;
+
+			if ((ed.Flags & OHCI_ED_F) == 0) {
+				// Handle control, interrupt or bulk endpoints
+				if (ohci_service_td(ohci, &ed))
+					break;
+			}
+			else {
+				// Handle isochronous endpoints
+				if (ohci_service_iso_td(ohci, &ed, completion))
+					break;
+			}
+		}
+
+		// Writeback ED
+		if (OHCI_WriteED(current, &ed)) {
+			OHCI_FatalError();
+			return 0;
+		}
+	}
+
+	return active;
 }
 
 void OHCI::OHCI_StateReset()
@@ -220,6 +420,9 @@ void OHCI::OHCI_StateReset()
 
 	m_Registers.HcRhDescriptorA = OHCI_RHA_NPS | 2; // The xbox lacks the hw to switch off the power on the ports and has 2 ports per HC
 	m_Registers.HcRhDescriptorB = 0; // The attached devices are removable and use PowerSwitchingMode to control the power on the ports
+
+	m_DoneCount = 7;
+
 	for (int i = 0; i < 2; i++)
 	{
 		OHCIPort* Port = &m_Registers.RhPort[i];
@@ -228,7 +431,10 @@ void OHCI::OHCI_StateReset()
 			USB_PortReset(&Port->UsbPort);
 		}
 	}
-	m_DoneCount = 7;
+	if (AsyncTD) {
+		usb_cancel_packet(&ohci->usb_packet);
+		AsyncTD = xbnull;
+	}
 
 	OHCI_StopEndpoints();
 
@@ -480,19 +686,19 @@ void OHCI::OHCI_WriteRegister(xbaddr Addr, uint32_t Value)
 				break;
 
 			case 8: // HcControlHeadED
-				m_Registers.HcControlHeadED = Value & OHCI_EDPTR_MASK;
+				m_Registers.HcControlHeadED = Value & OHCI_DPTR_MASK;
 				break;
 
 			case 9: // HcControlCurrentED
-				m_Registers.HcControlCurrentED = Value & OHCI_EDPTR_MASK;
+				m_Registers.HcControlCurrentED = Value & OHCI_DPTR_MASK;
 				break;
 
 			case 10: // HcBulkHeadED
-				m_Registers.HcBulkHeadED = Value & OHCI_EDPTR_MASK;
+				m_Registers.HcBulkHeadED = Value & OHCI_DPTR_MASK;
 				break;
 
 			case 11: // HcBulkCurrentED
-				m_Registers.HcBulkCurrentED = Value & OHCI_EDPTR_MASK;
+				m_Registers.HcBulkCurrentED = Value & OHCI_DPTR_MASK;
 				break;
 
 			case 12: // HcDoneHead

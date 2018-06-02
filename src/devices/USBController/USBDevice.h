@@ -56,7 +56,7 @@ typedef enum USBPacketState {
 }
 USBPacketState;
 
-// This is a linux struct for vectored I/O. See readv() and writev()
+/* This is a linux struct for vectored I/O. See readv() and writev() */
 typedef struct _IoVec
 {
 	void* Iov_Base;
@@ -73,6 +73,7 @@ typedef struct _IOVector
 }
 IOVector;
 
+/* USB endpoint */
 typedef struct _USBEndpoint
 {
 	uint8_t nr;
@@ -82,12 +83,12 @@ typedef struct _USBEndpoint
 	int max_packet_size;
 	bool pipeline;
 	bool halted;
-	USBDev *dev;
+	USBDev* Dev;          // device this endpoint belongs to
 	//QTAILQ_HEAD(, USBPacket) queue;
 }
 USBEndpoint;
 
-// definition of a USB device
+/* definition of a USB device */
 typedef struct _USBDev
 {
 	DeviceState qdev;
@@ -181,13 +182,13 @@ typedef struct USBDeviceClass
 }
 USBDeviceClass;
 
-// Structure used to hold information about an active USB packet
+/* Structure used to hold information about an active USB packet */
 typedef struct _USBPacket
 {
 	// Data fields for use by the driver
 	int Pid;
 	uint64_t Id;
-	USBEndpoint* Endpoint;
+	USBEndpoint* Endpoint;        // endpoint of the packet
 	unsigned int stream;
 	IOVector IoVec;               // used to perform vectored I/O
 	uint64_t parameter;           // control transfers
@@ -203,7 +204,7 @@ typedef struct _USBPacket
 }
 USBPacket;
 
-// Struct describing the status of a usb port
+/* Struct describing the status of a usb port */
 typedef struct _USBPort {
 	USBDev* Dev;     // usb device (if present)
 	int SpeedMask;   // usb speeds supported
