@@ -249,31 +249,42 @@ extern void XTL::EmuExecutePushBufferRaw
 			struct {
 				uint32_t        jmp          : 1;       /*  0 */
 				uint32_t        call         : 1;       /*  1 */
-				uint32_t        method       : 11;      /*  2 */
-				uint32_t        subchannel   : 3;       /* 13 */
-				uint32_t        non_inc      : 2;       /* 16 */
-				uint32_t        method_count : 11;      /* 18 */
-				uint32_t        error        : 3;       /* 29 */
-			};
-#if 0
-			struct {
-				uint32_t        jmp          : 1;       /*  0 */
-				uint32_t        call         : 1;       /*  1 */
 				uint32_t        addr         : 30;      /*  2 */
 			};
-#endif
+			struct {
+				uint32_t        method       : 13;      /*  0 */
+				uint32_t        subchannel   : 3;       /* 13 */
+				uint32_t        bit_15       : 1;       /* 16 */
+				uint32_t        bit_16       : 1;       /* 17 */
+				uint32_t        method_count : 12;      /* 18 */
+				uint32_t        non_inc      : 1;       /* 30 */
+				uint32_t        bit_31       : 1;       /* 31 */
+			};
 		} command;
 
-		// Read and skip over command DWORD :
-		command.field = *pdwPushData++;
+		// Read the command DWORD :
+		command.field = *pdwPushData;
+
+		if (command.jmp) {
+			LOG_TEST_CASE("Pushbuffer jmp");
+			pdwPushData = (DWORD*)command.addr;
+			continue;
+		}
+
+		if (command.call) {
+			LOG_TEST_CASE("Pushbuffer call");
+			// Note : NV2A return is said not to work, so handle this as a jump :
+			pdwPushData = (DWORD*)command.addr;
+			continue;
+		}
 
 		// Decode push buffer contents (inverse of D3DPUSH_ENCODE) :
-		DWORD dwMethod = command.method << 2; // align on 4
+		DWORD dwMethod = command.method;
 		DWORD dwCount = command.method_count;
-		DWORD bInc = command.non_inc;
+		DWORD bInc = command.non_inc == 0;
 
 		// Remember the address of the arguments
-		DWORD *pdwPushArguments = pdwPushData;
+		DWORD *pdwPushArguments = ++pdwPushData;
 		// Skip over the arguments already, so it always points to the next unhandled DWORD.
 		pdwPushData += dwCount;
 
@@ -281,6 +292,7 @@ extern void XTL::EmuExecutePushBufferRaw
 
 		if (dwCount > 0) {
 			if (command.subchannel > 0) {
+				LOG_TEST_CASE("Pushbuffer subchannel > 0");
 				// Skip all commands not intended for channel 0
 				continue;
 			}
@@ -334,12 +346,20 @@ extern void XTL::EmuExecutePushBufferRaw
 				// retrieve vertex shader
 				DWORD dwVertexShader = g_CurrentXboxVertexShaderHandle;
 				if (VshHandleIsVertexShader(dwVertexShader)) {
-					EmuWarning("Non-FVF Vertex Shaders not yet supported for PushBuffer emulation!");
+					// Test-case : Crash 'n' Burn [45530014]
+					// Test-case : CrimsonSea [4B4F0002]
+					// Test-case : Hot Wheels Stunt Track Challenge [54510089] 
+					// Test-case : Inside Pitch 2003 [4D530034]
+					// Test-case : Need for Speed Most Wanted [4541007B]
+					// Test-case : Prince of Persia: The Sands of Time [5553001d]
+					// Test-case : RPM Tuning [Top Gear RPM Tuning] [4B420007]
+					// Test-case : SpyHunter 2 [4D57001B]
+					LOG_TEST_CASE("Non-FVF Vertex Shaders not yet supported for PushBuffer emulation!");
 					continue;
 				}
 
 				if (dwVertexShader == 0) {
-					EmuWarning("FVF Vertex Shader is null");
+					LOG_TEST_CASE("FVF Vertex Shader is null");
 					dwVertexShader = -1;
 				}
 
@@ -403,6 +423,7 @@ extern void XTL::EmuExecutePushBufferRaw
 
 			case NV2A_VB_ELEMENT_U32: { // 0x1808, NVPB_FixLoop, Index Array Data, . NV097_ARRAY_ELEMENT32
 				// Test case : Turok menu's
+				LOG_TEST_CASE("NV2A_VB_ELEMENT_U32");
 #ifdef _DEBUG_TRACK_PB
 				if (bShowPB) {
 					printf("  NVPB_FixLoop(%u)\n", dwCount);
@@ -462,7 +483,7 @@ extern void XTL::EmuExecutePushBufferRaw
 #if 0 // TODO : Is the following nonsense?
 				//if no increment is not set, then there is one WORD less then the total dwCount*2 WORD data.
 				//this definition is purely my guess, need confirmation.
-				if (bInc == 0) {
+				if (!bInc) {
 					dwIndexCount -= 1;
 				}
 #endif
@@ -513,6 +534,7 @@ extern void XTL::EmuExecutePushBufferRaw
 
 					// release ptr
 					pActiveVB->Unlock();
+					pActiveVB->Release();
 					DbgDumpMesh((WORD*)pIndexData, dwIndexCount);
 				}
 #endif
@@ -561,8 +583,9 @@ extern void XTL::EmuExecutePushBufferRaw
 
 			case NV2A_VP_UPLOAD_CONST_ID: { // 0x00001ea4, D3DPUSH_SET_TRANSFORM_CONSTANT_LOAD  // Add 96 to constant index parameter, one parameter=CONSTANT + 96
 				//retrive transform constant index and add 96 to it.
+				LOG_TEST_CASE("NV2A_VP_UPLOAD_CONST_ID");
 				//EmuWarning("TRANSFORM CONSTANT LOAD PushBuffer Operation (0x%.04X, %d)", dwMethod, dwCount);
-				//EmuWarning("TRANSFORM CONSTANT LOAD PushBuffer Operation  Constant = %d)", *pdwPushData);
+				//EmuWarning("TRANSFORM CONSTANT LOAD PushBuffer Operation  Constant = %d)", *pdwPushArguments);
 				break;
 			}
 
@@ -571,11 +594,14 @@ extern void XTL::EmuExecutePushBufferRaw
 			case NV2A_VP_UPLOAD_CONST(2):
 			case NV2A_VP_UPLOAD_CONST(3): {
 				//load constant matrix to empty slot, then break;
+				LOG_TEST_CASE("NV2A_VP_UPLOAD_CONST");
 				break;
 			}
 
 			default: { // default case, handling any other unknown methods.
-				EmuWarning("Unhandled PushBuffer Operation : %s (0x%.04X, %d)", NV2AMethodToString(dwMethod), dwMethod, dwCount);
+				char message[256] = {};
+				sprintf(message, "Unhandled PushBuffer Operation : %s (0x%.04X, %d)", NV2AMethodToString(dwMethod), dwMethod, dwCount);
+				LOG_TEST_CASE(message);
 				break;
 			}
 			} // switch
@@ -584,6 +610,9 @@ extern void XTL::EmuExecutePushBufferRaw
 			// for the next instruction so any leftover values are handled there :
 			pdwPushArguments += HandledCount;
 			dwCount -= HandledCount;
+			if (bInc) {
+				dwMethod += 4;
+			}
 		} // while
     }
 
