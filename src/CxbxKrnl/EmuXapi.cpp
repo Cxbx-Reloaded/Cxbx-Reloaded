@@ -374,16 +374,6 @@ DWORD WINAPI XTL::EMUPATCH(XGetDevices)
 	DeviceType->ChangeConnected = 0;
 	DeviceType->PreviousConnected = DeviceType->CurrentConnected;
 
-	// If this is for getting  gamepad devices, and no gamepad was previously detected, connect one
-/*	if (DeviceType == gDeviceType_Gamepad && DeviceType->CurrentConnected == 0) {
-		for (unsigned int i = 0; i < total_xinput_gamepad; i++)
-		{
-			DeviceType->CurrentConnected |= 1<<i;
-		}
-		DeviceType->ChangeConnected = DeviceType->CurrentConnected ;
-		ret = DeviceType->CurrentConnected;
-	}
-*/
     int index = FindDeviceInfoIndexByDeviceType(DeviceType);
     int port;
     if (DeviceType->CurrentConnected == 0) {
@@ -394,7 +384,10 @@ DWORD WINAPI XTL::EMUPATCH(XGetDevices)
             }
         }
     }
-	// JSRF Hack: Don't set the ChangeConnected flag. Without this, JSRF hard crashes 
+    //the ChangeConnected flag must be set here together with the CurrentConnected flag.
+    DeviceType->ChangeConnected = DeviceType->CurrentConnected;
+
+    // JSRF Hack: Don't set the ChangeConnected flag. Without this, JSRF hard crashes 
 	// TODO: Why is this still needed? 
 	if (DeviceType == gDeviceType_Gamepad && TitleIsJSRF()) {
 		DeviceType->ChangeConnected = 0;
@@ -429,14 +422,10 @@ BOOL WINAPI XTL::EMUPATCH(XGetDeviceChanges)
 	LOG_FUNC_END;
 
 	BOOL ret = FALSE;
-    //OLD_XINPUT
-	// If this is a gamepad, and no gamepad was previously detected, connect one
-/*	if (DeviceType == gDeviceType_Gamepad && DeviceType->CurrentConnected == 0) {
-		DeviceType->CurrentConnected = 1;
-		DeviceType->ChangeConnected = 1;		
-	}
-*/
+    
     // If this device type was not previously detected, connect one (or more)
+    // some titles call XGetDevices first, and the CurrentConnected and ChangeConnected flags are set there.
+    // note that certain titles such as Otogi need the ChangeConnected to be set to 1 always to enable the input. 
     int port;
     if (DeviceType->CurrentConnected == 0) {
         for (port = 0; port < 4; port++) {
