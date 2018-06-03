@@ -200,7 +200,7 @@ extern void XTL::EmuExecutePushBufferRaw
     INDEX16 *pIndexData = NULL;
     PVOID pVertexData = NULL;
 
-    DWORD dwVertexShader = -1;
+    //DWORD dwVertexShader = -1;
 
     // cache of last 4 indices
 	INDEX16 pIBMem[4] = {0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF};
@@ -224,6 +224,13 @@ extern void XTL::EmuExecutePushBufferRaw
 
         bShowPB = true;
     }
+
+#define LOG_TRACK_PB(message, ...) \
+	if (bShowPB) { \
+		printf(message, __VA_ARGS__); \
+	}
+#else
+#define LOG_TRACK_PB(message, ...)
 #endif
 
     // static IDirect3DVertexBuffer *pVertexBuffer = nullptr;
@@ -249,10 +256,10 @@ extern void XTL::EmuExecutePushBufferRaw
 			struct {
 				uint32_t        jmp          : 1;       /*  0 */
 				uint32_t        call         : 1;       /*  1 */
-				uint32_t        addr         : 30;      /*  2 */
+				uint32_t        addr         : 30;      /*  2 : used when jmp or call is set */
 			};
 			struct {
-				uint32_t        method       : 13;      /*  0 */
+				uint32_t        method       : 13;      /*  0 : valid when jmp == 0 and call == 0 */
 				uint32_t        subchannel   : 3;       /* 13 */
 				uint32_t        bit_15       : 1;       /* 16 */
 				uint32_t        bit_16       : 1;       /* 17 */
@@ -279,7 +286,7 @@ extern void XTL::EmuExecutePushBufferRaw
 		}
 
 		// Decode push buffer contents (inverse of D3DPUSH_ENCODE) :
-		DWORD dwMethod = command.method;
+		DWORD dwMethod = command.method; // Note : two least significant bits are zero (not a jmp or call)s
 		DWORD dwCount = command.method_count;
 		DWORD bInc = command.non_inc == 0;
 
@@ -300,6 +307,9 @@ extern void XTL::EmuExecutePushBufferRaw
 
         // Interpret GPU Instruction
 		while (dwCount > 0) {
+			// Test case : Azurik (see https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/issues/360)
+			// Test case : RalliSport (see https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/issues/904#issuecomment-362929801)
+			// Test case : Star Wars Jedi Academy (see https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/issues/904#issuecomment-362929801)
 			// Assume the command will be handled completely (down-adjustments may happen)
 			int HandledCount = dwCount;
 
@@ -311,28 +321,17 @@ extern void XTL::EmuExecutePushBufferRaw
 			}
 
 			case NV2A_VERTEX_BEGIN_END: { // 0x000017FC, NVPB_SetBeginEnd, 1 DWORD parameter, D3DPUSH_SET_BEGIN_END, NV097_NO_OPERATION
+				LOG_TRACK_PB("  NVPB_SetBeginEnd(");
 
-#ifdef _DEBUG_TRACK_PB
-				if (bShowPB) {
-					printf("  NVPB_SetBeginEnd(");
-				}
-#endif
 				// Parameter == 0 means SetEnd, EndPush()
 				if (*pdwPushArguments == 0) {
-#ifdef _DEBUG_TRACK_PB
-					if (bShowPB) {
-						printf("DONE)\n");
-					}
-#endif
+					LOG_TRACK_PB("DONE)\n");
 					break; // EndPush(), done with BeginPush()
 				}
 
 				// BeginPush(), To be used as a replacement for DrawVerticesUP, the caller needs to set the vertex format using IDirect3DDevice8::SetVertexShader before calling BeginPush. All attributes in the vertex format must be padded DWORD multiples, and the vertex attributes must be specified in the canonical FVF ordering (position followed by weight, normal, diffuse, and so on).
-#ifdef _DEBUG_TRACK_PB
-				if (bShowPB) {
-					printf("PrimitiveType := %d)\n", *pdwPushArguments);
-				}
-#endif
+				LOG_TRACK_PB("PrimitiveType := %d)\n", *pdwPushArguments);
+
 				// Retrieve the D3DPRIMITIVETYPE info in parameter
 				XboxPrimitiveType = (X_D3DPRIMITIVETYPE)*pdwPushArguments;
 				break;
@@ -393,13 +392,9 @@ extern void XTL::EmuExecutePushBufferRaw
 				}
 				*/
 
-#ifdef _DEBUG_TRACK_PB
-				if (bShowPB) {
-					printf("NVPB_InlineVertexArray(...)\n");
-					printf("  dwCount : %d\n", dwCount);
-					printf("  dwVertexShader : 0x%08X\n", dwVertexShader);
-				}
-#endif
+				LOG_TRACK_PB("NVPB_InlineVertexArray(...)\n");
+				LOG_TRACK_PB("  dwCount : %d\n", dwCount);
+				LOG_TRACK_PB("  dwVertexShader : 0x%08X\n", dwVertexShader);
 
 				// render vertices
 				if (dwVertexShader != -1) {
@@ -426,9 +421,7 @@ extern void XTL::EmuExecutePushBufferRaw
 				LOG_TEST_CASE("NV2A_VB_ELEMENT_U32");
 #ifdef _DEBUG_TRACK_PB
 				if (bShowPB) {
-					printf("  NVPB_FixLoop(%u)\n", dwCount);
-					printf("\n");
-					printf("  Index Array Data...\n");
+					LOG_TRACK_PB("  NVPB_FixLoop(%u)\n\n  Index Array Data...\n", dwCount);
 					INDEX16 *pIndices = (INDEX16*)(pdwPushArguments + 1);
 					for (uint s = 0;s < dwCount; s++) {
 						if (s % 8 == 0)
@@ -475,8 +468,11 @@ extern void XTL::EmuExecutePushBufferRaw
 			}
 
 			case NV2A_VB_ELEMENT_U16: { // 0x1800, NVPB_InlineIndexArray,   NV097_ARRAY_ELEMENT16
-				// Test case : Turok menu's
-				//points pIndexData to the first parameter.
+				// Test case : Turok (in main menu)
+				// Test case : Hunter Redeemer
+				// Test case : Otogi (see https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/pull/1113#issuecomment-385593814)
+				LOG_TEST_CASE("NV2A_VB_ELEMENT_U16");
+				// Points pIndexData to the first parameter.
 				pIndexData = (INDEX16*)pdwPushArguments;
 				//multiply dwCount from DWORD count to WORD count
 				UINT dwIndexCount = dwCount * 2;
@@ -490,9 +486,7 @@ extern void XTL::EmuExecutePushBufferRaw
 
 #ifdef _DEBUG_TRACK_PB
 				if (bShowPB) {
-					printf("  NVPB_InlineIndexArray(0x%p, %u)...\n", pIndexData, dwIndexCount);
-					printf("\n");
-					printf("  Index Array Data...\n");
+					LOG_TRACK_PB("  NVPB_InlineIndexArray(0x%p, %u)...\n\n  Index Array Data...\n", pIndexData, dwIndexCount);
 					INDEX16 *pIndices = pIndexData;
 					for (uint s = 0;s < dwIndexCount; s++) {
 						if (s % 8 == 0)
@@ -515,12 +509,9 @@ extern void XTL::EmuExecutePushBufferRaw
 #endif
 						&uiStride);
 
-					// retrieve stream desc
 					pActiveVB->GetDesc(&VBDesc);
-					// unlock just in case
-					pActiveVB->Unlock();
-					// grab ptr
-					pActiveVB->Lock(0, 0, &pVBData, D3DLOCK_READONLY);
+					pActiveVB->Unlock(); // unlock just in case
+					//pActiveVB->Lock(0, 0, &pVBData, D3DLOCK_READONLY); // grab ptr
 					// print out stream data
 					{
 						printf("\n");
@@ -532,8 +523,7 @@ extern void XTL::EmuExecutePushBufferRaw
 						printf("\n");
 					}
 
-					// release ptr
-					pActiveVB->Unlock();
+					//pActiveVB->Unlock();
 					pActiveVB->Release();
 					DbgDumpMesh((WORD*)pIndexData, dwIndexCount);
 				}
@@ -616,13 +606,13 @@ extern void XTL::EmuExecutePushBufferRaw
 		} // while
     }
 
-    #ifdef _DEBUG_TRACK_PB
+#ifdef _DEBUG_TRACK_PB
     if (bShowPB) {
         printf("\n");
         printf("CxbxDbg> ");
         fflush(stdout);
     }
-    #endif
+#endif
 
     if (g_bStepPush) {
         g_pD3DDevice->Present(0,0,0,0);
