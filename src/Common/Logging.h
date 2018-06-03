@@ -242,30 +242,6 @@ extern thread_local std::string _logPrefix;
 		std::cout << _logFuncPrefix << " forwarding to "#api"...\n"; \
 	} } while (0)
 
-// LOG_IGNORED indicates that Cxbx consiously ignores an api
-#define LOG_IGNORED() \
-	do { if(g_bPrintfOn) { \
-		std::cout << _logFuncPrefix << " ignored!\n"; \
-	} } while (0)
-
-// LOG_UNIMPLEMENTED indicates that Cxbx is missing an implementation of an api
-#define LOG_UNIMPLEMENTED() \
-	do { if(g_bPrintfOn) { \
-		std::cout << _logFuncPrefix << " unimplemented!\n"; \
-	} } while (0)
-
-// LOG_INCOMPLETE indicates that Cxbx is missing part of an implementation of an api
-#define LOG_INCOMPLETE() \
-	do { if(g_bPrintfOn) { \
-		std::cout << _logFuncPrefix << " incomplete!\n"; \
-	} } while (0)
-
-// LOG_NOT_SUPPORTED indicates that Cxbx cannot implement (part of) an api
-#define LOG_NOT_SUPPORTED() \
-	do { if(g_bPrintfOn) { \
-		std::cout << _logFuncPrefix << " not supported!\n"; \
-	} } while (0)
-
 #else // _DEBUG_TRACE
 
 #define LOG_THREAD_INIT
@@ -281,12 +257,49 @@ extern thread_local std::string _logPrefix;
 #define LOG_FUNC_RESULT(r)
 #define LOG_FUNC_RESULT_TYPE(type, r)
 #define LOG_FORWARD(arg)
-#define LOG_IGNORED()
-#define LOG_UNIMPLEMENTED()
-#define LOG_INCOMPLETE()
-#define LOG_NOT_SUPPORTED()
 
 #endif //  _DEBUG_TRACE
+
+
+// LOG_IGNORED indicates that Cxbx consiously ignores an api
+#define LOG_IGNORED() \
+	do { \
+		static bool b_echoOnce = true; \
+		if(g_bPrintfOn && b_echoOnce) { \
+			std::cout << "WARN: " << __FILENAME__ << " : " << __func__ << " ignored!\n"; \
+			b_echoOnce = false; \
+		} \
+	} while(0)
+
+// LOG_UNIMPLEMENTED indicates that Cxbx is missing an implementation of an api
+#define LOG_UNIMPLEMENTED() \
+	do { \
+		static bool b_echoOnce = true; \
+		if(g_bPrintfOn && b_echoOnce) { \
+			std::cout << "WARN: " << __FILENAME__ << " : " << __func__ << " unimplemented!\n"; \
+			b_echoOnce = false; \
+		} \
+	 } while(0)
+
+// LOG_INCOMPLETE indicates that Cxbx is missing part of an implementation of an api
+#define LOG_INCOMPLETE() \
+	do { \
+		static bool b_echoOnce = true; \
+		if(g_bPrintfOn && b_echoOnce) { \
+			std::cout << "WARN: " << __FILENAME__ << " : " << __func__ << " incomplete!\n"; \
+			b_echoOnce = false; \
+		} \
+	} while(0)
+
+// LOG_NOT_SUPPORTED indicates that Cxbx cannot implement (part of) an api
+#define LOG_NOT_SUPPORTED() \
+	do { \
+		static bool b_echoOnce = true; \
+		if(g_bPrintfOn && b_echoOnce) { \
+			std::cout << "WARN: " << __FILENAME__ << " : " << __func__ << " not supported!\n"; \
+			b_echoOnce = false; \
+		} \
+	} while(0)
 
 
 //
