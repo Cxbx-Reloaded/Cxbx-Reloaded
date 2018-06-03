@@ -38,14 +38,6 @@
 
 #include "XADPCM.h"
 
-// LOG_UNIMPLEMENTED indicates that Cxbx is missing an implementation from DSound api
-#define LOG_UNIMPLEMENTED_DSOUND() \
-    static bool b_echoOnce = true; \
-    if (g_bPrintfOn && b_echoOnce) { \
-            std::cout << __func__ << " unimplemented!\n"; \
-            b_echoOnce = false; \
-    }
-
 CRITICAL_SECTION                    g_DSoundCriticalSection;
 #define enterCriticalSection        EnterCriticalSection(&g_DSoundCriticalSection)
 #define leaveCriticalSection        LeaveCriticalSection(&g_DSoundCriticalSection)
