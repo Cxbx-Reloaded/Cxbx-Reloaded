@@ -173,7 +173,7 @@ dashboard from non-retail xbe?");
 	// is forbidden from making allocations there and the LLE OHCI can distinguish identity mapped addresses from contiguous addresses.
 	// Once LLE CPU and MMU are implemented, this can be removed
 	if (g_bIsRetail != true) {
-		ConstructVMA(XBE_IMAGE_BASE + XBE_MAX_VA, XBOX_MEMORY_SIZE, UserRegion, ReservedVma, true);
+		ConstructVMA(XBE_IMAGE_BASE + XBE_MAX_VA, XBOX_MEMORY_SIZE - XBE_MAX_VA, UserRegion, ReservedVma, true);
 	}
 
 	if (g_bIsChihiro) {
@@ -2132,6 +2132,22 @@ xboxkrnl::NTSTATUS VMManager::XbVirtualMemoryStatistics(VAddr addr, xboxkrnl::PM
 	}
 
 	Lock();
+
+	// ergo720: hack. Always report as reserved the region after the memory placeholder and below 0x8000000 if we are emulating
+	// a 128 MiB system regardless of what VirtualQuery says. Once LLE CPU and MMU are implemented, this can be removed
+
+	if (g_bIsRetail != true && addr >= XBE_IMAGE_BASE + XBE_MAX_VA && addr < CHIHIRO_MEMORY_SIZE) {
+		memory_statistics->AllocationBase = (void*)(XBE_IMAGE_BASE + XBE_MAX_VA);
+		memory_statistics->AllocationProtect = XBOX_PAGE_NOACCESS;
+		memory_statistics->BaseAddress = (void*)ROUND_DOWN_4K(addr);
+		memory_statistics->RegionSize = CHIHIRO_MEMORY_SIZE - ROUND_DOWN_4K(addr);
+		memory_statistics->State = XBOX_MEM_RESERVE;
+		memory_statistics->Protect = XBOX_PAGE_NOACCESS;
+		memory_statistics->Type = XBOX_MEM_PRIVATE;
+
+		Unlock();
+		return STATUS_SUCCESS;
+	}
 
 	// Locate the vma containing the supplied address
 
