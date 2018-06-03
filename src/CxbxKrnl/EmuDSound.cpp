@@ -675,7 +675,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound_SetI3DL2Listener)
 
     // This function is relative to DSP, although it needs SetFX from LPDIRECTSOUNDBUFFER8 or LPDIRECTSOUNDFXI3DL2REVERB8 class.
 
-    LOG_UNIMPLEMENTED_DSOUND();
+    LOG_NOT_SUPPORTED();
 
     leaveCriticalSection;
 
@@ -701,7 +701,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound_SetMixBinHeadroom)
 		LOG_FUNC_ARG(dwHeadroom)
 		LOG_FUNC_END;
 
-    LOG_UNIMPLEMENTED_DSOUND();
+    LOG_UNIMPLEMENTED();
 
     leaveCriticalSection;
 
@@ -725,7 +725,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetMixBins)
 		LOG_FUNC_ARG(pMixBins)
 		LOG_FUNC_END;
 
-    LOG_UNIMPLEMENTED_DSOUND();
+    LOG_UNIMPLEMENTED();
 
     leaveCriticalSection;
 
@@ -755,7 +755,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetMixBinVolumes_12)
     // NOTE: Use this function for XDK 3911 only because the implementation was changed
     // somewhere around the December 2001 (4134) update (or earlier, maybe).
 
-    LOG_UNIMPLEMENTED_DSOUND();
+    LOG_UNIMPLEMENTED();
 
     leaveCriticalSection;
 
@@ -1872,7 +1872,9 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetRolloffFactor)
 		LOG_FUNC_ARG(dwApply)
 		LOG_FUNC_END;
 
-    LOG_UNIMPLEMENTED_DSOUND();
+    // NOTE: SetRolloffFactor is only supported for host primary buffer's 3D Listener.
+
+    LOG_UNIMPLEMENTED();
 
     leaveCriticalSection;
 
@@ -2462,7 +2464,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetMixBins)
 		LOG_FUNC_ARG(pMixBins)
 		LOG_FUNC_END;
 
-    LOG_UNIMPLEMENTED_DSOUND();
+    LOG_UNIMPLEMENTED();
 
     leaveCriticalSection;
 
@@ -2529,7 +2531,9 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetRolloffFactor)
 		LOG_FUNC_ARG(dwApply)
 		LOG_FUNC_END;
 
-    LOG_UNIMPLEMENTED_DSOUND();
+    // NOTE: SetRolloffFactor is only supported for host primary buffer's 3D Listener.
+
+    LOG_UNIMPLEMENTED();
 
     leaveCriticalSection;
 
@@ -2714,7 +2718,10 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetI3DL2Source)
 		LOG_FUNC_END;
 
     // NOTE: SetI3DL2Source is using DSFXI3DL2Reverb structure, aka different interface.
-    LOG_UNIMPLEMENTED_DSOUND();
+
+    // NOTE: DSP relative function
+
+    LOG_NOT_SUPPORTED();
 
     leaveCriticalSection;
 
@@ -2850,8 +2857,9 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetLFO) //Low Frequency Oscillat
 		LOG_FUNC_ARG(pLFODesc)
 		LOG_FUNC_END;
 
-    //DSP relative function
-    LOG_UNIMPLEMENTED_DSOUND();
+    // NOTE: DSP relative function
+
+    LOG_NOT_SUPPORTED();
 
     leaveCriticalSection;
 
@@ -2875,7 +2883,9 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetLFO)
         LOG_FUNC_ARG(pLFODesc)
         LOG_FUNC_END;
 
-    LOG_UNIMPLEMENTED_DSOUND();
+    // NOTE: DSP relative function
+
+    LOG_NOT_SUPPORTED();
 
     leaveCriticalSection;
 
@@ -2935,7 +2945,9 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetRolloffCurve)
 		LOG_FUNC_ARG(dwApply)
 		LOG_FUNC_END;
 
-    LOG_UNIMPLEMENTED_DSOUND();
+    // NOTE: Individual 3D buffer function.
+
+    LOG_NOT_SUPPORTED();
 
     leaveCriticalSection;
 
@@ -3059,11 +3071,10 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound_GetOutputLevels)
 		LOG_FUNC_END;
 
     // TODO: Anything?  Either way, I've never seen a game to date use this...
-    static bool bShowOnce = true;
-    if (bShowOnce) {
-        bShowOnce = false;
-        LOG_UNIMPLEMENTED_DSOUND();
-    }
+
+    // NOTE: It ask for access to real time output (require capture device I believe).
+
+    LOG_NOT_SUPPORTED();
 
     leaveCriticalSection;
 
@@ -3087,7 +3098,9 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetEG)
 		LOG_FUNC_ARG(pEnvelopeDesc)
 		LOG_FUNC_END;
 
-    LOG_UNIMPLEMENTED_DSOUND();
+    // NOTE: DSP relative function
+
+    LOG_NOT_SUPPORTED();
 
     leaveCriticalSection;
 
@@ -3209,7 +3222,9 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetFilter)
 		LOG_FUNC_ARG(pFilterDesc)
 		LOG_FUNC_END;
 
-    LOG_UNIMPLEMENTED_DSOUND();
+    // NOTE: DSP relative function
+
+    LOG_NOT_SUPPORTED();
 
     leaveCriticalSection;
 
@@ -3233,7 +3248,9 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetFilter)
 		LOG_FUNC_ARG(pFilterDesc)
 		LOG_FUNC_END;
 
-    LOG_UNIMPLEMENTED_DSOUND();
+    // NOTE: DSP relative function
+
+    LOG_NOT_SUPPORTED();
 
     leaveCriticalSection;
 
@@ -3366,7 +3383,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetMixBinVolumes_12)
     // NOTE: Use this function for XDK 3911 only because the implementation was changed
     // somewhere around the March 2002 (4361) update (or earlier, maybe).
 
-    LOG_UNIMPLEMENTED_DSOUND();
+    LOG_UNIMPLEMENTED();
 
     leaveCriticalSection;
 
@@ -3412,7 +3429,10 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetI3DL2Source)
 		LOG_FUNC_END;
 
     // NOTE: SetI3DL2Source is using DSFXI3DL2Reverb structure, aka different interface.
-    LOG_UNIMPLEMENTED_DSOUND();
+
+    // NOTE: DSP relative function
+
+    LOG_NOT_SUPPORTED();
 
     leaveCriticalSection;
 
@@ -3493,7 +3513,8 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetOutputBuffer)
     // NOTE: SetOutputBuffer is not possible in PC's DirectSound due to 3D controller requirement on ouput buffer to work simultaneously.
     // Test case: MultiPass sample
     // Best to emulate this LLE instead of HLE.
-    LOG_UNIMPLEMENTED_DSOUND();
+
+    LOG_NOT_SUPPORTED();
 
     leaveCriticalSection;
 
@@ -3520,7 +3541,8 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetOutputBuffer)
     // NOTE: SetOutputBuffer is not possible in PC's DirectSound due to 3D controller requirement on ouput buffer to work simultaneously.
     // Test case: Red Faction 2
     // Best to emulate this LLE instead of HLE.
-    LOG_UNIMPLEMENTED_DSOUND();
+
+    LOG_NOT_SUPPORTED();
 
     leaveCriticalSection;
 
@@ -3544,7 +3566,7 @@ HRESULT WINAPI XTL::EMUPATCH(XFileCreateMediaObjectEx)
 		LOG_FUNC_ARG_OUT(ppMediaObject)
 		LOG_FUNC_END;
 
-    LOG_UNIMPLEMENTED_DSOUND();
+    LOG_UNIMPLEMENTED();
 
     leaveCriticalSection;
 
@@ -3554,6 +3576,7 @@ HRESULT WINAPI XTL::EMUPATCH(XFileCreateMediaObjectEx)
 // ******************************************************************
 // * patch: XWaveFileCreateMediaObject
 // ******************************************************************
+// NOTE: Does not require any patch.
 HRESULT WINAPI XTL::EMUPATCH(XWaveFileCreateMediaObject)
 (
     LPCSTR                  pszFileName,
@@ -3570,7 +3593,7 @@ HRESULT WINAPI XTL::EMUPATCH(XWaveFileCreateMediaObject)
 		LOG_FUNC_ARG_OUT(ppMediaObject)
 		LOG_FUNC_END;
 
-    LOG_UNIMPLEMENTED_DSOUND();
+    LOG_UNIMPLEMENTED();
 
     leaveCriticalSection;
 
@@ -3594,7 +3617,9 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetEG)
 		LOG_FUNC_ARG(pEnvelopeDesc)
 		LOG_FUNC_END;
 
-    LOG_UNIMPLEMENTED_DSOUND();
+    // NOTE: DSP relative function
+
+    LOG_NOT_SUPPORTED();
 
     leaveCriticalSection;
 
@@ -3624,7 +3649,9 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound_GetEffectData)
 		LOG_FUNC_ARG(dwDataSize)
 		LOG_FUNC_END;
 
-    LOG_UNIMPLEMENTED_DSOUND();
+    // NOTE: DSP relative function
+
+    LOG_NOT_SUPPORTED();
 
     /* RadWolfie: Should not allocate memory, xbox xbe is just asking for input data, not allocate then input data...
     if (!pvData) {
@@ -3706,7 +3733,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetRolloffCurve)
 		LOG_FUNC_ARG(dwApply)
 		LOG_FUNC_END;
 
-    LOG_UNIMPLEMENTED_DSOUND();
+    LOG_UNIMPLEMENTED();
 
     leaveCriticalSection;
 
@@ -3738,7 +3765,9 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound_SetEffectData)
 		LOG_FUNC_ARG(dwApply)
 		LOG_FUNC_END;
 
-    LOG_UNIMPLEMENTED_DSOUND();
+    // NOTE: DSP relative function
+
+    LOG_NOT_SUPPORTED();
 
     leaveCriticalSection;
 
@@ -3762,9 +3791,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Use3DVoiceData)
 		LOG_FUNC_ARG(pUnknown)
 		LOG_FUNC_END;
 
-    LOG_UNIMPLEMENTED_DSOUND();
-
-    EmuWarning("IDirectSoundBuffer_Use3DVoiceData not yet supported!");
+    LOG_NOT_SUPPORTED();
 
     leaveCriticalSection;
 
@@ -3774,6 +3801,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Use3DVoiceData)
 // ******************************************************************
 // * patch: XFileCreateMediaObjectAsync
 // ******************************************************************
+// NOTE: Does not require a patch.
 HRESULT WINAPI XTL::EMUPATCH(XFileCreateMediaObjectAsync)
 (
     HANDLE      hFile,
@@ -3790,7 +3818,7 @@ HRESULT WINAPI XTL::EMUPATCH(XFileCreateMediaObjectAsync)
         LOG_FUNC_ARG_OUT(ppMediaObject)
         LOG_FUNC_END;
 
-    LOG_UNIMPLEMENTED_DSOUND();
+    LOG_UNIMPLEMENTED();
 
     *ppMediaObject = new X_XFileMediaObject();
 
@@ -3802,6 +3830,7 @@ HRESULT WINAPI XTL::EMUPATCH(XFileCreateMediaObjectAsync)
 // ******************************************************************
 // * patch: XFileMediaObject_Seek
 // ******************************************************************
+// NOTE: Does not require a patch.
 HRESULT WINAPI XTL::EMUPATCH(XFileMediaObject_Seek)
 (
     X_XFileMediaObject* pThis,
@@ -3820,7 +3849,7 @@ HRESULT WINAPI XTL::EMUPATCH(XFileMediaObject_Seek)
 		LOG_FUNC_ARG(pdwAbsolute)
 		LOG_FUNC_END;
 
-    LOG_UNIMPLEMENTED_DSOUND();
+    LOG_UNIMPLEMENTED();
 
     leaveCriticalSection;
 
@@ -3830,6 +3859,7 @@ HRESULT WINAPI XTL::EMUPATCH(XFileMediaObject_Seek)
 // ******************************************************************
 // * patch: XFileMediaObject_DoWork
 // ******************************************************************
+// NOTE: Does not require a patch.
 VOID WINAPI XTL::EMUPATCH(XFileMediaObject_DoWork)(X_XFileMediaObject* pThis)
 {
     //FUNC_EXPORTS;
@@ -3838,7 +3868,7 @@ VOID WINAPI XTL::EMUPATCH(XFileMediaObject_DoWork)(X_XFileMediaObject* pThis)
 
 	LOG_FUNC_ONE_ARG(pThis);
 
-    LOG_UNIMPLEMENTED_DSOUND();
+    LOG_UNIMPLEMENTED();
 
     leaveCriticalSection;
 }
@@ -3846,6 +3876,7 @@ VOID WINAPI XTL::EMUPATCH(XFileMediaObject_DoWork)(X_XFileMediaObject* pThis)
 // ******************************************************************
 // * patch: XFileMediaObject_GetStatus
 // ******************************************************************
+// NOTE: Does not require a patch.
 HRESULT WINAPI XTL::EMUPATCH(XFileMediaObject_GetStatus)
 (
     X_XFileMediaObject* pThis,
@@ -3860,7 +3891,7 @@ HRESULT WINAPI XTL::EMUPATCH(XFileMediaObject_GetStatus)
 		LOG_FUNC_ARG_OUT(pdwStatus)
 		LOG_FUNC_END;
 
-    LOG_UNIMPLEMENTED_DSOUND();
+    LOG_UNIMPLEMENTED();
 
     leaveCriticalSection;
 
@@ -3870,6 +3901,7 @@ HRESULT WINAPI XTL::EMUPATCH(XFileMediaObject_GetStatus)
 // ******************************************************************
 // * patch: XFileMediaObject_GetInfo
 // ******************************************************************
+// NOTE: Does not require a patch.
 HRESULT WINAPI XTL::EMUPATCH(XFileMediaObject_GetInfo)
 (
     X_XFileMediaObject* pThis,
@@ -3884,7 +3916,7 @@ HRESULT WINAPI XTL::EMUPATCH(XFileMediaObject_GetInfo)
 		LOG_FUNC_ARG_OUT(pInfo)
 		LOG_FUNC_END;
 
-    LOG_UNIMPLEMENTED_DSOUND();
+    LOG_UNIMPLEMENTED();
 
     leaveCriticalSection;
 
@@ -3894,6 +3926,7 @@ HRESULT WINAPI XTL::EMUPATCH(XFileMediaObject_GetInfo)
 // ******************************************************************
 // * patch: XFileMediaObject_Process
 // ******************************************************************
+// NOTE: Does not require a patch.
 HRESULT WINAPI XTL::EMUPATCH(XFileMediaObject_Process)
 (
     X_XFileMediaObject* pThis,
@@ -3910,7 +3943,7 @@ HRESULT WINAPI XTL::EMUPATCH(XFileMediaObject_Process)
 		LOG_FUNC_ARG(pOutputBuffer)
 		LOG_FUNC_END;
 
-    LOG_UNIMPLEMENTED_DSOUND();
+    LOG_UNIMPLEMENTED();
 
     leaveCriticalSection;
 
@@ -3920,6 +3953,7 @@ HRESULT WINAPI XTL::EMUPATCH(XFileMediaObject_Process)
 // ******************************************************************
 // * patch: XFileMediaObject_AddRef
 // ******************************************************************
+// NOTE: Does not require a patch.
 ULONG WINAPI XTL::EMUPATCH(XFileMediaObject_AddRef)
 (
 	X_XFileMediaObject* pThis)
@@ -3944,6 +3978,7 @@ ULONG WINAPI XTL::EMUPATCH(XFileMediaObject_AddRef)
 // ******************************************************************
 // * patch: XFileMediaObject_Release
 // ******************************************************************
+// NOTE: Does not require a patch.
 ULONG WINAPI XTL::EMUPATCH(XFileMediaObject_Release)
 (
 	X_XFileMediaObject* pThis)
@@ -3971,6 +4006,7 @@ ULONG WINAPI XTL::EMUPATCH(XFileMediaObject_Release)
 // ******************************************************************
 // * patch: XFileMediaObject_Discontinuity
 // ******************************************************************
+// NOTE: Does not require a patch.
 HRESULT WINAPI XTL::EMUPATCH(XFileMediaObject_Discontinuity)
 (
 	X_XFileMediaObject *pThis)
@@ -3981,7 +4017,7 @@ HRESULT WINAPI XTL::EMUPATCH(XFileMediaObject_Discontinuity)
 
 	LOG_FUNC_ONE_ARG(pThis);
 
-	LOG_UNIMPLEMENTED_DSOUND();
+	LOG_UNIMPLEMENTED();
 
     leaveCriticalSection;
 
@@ -4050,7 +4086,9 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound_CommitEffectData)
 
     LOG_FUNC_ONE_ARG(pThis);
 
-    LOG_UNIMPLEMENTED_DSOUND();
+    // NOTE: DSP relative function.
+
+    LOG_NOT_SUPPORTED();
 
     leaveCriticalSection;
 
@@ -4112,7 +4150,7 @@ HRESULT WINAPI XTL::EMUPATCH(XFileCreateMediaObject)
 		LOG_FUNC_ARG_OUT(ppMediaObject)
 		LOG_FUNC_END;
 
-    LOG_UNIMPLEMENTED_DSOUND();
+    LOG_UNIMPLEMENTED();
 
     leaveCriticalSection;
 
@@ -4122,6 +4160,7 @@ HRESULT WINAPI XTL::EMUPATCH(XFileCreateMediaObject)
 // ******************************************************************
 // * patch: XWaveFileCreateMediaObjectEx
 // ******************************************************************
+// NOTE: Does not require a patch.
 HRESULT WINAPI XTL::EMUPATCH(XWaveFileCreateMediaObjectEx)
 (
     LPCSTR              pszFileName,
@@ -4138,7 +4177,7 @@ HRESULT WINAPI XTL::EMUPATCH(XWaveFileCreateMediaObjectEx)
         LOG_FUNC_ARG_OUT(ppMediaObject)
         LOG_FUNC_END;
 
-    LOG_UNIMPLEMENTED_DSOUND();
+    LOG_UNIMPLEMENTED();
 
     leaveCriticalSection;
 
@@ -4164,7 +4203,7 @@ HRESULT WINAPI XTL::EMUPATCH(XAudioSetEffectData)
         LOG_FUNC_ARG(pRawDesc)
         LOG_FUNC_END;
 
-    LOG_UNIMPLEMENTED_DSOUND();
+    LOG_NOT_SUPPORTED();
 
     leaveCriticalSection;
 
@@ -4182,17 +4221,11 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetDistanceFactor)
 {
     FUNC_EXPORTS;
 
-    enterCriticalSection;
-
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(flDistanceFactor)
 		LOG_FUNC_ARG(dwApply)
 		LOG_FUNC_END;
-
-    LOG_UNIMPLEMENTED_DSOUND();
-
-    leaveCriticalSection;
 
     return HybridDirectSound3DListener_SetDistanceFactor(g_pDSoundPrimary3DListener8, flDistanceFactor, dwApply);
 }
@@ -4234,7 +4267,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_GetVoiceProperties)
         LOG_FUNC_ARG_OUT(pVoiceProps)
         LOG_FUNC_END;
 
-    LOG_UNIMPLEMENTED_DSOUND();
+    LOG_UNIMPLEMENTED();
 
     leaveCriticalSection;
 
@@ -4258,7 +4291,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_GetVoiceProperties)
         LOG_FUNC_ARG_OUT(pVoiceProps)
         LOG_FUNC_END;
 
-    LOG_UNIMPLEMENTED_DSOUND();
+    LOG_UNIMPLEMENTED();
 
     leaveCriticalSection;
 
