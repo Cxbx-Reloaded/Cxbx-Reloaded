@@ -109,18 +109,73 @@
 #define OHCI_ED_EN_SHIFT  7
 #define OHCI_ED_EN_MASK   (0xF<<OHCI_ED_EN_SHIFT)
 #define OHCI_ED_D_SHIFT   11
-#define OHCI_ED_D_MASK    (3<<OHCI_ED_D_SHIFT)
+#define OHCI_ED_D_MASK    (3<<OHCI_ED_D_SHIFT)        // Direction
 #define OHCI_ED_S         (1<<13)
 #define OHCI_ED_K         (1<<14)                     // sKip
 #define OHCI_ED_F         (1<<15)                     // Format
 #define OHCI_ED_MPS_SHIFT 16
-#define OHCI_ED_MPS_MASK  (0x7FF<<OHCI_ED_MPS_SHIFT)
+#define OHCI_ED_MPS_MASK  (0x7FF<<OHCI_ED_MPS_SHIFT)  // MaximumPacketSize
 
 /* Flags in the HeadP field of an ED */
 #define OHCI_ED_H         1                           // Halted
+#define OHCI_ED_C         2
 
-/* Mask for the four least significant bits in an ED address */
+/* Bitfields for the first word of a TD */
+#define OHCI_TD_R         (1<<18)                     // bufferRounding
+#define OHCI_TD_DP_SHIFT  19
+#define OHCI_TD_DP_MASK   (3<<OHCI_TD_DP_SHIFT)       // Direction-Pid
+#define OHCI_TD_DI_SHIFT  21
+#define OHCI_TD_DI_MASK   (7<<OHCI_TD_DI_SHIFT)
+#define OHCI_TD_T0        (1<<24)
+#define OHCI_TD_T1        (1<<25)
+#define OHCI_TD_EC_SHIFT  26
+#define OHCI_TD_EC_MASK   (3<<OHCI_TD_EC_SHIFT)
+#define OHCI_TD_CC_SHIFT  28
+#define OHCI_TD_CC_MASK   (0xf<<OHCI_TD_CC_SHIFT)
+
+/* Mask the four least significant bits in an ED address */
 #define OHCI_DPTR_MASK    0xFFFFFFF0
+
+#define OHCI_BM(val, field) \
+  (((val) & OHCI_##field##_MASK) >> OHCI_##field##_SHIFT)
+
+#define OHCI_SET_BM(val, field, newval) do { \
+    val &= ~OHCI_##field##_MASK; \
+    val |= ((newval) << OHCI_##field##_SHIFT) & OHCI_##field##_MASK; \
+    } while(0)
+
+/* Indicates the direction of data flow as specified by the TD */
+#define OHCI_TD_DIR_SETUP     0x0 // to endpoint
+#define OHCI_TD_DIR_OUT       0x1 // to endpoint
+#define OHCI_TD_DIR_IN        0x2 // from endpoint
+#define OHCI_TD_DIR_RESERVED  0x3
+
+#define OHCI_CC_NOERROR             0x0
+#define OHCI_CC_CRC                 0x1
+#define OHCI_CC_BITSTUFFING         0x2
+#define OHCI_CC_DATATOGGLEMISMATCH  0x3
+#define OHCI_CC_STALL               0x4
+#define OHCI_CC_DEVICENOTRESPONDING 0x5
+#define OHCI_CC_PIDCHECKFAILURE     0x6
+#define OHCI_CC_UNDEXPETEDPID       0x7
+#define OHCI_CC_DATAOVERRUN         0x8
+#define OHCI_CC_DATAUNDERRUN        0x9
+#define OHCI_CC_BUFFEROVERRUN       0xC
+#define OHCI_CC_BUFFERUNDERRUN      0xD
+
+#define USB_TOKEN_SETUP 0x2D
+#define USB_TOKEN_IN    0x69 // device -> host
+#define USB_TOKEN_OUT   0xE1 // host -> device
+
+#define USB_RET_SUCCESS           (0)
+#define USB_RET_NODEV             (-1)
+#define USB_RET_NAK               (-2)
+#define USB_RET_STALL             (-3)
+#define USB_RET_BABBLE            (-4)
+#define USB_RET_IOERROR           (-5)
+#define USB_RET_ASYNC             (-6)
+#define USB_RET_ADD_TO_QUEUE      (-7)
+#define USB_RET_REMOVE_FROM_QUEUE (-8)
 
 #define USB_HZ 12000000
 
@@ -179,7 +234,7 @@ void OHCI::OHCI_FrameBoundaryWorker()
 	if (ohci->old_ctl & (~ohci->ctl) & (OHCI_CTL_BLE | OHCI_CTL_CLE)) {
 		if (ohci->async_td) {
 			usb_cancel_packet(&ohci->usb_packet);
-			ohci->async_td = 0;
+			m_AsyncTD = xbnull;
 		}
 		OHCI_StopEndpoints();
 	}
@@ -243,6 +298,7 @@ void OHCI::OHCI_FatalError()
 
 	OHCI_SetInterrupt(OHCI_INTR_UE);
 	OHCI_BusStop();
+	DbgPrintf("Ohci: an unrecoverable error occoured!\n");
 }
 
 bool OHCI::OHCI_ReadHCCA(xbaddr Paddr, OHCI_HCCA* Hcca)
@@ -289,6 +345,83 @@ bool OHCI::OHCI_WriteED(xbaddr Paddr, OHCI_ED* Ed)
 	size_t OffsetOfHeadP = offsetof(OHCI_ED, HeadP);
 
 	return OHCI_WriteDwords(Paddr + OffsetOfHeadP, reinterpret_cast<uint32_t*>(reinterpret_cast<uint8_t*>(Ed) + OffsetOfHeadP), 1);
+}
+
+bool OHCI::OHCI_ReadTD(xbaddr Paddr, OHCI_TD* Td)
+{
+	return OHCI_GetDwords(Paddr, reinterpret_cast<uint32_t*>(Td), sizeof(*Td) >> 2); // TD is 16 bytes large
+}
+
+bool OHCI::OHCI_WriteTD(xbaddr Paddr, OHCI_TD* Td)
+{
+	return OHCI_WriteDwords(Paddr, reinterpret_cast<uint32_t*>(Td), sizeof(*Td) >> 2);
+}
+
+bool OHCI::OHCI_CopyTD(OHCI_TD* Td, uint8_t* Buffer, int Length, bool bIsWrite)
+{
+	uint32_t ptr, n;
+
+	// Figure out if we are crossing a 4K page boundary
+	ptr = Td->CurrentBufferPointer;
+	n = 0x1000 - (ptr & 0xFFF);
+	if (n > Length) {
+		n = Length;
+	}
+
+	if (OHCI_FindAndCopyTD(ptr, Buffer, n, bIsWrite)) {
+		return true; // error
+	}
+	if (n == Length) {
+		return false; // no bytes left to copy
+	}
+
+	// From the standard: "If during the data transfer the buffer address contained in the HCfs working copy of
+	// CurrentBufferPointer crosses a 4K boundary, the upper 20 bits of BufferEnd are copied to the
+	// working value of CurrentBufferPointer causing the next buffer address to be the 0th byte in the
+	// same 4K page that contains the last byte of the buffer."
+	ptr = Td->BufferEnd & ~0xFFFu;
+	Buffer += n;
+	if (OHCI_FindAndCopyTD(ptr, Buffer, Length - n, bIsWrite)) {
+		return true; // error
+	}
+	return false;
+}
+
+bool OHCI::OHCI_FindAndCopyTD(xbaddr Paddr, uint8_t* Buffer, int Length, bool bIsWrite)
+{
+	// ergo720: the buffer pointed to by Paddr can be anywhere in memory (it depends on how the xbe has
+	// allocated it) so, sadly, we cannot make any assumptions here regarding its location like we did
+	// in OHCI_ReadHCCA and the problem with VirtualAlloc can arise this time. Because of the hack in
+	// TranslateVAddrToPAddr, VirtualAlloc allocations are identity mapped and addresses below 0x4000000
+	// (Xbox) or 0x8000000 (Chihiro, Devkit) cannot be used by the VMManager for anything but to allocate
+	// xbe sections. This means that if Paddr is higher than the maximum possible physical address, then
+	// we know it's an identity mapped address, otherwise it's a contiguous address
+
+	int offset = 0;
+
+	if (Paddr == xbnull) {
+		return true; // error
+	}
+
+	if (g_bIsRetail) {
+		if (Paddr < XBOX_MEMORY_SIZE) {
+			offset = CONTIGUOUS_MEMORY_BASE;
+		}
+	}
+	else {
+		if (Paddr < CHIHIRO_MEMORY_SIZE) {
+			offset = CONTIGUOUS_MEMORY_BASE;
+		}
+	}
+
+	if (bIsWrite) {
+		std::memcpy(reinterpret_cast<void*>(Paddr + offset), Buffer, Length);
+	}
+	else {
+		std::memcpy(Buffer, reinterpret_cast<void*>(Paddr + offset), Length);
+	}
+
+	return false;
 }
 
 bool OHCI::OHCI_GetDwords(xbaddr Paddr, uint32_t* Buffer, int Number)
@@ -343,9 +476,9 @@ int OHCI::OHCI_ServiceEDlist(xbaddr Head, int Completion)
 		if ((ed.HeadP & OHCI_ED_H) || (ed.Flags & OHCI_ED_K)) { // halted or skip
 			// Cancel pending packets for ED that have been paused
 			xbaddr addr = ed.HeadP & OHCI_DPTR_MASK;
-			if (AsyncTD && addr == AsyncTD) {
+			if (m_AsyncTD && addr == m_AsyncTD) {
 				usb_cancel_packet(&ohci->usb_packet);
-				AsyncTD = xbnull;
+				m_AsyncTD = xbnull;
 				USB_DeviceEPstopped(m_UsbPacket.Endpoint->Dev, m_UsbPacket.Endpoint);
 			}
 			continue;
@@ -366,12 +499,13 @@ int OHCI::OHCI_ServiceEDlist(xbaddr Head, int Completion)
 
 			if ((ed.Flags & OHCI_ED_F) == 0) {
 				// Handle control, interrupt or bulk endpoints
-				if (ohci_service_td(ohci, &ed))
+				if (OHCI_ServiceTD(&ed)) {
 					break;
+				}
 			}
 			else {
 				// Handle isochronous endpoints
-				if (ohci_service_iso_td(ohci, &ed, completion))
+				if (ohci_service_iso_td(ohci, &ed, Completion))
 					break;
 			}
 		}
@@ -384,6 +518,250 @@ int OHCI::OHCI_ServiceEDlist(xbaddr Head, int Completion)
 	}
 
 	return active;
+}
+
+int OHCI::OHCI_ServiceTD(OHCI_ED* Ed)
+{
+	int direction;
+	size_t length = 0, packetlen = 0;
+#ifdef DEBUG_PACKET
+	const char *str = NULL;
+#endif
+	int pid;
+	int ret;
+	int i;
+	USBDev* dev;
+	USBEndpoint* ep;
+	OHCI_TD td;
+	xbaddr addr;
+	int flag_r;
+	int completion;
+
+	addr = Ed->HeadP & OHCI_DPTR_MASK;
+	// See if this TD has already been submitted to the device
+	completion = (addr == m_AsyncTD);
+	if (completion && !m_AsyncComplete) { // ??
+#ifdef DEBUG_PACKET
+		DPRINTF("Skipping async TD\n");
+		DbgPrintf("Skipping async TD\n");
+#endif
+		return 1;
+	}
+	if (OHCI_ReadTD(addr, &td)) {
+		EmuWarning("Ohci: TD read error at physical address 0x%X", addr);
+		OHCI_FatalError();
+		return 0;
+	}
+
+	// From the standard: "This 2-bit field indicates the direction of data flow and the PID
+	// to be used for the token. This field is only relevant to the HC if the D field in the ED
+	// was set to 00b or 11b indicating that the PID determination is deferred to the TD."
+	direction = OHCI_BM(Ed->Flags, ED_D);
+	switch (direction) {
+		case OHCI_TD_DIR_OUT:
+		case OHCI_TD_DIR_IN:
+			// Same value
+			break;
+		default:
+			direction = OHCI_BM(td.Flags, TD_DP);
+	}
+
+	switch (direction) {
+		case OHCI_TD_DIR_IN:
+#ifdef DEBUG_PACKET
+			str = "in";
+#endif
+			pid = USB_TOKEN_IN;
+			break;
+		case OHCI_TD_DIR_OUT:
+#ifdef DEBUG_PACKET
+			str = "out";
+#endif
+			pid = USB_TOKEN_OUT;
+			break;
+		case OHCI_TD_DIR_SETUP:
+#ifdef DEBUG_PACKET
+			str = "setup";
+#endif
+			pid = USB_TOKEN_SETUP;
+			break;
+		default:
+			EmuWarning("Ohci: bad direction");
+			return 1;
+	}
+
+	// Check if this TD has a buffer of user data to transfer
+	if (td.CurrentBufferPointer && td.BufferEnd) {
+		if ((td.CurrentBufferPointer & 0xFFFFF000) != (td.BufferEnd & 0xFFFFF000)) {
+			// the buffer crosses a 4K page boundary
+			length = (td.BufferEnd & 0xFFF) + 0x1001 - (td.CurrentBufferPointer & 0xFFF);
+		}
+		else {
+			// the buffer is within a single page
+			length = (td.BufferEnd - td.CurrentBufferPointer) + 1;
+		}
+
+		packetlen = length;
+		if (length && direction != OHCI_TD_DIR_IN) {
+			// The endpoint may not allow us to transfer it all now
+			packetlen = (Ed->Flags & OHCI_ED_MPS_MASK) >> OHCI_ED_MPS_SHIFT;
+			if (packetlen > length) {
+				packetlen = length;
+			}
+			if (!completion) {
+				if (OHCI_CopyTD(&td, m_UsbBuffer, packetlen, false)) {
+					OHCI_FatalError();
+				}
+			}
+		}
+	}
+
+	flag_r = (td.Flags & OHCI_TD_R) != 0;
+#ifdef DEBUG_PACKET
+	DPRINTF(" TD @ 0x%.8x %" PRId64 " of %" PRId64
+		" bytes %s r=%d cbp=0x%.8x be=0x%.8x\n",
+		addr, (int64_t)pktlen, (int64_t)len, str, flag_r, td.cbp, td.be);
+
+	if (pktlen > 0 && dir != OHCI_TD_DIR_IN) {
+		DPRINTF("  data:");
+		for (i = 0; i < pktlen; i++) {
+			printf(" %.2x", ohci->usb_buf[i]);
+		}
+		DPRINTF("\n");
+	}
+#endif
+	if (completion) {
+		m_AsyncTD = 0;
+		m_AsyncComplete = 0;
+	}
+	else {
+		if (m_AsyncTD) {
+			// From XQEMU: "??? The hardware should allow one active packet per endpoint.
+			// We only allow one active packet per controller. This should be sufficient
+			// as long as devices respond in a timely manner."
+#ifdef DEBUG_PACKET
+			DPRINTF("Too many pending packets\n");
+#endif
+			DbgPrintf("Too many pending packets\n");
+			return 1;
+		}
+		dev = ohci_find_device(ohci, OHCI_BM(Ed->Flags, ED_FA));
+		ep = usb_ep_get(dev, pid, OHCI_BM(Ed->Flags, ED_EN));
+		usb_packet_setup(&m_UsbPacket, pid, ep, 0, addr, !flag_r, OHCI_BM(td.Flags, TD_DI) == 0);
+		usb_packet_addbuf(&m_UsbPacket, ohci->usb_buf, packetlen);
+		usb_handle_packet(dev, &m_UsbPacket);
+#ifdef DEBUG_PACKET
+		DPRINTF("status=%d\n", ohci->usb_packet.status);
+#endif
+		if (m_UsbPacket.status == USB_RET_ASYNC) {
+			usb_device_flush_ep_queue(dev, ep);
+			m_AsyncTD = addr;
+			return 1;
+		}
+	}
+	if (m_UsbPacket.status == USB_RET_SUCCESS) {
+		ret = m_UsbPacket.actual_length;
+	}
+	else {
+		ret = m_UsbPacket.status;
+	}
+
+	if (ret >= 0) {
+		if (direction == OHCI_TD_DIR_IN) {
+			if (OHCI_CopyTD(&td, m_UsbBuffer, ret, true)) {
+				OHCI_FatalError();
+			}
+#ifdef DEBUG_PACKET
+			DPRINTF("  data:");
+			for (i = 0; i < ret; i++)
+				printf(" %.2x", ohci->usb_buf[i]);
+			DPRINTF("\n");
+#endif
+		}
+		else {
+			ret = packetlen;
+		}
+	}
+
+	if (ret >= 0) {
+		if ((td.CurrentBufferPointer & 0xFFF) + ret > 0xFFF) {
+			td.CurrentBufferPointer = (td.BufferEnd & ~0xFFF) + ((td.CurrentBufferPointer + ret) & 0xFFF);
+		}
+		else {
+			td.CurrentBufferPointer += ret;
+		}
+	}
+
+	// Writeback
+	if (ret == packetlen || (direction == OHCI_TD_DIR_IN && ret >= 0 && flag_r)) {
+		// Transmission succeeded
+		if (ret == length) {
+			td.CurrentBufferPointer = 0;
+		}
+		td.Flags |= OHCI_TD_T1;
+		td.Flags ^= OHCI_TD_T0;
+		OHCI_SET_BM(td.Flags, TD_CC, OHCI_CC_NOERROR);
+		OHCI_SET_BM(td.Flags, TD_EC, 0);
+
+		if ((direction != OHCI_TD_DIR_IN) && (ret != length)) {
+			// Partial packet transfer: TD not ready to retire yet
+			goto exit_no_retire;
+		}
+
+		// Setting ED_C is part of the TD retirement process
+		Ed->HeadP &= ~OHCI_ED_C;
+		if (td.Flags & OHCI_TD_T0)
+			Ed->HeadP |= OHCI_ED_C;
+	}
+	else {
+		if (ret >= 0) {
+			DbgPrintf("Ohci: Underrun\n");
+			OHCI_SET_BM(td.Flags, TD_CC, OHCI_CC_DATAUNDERRUN);
+		}
+		else {
+			switch (ret) {
+				case USB_RET_IOERROR:
+				case USB_RET_NODEV:
+					DbgPrintf("Ohci: Received DEV ERROR\n");
+					OHCI_SET_BM(td.Flags, TD_CC, OHCI_CC_DEVICENOTRESPONDING);
+					break;
+				case USB_RET_NAK:
+					DbgPrintf("Ohci: Received NAK\n");
+					return 1;
+				case USB_RET_STALL:
+					DbgPrintf("Ohci: Received STALL\n");
+					OHCI_SET_BM(td.Flags, TD_CC, OHCI_CC_STALL);
+					break;
+				case USB_RET_BABBLE:
+					DbgPrintf("Ohci: Received BABBLE\n");
+					OHCI_SET_BM(td.Flags, TD_CC, OHCI_CC_DATAOVERRUN);
+					break;
+				default:
+					DbgPrintf("Ohci: Bad device response %d\n", ret);
+					OHCI_SET_BM(td.Flags, TD_CC, OHCI_CC_UNDEXPETEDPID);
+					OHCI_SET_BM(td.Flags, TD_EC, 3);
+			}
+		}
+		Ed->HeadP |= OHCI_ED_H;
+	}
+
+	// Retire this TD
+	Ed->HeadP &= ~OHCI_DPTR_MASK;
+	Ed->HeadP |= td.NextTD & OHCI_DPTR_MASK;
+	td.NextTD = m_Registers.HcDoneHead;
+	m_Registers.HcDoneHead = addr;
+	i = OHCI_BM(td.Flags, TD_DI);
+	if (i < m_DoneCount)
+		m_DoneCount = i;
+	if (OHCI_BM(td.Flags, TD_CC) != OHCI_CC_NOERROR)
+		m_DoneCount = 0;
+
+exit_no_retire:
+	if (OHCI_WriteTD(addr, &td)) {
+		OHCI_FatalError();
+		return 1;
+	}
+	return OHCI_BM(td.Flags, TD_CC) != OHCI_CC_NOERROR;
 }
 
 void OHCI::OHCI_StateReset()
@@ -431,9 +809,9 @@ void OHCI::OHCI_StateReset()
 			USB_PortReset(&Port->UsbPort);
 		}
 	}
-	if (AsyncTD) {
+	if (m_AsyncTD) {
 		usb_cancel_packet(&ohci->usb_packet);
-		AsyncTD = xbnull;
+		m_AsyncTD = xbnull;
 	}
 
 	OHCI_StopEndpoints();

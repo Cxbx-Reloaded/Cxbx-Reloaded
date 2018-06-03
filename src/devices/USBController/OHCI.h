@@ -61,6 +61,15 @@ typedef struct _OHCI_ED {
 }
 OHCI_ED;
 
+/* general transfer descriptor */
+typedef struct _OHCI_TD {
+	uint32_t Flags;
+	uint32_t CurrentBufferPointer;
+	uint32_t NextTD;
+	uint32_t BufferEnd;
+}
+OHCI_TD;
+
 /* enum indicating the current HC state */
 typedef enum _OHCI_State
 {
@@ -153,6 +162,8 @@ class OHCI
 		uint64_t m_TicksPerUsbTick;
 		// pending usb packet to process
 		USBPacket m_UsbPacket;
+		// temporary buffer that holds the user data to transfer in a packet
+		uint8_t m_UsbBuffer[8192];
 		// ergo720: I believe it's the value of HcControl in the last frame
 		uint32_t old_ctl;
 		// irq number
@@ -161,7 +172,9 @@ class OHCI
 		// -> num of frames to wait before generating an interrupt for this TD
 		int m_DoneCount;
 		// the address of the pending TD
-		xbaddr AsyncTD;
+		xbaddr m_AsyncTD;
+		// ergo720: I think it signals that a TD has been processed completely
+		bool m_AsyncComplete;
 
 		// EOF callback wrapper
 		static void OHCI_FrameBoundaryWrapper(void* pVoid);
@@ -210,12 +223,22 @@ class OHCI
 		bool OHCI_ReadED(xbaddr Paddr, OHCI_ED* Ed);
 		// write an ED in memory
 		bool OHCI_WriteED(xbaddr Paddr, OHCI_ED* Ed);
+		// read an TD in memory
+		bool OHCI_ReadTD(xbaddr Paddr, OHCI_TD* Td);
+		// write a TD in memory
+		bool OHCI_WriteTD(xbaddr Paddr, OHCI_TD* Td);
+		// read/write the contents of a TD from/to main memory
+		bool OHCI_CopyTD(OHCI_TD* Td, uint8_t* Buffer, int Length, bool bIsWrite);
+		// find a TD buffer in memory and copy it
+		bool OHCI_FindAndCopyTD(xbaddr Paddr, uint8_t* Buffer, int Length, bool bIsWrite);
 		// read an array of DWORDs in memory
 		bool OHCI_GetDwords(xbaddr Paddr, uint32_t* Buffer, int Number);
 		// write an array of DWORDs in memory
 		bool OHCI_WriteDwords(xbaddr Paddr, uint32_t* Buffer, int Number);
-		//
+		// process an ED list
 		int OHCI_ServiceEDlist(xbaddr Head, int Completion);
+		// process a TD. Returns nonzero to terminate processing of this endpoint
+		int OHCI_ServiceTD(OHCI_ED* Ed);
 
 		// register a port with the HC
 		void USB_RegisterPort(USBPort* Port, int Index, int SpeedMask);
