@@ -42,6 +42,8 @@ namespace xboxkrnl {
     #include <xboxkrnl/xboxkrnl.h>
 };
 
+#define LOG_PREFIX "DSND"
+
 #include <dsound.h>
 #include <thread>
 #include "CxbxKrnl.h"
