@@ -190,13 +190,14 @@ DWORD CxbxGetStrideFromVertexShaderHandle(DWORD dwVertexShader)
 	if (VshHandleIsVertexShader(dwVertexShader)) {
 		// Test-case : Crash 'n' Burn [45530014]
 		// Test-case : CrimsonSea [4B4F0002]
+		// Test-case : Freedom Fighters
 		// Test-case : Hot Wheels Stunt Track Challenge [54510089] 
 		// Test-case : Inside Pitch 2003 [4D530034]
 		// Test-case : Need for Speed Most Wanted [4541007B]
 		// Test-case : Prince of Persia: The Sands of Time [5553001d]
 		// Test-case : RPM Tuning [Top Gear RPM Tuning] [4B420007]
 		// Test-case : SpyHunter 2 [4D57001B]
-		LOG_TEST_CASE("Non-FVF Vertex Shaders not yet (completely) supported for PushBuffer emulation!");
+		//LOG_TEST_CASE("Non-FVF Vertex Shaders not yet (completely) supported for PushBuffer emulation!");
 
 		CxbxVertexShader *pVertexShader = MapXboxVertexShaderHandleToCxbxVertexShader(dwVertexShader);
 		if (pVertexShader) {
