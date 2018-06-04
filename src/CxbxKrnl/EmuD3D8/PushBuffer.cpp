@@ -276,6 +276,8 @@ extern void XTL::EmuExecutePushBufferRaw
     // static IDirect3DVertexBuffer *pVertexBuffer = nullptr;
 
     static uint maxIBSize = 0;
+	static DWORD *subroutine_return;
+	static bool subroutine_active;
 	UINT8 * pPushDataEnd= (UINT8 *)pdwPushData + dwSize;
 
     while (true) {
@@ -292,18 +294,18 @@ extern void XTL::EmuExecutePushBufferRaw
 		// Sources : NV_PFIFO_CACHE1_DMA_STATE, https://github.com/haxar/xexec/blob/master/hw/gpu/nv2a.c#L220 and
 		// https://github.com/PatrickvL/Dxbx/blob/master/Source/Delphi/src/DxbxKrnl/EmuD3D8/uPushBuffer.pas#L126
 		union {
-			uint32_t            field;
+			uint32_t field; /* 0 .. 31 */
 			struct {
 				uint32_t        jump         : 1;       /*  0 */
 				uint32_t        call         : 1;       /*  1 */
-				uint32_t        method       : 11;      /*  2 */
-				uint32_t        subchannel   : 3;       /* 13 */
-				uint32_t        bit_15       : 1;       /* 16 */
-				uint32_t        bit_16       : 1;       /* 17 */
-				uint32_t        method_count : 11;      /* 18 */
-				uint32_t        instruction  : 3;       /* 29 */
+				uint32_t        method       : 11;      /*  2 .. 12 */
+				uint32_t        subchannel   : 3;       /* 13 .. 15 */
+				uint32_t        bit_16       : 1;       /* 16 */
+				uint32_t        call_return  : 1;       /* 17 */
+				uint32_t        method_count : 11;      /* 18 .. 28 */
+				uint32_t        instruction  : 3;       /* 29 .. 31 */
 			};
-			uint32_t            jmp_inst_addrress : 29;
+			uint32_t jmp_inst_address : 29; /* 0 .. 28 */
 		} command;
 
 		// Known values for the command.instruction bitmask (three bits = 2^3 = 6 instructions max)
@@ -314,19 +316,46 @@ extern void XTL::EmuExecutePushBufferRaw
 		} Instruction;
 
 		// Read the command DWORD from the current push buffer pointer
-		command.field = *pdwPushData;
+		command.field = *pdwPushData++;
 
-		// First, check and handle a jump or call indicator
+		// First, check and handle jump, call or return indicator
 		if (command.jump) {
-			LOG_TEST_CASE("Pushbuffer jump");
+			if (command.call) {
+				LOG_TEST_CASE("Pushbuffer jump and call?!");
+			}
+			else {
+				LOG_TEST_CASE("Pushbuffer jump");
+			}
+
 			pdwPushData = (DWORD*)(CONTIGUOUS_MEMORY_BASE + (command.field & ~3));
 			continue;
 		}
 
 		if (command.call) {
-			LOG_TEST_CASE("Pushbuffer call");
-			// Note : NV2A return is said not to work, so handle this as a jump :
+			// Note : NV2A return is said not to work
+			if (subroutine_active) {
+				LOG_TEST_CASE("Pushbuffer call while another call was active!");
+			}
+			else {
+				LOG_TEST_CASE("Pushbuffer call");
+			}
+
+			subroutine_return = pdwPushData;
+			subroutine_active = true;
 			pdwPushData = (DWORD*)(CONTIGUOUS_MEMORY_BASE + (command.field & ~3));
+			continue;
+		}
+
+		if (command.call_return) {
+			if (command.field != 0x00020000) {
+				LOG_TEST_CASE("Pushbuffer call return with additional bits?!");
+			}
+			else {
+				LOG_TEST_CASE("Pushbuffer call return");
+			}
+
+			pdwPushData = subroutine_return;
+			subroutine_active = false;
 			continue;
 		}
 
@@ -338,15 +367,15 @@ extern void XTL::EmuExecutePushBufferRaw
 			break;
 		case Instruction::Jump:
 			LOG_TEST_CASE("Pushbuffer instruction jump");
-			pdwPushData = (DWORD*)(CONTIGUOUS_MEMORY_BASE + command.jmp_inst_addrress);
+			pdwPushData = (DWORD*)(CONTIGUOUS_MEMORY_BASE + command.jmp_inst_address);
 			continue;
 		case Instruction::NoIncrement:
 			bInc = false;
 			break;
 		default:
 			LOG_TEST_CASE("Pushbuffer instruction unknown!");
-			// Skip the method itself, and to be safe, also the method data
-			pdwPushData += 1 + command.method_count;
+			// To be safe, skip the method data
+			pdwPushData += command.method_count;
 			continue;
 		}
 
@@ -359,12 +388,11 @@ extern void XTL::EmuExecutePushBufferRaw
 			// Test case : Turok (in main menu)
 			//LOG_TEST_CASE("Pushbuffer count == 0");
 			// When this happens, just skip the method
-			++pdwPushData;
 			continue;
 		}
 
 		// Remember the address of the arguments
-		DWORD *pdwPushArguments = ++pdwPushData;
+		DWORD *pdwPushArguments = pdwPushData;
 		// Skip over the arguments already, so it always points to the next unhandled DWORD.
 		pdwPushData += dwCount;
 
