@@ -3941,37 +3941,61 @@ VOID __fastcall XTL::EMUPATCH(D3DDevice_SwitchTexture)
 		LOG_FUNC_END;
 
     DWORD StageLookup[TEXTURE_STAGES] = { 0x00081b00, 0x00081b40, 0x00081b80, 0x00081bc0 };
+	// This array contains D3DPUSH_ENCODE(NV2A_TX_OFFSET(v), 2) = 2 DWORD's, shifted left PUSH_COUNT_SHIFT (18) left
     DWORD Stage = -1;
 
-    for(int v=0;v<TEXTURE_STAGES;v++)
-    {
-        if(StageLookup[v] == Method)
-        {
+    for (int v = 0; v < TEXTURE_STAGES; v++) {
+        if (StageLookup[v] == Method) {
             Stage = v;
+			break;
         }
     }
 
-    if(Stage == -1)
-    {
+    if (Stage == -1) {
+		LOG_TEST_CASE("D3DDevice_SwitchTexture Unknown Method");
         EmuWarning("Unknown Method (0x%.08X)", Method);
     }
-    else
-    {
+    else {
 		// Switch Texture updates the data pointer of an active texture using pushbuffer commands
-		// assert(EmuD3DActiveTexture[Stage] != xbnullptr);
-		LOG_TEST_CASE("Using CxbxActiveTextureCopies");
-		// test-case : Need For Speed Most Wanted
-		// test-case : Call of Duty 2: Big Red One
+		if (EmuD3DActiveTexture[Stage] == xbnullptr) {
+			LOG_TEST_CASE("D3DDevice_SwitchTexture without an active texture");
+		}
+		else {
+			//LOG_TEST_CASE("Using CxbxActiveTextureCopies");
+			// See https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/issues/1159
+			// Test-case : Arena Football
+			// Test-case : Call of Duty 2: Big Red One
+			// Test-case : Crimson Skies
+			// Test-case : Freedom Fighters - see https://www.youtube.com/watch?v=_NDCoLY8V3I
+			// Test-case : Freestyle MetalX
+			// Test-case : GENMA ONIMUSHA
+			// Test-case : Gun
+			// Test-case : Harry Potter : Quidditch World Cup
+			// Test-case : King Arthur
+			// Test-case : Madden NFL 2002
+			// Test-case : Madden NFL 2005
+			// Test-case : Madden NFL 07
+			// Test-case : Need For Speed Most Wanted
+			// Test-case : Need For Speed Underground
+			// Test-case : PocketBike Racer
+			// Test-case : Project Gotham Racing 2
+			// Test-case : Richard Burns Rally
+			// Test-case : Spider - Man 2
 
-		// Update data and format separately, instead of via GetDataFromXboxResource()
-		CxbxActiveTextureCopies[Stage].Common = EmuD3DActiveTexture[Stage]->Common;
-		CxbxActiveTextureCopies[Stage].Data = Data;
-		CxbxActiveTextureCopies[Stage].Format = Format;
-		CxbxActiveTextureCopies[Stage].Lock = 0;
-		CxbxActiveTextureCopies[Stage].Size = EmuD3DActiveTexture[Stage]->Size;
+			// Update data and format separately, instead of via GetDataFromXboxResource()
+			CxbxActiveTextureCopies[Stage].Common = EmuD3DActiveTexture[Stage]->Common;
+			CxbxActiveTextureCopies[Stage].Data = Data;
+			CxbxActiveTextureCopies[Stage].Format = Format;
+			CxbxActiveTextureCopies[Stage].Lock = 0;
+			CxbxActiveTextureCopies[Stage].Size = EmuD3DActiveTexture[Stage]->Size;
 
-		// Use the above modified copy, instead of altering the active Xbox texture
-		EmuD3DActiveTexture[Stage] = &CxbxActiveTextureCopies[Stage];
+			// Use the above modified copy, instead of altering the active Xbox texture
+			EmuD3DActiveTexture[Stage] = &CxbxActiveTextureCopies[Stage];
+			// Note : Since EmuD3DActiveTexture and CxbxActiveTextureCopies are host-managed,
+			// Xbox code should never alter these members (so : no reference counting, etc).
+			// As long as that's guaranteed, this is a safe way to emulate SwitchTexture.
+			// (GetHostResourceKey also avoids using any Xbox texture resource memory address.)
+		}
     }
 }
 
