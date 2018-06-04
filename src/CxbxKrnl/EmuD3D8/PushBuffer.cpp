@@ -280,13 +280,13 @@ extern void XTL::EmuExecutePushBufferRaw
 
     while (true) {
 
-		// check if loop reaches end of pushbuffer.
+		// Check if loop reaches end of pushbuffer
 		if ((UINT8 *)pdwPushData >= pPushDataEnd) {
 			if ((UINT8 *)pdwPushData > pPushDataEnd) {
-				EmuWarning("Last pushbuffer instruction exceeds END of Data.\n");
+				LOG_TEST_CASE("Last pushbuffer instruction exceeds END of Data");
 			}
 
-			break;
+			break; // from while(true)
 		}
 
 		// Sources : NV_PFIFO_CACHE1_DMA_STATE, https://github.com/haxar/xexec/blob/master/hw/gpu/nv2a.c#L220 and
@@ -294,58 +294,87 @@ extern void XTL::EmuExecutePushBufferRaw
 		union {
 			uint32_t            field;
 			struct {
-				uint32_t        jmp          : 1;       /*  0 */
+				uint32_t        jump         : 1;       /*  0 */
 				uint32_t        call         : 1;       /*  1 */
-				uint32_t        addr         : 30;      /*  2 : used when jmp or call is set */
-			};
-			struct {
-				uint32_t        method       : 13;      /*  0 : valid when jmp == 0 and call == 0 */
+				uint32_t        method       : 11;      /*  2 */
 				uint32_t        subchannel   : 3;       /* 13 */
 				uint32_t        bit_15       : 1;       /* 16 */
 				uint32_t        bit_16       : 1;       /* 17 */
-				uint32_t        method_count : 12;      /* 18 */
-				uint32_t        non_inc      : 1;       /* 30 */
-				uint32_t        bit_31       : 1;       /* 31 */
+				uint32_t        method_count : 11;      /* 18 */
+				uint32_t        instruction  : 3;       /* 29 */
 			};
+			uint32_t            jmp_inst_addrress : 29;
 		} command;
 
-		// Read the command DWORD :
+		// Known values for the command.instruction bitmask (three bits = 2^3 = 6 instructions max)
+		typedef enum {
+			Increment = 0,
+			Jump = 1,
+			NoIncrement = 2
+		} Instruction;
+
+		// Read the command DWORD from the current push buffer pointer
 		command.field = *pdwPushData;
 
-		if (command.jmp) {
-			LOG_TEST_CASE("Pushbuffer jmp");
-			pdwPushData = (DWORD*)command.addr;
+		// First, check and handle a jump or call indicator
+		if (command.jump) {
+			LOG_TEST_CASE("Pushbuffer jump");
+			pdwPushData = (DWORD*)(CONTIGUOUS_MEMORY_BASE + (command.field & ~3));
 			continue;
 		}
 
 		if (command.call) {
 			LOG_TEST_CASE("Pushbuffer call");
 			// Note : NV2A return is said not to work, so handle this as a jump :
-			pdwPushData = (DWORD*)command.addr;
+			pdwPushData = (DWORD*)(CONTIGUOUS_MEMORY_BASE + (command.field & ~3));
 			continue;
 		}
 
-		// Decode push buffer contents (inverse of D3DPUSH_ENCODE) :
-		DWORD dwMethod = command.method; // Note : two least significant bits are zero (not a jmp or call)s
+		// Decode and handle the push buffer instruction
+		bool bInc;
+		switch (command.instruction) {
+		case Instruction::Increment:
+			bInc = true;
+			break;
+		case Instruction::Jump:
+			LOG_TEST_CASE("Pushbuffer instruction jump");
+			pdwPushData = (DWORD*)(CONTIGUOUS_MEMORY_BASE + command.jmp_inst_addrress);
+			continue;
+		case Instruction::NoIncrement:
+			bInc = false;
+			break;
+		default:
+			LOG_TEST_CASE("Pushbuffer instruction unknown!");
+			// Skip the method itself, and to be safe, also the method data
+			pdwPushData += 1 + command.method_count;
+			continue;
+		}
+
+		// Decode push buffer method & size (inverse of D3DPUSH_ENCODE)
+		NV2AMETHOD dwMethod = command.method << 2; // Note : two least significant bits are zero (not a jmp or call)
 		DWORD dwCount = command.method_count;
-		DWORD bInc = command.non_inc == 0;
+
+		// Validate count
+		if (dwCount == 0) {
+			// Test case : Turok (in main menu)
+			//LOG_TEST_CASE("Pushbuffer count == 0");
+			// When this happens, just skip the method
+			++pdwPushData;
+			continue;
+		}
 
 		// Remember the address of the arguments
 		DWORD *pdwPushArguments = ++pdwPushData;
 		// Skip over the arguments already, so it always points to the next unhandled DWORD.
 		pdwPushData += dwCount;
 
-		// TODO : What if dwCount == 0 ?
-
-		if (dwCount > 0) {
-			if (command.subchannel > 0) {
-				LOG_TEST_CASE("Pushbuffer subchannel > 0");
-				// Skip all commands not intended for channel 0
-				continue;
-			}
+		// Skip all commands not intended for channel 0 (3D)
+		if (command.subchannel > 0) {
+			LOG_TEST_CASE("Pushbuffer subchannel > 0");
+			continue;
 		}
 
-        // Interpret GPU Instruction
+        // Interpret 3D method
 		while (dwCount > 0) {
 			// Test case : Azurik (see https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/issues/360)
 			// Test case : RalliSport (see https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/issues/904#issuecomment-362929801)
@@ -356,7 +385,7 @@ extern void XTL::EmuExecutePushBufferRaw
 			switch (dwMethod) {
 
 			case 0: {
-				// Test-case : zero occurs in Turok menu (trees don't render if we would exit the while loop)
+				LOG_TEST_CASE("Pushbuffer method == 0");
 				break;
 			}
 
@@ -445,8 +474,8 @@ extern void XTL::EmuExecutePushBufferRaw
 			}
 
 			case NV2A_VB_ELEMENT_U32: { // 0x1808, NVPB_FixLoop, Index Array Data, . NV097_ARRAY_ELEMENT32
-				// Test case : Turok menu's
-				LOG_TEST_CASE("NV2A_VB_ELEMENT_U32");
+				// Test case : Turok (in main menu)
+				//LOG_TEST_CASE("NV2A_VB_ELEMENT_U32");
 #ifdef _DEBUG_TRACK_PB
 				if (bShowPB) {
 					LOG_TRACK_PB("  NVPB_FixLoop(%u)\n\n  Index Array Data...\n", dwCount);
@@ -499,7 +528,7 @@ extern void XTL::EmuExecutePushBufferRaw
 				// Test case : Turok (in main menu)
 				// Test case : Hunter Redeemer
 				// Test case : Otogi (see https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/pull/1113#issuecomment-385593814)
-				LOG_TEST_CASE("NV2A_VB_ELEMENT_U16");
+				//LOG_TEST_CASE("NV2A_VB_ELEMENT_U16");
 				// Points pIndexData to the first parameter.
 				pIndexData = (INDEX16*)pdwPushArguments;
 				//multiply dwCount from DWORD count to WORD count
@@ -571,10 +600,10 @@ extern void XTL::EmuExecutePushBufferRaw
 						}
 					}
 
+					// render indexed vertices
 #ifdef _DEBUG_TRACK_PB
 					if (!g_PBTrackDisable.exists(pdwOrigPushData))
 #endif
-						// render indexed vertices
 					{
 						if (!g_bPBSkipPusher) {
 							if (IsValidCurrentShader()) {
@@ -631,8 +660,8 @@ extern void XTL::EmuExecutePushBufferRaw
 			if (bInc) {
 				dwMethod += 4;
 			}
-		} // while
-    }
+		} // while (dwCount > 0)
+    } // while (true)
 
 #ifdef _DEBUG_TRACK_PB
     if (bShowPB) {
