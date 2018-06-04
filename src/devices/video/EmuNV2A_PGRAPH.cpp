@@ -2765,7 +2765,7 @@ void pgraph_init(NV2AState *d)
 
     //glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
 
-	/*
+#ifdef USE_TEXTURE_CACHE
     pg->texture_cache = g_lru_cache_new_full(
         0,
         NULL,
@@ -2781,9 +2781,11 @@ void pgraph_init(NV2AState *d)
         );
 
     g_lru_cache_set_max_size(pg->texture_cache, 512);
+#endif
 
+#ifdef USE_SHADER_CACHE
     pg->shader_cache = g_hash_table_new(shader_hash, shader_equal);
-	*/
+#endif
 
     for (i=0; i<NV2A_VERTEXSHADER_ATTRIBUTES; i++) {
         glGenBuffers(1, &pg->vertex_attributes[i].gl_converted_buffer);
@@ -3166,20 +3168,23 @@ static void pgraph_bind_shaders(PGRAPHState *pg)
                                & NV_PGRAPH_TEXCTL0_0_ALPHAKILLEN;
     }
 
-	ShaderBinding* cached_shader = nullptr;//(ShaderBinding*)g_hash_table_lookup(pg->shader_cache, &state);
+#ifdef USE_SHADER_CACHE
+	ShaderBinding* cached_shader = (ShaderBinding*)g_hash_table_lookup(pg->shader_cache, &state);
+
     if (cached_shader) {
         pg->shader_binding = cached_shader;
     } else {
+#endif
         pg->shader_binding = generate_shaders(state);
 
+#ifdef USE_SHADER_CACHE
         /* cache it */
         ShaderState *cache_state = (ShaderState *)g_malloc(sizeof(*cache_state));
         memcpy(cache_state, &state, sizeof(*cache_state));
-#if 0 // TODO
         g_hash_table_insert(pg->shader_cache, cache_state,
                             (gpointer)pg->shader_binding);
-#endif
     }
+#endif
 
     bool binding_changed = (pg->shader_binding != old_binding);
 
