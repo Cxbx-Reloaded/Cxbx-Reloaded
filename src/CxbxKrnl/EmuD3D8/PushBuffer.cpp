@@ -176,7 +176,7 @@ void XTL::EmuExecutePushBuffer
 	DbgDumpPushBuffer((DWORD*)pPushBuffer->Data, pPushBuffer->Size);
 #endif
 
-    EmuExecutePushBufferRaw((DWORD*)pPushBuffer->Data, pPushBuffer->Size);
+    EmuExecutePushBufferRaw((void*)pPushBuffer->Data, pPushBuffer->Size);
 
     return;
 }
@@ -222,21 +222,55 @@ DWORD CxbxGetStrideFromVertexShaderHandle(DWORD dwVertexShader)
 	return Stride;
 }
 
+typedef union {
+/* https://envytools.readthedocs.io/en/latest/hw/fifo/dma-pusher.html#the-commands-pre-gf100-format
+	C = method Count, S = Subchannel, M = first Method, J = Jump address, X = ?
+	000CCCCCCCCCCC00SSSMMMMMMMMMMM00	increasing methods [NV4+]
+	00000000000000100000000000000000	return [NV1A+, NV4-style only]
+	001JJJJJJJJJJJJJJJJJJJJJJJJJJJ00	old jump [NV4+, NV4-style only]
+	010CCCCCCCCCCC00SSSMMMMMMMMMMM00	non-increasing methods [NV10+]
+	JJJJJJJJJJJJJJJJJJJJJJJJJJJJJJ01	jump [NV1A+, NV4-style only]
+	JJJJJJJJJJJJJJJJJJJJJJJJJJJJJJ10	call [NV1A+, NV4-style only]
+*/
+	// Entire 32 bit command word, and an overlay for the above use-cases :
+	uint32_t            word;                    /*  0 .. 31 */
+	struct {
+		uint32_t        type         : 2;        /*  0 ..  1 */
+			// See https://envytools.readthedocs.io/en/latest/hw/fifo/dma-pusher.html#nv4-control-flow-commands
+				#define COMMAND_TYPE_NORMAL 0 // Note : actual name not documented
+				#define COMMAND_TYPE_JUMP   1
+				#define COMMAND_TYPE_CALL   2
+		uint32_t        method       : 11;       /*  2 .. 12 */
+		uint32_t        subchannel   : 3;        /* 13 .. 15 */
+		uint32_t        flags        : 2;        /* 16 .. 17 */
+			// See https://envytools.readthedocs.io/en/latest/hw/fifo/dma-pusher.html#nv4-method-submission-commands
+				#define COMMAND_FLAGS_METHOD                      0
+				#define COMMAND_FLAGS_SLI_CONDITIONAL             1
+				#define COMMAND_FLAGS_RETURN                      2
+				#define COMMAND_FLAGS_LONG_NON_INCREASING_METHODS 3
+		uint32_t        method_count : 11;       /* 18 .. 28 */
+		uint32_t        instruction  : 3;        /* 29 .. 31 */
+				#define COMMAND_INSTRUCTION_INCREASING_METHODS     0
+				#define COMMAND_INSTRUCTION_OLD_JUMP               1
+				#define COMMAND_INSTRUCTION_NON_INCREASING_METHODS 2
+	};
+	#define COMMAND_WORD_MASK_OLD_JMP 0x1FFFFFFC /*  2 .. 31 */
+	#define COMMAND_WORD_MASK_JMP 0xFFFFFFFC     /*  2 .. 28 */
+} nv_fifo_command;
+
 extern void XTL::EmuExecutePushBufferRaw
 (
-    DWORD                 *pdwPushData,
-	ULONG					dwSize
+	void *pPushData,
+	uint32_t uSizeInBytes
 )
 {
     if(g_bSkipPush)
         return;
 
-	if (!pdwPushData) {
-		EmuWarning("pdwPushData is null");
+	if (!pPushData) {
+		EmuWarning("pPushData is null");
 		return;
 	}
-
-    DWORD *pdwOrigPushData = pdwPushData;
 
     INDEX16 *pIndexData = NULL;
     PVOID pVertexData = NULL;
@@ -253,14 +287,14 @@ extern void XTL::EmuExecutePushBufferRaw
 #ifdef _DEBUG_TRACK_PB
     bool bShowPB = false;
 
-    g_PBTrackTotal.insert(pdwPushData);
+    g_PBTrackTotal.insert(pPushData);
 
-    if (g_PBTrackShowOnce.exists(pdwPushData)) {
-        g_PBTrackShowOnce.remove(pdwPushData);
+    if (g_PBTrackShowOnce.exists(pPushData)) {
+        g_PBTrackShowOnce.remove(pPushData);
 
         printf("\n");
         printf("\n");
-        printf("  PushBuffer@0x%.08X...\n", pdwPushData);
+        printf("  PushBuffer@0x%.08X...\n", pPushData);
         printf("\n");
 
         bShowPB = true;
@@ -274,128 +308,164 @@ extern void XTL::EmuExecutePushBufferRaw
 #define LOG_TRACK_PB(message, ...)
 #endif
 
-    // static IDirect3DVertexBuffer *pVertexBuffer = nullptr;
-
     static uint maxIBSize = 0;
-	static DWORD *subroutine_return;
-	static bool subroutine_active;
-	UINT8 * pPushDataEnd= (UINT8 *)pdwPushData + dwSize;
 
-    while (true) {
+	// DMA Pusher state -- see https://envytools.readthedocs.io/en/latest/hw/fifo/dma-pusher.html#pusher-state
+#if 0
+	xbaddr dma_pushbuffer; // the pushbuffer and IB DMA object
+#endif
+	uint32_t *dma_limit; // pushbuffer size limit
+	uint32_t *dma_put; // pushbuffer current end address
+	uint32_t *dma_get; //pushbuffer current read address
+	struct {
+		NV2AMETHOD mthd; // Current method
+		uint32_t subc; // :3 = Current subchannel
+		uint32_t mcnt; // :24 = Current method count
+		bool ni; // Current command's NI (non-increasing) flag
+	} dma_state;
+	uint32_t dcount_shadow; // [NV5:] Number of already-processed methods in cmd]
+	bool subr_active; // Subroutine active
+	uint32_t *subr_return; // Subroutine return address
+	bool big_endian; // Pushbuffer endian switch
 
+	// DMA troubleshooting values -- see https://envytools.readthedocs.io/en/latest/hw/fifo/dma-pusher.html#errors
+	uint32_t *dma_get_jmp_shadow; // value of dma_get before the last jump
+	uint32_t rsvd_shadow; // the first word of last-read command
+	uint32_t data_shadow; // the last-read data word
+
+	// Initialize working variables
+	dma_get = (uint32_t*)pPushData;
+	dma_put = (uint32_t*)((xbaddr)pPushData + uSizeInBytes);
+	dma_limit = (uint32_t*)((xbaddr)pPushData + uSizeInBytes);
+	dma_state = {};
+	dcount_shadow = 0;
+	subr_active = false;
+	subr_return = 0;
+	big_endian = false;
+	dma_get_jmp_shadow = 0;
+	rsvd_shadow = 0;
+	data_shadow = 0;
+
+	// See https://envytools.readthedocs.io/en/latest/hw/fifo/dma-pusher.html#the-pusher-pseudocode-pre-gf100
+    while (dma_get != dma_put) {
 		// Check if loop reaches end of pushbuffer
-		if ((UINT8 *)pdwPushData >= pPushDataEnd) {
-			if ((UINT8 *)pdwPushData > pPushDataEnd) {
-				LOG_TEST_CASE("Last pushbuffer instruction exceeds END of Data");
-			}
-
+		if (dma_get >= dma_limit) {
+			LOG_TEST_CASE("Last pushbuffer instruction exceeds END of Data");
 			break; // from while(true)
 		}
 
-		// Sources : NV_PFIFO_CACHE1_DMA_STATE, https://github.com/haxar/xexec/blob/master/hw/gpu/nv2a.c#L220 and
-		// https://github.com/PatrickvL/Dxbx/blob/master/Source/Delphi/src/DxbxKrnl/EmuD3D8/uPushBuffer.pas#L126
-		union {
-			uint32_t field; /* 0 .. 31 */
-			struct {
-				uint32_t        jump         : 1;       /*  0 */
-				uint32_t        call         : 1;       /*  1 */
-				uint32_t        method       : 11;      /*  2 .. 12 */
-				uint32_t        subchannel   : 3;       /* 13 .. 15 */
-				uint32_t        bit_16       : 1;       /* 16 */
-				uint32_t        call_return  : 1;       /* 17 */
-				uint32_t        method_count : 11;      /* 18 .. 28 */
-				uint32_t        instruction  : 3;       /* 29 .. 31 */
-			};
-			uint32_t jmp_inst_address : 29; /* 0 .. 28 */
-		} command;
-
-		// Known values for the command.instruction bitmask (three bits = 2^3 = 6 instructions max)
-		typedef enum {
-			Increment = 0,
-			Jump = 1,
-			NoIncrement = 2
-		} Instruction;
+		nv_fifo_command command;
 
 		// Read the command DWORD from the current push buffer pointer
-		command.field = *pdwPushData++;
+		command.word = *dma_get++;
 
-		// First, check and handle jump, call or return indicator
-		if (command.jump) {
-			if (command.call) {
-				LOG_TEST_CASE("Pushbuffer jump and call?!");
+		// Check and handle command type, then instruction, then flags
+		switch (command.type) {
+		case COMMAND_TYPE_NORMAL:
+			break; // fall through
+		case COMMAND_TYPE_JUMP:
+			LOG_TEST_CASE("Pushbuffer COMMAND_TYPE_JUMP");
+			dma_get_jmp_shadow = dma_get;
+			dma_get = (uint32_t *)(CONTIGUOUS_MEMORY_BASE | (command.word & COMMAND_WORD_MASK_JMP));
+			continue;
+		case COMMAND_TYPE_CALL: // Note : NV2A return is said not to work?
+			if (subr_active) {
+				LOG_TEST_CASE("Pushbuffer COMMAND_TYPE_CALL while another call was active!");
+				// TODO : throw DMA_PUSHER(CALL_SUBR_ACTIVE);
 			}
 			else {
-				LOG_TEST_CASE("Pushbuffer jump");
+				LOG_TEST_CASE("Pushbuffer COMMAND_TYPE_CALL");
 			}
 
-			pdwPushData = (DWORD*)(CONTIGUOUS_MEMORY_BASE + (command.field & ~3));
+			subr_return = dma_get;
+			subr_active = true;
+			dma_get = (uint32_t *)(CONTIGUOUS_MEMORY_BASE | (command.word & COMMAND_WORD_MASK_JMP));
 			continue;
-		}
-
-		if (command.call) {
-			// Note : NV2A return is said not to work
-			if (subroutine_active) {
-				LOG_TEST_CASE("Pushbuffer call while another call was active!");
-			}
-			else {
-				LOG_TEST_CASE("Pushbuffer call");
-			}
-
-			subroutine_return = pdwPushData;
-			subroutine_active = true;
-			pdwPushData = (DWORD*)(CONTIGUOUS_MEMORY_BASE + (command.field & ~3));
+		default:
+			LOG_TEST_CASE("Pushbuffer COMMAND_TYPE unknown");
 			continue;
-		}
+		} // switch type
 
-		if (command.call_return) {
-			if (command.field != 0x00020000) {
-				LOG_TEST_CASE("Pushbuffer call return with additional bits?!");
-			}
-			else {
-				LOG_TEST_CASE("Pushbuffer call return");
-			}
-
-			pdwPushData = subroutine_return;
-			subroutine_active = false;
-			continue;
-		}
-
-		// Decode and handle the push buffer instruction
-		bool bInc;
 		switch (command.instruction) {
-		case Instruction::Increment:
-			bInc = true;
+		case COMMAND_INSTRUCTION_INCREASING_METHODS:
+			dma_state.ni = false;
 			break;
-		case Instruction::Jump:
-			LOG_TEST_CASE("Pushbuffer instruction jump");
-			pdwPushData = (DWORD*)(CONTIGUOUS_MEMORY_BASE + command.jmp_inst_address);
+		case COMMAND_INSTRUCTION_OLD_JUMP:
+			LOG_TEST_CASE("Pushbuffer COMMAND_INSTRUCTION_OLD_JUMP");
+			dma_get_jmp_shadow = dma_get;
+			dma_get = (uint32_t *)(CONTIGUOUS_MEMORY_BASE | (command.word & COMMAND_WORD_MASK_OLD_JMP));
 			continue;
-		case Instruction::NoIncrement:
-			bInc = false;
+		case COMMAND_INSTRUCTION_NON_INCREASING_METHODS:
+			dma_state.ni = true;
 			break;
 		default:
-			LOG_TEST_CASE("Pushbuffer instruction unknown!");
-			// To be safe, skip the method data
-			pdwPushData += command.method_count;
+			LOG_TEST_CASE("Pushbuffer COMMAND_INSTRUCTION unknown");
 			continue;
-		}
+		} // switch instruction
 
-		// Decode push buffer method & size (inverse of D3DPUSH_ENCODE)
-		NV2AMETHOD dwMethod = command.method << 2; // Note : two least significant bits are zero (not a jmp or call)
-		DWORD dwCount = command.method_count;
+		switch (command.flags) {
+		case COMMAND_FLAGS_METHOD: // Decode push buffer method & size (inverse of D3DPUSH_ENCODE)
+			dma_state.mthd = command.method;
+			dma_state.subc = command.subchannel;
+			dma_state.mcnt = command.method_count;
+			break; // fall through
+		case COMMAND_FLAGS_RETURN:
+			if (command.word != 0x00020000) {
+				LOG_TEST_CASE("Pushbuffer COMMAND_FLAGS_RETURN with additional bits?!");
+			}
+			else {
+				LOG_TEST_CASE("Pushbuffer COMMAND_FLAGS_RETURN");
+			}
+
+			if (!subr_active) {
+				LOG_TEST_CASE("Pushbuffer COMMAND_FLAGS_RETURN while another call was active!");
+				// TODO : throw DMA_PUSHER(RET_SUBR_INACTIVE);
+			}
+
+			dma_get = subr_return;
+			subr_active = false;
+			continue; // while
+		default:
+			if (command.flags == COMMAND_FLAGS_LONG_NON_INCREASING_METHODS) {
+				LOG_TEST_CASE("Pushbuffer COMMAND_FLAGS_LONG_NON_INCREASING_METHODS [IB-mode only] not available on NV2A");
+				// No need to do: dma_state.mthd = command.method; dma_state.ni = true;
+				dma_state.mcnt = *dma_get++ & 0x00FFFFFF; // Long NI method command count is read from low 24 bits of next word
+				dma_get += dma_state.mcnt; // To be safe, skip method data
+			} else if (command.flags == COMMAND_FLAGS_SLI_CONDITIONAL) {
+				LOG_TEST_CASE("Pushbuffer COMMAND_FLAGS_SLI_CONDITIONAL (NV40+) not available on NV2A");
+			} else {
+				LOG_TEST_CASE("Pushbuffer COMMAND_FLAGS unknown");
+			}
+
+			dma_get += command.method_count; // To be safe, skip method data
+			continue; // while
+		} // switch flags
+
+		/* no command active - this is the first word of a new one */
+		rsvd_shadow = command.word;
 
 		// Validate count
-		if (dwCount == 0) {
+		if (dma_state.mcnt == 0) {
 			// Test case : Turok (in main menu)
 			//LOG_TEST_CASE("Pushbuffer count == 0");
 			// When this happens, just skip the method
 			continue;
 		}
 
+		/* data word of methods command */
+		data_shadow = *dma_get;
+#if 0
+		if (!PULLER_KNOWS_MTHD(dma_state.mthd))
+			throw DMA_PUSHER(INVALID_MTHD);
+
+#endif
+#if 0
+		CACHE_PUSH(dma_state.subc, dma_state.mthd, word, dma_state.ni);
+#endif
 		// Remember the address of the arguments
-		DWORD *pdwPushArguments = pdwPushData;
+		DWORD *pdwPushArguments = (DWORD *)dma_get;
 		// Skip over the arguments already, so it always points to the next unhandled DWORD.
-		pdwPushData += dwCount;
+		dma_get += dma_state.mcnt;
 
 		// Skip all commands not intended for channel 0 (3D)
 		if (command.subchannel > 0) {
@@ -404,23 +474,24 @@ extern void XTL::EmuExecutePushBufferRaw
 		}
 
         // Interpret 3D method
+		DWORD dwCount = dma_state.mcnt;
 		while (dwCount > 0) {
 			// Test case : Azurik (see https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/issues/360)
 			// Test case : RalliSport (see https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/issues/904#issuecomment-362929801)
 			// Test case : Star Wars Jedi Academy (see https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/issues/904#issuecomment-362929801)
+			// Test case : Hot Wheels Stunt Track Challenge (while running hw2F.xbe)
 			// Assume the command will be handled completely (down-adjustments may happen)
 			int HandledCount = dwCount;
 
+			DWORD dwMethod = dma_state.mthd << 2;
 			switch (dwMethod) {
 
-			case 0: {
+			case 0:
 				LOG_TEST_CASE("Pushbuffer method == 0");
 				break;
-			}
 
 			case NV2A_VERTEX_BEGIN_END: { // 0x000017FC, NVPB_SetBeginEnd, 1 DWORD parameter, D3DPUSH_SET_BEGIN_END, NV097_NO_OPERATION
 				LOG_TRACK_PB("  NVPB_SetBeginEnd(");
-
 				// Parameter == 0 means SetEnd, EndPush()
 				if (*pdwPushArguments == 0) {
 					LOG_TRACK_PB("DONE)\n");
@@ -429,7 +500,6 @@ extern void XTL::EmuExecutePushBufferRaw
 
 				// BeginPush(), To be used as a replacement for DrawVerticesUP, the caller needs to set the vertex format using IDirect3DDevice8::SetVertexShader before calling BeginPush. All attributes in the vertex format must be padded DWORD multiples, and the vertex attributes must be specified in the canonical FVF ordering (position followed by weight, normal, diffuse, and so on).
 				LOG_TRACK_PB("PrimitiveType := %d)\n", *pdwPushArguments);
-
 				// Retrieve the D3DPRIMITIVETYPE info in parameter
 				XboxPrimitiveType = (X_D3DPRIMITIVETYPE)*pdwPushArguments;
 				break;
@@ -439,49 +509,16 @@ extern void XTL::EmuExecutePushBufferRaw
 				//DWORD vertex data array, 
 				//To be used as a replacement for DrawVerticesUP, the caller needs to set the vertex format using IDirect3DDevice8::SetVertexShader before calling BeginPush. All attributes in the vertex format must be padded DWORD multiples, and the vertex attributes must be specified in the canonical FVF ordering (position followed by weight, normal, diffuse, and so on).
 				pVertexData = pdwPushArguments;
-
 				// retrieve vertex shader
 				DWORD dwVertexShader = g_CurrentXboxVertexShaderHandle;
-
 				if (dwVertexShader == 0) {
 					LOG_TEST_CASE("FVF Vertex Shader is null");
 					dwVertexShader = -1;
 				}
 
-				/*
-				// create cached vertex buffer only once, with maxed out size
-				if (pVertexBuffer == 0) {
-					HRESULT hRet = g_pD3DDevice->CreateVertexBuffer(
-						2047*sizeof(DWORD),
-						D3DUSAGE_WRITEONLY,
-						dwVertexShader,
-						D3DPOOL_MANAGED,
-						&pVertexBuffer
-#ifdef CXBX_USE_D3D9
-						, nullptr
-#endif
-					);
-					if (FAILED(hRet))
-						CxbxKrnlCleanup("Unable to create vertex buffer cache for PushBuffer emulation (0x1818, dwCount : %d)", dwCount);
-				}
-
-				// copy vertex data
-				{
-					uint08 *pData = 0;
-					HRESULT hRet = pVertexBuffer->Lock(0, dwCount*4, &pData, 0);
-
-					if (FAILED(hRet))
-						CxbxKrnlCleanup("Unable to lock vertex buffer cache for PushBuffer emulation (0x1818, dwCount : %d)", dwCount);
-
-					memcpy(pData, pVertexData, dwCount*4);
-					pVertexBuffer->Unlock();
-				}
-				*/
-
 				LOG_TRACK_PB("NVPB_InlineVertexArray(...)\n");
 				LOG_TRACK_PB("  dwCount : %d\n", dwCount);
 				LOG_TRACK_PB("  dwVertexShader : 0x%08X\n", dwVertexShader);
-
 				// render vertices
 				if (dwVertexShader != -1) {
 					DWORD dwVertexStride = CxbxGetStrideFromVertexShaderHandle(dwVertexShader);
@@ -508,7 +545,7 @@ extern void XTL::EmuExecutePushBufferRaw
 #ifdef _DEBUG_TRACK_PB
 				if (bShowPB) {
 					LOG_TRACK_PB("  NVPB_FixLoop(%u)\n\n  Index Array Data...\n", dwCount);
-					INDEX16 *pIndices = (INDEX16*)(pdwPushArguments + 1);
+					INDEX16 *pIndices = (INDEX16*)pdwPushArguments;
 					for (uint s = 0;s < dwCount; s++) {
 						if (s % 8 == 0)
 							printf("\n  ");
@@ -527,13 +564,12 @@ extern void XTL::EmuExecutePushBufferRaw
 					pIBMem[mi + 2] = pIndices[mi];
 				}
 
-				// perform rendering
+				// render indexed vertices
 				if (pIBMem[0] != 0xFFFF) {
 					UINT uiIndexCount = dwCount + 2;
 #ifdef _DEBUG_TRACK_PB
-					if (!g_PBTrackDisable.exists(pdwOrigPushData))
+					if (!g_PBTrackDisable.exists(pPushData))
 #endif
-						// render indexed vertices
 					{
 						if (!g_bPBSkipPusher) {
 							if (IsValidCurrentShader()) {
@@ -554,18 +590,16 @@ extern void XTL::EmuExecutePushBufferRaw
 			}
 
 			case NV2A_VB_ELEMENT_U16: { // 0x1800, NVPB_InlineIndexArray,   NV097_ARRAY_ELEMENT16
+				//LOG_TEST_CASE("NV2A_VB_ELEMENT_U16");
 				// Test case : Turok (in main menu)
 				// Test case : Hunter Redeemer
 				// Test case : Otogi (see https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/pull/1113#issuecomment-385593814)
-				//LOG_TEST_CASE("NV2A_VB_ELEMENT_U16");
-				// Points pIndexData to the first parameter.
 				pIndexData = (INDEX16*)pdwPushArguments;
-				//multiply dwCount from DWORD count to WORD count
-				UINT dwIndexCount = dwCount * 2;
+				UINT dwIndexCount = dwCount * sizeof(INDEX16); // Two indices per DWORD
 #if 0 // TODO : Is the following nonsense?
 				//if no increment is not set, then there is one WORD less then the total dwCount*2 WORD data.
 				//this definition is purely my guess, need confirmation.
-				if (!bInc) {
+				if (dma_state.ni) {
 					dwIndexCount -= 1;
 				}
 #endif
@@ -582,12 +616,10 @@ extern void XTL::EmuExecutePushBufferRaw
 					}
 
 					printf("\n");
-
 					XTL::IDirect3DVertexBuffer *pActiveVB = NULL;
 					D3DVERTEXBUFFER_DESC VBDesc;
 					D3DLockData *pVBData = nullptr;
 					UINT  uiStride;
-
 					// retrieve stream data
 					g_pD3DDevice->GetStreamSource(0, &pActiveVB,
 #ifdef CXBX_USE_D3D9
@@ -631,7 +663,7 @@ extern void XTL::EmuExecutePushBufferRaw
 
 					// render indexed vertices
 #ifdef _DEBUG_TRACK_PB
-					if (!g_PBTrackDisable.exists(pdwOrigPushData))
+					if (!g_PBTrackDisable.exists(pPushData))
 #endif
 					{
 						if (!g_bPBSkipPusher) {
@@ -685,10 +717,13 @@ extern void XTL::EmuExecutePushBufferRaw
 			// Since some instructions use less arguments, we repeat this loop
 			// for the next instruction so any leftover values are handled there :
 			pdwPushArguments += HandledCount;
-			dwCount -= HandledCount;
-			if (bInc) {
-				dwMethod += 4;
+
+			if (!dma_state.ni) {
+				dma_state.mthd++;
 			}
+
+			dwCount -= HandledCount;
+			dcount_shadow += HandledCount;
 		} // while (dwCount > 0)
     } // while (true)
 
