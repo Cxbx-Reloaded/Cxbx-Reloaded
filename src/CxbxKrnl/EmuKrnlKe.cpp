@@ -240,25 +240,40 @@ void InitDpcAndTimerThread()
 
 // Xbox Performance Counter Frequency = 733333333 (CPU Clock)
 #define XBOX_PERFORMANCE_FREQUENCY 733333333
-
-LARGE_INTEGER NativePerformanceCounter = { 0 };
-LARGE_INTEGER NativePerformanceFrequency = { 0 };
-double NativeToXbox_FactorForPerformanceFrequency;
+uint64_t NativeToXbox_FactorForPerformanceFrequency;
 
 void ConnectKeInterruptTimeToThunkTable(); // forward
 
+uint64_t CxbxRdTsc(bool xbox) {
+	LARGE_INTEGER tsc;
+
+	QueryPerformanceCounter(&tsc);
+
+	if (xbox && NativeToXbox_FactorForPerformanceFrequency) {
+		LARGE_INTEGER scaledTsc;
+		scaledTsc.QuadPart = 1000000000;
+		scaledTsc.QuadPart *= tsc.QuadPart;
+		scaledTsc.QuadPart /= NativeToXbox_FactorForPerformanceFrequency;
+		return (uint64_t)scaledTsc.QuadPart;
+	}
+
+	return (uint64_t)tsc.QuadPart;
+}
+
+uint64_t CxbxCalibrateTsc()
+{
+	LARGE_INTEGER pf;
+	QueryPerformanceFrequency(&pf);
+	return pf.QuadPart;
+}
+
 void CxbxInitPerformanceCounters()
 {
-	BootTickCount = GetTickCount64();
-
-	// Measure current host performance counter and frequency
-	QueryPerformanceCounter(&NativePerformanceCounter);
-	QueryPerformanceFrequency(&NativePerformanceFrequency);
-	// TODO : If anything like speed-stepping influences this, prevent or fix it here
-
-	// Calculate the host-to-xbox performance frequency factor,
-	// used the return Xbox-like results in KeQueryPerformanceCounter:
-	NativeToXbox_FactorForPerformanceFrequency = (double)XBOX_PERFORMANCE_FREQUENCY / NativePerformanceFrequency.QuadPart;
+	LARGE_INTEGER t;
+	t.QuadPart = 1000000000;
+	t.QuadPart *= CxbxCalibrateTsc();
+	t.QuadPart /= XBOX_PERFORMANCE_FREQUENCY;
+	NativeToXbox_FactorForPerformanceFrequency = t.QuadPart;
 
 	ConnectKeInterruptTimeToThunkTable();
 
@@ -1102,20 +1117,12 @@ XBSYSAPI EXPORTNUM(126) xboxkrnl::ULONGLONG NTAPI xboxkrnl::KeQueryPerformanceCo
 	LOG_FUNC();
 
 	ULONGLONG ret;
-	::LARGE_INTEGER PerformanceCounter;
+
 	//no matter rdtsc is patched or not, we should always return a scaled performance counter here.
-
-	// Dxbx note : Xbox actually uses the RDTSC machine code instruction for this,
-	// and we we're bound to a single core, so we could do that too, but on Windows
-	// rdtsc is not a very stable counter, so instead, we'll use the native PeformanceCounter :
-	QueryPerformanceCounter(&PerformanceCounter);
-
-	// Re-base the performance counter to increase accuracy of the following conversion :
-	PerformanceCounter.QuadPart -= NativePerformanceCounter.QuadPart;
-	// We appy a conversion factor here, to fake Xbox1-like increment-speed behaviour :
-	PerformanceCounter.QuadPart = (ULONGLONG)(NativeToXbox_FactorForPerformanceFrequency * PerformanceCounter.QuadPart);
-
-	ret = PerformanceCounter.QuadPart;
+	DbgPrintf("host tick count       : %lu\n", CxbxRdTsc(false));
+	ret = CxbxRdTsc(true);
+	DbgPrintf("emulated tick count   : %lu\n", ret);
+	
 	RETURN(ret);
 }
 

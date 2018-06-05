@@ -70,7 +70,6 @@ namespace xboxkrnl {
 // TODO: Move these to LLE APUDevice once we have one!
 
 #define APU_TIMER_FREQUENCY	48000
-extern LARGE_INTEGER NativePerformanceFrequency;
 LARGE_INTEGER APUInitialPerformanceCounter;
 double NativeToXboxAPU_FactorForPerformanceFrequency = 0;
 
@@ -78,7 +77,7 @@ void ResetApuTimer()
 {
 	// Measure current host performance counter and frequency
 	QueryPerformanceCounter(&APUInitialPerformanceCounter);
-	NativeToXboxAPU_FactorForPerformanceFrequency = (double)APU_TIMER_FREQUENCY / NativePerformanceFrequency.QuadPart;
+	NativeToXboxAPU_FactorForPerformanceFrequency = (double)APU_TIMER_FREQUENCY / APUInitialPerformanceCounter.QuadPart;
 }
 
 uint32_t GetAPUTime()
