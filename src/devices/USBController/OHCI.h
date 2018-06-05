@@ -41,6 +41,20 @@
 #include "USBDevice.h"
 #include "..\CxbxKrnl\Timer.h"
 
+#define USB_TOKEN_SETUP 0x2D
+#define USB_TOKEN_IN    0x69 // device -> host
+#define USB_TOKEN_OUT   0xE1 // host -> device
+
+#define USB_RET_SUCCESS           (0)
+#define USB_RET_NODEV             (-1)
+#define USB_RET_NAK               (-2)
+#define USB_RET_STALL             (-3)
+#define USB_RET_BABBLE            (-4)
+#define USB_RET_IOERROR           (-5)
+#define USB_RET_ASYNC             (-6)
+#define USB_RET_ADD_TO_QUEUE      (-7)
+#define USB_RET_REMOVE_FROM_QUEUE (-8)
+
 
 // Abbreviations used:
 // OHCI: Open Host Controller Interface; the standard used on the Xbox to comunicate with the usb devices
@@ -140,7 +154,7 @@ class OHCI
 {
 	public:
 		// constructor
-		OHCI(int Irqn);
+		OHCI(int Irqn, USBDevice* UsbObj);
 		// destructor
 		~OHCI() {}
 		// read a register
@@ -150,6 +164,8 @@ class OHCI
 
 
 	private:
+		// pointer to g_USB0 or g_USB1
+		USBDevice* m_UsbDevice;
 		// all the registers available on the OHCI standard
 		OHCI_Registers m_Registers;
 		// end-of-frame timer
@@ -239,25 +255,8 @@ class OHCI
 		int OHCI_ServiceEDlist(xbaddr Head, int Completion);
 		// process a TD. Returns nonzero to terminate processing of this endpoint
 		int OHCI_ServiceTD(OHCI_ED* Ed);
-
-		// register a port with the HC
-		void USB_RegisterPort(USBPort* Port, int Index, int SpeedMask);
-		//
-		void USB_DeviceEPstopped(USBDev* Dev, USBEndpoint* Ep);
-		// reset a usb port
-		void USB_PortReset(USBPort* Port);
-		// a device is attched
-		void USB_Attach(USBPort* Port);
-		// a device is detached
-		void USB_Detach(USBPort* Port);
-		// a device downstream from the device attached to the port (attached through a hub) is detached
-		void ChildDetach(USBPort* Port, USBDev* Child);
-		// TODO
-		void Wakeup(USBPort* Port);
-		// TODO
-		void Complete(USBPort* Port, USBPacket *P);
-		// reset a device
-		void USB_DeviceReset(USBDev* Dev);
+		// find the usb device with the supplied address
+		XboxDevice* OHCI::OHCI_FindDevice(uint8_t Addr);
 };
 
 #endif

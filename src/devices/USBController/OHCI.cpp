@@ -105,9 +105,9 @@
 
 /* Bitfields for the first word of an ED */
 #define OHCI_ED_FA_SHIFT  0
-#define OHCI_ED_FA_MASK   (0x7F<<OHCI_ED_FA_SHIFT)
+#define OHCI_ED_FA_MASK   (0x7F<<OHCI_ED_FA_SHIFT)    // FunctionAddress
 #define OHCI_ED_EN_SHIFT  7
-#define OHCI_ED_EN_MASK   (0xF<<OHCI_ED_EN_SHIFT)
+#define OHCI_ED_EN_MASK   (0xF<<OHCI_ED_EN_SHIFT)     // EndpointNumber
 #define OHCI_ED_D_SHIFT   11
 #define OHCI_ED_D_MASK    (3<<OHCI_ED_D_SHIFT)        // Direction
 #define OHCI_ED_S         (1<<13)
@@ -163,20 +163,6 @@
 #define OHCI_CC_BUFFEROVERRUN       0xC
 #define OHCI_CC_BUFFERUNDERRUN      0xD
 
-#define USB_TOKEN_SETUP 0x2D
-#define USB_TOKEN_IN    0x69 // device -> host
-#define USB_TOKEN_OUT   0xE1 // host -> device
-
-#define USB_RET_SUCCESS           (0)
-#define USB_RET_NODEV             (-1)
-#define USB_RET_NAK               (-2)
-#define USB_RET_STALL             (-3)
-#define USB_RET_BABBLE            (-4)
-#define USB_RET_IOERROR           (-5)
-#define USB_RET_ASYNC             (-6)
-#define USB_RET_ADD_TO_QUEUE      (-7)
-#define USB_RET_REMOVE_FROM_QUEUE (-8)
-
 #define USB_HZ 12000000
 
 #define USB_SPEED_LOW   0
@@ -191,12 +177,13 @@ typedef enum _USB_SPEED
 USB_SPEED;
 
 
-OHCI::OHCI(int Irq)
+OHCI::OHCI(int Irq, USBDevice* UsbObj)
 {
 	m_IrqNum = Irq;
+	m_UsbDevice = UsbObj;
 
 	for (int i = 0; i < 2; i++) {
-		USB_RegisterPort(&m_Registers.RhPort[i].UsbPort, i, USB_SPEED_MASK_LOW | USB_SPEED_MASK_FULL);
+		m_UsbDevice->USB_RegisterPort(&m_Registers.RhPort[i].UsbPort, i, USB_SPEED_MASK_LOW | USB_SPEED_MASK_FULL);
 	}
 	OHCI_PacketInit(&m_UsbPacket);
 
@@ -479,7 +466,7 @@ int OHCI::OHCI_ServiceEDlist(xbaddr Head, int Completion)
 			if (m_AsyncTD && addr == m_AsyncTD) {
 				usb_cancel_packet(&ohci->usb_packet);
 				m_AsyncTD = xbnull;
-				USB_DeviceEPstopped(m_UsbPacket.Endpoint->Dev, m_UsbPacket.Endpoint);
+				m_UsbDevice->USB_DeviceEPstopped(m_UsbPacket.Endpoint->Dev, m_UsbPacket.Endpoint);
 			}
 			continue;
 		}
@@ -530,7 +517,7 @@ int OHCI::OHCI_ServiceTD(OHCI_ED* Ed)
 	int pid;
 	int ret;
 	int i;
-	USBDev* dev;
+	XboxDevice* dev;
 	USBEndpoint* ep;
 	OHCI_TD td;
 	xbaddr addr;
@@ -565,6 +552,16 @@ int OHCI::OHCI_ServiceTD(OHCI_ED* Ed)
 		default:
 			direction = OHCI_BM(td.Flags, TD_DP);
 	}
+
+	// Info: Each USB transaction consists of a
+	// 1. Token Packet, (Header defining what it expects to follow).
+	// 2. Optional Data Packet, (Containing the payload).
+	// 3. Status Packet, (Used to acknowledge transactions and to provide a means of error correction).
+
+	// There are three types of token packets:
+	// In - Informs the USB device that the host wishes to read information.
+	// Out - Informs the USB device that the host wishes to send information.
+	// Setup - Used to begin control transfers.
 
 	switch (direction) {
 		case OHCI_TD_DIR_IN:
@@ -645,9 +642,9 @@ int OHCI::OHCI_ServiceTD(OHCI_ED* Ed)
 			DbgPrintf("Too many pending packets\n");
 			return 1;
 		}
-		dev = ohci_find_device(ohci, OHCI_BM(Ed->Flags, ED_FA));
-		ep = usb_ep_get(dev, pid, OHCI_BM(Ed->Flags, ED_EN));
-		usb_packet_setup(&m_UsbPacket, pid, ep, 0, addr, !flag_r, OHCI_BM(td.Flags, TD_DI) == 0);
+		dev = OHCI_FindDevice(OHCI_BM(Ed->Flags, ED_FA));
+		ep = m_UsbDevice->USB_GetEP(dev, pid, OHCI_BM(Ed->Flags, ED_EN));
+		m_UsbDevice->USB_PacketSetup(&m_UsbPacket, pid, ep, 0, addr, !flag_r, OHCI_BM(td.Flags, TD_DI) == 0);
 		usb_packet_addbuf(&m_UsbPacket, ohci->usb_buf, packetlen);
 		usb_handle_packet(dev, &m_UsbPacket);
 #ifdef DEBUG_PACKET
@@ -764,6 +761,24 @@ exit_no_retire:
 	return OHCI_BM(td.Flags, TD_CC) != OHCI_CC_NOERROR;
 }
 
+XboxDevice* OHCI::OHCI_FindDevice(uint8_t Addr)
+{
+	XboxDevice* dev;
+	int i;
+
+	for (i = 0; i < 2; i++) {
+		if ((m_Registers.RhPort[i].HcRhPortStatus & OHCI_PORT_PES) == 0) {
+			continue; // port is disabled
+		}
+		dev = m_UsbDevice->USB_FindDevice(&m_Registers.RhPort[i].UsbPort, Addr);
+		if (dev != nullptr) {
+			return dev; // return found device
+		}
+	}
+
+	return nullptr;
+}
+
 void OHCI::OHCI_StateReset()
 {
 	// The usb state can be USB_Suspend if it is a software reset, and USB_Reset if it is a hardware
@@ -806,7 +821,7 @@ void OHCI::OHCI_StateReset()
 		OHCIPort* Port = &m_Registers.RhPort[i];
 		Port->HcRhPortStatus = 0;
 		if (Port->UsbPort.Dev && Port->UsbPort.Dev->Attached) {
-			USB_PortReset(&Port->UsbPort);
+			m_UsbDevice->USB_PortReset(&Port->UsbPort);
 		}
 	}
 	if (m_AsyncTD) {
@@ -1174,16 +1189,16 @@ uint32_t OHCI::OHCI_GetFrameRemaining()
 
 void OHCI::OHCI_StopEndpoints()
 {
-	USBDev* dev;
+	XboxDevice* dev;
 	int i, j;
 
 	for (i = 0; i < 2; i++) {
 		dev = m_Registers.RhPort[i].UsbPort.Dev;
 		if (dev && dev->Attached) {
-			USB_DeviceEPstopped(dev, &dev->EP_ctl);
+			m_UsbDevice->USB_DeviceEPstopped(dev, &dev->EP_ctl);
 			for (j = 0; j < USB_MAX_ENDPOINTS; j++) {
-				USB_DeviceEPstopped(dev, &dev->EP_in[j]);
-				USB_DeviceEPstopped(dev, &dev->EP_out[j]);
+				m_UsbDevice->USB_DeviceEPstopped(dev, &dev->EP_in[j]);
+				m_UsbDevice->USB_DeviceEPstopped(dev, &dev->EP_out[j]);
 			}
 		}
 	}
@@ -1269,7 +1284,7 @@ void OHCI::OHCI_PortSetStatus(int PortNum, uint32_t Value)
 
 	if (OHCI_PortSetIfConnected(PortNum, Value & OHCI_PORT_PRS)) {
 		DbgPrintf("Ohci: port %d: RESET\n", PortNum);
-		USB_DeviceReset(port->UsbPort.Dev);
+		m_UsbDevice->USB_DeviceReset(port->UsbPort.Dev);
 		port->HcRhPortStatus &= ~OHCI_PORT_PRS;
 		// ??? Should this also set OHCI_PORT_PESC
 		port->HcRhPortStatus |= OHCI_PORT_PES | OHCI_PORT_PRSC;
@@ -1371,63 +1386,3 @@ void OHCI::OHCI_Attach(USBPort* Port)
 	}
 }
 
-void OHCI::USB_RegisterPort(USBPort* Port, int Index, int SpeedMask)
-{
-	Port->PortIndex = Index;
-	Port->SpeedMask = SpeedMask;
-	Port->HubCount = 0;
-	std::snprintf(Port->Path, sizeof(Port->Path), "%d", Index + 1);
-}
-
-void OHCI::USB_DeviceEPstopped(USBDev* Dev, USBEndpoint* EP)
-{
-	// This seems to be a nop in XQEMU since it doesn't assign the EP_Stopped function (it's nullptr)
-	USBDeviceClass* klass = USB_DEVICE_GET_CLASS(Dev);
-	if (klass->EP_Stopped) {
-		klass->EP_Stopped(Dev, EP);
-	}
-}
-
-void OHCI::USB_PortReset(USBPort* Port)
-{
-	USBDev* dev = Port->Dev;
-
-	assert(dev != nullptr);
-	USB_Detach(Port);
-	USB_Attach(Port);
-	USB_DeviceReset(dev);
-}
-
-void OHCI::USB_Detach(USBPort* Port)
-{
-	USBDev* dev = Port->Dev;
-
-	assert(dev != nullptr);
-	assert(dev->State != USB_STATE_NOTATTACHED);
-	OHCI_Detach(Port);
-	dev->State = USB_STATE_NOTATTACHED;
-}
-
-void OHCI::USB_Attach(USBPort* Port)
-{
-	USBDev *dev = Port->Dev;
-
-	assert(dev != nullptr);
-	assert(dev->Attached);
-	assert(dev->State == USB_STATE_NOTATTACHED);
-	OHCI_Attach(Port);
-	dev->State = USB_STATE_ATTACHED;
-	usb_device_handle_attach(dev);
-}
-
-void OHCI::USB_DeviceReset(USBDev* dev)
-{
-	if (dev == nullptr || !dev->Attached) {
-		return;
-	}
-
-	dev->RemoteWakeup = 0;
-	dev->Addr = 0;
-	dev->State = USB_STATE_DEFAULT;
-	usb_device_handle_reset(dev);
-}

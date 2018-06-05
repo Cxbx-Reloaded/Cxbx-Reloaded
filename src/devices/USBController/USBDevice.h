@@ -37,6 +37,7 @@
 #define USBDEVICE_H_
 
 #include "..\PCIDevice.h"
+#include "..\devices\video\queue.h"
 #include <assert.h>
 
 #define USB_MAX_ENDPOINTS  15
@@ -73,6 +74,9 @@ typedef struct _IOVector
 }
 IOVector;
 
+typedef struct _USBPacket USBPacket;
+typedef struct _XboxDevice XboxDevice;
+
 /* USB endpoint */
 typedef struct _USBEndpoint
 {
@@ -83,13 +87,13 @@ typedef struct _USBEndpoint
 	int max_packet_size;
 	bool pipeline;
 	bool halted;
-	USBDev* Dev;          // device this endpoint belongs to
-	//QTAILQ_HEAD(, USBPacket) queue;
+	XboxDevice* Dev;                      // device this endpoint belongs to
+	QTAILQ_HEAD(, _USBPacket) Queue;  // queue of packets to this endpoint
 }
 USBEndpoint;
 
-/* definition of a USB device */
-typedef struct _USBDev
+/* definition of an Xbox usb device */
+typedef struct _XboxDevice
 {
 	DeviceState qdev;
 	USBPort *port;
@@ -102,25 +106,25 @@ typedef struct _USBDev
 	int speed;
 	// Supported speeds, not in info because it may be variable (hostdevs)
 	int speedmask;
-	uint8_t Addr; // device address
+	uint8_t Addr;                          // device function address
 	char product_desc[32];
 	int auto_attach;
-	int Attached; // device is attached
+	int Attached;                          // device is attached
 
-	int32_t State; // current state of device
+	int32_t State;                         // current state of device
 	uint8_t setup_buf[8];
 	uint8_t data_buf[4096];
-	int32_t RemoteWakeup; // wakeup flag
+	int32_t RemoteWakeup;                  // wakeup flag
 	int32_t setup_state;
 	int32_t setup_len;
 	int32_t setup_index;
 
-	USBEndpoint EP_ctl;
-	USBEndpoint EP_in[USB_MAX_ENDPOINTS];
-	USBEndpoint EP_out[USB_MAX_ENDPOINTS];
+	USBEndpoint EP_ctl;                    // endpoints for SETUP tokens
+	USBEndpoint EP_in[USB_MAX_ENDPOINTS];  // endpoints for OUT tokens
+	USBEndpoint EP_out[USB_MAX_ENDPOINTS]; // endpoints for IN tokens
 
 	//QLIST_HEAD(, USBDescString) strings;
-	const USBDesc *usb_desc; // Overrides class usb_desc if not NULL
+	const USBDesc *usb_desc;               // Overrides class usb_desc if not NULL
 	const USBDescDevice *device;
 
 	int configuration;
@@ -129,8 +133,9 @@ typedef struct _USBDev
 	const USBDescConfig *config;
 	const USBDescIface  *ifaces[USB_MAX_INTERFACES];
 }
-USBDev;
+XboxDevice;
 
+// ergo720: this could be merged in the OHCI or USBDevice class if possible
 typedef struct USBDeviceClass
 {
 	DeviceClass parent_class;
@@ -183,30 +188,29 @@ typedef struct USBDeviceClass
 USBDeviceClass;
 
 /* Structure used to hold information about an active USB packet */
-typedef struct _USBPacket
+struct _USBPacket
 {
 	// Data fields for use by the driver
-	int Pid;
-	uint64_t Id;
-	USBEndpoint* Endpoint;        // endpoint of the packet
-	unsigned int stream;
-	IOVector IoVec;               // used to perform vectored I/O
-	uint64_t parameter;           // control transfers
-	bool short_not_ok;
-	bool int_req;
-	int status;                   // USB_RET_* status code
-	int actual_length;            // Number of bytes actually transferred
+	int Pid;                                 // Packet ID
+	uint32_t Id; 				             // Paddr of the TD for this packet 
+	USBEndpoint* Endpoint;                   // endpoint this packet is transferred to
+	unsigned int Stream;		             
+	IOVector IoVec;                          // used to perform vectored I/O
+	uint64_t Parameter;                      // control transfers
+	bool ShortNotOK;                         // the bufferRounding mode of the TD for this packet
+	bool IntReq;                             // whether or not to generate an interrupt for this packet (DelayInterrupt of the TD is zero)
+	int Status;                              // USB_RET_* status code
+	int ActualLength;                        // Number of bytes actually transferred
 	// Internal use by the USB layer
-	USBPacketState state;
-	USBCombinedPacket *combined;
-	//QTAILQ_ENTRY(USBPacket) queue;
-	//QTAILQ_ENTRY(USBPacket) combined_entry;
-}
-USBPacket;
+	USBPacketState State;
+	//USBCombinedPacket *Combined;
+	QTAILQ_ENTRY(_USBPacket) Queue;
+	QTAILQ_ENTRY(_USBPacket) CombinedEntry;
+};
 
 /* Struct describing the status of a usb port */
 typedef struct _USBPort {
-	USBDev* Dev;     // usb device (if present)
+	XboxDevice* Dev;     // usb device (if present)
 	int SpeedMask;   // usb speeds supported
 	int HubCount;    // number of hubs attached
 	char Path[16];   // the number of the port
@@ -233,9 +237,38 @@ class USBDevice : public PCIDevice {
 		void MMIOWrite(int barIndex, uint32_t addr, uint32_t value, unsigned size);
 
 
+		// USBDevice-specific functions/variables
 		// pointers to the two USB host controllers available on the Xbox
 		OHCI* m_pHostController1 = nullptr;
 		OHCI* m_pHostController2 = nullptr;
+
+		// register a port with the HC
+		void USB_RegisterPort(USBPort* Port, int Index, int SpeedMask);
+		//
+		void USB_DeviceEPstopped(XboxDevice* Dev, USBEndpoint* Ep);
+		// reset a usb port
+		void USB_PortReset(USBPort* Port);
+		// a device is attched
+		void USB_Attach(USBPort* Port);
+		// a device is detached
+		void USB_Detach(USBPort* Port);
+		// a device downstream from the device attached to the port (attached through a hub) is detached
+		void ChildDetach(USBPort* Port, XboxDevice* Child);
+		// TODO
+		void Wakeup(USBPort* Port);
+		// TODO
+		void Complete(USBPort* Port, USBPacket *P);
+		// reset a device
+		void USB_DeviceReset(XboxDevice* Dev);
+		// find the usb device with the supplied address
+		XboxDevice* USB_FindDevice(USBPort* Port, uint8_t Addr);
+		// ergo720: can probably be removed by calling directly usb_hub_find_device
+		XboxDevice* USB_DeviceFindDevice(XboxDevice* Dev, uint8_t Addr);
+		// find the requested endpoint in the supplied device
+		USBEndpoint* USB_GetEP(XboxDevice* Dev, int Pid, int Ep);
+		// setup a packet for transfer
+		void USB_PacketSetup(USBPacket* p, int Pid, USBEndpoint* Ep, unsigned int Stream,
+			uint64_t Id, bool ShortNotOK, bool IntReq);
 };
 
 #endif
