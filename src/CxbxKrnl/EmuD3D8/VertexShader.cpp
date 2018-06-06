@@ -2408,6 +2408,12 @@ extern HRESULT XTL::EmuRecompileVshFunction
 	DWORD* pDeclToken = pRecompiledDeclaration;
 	do {
 		DWORD regNum = *pDeclToken & X_D3DVSD_VERTEXREGMASK;
+		if (regNum > 12) {
+			LOG_TEST_CASE("EmuRecompileVshFunction enocuntered RegNum > 12");
+			pDeclToken++;
+			continue;
+		}
+
 		declaredRegisters[regNum] = true;
 		pDeclToken++;
 	} while (*pDeclToken != X_D3DVSD_END());
