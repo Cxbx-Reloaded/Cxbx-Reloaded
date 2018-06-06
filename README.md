@@ -17,7 +17,7 @@ We now boot more titles than ever before, with more and more reaching gameplay.
 ## System Requirements
 ### Minimum
   * OS: Windows 7+ x64. 32-bit installations are not supported.
-  * GPU: Anything that supports Direct3D 9 (HLE) and OpenGL 3.3 (LLE).
+  * GPU: Anything that supports Direct3D 8 (HLE) and OpenGL 3.3 (LLE).
 ### Prerequisites
   * Visual C++ 2015 and 2017 redistributables may be required. Download them [here](https://support.microsoft.com/en-gb/help/2977003/the-latest-supported-visual-c-downloads).
   
