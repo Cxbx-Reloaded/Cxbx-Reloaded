@@ -2409,7 +2409,8 @@ extern HRESULT XTL::EmuRecompileVshFunction
 	do {
 		DWORD regNum = *pDeclToken & X_D3DVSD_VERTEXREGMASK;
 		if (regNum > 12) {
-			LOG_TEST_CASE("EmuRecompileVshFunction enocuntered RegNum > 12");
+			// Lego Star Wars hits this
+			LOG_TEST_CASE("RegNum > 12");
 			pDeclToken++;
 			continue;
 		}
