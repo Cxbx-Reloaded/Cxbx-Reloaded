@@ -35,11 +35,6 @@
 // ******************************************************************
 #include "ResourceTracker.h"
 
-// exported globals
-
-bool g_bVBSkipStream = false;
-bool g_bVBSkipPusher = false;
-
 //
 // all of our resource trackers
 //

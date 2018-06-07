@@ -113,6 +113,11 @@ static DWORD						g_CallbackParam;		// Callback param
 static BOOL                         g_bHasDepthStencil = FALSE;  // Does device have a Depth/Stencil Buffer?
 static DWORD						g_dwPrimPerFrame = 0;	// Number of primitives within one frame
 
+// primary push buffer
+static uint32  g_dwPrimaryPBCount = 0;
+static uint32 *g_pPrimaryPB = nullptr;
+
+
 struct {
 	XTL::X_D3DSurface Surface;
 	RECT SrcRect;
@@ -1622,10 +1627,6 @@ static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
             {
                 g_bPrintfOn = !g_bPrintfOn;
             }
-            else if(wParam == VK_F9)
-            {
-                XTL::g_bBrkPush = TRUE;
-            }
             else if(wParam == VK_F10)
             {
                 ToggleFauxFullscreen(hWnd);
@@ -1634,10 +1635,6 @@ static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
             {
                 if(g_iWireframe++ == 2)
                     g_iWireframe = 0;
-            }
-            else if(wParam == VK_F12)
-            {
-                XTL::g_bStepPush = !XTL::g_bStepPush;
             }
         }
         break;
@@ -7506,9 +7503,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawVertices)
 	// TODO : Call unpatched D3DDevice_SetStateVB(0);
 
 	CxbxUpdateNativeD3DResources();
-    #ifdef _DEBUG_TRACK_VB
-    if(!g_bVBSkipStream)
-    #endif
     if (IsValidCurrentShader()) {
 		CxbxDrawContext DrawContext = {};
 
@@ -7613,9 +7607,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawVerticesUP)
 
 	CxbxUpdateNativeD3DResources();
 
-    #ifdef _DEBUG_TRACK_VB
-    if(!g_bVBSkipStream)
-    #endif
     if (IsValidCurrentShader()) {
 		CxbxDrawContext DrawContext = {};
 
@@ -7668,9 +7659,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVertices)
 
 	CxbxUpdateNativeD3DResources();
 
-    #ifdef _DEBUG_TRACK_VB
-    if(!g_bVBSkipStream)
-    #endif
 	if (IsValidCurrentShader()) {
 		CxbxUpdateActiveIndexBuffer(pIndexData, VertexCount);
 
@@ -7729,9 +7717,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVerticesUP)
 
 	CxbxUpdateNativeD3DResources();
 
-    #ifdef _DEBUG_TRACK_VB
-    if(!g_bVBSkipStream)
-    #endif
 	if (IsValidCurrentShader()) {
 		CxbxDrawContext DrawContext = {};
 

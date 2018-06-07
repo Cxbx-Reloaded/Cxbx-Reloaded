@@ -53,15 +53,6 @@ extern void EmuUpdateActiveTextureStages();
 extern DWORD g_XboxBaseVertexIndex;
 #endif
 
-uint32  XTL::g_dwPrimaryPBCount = 0;
-uint32 *XTL::g_pPrimaryPB = nullptr;
-
-bool XTL::g_bStepPush = false;
-bool XTL::g_bSkipPush = false;
-bool XTL::g_bBrkPush  = false;
-
-bool g_bPBSkipPusher = false;
-
 const char *NV2AMethodToString(DWORD dwMethod); // forward
 
 static void DbgDumpMesh(WORD *pIndexData, DWORD dwCount);
@@ -223,7 +214,7 @@ DWORD CxbxGetStrideFromVertexShaderHandle(DWORD dwVertexShader)
 	return Stride;
 }
 
-PGRAPHState pgraph_state; // global, as inside a function it crashes (during initalization?)
+PGRAPHState pgraph_state = {}; // global, as inside a function it crashes (during initalization?)
 
 void HLE_pgraph_handle_method(
 	PGRAPHState *pg, // compatiblity, instead of NV2AState *d,
@@ -241,7 +232,7 @@ void HLE_pgraph_handle_method(
 		return; // For now, don't even attempt to run through
 	}
 
-#if 1 // Temporarily, use this array of 16 bit elements (until HLE drawing uses 32 bit indices like LLE)
+#if 1 // Temporarily, use this array of 16 bit elements (until HLE drawing uses 32 bit indices, like LLE)
 	static INDEX16 pg__inline_elements_16[NV2A_MAX_BATCH_LENGTH];
 	#define pg__inline_elements pg__inline_elements_16
 #else
@@ -281,8 +272,6 @@ void HLE_pgraph_handle_method(
 	case NV097_SET_BEGIN_END: { // 0x000017FC, NV2A_VERTEX_BEGIN_END, D3DPUSH_SET_BEGIN_END, 1 DWORD parameter
 		if (parameter == 0) { // Parameter == 0 means SetEnd, EndPush()
 			// Trigger all draws from here
-			CxbxUpdateNativeD3DResources();
-
 			if (pg->draw_arrays_length) {
 				LOG_TEST_CASE("PushBuffer : Draw Arrays");
 				assert(pg->inline_buffer_length == 0);
@@ -398,29 +387,38 @@ void HLE_pgraph_handle_method(
 					GL_UNSIGNED_INT,
 					(void*)0);
 #else
-				if (!g_bPBSkipPusher) {
-					if (IsValidCurrentShader()) {
-						unsigned int uiIndexCount = pg->inline_elements_length;
-						CxbxDrawContext DrawContext = {};
+				if (IsValidCurrentShader()) {
+					unsigned int uiIndexCount = pg->inline_elements_length;
+					CxbxDrawContext DrawContext = {};
 
-						DrawContext.XboxPrimitiveType = (X_D3DPRIMITIVETYPE)pg->primitive_mode;
-						DrawContext.dwVertexCount = EmuD3DIndexCountToVertexCount(DrawContext.XboxPrimitiveType, uiIndexCount);
-						DrawContext.hVertexShader = g_CurrentXboxVertexShaderHandle;
-						DrawContext.pIndexData = pg__inline_elements; // Used by GetVerticesInBuffer
+					DrawContext.XboxPrimitiveType = (X_D3DPRIMITIVETYPE)pg->primitive_mode;
+					DrawContext.dwVertexCount = EmuD3DIndexCountToVertexCount(DrawContext.XboxPrimitiveType, uiIndexCount);
+					DrawContext.hVertexShader = g_CurrentXboxVertexShaderHandle;
+					DrawContext.pIndexData = pg__inline_elements; // Used by GetVerticesInBuffer
 
-						CxbxDrawIndexed(DrawContext);
-					}
+					CxbxDrawIndexed(DrawContext);
 				}
 #endif
 			}
 			else {
 				LOG_TEST_CASE("EMPTY NV097_SET_BEGIN_END");
 			}
+		}
+		else {
+//			NV2A_GL_DGROUP_BEGIN("NV097_SET_BEGIN_END: 0x%x", parameter);
+			assert(parameter <= NV097_SET_BEGIN_END_OP_POLYGON);
 
-			break; // EndPush(), done with BeginPush()
+			pg->primitive_mode = parameter; // Retrieve the D3DPRIMITIVETYPE info in parameter
+
+			CxbxUpdateNativeD3DResources();
+
+			pg->inline_elements_length = 0;
+			pg->inline_array_length = 0;
+			pg->inline_buffer_length = 0;
+			pg->draw_arrays_length = 0;
+			pg->draw_arrays_max_count = 0;
 		}
 
-		pg->primitive_mode = parameter; // Retrieve the D3DPRIMITIVETYPE info in parameter
 		break;
 	}
 	case NV097_ARRAY_ELEMENT16: { // 0x1800, NV2A_VB_ELEMENT_U16
@@ -480,7 +478,10 @@ void HLE_pgraph_handle_method(
 }
 
 // For now, skip the cache, but handle the pgraph method directly
-#define CACHE_PUSH(subc, mthd, word, ni) HLE_pgraph_handle_method(pg, subc, mthd << 2, word)
+// Note : Here's where the method gets multiplied by four!
+// Note 2 : pg is read from local scope, and ni is unused (same in LLE)
+#define CACHE_PUSH(subc, mthd, word, ni) \
+	HLE_pgraph_handle_method(pg, subc, mthd << 2, word)
 
 typedef union {
 /* https://envytools.readthedocs.io/en/latest/hw/fifo/dma-pusher.html#the-commands-pre-gf100-format
@@ -546,17 +547,12 @@ extern void XTL::EmuExecutePushBufferRaw
 	assert(pPushData);
 	assert(uSizeInBytes >= 4);
 
-	if (g_bSkipPush) {
-		return;
-	}
-
 	// EmuNV2A_PGRAPH immitation
 	PGRAPHState *pg = &pgraph_state;
-	memset(pg, 0, sizeof(PGRAPHState));
 
 	// DMA Pusher state -- see https://envytools.readthedocs.io/en/latest/hw/fifo/dma-pusher.html#pusher-state
 #if 0
-	xbaddr dma_pushbuffer; // the pushbuffer and IB DMA object
+	static xbaddr dma_pushbuffer; // the pushbuffer and IB DMA object
 #endif
 	uint32_t *dma_limit; // pushbuffer size limit
 	uint32_t *dma_put; // pushbuffer current end address
@@ -567,52 +563,48 @@ extern void XTL::EmuExecutePushBufferRaw
 		uint32_t mcnt; // :24 = Current method count
 		bool ni; // Current command's NI (non-increasing) flag
 	} dma_state;
-	uint32_t dcount_shadow; // [NV5:] Number of already-processed methods in cmd]
-	bool subr_active; // Subroutine active
-	uint32_t *subr_return; // Subroutine return address
-	bool big_endian; // Pushbuffer endian switch
+
+	static uint32_t dcount_shadow = 0; // [NV5:] Number of already-processed methods in cmd]
+	static bool subr_active = false; // Subroutine active
+	static uint32_t *subr_return = nullptr; // Subroutine return address
+	// static bool big_endian = false; // Pushbuffer endian switch
 
 	// DMA troubleshooting values -- see https://envytools.readthedocs.io/en/latest/hw/fifo/dma-pusher.html#errors
-	uint32_t *dma_get_jmp_shadow; // value of dma_get before the last jump
-	uint32_t rsvd_shadow; // the first word of last-read command
-	uint32_t data_shadow; // the last-read data word
+	static uint32_t *dma_get_jmp_shadow = nullptr; // value of dma_get before the last jump
+	static uint32_t rsvd_shadow = 0; // the first word of last-read command
+	static uint32_t data_shadow = 0; // the last-read data word
+
+	// Overlay, to ease decoding the PFIFO command word
+	union {
+		uint32_t word;
+		nv_fifo_command command;
+	};
 
 	// Initialize working variables
-	dma_get = (uint32_t*)pPushData;
+	dma_limit = (uint32_t*)((xbaddr)pPushData + uSizeInBytes); // TODO : If this an absolute addresss?
 	dma_put = (uint32_t*)((xbaddr)pPushData + uSizeInBytes);
-	dma_limit = (uint32_t*)((xbaddr)pPushData + uSizeInBytes);
+	dma_get = (uint32_t*)pPushData;
 	dma_state = {};
-	dcount_shadow = 0;
-	subr_active = false;
-	subr_return = 0;
-	big_endian = false;
-	dma_get_jmp_shadow = 0;
-	rsvd_shadow = 0;
-	data_shadow = 0;
 
+	// NV-4-style PFIFO DMA command stream pusher
 	// See https://envytools.readthedocs.io/en/latest/hw/fifo/dma-pusher.html#the-pusher-pseudocode-pre-gf100
     while (dma_get != dma_put) {
 		// Check if loop reaches end of pushbuffer
 		if (dma_get >= dma_limit) {
 			LOG_TEST_CASE("Last pushbuffer instruction exceeds END of Data");
-			break; // from while
+			// TODO : throw DMA_PUSHER(MEM_FAULT);
+			return; // For now, don't even attempt to run through
 		}
-
-		union {
-			uint32_t word;
-			nv_fifo_command command;
-		};
 
 		// Read a DWORD from the current push buffer pointer
 		word = *dma_get++;
-
 		/* now, see if we're in the middle of a command */
 		if (dma_state.mcnt) {
 			/* data word of methods command */
 			data_shadow = word;
 #if 0
 			if (!PULLER_KNOWS_MTHD(dma_state.mthd)) {
-				throw DMA_PUSHER(INVALID_MTHD);
+				throw DMA_PUSHER(INVALID_MTHD);				
 				return; // For now, don't even attempt to run through
 			}
 
@@ -624,12 +616,11 @@ extern void XTL::EmuExecutePushBufferRaw
 
 			dma_state.mcnt--;
 			dcount_shadow++;
-			continue;
+			continue; // while
 		}
 
 		/* no command active - this is the first word of a new one */
 		rsvd_shadow = word;
-
 		// Check and handle command type, then instruction, then flags
 		switch (command.type) {
 		case COMMAND_TYPE_NORMAL:
@@ -638,7 +629,7 @@ extern void XTL::EmuExecutePushBufferRaw
 			LOG_TEST_CASE("Pushbuffer COMMAND_TYPE_JUMP");
 			dma_get_jmp_shadow = dma_get;
 			dma_get = (uint32_t *)(CONTIGUOUS_MEMORY_BASE | (word & COMMAND_WORD_MASK_JMP));
-			continue;
+			continue; // while
 		case COMMAND_TYPE_CALL: // Note : NV2A return is said not to work?
 			if (subr_active) {
 				LOG_TEST_CASE("Pushbuffer COMMAND_TYPE_CALL while another call was active!");
@@ -652,7 +643,7 @@ extern void XTL::EmuExecutePushBufferRaw
 			subr_return = dma_get;
 			subr_active = true;
 			dma_get = (uint32_t *)(CONTIGUOUS_MEMORY_BASE | (word & COMMAND_WORD_MASK_JMP));
-			continue;
+			continue; // while
 		default:
 			LOG_TEST_CASE("Pushbuffer COMMAND_TYPE unknown");
 			// TODO : throw DMA_PUSHER(INVALID_CMD);
@@ -667,7 +658,7 @@ extern void XTL::EmuExecutePushBufferRaw
 			LOG_TEST_CASE("Pushbuffer COMMAND_INSTRUCTION_OLD_JUMP");
 			dma_get_jmp_shadow = dma_get;
 			dma_get = (uint32_t *)(CONTIGUOUS_MEMORY_BASE | (word & COMMAND_WORD_MASK_OLD_JMP));
-			continue;
+			continue; // while
 		case COMMAND_INSTRUCTION_NON_INCREASING_METHODS:
 			dma_state.ni = true;
 			break;

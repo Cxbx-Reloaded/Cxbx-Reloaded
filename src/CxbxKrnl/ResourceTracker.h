@@ -37,9 +37,6 @@
 #include "Cxbx.h"
 #include "Common/Win32/Mutex.h"
 
-extern bool g_bVBSkipStream;
-extern bool g_bPBSkipPusher;
-
 extern class ResourceTracker : public Mutex
 {
     public:

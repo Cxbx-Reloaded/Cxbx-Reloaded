@@ -52,13 +52,4 @@ extern void EmuExecutePushBufferRaw
 	uint32_t uSizeInBytes
 );
 
-// primary push buffer
-extern uint32  g_dwPrimaryPBCount;
-extern uint32 *g_pPrimaryPB;
-
-// push buffer debugging
-extern bool g_bStepPush;
-extern bool g_bSkipPush;
-extern bool g_bBrkPush;
-
 #endif
