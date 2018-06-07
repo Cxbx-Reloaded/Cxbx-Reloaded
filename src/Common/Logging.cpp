@@ -40,7 +40,7 @@
 
 // For thread_local, see : http://en.cppreference.com/w/cpp/language/storage_duration
 // TODO : Use Boost.Format http://www.boost.org/doc/libs/1_53_0/libs/format/index.html
-thread_local std::string _logPrefix;
+thread_local std::string _logThreadPrefix;
 
 const bool needs_escape(const wint_t _char)
 {

@@ -216,7 +216,7 @@ g_EmuCDPD = {0};
 	do { \
 		if (FAILED(hRet)) \
 			if(g_bPrintfOn) \
-				printf("%s%s : %s D3D error (0x%.08X: %s)\n", _logPrefix.c_str(), _logFuncPrefix.c_str(), message, hRet, D3DErrorString(hRet)); \
+				printf("%s%s : %s D3D error (0x%.08X: %s)\n", _logThreadPrefix.c_str(), _logFuncPrefix.c_str(), message, hRet, D3DErrorString(hRet)); \
 	} while (0)
 
 #else

@@ -90,7 +90,7 @@ void NTAPI EmuWarning(const char *szWarningMessage, ...)
 
         LOG_THREAD_INIT;
 
-        std::cout << _logPrefix << "WARN: ";
+        std::cout << _logThreadPrefix << "WARN: ";
 
         va_start(argp, szWarningMessage);
 
