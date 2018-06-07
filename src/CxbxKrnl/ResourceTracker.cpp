@@ -46,9 +46,6 @@ bool g_bVBSkipPusher = false;
 
 ResourceTracker g_VBTrackTotal;
 ResourceTracker g_VBTrackDisable;
-ResourceTracker g_PBTrackTotal;
-ResourceTracker g_PBTrackDisable;
-ResourceTracker g_PBTrackShowOnce;
 ResourceTracker g_PatchedStreamsCache;
 ResourceTracker g_DataToTexture;
 ResourceTracker g_AlignCache;

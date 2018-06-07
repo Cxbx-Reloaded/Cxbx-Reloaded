@@ -79,8 +79,6 @@ typedef u32              xbaddr;
 #define _DEBUG_TRACK_VS
 /*! define this to track pixel shaders */
 #define _DEBUG_TRACK_PS
-/*! define this to track push buffers */
-#define _DEBUG_TRACK_PB
 /*! define this to track memory allocations */
 //#define _DEBUG_ALLOC
 #endif

@@ -2712,10 +2712,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_EndPush)(DWORD *pPush)
 
 	LOG_FUNC_ONE_ARG(pPush);
 
-#ifdef _DEBUG_TRACK_PB
-//	DbgDumpPushBuffer(g_pPrimaryPB, g_dwPrimaryPBCount*sizeof(DWORD));
-#endif
-
 	if (g_pPrimaryPB == nullptr)
 		EmuWarning("D3DDevice_EndPush called without preceding D3DDevice_BeginPush?!");
 	else

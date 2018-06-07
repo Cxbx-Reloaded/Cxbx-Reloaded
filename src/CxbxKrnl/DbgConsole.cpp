@@ -110,7 +110,7 @@ void DbgConsole::Reset()
     m_szInput[0] = '\0';
 }
 
-#if defined(_DEBUG_TRACK_VB) || defined(_DEBUG_TRACK_PB)
+#if defined(_DEBUG_TRACK_VB)
 typedef enum _ETAction
 {
     ETA_ENABLE  = 0,
@@ -200,14 +200,6 @@ void DbgConsole::ParseCommand()
         printf("CxbxDbg:  DumpStreamCache [DSC]   : Dumps the patched streams cache\n");
         #endif
 
-        #ifdef _DEBUG_TRACK_PB
-        printf("CxbxDbg:  ListPB          [LPB]   : List Active Push Buffers\n");
-        printf("CxbxDbg:  ShowPB          [SPB #] : Show Push Buffer(s)\n");
-        printf("CxbxDbg:  DisablePB       [DPB #] : Disable Push Buffer(s)\n");
-        printf("CxbxDbg:  EnablePB        [EPB #] : Enable Push Buffer(s)\n");
-        printf("CxbxDbg:  ClearPB         [CPB]   : Clear Push Buffer List\n");
-        #endif
-
         #ifdef _DEBUG_ALLOC
         printf("CxbxDbg:  DumpMem         [DMEM]  : Dump the heap allocation tracking table\n");
         #endif // _DEBUG_ALLOCC
@@ -284,90 +276,6 @@ void DbgConsole::ParseCommand()
         {
             printf("CxbxDbg: Syntax Incorrect (dvb #)\n");
         }
-    }
-    #endif
-    #ifdef _DEBUG_TRACK_PB
-    else if(_stricmp(szCmd, "lpb") == 0 || _stricmp(szCmd, "ListPB") == 0)
-    {
-        int v=0;
-
-        g_PBTrackTotal.Lock();
-
-        RTNode *cur = g_PBTrackTotal.getHead();
-
-        while(cur != NULL && cur->pNext != NULL)
-        {
-            bool enabled = g_PBTrackDisable.exists(cur->pResource);
-
-            printf("CxbxDbg: %.2d : 0x%p (%s)\n", v++, cur->pResource, enabled ? "enabled" : "disabled");
-
-            cur = cur->pNext;
-        }
-
-        g_PBTrackTotal.Unlock();
-    }
-    else if(_stricmp(szCmd, "spb") == 0 || _stricmp(szCmd, "ShowPB") == 0)
-    {
-        int n=0, m=0;
-
-        int c = sscanf(m_szInput, "%*s %d-%d", &n, &m);
-
-        if(c == 1)
-        {
-            EnableTracker(g_PBTrackTotal, g_PBTrackShowOnce, n, n, ETA_SHOW);
-        }
-        else if(c == 2)
-        {
-            EnableTracker(g_PBTrackTotal, g_PBTrackShowOnce, n, m, ETA_SHOW);
-        }
-        else
-        {
-            printf("CxbxDbg: Syntax Incorrect (spb #)\n");
-        }
-    }
-    else if(_stricmp(szCmd, "dpb") == 0 || _stricmp(szCmd, "DisablePB") == 0)
-    {
-        int n=0, m=0;
-
-        int c = sscanf(m_szInput, "%*s %d-%d", &n, &m);
-
-        if(c == 1)
-        {
-            EnableTracker(g_PBTrackTotal, g_PBTrackDisable, n, n, ETA_DISABLE);
-        }
-        else if(c == 2)
-        {
-            EnableTracker(g_PBTrackTotal, g_PBTrackDisable, n, m, ETA_DISABLE);
-        }
-        else
-        {
-            printf("CxbxDbg: Syntax Incorrect (dpb #)\n");
-        }
-    }
-    else if(_stricmp(szCmd, "epb") == 0 || _stricmp(szCmd, "EnablePB") == 0)
-    {
-        int n=0, m=0;
-
-        int c = sscanf(m_szInput, "%*s %d-%d", &n, &m);
-
-        if(c == 1)
-        {
-            EnableTracker(g_PBTrackTotal, g_PBTrackDisable, n, n, ETA_ENABLE);
-        }
-        else if(c == 2)
-        {
-            EnableTracker(g_PBTrackTotal, g_PBTrackDisable, n, m, ETA_ENABLE);
-        }
-        else
-        {
-            printf("CxbxDbg: Syntax Incorrect (dpb #)\n");
-        }
-    }
-    else if(_stricmp(szCmd, "cpb") == 0 || _stricmp(szCmd, "ClearPB") == 0)
-    {
-        g_PBTrackTotal.clear();
-
-        printf("CxbxDbg: Push Buffer List Cleared!\n");
     }
     #endif
     #ifdef _DEBUG_ALLOC
