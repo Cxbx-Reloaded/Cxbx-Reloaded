@@ -3287,6 +3287,21 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetViewport)
 
 	D3DVIEWPORT HostViewPort = *pViewport;
 
+	// Get current Xbox render target dimensions
+	DWORD XboxRenderTarget_Width = GetPixelContainerWidth(g_pXboxRenderTarget);
+	DWORD XboxRenderTarget_Height = GetPixelContainerHeigth(g_pXboxRenderTarget);
+
+	// Before any scaling, adjust viewport to stay within render target bounds
+	DWORD Right = HostViewPort.X + HostViewPort.Width;
+	if (Right > XboxRenderTarget_Width) {
+		HostViewPort.Width = XboxRenderTarget_Width - HostViewPort.X;
+	}
+
+	DWORD Bottom = HostViewPort.Y + HostViewPort.Height;
+	if (Bottom > XboxRenderTarget_Height) {
+		HostViewPort.Height = XboxRenderTarget_Height - HostViewPort.Y;
+	}
+
 	if (g_ScaleViewport) {
 #if 0 // Disabled for now, as the Xbox code triggers an error-code 6 in uc_emu_start()
 		// Use a trampoline here, so GetViewport can be unpatched
