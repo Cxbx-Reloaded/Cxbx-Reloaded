@@ -237,7 +237,7 @@ typedef enum _CxbxMsgDlgIcon {
 
 void CxbxPopupMessage(CxbxMsgDlgIcon icon, const char *message, ...);
 
-#ifdef TRUE // _DEBUG
+#ifdef _DEBUG
 #define LOG_TEST_CASE(message) do { static bool bTestCaseLogged = false; \
     if (!bTestCaseLogged) { bTestCaseLogged = true; \
     CxbxPopupMessage(CxbxMsgDlgIcon_Info, "Please report that %s shows the following message:\nLOG_TEST_CASE: %s\nIn %s (%s line %d)", \
