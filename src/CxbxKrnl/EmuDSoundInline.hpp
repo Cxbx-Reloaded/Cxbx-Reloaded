@@ -1499,16 +1499,21 @@ inline HRESULT HybridDirectSoundBuffer_SetMixBinVolumes_8(
         if (pMixBins->lpMixBinVolumePairs != xbnullptr) {
             // Let's normalize audio level except for low frequency (subwoofer)
             for (DWORD i = 0; i < count; i++) {
+#if 0 // This code isn't ideal for DirectSound, since it's not possible to set volume for each speakers.
                 if (pMixBins->lpMixBinVolumePairs[i].dwMixBin != XDSMIXBIN_LOW_FREQUENCY
                     // We only want to focus on speaker volumes, nothing else.
                     && pMixBins->lpMixBinVolumePairs[i].dwMixBin < XDSMIXBIN_SPEAKERS_MAX) {
+#endif
+                if (pMixBins->lpMixBinVolumePairs[i].dwMixBin == XDSMIXBIN_FRONT_LEFT
+                    // We only want to focus on front speaker volumes, nothing else.
+                    || pMixBins->lpMixBinVolumePairs[i].dwMixBin == XDSMIXBIN_FRONT_RIGHT) {
                     volume += pMixBins->lpMixBinVolumePairs[i].lVolume;
                 } else {
                     counter--;
                 }
             }
             if (counter > 0) {
-                Xb_volumeMixBin = volume / counter;
+                Xb_volumeMixBin = volume / (LONG)counter;
                 hRet = HybridDirectSoundBuffer_SetVolume(pDSBuffer, Xb_volume, EmuFlags, nullptr,
                                                          Xb_volumeMixBin, Xb_dwHeadroom);
             } else {
