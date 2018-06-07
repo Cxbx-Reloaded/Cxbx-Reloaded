@@ -3287,34 +3287,52 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetViewport)
 
 	D3DVIEWPORT HostViewPort = *pViewport;
 
-	if (g_ScaleViewport) {
-#if 0 // Disabled for now, as the Xbox code triggers an error-code 6 in uc_emu_start()
-		// Use a trampoline here, so GetViewport can be unpatched
-		XB_trampoline(VOID, WINAPI, D3DDevice_SetViewport, (CONST X_D3DVIEWPORT8 *));
-		XB_D3DDevice_SetViewport(pViewport);
-#endif
-
+	if (g_pXboxRenderTarget) {
 		// Get current Xbox render target dimensions
+
 		DWORD XboxRenderTarget_Width = GetPixelContainerWidth(g_pXboxRenderTarget);
 		DWORD XboxRenderTarget_Height = GetPixelContainerHeigth(g_pXboxRenderTarget);
 
-		// Get current host render target dimensions
-		DWORD HostRenderTarget_Width;
-		DWORD HostRenderTarget_Height;
-
-		if (GetHostRenderTargetDimensions(&HostRenderTarget_Width, &HostRenderTarget_Height)) {
-
-			// Scale Xbox to host dimensions (avoiding hard-coding 640 x 480)
-			HostViewPort.X = ScaleDWORD(pViewport->X, XboxRenderTarget_Width, HostRenderTarget_Width);
-			HostViewPort.Y = ScaleDWORD(pViewport->Y, XboxRenderTarget_Height, HostRenderTarget_Height);
-			HostViewPort.Width = ScaleDWORD(pViewport->Width, XboxRenderTarget_Width, HostRenderTarget_Width);
-			HostViewPort.Height = ScaleDWORD(pViewport->Height, XboxRenderTarget_Height, HostRenderTarget_Height);
-			// TODO : Fix test-case Shenmue 2 (which halves height, leaving the bottom half unused)
-			HostViewPort.MinZ = pViewport->MinZ; // No need scale Z for now
-			HostViewPort.MaxZ = pViewport->MaxZ;
+		// Before any scaling, adjust viewport to stay within render target bounds
+		DWORD Right = HostViewPort.X + HostViewPort.Width;
+		if (Right > XboxRenderTarget_Width) {
+			HostViewPort.Width = XboxRenderTarget_Width - HostViewPort.X;
 		}
-		else {
-			EmuWarning("GetHostRenderTargetDimensions failed - SetViewport sets Xbox viewport instead!");
+
+		DWORD Bottom = HostViewPort.Y + HostViewPort.Height;
+		if (Bottom > XboxRenderTarget_Height) {
+			HostViewPort.Height = XboxRenderTarget_Height - HostViewPort.Y;
+		}
+
+		if (g_ScaleViewport) {
+#if 0 // Disabled for now, as the Xbox code triggers an error-code 6 in uc_emu_start()
+			// Use a trampoline here, so GetViewport can be unpatched
+			XB_trampoline(VOID, WINAPI, D3DDevice_SetViewport, (CONST X_D3DVIEWPORT8 *));
+			XB_D3DDevice_SetViewport(pViewport);
+#endif
+
+			// Get current Xbox render target dimensions
+			DWORD XboxRenderTarget_Width = GetPixelContainerWidth(g_pXboxRenderTarget);
+			DWORD XboxRenderTarget_Height = GetPixelContainerHeigth(g_pXboxRenderTarget);
+
+			// Get current host render target dimensions
+			DWORD HostRenderTarget_Width;
+			DWORD HostRenderTarget_Height;
+
+			if (GetHostRenderTargetDimensions(&HostRenderTarget_Width, &HostRenderTarget_Height)) {
+
+				// Scale Xbox to host dimensions (avoiding hard-coding 640 x 480)
+				HostViewPort.X = ScaleDWORD(pViewport->X, XboxRenderTarget_Width, HostRenderTarget_Width);
+				HostViewPort.Y = ScaleDWORD(pViewport->Y, XboxRenderTarget_Height, HostRenderTarget_Height);
+				HostViewPort.Width = ScaleDWORD(pViewport->Width, XboxRenderTarget_Width, HostRenderTarget_Width);
+				HostViewPort.Height = ScaleDWORD(pViewport->Height, XboxRenderTarget_Height, HostRenderTarget_Height);
+				// TODO : Fix test-case Shenmue 2 (which halves height, leaving the bottom half unused)
+				HostViewPort.MinZ = pViewport->MinZ; // No need scale Z for now
+				HostViewPort.MaxZ = pViewport->MaxZ;
+			}
+			else {
+				EmuWarning("GetHostRenderTargetDimensions failed - SetViewport sets Xbox viewport instead!");
+			}
 		}
 	}
 
