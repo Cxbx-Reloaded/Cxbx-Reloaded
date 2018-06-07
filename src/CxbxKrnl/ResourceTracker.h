@@ -37,9 +37,6 @@
 #include "Cxbx.h"
 #include "Common/Win32/Mutex.h"
 
-extern bool g_bVBSkipStream;
-extern bool g_bPBSkipPusher;
-
 extern class ResourceTracker : public Mutex
 {
     public:
@@ -85,7 +82,6 @@ extern class ResourceTracker : public Mutex
         struct RTNode *m_tail;
 }
 g_VBTrackTotal, g_VBTrackDisable,
-g_PBTrackTotal, g_PBTrackDisable, g_PBTrackShowOnce,
 g_PatchedStreamsCache, g_DataToTexture, g_AlignCache;
 
 struct RTNode

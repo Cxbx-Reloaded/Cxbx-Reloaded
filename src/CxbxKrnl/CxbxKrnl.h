@@ -237,10 +237,18 @@ typedef enum _CxbxMsgDlgIcon {
 
 void CxbxPopupMessage(CxbxMsgDlgIcon icon, const char *message, ...);
 
+#ifdef _DEBUG
+#define LOG_TEST_CASE(message) do { static bool bTestCaseLogged = false; \
+    if (!bTestCaseLogged) { bTestCaseLogged = true; \
+    CxbxPopupMessage(CxbxMsgDlgIcon_Info, "Please report that %s shows the following message:\nLOG_TEST_CASE: %s\nIn %s (%s line %d)", \
+    CxbxKrnl_Xbe->m_szAsciiTitle, message, __func__, __FILE__, __LINE__); } } while(0)
+// was g_pCertificate->wszTitleName
+#else
 #define LOG_TEST_CASE(message) do { static bool bTestCaseLogged = false; \
     if (!bTestCaseLogged) { bTestCaseLogged = true; \
     printf("LOG_TEST_CASE: %s\nIn %s (%s line %d)", \
     message, __func__, __FILE__, __LINE__); } } while(0)
+#endif
 
 extern Xbe::Certificate *g_pCertificate;
 

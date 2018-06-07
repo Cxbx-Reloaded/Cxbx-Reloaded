@@ -1258,4 +1258,6 @@ typedef enum _X_D3DVSD_TOKENTYPE
 
 #define X_D3DVSD_END() 0xFFFFFFFF
 
+typedef DWORD NV2AMETHOD;
+
 #endif

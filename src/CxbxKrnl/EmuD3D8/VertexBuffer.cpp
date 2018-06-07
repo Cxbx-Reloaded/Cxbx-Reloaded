@@ -814,6 +814,7 @@ void XTL::CxbxVertexBufferConverter::Apply(CxbxDrawContext *pDrawContext)
 	if (pDrawContext->XboxPrimitiveType == X_D3DPT_POLYGON) {
 		// Convex polygon is the same as a triangle fan.
 		// No need to set : pDrawContext->XboxPrimitiveType = X_D3DPT_TRIANGLEFAN;
+		// Test-case : Panzer Dragoon ORTA (when entering in-game)
 		LOG_TEST_CASE("X_D3DPT_POLYGON");
 	}
 }

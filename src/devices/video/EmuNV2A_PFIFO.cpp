@@ -412,9 +412,9 @@ int pfifo_puller_thread(NV2AState *d)
 
 				switch (entry.engine) {
 				case ENGINE_GRAPHICS:
-					pgraph_context_switch(d, entry.channel_id);
+					pgraph_switch_context(d, entry.channel_id);
 					pgraph_wait_fifo_access(d);
-					pgraph_method(d, command->subchannel, 0, entry.instance);
+					pgraph_handle_method(d, command->subchannel, 0, entry.instance);
 					break;
 				default:
 					assert(false);
@@ -450,7 +450,7 @@ int pfifo_puller_thread(NV2AState *d)
 				switch (engine) {
 				case ENGINE_GRAPHICS:
 					pgraph_wait_fifo_access(d);
-					pgraph_method(d, command->subchannel,
+					pgraph_handle_method(d, command->subchannel,
 									command->method, parameter);
 					break;
 				default:

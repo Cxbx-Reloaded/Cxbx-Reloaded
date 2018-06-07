@@ -35,20 +35,12 @@
 // ******************************************************************
 #include "ResourceTracker.h"
 
-// exported globals
-
-bool g_bVBSkipStream = false;
-bool g_bVBSkipPusher = false;
-
 //
 // all of our resource trackers
 //
 
 ResourceTracker g_VBTrackTotal;
 ResourceTracker g_VBTrackDisable;
-ResourceTracker g_PBTrackTotal;
-ResourceTracker g_PBTrackDisable;
-ResourceTracker g_PBTrackShowOnce;
 ResourceTracker g_PatchedStreamsCache;
 ResourceTracker g_DataToTexture;
 ResourceTracker g_AlignCache;

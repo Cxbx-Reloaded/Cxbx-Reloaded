@@ -34,6 +34,12 @@
 // ******************************************************************
 #pragma once
 
+#undef USE_SHADER_CACHE
+
+#ifdef USE_SHADER_CACHE
+#include "glib_compat.h" // For GHashTable, g_hash_table_new, g_hash_table_lookup, g_hash_table_insert
+#endif
+
 #include "Cxbx.h" // For xbaddr
 #include "devices\PCIDevice.h" // For PCIDevice
 
@@ -327,7 +333,9 @@ typedef struct PGRAPHState {
 	bool texture_dirty[NV2A_MAX_TEXTURES];
 	TextureBinding *texture_binding[NV2A_MAX_TEXTURES];
 
-	//GHashTable *shader_cache;
+#ifdef USE_SHADER_CACHE
+	GHashTable *shader_cache;
+#endif
 	ShaderBinding *shader_binding;
 
 	bool texture_matrix_enable[NV2A_MAX_TEXTURES];

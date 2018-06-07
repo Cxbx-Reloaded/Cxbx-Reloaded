@@ -334,17 +334,17 @@ static const SurfaceColorFormatInfo kelvin_surface_color_format_map[16] = {
 		{}
 };
 
-static void pgraph_context_switch(NV2AState *d, unsigned int channel_id);
+static void pgraph_switch_context(NV2AState *d, unsigned int channel_id);
 static void pgraph_set_context_user(NV2AState *d, uint32_t value);
 static void pgraph_wait_fifo_access(NV2AState *d);
-static void pgraph_method(NV2AState *d, unsigned int subchannel, unsigned int method, uint32_t parameter);
+static void pgraph_handle_method(NV2AState *d, unsigned int subchannel, unsigned int method, uint32_t parameter);
 static void pgraph_allocate_inline_buffer_vertices(PGRAPHState *pg, unsigned int attr);
 static void pgraph_finish_inline_buffer_vertex(PGRAPHState *pg);
-static void pgraph_shader_update_constants(PGRAPHState *pg, ShaderBinding *binding, bool binding_changed, bool vertex_program, bool fixed_function);
+static void pgraph_update_shader_constants(PGRAPHState *pg, ShaderBinding *binding, bool binding_changed, bool vertex_program, bool fixed_function);
 static void pgraph_bind_shaders(PGRAPHState *pg);
-static bool pgraph_framebuffer_dirty(PGRAPHState *pg);
-static bool pgraph_color_write_enabled(PGRAPHState *pg);
-static bool pgraph_zeta_write_enabled(PGRAPHState *pg);
+static bool pgraph_get_framebuffer_dirty(PGRAPHState *pg);
+static bool pgraph_get_color_write_enabled(PGRAPHState *pg);
+static bool pgraph_get_zeta_write_enabled(PGRAPHState *pg);
 static void pgraph_set_surface_dirty(PGRAPHState *pg, bool color, bool zeta);
 static void pgraph_update_surface_part(NV2AState *d, bool upload, bool color);
 static void pgraph_update_surface(NV2AState *d, bool upload, bool color_write, bool zeta_write);
@@ -354,6 +354,7 @@ static void pgraph_get_surface_dimensions(PGRAPHState *pg, unsigned int *width, 
 static void pgraph_update_memory_buffer(NV2AState *d, hwaddr addr, hwaddr size, bool f);
 static void pgraph_bind_vertex_attributes(NV2AState *d, unsigned int num_elements, bool inline_data, unsigned int inline_stride);
 static unsigned int pgraph_bind_inline_array(NV2AState *d);
+
 static void load_graphics_object(NV2AState *d, hwaddr instance_address, GraphicsObject *obj);
 static GraphicsObject* lookup_graphics_object(PGRAPHState *s, hwaddr instance_address);
 static float convert_f16_to_float(uint16_t f16);
@@ -373,7 +374,7 @@ static gboolean shader_equal(gconstpointer a, gconstpointer b);
 static unsigned int kelvin_map_stencil_op(uint32_t parameter);
 static unsigned int kelvin_map_polygon_mode(uint32_t parameter);
 static unsigned int kelvin_map_texgen(uint32_t parameter, unsigned int channel);
-static void pgraph_method_log(unsigned int subchannel, unsigned int graphics_class, unsigned int method, uint32_t parameter);
+static void pgraph_log_method(unsigned int subchannel, unsigned int graphics_class, unsigned int method, uint32_t parameter);
 static uint64_t fnv_hash(const uint8_t *data, size_t len);
 static uint64_t fast_hash(const uint8_t *data, size_t len, unsigned int samples);
 
@@ -510,7 +511,7 @@ DEVICE_WRITE32(PGRAPH)
 	DEVICE_WRITE32_END(PGRAPH);
 }
 
-static void pgraph_method(NV2AState *d,
+static void pgraph_handle_method(NV2AState *d,
 							unsigned int subchannel,
 							unsigned int method,
 							uint32_t parameter)
@@ -535,7 +536,7 @@ static void pgraph_method(NV2AState *d,
 
 
 	// Logging is slow.. disable for now..
-	//pgraph_method_log(subchannel, object->graphics_class, method, parameter);
+	//pgraph_log_method(subchannel, object->graphics_class, method, parameter);
 
 	if (method == NV_SET_OBJECT) {
 		subchannel_data->object_instance = parameter;
@@ -1149,7 +1150,7 @@ static void pgraph_method(NV2AState *d,
 			break;
 
 		case NV097_SET_COLOR_MASK: {
-			pg->surface_color.write_enabled_cache |= pgraph_color_write_enabled(pg);
+			pg->surface_color.write_enabled_cache |= pgraph_get_color_write_enabled(pg);
 
 			bool alpha = parameter & NV097_SET_COLOR_MASK_ALPHA_WRITE_ENABLE;
 			bool red = parameter & NV097_SET_COLOR_MASK_RED_WRITE_ENABLE;
@@ -1166,7 +1167,7 @@ static void pgraph_method(NV2AState *d,
 			break;
 		}
 		case NV097_SET_DEPTH_MASK:
-			pg->surface_zeta.write_enabled_cache |= pgraph_zeta_write_enabled(pg);
+			pg->surface_zeta.write_enabled_cache |= pgraph_get_zeta_write_enabled(pg);
 
 			SET_MASK(pg->regs[NV_PGRAPH_CONTROL_0],
 				NV_PGRAPH_CONTROL_0_ZWRITEENABLE, parameter);
@@ -1461,7 +1462,7 @@ static void pgraph_method(NV2AState *d,
 									  NV_PGRAPH_CHEOPS_OFFSET_CONST_LD_PTR);
 
 			assert(const_load < NV2A_VERTEXSHADER_CONSTANTS);
-			// VertexShaderConstant *constant = &pg->constants[const_load];
+			// VertexShaderConstant *vsh_constant = &pg->vsh_constants[const_load];
 			pg->vsh_constants_dirty[const_load] |=
 				(parameter != pg->vsh_constants[const_load][slot%4]);
 			pg->vsh_constants[const_load][slot%4] = parameter;
@@ -1475,11 +1476,11 @@ static void pgraph_method(NV2AState *d,
 
 		CASE_3(NV097_SET_VERTEX3F, 4) : {
 			slot = (method - NV097_SET_VERTEX3F) / 4;
-			VertexAttribute *attribute =
+			VertexAttribute *vertex_attribute =
 				&pg->vertex_attributes[NV2A_VERTEX_ATTR_POSITION];
 			pgraph_allocate_inline_buffer_vertices(pg, NV2A_VERTEX_ATTR_POSITION);
-			attribute->inline_value[slot] = *(float*)&parameter;
-			attribute->inline_value[3] = 1.0f;
+			vertex_attribute->inline_value[slot] = *(float*)&parameter;
+			vertex_attribute->inline_value[3] = 1.0f;
 			if (slot == 2) {
 				pgraph_finish_inline_buffer_vertex(pg);
 			}
@@ -1577,10 +1578,10 @@ static void pgraph_method(NV2AState *d,
 
 		CASE_4(NV097_SET_VERTEX4F, 4): {
 			slot = (method - NV097_SET_VERTEX4F) / 4;
-			VertexAttribute *attribute =
+			VertexAttribute *vertex_attribute =
 				&pg->vertex_attributes[NV2A_VERTEX_ATTR_POSITION];
 			pgraph_allocate_inline_buffer_vertices(pg, NV2A_VERTEX_ATTR_POSITION);
-			attribute->inline_value[slot] = *(float*)&parameter;
+			vertex_attribute->inline_value[slot] = *(float*)&parameter;
 			if (slot == 3) {
 				pgraph_finish_inline_buffer_vertex(pg);
 			}
@@ -1667,18 +1668,18 @@ static void pgraph_method(NV2AState *d,
 			break;
 		}
 
-		CASE_16(NV097_SET_VERTEX_DATA_ARRAY_OFFSET, 4):
+		CASE_16(NV097_SET_VERTEX_DATA_ARRAY_OFFSET, 4): {
 
 			slot = (method - NV097_SET_VERTEX_DATA_ARRAY_OFFSET) / 4;
 
-			pg->vertex_attributes[slot].dma_select =
-				parameter & 0x80000000;
-			pg->vertex_attributes[slot].offset =
-				parameter & 0x7fffffff;
+			VertexAttribute *vertex_attribute = &pg->vertex_attributes[slot];
 
-			pg->vertex_attributes[slot].converted_elements = 0;
+			vertex_attribute->dma_select = parameter & 0x80000000;
+			vertex_attribute->offset = parameter & 0x7fffffff;
+			vertex_attribute->converted_elements = 0;
 
 			break;
+		}
 
 		case NV097_SET_LOGIC_OP_ENABLE:
 			SET_MASK(pg->regs[NV_PGRAPH_BLEND],
@@ -1802,28 +1803,28 @@ static void pgraph_method(NV2AState *d,
 						assert(pg->inline_elements_length == 0);
 
 						for (i = 0; i < NV2A_VERTEXSHADER_ATTRIBUTES; i++) {
-							VertexAttribute *attribute = &pg->vertex_attributes[i];
+							VertexAttribute *vertex_attribute = &pg->vertex_attributes[i];
 
-							if (attribute->inline_buffer) {
+							if (vertex_attribute->inline_buffer) {
 
 								glBindBuffer(GL_ARRAY_BUFFER,
-											 attribute->gl_inline_buffer);
+											 vertex_attribute->gl_inline_buffer);
 								glBufferData(GL_ARRAY_BUFFER,
 											 pg->inline_buffer_length
 												* sizeof(float) * 4,
-											 attribute->inline_buffer,
+											 vertex_attribute->inline_buffer,
 											 GL_DYNAMIC_DRAW);
 
 								/* Clear buffer for next batch */
-								g_free(attribute->inline_buffer);
-								attribute->inline_buffer = NULL;
+								g_free(vertex_attribute->inline_buffer);
+								vertex_attribute->inline_buffer = NULL;
 
 								glVertexAttribPointer(i, 4, GL_FLOAT, GL_FALSE, 0, 0);
 								glEnableVertexAttribArray(i);
 							} else {
 								glDisableVertexAttribArray(i);
 
-								glVertexAttrib4fv(i, attribute->inline_value);
+								glVertexAttrib4fv(i, vertex_attribute->inline_value);
 							}
 
 						}
@@ -2222,12 +2223,12 @@ static void pgraph_method(NV2AState *d,
 			slot = (method - NV097_SET_VERTEX_DATA2F_M) / 4;
 			unsigned int part = slot % 2;
 			slot /= 2;
-			VertexAttribute *attribute = &pg->vertex_attributes[slot];
+			VertexAttribute *vertex_attribute = &pg->vertex_attributes[slot];
 			pgraph_allocate_inline_buffer_vertices(pg, slot);
-			attribute->inline_value[part] = *(float*)&parameter;
+			vertex_attribute->inline_value[part] = *(float*)&parameter;
 			/* FIXME: Should these really be set to 0.0 and 1.0 ? Conditions? */
-			attribute->inline_value[2] = 0.0f;
-			attribute->inline_value[3] = 1.0f;
+			vertex_attribute->inline_value[2] = 0.0f;
+			vertex_attribute->inline_value[3] = 1.0f;
 			if ((slot == 0) && (part == 1)) {
 				pgraph_finish_inline_buffer_vertex(pg);
 			}
@@ -2237,9 +2238,9 @@ static void pgraph_method(NV2AState *d,
 			slot = (method - NV097_SET_VERTEX_DATA4F_M) / 4;
 			unsigned int part = slot % 4;
 			slot /= 4;
-			VertexAttribute *attribute = &pg->vertex_attributes[slot];
+			VertexAttribute *vertex_attribute = &pg->vertex_attributes[slot];
 			pgraph_allocate_inline_buffer_vertices(pg, slot);
-			attribute->inline_value[part] = *(float*)&parameter;
+			vertex_attribute->inline_value[part] = *(float*)&parameter;
 			if ((slot == 0) && (part == 3)) {
 				pgraph_finish_inline_buffer_vertex(pg);
 			}
@@ -2248,16 +2249,16 @@ static void pgraph_method(NV2AState *d,
 		CASE_16(NV097_SET_VERTEX_DATA2S, 4): {
 			slot = (method - NV097_SET_VERTEX_DATA2S) / 4;
 			assert(false); /* FIXME: Untested! */
-			VertexAttribute *attribute = &pg->vertex_attributes[slot];
+			VertexAttribute *vertex_attribute = &pg->vertex_attributes[slot];
 			pgraph_allocate_inline_buffer_vertices(pg, slot);
 			/* FIXME: Is mapping to [-1,+1] correct? */
-			attribute->inline_value[0] = ((int16_t)(parameter & 0xFFFF) * 2.0f + 1)
+			vertex_attribute->inline_value[0] = ((int16_t)(parameter & 0xFFFF) * 2.0f + 1)
 											 / 65535.0f;
-			attribute->inline_value[1] = ((int16_t)(parameter >> 16) * 2.0f + 1)
+			vertex_attribute->inline_value[1] = ((int16_t)(parameter >> 16) * 2.0f + 1)
 											 / 65535.0f;
 			/* FIXME: Should these really be set to 0.0 and 1.0 ? Conditions? */
-			attribute->inline_value[2] = 0.0f;
-			attribute->inline_value[3] = 1.0f;
+			vertex_attribute->inline_value[2] = 0.0f;
+			vertex_attribute->inline_value[3] = 1.0f;
 			if (slot == 0) {
 				pgraph_finish_inline_buffer_vertex(pg);
 				assert(false); /* FIXME: Untested */
@@ -2266,12 +2267,12 @@ static void pgraph_method(NV2AState *d,
 		}
 		CASE_16(NV097_SET_VERTEX_DATA4UB, 4) : {
 			slot = (method - NV097_SET_VERTEX_DATA4UB) / 4;
-			VertexAttribute *attribute = &pg->vertex_attributes[slot];
+			VertexAttribute *vertex_attribute = &pg->vertex_attributes[slot];
 			pgraph_allocate_inline_buffer_vertices(pg, slot);
-			attribute->inline_value[0] = (parameter & 0xFF) / 255.0f;
-			attribute->inline_value[1] = ((parameter >> 8) & 0xFF) / 255.0f;
-			attribute->inline_value[2] = ((parameter >> 16) & 0xFF) / 255.0f;
-			attribute->inline_value[3] = ((parameter >> 24) & 0xFF) / 255.0f;
+			vertex_attribute->inline_value[0] = (parameter & 0xFF) / 255.0f;
+			vertex_attribute->inline_value[1] = ((parameter >> 8) & 0xFF) / 255.0f;
+			vertex_attribute->inline_value[2] = ((parameter >> 16) & 0xFF) / 255.0f;
+			vertex_attribute->inline_value[3] = ((parameter >> 24) & 0xFF) / 255.0f;
 			if (slot == 0) {
 				pgraph_finish_inline_buffer_vertex(pg);
 				assert(false); /* FIXME: Untested */
@@ -2283,12 +2284,12 @@ static void pgraph_method(NV2AState *d,
 			unsigned int part = slot % 2;
 			slot /= 2;
 			assert(false); /* FIXME: Untested! */
-			VertexAttribute *attribute = &pg->vertex_attributes[slot];
+			VertexAttribute *vertex_attribute = &pg->vertex_attributes[slot];
 			pgraph_allocate_inline_buffer_vertices(pg, slot);
 			/* FIXME: Is mapping to [-1,+1] correct? */
-			attribute->inline_value[part * 2 + 0] = ((int16_t)(parameter & 0xFFFF)
+			vertex_attribute->inline_value[part * 2 + 0] = ((int16_t)(parameter & 0xFFFF)
 														 * 2.0f + 1) / 65535.0f;
-			attribute->inline_value[part * 2 + 1] = ((int16_t)(parameter >> 16)
+			vertex_attribute->inline_value[part * 2 + 1] = ((int16_t)(parameter >> 16)
 														 * 2.0f + 1) / 65535.0f;
 			if ((slot == 0) && (part == 1)) {
 				pgraph_finish_inline_buffer_vertex(pg);
@@ -2594,7 +2595,7 @@ static void pgraph_method(NV2AState *d,
 
 }
 
-static void pgraph_context_switch(NV2AState *d, unsigned int channel_id)
+static void pgraph_switch_context(NV2AState *d, unsigned int channel_id)
 {
 	bool valid;
 
@@ -2628,18 +2629,21 @@ static void pgraph_wait_fifo_access(NV2AState *d) {
 	}
 }
 
-static void pgraph_method_log(unsigned int subchannel,
+static void pgraph_log_method(unsigned int subchannel,
 								unsigned int graphics_class,
 								unsigned int method, uint32_t parameter) {
 	static unsigned int last = 0;
 	static unsigned int count = 0;
 
+	extern const char *NV2AMethodToString(DWORD dwMethod); // implemented in PushBuffer.cpp
+
 	if (last == 0x1800 && method != last) {
-		NV2A_GL_DPRINTF(true, "d->pgraph method (%d) 0x%08X * %d",
-						subchannel, last, count);
+		const char* method_name = NV2AMethodToString(last); // = 'NV2A_VB_ELEMENT_U16'
+		NV2A_GL_DPRINTF(true, "d->pgraph method (%d) 0x%08X %s * %d",
+						subchannel, last, method_name, count);
 	}
 	if (method != 0x1800) {
-		const char* method_name = NULL;
+		const char* method_name = NV2AMethodToString(method);
 		unsigned int nmethod = 0;
 		switch (graphics_class) {
 		case NV_KELVIN_PRIMITIVE:
@@ -2673,18 +2677,18 @@ static void pgraph_allocate_inline_buffer_vertices(PGRAPHState *pg,
                                                    unsigned int attr)
 {
     unsigned int i;
-    VertexAttribute *attribute = &pg->vertex_attributes[attr];
+    VertexAttribute *vertex_attribute = &pg->vertex_attributes[attr];
 
-    if (attribute->inline_buffer || pg->inline_buffer_length == 0) {
+    if (vertex_attribute->inline_buffer || pg->inline_buffer_length == 0) {
         return;
     }
 
-    /* Now upload the previous attribute value */
-    attribute->inline_buffer = (float*)g_malloc(NV2A_MAX_BATCH_LENGTH
+    /* Now upload the previous vertex_attribute value */
+    vertex_attribute->inline_buffer = (float*)g_malloc(NV2A_MAX_BATCH_LENGTH
                                                   * sizeof(float) * 4);
     for (i = 0; i < pg->inline_buffer_length; i++) {
-        memcpy(&attribute->inline_buffer[i * 4],
-               attribute->inline_value,
+        memcpy(&vertex_attribute->inline_buffer[i * 4],
+               vertex_attribute->inline_value,
                sizeof(float) * 4);
     }
 }
@@ -2696,11 +2700,11 @@ static void pgraph_finish_inline_buffer_vertex(PGRAPHState *pg)
     assert(pg->inline_buffer_length < NV2A_MAX_BATCH_LENGTH);
 
     for (i = 0; i < NV2A_VERTEXSHADER_ATTRIBUTES; i++) {
-        VertexAttribute *attribute = &pg->vertex_attributes[i];
-        if (attribute->inline_buffer) {
-            memcpy(&attribute->inline_buffer[
+        VertexAttribute *vertex_attribute = &pg->vertex_attributes[i];
+        if (vertex_attribute->inline_buffer) {
+            memcpy(&vertex_attribute->inline_buffer[
                       pg->inline_buffer_length * 4],
-                   attribute->inline_value,
+                   vertex_attribute->inline_value,
                    sizeof(float) * 4);
         }
     }
@@ -2761,7 +2765,7 @@ void pgraph_init(NV2AState *d)
 
     //glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
 
-	/*
+#ifdef USE_TEXTURE_CACHE
     pg->texture_cache = g_lru_cache_new_full(
         0,
         NULL,
@@ -2777,9 +2781,11 @@ void pgraph_init(NV2AState *d)
         );
 
     g_lru_cache_set_max_size(pg->texture_cache, 512);
+#endif
 
+#ifdef USE_SHADER_CACHE
     pg->shader_cache = g_hash_table_new(shader_hash, shader_equal);
-	*/
+#endif
 
     for (i=0; i<NV2A_VERTEXSHADER_ATTRIBUTES; i++) {
         glGenBuffers(1, &pg->vertex_attributes[i].gl_converted_buffer);
@@ -2829,7 +2835,7 @@ void pgraph_destroy(PGRAPHState *pg)
 	}
 }
 
-static void pgraph_shader_update_constants(PGRAPHState *pg,
+static void pgraph_update_shader_constants(PGRAPHState *pg,
                                            ShaderBinding *binding,
                                            bool binding_changed,
                                            bool vertex_program,
@@ -3162,32 +3168,35 @@ static void pgraph_bind_shaders(PGRAPHState *pg)
                                & NV_PGRAPH_TEXCTL0_0_ALPHAKILLEN;
     }
 
-	ShaderBinding* cached_shader = nullptr;//(ShaderBinding*)g_hash_table_lookup(pg->shader_cache, &state);
+#ifdef USE_SHADER_CACHE
+	ShaderBinding* cached_shader = (ShaderBinding*)g_hash_table_lookup(pg->shader_cache, &state);
+
     if (cached_shader) {
         pg->shader_binding = cached_shader;
     } else {
+#endif
         pg->shader_binding = generate_shaders(state);
 
+#ifdef USE_SHADER_CACHE
         /* cache it */
         ShaderState *cache_state = (ShaderState *)g_malloc(sizeof(*cache_state));
         memcpy(cache_state, &state, sizeof(*cache_state));
-#if 0 // TODO
         g_hash_table_insert(pg->shader_cache, cache_state,
                             (gpointer)pg->shader_binding);
-#endif
     }
+#endif
 
     bool binding_changed = (pg->shader_binding != old_binding);
 
     glUseProgram(pg->shader_binding->gl_program);
 
-    pgraph_shader_update_constants(pg, pg->shader_binding, binding_changed,
+    pgraph_update_shader_constants(pg, pg->shader_binding, binding_changed,
                                    vertex_program, fixed_function);
 
     NV2A_GL_DGROUP_END();
 }
 
-static bool pgraph_framebuffer_dirty(PGRAPHState *pg)
+static bool pgraph_get_framebuffer_dirty(PGRAPHState *pg)
 {
     bool shape_changed = memcmp(&pg->surface_shape, &pg->last_surface_shape,
                                 sizeof(SurfaceShape)) != 0;
@@ -3198,7 +3207,7 @@ static bool pgraph_framebuffer_dirty(PGRAPHState *pg)
     return true;
 }
 
-static bool pgraph_color_write_enabled(PGRAPHState *pg)
+static bool pgraph_get_color_write_enabled(PGRAPHState *pg)
 {
 	return pg->regs[NV_PGRAPH_CONTROL_0] & (
 		NV_PGRAPH_CONTROL_0_ALPHA_WRITE_ENABLE
@@ -3207,7 +3216,7 @@ static bool pgraph_color_write_enabled(PGRAPHState *pg)
 		| NV_PGRAPH_CONTROL_0_BLUE_WRITE_ENABLE);
 }
 
-static bool pgraph_zeta_write_enabled(PGRAPHState *pg)
+static bool pgraph_get_zeta_write_enabled(PGRAPHState *pg)
 {
 	return pg->regs[NV_PGRAPH_CONTROL_0] & (
 		NV_PGRAPH_CONTROL_0_ZWRITEENABLE
@@ -3218,10 +3227,10 @@ static void pgraph_set_surface_dirty(PGRAPHState *pg, bool color, bool zeta)
 {
     NV2A_DPRINTF("pgraph_set_surface_dirty(%d, %d) -- %d %d\n",
                  color, zeta,
-                 pgraph_color_write_enabled(pg), pgraph_zeta_write_enabled(pg));
+                 pgraph_get_color_write_enabled(pg), pgraph_get_zeta_write_enabled(pg));
     /* FIXME: Does this apply to CLEARs too? */
-    color = color && pgraph_color_write_enabled(pg);
-    zeta = zeta && pgraph_zeta_write_enabled(pg);
+    color = color && pgraph_get_color_write_enabled(pg);
+    zeta = zeta && pgraph_get_zeta_write_enabled(pg);
     pg->surface_color.draw_dirty |= color;
     pg->surface_zeta.draw_dirty |= zeta;
 }
@@ -3491,10 +3500,10 @@ static void pgraph_update_surface(NV2AState *d, bool upload,
                                           NV_PGRAPH_SETUPRASTER_Z_FORMAT);
 
     /* FIXME: Does this apply to CLEARs too? */
-    color_write = color_write && pgraph_color_write_enabled(pg);
-    zeta_write = zeta_write && pgraph_zeta_write_enabled(pg);
+    color_write = color_write && pgraph_get_color_write_enabled(pg);
+    zeta_write = zeta_write && pgraph_get_zeta_write_enabled(pg);
 
-    if (upload && pgraph_framebuffer_dirty(pg)) {
+    if (upload && pgraph_get_framebuffer_dirty(pg)) {
         assert(!pg->surface_color.draw_dirty);
         assert(!pg->surface_zeta.draw_dirty);
 
@@ -3946,45 +3955,45 @@ static void pgraph_bind_vertex_attributes(NV2AState *d,
     }
 
     for (i=0; i<NV2A_VERTEXSHADER_ATTRIBUTES; i++) {
-        VertexAttribute *attribute = &pg->vertex_attributes[i];
-        if (attribute->count) {
+        VertexAttribute *vertex_attribute = &pg->vertex_attributes[i];
+        if (vertex_attribute->count) {
             uint8_t *data;
             unsigned int in_stride;
-            if (inline_data && attribute->needs_conversion) {
+            if (inline_data && vertex_attribute->needs_conversion) {
                 data = (uint8_t*)pg->inline_array
-                        + attribute->inline_array_offset;
+                        + vertex_attribute->inline_array_offset;
                 in_stride = inline_stride;
             } else {
                 hwaddr dma_len;
-                if (attribute->dma_select) {
+                if (vertex_attribute->dma_select) {
                     data = (uint8_t*)nv_dma_map(d, pg->dma_vertex_b, &dma_len);
                 } else {
                     data = (uint8_t*)nv_dma_map(d, pg->dma_vertex_a, &dma_len);
                 }
 
-                assert(attribute->offset < dma_len);
-                data += attribute->offset;
+                assert(vertex_attribute->offset < dma_len);
+                data += vertex_attribute->offset;
 
-                in_stride = attribute->stride;
+                in_stride = vertex_attribute->stride;
             }
 
-            if (attribute->needs_conversion) {
+            if (vertex_attribute->needs_conversion) {
                 NV2A_DPRINTF("converted %d\n", i);
 
-                unsigned int out_stride = attribute->converted_size
-                                        * attribute->converted_count;
+                unsigned int out_stride = vertex_attribute->converted_size
+                                        * vertex_attribute->converted_count;
 
-                if (num_elements > attribute->converted_elements) {
-                    attribute->converted_buffer = (uint8_t*)g_realloc(
-                        attribute->converted_buffer,
+                if (num_elements > vertex_attribute->converted_elements) {
+                    vertex_attribute->converted_buffer = (uint8_t*)g_realloc(
+                        vertex_attribute->converted_buffer,
                         num_elements * out_stride);
                 }
 
-                for (j=attribute->converted_elements; j<num_elements; j++) {
+                for (j=vertex_attribute->converted_elements; j<num_elements; j++) {
                     uint8_t *in = data + j * in_stride;
-                    uint8_t *out = attribute->converted_buffer + j * out_stride;
+                    uint8_t *out = vertex_attribute->converted_buffer + j * out_stride;
 
-                    switch (attribute->format) {
+                    switch (vertex_attribute->format) {
                     case NV097_SET_VERTEX_DATA_ARRAY_FORMAT_TYPE_CMP: {
                         uint32_t p = ldl_le_p((uint32_t*)in);
                         float *xyz = (float*)out;
@@ -4003,47 +4012,47 @@ static void pgraph_bind_vertex_attributes(NV2AState *d,
                 }
 
 
-                glBindBuffer(GL_ARRAY_BUFFER, attribute->gl_converted_buffer);
-                if (num_elements != attribute->converted_elements) {
+                glBindBuffer(GL_ARRAY_BUFFER, vertex_attribute->gl_converted_buffer);
+                if (num_elements != vertex_attribute->converted_elements) {
                     glBufferData(GL_ARRAY_BUFFER,
                                  num_elements * out_stride,
-                                 attribute->converted_buffer,
+                                 vertex_attribute->converted_buffer,
                                  GL_DYNAMIC_DRAW);
-                    attribute->converted_elements = num_elements;
+                    vertex_attribute->converted_elements = num_elements;
                 }
 
 
                 glVertexAttribPointer(i,
-                    attribute->converted_count,
-                    attribute->gl_type,
-                    attribute->gl_normalize,
+                    vertex_attribute->converted_count,
+                    vertex_attribute->gl_type,
+                    vertex_attribute->gl_normalize,
                     out_stride,
                     0);
             } else if (inline_data) {
                 glBindBuffer(GL_ARRAY_BUFFER, pg->gl_inline_array_buffer);
                 glVertexAttribPointer(i,
-                                      attribute->gl_count,
-                                      attribute->gl_type,
-                                      attribute->gl_normalize,
+                                      vertex_attribute->gl_count,
+                                      vertex_attribute->gl_type,
+                                      vertex_attribute->gl_normalize,
                                       inline_stride,
-                                      (void*)(uintptr_t)attribute->inline_array_offset);
+                                      (void*)(uintptr_t)vertex_attribute->inline_array_offset);
             } else {
                 hwaddr addr = data - d->vram_ptr;
                 pgraph_update_memory_buffer(d, addr,
-                                            num_elements * attribute->stride,
+                                            num_elements * vertex_attribute->stride,
                                             false);
                 glVertexAttribPointer(i,
-                    attribute->gl_count,
-                    attribute->gl_type,
-                    attribute->gl_normalize,
-                    attribute->stride,
+                    vertex_attribute->gl_count,
+                    vertex_attribute->gl_type,
+                    vertex_attribute->gl_normalize,
+                    vertex_attribute->stride,
                     (void*)(uint64_t)(addr));
             }
             glEnableVertexAttribArray(i);
         } else {
             glDisableVertexAttribArray(i);
 
-            glVertexAttrib4fv(i, attribute->inline_value);
+            glVertexAttrib4fv(i, vertex_attribute->inline_value);
         }
     }
     NV2A_GL_DGROUP_END();
@@ -4059,13 +4068,13 @@ static unsigned int pgraph_bind_inline_array(NV2AState *d)
 
     unsigned int offset = 0;
     for (i=0; i<NV2A_VERTEXSHADER_ATTRIBUTES; i++) {
-        VertexAttribute *attribute = &pg->vertex_attributes[i];
-        if (attribute->count) {
-            attribute->inline_array_offset = offset;
+        VertexAttribute *vertex_attribute = &pg->vertex_attributes[i];
+        if (vertex_attribute->count) {
+            vertex_attribute->inline_array_offset = offset;
 
-            NV2A_DPRINTF("bind inline attribute %d size=%d, count=%d\n",
-                i, attribute->size, attribute->count);
-            offset += attribute->size * attribute->count;
+            NV2A_DPRINTF("bind inline vertex_attribute %d size=%d, count=%d\n",
+                i, vertex_attribute->size, vertex_attribute->count);
+            offset += vertex_attribute->size * vertex_attribute->count;
             assert(offset % 4 == 0);
         }
     }

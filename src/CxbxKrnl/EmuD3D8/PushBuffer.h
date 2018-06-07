@@ -48,23 +48,8 @@ extern void EmuExecutePushBuffer
 
 extern void EmuExecutePushBufferRaw
 (
-    DWORD                 *pdwPushData,
-	ULONG					dwSize
+	void *pPushData,
+	uint32_t uSizeInBytes
 );
-
-extern void DbgDumpPushBuffer
-( 
-	DWORD*				  PBData, 
-	DWORD				  dwSize 
-);
-
-// primary push buffer
-extern uint32  g_dwPrimaryPBCount;
-extern uint32 *g_pPrimaryPB;
-
-// push buffer debugging
-extern bool g_bStepPush;
-extern bool g_bSkipPush;
-extern bool g_bBrkPush;
 
 #endif
