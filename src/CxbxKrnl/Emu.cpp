@@ -50,6 +50,7 @@ namespace xboxkrnl
 #include "EmuShared.h"
 #include "HLEIntercept.h"
 #include "CxbxDebugger.h"
+#include "Logging.h"
 
 #ifdef _DEBUG
 #include <Dbghelp.h>
@@ -79,32 +80,29 @@ static int ExitException(LPEXCEPTION_POINTERS e);
 #ifdef _DEBUG_WARNINGS
 void NTAPI EmuWarning(const char *szWarningMessage, ...)
 {
-    if(szWarningMessage == NULL)
+    if (szWarningMessage == NULL) {
         return;
-
-    char szBuffer1[1024];
-    char szBuffer2[1024];
-
-    va_list argp;
-
-    sprintf(szBuffer1, "[0x%.4X] WARN: ", GetCurrentThreadId());
-
-    va_start(argp, szWarningMessage);
-
-    vsprintf(szBuffer2, szWarningMessage, argp);
-
-    va_end(argp);
-
-    strcat(szBuffer1, szBuffer2);
-
-    if(g_bPrintfOn)
-    {
-        printf("%s\n", szBuffer1);
     }
 
-    fflush(stdout);
+    if(g_bPrintfOn) {
 
-    return;
+        va_list argp;
+
+        LOG_THREAD_INIT;
+
+        std::cout << _logThreadPrefix << "WARN: ";
+
+        va_start(argp, szWarningMessage);
+
+        vfprintf(stdout, szWarningMessage, argp);
+
+        va_end(argp);
+
+        fprintf(stdout, "\n");
+
+        fflush(stdout);
+
+    }
 }
 #endif
 

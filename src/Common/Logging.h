@@ -169,13 +169,13 @@ constexpr const char* remove_emupatch_prefix(const char* str) {
 
 // For thread_local, see : http://en.cppreference.com/w/cpp/language/storage_duration
 // TODO : Use Boost.Format http://www.boost.org/doc/libs/1_53_0/libs/format/index.html
-extern thread_local std::string _logPrefix;
+extern thread_local std::string _logThreadPrefix;
 
 #define LOG_THREAD_INIT \
-	if (_logPrefix.length() == 0) { \
+	if (_logThreadPrefix.length() == 0) { \
 		std::stringstream tmp; \
 		tmp << "[" << hexstring16 << GetCurrentThreadId() << "] "; \
-		_logPrefix = tmp.str(); \
+		_logThreadPrefix = tmp.str(); \
     }
 
 #define LOG_FUNC_INIT(func) \
@@ -199,7 +199,7 @@ extern thread_local std::string _logPrefix;
 	do { if(g_bPrintfOn) { \
 		bool _had_arg = false; \
 		std::stringstream msg; \
-		msg << _logPrefix << _logFuncPrefix << "(";
+		msg << _logThreadPrefix << _logFuncPrefix << "(";
 
 #define LOG_FUNC_BEGIN \
 	LOG_INIT \
@@ -229,17 +229,17 @@ extern thread_local std::string _logPrefix;
 
 // LOG_FUNC_RESULT logs the function return result
 #define LOG_FUNC_RESULT(r) \
-	std::cout << _logPrefix << _logFuncPrefix << " returns " << _log_sanitize(r) << "\n";
+	std::cout << _logThreadPrefix << _logFuncPrefix << " returns " << _log_sanitize(r) << "\n";
 
 // LOG_FUNC_RESULT_TYPE logs the function return result using the overloaded << operator of the given type
 #define LOG_FUNC_RESULT_TYPE(type, r) \
-	std::cout << _logPrefix << _logFuncPrefix << " returns " << (type)r << "\n";
+	std::cout << _logThreadPrefix << _logFuncPrefix << " returns " << (type)r << "\n";
 
 // LOG_FORWARD indicates that an api is implemented by a forward to another API
 #define LOG_FORWARD(api) \
 	LOG_INIT \
 	do { if(g_bPrintfOn) { \
-		std::cout << _logPrefix << _logFuncPrefix << " forwarding to "#api"...\n"; \
+		std::cout << _logThreadPrefix << _logFuncPrefix << " forwarding to "#api"...\n"; \
 	} } while (0)
 
 #else // _DEBUG_TRACE
@@ -265,7 +265,7 @@ extern thread_local std::string _logPrefix;
 		if(g_bPrintfOn && b_echoOnce) { \
 			LOG_THREAD_INIT \
 			LOG_FUNC_INIT(__func__) \
-			std::cout << _logPrefix << "WARN: " << _logFuncPrefix << " ignored!\n"; \
+			std::cout << _logThreadPrefix << "WARN: " << _logFuncPrefix << " ignored!\n"; \
 			b_echoOnce = false; \
 		} \
 	} while(0)
@@ -277,7 +277,7 @@ extern thread_local std::string _logPrefix;
 		if(g_bPrintfOn && b_echoOnce) { \
 			LOG_THREAD_INIT \
 			LOG_FUNC_INIT(__func__) \
-			std::cout << _logPrefix << "WARN: " << _logFuncPrefix << " unimplemented!\n"; \
+			std::cout << _logThreadPrefix << "WARN: " << _logFuncPrefix << " unimplemented!\n"; \
 			b_echoOnce = false; \
 		} \
 	 } while(0)
@@ -289,7 +289,7 @@ extern thread_local std::string _logPrefix;
 		if(g_bPrintfOn && b_echoOnce) { \
 			LOG_THREAD_INIT \
 			LOG_FUNC_INIT(__func__) \
-			std::cout << _logPrefix << "WARN: " << _logFuncPrefix << " incomplete!\n"; \
+			std::cout << _logThreadPrefix << "WARN: " << _logFuncPrefix << " incomplete!\n"; \
 			b_echoOnce = false; \
 		} \
 	} while(0)
@@ -301,7 +301,7 @@ extern thread_local std::string _logPrefix;
 		if(g_bPrintfOn && b_echoOnce) { \
 			LOG_THREAD_INIT \
 			LOG_FUNC_INIT(__func__) \
-			std::cout << _logPrefix << "WARN: " << _logFuncPrefix << " not supported!\n"; \
+			std::cout << _logThreadPrefix << "WARN: " << _logFuncPrefix << " not supported!\n"; \
 			b_echoOnce = false; \
 		} \
 	} while(0)
