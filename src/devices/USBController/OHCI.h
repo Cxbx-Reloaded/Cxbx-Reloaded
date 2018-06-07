@@ -37,7 +37,6 @@
 #ifndef OHCI_H_
 #define OHCI_H_
 
-#include "Cxbx.h"
 #include "USBDevice.h"
 #include "..\CxbxKrnl\Timer.h"
 
@@ -165,7 +164,7 @@ class OHCI
 
 	private:
 		// pointer to g_USB0 or g_USB1
-		USBDevice* m_UsbDevice;
+		USBDevice* m_UsbDevice = nullptr;
 		// all the registers available on the OHCI standard
 		OHCI_Registers m_Registers;
 		// end-of-frame timer
@@ -177,9 +176,9 @@ class OHCI
 		// ticks per usb tick
 		uint64_t m_TicksPerUsbTick;
 		// pending usb packet to process
-		USBPacket m_UsbPacket;
+		USBPacket m_UsbPacket = {};
 		// temporary buffer that holds the user data to transfer in a packet
-		uint8_t m_UsbBuffer[8192];
+		uint8_t m_UsbBuffer[8192] = {};
 		// ergo720: I believe it's the value of HcControl in the last frame
 		uint32_t old_ctl;
 		// irq number

@@ -35,6 +35,7 @@
 #define CXBX_H
 
 #include <stdint.h>
+#include <assert.h>
 
 #define FUNC_EXPORTS __pragma(comment(linker, "/EXPORT:" __FUNCTION__ "=" __FUNCDNAME__))
 
@@ -159,7 +160,27 @@ extern volatile bool g_bPrintfOn;
 #define CxbxSetThreadName(Name)
 #endif
 
-// Compute (a*b)/c with a 96 bit intermediate result
+
+/* This is a linux struct for vectored I/O. See readv() and writev() */
+typedef struct _IoVec
+{
+	void* Iov_Base;  // Starting address
+	size_t Iov_Len;  // Number of bytes to transfer
+}
+IoVec;
+
+typedef struct _IOVector
+{
+	IoVec* IoVecStruct;
+	int IoVecNumber;      // TODO
+	int AllocNumber;      // TODO
+	size_t Size;
+}
+IOVector;
+
 inline uint64_t Muldiv64(uint64_t a, uint32_t b, uint32_t c);
+
+void IoVecReset(IOVector* qiov);
+void IoVecAdd(IOVector* qiov, void* base, size_t len);
 
 #endif

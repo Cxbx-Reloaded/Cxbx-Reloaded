@@ -639,14 +639,14 @@ int OHCI::OHCI_ServiceTD(OHCI_ED* Ed)
 #ifdef DEBUG_PACKET
 			DPRINTF("Too many pending packets\n");
 #endif
-			DbgPrintf("Too many pending packets\n");
+			DbgPrintf("Ohci: too many pending packets\n");
 			return 1;
 		}
 		dev = OHCI_FindDevice(OHCI_BM(Ed->Flags, ED_FA));
 		ep = m_UsbDevice->USB_GetEP(dev, pid, OHCI_BM(Ed->Flags, ED_EN));
 		m_UsbDevice->USB_PacketSetup(&m_UsbPacket, pid, ep, 0, addr, !flag_r, OHCI_BM(td.Flags, TD_DI) == 0);
-		usb_packet_addbuf(&m_UsbPacket, ohci->usb_buf, packetlen);
-		usb_handle_packet(dev, &m_UsbPacket);
+		m_UsbDevice->USB_PacketAddBuffer(&m_UsbPacket, m_UsbBuffer, packetlen);
+		m_UsbDevice->USB_HandlePacket(dev, &m_UsbPacket);
 #ifdef DEBUG_PACKET
 		DPRINTF("status=%d\n", ohci->usb_packet.status);
 #endif
@@ -905,7 +905,7 @@ void OHCI::OHCI_ChangeState(uint32_t Value)
 void OHCI::OHCI_PacketInit(USBPacket* packet)
 {
 	IOVector* vec = &packet->IoVec;
-	vec->IoVec = new IoVec;
+	vec->IoVecStruct = new IoVec;
 	vec->IoVecNumber = 0;
 	vec->AllocNumber = 1;
 	vec->Size = 0;
@@ -917,7 +917,7 @@ uint32_t OHCI::OHCI_ReadRegister(xbaddr Addr)
 
 	if (Addr & 3) {
 		// The standard allows only aligned reads to the registers
-		DbgPrintf("Ohci: Unaligned read. Ignoring.");
+		DbgPrintf("Ohci: Unaligned read. Ignoring.\n");
 		return ret;
 	}
 	else {
@@ -1024,7 +1024,7 @@ void OHCI::OHCI_WriteRegister(xbaddr Addr, uint32_t Value)
 {
 	if (Addr & 3) {
 		// The standard allows only aligned writes to the registers
-		DbgPrintf("Ohci: Unaligned write. Ignoring.");
+		DbgPrintf("Ohci: Unaligned write. Ignoring.\n");
 		return;
 	}
 	else {

@@ -37,6 +37,7 @@
 // The intent of this file is to add general functions which are not kernel specific (for those CxbxKrnl.h should be used instead)
 
 #include "Cxbx.h"
+#include <cstdlib>
 
 
 // Disable a compiler warning relative to uint64_t -> uint32_t conversions in Muldiv64. This function is taken from
@@ -44,6 +45,7 @@
 #pragma warning(push)
 #pragma warning(disable: 4244)
 
+// Compute (a*b)/c with a 96 bit intermediate result
 uint64_t Muldiv64(uint64_t a, uint32_t b, uint32_t c)
 {
 	union {
@@ -64,3 +66,25 @@ uint64_t Muldiv64(uint64_t a, uint32_t b, uint32_t c)
 }
 
 #pragma warning(pop)
+
+void IoVecReset(IOVector* qiov)
+{
+	assert(qiov->AllocNumber != -1);
+
+	qiov->IoVecNumber = 0;
+	qiov->Size = 0;
+}
+
+void IoVecAdd(IOVector* qiov, void* base, size_t len)
+{
+	assert(qiov->AllocNumber != -1);
+
+	if (qiov->IoVecNumber == qiov->AllocNumber) {
+		qiov->AllocNumber = 2 * qiov->AllocNumber + 1;
+		qiov->IoVecStruct = static_cast<IoVec*>(std::realloc(qiov->IoVecStruct, qiov->AllocNumber * sizeof(IOVector)));
+	}
+	qiov->IoVecStruct[qiov->IoVecNumber].Iov_Base = base;
+	qiov->IoVecStruct[qiov->IoVecNumber].Iov_Len = len;
+	qiov->Size += len;
+	++qiov->IoVecNumber;
+}

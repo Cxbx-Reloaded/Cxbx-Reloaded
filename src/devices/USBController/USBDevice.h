@@ -36,9 +36,9 @@
 #ifndef USBDEVICE_H_
 #define USBDEVICE_H_
 
+#include "Cxbx.h"
 #include "..\PCIDevice.h"
 #include "..\devices\video\queue.h"
-#include <assert.h>
 
 #define USB_MAX_ENDPOINTS  15
 #define USB_MAX_INTERFACES 16
@@ -57,37 +57,20 @@ typedef enum USBPacketState {
 }
 USBPacketState;
 
-/* This is a linux struct for vectored I/O. See readv() and writev() */
-typedef struct _IoVec
-{
-	void* Iov_Base;
-	size_t Iov_Len;
-}
-IoVec;
-
-typedef struct _IOVector
-{
-	IoVec* IoVec;
-	int IoVecNumber;      // TODO
-	int AllocNumber;      // TODO
-	size_t Size;
-}
-IOVector;
-
 typedef struct _USBPacket USBPacket;
 typedef struct _XboxDevice XboxDevice;
 
 /* USB endpoint */
 typedef struct _USBEndpoint
 {
-	uint8_t nr;
+	uint8_t Num;                      // endpoint number
 	uint8_t pid;
-	uint8_t type;
+	uint8_t Type;                     // the type of this endpoint
 	uint8_t ifnum;
 	int max_packet_size;
-	bool pipeline;
-	bool halted;
-	XboxDevice* Dev;                      // device this endpoint belongs to
+	bool Pipeline;
+	bool Halted;                      // indicates that the endpoint is halted
+	XboxDevice* Dev;                  // device this endpoint belongs to
 	QTAILQ_HEAD(, _USBPacket) Queue;  // queue of packets to this endpoint
 }
 USBEndpoint;
@@ -187,10 +170,16 @@ typedef struct USBDeviceClass
 }
 USBDeviceClass;
 
+typedef struct _USBCombinedPacket {
+	_USBPacket* First;
+	QTAILQ_HEAD(packets_head, _USBPacket) Packets;
+	IOVector IoVec;
+}
+USBCombinedPacket;
+
 /* Structure used to hold information about an active USB packet */
 struct _USBPacket
 {
-	// Data fields for use by the driver
 	int Pid;                                 // Packet ID
 	uint32_t Id; 				             // Paddr of the TD for this packet 
 	USBEndpoint* Endpoint;                   // endpoint this packet is transferred to
@@ -203,22 +192,24 @@ struct _USBPacket
 	int ActualLength;                        // Number of bytes actually transferred
 	// Internal use by the USB layer
 	USBPacketState State;
-	//USBCombinedPacket *Combined;
+	USBCombinedPacket* Combined;
 	QTAILQ_ENTRY(_USBPacket) Queue;
 	QTAILQ_ENTRY(_USBPacket) CombinedEntry;
 };
 
 /* Struct describing the status of a usb port */
 typedef struct _USBPort {
-	XboxDevice* Dev;     // usb device (if present)
-	int SpeedMask;   // usb speeds supported
-	int HubCount;    // number of hubs attached
-	char Path[16];   // the number of the port
-	int PortIndex;   // internal port index
-	//QTAILQ_ENTRY(USBPort) next;
+	XboxDevice* Dev;              // usb device (if present)
+	int SpeedMask;                // usb speeds supported
+	int HubCount;                 // number of hubs attached
+	char Path[16];                // the number of the port
+	int PortIndex;                // internal port index
+	QTAILQ_ENTRY(_USBPort) Next;
 }
 USBPort;
 
+// Forward declare OHCI class for USBDevice device class
+class OHCI;
 
 class USBDevice : public PCIDevice {
 	public:
@@ -238,9 +229,8 @@ class USBDevice : public PCIDevice {
 
 
 		// USBDevice-specific functions/variables
-		// pointers to the two USB host controllers available on the Xbox
-		OHCI* m_pHostController1 = nullptr;
-		OHCI* m_pHostController2 = nullptr;
+		// pointer to the host controller this device refears to
+		OHCI* m_HostController = nullptr;
 
 		// register a port with the HC
 		void USB_RegisterPort(USBPort* Port, int Index, int SpeedMask);
@@ -269,6 +259,16 @@ class USBDevice : public PCIDevice {
 		// setup a packet for transfer
 		void USB_PacketSetup(USBPacket* p, int Pid, USBEndpoint* Ep, unsigned int Stream,
 			uint64_t Id, bool ShortNotOK, bool IntReq);
+		// check if the state of the packet is queued or async
+		bool USB_IsPacketInflight(USBPacket* p);
+		// append the user buffer to the packet
+		void USB_PacketAddBuffer(USBPacket* p, void* ptr, size_t len);
+		// transfer and process the packet
+		void USB_HandlePacket(XboxDevice* dev, USBPacket* p);
+		// check if the packet has the expected state and assert if not
+		void USB_PacketCheckState(USBPacket* p, USBPacketState expected);
+		// process the packet
+		void USB_ProcessOne(USBPacket* p);
 };
 
 #endif

@@ -36,6 +36,13 @@
 
 #include "USBDevice.h"
 #include "OHCI.h"
+#include "CxbxKrnl\EmuKrnl.h"  // For EmuWarning
+
+#define USB_ENDPOINT_XFER_CONTROL   0
+#define USB_ENDPOINT_XFER_ISOC      1
+#define USB_ENDPOINT_XFER_BULK      2
+#define USB_ENDPOINT_XFER_INT       3
+#define USB_ENDPOINT_XFER_INVALID   255
 
 
 void USBDevice::Init(unsigned int address)
@@ -52,11 +59,11 @@ void USBDevice::Init(unsigned int address)
 	m_VendorId = PCI_VENDOR_ID_NVIDIA;
 
 	if (address == USB0_BASE) {
-		m_pHostController1 = new OHCI(1, this);
+		m_HostController = new OHCI(1, this);
 		return;
 	}
 
-	m_pHostController2 = new OHCI(9, this);
+	m_HostController = new OHCI(9, this);
 }
 
 uint32_t USBDevice::MMIORead(int barIndex, uint32_t addr, unsigned size)
@@ -64,14 +71,8 @@ uint32_t USBDevice::MMIORead(int barIndex, uint32_t addr, unsigned size)
 	// barIndex must be zero since we created the USB devices with a zero index in Init()
 	assert(barIndex == 0);
 
-	// Figure out the correct OHCI object and read the register
-	if (addr < USB1_BASE) {
-		// USB0 queried
-		return m_pHostController1->OHCI_ReadRegister(addr);
-	}
-
-	// USB1 queried
-	return m_pHostController2->OHCI_ReadRegister(addr);
+	// read the register of the corresponding HC
+	return m_HostController->OHCI_ReadRegister(addr);
 }
 
 void USBDevice::MMIOWrite(int barIndex, uint32_t addr, uint32_t value, unsigned size)
@@ -79,15 +80,8 @@ void USBDevice::MMIOWrite(int barIndex, uint32_t addr, uint32_t value, unsigned 
 	// barIndex must be zero since we created the USB devices with a zero index in Init()
 	assert(barIndex == 0);
 
-	// Figure out the correct OHCI object and write the value to the register
-	if (addr < USB1_BASE) {
-		// USB0 queried
-		m_pHostController1->OHCI_WriteRegister(addr, value);
-		return;
-	}
-
-	// USB1 queried
-	m_pHostController2->OHCI_WriteRegister(addr, value);
+	// write the register of the corresponding HC
+	m_HostController->OHCI_WriteRegister(addr, value);
 }
 
 void USBDevice::USB_RegisterPort(USBPort* Port, int Index, int SpeedMask)
@@ -195,8 +189,8 @@ USBEndpoint* USBDevice::USB_GetEP(XboxDevice* Dev, int Pid, int Ep)
 void USBDevice::USB_PacketSetup(USBPacket* p, int Pid, USBEndpoint* Ep, unsigned int Stream,
 	uint64_t Id, bool ShortNotOK, bool IntReq)
 {
-	assert(!usb_packet_is_inflight(p));
-	assert(p->iov.iov != NULL);
+	assert(!USB_IsPacketInflight(p));
+	assert(p->IoVec.IoVecStruct != nullptr);
 	p->Id = Id;
 	p->Pid = Pid;
 	p->Endpoint = Ep;
@@ -206,7 +200,109 @@ void USBDevice::USB_PacketSetup(USBPacket* p, int Pid, USBEndpoint* Ep, unsigned
 	p->Parameter = 0;
 	p->ShortNotOK = ShortNotOK;
 	p->IntReq = IntReq;
-	p->Combined = NULL;
-	qemu_iovec_reset(&p->iov);
-	usb_packet_set_state(p, USB_PACKET_SETUP);
+	p->Combined = nullptr;
+	IoVecReset(&p->IoVec);
+	p->State = USB_PACKET_SETUP;
+}
+
+bool USBDevice::USB_IsPacketInflight(USBPacket* p)
+{
+	return (p->State == USB_PACKET_QUEUED || p->State == USB_PACKET_ASYNC);
+}
+
+void USBDevice::USB_PacketAddBuffer(USBPacket* p, void* ptr, size_t len)
+{
+	IoVecAdd(&p->IoVec, ptr, len);
+}
+
+void USBDevice::USB_HandlePacket(XboxDevice* dev, USBPacket* p)
+{
+	if (dev == nullptr) {
+		p->Status = USB_RET_NODEV;
+		return;
+	}
+	assert(dev == p->Endpoint->Dev);
+	assert(dev->State == USB_STATE_DEFAULT);
+	USB_PacketCheckState(p, USB_PACKET_SETUP);
+	assert(p->Endpoint != nullptr);
+
+	// Submitting a new packet clears halt
+	if (p->Endpoint->Halted) {
+		assert(QTAILQ_EMPTY(&p->Endpoint->Queue));
+		p->Endpoint->Halted = false;
+	}
+
+	if (QTAILQ_EMPTY(&p->Endpoint->Queue) || p->Endpoint->Pipeline || p->Stream) {
+		USB_ProcessOne(p);
+		if (p->Status == USB_RET_ASYNC) {
+			// hcd drivers cannot handle async for isoc
+			assert(p->Endpoint->Type != USB_ENDPOINT_XFER_ISOC);
+			// using async for interrupt packets breaks migration
+			assert(p->Endpoint->Type != USB_ENDPOINT_XFER_INT ||
+				(dev->flags & (1 << USB_DEV_FLAG_IS_HOST)));
+			p->State = USB_PACKET_ASYNC;
+			QTAILQ_INSERT_TAIL(&p->Endpoint->Queue, p, Queue);
+		}
+		else if (p->Status == USB_RET_ADD_TO_QUEUE) {
+			usb_queue_one(p);
+		}
+		else {
+			// When pipelining is enabled usb-devices must always return async,
+			// otherwise packets can complete out of order!
+			assert(p->stream || !p->Endpoint->pipeline ||
+				QTAILQ_EMPTY(&p->Endpoint->Queue));
+			if (p->Status != USB_RET_NAK) {
+				p->State = USB_PACKET_COMPLETE;
+			}
+		}
+	}
+	else {
+		usb_queue_one(p);
+	}
+}
+
+void USBDevice::USB_PacketCheckState(USBPacket* p, USBPacketState expected)
+{
+	if (p->State == expected) {
+		return;
+	}
+
+	EmuWarning("Usb: packet state check failed!");
+	assert(0);
+}
+
+void USBDevice::USB_ProcessOne(USBPacket* p)
+{
+	XboxDevice* dev = p->Endpoint->Dev;
+
+	// Handlers expect status to be initialized to USB_RET_SUCCESS, but it
+	// can be USB_RET_NAK here from a previous usb_process_one() call,
+	// or USB_RET_ASYNC from going through usb_queue_one().
+	p->Status = USB_RET_SUCCESS;
+
+	if (p->Endpoint->Num == 0) {
+		// Info: All devices must support endpoint zero. This is the endpoint which receives all of the devices control 
+		// and status requests during enumeration and throughout the duration while the device is operational on the bus
+		if (p->Parameter) {
+			do_parameter(dev, p);
+			return;
+		}
+		switch (p->Pid) {
+			case USB_TOKEN_SETUP:
+				do_token_setup(dev, p);
+				break;
+			case USB_TOKEN_IN:
+				do_token_in(dev, p);
+				break;
+			case USB_TOKEN_OUT:
+				do_token_out(dev, p);
+				break;
+			default:
+				p->Status = USB_RET_STALL;
+		}
+	}
+	else {
+		// data pipe
+		usb_device_handle_data(dev, p);
+	}
 }
