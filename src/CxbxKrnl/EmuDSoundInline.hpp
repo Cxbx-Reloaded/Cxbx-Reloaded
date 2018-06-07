@@ -1508,7 +1508,7 @@ inline HRESULT HybridDirectSoundBuffer_SetMixBinVolumes_8(
                 }
             }
             if (counter > 0) {
-                Xb_volumeMixBin = volume / counter;
+                Xb_volumeMixBin = LONG((float)volume / (float)counter);
                 hRet = HybridDirectSoundBuffer_SetVolume(pDSBuffer, Xb_volume, EmuFlags, nullptr,
                                                          Xb_volumeMixBin, Xb_dwHeadroom);
             } else {
