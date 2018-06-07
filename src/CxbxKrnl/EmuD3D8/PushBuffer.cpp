@@ -35,10 +35,13 @@
 // ******************************************************************
 #define _XBOXKRNL_DEFEXTRN_
 
+#include <assert.h> // For assert()
+
 #include "CxbxKrnl/Emu.h"
 #include "CxbxKrnl/EmuXTL.h"
 #include "CxbxKrnl/EmuD3D8Types.h" // For X_D3DFORMAT
 #include "CxbxKrnl/ResourceTracker.h"
+#include "devices/video/nv2a.h" // For PGRAPHState
 #include "devices/video/nv2a_int.h" // For NV** defines
 
 // TODO: Find somewhere to put this that doesn't conflict with XTL::
@@ -48,7 +51,7 @@ extern DWORD g_XboxBaseVertexIndex;
 #endif
 
 uint32  XTL::g_dwPrimaryPBCount = 0;
-uint32 *XTL::g_pPrimaryPB = 0;
+uint32 *XTL::g_pPrimaryPB = nullptr;
 
 bool XTL::g_bStepPush = false;
 bool XTL::g_bSkipPush = false;
@@ -137,9 +140,8 @@ void XTL::EmuExecutePushBuffer
 )
 {
 	//Check whether Fixup exists or not. 
-	if (pFixup != NULL)
-	{
-		EmuWarning("PushBuffer has fixups\n");
+	if (pFixup != NULL) {
+		LOG_TEST_CASE("PushBuffer has fixups");
 		//Interpret address of PushBuffer Data and Fixup Data
 		UINT8* pPushBufferData = (UINT8*)pPushBuffer->Data;
 		UINT8* pFixupData = (UINT8*)(pFixup->Data + pFixup->Run);
@@ -161,21 +163,17 @@ void XTL::EmuExecutePushBuffer
 			}
 			pFixupData += SizeInBytes;
 			/*
-			When IDirect3DDevice8::RunPushBuffer is called with a fix - up object specified,
-			it will parse the fix - up data pointed to by pFixup and with a byte offset of Run.
-			The fix - up data is encoded as follows.The first DWORD is the size, in bytes,
-			of the push - buffer fix - up to be modified.The second DWORD is the offset, in bytes,
-			from the start of the push - buffer where the fix - up is to be modified.
-			The subsequent DWORDS are the data to be copied.This encoding repeats for every fix - up to be done,
+			When IDirect3DDevice8::RunPushBuffer is called with a fix-up object specified,
+			it will parse the fix-up data pointed to by pFixup and with a byte offset of Run.
+			The fix-up data is encoded as follows.The first DWORD is the size, in bytes,
+			of the push-buffer fix-up to be modified.The second DWORD is the offset, in bytes,
+			from the start of the push-buffer where the fix-up is to be modified.
+			The subsequent DWORDS are the data to be copied. This encoding repeats for every fix-up to be done,
 			until it terminates with a size value of 0xffffffff.
 			The offsets must be in an increasing order.
 			*/
 		}
 	}
-#ifdef _DEBUG_TRACK_PB
-	DbgDumpPushBuffer((DWORD*)pPushBuffer->Data, pPushBuffer->Size);
-#endif
-
     EmuExecutePushBufferRaw((void*)pPushBuffer->Data, pPushBuffer->Size);
 
     return;
@@ -224,13 +222,15 @@ DWORD CxbxGetStrideFromVertexShaderHandle(DWORD dwVertexShader)
 
 typedef union {
 /* https://envytools.readthedocs.io/en/latest/hw/fifo/dma-pusher.html#the-commands-pre-gf100-format
-	C = method Count, S = Subchannel, M = first Method, J = Jump address, X = ?
-	000CCCCCCCCCCC00SSSMMMMMMMMMMM00	increasing methods [NV4+]
-	00000000000000100000000000000000	return [NV1A+, NV4-style only]
-	001JJJJJJJJJJJJJJJJJJJJJJJJJJJ00	old jump [NV4+, NV4-style only]
-	010CCCCCCCCCCC00SSSMMMMMMMMMMM00	non-increasing methods [NV10+]
-	JJJJJJJJJJJJJJJJJJJJJJJJJJJJJJ01	jump [NV1A+, NV4-style only]
-	JJJJJJJJJJJJJJJJJJJJJJJJJJJJJJ10	call [NV1A+, NV4-style only]
+
+	000 CCCCCCCCCCC 00 SSS MMMMMMMMMMM 00	increasing methods [NV4+]
+	000 00000000000 10 000 00000000000 00	return [NV1A+, NV4-style only]
+	001 JJJJJJJJJJJ JJ JJJ JJJJJJJJJJJ 00	old jump [NV4+, NV4-style only]
+	010 CCCCCCCCCCC 00 SSS MMMMMMMMMMM 00	non-increasing methods [NV10+]
+	JJJ JJJJJJJJJJJ JJ JJJ JJJJJJJJJJJ 01	jump [NV1A+, NV4-style only]
+	JJJ JJJJJJJJJJJ JJ JJJ JJJJJJJJJJJ 10	call [NV1A+, NV4-style only]
+
+	C = method Count, S = Subchannel, M = first Method, J = Jump address
 */
 	// Entire 32 bit command word, and an overlay for the above use-cases :
 	uint32_t            word;                    /*  0 .. 31 */
@@ -258,57 +258,42 @@ typedef union {
 	#define COMMAND_WORD_MASK_JMP 0xFFFFFFFC     /*  2 .. 28 */
 } nv_fifo_command;
 
+PGRAPHState pgraph_state;
+
 extern void XTL::EmuExecutePushBufferRaw
 (
 	void *pPushData,
 	uint32_t uSizeInBytes
 )
 {
-    if(g_bSkipPush)
-        return;
+	// Test case : Azurik (see https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/issues/360)
+	// Test-case : Crash 'n' Burn [45530014]
+	// Test-case : CrimsonSea [4B4F0002]
+	// Test-case : Freedom Fighters
+	// Test-case : Hot Wheels Stunt Track Challenge [54510089] (while running hw2F.xbe)
+	// Test case : Hunter Redeemer
+	// Test-case : Inside Pitch 2003 [4D530034]
+	// Test-case : Need for Speed Most Wanted [4541007B]
+	// Test case : Otogi (see https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/pull/1113#issuecomment-385593814)
+	// Test-case : Prince of Persia: The Sands of Time [5553001d]
+	// Test case : RalliSport (see https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/issues/904#issuecomment-362929801)
+	// Test-case : RPM Tuning [Top Gear RPM Tuning] [4B420007]
+	// Test-case : SpyHunter 2 [4D57001B]
+	// Test case : Star Wars Jedi Academy (see https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/issues/904#issuecomment-362929801)
+	// Test case : Turok (in main menu)
 
-	if (!pPushData) {
-		EmuWarning("pPushData is null");
+	assert(pPushData);
+	assert(uSizeInBytes >= 4);
+
+	if (g_bSkipPush) {
 		return;
 	}
 
-    INDEX16 *pIndexData = NULL;
-    PVOID pVertexData = NULL;
+	static INDEX16 pg__inline_elements[NV2A_MAX_BATCH_LENGTH]; // Temporary 16 bit elements (until Direct3D drawing uses 32 bit indices)
 
-    //DWORD dwVertexShader = -1;
-
-    // cache of last 4 indices
-	INDEX16 pIBMem[4] = {0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF};
-
-    X_D3DPRIMITIVETYPE  XboxPrimitiveType = X_D3DPT_INVALID;
-
-	CxbxUpdateNativeD3DResources();
-
-#ifdef _DEBUG_TRACK_PB
-    bool bShowPB = false;
-
-    g_PBTrackTotal.insert(pPushData);
-
-    if (g_PBTrackShowOnce.exists(pPushData)) {
-        g_PBTrackShowOnce.remove(pPushData);
-
-        printf("\n");
-        printf("\n");
-        printf("  PushBuffer@0x%.08X...\n", pPushData);
-        printf("\n");
-
-        bShowPB = true;
-    }
-
-#define LOG_TRACK_PB(message, ...) \
-	if (bShowPB) { \
-		printf(message, __VA_ARGS__); \
-	}
-#else
-#define LOG_TRACK_PB(message, ...)
-#endif
-
-    static uint maxIBSize = 0;
+	// EmuNV2A_PGRAPH immitation
+	PGRAPHState *pg = &pgraph_state;
+	memset(pg, 0, sizeof(PGRAPHState));
 
 	// DMA Pusher state -- see https://envytools.readthedocs.io/en/latest/hw/fifo/dma-pusher.html#pusher-state
 #if 0
@@ -351,7 +336,7 @@ extern void XTL::EmuExecutePushBufferRaw
 		// Check if loop reaches end of pushbuffer
 		if (dma_get >= dma_limit) {
 			LOG_TEST_CASE("Last pushbuffer instruction exceeds END of Data");
-			break; // from while(true)
+			break; // from while
 		}
 
 		nv_fifo_command command;
@@ -372,6 +357,7 @@ extern void XTL::EmuExecutePushBufferRaw
 			if (subr_active) {
 				LOG_TEST_CASE("Pushbuffer COMMAND_TYPE_CALL while another call was active!");
 				// TODO : throw DMA_PUSHER(CALL_SUBR_ACTIVE);
+				return; // For now, don't even attempt to run through
 			}
 			else {
 				LOG_TEST_CASE("Pushbuffer COMMAND_TYPE_CALL");
@@ -383,7 +369,7 @@ extern void XTL::EmuExecutePushBufferRaw
 			continue;
 		default:
 			LOG_TEST_CASE("Pushbuffer COMMAND_TYPE unknown");
-			continue;
+			return; // For now, don't even attempt to run through
 		} // switch type
 
 		switch (command.instruction) {
@@ -400,7 +386,7 @@ extern void XTL::EmuExecutePushBufferRaw
 			break;
 		default:
 			LOG_TEST_CASE("Pushbuffer COMMAND_INSTRUCTION unknown");
-			continue;
+			return; // For now, don't even attempt to run through
 		} // switch instruction
 
 		switch (command.flags) {
@@ -409,9 +395,10 @@ extern void XTL::EmuExecutePushBufferRaw
 			dma_state.subc = command.subchannel;
 			dma_state.mcnt = command.method_count;
 			break; // fall through
-		case COMMAND_FLAGS_RETURN:
+		case COMMAND_FLAGS_RETURN: // Note : NV2A return is said not to work?
 			if (command.word != 0x00020000) {
 				LOG_TEST_CASE("Pushbuffer COMMAND_FLAGS_RETURN with additional bits?!");
+				return; // For now, don't even attempt to run through
 			}
 			else {
 				LOG_TEST_CASE("Pushbuffer COMMAND_FLAGS_RETURN");
@@ -420,29 +407,33 @@ extern void XTL::EmuExecutePushBufferRaw
 			if (!subr_active) {
 				LOG_TEST_CASE("Pushbuffer COMMAND_FLAGS_RETURN while another call was active!");
 				// TODO : throw DMA_PUSHER(RET_SUBR_INACTIVE);
+				return; // For now, don't even attempt to run through
 			}
 
 			dma_get = subr_return;
 			subr_active = false;
 			continue; // while
 		default:
-			if (command.flags == COMMAND_FLAGS_LONG_NON_INCREASING_METHODS) {
-				LOG_TEST_CASE("Pushbuffer COMMAND_FLAGS_LONG_NON_INCREASING_METHODS [IB-mode only] not available on NV2A");
-				// No need to do: dma_state.mthd = command.method; dma_state.ni = true;
-				dma_state.mcnt = *dma_get++ & 0x00FFFFFF; // Long NI method command count is read from low 24 bits of next word
-				dma_get += dma_state.mcnt; // To be safe, skip method data
-			} else if (command.flags == COMMAND_FLAGS_SLI_CONDITIONAL) {
+			if (command.flags == COMMAND_FLAGS_SLI_CONDITIONAL) {
 				LOG_TEST_CASE("Pushbuffer COMMAND_FLAGS_SLI_CONDITIONAL (NV40+) not available on NV2A");
+			} else if (command.flags == COMMAND_FLAGS_LONG_NON_INCREASING_METHODS) {
+				LOG_TEST_CASE("Pushbuffer COMMAND_FLAGS_LONG_NON_INCREASING_METHODS [IB-mode only] not available on NV2A");
+				/// No need to do: dma_state.mthd = command.method; dma_state.ni = true;
+				/// dma_state.mcnt = *dma_get++ & 0x00FFFFFF; // Long NI method command count is read from low 24 bits of next word
+				/// dma_get += dma_state.mcnt; // To be safe, skip method data
+				/// continue;
 			} else {
 				LOG_TEST_CASE("Pushbuffer COMMAND_FLAGS unknown");
 			}
 
-			dma_get += command.method_count; // To be safe, skip method data
-			continue; // while
+			/// dma_get += command.method_count; // To be safe, skip method data
+			/// continue;
+			return; // For now, don't even attempt to run through
 		} // switch flags
 
 		/* no command active - this is the first word of a new one */
 		rsvd_shadow = command.word;
+		dcount_shadow = 0;
 
 		// Validate count
 		if (dma_state.mcnt == 0) {
@@ -455,34 +446,26 @@ extern void XTL::EmuExecutePushBufferRaw
 		/* data word of methods command */
 		data_shadow = *dma_get;
 #if 0
-		if (!PULLER_KNOWS_MTHD(dma_state.mthd))
+		if (!PULLER_KNOWS_MTHD(dma_state.mthd)) {
 			throw DMA_PUSHER(INVALID_MTHD);
+			return; // For now, don't even attempt to run through
+		}
 
 #endif
 #if 0
 		CACHE_PUSH(dma_state.subc, dma_state.mthd, word, dma_state.ni);
 #endif
-		// Remember the address of the arguments
-		DWORD *pdwPushArguments = (DWORD *)dma_get;
-		// Skip over the arguments already, so it always points to the next unhandled DWORD.
-		dma_get += dma_state.mcnt;
 
 		// Skip all commands not intended for channel 0 (3D)
 		if (command.subchannel > 0) {
 			LOG_TEST_CASE("Pushbuffer subchannel > 0");
+			dma_get += dma_state.mcnt; // Skip over arguments, so it always points to the next unhandled DWORD
 			continue;
 		}
 
         // Interpret 3D method
-		DWORD dwCount = dma_state.mcnt;
-		while (dwCount > 0) {
-			// Test case : Azurik (see https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/issues/360)
-			// Test case : RalliSport (see https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/issues/904#issuecomment-362929801)
-			// Test case : Star Wars Jedi Academy (see https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/issues/904#issuecomment-362929801)
-			// Test case : Hot Wheels Stunt Track Challenge (while running hw2F.xbe)
-			// Assume the command will be handled completely (down-adjustments may happen)
-			int HandledCount = dwCount;
-
+		while (dma_state.mcnt > 0) {
+			uint32_t parameter = *dma_get++;
 			DWORD dwMethod = dma_state.mthd << 2;
 			switch (dwMethod) {
 
@@ -491,101 +474,179 @@ extern void XTL::EmuExecutePushBufferRaw
 				break;
 
 			case NV2A_VERTEX_BEGIN_END: { // 0x000017FC, NVPB_SetBeginEnd, 1 DWORD parameter, D3DPUSH_SET_BEGIN_END, NV097_NO_OPERATION
-				LOG_TRACK_PB("  NVPB_SetBeginEnd(");
-				// Parameter == 0 means SetEnd, EndPush()
-				if (*pdwPushArguments == 0) {
-					LOG_TRACK_PB("DONE)\n");
+				if (parameter == 0) { // Parameter == 0 means SetEnd, EndPush()
+					// Trigger all draws from here
+					CxbxUpdateNativeD3DResources();
+
+					if (pg->draw_arrays_length) {
+//						NV2A_GL_DPRINTF(false, "Draw Arrays");
+						assert(pg->inline_buffer_length == 0);
+						assert(pg->inline_array_length == 0);
+						assert(pg->inline_elements_length == 0);
+
+#if 0
+						pgraph_bind_vertex_attributes(d, pg->draw_arrays_max_count,
+							false, 0);
+						glMultiDrawArrays(pg->shader_binding->gl_primitive_mode,
+							pg->gl_draw_arrays_start,
+							pg->gl_draw_arrays_count,
+							pg->draw_arrays_length);
+#else
+						// TODO : Implement this
+#endif
+					}
+					else if (pg->inline_buffer_length) {
+//						NV2A_GL_DPRINTF(false, "Inline Buffer");
+						assert(pg->draw_arrays_length == 0);
+						assert(pg->inline_array_length == 0);
+						assert(pg->inline_elements_length == 0);
+
+#if 0
+						for (i = 0; i < NV2A_VERTEXSHADER_ATTRIBUTES; i++) {
+							VertexAttribute *vertex_attribute = &pg->vertex_attributes[i];
+
+							if (vertex_attribute->inline_buffer) {
+
+								glBindBuffer(GL_ARRAY_BUFFER,
+									vertex_attribute->gl_inline_buffer);
+								glBufferData(GL_ARRAY_BUFFER,
+									pg->inline_buffer_length
+									* sizeof(float) * 4,
+									vertex_attribute->inline_buffer,
+									GL_DYNAMIC_DRAW);
+
+								/* Clear buffer for next batch */
+								g_free(vertex_attribute->inline_buffer);
+								vertex_attribute->inline_buffer = NULL;
+
+								glVertexAttribPointer(i, 4, GL_FLOAT, GL_FALSE, 0, 0);
+								glEnableVertexAttribArray(i);
+							}
+							else {
+								glDisableVertexAttribArray(i);
+
+								glVertexAttrib4fv(i, vertex_attribute->inline_value);
+							}
+
+						}
+
+						glDrawArrays(pg->shader_binding->gl_primitive_mode,
+							0, pg->inline_buffer_length);
+#else
+						// TODO : Implement this
+#endif
+					}
+					else if (pg->inline_array_length) {
+//						NV2A_GL_DPRINTF(false, "Inline Array");
+						assert(pg->draw_arrays_length == 0);
+						assert(pg->inline_buffer_length == 0);
+						assert(pg->inline_elements_length == 0);
+
+#if 0
+						unsigned int index_count = pgraph_bind_inline_array(d);
+						glDrawArrays(pg->shader_binding->gl_primitive_mode, 0, index_count);
+#else
+						//DWORD vertex data array, 
+						//To be used as a replacement for DrawVerticesUP, the caller needs to set the vertex format using IDirect3DDevice8::SetVertexShader before calling BeginPush. All attributes in the vertex format must be padded DWORD multiples, and the vertex attributes must be specified in the canonical FVF ordering (position followed by weight, normal, diffuse, and so on).
+						// retrieve vertex shader
+						DWORD dwVertexShader = g_CurrentXboxVertexShaderHandle;
+						if (dwVertexShader == 0) {
+							LOG_TEST_CASE("FVF Vertex Shader is null");
+							dwVertexShader = -1;
+						}
+
+						// render vertices
+						if (dwVertexShader != -1) {
+							DWORD dwVertexStride = CxbxGetStrideFromVertexShaderHandle(dwVertexShader);
+							if (dwVertexStride > 0) {
+								UINT VertexCount = (pg->inline_array_length * sizeof(DWORD)) / dwVertexStride;
+								CxbxDrawContext DrawContext = {};
+
+								DrawContext.XboxPrimitiveType = (X_D3DPRIMITIVETYPE)pg->primitive_mode;
+								DrawContext.dwVertexCount = VertexCount;
+								DrawContext.pXboxVertexStreamZeroData = pg->inline_array;
+								DrawContext.uiXboxVertexStreamZeroStride = dwVertexStride;
+								DrawContext.hVertexShader = dwVertexShader;
+
+								CxbxDrawPrimitiveUP(DrawContext);
+							}
+						}
+#endif
+					}
+					else if (pg->inline_elements_length) {
+
+//						NV2A_GL_DPRINTF(false, "Inline Elements");
+
+						assert(pg->draw_arrays_length == 0);
+						assert(pg->inline_buffer_length == 0);
+						assert(pg->inline_array_length == 0);
+
+#if 0
+						uint32_t max_element = 0;
+						uint32_t min_element = (uint32_t)-1;
+						for (i = 0; i<pg->inline_elements_length; i++) {
+							max_element = MAX(pg->inline_elements[i], max_element);
+							min_element = MIN(pg->inline_elements[i], min_element);
+						}
+
+						pgraph_bind_vertex_attributes(d, max_element + 1, false, 0);
+
+						glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, pg->gl_element_buffer);
+						glBufferData(GL_ELEMENT_ARRAY_BUFFER,
+							pg->inline_elements_length * 4,
+							pg->inline_elements,
+							GL_DYNAMIC_DRAW);
+
+						glDrawRangeElements(pg->shader_binding->gl_primitive_mode,
+							min_element, max_element,
+							pg->inline_elements_length,
+							GL_UNSIGNED_INT,
+							(void*)0);
+
+#else
+						if (!g_bPBSkipPusher) {
+							if (IsValidCurrentShader()) {
+								unsigned int uiIndexCount = pg->inline_elements_length;
+								CxbxDrawContext DrawContext = {};
+
+								DrawContext.XboxPrimitiveType = (X_D3DPRIMITIVETYPE)pg->primitive_mode;
+								DrawContext.dwVertexCount = EmuD3DIndexCountToVertexCount(DrawContext.XboxPrimitiveType, uiIndexCount);
+								DrawContext.hVertexShader = g_CurrentXboxVertexShaderHandle;
+								DrawContext.pIndexData = pg__inline_elements; // Used by GetVerticesInBuffer
+
+								CxbxDrawIndexed(DrawContext);
+							}
+						}
+#endif
+					}
+					else {
+						LOG_TEST_CASE("EMPTY NV097_SET_BEGIN_END");
+					}
+
 					break; // EndPush(), done with BeginPush()
 				}
 
-				// BeginPush(), To be used as a replacement for DrawVerticesUP, the caller needs to set the vertex format using IDirect3DDevice8::SetVertexShader before calling BeginPush. All attributes in the vertex format must be padded DWORD multiples, and the vertex attributes must be specified in the canonical FVF ordering (position followed by weight, normal, diffuse, and so on).
-				LOG_TRACK_PB("PrimitiveType := %d)\n", *pdwPushArguments);
-				// Retrieve the D3DPRIMITIVETYPE info in parameter
-				XboxPrimitiveType = (X_D3DPRIMITIVETYPE)*pdwPushArguments;
+				pg->primitive_mode = parameter; // Retrieve the D3DPRIMITIVETYPE info in parameter
 				break;
 			}
 
 			case NV2A_VERTEX_DATA: { // 0x1818, NVPB_InlineVertexArray, parameter size= dwCount*DWORD, represent D3DFVF data. NV097_INLINE_ARRAY
-				//DWORD vertex data array, 
-				//To be used as a replacement for DrawVerticesUP, the caller needs to set the vertex format using IDirect3DDevice8::SetVertexShader before calling BeginPush. All attributes in the vertex format must be padded DWORD multiples, and the vertex attributes must be specified in the canonical FVF ordering (position followed by weight, normal, diffuse, and so on).
-				pVertexData = pdwPushArguments;
-				// retrieve vertex shader
-				DWORD dwVertexShader = g_CurrentXboxVertexShaderHandle;
-				if (dwVertexShader == 0) {
-					LOG_TEST_CASE("FVF Vertex Shader is null");
-					dwVertexShader = -1;
-				}
-
-				LOG_TRACK_PB("NVPB_InlineVertexArray(...)\n");
-				LOG_TRACK_PB("  dwCount : %d\n", dwCount);
-				LOG_TRACK_PB("  dwVertexShader : 0x%08X\n", dwVertexShader);
-				// render vertices
-				if (dwVertexShader != -1) {
-					DWORD dwVertexStride = CxbxGetStrideFromVertexShaderHandle(dwVertexShader);
-					if (dwVertexStride > 0) {
-						UINT VertexCount = (dwCount * sizeof(DWORD)) / dwVertexStride;
-						CxbxDrawContext DrawContext = {};
-
-						DrawContext.XboxPrimitiveType = XboxPrimitiveType;
-						DrawContext.dwVertexCount = VertexCount;
-						DrawContext.pXboxVertexStreamZeroData = pVertexData;
-						DrawContext.uiXboxVertexStreamZeroStride = dwVertexStride;
-						DrawContext.hVertexShader = dwVertexShader;
-
-						CxbxDrawPrimitiveUP(DrawContext);
-					}
-				}
-
+				assert(pg->inline_array_length < NV2A_MAX_BATCH_LENGTH);
+				pg->inline_array[
+					pg->inline_array_length++] = parameter;
 				break;
 			}
 
 			case NV2A_VB_ELEMENT_U32: { // 0x1808, NVPB_FixLoop, Index Array Data, . NV097_ARRAY_ELEMENT32
 				// Test case : Turok (in main menu)
 				//LOG_TEST_CASE("NV2A_VB_ELEMENT_U32");
-#ifdef _DEBUG_TRACK_PB
-				if (bShowPB) {
-					LOG_TRACK_PB("  NVPB_FixLoop(%u)\n\n  Index Array Data...\n", dwCount);
-					INDEX16 *pIndices = (INDEX16*)pdwPushArguments;
-					for (uint s = 0;s < dwCount; s++) {
-						if (s % 8 == 0)
-							printf("\n  ");
-
-						printf("  %.04X", *pIndices++);
-					}
-
-					printf("\n");
-					printf("\n");
-				}
+				assert(pg->inline_elements_length < NV2A_MAX_BATCH_LENGTH);
+#if 0
+				pg->inline_elements[
+#else
+				pg__inline_elements[
 #endif
-				//the pdwPushArguments pointing to the first unhandled DWORD already, no need to add offset
-				INDEX16 *pIndices = (INDEX16*)pdwPushArguments;
-				//!!!!!!don't understand this loop, the pIBMem[] is only 4 WORD, how can we copy the data with known size into it?******************************
-				for (uint mi = 0; mi < dwCount; mi++) {
-					pIBMem[mi + 2] = pIndices[mi];
-				}
-
-				// render indexed vertices
-				if (pIBMem[0] != 0xFFFF) {
-					UINT uiIndexCount = dwCount + 2;
-#ifdef _DEBUG_TRACK_PB
-					if (!g_PBTrackDisable.exists(pPushData))
-#endif
-					{
-						if (!g_bPBSkipPusher) {
-							if (IsValidCurrentShader()) {
-								CxbxDrawContext DrawContext = {};
-
-								DrawContext.XboxPrimitiveType = XboxPrimitiveType;
-								DrawContext.dwVertexCount = EmuD3DIndexCountToVertexCount(XboxPrimitiveType, uiIndexCount);
-								DrawContext.hVertexShader = g_CurrentXboxVertexShaderHandle;
-								DrawContext.pIndexData = pIBMem; // Used by GetVerticesInBuffer
-
-								CxbxDrawIndexed(DrawContext);
-							}
-						}
-					}
-				}
-
+					pg->inline_elements_length++] = parameter;
 				break;
 			}
 
@@ -594,93 +655,19 @@ extern void XTL::EmuExecutePushBufferRaw
 				// Test case : Turok (in main menu)
 				// Test case : Hunter Redeemer
 				// Test case : Otogi (see https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/pull/1113#issuecomment-385593814)
-				pIndexData = (INDEX16*)pdwPushArguments;
-				UINT dwIndexCount = dwCount * sizeof(INDEX16); // Two indices per DWORD
-#if 0 // TODO : Is the following nonsense?
-				//if no increment is not set, then there is one WORD less then the total dwCount*2 WORD data.
-				//this definition is purely my guess, need confirmation.
-				if (dma_state.ni) {
-					dwIndexCount -= 1;
-				}
+				assert(pg->inline_elements_length < NV2A_MAX_BATCH_LENGTH);
+#if 0
+				pg->inline_elements[
+#else
+				pg__inline_elements[
 #endif
-
-#ifdef _DEBUG_TRACK_PB
-				if (bShowPB) {
-					LOG_TRACK_PB("  NVPB_InlineIndexArray(0x%p, %u)...\n\n  Index Array Data...\n", pIndexData, dwIndexCount);
-					INDEX16 *pIndices = pIndexData;
-					for (uint s = 0;s < dwIndexCount; s++) {
-						if (s % 8 == 0)
-							printf("\n  ");
-
-						printf("  %.04X", *pIndices++);
-					}
-
-					printf("\n");
-					XTL::IDirect3DVertexBuffer *pActiveVB = NULL;
-					D3DVERTEXBUFFER_DESC VBDesc;
-					D3DLockData *pVBData = nullptr;
-					UINT  uiStride;
-					// retrieve stream data
-					g_pD3DDevice->GetStreamSource(0, &pActiveVB,
-#ifdef CXBX_USE_D3D9
-						nullptr, // pOffsetInBytes
+					pg->inline_elements_length++] = parameter & 0xFFFF;
+#if 0
+				pg->inline_elements[
+#else
+				pg__inline_elements[
 #endif
-						&uiStride);
-
-					pActiveVB->GetDesc(&VBDesc);
-					pActiveVB->Unlock(); // unlock just in case
-					//pActiveVB->Lock(0, 0, &pVBData, D3DLOCK_READONLY); // grab ptr
-					// print out stream data
-					{
-						printf("\n");
-						printf("  Vertex Stream Data (0x%.08X)...\n", pActiveVB);
-						printf("\n");
-						printf("  Format : %d\n", VBDesc.Format);
-						printf("  Size   : %d bytes\n", VBDesc.Size);
-						printf("  FVF    : 0x%.08X\n", VBDesc.FVF);
-						printf("\n");
-					}
-
-					//pActiveVB->Unlock();
-					pActiveVB->Release();
-					DbgDumpMesh((WORD*)pIndexData, dwIndexCount);
-				}
-#endif
-
-				// perform rendering
-				{
-					// copy index data
-					{
-						// remember last 2 indices
-						if (dwIndexCount >= 2) { // TODO : Is 2 indices enough for all primitive types?
-							pIBMem[0] = pIndexData[dwIndexCount - 2];
-							pIBMem[1] = pIndexData[dwIndexCount - 1];
-						}
-						else {
-							pIBMem[0] = 0xFFFF;
-						}
-					}
-
-					// render indexed vertices
-#ifdef _DEBUG_TRACK_PB
-					if (!g_PBTrackDisable.exists(pPushData))
-#endif
-					{
-						if (!g_bPBSkipPusher) {
-							if (IsValidCurrentShader()) {
-								CxbxDrawContext DrawContext = {};
-
-								DrawContext.XboxPrimitiveType = XboxPrimitiveType;
-								DrawContext.dwVertexCount = EmuD3DIndexCountToVertexCount(XboxPrimitiveType, dwIndexCount);
-								DrawContext.hVertexShader = g_CurrentXboxVertexShaderHandle;
-								DrawContext.pIndexData = pIndexData; // Used by GetVerticesInBuffer
-
-								CxbxDrawIndexed(DrawContext);
-							}
-						}
-					}
-				}
-
+					pg->inline_elements_length++] = parameter >> 16;
 				break;
 			}
 
@@ -693,7 +680,7 @@ extern void XTL::EmuExecutePushBufferRaw
 				//retrive transform constant index and add 96 to it.
 				LOG_TEST_CASE("NV2A_VP_UPLOAD_CONST_ID");
 				//EmuWarning("TRANSFORM CONSTANT LOAD PushBuffer Operation (0x%.04X, %d)", dwMethod, dwCount);
-				//EmuWarning("TRANSFORM CONSTANT LOAD PushBuffer Operation  Constant = %d)", *pdwPushArguments);
+				//EmuWarning("TRANSFORM CONSTANT LOAD PushBuffer Operation  Constant = %d)", *dma_get);
 				break;
 			}
 
@@ -708,37 +695,20 @@ extern void XTL::EmuExecutePushBufferRaw
 
 			default: { // default case, handling any other unknown methods.
 				char message[256] = {};
-				sprintf(message, "Unhandled PushBuffer Operation : %s (0x%.04X, %d)", NV2AMethodToString(dwMethod), dwMethod, dwCount);
+				sprintf(message, "Unhandled PushBuffer Operation : %s (0x%.04X)", NV2AMethodToString(dwMethod), dwMethod);
 				LOG_TEST_CASE(message);
 				break;
 			}
 			} // switch
 
-			// Since some instructions use less arguments, we repeat this loop
-			// for the next instruction so any leftover values are handled there :
-			pdwPushArguments += HandledCount;
-
 			if (!dma_state.ni) {
 				dma_state.mthd++;
 			}
 
-			dwCount -= HandledCount;
-			dcount_shadow += HandledCount;
-		} // while (dwCount > 0)
-    } // while (true)
-
-#ifdef _DEBUG_TRACK_PB
-    if (bShowPB) {
-        printf("\n");
-        printf("CxbxDbg> ");
-        fflush(stdout);
-    }
-#endif
-
-    if (g_bStepPush) {
-        g_pD3DDevice->Present(0,0,0,0);
-		Sleep(500);
-    }
+			dma_state.mcnt--;
+			dcount_shadow++;
+		} // while (dma_state.mcnt > 0)
+    } // while (dma_get != dma_put)
 }
 
 const char *NV2AMethodToString(DWORD dwMethod)
@@ -819,182 +789,3 @@ const char *NV2AMethodToString(DWORD dwMethod)
 		return "UNLABLED";
 	}
 }
-
-#ifdef _DEBUG_TRACK_PB
-void DbgDumpMesh(WORD *pIndexData, DWORD dwCount)
-{
-	if (dwCount == 0)
-		return;
-
-	if(!XTL::IsValidCurrentShader())
-        return;
-
-    XTL::IDirect3DVertexBuffer *pActiveVB = NULL;
-
-    XTL::D3DVERTEXBUFFER_DESC VBDesc;
-
-    BYTE *pVBData = nullptr;
-    UINT  uiStride;
-
-    // retrieve stream data
-    g_pD3DDevice->GetStreamSource(0, &pActiveVB,
-#ifdef CXBX_USE_D3D9
-		nullptr, // pOffsetInBytes
-#endif
-		&uiStride);
-
-    char szFileName[128];
-    sprintf(szFileName, "D:\\_cxbx\\mesh\\CxbxMesh-0x%.08X.x", pIndexData);
-    FILE *dbgVertices = fopen(szFileName, "wt");
-
-    // retrieve stream desc
-    pActiveVB->GetDesc(&VBDesc);
-
-    // unlock just in case
-    pActiveVB->Unlock();
-
-    // grab ptr
-    pActiveVB->Lock(0, 0, (D3DLockData **)&pVBData, D3DLOCK_READONLY);
-
-    // print out stream data
-    {
-        uint32 maxIndex = 0;
-
-        WORD *pwChk = (WORD*)pIndexData;
-
-        for(uint chk=0;chk<dwCount;chk++)
-        {
-            DWORD x = *pwChk++;
-
-            if(x > maxIndex)
-                maxIndex = x;
-        }
-
-        if(maxIndex > ((VBDesc.Size/uiStride) - 1))
-            maxIndex = (VBDesc.Size / uiStride) - 1;
-
-        fprintf(dbgVertices, "xof 0303txt 0032\n");
-        fprintf(dbgVertices, "\n");
-        fprintf(dbgVertices, "//\n");
-        fprintf(dbgVertices, "//  Vertex Stream Data (0x%.08X)...\n", pActiveVB);
-        fprintf(dbgVertices, "//\n");
-        fprintf(dbgVertices, "//  Format : %d\n", VBDesc.Format);
-        fprintf(dbgVertices, "//  Size   : %d bytes\n", VBDesc.Size);
-        fprintf(dbgVertices, "//  FVF    : 0x%.08X\n", VBDesc.FVF);
-        fprintf(dbgVertices, "//  iCount : %d\n", dwCount/2);
-        fprintf(dbgVertices, "//\n");
-        fprintf(dbgVertices, "\n");
-        fprintf(dbgVertices, "Frame SCENE_ROOT {\n");
-        fprintf(dbgVertices, "\n");
-        fprintf(dbgVertices, "  FrameTransformMatrix {\n");
-        fprintf(dbgVertices, "    1.000000,0.000000,0.000000,0.000000,\n");
-        fprintf(dbgVertices, "    0.000000,1.000000,0.000000,0.000000,\n");
-        fprintf(dbgVertices, "    0.000000,0.000000,1.000000,0.000000,\n");
-        fprintf(dbgVertices, "    0.000000,0.000000,0.000000,1.000000;;\n");
-        fprintf(dbgVertices, "  }\n");
-        fprintf(dbgVertices, "\n");
-        fprintf(dbgVertices, "  Frame Turok1 {\n");
-        fprintf(dbgVertices, "\n");
-        fprintf(dbgVertices, "    FrameTransformMatrix {\n");
-        fprintf(dbgVertices, "      1.000000,0.000000,0.000000,0.000000,\n");
-        fprintf(dbgVertices, "      0.000000,1.000000,0.000000,0.000000,\n");
-        fprintf(dbgVertices, "      0.000000,0.000000,1.000000,0.000000,\n");
-        fprintf(dbgVertices, "      0.000000,0.000000,0.000000,1.000000;;\n");
-        fprintf(dbgVertices, "    }\n");
-        fprintf(dbgVertices, "\n");
-        fprintf(dbgVertices, "    Mesh {\n");
-        fprintf(dbgVertices, "      %d;\n", maxIndex+1);
-
-        uint max = maxIndex+1;
-        for(uint v=0;v<max;v++)
-        {
-            fprintf(dbgVertices, "      %f;%f;%f;%s\n",
-                *(FLOAT*)&pVBData[v*uiStride+0],
-                *(FLOAT*)&pVBData[v*uiStride+4],
-                *(FLOAT*)&pVBData[v*uiStride+8],
-                (v < (max - 1)) ? "," : ";");
-        }
-
-        fprintf(dbgVertices, "      %d;\n", dwCount - 2);
-
-        WORD *pwVal = (WORD*)pIndexData;
-
-        max = dwCount;
-
-        DWORD a = *pwVal++;
-        DWORD b = *pwVal++;
-        DWORD c = *pwVal++;
-
-        DWORD la = a,lb = b,lc = c;
-
-        for(uint i=2;i<max;i++)
-        {
-            fprintf(dbgVertices, "      3;%d,%d,%d;%s\n",
-                a,b,c, (i < (max - 1)) ? "," : ";");
-
-            a = b;
-            b = c;
-            c = *pwVal++;
-
-            la = a;
-            lb = b;
-            lc = c;
-        }
-
-        fprintf(dbgVertices, "    }\n");
-        fprintf(dbgVertices, "  }\n");
-        fprintf(dbgVertices, "}\n");
-
-        fclose(dbgVertices);
-    }
-
-    // release ptr
-    pActiveVB->Unlock();
-}
-
-void XTL::DbgDumpPushBuffer( DWORD* PBData, DWORD dwSize )
-{
-	static int PbNumber = 0;	// Keep track of how many push buffers we've attemted to convert.
-	DWORD dwVertexShader;
-	char szPB[512];			
-
-	// Prevent dumping too many of these!
-	if( PbNumber > 300 )
-		return;
-
-	// Get a copy of the current vertex shader
-	g_pD3DDevice->GetVertexShader( &dwVertexShader );
-
-	/*if( g_CurrentXboxVertexShaderHandle != dwVertexShader )
-	{
-		printf( "g_CurrentXboxVertexShaderHandle does not match FVF from GetVertexShader!\n"
-					"g_CurrentXboxVertexShaderHandle = 0x%.08X\n"
-					"GetVertexShader = 0x%.08X\n" );
-	}*/
-	
-	if( dwVertexShader > 0xFFFF )
-	{
-		EmuWarning( "Cannot dump pushbuffer without an FVF (programmable shaders not supported)" );
-		return;
-	}
-
-	sprintf( szPB, "D:\\cxbx\\_pushbuffer\\pushbuffer%.03d.txt", PbNumber++ );
-
-	// Create a new file for this pushbuffer's data
-	HANDLE hFile = CreateFile( szPB, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, 0 );
-	if( hFile == INVALID_HANDLE_VALUE )
-		EmuWarning("Error creating pushbuffer file!");
-
-	DWORD dwBytesWritten;
-
-	// Write pushbuffer data to the file.
-	// TODO: Cache the 32-bit XXHash32::hash() of each pushbuffer to ensure that the same
-	// pushbuffer is not written twice within a given emulation session.
-	WriteFile( hFile, &g_CurrentXboxVertexShaderHandle, sizeof( DWORD ), &dwBytesWritten, NULL );
-	WriteFile( hFile, PBData, dwSize, &dwBytesWritten, NULL );
-
-	// Close handle
-	CloseHandle( hFile );
-}
-
-#endif
