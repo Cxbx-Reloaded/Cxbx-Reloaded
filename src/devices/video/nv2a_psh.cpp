@@ -306,6 +306,7 @@ static QString* get_var(struct PixelShader *ps, int reg, bool is_dest)
         assert(false);
         break;
     }
+    return qstring_from_str("");
 }
 
 // Get input variable code

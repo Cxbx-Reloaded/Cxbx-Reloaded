@@ -19,6 +19,9 @@ DEVICE_READ32(PFB)
 	DEVICE_READ32_END(PFB);
 }
 
+// TODO: Remove disabled warning once case are add to PFB switch.
+#pragma warning(push)
+#pragma warning(disable: 4065)
 DEVICE_WRITE32(PFB)
 {
 	switch (addr) {
@@ -29,3 +32,4 @@ DEVICE_WRITE32(PFB)
 
 	DEVICE_WRITE32_END(PFB);
 }
+#pragma warning(pop)

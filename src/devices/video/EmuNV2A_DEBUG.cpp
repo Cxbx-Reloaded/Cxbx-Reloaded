@@ -95,8 +95,12 @@ DEBUG_START(PFIFO)
 	DEBUG_CASE(NV_PFIFO_CACHE1_DMA_DATA_SHADOW);
 DEBUG_END(PFIFO)
 
+// TODO: Remove disabled warning once case are add to PRMA switch.
+#pragma warning(push)
+#pragma warning(disable: 4065)
 DEBUG_START(PRMA)
 DEBUG_END(PRMA)
+#pragma warning(pop)
 
 DEBUG_START(PVIDEO)
 	DEBUG_CASE(NV_PVIDEO_DEBUG_2);
@@ -141,20 +145,40 @@ DEBUG_START(PTIMER)
 	DEBUG_CASE(NV_PTIMER_ALARM_0);
 DEBUG_END(PTIMER)
 
+// TODO: Remove disabled warning once case are add to PCOUNTER switch.
+#pragma warning(push)
+#pragma warning(disable: 4065)
 DEBUG_START(PCOUNTER)
 DEBUG_END(PCOUNTER)
+#pragma warning(pop)
 
+// TODO: Remove disabled warning once case are add to PVPE switch.
+#pragma warning(push)
+#pragma warning(disable: 4065)
 DEBUG_START(PVPE)
 DEBUG_END(PVPE)
+#pragma warning(pop)
 
+// TODO: Remove disabled warning once case are add to PTV switch.
+#pragma warning(push)
+#pragma warning(disable: 4065)
 DEBUG_START(PTV)
 DEBUG_END(PTV)
+#pragma warning(pop)
 
+// TODO: Remove disabled warning once case are add to PRMFB switch.
+#pragma warning(push)
+#pragma warning(disable: 4065)
 DEBUG_START(PRMFB)
 DEBUG_END(PRMFB)
+#pragma warning(pop)
 
+// TODO: Remove disabled warning once case are add to PRMVIO switch.
+#pragma warning(push)
+#pragma warning(disable: 4065)
 DEBUG_START(PRMVIO)
 DEBUG_END(PRMVIO)
+#pragma warning(pop)
 
 DEBUG_START(PFB)
 	DEBUG_CASE(NV_PFB_CFG0)
@@ -233,8 +257,12 @@ DEBUG_START(PFB)
 	DEBUG_CASE(NV_PFB_BYPASS);
 DEBUG_END(PFB)
 
+// TODO: Remove disabled warning once case are add to PSTRAPS switch.
+#pragma warning(push)
+#pragma warning(disable: 4065)
 DEBUG_START(PSTRAPS)
 DEBUG_END(PSTRAPS)
+#pragma warning(pop)
 
 DEBUG_START(PGRAPH)
 	DEBUG_CASE(NV_PGRAPH_DEBUG_0);
@@ -431,11 +459,19 @@ DEBUG_START(PRAMDAC)
 
 DEBUG_END(PRAMDAC)
 
+// TODO: Remove disabled warning once case are add to PRMDIO switch.
+#pragma warning(push)
+#pragma warning(disable: 4065)
 DEBUG_START(PRMDIO)
 DEBUG_END(PRMDIO)
+#pragma warning(pop)
 
+// TODO: Remove disabled warning once case are add to PRAMIN switch.
+#pragma warning(push)
+#pragma warning(disable: 4065)
 DEBUG_START(PRAMIN)
 DEBUG_END(PRAMIN)
+#pragma warning(pop)
 
 DEBUG_START(USER)
 	DEBUG_CASE(NV_USER_DMA_PUT);

@@ -3013,8 +3013,8 @@ static void pgraph_update_shader_constants(PGRAPHState *pg,
     }
 
     if (binding->surface_size_loc != -1) {
-        glUniform2f(binding->surface_size_loc, pg->surface_shape.clip_width,
-                    pg->surface_shape.clip_height);
+        glUniform2f(binding->surface_size_loc, (GLfloat)pg->surface_shape.clip_width,
+                    (GLfloat)pg->surface_shape.clip_height);
     }
 
     if (binding->clip_range_loc != -1) {
@@ -3102,10 +3102,11 @@ static void pgraph_bind_shaders(PGRAPHState *pg)
         unsigned int reg = (i < 2) ? NV_PGRAPH_CSV1_A : NV_PGRAPH_CSV1_B;
         for (j = 0; j < 4; j++) {
             unsigned int masks[] = {
-                (i % 2) ? NV_PGRAPH_CSV1_A_T1_S : NV_PGRAPH_CSV1_A_T0_S,
-                (i % 2) ? NV_PGRAPH_CSV1_A_T1_T : NV_PGRAPH_CSV1_A_T0_T,
-                (i % 2) ? NV_PGRAPH_CSV1_A_T1_R : NV_PGRAPH_CSV1_A_T0_R,
-                (i % 2) ? NV_PGRAPH_CSV1_A_T1_Q : NV_PGRAPH_CSV1_A_T0_Q
+                // NOTE: For some reason, Visual Studio thinks NV_PGRAPH_xxxx is signed integer. (possible bug?)
+                (i % 2U) ? (unsigned int)NV_PGRAPH_CSV1_A_T1_S : (unsigned int)NV_PGRAPH_CSV1_A_T0_S,
+                (i % 2U) ? (unsigned int)NV_PGRAPH_CSV1_A_T1_T : (unsigned int)NV_PGRAPH_CSV1_A_T0_T,
+                (i % 2U) ? (unsigned int)NV_PGRAPH_CSV1_A_T1_R : (unsigned int)NV_PGRAPH_CSV1_A_T0_R,
+                (i % 2U) ? (unsigned int)NV_PGRAPH_CSV1_A_T1_Q : (unsigned int)NV_PGRAPH_CSV1_A_T0_Q
             };
             state.texgen[i][j] = (enum VshTexgen)GET_MASK(pg->regs[reg], masks[j]);
         }
@@ -3942,7 +3943,7 @@ static void pgraph_bind_vertex_attributes(NV2AState *d,
                                           bool inline_data,
                                           unsigned int inline_stride)
 {
-	int i, j;
+	unsigned int i, j;
     PGRAPHState *pg = &d->pgraph;
 
 	assert(pg->opengl_enabled);
@@ -4276,7 +4277,7 @@ static void upload_gl_texture(GLenum gl_target,
 
         unsigned int width = s.width, height = s.height;
 
-        int level;
+        unsigned int level;
         for (level = 0; level < s.levels; level++) {
             if (f.gl_format == 0) { /* compressed */
 
@@ -4335,7 +4336,7 @@ static void upload_gl_texture(GLenum gl_target,
         assert(f.gl_format != 0); /* FIXME: compressed not supported yet */
         assert(f.linear == false);
 
-        int level;
+        unsigned int level;
         for (level = 0; level < s.levels; level++) {
 
             unsigned int row_pitch = width * f.bytes_per_pixel;
@@ -4426,7 +4427,7 @@ static TextureBinding* generate_texture(const TextureShape s,
 
         size_t length = 0;
         unsigned int w = s.width, h = s.height;
-        int level;
+        unsigned int level;
         for (level = 0; level < s.levels; level++) {
             /* FIXME: This is wrong for compressed textures and textures with 1x? non-square mipmaps */
             length += w * h * f.bytes_per_pixel;
@@ -4471,13 +4472,14 @@ static TextureBinding* generate_texture(const TextureShape s,
     return ret;
 }
 
+// NOTE: Might want to change guint to guint64 for return.
 /* functions for texture LRU cache */
 static guint texture_key_hash(gconstpointer key)
 {
     const TextureKey *k = (const TextureKey *)key;
     uint64_t state_hash = fnv_hash(
         (const uint8_t*)&k->state, sizeof(TextureShape));
-    return state_hash ^ k->data_hash;
+    return guint(state_hash ^ k->data_hash);
 }
 static gboolean texture_key_equal(gconstpointer a, gconstpointer b)
 {
@@ -4514,10 +4516,11 @@ static void texture_binding_destroy(gpointer data)
     }
 }
 
+// NOTE: Might want to change guint to guint64 for return.
 /* hash and equality for shader cache hash table */
 static guint shader_hash(gconstpointer key)
 {
-    return fnv_hash((const uint8_t *)key, sizeof(ShaderState));
+    return (guint)fnv_hash((const uint8_t *)key, sizeof(ShaderState));
 }
 static gboolean shader_equal(gconstpointer a, gconstpointer b)
 {

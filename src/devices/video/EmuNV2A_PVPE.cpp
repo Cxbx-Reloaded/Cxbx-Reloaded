@@ -1,3 +1,7 @@
+
+// TODO: Remove disabled warning once case are add to PVPE switch.
+#pragma warning(push)
+#pragma warning(disable: 4065)
 DEVICE_READ32(PVPE)
 {
 	DEVICE_READ32_SWITCH() {
@@ -8,8 +12,11 @@ DEVICE_READ32(PVPE)
 
 	DEVICE_READ32_END(PVPE);
 }
+#pragma warning(pop)
 
-
+// TODO: Remove disabled warning once case are add to PVPE switch.
+#pragma warning(push)
+#pragma warning(disable: 4065)
 DEVICE_WRITE32(PVPE)
 {
 	switch (addr) {
@@ -20,4 +27,4 @@ DEVICE_WRITE32(PVPE)
 
 	DEVICE_WRITE32_END(PVPE);
 }
-
+#pragma warning(pop)
