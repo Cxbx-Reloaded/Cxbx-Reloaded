@@ -5,7 +5,9 @@
 #endif#pragma once
 //#include <windef.h>
 //#include "../CxbxKrnl/EmuXapi.h"
+#ifndef X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_VIRTUAL_SBC
 #define X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_VIRTUAL_SBC 0x80
+#endif
 /*
 extern "C" static CXBXVSBC_API DWORD VSBCGetState(UCHAR * pSBCGamepad);
 extern "C" static CXBXVSBC_API DWORD VSBCSetState(UCHAR * pSBCFeedback);

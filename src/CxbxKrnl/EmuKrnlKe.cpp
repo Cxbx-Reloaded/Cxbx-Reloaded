@@ -1526,7 +1526,7 @@ XBSYSAPI EXPORTNUM(145) xboxkrnl::LONG NTAPI xboxkrnl::KeSetEvent
 		// TODO: Find out why some XDKs do not call KeInitializeEvent first
 
 		//We can check the event type from the internal structure, see https://www.geoffchappell.com/studies/windows/km/ntoskrnl/structs/kobjects.htm?tx=111
-		if (Event->Header.Type & 0x7F == 0x01)
+		if ((Event->Header.Type & 0x7F) == 0x01)
 		{
 			KeInitializeEvent(Event, NotificationEvent, TRUE);
 		}
