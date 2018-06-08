@@ -1,3 +1,7 @@
+
+// TODO: Remove disabled warning once case are add to PRMVIO switch.
+#pragma warning(push)
+#pragma warning(disable: 4065)
 DEVICE_READ32(PRMVIO)
 {
 	// vga_ioport_read
@@ -9,7 +13,11 @@ DEVICE_READ32(PRMVIO)
 
 	DEVICE_READ32_END(PRMVIO);
 }
+#pragma warning(pop)
 
+// TODO: Remove disabled warning once case are add to PRMVIO switch.
+#pragma warning(push)
+#pragma warning(disable: 4065)
 DEVICE_WRITE32(PRMVIO)
 {
 	// vga_ioport_write
@@ -21,3 +29,4 @@ DEVICE_WRITE32(PRMVIO)
 
 	DEVICE_WRITE32_END(PRMVIO);
 }
+#pragma warning(pop)
