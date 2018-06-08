@@ -1180,7 +1180,7 @@ DWORD WINAPI XTL::EMUPATCH(XInputSetState)
                     //printf("SBC setstate!\n");
                     //EmuXSBCSetState((UCHAR *)&pFeedback->Rumble);
                     //UpdateVirtualSBCFeedbackDlg((UCHAR *)&pFeedback->Rumble);
-                    DWORD dwVXBCSetStateResult;
+                    //DWORD dwVXBCSetStateResult;
                     if (g_module != 0 && fnCxbxVSBCSetState == 0) {
                         fnCxbxVSBCSetState = (PFARPROC2)GetProcAddress(g_module, "VSBCSetState");
                         //fnCxbxVSBCGetState = (PFARPROC2)GetProcAddress(g_module, "VSBCGetState");
