@@ -3282,7 +3282,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetViewport)
 
 	if (g_pXboxRenderTarget) {
 		// Get current Xbox render target dimensions
-
 		DWORD XboxRenderTarget_Width = GetPixelContainerWidth(g_pXboxRenderTarget);
 		DWORD XboxRenderTarget_Height = GetPixelContainerHeigth(g_pXboxRenderTarget);
 
@@ -5525,13 +5524,17 @@ ULONG WINAPI XTL::EMUPATCH(D3DResource_Release)
 	// Was the Xbox resource freed?
 	if (uRet == 0) {
 
-		// If this was a cached renter target or depth surface, clear the cache variable too!
+		// If this was a cached render target or depth surface, clear the cache variable too!
 		if (pThis == g_pXboxRenderTarget) {
 			g_pXboxRenderTarget = nullptr;
 		}
 
 		if (pThis == g_pXboxDepthStencil) {
 			g_pXboxDepthStencil = nullptr;
+		}
+
+		if (pThis == g_XboxBackBufferSurface) {
+			g_XboxBackBufferSurface = nullptr;
 		}
 
 		// Also release the host copy (if it exists!)
