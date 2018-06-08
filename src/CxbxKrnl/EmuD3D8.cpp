@@ -8061,20 +8061,27 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderTarget)
 
 	// In Xbox titles, CreateDevice calls SetRenderTarget for the back buffer
 	// We can use this to determine the Xbox backbuffer surface for later use!
-	if (g_XboxBackBufferSurface == NULL) {
+	if (g_XboxBackBufferSurface == xbnullptr) {
 		g_XboxBackBufferSurface = pRenderTarget;
-	}
-
-	// If we got a null, set the Xbox Render Target to the Xbox Backbuffer
-	if (pRenderTarget == NULL) {
-		pRenderTarget = g_XboxBackBufferSurface;
+		// TODO : Some titles might render to another backbuffer later on,
+		// if that happens, we might need to skip the first one or two calls?
 	}
 
 	// The current render target is only replaced if it's passed in here non-null
-    if (pRenderTarget != NULL) {
+	if (pRenderTarget != xbnullptr) {
 		g_pXboxRenderTarget = pRenderTarget;
-		pHostRenderTarget = GetHostSurface(g_pXboxRenderTarget, D3DUSAGE_RENDERTARGET);
+	}
+	else {
+		// If non is given, use the current Xbox render target
+		pRenderTarget = g_pXboxRenderTarget;
+		// If there's no Xbox render target yet, fallback to the Xbox back buffer
+		if (pRenderTarget == xbnullptr) {
+			LOG_TEST_CASE("SetRenderTarget fallback to backbuffer");
+			pRenderTarget = g_XboxBackBufferSurface;
+		}
     }
+
+	pHostRenderTarget = GetHostSurface(pRenderTarget, D3DUSAGE_RENDERTARGET);
 
 	// The currenct depth stencil is always replaced by whats passed in here (even a null)
 	g_pXboxDepthStencil = pNewZStencil;
