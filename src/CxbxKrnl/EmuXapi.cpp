@@ -98,7 +98,7 @@ std::vector<XTL::X_XINPUT_DEVICE_INFO> g_XboxInputDeviceInfo;
 //look for xbox Device info from global info vector, and return the found index. return -1 for not found.
 int FindDeviceInfoIndexByXboxType(UCHAR ucType)
 {
-    int i;
+    size_t i;
     for (i = 0; i < g_XboxInputDeviceInfo.size(); i++) {
         if (g_XboxInputDeviceInfo[i].ucType == ucType) {
             return i;
@@ -110,7 +110,7 @@ int FindDeviceInfoIndexByXboxType(UCHAR ucType)
 //look for xbox Device info from global info vector, and return the found index. return -1 for not found.
 int FindDeviceInfoIndexByDeviceType(XTL::PXPP_DEVICE_TYPE DeviceType)
 {
-    int i;
+    size_t i;
     for (i = 0; i < g_XboxInputDeviceInfo.size(); i++) {
         if (g_XboxInputDeviceInfo[i].DeviceType == DeviceType) {
             return i;
