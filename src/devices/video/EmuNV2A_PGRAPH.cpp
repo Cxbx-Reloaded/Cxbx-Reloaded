@@ -3943,7 +3943,7 @@ static void pgraph_bind_vertex_attributes(NV2AState *d,
                                           bool inline_data,
                                           unsigned int inline_stride)
 {
-	int i, j;
+	unsigned int i, j;
     PGRAPHState *pg = &d->pgraph;
 
 	assert(pg->opengl_enabled);
@@ -4277,7 +4277,7 @@ static void upload_gl_texture(GLenum gl_target,
 
         unsigned int width = s.width, height = s.height;
 
-        int level;
+        unsigned int level;
         for (level = 0; level < s.levels; level++) {
             if (f.gl_format == 0) { /* compressed */
 
@@ -4336,7 +4336,7 @@ static void upload_gl_texture(GLenum gl_target,
         assert(f.gl_format != 0); /* FIXME: compressed not supported yet */
         assert(f.linear == false);
 
-        int level;
+        unsigned int level;
         for (level = 0; level < s.levels; level++) {
 
             unsigned int row_pitch = width * f.bytes_per_pixel;
@@ -4427,7 +4427,7 @@ static TextureBinding* generate_texture(const TextureShape s,
 
         size_t length = 0;
         unsigned int w = s.width, h = s.height;
-        int level;
+        unsigned int level;
         for (level = 0; level < s.levels; level++) {
             /* FIXME: This is wrong for compressed textures and textures with 1x? non-square mipmaps */
             length += w * h * f.bytes_per_pixel;
