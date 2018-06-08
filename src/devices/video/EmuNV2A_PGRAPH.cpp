@@ -4472,13 +4472,14 @@ static TextureBinding* generate_texture(const TextureShape s,
     return ret;
 }
 
+// NOTE: Might want to change guint to guint64 for return.
 /* functions for texture LRU cache */
 static guint texture_key_hash(gconstpointer key)
 {
     const TextureKey *k = (const TextureKey *)key;
     uint64_t state_hash = fnv_hash(
         (const uint8_t*)&k->state, sizeof(TextureShape));
-    return state_hash ^ k->data_hash;
+    return guint(state_hash ^ k->data_hash);
 }
 static gboolean texture_key_equal(gconstpointer a, gconstpointer b)
 {
@@ -4515,10 +4516,11 @@ static void texture_binding_destroy(gpointer data)
     }
 }
 
+// NOTE: Might want to change guint to guint64 for return.
 /* hash and equality for shader cache hash table */
 static guint shader_hash(gconstpointer key)
 {
-    return fnv_hash((const uint8_t *)key, sizeof(ShaderState));
+    return (guint)fnv_hash((const uint8_t *)key, sizeof(ShaderState));
 }
 static gboolean shader_equal(gconstpointer a, gconstpointer b)
 {
