@@ -3013,8 +3013,8 @@ static void pgraph_update_shader_constants(PGRAPHState *pg,
     }
 
     if (binding->surface_size_loc != -1) {
-        glUniform2ui(binding->surface_size_loc, pg->surface_shape.clip_width,
-                    pg->surface_shape.clip_height);
+        glUniform2f(binding->surface_size_loc, (GLfloat)pg->surface_shape.clip_width,
+                    (GLfloat)pg->surface_shape.clip_height);
     }
 
     if (binding->clip_range_loc != -1) {
