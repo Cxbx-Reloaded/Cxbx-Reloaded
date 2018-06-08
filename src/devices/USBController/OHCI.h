@@ -160,6 +160,10 @@ class OHCI
 		uint32_t OHCI_ReadRegister(xbaddr Addr);
 		// write a register
 		void OHCI_WriteRegister(xbaddr Addr, uint32_t Value);
+		// update ohci registers during a device attach
+		void OHCI_Attach(USBPort* Port);
+		// update ohci registers during a device detach
+		void OHCI_Detach(USBPort* Port);
 
 
 	private:
@@ -179,8 +183,8 @@ class OHCI
 		USBPacket m_UsbPacket = {};
 		// temporary buffer that holds the user data to transfer in a packet
 		uint8_t m_UsbBuffer[8192] = {};
-		// ergo720: I believe it's the value of HcControl in the last frame
-		uint32_t old_ctl;
+		// the value of HcControl in the previous frame
+		uint32_t m_OldHcControl;
 		// irq number
 		int m_IrqNum;
 		// ergo720: I think it's the DelayInterrupt flag in a TD
@@ -217,10 +221,6 @@ class OHCI
 		uint32_t OHCI_GetFrameRemaining();
 		//
 		void OHCI_StopEndpoints();
-		// update ohci registers during a device attach
-		void OHCI_Attach(USBPort* Port);
-		// update ohci registers during a device detach
-		void OHCI_Detach(USBPort* Port);
 		// set root hub status
 		void OHCI_SetHubStatus(uint32_t Value);
 		// update power related bits in HcRhPortStatus
@@ -242,7 +242,7 @@ class OHCI
 		bool OHCI_ReadTD(xbaddr Paddr, OHCI_TD* Td);
 		// write a TD in memory
 		bool OHCI_WriteTD(xbaddr Paddr, OHCI_TD* Td);
-		// read/write the contents of a TD from/to main memory
+		// read/write the user buffer pointed to by a TD from/to main memory
 		bool OHCI_CopyTD(OHCI_TD* Td, uint8_t* Buffer, int Length, bool bIsWrite);
 		// find a TD buffer in memory and copy it
 		bool OHCI_FindAndCopyTD(xbaddr Paddr, uint8_t* Buffer, int Length, bool bIsWrite);
@@ -256,6 +256,8 @@ class OHCI
 		int OHCI_ServiceTD(OHCI_ED* Ed);
 		// find the usb device with the supplied address
 		XboxDevice* OHCI::OHCI_FindDevice(uint8_t Addr);
+		// cancel a packet when a device is removed
+		void OHCI_AsyncCancelDevice(XboxDevice* dev);
 };
 
 #endif

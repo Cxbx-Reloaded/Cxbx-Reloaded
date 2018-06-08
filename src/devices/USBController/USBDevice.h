@@ -95,12 +95,12 @@ typedef struct _XboxDevice
 	int Attached;                          // device is attached
 
 	int32_t State;                         // current state of device
-	uint8_t setup_buf[8];
+	uint8_t SetupBuffer[8];                // holds the IoVec structs copied (control transfers only?)
 	uint8_t data_buf[4096];
 	int32_t RemoteWakeup;                  // wakeup flag
-	int32_t setup_state;
-	int32_t setup_len;
-	int32_t setup_index;
+	int32_t SetupState;                    // result of a setup tken processing operation
+	int32_t SetupLength;                   // number of bytes to transfer as specified by a setup token
+	int32_t SetupIndex;                    // index of the parameter in a setup token?
 
 	USBEndpoint EP_ctl;                    // endpoints for SETUP tokens
 	USBEndpoint EP_in[USB_MAX_ENDPOINTS];  // endpoints for OUT tokens
@@ -180,7 +180,7 @@ USBCombinedPacket;
 /* Structure used to hold information about an active USB packet */
 struct _USBPacket
 {
-	int Pid;                                 // Packet ID
+	int Pid;                                 // Packet ID (used to identify the type of packet that is being sent)
 	uint32_t Id; 				             // Paddr of the TD for this packet 
 	USBEndpoint* Endpoint;                   // endpoint this packet is transferred to
 	unsigned int Stream;		             
@@ -189,7 +189,7 @@ struct _USBPacket
 	bool ShortNotOK;                         // the bufferRounding mode of the TD for this packet
 	bool IntReq;                             // whether or not to generate an interrupt for this packet (DelayInterrupt of the TD is zero)
 	int Status;                              // USB_RET_* status code
-	int ActualLength;                        // Number of bytes actually transferred
+	int ActualLength;                        // before copy: offset inside IoVec structs; after copy: number of bytes actually transferred
 	// Internal use by the USB layer
 	USBPacketState State;
 	USBCombinedPacket* Combined;
@@ -208,7 +208,7 @@ typedef struct _USBPort {
 }
 USBPort;
 
-// Forward declare OHCI class for USBDevice device class
+// Forward declare OHCI class for USBDevice class
 class OHCI;
 
 class USBDevice : public PCIDevice {
@@ -229,7 +229,7 @@ class USBDevice : public PCIDevice {
 
 
 		// USBDevice-specific functions/variables
-		// pointer to the host controller this device refears to
+		// pointer to the host controller this device refers to
 		OHCI* m_HostController = nullptr;
 
 		// register a port with the HC
@@ -269,6 +269,29 @@ class USBDevice : public PCIDevice {
 		void USB_PacketCheckState(USBPacket* p, USBPacketState expected);
 		// process the packet
 		void USB_ProcessOne(USBPacket* p);
+		//
+		void USB_DoParameter(XboxDevice* s, USBPacket* p);
+		// process a setup token
+		void USB_DoTokenSetup(XboxDevice* s, USBPacket* p);
+		// process an input token
+		void DoTokenIn(XboxDevice* s, USBPacket* p);
+		// process an output token
+		void DoTokenOut(XboxDevice* s, USBPacket* p);
+		// copy the packet data to the buffer pointed to by ptr
+		void USB_PacketCopy(USBPacket* p, void* ptr, size_t bytes);
+		// queue a packet to an endpoint
+		void USB_QueueOne(USBPacket* p);
+		//
+		void USB_DeviceHandleControl(XboxDevice* dev, USBPacket* p, int request, int value, int index, int length, uint8_t* data);
+		//
+		void USB_DeviceHandleData(XboxDevice* dev, USBPacket* p);
+		//
+		void USB_DeviceFlushEPqueue(XboxDevice* dev, USBEndpoint* ep);
+		//
+		void USB_DeviceCancelPacket(XboxDevice* dev, USBPacket* p);
+		// Cancel an active packet.  The packed must have been deferred by
+		// returning USB_RET_ASYNC from handle_packet, and not yet completed
+		void USB_CancelPacket(USBPacket* p);
 };
 
 #endif

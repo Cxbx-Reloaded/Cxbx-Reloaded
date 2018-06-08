@@ -172,9 +172,9 @@ IoVec;
 typedef struct _IOVector
 {
 	IoVec* IoVecStruct;
-	int IoVecNumber;      // TODO
-	int AllocNumber;      // TODO
-	size_t Size;
+	int IoVecNumber;      // number of I/O buffers supplied
+	int AllocNumber;      // number of IoVec structs currently allocated
+	size_t Size;          // total size of all I/O buffers supplied
 }
 IOVector;
 
@@ -182,5 +182,7 @@ inline uint64_t Muldiv64(uint64_t a, uint32_t b, uint32_t c);
 
 void IoVecReset(IOVector* qiov);
 void IoVecAdd(IOVector* qiov, void* base, size_t len);
+size_t IoVecTobuffer(const IoVec* iov, const unsigned int iov_cnt, size_t offset, void *buf, size_t bytes);
+size_t IoVecFromBuffer(const IoVec* iov, unsigned int iov_cnt, size_t offset, void* buf, size_t bytes);
 
 #endif

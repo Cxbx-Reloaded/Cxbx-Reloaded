@@ -127,11 +127,11 @@
 #define OHCI_TD_DI_SHIFT  21
 #define OHCI_TD_DI_MASK   (7<<OHCI_TD_DI_SHIFT)
 #define OHCI_TD_T0        (1<<24)
-#define OHCI_TD_T1        (1<<25)
+#define OHCI_TD_T1        (1<<25)                     // DataToggle (T0 and T1)
 #define OHCI_TD_EC_SHIFT  26
 #define OHCI_TD_EC_MASK   (3<<OHCI_TD_EC_SHIFT)
 #define OHCI_TD_CC_SHIFT  28
-#define OHCI_TD_CC_MASK   (0xf<<OHCI_TD_CC_SHIFT)
+#define OHCI_TD_CC_MASK   (0xF<<OHCI_TD_CC_SHIFT)     // ConditionCode
 
 /* Mask the four least significant bits in an ED address */
 #define OHCI_DPTR_MASK    0xFFFFFFF0
@@ -218,14 +218,14 @@ void OHCI::OHCI_FrameBoundaryWorker()
 	}
 
 	// Cancel all pending packets if either of the lists has been disabled
-	if (ohci->old_ctl & (~ohci->ctl) & (OHCI_CTL_BLE | OHCI_CTL_CLE)) {
-		if (ohci->async_td) {
-			usb_cancel_packet(&ohci->usb_packet);
+	if (m_OldHcControl & (~m_Registers.HcControl) & (OHCI_CTL_BLE | OHCI_CTL_CLE)) {
+		if (m_AsyncTD) {
+			m_UsbDevice->USB_CancelPacket(&m_UsbPacket);
 			m_AsyncTD = xbnull;
 		}
 		OHCI_StopEndpoints();
 	}
-	ohci->old_ctl = ohci->ctl;
+	m_OldHcControl = m_Registers.HcControl;
 	ohci_process_lists(ohci, 0);
 
 	// Stop if UnrecoverableError happened or OHCI_SOF will crash
@@ -464,7 +464,7 @@ int OHCI::OHCI_ServiceEDlist(xbaddr Head, int Completion)
 			// Cancel pending packets for ED that have been paused
 			xbaddr addr = ed.HeadP & OHCI_DPTR_MASK;
 			if (m_AsyncTD && addr == m_AsyncTD) {
-				usb_cancel_packet(&ohci->usb_packet);
+				m_UsbDevice->USB_CancelPacket(&m_UsbPacket);
 				m_AsyncTD = xbnull;
 				m_UsbDevice->USB_DeviceEPstopped(m_UsbPacket.Endpoint->Dev, m_UsbPacket.Endpoint);
 			}
@@ -650,17 +650,17 @@ int OHCI::OHCI_ServiceTD(OHCI_ED* Ed)
 #ifdef DEBUG_PACKET
 		DPRINTF("status=%d\n", ohci->usb_packet.status);
 #endif
-		if (m_UsbPacket.status == USB_RET_ASYNC) {
-			usb_device_flush_ep_queue(dev, ep);
+		if (m_UsbPacket.Status == USB_RET_ASYNC) {
+			m_UsbDevice->USB_DeviceFlushEPqueue(dev, ep);
 			m_AsyncTD = addr;
 			return 1;
 		}
 	}
-	if (m_UsbPacket.status == USB_RET_SUCCESS) {
-		ret = m_UsbPacket.actual_length;
+	if (m_UsbPacket.Status == USB_RET_SUCCESS) {
+		ret = m_UsbPacket.ActualLength;
 	}
 	else {
-		ret = m_UsbPacket.status;
+		ret = m_UsbPacket.Status;
 	}
 
 	if (ret >= 0) {
@@ -785,6 +785,7 @@ void OHCI::OHCI_StateReset()
 	// reset or cold boot
 
 	OHCI_BusStop();
+	m_OldHcControl = 0;
 
 	// Reset all registers
 	// Remark: the standard says that RemoteWakeupConnected bit should be set during POST, cleared during hw reset
@@ -825,7 +826,7 @@ void OHCI::OHCI_StateReset()
 		}
 	}
 	if (m_AsyncTD) {
-		usb_cancel_packet(&ohci->usb_packet);
+		m_UsbDevice->USB_CancelPacket(&m_UsbPacket);
 		m_AsyncTD = xbnull;
 	}
 
@@ -1337,7 +1338,7 @@ void OHCI::OHCI_Detach(USBPort* Port)
 	OHCIPort* port = &m_Registers.RhPort[Port->PortIndex];
 	uint32_t old_state = port->HcRhPortStatus;
 
-	ohci_async_cancel_device(Port->Dev);
+	OHCI_AsyncCancelDevice(Port->Dev);
 
 	// set connect status
 	if (port->HcRhPortStatus & OHCI_PORT_CCS) {
@@ -1386,3 +1387,12 @@ void OHCI::OHCI_Attach(USBPort* Port)
 	}
 }
 
+void OHCI::OHCI_AsyncCancelDevice(XboxDevice* dev)
+{
+	if (m_AsyncTD &&
+		m_UsbDevice->USB_IsPacketInflight(&m_UsbPacket) &&
+		m_UsbPacket.Endpoint->Dev == dev) {
+		m_UsbDevice->USB_CancelPacket(&m_UsbPacket);
+		m_AsyncTD = 0;
+	}
+}

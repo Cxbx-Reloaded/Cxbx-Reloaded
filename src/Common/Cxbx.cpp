@@ -38,6 +38,11 @@
 
 #include "Cxbx.h"
 #include <cstdlib>
+#include <cstring>
+
+#ifndef MIN
+#define MIN(a, b) (((a) < (b)) ? (a) : (b))
+#endif
 
 
 // Disable a compiler warning relative to uint64_t -> uint32_t conversions in Muldiv64. This function is taken from
@@ -87,4 +92,47 @@ void IoVecAdd(IOVector* qiov, void* base, size_t len)
 	qiov->IoVecStruct[qiov->IoVecNumber].Iov_Len = len;
 	qiov->Size += len;
 	++qiov->IoVecNumber;
+}
+
+// This takes "iov_cnt" of "iov" buffers as input and copies sequentially their contents to the "buf" output buffer.
+// "offset" indicates the offset inside "bytes" (total lenght of "iov" buffers) where the copy is going to start.
+// "offset" must be less than "bytes" or else the assertion will fail. "done" is the number of bytes actually copied
+size_t IoVecTobuffer(const IoVec* iov, const unsigned int iov_cnt, size_t offset, void* buf, size_t bytes)
+{
+	size_t done;
+	unsigned int i;
+	for (i = 0, done = 0; (offset || done < bytes) && i < iov_cnt; i++) {
+		if (offset < iov[i].Iov_Len) {
+			size_t len = MIN(iov[i].Iov_Len - offset, bytes - done);
+			std::memcpy(static_cast<uint8_t*>(buf) + done, static_cast<uint8_t*>(iov[i].Iov_Base) + offset, len);
+			done += len;
+			offset = 0;
+		}
+		else {
+			offset -= iov[i].Iov_Len;
+		}
+	}
+	assert(offset == 0);
+	return done;
+}
+
+// This does the opposite of IoVecTobuffer: it takes "buf" as input and copies sequentially its contents to the
+// "iov" output buffers.
+size_t IoVecFromBuffer(const IoVec* iov, unsigned int iov_cnt, size_t offset, void* buf, size_t bytes)
+{
+	size_t done;
+	unsigned int i;
+	for (i = 0, done = 0; (offset || done < bytes) && i < iov_cnt; i++) {
+		if (offset < iov[i].Iov_Len) {
+			size_t len = MIN(iov[i].Iov_Len - offset, bytes - done);
+			memcpy(static_cast<uint8_t*>(iov[i].Iov_Base) + offset, static_cast<uint8_t*>(buf) + done, len);
+			done += len;
+			offset = 0;
+		}
+		else {
+			offset -= iov[i].Iov_Len;
+		}
+	}
+	assert(offset == 0);
+	return done;
 }

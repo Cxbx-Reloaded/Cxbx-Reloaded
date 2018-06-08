@@ -44,6 +44,15 @@
 #define USB_ENDPOINT_XFER_INT       3
 #define USB_ENDPOINT_XFER_INVALID   255
 
+#define USB_DIR_OUT         0
+#define USB_DIR_IN          0x80
+
+#define SETUP_STATE_IDLE    0
+#define SETUP_STATE_SETUP   1
+#define SETUP_STATE_DATA    2
+#define SETUP_STATE_ACK     3
+#define SETUP_STATE_PARAM   4
+
 
 void USBDevice::Init(unsigned int address)
 {
@@ -117,7 +126,7 @@ void USBDevice::USB_Detach(USBPort* Port)
 
 	assert(dev != nullptr);
 	assert(dev->State != USB_STATE_NOTATTACHED);
-	OHCI_Detach(Port);
+	m_HostController->OHCI_Detach(Port);
 	dev->State = USB_STATE_NOTATTACHED;
 }
 
@@ -128,7 +137,7 @@ void USBDevice::USB_Attach(USBPort* Port)
 	assert(dev != nullptr);
 	assert(dev->Attached);
 	assert(dev->State == USB_STATE_NOTATTACHED);
-	OHCI_Attach(Port);
+	m_HostController->OHCI_Attach(Port);
 	dev->State = USB_STATE_ATTACHED;
 	usb_device_handle_attach(dev);
 }
@@ -244,7 +253,7 @@ void USBDevice::USB_HandlePacket(XboxDevice* dev, USBPacket* p)
 			QTAILQ_INSERT_TAIL(&p->Endpoint->Queue, p, Queue);
 		}
 		else if (p->Status == USB_RET_ADD_TO_QUEUE) {
-			usb_queue_one(p);
+			USB_QueueOne(p);
 		}
 		else {
 			// When pipelining is enabled usb-devices must always return async,
@@ -257,8 +266,15 @@ void USBDevice::USB_HandlePacket(XboxDevice* dev, USBPacket* p)
 		}
 	}
 	else {
-		usb_queue_one(p);
+		USB_QueueOne(p);
 	}
+}
+
+void USBDevice::USB_QueueOne(USBPacket* p)
+{
+	p->State = USB_PACKET_QUEUED;
+	QTAILQ_INSERT_TAIL(&p->Endpoint->Queue, p, Queue);
+	p->Status = USB_RET_ASYNC;
 }
 
 void USBDevice::USB_PacketCheckState(USBPacket* p, USBPacketState expected)
@@ -284,18 +300,18 @@ void USBDevice::USB_ProcessOne(USBPacket* p)
 		// Info: All devices must support endpoint zero. This is the endpoint which receives all of the devices control 
 		// and status requests during enumeration and throughout the duration while the device is operational on the bus
 		if (p->Parameter) {
-			do_parameter(dev, p);
+			USB_DoParameter(dev, p);
 			return;
 		}
 		switch (p->Pid) {
 			case USB_TOKEN_SETUP:
-				do_token_setup(dev, p);
+				USB_DoTokenSetup(dev, p);
 				break;
 			case USB_TOKEN_IN:
-				do_token_in(dev, p);
+				DoTokenIn(dev, p);
 				break;
 			case USB_TOKEN_OUT:
-				do_token_out(dev, p);
+				DoTokenOut(dev, p);
 				break;
 			default:
 				p->Status = USB_RET_STALL;
@@ -303,6 +319,248 @@ void USBDevice::USB_ProcessOne(USBPacket* p)
 	}
 	else {
 		// data pipe
-		usb_device_handle_data(dev, p);
+		USB_DeviceHandleData(dev, p);
+	}
+}
+
+void USBDevice::USB_DoParameter(XboxDevice* s, USBPacket* p)
+{
+	int i, request, value, index;
+
+	for (i = 0; i < 8; i++) {
+		s->SetupBuffer[i] = p->Parameter >> (i * 8);
+	}
+
+	s->SetupState = SETUP_STATE_PARAM;
+	s->SetupLength = (s->SetupBuffer[7] << 8) | s->SetupBuffer[6];
+	s->SetupIndex = 0;
+
+	request = (s->SetupBuffer[0] << 8) | s->SetupBuffer[1];
+	value = (s->SetupBuffer[3] << 8) | s->SetupBuffer[2];
+	index = (s->SetupBuffer[5] << 8) | s->SetupBuffer[4];
+
+	if (s->SetupLength > sizeof(s->data_buf)) {
+		DbgPrintf("Usb: ctrl buffer too small (%d > %zu)\n", s->SetupLength, sizeof(s->data_buf));
+		p->Status = USB_RET_STALL;
+		return;
+	}
+
+	if (p->Pid == USB_TOKEN_OUT) {
+		USB_PacketCopy(p, s->data_buf, s->SetupLength);
+	}
+
+	USB_DeviceHandleControl(s, p, request, value, index, s->SetupLength, s->data_buf);
+	if (p->Status == USB_RET_ASYNC) {
+		return;
+	}
+
+	if (p->ActualLength < s->SetupLength) {
+		s->SetupLength = p->ActualLength;
+	}
+	if (p->Pid == USB_TOKEN_IN) {
+		p->ActualLength = 0;
+		USB_PacketCopy(p, s->data_buf, s->SetupLength);
+	}
+}
+
+void USBDevice::USB_DoTokenSetup(XboxDevice* s, USBPacket* p)
+{
+	int request, value, index;
+
+	// From the standard "Every Setup packet has eight bytes."
+	if (p->IoVec.Size != 8) {
+		p->Status = USB_RET_STALL;
+		return;
+	}
+
+	// Info: name, offset, size, info (sizes are in bytes)
+	// bmRequestType, 1, 1, determines the direction of the request, type of request and designated recipient
+	// bRequest, 1, 1, determines the request being made
+	// wValue, 2, 2, it is used to pass a parameter to the device, specific to the request
+	// wIndex, 4, 2, often used in requests to specify an endpoint or an interface
+	// wLength, 6, 2, number of bytes to transfer if there is a data phase
+	// The wValue and wIndex fields allow parameters to be passed with the request
+
+	USB_PacketCopy(p, s->SetupBuffer, p->IoVec.Size);
+	p->ActualLength = 0;
+	s->SetupLength = (s->SetupBuffer[7] << 8) | s->SetupBuffer[6];
+	s->SetupIndex = 0;
+
+	request = (s->SetupBuffer[0] << 8) | s->SetupBuffer[1];
+	value = (s->SetupBuffer[3] << 8) | s->SetupBuffer[2];
+	index = (s->SetupBuffer[5] << 8) | s->SetupBuffer[4];
+
+	if (s->SetupBuffer[0] & USB_DIR_IN) {
+		USB_DeviceHandleControl(s, p, request, value, index, s->SetupLength, s->data_buf);
+		if (p->Status == USB_RET_ASYNC) {
+			s->SetupState = SETUP_STATE_SETUP;
+		}
+		if (p->Status != USB_RET_SUCCESS) {
+			return;
+		}
+
+		if (p->ActualLength < s->SetupLength) {
+			s->SetupLength = p->ActualLength;
+		}
+		s->SetupState = SETUP_STATE_DATA;
+	}
+	else {
+		if (s->SetupLength > sizeof(s->data_buf)) {
+			DbgPrintf("Usb: ctrl buffer too small (%d > %zu)\n", s->SetupLength, sizeof(s->data_buf));
+			p->Status = USB_RET_STALL;
+			return;
+		}
+		if (s->SetupLength == 0) {
+			s->SetupState = SETUP_STATE_ACK;
+		}
+		else {
+			s->SetupState = SETUP_STATE_DATA;
+		}
+	}
+
+	p->ActualLength = 8;
+}
+
+void USBDevice::DoTokenIn(XboxDevice* s, USBPacket* p)
+{
+	int request, value, index;
+
+	assert(p->ep->nr == 0);
+
+	request = (s->SetupBuffer[0] << 8) | s->SetupBuffer[1];
+	value = (s->SetupBuffer[3] << 8) | s->SetupBuffer[2];
+	index = (s->SetupBuffer[5] << 8) | s->SetupBuffer[4];
+
+	switch (s->SetupState) {
+		case SETUP_STATE_ACK:
+			if (!(s->SetupBuffer[0] & USB_DIR_IN)) {
+				USB_DeviceHandleControl(s, p, request, value, index, s->SetupLength, s->data_buf);
+				if (p->Status == USB_RET_ASYNC) {
+					return;
+				}
+				s->SetupState = SETUP_STATE_IDLE;
+				p->ActualLength = 0;
+			}
+			break;
+
+		case SETUP_STATE_DATA:
+			if (s->SetupBuffer[0] & USB_DIR_IN) {
+				int len = s->SetupLength - s->SetupIndex;
+				if (len > p->IoVec.Size) {
+					len = p->IoVec.Size;
+				}
+				USB_PacketCopy(p, s->data_buf + s->SetupIndex, len);
+				s->SetupIndex += len;
+				if (s->SetupIndex >= s->SetupLength) {
+					s->SetupState = SETUP_STATE_ACK;
+				}
+				return;
+			}
+			s->SetupState = SETUP_STATE_IDLE;
+			p->Status = USB_RET_STALL;
+			break;
+
+		default:
+			p->Status = USB_RET_STALL;
+	}
+}
+
+void USBDevice::DoTokenOut(XboxDevice* s, USBPacket* p)
+{
+	assert(p->ep->nr == 0);
+
+	switch (s->SetupState) {
+		case SETUP_STATE_ACK:
+			if (s->SetupBuffer[0] & USB_DIR_IN) {
+				s->SetupState = SETUP_STATE_IDLE;
+				/* transfer OK */
+			}
+			else {
+				/* ignore additional output */
+			}
+			break;
+
+		case SETUP_STATE_DATA:
+			if (!(s->SetupBuffer[0] & USB_DIR_IN)) {
+				int len = s->SetupLength - s->SetupIndex;
+				if (len > p->IoVec.Size) {
+					len = p->IoVec.Size;
+				}
+				USB_PacketCopy(p, s->data_buf + s->SetupIndex, len);
+				s->SetupIndex += len;
+				if (s->SetupIndex >= s->SetupLength) {
+					s->SetupState = SETUP_STATE_ACK;
+				}
+				return;
+			}
+			s->SetupState = SETUP_STATE_IDLE;
+			p->Status = USB_RET_STALL;
+			break;
+
+		default:
+			p->Status = USB_RET_STALL;
+	}
+}
+
+void USBDevice::USB_PacketCopy(USBPacket* p, void* ptr, size_t bytes)
+{
+	IOVector* iov = p->Combined ? &p->Combined->IoVec : &p->IoVec;
+
+	assert(p->ActualLength >= 0);
+	assert(p->ActualLength + bytes <= iov->Size);
+	switch (p->Pid) {
+		case USB_TOKEN_SETUP:
+		case USB_TOKEN_OUT:
+			IoVecTobuffer(iov->IoVecStruct, iov->IoVecNumber, p->ActualLength, ptr, bytes);
+			break;
+		case USB_TOKEN_IN:
+			IoVecFromBuffer(iov->IoVecStruct, iov->IoVecNumber, p->ActualLength, ptr, bytes);
+			break;
+		default:
+			CxbxKrnlCleanup("Usb: %s has an invalid pid: %x\n", __func__, p->Pid);
+	}
+	p->ActualLength += bytes;
+}
+
+void USBDevice::USB_DeviceHandleControl(XboxDevice* dev, USBPacket* p, int request, int value, int index, int length, uint8_t* data)
+{
+	USBDeviceClass *klass = USB_DEVICE_GET_CLASS(dev);
+	if (klass->handle_control) {
+		klass->handle_control(dev, p, request, value, index, length, data); // TODO: usb_hub_handle_control
+	}
+}
+
+void USBDevice::USB_DeviceHandleData(XboxDevice* dev, USBPacket* p)
+{
+	USBDeviceClass *klass = USB_DEVICE_GET_CLASS(dev);
+	if (klass->handle_data) {
+		klass->handle_data(dev, p); // TODO: usb_hub_handle_data
+	}
+}
+
+void USBDevice::USB_DeviceFlushEPqueue(XboxDevice* dev, USBEndpoint* ep)
+{
+	USBDeviceClass *klass = USB_DEVICE_GET_CLASS(dev);
+	if (klass->flush_ep_queue) {
+		klass->flush_ep_queue(dev, ep); // TODO: it's nullptr in XQEMU...
+	}
+}
+
+void USBDevice::USB_DeviceCancelPacket(XboxDevice* dev, USBPacket* p)
+{
+	USBDeviceClass *klass = USB_DEVICE_GET_CLASS(dev);
+	if (klass->cancel_packet) {
+		klass->cancel_packet(dev, p); // TODO: it's nullptr in XQEMU...
+	}
+}
+
+void USBDevice::USB_CancelPacket(USBPacket* p)
+{
+	bool callback = (p->State == USB_PACKET_ASYNC);
+	assert(USB_IsPacketInflight(p));
+	p->State = USB_PACKET_CANCELED;
+	QTAILQ_REMOVE(&p->Endpoint->Queue, p, Queue);
+	if (callback) {
+		USB_DeviceCancelPacket(p->Endpoint->Dev, p);
 	}
 }
