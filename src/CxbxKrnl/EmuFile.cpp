@@ -536,7 +536,7 @@ XboxDevice *CxbxDeviceByDevicePath(const std::string XboxDevicePath)
 int CxbxRegisterDeviceHostPath(std::string XboxDevicePath, std::string HostDevicePath, bool IsFile)
 {
 	int result = -1;
-	NTSTATUS status;
+	NTSTATUS status = (NTSTATUS)-1;
 
 	XboxDevice newDevice;
 	newDevice.XboxDevicePath = XboxDevicePath;

@@ -1012,7 +1012,7 @@ XBSYSAPI EXPORTNUM(206) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueueApcThread
 		else
 		{
 			g_DuplicateHandles[ThreadHandle] = hApcThread;	// Save this thread because we'll need to de-reference it later
-			DbgPrintf( "DuplicateHandle returned 0x%X (ThreadId)\n", hApcThread, GetThreadId( hApcThread ) );
+			DbgPrintf( "DuplicateHandle returned 0x%X (ThreadId 0x%.4X)\n", hApcThread, GetThreadId( hApcThread ) );
 		}
 
 

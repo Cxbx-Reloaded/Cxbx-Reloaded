@@ -874,9 +874,9 @@ static void VshWriteShader(VSH_XBOX_SHADER *pShader,
             VshWriteOutputMask(pIntermediate->Output.Mask, pDisassembly, &DisassemblyPos);
         }
         // Print the parameters
-        for (int i = 0; i < 3; i++)
+        for (int p = 0; p < 3; p++)
         {
-            VSH_IMD_PARAMETER *pParameter = &pIntermediate->Parameters[i];
+            VSH_IMD_PARAMETER *pParameter = &pIntermediate->Parameters[p];
             if(pParameter->Active)
             {
                 VshWriteParameter(pParameter, pDisassembly, &DisassemblyPos);
@@ -2430,7 +2430,7 @@ extern HRESULT XTL::EmuRecompileVshFunction
     if(!pShader)
     {
         EmuWarning("Couldn't allocate memory for vertex shader conversion buffer");
-        hRet = E_OUTOFMEMORY;
+        return E_OUTOFMEMORY;
     }
     pShader->ShaderHeader = *pShaderHeader;
     switch(pShaderHeader->Version)
