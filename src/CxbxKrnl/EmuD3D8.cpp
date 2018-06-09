@@ -2317,7 +2317,7 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
 
 // check if a resource has been registered yet (if not, register it)
 void CreateHostResource(XTL::X_D3DResource *pResource, DWORD D3DUsage, int iTextureStage, DWORD dwSize); // Forward declartion to prevent restructure of code
-_declspec(noinline) static resource_info_t* EmuVerifyResourceIsRegistered(XTL::X_D3DResource *pResource, DWORD D3DUsage = 0, int iTextureStage = 0, DWORD dwSize = 0)
+static resource_info_t* EmuVerifyResourceIsRegistered(XTL::X_D3DResource *pResource, DWORD D3DUsage = 0, int iTextureStage = 0, DWORD dwSize = 0)
 {
 	// Skip resources without data
 	if (pResource->Data == NULL) {
