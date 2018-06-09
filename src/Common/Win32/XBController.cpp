@@ -482,6 +482,7 @@ void XBController::ListenPoll(XTL::X_XINPUT_STATE *Controller)
         return;
 
     XTL::LPDIRECTINPUTDEVICE8 pDevice=NULL;
+    XTL::LPDIRECTINPUTDEVICE8 pPrevDevice=(XTL::LPDIRECTINPUTDEVICE8)-1;
 
     HRESULT hRet=0;
     DWORD dwFlags=0;
@@ -493,6 +494,10 @@ void XBController::ListenPoll(XTL::X_XINPUT_STATE *Controller)
     Controller->Gamepad.sThumbLY = 0;
     Controller->Gamepad.sThumbRX = 0;
     Controller->Gamepad.sThumbRY = 0;
+
+    XTL::DIJOYSTATE JoyState = { 0 };
+	BYTE KeyboardState[256] = { 0 };
+	XTL::DIMOUSESTATE2 MouseState = { 0 };
 
     // ******************************************************************
     // * Poll all devices
@@ -507,16 +512,36 @@ void XBController::ListenPoll(XTL::X_XINPUT_STATE *Controller)
             continue;
 
         pDevice = m_InputDevice[dwDevice].m_Device;
+		if (pDevice == nullptr)
+			continue;
 
-        hRet = pDevice->Poll();
+		// Only poll on device-switch
+		if (pPrevDevice != pDevice) {
+			pPrevDevice = pDevice;
+			hRet = pDevice->Poll();
+			if (FAILED(hRet)) {
+				hRet = pDevice->Acquire();
+				while (hRet == DIERR_INPUTLOST)
+					hRet = pDevice->Acquire();
+			}
 
-        if(FAILED(hRet))
-        {
-            hRet = pDevice->Acquire();
+			if (dwFlags & DEVICE_FLAG_JOYSTICK) {
+				JoyState = { 0 };
+				if (pDevice->GetDeviceState(sizeof(JoyState), &JoyState) != DI_OK)
+					continue;
+			}
+			else if (dwFlags & DEVICE_FLAG_KEYBOARD) {
+				memset(KeyboardState, 0, sizeof(KeyboardState));
+				if (pDevice->GetDeviceState(sizeof(KeyboardState), &KeyboardState) != DI_OK)
+					continue;
+			}
+			else if (dwFlags & DEVICE_FLAG_MOUSE) {
+				MouseState = { 0 };
 
-            while(hRet == DIERR_INPUTLOST)
-                hRet = pDevice->Acquire();
-        }
+				if (pDevice->GetDeviceState(sizeof(MouseState), &MouseState) != DI_OK)
+					continue;
+			}
+		}
 
         SHORT wValue = 0;
 
@@ -525,11 +550,6 @@ void XBController::ListenPoll(XTL::X_XINPUT_STATE *Controller)
         // ******************************************************************
         if(dwFlags & DEVICE_FLAG_JOYSTICK)
         {
-            XTL::DIJOYSTATE JoyState = {0};
-
-            if(pDevice->GetDeviceState(sizeof(JoyState), &JoyState) != DI_OK)
-                continue;
-
             if(dwFlags & DEVICE_FLAG_AXIS)
             {
                 LONG *pdwAxis = (LONG*)((uint32)&JoyState + dwInfo);
@@ -563,11 +583,6 @@ void XBController::ListenPoll(XTL::X_XINPUT_STATE *Controller)
         // ******************************************************************
         else if(dwFlags & DEVICE_FLAG_KEYBOARD)
         {
-            BYTE KeyboardState[256] = {0};
-
-            if(pDevice->GetDeviceState(sizeof(KeyboardState), &KeyboardState) != DI_OK)
-                continue;
-
             BYTE bKey = KeyboardState[dwInfo];
 
             if(bKey & 0x80)
@@ -580,11 +595,6 @@ void XBController::ListenPoll(XTL::X_XINPUT_STATE *Controller)
         // ******************************************************************
         else if(dwFlags & DEVICE_FLAG_MOUSE)
         {
-            XTL::DIMOUSESTATE2 MouseState = {0};
-
-            if(pDevice->GetDeviceState(sizeof(MouseState), &MouseState) != DI_OK)
-                continue;
-
             if(dwFlags & DEVICE_FLAG_MOUSE_CLICK)
             {
                 if(MouseState.rgbButtons[dwInfo] & 0x80)
