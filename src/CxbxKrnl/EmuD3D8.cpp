@@ -110,7 +110,8 @@ static XTL::D3DSWAPCALLBACK			g_pSwapCallback = NULL;	// Swap/Present callback r
 static XTL::D3DCALLBACK				g_pCallback		= NULL;	// D3DDevice::InsertCallback routine
 static XTL::X_D3DCALLBACKTYPE		g_CallbackType;			// Callback type
 static DWORD						g_CallbackParam;		// Callback param
-static BOOL                         g_bHasDepthStencil = FALSE;  // Does device have a Depth/Stencil Buffer?
+static bool                         g_bHasDepth = false;    // Does device have a Depth Buffer?
+static bool                         g_bHasStencil = false;  // Does device have a Stencil Buffer?
 static DWORD						g_dwPrimPerFrame = 0;	// Number of primitives within one frame
 
 // primary push buffer
@@ -1841,6 +1842,41 @@ static DWORD WINAPI EmuUpdateTickCount(LPVOID)
     }
 }
 
+void UpdateDepthStencilFlags(XTL::IDirect3DSurface *pDepthStencilSurface)
+{
+	g_bHasDepth = false;
+	g_bHasStencil = false;
+	if (pDepthStencilSurface != nullptr) {
+		using namespace XTL; // Shouldn't be nescessary
+
+		D3DSURFACE_DESC Desc;
+		pDepthStencilSurface->GetDesc(&Desc);
+
+		switch (Desc.Format) {
+		case D3DFMT_D16:
+			g_bHasDepth = true;
+			break;
+		case D3DFMT_D15S1:
+			g_bHasDepth = true;
+			g_bHasStencil = true;
+			break;
+		case D3DFMT_D24X8:
+			g_bHasDepth = true;
+			break;
+		case D3DFMT_D24S8:
+			g_bHasDepth = true;
+			g_bHasStencil = true;
+			break;
+		case D3DFMT_D24X4S4:
+			g_bHasDepth = true;
+			g_bHasStencil = true;
+			break;
+		case D3DFMT_D32:
+			g_bHasDepth = true;
+			break;
+		}
+	}
+}
 // thread dedicated to create devices
 static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
 {
@@ -2208,11 +2244,8 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
 
 				// update z-stencil surface cache
 				XTL::IDirect3DSurface *pCurrentHostDepthStencil = nullptr;
-				hRet = g_pD3DDevice->GetDepthStencilSurface(&pCurrentHostDepthStencil);
-				DEBUG_D3DRESULT(hRet, "g_pD3DDevice->GetDepthStencilSurface");
-
-				g_bHasDepthStencil = SUCCEEDED(hRet) && (pCurrentHostDepthStencil != nullptr);
-
+				g_pD3DDevice->GetDepthStencilSurface(&pCurrentHostDepthStencil);
+				UpdateDepthStencilFlags(pCurrentHostDepthStencil);
 				if (pCurrentHostDepthStencil) {
 					pCurrentHostDepthStencil->Release();
 				}
@@ -2246,9 +2279,9 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
                 hRet = g_pD3DDevice->Clear(
 					/*Count=*/0, 
 					/*pRects=*/nullptr, 
-					D3DCLEAR_TARGET | (g_bHasDepthStencil ? D3DCLEAR_ZBUFFER|D3DCLEAR_STENCIL : 0),
+					D3DCLEAR_TARGET | (g_bHasDepth ? D3DCLEAR_ZBUFFER : 0) | (g_bHasStencil ? D3DCLEAR_STENCIL : 0),
 					/*Color=*/0xFF000000, // TODO : Use constant for this
-					/*Z=*/g_bHasDepthStencil ? 1.0f : 0.0f,
+					/*Z=*/g_bHasDepth ? 1.0f : 0.0f,
 					/*Stencil=*/0);
 				DEBUG_D3DRESULT(hRet, "g_pD3DDevice->Clear");
 
@@ -3282,7 +3315,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetViewport)
 
 	if (g_pXboxRenderTarget) {
 		// Get current Xbox render target dimensions
-
 		DWORD XboxRenderTarget_Width = GetPixelContainerWidth(g_pXboxRenderTarget);
 		DWORD XboxRenderTarget_Height = GetPixelContainerHeigth(g_pXboxRenderTarget);
 
@@ -4434,22 +4466,22 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_Clear)
 		LOG_FUNC_ARG(Stencil)
 		LOG_FUNC_END;
 
+	DWORD HostFlags = 0;
+
     // make adjustments to parameters to make sense with windows d3d
     {
-        DWORD newFlags = 0;
-
 		if (Flags & X_D3DCLEAR_TARGET) {
 			// TODO: D3DCLEAR_TARGET_A, *R, *G, *B don't exist on windows
 			if ((Flags & X_D3DCLEAR_TARGET) != X_D3DCLEAR_TARGET)
 				EmuWarning("Unsupported : Partial D3DCLEAR_TARGET flag(s) for D3DDevice_Clear : 0x%.08X", Flags & X_D3DCLEAR_TARGET);
 		
-			newFlags |= D3DCLEAR_TARGET;
+			HostFlags |= D3DCLEAR_TARGET;
 		}
 
         // Do not needlessly clear Z Buffer
 		if (Flags & X_D3DCLEAR_ZBUFFER) {
-			if (g_bHasDepthStencil)
-				newFlags |= D3DCLEAR_ZBUFFER;
+			if (g_bHasDepth)
+				HostFlags |= D3DCLEAR_ZBUFFER;
 			else
 				EmuWarning("Unsupported : D3DCLEAR_ZBUFFER flag for D3DDevice_Clear without ZBuffer");
 		}
@@ -4459,16 +4491,14 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_Clear)
 		// Avoids following DirectX Debug Runtime error report
 		//    [424] Direct3D8: (ERROR) :Invalid flag D3DCLEAR_ZBUFFER: no zbuffer is associated with device. Clear failed. 
 		if (Flags & X_D3DCLEAR_STENCIL) {
-			if (g_bHasDepthStencil) // TODO : Introduce/use g_bHasStencil
-				newFlags |= D3DCLEAR_STENCIL;
+			if (g_bHasStencil)
+				HostFlags |= D3DCLEAR_STENCIL;
 			else
 				EmuWarning("Unsupported : D3DCLEAR_STENCIL flag for D3DDevice_Clear without ZBuffer");
 		}
 
         if(Flags & ~(X_D3DCLEAR_TARGET | X_D3DCLEAR_ZBUFFER | X_D3DCLEAR_STENCIL))
             EmuWarning("Unsupported Flag(s) for D3DDevice_Clear : 0x%.08X", Flags & ~(X_D3DCLEAR_TARGET | X_D3DCLEAR_ZBUFFER | X_D3DCLEAR_STENCIL));
-
-        Flags = newFlags;
     }
 
 	DWORD dwFillMode;
@@ -4485,7 +4515,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_Clear)
     hRet = g_pD3DDevice->SetRenderState(D3DRS_FILLMODE, dwFillMode);
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetRenderState");
 
-    hRet = g_pD3DDevice->Clear(Count, pRects, Flags, Color, Z, Stencil);
+    hRet = g_pD3DDevice->Clear(Count, pRects, HostFlags, Color, Z, Stencil);
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->Clear");
 }
 
@@ -5525,13 +5555,17 @@ ULONG WINAPI XTL::EMUPATCH(D3DResource_Release)
 	// Was the Xbox resource freed?
 	if (uRet == 0) {
 
-		// If this was a cached renter target or depth surface, clear the cache variable too!
+		// If this was a cached render target or depth surface, clear the cache variable too!
 		if (pThis == g_pXboxRenderTarget) {
 			g_pXboxRenderTarget = nullptr;
 		}
 
 		if (pThis == g_pXboxDepthStencil) {
 			g_pXboxDepthStencil = nullptr;
+		}
+
+		if (pThis == g_XboxBackBufferSurface) {
+			g_XboxBackBufferSurface = nullptr;
 		}
 
 		// Also release the host copy (if it exists!)
@@ -8027,25 +8061,31 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderTarget)
 
 	// In Xbox titles, CreateDevice calls SetRenderTarget for the back buffer
 	// We can use this to determine the Xbox backbuffer surface for later use!
-	if (g_XboxBackBufferSurface == NULL) {
+	if (g_XboxBackBufferSurface == xbnullptr) {
 		g_XboxBackBufferSurface = pRenderTarget;
-	}
-
-	// If we got a null, set the Xbox Render Target to the Xbox Backbuffer
-	if (pRenderTarget == NULL) {
-		pRenderTarget = g_XboxBackBufferSurface;
+		// TODO : Some titles might render to another backbuffer later on,
+		// if that happens, we might need to skip the first one or two calls?
 	}
 
 	// The current render target is only replaced if it's passed in here non-null
-    if (pRenderTarget != NULL) {
+	if (pRenderTarget != xbnullptr) {
 		g_pXboxRenderTarget = pRenderTarget;
-		pHostRenderTarget = GetHostSurface(g_pXboxRenderTarget, D3DUSAGE_RENDERTARGET);
+	}
+	else {
+		// If non is given, use the current Xbox render target
+		pRenderTarget = g_pXboxRenderTarget;
+		// If there's no Xbox render target yet, fallback to the Xbox back buffer
+		if (pRenderTarget == xbnullptr) {
+			LOG_TEST_CASE("SetRenderTarget fallback to backbuffer");
+			pRenderTarget = g_XboxBackBufferSurface;
+		}
     }
+
+	pHostRenderTarget = GetHostSurface(pRenderTarget, D3DUSAGE_RENDERTARGET);
 
 	// The currenct depth stencil is always replaced by whats passed in here (even a null)
 	g_pXboxDepthStencil = pNewZStencil;
     pHostDepthStencil = GetHostSurface(g_pXboxDepthStencil, D3DUSAGE_DEPTHSTENCIL);
-	g_bHasDepthStencil = pHostDepthStencil != nullptr;
 
 	HRESULT hRet;
 #ifdef CXBX_USE_D3D9
@@ -8065,6 +8105,11 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderTarget)
 	hRet = g_pD3DDevice->SetRenderTarget(pHostRenderTarget, pHostDepthStencil);
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetRenderTarget");
 #endif
+
+	if (SUCCEEDED(hRet)) {
+		// Once we're sure the host depth-stencil is activated...
+		UpdateDepthStencilFlags(pHostDepthStencil);
+	}
 }
 
 // LTCG specific D3DDevice_SetPalette function...
