@@ -3564,6 +3564,12 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateVertexShader)
 		LOG_FUNC_ARG_TYPE(X_D3DUSAGE, Usage)
 		LOG_FUNC_END;
 
+	if (g_pD3DDevice == nullptr) {
+		LOG_TEST_CASE("D3DDevice_CreateVertexShader called before Direct3D_CreateDevice");
+		// We lie to allow the game to continue for now, but it probably won't work well
+		return STATUS_SUCCESS;
+	}
+
 	// Allocates an Xbox VertexShader struct
 	// Sets reference count to 1
 	// Puts Usage in VertexShader->Flags
