@@ -1,4 +1,4 @@
-// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
 // PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 // ******************************************************************
 // *
@@ -85,6 +85,7 @@ static DWORD WINAPI                 EmuRenderWindow(LPVOID);
 static DWORD WINAPI                 EmuCreateDeviceProxy(LPVOID);
 static LRESULT WINAPI               EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 static DWORD WINAPI                 EmuUpdateTickCount(LPVOID);
+static inline void                  EmuVerifyResourceIsRegistered(XTL::X_D3DResource *pResource, DWORD D3DUsage, int iTextureStage, DWORD dwSize);
 static void							UpdateCurrentMSpFAndFPS(); // Used for benchmarking/fps count
 
 // Static Variable(s)
@@ -743,9 +744,7 @@ typedef struct {
     std::chrono::time_point<std::chrono::high_resolution_clock> lastUpdate;
 } resource_info_t;
 
-typedef std::unordered_map<resource_key_t, resource_info_t> xbox_resource_map_t;
-xbox_resource_map_t g_XboxDirect3DResources;
-static inline resource_info_t*  EmuVerifyResourceIsRegistered(XTL::X_D3DResource *pResource, DWORD D3DUsage, int iTextureStage, DWORD dwSize);
+std::unordered_map <resource_key_t, resource_info_t> g_XboxDirect3DResources;
 
 bool IsResourceAPixelContainer(XTL::X_D3DResource* pXboxResource)
 {
@@ -782,25 +781,23 @@ resource_key_t GetHostResourceKey(XTL::X_D3DResource* pXboxResource)
 	return key;
 }
 
-xbox_resource_map_t::iterator GetHostResourceIterator(XTL::X_D3DResource* pXboxResource)
-{
-	return g_XboxDirect3DResources.find(GetHostResourceKey(pXboxResource));
-}
-
-void FreeHostResource(xbox_resource_map_t::iterator it)
+void FreeHostResource(resource_key_t key)
 {
 	// Release the host resource and remove it from the list
-	if (it != g_XboxDirect3DResources.end()) {
-		if (it->second.pHostResource) {
-			(it->second.pHostResource)->Release();
+	auto hostResourceIterator = g_XboxDirect3DResources.find(key);
+	if (hostResourceIterator != g_XboxDirect3DResources.end()) {
+		if (hostResourceIterator->second.pHostResource) {
+			(hostResourceIterator->second.pHostResource)->Release();
 		}
 
-		g_XboxDirect3DResources.erase(it);
+		g_XboxDirect3DResources.erase(hostResourceIterator);
 	}
 }
 
-void ForceResourceRehash(xbox_resource_map_t::iterator it)
+void ForceResourceRehash(XTL::X_D3DResource* pXboxResource)
 {
+	auto key = GetHostResourceKey(pXboxResource);
+	auto it = g_XboxDirect3DResources.find(key);
 	if (it != g_XboxDirect3DResources.end() && it->second.pHostResource) {
 		it->second.forceRehash = true;
 	}
@@ -811,23 +808,19 @@ XTL::IDirect3DResource *GetHostResource(XTL::X_D3DResource *pXboxResource, DWORD
 	if (pXboxResource == NULL || pXboxResource->Data == NULL)
 		return nullptr;
 
-	auto info = EmuVerifyResourceIsRegistered(pXboxResource, D3DUsage, iTextureStage, /*dwSize=*/0);
+	EmuVerifyResourceIsRegistered(pXboxResource, D3DUsage, iTextureStage, /*dwSize=*/0);
 
-	if (pXboxResource->Lock == X_D3DRESOURCE_LOCK_PALETTE) {
+	if (pXboxResource->Lock == X_D3DRESOURCE_LOCK_PALETTE)
+		return nullptr;
+
+	auto key = GetHostResourceKey(pXboxResource);
+	auto it = g_XboxDirect3DResources.find(key);
+	if (it == g_XboxDirect3DResources.end() || !it->second.pHostResource) {
+		EmuWarning("GetHostResource: Resource not registered or does not have a host counterpart!");
 		return nullptr;
 	}
 
-	if (info == nullptr) {
-		EmuWarning("GetHostResource: Resource not registered");
-		return nullptr;
-	}
-
-	if (!info->pHostResource) {
-		EmuWarning("GetHostResource: Resource does not have a host counterpart!");
-		return nullptr;
-	}
-
-	return info->pHostResource;
+	return it->second.pHostResource;
 }
 
 // Forward declaration of CxbxGetPixelContainerMeasures to prevent
@@ -869,8 +862,9 @@ size_t GetXboxResourceSize(XTL::X_D3DResource* pXboxResource)
 	
 }
 
-bool HostResourceRequiresUpdate(xbox_resource_map_t::iterator it, DWORD dwSize)
+bool HostResourceRequiresUpdate(resource_key_t key, DWORD dwSize)
 {
+	auto it = g_XboxDirect3DResources.find(key);
 	if (it == g_XboxDirect3DResources.end() || !it->second.pXboxResource) {
 		return false;
 	}
@@ -2317,46 +2311,40 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
 
 // check if a resource has been registered yet (if not, register it)
 void CreateHostResource(XTL::X_D3DResource *pResource, DWORD D3DUsage, int iTextureStage, DWORD dwSize); // Forward declartion to prevent restructure of code
-static resource_info_t* EmuVerifyResourceIsRegistered(XTL::X_D3DResource *pResource, DWORD D3DUsage = 0, int iTextureStage = 0, DWORD dwSize = 0)
+static void EmuVerifyResourceIsRegistered(XTL::X_D3DResource *pResource, DWORD D3DUsage = 0, int iTextureStage = 0, DWORD dwSize = 0)
 {
 	// Skip resources without data
-	if (pResource->Data == NULL) {
-		return nullptr;
-	}
+	if (pResource->Data == NULL)
+		return;
 
-	auto it = GetHostResourceIterator(pResource);
+	auto key = GetHostResourceKey(pResource);
+	auto it = g_XboxDirect3DResources.find(key);
 	if (it != g_XboxDirect3DResources.end()) {
 		// Don't trash RenderTargets
 		// this fixes an issue where CubeMaps were broken because the surface Set in GetCubeMapSurface
 		// would be overwritten by the surface created in SetRenderTarget
 		if (D3DUsage == D3DUSAGE_RENDERTARGET) {
-			return &it->second;
+			return;
 		}
 
         //check if the same key existed in the HostResource map already. if there is a old pXboxResource in the map with the same key but different resource address, it must be freed first.
         
         if (it->second.pXboxResource != pResource) {
             //printf("EmuVerifyResourceIsRegistered passed in XboxResource collipse HostResource map!! key : %llX , map pXboxResource : %08X , passed in pResource : %08X \n", key, it->second.pXboxResource, pResource);
-            FreeHostResource(it);
+            FreeHostResource(key);
         }
         else
-        if (!HostResourceRequiresUpdate(it, dwSize)) {
-			return &it->second;
+        if (!HostResourceRequiresUpdate(key, dwSize)) {
+			return;
 		}
 
-		FreeHostResource(it);
-		CreateHostResource(pResource, D3DUsage, iTextureStage, dwSize);
-		return &it->second;
+		FreeHostResource(key);
+	} else {
+		resource_info_t newResource;
+		g_XboxDirect3DResources[key] = newResource;
 	}
 
 	CreateHostResource(pResource, D3DUsage, iTextureStage, dwSize);
-	it = GetHostResourceIterator(pResource);
-
-	if (it != g_XboxDirect3DResources.end()) {
-		return &it->second;
-	}
-
-	return nullptr;
 }
 
 typedef struct {
@@ -5559,7 +5547,7 @@ ULONG WINAPI XTL::EMUPATCH(D3DResource_Release)
 		LOG_FUNC_ONE_ARG(pThis);
 
 	// Backup the key now, as the Xbox resource may be wiped out by the following release call!
-	auto it = GetHostResourceIterator(pThis);
+	auto key = GetHostResourceKey(pThis);
 
 	// Call the Xbox version of D3DResource_Release and store the result
 	XB_trampoline(ULONG, WINAPI, D3DResource_Release, (X_D3DResource*));
@@ -5583,7 +5571,7 @@ ULONG WINAPI XTL::EMUPATCH(D3DResource_Release)
 		}
 
 		// Also release the host copy (if it exists!)
-		FreeHostResource(it);
+		FreeHostResource(key); 
 	}
 
     return uRet;
@@ -6837,7 +6825,7 @@ VOID WINAPI XTL::EMUPATCH(Lock2DSurface)
 	XB_Lock2DSurface(pPixelContainer, FaceType, Level, pLockedRect, pRect, Flags);
 
 	// Mark the resource as modified
-	ForceResourceRehash(GetHostResourceIterator(pPixelContainer));
+	ForceResourceRehash(pPixelContainer);
 }
 
 
@@ -6869,7 +6857,7 @@ VOID WINAPI XTL::EMUPATCH(Lock3DSurface)
 	XB_Lock3DSurface(pPixelContainer, Level, pLockedVolume, pBox, Flags);
 
 	// Mark the resource as modified
-	ForceResourceRehash(GetHostResourceIterator(pPixelContainer));
+	ForceResourceRehash(pPixelContainer);
 }
 
 
@@ -8190,7 +8178,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetPalette)
 	if (Stage < TEXTURE_STAGES) {
 		if (g_pCurrentPalette[Stage] != GetDataFromXboxResource(pPalette) && XTL::EmuD3DActiveTexture[Stage] != nullptr) {
 			// If the palette for a texture has changed, we need to re-convert the texture
-			FreeHostResource(GetHostResourceIterator(XTL::EmuD3DActiveTexture[Stage]));
+			FreeHostResource(GetHostResourceKey(XTL::EmuD3DActiveTexture[Stage]));
 		}
 
 		// Cache palette data and size
@@ -8223,7 +8211,7 @@ VOID WINAPI XTL::EMUPATCH(D3DPalette_Lock)
 	// Check if this palette is in use by a texture stage, and force it to be re-converted if yes
 	for (int i = 0; i < TEXTURE_STAGES; i++) {
 		if (EmuD3DActiveTexture[i] != nullptr && g_pCurrentPalette[i] == GetDataFromXboxResource(pThis)) {
-			FreeHostResource(GetHostResourceIterator(EmuD3DActiveTexture[i]));
+			FreeHostResource(GetHostResourceKey(EmuD3DActiveTexture[i]));
 		}
 	}
 }
@@ -8250,7 +8238,7 @@ XTL::D3DCOLOR * WINAPI XTL::EMUPATCH(D3DPalette_Lock2)
 	// Check if this palette is in use by a texture stage, and force it to be re-converted if yes
 	for (int i = 0; i < TEXTURE_STAGES; i++) {
 		if (EmuD3DActiveTexture[i] != nullptr && g_pCurrentPalette[i] == GetDataFromXboxResource(pThis)) {
-			FreeHostResource(GetHostResourceIterator(EmuD3DActiveTexture[i]));
+			FreeHostResource(GetHostResourceKey(EmuD3DActiveTexture[i]));
 		}
 	}
 
