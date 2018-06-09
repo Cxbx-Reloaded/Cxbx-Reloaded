@@ -223,6 +223,7 @@ class WndMain : public Wnd
 		int		m_UseAllCores;
 		int		m_SkipRdtscPatching;
 		int     m_ScaleViewport;
+		int		m_DirectHostBackBufferAccess;
 
         // ******************************************************************
         // * debug output filenames
