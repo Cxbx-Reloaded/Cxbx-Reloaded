@@ -482,9 +482,13 @@ BEGIN
         END
         POPUP "Hacks",                          65535,MFT_STRING,MFS_ENABLED
         BEGIN
+            POPUP "Speed Hacks",                    ID_HACKS_SPEEDHACKS,MFT_STRING,MFS_ENABLED
+            BEGIN
+                MENUITEM "Run Xbox threads on all cores", ID_HACKS_RUNXBOXTHREADSONALLCORES,MFT_STRING,MFS_ENABLED
+                MENUITEM "Render directly to Host Backbuffer", ID_HACKS_RENDERDIRECTLYTOHOSTBACKBUFFER,MFT_STRING,MFS_ENABLED
+                MENUITEM "Uncap Framerate",             ID_HACKS_UNCAPFRAMERATE,MFT_STRING,MFS_ENABLED
+            END
             MENUITEM "Disable Pixel Shaders",       ID_HACKS_DISABLEPIXELSHADERS,MFT_STRING,MFS_ENABLED
-            MENUITEM "Uncap Framerate",             ID_HACKS_UNCAPFRAMERATE,MFT_STRING,MFS_ENABLED
-            MENUITEM "Run Xbox threads on all cores", ID_HACKS_RUNXBOXTHREADSONALLCORES,MFT_STRING,MFS_ENABLED
             MENUITEM "Skip rdtsc patching",         ID_HACKS_SKIPRDTSCPATCHING,MFT_STRING,MFS_ENABLED
             MENUITEM "Scale Xbox viewport to host (and back)", ID_HACKS_SCALEVIEWPORT,MFT_STRING,MFS_ENABLED
         END

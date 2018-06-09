@@ -91,20 +91,8 @@ void ClearHLECache()
 
 void WndMain::InitializeSettings() {
 	HKEY hKey;
-	if (RegOpenKeyEx(HKEY_CURRENT_USER, "Software\\Cxbx-Reloaded", 0, KEY_SET_VALUE, &hKey) == ERROR_SUCCESS) {
-		for (int v = 0; v < m_dwRecentXbe; v++) {
-			char buffer[32];
-			sprintf(buffer, "RecentXbe%d", v);
-			RegDeleteValue(hKey, buffer);
-		}
-		RegDeleteValue(hKey, "CxbxDebug"); RegDeleteValue(hKey, "CxbxDebugFilename");
-		RegDeleteValue(hKey, "HackDisablePixelShaders"); RegDeleteValue(hKey, "HackUncapFrameRate");
-		RegDeleteValue(hKey, "HackUseAllCores");  RegDeleteValue(hKey, "KrnlDebug");
-		RegDeleteValue(hKey, "KrnlDebugFilename"); RegDeleteValue(hKey, "LLEFLAGS");
-		RegDeleteValue(hKey, "RecentXbe"); RegDeleteValue(hKey, "XInputEnabled");
-
-		RegDeleteTree(hKey, "XBVideo"); RegDeleteTree(hKey, "XBAudio"); RegDeleteTree(hKey, "XBController");
-
+	if (RegOpenKeyEx(HKEY_CURRENT_USER, "Software\\Cxbx-Reloaded", 0, KEY_ENUMERATE_SUB_KEYS | DELETE | KEY_QUERY_VALUE | KEY_SET_VALUE, &hKey) == ERROR_SUCCESS) {
+		RegDeleteTree(hKey, NULL);
 		RegCloseKey(hKey);
 
 		g_SaveOnExit = false;
@@ -236,6 +224,13 @@ WndMain::WndMain(HINSTANCE x_hInstance) :
 			if (result != ERROR_SUCCESS) {
 				m_ScaleViewport = 0;
 			}
+
+			dwType = REG_DWORD; dwSize = sizeof(DWORD);
+			result = RegQueryValueEx(hKey, "HackDirectBackBufferAccess", NULL, &dwType, (PBYTE)&m_DirectHostBackBufferAccess, &dwSize);
+			if (result != ERROR_SUCCESS) {
+				m_DirectHostBackBufferAccess = 0;
+			}
+
 
 			dwType = REG_DWORD; dwSize = sizeof(DWORD);
 			result = RegQueryValueEx(hKey, "CxbxDebug", NULL, &dwType, (PBYTE)&m_CxbxDebug, &dwSize);
@@ -401,6 +396,9 @@ WndMain::~WndMain()
 
 			dwType = REG_DWORD; dwSize = sizeof(DWORD);
 			RegSetValueEx(hKey, "HackScaleViewport", 0, dwType, (PBYTE)&m_ScaleViewport, dwSize);
+
+			dwType = REG_DWORD; dwSize = sizeof(DWORD);
+			RegSetValueEx(hKey, "HackDirectBackBufferAccess", 0, dwType, (PBYTE)&m_DirectHostBackBufferAccess, dwSize);
 
 			dwType = REG_DWORD; dwSize = sizeof(DWORD);
             RegSetValueEx(hKey, "CxbxDebug", 0, dwType, (PBYTE)&m_CxbxDebug, dwSize);
@@ -1379,6 +1377,11 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 				RefreshMenus();
 				break;
 
+			case ID_HACKS_RENDERDIRECTLYTOHOSTBACKBUFFER:
+				m_DirectHostBackBufferAccess = !m_DirectHostBackBufferAccess;
+				RefreshMenus();
+				break;
+
             case ID_HELP_ABOUT:
             {
 				ShowAboutDialog(hwnd);
@@ -1812,6 +1815,9 @@ void WndMain::RefreshMenus()
       
 			chk_flag = (m_ScaleViewport) ? MF_CHECKED : MF_UNCHECKED;
 			CheckMenuItem(settings_menu, ID_HACKS_SCALEVIEWPORT, chk_flag);
+
+			chk_flag = (m_DirectHostBackBufferAccess) ? MF_CHECKED : MF_UNCHECKED;
+			CheckMenuItem(settings_menu, ID_HACKS_RENDERDIRECTLYTOHOSTBACKBUFFER, chk_flag);
 		}
 
         // emulation menu
@@ -2187,6 +2193,7 @@ void WndMain::StartEmulation(HWND hwndParent, DebuggerState LocalDebuggerState /
 	g_EmuShared->SetUseAllCores(&m_UseAllCores);
 	g_EmuShared->SetSkipRdtscPatching(&m_SkipRdtscPatching);
 	g_EmuShared->SetScaleViewport(&m_ScaleViewport);
+	g_EmuShared->SetDirectHostBackBufferAccess(&m_DirectHostBackBufferAccess);
 
 	if (m_ScaleViewport) {
 		// Set the window size to emulation dimensions

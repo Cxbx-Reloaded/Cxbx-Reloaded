@@ -4601,24 +4601,26 @@ DWORD WINAPI XTL::EMUPATCH(D3DDevice_Swap)
 		// Previously we used D3DX_FILTER_POINT here, but that gave jagged edges in Dashboard.
 		// Dxbx note : D3DX_FILTER_LINEAR gives a smoother image, but 'bleeds' across borders
 
-		auto pXboxBackBufferHostSurface = GetHostSurface(g_XboxBackBufferSurface);
-		if (pXboxBackBufferHostSurface) {
-			// Blit Xbox BackBuffer to host BackBuffer
-			// TODO: This could be much faster if we used the XboxBackBufferSurface as a texture and blitted with a fullscreen quad
-			// This way, the scaling/format conversion would be handled by the GPU instead
-			// If we were using native D3D9, we could just use StretchRects instead, but D3D8 doesn't have that feature!
-			hRet = D3DXLoadSurfaceFromSurface(
-				/* pDestSurface = */ pCurrentHostBackBuffer,
-				/* pDestPalette = */ nullptr,
-				/* pDestRect = */ nullptr,
-				/* pSrcSurface = */ pXboxBackBufferHostSurface,
-				/* pSrcPalette = */ nullptr,
-				/* pSrcRect = */ nullptr,
-				/* Filter = */ LoadSurfaceFilter,
-				/* ColorKey = */ 0);
+		if (!g_DirectHostBackBufferAccess) {
+			auto pXboxBackBufferHostSurface = GetHostSurface(g_XboxBackBufferSurface);
+			if (pXboxBackBufferHostSurface) {
+				// Blit Xbox BackBuffer to host BackBuffer
+				// TODO: This could be much faster if we used the XboxBackBufferSurface as a texture and blitted with a fullscreen quad
+				// This way, the scaling/format conversion would be handled by the GPU instead
+				// If we were using native D3D9, we could just use StretchRects instead, but D3D8 doesn't have that feature!
+				hRet = D3DXLoadSurfaceFromSurface(
+					/* pDestSurface = */ pCurrentHostBackBuffer,
+					/* pDestPalette = */ nullptr,
+					/* pDestRect = */ nullptr,
+					/* pSrcSurface = */ pXboxBackBufferHostSurface,
+					/* pSrcPalette = */ nullptr,
+					/* pSrcRect = */ nullptr,
+					/* Filter = */ LoadSurfaceFilter,
+					/* ColorKey = */ 0);
 
-			if (hRet != D3D_OK) {
-				EmuWarning("Couldn't blit Xbox BackBuffer to host BackBuffer : %X", hRet);
+				if (hRet != D3D_OK) {
+					EmuWarning("Couldn't blit Xbox BackBuffer to host BackBuffer : %X", hRet);
+				}
 			}
 		}
 
@@ -8087,6 +8089,19 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderTarget)
 	g_pXboxDepthStencil = pNewZStencil;
     pHostDepthStencil = GetHostSurface(g_pXboxDepthStencil, D3DUSAGE_DEPTHSTENCIL);
 
+	if (g_DirectHostBackBufferAccess && pRenderTarget == g_XboxBackBufferSurface) {
+		HRESULT hRet = g_pD3DDevice->GetBackBuffer(
+			#ifdef CXBX_USE_D3D9
+						0, // iSwapChain
+			#endif
+			0, D3DBACKBUFFER_TYPE_MONO, &pHostRenderTarget);
+		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->GetBackBuffer");
+
+		if (FAILED(hRet)) {
+			CxbxKrnlCleanup("Could not get host backbuffer");
+		}
+	}
+
 	HRESULT hRet;
 #ifdef CXBX_USE_D3D9
 	// Mimick Direct3D 8 SetRenderTarget by only setting render target if non-null
@@ -8105,6 +8120,10 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderTarget)
 	hRet = g_pD3DDevice->SetRenderTarget(pHostRenderTarget, pHostDepthStencil);
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetRenderTarget");
 #endif
+
+	if (g_DirectHostBackBufferAccess && pRenderTarget == g_XboxBackBufferSurface) {
+		pHostRenderTarget->Release();
+	}
 
 	if (SUCCEEDED(hRet)) {
 		// Once we're sure the host depth-stencil is activated...

@@ -112,4 +112,5 @@ extern bool g_UncapFramerate;
 extern bool g_UseAllCores;
 extern bool g_SkipRdtscPatching;
 extern bool g_ScaleViewport;
+extern bool g_DirectHostBackBufferAccess;
 #endif

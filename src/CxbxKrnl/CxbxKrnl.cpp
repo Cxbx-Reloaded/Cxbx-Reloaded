@@ -607,6 +607,7 @@ void PrintCurrentConfigurationLog()
 		printf("Run Xbox threads on all cores: %s\n", g_UseAllCores == 1 ? "On" : "Off");
 		printf("Skip RDTSC Patching: %s\n", g_SkipRdtscPatching == 1 ? "On" : "Off");
 		printf("Scale Xbox to host viewport (and back): %s\n", g_ScaleViewport == 1 ? "On" : "Off");
+		printf("Render directly to Host BackBuffer: %s\n", g_DirectHostBackBufferAccess == 1 ? "On" : "Off");
 	}
 
 	printf("------------------------- END OF CONFIG LOG ------------------------\n");
@@ -1252,6 +1253,8 @@ __declspec(noreturn) void CxbxKrnlInit
 		g_SkipRdtscPatching = !!HackEnabled;
 		g_EmuShared->GetScaleViewport(&HackEnabled);
 		g_ScaleViewport = !!HackEnabled;
+		g_EmuShared->GetDirectHostBackBufferAccess(&HackEnabled);
+		g_DirectHostBackBufferAccess = !!HackEnabled;
 	}
 
 #ifdef _DEBUG_PRINT_CURRENT_CONF
