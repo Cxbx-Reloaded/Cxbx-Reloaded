@@ -2351,6 +2351,7 @@ void WndMain::DrawLedBitmap(HWND hwnd, bool bdefault)
 	else { // draw colored bitmap
 		int LedSequence[4] = { XBOX_LED_COLOUR_OFF, XBOX_LED_COLOUR_OFF, XBOX_LED_COLOUR_OFF, XBOX_LED_COLOUR_OFF };
 		static int LedSequenceOffset = 0;
+		int FlagsLLE = 0;
 
 		g_EmuShared->GetLedSequence(LedSequence);
 
@@ -2358,17 +2359,18 @@ void WndMain::DrawLedBitmap(HWND hwnd, bool bdefault)
 		ActiveLEDColor = LedSequence[LedSequenceOffset & 3];
 		++LedSequenceOffset;
 
+		g_EmuShared->GetFlagsLLE(&FlagsLLE);
 		// Set LLE flags string based on selected LLE flags
-		if (m_FlagsLLE & LLE_APU) {
+		if (FlagsLLE & LLE_APU) {
 			strcat(flagString, "A");
 		}
-		if (m_FlagsLLE & LLE_GPU) {
+		if (FlagsLLE & LLE_GPU) {
 			strcat(flagString, "G");
 		}
-		if (m_FlagsLLE & LLE_JIT) {
+		if (FlagsLLE & LLE_JIT) {
 			strcat(flagString, "J");
 		}
-		if (m_FlagsLLE == 0) {
+		if (FlagsLLE == 0) {
 			sprintf(flagString, "HLE");
 		}
 	}

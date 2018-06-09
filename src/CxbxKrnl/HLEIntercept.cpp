@@ -324,6 +324,28 @@ void EmuD3D_Init_DeferredStates()
     }
 }
 
+// Update shared structure with GUI process
+void EmuUpdateLLEStatus()
+{
+    int FlagsLLE;
+    g_EmuShared->GetFlagsLLE(&FlagsLLE);
+
+    if ((FlagsLLE & LLE_GPU) == false
+        && (g_SymbolAddresses.find("Direct3D_CreateDevice") == g_SymbolAddresses.end()
+            || g_SymbolAddresses["Direct3D_CreateDevice"] == 0)) {
+        bLLE_GPU = true;
+        FlagsLLE ^= LLE_GPU;
+    }
+
+    if ((FlagsLLE & LLE_APU) == false
+        && (g_SymbolAddresses.find("DirectSoundCreate") == g_SymbolAddresses.end()
+            || g_SymbolAddresses["DirectSoundCreate"] == 0)) {
+        bLLE_APU = true;
+        FlagsLLE ^= LLE_APU;
+    }
+    g_EmuShared->SetFlagsLLE(&FlagsLLE);
+}
+
 // NOTE: EmuHLEIntercept do not get to be in XbSymbolDatabase, do the intecept in Cxbx project only.
 void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 {
@@ -444,6 +466,8 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 
             EmuD3D_Init_DeferredStates();
 
+            EmuUpdateLLEStatus();
+
             g_HLECacheUsed = true;
         }
 
@@ -563,6 +587,8 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
         cacheAddress << std::hex << (*it).second;
         WritePrivateProfileString("Symbols", (*it).first.c_str(), cacheAddress.str().c_str(), filename.c_str());
     }
+
+    EmuUpdateLLEStatus();
 }
 
 // NOTE: EmuInstallPatch do not get to be in XbSymbolDatabase, do the patches in Cxbx project only.
