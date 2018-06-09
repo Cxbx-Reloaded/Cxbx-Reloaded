@@ -226,7 +226,7 @@ void OHCI::OHCI_FrameBoundaryWorker()
 		OHCI_StopEndpoints();
 	}
 	m_OldHcControl = m_Registers.HcControl;
-	ohci_process_lists(ohci, 0);
+	OHCI_ProcessLists(0);
 
 	// Stop if UnrecoverableError happened or OHCI_SOF will crash
 	if (m_Registers.HcInterruptStatus & OHCI_INTR_UE) {
@@ -1394,5 +1394,28 @@ void OHCI::OHCI_AsyncCancelDevice(XboxDevice* dev)
 		m_UsbPacket.Endpoint->Dev == dev) {
 		m_UsbDevice->USB_CancelPacket(&m_UsbPacket);
 		m_AsyncTD = 0;
+	}
+}
+
+void OHCI::OHCI_ProcessLists(int completion)
+{
+	// Only process the control list if it is enabled (HcControl) and has available TD's (HcCommandStatus)
+	if ((m_Registers.HcControl & OHCI_CTL_CLE) && (m_Registers.HcCommandStatus & OHCI_STATUS_CLF)) {
+		if (m_Registers.HcControlCurrentED && m_Registers.HcControlCurrentED != m_Registers.HcControlHeadED) {
+			DbgPrintf("Ohci: head 0x%X, current 0x%X\n",
+				m_Registers.HcControlHeadED, m_Registers.HcControlCurrentED);
+		}
+		if (!OHCI_ServiceEDlist(m_Registers.HcControlHeadED, completion)) {
+			m_Registers.HcControlCurrentED = 0;
+			m_Registers.HcCommandStatus &= ~OHCI_STATUS_CLF;
+		}
+	}
+
+	// Only process the bulk list if it is enabled (HcControl) and has available TD's (HcCommandStatus)
+	if ((m_Registers.HcControl & OHCI_CTL_BLE) && (m_Registers.HcCommandStatus & OHCI_STATUS_BLF)) {
+		if (!OHCI_ServiceEDlist(m_Registers.HcBulkHeadED, completion)) {
+			m_Registers.HcBulkCurrentED = 0;
+			m_Registers.HcCommandStatus &= ~OHCI_STATUS_BLF;
+		}
 	}
 }

@@ -181,7 +181,7 @@ USBCombinedPacket;
 struct _USBPacket
 {
 	int Pid;                                 // Packet ID (used to identify the type of packet that is being sent)
-	uint32_t Id; 				             // Paddr of the TD for this packet 
+	uint32_t Id;                             // Paddr of the TD for this packet 
 	USBEndpoint* Endpoint;                   // endpoint this packet is transferred to
 	unsigned int Stream;		             
 	IOVector IoVec;                          // used to perform vectored I/O
