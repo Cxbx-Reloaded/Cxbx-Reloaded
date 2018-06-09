@@ -91,20 +91,8 @@ void ClearHLECache()
 
 void WndMain::InitializeSettings() {
 	HKEY hKey;
-	if (RegOpenKeyEx(HKEY_CURRENT_USER, "Software\\Cxbx-Reloaded", 0, KEY_SET_VALUE, &hKey) == ERROR_SUCCESS) {
-		for (int v = 0; v < m_dwRecentXbe; v++) {
-			char buffer[32];
-			sprintf(buffer, "RecentXbe%d", v);
-			RegDeleteValue(hKey, buffer);
-		}
-		RegDeleteValue(hKey, "CxbxDebug"); RegDeleteValue(hKey, "CxbxDebugFilename");
-		RegDeleteValue(hKey, "HackDisablePixelShaders"); RegDeleteValue(hKey, "HackUncapFrameRate");
-		RegDeleteValue(hKey, "HackUseAllCores");  RegDeleteValue(hKey, "KrnlDebug");
-		RegDeleteValue(hKey, "KrnlDebugFilename"); RegDeleteValue(hKey, "LLEFLAGS");
-		RegDeleteValue(hKey, "RecentXbe"); RegDeleteValue(hKey, "XInputEnabled");
-
-		RegDeleteTree(hKey, "XBVideo"); RegDeleteTree(hKey, "XBAudio"); RegDeleteTree(hKey, "XBController");
-
+	if (RegOpenKeyEx(HKEY_CURRENT_USER, "Software\\Cxbx-Reloaded", 0, KEY_ENUMERATE_SUB_KEYS | DELETE | KEY_QUERY_VALUE | KEY_SET_VALUE, &hKey) == ERROR_SUCCESS) {
+		RegDeleteTree(hKey, NULL);
 		RegCloseKey(hKey);
 
 		g_SaveOnExit = false;
