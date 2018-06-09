@@ -3335,17 +3335,11 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetViewport)
 			XB_trampoline(VOID, WINAPI, D3DDevice_SetViewport, (CONST X_D3DVIEWPORT8 *));
 			XB_D3DDevice_SetViewport(pViewport);
 #endif
-
-			// Get current Xbox render target dimensions
-			DWORD XboxRenderTarget_Width = GetPixelContainerWidth(g_pXboxRenderTarget);
-			DWORD XboxRenderTarget_Height = GetPixelContainerHeigth(g_pXboxRenderTarget);
-
 			// Get current host render target dimensions
 			DWORD HostRenderTarget_Width;
 			DWORD HostRenderTarget_Height;
 
 			if (GetHostRenderTargetDimensions(&HostRenderTarget_Width, &HostRenderTarget_Height)) {
-
 				// Scale Xbox to host dimensions (avoiding hard-coding 640 x 480)
 				HostViewPort.X = ScaleDWORD(pViewport->X, XboxRenderTarget_Width, HostRenderTarget_Width);
 				HostViewPort.Y = ScaleDWORD(pViewport->Y, XboxRenderTarget_Height, HostRenderTarget_Height);
@@ -7366,8 +7360,8 @@ void XTL::CxbxDrawIndexed(CxbxDrawContext &DrawContext)
 			// Close line-loops using a final single line, drawn from the end to the start vertex
 			LOG_TEST_CASE("X_D3DPT_LINELOOP");
 			// Read the end and start index from the supplied index data
-			INDEX16 LowIndex = DrawContext.pIndexData[0];
-			INDEX16 HighIndex = DrawContext.pIndexData[DrawContext.dwHostPrimitiveCount];
+			LowIndex = DrawContext.pIndexData[0];
+			HighIndex = DrawContext.pIndexData[DrawContext.dwHostPrimitiveCount];
 			// If needed, swap so highest index is higher than lowest (duh)
 			if (HighIndex < LowIndex) {
 				HighIndex ^= LowIndex;
@@ -7846,8 +7840,8 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVerticesUP)
 				// Close line-loops using a final single line, drawn from the end to the start vertex
 				LOG_TEST_CASE("X_D3DPT_LINELOOP"); // TODO : Which titles reach this case?
 				// Read the end and start index from the supplied index data
-				INDEX16 LowIndex = ((INDEX16*)pIndexData)[0];
-				INDEX16 HighIndex = ((INDEX16*)pIndexData)[DrawContext.dwHostPrimitiveCount];
+				LowIndex = ((INDEX16*)pIndexData)[0];
+				HighIndex = ((INDEX16*)pIndexData)[DrawContext.dwHostPrimitiveCount];
 				// If needed, swap so highest index is higher than lowest (duh)
 				if (HighIndex < LowIndex) {
 					HighIndex ^= LowIndex;

@@ -213,12 +213,12 @@ namespace DlgVSBCFeedback
         {
             HWND hWndButton = GetDlgItem(hWndDlg, LOWORD(wParam));
 
-            switch (LOWORD(wParam))
+//            switch (LOWORD(wParam))
             {
                 //case IDC_HOST_CANCEL:
                   //  //EndDialog(hWndDlg, wParam);
                     //break;
-            default:
+//            default:
                 return FALSE;
             }
 

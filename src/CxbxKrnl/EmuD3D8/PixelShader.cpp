@@ -6181,8 +6181,8 @@ inline BOOL OptimizeOperation
 		}
 	} else if(strcmp(szOp2, "cnd")==0) {
 #ifdef REVEL8N_PIXEL_SHADER_CHANGES
-		int iOffset = 0;
-		int i = 0;
+		iOffset = 0;
+		i = 0;
 		for (i = 0; i < 2; ++i)
 		{
 			if (strcmp(szOps[i], "mul")==0)
@@ -6276,17 +6276,18 @@ inline void CorrectConstToReg(char *szConst, int *pPSC0, int *pPSC1)
 			// Add this const to the beginning of the psh
 			char str[100];
 			char *szNewCodeBuffer = (char *)malloc((strlen(pCodeBuffer)+70)*sizeof(char));
-			strncpy(szNewCodeBuffer, pCodeBuffer, 7);
-			szNewCodeBuffer[7]=0x00;
-			sprintf(str, "def c%d, %ff, %ff, %ff, %ff\n", i, 
-				fConst,fConst,fConst,fConst);
-			iPreRunLen+=strlen(str);
-			strcat(szNewCodeBuffer, str);
-			strcat(szNewCodeBuffer, &pCodeBuffer[7]);
-			strcpy(pCodeBuffer, szNewCodeBuffer);
+			if (szNewCodeBuffer) {
+				strncpy(szNewCodeBuffer, pCodeBuffer, 7);
+				szNewCodeBuffer[7] = 0x00;
+				sprintf(str, "def c%d, %ff, %ff, %ff, %ff\n", i,
+					fConst, fConst, fConst, fConst);
+				iPreRunLen += strlen(str);
+				strcat(szNewCodeBuffer, str);
+				strcat(szNewCodeBuffer, &pCodeBuffer[7]);
+				strcpy(pCodeBuffer, szNewCodeBuffer);
 
-			free(szNewCodeBuffer);
-
+				free(szNewCodeBuffer);
+			}
 			iConstCount++;
 
 			printf("added: %s\n", str);
