@@ -2251,7 +2251,6 @@ void WndMain::StartEmulation(HWND hwndParent, DebuggerState LocalDebuggerState /
             else
             {
                 m_bIsStarted = true;
-                g_EmuShared->SetIsReady(true);
                 printf("WndMain: %s emulation started with debugger.\n", m_Xbe->m_szAsciiTitle);
             }
         }
@@ -2266,7 +2265,6 @@ void WndMain::StartEmulation(HWND hwndParent, DebuggerState LocalDebuggerState /
             else
             {
                 m_bIsStarted = true;
-                g_EmuShared->SetIsReady(true);
                 printf("WndMain: %s emulation started.\n", m_Xbe->m_szAsciiTitle);
             }
         }
