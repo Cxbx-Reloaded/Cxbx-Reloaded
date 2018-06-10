@@ -2280,7 +2280,6 @@ void WndMain::StartEmulation(HWND hwndParent, DebuggerState LocalDebuggerState /
                 printf("WndMain: %s emulation started.\n", m_Xbe->m_szAsciiTitle);
             }
         }
-
     }
 }
 
