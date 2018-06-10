@@ -2319,7 +2319,27 @@ void WndMain::CrashMonitor()
 	DWORD dwProcessID_ExitCode = 0;
 	GetWindowThreadProcessId(m_hwndChild, &dwProcessID_ExitCode);
 
+	// Did not received valid process ID, assume we do not have access or crashed in the process.
+	if (dwProcessID_ExitCode == 0) {
+
+	crashCleanup:
+
+		KillTimer(m_hwnd, TIMERID_FPS);
+		KillTimer(m_hwnd, TIMERID_LED);
+		DrawLedBitmap(m_hwnd, true);
+		m_hwndChild = NULL;
+		m_bIsStarted = false;
+		UpdateCaption();
+		RefreshMenus();
+		return;
+	}
+
 	HANDLE hProcess = OpenProcess(SYNCHRONIZE | PROCESS_QUERY_INFORMATION, FALSE, dwProcessID_ExitCode);
+
+	// Did not received valid handle, assume we do not have access or crashed in the process.
+	if (hProcess == NULL) {
+		goto crashCleanup;
+	}
 
 	WaitForSingleObject(hProcess, INFINITE);
 	dwProcessID_ExitCode = 0;
@@ -2333,16 +2353,7 @@ void WndMain::CrashMonitor()
 			return;
 		} else { // that's a crash
 			CloseHandle(hProcess);
-			if (m_bIsStarted) { // that's a hard crash, Dr Watson is invoked
-				KillTimer(m_hwnd, TIMERID_FPS);
-				KillTimer(m_hwnd, TIMERID_LED);
-				DrawLedBitmap(m_hwnd, true);
-				m_hwndChild = NULL;
-				m_bIsStarted = false;
-				UpdateCaption();
-				RefreshMenus();
-			}
-			return;
+			goto crashCleanup;
 		}
 	}
 
