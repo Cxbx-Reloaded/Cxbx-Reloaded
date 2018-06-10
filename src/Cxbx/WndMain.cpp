@@ -507,21 +507,16 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                 {
 					CreateThread(NULL, NULL, CrashMonitorWrapper, (void*)this, NULL, NULL); // create the crash monitoring thread 
 					if (m_hwndChild == NULL) {
-						float fps = 0.0f;
-						float mspf = 0.0f;
 						int LedSequence[4] = { XBOX_LED_COLOUR_GREEN, XBOX_LED_COLOUR_GREEN, XBOX_LED_COLOUR_GREEN, XBOX_LED_COLOUR_GREEN };
-						g_EmuShared->SetCurrentMSpF(&mspf);
-						g_EmuShared->SetCurrentFPS(&fps);
 						g_EmuShared->SetLedSequence(LedSequence);
 						SetTimer(hwnd, TIMERID_FPS, 1000, (TIMERPROC)NULL);
 						SetTimer(hwnd, TIMERID_LED, XBOX_LED_FLASH_PERIOD, (TIMERPROC)NULL);
-						m_hwndChild = GetWindow(hwnd, GW_CHILD); // (HWND)HIWORD(wParam) seems to be NULL
+						m_hwndChild = (HWND)lParam;
 						UpdateCaption();
 						RefreshMenus();
 					}
-					else
-					{
-						m_hwndChild = GetWindow(hwnd, GW_CHILD);
+					else {
+						m_hwndChild = (HWND)lParam;
 					}
                 }
                 break;
@@ -538,8 +533,23 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 					}
                 }
                 break;
-            }
-        };
+
+				case WM_USER: {
+					 switch(lParam) {
+						case ID_KRNL_IS_READY: {
+							float fps = 0.0f;
+							float mspf = 0.0f;
+							g_EmuShared->SetCurrentMSpF(&mspf);
+							g_EmuShared->SetCurrentFPS(&fps);
+							g_EmuShared->SetFlagsLLE(&m_FlagsLLE);
+							g_EmuShared->SetIsReady(true);
+							break;
+						}
+					}
+					break;
+				}
+			}
+		};
 		break; // added per PVS suggestion.
 
 		case WM_TIMER:
@@ -2240,6 +2250,7 @@ void WndMain::StartEmulation(HWND hwndParent, DebuggerState LocalDebuggerState /
             else
             {
                 m_bIsStarted = true;
+                g_EmuShared->SetIsReady(true);
                 printf("WndMain: %s emulation started with debugger.\n", m_Xbe->m_szAsciiTitle);
             }
         }
@@ -2254,9 +2265,11 @@ void WndMain::StartEmulation(HWND hwndParent, DebuggerState LocalDebuggerState /
             else
             {
                 m_bIsStarted = true;
+                g_EmuShared->SetIsReady(true);
                 printf("WndMain: %s emulation started.\n", m_Xbe->m_szAsciiTitle);
             }
         }
+
     }
 }
 

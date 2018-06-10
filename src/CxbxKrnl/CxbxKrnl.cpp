@@ -42,6 +42,7 @@ namespace xboxkrnl
     #include <xboxkrnl/xboxkrnl.h>
 };
 
+#include "Cxbx\ResCxbx.h"
 #include "CxbxKrnl.h"
 #include "Cxbx\CxbxXbdm.h" // For Cxbx_LibXbdmThunkTable
 #include "CxbxVersion.h"
@@ -904,6 +905,28 @@ void CxbxKrnlMain(int argc, char* argv[])
 	CxbxKrnl_hEmuParent = IsWindow(hWnd) ? hWnd : NULL;
 
 	g_CurrentProcessHandle = GetCurrentProcess(); // OpenProcess(PROCESS_ALL_ACCESS, FALSE, GetCurrentProcessId());
+
+    if (CxbxKrnl_hEmuParent == NULL) {
+        CxbxKrnlCleanup("GUI process does not exist!");
+    } else {
+        SendMessage(CxbxKrnl_hEmuParent, WM_PARENTNOTIFY, WM_USER, ID_KRNL_IS_READY);
+    }
+    
+    // Force wait until first allocated process is ready
+    int waitCounter = 10;
+    bool isReady = false;
+
+    while (waitCounter > 0) {
+        g_EmuShared->GetIsReady(&isReady);
+        if (isReady) {
+            break;
+        }
+        waitCounter--;
+        Sleep(100);
+    }
+    if (!isReady) {
+        CxbxKrnlCleanup("GUI process is not ready!");
+    }
 
 	// Write a header to the log
 	{

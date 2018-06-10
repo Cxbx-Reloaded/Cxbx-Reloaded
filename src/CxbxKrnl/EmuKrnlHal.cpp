@@ -575,6 +575,7 @@ XBSYSAPI EXPORTNUM(49) xboxkrnl::VOID DECLSPEC_NORETURN NTAPI xboxkrnl::HalRetur
 				QuickReboot |= BOOT_QUICK_REBOOT;
 				g_EmuShared->SetBootFlags(&QuickReboot);
 				g_EmuShared->SetMultiXbeFlag(&bMultiXbe);
+				g_EmuShared->SetIsReady(false);
 
 				char szArgsBuffer[4096];
 
