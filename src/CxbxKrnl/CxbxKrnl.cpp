@@ -911,7 +911,8 @@ void CxbxKrnlMain(int argc, char* argv[])
     } else {
         SendMessage(CxbxKrnl_hEmuParent, WM_PARENTNOTIFY, WM_USER, ID_KRNL_IS_READY);
     }
-    
+
+    retryWait:
     // Force wait until first allocated process is ready
     int waitCounter = 10;
     bool isReady = false;
@@ -925,7 +926,12 @@ void CxbxKrnlMain(int argc, char* argv[])
         Sleep(100);
     }
     if (!isReady) {
-        CxbxKrnlCleanup("GUI process is not ready!");
+        EmuWarning("GUI process is not ready!");
+        int mbRet = MessageBox(NULL, "GUI process is not ready, do you wish to retry?", TEXT("Cxbx-Reloaded"),
+                   MB_ICONWARNING | MB_RETRYCANCEL | MB_TOPMOST | MB_SETFOREGROUND);
+        if (mbRet == IDRETRY) {
+            goto retryWait;
+        }
     }
     g_EmuShared->SetIsReady(false);
 
