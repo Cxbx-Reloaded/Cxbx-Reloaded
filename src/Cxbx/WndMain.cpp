@@ -499,6 +499,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
         }
         break;
 
+        // NOTE: WM_PARENTNOTIFY was triggered by kernel process' graphic window creation.
         case WM_PARENTNOTIFY:
         {
             switch(LOWORD(wParam))
