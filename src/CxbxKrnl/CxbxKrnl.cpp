@@ -927,6 +927,15 @@ void CxbxKrnlMain(int argc, char* argv[])
     if (!isReady) {
         CxbxKrnlCleanup("GUI process is not ready!");
     }
+    g_EmuShared->SetIsReady(false);
+
+    bool bQuickReboot;
+    g_EmuShared->GetMultiXbeFlag(&bQuickReboot);
+
+    // precaution for multi-xbe titles in the case CrashMonitor has still not destoyed the previous mutex
+    while (bQuickReboot) {
+        g_EmuShared->GetMultiXbeFlag(&bQuickReboot);
+    }
 
 	// Write a header to the log
 	{

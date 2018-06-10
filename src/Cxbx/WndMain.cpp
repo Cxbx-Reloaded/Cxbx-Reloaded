@@ -506,7 +506,6 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
             {
                 case WM_CREATE:
                 {
-					CreateThread(NULL, NULL, CrashMonitorWrapper, (void*)this, NULL, NULL); // create the crash monitoring thread 
 					if (m_hwndChild == NULL) {
 						int LedSequence[4] = { XBOX_LED_COLOUR_GREEN, XBOX_LED_COLOUR_GREEN, XBOX_LED_COLOUR_GREEN, XBOX_LED_COLOUR_GREEN };
 						g_EmuShared->SetLedSequence(LedSequence);
@@ -519,6 +518,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 					else {
 						m_hwndChild = (HWND)lParam;
 					}
+					CreateThread(NULL, NULL, CrashMonitorWrapper, (void*)this, NULL, NULL); // create the crash monitoring thread
                 }
                 break;
 
@@ -2292,13 +2292,13 @@ void WndMain::StopEmulation()
 	ResizeWindow(m_hwnd, /*bForGUI=*/true);
 }
 
-
 // wrapper function to call CrashMonitor
 DWORD WINAPI WndMain::CrashMonitorWrapper(LPVOID lpVoid)
 {
 	CxbxSetThreadName("Cxbx Crash Monitor");
 
 	static_cast<WndMain*>(lpVoid)->CrashMonitor();
+
 	return 0;
 }
 
@@ -2306,41 +2306,41 @@ DWORD WINAPI WndMain::CrashMonitorWrapper(LPVOID lpVoid)
 void WndMain::CrashMonitor()
 {
 	bool bQuickReboot;
-	HANDLE hCrashMutex = OpenMutex(MUTEX_ALL_ACCESS, FALSE, "CrashMutex");
+	DWORD dwProcessID_ExitCode = 0;
+	GetWindowThreadProcessId(m_hwndChild, &dwProcessID_ExitCode);
 
-	DWORD state = WaitForSingleObject(hCrashMutex, INFINITE);
+	HANDLE hProcess = OpenProcess(SYNCHRONIZE | PROCESS_QUERY_INFORMATION, FALSE, dwProcessID_ExitCode);
+
+	WaitForSingleObject(hProcess, INFINITE);
+	dwProcessID_ExitCode = 0;
+	GetExitCodeProcess(hProcess, &dwProcessID_ExitCode);
 
 	g_EmuShared->GetMultiXbeFlag(&bQuickReboot);
 
-	if (state == WAIT_OBJECT_0) // StopEmulation
-	{
-		CloseHandle(hCrashMutex);
-		return;
-	}
-
-	if (state == WAIT_ABANDONED && !bQuickReboot) // that's a crash
-	{
-		CloseHandle(hCrashMutex);
-		if (m_bIsStarted) // that's a hard crash, Dr Watson is invoked
-		{
-			KillTimer(m_hwnd, TIMERID_FPS);
-			KillTimer(m_hwnd, TIMERID_LED);
-			DrawLedBitmap(m_hwnd, true);
-			m_hwndChild = NULL;
-			m_bIsStarted = false;
-			UpdateCaption();
-			RefreshMenus();
+	if (!bQuickReboot) {
+ 		if (dwProcessID_ExitCode == EXIT_SUCCESS) {// StopEmulation
+			CloseHandle(hProcess);
+			return;
+		} else { // that's a crash
+			CloseHandle(hProcess);
+			if (m_bIsStarted) { // that's a hard crash, Dr Watson is invoked
+				KillTimer(m_hwnd, TIMERID_FPS);
+				KillTimer(m_hwnd, TIMERID_LED);
+				DrawLedBitmap(m_hwnd, true);
+				m_hwndChild = NULL;
+				m_bIsStarted = false;
+				UpdateCaption();
+				RefreshMenus();
+			}
+			return;
 		}
-		return;
 	}
 
 	// multi-xbe
 	// destroy this thread and start a new one
-	CloseHandle(hCrashMutex);
+	CloseHandle(hProcess);
 	bQuickReboot = false;
 	g_EmuShared->SetMultiXbeFlag(&bQuickReboot);
-
-	return;
 }
 
 // draw Xbox LED bitmap
