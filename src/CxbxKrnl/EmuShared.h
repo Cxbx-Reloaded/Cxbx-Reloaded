@@ -67,13 +67,19 @@ class EmuShared : public Mutex
 		// ******************************************************************
 		static void Init();
 
-		void EmuShared::Load();
-		void EmuShared::Save();
+		void Load();
+		void Save();
 
 		// ******************************************************************
 		// * Each process needs to call this to cleanup shared memory
 		// ******************************************************************
 		static void Cleanup();
+
+		// ******************************************************************
+		// * Each child process need to wait until parent process is ready
+		// ******************************************************************
+		void GetIsReady(bool *isReady) { Lock(); *isReady = m_isReady; Unlock(); }
+		void SetIsReady(bool isReady) { Lock(); m_isReady = isReady; Unlock(); }
 
 		// ******************************************************************
 		// * Xbox Video Accessors
@@ -194,20 +200,21 @@ class EmuShared : public Mutex
 		XBVideo      m_XBVideo;
 		XBAudio      m_XBAudio;
 		char         m_XbePath[MAX_PATH];
-		int			 m_BootFlags;
+		int          m_BootFlags;
 		int          m_FlagsLLE;
-		int			 m_XInputEnabled;
-		int			 m_DisablePixelShaders;
-		int			 m_UncapFramerate;
-		int			 m_UseAllCores;
-		int			 m_SkipRdtscPatching;
-		float		 m_MSpF;
+		int          m_XInputEnabled;
+		int          m_DisablePixelShaders;
+		int          m_UncapFramerate;
+		int          m_UseAllCores;
+		int          m_SkipRdtscPatching;
+		float        m_MSpF;
 		float        m_FPS;
-		bool		 m_bMultiXbeFlag;
-		bool		 m_bDebugging;
+		bool         m_bMultiXbeFlag;
+		bool         m_bDebugging;
 		int          m_LedSequence[4];
 		int          m_ScaleViewport;
-		int			 m_DirectHostBackBufferAccess;
+		int          m_DirectHostBackBufferAccess;
+		bool         m_isReady;
 };
 
 // ******************************************************************
