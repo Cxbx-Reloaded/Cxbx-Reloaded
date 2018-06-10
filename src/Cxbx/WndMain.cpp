@@ -2188,6 +2188,17 @@ void WndMain::SaveXbeAs()
 void WndMain::StartEmulation(HWND hwndParent, DebuggerState LocalDebuggerState /*= debuggerOff*/)
 {
     char szBuffer[MAX_PATH];
+    bool isEmulating = false;
+
+    g_EmuShared->GetIsEmulating(&isEmulating);
+
+    if (isEmulating) {
+        MessageBox(m_hwnd, "A title is currently emulating, please stop emulation before attempt start again.",
+                   "Cxbx-Reloaded", MB_ICONERROR | MB_OK);
+        return;
+    }
+
+    g_EmuShared->SetIsEmulating(true);
 
     // register xbe path with emulator process
     g_EmuShared->SetXbePath(m_Xbe->m_szPath);
@@ -2288,6 +2299,7 @@ void WndMain::StopEmulation()
     RefreshMenus();
 	// Set the window size back to it's GUI dimensions
 	ResizeWindow(m_hwnd, /*bForGUI=*/true);
+	g_EmuShared->SetIsEmulating(false);
 }
 
 // wrapper function to call CrashMonitor
