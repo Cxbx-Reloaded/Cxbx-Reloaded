@@ -78,14 +78,14 @@ class EmuShared : public Mutex
 		// ******************************************************************
 		// * Check if parent process is emulating title
 		// ******************************************************************
-		void GetIsEmulating(bool *isEmulating) { Lock(); *isEmulating = m_isEmulating; Unlock(); }
-		void SetIsEmulating(bool isEmulating) { Lock(); m_isEmulating = isEmulating; Unlock(); }
+		void GetIsEmulating(bool *isEmulating) { Lock(); *isEmulating = m_bEmulating; Unlock(); }
+		void SetIsEmulating(bool isEmulating) { Lock(); m_bEmulating = isEmulating; Unlock(); }
 
 		// ******************************************************************
 		// * Each child process need to wait until parent process is ready
 		// ******************************************************************
-		void GetIsReady(bool *isReady) { Lock(); *isReady = m_isReady; Unlock(); }
-		void SetIsReady(bool isReady) { Lock(); m_isReady = isReady; Unlock(); }
+		void GetIsReady(bool *isReady) { Lock(); *isReady = m_bReady; Unlock(); }
+		void SetIsReady(bool isReady) { Lock(); m_bReady = isReady; Unlock(); }
 
 		// ******************************************************************
 		// * Xbox Video Accessors
@@ -217,11 +217,11 @@ class EmuShared : public Mutex
 		float        m_FPS;
 		bool         m_bMultiXbeFlag;
 		bool         m_bDebugging;
+		bool         m_bReady;
+		bool         m_bEmulating;
 		int          m_LedSequence[4];
 		int          m_ScaleViewport;
 		int          m_DirectHostBackBufferAccess;
-		bool         m_isReady;
-		bool         m_isEmulating;
 };
 
 // ******************************************************************
