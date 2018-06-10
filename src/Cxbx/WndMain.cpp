@@ -507,7 +507,11 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                 case WM_CREATE:
                 {
 					if (m_hwndChild == NULL) {
+						float fps = 0.0f;
+						float mspf = 0.0f;
 						int LedSequence[4] = { XBOX_LED_COLOUR_GREEN, XBOX_LED_COLOUR_GREEN, XBOX_LED_COLOUR_GREEN, XBOX_LED_COLOUR_GREEN };
+						g_EmuShared->SetCurrentMSpF(&mspf);
+						g_EmuShared->SetCurrentFPS(&fps);
 						g_EmuShared->SetLedSequence(LedSequence);
 						SetTimer(hwnd, TIMERID_FPS, 1000, (TIMERPROC)NULL);
 						SetTimer(hwnd, TIMERID_LED, XBOX_LED_FLASH_PERIOD, (TIMERPROC)NULL);
@@ -538,10 +542,6 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 				case WM_USER: {
 					 switch(lParam) {
 						case ID_KRNL_IS_READY: {
-							float fps = 0.0f;
-							float mspf = 0.0f;
-							g_EmuShared->SetCurrentMSpF(&mspf);
-							g_EmuShared->SetCurrentFPS(&fps);
 							g_EmuShared->SetFlagsLLE(&m_FlagsLLE);
 							g_EmuShared->SetIsReady(true);
 							break;
