@@ -932,6 +932,7 @@ void CxbxKrnlMain(int argc, char* argv[])
         if (mbRet == IDRETRY) {
             goto retryWait;
         }
+        CxbxKrnlShutDown();
     }
     g_EmuShared->SetIsReady(false);
 
