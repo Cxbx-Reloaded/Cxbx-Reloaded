@@ -76,6 +76,12 @@ class EmuShared : public Mutex
 		static void Cleanup();
 
 		// ******************************************************************
+		// * Check if parent process is emulating title
+		// ******************************************************************
+		void GetIsEmulating(bool *isEmulating) { Lock(); *isEmulating = m_isEmulating; Unlock(); }
+		void SetIsEmulating(bool isEmulating) { Lock(); m_isEmulating = isEmulating; Unlock(); }
+
+		// ******************************************************************
 		// * Each child process need to wait until parent process is ready
 		// ******************************************************************
 		void GetIsReady(bool *isReady) { Lock(); *isReady = m_isReady; Unlock(); }
@@ -215,6 +221,7 @@ class EmuShared : public Mutex
 		int          m_ScaleViewport;
 		int          m_DirectHostBackBufferAccess;
 		bool         m_isReady;
+		bool         m_isEmulating;
 };
 
 // ******************************************************************
