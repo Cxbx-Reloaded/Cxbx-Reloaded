@@ -541,6 +541,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
 				case WM_USER: {
 					 switch(lParam) {
+						// NOTE: If anything need to set before kernel process start do anything, do it here.
 						case ID_KRNL_IS_READY: {
 							g_EmuShared->SetFlagsLLE(&m_FlagsLLE);
 							g_EmuShared->SetIsReady(true);
