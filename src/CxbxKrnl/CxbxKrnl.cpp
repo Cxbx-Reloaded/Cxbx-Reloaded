@@ -1458,13 +1458,15 @@ void CxbxInitFilePaths()
 	{
 		LONG result = ERROR_SUCCESS;
 
-		dwType = REG_DWORD; dwSize = sizeof(szAppData);
+		dwType = REG_SZ; dwSize = sizeof(szAppData);
 		result = RegQueryValueEx(hKey, "DATALOC", NULL, &dwType, (PBYTE)&szAppData, &dwSize);
 		if (result != ERROR_SUCCESS) {
 			SHGetSpecialFolderPath(NULL, szAppData, CSIDL_APPDATA, TRUE); //Luke wants default to be %appdata%
 		}
 
 	}
+
+	snprintf(szFolder_CxbxReloadedData, MAX_PATH, "%s\\Cxbx-Reloaded", szAppData);
 
 	// Make sure our data folder exists :
 	int result = SHCreateDirectoryEx(nullptr, szFolder_CxbxReloadedData, nullptr);
