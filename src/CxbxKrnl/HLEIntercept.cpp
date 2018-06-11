@@ -325,22 +325,21 @@ void EmuD3D_Init_DeferredStates()
 }
 
 // Update shared structure with GUI process
-void EmuUpdateLLEStatus()
+void EmuUpdateLLEStatus(uint32_t XbLibScan)
 {
     int FlagsLLE;
     g_EmuShared->GetFlagsLLE(&FlagsLLE);
 
     if ((FlagsLLE & LLE_GPU) == false
-        && (g_SymbolAddresses.find("Direct3D_CreateDevice") == g_SymbolAddresses.end()
-            || g_SymbolAddresses["Direct3D_CreateDevice"] == 0)) {
+        && !((XbLibScan & XbSymbolLib_D3D8) > 0
+            || (XbLibScan & XbSymbolLib_D3D8LTCG) > 0)) {
         bLLE_GPU = true;
         FlagsLLE ^= LLE_GPU;
         EmuOutputMessage(XB_OUTPUT_MESSAGE_INFO, "Fallback to LLE GPU.");
     }
 
     if ((FlagsLLE & LLE_APU) == false
-        && (g_SymbolAddresses.find("DirectSoundCreate") == g_SymbolAddresses.end()
-            || g_SymbolAddresses["DirectSoundCreate"] == 0)) {
+        && (XbLibScan & XbSymbolLib_DSOUND) == 0) {
         bLLE_APU = true;
         FlagsLLE ^= LLE_APU;
         EmuOutputMessage(XB_OUTPUT_MESSAGE_INFO, "Fallback to LLE APU.");
@@ -352,6 +351,27 @@ void EmuUpdateLLEStatus()
 void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 {
     Xbe::LibraryVersion *pLibraryVersion = (Xbe::LibraryVersion*)pXbeHeader->dwLibraryVersionsAddr;
+
+    uint16 xdkVersion = 0;
+    uint32_t XbLibScan = 0;
+
+    // NOTE: We need to check if title has library header to optimize verification process.
+    if (pLibraryVersion != nullptr) {
+        uint32 dwLibraryVersions = pXbeHeader->dwLibraryVersions;
+
+        // Get the highest revision build and prefix library to scan.
+        for (uint32 v = 0; v < dwLibraryVersions; v++) {
+            uint16 BuildVersion = pLibraryVersion[v].wBuildVersion;
+            uint16 QFEVersion = pLibraryVersion[v].wFlags.QFEVersion;
+
+            if (xdkVersion < BuildVersion) {
+                xdkVersion = BuildVersion;
+            }
+            XbLibScan |= XbSymbolLibrayToFlag(std::string(pLibraryVersion[v].szName, pLibraryVersion[v].szName + 8).c_str());
+        }
+    }
+
+    EmuUpdateLLEStatus(XbLibScan);
 
     printf("\n");
     printf("*******************************************************************************\n");
@@ -468,8 +488,6 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 
             EmuD3D_Init_DeferredStates();
 
-            EmuUpdateLLEStatus();
-
             g_HLECacheUsed = true;
         }
 
@@ -488,25 +506,9 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
     //
     // initialize Microsoft XDK emulation
     //
-    if(pLibraryVersion != 0)
-    {
+    if(pLibraryVersion != nullptr) {
+
         printf("HLE: Detected Microsoft XDK application...\n");
-
-        uint32 dwLibraryVersions = pXbeHeader->dwLibraryVersions;
-
-        uint16 xdkVersion = 0;
-        uint32_t XbLibScan = 0;
-
-        // Get the highest revision build and prefix library to scan.
-        for (uint32 v = 0; v < dwLibraryVersions; v++) {
-            uint16 BuildVersion = pLibraryVersion[v].wBuildVersion;
-            uint16 QFEVersion = pLibraryVersion[v].wFlags.QFEVersion;
-
-            if (xdkVersion < BuildVersion) {
-                xdkVersion = BuildVersion;
-            }
-            XbLibScan |= XbSymbolLibrayToFlag(std::string(pLibraryVersion[v].szName, pLibraryVersion[v].szName + 8).c_str());
-        }
 
         // TODO: Is this enough for alias? We need to verify it.
         if ((XbLibScan & XbSymbolLib_D3D8) > 0 || (XbLibScan & XbSymbolLib_D3D8LTCG) > 0) {
@@ -589,8 +591,6 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
         cacheAddress << std::hex << (*it).second;
         WritePrivateProfileString("Symbols", (*it).first.c_str(), cacheAddress.str().c_str(), filename.c_str());
     }
-
-    EmuUpdateLLEStatus();
 }
 
 // NOTE: EmuInstallPatch do not get to be in XbSymbolDatabase, do the patches in Cxbx project only.
