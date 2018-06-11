@@ -281,17 +281,17 @@
     <ClCompile Include="..\..\src\CxbxKrnl\PoolManager.cpp">
       <Filter>Emulator</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\devices\USBController\USBDevice.cpp">
-      <Filter>Hardware</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\devices\USBController\OHCI.cpp">
-      <Filter>Hardware</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\CxbxKrnl\Timer.cpp">
       <Filter>Emulator</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\Common\Cxbx.cpp" />
       <Filter>GUI</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\devices\usb\OHCI.cpp">
+      <Filter>Hardware\Usb</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\devices\usb\USBDevice.cpp">
+      <Filter>Hardware\Usb</Filter>
     </ClCompile>
 	<ClCompile Include="..\..\src\Cxbx\DlgXboxControllerPortMapping.cpp">
       <Filter>GUI</Filter>
@@ -577,14 +577,14 @@
     <ClInclude Include="..\..\src\CxbxKrnl\PoolManager.h">
       <Filter>Emulator</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\devices\USBController\USBDevice.h">
-      <Filter>Hardware</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\devices\USBController\OHCI.h">
-      <Filter>Hardware</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\CxbxKrnl\Timer.h">
       <Filter>Emulator</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\devices\usb\OHCI.h">
+      <Filter>Hardware\Usb</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\devices\usb\USBDevice.h">
+      <Filter>Hardware\Usb</Filter>
     </ClInclude>
 	<ClInclude Include="..\..\src\Cxbx\DlgXboxControllerPortMapping.h">
       <Filter>GUI</Filter>
@@ -701,6 +701,9 @@
     </Filter>
     <Filter Include="Hardware\X86">
       <UniqueIdentifier>{9efb9cfc-2731-4edb-8dd0-36950b0263df}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Hardware\Usb">
+      <UniqueIdentifier>{379f4b26-2444-4fda-90eb-d93e7d5938a2}</UniqueIdentifier>
     </Filter>
     <Filter Include="Code Format">
       <UniqueIdentifier>{0e125cbe-fb2e-41ef-a381-6effd9fabd35}</UniqueIdentifier>

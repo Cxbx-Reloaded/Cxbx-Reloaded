@@ -125,13 +125,26 @@
 #define OHCI_TD_DP_SHIFT  19
 #define OHCI_TD_DP_MASK   (3<<OHCI_TD_DP_SHIFT)       // Direction-Pid
 #define OHCI_TD_DI_SHIFT  21
-#define OHCI_TD_DI_MASK   (7<<OHCI_TD_DI_SHIFT)
+#define OHCI_TD_DI_MASK   (7<<OHCI_TD_DI_SHIFT)       // DelayInterrupt
 #define OHCI_TD_T0        (1<<24)
 #define OHCI_TD_T1        (1<<25)                     // DataToggle (T0 and T1)
 #define OHCI_TD_EC_SHIFT  26
 #define OHCI_TD_EC_MASK   (3<<OHCI_TD_EC_SHIFT)
 #define OHCI_TD_CC_SHIFT  28
 #define OHCI_TD_CC_MASK   (0xF<<OHCI_TD_CC_SHIFT)     // ConditionCode
+
+/* Bitfields for the first word of an Isochronous Transfer Desciptor.  */
+/* CC & DI - same as in the General Transfer Desciptor */
+#define OHCI_TD_SF_SHIFT  0
+#define OHCI_TD_SF_MASK   (0xffff<<OHCI_TD_SF_SHIFT)
+#define OHCI_TD_FC_SHIFT  24
+#define OHCI_TD_FC_MASK   (7<<OHCI_TD_FC_SHIFT)
+
+/* Isochronous Transfer Desciptor - Offset / PacketStatusWord */
+#define OHCI_TD_PSW_CC_SHIFT 12
+#define OHCI_TD_PSW_CC_MASK  (0xf<<OHCI_TD_PSW_CC_SHIFT)
+#define OHCI_TD_PSW_SIZE_SHIFT 0
+#define OHCI_TD_PSW_SIZE_MASK  (0xfff<<OHCI_TD_PSW_SIZE_SHIFT)
 
 /* Mask the four least significant bits in an ED address */
 #define OHCI_DPTR_MASK    0xFFFFFFF0
@@ -167,6 +180,11 @@
 
 #define USB_SPEED_LOW   0
 #define USB_SPEED_FULL  1
+
+#define USUB(a, b) ((int16_t)((uint16_t)(a) - (uint16_t)(b)))
+
+#define OHCI_PAGE_MASK    0xFFFFF000
+#define OHCI_OFFSET_MASK  0xFFF
 
 
 typedef enum _USB_SPEED
@@ -323,25 +341,60 @@ bool OHCI::OHCI_WriteHCCA(xbaddr Paddr, OHCI_HCCA* Hcca)
 
 bool OHCI::OHCI_ReadED(xbaddr Paddr, OHCI_ED* Ed)
 {
-	return OHCI_GetDwords(Paddr, reinterpret_cast<uint32_t*>(Ed), sizeof(*Ed) >> 2); // ED is 16 bytes large
+	if (Paddr != xbnull) {
+		GetDwords(Paddr, reinterpret_cast<uint32_t*>(Ed), sizeof(*Ed) >> 2); // ED is 16 bytes large
+		return false;
+	}
+	return true; // error
 }
 
 bool OHCI::OHCI_WriteED(xbaddr Paddr, OHCI_ED* Ed)
 {
-	// According to the standard, only the HeadP field is writable by the HC, so we'll write just that
-	size_t OffsetOfHeadP = offsetof(OHCI_ED, HeadP);
-
-	return OHCI_WriteDwords(Paddr + OffsetOfHeadP, reinterpret_cast<uint32_t*>(reinterpret_cast<uint8_t*>(Ed) + OffsetOfHeadP), 1);
+	if (Paddr != xbnull) {
+		// According to the standard, only the HeadP field is writable by the HC, so we'll write just that
+		size_t OffsetOfHeadP = offsetof(OHCI_ED, HeadP);
+		WriteDwords(Paddr + OffsetOfHeadP, reinterpret_cast<uint32_t*>(reinterpret_cast<uint8_t*>(Ed) + OffsetOfHeadP), 1);
+		return false;
+	}
+	return true; // error
 }
 
 bool OHCI::OHCI_ReadTD(xbaddr Paddr, OHCI_TD* Td)
 {
-	return OHCI_GetDwords(Paddr, reinterpret_cast<uint32_t*>(Td), sizeof(*Td) >> 2); // TD is 16 bytes large
+	if (Paddr != xbnull) {
+		GetDwords(Paddr, reinterpret_cast<uint32_t*>(Td), sizeof(*Td) >> 2); // TD is 16 bytes large
+		return false;
+	}
+	return true; // error
 }
 
 bool OHCI::OHCI_WriteTD(xbaddr Paddr, OHCI_TD* Td)
 {
-	return OHCI_WriteDwords(Paddr, reinterpret_cast<uint32_t*>(Td), sizeof(*Td) >> 2);
+	if (Paddr != xbnull) {
+		WriteDwords(Paddr, reinterpret_cast<uint32_t*>(Td), sizeof(*Td) >> 2);
+		return false;
+	}
+	return true; // error
+}
+
+bool OHCI::OHCI_ReadIsoTD(xbaddr Paddr, OHCI_ISO_TD* td)
+{
+	if (Paddr != xbnull) {
+		GetDwords(Paddr, reinterpret_cast<uint32_t*>(td), 4);
+		GetWords(Paddr + 16, td->Offset, 8);
+		return false;
+	}
+	return true; // error
+}
+
+bool OHCI::OHCI_WriteIsoTD(xbaddr Paddr, OHCI_ISO_TD* td)
+{
+	if (Paddr != xbnull) {
+		WriteDwords(Paddr, reinterpret_cast<uint32_t*>(td), 4);
+		WriteWords(Paddr + 16, td->Offset, 8);
+		return false;
+	}
+	return true; // error
 }
 
 bool OHCI::OHCI_CopyTD(OHCI_TD* Td, uint8_t* Buffer, int Length, bool bIsWrite)
@@ -367,6 +420,30 @@ bool OHCI::OHCI_CopyTD(OHCI_TD* Td, uint8_t* Buffer, int Length, bool bIsWrite)
 	// working value of CurrentBufferPointer causing the next buffer address to be the 0th byte in the
 	// same 4K page that contains the last byte of the buffer."
 	ptr = Td->BufferEnd & ~0xFFFu;
+	Buffer += n;
+	if (OHCI_FindAndCopyTD(ptr, Buffer, Length - n, bIsWrite)) {
+		return true; // error
+	}
+	return false;
+}
+
+bool OHCI::OHCI_CopyIsoTD(uint32_t start_addr, uint32_t end_addr, uint8_t* Buffer, int Length, bool bIsWrite)
+{
+	uint32_t ptr, n;
+
+	ptr = start_addr;
+	n = 0x1000 - (ptr & 0xFFF);
+	if (n > Length) {
+		n = Length;
+	}
+
+	if (OHCI_FindAndCopyTD(ptr, Buffer, n, bIsWrite)) {
+		return true; // error
+	}
+	if (n == Length) {
+		return false; // no bytes left to copy
+	}
+	ptr = end_addr & ~0xfffu;
 	Buffer += n;
 	if (OHCI_FindAndCopyTD(ptr, Buffer, Length - n, bIsWrite)) {
 		return true; // error
@@ -409,30 +486,6 @@ bool OHCI::OHCI_FindAndCopyTD(xbaddr Paddr, uint8_t* Buffer, int Length, bool bI
 	}
 
 	return false;
-}
-
-bool OHCI::OHCI_GetDwords(xbaddr Paddr, uint32_t* Buffer, int Number)
-{
-	if (Paddr != xbnull) {
-		for (int i = 0; i < Number; i++, Buffer++, Paddr += sizeof(*Buffer)) {
-			std::memcpy(Buffer, reinterpret_cast<void*>(Paddr + CONTIGUOUS_MEMORY_BASE), 4); // dropped little -> big endian conversion from XQEMU
-		}
-		return false;
-	}
-
-	return true; // error
-}
-
-bool OHCI::OHCI_WriteDwords(xbaddr Paddr, uint32_t* Buffer, int Number)
-{
-	if (Paddr != xbnull) {
-		for (int i = 0; i < Number; i++, Buffer++, Paddr += sizeof(*Buffer)) {
-			std::memcpy(reinterpret_cast<void*>(Paddr + CONTIGUOUS_MEMORY_BASE), Buffer, 4); // dropped big -> little endian conversion from XQEMU
-		}
-		return false;
-	}
-
-	return true; // error
 }
 
 int OHCI::OHCI_ServiceEDlist(xbaddr Head, int Completion)
@@ -492,7 +545,7 @@ int OHCI::OHCI_ServiceEDlist(xbaddr Head, int Completion)
 			}
 			else {
 				// Handle isochronous endpoints
-				if (ohci_service_iso_td(ohci, &ed, Completion))
+				if (OHCI_ServiceIsoTD(&ed, Completion))
 					break;
 			}
 		}
@@ -748,10 +801,12 @@ int OHCI::OHCI_ServiceTD(OHCI_ED* Ed)
 	td.NextTD = m_Registers.HcDoneHead;
 	m_Registers.HcDoneHead = addr;
 	i = OHCI_BM(td.Flags, TD_DI);
-	if (i < m_DoneCount)
+	if (i < m_DoneCount) {
 		m_DoneCount = i;
-	if (OHCI_BM(td.Flags, TD_CC) != OHCI_CC_NOERROR)
+	}	
+	if (OHCI_BM(td.Flags, TD_CC) != OHCI_CC_NOERROR) {
 		m_DoneCount = 0;
+	}
 
 exit_no_retire:
 	if (OHCI_WriteTD(addr, &td)) {
@@ -1418,4 +1473,277 @@ void OHCI::OHCI_ProcessLists(int completion)
 			m_Registers.HcCommandStatus &= ~OHCI_STATUS_BLF;
 		}
 	}
+}
+
+int OHCI::OHCI_ServiceIsoTD(OHCI_ED* ed, int completion)
+{
+	int dir;
+	size_t len = 0;
+#ifdef DEBUG_ISOCH
+	const char *str = NULL;
+#endif
+	int pid;
+	int ret;
+	int i;
+	XboxDevice* dev;
+	USBEndpoint* ep;
+	OHCI_ISO_TD iso_td;
+	uint32_t addr;
+	uint16_t starting_frame;
+	int16_t relative_frame_number;
+	int frame_count;
+	uint32_t start_offset, next_offset, end_offset = 0;
+	uint32_t start_addr, end_addr;
+
+	addr = ed->HeadP & OHCI_DPTR_MASK;
+
+	if (OHCI_ReadIsoTD(addr, &iso_td)) {
+		DbgPrintf("Ohci: ISO_TD read error at physical address 0x%X\n", addr);
+		OHCI_FatalError();
+		return 0;
+	}
+
+	starting_frame = OHCI_BM(iso_td.Flags, TD_SF);
+	frame_count = OHCI_BM(iso_td.Flags, TD_FC);
+	// From the standard: "The Host Controller does an unsigned subtraction of StartingFrame from the 16 bits of
+	// HcFmNumber to arrive at a signed value for a relative frame number (frame R)."
+	relative_frame_number = USUB(m_Registers.HcFmNumber & 0xFFFF, starting_frame);
+
+#ifdef DEBUG_ISOCH
+	printf("--- ISO_TD ED head 0x%.8x tailp 0x%.8x\n"
+		"0x%.8x 0x%.8x 0x%.8x 0x%.8x\n"
+		"0x%.8x 0x%.8x 0x%.8x 0x%.8x\n"
+		"0x%.8x 0x%.8x 0x%.8x 0x%.8x\n"
+		"frame_number 0x%.8x starting_frame 0x%.8x\n"
+		"frame_count  0x%.8x relative %d\n"
+		"di 0x%.8x cc 0x%.8x\n",
+		ed->head & OHCI_DPTR_MASK, ed->tail & OHCI_DPTR_MASK,
+		iso_td.flags, iso_td.bp, iso_td.next, iso_td.be,
+		iso_td.offset[0], iso_td.offset[1], iso_td.offset[2], iso_td.offset[3],
+		iso_td.offset[4], iso_td.offset[5], iso_td.offset[6], iso_td.offset[7],
+		ohci->frame_number, starting_frame,
+		frame_count, relative_frame_number,
+		OHCI_BM(iso_td.flags, TD_DI), OHCI_BM(iso_td.flags, TD_CC));
+#endif
+
+	if (relative_frame_number < 0) {
+		// From the standard: "If the relative frame number is negative, then the current frame is earlier than the 0th frame
+		// of the Isochronous TD and the Host Controller advances to the next ED."
+		DbgPrintf("Ohci: ISO_TD R=%d < 0\n", relative_frame_number);
+		return 1;
+	}
+	else if (relative_frame_number > frame_count) {
+		// From the standard: "If the relative frame number is greater than
+		// FrameCount, then the Isochronous TD has expired and a error condition exists."
+		DbgPrintf("Ohci: ISO_TD R=%d > FC=%d\n", relative_frame_number, frame_count);
+		OHCI_SET_BM(iso_td.Flags, TD_CC, OHCI_CC_DATAOVERRUN);
+		ed->HeadP &= ~OHCI_DPTR_MASK;
+		ed->HeadP |= (iso_td.NextTD & OHCI_DPTR_MASK);
+		iso_td.NextTD = m_Registers.HcDoneHead;
+		m_Registers.HcDoneHead = addr;
+		i = OHCI_BM(iso_td.Flags, TD_DI);
+		if (i < m_DoneCount) {
+			m_DoneCount = i;
+		}
+		if (OHCI_WriteIsoTD(addr, &iso_td)) {
+			OHCI_FatalError();
+			return 1;
+		}
+		return 0;
+	}
+
+	// From the standard: "If the relative frame number is between 0 and FrameCount, then the Host Controller issues
+	// a token to the endpoint and attempts a data transfer using the buffer described by the Isochronous TD."	
+
+	dir = OHCI_BM(ed->Flags, ED_D);
+	switch (dir) {
+		case OHCI_TD_DIR_IN:
+#ifdef DEBUG_ISOCH
+			str = "in";
+#endif
+			pid = USB_TOKEN_IN;
+			break;
+		case OHCI_TD_DIR_OUT:
+#ifdef DEBUG_ISOCH
+			str = "out";
+#endif
+			pid = USB_TOKEN_OUT;
+			break;
+		case OHCI_TD_DIR_SETUP:
+#ifdef DEBUG_ISOCH
+			str = "setup";
+#endif
+			pid = USB_TOKEN_SETUP;
+			break;
+		default:
+			EmuWarning("Ohci: Bad direction %d", dir);
+			return 1;
+	}
+
+	if (!iso_td.BufferPage0 || !iso_td.BufferEnd) {
+		DbgPrintf("Ohci: ISO_TD bp 0x%.8X be 0x%.8X\n", iso_td.BufferPage0, iso_td.BufferEnd);
+		return 1;
+	}
+
+	start_offset = iso_td.Offset[relative_frame_number];
+	next_offset = iso_td.Offset[relative_frame_number + 1];
+
+	// From the standard: "If the Host Controller supports checking of the Offsets, if either Offset[R] or Offset[R+1] does
+	// not have a ConditionCode of NOT ACCESSED or if the Offset[R + 1] is not greater than or equal to Offset[R], then
+	// an Unrecoverable Error is indicated."
+	// ergo720: I have a doubt here: according to the standard, the error condition is set if ConditionCode (bits 12-15 of
+	// Offset[R(+1)] is not 111x (= NOT ACCESSED), however the check below is only triggered if the bits are all zeros
+	// (= NO ERROR). So, if, for example, these bits are 1100 (= BUFFER OVERRUN), the check won't be triggered when actually
+	// it should be
+
+	if (!(OHCI_BM(start_offset, TD_PSW_CC) & 0xE) ||
+		((relative_frame_number < frame_count) &&
+			!(OHCI_BM(next_offset, TD_PSW_CC) & 0xE))) {
+		DbgPrintf("Ohci: ISO_TD cc != not accessed 0x%.8x 0x%.8x\n", start_offset, next_offset);
+		return 1;
+	}
+
+	if ((relative_frame_number < frame_count) && (start_offset > next_offset)) {
+		printf("Ohci: ISO_TD start_offset=0x%.8x > next_offset=0x%.8x\n", start_offset, next_offset);
+		return 1;
+	}
+
+	// From the standard: "Bit 12 of offset R then selects the upper 20 bits of the physical address
+	// as either BufferPage0 when bit 12 = 0 or the upper 20 bits of BufferEnd when bit 12 = 1."
+		
+	if ((start_offset & 0x1000) == 0) {
+		start_addr = (iso_td.BufferPage0 & OHCI_PAGE_MASK) |
+			(start_offset & OHCI_OFFSET_MASK);
+	}
+	else {
+		start_addr = (iso_td.BufferEnd & OHCI_PAGE_MASK) |
+			(start_offset & OHCI_OFFSET_MASK);
+	}
+
+	// From the standard: "If the data packet is not the last in an Isochronous TD (R not equal to FrameCount),
+	// then the ending address of the buffer is found by using Offset[R + 1] - 1. This value is then used to create a
+	// physical address in the same manner as the Offset[R] was used to create the starting physical address."	
+
+	if (relative_frame_number < frame_count) {
+		end_offset = next_offset - 1;
+		if ((end_offset & 0x1000) == 0) {
+			end_addr = (iso_td.BufferPage0 & OHCI_PAGE_MASK) |
+				(end_offset & OHCI_OFFSET_MASK);
+		}
+		else {
+			end_addr = (iso_td.BufferEnd & OHCI_PAGE_MASK) |
+				(end_offset & OHCI_OFFSET_MASK);
+		}
+	}
+	else {
+		// From the standard: "If, however, the data packet is the last in an Isochronous TD(R = FrameCount),
+		//  then the value of BufferEnd is the address of the last byte in the buffer."	
+		end_addr = iso_td.BufferEnd;
+	}
+
+	if ((start_addr & OHCI_PAGE_MASK) != (end_addr & OHCI_PAGE_MASK)) {
+		len = (end_addr & OHCI_OFFSET_MASK) + 0x1001
+			- (start_addr & OHCI_OFFSET_MASK);
+	}
+	else {
+		len = end_addr - start_addr + 1;
+	}
+
+	if (len && dir != OHCI_TD_DIR_IN) {
+		if (OHCI_CopyIsoTD(start_addr, end_addr, m_UsbBuffer, len, false)) {
+			OHCI_FatalError();
+			return 1;
+		}
+	}
+
+	if (!completion) {
+		bool int_req = relative_frame_number == frame_count && OHCI_BM(iso_td.Flags, TD_DI) == 0;
+		dev = OHCI_FindDevice(OHCI_BM(ed->Flags, ED_FA));
+		ep = m_UsbDevice->USB_GetEP(dev, pid, OHCI_BM(ed->Flags, ED_EN));
+		m_UsbDevice->USB_PacketSetup(&m_UsbPacket, pid, ep, 0, addr, false, int_req);
+		m_UsbDevice->USB_PacketAddBuffer(&m_UsbPacket, m_UsbBuffer, len);
+		m_UsbDevice->USB_HandlePacket(dev, &m_UsbPacket);
+		if (m_UsbPacket.Status == USB_RET_ASYNC) {
+			m_UsbDevice->USB_DeviceFlushEPqueue(dev, ep);
+			return 1;
+		}
+	}
+	if (m_UsbPacket.Status == USB_RET_SUCCESS) {
+		ret = m_UsbPacket.ActualLength;
+	}
+	else {
+		ret = m_UsbPacket.Status;
+	}
+
+#ifdef DEBUG_ISOCH
+	printf("so 0x%.8x eo 0x%.8x\nsa 0x%.8x ea 0x%.8x\ndir %s len %zu ret %d\n",
+		start_offset, end_offset, start_addr, end_addr, str, len, ret);
+#endif
+
+	// From the standard: "After each data packet transfer, the Rth Offset is replaced with a value that indicates the status of
+	// the data packet transfer.The upper 4 bits of the value are the ConditionCode for the transfer and the lower 12 bits
+	// represent the size of the transfer.Together, these two fields constitute the Packet Status Word(PacketStatusWord)."
+	// Writeback
+	if (dir == OHCI_TD_DIR_IN && ret >= 0 && ret <= len) {
+		// IN transfer succeeded
+		if (OHCI_CopyIsoTD(start_addr, end_addr, m_UsbBuffer, ret, true)) {
+			OHCI_FatalError();
+			return 1;
+		}
+		OHCI_SET_BM(iso_td.Offset[relative_frame_number], TD_PSW_CC, OHCI_CC_NOERROR);
+		OHCI_SET_BM(iso_td.Offset[relative_frame_number], TD_PSW_SIZE, ret);
+	}
+	else if (dir == OHCI_TD_DIR_OUT && ret == len) {
+		// OUT transfer succeeded
+		OHCI_SET_BM(iso_td.Offset[relative_frame_number], TD_PSW_CC, OHCI_CC_NOERROR);
+		OHCI_SET_BM(iso_td.Offset[relative_frame_number], TD_PSW_SIZE, 0);
+	}
+	else {
+		// Handle the error condition
+		if (ret > static_cast<ptrdiff_t>(len)) { // Sequence Error
+			DbgPrintf("Ohci: DataOverrun %d > %zu\n", ret, len);
+			OHCI_SET_BM(iso_td.Offset[relative_frame_number], TD_PSW_CC, OHCI_CC_DATAOVERRUN);
+			OHCI_SET_BM(iso_td.Offset[relative_frame_number], TD_PSW_SIZE, len);
+		}
+		else if (ret >= 0) { // Sequence Error
+			DbgPrintf("Ohci: DataUnderrun %d\n", ret);
+			OHCI_SET_BM(iso_td.Offset[relative_frame_number], TD_PSW_CC, OHCI_CC_DATAUNDERRUN);
+		}
+		else {
+			switch (ret) {
+				case USB_RET_IOERROR: // Transmission Errors
+				case USB_RET_NODEV:
+					OHCI_SET_BM(iso_td.Offset[relative_frame_number], TD_PSW_CC, OHCI_CC_DEVICENOTRESPONDING);
+					OHCI_SET_BM(iso_td.Offset[relative_frame_number], TD_PSW_SIZE, 0);
+					break;
+				case USB_RET_NAK: // NAK and STALL
+				case USB_RET_STALL:
+					DbgPrintf("Ohci: got NAK/STALL %d\n", ret);
+					OHCI_SET_BM(iso_td.Offset[relative_frame_number], TD_PSW_CC, OHCI_CC_STALL);
+					OHCI_SET_BM(iso_td.Offset[relative_frame_number], TD_PSW_SIZE, 0);
+					break;
+				default: // Unknown Error
+					DbgPrintf("Ohci: Bad device response %d\n", ret);
+					OHCI_SET_BM(iso_td.Offset[relative_frame_number], TD_PSW_CC, OHCI_CC_UNDEXPETEDPID);
+					break;
+			}
+		}
+	}
+
+	if (relative_frame_number == frame_count) {
+		// Last data packet of ISO TD - retire the TD to the Done Queue
+		OHCI_SET_BM(iso_td.Flags, TD_CC, OHCI_CC_NOERROR);
+		ed->HeadP &= ~OHCI_DPTR_MASK;
+		ed->HeadP |= (iso_td.NextTD & OHCI_DPTR_MASK);
+		iso_td.NextTD = m_Registers.HcDoneHead;
+		m_Registers.HcDoneHead = addr;
+		i = OHCI_BM(iso_td.Flags, TD_DI);
+		if (i < m_DoneCount) {
+			m_DoneCount = i;
+		}
+	}
+	if (OHCI_WriteIsoTD(addr, &iso_td)) {
+		OHCI_FatalError();
+	}
+	return 1;
 }

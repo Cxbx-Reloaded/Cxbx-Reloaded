@@ -83,6 +83,16 @@ typedef struct _OHCI_TD {
 }
 OHCI_TD;
 
+/* Isochronous transfer descriptor */
+typedef struct _OHCI_ISO_TD {
+	uint32_t Flags;
+	uint32_t BufferPage0;
+	uint32_t NextTD;
+	uint32_t BufferEnd;
+	uint16_t Offset[8];
+}
+OHCI_ISO_TD;
+
 /* enum indicating the current HC state */
 typedef enum _OHCI_State
 {
@@ -187,8 +197,7 @@ class OHCI
 		uint32_t m_OldHcControl;
 		// irq number
 		int m_IrqNum;
-		// ergo720: I think it's the DelayInterrupt flag in a TD
-		// -> num of frames to wait before generating an interrupt for this TD
+		// Done Queue Interrupt Counter
 		int m_DoneCount;
 		// the address of the pending TD
 		xbaddr m_AsyncTD;
@@ -242,18 +251,22 @@ class OHCI
 		bool OHCI_ReadTD(xbaddr Paddr, OHCI_TD* Td);
 		// write a TD in memory
 		bool OHCI_WriteTD(xbaddr Paddr, OHCI_TD* Td);
+		// read an iso TD in memory
+		bool OHCI_ReadIsoTD(xbaddr Paddr, OHCI_ISO_TD* td);
+		// write an iso TD in memory
+		bool OHCI_WriteIsoTD(xbaddr Paddr, OHCI_ISO_TD* td);
 		// read/write the user buffer pointed to by a TD from/to main memory
 		bool OHCI_CopyTD(OHCI_TD* Td, uint8_t* Buffer, int Length, bool bIsWrite);
+		// read/write the user buffer pointed to by a ISO TD from/to main memory
+		bool OHCI_CopyIsoTD(uint32_t start_addr, uint32_t end_addr, uint8_t* Buffer, int Length, bool bIsWrite);
 		// find a TD buffer in memory and copy it
 		bool OHCI_FindAndCopyTD(xbaddr Paddr, uint8_t* Buffer, int Length, bool bIsWrite);
-		// read an array of DWORDs in memory
-		bool OHCI_GetDwords(xbaddr Paddr, uint32_t* Buffer, int Number);
-		// write an array of DWORDs in memory
-		bool OHCI_WriteDwords(xbaddr Paddr, uint32_t* Buffer, int Number);
 		// process an ED list. Returns nonzero if active TD was found
 		int OHCI_ServiceEDlist(xbaddr Head, int Completion);
 		// process a TD. Returns nonzero to terminate processing of this endpoint
 		int OHCI_ServiceTD(OHCI_ED* Ed);
+		// process an isochronous TD
+		int OHCI_ServiceIsoTD(OHCI_ED* ed, int completion);
 		// find the usb device with the supplied address
 		XboxDevice* OHCI::OHCI_FindDevice(uint8_t Addr);
 		// cancel a packet when a device is removed
