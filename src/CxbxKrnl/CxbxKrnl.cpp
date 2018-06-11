@@ -1451,8 +1451,20 @@ __declspec(noreturn) void CxbxKrnlInit
 void CxbxInitFilePaths()
 {
 	char szAppData[MAX_PATH];
-	SHGetSpecialFolderPath(NULL, szAppData, CSIDL_APPDATA, TRUE);
-	snprintf(szFolder_CxbxReloadedData, MAX_PATH, "%s\\Cxbx-Reloaded", szAppData);
+	DWORD   dwDisposition, dwType, dwSize;
+	HKEY    hKey;
+
+	if (RegCreateKeyEx(HKEY_CURRENT_USER, "Software\\Cxbx-Reloaded", 0, NULL, REG_OPTION_NON_VOLATILE, KEY_QUERY_VALUE, NULL, &hKey, &dwDisposition) == ERROR_SUCCESS)
+	{
+		LONG result = ERROR_SUCCESS;
+
+		dwType = REG_DWORD; dwSize = sizeof(szAppData);
+		result = RegQueryValueEx(hKey, "DATALOC", NULL, &dwType, (PBYTE)&szAppData, &dwSize);
+		if (result != ERROR_SUCCESS) {
+			SHGetSpecialFolderPath(NULL, szAppData, CSIDL_APPDATA, TRUE); //Luke wants default to be %appdata%
+		}
+
+	}
 
 	// Make sure our data folder exists :
 	int result = SHCreateDirectoryEx(nullptr, szFolder_CxbxReloadedData, nullptr);

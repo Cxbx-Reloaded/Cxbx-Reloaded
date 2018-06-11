@@ -48,6 +48,7 @@
 #include <multimon.h>
 
 #include <io.h>
+#include <shlobj.h>
 
 #include <sstream> // for std::stringstream
 #include <fstream>
@@ -1149,6 +1150,39 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 					break;
 				}
 				ShowEepromConfig(hwnd);
+			}
+			case ID_SETTINGS_CONFIG_DATALOC:
+			{
+				char szDir[MAX_PATH];
+				BROWSEINFO bInfo;
+				bInfo.hwndOwner = NULL;
+				bInfo.pidlRoot = NULL;
+				bInfo.pszDisplayName = szDir;
+				bInfo.lpszTitle = "Please, select a folder";
+				bInfo.ulFlags = BIF_NEWDIALOGSTYLE;
+				bInfo.lpfn = NULL;
+				bInfo.lParam = 0;
+				bInfo.iImage = -1;
+
+				LPITEMIDLIST lpItem = SHBrowseForFolder(&bInfo);
+
+				if (lpItem != NULL)
+				{
+					DWORD   dwDisposition, dwType, dwSize;
+					HKEY    hKey;
+
+					SHGetPathFromIDList(lpItem, szDir);
+
+					if (RegCreateKeyEx(HKEY_CURRENT_USER, "Software\\Cxbx-Reloaded", 0, NULL, REG_OPTION_NON_VOLATILE, KEY_SET_VALUE, NULL, &hKey, &dwDisposition) == ERROR_SUCCESS)
+					{
+						dwType = REG_SZ;
+						dwSize = sizeof(szDir);
+
+						RegSetValueEx(hKey, "DATALOC", 0, dwType, (PBYTE)&szDir, dwSize);
+
+						RegCloseKey(hKey);
+					}
+				}
 			}
 			break;
 
