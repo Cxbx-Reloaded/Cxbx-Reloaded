@@ -358,6 +358,8 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
     // NOTE: We need to check if title has library header to optimize verification process.
     if (pLibraryVersion != nullptr) {
         uint32 dwLibraryVersions = pXbeHeader->dwLibraryVersions;
+        const char* SectionName = nullptr;
+        Xbe::SectionHeader* pSectionHeaders = (Xbe::SectionHeader*)pXbeHeader->dwSectionHeadersAddr;
 
         // Get the highest revision build and prefix library to scan.
         for (uint32 v = 0; v < dwLibraryVersions; v++) {
@@ -368,6 +370,15 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
                 xdkVersion = BuildVersion;
             }
             XbLibScan |= XbSymbolLibrayToFlag(std::string(pLibraryVersion[v].szName, pLibraryVersion[v].szName + 8).c_str());
+        }
+
+        // Since XDK 4039 title does not have library version for DSOUND, let's check section header if it exists or not.
+        for (unsigned int v = 0; v < pXbeHeader->dwSections; v++) {
+            SectionName = (const char*)pSectionHeaders[v].dwSectionNameAddr;
+            if (strncmp(SectionName, "DSOUND", 8) == 0) {
+                XbLibScan |= XbSymbolLib_DSOUND;
+                break;
+            }
         }
     }
 
