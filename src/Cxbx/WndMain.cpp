@@ -515,12 +515,12 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 						g_EmuShared->SetLedSequence(LedSequence);
 						SetTimer(hwnd, TIMERID_FPS, 1000, (TIMERPROC)NULL);
 						SetTimer(hwnd, TIMERID_LED, XBOX_LED_FLASH_PERIOD, (TIMERPROC)NULL);
-						m_hwndChild = (HWND)lParam;
+						m_hwndChild = GetWindow(hwnd, GW_CHILD);
 						UpdateCaption();
 						RefreshMenus();
 					}
 					else {
-						m_hwndChild = (HWND)lParam;
+						m_hwndChild = GetWindow(hwnd, GW_CHILD);
 					}
 					CreateThread(NULL, NULL, CrashMonitorWrapper, (void*)this, NULL, NULL); // create the crash monitoring thread
                 }
