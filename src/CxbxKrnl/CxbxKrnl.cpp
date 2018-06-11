@@ -1454,16 +1454,16 @@ void CxbxInitFilePaths()
 	DWORD   dwDisposition, dwType, dwSize;
 	HKEY    hKey;
 
-	if (RegCreateKeyEx(HKEY_CURRENT_USER, "Software\\Cxbx-Reloaded", 0, NULL, REG_OPTION_NON_VOLATILE, KEY_QUERY_VALUE, NULL, &hKey, &dwDisposition) == ERROR_SUCCESS)
+	if (RegCreateKeyEx(HKEY_CURRENT_USER, "Software\\Cxbx-Reloaded\\DataStorageLocation", 0, NULL, REG_OPTION_NON_VOLATILE,
+		KEY_QUERY_VALUE, NULL, &hKey, &dwDisposition) == ERROR_SUCCESS)
 	{
 		LONG result = ERROR_SUCCESS;
 
 		dwType = REG_SZ; dwSize = sizeof(szAppData);
-		result = RegQueryValueEx(hKey, "DATALOC", NULL, &dwType, (PBYTE)&szAppData, &dwSize);
+		result = RegQueryValueEx(hKey, "DataStorageLocationDirectory", NULL, &dwType, (PBYTE)&szAppData, &dwSize);
 		if (result != ERROR_SUCCESS) {
 			SHGetSpecialFolderPath(NULL, szAppData, CSIDL_APPDATA, TRUE); //Luke wants default to be %appdata%
 		}
-
 	}
 
 	snprintf(szFolder_CxbxReloadedData, MAX_PATH, "%s\\Cxbx-Reloaded", szAppData);

@@ -1,6 +1,6 @@
 ﻿//{{NO_DEPENDENCIES}}
 // Microsoft Visual C++ generated include file.
-// Used by C:\Users\Aaron\Source\Repos\cxbx-reloaded2\resource\Cxbx.rc
+// Used by c:\Users\Aaron\source\repos\cxbx-reloaded2\resource\Cxbx.rc
 //
 #define IDI_CXBX                        101
 #define IDB_SPLASH                      102
@@ -279,7 +279,9 @@
 #define ID_SETTINGS_CONFIG_XBOX_CONTROLLER_MAPPING 40101
 #define ID_HACKS_RENDERDIRECTLYTOHOSTBACKBUFFER 40102
 #define ID_HACKS_SPEEDHACKS             40103
-#define ID_SETTINGS_CONFIG_DATALOC      40104
+#define ID_SETTINGS_CONFIG_DLOCCUSTOM   40104
+#define ID_SETTINGS_CONFIG_DLOCAPPDATA  40105
+#define ID_SETTINGS_CONFIG_DLOCCURDIR   40106
 #define IDC_STATIC                      -1
 
 // Next default values for new objects
@@ -287,7 +289,7 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        135
-#define _APS_NEXT_COMMAND_VALUE         40105
+#define _APS_NEXT_COMMAND_VALUE         40107
 #define _APS_NEXT_CONTROL_VALUE         1256
 #define _APS_NEXT_SYMED_VALUE           104
 #endif

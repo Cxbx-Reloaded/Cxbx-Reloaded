@@ -1089,46 +1089,46 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
 					// dump xbe information to file
 					{
-                        std::string Xbe_info = DumpInformation(m_Xbe);
-                        if (m_Xbe->HasError()) {
-                            MessageBox(m_hwnd, m_Xbe->GetError().c_str(), "Cxbx-Reloaded", MB_ICONSTOP | MB_OK);
-                        }
-                        else {
-                            std::ofstream Xbe_dump_file(ofn.lpstrFile);
-                            if(Xbe_dump_file.is_open()) {
-                                Xbe_dump_file << Xbe_info;
-                                Xbe_dump_file.close();
-                                char buffer[255];
-                                sprintf(buffer, "%s's .xbe info was successfully dumped.", m_Xbe->m_szAsciiTitle);
-                                printf("WndMain: %s\n", buffer);
-                                MessageBox(m_hwnd, buffer, "Cxbx-Reloaded", MB_ICONINFORMATION | MB_OK);
-                            }
-                            else {
-                                MessageBox(m_hwnd, "Could not open Xbe text file.", "Cxbx-Reloaded", MB_ICONSTOP | MB_OK);
-                            }
-                        }
+						std::string Xbe_info = DumpInformation(m_Xbe);
+						if (m_Xbe->HasError()) {
+							MessageBox(m_hwnd, m_Xbe->GetError().c_str(), "Cxbx-Reloaded", MB_ICONSTOP | MB_OK);
+						}
+						else {
+							std::ofstream Xbe_dump_file(ofn.lpstrFile);
+							if (Xbe_dump_file.is_open()) {
+								Xbe_dump_file << Xbe_info;
+								Xbe_dump_file.close();
+								char buffer[255];
+								sprintf(buffer, "%s's .xbe info was successfully dumped.", m_Xbe->m_szAsciiTitle);
+								printf("WndMain: %s\n", buffer);
+								MessageBox(m_hwnd, buffer, "Cxbx-Reloaded", MB_ICONINFORMATION | MB_OK);
+							}
+							else {
+								MessageBox(m_hwnd, "Could not open Xbe text file.", "Cxbx-Reloaded", MB_ICONSTOP | MB_OK);
+							}
+						}
 					}
 				}
 			}
 			break;
 
-            case ID_EDIT_DUMPXBEINFOTO_DEBUGCONSOLE:
-            {
-                std::string Xbe_info = DumpInformation(m_Xbe);
-                if (m_Xbe->HasError()) {
-                    MessageBox(m_hwnd, m_Xbe->GetError().c_str(), "Cxbx-Reloaded", MB_ICONSTOP | MB_OK);
-                }
-                else {
-                    std::cout << Xbe_info;
-                    char buffer[255];
-                    sprintf(buffer, "%s's .xbe info was successfully dumped to console.", m_Xbe->m_szAsciiTitle);
-                    printf("WndMain: %s\n", buffer);
-                }
-            }
-            break;
-            case ID_SETTINGS_CONFIG_XBOX_CONTROLLER_MAPPING:
-                ShowXboxControllerPortMappingConfig(hwnd);
-                break;
+			case ID_EDIT_DUMPXBEINFOTO_DEBUGCONSOLE:
+			{
+				std::string Xbe_info = DumpInformation(m_Xbe);
+				if (m_Xbe->HasError()) {
+					MessageBox(m_hwnd, m_Xbe->GetError().c_str(), "Cxbx-Reloaded", MB_ICONSTOP | MB_OK);
+				}
+				else {
+					std::cout << Xbe_info;
+					char buffer[255];
+					sprintf(buffer, "%s's .xbe info was successfully dumped to console.", m_Xbe->m_szAsciiTitle);
+					printf("WndMain: %s\n", buffer);
+				}
+			}
+			break;
+			case ID_SETTINGS_CONFIG_XBOX_CONTROLLER_MAPPING:
+				ShowXboxControllerPortMappingConfig(hwnd);
+				break;
 			case ID_SETTINGS_CONFIG_CONTROLLER:
 				ShowControllerConfig(hwnd);
 				break;
@@ -1137,9 +1137,9 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 				ShowVideoConfig(hwnd);
 				break;
 
-            case ID_SETTINGS_CONFIG_AUDIO:
-                ShowAudioConfig(hwnd);
-                break;
+			case ID_SETTINGS_CONFIG_AUDIO:
+				ShowAudioConfig(hwnd);
+				break;
 
 			case ID_SETTINGS_CONFIG_EEPROM:
 			{
@@ -1151,7 +1151,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 				}
 				ShowEepromConfig(hwnd);
 			}
-			case ID_SETTINGS_CONFIG_DATALOC:
+			case ID_SETTINGS_CONFIG_DLOCCUSTOM: //for custom
 			{
 				char szDir[MAX_PATH];
 				BROWSEINFO bInfo;
@@ -1172,16 +1172,51 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 					HKEY    hKey;
 
 					SHGetPathFromIDList(lpItem, szDir);
-
-					if (RegCreateKeyEx(HKEY_CURRENT_USER, "Software\\Cxbx-Reloaded", 0, NULL, REG_OPTION_NON_VOLATILE, KEY_SET_VALUE, NULL, &hKey, &dwDisposition) == ERROR_SUCCESS)
+					if (RegCreateKeyEx(HKEY_CURRENT_USER, "Software\\Cxbx-Reloaded\\DataStorageLocation", 0, NULL, REG_OPTION_NON_VOLATILE,
+						KEY_SET_VALUE, NULL, &hKey, &dwDisposition) == ERROR_SUCCESS)
 					{
-						dwType = REG_SZ;
-						dwSize = sizeof(szDir);
-
-						RegSetValueEx(hKey, "DATALOC", 0, dwType, (PBYTE)&szDir, dwSize);
-
+						dwType = REG_SZ; dwSize = sizeof(szDir);
+						RegSetValueEx(hKey, "DataStorageLocationDirectory", 0, dwType, (PBYTE)&szDir, dwSize);
 						RegCloseKey(hKey);
 					}
+				}
+			}
+			break;
+
+			case ID_SETTINGS_CONFIG_DLOCAPPDATA:
+			{
+				char szDir[MAX_PATH];
+				char szFolder_CxbxReloadedData[MAX_PATH];
+				DWORD   dwDisposition, dwType, dwSize;
+				HKEY    hKey;
+
+				SHGetSpecialFolderPath(NULL, szDir, CSIDL_APPDATA, TRUE);
+				snprintf(szFolder_CxbxReloadedData, MAX_PATH, "%s\\Cxbx-Reloaded", szDir);
+				if (RegCreateKeyEx(HKEY_CURRENT_USER, "Software\\Cxbx-Reloaded\\DataStorageLocation", 0, NULL, REG_OPTION_NON_VOLATILE,
+					KEY_SET_VALUE, NULL, &hKey, &dwDisposition) == ERROR_SUCCESS)
+				{
+					dwType = REG_SZ; dwSize = sizeof(szFolder_CxbxReloadedData);
+					RegSetValueEx(hKey, "DataStorageLocationDirectory", 0, dwType, (PBYTE)&szFolder_CxbxReloadedData, dwSize);
+					RegCloseKey(hKey);
+				}
+			}
+			break;
+
+			case ID_SETTINGS_CONFIG_DLOCCURDIR:
+			{
+				char szDir[MAX_PATH];
+				char szFolder_CxbxReloadedData[MAX_PATH];
+				DWORD   dwDisposition, dwType, dwSize;
+				HKEY    hKey;
+
+				GetCurrentDirectory(MAX_PATH, szDir);
+				snprintf(szFolder_CxbxReloadedData, MAX_PATH, "%s\\Cxbx-Reloaded", szDir);
+				if (RegCreateKeyEx(HKEY_CURRENT_USER, "Software\\Cxbx-Reloaded\\DataStorageLocation", 0, NULL, REG_OPTION_NON_VOLATILE,
+					KEY_SET_VALUE, NULL, &hKey, &dwDisposition) == ERROR_SUCCESS)
+				{
+					dwType = REG_SZ; dwSize = sizeof(szFolder_CxbxReloadedData);
+					RegSetValueEx(hKey, "DataStorageLocationDirectory", 0, dwType, (PBYTE)&szFolder_CxbxReloadedData, dwSize);
+					RegCloseKey(hKey);
 				}
 			}
 			break;
