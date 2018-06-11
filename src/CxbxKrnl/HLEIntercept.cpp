@@ -335,7 +335,7 @@ void EmuUpdateLLEStatus()
             || g_SymbolAddresses["Direct3D_CreateDevice"] == 0)) {
         bLLE_GPU = true;
         FlagsLLE ^= LLE_GPU;
-        EmuOutputMessage(XB_OUTPUT_MESSAGE_INFO, "Rollback to LLE GPU.");
+        EmuOutputMessage(XB_OUTPUT_MESSAGE_INFO, "Fallback to LLE GPU.");
     }
 
     if ((FlagsLLE & LLE_APU) == false
@@ -343,7 +343,7 @@ void EmuUpdateLLEStatus()
             || g_SymbolAddresses["DirectSoundCreate"] == 0)) {
         bLLE_APU = true;
         FlagsLLE ^= LLE_APU;
-        EmuOutputMessage(XB_OUTPUT_MESSAGE_INFO, "Rollback to LLE APU.");
+        EmuOutputMessage(XB_OUTPUT_MESSAGE_INFO, "Fallback to LLE APU.");
     }
     g_EmuShared->SetFlagsLLE(&FlagsLLE);
 }
