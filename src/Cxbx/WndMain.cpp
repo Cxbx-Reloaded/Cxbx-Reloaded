@@ -2330,28 +2330,29 @@ void WndMain::CrashMonitor()
 	 		WaitForSingleObject(hProcess, INFINITE);
 	 		dwProcessID_ExitCode = 0;
 	 		GetExitCodeProcess(hProcess, &dwProcessID_ExitCode);
+	 		CloseHandle(hProcess);
 
 	 		g_EmuShared->GetMultiXbeFlag(&bQuickReboot);
 
 	 		if (!bQuickReboot) {
 	 			if (dwProcessID_ExitCode == EXIT_SUCCESS) {// StopEmulation
-	 				CloseHandle(hProcess);
 	 				return;
-	 			} else { // that's a crash
-					CloseHandle(hProcess);
 	 			}
+				// Or else, it's a crash
 	 		}
 	 		else {
 
 	 			// multi-xbe
 	 			// destroy this thread and start a new one
-	 			CloseHandle(hProcess);
 	 			bQuickReboot = false;
 	 			g_EmuShared->SetMultiXbeFlag(&bQuickReboot);
 	 			return;
 	 		}
 	 	}
 	}
+
+	// Crash clean up.
+
 	KillTimer(m_hwnd, TIMERID_FPS);
 	KillTimer(m_hwnd, TIMERID_LED);
 	DrawLedBitmap(m_hwnd, true);
