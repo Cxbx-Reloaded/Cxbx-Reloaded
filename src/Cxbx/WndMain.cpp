@@ -2319,49 +2319,46 @@ void WndMain::CrashMonitor()
 	DWORD dwProcessID_ExitCode = 0;
 	GetWindowThreadProcessId(m_hwndChild, &dwProcessID_ExitCode);
 
-	// Did not received valid process ID, assume we do not have access or crashed in the process.
-	if (dwProcessID_ExitCode == 0) {
-
-	crashCleanup:
-
-		KillTimer(m_hwnd, TIMERID_FPS);
-		KillTimer(m_hwnd, TIMERID_LED);
-		DrawLedBitmap(m_hwnd, true);
-		m_hwndChild = NULL;
-		m_bIsStarted = false;
-		UpdateCaption();
-		RefreshMenus();
-		return;
-	}
+	// If we do receive valid process ID, let's do the next step.
+	if (dwProcessID_ExitCode != 0) {
 
 	HANDLE hProcess = OpenProcess(SYNCHRONIZE | PROCESS_QUERY_INFORMATION, FALSE, dwProcessID_ExitCode);
 
-	// Did not received valid handle, assume we do not have access or crashed in the process.
-	if (hProcess == NULL) {
-		goto crashCleanup;
+	 	// If we do receive valid handle, let's do the next step.
+	 	if (hProcess != NULL) {
+
+	 		WaitForSingleObject(hProcess, INFINITE);
+	 		dwProcessID_ExitCode = 0;
+	 		GetExitCodeProcess(hProcess, &dwProcessID_ExitCode);
+
+	 		g_EmuShared->GetMultiXbeFlag(&bQuickReboot);
+
+	 		if (!bQuickReboot) {
+	 			if (dwProcessID_ExitCode == EXIT_SUCCESS) {// StopEmulation
+	 				CloseHandle(hProcess);
+	 				return;
+	 			} else { // that's a crash
+					CloseHandle(hProcess);
+	 			}
+	 		}
+	 		else {
+
+	 			// multi-xbe
+	 			// destroy this thread and start a new one
+	 			CloseHandle(hProcess);
+	 			bQuickReboot = false;
+	 			g_EmuShared->SetMultiXbeFlag(&bQuickReboot);
+	 			return;
+	 		}
+	 	}
 	}
-
-	WaitForSingleObject(hProcess, INFINITE);
-	dwProcessID_ExitCode = 0;
-	GetExitCodeProcess(hProcess, &dwProcessID_ExitCode);
-
-	g_EmuShared->GetMultiXbeFlag(&bQuickReboot);
-
-	if (!bQuickReboot) {
- 		if (dwProcessID_ExitCode == EXIT_SUCCESS) {// StopEmulation
-			CloseHandle(hProcess);
-			return;
-		} else { // that's a crash
-			CloseHandle(hProcess);
-			goto crashCleanup;
-		}
-	}
-
-	// multi-xbe
-	// destroy this thread and start a new one
-	CloseHandle(hProcess);
-	bQuickReboot = false;
-	g_EmuShared->SetMultiXbeFlag(&bQuickReboot);
+	KillTimer(m_hwnd, TIMERID_FPS);
+	KillTimer(m_hwnd, TIMERID_LED);
+	DrawLedBitmap(m_hwnd, true);
+	m_hwndChild = NULL;
+	m_bIsStarted = false;
+	UpdateCaption();
+	RefreshMenus();
 }
 
 // draw Xbox LED bitmap
