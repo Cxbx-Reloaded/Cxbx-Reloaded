@@ -1320,7 +1320,6 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 			case ID_EMULATION_LLE_JIT:
 			{
 				m_FlagsLLE = m_FlagsLLE ^ LLE_JIT;
-				ClearHLECache();
 				RefreshMenus();
 			}
 			break;
@@ -1328,7 +1327,6 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 			case ID_EMULATION_LLE_APU:
 			{
 				m_FlagsLLE = m_FlagsLLE ^ LLE_APU;
-				ClearHLECache();
 				RefreshMenus();
 			}
 			break;
@@ -1336,7 +1334,6 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 			case ID_EMULATION_LLE_GPU:
 			{
 				m_FlagsLLE = m_FlagsLLE ^ LLE_GPU;
-				ClearHLECache();
 				RefreshMenus();
 			}
 			break;
