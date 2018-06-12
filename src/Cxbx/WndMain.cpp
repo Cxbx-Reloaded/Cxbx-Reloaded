@@ -1173,7 +1173,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 				bInfo.pidlRoot = NULL;
 				bInfo.pszDisplayName = szDir;
 				bInfo.lpszTitle = "Please, select a folder";
-				bInfo.ulFlags = BIF_NEWDIALOGSTYLE;
+				bInfo.ulFlags = BIF_NEWDIALOGSTYLE, BIF_EDITBOX, BIF_VALIDATE;
 				bInfo.lpfn = NULL;
 				bInfo.lParam = 0;
 				bInfo.iImage = -1;
@@ -1187,6 +1187,13 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 					int toggle = 2;
 
 					SHGetPathFromIDList(lpItem, szDir);
+
+					if (!strlen(szDir))
+					{
+						MessageBox(hwnd, "You've selected an invalid folder.. Go back and try again.", "Cxbx-Reloaded", MB_ICONEXCLAMATION | MB_OK);
+						break;
+					}
+
 					if (RegCreateKeyEx(HKEY_CURRENT_USER, "Software\\Cxbx-Reloaded\\DataStorageLocation", 0, NULL, REG_OPTION_NON_VOLATILE,
 						KEY_SET_VALUE, NULL, &hKey, &dwDisposition) == ERROR_SUCCESS)
 					{
