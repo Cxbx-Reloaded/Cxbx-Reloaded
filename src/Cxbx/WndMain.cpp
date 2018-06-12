@@ -159,8 +159,8 @@ WndMain::WndMain(HINSTANCE x_hInstance) :
 	m_KrnlDebug(DM_NONE),
 	m_CxbxDebug(DM_NONE),
 	m_FlagsLLE(0),
-	m_dwRecentXbe(0),
-	m_StorageToggle(0)
+	m_StorageToggle(0),
+	m_dwRecentXbe(0)
 {
     // initialize members
     {
@@ -1190,7 +1190,14 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
 					if (!strlen(szDir))
 					{
-						MessageBox(hwnd, "You've selected an invalid folder.. Go back and try again.", "Cxbx-Reloaded", MB_ICONEXCLAMATION | MB_OK);
+						MessageBox(hwnd, "You've selected an invalid folder... Go back and try again.", "Cxbx-Reloaded", MB_ICONEXCLAMATION | MB_OK);
+						break;
+					}
+
+					std::string szDirTemp = std::string(szDir) + std::string("\\Cxbx-Reloaded");
+					int result = SHCreateDirectoryEx(nullptr, szDirTemp.c_str(), nullptr);
+					if ((result != ERROR_SUCCESS) && (result != ERROR_ALREADY_EXISTS)) {
+						MessageBox(hwnd, "You don't have write permissions on that directory...", "Cxbx-Reloaded", MB_ICONEXCLAMATION | MB_OK);
 						break;
 					}
 
