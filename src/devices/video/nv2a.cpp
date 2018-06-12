@@ -394,30 +394,31 @@ void NV2ADevice::SwapBuffers(NV2AState *d)
 	static int framebufferWidth = 640;
 	static int framebufferHeight = 480;
 
-	static GLuint texture = -1;
+	static GLuint frame_texture = -1;
 
 	// Convert AV Format to OpenGl format details & destroy the texture if format changed..
 	// This is required for titles that use a non ARGB framebuffer, such was Beats of Rage
-	if (g_AvDisplayModeFormat != PreviousAvDisplayModeFormat) {
+	if (PreviousAvDisplayModeFormat != g_AvDisplayModeFormat) {
 		AvDisplayModeFormatToGL(g_AvDisplayModeFormat, &internalFormat, &format, &type);
 		AvGetFormatSize(AvpCurrentMode, &framebufferWidth, &framebufferHeight);
-		if (texture != -1) {
-			glDeleteTextures(1, &texture);
-			texture = -1;
+		if (frame_texture != -1) {
+			glDeleteTextures(1, &frame_texture);
+			frame_texture = -1;
 		}
+
+		PreviousAvDisplayModeFormat = g_AvDisplayModeFormat;
 	}
 	
 	// If we need to create a new texture, do so, otherwise, update the existing
-	if (texture == -1) {
-		glGenTextures(1, &texture);
-		glBindTexture(GL_TEXTURE_2D, texture);
-		glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, framebufferWidth, framebufferHeight, 0, format, type, (void*)(0x80000000 | d->pcrtc.start));
+	hwaddr frame_buffer = /*CONTIGUOUS_MEMORY_BASE=*/0x80000000 | d->pcrtc.start; // NV_PCRTC_START
+	if (frame_texture == -1) {
+		glGenTextures(1, &frame_texture);
+		glBindTexture(GL_TEXTURE_2D, frame_texture);
+		glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, framebufferWidth, framebufferHeight, 0, format, type, (void*)frame_buffer);
 	} else {
-		glBindTexture(GL_TEXTURE_2D, texture);
-		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, framebufferWidth, framebufferHeight, format, type, (void*)(0x80000000 | d->pcrtc.start));
+		glBindTexture(GL_TEXTURE_2D, frame_texture);
+		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, framebufferWidth, framebufferHeight, format, type, (void*)frame_buffer);
 	}
-
-	PreviousAvDisplayModeFormat = g_AvDisplayModeFormat;
 
 	// If we need to create an OpenGL framebuffer, do so
 	static GLuint framebuffer = -1;
@@ -427,13 +428,158 @@ void NV2ADevice::SwapBuffers(NV2AState *d)
 
 	// Draw to screen..
 	glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture, 0);
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, frame_texture, 0);
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0); // break the existing binding of a framebuffer object to target
 	glClearColor(1.0f, 0.0f, 1.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
 	// TODO: Use window size/actual framebuffer size rather than hard coding 640x480
-	glBlitFramebuffer(0, 0, framebufferWidth, framebufferHeight, 0, 480, 640, 0, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+	const GLenum filter = GL_NEAREST;
+	glBlitFramebuffer(0, 0, framebufferWidth, framebufferHeight, 0, 480, 640, 0, GL_COLOR_BUFFER_BIT, filter);
 	
+#define CXBX_NV2A_LLE_OVERLAY_ENABLED // Completely untested
+#ifdef CXBX_NV2A_LLE_OVERLAY_ENABLED
+	// It seem NV2A supports 2 video overlays
+	for (int v = 0; v < 2; v++) {
+		uint32_t video_buffer_use = (v == 0) ? NV_PVIDEO_BUFFER_0_USE : NV_PVIDEO_BUFFER_1_USE;
+		if (!(d->pvideo.regs[NV_PVIDEO_BUFFER] & video_buffer_use)) {
+			continue;
+		}
+
+		// Get overlay measures (from xqemu nv2a_overlay_draw_line) :
+		hwaddr overlay_base = d->pvideo.regs[NV_PVIDEO_BASE(v)];
+		hwaddr overlay_limit = d->pvideo.regs[NV_PVIDEO_LIMIT(v)];
+		hwaddr overlay_offset = d->pvideo.regs[NV_PVIDEO_OFFSET(v)];
+
+		int in_width = GET_MASK(d->pvideo.regs[NV_PVIDEO_SIZE_IN(v)], NV_PVIDEO_SIZE_IN_WIDTH);
+		int in_height = GET_MASK(d->pvideo.regs[NV_PVIDEO_SIZE_IN(0)], NV_PVIDEO_SIZE_IN_HEIGHT);
+		int in_s = GET_MASK(d->pvideo.regs[NV_PVIDEO_POINT_IN(v)], NV_PVIDEO_POINT_IN_S);
+		int in_t = GET_MASK(d->pvideo.regs[NV_PVIDEO_POINT_IN(v)], NV_PVIDEO_POINT_IN_T);
+		int in_pitch = GET_MASK(d->pvideo.regs[NV_PVIDEO_FORMAT(v)], NV_PVIDEO_FORMAT_PITCH);
+		int in_color = GET_MASK(d->pvideo.regs[NV_PVIDEO_FORMAT(v)], NV_PVIDEO_FORMAT_COLOR);
+
+		int out_width = GET_MASK(d->pvideo.regs[NV_PVIDEO_SIZE_OUT(v)], NV_PVIDEO_SIZE_OUT_WIDTH);
+		int out_height = GET_MASK(d->pvideo.regs[NV_PVIDEO_SIZE_OUT(v)], NV_PVIDEO_SIZE_OUT_HEIGHT);
+		int out_x = GET_MASK(d->pvideo.regs[NV_PVIDEO_POINT_OUT(v)], NV_PVIDEO_POINT_OUT_X);
+		int out_y = GET_MASK(d->pvideo.regs[NV_PVIDEO_POINT_OUT(v)], NV_PVIDEO_POINT_OUT_Y);
+
+		// Use a shader to convert YUV to RGB :
+		// From https://stackoverflow.com/questions/44291939/portable-yuv-drawing-context
+		// to https://hg.libsdl.org/SDL/file/1f2cb42aa5d3/src/render/opengl/SDL_shaders_gl.c#l128	
+		const char *OPENGL_SHADER_YUV[2] = {
+			/* vertex shader */
+			"varying vec4 v_color;\n"
+			"varying vec2 v_texCoord;\n"
+			"\n"
+			"void main()\n"
+			"{\n"
+			"    gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;\n"
+			"    v_color = gl_Color;\n"
+			"    v_texCoord = vec2(gl_MultiTexCoord0);\n"
+			"}\n",
+			/* fragment shader */
+			"varying vec4 v_color;\n"
+			"varying vec2 v_texCoord;\n"
+			"uniform sampler2D tex0; // Y \n"
+			"uniform sampler2D tex1; // U \n"
+			"uniform sampler2D tex2; // V \n"
+			"\n"
+			"// YUV offset \n"
+			"const vec3 offset = vec3(-0.0627451017, -0.501960814, -0.501960814);\n"
+			"\n"
+			"// RGB coefficients \n"
+			"const vec3 Rcoeff = vec3(1.164,  0.000,  1.596);\n"
+			"const vec3 Gcoeff = vec3(1.164, -0.391, -0.813);\n"
+			"const vec3 Bcoeff = vec3(1.164,  2.018,  0.000);\n"
+			"\n"
+			"void main()\n"
+			"{\n"
+			"    vec2 tcoord;\n"
+			"    vec3 yuv, rgb;\n"
+			"\n"
+			"    // Get the Y value \n"
+			"    tcoord = v_texCoord;\n"
+			"    yuv.x = texture2D(tex0, tcoord).r;\n"
+			"\n"
+			"    // Get the U and V values \n"
+			"    tcoord *= UVCoordScale;\n"
+			"    yuv.y = texture2D(tex1, tcoord).r;\n"
+			"    yuv.z = texture2D(tex2, tcoord).r;\n"
+			"\n"
+			"    // Do the color transform \n"
+			"    yuv += offset;\n"
+			"    rgb.r = dot(yuv, Rcoeff);\n"
+			"    rgb.g = dot(yuv, Gcoeff);\n"
+			"    rgb.b = dot(yuv, Bcoeff);\n"
+			"\n"
+			"    // That was easy. :) \n"
+			"    gl_FragColor = vec4(rgb, 1.0) * v_color;\n"
+			"}\n" };
+
+		// Bind shader
+		static GLuint shader_program_yuv_to_rgb = -1;
+		if (shader_program_yuv_to_rgb == -1) {
+			shader_program_yuv_to_rgb = glCreateProgram(); // glCreateProgramObjectARB()
+
+			GLuint vertex_shader = glCreateShader(GL_VERTEX_SHADER); // GL_VERTEX_SHADER_ARB
+			glShaderSource(vertex_shader, 1, &OPENGL_SHADER_YUV[0], 0);
+			glCompileShader(vertex_shader);
+#if 0
+			/* Check it compiled */
+			GLint compiled = 0;
+			glGetShaderiv(shader_program_yuv_to_rgb, GL_COMPILE_STATUS, &compiled);
+#endif
+			GLuint fragment_shader = glCreateShader(GL_FRAGMENT_SHADER); // GL_FRAGMENT_SHADER_ARB
+			glShaderSource(fragment_shader, 1, &OPENGL_SHADER_YUV[1], 0);
+			glCompileShader(fragment_shader);
+#if 0
+			/* Check it compiled */
+			GLint compiled = 0;
+			glGetShaderiv(shader_program_yuv_to_rgb, GL_COMPILE_STATUS, &compiled);
+#endif
+			glAttachShader(shader_program_yuv_to_rgb, vertex_shader); // glAttachObjectARB
+			glAttachShader(shader_program_yuv_to_rgb, fragment_shader); // glAttachObjectARB
+
+			glLinkProgram(shader_program_yuv_to_rgb);
+#if 0
+			/* Check it linked */
+			GLint linked = 0;
+			glGetProgramiv(shader_program_yuv_to_rgb, GL_LINK_STATUS, &linked);
+#endif
+		}
+
+		glUseProgram(shader_program_yuv_to_rgb);
+
+		// If we need to create a new overlay texture, do so, otherwise, update the existing
+		static GLuint overlay_texture = -1;
+
+		hwaddr overlay_buffer = /*CONTIGUOUS_MEMORY_BASE=*/0x80000000 | overlay_base + overlay_offset;
+		if (overlay_texture == -1) {
+			glGenTextures(1, &overlay_texture);
+			glBindTexture(GL_TEXTURE_2D, overlay_texture);
+			glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, framebufferWidth, framebufferHeight, 0, format, type, (void*)overlay_buffer);
+		}
+		else {
+			glBindTexture(GL_TEXTURE_2D, overlay_texture);
+			glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, framebufferWidth, framebufferHeight, format, type, (void*)overlay_buffer);
+		}
+
+		// Bind overlay texture
+		// TODO : Is this correct?
+		glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, overlay_texture, 0);
+
+		// Determine source and destination coordinates, with that blit the overlay over the framebuffer
+		GLint srcX0 = in_s;
+		GLint srcY0 = in_t;
+		GLint srcX1 = in_width;
+		GLint srcY1 = in_height;
+		GLint dstX0 = out_x;
+		GLint dstY0 = out_y;
+		GLint dstX1 = out_width;
+		GLint dstY1 = out_height;
+		glBlitFramebuffer(srcX0, srcY0, srcX1, srcY1, dstX0, dstY0, dstX1, dstY1, GL_COLOR_BUFFER_BIT, filter);
+	}
+#endif
+
 	// We currently don't double buffer, so no need to call swap...
 	glo_swap(d->pgraph.gl_context);
 
