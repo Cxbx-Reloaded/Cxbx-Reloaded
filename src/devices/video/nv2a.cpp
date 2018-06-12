@@ -477,6 +477,8 @@ void NV2ADevice::SwapBuffers(NV2AState *d)
 			"    v_texCoord = vec2(gl_MultiTexCoord0);\n"
 			"}\n",
 			/* fragment shader */
+			"#define UVCoordScale 1.0\n" // Temporary, to prevent: error C1008: undefined variable "UVCoordScale"
+
 			"varying vec4 v_color;\n"
 			"varying vec2 v_texCoord;\n"
 			"uniform sampler2D tex0; // Y \n"
@@ -501,7 +503,7 @@ void NV2ADevice::SwapBuffers(NV2AState *d)
 			"    yuv.x = texture2D(tex0, tcoord).r;\n"
 			"\n"
 			"    // Get the U and V values \n"
-			"    tcoord *= UVCoordScale;\n"
+			"    tcoord *= UVCoordScale;\n" // See above temporary define 
 			"    yuv.y = texture2D(tex1, tcoord).r;\n"
 			"    yuv.z = texture2D(tex2, tcoord).r;\n"
 			"\n"
@@ -520,22 +522,9 @@ void NV2ADevice::SwapBuffers(NV2AState *d)
 		if (shader_program_yuv_to_rgb == -1) {
 			shader_program_yuv_to_rgb = glCreateProgram(); // glCreateProgramObjectARB()
 
-			GLuint vertex_shader = glCreateShader(GL_VERTEX_SHADER); // GL_VERTEX_SHADER_ARB
-			glShaderSource(vertex_shader, 1, &OPENGL_SHADER_YUV[0], 0);
-			glCompileShader(vertex_shader);
-#if 0
-			/* Check it compiled */
-			GLint compiled = 0;
-			glGetShaderiv(shader_program_yuv_to_rgb, GL_COMPILE_STATUS, &compiled);
-#endif
-			GLuint fragment_shader = glCreateShader(GL_FRAGMENT_SHADER); // GL_FRAGMENT_SHADER_ARB
-			glShaderSource(fragment_shader, 1, &OPENGL_SHADER_YUV[1], 0);
-			glCompileShader(fragment_shader);
-#if 0
-			/* Check it compiled */
-			GLint compiled = 0;
-			glGetShaderiv(shader_program_yuv_to_rgb, GL_COMPILE_STATUS, &compiled);
-#endif
+			GLuint vertex_shader = create_gl_shader(GL_VERTEX_SHADER, OPENGL_SHADER_YUV[0], "YUV>RGB Vertex shader");
+			GLuint fragment_shader = create_gl_shader(GL_FRAGMENT_SHADER, OPENGL_SHADER_YUV[1], "YUV>RGB Fragment shader");
+// TODO : Verified upto here - get the rest working too...
 			glAttachShader(shader_program_yuv_to_rgb, vertex_shader); // glAttachObjectARB
 			glAttachShader(shader_program_yuv_to_rgb, fragment_shader); // glAttachObjectARB
 
@@ -576,6 +565,8 @@ void NV2ADevice::SwapBuffers(NV2AState *d)
 		GLint dstY0 = out_y;
 		GLint dstX1 = out_width;
 		GLint dstY1 = out_height;
+
+		GLint tmp = dstY0; dstY0 = dstY1; dstY1 = tmp; // Flip Y to prevent upside down rendering
 		glBlitFramebuffer(srcX0, srcY0, srcX1, srcY1, dstX0, dstY0, dstX1, dstY1, GL_COLOR_BUFFER_BIT, filter);
 	}
 #endif

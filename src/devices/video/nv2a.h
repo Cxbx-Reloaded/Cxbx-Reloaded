@@ -625,6 +625,10 @@ inline void D3DPUSH_DECODE(const DWORD dwPushCommand, DWORD &dwMethod, DWORD &dw
 
 void CxbxReserveNV2AMemory(NV2AState *d);
 
+GLuint create_gl_shader(GLenum gl_shader_type,
+	const char *code,
+	const char *name); // forward to nv2a_shaders.cpp
+
 class NV2ADevice : public PCIDevice {
 public:
 	// constructor
