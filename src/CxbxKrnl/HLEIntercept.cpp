@@ -350,6 +350,9 @@ void EmuUpdateLLEStatus(uint32_t XbLibScan)
 // NOTE: EmuHLEIntercept do not get to be in XbSymbolDatabase, do the intecept in Cxbx project only.
 void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 {
+    // NOTE: Increase this revision number any time we changed something inside Cxbx-Reloaded.
+    int revisionCache = 4;
+
     Xbe::LibraryVersion *pLibraryVersion = (Xbe::LibraryVersion*)pXbeHeader->dwLibraryVersionsAddr;
 
     uint16 xdkVersion = 0;
@@ -425,9 +428,14 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
             char buffer[SHRT_MAX] = { 0 };
             char* bufferPtr = buffer;
             g_HLECacheUsed = true;
+
+            const uint32 cacheRevision = GetPrivateProfileInt("Info", "revision", 0, filename.c_str());
             const uint32 cacheFlagsLLE = GetPrivateProfileInt("Info", "FlagsLLE", 0, filename.c_str());
 
             if (cacheFlagsLLE != gFlagsLLE) {
+                g_HLECacheUsed = false;
+            }
+            else if (cacheRevision != revisionCache) {
                 g_HLECacheUsed = false;
             }
 
@@ -570,6 +578,11 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
         std::string HLECacheHashString = std::to_string(XbSymbolLibraryVersion());
         WritePrivateProfileString("Info", "HLECacheHash", HLECacheHashString.c_str(), filename.c_str());
     }
+
+
+    std::stringstream revision;
+    revision << std::dec << revisionCache;
+    WritePrivateProfileString("Info", "revision", revision.str().c_str(), filename.c_str());
 
     std::stringstream flagsLLE;
     flagsLLE << std::dec << gFlagsLLE;
