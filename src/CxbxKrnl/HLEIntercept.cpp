@@ -375,7 +375,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
         // Since XDK 4039 title does not have library version for DSOUND, let's check section header if it exists or not.
         for (unsigned int v = 0; v < pXbeHeader->dwSections; v++) {
             SectionName = (const char*)pSectionHeaders[v].dwSectionNameAddr;
-            if (strncmp(SectionName, "DSOUND", 8) == 0) {
+            if (strncmp(SectionName, Lib_DSOUND, 8) == 0) {
                 XbLibScan |= XbSymbolLib_DSOUND;
                 break;
             }
