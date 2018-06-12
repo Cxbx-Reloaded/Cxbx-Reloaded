@@ -231,6 +231,11 @@ class WndMain : public Wnd
         char       *m_CxbxDebugFilename;
         char       *m_KrnlDebugFilename;
 
+		// ******************************************************************
+		// * settings
+		// ******************************************************************
+		int		m_StorageToggle;
+
 };
 
 #endif

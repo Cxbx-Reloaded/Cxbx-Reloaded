@@ -159,7 +159,8 @@ WndMain::WndMain(HINSTANCE x_hInstance) :
 	m_KrnlDebug(DM_NONE),
 	m_CxbxDebug(DM_NONE),
 	m_FlagsLLE(0),
-	m_dwRecentXbe(0)
+	m_dwRecentXbe(0),
+	m_StorageToggle(0)
 {
     // initialize members
     {
@@ -261,6 +262,18 @@ WndMain::WndMain(HINSTANCE x_hInstance) :
 			lErrCodeKrnlDebugFilename = RegQueryValueEx(hKey, "KrnlDebugFilename", NULL, &dwType, (PBYTE)m_KrnlDebugFilename, &dwSize);
 			if (lErrCodeKrnlDebugFilename != ERROR_SUCCESS) {
 				m_KrnlDebugFilename[0] = '\0';
+			}
+
+			// bad
+			if (RegCreateKeyEx(HKEY_CURRENT_USER, "Software\\Cxbx-Reloaded\\DataStorageLocation", 0, NULL,
+				REG_OPTION_NON_VOLATILE, KEY_QUERY_VALUE, NULL, &hKey, &dwDisposition) == ERROR_SUCCESS)
+			{
+				LONG result = ERROR_SUCCESS;
+				dwType = REG_DWORD; dwSize = sizeof(DWORD);
+				result = RegQueryValueEx(hKey, "DataStorageToggle", NULL, &dwType, (PBYTE)&m_StorageToggle, &dwSize);
+				if (result != ERROR_SUCCESS) {
+					m_StorageToggle = 0;
+				}
 			}
 
 			// Prevent using an incorrect path from the registry if the debug folders have been moved
@@ -1151,7 +1164,8 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 				}
 				ShowEepromConfig(hwnd);
 			}
-			case ID_SETTINGS_CONFIG_DLOCCUSTOM: //for custom
+			//bad
+			case ID_SETTINGS_CONFIG_DLOCCUSTOM:
 			{
 				char szDir[MAX_PATH];
 				BROWSEINFO bInfo;
@@ -1170,6 +1184,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 				{
 					DWORD   dwDisposition, dwType, dwSize;
 					HKEY    hKey;
+					int toggle = 2;
 
 					SHGetPathFromIDList(lpItem, szDir);
 					if (RegCreateKeyEx(HKEY_CURRENT_USER, "Software\\Cxbx-Reloaded\\DataStorageLocation", 0, NULL, REG_OPTION_NON_VOLATILE,
@@ -1177,7 +1192,10 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 					{
 						dwType = REG_SZ; dwSize = sizeof(szDir);
 						RegSetValueEx(hKey, "DataStorageLocationDirectory", 0, dwType, (PBYTE)&szDir, dwSize);
+						RegSetValueEx(hKey, "DataStorageToggle", 0, REG_DWORD, (PBYTE)&toggle, sizeof(toggle));
 						RegCloseKey(hKey);
+						m_StorageToggle = 2;
+						RefreshMenus();
 					}
 				}
 			}
@@ -1189,6 +1207,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 				char szFolder_CxbxReloadedData[MAX_PATH];
 				DWORD   dwDisposition, dwType, dwSize;
 				HKEY    hKey;
+				int toggle = 0;
 
 				SHGetSpecialFolderPath(NULL, szDir, CSIDL_APPDATA, TRUE);
 				snprintf(szFolder_CxbxReloadedData, MAX_PATH, "%s\\Cxbx-Reloaded", szDir);
@@ -1197,7 +1216,10 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 				{
 					dwType = REG_SZ; dwSize = sizeof(szFolder_CxbxReloadedData);
 					RegSetValueEx(hKey, "DataStorageLocationDirectory", 0, dwType, (PBYTE)&szFolder_CxbxReloadedData, dwSize);
+					RegSetValueEx(hKey, "DataStorageToggle", 0, REG_DWORD, (PBYTE)&toggle, sizeof(toggle));
 					RegCloseKey(hKey);
+					m_StorageToggle = 0;
+					RefreshMenus();
 				}
 			}
 			break;
@@ -1208,6 +1230,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 				char szFolder_CxbxReloadedData[MAX_PATH];
 				DWORD   dwDisposition, dwType, dwSize;
 				HKEY    hKey;
+				int toggle = 1;
 
 				GetCurrentDirectory(MAX_PATH, szDir);
 				snprintf(szFolder_CxbxReloadedData, MAX_PATH, "%s\\Cxbx-Reloaded", szDir);
@@ -1216,7 +1239,10 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 				{
 					dwType = REG_SZ; dwSize = sizeof(szFolder_CxbxReloadedData);
 					RegSetValueEx(hKey, "DataStorageLocationDirectory", 0, dwType, (PBYTE)&szFolder_CxbxReloadedData, dwSize);
+					RegSetValueEx(hKey, "DataStorageToggle", 0, REG_DWORD, (PBYTE)&toggle, sizeof(toggle));
 					RegCloseKey(hKey);
+					m_StorageToggle = 1;
+					RefreshMenus();
 				}
 			}
 			break;
@@ -1887,6 +1913,26 @@ void WndMain::RefreshMenus()
 
 			chk_flag = (m_DirectHostBackBufferAccess) ? MF_CHECKED : MF_UNCHECKED;
 			CheckMenuItem(settings_menu, ID_HACKS_RENDERDIRECTLYTOHOSTBACKBUFFER, chk_flag);
+
+			//bad
+			if (m_StorageToggle == 0)
+			{
+				CheckMenuItem(settings_menu, ID_SETTINGS_CONFIG_DLOCAPPDATA, MF_CHECKED);
+				CheckMenuItem(settings_menu, ID_SETTINGS_CONFIG_DLOCCURDIR, MF_UNCHECKED);
+				CheckMenuItem(settings_menu, ID_SETTINGS_CONFIG_DLOCCUSTOM, MF_UNCHECKED);
+			}
+			else if (m_StorageToggle == 1)
+			{
+				CheckMenuItem(settings_menu, ID_SETTINGS_CONFIG_DLOCAPPDATA, MF_UNCHECKED);
+				CheckMenuItem(settings_menu, ID_SETTINGS_CONFIG_DLOCCURDIR, MF_CHECKED);
+				CheckMenuItem(settings_menu, ID_SETTINGS_CONFIG_DLOCCUSTOM, MF_UNCHECKED);
+			}
+			else if (m_StorageToggle == 2)
+			{
+				CheckMenuItem(settings_menu, ID_SETTINGS_CONFIG_DLOCAPPDATA, MF_UNCHECKED);
+				CheckMenuItem(settings_menu, ID_SETTINGS_CONFIG_DLOCCURDIR, MF_UNCHECKED);
+				CheckMenuItem(settings_menu, ID_SETTINGS_CONFIG_DLOCCUSTOM, MF_CHECKED);
+			}
 		}
 
         // emulation menu
