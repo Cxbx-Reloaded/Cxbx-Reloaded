@@ -499,13 +499,13 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
         }
         break;
 
+        // NOTE: WM_PARENTNOTIFY was triggered by kernel process' graphic window creation.
         case WM_PARENTNOTIFY:
         {
             switch(LOWORD(wParam))
             {
                 case WM_CREATE:
                 {
-					CreateThread(NULL, NULL, CrashMonitorWrapper, (void*)this, NULL, NULL); // create the crash monitoring thread 
 					if (m_hwndChild == NULL) {
 						float fps = 0.0f;
 						float mspf = 0.0f;
@@ -515,14 +515,14 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 						g_EmuShared->SetLedSequence(LedSequence);
 						SetTimer(hwnd, TIMERID_FPS, 1000, (TIMERPROC)NULL);
 						SetTimer(hwnd, TIMERID_LED, XBOX_LED_FLASH_PERIOD, (TIMERPROC)NULL);
-						m_hwndChild = GetWindow(hwnd, GW_CHILD); // (HWND)HIWORD(wParam) seems to be NULL
+						m_hwndChild = GetWindow(hwnd, GW_CHILD);
 						UpdateCaption();
 						RefreshMenus();
 					}
-					else
-					{
+					else {
 						m_hwndChild = GetWindow(hwnd, GW_CHILD);
 					}
+					CreateThread(NULL, NULL, CrashMonitorWrapper, (void*)this, NULL, NULL); // create the crash monitoring thread
                 }
                 break;
 
@@ -538,8 +538,20 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 					}
                 }
                 break;
-            }
-        };
+
+				case WM_USER: {
+					 switch(lParam) {
+						// NOTE: If anything need to set before kernel process start do anything, do it here.
+						case ID_KRNL_IS_READY: {
+							g_EmuShared->SetFlagsLLE(&m_FlagsLLE);
+							g_EmuShared->SetIsReady(true);
+							break;
+						}
+					}
+					break;
+				}
+			}
+		};
 		break; // added per PVS suggestion.
 
 		case WM_TIMER:
@@ -2177,6 +2189,17 @@ void WndMain::SaveXbeAs()
 void WndMain::StartEmulation(HWND hwndParent, DebuggerState LocalDebuggerState /*= debuggerOff*/)
 {
     char szBuffer[MAX_PATH];
+    bool isEmulating = false;
+
+    g_EmuShared->GetIsEmulating(&isEmulating);
+
+    if (isEmulating) {
+        MessageBox(m_hwnd, "A title is currently emulating, please stop emulation before attempt start again.",
+                   "Cxbx-Reloaded", MB_ICONERROR | MB_OK);
+        return;
+    }
+
+    g_EmuShared->SetIsEmulating(true);
 
     // register xbe path with emulator process
     g_EmuShared->SetXbePath(m_Xbe->m_szPath);
@@ -2276,8 +2299,8 @@ void WndMain::StopEmulation()
     RefreshMenus();
 	// Set the window size back to it's GUI dimensions
 	ResizeWindow(m_hwnd, /*bForGUI=*/true);
+	g_EmuShared->SetIsEmulating(false);
 }
-
 
 // wrapper function to call CrashMonitor
 DWORD WINAPI WndMain::CrashMonitorWrapper(LPVOID lpVoid)
@@ -2285,6 +2308,7 @@ DWORD WINAPI WndMain::CrashMonitorWrapper(LPVOID lpVoid)
 	CxbxSetThreadName("Cxbx Crash Monitor");
 
 	static_cast<WndMain*>(lpVoid)->CrashMonitor();
+
 	return 0;
 }
 
@@ -2292,41 +2316,50 @@ DWORD WINAPI WndMain::CrashMonitorWrapper(LPVOID lpVoid)
 void WndMain::CrashMonitor()
 {
 	bool bQuickReboot;
-	HANDLE hCrashMutex = OpenMutex(MUTEX_ALL_ACCESS, FALSE, "CrashMutex");
+	DWORD dwProcessID_ExitCode = 0;
+	GetWindowThreadProcessId(m_hwndChild, &dwProcessID_ExitCode);
 
-	DWORD state = WaitForSingleObject(hCrashMutex, INFINITE);
+	// If we do receive valid process ID, let's do the next step.
+	if (dwProcessID_ExitCode != 0) {
 
-	g_EmuShared->GetMultiXbeFlag(&bQuickReboot);
+	HANDLE hProcess = OpenProcess(SYNCHRONIZE | PROCESS_QUERY_INFORMATION, FALSE, dwProcessID_ExitCode);
 
-	if (state == WAIT_OBJECT_0) // StopEmulation
-	{
-		CloseHandle(hCrashMutex);
-		return;
+	 	// If we do receive valid handle, let's do the next step.
+	 	if (hProcess != NULL) {
+
+	 		WaitForSingleObject(hProcess, INFINITE);
+	 		dwProcessID_ExitCode = 0;
+	 		GetExitCodeProcess(hProcess, &dwProcessID_ExitCode);
+	 		CloseHandle(hProcess);
+
+	 		g_EmuShared->GetMultiXbeFlag(&bQuickReboot);
+
+	 		if (!bQuickReboot) {
+	 			if (dwProcessID_ExitCode == EXIT_SUCCESS) {// StopEmulation
+	 				return;
+	 			}
+				// Or else, it's a crash
+	 		}
+	 		else {
+
+	 			// multi-xbe
+	 			// destroy this thread and start a new one
+	 			bQuickReboot = false;
+	 			g_EmuShared->SetMultiXbeFlag(&bQuickReboot);
+	 			return;
+	 		}
+	 	}
 	}
 
-	if (state == WAIT_ABANDONED && !bQuickReboot) // that's a crash
-	{
-		CloseHandle(hCrashMutex);
-		if (m_bIsStarted) // that's a hard crash, Dr Watson is invoked
-		{
-			KillTimer(m_hwnd, TIMERID_FPS);
-			KillTimer(m_hwnd, TIMERID_LED);
-			DrawLedBitmap(m_hwnd, true);
-			m_hwndChild = NULL;
-			m_bIsStarted = false;
-			UpdateCaption();
-			RefreshMenus();
-		}
-		return;
-	}
+	// Crash clean up.
 
-	// multi-xbe
-	// destroy this thread and start a new one
-	CloseHandle(hCrashMutex);
-	bQuickReboot = false;
-	g_EmuShared->SetMultiXbeFlag(&bQuickReboot);
-
-	return;
+	KillTimer(m_hwnd, TIMERID_FPS);
+	KillTimer(m_hwnd, TIMERID_LED);
+	DrawLedBitmap(m_hwnd, true);
+	m_hwndChild = NULL;
+	m_bIsStarted = false;
+	UpdateCaption();
+	RefreshMenus();
 }
 
 // draw Xbox LED bitmap
@@ -2351,6 +2384,7 @@ void WndMain::DrawLedBitmap(HWND hwnd, bool bdefault)
 	else { // draw colored bitmap
 		int LedSequence[4] = { XBOX_LED_COLOUR_OFF, XBOX_LED_COLOUR_OFF, XBOX_LED_COLOUR_OFF, XBOX_LED_COLOUR_OFF };
 		static int LedSequenceOffset = 0;
+		int FlagsLLE = 0;
 
 		g_EmuShared->GetLedSequence(LedSequence);
 
@@ -2358,17 +2392,18 @@ void WndMain::DrawLedBitmap(HWND hwnd, bool bdefault)
 		ActiveLEDColor = LedSequence[LedSequenceOffset & 3];
 		++LedSequenceOffset;
 
+		g_EmuShared->GetFlagsLLE(&FlagsLLE);
 		// Set LLE flags string based on selected LLE flags
-		if (m_FlagsLLE & LLE_APU) {
+		if (FlagsLLE & LLE_APU) {
 			strcat(flagString, "A");
 		}
-		if (m_FlagsLLE & LLE_GPU) {
+		if (FlagsLLE & LLE_GPU) {
 			strcat(flagString, "G");
 		}
-		if (m_FlagsLLE & LLE_JIT) {
+		if (FlagsLLE & LLE_JIT) {
 			strcat(flagString, "J");
 		}
-		if (m_FlagsLLE == 0) {
+		if (FlagsLLE == 0) {
 			sprintf(flagString, "HLE");
 		}
 	}

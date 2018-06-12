@@ -324,10 +324,65 @@ void EmuD3D_Init_DeferredStates()
     }
 }
 
+// Update shared structure with GUI process
+void EmuUpdateLLEStatus(uint32_t XbLibScan)
+{
+    int FlagsLLE;
+    g_EmuShared->GetFlagsLLE(&FlagsLLE);
+
+    if ((FlagsLLE & LLE_GPU) == false
+        && !((XbLibScan & XbSymbolLib_D3D8) > 0
+            || (XbLibScan & XbSymbolLib_D3D8LTCG) > 0)) {
+        bLLE_GPU = true;
+        FlagsLLE ^= LLE_GPU;
+        EmuOutputMessage(XB_OUTPUT_MESSAGE_INFO, "Fallback to LLE GPU.");
+    }
+
+    if ((FlagsLLE & LLE_APU) == false
+        && (XbLibScan & XbSymbolLib_DSOUND) == 0) {
+        bLLE_APU = true;
+        FlagsLLE ^= LLE_APU;
+        EmuOutputMessage(XB_OUTPUT_MESSAGE_INFO, "Fallback to LLE APU.");
+    }
+    g_EmuShared->SetFlagsLLE(&FlagsLLE);
+}
+
 // NOTE: EmuHLEIntercept do not get to be in XbSymbolDatabase, do the intecept in Cxbx project only.
 void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 {
     Xbe::LibraryVersion *pLibraryVersion = (Xbe::LibraryVersion*)pXbeHeader->dwLibraryVersionsAddr;
+
+    uint16 xdkVersion = 0;
+    uint32_t XbLibScan = 0;
+
+    // NOTE: We need to check if title has library header to optimize verification process.
+    if (pLibraryVersion != nullptr) {
+        uint32 dwLibraryVersions = pXbeHeader->dwLibraryVersions;
+        const char* SectionName = nullptr;
+        Xbe::SectionHeader* pSectionHeaders = (Xbe::SectionHeader*)pXbeHeader->dwSectionHeadersAddr;
+
+        // Get the highest revision build and prefix library to scan.
+        for (uint32 v = 0; v < dwLibraryVersions; v++) {
+            uint16 BuildVersion = pLibraryVersion[v].wBuildVersion;
+            uint16 QFEVersion = pLibraryVersion[v].wFlags.QFEVersion;
+
+            if (xdkVersion < BuildVersion) {
+                xdkVersion = BuildVersion;
+            }
+            XbLibScan |= XbSymbolLibrayToFlag(std::string(pLibraryVersion[v].szName, pLibraryVersion[v].szName + 8).c_str());
+        }
+
+        // Since XDK 4039 title does not have library version for DSOUND, let's check section header if it exists or not.
+        for (unsigned int v = 0; v < pXbeHeader->dwSections; v++) {
+            SectionName = (const char*)pSectionHeaders[v].dwSectionNameAddr;
+            if (strncmp(SectionName, Lib_DSOUND, 8) == 0) {
+                XbLibScan |= XbSymbolLib_DSOUND;
+                break;
+            }
+        }
+    }
+
+    EmuUpdateLLEStatus(XbLibScan);
 
     printf("\n");
     printf("*******************************************************************************\n");
@@ -462,25 +517,9 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
     //
     // initialize Microsoft XDK emulation
     //
-    if(pLibraryVersion != 0)
-    {
+    if(pLibraryVersion != nullptr) {
+
         printf("HLE: Detected Microsoft XDK application...\n");
-
-        uint32 dwLibraryVersions = pXbeHeader->dwLibraryVersions;
-
-        uint16 xdkVersion = 0;
-        uint32_t XbLibScan = 0;
-
-        // Get the highest revision build and prefix library to scan.
-        for (uint32 v = 0; v < dwLibraryVersions; v++) {
-            uint16 BuildVersion = pLibraryVersion[v].wBuildVersion;
-            uint16 QFEVersion = pLibraryVersion[v].wFlags.QFEVersion;
-
-            if (xdkVersion < BuildVersion) {
-                xdkVersion = BuildVersion;
-            }
-            XbLibScan |= XbSymbolLibrayToFlag(std::string(pLibraryVersion[v].szName, pLibraryVersion[v].szName + 8).c_str());
-        }
 
         // TODO: Is this enough for alias? We need to verify it.
         if ((XbLibScan & XbSymbolLib_D3D8) > 0 || (XbLibScan & XbSymbolLib_D3D8LTCG) > 0) {
