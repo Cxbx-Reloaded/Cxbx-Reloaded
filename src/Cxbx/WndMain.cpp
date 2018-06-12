@@ -222,13 +222,13 @@ WndMain::WndMain(HINSTANCE x_hInstance) :
 			dwType = REG_DWORD; dwSize = sizeof(DWORD);
 			result = RegQueryValueEx(hKey, "HackScaleViewport", NULL, &dwType, (PBYTE)&m_ScaleViewport, &dwSize);
 			if (result != ERROR_SUCCESS) {
-				m_ScaleViewport = 0;
+				m_ScaleViewport = 1;
 			}
 
 			dwType = REG_DWORD; dwSize = sizeof(DWORD);
 			result = RegQueryValueEx(hKey, "HackDirectBackBufferAccess", NULL, &dwType, (PBYTE)&m_DirectHostBackBufferAccess, &dwSize);
 			if (result != ERROR_SUCCESS) {
-				m_DirectHostBackBufferAccess = 0;
+				m_DirectHostBackBufferAccess = 1;
 			}
 
 
