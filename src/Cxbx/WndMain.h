@@ -235,7 +235,6 @@ class WndMain : public Wnd
 		// * Storage location
 		// ******************************************************************
 		DWORD   m_StorageToggle;
-		char    m_StorageLocation[MAX_PATH];
 };
 
 #endif

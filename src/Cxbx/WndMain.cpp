@@ -160,7 +160,6 @@ WndMain::WndMain(HINSTANCE x_hInstance) :
 	m_CxbxDebug(DM_NONE),
 	m_FlagsLLE(0),
 	m_StorageToggle(0),
-	m_StorageLocation(),
 	m_dwRecentXbe(0)
 {
     // initialize members
@@ -272,12 +271,12 @@ WndMain::WndMain(HINSTANCE x_hInstance) :
 			}
 
 			dwType = REG_SZ; dwSize = MAX_PATH;
-			result = RegQueryValueEx(hKey, "DataStorageLocation", NULL, &dwType, (PBYTE)&m_StorageLocation, &dwSize);
+			result = RegQueryValueEx(hKey, "DataStorageLocation", NULL, &dwType, (PBYTE)&XTL::szFolder_CxbxReloadedData, &dwSize);
 			if (result != ERROR_SUCCESS) {
 				char szDir[MAX_PATH];
 				SHGetSpecialFolderPath(NULL, szDir, CSIDL_APPDATA, TRUE);
-				strcpy(m_StorageLocation, szDir);
-				g_EmuShared->SetStorageLocation(m_StorageLocation);
+				strncpy(XTL::szFolder_CxbxReloadedData, szDir, MAX_PATH);
+				g_EmuShared->SetStorageLocation(XTL::szFolder_CxbxReloadedData);
 			}
 
 			// Prevent using an incorrect path from the registry if the debug folders have been moved
@@ -437,7 +436,7 @@ WndMain::~WndMain()
 			RegSetValueEx(hKey, "DataStorageToggle", 0, dwType, (PBYTE)&m_StorageToggle, dwSize);
 
 			dwType = REG_SZ; dwSize = MAX_PATH;
-			RegSetValueEx(hKey, "DataStorageLocation", 0, dwType, (PBYTE)m_StorageLocation, dwSize);
+			RegSetValueEx(hKey, "DataStorageLocation", 0, dwType, (PBYTE)XTL::szFolder_CxbxReloadedData, dwSize);
         }
     }
 
@@ -1221,7 +1220,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 					}
 
 					m_StorageToggle = 2;
-					strcpy(m_StorageLocation, szDir);
+					strncpy(XTL::szFolder_CxbxReloadedData, szDir, MAX_PATH);
 					RefreshMenus();
 				}
 			}
@@ -1233,7 +1232,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
 				SHGetSpecialFolderPath(NULL, szDir, CSIDL_APPDATA, TRUE);
 				m_StorageToggle = 0;
-				strcpy(m_StorageLocation, szDir);
+				strncpy(XTL::szFolder_CxbxReloadedData, szDir, MAX_PATH);
 				RefreshMenus();
 			}
 			break;
@@ -1244,7 +1243,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
 				GetCurrentDirectory(MAX_PATH, szDir);
 				m_StorageToggle = 1;
-				strcpy(m_StorageLocation, szDir);
+				strncpy(XTL::szFolder_CxbxReloadedData, szDir, MAX_PATH);
 				RefreshMenus();
 			}
 			break;
@@ -2321,7 +2320,7 @@ void WndMain::StartEmulation(HWND hwndParent, DebuggerState LocalDebuggerState /
 	g_EmuShared->SetDirectHostBackBufferAccess(&m_DirectHostBackBufferAccess);
 
 	// register storage location with emulator process
-	g_EmuShared->SetStorageLocation(m_StorageLocation);
+	g_EmuShared->SetStorageLocation(XTL::szFolder_CxbxReloadedData);
 
 	if (m_ScaleViewport) {
 		// Set the window size to emulation dimensions
