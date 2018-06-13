@@ -228,7 +228,7 @@ WndMain::WndMain(HINSTANCE x_hInstance) :
 			dwType = REG_DWORD; dwSize = sizeof(DWORD);
 			result = RegQueryValueEx(hKey, "HackDirectBackBufferAccess", NULL, &dwType, (PBYTE)&m_DirectHostBackBufferAccess, &dwSize);
 			if (result != ERROR_SUCCESS) {
-				m_DirectHostBackBufferAccess = 0;
+				m_DirectHostBackBufferAccess = 1;
 			}
 
 
