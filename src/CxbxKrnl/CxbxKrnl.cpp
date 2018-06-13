@@ -1263,7 +1263,8 @@ __declspec(noreturn) void CxbxKrnlInit
 	
 	// Initialize devices :
 	char szBuffer[MAX_PATH];
-	SHGetSpecialFolderPath(NULL, szBuffer, CSIDL_APPDATA, TRUE);
+	g_EmuShared->GetStorageLocation(szBuffer);
+
 	strcat(szBuffer, "\\Cxbx-Reloaded\\");
 	std::string basePath(szBuffer);
 	CxbxBasePath = basePath + "EmuDisk\\";
@@ -1451,21 +1452,7 @@ __declspec(noreturn) void CxbxKrnlInit
 void CxbxInitFilePaths()
 {
 	char szAppData[MAX_PATH];
-	DWORD   dwDisposition, dwType, dwSize;
-	HKEY    hKey;
-
-	if (RegCreateKeyEx(HKEY_CURRENT_USER, "Software\\Cxbx-Reloaded\\DataStorageLocation", 0, NULL, REG_OPTION_NON_VOLATILE,
-		KEY_QUERY_VALUE, NULL, &hKey, &dwDisposition) == ERROR_SUCCESS)
-	{
-		LONG result = ERROR_SUCCESS;
-
-		dwType = REG_SZ; dwSize = sizeof(szAppData);
-		result = RegQueryValueEx(hKey, "DataStorageLocationDirectory", NULL, &dwType, (PBYTE)&szAppData, &dwSize);
-		if (result != ERROR_SUCCESS) {
-			SHGetSpecialFolderPath(NULL, szAppData, CSIDL_APPDATA, TRUE); //Luke wants default to be %appdata%
-		}
-	}
-
+	g_EmuShared->GetStorageLocation(szAppData);
 	snprintf(szFolder_CxbxReloadedData, MAX_PATH, "%s\\Cxbx-Reloaded", szAppData);
 
 	// Make sure our data folder exists :
@@ -1484,6 +1471,7 @@ void CxbxInitFilePaths()
 	snprintf(szFilePath_EEPROM_bin, MAX_PATH, "%s\\EEPROM.bin", szFolder_CxbxReloadedData);
 	snprintf(szFilePath_memory_bin, MAX_PATH, "%s\\memory.bin", szFolder_CxbxReloadedData);
 	snprintf(szFilePath_page_tables, MAX_PATH, "%s\\PageTables.bin", szFolder_CxbxReloadedData);
+	//strcpy(szFilePath_memory_bin, szFilePath_memory_bin);
 
 	GetModuleFileName(GetModuleHandle(NULL), szFilePath_CxbxReloaded_Exe, MAX_PATH);
 }

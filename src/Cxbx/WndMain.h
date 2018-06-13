@@ -232,10 +232,10 @@ class WndMain : public Wnd
         char       *m_KrnlDebugFilename;
 
 		// ******************************************************************
-		// * settings
+		// * Storage location
 		// ******************************************************************
-		int		m_StorageToggle;
-
+		DWORD   m_StorageToggle;
+		char    m_StorageLocation[MAX_PATH];
 };
 
 #endif

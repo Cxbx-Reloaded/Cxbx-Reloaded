@@ -73,11 +73,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		return 1;
 	}
 
+	/*! initialize shared memory */
+	EmuShared::Init();
+
 	/* Initialize Cxbx File Paths */
 	CxbxInitFilePaths();
-
-    /*! initialize shared memory */
-    EmuShared::Init();
 
 	if (__argc >= 2 && strcmp(__argv[1], "/load") == 0 && strlen(__argv[2]) > 0)  {
 		CxbxKrnlMain(__argc, __argv);

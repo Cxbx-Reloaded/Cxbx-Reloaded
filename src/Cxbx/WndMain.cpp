@@ -160,6 +160,7 @@ WndMain::WndMain(HINSTANCE x_hInstance) :
 	m_CxbxDebug(DM_NONE),
 	m_FlagsLLE(0),
 	m_StorageToggle(0),
+	m_StorageLocation(),
 	m_dwRecentXbe(0)
 {
     // initialize members
@@ -264,16 +265,19 @@ WndMain::WndMain(HINSTANCE x_hInstance) :
 				m_KrnlDebugFilename[0] = '\0';
 			}
 
-			// bad
-			if (RegCreateKeyEx(HKEY_CURRENT_USER, "Software\\Cxbx-Reloaded\\DataStorageLocation", 0, NULL,
-				REG_OPTION_NON_VOLATILE, KEY_QUERY_VALUE, NULL, &hKey, &dwDisposition) == ERROR_SUCCESS)
-			{
-				LONG result = ERROR_SUCCESS;
-				dwType = REG_DWORD; dwSize = sizeof(DWORD);
-				result = RegQueryValueEx(hKey, "DataStorageToggle", NULL, &dwType, (PBYTE)&m_StorageToggle, &dwSize);
-				if (result != ERROR_SUCCESS) {
-					m_StorageToggle = 0;
-				}
+			dwType = REG_DWORD; dwSize = sizeof(DWORD);
+			result = RegQueryValueEx(hKey, "DataStorageToggle", NULL, &dwType, (PBYTE)&m_StorageToggle, &dwSize);
+			if (result != ERROR_SUCCESS) {
+				m_StorageToggle = 0; //AppData
+			}
+
+			dwType = REG_SZ; dwSize = MAX_PATH;
+			result = RegQueryValueEx(hKey, "DataStorageLocation", NULL, &dwType, (PBYTE)&m_StorageLocation, &dwSize);
+			if (result != ERROR_SUCCESS) {
+				char szDir[MAX_PATH];
+				SHGetSpecialFolderPath(NULL, szDir, CSIDL_APPDATA, TRUE);
+				strcpy(m_StorageLocation, szDir);
+				g_EmuShared->SetStorageLocation(m_StorageLocation);
 			}
 
 			// Prevent using an incorrect path from the registry if the debug folders have been moved
@@ -428,6 +432,12 @@ WndMain::~WndMain()
 
             dwType = REG_SZ; dwSize = MAX_PATH;
             RegSetValueEx(hKey, "KrnlDebugFilename", 0, dwType, (PBYTE)m_KrnlDebugFilename, dwSize);
+
+			dwType = REG_DWORD; dwSize = sizeof(DWORD);
+			RegSetValueEx(hKey, "DataStorageToggle", 0, dwType, (PBYTE)&m_StorageToggle, dwSize);
+
+			dwType = REG_SZ; dwSize = MAX_PATH;
+			RegSetValueEx(hKey, "DataStorageLocation", 0, dwType, (PBYTE)m_StorageLocation, dwSize);
         }
     }
 
@@ -1168,6 +1178,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 			case ID_SETTINGS_CONFIG_DLOCCUSTOM:
 			{
 				char szDir[MAX_PATH];
+
 				BROWSEINFO bInfo;
 				bInfo.hwndOwner = NULL;
 				bInfo.pidlRoot = NULL;
@@ -1182,10 +1193,6 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
 				if (lpItem != NULL)
 				{
-					DWORD   dwDisposition, dwType, dwSize;
-					HKEY    hKey;
-					int toggle = 2;
-
 					SHGetPathFromIDList(lpItem, szDir);
 
 					if (!strlen(szDir))
@@ -1201,16 +1208,9 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 						break;
 					}
 
-					if (RegCreateKeyEx(HKEY_CURRENT_USER, "Software\\Cxbx-Reloaded\\DataStorageLocation", 0, NULL, REG_OPTION_NON_VOLATILE,
-						KEY_SET_VALUE, NULL, &hKey, &dwDisposition) == ERROR_SUCCESS)
-					{
-						dwType = REG_SZ; dwSize = sizeof(szDir);
-						RegSetValueEx(hKey, "DataStorageLocationDirectory", 0, dwType, (PBYTE)&szDir, dwSize);
-						RegSetValueEx(hKey, "DataStorageToggle", 0, REG_DWORD, (PBYTE)&toggle, sizeof(toggle));
-						RegCloseKey(hKey);
-						m_StorageToggle = 2;
-						RefreshMenus();
-					}
+					m_StorageToggle = 2;
+					strcpy(m_StorageLocation, szDir);
+					RefreshMenus();
 				}
 			}
 			break;
@@ -1218,46 +1218,22 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 			case ID_SETTINGS_CONFIG_DLOCAPPDATA:
 			{
 				char szDir[MAX_PATH];
-				char szFolder_CxbxReloadedData[MAX_PATH];
-				DWORD   dwDisposition, dwType, dwSize;
-				HKEY    hKey;
-				int toggle = 0;
 
 				SHGetSpecialFolderPath(NULL, szDir, CSIDL_APPDATA, TRUE);
-				snprintf(szFolder_CxbxReloadedData, MAX_PATH, "%s\\Cxbx-Reloaded", szDir);
-				if (RegCreateKeyEx(HKEY_CURRENT_USER, "Software\\Cxbx-Reloaded\\DataStorageLocation", 0, NULL, REG_OPTION_NON_VOLATILE,
-					KEY_SET_VALUE, NULL, &hKey, &dwDisposition) == ERROR_SUCCESS)
-				{
-					dwType = REG_SZ; dwSize = sizeof(szFolder_CxbxReloadedData);
-					RegSetValueEx(hKey, "DataStorageLocationDirectory", 0, dwType, (PBYTE)&szFolder_CxbxReloadedData, dwSize);
-					RegSetValueEx(hKey, "DataStorageToggle", 0, REG_DWORD, (PBYTE)&toggle, sizeof(toggle));
-					RegCloseKey(hKey);
-					m_StorageToggle = 0;
-					RefreshMenus();
-				}
+				m_StorageToggle = 0;
+				strcpy(m_StorageLocation, szDir);
+				RefreshMenus();
 			}
 			break;
 
 			case ID_SETTINGS_CONFIG_DLOCCURDIR:
 			{
 				char szDir[MAX_PATH];
-				char szFolder_CxbxReloadedData[MAX_PATH];
-				DWORD   dwDisposition, dwType, dwSize;
-				HKEY    hKey;
-				int toggle = 1;
 
 				GetCurrentDirectory(MAX_PATH, szDir);
-				snprintf(szFolder_CxbxReloadedData, MAX_PATH, "%s\\Cxbx-Reloaded", szDir);
-				if (RegCreateKeyEx(HKEY_CURRENT_USER, "Software\\Cxbx-Reloaded\\DataStorageLocation", 0, NULL, REG_OPTION_NON_VOLATILE,
-					KEY_SET_VALUE, NULL, &hKey, &dwDisposition) == ERROR_SUCCESS)
-				{
-					dwType = REG_SZ; dwSize = sizeof(szFolder_CxbxReloadedData);
-					RegSetValueEx(hKey, "DataStorageLocationDirectory", 0, dwType, (PBYTE)&szFolder_CxbxReloadedData, dwSize);
-					RegSetValueEx(hKey, "DataStorageToggle", 0, REG_DWORD, (PBYTE)&toggle, sizeof(toggle));
-					RegCloseKey(hKey);
-					m_StorageToggle = 1;
-					RefreshMenus();
-				}
+				m_StorageToggle = 1;
+				strcpy(m_StorageLocation, szDir);
+				RefreshMenus();
 			}
 			break;
 
@@ -1929,23 +1905,23 @@ void WndMain::RefreshMenus()
 			CheckMenuItem(settings_menu, ID_HACKS_RENDERDIRECTLYTOHOSTBACKBUFFER, chk_flag);
 
 			//bad
-			if (m_StorageToggle == 0)
+			switch (m_StorageToggle)
 			{
-				CheckMenuItem(settings_menu, ID_SETTINGS_CONFIG_DLOCAPPDATA, MF_CHECKED);
-				CheckMenuItem(settings_menu, ID_SETTINGS_CONFIG_DLOCCURDIR, MF_UNCHECKED);
-				CheckMenuItem(settings_menu, ID_SETTINGS_CONFIG_DLOCCUSTOM, MF_UNCHECKED);
-			}
-			else if (m_StorageToggle == 1)
-			{
-				CheckMenuItem(settings_menu, ID_SETTINGS_CONFIG_DLOCAPPDATA, MF_UNCHECKED);
-				CheckMenuItem(settings_menu, ID_SETTINGS_CONFIG_DLOCCURDIR, MF_CHECKED);
-				CheckMenuItem(settings_menu, ID_SETTINGS_CONFIG_DLOCCUSTOM, MF_UNCHECKED);
-			}
-			else if (m_StorageToggle == 2)
-			{
-				CheckMenuItem(settings_menu, ID_SETTINGS_CONFIG_DLOCAPPDATA, MF_UNCHECKED);
-				CheckMenuItem(settings_menu, ID_SETTINGS_CONFIG_DLOCCURDIR, MF_UNCHECKED);
-				CheckMenuItem(settings_menu, ID_SETTINGS_CONFIG_DLOCCUSTOM, MF_CHECKED);
+				case 0:
+					CheckMenuItem(settings_menu, ID_SETTINGS_CONFIG_DLOCAPPDATA, MF_CHECKED);
+					CheckMenuItem(settings_menu, ID_SETTINGS_CONFIG_DLOCCURDIR, MF_UNCHECKED);
+					CheckMenuItem(settings_menu, ID_SETTINGS_CONFIG_DLOCCUSTOM, MF_UNCHECKED);
+					break;
+				case 1:
+					CheckMenuItem(settings_menu, ID_SETTINGS_CONFIG_DLOCAPPDATA, MF_UNCHECKED);
+					CheckMenuItem(settings_menu, ID_SETTINGS_CONFIG_DLOCCURDIR, MF_CHECKED);
+					CheckMenuItem(settings_menu, ID_SETTINGS_CONFIG_DLOCCUSTOM, MF_UNCHECKED);
+					break;
+				case 2:
+					CheckMenuItem(settings_menu, ID_SETTINGS_CONFIG_DLOCAPPDATA, MF_UNCHECKED);
+					CheckMenuItem(settings_menu, ID_SETTINGS_CONFIG_DLOCCURDIR, MF_UNCHECKED);
+					CheckMenuItem(settings_menu, ID_SETTINGS_CONFIG_DLOCCUSTOM, MF_CHECKED);
+					break;
 			}
 		}
 
@@ -2323,6 +2299,9 @@ void WndMain::StartEmulation(HWND hwndParent, DebuggerState LocalDebuggerState /
 	g_EmuShared->SetSkipRdtscPatching(&m_SkipRdtscPatching);
 	g_EmuShared->SetScaleViewport(&m_ScaleViewport);
 	g_EmuShared->SetDirectHostBackBufferAccess(&m_DirectHostBackBufferAccess);
+
+	// register storage location with emulator process
+	g_EmuShared->SetStorageLocation(m_StorageLocation);
 
 	if (m_ScaleViewport) {
 		// Set the window size to emulation dimensions
