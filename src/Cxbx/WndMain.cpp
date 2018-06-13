@@ -1213,6 +1213,12 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 					}
 
 					std::string szDirTemp = std::string(szDir) + std::string("\\Cxbx-Reloaded");
+
+					if (szDirTemp.size() > MAX_PATH) {
+						MessageBox(hwnd, "Directory path is too long. Go back and choose a shorter path.", "Cxbx-Reloaded", MB_ICONEXCLAMATION | MB_OK);
+						break;
+					}
+
 					int result = SHCreateDirectoryEx(nullptr, szDirTemp.c_str(), nullptr);
 					if ((result != ERROR_SUCCESS) && (result != ERROR_ALREADY_EXISTS)) {
 						MessageBox(hwnd, "You don't have write permissions on that directory...", "Cxbx-Reloaded", MB_ICONEXCLAMATION | MB_OK);
