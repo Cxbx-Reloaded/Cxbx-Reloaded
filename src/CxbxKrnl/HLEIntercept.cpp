@@ -324,10 +324,70 @@ void EmuD3D_Init_DeferredStates()
     }
 }
 
+// Update shared structure with GUI process
+void EmuUpdateLLEStatus(uint32_t XbLibScan)
+{
+    int FlagsLLE;
+    g_EmuShared->GetFlagsLLE(&FlagsLLE);
+
+    if ((FlagsLLE & LLE_GPU) == false
+        && !((XbLibScan & XbSymbolLib_D3D8) > 0
+            || (XbLibScan & XbSymbolLib_D3D8LTCG) > 0)) {
+        bLLE_GPU = true;
+        FlagsLLE ^= LLE_GPU;
+        EmuOutputMessage(XB_OUTPUT_MESSAGE_INFO, "Fallback to LLE GPU.");
+    }
+
+    if ((FlagsLLE & LLE_APU) == false
+        && (XbLibScan & XbSymbolLib_DSOUND) == 0) {
+        bLLE_APU = true;
+        FlagsLLE ^= LLE_APU;
+        EmuOutputMessage(XB_OUTPUT_MESSAGE_INFO, "Fallback to LLE APU.");
+    }
+    g_EmuShared->SetFlagsLLE(&FlagsLLE);
+}
+
 // NOTE: EmuHLEIntercept do not get to be in XbSymbolDatabase, do the intecept in Cxbx project only.
 void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 {
+    // NOTE: Increase this revision number any time we changed something inside Cxbx-Reloaded.
+    int revisionCache = 4;
+
     Xbe::LibraryVersion *pLibraryVersion = (Xbe::LibraryVersion*)pXbeHeader->dwLibraryVersionsAddr;
+
+    uint16 xdkVersion = 0;
+    uint32_t XbLibScan = 0;
+
+    // NOTE: We need to check if title has library header to optimize verification process.
+    if (pLibraryVersion != nullptr) {
+        uint32 dwLibraryVersions = pXbeHeader->dwLibraryVersions;
+        const char* SectionName = nullptr;
+        Xbe::SectionHeader* pSectionHeaders = (Xbe::SectionHeader*)pXbeHeader->dwSectionHeadersAddr;
+
+        // Get the highest revision build and prefix library to scan.
+        for (uint32 v = 0; v < dwLibraryVersions; v++) {
+            uint16 BuildVersion = pLibraryVersion[v].wBuildVersion;
+            uint16 QFEVersion = pLibraryVersion[v].wFlags.QFEVersion;
+
+            if (xdkVersion < BuildVersion) {
+                xdkVersion = BuildVersion;
+            }
+            XbLibScan |= XbSymbolLibrayToFlag(std::string(pLibraryVersion[v].szName, pLibraryVersion[v].szName + 8).c_str());
+        }
+
+        // Since XDK 4039 title does not have library version for DSOUND, let's check section header if it exists or not.
+        for (unsigned int v = 0; v < pXbeHeader->dwSections; v++) {
+            SectionName = (const char*)pSectionHeaders[v].dwSectionNameAddr;
+            if (strncmp(SectionName, Lib_DSOUND, 8) == 0) {
+                XbLibScan |= XbSymbolLib_DSOUND;
+                break;
+            }
+        }
+    }
+
+    EmuUpdateLLEStatus(XbLibScan);
+    int gFlagsLLE;
+    g_EmuShared->GetFlagsLLE(&gFlagsLLE);
 
     printf("\n");
     printf("*******************************************************************************\n");
@@ -367,84 +427,86 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
         if (HLECacheHash == XbSymbolLibraryVersion()) {
             char buffer[SHRT_MAX] = { 0 };
             char* bufferPtr = buffer;
-
-            printf("Using HLE Cache\n");
-
-            GetPrivateProfileSection("Symbols", buffer, sizeof(buffer), filename.c_str());
-
-            // Parse the .INI file into the map of symbol addresses
-            while (strlen(bufferPtr) > 0) {
-                std::string ini_entry(bufferPtr);
-
-                auto separator = ini_entry.find('=');
-                std::string key = ini_entry.substr(0, separator);
-                std::string value = ini_entry.substr(separator + 1, std::string::npos);
-                uint32_t addr = strtol(value.c_str(), 0, 16);
-
-                g_SymbolAddresses[key] = addr;
-                bufferPtr += strlen(bufferPtr) + 1;
-            }
-
-            // Iterate through the map of symbol addresses, calling GetEmuPatchAddr on all functions.
-            for (auto it = g_SymbolAddresses.begin(); it != g_SymbolAddresses.end(); ++it) {
-                std::string functionName = (*it).first;
-                xbaddr location = (*it).second;
-
-                std::stringstream output;
-                output << "HLECache: 0x" << std::setfill('0') << std::setw(8) << std::hex << location
-                    << " -> " << functionName;
-                void* pFunc = GetEmuPatchAddr(functionName);
-                if (pFunc != nullptr)
-                {
-                    // skip entries that weren't located at all
-                    if (location == NULL)
-                    {
-                        output << "\t(not patched)";
-                    }
-                    // Prevent patching illegal addresses
-                    else if (location < XBE_IMAGE_BASE)
-                    {
-                        output << "\t*ADDRESS TOO LOW!*";
-                    }
-                    else if (location > g_SystemMaxMemory)
-                    {
-                        output << "\t*ADDRESS TOO HIGH!*";
-                    }
-                    else
-                    {
-                        EmuInstallPatch(functionName, location, pFunc);
-                        output << "\t*PATCHED*";
-                    }
-                }
-                else
-                {
-                    if (location != NULL)
-                        output << "\t(no patch)";
-                }
-
-                output << "\n";
-                printf(output.str().c_str());
-            }
-
-            // Fix up Render state and Texture States
-            if (g_SymbolAddresses.find("D3DDeferredRenderState") == g_SymbolAddresses.end()
-                || g_SymbolAddresses["D3DDeferredRenderState"] == 0) {
-                EmuWarning("EmuD3DDeferredRenderState was not found!");
-            }
-            
-            if (g_SymbolAddresses.find("D3DDeferredTextureState") == g_SymbolAddresses.end()
-                || g_SymbolAddresses["D3DDeferredTextureState"] == 0) {
-                EmuWarning("EmuD3DDeferredTextureState was not found!");
-            }
-
-            if (g_SymbolAddresses.find("D3DDEVICE") == g_SymbolAddresses.end()
-                || g_SymbolAddresses["D3DDEVICE"] == 0) {
-                EmuWarning("D3DDEVICE was not found!");
-            }
-
-            EmuD3D_Init_DeferredStates();
-
             g_HLECacheUsed = true;
+
+            const uint32 cacheRevision = GetPrivateProfileInt("Info", "revision", 0, filename.c_str());
+            const uint32 cacheFlagsLLE = GetPrivateProfileInt("Info", "FlagsLLE", 0, filename.c_str());
+
+            if (cacheFlagsLLE != gFlagsLLE) {
+                g_HLECacheUsed = false;
+            }
+            else if (cacheRevision != revisionCache) {
+                g_HLECacheUsed = false;
+            }
+
+            if (g_HLECacheUsed) {
+                printf("Using HLE Cache\n");
+
+                GetPrivateProfileSection("Symbols", buffer, sizeof(buffer), filename.c_str());
+
+                // Parse the .INI file into the map of symbol addresses
+                while (strlen(bufferPtr) > 0) {
+                    std::string ini_entry(bufferPtr);
+
+                    auto separator = ini_entry.find('=');
+                    std::string key = ini_entry.substr(0, separator);
+                    std::string value = ini_entry.substr(separator + 1, std::string::npos);
+                    uint32_t addr = strtol(value.c_str(), 0, 16);
+
+                    g_SymbolAddresses[key] = addr;
+                    bufferPtr += strlen(bufferPtr) + 1;
+                }
+
+                // Iterate through the map of symbol addresses, calling GetEmuPatchAddr on all functions.
+                for (auto it = g_SymbolAddresses.begin(); it != g_SymbolAddresses.end(); ++it) {
+                    std::string functionName = (*it).first;
+                    xbaddr location = (*it).second;
+
+                    std::stringstream output;
+                    output << "HLECache: 0x" << std::setfill('0') << std::setw(8) << std::hex << location
+                        << " -> " << functionName;
+                    void* pFunc = GetEmuPatchAddr(functionName);
+                    if (pFunc != nullptr) {
+                        // skip entries that weren't located at all
+                        if (location == NULL) {
+                            output << "\t(not patched)";
+                        }
+                        // Prevent patching illegal addresses
+                        else if (location < XBE_IMAGE_BASE) {
+                            output << "\t*ADDRESS TOO LOW!*";
+                        } else if (location > g_SystemMaxMemory) {
+                            output << "\t*ADDRESS TOO HIGH!*";
+                        } else {
+                            EmuInstallPatch(functionName, location, pFunc);
+                            output << "\t*PATCHED*";
+                        }
+                    } else {
+                        if (location != NULL)
+                            output << "\t(no patch)";
+                    }
+
+                    output << "\n";
+                    printf(output.str().c_str());
+                }
+
+                // Fix up Render state and Texture States
+                if (g_SymbolAddresses.find("D3DDeferredRenderState") == g_SymbolAddresses.end()
+                    || g_SymbolAddresses["D3DDeferredRenderState"] == 0) {
+                    EmuWarning("EmuD3DDeferredRenderState was not found!");
+                }
+
+                if (g_SymbolAddresses.find("D3DDeferredTextureState") == g_SymbolAddresses.end()
+                    || g_SymbolAddresses["D3DDeferredTextureState"] == 0) {
+                    EmuWarning("EmuD3DDeferredTextureState was not found!");
+                }
+
+                if (g_SymbolAddresses.find("D3DDEVICE") == g_SymbolAddresses.end()
+                    || g_SymbolAddresses["D3DDEVICE"] == 0) {
+                    EmuWarning("D3DDEVICE was not found!");
+                }
+
+                EmuD3D_Init_DeferredStates();
+            }
         }
 
         // If g_SymbolAddresses didn't get filled, the HLE cache is invalid
@@ -462,25 +524,9 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
     //
     // initialize Microsoft XDK emulation
     //
-    if(pLibraryVersion != 0)
-    {
+    if(pLibraryVersion != nullptr) {
+
         printf("HLE: Detected Microsoft XDK application...\n");
-
-        uint32 dwLibraryVersions = pXbeHeader->dwLibraryVersions;
-
-        uint16 xdkVersion = 0;
-        uint32_t XbLibScan = 0;
-
-        // Get the highest revision build and prefix library to scan.
-        for (uint32 v = 0; v < dwLibraryVersions; v++) {
-            uint16 BuildVersion = pLibraryVersion[v].wBuildVersion;
-            uint16 QFEVersion = pLibraryVersion[v].wFlags.QFEVersion;
-
-            if (xdkVersion < BuildVersion) {
-                xdkVersion = BuildVersion;
-            }
-            XbLibScan |= XbSymbolLibrayToFlag(std::string(pLibraryVersion[v].szName, pLibraryVersion[v].szName + 8).c_str());
-        }
 
         // TODO: Is this enough for alias? We need to verify it.
         if ((XbLibScan & XbSymbolLib_D3D8) > 0 || (XbLibScan & XbSymbolLib_D3D8LTCG) > 0) {
@@ -532,6 +578,15 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
         std::string HLECacheHashString = std::to_string(XbSymbolLibraryVersion());
         WritePrivateProfileString("Info", "HLECacheHash", HLECacheHashString.c_str(), filename.c_str());
     }
+
+
+    std::stringstream revision;
+    revision << std::dec << revisionCache;
+    WritePrivateProfileString("Info", "revision", revision.str().c_str(), filename.c_str());
+
+    std::stringstream flagsLLE;
+    flagsLLE << std::dec << gFlagsLLE;
+    WritePrivateProfileString("Info", "FlagsLLE", flagsLLE.str().c_str(), filename.c_str());
 
     // Write the Certificate Details to the cache file
     WritePrivateProfileString("Certificate", "Name", tAsciiTitle, filename.c_str());
