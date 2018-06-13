@@ -180,7 +180,7 @@ class EmuShared : public Mutex
 		}
 
 		// ******************************************************************
-		// * Xbox LED values Accessors
+		// * File storage location
 		// ******************************************************************
 		void GetStorageLocation(char *path) { Lock(); strcpy(path, m_StorageLocation); Unlock(); }
 		void SetStorageLocation(char *path) { Lock(); strcpy(m_StorageLocation, path); Unlock(); }
