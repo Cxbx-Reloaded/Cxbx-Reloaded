@@ -1307,9 +1307,7 @@ __declspec(noreturn) void CxbxKrnlInit
 	char szBuffer[MAX_PATH];
 	g_EmuShared->GetStorageLocation(szBuffer);
 
-	strcat(szBuffer, "\\Cxbx-Reloaded\\");
-	std::string basePath(szBuffer);
-	CxbxBasePath = basePath + "EmuDisk\\";
+	CxbxBasePath = std::string(szBuffer) + "\\EmuDisk\\";
 
 	// Determine XBE Path
 	memset(szBuffer, 0, MAX_PATH);
