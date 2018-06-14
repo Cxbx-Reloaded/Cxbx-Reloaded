@@ -271,14 +271,29 @@ WndMain::WndMain(HINSTANCE x_hInstance) :
 				m_StorageToggle = CXBX_DATA_APPDATA;
 			}
 
-			dwType = REG_SZ; dwSize = MAX_PATH;
-			result = RegQueryValueEx(hKey, "DataStorageLocation", NULL, &dwType, (PBYTE)&m_StorageLocation, &dwSize);
-			if (result != ERROR_SUCCESS) {
-				char szDir[MAX_PATH];
-				SHGetSpecialFolderPath(NULL, szDir, CSIDL_APPDATA, TRUE);
-				strncpy(m_StorageLocation, szDir, MAX_PATH);
-				strncat(m_StorageLocation, "\\Cxbx-Reloaded", MAX_PATH);
+			switch (m_StorageToggle) {
+				case CXBX_DATA_APPDATA:
+				default:
+					SHGetSpecialFolderPath(NULL, m_StorageLocation, CSIDL_APPDATA, TRUE);
+					m_StorageToggle = CXBX_DATA_APPDATA;
+					strncat(m_StorageLocation, "\\Cxbx-Reloaded", MAX_PATH);
+					break;
+
+				case CXBX_DATA_CURDIR:
+					GetCurrentDirectory(MAX_PATH, m_StorageLocation);
+					break;
+
+				case CXBX_DATA_CUSTOM:
+			 		dwType = REG_SZ; dwSize = MAX_PATH;
+			 		result = RegQueryValueEx(hKey, "DataStorageLocation", NULL, &dwType, (PBYTE)&m_StorageLocation, &dwSize);
+			 		if (result != ERROR_SUCCESS) {
+						SHGetSpecialFolderPath(NULL, m_StorageLocation, CSIDL_APPDATA, TRUE);
+						strncat(m_StorageLocation, "\\Cxbx-Reloaded", MAX_PATH);
+					}
+					break;
 			}
+			// NOTE: This is a requirement for pre-verification from GUI. Used in CxbxInitFilePaths function.
+			g_EmuShared->SetStorageLocation(m_StorageLocation);
 
 			// Prevent using an incorrect path from the registry if the debug folders have been moved
 			if (m_CxbxDebug == DM_FILE)
@@ -436,8 +451,11 @@ WndMain::~WndMain()
 			dwType = REG_DWORD; dwSize = sizeof(DWORD);
 			RegSetValueEx(hKey, "DataStorageToggle", 0, dwType, (PBYTE)&m_StorageToggle, dwSize);
 
-			dwType = REG_SZ; dwSize = MAX_PATH;
-			RegSetValueEx(hKey, "DataStorageLocation", 0, dwType, (PBYTE)m_StorageLocation, dwSize);
+			// NOTE: Save custom directory provided by user only.
+			if (m_StorageToggle == CXBX_DATA_CUSTOM) {
+				dwType = REG_SZ; dwSize = MAX_PATH;
+				RegSetValueEx(hKey, "DataStorageLocation", 0, dwType, (PBYTE)m_StorageLocation, dwSize);
+			}
         }
     }
 
