@@ -1,6 +1,6 @@
 @echo off
 
-git describe --always > GIT_VERSION
+git describe --always --tags --first-parent > GIT_VERSION
 @if not exist %~1 (
 @goto update
 )
