@@ -160,7 +160,7 @@ WndMain::WndMain(HINSTANCE x_hInstance) :
 	m_CxbxDebug(DM_NONE),
 	m_FlagsLLE(0),
 	m_StorageToggle(CXBX_DATA_APPDATA),
-    m_StorageLocation(""),
+	m_StorageLocation(""),
 	m_dwRecentXbe(0)
 {
     // initialize members
