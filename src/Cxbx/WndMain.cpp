@@ -2191,7 +2191,7 @@ void WndMain::StartEmulation(HWND hwndParent, DebuggerState LocalDebuggerState /
     g_EmuShared->GetIsEmulating(&isEmulating);
 
     if (isEmulating) {
-        MessageBox(m_hwnd, "A title is currently emulating, please stop emulation before attempt start again.",
+        MessageBox(m_hwnd, "A title is currently emulating, please stop emulation before attempting to start again.",
                    "Cxbx-Reloaded", MB_ICONERROR | MB_OK);
         return;
     }
