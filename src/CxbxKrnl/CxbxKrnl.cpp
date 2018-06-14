@@ -1305,10 +1305,9 @@ __declspec(noreturn) void CxbxKrnlInit
 	
 	// Initialize devices :
 	char szBuffer[MAX_PATH];
-	SHGetSpecialFolderPath(NULL, szBuffer, CSIDL_APPDATA, TRUE);
-	strcat(szBuffer, "\\Cxbx-Reloaded\\");
-	std::string basePath(szBuffer);
-	CxbxBasePath = basePath + "EmuDisk\\";
+	g_EmuShared->GetStorageLocation(szBuffer);
+
+	CxbxBasePath = std::string(szBuffer) + "\\EmuDisk\\";
 
 	// Determine XBE Path
 	memset(szBuffer, 0, MAX_PATH);
@@ -1491,9 +1490,7 @@ __declspec(noreturn) void CxbxKrnlInit
 
 void CxbxInitFilePaths()
 {
-	char szAppData[MAX_PATH];
-	SHGetSpecialFolderPath(NULL, szAppData, CSIDL_APPDATA, TRUE);
-	snprintf(szFolder_CxbxReloadedData, MAX_PATH, "%s\\Cxbx-Reloaded", szAppData);
+	g_EmuShared->GetStorageLocation(szFolder_CxbxReloadedData);
 
 	// Make sure our data folder exists :
 	int result = SHCreateDirectoryEx(nullptr, szFolder_CxbxReloadedData, nullptr);

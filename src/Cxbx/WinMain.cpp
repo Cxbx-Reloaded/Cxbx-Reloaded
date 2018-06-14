@@ -73,13 +73,14 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		return 1;
 	}
 
-	/* Initialize Cxbx File Paths */
-	CxbxInitFilePaths();
-
-    /*! initialize shared memory */
-    EmuShared::Init();
+	/*! initialize shared memory */
+	EmuShared::Init();
 
 	if (__argc >= 2 && strcmp(__argv[1], "/load") == 0 && strlen(__argv[2]) > 0)  {
+
+		/* Initialize Cxbx File Paths */
+		CxbxInitFilePaths();
+
 		CxbxKrnlMain(__argc, __argv);
 		return 0;
 	}
@@ -90,6 +91,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	InitCommonControlsEx(&icc);
 
     WndMain *MainWindow = new WndMain(hInstance);
+
+	// NOTE: CxbxInitFilePaths must be initalize AFTER WndMain for data directory option from user.
+	/* Initialize Cxbx File Paths */
+	CxbxInitFilePaths();
 
     /*! wait for window to be created, or failure */
     while(!MainWindow->isCreated() && MainWindow->ProcessMessages())

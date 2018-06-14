@@ -191,6 +191,11 @@ class EmuShared : public Mutex
 			Unlock();
 		}
 
+		// ******************************************************************
+		// * File storage location
+		// ******************************************************************
+		void GetStorageLocation(char *path) { Lock(); strcpy(path, m_StorageLocation); Unlock(); }
+		void SetStorageLocation(char *path) { Lock(); strcpy(m_StorageLocation, path); Unlock(); }
 
 	private:
 		// ******************************************************************
@@ -222,6 +227,7 @@ class EmuShared : public Mutex
 		int          m_LedSequence[4];
 		int          m_ScaleViewport;
 		int          m_DirectHostBackBufferAccess;
+		char         m_StorageLocation[MAX_PATH];
 };
 
 // ******************************************************************

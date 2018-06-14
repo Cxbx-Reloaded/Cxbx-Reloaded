@@ -470,6 +470,12 @@ BEGIN
         MENUITEM "Config &Video...",            ID_SETTINGS_CONFIG_VIDEO,MFT_STRING,MFS_ENABLED
         MENUITEM "Config &Audio...",            ID_SETTINGS_CONFIG_AUDIO,MFT_STRING,MFS_ENABLED
         MENUITEM "Config &Eeprom...",           ID_SETTINGS_CONFIG_EEPROM,MFT_STRING,MFS_ENABLED
+        POPUP "Config &Data Location...",       65535,MFT_STRING,MFS_ENABLED
+        BEGIN
+            MENUITEM "Store in AppData",            ID_SETTINGS_CONFIG_DLOCAPPDATA,MFT_STRING,MFS_ENABLED
+            MENUITEM "Store with Executable",       ID_SETTINGS_CONFIG_DLOCCURDIR,MFT_STRING,MFS_ENABLED
+            MENUITEM "Custom",                      ID_SETTINGS_CONFIG_DLOCCUSTOM,MFT_STRING,MFS_ENABLED
+        END
         POPUP "&HLE Cache",                     65535,MFT_STRING,MFS_ENABLED
         BEGIN
             MENUITEM "&Clear entire HLE Cache",     ID_CACHE_CLEARHLECACHE_ALL,MFT_STRING,MFS_ENABLED
@@ -482,7 +488,7 @@ BEGIN
         END
         POPUP "Hacks",                          65535,MFT_STRING,MFS_ENABLED
         BEGIN
-            POPUP "Speed Hacks",                    ID_HACKS_SPEEDHACKS,MFT_STRING,MFS_ENABLED
+            POPUP "Speed Hacks",                    65535,MFT_STRING,MFS_ENABLED
             BEGIN
                 MENUITEM "Run Xbox threads on all cores", ID_HACKS_RUNXBOXTHREADSONALLCORES,MFT_STRING,MFS_ENABLED
                 MENUITEM "Render directly to Host Backbuffer", ID_HACKS_RENDERDIRECTLYTOHOSTBACKBUFFER,MFT_STRING,MFS_ENABLED

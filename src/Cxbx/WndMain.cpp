@@ -48,6 +48,7 @@
 #include <multimon.h>
 
 #include <io.h>
+#include <shlobj.h>
 
 #include <sstream> // for std::stringstream
 #include <fstream>
@@ -61,9 +62,9 @@ static int splashLogoWidth, splashLogoHeight;
 
 bool g_SaveOnExit = true;
 
-void ClearHLECache()
+void ClearHLECache(char sStorageLocation[MAX_PATH])
 {
-	std::string cacheDir = std::string(XTL::szFolder_CxbxReloadedData) + "\\HLECache\\";
+	std::string cacheDir = std::string(sStorageLocation) + "\\HLECache\\";
 	std::string fullpath = cacheDir + "*.ini";
 
 	WIN32_FIND_DATA data;
@@ -158,6 +159,8 @@ WndMain::WndMain(HINSTANCE x_hInstance) :
 	m_KrnlDebug(DM_NONE),
 	m_CxbxDebug(DM_NONE),
 	m_FlagsLLE(0),
+	m_StorageToggle(CXBX_DATA_APPDATA),
+	m_StorageLocation(""),
 	m_dwRecentXbe(0)
 {
     // initialize members
@@ -261,6 +264,36 @@ WndMain::WndMain(HINSTANCE x_hInstance) :
 			if (lErrCodeKrnlDebugFilename != ERROR_SUCCESS) {
 				m_KrnlDebugFilename[0] = '\0';
 			}
+
+			dwType = REG_DWORD; dwSize = sizeof(DWORD);
+			result = RegQueryValueEx(hKey, "DataStorageToggle", NULL, &dwType, (PBYTE)&m_StorageToggle, &dwSize);
+			if (result != ERROR_SUCCESS) {
+				m_StorageToggle = CXBX_DATA_APPDATA;
+			}
+
+			switch (m_StorageToggle) {
+				case CXBX_DATA_APPDATA:
+				default:
+					SHGetSpecialFolderPath(NULL, m_StorageLocation, CSIDL_APPDATA, TRUE);
+					m_StorageToggle = CXBX_DATA_APPDATA;
+					strncat(m_StorageLocation, "\\Cxbx-Reloaded", MAX_PATH);
+					break;
+
+				case CXBX_DATA_CURDIR:
+					GetCurrentDirectory(MAX_PATH, m_StorageLocation);
+					break;
+
+				case CXBX_DATA_CUSTOM:
+			 		dwType = REG_SZ; dwSize = MAX_PATH;
+			 		result = RegQueryValueEx(hKey, "DataStorageLocation", NULL, &dwType, (PBYTE)&m_StorageLocation, &dwSize);
+			 		if (result != ERROR_SUCCESS) {
+						SHGetSpecialFolderPath(NULL, m_StorageLocation, CSIDL_APPDATA, TRUE);
+						strncat(m_StorageLocation, "\\Cxbx-Reloaded", MAX_PATH);
+					}
+					break;
+			}
+			// NOTE: This is a requirement for pre-verification from GUI. Used in CxbxInitFilePaths function.
+			g_EmuShared->SetStorageLocation(m_StorageLocation);
 
 			// Prevent using an incorrect path from the registry if the debug folders have been moved
 			if (m_CxbxDebug == DM_FILE)
@@ -414,6 +447,15 @@ WndMain::~WndMain()
 
             dwType = REG_SZ; dwSize = MAX_PATH;
             RegSetValueEx(hKey, "KrnlDebugFilename", 0, dwType, (PBYTE)m_KrnlDebugFilename, dwSize);
+
+			dwType = REG_DWORD; dwSize = sizeof(DWORD);
+			RegSetValueEx(hKey, "DataStorageToggle", 0, dwType, (PBYTE)&m_StorageToggle, dwSize);
+
+			// NOTE: Save custom directory provided by user only.
+			if (m_StorageToggle == CXBX_DATA_CUSTOM) {
+				dwType = REG_SZ; dwSize = MAX_PATH;
+				RegSetValueEx(hKey, "DataStorageLocation", 0, dwType, (PBYTE)m_StorageLocation, dwSize);
+			}
         }
     }
 
@@ -1100,46 +1142,48 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
 					// dump xbe information to file
 					{
-                        std::string Xbe_info = DumpInformation(m_Xbe);
-                        if (m_Xbe->HasError()) {
-                            MessageBox(m_hwnd, m_Xbe->GetError().c_str(), "Cxbx-Reloaded", MB_ICONSTOP | MB_OK);
-                        }
-                        else {
-                            std::ofstream Xbe_dump_file(ofn.lpstrFile);
-                            if(Xbe_dump_file.is_open()) {
-                                Xbe_dump_file << Xbe_info;
-                                Xbe_dump_file.close();
-                                char buffer[255];
-                                sprintf(buffer, "%s's .xbe info was successfully dumped.", m_Xbe->m_szAsciiTitle);
-                                printf("WndMain: %s\n", buffer);
-                                MessageBox(m_hwnd, buffer, "Cxbx-Reloaded", MB_ICONINFORMATION | MB_OK);
-                            }
-                            else {
-                                MessageBox(m_hwnd, "Could not open Xbe text file.", "Cxbx-Reloaded", MB_ICONSTOP | MB_OK);
-                            }
-                        }
+						std::string Xbe_info = DumpInformation(m_Xbe);
+						if (m_Xbe->HasError()) {
+							MessageBox(m_hwnd, m_Xbe->GetError().c_str(), "Cxbx-Reloaded", MB_ICONSTOP | MB_OK);
+						}
+						else {
+							std::ofstream Xbe_dump_file(ofn.lpstrFile);
+							if (Xbe_dump_file.is_open()) {
+								Xbe_dump_file << Xbe_info;
+								Xbe_dump_file.close();
+								char buffer[255];
+								sprintf(buffer, "%s's .xbe info was successfully dumped.", m_Xbe->m_szAsciiTitle);
+								printf("WndMain: %s\n", buffer);
+								MessageBox(m_hwnd, buffer, "Cxbx-Reloaded", MB_ICONINFORMATION | MB_OK);
+							}
+							else {
+								MessageBox(m_hwnd, "Could not open Xbe text file.", "Cxbx-Reloaded", MB_ICONSTOP | MB_OK);
+							}
+						}
 					}
 				}
 			}
 			break;
 
-            case ID_EDIT_DUMPXBEINFOTO_DEBUGCONSOLE:
-            {
-                std::string Xbe_info = DumpInformation(m_Xbe);
-                if (m_Xbe->HasError()) {
-                    MessageBox(m_hwnd, m_Xbe->GetError().c_str(), "Cxbx-Reloaded", MB_ICONSTOP | MB_OK);
-                }
-                else {
-                    std::cout << Xbe_info;
-                    char buffer[255];
-                    sprintf(buffer, "%s's .xbe info was successfully dumped to console.", m_Xbe->m_szAsciiTitle);
-                    printf("WndMain: %s\n", buffer);
-                }
-            }
-            break;
-            case ID_SETTINGS_CONFIG_XBOX_CONTROLLER_MAPPING:
-                ShowXboxControllerPortMappingConfig(hwnd);
-                break;
+			case ID_EDIT_DUMPXBEINFOTO_DEBUGCONSOLE:
+			{
+				std::string Xbe_info = DumpInformation(m_Xbe);
+				if (m_Xbe->HasError()) {
+					MessageBox(m_hwnd, m_Xbe->GetError().c_str(), "Cxbx-Reloaded", MB_ICONSTOP | MB_OK);
+				}
+				else {
+					std::cout << Xbe_info;
+					char buffer[255];
+					sprintf(buffer, "%s's .xbe info was successfully dumped to console.", m_Xbe->m_szAsciiTitle);
+					printf("WndMain: %s\n", buffer);
+				}
+			}
+			break;
+
+			case ID_SETTINGS_CONFIG_XBOX_CONTROLLER_MAPPING:
+				ShowXboxControllerPortMappingConfig(hwnd);
+				break;
+
 			case ID_SETTINGS_CONFIG_CONTROLLER:
 				ShowControllerConfig(hwnd);
 				break;
@@ -1148,9 +1192,9 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 				ShowVideoConfig(hwnd);
 				break;
 
-            case ID_SETTINGS_CONFIG_AUDIO:
-                ShowAudioConfig(hwnd);
-                break;
+			case ID_SETTINGS_CONFIG_AUDIO:
+				ShowAudioConfig(hwnd);
+				break;
 
 			case ID_SETTINGS_CONFIG_EEPROM:
 			{
@@ -1164,16 +1208,88 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 			}
 			break;
 
+			case ID_SETTINGS_CONFIG_DLOCCUSTOM:
+			{
+				char szDir[MAX_PATH];
+
+				BROWSEINFO bInfo;
+				bInfo.hwndOwner = NULL;
+				bInfo.pidlRoot = NULL;
+				bInfo.pszDisplayName = szDir;
+				bInfo.lpszTitle = "Please, select a folder";
+				bInfo.ulFlags = BIF_NEWDIALOGSTYLE, BIF_EDITBOX, BIF_VALIDATE;
+				bInfo.lpfn = NULL;
+				bInfo.lParam = 0;
+				bInfo.iImage = -1;
+
+				LPITEMIDLIST lpItem = SHBrowseForFolder(&bInfo);
+
+				if (lpItem != NULL)
+				{
+					SHGetPathFromIDList(lpItem, szDir);
+
+					// -14 is for \\Cxbx-Reloaded string to be include later down below.
+					size_t szLen = strnlen(szDir, MAX_PATH - 14);
+					if (szLen == 0) {
+						MessageBox(hwnd, "You've selected an invalid folder... Go back and try again.", "Cxbx-Reloaded", MB_ICONEXCLAMATION | MB_OK);
+						break;
+					}
+					else if (szLen == MAX_PATH - 14) {
+						MessageBox(hwnd, "You've selected a folder path which is too long... Go back and try again.", "Cxbx-Reloaded", MB_ICONEXCLAMATION | MB_OK);
+						break;
+					}
+
+					std::string szDirTemp = std::string(szDir) + std::string("\\Cxbx-Reloaded");
+
+					if (szDirTemp.size() > MAX_PATH) {
+						MessageBox(hwnd, "Directory path is too long. Go back and choose a shorter path.", "Cxbx-Reloaded", MB_ICONEXCLAMATION | MB_OK);
+						break;
+					}
+
+					int result = SHCreateDirectoryEx(nullptr, szDirTemp.c_str(), nullptr);
+					if ((result != ERROR_SUCCESS) && (result != ERROR_ALREADY_EXISTS)) {
+						MessageBox(hwnd, "You don't have write permissions on that directory...", "Cxbx-Reloaded", MB_ICONEXCLAMATION | MB_OK);
+						break;
+					}
+
+					m_StorageToggle = CXBX_DATA_CUSTOM;
+					strncpy(m_StorageLocation, szDirTemp.c_str(), MAX_PATH);
+					RefreshMenus();
+				}
+			}
+			break;
+
+			case ID_SETTINGS_CONFIG_DLOCAPPDATA:
+			{
+				char szDir[MAX_PATH];
+
+				SHGetSpecialFolderPath(NULL, szDir, CSIDL_APPDATA, TRUE);
+				m_StorageToggle = CXBX_DATA_APPDATA;
+				strncpy(m_StorageLocation, szDir, MAX_PATH);
+				strncat(m_StorageLocation, "\\Cxbx-Reloaded", MAX_PATH);
+				RefreshMenus();
+			}
+			break;
+
+			case ID_SETTINGS_CONFIG_DLOCCURDIR:
+			{
+
+				GetCurrentDirectory(MAX_PATH, m_StorageLocation);
+				m_StorageToggle = CXBX_DATA_CURDIR;
+				RefreshMenus();
+			}
+			break;
+
 			case ID_CACHE_CLEARHLECACHE_ALL:
 			{
-				ClearHLECache();
+				ClearHLECache(m_StorageLocation);
 				MessageBox(m_hwnd, "The entire HLE Cache has been cleared.", "Cxbx-Reloaded", MB_OK);
 			}
 			break;
 
 			case ID_CACHE_CLEARHLECACHE_CURRENT:
 			{
-				std::string cacheDir = std::string(XTL::szFolder_CxbxReloadedData) + "\\HLECache\\";
+				std::string cacheDir = std::string(m_StorageLocation) + "\\HLECache\\";
 
 				// Hash the loaded XBE's header, use it as a filename
 				uint32_t uiHash = XXHash32::hash((void*)&m_Xbe->m_Header, sizeof(Xbe::Header), 0);
@@ -1827,6 +1943,26 @@ void WndMain::RefreshMenus()
 
 			chk_flag = (m_DirectHostBackBufferAccess) ? MF_CHECKED : MF_UNCHECKED;
 			CheckMenuItem(settings_menu, ID_HACKS_RENDERDIRECTLYTOHOSTBACKBUFFER, chk_flag);
+
+			//bad
+			switch (m_StorageToggle)
+			{
+				case CXBX_DATA_APPDATA:
+					CheckMenuItem(settings_menu, ID_SETTINGS_CONFIG_DLOCAPPDATA, MF_CHECKED);
+					CheckMenuItem(settings_menu, ID_SETTINGS_CONFIG_DLOCCURDIR, MF_UNCHECKED);
+					CheckMenuItem(settings_menu, ID_SETTINGS_CONFIG_DLOCCUSTOM, MF_UNCHECKED);
+					break;
+				case CXBX_DATA_CURDIR:
+					CheckMenuItem(settings_menu, ID_SETTINGS_CONFIG_DLOCAPPDATA, MF_UNCHECKED);
+					CheckMenuItem(settings_menu, ID_SETTINGS_CONFIG_DLOCCURDIR, MF_CHECKED);
+					CheckMenuItem(settings_menu, ID_SETTINGS_CONFIG_DLOCCUSTOM, MF_UNCHECKED);
+					break;
+				case CXBX_DATA_CUSTOM:
+					CheckMenuItem(settings_menu, ID_SETTINGS_CONFIG_DLOCAPPDATA, MF_UNCHECKED);
+					CheckMenuItem(settings_menu, ID_SETTINGS_CONFIG_DLOCCURDIR, MF_UNCHECKED);
+					CheckMenuItem(settings_menu, ID_SETTINGS_CONFIG_DLOCCUSTOM, MF_CHECKED);
+					break;
+			}
 		}
 
         // emulation menu
@@ -2124,7 +2260,7 @@ void WndMain::OpenMRU(int mru)
 // Open the dashboard xbe if found
 void WndMain::OpenDashboard()
 {
-	std::string DashboardPath = std::string(XTL::szFolder_CxbxReloadedData) + std::string("\\EmuDisk\\Partition2\\xboxdash.xbe");
+	std::string DashboardPath = std::string(m_StorageLocation) + std::string("\\EmuDisk\\Partition2\\xboxdash.xbe");
 	OpenXbe(DashboardPath.c_str());
 }
 
@@ -2216,6 +2352,9 @@ void WndMain::StartEmulation(HWND hwndParent, DebuggerState LocalDebuggerState /
 	g_EmuShared->SetSkipRdtscPatching(&m_SkipRdtscPatching);
 	g_EmuShared->SetScaleViewport(&m_ScaleViewport);
 	g_EmuShared->SetDirectHostBackBufferAccess(&m_DirectHostBackBufferAccess);
+
+	// register storage location with emulator process
+	g_EmuShared->SetStorageLocation(m_StorageLocation);
 
 	if (m_ScaleViewport) {
 		// Set the window size to emulation dimensions
