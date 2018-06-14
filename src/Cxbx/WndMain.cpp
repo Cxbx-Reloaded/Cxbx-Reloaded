@@ -1919,6 +1919,8 @@ void WndMain::UpdateRecentFiles()
     }
 }
 
+extern std::string FormatTitleId(uint32_t title_id);
+
 void WndMain::UpdateCaption()
 {
 	char AsciiTitle[MAX_PATH];
@@ -1932,7 +1934,7 @@ void WndMain::UpdateCaption()
 			i += sprintf(AsciiTitle + i, " : Loaded ");
 		}
 
-		i += sprintf(AsciiTitle + i, m_Xbe->m_szAsciiTitle);
+		i += sprintf(AsciiTitle + i, "%s v1.%02d (%s)", FormatTitleId(m_Xbe->m_Certificate.dwTitleId).c_str(), m_Xbe->m_Certificate.dwVersion, m_Xbe->m_szAsciiTitle);
 
 		// Append FPS menu text
 		HMENU hMenu = GetMenu(m_hwnd);
