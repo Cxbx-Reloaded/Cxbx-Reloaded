@@ -159,7 +159,7 @@ WndMain::WndMain(HINSTANCE x_hInstance) :
 	m_KrnlDebug(DM_NONE),
 	m_CxbxDebug(DM_NONE),
 	m_FlagsLLE(0),
-	m_StorageToggle(0),
+	m_StorageToggle(CXBX_DATA_APPDATA),
     m_StorageLocation(""),
 	m_dwRecentXbe(0)
 {
@@ -268,7 +268,7 @@ WndMain::WndMain(HINSTANCE x_hInstance) :
 			dwType = REG_DWORD; dwSize = sizeof(DWORD);
 			result = RegQueryValueEx(hKey, "DataStorageToggle", NULL, &dwType, (PBYTE)&m_StorageToggle, &dwSize);
 			if (result != ERROR_SUCCESS) {
-				m_StorageToggle = 0; //AppData
+				m_StorageToggle = CXBX_DATA_APPDATA;
 			}
 
 			dwType = REG_SZ; dwSize = MAX_PATH;
@@ -1226,7 +1226,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 						break;
 					}
 
-					m_StorageToggle = 2;
+					m_StorageToggle = CXBX_DATA_CUSTOM;
 					strncpy(m_StorageLocation, szDirTemp.c_str(), MAX_PATH);
 					RefreshMenus();
 				}
@@ -1238,7 +1238,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 				char szDir[MAX_PATH];
 
 				SHGetSpecialFolderPath(NULL, szDir, CSIDL_APPDATA, TRUE);
-				m_StorageToggle = 0;
+				m_StorageToggle = CXBX_DATA_APPDATA;
 				strncpy(m_StorageLocation, szDir, MAX_PATH);
 				strncat(m_StorageLocation, "\\Cxbx-Reloaded", MAX_PATH);
 				RefreshMenus();
@@ -1250,7 +1250,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 				char szDir[MAX_PATH];
 
 				GetCurrentDirectory(MAX_PATH, szDir);
-				m_StorageToggle = 1;
+				m_StorageToggle = CXBX_DATA_CURDIR;
 				strncpy(m_StorageLocation, szDir, MAX_PATH);
 				RefreshMenus();
 			}
@@ -1923,17 +1923,17 @@ void WndMain::RefreshMenus()
 			//bad
 			switch (m_StorageToggle)
 			{
-				case 0:
+				case CXBX_DATA_APPDATA:
 					CheckMenuItem(settings_menu, ID_SETTINGS_CONFIG_DLOCAPPDATA, MF_CHECKED);
 					CheckMenuItem(settings_menu, ID_SETTINGS_CONFIG_DLOCCURDIR, MF_UNCHECKED);
 					CheckMenuItem(settings_menu, ID_SETTINGS_CONFIG_DLOCCUSTOM, MF_UNCHECKED);
 					break;
-				case 1:
+				case CXBX_DATA_CURDIR:
 					CheckMenuItem(settings_menu, ID_SETTINGS_CONFIG_DLOCAPPDATA, MF_UNCHECKED);
 					CheckMenuItem(settings_menu, ID_SETTINGS_CONFIG_DLOCCURDIR, MF_CHECKED);
 					CheckMenuItem(settings_menu, ID_SETTINGS_CONFIG_DLOCCUSTOM, MF_UNCHECKED);
 					break;
-				case 2:
+				case CXBX_DATA_CUSTOM:
 					CheckMenuItem(settings_menu, ID_SETTINGS_CONFIG_DLOCAPPDATA, MF_UNCHECKED);
 					CheckMenuItem(settings_menu, ID_SETTINGS_CONFIG_DLOCCURDIR, MF_UNCHECKED);
 					CheckMenuItem(settings_menu, ID_SETTINGS_CONFIG_DLOCCUSTOM, MF_CHECKED);

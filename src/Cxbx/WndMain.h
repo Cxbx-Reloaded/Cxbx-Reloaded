@@ -42,6 +42,13 @@
 // ******************************************************************
 #define RECENT_XBE_SIZE 10
 
+// Cxbx-Reloaded's data storage location.
+typedef enum _CXBX_DATA {
+	CXBX_DATA_APPDATA   = 0,
+	CXBX_DATA_CURDIR    = 1,
+	CXBX_DATA_CUSTOM    = 2,
+} CXBX_DATA;
+
 // ******************************************************************
 // * class : WndMain
 // ******************************************************************
@@ -234,7 +241,8 @@ class WndMain : public Wnd
 		// ******************************************************************
 		// * Storage location
 		// ******************************************************************
-		DWORD   m_StorageToggle;
+		CXBX_DATA   m_StorageToggle;
+		char        m_StorageLocation[MAX_PATH];
 };
 
 #endif
