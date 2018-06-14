@@ -67,13 +67,25 @@ class EmuShared : public Mutex
 		// ******************************************************************
 		static void Init();
 
-		void EmuShared::Load();
-		void EmuShared::Save();
+		void Load();
+		void Save();
 
 		// ******************************************************************
 		// * Each process needs to call this to cleanup shared memory
 		// ******************************************************************
 		static void Cleanup();
+
+		// ******************************************************************
+		// * Check if parent process is emulating title
+		// ******************************************************************
+		void GetIsEmulating(bool *isEmulating) { Lock(); *isEmulating = m_bEmulating; Unlock(); }
+		void SetIsEmulating(bool isEmulating) { Lock(); m_bEmulating = isEmulating; Unlock(); }
+
+		// ******************************************************************
+		// * Each child process need to wait until parent process is ready
+		// ******************************************************************
+		void GetIsReady(bool *isReady) { Lock(); *isReady = m_bReady; Unlock(); }
+		void SetIsReady(bool isReady) { Lock(); m_bReady = isReady; Unlock(); }
 
 		// ******************************************************************
 		// * Xbox Video Accessors
@@ -199,20 +211,22 @@ class EmuShared : public Mutex
 		XBVideo      m_XBVideo;
 		XBAudio      m_XBAudio;
 		char         m_XbePath[MAX_PATH];
-		int			 m_BootFlags;
+		int          m_BootFlags;
 		int          m_FlagsLLE;
-		int			 m_XInputEnabled;
-		int			 m_DisablePixelShaders;
-		int			 m_UncapFramerate;
-		int			 m_UseAllCores;
-		int			 m_SkipRdtscPatching;
-		float		 m_MSpF;
+		int          m_XInputEnabled;
+		int          m_DisablePixelShaders;
+		int          m_UncapFramerate;
+		int          m_UseAllCores;
+		int          m_SkipRdtscPatching;
+		float        m_MSpF;
 		float        m_FPS;
-		bool		 m_bMultiXbeFlag;
-		bool		 m_bDebugging;
+		bool         m_bMultiXbeFlag;
+		bool         m_bDebugging;
+		bool         m_bReady;
+		bool         m_bEmulating;
 		int          m_LedSequence[4];
 		int          m_ScaleViewport;
-		int			 m_DirectHostBackBufferAccess;
+		int          m_DirectHostBackBufferAccess;
 		char         m_StorageLocation[MAX_PATH];
 };
 

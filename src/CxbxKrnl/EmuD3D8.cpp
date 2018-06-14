@@ -1420,17 +1420,6 @@ static DWORD WINAPI EmuRenderWindow(LPVOID lpVoid)
         RegisterClassEx(&wc);
     }
 
-	bool bQuickReboot;
-	g_EmuShared->GetMultiXbeFlag(&bQuickReboot);
-
-	// precaution for multi-xbe titles in the case CrashMonitor has still not destoyed the previous mutex
-	while (bQuickReboot)
-	{
-		g_EmuShared->GetMultiXbeFlag(&bQuickReboot);
-	}
-
-	HANDLE hCrashMutex = CreateMutex(NULL, TRUE, "CrashMutex");
-
     // create the window
     {
         HWND hwndParent = GetDesktopWindow();
@@ -1509,8 +1498,6 @@ static DWORD WINAPI EmuRenderWindow(LPVOID lpVoid)
         g_bRenderWindowActive = false;
 
         delete dbgConsole;
-
-		if (hCrashMutex != NULL) { ReleaseMutex(hCrashMutex); }
 
         CxbxKrnlCleanup(NULL);
     }

@@ -62,9 +62,9 @@ static int splashLogoWidth, splashLogoHeight;
 
 bool g_SaveOnExit = true;
 
-void ClearHLECache()
+void ClearHLECache(char sStorageLocation[MAX_PATH])
 {
-	std::string cacheDir = std::string(XTL::szFolder_CxbxReloadedData) + "\\HLECache\\";
+	std::string cacheDir = std::string(sStorageLocation) + "\\HLECache\\";
 	std::string fullpath = cacheDir + "*.ini";
 
 	WIN32_FIND_DATA data;
@@ -159,8 +159,8 @@ WndMain::WndMain(HINSTANCE x_hInstance) :
 	m_KrnlDebug(DM_NONE),
 	m_CxbxDebug(DM_NONE),
 	m_FlagsLLE(0),
-	m_StorageToggle(0),
-	m_StorageLocation(),
+	m_StorageToggle(CXBX_DATA_APPDATA),
+	m_StorageLocation(""),
 	m_dwRecentXbe(0)
 {
     // initialize members
@@ -231,7 +231,7 @@ WndMain::WndMain(HINSTANCE x_hInstance) :
 			dwType = REG_DWORD; dwSize = sizeof(DWORD);
 			result = RegQueryValueEx(hKey, "HackDirectBackBufferAccess", NULL, &dwType, (PBYTE)&m_DirectHostBackBufferAccess, &dwSize);
 			if (result != ERROR_SUCCESS) {
-				m_DirectHostBackBufferAccess = 0;
+				m_DirectHostBackBufferAccess = 1;
 			}
 
 
@@ -268,17 +268,32 @@ WndMain::WndMain(HINSTANCE x_hInstance) :
 			dwType = REG_DWORD; dwSize = sizeof(DWORD);
 			result = RegQueryValueEx(hKey, "DataStorageToggle", NULL, &dwType, (PBYTE)&m_StorageToggle, &dwSize);
 			if (result != ERROR_SUCCESS) {
-				m_StorageToggle = 0; //AppData
+				m_StorageToggle = CXBX_DATA_APPDATA;
 			}
 
-			dwType = REG_SZ; dwSize = MAX_PATH;
-			result = RegQueryValueEx(hKey, "DataStorageLocation", NULL, &dwType, (PBYTE)&m_StorageLocation, &dwSize);
-			if (result != ERROR_SUCCESS) {
-				char szDir[MAX_PATH];
-				SHGetSpecialFolderPath(NULL, szDir, CSIDL_APPDATA, TRUE);
-				strcpy(m_StorageLocation, szDir);
-				g_EmuShared->SetStorageLocation(m_StorageLocation);
+			switch (m_StorageToggle) {
+				case CXBX_DATA_APPDATA:
+				default:
+					SHGetSpecialFolderPath(NULL, m_StorageLocation, CSIDL_APPDATA, TRUE);
+					m_StorageToggle = CXBX_DATA_APPDATA;
+					strncat(m_StorageLocation, "\\Cxbx-Reloaded", MAX_PATH);
+					break;
+
+				case CXBX_DATA_CURDIR:
+					GetCurrentDirectory(MAX_PATH, m_StorageLocation);
+					break;
+
+				case CXBX_DATA_CUSTOM:
+			 		dwType = REG_SZ; dwSize = MAX_PATH;
+			 		result = RegQueryValueEx(hKey, "DataStorageLocation", NULL, &dwType, (PBYTE)&m_StorageLocation, &dwSize);
+			 		if (result != ERROR_SUCCESS) {
+						SHGetSpecialFolderPath(NULL, m_StorageLocation, CSIDL_APPDATA, TRUE);
+						strncat(m_StorageLocation, "\\Cxbx-Reloaded", MAX_PATH);
+					}
+					break;
 			}
+			// NOTE: This is a requirement for pre-verification from GUI. Used in CxbxInitFilePaths function.
+			g_EmuShared->SetStorageLocation(m_StorageLocation);
 
 			// Prevent using an incorrect path from the registry if the debug folders have been moved
 			if (m_CxbxDebug == DM_FILE)
@@ -436,8 +451,11 @@ WndMain::~WndMain()
 			dwType = REG_DWORD; dwSize = sizeof(DWORD);
 			RegSetValueEx(hKey, "DataStorageToggle", 0, dwType, (PBYTE)&m_StorageToggle, dwSize);
 
-			dwType = REG_SZ; dwSize = MAX_PATH;
-			RegSetValueEx(hKey, "DataStorageLocation", 0, dwType, (PBYTE)m_StorageLocation, dwSize);
+			// NOTE: Save custom directory provided by user only.
+			if (m_StorageToggle == CXBX_DATA_CUSTOM) {
+				dwType = REG_SZ; dwSize = MAX_PATH;
+				RegSetValueEx(hKey, "DataStorageLocation", 0, dwType, (PBYTE)m_StorageLocation, dwSize);
+			}
         }
     }
 
@@ -523,13 +541,13 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
         }
         break;
 
+        // NOTE: WM_PARENTNOTIFY was triggered by kernel process' graphic window creation.
         case WM_PARENTNOTIFY:
         {
             switch(LOWORD(wParam))
             {
                 case WM_CREATE:
                 {
-					CreateThread(NULL, NULL, CrashMonitorWrapper, (void*)this, NULL, NULL); // create the crash monitoring thread 
 					if (m_hwndChild == NULL) {
 						float fps = 0.0f;
 						float mspf = 0.0f;
@@ -539,14 +557,14 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 						g_EmuShared->SetLedSequence(LedSequence);
 						SetTimer(hwnd, TIMERID_FPS, 1000, (TIMERPROC)NULL);
 						SetTimer(hwnd, TIMERID_LED, XBOX_LED_FLASH_PERIOD, (TIMERPROC)NULL);
-						m_hwndChild = GetWindow(hwnd, GW_CHILD); // (HWND)HIWORD(wParam) seems to be NULL
+						m_hwndChild = GetWindow(hwnd, GW_CHILD);
 						UpdateCaption();
 						RefreshMenus();
 					}
-					else
-					{
+					else {
 						m_hwndChild = GetWindow(hwnd, GW_CHILD);
 					}
+					CreateThread(NULL, NULL, CrashMonitorWrapper, (void*)this, NULL, NULL); // create the crash monitoring thread
                 }
                 break;
 
@@ -562,8 +580,20 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 					}
                 }
                 break;
-            }
-        };
+
+				case WM_USER: {
+					 switch(lParam) {
+						// NOTE: If anything need to set before kernel process start do anything, do it here.
+						case ID_KRNL_IS_READY: {
+							g_EmuShared->SetFlagsLLE(&m_FlagsLLE);
+							g_EmuShared->SetIsReady(true);
+							break;
+						}
+					}
+					break;
+				}
+			}
+		};
 		break; // added per PVS suggestion.
 
 		case WM_TIMER:
@@ -1174,7 +1204,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 				}
 				ShowEepromConfig(hwnd);
 			}
-			//bad
+
 			case ID_SETTINGS_CONFIG_DLOCCUSTOM:
 			{
 				char szDir[MAX_PATH];
@@ -1195,21 +1225,32 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 				{
 					SHGetPathFromIDList(lpItem, szDir);
 
-					if (!strlen(szDir))
-					{
+					// -14 is for \\Cxbx-Reloaded string to be include later down below.
+					size_t szLen = strnlen(szDir, MAX_PATH - 14);
+					if (szLen == 0) {
 						MessageBox(hwnd, "You've selected an invalid folder... Go back and try again.", "Cxbx-Reloaded", MB_ICONEXCLAMATION | MB_OK);
+						break;
+					}
+					else if (szLen == MAX_PATH - 14) {
+						MessageBox(hwnd, "You've selected a folder path which is too long... Go back and try again.", "Cxbx-Reloaded", MB_ICONEXCLAMATION | MB_OK);
 						break;
 					}
 
 					std::string szDirTemp = std::string(szDir) + std::string("\\Cxbx-Reloaded");
+
+					if (szDirTemp.size() > MAX_PATH) {
+						MessageBox(hwnd, "Directory path is too long. Go back and choose a shorter path.", "Cxbx-Reloaded", MB_ICONEXCLAMATION | MB_OK);
+						break;
+					}
+
 					int result = SHCreateDirectoryEx(nullptr, szDirTemp.c_str(), nullptr);
 					if ((result != ERROR_SUCCESS) && (result != ERROR_ALREADY_EXISTS)) {
 						MessageBox(hwnd, "You don't have write permissions on that directory...", "Cxbx-Reloaded", MB_ICONEXCLAMATION | MB_OK);
 						break;
 					}
 
-					m_StorageToggle = 2;
-					strcpy(m_StorageLocation, szDir);
+					m_StorageToggle = CXBX_DATA_CUSTOM;
+					strncpy(m_StorageLocation, szDirTemp.c_str(), MAX_PATH);
 					RefreshMenus();
 				}
 			}
@@ -1220,33 +1261,32 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 				char szDir[MAX_PATH];
 
 				SHGetSpecialFolderPath(NULL, szDir, CSIDL_APPDATA, TRUE);
-				m_StorageToggle = 0;
-				strcpy(m_StorageLocation, szDir);
+				m_StorageToggle = CXBX_DATA_APPDATA;
+				strncpy(m_StorageLocation, szDir, MAX_PATH);
+				strncat(m_StorageLocation, "\\Cxbx-Reloaded", MAX_PATH);
 				RefreshMenus();
 			}
 			break;
 
 			case ID_SETTINGS_CONFIG_DLOCCURDIR:
 			{
-				char szDir[MAX_PATH];
 
-				GetCurrentDirectory(MAX_PATH, szDir);
-				m_StorageToggle = 1;
-				strcpy(m_StorageLocation, szDir);
+				GetCurrentDirectory(MAX_PATH, m_StorageLocation);
+				m_StorageToggle = CXBX_DATA_CURDIR;
 				RefreshMenus();
 			}
 			break;
 
 			case ID_CACHE_CLEARHLECACHE_ALL:
 			{
-				ClearHLECache();
+				ClearHLECache(m_StorageLocation);
 				MessageBox(m_hwnd, "The entire HLE Cache has been cleared.", "Cxbx-Reloaded", MB_OK);
 			}
 			break;
 
 			case ID_CACHE_CLEARHLECACHE_CURRENT:
 			{
-				std::string cacheDir = std::string(XTL::szFolder_CxbxReloadedData) + "\\HLECache\\";
+				std::string cacheDir = std::string(m_StorageLocation) + "\\HLECache\\";
 
 				// Hash the loaded XBE's header, use it as a filename
 				uint32_t uiHash = XXHash32::hash((void*)&m_Xbe->m_Header, sizeof(Xbe::Header), 0);
@@ -1393,7 +1433,6 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 			case ID_EMULATION_LLE_JIT:
 			{
 				m_FlagsLLE = m_FlagsLLE ^ LLE_JIT;
-				ClearHLECache();
 				RefreshMenus();
 			}
 			break;
@@ -1401,7 +1440,6 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 			case ID_EMULATION_LLE_APU:
 			{
 				m_FlagsLLE = m_FlagsLLE ^ LLE_APU;
-				ClearHLECache();
 				RefreshMenus();
 			}
 			break;
@@ -1409,7 +1447,6 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 			case ID_EMULATION_LLE_GPU:
 			{
 				m_FlagsLLE = m_FlagsLLE ^ LLE_GPU;
-				ClearHLECache();
 				RefreshMenus();
 			}
 			break;
@@ -1907,17 +1944,17 @@ void WndMain::RefreshMenus()
 			//bad
 			switch (m_StorageToggle)
 			{
-				case 0:
+				case CXBX_DATA_APPDATA:
 					CheckMenuItem(settings_menu, ID_SETTINGS_CONFIG_DLOCAPPDATA, MF_CHECKED);
 					CheckMenuItem(settings_menu, ID_SETTINGS_CONFIG_DLOCCURDIR, MF_UNCHECKED);
 					CheckMenuItem(settings_menu, ID_SETTINGS_CONFIG_DLOCCUSTOM, MF_UNCHECKED);
 					break;
-				case 1:
+				case CXBX_DATA_CURDIR:
 					CheckMenuItem(settings_menu, ID_SETTINGS_CONFIG_DLOCAPPDATA, MF_UNCHECKED);
 					CheckMenuItem(settings_menu, ID_SETTINGS_CONFIG_DLOCCURDIR, MF_CHECKED);
 					CheckMenuItem(settings_menu, ID_SETTINGS_CONFIG_DLOCCUSTOM, MF_UNCHECKED);
 					break;
-				case 2:
+				case CXBX_DATA_CUSTOM:
 					CheckMenuItem(settings_menu, ID_SETTINGS_CONFIG_DLOCAPPDATA, MF_UNCHECKED);
 					CheckMenuItem(settings_menu, ID_SETTINGS_CONFIG_DLOCCURDIR, MF_UNCHECKED);
 					CheckMenuItem(settings_menu, ID_SETTINGS_CONFIG_DLOCCUSTOM, MF_CHECKED);
@@ -2218,7 +2255,7 @@ void WndMain::OpenMRU(int mru)
 // Open the dashboard xbe if found
 void WndMain::OpenDashboard()
 {
-	std::string DashboardPath = std::string(XTL::szFolder_CxbxReloadedData) + std::string("\\EmuDisk\\Partition2\\xboxdash.xbe");
+	std::string DashboardPath = std::string(m_StorageLocation) + std::string("\\EmuDisk\\Partition2\\xboxdash.xbe");
 	OpenXbe(DashboardPath.c_str());
 }
 
@@ -2282,6 +2319,17 @@ void WndMain::SaveXbeAs()
 void WndMain::StartEmulation(HWND hwndParent, DebuggerState LocalDebuggerState /*= debuggerOff*/)
 {
     char szBuffer[MAX_PATH];
+    bool isEmulating = false;
+
+    g_EmuShared->GetIsEmulating(&isEmulating);
+
+    if (isEmulating) {
+        MessageBox(m_hwnd, "A title is currently emulating, please stop emulation before attempt start again.",
+                   "Cxbx-Reloaded", MB_ICONERROR | MB_OK);
+        return;
+    }
+
+    g_EmuShared->SetIsEmulating(true);
 
     // register xbe path with emulator process
     g_EmuShared->SetXbePath(m_Xbe->m_szPath);
@@ -2384,8 +2432,8 @@ void WndMain::StopEmulation()
     RefreshMenus();
 	// Set the window size back to it's GUI dimensions
 	ResizeWindow(m_hwnd, /*bForGUI=*/true);
+	g_EmuShared->SetIsEmulating(false);
 }
-
 
 // wrapper function to call CrashMonitor
 DWORD WINAPI WndMain::CrashMonitorWrapper(LPVOID lpVoid)
@@ -2393,6 +2441,7 @@ DWORD WINAPI WndMain::CrashMonitorWrapper(LPVOID lpVoid)
 	CxbxSetThreadName("Cxbx Crash Monitor");
 
 	static_cast<WndMain*>(lpVoid)->CrashMonitor();
+
 	return 0;
 }
 
@@ -2400,41 +2449,50 @@ DWORD WINAPI WndMain::CrashMonitorWrapper(LPVOID lpVoid)
 void WndMain::CrashMonitor()
 {
 	bool bQuickReboot;
-	HANDLE hCrashMutex = OpenMutex(MUTEX_ALL_ACCESS, FALSE, "CrashMutex");
+	DWORD dwProcessID_ExitCode = 0;
+	GetWindowThreadProcessId(m_hwndChild, &dwProcessID_ExitCode);
 
-	DWORD state = WaitForSingleObject(hCrashMutex, INFINITE);
+	// If we do receive valid process ID, let's do the next step.
+	if (dwProcessID_ExitCode != 0) {
 
-	g_EmuShared->GetMultiXbeFlag(&bQuickReboot);
+	HANDLE hProcess = OpenProcess(SYNCHRONIZE | PROCESS_QUERY_INFORMATION, FALSE, dwProcessID_ExitCode);
 
-	if (state == WAIT_OBJECT_0) // StopEmulation
-	{
-		CloseHandle(hCrashMutex);
-		return;
+	 	// If we do receive valid handle, let's do the next step.
+	 	if (hProcess != NULL) {
+
+	 		WaitForSingleObject(hProcess, INFINITE);
+	 		dwProcessID_ExitCode = 0;
+	 		GetExitCodeProcess(hProcess, &dwProcessID_ExitCode);
+	 		CloseHandle(hProcess);
+
+	 		g_EmuShared->GetMultiXbeFlag(&bQuickReboot);
+
+	 		if (!bQuickReboot) {
+	 			if (dwProcessID_ExitCode == EXIT_SUCCESS) {// StopEmulation
+	 				return;
+	 			}
+				// Or else, it's a crash
+	 		}
+	 		else {
+
+	 			// multi-xbe
+	 			// destroy this thread and start a new one
+	 			bQuickReboot = false;
+	 			g_EmuShared->SetMultiXbeFlag(&bQuickReboot);
+	 			return;
+	 		}
+	 	}
 	}
 
-	if (state == WAIT_ABANDONED && !bQuickReboot) // that's a crash
-	{
-		CloseHandle(hCrashMutex);
-		if (m_bIsStarted) // that's a hard crash, Dr Watson is invoked
-		{
-			KillTimer(m_hwnd, TIMERID_FPS);
-			KillTimer(m_hwnd, TIMERID_LED);
-			DrawLedBitmap(m_hwnd, true);
-			m_hwndChild = NULL;
-			m_bIsStarted = false;
-			UpdateCaption();
-			RefreshMenus();
-		}
-		return;
-	}
+	// Crash clean up.
 
-	// multi-xbe
-	// destroy this thread and start a new one
-	CloseHandle(hCrashMutex);
-	bQuickReboot = false;
-	g_EmuShared->SetMultiXbeFlag(&bQuickReboot);
-
-	return;
+	KillTimer(m_hwnd, TIMERID_FPS);
+	KillTimer(m_hwnd, TIMERID_LED);
+	DrawLedBitmap(m_hwnd, true);
+	m_hwndChild = NULL;
+	m_bIsStarted = false;
+	UpdateCaption();
+	RefreshMenus();
 }
 
 // draw Xbox LED bitmap
@@ -2459,6 +2517,7 @@ void WndMain::DrawLedBitmap(HWND hwnd, bool bdefault)
 	else { // draw colored bitmap
 		int LedSequence[4] = { XBOX_LED_COLOUR_OFF, XBOX_LED_COLOUR_OFF, XBOX_LED_COLOUR_OFF, XBOX_LED_COLOUR_OFF };
 		static int LedSequenceOffset = 0;
+		int FlagsLLE = 0;
 
 		g_EmuShared->GetLedSequence(LedSequence);
 
@@ -2466,17 +2525,18 @@ void WndMain::DrawLedBitmap(HWND hwnd, bool bdefault)
 		ActiveLEDColor = LedSequence[LedSequenceOffset & 3];
 		++LedSequenceOffset;
 
+		g_EmuShared->GetFlagsLLE(&FlagsLLE);
 		// Set LLE flags string based on selected LLE flags
-		if (m_FlagsLLE & LLE_APU) {
+		if (FlagsLLE & LLE_APU) {
 			strcat(flagString, "A");
 		}
-		if (m_FlagsLLE & LLE_GPU) {
+		if (FlagsLLE & LLE_GPU) {
 			strcat(flagString, "G");
 		}
-		if (m_FlagsLLE & LLE_JIT) {
+		if (FlagsLLE & LLE_JIT) {
 			strcat(flagString, "J");
 		}
-		if (m_FlagsLLE == 0) {
+		if (FlagsLLE == 0) {
 			sprintf(flagString, "HLE");
 		}
 	}

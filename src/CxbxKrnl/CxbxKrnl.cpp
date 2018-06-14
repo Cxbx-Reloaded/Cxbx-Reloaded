@@ -42,6 +42,7 @@ namespace xboxkrnl
     #include <xboxkrnl/xboxkrnl.h>
 };
 
+#include "Cxbx\ResCxbx.h"
 #include "CxbxKrnl.h"
 #include "Cxbx\CxbxXbdm.h" // For Cxbx_LibXbdmThunkTable
 #include "CxbxVersion.h"
@@ -602,12 +603,12 @@ void PrintCurrentConfigurationLog()
 	// Print Enabled Hacks
 	{
 		printf("--------------------------- HACKS CONFIG ---------------------------\n");
-		printf("Disable Pixel Shaders: %s\n", g_DisablePixelShaders == 1 ? "On" : "Off");
-		printf("Uncap Framerate: %s\n", g_UncapFramerate == 1 ? "On" : "Off");
-		printf("Run Xbox threads on all cores: %s\n", g_UseAllCores == 1 ? "On" : "Off");
-		printf("Skip RDTSC Patching: %s\n", g_SkipRdtscPatching == 1 ? "On" : "Off");
-		printf("Scale Xbox to host viewport (and back): %s\n", g_ScaleViewport == 1 ? "On" : "Off");
-		printf("Render directly to Host BackBuffer: %s\n", g_DirectHostBackBufferAccess == 1 ? "On" : "Off");
+		printf("Disable Pixel Shaders: %s\n", g_DisablePixelShaders == 1 ? "On" : "Off (Default)");
+		printf("Uncap Framerate: %s\n", g_UncapFramerate == 1 ? "On" : "Off (Default)");
+		printf("Run Xbox threads on all cores: %s\n", g_UseAllCores == 1 ? "On" : "Off (Default)");
+		printf("Skip RDTSC Patching: %s\n", g_SkipRdtscPatching == 1 ? "On" : "Off (Default)");
+		printf("Scale Xbox to host viewport (and back): %s\n", g_ScaleViewport == 1 ? "On" : "Off (Default)");
+		printf("Render directly to Host BackBuffer: %s\n", g_DirectHostBackBufferAccess == 1 ? "On (Default)" : "Off");
 	}
 
 	printf("------------------------- END OF CONFIG LOG ------------------------\n");
@@ -904,6 +905,47 @@ void CxbxKrnlMain(int argc, char* argv[])
 	CxbxKrnl_hEmuParent = IsWindow(hWnd) ? hWnd : NULL;
 
 	g_CurrentProcessHandle = GetCurrentProcess(); // OpenProcess(PROCESS_ALL_ACCESS, FALSE, GetCurrentProcessId());
+
+    if (CxbxKrnl_hEmuParent == NULL) {
+        CxbxKrnlCleanup("GUI process does not exist!");
+    } else {
+        SendMessage(CxbxKrnl_hEmuParent, WM_PARENTNOTIFY, WM_USER, ID_KRNL_IS_READY);
+    }
+
+    // Force wait until first allocated process is ready
+    do {
+        int waitCounter = 10;
+        bool isReady = false;
+
+        while (waitCounter > 0) {
+            g_EmuShared->GetIsReady(&isReady);
+            if (isReady) {
+                break;
+            }
+            waitCounter--;
+            Sleep(100);
+        }
+        if (!isReady) {
+            EmuWarning("GUI process is not ready!");
+            int mbRet = MessageBox(NULL, "GUI process is not ready, do you wish to retry?", TEXT("Cxbx-Reloaded"),
+                                   MB_ICONWARNING | MB_RETRYCANCEL | MB_TOPMOST | MB_SETFOREGROUND);
+            if (mbRet == IDRETRY) {
+                continue;
+            }
+            CxbxKrnlShutDown();
+        }
+        break;
+    } while (true);
+
+    g_EmuShared->SetIsReady(false);
+
+    bool bQuickReboot;
+    g_EmuShared->GetMultiXbeFlag(&bQuickReboot);
+
+    // precaution for multi-xbe titles in the case CrashMonitor has still not destoyed the previous mutex
+    while (bQuickReboot) {
+        g_EmuShared->GetMultiXbeFlag(&bQuickReboot);
+    }
 
 	// Write a header to the log
 	{
@@ -1265,9 +1307,7 @@ __declspec(noreturn) void CxbxKrnlInit
 	char szBuffer[MAX_PATH];
 	g_EmuShared->GetStorageLocation(szBuffer);
 
-	strcat(szBuffer, "\\Cxbx-Reloaded\\");
-	std::string basePath(szBuffer);
-	CxbxBasePath = basePath + "EmuDisk\\";
+	CxbxBasePath = std::string(szBuffer) + "\\EmuDisk\\";
 
 	// Determine XBE Path
 	memset(szBuffer, 0, MAX_PATH);
@@ -1451,9 +1491,7 @@ __declspec(noreturn) void CxbxKrnlInit
 
 void CxbxInitFilePaths()
 {
-	char szAppData[MAX_PATH];
-	g_EmuShared->GetStorageLocation(szAppData);
-	snprintf(szFolder_CxbxReloadedData, MAX_PATH, "%s\\Cxbx-Reloaded", szAppData);
+	g_EmuShared->GetStorageLocation(szFolder_CxbxReloadedData);
 
 	// Make sure our data folder exists :
 	int result = SHCreateDirectoryEx(nullptr, szFolder_CxbxReloadedData, nullptr);
@@ -1471,7 +1509,6 @@ void CxbxInitFilePaths()
 	snprintf(szFilePath_EEPROM_bin, MAX_PATH, "%s\\EEPROM.bin", szFolder_CxbxReloadedData);
 	snprintf(szFilePath_memory_bin, MAX_PATH, "%s\\memory.bin", szFolder_CxbxReloadedData);
 	snprintf(szFilePath_page_tables, MAX_PATH, "%s\\PageTables.bin", szFolder_CxbxReloadedData);
-	//strcpy(szFilePath_memory_bin, szFilePath_memory_bin);
 
 	GetModuleFileName(GetModuleHandle(NULL), szFilePath_CxbxReloaded_Exe, MAX_PATH);
 }
