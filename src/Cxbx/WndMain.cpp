@@ -1204,7 +1204,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 				}
 				ShowEepromConfig(hwnd);
 			}
-			//bad
+
 			case ID_SETTINGS_CONFIG_DLOCCUSTOM:
 			{
 				char szDir[MAX_PATH];
@@ -1265,11 +1265,9 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
 			case ID_SETTINGS_CONFIG_DLOCCURDIR:
 			{
-				char szDir[MAX_PATH];
 
-				GetCurrentDirectory(MAX_PATH, szDir);
+				GetCurrentDirectory(MAX_PATH, m_StorageLocation);
 				m_StorageToggle = CXBX_DATA_CURDIR;
-				strncpy(m_StorageLocation, szDir, MAX_PATH);
 				RefreshMenus();
 			}
 			break;
