@@ -1493,9 +1493,7 @@ __declspec(noreturn) void CxbxKrnlInit
 
 void CxbxInitFilePaths()
 {
-	char szAppData[MAX_PATH];
-	g_EmuShared->GetStorageLocation(szAppData);
-	snprintf(szFolder_CxbxReloadedData, MAX_PATH, "%s\\Cxbx-Reloaded", szAppData);
+	g_EmuShared->GetStorageLocation(szFolder_CxbxReloadedData);
 
 	// Make sure our data folder exists :
 	int result = SHCreateDirectoryEx(nullptr, szFolder_CxbxReloadedData, nullptr);
