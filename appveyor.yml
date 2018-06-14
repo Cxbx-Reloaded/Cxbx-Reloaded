@@ -3,10 +3,6 @@
 init:
   - ps: Update-AppveyorBuild -Version "$env:appveyor_repo_commit"
 
-branches:
-  only:
-    - master
-
 image:
   # If this is modified, please also update the build script
   - Visual Studio 2017
