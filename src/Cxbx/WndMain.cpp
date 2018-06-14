@@ -62,9 +62,9 @@ static int splashLogoWidth, splashLogoHeight;
 
 bool g_SaveOnExit = true;
 
-void ClearHLECache()
+void ClearHLECache(char sStorageLocation[MAX_PATH])
 {
-	std::string cacheDir = std::string(XTL::szFolder_CxbxReloadedData) + "\\HLECache\\";
+	std::string cacheDir = std::string(sStorageLocation) + "\\HLECache\\";
 	std::string fullpath = cacheDir + "*.ini";
 
 	WIN32_FIND_DATA data;
@@ -160,6 +160,7 @@ WndMain::WndMain(HINSTANCE x_hInstance) :
 	m_CxbxDebug(DM_NONE),
 	m_FlagsLLE(0),
 	m_StorageToggle(0),
+    m_StorageLocation(""),
 	m_dwRecentXbe(0)
 {
     // initialize members
@@ -271,12 +272,12 @@ WndMain::WndMain(HINSTANCE x_hInstance) :
 			}
 
 			dwType = REG_SZ; dwSize = MAX_PATH;
-			result = RegQueryValueEx(hKey, "DataStorageLocation", NULL, &dwType, (PBYTE)&XTL::szFolder_CxbxReloadedData, &dwSize);
+			result = RegQueryValueEx(hKey, "DataStorageLocation", NULL, &dwType, (PBYTE)&m_StorageLocation, &dwSize);
 			if (result != ERROR_SUCCESS) {
 				char szDir[MAX_PATH];
 				SHGetSpecialFolderPath(NULL, szDir, CSIDL_APPDATA, TRUE);
-				strncpy(XTL::szFolder_CxbxReloadedData, szDir, MAX_PATH);
-				g_EmuShared->SetStorageLocation(XTL::szFolder_CxbxReloadedData);
+				strncpy(m_StorageLocation, szDir, MAX_PATH);
+				strncat(m_StorageLocation, "\\Cxbx-Reloaded", MAX_PATH);
 			}
 
 			// Prevent using an incorrect path from the registry if the debug folders have been moved
@@ -436,7 +437,7 @@ WndMain::~WndMain()
 			RegSetValueEx(hKey, "DataStorageToggle", 0, dwType, (PBYTE)&m_StorageToggle, dwSize);
 
 			dwType = REG_SZ; dwSize = MAX_PATH;
-			RegSetValueEx(hKey, "DataStorageLocation", 0, dwType, (PBYTE)XTL::szFolder_CxbxReloadedData, dwSize);
+			RegSetValueEx(hKey, "DataStorageLocation", 0, dwType, (PBYTE)m_StorageLocation, dwSize);
         }
     }
 
@@ -1226,7 +1227,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 					}
 
 					m_StorageToggle = 2;
-					strncpy(XTL::szFolder_CxbxReloadedData, szDir, MAX_PATH);
+					strncpy(m_StorageLocation, szDirTemp.c_str(), MAX_PATH);
 					RefreshMenus();
 				}
 			}
@@ -1238,7 +1239,8 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
 				SHGetSpecialFolderPath(NULL, szDir, CSIDL_APPDATA, TRUE);
 				m_StorageToggle = 0;
-				strncpy(XTL::szFolder_CxbxReloadedData, szDir, MAX_PATH);
+				strncpy(m_StorageLocation, szDir, MAX_PATH);
+				strncat(m_StorageLocation, "\\Cxbx-Reloaded", MAX_PATH);
 				RefreshMenus();
 			}
 			break;
@@ -1249,21 +1251,21 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
 				GetCurrentDirectory(MAX_PATH, szDir);
 				m_StorageToggle = 1;
-				strncpy(XTL::szFolder_CxbxReloadedData, szDir, MAX_PATH);
+				strncpy(m_StorageLocation, szDir, MAX_PATH);
 				RefreshMenus();
 			}
 			break;
 
 			case ID_CACHE_CLEARHLECACHE_ALL:
 			{
-				ClearHLECache();
+				ClearHLECache(m_StorageLocation);
 				MessageBox(m_hwnd, "The entire HLE Cache has been cleared.", "Cxbx-Reloaded", MB_OK);
 			}
 			break;
 
 			case ID_CACHE_CLEARHLECACHE_CURRENT:
 			{
-				std::string cacheDir = std::string(XTL::szFolder_CxbxReloadedData) + "\\HLECache\\";
+				std::string cacheDir = std::string(m_StorageLocation) + "\\HLECache\\";
 
 				// Hash the loaded XBE's header, use it as a filename
 				uint32_t uiHash = XXHash32::hash((void*)&m_Xbe->m_Header, sizeof(Xbe::Header), 0);
@@ -2232,7 +2234,7 @@ void WndMain::OpenMRU(int mru)
 // Open the dashboard xbe if found
 void WndMain::OpenDashboard()
 {
-	std::string DashboardPath = std::string(XTL::szFolder_CxbxReloadedData) + std::string("\\EmuDisk\\Partition2\\xboxdash.xbe");
+	std::string DashboardPath = std::string(m_StorageLocation) + std::string("\\EmuDisk\\Partition2\\xboxdash.xbe");
 	OpenXbe(DashboardPath.c_str());
 }
 
@@ -2326,7 +2328,7 @@ void WndMain::StartEmulation(HWND hwndParent, DebuggerState LocalDebuggerState /
 	g_EmuShared->SetDirectHostBackBufferAccess(&m_DirectHostBackBufferAccess);
 
 	// register storage location with emulator process
-	g_EmuShared->SetStorageLocation(XTL::szFolder_CxbxReloadedData);
+	g_EmuShared->SetStorageLocation(m_StorageLocation);
 
 	if (m_ScaleViewport) {
 		// Set the window size to emulation dimensions
