@@ -2355,6 +2355,7 @@ void WndMain::CrashMonitor()
 	DrawLedBitmap(m_hwnd, true);
 	m_hwndChild = NULL;
 	m_bIsStarted = false;
+	g_EmuShared->SetIsEmulating(false);
 	UpdateCaption();
 	RefreshMenus();
 }
