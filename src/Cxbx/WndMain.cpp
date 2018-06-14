@@ -1225,9 +1225,14 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 				{
 					SHGetPathFromIDList(lpItem, szDir);
 
-					if (!strlen(szDir))
-					{
+					// -14 is for \\Cxbx-Reloaded string to be include later down below.
+					size_t szLen = strnlen(szDir, MAX_PATH - 14);
+					if (szLen == 0) {
 						MessageBox(hwnd, "You've selected an invalid folder... Go back and try again.", "Cxbx-Reloaded", MB_ICONEXCLAMATION | MB_OK);
+						break;
+					}
+					else if (szLen == MAX_PATH - 14) {
+						MessageBox(hwnd, "You've selected a folder path which is too long... Go back and try again.", "Cxbx-Reloaded", MB_ICONEXCLAMATION | MB_OK);
 						break;
 					}
 
