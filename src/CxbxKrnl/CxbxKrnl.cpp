@@ -1318,8 +1318,6 @@ __declspec(noreturn) void CxbxKrnlInit
 	std::string xbeDirectory(szBuffer);
 	CxbxBasePathHandle = CreateFile(CxbxBasePath.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
 	memset(szBuffer, 0, MAX_PATH);
-	sprintf(szBuffer, "%08X", g_pCertificate->dwTitleId);
-	std::string titleId(szBuffer);
 	// Games may assume they are running from CdRom :
 	CxbxDefaultXbeDriveIndex = CxbxRegisterDeviceHostPath(DeviceCdrom0, xbeDirectory);
 	// Partition 0 contains configuration data, and is accessed as a native file, instead as a folder :
@@ -1375,7 +1373,8 @@ __declspec(noreturn) void CxbxKrnlInit
 
 		// Dump Xbe certificate
 		if (g_pCertificate != NULL) {
-			printf("[0x%.4X] INIT: XBE TitleID : %.8X\n", GetCurrentThreadId(), g_pCertificate->dwTitleId);
+			printf("[0x%.4X] INIT: XBE TitleID : %s\n", GetCurrentThreadId(), FormatTitleId(g_pCertificate->dwTitleId).c_str());
+			printf("[0x%.4X] INIT: XBE Version : 1.%02d\n", GetCurrentThreadId(), g_pCertificate->dwVersion);
 			printf("[0x%.4X] INIT: XBE TitleName : %ls\n", GetCurrentThreadId(), g_pCertificate->wszTitleName);
 			printf("[0x%.4X] INIT: XBE Region : %s\n", GetCurrentThreadId(), CxbxKrnl_Xbe->GameRegionToString());
 		}

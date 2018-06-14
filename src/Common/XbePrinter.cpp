@@ -42,6 +42,8 @@
 #include <sstream> // For std::stringstream
 #include <iomanip> // For std::setfill, std::uppercase, std::hex
 
+extern std::string FormatTitleId(uint32_t title_id); // Exposed in Emu.cpp
+
 // better time
 static char *BetterTime(uint32 x_timeDate)
 {
@@ -315,7 +317,7 @@ std::string XbePrinter::GenCertificateHeader()
     text << "Dumping XBE Certificate...\n\n";
     text << "Size of Certificate              : 0x" << std::setw(8) << Xbe_certificate->dwSize << "\n";
     text << "TimeDate Stamp                   : 0x" << std::setw(8) << Xbe_certificate->dwTimeDate << " (" << BetterTime(Xbe_certificate->dwTimeDate) << ")\n";
-    text << "Title ID                         : 0x" << std::setw(8) << Xbe_certificate->dwTitleId << "\n";
+    text << "Title ID                         : " << FormatTitleId(Xbe_certificate->dwTitleId) << "\n";
     text << "Title                            : L\"" << Xbe_to_print->m_szAsciiTitle << "\"\n";
     return text.str();
 }
@@ -347,7 +349,7 @@ std::string XbePrinter::GenMediaInfo()
     text << "Game Region                      : 0x" << std::setw(8) << Xbe_certificate->dwGameRegion << " (" << Xbe_to_print->GameRegionToString() << ")\n";
     text << "Game Ratings                     : 0x" << std::setw(8) << Xbe_certificate->dwGameRatings << " (" << GameRatingToString() << ")\n";
     text << "Disk Number                      : 0x" << std::setw(8) << Xbe_certificate->dwDiskNumber << "\n";
-    text << "Version                          : 0x" << std::setw(8) << Xbe_certificate->dwVersion << "\n";
+    text << "Version                          : 1." << std::dec << std::setw(2) << Xbe_certificate->dwVersion << "\n";
     return text.str();
 }
 

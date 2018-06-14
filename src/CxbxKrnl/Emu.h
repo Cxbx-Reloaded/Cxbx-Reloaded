@@ -47,6 +47,8 @@ void NTAPI EmuWarning(const char *szWarningMessage, ...);
 inline void NTAPI EmuWarning(const char *szWarningMessage, ...) { }
 #endif
 
+std::string FormatTitleId(uint32_t title_id);
+
 // exception handler
 extern int EmuException(LPEXCEPTION_POINTERS e);
 

@@ -77,6 +77,31 @@ LARGE_INTEGER	HostSystemTimeDelta = {};
 // Static Function(s)
 static int ExitException(LPEXCEPTION_POINTERS e);
 
+std::string FormatTitleId(uint32_t title_id)
+{
+	std::stringstream ss;
+	
+	// If the Title ID prefix is a printable character, parse it
+	// This shows the correct game serial number for retail titles!
+	// EG: MS-001 for 1st tile published by MS, EA-002 for 2nd title by EA, etc
+	// Some special Xbes (Dashboard, XDK Samples) use non-alphanumeric serials
+	// We fall back to Hex for those
+	char pTitleId1 = (title_id >> 24) & 0xFF;
+	char pTitleId2 = (title_id >> 16) & 0xFF;
+
+	if (isalnum(pTitleId1) && isalnum(pTitleId2)) {
+		ss << pTitleId1 << pTitleId2;
+	} else {
+		// Prefix was non-printable, so we need to print a hex reprentation
+		ss << "0x" << std::setfill('0') << std::setw(4) << std::hex << std::uppercase << (uint16_t)((title_id & 0xFFFF0000) >> 16);
+	}	
+
+	ss << "-";
+	ss << std::setfill('0') << std::setw(3) << std::dec << (title_id & 0x0000FFFF);
+
+	return ss.str();
+}
+
 // print out a warning message to the kernel debug log file
 #ifdef _DEBUG_WARNINGS
 void NTAPI EmuWarning(const char *szWarningMessage, ...)

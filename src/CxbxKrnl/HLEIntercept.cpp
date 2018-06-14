@@ -574,10 +574,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 
     // Write the Certificate Details to the cache file
     WritePrivateProfileString("Certificate", "Name", tAsciiTitle, filename.c_str());
-
-    std::stringstream titleId;
-    titleId << std::hex << g_pCertificate->dwTitleId;
-    WritePrivateProfileString("Certificate", "TitleID", titleId.str().c_str(), filename.c_str());
+    WritePrivateProfileString("Certificate", "TitleID", FormatTitleId(g_pCertificate->dwTitleId).c_str(), filename.c_str());
 
     std::stringstream region;
     region << std::hex << g_pCertificate->dwGameRegion;
