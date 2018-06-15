@@ -299,6 +299,9 @@ void CxbxInitFilePaths();
 
 void ConnectWindowsTimersToThunkTable();
 
+/*! Generate a standard arg format string */
+void CxbxConvertArgToString(std::string &dest, const char* krnlExe, const char* xbeFile, HWND hwndParent, DebugMode krnlDebug, const char* krnlDebugFile);
+
 /*! kernel thunk table */
 extern uint32 CxbxKrnl_KernelThunkTable[379];
 
