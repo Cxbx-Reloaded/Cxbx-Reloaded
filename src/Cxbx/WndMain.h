@@ -145,6 +145,16 @@ class WndMain : public Wnd
 		void CrashMonitor();
 
 		// ******************************************************************
+		// * Debugger monitoring function thread
+		// ******************************************************************
+		static DWORD WINAPI DebuggerMonitor(LPVOID lpVoid);
+
+		// ******************************************************************
+		// * Close debugger monitoring function
+		// ******************************************************************
+		void DebuggerMonitorClose();
+
+		// ******************************************************************
 		// * clear registry values and keys
 		// ******************************************************************
 		void InitializeSettings();
@@ -191,9 +201,12 @@ class WndMain : public Wnd
         char       *m_XbeFilename;
 
         // ******************************************************************
-        // * cached child window handle
+        // * cached window, process, and thread handle
         // ******************************************************************
         HWND        m_hwndChild;
+        HANDLE      m_hDebuggerProc;
+        HANDLE      m_hDebuggerThread;
+        HANDLE      m_hDebuggerMonitorThread;
 
         // ******************************************************************
         // * Recent Xbe files
