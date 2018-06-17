@@ -1773,6 +1773,21 @@ void CxbxKrnlPanic()
     CxbxKrnlCleanup("Kernel Panic!");
 }
 
+void CxbxConvertArgToString(std::string &dest, const char* krnlExe, const char* xbeFile, HWND hwndParent, DebugMode krnlDebug, const char* krnlDebugFile) {
+
+    std::stringstream szArgsStream;
+
+    // The format is: "krnlExe" /load "xbeFile" hwndParent krnlDebug "krnlDebugFile"
+    szArgsStream <<
+        "\"" << krnlExe << "\""
+        " /load \"" << xbeFile << "\""
+        " " << std::dec << (int)hwndParent <<
+        " " << std::dec << (int)krnlDebug <<
+        " \"" << krnlDebugFile << "\"";
+
+    dest = szArgsStream.str();
+}
+
 static clock_t						g_DeltaTime = 0;			 // Used for benchmarking/fps count
 static unsigned int					g_Frames = 0;
 
