@@ -376,7 +376,6 @@
     <ClInclude Include="..\..\src\devices\video\swizzle.h" />
     <ClInclude Include="..\..\src\devices\video\vga.h" />
     <ClInclude Include="..\..\src\devices\Xbox.h" />
-    <ClInclude Include="DlgXboxControllerPortMapping.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\CONTRIBUTORS" />
