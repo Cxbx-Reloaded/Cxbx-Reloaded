@@ -48,13 +48,13 @@ bool CxbxExec(std::string &execCommand, HANDLE* hProcess, bool requestHandleProc
 	strncpy(szArgsBufferOutput, execCommand.c_str(), szSize);
 	szArgsBufferOutput[szSize] = '\0';
 
-    /* NOTE: CreateProcess's 2nd parameter (lpCommandLine) is char*, not const char*. Plus it has ability to change the input buffer data.
-       Source: https://msdn.microsoft.com/en-us/library/ms682425.aspx
+	/* NOTE: CreateProcess's 2nd parameter (lpCommandLine) is char*, not const char*. Plus it has ability to change the input buffer data.
+		Source: https://msdn.microsoft.com/en-us/library/ms682425.aspx
 
-       Using ShellExecute has proper implement. Unfortunately, we need created process handle for Debugger monitor.
-       Plus ShellExecute is high level whilst CreateProcess is low level. We want to use official low level functions as possible to reduce
-       cpu load cycles to get the task done.
-     */
+		Using ShellExecute has proper implement. Unfortunately, we need created process handle for Debugger monitor.
+		Plus ShellExecute is high level whilst CreateProcess is low level. We want to use official low level functions as possible to reduce
+		cpu load cycles to get the task done.
+	*/
 	if (CreateProcess(nullptr, szArgsBufferOutput, nullptr, nullptr, false, 0, nullptr, nullptr, &startupInfo, &processInfo) == 0) {
 		delete[] szArgsBufferOutput;
 		return 0;
