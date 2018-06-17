@@ -389,18 +389,17 @@ void NV2ADevice::SwapBuffers(NV2AState *d)
 
 	static ULONG PreviousAvDisplayModeFormat = 0;
 	static GLenum internalFormat = GL_RGBA;
-	static GLenum format = GL_RGBA;
-	static GLenum type = GL_UNSIGNED_INT_8_8_8_8;
-	static int framebufferWidth = 640;
-	static int framebufferHeight = 480;
-
+	static GLenum frame_format = GL_RGBA;
+	static GLenum frame_type = GL_UNSIGNED_INT_8_8_8_8;
+	static int frame_width = 640;
+	static int frame_height = 480;
 	static GLuint frame_texture = -1;
 
 	// Convert AV Format to OpenGl format details & destroy the texture if format changed..
 	// This is required for titles that use a non ARGB framebuffer, such was Beats of Rage
 	if (PreviousAvDisplayModeFormat != g_AvDisplayModeFormat) {
-		AvDisplayModeFormatToGL(g_AvDisplayModeFormat, &internalFormat, &format, &type);
-		AvGetFormatSize(AvpCurrentMode, &framebufferWidth, &framebufferHeight);
+		AvDisplayModeFormatToGL(g_AvDisplayModeFormat, &internalFormat, &frame_format, &frame_type);
+		AvGetFormatSize(AvpCurrentMode, &frame_width, &frame_height);
 		if (frame_texture != -1) {
 			glDeleteTextures(1, &frame_texture);
 			frame_texture = -1;
@@ -414,10 +413,10 @@ void NV2ADevice::SwapBuffers(NV2AState *d)
 	if (frame_texture == -1) {
 		glGenTextures(1, &frame_texture);
 		glBindTexture(GL_TEXTURE_2D, frame_texture);
-		glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, framebufferWidth, framebufferHeight, 0, format, type, (void*)frame_buffer);
+		glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, frame_width, frame_height, 0, frame_format, frame_type, (void*)frame_buffer);
 	} else {
 		glBindTexture(GL_TEXTURE_2D, frame_texture);
-		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, framebufferWidth, framebufferHeight, format, type, (void*)frame_buffer);
+		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, frame_width, frame_height, frame_format, frame_type, (void*)frame_buffer);
 	}
 
 	// If we need to create an OpenGL framebuffer, do so
@@ -434,7 +433,7 @@ void NV2ADevice::SwapBuffers(NV2AState *d)
 	glClear(GL_COLOR_BUFFER_BIT);
 	// TODO: Use window size/actual framebuffer size rather than hard coding 640x480
 	const GLenum filter = GL_NEAREST;
-	glBlitFramebuffer(0, 0, framebufferWidth, framebufferHeight, 0, 480, 640, 0, GL_COLOR_BUFFER_BIT, filter);
+	glBlitFramebuffer(0, 0, frame_width, frame_height, 0, 480, 640, 0, GL_COLOR_BUFFER_BIT, filter);
 	
 #define CXBX_NV2A_LLE_OVERLAY_ENABLED // Completely untested
 #ifdef CXBX_NV2A_LLE_OVERLAY_ENABLED
@@ -450,17 +449,17 @@ void NV2ADevice::SwapBuffers(NV2AState *d)
 		hwaddr overlay_limit = d->pvideo.regs[NV_PVIDEO_LIMIT(v)];
 		hwaddr overlay_offset = d->pvideo.regs[NV_PVIDEO_OFFSET(v)];
 
-		int in_width = GET_MASK(d->pvideo.regs[NV_PVIDEO_SIZE_IN(v)], NV_PVIDEO_SIZE_IN_WIDTH);
-		int in_height = GET_MASK(d->pvideo.regs[NV_PVIDEO_SIZE_IN(0)], NV_PVIDEO_SIZE_IN_HEIGHT);
-		int in_s = GET_MASK(d->pvideo.regs[NV_PVIDEO_POINT_IN(v)], NV_PVIDEO_POINT_IN_S);
-		int in_t = GET_MASK(d->pvideo.regs[NV_PVIDEO_POINT_IN(v)], NV_PVIDEO_POINT_IN_T);
-		int in_pitch = GET_MASK(d->pvideo.regs[NV_PVIDEO_FORMAT(v)], NV_PVIDEO_FORMAT_PITCH);
-		int in_color = GET_MASK(d->pvideo.regs[NV_PVIDEO_FORMAT(v)], NV_PVIDEO_FORMAT_COLOR);
+		int overlay_in_width = GET_MASK(d->pvideo.regs[NV_PVIDEO_SIZE_IN(v)], NV_PVIDEO_SIZE_IN_WIDTH);
+		int overlay_in_height = GET_MASK(d->pvideo.regs[NV_PVIDEO_SIZE_IN(0)], NV_PVIDEO_SIZE_IN_HEIGHT);
+		int overlay_in_s = GET_MASK(d->pvideo.regs[NV_PVIDEO_POINT_IN(v)], NV_PVIDEO_POINT_IN_S);
+		int overlay_in_t = GET_MASK(d->pvideo.regs[NV_PVIDEO_POINT_IN(v)], NV_PVIDEO_POINT_IN_T);
+		int overlay_format_pitch = GET_MASK(d->pvideo.regs[NV_PVIDEO_FORMAT(v)], NV_PVIDEO_FORMAT_PITCH);
+		int overlay_format_color = GET_MASK(d->pvideo.regs[NV_PVIDEO_FORMAT(v)], NV_PVIDEO_FORMAT_COLOR);
 
-		int out_width = GET_MASK(d->pvideo.regs[NV_PVIDEO_SIZE_OUT(v)], NV_PVIDEO_SIZE_OUT_WIDTH);
-		int out_height = GET_MASK(d->pvideo.regs[NV_PVIDEO_SIZE_OUT(v)], NV_PVIDEO_SIZE_OUT_HEIGHT);
-		int out_x = GET_MASK(d->pvideo.regs[NV_PVIDEO_POINT_OUT(v)], NV_PVIDEO_POINT_OUT_X);
-		int out_y = GET_MASK(d->pvideo.regs[NV_PVIDEO_POINT_OUT(v)], NV_PVIDEO_POINT_OUT_Y);
+		int overlay_out_width = GET_MASK(d->pvideo.regs[NV_PVIDEO_SIZE_OUT(v)], NV_PVIDEO_SIZE_OUT_WIDTH);
+		int overlay_out_height = GET_MASK(d->pvideo.regs[NV_PVIDEO_SIZE_OUT(v)], NV_PVIDEO_SIZE_OUT_HEIGHT);
+		int overlay_out_x = GET_MASK(d->pvideo.regs[NV_PVIDEO_POINT_OUT(v)], NV_PVIDEO_POINT_OUT_X);
+		int overlay_out_y = GET_MASK(d->pvideo.regs[NV_PVIDEO_POINT_OUT(v)], NV_PVIDEO_POINT_OUT_Y);
 
 		// Use a shader to convert YUV to RGB :
 		// From https://stackoverflow.com/questions/44291939/portable-yuv-drawing-context
@@ -478,7 +477,6 @@ void NV2ADevice::SwapBuffers(NV2AState *d)
 			"}\n",
 			/* fragment shader */
 			"#define UVCoordScale 1.0\n" // Temporary, to prevent: error C1008: undefined variable "UVCoordScale"
-
 			"varying vec4 v_color;\n"
 			"varying vec2 v_texCoord;\n"
 			"uniform sampler2D tex0; // Y \n"
@@ -545,11 +543,11 @@ void NV2ADevice::SwapBuffers(NV2AState *d)
 		if (overlay_texture == -1) {
 			glGenTextures(1, &overlay_texture);
 			glBindTexture(GL_TEXTURE_2D, overlay_texture);
-			glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, framebufferWidth, framebufferHeight, 0, format, type, (void*)overlay_buffer);
+			glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, overlay_in_width, overlay_in_height, 0, frame_format, frame_type, (void*)overlay_buffer);
 		}
 		else {
 			glBindTexture(GL_TEXTURE_2D, overlay_texture);
-			glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, framebufferWidth, framebufferHeight, format, type, (void*)overlay_buffer);
+			glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, overlay_in_width, overlay_in_height, frame_format, frame_type, (void*)overlay_buffer);
 		}
 
 		// Bind overlay texture
@@ -557,14 +555,14 @@ void NV2ADevice::SwapBuffers(NV2AState *d)
 		glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, overlay_texture, 0);
 
 		// Determine source and destination coordinates, with that blit the overlay over the framebuffer
-		GLint srcX0 = in_s;
-		GLint srcY0 = in_t;
-		GLint srcX1 = in_width;
-		GLint srcY1 = in_height;
-		GLint dstX0 = out_x;
-		GLint dstY0 = out_y;
-		GLint dstX1 = out_width;
-		GLint dstY1 = out_height;
+		GLint srcX0 = overlay_in_s;
+		GLint srcY0 = overlay_in_t;
+		GLint srcX1 = overlay_in_width;
+		GLint srcY1 = overlay_in_height;
+		GLint dstX0 = overlay_out_x;
+		GLint dstY0 = overlay_out_y;
+		GLint dstX1 = overlay_out_width;
+		GLint dstY1 = overlay_out_height;
 
 		GLint tmp = dstY0; dstY0 = dstY1; dstY1 = tmp; // Flip Y to prevent upside down rendering
 		glBlitFramebuffer(srcX0, srcY0, srcX1, srcY1, dstX0, dstY0, dstX1, dstY1, GL_COLOR_BUFFER_BIT, filter);

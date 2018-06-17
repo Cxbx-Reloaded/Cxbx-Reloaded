@@ -2804,7 +2804,7 @@ void pgraph_init(NV2AState *d)
     glGenVertexArrays(1, &pg->gl_vertex_array);
     glBindVertexArray(pg->gl_vertex_array);
 
-    assert(glGetError() == GL_NO_ERROR);
+//    assert(glGetError() == GL_NO_ERROR);
 
 	unlockGL(&d->pgraph);
 }
@@ -3444,7 +3444,7 @@ static void pgraph_update_surface_part(NV2AState *d, bool upload, bool color) {
 						   width, height,
 						   buf);
 
-			assert(glGetError() == GL_NO_ERROR);
+//			assert(glGetError() == GL_NO_ERROR);
 		}
 
         if (swizzle) {
@@ -3934,8 +3934,8 @@ static void pgraph_update_memory_buffer(NV2AState *d, hwaddr addr, hwaddr size,
 		glBufferSubData(GL_ARRAY_BUFFER, addr, end - addr, d->vram_ptr + addr);
     // }
 
-		auto error = glGetError();
-		assert(error == GL_NO_ERROR);
+//		auto error = glGetError();
+//		assert(error == GL_NO_ERROR);
 }
 
 static void pgraph_bind_vertex_attributes(NV2AState *d,
