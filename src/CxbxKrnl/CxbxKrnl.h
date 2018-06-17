@@ -302,6 +302,8 @@ void ConnectWindowsTimersToThunkTable();
 /*! Generate a standard arg format string */
 void CxbxConvertArgToString(std::string &dest, const char* krnlExe, const char* xbeFile, HWND hwndParent, DebugMode krnlDebug, const char* krnlDebugFile);
 
+bool CxbxExec(std::string &execCommand, HANDLE* hProcess, bool requestHandleProcess);
+
 /*! kernel thunk table */
 extern uint32 CxbxKrnl_KernelThunkTable[379];
 
