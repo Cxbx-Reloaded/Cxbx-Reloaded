@@ -47,7 +47,7 @@ namespace xboxkrnl
 #include <Shlwapi.h> // For PathRemoveFileSpec()
 #include "Logging.h" // For LOG_FUNC()
 #include "EmuKrnlLogging.h"
-#include "CxbxKrnl.h" // For CxbxKrnlCleanup
+#include "CxbxKrnl.h" // For CxbxKrnlCleanup, CxbxConvertArgToString, and CxbxExec
 #include "Emu.h" // For EmuWarning()
 #include "EmuKrnl.h"
 #include "EmuX86.h" // HalReadWritePciSpace needs this
@@ -476,11 +476,6 @@ XBSYSAPI EXPORTNUM(49) xboxkrnl::VOID DECLSPEC_NORETURN NTAPI xboxkrnl::HalRetur
 {
 	LOG_FUNC_ONE_ARG(Routine);
 
-	STARTUPINFO startupInfo = { 0 };
-	PROCESS_INFORMATION processInfo = { 0 };
-	char* szArgsBufferOutput;
-	size_t szSize;
-
 	switch (Routine) {
 	case ReturnFirmwareHalt:
 		CxbxKrnlCleanup("Emulated Xbox is halted");
@@ -587,18 +582,10 @@ XBSYSAPI EXPORTNUM(49) xboxkrnl::VOID DECLSPEC_NORETURN NTAPI xboxkrnl::HalRetur
 
 				std::string szProcArgsBuffer;
 				CxbxConvertArgToString(szProcArgsBuffer, szFilePath_CxbxReloaded_Exe, XbePath.c_str(), CxbxKrnl_hEmuParent, CxbxKrnl_DebugMode, CxbxKrnl_DebugFileName.c_str());
-				szSize = szProcArgsBuffer.size();
-				szArgsBufferOutput = new char[szSize + 1];
-				strncpy(szArgsBufferOutput, szProcArgsBuffer.c_str(), szSize);
-				szArgsBufferOutput[szSize] = '\0';
 
-				if (CreateProcess(nullptr, szArgsBufferOutput, nullptr, nullptr, false, 0, nullptr, nullptr, &startupInfo, &processInfo) == 0) {
-					delete[] szArgsBufferOutput;
+				if (!CxbxExec(szProcArgsBuffer, nullptr, false)) {
 					CxbxKrnlCleanup("Could not launch %s", XbePath.c_str());
 				}
-				delete[] szArgsBufferOutput;
-				CloseHandle(processInfo.hProcess);
-				CloseHandle(processInfo.hThread);
 			}
 		}
 		break;
@@ -622,18 +609,10 @@ XBSYSAPI EXPORTNUM(49) xboxkrnl::VOID DECLSPEC_NORETURN NTAPI xboxkrnl::HalRetur
 
 		std::string szProcArgsBuffer;
 		CxbxConvertArgToString(szProcArgsBuffer, szFilePath_CxbxReloaded_Exe, szWorkingDirectoy, CxbxKrnl_hEmuParent, CxbxKrnl_DebugMode, CxbxKrnl_DebugFileName.c_str());
-		szSize = szProcArgsBuffer.size();
-		szArgsBufferOutput = new char[szSize + 1];
-		strncpy(szArgsBufferOutput, szProcArgsBuffer.c_str(), szSize);
-		szArgsBufferOutput[szSize] = '\0';
 
-		if (CreateProcess(nullptr, szArgsBufferOutput, nullptr, nullptr, false, 0, nullptr, nullptr, &startupInfo, &processInfo) == 0) {
-			delete[] szArgsBufferOutput;
+		if (!CxbxExec(szProcArgsBuffer, nullptr, false)) {
 			CxbxKrnlCleanup("Could not launch %s", szWorkingDirectoy);
 		}
-		delete[] szArgsBufferOutput;
-		CloseHandle(processInfo.hProcess);
-		CloseHandle(processInfo.hThread);
 		break;
 	}
 

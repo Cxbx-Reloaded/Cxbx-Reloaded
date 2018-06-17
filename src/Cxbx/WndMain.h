@@ -205,7 +205,6 @@ class WndMain : public Wnd
         // ******************************************************************
         HWND        m_hwndChild;
         HANDLE      m_hDebuggerProc;
-        HANDLE      m_hDebuggerThread;
         HANDLE      m_hDebuggerMonitorThread;
 
         // ******************************************************************

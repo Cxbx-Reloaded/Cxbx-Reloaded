@@ -42,7 +42,7 @@
 #include "DlgXboxControllerPortMapping.h"
 #include "Common/XbePrinter.h" // For DumpInformation
 #include "CxbxKrnl/EmuShared.h"
-#include "CxbxKrnl/CxbxKrnl.h" // For CxbxConvertArgToString
+#include "..\CxbxKrnl\CxbxKrnl.h" // For CxbxConvertArgToString and CxbxExec
 #include "ResCxbx.h"
 #include "CxbxVersion.h"
 #include "Shlwapi.h"
@@ -164,7 +164,6 @@ WndMain::WndMain(HINSTANCE x_hInstance) :
 	m_StorageLocation(""),
 	m_dwRecentXbe(0),
 	m_hDebuggerProc(nullptr),
-	m_hDebuggerThread(nullptr),
 	m_hDebuggerMonitorThread(nullptr)
 {
     // initialize members
@@ -2384,11 +2383,6 @@ void WndMain::StartEmulation(HWND hwndParent, DebuggerState LocalDebuggerState /
 		bool AttachLocalDebugger = (LocalDebuggerState == debuggerOn);
 		g_EmuShared->SetDebuggingFlag(&AttachLocalDebugger);
 
-        STARTUPINFO startupInfo = { 0 };
-        PROCESS_INFORMATION processInfo = { 0 };
-        char* szArgsBufferOutput;
-        size_t szSize;
-
         std::string szProcArgsBuffer;
         XTL::CxbxConvertArgToString(szProcArgsBuffer, szExeFileName, m_XbeFilename, hwndParent, m_KrnlDebug, m_KrnlDebugFilename);
 
@@ -2399,46 +2393,30 @@ void WndMain::StartEmulation(HWND hwndParent, DebuggerState LocalDebuggerState /
 
             // TODO: Set a configuration variable for this. For now it will be within the same folder as Cxbx.exe
             std::string szProcDbgArgsBuffer = "CxbxDebugger.exe " + szProcArgsBuffer;
-            szSize = szProcDbgArgsBuffer.size();
 
-            szArgsBufferOutput = new char[szSize + 1];
-            strncpy(szArgsBufferOutput, szProcDbgArgsBuffer.c_str(), szSize);
-            szArgsBufferOutput[szSize] = '\0';
-
-            if (CreateProcess(nullptr, szArgsBufferOutput, nullptr, nullptr, false, 0, nullptr, nullptr, &startupInfo, &processInfo) == 0) {
+            if (!XTL::CxbxExec(szProcDbgArgsBuffer, &m_hDebuggerProc, true)) {
                 MessageBox(m_hwnd, "Failed to start emulation with the debugger.\n\nYou will need to build CxbxDebugger manually.", "Cxbx-Reloaded", MB_ICONSTOP | MB_OK);
 
                 printf("WndMain: %s debugger shell failed.\n", m_Xbe->m_szAsciiTitle);
             }
             else {
                 m_bIsStarted = true;
-                m_hDebuggerProc = processInfo.hProcess;
-                m_hDebuggerThread = processInfo.hThread;
                 printf("WndMain: %s emulation started with debugger.\n", m_Xbe->m_szAsciiTitle);
                 m_hDebuggerMonitorThread = CreateThread(nullptr, 0, DebuggerMonitor, (void*)this, 0, nullptr); // create the debugger monitoring thread
             }
         }
         else {
-            szSize = szProcArgsBuffer.size();
-            szArgsBufferOutput = new char[szSize + 1];
-            strncpy(szArgsBufferOutput, szProcArgsBuffer.c_str(), szSize);
-            szArgsBufferOutput[szSize] = '\0';
 
-            if (CreateProcess(nullptr, szArgsBufferOutput, nullptr, nullptr, false, 0, nullptr, nullptr, &startupInfo, &processInfo) == 0) {
+            if (!XTL::CxbxExec(szProcArgsBuffer, nullptr, false)) {
                 MessageBox(m_hwnd, "Emulation failed.\n\n If this message repeats, the Xbe is not supported.", "Cxbx-Reloaded", MB_ICONSTOP | MB_OK);
 
                 printf("WndMain: %s shell failed.\n", m_Xbe->m_szAsciiTitle);
             }
             else {
                 m_bIsStarted = true;
-                CloseHandle(processInfo.hProcess);
-                CloseHandle(processInfo.hThread);
                 printf("WndMain: %s emulation started.\n", m_Xbe->m_szAsciiTitle);
             }
         }
-
-        // Clean up
-        delete[] szArgsBufferOutput;
     }
 }
 
@@ -2537,11 +2515,6 @@ DWORD WINAPI WndMain::DebuggerMonitor(LPVOID lpVoid)
 			CloseHandle(pThis->m_hDebuggerProc);
 			pThis->m_hDebuggerProc = nullptr;
 		}
-
-		if (pThis->m_hDebuggerThread != nullptr) {
-			CloseHandle(pThis->m_hDebuggerProc);
-			pThis->m_hDebuggerProc = nullptr;
-		}
 	}
 	CloseHandle(pThis->m_hDebuggerMonitorThread);
 	pThis->m_hDebuggerMonitorThread = nullptr;
@@ -2553,16 +2526,14 @@ void WndMain::DebuggerMonitorClose()
 
 	if (m_hDebuggerProc != nullptr) {
 		HANDLE hDebuggerProcTemp = m_hDebuggerProc;
-		HANDLE hDebuggerThreadTemp = m_hDebuggerThread;
 		HANDLE hDebuggerMonitorThreadTemp = m_hDebuggerMonitorThread;
 
 		// Set member to null pointer before terminate, this way debugger monitor thread will remain thread-safe.
 		m_hDebuggerProc = nullptr;
-		m_hDebuggerThread = nullptr;
 
 
 		TerminateProcess(hDebuggerProcTemp, EXIT_SUCCESS);
-		CloseHandle(hDebuggerThreadTemp);
+		CloseHandle(hDebuggerProcTemp);
 
 		WaitForSingleObject(hDebuggerMonitorThreadTemp, INFINITE);
 	}
