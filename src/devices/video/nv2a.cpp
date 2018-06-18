@@ -476,59 +476,91 @@ void NV2ADevice::UpdateHostDisplay(NV2AState *d)
 		int overlay_out_width = GET_MASK(d->pvideo.regs[NV_PVIDEO_SIZE_OUT(v)], NV_PVIDEO_SIZE_OUT_WIDTH);
 		int overlay_out_height = GET_MASK(d->pvideo.regs[NV_PVIDEO_SIZE_OUT(v)], NV_PVIDEO_SIZE_OUT_HEIGHT);
 
-		// Use a shader to convert YUV to RGB :
+		// Use a shader to convert YUV to RGB using information from :
 		// From https://stackoverflow.com/questions/44291939/portable-yuv-drawing-context
-		// to https://hg.libsdl.org/SDL/file/1f2cb42aa5d3/src/render/opengl/SDL_shaders_gl.c#l128	
+		// to https://hg.libsdl.org/SDL/file/1f2cb42aa5d3/src/render/opengl/SDL_shaders_gl.c#l128
+		// From https://stackoverflow.com/questions/12428108/ios-how-to-draw-a-yuv-image-using-opengl
+		// to https://github.com/kolyvan/kxmovie/blob/master/kxmovie/KxMovieGLView.m
+		// and https://www.opengl.org/discussion_boards/archive/index.php/t-169186.html
+		// and https://gist.github.com/roxlu/9329339
 		const char *OPENGL_SHADER_YUV[2] = {
 			/* vertex shader */
-			"varying vec4 v_color;\n"
-			"varying vec2 v_texCoord;\n"
+#if 1
+			"#version 120\n"
+//			"varying vec4 v_color;\n"
+			"varying vec2 v_coord;\n"
 			"\n"
 			"void main()\n"
 			"{\n"
 			"    gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;\n"
-			"    v_color = gl_Color;\n"
-			"    v_texCoord = vec2(gl_MultiTexCoord0);\n"
+//			"    v_color = gl_Color;\n"
+			"    v_coord = vec2(gl_MultiTexCoord0);\n"
 			"}\n",
+#else
+			"#version 130\n"
+			"uniform mat4 u_pm;\n"
+			"uniform vec4 draw_pos;\n"
+			"const vec2 verts[4] = vec2[](\n"
+			"	vec2(-0.5,  0.5),\n"
+			"	vec2(-0.5, -0.5),\n"
+			"	vec2( 0.5,  0.5),\n"
+			"	vec2( 0.5, -0.5)\n"
+			"	);\n"
+			"const vec2 texcoords[4] = vec2[](\n"
+			"	vec2(0.0, 1.0),\n"
+			"	vec2(0.0, 0.0),\n"
+			"	vec2(1.0, 1.0),\n"
+			"	vec2(1.0, 0.0)\n"
+			"	);\n"
+			"out vec2 v_coord;\n"
+			"void main() {\n"
+			"	vec2 vert = verts[gl_VertexID];\n"
+			"	vec4 p = vec4(\n"
+			"		(0.5 * draw_pos.z) + draw_pos.x + (vert.x * draw_pos.z),\n"
+			"		(0.5 * draw_pos.w) + draw_pos.y + (vert.y * draw_pos.w),\n"
+			"		0, 1);\n"
+			"	gl_Position = u_pm * p;\n"
+			"	v_coord = texcoords[gl_VertexID];\n"
+			"}\n",
+#endif
 			/* fragment shader */
-			"#define UVCoordScale 1.0\n" // Temporary, to prevent: error C1008: undefined variable "UVCoordScale"
-			"varying vec4 v_color;\n"
-			"varying vec2 v_texCoord;\n"
-			"uniform sampler2D tex0; // Y \n"
-			"uniform sampler2D tex1; // U \n"
-			"uniform sampler2D tex2; // V \n"
-			"\n"
+			"#version 130\n"
+			"uniform sampler2D yuyv_tex;\n"
+//			"#define UVCoordScale 1.0\n"
+			"in vec2 v_coord;\n"
+			"out vec4 out_rgba;\n"
 			"// YUV offset \n"
 			"const vec3 offset = vec3(-0.0627451017, -0.501960814, -0.501960814);\n"
-			"\n"
 			"// RGB coefficients \n"
 			"const vec3 Rcoeff = vec3(1.164,  0.000,  1.596);\n"
 			"const vec3 Gcoeff = vec3(1.164, -0.391, -0.813);\n"
 			"const vec3 Bcoeff = vec3(1.164,  2.018,  0.000);\n"
-			"\n"
-			"void main()\n"
+			"void main(void)\n"
 			"{\n"
-			"    vec2 tcoord;\n"
-			"    vec3 yuv, rgb;\n"
-			"\n"
-			"    // Get the Y value \n"
-			"    tcoord = v_texCoord;\n"
-			"    yuv.x = texture2D(tex0, tcoord).r;\n"
-			"\n"
-			"    // Get the U and V values \n"
-			"    tcoord *= UVCoordScale;\n" // See above temporary define 
-			"    yuv.y = texture2D(tex1, tcoord).r;\n"
-			"    yuv.z = texture2D(tex2, tcoord).r;\n"
-			"\n"
-			"    // Do the color transform \n"
-			"    yuv += offset;\n"
-			"    rgb.r = dot(yuv, Rcoeff);\n"
-			"    rgb.g = dot(yuv, Gcoeff);\n"
-			"    rgb.b = dot(yuv, Bcoeff);\n"
-			"\n"
-			"    // That was easy. :) \n"
-			"    gl_FragColor = vec4(rgb, 1.0) * v_color;\n"
-			"}\n" };
+			"	// Fetch 4:2:2 macropixel YUYV \n"
+//			"    tcoord *= UVCoordScale;\n" // See above temporary define 
+			"	vec4 macropixel = texture2D(yuyv_tex, v_coord);\n"
+			"	// Now macropixel.r-g-b-a is actually mp.y1-u-y2-v \n"
+			"	float u = macropixel.g;\n"
+			"	float v = macropixel.a;\n"
+			"	// Depending on even/odd fragment x position choose y1-u-v or y2-u-v \n"
+			"	vec3 yuv;\n"
+			"	if (mod(gl_FragCoord.x, 2.0) < 1.0) {\n"
+			"		float y1 = macropixel.r;\n"
+			"		yuv = vec3(y1,u,v); // even \n"
+			"	} else {\n"
+			"		float y2 = macropixel.b;\n"
+			"		yuv = vec3(y2,u,v); // odd \n"
+			"	}\n"
+			"	// Do the color transform \n"
+			"	yuv += offset;\n"
+			"	out_rgba.r = dot(yuv, Rcoeff);\n"
+			"	out_rgba.g = dot(yuv, Gcoeff);\n"
+			"	out_rgba.b = dot(yuv, Bcoeff);\n"
+			"	out_rgba.a = 1.0;\n"
+//			"    gl_FragColor = vec4(rgb, 1.0) * v_color;\n"
+			"}\n"
+		};
 
 		// Bind shader
 		static GLuint shader_program_yuv_to_rgb = -1;
@@ -559,8 +591,8 @@ void NV2ADevice::UpdateHostDisplay(NV2AState *d)
 		static GLuint overlay_texture = -1;
 
 		hwaddr overlay_buffer = /*CONTIGUOUS_MEMORY_BASE=*/0x80000000 | overlay_base + overlay_offset;
-		GLenum overlay_internal_format = frame_internal_format; // TODO
-		GLenum overlay_format = frame_format; // TODO
+		GLenum overlay_internal_format = frame_internal_format; // TODO : GL_LUMINANCE ?
+		GLenum overlay_format = frame_format; // TODO : GL_LUMINANCE ?
 		GLenum overlay_type = frame_type; // TODO
 		if (overlay_texture == -1) {
 			glGenTextures(1, &overlay_texture);
@@ -568,15 +600,20 @@ void NV2ADevice::UpdateHostDisplay(NV2AState *d)
 			glTexImage2D(GL_TEXTURE_2D, 0, overlay_internal_format, overlay_in_width, overlay_in_height, 0, overlay_format, overlay_type, (void*)overlay_buffer);
 		}
 		else {
-			glBindTexture(GL_TEXTURE_2D, overlay_texture);
+			glBindTexture(GL_TEXTURE_2D, overlay_texture); // update the YUV video texturing unit 
 			glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, overlay_in_width, overlay_in_height, overlay_format, overlay_type, (void*)overlay_buffer);
 		}
 
-		// Bind overlay texture
-		// TODO : Is this correct?
-		glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, overlay_texture, 0);
+		glUniform1i(glGetUniformLocation(shader_program_yuv_to_rgb, "yuyv_tex"), 0);
 
-		// Determine source and destination coordinates, with that blit the overlay over the framebuffer
+		// Bind overlay texture
+		glActiveTexture(GL_TEXTURE0);
+		glTexEnvf(GL_TEXTURE_2D, GL_TEXTURE_ENV_MODE, GL_REPLACE); // note that GL_REPLACE is certainly not the best thing for video mixing ...
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR); // Linear Filtering seem a good compromise between speed/quality
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR); // this seem the same thing for the magnification and minification
+		glBindTexture(GL_TEXTURE_2D, overlay_texture);
+
+		// Determine source and destination coordinates, with that draw the overlay over the framebuffer
 		GLint srcX0 = overlay_in_s;
 		GLint srcY0 = overlay_in_t;
 		GLint srcX1 = overlay_in_width;
@@ -587,7 +624,22 @@ void NV2ADevice::UpdateHostDisplay(NV2AState *d)
 		GLint dstY1 = overlay_out_height;
 
 		GLint tmp = dstY0; dstY0 = dstY1; dstY1 = tmp; // Flip Y to prevent upside down rendering
-		glBlitFramebuffer(srcX0, srcY0, srcX1, srcY1, dstX0, dstY0, dstX1, dstY1, GL_COLOR_BUFFER_BIT, filter);
+
+		glBegin(GL_TRIANGLE_STRIP);
+		glTexCoord2i(srcX0, srcY0);
+		glVertex2i(dstX0, dstY0);
+
+		glTexCoord2i(srcX1, srcY0);
+		glVertex2i(dstX1, dstY0);
+
+		glTexCoord2i(srcX0, srcY1);
+		glVertex2i(dstX0, dstY1);
+
+		glTexCoord2i(srcX1, srcY1);
+		glVertex2i(dstX1, dstY1);
+		glEnd();
+
+		glBindTexture(GL_TEXTURE_2D, 0);
 	}
 #endif
 
