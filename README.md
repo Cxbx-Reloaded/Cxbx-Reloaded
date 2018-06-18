@@ -24,8 +24,10 @@ We now boot more titles than ever before, with more and more reaching gameplay.
 ## Automated Builds
 Cxbx-Reloaded is not yet ready for general release, but the latest development builds can be downloaded from our [AppVeyor](https://ci.appveyor.com/project/SoullessSentinel/cxbx-reloaded/branch/master):
 
-* [Latest build (Release)](https://ci.appveyor.com/api/projects/SoullessSentinel/cxbx-reloaded/artifacts/export/Release.zip?branch=master&job=Configuration:%20Release&pr=false)
-* [Latest build (Debug)](https://ci.appveyor.com/api/projects/SoullessSentinel/cxbx-reloaded/artifacts/export/Debug.zip?branch=master&job=Configuration:%20Debug&pr=false)
+* [Latst Stable](https://ci.appveyor.com/api/projects/SoullessSentinel/cxbx-reloaded/artifacts/export/Release.zip?branch=master&job=Configuration:%20Release&pr=false)
+* [Latest Stable (Debug)](https://ci.appveyor.com/api/projects/SoullessSentinel/cxbx-reloaded/artifacts/export/Debug.zip?branch=master&job=Configuration:%20Debug&pr=false)
+* [Latest Development Build (Release)](https://ci.appveyor.com/api/projects/SoullessSentinel/cxbx-reloaded/artifacts/export/Release.zip?branch=develop&job=Configuration:%20Release&pr=false)
+* [Latest Development Build (Debug)](https://ci.appveyor.com/api/projects/SoullessSentinel/cxbx-reloaded/artifacts/export/Debug.zip?branch=develop&job=Configuration:%20Debug&pr=false)
 * [Full build history](https://ci.appveyor.com/project/SoullessSentinel/cxbx-reloaded/history)
 
 ## Compatibility
