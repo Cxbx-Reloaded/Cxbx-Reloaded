@@ -6,18 +6,11 @@ or [Discord](https://discord.gg/26Xjx23)
 
 Cxbx-Reloaded is an emulator for running Microsoft Xbox (and eventually, Chihiro) games on Microsoft Windows.
 
-The project began its life as a fork of Cxbx with added 64-bit support.
-
-Work is currently underway to backport some of the improvements made from Dxbx.
-
-Cxbx-Reloaded is early in development, however it is progressing almost daily;
-
-We now boot more titles than ever before, with more and more reaching gameplay.
-
 ## System Requirements
 ### Minimum
   * OS: Windows 7+ x64. 32-bit installations are not supported.
   * GPU: Anything that supports Direct3D 8 (HLE) and OpenGL 3.3 (LLE).
+  * Due to poor driver support for Direct3D8 on modern cards, some users may see better results when using a wrapper, such as [D3D8to9](https://github.com/crosire/d3d8to9/)
 ### Prerequisites
   * Visual C++ 2015 and 2017 redistributables may be required. Download them [here](https://support.microsoft.com/en-gb/help/2977003/the-latest-supported-visual-c-downloads).
   
