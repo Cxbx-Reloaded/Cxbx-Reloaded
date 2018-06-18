@@ -6,26 +6,35 @@ or [Discord](https://discord.gg/26Xjx23)
 
 Cxbx-Reloaded is an emulator for running Microsoft Xbox (and eventually, Chihiro) games on Microsoft Windows.
 
-The project began its life as a fork of Cxbx with added 64-bit support.
-
-Work is currently underway to backport some of the improvements made from Dxbx.
-
-Cxbx-Reloaded is early in development, however it is progressing almost daily;
-
-We now boot more titles than ever before, with more and more reaching gameplay.
-
 ## System Requirements
 ### Minimum
   * OS: Windows 7+ x64. 32-bit installations are not supported.
   * GPU: Anything that supports Direct3D 8 (HLE) and OpenGL 3.3 (LLE).
+  * Due to poor driver support for Direct3D8 on modern cards, some users may see better results when using a wrapper, such as [D3D8to9](https://github.com/crosire/d3d8to9/)
 ### Prerequisites
   * Visual C++ 2015 and 2017 redistributables may be required. Download them [here](https://support.microsoft.com/en-gb/help/2977003/the-latest-supported-visual-c-downloads).
   
 ## Automated Builds
-Cxbx-Reloaded is not yet ready for general release, but the latest development builds can be downloaded from our [AppVeyor](https://ci.appveyor.com/project/SoullessSentinel/cxbx-reloaded/branch/master):
+Cxbx-Reloaded is not yet ready for general release, but the latest development builds can be downloaded using the links below:
 
-* [Latest build (Release)](https://ci.appveyor.com/api/projects/SoullessSentinel/cxbx-reloaded/artifacts/export/Release.zip?branch=master&job=Configuration:%20Release&pr=false)
-* [Latest build (Debug)](https://ci.appveyor.com/api/projects/SoullessSentinel/cxbx-reloaded/artifacts/export/Debug.zip?branch=master&job=Configuration:%20Debug&pr=false)
+<!-- TODO: Enable these once the first stable release happens
+### Latest Stable
+Grab these if you just want to use the emulator to play games.
+* [Latest Stable (Release Build)](https://ci.appveyor.com/api/projects/SoullessSentinel/cxbx-reloaded/artifacts/export/Release.zip?branch=master&job=Configuration:%20Release&pr=false)
+* [Latest Stable (Debug Build)](https://ci.appveyor.com/api/projects/SoullessSentinel/cxbx-reloaded/artifacts/export/Debug.zip?branch=master&job=Configuration:%20Debug&pr=false)
+--> 
+
+<!-- TODO: Remove this after v0.1 release -->
+### Upcoming Release (Alpha Status)
+Grab these builds if you wish to preview/alpha test an upcoming release
+* [Latest v0.1 Alpha Build (Release)](https://ci.appveyor.com/api/projects/SoullessSentinel/cxbx-reloaded/artifacts/export/Release.zip?branch=v0.1&job=Configuration:%20Release&pr=false)
+* [Latest v0.1 Alpha Build (Debug)](https://ci.appveyor.com/api/projects/SoullessSentinel/cxbx-reloaded/artifacts/export/Debug.zip?branch=v0.1&job=Configuration:%20Debug&pr=false)
+
+### Development Builds
+Grab these builds if you want to test the latest and greatest features. These builds are likely to be more unstable than release builds, and are not recommended for just playing games.
+* [Latest Development Build (Release)](https://ci.appveyor.com/api/projects/SoullessSentinel/cxbx-reloaded/artifacts/export/Release.zip?branch=develop&job=Configuration:%20Release&pr=false)
+* [Latest Development Build (Debug)](https://ci.appveyor.com/api/projects/SoullessSentinel/cxbx-reloaded/artifacts/export/Debug.zip?branch=develop&job=Configuration:%20Debug&pr=false)
+
 * [Full build history](https://ci.appveyor.com/project/SoullessSentinel/cxbx-reloaded/history)
 
 ## Compatibility
