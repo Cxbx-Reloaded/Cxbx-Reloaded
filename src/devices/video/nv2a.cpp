@@ -28,12 +28,15 @@
 // *  If not, write to the Free Software Foundation, Inc.,
 // *  59 Temple Place - Suite 330, Bostom, MA 02111-1307, USA.
 // *
+// *  (c) 2002-2003 Aaron Robinson <caustik@caustik.com>
+// * 
 // *  nv2a.cpp is heavily based on code from XQEMU
 // *  Copyright(c) 2012 espes
 // *  Copyright(c) 2015 Jannik Vogel
 // *  https://github.com/espes/xqemu/blob/xbox/hw/xbox/nv2a.c
-// *  (c) 2017-2018 Luke Usher <luke.usher@outlook.com>
-// *  (c) 2018 Patrick van Logchem <pvanlogchem@gmail.com>
+// *
+// *  (c) 2016-2018 Luke Usher <luke.usher@outlook.com>
+// *  (c) 2017-2018 Patrick van Logchem <pvanlogchem@gmail.com>
 // *
 // *  All rights reserved
 // *
@@ -161,11 +164,11 @@ static void update_irq(NV2AState *d)
 #include "EmuNV2A_DEBUG.cpp"
 
 
-#define DEBUG_READ32(DEV)              DbgPrintf("X86 : Read32  NV2A " #DEV "(0x%08X) = 0x%08X [Handle%s]\n", addr, result, DebugNV_##DEV##(addr))
-#define DEBUG_READ32_UNHANDLED(DEV)  { DbgPrintf("X86 : Read32  NV2A " #DEV "(0x%08X) = 0x%08X [Unhandle%s]\n", addr, result, DebugNV_##DEV##(addr)); return result; }
+#define DEBUG_READ32(DEV)            DbgPrintf("X86 : Rd32 NV2A " #DEV "(0x%08X) = 0x%08X [Handled %s]\n", addr, result, DebugNV_##DEV##(addr))
+#define DEBUG_READ32_UNHANDLED(DEV)  { DbgPrintf("X86 : Rd32 NV2A " #DEV "(0x%08X) = 0x%08X [Unhandled %s]\n", addr, result, DebugNV_##DEV##(addr)); return result; }
 
-#define DEBUG_WRITE32(DEV)             DbgPrintf("X86 : Write32 NV2A " #DEV "(0x%08X, 0x%08X) [Handle%s]\n", addr, value, DebugNV_##DEV##(addr))
-#define DEBUG_WRITE32_UNHANDLED(DEV) { DbgPrintf("X86 : Write32 NV2A " #DEV "(0x%08X, 0x%08X) [Unhandle%s]\n", addr, value, DebugNV_##DEV##(addr)); return; }
+#define DEBUG_WRITE32(DEV)           DbgPrintf("X86 : Wr32 NV2A " #DEV "(0x%08X, 0x%08X) [Handled %s]\n", addr, value, DebugNV_##DEV##(addr))
+#define DEBUG_WRITE32_UNHANDLED(DEV) { DbgPrintf("X86 : Wr32 NV2A " #DEV "(0x%08X, 0x%08X) [Unhandled %s]\n", addr, value, DebugNV_##DEV##(addr)); return; }
 
 #define DEVICE_READ32(DEV) uint32_t EmuNV2A_##DEV##_Read32(NV2AState *d, xbaddr addr)
 #define DEVICE_READ32_SWITCH() uint32_t result = 0; switch (addr) 
@@ -211,6 +214,8 @@ static DMAObject nv_dma_load(NV2AState *d, xbaddr dma_obj_address)
 
 static void *nv_dma_map(NV2AState *d, xbaddr dma_obj_address, xbaddr *len)
 {
+//	assert(dma_obj_address < d->pramin.ramin_size);
+
 	DMAObject dma = nv_dma_load(d, dma_obj_address);
 
 	/* TODO: Handle targets and classes properly */
@@ -222,6 +227,7 @@ static void *nv_dma_map(NV2AState *d, xbaddr dma_obj_address, xbaddr *len)
 	// assert(dma.address + dma.limit < memory_region_size(d->vram));
 	*len = dma.limit;
 	return d->vram_ptr + dma.address;
+//	return (void*)(PHYSICAL_MAP_BASE  + dma.address);
 }
 
 #include "EmuNV2A_PBUS.cpp"
@@ -690,7 +696,6 @@ void NV2ADevice::Init()
 
 	CxbxReserveNV2AMemory(d);
 
-
 	d->pcrtc.start = 0;
 
 	d->vram_ptr = (uint8_t*)PHYSICAL_MAP_BASE;
@@ -705,12 +710,12 @@ void NV2ADevice::Init()
 	qemu_mutex_init(&d->pfifo.cache1.cache_lock);
 	qemu_cond_init(&d->pfifo.cache1.cache_cond);
 	qemu_cond_init(&d->pvideo.interrupt_cond);
-
+//	d->pfifo.puller_thread = std::thread(pfifo_puller_thread, d);
 	pgraph_init(m_nv2a_state);
 
 	// Only spawn VBlank thread when LLE is enabled
 	if (bLLE_GPU) {
-		vblank_thread = std::thread(nv2a_vblank_thread, m_nv2a_state);
+		vblank_thread = std::thread(nv2a_vblank_thread, d);
 	}
 
 	d->pfifo.puller_thread = std::thread(pfifo_puller_thread, d);
