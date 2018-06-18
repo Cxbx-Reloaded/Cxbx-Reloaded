@@ -123,20 +123,28 @@ static void update_irq(NV2AState *d)
 		d->pmc.pending_interrupts &= ~NV_PMC_INTR_0_PGRAPH;
 	}
 
-	/* TODO : PBUS * /
-	if (d->pbus.pending_interrupts & d->pbus.enabled_interrupts) {
-	d->pmc.pending_interrupts |= NV_PMC_INTR_0_PBUS;
+	/* PVIDEO */
+	if (d->pvideo.pending_interrupts & d->pvideo.enabled_interrupts) {
+		d->pmc.pending_interrupts |= NV_PMC_INTR_0_PVIDEO;
 	}
 	else {
-	d->pmc.pending_interrupts &= ~NV_PMC_INTR_0_PBUS;
+		d->pmc.pending_interrupts &= ~NV_PMC_INTR_0_PVIDEO;
+	}
+
+	/* TODO : PBUS * /
+	if (d->pbus.pending_interrupts & d->pbus.enabled_interrupts) {
+		d->pmc.pending_interrupts |= NV_PMC_INTR_0_PBUS;
+	}
+	else {
+		d->pmc.pending_interrupts &= ~NV_PMC_INTR_0_PBUS;
 	} */
 
 	/* TODO : SOFTWARE * /
 	if (d->user.pending_interrupts & d->.enabled_interrupts) {
-	d->pmc.pending_interrupts |= NV_PMC_INTR_0_SOFTWARE;
+		d->pmc.pending_interrupts |= NV_PMC_INTR_0_SOFTWARE;
 	}
 	else {
-	d->pmc.pending_interrupts &= ~NV_PMC_INTR_0_SOFTWARE;
+		d->pmc.pending_interrupts &= ~NV_PMC_INTR_0_SOFTWARE;
 	} */
 
 	if (d->pmc.pending_interrupts && d->pmc.enabled_interrupts) {
@@ -377,7 +385,7 @@ void AvGetFormatSize(ULONG mode, int* width, int* height)
 }
 
 extern void UpdateFPSCounter();
-void NV2ADevice::SwapBuffers(NV2AState *d)
+void NV2ADevice::UpdateHostDisplay(NV2AState *d)
 {
 	if (!d->pgraph.opengl_enabled) {
 		return;
@@ -388,7 +396,7 @@ void NV2ADevice::SwapBuffers(NV2AState *d)
 	NV2A_GL_DGROUP_BEGIN("VGA Frame");
 
 	static ULONG PreviousAvDisplayModeFormat = 0;
-	static GLenum internalFormat = GL_RGBA;
+	static GLenum frame_internal_format = GL_RGBA;
 	static GLenum frame_format = GL_RGBA;
 	static GLenum frame_type = GL_UNSIGNED_INT_8_8_8_8;
 	static int frame_width = 640;
@@ -398,7 +406,7 @@ void NV2ADevice::SwapBuffers(NV2AState *d)
 	// Convert AV Format to OpenGl format details & destroy the texture if format changed..
 	// This is required for titles that use a non ARGB framebuffer, such was Beats of Rage
 	if (PreviousAvDisplayModeFormat != g_AvDisplayModeFormat) {
-		AvDisplayModeFormatToGL(g_AvDisplayModeFormat, &internalFormat, &frame_format, &frame_type);
+		AvDisplayModeFormatToGL(g_AvDisplayModeFormat, &frame_internal_format, &frame_format, &frame_type);
 		AvGetFormatSize(AvpCurrentMode, &frame_width, &frame_height);
 		if (frame_texture != -1) {
 			glDeleteTextures(1, &frame_texture);
@@ -413,7 +421,7 @@ void NV2ADevice::SwapBuffers(NV2AState *d)
 	if (frame_texture == -1) {
 		glGenTextures(1, &frame_texture);
 		glBindTexture(GL_TEXTURE_2D, frame_texture);
-		glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, frame_width, frame_height, 0, frame_format, frame_type, (void*)frame_buffer);
+		glTexImage2D(GL_TEXTURE_2D, 0, frame_internal_format, frame_width, frame_height, 0, frame_format, frame_type, (void*)frame_buffer);
 	} else {
 		glBindTexture(GL_TEXTURE_2D, frame_texture);
 		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, frame_width, frame_height, frame_format, frame_type, (void*)frame_buffer);
@@ -449,17 +457,18 @@ void NV2ADevice::SwapBuffers(NV2AState *d)
 		hwaddr overlay_limit = d->pvideo.regs[NV_PVIDEO_LIMIT(v)];
 		hwaddr overlay_offset = d->pvideo.regs[NV_PVIDEO_OFFSET(v)];
 
-		int overlay_in_width = GET_MASK(d->pvideo.regs[NV_PVIDEO_SIZE_IN(v)], NV_PVIDEO_SIZE_IN_WIDTH);
-		int overlay_in_height = GET_MASK(d->pvideo.regs[NV_PVIDEO_SIZE_IN(0)], NV_PVIDEO_SIZE_IN_HEIGHT);
-		int overlay_in_s = GET_MASK(d->pvideo.regs[NV_PVIDEO_POINT_IN(v)], NV_PVIDEO_POINT_IN_S);
-		int overlay_in_t = GET_MASK(d->pvideo.regs[NV_PVIDEO_POINT_IN(v)], NV_PVIDEO_POINT_IN_T);
 		int overlay_format_pitch = GET_MASK(d->pvideo.regs[NV_PVIDEO_FORMAT(v)], NV_PVIDEO_FORMAT_PITCH);
 		int overlay_format_color = GET_MASK(d->pvideo.regs[NV_PVIDEO_FORMAT(v)], NV_PVIDEO_FORMAT_COLOR);
 
-		int overlay_out_width = GET_MASK(d->pvideo.regs[NV_PVIDEO_SIZE_OUT(v)], NV_PVIDEO_SIZE_OUT_WIDTH);
-		int overlay_out_height = GET_MASK(d->pvideo.regs[NV_PVIDEO_SIZE_OUT(v)], NV_PVIDEO_SIZE_OUT_HEIGHT);
+		int overlay_in_s = GET_MASK(d->pvideo.regs[NV_PVIDEO_POINT_IN(v)], NV_PVIDEO_POINT_IN_S);
+		int overlay_in_t = GET_MASK(d->pvideo.regs[NV_PVIDEO_POINT_IN(v)], NV_PVIDEO_POINT_IN_T);
+		int overlay_in_width = GET_MASK(d->pvideo.regs[NV_PVIDEO_SIZE_IN(v)], NV_PVIDEO_SIZE_IN_WIDTH);
+		int overlay_in_height = GET_MASK(d->pvideo.regs[NV_PVIDEO_SIZE_IN(0)], NV_PVIDEO_SIZE_IN_HEIGHT);
+
 		int overlay_out_x = GET_MASK(d->pvideo.regs[NV_PVIDEO_POINT_OUT(v)], NV_PVIDEO_POINT_OUT_X);
 		int overlay_out_y = GET_MASK(d->pvideo.regs[NV_PVIDEO_POINT_OUT(v)], NV_PVIDEO_POINT_OUT_Y);
+		int overlay_out_width = GET_MASK(d->pvideo.regs[NV_PVIDEO_SIZE_OUT(v)], NV_PVIDEO_SIZE_OUT_WIDTH);
+		int overlay_out_height = GET_MASK(d->pvideo.regs[NV_PVIDEO_SIZE_OUT(v)], NV_PVIDEO_SIZE_OUT_HEIGHT);
 
 		// Use a shader to convert YUV to RGB :
 		// From https://stackoverflow.com/questions/44291939/portable-yuv-drawing-context
@@ -522,16 +531,20 @@ void NV2ADevice::SwapBuffers(NV2AState *d)
 
 			GLuint vertex_shader = create_gl_shader(GL_VERTEX_SHADER, OPENGL_SHADER_YUV[0], "YUV>RGB Vertex shader");
 			GLuint fragment_shader = create_gl_shader(GL_FRAGMENT_SHADER, OPENGL_SHADER_YUV[1], "YUV>RGB Fragment shader");
-// TODO : Verified upto here - get the rest working too...
 			glAttachShader(shader_program_yuv_to_rgb, vertex_shader); // glAttachObjectARB
 			glAttachShader(shader_program_yuv_to_rgb, fragment_shader); // glAttachObjectARB
 
 			glLinkProgram(shader_program_yuv_to_rgb);
-#if 0
+
 			/* Check it linked */
 			GLint linked = 0;
 			glGetProgramiv(shader_program_yuv_to_rgb, GL_LINK_STATUS, &linked);
-#endif
+			if (!linked) {
+				GLchar log[2048];
+				glGetProgramInfoLog(shader_program_yuv_to_rgb, 2048, NULL, log);
+				fprintf(stderr, "nv2a: shader linking failed: %s\n", log);
+				abort();
+			}
 		}
 
 		glUseProgram(shader_program_yuv_to_rgb);
@@ -540,14 +553,17 @@ void NV2ADevice::SwapBuffers(NV2AState *d)
 		static GLuint overlay_texture = -1;
 
 		hwaddr overlay_buffer = /*CONTIGUOUS_MEMORY_BASE=*/0x80000000 | overlay_base + overlay_offset;
+		GLenum overlay_internal_format = frame_internal_format; // TODO
+		GLenum overlay_format = frame_format; // TODO
+		GLenum overlay_type = frame_type; // TODO
 		if (overlay_texture == -1) {
 			glGenTextures(1, &overlay_texture);
 			glBindTexture(GL_TEXTURE_2D, overlay_texture);
-			glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, overlay_in_width, overlay_in_height, 0, frame_format, frame_type, (void*)overlay_buffer);
+			glTexImage2D(GL_TEXTURE_2D, 0, overlay_internal_format, overlay_in_width, overlay_in_height, 0, overlay_format, overlay_type, (void*)overlay_buffer);
 		}
 		else {
 			glBindTexture(GL_TEXTURE_2D, overlay_texture);
-			glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, overlay_in_width, overlay_in_height, frame_format, frame_type, (void*)overlay_buffer);
+			glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, overlay_in_width, overlay_in_height, overlay_format, overlay_type, (void*)overlay_buffer);
 		}
 
 		// Bind overlay texture
@@ -581,7 +597,7 @@ void NV2ADevice::SwapBuffers(NV2AState *d)
 	UpdateFPSCounter();
 }
 
-// TODO: Fix this properl
+// TODO: Fix this properly
 static void nv2a_vblank_thread(NV2AState *d)
 {
 	CxbxSetThreadName("Cxbx NV2A VBLANK");
@@ -596,7 +612,7 @@ static void nv2a_vblank_thread(NV2AState *d)
 
 			// TODO: We should swap here for the purposes of supporting overlays + direct framebuffer access
 			// But it causes crashes on AMD hardware for reasons currently unknown...
-			//NV2ADevice::SwapBuffers(d);
+			//NV2ADevice::UpdateHostDisplay(d);
 		}
 	}
 }
@@ -674,6 +690,7 @@ void NV2ADevice::Init()
 
 	CxbxReserveNV2AMemory(d);
 
+
 	d->pcrtc.start = 0;
 
 	d->vram_ptr = (uint8_t*)PHYSICAL_MAP_BASE;
@@ -687,6 +704,7 @@ void NV2ADevice::Init()
 	// Setup the conditions/mutexes
 	qemu_mutex_init(&d->pfifo.cache1.cache_lock);
 	qemu_cond_init(&d->pfifo.cache1.cache_cond);
+	qemu_cond_init(&d->pvideo.interrupt_cond);
 
 	pgraph_init(m_nv2a_state);
 

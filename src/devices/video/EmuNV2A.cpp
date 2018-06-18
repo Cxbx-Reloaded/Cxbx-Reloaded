@@ -101,6 +101,14 @@ static void update_irq(NV2AState *d)
 		d->pmc.pending_interrupts &= ~NV_PMC_INTR_0_PGRAPH;
 	}
 
+	/* PVIDEO */
+	if (d->pvideo.pending_interrupts & d->pvideo.enabled_interrupts) {
+		d->pmc.pending_interrupts |= NV_PMC_INTR_0_PVIDEO;
+	}
+	else {
+		d->pmc.pending_interrupts &= ~NV_PMC_INTR_0_PVIDEO;
+	}
+
 	/* TODO : PBUS * /
 	if (d->pbus.pending_interrupts & d->pbus.enabled_interrupts) {
 		d->pmc.pending_interrupts |= NV_PMC_INTR_0_PBUS;

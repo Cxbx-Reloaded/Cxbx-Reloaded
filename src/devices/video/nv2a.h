@@ -507,6 +507,9 @@ typedef struct NV2AState {
     } pfifo;
 
     struct {
+		uint32_t pending_interrupts;
+		uint32_t enabled_interrupts;
+		QemuCond interrupt_cond;
 		uint32_t regs[NV_PVIDEO_SIZE]; // TODO : union
     } pvideo;
 
@@ -645,7 +648,7 @@ public:
 	uint32_t MMIORead(int barIndex, uint32_t addr, unsigned size);
 	void MMIOWrite(int barIndex, uint32_t addr, uint32_t value, unsigned size);
 
-	static void SwapBuffers(NV2AState *d);
+	static void UpdateHostDisplay(NV2AState *d);
 private:
 	NV2AState *m_nv2a_state;
 };
