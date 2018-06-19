@@ -4080,9 +4080,22 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexData2s)
 
 	LOG_FORWARD("D3DDevice_SetVertexData4f");
 
-    DWORD dwA = a, dwB = b;
+	float fa = a / 32767.0f;
+	float fb = b / 32767.0f;
 
-    EMUPATCH(D3DDevice_SetVertexData4f)(Register, DWtoF(dwA), DWtoF(dwB), 0.0f, 1.0f);
+	// Special case: If the input register is a color, don't transform!
+	// Test case: Halo
+	switch (Register) {
+		case X_D3DVSDE_DIFFUSE:
+		case X_D3DVSDE_SPECULAR:
+		case X_D3DVSDE_BACKDIFFUSE:
+		case X_D3DVSDE_BACKSPECULAR:
+			fa = a;
+			fb = b;
+			break;
+	}
+
+    EMUPATCH(D3DDevice_SetVertexData4f)(Register, fa, fb, 0.0f, 1.0f);
 }
 
 DWORD FloatsToDWORD(FLOAT d, FLOAT a, FLOAT b, FLOAT c)
@@ -4231,14 +4244,14 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexData4f)
 
         case X_D3DVSDE_DIFFUSE:
         {
-            g_InlineVertexBuffer_Table[o].Diffuse = FloatsToDWORD(d, a, b, c);
+            g_InlineVertexBuffer_Table[o].Diffuse = D3DCOLOR_COLORVALUE(a, b, c, d);
             g_InlineVertexBuffer_FVF |= D3DFVF_DIFFUSE;
 			break;
         }
 
 		case X_D3DVSDE_SPECULAR:
         {
-            g_InlineVertexBuffer_Table[o].Specular = FloatsToDWORD(d, a, b, c);
+            g_InlineVertexBuffer_Table[o].Specular = D3DCOLOR_COLORVALUE(a, b, c, d);
             g_InlineVertexBuffer_FVF |= D3DFVF_SPECULAR;
 			break;
         }
@@ -4254,14 +4267,14 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexData4f)
 
 		case X_D3DVSDE_BACKDIFFUSE: // Xbox extension
 		{
-			g_InlineVertexBuffer_Table[o].BackDiffuse = FloatsToDWORD(d, a, b, c);
+			g_InlineVertexBuffer_Table[o].BackDiffuse = D3DCOLOR_COLORVALUE(a, b, c, d);
 			EmuWarning("Host Direct3D8 doesn''t support FVF BACKDIFFUSE");
 			break;
 		}
 
 		case X_D3DVSDE_BACKSPECULAR: // Xbox extension
 		{
-			g_InlineVertexBuffer_Table[o].BackSpecular = FloatsToDWORD(d, a, b, c);
+			g_InlineVertexBuffer_Table[o].BackSpecular = D3DCOLOR_COLORVALUE(a, b, c, d);
 			EmuWarning("Host Direct3D8 doesn''t support FVF BACKSPECULAR");
 			break;
 		}
@@ -4346,9 +4359,12 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexData4ub)
 
 	LOG_FORWARD("D3DDevice_SetVertexData4f");
 
-	DWORD dwA = a, dwB = b, dwC = c, dwD = d;
+	float fa = a / 255.0f;
+	float fb = b / 255.0f;
+	float fc = c / 255.0f;
+	float fd = d / 255.0f;
 
-    EMUPATCH(D3DDevice_SetVertexData4f)(Register, DWtoF(dwA), DWtoF(dwB), DWtoF(dwC), DWtoF(dwD));
+    EMUPATCH(D3DDevice_SetVertexData4f)(Register, fa, fb, fc, fd);
 }
 
 // ******************************************************************
@@ -4367,9 +4383,26 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexData4s)
 
 	LOG_FORWARD("D3DDevice_SetVertexData4f");
 
-	DWORD dwA = a, dwB = b, dwC = c, dwD = d;
+	float fa = a / 32767.0f;
+	float fb = b / 32767.0f;
+	float fc = c / 32767.0f;
+	float fd = d / 32767.0f;
 
-    EMUPATCH(D3DDevice_SetVertexData4f)(Register, DWtoF(dwA), DWtoF(dwB), DWtoF(dwC), DWtoF(dwD));
+	// Special case: If the input register is a color, don't transform!
+	// Test case: Halo
+	switch (Register) {
+	case X_D3DVSDE_DIFFUSE:
+	case X_D3DVSDE_SPECULAR:
+	case X_D3DVSDE_BACKDIFFUSE:
+	case X_D3DVSDE_BACKSPECULAR:
+		fa = a;
+		fb = b;
+		fc = c;
+		fd = d;
+		break;
+	}
+
+    EMUPATCH(D3DDevice_SetVertexData4f)(Register, fa, fb, fc, fd);
 }
 
 // ******************************************************************
@@ -4385,10 +4418,10 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexDataColor)
 
 	LOG_FORWARD("D3DDevice_SetVertexData4f");
 
-    FLOAT a = DWtoF((Color & 0xFF000000) >> 24);
-    FLOAT r = DWtoF((Color & 0x00FF0000) >> 16);
-    FLOAT g = DWtoF((Color & 0x0000FF00) >> 8);
-    FLOAT b = DWtoF((Color & 0x000000FF) >> 0);
+    FLOAT a = ((Color & 0xFF000000) >> 24) / 255.0f;
+    FLOAT r = ((Color & 0x00FF0000) >> 16) / 255.0f;
+    FLOAT g = ((Color & 0x0000FF00) >> 8) / 255.0f;
+    FLOAT b = ((Color & 0x000000FF) >> 0) / 255.0f;
 
     EMUPATCH(D3DDevice_SetVertexData4f)(Register, r, g, b, a);
 }
