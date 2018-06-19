@@ -164,10 +164,10 @@ static void update_irq(NV2AState *d)
 #include "EmuNV2A_DEBUG.cpp"
 
 
-#define DEBUG_READ32(DEV)            DbgPrintf("X86 : Rd32 NV2A " #DEV "(0x%08X) = 0x%08X [Handled %s]\n", addr, result, DebugNV_##DEV##(addr))
+#define DEBUG_READ32(DEV)              DbgPrintf("X86 : Rd32 NV2A " #DEV "(0x%08X) = 0x%08X [Handled %s]\n", addr, result, DebugNV_##DEV##(addr))
 #define DEBUG_READ32_UNHANDLED(DEV)  { DbgPrintf("X86 : Rd32 NV2A " #DEV "(0x%08X) = 0x%08X [Unhandled %s]\n", addr, result, DebugNV_##DEV##(addr)); return result; }
 
-#define DEBUG_WRITE32(DEV)           DbgPrintf("X86 : Wr32 NV2A " #DEV "(0x%08X, 0x%08X) [Handled %s]\n", addr, value, DebugNV_##DEV##(addr))
+#define DEBUG_WRITE32(DEV)             DbgPrintf("X86 : Wr32 NV2A " #DEV "(0x%08X, 0x%08X) [Handled %s]\n", addr, value, DebugNV_##DEV##(addr))
 #define DEBUG_WRITE32_UNHANDLED(DEV) { DbgPrintf("X86 : Wr32 NV2A " #DEV "(0x%08X, 0x%08X) [Unhandled %s]\n", addr, value, DebugNV_##DEV##(addr)); return; }
 
 #define DEVICE_READ32(DEV) uint32_t EmuNV2A_##DEV##_Read32(NV2AState *d, xbaddr addr)
@@ -405,8 +405,8 @@ void NV2ADevice::UpdateHostDisplay(NV2AState *d)
 	static GLenum frame_internal_format = GL_RGBA;
 	static GLenum frame_format = GL_RGBA;
 	static GLenum frame_type = GL_UNSIGNED_INT_8_8_8_8;
-	static int frame_width = 640;
-	static int frame_height = 480;
+	static GLsizei frame_width = 640;
+	static GLsizei frame_height = 480;
 	static GLuint frame_texture = -1;
 
 	// Convert AV Format to OpenGl format details & destroy the texture if format changed..
@@ -421,17 +421,18 @@ void NV2ADevice::UpdateHostDisplay(NV2AState *d)
 
 		PreviousAvDisplayModeFormat = g_AvDisplayModeFormat;
 	}
-	
+
 	// If we need to create a new texture, do so, otherwise, update the existing
-	hwaddr frame_buffer = /*CONTIGUOUS_MEMORY_BASE=*/0x80000000 | d->pcrtc.start; // NV_PCRTC_START
+	hwaddr frame_pixels = /*CONTIGUOUS_MEMORY_BASE=*/0x80000000 | d->pcrtc.start; // NV_PCRTC_START
 	if (frame_texture == -1) {
 		glGenTextures(1, &frame_texture);
 		glBindTexture(GL_TEXTURE_2D, frame_texture);
-		glTexImage2D(GL_TEXTURE_2D, 0, frame_internal_format, frame_width, frame_height, 0, frame_format, frame_type, (void*)frame_buffer);
+		glTexImage2D(GL_TEXTURE_2D, 0, frame_internal_format, frame_width, frame_height, 0, frame_format, frame_type, (void*)frame_pixels);
 	} else {
 		glBindTexture(GL_TEXTURE_2D, frame_texture);
-		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, frame_width, frame_height, frame_format, frame_type, (void*)frame_buffer);
+		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, frame_width, frame_height, frame_format, frame_type, (void*)frame_pixels);
 	}
+	glBindTexture(GL_TEXTURE_2D, 0);
 
 	// If we need to create an OpenGL framebuffer, do so
 	static GLuint framebuffer = -1;
@@ -439,19 +440,29 @@ void NV2ADevice::UpdateHostDisplay(NV2AState *d)
 		glGenFramebuffers(1, &framebuffer);
 	}
 
+	// TODO : Is this neccesary? 
+	glFramebufferTexture2D(GL_FRAMEBUFFER,
+		GL_COLOR_ATTACHMENT0,
+		GL_TEXTURE_2D,
+		0, 0);
+
 	// Draw to screen..
+	// Note : this is modelled partially after pgraph_update_surface()
+	// TODO : This function also unswizzles - should we too?
 	glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, frame_texture, 0);
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0); // break the existing binding of a framebuffer object to target
-	glClearColor(1.0f, 0.0f, 1.0f, 1.0f);
+	glClearColor(1.0f, 0.0f, 1.0f, 1.0f); // Might screen get purple, glBlitFramebuffer failed
 	glClear(GL_COLOR_BUFFER_BIT);
+	static const GLenum filter = GL_NEAREST;
 	// TODO: Use window size/actual framebuffer size rather than hard coding 640x480
-	const GLenum filter = GL_NEAREST;
+	// Note : dstY0 and dstY1 are swapped so the screen doesn't appear upside down
 	glBlitFramebuffer(0, 0, frame_width, frame_height, 0, 480, 640, 0, GL_COLOR_BUFFER_BIT, filter);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	
 #define CXBX_NV2A_LLE_OVERLAY_ENABLED // Completely untested
 #ifdef CXBX_NV2A_LLE_OVERLAY_ENABLED
-	// It seem NV2A supports 2 video overlays
+	// It seems NV2A supports 2 video overlays
 	for (int v = 0; v < 2; v++) {
 		uint32_t video_buffer_use = (v == 0) ? NV_PVIDEO_BUFFER_0_USE : NV_PVIDEO_BUFFER_1_USE;
 		if (!(d->pvideo.regs[NV_PVIDEO_BUFFER] & video_buffer_use)) {
@@ -483,7 +494,7 @@ void NV2ADevice::UpdateHostDisplay(NV2AState *d)
 		// to https://github.com/kolyvan/kxmovie/blob/master/kxmovie/KxMovieGLView.m
 		// and https://www.opengl.org/discussion_boards/archive/index.php/t-169186.html
 		// and https://gist.github.com/roxlu/9329339
-		const char *OPENGL_SHADER_YUV[2] = {
+		static const char *OPENGL_SHADER_YUV[2] = {
 			/* vertex shader */
 #if 1
 			"#version 120\n"
@@ -564,6 +575,7 @@ void NV2ADevice::UpdateHostDisplay(NV2AState *d)
 
 		// Bind shader
 		static GLuint shader_program_yuv_to_rgb = -1;
+		static GLint yuyv_tex_loc = -1;
 		if (shader_program_yuv_to_rgb == -1) {
 			shader_program_yuv_to_rgb = glCreateProgram(); // glCreateProgramObjectARB()
 
@@ -583,6 +595,8 @@ void NV2ADevice::UpdateHostDisplay(NV2AState *d)
 				fprintf(stderr, "nv2a: shader linking failed: %s\n", log);
 				abort();
 			}
+
+			yuyv_tex_loc = glGetUniformLocation(shader_program_yuv_to_rgb, "yuyv_tex");
 		}
 
 		glUseProgram(shader_program_yuv_to_rgb);
@@ -590,28 +604,38 @@ void NV2ADevice::UpdateHostDisplay(NV2AState *d)
 		// If we need to create a new overlay texture, do so, otherwise, update the existing
 		static GLuint overlay_texture = -1;
 
-		hwaddr overlay_buffer = /*CONTIGUOUS_MEMORY_BASE=*/0x80000000 | overlay_base + overlay_offset;
 		GLenum overlay_internal_format = frame_internal_format; // TODO : GL_LUMINANCE ?
 		GLenum overlay_format = frame_format; // TODO : GL_LUMINANCE ?
 		GLenum overlay_type = frame_type; // TODO
+
+		// Detect changes in overlay dimensions
+		static GLuint static_overlay_in_width = 0;
+		static GLuint static_overlay_in_height = 0;
+		if (static_overlay_in_width != overlay_in_width || static_overlay_in_height != overlay_in_height) {
+			static_overlay_in_width = overlay_in_width;
+			static_overlay_in_height = overlay_in_height;
+			if (overlay_texture != -1) {
+				glDeleteTextures(1, &overlay_texture);
+				overlay_texture = -1;
+			}
+		}
+
+		// TODO : Speed this up using 2 PixelBufferObjects (and use asynchronous DMA transfer)?
+
+		hwaddr overlay_pixels = /*CONTIGUOUS_MEMORY_BASE=*/0x80000000 | overlay_base + overlay_offset;
 		if (overlay_texture == -1) {
 			glGenTextures(1, &overlay_texture);
 			glBindTexture(GL_TEXTURE_2D, overlay_texture);
-			glTexImage2D(GL_TEXTURE_2D, 0, overlay_internal_format, overlay_in_width, overlay_in_height, 0, overlay_format, overlay_type, (void*)overlay_buffer);
+			glTexImage2D(GL_TEXTURE_2D, 0, overlay_internal_format, overlay_in_width, overlay_in_height, 0, overlay_format, overlay_type, (void*)overlay_pixels);
 		}
 		else {
 			glBindTexture(GL_TEXTURE_2D, overlay_texture); // update the YUV video texturing unit 
-			glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, overlay_in_width, overlay_in_height, overlay_format, overlay_type, (void*)overlay_buffer);
+			glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, overlay_in_width, overlay_in_height, overlay_format, overlay_type, (void*)overlay_pixels);
 		}
 
-		glUniform1i(glGetUniformLocation(shader_program_yuv_to_rgb, "yuyv_tex"), 0);
+		glUniform1i(yuyv_tex_loc, 0);
 
-		// Bind overlay texture
-		glActiveTexture(GL_TEXTURE0);
-		glTexEnvf(GL_TEXTURE_2D, GL_TEXTURE_ENV_MODE, GL_REPLACE); // note that GL_REPLACE is certainly not the best thing for video mixing ...
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR); // Linear Filtering seem a good compromise between speed/quality
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR); // this seem the same thing for the magnification and minification
-		glBindTexture(GL_TEXTURE_2D, overlay_texture);
+		glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
 
 		// Determine source and destination coordinates, with that draw the overlay over the framebuffer
 		GLint srcX0 = overlay_in_s;
@@ -623,23 +647,74 @@ void NV2ADevice::UpdateHostDisplay(NV2AState *d)
 		GLint dstX1 = overlay_out_width;
 		GLint dstY1 = overlay_out_height;
 
-		GLint tmp = dstY0; dstY0 = dstY1; dstY1 = tmp; // Flip Y to prevent upside down rendering
+		if (overlay_in_s != 0 || overlay_in_t != 0 || overlay_out_x != 0 || overlay_out_y != 0 || overlay_out_width != 640 || overlay_out_height != 480) {
+			LOG_TEST_CASE("Non-standard overlay dimensions");
+		}
 
-		glBegin(GL_TRIANGLE_STRIP);
-		glTexCoord2i(srcX0, srcY0);
-		glVertex2i(dstX0, dstY0);
+		//GLint tmp = dstY0; dstY0 = dstY1; dstY1 = tmp; // Flip Y to prevent upside down rendering
 
-		glTexCoord2i(srcX1, srcY0);
-		glVertex2i(dstX1, dstY0);
+		GLfloat srcX0f = (GLfloat)srcX0 / overlay_in_width;
+		GLfloat srcX1f = (GLfloat)srcX1 / overlay_in_width;
+		GLfloat srcY0f = (GLfloat)srcY0 / overlay_in_height;
+		GLfloat srcY1f = (GLfloat)srcY1 / overlay_in_height;
 
-		glTexCoord2i(srcX0, srcY1);
-		glVertex2i(dstX0, dstY1);
+		GLfloat dstX0f = (GLfloat)dstX0 / frame_width;
+		GLfloat dstX1f = (GLfloat)dstX1 / frame_width;
+		GLfloat dstY0f = (GLfloat)dstY0 / frame_height;
+		GLfloat dstY1f = (GLfloat)dstY1 / frame_height;
 
-		glTexCoord2i(srcX1, srcY1);
-		glVertex2i(dstX1, dstY1);
+		glPushMatrix(); //??
+
+		glViewport(0, 0, frame_width, frame_height);
+		glNormal3f(0.0f, 0.0f, 1.0f);
+
+		glDepthRange(-1, 1);
+		glClearColor(0, 0, 0, 0);
+		glColor3f(1, 1, 1);
+		glClearDepth(1);
+		// pre-frustum_setup
+		glMatrixMode(GL_PROJECTION);
+		glLoadIdentity();
+		glOrtho(0, frame_width, frame_height, 0, -1, 1);
+		// post-frustum_setup
+		glMatrixMode(GL_MODELVIEW);
+		glLoadIdentity();
+		glDisable(GL_BLEND);
+		glDisable(GL_DEPTH_TEST);
+		glDepthMask(GL_FALSE);
+		glDisable(GL_CULL_FACE);
+		glShadeModel(GL_FLAT);
+		glDisable(GL_TEXTURE_2D);
+		// post-en/disable
+		glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_FASTEST);
+
+		// Bind overlay texture
+		glActiveTexture(GL_TEXTURE0);
+		glTexEnvi(GL_TEXTURE_2D, GL_TEXTURE_ENV_MODE, GL_REPLACE); // note that GL_REPLACE is certainly not the best thing for video mixing ...
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR); // Linear Filtering seem a good compromise between speed/quality
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR); // this seem the same thing for the magnification and minification
+		glEnable(GL_TEXTURE_2D);
+		glMatrixMode(GL_TEXTURE);
+		glLoadIdentity();
+
+		glBegin(GL_TRIANGLE_STRIP); // glBegin(GL_QUADS);
+		glTexCoord2f(0.0f, 0.0f);   glVertex3f(-1.0f, -1.0f, 0.0f);
+		glTexCoord2f(1.0f, 0.0f);   glVertex3f(1.0f, -1.0f, 0.0f);
+		glTexCoord2f(1.0f, 1.0f);   glVertex3f(1.0f, 1.0f, 0.0f);
+		glTexCoord2f(0.0f, 1.0f);   glVertex3f(-1.0f, 1.0f, 0.0f);
+/*
+		glTexCoord2f(srcX0f, srcY0f); glVertex2f(dstX0f, dstY0f);
+		glTexCoord2f(srcX1f, srcY0f); glVertex2f(dstX1f, dstY0f);
+		glTexCoord2f(srcX1f, srcY1f); glVertex2f(dstX1f, dstY1f);
+		glTexCoord2f(srcX0f, srcY1f); glVertex2f(dstX0f, dstY1f);
+*/
 		glEnd();
 
+		glPopMatrix(); //??
+		glDisable(GL_TEXTURE_2D);
 		glBindTexture(GL_TEXTURE_2D, 0);
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		glUseProgram(0);
 	}
 #endif
 
