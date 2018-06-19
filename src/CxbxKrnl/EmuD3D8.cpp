@@ -6202,44 +6202,94 @@ VOID __fastcall XTL::EMUPATCH(D3DDevice_SetRenderState_Simple)
 		LOG_FUNC_ARG(Value)
 		LOG_FUNC_END;
 
-    int State = -1;
-
-    // Todo: make this faster and more elegant
-    for(int v=0;v<174;v++)
-    {
-        if(EmuD3DRenderStateSimpleEncoded[v] == Method)
-        {
-            State = v;
-            break;
-        }
-    }
-
 	// Special Case: Handle PixelShader related Render States
 	// TODO: Port over EmuMappedD3DRenderState and related code from Dxbx or Wip_LessVertexPatching
 	// After this, we don't need to do this part anymore
 	switch (Method & 0x00001FFC) {
-		case /*0x00000a60*/NV2A_RC_CONSTANT_COLOR0(0): TemporaryPixelShaderConstants[X_D3DRS_PSCONSTANT0_0] = Value; return;
-		case /*0x00000a64*/NV2A_RC_CONSTANT_COLOR0(1): TemporaryPixelShaderConstants[X_D3DRS_PSCONSTANT0_1] = Value; return;
-		case /*0x00000a68*/NV2A_RC_CONSTANT_COLOR0(2): TemporaryPixelShaderConstants[X_D3DRS_PSCONSTANT0_2] = Value; return;
-		case /*0x00000a6c*/NV2A_RC_CONSTANT_COLOR0(3): TemporaryPixelShaderConstants[X_D3DRS_PSCONSTANT0_3] = Value; return;
-		case /*0x00000a70*/NV2A_RC_CONSTANT_COLOR0(4): TemporaryPixelShaderConstants[X_D3DRS_PSCONSTANT0_4] = Value; return;
-		case /*0x00000a74*/NV2A_RC_CONSTANT_COLOR0(5): TemporaryPixelShaderConstants[X_D3DRS_PSCONSTANT0_5] = Value; return;
-		case /*0x00000a78*/NV2A_RC_CONSTANT_COLOR0(6): TemporaryPixelShaderConstants[X_D3DRS_PSCONSTANT0_6] = Value; return;
-		case /*0x00000a7c*/NV2A_RC_CONSTANT_COLOR0(7): TemporaryPixelShaderConstants[X_D3DRS_PSCONSTANT0_7] = Value; return;
-		case /*0x00000a80*/NV2A_RC_CONSTANT_COLOR1(0): TemporaryPixelShaderConstants[X_D3DRS_PSCONSTANT1_0] = Value; return;
-		case /*0x00000a84*/NV2A_RC_CONSTANT_COLOR1(1): TemporaryPixelShaderConstants[X_D3DRS_PSCONSTANT1_1] = Value; return;
-		case /*0x00000a88*/NV2A_RC_CONSTANT_COLOR1(2): TemporaryPixelShaderConstants[X_D3DRS_PSCONSTANT1_2] = Value; return;
-		case /*0x00000a8c*/NV2A_RC_CONSTANT_COLOR1(3): TemporaryPixelShaderConstants[X_D3DRS_PSCONSTANT1_3] = Value; return;
-		case /*0x00000a90*/NV2A_RC_CONSTANT_COLOR1(4): TemporaryPixelShaderConstants[X_D3DRS_PSCONSTANT1_4] = Value; return;
-		case /*0x00000a94*/NV2A_RC_CONSTANT_COLOR1(5): TemporaryPixelShaderConstants[X_D3DRS_PSCONSTANT1_5] = Value; return;
-		case /*0x00000a98*/NV2A_RC_CONSTANT_COLOR1(6): TemporaryPixelShaderConstants[X_D3DRS_PSCONSTANT1_6] = Value; return;
-		case /*0x00000a9c*/NV2A_RC_CONSTANT_COLOR1(7): TemporaryPixelShaderConstants[X_D3DRS_PSCONSTANT1_7] = Value; return;
-		case /*0x00001e20*/NV2A_RC_COLOR0: TemporaryPixelShaderConstants[X_D3DRS_PSFINALCOMBINERCONSTANT0] = Value; return;
-		case /*0x00001e24*/NV2A_RC_COLOR1: TemporaryPixelShaderConstants[X_D3DRS_PSFINALCOMBINERCONSTANT1] = Value; return;
+		case NV2A_RC_IN_ALPHA(0): TemporaryPixelShaderRenderStates[X_D3DRS_PSALPHAINPUTS0] = Value; return;
+		case NV2A_RC_IN_ALPHA(1): TemporaryPixelShaderRenderStates[X_D3DRS_PSALPHAINPUTS1] = Value; return;
+		case NV2A_RC_IN_ALPHA(2): TemporaryPixelShaderRenderStates[X_D3DRS_PSALPHAINPUTS2] = Value; return;
+		case NV2A_RC_IN_ALPHA(3): TemporaryPixelShaderRenderStates[X_D3DRS_PSALPHAINPUTS3] = Value; return;
+		case NV2A_RC_IN_ALPHA(4): TemporaryPixelShaderRenderStates[X_D3DRS_PSALPHAINPUTS4] = Value; return;
+		case NV2A_RC_IN_ALPHA(5): TemporaryPixelShaderRenderStates[X_D3DRS_PSALPHAINPUTS5] = Value; return;
+		case NV2A_RC_IN_ALPHA(6): TemporaryPixelShaderRenderStates[X_D3DRS_PSALPHAINPUTS6] = Value; return;
+		case NV2A_RC_IN_ALPHA(7): TemporaryPixelShaderRenderStates[X_D3DRS_PSALPHAINPUTS7] = Value; return;
+		case NV2A_RC_FINAL0: TemporaryPixelShaderRenderStates[X_D3DRS_PSFINALCOMBINERINPUTSABCD] = Value; return;
+		case NV2A_RC_FINAL1: TemporaryPixelShaderRenderStates[X_D3DRS_PSFINALCOMBINERINPUTSEFG] = Value; return;
+		case NV2A_RC_CONSTANT_COLOR0(0): TemporaryPixelShaderRenderStates[X_D3DRS_PSCONSTANT0_0] = Value; return;
+		case NV2A_RC_CONSTANT_COLOR0(1): TemporaryPixelShaderRenderStates[X_D3DRS_PSCONSTANT0_1] = Value; return;
+		case NV2A_RC_CONSTANT_COLOR0(2): TemporaryPixelShaderRenderStates[X_D3DRS_PSCONSTANT0_2] = Value; return;
+		case NV2A_RC_CONSTANT_COLOR0(3): TemporaryPixelShaderRenderStates[X_D3DRS_PSCONSTANT0_3] = Value; return;
+		case NV2A_RC_CONSTANT_COLOR0(4): TemporaryPixelShaderRenderStates[X_D3DRS_PSCONSTANT0_4] = Value; return;
+		case NV2A_RC_CONSTANT_COLOR0(5): TemporaryPixelShaderRenderStates[X_D3DRS_PSCONSTANT0_5] = Value; return;
+		case NV2A_RC_CONSTANT_COLOR0(6): TemporaryPixelShaderRenderStates[X_D3DRS_PSCONSTANT0_6] = Value; return;
+		case NV2A_RC_CONSTANT_COLOR0(7): TemporaryPixelShaderRenderStates[X_D3DRS_PSCONSTANT0_7] = Value; return;
+		case NV2A_RC_CONSTANT_COLOR1(0): TemporaryPixelShaderRenderStates[X_D3DRS_PSCONSTANT1_0] = Value; return;
+		case NV2A_RC_CONSTANT_COLOR1(1): TemporaryPixelShaderRenderStates[X_D3DRS_PSCONSTANT1_1] = Value; return;
+		case NV2A_RC_CONSTANT_COLOR1(2): TemporaryPixelShaderRenderStates[X_D3DRS_PSCONSTANT1_2] = Value; return;
+		case NV2A_RC_CONSTANT_COLOR1(3): TemporaryPixelShaderRenderStates[X_D3DRS_PSCONSTANT1_3] = Value; return;
+		case NV2A_RC_CONSTANT_COLOR1(4): TemporaryPixelShaderRenderStates[X_D3DRS_PSCONSTANT1_4] = Value; return;
+		case NV2A_RC_CONSTANT_COLOR1(5): TemporaryPixelShaderRenderStates[X_D3DRS_PSCONSTANT1_5] = Value; return;
+		case NV2A_RC_CONSTANT_COLOR1(6): TemporaryPixelShaderRenderStates[X_D3DRS_PSCONSTANT1_6] = Value; return;
+		case NV2A_RC_CONSTANT_COLOR1(7): TemporaryPixelShaderRenderStates[X_D3DRS_PSCONSTANT1_7] = Value; return;
+		case NV2A_RC_OUT_ALPHA(0): TemporaryPixelShaderRenderStates[X_D3DRS_PSALPHAOUTPUTS0] = Value; return;
+		case NV2A_RC_OUT_ALPHA(1): TemporaryPixelShaderRenderStates[X_D3DRS_PSALPHAOUTPUTS1] = Value; return;
+		case NV2A_RC_OUT_ALPHA(2): TemporaryPixelShaderRenderStates[X_D3DRS_PSALPHAOUTPUTS2] = Value; return;
+		case NV2A_RC_OUT_ALPHA(3): TemporaryPixelShaderRenderStates[X_D3DRS_PSALPHAOUTPUTS3] = Value; return;
+		case NV2A_RC_OUT_ALPHA(4): TemporaryPixelShaderRenderStates[X_D3DRS_PSALPHAOUTPUTS4] = Value; return;
+		case NV2A_RC_OUT_ALPHA(5): TemporaryPixelShaderRenderStates[X_D3DRS_PSALPHAOUTPUTS5] = Value; return;
+		case NV2A_RC_OUT_ALPHA(6): TemporaryPixelShaderRenderStates[X_D3DRS_PSALPHAOUTPUTS6] = Value; return;
+		case NV2A_RC_OUT_ALPHA(7): TemporaryPixelShaderRenderStates[X_D3DRS_PSALPHAOUTPUTS7] = Value; return;
+		case NV2A_RC_IN_RGB(0): TemporaryPixelShaderRenderStates[X_D3DRS_PSRGBINPUTS0] = Value; return;
+		case NV2A_RC_IN_RGB(1): TemporaryPixelShaderRenderStates[X_D3DRS_PSRGBINPUTS1] = Value; return;
+		case NV2A_RC_IN_RGB(2): TemporaryPixelShaderRenderStates[X_D3DRS_PSRGBINPUTS2] = Value; return;
+		case NV2A_RC_IN_RGB(3): TemporaryPixelShaderRenderStates[X_D3DRS_PSRGBINPUTS3] = Value; return;
+		case NV2A_RC_IN_RGB(4): TemporaryPixelShaderRenderStates[X_D3DRS_PSRGBINPUTS4] = Value; return;
+		case NV2A_RC_IN_RGB(5): TemporaryPixelShaderRenderStates[X_D3DRS_PSRGBINPUTS5] = Value; return;
+		case NV2A_RC_IN_RGB(6): TemporaryPixelShaderRenderStates[X_D3DRS_PSRGBINPUTS6] = Value; return;
+		case NV2A_RC_IN_RGB(7): TemporaryPixelShaderRenderStates[X_D3DRS_PSRGBINPUTS7] = Value; return;
+		case NV2A_TX_SHADER_CULL_MODE: TemporaryPixelShaderRenderStates[X_D3DRS_PSCOMPAREMODE] = Value; return;
+		case NV2A_RC_COLOR0: TemporaryPixelShaderRenderStates[X_D3DRS_PSFINALCOMBINERCONSTANT0] = Value; return;
+		case NV2A_RC_COLOR1: TemporaryPixelShaderRenderStates[X_D3DRS_PSFINALCOMBINERCONSTANT1] = Value; return;
+		case NV2A_RC_OUT_RGB(0): TemporaryPixelShaderRenderStates[X_D3DRS_PSRGBOUTPUTS0] = Value; return;
+		case NV2A_RC_OUT_RGB(1): TemporaryPixelShaderRenderStates[X_D3DRS_PSRGBOUTPUTS1] = Value; return;
+		case NV2A_RC_OUT_RGB(2): TemporaryPixelShaderRenderStates[X_D3DRS_PSRGBOUTPUTS2] = Value; return;
+		case NV2A_RC_OUT_RGB(3): TemporaryPixelShaderRenderStates[X_D3DRS_PSRGBOUTPUTS3] = Value; return;
+		case NV2A_RC_OUT_RGB(4): TemporaryPixelShaderRenderStates[X_D3DRS_PSRGBOUTPUTS4] = Value; return;
+		case NV2A_RC_OUT_RGB(5): TemporaryPixelShaderRenderStates[X_D3DRS_PSRGBOUTPUTS5] = Value; return;
+		case NV2A_RC_OUT_RGB(6): TemporaryPixelShaderRenderStates[X_D3DRS_PSRGBOUTPUTS6] = Value; return;
+		case NV2A_RC_OUT_RGB(7): TemporaryPixelShaderRenderStates[X_D3DRS_PSRGBOUTPUTS7] = Value; return;
+		case NV2A_RC_ENABLE: TemporaryPixelShaderRenderStates[X_D3DRS_PSCOMBINERCOUNT] = Value; return;
+		case NV2A_NOP: TemporaryPixelShaderRenderStates[X_D3DRS_PS_RESERVED] = Value; return; // Dxbx note : This takes the slot of X_D3DPIXELSHADERDEF.PSTextureModes, set by D3DDevice_SetRenderState_LogicOp?
+		case NV2A_TX_SHADER_DOTMAPPING: TemporaryPixelShaderRenderStates[X_D3DRS_PSDOTMAPPING] = Value; return;
+		case NV2A_TX_SHADER_PREVIOUS: TemporaryPixelShaderRenderStates[X_D3DRS_PSINPUTTEXTURE] = Value; return;	
 	}
 
-    if(State == -1)
-        EmuWarning("RenderState_Simple(0x%.08X, 0x%.08X) is unsupported!", Method, Value);
+	// Fallback to non-shader render state handling
+	int State = -1;
+
+	// Todo: make this faster and more elegant
+	for (int v = 0; v<174; v++)
+	{
+		if (EmuD3DRenderStateSimpleEncoded[v] == Method)
+		{
+			State = v;
+			break;
+		}
+	}
+
+	if (State == -1) {
+		// Attempt to determine renderstate name for unsupported types
+		std::string name = "Unknown";
+		for (int i = 0; i <= X_D3DRS_DONOTCULLUNCOMPRESSED; i++) {
+			if (DxbxRenderStateInfo[i].M == (Method & 0x00001FFC)) {
+				name = DxbxRenderStateInfo[i].S;
+				break;
+			}
+		}
+
+		EmuWarning("RenderState_Simple(0x%.08X (%s), 0x%.08X) is unsupported!", Method, name.c_str(), Value);
+	}
     else
     {
         switch(State)
@@ -7471,6 +7521,21 @@ void XTL::CxbxUpdateNativeD3DResources()
 */
 }
 
+VOID __declspec(noinline) D3DDevice_SetPixelShaderCommon(DWORD Handle)
+{
+	// Update the global pixel shader and Render States
+	// TODO: Remove all of this as soon as RenderState functions are all unpatched!
+	// At that point, SetPixelShader could be FULLY unpatched
+	g_D3DActivePixelShader = (XTL::X_PixelShader*)Handle;
+
+	// Copy the Pixel Shader data to the TemporaryPixelShaderRenderStates array
+	// This mirrors the fact that unpathed SetPixelShader does the same thing!
+	if (g_D3DActivePixelShader != nullptr) {
+		memcpy(&(XTL::TemporaryPixelShaderRenderStates[XTL::X_D3DRS_PSALPHAINPUTS0]), g_D3DActivePixelShader->pPSDef, sizeof(XTL::X_D3DPIXELSHADERDEF) - 3 * sizeof(DWORD));
+		XTL::TemporaryPixelShaderRenderStates[XTL::X_D3DRS_PSTEXTUREMODES] = g_D3DActivePixelShader->pPSDef->PSTextureModes;
+	}
+}
+
 // LTCG specific D3DDevice_SetPixelShader function...
 // This uses a custom calling convention where parameter is passed in EAX
 // TODO: XB_trampoline plus Log function is not working due lost parameter in EAX.
@@ -7492,8 +7557,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetPixelShader_0)
 	//XB_trampoline(VOID, WINAPI, D3DDevice_SetPixelShader_0, ());
 	//XB_D3DDevice_SetPixelShader_0();
 
-	// Update the global pixel shader
-	g_D3DActivePixelShader = (X_PixelShader*)Handle;
+	D3DDevice_SetPixelShaderCommon(Handle);
 }
 
 // ******************************************************************
@@ -7511,8 +7575,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetPixelShader)
 	XB_trampoline(VOID, WINAPI, D3DDevice_SetPixelShader, (DWORD));
 	XB_D3DDevice_SetPixelShader(Handle);
 
-	// Update the global pixel shader
-	g_D3DActivePixelShader = (X_PixelShader*)Handle;
+	D3DDevice_SetPixelShaderCommon(Handle);
 }
 
 
