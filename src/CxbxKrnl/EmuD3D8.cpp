@@ -6278,8 +6278,18 @@ VOID __fastcall XTL::EMUPATCH(D3DDevice_SetRenderState_Simple)
 		}
 	}
 
-    if(State == -1)
-        EmuWarning("RenderState_Simple(0x%.08X, 0x%.08X) is unsupported!", Method, Value);
+	if (State == -1) {
+		// Attempt to determine renderstate name for unsupported types
+		std::string name = "Unknown";
+		for (int i = 0; i <= X_D3DRS_DONOTCULLUNCOMPRESSED; i++) {
+			if (DxbxRenderStateInfo[i].M == (Method & 0x00001FFC)) {
+				name = DxbxRenderStateInfo[i].S;
+				break;
+			}
+		}
+
+		EmuWarning("RenderState_Simple(0x%.08X (%s), 0x%.08X) is unsupported!", Method, name.c_str(), Value);
+	}
     else
     {
         switch(State)
