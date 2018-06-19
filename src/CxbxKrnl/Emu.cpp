@@ -42,7 +42,6 @@ namespace xboxkrnl
 };
 
 #include "CxbxKrnl.h"
-#define COMPILE_MULTIMON_STUBS
 #include "Emu.h"
 #include "EmuX86.h"
 #include "EmuFS.h"
