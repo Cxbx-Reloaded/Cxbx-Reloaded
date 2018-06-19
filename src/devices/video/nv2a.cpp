@@ -487,119 +487,94 @@ void NV2ADevice::UpdateHostDisplay(NV2AState *d)
 		int overlay_out_width = GET_MASK(d->pvideo.regs[NV_PVIDEO_SIZE_OUT(v)], NV_PVIDEO_SIZE_OUT_WIDTH);
 		int overlay_out_height = GET_MASK(d->pvideo.regs[NV_PVIDEO_SIZE_OUT(v)], NV_PVIDEO_SIZE_OUT_HEIGHT);
 
-		// Use a shader to convert YUV to RGB using information from :
-		// From https://stackoverflow.com/questions/44291939/portable-yuv-drawing-context
-		// to https://hg.libsdl.org/SDL/file/1f2cb42aa5d3/src/render/opengl/SDL_shaders_gl.c#l128
-		// From https://stackoverflow.com/questions/12428108/ios-how-to-draw-a-yuv-image-using-opengl
-		// to https://github.com/kolyvan/kxmovie/blob/master/kxmovie/KxMovieGLView.m
-		// and https://www.opengl.org/discussion_boards/archive/index.php/t-169186.html
-		// and https://gist.github.com/roxlu/9329339
-		static const char *OPENGL_SHADER_YUV[2] = {
-			/* vertex shader */
-#if 1
-			"#version 120\n"
-//			"varying vec4 v_color;\n"
-			"varying vec2 v_coord;\n"
-			"\n"
-			"void main()\n"
-			"{\n"
-			"    gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;\n"
-//			"    v_color = gl_Color;\n"
-			"    v_coord = vec2(gl_MultiTexCoord0);\n"
-			"}\n",
-#else
-			"#version 130\n"
-			"uniform mat4 u_pm;\n"
-			"uniform vec4 draw_pos;\n"
-			"const vec2 verts[4] = vec2[](\n"
-			"	vec2(-0.5,  0.5),\n"
-			"	vec2(-0.5, -0.5),\n"
-			"	vec2( 0.5,  0.5),\n"
-			"	vec2( 0.5, -0.5)\n"
-			"	);\n"
-			"const vec2 texcoords[4] = vec2[](\n"
-			"	vec2(0.0, 1.0),\n"
-			"	vec2(0.0, 0.0),\n"
-			"	vec2(1.0, 1.0),\n"
-			"	vec2(1.0, 0.0)\n"
-			"	);\n"
-			"out vec2 v_coord;\n"
-			"void main() {\n"
-			"	vec2 vert = verts[gl_VertexID];\n"
-			"	vec4 p = vec4(\n"
-			"		(0.5 * draw_pos.z) + draw_pos.x + (vert.x * draw_pos.z),\n"
-			"		(0.5 * draw_pos.w) + draw_pos.y + (vert.y * draw_pos.w),\n"
-			"		0, 1);\n"
-			"	gl_Position = u_pm * p;\n"
-			"	v_coord = texcoords[gl_VertexID];\n"
-			"}\n",
-#endif
-			/* fragment shader */
-			"#version 130\n"
-			"uniform sampler2D yuyv_tex;\n"
-//			"#define UVCoordScale 1.0\n"
-			"in vec2 v_coord;\n"
-			"out vec4 out_rgba;\n"
-			"// YUV offset \n"
-			"const vec3 offset = vec3(-0.0627451017, -0.501960814, -0.501960814);\n"
-			"// RGB coefficients \n"
-			"const vec3 Rcoeff = vec3(1.164,  0.000,  1.596);\n"
-			"const vec3 Gcoeff = vec3(1.164, -0.391, -0.813);\n"
-			"const vec3 Bcoeff = vec3(1.164,  2.018,  0.000);\n"
-			"void main(void)\n"
-			"{\n"
-			"	// Fetch 4:2:2 macropixel YUYV \n"
-//			"    tcoord *= UVCoordScale;\n" // See above temporary define 
-			"	vec4 macropixel = texture2D(yuyv_tex, v_coord);\n"
-			"	// Now macropixel.r-g-b-a is actually mp.y1-u-y2-v \n"
-			"	float u = macropixel.g;\n"
-			"	float v = macropixel.a;\n"
-			"	// Depending on even/odd fragment x position choose y1-u-v or y2-u-v \n"
-			"	vec3 yuv;\n"
-			"	if (mod(gl_FragCoord.x, 2.0) < 1.0) {\n"
-			"		float y1 = macropixel.r;\n"
-			"		yuv = vec3(y1,u,v); // even \n"
-			"	} else {\n"
-			"		float y2 = macropixel.b;\n"
-			"		yuv = vec3(y2,u,v); // odd \n"
-			"	}\n"
-			"	// Do the color transform \n"
-			"	yuv += offset;\n"
-			"	out_rgba.r = dot(yuv, Rcoeff);\n"
-			"	out_rgba.g = dot(yuv, Gcoeff);\n"
-			"	out_rgba.b = dot(yuv, Bcoeff);\n"
-			"	out_rgba.a = 1.0;\n"
-//			"    gl_FragColor = vec4(rgb, 1.0) * v_color;\n"
-			"}\n"
-		};
+		// TODO : Move this to void Enable_YUV_shader()
+		{
+			// Use a shader to convert YUV to RGB using information from :
+			// From https://stackoverflow.com/questions/44291939/portable-yuv-drawing-context
+			// to https://hg.libsdl.org/SDL/file/1f2cb42aa5d3/src/render/opengl/SDL_shaders_gl.c#l128
+			// From https://stackoverflow.com/questions/12428108/ios-how-to-draw-a-yuv-image-using-opengl
+			// to https://github.com/kolyvan/kxmovie/blob/master/kxmovie/KxMovieGLView.m
+			// and https://www.opengl.org/discussion_boards/archive/index.php/t-169186.html
+			// and https://gist.github.com/roxlu/9329339
+			static const char *OPENGL_SHADER_YUV[2] = {
+				/* vertex shader */
+				"#version 120\n"
+				"varying vec2 v_tex_coord;\n"
+				"\n"
+				"void main()\n"
+				"{\n"
+				"    gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;\n"
+				"    v_tex_coord = vec2(gl_MultiTexCoord0);\n"
+				"}\n",
+				/* fragment shader */
+				"#version 130\n"
+				"uniform sampler2D yuyv_tex;\n"
+				"in vec2 v_tex_coord;\n"
+				"out vec4 out_rgba;\n"
+				"// YUV offset \n"
+				"const vec3 offset = vec3(-0.0627451017, -0.501960814, -0.501960814);\n"
+				"// RGB coefficients \n"
+				"const vec3 Rcoeff = vec3(1.164,  0.000,  1.596);\n"
+				"const vec3 Gcoeff = vec3(1.164, -0.391, -0.813);\n"
+				"const vec3 Bcoeff = vec3(1.164,  2.018,  0.000);\n"
+				"void main(void)\n"
+				"{\n"
+				"	// Fetch 4:2:2 YUYV macropixel \n"
+				"	vec4 yuyv = texture2D(yuyv_tex, v_tex_coord);\n"
+				"	// Now r-g-b-a is actually y1-u-y2-v \n"
+				"	float u = yuyv.g;\n"
+				"	float v = yuyv.a;\n"
+				"	vec3 yuv;\n"
+				"   // Convert texture coordinate into texture x position \n"
+				"   ivec2 texture_size = textureSize(yuyv_tex, 0);\n"
+				"   float texture_x = v_tex_coord.x * texture_size.x;\n"
+				"	// Depending on fragment x position choose y1-u-v or y2-u-v \n"
+				"	if (mod(texture_x, 1.0) < 0.5) { // left half \n"
+				"		float y1 = yuyv.r;\n"
+				"		yuv = vec3(y1, u, v);\n"
+				"	} else { // right half \n"
+				"		float y2 = yuyv.b;\n"
+				"		yuv = vec3(y2, u, v);\n"
+				"	}\n"
+				"	// Do the color transform \n"
+				"	yuv += offset;\n"
+				"	out_rgba.r = dot(yuv, Rcoeff);\n"
+				"	out_rgba.g = dot(yuv, Gcoeff);\n"
+				"	out_rgba.b = dot(yuv, Bcoeff);\n"
+				"	out_rgba.a = 1.0;\n"
+				"}\n"
+			};
 
-		// Bind shader
-		static GLuint shader_program_yuv_to_rgb = -1;
-		static GLint yuyv_tex_loc = -1;
-		if (shader_program_yuv_to_rgb == -1) {
-			shader_program_yuv_to_rgb = glCreateProgram(); // glCreateProgramObjectARB()
+			// Bind shader
+			static GLuint shader_program_yuv_to_rgb = -1;
+			static GLint yuyv_tex_loc = -1;
+			if (shader_program_yuv_to_rgb == -1) {
+				shader_program_yuv_to_rgb = glCreateProgram(); // glCreateProgramObjectARB()
 
-			GLuint vertex_shader = create_gl_shader(GL_VERTEX_SHADER, OPENGL_SHADER_YUV[0], "YUV>RGB Vertex shader");
-			GLuint fragment_shader = create_gl_shader(GL_FRAGMENT_SHADER, OPENGL_SHADER_YUV[1], "YUV>RGB Fragment shader");
-			glAttachShader(shader_program_yuv_to_rgb, vertex_shader); // glAttachObjectARB
-			glAttachShader(shader_program_yuv_to_rgb, fragment_shader); // glAttachObjectARB
+				GLuint vertex_shader = create_gl_shader(GL_VERTEX_SHADER, OPENGL_SHADER_YUV[0], "YUV>RGB Vertex shader");
+				GLuint fragment_shader = create_gl_shader(GL_FRAGMENT_SHADER, OPENGL_SHADER_YUV[1], "YUV>RGB Fragment shader");
+				glAttachShader(shader_program_yuv_to_rgb, vertex_shader); // glAttachObjectARB
+				glAttachShader(shader_program_yuv_to_rgb, fragment_shader); // glAttachObjectARB
 
-			glLinkProgram(shader_program_yuv_to_rgb);
+				glLinkProgram(shader_program_yuv_to_rgb);
 
-			/* Check it linked */
-			GLint linked = 0;
-			glGetProgramiv(shader_program_yuv_to_rgb, GL_LINK_STATUS, &linked);
-			if (!linked) {
-				GLchar log[2048];
-				glGetProgramInfoLog(shader_program_yuv_to_rgb, 2048, NULL, log);
-				fprintf(stderr, "nv2a: shader linking failed: %s\n", log);
-				abort();
+				/* Check it linked */
+				GLint linked = 0;
+				glGetProgramiv(shader_program_yuv_to_rgb, GL_LINK_STATUS, &linked);
+				if (!linked) {
+					GLchar log[2048];
+					glGetProgramInfoLog(shader_program_yuv_to_rgb, 2048, NULL, log);
+					fprintf(stderr, "nv2a: shader linking failed: %s\n", log);
+					abort();
+				}
+
+				yuyv_tex_loc = glGetUniformLocation(shader_program_yuv_to_rgb, "yuyv_tex");
 			}
 
-			yuyv_tex_loc = glGetUniformLocation(shader_program_yuv_to_rgb, "yuyv_tex");
-		}
+			glUseProgram(shader_program_yuv_to_rgb);
 
-		glUseProgram(shader_program_yuv_to_rgb);
+			glUniform1i(yuyv_tex_loc, 0);
+		}
 
 		// If we need to create a new overlay texture, do so, otherwise, update the existing
 		static GLuint overlay_texture = -1;
@@ -632,8 +607,6 @@ void NV2ADevice::UpdateHostDisplay(NV2AState *d)
 			glBindTexture(GL_TEXTURE_2D, overlay_texture); // update the YUV video texturing unit 
 			glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, overlay_in_width, overlay_in_height, overlay_format, overlay_type, (void*)overlay_pixels);
 		}
-
-		glUniform1i(yuyv_tex_loc, 0);
 
 		glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
 
