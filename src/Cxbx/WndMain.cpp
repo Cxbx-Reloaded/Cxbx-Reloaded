@@ -46,7 +46,9 @@
 #include "ResCxbx.h"
 #include "CxbxVersion.h"
 #include "Shlwapi.h"
-#include <multimon.h>
+
+#undef GetSystemMetrics // Force remove DirectX 8's multimon.h defined function (redirect to xGetSystemMetrics).
+#include <WinUser.h> // For GetSystemMetrics
 
 #include <io.h>
 #include <shlobj.h>
