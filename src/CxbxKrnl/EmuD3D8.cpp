@@ -6416,12 +6416,9 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderState_PSTextureModes)
 )
 {
 	FUNC_EXPORTS
-
 	LOG_FUNC_ONE_ARG(Value);
 
-    // TODO: do something..
-
-	LOG_UNIMPLEMENTED();
+	XTL::TemporaryPixelShaderRenderStates[XTL::X_D3DRS_PSTEXTUREMODES] = Value;
 }
 
 // ******************************************************************
