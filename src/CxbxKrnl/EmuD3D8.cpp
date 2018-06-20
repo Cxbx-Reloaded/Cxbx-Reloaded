@@ -4027,18 +4027,21 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexData2s)
 
 	LOG_FORWARD("D3DDevice_SetVertexData4f");
 
-	float fa = a / 32767.0f;
-	float fb = b / 32767.0f;
-
-	// Special case: If the input register is a color, don't transform!
-	// Test case: Halo
+	float fa, fb;
+	
 	switch (Register) {
+		// Special case: If the input register is a color, don't transform!
+		// Test case: Halo
 		case X_D3DVSDE_DIFFUSE:
 		case X_D3DVSDE_SPECULAR:
 		case X_D3DVSDE_BACKDIFFUSE:
 		case X_D3DVSDE_BACKSPECULAR:
 			fa = a;
 			fb = b;
+			break;
+		default:
+			fa = a / 32767.0f;
+			fb = b / 32767.0f;
 			break;
 	}
 
@@ -4330,23 +4333,26 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexData4s)
 
 	LOG_FORWARD("D3DDevice_SetVertexData4f");
 
-	float fa = a / 32767.0f;
-	float fb = b / 32767.0f;
-	float fc = c / 32767.0f;
-	float fd = d / 32767.0f;
+	float fa, fb, fc, fd;
 
 	// Special case: If the input register is a color, don't transform!
 	// Test case: Halo
 	switch (Register) {
-	case X_D3DVSDE_DIFFUSE:
-	case X_D3DVSDE_SPECULAR:
-	case X_D3DVSDE_BACKDIFFUSE:
-	case X_D3DVSDE_BACKSPECULAR:
-		fa = a;
-		fb = b;
-		fc = c;
-		fd = d;
-		break;
+		case X_D3DVSDE_DIFFUSE:
+		case X_D3DVSDE_SPECULAR:
+		case X_D3DVSDE_BACKDIFFUSE:
+		case X_D3DVSDE_BACKSPECULAR:
+			fa = a;
+			fb = b;
+			fc = c;
+			fd = d;
+			break;
+		default:
+			fa = a / 32767.0f;
+			fb = b / 32767.0f;
+			fc = c / 32767.0f;
+			fd = d / 32767.0f;
+			break;
 	}
 
     EMUPATCH(D3DDevice_SetVertexData4f)(Register, fa, fb, fc, fd);
