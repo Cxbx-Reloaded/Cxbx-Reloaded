@@ -904,6 +904,7 @@ struct PSH_XBOX_SHADER {
 	bool FixupPixelShader();
 	bool FixInvalidSrcSwizzle();
 	bool FixMissingR0a();
+	bool FixMissingR1a();
 	bool FixCoIssuedOpcodes();
 };
 
@@ -2196,6 +2197,9 @@ PSH_RECOMPILED_SHADER PSH_XBOX_SHADER::Decode(XTL::X_D3DPIXELSHADERDEF *pPSDef)
 
   if (FixMissingR0a())
     Log("FixMissingR0a");
+
+  if (FixMissingR1a())
+	  Log("FixMissingR1a");
 
   if (FixCoIssuedOpcodes())
     Log("FixCoIssuedOpcodes");
@@ -3846,6 +3850,54 @@ bool PSH_XBOX_SHADER::FixMissingR0a()
   }
   return false;
 } // FixMissingR0a
+
+bool PSH_XBOX_SHADER::FixMissingR1a()
+// On the Xbox, the alpha portion of the R1 register is initialized to
+// the alpha component of texture 1 if texturing is enabled for texture 1 :
+{
+	int R1aDefaultInsertPos;
+	int i;
+	PPSH_INTERMEDIATE_FORMAT Cur;
+	PSH_INTERMEDIATE_FORMAT NewIns = {};
+
+	// Detect a read of r1.a without a write, as we need to insert a "MOV r1.a, t1.a" as default (like the xbox has) :
+	R1aDefaultInsertPos = -1;
+	for (i = 0; i < IntermediateCount; i++)
+	{
+		Cur = &(Intermediate[i]);
+		if (!Cur->IsArithmetic())
+			continue;
+
+		// Make sure if we insert at all, it'll be after the DEF's :
+		if (R1aDefaultInsertPos < 0)
+			R1aDefaultInsertPos = i;
+
+		// First, check if r0.a is read by this opcode :
+		if (Cur->ReadsFromRegister(PARAM_R, 1, MASK_A))
+		{
+			R1aDefaultInsertPos = i;
+			break;
+		}
+
+		// If this opcode writes to r0.a, we're done :
+		if (Cur->WritesToRegister(PARAM_R, 1, MASK_A))
+			return false;
+	}
+
+	if (R1aDefaultInsertPos >= 0)
+	{
+		// Insert a new opcode : MOV r1.a, t1.a
+		NewIns.Initialize(PO_MOV);
+		NewIns.Output[0].SetRegister(PARAM_R, 1, MASK_A);
+		NewIns.Parameters[0] = NewIns.Output[0];
+		NewIns.Parameters[0].Type = PARAM_T;
+		NewIns.CommentString = "Inserted r0.a default";
+		InsertIntermediate(&NewIns, R1aDefaultInsertPos);
+		return true;
+	}
+	return false;
+} // FixMissingR1a
+
 
 bool PSH_XBOX_SHADER::FixCoIssuedOpcodes()
 {
