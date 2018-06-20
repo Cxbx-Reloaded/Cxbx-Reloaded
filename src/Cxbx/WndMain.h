@@ -238,7 +238,7 @@ class WndMain : public Wnd
 		// * Hack Flags
 		// ******************************************************************	
 		int		m_DisablePixelShaders;
-		int		m_CapFramerate;
+		int		m_UncapFramerate;
 		int		m_UseAllCores;
 		int		m_SkipRdtscPatching;
 		int     m_ScaleViewport;

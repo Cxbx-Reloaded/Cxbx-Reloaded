@@ -604,7 +604,7 @@ void PrintCurrentConfigurationLog()
 	{
 		printf("--------------------------- HACKS CONFIG ---------------------------\n");
 		printf("Disable Pixel Shaders: %s\n", g_DisablePixelShaders == 1 ? "On" : "Off (Default)");
-		printf("Cap Framerate: %s\n", g_CapFramerate == 1 ? "On" : "Off (Default)");
+		printf("Uncap Framerate: %s\n", g_UncapFramerate == 1 ? "On" : "Off (Default)");
 		printf("Run Xbox threads on all cores: %s\n", g_UseAllCores == 1 ? "On" : "Off (Default)");
 		printf("Skip RDTSC Patching: %s\n", g_SkipRdtscPatching == 1 ? "On" : "Off (Default)");
 		printf("Scale Xbox to host viewport (and back): %s\n", g_ScaleViewport == 1 ? "On" : "Off (Default)");
@@ -1287,8 +1287,8 @@ __declspec(noreturn) void CxbxKrnlInit
 		int HackEnabled = 0;
 		g_EmuShared->GetDisablePixelShaders(&HackEnabled);
 		g_DisablePixelShaders = !!HackEnabled;
-		g_EmuShared->GetCapFramerate(&HackEnabled);
-		g_CapFramerate = !!HackEnabled;
+		g_EmuShared->GetUncapFramerate(&HackEnabled);
+		g_UncapFramerate = !!HackEnabled;
 		g_EmuShared->GetUseAllCores(&HackEnabled);
 		g_UseAllCores = !!HackEnabled;
 		g_EmuShared->GetSkipRdtscPatching(&HackEnabled);
