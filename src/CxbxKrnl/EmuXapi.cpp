@@ -427,7 +427,8 @@ BOOL WINAPI XTL::EMUPATCH(XGetDeviceChanges)
     // some titles call XGetDevices first, and the CurrentConnected and ChangeConnected flags are set there.
     // note that certain titles such as Otogi need the ChangeConnected to be set to 1 always to enable the input. 
     int port;
-    if (DeviceType->CurrentConnected == 0) {
+    //fix for Lego Star War no input, it requires the XGetDeviceChanges to return changes all the time, but no removal, only insertions.
+    //if (DeviceType->CurrentConnected == 0) {
         for (port = 0; port < 4; port++) {
             //if the host controller is connected and the xbox DeviceType matches. set the CurrentConnected flag.
             if (g_XboxControllerHostBridge[port].XboxDeviceInfo.DeviceType == DeviceType && g_XboxControllerHostBridge[port].dwHostType>0) {
@@ -435,7 +436,7 @@ BOOL WINAPI XTL::EMUPATCH(XGetDeviceChanges)
             }
         }
         DeviceType->ChangeConnected = DeviceType->CurrentConnected;
-    }
+    //}
 
     // JSRF Hack: Don't set the ChangeConnected flag. Without this, JSRF hard crashes 
 	// TODO: Why is this still needed? 
@@ -450,7 +451,9 @@ BOOL WINAPI XTL::EMUPATCH(XGetDeviceChanges)
     }
     else
     {
-		UCHAR oldIrql = xboxkrnl::KeRaiseIrqlToDpcLevel();
+
+        /* // old_XInput_code
+        UCHAR oldIrql = xboxkrnl::KeRaiseIrqlToDpcLevel();
 
         *pdwInsertions = (DeviceType->CurrentConnected & ~DeviceType->PreviousConnected);
         *pdwRemovals = (DeviceType->PreviousConnected & ~DeviceType->CurrentConnected);
@@ -464,6 +467,10 @@ BOOL WINAPI XTL::EMUPATCH(XGetDeviceChanges)
         ret = (*pdwInsertions | *pdwRemovals) ? TRUE : FALSE;
 
 		xboxkrnl::KfLowerIrql(oldIrql);
+        */
+        //fix for Lego Star War no input, it requires the XGetDeviceChanges to return changes all the time, but no removal, only insertions.
+        *pdwRemovals = 0;
+        *pdwInsertions = DeviceType->CurrentConnected;
     }
 
 	RETURN(ret);
