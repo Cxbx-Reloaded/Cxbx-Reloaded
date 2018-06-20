@@ -3859,7 +3859,7 @@ bool PSH_XBOX_SHADER::FixMissingR1a()
 	PPSH_INTERMEDIATE_FORMAT Cur;
 	PSH_INTERMEDIATE_FORMAT NewIns = {};
 
-	// Detect a read of r1.a without a write, as we need to insert a "MOV r1.a, t0.a" as default (like the xbox has) :
+	// Detect a read of r1.a without a write, as we need to insert a "MOV r1.a, t1.a" as default (like the xbox has) :
 	R1aDefaultInsertPos = -1;
 	for (i = 0; i < IntermediateCount; i++)
 	{
@@ -3885,7 +3885,7 @@ bool PSH_XBOX_SHADER::FixMissingR1a()
 
 	if (R1aDefaultInsertPos >= 0)
 	{
-		// Insert a new opcode : MOV ra.a, t1.a
+		// Insert a new opcode : MOV r1.a, t1.a
 		NewIns.Initialize(PO_MOV);
 		NewIns.Output[0].SetRegister(PARAM_R, 1, MASK_A);
 		NewIns.Parameters[0] = NewIns.Output[0];
