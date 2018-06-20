@@ -822,7 +822,6 @@ typedef struct _PSH_INTERMEDIATE_FORMAT {
 *PPSH_INTERMEDIATE_FORMAT;
 
 typedef struct _PSH_RECOMPILED_SHADER {
-	struct _PSH_RECOMPILED_SHADER *Next;
 	XTL::X_D3DPIXELSHADERDEF PSDef;
 	std::string NewShaderStr;
 	DWORD ConvertedHandle;
@@ -3891,7 +3890,7 @@ bool PSH_XBOX_SHADER::FixMissingR1a()
 		NewIns.Output[0].SetRegister(PARAM_R, 1, MASK_A);
 		NewIns.Parameters[0] = NewIns.Output[0];
 		NewIns.Parameters[0].Type = PARAM_T;
-		NewIns.CommentString = "Inserted r0.a default";
+		NewIns.CommentString = "Inserted r1.a default";
 		InsertIntermediate(&NewIns, R1aDefaultInsertPos);
 		return true;
 	}
@@ -4272,7 +4271,7 @@ static const
 // TODO : Initialize this :
 DWORD *XTL::EmuMappedD3DRenderState[X_D3DRS_UNSUPPORTED]; // 1 extra for the unsupported value
 
-PPSH_RECOMPILED_SHADER RecompiledShaders_Head = nullptr;
+std::vector<PSH_RECOMPILED_SHADER> g_RecompiledPixelShaders;
 
 // Temporary...
 DWORD XTL::TemporaryPixelShaderRenderStates[XTL::X_D3DRS_PSTEXTUREMODES + 1];
@@ -4306,27 +4305,23 @@ VOID XTL::DxbxUpdateActivePixelShader() // NOPATCH
  
   if (pPSDef != nullptr)
   {
-    // Now, see if we already have a shader compiled for this declaration :
-    RecompiledPixelShader = RecompiledShaders_Head;
-    while (RecompiledPixelShader)
-	{
-      // Only compare parts that form a unique shader (ignore the constants and Direct3D8 run-time fields) :
-      if ((memcmp(&(RecompiledPixelShader->PSDef.PSAlphaInputs[0]), &(pPSDef->PSAlphaInputs[0]), (8+2)*sizeof(DWORD)) == 0)
-      && (memcmp(&(RecompiledPixelShader->PSDef.PSAlphaOutputs[0]), &(pPSDef->PSAlphaOutputs[0]), (8+8+3+8+4)* sizeof(DWORD)) == 0))
-        break;
+	RecompiledPixelShader = nullptr;
 
-      RecompiledPixelShader = RecompiledPixelShader->Next;
-    }
+    // Now, see if we already have a shader compiled for this declaration :
+	for (auto it = g_RecompiledPixelShaders.begin(); it != g_RecompiledPixelShaders.end(); ++it) {
+		// Only compare parts that form a unique shader (ignore the constants and Direct3D8 run-time fields) :
+		if ((memcmp(&(it->PSDef.PSAlphaInputs[0]), &(pPSDef->PSAlphaInputs[0]), (8 + 2) * sizeof(DWORD)) == 0)
+			&& (memcmp(&(it->PSDef.PSAlphaOutputs[0]), &(pPSDef->PSAlphaOutputs[0]), (8 + 8 + 3 + 8 + 4) * sizeof(DWORD)) == 0)) {
+			RecompiledPixelShader = &(*it);
+			break;
+		}
+	}
 
     // If none was found, recompile this shader and remember it :
-    if (RecompiledPixelShader == nullptr)
-	{
+    if (RecompiledPixelShader == nullptr) {
       // Recompile this pixel shader :
-      RecompiledPixelShader = new PSH_RECOMPILED_SHADER;
-      *RecompiledPixelShader = DxbxRecompilePixelShader(pPSDef);
-      // Add this shader to the chain :
-      RecompiledPixelShader->Next = RecompiledShaders_Head;
-      RecompiledShaders_Head = RecompiledPixelShader;
+	  g_RecompiledPixelShaders.push_back(DxbxRecompilePixelShader(pPSDef));
+	  RecompiledPixelShader = &g_RecompiledPixelShaders.back();
     }
 
     // Switch to the converted pixel shader (if it's any different from our currently active
