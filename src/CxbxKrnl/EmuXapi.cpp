@@ -451,8 +451,6 @@ BOOL WINAPI XTL::EMUPATCH(XGetDeviceChanges)
     }
     else
     {
-
-        /* // old_XInput_code
         UCHAR oldIrql = xboxkrnl::KeRaiseIrqlToDpcLevel();
 
         *pdwInsertions = (DeviceType->CurrentConnected & ~DeviceType->PreviousConnected);
@@ -467,11 +465,10 @@ BOOL WINAPI XTL::EMUPATCH(XGetDeviceChanges)
         ret = (*pdwInsertions | *pdwRemovals) ? TRUE : FALSE;
 
 		xboxkrnl::KfLowerIrql(oldIrql);
-        */
-        //fix for Lego Star War no input, it requires the XGetDeviceChanges to return changes all the time, but no removal, only insertions.
-        *pdwRemovals = 0;
-        *pdwInsertions = DeviceType->CurrentConnected;
     }
+    //fix for Lego Star War no input, it requires the XGetDeviceChanges to return changes all the time, but no removal, only insertions.
+    *pdwRemovals = 0;
+    *pdwInsertions = DeviceType->CurrentConnected;
 
 	RETURN(ret);
 }
