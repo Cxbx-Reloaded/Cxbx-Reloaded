@@ -4675,7 +4675,7 @@ DWORD WINAPI XTL::EMUPATCH(D3DDevice_Swap)
 
 	hRet = g_pD3DDevice->BeginScene();
 
-	if (!g_UncapFramerate) {
+	if (g_CapFramerate) {
 		// If the last frame completed faster than the Xbox VBlank period, wait for it
 		// TODO: Read the frame rate target from the Xbox display mode
 		// See comments in GetNextVblankTime();

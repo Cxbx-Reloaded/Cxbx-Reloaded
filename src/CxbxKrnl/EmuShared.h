@@ -134,8 +134,8 @@ class EmuShared : public Mutex
 		// ******************************************************************
 		void GetDisablePixelShaders(int* value) { Lock(); *value = m_DisablePixelShaders; Unlock(); }
 		void SetDisablePixelShaders(int* value) { Lock(); m_DisablePixelShaders = *value; Unlock(); }
-		void GetUncapFramerate(int* value) { Lock(); *value = m_UncapFramerate; Unlock(); }
-		void SetUncapFramerate(int* value) { Lock(); m_UncapFramerate = *value; Unlock(); }
+		void GetCapFramerate(int* value) { Lock(); *value = m_CapFramerate; Unlock(); }
+		void SetCapFramerate(int* value) { Lock(); m_CapFramerate = *value; Unlock(); }
 		void GetUseAllCores(int* value) { Lock(); *value = m_UseAllCores; Unlock(); }
 		void SetUseAllCores(int* value) { Lock(); m_UseAllCores = *value; Unlock(); }
 		void GetSkipRdtscPatching(int* value) { Lock(); *value = m_SkipRdtscPatching; Unlock(); }
@@ -215,7 +215,7 @@ class EmuShared : public Mutex
 		int          m_FlagsLLE;
 		int          m_XInputEnabled;
 		int          m_DisablePixelShaders;
-		int          m_UncapFramerate;
+		int          m_CapFramerate;
 		int          m_UseAllCores;
 		int          m_SkipRdtscPatching;
 		float        m_MSpF;

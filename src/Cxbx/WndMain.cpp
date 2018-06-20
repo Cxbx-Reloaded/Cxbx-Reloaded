@@ -210,9 +210,9 @@ WndMain::WndMain(HINSTANCE x_hInstance) :
 			}
 
 			dwType = REG_DWORD; dwSize = sizeof(DWORD);
-			result = RegQueryValueEx(hKey, "HackUncapFrameRate", NULL, &dwType, (PBYTE)&m_UncapFramerate, &dwSize);
+			result = RegQueryValueEx(hKey, "HackCapFrameRate", NULL, &dwType, (PBYTE)&m_CapFramerate, &dwSize);
 			if (result != ERROR_SUCCESS) {
-				m_UncapFramerate = 0;
+				m_CapFramerate = 0;
 			}
 
 			dwType = REG_DWORD; dwSize = sizeof(DWORD);
@@ -424,7 +424,7 @@ WndMain::~WndMain()
 			RegSetValueEx(hKey, "HackDisablePixelShaders", 0, dwType, (PBYTE)&m_DisablePixelShaders, dwSize);
 
 			dwType = REG_DWORD; dwSize = sizeof(DWORD);
-			RegSetValueEx(hKey, "HackUncapFrameRate", 0, dwType, (PBYTE)&m_UncapFramerate, dwSize);
+			RegSetValueEx(hKey, "HackCapFrameRate", 0, dwType, (PBYTE)&m_CapFramerate, dwSize);
 
 			dwType = REG_DWORD; dwSize = sizeof(DWORD);
 			RegSetValueEx(hKey, "HackUseAllCores", 0, dwType, (PBYTE)&m_UseAllCores, dwSize);
@@ -1492,8 +1492,8 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 				RefreshMenus();
 				break;
 
-			case ID_HACKS_UNCAPFRAMERATE:
-				m_UncapFramerate = !m_UncapFramerate;
+			case ID_HACKS_CAPFRAMERATE:
+				m_CapFramerate = !m_CapFramerate;
 				RefreshMenus();
 				break;
 
@@ -1939,8 +1939,8 @@ void WndMain::RefreshMenus()
 			chk_flag = (m_DisablePixelShaders) ? MF_CHECKED : MF_UNCHECKED;
 			CheckMenuItem(settings_menu, ID_HACKS_DISABLEPIXELSHADERS, chk_flag);
 
-			chk_flag = (m_UncapFramerate) ? MF_CHECKED : MF_UNCHECKED;
-			CheckMenuItem(settings_menu, ID_HACKS_UNCAPFRAMERATE, chk_flag);
+			chk_flag = (m_CapFramerate) ? MF_CHECKED : MF_UNCHECKED;
+			CheckMenuItem(settings_menu, ID_HACKS_CAPFRAMERATE, chk_flag);
 
 			chk_flag = (m_UseAllCores) ? MF_CHECKED : MF_UNCHECKED;
 			CheckMenuItem(settings_menu, ID_HACKS_RUNXBOXTHREADSONALLCORES, chk_flag);
@@ -2356,7 +2356,7 @@ void WndMain::StartEmulation(HWND hwndParent, DebuggerState LocalDebuggerState /
 
 	// register Hacks with emulator process
 	g_EmuShared->SetDisablePixelShaders(&m_DisablePixelShaders);
-	g_EmuShared->SetUncapFramerate(&m_UncapFramerate);
+	g_EmuShared->SetCapFramerate(&m_CapFramerate);
 	g_EmuShared->SetUseAllCores(&m_UseAllCores);
 	g_EmuShared->SetSkipRdtscPatching(&m_SkipRdtscPatching);
 	g_EmuShared->SetScaleViewport(&m_ScaleViewport);
