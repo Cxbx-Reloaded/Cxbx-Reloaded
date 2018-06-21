@@ -2863,3 +2863,36 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_GetViewport)
 		}
 	}
 }
+
+// ******************************************************************
+// * patch: D3D_BlockOnResource
+// ******************************************************************
+void WINAPI XTL::EMUPATCH(D3D_BlockOnResource)( X_D3DResource* pResource )
+{
+	FUNC_EXPORTS
+
+	LOG_FUNC_ONE_ARG(pResource);
+
+	// TODO: Implement
+	// NOTE: Azurik appears to call this directly from numerous points
+	LOG_UNIMPLEMENTED();
+		
+}
+
+
+// ******************************************************************
+// * patch: IDirect3DResource8_IsBusy
+// ******************************************************************
+BOOL WINAPI XTL::EMUPATCH(D3DResource_IsBusy)
+(
+    X_D3DResource      *pThis
+)
+{
+	FUNC_EXPORTS
+
+    /* too much output
+	LOG_FUNC_ONE_ARG(pThis);
+    //*/
+
+    return FALSE;
+}

@@ -2615,18 +2615,6 @@ HRESULT WINAPI XTL::EMUPATCH(Direct3D_CreateDevice)
 }
 
 // ******************************************************************
-// * patch: IDirect3DResource8_IsBusy
-// ******************************************************************
-BOOL WINAPI XTL::EMUPATCH(D3DDevice_IsBusy)()
-{
-	FUNC_EXPORTS
-
-	LOG_FUNC();
-    
-    return FALSE;
-}
-
-// ******************************************************************
 // * patch: D3DDevice_GetDisplayFieldStatus
 // ******************************************************************
 VOID WINAPI XTL::EMUPATCH(D3DDevice_GetDisplayFieldStatus)(X_D3DFIELD_STATUS *pFieldStatus)
@@ -5548,23 +5536,6 @@ ULONG WINAPI XTL::EMUPATCH(D3DResource_Release)
 	}
 
     return uRet;
-}
-
-// ******************************************************************
-// * patch: IDirect3DResource8_IsBusy
-// ******************************************************************
-BOOL WINAPI XTL::EMUPATCH(D3DResource_IsBusy)
-(
-    X_D3DResource      *pThis
-)
-{
-	FUNC_EXPORTS
-
-    /* too much output
-	LOG_FUNC_ONE_ARG(pThis);
-    //*/
-
-    return FALSE;
 }
 
 // ******************************************************************
@@ -9301,6 +9272,21 @@ void WINAPI XTL::EMUPATCH(D3D_SetCommonDebugRegisters)()
 }
 
 // ******************************************************************
+// * patch: D3DDevice_IsBusy
+// ******************************************************************
+BOOL WINAPI XTL::EMUPATCH(D3DDevice_IsBusy)()
+{
+	FUNC_EXPORTS
+
+		LOG_FUNC();
+
+	// NOTE: This function returns FALSE when the NV2A FIFO is empty/complete, or NV_PGRAPH_STATUS = 0
+	// Otherwise, it returns true.
+
+	return FALSE;
+}
+
+// ******************************************************************
 // * patch: D3D_BlockOnTime
 // ******************************************************************
 void WINAPI XTL::EMUPATCH(D3D_BlockOnTime)( DWORD Unknown1, int Unknown2 )
@@ -9319,21 +9305,6 @@ void WINAPI XTL::EMUPATCH(D3D_BlockOnTime)( DWORD Unknown1, int Unknown2 )
 	//__asm int 3;
 
 	LOG_UNIMPLEMENTED();
-}
-
-// ******************************************************************
-// * patch: D3D_BlockOnResource
-// ******************************************************************
-void WINAPI XTL::EMUPATCH(D3D_BlockOnResource)( X_D3DResource* pResource )
-{
-	FUNC_EXPORTS
-
-	LOG_FUNC_ONE_ARG(pResource);
-
-	// TODO: Implement
-	// NOTE: Azurik appears to call this directly from numerous points
-	LOG_UNIMPLEMENTED();
-		
 }
 
 // ******************************************************************
