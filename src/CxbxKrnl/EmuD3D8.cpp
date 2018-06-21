@@ -8878,28 +8878,6 @@ VOID WINAPI XTL::EMUPATCH(D3DResource_BlockUntilNotBusy)
 }
 
 // ******************************************************************
-// * patch: D3DDevice_SetScissors
-// ******************************************************************
-VOID WINAPI XTL::EMUPATCH(D3DDevice_SetScissors)
-(
-    DWORD          Count,
-    BOOL           Exclusive,
-    CONST D3DRECT  *pRects
-)
-{
-	FUNC_EXPORTS
-
-	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(Count)
-		LOG_FUNC_ARG(Exclusive)
-		LOG_FUNC_ARG(pRects)
-		LOG_FUNC_END;
-
-    // TODO: Implement
-	LOG_UNIMPLEMENTED();
-}
-
-// ******************************************************************
 // * patch: D3DDevice_SetScreenSpaceOffset
 // ******************************************************************
 VOID WINAPI XTL::EMUPATCH(D3DDevice_SetScreenSpaceOffset)
@@ -9238,20 +9216,6 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_GetModelView)(D3DXMATRIX* pModelView)
 	return D3D_OK;
 }
 
-// ******************************************************************
-// * patch: D3DDevice_SetBackMaterial
-// ******************************************************************
-VOID WINAPI XTL::EMUPATCH(D3DDevice_SetBackMaterial)
-(
-	X_D3DMATERIAL8* pMaterial
-)
-{
-	FUNC_EXPORTS
-
-	LOG_FUNC_ONE_ARG(pMaterial);
-
-	LOG_NOT_SUPPORTED();
-}
 
 DWORD PushBuffer[64 * 1024 / sizeof(DWORD)];
 
@@ -9324,71 +9288,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderTargetFast)
 	// Redirect to the standard version.
 	
 	EMUPATCH(D3DDevice_SetRenderTarget)(pRenderTarget, pNewZStencil);
-}
-
-// ******************************************************************
-// * patch: D3DDevice_GetScissors
-// ******************************************************************
-VOID WINAPI XTL::EMUPATCH(D3DDevice_GetScissors)
-(
-	DWORD	*pCount, 
-	BOOL	*pExclusive, 
-	D3DRECT *pRects
-)
-{
-	FUNC_EXPORTS
-
-	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(pCount)
-		LOG_FUNC_ARG(pExclusive)
-		LOG_FUNC_ARG(pRects)
-		LOG_FUNC_END;
-
-    // TODO: Save a copy of each scissor rect in case this function is called
-	// in conjunction with D3DDevice::SetScissors. So far, only Outrun2 uses
-	// this function. For now, just return the values within the current
-	// viewport.
-
-	D3DVIEWPORT vp;
-
-	HRESULT hRet = g_pD3DDevice->GetViewport( &vp );
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->GetViewport");
-
-	pRects->x1 = pRects->y1 = 0;
-	pRects->x2 = vp.Width;
-	pRects->y2 = vp.Height;
-
-	pExclusive[0] = FALSE;
-}
-
-// ******************************************************************
-// * patch: D3DDevice_GetBackMaterial
-// ******************************************************************
-VOID WINAPI XTL::EMUPATCH(D3DDevice_GetBackMaterial)
-(
-	X_D3DMATERIAL8* pMaterial
-)
-{
-	FUNC_EXPORTS
-
-	LOG_FUNC_ONE_ARG(pMaterial);
-
-	LOG_NOT_SUPPORTED();
-
-	HRESULT hRet = D3D_OK;
-
-	// TODO: HACK: This is wrong, but better than nothing, right?
-	if (pMaterial)
-	{
-		hRet = g_pD3DDevice->GetMaterial(pMaterial);
-		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->GetMaterial");
-	}
-
-	if (FAILED(hRet))
-	{
-		EmuWarning("We're lying about getting a back material!");
-		hRet = D3D_OK;
-	}
 }
 
 // ******************************************************************
