@@ -6373,7 +6373,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderState_VertexBlend)
     } else {
         LOG_TEST_CASE("Unsupported D3DVERTEXBLENDFLAGS (%d)", Value);
         return;
-}
+	}
 
     HRESULT hRet = g_pD3DDevice->SetRenderState(D3DRS_VERTEXBLEND, Value);
     DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetRenderState");
