@@ -6359,22 +6359,24 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderState_VertexBlend)
     DWORD Value
 )
 {
-	FUNC_EXPORTS
+    FUNC_EXPORTS
 
-	LOG_FUNC_ONE_ARG(Value);
+    LOG_FUNC_ONE_ARG(Value);
 
     // convert from Xbox direct3d to PC direct3d enumeration
-    if(Value <= 1)
+    if(Value <= 1) {
         Value = Value;
-    else if(Value == 3)
+    } else if(Value == 3) {
         Value = 2;
-    else if(Value == 5)
+    } else if(Value == 5) {
         Value = 3;
-    else
-        CxbxKrnlCleanup("Unsupported D3DVERTEXBLENDFLAGS (%d)", Value);
+    } else {
+        LOG_TEST_CASE("Unsupported D3DVERTEXBLENDFLAGS (%d)", Value);
+        return;
+}
 
-	HRESULT hRet = g_pD3DDevice->SetRenderState(D3DRS_VERTEXBLEND, Value);
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetRenderState");
+    HRESULT hRet = g_pD3DDevice->SetRenderState(D3DRS_VERTEXBLEND, Value);
+    DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetRenderState");
 }
 
 // ******************************************************************
