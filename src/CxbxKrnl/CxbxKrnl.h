@@ -130,7 +130,7 @@ extern "C" {
 /*! base addresses of various components */
 // The WC memory is another name of the tiled memory
 #define XBOX_WRITE_COMBINED_BASE 0xF0000000 // WC
-#define XBOX_WRITE_COMBINED_SIZE 0x08000000 // - 0xF7FFFFF
+#define XBOX_WRITE_COMBINED_SIZE 0x08000000 // - 0xF7FFFFFF
 #define XBOX_WRITE_COMBINE_END   XBOX_WRITE_COMBINED_BASE + XBOX_WRITE_COMBINED_SIZE // 128 MiB
 
 #define XBOX_UNCACHED_BASE       0xF8000000 // UC

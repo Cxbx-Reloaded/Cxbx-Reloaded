@@ -390,6 +390,128 @@ void AvGetFormatSize(ULONG mode, int* width, int* height)
 	*height = 480;
 }
 
+void _check_gl_error(const char *file, int line)
+{
+	GLenum err;
+	while ((err = glGetError()) != GL_NO_ERROR) {
+		char *error;
+		switch (err) {
+		case GL_INVALID_ENUM: error = "GL_INVALID_ENUM"; break;
+		case GL_INVALID_VALUE: error = "GL_INVALID_VALUE"; break;
+		case GL_INVALID_OPERATION: error = "GL_INVALID_OPERATION"; break;
+		case GL_STACK_OVERFLOW: error = "GL_STACK_OVERFLOW"; break;
+		case GL_STACK_UNDERFLOW: error = "GL_STACK_UNDERFLOW"; break;
+		case GL_OUT_OF_MEMORY: error = "GL_OUT_OF_MEMORY"; break;
+		case GL_INVALID_FRAMEBUFFER_OPERATION: error = "GL_INVALID_FRAMEBUFFER_OPERATION"; break;
+		//case GL_INVALID_FRAMEBUFFER_OPERATION_EXT: error = "GL_INVALID_FRAMEBUFFER_OPERATION_EXT"; break;
+		case GL_CONTEXT_LOST: error = "GL_CONTEXT_LOST"; break;
+		default: error = nullptr;
+		}
+
+		printf("OpenGL error 0x%.8X %s\n", err, error);
+		assert(false);
+	}
+}
+
+#define GL_CHECK() _check_gl_error(__FILE__,__LINE__)
+
+static GLint yuyv_tex_loc = -1;
+
+GLuint Get_YUV_to_RGB_shader_program()
+{
+	// Use a shader to convert YUV to RGB using information from :
+	// From https://stackoverflow.com/questions/44291939/portable-yuv-drawing-context
+	// to https://hg.libsdl.org/SDL/file/1f2cb42aa5d3/src/render/opengl/SDL_shaders_gl.c#l128
+	// From https://stackoverflow.com/questions/12428108/ios-how-to-draw-a-yuv-image-using-opengl
+	// to https://github.com/kolyvan/kxmovie/blob/master/kxmovie/KxMovieGLView.m
+	// and https://www.opengl.org/discussion_boards/archive/index.php/t-169186.html
+	// and https://gist.github.com/roxlu/9329339
+	static const char *OPENGL_SHADER_YUV[2] = {
+		/* vertex shader */
+		"#version 330 core\n"
+		"layout(location = 0) in vec3 vertexPosition_modelspace;\n"
+		"layout(location = 1) in vec2 vertexUV;\n"
+		"out vec2 v_tex_coord;\n"
+		"void main() {\n"
+		"	gl_Position = vec4(vertexPosition_modelspace,1);\n"
+		"	v_tex_coord = vertexUV;\n"
+		"}\n",
+		/* fragment shader */
+		"#version 330 core\n"
+		"in vec2 v_tex_coord;\n"
+		"uniform sampler2D yuyv_tex;\n"
+		"out vec4 out_rgba;\n"
+		"// YUV offset \n"
+		"const vec3 offset = vec3(-0.0627451017, -0.501960814, -0.501960814);\n"
+		"// RGB coefficients \n"
+		"const vec3 Rcoeff = vec3(1.164,  0.000,  1.596);\n"
+		"const vec3 Gcoeff = vec3(1.164, -0.391, -0.813);\n"
+		"const vec3 Bcoeff = vec3(1.164,  2.018,  0.000);\n"
+		"void main(void)\n"
+		"{\n"
+		"	// Fetch 4:2:2 YUYV macropixel \n"
+		"	vec4 yuyv = texture2D(yuyv_tex, v_tex_coord);\n"
+		"	// Now r-g-b-a is actually y1-u-y2-v \n"
+		"	float u = yuyv.g;\n"
+		"	float v = yuyv.a;\n"
+		"	vec3 yuv;\n"
+		"   // Convert texture coordinate into texture x position \n"
+		"   ivec2 texture_size = textureSize(yuyv_tex, 0);\n"
+		"   float texture_x = v_tex_coord.x * texture_size.x;\n"
+		"	// Depending on fragment x position choose y1-u-v or y2-u-v \n"
+		"	if (mod(texture_x, 1.0) >= 0.5) { // left half \n"
+		"		float y1 = yuyv.r;\n"
+		"		yuv = vec3(y1, u, v);\n"
+		"	} else { // right half \n"
+		"		float y2 = yuyv.b;\n"
+		"		yuv = vec3(y2, u, v);\n"
+		"	}\n"
+		"	// Do the color transform \n"
+		"	yuv += offset;\n"
+		"	out_rgba.r = dot(yuv, Rcoeff);\n"
+		"	out_rgba.g = dot(yuv, Gcoeff);\n"
+		"	out_rgba.b = dot(yuv, Bcoeff);\n"
+		"	out_rgba.a = 1.0;\n"
+		"}\n"
+	};
+
+	// Bind shader
+	static GLuint shader_program_yuv_to_rgb = -1;
+	if (shader_program_yuv_to_rgb == -1) {
+		shader_program_yuv_to_rgb = glCreateProgram(); // glCreateProgramObjectARB()
+		GL_CHECK();
+
+		GLuint vertex_shader = create_gl_shader(GL_VERTEX_SHADER, OPENGL_SHADER_YUV[0], "YUV>RGB Vertex shader");
+		GL_CHECK();
+		GLuint fragment_shader = create_gl_shader(GL_FRAGMENT_SHADER, OPENGL_SHADER_YUV[1], "YUV>RGB Fragment shader");
+		GL_CHECK();
+		glAttachShader(shader_program_yuv_to_rgb, vertex_shader); // glAttachObjectARB
+		GL_CHECK();
+		glAttachShader(shader_program_yuv_to_rgb, fragment_shader); // glAttachObjectARB
+		GL_CHECK();
+
+		glLinkProgram(shader_program_yuv_to_rgb);
+		GL_CHECK();
+
+		/* Check it linked */
+		GLint linked = 0;
+		glGetProgramiv(shader_program_yuv_to_rgb, GL_LINK_STATUS, &linked);
+		GL_CHECK();
+		if (!linked) {
+			GLchar log[2048];
+			glGetProgramInfoLog(shader_program_yuv_to_rgb, 2048, NULL, log);
+			fprintf(stderr, "nv2a: shader linking failed: %s\n", log);
+			abort();
+		}
+
+		yuyv_tex_loc = glGetUniformLocation(shader_program_yuv_to_rgb, "yuyv_tex");
+		GL_CHECK();
+		assert(yuyv_tex_loc >= 0);
+	}
+
+	return shader_program_yuv_to_rgb;
+}
+
 extern void UpdateFPSCounter();
 void NV2ADevice::UpdateHostDisplay(NV2AState *d)
 {
@@ -402,9 +524,9 @@ void NV2ADevice::UpdateHostDisplay(NV2AState *d)
 	NV2A_GL_DGROUP_BEGIN("VGA Frame");
 
 	static ULONG PreviousAvDisplayModeFormat = 0;
-	static GLenum frame_internal_format = GL_RGBA;
-	static GLenum frame_format = GL_RGBA;
-	static GLenum frame_type = GL_UNSIGNED_INT_8_8_8_8;
+	static GLenum gl_frame_internal_format = GL_RGBA;
+	static GLenum gl_frame_format = GL_RGBA;
+	static GLenum gl_frame_type = GL_UNSIGNED_INT_8_8_8_8;
 	static GLsizei frame_width = 640;
 	static GLsizei frame_height = 480;
 	static GLuint frame_texture = -1;
@@ -412,7 +534,7 @@ void NV2ADevice::UpdateHostDisplay(NV2AState *d)
 	// Convert AV Format to OpenGl format details & destroy the texture if format changed..
 	// This is required for titles that use a non ARGB framebuffer, such was Beats of Rage
 	if (PreviousAvDisplayModeFormat != g_AvDisplayModeFormat) {
-		AvDisplayModeFormatToGL(g_AvDisplayModeFormat, &frame_internal_format, &frame_format, &frame_type);
+		AvDisplayModeFormatToGL(g_AvDisplayModeFormat, &gl_frame_internal_format, &gl_frame_format, &gl_frame_type);
 		AvGetFormatSize(AvpCurrentMode, &frame_width, &frame_height);
 		if (frame_texture != -1) {
 			glDeleteTextures(1, &frame_texture);
@@ -422,15 +544,17 @@ void NV2ADevice::UpdateHostDisplay(NV2AState *d)
 		PreviousAvDisplayModeFormat = g_AvDisplayModeFormat;
 	}
 
+	glGetError(); // reset GL_CHECK
+
 	// If we need to create a new texture, do so, otherwise, update the existing
 	hwaddr frame_pixels = /*CONTIGUOUS_MEMORY_BASE=*/0x80000000 | d->pcrtc.start; // NV_PCRTC_START
 	if (frame_texture == -1) {
 		glGenTextures(1, &frame_texture);
 		glBindTexture(GL_TEXTURE_2D, frame_texture);
-		glTexImage2D(GL_TEXTURE_2D, 0, frame_internal_format, frame_width, frame_height, 0, frame_format, frame_type, (void*)frame_pixels);
+		glTexImage2D(GL_TEXTURE_2D, 0, gl_frame_internal_format, frame_width, frame_height, 0, gl_frame_format, gl_frame_type, (void*)frame_pixels);
 	} else {
 		glBindTexture(GL_TEXTURE_2D, frame_texture);
-		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, frame_width, frame_height, frame_format, frame_type, (void*)frame_pixels);
+		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, frame_width, frame_height, gl_frame_format, gl_frame_type, (void*)frame_pixels);
 	}
 	glBindTexture(GL_TEXTURE_2D, 0);
 
@@ -438,31 +562,34 @@ void NV2ADevice::UpdateHostDisplay(NV2AState *d)
 	static GLuint framebuffer = -1;
 	if (framebuffer == -1) {
 		glGenFramebuffers(1, &framebuffer);
+		GL_CHECK();
 	}
 
-	// TODO : Is this neccesary? 
-	glFramebufferTexture2D(GL_FRAMEBUFFER,
-		GL_COLOR_ATTACHMENT0,
-		GL_TEXTURE_2D,
-		0, 0);
+	// Note : The following is modelled partially after pgraph_update_surface()
+	// TODO : pgraph_update_surface() also unswizzles - should we too?
 
-	// Draw to screen..
-	// Note : this is modelled partially after pgraph_update_surface()
-	// TODO : This function also unswizzles - should we too?
-	glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, frame_texture, 0);
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0); // break the existing binding of a framebuffer object to target
-	glClearColor(1.0f, 0.0f, 1.0f, 1.0f); // Might screen get purple, glBlitFramebuffer failed
+	// Target the actual framebuffer
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+#ifdef DEBUG
+	// If the screen turns purple, glBlitFramebuffer below failed
+	glClearColor(1.0f, 0.0f, 1.0f, 1.0f);
+	GL_CHECK();
 	glClear(GL_COLOR_BUFFER_BIT);
+	GL_CHECK();
+#endif
+
+	// Copy frame texture to an internal frame buffer
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, framebuffer);
+	glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, frame_texture, 0);
+	// Blit the active internal 'read' frame buffer to the actual 'draw' framebuffer
 	static const GLenum filter = GL_NEAREST;
 	// TODO: Use window size/actual framebuffer size rather than hard coding 640x480
 	// Note : dstY0 and dstY1 are swapped so the screen doesn't appear upside down
 	glBlitFramebuffer(0, 0, frame_width, frame_height, 0, 480, 640, 0, GL_COLOR_BUFFER_BIT, filter);
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	
-#define CXBX_NV2A_LLE_OVERLAY_ENABLED // Completely untested
-#ifdef CXBX_NV2A_LLE_OVERLAY_ENABLED
-	// It seems NV2A supports 2 video overlays
+	// Detach internal framebuffer
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+
+	// NV2A supports 2 video overlays
 	for (int v = 0; v < 2; v++) {
 		uint32_t video_buffer_use = (v == 0) ? NV_PVIDEO_BUFFER_0_USE : NV_PVIDEO_BUFFER_1_USE;
 		if (!(d->pvideo.regs[NV_PVIDEO_BUFFER] & video_buffer_use)) {
@@ -470,125 +597,46 @@ void NV2ADevice::UpdateHostDisplay(NV2AState *d)
 		}
 
 		// Get overlay measures (from xqemu nv2a_overlay_draw_line) :
+		uint32_t overlay_offset_high_26 = d->pvideo.regs[NV_PVIDEO_OFFSET(v)];
+		uint32_t overlay_offset_lower_6 = d->pvideo.regs[NV_PVIDEO_POINT_IN(v)] >> 3;
+		uint32_t overlay_size_in = d->pvideo.regs[NV_PVIDEO_SIZE_IN(v)];
+		uint32_t overlay_color_key = d->pvideo.regs[NV_PVIDEO_COLOR_KEY(v)];
+		uint32_t overlay_format = d->pvideo.regs[NV_PVIDEO_FORMAT(v)];
+
+#ifdef DEBUG
+		// Check a few assumptions
 		hwaddr overlay_base = d->pvideo.regs[NV_PVIDEO_BASE(v)];
 		hwaddr overlay_limit = d->pvideo.regs[NV_PVIDEO_LIMIT(v)];
-		hwaddr overlay_offset = d->pvideo.regs[NV_PVIDEO_OFFSET(v)];
-
-		int overlay_format_pitch = GET_MASK(d->pvideo.regs[NV_PVIDEO_FORMAT(v)], NV_PVIDEO_FORMAT_PITCH);
-		int overlay_format_color = GET_MASK(d->pvideo.regs[NV_PVIDEO_FORMAT(v)], NV_PVIDEO_FORMAT_COLOR);
-
-		int overlay_in_s = GET_MASK(d->pvideo.regs[NV_PVIDEO_POINT_IN(v)], NV_PVIDEO_POINT_IN_S);
-		int overlay_in_t = GET_MASK(d->pvideo.regs[NV_PVIDEO_POINT_IN(v)], NV_PVIDEO_POINT_IN_T);
-		int overlay_in_width = GET_MASK(d->pvideo.regs[NV_PVIDEO_SIZE_IN(v)], NV_PVIDEO_SIZE_IN_WIDTH);
-		int overlay_in_height = GET_MASK(d->pvideo.regs[NV_PVIDEO_SIZE_IN(0)], NV_PVIDEO_SIZE_IN_HEIGHT);
+		assert(overlay_base == 0);
+		assert(overlay_limit == (128 * ONE_MB) - 1); // = CONTIGUOUS_MEMORY_CHIHIRO_SIZE - 1
+		assert(GET_MASK(overlay_format, NV_PVIDEO_FORMAT_COLOR) == NV_PVIDEO_FORMAT_COLOR_LE_CR8YB8CB8YA8);
+#endif
+		// Derive actual attributes
+		int overlay_pitch = overlay_format & NV_PVIDEO_FORMAT_PITCH;
+		bool overlay_is_transparent = GET_MASK(overlay_format, NV_PVIDEO_FORMAT_DISPLAY);
+		hwaddr overlay_offset = overlay_offset_high_26 | overlay_offset_lower_6;
+		uint32_t overlay_size_in_height_width = overlay_size_in - (overlay_offset_lower_6 >> 1);
+		uint32_t overlay_in_height = overlay_size_in_height_width >> 16;
+		uint32_t overlay_in_width = overlay_size_in_height_width & 0xFFFF;
 
 		int overlay_out_x = GET_MASK(d->pvideo.regs[NV_PVIDEO_POINT_OUT(v)], NV_PVIDEO_POINT_OUT_X);
 		int overlay_out_y = GET_MASK(d->pvideo.regs[NV_PVIDEO_POINT_OUT(v)], NV_PVIDEO_POINT_OUT_Y);
 		int overlay_out_width = GET_MASK(d->pvideo.regs[NV_PVIDEO_SIZE_OUT(v)], NV_PVIDEO_SIZE_OUT_WIDTH);
 		int overlay_out_height = GET_MASK(d->pvideo.regs[NV_PVIDEO_SIZE_OUT(v)], NV_PVIDEO_SIZE_OUT_HEIGHT);
 
-		// TODO : Move this to void Enable_YUV_shader()
-		{
-			// Use a shader to convert YUV to RGB using information from :
-			// From https://stackoverflow.com/questions/44291939/portable-yuv-drawing-context
-			// to https://hg.libsdl.org/SDL/file/1f2cb42aa5d3/src/render/opengl/SDL_shaders_gl.c#l128
-			// From https://stackoverflow.com/questions/12428108/ios-how-to-draw-a-yuv-image-using-opengl
-			// to https://github.com/kolyvan/kxmovie/blob/master/kxmovie/KxMovieGLView.m
-			// and https://www.opengl.org/discussion_boards/archive/index.php/t-169186.html
-			// and https://gist.github.com/roxlu/9329339
-			static const char *OPENGL_SHADER_YUV[2] = {
-				/* vertex shader */
-				"#version 120\n"
-				"varying vec2 v_tex_coord;\n"
-				"\n"
-				"void main()\n"
-				"{\n"
-				"    gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;\n"
-				"    v_tex_coord = vec2(gl_MultiTexCoord0);\n"
-				"}\n",
-				/* fragment shader */
-				"#version 130\n"
-				"uniform sampler2D yuyv_tex;\n"
-				"in vec2 v_tex_coord;\n"
-				"out vec4 out_rgba;\n"
-				"// YUV offset \n"
-				"const vec3 offset = vec3(-0.0627451017, -0.501960814, -0.501960814);\n"
-				"// RGB coefficients \n"
-				"const vec3 Rcoeff = vec3(1.164,  0.000,  1.596);\n"
-				"const vec3 Gcoeff = vec3(1.164, -0.391, -0.813);\n"
-				"const vec3 Bcoeff = vec3(1.164,  2.018,  0.000);\n"
-				"void main(void)\n"
-				"{\n"
-				"	// Fetch 4:2:2 YUYV macropixel \n"
-				"	vec4 yuyv = texture2D(yuyv_tex, v_tex_coord);\n"
-				"	// Now r-g-b-a is actually y1-u-y2-v \n"
-				"	float u = yuyv.g;\n"
-				"	float v = yuyv.a;\n"
-				"	vec3 yuv;\n"
-				"   // Convert texture coordinate into texture x position \n"
-				"   ivec2 texture_size = textureSize(yuyv_tex, 0);\n"
-				"   float texture_x = v_tex_coord.x * texture_size.x;\n"
-				"	// Depending on fragment x position choose y1-u-v or y2-u-v \n"
-				"	if (mod(texture_x, 1.0) < 0.5) { // left half \n"
-				"		float y1 = yuyv.r;\n"
-				"		yuv = vec3(y1, u, v);\n"
-				"	} else { // right half \n"
-				"		float y2 = yuyv.b;\n"
-				"		yuv = vec3(y2, u, v);\n"
-				"	}\n"
-				"	// Do the color transform \n"
-				"	yuv += offset;\n"
-				"	out_rgba.r = dot(yuv, Rcoeff);\n"
-				"	out_rgba.g = dot(yuv, Gcoeff);\n"
-				"	out_rgba.b = dot(yuv, Bcoeff);\n"
-				"	out_rgba.a = 1.0;\n"
-				"}\n"
-			};
-
-			// Bind shader
-			static GLuint shader_program_yuv_to_rgb = -1;
-			static GLint yuyv_tex_loc = -1;
-			if (shader_program_yuv_to_rgb == -1) {
-				shader_program_yuv_to_rgb = glCreateProgram(); // glCreateProgramObjectARB()
-
-				GLuint vertex_shader = create_gl_shader(GL_VERTEX_SHADER, OPENGL_SHADER_YUV[0], "YUV>RGB Vertex shader");
-				GLuint fragment_shader = create_gl_shader(GL_FRAGMENT_SHADER, OPENGL_SHADER_YUV[1], "YUV>RGB Fragment shader");
-				glAttachShader(shader_program_yuv_to_rgb, vertex_shader); // glAttachObjectARB
-				glAttachShader(shader_program_yuv_to_rgb, fragment_shader); // glAttachObjectARB
-
-				glLinkProgram(shader_program_yuv_to_rgb);
-
-				/* Check it linked */
-				GLint linked = 0;
-				glGetProgramiv(shader_program_yuv_to_rgb, GL_LINK_STATUS, &linked);
-				if (!linked) {
-					GLchar log[2048];
-					glGetProgramInfoLog(shader_program_yuv_to_rgb, 2048, NULL, log);
-					fprintf(stderr, "nv2a: shader linking failed: %s\n", log);
-					abort();
-				}
-
-				yuyv_tex_loc = glGetUniformLocation(shader_program_yuv_to_rgb, "yuyv_tex");
-			}
-
-			glUseProgram(shader_program_yuv_to_rgb);
-
-			glUniform1i(yuyv_tex_loc, 0);
-		}
-
 		// If we need to create a new overlay texture, do so, otherwise, update the existing
 		static GLuint overlay_texture = -1;
 
-		GLenum overlay_internal_format = frame_internal_format; // TODO : GL_LUMINANCE ?
-		GLenum overlay_format = frame_format; // TODO : GL_LUMINANCE ?
-		GLenum overlay_type = frame_type; // TODO
-
 		// Detect changes in overlay dimensions
-		static GLuint static_overlay_in_width = 0;
-		static GLuint static_overlay_in_height = 0;
-		if (static_overlay_in_width != overlay_in_width || static_overlay_in_height != overlay_in_height) {
+		static int static_overlay_in_width = 0;
+		static int static_overlay_in_height = 0;
+		static int static_overlay_pitch = 0;
+		if (static_overlay_in_width != overlay_in_width
+		|| static_overlay_in_height != overlay_in_height
+		|| static_overlay_pitch != overlay_pitch) {
 			static_overlay_in_width = overlay_in_width;
 			static_overlay_in_height = overlay_in_height;
+			static_overlay_pitch = overlay_pitch;
 			if (overlay_texture != -1) {
 				glDeleteTextures(1, &overlay_texture);
 				overlay_texture = -1;
@@ -597,18 +645,32 @@ void NV2ADevice::UpdateHostDisplay(NV2AState *d)
 
 		// TODO : Speed this up using 2 PixelBufferObjects (and use asynchronous DMA transfer)?
 
-		hwaddr overlay_pixels = /*CONTIGUOUS_MEMORY_BASE=*/0x80000000 | overlay_base + overlay_offset;
+		// Render using texture #0
+		glActiveTexture(GL_TEXTURE0);
+
+		static const GLenum gl_overlay_internal_format = GL_RGBA8;
+		static const GLenum gl_overlay_format = GL_BGRA;
+		static const GLenum gl_overlay_type = GL_UNSIGNED_BYTE;
+			   
+		hwaddr overlay_pixels = /*CONTIGUOUS_MEMORY_BASE=*/0x80000000 | overlay_offset;
 		if (overlay_texture == -1) {
 			glGenTextures(1, &overlay_texture);
+
 			glBindTexture(GL_TEXTURE_2D, overlay_texture);
-			glTexImage2D(GL_TEXTURE_2D, 0, overlay_internal_format, overlay_in_width, overlay_in_height, 0, overlay_format, overlay_type, (void*)overlay_pixels);
+			glTexImage2D(GL_TEXTURE_2D, 0, gl_overlay_internal_format, overlay_pitch / 4, overlay_in_height, 0, gl_overlay_format, gl_overlay_type, (void*)overlay_pixels);
 		}
 		else {
 			glBindTexture(GL_TEXTURE_2D, overlay_texture); // update the YUV video texturing unit 
-			glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, overlay_in_width, overlay_in_height, overlay_format, overlay_type, (void*)overlay_pixels);
+			glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, overlay_pitch / 4, overlay_in_height, gl_overlay_format, gl_overlay_type, (void*)overlay_pixels);
 		}
 
-		glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+		// Don't average YUYV samples when resizing
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+		// Note : we cannot convert overlay_offset into actual top/left coordinate, so assume (0,0)
+		static const int overlay_in_s = 0;
+		static const int overlay_in_t = 0;
 
 		// Determine source and destination coordinates, with that draw the overlay over the framebuffer
 		GLint srcX0 = overlay_in_s;
@@ -620,76 +682,84 @@ void NV2ADevice::UpdateHostDisplay(NV2AState *d)
 		GLint dstX1 = overlay_out_width;
 		GLint dstY1 = overlay_out_height;
 
+		// Detect some special cases, for later finetuning
 		if (overlay_in_s != 0 || overlay_in_t != 0 || overlay_out_x != 0 || overlay_out_y != 0 || overlay_out_width != 640 || overlay_out_height != 480) {
 			LOG_TEST_CASE("Non-standard overlay dimensions");
 		}
 
-		//GLint tmp = dstY0; dstY0 = dstY1; dstY1 = tmp; // Flip Y to prevent upside down rendering
+		// Flip Y to prevent upside down rendering
+		GLint tmp = dstY0; dstY0 = dstY1; dstY1 = tmp;
 
+		// Convert UV coordinates to [0.0, 1.0]
 		GLfloat srcX0f = (GLfloat)srcX0 / overlay_in_width;
 		GLfloat srcX1f = (GLfloat)srcX1 / overlay_in_width;
 		GLfloat srcY0f = (GLfloat)srcY0 / overlay_in_height;
 		GLfloat srcY1f = (GLfloat)srcY1 / overlay_in_height;
 
-		GLfloat dstX0f = (GLfloat)dstX0 / frame_width;
-		GLfloat dstX1f = (GLfloat)dstX1 / frame_width;
-		GLfloat dstY0f = (GLfloat)dstY0 / frame_height;
-		GLfloat dstY1f = (GLfloat)dstY1 / frame_height;
+		// Convert screen coordinates to [-1.0, 1.0]
+		GLfloat dstX0f = (GLfloat)((dstX0 / frame_width) * 2.0f) - 1.0f;
+		GLfloat dstX1f = (GLfloat)((dstX1 / frame_width) * 2.0f) - 1.0f;
+		GLfloat dstY0f = (GLfloat)((dstY0 / frame_height) * 2.0f) - 1.0f;
+		GLfloat dstY1f = (GLfloat)((dstY1 / frame_height) * 2.0f) - 1.0f;
 
-		glPushMatrix(); //??
-
-		glViewport(0, 0, frame_width, frame_height);
-		glNormal3f(0.0f, 0.0f, 1.0f);
-
-		glDepthRange(-1, 1);
-		glClearColor(0, 0, 0, 0);
-		glColor3f(1, 1, 1);
-		glClearDepth(1);
-		// pre-frustum_setup
-		glMatrixMode(GL_PROJECTION);
-		glLoadIdentity();
-		glOrtho(0, frame_width, frame_height, 0, -1, 1);
-		// post-frustum_setup
-		glMatrixMode(GL_MODELVIEW);
-		glLoadIdentity();
-		glDisable(GL_BLEND);
-		glDisable(GL_DEPTH_TEST);
-		glDepthMask(GL_FALSE);
 		glDisable(GL_CULL_FACE);
-		glShadeModel(GL_FLAT);
-		glDisable(GL_TEXTURE_2D);
-		// post-en/disable
-		glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_FASTEST);
 
-		// Bind overlay texture
-		glActiveTexture(GL_TEXTURE0);
-		glTexEnvi(GL_TEXTURE_2D, GL_TEXTURE_ENV_MODE, GL_REPLACE); // note that GL_REPLACE is certainly not the best thing for video mixing ...
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR); // Linear Filtering seem a good compromise between speed/quality
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR); // this seem the same thing for the magnification and minification
-		glEnable(GL_TEXTURE_2D);
-		glMatrixMode(GL_TEXTURE);
-		glLoadIdentity();
+		glUseProgram(Get_YUV_to_RGB_shader_program());
 
-		glBegin(GL_TRIANGLE_STRIP); // glBegin(GL_QUADS);
-		glTexCoord2f(0.0f, 0.0f);   glVertex3f(-1.0f, -1.0f, 0.0f);
-		glTexCoord2f(1.0f, 0.0f);   glVertex3f(1.0f, -1.0f, 0.0f);
-		glTexCoord2f(1.0f, 1.0f);   glVertex3f(1.0f, 1.0f, 0.0f);
-		glTexCoord2f(0.0f, 1.0f);   glVertex3f(-1.0f, 1.0f, 0.0f);
-/*
-		glTexCoord2f(srcX0f, srcY0f); glVertex2f(dstX0f, dstY0f);
-		glTexCoord2f(srcX1f, srcY0f); glVertex2f(dstX1f, dstY0f);
-		glTexCoord2f(srcX1f, srcY1f); glVertex2f(dstX1f, dstY1f);
-		glTexCoord2f(srcX0f, srcY1f); glVertex2f(dstX0f, dstY1f);
-*/
-		glEnd();
+		// Attach texture #0 to the shader sampler location 
+		glUniform1i(yuyv_tex_loc, 0);
 
-		glPopMatrix(); //??
-		glDisable(GL_TEXTURE_2D);
-		glBindTexture(GL_TEXTURE_2D, 0);
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		// Feed screen coordinates through a vertex buffer object
+		const GLfloat vertex_buffer_data[] = {
+			dstX0f, dstY0f, 0.0f,
+			dstX1f, dstY0f, 0.0f,
+			dstX1f, dstY1f, 0.0f,
+			dstX0f, dstY1f, 0.0f,
+		};
+		static GLuint vertexbuffer = -1;
+		if (vertexbuffer == -1) {
+			glGenBuffers(1, &vertexbuffer);	
+		}
+		glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_buffer_data), vertex_buffer_data, GL_STREAM_DRAW);
+		glVertexAttribPointer(
+			0,                  // layout(location = 0) in the vertex shader.
+			3,                  // size = vec3
+			GL_FLOAT,           // type
+			GL_FALSE,           // normalized?
+			0,                  // stride
+			(void*)0            // array buffer offset
+		);
+		glEnableVertexAttribArray(0);
+
+		// Feed texture coordinates through another vertex buffer object
+		const GLfloat uv_buffer_data[] = {
+			srcX0f, srcY0f,
+			srcX1f, srcY0f,
+			srcX1f, srcY1f,
+			srcX0f, srcY1f,
+		};
+		static GLuint uvbuffer = -1;
+		if (uvbuffer == -1) {
+			glGenBuffers(1, &uvbuffer);
+		}
+		glBindBuffer(GL_ARRAY_BUFFER, uvbuffer);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(uv_buffer_data), uv_buffer_data, GL_STREAM_DRAW);
+		glVertexAttribPointer(
+			1,                  // layout(location = 1) in the vertex shader.
+			2,                  // size = vec2
+			GL_FLOAT,           // type
+			GL_FALSE,           // normalized?
+			0,                  // stride
+			(void*)0            // array buffer offset
+		);
+		glEnableVertexAttribArray(1);
+
+		// Finally! Draw the dang overlay...
+		glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+
 		glUseProgram(0);
 	}
-#endif
 
 	// We currently don't double buffer, so no need to call swap...
 	glo_swap(d->pgraph.gl_context);

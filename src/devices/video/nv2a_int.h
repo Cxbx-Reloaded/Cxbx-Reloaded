@@ -680,6 +680,7 @@
 #   define NV_PVIDEO_FORMAT_COLOR                             0x00030000
 #       define NV_PVIDEO_FORMAT_COLOR_LE_CR8YB8CB8YA8             1
 #   define NV_PVIDEO_FORMAT_DISPLAY                            (1 << 20)
+#define NV_PVIDEO_COLOR_KEY(i)                           0x00000b00 + (i * 4)
 
 
 #define NV_PTIMER_INTR_0                                 0x00000100
