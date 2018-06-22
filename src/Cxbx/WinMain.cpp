@@ -59,8 +59,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	}
 	
 	if (bIsWow64 == FALSE) {
-		MessageBox(NULL, "Cxbx-Reloaded can only run under WoW64\nThis means either a 64-bit version of Windows or Wine with a 64-bit prefix", "Cxbx-Reloaded", MB_OK);
-		return 1;
+		MessageBox(NULL, "Cxbx-Reloaded can only run under WoW64\nThis means either a 64-bit version of Windows or Wine with a 64-bit prefix", "Cxbx-Reloaded",
+			MB_OK | MB_ICONERROR);
+		return EXIT_FAILURE;
 	}
 
 	/*! verify Cxbx.exe is loaded to base address 0x00010000 */
@@ -69,8 +70,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		/*! CXBX_BASE_ADDR is defined as 0x00010000, which is the base address of
 			the Cxbx.exe host executable.
 		    Set in Cxbx Project options, Linker, Advanced, Base Address */
-		MessageBox(NULL, "Cxbx.exe is not loaded to base address 0x00010000 (which is a requirement for Xbox emulation)", "Cxbx-Reloaded", MB_OK);
-		return 1;
+		MessageBox(NULL, "Cxbx.exe is not loaded to base address 0x00010000 (which is a requirement for Xbox emulation)", "Cxbx-Reloaded",
+			MB_OK | MB_ICONERROR);
+		return EXIT_FAILURE;
 	}
 
 	/*! initialize shared memory */
@@ -82,7 +84,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		CxbxInitFilePaths();
 
 		CxbxKrnlMain(__argc, __argv);
-		return 0;
+		return EXIT_SUCCESS;
 	}
 
 	INITCOMMONCONTROLSEX icc;
@@ -127,5 +129,5 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     /*! cleanup shared memory */
     EmuShared::Cleanup();
 
-    return 0;
+    return EXIT_SUCCESS;
 }
