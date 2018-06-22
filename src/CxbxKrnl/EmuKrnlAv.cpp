@@ -290,16 +290,16 @@ XBSYSAPI EXPORTNUM(3) xboxkrnl::ULONG NTAPI xboxkrnl::AvSetDisplayMode
 	{
 	case XTL::X_D3DFMT_LIN_A1R5G5B5:
 	case XTL::X_D3DFMT_LIN_X1R5G5B5:
-		GeneralControl = 0x00100030;
+		GeneralControl = NV_PRAMDAC_GENERAL_CONTROL_BPC_8BITS | NV_PRAMDAC_GENERAL_CONTROL_PIXMIX_ON; /*=0x00100030*/
 		CR28Depth = 2;
 		break;
 	case XTL::X_D3DFMT_LIN_R5G6B5:
-		GeneralControl = 0x00101030;
+		GeneralControl = NV_PRAMDAC_GENERAL_CONTROL_BPC_8BITS | NV_PRAMDAC_GENERAL_CONTROL_ALT_MODE_SEL | NV_PRAMDAC_GENERAL_CONTROL_PIXMIX_ON; /*=0x00101030*/
 		CR28Depth = 2;
 		break;
 	case XTL::X_D3DFMT_LIN_A8R8G8B8:
 	case XTL::X_D3DFMT_LIN_X8R8G8B8:
-		GeneralControl = 0x00100030;
+		GeneralControl = NV_PRAMDAC_GENERAL_CONTROL_BPC_8BITS | NV_PRAMDAC_GENERAL_CONTROL_PIXMIX_ON; /*=0x00100030*/
 		CR28Depth = 3;
 		break;
 	}
@@ -313,10 +313,10 @@ XBSYSAPI EXPORTNUM(3) xboxkrnl::ULONG NTAPI xboxkrnl::AvSetDisplayMode
 	if (AvpCurrentMode == Mode)
 	{
 		REG_WR32(RegisterBase, NV_PRAMDAC_GENERAL_CONTROL, GeneralControl);
-		CRTC_WR(RegisterBase, NV_CIO_SR_LOCK_INDEX, NV_CIO_SR_UNLOCK_RW_VALUE);
-		CRTC_WR(RegisterBase, 0x13, (UCHAR)(Pitch & 0xFF));
-		CRTC_WR(RegisterBase, 0x19, (UCHAR)((Pitch & 0x700) >> 3));
-		CRTC_WR(RegisterBase, 0x28, 0x80 | CR28Depth);
+		CRTC_WR(RegisterBase, NV_CIO_SR_LOCK_INDEX, NV_CIO_SR_UNLOCK_RW_VALUE); /* crtc lock */
+		CRTC_WR(RegisterBase, NV_CIO_CR_OFFSET_INDEX /*=0x13*/, (UCHAR)(Pitch & 0xFF)); /* sets screen pitch */
+		CRTC_WR(RegisterBase, NV_CIO_CRE_RPC0_INDEX /*=0x19*/, (UCHAR)((Pitch & 0x700) >> 3)); /* repaint control 0 */
+		CRTC_WR(RegisterBase, NV_CIO_CRE_PIXEL_INDEX /*=0x28*/, 0x80 | CR28Depth);
 		REG_WR32(RegisterBase, NV_PCRTC_START, FrameBuffer);
 
 		AvSendTVEncoderOption(RegisterBase, AV_OPTION_FLICKER_FILTER, 5, NULL);

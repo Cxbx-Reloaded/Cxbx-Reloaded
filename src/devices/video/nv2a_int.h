@@ -680,6 +680,7 @@
 #   define NV_PVIDEO_FORMAT_COLOR                             0x00030000
 #       define NV_PVIDEO_FORMAT_COLOR_LE_CR8YB8CB8YA8             1
 #   define NV_PVIDEO_FORMAT_DISPLAY                            (1 << 20)
+#define NV_PVIDEO_COLOR_KEY(i)                           0x00000b00 + (i * 4)
 
 
 #define NV_PTIMER_INTR_0                                 0x00000100
@@ -1249,11 +1250,11 @@
 #   define NV097_SET_INVERSE_MODEL_VIEW_MATRIX                0x00000580
 #   define NV097_SET_COMPOSITE_MATRIX                         0x00000680
 #   define NV097_SET_TEXTURE_MATRIX                           0x000006C0
-#   define NV097_SET_FOG_PARAMS                               0x000009C0
 #   define NV097_SET_TEXGEN_PLANE_S                           0x00000840
 #   define NV097_SET_TEXGEN_PLANE_T                           0x00000850
 #   define NV097_SET_TEXGEN_PLANE_R                           0x00000860
 #   define NV097_SET_TEXGEN_PLANE_Q                           0x00000870
+#   define NV097_SET_FOG_PARAMS                               0x000009C0
 #   define NV097_SET_TEXGEN_VIEW_MODEL                        0x000009CC
 #       define NV097_SET_TEXGEN_VIEW_MODEL_LOCAL_VIEWER           0
 #       define NV097_SET_TEXGEN_VIEW_MODEL_INFINITE_VIEWER        1
@@ -1292,7 +1293,6 @@
 #   define NV097_SET_VIEWPORT_SCALE                           0x00000AF0
 #   define NV097_SET_TRANSFORM_PROGRAM                        0x00000B00
 #   define NV097_SET_TRANSFORM_CONSTANT                       0x00000B80
-#   define NV097_SET_VERTEX3F                                 0x00001500
 #   define NV097_SET_BACK_LIGHT_AMBIENT_COLOR                 0x00000C00
 #   define NV097_SET_BACK_LIGHT_DIFFUSE_COLOR                 0x00000C0C
 #   define NV097_SET_BACK_LIGHT_SPECULAR_COLOR                0x00000C18
@@ -1306,6 +1306,7 @@
 #   define NV097_SET_LIGHT_SPOT_DIRECTION                     0x0000104C
 #   define NV097_SET_LIGHT_LOCAL_POSITION                     0x0000105C
 #   define NV097_SET_LIGHT_LOCAL_ATTENUATION                  0x00001068
+#   define NV097_SET_VERTEX3F                                 0x00001500
 #   define NV097_SET_VERTEX4F                                 0x00001518
 #   define NV097_SET_VERTEX_DATA_ARRAY_OFFSET                 0x00001720
 #   define NV097_SET_VERTEX_DATA_ARRAY_FORMAT                 0x00001760
@@ -1350,10 +1351,10 @@
 #   define NV097_INLINE_ARRAY                                 0x00001818
 #   define NV097_SET_EYE_VECTOR                               0x0000181C
 #   define NV097_SET_VERTEX_DATA2F_M                          0x00001880
-#   define NV097_SET_VERTEX_DATA4F_M                          0x00001A00
 #   define NV097_SET_VERTEX_DATA2S                            0x00001900
 #   define NV097_SET_VERTEX_DATA4UB                           0x00001940
 #   define NV097_SET_VERTEX_DATA4S_M                          0x00001980
+#   define NV097_SET_VERTEX_DATA4F_M                          0x00001A00
 #   define NV097_SET_TEXTURE_OFFSET                           0x00001B00
 #   define NV097_SET_TEXTURE_FORMAT                           0x00001B04
 #       define NV097_SET_TEXTURE_FORMAT_CONTEXT_DMA               0x00000003
