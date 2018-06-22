@@ -38,6 +38,23 @@
 
 #include "..\..\CxbxKrnl\CxbxKrnl.h"
 
+// Source: https://stackoverflow.com/questions/8046097/how-to-check-if-a-process-has-the-administrative-rights
+bool CxbxIsElevated() {
+	bool fRet = false;
+	HANDLE hToken = NULL;
+	if (OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &hToken)) {
+		TOKEN_ELEVATION Elevation;
+		DWORD cbSize = sizeof(TOKEN_ELEVATION);
+		if (GetTokenInformation(hToken, TokenElevation, &Elevation, sizeof(Elevation), &cbSize)) {
+			fRet = Elevation.TokenIsElevated > 0;
+		}
+	}
+	if (hToken) {
+		CloseHandle(hToken);
+	}
+	return fRet;
+}
+
 bool CxbxExec(std::string &execCommand, HANDLE* hProcess, bool requestHandleProcess) {
 
 	STARTUPINFO startupInfo = { 0 };

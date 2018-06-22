@@ -304,6 +304,8 @@ void CxbxConvertArgToString(std::string &dest, const char* krnlExe, const char* 
 
 bool CxbxExec(std::string &execCommand, HANDLE* hProcess, bool requestHandleProcess);
 
+bool CxbxIsElevated();
+
 /*! kernel thunk table */
 extern uint32 CxbxKrnl_KernelThunkTable[379];
 

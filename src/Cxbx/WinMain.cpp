@@ -64,6 +64,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		return EXIT_FAILURE;
 	}
 
+	bool bElevated = CxbxIsElevated();
+	if (bElevated) {
+		MessageBox(NULL, "Running as administrator rights is a security breach and will not improve anything.\nForced closing...", "Cxbx-Reloaded",
+			MB_OK | MB_ICONERROR);
+		return EXIT_FAILURE;
+	}
+
 	/*! verify Cxbx.exe is loaded to base address 0x00010000 */
 	if ((UINT_PTR)GetModuleHandle(nullptr) != CXBX_BASE_ADDR)
 	{
