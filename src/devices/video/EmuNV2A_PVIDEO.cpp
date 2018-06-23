@@ -8,7 +8,8 @@ static void pvideo_vga_invalidate(NV2AState *d)
 	// TODO : vga_invalidate_scanlines(&d->vga, y1, y2);
 
 	// TODO: Remove this when the AMD crash is solved in vblank_thread
-	NV2ADevice::UpdateHostDisplay(d);
+	if (d->enable_overlay) // to avoid flickering, only update when there's an overlay
+		NV2ADevice::UpdateHostDisplay(d);
 }
 
 DEVICE_READ32(PVIDEO)
