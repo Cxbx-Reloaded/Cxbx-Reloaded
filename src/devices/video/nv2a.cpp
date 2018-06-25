@@ -428,51 +428,51 @@ GLuint Get_YUV_to_RGB_shader_program()
 	// and https://gist.github.com/roxlu/9329339
 	static const char *OPENGL_SHADER_YUV[2] = {
 		/* vertex shader */
-		"#version 330 core\n"
-		"layout(location = 0) in vec3 vertexPosition_modelspace;\n"
-		"layout(location = 1) in vec2 vertexUV;\n"
-		"out vec2 v_tex_coord;\n"
-		"void main() {\n"
-		"	gl_Position = vec4(vertexPosition_modelspace,1);\n"
-		"	v_tex_coord = vertexUV;\n"
-		"}\n",
+		"#version 330 core                                                       \n"
+		"layout(location = 0) in vec3 vertexPosition_modelspace;                 \n"
+		"layout(location = 1) in vec2 vertexUV;                                  \n"
+		"out vec2 v_tex_coord;                                                   \n"
+		"void main() {                                                           \n"
+		"	gl_Position = vec4(vertexPosition_modelspace,1);                     \n"
+		"	v_tex_coord = vertexUV;                                              \n"
+		"}                                                                       \n",
 		/* fragment shader */
-		"#version 330 core\n"
-		"in vec2 v_tex_coord;\n"
-		"uniform sampler2D yuyv_tex;\n"
-		"out vec4 out_rgba;\n"
-		"// YUV offset \n"
-		"const vec3 offset = vec3(-0.0627451017, -0.501960814, -0.501960814);\n"
-		"// RGB coefficients \n"
-		"const vec3 Rcoeff = vec3(1.164,  0.000,  1.596);\n"
-		"const vec3 Gcoeff = vec3(1.164, -0.391, -0.813);\n"
-		"const vec3 Bcoeff = vec3(1.164,  2.018,  0.000);\n"
-		"void main(void)\n"
-		"{\n"
-		"	// Fetch 4:2:2 YUYV macropixel \n"
-		"	vec4 yuyv = texture2D(yuyv_tex, v_tex_coord);\n"
-		"	// Now r-g-b-a is actually y1-u-y2-v \n"
-		"	float u = yuyv.g;\n"
-		"	float v = yuyv.a;\n"
-		"	vec3 yuv;\n"
-		"   // Convert texture coordinate into texture x position \n"
-		"   ivec2 texture_size = textureSize(yuyv_tex, 0);\n"
-		"   float texture_x = v_tex_coord.x * texture_size.x;\n"
-		"	// Depending on fragment x position choose y1-u-v or y2-u-v \n"
-		"	if (mod(texture_x, 1.0) >= 0.5) { // left half \n"
-		"		float y1 = yuyv.r;\n"
-		"		yuv = vec3(y1, u, v);\n"
-		"	} else { // right half \n"
-		"		float y2 = yuyv.b;\n"
-		"		yuv = vec3(y2, u, v);\n"
-		"	}\n"
-		"	// Do the color transform \n"
-		"	yuv += offset;\n"
-		"	out_rgba.r = dot(yuv, Rcoeff);\n"
-		"	out_rgba.g = dot(yuv, Gcoeff);\n"
-		"	out_rgba.b = dot(yuv, Bcoeff);\n"
-		"	out_rgba.a = 1.0;\n"
-		"}\n"
+		"#version 330 core                                                       \n"
+		"in vec2 v_tex_coord;                                                    \n"
+		"uniform sampler2D yuyv_tex;                                             \n"
+		"out vec4 out_rgba;                                                      \n"
+		"// YUV offset                                                           \n"
+		"const vec3 offset = vec3(-0.0627451017, -0.501960814, -0.501960814);    \n"
+		"// RGB coefficients                                                     \n"
+		"const vec3 Rcoeff = vec3(1.164,  0.000,  1.596);                        \n"
+		"const vec3 Gcoeff = vec3(1.164, -0.391, -0.813);                        \n"
+		"const vec3 Bcoeff = vec3(1.164,  2.018,  0.000);                        \n"
+		"void main(void)                                                         \n"
+		"{                                                                       \n"
+		"	// Fetch 4:2:2 YUYV macropixel                                       \n"
+		"	vec4 yuyv = texture2D(yuyv_tex, v_tex_coord);                        \n"
+		"	// Now r-g-b-a is actually y1-u-y2-v                                 \n"
+		"	float u = yuyv.g;                                                    \n"
+		"	float v = yuyv.a;                                                    \n"
+		"	vec3 yuv;                                                            \n"
+		"   // Convert texture coordinate into texture x position                \n"
+		"   ivec2 texture_size = textureSize(yuyv_tex, 0);                       \n"
+		"   float texture_x = v_tex_coord.x * texture_size.x;                    \n"
+		"	// Depending on fragment x position choose y1-u-v or y2-u-v          \n"
+		"	if (mod(texture_x, 1.0) >= 0.5) { // left half                       \n"
+		"		float y1 = yuyv.r;                                               \n"
+		"		yuv = vec3(y1, u, v);                                            \n"
+		"	} else { // right half                                               \n"
+		"		float y2 = yuyv.b;                                               \n"
+		"		yuv = vec3(y2, u, v);                                            \n"
+		"	}                                                                    \n"
+		"	// Do the color transform                                            \n"
+		"	yuv += offset;                                                       \n"
+		"	out_rgba.r = dot(yuv, Rcoeff);                                       \n"
+		"	out_rgba.g = dot(yuv, Gcoeff);                                       \n"
+		"	out_rgba.b = dot(yuv, Bcoeff);                                       \n"
+		"	out_rgba.a = 1.0;                                                    \n"
+		"}                                                                       \n"
 	};
 
 	// Bind shader
@@ -512,23 +512,126 @@ GLuint Get_YUV_to_RGB_shader_program()
 	return shader_program_yuv_to_rgb;
 }
 
-extern void UpdateFPSCounter();
-void NV2ADevice::UpdateHostDisplay(NV2AState *d)
+#ifdef DRAW_FRAMEBUFFER // Shaders don't compile yet
+
+GLuint m_vao, m_framebuffer_vertex_buffer_object, m_framebuffer_element_buffer_object, m_tex = -1;
+GLuint m_framebuffer_shader_program = -1;
+
+GLint m_framebuffer_attribute_location_position = -1;
+GLint m_framebuffer_attribute_location_texture = -1;
+
+/*
+ * Initialize Shaders
+ */
+void InitShaders(void)
 {
-	if (!d->pgraph.opengl_enabled) {
-		return;
-	}
+	static const char *gl_framebuffer_shader_src[2] = {
+		/* vertex shader */
+		"#version 330 core                                                            \n"
+		"layout(location = 0) in vec2 in_Position;                                    \n"
+		"layout(location = 1) in vec2 in_Texcoord;                                    \n"
+		"out vec2 Texcoord;                                                           \n"
+		"void main()                                                                  \n"
+		"{                                                                            \n"
+		"    Texcoord = in_Texcoord;                                                  \n"
+		"    gl_Position = vec4(in_Position, 0.0, 1.0);                               \n"
+		"}                                                                            \n",
+		/* fragment shader */
+		"#version 330 core                                                            \n"
+		"in vec2 Texcoord;                                                            \n"
+		"out vec4 out_Color;                                                          \n"
+		"uniform sampler2D tex;                                                       \n"
+		"void main()                                                                  \n"
+		"{                                                                            \n"
+		"    out_Color = texture2D(tex, Texcoord);                                    \n"
+		"}                                                                            \n"
+	};
 
-	lockGL(&d->pgraph);
+	glGetError(); // reset GL_CHECK
+#if 0
+	glGenVertexArrays(1, &m_vao);
+    glBindVertexArray(m_vao);
+#endif
 
-	NV2A_GL_DGROUP_BEGIN("VGA Frame");
+    m_framebuffer_shader_program = glCreateProgram();
+	GL_CHECK();
 
+    // Compile vertex shader
+	GLuint vertex_shader = create_gl_shader(GL_VERTEX_SHADER, gl_framebuffer_shader_src[0], "Framebuffer vertex shader");
+    // Compile fragment shader
+	GLuint fragment_shader = create_gl_shader(GL_FRAGMENT_SHADER, gl_framebuffer_shader_src[1], "Framebuffer fragment shader");
+
+    // Link vertex and fragment shaders
+	glAttachShader(m_framebuffer_shader_program, vertex_shader);
+    glAttachShader(m_framebuffer_shader_program, fragment_shader);
+    glBindFragDataLocation(m_framebuffer_shader_program, 0, "out_Color");
+    glLinkProgram(m_framebuffer_shader_program);
+
+    m_framebuffer_attribute_location_position = glGetAttribLocation(m_framebuffer_shader_program, "in_Position");
+    m_framebuffer_attribute_location_texture = glGetAttribLocation(m_framebuffer_shader_program, "in_Texcoord");
+}
+
+/*
+ * Initialize Geometry
+ */
+void InitGeometry()
+{
+	static const GLfloat verts[6][4] = {
+		//  x      y      s      t
+		{ -1.0f, -1.0f,  0.0f,  1.0f }, // BL
+		{ -1.0f,  1.0f,  0.0f,  0.0f }, // TL
+		{  1.0f,  1.0f,  1.0f,  0.0f }, // TR
+		{  1.0f, -1.0f,  1.0f,  1.0f }, // BR
+	};
+
+	static const GLint indicies[] = {
+		0, 1, 2, 0, 2, 3
+	};
+
+	// Populate vertex buffer
+	glGenBuffers(1, &m_framebuffer_vertex_buffer_object);
+	glBindBuffer(GL_ARRAY_BUFFER, m_framebuffer_vertex_buffer_object);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(verts), verts, GL_STATIC_DRAW);
+
+	// Populate element buffer
+	glGenBuffers(1, &m_framebuffer_element_buffer_object);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_framebuffer_element_buffer_object);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indicies), indicies, GL_STATIC_DRAW);
+}
+
+void BindGeometry()
+{
+	glUseProgram(m_framebuffer_shader_program);
+
+	glBindBuffer(GL_ARRAY_BUFFER, m_framebuffer_vertex_buffer_object);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_framebuffer_element_buffer_object);
+
+	// Bind vertex position attribute
+    glVertexAttribPointer(m_framebuffer_attribute_location_position, 2, GL_FLOAT, GL_FALSE, 4*sizeof(GLfloat), (void*)0);
+    glEnableVertexAttribArray(m_framebuffer_attribute_location_position);
+
+	// Bind vertex texture coordinate attribute
+    glVertexAttribPointer(m_framebuffer_attribute_location_texture, 2, GL_FLOAT, GL_FALSE, 4*sizeof(GLfloat), (void*)(2*sizeof(GLfloat)));
+    glEnableVertexAttribArray(m_framebuffer_attribute_location_texture);
+}
+
+void cxbx_gl_initialize()
+{
+	InitShaders();
+	InitGeometry();
+}
+
+#endif // DRAW_FRAMEBUFFER
+
+static GLsizei frame_width = 640;
+static GLsizei frame_height = 480;
+
+void cxbx_gl_update_framebuffer(NV2AState *d)
+{
 	static ULONG PreviousAvDisplayModeFormat = 0;
 	static GLenum gl_frame_internal_format = GL_RGBA;
-	static GLenum gl_frame_format = GL_RGBA;
-	static GLenum gl_frame_type = GL_UNSIGNED_INT_8_8_8_8;
-	static GLsizei frame_width = 640;
-	static GLsizei frame_height = 480;
+	static GLenum gl_frame_format = GL_BGRA; // Was GL_RGBA;
+	static GLenum gl_frame_type = GL_UNSIGNED_INT_8_8_8_8_REV; // Was GL_UNSIGNED_INT_8_8_8_8;
 	static GLuint frame_texture = -1;
 
 	// Convert AV Format to OpenGl format details & destroy the texture if format changed..
@@ -578,6 +681,11 @@ void NV2ADevice::UpdateHostDisplay(NV2AState *d)
 	GL_CHECK();
 #endif
 
+#ifdef DRAW_FRAMEBUFFER // Shaders don't compile yet
+	// Draw frame texture to an internal frame buffer
+	BindGeometry();
+	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, NULL);
+#else
 	// Copy frame texture to an internal frame buffer
 	glBindFramebuffer(GL_READ_FRAMEBUFFER, framebuffer);
 	glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, frame_texture, 0);
@@ -586,9 +694,14 @@ void NV2ADevice::UpdateHostDisplay(NV2AState *d)
 	// TODO: Use window size/actual framebuffer size rather than hard coding 640x480
 	// Note : dstY0 and dstY1 are swapped so the screen doesn't appear upside down
 	glBlitFramebuffer(0, 0, frame_width, frame_height, 0, 480, 640, 0, GL_COLOR_BUFFER_BIT, filter);
-	// Detach internal framebuffer
-	glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+#endif
 
+	// Restore xbox framebuffer
+	glBindFramebuffer(GL_FRAMEBUFFER, d->pgraph.gl_framebuffer);
+}
+
+void cxbx_gl_render_overlays(NV2AState *d)
+{
 	// NV2A supports 2 video overlays
 	for (int v = 0; v < 2; v++) {
 		uint32_t video_buffer_use = (v == 0) ? NV_PVIDEO_BUFFER_0_USE : NV_PVIDEO_BUFFER_1_USE;
@@ -760,14 +873,28 @@ void NV2ADevice::UpdateHostDisplay(NV2AState *d)
 
 		glUseProgram(0);
 	}
+}
+
+extern void UpdateFPSCounter();
+void NV2ADevice::UpdateHostDisplay(NV2AState *d)
+{
+	if (!d->pgraph.opengl_enabled) {
+		return;
+	}
+
+	lockGL(&d->pgraph);
+
+	NV2A_GL_DGROUP_BEGIN("VGA Frame");
+
+	cxbx_gl_update_framebuffer(d);
+
+	cxbx_gl_render_overlays(d);
 
 	// We currently don't double buffer, so no need to call swap...
 	glo_swap(d->pgraph.gl_context);
 
-	// Restore previous framebuffer
-	glBindFramebuffer(GL_FRAMEBUFFER, d->pgraph.gl_framebuffer);
-
 	NV2A_GL_DGROUP_END();
+
 	unlockGL(&d->pgraph);
 
 	UpdateFPSCounter();
@@ -884,7 +1011,10 @@ void NV2ADevice::Init()
 	pgraph_init(m_nv2a_state);
 
 	// Only spawn VBlank thread when LLE is enabled
-	if (bLLE_GPU) {
+	if (d->pgraph.opengl_enabled) {
+#ifdef DRAW_FRAMEBUFFER
+		cxbx_gl_initialize();
+#endif
 		vblank_thread = std::thread(nv2a_vblank_thread, d);
 	}
 
