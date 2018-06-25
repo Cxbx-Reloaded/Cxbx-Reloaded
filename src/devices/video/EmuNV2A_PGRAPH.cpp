@@ -2363,24 +2363,32 @@ static void pgraph_handle_method(NV2AState *d,
 
 					switch(pg->surface_shape.zeta_format) {
 					case NV097_SET_SURFACE_FORMAT_ZETA_Z16: {
-						uint16_t z = clear_zstencil & 0xFFFF;
-						/* FIXME: Remove bit for stencil clear? */
-						if (pg->surface_shape.z_format) {
-							gl_clear_depth = convert_f16_to_float(z) / f16_max;
-							assert(false); /* FIXME: Untested */
-						} else {
-							gl_clear_depth = z / (float)0xFFFF;
+						if (parameter & NV097_CLEAR_SURFACE_Z) {
+							gl_mask |= GL_DEPTH_BUFFER_BIT;
+							uint16_t z = clear_zstencil & 0xFFFF;
+							if (pg->surface_shape.z_format) {
+								gl_clear_depth = convert_f16_to_float(z) / f16_max;
+								assert(false); /* FIXME: Untested */
+							} else {
+								gl_clear_depth = z / (float)0xFFFF;
+							}
 						}
 						break;
 					}
 					case NV097_SET_SURFACE_FORMAT_ZETA_Z24S8: {
-						gl_clear_stencil = clear_zstencil & 0xFF;
-						uint32_t z = clear_zstencil >> 8;
-						if (pg->surface_shape.z_format) {
-							gl_clear_depth = convert_f24_to_float(z) / f24_max;
-							assert(false); /* FIXME: Untested */
-						} else {
-							gl_clear_depth = z / (float)0xFFFFFF;
+						if (parameter & NV097_CLEAR_SURFACE_STENCIL) {
+							gl_mask |= GL_STENCIL_BUFFER_BIT;
+							gl_clear_stencil = clear_zstencil & 0xFF;
+						}
+						if (parameter & NV097_CLEAR_SURFACE_Z) {
+							gl_mask |= GL_DEPTH_BUFFER_BIT;
+							uint32_t z = clear_zstencil >> 8;
+							if (pg->surface_shape.z_format) {
+								gl_clear_depth = convert_f24_to_float(z) / f24_max;
+								assert(false); /* FIXME: Untested */
+							} else {
+								gl_clear_depth = z / (float)0xFFFFFF;
+							}
 						}
 						break;
 					}
@@ -2389,13 +2397,11 @@ static void pgraph_handle_method(NV2AState *d,
 						assert(false);
 						break;
 					}
-					if (parameter & NV097_CLEAR_SURFACE_Z) {
-						gl_mask |= GL_DEPTH_BUFFER_BIT;
+					if (gl_mask & GL_DEPTH_BUFFER_BIT) {
 						glDepthMask(GL_TRUE);
 						glClearDepth(gl_clear_depth);
 					}
-					if (parameter & NV097_CLEAR_SURFACE_STENCIL) {
-						gl_mask |= GL_STENCIL_BUFFER_BIT;
+					if (gl_mask & GL_STENCIL_BUFFER_BIT) {
 						glStencilMask(0xff);
 						glClearStencil(gl_clear_stencil);            
 					}
