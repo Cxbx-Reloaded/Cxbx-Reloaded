@@ -572,8 +572,6 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 					else {
 						m_hwndChild = GetWindow(hwnd, GW_CHILD);
 					}
-					HANDLE hThreadTemp = CreateThread(NULL, NULL, CrashMonitorWrapper, (void*)this, NULL, NULL); // create the crash monitoring thread
-					CloseHandle(hThreadTemp);
                 }
                 break;
 
@@ -591,9 +589,15 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                 break;
 
 				case WM_USER: {
-					 switch(lParam) {
+					 switch(HIWORD(wParam)) {
 						// NOTE: If anything need to set before kernel process start do anything, do it here.
 						case ID_KRNL_IS_READY: {
+							Crash_Manager_Data* pCMD = (Crash_Manager_Data*)malloc(sizeof(Crash_Manager_Data));
+							pCMD->pWndMain = this;
+							pCMD->dwChildProcID = lParam; // lParam is process ID.
+							HANDLE hThreadTemp = CreateThread(NULL, NULL, CrashMonitorWrapper, (void*)pCMD, NULL, NULL); // create the crash monitoring thread
+							CloseHandle(hThreadTemp);
+
 							g_EmuShared->SetFlagsLLE(&m_FlagsLLE);
 							g_EmuShared->SetIsEmulating(true); // NOTE: Putting in here raise to low or medium risk due to debugger will launch itself. (Current workaround)
 							g_EmuShared->SetIsReady(true);
@@ -2442,39 +2446,40 @@ void WndMain::StopEmulation()
 }
 
 // wrapper function to call CrashMonitor
-DWORD WINAPI WndMain::CrashMonitorWrapper(LPVOID lpVoid)
+DWORD WINAPI WndMain::CrashMonitorWrapper(LPVOID lpParam)
 {
 	CxbxSetThreadName("Cxbx Crash Monitor");
 
-	static_cast<WndMain*>(lpVoid)->CrashMonitor();
+	Crash_Manager_Data* pCMD = (Crash_Manager_Data*)lpParam;
+	static_cast<WndMain*>(pCMD->pWndMain)->CrashMonitor(pCMD->dwChildProcID);
+	free(lpParam);
 
 	return 0;
 }
 
 // monitor for crashes
-void WndMain::CrashMonitor()
+void WndMain::CrashMonitor(DWORD dwChildProcID)
 {
 	bool bQuickReboot;
-	DWORD dwProcessID_ExitCode = 0;
-	GetWindowThreadProcessId(m_hwndChild, &dwProcessID_ExitCode);
+	DWORD dwExitCode = 0;
 
 	// If we do receive valid process ID, let's do the next step.
-	if (dwProcessID_ExitCode != 0) {
+	if (dwChildProcID != 0) {
 
-	HANDLE hProcess = OpenProcess(SYNCHRONIZE | PROCESS_QUERY_INFORMATION, FALSE, dwProcessID_ExitCode);
+	HANDLE hProcess = OpenProcess(SYNCHRONIZE | PROCESS_QUERY_INFORMATION, FALSE, dwChildProcID);
 
 	 	// If we do receive valid handle, let's do the next step.
 	 	if (hProcess != NULL) {
 
 	 		WaitForSingleObject(hProcess, INFINITE);
-	 		dwProcessID_ExitCode = 0;
-	 		GetExitCodeProcess(hProcess, &dwProcessID_ExitCode);
+
+	 		GetExitCodeProcess(hProcess, &dwExitCode);
 	 		CloseHandle(hProcess);
 
 	 		g_EmuShared->GetMultiXbeFlag(&bQuickReboot);
 
 	 		if (!bQuickReboot) {
-	 			if (dwProcessID_ExitCode == EXIT_SUCCESS) {// StopEmulation
+	 			if (dwExitCode == EXIT_SUCCESS) {// StopEmulation
 	 				return;
 	 			}
 				// Or else, it's a crash

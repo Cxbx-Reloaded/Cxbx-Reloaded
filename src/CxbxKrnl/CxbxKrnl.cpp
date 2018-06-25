@@ -909,7 +909,7 @@ void CxbxKrnlMain(int argc, char* argv[])
     if (CxbxKrnl_hEmuParent == NULL) {
         CxbxKrnlCleanup("GUI process does not exist!");
     } else {
-        SendMessage(CxbxKrnl_hEmuParent, WM_PARENTNOTIFY, WM_USER, ID_KRNL_IS_READY);
+        SendMessage(CxbxKrnl_hEmuParent, WM_PARENTNOTIFY, MAKELONG(WM_USER, ID_KRNL_IS_READY), GetCurrentProcessId());
     }
 
     // Force wait until first allocated process is ready
@@ -938,14 +938,6 @@ void CxbxKrnlMain(int argc, char* argv[])
     } while (true);
 
     g_EmuShared->SetIsReady(false);
-
-    bool bQuickReboot;
-    g_EmuShared->GetMultiXbeFlag(&bQuickReboot);
-
-    // precaution for multi-xbe titles in the case CrashMonitor has still not destoyed the previous mutex
-    while (bQuickReboot) {
-        g_EmuShared->GetMultiXbeFlag(&bQuickReboot);
-    }
 
 	// Write a header to the log
 	{
