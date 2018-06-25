@@ -192,6 +192,7 @@ extern "C" {
 
 // Kernel boot flags
 enum {
+	BOOT_NONE =           0,
 	BOOT_EJECT_PENDING =  1 << 0,
 	BOOT_FATAL_ERROR =    1 << 1,
 	BOOT_SKIP_ANIMATION = 1 << 2,
@@ -261,7 +262,7 @@ extern bool g_bIsDebugKernel;
 void CxbxKrnlMain(int argc, char* argv[]);
 
 /*! initialize emulation */
-__declspec(noreturn) void CxbxKrnlInit(void *pTLSData, Xbe::TLS *pTLS, Xbe::LibraryVersion *LibraryVersion, DebugMode DbgMode, const char *szDebugFilename, Xbe::Header *XbeHeader, uint32 XbeHeaderSize, void (*Entry)());
+__declspec(noreturn) void CxbxKrnlInit(void *pTLSData, Xbe::TLS *pTLS, Xbe::LibraryVersion *LibraryVersion, DebugMode DbgMode, const char *szDebugFilename, Xbe::Header *XbeHeader, uint32 XbeHeaderSize, void (*Entry)(), int BootFlags);
 
 /*! cleanup emulation */
 __declspec(noreturn) void CxbxKrnlCleanup(const char *szErrorMessage, ...);

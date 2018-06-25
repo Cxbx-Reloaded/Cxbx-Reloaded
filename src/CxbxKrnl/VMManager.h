@@ -118,7 +118,7 @@ class VMManager : public PhysicalMemory
 			CloseHandle(m_hPTFile);
 		}
 		// initializes the memory manager to the default configuration
-		void Initialize(HANDLE memory_view, HANDLE pagetables_view);
+		void Initialize(HANDLE memory_view, HANDLE pagetables_view, int BootFlags);
 		// retrieves memory statistics
 		void MemoryStatistics(xboxkrnl::PMM_STATISTICS memory_statistics);
 		// allocates memory in the user region

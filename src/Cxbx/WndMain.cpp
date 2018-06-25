@@ -2349,6 +2349,9 @@ void WndMain::StartEmulation(HWND hwndParent, DebuggerState LocalDebuggerState /
         return;
     }
 
+    // Reset to default
+    g_EmuShared->Reset();
+
     // register xbe path with emulator process
     g_EmuShared->SetXbePath(m_Xbe->m_szPath);
 

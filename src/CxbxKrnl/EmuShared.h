@@ -94,6 +94,12 @@ class EmuShared : public Mutex
 		void SetIsReady(bool isReady) { Lock(); m_bReady = isReady; Unlock(); }
 
 		// ******************************************************************
+		// * Check if previous kernel mode process is running.
+		// ******************************************************************
+		void GetKrnlProcID(unsigned int *krnlProcID) { Lock(); *krnlProcID = m_dwKrnlProcID; Unlock(); }
+		void SetKrnlProcID(unsigned int krnlProcID) { Lock(); m_dwKrnlProcID = krnlProcID; Unlock(); }
+
+		// ******************************************************************
 		// * Xbox Video Accessors
 		// ******************************************************************
 		void GetXBVideo(      XBVideo *video) { Lock(); *video = XBVideo(m_XBVideo); Unlock(); }
@@ -203,6 +209,30 @@ class EmuShared : public Mutex
 		void GetStorageLocation(char *path) { Lock(); strcpy(path, m_StorageLocation); Unlock(); }
 		void SetStorageLocation(char *path) { Lock(); strcpy(m_StorageLocation, path); Unlock(); }
 
+		// ******************************************************************
+		// * Reset specific variables to default for kernel mode.
+		// ******************************************************************
+		void ResetKrnl()
+		{
+			Lock();
+			m_BootFlags = 0;
+			m_MSpF = 0.0f;
+			m_FPS = 0.0f;
+			m_bMultiXbeFlag = 0;
+			Unlock();
+		}
+
+		// ******************************************************************
+		// * Reset specific variables to default for gui mode.
+		// ******************************************************************
+		void Reset()
+		{
+			Lock();
+			ResetKrnl();
+			m_dwKrnlProcID = 0;
+			Unlock();
+		}
+
 	private:
 		// ******************************************************************
 		// * Constructor / Deconstructor
@@ -238,6 +268,7 @@ class EmuShared : public Mutex
 		bool         m_bReserved2;
 		bool         m_bReserved3;
 		bool         m_bReserved4;
+		unsigned int m_dwKrnlProcID; // Only used for kernel mode level.
 };
 
 // ******************************************************************
