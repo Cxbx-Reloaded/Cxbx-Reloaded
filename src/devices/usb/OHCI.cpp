@@ -9,7 +9,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->devices->USBController->OHCI.cpp
+// *   Cxbx->devices->usb->OHCI.cpp
 // *
 // *  This file is part of the Cxbx project.
 // *

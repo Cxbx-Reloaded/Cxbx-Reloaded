@@ -293,6 +293,9 @@
     <ClCompile Include="..\..\src\devices\usb\USBDevice.cpp">
       <Filter>Hardware\Usb</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\devices\usb\Hub.cpp">
+      <Filter>Hardware\Usb</Filter>
+    </ClCompile>
 	<ClCompile Include="..\..\src\Cxbx\DlgXboxControllerPortMapping.cpp">
       <Filter>GUI</Filter>
     </ClCompile>
@@ -584,6 +587,12 @@
       <Filter>Hardware\Usb</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\devices\usb\USBDevice.h">
+      <Filter>Hardware\Usb</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\devices\usb\Hub.h">
+      <Filter>Hardware\Usb</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\devices\usb\UsbCommon.h">
       <Filter>Hardware\Usb</Filter>
     </ClInclude>
 	<ClInclude Include="..\..\src\Cxbx\DlgXboxControllerPortMapping.h">

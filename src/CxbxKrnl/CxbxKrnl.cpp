@@ -70,6 +70,7 @@ namespace xboxkrnl
 #include "devices\Xbox.h" // For InitXboxHardware()
 #include "devices\LED.h" // For LED::Sequence
 #include "EmuSha.h" // For the SHA1 functions
+#include "Timer.h" // For Timer_Init
 
 /*! thread local storage */
 Xbe::TLS *CxbxKrnl_TLS = NULL;
