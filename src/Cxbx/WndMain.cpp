@@ -42,12 +42,16 @@
 #include "DlgXboxControllerPortMapping.h"
 #include "Common/XbePrinter.h" // For DumpInformation
 #include "CxbxKrnl/EmuShared.h"
+#include "..\CxbxKrnl\CxbxKrnl.h" // For CxbxConvertArgToString and CxbxExec
 #include "ResCxbx.h"
 #include "CxbxVersion.h"
 #include "Shlwapi.h"
-#include <multimon.h>
+
+#undef GetSystemMetrics // Force remove DirectX 8's multimon.h defined function (redirect to xGetSystemMetrics).
+#include <WinUser.h> // For GetSystemMetrics
 
 #include <io.h>
+#include <shlobj.h>
 
 #include <sstream> // for std::stringstream
 #include <fstream>
@@ -61,9 +65,9 @@ static int splashLogoWidth, splashLogoHeight;
 
 bool g_SaveOnExit = true;
 
-void ClearHLECache()
+void ClearHLECache(char sStorageLocation[MAX_PATH])
 {
-	std::string cacheDir = std::string(XTL::szFolder_CxbxReloadedData) + "\\HLECache\\";
+	std::string cacheDir = std::string(sStorageLocation) + "\\HLECache\\";
 	std::string fullpath = cacheDir + "*.ini";
 
 	WIN32_FIND_DATA data;
@@ -154,11 +158,15 @@ WndMain::WndMain(HINSTANCE x_hInstance) :
 	m_Xbe(nullptr),
 	m_bXbeChanged(false),
 	m_bIsStarted(false),
-	m_hwndChild(NULL),
+	m_hwndChild(nullptr),
 	m_KrnlDebug(DM_NONE),
 	m_CxbxDebug(DM_NONE),
 	m_FlagsLLE(0),
-	m_dwRecentXbe(0)
+	m_StorageToggle(CXBX_DATA_APPDATA),
+	m_StorageLocation(""),
+	m_dwRecentXbe(0),
+	m_hDebuggerProc(nullptr),
+	m_hDebuggerMonitorThread(nullptr)
 {
     // initialize members
     {
@@ -261,6 +269,36 @@ WndMain::WndMain(HINSTANCE x_hInstance) :
 			if (lErrCodeKrnlDebugFilename != ERROR_SUCCESS) {
 				m_KrnlDebugFilename[0] = '\0';
 			}
+
+			dwType = REG_DWORD; dwSize = sizeof(DWORD);
+			result = RegQueryValueEx(hKey, "DataStorageToggle", NULL, &dwType, (PBYTE)&m_StorageToggle, &dwSize);
+			if (result != ERROR_SUCCESS) {
+				m_StorageToggle = CXBX_DATA_APPDATA;
+			}
+
+			switch (m_StorageToggle) {
+				case CXBX_DATA_APPDATA:
+				default:
+					SHGetSpecialFolderPath(NULL, m_StorageLocation, CSIDL_APPDATA, TRUE);
+					m_StorageToggle = CXBX_DATA_APPDATA;
+					strncat(m_StorageLocation, "\\Cxbx-Reloaded", MAX_PATH);
+					break;
+
+				case CXBX_DATA_CURDIR:
+					GetCurrentDirectory(MAX_PATH, m_StorageLocation);
+					break;
+
+				case CXBX_DATA_CUSTOM:
+			 		dwType = REG_SZ; dwSize = MAX_PATH;
+			 		result = RegQueryValueEx(hKey, "DataStorageLocation", NULL, &dwType, (PBYTE)&m_StorageLocation, &dwSize);
+			 		if (result != ERROR_SUCCESS) {
+						SHGetSpecialFolderPath(NULL, m_StorageLocation, CSIDL_APPDATA, TRUE);
+						strncat(m_StorageLocation, "\\Cxbx-Reloaded", MAX_PATH);
+					}
+					break;
+			}
+			// NOTE: This is a requirement for pre-verification from GUI. Used in CxbxInitFilePaths function.
+			g_EmuShared->SetStorageLocation(m_StorageLocation);
 
 			// Prevent using an incorrect path from the registry if the debug folders have been moved
 			if (m_CxbxDebug == DM_FILE)
@@ -414,8 +452,20 @@ WndMain::~WndMain()
 
             dwType = REG_SZ; dwSize = MAX_PATH;
             RegSetValueEx(hKey, "KrnlDebugFilename", 0, dwType, (PBYTE)m_KrnlDebugFilename, dwSize);
+
+			dwType = REG_DWORD; dwSize = sizeof(DWORD);
+			RegSetValueEx(hKey, "DataStorageToggle", 0, dwType, (PBYTE)&m_StorageToggle, dwSize);
+
+			// NOTE: Save custom directory provided by user only.
+			if (m_StorageToggle == CXBX_DATA_CUSTOM) {
+				dwType = REG_SZ; dwSize = MAX_PATH;
+				RegSetValueEx(hKey, "DataStorageLocation", 0, dwType, (PBYTE)m_StorageLocation, dwSize);
+			}
         }
     }
+
+    // Close opened debugger monitor if there is one
+    DebuggerMonitorClose();
 
     // cleanup allocations
     {
@@ -522,7 +572,8 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 					else {
 						m_hwndChild = GetWindow(hwnd, GW_CHILD);
 					}
-					CreateThread(NULL, NULL, CrashMonitorWrapper, (void*)this, NULL, NULL); // create the crash monitoring thread
+					HANDLE hThreadTemp = CreateThread(NULL, NULL, CrashMonitorWrapper, (void*)this, NULL, NULL); // create the crash monitoring thread
+					CloseHandle(hThreadTemp);
                 }
                 break;
 
@@ -544,6 +595,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 						// NOTE: If anything need to set before kernel process start do anything, do it here.
 						case ID_KRNL_IS_READY: {
 							g_EmuShared->SetFlagsLLE(&m_FlagsLLE);
+							g_EmuShared->SetIsEmulating(true); // NOTE: Putting in here raise to low or medium risk due to debugger will launch itself. (Current workaround)
 							g_EmuShared->SetIsReady(true);
 							break;
 						}
@@ -1100,46 +1152,48 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
 					// dump xbe information to file
 					{
-                        std::string Xbe_info = DumpInformation(m_Xbe);
-                        if (m_Xbe->HasError()) {
-                            MessageBox(m_hwnd, m_Xbe->GetError().c_str(), "Cxbx-Reloaded", MB_ICONSTOP | MB_OK);
-                        }
-                        else {
-                            std::ofstream Xbe_dump_file(ofn.lpstrFile);
-                            if(Xbe_dump_file.is_open()) {
-                                Xbe_dump_file << Xbe_info;
-                                Xbe_dump_file.close();
-                                char buffer[255];
-                                sprintf(buffer, "%s's .xbe info was successfully dumped.", m_Xbe->m_szAsciiTitle);
-                                printf("WndMain: %s\n", buffer);
-                                MessageBox(m_hwnd, buffer, "Cxbx-Reloaded", MB_ICONINFORMATION | MB_OK);
-                            }
-                            else {
-                                MessageBox(m_hwnd, "Could not open Xbe text file.", "Cxbx-Reloaded", MB_ICONSTOP | MB_OK);
-                            }
-                        }
+						std::string Xbe_info = DumpInformation(m_Xbe);
+						if (m_Xbe->HasError()) {
+							MessageBox(m_hwnd, m_Xbe->GetError().c_str(), "Cxbx-Reloaded", MB_ICONSTOP | MB_OK);
+						}
+						else {
+							std::ofstream Xbe_dump_file(ofn.lpstrFile);
+							if (Xbe_dump_file.is_open()) {
+								Xbe_dump_file << Xbe_info;
+								Xbe_dump_file.close();
+								char buffer[255];
+								sprintf(buffer, "%s's .xbe info was successfully dumped.", m_Xbe->m_szAsciiTitle);
+								printf("WndMain: %s\n", buffer);
+								MessageBox(m_hwnd, buffer, "Cxbx-Reloaded", MB_ICONINFORMATION | MB_OK);
+							}
+							else {
+								MessageBox(m_hwnd, "Could not open Xbe text file.", "Cxbx-Reloaded", MB_ICONSTOP | MB_OK);
+							}
+						}
 					}
 				}
 			}
 			break;
 
-            case ID_EDIT_DUMPXBEINFOTO_DEBUGCONSOLE:
-            {
-                std::string Xbe_info = DumpInformation(m_Xbe);
-                if (m_Xbe->HasError()) {
-                    MessageBox(m_hwnd, m_Xbe->GetError().c_str(), "Cxbx-Reloaded", MB_ICONSTOP | MB_OK);
-                }
-                else {
-                    std::cout << Xbe_info;
-                    char buffer[255];
-                    sprintf(buffer, "%s's .xbe info was successfully dumped to console.", m_Xbe->m_szAsciiTitle);
-                    printf("WndMain: %s\n", buffer);
-                }
-            }
-            break;
-            case ID_SETTINGS_CONFIG_XBOX_CONTROLLER_MAPPING:
-                ShowXboxControllerPortMappingConfig(hwnd);
-                break;
+			case ID_EDIT_DUMPXBEINFOTO_DEBUGCONSOLE:
+			{
+				std::string Xbe_info = DumpInformation(m_Xbe);
+				if (m_Xbe->HasError()) {
+					MessageBox(m_hwnd, m_Xbe->GetError().c_str(), "Cxbx-Reloaded", MB_ICONSTOP | MB_OK);
+				}
+				else {
+					std::cout << Xbe_info;
+					char buffer[255];
+					sprintf(buffer, "%s's .xbe info was successfully dumped to console.", m_Xbe->m_szAsciiTitle);
+					printf("WndMain: %s\n", buffer);
+				}
+			}
+			break;
+
+			case ID_SETTINGS_CONFIG_XBOX_CONTROLLER_MAPPING:
+				ShowXboxControllerPortMappingConfig(hwnd);
+				break;
+
 			case ID_SETTINGS_CONFIG_CONTROLLER:
 				ShowControllerConfig(hwnd);
 				break;
@@ -1148,9 +1202,9 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 				ShowVideoConfig(hwnd);
 				break;
 
-            case ID_SETTINGS_CONFIG_AUDIO:
-                ShowAudioConfig(hwnd);
-                break;
+			case ID_SETTINGS_CONFIG_AUDIO:
+				ShowAudioConfig(hwnd);
+				break;
 
 			case ID_SETTINGS_CONFIG_EEPROM:
 			{
@@ -1164,16 +1218,88 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 			}
 			break;
 
+			case ID_SETTINGS_CONFIG_DLOCCUSTOM:
+			{
+				char szDir[MAX_PATH];
+
+				BROWSEINFO bInfo;
+				bInfo.hwndOwner = NULL;
+				bInfo.pidlRoot = NULL;
+				bInfo.pszDisplayName = szDir;
+				bInfo.lpszTitle = "Please, select a folder";
+				bInfo.ulFlags = BIF_NEWDIALOGSTYLE, BIF_EDITBOX, BIF_VALIDATE;
+				bInfo.lpfn = NULL;
+				bInfo.lParam = 0;
+				bInfo.iImage = -1;
+
+				LPITEMIDLIST lpItem = SHBrowseForFolder(&bInfo);
+
+				if (lpItem != NULL)
+				{
+					SHGetPathFromIDList(lpItem, szDir);
+
+					// -14 is for \\Cxbx-Reloaded string to be include later down below.
+					size_t szLen = strnlen(szDir, MAX_PATH - 14);
+					if (szLen == 0) {
+						MessageBox(hwnd, "You've selected an invalid folder... Go back and try again.", "Cxbx-Reloaded", MB_ICONEXCLAMATION | MB_OK);
+						break;
+					}
+					else if (szLen == MAX_PATH - 14) {
+						MessageBox(hwnd, "You've selected a folder path which is too long... Go back and try again.", "Cxbx-Reloaded", MB_ICONEXCLAMATION | MB_OK);
+						break;
+					}
+
+					std::string szDirTemp = std::string(szDir) + std::string("\\Cxbx-Reloaded");
+
+					if (szDirTemp.size() > MAX_PATH) {
+						MessageBox(hwnd, "Directory path is too long. Go back and choose a shorter path.", "Cxbx-Reloaded", MB_ICONEXCLAMATION | MB_OK);
+						break;
+					}
+
+					int result = SHCreateDirectoryEx(nullptr, szDirTemp.c_str(), nullptr);
+					if ((result != ERROR_SUCCESS) && (result != ERROR_ALREADY_EXISTS)) {
+						MessageBox(hwnd, "You don't have write permissions on that directory...", "Cxbx-Reloaded", MB_ICONEXCLAMATION | MB_OK);
+						break;
+					}
+
+					m_StorageToggle = CXBX_DATA_CUSTOM;
+					strncpy(m_StorageLocation, szDirTemp.c_str(), MAX_PATH);
+					RefreshMenus();
+				}
+			}
+			break;
+
+			case ID_SETTINGS_CONFIG_DLOCAPPDATA:
+			{
+				char szDir[MAX_PATH];
+
+				SHGetSpecialFolderPath(NULL, szDir, CSIDL_APPDATA, TRUE);
+				m_StorageToggle = CXBX_DATA_APPDATA;
+				strncpy(m_StorageLocation, szDir, MAX_PATH);
+				strncat(m_StorageLocation, "\\Cxbx-Reloaded", MAX_PATH);
+				RefreshMenus();
+			}
+			break;
+
+			case ID_SETTINGS_CONFIG_DLOCCURDIR:
+			{
+
+				GetCurrentDirectory(MAX_PATH, m_StorageLocation);
+				m_StorageToggle = CXBX_DATA_CURDIR;
+				RefreshMenus();
+			}
+			break;
+
 			case ID_CACHE_CLEARHLECACHE_ALL:
 			{
-				ClearHLECache();
+				ClearHLECache(m_StorageLocation);
 				MessageBox(m_hwnd, "The entire HLE Cache has been cleared.", "Cxbx-Reloaded", MB_OK);
 			}
 			break;
 
 			case ID_CACHE_CLEARHLECACHE_CURRENT:
 			{
-				std::string cacheDir = std::string(XTL::szFolder_CxbxReloadedData) + "\\HLECache\\";
+				std::string cacheDir = std::string(m_StorageLocation) + "\\HLECache\\";
 
 				// Hash the loaded XBE's header, use it as a filename
 				uint32_t uiHash = XXHash32::hash((void*)&m_Xbe->m_Header, sizeof(Xbe::Header), 0);
@@ -1827,6 +1953,26 @@ void WndMain::RefreshMenus()
 
 			chk_flag = (m_DirectHostBackBufferAccess) ? MF_CHECKED : MF_UNCHECKED;
 			CheckMenuItem(settings_menu, ID_HACKS_RENDERDIRECTLYTOHOSTBACKBUFFER, chk_flag);
+
+			//bad
+			switch (m_StorageToggle)
+			{
+				case CXBX_DATA_APPDATA:
+					CheckMenuItem(settings_menu, ID_SETTINGS_CONFIG_DLOCAPPDATA, MF_CHECKED);
+					CheckMenuItem(settings_menu, ID_SETTINGS_CONFIG_DLOCCURDIR, MF_UNCHECKED);
+					CheckMenuItem(settings_menu, ID_SETTINGS_CONFIG_DLOCCUSTOM, MF_UNCHECKED);
+					break;
+				case CXBX_DATA_CURDIR:
+					CheckMenuItem(settings_menu, ID_SETTINGS_CONFIG_DLOCAPPDATA, MF_UNCHECKED);
+					CheckMenuItem(settings_menu, ID_SETTINGS_CONFIG_DLOCCURDIR, MF_CHECKED);
+					CheckMenuItem(settings_menu, ID_SETTINGS_CONFIG_DLOCCUSTOM, MF_UNCHECKED);
+					break;
+				case CXBX_DATA_CUSTOM:
+					CheckMenuItem(settings_menu, ID_SETTINGS_CONFIG_DLOCAPPDATA, MF_UNCHECKED);
+					CheckMenuItem(settings_menu, ID_SETTINGS_CONFIG_DLOCCURDIR, MF_UNCHECKED);
+					CheckMenuItem(settings_menu, ID_SETTINGS_CONFIG_DLOCCUSTOM, MF_CHECKED);
+					break;
+			}
 		}
 
         // emulation menu
@@ -2085,6 +2231,8 @@ void WndMain::CloseXbe()
     UpdateCaption();
     RefreshMenus();
 
+    DebuggerMonitorClose();
+
     // clear logo bitmap
     {
         uint32 v=0;
@@ -2124,7 +2272,7 @@ void WndMain::OpenMRU(int mru)
 // Open the dashboard xbe if found
 void WndMain::OpenDashboard()
 {
-	std::string DashboardPath = std::string(XTL::szFolder_CxbxReloadedData) + std::string("\\EmuDisk\\Partition2\\xboxdash.xbe");
+	std::string DashboardPath = std::string(m_StorageLocation) + std::string("\\EmuDisk\\Partition2\\xboxdash.xbe");
 	OpenXbe(DashboardPath.c_str());
 }
 
@@ -2187,7 +2335,6 @@ void WndMain::SaveXbeAs()
 // start emulation
 void WndMain::StartEmulation(HWND hwndParent, DebuggerState LocalDebuggerState /*= debuggerOff*/)
 {
-    char szBuffer[MAX_PATH];
     bool isEmulating = false;
 
     g_EmuShared->GetIsEmulating(&isEmulating);
@@ -2197,8 +2344,6 @@ void WndMain::StartEmulation(HWND hwndParent, DebuggerState LocalDebuggerState /
                    "Cxbx-Reloaded", MB_ICONERROR | MB_OK);
         return;
     }
-
-    g_EmuShared->SetIsEmulating(true);
 
     // register xbe path with emulator process
     g_EmuShared->SetXbePath(m_Xbe->m_szPath);
@@ -2217,6 +2362,9 @@ void WndMain::StartEmulation(HWND hwndParent, DebuggerState LocalDebuggerState /
 	g_EmuShared->SetScaleViewport(&m_ScaleViewport);
 	g_EmuShared->SetDirectHostBackBufferAccess(&m_DirectHostBackBufferAccess);
 
+	// register storage location with emulator process
+	g_EmuShared->SetStorageLocation(m_StorageLocation);
+
 	if (m_ScaleViewport) {
 		// Set the window size to emulation dimensions
 		// Note : Doing this here assures the emulation process will use
@@ -2230,51 +2378,43 @@ void WndMain::StartEmulation(HWND hwndParent, DebuggerState LocalDebuggerState /
 
 	// shell exe
     {
-        GetModuleFileName(NULL, szBuffer, MAX_PATH);
-
-		char *spot = strrchr(szBuffer, '\\');
-		if (spot != NULL)
-			*spot = '\0';
 
 		char szExeFileName[MAX_PATH];
 		GetModuleFileName(GetModuleHandle(NULL), szExeFileName, MAX_PATH);
 
-		char szArgsBuffer[4096];
-		snprintf(szArgsBuffer, 4096, "/load \"%s\" %d %d \"%s\"", m_XbeFilename, (int)hwndParent, (int)m_KrnlDebug, m_KrnlDebugFilename);
-
 		bool AttachLocalDebugger = (LocalDebuggerState == debuggerOn);
 		g_EmuShared->SetDebuggingFlag(&AttachLocalDebugger);
 
-        if (AttachLocalDebugger)
-        {
+        std::string szProcArgsBuffer;
+        XTL::CxbxConvertArgToString(szProcArgsBuffer, szExeFileName, m_XbeFilename, hwndParent, m_KrnlDebug, m_KrnlDebugFilename);
+
+        if (AttachLocalDebugger) {
+
+            // Check then close existing debugger monitor.
+            DebuggerMonitorClose();
+
             // TODO: Set a configuration variable for this. For now it will be within the same folder as Cxbx.exe
-            const char* szDebugger = "CxbxDebugger.exe";
+            std::string szProcDbgArgsBuffer = "CxbxDebugger.exe " + szProcArgsBuffer;
 
-            char szDbgArgsBuffer[4096];
-            snprintf(szDbgArgsBuffer, 4096, "%s %s", szExeFileName, szArgsBuffer);
-
-            if ((int)ShellExecute(NULL, "open", szDebugger, szDbgArgsBuffer, szBuffer, SW_SHOWDEFAULT) <= 32)
-            {
+            if (!XTL::CxbxExec(szProcDbgArgsBuffer, &m_hDebuggerProc, true)) {
                 MessageBox(m_hwnd, "Failed to start emulation with the debugger.\n\nYou will need to build CxbxDebugger manually.", "Cxbx-Reloaded", MB_ICONSTOP | MB_OK);
 
                 printf("WndMain: %s debugger shell failed.\n", m_Xbe->m_szAsciiTitle);
             }
-            else
-            {
+            else {
                 m_bIsStarted = true;
                 printf("WndMain: %s emulation started with debugger.\n", m_Xbe->m_szAsciiTitle);
+                m_hDebuggerMonitorThread = CreateThread(nullptr, 0, DebuggerMonitor, (void*)this, 0, nullptr); // create the debugger monitoring thread
             }
         }
-        else
-        {
-            if ((int)ShellExecute(NULL, "open", szExeFileName, szArgsBuffer, szBuffer, SW_SHOWDEFAULT) <= 32)
-            {
+        else {
+
+            if (!XTL::CxbxExec(szProcArgsBuffer, nullptr, false)) {
                 MessageBox(m_hwnd, "Emulation failed.\n\n If this message repeats, the Xbe is not supported.", "Cxbx-Reloaded", MB_ICONSTOP | MB_OK);
 
                 printf("WndMain: %s shell failed.\n", m_Xbe->m_szAsciiTitle);
             }
-            else
-            {
+            else {
                 m_bIsStarted = true;
                 printf("WndMain: %s emulation started.\n", m_Xbe->m_szAsciiTitle);
             }
@@ -2360,6 +2500,45 @@ void WndMain::CrashMonitor()
 	g_EmuShared->SetIsEmulating(false);
 	UpdateCaption();
 	RefreshMenus();
+}
+
+// monitor for Debugger to close then set as "available" (For limit to 1 debugger per Cxbx GUI.)
+DWORD WINAPI WndMain::DebuggerMonitor(LPVOID lpVoid)
+{
+	CxbxSetThreadName("Cxbx Debugger Monitor");
+	WndMain* pThis = static_cast<WndMain*>(lpVoid);
+
+	if (pThis->m_hDebuggerProc != nullptr) {
+
+		// Peform a wait until Debugger is closed.
+		WaitForSingleObject(pThis->m_hDebuggerProc, INFINITE);
+
+		if (pThis->m_hDebuggerProc != nullptr) {
+			CloseHandle(pThis->m_hDebuggerProc);
+			pThis->m_hDebuggerProc = nullptr;
+		}
+	}
+	CloseHandle(pThis->m_hDebuggerMonitorThread);
+	pThis->m_hDebuggerMonitorThread = nullptr;
+
+	return 0;
+}
+void WndMain::DebuggerMonitorClose()
+{
+
+	if (m_hDebuggerProc != nullptr) {
+		HANDLE hDebuggerProcTemp = m_hDebuggerProc;
+		HANDLE hDebuggerMonitorThreadTemp = m_hDebuggerMonitorThread;
+
+		// Set member to null pointer before terminate, this way debugger monitor thread will remain thread-safe.
+		m_hDebuggerProc = nullptr;
+
+
+		TerminateProcess(hDebuggerProcTemp, EXIT_SUCCESS);
+		CloseHandle(hDebuggerProcTemp);
+
+		WaitForSingleObject(hDebuggerMonitorThreadTemp, INFINITE);
+	}
 }
 
 // draw Xbox LED bitmap

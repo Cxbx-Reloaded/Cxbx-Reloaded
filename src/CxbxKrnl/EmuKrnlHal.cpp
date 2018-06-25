@@ -47,7 +47,7 @@ namespace xboxkrnl
 #include <Shlwapi.h> // For PathRemoveFileSpec()
 #include "Logging.h" // For LOG_FUNC()
 #include "EmuKrnlLogging.h"
-#include "CxbxKrnl.h" // For CxbxKrnlCleanup
+#include "CxbxKrnl.h" // For CxbxKrnlCleanup, CxbxConvertArgToString, and CxbxExec
 #include "Emu.h" // For EmuWarning()
 #include "EmuKrnl.h"
 #include "EmuX86.h" // HalReadWritePciSpace needs this
@@ -576,15 +576,16 @@ XBSYSAPI EXPORTNUM(49) xboxkrnl::VOID DECLSPEC_NORETURN NTAPI xboxkrnl::HalRetur
 				g_EmuShared->SetBootFlags(&QuickReboot);
 				g_EmuShared->SetMultiXbeFlag(&bMultiXbe);
 
-				char szArgsBuffer[4096];
-
 				// Some titles (Xbox Dashboard) use ";" as a final path seperator
 				// This allows the Xbox Live option on the dashboard to properly launch XOnlinedash.xbe
 				std::replace(XbePath.begin(), XbePath.end(), ';', '\\');
 
-				snprintf(szArgsBuffer, 4096, "/load \"%s\" %u %d \"%s\"", XbePath.c_str(), CxbxKrnl_hEmuParent, CxbxKrnl_DebugMode, CxbxKrnl_DebugFileName.c_str());
-				if ((int)ShellExecute(NULL, "open", szFilePath_CxbxReloaded_Exe, szArgsBuffer, szWorkingDirectoy, SW_SHOWDEFAULT) <= 32)
+				std::string szProcArgsBuffer;
+				CxbxConvertArgToString(szProcArgsBuffer, szFilePath_CxbxReloaded_Exe, XbePath.c_str(), CxbxKrnl_hEmuParent, CxbxKrnl_DebugMode, CxbxKrnl_DebugFileName.c_str());
+
+				if (!CxbxExec(szProcArgsBuffer, nullptr, false)) {
 					CxbxKrnlCleanup("Could not launch %s", XbePath.c_str());
+				}
 			}
 		}
 		break;
@@ -600,14 +601,18 @@ XBSYSAPI EXPORTNUM(49) xboxkrnl::VOID DECLSPEC_NORETURN NTAPI xboxkrnl::HalRetur
 		// paths if we want to emulate all the possible fatal errors
 
 		xboxkrnl::HalWriteSMBusValue(SMBUS_ADDRESS_SYSTEM_MICRO_CONTROLLER, SMC_COMMAND_SCRATCH, 0, SMC_SCRATCH_DISPLAY_FATAL_ERROR);
-		char szArgsBuffer[4096];
+
 		char szWorkingDirectoy[MAX_PATH];
 		bool bMultiXbe = true;
 		g_EmuShared->SetMultiXbeFlag(&bMultiXbe);
 		g_EmuShared->GetXbePath(szWorkingDirectoy);
-		snprintf(szArgsBuffer, 4096, "/load \"%s\" %u %d \"%s\"", szWorkingDirectoy, CxbxKrnl_hEmuParent, CxbxKrnl_DebugMode, CxbxKrnl_DebugFileName.c_str());
-		if ((int)ShellExecute(NULL, "open", szFilePath_CxbxReloaded_Exe, szArgsBuffer, szWorkingDirectoy, SW_SHOWDEFAULT) <= 32)
+
+		std::string szProcArgsBuffer;
+		CxbxConvertArgToString(szProcArgsBuffer, szFilePath_CxbxReloaded_Exe, szWorkingDirectoy, CxbxKrnl_hEmuParent, CxbxKrnl_DebugMode, CxbxKrnl_DebugFileName.c_str());
+
+		if (!CxbxExec(szProcArgsBuffer, nullptr, false)) {
 			CxbxKrnlCleanup("Could not launch %s", szWorkingDirectoy);
+		}
 		break;
 	}
 

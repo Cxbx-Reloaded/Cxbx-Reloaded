@@ -76,6 +76,12 @@ class EmuShared : public Mutex
 		static void Cleanup();
 
 		// ******************************************************************
+		// * Check if shared memory is used on launch
+		// ******************************************************************
+		void GetIsFirstLaunch(bool *isFirstLaunch) { Lock(); *isFirstLaunch = m_bFirstLaunch; Unlock(); }
+		void SetIsFirstLaunch(bool isFirstLaunch) { Lock(); m_bFirstLaunch = isFirstLaunch; Unlock(); }
+
+		// ******************************************************************
 		// * Check if parent process is emulating title
 		// ******************************************************************
 		void GetIsEmulating(bool *isEmulating) { Lock(); *isEmulating = m_bEmulating; Unlock(); }
@@ -191,6 +197,11 @@ class EmuShared : public Mutex
 			Unlock();
 		}
 
+		// ******************************************************************
+		// * File storage location
+		// ******************************************************************
+		void GetStorageLocation(char *path) { Lock(); strcpy(path, m_StorageLocation); Unlock(); }
+		void SetStorageLocation(char *path) { Lock(); strcpy(m_StorageLocation, path); Unlock(); }
 
 	private:
 		// ******************************************************************
@@ -222,6 +233,11 @@ class EmuShared : public Mutex
 		int          m_LedSequence[4];
 		int          m_ScaleViewport;
 		int          m_DirectHostBackBufferAccess;
+		char         m_StorageLocation[MAX_PATH];
+		bool         m_bFirstLaunch;
+		bool         m_bReserved2;
+		bool         m_bReserved3;
+		bool         m_bReserved4;
 };
 
 // ******************************************************************

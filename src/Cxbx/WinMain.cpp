@@ -59,8 +59,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	}
 	
 	if (bIsWow64 == FALSE) {
-		MessageBox(NULL, "Cxbx-Reloaded can only run under WoW64\nThis means either a 64-bit version of Windows or Wine with a 64-bit prefix", "Cxbx-Reloaded", MB_OK);
-		return 1;
+		MessageBox(NULL, "Cxbx-Reloaded can only run under WoW64\nThis means either a 64-bit version of Windows or Wine with a 64-bit prefix", "Cxbx-Reloaded",
+			MB_OK | MB_ICONERROR);
+		return EXIT_FAILURE;
 	}
 
 	/*! verify Cxbx.exe is loaded to base address 0x00010000 */
@@ -69,19 +70,39 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		/*! CXBX_BASE_ADDR is defined as 0x00010000, which is the base address of
 			the Cxbx.exe host executable.
 		    Set in Cxbx Project options, Linker, Advanced, Base Address */
-		MessageBox(NULL, "Cxbx.exe is not loaded to base address 0x00010000 (which is a requirement for Xbox emulation)", "Cxbx-Reloaded", MB_OK);
-		return 1;
+		MessageBox(NULL, "Cxbx.exe is not loaded to base address 0x00010000 (which is a requirement for Xbox emulation)", "Cxbx-Reloaded",
+			MB_OK | MB_ICONERROR);
+		return EXIT_FAILURE;
 	}
 
-	/* Initialize Cxbx File Paths */
-	CxbxInitFilePaths();
+	/*! initialize shared memory */
+	EmuShared::Init();
 
-    /*! initialize shared memory */
-    EmuShared::Init();
+	bool bFirstLaunch;
+	g_EmuShared->GetIsFirstLaunch(&bFirstLaunch);
+
+    /* check if process is launch with elevated access then prompt for continue on or not. */
+	if (!bFirstLaunch) {
+		bool bElevated = CxbxIsElevated();
+		if (bElevated && !bFirstLaunch) {
+			int ret = MessageBox(NULL, "Cxbx-Reloaded has detected that it has been launched with Administrator rights.\n"
+								"\nThis is dangerous, as a maliciously modified Xbox titles could take control of your system.\n"
+								"\nAre you sure you want to continue?", "Cxbx-Reloaded", MB_YESNO | MB_ICONWARNING);
+			if (ret != IDYES) {
+				EmuShared::Cleanup();
+				return EXIT_FAILURE;
+			}
+		}
+		g_EmuShared->SetIsFirstLaunch(true);
+	}
 
 	if (__argc >= 2 && strcmp(__argv[1], "/load") == 0 && strlen(__argv[2]) > 0)  {
+
+		/* Initialize Cxbx File Paths */
+		CxbxInitFilePaths();
+
 		CxbxKrnlMain(__argc, __argv);
-		return 0;
+		return EXIT_SUCCESS;
 	}
 
 	INITCOMMONCONTROLSEX icc;
@@ -90,6 +111,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	InitCommonControlsEx(&icc);
 
     WndMain *MainWindow = new WndMain(hInstance);
+
+	// NOTE: CxbxInitFilePaths must be initalize AFTER WndMain for data directory option from user.
+	/* Initialize Cxbx File Paths */
+	CxbxInitFilePaths();
 
     /*! wait for window to be created, or failure */
     while(!MainWindow->isCreated() && MainWindow->ProcessMessages())
@@ -122,5 +147,5 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     /*! cleanup shared memory */
     EmuShared::Cleanup();
 
-    return 0;
+    return EXIT_SUCCESS;
 }

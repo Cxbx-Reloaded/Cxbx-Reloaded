@@ -138,6 +138,8 @@ EmuShared::EmuShared()
 	Load();
 	m_bDebugging = false;
 	m_bMultiXbeFlag = false;
+	m_bEmulating = false;
+	m_bFirstLaunch = false;
 }
 
 // ******************************************************************

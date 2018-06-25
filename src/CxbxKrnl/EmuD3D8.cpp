@@ -2615,18 +2615,6 @@ HRESULT WINAPI XTL::EMUPATCH(Direct3D_CreateDevice)
 }
 
 // ******************************************************************
-// * patch: IDirect3DResource8_IsBusy
-// ******************************************************************
-BOOL WINAPI XTL::EMUPATCH(D3DDevice_IsBusy)()
-{
-	FUNC_EXPORTS
-
-	LOG_FUNC();
-    
-    return FALSE;
-}
-
-// ******************************************************************
 // * patch: D3DDevice_GetDisplayFieldStatus
 // ******************************************************************
 VOID WINAPI XTL::EMUPATCH(D3DDevice_GetDisplayFieldStatus)(X_D3DFIELD_STATUS *pFieldStatus)
@@ -3300,6 +3288,10 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetViewport)
 
 	D3DVIEWPORT HostViewPort = *pViewport;
 
+	// Always call the Xbox SetViewPort to update D3D Internal State
+	XB_trampoline(VOID, WINAPI, D3DDevice_SetViewport, (CONST X_D3DVIEWPORT8 *));
+	XB_D3DDevice_SetViewport(pViewport);
+
 	if (g_pXboxRenderTarget) {
 		// Get current Xbox render target dimensions
 		DWORD XboxRenderTarget_Width = GetPixelContainerWidth(g_pXboxRenderTarget);
@@ -3317,11 +3309,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetViewport)
 		}
 
 		if (g_ScaleViewport) {
-#if 0 // Disabled for now, as the Xbox code triggers an error-code 6 in uc_emu_start()
-			// Use a trampoline here, so GetViewport can be unpatched
-			XB_trampoline(VOID, WINAPI, D3DDevice_SetViewport, (CONST X_D3DVIEWPORT8 *));
-			XB_D3DDevice_SetViewport(pViewport);
-#endif
 			// Get current host render target dimensions
 			DWORD HostRenderTarget_Width;
 			DWORD HostRenderTarget_Height;
@@ -3344,58 +3331,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetViewport)
 
 	HRESULT hRet = g_pD3DDevice->SetViewport(&HostViewPort);
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetViewport");
-}
-
-// ******************************************************************
-// * patch: D3DDevice_GetViewport
-// ******************************************************************
-VOID WINAPI XTL::EMUPATCH(D3DDevice_GetViewport)
-(
-    X_D3DVIEWPORT8 *pViewport
-)
-{
-	FUNC_EXPORTS
-
-	LOG_FUNC_ONE_ARG(pViewport);
-
-	D3DVIEWPORT HostViewPort;
-
-	HRESULT hRet = g_pD3DDevice->GetViewport(&HostViewPort);
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->GetViewport");
-
-	if (!g_ScaleViewport) {
-		*pViewport = HostViewPort;
-	}
-	else {
-		// Note : We cannot return the Xbox viewport as set in EMUPATCH(D3DDevice_SetViewport)
-		// because various Xbox D3D functions reset the Xbox viewport. Since we call comparable
-		// functions on host D3D, the host viewport is better suited as a return value;
-		// We just need to scale the host viewport back to Xbox dimensions - the exact opposite
-		// operation from the up-scaling that happens in EMUPATCH(D3DDevice_SetViewport).
-
-		// Get current host render target dimensions
-		DWORD HostRenderTarget_Width;
-		DWORD HostRenderTarget_Height;
-
-		if (GetHostRenderTargetDimensions(&HostRenderTarget_Width, &HostRenderTarget_Height)) {
-
-			// Get current Xbox render target dimensions
-			DWORD XboxRenderTarget_Width = GetPixelContainerWidth(g_pXboxRenderTarget);
-			DWORD XboxRenderTarget_Height = GetPixelContainerHeigth(g_pXboxRenderTarget);
-
-			// Scale host back to Xbox dimensions (avoiding hard-coding 640 x 480)
-			pViewport->X = ScaleDWORD(HostViewPort.X, HostRenderTarget_Width, XboxRenderTarget_Width);
-			pViewport->Y = ScaleDWORD(HostViewPort.Y, HostRenderTarget_Height, XboxRenderTarget_Height);
-			pViewport->Width = ScaleDWORD(HostViewPort.Width, HostRenderTarget_Width, XboxRenderTarget_Width);
-			pViewport->Height = ScaleDWORD(HostViewPort.Height, HostRenderTarget_Height, XboxRenderTarget_Height);
-			pViewport->MinZ = HostViewPort.MinZ; // No need scale Z for now
-			pViewport->MaxZ = HostViewPort.MaxZ;
-		}
-		else {
-			*pViewport = HostViewPort;
-			EmuWarning("GetHostRenderTargetDimensions failed - GetViewport returns host viewport instead!");
-		}
-	}
 }
 
 // LTCG specific D3DDevice_GetViewportOffsetAndScale function...
@@ -4080,9 +4015,25 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexData2s)
 
 	LOG_FORWARD("D3DDevice_SetVertexData4f");
 
-    DWORD dwA = a, dwB = b;
+	float fa, fb;
+	
+	switch (Register) {
+		// Special case: If the input register is a color, don't transform!
+		// Test case: Halo
+		case X_D3DVSDE_DIFFUSE:
+		case X_D3DVSDE_SPECULAR:
+		case X_D3DVSDE_BACKDIFFUSE:
+		case X_D3DVSDE_BACKSPECULAR:
+			fa = a;
+			fb = b;
+			break;
+		default:
+			fa = a / 32767.0f;
+			fb = b / 32767.0f;
+			break;
+	}
 
-    EMUPATCH(D3DDevice_SetVertexData4f)(Register, DWtoF(dwA), DWtoF(dwB), 0.0f, 1.0f);
+    EMUPATCH(D3DDevice_SetVertexData4f)(Register, fa, fb, 0.0f, 1.0f);
 }
 
 DWORD FloatsToDWORD(FLOAT d, FLOAT a, FLOAT b, FLOAT c)
@@ -4231,14 +4182,14 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexData4f)
 
         case X_D3DVSDE_DIFFUSE:
         {
-            g_InlineVertexBuffer_Table[o].Diffuse = FloatsToDWORD(d, a, b, c);
+            g_InlineVertexBuffer_Table[o].Diffuse = D3DCOLOR_COLORVALUE(a, b, c, d);
             g_InlineVertexBuffer_FVF |= D3DFVF_DIFFUSE;
 			break;
         }
 
 		case X_D3DVSDE_SPECULAR:
         {
-            g_InlineVertexBuffer_Table[o].Specular = FloatsToDWORD(d, a, b, c);
+            g_InlineVertexBuffer_Table[o].Specular = D3DCOLOR_COLORVALUE(a, b, c, d);
             g_InlineVertexBuffer_FVF |= D3DFVF_SPECULAR;
 			break;
         }
@@ -4254,14 +4205,14 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexData4f)
 
 		case X_D3DVSDE_BACKDIFFUSE: // Xbox extension
 		{
-			g_InlineVertexBuffer_Table[o].BackDiffuse = FloatsToDWORD(d, a, b, c);
+			g_InlineVertexBuffer_Table[o].BackDiffuse = D3DCOLOR_COLORVALUE(a, b, c, d);
 			EmuWarning("Host Direct3D8 doesn''t support FVF BACKDIFFUSE");
 			break;
 		}
 
 		case X_D3DVSDE_BACKSPECULAR: // Xbox extension
 		{
-			g_InlineVertexBuffer_Table[o].BackSpecular = FloatsToDWORD(d, a, b, c);
+			g_InlineVertexBuffer_Table[o].BackSpecular = D3DCOLOR_COLORVALUE(a, b, c, d);
 			EmuWarning("Host Direct3D8 doesn''t support FVF BACKSPECULAR");
 			break;
 		}
@@ -4346,9 +4297,12 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexData4ub)
 
 	LOG_FORWARD("D3DDevice_SetVertexData4f");
 
-	DWORD dwA = a, dwB = b, dwC = c, dwD = d;
+	float fa = a / 255.0f;
+	float fb = b / 255.0f;
+	float fc = c / 255.0f;
+	float fd = d / 255.0f;
 
-    EMUPATCH(D3DDevice_SetVertexData4f)(Register, DWtoF(dwA), DWtoF(dwB), DWtoF(dwC), DWtoF(dwD));
+    EMUPATCH(D3DDevice_SetVertexData4f)(Register, fa, fb, fc, fd);
 }
 
 // ******************************************************************
@@ -4367,9 +4321,29 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexData4s)
 
 	LOG_FORWARD("D3DDevice_SetVertexData4f");
 
-	DWORD dwA = a, dwB = b, dwC = c, dwD = d;
+	float fa, fb, fc, fd;
 
-    EMUPATCH(D3DDevice_SetVertexData4f)(Register, DWtoF(dwA), DWtoF(dwB), DWtoF(dwC), DWtoF(dwD));
+	// Special case: If the input register is a color, don't transform!
+	// Test case: Halo
+	switch (Register) {
+		case X_D3DVSDE_DIFFUSE:
+		case X_D3DVSDE_SPECULAR:
+		case X_D3DVSDE_BACKDIFFUSE:
+		case X_D3DVSDE_BACKSPECULAR:
+			fa = a;
+			fb = b;
+			fc = c;
+			fd = d;
+			break;
+		default:
+			fa = a / 32767.0f;
+			fb = b / 32767.0f;
+			fc = c / 32767.0f;
+			fd = d / 32767.0f;
+			break;
+	}
+
+    EMUPATCH(D3DDevice_SetVertexData4f)(Register, fa, fb, fc, fd);
 }
 
 // ******************************************************************
@@ -4385,10 +4359,10 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexDataColor)
 
 	LOG_FORWARD("D3DDevice_SetVertexData4f");
 
-    FLOAT a = DWtoF((Color & 0xFF000000) >> 24);
-    FLOAT r = DWtoF((Color & 0x00FF0000) >> 16);
-    FLOAT g = DWtoF((Color & 0x0000FF00) >> 8);
-    FLOAT b = DWtoF((Color & 0x000000FF) >> 0);
+    FLOAT a = ((Color & 0xFF000000) >> 24) / 255.0f;
+    FLOAT r = ((Color & 0x00FF0000) >> 16) / 255.0f;
+    FLOAT g = ((Color & 0x0000FF00) >> 8) / 255.0f;
+    FLOAT b = ((Color & 0x000000FF) >> 0) / 255.0f;
 
     EMUPATCH(D3DDevice_SetVertexData4f)(Register, r, g, b, a);
 }
@@ -5565,23 +5539,6 @@ ULONG WINAPI XTL::EMUPATCH(D3DResource_Release)
 }
 
 // ******************************************************************
-// * patch: IDirect3DResource8_IsBusy
-// ******************************************************************
-BOOL WINAPI XTL::EMUPATCH(D3DResource_IsBusy)
-(
-    X_D3DResource      *pThis
-)
-{
-	FUNC_EXPORTS
-
-    /* too much output
-	LOG_FUNC_ONE_ARG(pThis);
-    //*/
-
-    return FALSE;
-}
-
-// ******************************************************************
 // * patch: D3DDevice_EnableOverlay
 // ******************************************************************
 VOID WINAPI XTL::EMUPATCH(D3DDevice_EnableOverlay)
@@ -6202,44 +6159,94 @@ VOID __fastcall XTL::EMUPATCH(D3DDevice_SetRenderState_Simple)
 		LOG_FUNC_ARG(Value)
 		LOG_FUNC_END;
 
-    int State = -1;
-
-    // Todo: make this faster and more elegant
-    for(int v=0;v<174;v++)
-    {
-        if(EmuD3DRenderStateSimpleEncoded[v] == Method)
-        {
-            State = v;
-            break;
-        }
-    }
-
 	// Special Case: Handle PixelShader related Render States
 	// TODO: Port over EmuMappedD3DRenderState and related code from Dxbx or Wip_LessVertexPatching
 	// After this, we don't need to do this part anymore
 	switch (Method & 0x00001FFC) {
-		case /*0x00000a60*/NV2A_RC_CONSTANT_COLOR0(0): TemporaryPixelShaderConstants[X_D3DRS_PSCONSTANT0_0] = Value; return;
-		case /*0x00000a64*/NV2A_RC_CONSTANT_COLOR0(1): TemporaryPixelShaderConstants[X_D3DRS_PSCONSTANT0_1] = Value; return;
-		case /*0x00000a68*/NV2A_RC_CONSTANT_COLOR0(2): TemporaryPixelShaderConstants[X_D3DRS_PSCONSTANT0_2] = Value; return;
-		case /*0x00000a6c*/NV2A_RC_CONSTANT_COLOR0(3): TemporaryPixelShaderConstants[X_D3DRS_PSCONSTANT0_3] = Value; return;
-		case /*0x00000a70*/NV2A_RC_CONSTANT_COLOR0(4): TemporaryPixelShaderConstants[X_D3DRS_PSCONSTANT0_4] = Value; return;
-		case /*0x00000a74*/NV2A_RC_CONSTANT_COLOR0(5): TemporaryPixelShaderConstants[X_D3DRS_PSCONSTANT0_5] = Value; return;
-		case /*0x00000a78*/NV2A_RC_CONSTANT_COLOR0(6): TemporaryPixelShaderConstants[X_D3DRS_PSCONSTANT0_6] = Value; return;
-		case /*0x00000a7c*/NV2A_RC_CONSTANT_COLOR0(7): TemporaryPixelShaderConstants[X_D3DRS_PSCONSTANT0_7] = Value; return;
-		case /*0x00000a80*/NV2A_RC_CONSTANT_COLOR1(0): TemporaryPixelShaderConstants[X_D3DRS_PSCONSTANT1_0] = Value; return;
-		case /*0x00000a84*/NV2A_RC_CONSTANT_COLOR1(1): TemporaryPixelShaderConstants[X_D3DRS_PSCONSTANT1_1] = Value; return;
-		case /*0x00000a88*/NV2A_RC_CONSTANT_COLOR1(2): TemporaryPixelShaderConstants[X_D3DRS_PSCONSTANT1_2] = Value; return;
-		case /*0x00000a8c*/NV2A_RC_CONSTANT_COLOR1(3): TemporaryPixelShaderConstants[X_D3DRS_PSCONSTANT1_3] = Value; return;
-		case /*0x00000a90*/NV2A_RC_CONSTANT_COLOR1(4): TemporaryPixelShaderConstants[X_D3DRS_PSCONSTANT1_4] = Value; return;
-		case /*0x00000a94*/NV2A_RC_CONSTANT_COLOR1(5): TemporaryPixelShaderConstants[X_D3DRS_PSCONSTANT1_5] = Value; return;
-		case /*0x00000a98*/NV2A_RC_CONSTANT_COLOR1(6): TemporaryPixelShaderConstants[X_D3DRS_PSCONSTANT1_6] = Value; return;
-		case /*0x00000a9c*/NV2A_RC_CONSTANT_COLOR1(7): TemporaryPixelShaderConstants[X_D3DRS_PSCONSTANT1_7] = Value; return;
-		case /*0x00001e20*/NV2A_RC_COLOR0: TemporaryPixelShaderConstants[X_D3DRS_PSFINALCOMBINERCONSTANT0] = Value; return;
-		case /*0x00001e24*/NV2A_RC_COLOR1: TemporaryPixelShaderConstants[X_D3DRS_PSFINALCOMBINERCONSTANT1] = Value; return;
+		case NV2A_RC_IN_ALPHA(0): TemporaryPixelShaderRenderStates[X_D3DRS_PSALPHAINPUTS0] = Value; return;
+		case NV2A_RC_IN_ALPHA(1): TemporaryPixelShaderRenderStates[X_D3DRS_PSALPHAINPUTS1] = Value; return;
+		case NV2A_RC_IN_ALPHA(2): TemporaryPixelShaderRenderStates[X_D3DRS_PSALPHAINPUTS2] = Value; return;
+		case NV2A_RC_IN_ALPHA(3): TemporaryPixelShaderRenderStates[X_D3DRS_PSALPHAINPUTS3] = Value; return;
+		case NV2A_RC_IN_ALPHA(4): TemporaryPixelShaderRenderStates[X_D3DRS_PSALPHAINPUTS4] = Value; return;
+		case NV2A_RC_IN_ALPHA(5): TemporaryPixelShaderRenderStates[X_D3DRS_PSALPHAINPUTS5] = Value; return;
+		case NV2A_RC_IN_ALPHA(6): TemporaryPixelShaderRenderStates[X_D3DRS_PSALPHAINPUTS6] = Value; return;
+		case NV2A_RC_IN_ALPHA(7): TemporaryPixelShaderRenderStates[X_D3DRS_PSALPHAINPUTS7] = Value; return;
+		case NV2A_RC_FINAL0: TemporaryPixelShaderRenderStates[X_D3DRS_PSFINALCOMBINERINPUTSABCD] = Value; return;
+		case NV2A_RC_FINAL1: TemporaryPixelShaderRenderStates[X_D3DRS_PSFINALCOMBINERINPUTSEFG] = Value; return;
+		case NV2A_RC_CONSTANT_COLOR0(0): TemporaryPixelShaderRenderStates[X_D3DRS_PSCONSTANT0_0] = Value; return;
+		case NV2A_RC_CONSTANT_COLOR0(1): TemporaryPixelShaderRenderStates[X_D3DRS_PSCONSTANT0_1] = Value; return;
+		case NV2A_RC_CONSTANT_COLOR0(2): TemporaryPixelShaderRenderStates[X_D3DRS_PSCONSTANT0_2] = Value; return;
+		case NV2A_RC_CONSTANT_COLOR0(3): TemporaryPixelShaderRenderStates[X_D3DRS_PSCONSTANT0_3] = Value; return;
+		case NV2A_RC_CONSTANT_COLOR0(4): TemporaryPixelShaderRenderStates[X_D3DRS_PSCONSTANT0_4] = Value; return;
+		case NV2A_RC_CONSTANT_COLOR0(5): TemporaryPixelShaderRenderStates[X_D3DRS_PSCONSTANT0_5] = Value; return;
+		case NV2A_RC_CONSTANT_COLOR0(6): TemporaryPixelShaderRenderStates[X_D3DRS_PSCONSTANT0_6] = Value; return;
+		case NV2A_RC_CONSTANT_COLOR0(7): TemporaryPixelShaderRenderStates[X_D3DRS_PSCONSTANT0_7] = Value; return;
+		case NV2A_RC_CONSTANT_COLOR1(0): TemporaryPixelShaderRenderStates[X_D3DRS_PSCONSTANT1_0] = Value; return;
+		case NV2A_RC_CONSTANT_COLOR1(1): TemporaryPixelShaderRenderStates[X_D3DRS_PSCONSTANT1_1] = Value; return;
+		case NV2A_RC_CONSTANT_COLOR1(2): TemporaryPixelShaderRenderStates[X_D3DRS_PSCONSTANT1_2] = Value; return;
+		case NV2A_RC_CONSTANT_COLOR1(3): TemporaryPixelShaderRenderStates[X_D3DRS_PSCONSTANT1_3] = Value; return;
+		case NV2A_RC_CONSTANT_COLOR1(4): TemporaryPixelShaderRenderStates[X_D3DRS_PSCONSTANT1_4] = Value; return;
+		case NV2A_RC_CONSTANT_COLOR1(5): TemporaryPixelShaderRenderStates[X_D3DRS_PSCONSTANT1_5] = Value; return;
+		case NV2A_RC_CONSTANT_COLOR1(6): TemporaryPixelShaderRenderStates[X_D3DRS_PSCONSTANT1_6] = Value; return;
+		case NV2A_RC_CONSTANT_COLOR1(7): TemporaryPixelShaderRenderStates[X_D3DRS_PSCONSTANT1_7] = Value; return;
+		case NV2A_RC_OUT_ALPHA(0): TemporaryPixelShaderRenderStates[X_D3DRS_PSALPHAOUTPUTS0] = Value; return;
+		case NV2A_RC_OUT_ALPHA(1): TemporaryPixelShaderRenderStates[X_D3DRS_PSALPHAOUTPUTS1] = Value; return;
+		case NV2A_RC_OUT_ALPHA(2): TemporaryPixelShaderRenderStates[X_D3DRS_PSALPHAOUTPUTS2] = Value; return;
+		case NV2A_RC_OUT_ALPHA(3): TemporaryPixelShaderRenderStates[X_D3DRS_PSALPHAOUTPUTS3] = Value; return;
+		case NV2A_RC_OUT_ALPHA(4): TemporaryPixelShaderRenderStates[X_D3DRS_PSALPHAOUTPUTS4] = Value; return;
+		case NV2A_RC_OUT_ALPHA(5): TemporaryPixelShaderRenderStates[X_D3DRS_PSALPHAOUTPUTS5] = Value; return;
+		case NV2A_RC_OUT_ALPHA(6): TemporaryPixelShaderRenderStates[X_D3DRS_PSALPHAOUTPUTS6] = Value; return;
+		case NV2A_RC_OUT_ALPHA(7): TemporaryPixelShaderRenderStates[X_D3DRS_PSALPHAOUTPUTS7] = Value; return;
+		case NV2A_RC_IN_RGB(0): TemporaryPixelShaderRenderStates[X_D3DRS_PSRGBINPUTS0] = Value; return;
+		case NV2A_RC_IN_RGB(1): TemporaryPixelShaderRenderStates[X_D3DRS_PSRGBINPUTS1] = Value; return;
+		case NV2A_RC_IN_RGB(2): TemporaryPixelShaderRenderStates[X_D3DRS_PSRGBINPUTS2] = Value; return;
+		case NV2A_RC_IN_RGB(3): TemporaryPixelShaderRenderStates[X_D3DRS_PSRGBINPUTS3] = Value; return;
+		case NV2A_RC_IN_RGB(4): TemporaryPixelShaderRenderStates[X_D3DRS_PSRGBINPUTS4] = Value; return;
+		case NV2A_RC_IN_RGB(5): TemporaryPixelShaderRenderStates[X_D3DRS_PSRGBINPUTS5] = Value; return;
+		case NV2A_RC_IN_RGB(6): TemporaryPixelShaderRenderStates[X_D3DRS_PSRGBINPUTS6] = Value; return;
+		case NV2A_RC_IN_RGB(7): TemporaryPixelShaderRenderStates[X_D3DRS_PSRGBINPUTS7] = Value; return;
+		case NV2A_TX_SHADER_CULL_MODE: TemporaryPixelShaderRenderStates[X_D3DRS_PSCOMPAREMODE] = Value; return;
+		case NV2A_RC_COLOR0: TemporaryPixelShaderRenderStates[X_D3DRS_PSFINALCOMBINERCONSTANT0] = Value; return;
+		case NV2A_RC_COLOR1: TemporaryPixelShaderRenderStates[X_D3DRS_PSFINALCOMBINERCONSTANT1] = Value; return;
+		case NV2A_RC_OUT_RGB(0): TemporaryPixelShaderRenderStates[X_D3DRS_PSRGBOUTPUTS0] = Value; return;
+		case NV2A_RC_OUT_RGB(1): TemporaryPixelShaderRenderStates[X_D3DRS_PSRGBOUTPUTS1] = Value; return;
+		case NV2A_RC_OUT_RGB(2): TemporaryPixelShaderRenderStates[X_D3DRS_PSRGBOUTPUTS2] = Value; return;
+		case NV2A_RC_OUT_RGB(3): TemporaryPixelShaderRenderStates[X_D3DRS_PSRGBOUTPUTS3] = Value; return;
+		case NV2A_RC_OUT_RGB(4): TemporaryPixelShaderRenderStates[X_D3DRS_PSRGBOUTPUTS4] = Value; return;
+		case NV2A_RC_OUT_RGB(5): TemporaryPixelShaderRenderStates[X_D3DRS_PSRGBOUTPUTS5] = Value; return;
+		case NV2A_RC_OUT_RGB(6): TemporaryPixelShaderRenderStates[X_D3DRS_PSRGBOUTPUTS6] = Value; return;
+		case NV2A_RC_OUT_RGB(7): TemporaryPixelShaderRenderStates[X_D3DRS_PSRGBOUTPUTS7] = Value; return;
+		case NV2A_RC_ENABLE: TemporaryPixelShaderRenderStates[X_D3DRS_PSCOMBINERCOUNT] = Value; return;
+		case NV2A_NOP: TemporaryPixelShaderRenderStates[X_D3DRS_PS_RESERVED] = Value; return; // Dxbx note : This takes the slot of X_D3DPIXELSHADERDEF.PSTextureModes, set by D3DDevice_SetRenderState_LogicOp?
+		case NV2A_TX_SHADER_DOTMAPPING: TemporaryPixelShaderRenderStates[X_D3DRS_PSDOTMAPPING] = Value; return;
+		case NV2A_TX_SHADER_PREVIOUS: TemporaryPixelShaderRenderStates[X_D3DRS_PSINPUTTEXTURE] = Value; return;	
 	}
 
-    if(State == -1)
-        EmuWarning("RenderState_Simple(0x%.08X, 0x%.08X) is unsupported!", Method, Value);
+	// Fallback to non-shader render state handling
+	int State = -1;
+
+	// Todo: make this faster and more elegant
+	for (int v = 0; v<174; v++)
+	{
+		if (EmuD3DRenderStateSimpleEncoded[v] == Method)
+		{
+			State = v;
+			break;
+		}
+	}
+
+	if (State == -1) {
+		// Attempt to determine renderstate name for unsupported types
+		std::string name = "Unknown";
+		for (int i = 0; i <= X_D3DRS_DONOTCULLUNCOMPRESSED; i++) {
+			if (DxbxRenderStateInfo[i].M == (Method & 0x00001FFC)) {
+				name = DxbxRenderStateInfo[i].S;
+				break;
+			}
+		}
+
+		EmuWarning("RenderState_Simple(0x%.08X (%s), 0x%.08X) is unsupported!", Method, name.c_str(), Value);
+	}
     else
     {
         switch(State)
@@ -6359,22 +6366,24 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderState_VertexBlend)
     DWORD Value
 )
 {
-	FUNC_EXPORTS
+    FUNC_EXPORTS
 
-	LOG_FUNC_ONE_ARG(Value);
+    LOG_FUNC_ONE_ARG(Value);
 
     // convert from Xbox direct3d to PC direct3d enumeration
-    if(Value <= 1)
+    if(Value <= 1) {
         Value = Value;
-    else if(Value == 3)
+    } else if(Value == 3) {
         Value = 2;
-    else if(Value == 5)
+    } else if(Value == 5) {
         Value = 3;
-    else
-        CxbxKrnlCleanup("Unsupported D3DVERTEXBLENDFLAGS (%d)", Value);
+    } else {
+        LOG_TEST_CASE("Unsupported D3DVERTEXBLENDFLAGS (%d)", Value);
+        return;
+	}
 
-	HRESULT hRet = g_pD3DDevice->SetRenderState(D3DRS_VERTEXBLEND, Value);
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetRenderState");
+    HRESULT hRet = g_pD3DDevice->SetRenderState(D3DRS_VERTEXBLEND, Value);
+    DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetRenderState");
 }
 
 // ******************************************************************
@@ -6386,12 +6395,9 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderState_PSTextureModes)
 )
 {
 	FUNC_EXPORTS
-
 	LOG_FUNC_ONE_ARG(Value);
 
-    // TODO: do something..
-
-	LOG_UNIMPLEMENTED();
+	XTL::TemporaryPixelShaderRenderStates[XTL::X_D3DRS_PSTEXTUREMODES] = Value;
 }
 
 // ******************************************************************
@@ -7471,6 +7477,21 @@ void XTL::CxbxUpdateNativeD3DResources()
 */
 }
 
+VOID __declspec(noinline) D3DDevice_SetPixelShaderCommon(DWORD Handle)
+{
+	// Update the global pixel shader and Render States
+	// TODO: Remove all of this as soon as RenderState functions are all unpatched!
+	// At that point, SetPixelShader could be FULLY unpatched
+	g_D3DActivePixelShader = (XTL::X_PixelShader*)Handle;
+
+	// Copy the Pixel Shader data to the TemporaryPixelShaderRenderStates array
+	// This mirrors the fact that unpathed SetPixelShader does the same thing!
+	if (g_D3DActivePixelShader != nullptr) {
+		memcpy(&(XTL::TemporaryPixelShaderRenderStates[XTL::X_D3DRS_PSALPHAINPUTS0]), g_D3DActivePixelShader->pPSDef, sizeof(XTL::X_D3DPIXELSHADERDEF) - 3 * sizeof(DWORD));
+		XTL::TemporaryPixelShaderRenderStates[XTL::X_D3DRS_PSTEXTUREMODES] = g_D3DActivePixelShader->pPSDef->PSTextureModes;
+	}
+}
+
 // LTCG specific D3DDevice_SetPixelShader function...
 // This uses a custom calling convention where parameter is passed in EAX
 // TODO: XB_trampoline plus Log function is not working due lost parameter in EAX.
@@ -7492,8 +7513,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetPixelShader_0)
 	//XB_trampoline(VOID, WINAPI, D3DDevice_SetPixelShader_0, ());
 	//XB_D3DDevice_SetPixelShader_0();
 
-	// Update the global pixel shader
-	g_D3DActivePixelShader = (X_PixelShader*)Handle;
+	D3DDevice_SetPixelShaderCommon(Handle);
 }
 
 // ******************************************************************
@@ -7511,8 +7531,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetPixelShader)
 	XB_trampoline(VOID, WINAPI, D3DDevice_SetPixelShader, (DWORD));
 	XB_D3DDevice_SetPixelShader(Handle);
 
-	// Update the global pixel shader
-	g_D3DActivePixelShader = (X_PixelShader*)Handle;
+	D3DDevice_SetPixelShaderCommon(Handle);
 }
 
 
@@ -8861,28 +8880,6 @@ VOID WINAPI XTL::EMUPATCH(D3DResource_BlockUntilNotBusy)
 }
 
 // ******************************************************************
-// * patch: D3DDevice_SetScissors
-// ******************************************************************
-VOID WINAPI XTL::EMUPATCH(D3DDevice_SetScissors)
-(
-    DWORD          Count,
-    BOOL           Exclusive,
-    CONST D3DRECT  *pRects
-)
-{
-	FUNC_EXPORTS
-
-	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(Count)
-		LOG_FUNC_ARG(Exclusive)
-		LOG_FUNC_ARG(pRects)
-		LOG_FUNC_END;
-
-    // TODO: Implement
-	LOG_UNIMPLEMENTED();
-}
-
-// ******************************************************************
 // * patch: D3DDevice_SetScreenSpaceOffset
 // ******************************************************************
 VOID WINAPI XTL::EMUPATCH(D3DDevice_SetScreenSpaceOffset)
@@ -9221,20 +9218,6 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_GetModelView)(D3DXMATRIX* pModelView)
 	return D3D_OK;
 }
 
-// ******************************************************************
-// * patch: D3DDevice_SetBackMaterial
-// ******************************************************************
-VOID WINAPI XTL::EMUPATCH(D3DDevice_SetBackMaterial)
-(
-	X_D3DMATERIAL8* pMaterial
-)
-{
-	FUNC_EXPORTS
-
-	LOG_FUNC_ONE_ARG(pMaterial);
-
-	LOG_NOT_SUPPORTED();
-}
 
 DWORD PushBuffer[64 * 1024 / sizeof(DWORD)];
 
@@ -9252,6 +9235,21 @@ void WINAPI XTL::EMUPATCH(D3D_SetCommonDebugRegisters)()
 
 	LOG_UNIMPLEMENTED();
 
+}
+
+// ******************************************************************
+// * patch: D3DDevice_IsBusy
+// ******************************************************************
+BOOL WINAPI XTL::EMUPATCH(D3DDevice_IsBusy)()
+{
+	FUNC_EXPORTS
+
+		LOG_FUNC();
+
+	// NOTE: This function returns FALSE when the NV2A FIFO is empty/complete, or NV_PGRAPH_STATUS = 0
+	// Otherwise, it returns true.
+
+	return FALSE;
 }
 
 // ******************************************************************
@@ -9276,21 +9274,6 @@ void WINAPI XTL::EMUPATCH(D3D_BlockOnTime)( DWORD Unknown1, int Unknown2 )
 }
 
 // ******************************************************************
-// * patch: D3D_BlockOnResource
-// ******************************************************************
-void WINAPI XTL::EMUPATCH(D3D_BlockOnResource)( X_D3DResource* pResource )
-{
-	FUNC_EXPORTS
-
-	LOG_FUNC_ONE_ARG(pResource);
-
-	// TODO: Implement
-	// NOTE: Azurik appears to call this directly from numerous points
-	LOG_UNIMPLEMENTED();
-		
-}
-
-// ******************************************************************
 // * patch: D3DDevice_SetRenderTargetFast
 // ******************************************************************
 VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderTargetFast)
@@ -9307,71 +9290,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderTargetFast)
 	// Redirect to the standard version.
 	
 	EMUPATCH(D3DDevice_SetRenderTarget)(pRenderTarget, pNewZStencil);
-}
-
-// ******************************************************************
-// * patch: D3DDevice_GetScissors
-// ******************************************************************
-VOID WINAPI XTL::EMUPATCH(D3DDevice_GetScissors)
-(
-	DWORD	*pCount, 
-	BOOL	*pExclusive, 
-	D3DRECT *pRects
-)
-{
-	FUNC_EXPORTS
-
-	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(pCount)
-		LOG_FUNC_ARG(pExclusive)
-		LOG_FUNC_ARG(pRects)
-		LOG_FUNC_END;
-
-    // TODO: Save a copy of each scissor rect in case this function is called
-	// in conjunction with D3DDevice::SetScissors. So far, only Outrun2 uses
-	// this function. For now, just return the values within the current
-	// viewport.
-
-	D3DVIEWPORT vp;
-
-	HRESULT hRet = g_pD3DDevice->GetViewport( &vp );
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->GetViewport");
-
-	pRects->x1 = pRects->y1 = 0;
-	pRects->x2 = vp.Width;
-	pRects->y2 = vp.Height;
-
-	pExclusive[0] = FALSE;
-}
-
-// ******************************************************************
-// * patch: D3DDevice_GetBackMaterial
-// ******************************************************************
-VOID WINAPI XTL::EMUPATCH(D3DDevice_GetBackMaterial)
-(
-	X_D3DMATERIAL8* pMaterial
-)
-{
-	FUNC_EXPORTS
-
-	LOG_FUNC_ONE_ARG(pMaterial);
-
-	LOG_NOT_SUPPORTED();
-
-	HRESULT hRet = D3D_OK;
-
-	// TODO: HACK: This is wrong, but better than nothing, right?
-	if (pMaterial)
-	{
-		hRet = g_pD3DDevice->GetMaterial(pMaterial);
-		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->GetMaterial");
-	}
-
-	if (FAILED(hRet))
-	{
-		EmuWarning("We're lying about getting a back material!");
-		hRet = D3D_OK;
-	}
 }
 
 // ******************************************************************

@@ -764,7 +764,7 @@ STRUCT_VERTEX_DATA);
 
 }
 
-static GLuint create_gl_shader(GLenum gl_shader_type,
+/*static*/ GLuint create_gl_shader(GLenum gl_shader_type,
                                const char *code,
                                const char *name)
 {

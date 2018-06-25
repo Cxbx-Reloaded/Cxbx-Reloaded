@@ -130,7 +130,7 @@ extern "C" {
 /*! base addresses of various components */
 // The WC memory is another name of the tiled memory
 #define XBOX_WRITE_COMBINED_BASE 0xF0000000 // WC
-#define XBOX_WRITE_COMBINED_SIZE 0x08000000 // - 0xF7FFFFF
+#define XBOX_WRITE_COMBINED_SIZE 0x08000000 // - 0xF7FFFFFF
 #define XBOX_WRITE_COMBINE_END   XBOX_WRITE_COMBINED_BASE + XBOX_WRITE_COMBINED_SIZE // 128 MiB
 
 #define XBOX_UNCACHED_BASE       0xF8000000 // UC
@@ -298,6 +298,13 @@ void CxbxInitPerformanceCounters(); // Implemented in EmuKrnlKe.cpp
 void CxbxInitFilePaths();
 
 void ConnectWindowsTimersToThunkTable();
+
+/*! Generate a standard arg format string */
+void CxbxConvertArgToString(std::string &dest, const char* krnlExe, const char* xbeFile, HWND hwndParent, DebugMode krnlDebug, const char* krnlDebugFile);
+
+bool CxbxExec(std::string &execCommand, HANDLE* hProcess, bool requestHandleProcess);
+
+bool CxbxIsElevated();
 
 /*! kernel thunk table */
 extern uint32 CxbxKrnl_KernelThunkTable[379];

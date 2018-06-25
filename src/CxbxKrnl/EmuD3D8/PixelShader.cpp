@@ -822,7 +822,6 @@ typedef struct _PSH_INTERMEDIATE_FORMAT {
 *PPSH_INTERMEDIATE_FORMAT;
 
 typedef struct _PSH_RECOMPILED_SHADER {
-	struct _PSH_RECOMPILED_SHADER *Next;
 	XTL::X_D3DPIXELSHADERDEF PSDef;
 	std::string NewShaderStr;
 	DWORD ConvertedHandle;
@@ -904,6 +903,7 @@ struct PSH_XBOX_SHADER {
 	bool FixupPixelShader();
 	bool FixInvalidSrcSwizzle();
 	bool FixMissingR0a();
+	bool FixMissingR1a();
 	bool FixCoIssuedOpcodes();
 };
 
@@ -2051,7 +2051,7 @@ std::string PSH_XBOX_SHADER::OriginalToString(XTL::X_D3DPIXELSHADERDEF *pPSDef) 
                   pPSDef->PSRGBOutputs[0], pPSDef->PSRGBOutputs[1], pPSDef->PSRGBOutputs[2], pPSDef->PSRGBOutputs[3],
                   pPSDef->PSRGBOutputs[4], pPSDef->PSRGBOutputs[5], pPSDef->PSRGBOutputs[6], pPSDef->PSRGBOutputs[7],
                   pPSDef->PSCombinerCount,
-                  pPSDef->PSTextureModes,
+				  XTL::TemporaryPixelShaderRenderStates[XTL::X_D3DRS_PSTEXTUREMODES], /* pPSDef->PSTextureModes is stored in a different place than pPSDef*/
                   pPSDef->PSDotMapping,
                   pPSDef->PSInputTexture,
                   pPSDef->PSC0Mapping,
@@ -2072,7 +2072,7 @@ PSH_RECOMPILED_SHADER PSH_XBOX_SHADER::Decode(XTL::X_D3DPIXELSHADERDEF *pPSDef)
 
   for (i = 0; i < XTL::X_D3DTS_STAGECOUNT; i++)
   {
-    PSTextureModes[i] = (PS_TEXTUREMODES)((pPSDef->PSTextureModes >> (i*5)) & 0x1F);
+    PSTextureModes[i] = (PS_TEXTUREMODES)((XTL::TemporaryPixelShaderRenderStates[XTL::X_D3DRS_PSTEXTUREMODES] >> (i*5)) & 0x1F);
     PSCompareMode[i] = (pPSDef->PSCompareMode >> (i*4)) & 0xF;
   }
 
@@ -2197,6 +2197,9 @@ PSH_RECOMPILED_SHADER PSH_XBOX_SHADER::Decode(XTL::X_D3DPIXELSHADERDEF *pPSDef)
   if (FixMissingR0a())
     Log("FixMissingR0a");
 
+  if (FixMissingR1a())
+	  Log("FixMissingR1a");
+
   if (FixCoIssuedOpcodes())
     Log("FixCoIssuedOpcodes");
 
@@ -2226,7 +2229,7 @@ std::string PSH_XBOX_SHADER::DecodedToString(XTL::X_D3DPIXELSHADERDEF *pPSDef)
   _AddStr1("\n-----PixelShader Definition Contents-----");
   _AddStr1(OriginalToString(pPSDef));
 
-  if (pPSDef->PSTextureModes > 0) 
+  if (XTL::TemporaryPixelShaderRenderStates[XTL::X_D3DRS_PSTEXTUREMODES] > 0)
   {
     _AddStr1("\nPSTextureModes ->"); // Texture addressing modes
     _AddStr("Stage 0: %s", PS_TextureModesStr[PSTextureModes[0]]);
@@ -3847,6 +3850,55 @@ bool PSH_XBOX_SHADER::FixMissingR0a()
   return false;
 } // FixMissingR0a
 
+bool PSH_XBOX_SHADER::FixMissingR1a()
+// On the Xbox, the alpha portion of the R1 register is initialized to
+// the alpha component of texture 1 if texturing is enabled for texture 1 :
+{
+	int R1aDefaultInsertPos;
+	int i;
+	PPSH_INTERMEDIATE_FORMAT Cur;
+	PSH_INTERMEDIATE_FORMAT NewIns = {};
+
+	// Detect a read of r1.a without a write, as we need to insert a "MOV r1.a, t1.a" as default (like the xbox has) :
+	R1aDefaultInsertPos = -1;
+	for (i = 0; i < IntermediateCount; i++)
+	{
+		Cur = &(Intermediate[i]);
+		if (!Cur->IsArithmetic())
+			continue;
+
+		// First, check if r1.a is read by this opcode :
+		if (Cur->ReadsFromRegister(PARAM_R, 1, MASK_A))
+		{
+			// Make sure if we insert at all, it'll be after the DEF's :
+			if (R1aDefaultInsertPos < 0)
+				R1aDefaultInsertPos = i;
+
+			R1aDefaultInsertPos = i;
+			break;
+		}
+
+		// If this opcode writes to r1.a, we're done :
+		if (Cur->WritesToRegister(PARAM_R, 1, MASK_A))
+			return false;
+	}
+
+	if (R1aDefaultInsertPos >= 0)
+	{
+		// Insert a new opcode : MOV r1.a, t1.a
+		NewIns.Initialize(PO_MOV);
+		NewIns.Output[0].SetRegister(PARAM_R, 1, MASK_A);
+		NewIns.Parameters[0] = NewIns.Output[0];
+		NewIns.Parameters[0].Type = PARAM_T;
+		NewIns.CommentString = "Inserted r1.a default";
+		InsertIntermediate(&NewIns, R1aDefaultInsertPos);
+		return true;
+	}
+
+	return false;
+} // FixMissingR1a
+
+
 bool PSH_XBOX_SHADER::FixCoIssuedOpcodes()
 {
   DWORD PrevMask;
@@ -4220,10 +4272,10 @@ static const
 // TODO : Initialize this :
 DWORD *XTL::EmuMappedD3DRenderState[X_D3DRS_UNSUPPORTED]; // 1 extra for the unsupported value
 
-PPSH_RECOMPILED_SHADER RecompiledShaders_Head = nullptr;
+std::vector<PSH_RECOMPILED_SHADER> g_RecompiledPixelShaders;
 
 // Temporary...
-DWORD XTL::TemporaryPixelShaderConstants[XTL::X_D3DRS_PSINPUTTEXTURE + 1];
+DWORD XTL::TemporaryPixelShaderRenderStates[XTL::X_D3DRS_PSTEXTUREMODES + 1];
 
 VOID XTL::DxbxUpdateActivePixelShader() // NOPATCH
 {
@@ -4243,31 +4295,34 @@ VOID XTL::DxbxUpdateActivePixelShader() // NOPATCH
   // For now, we still patch SetPixelShader and read from there...
   //DWORD *XTL_D3D__RenderState = XTL::EmuMappedD3DRenderState[0];
   //pPSDef = (XTL::X_D3DPIXELSHADERDEF*)(XTL_D3D__RenderState);
-	  pPSDef = g_D3DActivePixelShader != nullptr ? g_D3DActivePixelShader->pPSDef : nullptr;
+
+  // Use the pixel shader stored in TemporaryPixelShaderRenderStates rather than the set handle
+  // This allows changes made via SetRenderState to actually take effect!
+  // TODO: Remove this and read directly from XTL_D3D__RenderState when all RenderState and Pixel Shader functions are unpatched
+  // NOTE: PSTextureModes is in a different location in the X_D3DPIXELSHADERFEF than in Render State mappings
+  // All other fields are the same. We cast TemporaryPixelShaderRenderStates to a pPSDef for these fields, but
+  // manually read from TemporaryPixelShaderRenderStates[X_D3DRS_PSTEXTUREMODES) for that one field.
+  pPSDef = g_D3DActivePixelShader != nullptr ? (XTL::X_D3DPIXELSHADERDEF*)(&TemporaryPixelShaderRenderStates[0]) : nullptr;
  
   if (pPSDef != nullptr)
   {
-    // Now, see if we already have a shader compiled for this declaration :
-    RecompiledPixelShader = RecompiledShaders_Head;
-    while (RecompiledPixelShader)
-	{
-      // Only compare parts that form a unique shader (ignore the constants and Direct3D8 run-time fields) :
-      if ((memcmp(&(RecompiledPixelShader->PSDef.PSAlphaInputs[0]), &(pPSDef->PSAlphaInputs[0]), (8+2)*sizeof(DWORD)) == 0)
-      && (memcmp(&(RecompiledPixelShader->PSDef.PSAlphaOutputs[0]), &(pPSDef->PSAlphaOutputs[0]), (8+8+3+8+4)* sizeof(DWORD)) == 0))
-        break;
+	RecompiledPixelShader = nullptr;
 
-      RecompiledPixelShader = RecompiledPixelShader->Next;
-    }
+    // Now, see if we already have a shader compiled for this declaration :
+	for (auto it = g_RecompiledPixelShaders.begin(); it != g_RecompiledPixelShaders.end(); ++it) {
+		// Only compare parts that form a unique shader (ignore the constants and Direct3D8 run-time fields) :
+		if ((memcmp(&(it->PSDef.PSAlphaInputs[0]), &(pPSDef->PSAlphaInputs[0]), (8 + 2) * sizeof(DWORD)) == 0)
+			&& (memcmp(&(it->PSDef.PSAlphaOutputs[0]), &(pPSDef->PSAlphaOutputs[0]), (8 + 8 + 3 + 8 + 4) * sizeof(DWORD)) == 0)) {
+			RecompiledPixelShader = &(*it);
+			break;
+		}
+	}
 
     // If none was found, recompile this shader and remember it :
-    if (RecompiledPixelShader == nullptr)
-	{
+    if (RecompiledPixelShader == nullptr) {
       // Recompile this pixel shader :
-      RecompiledPixelShader = new PSH_RECOMPILED_SHADER;
-      *RecompiledPixelShader = DxbxRecompilePixelShader(pPSDef);
-      // Add this shader to the chain :
-      RecompiledPixelShader->Next = RecompiledShaders_Head;
-      RecompiledShaders_Head = RecompiledPixelShader;
+	  g_RecompiledPixelShaders.push_back(DxbxRecompilePixelShader(pPSDef));
+	  RecompiledPixelShader = &g_RecompiledPixelShaders.back();
     }
 
     // Switch to the converted pixel shader (if it's any different from our currently active
@@ -4318,15 +4373,15 @@ VOID XTL::DxbxUpdateActivePixelShader() // NOPATCH
 			break;
 		  case PSH_XBOX_CONSTANT_FC0:
             //dwColor = *XTL::EmuMappedD3DRenderState[XTL::X_D3DRS_PSFINALCOMBINERCONSTANT0];
-			dwColor = TemporaryPixelShaderConstants[XTL::X_D3DRS_PSFINALCOMBINERCONSTANT0];
+			dwColor = TemporaryPixelShaderRenderStates[XTL::X_D3DRS_PSFINALCOMBINERCONSTANT0];
 			break;
 		  case PSH_XBOX_CONSTANT_FC1:
             //dwColor = *XTL::EmuMappedD3DRenderState[XTL::X_D3DRS_PSFINALCOMBINERCONSTANT1];
-			dwColor = TemporaryPixelShaderConstants[XTL::X_D3DRS_PSFINALCOMBINERCONSTANT1];
+			dwColor = TemporaryPixelShaderRenderStates[XTL::X_D3DRS_PSFINALCOMBINERCONSTANT1];
 			break;
 	    default:
             //dwColor = *XTL::EmuMappedD3DRenderState[XTL::X_D3DRS_PSCONSTANT0_0 + i];
-			dwColor = TemporaryPixelShaderConstants[XTL::X_D3DRS_PSCONSTANT0_0 + i];
+			dwColor = TemporaryPixelShaderRenderStates[XTL::X_D3DRS_PSCONSTANT0_0 + i];
 			break;
         }
 
@@ -6344,7 +6399,7 @@ void XTL::DumpPixelShaderDefToFile( X_D3DPIXELSHADERDEF* pPSDef, const char* psz
 					  pPSDef->PSRGBOutputs[0], pPSDef->PSRGBOutputs[1], pPSDef->PSRGBOutputs[2], pPSDef->PSRGBOutputs[3], 
 					  pPSDef->PSRGBOutputs[4], pPSDef->PSRGBOutputs[5], pPSDef->PSRGBOutputs[6], pPSDef->PSRGBOutputs[7], 
 					  pPSDef->PSCombinerCount,
-					  pPSDef->PSTextureModes,
+					  TemporaryPixelShaderRenderStates[X_D3DRS_PSTEXTUREMODES], /* pPSDef->PSTextureModes is stored in a different place than pPSDef*/
 					  pPSDef->PSDotMapping,
 					  pPSDef->PSInputTexture,
 					  pPSDef->PSC0Mapping,
@@ -6367,12 +6422,12 @@ void XTL::PrintPixelShaderDefContents( X_D3DPIXELSHADERDEF* pPSDef )
 	{
 		DbgPshPrintf( "\n-----PixelShader Def Contents-----\n" );
 
-		if( pPSDef->PSTextureModes )
+		if(TemporaryPixelShaderRenderStates[X_D3DRS_PSTEXTUREMODES])
 		{
-			DWORD dwPSTexMode0 = ( pPSDef->PSTextureModes >> 0 ) & 0x1F;
-			DWORD dwPSTexMode1 = ( pPSDef->PSTextureModes >> 5 ) & 0x1F;
-			DWORD dwPSTexMode2 = ( pPSDef->PSTextureModes >> 10 ) & 0x1F;
-			DWORD dwPSTexMode3 = ( pPSDef->PSTextureModes >> 15 ) & 0x1F;
+			DWORD dwPSTexMode0 = ( TemporaryPixelShaderRenderStates[X_D3DRS_PSTEXTUREMODES] >> 0 ) & 0x1F;
+			DWORD dwPSTexMode1 = ( TemporaryPixelShaderRenderStates[X_D3DRS_PSTEXTUREMODES] >> 5 ) & 0x1F;
+			DWORD dwPSTexMode2 = ( TemporaryPixelShaderRenderStates[X_D3DRS_PSTEXTUREMODES] >> 10 ) & 0x1F;
+			DWORD dwPSTexMode3 = ( TemporaryPixelShaderRenderStates[X_D3DRS_PSTEXTUREMODES] >> 15 ) & 0x1F;
 
 			DbgPshPrintf( "PSTextureModes ->\n" );
 			DbgPshPrintf( "Stage 0: %s\n", PS_TextureModesStr[dwPSTexMode0] );
@@ -6455,7 +6510,9 @@ HRESULT XTL::EmuRecompilePshDef( X_D3DPIXELSHADERDEF* pPSDef, LPD3DXBUFFER* ppRe
 	sprintf(szPshString, "%s", "ps.1.0\n");
 
 	// Handle Texture declarations
-	if(pPSDef->PSTextureModes != 0)
+	// PSTEXTUREModes is stored in a different address in D3D_RenderStates than pPSDef
+	// So we must read it from the render array instead (pPSDef in this case is a pointer to the RenderState array, NOT the shader itself)
+	if(TemporaryPixelShaderRenderStates[X_D3DRS_PSTEXTUREMODES] != 0)
 	{
 	}
 

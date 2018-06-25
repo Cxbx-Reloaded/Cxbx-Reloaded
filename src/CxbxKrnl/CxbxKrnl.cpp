@@ -1305,10 +1305,9 @@ __declspec(noreturn) void CxbxKrnlInit
 	
 	// Initialize devices :
 	char szBuffer[MAX_PATH];
-	SHGetSpecialFolderPath(NULL, szBuffer, CSIDL_APPDATA, TRUE);
-	strcat(szBuffer, "\\Cxbx-Reloaded\\");
-	std::string basePath(szBuffer);
-	CxbxBasePath = basePath + "EmuDisk\\";
+	g_EmuShared->GetStorageLocation(szBuffer);
+
+	CxbxBasePath = std::string(szBuffer) + "\\EmuDisk\\";
 
 	// Determine XBE Path
 	memset(szBuffer, 0, MAX_PATH);
@@ -1491,9 +1490,7 @@ __declspec(noreturn) void CxbxKrnlInit
 
 void CxbxInitFilePaths()
 {
-	char szAppData[MAX_PATH];
-	SHGetSpecialFolderPath(NULL, szAppData, CSIDL_APPDATA, TRUE);
-	snprintf(szFolder_CxbxReloadedData, MAX_PATH, "%s\\Cxbx-Reloaded", szAppData);
+	g_EmuShared->GetStorageLocation(szFolder_CxbxReloadedData);
 
 	// Make sure our data folder exists :
 	int result = SHCreateDirectoryEx(nullptr, szFolder_CxbxReloadedData, nullptr);
@@ -1774,6 +1771,21 @@ __declspec(noreturn) void CxbxKrnlTerminateThread()
 void CxbxKrnlPanic()
 {
     CxbxKrnlCleanup("Kernel Panic!");
+}
+
+void CxbxConvertArgToString(std::string &dest, const char* krnlExe, const char* xbeFile, HWND hwndParent, DebugMode krnlDebug, const char* krnlDebugFile) {
+
+    std::stringstream szArgsStream;
+
+    // The format is: "krnlExe" /load "xbeFile" hwndParent krnlDebug "krnlDebugFile"
+    szArgsStream <<
+        "\"" << krnlExe << "\""
+        " /load \"" << xbeFile << "\""
+        " " << std::dec << (int)hwndParent <<
+        " " << std::dec << (int)krnlDebug <<
+        " \"" << krnlDebugFile << "\"";
+
+    dest = szArgsStream.str();
 }
 
 static clock_t						g_DeltaTime = 0;			 // Used for benchmarking/fps count

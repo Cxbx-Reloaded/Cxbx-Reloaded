@@ -500,25 +500,25 @@ typedef union {
 	struct {
 		uint32_t        type         : 2;        /*  0 ..  1 */
 			// See https://envytools.readthedocs.io/en/latest/hw/fifo/dma-pusher.html#nv4-control-flow-commands
-				#define COMMAND_TYPE_NORMAL 0 // Note : actual name not documented
-				#define COMMAND_TYPE_JUMP   1
-				#define COMMAND_TYPE_CALL   2
+				#define COMMAND_TYPE_NONE        0
+				#define COMMAND_TYPE_JUMP_LONG   1
+				#define COMMAND_TYPE_CALL        2
 		uint32_t        method       : 11;       /*  2 .. 12 */
 		uint32_t        subchannel   : 3;        /* 13 .. 15 */
 		uint32_t        flags        : 2;        /* 16 .. 17 */
 			// See https://envytools.readthedocs.io/en/latest/hw/fifo/dma-pusher.html#nv4-method-submission-commands
-				#define COMMAND_FLAGS_METHOD                      0
-				#define COMMAND_FLAGS_SLI_CONDITIONAL             1
-				#define COMMAND_FLAGS_RETURN                      2
-				#define COMMAND_FLAGS_LONG_NON_INCREASING_METHODS 3
+				#define COMMAND_FLAGS_NONE                         0
+				#define COMMAND_FLAGS_SLI_CONDITIONAL              1 // (NV40+)
+				#define COMMAND_FLAGS_RETURN                       2
+				#define COMMAND_FLAGS_LONG_NON_INCREASING_METHODS  3 // [IB-mode only] 
 		uint32_t        method_count : 11;       /* 18 .. 28 */
 		uint32_t        instruction  : 3;        /* 29 .. 31 */
 				#define COMMAND_INSTRUCTION_INCREASING_METHODS     0
-				#define COMMAND_INSTRUCTION_OLD_JUMP               1
+				#define COMMAND_INSTRUCTION_JUMP                   1
 				#define COMMAND_INSTRUCTION_NON_INCREASING_METHODS 2
 	};
-	#define COMMAND_WORD_MASK_OLD_JMP 0x1FFFFFFC /*  2 .. 31 */
-	#define COMMAND_WORD_MASK_JMP 0xFFFFFFFC     /*  2 .. 28 */
+	#define COMMAND_WORD_MASK_JUMP      0x1FFFFFFC /*  2 .. 31 */
+	#define COMMAND_WORD_MASK_JUMP_LONG 0xFFFFFFFC /*  2 .. 28 */
 } nv_fifo_command;
 
 extern void XTL::EmuExecutePushBufferRaw
@@ -623,12 +623,12 @@ extern void XTL::EmuExecutePushBufferRaw
 		rsvd_shadow = word;
 		// Check and handle command type, then instruction, then flags
 		switch (command.type) {
-		case COMMAND_TYPE_NORMAL:
+		case COMMAND_TYPE_NONE:
 			break; // fall through
-		case COMMAND_TYPE_JUMP:
-			LOG_TEST_CASE("Pushbuffer COMMAND_TYPE_JUMP");
+		case COMMAND_TYPE_JUMP_LONG:
+			LOG_TEST_CASE("Pushbuffer COMMAND_TYPE_JUMP_LONG");
 			dma_get_jmp_shadow = dma_get;
-			dma_get = (uint32_t *)(CONTIGUOUS_MEMORY_BASE | (word & COMMAND_WORD_MASK_JMP));
+			dma_get = (uint32_t *)(CONTIGUOUS_MEMORY_BASE | (word & COMMAND_WORD_MASK_JUMP_LONG));
 			continue; // while
 		case COMMAND_TYPE_CALL: // Note : NV2A return is said not to work?
 			if (subr_active) {
@@ -642,7 +642,7 @@ extern void XTL::EmuExecutePushBufferRaw
 
 			subr_return = dma_get;
 			subr_active = true;
-			dma_get = (uint32_t *)(CONTIGUOUS_MEMORY_BASE | (word & COMMAND_WORD_MASK_JMP));
+			dma_get = (uint32_t *)(CONTIGUOUS_MEMORY_BASE | (word & COMMAND_WORD_MASK_JUMP_LONG));
 			continue; // while
 		default:
 			LOG_TEST_CASE("Pushbuffer COMMAND_TYPE unknown");
@@ -654,10 +654,10 @@ extern void XTL::EmuExecutePushBufferRaw
 		case COMMAND_INSTRUCTION_INCREASING_METHODS:
 			dma_state.ni = false;
 			break;
-		case COMMAND_INSTRUCTION_OLD_JUMP:
-			LOG_TEST_CASE("Pushbuffer COMMAND_INSTRUCTION_OLD_JUMP");
+		case COMMAND_INSTRUCTION_JUMP:
+			LOG_TEST_CASE("Pushbuffer COMMAND_INSTRUCTION_JUMP");
 			dma_get_jmp_shadow = dma_get;
-			dma_get = (uint32_t *)(CONTIGUOUS_MEMORY_BASE | (word & COMMAND_WORD_MASK_OLD_JMP));
+			dma_get = (uint32_t *)(CONTIGUOUS_MEMORY_BASE | (word & COMMAND_WORD_MASK_JUMP));
 			continue; // while
 		case COMMAND_INSTRUCTION_NON_INCREASING_METHODS:
 			dma_state.ni = true;
@@ -669,7 +669,7 @@ extern void XTL::EmuExecutePushBufferRaw
 		} // switch instruction
 
 		switch (command.flags) {
-		case COMMAND_FLAGS_METHOD: // Decode push buffer method & size (inverse of D3DPUSH_ENCODE)
+		case COMMAND_FLAGS_NONE: // Decode push buffer method & size (inverse of D3DPUSH_ENCODE)
 			dma_state.mthd = command.method;
 			dma_state.subc = command.subchannel;
 			dma_state.mcnt = command.method_count;

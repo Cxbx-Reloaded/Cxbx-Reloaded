@@ -49,7 +49,7 @@ HRESULT EmuRecompilePshDef( X_D3DPIXELSHADERDEF* pPSDef, LPD3DXBUFFER* ppRecompi
 VOID DxbxUpdateActivePixelShader(); // NOPATCH
 
 // TODO: Remove this once the Render State code has been fully ported from Dxbx/Wip_LessVertexPatching
-extern DWORD TemporaryPixelShaderConstants[X_D3DRS_PSINPUTTEXTURE + 1];
+extern DWORD TemporaryPixelShaderRenderStates[X_D3DRS_PSTEXTUREMODES + 1];
 
 #ifdef _DEBUG_TRACK_PS
 #define DbgPshPrintf if(g_bPrintfOn) printf

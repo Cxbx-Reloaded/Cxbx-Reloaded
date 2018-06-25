@@ -1515,7 +1515,7 @@ const RenderStateInfo DxbxRenderStateInfo[] = {
 	{ "D3DRS_PSRGBOUTPUTS6"               /*=  51*/, 3424, xtDWORD,               NV2A_RC_OUT_RGB(6) },
 	{ "D3DRS_PSRGBOUTPUTS7"               /*=  52*/, 3424, xtDWORD,               NV2A_RC_OUT_RGB(7) },
 	{ "D3DRS_PSCOMBINERCOUNT"             /*=  53*/, 3424, xtDWORD,               NV2A_RC_ENABLE },
-	{ "D3DRS_PS_RESERVED"                 /*=  54*/, 3424, xtDWORD,               NV2A_NOP }, // Dxbx note : This takes the slot of X_D3DPIXELSHADERDEF.PSTextureModes, set by D3DDevice_SetRenderState_LogicOp?
+	{ "D3DRS_PSTEXTUREMODES_RESERVED"     /*=  54*/, 3424, xtDWORD,               NV2A_CLEAR_VALUE }, // Dxbx note : This takes the slot of X_D3DPIXELSHADERDEF.PSTextureModes, set by D3DDevice_SetRenderState_LogicOp?
 	{ "D3DRS_PSDOTMAPPING"                /*=  55*/, 3424, xtDWORD,               NV2A_TX_SHADER_DOTMAPPING },
 	{ "D3DRS_PSINPUTTEXTURE"              /*=  56*/, 3424, xtDWORD,               NV2A_TX_SHADER_PREVIOUS },
 	// End of "pixel-shader" render states, continuing with "simple" render states :

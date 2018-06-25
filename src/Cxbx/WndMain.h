@@ -42,6 +42,13 @@
 // ******************************************************************
 #define RECENT_XBE_SIZE 10
 
+// Cxbx-Reloaded's data storage location.
+typedef enum _CXBX_DATA {
+	CXBX_DATA_APPDATA   = 0,
+	CXBX_DATA_CURDIR    = 1,
+	CXBX_DATA_CUSTOM    = 2,
+} CXBX_DATA;
+
 // ******************************************************************
 // * class : WndMain
 // ******************************************************************
@@ -138,6 +145,16 @@ class WndMain : public Wnd
 		void CrashMonitor();
 
 		// ******************************************************************
+		// * Debugger monitoring function thread
+		// ******************************************************************
+		static DWORD WINAPI DebuggerMonitor(LPVOID lpVoid);
+
+		// ******************************************************************
+		// * Close debugger monitoring function
+		// ******************************************************************
+		void DebuggerMonitorClose();
+
+		// ******************************************************************
 		// * clear registry values and keys
 		// ******************************************************************
 		void InitializeSettings();
@@ -184,9 +201,11 @@ class WndMain : public Wnd
         char       *m_XbeFilename;
 
         // ******************************************************************
-        // * cached child window handle
+        // * cached window, process, and thread handle
         // ******************************************************************
         HWND        m_hwndChild;
+        HANDLE      m_hDebuggerProc;
+        HANDLE      m_hDebuggerMonitorThread;
 
         // ******************************************************************
         // * Recent Xbe files
@@ -231,6 +250,11 @@ class WndMain : public Wnd
         char       *m_CxbxDebugFilename;
         char       *m_KrnlDebugFilename;
 
+		// ******************************************************************
+		// * Storage location
+		// ******************************************************************
+		CXBX_DATA   m_StorageToggle;
+		char        m_StorageLocation[MAX_PATH];
 };
 
 #endif

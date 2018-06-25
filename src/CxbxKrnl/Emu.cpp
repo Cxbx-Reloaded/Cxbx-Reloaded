@@ -42,7 +42,6 @@ namespace xboxkrnl
 };
 
 #include "CxbxKrnl.h"
-#define COMPILE_MULTIMON_STUBS
 #include "Emu.h"
 #include "EmuX86.h"
 #include "EmuFS.h"
@@ -89,13 +88,13 @@ std::string FormatTitleId(uint32_t title_id)
 	char pTitleId1 = (title_id >> 24) & 0xFF;
 	char pTitleId2 = (title_id >> 16) & 0xFF;
 
-	if (isalnum(pTitleId1) && isalnum(pTitleId2)) {
-		ss << pTitleId1 << pTitleId2;
-	} else {
-		// Prefix was non-printable, so we need to print a hex reprentation
-		ss << "0x" << std::setfill('0') << std::setw(4) << std::hex << std::uppercase << (uint16_t)((title_id & 0xFFFF0000) >> 16);
+	if (!isalnum(pTitleId1) || !isalnum(pTitleId2)) {
+		// Prefix was non-printable, so we need to print a hex reprentation of the entire title_id
+		ss << std::setfill('0') << std::setw(8) << std::hex << std::uppercase << title_id;
+		return ss.str();
 	}	
 
+	ss << pTitleId1 << pTitleId2;
 	ss << "-";
 	ss << std::setfill('0') << std::setw(3) << std::dec << (title_id & 0x0000FFFF);
 
