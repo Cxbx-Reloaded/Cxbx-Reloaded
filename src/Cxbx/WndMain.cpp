@@ -2499,12 +2499,12 @@ void WndMain::CrashMonitor(DWORD dwChildProcID)
 
 	KillTimer(m_hwnd, TIMERID_FPS);
 	KillTimer(m_hwnd, TIMERID_LED);
-	DrawLedBitmap(m_hwnd, true);
 	m_hwndChild = NULL;
 	m_bIsStarted = false;
 	g_EmuShared->SetIsEmulating(false);
 	UpdateCaption();
 	RefreshMenus();
+	DrawLedBitmap(m_hwnd, true);
 }
 
 // monitor for Debugger to close then set as "available" (For limit to 1 debugger per Cxbx GUI.)
