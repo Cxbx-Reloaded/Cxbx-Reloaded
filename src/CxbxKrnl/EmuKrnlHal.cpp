@@ -602,10 +602,6 @@ XBSYSAPI EXPORTNUM(49) xboxkrnl::VOID DECLSPEC_NORETURN NTAPI xboxkrnl::HalRetur
 		xboxkrnl::HalWriteSMBusValue(SMBUS_ADDRESS_SYSTEM_MICRO_CONTROLLER, SMC_COMMAND_SCRATCH, 0, SMC_SCRATCH_DISPLAY_FATAL_ERROR);
 
 		char szWorkingDirectoy[MAX_PATH];
-		int QuickReboot;
-		g_EmuShared->GetBootFlags(&QuickReboot);
-		QuickReboot |= BOOT_FATAL_ERROR;
-		g_EmuShared->SetBootFlags(&QuickReboot);
 		g_EmuShared->GetXbePath(szWorkingDirectoy);
 
 		std::string szProcArgsBuffer;
