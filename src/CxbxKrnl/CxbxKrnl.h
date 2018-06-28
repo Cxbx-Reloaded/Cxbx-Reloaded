@@ -190,16 +190,6 @@ extern "C" {
 #define VECTOR2IRQ(vector)  ((vector)-IRQ_BASE)
 #define VECTOR2IRQL(vector) (MAX_BUS_INTERRUPT_LEVEL - VECTOR2IRQ(vector))
 
-// Kernel boot flags
-enum {
-	BOOT_NONE =           0,
-	BOOT_EJECT_PENDING =  1 << 0,
-	BOOT_FATAL_ERROR =    1 << 1,
-	BOOT_SKIP_ANIMATION = 1 << 2,
-	BOOT_RUN_DASHBOARD =  1 << 3,
-	BOOT_QUICK_REBOOT =   1 << 4,
-};
-
 /* Xbox PAGE Masks */
 #define XBOX_PAGE_NOACCESS          0x01
 #define XBOX_PAGE_READONLY          0x02
