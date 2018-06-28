@@ -574,7 +574,6 @@ XBSYSAPI EXPORTNUM(49) xboxkrnl::VOID DECLSPEC_NORETURN NTAPI xboxkrnl::HalRetur
 				g_EmuShared->GetBootFlags(&QuickReboot);
 				QuickReboot |= BOOT_QUICK_REBOOT;
 				g_EmuShared->SetBootFlags(&QuickReboot);
-				g_EmuShared->SetMultiXbeFlag(&bMultiXbe);
 
 				// Some titles (Xbox Dashboard) use ";" as a final path seperator
 				// This allows the Xbox Live option on the dashboard to properly launch XOnlinedash.xbe
@@ -603,8 +602,10 @@ XBSYSAPI EXPORTNUM(49) xboxkrnl::VOID DECLSPEC_NORETURN NTAPI xboxkrnl::HalRetur
 		xboxkrnl::HalWriteSMBusValue(SMBUS_ADDRESS_SYSTEM_MICRO_CONTROLLER, SMC_COMMAND_SCRATCH, 0, SMC_SCRATCH_DISPLAY_FATAL_ERROR);
 
 		char szWorkingDirectoy[MAX_PATH];
-		bool bMultiXbe = true;
-		g_EmuShared->SetMultiXbeFlag(&bMultiXbe);
+		int QuickReboot;
+		g_EmuShared->GetBootFlags(&QuickReboot);
+		QuickReboot |= BOOT_FATAL_ERROR;
+		g_EmuShared->SetBootFlags(&QuickReboot);
 		g_EmuShared->GetXbePath(szWorkingDirectoy);
 
 		std::string szProcArgsBuffer;

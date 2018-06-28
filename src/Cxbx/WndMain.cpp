@@ -2463,7 +2463,7 @@ DWORD WINAPI WndMain::CrashMonitorWrapper(LPVOID lpParam)
 // monitor for crashes
 void WndMain::CrashMonitor(DWORD dwChildProcID)
 {
-	bool bQuickReboot;
+	int iBootFlags;
 	DWORD dwExitCode = 0;
 
 	// If we do receive valid process ID, let's do the next step.
@@ -2479,9 +2479,9 @@ void WndMain::CrashMonitor(DWORD dwChildProcID)
 	 		GetExitCodeProcess(hProcess, &dwExitCode);
 	 		CloseHandle(hProcess);
 
-	 		g_EmuShared->GetMultiXbeFlag(&bQuickReboot);
+	 		g_EmuShared->GetBootFlags(&iBootFlags);
 
-	 		if (!bQuickReboot) {
+	 		if (!iBootFlags) {
 	 			if (dwExitCode == EXIT_SUCCESS) {// StopEmulation
 	 				return;
 	 			}
@@ -2491,8 +2491,6 @@ void WndMain::CrashMonitor(DWORD dwChildProcID)
 
 	 			// multi-xbe
 	 			// destroy this thread and start a new one
-	 			bQuickReboot = false;
-	 			g_EmuShared->SetMultiXbeFlag(&bQuickReboot);
 	 			return;
 	 		}
 	 	}

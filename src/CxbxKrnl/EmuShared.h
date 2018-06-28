@@ -170,12 +170,6 @@ class EmuShared : public Mutex
 		void SetCurrentFPS(float *value) { Lock(); m_FPS = *value; Unlock(); }
 
 		// ******************************************************************
-		// * MultiXbe flag Accessors
-		// ******************************************************************
-		void GetMultiXbeFlag(bool *value) { Lock(); *value = m_bMultiXbeFlag; Unlock(); }
-		void SetMultiXbeFlag(bool *value) { Lock(); m_bMultiXbeFlag = *value; Unlock(); }
-
-		// ******************************************************************
 		// * Debugging flag Accessors
 		// ******************************************************************
 		void GetDebuggingFlag(bool *value) { Lock(); *value = m_bDebugging; Unlock(); }
@@ -218,7 +212,6 @@ class EmuShared : public Mutex
 			m_BootFlags = 0;
 			m_MSpF = 0.0f;
 			m_FPS = 0.0f;
-			m_bMultiXbeFlag = 0;
 			Unlock();
 		}
 
@@ -256,7 +249,7 @@ class EmuShared : public Mutex
 		int          m_SkipRdtscPatching;
 		float        m_MSpF;
 		float        m_FPS;
-		bool         m_bMultiXbeFlag;
+		bool         m_bReserved1;
 		bool         m_bDebugging;
 		bool         m_bReady;
 		bool         m_bEmulating;
