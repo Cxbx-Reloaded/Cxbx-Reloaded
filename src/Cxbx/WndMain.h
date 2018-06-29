@@ -37,6 +37,8 @@
 #include "Wnd.h"
 #include "Common/Xbe.h"
 
+#include <thread>
+
 // ******************************************************************
 // * constants
 // ******************************************************************
@@ -210,7 +212,7 @@ class WndMain : public Wnd
         // ******************************************************************
         HWND        m_hwndChild;
         HANDLE      m_hDebuggerProc;
-        HANDLE      m_hDebuggerMonitorThread;
+        std::thread m_hDebuggerMonitorThread;
 
         // ******************************************************************
         // * Recent Xbe files

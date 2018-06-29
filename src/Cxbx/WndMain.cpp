@@ -166,7 +166,7 @@ WndMain::WndMain(HINSTANCE x_hInstance) :
 	m_StorageLocation(""),
 	m_dwRecentXbe(0),
 	m_hDebuggerProc(nullptr),
-	m_hDebuggerMonitorThread(nullptr)
+	m_hDebuggerMonitorThread()
 {
     // initialize members
     {
@@ -595,8 +595,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 							Crash_Manager_Data* pCMD = (Crash_Manager_Data*)malloc(sizeof(Crash_Manager_Data));
 							pCMD->pWndMain = this;
 							pCMD->dwChildProcID = lParam; // lParam is process ID.
-							HANDLE hThreadTemp = CreateThread(NULL, NULL, CrashMonitorWrapper, (void*)pCMD, NULL, NULL); // create the crash monitoring thread
-							CloseHandle(hThreadTemp);
+							std::thread(CrashMonitorWrapper, pCMD).detach();
 
 							g_EmuShared->SetFlagsLLE(&m_FlagsLLE);
 							g_EmuShared->SetIsEmulating(true); // NOTE: Putting in here raise to low or medium risk due to debugger will launch itself. (Current workaround)
@@ -2411,7 +2410,7 @@ void WndMain::StartEmulation(HWND hwndParent, DebuggerState LocalDebuggerState /
             else {
                 m_bIsStarted = true;
                 printf("WndMain: %s emulation started with debugger.\n", m_Xbe->m_szAsciiTitle);
-                m_hDebuggerMonitorThread = CreateThread(nullptr, 0, DebuggerMonitor, (void*)this, 0, nullptr); // create the debugger monitoring thread
+                m_hDebuggerMonitorThread = std::thread(DebuggerMonitor, this); // create the debugger monitoring thread
             }
         }
         else {
@@ -2524,8 +2523,10 @@ DWORD WINAPI WndMain::DebuggerMonitor(LPVOID lpVoid)
 			pThis->m_hDebuggerProc = nullptr;
 		}
 	}
-	CloseHandle(pThis->m_hDebuggerMonitorThread);
-	pThis->m_hDebuggerMonitorThread = nullptr;
+
+	if (pThis->m_hDebuggerMonitorThread.joinable()) {
+		pThis->m_hDebuggerMonitorThread.detach();
+	}
 
 	return 0;
 }
@@ -2534,7 +2535,7 @@ void WndMain::DebuggerMonitorClose()
 
 	if (m_hDebuggerProc != nullptr) {
 		HANDLE hDebuggerProcTemp = m_hDebuggerProc;
-		HANDLE hDebuggerMonitorThreadTemp = m_hDebuggerMonitorThread;
+		std::thread hDebuggerMonitorThreadTemp = std::thread(std::move(m_hDebuggerMonitorThread));
 
 		// Set member to null pointer before terminate, this way debugger monitor thread will remain thread-safe.
 		m_hDebuggerProc = nullptr;
@@ -2543,7 +2544,7 @@ void WndMain::DebuggerMonitorClose()
 		TerminateProcess(hDebuggerProcTemp, EXIT_SUCCESS);
 		CloseHandle(hDebuggerProcTemp);
 
-		WaitForSingleObject(hDebuggerMonitorThreadTemp, INFINITE);
+		hDebuggerMonitorThreadTemp.join();
 	}
 }
 
