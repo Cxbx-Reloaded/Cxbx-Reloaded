@@ -775,7 +775,7 @@ STRUCT_VERTEX_DATA);
     NV2A_DPRINTF("compile new %s, code:\n%s\n", name, code);
 
     GLuint shader = glCreateShader(gl_shader_type);
-    glShaderSource(shader, 1, &code, 0);
+    glShaderSource(shader, 1, &code, NULL);
     glCompileShader(shader);
 
     /* Check it compiled */

@@ -390,12 +390,24 @@ void AvGetFormatSize(ULONG mode, int* width, int* height)
 	*height = 480;
 }
 
+void _check_gl_reset()
+{
+	while (true) {
+		GLenum err = glGetError();
+		if (err == GL_NO_ERROR) 
+			return;
+		if (err == 0)
+			return;
+	}
+}
+
 void _check_gl_error(const char *file, int line)
 {
-	GLenum err;
-	while ((err = glGetError()) != GL_NO_ERROR) {
+	while (true) {
+		GLenum err = glGetError();
 		char *error;
 		switch (err) {
+		case GL_NO_ERROR: return;
 		case GL_INVALID_ENUM: error = "GL_INVALID_ENUM"; break;
 		case GL_INVALID_VALUE: error = "GL_INVALID_VALUE"; break;
 		case GL_INVALID_OPERATION: error = "GL_INVALID_OPERATION"; break;
@@ -405,7 +417,7 @@ void _check_gl_error(const char *file, int line)
 		case GL_INVALID_FRAMEBUFFER_OPERATION: error = "GL_INVALID_FRAMEBUFFER_OPERATION"; break;
 		//case GL_INVALID_FRAMEBUFFER_OPERATION_EXT: error = "GL_INVALID_FRAMEBUFFER_OPERATION_EXT"; break;
 		case GL_CONTEXT_LOST: error = "GL_CONTEXT_LOST"; break;
-		default: error = nullptr;
+		default: error = "(unknown)"; break;
 		}
 
 		printf("OpenGL error 0x%.8X %s\n", err, error);
@@ -413,9 +425,25 @@ void _check_gl_error(const char *file, int line)
 	}
 }
 
+#define GL_RESET() _check_gl_reset
 #define GL_CHECK() _check_gl_error(__FILE__,__LINE__)
 
-static GLint yuyv_tex_loc = -1;
+enum {
+	SAMP_TEXCOORD = 5,
+};
+
+enum {
+	FRAG_COLOR = 0,
+};
+
+enum {
+	ATTR_POSITION = 0,
+	ATTR_TEXCOORD = 4,
+};
+
+static GLint m_overlay_uniform_location_texture = -1;
+static GLint m_overlay_attribute_location_position = -1;
+static GLint m_overlay_attribute_location_texture = -1;
 
 GLuint Get_YUV_to_RGB_shader_program()
 {
@@ -429,18 +457,34 @@ GLuint Get_YUV_to_RGB_shader_program()
 	static const char *OPENGL_SHADER_YUV[2] = {
 		/* vertex shader */
 		"#version 330 core                                                       \n"
-		"layout(location = 0) in vec3 vertexPosition_modelspace;                 \n"
-		"layout(location = 1) in vec2 vertexUV;                                  \n"
-		"out vec2 v_tex_coord;                                                   \n"
-		"void main() {                                                           \n"
-		"	gl_Position = vec4(vertexPosition_modelspace,1);                     \n"
-		"	v_tex_coord = vertexUV;                                              \n"
-		"}                                                                       \n",
-		/* fragment shader */
+		"#define ATTR_POSITION 0                                                 \n"
+		"#define ATTR_TEXCOORD 4                                                 \n"
+		"precision highp float;                                                  \n"
+		"precision highp int;                                                    \n"
+		"layout(std140, column_major) uniform;                                   \n"
+		"layout(location = ATTR_POSITION) in vec2 Position;                      \n"
+		"layout(location = ATTR_TEXCOORD) in vec2 Texcoord;                      \n"
+		"out block                                                               \n"
+		"{                                                                       \n"
+		"  vec2 Texcoord;                                                        \n"
+		"} Out;                                                                  \n"
+		"void main()                                                             \n"
+		"{                                                                       \n"
+		"	Out.Texcoord = Texcoord;                                             \n"
+		"	gl_Position = vec4(Position, 0.0, 1.0);                              \n"
+		"}                                                                       \n"
+		, /* fragment shader */
 		"#version 330 core                                                       \n"
-		"in vec2 v_tex_coord;                                                    \n"
-		"uniform sampler2D yuyv_tex;                                             \n"
-		"out vec4 out_rgba;                                                      \n"
+		"#define FRAG_COLOR 0                                                    \n"
+		"precision highp float;                                                  \n"
+		"precision highp int;                                                    \n"
+		"layout(std140, column_major) uniform;                                   \n"
+		"uniform sampler2D tex_yuyv;                                             \n"
+		"in block                                                                \n"
+		"{                                                                       \n"
+		"  vec2 Texcoord;                                                        \n"
+		"} In;                                                                   \n"
+		"layout(location = FRAG_COLOR, index = 0) out vec4 Color;                \n"
 		"// YUV offset                                                           \n"
 		"const vec3 offset = vec3(-0.0627451017, -0.501960814, -0.501960814);    \n"
 		"// RGB coefficients                                                     \n"
@@ -450,16 +494,16 @@ GLuint Get_YUV_to_RGB_shader_program()
 		"void main(void)                                                         \n"
 		"{                                                                       \n"
 		"	// Fetch 4:2:2 YUYV macropixel                                       \n"
-		"	vec4 yuyv = texture2D(yuyv_tex, v_tex_coord);                        \n"
+		"	vec4 yuyv = texture2D(tex_yuyv, In.Texcoord);                        \n"
 		"	// Now r-g-b-a is actually y1-u-y2-v                                 \n"
 		"	float u = yuyv.g;                                                    \n"
 		"	float v = yuyv.a;                                                    \n"
 		"	vec3 yuv;                                                            \n"
 		"   // Convert texture coordinate into texture x position                \n"
-		"   ivec2 texture_size = textureSize(yuyv_tex, 0);                       \n"
-		"   float texture_x = v_tex_coord.x * texture_size.x;                    \n"
+		"   ivec2 texture_size = textureSize(tex_yuyv, 0);                       \n"
+		"   float texture_x = In.Texcoord.x * texture_size.x;                    \n"
 		"	// Depending on fragment x position choose y1-u-v or y2-u-v          \n"
-		"	if (mod(texture_x, 1.0) >= 0.5) { // left half                       \n"
+		"	if (mod(texture_x, 1.0) < 0.5) { // left half                        \n"
 		"		float y1 = yuyv.r;                                               \n"
 		"		yuv = vec3(y1, u, v);                                            \n"
 		"	} else { // right half                                               \n"
@@ -468,57 +512,63 @@ GLuint Get_YUV_to_RGB_shader_program()
 		"	}                                                                    \n"
 		"	// Do the color transform                                            \n"
 		"	yuv += offset;                                                       \n"
-		"	out_rgba.r = dot(yuv, Rcoeff);                                       \n"
-		"	out_rgba.g = dot(yuv, Gcoeff);                                       \n"
-		"	out_rgba.b = dot(yuv, Bcoeff);                                       \n"
-		"	out_rgba.a = 1.0;                                                    \n"
+		"	Color.r = dot(yuv, Rcoeff);                                          \n"
+		"	Color.g = dot(yuv, Gcoeff);                                          \n"
+		"	Color.b = dot(yuv, Bcoeff);                                          \n"
+		"	Color.a = 1.0;                                                       \n"
 		"}                                                                       \n"
 	};
 
 	// Bind shader
-	static GLuint shader_program_yuv_to_rgb = -1;
-	if (shader_program_yuv_to_rgb == -1) {
-		shader_program_yuv_to_rgb = glCreateProgram(); // glCreateProgramObjectARB()
+	static GLuint shader_program_name_yuv_to_rgb = -1;
+	if (shader_program_name_yuv_to_rgb == -1) {
+		GLuint vertex_shader_name = create_gl_shader(GL_VERTEX_SHADER, OPENGL_SHADER_YUV[0], "YUV>RGB Vertex shader");
+		GL_CHECK();
+		GLuint fragment_shader_name = create_gl_shader(GL_FRAGMENT_SHADER, OPENGL_SHADER_YUV[1], "YUV>RGB Fragment shader");
 		GL_CHECK();
 
-		GLuint vertex_shader = create_gl_shader(GL_VERTEX_SHADER, OPENGL_SHADER_YUV[0], "YUV>RGB Vertex shader");
+		shader_program_name_yuv_to_rgb = glCreateProgram();
 		GL_CHECK();
-		GLuint fragment_shader = create_gl_shader(GL_FRAGMENT_SHADER, OPENGL_SHADER_YUV[1], "YUV>RGB Fragment shader");
+		glAttachShader(shader_program_name_yuv_to_rgb, vertex_shader_name);
 		GL_CHECK();
-		glAttachShader(shader_program_yuv_to_rgb, vertex_shader); // glAttachObjectARB
+		glAttachShader(shader_program_name_yuv_to_rgb, fragment_shader_name);
 		GL_CHECK();
-		glAttachShader(shader_program_yuv_to_rgb, fragment_shader); // glAttachObjectARB
+		glBindAttribLocation(shader_program_name_yuv_to_rgb, ATTR_POSITION, "Position");
 		GL_CHECK();
-
-		glLinkProgram(shader_program_yuv_to_rgb);
+		glBindAttribLocation(shader_program_name_yuv_to_rgb, ATTR_TEXCOORD, "Texcoord");
+		GL_CHECK();
+		glBindFragDataLocation(shader_program_name_yuv_to_rgb, FRAG_COLOR, "Color");
+		GL_CHECK();
+		glLinkProgram(shader_program_name_yuv_to_rgb);
 		GL_CHECK();
 
 		/* Check it linked */
 		GLint linked = 0;
-		glGetProgramiv(shader_program_yuv_to_rgb, GL_LINK_STATUS, &linked);
+		glGetProgramiv(shader_program_name_yuv_to_rgb, GL_LINK_STATUS, &linked);
 		GL_CHECK();
 		if (!linked) {
 			GLchar log[2048];
-			glGetProgramInfoLog(shader_program_yuv_to_rgb, 2048, NULL, log);
+			glGetProgramInfoLog(shader_program_name_yuv_to_rgb, 2048, NULL, log);
 			fprintf(stderr, "nv2a: shader linking failed: %s\n", log);
 			abort();
 		}
 
-		yuyv_tex_loc = glGetUniformLocation(shader_program_yuv_to_rgb, "yuyv_tex");
+		m_overlay_uniform_location_texture = glGetUniformLocation(shader_program_name_yuv_to_rgb, "tex_yuyv");
 		GL_CHECK();
-		assert(yuyv_tex_loc >= 0);
+		assert(m_overlay_uniform_location_texture >= 0);
 	}
 
-	return shader_program_yuv_to_rgb;
+	return shader_program_name_yuv_to_rgb;
 }
 
-#ifdef DRAW_FRAMEBUFFER // Shaders don't compile yet
+//#define DRAW_FRAMEBUFFER // Doesn't show anything yet
 
-GLuint m_vao, m_framebuffer_vertex_buffer_object, m_framebuffer_element_buffer_object, m_tex = -1;
+#ifdef DRAW_FRAMEBUFFER
+
 GLuint m_framebuffer_shader_program = -1;
-
-GLint m_framebuffer_attribute_location_position = -1;
-GLint m_framebuffer_attribute_location_texture = -1;
+GLuint m_framebuffer_uniform_location_texture = -1;
+GLuint m_framebuffer_vertex_buffer_object = -1;
+GLuint m_framebuffer_vertex_array_name = -1;
 
 /*
  * Initialize Shaders
@@ -527,56 +577,85 @@ void InitShaders(void)
 {
 	static const char *gl_framebuffer_shader_src[2] = {
 		/* vertex shader */
-		"#version 330 core                                                            \n"
-		"layout(location = 0) in vec2 in_Position;                                    \n"
-		"layout(location = 1) in vec2 in_Texcoord;                                    \n"
-		"out vec2 Texcoord;                                                           \n"
-		"void main()                                                                  \n"
-		"{                                                                            \n"
-		"    Texcoord = in_Texcoord;                                                  \n"
-		"    gl_Position = vec4(in_Position, 0.0, 1.0);                               \n"
-		"}                                                                            \n",
-		/* fragment shader */
-		"#version 330 core                                                            \n"
-		"in vec2 Texcoord;                                                            \n"
-		"out vec4 out_Color;                                                          \n"
-		"uniform sampler2D tex;                                                       \n"
-		"void main()                                                                  \n"
-		"{                                                                            \n"
-		"    out_Color = texture2D(tex, Texcoord);                                    \n"
-		"}                                                                            \n"
+		"#version 330 core                                                       \n"
+		"#define ATTR_POSITION 0                                                 \n"
+		"#define ATTR_TEXCOORD 4                                                 \n"
+		"precision highp float;                                                  \n"
+		"precision highp int;                                                    \n"
+		"layout(std140, column_major) uniform;                                   \n"
+		"layout(location = ATTR_POSITION) in vec2 Position;                      \n"
+		"layout(location = ATTR_TEXCOORD) in vec2 Texcoord;                      \n"
+		"out block                                                               \n"
+		"{                                                                       \n"
+		"  vec2 Texcoord;                                                        \n"
+		"} Out;                                                                  \n"
+		"void main()                                                             \n"
+		"{                                                                       \n"
+		"	Out.Texcoord = Texcoord;                                             \n"
+		"	gl_Position = vec4(Position, 0.0, 1.0);                              \n"
+		"}                                                                       \n"
+		, /* fragment shader */
+		"#version 330 core                                                       \n"
+		"#define FRAG_COLOR 0                                                    \n"
+		"precision highp float;                                                  \n"
+		"precision highp int;                                                    \n"
+		"layout(std140, column_major) uniform;                                   \n"
+		"uniform sampler2D tex;                                                  \n"
+		"in block                                                                \n"
+		"{                                                                       \n"
+		"  vec2 Texcoord;                                                        \n"
+		"} In;                                                                   \n"
+		"layout(location = FRAG_COLOR, index = 0) out vec4 Color;                \n"
+		"void main()                                                             \n"
+		"{                                                                       \n"
+		"  Color = texture2D(tex, In.Texcoord);                                  \n"
+		"}                                                                       \n"
 	};
 
-	glGetError(); // reset GL_CHECK
+	GL_RESET();
 #if 0
 	glGenVertexArrays(1, &m_vao);
-    glBindVertexArray(m_vao);
+	glBindVertexArray(m_vao);
 #endif
 
-    m_framebuffer_shader_program = glCreateProgram();
-	GL_CHECK();
-
-    // Compile vertex shader
+	// Compile vertex shader
 	GLuint vertex_shader = create_gl_shader(GL_VERTEX_SHADER, gl_framebuffer_shader_src[0], "Framebuffer vertex shader");
-    // Compile fragment shader
+	// Compile fragment shader
 	GLuint fragment_shader = create_gl_shader(GL_FRAGMENT_SHADER, gl_framebuffer_shader_src[1], "Framebuffer fragment shader");
 
-    // Link vertex and fragment shaders
+	m_framebuffer_shader_program = glCreateProgram();
+	GL_CHECK();
+	// Link vertex and fragment shaders
 	glAttachShader(m_framebuffer_shader_program, vertex_shader);
-    glAttachShader(m_framebuffer_shader_program, fragment_shader);
-    glBindFragDataLocation(m_framebuffer_shader_program, 0, "out_Color");
-    glLinkProgram(m_framebuffer_shader_program);
+	GL_CHECK();
+	glAttachShader(m_framebuffer_shader_program, fragment_shader);
+	GL_CHECK();
+	glBindAttribLocation(m_framebuffer_shader_program, ATTR_POSITION, "Position");
+	GL_CHECK();
+	glBindAttribLocation(m_framebuffer_shader_program, ATTR_TEXCOORD, "Texcoord");
+	GL_CHECK();
+	glBindFragDataLocation(m_framebuffer_shader_program, FRAG_COLOR, "Color");
+	GL_CHECK();
+	glLinkProgram(m_framebuffer_shader_program);
+	GL_CHECK();
+	/* Check it linked */
+	GLint linked = 0;
+	glGetProgramiv(m_framebuffer_shader_program, GL_LINK_STATUS, &linked);
+	GL_CHECK();
+	if (!linked) {
+		GLchar log[2048];
+		glGetProgramInfoLog(m_framebuffer_shader_program, 2048, NULL, log);
+		fprintf(stderr, "nv2a: shader linking failed: %s\n", log);
+		abort();
+	}
 
-    m_framebuffer_attribute_location_position = glGetAttribLocation(m_framebuffer_shader_program, "in_Position");
-    m_framebuffer_attribute_location_texture = glGetAttribLocation(m_framebuffer_shader_program, "in_Texcoord");
+	m_framebuffer_uniform_location_texture = glGetUniformLocation(m_framebuffer_shader_program, "tex");
+	GL_CHECK();
 }
 
-/*
- * Initialize Geometry
- */
 void InitGeometry()
 {
-	static const GLfloat verts[6][4] = {
+	static const GLfloat vertices[6][4] = {
 		//  x      y      s      t
 		{ -1.0f, -1.0f,  0.0f,  1.0f }, // BL
 		{ -1.0f,  1.0f,  0.0f,  0.0f }, // TL
@@ -584,41 +663,65 @@ void InitGeometry()
 		{  1.0f, -1.0f,  1.0f,  1.0f }, // BR
 	};
 
-	static const GLint indicies[] = {
-		0, 1, 2, 0, 2, 3
-	};
-
 	// Populate vertex buffer
 	glGenBuffers(1, &m_framebuffer_vertex_buffer_object);
+	GL_CHECK();
 	glBindBuffer(GL_ARRAY_BUFFER, m_framebuffer_vertex_buffer_object);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(verts), verts, GL_STATIC_DRAW);
-
-	// Populate element buffer
-	glGenBuffers(1, &m_framebuffer_element_buffer_object);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_framebuffer_element_buffer_object);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indicies), indicies, GL_STATIC_DRAW);
+	GL_CHECK();
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+	GL_CHECK();
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	GL_CHECK();
 }
 
-void BindGeometry()
+void InitVertexArray()
 {
-	glUseProgram(m_framebuffer_shader_program);
+	glGenVertexArrays(1, &m_framebuffer_vertex_array_name);
+	GL_CHECK();
+	glBindVertexArray(m_framebuffer_vertex_array_name);
+	GL_CHECK();
 
 	glBindBuffer(GL_ARRAY_BUFFER, m_framebuffer_vertex_buffer_object);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_framebuffer_element_buffer_object);
+	GL_CHECK();
 
 	// Bind vertex position attribute
-    glVertexAttribPointer(m_framebuffer_attribute_location_position, 2, GL_FLOAT, GL_FALSE, 4*sizeof(GLfloat), (void*)0);
-    glEnableVertexAttribArray(m_framebuffer_attribute_location_position);
-
+	// Bind vertex position attribute
+	glVertexAttribPointer(
+		/*index=*/ATTR_POSITION,
+		/*size=vec*/2,
+		/*type=*/GL_FLOAT,
+		/*normalized?=*/GL_FALSE,
+		/*stride=*/4 * sizeof(GLfloat),
+		/*array buffer offset=*/(void*)0
+	);
+	GL_CHECK();
 	// Bind vertex texture coordinate attribute
-    glVertexAttribPointer(m_framebuffer_attribute_location_texture, 2, GL_FLOAT, GL_FALSE, 4*sizeof(GLfloat), (void*)(2*sizeof(GLfloat)));
-    glEnableVertexAttribArray(m_framebuffer_attribute_location_texture);
+	glVertexAttribPointer(
+		/*index=*/ATTR_TEXCOORD,
+		/*size=vec*/2,
+		/*type=*/GL_FLOAT,
+		/*normalized?=*/GL_FALSE,
+		/*stride=*/4 * sizeof(GLfloat),
+		/*array buffer offset=*/(void*)(2 * sizeof(GLfloat))
+	);
+	GL_CHECK();
+	glEnableVertexAttribArray(ATTR_POSITION);
+	GL_CHECK();
+	glEnableVertexAttribArray(ATTR_TEXCOORD);
+	GL_CHECK();
+	glBindVertexArray(0);
+	GL_CHECK();
 }
 
-void cxbx_gl_initialize()
+void cxbx_gl_initialize(NV2AState *d)
 {
+	lockGL(&d->pgraph);
+
 	InitShaders();
 	InitGeometry();
+	InitVertexArray();
+
+	unlockGL(&d->pgraph);
 }
 
 #endif // DRAW_FRAMEBUFFER
@@ -628,20 +731,20 @@ static GLsizei frame_height = 480;
 
 void cxbx_gl_update_framebuffer(NV2AState *d)
 {
-	static ULONG PreviousAvDisplayModeFormat = 0;
-	static GLenum gl_frame_internal_format = GL_RGBA;
-	static GLenum gl_frame_format = GL_BGRA; // Was GL_RGBA;
-	static GLenum gl_frame_type = GL_UNSIGNED_INT_8_8_8_8_REV; // Was GL_UNSIGNED_INT_8_8_8_8;
-	static GLuint frame_texture = -1;
+	static GLenum frame_gl_internal_format = GL_RGBA8;
+	static GLenum frame_gl_format = GL_BGRA;
+	static GLenum frame_gl_type = GL_UNSIGNED_INT_8_8_8_8_REV;
+	static GLuint frame_gl_texture = -1;
 
 	// Convert AV Format to OpenGl format details & destroy the texture if format changed..
 	// This is required for titles that use a non ARGB framebuffer, such was Beats of Rage
+	static ULONG PreviousAvDisplayModeFormat = 0;
 	if (PreviousAvDisplayModeFormat != g_AvDisplayModeFormat) {
-		AvDisplayModeFormatToGL(g_AvDisplayModeFormat, &gl_frame_internal_format, &gl_frame_format, &gl_frame_type);
+		AvDisplayModeFormatToGL(g_AvDisplayModeFormat, &frame_gl_internal_format, &frame_gl_format, &frame_gl_type);
 		AvGetFormatSize(AvpCurrentMode, &frame_width, &frame_height);
-		if (frame_texture != -1) {
-			glDeleteTextures(1, &frame_texture);
-			frame_texture = -1;
+		if (frame_gl_texture != -1) {
+			glDeleteTextures(1, &frame_gl_texture);
+			frame_gl_texture = -1;
 		}
 
 		PreviousAvDisplayModeFormat = g_AvDisplayModeFormat;
@@ -649,22 +752,32 @@ void cxbx_gl_update_framebuffer(NV2AState *d)
 
 	glGetError(); // reset GL_CHECK
 
-	// If we need to create a new texture, do so, otherwise, update the existing
-	hwaddr frame_pixels = /*CONTIGUOUS_MEMORY_BASE=*/0x80000000 | d->pcrtc.start; // NV_PCRTC_START
-	if (frame_texture == -1) {
-		glGenTextures(1, &frame_texture);
-		glBindTexture(GL_TEXTURE_2D, frame_texture);
-		glTexImage2D(GL_TEXTURE_2D, 0, gl_frame_internal_format, frame_width, frame_height, 0, gl_frame_format, gl_frame_type, (void*)frame_pixels);
-	} else {
-		glBindTexture(GL_TEXTURE_2D, frame_texture);
-		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, frame_width, frame_height, gl_frame_format, gl_frame_type, (void*)frame_pixels);
+	// If we need to create a (new) texture, do so
+	if (frame_gl_texture == -1) {
+		glGenTextures(1, &frame_gl_texture);
+		GL_CHECK();
+		glBindTexture(GL_TEXTURE_2D, frame_gl_texture);
+		GL_CHECK();
+		glTexImage2D(GL_TEXTURE_2D, 0, frame_gl_internal_format, frame_width, frame_height, 0, frame_gl_format, frame_gl_type, NULL);
+		GL_CHECK();
 	}
-	glBindTexture(GL_TEXTURE_2D, 0);
+
+	// Update the frame texture
+	glBindTexture(GL_TEXTURE_2D, frame_gl_texture);
+	GL_CHECK();
+	// TODO : Get the correct swizzle from the av format (see kelvin_color_format_map)
+	static const GLint swizzle_mask_RGBA[4] = { GL_RED, GL_GREEN, GL_BLUE, GL_ALPHA };
+	glTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_RGBA, swizzle_mask_RGBA);
+	GL_CHECK();
+
+	hwaddr frame_pixels = /*CONTIGUOUS_MEMORY_BASE=*/0x80000000 | d->pcrtc.start; // NV_PCRTC_START
+	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, frame_width, frame_height, frame_gl_format, frame_gl_type, (void*)frame_pixels);
+	GL_CHECK();
 
 	// If we need to create an OpenGL framebuffer, do so
-	static GLuint framebuffer = -1;
-	if (framebuffer == -1) {
-		glGenFramebuffers(1, &framebuffer);
+	static GLuint frame_gl_framebuffer = -1;
+	if (frame_gl_framebuffer == -1) {
+		glGenFramebuffers(1, &frame_gl_framebuffer);
 		GL_CHECK();
 	}
 
@@ -673,7 +786,9 @@ void cxbx_gl_update_framebuffer(NV2AState *d)
 
 	// Target the actual framebuffer
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-#ifdef DEBUG
+	GL_CHECK();
+
+#ifdef DEBUG_NV2A_GL
 	// If the screen turns purple, glBlitFramebuffer below failed
 	glClearColor(1.0f, 0.0f, 1.0f, 1.0f);
 	GL_CHECK();
@@ -681,23 +796,39 @@ void cxbx_gl_update_framebuffer(NV2AState *d)
 	GL_CHECK();
 #endif
 
-#ifdef DRAW_FRAMEBUFFER // Shaders don't compile yet
+#ifdef DRAW_FRAMEBUFFER
 	// Draw frame texture to an internal frame buffer
-	BindGeometry();
-	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, NULL);
+	glUseProgram(m_framebuffer_shader_program);
+	GL_CHECK();
+	glUniform1i(m_framebuffer_uniform_location_texture, SAMP_TEXCOORD);
+	GL_CHECK();
+	glActiveTexture(GL_TEXTURE0);
+	GL_CHECK();
+	glBindTexture(GL_TEXTURE_2D, frame_gl_texture);
+	GL_CHECK();
+	glBindVertexArray(m_framebuffer_vertex_array_name);
+	GL_CHECK();
+	glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+	GL_CHECK();
 #else
 	// Copy frame texture to an internal frame buffer
-	glBindFramebuffer(GL_READ_FRAMEBUFFER, framebuffer);
-	glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, frame_texture, 0);
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, frame_gl_framebuffer);
+	GL_CHECK();
+	glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, frame_gl_texture, 0);
+	GL_CHECK();
 	// Blit the active internal 'read' frame buffer to the actual 'draw' framebuffer
 	static const GLenum filter = GL_NEAREST;
 	// TODO: Use window size/actual framebuffer size rather than hard coding 640x480
 	// Note : dstY0 and dstY1 are swapped so the screen doesn't appear upside down
 	glBlitFramebuffer(0, 0, frame_width, frame_height, 0, 480, 640, 0, GL_COLOR_BUFFER_BIT, filter);
+	GL_CHECK();
 #endif
 
+	glBindTexture(GL_TEXTURE_2D, 0);
+	GL_CHECK();
 	// Restore xbox framebuffer
 	glBindFramebuffer(GL_FRAMEBUFFER, d->pgraph.gl_framebuffer);
+	GL_CHECK();
 }
 
 void cxbx_gl_render_overlays(NV2AState *d)
@@ -738,7 +869,7 @@ void cxbx_gl_render_overlays(NV2AState *d)
 		int overlay_out_height = GET_MASK(d->pvideo.regs[NV_PVIDEO_SIZE_OUT(v)], NV_PVIDEO_SIZE_OUT_HEIGHT);
 
 		// If we need to create a new overlay texture, do so, otherwise, update the existing
-		static GLuint overlay_texture = -1;
+		static GLuint overlay_gl_texture = -1;
 
 		// Detect changes in overlay dimensions
 		static int static_overlay_in_width = 0;
@@ -750,9 +881,9 @@ void cxbx_gl_render_overlays(NV2AState *d)
 			static_overlay_in_width = overlay_in_width;
 			static_overlay_in_height = overlay_in_height;
 			static_overlay_pitch = overlay_pitch;
-			if (overlay_texture != -1) {
-				glDeleteTextures(1, &overlay_texture);
-				overlay_texture = -1;
+			if (overlay_gl_texture != -1) {
+				glDeleteTextures(1, &overlay_gl_texture);
+				overlay_gl_texture = -1;
 			}
 		}
 
@@ -760,26 +891,36 @@ void cxbx_gl_render_overlays(NV2AState *d)
 
 		// Render using texture #0
 		glActiveTexture(GL_TEXTURE0);
+		GL_CHECK();
 
-		static const GLenum gl_overlay_internal_format = GL_RGBA8;
-		static const GLenum gl_overlay_format = GL_BGRA;
-		static const GLenum gl_overlay_type = GL_UNSIGNED_BYTE;
+		static const GLenum overlay_gl_internal_format = GL_RGBA8;
+		static const GLenum overlay_gl_format = GL_BGRA;
+		static const GLenum overlay_gl_type = GL_UNSIGNED_INT_8_8_8_8_REV;
 			   
 		hwaddr overlay_pixels = /*CONTIGUOUS_MEMORY_BASE=*/0x80000000 | overlay_offset;
-		if (overlay_texture == -1) {
-			glGenTextures(1, &overlay_texture);
+		if (overlay_gl_texture == -1) {
+			glGenTextures(1, &overlay_gl_texture);
+			GL_CHECK();
+			glBindTexture(GL_TEXTURE_2D, overlay_gl_texture);
+			GL_CHECK();
+			glTexImage2D(GL_TEXTURE_2D, 0, overlay_gl_internal_format, overlay_pitch / 4, overlay_in_height, 0, overlay_gl_format, overlay_gl_type, NULL);
+			GL_CHECK();
+		}
 
-			glBindTexture(GL_TEXTURE_2D, overlay_texture);
-			glTexImage2D(GL_TEXTURE_2D, 0, gl_overlay_internal_format, overlay_pitch / 4, overlay_in_height, 0, gl_overlay_format, gl_overlay_type, (void*)overlay_pixels);
-		}
-		else {
-			glBindTexture(GL_TEXTURE_2D, overlay_texture); // update the YUV video texturing unit 
-			glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, overlay_pitch / 4, overlay_in_height, gl_overlay_format, gl_overlay_type, (void*)overlay_pixels);
-		}
+		// update the YUV video texturing unit 
+		glBindTexture(GL_TEXTURE_2D, overlay_gl_texture);
+		GL_CHECK();
+		static const GLint swizzle_mask_BGRA[4] = { GL_BLUE, GL_GREEN, GL_RED, GL_ALPHA };
+		glTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_RGBA, swizzle_mask_BGRA);
+		GL_CHECK();
+		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, overlay_pitch / 4, overlay_in_height, overlay_gl_format, overlay_gl_type, (void*)overlay_pixels);
+		GL_CHECK();
 
 		// Don't average YUYV samples when resizing
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		GL_CHECK();
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		GL_CHECK();
 
 		// Note : we cannot convert overlay_offset into actual top/left coordinate, so assume (0,0)
 		static const int overlay_in_s = 0;
@@ -816,63 +957,66 @@ void cxbx_gl_render_overlays(NV2AState *d)
 		GLfloat dstY1f = (GLfloat)((dstY1 / frame_height) * 2.0f) - 1.0f;
 
 		glDisable(GL_CULL_FACE);
+		GL_CHECK();
 
 		glUseProgram(Get_YUV_to_RGB_shader_program());
+		GL_CHECK();
 
 		// Attach texture #0 to the shader sampler location 
-		glUniform1i(yuyv_tex_loc, 0);
+		glUniform1i(m_overlay_uniform_location_texture, 0);
+		GL_CHECK();
 
-		// Feed screen coordinates through a vertex buffer object
-		const GLfloat vertex_buffer_data[] = {
-			dstX0f, dstY0f, 0.0f,
-			dstX1f, dstY0f, 0.0f,
-			dstX1f, dstY1f, 0.0f,
-			dstX0f, dstY1f, 0.0f,
+		// Feed screen and texture coordinates through a vertex buffer object
+		const GLfloat overlay_vertex_buffer_data[] = {
+			dstX0f, dstY0f, srcX0f, srcY0f,
+			dstX1f, dstY0f, srcX1f, srcY0f,
+			dstX1f, dstY1f, srcX1f, srcY1f,
+			dstX0f, dstY1f, srcX0f, srcY1f,
 		};
-		static GLuint vertexbuffer = -1;
-		if (vertexbuffer == -1) {
-			glGenBuffers(1, &vertexbuffer);	
-		}
-		glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_buffer_data), vertex_buffer_data, GL_STREAM_DRAW);
-		glVertexAttribPointer(
-			0,                  // layout(location = 0) in the vertex shader.
-			3,                  // size = vec3
-			GL_FLOAT,           // type
-			GL_FALSE,           // normalized?
-			0,                  // stride
-			(void*)0            // array buffer offset
-		);
-		glEnableVertexAttribArray(0);
 
-		// Feed texture coordinates through another vertex buffer object
-		const GLfloat uv_buffer_data[] = {
-			srcX0f, srcY0f,
-			srcX1f, srcY0f,
-			srcX1f, srcY1f,
-			srcX0f, srcY1f,
-		};
-		static GLuint uvbuffer = -1;
-		if (uvbuffer == -1) {
-			glGenBuffers(1, &uvbuffer);
+		static GLuint overlay_gl_vertex_buffer_object = -1;
+		if (overlay_gl_vertex_buffer_object == -1) {
+			glGenBuffers(1, &overlay_gl_vertex_buffer_object);	
+			GL_CHECK();
 		}
-		glBindBuffer(GL_ARRAY_BUFFER, uvbuffer);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(uv_buffer_data), uv_buffer_data, GL_STREAM_DRAW);
-		glVertexAttribPointer(
-			1,                  // layout(location = 1) in the vertex shader.
-			2,                  // size = vec2
-			GL_FLOAT,           // type
-			GL_FALSE,           // normalized?
-			0,                  // stride
-			(void*)0            // array buffer offset
-		);
-		glEnableVertexAttribArray(1);
 
+		glBindBuffer(GL_ARRAY_BUFFER, overlay_gl_vertex_buffer_object);
+		GL_CHECK();
+		glBufferData(GL_ARRAY_BUFFER, sizeof(overlay_vertex_buffer_data), overlay_vertex_buffer_data, GL_STREAM_DRAW);
+		GL_CHECK();
+		// Bind vertex position attribute
+		glVertexAttribPointer(
+			/*index=*/ATTR_POSITION,
+			/*size=vec*/2,
+			/*type=*/GL_FLOAT,
+			/*normalized?=*/GL_FALSE,
+			/*stride=*/4*sizeof(GLfloat),
+			/*array buffer offset=*/(void*)0
+		);
+		GL_CHECK();
+		// Bind vertex texture coordinate attribute
+		glVertexAttribPointer(
+			/*index=*/ATTR_TEXCOORD,
+			/*size=vec*/2,
+			/*type=*/GL_FLOAT,
+			/*normalized?=*/GL_FALSE,
+			/*stride=*/4*sizeof(GLfloat),
+			/*array buffer offset=*/(void*)(2 * sizeof(GLfloat))
+		);
+		GL_CHECK();
+		glEnableVertexAttribArray(ATTR_POSITION);
+		GL_CHECK();
+		glEnableVertexAttribArray(ATTR_TEXCOORD);
+		GL_CHECK();
 		// Finally! Draw the dang overlay...
 		glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-
-		glUseProgram(0);
+		GL_CHECK();
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		GL_CHECK();
 	}
+
+	glUseProgram(0);
+	GL_CHECK();
 }
 
 extern void UpdateFPSCounter();
@@ -1013,7 +1157,7 @@ void NV2ADevice::Init()
 	// Only spawn VBlank thread when LLE is enabled
 	if (d->pgraph.opengl_enabled) {
 #ifdef DRAW_FRAMEBUFFER
-		cxbx_gl_initialize();
+		cxbx_gl_initialize(d);
 #endif
 		vblank_thread = std::thread(nv2a_vblank_thread, d);
 	}
