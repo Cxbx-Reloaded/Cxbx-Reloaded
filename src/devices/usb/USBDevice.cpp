@@ -38,15 +38,6 @@
 #include "OHCI.h"
 #include "CxbxKrnl\EmuKrnl.h"  // For EmuWarning
 
-#define USB_ENDPOINT_XFER_CONTROL   0
-#define USB_ENDPOINT_XFER_ISOC      1
-#define USB_ENDPOINT_XFER_BULK      2
-#define USB_ENDPOINT_XFER_INT       3
-#define USB_ENDPOINT_XFER_INVALID   255
-
-#define USB_DIR_OUT         0
-#define USB_DIR_IN          0x80
-
 #define SETUP_STATE_IDLE    0
 #define SETUP_STATE_SETUP   1
 #define SETUP_STATE_DATA    2
@@ -98,21 +89,13 @@ void USBDevice::USB_RegisterPort(USBPort* Port, int Index, int SpeedMask)
 	Port->PortIndex = Index;
 	Port->SpeedMask = SpeedMask;
 	Port->HubCount = 0;
+	Port->Dev = nullptr;
 	std::snprintf(Port->Path, sizeof(Port->Path), "%d", Index + 1);
-}
-
-void USBDevice::USB_DeviceEPstopped(XboxDevice* Dev, USBEndpoint* EP)
-{
-	// This seems to be a nop in XQEMU since it doesn't assign the EP_Stopped function (it's nullptr)
-	USBDeviceClass* klass = USB_DEVICE_GET_CLASS(Dev);
-	if (klass->EP_Stopped) {
-		klass->EP_Stopped(Dev, EP);
-	}
 }
 
 void USBDevice::USB_PortReset(USBPort* Port)
 {
-	XboxDevice* dev = Port->Dev;
+	XboxDeviceState* dev = Port->Dev;
 
 	assert(dev != nullptr);
 	USB_Detach(Port);
@@ -122,7 +105,7 @@ void USBDevice::USB_PortReset(USBPort* Port)
 
 void USBDevice::USB_Detach(USBPort* Port)
 {
-	XboxDevice* dev = Port->Dev;
+	XboxDeviceState* dev = Port->Dev;
 
 	assert(dev != nullptr);
 	assert(dev->State != USB_STATE_NOTATTACHED);
@@ -132,7 +115,7 @@ void USBDevice::USB_Detach(USBPort* Port)
 
 void USBDevice::USB_Attach(USBPort* Port)
 {
-	XboxDevice *dev = Port->Dev;
+	XboxDeviceState *dev = Port->Dev;
 
 	assert(dev != nullptr);
 	assert(dev->Attached);
@@ -142,7 +125,7 @@ void USBDevice::USB_Attach(USBPort* Port)
 	usb_device_handle_attach(dev);
 }
 
-void USBDevice::USB_DeviceReset(XboxDevice* dev)
+void USBDevice::USB_DeviceReset(XboxDeviceState* dev)
 {
 	if (dev == nullptr || !dev->Attached) {
 		return;
@@ -154,9 +137,9 @@ void USBDevice::USB_DeviceReset(XboxDevice* dev)
 	usb_device_handle_reset(dev);
 }
 
-XboxDevice* USBDevice::USB_FindDevice(USBPort* Port, uint8_t Addr)
+XboxDeviceState* USBDevice::USB_FindDevice(USBPort* Port, uint8_t Addr)
 {
-	XboxDevice* dev = Port->Dev;
+	XboxDeviceState* dev = Port->Dev;
 
 	if (dev == nullptr || !dev->Attached || dev->State != USB_STATE_DEFAULT) {
 		return nullptr;
@@ -168,17 +151,7 @@ XboxDevice* USBDevice::USB_FindDevice(USBPort* Port, uint8_t Addr)
 	return USB_DeviceFindDevice(dev, Addr);
 }
 
-XboxDevice* USBDevice::USB_DeviceFindDevice(XboxDevice* Dev, uint8_t Addr)
-{
-	USBDeviceClass *klass = USB_DEVICE_GET_CLASS(Dev);
-	if (klass->find_device) {
-		return klass->find_device(Dev, Addr); // TODO: usb_hub_find_device
-	}
-
-	return nullptr;
-}
-
-USBEndpoint* USBDevice::USB_GetEP(XboxDevice* Dev, int Pid, int Ep)
+USBEndpoint* USBDevice::USB_GetEP(XboxDeviceState* Dev, int Pid, int Ep)
 {
 	USBEndpoint* eps;
 
@@ -224,7 +197,7 @@ void USBDevice::USB_PacketAddBuffer(USBPacket* p, void* ptr, size_t len)
 	IoVecAdd(&p->IoVec, ptr, len);
 }
 
-void USBDevice::USB_HandlePacket(XboxDevice* dev, USBPacket* p)
+void USBDevice::USB_HandlePacket(XboxDeviceState* dev, USBPacket* p)
 {
 	if (dev == nullptr) {
 		p->Status = USB_RET_NODEV;
@@ -289,7 +262,7 @@ void USBDevice::USB_PacketCheckState(USBPacket* p, USBPacketState expected)
 
 void USBDevice::USB_ProcessOne(USBPacket* p)
 {
-	XboxDevice* dev = p->Endpoint->Dev;
+	XboxDeviceState* dev = p->Endpoint->Dev;
 
 	// Handlers expect status to be initialized to USB_RET_SUCCESS, but it
 	// can be USB_RET_NAK here from a previous usb_process_one() call,
@@ -323,7 +296,7 @@ void USBDevice::USB_ProcessOne(USBPacket* p)
 	}
 }
 
-void USBDevice::USB_DoParameter(XboxDevice* s, USBPacket* p)
+void USBDevice::USB_DoParameter(XboxDeviceState* s, USBPacket* p)
 {
 	int i, request, value, index;
 
@@ -363,7 +336,7 @@ void USBDevice::USB_DoParameter(XboxDevice* s, USBPacket* p)
 	}
 }
 
-void USBDevice::USB_DoTokenSetup(XboxDevice* s, USBPacket* p)
+void USBDevice::USB_DoTokenSetup(XboxDeviceState* s, USBPacket* p)
 {
 	int request, value, index;
 
@@ -421,7 +394,7 @@ void USBDevice::USB_DoTokenSetup(XboxDevice* s, USBPacket* p)
 	p->ActualLength = 8;
 }
 
-void USBDevice::DoTokenIn(XboxDevice* s, USBPacket* p)
+void USBDevice::DoTokenIn(XboxDeviceState* s, USBPacket* p)
 {
 	int request, value, index;
 
@@ -465,7 +438,7 @@ void USBDevice::DoTokenIn(XboxDevice* s, USBPacket* p)
 	}
 }
 
-void USBDevice::DoTokenOut(XboxDevice* s, USBPacket* p)
+void USBDevice::DoTokenOut(XboxDeviceState* s, USBPacket* p)
 {
 	assert(p->ep->nr == 0);
 
@@ -522,7 +495,17 @@ void USBDevice::USB_PacketCopy(USBPacket* p, void* ptr, size_t bytes)
 	p->ActualLength += bytes;
 }
 
-void USBDevice::USB_DeviceHandleControl(XboxDevice* dev, USBPacket* p, int request, int value, int index, int length, uint8_t* data)
+int USBDevice::USB_DeviceInit(XboxDeviceState* dev)
+{
+	USBDeviceClass* klass = dev->klass;
+	if (klass->init) {
+		return klass->init(dev);
+	}
+
+	return 0;
+}
+
+void USBDevice::USB_DeviceHandleControl(XboxDeviceState* dev, USBPacket* p, int request, int value, int index, int length, uint8_t* data)
 {
 	USBDeviceClass *klass = USB_DEVICE_GET_CLASS(dev);
 	if (klass->handle_control) {
@@ -530,7 +513,7 @@ void USBDevice::USB_DeviceHandleControl(XboxDevice* dev, USBPacket* p, int reque
 	}
 }
 
-void USBDevice::USB_DeviceHandleData(XboxDevice* dev, USBPacket* p)
+void USBDevice::USB_DeviceHandleData(XboxDeviceState* dev, USBPacket* p)
 {
 	USBDeviceClass *klass = USB_DEVICE_GET_CLASS(dev);
 	if (klass->handle_data) {
@@ -538,7 +521,7 @@ void USBDevice::USB_DeviceHandleData(XboxDevice* dev, USBPacket* p)
 	}
 }
 
-void USBDevice::USB_DeviceFlushEPqueue(XboxDevice* dev, USBEndpoint* ep)
+void USBDevice::USB_DeviceFlushEPqueue(XboxDeviceState* dev, USBEndpoint* ep)
 {
 	USBDeviceClass *klass = USB_DEVICE_GET_CLASS(dev);
 	if (klass->flush_ep_queue) {
@@ -546,11 +529,29 @@ void USBDevice::USB_DeviceFlushEPqueue(XboxDevice* dev, USBEndpoint* ep)
 	}
 }
 
-void USBDevice::USB_DeviceCancelPacket(XboxDevice* dev, USBPacket* p)
+void USBDevice::USB_DeviceCancelPacket(XboxDeviceState* dev, USBPacket* p)
 {
 	USBDeviceClass *klass = USB_DEVICE_GET_CLASS(dev);
 	if (klass->cancel_packet) {
 		klass->cancel_packet(dev, p); // TODO: it's nullptr in XQEMU...
+	}
+}
+
+XboxDeviceState* USBDevice::USB_DeviceFindDevice(XboxDeviceState* Dev, uint8_t Addr)
+{
+	USBDeviceClass *klass = USB_DEVICE_GET_CLASS(Dev);
+	if (klass->find_device) {
+		return klass->find_device(Dev, Addr); // TODO: usb_hub_find_device
+	}
+
+	return nullptr;
+}
+
+void USBDevice::USB_DeviceEPstopped(XboxDeviceState* Dev, USBEndpoint* EP)
+{
+	USBDeviceClass* klass = USB_DEVICE_GET_CLASS(Dev);
+	if (klass->ep_stopped) {
+		klass->ep_stopped(Dev, EP);
 	}
 }
 

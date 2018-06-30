@@ -36,6 +36,7 @@
 
 #include <stdint.h>
 #include <assert.h>
+#include <processthreadsapi.h>
 
 #define FUNC_EXPORTS __pragma(comment(linker, "/EXPORT:" __FUNCTION__ "=" __FUNCDNAME__))
 
@@ -162,21 +163,19 @@ extern volatile bool g_bPrintfOn;
 
 
 /* This is a linux struct for vectored I/O. See readv() and writev() */
-typedef struct _IoVec
+struct IoVec
 {
 	void* Iov_Base;  // Starting address
 	size_t Iov_Len;  // Number of bytes to transfer
-}
-IoVec;
+};
 
-typedef struct _IOVector
+struct IOVector
 {
 	IoVec* IoVecStruct;
 	int IoVecNumber;      // number of I/O buffers supplied
 	int AllocNumber;      // number of IoVec structs currently allocated
 	size_t Size;          // total size of all I/O buffers supplied
-}
-IOVector;
+};
 
 inline uint64_t Muldiv64(uint64_t a, uint32_t b, uint32_t c);
 
@@ -189,5 +188,12 @@ void WriteDwords(xbaddr Paddr, uint32_t* Buffer, int Number);
 void GetDwords(xbaddr Paddr, uint32_t* Buffer, int Number);
 void GetWords(xbaddr Paddr, uint16_t* Buffer, int Number);
 void WriteWords(xbaddr Paddr, uint16_t* Buffer, int Number);
+
+// Calculate a struct base address from a pointer to a member of it
+#ifndef container_of
+#define container_of(address, type, field) ((type *)( \
+                                              (int8_t*)(address) - \
+                                              (uint32_t)(&((type *)0)->field)))
+#endif
 
 #endif

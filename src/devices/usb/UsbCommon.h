@@ -34,6 +34,9 @@
 // *
 // ******************************************************************
 
+#ifndef USBCOMMON_H_
+#define USBCOMMON_H_
+
 #include "Cxbx.h"
 #include "..\devices\video\queue.h"
 #include <functional>
@@ -44,6 +47,23 @@
 #define USB_STATE_NOTATTACHED 0
 #define USB_STATE_ATTACHED    1
 #define USB_STATE_DEFAULT     2
+
+#define USB_CLASS_HUB         9
+
+#define USB_ENDPOINT_XFER_CONTROL   0
+#define USB_ENDPOINT_XFER_ISOC      1
+#define USB_ENDPOINT_XFER_BULK      2
+#define USB_ENDPOINT_XFER_INT       3
+#define USB_ENDPOINT_XFER_INVALID   255
+
+#define USB_INTERFACE_INVALID       255
+
+#define USB_DIR_OUT         0
+#define USB_DIR_IN          0x80
+
+#define USB_TOKEN_SETUP 0x2D
+#define USB_TOKEN_IN    0x69 // device -> host
+#define USB_TOKEN_OUT   0xE1 // host -> device
 
 
 typedef enum USBPacketState {
@@ -56,17 +76,16 @@ typedef enum USBPacketState {
 }
 USBPacketState;
 
-typedef struct _USBPacket USBPacket;
-typedef struct _XboxDevice XboxDevice;
+struct USBPacket;
+struct XboxDeviceState;
 typedef const char* USBDescStrings[256];
 
-typedef struct _USBDescOther {
+struct USBDescOther {
     uint8_t                   length;
-    const uint8_t             *data;
-}
-USBDescOther;
+    const uint8_t*            data;
+};
 
-typedef struct _USBDescEndpoint {
+struct USBDescEndpoint {
     uint8_t                   bEndpointAddress;
     uint8_t                   bmAttributes;
     uint16_t                  wMaxPacketSize;
@@ -75,14 +94,13 @@ typedef struct _USBDescEndpoint {
     uint8_t                   bSynchAddress;
 
     uint8_t                   is_audio; /* has bRefresh + bSynchAddress */
-    uint8_t                   *extra;
+    uint8_t*                  extra;
 
     /* superspeed endpoint companion */
     uint8_t                   bMaxBurst;
     uint8_t                   bmAttributes_super;
     uint16_t                  wBytesPerInterval;
-}
-USBDescEndpoint;
+};
 
 struct USBDescIface {
     uint8_t                   bInterfaceNumber;
@@ -101,7 +119,7 @@ struct USBDescIface {
 };
 
 /* conceptually an Interface Association Descriptor, and releated interfaces */
-typedef struct _USBDescIfaceAssoc {
+struct USBDescIfaceAssoc {
     uint8_t                   bFirstInterface;
     uint8_t                   bInterfaceCount;
     uint8_t                   bFunctionClass;
@@ -111,10 +129,9 @@ typedef struct _USBDescIfaceAssoc {
 
     uint8_t                   nif;
     const USBDescIface*       ifs;
-}
-USBDescIfaceAssoc;
+};
 
-typedef struct _USBDescConfig {
+struct USBDescConfig {
     uint8_t                   bNumInterfaces;
     uint8_t                   bConfigurationValue;
     uint8_t                   iConfiguration;
@@ -128,8 +145,7 @@ typedef struct _USBDescConfig {
     /* "normal" interfaces */
     uint8_t                   nif;
     const USBDescIface*       ifs;
-}
-USBDescConfig;
+};
 
 struct USBDescDevice {
     uint16_t                  bcdUSB;
@@ -139,50 +155,49 @@ struct USBDescDevice {
     uint8_t                   bMaxPacketSize0;
     uint8_t                   bNumConfigurations;
     const USBDescConfig*      confs;
-	USBDescDevice();
+	USBDescDevice(bool bDefault);
+	~USBDescDevice();
 };
 
-typedef struct _USBDescID {
+struct USBDescID {
     uint16_t                  idVendor;
     uint16_t                  idProduct;
     uint16_t                  bcdDevice;
     uint8_t                   iManufacturer;
     uint8_t                   iProduct;
-    uint8_t                   iSerialNumber;
-}
-USBDescID;
+    uint8_t                   iSerialNumber; // index of string descriptor
+};
 
-typedef struct _USBDesc {
-    USBDescID                 id;
-    const USBDescDevice*      full;
+/* Global USB Descriptor struct */
+struct USBDesc {
+    USBDescID                 id;   // id-specific info of the device descriptor
+    const USBDescDevice*      full; // remaining fields of the device descriptor
     const char* const*        str;
-}
-USBDesc;
+	USBDesc(bool bDefault);
+};
 
 /* USB endpoint */
-typedef struct _USBEndpoint
+struct USBEndpoint
 {
 	uint8_t Num;                      // endpoint number
 	uint8_t pid;
 	uint8_t Type;                     // the type of this endpoint
-	uint8_t ifnum;
-	int max_packet_size;
+	uint8_t IfNum;                    // interface number this endpoint belongs to
+	int MaxPacketSize;
 	bool Pipeline;
 	bool Halted;                      // indicates that the endpoint is halted
-	XboxDevice* Dev;                  // device this endpoint belongs to
-	QTAILQ_HEAD(, _USBPacket) Queue;  // queue of packets to this endpoint
-}
-USBEndpoint;
+	XboxDeviceState* Dev;                  // device this endpoint belongs to
+	QTAILQ_HEAD(, USBPacket) Queue;  // queue of packets to this endpoint
+};
 
 /* definition of an Xbox usb device */
-typedef struct _XboxDevice
+struct XboxDeviceState
 {
-	DeviceState qdev;
-	USBPort *port;
-	char *port_path;
-	char *serial;
-	void *opaque;
+	USBPort* Port;                        // usb port struct of this device
+	int PortPath;                         // port index to which this device is attached to
+	char* Serial;
 	uint32_t flags;
+	USBDeviceClass* klass;                // usb class struct of this device
 
 	// Actual connected speed
 	int speed;
@@ -205,7 +220,7 @@ typedef struct _XboxDevice
 	USBEndpoint EP_out[USB_MAX_ENDPOINTS]; // endpoints for IN tokens
 
 	QLIST_HEAD(, USBDescString) Strings;
-	const USBDesc *usb_desc;               // Overrides class usb_desc if not NULL
+	const USBDesc* usb_desc;               // Overrides class usb_desc if not NULL
 	const USBDescDevice *device;
 
 	int configuration;
@@ -213,18 +228,16 @@ typedef struct _XboxDevice
 	int altsetting[USB_MAX_INTERFACES];
 	const USBDescConfig *config;
 	const USBDescIface  *ifaces[USB_MAX_INTERFACES];
-}
-XboxDevice;
+};
 
-typedef struct _USBCombinedPacket {
-	_USBPacket* First;
-	QTAILQ_HEAD(packets_head, _USBPacket) Packets;
+struct USBCombinedPacket {
+	USBPacket* First;
+	QTAILQ_HEAD(packets_head, USBPacket) Packets;
 	IOVector IoVec;
-}
-USBCombinedPacket;
+};
 
 /* Structure used to hold information about an active USB packet */
-struct _USBPacket
+struct USBPacket
 {
 	int Pid;                                 // Packet ID (used to identify the type of packet that is being sent)
 	uint32_t Id;                             // Paddr of the TD for this packet 
@@ -239,70 +252,67 @@ struct _USBPacket
 	// Internal use by the USB layer
 	USBPacketState State;
 	USBCombinedPacket* Combined;
-	QTAILQ_ENTRY(_USBPacket) Queue;
-	QTAILQ_ENTRY(_USBPacket) CombinedEntry;
+	QTAILQ_ENTRY(USBPacket) Queue;
+	QTAILQ_ENTRY(USBPacket) CombinedEntry;
 };
 
 /* Struct describing the status of a usb port */
-typedef struct _USBPort {
-	XboxDevice* Dev;              // usb device (if present)
+struct USBPort {
+	XboxDeviceState* Dev;         // usb device (if present)
 	int SpeedMask;                // usb speeds supported
 	int HubCount;                 // number of hubs attached
 	char Path[16];                // the number of the port
-	int PortIndex;                // internal port index
-	QTAILQ_ENTRY(_USBPort) Next;
-}
-USBPort;
+	int PortIndex;                // internal port index against this HC
+};
 
 /* Struct which stores general functions/variables regarding the peripheral */
-typedef struct _USBDeviceClass
+struct USBDeviceClass
 {
-	std::function<int(XboxDevice* dev)> init;
+	std::function<int(XboxDeviceState* dev)> init;
 
 	// Walk (enabled) downstream ports, check for a matching device.
 	// Only hubs implement this.
-	std::function<XboxDevice*(XboxDevice* dev, uint8_t addr)> find_device;
+	std::function<XboxDeviceState*(XboxDeviceState* dev, uint8_t addr)> find_device;
 
 	// Called when a packet is canceled.
-	std::function<void(XboxDevice* dev, USBPacket* p)> cancel_packet;
+	std::function<void(XboxDeviceState* dev, USBPacket* p)> cancel_packet;
 
 	// Called when device is destroyed.
-	std::function<void(XboxDevice* dev)> handle_destroy;
+	std::function<void(XboxDeviceState* dev)> handle_destroy;
 
 	// Attach the device
-	std::function<void(XboxDevice* dev)> handle_attach;
+	std::function<void(XboxDeviceState* dev)> handle_attach;
 
 	// Reset the device
-	std::function<void(XboxDevice* dev)> handle_reset;
+	std::function<void(XboxDeviceState* dev)> handle_reset;
 
 	// Process control request.
 	// Called from handle_packet().
 	// Status gets stored in p->status, and if p->status == USB_RET_SUCCESS
 	// then the number of bytes transferred is stored in p->actual_length
-	std::function<void(XboxDevice* dev, USBPacket* p, int request, int value,
+	std::function<void(XboxDeviceState* dev, USBPacket* p, int request, int value,
 		int index, int length, uint8_t *data)> handle_control;
 
 	// Process data transfers (both BULK and ISOC).
 	// Called from handle_packet().
 	// Status gets stored in p->status, and if p->status == USB_RET_SUCCESS
 	// then the number of bytes transferred is stored in p->actual_length
-	std::function<void(XboxDevice* dev, USBPacket* p)> handle_data;
+	std::function<void(XboxDeviceState* dev, USBPacket* p)> handle_data;
 
-	std::function<void(XboxDevice* dev, int Interface,
+	std::function<void(XboxDeviceState* dev, int Interface,
 		int alt_old, int alt_new)> set_interface;
 
 	// Called when the hcd is done queuing packets for an endpoint, only
 	// necessary for devices which can return USB_RET_ADD_TO_QUEUE.
-	std::function<void(XboxDevice* dev, USBEndpoint* ep)> flush_ep_queue;
+	std::function<void(XboxDeviceState* dev, USBEndpoint* ep)> flush_ep_queue;
 
 	// Called by the hcd to let the device know the queue for an endpoint
 	// has been unlinked / stopped. Optional may be NULL.
-	std::function<void(XboxDevice* Dev, USBEndpoint* EP)> EP_Stopped;
+	std::function<void(XboxDeviceState* Dev, USBEndpoint* EP)> ep_stopped;
 
 	const char* product_desc;
-	const USBDesc* usb_desc;
-}
-USBDeviceClass;
+	const USBDesc* usb_desc;   // device descriptor
+};
 
 
 /* Abstract class representing a usb peripheral */
@@ -310,8 +320,10 @@ class UsbPeripheral
 {
 	protected:
 		USBDeviceClass* m_pPeripheralFuncStruct;
-		XboxDevice* m_pDeviceStruct;
+		XboxDeviceState* m_pDeviceStruct;
 		
-		virtual void Init() = 0;
+		virtual int Init(int pport) = 0;
 		
 };
+
+#endif

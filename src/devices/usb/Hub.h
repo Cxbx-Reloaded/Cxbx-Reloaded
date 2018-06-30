@@ -34,11 +34,14 @@
 // *
 // ******************************************************************
 
+#ifndef HUB_H_
+#define HUB_H_
+
 #include "UsbCommon.h"
 
 
 /* same as Linux kernel root hubs */
-typedef enum ft{
+typedef enum {
     STR_MANUFACTURER = 1,
     STR_PRODUCT,
     STR_SERIALNUMBER,
@@ -50,22 +53,42 @@ class Hub final : public UsbPeripheral
 {
 	public:
 		// initialize this peripheral
-		void Init() override;
+		int Init(int pport) override;
+		// destructor
+		~Hub();
 		
 		
 	private:
+		// usb device this hub is attached to
+		USBDevice* m_UsbDev = nullptr;
+		// hub state
+		USBHubState* m_HubState = nullptr;
+
 		// initialize various member variables/functions
 		void ClassInitFn();
 		// see USBDeviceClass for comments about these functions
-		int UsbHub_Initfn(XboxDevice* dev);
-		XboxDevice* UsbHub_FindDevice(XboxDevice* dev, uint8_t addr);
-		void UsbHub_HandleReset(XboxDevice* dev);
-		void UsbHub_HandleControl(XboxDevice* dev, USBPacket* p,
+		int UsbHub_Initfn(XboxDeviceState* dev);
+		XboxDeviceState* UsbHub_FindDevice(XboxDeviceState* dev, uint8_t addr);
+		void UsbHub_HandleReset(XboxDeviceState* dev);
+		void UsbHub_HandleControl(XboxDeviceState* dev, USBPacket* p,
                int request, int value, int index, int length, uint8_t* data);
-		void UsbHub_HandleData(XboxDevice* dev, USBPacket* p);
-		void UsbHub_HandleDestroy(XboxDevice* dev);
+		void UsbHub_HandleData(XboxDeviceState* dev, USBPacket* p);
+		void UsbHub_HandleDestroy(XboxDeviceState* dev);
+		// TODO: perhaps these can be put in UsbPeripheral...
 		// initialize the endpoints of this peripheral
 		void UsbEpInit();
-		//
+		// destroy hub
+		void HubCleanUp();
+		// reset all endpoints of this peripheral
 		void UsbEpReset();
+		// attach this hub to a usb port
+		int UsbClaimPort(int port);
+		// get device descriptor
+		const USBDesc* GetUsbDeviceDesc(XboxDeviceState* dev);
+		// create a serial number for the device
+		void CreateSerial(XboxDeviceState* dev);
 };
+
+extern Hub* g_HubObjArray[4];
+
+#endif

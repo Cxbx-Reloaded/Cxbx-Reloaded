@@ -281,7 +281,7 @@ void OHCI::OHCI_FrameBoundaryWorker()
 	}
 
 	if (m_DoneCount != 7 && m_DoneCount != 0) {
-		// decrease DelayInterrupt counter
+		// decrease Done Queue counter
 		m_DoneCount--;
 	}
 
@@ -570,7 +570,7 @@ int OHCI::OHCI_ServiceTD(OHCI_ED* Ed)
 	int pid;
 	int ret;
 	int i;
-	XboxDevice* dev;
+	XboxDeviceState* dev;
 	USBEndpoint* ep;
 	OHCI_TD td;
 	xbaddr addr;
@@ -816,9 +816,9 @@ exit_no_retire:
 	return OHCI_BM(td.Flags, TD_CC) != OHCI_CC_NOERROR;
 }
 
-XboxDevice* OHCI::OHCI_FindDevice(uint8_t Addr)
+XboxDeviceState* OHCI::OHCI_FindDevice(uint8_t Addr)
 {
-	XboxDevice* dev;
+	XboxDeviceState* dev;
 	int i;
 
 	for (i = 0; i < 2; i++) {
@@ -1245,7 +1245,7 @@ uint32_t OHCI::OHCI_GetFrameRemaining()
 
 void OHCI::OHCI_StopEndpoints()
 {
-	XboxDevice* dev;
+	XboxDeviceState* dev;
 	int i, j;
 
 	for (i = 0; i < 2; i++) {
@@ -1442,7 +1442,7 @@ void OHCI::OHCI_Attach(USBPort* Port)
 	}
 }
 
-void OHCI::OHCI_AsyncCancelDevice(XboxDevice* dev)
+void OHCI::OHCI_AsyncCancelDevice(XboxDeviceState* dev)
 {
 	if (m_AsyncTD &&
 		m_UsbDevice->USB_IsPacketInflight(&m_UsbPacket) &&
@@ -1485,7 +1485,7 @@ int OHCI::OHCI_ServiceIsoTD(OHCI_ED* ed, int completion)
 	int pid;
 	int ret;
 	int i;
-	XboxDevice* dev;
+	XboxDeviceState* dev;
 	USBEndpoint* ep;
 	OHCI_ISO_TD iso_td;
 	uint32_t addr;
@@ -1637,7 +1637,7 @@ int OHCI::OHCI_ServiceIsoTD(OHCI_ED* ed, int completion)
 	}
 	else {
 		// From the standard: "If, however, the data packet is the last in an Isochronous TD(R = FrameCount),
-		//  then the value of BufferEnd is the address of the last byte in the buffer."	
+		// then the value of BufferEnd is the address of the last byte in the buffer."	
 		end_addr = iso_td.BufferEnd;
 	}
 
@@ -1683,6 +1683,7 @@ int OHCI::OHCI_ServiceIsoTD(OHCI_ED* ed, int completion)
 	// From the standard: "After each data packet transfer, the Rth Offset is replaced with a value that indicates the status of
 	// the data packet transfer.The upper 4 bits of the value are the ConditionCode for the transfer and the lower 12 bits
 	// represent the size of the transfer.Together, these two fields constitute the Packet Status Word(PacketStatusWord)."
+
 	// Writeback
 	if (dir == OHCI_TD_DIR_IN && ret >= 0 && ret <= len) {
 		// IN transfer succeeded
@@ -1746,4 +1747,10 @@ int OHCI::OHCI_ServiceIsoTD(OHCI_ED* ed, int completion)
 		OHCI_FatalError();
 	}
 	return 1;
+}
+
+void OHCI::OHCI_AssignUsbPortStruct(int port, XboxDeviceState* dev)
+{
+	dev->Port = &m_Registers.RhPort[port].UsbPort;
+	m_Registers.RhPort[port].UsbPort.Dev = dev;
 }

@@ -68,7 +68,7 @@ class USBDevice : public PCIDevice {
 		// register a port with the HC
 		void USB_RegisterPort(USBPort* Port, int Index, int SpeedMask);
 		//
-		void USB_DeviceEPstopped(XboxDevice* Dev, USBEndpoint* Ep);
+		void USB_DeviceEPstopped(XboxDeviceState* Dev, USBEndpoint* Ep);
 		// reset a usb port
 		void USB_PortReset(USBPort* Port);
 		// a device is attched
@@ -76,19 +76,19 @@ class USBDevice : public PCIDevice {
 		// a device is detached
 		void USB_Detach(USBPort* Port);
 		// a device downstream from the device attached to the port (attached through a hub) is detached
-		void ChildDetach(USBPort* Port, XboxDevice* Child);
+		void ChildDetach(USBPort* Port, XboxDeviceState* Child);
 		// TODO
 		void Wakeup(USBPort* Port);
 		// TODO
 		void Complete(USBPort* Port, USBPacket *P);
 		// reset a device
-		void USB_DeviceReset(XboxDevice* Dev);
+		void USB_DeviceReset(XboxDeviceState* Dev);
 		// find the usb device with the supplied address
-		XboxDevice* USB_FindDevice(USBPort* Port, uint8_t Addr);
+		XboxDeviceState* USB_FindDevice(USBPort* Port, uint8_t Addr);
 		// ergo720: can probably be removed by calling directly usb_hub_find_device
-		XboxDevice* USB_DeviceFindDevice(XboxDevice* Dev, uint8_t Addr);
+		XboxDeviceState* USB_DeviceFindDevice(XboxDeviceState* Dev, uint8_t Addr);
 		// find the requested endpoint in the supplied device
-		USBEndpoint* USB_GetEP(XboxDevice* Dev, int Pid, int Ep);
+		USBEndpoint* USB_GetEP(XboxDeviceState* Dev, int Pid, int Ep);
 		// setup a packet for transfer
 		void USB_PacketSetup(USBPacket* p, int Pid, USBEndpoint* Ep, unsigned int Stream,
 			uint64_t Id, bool ShortNotOK, bool IntReq);
@@ -97,31 +97,33 @@ class USBDevice : public PCIDevice {
 		// append the user buffer to the packet
 		void USB_PacketAddBuffer(USBPacket* p, void* ptr, size_t len);
 		// transfer and process the packet
-		void USB_HandlePacket(XboxDevice* dev, USBPacket* p);
+		void USB_HandlePacket(XboxDeviceState* dev, USBPacket* p);
 		// check if the packet has the expected state and assert if not
 		void USB_PacketCheckState(USBPacket* p, USBPacketState expected);
 		// process the packet
 		void USB_ProcessOne(USBPacket* p);
 		//
-		void USB_DoParameter(XboxDevice* s, USBPacket* p);
+		void USB_DoParameter(XboxDeviceState* s, USBPacket* p);
 		// process a setup token
-		void USB_DoTokenSetup(XboxDevice* s, USBPacket* p);
+		void USB_DoTokenSetup(XboxDeviceState* s, USBPacket* p);
 		// process an input token
-		void DoTokenIn(XboxDevice* s, USBPacket* p);
+		void DoTokenIn(XboxDeviceState* s, USBPacket* p);
 		// process an output token
-		void DoTokenOut(XboxDevice* s, USBPacket* p);
+		void DoTokenOut(XboxDeviceState* s, USBPacket* p);
 		// copy the packet data to the buffer pointed to by ptr
 		void USB_PacketCopy(USBPacket* p, void* ptr, size_t bytes);
 		// queue a packet to an endpoint
 		void USB_QueueOne(USBPacket* p);
+		// call usb class init function
+		int USB_DeviceInit(XboxDeviceState* dev);
 		//
-		void USB_DeviceHandleControl(XboxDevice* dev, USBPacket* p, int request, int value, int index, int length, uint8_t* data);
+		void USB_DeviceHandleControl(XboxDeviceState* dev, USBPacket* p, int request, int value, int index, int length, uint8_t* data);
 		//
-		void USB_DeviceHandleData(XboxDevice* dev, USBPacket* p);
+		void USB_DeviceHandleData(XboxDeviceState* dev, USBPacket* p);
 		//
-		void USB_DeviceFlushEPqueue(XboxDevice* dev, USBEndpoint* ep);
+		void USB_DeviceFlushEPqueue(XboxDeviceState* dev, USBEndpoint* ep);
 		//
-		void USB_DeviceCancelPacket(XboxDevice* dev, USBPacket* p);
+		void USB_DeviceCancelPacket(XboxDeviceState* dev, USBPacket* p);
 		// Cancel an active packet.  The packed must have been deferred by
 		// returning USB_RET_ASYNC from handle_packet, and not yet completed
 		void USB_CancelPacket(USBPacket* p);
