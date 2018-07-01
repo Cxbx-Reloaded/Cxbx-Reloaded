@@ -60,7 +60,7 @@ bool VirtualMemoryArea::CanBeMergedWith(const VirtualMemoryArea& next) const
 	return false;
 }
 
-void VMManager::Initialize(HANDLE memory_view, HANDLE pagetables_view)
+void VMManager::Initialize(HANDLE memory_view, HANDLE pagetables_view, int BootFlags)
 {
 	// Set up the critical section to synchronize accesses
 	InitializeCriticalSectionAndSpinCount(&m_CriticalSection, 0x400);
@@ -78,9 +78,7 @@ void VMManager::Initialize(HANDLE memory_view, HANDLE pagetables_view)
 	ConstructMemoryRegion(SYSTEM_MEMORY_BASE, SYSTEM_MEMORY_SIZE, SystemRegion);
 	ConstructMemoryRegion(DEVKIT_MEMORY_BASE, DEVKIT_MEMORY_SIZE, DevkitRegion);
 
-	int QuickReboot;
-	g_EmuShared->GetBootFlags(&QuickReboot);
-	if ((QuickReboot & BOOT_QUICK_REBOOT) != 0)
+	if ((BootFlags & BOOT_QUICK_REBOOT) != 0)
 	{
 		UCHAR PreviousXbeType = *(UCHAR*)(CONTIGUOUS_MEMORY_BASE + PAGE_SIZE - 9);
 		if (PreviousXbeType != g_XbeType)
@@ -135,7 +133,7 @@ dashboard from non-retail xbe?");
 	LIST_ENTRY_INSERT_HEAD(ListEntry, &block->ListEntry);
 
 	// Set up the pfn database
-	if ((QuickReboot & BOOT_QUICK_REBOOT) == 0) {
+	if ((BootFlags & BOOT_QUICK_REBOOT) == 0) {
 
 		// Quote from LukeUsher "Yeah, known issue. Contiguous memory persists more than it should so the framebuffer doesn't get cleared.
 		// The memory manager needs updating to only persist areas of memory marked with MmPersistContiguousMemory and discard the rest.

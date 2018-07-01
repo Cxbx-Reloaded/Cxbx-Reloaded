@@ -37,6 +37,8 @@
 #include "Wnd.h"
 #include "Common/Xbe.h"
 
+#include <thread>
+
 // ******************************************************************
 // * constants
 // ******************************************************************
@@ -48,6 +50,11 @@ typedef enum _CXBX_DATA {
 	CXBX_DATA_CURDIR    = 1,
 	CXBX_DATA_CUSTOM    = 2,
 } CXBX_DATA;
+
+typedef struct _Crash_Manager_Data {
+	LPVOID  pWndMain;
+	DWORD   dwChildProcID;
+} Crash_Manager_Data;
 
 // ******************************************************************
 // * class : WndMain
@@ -137,12 +144,12 @@ class WndMain : public Wnd
 		// ******************************************************************
 		// * crash monitoring wrapper function
 		// ******************************************************************
-		static DWORD WINAPI CrashMonitorWrapper(LPVOID lpVoid);
+		static DWORD WINAPI CrashMonitorWrapper(LPVOID lpParam);
 
 		// ******************************************************************
 		// * crash monitoring function thread
 		// ******************************************************************
-		void CrashMonitor();
+		void CrashMonitor(DWORD dwChildProcID);
 
 		// ******************************************************************
 		// * Debugger monitoring function thread
@@ -205,7 +212,7 @@ class WndMain : public Wnd
         // ******************************************************************
         HWND        m_hwndChild;
         HANDLE      m_hDebuggerProc;
-        HANDLE      m_hDebuggerMonitorThread;
+        std::thread m_hDebuggerMonitorThread;
 
         // ******************************************************************
         // * Recent Xbe files

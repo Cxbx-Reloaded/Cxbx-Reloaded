@@ -166,7 +166,7 @@ WndMain::WndMain(HINSTANCE x_hInstance) :
 	m_StorageLocation(""),
 	m_dwRecentXbe(0),
 	m_hDebuggerProc(nullptr),
-	m_hDebuggerMonitorThread(nullptr)
+	m_hDebuggerMonitorThread()
 {
     // initialize members
     {
@@ -572,8 +572,6 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 					else {
 						m_hwndChild = GetWindow(hwnd, GW_CHILD);
 					}
-					HANDLE hThreadTemp = CreateThread(NULL, NULL, CrashMonitorWrapper, (void*)this, NULL, NULL); // create the crash monitoring thread
-					CloseHandle(hThreadTemp);
                 }
                 break;
 
@@ -591,9 +589,14 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                 break;
 
 				case WM_USER: {
-					 switch(lParam) {
+					 switch(HIWORD(wParam)) {
 						// NOTE: If anything need to set before kernel process start do anything, do it here.
 						case ID_KRNL_IS_READY: {
+							Crash_Manager_Data* pCMD = (Crash_Manager_Data*)malloc(sizeof(Crash_Manager_Data));
+							pCMD->pWndMain = this;
+							pCMD->dwChildProcID = lParam; // lParam is process ID.
+							std::thread(CrashMonitorWrapper, pCMD).detach();
+
 							g_EmuShared->SetFlagsLLE(&m_FlagsLLE);
 							g_EmuShared->SetIsEmulating(true); // NOTE: Putting in here raise to low or medium risk due to debugger will launch itself. (Current workaround)
 							g_EmuShared->SetIsReady(true);
@@ -2345,6 +2348,9 @@ void WndMain::StartEmulation(HWND hwndParent, DebuggerState LocalDebuggerState /
         return;
     }
 
+    // Reset to default
+    g_EmuShared->Reset();
+
     // register xbe path with emulator process
     g_EmuShared->SetXbePath(m_Xbe->m_szPath);
 
@@ -2404,7 +2410,7 @@ void WndMain::StartEmulation(HWND hwndParent, DebuggerState LocalDebuggerState /
             else {
                 m_bIsStarted = true;
                 printf("WndMain: %s emulation started with debugger.\n", m_Xbe->m_szAsciiTitle);
-                m_hDebuggerMonitorThread = CreateThread(nullptr, 0, DebuggerMonitor, (void*)this, 0, nullptr); // create the debugger monitoring thread
+                m_hDebuggerMonitorThread = std::thread(DebuggerMonitor, this); // create the debugger monitoring thread
             }
         }
         else {
@@ -2442,39 +2448,40 @@ void WndMain::StopEmulation()
 }
 
 // wrapper function to call CrashMonitor
-DWORD WINAPI WndMain::CrashMonitorWrapper(LPVOID lpVoid)
+DWORD WINAPI WndMain::CrashMonitorWrapper(LPVOID lpParam)
 {
 	CxbxSetThreadName("Cxbx Crash Monitor");
 
-	static_cast<WndMain*>(lpVoid)->CrashMonitor();
+	Crash_Manager_Data* pCMD = (Crash_Manager_Data*)lpParam;
+	static_cast<WndMain*>(pCMD->pWndMain)->CrashMonitor(pCMD->dwChildProcID);
+	free(lpParam);
 
 	return 0;
 }
 
 // monitor for crashes
-void WndMain::CrashMonitor()
+void WndMain::CrashMonitor(DWORD dwChildProcID)
 {
-	bool bQuickReboot;
-	DWORD dwProcessID_ExitCode = 0;
-	GetWindowThreadProcessId(m_hwndChild, &dwProcessID_ExitCode);
+	int iBootFlags;
+	DWORD dwExitCode = 0;
 
 	// If we do receive valid process ID, let's do the next step.
-	if (dwProcessID_ExitCode != 0) {
+	if (dwChildProcID != 0) {
 
-	HANDLE hProcess = OpenProcess(SYNCHRONIZE | PROCESS_QUERY_INFORMATION, FALSE, dwProcessID_ExitCode);
+	HANDLE hProcess = OpenProcess(SYNCHRONIZE | PROCESS_QUERY_INFORMATION, FALSE, dwChildProcID);
 
 	 	// If we do receive valid handle, let's do the next step.
 	 	if (hProcess != NULL) {
 
 	 		WaitForSingleObject(hProcess, INFINITE);
-	 		dwProcessID_ExitCode = 0;
-	 		GetExitCodeProcess(hProcess, &dwProcessID_ExitCode);
+
+	 		GetExitCodeProcess(hProcess, &dwExitCode);
 	 		CloseHandle(hProcess);
 
-	 		g_EmuShared->GetMultiXbeFlag(&bQuickReboot);
+	 		g_EmuShared->GetBootFlags(&iBootFlags);
 
-	 		if (!bQuickReboot) {
-	 			if (dwProcessID_ExitCode == EXIT_SUCCESS) {// StopEmulation
+	 		if (!iBootFlags) {
+	 			if (dwExitCode == EXIT_SUCCESS) {// StopEmulation
 	 				return;
 	 			}
 				// Or else, it's a crash
@@ -2483,8 +2490,6 @@ void WndMain::CrashMonitor()
 
 	 			// multi-xbe
 	 			// destroy this thread and start a new one
-	 			bQuickReboot = false;
-	 			g_EmuShared->SetMultiXbeFlag(&bQuickReboot);
 	 			return;
 	 		}
 	 	}
@@ -2494,12 +2499,12 @@ void WndMain::CrashMonitor()
 
 	KillTimer(m_hwnd, TIMERID_FPS);
 	KillTimer(m_hwnd, TIMERID_LED);
-	DrawLedBitmap(m_hwnd, true);
 	m_hwndChild = NULL;
 	m_bIsStarted = false;
 	g_EmuShared->SetIsEmulating(false);
 	UpdateCaption();
 	RefreshMenus();
+	DrawLedBitmap(m_hwnd, true);
 }
 
 // monitor for Debugger to close then set as "available" (For limit to 1 debugger per Cxbx GUI.)
@@ -2518,8 +2523,10 @@ DWORD WINAPI WndMain::DebuggerMonitor(LPVOID lpVoid)
 			pThis->m_hDebuggerProc = nullptr;
 		}
 	}
-	CloseHandle(pThis->m_hDebuggerMonitorThread);
-	pThis->m_hDebuggerMonitorThread = nullptr;
+
+	if (pThis->m_hDebuggerMonitorThread.joinable()) {
+		pThis->m_hDebuggerMonitorThread.detach();
+	}
 
 	return 0;
 }
@@ -2528,7 +2535,7 @@ void WndMain::DebuggerMonitorClose()
 
 	if (m_hDebuggerProc != nullptr) {
 		HANDLE hDebuggerProcTemp = m_hDebuggerProc;
-		HANDLE hDebuggerMonitorThreadTemp = m_hDebuggerMonitorThread;
+		std::thread hDebuggerMonitorThreadTemp = std::thread(std::move(m_hDebuggerMonitorThread));
 
 		// Set member to null pointer before terminate, this way debugger monitor thread will remain thread-safe.
 		m_hDebuggerProc = nullptr;
@@ -2537,7 +2544,7 @@ void WndMain::DebuggerMonitorClose()
 		TerminateProcess(hDebuggerProcTemp, EXIT_SUCCESS);
 		CloseHandle(hDebuggerProcTemp);
 
-		WaitForSingleObject(hDebuggerMonitorThreadTemp, INFINITE);
+		hDebuggerMonitorThreadTemp.join();
 	}
 }
 

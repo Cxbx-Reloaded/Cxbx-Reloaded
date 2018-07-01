@@ -54,6 +54,16 @@ enum {
 	LLE_JIT = 1 << 2,
 };
 
+// Kernel boot flags
+enum {
+	BOOT_NONE =           0,
+	BOOT_EJECT_PENDING =  1 << 0,
+	BOOT_FATAL_ERROR =    1 << 1,
+	BOOT_SKIP_ANIMATION = 1 << 2,
+	BOOT_RUN_DASHBOARD =  1 << 3,
+	BOOT_QUICK_REBOOT =   1 << 4,
+};
+
 // ******************************************************************
 // * EmuShared : Shared memory
 // ******************************************************************
@@ -92,6 +102,12 @@ class EmuShared : public Mutex
 		// ******************************************************************
 		void GetIsReady(bool *isReady) { Lock(); *isReady = m_bReady; Unlock(); }
 		void SetIsReady(bool isReady) { Lock(); m_bReady = isReady; Unlock(); }
+
+		// ******************************************************************
+		// * Check if previous kernel mode process is running.
+		// ******************************************************************
+		void GetKrnlProcID(unsigned int *krnlProcID) { Lock(); *krnlProcID = m_dwKrnlProcID; Unlock(); }
+		void SetKrnlProcID(unsigned int krnlProcID) { Lock(); m_dwKrnlProcID = krnlProcID; Unlock(); }
 
 		// ******************************************************************
 		// * Xbox Video Accessors
@@ -164,12 +180,6 @@ class EmuShared : public Mutex
 		void SetCurrentFPS(float *value) { Lock(); m_FPS = *value; Unlock(); }
 
 		// ******************************************************************
-		// * MultiXbe flag Accessors
-		// ******************************************************************
-		void GetMultiXbeFlag(bool *value) { Lock(); *value = m_bMultiXbeFlag; Unlock(); }
-		void SetMultiXbeFlag(bool *value) { Lock(); m_bMultiXbeFlag = *value; Unlock(); }
-
-		// ******************************************************************
 		// * Debugging flag Accessors
 		// ******************************************************************
 		void GetDebuggingFlag(bool *value) { Lock(); *value = m_bDebugging; Unlock(); }
@@ -203,6 +213,29 @@ class EmuShared : public Mutex
 		void GetStorageLocation(char *path) { Lock(); strcpy(path, m_StorageLocation); Unlock(); }
 		void SetStorageLocation(char *path) { Lock(); strcpy(m_StorageLocation, path); Unlock(); }
 
+		// ******************************************************************
+		// * Reset specific variables to default for kernel mode.
+		// ******************************************************************
+		void ResetKrnl()
+		{
+			Lock();
+			m_BootFlags = 0;
+			m_MSpF = 0.0f;
+			m_FPS = 0.0f;
+			Unlock();
+		}
+
+		// ******************************************************************
+		// * Reset specific variables to default for gui mode.
+		// ******************************************************************
+		void Reset()
+		{
+			Lock();
+			ResetKrnl();
+			m_dwKrnlProcID = 0;
+			Unlock();
+		}
+
 	private:
 		// ******************************************************************
 		// * Constructor / Deconstructor
@@ -226,7 +259,7 @@ class EmuShared : public Mutex
 		int          m_SkipRdtscPatching;
 		float        m_MSpF;
 		float        m_FPS;
-		bool         m_bMultiXbeFlag;
+		bool         m_bReserved1;
 		bool         m_bDebugging;
 		bool         m_bReady;
 		bool         m_bEmulating;
@@ -238,6 +271,7 @@ class EmuShared : public Mutex
 		bool         m_bReserved2;
 		bool         m_bReserved3;
 		bool         m_bReserved4;
+		unsigned int m_dwKrnlProcID; // Only used for kernel mode level.
 };
 
 // ******************************************************************

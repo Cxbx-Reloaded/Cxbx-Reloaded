@@ -912,46 +912,65 @@ void CxbxKrnlMain(int argc, char* argv[])
 
 	g_CurrentProcessHandle = GetCurrentProcess(); // OpenProcess(PROCESS_ALL_ACCESS, FALSE, GetCurrentProcessId());
 
-    if (CxbxKrnl_hEmuParent == NULL) {
-        CxbxKrnlCleanup("GUI process does not exist!");
-    } else {
-        SendMessage(CxbxKrnl_hEmuParent, WM_PARENTNOTIFY, WM_USER, ID_KRNL_IS_READY);
-    }
+	if (CxbxKrnl_hEmuParent != NULL) {
+		SendMessage(CxbxKrnl_hEmuParent, WM_PARENTNOTIFY, MAKELONG(WM_USER, ID_KRNL_IS_READY), GetCurrentProcessId());
 
-    // Force wait until first allocated process is ready
-    do {
-        int waitCounter = 10;
-        bool isReady = false;
+		// Force wait until GUI process is ready
+		do {
+			int waitCounter = 10;
+			bool isReady = false;
 
-        while (waitCounter > 0) {
-            g_EmuShared->GetIsReady(&isReady);
-            if (isReady) {
-                break;
-            }
-            waitCounter--;
-            Sleep(100);
-        }
-        if (!isReady) {
-            EmuWarning("GUI process is not ready!");
-            int mbRet = MessageBox(NULL, "GUI process is not ready, do you wish to retry?", TEXT("Cxbx-Reloaded"),
-                                   MB_ICONWARNING | MB_RETRYCANCEL | MB_TOPMOST | MB_SETFOREGROUND);
-            if (mbRet == IDRETRY) {
-                continue;
-            }
-            CxbxKrnlShutDown();
-        }
-        break;
-    } while (true);
+			while (waitCounter > 0) {
+				g_EmuShared->GetIsReady(&isReady);
+				if (isReady) {
+					break;
+				}
+				waitCounter--;
+				Sleep(100);
+			}
+			if (!isReady) {
+				EmuWarning("GUI process is not ready!");
+				int mbRet = MessageBox(NULL, "GUI process is not ready, do you wish to retry?", TEXT("Cxbx-Reloaded"),
+										MB_ICONWARNING | MB_RETRYCANCEL | MB_TOPMOST | MB_SETFOREGROUND);
+				if (mbRet == IDRETRY) {
+					continue;
+				}
+				CxbxKrnlShutDown();
+			}
+			break;
+		} while (true);
+	}
 
-    g_EmuShared->SetIsReady(false);
+	g_EmuShared->SetIsReady(false);
 
-    bool bQuickReboot;
-    g_EmuShared->GetMultiXbeFlag(&bQuickReboot);
+	UINT prevKrnlProcID = 0;
+	DWORD dwExitCode = EXIT_SUCCESS;
+	g_EmuShared->GetKrnlProcID(&prevKrnlProcID);
 
-    // precaution for multi-xbe titles in the case CrashMonitor has still not destoyed the previous mutex
-    while (bQuickReboot) {
-        g_EmuShared->GetMultiXbeFlag(&bQuickReboot);
-    }
+	// Force wait until previous kernel process is closed.
+	if (prevKrnlProcID != 0) {
+		HANDLE hProcess = OpenProcess(SYNCHRONIZE | PROCESS_QUERY_INFORMATION, FALSE, prevKrnlProcID);
+		// If we do receive valid handle, let's do the next step.
+		if (hProcess != NULL) {
+
+			WaitForSingleObject(hProcess, INFINITE);
+
+			GetExitCodeProcess(hProcess, &dwExitCode);
+			CloseHandle(hProcess);
+		}
+	}
+
+	if (dwExitCode != EXIT_SUCCESS) {// StopEmulation
+		CxbxKrnlShutDown();
+	}
+
+	int BootFlags = BOOT_NONE;
+	g_EmuShared->GetBootFlags(&BootFlags);
+
+	g_EmuShared->ResetKrnl();
+
+	// Save current kernel proccess id for next reboot if will occur in the future.
+	g_EmuShared->SetKrnlProcID(GetCurrentProcessId());
 
 	// Write a header to the log
 	{
@@ -1096,7 +1115,7 @@ void CxbxKrnlMain(int argc, char* argv[])
 
 
 		// Initialize the virtual manager
-		g_VMManager.Initialize(hMemoryBin, hPageTables);
+		g_VMManager.Initialize(hMemoryBin, hPageTables, BootFlags);
 
 		// Commit the memory used by the xbe header
 		size_t HeaderSize = CxbxKrnl_Xbe->m_Header.dwSizeofHeaders;
@@ -1158,7 +1177,8 @@ void CxbxKrnlMain(int argc, char* argv[])
 			DebugFileName.c_str(),
 			(Xbe::Header*)CxbxKrnl_Xbe->m_Header.dwBaseAddr,
 			CxbxKrnl_Xbe->m_Header.dwSizeofHeaders,
-			(void(*)())EntryPoint
+			(void(*)())EntryPoint,
+ 			BootFlags
 		);
 	}
 }
@@ -1208,7 +1228,8 @@ __declspec(noreturn) void CxbxKrnlInit
 	const char             *szDebugFilename,
 	Xbe::Header            *pXbeHeader,
 	uint32                  dwXbeHeaderSize,
-	void(*Entry)())
+	void(*Entry)(),
+	int BootFlags)
 {
 	// update caches
 	CxbxKrnl_TLS = pTLS;
@@ -1421,9 +1442,6 @@ __declspec(noreturn) void CxbxKrnlInit
 	XTL::CxbxInitWindow(true);
 
 	// Now process the boot flags to see if there are any special conditions to handle
-	int BootFlags = 0;
-	g_EmuShared->GetBootFlags(&BootFlags);
-
 	if (BootFlags & BOOT_EJECT_PENDING) {} // TODO
 	if (BootFlags & BOOT_FATAL_ERROR)
 	{
