@@ -125,35 +125,41 @@ static const GLenum pgraph_stencil_op_map[] = {
     GL_DECR_WRAP,
 };
 
+enum FormatEncoding {
+	linear = 0,
+	swizzled, // for all NV097_SET_TEXTURE_FORMAT_*_SZ_*
+	compressed // for all NV097_SET_TEXTURE_FORMAT_*_DXT*
+};
+
 typedef struct ColorFormatInfo {
-    unsigned int bytes_per_pixel;
-    bool linear;
+    unsigned int bytes_per_pixel; // Derived from the total number of channel bits
+    FormatEncoding encoding;
     GLint gl_internal_format;
-    GLenum gl_format;
+    GLenum gl_format; // == 0 for compressed formats
     GLenum gl_type;
-    GLenum gl_swizzle_mask[4];
+    GLint gl_swizzle_mask[4];
 } ColorFormatInfo;
 
 // Note : Avoid designated initializers to facilitate C++ builds
 static const ColorFormatInfo kelvin_color_format_map[256] = {
     //0x00 [NV097_SET_TEXTURE_FORMAT_COLOR_SZ_Y8] =
-        {1, false, GL_R8, GL_RED, GL_UNSIGNED_BYTE,
+        {1, swizzled, GL_R8, GL_RED, GL_UNSIGNED_BYTE,
          {GL_RED, GL_RED, GL_RED, GL_ONE}},
     //0x01 [NV097_SET_TEXTURE_FORMAT_COLOR_SZ_AY8] =
-        {1, false, GL_R8, GL_RED, GL_UNSIGNED_BYTE,
+        {1, swizzled, GL_R8, GL_RED, GL_UNSIGNED_BYTE,
          {GL_RED, GL_RED, GL_RED, GL_RED}},
     //0x02 [NV097_SET_TEXTURE_FORMAT_COLOR_SZ_A1R5G5B5] =
-        {2, false, GL_RGB5_A1, GL_BGRA, GL_UNSIGNED_SHORT_1_5_5_5_REV},
+        {2, swizzled, GL_RGB5_A1, GL_BGRA, GL_UNSIGNED_SHORT_1_5_5_5_REV},
     //0x03 [NV097_SET_TEXTURE_FORMAT_COLOR_SZ_X1R5G5B5] =
-        {2, false, GL_RGB5, GL_BGRA, GL_UNSIGNED_SHORT_1_5_5_5_REV},
+        {2, swizzled, GL_RGB5, GL_BGRA, GL_UNSIGNED_SHORT_1_5_5_5_REV},
     //0x04 [NV097_SET_TEXTURE_FORMAT_COLOR_SZ_A4R4G4B4] =
-        {2, false, GL_RGBA4, GL_BGRA, GL_UNSIGNED_SHORT_4_4_4_4_REV},
+        {2, swizzled, GL_RGBA4, GL_BGRA, GL_UNSIGNED_SHORT_4_4_4_4_REV},
     //0x05 [NV097_SET_TEXTURE_FORMAT_COLOR_SZ_R5G6B5] =
-        {2, false, GL_RGB565, GL_RGB, GL_UNSIGNED_SHORT_5_6_5},
+        {2, swizzled, GL_RGB565, GL_RGB, GL_UNSIGNED_SHORT_5_6_5},
     //0x06 [NV097_SET_TEXTURE_FORMAT_COLOR_SZ_A8R8G8B8] =
-        {4, false, GL_RGBA8, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV},
+        {4, swizzled, GL_RGBA8, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV},
     //0x07 [NV097_SET_TEXTURE_FORMAT_COLOR_SZ_X8R8G8B8] =
-        {4, false, GL_RGB8, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV},
+        {4, swizzled, GL_RGB8, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV},
 	//0x08 [?] =
 		{},
 	//0x09 [?] =
@@ -162,57 +168,61 @@ static const ColorFormatInfo kelvin_color_format_map[256] = {
 		{},
 
     /* paletted texture */
-    //0x0B [NV097_SET_TEXTURE_FORMAT_COLOR_SZ_I8_A8R8G8B8] =
-        {1, false, GL_RGBA8, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV},
+    //0x0B [NV097_SET_TEXTURE_FORMAT_COLOR_SZ_I8_A8R8G8B8] = // See convert_texture_data
+        {1, swizzled, GL_RGBA8, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV},
 
     //0x0C [NV097_SET_TEXTURE_FORMAT_COLOR_L_DXT1_A1R5G5B5] =
-        {4, false, GL_COMPRESSED_RGBA_S3TC_DXT1_EXT, 0, GL_RGBA},
+        {4, compressed, GL_COMPRESSED_RGBA_S3TC_DXT1_EXT, 0, GL_RGBA},
 	//0x0D [?] =
 		{},
     //0x0E [NV097_SET_TEXTURE_FORMAT_COLOR_L_DXT23_A8R8G8B8] =
-        {4, false, GL_COMPRESSED_RGBA_S3TC_DXT3_EXT, 0, GL_RGBA},
+        {4, compressed, GL_COMPRESSED_RGBA_S3TC_DXT3_EXT, 0, GL_RGBA},
     //0x0F [NV097_SET_TEXTURE_FORMAT_COLOR_L_DXT45_A8R8G8B8] =
-        {4, false, GL_COMPRESSED_RGBA_S3TC_DXT5_EXT, 0, GL_RGBA},
+        {4, compressed, GL_COMPRESSED_RGBA_S3TC_DXT5_EXT, 0, GL_RGBA},
     //0x10 [NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_A1R5G5B5] =
-        {2, true, GL_RGB5_A1, GL_BGRA, GL_UNSIGNED_SHORT_1_5_5_5_REV},
+        {2, linear, GL_RGB5_A1, GL_BGRA, GL_UNSIGNED_SHORT_1_5_5_5_REV},
     //0x11 [NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_R5G6B5] =
-        {2, true, GL_RGB565, GL_RGB, GL_UNSIGNED_SHORT_5_6_5},
+        {2, linear, GL_RGB565, GL_RGB, GL_UNSIGNED_SHORT_5_6_5},
     //0x12 [NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_A8R8G8B8] =
-        {4, true, GL_RGBA8, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV},
+        {4, linear, GL_RGBA8, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV},
     //0x13 [NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_Y8] =
-        {1, true, GL_R8, GL_RED, GL_UNSIGNED_BYTE,
+        {1, linear, GL_R8, GL_RED, GL_UNSIGNED_BYTE,
          {GL_RED, GL_RED, GL_RED, GL_ONE}},
-	//0x14 [?] =
-		{},
-	//0x15 [?] =
-		{},
-	//0x16 [?] =
-		{},
-	//0x17 [?] =
-		{},
-	//0x18 [?] =
-		{},
+	//0x14 [NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_SY8] =
+        {1, linear, GL_R8, GL_RED, GL_BYTE,
+         {GL_RED, GL_RED, GL_RED, GL_ONE}}, // TODO : Verify
+	//0x15 [NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_X7SY9] = // See convert_texture_data
+		{2, linear, GL_RGBA8, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV}, // TODO : Verify
+	//0x16 [NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_R8B8] =
+        {2, linear, GL_RG8_SNORM, GL_RG, GL_UNSIGNED_BYTE,
+         {GL_RED, GL_ZERO, GL_GREEN, GL_ONE}}, // TODO : Verify
+	//0x17 [NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_G8B8] =
+        {2, linear, GL_RG8_SNORM, GL_RG, GL_UNSIGNED_BYTE,
+         {GL_ZERO, GL_RED, GL_GREEN, GL_ONE}}, // TODO : Verify
+	//0x18 [NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_SG8SB8] =
+        {2, linear, GL_RG8_SNORM, GL_RG, GL_BYTE,
+         {GL_ZERO, GL_RED, GL_GREEN, GL_ONE}}, // TODO : Verify
 
     //0x19 [NV097_SET_TEXTURE_FORMAT_COLOR_SZ_A8] =
-        {1, false, GL_R8, GL_RED, GL_UNSIGNED_BYTE,
+        {1, swizzled, GL_R8, GL_RED, GL_UNSIGNED_BYTE,
          {GL_ONE, GL_ONE, GL_ONE, GL_RED}},
     //0x1A [NV097_SET_TEXTURE_FORMAT_COLOR_SZ_A8Y8] =
-        {2, false, GL_RG8, GL_RG, GL_UNSIGNED_BYTE,
+        {2, swizzled, GL_RG8, GL_RG, GL_UNSIGNED_BYTE,
          {GL_GREEN, GL_GREEN, GL_GREEN, GL_RED}},
     //0x1B [NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_AY8] =
-        {1, true, GL_R8, GL_RED, GL_UNSIGNED_BYTE,
+        {1, linear, GL_R8, GL_RED, GL_UNSIGNED_BYTE,
          {GL_RED, GL_RED, GL_RED, GL_RED}},
     //0x1C [NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_X1R5G5B5] =
-        {2, true, GL_RGB5, GL_BGRA, GL_UNSIGNED_SHORT_1_5_5_5_REV},
+        {2, linear, GL_RGB5, GL_BGRA, GL_UNSIGNED_SHORT_1_5_5_5_REV},
     //0x1D [NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_A4R4G4B4] =
-        {2, false, GL_RGBA4, GL_BGRA, GL_UNSIGNED_SHORT_4_4_4_4_REV},
+        {2, linear, GL_RGBA4, GL_BGRA, GL_UNSIGNED_SHORT_4_4_4_4_REV}, // TODO : Verify this is truely linear
     //0x1E [NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_X8R8G8B8] =
-        {4, true, GL_RGB8, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV},
+        {4, linear, GL_RGB8, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV},
     //0x1F [NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_A8] =
-        {1, true, GL_R8, GL_RED, GL_UNSIGNED_BYTE,
+        {1, linear, GL_R8, GL_RED, GL_UNSIGNED_BYTE,
          {GL_ONE, GL_ONE, GL_ONE, GL_RED}},
     //0x20 [NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_A8Y8] =
-        {2, true, GL_RG8, GL_RG, GL_UNSIGNED_BYTE,
+        {2, linear, GL_RG8, GL_RG, GL_UNSIGNED_BYTE,
          {GL_GREEN, GL_GREEN, GL_GREEN, GL_RED}},
 	//0x21 [?] =
 		{},
@@ -220,75 +230,78 @@ static const ColorFormatInfo kelvin_color_format_map[256] = {
 		{},
 	//0x23 [?] =
 		{},
-	//0x24 [NV097_SET_TEXTURE_FORMAT_COLOR_LC_IMAGE_CR8YB8CB8YA8] =
-		{ 2, true, GL_RGBA8,  GL_RGBA, GL_UNSIGNED_INT_8_8_8_8_REV }, // TODO: format conversion
-	//0x25 [?] =
-		{},
-	//0x26 [?] =
-		{},
+	//0x24 [NV097_SET_TEXTURE_FORMAT_COLOR_LC_IMAGE_CR8YB8CB8YA8] = // See convert_texture_data calling ____UYVYToARGBRow_C
+		{2, linear, GL_RGBA8, GL_RGBA, GL_UNSIGNED_INT_8_8_8_8}, // TODO : Verify
+	//0x25 [NV097_SET_TEXTURE_FORMAT_COLOR_LC_IMAGE_YB8CR8YA8CB8] = // See convert_texture_data calling ____YUY2ToARGBRow_C
+		{2, linear, GL_RGBA8, GL_RGBA, GL_UNSIGNED_INT_8_8_8_8}, // TODO : Verify
+	//0x26 [NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_A8CR8CB8Y8] = // See convert_texture_data
+		{2, linear, GL_RGBA8, GL_RGBA, GL_UNSIGNED_INT_8_8_8_8}, // TODO : Verify
 
-    //0x27 [NV097_SET_TEXTURE_FORMAT_COLOR_SZ_R6G5B5] =
-        {2, false, GL_RGB8_SNORM, GL_RGB, GL_BYTE}, /* FIXME: This might be signed */
+    //0x27 [NV097_SET_TEXTURE_FORMAT_COLOR_SZ_R6G5B5] = // See convert_texture_data
+        {2, swizzled, GL_RGBA8, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV},
     //0x28 [NV097_SET_TEXTURE_FORMAT_COLOR_SZ_G8B8] =
-        {2, false, GL_RG8_SNORM, GL_RG, GL_BYTE, /* FIXME: This might be signed */
+        {2, swizzled, GL_RG8_SNORM, GL_RG, GL_UNSIGNED_BYTE,
          {GL_ZERO, GL_RED, GL_GREEN, GL_ONE}},
     //0x29 [NV097_SET_TEXTURE_FORMAT_COLOR_SZ_R8B8] =
-        {2, false, GL_RG8_SNORM, GL_RG, GL_BYTE, /* FIXME: This might be signed */
+        {2, swizzled, GL_RG8_SNORM, GL_RG, GL_UNSIGNED_BYTE,
          {GL_RED, GL_ZERO, GL_GREEN, GL_ONE}},
-	//0x2A [?] =
-		{},
-	//0x2B [?] =
-		{},
-	//0x2C [?] =
-		{},
-	//0x2D [?] =
-		{},
+	//0x2A [NV097_SET_TEXTURE_FORMAT_COLOR_SZ_DEPTH_X8_Y24_FIXED] =
+		{4, swizzled, GL_DEPTH24_STENCIL8, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8}, // TODO : Verify
+	//0x2B [NV097_SET_TEXTURE_FORMAT_COLOR_SZ_DEPTH_X8_Y24_FLOAT] =
+		{4, swizzled, GL_DEPTH24_STENCIL8, GL_DEPTH_STENCIL, GL_FLOAT_32_UNSIGNED_INT_24_8_REV}, // TODO : Verify
+	//0x2C [NV097_SET_TEXTURE_FORMAT_COLOR_SZ_DEPTH_Y16_FIXED] =
+		{2, swizzled, GL_DEPTH_COMPONENT16, GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT}, // TODO : Verify
+	//0x2D [NV097_SET_TEXTURE_FORMAT_COLOR_SZ_DEPTH_Y16_FLOAT] =
+		{2, swizzled, GL_DEPTH_COMPONENT16, GL_DEPTH_COMPONENT, GL_FLOAT}, // TODO : Verify
 
 
     /* TODO: format conversion */
     //0x2E [NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_DEPTH_X8_Y24_FIXED] =
-        {4, true, GL_DEPTH24_STENCIL8, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8},
+        {4, linear, GL_DEPTH24_STENCIL8, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8},
 	//0x2F [?] =
 		{},
     //0x30 [NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_DEPTH_Y16_FIXED] =
-        {2, true, GL_DEPTH_COMPONENT16, GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT},
-	//0x31 [?] =
-		{},
-	//0x32 [?] =
-		{},
-	//0x33 [?] =
-		{},
-	//0x34 [?] =
-		{},
-    //0x35 [NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_Y16] =
-        {2, true, GL_R16, GL_RED, GL_UNSIGNED_SHORT,
+        {2, linear, GL_DEPTH_COMPONENT16, GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT},
+	//0x31 [NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_DEPTH_Y16_FLOAT] =
+        {2, linear, GL_DEPTH_COMPONENT16, GL_DEPTH_COMPONENT, GL_FLOAT}, // TODO : Verify
+	//0x32 [NV097_SET_TEXTURE_FORMAT_COLOR_SZ_Y16] =
+        {2, swizzled, GL_R16, GL_RED, GL_UNSIGNED_SHORT, // TODO : Verify
          {GL_RED, GL_RED, GL_RED, GL_ONE}},
-	//0x36 [?] =
-		{},
-	//0x37 [?] =
-		{},
-	//0x38 [?] =
-		{},
-	//0x39 [?] =
-		{},
+	//0x33 [NV097_SET_TEXTURE_FORMAT_COLOR_SZ_YB_16_YA_16] =
+        {4, swizzled, GL_R16, GL_RED, GL_UNSIGNED_SHORT, // TODO : Verify
+         {GL_RED, GL_RED, GL_RED, GL_GREEN}},
+	//0x34 [NV097_SET_TEXTURE_FORMAT_COLOR_LC_IMAGE_A4V6YB6A4U6YA6] =
+		{4, linear}, // TODO : Complete this declaration
+    //0x35 [NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_Y16] =
+        {2, linear, GL_R16, GL_RED, GL_UNSIGNED_SHORT,
+         {GL_RED, GL_RED, GL_RED, GL_ONE}},
+	//0x36 [NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_YB16YA16] =
+        {4, linear, GL_R16, GL_RED, GL_UNSIGNED_SHORT, // TODO : Verify
+         {GL_RED, GL_RED, GL_GREEN, GL_GREEN}},
+	//0x37 [NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_R6G5B5] = // See convert_texture_data
+        {2, linear, GL_RGBA8, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV},
+	//0x38 [NV097_SET_TEXTURE_FORMAT_COLOR_SZ_R5G5B5A1] = // See convert_texture_data
+		{2, swizzled, GL_RGBA8, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV}, // TODO : Verify
+	//0x39 [NV097_SET_TEXTURE_FORMAT_COLOR_SZ_R4G4B4A4] = // See convert_texture_data
+		{2, swizzled, GL_RGBA8, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV}, // TODO : Verify
     //0x3A [NV097_SET_TEXTURE_FORMAT_COLOR_SZ_A8B8G8R8] =
-        {4, false, GL_RGBA8, GL_RGBA, GL_UNSIGNED_INT_8_8_8_8_REV},
-	//0x3B [?] =
-		{},
+        {4, swizzled, GL_RGBA8, GL_RGBA, GL_UNSIGNED_INT_8_8_8_8_REV}, // TODO : Verify
+	//0x3B [NV097_SET_TEXTURE_FORMAT_COLOR_SZ_B8G8R8A8] =
+		{4, swizzled, GL_RGBA8, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8}, // TODO : Verify
 
     //0x3C [NV097_SET_TEXTURE_FORMAT_COLOR_SZ_R8G8B8A8] =
-        {4, false, GL_RGBA8, GL_RGBA, GL_UNSIGNED_INT_8_8_8_8},
-	//0x3D [?] =
-		{},
-	//0x3E [?] =
-		{},
+        {4, swizzled, GL_RGBA8, GL_RGBA, GL_UNSIGNED_INT_8_8_8_8},
+	//0x3D [NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_R5G5B5A1] = // See convert_texture_data
+		{2, linear, GL_RGBA8, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV}, // TODO : Verify
+	//0x3E [NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_R4G4B4A4] = // See convert_texture_data
+        {2, linear, GL_RGBA8, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV}, // TODO : Verify
 
     //0x3F [NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_A8B8G8R8] =
-        {4, true, GL_RGBA8, GL_RGBA, GL_UNSIGNED_INT_8_8_8_8_REV},
+        {4, linear, GL_RGBA8, GL_RGBA, GL_UNSIGNED_INT_8_8_8_8_REV}, // TODO : Verify
     //0x40 [NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_B8G8R8A8] =
-        {4, true, GL_RGBA8, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8},
+        {4, linear, GL_RGBA8, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8}, // TODO : Verify
     //0x41 [NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_R8G8B8A8] =
-        {4, true, GL_RGBA8, GL_RGBA, GL_UNSIGNED_INT_8_8_8_8},
+        {4, linear, GL_RGBA8, GL_RGBA, GL_UNSIGNED_INT_8_8_8_8}, // TODO : Verify
 };
 
 typedef struct SurfaceColorFormatInfo {
@@ -359,9 +372,7 @@ static void load_graphics_object(NV2AState *d, hwaddr instance_address, Graphics
 static GraphicsObject* lookup_graphics_object(PGRAPHState *s, hwaddr instance_address);
 static float convert_f16_to_float(uint16_t f16);
 static float convert_f24_to_float(uint32_t f24);
-static uint8_t cliptobyte(int x);
-static void convert_yuy2_to_rgb(const uint8_t *line, unsigned int ix, uint8_t *r, uint8_t *g, uint8_t* b);
-static uint8_t* convert_texture_data(const TextureShape s, const uint8_t *data, const uint8_t *palette_data, unsigned int width, unsigned int height, unsigned int depth, unsigned int row_pitch, unsigned int slice_pitch);
+static uint8_t* convert_texture_data(const unsigned int color_format, const uint8_t *data, const uint8_t *palette_data, const unsigned int width, const unsigned int height, const unsigned int depth, const unsigned int row_pitch, const unsigned int slice_pitch);
 static void upload_gl_texture(GLenum gl_target, const TextureShape s, const uint8_t *texture_data, const uint8_t *palette_data);
 static TextureBinding* generate_texture(const TextureShape s, const uint8_t *texture_data, const uint8_t *palette_data);
 static guint texture_key_hash(gconstpointer key);
@@ -2356,24 +2367,32 @@ static void pgraph_handle_method(NV2AState *d,
 
 					switch(pg->surface_shape.zeta_format) {
 					case NV097_SET_SURFACE_FORMAT_ZETA_Z16: {
-						uint16_t z = clear_zstencil & 0xFFFF;
-						/* FIXME: Remove bit for stencil clear? */
-						if (pg->surface_shape.z_format) {
-							gl_clear_depth = convert_f16_to_float(z) / f16_max;
-							assert(false); /* FIXME: Untested */
-						} else {
-							gl_clear_depth = z / (float)0xFFFF;
+						if (parameter & NV097_CLEAR_SURFACE_Z) {
+							gl_mask |= GL_DEPTH_BUFFER_BIT;
+							uint16_t z = clear_zstencil & 0xFFFF;
+							if (pg->surface_shape.z_format) {
+								gl_clear_depth = convert_f16_to_float(z) / f16_max;
+								assert(false); /* FIXME: Untested */
+							} else {
+								gl_clear_depth = z / (float)0xFFFF;
+							}
 						}
 						break;
 					}
 					case NV097_SET_SURFACE_FORMAT_ZETA_Z24S8: {
-						gl_clear_stencil = clear_zstencil & 0xFF;
-						uint32_t z = clear_zstencil >> 8;
-						if (pg->surface_shape.z_format) {
-							gl_clear_depth = convert_f24_to_float(z) / f24_max;
-							assert(false); /* FIXME: Untested */
-						} else {
-							gl_clear_depth = z / (float)0xFFFFFF;
+						if (parameter & NV097_CLEAR_SURFACE_STENCIL) {
+							gl_mask |= GL_STENCIL_BUFFER_BIT;
+							gl_clear_stencil = clear_zstencil & 0xFF;
+						}
+						if (parameter & NV097_CLEAR_SURFACE_Z) {
+							gl_mask |= GL_DEPTH_BUFFER_BIT;
+							uint32_t z = clear_zstencil >> 8;
+							if (pg->surface_shape.z_format) {
+								gl_clear_depth = convert_f24_to_float(z) / f24_max;
+								assert(false); /* FIXME: Untested */
+							} else {
+								gl_clear_depth = z / (float)0xFFFFFF;
+							}
 						}
 						break;
 					}
@@ -2382,13 +2401,11 @@ static void pgraph_handle_method(NV2AState *d,
 						assert(false);
 						break;
 					}
-					if (parameter & NV097_CLEAR_SURFACE_Z) {
-						gl_mask |= GL_DEPTH_BUFFER_BIT;
+					if (gl_mask & GL_DEPTH_BUFFER_BIT) {
 						glDepthMask(GL_TRUE);
 						glClearDepth(gl_clear_depth);
 					}
-					if (parameter & NV097_CLEAR_SURFACE_STENCIL) {
-						gl_mask |= GL_STENCIL_BUFFER_BIT;
+					if (gl_mask & GL_STENCIL_BUFFER_BIT) {
 						glStencilMask(0xff);
 						glClearStencil(gl_clear_stencil);            
 					}
@@ -3164,7 +3181,7 @@ static void pgraph_bind_shaders(PGRAPHState *pg)
             GET_MASK(pg->regs[NV_PGRAPH_TEXFMT0 + i*4],
                      NV_PGRAPH_TEXFMT0_COLOR);
 
-        if (enabled && kelvin_color_format_map[color_format].linear) {
+        if (enabled && kelvin_color_format_map[color_format].encoding == linear) {
             state.psh.rect_tex[i] = true;
         }
 
@@ -3678,7 +3695,7 @@ static void pgraph_bind_textures(NV2AState *d)
         }
 
         unsigned int width, height, depth;
-        if (f.linear) {
+        if (f.encoding == linear) {
             assert(dimensionality == 2);
             width = rect_width;
             height = rect_height;
@@ -3690,7 +3707,7 @@ static void pgraph_bind_textures(NV2AState *d)
 
             /* FIXME: What about 3D mipmaps? */
             levels = MIN(levels, max_mipmap_level + 1);
-            if (f.gl_format != 0) {
+            if (f.encoding == swizzled) {
                 /* Discard mipmap levels that would be smaller than 1x1.
                  * FIXME: Is this actually needed?
                  *
@@ -3756,7 +3773,7 @@ static void pgraph_bind_textures(NV2AState *d)
         NV2A_DPRINTF(" - 0x%tx\n", texture_data - d->vram_ptr);
 
         size_t length = 0;
-        if (f.linear) {
+        if (f.encoding == linear) {
             assert(cubemap == false);
             assert(dimensionality == 2);
             length = height * pitch;
@@ -3764,7 +3781,7 @@ static void pgraph_bind_textures(NV2AState *d)
             if (dimensionality >= 2) {
                 unsigned int w = width, h = height;
                 unsigned int level;
-                if (f.gl_format != 0) {
+                if (f.encoding == swizzled) {
                     for (level = 0; level < levels; level++) {
                         w = MAX(w, 1); h = MAX(h, 1);
                         length += w * h * f.bytes_per_pixel;
@@ -3832,8 +3849,8 @@ static void pgraph_bind_textures(NV2AState *d)
         glBindTexture(binding->gl_target, binding->gl_texture);
 
 
-        if (f.linear) {
-            /* somtimes games try to set mipmap min filters on linear textures.
+        if (f.encoding == linear) {
+            /* sometimes games try to set mipmap min filters on linear textures.
              * this could indicate a bug... */
             switch (min_filter) {
             case NV_PGRAPH_TEXFILTER0_MIN_BOX_NEARESTLOD:
@@ -4156,83 +4173,103 @@ static float convert_f24_to_float(uint32_t f24) {
     return *(float*)&i;
 }
 
-static uint8_t cliptobyte(int x)
-{
-    return (uint8_t)((x < 0) ? 0 : ((x > 255) ? 255 : x));
-}
+extern void __R6G5B5ToARGBRow_C(const uint8* src_r6g5b5, uint8* dst_argb, int width);
+extern void ____YUY2ToARGBRow_C(const uint8* src_yuy2, uint8* rgb_buf, int width);
+extern void ____UYVYToARGBRow_C(const uint8* src_uyvy, uint8* rgb_buf, int width);
+extern void R5G5B5A1ToARGBRow_C(const uint8* src_r5g5b5a1, uint8* dst_argb, int width);
+extern void R4G4B4A4ToARGBRow_C(const uint8* src_argb4444, uint8* dst_argb,	int width);
 
-static void convert_yuy2_to_rgb(const uint8_t *line, unsigned int ix,
-                                uint8_t *r, uint8_t *g, uint8_t* b) {
-    int c, d, e;
-    c = (int)line[ix * 2] - 16;
-    if (ix % 2) {
-        d = (int)line[ix * 2 - 1] - 128;
-        e = (int)line[ix * 2 + 1] - 128;
-    } else {
-        d = (int)line[ix * 2 + 1] - 128;
-        e = (int)line[ix * 2 + 3] - 128;
-    }
-    *r = cliptobyte((298 * c + 409 * e + 128) >> 8);
-    *g = cliptobyte((298 * c - 100 * d - 208 * e + 128) >> 8);
-    *b = cliptobyte((298 * c + 516 * d + 128) >> 8);
-}
-
-static uint8_t* convert_texture_data(const TextureShape s,
+static uint8_t* convert_texture_data(const unsigned int color_format,
                                      const uint8_t *data,
                                      const uint8_t *palette_data,
-                                     unsigned int width,
-                                     unsigned int height,
-                                     unsigned int depth,
-                                     unsigned int row_pitch,
-                                     unsigned int slice_pitch)
+                                     const unsigned int width,
+                                     const unsigned int height,
+                                     const unsigned int depth,
+                                     const unsigned int row_pitch,
+                                     const unsigned int slice_pitch)
 {
-    if (s.color_format == NV097_SET_TEXTURE_FORMAT_COLOR_SZ_I8_A8R8G8B8) {
-        assert(depth == 1); /* FIXME */
-        uint8_t* converted_data = (uint8_t*)g_malloc(width * height * 4);
+	// Note : Unswizzle is already done when entering here
+	switch (color_format) {
+	case NV097_SET_TEXTURE_FORMAT_COLOR_SZ_I8_A8R8G8B8: {
+		assert(depth == 1); /* FIXME */
+		uint8_t* converted_data = (uint8_t*)g_malloc(width * height * 4);
 		unsigned int x, y;
-        for (y = 0; y < height; y++) {
-            for (x = 0; x < width; x++) {
-                uint8_t index = data[y * row_pitch + x];
-                uint32_t color = *(uint32_t*)(palette_data + index * 4);
-                *(uint32_t*)(converted_data + y * width * 4 + x * 4) = color;
-            }
-        }
-        return converted_data;
-    } else if (s.color_format
-                   == NV097_SET_TEXTURE_FORMAT_COLOR_LC_IMAGE_CR8YB8CB8YA8) {
-        assert(depth == 1); /* FIXME */
-        uint8_t* converted_data = (uint8_t*)g_malloc(width * height * 4);
-		unsigned int x, y;
-        for (y = 0; y < height; y++) {
-            const uint8_t* line = &data[y * s.width * 2];
-            for (x = 0; x < width; x++) {
-                uint8_t* pixel = &converted_data[(y * s.width + x) * 4];
-                /* FIXME: Actually needs uyvy? */
-                convert_yuy2_to_rgb(line, x, &pixel[0], &pixel[1], &pixel[2]);
-                pixel[3] = 255;
-          }
-        }
-        return converted_data;
-    } else if (s.color_format
-                   == NV097_SET_TEXTURE_FORMAT_COLOR_SZ_R6G5B5) {
-        assert(depth == 1); /* FIXME */
-        uint8_t *converted_data = (uint8_t*)g_malloc(width * height * 3);
-		unsigned int x, y;
-        for (y = 0; y < height; y++) {
-            for (x = 0; x < width; x++) {
-                uint16_t rgb655 = *(uint16_t*)(data + y * row_pitch + x * 2);
-                int8_t *pixel = (int8_t*)&converted_data[(y * width + x) * 3];
-                /* Maps 5 bit G and B signed value range to 8 bit
-                 * signed values. R is probably unsigned.
-                 */
-                rgb655 ^= (1 << 9) | (1 << 4);
-                pixel[0] = ((rgb655 & 0xFC00) >> 10) * 0x7F / 0x3F;
-                pixel[1] = ((rgb655 & 0x03E0) >> 5) * 0xFF / 0x1F - 0x80;
-                pixel[2] = (rgb655 & 0x001F) * 0xFF / 0x1F - 0x80;
-            }
-        }
-        return converted_data;
-    } else {
+		for (y = 0; y < height; y++) {
+			for (x = 0; x < width; x++) {
+				uint8_t index = data[y * row_pitch + x];
+				uint32_t color = *(uint32_t*)(palette_data + index * 4);
+				*(uint32_t*)(converted_data + y * width * 4 + x * 4) = color;
+			}
+		}
+		return converted_data;
+	}
+	case NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_X7SY9: {
+		assert(false); /* FIXME */
+		return NULL;
+	}
+	case NV097_SET_TEXTURE_FORMAT_COLOR_LC_IMAGE_CR8YB8CB8YA8: {
+		assert(depth == 1); /* FIXME */
+		uint8_t* converted_data = (uint8_t*)g_malloc(width * height * 4);
+		unsigned int y;
+		for (y = 0; y < height; y++) {
+			const uint8_t* line = &data[y * width * 2];
+			uint8_t* pixel = &converted_data[(y * width) * 4];
+			____UYVYToARGBRow_C(line, pixel, width);
+		}
+		return converted_data;
+	}	
+	case NV097_SET_TEXTURE_FORMAT_COLOR_LC_IMAGE_YB8CR8YA8CB8: {
+		assert(depth == 1); /* FIXME */
+		uint8_t* converted_data = (uint8_t*)g_malloc(width * height * 4);
+		unsigned int y;
+		for (y = 0; y < height; y++) {
+			const uint8_t* line = &data[y * width * 2];
+			uint8_t* pixel = &converted_data[(y * width) * 4];
+			____YUY2ToARGBRow_C(line, pixel, width);
+		}
+		return converted_data;
+	}
+	case NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_A8CR8CB8Y8: {
+		assert(false); /* FIXME */
+		return NULL;
+	}
+	case NV097_SET_TEXTURE_FORMAT_COLOR_SZ_R6G5B5:
+	case NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_R6G5B5: {
+		assert(depth == 1); /* FIXME */
+		uint8_t *converted_data = (uint8_t*)g_malloc(width * height * 4);
+		unsigned int y;
+		for (y = 0; y < height; y++) {
+			uint16_t rgb655 = *(uint16_t*)(data + y * row_pitch);
+			int8_t *pixel = (int8_t*)&converted_data[(y * width) * 4];
+			__R6G5B5ToARGBRow_C((const uint8*)rgb655, (uint8*)pixel, width);
+		}
+		return converted_data;
+    }
+	case NV097_SET_TEXTURE_FORMAT_COLOR_SZ_R5G5B5A1:
+	case NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_R5G5B5A1: {
+		assert(depth == 1); /* FIXME */
+		uint8_t *converted_data = (uint8_t*)g_malloc(width * height * 4);
+		unsigned int y;
+		for (y = 0; y < height; y++) {
+			uint16_t r5g5b5a1 = *(uint16_t*)(data + y * row_pitch);
+			int8_t *pixel = (int8_t*)&converted_data[(y * width) * 4];
+			R5G5B5A1ToARGBRow_C((uint8_t *)r5g5b5a1, (uint8_t *)pixel, width);
+		}
+		return converted_data;
+	}
+	case NV097_SET_TEXTURE_FORMAT_COLOR_SZ_R4G4B4A4:
+	case NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_R4G4B4A4: {
+		assert(depth == 1); /* FIXME */
+		uint8_t *converted_data = (uint8_t*)g_malloc(width * height * 4);
+		unsigned int y;
+		for (y = 0; y < height; y++) {
+			uint16_t r4g4b4a4 = *(uint16_t*)(data + y * row_pitch);
+			int8_t *pixel = (int8_t*)&converted_data[(y * width) * 4];
+			R4G4B4A4ToARGBRow_C((uint8_t *)r4g4b4a4, (uint8_t *)pixel, width);
+		}
+		return converted_data;
+	}
+	default:
         return NULL;
     }
 }
@@ -4256,7 +4293,13 @@ static void upload_gl_texture(GLenum gl_target,
         glPixelStorei(GL_UNPACK_ROW_LENGTH,
                       s.pitch / f.bytes_per_pixel);
 
-        uint8_t *converted = convert_texture_data(s, texture_data,
+		uint8_t *unswizzled = NULL;
+        if (f.encoding == swizzled) { // TODO : Verify this works correctly
+            unswizzled = (uint8_t*)g_malloc(s.height * s.pitch);
+            unswizzle_rect(texture_data, s.width, s.height,
+                            unswizzled, s.pitch, f.bytes_per_pixel);
+        }
+        uint8_t *converted = convert_texture_data(s.color_format, unswizzled ? unswizzled : texture_data,
                                                   palette_data,
                                                   s.width, s.height, 1,
                                                   s.pitch, 0);
@@ -4264,10 +4307,13 @@ static void upload_gl_texture(GLenum gl_target,
         glTexImage2D(gl_target, 0, f.gl_internal_format,
                      s.width, s.height, 0,
                      f.gl_format, f.gl_type,
-                     converted ? converted : texture_data);
+                     converted ? converted : unswizzled ? unswizzled : texture_data);
 
         if (converted) {
           g_free(converted);
+        }
+		if (unswizzled) {
+			g_free(unswizzled);
         }
 
         glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
@@ -4285,7 +4331,7 @@ static void upload_gl_texture(GLenum gl_target,
 
         unsigned int level;
         for (level = 0; level < s.levels; level++) {
-            if (f.gl_format == 0) { /* compressed */
+            if (f.encoding == compressed) {
 
                 width = MAX(width, 4); height = MAX(height, 4);
 
@@ -4307,11 +4353,14 @@ static void upload_gl_texture(GLenum gl_target,
                 width = MAX(width, 1); height = MAX(height, 1);
 
                 unsigned int pitch = width * f.bytes_per_pixel;
-                uint8_t *unswizzled = (uint8_t*)g_malloc(height * pitch);
-                unswizzle_rect(texture_data, width, height,
-                               unswizzled, pitch, f.bytes_per_pixel);
+                uint8_t *unswizzled = NULL;
+                if (f.encoding == swizzled) {
+                    unswizzled = (uint8_t*)g_malloc(height * pitch);
+                    unswizzle_rect(texture_data, width, height,
+                                   unswizzled, pitch, f.bytes_per_pixel);
+                }
 
-                uint8_t *converted = convert_texture_data(s, unswizzled,
+                uint8_t *converted = convert_texture_data(s.color_format, unswizzled ? unswizzled : texture_data,
                                                           palette_data,
                                                           width, height, 1,
                                                           pitch, 0);
@@ -4319,12 +4368,14 @@ static void upload_gl_texture(GLenum gl_target,
                 glTexImage2D(gl_target, level, f.gl_internal_format,
                              width, height, 0,
                              f.gl_format, f.gl_type,
-                             converted ? converted : unswizzled);
+                             converted ? converted : unswizzled ? unswizzled : texture_data);
 
                 if (converted) {
                     g_free(converted);
                 }
-                g_free(unswizzled);
+                if (unswizzled) {
+                    g_free(unswizzled);
+                }
 
                 texture_data += width * height * f.bytes_per_pixel;
             }
@@ -4339,19 +4390,18 @@ static void upload_gl_texture(GLenum gl_target,
 
         unsigned int width = s.width, height = s.height, depth = s.depth;
 
-        assert(f.gl_format != 0); /* FIXME: compressed not supported yet */
-        assert(f.linear == false);
-
         unsigned int level;
         for (level = 0; level < s.levels; level++) {
 
             unsigned int row_pitch = width * f.bytes_per_pixel;
             unsigned int slice_pitch = row_pitch * height;
-            uint8_t *unswizzled = (uint8_t*)g_malloc(slice_pitch * depth);
-            unswizzle_box(texture_data, width, height, depth, unswizzled,
-                           row_pitch, slice_pitch, f.bytes_per_pixel);
-
-            uint8_t *converted = convert_texture_data(s, unswizzled,
+            uint8_t *unswizzled = NULL;
+            if (f.encoding == swizzled) {
+                unswizzled = (uint8_t*)g_malloc(slice_pitch * depth);
+                unswizzle_box(texture_data, width, height, depth, unswizzled,
+                               row_pitch, slice_pitch, f.bytes_per_pixel);
+            }
+            uint8_t *converted = convert_texture_data(s.color_format, unswizzled ? unswizzled : texture_data,
                                                       palette_data,
                                                       width, height, depth,
                                                       row_pitch, slice_pitch);
@@ -4359,12 +4409,14 @@ static void upload_gl_texture(GLenum gl_target,
             glTexImage3D(gl_target, level, f.gl_internal_format,
                          width, height, depth, 0,
                          f.gl_format, f.gl_type,
-                         converted ? converted : unswizzled);
+                         converted ? converted : unswizzled ? unswizzled : texture_data);
 
             if (converted) {
                 g_free(converted);
             }
-            g_free(unswizzled);
+            if (unswizzled) {
+                g_free(unswizzled);
+            }
 
             texture_data += width * height * depth * f.bytes_per_pixel;
 
@@ -4394,11 +4446,11 @@ static TextureBinding* generate_texture(const TextureShape s,
 
     GLenum gl_target;
     if (s.cubemap) {
-        assert(f.linear == false);
+        assert(f.encoding != linear);
         assert(s.dimensionality == 2);
         gl_target = GL_TEXTURE_CUBE_MAP;
     } else {
-        if (f.linear) {
+        if (f.encoding == linear) { /* FIXME : Include compressed too? (!= swizzled) */
             /* linear textures use unnormalised texcoords.
              * GL_TEXTURE_RECTANGLE_ARB conveniently also does, but
              * does not allow repeat and mirror wrap modes.
@@ -4425,7 +4477,7 @@ static TextureBinding* generate_texture(const TextureShape s,
 
     NV2A_GL_DLABEL(GL_TEXTURE, gl_texture,
                    "format: 0x%02X%s, %d dimensions%s, width: %d, height: %d, depth: %d",
-                   s.color_format, f.linear ? "" : " (SZ)",
+                   s.color_format, {"", " (SZ)", " (DXT)"}[f.encoding],
                    s.dimensionality, s.cubemap ? " (Cubemap)" : "",
                    s.width, s.height, s.depth);
 
@@ -4458,7 +4510,7 @@ static TextureBinding* generate_texture(const TextureShape s,
     }
 
     /* Linear textures don't support mipmapping */
-    if (!f.linear) {
+    if (f.encoding != linear) {
         glTexParameteri(gl_target, GL_TEXTURE_BASE_LEVEL,
             s.min_mipmap_level);
         glTexParameteri(gl_target, GL_TEXTURE_MAX_LEVEL,
