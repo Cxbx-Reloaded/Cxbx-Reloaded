@@ -36,6 +36,7 @@
 
 #include "OHCI.h"
 #include "Hub.h"
+#include "..\CxbxKrnl\EmuKrnl.h" // For EmuWarning
 
 #define NUM_PORTS 8
 
@@ -55,15 +56,15 @@ int PlayerToUsbArray[] = {
 };
 
 struct USBHubPort {
-	USBPort port;          // downstream ports of the hub
+	USBPort port;          // downstream port status
 	uint16_t wPortStatus;
 	uint16_t wPortChange;
 };
 
 struct USBHubState {
-	XboxDeviceState dev;
+	XboxDeviceState dev;         // hub device status
 	USBEndpoint* intr;
-	USBHubPort ports[NUM_PORTS];
+	USBHubPort ports[NUM_PORTS]; // downstream ports of the hub
 };
 
 USBDescIface::USBDescIface(bool bDefault)
@@ -83,8 +84,12 @@ USBDescIface::USBDescIface(bool bDefault)
 }
 
 USBDescIface::~USBDescIface()
-{ 
-	delete descs;
+{
+	delete descs; // always one struct of this?
+	if (bNumEndpoints != 1) {
+		delete[] eps;
+		return;
+	}
 	delete eps;
 }
 
@@ -108,7 +113,14 @@ USBDescDevice::USBDescDevice(bool bDefault)
 	}
 }
 
-USBDescDevice::~USBDescDevice() { delete confs; }
+USBDescDevice::~USBDescDevice()
+{
+	if (bNumConfigurations != 1) {
+		delete[] confs;
+		return;
+	}
+	delete confs;
+}
 
 static const USBDescDevice desc_device_hub(true);
 
@@ -255,12 +267,12 @@ int Hub::UsbHub_Initfn(XboxDeviceState* dev)
 	int i;
 
 	if (dev->Port->HubCount == 5) {
-		DbgPrintf("Hub: chain too deep");
+		DbgPrintf("Hub: chain too deep\n");
 		return -1;
 	}
 
-	usb_desc_create_serial(dev);
-	usb_desc_init(dev);
+	CreateSerial(dev);
+	UsbDescInit(dev);
 	s->intr = usb_ep_get(dev, USB_TOKEN_IN, 1);
 	for (i = 0; i < NUM_PORTS; i++) {
 		port = &s->ports[i];
@@ -274,6 +286,7 @@ int Hub::UsbHub_Initfn(XboxDeviceState* dev)
 }
 
 /*
+* From XQEMU:
 * This function creates a serial number for a usb device.
 * The serial number should:
 *   (a) Be unique within the emulator.
@@ -287,52 +300,150 @@ int Hub::UsbHub_Initfn(XboxDeviceState* dev)
 */
 void Hub::CreateSerial(XboxDeviceState* dev)
 {
-	DeviceState *hcd = dev->qdev.parent_bus->parent;
 	const USBDesc* desc = GetUsbDeviceDesc(dev);
 	int index = desc->id.iSerialNumber;
+	USBDescString* s;
 	char serial[64];
 	char* path;
 	int dst;
 
-	if (dev->serial) {
-		/* 'serial' usb bus property has priority if present */
-		usb_desc_set_string(dev, index, dev->serial);
-		return;
+	assert(index != 0 && desc->str[index] != NULL);
+	dst = std::snprintf(serial, sizeof(serial), "%s", desc->str[index]);
+	dst += std::snprintf(serial + dst, sizeof(serial) - dst, "-%s", m_UsbDev->m_PciPath);
+	dst += std::snprintf(serial + dst, sizeof(serial) - dst, "-%s", dev->Port->Path);
+
+	QLIST_FOREACH(s, &dev->Strings, next) {
+		if (s->index == index) {
+			break;
+		}
 	}
 
-	assert(index != 0 && desc->str[index] != NULL);
-	dst = snprintf(serial, sizeof(serial), "%s", desc->str[index]);
-	path = qdev_get_dev_path(hcd);
-	if (path) {
-		dst += snprintf(serial + dst, sizeof(serial) - dst, "-%s", path);
+	if (s == nullptr) {
+		s = new USBDescString;
+		s->index = index;
+		QLIST_INSERT_HEAD(&dev->Strings, s, next);
 	}
-	dst += snprintf(serial + dst, sizeof(serial) - dst, "-%s", dev->port->path);
-	usb_desc_set_string(dev, index, serial);
+
+	s->str = serial;
 }
 
 const USBDesc* Hub::GetUsbDeviceDesc(XboxDeviceState* dev)
 {
 	USBDeviceClass* klass = dev->klass;
-	if (dev->usb_desc) {
-		return dev->usb_desc;
+	if (dev->UsbDesc) {
+		return dev->UsbDesc;
 	}
 	return klass->usb_desc;
 }
 
-void usb_desc_set_string(USBDevice *dev, uint8_t index, const char *str)
+void Hub::UsbDescInit(XboxDeviceState* dev)
 {
-	USBDescString *s;
+	const USBDesc* desc = GetUsbDeviceDesc(dev);
 
-	QLIST_FOREACH(s, &dev->strings, next) {
-		if (s->index == index) {
+	assert(desc != NULL);
+	dev->Speed = USB_SPEED_FULL;
+	dev->SpeedMask = 0;
+	if (desc->full) {
+		dev->SpeedMask |= USB_SPEED_MASK_FULL;
+	}
+	UsbDescSetDefaults(dev);
+}
+
+void Hub::UsbDescSetDefaults(XboxDeviceState* dev)
+{
+	const USBDesc *desc = GetUsbDeviceDesc(dev);
+
+	assert(desc != NULL);
+	switch (dev->Speed) {
+		case USB_SPEED_LOW:
+		case USB_SPEED_FULL: {
+			dev->Device = desc->full;
 			break;
 		}
+		default:
+			EmuWarning("Unknown speed parameter %d set in %s", dev->ProductDesc.c_str());
 	}
-	if (s == NULL) {
-		s = g_malloc0(sizeof(*s));
-		s->index = index;
-		QLIST_INSERT_HEAD(&dev->strings, s, next);
+	UsbDescSetConfig(dev, 0);
+}
+
+int Hub::UsbDescSetConfig(XboxDeviceState* dev, int value)
+{
+	int i;
+
+	if (value == 0) { // default configuration
+		dev->Configuration = 0;
+		dev->NumInterfaces = 0;
+		dev->Config = nullptr;
 	}
-	g_free(s->str);
-	s->str = g_strdup(str);
+	else {
+		for (i = 0; i < dev->Device->bNumConfigurations; i++) { // select the configuration specified
+			if (dev->Device->confs[i].bConfigurationValue == value) {
+				dev->Configuration = value;
+				dev->NumInterfaces = dev->Device->confs[i].bNumInterfaces;
+				dev->Config = dev->Device->confs + i;
+				assert(dev->NumInterfaces <= USB_MAX_INTERFACES);
+			}
+		}
+		if (i < dev->Device->bNumConfigurations) {
+			return -1;
+		}
+	}
+
+	for (i = 0; i < dev->NumInterfaces; i++) { // setup all interfaces for the selected configuration
+		UsbDescSetInterface(dev, i, 0);
+	}
+	for (; i < USB_MAX_INTERFACES; i++) { // null the remaining interfaces
+		dev->AltSetting[i] = 0;
+		dev->Ifaces[i] = nullptr;
+	}
+
+	return 0;
+}
+
+int Hub::UsbDescSetInterface(XboxDeviceState* dev, int index, int value)
+{
+	const USBDescIface* iface;
+	int old;
+
+	iface = UsbDescFindInterface(dev, index, value);
+	if (iface == NULL) {
+		return -1;
+	}
+
+	old = dev->altsetting[index];
+	dev->altsetting[index] = value;
+	dev->ifaces[index] = iface;
+	usb_desc_ep_init(dev);
+
+	if (old != value) {
+		usb_device_set_interface(dev, index, old, value);
+	}
+	return 0;
+}
+
+const USBDescIface* Hub::UsbDescFindInterface(XboxDeviceState* dev, int nif, int alt)
+{
+	const USBDescIface* iface;
+	int g, i;
+
+	if (!dev->Config) { // no configuration descriptor here, nothing to search
+		return nullptr;
+	}
+	for (g = 0; g < dev->Config->nif_groups; g++) {
+		for (i = 0; i < dev->config->if_groups[g].nif; i++) {
+			iface = &dev->config->if_groups[g].ifs[i];
+			if (iface->bInterfaceNumber == nif &&
+				iface->bAlternateSetting == alt) {
+				return iface;
+			}
+		}
+	}
+	for (i = 0; i < dev->config->nif; i++) {
+		iface = &dev->config->ifs[i];
+		if (iface->bInterfaceNumber == nif &&
+			iface->bAlternateSetting == alt) {
+			return iface;
+		}
+	}
+	return NULL;
 }

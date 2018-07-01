@@ -37,7 +37,7 @@
 #ifndef USBCOMMON_H_
 #define USBCOMMON_H_
 
-#include "Cxbx.h"
+#include "CxbxCommon.h"
 #include "..\devices\video\queue.h"
 #include <functional>
 
@@ -65,6 +65,16 @@
 #define USB_TOKEN_IN    0x69 // device -> host
 #define USB_TOKEN_OUT   0xE1 // host -> device
 
+#define USB_SPEED_LOW   0
+#define USB_SPEED_FULL  1
+
+
+typedef enum _USB_SPEED
+{
+	USB_SPEED_MASK_LOW = 1 << 0,
+	USB_SPEED_MASK_FULL = 1 << 1,
+}
+USB_SPEED;
 
 typedef enum USBPacketState {
 	USB_PACKET_UNDEFINED = 0,
@@ -79,6 +89,13 @@ USBPacketState;
 struct USBPacket;
 struct XboxDeviceState;
 typedef const char* USBDescStrings[256];
+
+/* String descriptor */
+struct USBDescString {
+	uint8_t index;      // index of this string descriptor
+	std::string str;    // the string of this string descriptor
+	QLIST_ENTRY(USBDescString) next;
+};
 
 struct USBDescOther {
     uint8_t                   length;
@@ -102,14 +119,15 @@ struct USBDescEndpoint {
     uint16_t                  wBytesPerInterval;
 };
 
+/* Interface descriptor */
 struct USBDescIface {
-    uint8_t                   bInterfaceNumber;
-    uint8_t                   bAlternateSetting;
-    uint8_t                   bNumEndpoints;
-    uint8_t                   bInterfaceClass;
-    uint8_t                   bInterfaceSubClass;
-    uint8_t                   bInterfaceProtocol;
-    uint8_t                   iInterface;
+    uint8_t                   bInterfaceNumber;   // number of interface
+    uint8_t                   bAlternateSetting;  // value used to select the alternate setting for the interface identified by bInterfaceNumber
+    uint8_t                   bNumEndpoints;      // number of endpoints used by this interface (excluding endpoint zero)
+    uint8_t                   bInterfaceClass;    // class code (assigned by the USB)
+    uint8_t                   bInterfaceSubClass; // subclass code (assigned by the USB)
+    uint8_t                   bInterfaceProtocol; // protocol code (assigned by the USB)
+    uint8_t                   iInterface;         // index of string descriptor describing this interface
 
     uint8_t                   ndesc;
     USBDescOther*             descs;
@@ -131,12 +149,13 @@ struct USBDescIfaceAssoc {
     const USBDescIface*       ifs;
 };
 
+/* Configuration descriptor */
 struct USBDescConfig {
-    uint8_t                   bNumInterfaces;
-    uint8_t                   bConfigurationValue;
-    uint8_t                   iConfiguration;
-    uint8_t                   bmAttributes;
-    uint8_t                   bMaxPower;
+    uint8_t                   bNumInterfaces;      // number of interfaces supported by this configuration
+    uint8_t                   bConfigurationValue; // value to use as an argument to the SetConfiguration() request to select this configuration
+    uint8_t                   iConfiguration;      // index of string descriptor describing this configuration
+    uint8_t                   bmAttributes;        // configuration characteristics
+    uint8_t                   bMaxPower;           // maximum power consumption of the USB device in this configuration expressed in 2mA units
 
     /* grouped interfaces */
     uint8_t                   nif_groups;
@@ -147,25 +166,27 @@ struct USBDescConfig {
     const USBDescIface*       ifs;
 };
 
+/* Device descriptor part 1 */
 struct USBDescDevice {
-    uint16_t                  bcdUSB;
-    uint8_t                   bDeviceClass;
-    uint8_t                   bDeviceSubClass;
-    uint8_t                   bDeviceProtocol;
-    uint8_t                   bMaxPacketSize0;
-    uint8_t                   bNumConfigurations;
-    const USBDescConfig*      confs;
+    uint16_t                  bcdUSB;             // USB Specification Release Number in Binary-Coded Decimal (i.e., 2.10 is 210H)
+    uint8_t                   bDeviceClass;       // class code (assigned by the USB)
+    uint8_t                   bDeviceSubClass;    // subclass code (assigned by the USB)
+    uint8_t                   bDeviceProtocol;    // protocol code (assigned by the USB)
+    uint8_t                   bMaxPacketSize0;    // maximum packet size for endpoint zero (only 8, 16, 32, or 64 are valid)
+    uint8_t                   bNumConfigurations; // number of possible configurations
+    const USBDescConfig*      confs;              // configuration descriptor in use
 	USBDescDevice(bool bDefault);
 	~USBDescDevice();
 };
 
+/* Device descriptor part 2 */
 struct USBDescID {
-    uint16_t                  idVendor;
-    uint16_t                  idProduct;
-    uint16_t                  bcdDevice;
-    uint8_t                   iManufacturer;
-    uint8_t                   iProduct;
-    uint8_t                   iSerialNumber; // index of string descriptor
+    uint16_t                  idVendor;      // vendor ID (assigned by the USB)
+    uint16_t                  idProduct;     // product ID (assigned by the manufacturer)
+    uint16_t                  bcdDevice;     // device release number in binary-coded decimal
+    uint8_t                   iManufacturer; // index of string descriptor describing manufacturer
+    uint8_t                   iProduct;      // index of string descriptor describing product
+    uint8_t                   iSerialNumber; // index of string descriptor describing the device’s serial number
 };
 
 /* Global USB Descriptor struct */
@@ -186,23 +207,21 @@ struct USBEndpoint
 	int MaxPacketSize;
 	bool Pipeline;
 	bool Halted;                      // indicates that the endpoint is halted
-	XboxDeviceState* Dev;                  // device this endpoint belongs to
-	QTAILQ_HEAD(, USBPacket) Queue;  // queue of packets to this endpoint
+	XboxDeviceState* Dev;             // device this endpoint belongs to
+	QTAILQ_HEAD(, USBPacket) Queue;   // queue of packets to this endpoint
 };
 
 /* definition of an Xbox usb device */
 struct XboxDeviceState
 {
-	USBPort* Port;                        // usb port struct of this device
-	int PortPath;                         // port index to which this device is attached to
-	char* Serial;
-	uint32_t flags;
-	USBDeviceClass* klass;                // usb class struct of this device
-
-	// Actual connected speed
-	int speed;
-	// Supported speeds, not in info because it may be variable (hostdevs)
-	int speedmask;
+	USBPort* Port;                         // usb port struct of this device
+	int PortPath;                          // port index to which this device is attached to
+	char* Serial;						   
+	uint32_t flags;						   
+	USBDeviceClass* klass;                 // usb class struct of this device
+										   
+	int Speed;                             // actual connected speed
+	int SpeedMask;                         // supported speeds, not in info because it may be variable (hostdevs)
 	uint8_t Addr;                          // device function address
 	std::string ProductDesc;               // the friendly name of this device
 	int Attached;                          // device is attached
@@ -219,15 +238,15 @@ struct XboxDeviceState
 	USBEndpoint EP_in[USB_MAX_ENDPOINTS];  // endpoints for OUT tokens
 	USBEndpoint EP_out[USB_MAX_ENDPOINTS]; // endpoints for IN tokens
 
-	QLIST_HEAD(, USBDescString) Strings;
-	const USBDesc* usb_desc;               // Overrides class usb_desc if not NULL
-	const USBDescDevice *device;
+	QLIST_HEAD(, USBDescString) Strings;   // strings of the string descriptor
+	const USBDesc* UsbDesc;                // Overrides class usb_desc if not NULL
+	const USBDescDevice* Device;           // device descriptor part 1
 
-	int configuration;
-	int ninterfaces;
-	int altsetting[USB_MAX_INTERFACES];
-	const USBDescConfig *config;
-	const USBDescIface  *ifaces[USB_MAX_INTERFACES];
+	int Configuration;                     // number of the selected configuration descriptor
+	int NumInterfaces;                     // number of available interface descriptors
+	int AltSetting[USB_MAX_INTERFACES];    // 
+	const USBDescConfig* Config;           // configuration descriptor in use
+	const USBDescIface* Ifaces[USB_MAX_INTERFACES];
 };
 
 struct USBCombinedPacket {
@@ -260,8 +279,8 @@ struct USBPacket
 struct USBPort {
 	XboxDeviceState* Dev;         // usb device (if present)
 	int SpeedMask;                // usb speeds supported
-	int HubCount;                 // number of hubs attached
-	char Path[16];                // the number of the port
+	int HubCount;                 // number of hubs chained
+	char Path[16];                // the number of the port + 1, used to create a serial number for this device
 	int PortIndex;                // internal port index against this HC
 };
 
@@ -310,7 +329,7 @@ struct USBDeviceClass
 	// has been unlinked / stopped. Optional may be NULL.
 	std::function<void(XboxDeviceState* Dev, USBEndpoint* EP)> ep_stopped;
 
-	const char* product_desc;
+	const char* product_desc;  // friendly name of the device
 	const USBDesc* usb_desc;   // device descriptor
 };
 

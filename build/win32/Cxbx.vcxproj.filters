@@ -284,7 +284,6 @@
     <ClCompile Include="..\..\src\CxbxKrnl\Timer.cpp">
       <Filter>Emulator</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\Common\Cxbx.cpp" />
       <Filter>GUI</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\devices\usb\OHCI.cpp">
@@ -295,6 +294,9 @@
     </ClCompile>
     <ClCompile Include="..\..\src\devices\usb\Hub.cpp">
       <Filter>Hardware\Usb</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\Common\CxbxCommon.cpp" />
+      <Filter>GUI</Filter>
     </ClCompile>
 	<ClCompile Include="..\..\src\Cxbx\DlgXboxControllerPortMapping.cpp">
       <Filter>GUI</Filter>
@@ -342,9 +344,6 @@
     </ClInclude>
     <ClInclude Include="..\..\src\CxbxKrnl\EmuKrnlLogging.h">
       <Filter>Kernel</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\Cxbx.h">
-      <Filter>Shared</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\CxbxKrnl\Emu.h">
       <Filter>Shared</Filter>
@@ -594,6 +593,9 @@
     </ClInclude>
     <ClInclude Include="..\..\src\devices\usb\UsbCommon.h">
       <Filter>Hardware\Usb</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\CxbxCommon.h">
+      <Filter>Shared</Filter>
     </ClInclude>
 	<ClInclude Include="..\..\src\Cxbx\DlgXboxControllerPortMapping.h">
       <Filter>GUI</Filter>

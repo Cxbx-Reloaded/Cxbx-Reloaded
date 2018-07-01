@@ -178,30 +178,25 @@
 
 #define USB_HZ 12000000
 
-#define USB_SPEED_LOW   0
-#define USB_SPEED_FULL  1
-
 #define USUB(a, b) ((int16_t)((uint16_t)(a) - (uint16_t)(b)))
 
 #define OHCI_PAGE_MASK    0xFFFFF000
 #define OHCI_OFFSET_MASK  0xFFF
 
 
-typedef enum _USB_SPEED
-{
-	USB_SPEED_MASK_LOW =  1 << 0,
-	USB_SPEED_MASK_FULL = 1 << 1,
-}
-USB_SPEED;
-
-
 OHCI::OHCI(int Irq, USBDevice* UsbObj)
 {
+	int offset = 0;
+
 	m_IrqNum = Irq;
 	m_UsbDevice = UsbObj;
 
+	if (m_IrqNum == 9) {
+		offset = 2;
+	}
+
 	for (int i = 0; i < 2; i++) {
-		m_UsbDevice->USB_RegisterPort(&m_Registers.RhPort[i].UsbPort, i, USB_SPEED_MASK_LOW | USB_SPEED_MASK_FULL);
+		m_UsbDevice->USB_RegisterPort(&m_Registers.RhPort[i].UsbPort, i + offset, USB_SPEED_MASK_LOW | USB_SPEED_MASK_FULL);
 	}
 	OHCI_PacketInit(&m_UsbPacket);
 
@@ -1423,7 +1418,7 @@ void OHCI::OHCI_Attach(USBPort* Port)
 	port->HcRhPortStatus |= OHCI_PORT_CCS | OHCI_PORT_CSC;
 
 	// update speed
-	if (port->UsbPort.Dev->speed == USB_SPEED_LOW) {
+	if (port->UsbPort.Dev->Speed == USB_SPEED_LOW) {
 		port->HcRhPortStatus |= OHCI_PORT_LSDA;
 	}
 	else {

@@ -142,7 +142,6 @@ struct OHCI_Registers
 	uint32_t HcRhDescriptorA;
 	uint32_t HcRhDescriptorB;
 	uint32_t HcRhStatus;
-	// For some reason, both XQEMU and OpenXbox set 4 ports per HC, for a total of 8 usb ports.
 	OHCIPort RhPort[2]; // 2 ports per HC, for a total of 4 USB ports
 };
 

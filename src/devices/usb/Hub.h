@@ -74,7 +74,7 @@ class Hub final : public UsbPeripheral
                int request, int value, int index, int length, uint8_t* data);
 		void UsbHub_HandleData(XboxDeviceState* dev, USBPacket* p);
 		void UsbHub_HandleDestroy(XboxDeviceState* dev);
-		// TODO: perhaps these can be put in UsbPeripheral...
+		// TODO: perhaps these can be put in UsbPeripheral or USBDevice...
 		// initialize the endpoints of this peripheral
 		void UsbEpInit();
 		// destroy hub
@@ -87,6 +87,16 @@ class Hub final : public UsbPeripheral
 		const USBDesc* GetUsbDeviceDesc(XboxDeviceState* dev);
 		// create a serial number for the device
 		void CreateSerial(XboxDeviceState* dev);
+		//
+		void UsbDescInit(XboxDeviceState* dev);
+		//
+		void UsbDescSetDefaults(XboxDeviceState* dev);
+		//
+		int UsbDescSetConfig(XboxDeviceState* dev, int value);
+		//
+		int UsbDescSetInterface(XboxDeviceState* dev, int index, int value);
+		//
+		const USBDescIface* UsbDescFindInterface(XboxDeviceState* dev, int nif, int alt);
 };
 
 extern Hub* g_HubObjArray[4];

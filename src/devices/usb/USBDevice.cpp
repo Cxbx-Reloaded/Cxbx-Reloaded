@@ -60,10 +60,12 @@ void USBDevice::Init(unsigned int address)
 
 	if (address == USB0_BASE) {
 		m_HostController = new OHCI(1, this);
+		m_PciPath = "pci.0:02.0";
 		return;
 	}
 
 	m_HostController = new OHCI(9, this);
+	m_PciPath = "pci.0:03.0";
 }
 
 uint32_t USBDevice::MMIORead(int barIndex, uint32_t addr, unsigned size)

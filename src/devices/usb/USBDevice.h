@@ -63,7 +63,9 @@ class USBDevice : public PCIDevice {
 
 		// USBDevice-specific functions/variables
 		// pointer to the host controller this device refers to
-		OHCI* m_HostController = nullptr;
+		OHCI* m_HostController;
+		// PCI path of this usb device
+		const char* m_PciPath;
 
 		// register a port with the HC
 		void USB_RegisterPort(USBPort* Port, int Index, int SpeedMask);
