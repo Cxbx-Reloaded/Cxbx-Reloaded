@@ -569,12 +569,6 @@ void PrintCurrentConfigurationLog()
 		printf("LLE for JIT is %s\n", bLLE_JIT ? "enabled" : "disabled");
 	}
 
-	// Print current INPUT configuration
-	{
-		printf("--------------------------- INPUT CONFIG ---------------------------\n");
-		printf("Using %s\n", g_XInputEnabled ? "XInput" : "DirectInput");
-	}
-
 	// Print current video configuration (DirectX/HLE)
 	if (!bLLE_GPU) {
 		XBVideo XBVideoConf;
@@ -1300,13 +1294,6 @@ __declspec(noreturn) void CxbxKrnlInit
 		bLLE_APU = (CxbxLLE_Flags & LLE_APU) > 0;
 		bLLE_GPU = (CxbxLLE_Flags & LLE_GPU) > 0;
 		bLLE_JIT = (CxbxLLE_Flags & LLE_JIT) > 0;
-	}
-
-	// Process XInput Enabled flag
-	{
-		int XInputEnabled;
-		g_EmuShared->GetXInputEnabled(&XInputEnabled);
-		g_XInputEnabled = !!XInputEnabled;
 	}
 
 	// Process Hacks
