@@ -258,7 +258,6 @@ void SetupXboxDeviceTypes()
 		}
 
 		printf("XAPI: XDEVICE_TYPE_GAMEPAD Found at 0x%08X\n", gDeviceType_Gamepad);
-        InitXboxControllerHostBridge();
 	}
 }
 
@@ -290,6 +289,9 @@ VOID WINAPI XTL::EMUPATCH(XInitDevices)
         g_hInputHandle[v] = 0;
     }
 */
+
+	InitXboxControllerHostBridge();
+
 }
 
 bool TitleIsJSRF()
