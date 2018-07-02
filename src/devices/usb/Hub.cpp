@@ -40,6 +40,20 @@
 
 #define NUM_PORTS 8
 
+#define PORT_STAT_CONNECTION   0x0001
+#define PORT_STAT_ENABLE       0x0002
+#define PORT_STAT_SUSPEND      0x0004
+#define PORT_STAT_OVERCURRENT  0x0008
+#define PORT_STAT_RESET        0x0010
+#define PORT_STAT_POWER        0x0100
+#define PORT_STAT_LOW_SPEED    0x0200
+
+#define PORT_STAT_C_CONNECTION	0x0001
+#define PORT_STAT_C_ENABLE      0x0002
+#define PORT_STAT_C_SUSPEND     0x0004
+#define PORT_STAT_C_OVERCURRENT	0x0008
+#define PORT_STAT_C_RESET       0x0010
+
 
 // To avoid including Xbox.h
 extern USBDevice* g_USB0;
@@ -57,13 +71,13 @@ int PlayerToUsbArray[] = {
 
 struct USBHubPort {
 	USBPort port;          // downstream port status
-	uint16_t wPortStatus;
-	uint16_t wPortChange;
+	uint16_t wPortStatus;  // Port Status Field, in accordance with the standard
+	uint16_t wPortChange;  // Port Change Field, in accordance with the standard
 };
 
 struct USBHubState {
 	XboxDeviceState dev;         // hub device status
-	USBEndpoint* intr;
+	USBEndpoint* intr;           // interrupt endpoint of the hub
 	USBHubPort ports[NUM_PORTS]; // downstream ports of the hub
 };
 
@@ -153,15 +167,13 @@ int Hub::Init(int pport)
     }
     rc = m_UsbDev->USB_DeviceInit(m_pDeviceStruct);
     if (rc != 0) {
-        usb_release_port(dev);
+        UsbReleasePort(m_pDeviceStruct);
         return rc;
     }
-    if (dev->auto_attach) {
-        rc = usb_device_attach(dev);
-        if (rc != 0) {
-            usb_qdev_exit(qdev);
-            return rc;
-        }
+    rc = usb_device_attach(dev);
+    if (rc != 0) {
+        usb_qdev_exit(qdev);
+        return rc;
     }
 }
 
@@ -240,7 +252,6 @@ void Hub::UsbEpReset()
 
 int Hub::UsbClaimPort(int pport)
 {
-	USBPort* port;
 	int usb_port;
 
 	assert(m_pDeviceStruct->Port == nullptr);
@@ -260,10 +271,20 @@ int Hub::UsbClaimPort(int pport)
 	return 0;
 }
 
+void Hub::UsbReleasePort(XboxDeviceState* dev)
+{
+	USBPort* port = dev->Port;
+
+	assert(port != nullptr);
+
+	port->Dev = nullptr;
+	dev->Port = nullptr;
+}
+
 int Hub::UsbHub_Initfn(XboxDeviceState* dev)
 {
 	USBHubState* s = container_of(dev, USBHubState, dev);
-	USBHubPort *port;
+	USBHubPort* port;
 	int i;
 
 	if (dev->Port->HubCount == 5) {
@@ -273,16 +294,33 @@ int Hub::UsbHub_Initfn(XboxDeviceState* dev)
 
 	CreateSerial(dev);
 	UsbDescInit(dev);
-	s->intr = usb_ep_get(dev, USB_TOKEN_IN, 1);
+	s->intr = m_UsbDev->USB_GetEP(dev, USB_TOKEN_IN, 1);
 	for (i = 0; i < NUM_PORTS; i++) {
 		port = &s->ports[i];
-		usb_register_port(usb_bus_from_device(dev),
-			&port->port, s, i, &usb_hub_port_ops,
-			USB_SPEED_MASK_LOW | USB_SPEED_MASK_FULL);
-		usb_port_location(&port->port, dev->port, i + 1);
+		m_UsbDev->USB_RegisterPort(&port->port, i, USB_SPEED_MASK_LOW | USB_SPEED_MASK_FULL);
+		m_UsbDev->USB_PortLocation(&port->port, dev->Port, i + 1);
 	}
-	usb_hub_handle_reset(dev);
+	UsbHub_HandleReset(dev);
 	return 0;
+}
+
+void Hub::UsbHub_HandleReset(XboxDeviceState* dev)
+{
+	USBHubState* s = container_of(dev, USBHubState, dev);
+	USBHubPort* port;
+
+	for (int i = 0; i < NUM_PORTS; i++) {
+		port = s->ports + i;
+		port->wPortStatus = PORT_STAT_POWER;
+		port->wPortChange = 0;
+		if (port->port.Dev && port->port.Dev->Attached) {
+			port->wPortStatus |= PORT_STAT_CONNECTION;
+			port->wPortChange |= PORT_STAT_C_CONNECTION;
+			if (port->port.Dev->Speed == USB_SPEED_LOW) {
+				port->wPortStatus |= PORT_STAT_LOW_SPEED;
+			}
+		}
+	}
 }
 
 /*
@@ -406,17 +444,17 @@ int Hub::UsbDescSetInterface(XboxDeviceState* dev, int index, int value)
 	int old;
 
 	iface = UsbDescFindInterface(dev, index, value);
-	if (iface == NULL) {
+	if (iface == nullptr) {
 		return -1;
 	}
 
-	old = dev->altsetting[index];
-	dev->altsetting[index] = value;
-	dev->ifaces[index] = iface;
-	usb_desc_ep_init(dev);
+	old = dev->AltSetting[index];
+	dev->AltSetting[index] = value;
+	dev->Ifaces[index] = iface;
+	UsbDescEpInit(dev);
 
 	if (old != value) {
-		usb_device_set_interface(dev, index, old, value);
+		m_UsbDev->USB_DeviceSetInterface(dev, index, old, value);
 	}
 	return 0;
 }
@@ -424,26 +462,46 @@ int Hub::UsbDescSetInterface(XboxDeviceState* dev, int index, int value)
 const USBDescIface* Hub::UsbDescFindInterface(XboxDeviceState* dev, int nif, int alt)
 {
 	const USBDescIface* iface;
-	int g, i;
+	int i;
 
 	if (!dev->Config) { // no configuration descriptor here, nothing to search
 		return nullptr;
 	}
-	for (g = 0; g < dev->Config->nif_groups; g++) {
-		for (i = 0; i < dev->config->if_groups[g].nif; i++) {
-			iface = &dev->config->if_groups[g].ifs[i];
-			if (iface->bInterfaceNumber == nif &&
-				iface->bAlternateSetting == alt) {
-				return iface;
-			}
-		}
-	}
-	for (i = 0; i < dev->config->nif; i++) {
-		iface = &dev->config->ifs[i];
+	for (i = 0; i < dev->Config->nif; i++) { // find the desired interface
+		iface = &dev->Config->ifs[i];
 		if (iface->bInterfaceNumber == nif &&
 			iface->bAlternateSetting == alt) {
 			return iface;
 		}
 	}
-	return NULL;
+	return nullptr; // not found
+}
+
+void Hub::UsbDescEpInit(XboxDeviceState* dev)
+{
+	const USBDescIface *iface;
+	int i, e, pid, ep;
+
+	UsbEpInit(); // reset endpoints (because we changed descriptors in use?)
+	for (i = 0; i < dev->NumInterfaces; i++) {
+		iface = dev->Ifaces[i];
+		if (iface == nullptr) {
+			continue;
+		}
+		for (e = 0; e < iface->bNumEndpoints; e++) {
+			// From the standard:
+			// "bEndpointAddress:
+			// Bit 3...0: The endpoint number
+			// Bit 6...4: Reserved, reset to zero
+			// Bit 7: Direction -> 0 = OUT endpoint, 1 = IN endpoint
+			// bmAttributes:
+			// Bit 1..0: Transfer Type
+			// 00 = Control, 01 = Isochronous, 10 = Bulk, 11 = Interrupt. All other bits are reserved"
+			pid = (iface->eps[e].bEndpointAddress & USB_DIR_IN) ? USB_TOKEN_IN : USB_TOKEN_OUT;
+			ep = iface->eps[e].bEndpointAddress & 0xF;
+			m_UsbDev->USB_EPsetType(dev, pid, ep, iface->eps[e].bmAttributes & 0x03);
+			m_UsbDev->USB_EPsetIfnum(dev, pid, ep, iface->bInterfaceNumber);
+			m_UsbDev->USB_EPsetMaxPacketSize(dev, pid, ep, iface->eps[e].wMaxPacketSize);
+		}
+	}
 }

@@ -41,9 +41,10 @@
 #include "UsbCommon.h"
 
 
-// Forward declare OHCI class for USBDevice class
+// Forward declare OHCI class for m_HostController pointer
 class OHCI;
 
+/* Helper class which provides various functionality to both OHCI and usb device classes */
 class USBDevice : public PCIDevice {
 	public:
 		// constructor
@@ -68,12 +69,12 @@ class USBDevice : public PCIDevice {
 		const char* m_PciPath;
 
 		// register a port with the HC
-		void USB_RegisterPort(USBPort* Port, int Index, int SpeedMask);
+		void USB_RegisterPort(USBPort* Port, int Index, int SpeedMask, USBPortOps* Ops);
 		//
 		void USB_DeviceEPstopped(XboxDeviceState* Dev, USBEndpoint* Ep);
 		// reset a usb port
 		void USB_PortReset(USBPort* Port);
-		// a device is attched
+		// a device is attached
 		void USB_Attach(USBPort* Port);
 		// a device is detached
 		void USB_Detach(USBPort* Port);
@@ -87,7 +88,7 @@ class USBDevice : public PCIDevice {
 		void USB_DeviceReset(XboxDeviceState* Dev);
 		// find the usb device with the supplied address
 		XboxDeviceState* USB_FindDevice(USBPort* Port, uint8_t Addr);
-		// ergo720: can probably be removed by calling directly usb_hub_find_device
+		//
 		XboxDeviceState* USB_DeviceFindDevice(XboxDeviceState* Dev, uint8_t Addr);
 		// find the requested endpoint in the supplied device
 		USBEndpoint* USB_GetEP(XboxDeviceState* Dev, int Pid, int Ep);
@@ -114,21 +115,31 @@ class USBDevice : public PCIDevice {
 		void DoTokenOut(XboxDeviceState* s, USBPacket* p);
 		// copy the packet data to the buffer pointed to by ptr
 		void USB_PacketCopy(USBPacket* p, void* ptr, size_t bytes);
+		// Cancel an active packet.  The packed must have been deferred by
+		// returning USB_RET_ASYNC from handle_packet, and not yet completed
+		void USB_CancelPacket(USBPacket* p);
 		// queue a packet to an endpoint
 		void USB_QueueOne(USBPacket* p);
 		// call usb class init function
 		int USB_DeviceInit(XboxDeviceState* dev);
-		//
+		// call usb class handle_control function
 		void USB_DeviceHandleControl(XboxDeviceState* dev, USBPacket* p, int request, int value, int index, int length, uint8_t* data);
-		//
+		// call usb class handle_data function
 		void USB_DeviceHandleData(XboxDeviceState* dev, USBPacket* p);
-		//
+		// call usb class flush_ep_queue function
 		void USB_DeviceFlushEPqueue(XboxDeviceState* dev, USBEndpoint* ep);
-		//
+		// call usb class cancel_packet function
 		void USB_DeviceCancelPacket(XboxDeviceState* dev, USBPacket* p);
-		// Cancel an active packet.  The packed must have been deferred by
-		// returning USB_RET_ASYNC from handle_packet, and not yet completed
-		void USB_CancelPacket(USBPacket* p);
+		// call usb class set_interface function
+		void USB_DeviceSetInterface(XboxDeviceState* dev, int iface, int alt_old, int alt_new);
+		// set the type of the endpoint
+		void USB_EPsetType(XboxDeviceState* dev, int pid, int ep, uint8_t type);
+		// set the interface number of the endpoint
+		uint8_t USB_EPsetIfnum(XboxDeviceState* dev, int pid, int ep, uint8_t ifnum);
+		// set the maximum packet size parameter of the endpoint
+		void USB_EPsetMaxPacketSize(XboxDeviceState* dev, int pid, int ep, uint16_t raw);
+		// assign port numbers (also for hubs)
+		void USB_PortLocation(USBPort* downstream, USBPort* upstream, int portnr);
 };
 
 #endif

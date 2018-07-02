@@ -187,16 +187,27 @@
 OHCI::OHCI(int Irq, USBDevice* UsbObj)
 {
 	int offset = 0;
+	USBPortOps* ops;
 
 	m_IrqNum = Irq;
 	m_UsbDevice = UsbObj;
+	ops = new USBPortOps();
+	{
+		using namespace std::placeholders;
+
+		ops->attach       = std::bind(&OHCI::OHCI_Attach, this, _1);
+		ops->detach       = std::bind(&OHCI::OHCI_Detach, this, _1);
+		ops->child_detach = std::bind(&OHCI::OHCI_ChildDetach, this, _1);
+		ops->wakeup       = std::bind(&OHCI::OHCI_Wakeup, this, _1);
+		ops->complete     = std::bind(&OHCI::OHCI_AsyncCompletePacket, this, _1, _2);
+	}
 
 	if (m_IrqNum == 9) {
 		offset = 2;
 	}
 
 	for (int i = 0; i < 2; i++) {
-		m_UsbDevice->USB_RegisterPort(&m_Registers.RhPort[i].UsbPort, i + offset, USB_SPEED_MASK_LOW | USB_SPEED_MASK_FULL);
+		m_UsbDevice->USB_RegisterPort(&m_Registers.RhPort[i].UsbPort, i + offset, USB_SPEED_MASK_LOW | USB_SPEED_MASK_FULL, ops);
 	}
 	OHCI_PacketInit(&m_UsbPacket);
 
@@ -1435,6 +1446,43 @@ void OHCI::OHCI_Attach(USBPort* Port)
 	if (old_state != port->HcRhPortStatus) {
 		OHCI_SetInterrupt(OHCI_INTR_RHSC);
 	}
+}
+
+void OHCI::OHCI_ChildDetach(XboxDeviceState* child)
+{
+	OHCI_AsyncCancelDevice(child);
+}
+
+void OHCI::OHCI_Wakeup(USBPort* port1)
+{
+	OHCIPort* port = &m_Registers.RhPort[port1->PortIndex];
+	uint32_t intr = 0;
+	if (port->HcRhPortStatus & OHCI_PORT_PSS) {
+		DbgPrintf("Ohci: port %d: wakeup\n", port1->PortIndex);
+		port->HcRhPortStatus |= OHCI_PORT_PSSC;
+		port->HcRhPortStatus &= ~OHCI_PORT_PSS;
+		intr = OHCI_INTR_RHSC;
+	}
+	// Note that the controller can be suspended even if this port is not
+	if ((m_Registers.HcControl & OHCI_CTL_HCFS) == Suspend) {
+		DbgPrintf("Ohci: remote-wakeup: SUSPEND->RESUME\n");
+		// From the standard: "The only interrupts possible in the USBSUSPEND state are ResumeDetected (the
+		// Host Controller will have changed the HostControllerFunctionalState to the USBRESUME state)
+		// and OwnershipChange."
+		m_Registers.HcControl &= ~OHCI_CTL_HCFS;
+		m_Registers.HcControl |= Resume;
+		intr = OHCI_INTR_RD;
+	}
+	OHCI_SetInterrupt(intr);
+}
+
+void OHCI::OHCI_AsyncCompletePacket(USBPort* port, USBPacket* packet)
+{
+#ifdef DEBUG_PACKET
+	DPRINTF("Async packet complete\n");
+#endif
+	m_AsyncComplete = 1;
+	OHCI_ProcessLists(1);
 }
 
 void OHCI::OHCI_AsyncCancelDevice(XboxDeviceState* dev)

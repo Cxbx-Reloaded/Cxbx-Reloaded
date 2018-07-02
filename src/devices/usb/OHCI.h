@@ -158,10 +158,6 @@ class OHCI
 		uint32_t OHCI_ReadRegister(xbaddr Addr);
 		// write a register
 		void OHCI_WriteRegister(xbaddr Addr, uint32_t Value);
-		// update ohci registers during a device attach
-		void OHCI_Attach(USBPort* Port);
-		// update ohci registers during a device detach
-		void OHCI_Detach(USBPort* Port);
 		// update the USBPort struct with the device attached
 		void OHCI_AssignUsbPortStruct(int port, XboxDeviceState* dev);
 
@@ -263,6 +259,12 @@ class OHCI
 		void OHCI_AsyncCancelDevice(XboxDeviceState* dev);
 		// Process Control and Bulk lists
 		void OHCI_ProcessLists(int completion);
+		// see USBPortOps struct for info
+		void OHCI_Attach(USBPort* Port);
+		void OHCI_Detach(USBPort* Port);
+		void OHCI_ChildDetach(XboxDeviceState* child);
+		void OHCI_Wakeup(USBPort* port1);
+		void OHCI_AsyncCompletePacket(USBPort* port, USBPacket* packet);
 };
 
 #endif

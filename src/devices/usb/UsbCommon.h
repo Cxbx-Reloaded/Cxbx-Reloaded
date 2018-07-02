@@ -102,21 +102,17 @@ struct USBDescOther {
     const uint8_t*            data;
 };
 
+/* Endpoint descriptor */
 struct USBDescEndpoint {
-    uint8_t                   bEndpointAddress;
-    uint8_t                   bmAttributes;
-    uint16_t                  wMaxPacketSize;
-    uint8_t                   bInterval;
-    uint8_t                   bRefresh;
-    uint8_t                   bSynchAddress;
+    uint8_t                   bEndpointAddress; // the address of the endpoint on the USB device described by this descriptor
+    uint8_t                   bmAttributes;     // this field describes the endpoint's attributes when it is configured using the bConfigurationValue
+    uint16_t                  wMaxPacketSize;   // maximum packet size this endpoint is capable of sending or receiving when this configuration is selected
+    uint8_t                   bInterval;        // interval for polling endpoint for data transfers, expressed in milliseconds.
+    uint8_t                   bRefresh;         // for audio devices only: the rate at which synchronization feedback is provided
+    uint8_t                   bSynchAddress;    // for audio devices only: the address of the synchronization endpoint
 
     uint8_t                   is_audio; /* has bRefresh + bSynchAddress */
     uint8_t*                  extra;
-
-    /* superspeed endpoint companion */
-    uint8_t                   bMaxBurst;
-    uint8_t                   bmAttributes_super;
-    uint16_t                  wBytesPerInterval;
 };
 
 /* Interface descriptor */
@@ -131,23 +127,16 @@ struct USBDescIface {
 
     uint8_t                   ndesc;
     USBDescOther*             descs;
-    USBDescEndpoint*          eps;
+    USBDescEndpoint*          eps;                // endpoints supported by this interface
 	USBDescIface(bool bDefault);
 	~USBDescIface();
 };
 
-/* conceptually an Interface Association Descriptor, and releated interfaces */
-struct USBDescIfaceAssoc {
-    uint8_t                   bFirstInterface;
-    uint8_t                   bInterfaceCount;
-    uint8_t                   bFunctionClass;
-    uint8_t                   bFunctionSubClass;
-    uint8_t                   bFunctionProtocol;
-    uint8_t                   iFunction;
-
-    uint8_t                   nif;
-    const USBDescIface*       ifs;
-};
+/*
+* ergo720: I removed the Interface Association Descriptor (IAD) since, at the time of this writing (2018), the xboxdevwiki documents that all
+* known xid devices don't use them and also, according to the corresponding standard, IAD applies to usb revision 2.0 while the xbox uses
+* usb revision 1.1 so it shouldn't support them either. If this turns out to be incorrect, then IAD support will have to be added
+*/
 
 /* Configuration descriptor */
 struct USBDescConfig {
@@ -156,14 +145,8 @@ struct USBDescConfig {
     uint8_t                   iConfiguration;      // index of string descriptor describing this configuration
     uint8_t                   bmAttributes;        // configuration characteristics
     uint8_t                   bMaxPower;           // maximum power consumption of the USB device in this configuration expressed in 2mA units
-
-    /* grouped interfaces */
-    uint8_t                   nif_groups;
-    const USBDescIfaceAssoc*  if_groups;
-
-    /* "normal" interfaces */
-    uint8_t                   nif;
-    const USBDescIface*       ifs;
+    uint8_t                   nif;                 // number of interfaces (again)
+    const USBDescIface*       ifs;                 // interfaces supported by this configuration
 };
 
 /* Device descriptor part 1 */
@@ -174,7 +157,7 @@ struct USBDescDevice {
     uint8_t                   bDeviceProtocol;    // protocol code (assigned by the USB)
     uint8_t                   bMaxPacketSize0;    // maximum packet size for endpoint zero (only 8, 16, 32, or 64 are valid)
     uint8_t                   bNumConfigurations; // number of possible configurations
-    const USBDescConfig*      confs;              // configuration descriptor in use
+    const USBDescConfig*      confs;              // configurations supported by this device
 	USBDescDevice(bool bDefault);
 	~USBDescDevice();
 };
@@ -198,13 +181,12 @@ struct USBDesc {
 };
 
 /* USB endpoint */
-struct USBEndpoint
-{
+struct USBEndpoint {
 	uint8_t Num;                      // endpoint number
 	uint8_t pid;
 	uint8_t Type;                     // the type of this endpoint
 	uint8_t IfNum;                    // interface number this endpoint belongs to
-	int MaxPacketSize;
+	int MaxPacketSize;                // maximum packet size supported by this endpoint
 	bool Pipeline;
 	bool Halted;                      // indicates that the endpoint is halted
 	XboxDeviceState* Dev;             // device this endpoint belongs to
@@ -212,8 +194,7 @@ struct USBEndpoint
 };
 
 /* definition of an Xbox usb device */
-struct XboxDeviceState
-{
+struct XboxDeviceState {
 	USBPort* Port;                         // usb port struct of this device
 	int PortPath;                          // port index to which this device is attached to
 	char* Serial;						   
@@ -239,14 +220,14 @@ struct XboxDeviceState
 	USBEndpoint EP_out[USB_MAX_ENDPOINTS]; // endpoints for IN tokens
 
 	QLIST_HEAD(, USBDescString) Strings;   // strings of the string descriptor
-	const USBDesc* UsbDesc;                // Overrides class usb_desc if not NULL
+	const USBDesc* UsbDesc;                // Overrides class usb_desc if not nullptr
 	const USBDescDevice* Device;           // device descriptor part 1
 
-	int Configuration;                     // number of the selected configuration descriptor
-	int NumInterfaces;                     // number of available interface descriptors
-	int AltSetting[USB_MAX_INTERFACES];    // 
-	const USBDescConfig* Config;           // configuration descriptor in use
-	const USBDescIface* Ifaces[USB_MAX_INTERFACES];
+	int Configuration;                              // number of the selected configuration descriptor
+	int NumInterfaces;                              // number of available interface descriptors
+	int AltSetting[USB_MAX_INTERFACES];             // alternate setting numbers for the current interface
+	const USBDescConfig* Config;                    // configuration in use
+	const USBDescIface* Ifaces[USB_MAX_INTERFACES]; // interface in use
 };
 
 struct USBCombinedPacket {
@@ -256,8 +237,7 @@ struct USBCombinedPacket {
 };
 
 /* Structure used to hold information about an active USB packet */
-struct USBPacket
-{
+struct USBPacket {
 	int Pid;                                 // Packet ID (used to identify the type of packet that is being sent)
 	uint32_t Id;                             // Paddr of the TD for this packet 
 	USBEndpoint* Endpoint;                   // endpoint this packet is transferred to
@@ -275,9 +255,26 @@ struct USBPacket
 	QTAILQ_ENTRY(USBPacket) CombinedEntry;
 };
 
+struct USBPortOps {
+	std::function<void(USBPort*port)> attach;
+	std::function<void(USBPort *port)> detach;
+	/*
+	* This gets called when a device downstream from the device attached to
+	* the port (attached through a hub) gets detached.
+	*/
+	std::function<void(XboxDeviceState* child)> child_detach;
+	std::function<void(USBPort* port)> wakeup;
+	/*
+	* Note that port->dev will be different then the device from which
+	* the packet originated when a hub is involved.
+	*/
+	std::function<void(USBPort* port, USBPacket* p)> complete;
+};
+
 /* Struct describing the status of a usb port */
 struct USBPort {
 	XboxDeviceState* Dev;         // usb device (if present)
+	USBPortOps* Operations;       // functions to call when a port event happens
 	int SpeedMask;                // usb speeds supported
 	int HubCount;                 // number of hubs chained
 	char Path[16];                // the number of the port + 1, used to create a serial number for this device
@@ -285,8 +282,7 @@ struct USBPort {
 };
 
 /* Struct which stores general functions/variables regarding the peripheral */
-struct USBDeviceClass
-{
+struct USBDeviceClass {
 	std::function<int(XboxDeviceState* dev)> init;
 
 	// Walk (enabled) downstream ports, check for a matching device.

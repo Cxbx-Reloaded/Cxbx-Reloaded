@@ -77,26 +77,30 @@ class Hub final : public UsbPeripheral
 		// TODO: perhaps these can be put in UsbPeripheral or USBDevice...
 		// initialize the endpoints of this peripheral
 		void UsbEpInit();
-		// destroy hub
+		// destroy hub resources
 		void HubCleanUp();
 		// reset all endpoints of this peripheral
 		void UsbEpReset();
-		// attach this hub to a usb port
+		// reserve a usb port for this hub
 		int UsbClaimPort(int port);
+		//
+		void UsbReleasePort(XboxDeviceState* dev);
 		// get device descriptor
 		const USBDesc* GetUsbDeviceDesc(XboxDeviceState* dev);
 		// create a serial number for the device
 		void CreateSerial(XboxDeviceState* dev);
-		//
+		// start descriptors initialization
 		void UsbDescInit(XboxDeviceState* dev);
-		//
+		// set the descriptors to use for this device
 		void UsbDescSetDefaults(XboxDeviceState* dev);
-		//
+		// set the configuration to use
 		int UsbDescSetConfig(XboxDeviceState* dev, int value);
-		//
+		// set the interface to use
 		int UsbDescSetInterface(XboxDeviceState* dev, int index, int value);
-		//
+		// find the interface to use
 		const USBDescIface* UsbDescFindInterface(XboxDeviceState* dev, int nif, int alt);
+		// setup endpoints and their descriptors
+		void UsbDescEpInit(XboxDeviceState* dev);
 };
 
 extern Hub* g_HubObjArray[4];

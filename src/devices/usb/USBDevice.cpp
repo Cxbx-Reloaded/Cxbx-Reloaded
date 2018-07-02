@@ -86,13 +86,12 @@ void USBDevice::MMIOWrite(int barIndex, uint32_t addr, uint32_t value, unsigned 
 	m_HostController->OHCI_WriteRegister(addr, value);
 }
 
-void USBDevice::USB_RegisterPort(USBPort* Port, int Index, int SpeedMask)
+void USBDevice::USB_RegisterPort(USBPort* Port, int Index, int SpeedMask, USBPortOps* Ops)
 {
 	Port->PortIndex = Index;
 	Port->SpeedMask = SpeedMask;
-	Port->HubCount = 0;
-	Port->Dev = nullptr;
-	std::snprintf(Port->Path, sizeof(Port->Path), "%d", Index + 1);
+	Port->Operations = Ops;
+	USB_PortLocation(Port, nullptr, Index + 1);
 }
 
 void USBDevice::USB_PortReset(USBPort* Port)
@@ -164,8 +163,8 @@ USBEndpoint* USBDevice::USB_GetEP(XboxDeviceState* Dev, int Pid, int Ep)
 	if (Ep == 0) {
 		return &Dev->EP_ctl; // EndpointNumber zero represents the default control endpoint
 	}
-	assert(pid == USB_TOKEN_IN || pid == USB_TOKEN_OUT);
-	assert(ep > 0 && ep <= USB_MAX_ENDPOINTS);
+	assert(Pid == USB_TOKEN_IN || Pid == USB_TOKEN_OUT);
+	assert(Ep > 0 && Ep <= USB_MAX_ENDPOINTS);
 
 	return eps + Ep - 1;
 }
@@ -509,51 +508,59 @@ int USBDevice::USB_DeviceInit(XboxDeviceState* dev)
 
 void USBDevice::USB_DeviceHandleControl(XboxDeviceState* dev, USBPacket* p, int request, int value, int index, int length, uint8_t* data)
 {
-	USBDeviceClass *klass = USB_DEVICE_GET_CLASS(dev);
+	USBDeviceClass* klass = dev->klass;
 	if (klass->handle_control) {
-		klass->handle_control(dev, p, request, value, index, length, data); // TODO: usb_hub_handle_control
+		klass->handle_control(dev, p, request, value, index, length, data);
 	}
 }
 
 void USBDevice::USB_DeviceHandleData(XboxDeviceState* dev, USBPacket* p)
 {
-	USBDeviceClass *klass = USB_DEVICE_GET_CLASS(dev);
+	USBDeviceClass* klass = dev->klass;
 	if (klass->handle_data) {
-		klass->handle_data(dev, p); // TODO: usb_hub_handle_data
+		klass->handle_data(dev, p);
 	}
 }
 
 void USBDevice::USB_DeviceFlushEPqueue(XboxDeviceState* dev, USBEndpoint* ep)
 {
-	USBDeviceClass *klass = USB_DEVICE_GET_CLASS(dev);
+	USBDeviceClass *klass = dev->klass;
 	if (klass->flush_ep_queue) {
-		klass->flush_ep_queue(dev, ep); // TODO: it's nullptr in XQEMU...
+		klass->flush_ep_queue(dev, ep);
 	}
 }
 
 void USBDevice::USB_DeviceCancelPacket(XboxDeviceState* dev, USBPacket* p)
 {
-	USBDeviceClass *klass = USB_DEVICE_GET_CLASS(dev);
+	USBDeviceClass* klass = dev->klass;
 	if (klass->cancel_packet) {
-		klass->cancel_packet(dev, p); // TODO: it's nullptr in XQEMU...
+		klass->cancel_packet(dev, p);
 	}
 }
 
-XboxDeviceState* USBDevice::USB_DeviceFindDevice(XboxDeviceState* Dev, uint8_t Addr)
+XboxDeviceState* USBDevice::USB_DeviceFindDevice(XboxDeviceState* dev, uint8_t Addr)
 {
-	USBDeviceClass *klass = USB_DEVICE_GET_CLASS(Dev);
+	USBDeviceClass* klass = dev->klass;
 	if (klass->find_device) {
-		return klass->find_device(Dev, Addr); // TODO: usb_hub_find_device
+		return klass->find_device(dev, Addr);
 	}
 
 	return nullptr;
 }
 
-void USBDevice::USB_DeviceEPstopped(XboxDeviceState* Dev, USBEndpoint* EP)
+void USBDevice::USB_DeviceEPstopped(XboxDeviceState* dev, USBEndpoint* EP)
 {
-	USBDeviceClass* klass = USB_DEVICE_GET_CLASS(Dev);
+	USBDeviceClass* klass = dev->klass;
 	if (klass->ep_stopped) {
-		klass->ep_stopped(Dev, EP);
+		klass->ep_stopped(dev, EP);
+	}
+}
+
+void USBDevice::USB_DeviceSetInterface(XboxDeviceState* dev, int iface, int alt_old, int alt_new)
+{
+	USBDeviceClass* klass = dev->klass;
+	if (klass->set_interface) {
+		klass->set_interface(dev, iface, alt_old, alt_new);
 	}
 }
 
@@ -565,5 +572,40 @@ void USBDevice::USB_CancelPacket(USBPacket* p)
 	QTAILQ_REMOVE(&p->Endpoint->Queue, p, Queue);
 	if (callback) {
 		USB_DeviceCancelPacket(p->Endpoint->Dev, p);
+	}
+}
+
+void USBDevice::USB_EPsetType(XboxDeviceState* dev, int pid, int ep, uint8_t type)
+{
+	USBEndpoint* uep = USB_GetEP(dev, pid, ep);
+	uep->Type = type;
+}
+
+uint8_t USBDevice::USB_EPsetIfnum(XboxDeviceState* dev, int pid, int ep, uint8_t ifnum)
+{
+	USBEndpoint* uep = USB_GetEP(dev, pid, ep);
+	uep->IfNum = ifnum;
+}
+
+void USBDevice::USB_EPsetMaxPacketSize(XboxDeviceState* dev, int pid, int ep, uint16_t raw)
+{
+	USBEndpoint* uep = USB_GetEP(dev, pid, ep);
+
+	// Dropped from XQEMU the calculation max_packet_size = size * microframes since that's only true
+	// for high speed (usb 2.0) devices
+
+	uep->MaxPacketSize = raw & 0x7FF;
+}
+
+void USBDevice::USB_PortLocation(USBPort* downstream, USBPort* upstream, int portnr)
+{
+	if (upstream) {
+		std::snprintf(downstream->Path, sizeof(downstream->Path), "%s.%d",
+			upstream->Path, portnr);
+		downstream->HubCount = upstream->HubCount + 1;
+	}
+	else {
+		std::snprintf(downstream->Path, sizeof(downstream->Path), "%d", portnr);
+		downstream->HubCount = 0;
 	}
 }
