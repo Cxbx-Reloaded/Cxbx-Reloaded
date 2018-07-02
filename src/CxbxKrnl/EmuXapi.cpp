@@ -258,7 +258,6 @@ void SetupXboxDeviceTypes()
 		}
 
 		printf("XAPI: XDEVICE_TYPE_GAMEPAD Found at 0x%08X\n", gDeviceType_Gamepad);
-        InitXboxControllerHostBridge();
 	}
 }
 
@@ -277,6 +276,7 @@ VOID WINAPI XTL::EMUPATCH(XInitDevices)
 		LOG_FUNC_ARG(dwPreallocTypeCount)
 		LOG_FUNC_ARG((DWORD)PreallocTypes)
 		LOG_FUNC_END;
+
 /*    for(int v=0;v<XINPUT_SETSTATE_SLOTS;v++)
     {
         g_pXInputSetStateStatus[v].hDevice = 0;
@@ -288,18 +288,10 @@ VOID WINAPI XTL::EMUPATCH(XInitDevices)
     {
         g_hInputHandle[v] = 0;
     }
-*/	
-	if (g_XInputEnabled)
-	{
-		//query the total connected xinput gamepad.
-		total_xinput_gamepad = XInputGamepad_Connected();
-	}
-	else 
-	{
-		//using keyboard, we set the gamd pad count to 1
-		total_xinput_gamepad = 1;
-	}
-	
+*/
+
+	InitXboxControllerHostBridge();
+
 }
 
 bool TitleIsJSRF()

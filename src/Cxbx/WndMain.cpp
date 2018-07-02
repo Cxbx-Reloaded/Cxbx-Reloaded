@@ -198,12 +198,6 @@ WndMain::WndMain(HINSTANCE x_hInstance) :
 			}
 
 			dwType = REG_DWORD; dwSize = sizeof(DWORD);
-			result = RegQueryValueEx(hKey, "XInputEnabled", NULL, &dwType, (PBYTE)&m_XInputEnabled, &dwSize);
-			if (result != ERROR_SUCCESS) {
-				m_XInputEnabled = 0;
-			}
-
-			dwType = REG_DWORD; dwSize = sizeof(DWORD);
 			result = RegQueryValueEx(hKey, "HackDisablePixelShaders", NULL, &dwType, (PBYTE)&m_DisablePixelShaders, &dwSize);
 			if (result != ERROR_SUCCESS) {
 				m_DisablePixelShaders = 0;
@@ -416,9 +410,6 @@ WndMain::~WndMain()
 
 			dwType = REG_DWORD; dwSize = sizeof(DWORD);
 			RegSetValueEx(hKey, "LLEFLAGS", 0, dwType, (PBYTE)&m_FlagsLLE, dwSize);
-
-			dwType = REG_DWORD; dwSize = sizeof(DWORD);
-			RegSetValueEx(hKey, "XInputEnabled", 0, dwType, (PBYTE)&m_XInputEnabled, dwSize);
 
 			dwType = REG_DWORD; dwSize = sizeof(DWORD);
 			RegSetValueEx(hKey, "HackDisablePixelShaders", 0, dwType, (PBYTE)&m_DisablePixelShaders, dwSize);
@@ -1467,11 +1458,6 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 			}
 			break;
 
-			case ID_SETTINGS_XINPUT:
-				m_XInputEnabled = !m_XInputEnabled;
-				RefreshMenus();
-				break;
-
             case ID_EMULATION_START:
                 if (m_Xbe != nullptr)
                 {
@@ -1936,9 +1922,6 @@ void WndMain::RefreshMenus()
 			chk_flag = (m_FlagsLLE & LLE_GPU) ? MF_CHECKED : MF_UNCHECKED;
 			CheckMenuItem(settings_menu, ID_EMULATION_LLE_GPU, chk_flag);
 
-			chk_flag = (m_XInputEnabled) ? MF_CHECKED : MF_UNCHECKED;
-			CheckMenuItem(settings_menu, ID_SETTINGS_XINPUT, chk_flag);
-
 			chk_flag = (m_DisablePixelShaders) ? MF_CHECKED : MF_UNCHECKED;
 			CheckMenuItem(settings_menu, ID_HACKS_DISABLEPIXELSHADERS, chk_flag);
 
@@ -2356,9 +2339,6 @@ void WndMain::StartEmulation(HWND hwndParent, DebuggerState LocalDebuggerState /
 
 	// register LLE flags with emulator process
 	g_EmuShared->SetFlagsLLE(&m_FlagsLLE);
-
-	// register XInput flags with emulator process
-	g_EmuShared->SetXInputEnabled(&m_XInputEnabled);
 
 	// register Hacks with emulator process
 	g_EmuShared->SetDisablePixelShaders(&m_DisablePixelShaders);

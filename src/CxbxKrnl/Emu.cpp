@@ -62,7 +62,6 @@ CHAR            *g_strCurDrive= NULL;
 volatile thread_local  bool    g_bEmuException = false;
 volatile bool    g_bEmuSuspended = false;
 volatile bool    g_bPrintfOn = true;
-bool g_XInputEnabled = false;
 bool g_DisablePixelShaders = false;
 bool g_UncapFramerate = false;
 bool g_UseAllCores = false;
