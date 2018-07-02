@@ -146,12 +146,6 @@ class EmuShared : public Mutex
 		void SetBootFlags(int *value) { Lock(); m_BootFlags = *value; Unlock(); }
 
 		// ******************************************************************
-		// * XInput Flag Accessors
-		// ******************************************************************
-		void GetXInputEnabled(int* value) { Lock(); *value = m_XInputEnabled; Unlock(); }
-		void SetXInputEnabled(int* value) { Lock(); m_XInputEnabled = *value; Unlock(); }
-
-		// ******************************************************************
 		// * Hack Flag Accessors
 		// ******************************************************************
 		void GetDisablePixelShaders(int* value) { Lock(); *value = m_DisablePixelShaders; Unlock(); }
@@ -252,7 +246,7 @@ class EmuShared : public Mutex
 		char         m_XbePath[MAX_PATH];
 		int          m_BootFlags;
 		int          m_FlagsLLE;
-		int          m_XInputEnabled;
+		int          m_Reserved1;
 		int          m_DisablePixelShaders;
 		int          m_UncapFramerate;
 		int          m_UseAllCores;

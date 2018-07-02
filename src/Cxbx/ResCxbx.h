@@ -264,7 +264,6 @@
 #define ID_SETTINGS_CACHE               40083
 #define ID_CACHE_CLEARHLECACHE_ALL      40084
 #define ID_CACHE_CLEARHLECACHE_CURRENT  40085
-#define ID_SETTINGS_XINPUT              40086
 #define ID_SETTINGS_HACKS               40088
 #define ID_HACKS_DISABLEPIXELSHADERS    40089
 #define ID_LED                          40090
