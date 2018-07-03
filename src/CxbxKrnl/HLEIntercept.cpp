@@ -351,7 +351,7 @@ void EmuUpdateLLEStatus(uint32_t XbLibScan)
 void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 {
     // NOTE: Increase this revision number any time we changed something inside Cxbx-Reloaded.
-    int revisionCache = 4;
+    int revisionCache = 5;
 
     Xbe::LibraryVersion *pLibraryVersion = (Xbe::LibraryVersion*)pXbeHeader->dwLibraryVersionsAddr;
 
