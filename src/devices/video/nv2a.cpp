@@ -425,11 +425,11 @@ void _check_gl_error(const char *file, int line)
 	}
 }
 
-#define GL_RESET() _check_gl_reset
+#define GL_RESET() _check_gl_reset()
 #define GL_CHECK() _check_gl_error(__FILE__,__LINE__)
 
 enum {
-	SAMP_TEXCOORD = 5,
+	SAMP_TEXCOORD = 0,
 };
 
 enum {
@@ -533,13 +533,16 @@ GLuint Get_YUV_to_RGB_shader_program()
 	// Bind shader
 	static GLuint shader_program_name_yuv_to_rgb = -1;
 	if (shader_program_name_yuv_to_rgb == -1) {
+		// Compile vertex shader
 		GLuint vertex_shader_name = create_gl_shader(GL_VERTEX_SHADER, OPENGL_SHADER_YUV[0], "YUV>RGB Vertex shader");
 		GL_CHECK();
+		// Compile fragment shader
 		GLuint fragment_shader_name = create_gl_shader(GL_FRAGMENT_SHADER, OPENGL_SHADER_YUV[1], "YUV>RGB Fragment shader");
 		GL_CHECK();
 
 		shader_program_name_yuv_to_rgb = glCreateProgram();
 		GL_CHECK();
+		// Link vertex and fragment shaders
 		glAttachShader(shader_program_name_yuv_to_rgb, vertex_shader_name);
 		GL_CHECK();
 		glAttachShader(shader_program_name_yuv_to_rgb, fragment_shader_name);
@@ -591,15 +594,19 @@ void InitShaders(void)
 		"#version 330 core                                                       \n"
 		"#define ATTR_POSITION 0                                                 \n"
 		"#define ATTR_TEXCOORD 4                                                 \n"
+		"                                                                        \n"
 		"precision highp float;                                                  \n"
 		"precision highp int;                                                    \n"
 		"layout(std140, column_major) uniform;                                   \n"
+		"                                                                        \n"
 		"layout(location = ATTR_POSITION) in vec2 Position;                      \n"
 		"layout(location = ATTR_TEXCOORD) in vec2 Texcoord;                      \n"
+		"                                                                        \n"
 		"out block                                                               \n"
 		"{                                                                       \n"
 		"  vec2 Texcoord;                                                        \n"
 		"} Out;                                                                  \n"
+		"                                                                        \n"
 		"void main()                                                             \n"
 		"{                                                                       \n"
 		"	Out.Texcoord = Texcoord;                                             \n"
@@ -608,27 +615,32 @@ void InitShaders(void)
 		, /* fragment shader */
 		"#version 330 core                                                       \n"
 		"#define FRAG_COLOR 0                                                    \n"
+		"                                                                        \n"
 		"precision highp float;                                                  \n"
 		"precision highp int;                                                    \n"
 		"layout(std140, column_major) uniform;                                   \n"
+		"                                                                        \n"
 		"uniform sampler2D tex;                                                  \n"
+		"                                                                        \n"
 		"in block                                                                \n"
 		"{                                                                       \n"
 		"  vec2 Texcoord;                                                        \n"
 		"} In;                                                                   \n"
+		"                                                                        \n"
 		"layout(location = FRAG_COLOR, index = 0) out vec4 Color;                \n"
+		"                                                                        \n"
 		"void main()                                                             \n"
 		"{                                                                       \n"
 		"  Color = texture2D(tex, In.Texcoord);                                  \n"
 		"}                                                                       \n"
 	};
 
-	GL_RESET();
-
 	// Compile vertex shader
 	GLuint vertex_shader = create_gl_shader(GL_VERTEX_SHADER, gl_framebuffer_shader_src[0], "Framebuffer vertex shader");
+	GL_CHECK();
 	// Compile fragment shader
 	GLuint fragment_shader = create_gl_shader(GL_FRAGMENT_SHADER, gl_framebuffer_shader_src[1], "Framebuffer fragment shader");
+	GL_CHECK();
 
 	m_framebuffer_shader_program = glCreateProgram();
 	GL_CHECK();
@@ -645,6 +657,7 @@ void InitShaders(void)
 	GL_CHECK();
 	glLinkProgram(m_framebuffer_shader_program);
 	GL_CHECK();
+
 	/* Check it linked */
 	GLint linked = 0;
 	glGetProgramiv(m_framebuffer_shader_program, GL_LINK_STATUS, &linked);
@@ -658,16 +671,17 @@ void InitShaders(void)
 
 	m_framebuffer_uniform_location_texture = glGetUniformLocation(m_framebuffer_shader_program, "tex");
 	GL_CHECK();
+	assert(m_framebuffer_uniform_location_texture >= 0);
 }
 
 void InitGeometry()
 {
-	static const GLfloat vertices[6][4] = {
+	static const GLfloat vertices[] = {
 		//  x      y      s      t
-		{ -1.0f, -1.0f,  0.0f,  1.0f }, // BL
-		{ -1.0f,  1.0f,  0.0f,  0.0f }, // TL
-		{  1.0f,  1.0f,  1.0f,  0.0f }, // TR
-		{  1.0f, -1.0f,  1.0f,  1.0f }, // BR
+		-1.0f, -1.0f,  0.0f,  0.0f, // BL
+		 1.0f, -1.0f,  1.0f,  0.0f, // BR
+		 1.0f,  1.0f,  1.0f,  1.0f, // TR
+		-1.0f,  1.0f,  0.0f,  1.0f, // TL
 	};
 
 	// Populate vertex buffer
@@ -691,7 +705,6 @@ void InitVertexArray()
 	glBindBuffer(GL_ARRAY_BUFFER, m_framebuffer_vertex_buffer_object);
 	GL_CHECK();
 
-	// Bind vertex position attribute
 	// Bind vertex position attribute
 	glVertexAttribPointer(
 		/*index=*/ATTR_POSITION,
@@ -723,6 +736,8 @@ void InitVertexArray()
 void cxbx_gl_initialize(NV2AState *d)
 {
 	lockGL(&d->pgraph);
+
+	GL_RESET();
 
 	InitShaders();
 	InitGeometry();
@@ -790,7 +805,7 @@ void cxbx_gl_render_framebuffer(NV2AState *d)
 	// TODO : pgraph_update_surface() also unswizzles - should we too?
 
 #ifdef DEBUG_NV2A_GL
-	// If the screen turns purple, glBlitFramebuffer below failed
+	// If the screen turns purple, glDrawArrays/glBlitFramebuffer below failed
 	glClearColor(1.0f, 0.0f, 1.0f, 1.0f);
 	GL_CHECK();
 	glClear(GL_COLOR_BUFFER_BIT);
@@ -809,6 +824,12 @@ void cxbx_gl_render_framebuffer(NV2AState *d)
 	GL_CHECK();
 	glBindVertexArray(m_framebuffer_vertex_array_name);
 	GL_CHECK();
+	glBindBuffer(GL_ARRAY_BUFFER, m_framebuffer_vertex_buffer_object);
+	GL_CHECK();
+	glEnableVertexAttribArray(ATTR_POSITION);
+	GL_CHECK();
+	glEnableVertexAttribArray(ATTR_TEXCOORD);
+	GL_CHECK();
 	glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 	GL_CHECK();
 #else
@@ -824,9 +845,6 @@ void cxbx_gl_render_framebuffer(NV2AState *d)
 	glBlitFramebuffer(0, 0, frame_width, frame_height, 0, 480, 640, 0, GL_COLOR_BUFFER_BIT, filter);
 	GL_CHECK();
 #endif
-
-	glBindTexture(GL_TEXTURE_2D, 0);
-	GL_CHECK();
 }
 
 void cxbx_gl_render_overlays(NV2AState *d)
@@ -954,14 +972,11 @@ void cxbx_gl_render_overlays(NV2AState *d)
 		GLfloat dstY0f = (GLfloat)((dstY0 / frame_height) * 2.0f) - 1.0f;
 		GLfloat dstY1f = (GLfloat)((dstY1 / frame_height) * 2.0f) - 1.0f;
 
-		glDisable(GL_CULL_FACE);
-		GL_CHECK();
-
 		glUseProgram(Get_YUV_to_RGB_shader_program());
 		GL_CHECK();
 
 		// Attach texture #0 to the shader sampler location 
-		glUniform1i(m_overlay_uniform_location_texture, 0);
+		glUniform1i(m_overlay_uniform_location_texture, SAMP_TEXCOORD);
 		GL_CHECK();
 
 		glActiveTexture(GL_TEXTURE0);
@@ -1023,14 +1038,7 @@ void cxbx_gl_render_overlays(NV2AState *d)
 		// Finally! Draw the dang overlay...
 		glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 		GL_CHECK();
-		glBindBuffer(GL_ARRAY_BUFFER, 0);
-		GL_CHECK();
-		glBindVertexArray(0);
-		GL_CHECK();
 	}
-
-	glUseProgram(0);
-	GL_CHECK();
 }
 
 extern void UpdateFPSCounter();
@@ -1044,27 +1052,39 @@ void NV2ADevice::UpdateHostDisplay(NV2AState *d)
 
 	NV2A_GL_DGROUP_BEGIN("VGA Frame");
 
-	glGetError(); // reset GL_CHECK
+	GL_RESET();
 
-	// Target the actual framebuffer
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+	// Target the host framebuffer
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+//	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 	GL_CHECK();
 
-	// When either overlay is enabled and not transparent (TODO : and overlay fills entire screen)
+	glDisable(GL_CULL_FACE);
+	GL_CHECK();
+
+	// Is either overlay enabled and not transparent (TODO : and overlay fills entire screen) ?
 	if (((d->pvideo.regs[NV_PVIDEO_BUFFER] & NV_PVIDEO_BUFFER_0_USE) && (GET_MASK(d->pvideo.regs[NV_PVIDEO_FORMAT(0)], NV_PVIDEO_FORMAT_DISPLAY) == 0))
     ||  ((d->pvideo.regs[NV_PVIDEO_BUFFER] & NV_PVIDEO_BUFFER_1_USE) && (GET_MASK(d->pvideo.regs[NV_PVIDEO_FORMAT(1)], NV_PVIDEO_FORMAT_DISPLAY) == 0))) {
-		// skip framebuffer draw
+		// Then the framebuffer won't be visible anyway, so doesn't have to be rendered
 	} else {
 		cxbx_gl_render_framebuffer(d);
 	}
 
 	cxbx_gl_render_overlays(d);
 
+	glBindTexture(GL_TEXTURE_2D, 0);
+	GL_CHECK();
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	GL_CHECK();
+	glBindVertexArray(0);
+	GL_CHECK();
+	glUseProgram(0);
+	GL_CHECK();
+
 	// Restore xbox framebuffer
 	glBindFramebuffer(GL_FRAMEBUFFER, d->pgraph.gl_framebuffer);
 	GL_CHECK();
 
-	// We currently don't double buffer, so no need to call swap...
 	glo_swap(d->pgraph.gl_context);
 
 	NV2A_GL_DGROUP_END();
