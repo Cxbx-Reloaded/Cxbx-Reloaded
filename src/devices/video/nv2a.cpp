@@ -441,9 +441,9 @@ enum {
 	ATTR_TEXCOORD = 4,
 };
 
-static GLint m_overlay_uniform_location_texture = -1;
-static GLint m_overlay_attribute_location_position = -1;
-static GLint m_overlay_attribute_location_texture = -1;
+static GLint m_overlay_gl_uniform_location_texture = -1;
+static GLint m_overlay_gl_attribute_location_position = -1;
+static GLint m_overlay_gl_attribute_location_texture = -1;
 
 GLuint Get_YUV_to_RGB_shader_program()
 {
@@ -567,9 +567,9 @@ GLuint Get_YUV_to_RGB_shader_program()
 			abort();
 		}
 
-		m_overlay_uniform_location_texture = glGetUniformLocation(shader_program_name_yuv_to_rgb, "tex_yuyv");
+		m_overlay_gl_uniform_location_texture = glGetUniformLocation(shader_program_name_yuv_to_rgb, "tex_yuyv");
 		GL_CHECK();
-		assert(m_overlay_uniform_location_texture >= 0);
+		assert(m_overlay_gl_uniform_location_texture >= 0);
 	}
 
 	return shader_program_name_yuv_to_rgb;
@@ -579,15 +579,12 @@ GLuint Get_YUV_to_RGB_shader_program()
 
 #ifdef DRAW_FRAMEBUFFER
 
-GLuint m_framebuffer_shader_program = -1;
-GLuint m_framebuffer_uniform_location_texture = -1;
-GLuint m_framebuffer_vertex_buffer_object = -1;
-GLuint m_framebuffer_vertex_array_name = -1;
+GLuint m_framebuffer_gl_shader_program = -1;
+GLuint m_framebuffer_gl_uniform_location_texture = -1;
+GLuint m_framebuffer_gl_vertex_buffer_object = -1;
+GLuint m_framebuffer_gl_vertex_array_object = -1;
 
-/*
- * Initialize Shaders
- */
-void InitShaders(void)
+void InitFramebufferShaders(void)
 {
 	static const char *gl_framebuffer_shader_src[2] = {
 		/* vertex shader */
@@ -642,39 +639,39 @@ void InitShaders(void)
 	GLuint fragment_shader = create_gl_shader(GL_FRAGMENT_SHADER, gl_framebuffer_shader_src[1], "Framebuffer fragment shader");
 	GL_CHECK();
 
-	m_framebuffer_shader_program = glCreateProgram();
+	m_framebuffer_gl_shader_program = glCreateProgram();
 	GL_CHECK();
 	// Link vertex and fragment shaders
-	glAttachShader(m_framebuffer_shader_program, vertex_shader);
+	glAttachShader(m_framebuffer_gl_shader_program, vertex_shader);
 	GL_CHECK();
-	glAttachShader(m_framebuffer_shader_program, fragment_shader);
+	glAttachShader(m_framebuffer_gl_shader_program, fragment_shader);
 	GL_CHECK();
-	glBindAttribLocation(m_framebuffer_shader_program, ATTR_POSITION, "Position");
+	glBindAttribLocation(m_framebuffer_gl_shader_program, ATTR_POSITION, "Position");
 	GL_CHECK();
-	glBindAttribLocation(m_framebuffer_shader_program, ATTR_TEXCOORD, "Texcoord");
+	glBindAttribLocation(m_framebuffer_gl_shader_program, ATTR_TEXCOORD, "Texcoord");
 	GL_CHECK();
-	glBindFragDataLocation(m_framebuffer_shader_program, FRAG_COLOR, "Color");
+	glBindFragDataLocation(m_framebuffer_gl_shader_program, FRAG_COLOR, "Color");
 	GL_CHECK();
-	glLinkProgram(m_framebuffer_shader_program);
+	glLinkProgram(m_framebuffer_gl_shader_program);
 	GL_CHECK();
 
 	/* Check it linked */
 	GLint linked = 0;
-	glGetProgramiv(m_framebuffer_shader_program, GL_LINK_STATUS, &linked);
+	glGetProgramiv(m_framebuffer_gl_shader_program, GL_LINK_STATUS, &linked);
 	GL_CHECK();
 	if (!linked) {
 		GLchar log[2048];
-		glGetProgramInfoLog(m_framebuffer_shader_program, 2048, NULL, log);
+		glGetProgramInfoLog(m_framebuffer_gl_shader_program, 2048, NULL, log);
 		fprintf(stderr, "nv2a: shader linking failed: %s\n", log);
 		abort();
 	}
 
-	m_framebuffer_uniform_location_texture = glGetUniformLocation(m_framebuffer_shader_program, "tex");
+	m_framebuffer_gl_uniform_location_texture = glGetUniformLocation(m_framebuffer_gl_shader_program, "tex");
 	GL_CHECK();
-	assert(m_framebuffer_uniform_location_texture >= 0);
+	assert(m_framebuffer_gl_uniform_location_texture >= 0);
 }
 
-void InitGeometry()
+void InitFramebufferGeometry()
 {
 	static const GLfloat vertices[] = {
 		//  x      y      s      t
@@ -684,27 +681,17 @@ void InitGeometry()
 		-1.0f,  1.0f,  0.0f,  1.0f, // TL
 	};
 
+	glGenVertexArrays(1, &m_framebuffer_gl_vertex_array_object);
+	GL_CHECK();
+	glBindVertexArray(m_framebuffer_gl_vertex_array_object);
+	GL_CHECK();
 	// Populate vertex buffer
-	glGenBuffers(1, &m_framebuffer_vertex_buffer_object);
+	glGenBuffers(1, &m_framebuffer_gl_vertex_buffer_object);
 	GL_CHECK();
-	glBindBuffer(GL_ARRAY_BUFFER, m_framebuffer_vertex_buffer_object);
+	glBindBuffer(GL_ARRAY_BUFFER, m_framebuffer_gl_vertex_buffer_object);
 	GL_CHECK();
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+	glEnableVertexAttribArray(ATTR_POSITION);
 	GL_CHECK();
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	GL_CHECK();
-}
-
-void InitVertexArray()
-{
-	glGenVertexArrays(1, &m_framebuffer_vertex_array_name);
-	GL_CHECK();
-	glBindVertexArray(m_framebuffer_vertex_array_name);
-	GL_CHECK();
-
-	glBindBuffer(GL_ARRAY_BUFFER, m_framebuffer_vertex_buffer_object);
-	GL_CHECK();
-
 	// Bind vertex position attribute
 	glVertexAttribPointer(
 		/*index=*/ATTR_POSITION,
@@ -714,6 +701,8 @@ void InitVertexArray()
 		/*stride=*/4 * sizeof(GLfloat),
 		/*array buffer offset=*/(void*)0
 	);
+	GL_CHECK();
+	glEnableVertexAttribArray(ATTR_TEXCOORD);
 	GL_CHECK();
 	// Bind vertex texture coordinate attribute
 	glVertexAttribPointer(
@@ -725,52 +714,67 @@ void InitVertexArray()
 		/*array buffer offset=*/(void*)(2 * sizeof(GLfloat))
 	);
 	GL_CHECK();
-	glEnableVertexAttribArray(ATTR_POSITION);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 	GL_CHECK();
-	glEnableVertexAttribArray(ATTR_TEXCOORD);
+
+	// Unbind everything we've used
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	GL_CHECK();
 	glBindVertexArray(0);
 	GL_CHECK();
 }
 
-void cxbx_gl_initialize(NV2AState *d)
+void cxbx_gl_framebuffer_initialize(NV2AState *d)
 {
 	lockGL(&d->pgraph);
 
 	GL_RESET();
 
-	InitShaders();
-	InitGeometry();
-	InitVertexArray();
+	InitFramebufferShaders();
+	InitFramebufferGeometry();
 
 	unlockGL(&d->pgraph);
 }
 
 #endif // DRAW_FRAMEBUFFER
 
+static GLenum frame_gl_internal_format = GL_RGBA8;
+static GLenum frame_gl_format = GL_BGRA;
+static GLenum frame_gl_type = GL_UNSIGNED_INT_8_8_8_8_REV;
+static GLuint frame_gl_texture = -1;
+
 static GLsizei frame_width = 640;
 static GLsizei frame_height = 480;
 
-void cxbx_gl_render_framebuffer(NV2AState *d)
-{
-	static GLenum frame_gl_internal_format = GL_RGBA8;
-	static GLenum frame_gl_format = GL_BGRA;
-	static GLenum frame_gl_type = GL_UNSIGNED_INT_8_8_8_8_REV;
-	static GLuint frame_gl_texture = -1;
+void cxbx_gl_update_displaymode() {
+	// Convert AV Format to OpenGl format details & destroy the texture if format changed.
+	// This is required for titles that use a non ARGB framebuffer, such as Beats of Rage
+	static ULONG PreviousAvDisplayModeFormat = -1;
+	static GLsizei old_frame_width = 640;
+	static GLsizei old_frame_height = 480;
 
-	// Convert AV Format to OpenGl format details & destroy the texture if format changed..
-	// This is required for titles that use a non ARGB framebuffer, such was Beats of Rage
-	static ULONG PreviousAvDisplayModeFormat = 0;
 	if (PreviousAvDisplayModeFormat != g_AvDisplayModeFormat) {
+		PreviousAvDisplayModeFormat = g_AvDisplayModeFormat;
 		AvDisplayModeFormatToGL(g_AvDisplayModeFormat, &frame_gl_internal_format, &frame_gl_format, &frame_gl_type);
 		AvGetFormatSize(AvpCurrentMode, &frame_width, &frame_height);
-		if (frame_gl_texture != -1) {
-			glDeleteTextures(1, &frame_gl_texture);
-			frame_gl_texture = -1;
+		// Detect changes in framebuffer dimensions
+		if (old_frame_width != frame_width
+		 || old_frame_height != frame_height) {
+			old_frame_width = frame_width;
+			old_frame_height = frame_height;
+			if (frame_gl_texture != -1) {
+				glDeleteTextures(1, &frame_gl_texture);
+				frame_gl_texture = -1;
+			}
 		}
-
-		PreviousAvDisplayModeFormat = g_AvDisplayModeFormat;
 	}
+}
+
+void cxbx_gl_render_framebuffer(NV2AState *d)
+{
+	// Render using texture #0
+	glActiveTexture(GL_TEXTURE0);
+	GL_CHECK();
 
 	// If we need to create a (new) texture, do so
 	if (frame_gl_texture == -1) {
@@ -781,10 +785,12 @@ void cxbx_gl_render_framebuffer(NV2AState *d)
 		glTexImage2D(GL_TEXTURE_2D, 0, frame_gl_internal_format, frame_width, frame_height, 0, frame_gl_format, frame_gl_type, NULL);
 		GL_CHECK();
 	}
+	else {
+		// Update the frame texture
+		glBindTexture(GL_TEXTURE_2D, frame_gl_texture);
+		GL_CHECK();
+	}
 
-	// Update the frame texture
-	glBindTexture(GL_TEXTURE_2D, frame_gl_texture);
-	GL_CHECK();
 	// TODO : Get the correct swizzle from the av format (see kelvin_color_format_map)
 	static const GLint swizzle_mask_RGBA[4] = { GL_RED, GL_GREEN, GL_BLUE, GL_ALPHA };
 	glTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_RGBA, swizzle_mask_RGBA);
@@ -793,13 +799,6 @@ void cxbx_gl_render_framebuffer(NV2AState *d)
 	hwaddr frame_pixels = /*CONTIGUOUS_MEMORY_BASE=*/0x80000000 | d->pcrtc.start; // NV_PCRTC_START
 	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, frame_width, frame_height, frame_gl_format, frame_gl_type, (void*)frame_pixels);
 	GL_CHECK();
-
-	// If we need to create an OpenGL framebuffer, do so
-	static GLuint frame_gl_framebuffer = -1;
-	if (frame_gl_framebuffer == -1) {
-		glGenFramebuffers(1, &frame_gl_framebuffer);
-		GL_CHECK();
-	}
 
 	// Note : The following is modelled partially after pgraph_update_surface()
 	// TODO : pgraph_update_surface() also unswizzles - should we too?
@@ -814,17 +813,19 @@ void cxbx_gl_render_framebuffer(NV2AState *d)
 
 #ifdef DRAW_FRAMEBUFFER
 	// Draw frame texture to an internal frame buffer
-	glUseProgram(m_framebuffer_shader_program);
+	glUseProgram(m_framebuffer_gl_shader_program);
 	GL_CHECK();
-	glUniform1i(m_framebuffer_uniform_location_texture, SAMP_TEXCOORD);
+	glUniform1i(m_framebuffer_gl_uniform_location_texture, SAMP_TEXCOORD);
 	GL_CHECK();
+#if 0 // State already set above :
 	glActiveTexture(GL_TEXTURE0);
 	GL_CHECK();
 	glBindTexture(GL_TEXTURE_2D, frame_gl_texture);
 	GL_CHECK();
-	glBindVertexArray(m_framebuffer_vertex_array_name);
+#endif
+	glBindVertexArray(m_framebuffer_gl_vertex_array_object);
 	GL_CHECK();
-	glBindBuffer(GL_ARRAY_BUFFER, m_framebuffer_vertex_buffer_object);
+	glBindBuffer(GL_ARRAY_BUFFER, m_framebuffer_gl_vertex_buffer_object);
 	GL_CHECK();
 	glEnableVertexAttribArray(ATTR_POSITION);
 	GL_CHECK();
@@ -833,10 +834,17 @@ void cxbx_gl_render_framebuffer(NV2AState *d)
 	glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 	GL_CHECK();
 #else
+	// If we need to create an OpenGL framebuffer, do so
+	static GLuint frame_gl_framebuffer = -1;
+	if (frame_gl_framebuffer == -1) {
+		glGenFramebuffers(1, &frame_gl_framebuffer);
+		GL_CHECK();
+	}
+
 	// Copy frame texture to an internal frame buffer
 	glBindFramebuffer(GL_READ_FRAMEBUFFER, frame_gl_framebuffer);
 	GL_CHECK();
-	glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, frame_gl_texture, 0);
+	glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, frame_gl_texture, /*level=*/0);
 	GL_CHECK();
 	// Blit the active internal 'read' frame buffer to the actual 'draw' framebuffer
 	static const GLenum filter = GL_NEAREST;
@@ -847,60 +855,80 @@ void cxbx_gl_render_framebuffer(NV2AState *d)
 #endif
 }
 
-void cxbx_gl_render_overlays(NV2AState *d)
+void pvideo_init(NV2AState *d)
 {
-	// NV2A supports 2 video overlays
-	for (int v = 0; v < 2; v++) {
-		uint32_t video_buffer_use = (v == 0) ? NV_PVIDEO_BUFFER_0_USE : NV_PVIDEO_BUFFER_1_USE;
-		if (!(d->pvideo.regs[NV_PVIDEO_BUFFER] & video_buffer_use)) {
-			continue;
-		}
+	d->pvideo.overlays[0].gl_texture = -1;
+	d->pvideo.overlays[1].gl_texture = -1;
+}
 
-		// Get overlay measures (from xqemu nv2a_overlay_draw_line) :
-		uint32_t overlay_offset_high_26 = d->pvideo.regs[NV_PVIDEO_OFFSET(v)];
-		uint32_t overlay_offset_lower_6 = d->pvideo.regs[NV_PVIDEO_POINT_IN(v)] >> 3;
-		uint32_t overlay_size_in = d->pvideo.regs[NV_PVIDEO_SIZE_IN(v)];
-		uint32_t overlay_color_key = d->pvideo.regs[NV_PVIDEO_COLOR_KEY(v)];
-		uint32_t overlay_format = d->pvideo.regs[NV_PVIDEO_FORMAT(v)];
+void cxbx_gl_parse_overlay(NV2AState *d, int v)
+{
+	OverlayState &overlay = d->pvideo.overlays[v];
+
+	uint32_t video_buffer_use = (v == 0) ? NV_PVIDEO_BUFFER_0_USE : NV_PVIDEO_BUFFER_1_USE;
+	overlay.video_buffer_use = d->pvideo.regs[NV_PVIDEO_BUFFER] & video_buffer_use;
+
+	// Get overlay measures (from xqemu nv2a_overlay_draw_line) :
+	uint32_t overlay_offset_high_26 = d->pvideo.regs[NV_PVIDEO_OFFSET(v)];
+	uint32_t overlay_offset_lower_6 = d->pvideo.regs[NV_PVIDEO_POINT_IN(v)] >> 3;
+	uint32_t overlay_size_in = d->pvideo.regs[NV_PVIDEO_SIZE_IN(v)];
+	uint32_t overlay_color_key = d->pvideo.regs[NV_PVIDEO_COLOR_KEY(v)];
+	uint32_t overlay_format = d->pvideo.regs[NV_PVIDEO_FORMAT(v)];
 
 #ifdef DEBUG
-		// Check a few assumptions
-		hwaddr overlay_base = d->pvideo.regs[NV_PVIDEO_BASE(v)];
-		hwaddr overlay_limit = d->pvideo.regs[NV_PVIDEO_LIMIT(v)];
-		assert(overlay_base == 0);
-		assert(overlay_limit == (128 * ONE_MB) - 1); // = CONTIGUOUS_MEMORY_CHIHIRO_SIZE - 1
-		assert(GET_MASK(overlay_format, NV_PVIDEO_FORMAT_COLOR) == NV_PVIDEO_FORMAT_COLOR_LE_CR8YB8CB8YA8);
+	// Check a few assumptions
+	overlay.base = d->pvideo.regs[NV_PVIDEO_BASE(v)];
+	overlay.limit = d->pvideo.regs[NV_PVIDEO_LIMIT(v)];
+	assert(overlay.base == 0);
+	assert(overlay.limit == (128 * ONE_MB) - 1); // = CONTIGUOUS_MEMORY_CHIHIRO_SIZE - 1
+	assert(GET_MASK(overlay_format, NV_PVIDEO_FORMAT_COLOR) == NV_PVIDEO_FORMAT_COLOR_LE_CR8YB8CB8YA8);
+
 #endif
-		// Derive actual attributes
-		int overlay_pitch = overlay_format & NV_PVIDEO_FORMAT_PITCH;
-		bool overlay_is_transparent = GET_MASK(overlay_format, NV_PVIDEO_FORMAT_DISPLAY);
-		hwaddr overlay_offset = overlay_offset_high_26 | overlay_offset_lower_6;
-		uint32_t overlay_size_in_height_width = overlay_size_in - (overlay_offset_lower_6 >> 1);
-		uint32_t overlay_in_height = overlay_size_in_height_width >> 16;
-		uint32_t overlay_in_width = overlay_size_in_height_width & 0xFFFF;
+	// Derive actual attributes
+	overlay.pitch = overlay_format & NV_PVIDEO_FORMAT_PITCH;
+	overlay.is_transparent = GET_MASK(overlay_format, NV_PVIDEO_FORMAT_DISPLAY);
+	overlay.offset = overlay_offset_high_26 | overlay_offset_lower_6;
 
-		int overlay_out_x = GET_MASK(d->pvideo.regs[NV_PVIDEO_POINT_OUT(v)], NV_PVIDEO_POINT_OUT_X);
-		int overlay_out_y = GET_MASK(d->pvideo.regs[NV_PVIDEO_POINT_OUT(v)], NV_PVIDEO_POINT_OUT_Y);
-		int overlay_out_width = GET_MASK(d->pvideo.regs[NV_PVIDEO_SIZE_OUT(v)], NV_PVIDEO_SIZE_OUT_WIDTH);
-		int overlay_out_height = GET_MASK(d->pvideo.regs[NV_PVIDEO_SIZE_OUT(v)], NV_PVIDEO_SIZE_OUT_HEIGHT);
+	uint32_t overlay_size_in_height_width = overlay_size_in - (overlay_offset_lower_6 >> 1);
+	overlay.in_height = overlay_size_in_height_width >> 16;
+	overlay.in_width = overlay_size_in_height_width & 0xFFFF;
 
-		// If we need to create a new overlay texture, do so, otherwise, update the existing
-		static GLuint overlay_gl_texture = -1;
+	overlay.out_x = GET_MASK(d->pvideo.regs[NV_PVIDEO_POINT_OUT(v)], NV_PVIDEO_POINT_OUT_X);
+	overlay.out_y = GET_MASK(d->pvideo.regs[NV_PVIDEO_POINT_OUT(v)], NV_PVIDEO_POINT_OUT_Y);
+	overlay.out_width = GET_MASK(d->pvideo.regs[NV_PVIDEO_SIZE_OUT(v)], NV_PVIDEO_SIZE_OUT_WIDTH);
+	overlay.out_height = GET_MASK(d->pvideo.regs[NV_PVIDEO_SIZE_OUT(v)], NV_PVIDEO_SIZE_OUT_HEIGHT);
 
-		// Detect changes in overlay dimensions
-		static int static_overlay_in_width = 0;
-		static int static_overlay_in_height = 0;
-		static int static_overlay_pitch = 0;
-		if (static_overlay_in_width != overlay_in_width
-		|| static_overlay_in_height != overlay_in_height
-		|| static_overlay_pitch != overlay_pitch) {
-			static_overlay_in_width = overlay_in_width;
-			static_overlay_in_height = overlay_in_height;
-			static_overlay_pitch = overlay_pitch;
-			if (overlay_gl_texture != -1) {
-				glDeleteTextures(1, &overlay_gl_texture);
-				overlay_gl_texture = -1;
-			}
+	// Detect changes in overlay dimensions
+	if (overlay.old_in_width != overlay.in_width
+	 || overlay.old_in_height != overlay.in_height
+	 || overlay.old_pitch != overlay.pitch) {
+		overlay.old_in_width = overlay.in_width;
+		overlay.old_in_height = overlay.in_height;
+		overlay.old_pitch = overlay.pitch;
+		if (overlay.gl_texture != -1) {
+			glDeleteTextures(1, &overlay.gl_texture);
+			overlay.gl_texture = -1;
+		}
+	}
+
+	overlay.covers_framebuffer = overlay.video_buffer_use
+		&& (!overlay.is_transparent)
+		&& (overlay.out_x == 0)
+		&& (overlay.out_y == 0)
+		&& (overlay.out_width == frame_width)
+		&& (overlay.out_height == frame_height);
+}
+
+void cxbx_gl_render_overlays(NV2AState *d)
+{
+	static const GLenum overlay_gl_internal_format = GL_RGBA8;
+	static const GLenum overlay_gl_format = GL_BGRA;
+	static const GLenum overlay_gl_type = GL_UNSIGNED_INT_8_8_8_8_REV;
+			   
+	for (int v = 0; v < 2; v++) {
+		OverlayState &overlay = d->pvideo.overlays[v];
+		if (!overlay.video_buffer_use) {
+			continue;
 		}
 
 		// TODO : Speed this up using 2 PixelBufferObjects (and use asynchronous DMA transfer)?
@@ -909,27 +937,27 @@ void cxbx_gl_render_overlays(NV2AState *d)
 		glActiveTexture(GL_TEXTURE0);
 		GL_CHECK();
 
-		static const GLenum overlay_gl_internal_format = GL_RGBA8;
-		static const GLenum overlay_gl_format = GL_BGRA;
-		static const GLenum overlay_gl_type = GL_UNSIGNED_INT_8_8_8_8_REV;
-			   
-		hwaddr overlay_pixels = /*CONTIGUOUS_MEMORY_BASE=*/0x80000000 | overlay_offset;
-		if (overlay_gl_texture == -1) {
-			glGenTextures(1, &overlay_gl_texture);
+		// If we need to create a (new) overlay texture, do so
+		if (overlay.gl_texture == -1) {
+			glGenTextures(1, &overlay.gl_texture);
 			GL_CHECK();
-			glBindTexture(GL_TEXTURE_2D, overlay_gl_texture);
+			glBindTexture(GL_TEXTURE_2D, overlay.gl_texture);
 			GL_CHECK();
-			glTexImage2D(GL_TEXTURE_2D, 0, overlay_gl_internal_format, overlay_pitch / 4, overlay_in_height, 0, overlay_gl_format, overlay_gl_type, NULL);
+			glTexImage2D(GL_TEXTURE_2D, 0, overlay_gl_internal_format, overlay.pitch / 4, overlay.in_height, 0, overlay_gl_format, overlay_gl_type, NULL);
+			GL_CHECK();
+		}
+		else {
+			// update the YUV video texturing unit 
+			glBindTexture(GL_TEXTURE_2D, overlay.gl_texture);
 			GL_CHECK();
 		}
 
-		// update the YUV video texturing unit 
-		glBindTexture(GL_TEXTURE_2D, overlay_gl_texture);
-		GL_CHECK();
 		static const GLint swizzle_mask_BGRA[4] = { GL_BLUE, GL_GREEN, GL_RED, GL_ALPHA };
 		glTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_RGBA, swizzle_mask_BGRA);
 		GL_CHECK();
-		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, overlay_pitch / 4, overlay_in_height, overlay_gl_format, overlay_gl_type, (void*)overlay_pixels);
+
+		hwaddr overlay_pixels = /*CONTIGUOUS_MEMORY_BASE=*/0x80000000 | overlay.offset;
+		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, overlay.pitch / 4, overlay.in_height, overlay_gl_format, overlay_gl_type, (void*)overlay_pixels);
 		GL_CHECK();
 
 		// Don't average YUYV samples when resizing
@@ -945,26 +973,23 @@ void cxbx_gl_render_overlays(NV2AState *d)
 		// Determine source and destination coordinates, with that draw the overlay over the framebuffer
 		GLint srcX0 = overlay_in_s;
 		GLint srcY0 = overlay_in_t;
-		GLint srcX1 = overlay_in_width;
-		GLint srcY1 = overlay_in_height;
-		GLint dstX0 = overlay_out_x;
-		GLint dstY0 = overlay_out_y;
-		GLint dstX1 = overlay_out_width;
-		GLint dstY1 = overlay_out_height;
+		GLint srcX1 = overlay.in_width;
+		GLint srcY1 = overlay.in_height;
+		GLint dstX0 = overlay.out_x;
+		GLint dstY0 = overlay.out_y;
+		GLint dstX1 = overlay.out_width;
+		GLint dstY1 = overlay.out_height;
 
 		// Detect some special cases, for later finetuning
-		if (overlay_in_s != 0 || overlay_in_t != 0 || overlay_out_x != 0 || overlay_out_y != 0 || overlay_out_width != 640 || overlay_out_height != 480) {
+		if (overlay_in_s != 0 || overlay_in_t != 0 || !overlay.covers_framebuffer) {
 			LOG_TEST_CASE("Non-standard overlay dimensions");
 		}
 
-		// Flip Y to prevent upside down rendering
-		GLint tmp = dstY0; dstY0 = dstY1; dstY1 = tmp;
-
 		// Convert UV coordinates to [0.0, 1.0]
-		GLfloat srcX0f = (GLfloat)srcX0 / overlay_in_width;
-		GLfloat srcX1f = (GLfloat)srcX1 / overlay_in_width;
-		GLfloat srcY0f = (GLfloat)srcY0 / overlay_in_height;
-		GLfloat srcY1f = (GLfloat)srcY1 / overlay_in_height;
+		GLfloat srcX0f = (GLfloat)srcX0 / overlay.in_width;
+		GLfloat srcX1f = (GLfloat)srcX1 / overlay.in_width;
+		GLfloat srcY0f = (GLfloat)srcY0 / overlay.in_height;
+		GLfloat srcY1f = (GLfloat)srcY1 / overlay.in_height;
 
 		// Convert screen coordinates to [-1.0, 1.0]
 		GLfloat dstX0f = (GLfloat)((dstX0 / frame_width) * 2.0f) - 1.0f;
@@ -976,14 +1001,18 @@ void cxbx_gl_render_overlays(NV2AState *d)
 		GL_CHECK();
 
 		// Attach texture #0 to the shader sampler location 
-		glUniform1i(m_overlay_uniform_location_texture, SAMP_TEXCOORD);
+		glUniform1i(m_overlay_gl_uniform_location_texture, SAMP_TEXCOORD);
 		GL_CHECK();
 
+#if 0 // State already set above :
 		glActiveTexture(GL_TEXTURE0);
 		GL_CHECK();
 
-		glBindTexture(GL_TEXTURE_2D, overlay_gl_texture);
+		glBindTexture(GL_TEXTURE_2D, overlay.gl_texture);
 		GL_CHECK();
+#endif
+		// Flip Y to prevent upside down rendering
+		std::swap(srcY0f, srcY1f);
 
 		// Feed screen and texture coordinates through a vertex buffer object
 		const GLfloat overlay_vertex_buffer_data[] = {
@@ -993,47 +1022,51 @@ void cxbx_gl_render_overlays(NV2AState *d)
 			dstX0f, dstY1f, srcX0f, srcY1f,
 		};
 
-		static GLuint m_framebuffer_vertex_array_name = -1;
-		if (m_framebuffer_vertex_array_name == -1) {
-			glGenVertexArrays(1, &m_framebuffer_vertex_array_name);
+		static GLuint overlaybuffer_gl_vertex_array_object = -1;
+		if (overlaybuffer_gl_vertex_array_object == -1) {
+			glGenVertexArrays(1, &overlaybuffer_gl_vertex_array_object);
 			GL_CHECK();
 		}
-		glBindVertexArray(m_framebuffer_vertex_array_name);
+		glBindVertexArray(overlaybuffer_gl_vertex_array_object);
 		GL_CHECK();
 
 		static GLuint overlay_gl_vertex_buffer_object = -1;
 		if (overlay_gl_vertex_buffer_object == -1) {
 			glGenBuffers(1, &overlay_gl_vertex_buffer_object);	
 			GL_CHECK();
+			glBindBuffer(GL_ARRAY_BUFFER, overlay_gl_vertex_buffer_object);
+			GL_CHECK();
+			glEnableVertexAttribArray(ATTR_POSITION);
+			GL_CHECK();
+			// Bind vertex position attribute
+			glVertexAttribPointer(
+				/*index=*/ATTR_POSITION,
+				/*size=vec*/2,
+				/*type=*/GL_FLOAT,
+				/*normalized?=*/GL_FALSE,
+				/*stride=*/4 * sizeof(GLfloat),
+				/*array buffer offset=*/(void*)0
+			);
+			GL_CHECK();
+			glEnableVertexAttribArray(ATTR_TEXCOORD);
+			GL_CHECK();
+			// Bind vertex texture coordinate attribute
+			glVertexAttribPointer(
+				/*index=*/ATTR_TEXCOORD,
+				/*size=vec*/2,
+				/*type=*/GL_FLOAT,
+				/*normalized?=*/GL_FALSE,
+				/*stride=*/4 * sizeof(GLfloat),
+				/*array buffer offset=*/(void*)(2 * sizeof(GLfloat))
+			);
+			GL_CHECK();
+		}
+		else {
+			glBindBuffer(GL_ARRAY_BUFFER, overlay_gl_vertex_buffer_object);
+			GL_CHECK();
 		}
 
-		glBindBuffer(GL_ARRAY_BUFFER, overlay_gl_vertex_buffer_object);
-		GL_CHECK();
 		glBufferData(GL_ARRAY_BUFFER, sizeof(overlay_vertex_buffer_data), overlay_vertex_buffer_data, GL_STREAM_DRAW);
-		GL_CHECK();
-		// Bind vertex position attribute
-		glVertexAttribPointer(
-			/*index=*/ATTR_POSITION,
-			/*size=vec*/2,
-			/*type=*/GL_FLOAT,
-			/*normalized?=*/GL_FALSE,
-			/*stride=*/4*sizeof(GLfloat),
-			/*array buffer offset=*/(void*)0
-		);
-		GL_CHECK();
-		// Bind vertex texture coordinate attribute
-		glVertexAttribPointer(
-			/*index=*/ATTR_TEXCOORD,
-			/*size=vec*/2,
-			/*type=*/GL_FLOAT,
-			/*normalized?=*/GL_FALSE,
-			/*stride=*/4*sizeof(GLfloat),
-			/*array buffer offset=*/(void*)(2 * sizeof(GLfloat))
-		);
-		GL_CHECK();
-		glEnableVertexAttribArray(ATTR_POSITION);
-		GL_CHECK();
-		glEnableVertexAttribArray(ATTR_TEXCOORD);
 		GL_CHECK();
 		// Finally! Draw the dang overlay...
 		glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
@@ -1056,15 +1089,20 @@ void NV2ADevice::UpdateHostDisplay(NV2AState *d)
 
 	// Target the host framebuffer
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-//	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 	GL_CHECK();
 
 	glDisable(GL_CULL_FACE);
 	GL_CHECK();
 
-	// Is either overlay enabled and not transparent (TODO : and overlay fills entire screen) ?
-	if (((d->pvideo.regs[NV_PVIDEO_BUFFER] & NV_PVIDEO_BUFFER_0_USE) && (GET_MASK(d->pvideo.regs[NV_PVIDEO_FORMAT(0)], NV_PVIDEO_FORMAT_DISPLAY) == 0))
-    ||  ((d->pvideo.regs[NV_PVIDEO_BUFFER] & NV_PVIDEO_BUFFER_1_USE) && (GET_MASK(d->pvideo.regs[NV_PVIDEO_FORMAT(1)], NV_PVIDEO_FORMAT_DISPLAY) == 0))) {
+	cxbx_gl_update_displaymode();
+
+	for (int v = 0; v < 2; v++) {
+		cxbx_gl_parse_overlay(d, v);
+	}
+
+	// Is either overlay fullscreen ?
+	if (d->pvideo.overlays[0].covers_framebuffer 
+	 || d->pvideo.overlays[1].covers_framebuffer) {
 		// Then the framebuffer won't be visible anyway, so doesn't have to be rendered
 	} else {
 		cxbx_gl_render_framebuffer(d);
@@ -1072,6 +1110,7 @@ void NV2ADevice::UpdateHostDisplay(NV2AState *d)
 
 	cxbx_gl_render_overlays(d);
 
+	// Unbind everything we've used
 	glBindTexture(GL_TEXTURE_2D, 0);
 	GL_CHECK();
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -1202,13 +1241,15 @@ void NV2ADevice::Init()
 	qemu_cond_init(&d->pfifo.cache1.cache_cond);
 	qemu_cond_init(&d->pvideo.interrupt_cond);
 //	d->pfifo.puller_thread = std::thread(pfifo_puller_thread, d);
-	pgraph_init(m_nv2a_state);
+	pgraph_init(d);
 
 	// Only spawn VBlank thread when LLE is enabled
 	if (d->pgraph.opengl_enabled) {
 #ifdef DRAW_FRAMEBUFFER
-		cxbx_gl_initialize(d);
+		cxbx_gl_framebuffer_initialize(d);
 #endif
+		pvideo_init(d);
+
 		vblank_thread = std::thread(nv2a_vblank_thread, d);
 	}
 

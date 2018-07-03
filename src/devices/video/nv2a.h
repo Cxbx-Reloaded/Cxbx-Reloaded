@@ -463,6 +463,29 @@ typedef struct Cache1State {
 	std::queue<CacheEntry*> working_cache;
 } Cache1State;
 
+typedef struct OverlayState {
+	bool video_buffer_use;
+	int pitch;
+	bool is_transparent;
+#ifdef DEBUG
+	hwaddr base;
+	hwaddr limit;
+#endif
+	hwaddr offset;
+	uint32_t in_height;
+	uint32_t in_width;
+	int out_x;
+	int out_y;
+	int out_width;
+	int out_height;
+
+	bool covers_framebuffer;
+	int old_in_width;
+	int old_in_height;
+	int old_pitch;
+	GLuint gl_texture = -1;
+} OverlayState;
+
 typedef struct ChannelControl {
 	xbaddr dma_put;
 	xbaddr dma_get;
@@ -510,6 +533,7 @@ typedef struct NV2AState {
 		uint32_t pending_interrupts;
 		uint32_t enabled_interrupts;
 		QemuCond interrupt_cond;
+		OverlayState overlays[2]; // NV2A supports 2 video overlays
 		uint32_t regs[NV_PVIDEO_SIZE]; // TODO : union
     } pvideo;
 
