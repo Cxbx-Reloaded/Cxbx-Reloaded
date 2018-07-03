@@ -159,18 +159,18 @@ static const USBDesc desc_hub(true);
 
 int Hub::Init(int pport)
 {
-	ClassInitFn();
-	UsbEpInit();
-    int rc = UsbClaimPort(pport);
+	XboxDeviceState* dev = ClassInitFn();
+	m_UsbDev->UsbEpInit(dev);
+    int rc = UsbHubClaimPort(dev, pport);
     if (rc != 0) {
         return rc;
     }
-    rc = m_UsbDev->USB_DeviceInit(m_pDeviceStruct);
+    rc = m_UsbDev->USB_DeviceInit(dev);
     if (rc != 0) {
-        UsbReleasePort(m_pDeviceStruct);
+		UsbHubReleasePort(dev);
         return rc;
     }
-    m_UsbDev->USB_DeviceAttach(m_pDeviceStruct);
+    m_UsbDev->USB_DeviceAttach(dev);
 
 	return 0;
 }
@@ -181,91 +181,57 @@ Hub::~Hub()
 	delete m_HubState->ports[0].port.Operations;
 	delete m_HubState;
 	m_pPeripheralFuncStruct = nullptr;
-	m_pDeviceStruct = nullptr;
+	m_HubState = nullptr;
 }
 
-void Hub::ClassInitFn()
+XboxDeviceState* Hub::ClassInitFn()
 {
 	m_pPeripheralFuncStruct = new USBDeviceClass();
 	m_HubState = new USBHubState();
-	m_pDeviceStruct = &m_HubState->dev;
-	
-	m_pDeviceStruct->ProductDesc = "Cxbx-Reloaded USB Hub";
-	QLIST_INIT(&m_pDeviceStruct->Strings);
-	m_pDeviceStruct->klass = m_pPeripheralFuncStruct;
+	XboxDeviceState* dev = &m_HubState->dev;
+
+	dev->ProductDesc = "Cxbx-Reloaded USB Hub";
+	QLIST_INIT(&dev->Strings);
+	dev->klass = m_pPeripheralFuncStruct;
 
 	{
 		using namespace std::placeholders;
-		
+
 		m_pPeripheralFuncStruct->init           = std::bind(&Hub::UsbHub_Initfn, this, _1);
 		m_pPeripheralFuncStruct->find_device    = std::bind(&Hub::UsbHub_FindDevice, this, _1, _2);
 		m_pPeripheralFuncStruct->handle_reset   = std::bind(&Hub::UsbHub_HandleReset, this);
 		m_pPeripheralFuncStruct->handle_control = std::bind(&Hub::UsbHub_HandleControl, this, _1, _2, _3, _4, _5, _6, _7);
 		m_pPeripheralFuncStruct->handle_data    = std::bind(&Hub::UsbHub_HandleData, this, _1, _2);
 		m_pPeripheralFuncStruct->handle_destroy = std::bind(&Hub::UsbHub_HandleDestroy, this, _1);
-		m_pPeripheralFuncStruct->product_desc   = m_pDeviceStruct->ProductDesc.c_str();
+		m_pPeripheralFuncStruct->product_desc   = dev->ProductDesc.c_str();
 		m_pPeripheralFuncStruct->usb_desc       = &desc_hub;
 	}
+
+	return dev;
 }
 
-void Hub::UsbEpInit()
-{
-    UsbEpReset();
-    QTAILQ_INIT(&m_pDeviceStruct->EP_ctl.Queue);
-    for (int ep = 0; ep < USB_MAX_ENDPOINTS; ep++) {
-        QTAILQ_INIT(&m_pDeviceStruct->EP_in[ep].Queue);
-        QTAILQ_INIT(&m_pDeviceStruct->EP_out[ep].Queue);
-    }
-}
-
-void Hub::UsbEpReset()
-{
-    m_pDeviceStruct->EP_ctl.Num = 0;
-    m_pDeviceStruct->EP_ctl.Type = USB_ENDPOINT_XFER_CONTROL;
-    m_pDeviceStruct->EP_ctl.IfNum = 0;
-    m_pDeviceStruct->EP_ctl.MaxPacketSize = 64;
-    m_pDeviceStruct->EP_ctl.Dev = m_pDeviceStruct;
-    m_pDeviceStruct->EP_ctl.Pipeline = false;
-    for (int ep = 0; ep < USB_MAX_ENDPOINTS; ep++) {
-        m_pDeviceStruct->EP_in[ep].Num = ep + 1;
-        m_pDeviceStruct->EP_out[ep].Num = ep + 1;
-        m_pDeviceStruct->EP_in[ep].pid = USB_TOKEN_IN;
-        m_pDeviceStruct->EP_out[ep].pid = USB_TOKEN_OUT;
-        m_pDeviceStruct->EP_in[ep].Type = USB_ENDPOINT_XFER_INVALID;
-        m_pDeviceStruct->EP_out[ep].Type = USB_ENDPOINT_XFER_INVALID;
-        m_pDeviceStruct->EP_in[ep].IfNum = USB_INTERFACE_INVALID;
-        m_pDeviceStruct->EP_out[ep].IfNum = USB_INTERFACE_INVALID;
-        m_pDeviceStruct->EP_in[ep].MaxPacketSize = 0;
-        m_pDeviceStruct->EP_out[ep].MaxPacketSize = 0;
-        m_pDeviceStruct->EP_in[ep].Dev = m_pDeviceStruct;
-        m_pDeviceStruct->EP_out[ep].Dev = m_pDeviceStruct;
-        m_pDeviceStruct->EP_in[ep].Pipeline = false;
-        m_pDeviceStruct->EP_out[ep].Pipeline = false;
-    }
-}
-
-int Hub::UsbClaimPort(int pport)
+int Hub::UsbHubClaimPort(XboxDeviceState* dev, int pport)
 {
 	int usb_port;
 
-	assert(m_pDeviceStruct->Port == nullptr);
+	assert(dev->Port == nullptr);
 
 	if (pport > 4 || pport < 1) { return -1; };
 
 	usb_port = PlayerToUsbArray[pport];
 	if (usb_port > 2) {
 		m_UsbDev = g_USB0;
-		m_UsbDev->m_HostController->OHCI_AssignUsbPortStruct(usb_port - 3, m_pDeviceStruct);
+		m_UsbDev->m_HostController->OHCI_AssignUsbPortStruct(usb_port - 3, dev);
 	}
 	else {
 		m_UsbDev = g_USB1;
-		m_UsbDev->m_HostController->OHCI_AssignUsbPortStruct(usb_port - 1, m_pDeviceStruct);
+		m_UsbDev->m_HostController->OHCI_AssignUsbPortStruct(usb_port - 1, dev);
 	}
 
 	return 0;
 }
 
-void Hub::UsbReleasePort(XboxDeviceState* dev)
+void Hub::UsbHubReleasePort(XboxDeviceState* dev)
 {
 	USBPort* port = dev->Port;
 
@@ -286,8 +252,8 @@ int Hub::UsbHub_Initfn(XboxDeviceState* dev)
 		return -1;
 	}
 
-	CreateSerial(dev);
-	UsbDescInit(dev);
+	m_UsbDev->CreateSerial(dev);
+	m_UsbDev->UsbDescInit(dev);
 	m_HubState->intr = m_UsbDev->USB_GetEP(dev, USB_TOKEN_IN, 1);
 
 	ops = new USBPortOps();
@@ -296,7 +262,7 @@ int Hub::UsbHub_Initfn(XboxDeviceState* dev)
 
 		ops->attach       = std::bind(&Hub::UsbHub_Attach, this, _1);
 		ops->detach       = std::bind(&Hub::UsbHub_Detach, this, _1);
-		ops->child_detach = std::bind(&Hub::UsbHub_ChildDetach, this, _1, _2);
+		ops->child_detach = std::bind(&Hub::UsbHub_ChildDetach, this, _1);
 		ops->wakeup       = std::bind(&Hub::UsbHub_Wakeup, this, _1);
 		ops->complete     = std::bind(&Hub::UsbHub_Complete, this, _1, _2);
 	}
@@ -308,6 +274,24 @@ int Hub::UsbHub_Initfn(XboxDeviceState* dev)
 	}
 	UsbHub_HandleReset();
 	return 0;
+}
+
+XboxDeviceState* Hub::UsbHub_FindDevice(XboxDeviceState* dev, uint8_t addr)
+{
+	USBHubPort* port;
+	XboxDeviceState* downstream;
+
+	for (int i = 0; i < NUM_PORTS; i++) {
+		port = &m_HubState->ports[i];
+		if (!(port->wPortStatus & PORT_STAT_ENABLE)) {
+			continue;
+		}
+		downstream = m_UsbDev->USB_FindDevice(&port->port, addr);
+		if (downstream != nullptr) {
+			return downstream;
+		}
+	}
+	return nullptr;
 }
 
 void Hub::UsbHub_HandleReset()
@@ -328,185 +312,297 @@ void Hub::UsbHub_HandleReset()
 	}
 }
 
-/*
-* From XQEMU:
-* This function creates a serial number for a usb device.
-* The serial number should:
-*   (a) Be unique within the emulator.
-*   (b) Be constant, so you don't get a new one each
-*       time the guest is started.
-* So we are using the physical location to generate a serial number
-* from it.  It has three pieces:  First a fixed, device-specific
-* prefix.  Second the device path of the host controller (which is
-* the pci address in most cases).  Third the physical port path.
-* Results in serial numbers like this: "314159-0000:00:1d.7-3".
-*/
-void Hub::CreateSerial(XboxDeviceState* dev)
+void Hub::UsbHub_HandleControl(XboxDeviceState* dev, USBPacket* p,
+	int request, int value, int index, int length, uint8_t* data)
 {
-	const USBDesc* desc = GetUsbDeviceDesc(dev);
-	int index = desc->id.iSerialNumber;
-	USBDescString* s;
-	char serial[64];
-	char* path;
-	int dst;
+	USBHubState *s = (USBHubState *)dev;
+	int ret;
 
-	assert(index != 0 && desc->str[index] != NULL);
-	dst = std::snprintf(serial, sizeof(serial), "%s", desc->str[index]);
-	dst += std::snprintf(serial + dst, sizeof(serial) - dst, "-%s", m_UsbDev->m_PciPath);
-	dst += std::snprintf(serial + dst, sizeof(serial) - dst, "-%s", dev->Port->Path);
+	ret = usb_desc_handle_control(dev, p, request, value, index, length, data);
+	if (ret >= 0) {
+		return;
+	}
 
-	QLIST_FOREACH(s, &dev->Strings, next) {
-		if (s->index == index) {
-			break;
+	switch (request) {
+	case EndpointOutRequest | USB_REQ_CLEAR_FEATURE:
+		if (value == 0 && index != 0x81) { /* clear ep halt */
+			goto fail;
 		}
-	}
-
-	if (s == nullptr) {
-		s = new USBDescString;
-		s->index = index;
-		QLIST_INSERT_HEAD(&dev->Strings, s, next);
-	}
-
-	s->str = serial;
-}
-
-const USBDesc* Hub::GetUsbDeviceDesc(XboxDeviceState* dev)
-{
-	USBDeviceClass* klass = dev->klass;
-	if (dev->UsbDesc) {
-		return dev->UsbDesc;
-	}
-	return klass->usb_desc;
-}
-
-void Hub::UsbDescInit(XboxDeviceState* dev)
-{
-	const USBDesc* desc = GetUsbDeviceDesc(dev);
-
-	assert(desc != NULL);
-	dev->Speed = USB_SPEED_FULL;
-	dev->SpeedMask = 0;
-	if (desc->full) {
-		dev->SpeedMask |= USB_SPEED_MASK_FULL;
-	}
-	UsbDescSetDefaults(dev);
-}
-
-void Hub::UsbDescSetDefaults(XboxDeviceState* dev)
-{
-	const USBDesc *desc = GetUsbDeviceDesc(dev);
-
-	assert(desc != NULL);
-	switch (dev->Speed) {
-		case USB_SPEED_LOW:
-		case USB_SPEED_FULL: {
-			dev->Device = desc->full;
-			break;
+		break;
+		/* usb specific requests */
+	case GetHubStatus:
+		data[0] = 0;
+		data[1] = 0;
+		data[2] = 0;
+		data[3] = 0;
+		p->actual_length = 4;
+		break;
+	case GetPortStatus:
+	{
+		unsigned int n = index - 1;
+		USBHubPort *port;
+		if (n >= NUM_PORTS) {
+			goto fail;
 		}
+		port = &s->ports[n];
+		trace_usb_hub_get_port_status(s->dev.addr, index,
+			port->wPortStatus,
+			port->wPortChange);
+		data[0] = port->wPortStatus;
+		data[1] = port->wPortStatus >> 8;
+		data[2] = port->wPortChange;
+		data[3] = port->wPortChange >> 8;
+		p->actual_length = 4;
+	}
+	break;
+	case SetHubFeature:
+	case ClearHubFeature:
+		if (value != 0 && value != 1) {
+			goto fail;
+		}
+		break;
+	case SetPortFeature:
+	{
+		unsigned int n = index - 1;
+		USBHubPort *port;
+		USBDevice *dev;
+
+		trace_usb_hub_set_port_feature(s->dev.addr, index,
+			feature_name(value));
+
+		if (n >= NUM_PORTS) {
+			goto fail;
+		}
+		port = &s->ports[n];
+		dev = port->port.dev;
+		switch (value) {
+		case PORT_SUSPEND:
+			port->wPortStatus |= PORT_STAT_SUSPEND;
+			break;
+		case PORT_RESET:
+			if (dev && dev->attached) {
+				usb_device_reset(dev);
+				port->wPortChange |= PORT_STAT_C_RESET;
+				/* set enable bit */
+				port->wPortStatus |= PORT_STAT_ENABLE;
+				usb_wakeup(s->intr, 0);
+			}
+			break;
+		case PORT_POWER:
+			break;
 		default:
-			EmuWarning("Unknown speed parameter %d set in %s", dev->ProductDesc.c_str());
+			goto fail;
+		}
 	}
-	UsbDescSetConfig(dev, 0);
+	break;
+	case ClearPortFeature:
+	{
+		unsigned int n = index - 1;
+		USBHubPort *port;
+
+		trace_usb_hub_clear_port_feature(s->dev.addr, index,
+			feature_name(value));
+
+		if (n >= NUM_PORTS) {
+			goto fail;
+		}
+		port = &s->ports[n];
+		switch (value) {
+		case PORT_ENABLE:
+			port->wPortStatus &= ~PORT_STAT_ENABLE;
+			break;
+		case PORT_C_ENABLE:
+			port->wPortChange &= ~PORT_STAT_C_ENABLE;
+			break;
+		case PORT_SUSPEND:
+			port->wPortStatus &= ~PORT_STAT_SUSPEND;
+			break;
+		case PORT_C_SUSPEND:
+			port->wPortChange &= ~PORT_STAT_C_SUSPEND;
+			break;
+		case PORT_C_CONNECTION:
+			port->wPortChange &= ~PORT_STAT_C_CONNECTION;
+			break;
+		case PORT_C_OVERCURRENT:
+			port->wPortChange &= ~PORT_STAT_C_OVERCURRENT;
+			break;
+		case PORT_C_RESET:
+			port->wPortChange &= ~PORT_STAT_C_RESET;
+			break;
+		default:
+			goto fail;
+		}
+	}
+	break;
+	case GetHubDescriptor:
+	{
+		unsigned int n, limit, var_hub_size = 0;
+		memcpy(data, qemu_hub_hub_descriptor,
+			sizeof(qemu_hub_hub_descriptor));
+		data[2] = NUM_PORTS;
+
+		/* fill DeviceRemovable bits */
+		limit = ((NUM_PORTS + 1 + 7) / 8) + 7;
+		for (n = 7; n < limit; n++) {
+			data[n] = 0x00;
+			var_hub_size++;
+		}
+
+		/* fill PortPwrCtrlMask bits */
+		limit = limit + ((NUM_PORTS + 7) / 8);
+		for (; n < limit; n++) {
+			data[n] = 0xff;
+			var_hub_size++;
+		}
+
+		p->actual_length = sizeof(qemu_hub_hub_descriptor) + var_hub_size;
+		data[0] = p->actual_length;
+		break;
+	}
+	default:
+	fail:
+		p->status = USB_RET_STALL;
+		break;
+	}
 }
 
-int Hub::UsbDescSetConfig(XboxDeviceState* dev, int value)
+void Hub::UsbHub_Attach(USBPort* port1)
 {
-	int i;
+	USBHubPort* port = &m_HubState->ports[port1->PortIndex];
 
-	if (value == 0) { // default configuration
-		dev->Configuration = 0;
-		dev->NumInterfaces = 0;
-		dev->Config = nullptr;
+	port->wPortStatus |= PORT_STAT_CONNECTION;
+	port->wPortChange |= PORT_STAT_C_CONNECTION;
+	if (port->port.Dev->Speed == USB_SPEED_LOW) {
+		port->wPortStatus |= PORT_STAT_LOW_SPEED;
 	}
 	else {
-		for (i = 0; i < dev->Device->bNumConfigurations; i++) { // select the configuration specified
-			if (dev->Device->confs[i].bConfigurationValue == value) {
-				dev->Configuration = value;
-				dev->NumInterfaces = dev->Device->confs[i].bNumInterfaces;
-				dev->Config = dev->Device->confs + i;
-				assert(dev->NumInterfaces <= USB_MAX_INTERFACES);
-			}
-		}
-		if (i < dev->Device->bNumConfigurations) {
-			return -1;
-		}
+		port->wPortStatus &= ~PORT_STAT_LOW_SPEED;
 	}
-
-	for (i = 0; i < dev->NumInterfaces; i++) { // setup all interfaces for the selected configuration
-		UsbDescSetInterface(dev, i, 0);
-	}
-	for (; i < USB_MAX_INTERFACES; i++) { // null the remaining interfaces
-		dev->AltSetting[i] = 0;
-		dev->Ifaces[i] = nullptr;
-	}
-
-	return 0;
+	m_UsbDev->USB_Wakeup(m_HubState->intr);
 }
 
-int Hub::UsbDescSetInterface(XboxDeviceState* dev, int index, int value)
+void Hub::UsbHub_Detach(USBPort* port1)
 {
-	const USBDescIface* iface;
-	int old;
+	USBHubPort* port = &m_HubState->ports[port1->PortIndex];
 
-	iface = UsbDescFindInterface(dev, index, value);
-	if (iface == nullptr) {
-		return -1;
+	m_UsbDev->USB_Wakeup(m_HubState->intr);
+
+	// Let upstream know the device on this port is gone
+	m_HubState->dev.Port->Operations->child_detach(port1->Dev);
+
+	port->wPortStatus &= ~PORT_STAT_CONNECTION;
+	port->wPortChange |= PORT_STAT_C_CONNECTION;
+	if (port->wPortStatus & PORT_STAT_ENABLE) {
+		port->wPortStatus &= ~PORT_STAT_ENABLE;
+		port->wPortChange |= PORT_STAT_C_ENABLE;
 	}
-
-	old = dev->AltSetting[index];
-	dev->AltSetting[index] = value;
-	dev->Ifaces[index] = iface;
-	UsbDescEpInit(dev);
-
-	if (old != value) {
-		m_UsbDev->USB_DeviceSetInterface(dev, index, old, value);
-	}
-	return 0;
+	m_UsbDev->USB_Wakeup(m_HubState->intr);
 }
 
-const USBDescIface* Hub::UsbDescFindInterface(XboxDeviceState* dev, int nif, int alt)
+void Hub::UsbHub_ChildDetach(XboxDeviceState* child)
 {
-	const USBDescIface* iface;
-	int i;
-
-	if (!dev->Config) { // no configuration descriptor here, nothing to search
-		return nullptr;
-	}
-	for (i = 0; i < dev->Config->nif; i++) { // find the desired interface
-		iface = &dev->Config->ifs[i];
-		if (iface->bInterfaceNumber == nif &&
-			iface->bAlternateSetting == alt) {
-			return iface;
-		}
-	}
-	return nullptr; // not found
+	// Pass along to upstream
+	m_HubState->dev.Port->Operations->child_detach(child);
 }
 
-void Hub::UsbDescEpInit(XboxDeviceState* dev)
+void Hub::UsbHub_Wakeup(USBPort* port1)
 {
-	const USBDescIface *iface;
-	int i, e, pid, ep;
+	USBHubPort* port = &m_HubState->ports[port1->PortIndex];
 
-	UsbEpInit(); // reset endpoints (because we changed descriptors in use?)
-	for (i = 0; i < dev->NumInterfaces; i++) {
-		iface = dev->Ifaces[i];
-		if (iface == nullptr) {
-			continue;
-		}
-		for (e = 0; e < iface->bNumEndpoints; e++) {
-			// From the standard:
-			// "bEndpointAddress:
-			// Bit 3...0: The endpoint number
-			// Bit 6...4: Reserved, reset to zero
-			// Bit 7: Direction -> 0 = OUT endpoint, 1 = IN endpoint
-			// bmAttributes:
-			// Bit 1..0: Transfer Type
-			// 00 = Control, 01 = Isochronous, 10 = Bulk, 11 = Interrupt. All other bits are reserved"
-			pid = (iface->eps[e].bEndpointAddress & USB_DIR_IN) ? USB_TOKEN_IN : USB_TOKEN_OUT;
-			ep = iface->eps[e].bEndpointAddress & 0xF;
-			m_UsbDev->USB_EPsetType(dev, pid, ep, iface->eps[e].bmAttributes & 0x03);
-			m_UsbDev->USB_EPsetIfnum(dev, pid, ep, iface->bInterfaceNumber);
-			m_UsbDev->USB_EPsetMaxPacketSize(dev, pid, ep, iface->eps[e].wMaxPacketSize);
-		}
+	if (port->wPortStatus & PORT_STAT_SUSPEND) {
+		port->wPortChange |= PORT_STAT_C_SUSPEND;
+		m_UsbDev->USB_Wakeup(m_HubState->intr);
 	}
+}
+
+void Hub::UsbHub_Complete(USBPort* port, USBPacket* packet)
+{
+	// Just pass it along to upstream
+	m_HubState->dev.Port->Operations->complete(m_HubState->dev.Port, packet);
+}
+
+int usb_desc_handle_control(USBDevice *dev, USBPacket *p,
+	int request, int value, int index, int length, uint8_t *data)
+{
+	const USBDesc *desc = usb_device_get_usb_desc(dev);
+	int ret = -1;
+
+	assert(desc != NULL);
+	switch (request) {
+	case DeviceOutRequest | USB_REQ_SET_ADDRESS:
+		dev->addr = value;
+		trace_usb_set_addr(dev->addr);
+		ret = 0;
+		break;
+
+	case DeviceRequest | USB_REQ_GET_DESCRIPTOR:
+		ret = usb_desc_get_descriptor(dev, p, value, data, length);
+		break;
+
+	case DeviceRequest | USB_REQ_GET_CONFIGURATION:
+		/*
+		* 9.4.2: 0 should be returned if the device is unconfigured, otherwise
+		* the non zero value of bConfigurationValue.
+		*/
+		data[0] = dev->config ? dev->config->bConfigurationValue : 0;
+		p->actual_length = 1;
+		ret = 0;
+		break;
+	case DeviceOutRequest | USB_REQ_SET_CONFIGURATION:
+		ret = usb_desc_set_config(dev, value);
+		trace_usb_set_config(dev->addr, value, ret);
+		break;
+
+	case DeviceRequest | USB_REQ_GET_STATUS: {
+		const USBDescConfig *config = dev->config ?
+			dev->config : &dev->device->confs[0];
+
+		data[0] = 0;
+		/*
+		* Default state: Device behavior when this request is received while
+		*                the device is in the Default state is not specified.
+		* We return the same value that a configured device would return if
+		* it used the first configuration.
+		*/
+		if (config->bmAttributes & 0x40) {
+			data[0] |= 1 << USB_DEVICE_SELF_POWERED;
+		}
+		if (dev->remote_wakeup) {
+			data[0] |= 1 << USB_DEVICE_REMOTE_WAKEUP;
+		}
+		data[1] = 0x00;
+		p->actual_length = 2;
+		ret = 0;
+		break;
+	}
+	case DeviceOutRequest | USB_REQ_CLEAR_FEATURE:
+		if (value == USB_DEVICE_REMOTE_WAKEUP) {
+			dev->remote_wakeup = 0;
+			ret = 0;
+		}
+		trace_usb_clear_device_feature(dev->addr, value, ret);
+		break;
+	case DeviceOutRequest | USB_REQ_SET_FEATURE:
+		if (value == USB_DEVICE_REMOTE_WAKEUP) {
+			dev->remote_wakeup = 1;
+			ret = 0;
+		}
+		trace_usb_set_device_feature(dev->addr, value, ret);
+		break;
+
+	case InterfaceRequest | USB_REQ_GET_INTERFACE:
+		if (index < 0 || index >= dev->ninterfaces) {
+			break;
+		}
+		data[0] = dev->altsetting[index];
+		p->actual_length = 1;
+		ret = 0;
+		break;
+	case InterfaceOutRequest | USB_REQ_SET_INTERFACE:
+		ret = usb_desc_set_interface(dev, index, value);
+		trace_usb_set_interface(dev->addr, index, value, ret);
+		break;
+
+	}
+	return ret;
 }

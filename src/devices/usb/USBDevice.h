@@ -80,14 +80,14 @@ class USBDevice : public PCIDevice {
 		void USB_Detach(USBPort* Port);
 		// a device downstream from the device attached to the port (attached through a hub) is detached
 		void ChildDetach(USBPort* Port, XboxDeviceState* Child);
-		// TODO
-		void Wakeup(USBPort* Port);
+		// update port status when a device is detached
+		void USB_Wakeup(USBEndpoint* ep);
 		// TODO
 		void Complete(USBPort* Port, USBPacket *P);
 		// reset a device
 		void USB_DeviceReset(XboxDeviceState* Dev);
-		//
-		XboxDeviceState* USB_DeviceFindDevice(XboxDeviceState* Dev, uint8_t Addr);
+		// find the device connected to the supplied port and address
+		XboxDeviceState* USB_FindDevice(USBPort* Port, uint8_t Addr);
 		// find the requested endpoint in the supplied device
 		USBEndpoint* USB_GetEP(XboxDeviceState* Dev, int Pid, int Ep);
 		// setup a packet for transfer
@@ -121,7 +121,7 @@ class USBDevice : public PCIDevice {
 		// call usb class init function
 		int USB_DeviceInit(XboxDeviceState* dev);
 		// call usb class find_device function
-		XboxDeviceState* USB_FindDevice(USBPort* Port, uint8_t Addr);
+		XboxDeviceState* USB_DeviceFindDevice(XboxDeviceState* Dev, uint8_t Addr);
 		// call usb class cancel_packet function
 		void USB_DeviceCancelPacket(XboxDeviceState* dev, USBPacket* p);
 		// call usb class handle_destroy function
@@ -148,6 +148,26 @@ class USBDevice : public PCIDevice {
 		void USB_EPsetMaxPacketSize(XboxDeviceState* dev, int pid, int ep, uint16_t raw);
 		// assign port numbers (also for hubs)
 		void USB_PortLocation(USBPort* downstream, USBPort* upstream, int portnr);
+		// initialize the endpoints of this peripheral
+		void UsbEpInit(XboxDeviceState* dev);
+		// reset all endpoints of this peripheral
+		void UsbEpReset(XboxDeviceState* dev);
+		// create a serial number for the device
+		void CreateSerial(XboxDeviceState* dev);
+		// start descriptors initialization
+		void UsbDescInit(XboxDeviceState* dev);
+		// get device descriptor
+		const USBDesc* GetUsbDeviceDesc(XboxDeviceState* dev);
+		// set the descriptors to use for this device
+		void UsbDescSetDefaults(XboxDeviceState* dev);
+		// set the configuration to use
+		int UsbDescSetConfig(XboxDeviceState* dev, int value);
+		// set the interface to use
+		int UsbDescSetInterface(XboxDeviceState* dev, int index, int value);
+		// find the interface to use
+		const USBDescIface* UsbDescFindInterface(XboxDeviceState* dev, int nif, int alt);
+		// setup endpoints and their descriptors
+		void UsbDescEpInit(XboxDeviceState* dev);
 };
 
 #endif

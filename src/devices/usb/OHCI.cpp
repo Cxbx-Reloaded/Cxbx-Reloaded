@@ -197,7 +197,7 @@ OHCI::OHCI(int Irq, USBDevice* UsbObj)
 
 		ops->attach       = std::bind(&OHCI::OHCI_Attach, this, _1);
 		ops->detach       = std::bind(&OHCI::OHCI_Detach, this, _1);
-		ops->child_detach = std::bind(&OHCI::OHCI_ChildDetach, this, nullptr, _2);
+		ops->child_detach = std::bind(&OHCI::OHCI_ChildDetach, this, _1);
 		ops->wakeup       = std::bind(&OHCI::OHCI_Wakeup, this, _1);
 		ops->complete     = std::bind(&OHCI::OHCI_AsyncCompletePacket, this, _1, _2);
 	}
@@ -1448,7 +1448,7 @@ void OHCI::OHCI_Attach(USBPort* Port)
 	}
 }
 
-void OHCI::OHCI_ChildDetach(USBPort* port, XboxDeviceState* child)
+void OHCI::OHCI_ChildDetach(XboxDeviceState* child)
 {
 	OHCI_AsyncCancelDevice(child);
 }

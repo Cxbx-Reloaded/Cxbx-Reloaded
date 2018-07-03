@@ -113,6 +113,9 @@ struct USBDescEndpoint {
 
     uint8_t                   is_audio; /* has bRefresh + bSynchAddress */
     uint8_t*                  extra;
+
+	// Dropped from XQEMU the parameters bMaxBurst, bmAttributes_super and wBytesPerInterval because those are only defined for
+	// superspeed (usb 3.0) devices in the superspeed endpoint companion
 };
 
 /* Interface descriptor */
@@ -201,7 +204,7 @@ struct XboxDeviceState {
 	uint32_t flags;						   
 	USBDeviceClass* klass;                 // usb class struct of this device
 										   
-	int Speed;                             // actual connected speed
+	int Speed;                             // actual speed of the connected device
 	int SpeedMask;                         // supported speeds, not in info because it may be variable (hostdevs)
 	uint8_t Addr;                          // device function address
 	std::string ProductDesc;               // the friendly name of this device
@@ -262,7 +265,7 @@ struct USBPortOps {
 	* This gets called when a device downstream from the device attached to
 	* the port (attached through a hub) gets detached.
 	*/
-	std::function<void(USBPort* port, XboxDeviceState* child)> child_detach;
+	std::function<void(XboxDeviceState* child)> child_detach;
 	std::function<void(USBPort* port)> wakeup;
 	/*
 	* Note that port->dev will be different then the device from which
@@ -278,7 +281,7 @@ struct USBPort {
 	int SpeedMask;                // usb speeds supported
 	int HubCount;                 // number of hubs chained
 	char Path[16];                // the number of the port + 1, used to create a serial number for this device
-	int PortIndex;                // internal port index against this HC
+	int PortIndex;                // internal port index
 };
 
 /* Struct which stores general functions/variables regarding the peripheral */
@@ -327,18 +330,6 @@ struct USBDeviceClass {
 
 	const char* product_desc;  // friendly name of the device
 	const USBDesc* usb_desc;   // device descriptor
-};
-
-
-/* Abstract class representing a usb peripheral */
-class UsbPeripheral
-{
-	protected:
-		USBDeviceClass* m_pPeripheralFuncStruct;
-		XboxDeviceState* m_pDeviceStruct;
-		
-		virtual int Init(int pport) = 0;
-		
 };
 
 #endif

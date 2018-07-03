@@ -49,23 +49,25 @@ typedef enum {
 
 
 /* Class which implements a usb hub */
-class Hub final : public UsbPeripheral
+class Hub
 {
 	public:
 		// initialize this peripheral
-		int Init(int pport) override;
+		int Init(int pport);
 		// destructor
 		~Hub();
 		
 		
 	private:
 		// usb device this hub is attached to
-		USBDevice* m_UsbDev = nullptr;
+		USBDevice* m_UsbDev;
 		// hub state
-		USBHubState* m_HubState = nullptr;
+		USBHubState* m_HubState;
+		// hub class functions
+		USBDeviceClass* m_pPeripheralFuncStruct;
 
 		// initialize various member variables/functions
-		void ClassInitFn();
+		XboxDeviceState* ClassInitFn();
 		// see USBDeviceClass for comments about these functions
 		int UsbHub_Initfn(XboxDeviceState* dev);
 		XboxDeviceState* UsbHub_FindDevice(XboxDeviceState* dev, uint8_t addr);
@@ -77,34 +79,13 @@ class Hub final : public UsbPeripheral
 		// see USBPortOps struct for info
 		void UsbHub_Attach(USBPort* port1);
 		void UsbHub_Detach(USBPort* port1);
-		void UsbHub_ChildDetach(USBPort* port1, XboxDeviceState* child);
+		void UsbHub_ChildDetach(XboxDeviceState* child);
 		void UsbHub_Wakeup(USBPort* port1);
 		void UsbHub_Complete(USBPort* port, USBPacket* packet);
-		// TODO: perhaps these can be put in UsbPeripheral or USBDevice...
-		// initialize the endpoints of this peripheral
-		void UsbEpInit();
-		// reset all endpoints of this peripheral
-		void UsbEpReset();
 		// reserve a usb port for this hub
-		int UsbClaimPort(int port);
-		//
-		void UsbReleasePort(XboxDeviceState* dev);
-		// get device descriptor
-		const USBDesc* GetUsbDeviceDesc(XboxDeviceState* dev);
-		// create a serial number for the device
-		void CreateSerial(XboxDeviceState* dev);
-		// start descriptors initialization
-		void UsbDescInit(XboxDeviceState* dev);
-		// set the descriptors to use for this device
-		void UsbDescSetDefaults(XboxDeviceState* dev);
-		// set the configuration to use
-		int UsbDescSetConfig(XboxDeviceState* dev, int value);
-		// set the interface to use
-		int UsbDescSetInterface(XboxDeviceState* dev, int index, int value);
-		// find the interface to use
-		const USBDescIface* UsbDescFindInterface(XboxDeviceState* dev, int nif, int alt);
-		// setup endpoints and their descriptors
-		void UsbDescEpInit(XboxDeviceState* dev);
+		int UsbHubClaimPort(XboxDeviceState* dev, int port);
+		// free the usb port used by this hub
+		void UsbHubReleasePort(XboxDeviceState* dev);
 };
 
 extern Hub* g_HubObjArray[4];

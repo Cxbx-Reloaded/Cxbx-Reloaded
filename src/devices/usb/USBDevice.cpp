@@ -104,16 +104,6 @@ void USBDevice::USB_PortReset(USBPort* Port)
 	USB_DeviceReset(dev);
 }
 
-void USBDevice::USB_Detach(USBPort* Port)
-{
-	XboxDeviceState* dev = Port->Dev;
-
-	assert(dev != nullptr);
-	assert(dev->State != USB_STATE_NOTATTACHED);
-	m_HostController->OHCI_Detach(Port);
-	dev->State = USB_STATE_NOTATTACHED;
-}
-
 void USBDevice::USB_Attach(USBPort* Port)
 {
 	XboxDeviceState* dev = Port->Dev;
@@ -124,6 +114,25 @@ void USBDevice::USB_Attach(USBPort* Port)
 	Port->Operations->attach(Port);
 	dev->State = USB_STATE_ATTACHED;
 	USB_DeviceHandleAttach(dev);
+}
+
+void USBDevice::USB_Detach(USBPort* Port)
+{
+	XboxDeviceState* dev = Port->Dev;
+
+	assert(dev != nullptr);
+	assert(dev->State != USB_STATE_NOTATTACHED);
+	m_HostController->OHCI_Detach(Port);
+	dev->State = USB_STATE_NOTATTACHED;
+}
+
+void USBDevice::USB_Wakeup(USBEndpoint* ep)
+{
+	XboxDeviceState* dev = ep->Dev;
+
+	if (dev->RemoteWakeup && dev->Port && dev->Port->Operations->wakeup) {
+		dev->Port->Operations->wakeup(dev->Port);
+	}
 }
 
 void USBDevice::USB_DeviceReset(XboxDeviceState* dev)
@@ -643,4 +652,223 @@ void USBDevice::USB_DeviceAttach(XboxDeviceState* dev)
 
 	dev->Attached++;
 	USB_Attach(port);
+}
+
+void USBDevice::UsbEpInit(XboxDeviceState* dev)
+{
+	UsbEpReset(dev);
+	QTAILQ_INIT(&dev->EP_ctl.Queue);
+	for (int ep = 0; ep < USB_MAX_ENDPOINTS; ep++) {
+		QTAILQ_INIT(&dev->EP_in[ep].Queue);
+		QTAILQ_INIT(&dev->EP_out[ep].Queue);
+	}
+}
+
+void USBDevice::UsbEpReset(XboxDeviceState* dev)
+{
+	dev->EP_ctl.Num = 0;
+	dev->EP_ctl.Type = USB_ENDPOINT_XFER_CONTROL;
+	dev->EP_ctl.IfNum = 0;
+	dev->EP_ctl.MaxPacketSize = 64;
+	dev->EP_ctl.Dev = dev;
+	dev->EP_ctl.Pipeline = false;
+	for (int ep = 0; ep < USB_MAX_ENDPOINTS; ep++) {
+		dev->EP_in[ep].Num = ep + 1;
+		dev->EP_out[ep].Num = ep + 1;
+		dev->EP_in[ep].pid = USB_TOKEN_IN;
+		dev->EP_out[ep].pid = USB_TOKEN_OUT;
+		dev->EP_in[ep].Type = USB_ENDPOINT_XFER_INVALID;
+		dev->EP_out[ep].Type = USB_ENDPOINT_XFER_INVALID;
+		dev->EP_in[ep].IfNum = USB_INTERFACE_INVALID;
+		dev->EP_out[ep].IfNum = USB_INTERFACE_INVALID;
+		dev->EP_in[ep].MaxPacketSize = 0;
+		dev->EP_out[ep].MaxPacketSize = 0;
+		dev->EP_in[ep].Dev = dev;
+		dev->EP_out[ep].Dev = dev;
+		dev->EP_in[ep].Pipeline = false;
+		dev->EP_out[ep].Pipeline = false;
+	}
+}
+
+/*
+* From XQEMU:
+* This function creates a serial number for a usb device.
+* The serial number should:
+*   (a) Be unique within the emulator.
+*   (b) Be constant, so you don't get a new one each
+*       time the guest is started.
+* So we are using the physical location to generate a serial number
+* from it.  It has three pieces:  First a fixed, device-specific
+* prefix.  Second the device path of the host controller (which is
+* the pci address in most cases).  Third the physical port path.
+* Results in serial numbers like this: "314159-0000:00:1d.7-3".
+*/
+void USBDevice::CreateSerial(XboxDeviceState* dev)
+{
+	const USBDesc* desc = GetUsbDeviceDesc(dev);
+	int index = desc->id.iSerialNumber;
+	USBDescString* s;
+	char serial[64];
+	char* path;
+	int dst;
+
+	assert(index != 0 && desc->str[index] != NULL);
+	dst = std::snprintf(serial, sizeof(serial), "%s", desc->str[index]);
+	dst += std::snprintf(serial + dst, sizeof(serial) - dst, "-%s", m_PciPath);
+	dst += std::snprintf(serial + dst, sizeof(serial) - dst, "-%s", dev->Port->Path);
+
+	QLIST_FOREACH(s, &dev->Strings, next) {
+		if (s->index == index) {
+			break;
+		}
+	}
+
+	if (s == nullptr) {
+		s = new USBDescString;
+		s->index = index;
+		QLIST_INSERT_HEAD(&dev->Strings, s, next);
+	}
+
+	s->str = serial;
+}
+
+const USBDesc* USBDevice::GetUsbDeviceDesc(XboxDeviceState* dev)
+{
+	USBDeviceClass* klass = dev->klass;
+	if (dev->UsbDesc) {
+		return dev->UsbDesc;
+	}
+	return klass->usb_desc;
+}
+
+void USBDevice::UsbDescInit(XboxDeviceState* dev)
+{
+	const USBDesc* desc = GetUsbDeviceDesc(dev);
+
+	assert(desc != NULL);
+	dev->Speed = USB_SPEED_FULL;
+	dev->SpeedMask = 0;
+	if (desc->full) {
+		dev->SpeedMask |= USB_SPEED_MASK_FULL;
+	}
+	UsbDescSetDefaults(dev);
+}
+
+void USBDevice::UsbDescSetDefaults(XboxDeviceState* dev)
+{
+	const USBDesc *desc = GetUsbDeviceDesc(dev);
+
+	assert(desc != NULL);
+	switch (dev->Speed) {
+	case USB_SPEED_LOW:
+	case USB_SPEED_FULL: {
+		dev->Device = desc->full;
+		break;
+	}
+	default:
+		EmuWarning("Unknown speed parameter %d set in %s", dev->ProductDesc.c_str());
+	}
+	UsbDescSetConfig(dev, 0);
+}
+
+int USBDevice::UsbDescSetConfig(XboxDeviceState* dev, int value)
+{
+	int i;
+
+	if (value == 0) { // default configuration
+		dev->Configuration = 0;
+		dev->NumInterfaces = 0;
+		dev->Config = nullptr;
+	}
+	else {
+		for (i = 0; i < dev->Device->bNumConfigurations; i++) { // select the configuration specified
+			if (dev->Device->confs[i].bConfigurationValue == value) {
+				dev->Configuration = value;
+				dev->NumInterfaces = dev->Device->confs[i].bNumInterfaces;
+				dev->Config = dev->Device->confs + i;
+				assert(dev->NumInterfaces <= USB_MAX_INTERFACES);
+			}
+		}
+		if (i < dev->Device->bNumConfigurations) {
+			return -1;
+		}
+	}
+
+	for (i = 0; i < dev->NumInterfaces; i++) { // setup all interfaces for the selected configuration
+		UsbDescSetInterface(dev, i, 0);
+	}
+	for (; i < USB_MAX_INTERFACES; i++) { // null the remaining interfaces
+		dev->AltSetting[i] = 0;
+		dev->Ifaces[i] = nullptr;
+	}
+
+	return 0;
+}
+
+int USBDevice::UsbDescSetInterface(XboxDeviceState* dev, int index, int value)
+{
+	const USBDescIface* iface;
+	int old;
+
+	iface = UsbDescFindInterface(dev, index, value);
+	if (iface == nullptr) {
+		return -1;
+	}
+
+	old = dev->AltSetting[index];
+	dev->AltSetting[index] = value;
+	dev->Ifaces[index] = iface;
+	UsbDescEpInit(dev);
+
+	if (old != value) {
+		USB_DeviceSetInterface(dev, index, old, value);
+	}
+	return 0;
+}
+
+const USBDescIface* USBDevice::UsbDescFindInterface(XboxDeviceState* dev, int nif, int alt)
+{
+	const USBDescIface* iface;
+	int i;
+
+	if (!dev->Config) { // no configuration descriptor here, nothing to search
+		return nullptr;
+	}
+	for (i = 0; i < dev->Config->nif; i++) { // find the desired interface
+		iface = &dev->Config->ifs[i];
+		if (iface->bInterfaceNumber == nif &&
+			iface->bAlternateSetting == alt) {
+			return iface;
+		}
+	}
+	return nullptr; // not found
+}
+
+void USBDevice::UsbDescEpInit(XboxDeviceState* dev)
+{
+	const USBDescIface *iface;
+	int i, e, pid, ep;
+
+	UsbEpInit(dev); // reset endpoints (because we changed descriptors in use?)
+	for (i = 0; i < dev->NumInterfaces; i++) {
+		iface = dev->Ifaces[i];
+		if (iface == nullptr) {
+			continue;
+		}
+		for (e = 0; e < iface->bNumEndpoints; e++) {
+			// From the standard:
+			// "bEndpointAddress:
+			// Bit 3...0: The endpoint number
+			// Bit 6...4: Reserved, reset to zero
+			// Bit 7: Direction -> 0 = OUT endpoint, 1 = IN endpoint
+			// bmAttributes:
+			// Bit 1..0: Transfer Type
+			// 00 = Control, 01 = Isochronous, 10 = Bulk, 11 = Interrupt. All other bits are reserved"
+			pid = (iface->eps[e].bEndpointAddress & USB_DIR_IN) ? USB_TOKEN_IN : USB_TOKEN_OUT;
+			ep = iface->eps[e].bEndpointAddress & 0xF;
+			USB_EPsetType(dev, pid, ep, iface->eps[e].bmAttributes & 0x03);
+			USB_EPsetIfnum(dev, pid, ep, iface->bInterfaceNumber);
+			USB_EPsetMaxPacketSize(dev, pid, ep, iface->eps[e].wMaxPacketSize);
+		}
+	}
 }
