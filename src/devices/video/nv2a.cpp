@@ -454,37 +454,48 @@ GLuint Get_YUV_to_RGB_shader_program()
 	// to https://github.com/kolyvan/kxmovie/blob/master/kxmovie/KxMovieGLView.m
 	// and https://www.opengl.org/discussion_boards/archive/index.php/t-169186.html
 	// and https://gist.github.com/roxlu/9329339
+	// https://github.com/g-truc/ogl-samples/blob/master/data/gl-330/texture-2d.vert
 	static const char *OPENGL_SHADER_YUV[2] = {
 		/* vertex shader */
 		"#version 330 core                                                       \n"
 		"#define ATTR_POSITION 0                                                 \n"
 		"#define ATTR_TEXCOORD 4                                                 \n"
+		"                                                                        \n"
 		"precision highp float;                                                  \n"
 		"precision highp int;                                                    \n"
 		"layout(std140, column_major) uniform;                                   \n"
+		"                                                                        \n"
 		"layout(location = ATTR_POSITION) in vec2 Position;                      \n"
 		"layout(location = ATTR_TEXCOORD) in vec2 Texcoord;                      \n"
+		"                                                                        \n"
 		"out block                                                               \n"
 		"{                                                                       \n"
 		"  vec2 Texcoord;                                                        \n"
 		"} Out;                                                                  \n"
+		"                                                                        \n"
 		"void main()                                                             \n"
 		"{                                                                       \n"
 		"	Out.Texcoord = Texcoord;                                             \n"
 		"	gl_Position = vec4(Position, 0.0, 1.0);                              \n"
 		"}                                                                       \n"
 		, /* fragment shader */
+		// https://github.com/g-truc/ogl-samples/blob/master/data/gl-330/texture-2d.frag
 		"#version 330 core                                                       \n"
 		"#define FRAG_COLOR 0                                                    \n"
+		"                                                                        \n"
 		"precision highp float;                                                  \n"
 		"precision highp int;                                                    \n"
 		"layout(std140, column_major) uniform;                                   \n"
+		"                                                                        \n"
 		"uniform sampler2D tex_yuyv;                                             \n"
+		"                                                                        \n"
 		"in block                                                                \n"
 		"{                                                                       \n"
 		"  vec2 Texcoord;                                                        \n"
 		"} In;                                                                   \n"
+		"                                                                        \n"
 		"layout(location = FRAG_COLOR, index = 0) out vec4 Color;                \n"
+		"                                                                        \n"
 		"// YUV offset                                                           \n"
 		"const vec3 offset = vec3(-0.0627451017, -0.501960814, -0.501960814);    \n"
 		"// RGB coefficients                                                     \n"
@@ -613,10 +624,6 @@ void InitShaders(void)
 	};
 
 	GL_RESET();
-#if 0
-	glGenVertexArrays(1, &m_vao);
-	glBindVertexArray(m_vao);
-#endif
 
 	// Compile vertex shader
 	GLuint vertex_shader = create_gl_shader(GL_VERTEX_SHADER, gl_framebuffer_shader_src[0], "Framebuffer vertex shader");
@@ -729,7 +736,7 @@ void cxbx_gl_initialize(NV2AState *d)
 static GLsizei frame_width = 640;
 static GLsizei frame_height = 480;
 
-void cxbx_gl_update_framebuffer(NV2AState *d)
+void cxbx_gl_render_framebuffer(NV2AState *d)
 {
 	static GLenum frame_gl_internal_format = GL_RGBA8;
 	static GLenum frame_gl_format = GL_BGRA;
@@ -749,8 +756,6 @@ void cxbx_gl_update_framebuffer(NV2AState *d)
 
 		PreviousAvDisplayModeFormat = g_AvDisplayModeFormat;
 	}
-
-	glGetError(); // reset GL_CHECK
 
 	// If we need to create a (new) texture, do so
 	if (frame_gl_texture == -1) {
@@ -783,10 +788,6 @@ void cxbx_gl_update_framebuffer(NV2AState *d)
 
 	// Note : The following is modelled partially after pgraph_update_surface()
 	// TODO : pgraph_update_surface() also unswizzles - should we too?
-
-	// Target the actual framebuffer
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-	GL_CHECK();
 
 #ifdef DEBUG_NV2A_GL
 	// If the screen turns purple, glBlitFramebuffer below failed
@@ -825,9 +826,6 @@ void cxbx_gl_update_framebuffer(NV2AState *d)
 #endif
 
 	glBindTexture(GL_TEXTURE_2D, 0);
-	GL_CHECK();
-	// Restore xbox framebuffer
-	glBindFramebuffer(GL_FRAMEBUFFER, d->pgraph.gl_framebuffer);
 	GL_CHECK();
 }
 
@@ -966,6 +964,12 @@ void cxbx_gl_render_overlays(NV2AState *d)
 		glUniform1i(m_overlay_uniform_location_texture, 0);
 		GL_CHECK();
 
+		glActiveTexture(GL_TEXTURE0);
+		GL_CHECK();
+
+		glBindTexture(GL_TEXTURE_2D, overlay_gl_texture);
+		GL_CHECK();
+
 		// Feed screen and texture coordinates through a vertex buffer object
 		const GLfloat overlay_vertex_buffer_data[] = {
 			dstX0f, dstY0f, srcX0f, srcY0f,
@@ -973,6 +977,14 @@ void cxbx_gl_render_overlays(NV2AState *d)
 			dstX1f, dstY1f, srcX1f, srcY1f,
 			dstX0f, dstY1f, srcX0f, srcY1f,
 		};
+
+		static GLuint m_framebuffer_vertex_array_name = -1;
+		if (m_framebuffer_vertex_array_name == -1) {
+			glGenVertexArrays(1, &m_framebuffer_vertex_array_name);
+			GL_CHECK();
+		}
+		glBindVertexArray(m_framebuffer_vertex_array_name);
+		GL_CHECK();
 
 		static GLuint overlay_gl_vertex_buffer_object = -1;
 		if (overlay_gl_vertex_buffer_object == -1) {
@@ -1013,6 +1025,8 @@ void cxbx_gl_render_overlays(NV2AState *d)
 		GL_CHECK();
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 		GL_CHECK();
+		glBindVertexArray(0);
+		GL_CHECK();
 	}
 
 	glUseProgram(0);
@@ -1030,9 +1044,25 @@ void NV2ADevice::UpdateHostDisplay(NV2AState *d)
 
 	NV2A_GL_DGROUP_BEGIN("VGA Frame");
 
-	cxbx_gl_update_framebuffer(d);
+	glGetError(); // reset GL_CHECK
+
+	// Target the actual framebuffer
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+	GL_CHECK();
+
+	// When either overlay is enabled and not transparent (TODO : and overlay fills entire screen)
+	if (((d->pvideo.regs[NV_PVIDEO_BUFFER] & NV_PVIDEO_BUFFER_0_USE) && (GET_MASK(d->pvideo.regs[NV_PVIDEO_FORMAT(0)], NV_PVIDEO_FORMAT_DISPLAY) == 0))
+    ||  ((d->pvideo.regs[NV_PVIDEO_BUFFER] & NV_PVIDEO_BUFFER_1_USE) && (GET_MASK(d->pvideo.regs[NV_PVIDEO_FORMAT(1)], NV_PVIDEO_FORMAT_DISPLAY) == 0))) {
+		// skip framebuffer draw
+	} else {
+		cxbx_gl_render_framebuffer(d);
+	}
 
 	cxbx_gl_render_overlays(d);
+
+	// Restore xbox framebuffer
+	glBindFramebuffer(GL_FRAMEBUFFER, d->pgraph.gl_framebuffer);
+	GL_CHECK();
 
 	// We currently don't double buffer, so no need to call swap...
 	glo_swap(d->pgraph.gl_context);
