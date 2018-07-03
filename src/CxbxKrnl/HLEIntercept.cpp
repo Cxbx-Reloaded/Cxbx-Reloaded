@@ -592,6 +592,10 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
     WritePrivateProfileString("Certificate", "Name", tAsciiTitle, filename.c_str());
     WritePrivateProfileString("Certificate", "TitleID", FormatTitleId(g_pCertificate->dwTitleId).c_str(), filename.c_str());
 
+    std::stringstream titleIdAlt;
+    titleIdAlt << std::hex << g_pCertificate->dwTitleId;
+    WritePrivateProfileString("Certificate", "TitleIDAlt", titleIdAlt.str().c_str(), filename.c_str());
+
     std::stringstream region;
     region << std::hex << g_pCertificate->dwGameRegion;
     WritePrivateProfileString("Certificate", "Region", region.str().c_str(), filename.c_str());
