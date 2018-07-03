@@ -69,16 +69,20 @@ class Hub final : public UsbPeripheral
 		// see USBDeviceClass for comments about these functions
 		int UsbHub_Initfn(XboxDeviceState* dev);
 		XboxDeviceState* UsbHub_FindDevice(XboxDeviceState* dev, uint8_t addr);
-		void UsbHub_HandleReset(XboxDeviceState* dev);
+		void UsbHub_HandleReset();
 		void UsbHub_HandleControl(XboxDeviceState* dev, USBPacket* p,
                int request, int value, int index, int length, uint8_t* data);
 		void UsbHub_HandleData(XboxDeviceState* dev, USBPacket* p);
 		void UsbHub_HandleDestroy(XboxDeviceState* dev);
+		// see USBPortOps struct for info
+		void UsbHub_Attach(USBPort* port1);
+		void UsbHub_Detach(USBPort* port1);
+		void UsbHub_ChildDetach(USBPort* port1, XboxDeviceState* child);
+		void UsbHub_Wakeup(USBPort* port1);
+		void UsbHub_Complete(USBPort* port, USBPacket* packet);
 		// TODO: perhaps these can be put in UsbPeripheral or USBDevice...
 		// initialize the endpoints of this peripheral
 		void UsbEpInit();
-		// destroy hub resources
-		void HubCleanUp();
 		// reset all endpoints of this peripheral
 		void UsbEpReset();
 		// reserve a usb port for this hub

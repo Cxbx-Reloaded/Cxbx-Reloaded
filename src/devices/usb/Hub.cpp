@@ -170,22 +170,16 @@ int Hub::Init(int pport)
         UsbReleasePort(m_pDeviceStruct);
         return rc;
     }
-    rc = usb_device_attach(dev);
-    if (rc != 0) {
-        usb_qdev_exit(qdev);
-        return rc;
-    }
+    m_UsbDev->USB_DeviceAttach(m_pDeviceStruct);
+
+	return 0;
 }
 
 Hub::~Hub()
 {
-	HubCleanUp();
-}
-
-void Hub::HubCleanUp()
-{
 	delete m_pPeripheralFuncStruct;
-	delete m_pDeviceStruct;
+	delete m_HubState->ports[0].port.Operations;
+	delete m_HubState;
 	m_pPeripheralFuncStruct = nullptr;
 	m_pDeviceStruct = nullptr;
 }
@@ -205,7 +199,7 @@ void Hub::ClassInitFn()
 		
 		m_pPeripheralFuncStruct->init           = std::bind(&Hub::UsbHub_Initfn, this, _1);
 		m_pPeripheralFuncStruct->find_device    = std::bind(&Hub::UsbHub_FindDevice, this, _1, _2);
-		m_pPeripheralFuncStruct->handle_reset   = std::bind(&Hub::UsbHub_HandleReset, this, _1);
+		m_pPeripheralFuncStruct->handle_reset   = std::bind(&Hub::UsbHub_HandleReset, this);
 		m_pPeripheralFuncStruct->handle_control = std::bind(&Hub::UsbHub_HandleControl, this, _1, _2, _3, _4, _5, _6, _7);
 		m_pPeripheralFuncStruct->handle_data    = std::bind(&Hub::UsbHub_HandleData, this, _1, _2);
 		m_pPeripheralFuncStruct->handle_destroy = std::bind(&Hub::UsbHub_HandleDestroy, this, _1);
@@ -283,8 +277,8 @@ void Hub::UsbReleasePort(XboxDeviceState* dev)
 
 int Hub::UsbHub_Initfn(XboxDeviceState* dev)
 {
-	USBHubState* s = container_of(dev, USBHubState, dev);
 	USBHubPort* port;
+	USBPortOps* ops;
 	int i;
 
 	if (dev->Port->HubCount == 5) {
@@ -294,23 +288,34 @@ int Hub::UsbHub_Initfn(XboxDeviceState* dev)
 
 	CreateSerial(dev);
 	UsbDescInit(dev);
-	s->intr = m_UsbDev->USB_GetEP(dev, USB_TOKEN_IN, 1);
+	m_HubState->intr = m_UsbDev->USB_GetEP(dev, USB_TOKEN_IN, 1);
+
+	ops = new USBPortOps();
+	{
+		using namespace std::placeholders;
+
+		ops->attach       = std::bind(&Hub::UsbHub_Attach, this, _1);
+		ops->detach       = std::bind(&Hub::UsbHub_Detach, this, _1);
+		ops->child_detach = std::bind(&Hub::UsbHub_ChildDetach, this, _1, _2);
+		ops->wakeup       = std::bind(&Hub::UsbHub_Wakeup, this, _1);
+		ops->complete     = std::bind(&Hub::UsbHub_Complete, this, _1, _2);
+	}
+
 	for (i = 0; i < NUM_PORTS; i++) {
-		port = &s->ports[i];
-		m_UsbDev->USB_RegisterPort(&port->port, i, USB_SPEED_MASK_LOW | USB_SPEED_MASK_FULL);
+		port = &m_HubState->ports[i];
+		m_UsbDev->USB_RegisterPort(&port->port, i, USB_SPEED_MASK_LOW | USB_SPEED_MASK_FULL, ops);
 		m_UsbDev->USB_PortLocation(&port->port, dev->Port, i + 1);
 	}
-	UsbHub_HandleReset(dev);
+	UsbHub_HandleReset();
 	return 0;
 }
 
-void Hub::UsbHub_HandleReset(XboxDeviceState* dev)
+void Hub::UsbHub_HandleReset()
 {
-	USBHubState* s = container_of(dev, USBHubState, dev);
 	USBHubPort* port;
 
 	for (int i = 0; i < NUM_PORTS; i++) {
-		port = s->ports + i;
+		port = m_HubState->ports + i;
 		port->wPortStatus = PORT_STAT_POWER;
 		port->wPortChange = 0;
 		if (port->port.Dev && port->port.Dev->Attached) {

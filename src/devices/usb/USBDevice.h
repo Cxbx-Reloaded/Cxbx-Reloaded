@@ -70,13 +70,13 @@ class USBDevice : public PCIDevice {
 
 		// register a port with the HC
 		void USB_RegisterPort(USBPort* Port, int Index, int SpeedMask, USBPortOps* Ops);
-		//
-		void USB_DeviceEPstopped(XboxDeviceState* Dev, USBEndpoint* Ep);
 		// reset a usb port
 		void USB_PortReset(USBPort* Port);
-		// a device is attached
+		// update device status during an attach
+		void USB_DeviceAttach(XboxDeviceState* dev);
+		// update port status when a device is attached
 		void USB_Attach(USBPort* Port);
-		// a device is detached
+		// update port status when a device is detached
 		void USB_Detach(USBPort* Port);
 		// a device downstream from the device attached to the port (attached through a hub) is detached
 		void ChildDetach(USBPort* Port, XboxDeviceState* Child);
@@ -86,8 +86,6 @@ class USBDevice : public PCIDevice {
 		void Complete(USBPort* Port, USBPacket *P);
 		// reset a device
 		void USB_DeviceReset(XboxDeviceState* Dev);
-		// find the usb device with the supplied address
-		XboxDeviceState* USB_FindDevice(USBPort* Port, uint8_t Addr);
 		//
 		XboxDeviceState* USB_DeviceFindDevice(XboxDeviceState* Dev, uint8_t Addr);
 		// find the requested endpoint in the supplied device
@@ -122,16 +120,26 @@ class USBDevice : public PCIDevice {
 		void USB_QueueOne(USBPacket* p);
 		// call usb class init function
 		int USB_DeviceInit(XboxDeviceState* dev);
+		// call usb class find_device function
+		XboxDeviceState* USB_FindDevice(USBPort* Port, uint8_t Addr);
+		// call usb class cancel_packet function
+		void USB_DeviceCancelPacket(XboxDeviceState* dev, USBPacket* p);
+		// call usb class handle_destroy function
+		void USB_DeviceHandleDestroy(XboxDeviceState* dev);
+		// call usb class handle_attach function
+		void USB_DeviceHandleAttach(XboxDeviceState* dev);
+		// call usb class handle_reset function
+		void USB_DeviceHandleReset(XboxDeviceState* dev);
 		// call usb class handle_control function
 		void USB_DeviceHandleControl(XboxDeviceState* dev, USBPacket* p, int request, int value, int index, int length, uint8_t* data);
 		// call usb class handle_data function
 		void USB_DeviceHandleData(XboxDeviceState* dev, USBPacket* p);
-		// call usb class flush_ep_queue function
-		void USB_DeviceFlushEPqueue(XboxDeviceState* dev, USBEndpoint* ep);
-		// call usb class cancel_packet function
-		void USB_DeviceCancelPacket(XboxDeviceState* dev, USBPacket* p);
 		// call usb class set_interface function
 		void USB_DeviceSetInterface(XboxDeviceState* dev, int iface, int alt_old, int alt_new);
+		// call usb class flush_ep_queue function
+		void USB_DeviceFlushEPqueue(XboxDeviceState* dev, USBEndpoint* ep);
+		// call usb class ep_stopped function
+		void USB_DeviceEPstopped(XboxDeviceState* Dev, USBEndpoint* Ep);
 		// set the type of the endpoint
 		void USB_EPsetType(XboxDeviceState* dev, int pid, int ep, uint8_t type);
 		// set the interface number of the endpoint

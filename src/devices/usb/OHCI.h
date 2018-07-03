@@ -262,7 +262,7 @@ class OHCI
 		// see USBPortOps struct for info
 		void OHCI_Attach(USBPort* Port);
 		void OHCI_Detach(USBPort* Port);
-		void OHCI_ChildDetach(XboxDeviceState* child);
+		void OHCI_ChildDetach(USBPort* port, XboxDeviceState* child);
 		void OHCI_Wakeup(USBPort* port1);
 		void OHCI_AsyncCompletePacket(USBPort* port, USBPacket* packet);
 };

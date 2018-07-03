@@ -116,14 +116,14 @@ void USBDevice::USB_Detach(USBPort* Port)
 
 void USBDevice::USB_Attach(USBPort* Port)
 {
-	XboxDeviceState *dev = Port->Dev;
+	XboxDeviceState* dev = Port->Dev;
 
 	assert(dev != nullptr);
 	assert(dev->Attached);
 	assert(dev->State == USB_STATE_NOTATTACHED);
-	m_HostController->OHCI_Attach(Port);
+	Port->Operations->attach(Port);
 	dev->State = USB_STATE_ATTACHED;
-	usb_device_handle_attach(dev);
+	USB_DeviceHandleAttach(dev);
 }
 
 void USBDevice::USB_DeviceReset(XboxDeviceState* dev)
@@ -506,6 +506,48 @@ int USBDevice::USB_DeviceInit(XboxDeviceState* dev)
 	return 0;
 }
 
+XboxDeviceState* USBDevice::USB_DeviceFindDevice(XboxDeviceState* dev, uint8_t Addr)
+{
+	USBDeviceClass* klass = dev->klass;
+	if (klass->find_device) {
+		return klass->find_device(dev, Addr);
+	}
+
+	return nullptr;
+}
+
+void USBDevice::USB_DeviceCancelPacket(XboxDeviceState* dev, USBPacket* p)
+{
+	USBDeviceClass* klass = dev->klass;
+	if (klass->cancel_packet) {
+		klass->cancel_packet(dev, p);
+	}
+}
+
+void USBDevice::USB_DeviceHandleDestroy(XboxDeviceState* dev)
+{
+	USBDeviceClass* klass = dev->klass;
+	if (klass->handle_destroy) {
+		klass->handle_destroy(dev);
+	}
+}
+
+void USBDevice::USB_DeviceHandleAttach(XboxDeviceState* dev)
+{
+	USBDeviceClass* klass = dev->klass;
+	if (klass->handle_attach) {
+		klass->handle_attach(dev);
+	}
+}
+
+void USBDevice::USB_DeviceHandleReset(XboxDeviceState* dev)
+{
+	USBDeviceClass* klass = dev->klass;
+	if (klass->handle_reset) {
+		klass->handle_reset(dev);
+	}
+}
+
 void USBDevice::USB_DeviceHandleControl(XboxDeviceState* dev, USBPacket* p, int request, int value, int index, int length, uint8_t* data)
 {
 	USBDeviceClass* klass = dev->klass;
@@ -522,6 +564,14 @@ void USBDevice::USB_DeviceHandleData(XboxDeviceState* dev, USBPacket* p)
 	}
 }
 
+void USBDevice::USB_DeviceSetInterface(XboxDeviceState* dev, int iface, int alt_old, int alt_new)
+{
+	USBDeviceClass* klass = dev->klass;
+	if (klass->set_interface) {
+		klass->set_interface(dev, iface, alt_old, alt_new);
+	}
+}
+
 void USBDevice::USB_DeviceFlushEPqueue(XboxDeviceState* dev, USBEndpoint* ep)
 {
 	USBDeviceClass *klass = dev->klass;
@@ -530,37 +580,11 @@ void USBDevice::USB_DeviceFlushEPqueue(XboxDeviceState* dev, USBEndpoint* ep)
 	}
 }
 
-void USBDevice::USB_DeviceCancelPacket(XboxDeviceState* dev, USBPacket* p)
-{
-	USBDeviceClass* klass = dev->klass;
-	if (klass->cancel_packet) {
-		klass->cancel_packet(dev, p);
-	}
-}
-
-XboxDeviceState* USBDevice::USB_DeviceFindDevice(XboxDeviceState* dev, uint8_t Addr)
-{
-	USBDeviceClass* klass = dev->klass;
-	if (klass->find_device) {
-		return klass->find_device(dev, Addr);
-	}
-
-	return nullptr;
-}
-
 void USBDevice::USB_DeviceEPstopped(XboxDeviceState* dev, USBEndpoint* EP)
 {
 	USBDeviceClass* klass = dev->klass;
 	if (klass->ep_stopped) {
 		klass->ep_stopped(dev, EP);
-	}
-}
-
-void USBDevice::USB_DeviceSetInterface(XboxDeviceState* dev, int iface, int alt_old, int alt_new)
-{
-	USBDeviceClass* klass = dev->klass;
-	if (klass->set_interface) {
-		klass->set_interface(dev, iface, alt_old, alt_new);
 	}
 }
 
@@ -608,4 +632,15 @@ void USBDevice::USB_PortLocation(USBPort* downstream, USBPort* upstream, int por
 		std::snprintf(downstream->Path, sizeof(downstream->Path), "%d", portnr);
 		downstream->HubCount = 0;
 	}
+}
+
+void USBDevice::USB_DeviceAttach(XboxDeviceState* dev)
+{
+	USBPort* port = dev->Port;
+
+	assert(port != nullptr);
+	assert(!dev->Attached);
+
+	dev->Attached++;
+	USB_Attach(port);
 }

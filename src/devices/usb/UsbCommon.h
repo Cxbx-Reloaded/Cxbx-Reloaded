@@ -256,13 +256,13 @@ struct USBPacket {
 };
 
 struct USBPortOps {
-	std::function<void(USBPort*port)> attach;
-	std::function<void(USBPort *port)> detach;
+	std::function<void(USBPort* port)> attach;
+	std::function<void(USBPort* port)> detach;
 	/*
 	* This gets called when a device downstream from the device attached to
 	* the port (attached through a hub) gets detached.
 	*/
-	std::function<void(XboxDeviceState* child)> child_detach;
+	std::function<void(USBPort* port, XboxDeviceState* child)> child_detach;
 	std::function<void(USBPort* port)> wakeup;
 	/*
 	* Note that port->dev will be different then the device from which
