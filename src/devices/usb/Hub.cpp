@@ -138,8 +138,6 @@ USBDescDevice::~USBDescDevice()
 
 static const USBDescDevice desc_device_hub(true);
 
-static USBDescStrings desc_strings = { nullptr, "Cxbx-Reloaded", "Cxbx-Reloaded USB Hub", "314159" };
-
 USBDesc::USBDesc(bool bDefault)
 {
 	std::memset(this, 0, sizeof(USBDesc));
@@ -151,7 +149,6 @@ USBDesc::USBDesc(bool bDefault)
 		id.iProduct = STR_PRODUCT;
 		id.iSerialNumber = STR_SERIALNUMBER;
 		full = &desc_device_hub;
-		str = desc_strings;
 	}
 }
 
@@ -160,7 +157,7 @@ static const USBDesc desc_hub(true);
 int Hub::Init(int pport)
 {
 	XboxDeviceState* dev = ClassInitFn();
-	m_UsbDev->UsbEpInit(dev);
+	m_UsbDev->USB_EpInit(dev);
     int rc = UsbHubClaimPort(dev, pport);
     if (rc != 0) {
         return rc;
@@ -252,8 +249,10 @@ int Hub::UsbHub_Initfn(XboxDeviceState* dev)
 		return -1;
 	}
 
-	m_UsbDev->CreateSerial(dev);
-	m_UsbDev->UsbDescInit(dev);
+	m_UsbDev->USB_CreateSerial(dev, "314159");
+	m_UsbDev->USBDesc_SetString(dev, STR_MANUFACTURER, "Cxbx-Reloaded");
+	m_UsbDev->USBDesc_SetString(dev, STR_PRODUCT, "Cxbx-Reloaded USB Hub");
+	m_UsbDev->USBDesc_Init(dev);
 	m_HubState->intr = m_UsbDev->USB_GetEP(dev, USB_TOKEN_IN, 1);
 
 	ops = new USBPortOps();
@@ -318,7 +317,7 @@ void Hub::UsbHub_HandleControl(XboxDeviceState* dev, USBPacket* p,
 	USBHubState *s = (USBHubState *)dev;
 	int ret;
 
-	ret = usb_desc_handle_control(dev, p, request, value, index, length, data);
+	ret = m_UsbDev->USBDesc_HandleControl(dev, p, request, value, index, length, data);
 	if (ret >= 0) {
 		return;
 	}
@@ -519,90 +518,4 @@ void Hub::UsbHub_Complete(USBPort* port, USBPacket* packet)
 {
 	// Just pass it along to upstream
 	m_HubState->dev.Port->Operations->complete(m_HubState->dev.Port, packet);
-}
-
-int usb_desc_handle_control(USBDevice *dev, USBPacket *p,
-	int request, int value, int index, int length, uint8_t *data)
-{
-	const USBDesc *desc = usb_device_get_usb_desc(dev);
-	int ret = -1;
-
-	assert(desc != NULL);
-	switch (request) {
-	case DeviceOutRequest | USB_REQ_SET_ADDRESS:
-		dev->addr = value;
-		trace_usb_set_addr(dev->addr);
-		ret = 0;
-		break;
-
-	case DeviceRequest | USB_REQ_GET_DESCRIPTOR:
-		ret = usb_desc_get_descriptor(dev, p, value, data, length);
-		break;
-
-	case DeviceRequest | USB_REQ_GET_CONFIGURATION:
-		/*
-		* 9.4.2: 0 should be returned if the device is unconfigured, otherwise
-		* the non zero value of bConfigurationValue.
-		*/
-		data[0] = dev->config ? dev->config->bConfigurationValue : 0;
-		p->actual_length = 1;
-		ret = 0;
-		break;
-	case DeviceOutRequest | USB_REQ_SET_CONFIGURATION:
-		ret = usb_desc_set_config(dev, value);
-		trace_usb_set_config(dev->addr, value, ret);
-		break;
-
-	case DeviceRequest | USB_REQ_GET_STATUS: {
-		const USBDescConfig *config = dev->config ?
-			dev->config : &dev->device->confs[0];
-
-		data[0] = 0;
-		/*
-		* Default state: Device behavior when this request is received while
-		*                the device is in the Default state is not specified.
-		* We return the same value that a configured device would return if
-		* it used the first configuration.
-		*/
-		if (config->bmAttributes & 0x40) {
-			data[0] |= 1 << USB_DEVICE_SELF_POWERED;
-		}
-		if (dev->remote_wakeup) {
-			data[0] |= 1 << USB_DEVICE_REMOTE_WAKEUP;
-		}
-		data[1] = 0x00;
-		p->actual_length = 2;
-		ret = 0;
-		break;
-	}
-	case DeviceOutRequest | USB_REQ_CLEAR_FEATURE:
-		if (value == USB_DEVICE_REMOTE_WAKEUP) {
-			dev->remote_wakeup = 0;
-			ret = 0;
-		}
-		trace_usb_clear_device_feature(dev->addr, value, ret);
-		break;
-	case DeviceOutRequest | USB_REQ_SET_FEATURE:
-		if (value == USB_DEVICE_REMOTE_WAKEUP) {
-			dev->remote_wakeup = 1;
-			ret = 0;
-		}
-		trace_usb_set_device_feature(dev->addr, value, ret);
-		break;
-
-	case InterfaceRequest | USB_REQ_GET_INTERFACE:
-		if (index < 0 || index >= dev->ninterfaces) {
-			break;
-		}
-		data[0] = dev->altsetting[index];
-		p->actual_length = 1;
-		ret = 0;
-		break;
-	case InterfaceOutRequest | USB_REQ_SET_INTERFACE:
-		ret = usb_desc_set_interface(dev, index, value);
-		trace_usb_set_interface(dev->addr, index, value, ret);
-		break;
-
-	}
-	return ret;
 }

@@ -149,25 +149,47 @@ class USBDevice : public PCIDevice {
 		// assign port numbers (also for hubs)
 		void USB_PortLocation(USBPort* downstream, USBPort* upstream, int portnr);
 		// initialize the endpoints of this peripheral
-		void UsbEpInit(XboxDeviceState* dev);
+		void USB_EpInit(XboxDeviceState* dev);
 		// reset all endpoints of this peripheral
-		void UsbEpReset(XboxDeviceState* dev);
+		void USB_EpReset(XboxDeviceState* dev);
 		// create a serial number for the device
-		void CreateSerial(XboxDeviceState* dev);
+		void USB_CreateSerial(XboxDeviceState* dev, const char* str);
 		// start descriptors initialization
-		void UsbDescInit(XboxDeviceState* dev);
+		void USBDesc_Init(XboxDeviceState* dev);
 		// get device descriptor
-		const USBDesc* GetUsbDeviceDesc(XboxDeviceState* dev);
+		const USBDesc* USBDesc_GetUsbDeviceDesc(XboxDeviceState* dev);
 		// set the descriptors to use for this device
-		void UsbDescSetDefaults(XboxDeviceState* dev);
+		void USBDesc_SetDefaults(XboxDeviceState* dev);
 		// set the configuration to use
-		int UsbDescSetConfig(XboxDeviceState* dev, int value);
+		int USBDesc_SetConfig(XboxDeviceState* dev, int value);
 		// set the interface to use
-		int UsbDescSetInterface(XboxDeviceState* dev, int index, int value);
+		int USBDesc_SetInterface(XboxDeviceState* dev, int index, int value);
 		// find the interface to use
-		const USBDescIface* UsbDescFindInterface(XboxDeviceState* dev, int nif, int alt);
+		const USBDescIface* USBDesc_FindInterface(XboxDeviceState* dev, int nif, int alt);
 		// setup endpoints and their descriptors
-		void UsbDescEpInit(XboxDeviceState* dev);
+		void USBDesc_EpInit(XboxDeviceState* dev);
+		// handle standard control request
+		int USBDesc_HandleControl(XboxDeviceState *dev, USBPacket *p,
+			int request, int value, int index, int length, uint8_t *data);
+		// handle standard GetDescriptor() request
+		int USBDesc_HandleStandardGetDescriptor(XboxDeviceState* dev, USBPacket* p,
+			int value, uint8_t* dest, size_t len);
+		// return the binary rapresentation of a device descriptor
+		int USB_ReadDeviceDesc(const USBDescID* id, const USBDescDevice* dev, uint8_t* dest, size_t len);
+		// return the binary rapresentation of configuration descriptors
+		int USB_ReadConfigurationDesc(const USBDescConfig* conf, int flags, uint8_t* dest, size_t len);
+		// return the binary rapresentation of interface descriptors
+		int USB_ReadInterfaceDesc(const USBDescIface* iface, int flags, uint8_t* dest, size_t len);
+		// return the binary rapresentation of class-specific descriptors
+		int USB_ReadOtherDesc(const USBDescOther* desc, uint8_t* dest, size_t len);
+		// return the binary rapresentation of endpoint descriptors
+		int USB_ReadEndpointDesc(const USBDescEndpoint* ep, int flags, uint8_t* dest, size_t len);
+		// return the binary rapresentation of string descriptors
+		int USB_ReadStringDesc(XboxDeviceState* dev, int index, uint8_t* dest, size_t len);
+		// set a string in the string descriptor with the supplied index
+		void USBDesc_SetString(XboxDeviceState* dev, int index, const char* str);
+		// get a string in the string descriptor with the supplied index
+		const char* USBDesc_GetString(XboxDeviceState* dev, int index);
 };
 
 #endif

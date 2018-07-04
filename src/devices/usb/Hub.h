@@ -60,11 +60,11 @@ class Hub
 		
 	private:
 		// usb device this hub is attached to
-		USBDevice* m_UsbDev;
+		USBDevice* m_UsbDev = nullptr;
 		// hub state
-		USBHubState* m_HubState;
+		USBHubState* m_HubState = nullptr;
 		// hub class functions
-		USBDeviceClass* m_pPeripheralFuncStruct;
+		USBDeviceClass* m_pPeripheralFuncStruct = nullptr;
 
 		// initialize various member variables/functions
 		XboxDeviceState* ClassInitFn();

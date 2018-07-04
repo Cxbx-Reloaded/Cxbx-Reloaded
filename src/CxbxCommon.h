@@ -189,11 +189,7 @@ void GetDwords(xbaddr Paddr, uint32_t* Buffer, int Number);
 void GetWords(xbaddr Paddr, uint16_t* Buffer, int Number);
 void WriteWords(xbaddr Paddr, uint16_t* Buffer, int Number);
 
-// Calculate a struct base address from a pointer to a member of it
-#ifndef container_of
-#define container_of(address, type, field) ((type *)( \
-                                              (int8_t*)(address) - \
-                                              (uint32_t)(&((type *)0)->field)))
-#endif
+#define GET_WORD_LOW(value) (uint8_t)((value) & 0xFF)
+#define GET_WORD_HIGH(value) (uint8_t)(((value) >> 8) & 0xFF)
 
 #endif

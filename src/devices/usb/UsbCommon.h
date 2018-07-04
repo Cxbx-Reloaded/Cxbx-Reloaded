@@ -68,6 +68,61 @@
 #define USB_SPEED_LOW   0
 #define USB_SPEED_FULL  1
 
+#define USB_DEVICE_SELF_POWERED		0
+#define USB_DEVICE_REMOTE_WAKEUP	1
+
+#define USB_TYPE_MASK			(0x03 << 5)
+#define USB_TYPE_STANDARD		(0x00 << 5)
+#define USB_TYPE_CLASS			(0x01 << 5)
+#define USB_TYPE_VENDOR			(0x02 << 5)
+#define USB_TYPE_RESERVED		(0x03 << 5)
+
+#define USB_RECIP_MASK			0x1F
+#define USB_RECIP_DEVICE		0x00
+#define USB_RECIP_INTERFACE		0x01
+#define USB_RECIP_ENDPOINT		0x02
+#define USB_RECIP_OTHER			0x03
+
+#define DeviceRequest ((USB_DIR_IN|USB_TYPE_STANDARD|USB_RECIP_DEVICE)<<8)
+#define DeviceOutRequest ((USB_DIR_OUT|USB_TYPE_STANDARD|USB_RECIP_DEVICE)<<8)
+#define VendorDeviceRequest ((USB_DIR_IN|USB_TYPE_VENDOR|USB_RECIP_DEVICE)<<8)
+#define VendorDeviceOutRequest ((USB_DIR_OUT|USB_TYPE_VENDOR|USB_RECIP_DEVICE)<<8)
+
+#define InterfaceRequest \
+        ((USB_DIR_IN|USB_TYPE_STANDARD|USB_RECIP_INTERFACE)<<8)
+#define InterfaceOutRequest \
+        ((USB_DIR_OUT|USB_TYPE_STANDARD|USB_RECIP_INTERFACE)<<8)
+#define ClassInterfaceRequest \
+        ((USB_DIR_IN|USB_TYPE_CLASS|USB_RECIP_INTERFACE)<<8)
+#define ClassInterfaceOutRequest \
+        ((USB_DIR_OUT|USB_TYPE_CLASS|USB_RECIP_INTERFACE)<<8)
+#define VendorInterfaceRequest \
+        ((USB_DIR_IN|USB_TYPE_VENDOR|USB_RECIP_INTERFACE)<<8)
+#define VendorInterfaceOutRequest \
+        ((USB_DIR_OUT|USB_TYPE_VENDOR|USB_RECIP_INTERFACE)<<8)
+
+#define EndpointRequest ((USB_DIR_IN|USB_TYPE_STANDARD|USB_RECIP_ENDPOINT)<<8)
+#define EndpointOutRequest \
+        ((USB_DIR_OUT|USB_TYPE_STANDARD|USB_RECIP_ENDPOINT)<<8)
+
+#define USB_REQ_GET_STATUS			0x00
+#define USB_REQ_CLEAR_FEATURE		0x01
+#define USB_REQ_SET_FEATURE			0x03
+#define USB_REQ_SET_ADDRESS			0x05
+#define USB_REQ_GET_DESCRIPTOR		0x06
+#define USB_REQ_SET_DESCRIPTOR		0x07
+#define USB_REQ_GET_CONFIGURATION	0x08
+#define USB_REQ_SET_CONFIGURATION	0x09
+#define USB_REQ_GET_INTERFACE		0x0A
+#define USB_REQ_SET_INTERFACE		0x0B
+#define USB_REQ_SYNCH_FRAME			0x0C
+
+#define USB_DT_DEVICE			0x01
+#define USB_DT_CONFIG			0x02
+#define USB_DT_STRING			0x03
+#define USB_DT_INTERFACE		0x04
+#define USB_DT_ENDPOINT			0x05
+
 
 typedef enum _USB_SPEED
 {
@@ -88,7 +143,6 @@ USBPacketState;
 
 struct USBPacket;
 struct XboxDeviceState;
-typedef const char* USBDescStrings[256];
 
 /* String descriptor */
 struct USBDescString {
@@ -97,6 +151,7 @@ struct USBDescString {
 	QLIST_ENTRY(USBDescString) next;
 };
 
+// Device-specific class descriptors, if any. No idea if some Xbox devices use this but, if not, this can be removed
 struct USBDescOther {
     uint8_t                   length;
     const uint8_t*            data;
@@ -111,8 +166,8 @@ struct USBDescEndpoint {
     uint8_t                   bRefresh;         // for audio devices only: the rate at which synchronization feedback is provided
     uint8_t                   bSynchAddress;    // for audio devices only: the address of the synchronization endpoint
 
-    uint8_t                   is_audio; /* has bRefresh + bSynchAddress */
-    uint8_t*                  extra;
+    uint8_t                   is_audio;         // has bRefresh + bSynchAddress
+    uint8_t*                  extra;            // class-specific descriptors (if any) associated with this endpoint
 
 	// Dropped from XQEMU the parameters bMaxBurst, bmAttributes_super and wBytesPerInterval because those are only defined for
 	// superspeed (usb 3.0) devices in the superspeed endpoint companion
@@ -128,8 +183,8 @@ struct USBDescIface {
     uint8_t                   bInterfaceProtocol; // protocol code (assigned by the USB)
     uint8_t                   iInterface;         // index of string descriptor describing this interface
 
-    uint8_t                   ndesc;
-    USBDescOther*             descs;
+    uint8_t                   ndesc;              // number of device-specific class descriptors (if any)
+    USBDescOther*             descs;              // pointer to the extra class descriptors
     USBDescEndpoint*          eps;                // endpoints supported by this interface
 	USBDescIface(bool bDefault);
 	~USBDescIface();
@@ -179,9 +234,66 @@ struct USBDescID {
 struct USBDesc {
     USBDescID                 id;   // id-specific info of the device descriptor
     const USBDescDevice*      full; // remaining fields of the device descriptor
-    const char* const*        str;
 	USBDesc(bool bDefault);
 };
+
+#pragma pack(1)
+
+// Binary representation of the descriptors
+// Dropped from XQEMU usb 2.0 and 3.0 only descriptors
+struct USBDescriptor {
+	uint8_t                   bLength;
+	uint8_t                   bDescriptorType;
+	union {
+		struct {
+			uint8_t           bcdUSB_lo;
+			uint8_t           bcdUSB_hi;
+			uint8_t           bDeviceClass;
+			uint8_t           bDeviceSubClass;
+			uint8_t           bDeviceProtocol;
+			uint8_t           bMaxPacketSize0;
+			uint8_t           idVendor_lo;
+			uint8_t           idVendor_hi;
+			uint8_t           idProduct_lo;
+			uint8_t           idProduct_hi;
+			uint8_t           bcdDevice_lo;
+			uint8_t           bcdDevice_hi;
+			uint8_t           iManufacturer;
+			uint8_t           iProduct;
+			uint8_t           iSerialNumber;
+			uint8_t           bNumConfigurations;
+		} device; // device descriptor
+		struct {
+			uint8_t           wTotalLength_lo;
+			uint8_t           wTotalLength_hi;
+			uint8_t           bNumInterfaces;
+			uint8_t           bConfigurationValue;
+			uint8_t           iConfiguration;
+			uint8_t           bmAttributes;
+			uint8_t           bMaxPower;
+		} config; // configuration descriptor
+		struct {
+			uint8_t           bInterfaceNumber;
+			uint8_t           bAlternateSetting;
+			uint8_t           bNumEndpoints;
+			uint8_t           bInterfaceClass;
+			uint8_t           bInterfaceSubClass;
+			uint8_t           bInterfaceProtocol;
+			uint8_t           iInterface;
+		} iface; // interface descriptor
+		struct {
+			uint8_t           bEndpointAddress;
+			uint8_t           bmAttributes;
+			uint8_t           wMaxPacketSize_lo;
+			uint8_t           wMaxPacketSize_hi;
+			uint8_t           bInterval;
+			uint8_t           bRefresh;        // only audio ep
+			uint8_t           bSynchAddress;   // only audio ep
+		} endpoint; // endpoint descriptor
+	} u;
+};
+
+#pragma pack()
 
 /* USB endpoint */
 struct USBEndpoint {
@@ -211,18 +323,18 @@ struct XboxDeviceState {
 	int Attached;                          // device is attached
 
 	int32_t State;                         // current state of device
-	uint8_t SetupBuffer[8];                // holds the IoVec structs copied (control transfers only?)
-	uint8_t data_buf[4096];
+	uint8_t SetupBuffer[8];                // setup packet buffer - 8 bytes (control transfers only)
+	uint8_t DataBuffer[4096];              // buffer where to write the data requested during usb requests
 	int32_t RemoteWakeup;                  // wakeup flag
 	int32_t SetupState;                    // result of a setup tken processing operation
-	int32_t SetupLength;                   // number of bytes to transfer as specified by a setup token
+	int32_t SetupLength;                   // this field specifies the length of the data transferred during the second phase of the control transfer
 	int32_t SetupIndex;                    // index of the parameter in a setup token?
 
 	USBEndpoint EP_ctl;                    // endpoints for SETUP tokens
 	USBEndpoint EP_in[USB_MAX_ENDPOINTS];  // endpoints for OUT tokens
 	USBEndpoint EP_out[USB_MAX_ENDPOINTS]; // endpoints for IN tokens
 
-	QLIST_HEAD(, USBDescString) Strings;   // strings of the string descriptor
+	QLIST_HEAD(, USBDescString) Strings;   // strings of the string descriptors
 	const USBDesc* UsbDesc;                // Overrides class usb_desc if not nullptr
 	const USBDescDevice* Device;           // device descriptor part 1
 
@@ -250,7 +362,7 @@ struct USBPacket {
 	bool ShortNotOK;                         // the bufferRounding mode of the TD for this packet
 	bool IntReq;                             // whether or not to generate an interrupt for this packet (DelayInterrupt of the TD is zero)
 	int Status;                              // USB_RET_* status code
-	int ActualLength;                        // before copy: offset inside IoVec structs; after copy: number of bytes actually transferred
+	int ActualLength;                        // number of bytes actually written to DataBuffer
 	// Internal use by the USB layer
 	USBPacketState State;
 	USBCombinedPacket* Combined;
