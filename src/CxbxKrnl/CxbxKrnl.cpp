@@ -1386,7 +1386,11 @@ __declspec(noreturn) void CxbxKrnlInit
 
 		// Dump Xbe certificate
 		if (g_pCertificate != NULL) {
+			std::stringstream titleIdHex;
+			titleIdHex << std::hex << g_pCertificate->dwTitleId;
+
 			printf("[0x%.4X] INIT: XBE TitleID : %s\n", GetCurrentThreadId(), FormatTitleId(g_pCertificate->dwTitleId).c_str());
+			printf("[0x%.4X] INIT: XBE TitleID (Hex) : 0x%s\n", GetCurrentThreadId(), titleIdHex.str().c_str());
 			printf("[0x%.4X] INIT: XBE Version : 1.%02d\n", GetCurrentThreadId(), g_pCertificate->dwVersion);
 			printf("[0x%.4X] INIT: XBE TitleName : %ls\n", GetCurrentThreadId(), g_pCertificate->wszTitleName);
 			printf("[0x%.4X] INIT: XBE Region : %s\n", GetCurrentThreadId(), CxbxKrnl_Xbe->GameRegionToString());

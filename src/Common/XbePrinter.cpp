@@ -318,6 +318,7 @@ std::string XbePrinter::GenCertificateHeader()
     text << "Size of Certificate              : 0x" << std::setw(8) << Xbe_certificate->dwSize << "\n";
     text << "TimeDate Stamp                   : 0x" << std::setw(8) << Xbe_certificate->dwTimeDate << " (" << BetterTime(Xbe_certificate->dwTimeDate) << ")\n";
     text << "Title ID                         : " << FormatTitleId(Xbe_certificate->dwTitleId) << "\n";
+    text << "Title ID (Hex)                   : 0x" << std::setw(8) << Xbe_certificate->dwTitleId << "\n";
     text << "Title                            : L\"" << Xbe_to_print->m_szAsciiTitle << "\"\n";
     return text.str();
 }
