@@ -575,16 +575,9 @@ GLuint Get_YUV_to_RGB_shader_program()
 	return shader_program_name_yuv_to_rgb;
 }
 
-//#define DRAW_FRAMEBUFFER // Doesn't show anything yet
-
-#ifdef DRAW_FRAMEBUFFER
-
-GLuint m_framebuffer_gl_shader_program = -1;
 GLuint m_framebuffer_gl_uniform_location_texture = -1;
-GLuint m_framebuffer_gl_vertex_buffer_object = -1;
-GLuint m_framebuffer_gl_vertex_array_object = -1;
 
-void InitFramebufferShaders(void)
+GLuint GetFramebufferShaderProgram()
 {
 	static const char *gl_framebuffer_shader_src[2] = {
 		/* vertex shader */
@@ -632,108 +625,50 @@ void InitFramebufferShaders(void)
 		"}                                                                       \n"
 	};
 
-	// Compile vertex shader
-	GLuint vertex_shader = create_gl_shader(GL_VERTEX_SHADER, gl_framebuffer_shader_src[0], "Framebuffer vertex shader");
-	GL_CHECK();
-	// Compile fragment shader
-	GLuint fragment_shader = create_gl_shader(GL_FRAGMENT_SHADER, gl_framebuffer_shader_src[1], "Framebuffer fragment shader");
-	GL_CHECK();
+	// Bind shader
+	static GLuint m_framebuffer_gl_shader_program = -1;
+	if (m_framebuffer_gl_shader_program == -1) {
+		m_framebuffer_gl_shader_program = glCreateProgram();
+		// Compile vertex shader
+		GLuint vertex_shader = create_gl_shader(GL_VERTEX_SHADER, gl_framebuffer_shader_src[0], "Framebuffer vertex shader");
+		GL_CHECK();
+		// Compile fragment shader
+		GLuint fragment_shader = create_gl_shader(GL_FRAGMENT_SHADER, gl_framebuffer_shader_src[1], "Framebuffer fragment shader");
+		GL_CHECK();
 
-	m_framebuffer_gl_shader_program = glCreateProgram();
-	GL_CHECK();
-	// Link vertex and fragment shaders
-	glAttachShader(m_framebuffer_gl_shader_program, vertex_shader);
-	GL_CHECK();
-	glAttachShader(m_framebuffer_gl_shader_program, fragment_shader);
-	GL_CHECK();
-	glBindAttribLocation(m_framebuffer_gl_shader_program, ATTR_POSITION, "Position");
-	GL_CHECK();
-	glBindAttribLocation(m_framebuffer_gl_shader_program, ATTR_TEXCOORD, "Texcoord");
-	GL_CHECK();
-	glBindFragDataLocation(m_framebuffer_gl_shader_program, FRAG_COLOR, "Color");
-	GL_CHECK();
-	glLinkProgram(m_framebuffer_gl_shader_program);
-	GL_CHECK();
+		GL_CHECK();
+		// Link vertex and fragment shaders
+		glAttachShader(m_framebuffer_gl_shader_program, vertex_shader);
+		GL_CHECK();
+		glAttachShader(m_framebuffer_gl_shader_program, fragment_shader);
+		GL_CHECK();
+		glBindAttribLocation(m_framebuffer_gl_shader_program, ATTR_POSITION, "Position");
+		GL_CHECK();
+		glBindAttribLocation(m_framebuffer_gl_shader_program, ATTR_TEXCOORD, "Texcoord");
+		GL_CHECK();
+		glBindFragDataLocation(m_framebuffer_gl_shader_program, FRAG_COLOR, "Color");
+		GL_CHECK();
+		glLinkProgram(m_framebuffer_gl_shader_program);
+		GL_CHECK();
 
-	/* Check it linked */
-	GLint linked = 0;
-	glGetProgramiv(m_framebuffer_gl_shader_program, GL_LINK_STATUS, &linked);
-	GL_CHECK();
-	if (!linked) {
-		GLchar log[2048];
-		glGetProgramInfoLog(m_framebuffer_gl_shader_program, 2048, NULL, log);
-		fprintf(stderr, "nv2a: shader linking failed: %s\n", log);
-		abort();
+		/* Check it linked */
+		GLint linked = 0;
+		glGetProgramiv(m_framebuffer_gl_shader_program, GL_LINK_STATUS, &linked);
+		GL_CHECK();
+		if (!linked) {
+			GLchar log[2048];
+			glGetProgramInfoLog(m_framebuffer_gl_shader_program, 2048, NULL, log);
+			fprintf(stderr, "nv2a: shader linking failed: %s\n", log);
+			abort();
+		}
+
+		m_framebuffer_gl_uniform_location_texture = glGetUniformLocation(m_framebuffer_gl_shader_program, "tex");
+		GL_CHECK();
+		assert(m_framebuffer_gl_uniform_location_texture >= 0);
 	}
 
-	m_framebuffer_gl_uniform_location_texture = glGetUniformLocation(m_framebuffer_gl_shader_program, "tex");
-	GL_CHECK();
-	assert(m_framebuffer_gl_uniform_location_texture >= 0);
+	return m_framebuffer_gl_shader_program;
 }
-
-void InitFramebufferGeometry()
-{
-	static const GLfloat vertices[] = {
-		//  x      y      s      t
-		-1.0f, -1.0f,  0.0f,  0.0f, // BL
-		 1.0f, -1.0f,  1.0f,  0.0f, // BR
-		 1.0f,  1.0f,  1.0f,  1.0f, // TR
-		-1.0f,  1.0f,  0.0f,  1.0f, // TL
-	};
-
-	glGenVertexArrays(1, &m_framebuffer_gl_vertex_array_object);
-	GL_CHECK();
-	glBindVertexArray(m_framebuffer_gl_vertex_array_object);
-	GL_CHECK();
-	// Populate vertex buffer
-	glGenBuffers(1, &m_framebuffer_gl_vertex_buffer_object);
-	GL_CHECK();
-	glBindBuffer(GL_ARRAY_BUFFER, m_framebuffer_gl_vertex_buffer_object);
-	GL_CHECK();
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-	GL_CHECK();
-	// Bind vertex position attribute
-	glVertexAttribPointer(
-		/*index=*/ATTR_POSITION,
-		/*size=vec*/2,
-		/*type=*/GL_FLOAT,
-		/*normalized?=*/GL_FALSE,
-		/*stride=*/4 * sizeof(GLfloat),
-		/*array buffer offset=*/(void*)0
-	);
-	GL_CHECK();
-	glEnableVertexAttribArray(ATTR_POSITION);
-	GL_CHECK();
-	// Bind vertex texture coordinate attribute
-	glVertexAttribPointer(
-		/*index=*/ATTR_TEXCOORD,
-		/*size=vec*/2,
-		/*type=*/GL_FLOAT,
-		/*normalized?=*/GL_FALSE,
-		/*stride=*/4 * sizeof(GLfloat),
-		/*array buffer offset=*/(void*)(2 * sizeof(GLfloat))
-	);
-	GL_CHECK();
-	glEnableVertexAttribArray(ATTR_TEXCOORD);
-	GL_CHECK();
-	// Unbind everything we've used
-	glBindVertexArray(0);
-	GL_CHECK();
-}
-
-void cxbx_gl_framebuffer_initialize(NV2AState *d)
-{
-	lockGL(&d->pgraph);
-
-	GL_RESET();
-
-	InitFramebufferShaders();
-	InitFramebufferGeometry();
-
-	unlockGL(&d->pgraph);
-}
-
-#endif // DRAW_FRAMEBUFFER
 
 static GLenum frame_gl_internal_format = GL_RGBA8;
 static GLenum frame_gl_format = GL_BGRA;
@@ -820,41 +755,56 @@ void cxbx_gl_render_framebuffer(NV2AState *d)
 	GL_CHECK();
 #endif
 
-#ifdef DRAW_FRAMEBUFFER
 	// Draw frame texture to an internal frame buffer
-	glUseProgram(m_framebuffer_gl_shader_program);
+	glUseProgram(GetFramebufferShaderProgram());
 	GL_CHECK();
 	glUniform1i(m_framebuffer_gl_uniform_location_texture, SAMP_TEXCOORD);
 	GL_CHECK();
-	glBindVertexArray(m_framebuffer_gl_vertex_array_object);
+
+	static const GLfloat vertices[] = {
+		//  x      y      s      t
+		-1.0f, -1.0f,  0.0f,  1.0f, // BL
+		 1.0f, -1.0f,  1.0f,  1.0f, // BR
+		 1.0f,  1.0f,  1.0f,  0.0f, // TR
+		-1.0f,  1.0f,  0.0f,  0.0f, // TL
+	};
+
+	// Populate vertex buffer
+	static GLuint m_framebuffer_gl_vertex_buffer_object = -1;
+	if (m_framebuffer_gl_vertex_buffer_object == -1) {
+		glGenBuffers(1, &m_framebuffer_gl_vertex_buffer_object);
+		GL_CHECK();
+	}
+	glBindBuffer(GL_ARRAY_BUFFER, m_framebuffer_gl_vertex_buffer_object);
+	GL_CHECK();
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_DYNAMIC_DRAW);
+	GL_CHECK();
+	// Bind vertex position attribute
+	glVertexAttribPointer(
+		/*index=*/ATTR_POSITION,
+		/*size=vec*/2,
+		/*type=*/GL_FLOAT,
+		/*normalized?=*/GL_FALSE,
+		/*stride=*/4 * sizeof(GLfloat),
+		/*array buffer offset=*/(void*)0
+	);
+	GL_CHECK();
+	glEnableVertexAttribArray(ATTR_POSITION);
+	GL_CHECK();
+	// Bind vertex texture coordinate attribute
+	glVertexAttribPointer(
+		/*index=*/ATTR_TEXCOORD,
+		/*size=vec*/2,
+		/*type=*/GL_FLOAT,
+		/*normalized?=*/GL_FALSE,
+		/*stride=*/4 * sizeof(GLfloat),
+		/*array buffer offset=*/(void*)(2 * sizeof(GLfloat))
+	);
+	GL_CHECK();
+	glEnableVertexAttribArray(ATTR_TEXCOORD);
 	GL_CHECK();
 	glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 	GL_CHECK();
-	glBindVertexArray(0);
-	GL_CHECK();
-#else
-	// If we need to create an OpenGL framebuffer, do so
-	static GLuint frame_gl_framebuffer = -1;
-	if (frame_gl_framebuffer == -1) {
-		glGenFramebuffers(1, &frame_gl_framebuffer);
-		GL_CHECK();
-	}
-
-	// Copy frame texture to an internal frame buffer
-	glBindFramebuffer(GL_READ_FRAMEBUFFER, frame_gl_framebuffer);
-	GL_CHECK();
-	glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, frame_gl_texture, /*level=*/0);
-	GL_CHECK();
-	// Blit the active internal 'read' frame buffer to the actual 'draw' framebuffer
-	static const GLenum filter = GL_NEAREST;
-	// TODO: Use window size/actual framebuffer size rather than hard coding 640x480
-	// Note : dstY0 and dstY1 are swapped so the screen doesn't appear upside down
-	glBlitFramebuffer(0, 0, frame_width, frame_height, 0, 480, 640, 0, GL_COLOR_BUFFER_BIT, filter);
-	GL_CHECK();
-	// Detach internal framebuffer
-	glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
-	GL_CHECK();
-#endif
 }
 
 void pvideo_init(NV2AState *d)
@@ -1225,9 +1175,6 @@ void NV2ADevice::Init()
 
 	// Only spawn VBlank thread when LLE is enabled
 	if (d->pgraph.opengl_enabled) {
-#ifdef DRAW_FRAMEBUFFER
-		cxbx_gl_framebuffer_initialize(d);
-#endif
 		pvideo_init(d);
 
 		vblank_thread = std::thread(nv2a_vblank_thread, d);
