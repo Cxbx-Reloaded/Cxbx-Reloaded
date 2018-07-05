@@ -2429,14 +2429,14 @@ void WndMain::StartEmulation(HWND hwndParent, DebuggerState LocalDebuggerState /
 // stop emulation
 void WndMain::StopEmulation()
 {
-    m_bIsStarted = false;
-    if (m_hwndChild != NULL) {
+	m_bIsStarted = false;
+	if (m_hwndChild != NULL) {
 		if (IsWindow(m_hwndChild)) {
 			SendMessage(m_hwndChild, WM_CLOSE, 0, 0);
 		}
 
 		m_hwndChild = NULL;
-    }
+	}
 
 	UpdateCaption();
 	RefreshMenus();
