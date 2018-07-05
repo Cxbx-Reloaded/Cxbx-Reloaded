@@ -690,7 +690,7 @@ void InitFramebufferGeometry()
 	GL_CHECK();
 	glBindBuffer(GL_ARRAY_BUFFER, m_framebuffer_gl_vertex_buffer_object);
 	GL_CHECK();
-	glEnableVertexAttribArray(ATTR_POSITION);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 	GL_CHECK();
 	// Bind vertex position attribute
 	glVertexAttribPointer(
@@ -702,7 +702,7 @@ void InitFramebufferGeometry()
 		/*array buffer offset=*/(void*)0
 	);
 	GL_CHECK();
-	glEnableVertexAttribArray(ATTR_TEXCOORD);
+	glEnableVertexAttribArray(ATTR_POSITION);
 	GL_CHECK();
 	// Bind vertex texture coordinate attribute
 	glVertexAttribPointer(
@@ -714,12 +714,9 @@ void InitFramebufferGeometry()
 		/*array buffer offset=*/(void*)(2 * sizeof(GLfloat))
 	);
 	GL_CHECK();
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+	glEnableVertexAttribArray(ATTR_TEXCOORD);
 	GL_CHECK();
-
 	// Unbind everything we've used
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	GL_CHECK();
 	glBindVertexArray(0);
 	GL_CHECK();
 }
@@ -781,32 +778,35 @@ void cxbx_gl_update_displaymode() {
 
 void cxbx_gl_render_framebuffer(NV2AState *d)
 {
-	// Render using texture #0
-	glActiveTexture(GL_TEXTURE0);
-	GL_CHECK();
-
 	// If we need to create a (new) texture, do so
 	if (frame_gl_texture == -1) {
 		glGenTextures(1, &frame_gl_texture);
 		GL_CHECK();
 		glBindTexture(GL_TEXTURE_2D, frame_gl_texture);
 		GL_CHECK();
-		glTexImage2D(GL_TEXTURE_2D, 0, frame_gl_internal_format, frame_width, frame_height, 0, frame_gl_format, frame_gl_type, NULL);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
+		GL_CHECK();
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
+		GL_CHECK();
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		GL_CHECK();
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		GL_CHECK();
+		// TODO : Get the correct swizzle from the av format (see kelvin_color_format_map)
+		static const GLint swizzle_mask_RGBA[4] = { GL_RED, GL_GREEN, GL_BLUE, GL_ALPHA };
+		glTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_RGBA, swizzle_mask_RGBA);
+		GL_CHECK();
+		glTexImage2D(GL_TEXTURE_2D, /*level=*/0, frame_gl_internal_format, frame_width, frame_height, /*border=*/0, frame_gl_format, frame_gl_type, NULL);
 		GL_CHECK();
 	}
 	else {
-		// Update the frame texture
 		glBindTexture(GL_TEXTURE_2D, frame_gl_texture);
 		GL_CHECK();
 	}
 
-	// TODO : Get the correct swizzle from the av format (see kelvin_color_format_map)
-	static const GLint swizzle_mask_RGBA[4] = { GL_RED, GL_GREEN, GL_BLUE, GL_ALPHA };
-	glTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_RGBA, swizzle_mask_RGBA);
-	GL_CHECK();
-
+	// Update the frame texture
 	hwaddr frame_pixels = /*CONTIGUOUS_MEMORY_BASE=*/0x80000000 | d->pcrtc.start; // NV_PCRTC_START
-	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, frame_width, frame_height, frame_gl_format, frame_gl_type, (void*)frame_pixels);
+	glTexSubImage2D(GL_TEXTURE_2D, /*level=*/0, /*xoffset=*/0, /*yoffset=*/0, frame_width, frame_height, frame_gl_format, frame_gl_type, (void*)frame_pixels);
 	GL_CHECK();
 
 	// Note : The following is modelled partially after pgraph_update_surface()
@@ -826,21 +826,11 @@ void cxbx_gl_render_framebuffer(NV2AState *d)
 	GL_CHECK();
 	glUniform1i(m_framebuffer_gl_uniform_location_texture, SAMP_TEXCOORD);
 	GL_CHECK();
-#if 0 // State already set above :
-	glActiveTexture(GL_TEXTURE0);
-	GL_CHECK();
-	glBindTexture(GL_TEXTURE_2D, frame_gl_texture);
-	GL_CHECK();
-#endif
 	glBindVertexArray(m_framebuffer_gl_vertex_array_object);
 	GL_CHECK();
-	glBindBuffer(GL_ARRAY_BUFFER, m_framebuffer_gl_vertex_buffer_object);
-	GL_CHECK();
-	glEnableVertexAttribArray(ATTR_POSITION);
-	GL_CHECK();
-	glEnableVertexAttribArray(ATTR_TEXCOORD);
-	GL_CHECK();
 	glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+	GL_CHECK();
+	glBindVertexArray(0);
 	GL_CHECK();
 #else
 	// If we need to create an OpenGL framebuffer, do so
@@ -860,6 +850,9 @@ void cxbx_gl_render_framebuffer(NV2AState *d)
 	// TODO: Use window size/actual framebuffer size rather than hard coding 640x480
 	// Note : dstY0 and dstY1 are swapped so the screen doesn't appear upside down
 	glBlitFramebuffer(0, 0, frame_width, frame_height, 0, 480, 640, 0, GL_COLOR_BUFFER_BIT, filter);
+	GL_CHECK();
+	// Detach internal framebuffer
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
 	GL_CHECK();
 #endif
 }
@@ -942,37 +935,35 @@ void cxbx_gl_render_overlays(NV2AState *d)
 
 		// TODO : Speed this up using 2 PixelBufferObjects (and use asynchronous DMA transfer)?
 
-		// Render using texture #0
-		glActiveTexture(GL_TEXTURE0);
-		GL_CHECK();
-
 		// If we need to create a (new) overlay texture, do so
 		if (overlay.gl_texture == -1) {
 			glGenTextures(1, &overlay.gl_texture);
 			GL_CHECK();
 			glBindTexture(GL_TEXTURE_2D, overlay.gl_texture);
 			GL_CHECK();
-			glTexImage2D(GL_TEXTURE_2D, 0, overlay_gl_internal_format, overlay.pitch / 4, overlay.in_height, 0, overlay_gl_format, overlay_gl_type, NULL);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
+			GL_CHECK();
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
+			GL_CHECK();
+			// Don't average YUYV samples when resizing
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+			GL_CHECK();
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+			GL_CHECK();
+			static const GLint swizzle_mask_BGRA[4] = { GL_BLUE, GL_GREEN, GL_RED, GL_ALPHA };
+			glTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_RGBA, swizzle_mask_BGRA);
+			GL_CHECK();
+			glTexImage2D(GL_TEXTURE_2D, /*level=*/0, overlay_gl_internal_format, overlay.pitch / 4, overlay.in_height, /*border=*/0, overlay_gl_format, overlay_gl_type, NULL);
 			GL_CHECK();
 		}
 		else {
-			// update the YUV video texturing unit 
 			glBindTexture(GL_TEXTURE_2D, overlay.gl_texture);
 			GL_CHECK();
 		}
 
-		static const GLint swizzle_mask_BGRA[4] = { GL_BLUE, GL_GREEN, GL_RED, GL_ALPHA };
-		glTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_RGBA, swizzle_mask_BGRA);
-		GL_CHECK();
-
+		// Update the YUV video texture
 		hwaddr overlay_pixels = /*CONTIGUOUS_MEMORY_BASE=*/0x80000000 | overlay.offset;
-		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, overlay.pitch / 4, overlay.in_height, overlay_gl_format, overlay_gl_type, (void*)overlay_pixels);
-		GL_CHECK();
-
-		// Don't average YUYV samples when resizing
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		GL_CHECK();
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexSubImage2D(GL_TEXTURE_2D, /*level=*/0, /*xoffset=*/0, /*yoffset=*/0, overlay.pitch / 4, overlay.in_height, overlay_gl_format, overlay_gl_type, (void*)overlay_pixels);
 		GL_CHECK();
 
 		// Note : we cannot convert overlay_offset into actual top/left coordinate, so assume (0,0)
@@ -1013,13 +1004,6 @@ void cxbx_gl_render_overlays(NV2AState *d)
 		glUniform1i(m_overlay_gl_uniform_location_texture, SAMP_TEXCOORD);
 		GL_CHECK();
 
-#if 0 // State already set above :
-		glActiveTexture(GL_TEXTURE0);
-		GL_CHECK();
-
-		glBindTexture(GL_TEXTURE_2D, overlay.gl_texture);
-		GL_CHECK();
-#endif
 		// Flip Y to prevent upside down rendering
 		std::swap(srcY0f, srcY1f);
 
@@ -1031,51 +1015,39 @@ void cxbx_gl_render_overlays(NV2AState *d)
 			dstX0f, dstY1f, srcX0f, srcY1f,
 		};
 
-		static GLuint overlaybuffer_gl_vertex_array_object = -1;
-		if (overlaybuffer_gl_vertex_array_object == -1) {
-			glGenVertexArrays(1, &overlaybuffer_gl_vertex_array_object);
-			GL_CHECK();
-		}
-		glBindVertexArray(overlaybuffer_gl_vertex_array_object);
-		GL_CHECK();
-
 		static GLuint overlay_gl_vertex_buffer_object = -1;
 		if (overlay_gl_vertex_buffer_object == -1) {
-			glGenBuffers(1, &overlay_gl_vertex_buffer_object);	
-			GL_CHECK();
-			glBindBuffer(GL_ARRAY_BUFFER, overlay_gl_vertex_buffer_object);
-			GL_CHECK();
-			glEnableVertexAttribArray(ATTR_POSITION);
-			GL_CHECK();
-			// Bind vertex position attribute
-			glVertexAttribPointer(
-				/*index=*/ATTR_POSITION,
-				/*size=vec*/2,
-				/*type=*/GL_FLOAT,
-				/*normalized?=*/GL_FALSE,
-				/*stride=*/4 * sizeof(GLfloat),
-				/*array buffer offset=*/(void*)0
-			);
-			GL_CHECK();
-			glEnableVertexAttribArray(ATTR_TEXCOORD);
-			GL_CHECK();
-			// Bind vertex texture coordinate attribute
-			glVertexAttribPointer(
-				/*index=*/ATTR_TEXCOORD,
-				/*size=vec*/2,
-				/*type=*/GL_FLOAT,
-				/*normalized?=*/GL_FALSE,
-				/*stride=*/4 * sizeof(GLfloat),
-				/*array buffer offset=*/(void*)(2 * sizeof(GLfloat))
-			);
-			GL_CHECK();
-		}
-		else {
-			glBindBuffer(GL_ARRAY_BUFFER, overlay_gl_vertex_buffer_object);
+			glGenBuffers(1, &overlay_gl_vertex_buffer_object);
 			GL_CHECK();
 		}
 
-		glBufferData(GL_ARRAY_BUFFER, sizeof(overlay_vertex_buffer_data), overlay_vertex_buffer_data, GL_STREAM_DRAW);
+		glBindBuffer(GL_ARRAY_BUFFER, overlay_gl_vertex_buffer_object);
+		GL_CHECK();
+		glBufferData(GL_ARRAY_BUFFER, sizeof(overlay_vertex_buffer_data), overlay_vertex_buffer_data, GL_DYNAMIC_DRAW);
+		GL_CHECK();
+		// Bind vertex position attribute
+		glVertexAttribPointer(
+			/*index=*/ATTR_POSITION,
+			/*size=vec*/2,
+			/*type=*/GL_FLOAT,
+			/*normalized?=*/GL_FALSE,
+			/*stride=*/4 * sizeof(GLfloat),
+			/*array buffer offset=*/(void*)0
+		);
+		GL_CHECK();
+		glEnableVertexAttribArray(ATTR_POSITION);
+		GL_CHECK();
+		// Bind vertex texture coordinate attribute
+		glVertexAttribPointer(
+			/*index=*/ATTR_TEXCOORD,
+			/*size=vec*/2,
+			/*type=*/GL_FLOAT,
+			/*normalized?=*/GL_FALSE,
+			/*stride=*/4 * sizeof(GLfloat),
+			/*array buffer offset=*/(void*)(2 * sizeof(GLfloat))
+		);
+		GL_CHECK();
+		glEnableVertexAttribArray(ATTR_TEXCOORD);
 		GL_CHECK();
 		// Finally! Draw the dang overlay...
 		glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
@@ -1099,8 +1071,10 @@ void NV2ADevice::UpdateHostDisplay(NV2AState *d)
 	// Target the host framebuffer
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	GL_CHECK();
-
 	glDisable(GL_CULL_FACE);
+	GL_CHECK();
+	// Render using texture #0
+	glActiveTexture(GL_TEXTURE0);
 	GL_CHECK();
 
 	cxbx_gl_update_displaymode();
@@ -1120,15 +1094,12 @@ void NV2ADevice::UpdateHostDisplay(NV2AState *d)
 	cxbx_gl_render_overlays(d);
 
 	// Unbind everything we've used
-	glBindTexture(GL_TEXTURE_2D, 0);
+	glUseProgram(0);
 	GL_CHECK();
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	GL_CHECK();
-	glBindVertexArray(0);
+	glBindTexture(GL_TEXTURE_2D, 0);
 	GL_CHECK();
-	glUseProgram(0);
-	GL_CHECK();
-
 	// Restore xbox framebuffer
 	glBindFramebuffer(GL_FRAMEBUFFER, d->pgraph.gl_framebuffer);
 	GL_CHECK();
