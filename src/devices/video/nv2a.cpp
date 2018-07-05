@@ -425,8 +425,13 @@ void _check_gl_error(const char *file, int line)
 	}
 }
 
+#ifdef DEBUG_NV2A_GL
 #define GL_RESET() _check_gl_reset()
 #define GL_CHECK() _check_gl_error(__FILE__,__LINE__)
+#else
+#define GL_RESET()
+#define GL_CHECK()
+#endif
 
 enum {
 	SAMP_TEXCOORD = 0,
