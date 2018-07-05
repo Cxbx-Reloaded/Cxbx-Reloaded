@@ -86,6 +86,8 @@ class Hub
 		int UsbHubClaimPort(XboxDeviceState* dev, int port);
 		// free the usb port used by this hub
 		void UsbHubReleasePort(XboxDeviceState* dev);
+		// retieve the name of the feature of the usb request
+		std::string GetFeatureName(int feature);
 };
 
 extern Hub* g_HubObjArray[4];

@@ -38,6 +38,8 @@
 #include "Hub.h"
 #include "..\CxbxKrnl\EmuKrnl.h" // For EmuWarning
 
+#define LOG_STR_HUB "Hub"
+
 #define NUM_PORTS 8
 
 #define PORT_STAT_CONNECTION   0x0001
@@ -53,6 +55,27 @@
 #define PORT_STAT_C_SUSPEND     0x0004
 #define PORT_STAT_C_OVERCURRENT	0x0008
 #define PORT_STAT_C_RESET       0x0010
+
+#define ClearHubFeature		(0x2000 | USB_REQ_CLEAR_FEATURE)
+#define ClearPortFeature	(0x2300 | USB_REQ_CLEAR_FEATURE)
+#define GetHubDescriptor	(0xA000 | USB_REQ_GET_DESCRIPTOR)
+#define GetHubStatus		(0xA000 | USB_REQ_GET_STATUS)
+#define GetPortStatus		(0xA300 | USB_REQ_GET_STATUS)
+#define SetHubFeature		(0x2000 | USB_REQ_SET_FEATURE)
+#define SetPortFeature		(0x2300 | USB_REQ_SET_FEATURE)
+
+#define PORT_CONNECTION	    0
+#define PORT_ENABLE	        1
+#define PORT_SUSPEND        2
+#define PORT_OVERCURRENT    3
+#define PORT_RESET          4
+#define PORT_POWER          8
+#define PORT_LOWSPEED       9
+#define PORT_C_CONNECTION   16
+#define PORT_C_ENABLE       17
+#define PORT_C_SUSPEND      18
+#define PORT_C_OVERCURRENT	19
+#define PORT_C_RESET		20
 
 
 // To avoid including Xbox.h
@@ -153,6 +176,23 @@ USBDesc::USBDesc(bool bDefault)
 }
 
 static const USBDesc desc_hub(true);
+
+// Class-specific hub descriptor. Remember to update DeviceRemovable and PortPwrCtrlMask if you change NUM_PORTS since their values depend on
+// the number of downstream ports available on the hub! Also note that this descriptor cannot be put in the descs member of the interface descriptor
+// because then this descriptor will be retrieved during a standard GetDescriptor request instead of the hub-specific GetHubDescriptor request
+static const uint8_t HubDescriptor[] =
+{
+	0x0A,			//  u8   bDescLength; 10 bytes
+	0x29,			//  u8   bDescriptorType; Hub-descriptor
+	NUM_PORTS,		//  u8   bNbrPorts; 0x08
+	0x0a,			//  u16  wHubCharacteristics; (individual port over-current protection, no power switching)
+	0x00,
+	0x01,			//  u8   bPwrOn2pwrGood; 2 ms
+	0x00,			//  u8   bHubContrCurrent; 0 mA
+	0x00,           //  u16  DeviceRemovable; all devices are removable
+	0x00,
+	0xFF,           //  u8  PortPwrCtrlMask; all 1's for compatibility reasons
+};
 
 int Hub::Init(int pport)
 {
@@ -314,7 +354,6 @@ void Hub::UsbHub_HandleReset()
 void Hub::UsbHub_HandleControl(XboxDeviceState* dev, USBPacket* p,
 	int request, int value, int index, int length, uint8_t* data)
 {
-	USBHubState *s = (USBHubState *)dev;
 	int ret;
 
 	ret = m_UsbDev->USBDesc_HandleControl(dev, p, request, value, index, length, data);
@@ -323,146 +362,217 @@ void Hub::UsbHub_HandleControl(XboxDeviceState* dev, USBPacket* p,
 	}
 
 	switch (request) {
-	case EndpointOutRequest | USB_REQ_CLEAR_FEATURE:
-		if (value == 0 && index != 0x81) { /* clear ep halt */
-			goto fail;
-		}
-		break;
-		/* usb specific requests */
-	case GetHubStatus:
-		data[0] = 0;
-		data[1] = 0;
-		data[2] = 0;
-		data[3] = 0;
-		p->actual_length = 4;
-		break;
-	case GetPortStatus:
-	{
-		unsigned int n = index - 1;
-		USBHubPort *port;
-		if (n >= NUM_PORTS) {
-			goto fail;
-		}
-		port = &s->ports[n];
-		trace_usb_hub_get_port_status(s->dev.addr, index,
-			port->wPortStatus,
-			port->wPortChange);
-		data[0] = port->wPortStatus;
-		data[1] = port->wPortStatus >> 8;
-		data[2] = port->wPortChange;
-		data[3] = port->wPortChange >> 8;
-		p->actual_length = 4;
-	}
-	break;
-	case SetHubFeature:
-	case ClearHubFeature:
-		if (value != 0 && value != 1) {
-			goto fail;
-		}
-		break;
-	case SetPortFeature:
-	{
-		unsigned int n = index - 1;
-		USBHubPort *port;
-		USBDevice *dev;
-
-		trace_usb_hub_set_port_feature(s->dev.addr, index,
-			feature_name(value));
-
-		if (n >= NUM_PORTS) {
-			goto fail;
-		}
-		port = &s->ports[n];
-		dev = port->port.dev;
-		switch (value) {
-		case PORT_SUSPEND:
-			port->wPortStatus |= PORT_STAT_SUSPEND;
-			break;
-		case PORT_RESET:
-			if (dev && dev->attached) {
-				usb_device_reset(dev);
-				port->wPortChange |= PORT_STAT_C_RESET;
-				/* set enable bit */
-				port->wPortStatus |= PORT_STAT_ENABLE;
-				usb_wakeup(s->intr, 0);
+		case EndpointOutRequest | USB_REQ_CLEAR_FEATURE: {
+			// clear ep halt and bEndpointAddress of hub is 0x81
+			if (value == 0 && index != 0x81) {
+				goto fail;
 			}
 			break;
-		case PORT_POWER:
+		}
+
+		case GetHubStatus: {
+			// From the standard: "This request returns the current hub status and the states that have changed since the previous acknowledgment.
+			// The first word of data contains wHubStatus. The second word of data contains wHubChange"
+			// We always report that the local power supply is good and that currently there is no over-power condition
+			data[0] = 0;
+			data[1] = 0;
+			data[2] = 0;
+			data[3] = 0;
+			p->ActualLength = 4;
 			break;
+		}
+
+		case GetPortStatus: {
+			// From the standard: "This request returns the current port status and the current value of the port status change bits.
+			// The first word of data contains wPortStatus. The second word of data contains wPortChange"
+			unsigned int n = index - 1;
+			USBHubPort* port;
+			if (n >= NUM_PORTS) {
+				goto fail;
+			}
+			port = &m_HubState->ports[n];
+			DbgPrintf("%s: %s GetPortStatus -> Address 0x%X, wIndex %d, wPortStatus %d, wPortChange %d\n",
+				LOG_STR_HUB, __func__, m_HubState->dev.Addr, index, port->wPortStatus, port->wPortChange);
+			data[0] = port->wPortStatus;
+			data[1] = port->wPortStatus >> 8;
+			data[2] = port->wPortChange;
+			data[3] = port->wPortChange >> 8;
+			p->ActualLength = 4;
+			break;
+		}
+
+		case SetHubFeature:
+		case ClearHubFeature: {
+			if (value != 0 && value != 1) {
+				goto fail;
+			}
+			break;
+		}
+
+		case SetPortFeature: {
+			// From the standard: "This request sets a value reported in the port status. Features that can be set with this request are PORT_RESET,
+			// PORT_SUSPEND and PORT_POWER; others features are not required to be set by this request"
+			unsigned int n = index - 1;
+			USBHubPort* port;
+			XboxDeviceState* dev;
+
+			DbgPrintf("%s: %s SetPortFeature -> Address 0x%X, wIndex %d, Feature %s\n",
+				LOG_STR_HUB, __func__, m_HubState->dev.Addr, index, GetFeatureName(value));
+
+			if (n >= NUM_PORTS) {
+				goto fail;
+			}
+			port = &m_HubState->ports[n];
+			dev = port->port.Dev;
+			switch (value) {
+				case PORT_SUSPEND: {
+					port->wPortStatus |= PORT_STAT_SUSPEND;
+					break;
+				}
+
+				case PORT_RESET: {
+					if (dev && dev->Attached) {
+						m_UsbDev->USB_DeviceReset(dev);
+						port->wPortChange |= PORT_STAT_C_RESET;
+						port->wPortStatus |= PORT_STAT_ENABLE;
+						m_UsbDev->USB_Wakeup(m_HubState->intr);
+					}
+					break;
+				}
+
+				case PORT_POWER:
+					break;
+
+				default:
+					goto fail;
+			}
+			break;
+		}
+
+		case ClearPortFeature: {
+			// From the standard: "This request resets a value reported in the port status"
+			unsigned int n = index - 1;
+			USBHubPort *port;
+
+			DbgPrintf("%s: %s ClearPortFeature -> Address 0x%X, wIndex %d, Feature %s\n",
+				LOG_STR_HUB, __func__, m_HubState->dev.Addr, index, GetFeatureName(value));
+
+			if (n >= NUM_PORTS) {
+				goto fail;
+			}
+			port = &m_HubState->ports[n];
+			switch (value) {
+				case PORT_ENABLE: {
+					port->wPortStatus &= ~PORT_STAT_ENABLE;
+					break;
+				}
+
+				case PORT_C_ENABLE: {
+					port->wPortChange &= ~PORT_STAT_C_ENABLE;
+					break;
+				}
+
+				case PORT_SUSPEND: {
+					port->wPortStatus &= ~PORT_STAT_SUSPEND;
+					break;
+				}
+
+				case PORT_C_SUSPEND: {
+					port->wPortChange &= ~PORT_STAT_C_SUSPEND;
+					break;
+				}
+
+				case PORT_C_CONNECTION: {
+					port->wPortChange &= ~PORT_STAT_C_CONNECTION;
+					break;
+				}
+
+				case PORT_C_OVERCURRENT: {
+					port->wPortChange &= ~PORT_STAT_C_OVERCURRENT;
+					break;
+				}
+
+				case PORT_C_RESET: {
+					port->wPortChange &= ~PORT_STAT_C_RESET;
+					break;
+				}
+
+				default:
+					goto fail;
+			}
+			break;
+		}
+
+		case GetHubDescriptor: {
+			std::memcpy(data, HubDescriptor, sizeof(HubDescriptor));
+			p->ActualLength = sizeof(HubDescriptor);
+			break;
+		}
+
 		default:
-			goto fail;
-		}
+		fail:
+			p->Status = USB_RET_STALL;
+			break;
 	}
-	break;
-	case ClearPortFeature:
-	{
-		unsigned int n = index - 1;
-		USBHubPort *port;
+}
 
-		trace_usb_hub_clear_port_feature(s->dev.addr, index,
-			feature_name(value));
-
-		if (n >= NUM_PORTS) {
-			goto fail;
+void Hub::UsbHub_HandleData(XboxDeviceState* dev, USBPacket* p)
+{
+	switch (p->Pid) {
+		case USB_TOKEN_IN: {
+			if (p->Endpoint->Num == 1) {
+				USBHubPort* port;
+				unsigned int status;
+				uint8_t buf[4];
+				int i, n;
+				status = 0;
+				for (i = 0; i < NUM_PORTS; i++) {
+					port = &m_HubState->ports[i];
+					if (port->wPortChange) {
+						status |= (1 << (i + 1));
+					}
+				}
+				if (status != 0) {
+					n = (NUM_PORTS + 1 + 7) / 8;
+					if (p->IoVec.Size == 1) { /* FreeBSD workaround */
+						n = 1;
+					}
+					else if (n > p->IoVec.Size) {
+						p->Status = USB_RET_BABBLE;
+						return;
+					}
+					DbgPrintf("%s: %s Address 0x%X, Status %d\n", LOG_STR_HUB, __func__, m_HubState->dev.Addr, status);
+					for (i = 0; i < n; i++) {
+						buf[i] = status >> (8 * i);
+					}
+					m_UsbDev->USB_PacketCopy(p, buf, n);
+				}
+				else {
+					p->Status = USB_RET_NAK; /* usb11 11.13.1 */
+				}
+			}
+			else {
+				goto fail;
+			}
+			break;
 		}
-		port = &s->ports[n];
-		switch (value) {
-		case PORT_ENABLE:
-			port->wPortStatus &= ~PORT_STAT_ENABLE;
-			break;
-		case PORT_C_ENABLE:
-			port->wPortChange &= ~PORT_STAT_C_ENABLE;
-			break;
-		case PORT_SUSPEND:
-			port->wPortStatus &= ~PORT_STAT_SUSPEND;
-			break;
-		case PORT_C_SUSPEND:
-			port->wPortChange &= ~PORT_STAT_C_SUSPEND;
-			break;
-		case PORT_C_CONNECTION:
-			port->wPortChange &= ~PORT_STAT_C_CONNECTION;
-			break;
-		case PORT_C_OVERCURRENT:
-			port->wPortChange &= ~PORT_STAT_C_OVERCURRENT;
-			break;
-		case PORT_C_RESET:
-			port->wPortChange &= ~PORT_STAT_C_RESET;
-			break;
+
+		case USB_TOKEN_OUT:
 		default:
-			goto fail;
+		fail:
+			p->Status = USB_RET_STALL;
+			break;
+	}
+}
+
+void Hub::UsbHub_HandleDestroy(XboxDeviceState* dev)
+{
+	for (int i = 0; i < NUM_PORTS; i++) {
+		if (m_HubState->ports[i].port.Dev) {
+			// delete downstream device
 		}
 	}
-	break;
-	case GetHubDescriptor:
-	{
-		unsigned int n, limit, var_hub_size = 0;
-		memcpy(data, qemu_hub_hub_descriptor,
-			sizeof(qemu_hub_hub_descriptor));
-		data[2] = NUM_PORTS;
-
-		/* fill DeviceRemovable bits */
-		limit = ((NUM_PORTS + 1 + 7) / 8) + 7;
-		for (n = 7; n < limit; n++) {
-			data[n] = 0x00;
-			var_hub_size++;
-		}
-
-		/* fill PortPwrCtrlMask bits */
-		limit = limit + ((NUM_PORTS + 7) / 8);
-		for (; n < limit; n++) {
-			data[n] = 0xff;
-			var_hub_size++;
-		}
-
-		p->actual_length = sizeof(qemu_hub_hub_descriptor) + var_hub_size;
-		data[0] = p->actual_length;
-		break;
-	}
-	default:
-	fail:
-		p->status = USB_RET_STALL;
-		break;
-	}
+	// TODO
 }
 
 void Hub::UsbHub_Attach(USBPort* port1)
@@ -518,4 +628,77 @@ void Hub::UsbHub_Complete(USBPort* port, USBPacket* packet)
 {
 	// Just pass it along to upstream
 	m_HubState->dev.Port->Operations->complete(m_HubState->dev.Port, packet);
+}
+
+std::string Hub::GetFeatureName(int feature)
+{
+	std::string str;
+
+	switch (feature) {
+		case PORT_CONNECTION: {
+			str = "connection";
+			break;
+		}
+
+		case PORT_ENABLE: {
+			str = "enable";
+			break;
+		}
+
+		case PORT_SUSPEND: {
+			str = "suspend";
+			break;
+		}
+
+		case PORT_OVERCURRENT: {
+			str = "overcurrent";
+			break;
+		}
+
+		case PORT_RESET: {
+			str = "reset";
+			break;
+		}
+
+		case PORT_POWER: {
+			str = "power";
+			break;
+		}
+
+		case PORT_LOWSPEED: {
+			str = "lowspeed";
+			break;
+		}
+
+		case PORT_C_CONNECTION: {
+			str = "change_connection";
+			break;
+		}
+
+		case PORT_C_ENABLE: {
+			str = "change_enable";
+			break;
+		}
+
+		case PORT_C_SUSPEND: {
+			str = "change_suspend";
+			break;
+		}
+
+		case PORT_C_OVERCURRENT: {
+			str = "change_overcurrent";
+			break;
+		}
+
+		case PORT_C_RESET: {
+			str = "change_reset";
+			break;
+		}
+
+		default:
+			str = "?";
+			break;
+	}
+
+	return str;
 }

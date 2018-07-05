@@ -144,7 +144,7 @@ void USBDevice::USB_DeviceReset(XboxDeviceState* dev)
 	dev->RemoteWakeup = 0;
 	dev->Addr = 0;
 	dev->State = USB_STATE_DEFAULT;
-	usb_device_handle_reset(dev);
+	USB_DeviceHandleReset(dev);
 }
 
 XboxDeviceState* USBDevice::USB_FindDevice(USBPort* Port, uint8_t Addr)
@@ -746,7 +746,7 @@ void USBDevice::USBDesc_SetDefaults(XboxDeviceState* dev)
 {
 	const USBDesc *desc = USBDesc_GetUsbDeviceDesc(dev);
 
-	assert(desc != NULL);
+	assert(desc != nullptr);
 	switch (dev->Speed) {
 	case USB_SPEED_LOW:
 	case USB_SPEED_FULL: {
@@ -873,7 +873,7 @@ int USBDevice::USBDesc_HandleControl(XboxDeviceState* dev, USBPacket *p,
 			// From the standard: "This request sets the device address for all future device accesses.
 			// The wValue field specifies the device address to use for all subsequent accesses"
 			dev->Addr = value;
-			DbgPrintf("Address 0x%X set for device %s", dev->Addr, dev->ProductDesc.c_str());
+			DbgPrintf("Address 0x%X set for device %s\n", dev->Addr, dev->ProductDesc.c_str());
 			ret = 0;
 			break;
 		}
@@ -972,6 +972,7 @@ is %d and returned %d\n", dev->Addr, index, value, ret);
 		}
 
 		default:
+			break;
 	}
 	return ret;
 }
@@ -1103,7 +1104,7 @@ int USBDevice::USB_ReadConfigurationDesc(const USBDescConfig* conf, int flags, u
 
 int USBDevice::USB_ReadInterfaceDesc(const USBDescIface* iface, int flags, uint8_t* dest, size_t len)
 {
-	uint8_t bLength = 0x09; // a interface descriptor is 9 bytes large
+	uint8_t bLength = 0x09; // an interface descriptor is 9 bytes large
 	int i, rc, pos = 0;
 	USBDescriptor* d = reinterpret_cast<USBDescriptor*>(dest);
 
@@ -1114,7 +1115,7 @@ int USBDevice::USB_ReadInterfaceDesc(const USBDescIface* iface, int flags, uint8
 	// From the standard: "The first interface descriptor follows the configuration descriptor.
 	// The endpoint descriptors for the first interface follow the first interface descriptor.
 	// If there are additional interfaces, their interface descriptor and endpoint descriptors
-	//  follow the first interface’s endpoint descriptors. Class-specific and/or vendor-specific
+	// follow the first interface’s endpoint descriptors. Class-specific and/or vendor-specific
 	// descriptors follow the standard descriptors they extend or modify."
 
 	d->bLength = bLength;
@@ -1202,7 +1203,7 @@ int USBDevice::USB_ReadStringDesc(XboxDeviceState* dev, int index, uint8_t* dest
 	}
 
 	// From the standard: "String index zero for all languages returns a string descriptor
-	// that contains an array of two-byte LANGID codes supported by the device."
+	// that contains an array of two-byte LANGID codes supported by the device"
 
 	if (index == 0) {
 		/* language ids */
