@@ -2439,9 +2439,15 @@ void WndMain::StopEmulation()
     }
 
 	UpdateCaption();
-    RefreshMenus();
-	// Set the window size back to it's GUI dimensions
-	ResizeWindow(m_hwnd, /*bForGUI=*/true);
+	RefreshMenus();
+
+	int iScaleView = FALSE;
+	g_EmuShared->GetScaleViewport(&iScaleView);
+	if (iScaleView != 0) {
+		// Set the window size back to it's GUI dimensions
+		ResizeWindow(m_hwnd, /*bForGUI=*/true);
+	}
+
 	g_EmuShared->SetIsEmulating(false);
 }
 
