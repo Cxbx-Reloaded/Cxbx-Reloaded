@@ -750,6 +750,9 @@ void cxbx_gl_update_displaymode() {
 	// Convert AV Format to OpenGl format details & destroy the texture if format changed.
 	// This is required for titles that use a non ARGB framebuffer, such as Beats of Rage
 	static ULONG PreviousAvDisplayModeFormat = -1;
+	static GLenum old_frame_gl_internal_format = GL_RGBA8;
+	static GLenum old_frame_gl_format = GL_BGRA;
+	static GLenum old_frame_gl_type = GL_UNSIGNED_INT_8_8_8_8_REV;
 	static GLsizei old_frame_width = 640;
 	static GLsizei old_frame_height = 480;
 
@@ -758,8 +761,14 @@ void cxbx_gl_update_displaymode() {
 		AvDisplayModeFormatToGL(g_AvDisplayModeFormat, &frame_gl_internal_format, &frame_gl_format, &frame_gl_type);
 		AvGetFormatSize(AvpCurrentMode, &frame_width, &frame_height);
 		// Detect changes in framebuffer dimensions
-		if (old_frame_width != frame_width
+		if (old_frame_gl_internal_format != frame_gl_internal_format
+		 || old_frame_gl_format != frame_gl_format
+		 || old_frame_gl_type != frame_gl_type
+		 || old_frame_width != frame_width
 		 || old_frame_height != frame_height) {
+			old_frame_gl_internal_format = frame_gl_internal_format;
+			old_frame_gl_format = frame_gl_format;
+			old_frame_gl_type = frame_gl_type;
 			old_frame_width = frame_width;
 			old_frame_height = frame_height;
 			if (frame_gl_texture != -1) {
@@ -886,7 +895,7 @@ void cxbx_gl_parse_overlay(NV2AState *d, int v)
 #endif
 	// Derive actual attributes
 	overlay.pitch = overlay_format & NV_PVIDEO_FORMAT_PITCH;
-	overlay.is_transparent = GET_MASK(overlay_format, NV_PVIDEO_FORMAT_DISPLAY);
+	overlay.is_transparent = overlay_format & NV_PVIDEO_FORMAT_DISPLAY;
 	overlay.offset = overlay_offset_high_26 | overlay_offset_lower_6;
 
 	uint32_t overlay_size_in_height_width = overlay_size_in - (overlay_offset_lower_6 >> 1);
