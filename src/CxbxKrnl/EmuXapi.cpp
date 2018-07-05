@@ -344,6 +344,40 @@ bool TitleIsJSRF()
 	return result;
 }
 
+bool TitleIsLegoSW()
+{
+	static bool detected = false;
+	static bool result = false;
+
+	// Prevent running the check every time this function is called
+	if (detected) {
+		return result;
+	}
+
+	// Array of known Lego Star Wars title IDs, must be 0 terminated
+	DWORD titleIds[] = {
+		0x4553001D, // v1.01 - PAL; v1.02 - NTSC
+		0
+	};
+
+	DWORD* pTitleId = &titleIds[0];
+	while (*pTitleId != 0) {
+		if (g_pCertificate->dwTitleId == *pTitleId) {
+			result = true;
+			break;
+		}
+
+		pTitleId++;
+	}
+
+	if (result) {
+		EmuWarning("Applying Lego Star Wars Hack");
+	}
+
+	detected = true;
+	return result;
+}
+
 // ******************************************************************
 // * patch: XGetDevices
 // * Note: This could be unpatched however,
@@ -419,8 +453,7 @@ BOOL WINAPI XTL::EMUPATCH(XGetDeviceChanges)
     // some titles call XGetDevices first, and the CurrentConnected and ChangeConnected flags are set there.
     // note that certain titles such as Otogi need the ChangeConnected to be set to 1 always to enable the input. 
     int port;
-    //fix for Lego Star War no input, it requires the XGetDeviceChanges to return changes all the time, but no removal, only insertions.
-    //if (DeviceType->CurrentConnected == 0) {
+    if (DeviceType->CurrentConnected == 0) {
         for (port = 0; port < 4; port++) {
             //if the host controller is connected and the xbox DeviceType matches. set the CurrentConnected flag.
             if (g_XboxControllerHostBridge[port].XboxDeviceInfo.DeviceType == DeviceType && g_XboxControllerHostBridge[port].dwHostType>0) {
@@ -428,10 +461,9 @@ BOOL WINAPI XTL::EMUPATCH(XGetDeviceChanges)
             }
         }
         DeviceType->ChangeConnected = DeviceType->CurrentConnected;
-    //}
+    }
 
-    // JSRF Hack: Don't set the ChangeConnected flag. Without this, JSRF hard crashes 
-	// TODO: Why is this still needed? 
+    // JSRF Hack: Don't set the ChangeConnected flag. Without this, JSRF hard crashes
 	if (TitleIsJSRF()) {
 		DeviceType->ChangeConnected = 0;
 	}
@@ -458,9 +490,14 @@ BOOL WINAPI XTL::EMUPATCH(XGetDeviceChanges)
 
 		xboxkrnl::KfLowerIrql(oldIrql);
     }
-    //fix for Lego Star War no input, it requires the XGetDeviceChanges to return changes all the time, but no removal, only insertions.
-    *pdwRemovals = 0;
-    *pdwInsertions = DeviceType->CurrentConnected;
+
+    // Lego SW Hack: Require XGetDeviceChanges to return changes all the time, but no removal, only insertions.
+    // Without this, Lego SW will not response to controller's input.
+	if (TitleIsLegoSW()) {
+		*pdwRemovals = 0;
+		*pdwInsertions = DeviceType->CurrentConnected;
+		ret = TRUE;
+	}
 
 	RETURN(ret);
 }
