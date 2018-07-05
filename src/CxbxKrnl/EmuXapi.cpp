@@ -356,7 +356,7 @@ bool TitleIsLegoSW()
 
 	// Array of known Lego Star Wars title IDs, must be 0 terminated
 	DWORD titleIds[] = {
-		0x4553001D, // NTSC
+		0x4553001D, // v1.01 - PAL; v1.02 - NTSC
 		0
 	};
 
