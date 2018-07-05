@@ -399,6 +399,12 @@ int pfifo_puller_thread(NV2AState *d)
 		qemu_mutex_lock(&d->pgraph.lock);
 
 		while (!state->working_cache.empty()) {
+			if (d->exiting) {
+				qemu_mutex_lock(&d->pgraph.lock);
+				glo_set_current(NULL);
+				return 0;
+			}
+
 			CacheEntry* command = state->working_cache.front();
 			state->working_cache.pop();
 

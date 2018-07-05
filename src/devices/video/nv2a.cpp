@@ -678,7 +678,7 @@ GLuint GetFramebufferShaderProgram()
 static GLenum frame_gl_internal_format = GL_RGBA8;
 static GLenum frame_gl_format = GL_BGRA;
 static GLenum frame_gl_type = GL_UNSIGNED_INT_8_8_8_8_REV;
-static GLuint frame_gl_texture = -1;
+static GLuint frame_gl_texture = 0;
 
 static GLsizei frame_width = 640;
 static GLsizei frame_height = 480;
@@ -708,9 +708,9 @@ void cxbx_gl_update_displaymode() {
 			old_frame_gl_type = frame_gl_type;
 			old_frame_width = frame_width;
 			old_frame_height = frame_height;
-			if (frame_gl_texture != -1) {
+			if (frame_gl_texture) {
 				glDeleteTextures(1, &frame_gl_texture);
-				frame_gl_texture = -1;
+				frame_gl_texture = 0;
 			}
 		}
 	}
@@ -719,7 +719,7 @@ void cxbx_gl_update_displaymode() {
 void cxbx_gl_render_framebuffer(NV2AState *d)
 {
 	// If we need to create a (new) texture, do so
-	if (frame_gl_texture == -1) {
+	if (!frame_gl_texture) {
 		glGenTextures(1, &frame_gl_texture);
 		GL_CHECK();
 		glBindTexture(GL_TEXTURE_2D, frame_gl_texture);
@@ -814,8 +814,23 @@ void cxbx_gl_render_framebuffer(NV2AState *d)
 
 void pvideo_init(NV2AState *d)
 {
-	d->pvideo.overlays[0].gl_texture = -1;
-	d->pvideo.overlays[1].gl_texture = -1;
+	d->pvideo.overlays[0].gl_texture = 0;
+	d->pvideo.overlays[1].gl_texture = 0;
+	//qemu_cond_init(&d->pvideo.interrupt_cond);
+}
+
+void pvideo_destroy(NV2AState *d)
+{
+	if (d->pvideo.overlays[0].gl_texture) {
+		glDeleteTextures(1, &d->pvideo.overlays[0].gl_texture);
+		d->pvideo.overlays[0].gl_texture = 0;
+	}
+
+	if (d->pvideo.overlays[1].gl_texture) {
+		glDeleteTextures(1, &d->pvideo.overlays[1].gl_texture);
+		d->pvideo.overlays[1].gl_texture = 0;
+	}
+	//qemu_cond_destroy(&d->pvideo.interrupt_cond);
 }
 
 void cxbx_gl_parse_overlay(NV2AState *d, int v)
@@ -862,9 +877,9 @@ void cxbx_gl_parse_overlay(NV2AState *d, int v)
 		overlay.old_in_width = overlay.in_width;
 		overlay.old_in_height = overlay.in_height;
 		overlay.old_pitch = overlay.pitch;
-		if (overlay.gl_texture != -1) {
+		if (overlay.gl_texture) {
 			glDeleteTextures(1, &overlay.gl_texture);
-			overlay.gl_texture = -1;
+			overlay.gl_texture = 0;
 		}
 	}
 
@@ -891,7 +906,7 @@ void cxbx_gl_render_overlays(NV2AState *d)
 		// TODO : Speed this up using 2 PixelBufferObjects (and use asynchronous DMA transfer)?
 
 		// If we need to create a (new) overlay texture, do so
-		if (overlay.gl_texture == -1) {
+		if (!overlay.gl_texture) {
 			glGenTextures(1, &overlay.gl_texture);
 			GL_CHECK();
 			glBindTexture(GL_TEXTURE_2D, overlay.gl_texture);
@@ -1074,7 +1089,7 @@ static void nv2a_vblank_thread(NV2AState *d)
 	CxbxSetThreadName("Cxbx NV2A VBLANK");
 	auto nextVBlankTime = GetNextVBlankTime();
 
-	while (true) {
+	while (!d->exiting) {
 		// Handle VBlank
 		if (std::chrono::steady_clock::now() > nextVBlankTime) {
 			d->pcrtc.pending_interrupts |= NV_PCRTC_INTR_0_VBLANK;
@@ -1136,6 +1151,7 @@ NV2ADevice::NV2ADevice()
 
 NV2ADevice::~NV2ADevice()
 {
+	Reset(); // TODO : Review this
 	delete m_nv2a_state;
 }
 
@@ -1174,8 +1190,6 @@ void NV2ADevice::Init()
 	// Setup the conditions/mutexes
 	qemu_mutex_init(&d->pfifo.cache1.cache_lock);
 	qemu_cond_init(&d->pfifo.cache1.cache_cond);
-	qemu_cond_init(&d->pvideo.interrupt_cond);
-//	d->pfifo.puller_thread = std::thread(pfifo_puller_thread, d);
 	pgraph_init(d);
 
 	// Only spawn VBlank thread when LLE is enabled
@@ -1190,6 +1204,21 @@ void NV2ADevice::Init()
 
 void NV2ADevice::Reset()
 {
+	NV2AState *d = m_nv2a_state; // glue
+	if (!d) return;
+
+	d->exiting = true;
+	qemu_cond_signal(&d->pfifo.cache1.cache_cond);
+	d->pfifo.puller_thread.join(); // was qemu_thread_join(&d->pfifo.puller_thread);
+
+	if (d->pgraph.opengl_enabled) {
+		vblank_thread.join();
+		pvideo_destroy(d);
+	}
+
+	pgraph_destroy(&d->pgraph);
+	qemu_mutex_destroy(&d->pfifo.cache1.cache_lock);
+	qemu_cond_destroy(&d->pfifo.cache1.cache_cond);
 }
 
 uint32_t NV2ADevice::IORead(int barIndex, uint32_t port, unsigned size)

@@ -532,7 +532,7 @@ typedef struct NV2AState {
     struct {
 		uint32_t pending_interrupts;
 		uint32_t enabled_interrupts;
-		QemuCond interrupt_cond;
+		//QemuCond interrupt_cond;
 		OverlayState overlays[2]; // NV2A supports 2 video overlays
 		uint32_t regs[NV_PVIDEO_SIZE]; // TODO : union
     } pvideo;

@@ -2854,6 +2854,12 @@ void pgraph_destroy(PGRAPHState *pg)
 
 		unlockGL(pg);
 	}
+
+	qemu_mutex_destroy(&pg->lock);
+	qemu_mutex_destroy(&pg->gl_lock);
+	qemu_cond_destroy(&pg->interrupt_cond);
+	qemu_cond_destroy(&pg->fifo_access_cond);
+	qemu_cond_destroy(&pg->flip_3d);
 }
 
 static void pgraph_update_shader_constants(PGRAPHState *pg,
