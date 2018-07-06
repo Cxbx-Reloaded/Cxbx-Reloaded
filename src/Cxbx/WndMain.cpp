@@ -136,9 +136,16 @@ void WndMain::ResizeWindow(HWND hwnd, bool bForGUI)
 	if (m_h > dHeight)
 		m_h = dHeight;
 
-	// Center to desktop
-	m_x = desktopRect.left + ((desktopRect.right - desktopRect.left - m_w) / 2);
-	m_y = desktopRect.top + ((desktopRect.bottom - desktopRect.top - m_h) / 2);
+	if (bForGUI && m_prevWindowLoc.x != -1 && m_prevWindowLoc.y != -1) {
+		// Restore to previous Window location
+		m_x = m_prevWindowLoc.x;
+		m_y = m_prevWindowLoc.y;
+	}
+	else {
+		// Center to desktop
+		m_x = desktopRect.left + ((dWidth - m_w) / 2);
+		m_y = desktopRect.top + ((dHeight - m_h) / 2);
+	}
 
 	// Resize the window so it's client area can contain the requested resolution
 	windowRect = { m_x, m_y, m_x + m_w, m_y + m_h };
@@ -166,7 +173,8 @@ WndMain::WndMain(HINSTANCE x_hInstance) :
 	m_StorageLocation(""),
 	m_dwRecentXbe(0),
 	m_hDebuggerProc(nullptr),
-	m_hDebuggerMonitorThread()
+	m_hDebuggerMonitorThread(),
+	m_prevWindowLoc({ -1, -1 })
 {
     // initialize members
     {
@@ -2351,6 +2359,16 @@ void WndMain::StartEmulation(HWND hwndParent, DebuggerState LocalDebuggerState /
 	// register storage location with emulator process
 	g_EmuShared->SetStorageLocation(m_StorageLocation);
 
+	// Preserve previous GUI window location.
+	HWND hOwner = GetParent(m_hwnd);
+	RECT curWindowPos;
+	GetWindowRect((hOwner != nullptr ? hOwner : m_hwnd), &curWindowPos);
+	m_prevWindowLoc.x = curWindowPos.left;
+	m_prevWindowLoc.y = curWindowPos.top;
+	ScreenToClient((hOwner != nullptr ? hOwner : m_hwnd), &m_prevWindowLoc);
+	m_prevWindowLoc.x = curWindowPos.left - m_prevWindowLoc.x;
+	m_prevWindowLoc.y = curWindowPos.top - m_prevWindowLoc.y;
+
 	if (m_ScaleViewport) {
 		// Set the window size to emulation dimensions
 		// Note : Doing this here assures the emulation process will use
@@ -2411,19 +2429,25 @@ void WndMain::StartEmulation(HWND hwndParent, DebuggerState LocalDebuggerState /
 // stop emulation
 void WndMain::StopEmulation()
 {
-    m_bIsStarted = false;
-    if (m_hwndChild != NULL) {
+	m_bIsStarted = false;
+	if (m_hwndChild != NULL) {
 		if (IsWindow(m_hwndChild)) {
 			SendMessage(m_hwndChild, WM_CLOSE, 0, 0);
 		}
 
 		m_hwndChild = NULL;
-    }
+	}
 
 	UpdateCaption();
-    RefreshMenus();
-	// Set the window size back to it's GUI dimensions
-	ResizeWindow(m_hwnd, /*bForGUI=*/true);
+	RefreshMenus();
+
+	int iScaleView = FALSE;
+	g_EmuShared->GetScaleViewport(&iScaleView);
+	if (iScaleView != 0) {
+		// Set the window size back to it's GUI dimensions
+		ResizeWindow(m_hwnd, /*bForGUI=*/true);
+	}
+
 	g_EmuShared->SetIsEmulating(false);
 }
 

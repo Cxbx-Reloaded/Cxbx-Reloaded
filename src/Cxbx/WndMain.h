@@ -184,7 +184,7 @@ class WndMain : public Wnd
 		HBITMAP     m_OriLed;
 		HBITMAP     m_SplashBmp;
 		HBITMAP     m_LogoBmp;
-		HBITMAP		m_GameLogoBMP;
+		HBITMAP     m_GameLogoBMP;
 		HBITMAP     m_LedBmp;
 		HBRUSH      m_Brushes[4];
 		HPEN        m_Pens[4];
@@ -239,17 +239,17 @@ class WndMain : public Wnd
 		// ******************************************************************
 		// * XInput Enabled Flag
 		// ******************************************************************		
-		int			m_XInputEnabled;
+		int         m_XInputEnabled;
 
 		// ******************************************************************
 		// * Hack Flags
 		// ******************************************************************	
-		int		m_DisablePixelShaders;
-		int		m_UncapFramerate;
-		int		m_UseAllCores;
-		int		m_SkipRdtscPatching;
-		int     m_ScaleViewport;
-		int		m_DirectHostBackBufferAccess;
+		int         m_DisablePixelShaders;
+		int         m_UncapFramerate;
+		int         m_UseAllCores;
+		int         m_SkipRdtscPatching;
+		int         m_ScaleViewport;
+		int         m_DirectHostBackBufferAccess;
 
         // ******************************************************************
         // * debug output filenames
@@ -262,6 +262,11 @@ class WndMain : public Wnd
 		// ******************************************************************
 		CXBX_DATA   m_StorageToggle;
 		char        m_StorageLocation[MAX_PATH];
+
+		// ******************************************************************
+		// * Previous GUI window location (before start emulation)
+		// ******************************************************************
+		POINT       m_prevWindowLoc;
 };
 
 #endif
