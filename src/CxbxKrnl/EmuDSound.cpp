@@ -295,7 +295,7 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreate)
                 break;
             case DSERR_OUTOFMEMORY:
                 dsErrorMsg = "Unable to allocate DirectSound subsystem class."
-                            "\n\nPlease close any opened application(s) or restart computer before try again.";
+                            "\n\nPlease close any opened application(s) or restart computer before trying again.";
                 break;
             default:
                 dsErrorMsg = "DirectSoundCreate8 unknown failed: 0x%08X";
