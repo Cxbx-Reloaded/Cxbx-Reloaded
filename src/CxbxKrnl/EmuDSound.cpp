@@ -282,7 +282,7 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreate)
                             "\n\nPlease report to respective game compatibility issue.";
                 break;
             case DSERR_INVALIDPARAM:
-                dsErrorMsg = "DirectSoundCreate8 return invalid paramemter."
+                dsErrorMsg = "DirectSoundCreate8 return invalid parameter."
                             "\n\nPlease report to respective game compatibility issue.";
                 break;
             case DSERR_NOAGGREGATION:
@@ -294,8 +294,8 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreate)
                             "\n\nThen try again.";
                 break;
             case DSERR_OUTOFMEMORY:
-                dsErrorMsg = "Unable to allocate DirectSound subystem class."
-                            "\n\nPlease close any opened applications or restart computer before try again.";
+                dsErrorMsg = "Unable to allocate DirectSound subsystem class."
+                            "\n\nPlease close any opened application(s) or restart computer before try again.";
                 break;
             default:
                 dsErrorMsg = "DirectSoundCreate8 unknown failed: 0x%08X";
