@@ -225,7 +225,7 @@ VOID RefreshAudioAdapter()
             g_XBAudio.SetAudioAdapter(binGUID);
         }
 
-        // Force save default audio device if selected audo device is invalid.
+        // Force save default audio device if selected audio device is invalid.
         if (pGUID == (LPGUID)CB_ERR) {
             SendMessage(g_hAudioAdapter, CB_SETCURSEL, 0, 0);
             g_EmuShared->SetXBAudio(&g_XBAudio);
