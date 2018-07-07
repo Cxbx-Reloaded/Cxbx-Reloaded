@@ -272,7 +272,8 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreate)
         hRet = DirectSoundCreate8(&g_XBAudio.GetAudioAdapter(), &g_pDSound8, NULL);
 
         if (hRet != DS_OK) {
-            CxbxKrnlCleanup("DirectSoundCreate8 Failed!");
+            CxbxKrnlCleanup("DirectSoundCreate8 Failed!"
+                            "\n\nPlease select a valid audio device from Cxbx-Reloaded's config audio dialog.");
         }
 
         hRet = g_pDSound8->SetCooperativeLevel(g_hEmuWindow, DSSCL_PRIORITY);
