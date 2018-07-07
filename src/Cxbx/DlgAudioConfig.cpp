@@ -229,8 +229,8 @@ VOID RefreshAudioAdapter()
         if (pGUID == (LPGUID)CB_ERR) {
             SendMessage(g_hAudioAdapter, CB_SETCURSEL, 0, 0);
             g_EmuShared->SetXBAudio(&g_XBAudio);
-            MessageBox(nullptr, "Your selected audio device is invalid,\n"
-                                "reverting to default audio device.", "Cxbx-Reloaded", MB_OK | MB_ICONEXCLAMATION);
+            MessageBox(nullptr, "Your selected audio adapter is invalid,\n"
+                                "reverting to default audio adapter.", "Cxbx-Reloaded", MB_OK | MB_ICONEXCLAMATION);
         }
     }
 }

@@ -278,7 +278,7 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreate)
                 // Is not a fatal error.
                 break;
             case DSERR_ALLOCATED:
-                dsErrorMsg = "Audio device is already allocated. Possible fault within Cxbx-Reloaded's emulator."
+                dsErrorMsg = "Audio adapter is already allocated. Possible fault within Cxbx-Reloaded's emulator."
                             "\n\nPlease report to respective game compatibility issue.";
                 break;
             case DSERR_INVALIDPARAM:
@@ -286,11 +286,11 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreate)
                             "\n\nPlease report to respective game compatibility issue.";
                 break;
             case DSERR_NOAGGREGATION:
-                dsErrorMsg = "Audio device does not support aggregation."
-                            "\n\nPlease use different audio device.";
+                dsErrorMsg = "Audio adapter does not support aggregation."
+                            "\n\nPlease use different audio adapter.";
                 break;
             case DSERR_NODRIVER:
-                dsErrorMsg = "Please select a valid audio device from Cxbx-Reloaded's config audio dialog."
+                dsErrorMsg = "Please select a valid audio adapter from Cxbx-Reloaded's config audio dialog."
                             "\n\nThen try again.";
                 break;
             case DSERR_OUTOFMEMORY:
