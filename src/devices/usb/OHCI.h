@@ -40,16 +40,6 @@
 #include "USBDevice.h"
 #include "..\CxbxKrnl\Timer.h"
 
-#define USB_RET_SUCCESS           (0)
-#define USB_RET_NODEV             (-1)
-#define USB_RET_NAK               (-2)
-#define USB_RET_STALL             (-3)
-#define USB_RET_BABBLE            (-4)
-#define USB_RET_IOERROR           (-5)
-#define USB_RET_ASYNC             (-6)
-#define USB_RET_ADD_TO_QUEUE      (-7)
-#define USB_RET_REMOVE_FROM_QUEUE (-8)
-
 
 // Abbreviations used:
 // OHCI: Open Host Controller Interface; the standard used on the Xbox to comunicate with the usb devices
@@ -158,8 +148,6 @@ class OHCI
 		uint32_t OHCI_ReadRegister(xbaddr Addr);
 		// write a register
 		void OHCI_WriteRegister(xbaddr Addr, uint32_t Value);
-		// update the USBPort struct with the device attached
-		void OHCI_AssignUsbPortStruct(int port, XboxDeviceState* dev);
 
 
 	private:

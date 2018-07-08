@@ -298,6 +298,9 @@
     <ClCompile Include="..\..\src\Common\CxbxCommon.cpp" />
       <Filter>GUI</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\devices\usb\XidGamepad.cpp">
+      <Filter>Hardware\Usb</Filter>
+    </ClCompile>
 	<ClCompile Include="..\..\src\Cxbx\DlgXboxControllerPortMapping.cpp">
       <Filter>GUI</Filter>
     </ClCompile>
@@ -596,6 +599,9 @@
     </ClInclude>
     <ClInclude Include="..\..\src\CxbxCommon.h">
       <Filter>Shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\devices\usb\XidGamepad.h">
+      <Filter>Hardware\Usb</Filter>
     </ClInclude>
 	<ClInclude Include="..\..\src\Cxbx\DlgXboxControllerPortMapping.h">
       <Filter>GUI</Filter>

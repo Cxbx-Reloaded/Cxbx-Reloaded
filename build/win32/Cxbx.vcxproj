@@ -366,6 +366,7 @@
     <ClInclude Include="..\..\src\devices\usb\OHCI.h" />
     <ClInclude Include="..\..\src\devices\usb\UsbCommon.h" />
     <ClInclude Include="..\..\src\devices\usb\USBDevice.h" />
+    <ClInclude Include="..\..\src\devices\usb\XidGamepad.h" />
     <ClInclude Include="..\..\src\devices\video\nv2a.h" />
     <ClInclude Include="..\..\src\devices\video\nv2a_debug.h" />
     <ClInclude Include="..\..\src\devices\video\nv2a_int.h" />
@@ -739,6 +740,7 @@
     <ClCompile Include="..\..\src\devices\usb\Hub.cpp" />
     <ClCompile Include="..\..\src\devices\usb\OHCI.cpp" />
     <ClCompile Include="..\..\src\devices\usb\USBDevice.cpp" />
+    <ClCompile Include="..\..\src\devices\usb\XidGamepad.cpp" />
     <ClCompile Include="..\..\src\devices\video\nv2a.cpp" />
     <ClCompile Include="..\..\src\devices\video\nv2a_debug.cpp" />
     <ClCompile Include="..\..\src\devices\video\nv2a_psh.cpp" />

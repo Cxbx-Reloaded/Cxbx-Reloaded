@@ -39,6 +39,7 @@
 
 #include "..\PCIDevice.h"
 #include "UsbCommon.h"
+#include <vector>
 
 
 // Forward declare OHCI class for m_HostController pointer
@@ -67,9 +68,13 @@ class USBDevice : public PCIDevice {
 		OHCI* m_HostController;
 		// PCI path of this usb device
 		const char* m_PciPath;
+		// free usb ports on this device (hubs included)
+		std::vector<USBPort*> m_FreePorts;
 
 		// register a port with the HC
 		void USB_RegisterPort(USBPort* Port, int Index, int SpeedMask, USBPortOps* Ops);
+		// free a port with the HC
+		void USB_UnregisterPort(USBPort* Port);
 		// reset a usb port
 		void USB_PortReset(USBPort* Port);
 		// update device status during an attach

@@ -36,7 +36,6 @@
 
 #include "OHCI.h"
 #include "Hub.h"
-#include "..\CxbxKrnl\EmuKrnl.h" // For EmuWarning
 
 #define LOG_STR_HUB "Hub"
 
@@ -92,6 +91,13 @@ int PlayerToUsbArray[] = {
 	2,
 };
 
+/* same as Linux kernel root hubs */
+typedef enum {
+	STR_MANUFACTURER = 1,
+	STR_PRODUCT,
+	STR_SERIALNUMBER,
+};
+
 struct USBHubPort {
 	USBPort port;          // downstream port status
 	uint16_t wPortStatus;  // Port Status Field, in accordance with the standard
@@ -104,78 +110,62 @@ struct USBHubState {
 	USBHubPort ports[NUM_PORTS]; // downstream ports of the hub
 };
 
-USBDescIface::USBDescIface(bool bDefault)
+USBDescIface::USBDescIface()
 {
 	std::memset(this, 0, sizeof(USBDescIface));
-	if (bDefault) {
-		descs = new USBDescOther();
-		eps = new USBDescEndpoint();
-		bInterfaceNumber = 0;
-		bNumEndpoints = 1;
-		bInterfaceClass = USB_CLASS_HUB;
-		eps->bEndpointAddress = USB_DIR_IN | 0x01;
-		eps->bmAttributes = USB_ENDPOINT_XFER_INT;
-		eps->wMaxPacketSize = 1 + (NUM_PORTS + 7) / 8;
-		eps->bInterval = 0xFF;
-	}
+	eps = new USBDescEndpoint();
+	bInterfaceNumber = 0;
+	bNumEndpoints = 1;
+	bInterfaceClass = USB_CLASS_HUB;
+	eps->bEndpointAddress = USB_DIR_IN | 0x01;
+	eps->bmAttributes = USB_ENDPOINT_XFER_INT;
+	eps->wMaxPacketSize = 1 + (NUM_PORTS + 7) / 8;
+	eps->bInterval = 0xFF;
 }
 
 USBDescIface::~USBDescIface()
 {
-	delete descs; // always one struct of this?
-	if (bNumEndpoints != 1) {
-		delete[] eps;
-		return;
-	}
 	delete eps;
 }
 
-static const USBDescIface desc_iface_hub(true);
+static const USBDescIface desc_iface_hub;
 
-USBDescDevice::USBDescDevice(bool bDefault)
+USBDescDevice::USBDescDevice()
 {
 	std::memset(this, 0, sizeof(USBDescDevice));
-	if (bDefault) {
-		USBDescConfig* pUSBDescConfig = new USBDescConfig();
-		bcdUSB = 0x0110;
-		bDeviceClass = USB_CLASS_HUB;
-		bMaxPacketSize0 = 8;
-		bNumConfigurations = 1;
-		pUSBDescConfig->bNumInterfaces = 1;
-		pUSBDescConfig->bConfigurationValue = 1;
-		pUSBDescConfig->bmAttributes = 0xE0;
-		pUSBDescConfig->nif = 1;
-		pUSBDescConfig->ifs = &desc_iface_hub;
-		confs = pUSBDescConfig;
-	}
+	USBDescConfig* pUSBDescConfig = new USBDescConfig();
+	bcdUSB = 0x0110;
+	bDeviceClass = USB_CLASS_HUB;
+	bMaxPacketSize0 = 8;
+	bNumConfigurations = 1;
+	pUSBDescConfig->bNumInterfaces = 1;
+	pUSBDescConfig->bConfigurationValue = 1;
+	pUSBDescConfig->bmAttributes = 0xE0;
+	pUSBDescConfig->nif = 1;
+	pUSBDescConfig->ifs = &desc_iface_hub;
+	confs = pUSBDescConfig;
 }
 
 USBDescDevice::~USBDescDevice()
 {
-	if (bNumConfigurations != 1) {
-		delete[] confs;
-		return;
-	}
 	delete confs;
 }
 
-static const USBDescDevice desc_device_hub(true);
+static const USBDescDevice desc_device_hub;
 
-USBDesc::USBDesc(bool bDefault)
+USBDesc::USBDesc()
 {
 	std::memset(this, 0, sizeof(USBDesc));
-	if (bDefault) {
-		id.idVendor = 0x0409;
-		id.idProduct = 0x55AA;
-		id.bcdDevice = 0x0101;
-		id.iManufacturer = STR_MANUFACTURER;
-		id.iProduct = STR_PRODUCT;
-		id.iSerialNumber = STR_SERIALNUMBER;
-		full = &desc_device_hub;
-	}
+	id.idVendor = 0x0409;
+	id.idProduct = 0x55AA;
+	id.bcdDevice = 0x0101;
+	id.iManufacturer = STR_MANUFACTURER;
+	id.iProduct = STR_PRODUCT;
+	id.iSerialNumber = STR_SERIALNUMBER;
+	full = &desc_device_hub;
 }
 
-static const USBDesc desc_hub(true);
+static const USBDesc desc_hub;
 
 // Class-specific hub descriptor. Remember to update DeviceRemovable and PortPwrCtrlMask if you change NUM_PORTS since their values depend on
 // the number of downstream ports available on the hub! Also note that this descriptor cannot be put in the descs member of the interface descriptor
@@ -196,29 +186,18 @@ static const uint8_t HubDescriptor[] =
 
 int Hub::Init(int pport)
 {
+	if (pport > 4 || pport < 1) { return -1; };
+
 	XboxDeviceState* dev = ClassInitFn();
-	m_UsbDev->USB_EpInit(dev);
     int rc = UsbHubClaimPort(dev, pport);
     if (rc != 0) {
         return rc;
     }
-    rc = m_UsbDev->USB_DeviceInit(dev);
-    if (rc != 0) {
-		UsbHubReleasePort(dev);
-        return rc;
-    }
+	m_UsbDev->USB_EpInit(dev);
+    m_UsbDev->USB_DeviceInit(dev);
     m_UsbDev->USB_DeviceAttach(dev);
 
 	return 0;
-}
-
-Hub::~Hub()
-{
-	delete m_pPeripheralFuncStruct;
-	delete m_HubState->ports[0].port.Operations;
-	delete m_HubState;
-	m_pPeripheralFuncStruct = nullptr;
-	m_HubState = nullptr;
 }
 
 XboxDeviceState* Hub::ClassInitFn()
@@ -239,7 +218,7 @@ XboxDeviceState* Hub::ClassInitFn()
 		m_pPeripheralFuncStruct->handle_reset   = std::bind(&Hub::UsbHub_HandleReset, this);
 		m_pPeripheralFuncStruct->handle_control = std::bind(&Hub::UsbHub_HandleControl, this, _1, _2, _3, _4, _5, _6, _7);
 		m_pPeripheralFuncStruct->handle_data    = std::bind(&Hub::UsbHub_HandleData, this, _1, _2);
-		m_pPeripheralFuncStruct->handle_destroy = std::bind(&Hub::UsbHub_HandleDestroy, this, _1);
+		m_pPeripheralFuncStruct->handle_destroy = std::bind(&Hub::UsbHub_HandleDestroy, this);
 		m_pPeripheralFuncStruct->product_desc   = dev->ProductDesc.c_str();
 		m_pPeripheralFuncStruct->usb_desc       = &desc_hub;
 	}
@@ -249,21 +228,34 @@ XboxDeviceState* Hub::ClassInitFn()
 
 int Hub::UsbHubClaimPort(XboxDeviceState* dev, int pport)
 {
+	int i;
 	int usb_port;
+	std::vector<USBPort*>::iterator it;
 
 	assert(dev->Port == nullptr);
 
-	if (pport > 4 || pport < 1) { return -1; };
-
+	i = 0;
 	usb_port = PlayerToUsbArray[pport];
 	if (usb_port > 2) {
 		m_UsbDev = g_USB0;
-		m_UsbDev->m_HostController->OHCI_AssignUsbPortStruct(usb_port - 3, dev);
 	}
 	else {
 		m_UsbDev = g_USB1;
-		m_UsbDev->m_HostController->OHCI_AssignUsbPortStruct(usb_port - 1, dev);
 	}
+	for (auto port : m_UsbDev->m_FreePorts) {
+		if (strcmp(port->Path, std::to_string(usb_port).c_str()) == 0) {
+			break;
+		}
+		i++;
+	}
+	if (i == 2) {
+		EmuWarning("Port requested %d not found (in use?)", usb_port);
+		return -1;
+	}
+	it = m_UsbDev->m_FreePorts.begin() + i;
+	dev->Port = *it;
+	(*it)->Dev = dev;
+	m_UsbDev->m_FreePorts.erase(it);
 
 	return 0;
 }
@@ -283,11 +275,6 @@ int Hub::UsbHub_Initfn(XboxDeviceState* dev)
 	USBHubPort* port;
 	USBPortOps* ops;
 	int i;
-
-	if (dev->Port->HubCount == 5) {
-		DbgPrintf("Hub: chain too deep\n");
-		return -1;
-	}
 
 	m_UsbDev->USB_CreateSerial(dev, "314159");
 	m_UsbDev->USBDesc_SetString(dev, STR_MANUFACTURER, "Cxbx-Reloaded");
@@ -565,14 +552,23 @@ void Hub::UsbHub_HandleData(XboxDeviceState* dev, USBPacket* p)
 	}
 }
 
-void Hub::UsbHub_HandleDestroy(XboxDeviceState* dev)
+void Hub::UsbHub_HandleDestroy()
 {
+	// Inform upstream that the hub is detached and gone
+	m_HubState->dev.Port->Operations->detach(m_HubState->dev.Port);
+	m_UsbDev->m_FreePorts.push_back(m_HubState->dev.Port);
+
 	for (int i = 0; i < NUM_PORTS; i++) {
 		if (m_HubState->ports[i].port.Dev) {
-			// delete downstream device
+			// Also destroy attached downstream device
+			m_HubState->ports[i].port.Dev->klass->handle_destroy();
+		}
+		else {
+			m_UsbDev->USB_UnregisterPort(&m_HubState->ports[i].port);
 		}
 	}
-	// TODO
+	UsbHubReleasePort(&m_HubState->dev);
+	HubCleanUp();
 }
 
 void Hub::UsbHub_Attach(USBPort* port1)
@@ -701,4 +697,13 @@ std::string Hub::GetFeatureName(int feature)
 	}
 
 	return str;
+}
+
+void Hub::HubCleanUp()
+{
+	delete m_pPeripheralFuncStruct;
+	delete m_HubState->ports[0].port.Operations;
+	delete m_HubState;
+	m_pPeripheralFuncStruct = nullptr;
+	m_HubState = nullptr;
 }

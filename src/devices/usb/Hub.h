@@ -37,30 +37,26 @@
 #ifndef HUB_H_
 #define HUB_H_
 
-#include "UsbCommon.h"
+#include "UsbDevice.h"
 
 
-/* same as Linux kernel root hubs */
-typedef enum {
-    STR_MANUFACTURER = 1,
-    STR_PRODUCT,
-    STR_SERIALNUMBER,
-};
+struct USBHubState; // forward declare
 
 
 /* Class which implements a usb hub */
 class Hub
 {
 	public:
+		// usb device this hub is attached to
+		USBDevice* m_UsbDev = nullptr;
+
 		// initialize this peripheral
 		int Init(int pport);
-		// destructor
-		~Hub();
+		// destroy hub resources
+		void HubCleanUp();
 		
 		
 	private:
-		// usb device this hub is attached to
-		USBDevice* m_UsbDev = nullptr;
 		// hub state
 		USBHubState* m_HubState = nullptr;
 		// hub class functions
@@ -75,7 +71,7 @@ class Hub
 		void UsbHub_HandleControl(XboxDeviceState* dev, USBPacket* p,
                int request, int value, int index, int length, uint8_t* data);
 		void UsbHub_HandleData(XboxDeviceState* dev, USBPacket* p);
-		void UsbHub_HandleDestroy(XboxDeviceState* dev);
+		void UsbHub_HandleDestroy();
 		// see USBPortOps struct for info
 		void UsbHub_Attach(USBPort* port1);
 		void UsbHub_Detach(USBPort* port1);
@@ -91,5 +87,6 @@ class Hub
 };
 
 extern Hub* g_HubObjArray[4];
+extern int PlayerToUsbArray[5];
 
 #endif

@@ -92,6 +92,14 @@ void USBDevice::USB_RegisterPort(USBPort* Port, int Index, int SpeedMask, USBPor
 	Port->SpeedMask = SpeedMask;
 	Port->Operations = Ops;
 	USB_PortLocation(Port, nullptr, Index + 1);
+	m_FreePorts.push_back(Port);
+}
+
+void USBDevice::USB_UnregisterPort(USBPort* Port)
+{
+	auto it = std::find(m_FreePorts.begin(), m_FreePorts.end(), Port);
+	assert(it != m_FreePorts.end());
+	m_FreePorts.erase(it);
 }
 
 void USBDevice::USB_PortReset(USBPort* Port)
@@ -633,13 +641,10 @@ void USBDevice::USB_EPsetMaxPacketSize(XboxDeviceState* dev, int pid, int ep, ui
 void USBDevice::USB_PortLocation(USBPort* downstream, USBPort* upstream, int portnr)
 {
 	if (upstream) {
-		std::snprintf(downstream->Path, sizeof(downstream->Path), "%s.%d",
-			upstream->Path, portnr);
-		downstream->HubCount = upstream->HubCount + 1;
+		std::snprintf(downstream->Path, sizeof(downstream->Path), "%s.%d", upstream->Path, portnr);
 	}
 	else {
 		std::snprintf(downstream->Path, sizeof(downstream->Path), "%d", portnr);
-		downstream->HubCount = 0;
 	}
 }
 
@@ -1264,3 +1269,4 @@ const char* USBDevice::USBDesc_GetString(XboxDeviceState* dev, int index)
 
 	return nullptr;
 }
+

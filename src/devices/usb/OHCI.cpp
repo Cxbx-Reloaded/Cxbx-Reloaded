@@ -1791,9 +1791,3 @@ int OHCI::OHCI_ServiceIsoTD(OHCI_ED* ed, int completion)
 	}
 	return 1;
 }
-
-void OHCI::OHCI_AssignUsbPortStruct(int port, XboxDeviceState* dev)
-{
-	dev->Port = &m_Registers.RhPort[port].UsbPort;
-	m_Registers.RhPort[port].UsbPort.Dev = dev;
-}

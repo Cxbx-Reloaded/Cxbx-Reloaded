@@ -123,7 +123,7 @@ size_t IoVecFromBuffer(const IoVec* iov, unsigned int iov_cnt, size_t offset, vo
 	for (i = 0, done = 0; (offset || done < bytes) && i < iov_cnt; i++) {
 		if (offset < iov[i].Iov_Len) {
 			size_t len = MIN(iov[i].Iov_Len - offset, bytes - done);
-			memcpy(static_cast<uint8_t*>(iov[i].Iov_Base) + offset, static_cast<uint8_t*>(buf) + done, len);
+			std::memcpy(static_cast<uint8_t*>(iov[i].Iov_Base) + offset, static_cast<uint8_t*>(buf) + done, len);
 			done += len;
 			offset = 0;
 		}

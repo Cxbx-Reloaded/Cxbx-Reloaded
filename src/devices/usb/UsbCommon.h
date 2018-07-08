@@ -39,6 +39,7 @@
 
 #include "CxbxCommon.h"
 #include "..\devices\video\queue.h"
+#include "..\CxbxKrnl\EmuKrnl.h" // For EmuWarning
 #include <functional>
 
 #define USB_MAX_ENDPOINTS  15
@@ -123,6 +124,16 @@
 #define USB_DT_INTERFACE		0x04
 #define USB_DT_ENDPOINT			0x05
 
+#define USB_RET_SUCCESS           (0)
+#define USB_RET_NODEV             (-1)
+#define USB_RET_NAK               (-2)
+#define USB_RET_STALL             (-3)
+#define USB_RET_BABBLE            (-4)
+#define USB_RET_IOERROR           (-5)
+#define USB_RET_ASYNC             (-6)
+#define USB_RET_ADD_TO_QUEUE      (-7)
+#define USB_RET_REMOVE_FROM_QUEUE (-8)
+
 
 typedef enum _USB_SPEED
 {
@@ -186,7 +197,7 @@ struct USBDescIface {
     uint8_t                   ndesc;              // number of device-specific class descriptors (if any)
     USBDescOther*             descs;              // pointer to the extra class descriptors
     USBDescEndpoint*          eps;                // endpoints supported by this interface
-	USBDescIface(bool bDefault);
+	USBDescIface();
 	~USBDescIface();
 };
 
@@ -216,7 +227,7 @@ struct USBDescDevice {
     uint8_t                   bMaxPacketSize0;    // maximum packet size for endpoint zero (only 8, 16, 32, or 64 are valid)
     uint8_t                   bNumConfigurations; // number of possible configurations
     const USBDescConfig*      confs;              // configurations supported by this device
-	USBDescDevice(bool bDefault);
+	USBDescDevice();
 	~USBDescDevice();
 };
 
@@ -234,7 +245,7 @@ struct USBDescID {
 struct USBDesc {
     USBDescID                 id;   // id-specific info of the device descriptor
     const USBDescDevice*      full; // remaining fields of the device descriptor
-	USBDesc(bool bDefault);
+	USBDesc();
 };
 
 #pragma pack(1)
@@ -391,7 +402,6 @@ struct USBPort {
 	XboxDeviceState* Dev;         // usb device (if present)
 	USBPortOps* Operations;       // functions to call when a port event happens
 	int SpeedMask;                // usb speeds supported
-	int HubCount;                 // number of hubs chained
 	char Path[16];                // the number of the port + 1, used to create a serial number for this device
 	int PortIndex;                // internal port index
 };
@@ -408,7 +418,7 @@ struct USBDeviceClass {
 	std::function<void(XboxDeviceState* dev, USBPacket* p)> cancel_packet;
 
 	// Called when device is destroyed.
-	std::function<void(XboxDeviceState* dev)> handle_destroy;
+	std::function<void(void)> handle_destroy;
 
 	// Attach the device
 	std::function<void(XboxDeviceState* dev)> handle_attach;
