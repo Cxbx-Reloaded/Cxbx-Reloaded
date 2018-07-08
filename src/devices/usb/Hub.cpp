@@ -91,13 +91,6 @@ int PlayerToUsbArray[] = {
 	2,
 };
 
-/* same as Linux kernel root hubs */
-typedef enum {
-	STR_MANUFACTURER = 1,
-	STR_PRODUCT,
-	STR_SERIALNUMBER,
-};
-
 struct USBHubPort {
 	USBPort port;          // downstream port status
 	uint16_t wPortStatus;  // Port Status Field, in accordance with the standard

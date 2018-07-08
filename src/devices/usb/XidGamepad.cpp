@@ -60,7 +60,7 @@ struct XIDDesc {
 	XIDDesc();
 };
 
-/* Struct used by the Get_Report request -> buttons state */
+/* Struct used by the Get_Report request -> button's state */
 struct XIDGamepadReport {
 	uint8_t bReportId;
 	uint8_t bLength;

@@ -152,6 +152,13 @@ typedef enum USBPacketState {
 }
 USBPacketState;
 
+/* same as Linux kernel root hubs */
+typedef enum {
+	STR_MANUFACTURER = 1,
+	STR_PRODUCT,
+	STR_SERIALNUMBER,
+};
+
 struct USBPacket;
 struct XboxDeviceState;
 

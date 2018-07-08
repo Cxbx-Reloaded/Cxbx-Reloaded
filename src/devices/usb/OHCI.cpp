@@ -532,14 +532,14 @@ int OHCI::OHCI_ServiceEDlist(xbaddr Head, int Completion)
 
 		while ((ed.HeadP & OHCI_DPTR_MASK) != ed.TailP) { // a TD is available to be processed
 #ifdef DEBUG_PACKET
-			DPRINTF("ED @ 0x%.8x fa=%u en=%u d=%u s=%u k=%u f=%u mps=%u "
-				"h=%u c=%u\n  head=0x%.8x tailp=0x%.8x next=0x%.8x\n", cur,
-				OHCI_BM(ed.flags, ED_FA), OHCI_BM(ed.flags, ED_EN),
-				OHCI_BM(ed.flags, ED_D), (ed.flags & OHCI_ED_S) != 0,
-				(ed.flags & OHCI_ED_K) != 0, (ed.flags & OHCI_ED_F) != 0,
-				OHCI_BM(ed.flags, ED_MPS), (ed.head & OHCI_ED_H) != 0,
-				(ed.head & OHCI_ED_C) != 0, ed.head & OHCI_DPTR_MASK,
-				ed.tail & OHCI_DPTR_MASK, ed.next & OHCI_DPTR_MASK);
+			printf("ED @ 0x%.8x fa=%u en=%u d=%u s=%u k=%u f=%u mps=%u "
+				"h=%u c=%u\n  head=0x%.8x tailp=0x%.8x next=0x%.8x\n", current,
+				OHCI_BM(ed.Flags, ED_FA), OHCI_BM(ed.Flags, ED_EN),
+				OHCI_BM(ed.Flags, ED_D), (ed.Flags & OHCI_ED_S) != 0,
+				(ed.Flags & OHCI_ED_K) != 0, (ed.Flags & OHCI_ED_F) != 0,
+				OHCI_BM(ed.Flags, ED_MPS), (ed.HeadP & OHCI_ED_H) != 0,
+				(ed.HeadP & OHCI_ED_C) != 0, ed.HeadP & OHCI_DPTR_MASK,
+				ed.TailP & OHCI_DPTR_MASK, ed.NextED & OHCI_DPTR_MASK);
 #endif
 			active = 1;
 
@@ -571,7 +571,7 @@ int OHCI::OHCI_ServiceTD(OHCI_ED* Ed)
 	int direction;
 	size_t length = 0, packetlen = 0;
 #ifdef DEBUG_PACKET
-	const char *str = NULL;
+	const char *str = nullptr;
 #endif
 	int pid;
 	int ret;
@@ -587,10 +587,7 @@ int OHCI::OHCI_ServiceTD(OHCI_ED* Ed)
 	// See if this TD has already been submitted to the device
 	completion = (addr == m_AsyncTD);
 	if (completion && !m_AsyncComplete) { // ??
-#ifdef DEBUG_PACKET
-		DPRINTF("Skipping async TD\n");
 		DbgPrintf("Skipping async TD\n");
-#endif
 		return 1;
 	}
 	if (OHCI_ReadTD(addr, &td)) {
@@ -674,16 +671,15 @@ int OHCI::OHCI_ServiceTD(OHCI_ED* Ed)
 
 	flag_r = (td.Flags & OHCI_TD_R) != 0;
 #ifdef DEBUG_PACKET
-	DPRINTF(" TD @ 0x%.8x %" PRId64 " of %" PRId64
-		" bytes %s r=%d cbp=0x%.8x be=0x%.8x\n",
-		addr, (int64_t)pktlen, (int64_t)len, str, flag_r, td.cbp, td.be);
+	printf(" TD @ 0x%.8X %lld of %lld bytes %s r=%d cbp=0x%.8X be=0x%.8X\n",
+		addr, (int64_t)packetlen, (int64_t)length, str, flag_r, td.CurrentBufferPointer, td.BufferEnd);
 
-	if (pktlen > 0 && dir != OHCI_TD_DIR_IN) {
-		DPRINTF("  data:");
-		for (i = 0; i < pktlen; i++) {
-			printf(" %.2x", ohci->usb_buf[i]);
+	if (packetlen > 0 && direction != OHCI_TD_DIR_IN) {
+		printf("  data:");
+		for (i = 0; i < packetlen; i++) {
+			printf(" %.2x", m_UsbBuffer[i]);
 		}
-		DPRINTF("\n");
+		printf("\n");
 	}
 #endif
 	if (completion) {
@@ -695,9 +691,6 @@ int OHCI::OHCI_ServiceTD(OHCI_ED* Ed)
 			// From XQEMU: "??? The hardware should allow one active packet per endpoint.
 			// We only allow one active packet per controller. This should be sufficient
 			// as long as devices respond in a timely manner."
-#ifdef DEBUG_PACKET
-			DPRINTF("Too many pending packets\n");
-#endif
 			DbgPrintf("Ohci: too many pending packets\n");
 			return 1;
 		}
@@ -707,7 +700,7 @@ int OHCI::OHCI_ServiceTD(OHCI_ED* Ed)
 		m_UsbDevice->USB_PacketAddBuffer(&m_UsbPacket, m_UsbBuffer, packetlen);
 		m_UsbDevice->USB_HandlePacket(dev, &m_UsbPacket);
 #ifdef DEBUG_PACKET
-		DPRINTF("status=%d\n", ohci->usb_packet.status);
+		printf("status=%d\n", m_UsbPacket.Status);
 #endif
 		if (m_UsbPacket.Status == USB_RET_ASYNC) {
 			m_UsbDevice->USB_DeviceFlushEPqueue(dev, ep);
@@ -728,10 +721,11 @@ int OHCI::OHCI_ServiceTD(OHCI_ED* Ed)
 				OHCI_FatalError();
 			}
 #ifdef DEBUG_PACKET
-			DPRINTF("  data:");
-			for (i = 0; i < ret; i++)
-				printf(" %.2x", ohci->usb_buf[i]);
-			DPRINTF("\n");
+			printf("  data:");
+			for (i = 0; i < ret; i++) {
+				printf(" %.2X", m_UsbBuffer[i]);
+			}
+			printf("\n");
 #endif
 		}
 		else {
@@ -1479,7 +1473,7 @@ void OHCI::OHCI_Wakeup(USBPort* port1)
 void OHCI::OHCI_AsyncCompletePacket(USBPort* port, USBPacket* packet)
 {
 #ifdef DEBUG_PACKET
-	DPRINTF("Async packet complete\n");
+	printf("Async packet complete\n");
 #endif
 	m_AsyncComplete = 1;
 	OHCI_ProcessLists(1);
@@ -1523,7 +1517,7 @@ int OHCI::OHCI_ServiceIsoTD(OHCI_ED* ed, int completion)
 	int dir;
 	size_t len = 0;
 #ifdef DEBUG_ISOCH
-	const char *str = NULL;
+	const char* str = nullptr;
 #endif
 	int pid;
 	int ret;
@@ -1553,20 +1547,20 @@ int OHCI::OHCI_ServiceIsoTD(OHCI_ED* ed, int completion)
 	relative_frame_number = USUB(m_Registers.HcFmNumber & 0xFFFF, starting_frame);
 
 #ifdef DEBUG_ISOCH
-	printf("--- ISO_TD ED head 0x%.8x tailp 0x%.8x\n"
-		"0x%.8x 0x%.8x 0x%.8x 0x%.8x\n"
-		"0x%.8x 0x%.8x 0x%.8x 0x%.8x\n"
-		"0x%.8x 0x%.8x 0x%.8x 0x%.8x\n"
-		"frame_number 0x%.8x starting_frame 0x%.8x\n"
-		"frame_count  0x%.8x relative %d\n"
-		"di 0x%.8x cc 0x%.8x\n",
-		ed->head & OHCI_DPTR_MASK, ed->tail & OHCI_DPTR_MASK,
-		iso_td.flags, iso_td.bp, iso_td.next, iso_td.be,
-		iso_td.offset[0], iso_td.offset[1], iso_td.offset[2], iso_td.offset[3],
-		iso_td.offset[4], iso_td.offset[5], iso_td.offset[6], iso_td.offset[7],
-		ohci->frame_number, starting_frame,
+	printf("--- ISO_TD ED head 0x%.8X tailp 0x%.8X\n"
+		"0x%.8X 0x%.8X 0x%.8X 0x%.8X\n"
+		"0x%.8X 0x%.8X 0x%.8X 0x%.8X\n"
+		"0x%.8X 0x%.8X 0x%.8X 0x%.8X\n"
+		"frame_number 0x%.8X starting_frame 0x%.8X\n"
+		"frame_count  0x%.8X relative %d\n"
+		"di 0x%.8X cc 0x%.8X\n",
+		ed->HeadP & OHCI_DPTR_MASK, ed->TailP & OHCI_DPTR_MASK,
+		iso_td.Flags, iso_td.BufferPage0, iso_td.NextTD, iso_td.BufferEnd,
+		iso_td.Offset[0], iso_td.Offset[1], iso_td.Offset[2], iso_td.Offset[3],
+		iso_td.Offset[4], iso_td.Offset[5], iso_td.Offset[6], iso_td.Offset[7],
+		m_Registers.HcFmNumber, starting_frame,
 		frame_count, relative_frame_number,
-		OHCI_BM(iso_td.flags, TD_DI), OHCI_BM(iso_td.flags, TD_CC));
+		OHCI_BM(iso_td.Flags, TD_DI), OHCI_BM(iso_td.Flags, TD_CC));
 #endif
 
 	if (relative_frame_number < 0) {
@@ -1719,7 +1713,7 @@ int OHCI::OHCI_ServiceIsoTD(OHCI_ED* ed, int completion)
 	}
 
 #ifdef DEBUG_ISOCH
-	printf("so 0x%.8x eo 0x%.8x\nsa 0x%.8x ea 0x%.8x\ndir %s len %zu ret %d\n",
+	printf("so 0x%.8X eo 0x%.8X\nsa 0x%.8X ea 0x%.8X\ndir %s len %zu ret %d\n",
 		start_offset, end_offset, start_addr, end_addr, str, len, ret);
 #endif
 

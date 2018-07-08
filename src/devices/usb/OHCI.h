@@ -202,7 +202,7 @@ class OHCI
 		void OHCI_SetInterrupt(uint32_t Value);
 		// calculate frame time remaining
 		uint32_t OHCI_GetFrameRemaining();
-		//
+		// halt the endpoints of the device
 		void OHCI_StopEndpoints();
 		// set root hub status
 		void OHCI_SetHubStatus(uint32_t Value);

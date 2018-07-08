@@ -83,12 +83,8 @@ class USBDevice : public PCIDevice {
 		void USB_Attach(USBPort* Port);
 		// update port status when a device is detached
 		void USB_Detach(USBPort* Port);
-		// a device downstream from the device attached to the port (attached through a hub) is detached
-		void ChildDetach(USBPort* Port, XboxDeviceState* Child);
 		// update port status when a device is detached
 		void USB_Wakeup(USBEndpoint* ep);
-		// TODO
-		void Complete(USBPort* Port, USBPacket *P);
 		// reset a device
 		void USB_DeviceReset(XboxDeviceState* Dev);
 		// find the device connected to the supplied port and address
