@@ -211,17 +211,26 @@ VOID RefreshAudioAdapter()
 
         GUID binGUID;
 
-        if (pGUID) {
+        // Check if pGUID doesn't have CB_ERR. (source of cause to crash)
+        if (pGUID != nullptr && pGUID != (LPGUID)CB_ERR) {
             binGUID = *pGUID;
-        } else {
+        }
+        else {
             binGUID = { 0 };
         }
 
-        if(binGUID != oldGUID)
-        {
+        if(binGUID != oldGUID) {
             g_bHasChanges = TRUE;
 
             g_XBAudio.SetAudioAdapter(binGUID);
+        }
+
+        // Force save default audio device if selected audio device is invalid.
+        if (pGUID == (LPGUID)CB_ERR) {
+            SendMessage(g_hAudioAdapter, CB_SETCURSEL, 0, 0);
+            g_EmuShared->SetXBAudio(&g_XBAudio);
+            MessageBox(nullptr, "Your selected audio adapter is invalid,\n"
+                                "reverting to default audio adapter.", "Cxbx-Reloaded", MB_OK | MB_ICONEXCLAMATION);
         }
     }
 }
