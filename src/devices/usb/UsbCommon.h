@@ -330,8 +330,7 @@ struct USBEndpoint {
 struct XboxDeviceState {
 	USBPort* Port;                         // usb port struct of this device
 	int PortPath;                          // port index to which this device is attached to
-	char* Serial;						   
-	uint32_t flags;						   
+	char* Serial;						   					   
 	USBDeviceClass* klass;                 // usb class struct of this device
 										   
 	int Speed;                             // actual speed of the connected device
@@ -344,7 +343,7 @@ struct XboxDeviceState {
 	uint8_t SetupBuffer[8];                // setup packet buffer - 8 bytes (control transfers only)
 	uint8_t DataBuffer[4096];              // buffer where to write the data requested during usb requests
 	int32_t RemoteWakeup;                  // wakeup flag
-	int32_t SetupState;                    // result of a setup tken processing operation
+	int32_t SetupState;                    // result of a control transfer processing operation
 	int32_t SetupLength;                   // this field specifies the length of the data transferred during the second phase of the control transfer
 	int32_t SetupIndex;                    // index of the parameter in a setup token?
 

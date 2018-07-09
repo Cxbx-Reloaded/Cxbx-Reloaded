@@ -38,6 +38,8 @@
 #include "OHCI.h"
 #include "CxbxKrnl\EmuKrnl.h"  // For EmuWarning
 
+#define LOG_STR_USB "Usb"
+
 #define SETUP_STATE_IDLE    0
 #define SETUP_STATE_SETUP   1
 #define SETUP_STATE_DATA    2
@@ -130,7 +132,7 @@ void USBDevice::USB_Detach(USBPort* Port)
 
 	assert(dev != nullptr);
 	assert(dev->State != USB_STATE_NOTATTACHED);
-	m_HostController->OHCI_Detach(Port);
+	Port->Operations->detach(Port);
 	dev->State = USB_STATE_NOTATTACHED;
 }
 
@@ -238,8 +240,7 @@ void USBDevice::USB_HandlePacket(XboxDeviceState* dev, USBPacket* p)
 			// hcd drivers cannot handle async for isoc
 			assert(p->Endpoint->Type != USB_ENDPOINT_XFER_ISOC);
 			// using async for interrupt packets breaks migration
-			assert(p->Endpoint->Type != USB_ENDPOINT_XFER_INT ||
-				(dev->flags & (1 << USB_DEV_FLAG_IS_HOST)));
+			assert(p->Endpoint->Type != USB_ENDPOINT_XFER_INT);
 			p->State = USB_PACKET_ASYNC;
 			QTAILQ_INSERT_TAIL(&p->Endpoint->Queue, p, Queue);
 		}
@@ -249,7 +250,7 @@ void USBDevice::USB_HandlePacket(XboxDeviceState* dev, USBPacket* p)
 		else {
 			// When pipelining is enabled usb-devices must always return async,
 			// otherwise packets can complete out of order!
-			assert(p->stream || !p->Endpoint->pipeline ||
+			assert(p->Stream || !p->Endpoint->Pipeline ||
 				QTAILQ_EMPTY(&p->Endpoint->Queue));
 			if (p->Status != USB_RET_NAK) {
 				p->State = USB_PACKET_COMPLETE;
@@ -274,7 +275,7 @@ void USBDevice::USB_PacketCheckState(USBPacket* p, USBPacketState expected)
 		return;
 	}
 
-	EmuWarning("Usb: packet state check failed!");
+	EmuWarning("%s: packet state check failed!", LOG_STR_USB);
 	assert(0);
 }
 
@@ -295,15 +296,21 @@ void USBDevice::USB_ProcessOne(USBPacket* p)
 			return;
 		}
 		switch (p->Pid) {
-			case USB_TOKEN_SETUP:
+			case USB_TOKEN_SETUP: {
 				USB_DoTokenSetup(dev, p);
 				break;
-			case USB_TOKEN_IN:
+			}
+
+			case USB_TOKEN_IN: {
 				DoTokenIn(dev, p);
 				break;
-			case USB_TOKEN_OUT:
+			}
+
+			case USB_TOKEN_OUT: {
 				DoTokenOut(dev, p);
 				break;
+			}
+
 			default:
 				p->Status = USB_RET_STALL;
 		}
@@ -331,7 +338,7 @@ void USBDevice::USB_DoParameter(XboxDeviceState* s, USBPacket* p)
 	index = (s->SetupBuffer[5] << 8) | s->SetupBuffer[4];
 
 	if (s->SetupLength > sizeof(s->DataBuffer)) {
-		DbgPrintf("Usb: ctrl buffer too small (%d > %zu)\n", s->SetupLength, sizeof(s->DataBuffer));
+		DbgPrintf("%s: ctrl buffer too small (%d > %zu)\n", LOG_STR_USB, s->SetupLength, sizeof(s->DataBuffer));
 		p->Status = USB_RET_STALL;
 		return;
 	}
@@ -389,7 +396,6 @@ void USBDevice::USB_DoTokenSetup(XboxDeviceState* s, USBPacket* p)
 		if (p->Status != USB_RET_SUCCESS) {
 			return;
 		}
-
 		if (p->ActualLength < s->SetupLength) {
 			s->SetupLength = p->ActualLength;
 		}
@@ -397,7 +403,7 @@ void USBDevice::USB_DoTokenSetup(XboxDeviceState* s, USBPacket* p)
 	}
 	else {
 		if (s->SetupLength > sizeof(s->DataBuffer)) {
-			DbgPrintf("Usb: ctrl buffer too small (%d > %zu)\n", s->SetupLength, sizeof(s->DataBuffer));
+			DbgPrintf("%s: ctrl buffer too small (%d > %zu)\n", LOG_STR_USB, s->SetupLength, sizeof(s->DataBuffer));
 			p->Status = USB_RET_STALL;
 			return;
 		}
@@ -416,7 +422,7 @@ void USBDevice::DoTokenIn(XboxDeviceState* s, USBPacket* p)
 {
 	int request, value, index;
 
-	assert(p->ep->nr == 0);
+	assert(p->Endpoint->Num == 0);
 
 	request = (s->SetupBuffer[0] << 8) | s->SetupBuffer[1];
 	value = (s->SetupBuffer[3] << 8) | s->SetupBuffer[2];
@@ -458,16 +464,16 @@ void USBDevice::DoTokenIn(XboxDeviceState* s, USBPacket* p)
 
 void USBDevice::DoTokenOut(XboxDeviceState* s, USBPacket* p)
 {
-	assert(p->ep->nr == 0);
+	assert(p->Endpoint->Num == 0);
 
 	switch (s->SetupState) {
 		case SETUP_STATE_ACK:
 			if (s->SetupBuffer[0] & USB_DIR_IN) {
 				s->SetupState = SETUP_STATE_IDLE;
-				/* transfer OK */
+				// transfer OK
 			}
 			else {
-				/* ignore additional output */
+				// ignore additional output
 			}
 			break;
 
@@ -508,7 +514,7 @@ void USBDevice::USB_PacketCopy(USBPacket* p, void* ptr, size_t bytes)
 			IoVecFromBuffer(iov->IoVecStruct, iov->IoVecNumber, p->ActualLength, ptr, bytes);
 			break;
 		default:
-			CxbxKrnlCleanup("Usb: %s has an invalid pid: %x\n", __func__, p->Pid);
+			CxbxKrnlCleanup("%s: %s has an invalid pid: %x\n", LOG_STR_USB, __func__, p->Pid);
 	}
 	p->ActualLength += bytes;
 }
@@ -545,7 +551,7 @@ void USBDevice::USB_DeviceHandleDestroy(XboxDeviceState* dev)
 {
 	USBDeviceClass* klass = dev->klass;
 	if (klass->handle_destroy) {
-		klass->handle_destroy(dev);
+		klass->handle_destroy();
 	}
 }
 
@@ -759,7 +765,7 @@ void USBDevice::USBDesc_SetDefaults(XboxDeviceState* dev)
 		break;
 	}
 	default:
-		EmuWarning("Unknown speed parameter %d set in %s", dev->ProductDesc.c_str());
+		EmuWarning("%s: unknown speed parameter %d set in %s", LOG_STR_USB, dev->ProductDesc.c_str());
 	}
 	USBDesc_SetConfig(dev, 0);
 }
@@ -878,7 +884,7 @@ int USBDevice::USBDesc_HandleControl(XboxDeviceState* dev, USBPacket *p,
 			// From the standard: "This request sets the device address for all future device accesses.
 			// The wValue field specifies the device address to use for all subsequent accesses"
 			dev->Addr = value;
-			DbgPrintf("Address 0x%X set for device %s\n", dev->Addr, dev->ProductDesc.c_str());
+			DbgPrintf("%s: address 0x%X set for device %s\n", LOG_STR_USB, dev->Addr, dev->ProductDesc.c_str());
 			ret = 0;
 			break;
 		}
@@ -904,8 +910,8 @@ int USBDevice::USBDesc_HandleControl(XboxDeviceState* dev, USBPacket *p,
 			// From the standard: "This request sets the device configuration. The lower byte of the wValue field specifies the desired configuration.
 			// This configuration value must be zero or match a configuration value from a configuration descriptor"
 			ret = USBDesc_SetConfig(dev, value);
-			DbgPrintf("Received standard SetConfiguration() request for device at address 0x%X. Configuration selected is %d and returned %d\n",
-				dev->Addr, value, ret);
+			DbgPrintf("%s: received standard SetConfiguration() request for device at address 0x%X. Configuration selected is %d and returned %d\n",
+				LOG_STR_USB, dev->Addr, value, ret);
 			break;
 		}
 
@@ -938,8 +944,8 @@ int USBDevice::USBDesc_HandleControl(XboxDeviceState* dev, USBPacket *p,
 				dev->RemoteWakeup = 0;
 				ret = 0;
 			}
-			DbgPrintf("Received standard ClearFeature() request for device at address 0x%X. Feature selected is %d and returned %d\n",
-				dev->Addr, value, ret);
+			DbgPrintf("%s: received standard ClearFeature() request for device at address 0x%X. Feature selected is %d and returned %d\n",
+				LOG_STR_USB, dev->Addr, value, ret);
 			break;
 		}
 
@@ -950,8 +956,8 @@ int USBDevice::USBDesc_HandleControl(XboxDeviceState* dev, USBPacket *p,
 				dev->RemoteWakeup = 1;
 				ret = 0;
 			}
-			DbgPrintf("Received standard SetFeature() request for device at address 0x%X. Feature selected is %d and returned %d\n",
-				dev->Addr, value, ret);
+			DbgPrintf("%s: received standard SetFeature() request for device at address 0x%X. Feature selected is %d and returned %d\n",
+				LOG_STR_USB, dev->Addr, value, ret);
 			break;
 		}
 
@@ -971,8 +977,8 @@ int USBDevice::USBDesc_HandleControl(XboxDeviceState* dev, USBPacket *p,
 			// From the standard: "This request allows the host to select an alternate setting for the specified interface"
 			// wValue = Alternative Setting; wIndex = Interface
 			ret = USBDesc_SetInterface(dev, index, value);
-			DbgPrintf("Received standard SetInterface() request for device at address 0x%X. Interface selected is %d, Alternative Setting \
-is %d and returned %d\n", dev->Addr, index, value, ret);
+			DbgPrintf("%s; received standard SetInterface() request for device at address 0x%X. Interface selected is %d, Alternative Setting \
+is %d and returned %d\n", LOG_STR_USB, dev->Addr, index, value, ret);
 			break;
 		}
 
@@ -999,7 +1005,7 @@ int USBDevice::USBDesc_HandleStandardGetDescriptor(XboxDeviceState* dev, USBPack
 	switch (type) {
 		case USB_DT_DEVICE: {
 			ret = USB_ReadDeviceDesc(&desc->id, dev->Device, buf, sizeof(buf));
-			DbgPrintf("Read operation of device descriptor of device 0x%X returns %d\n", dev->Addr, ret);
+			DbgPrintf("%s: read operation of device descriptor of device 0x%X returns %d\n", LOG_STR_USB, dev->Addr, ret);
 			break;
 		}
 
@@ -1007,13 +1013,13 @@ int USBDevice::USBDesc_HandleStandardGetDescriptor(XboxDeviceState* dev, USBPack
 			if (index < dev->Device->bNumConfigurations) {
 				ret = USB_ReadConfigurationDesc(dev->Device->confs + index, flags, buf, sizeof(buf));
 			}
-			DbgPrintf("Read operation of configuration descriptor %d of device 0x%X returns %d\n", index, dev->Addr, ret);
+			DbgPrintf("%s: read operation of configuration descriptor %d of device 0x%X returns %d\n", LOG_STR_USB, index, dev->Addr, ret);
 			break;
 		}
 
 		case USB_DT_STRING: {
 			ret = USB_ReadStringDesc(dev, index, buf, sizeof(buf));
-			DbgPrintf("Read operation of string descriptor %d of device 0x%X returns %d\n", index, dev->Addr, ret);
+			DbgPrintf("%s: read operation of string descriptor %d of device 0x%X returns %d\n", LOG_STR_USB, index, dev->Addr, ret);
 			break;
 		}
 
@@ -1021,7 +1027,7 @@ int USBDevice::USBDesc_HandleStandardGetDescriptor(XboxDeviceState* dev, USBPack
 		// USB_DT_BOS (15) and USB_DT_DEBUG (10) -> usb 3.0 only
 
 		default:
-			EmuWarning("%s: device address %d unknown type %d (len %zd)", __func__, dev->Addr, type, len);
+			EmuWarning("%s: %s has a device address %d of unknown type %d (len %zd)", LOG_STR_USB, __func__, dev->Addr, type, len);
 			break;
 	}
 

@@ -514,7 +514,7 @@ void Hub::UsbHub_HandleData(XboxDeviceState* dev, USBPacket* p)
 				}
 				if (status != 0) {
 					n = (NUM_PORTS + 1 + 7) / 8;
-					if (p->IoVec.Size == 1) { /* FreeBSD workaround */
+					if (p->IoVec.Size == 1) { // FreeBSD workaround
 						n = 1;
 					}
 					else if (n > p->IoVec.Size) {
@@ -528,7 +528,7 @@ void Hub::UsbHub_HandleData(XboxDeviceState* dev, USBPacket* p)
 					m_UsbDev->USB_PacketCopy(p, buf, n);
 				}
 				else {
-					p->Status = USB_RET_NAK; /* usb11 11.13.1 */
+					p->Status = USB_RET_NAK; // usb11 11.13.1
 				}
 			}
 			else {

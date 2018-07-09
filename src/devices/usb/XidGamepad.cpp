@@ -37,6 +37,8 @@
 #include "XidGamepad.h"
 #include "USBDevice.h"
 
+#define LOG_STR_GAMEPAD "Gamepad"
+
 #define USB_CLASS_XID  0x58
 #define USB_DT_XID     0x42
 
@@ -290,7 +292,7 @@ void XidGamepad::UsbXid_Attach(XboxDeviceState* dev)
 
 void XidGamepad::UsbXid_HandleReset()
 {
-	DbgPrintf("Gamepad reset event\n");
+	DbgPrintf("%s reset event\n", LOG_STR_GAMEPAD);
 }
 
 void XidGamepad::UsbXid_HandleControl(XboxDeviceState* dev, USBPacket* p,
@@ -298,7 +300,7 @@ void XidGamepad::UsbXid_HandleControl(XboxDeviceState* dev, USBPacket* p,
 {
 	int ret = m_UsbDev->USBDesc_HandleControl(dev, p, request, value, index, length, data);
 	if (ret >= 0) {
-		DbgPrintf("Gamepad handled by USBDesc_HandleControl, ret is %d\n", ret);
+		DbgPrintf("%s handled by USBDesc_HandleControl, ret is %d\n", LOG_STR_GAMEPAD, ret);
 		return;
 	}
 
@@ -308,7 +310,7 @@ void XidGamepad::UsbXid_HandleControl(XboxDeviceState* dev, USBPacket* p,
 			// From the HID standard: "The Get_Report request allows the host to receive a report via the Control pipe.
 			// The wValue field specifies the Report Type in the high byte and the Report ID in the low byte. Set Report ID
 			// to 0 (zero) if Report IDs are not used. 01 = input, 02 = output, 03 = feature, 04-FF = reserved"
-			DbgPrintf("Gamepad GET_REPORT 0x%X\n", value);
+			DbgPrintf("%s GET_REPORT 0x%X\n", LOG_STR_GAMEPAD, value);
 			if (value == 0x100) {
 				assert(m_XidState->in_state.bLength <= length);
 				// m_XidState->in_state.bReportId++; /* FIXME: I'm not sure if bReportId is just a counter */
@@ -326,7 +328,7 @@ void XidGamepad::UsbXid_HandleControl(XboxDeviceState* dev, USBPacket* p,
 			// setting the state of input, output, or feature controls. The meaning of the request fields for the Set_Report
 			// request is the same as for the Get_Report request, however the data direction is reversed and the Report
 			// Data is sent from host to device."
-			DbgPrintf("Gamepad SET_REPORT 0x%X\n", value);
+			DbgPrintf("%s SET_REPORT 0x%X\n", LOG_STR_GAMEPAD, value);
 			if (value == 0x200) {
 				// Read length, then the entire packet
 				std::memcpy(&m_XidState->out_state, data, sizeof(m_XidState->out_state));
@@ -346,7 +348,7 @@ void XidGamepad::UsbXid_HandleControl(XboxDeviceState* dev, USBPacket* p,
 
 		// XID-specific requests
 		case VendorInterfaceRequest | USB_REQ_GET_DESCRIPTOR: {
-			DbgPrintf("Gamepad GET_DESCRIPTOR 0x%x\n", value);
+			DbgPrintf("%s GET_DESCRIPTOR 0x%x\n", LOG_STR_GAMEPAD, value);
 			if (value == 0x4200) {
 				assert(m_XidState->xid_desc->bLength <= length);
 				std::memcpy(data, m_XidState->xid_desc, m_XidState->xid_desc->bLength);
@@ -359,7 +361,7 @@ void XidGamepad::UsbXid_HandleControl(XboxDeviceState* dev, USBPacket* p,
 		}
 
 		case VendorInterfaceRequest | XID_GET_CAPABILITIES: {
-			DbgPrintf("Gamepad XID_GET_CAPABILITIES 0x%x\n", value);
+			DbgPrintf("%s XID_GET_CAPABILITIES 0x%x\n", LOG_STR_GAMEPAD, value);
 			/* FIXME: ! */
 			p->Status = USB_RET_STALL;
 			//assert(false);
@@ -368,7 +370,7 @@ void XidGamepad::UsbXid_HandleControl(XboxDeviceState* dev, USBPacket* p,
 
 		case ((USB_DIR_IN | USB_TYPE_CLASS | USB_RECIP_DEVICE) << 8) | USB_REQ_GET_DESCRIPTOR: {
 			/* FIXME: ! */
-			DbgPrintf("Gamepad unknown xpad request 0x%X: value = 0x%X\n", request, value);
+			DbgPrintf("%s unknown xpad request 0x%X: value = 0x%X\n", LOG_STR_GAMEPAD, request, value);
 			std::memset(data, 0x00, length);
 			//FIXME: Intended for the hub: usbd_get_hub_descriptor, UT_READ_CLASS?!
 			p->Status = USB_RET_STALL;
@@ -378,14 +380,14 @@ void XidGamepad::UsbXid_HandleControl(XboxDeviceState* dev, USBPacket* p,
 
 		case ((USB_DIR_OUT | USB_TYPE_STANDARD | USB_RECIP_ENDPOINT) << 8) | USB_REQ_CLEAR_FEATURE: {
 			/* FIXME: ! */
-			DbgPrintf("Gamepad unknown xpad request 0x%X: value = 0x%X\n", request, value);
+			DbgPrintf("%s unknown xpad request 0x%X: value = 0x%X\n", LOG_STR_GAMEPAD, request, value);
 			std::memset(data, 0x00, length);
 			p->Status = USB_RET_STALL;
 			break;
 		}
 
 		default:
-			DbgPrintf("Gamepad USB stalled on request 0x%X value 0x%X\n", request, value);
+			DbgPrintf("%s USB stalled on request 0x%X value 0x%X\n", LOG_STR_GAMEPAD, request, value);
 			p->Status = USB_RET_STALL;
 			assert(0);
 			break;
