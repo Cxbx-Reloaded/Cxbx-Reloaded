@@ -333,47 +333,6 @@ extern std::chrono::time_point<std::chrono::steady_clock, std::chrono::duration<
 extern ULONG AvpCurrentMode;		// Current AV Mode
 extern ULONG g_AvDisplayModeFormat;		// Current AV FrameBuffer Format
 
-void AvDisplayModeFormatToGL(ULONG displayModeFormat, GLenum* internalFormat, GLenum* format, GLenum* type)
-{
-#define D3DFMT_LIN_A1R5G5B5   0x00000010
-#define D3DFMT_LIN_X1R5G5B5   0x0000001C
-#define D3DFMT_LIN_R5G6B5     0x00000011
-#define D3DFMT_LIN_A8R8G8B8   0x00000012
-#define D3DFMT_LIN_X8R8G8B8   0x0000001E
-
-	switch (displayModeFormat) {
-	case D3DFMT_LIN_A1R5G5B5:
-		*internalFormat = GL_RGB5_A1;
-		*format = GL_BGRA;
-		*type = GL_UNSIGNED_SHORT_1_5_5_5_REV;
-		break;
-	case D3DFMT_LIN_X1R5G5B5:
-		*internalFormat = GL_RGB5;
-		*format = GL_BGRA;
-		*type = GL_UNSIGNED_SHORT_1_5_5_5_REV;
-		break;
-	case D3DFMT_LIN_R5G6B5:
-		*internalFormat = GL_RGB;
-		*format = GL_RGB;
-		*type = GL_UNSIGNED_SHORT_5_6_5;
-		break;
-	case D3DFMT_LIN_X8R8G8B8:
-		*internalFormat = GL_RGB8;
-		*format = GL_BGRA;
-		*type = GL_UNSIGNED_INT_8_8_8_8_REV;
-		break;
-	case D3DFMT_LIN_A8R8G8B8:
-		*internalFormat = GL_RGBA8;
-		*format = GL_BGRA;
-		*type = GL_UNSIGNED_INT_8_8_8_8_REV;
-		break;
-	default:
-		*internalFormat = GL_RGBA;
-		*format = GL_RGBA;
-		*type = GL_UNSIGNED_INT_8_8_8_8_REV;
-	}
-}
-
 void AvGetFormatSize(ULONG mode, int* width, int* height)
 {
 	// Iterate through the display mode table until we find a matching mode
@@ -683,7 +642,7 @@ static GLuint frame_gl_texture = 0;
 static GLsizei frame_width = 640;
 static GLsizei frame_height = 480;
 
-void cxbx_gl_update_displaymode() {
+void cxbx_gl_update_displaymode(NV2AState *d) {
 	// Convert AV Format to OpenGl format details & destroy the texture if format changed.
 	// This is required for titles that use a non ARGB framebuffer, such as Beats of Rage
 	static ULONG PreviousAvDisplayModeFormat = -1;
@@ -695,7 +654,11 @@ void cxbx_gl_update_displaymode() {
 
 	if (PreviousAvDisplayModeFormat != g_AvDisplayModeFormat) {
 		PreviousAvDisplayModeFormat = g_AvDisplayModeFormat;
-		AvDisplayModeFormatToGL(g_AvDisplayModeFormat, &frame_gl_internal_format, &frame_gl_format, &frame_gl_type);
+
+		frame_gl_internal_format = kelvin_color_format_map[g_AvDisplayModeFormat].gl_internal_format;
+		frame_gl_format = kelvin_color_format_map[g_AvDisplayModeFormat].gl_format;
+		frame_gl_type = kelvin_color_format_map[g_AvDisplayModeFormat].gl_type;
+
 		AvGetFormatSize(AvpCurrentMode, &frame_width, &frame_height);
 		// Detect changes in framebuffer dimensions
 		if (old_frame_gl_internal_format != frame_gl_internal_format
@@ -714,10 +677,35 @@ void cxbx_gl_update_displaymode() {
 			}
 		}
 	}
+
+	int frame_pixel_bytes = d->prmcio.cr[NV_CIO_CRE_PIXEL_INDEX] & 0x03;
+	if (frame_pixel_bytes == 2) {
+		// Test case : Arctic Thunder, sets a 16 bit framebuffer (R5G6B5) not via
+		// AvSetDisplayMode(), but via VGA control register writes, which implies
+		// that g_AvDisplayModeFormat cannot be used to determine the framebuffer
+		// width. Instead, read the framebuffer width from the VGA control register :
+		frame_width = (d->prmcio.cr[NV_CIO_CR_OFFSET_INDEX] * 8) / frame_pixel_bytes;
+	}
 }
 
 void cxbx_gl_render_framebuffer(NV2AState *d)
 {
+	// Update the frame texture
+	uint8_t* frame_pixels = (uint8_t*)(/*CONTIGUOUS_MEMORY_BASE=*/0x80000000 | d->pcrtc.start); // NV_PCRTC_START
+	uint8_t* palette_data = xbnullptr; // Note : Framebuffer formats aren't paletized
+
+	TextureShape s;
+	s.cubemap = false; // Note : Unused in upload_gl_texture GL_TEXTURE_2D path
+	s.dimensionality = 2; // Note : Unused in upload_gl_texture GL_TEXTURE_2D path
+	s.color_format = g_AvDisplayModeFormat;
+	s.levels = 1;
+	s.width = frame_width;
+	s.height = frame_height;
+	s.depth = 0; // Note : Unused in upload_gl_texture GL_TEXTURE_2D path
+	s.min_mipmap_level = 0;
+	s.max_mipmap_level = 0;
+	s.pitch = 0; // Note : Unused in upload_gl_texture GL_TEXTURE_2D path
+
 	// If we need to create a (new) texture, do so
 	if (!frame_gl_texture) {
 		glGenTextures(1, &frame_gl_texture);
@@ -732,10 +720,6 @@ void cxbx_gl_render_framebuffer(NV2AState *d)
 		GL_CHECK();
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		GL_CHECK();
-		// TODO : Get the correct swizzle from the av format (see kelvin_color_format_map)
-		static const GLint swizzle_mask_RGBA[4] = { GL_RED, GL_GREEN, GL_BLUE, GL_ALPHA };
-		glTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_RGBA, swizzle_mask_RGBA);
-		GL_CHECK();
 		glTexImage2D(GL_TEXTURE_2D, /*level=*/0, frame_gl_internal_format, frame_width, frame_height, /*border=*/0, frame_gl_format, frame_gl_type, NULL);
 		GL_CHECK();
 	}
@@ -744,10 +728,19 @@ void cxbx_gl_render_framebuffer(NV2AState *d)
 		GL_CHECK();
 	}
 
-	// Update the frame texture
-	hwaddr frame_pixels = /*CONTIGUOUS_MEMORY_BASE=*/0x80000000 | d->pcrtc.start; // NV_PCRTC_START
-	glTexSubImage2D(GL_TEXTURE_2D, /*level=*/0, /*xoffset=*/0, /*yoffset=*/0, frame_width, frame_height, frame_gl_format, frame_gl_type, (void*)frame_pixels);
+	int rf = upload_gl_texture(GL_TEXTURE_2D,
+		s,
+		frame_pixels,
+		palette_data);
 	GL_CHECK();
+
+	// Note : It'd be less code to use generate_texture(), except that puts linear formats
+	// into GL_TEXTURE_RECTANGLE, while we need GL_TEXTURE_2D here. So instead, handle the
+	// difference here by separately setting the resulting format's RGBA swizzle:
+	ColorFormatInfo cfi = kelvin_color_format_map[rf];
+	if (cfi.gl_swizzle_mask) {
+		glTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_RGBA, cfi.gl_swizzle_mask);
+	}
 
 	// Note : The following is modelled partially after pgraph_update_surface()
 	// TODO : pgraph_update_surface() also unswizzles - should we too?
@@ -896,7 +889,7 @@ void cxbx_gl_render_overlays(NV2AState *d)
 	static const GLenum overlay_gl_internal_format = GL_RGBA8;
 	static const GLenum overlay_gl_format = GL_BGRA;
 	static const GLenum overlay_gl_type = GL_UNSIGNED_INT_8_8_8_8_REV;
-			   
+
 	for (int v = 0; v < 2; v++) {
 		OverlayState &overlay = d->pvideo.overlays[v];
 		if (!overlay.video_buffer_use) {
@@ -920,8 +913,8 @@ void cxbx_gl_render_overlays(NV2AState *d)
 			GL_CHECK();
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 			GL_CHECK();
-			static const GLint swizzle_mask_BGRA[4] = { GL_BLUE, GL_GREEN, GL_RED, GL_ALPHA };
-			glTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_RGBA, swizzle_mask_BGRA);
+			// Note : YUYV formats are sampled using BGRA in OPENGL_SHADER_YUV[1] fragment shader
+			glTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_RGBA, gl_swizzle_mask_BGRA);
 			GL_CHECK();
 			glTexImage2D(GL_TEXTURE_2D, /*level=*/0, overlay_gl_internal_format, overlay.pitch / 4, overlay.in_height, /*border=*/0, overlay_gl_format, overlay_gl_type, NULL);
 			GL_CHECK();
@@ -1047,7 +1040,7 @@ void NV2ADevice::UpdateHostDisplay(NV2AState *d)
 	glActiveTexture(GL_TEXTURE0);
 	GL_CHECK();
 
-	cxbx_gl_update_displaymode();
+	cxbx_gl_update_displaymode(d);
 
 	for (int v = 0; v < 2; v++) {
 		cxbx_gl_parse_overlay(d, v);
@@ -1230,27 +1223,34 @@ void NV2ADevice::IOWrite(int barIndex, uint32_t port, uint32_t value, unsigned s
 {
 }
 
+uint32_t NV2ADevice::BlockRead(const NV2ABlockInfo* block, uint32_t addr, unsigned size)
+{
+	switch (size) {
+	case sizeof(uint8_t) :
+		return block->ops.read(m_nv2a_state, addr - block->offset) & 0xFF;
+	case sizeof(uint16_t) :
+		assert((addr & 1) == 0); // TODO : What if this fails?	
+
+		return block->ops.read(m_nv2a_state, addr - block->offset) & 0xFFFF;
+	case sizeof(uint32_t) :
+		assert((addr & 3) == 0); // TODO : What if this fails?	
+
+		return block->ops.read(m_nv2a_state, addr - block->offset);
+	default:
+		assert(false);
+
+		return 0;
+	}
+}
+
 uint32_t NV2ADevice::MMIORead(int barIndex, uint32_t addr, unsigned size)
 { 
-
 	switch (barIndex) {
 	case 0: {
 		// Access NV2A regardless weither HLE is disabled or not (ignoring bLLE_GPU)
 		const NV2ABlockInfo* block = EmuNV2A_Block(addr);
-
 		if (block != nullptr) {
-			switch (size) {
-			case sizeof(uint8_t) :
-				return block->ops.read(m_nv2a_state, addr - block->offset) & 0xFF;
-			case sizeof(uint16_t) :
-				assert((addr & 1) == 0); // TODO : What if this fails?	
-
-				return block->ops.read(m_nv2a_state, addr - block->offset) & 0xFFFF;
-			case sizeof(uint32_t) :
-				assert((addr & 3) == 0); // TODO : What if this fails?	
-
-				return block->ops.read(m_nv2a_state, addr - block->offset);
-			}
+			return BlockRead(block, addr, size);
 		}
 		break;
 	}
@@ -1264,6 +1264,49 @@ uint32_t NV2ADevice::MMIORead(int barIndex, uint32_t addr, unsigned size)
 	return 0;
 }
 
+void NV2ADevice::BlockWrite(const NV2ABlockInfo* block, uint32_t addr, uint32_t value, unsigned size)
+{
+	switch (size) {
+	case sizeof(uint8_t) : {
+#if 0
+		xbaddr aligned_addr;
+		uint32_t aligned_value;
+		int shift;
+		uint32_t mask;
+
+		aligned_addr = addr & ~3;
+		aligned_value = block->ops.read(m_nv2a_state, aligned_addr - block->offset);
+		shift = (addr & 3) * 8;
+		mask = 0xFF << shift;
+		block->ops.write(m_nv2a_state, aligned_addr - block->offset, (aligned_value & ~mask) | (value << shift));
+#else
+		block->ops.write(m_nv2a_state, addr - block->offset, value);
+#endif
+		return;
+	}
+	case sizeof(uint16_t) : {
+		assert((addr & 1) == 0); // TODO : What if this fails?
+
+		xbaddr aligned_addr;
+		uint32_t aligned_value;
+		int shift;
+		uint32_t mask;
+
+		aligned_addr = addr & ~3;
+		aligned_value = block->ops.read(m_nv2a_state, aligned_addr - block->offset);
+		shift = (addr & 2) * 16;
+		mask = 0xFFFF << shift;
+		block->ops.write(m_nv2a_state, aligned_addr - block->offset, (aligned_value & ~mask) | (value << shift));
+		return;
+	}
+	case sizeof(uint32_t) :
+		assert((addr & 3) == 0); // TODO : What if this fails?	
+
+		block->ops.write(m_nv2a_state, addr - block->offset, value);
+		return;
+	}
+}
+
 void NV2ADevice::MMIOWrite(int barIndex, uint32_t addr, uint32_t value, unsigned size)
 {
 	switch (barIndex) {
@@ -1272,37 +1315,11 @@ void NV2ADevice::MMIOWrite(int barIndex, uint32_t addr, uint32_t value, unsigned
 		const NV2ABlockInfo* block = EmuNV2A_Block(addr);
 
 		if (block != nullptr) {
-			xbaddr aligned_addr;
-			uint32_t aligned_value;
-			int shift;
-			uint32_t mask;
-
-			switch (size) {
-			case sizeof(uint8_t) :
-				aligned_addr = addr & ~3;
-				aligned_value = block->ops.read(m_nv2a_state, aligned_addr - block->offset);
-				shift = (addr & 3) * 8;
-				mask = 0xFF << shift;
-				block->ops.write(m_nv2a_state, aligned_addr - block->offset, (aligned_value & ~mask) | (value << shift));
-				return;
-			case sizeof(uint16_t) :
-				assert((addr & 1) == 0); // TODO : What if this fails?				
-
-				aligned_addr = addr & ~3;
-				aligned_value = block->ops.read(m_nv2a_state, aligned_addr - block->offset);
-				shift = (addr & 2) * 16;
-				mask = 0xFFFF << shift;				
-				block->ops.write(m_nv2a_state, aligned_addr - block->offset, (aligned_value & ~mask) | (value << shift));
-				return;
-			case sizeof(uint32_t) :
-				assert((addr & 3) == 0); // TODO : What if this fails?	
-
-				block->ops.write(m_nv2a_state, addr - block->offset, value);
-				return;
-			}
+			BlockWrite(block, addr, value, size);
+			return;
 		}
 
-		break;	
+		break;
 	}
 	case 1: {
 		// TODO : access physical memory

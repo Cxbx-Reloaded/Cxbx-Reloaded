@@ -58,7 +58,9 @@ namespace NtDll
 #include "EmuX86.h"
 
 #include "EmuKrnlAvModes.h"
+#include "devices\Xbox.h" // For g_NV2A
 #include "devices\video\nv2a_int.h"
+#include "devices\video\nv2a.h" // For NV2ABlockInfo, EmuNV2A_Block()
 
 #ifndef VOID
 #define VOID void
@@ -87,27 +89,34 @@ VOID REG_WR32(VOID* Ptr, xboxkrnl::ULONG Addr, xboxkrnl::ULONG Val)
 
 VOID CRTC_WR(VOID* Ptr, xboxkrnl::UCHAR i, xboxkrnl::UCHAR d)
 {
-	REG_WR08(Ptr, NV_PRMCIO_CRX__COLOR, i);
-	REG_WR08(Ptr, NV_PRMCIO_CR__COLOR, d);
+	static const NV2ABlockInfo* block = EmuNV2A_Block(NV_PRMCIO_CRX__COLOR);
+
+	g_NV2A->BlockWrite(block, NV_PRMCIO_CRX__COLOR, i, sizeof(uint8_t));
+	g_NV2A->BlockWrite(block, NV_PRMCIO_CR__COLOR, d, sizeof(uint8_t));
 }
 
 VOID SRX_WR(VOID *Ptr, xboxkrnl::UCHAR i, xboxkrnl::UCHAR d)
-
 {
-	REG_WR08(Ptr, NV_PRMVIO_SRX, i);
-	REG_WR08(Ptr, NV_PRMVIO_SR, (d));
+	static const NV2ABlockInfo* block = EmuNV2A_Block(NV_PRMVIO_SRX);
+
+	g_NV2A->BlockWrite(block, NV_PRMVIO_SRX, i, sizeof(uint8_t));
+	g_NV2A->BlockWrite(block, NV_PRMVIO_SR, d, sizeof(uint8_t));
 }
 
 VOID GRX_WR(VOID *Ptr, xboxkrnl::UCHAR i, xboxkrnl::UCHAR d)
 {
-	REG_WR08(Ptr, NV_PRMVIO_GRX, i);
-	REG_WR08(Ptr, NV_PRMVIO_GX, (d));
+	static const NV2ABlockInfo* block = EmuNV2A_Block(NV_PRMVIO_GRX);
+
+	g_NV2A->BlockWrite(block, NV_PRMVIO_GRX, i, sizeof(uint8_t));
+	g_NV2A->BlockWrite(block, NV_PRMVIO_GX, d, sizeof(uint8_t));
 }
 
 VOID ARX_WR(VOID *Ptr, xboxkrnl::UCHAR i, xboxkrnl::UCHAR d)
 {
-	REG_WR08(Ptr, NV_PRMCIO_ARX, i);
-	REG_WR08(Ptr, NV_PRMCIO_ARX, (d));
+	static const NV2ABlockInfo* block = EmuNV2A_Block(NV_PRMCIO_ARX);
+
+	g_NV2A->BlockWrite(block, NV_PRMCIO_ARX, i, sizeof(uint8_t));
+	g_NV2A->BlockWrite(block, NV_PRMCIO_ARX, d, sizeof(uint8_t));
 }
 
 
@@ -310,6 +319,7 @@ XBSYSAPI EXPORTNUM(3) xboxkrnl::ULONG NTAPI xboxkrnl::AvSetDisplayMode
 
 	Pitch /= 8;
 
+	AvpCurrentMode = Mode; // Short-circuit the quick path for now
 	if (AvpCurrentMode == Mode)
 	{
 		REG_WR32(RegisterBase, NV_PRAMDAC_GENERAL_CONTROL, GeneralControl);

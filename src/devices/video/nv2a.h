@@ -593,6 +593,8 @@ typedef struct NV2ABlockInfo {
 	MemoryRegionOps ops;
 } NV2ABlockInfo;
 
+const NV2ABlockInfo* EmuNV2A_Block(xbaddr addr);
+
 #if 0
 // Valid after PCI init :
 #define NV20_REG_BASE_KERNEL 0xFD000000
@@ -669,7 +671,9 @@ public:
 
 	uint32_t IORead(int barIndex, uint32_t port, unsigned size);
 	void IOWrite(int barIndex, uint32_t port, uint32_t value, unsigned size);
+	uint32_t BlockRead(const NV2ABlockInfo* block, uint32_t addr, unsigned size);
 	uint32_t MMIORead(int barIndex, uint32_t addr, unsigned size);
+	void BlockWrite(const NV2ABlockInfo* block, uint32_t addr, uint32_t value, unsigned size);
 	void MMIOWrite(int barIndex, uint32_t addr, uint32_t value, unsigned size);
 
 	static void UpdateHostDisplay(NV2AState *d);
