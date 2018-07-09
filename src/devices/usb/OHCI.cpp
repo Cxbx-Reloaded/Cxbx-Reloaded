@@ -75,6 +75,8 @@
 // HcFmRemaining
 #define OHCI_FMR_FR                         0x00003FFF       // FrameRemaining
 #define OHCI_FMR_FRT                        0x80000000       // FrameRemainingToggle
+// LSThreshold
+#define OHCI_LS_THRESH                      0x628            // LSThreshold
 // HcRhDescriptorA
 #define OHCI_RHA_RW_MASK                    0x00000000       // Mask of supported features
 #define OHCI_RHA_PSM                        (1<<8)           // PowerSwitchingMode
@@ -869,9 +871,11 @@ void OHCI::OHCI_StateReset()
 	m_Registers.HcFmRemaining = 0;
 	m_Registers.HcFmNumber = 0;
 	m_Registers.HcPeriodicStart = 0;
+	m_Registers.HcLSThreshold = OHCI_LS_THRESH;
 
 	m_Registers.HcRhDescriptorA = OHCI_RHA_NPS | 2; // The xbox lacks the hw to switch off the power on the ports and has 2 ports per HC
 	m_Registers.HcRhDescriptorB = 0; // The attached devices are removable and use PowerSwitchingMode to control the power on the ports
+	m_Registers.HcRhStatus = 0;
 
 	m_DoneCount = 7;
 
@@ -1376,7 +1380,7 @@ int OHCI::OHCI_PortSetIfConnected(int i, uint32_t Value)
 	if (!(m_Registers.RhPort[i].HcRhPortStatus & OHCI_PORT_CCS)) {
 		m_Registers.RhPort[i].HcRhPortStatus |= OHCI_PORT_CSC;
 		if (m_Registers.HcRhStatus & OHCI_RHS_DRWE) {
-			// TODO: CSC is a wakeup event
+			// from XQEMU: TODO, CSC is a wakeup event
 		}
 		return 0;
 	}
