@@ -79,6 +79,8 @@ class USBDevice : public PCIDevice {
 		void USB_PortReset(USBPort* Port);
 		// update device status during an attach
 		void USB_DeviceAttach(XboxDeviceState* dev);
+		// update device status during an detach
+		void USB_DeviceDetach(XboxDeviceState* dev);
 		// update port status when a device is attached
 		void USB_Attach(USBPort* Port);
 		// update port status when a device is detached

@@ -330,7 +330,6 @@ struct USBEndpoint {
 struct XboxDeviceState {
 	USBPort* Port;                         // usb port struct of this device
 	int PortPath;                          // port index to which this device is attached to
-	char* Serial;						   					   
 	USBDeviceClass* klass;                 // usb class struct of this device
 										   
 	int Speed;                             // actual speed of the connected device

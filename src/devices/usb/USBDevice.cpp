@@ -665,6 +665,17 @@ void USBDevice::USB_DeviceAttach(XboxDeviceState* dev)
 	USB_Attach(port);
 }
 
+void USBDevice::USB_DeviceDetach(XboxDeviceState* dev)
+{
+	USBPort* port = dev->Port;
+
+	assert(port != nullptr);
+	assert(dev->Attached);
+
+	USB_Detach(port);
+	dev->Attached--;
+}
+
 void USBDevice::USB_EpInit(XboxDeviceState* dev)
 {
 	USB_EpReset(dev);

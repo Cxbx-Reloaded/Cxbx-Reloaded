@@ -548,7 +548,7 @@ void Hub::UsbHub_HandleData(XboxDeviceState* dev, USBPacket* p)
 void Hub::UsbHub_HandleDestroy()
 {
 	// Inform upstream that the hub is detached and gone
-	m_HubState->dev.Port->Operations->detach(m_HubState->dev.Port);
+	m_UsbDev->USB_DeviceDetach(&m_HubState->dev);
 	m_UsbDev->m_FreePorts.push_back(m_HubState->dev.Port);
 
 	for (int i = 0; i < NUM_PORTS; i++) {
