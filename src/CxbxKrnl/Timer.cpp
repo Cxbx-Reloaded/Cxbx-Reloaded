@@ -38,7 +38,10 @@
 #include <thread>
 #include <vector>
 #include "Timer.h"
-#include "Cxbx.h"
+#include "CxbxCommon.h"
+#ifdef __linux__
+#include <time.h>
+#endif
 
 
 #define CLOCK_REALTIME 0
@@ -58,9 +61,17 @@ static uint64_t ClockFrequency;
 // Returns the current time of the timer
 inline uint64_t GetTime_NS(TimerObject* Timer)
 {
+#ifdef _WIN32
 	LARGE_INTEGER li;
 	QueryPerformanceCounter(&li);
 	uint64_t Ret = Muldiv64(li.QuadPart, SCALE_S, ClockFrequency);
+#elif __linux__
+	static struct timespec ts;
+	clock_gettime(CLOCK_MONOTONIC_RAW, &ts);
+	uint64_t Ret = Muldiv64(ts.tv_sec, SCALE_S, 1) + ts.tv_nsec;
+#else
+#error
+#endif
 	return Timer->Type == CLOCK_REALTIME ? Ret : Ret / Timer->SlowdownFactor;
 }
 
@@ -138,7 +149,13 @@ void Timer_Start(TimerObject* Timer, uint64_t Expire_MS)
 // Retrives the frequency of the high resolution clock of the host
 void Timer_Init()
 {
+#ifdef _WIN32
 	LARGE_INTEGER freq;
 	QueryPerformanceFrequency(&freq);
 	ClockFrequency = freq.QuadPart;
+#elif __linux__
+	ClockFrequency = 0;
+#else
+#error
+#endif
 }
