@@ -4197,8 +4197,7 @@ extern void R5G5B5A1ToARGBRow_C(const uint8* src_r5g5b5a1, uint8* dst_argb, int 
 extern void R4G4B4A4ToARGBRow_C(const uint8* src_argb4444, uint8* dst_argb,	int width);
 
 /* 'converted_format' indicates the format that results when convert_texture_data() returns non-NULL converted_data. */
-static const int converted_format = NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_R8G8B8A8;
-// TODO : Verify that NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_R8G8B8A8 is indeed the correct output format
+static const int converted_format = NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_A8R8G8B8;
 
 static uint8_t* convert_texture_data(const unsigned int color_format,
                                      const uint8_t *data,
@@ -4212,6 +4211,7 @@ static uint8_t* convert_texture_data(const unsigned int color_format,
 	// Note : Unswizzle is already done when entering here
 	switch (color_format) {
 	case NV097_SET_TEXTURE_FORMAT_COLOR_SZ_I8_A8R8G8B8: {
+		// Test-case : WWE RAW2
 		assert(depth == 1); /* FIXME */
 		uint8_t* converted_data = (uint8_t*)g_malloc(width * height * 4);
 		unsigned int x, y;
@@ -4229,13 +4229,16 @@ static uint8_t* convert_texture_data(const unsigned int color_format,
 		return NULL;
 	}
 	case NV097_SET_TEXTURE_FORMAT_COLOR_LC_IMAGE_CR8YB8CB8YA8: {
+		// Test-case : WWE RAW2
 		assert(depth == 1); /* FIXME */
 		uint8_t* converted_data = (uint8_t*)g_malloc(width * height * 4);
 		unsigned int y;
 		for (y = 0; y < height; y++) {
 			const uint8_t* line = &data[y * width * 2];
 			uint8_t* pixel = &converted_data[(y * width) * 4];
-			____UYVYToARGBRow_C(line, pixel, width);
+			____YUY2ToARGBRow_C(line, pixel, width);
+			// Note : LC_IMAGE_CR8YB8CB8YA8 suggests UYVY format,
+			// but for an unknown reason, the actual encoding is YUY2
 		}
 		return converted_data;
 	}	
@@ -4246,7 +4249,7 @@ static uint8_t* convert_texture_data(const unsigned int color_format,
 		for (y = 0; y < height; y++) {
 			const uint8_t* line = &data[y * width * 2];
 			uint8_t* pixel = &converted_data[(y * width) * 4];
-			____YUY2ToARGBRow_C(line, pixel, width);
+			____UYVYToARGBRow_C(line, pixel, width); // TODO : Validate LC_IMAGE_YB8CR8YA8CB8 indeed requires ____UYVYToARGBRow_C()
 		}
 		return converted_data;
 	}

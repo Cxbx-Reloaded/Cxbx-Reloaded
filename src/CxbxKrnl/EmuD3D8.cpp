@@ -1699,6 +1699,7 @@ std::chrono::time_point<std::chrono::steady_clock, std::chrono::duration<double,
 	// otherwise, m_CurrentAvInfo will never be initialised!
 	// 20ms should be used in the case of 50hz
 	return std::chrono::steady_clock::now() + 16.6666666667ms;
+	//return std::chrono::steady_clock::now() + 166.666666667ms;
 }
 
 
