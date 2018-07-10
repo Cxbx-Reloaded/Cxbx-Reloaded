@@ -1136,5 +1136,8 @@ opcode_error:
 void EmuX86_Init()
 {
 	DbgPrintf("X86 : Initializing distorm version %d\n", distorm_version());
+#ifndef USE_SEH // implies VEH
+	AddVectoredExceptionHandler(1, EmuException);
+#endif // !USE_SEG
 	EmuX86_InitContextRecordOffsetByRegisterType();
 }

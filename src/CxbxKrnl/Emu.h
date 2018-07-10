@@ -48,7 +48,7 @@ inline void NTAPI EmuWarning(const char *szWarningMessage, ...) { }
 #endif
 
 // exception handler
-extern int EmuException(LPEXCEPTION_POINTERS e);
+extern LONG NTAPI EmuException(EXCEPTION_POINTERS *e);
 
 // print call stack trace
 #ifdef _DEBUG

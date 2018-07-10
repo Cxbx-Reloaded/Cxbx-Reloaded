@@ -97,14 +97,18 @@ public:
 			m_Pending = false;
 		}
 
+#ifdef USE_SEH
 		__try {
+#endif // USE_SEH
 			BOOLEAN(__stdcall *ServiceRoutine)(xboxkrnl::PKINTERRUPT, void*) = (BOOLEAN(__stdcall *)(xboxkrnl::PKINTERRUPT, void*))Interrupt->ServiceRoutine;
 			BOOLEAN result = ServiceRoutine(Interrupt, Interrupt->ServiceContext);
+#ifdef USE_SEH
 		}
 		__except (EmuException(GetExceptionInformation()))
 		{
 			EmuWarning("Problem with ExceptionFilter!");
 		}
+#endif // USE_SEH
 	}
 private:
 	bool m_Asserted = false;
