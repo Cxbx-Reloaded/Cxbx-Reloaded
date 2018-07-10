@@ -216,26 +216,15 @@ void EmuExceptionNonBreakpointUnhandledShow(LPEXCEPTION_POINTERS e)
 	}
 }
 
-// exception handler
 bool IsRdtscInstruction(xbaddr addr);
-extern int EmuException(LPEXCEPTION_POINTERS e)
+LONG NTAPI EmuException(EXCEPTION_POINTERS *e)
 {
     g_bEmuException = true;
-	if (e->ExceptionRecord->ExceptionCode == STATUS_BREAKPOINT)
-	{
-		// notify user
-		if (EmuExceptionBreakpointAsk(e))
-		{
-			// We're allowed to continue :
-			g_bEmuException = false;
-			return EXCEPTION_CONTINUE_EXECUTION;
-		}
-	}
-	else
-	{
-		// Check if this exception came from rdtsc, but only whe g_PatchCpuFrequency hack is set.
-		if (e->ExceptionRecord->ExceptionCode == STATUS_PRIVILEGED_INSTRUCTION && !g_SkipRdtscPatching )
-		{
+	switch (e->ExceptionRecord->ExceptionCode) {
+	case STATUS_PRIVILEGED_INSTRUCTION:
+		// When the g_SkipRdtscPatching hack is disabled
+		if (!g_SkipRdtscPatching) {
+			// Check if this exception came from rdtsc 
 			if (IsRdtscInstruction(e->ContextRecord->Eip)) {
 				LARGE_INTEGER PerformanceCount;
 				PerformanceCount.QuadPart = xboxkrnl::KeQueryPerformanceCounter();
@@ -246,45 +235,47 @@ extern int EmuException(LPEXCEPTION_POINTERS e)
 				return EXCEPTION_CONTINUE_EXECUTION;
 			}
 		}
-
-        // Skip past CxbxDebugger-specific exceptions thrown when an unsupported was attached (ie Visual Studio)
-        if (CxbxDebugger::IsDebuggerException(e->ExceptionRecord->ExceptionCode))
-        {
-            g_bEmuException = false;
-            return EXCEPTION_CONTINUE_EXECUTION;
-        }
-
+		// Don't break for other privileged instructions, but fall through to our exception decoder below :
+	case EXCEPTION_ACCESS_VIOLATION:
 		// Pass the exception to our X86 implementation, to try and execute the failing instruction
-		if (EmuX86_DecodeException(e))
-		{
+		if (EmuX86_DecodeException(e)) {
 			// We're allowed to continue :
 			g_bEmuException = false;
 			return EXCEPTION_CONTINUE_EXECUTION;
 		}
-		
-		// Try to Report this exception to the debugger, which may allow handling of this exception
-		if (CxbxDebugger::CanReport())
-		{
-			bool DebuggerHandled = false;
-			CxbxDebugger::ReportAndHandleException(e->ExceptionRecord, DebuggerHandled);
+		break;
+	case STATUS_BREAKPOINT:
+		// notify user
+		if (EmuExceptionBreakpointAsk(e)) {
+			// We're allowed to continue :
+			g_bEmuException = false;
+			return EXCEPTION_CONTINUE_EXECUTION;
+		}
+		break;
+	}
 
-			if (DebuggerHandled)
-			{
-				// Bypass exception
-				g_bEmuException = false;
-				return EXCEPTION_CONTINUE_SEARCH;
-			}
-			else
-			{
-				// Kill the process immediately without the Cxbx notifier
-				EmuExceptionExitProcess();
-			}
+	// Skip past CxbxDebugger-specific exceptions thrown when an unsupported was attached (ie Visual Studio)
+	if (CxbxDebugger::IsDebuggerException(e->ExceptionRecord->ExceptionCode)) {
+		g_bEmuException = false;
+		return EXCEPTION_CONTINUE_EXECUTION;
+	}
+		
+	// Try to Report this exception to the debugger, which may allow handling of this exception
+	if (CxbxDebugger::CanReport()) {
+		bool DebuggerHandled = false;
+		CxbxDebugger::ReportAndHandleException(e->ExceptionRecord, DebuggerHandled);
+		if (DebuggerHandled) {
+			// Bypass exception
+			g_bEmuException = false;
+			return EXCEPTION_CONTINUE_SEARCH;
 		}
-		else
-		{
-			// notify user
-			EmuExceptionNonBreakpointUnhandledShow(e);
-		}
+
+		// Kill the process immediately without the Cxbx notifier
+		EmuExceptionExitProcess();
+	}
+	else {
+		// notify user
+		EmuExceptionNonBreakpointUnhandledShow(e);
 	}
 
 	// Unhandled exception :
