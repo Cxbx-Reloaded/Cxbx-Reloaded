@@ -683,8 +683,13 @@ std::vector<xbaddr> g_RdtscPatches;
 
 bool IsRdtscInstruction(xbaddr addr)
 {
-	if (std::find(g_RdtscPatches.begin(), g_RdtscPatches.end(), addr) != g_RdtscPatches.end()) {
-		return true;
+	// First the fastest check - is this a patch? (see PatchRdtsc)
+	uint8_t* opAddr = (uint8_t*)addr;
+	if ((opAddr[0] == 0xEF) // OUT DX, EAX
+	 && (opAddr[1] == 0x90)) { // NOP
+		if (std::find(g_RdtscPatches.begin(), g_RdtscPatches.end(), addr) != g_RdtscPatches.end()) {
+			return true;
+		}
 	}
 
 	return false;
