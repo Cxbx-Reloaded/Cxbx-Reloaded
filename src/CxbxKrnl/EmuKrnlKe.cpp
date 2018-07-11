@@ -248,21 +248,21 @@ void InitDpcAndTimerThread()
 
 // Xbox Performance Counter Frequency = 733333333 (CPU Clock)
 #define XBOX_PERFORMANCE_FREQUENCY 733333333
-uint64_t NativeToXbox_FactorForPerformanceFrequency;
+ULONGLONG NativeToXbox_FactorForPerformanceFrequency;
 
 void ConnectKeInterruptTimeToThunkTable(); // forward
 
-uint64_t CxbxRdTsc(bool xbox) {
+ULONGLONG CxbxRdTsc(bool xbox) {
 	LARGE_INTEGER tsc;
 
 	QueryPerformanceCounter(&tsc);
 
 	if (xbox && NativeToXbox_FactorForPerformanceFrequency) {
-		LARGE_INTEGER scaledTsc;
+		ULARGE_INTEGER scaledTsc;
 		scaledTsc.QuadPart = 1000000000;
-		scaledTsc.QuadPart *= tsc.QuadPart;
+		scaledTsc.QuadPart *= (ULONGLONG)tsc.QuadPart;
 		scaledTsc.QuadPart /= NativeToXbox_FactorForPerformanceFrequency;
-		return (uint64_t)scaledTsc.QuadPart;
+		return scaledTsc.QuadPart;
 	}
 
 	return (uint64_t)tsc.QuadPart;
@@ -1127,8 +1127,8 @@ XBSYSAPI EXPORTNUM(126) xboxkrnl::ULONGLONG NTAPI xboxkrnl::KeQueryPerformanceCo
 	ULONGLONG ret;
 
 	//no matter rdtsc is patched or not, we should always return a scaled performance counter here.
-	DbgPrintf("host tick count       : %lu\n", CxbxRdTsc(false));
-	ret = CxbxRdTsc(true);
+	DbgPrintf("host tick count       : %lu\n", CxbxRdTsc(/*xbox=*/false));
+	ret = CxbxRdTsc(/*xbox=*/true);
 	DbgPrintf("emulated tick count   : %lu\n", ret);
 	
 	RETURN(ret);

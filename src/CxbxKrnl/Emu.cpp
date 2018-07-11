@@ -216,24 +216,40 @@ void EmuExceptionNonBreakpointUnhandledShow(LPEXCEPTION_POINTERS e)
 	}
 }
 
+// Returns weither the given address is part of an Xbox managed memory region
+bool IsXboxCodeAddress(xbaddr addr)
+{
+	// TODO : Replace the following with a (fast) check weither
+	// the given address lies in xbox allocated virtual memory,
+	// for example by g_VMManager.CheckConflictingVMA(addr, 0).
+	return (addr >= XBE_IMAGE_BASE) && (addr <= XBE_MAX_VA);
+	// Note : Not IS_USER_ADDRESS(), that would include host DLL code
+}
+
 bool IsRdtscInstruction(xbaddr addr);
+ULONGLONG CxbxRdTsc(bool xbox);
 bool TryHandleException(EXCEPTION_POINTERS *e)
 {
+	// Only handle exceptions which originate from Xbox code
+	if (!IsXboxCodeAddress(e->ContextRecord->Eip)) {
+		return false;
+	}
+
 	// Make sure access-violations reach EmuX86_DecodeException() as soon as possible
 	if (e->ExceptionRecord->ExceptionCode != EXCEPTION_ACCESS_VIOLATION) {
 		switch (e->ExceptionRecord->ExceptionCode) {
 		case STATUS_PRIVILEGED_INSTRUCTION:
-			// When the g_SkipRdtscPatching hack is disabled
-			if (!g_SkipRdtscPatching) {
-				// Check if this exception came from rdtsc 
-				if (IsRdtscInstruction(e->ContextRecord->Eip)) {
-					LARGE_INTEGER PerformanceCount;
-					PerformanceCount.QuadPart = xboxkrnl::KeQueryPerformanceCounter();
-					e->ContextRecord->Eax = PerformanceCount.LowPart;
-					e->ContextRecord->Edx = PerformanceCount.HighPart;
-					e->ContextRecord->Eip += 2;
-					return true;
-				}
+			// Check if this exception came from rdtsc 
+			if (IsRdtscInstruction(e->ContextRecord->Eip)) {
+				// If so, use a return value that updates with Xbox frequency;
+				// Avoid the overhead of xboxkrnl::KeQueryPerformanceCounter,
+				// by calling directly into it's backing implementation:
+				ULARGE_INTEGER PerformanceCount;
+				PerformanceCount.QuadPart = CxbxRdTsc(/*xbox=*/true);
+				e->ContextRecord->Eax = PerformanceCount.LowPart;
+				e->ContextRecord->Edx = PerformanceCount.HighPart;
+				e->ContextRecord->Eip += 2;
+				return true;
 			}
 			break;
 		case STATUS_BREAKPOINT:
