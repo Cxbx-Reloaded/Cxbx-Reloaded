@@ -294,8 +294,10 @@ bool lleTryHandleException(EXCEPTION_POINTERS *e)
 
 	genericException(e);
 
-	// Unhandled exception :
+	// We do not need EmuException to handle it again.
 	bOverrideException = true;
+
+	// Unhandled exception :
 	return false;
 }
 
@@ -312,7 +314,7 @@ LONG NTAPI lleException(EXCEPTION_POINTERS *e)
 bool EmuTryHandleException(EXCEPTION_POINTERS *e)
 {
 
-	// Check if lle exception is already called here first before emu exception.
+	// Check if lle exception is already called first before emu exception.
 	if (bOverrideException) {
 		return false;
 	}
