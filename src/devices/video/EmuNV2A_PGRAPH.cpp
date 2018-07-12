@@ -202,7 +202,7 @@ static const ColorFormatInfo kelvin_color_format_map[256] = {
 	//0x14 [NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_SY8] =
         {1, linear, GL_R8, GL_RED, GL_BYTE,
          gl_swizzle_mask_RRR1}, // TODO : Verify
-	//0x15 [NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_X7SY9] = // See convert_texture_data
+	//0x15 [NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_X7SY9] = // See convert_texture_data FIXME
 		{2, linear, GL_RGBA8, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV}, // TODO : Verify
 	//0x16 [NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_R8B8] =
         {2, linear, GL_RG8_SNORM, GL_RG, GL_UNSIGNED_BYTE,
@@ -245,11 +245,11 @@ static const ColorFormatInfo kelvin_color_format_map[256] = {
 		{2, linear, GL_RGBA8, GL_RGBA, GL_UNSIGNED_INT_8_8_8_8}, // TODO : Verify
 	//0x25 [NV097_SET_TEXTURE_FORMAT_COLOR_LC_IMAGE_YB8CR8YA8CB8] = // See convert_texture_data calling ____YUY2ToARGBRow_C
 		{2, linear, GL_RGBA8, GL_RGBA, GL_UNSIGNED_INT_8_8_8_8}, // TODO : Verify
-	//0x26 [NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_A8CR8CB8Y8] = // See convert_texture_data
+	//0x26 [NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_A8CR8CB8Y8] = // See convert_texture_data FIXME
 		{2, linear, GL_RGBA8, GL_RGBA, GL_UNSIGNED_INT_8_8_8_8}, // TODO : Verify
 
-    //0x27 [NV097_SET_TEXTURE_FORMAT_COLOR_SZ_R6G5B5] = // See convert_texture_data
-        {2, swizzled, GL_RGBA8, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV},
+    //0x27 [NV097_SET_TEXTURE_FORMAT_COLOR_SZ_R6G5B5] = // See convert_texture_data calling __R6G5B5ToARGBRow_C
+        {2, swizzled, GL_RGBA8, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV}, // TODO : Verify
     //0x28 [NV097_SET_TEXTURE_FORMAT_COLOR_SZ_G8B8] =
         {2, swizzled, GL_RG8_SNORM, GL_RG, GL_UNSIGNED_BYTE,
          gl_swizzle_mask_0RG1},
@@ -289,12 +289,12 @@ static const ColorFormatInfo kelvin_color_format_map[256] = {
 	//0x36 [NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_YB16YA16] =
         {4, linear, GL_R16, GL_RED, GL_UNSIGNED_SHORT, // TODO : Verify
          gl_swizzle_mask_RRGG},
-	//0x37 [NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_R6G5B5] = // See convert_texture_data
-        {2, linear, GL_RGBA8, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV},
-	//0x38 [NV097_SET_TEXTURE_FORMAT_COLOR_SZ_R5G5B5A1] = // See convert_texture_data
-		{2, swizzled, GL_RGBA8, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV}, // TODO : Verify
-	//0x39 [NV097_SET_TEXTURE_FORMAT_COLOR_SZ_R4G4B4A4] = // See convert_texture_data
-		{2, swizzled, GL_RGBA8, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV}, // TODO : Verify
+	//0x37 [NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_R6G5B5] = // See convert_texture_data calling __R6G5B5ToARGBRow_C
+        {2, linear, GL_RGBA8, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV}, // TODO : Verify
+	//0x38 [NV097_SET_TEXTURE_FORMAT_COLOR_SZ_R5G5B5A1] =
+		{2, swizzled, GL_RGBA, GL_RGBA, GL_UNSIGNED_SHORT_5_5_5_1}, // TODO : Verify
+	//0x39 [NV097_SET_TEXTURE_FORMAT_COLOR_SZ_R4G4B4A4] =
+		{2, swizzled, GL_RGBA, GL_RGBA, GL_UNSIGNED_SHORT_4_4_4_4}, // TODO : Verify
     //0x3A [NV097_SET_TEXTURE_FORMAT_COLOR_SZ_A8B8G8R8] =
         {4, swizzled, GL_RGBA8, GL_RGBA, GL_UNSIGNED_INT_8_8_8_8_REV}, // TODO : Verify
 	//0x3B [NV097_SET_TEXTURE_FORMAT_COLOR_SZ_B8G8R8A8] =
@@ -302,10 +302,10 @@ static const ColorFormatInfo kelvin_color_format_map[256] = {
 
     //0x3C [NV097_SET_TEXTURE_FORMAT_COLOR_SZ_R8G8B8A8] =
         {4, swizzled, GL_RGBA8, GL_RGBA, GL_UNSIGNED_INT_8_8_8_8},
-	//0x3D [NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_R5G5B5A1] = // See convert_texture_data
-		{2, linear, GL_RGBA8, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV}, // TODO : Verify
-	//0x3E [NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_R4G4B4A4] = // See convert_texture_data
-        {2, linear, GL_RGBA8, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV}, // TODO : Verify
+	//0x3D [NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_R5G5B5A1] =
+		{2, linear, GL_RGBA, GL_RGBA, GL_UNSIGNED_SHORT_5_5_5_1}, // TODO : Verify
+	//0x3E [NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_R4G4B4A4] =
+        {2, linear, GL_RGBA, GL_RGBA, GL_UNSIGNED_SHORT_4_4_4_4}, // TODO : Verify
 
     //0x3F [NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_A8B8G8R8] =
         {4, linear, GL_RGBA8, GL_RGBA, GL_UNSIGNED_INT_8_8_8_8_REV}, // TODO : Verify
@@ -4193,8 +4193,6 @@ static float convert_f24_to_float(uint32_t f24) {
 extern void __R6G5B5ToARGBRow_C(const uint8* src_r6g5b5, uint8* dst_argb, int width);
 extern void ____YUY2ToARGBRow_C(const uint8* src_yuy2, uint8* rgb_buf, int width);
 extern void ____UYVYToARGBRow_C(const uint8* src_uyvy, uint8* rgb_buf, int width);
-extern void R5G5B5A1ToARGBRow_C(const uint8* src_r5g5b5a1, uint8* dst_argb, int width);
-extern void R4G4B4A4ToARGBRow_C(const uint8* src_argb4444, uint8* dst_argb,	int width);
 
 /* 'converted_format' indicates the format that results when convert_texture_data() returns non-NULL converted_data. */
 static const int converted_format = NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_A8R8G8B8;
@@ -4266,30 +4264,6 @@ static uint8_t* convert_texture_data(const unsigned int color_format,
 			uint16_t rgb655 = *(uint16_t*)(data + y * row_pitch);
 			int8_t *pixel = (int8_t*)&converted_data[(y * width) * 4];
 			__R6G5B5ToARGBRow_C((const uint8*)rgb655, (uint8*)pixel, width);
-		}
-		return converted_data;
-    }
-	case NV097_SET_TEXTURE_FORMAT_COLOR_SZ_R5G5B5A1:
-	case NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_R5G5B5A1: {
-		assert(depth == 1); /* FIXME */
-		uint8_t *converted_data = (uint8_t*)g_malloc(width * height * 4);
-		unsigned int y;
-		for (y = 0; y < height; y++) {
-			uint16_t r5g5b5a1 = *(uint16_t*)(data + y * row_pitch);
-			int8_t *pixel = (int8_t*)&converted_data[(y * width) * 4];
-			R5G5B5A1ToARGBRow_C((uint8_t *)r5g5b5a1, (uint8_t *)pixel, width);
-		}
-		return converted_data;
-	}
-	case NV097_SET_TEXTURE_FORMAT_COLOR_SZ_R4G4B4A4:
-	case NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_R4G4B4A4: {
-		assert(depth == 1); /* FIXME */
-		uint8_t *converted_data = (uint8_t*)g_malloc(width * height * 4);
-		unsigned int y;
-		for (y = 0; y < height; y++) {
-			uint16_t r4g4b4a4 = *(uint16_t*)(data + y * row_pitch);
-			int8_t *pixel = (int8_t*)&converted_data[(y * width) * 4];
-			R4G4B4A4ToARGBRow_C((uint8_t *)r4g4b4a4, (uint8_t *)pixel, width);
 		}
 		return converted_data;
 	}
