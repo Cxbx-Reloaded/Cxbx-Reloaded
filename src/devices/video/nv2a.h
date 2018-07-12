@@ -483,7 +483,7 @@ typedef struct OverlayState {
 	int old_in_width;
 	int old_in_height;
 	int old_pitch;
-	GLuint gl_texture = -1;
+	GLuint gl_texture;
 } OverlayState;
 
 typedef struct ChannelControl {

@@ -807,8 +807,6 @@ void cxbx_gl_render_framebuffer(NV2AState *d)
 
 void pvideo_init(NV2AState *d)
 {
-	d->pvideo.overlays[0].gl_texture = 0;
-	d->pvideo.overlays[1].gl_texture = 0;
 	//qemu_cond_init(&d->pvideo.interrupt_cond);
 }
 
@@ -823,6 +821,7 @@ void pvideo_destroy(NV2AState *d)
 		glDeleteTextures(1, &d->pvideo.overlays[1].gl_texture);
 		d->pvideo.overlays[1].gl_texture = 0;
 	}
+
 	//qemu_cond_destroy(&d->pvideo.interrupt_cond);
 }
 
