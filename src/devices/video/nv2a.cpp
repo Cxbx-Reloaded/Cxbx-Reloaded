@@ -679,12 +679,21 @@ void cxbx_gl_update_displaymode(NV2AState *d) {
 	}
 
 	int frame_pixel_bytes = d->prmcio.cr[NV_CIO_CRE_PIXEL_INDEX] & 0x03;
-	if (frame_pixel_bytes == 2) {
+	if (frame_pixel_bytes >= 2)	{
+		if (frame_pixel_bytes == 3) {
+			// Test-case : WWE RAW2
+			frame_pixel_bytes++;
+		}
+
 		// Test case : Arctic Thunder, sets a 16 bit framebuffer (R5G6B5) not via
 		// AvSetDisplayMode(), but via VGA control register writes, which implies
 		// that g_AvDisplayModeFormat cannot be used to determine the framebuffer
-		// width. Instead, read the framebuffer width from the VGA control register :
-		frame_width = (d->prmcio.cr[NV_CIO_CR_OFFSET_INDEX] * 8) / frame_pixel_bytes;
+		// width. Instead, read the framebuffer width from the VGA control registers :
+		frame_width = ((int)d->prmcio.cr[NV_CIO_CR_OFFSET_INDEX])
+			| (0x700 & ((int)d->prmcio.cr[NV_CIO_CRE_RPC0_INDEX] << 3))
+			| (0x800 & ((int)d->prmcio.cr[NV_CIO_CRE_LSR_INDEX] << 6));
+		frame_width *= 8;
+		frame_width /= frame_pixel_bytes;
 	}
 }
 
@@ -1020,11 +1029,12 @@ void cxbx_gl_render_overlays(NV2AState *d)
 extern void UpdateFPSCounter();
 void NV2ADevice::UpdateHostDisplay(NV2AState *d)
 {
-	if (!d->pgraph.opengl_enabled) {
+	PGRAPHState *pg = &d->pgraph;
+	if (!pg->opengl_enabled) {
 		return;
 	}
 
-	lockGL(&d->pgraph);
+	lockGL(pg);
 
 	NV2A_GL_DGROUP_BEGIN("VGA Frame");
 
@@ -1058,19 +1068,19 @@ void NV2ADevice::UpdateHostDisplay(NV2AState *d)
 	// Unbind everything we've used
 	glUseProgram(0);
 	GL_CHECK();
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);//pg->gl_memory_buffer);
 	GL_CHECK();
-	glBindTexture(GL_TEXTURE_2D, 0);
+	glBindTexture(GL_TEXTURE_2D, 0);//pg->gl_color_buffer);
 	GL_CHECK();
 	// Restore xbox framebuffer
-	glBindFramebuffer(GL_FRAMEBUFFER, d->pgraph.gl_framebuffer);
+	glBindFramebuffer(GL_FRAMEBUFFER, pg->gl_framebuffer);
 	GL_CHECK();
 
-	glo_swap(d->pgraph.gl_context);
+	glo_swap(pg->gl_context);
 
 	NV2A_GL_DGROUP_END();
 
-	unlockGL(&d->pgraph);
+	unlockGL(pg);
 
 	UpdateFPSCounter();
 }

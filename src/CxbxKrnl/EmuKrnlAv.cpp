@@ -319,11 +319,9 @@ XBSYSAPI EXPORTNUM(3) xboxkrnl::ULONG NTAPI xboxkrnl::AvSetDisplayMode
 
 	Pitch /= 8;
 
-	AvpCurrentMode = Mode; // Short-circuit the quick path for now
-	if (AvpCurrentMode == Mode)
-	{
+	if (AvpCurrentMode == Mode) {
 		REG_WR32(RegisterBase, NV_PRAMDAC_GENERAL_CONTROL, GeneralControl);
-		CRTC_WR(RegisterBase, NV_CIO_SR_LOCK_INDEX, NV_CIO_SR_UNLOCK_RW_VALUE); /* crtc lock */
+		CRTC_WR(RegisterBase, NV_CIO_SR_LOCK_INDEX /*=0x1c*/, NV_CIO_SR_UNLOCK_RW_VALUE); /* crtc lock */
 		CRTC_WR(RegisterBase, NV_CIO_CR_OFFSET_INDEX /*=0x13*/, (UCHAR)(Pitch & 0xFF)); /* sets screen pitch */
 		CRTC_WR(RegisterBase, NV_CIO_CRE_RPC0_INDEX /*=0x19*/, (UCHAR)((Pitch & 0x700) >> 3)); /* repaint control 0 */
 		CRTC_WR(RegisterBase, NV_CIO_CRE_PIXEL_INDEX /*=0x28*/, 0x80 | CR28Depth);
@@ -335,6 +333,8 @@ XBSYSAPI EXPORTNUM(3) xboxkrnl::ULONG NTAPI xboxkrnl::AvSetDisplayMode
 
 		RETURN(STATUS_SUCCESS);
 	}
+
+	CRTC_WR(RegisterBase, NV_CIO_CRE_PIXEL_INDEX /*=0x28*/, 0x80 | CR28Depth);
 
 	// TODO: Lots of setup/TV encoder configuration
 	// Ignored for now since we don't emulate that stuff yet...
@@ -351,9 +351,9 @@ XBSYSAPI EXPORTNUM(3) xboxkrnl::ULONG NTAPI xboxkrnl::AvSetDisplayMode
 	}
 
 	if (Mode & AV_MODE_FLAGS_SCART)	{
-		REG_WR32(RegisterBase, 0x680630, 0);
-		REG_WR32(RegisterBase, 0x6808C4, 0);
-		REG_WR32(RegisterBase, 0x68084C, 0);
+		REG_WR32(RegisterBase, 0x00680630, 0); // NV_RAMDAC + 0x0630
+		REG_WR32(RegisterBase, 0x006808C4, 0); // NV_RAMDAC + 0x08C4
+		REG_WR32(RegisterBase, 0x0068084C, 0); // NV_RAMDAC + 0x084C
 	}
 
 	const UCHAR* pByte = AvpSRXRegisters;
@@ -381,7 +381,7 @@ XBSYSAPI EXPORTNUM(3) xboxkrnl::ULONG NTAPI xboxkrnl::AvSetDisplayMode
 
 	REG_WR08(RegisterBase, NV_PRMCIO_ARX, 0x20);
 
-	CRTC_WR(RegisterBase, 0x11, 0x00);
+	CRTC_WR(RegisterBase, NV_CIO_CR_VRE_INDEX /*=0x11*/, 0x00);
 	pByte = AvpCRTCRegisters[iCRTC];
 	pByteMax = pByte + sizeof(AvpCRTCRegisters[0]);
 
@@ -389,15 +389,19 @@ XBSYSAPI EXPORTNUM(3) xboxkrnl::ULONG NTAPI xboxkrnl::AvSetDisplayMode
 		UCHAR Register = AvpCRTCRegisters[0][i];
 		UCHAR Data = *pByte;
 
-		if (Register == 0x13) {
+		switch (Register) {
+		case NV_CIO_CR_OFFSET_INDEX /*=0x13*/:
 			Data = (UCHAR)(Pitch & 0xFF);
-		} else if (Register == 0x19) {
+			break;
+		case NV_CIO_CRE_RPC0_INDEX /*=0x19*/:
 			Data |= (UCHAR)((Pitch & 0x700) >> 3);
-		} else if (Register == 0x25) {
+			break;
+		case NV_CIO_CRE_LSR_INDEX /*=0x25*/:
 			Data |= (UCHAR)((Pitch & 0x800) >> 6);
+			break;
 		}
 
-		CRTC_WR(RegisterBase, AvpCRTCRegisters[0][i], Data);
+		CRTC_WR(RegisterBase, Register, Data);
 	}
 
 	// TODO: More TV Encoder stuff...

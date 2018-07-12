@@ -4521,7 +4521,7 @@ static TextureBinding* generate_texture(const TextureShape s,
             s.levels - 1);
     }
 
-	/* Set this before calling upload_gl_texture() to prevent possible conversions */
+	/* Set this before calling upload_gl_texture() to prevent potential conversions */
     if (f.gl_swizzle_mask) {
         glTexParameteriv(gl_target, GL_TEXTURE_SWIZZLE_RGBA,
                          f.gl_swizzle_mask);
