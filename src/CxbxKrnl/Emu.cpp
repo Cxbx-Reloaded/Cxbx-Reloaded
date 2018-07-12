@@ -226,6 +226,24 @@ bool IsXboxCodeAddress(xbaddr addr)
 	// Note : Not IS_USER_ADDRESS(), that would include host DLL code
 }
 
+void genericException(EXCEPTION_POINTERS *e) {
+	// Try to report this exception to the debugger, which may allow handling of this exception
+	if (CxbxDebugger::CanReport()) {
+		bool DebuggerHandled = false;
+		CxbxDebugger::ReportAndHandleException(e->ExceptionRecord, DebuggerHandled);
+		if (!DebuggerHandled) {
+			// Kill the process immediately without the Cxbx notifier
+			EmuExceptionExitProcess();
+		}
+
+		// Bypass exception
+	}
+	else {
+		// notify user
+		EmuExceptionNonBreakpointUnhandledShow(e);
+	}
+}
+
 static thread_local bool bOverrideException;
 
 bool IsRdtscInstruction(xbaddr addr);
@@ -274,21 +292,7 @@ bool lleTryHandleException(EXCEPTION_POINTERS *e)
 		return true;
 	}
 
-	// Try to report this exception to the debugger, which may allow handling of this exception
-	if (CxbxDebugger::CanReport()) {
-		bool DebuggerHandled = false;
-		CxbxDebugger::ReportAndHandleException(e->ExceptionRecord, DebuggerHandled);
-		if (!DebuggerHandled) {
-			// Kill the process immediately without the Cxbx notifier
-			EmuExceptionExitProcess();
-		}
-
-		// Bypass exception
-	}
-	else {
-		// notify user
-		EmuExceptionNonBreakpointUnhandledShow(e);
-	}
+	genericException(e);
 
 	// Unhandled exception :
 	bOverrideException = true;
@@ -327,22 +331,7 @@ bool EmuTryHandleException(EXCEPTION_POINTERS *e)
 		}
 	}
 
-	// Try to report this exception to the debugger, which may allow handling of this exception
-	if (CxbxDebugger::CanReport()) {
-		bool DebuggerHandled = false;
-		CxbxDebugger::ReportAndHandleException(e->ExceptionRecord, DebuggerHandled);
-		if (DebuggerHandled) {
-			// Bypass exception
-			return false;
-		}
-
-		// Kill the process immediately without the Cxbx notifier
-		EmuExceptionExitProcess();
-	}
-	else {
-		// notify user
-		EmuExceptionNonBreakpointUnhandledShow(e);
-	}
+	genericException(e);
 
 	// Unhandled exception :
 	return false;
