@@ -161,21 +161,17 @@ DWORD ExecuteDpcQueue()
 		// Set DpcRoutineActive to support KeIsExecutingDpc:
 		KeGetCurrentPrcb()->DpcRoutineActive = TRUE; // Experimental
 		DbgPrintf("KRNL: Global DpcQueue, calling DPC at 0x%.8X\n", pkdpc->DeferredRoutine);
-#ifdef USE_SEH
 		__try {
-#endif // USE_SEH
 			// Call the Deferred Procedure  :
 			pkdpc->DeferredRoutine(
 				pkdpc,
 				pkdpc->DeferredContext,
 				pkdpc->SystemArgument1,
 				pkdpc->SystemArgument2);
-#ifdef USE_SEH
 		} __except (EmuException(GetExceptionInformation()))
 		{
 			EmuWarning("Problem with ExceptionFilter!");
 		}
-#endif // USE_SEH
 
 		KeGetCurrentPrcb()->DpcRoutineActive = FALSE; // Experimental
 	}
@@ -209,20 +205,17 @@ DWORD ExecuteDpcQueue()
 				break; // while
 
 			DbgPrintf("KRNL: Global TimerQueue, calling DPC at 0x%.8X\n", pkdpc->DeferredRoutine);
-#ifdef USE_SEH
+
 			__try {
-#endif // USE_SEH
 				pkdpc->DeferredRoutine(
 					pkdpc,
 					pkdpc->DeferredContext,
 					pkdpc->SystemArgument1,
 					pkdpc->SystemArgument2);
-#ifdef USE_SEH
 			} __except (EmuException(GetExceptionInformation()))
 			{
 				EmuWarning("Problem with ExceptionFilter!");
 			}
-#endif // USE_SEH
 		}
 	}
 

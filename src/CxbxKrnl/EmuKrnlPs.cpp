@@ -167,10 +167,8 @@ static unsigned int WINAPI PCSTProxy
 	}
 
 	// use the special calling convention
-#ifdef USE_SEH
 	__try
 	{
-#endif // USE_SEH
 		// Given the non-standard calling convention (requiring
 		// the first argument in ebp+4) we need the below __asm.
 		//
@@ -187,14 +185,11 @@ static unsigned int WINAPI PCSTProxy
 			lea         ebp, [esp - 4]
 			jmp near    esi
 		}
-
-#ifdef USE_SEH
 	}
 	__except (EmuException(GetExceptionInformation()))
 	{
 		EmuWarning("Problem with ExceptionFilter!");
 	}
-#endif // USE_SEH
 
 callComplete:
 
@@ -212,19 +207,15 @@ void PspSystemThreadStartup
 	IN PVOID StartContext
 )
 {
-#ifdef USE_SEH
 	__try
 	{
-#endif // USE_SEH
 		(StartRoutine)(StartContext);
-#ifdef USE_SEH
 	}
 	__except (EmuException(GetExceptionInformation()))
 	// TODO : Call PspUnhandledExceptionInSystemThread(GetExceptionInformation())
 	{
 		EmuWarning("Problem with ExceptionFilter!"); // TODO : Disable?
 	}
-#endif // USE_SEH
 
 	xboxkrnl::PsTerminateSystemThread(STATUS_SUCCESS);
 }

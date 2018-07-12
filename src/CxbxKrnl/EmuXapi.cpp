@@ -1390,19 +1390,15 @@ typedef struct {
 
 void WINAPI EmuFiberStartup(fiber_context_t* context)
 {
-#ifdef USE_SEH
 	__try
 	{
-#endif //USE_SEH
 		LPFIBER_START_ROUTINE pfStartRoutine = (LPFIBER_START_ROUTINE)context->lpStartRoutine;
 		pfStartRoutine(context->lpParameter);
-#ifdef USE_SEH
 	}
 	__except (EmuException(GetExceptionInformation()))
 	{
 		EmuWarning("Problem with ExceptionFilter");
 	}
-#endif //USE_SEH
 }
 
 // ******************************************************************
