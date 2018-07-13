@@ -17,18 +17,10 @@ Cxbx-Reloaded is an emulator for running Microsoft Xbox (and eventually, Chihiro
 ## Automated Builds
 Cxbx-Reloaded is not yet ready for general release, but the latest development builds can be downloaded using the links below:
 
-<!-- TODO: Enable these once the first stable release happens
 ### Latest Stable
 Grab these if you just want to use the emulator to play games.
 * [Latest Stable (Release Build)](https://ci.appveyor.com/api/projects/SoullessSentinel/cxbx-reloaded/artifacts/export/Release.zip?branch=master&job=Configuration:%20Release&pr=false)
 * [Latest Stable (Debug Build)](https://ci.appveyor.com/api/projects/SoullessSentinel/cxbx-reloaded/artifacts/export/Debug.zip?branch=master&job=Configuration:%20Debug&pr=false)
---> 
-
-<!-- TODO: Remove this after v0.1 release -->
-### Upcoming Release (Alpha Status)
-Grab these builds if you wish to preview/alpha test an upcoming release
-* [Latest v0.1 Alpha Build (Release)](https://ci.appveyor.com/api/projects/SoullessSentinel/cxbx-reloaded/artifacts/export/Release.zip?branch=v0.1&job=Configuration:%20Release&pr=false)
-* [Latest v0.1 Alpha Build (Debug)](https://ci.appveyor.com/api/projects/SoullessSentinel/cxbx-reloaded/artifacts/export/Debug.zip?branch=v0.1&job=Configuration:%20Debug&pr=false)
 
 ### Development Builds
 Grab these builds if you want to test the latest and greatest features. These builds are likely to be more unstable than release builds, and are not recommended for just playing games.
