@@ -319,7 +319,6 @@ bool EmuTryHandleException(EXCEPTION_POINTERS *e)
 		return false;
 	}
 
-	// Make sure access-violations reach EmuX86_DecodeException() as soon as possible
 	if (e->ExceptionRecord->ExceptionCode != EXCEPTION_ACCESS_VIOLATION) {
 		switch (e->ExceptionRecord->ExceptionCode) {
 		case STATUS_BREAKPOINT:
