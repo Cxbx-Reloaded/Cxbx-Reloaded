@@ -226,10 +226,33 @@ bool IsXboxCodeAddress(xbaddr addr)
 	// Note : Not IS_USER_ADDRESS(), that would include host DLL code
 }
 
+void genericException(EXCEPTION_POINTERS *e) {
+	// Try to report this exception to the debugger, which may allow handling of this exception
+	if (CxbxDebugger::CanReport()) {
+		bool DebuggerHandled = false;
+		CxbxDebugger::ReportAndHandleException(e->ExceptionRecord, DebuggerHandled);
+		if (!DebuggerHandled) {
+			// Kill the process immediately without the Cxbx notifier
+			EmuExceptionExitProcess();
+		}
+
+		// Bypass exception
+	}
+	else {
+		// notify user
+		EmuExceptionNonBreakpointUnhandledShow(e);
+	}
+}
+
+static thread_local bool bOverrideException;
+
 bool IsRdtscInstruction(xbaddr addr);
 ULONGLONG CxbxRdTsc(bool xbox);
-bool TryHandleException(EXCEPTION_POINTERS *e)
+bool lleTryHandleException(EXCEPTION_POINTERS *e)
 {
+	// Initalize local thread variable
+	bOverrideException = false;
+
 	// Only handle exceptions which originate from Xbox code
 	if (!IsXboxCodeAddress(e->ContextRecord->Eip)) {
 		return false;
@@ -253,8 +276,8 @@ bool TryHandleException(EXCEPTION_POINTERS *e)
 			}
 			break;
 		case STATUS_BREAKPOINT:
-			// Let user choose between continue or break
-			return EmuExceptionBreakpointAsk(e);
+			// Pass breakpoint down to EmuException since VEH doesn't have call stack viewable.
+			return false;
 		default:
 			// Skip past CxbxDebugger-specific exceptions thrown when an unsupported was attached (ie Visual Studio)
 			if (CxbxDebugger::IsDebuggerException(e->ExceptionRecord->ExceptionCode)) {
@@ -269,31 +292,56 @@ bool TryHandleException(EXCEPTION_POINTERS *e)
 		return true;
 	}
 
-	// Try to Report this exception to the debugger, which may allow handling of this exception
-	if (CxbxDebugger::CanReport()) {
-		bool DebuggerHandled = false;
-		CxbxDebugger::ReportAndHandleException(e->ExceptionRecord, DebuggerHandled);
-		if (DebuggerHandled) {
-			// Bypass exception
-			return false;
-		}
+	genericException(e);
 
-		// Kill the process immediately without the Cxbx notifier
-		EmuExceptionExitProcess();
-	}
-	else {
-		// notify user
-		EmuExceptionNonBreakpointUnhandledShow(e);
-	}
+	// We do not need EmuException to handle it again.
+	bOverrideException = true;
 
 	// Unhandled exception :
 	return false;
 }
 
-LONG NTAPI EmuException(EXCEPTION_POINTERS *e)
+// Only for LLE emulation coding (to help performance a little bit better)
+LONG NTAPI lleException(EXCEPTION_POINTERS *e)
 {
 	g_bEmuException = true;
-	LONG result = TryHandleException(e) ? EXCEPTION_CONTINUE_EXECUTION : EXCEPTION_CONTINUE_SEARCH;
+	LONG result = lleTryHandleException(e) ? EXCEPTION_CONTINUE_EXECUTION : EXCEPTION_CONTINUE_SEARCH;
+	g_bEmuException = false;
+	return result;
+}
+
+// Only for Cxbx emulation coding (to catch all of last resort exception may occur.)
+bool EmuTryHandleException(EXCEPTION_POINTERS *e)
+{
+
+	// Check if lle exception is already called first before emu exception.
+	if (bOverrideException) {
+		return false;
+	}
+
+	if (e->ExceptionRecord->ExceptionCode != EXCEPTION_ACCESS_VIOLATION) {
+		switch (e->ExceptionRecord->ExceptionCode) {
+		case STATUS_BREAKPOINT:
+			// Let user choose between continue or break
+			return EmuExceptionBreakpointAsk(e);
+		default:
+			// Skip past CxbxDebugger-specific exceptions thrown when an unsupported was attached (ie Visual Studio)
+			if (CxbxDebugger::IsDebuggerException(e->ExceptionRecord->ExceptionCode)) {
+				return true;
+			}
+		}
+	}
+
+	genericException(e);
+
+	// Unhandled exception :
+	return false;
+}
+
+int EmuException(EXCEPTION_POINTERS *e)
+{
+	g_bEmuException = true;
+	LONG result = EmuTryHandleException(e) ? EXCEPTION_CONTINUE_EXECUTION : EXCEPTION_CONTINUE_SEARCH;
 	g_bEmuException = false;
 	return result;
 }
