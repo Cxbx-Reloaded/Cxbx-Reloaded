@@ -271,8 +271,38 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreate)
     if (!initialized || g_pDSound8 == nullptr) {
         hRet = DirectSoundCreate8(&g_XBAudio.GetAudioAdapter(), &g_pDSound8, NULL);
 
-        if (hRet != DS_OK) {
-            CxbxKrnlCleanup("DirectSoundCreate8 Failed!");
+        LPCSTR dsErrorMsg = nullptr;
+
+        switch (hRet) {
+            case DS_OK:
+                // Is not a fatal error.
+                break;
+            case DSERR_ALLOCATED:
+                dsErrorMsg = "Audio adapter is already allocated. Possible fault within Cxbx-Reloaded's emulator."
+                            "\n\nPlease report to respective game compatibility issue.";
+                break;
+            case DSERR_INVALIDPARAM:
+                dsErrorMsg = "DirectSoundCreate8 return invalid parameter."
+                            "\n\nPlease report to respective game compatibility issue.";
+                break;
+            case DSERR_NOAGGREGATION:
+                dsErrorMsg = "Audio adapter does not support aggregation."
+                            "\n\nPlease use different audio adapter.";
+                break;
+            case DSERR_NODRIVER:
+                dsErrorMsg = "Please select a valid audio adapter from Cxbx-Reloaded's config audio dialog."
+                            "\n\nThen try again.";
+                break;
+            case DSERR_OUTOFMEMORY:
+                dsErrorMsg = "Unable to allocate DirectSound subsystem class."
+                            "\n\nPlease close any opened application(s) or restart computer before trying again.";
+                break;
+            default:
+                dsErrorMsg = "DirectSoundCreate8 unknown failed: 0x%08X";
+        }
+
+        if (dsErrorMsg != nullptr) {
+            CxbxKrnlCleanup(dsErrorMsg, hRet);
         }
 
         hRet = g_pDSound8->SetCooperativeLevel(g_hEmuWindow, DSSCL_PRIORITY);

@@ -351,7 +351,7 @@ void EmuUpdateLLEStatus(uint32_t XbLibScan)
 void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 {
     // NOTE: Increase this revision number any time we changed something inside Cxbx-Reloaded.
-    int revisionCache = 4;
+    int revisionCache = 5;
 
     Xbe::LibraryVersion *pLibraryVersion = (Xbe::LibraryVersion*)pXbeHeader->dwLibraryVersionsAddr;
 
@@ -591,6 +591,10 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
     // Write the Certificate Details to the cache file
     WritePrivateProfileString("Certificate", "Name", tAsciiTitle, filename.c_str());
     WritePrivateProfileString("Certificate", "TitleID", FormatTitleId(g_pCertificate->dwTitleId).c_str(), filename.c_str());
+
+    std::stringstream titleIdHex;
+    titleIdHex << std::hex << g_pCertificate->dwTitleId;
+    WritePrivateProfileString("Certificate", "TitleIDHex", titleIdHex.str().c_str(), filename.c_str());
 
     std::stringstream region;
     region << std::hex << g_pCertificate->dwGameRegion;

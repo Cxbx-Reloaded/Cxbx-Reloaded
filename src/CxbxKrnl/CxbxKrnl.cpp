@@ -569,12 +569,6 @@ void PrintCurrentConfigurationLog()
 		printf("LLE for JIT is %s\n", bLLE_JIT ? "enabled" : "disabled");
 	}
 
-	// Print current INPUT configuration
-	{
-		printf("--------------------------- INPUT CONFIG ---------------------------\n");
-		printf("Using %s\n", g_XInputEnabled ? "XInput" : "DirectInput");
-	}
-
 	// Print current video configuration (DirectX/HLE)
 	if (!bLLE_GPU) {
 		XBVideo XBVideoConf;
@@ -705,7 +699,7 @@ void PatchRdtsc(xbaddr addr)
 }
 
 const uint8_t rdtsc_pattern[] = {
-	0x89,//{0x0F,0x31,0x89 },
+	0x89,//{ 0x0F,0x31,0x89 },
 	0xC3,//{ 0x0F,0x31,0xC3 },
 	0x8B,//{ 0x0F,0x31,0x8B },   //one false positive in Sonic Rider .text 88 5C 0F 31
 	0xB9,//{ 0x0F,0x31,0xB9 },
@@ -713,7 +707,7 @@ const uint8_t rdtsc_pattern[] = {
 	0x8D,//{ 0x0F,0x31,0x8D },
 	0x68,//{ 0x0F,0x31,0x68 },
 	0x5A,//{ 0x0F,0x31,0x5A },
-	0x29,//{ 0x0F,0x31,0x29},
+	0x29,//{ 0x0F,0x31,0x29 },
 	0xF3,//{ 0x0F,0x31,0xF3 },
 	0xE9,//{ 0x0F,0x31,0xE9 },
 	0x2B,//{ 0x0F,0x31,0x2B },
@@ -727,8 +721,14 @@ const uint8_t rdtsc_pattern[] = {
 	0x83,//{ 0x0F,0x31,0x83 },
 	0x33,//{ 0x0F,0x31,0x33 },
 	0xF7,//{ 0x0F,0x31,0xF7 },
-	0x8A,//{ 0x0F,0x31,0xF7 }, // 8A and 56 only apears in RalliSport 2 .text , need to watch whether any future false positive.
-	0x56//{ 0x0F,0x31,0xF7 }	//
+	0x8A,//{ 0x0F,0x31,0x8A }, // 8A and 56 only apears in RalliSport 2 .text , need to watch whether any future false positive.
+	0x56,//{ 0x0F,0x31,0x56 }
+    0x6A,                      // 6A, 39, EB, F6, A1, 01 only appear in Unreal Championship, 01 is at WMVDEC section
+    0x39,
+    0xEB,
+    0xF6,
+    0xA1,
+    0x01
 };
 const int sizeof_rdtsc_pattern = sizeof(rdtsc_pattern);
 
@@ -906,46 +906,65 @@ void CxbxKrnlMain(int argc, char* argv[])
 
 	g_CurrentProcessHandle = GetCurrentProcess(); // OpenProcess(PROCESS_ALL_ACCESS, FALSE, GetCurrentProcessId());
 
-    if (CxbxKrnl_hEmuParent == NULL) {
-        CxbxKrnlCleanup("GUI process does not exist!");
-    } else {
-        SendMessage(CxbxKrnl_hEmuParent, WM_PARENTNOTIFY, WM_USER, ID_KRNL_IS_READY);
-    }
+	if (CxbxKrnl_hEmuParent != NULL) {
+		SendMessage(CxbxKrnl_hEmuParent, WM_PARENTNOTIFY, MAKELONG(WM_USER, ID_KRNL_IS_READY), GetCurrentProcessId());
 
-    // Force wait until first allocated process is ready
-    do {
-        int waitCounter = 10;
-        bool isReady = false;
+		// Force wait until GUI process is ready
+		do {
+			int waitCounter = 10;
+			bool isReady = false;
 
-        while (waitCounter > 0) {
-            g_EmuShared->GetIsReady(&isReady);
-            if (isReady) {
-                break;
-            }
-            waitCounter--;
-            Sleep(100);
-        }
-        if (!isReady) {
-            EmuWarning("GUI process is not ready!");
-            int mbRet = MessageBox(NULL, "GUI process is not ready, do you wish to retry?", TEXT("Cxbx-Reloaded"),
-                                   MB_ICONWARNING | MB_RETRYCANCEL | MB_TOPMOST | MB_SETFOREGROUND);
-            if (mbRet == IDRETRY) {
-                continue;
-            }
-            CxbxKrnlShutDown();
-        }
-        break;
-    } while (true);
+			while (waitCounter > 0) {
+				g_EmuShared->GetIsReady(&isReady);
+				if (isReady) {
+					break;
+				}
+				waitCounter--;
+				Sleep(100);
+			}
+			if (!isReady) {
+				EmuWarning("GUI process is not ready!");
+				int mbRet = MessageBox(NULL, "GUI process is not ready, do you wish to retry?", TEXT("Cxbx-Reloaded"),
+										MB_ICONWARNING | MB_RETRYCANCEL | MB_TOPMOST | MB_SETFOREGROUND);
+				if (mbRet == IDRETRY) {
+					continue;
+				}
+				CxbxKrnlShutDown();
+			}
+			break;
+		} while (true);
+	}
 
-    g_EmuShared->SetIsReady(false);
+	g_EmuShared->SetIsReady(false);
 
-    bool bQuickReboot;
-    g_EmuShared->GetMultiXbeFlag(&bQuickReboot);
+	UINT prevKrnlProcID = 0;
+	DWORD dwExitCode = EXIT_SUCCESS;
+	g_EmuShared->GetKrnlProcID(&prevKrnlProcID);
 
-    // precaution for multi-xbe titles in the case CrashMonitor has still not destoyed the previous mutex
-    while (bQuickReboot) {
-        g_EmuShared->GetMultiXbeFlag(&bQuickReboot);
-    }
+	// Force wait until previous kernel process is closed.
+	if (prevKrnlProcID != 0) {
+		HANDLE hProcess = OpenProcess(SYNCHRONIZE | PROCESS_QUERY_INFORMATION, FALSE, prevKrnlProcID);
+		// If we do receive valid handle, let's do the next step.
+		if (hProcess != NULL) {
+
+			WaitForSingleObject(hProcess, INFINITE);
+
+			GetExitCodeProcess(hProcess, &dwExitCode);
+			CloseHandle(hProcess);
+		}
+	}
+
+	if (dwExitCode != EXIT_SUCCESS) {// StopEmulation
+		CxbxKrnlShutDown();
+	}
+
+	int BootFlags = BOOT_NONE;
+	g_EmuShared->GetBootFlags(&BootFlags);
+
+	g_EmuShared->ResetKrnl();
+
+	// Save current kernel proccess id for next reboot if will occur in the future.
+	g_EmuShared->SetKrnlProcID(GetCurrentProcessId());
 
 	// Write a header to the log
 	{
@@ -1090,7 +1109,7 @@ void CxbxKrnlMain(int argc, char* argv[])
 
 
 		// Initialize the virtual manager
-		g_VMManager.Initialize(hMemoryBin, hPageTables);
+		g_VMManager.Initialize(hMemoryBin, hPageTables, BootFlags);
 
 		// Commit the memory used by the xbe header
 		size_t HeaderSize = CxbxKrnl_Xbe->m_Header.dwSizeofHeaders;
@@ -1152,7 +1171,8 @@ void CxbxKrnlMain(int argc, char* argv[])
 			DebugFileName.c_str(),
 			(Xbe::Header*)CxbxKrnl_Xbe->m_Header.dwBaseAddr,
 			CxbxKrnl_Xbe->m_Header.dwSizeofHeaders,
-			(void(*)())EntryPoint
+			(void(*)())EntryPoint,
+ 			BootFlags
 		);
 	}
 }
@@ -1202,7 +1222,8 @@ __declspec(noreturn) void CxbxKrnlInit
 	const char             *szDebugFilename,
 	Xbe::Header            *pXbeHeader,
 	uint32                  dwXbeHeaderSize,
-	void(*Entry)())
+	void(*Entry)(),
+	int BootFlags)
 {
 	// update caches
 	CxbxKrnl_TLS = pTLS;
@@ -1273,13 +1294,6 @@ __declspec(noreturn) void CxbxKrnlInit
 		bLLE_APU = (CxbxLLE_Flags & LLE_APU) > 0;
 		bLLE_GPU = (CxbxLLE_Flags & LLE_GPU) > 0;
 		bLLE_JIT = (CxbxLLE_Flags & LLE_JIT) > 0;
-	}
-
-	// Process XInput Enabled flag
-	{
-		int XInputEnabled;
-		g_EmuShared->GetXInputEnabled(&XInputEnabled);
-		g_XInputEnabled = !!XInputEnabled;
 	}
 
 	// Process Hacks
@@ -1372,7 +1386,11 @@ __declspec(noreturn) void CxbxKrnlInit
 
 		// Dump Xbe certificate
 		if (g_pCertificate != NULL) {
+			std::stringstream titleIdHex;
+			titleIdHex << std::hex << g_pCertificate->dwTitleId;
+
 			printf("[0x%.4X] INIT: XBE TitleID : %s\n", GetCurrentThreadId(), FormatTitleId(g_pCertificate->dwTitleId).c_str());
+			printf("[0x%.4X] INIT: XBE TitleID (Hex) : 0x%s\n", GetCurrentThreadId(), titleIdHex.str().c_str());
 			printf("[0x%.4X] INIT: XBE Version : 1.%02d\n", GetCurrentThreadId(), g_pCertificate->dwVersion);
 			printf("[0x%.4X] INIT: XBE TitleName : %ls\n", GetCurrentThreadId(), g_pCertificate->wszTitleName);
 			printf("[0x%.4X] INIT: XBE Region : %s\n", GetCurrentThreadId(), CxbxKrnl_Xbe->GameRegionToString());
@@ -1415,9 +1433,6 @@ __declspec(noreturn) void CxbxKrnlInit
 	XTL::CxbxInitWindow(true);
 
 	// Now process the boot flags to see if there are any special conditions to handle
-	int BootFlags = 0;
-	g_EmuShared->GetBootFlags(&BootFlags);
-
 	if (BootFlags & BOOT_EJECT_PENDING) {} // TODO
 	if (BootFlags & BOOT_FATAL_ERROR)
 	{

@@ -136,9 +136,16 @@ void WndMain::ResizeWindow(HWND hwnd, bool bForGUI)
 	if (m_h > dHeight)
 		m_h = dHeight;
 
-	// Center to desktop
-	m_x = desktopRect.left + ((desktopRect.right - desktopRect.left - m_w) / 2);
-	m_y = desktopRect.top + ((desktopRect.bottom - desktopRect.top - m_h) / 2);
+	if (bForGUI && m_prevWindowLoc.x != -1 && m_prevWindowLoc.y != -1) {
+		// Restore to previous Window location
+		m_x = m_prevWindowLoc.x;
+		m_y = m_prevWindowLoc.y;
+	}
+	else {
+		// Center to desktop
+		m_x = desktopRect.left + ((dWidth - m_w) / 2);
+		m_y = desktopRect.top + ((dHeight - m_h) / 2);
+	}
 
 	// Resize the window so it's client area can contain the requested resolution
 	windowRect = { m_x, m_y, m_x + m_w, m_y + m_h };
@@ -166,7 +173,8 @@ WndMain::WndMain(HINSTANCE x_hInstance) :
 	m_StorageLocation(""),
 	m_dwRecentXbe(0),
 	m_hDebuggerProc(nullptr),
-	m_hDebuggerMonitorThread(nullptr)
+	m_hDebuggerMonitorThread(),
+	m_prevWindowLoc({ -1, -1 })
 {
     // initialize members
     {
@@ -195,12 +203,6 @@ WndMain::WndMain(HINSTANCE x_hInstance) :
 			result = RegQueryValueEx(hKey, "LLEFLAGS", NULL, &dwType, (PBYTE)&m_FlagsLLE, &dwSize);
 			if (result != ERROR_SUCCESS) {
 				m_FlagsLLE = 0;
-			}
-
-			dwType = REG_DWORD; dwSize = sizeof(DWORD);
-			result = RegQueryValueEx(hKey, "XInputEnabled", NULL, &dwType, (PBYTE)&m_XInputEnabled, &dwSize);
-			if (result != ERROR_SUCCESS) {
-				m_XInputEnabled = 0;
 			}
 
 			dwType = REG_DWORD; dwSize = sizeof(DWORD);
@@ -418,9 +420,6 @@ WndMain::~WndMain()
 			RegSetValueEx(hKey, "LLEFLAGS", 0, dwType, (PBYTE)&m_FlagsLLE, dwSize);
 
 			dwType = REG_DWORD; dwSize = sizeof(DWORD);
-			RegSetValueEx(hKey, "XInputEnabled", 0, dwType, (PBYTE)&m_XInputEnabled, dwSize);
-
-			dwType = REG_DWORD; dwSize = sizeof(DWORD);
 			RegSetValueEx(hKey, "HackDisablePixelShaders", 0, dwType, (PBYTE)&m_DisablePixelShaders, dwSize);
 
 			dwType = REG_DWORD; dwSize = sizeof(DWORD);
@@ -572,8 +571,6 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 					else {
 						m_hwndChild = GetWindow(hwnd, GW_CHILD);
 					}
-					HANDLE hThreadTemp = CreateThread(NULL, NULL, CrashMonitorWrapper, (void*)this, NULL, NULL); // create the crash monitoring thread
-					CloseHandle(hThreadTemp);
                 }
                 break;
 
@@ -591,9 +588,14 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                 break;
 
 				case WM_USER: {
-					 switch(lParam) {
+					 switch(HIWORD(wParam)) {
 						// NOTE: If anything need to set before kernel process start do anything, do it here.
 						case ID_KRNL_IS_READY: {
+							Crash_Manager_Data* pCMD = (Crash_Manager_Data*)malloc(sizeof(Crash_Manager_Data));
+							pCMD->pWndMain = this;
+							pCMD->dwChildProcID = lParam; // lParam is process ID.
+							std::thread(CrashMonitorWrapper, pCMD).detach();
+
 							g_EmuShared->SetFlagsLLE(&m_FlagsLLE);
 							g_EmuShared->SetIsEmulating(true); // NOTE: Putting in here raise to low or medium risk due to debugger will launch itself. (Current workaround)
 							g_EmuShared->SetIsReady(true);
@@ -1464,11 +1466,6 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 			}
 			break;
 
-			case ID_SETTINGS_XINPUT:
-				m_XInputEnabled = !m_XInputEnabled;
-				RefreshMenus();
-				break;
-
             case ID_EMULATION_START:
                 if (m_Xbe != nullptr)
                 {
@@ -1933,9 +1930,6 @@ void WndMain::RefreshMenus()
 			chk_flag = (m_FlagsLLE & LLE_GPU) ? MF_CHECKED : MF_UNCHECKED;
 			CheckMenuItem(settings_menu, ID_EMULATION_LLE_GPU, chk_flag);
 
-			chk_flag = (m_XInputEnabled) ? MF_CHECKED : MF_UNCHECKED;
-			CheckMenuItem(settings_menu, ID_SETTINGS_XINPUT, chk_flag);
-
 			chk_flag = (m_DisablePixelShaders) ? MF_CHECKED : MF_UNCHECKED;
 			CheckMenuItem(settings_menu, ID_HACKS_DISABLEPIXELSHADERS, chk_flag);
 
@@ -2345,14 +2339,14 @@ void WndMain::StartEmulation(HWND hwndParent, DebuggerState LocalDebuggerState /
         return;
     }
 
+    // Reset to default
+    g_EmuShared->Reset();
+
     // register xbe path with emulator process
     g_EmuShared->SetXbePath(m_Xbe->m_szPath);
 
 	// register LLE flags with emulator process
 	g_EmuShared->SetFlagsLLE(&m_FlagsLLE);
-
-	// register XInput flags with emulator process
-	g_EmuShared->SetXInputEnabled(&m_XInputEnabled);
 
 	// register Hacks with emulator process
 	g_EmuShared->SetDisablePixelShaders(&m_DisablePixelShaders);
@@ -2364,6 +2358,16 @@ void WndMain::StartEmulation(HWND hwndParent, DebuggerState LocalDebuggerState /
 
 	// register storage location with emulator process
 	g_EmuShared->SetStorageLocation(m_StorageLocation);
+
+	// Preserve previous GUI window location.
+	HWND hOwner = GetParent(m_hwnd);
+	RECT curWindowPos;
+	GetWindowRect((hOwner != nullptr ? hOwner : m_hwnd), &curWindowPos);
+	m_prevWindowLoc.x = curWindowPos.left;
+	m_prevWindowLoc.y = curWindowPos.top;
+	ScreenToClient((hOwner != nullptr ? hOwner : m_hwnd), &m_prevWindowLoc);
+	m_prevWindowLoc.x = curWindowPos.left - m_prevWindowLoc.x;
+	m_prevWindowLoc.y = curWindowPos.top - m_prevWindowLoc.y;
 
 	if (m_ScaleViewport) {
 		// Set the window size to emulation dimensions
@@ -2404,7 +2408,7 @@ void WndMain::StartEmulation(HWND hwndParent, DebuggerState LocalDebuggerState /
             else {
                 m_bIsStarted = true;
                 printf("WndMain: %s emulation started with debugger.\n", m_Xbe->m_szAsciiTitle);
-                m_hDebuggerMonitorThread = CreateThread(nullptr, 0, DebuggerMonitor, (void*)this, 0, nullptr); // create the debugger monitoring thread
+                m_hDebuggerMonitorThread = std::thread(DebuggerMonitor, this); // create the debugger monitoring thread
             }
         }
         else {
@@ -2425,56 +2429,63 @@ void WndMain::StartEmulation(HWND hwndParent, DebuggerState LocalDebuggerState /
 // stop emulation
 void WndMain::StopEmulation()
 {
-    m_bIsStarted = false;
-    if (m_hwndChild != NULL) {
+	m_bIsStarted = false;
+	if (m_hwndChild != NULL) {
 		if (IsWindow(m_hwndChild)) {
 			SendMessage(m_hwndChild, WM_CLOSE, 0, 0);
 		}
 
 		m_hwndChild = NULL;
-    }
+	}
 
 	UpdateCaption();
-    RefreshMenus();
-	// Set the window size back to it's GUI dimensions
-	ResizeWindow(m_hwnd, /*bForGUI=*/true);
+	RefreshMenus();
+
+	int iScaleView = FALSE;
+	g_EmuShared->GetScaleViewport(&iScaleView);
+	if (iScaleView != 0) {
+		// Set the window size back to it's GUI dimensions
+		ResizeWindow(m_hwnd, /*bForGUI=*/true);
+	}
+
 	g_EmuShared->SetIsEmulating(false);
 }
 
 // wrapper function to call CrashMonitor
-DWORD WINAPI WndMain::CrashMonitorWrapper(LPVOID lpVoid)
+DWORD WINAPI WndMain::CrashMonitorWrapper(LPVOID lpParam)
 {
 	CxbxSetThreadName("Cxbx Crash Monitor");
 
-	static_cast<WndMain*>(lpVoid)->CrashMonitor();
+	Crash_Manager_Data* pCMD = (Crash_Manager_Data*)lpParam;
+	static_cast<WndMain*>(pCMD->pWndMain)->CrashMonitor(pCMD->dwChildProcID);
+	free(lpParam);
 
 	return 0;
 }
 
 // monitor for crashes
-void WndMain::CrashMonitor()
+void WndMain::CrashMonitor(DWORD dwChildProcID)
 {
-	bool bQuickReboot;
-	DWORD dwProcessID_ExitCode = 0;
-	GetWindowThreadProcessId(m_hwndChild, &dwProcessID_ExitCode);
+	int iBootFlags;
+	DWORD dwExitCode = 0;
 
 	// If we do receive valid process ID, let's do the next step.
-	if (dwProcessID_ExitCode != 0) {
+	if (dwChildProcID != 0) {
 
-	HANDLE hProcess = OpenProcess(SYNCHRONIZE | PROCESS_QUERY_INFORMATION, FALSE, dwProcessID_ExitCode);
+	HANDLE hProcess = OpenProcess(SYNCHRONIZE | PROCESS_QUERY_INFORMATION, FALSE, dwChildProcID);
 
 	 	// If we do receive valid handle, let's do the next step.
 	 	if (hProcess != NULL) {
 
 	 		WaitForSingleObject(hProcess, INFINITE);
-	 		dwProcessID_ExitCode = 0;
-	 		GetExitCodeProcess(hProcess, &dwProcessID_ExitCode);
+
+	 		GetExitCodeProcess(hProcess, &dwExitCode);
 	 		CloseHandle(hProcess);
 
-	 		g_EmuShared->GetMultiXbeFlag(&bQuickReboot);
+	 		g_EmuShared->GetBootFlags(&iBootFlags);
 
-	 		if (!bQuickReboot) {
-	 			if (dwProcessID_ExitCode == EXIT_SUCCESS) {// StopEmulation
+	 		if (!iBootFlags) {
+	 			if (dwExitCode == EXIT_SUCCESS) {// StopEmulation
 	 				return;
 	 			}
 				// Or else, it's a crash
@@ -2483,8 +2494,6 @@ void WndMain::CrashMonitor()
 
 	 			// multi-xbe
 	 			// destroy this thread and start a new one
-	 			bQuickReboot = false;
-	 			g_EmuShared->SetMultiXbeFlag(&bQuickReboot);
 	 			return;
 	 		}
 	 	}
@@ -2494,12 +2503,12 @@ void WndMain::CrashMonitor()
 
 	KillTimer(m_hwnd, TIMERID_FPS);
 	KillTimer(m_hwnd, TIMERID_LED);
-	DrawLedBitmap(m_hwnd, true);
 	m_hwndChild = NULL;
 	m_bIsStarted = false;
 	g_EmuShared->SetIsEmulating(false);
 	UpdateCaption();
 	RefreshMenus();
+	DrawLedBitmap(m_hwnd, true);
 }
 
 // monitor for Debugger to close then set as "available" (For limit to 1 debugger per Cxbx GUI.)
@@ -2518,8 +2527,10 @@ DWORD WINAPI WndMain::DebuggerMonitor(LPVOID lpVoid)
 			pThis->m_hDebuggerProc = nullptr;
 		}
 	}
-	CloseHandle(pThis->m_hDebuggerMonitorThread);
-	pThis->m_hDebuggerMonitorThread = nullptr;
+
+	if (pThis->m_hDebuggerMonitorThread.joinable()) {
+		pThis->m_hDebuggerMonitorThread.detach();
+	}
 
 	return 0;
 }
@@ -2528,7 +2539,7 @@ void WndMain::DebuggerMonitorClose()
 
 	if (m_hDebuggerProc != nullptr) {
 		HANDLE hDebuggerProcTemp = m_hDebuggerProc;
-		HANDLE hDebuggerMonitorThreadTemp = m_hDebuggerMonitorThread;
+		std::thread hDebuggerMonitorThreadTemp = std::thread(std::move(m_hDebuggerMonitorThread));
 
 		// Set member to null pointer before terminate, this way debugger monitor thread will remain thread-safe.
 		m_hDebuggerProc = nullptr;
@@ -2537,7 +2548,7 @@ void WndMain::DebuggerMonitorClose()
 		TerminateProcess(hDebuggerProcTemp, EXIT_SUCCESS);
 		CloseHandle(hDebuggerProcTemp);
 
-		WaitForSingleObject(hDebuggerMonitorThreadTemp, INFINITE);
+		hDebuggerMonitorThreadTemp.join();
 	}
 }
 
