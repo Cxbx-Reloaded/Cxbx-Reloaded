@@ -152,6 +152,9 @@ USBDesc::USBDesc()
 	id.idVendor = 0x045E;
 	id.idProduct = 0x0202;
 	id.bcdDevice = 0x0100;
+	id.iManufacturer = STR_MANUFACTURER;
+	id.iProduct = STR_PRODUCT;
+	id.iSerialNumber = STR_SERIALNUMBER;
 	full = &desc_device_xbox_gamepad;
 }
 
@@ -262,6 +265,9 @@ void XidGamepad::UsbXidReleasePort(XboxDeviceState* dev)
 
 int XidGamepad::UsbXid_Initfn(XboxDeviceState* dev)
 {
+	m_UsbDev->USB_CreateSerial(dev, std::string("1"));
+	m_UsbDev->USBDesc_SetString(dev, STR_MANUFACTURER, std::string("Cxbx-Reloaded"));
+	m_UsbDev->USBDesc_SetString(dev, STR_PRODUCT, std::string("Microsoft Gamepad"));
 	m_UsbDev->USBDesc_Init(dev);
 	m_XidState->intr = m_UsbDev->USB_GetEP(dev, USB_TOKEN_IN, 2);
 

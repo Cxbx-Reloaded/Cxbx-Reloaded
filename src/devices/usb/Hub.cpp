@@ -269,7 +269,7 @@ int Hub::UsbHub_Initfn(XboxDeviceState* dev)
 	USBPortOps* ops;
 	int i;
 
-	m_UsbDev->USB_CreateSerial(dev, "314159");
+	m_UsbDev->USB_CreateSerial(dev, std::string("314159"));
 	m_UsbDev->USBDesc_SetString(dev, STR_MANUFACTURER, std::string("Cxbx-Reloaded"));
 	m_UsbDev->USBDesc_SetString(dev, STR_PRODUCT, std::string("Cxbx-Reloaded USB Hub"));
 	m_UsbDev->USBDesc_Init(dev);

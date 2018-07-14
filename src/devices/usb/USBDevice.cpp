@@ -725,19 +725,18 @@ void USBDevice::USB_EpReset(XboxDeviceState* dev)
 * the pci address in most cases).  Third the physical port path.
 * Results in serial numbers like this: "314159-0000:00:1d.7-3".
 */
-void USBDevice::USB_CreateSerial(XboxDeviceState* dev, const char* str)
+void USBDevice::USB_CreateSerial(XboxDeviceState* dev, std::string&& str)
 {
 	const USBDesc* desc = USBDesc_GetUsbDeviceDesc(dev);
 	int index = desc->id.iSerialNumber;
-	USBDescString* s;
-	std::string serial;
+	std::string str2;
 
-	assert(index != 0 && str != nullptr);
-	serial = str + '-';
-	serial += m_PciPath;
-	serial += ('-' + dev->Port->Path);
+	assert(index != 0 && str.empty() == false);
+	str += '-';
+	str += m_PciPath;
+	str += ('-' + dev->Port->Path);
 
-	USBDesc_SetString(dev, index, serial);
+	USBDesc_SetString(dev, index, std::move(str));
 }
 
 const USBDesc* USBDevice::USBDesc_GetUsbDeviceDesc(XboxDeviceState* dev)
@@ -1253,7 +1252,7 @@ int USBDevice::USB_ReadStringDesc(XboxDeviceState* dev, int index, uint8_t* dest
 	return pos;
 }
 
-void USBDevice::USBDesc_SetString(XboxDeviceState* dev, int index, std::string& const str)
+void USBDevice::USBDesc_SetString(XboxDeviceState* dev, int index, std::string&& str)
 {
 	USBDescString* s;
 

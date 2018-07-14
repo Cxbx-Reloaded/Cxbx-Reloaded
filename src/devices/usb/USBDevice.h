@@ -156,7 +156,7 @@ class USBDevice : public PCIDevice {
 		// reset all endpoints of this peripheral
 		void USB_EpReset(XboxDeviceState* dev);
 		// create a serial number for the device
-		void USB_CreateSerial(XboxDeviceState* dev, const char* str);
+		void USB_CreateSerial(XboxDeviceState* dev, std::string&& str);
 		// start descriptors initialization
 		void USBDesc_Init(XboxDeviceState* dev);
 		// get device descriptor
@@ -190,7 +190,7 @@ class USBDevice : public PCIDevice {
 		// return the binary rapresentation of string descriptors
 		int USB_ReadStringDesc(XboxDeviceState* dev, int index, uint8_t* dest, size_t len);
 		// set a string in the string descriptor with the supplied index
-		void USBDesc_SetString(XboxDeviceState* dev, int index, std::string& const str);
+		void USBDesc_SetString(XboxDeviceState* dev, int index, std::string&& str);
 		// get a string in the string descriptor with the supplied index
 		const char* USBDesc_GetString(XboxDeviceState* dev, int index);
 };
