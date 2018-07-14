@@ -10,3 +10,7 @@
 [submodule "import/XbSymbolDatabase"]
 	path = import/XbSymbolDatabase
 	url = https://github.com/Cxbx-Reloaded/XbSymbolDatabase.git
+[submodule "SDL-mirror"]
+	path = import/SDL-mirror
+	url = https://github.com/spurious/SDL-mirror
+	branch = release-2.0.8

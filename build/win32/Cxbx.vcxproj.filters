@@ -297,7 +297,7 @@
     <ClCompile Include="..\..\src\devices\usb\XidGamepad.cpp">
       <Filter>Hardware\Usb</Filter>
     </ClCompile>
-	<ClCompile Include="..\..\src\Cxbx\DlgXboxControllerPortMapping.cpp">
+    <ClCompile Include="..\..\src\Cxbx\DlgXboxControllerPortMapping.cpp">
       <Filter>GUI</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\Common\Win32\XBPortMapping.cpp">
@@ -599,13 +599,12 @@
     <ClInclude Include="..\..\src\devices\usb\XidGamepad.h">
       <Filter>Hardware\Usb</Filter>
     </ClInclude>
-	<ClInclude Include="..\..\src\Cxbx\DlgXboxControllerPortMapping.h">
+    <ClInclude Include="..\..\src\Cxbx\DlgXboxControllerPortMapping.h">
       <Filter>GUI</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\Common\Win32\XBPortMapping.h">
       <Filter>Emulator</Filter>
     </ClInclude>
-    <ClInclude Include="DlgXboxControllerPortMapping.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\resource\Splash.jpg">
