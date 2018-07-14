@@ -284,8 +284,6 @@
     <ClCompile Include="..\..\src\CxbxKrnl\Timer.cpp">
       <Filter>Emulator</Filter>
     </ClCompile>
-      <Filter>GUI</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\devices\usb\OHCI.cpp">
       <Filter>Hardware\Usb</Filter>
     </ClCompile>
@@ -296,8 +294,6 @@
       <Filter>Hardware\Usb</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\Common\CxbxCommon.cpp" />
-      <Filter>GUI</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\devices\usb\XidGamepad.cpp">
       <Filter>Hardware\Usb</Filter>
     </ClCompile>
