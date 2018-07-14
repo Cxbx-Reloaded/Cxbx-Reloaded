@@ -190,7 +190,7 @@ class USBDevice : public PCIDevice {
 		// return the binary rapresentation of string descriptors
 		int USB_ReadStringDesc(XboxDeviceState* dev, int index, uint8_t* dest, size_t len);
 		// set a string in the string descriptor with the supplied index
-		void USBDesc_SetString(XboxDeviceState* dev, int index, const char* str);
+		void USBDesc_SetString(XboxDeviceState* dev, int index, std::string& const str);
 		// get a string in the string descriptor with the supplied index
 		const char* USBDesc_GetString(XboxDeviceState* dev, int index);
 };

@@ -647,10 +647,10 @@ void USBDevice::USB_EPsetMaxPacketSize(XboxDeviceState* dev, int pid, int ep, ui
 void USBDevice::USB_PortLocation(USBPort* downstream, USBPort* upstream, int portnr)
 {
 	if (upstream) {
-		std::snprintf(downstream->Path, sizeof(downstream->Path), "%s.%d", upstream->Path, portnr);
+		downstream->Path = upstream->Path + '.' + std::to_string(portnr);
 	}
 	else {
-		std::snprintf(downstream->Path, sizeof(downstream->Path), "%d", portnr);
+		downstream->Path = std::to_string(portnr);
 	}
 }
 
@@ -730,14 +730,12 @@ void USBDevice::USB_CreateSerial(XboxDeviceState* dev, const char* str)
 	const USBDesc* desc = USBDesc_GetUsbDeviceDesc(dev);
 	int index = desc->id.iSerialNumber;
 	USBDescString* s;
-	char serial[64];
-	char* path;
-	int dst;
+	std::string serial;
 
 	assert(index != 0 && str != nullptr);
-	dst = std::snprintf(serial, sizeof(serial), "%s", str);
-	dst += std::snprintf(serial + dst, sizeof(serial) - dst, "-%s", m_PciPath);
-	std::snprintf(serial + dst, sizeof(serial) - dst, "-%s", dev->Port->Path);
+	serial = str + '-';
+	serial += m_PciPath;
+	serial += ('-' + dev->Port->Path);
 
 	USBDesc_SetString(dev, index, serial);
 }
@@ -1255,7 +1253,7 @@ int USBDevice::USB_ReadStringDesc(XboxDeviceState* dev, int index, uint8_t* dest
 	return pos;
 }
 
-void USBDevice::USBDesc_SetString(XboxDeviceState* dev, int index, const char* str)
+void USBDevice::USBDesc_SetString(XboxDeviceState* dev, int index, std::string& const str)
 {
 	USBDescString* s;
 

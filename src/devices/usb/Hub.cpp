@@ -236,7 +236,7 @@ int Hub::UsbHubClaimPort(XboxDeviceState* dev, int pport)
 		m_UsbDev = g_USB1;
 	}
 	for (auto port : m_UsbDev->m_FreePorts) {
-		if (strcmp(port->Path, std::to_string(usb_port).c_str()) == 0) {
+		if (port->Path == std::to_string(usb_port)) {
 			break;
 		}
 		i++;
@@ -270,8 +270,8 @@ int Hub::UsbHub_Initfn(XboxDeviceState* dev)
 	int i;
 
 	m_UsbDev->USB_CreateSerial(dev, "314159");
-	m_UsbDev->USBDesc_SetString(dev, STR_MANUFACTURER, "Cxbx-Reloaded");
-	m_UsbDev->USBDesc_SetString(dev, STR_PRODUCT, "Cxbx-Reloaded USB Hub");
+	m_UsbDev->USBDesc_SetString(dev, STR_MANUFACTURER, std::string("Cxbx-Reloaded"));
+	m_UsbDev->USBDesc_SetString(dev, STR_PRODUCT, std::string("Cxbx-Reloaded USB Hub"));
 	m_UsbDev->USBDesc_Init(dev);
 	m_HubState->intr = m_UsbDev->USB_GetEP(dev, USB_TOKEN_IN, 1);
 

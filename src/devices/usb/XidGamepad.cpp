@@ -230,7 +230,7 @@ int XidGamepad::UsbXidClaimPort(XboxDeviceState* dev, int pport)
 		if (g_HubObjArray[j]) {
 			i = 0;
 			for (auto port : g_HubObjArray[j]->m_UsbDev->m_FreePorts) {
-				if (strcmp(port->Path, (std::to_string(usb_port) + ".2").c_str()) == 0) {
+				if (port->Path == (std::to_string(usb_port) + ".2")) {
 					m_UsbDev = g_HubObjArray[j]->m_UsbDev;
 					break;
 				}

@@ -407,7 +407,7 @@ struct USBPort {
 	XboxDeviceState* Dev;         // usb device (if present)
 	USBPortOps* Operations;       // functions to call when a port event happens
 	int SpeedMask;                // usb speeds supported
-	char Path[16];                // the number of the port + 1, used to create a serial number for this device
+	std::string Path;             // the number of the port + 1, used to create a serial number for this device
 	int PortIndex;                // internal port index
 };
 
