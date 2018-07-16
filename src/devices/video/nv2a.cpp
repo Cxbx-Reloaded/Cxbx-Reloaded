@@ -406,8 +406,6 @@ enum {
 };
 
 static GLint m_overlay_gl_uniform_location_texture = -1;
-static GLint m_overlay_gl_attribute_location_position = -1;
-static GLint m_overlay_gl_attribute_location_texture = -1;
 
 GLuint Get_YUV_to_RGB_shader_program()
 {
@@ -439,8 +437,8 @@ GLuint Get_YUV_to_RGB_shader_program()
 		"                                                                        \n"
 		"void main()                                                             \n"
 		"{                                                                       \n"
-		"	Out.Texcoord = Texcoord;                                             \n"
-		"	gl_Position = vec4(Position, 0.0, 1.0);                              \n"
+		"  Out.Texcoord = Texcoord;                                              \n"
+		"  gl_Position = vec4(Position, 0.0, 1.0);                               \n"
 		"}                                                                       \n"
 		, /* fragment shader */
 		// https://github.com/g-truc/ogl-samples/blob/master/data/gl-330/texture-2d.frag
@@ -468,29 +466,29 @@ GLuint Get_YUV_to_RGB_shader_program()
 		"const vec3 Bcoeff = vec3(1.164,  2.018,  0.000);                        \n"
 		"void main(void)                                                         \n"
 		"{                                                                       \n"
-		"	// Fetch 4:2:2 YUYV macropixel                                       \n"
-		"	vec4 yuyv = texture2D(tex_yuyv, In.Texcoord);                        \n"
-		"	// Now r-g-b-a is actually y1-u-y2-v                                 \n"
-		"	float u = yuyv.g;                                                    \n"
-		"	float v = yuyv.a;                                                    \n"
-		"	vec3 yuv;                                                            \n"
-		"   // Convert texture coordinate into texture x position                \n"
-		"   ivec2 texture_size = textureSize(tex_yuyv, 0);                       \n"
-		"   float texture_x = In.Texcoord.x * texture_size.x;                    \n"
-		"	// Depending on fragment x position choose y1-u-v or y2-u-v          \n"
-		"	if (mod(texture_x, 1.0) < 0.5) { // left half                        \n"
-		"		float y1 = yuyv.r;                                               \n"
-		"		yuv = vec3(y1, u, v);                                            \n"
-		"	} else { // right half                                               \n"
-		"		float y2 = yuyv.b;                                               \n"
-		"		yuv = vec3(y2, u, v);                                            \n"
-		"	}                                                                    \n"
-		"	// Do the color transform                                            \n"
-		"	yuv += offset;                                                       \n"
-		"	Color.r = dot(yuv, Rcoeff);                                          \n"
-		"	Color.g = dot(yuv, Gcoeff);                                          \n"
-		"	Color.b = dot(yuv, Bcoeff);                                          \n"
-		"	Color.a = 1.0;                                                       \n"
+		"  // Fetch 4:2:2 YUYV macropixel                                        \n"
+		"  vec4 yuyv = texture2D(tex_yuyv, In.Texcoord);                         \n"
+		"  // Now r-g-b-a is actually y1-u-y2-v                                  \n"
+		"  float u = yuyv.g;                                                     \n"
+		"  float v = yuyv.a;                                                     \n"
+		"  vec3 yuv;                                                             \n"
+		"  // Convert texture coordinate into texture x position                 \n"
+		"  ivec2 texture_size = textureSize(tex_yuyv, 0);                        \n"
+		"  float texture_x = In.Texcoord.x * texture_size.x;                     \n"
+		"  // Depending on fragment x position choose y1-u-v or y2-u-v           \n"
+		"  if (mod(texture_x, 1.0) < 0.5) { // left half                         \n"
+		"    float y1 = yuyv.r;                                                  \n"
+		"    yuv = vec3(y1, u, v);                                               \n"
+		"  } else { // right half                                                \n"
+		"    float y2 = yuyv.b;                                                  \n"
+		"    yuv = vec3(y2, u, v);                                               \n"
+		"  }                                                                     \n"
+		"  // Do the color transform                                             \n"
+		"  yuv += offset;                                                        \n"
+		"  Color.r = dot(yuv, Rcoeff);                                           \n"
+		"  Color.g = dot(yuv, Gcoeff);                                           \n"
+		"  Color.b = dot(yuv, Bcoeff);                                           \n"
+		"  Color.a = 1.0;                                                        \n"
 		"}                                                                       \n"
 	};
 
@@ -561,7 +559,7 @@ GLuint GetFramebufferShaderProgram()
 		"  vec2 Texcoord;                                                        \n"
 		"} Out;                                                                  \n"
 		"                                                                        \n"
-		"void main()                                                             \n"
+		"void main(void)                                                         \n"
 		"{                                                                       \n"
 		"	Out.Texcoord = Texcoord;                                             \n"
 		"	gl_Position = vec4(Position, 0.0, 1.0);                              \n"
@@ -592,7 +590,6 @@ GLuint GetFramebufferShaderProgram()
 	// Bind shader
 	static GLuint m_framebuffer_gl_shader_program = -1;
 	if (m_framebuffer_gl_shader_program == -1) {
-		m_framebuffer_gl_shader_program = glCreateProgram();
 		// Compile vertex shader
 		GLuint vertex_shader = create_gl_shader(GL_VERTEX_SHADER, gl_framebuffer_shader_src[0], "Framebuffer vertex shader");
 		GL_CHECK();
@@ -600,6 +597,7 @@ GLuint GetFramebufferShaderProgram()
 		GLuint fragment_shader = create_gl_shader(GL_FRAGMENT_SHADER, gl_framebuffer_shader_src[1], "Framebuffer fragment shader");
 		GL_CHECK();
 
+		m_framebuffer_gl_shader_program = glCreateProgram();
 		GL_CHECK();
 		// Link vertex and fragment shaders
 		glAttachShader(m_framebuffer_gl_shader_program, vertex_shader);
@@ -634,6 +632,9 @@ GLuint GetFramebufferShaderProgram()
 	return m_framebuffer_gl_shader_program;
 }
 
+static int display_mode_format = 0;
+static int frame_pixel_bytes = 1;
+
 static GLenum frame_gl_internal_format = GL_RGBA8;
 static GLenum frame_gl_format = GL_BGRA;
 static GLenum frame_gl_type = GL_UNSIGNED_INT_8_8_8_8_REV;
@@ -643,57 +644,73 @@ static GLsizei frame_width = 640;
 static GLsizei frame_height = 480;
 
 void cxbx_gl_update_displaymode(NV2AState *d) {
-	// Convert AV Format to OpenGl format details & destroy the texture if format changed.
-	// This is required for titles that use a non ARGB framebuffer, such as Beats of Rage
-	static ULONG PreviousAvDisplayModeFormat = -1;
 	static GLenum old_frame_gl_internal_format = GL_RGBA8;
 	static GLenum old_frame_gl_format = GL_BGRA;
 	static GLenum old_frame_gl_type = GL_UNSIGNED_INT_8_8_8_8_REV;
 	static GLsizei old_frame_width = 640;
 	static GLsizei old_frame_height = 480;
 
-	if (PreviousAvDisplayModeFormat != g_AvDisplayModeFormat) {
-		PreviousAvDisplayModeFormat = g_AvDisplayModeFormat;
+	// Derive display mode and bytes per pixel from actual hardware register contents:
+	// This is required for titles that use a non ARGB framebuffer, such as Beats of Rage
+	switch (d->prmcio.cr[NV_CIO_CRE_PIXEL_INDEX] & 0x03) {
+	case 0:
+		assert(false); // TODO : Verify this
+		display_mode_format = g_AvDisplayModeFormat;
+		// TODO : Remove g_AvDisplayModeFormat entirely
+		frame_pixel_bytes = 1; break;
+	case 1:
+		assert(false); // TODO : Verify this
+		display_mode_format = g_AvDisplayModeFormat;
+		frame_pixel_bytes = 1; break;
+	case 2:
+		if (d->pramdac.regs[NV_PRAMDAC_GENERAL_CONTROL & (NV_PRAMDAC_SIZE - 1)] & NV_PRAMDAC_GENERAL_CONTROL_ALT_MODE_SEL)
+			display_mode_format = NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_R5G6B5;
+		else
+			display_mode_format = NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_X1R5G5B5;
 
-		frame_gl_internal_format = kelvin_color_format_map[g_AvDisplayModeFormat].gl_internal_format;
-		frame_gl_format = kelvin_color_format_map[g_AvDisplayModeFormat].gl_format;
-		frame_gl_type = kelvin_color_format_map[g_AvDisplayModeFormat].gl_type;
-
-		AvGetFormatSize(AvpCurrentMode, &frame_width, &frame_height);
-		// Detect changes in framebuffer dimensions
-		if (old_frame_gl_internal_format != frame_gl_internal_format
-		 || old_frame_gl_format != frame_gl_format
-		 || old_frame_gl_type != frame_gl_type
-		 || old_frame_width != frame_width
-		 || old_frame_height != frame_height) {
-			old_frame_gl_internal_format = frame_gl_internal_format;
-			old_frame_gl_format = frame_gl_format;
-			old_frame_gl_type = frame_gl_type;
-			old_frame_width = frame_width;
-			old_frame_height = frame_height;
-			if (frame_gl_texture) {
-				glDeleteTextures(1, &frame_gl_texture);
-				frame_gl_texture = 0;
-			}
-		}
+		frame_pixel_bytes = 2; break;
+	case 3:
+		// Test-case : WWE RAW2
+		display_mode_format = NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_X8R8G8B8;
+		frame_pixel_bytes = 4; break;
 	}
 
-	int frame_pixel_bytes = d->prmcio.cr[NV_CIO_CRE_PIXEL_INDEX] & 0x03;
-	if (frame_pixel_bytes >= 2)	{
-		if (frame_pixel_bytes == 3) {
-			// Test-case : WWE RAW2
-			frame_pixel_bytes++;
-		}
+	// Convert displau format to OpenGl format details
+	frame_gl_internal_format = kelvin_color_format_map[display_mode_format].gl_internal_format;
+	frame_gl_format = kelvin_color_format_map[display_mode_format].gl_format;
+	frame_gl_type = kelvin_color_format_map[display_mode_format].gl_type;
 
-		// Test case : Arctic Thunder, sets a 16 bit framebuffer (R5G6B5) not via
-		// AvSetDisplayMode(), but via VGA control register writes, which implies
-		// that g_AvDisplayModeFormat cannot be used to determine the framebuffer
-		// width. Instead, read the framebuffer width from the VGA control registers :
-		frame_width = ((int)d->prmcio.cr[NV_CIO_CR_OFFSET_INDEX])
-			| (0x700 & ((int)d->prmcio.cr[NV_CIO_CRE_RPC0_INDEX] << 3))
-			| (0x800 & ((int)d->prmcio.cr[NV_CIO_CRE_LSR_INDEX] << 6));
-		frame_width *= 8;
-		frame_width /= frame_pixel_bytes;
+	// TODO : Replace the call to AvGetFormatSize() with deriving
+	// frame_height from hardware register(s)
+	AvGetFormatSize(AvpCurrentMode, &frame_width, &frame_height);
+
+	// Test case : Arctic Thunder, sets a 16 bit framebuffer (R5G6B5) not via
+	// AvSetDisplayMode(), but via VGA control register writes, which implies
+	// that g_AvDisplayModeFormat cannot be used to determine the framebuffer
+	// width. Instead, read the framebuffer width from the VGA control registers :
+	frame_width = ((int)d->prmcio.cr[NV_CIO_CR_OFFSET_INDEX])
+		| (0x700 & ((int)d->prmcio.cr[NV_CIO_CRE_RPC0_INDEX] << 3))
+		| (0x800 & ((int)d->prmcio.cr[NV_CIO_CRE_LSR_INDEX] << 6));
+	frame_width *= 8;
+	frame_width /= frame_pixel_bytes;
+
+	// Detect changes in framebuffer dimensions
+
+	if (old_frame_gl_internal_format != frame_gl_internal_format
+		|| old_frame_gl_format != frame_gl_format
+		|| old_frame_gl_type != frame_gl_type
+		|| old_frame_width != frame_width
+		|| old_frame_height != frame_height) {
+		old_frame_gl_internal_format = frame_gl_internal_format;
+		old_frame_gl_format = frame_gl_format;
+		old_frame_gl_type = frame_gl_type;
+		old_frame_width = frame_width;
+		old_frame_height = frame_height;
+		if (frame_gl_texture) {
+			// Destroy the texture if format changed
+			glDeleteTextures(1, &frame_gl_texture);
+			frame_gl_texture = 0;
+		}
 	}
 }
 
@@ -706,7 +723,7 @@ void cxbx_gl_render_framebuffer(NV2AState *d)
 	TextureShape s;
 	s.cubemap = false; // Note : Unused in upload_gl_texture GL_TEXTURE_2D path
 	s.dimensionality = 2; // Note : Unused in upload_gl_texture GL_TEXTURE_2D path
-	s.color_format = g_AvDisplayModeFormat;
+	s.color_format = display_mode_format;
 	s.levels = 1;
 	s.width = frame_width;
 	s.height = frame_height;
@@ -751,8 +768,17 @@ void cxbx_gl_render_framebuffer(NV2AState *d)
 		glTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_RGBA, cfi.gl_swizzle_mask);
 	}
 
-	// Note : The following is modelled partially after pgraph_update_surface()
-	// TODO : pgraph_update_surface() also unswizzles - should we too?
+#if 0 // old
+	// If we need to create an OpenGL framebuffer, do so
+	static GLuint framebuffer = -1;
+	if (framebuffer == -1) {
+		glGenFramebuffers(1, &framebuffer);
+		GL_CHECK();
+	}
+
+	// Target the actual framebuffer
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+#endif
 
 #ifdef DEBUG_NV2A_GL
 	// If the screen turns purple, glDrawArrays/glBlitFramebuffer below failed
@@ -762,6 +788,17 @@ void cxbx_gl_render_framebuffer(NV2AState *d)
 	GL_CHECK();
 #endif
 
+#if 0 // old
+	// Copy frame texture to an internal frame buffer
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, framebuffer);
+	glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, frame_gl_texture, /*level=*/0);
+	// Blit the active internal 'read' frame buffer to the actual 'draw' framebuffer
+	static const GLenum filter = GL_NEAREST;
+	// Note : dstY0 and dstY1 are swapped so the screen doesn't appear upside down
+	glBlitFramebuffer(0, 0, frame_width, frame_height, 0, frame_height, frame_width, 0, GL_COLOR_BUFFER_BIT, filter);
+	// Detach internal framebuffer
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+#else
 	// Draw frame texture to an internal frame buffer
 	glUseProgram(GetFramebufferShaderProgram());
 	GL_CHECK();
@@ -782,6 +819,7 @@ void cxbx_gl_render_framebuffer(NV2AState *d)
 		glGenBuffers(1, &m_framebuffer_gl_vertex_buffer_object);
 		GL_CHECK();
 	}
+
 	glBindBuffer(GL_ARRAY_BUFFER, m_framebuffer_gl_vertex_buffer_object);
 	GL_CHECK();
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_DYNAMIC_DRAW);
@@ -812,6 +850,7 @@ void cxbx_gl_render_framebuffer(NV2AState *d)
 	GL_CHECK();
 	glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 	GL_CHECK();
+#endif
 }
 
 void pvideo_init(NV2AState *d)
@@ -1038,22 +1077,22 @@ void NV2ADevice::UpdateHostDisplay(NV2AState *d)
 
 	NV2A_GL_DGROUP_BEGIN("VGA Frame");
 
+	cxbx_gl_update_displaymode(d);
+
+	for (int v = 0; v < 2; v++) {
+		cxbx_gl_parse_overlay(d, v);
+	}
+
 	GL_RESET();
 
 	// Target the host framebuffer
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0); // NOTE : If disabled, overlays don't show?!
 	GL_CHECK();
 	glDisable(GL_CULL_FACE);
 	GL_CHECK();
 	// Render using texture #0
 	glActiveTexture(GL_TEXTURE0);
 	GL_CHECK();
-
-	cxbx_gl_update_displaymode(d);
-
-	for (int v = 0; v < 2; v++) {
-		cxbx_gl_parse_overlay(d, v);
-	}
 
 	// Is either overlay fullscreen ?
 	if (d->pvideo.overlays[0].covers_framebuffer 
