@@ -1,4 +1,26 @@
 #pragma once
+
+// Mode enum values where:
+//
+//  0xC0000000 - output mode mask:
+//
+//    0x00000000 - 480 line SDTV
+//    0x40000000 - 525 line SDTV
+//    0x80000000 - HDTV
+//    0xC0000000 - VGA
+//
+//  0x10000000 - enable WSS (_16x9)
+//  0x20000000 - use SCART output (_RGB)
+//
+//  0x01000000 - disable DAC A
+//  0x02000000 - disable DAC B
+//  0x04000000 - disable DAC C
+//  0x08000000 - disable DAC D
+//
+//  0x00FF0000 - register table index
+//  0x0000FF00 - CRTC table index
+//  0x000000FF - TV table index, based on output mode mask above
+
 #define AV_MODE_TABLE_VERSION  0
 
 #define AV_MODE_OFF                                 0x00000000
@@ -109,8 +131,8 @@
 #define AV_MODE_FLAGS_DACC_DISABLE                  0x04000000
 #define AV_MODE_FLAGS_DACD_DISABLE                  0x08000000
 
-#define AV_MODE_FLAGS_WSS                           0x10000000
-#define AV_MODE_FLAGS_SCART                         0x20000000
+#define AV_MODE_FLAGS_WSS                           0x10000000 // _16x9
+#define AV_MODE_FLAGS_SCART                         0x20000000 // _RGB
 #define AV_MODE_FLAGS_NTSCJ                         0x00000080
 
 #define AV_MODE_OUT_MASK                            0xC0000000

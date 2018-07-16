@@ -66,7 +66,6 @@ namespace xboxkrnl
 #include "CxbxKrnl\EmuFS.h"
 #include "CxbxKrnl\EmuKrnl.h"
 #include "CxbxKrnl\HLEIntercept.h"
-#include "CxbxKrnl\EmuKrnlAvModes.h"
 
 #include "vga.h"
 #include "nv2a.h" // For NV2AState
@@ -329,25 +328,6 @@ const NV2ABlockInfo* EmuNV2A_Block(xbaddr addr)
 // we simulate VBLANK by calling the interrupt at 60Hz
 std::thread vblank_thread;
 extern std::chrono::time_point<std::chrono::steady_clock, std::chrono::duration<double, std::nano>> GetNextVBlankTime();
-
-extern ULONG AvpCurrentMode;		// Current AV Mode
-extern ULONG g_AvDisplayModeFormat;		// Current AV FrameBuffer Format
-
-void AvGetFormatSize(ULONG mode, int* width, int* height)
-{
-	// Iterate through the display mode table until we find a matching mode
-	for (unsigned int i = 0; i < g_DisplayModeCount; i++) {
-		if (g_DisplayModes[i].DisplayMode == mode) {
-			*width = g_DisplayModes[i].Width;
-			*height = g_DisplayModes[i].Height;
-			return;
-		}
-	}
-
-	// if we couldn't find a valid mode, fallback to 640x480
-	*width = 640;
-	*height = 480;
-}
 
 void _check_gl_reset()
 {
@@ -652,27 +632,37 @@ void cxbx_gl_update_displaymode(NV2AState *d) {
 
 	// Derive display mode and bytes per pixel from actual hardware register contents:
 	// This is required for titles that use a non ARGB framebuffer, such as Beats of Rage
+	bool alt_mode = d->pramdac.regs[NV_PRAMDAC_GENERAL_CONTROL & (NV_PRAMDAC_SIZE - 1)]
+		& NV_PRAMDAC_GENERAL_CONTROL_ALT_MODE_SEL;
 	switch (d->prmcio.cr[NV_CIO_CRE_PIXEL_INDEX] & 0x03) {
-	case 0:
+	case 1: // 8bpp
 		assert(false); // TODO : Verify this
-		display_mode_format = g_AvDisplayModeFormat;
-		// TODO : Remove g_AvDisplayModeFormat entirely
-		frame_pixel_bytes = 1; break;
-	case 1:
-		assert(false); // TODO : Verify this
-		display_mode_format = g_AvDisplayModeFormat;
-		frame_pixel_bytes = 1; break;
-	case 2:
-		if (d->pramdac.regs[NV_PRAMDAC_GENERAL_CONTROL & (NV_PRAMDAC_SIZE - 1)] & NV_PRAMDAC_GENERAL_CONTROL_ALT_MODE_SEL)
+		frame_pixel_bytes = 1;
+		break;
+	case 2: // 15 or 16 bpp
+		if (alt_mode) {
+			// Test case : Arctic Thunder
 			display_mode_format = NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_R5G6B5;
-		else
+		}
+		else {
 			display_mode_format = NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_X1R5G5B5;
+		}
 
-		frame_pixel_bytes = 2; break;
-	case 3:
-		// Test-case : WWE RAW2
-		display_mode_format = NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_X8R8G8B8;
-		frame_pixel_bytes = 4; break;
+		frame_pixel_bytes = 2;
+		break;
+	case 0: // VGA; Fall through
+	case 3: // 24 or 32 bpp
+		if (alt_mode) {
+			// Test-case : WWE RAW2
+			display_mode_format = NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_X8R8G8B8;
+		}
+		else {
+			// Test-case : XDK sample DolphinClassic (after VGA fall-through)
+			display_mode_format = NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_A8R8G8B8;
+		}
+
+		frame_pixel_bytes = 4;
+		break;
 	}
 
 	// Convert displau format to OpenGl format details
@@ -680,13 +670,9 @@ void cxbx_gl_update_displaymode(NV2AState *d) {
 	frame_gl_format = kelvin_color_format_map[display_mode_format].gl_format;
 	frame_gl_type = kelvin_color_format_map[display_mode_format].gl_type;
 
-	// TODO : Replace the call to AvGetFormatSize() with deriving
-	// frame_height from hardware register(s)
-	AvGetFormatSize(AvpCurrentMode, &frame_width, &frame_height);
-
 	// Test case : Arctic Thunder, sets a 16 bit framebuffer (R5G6B5) not via
 	// AvSetDisplayMode(), but via VGA control register writes, which implies
-	// that g_AvDisplayModeFormat cannot be used to determine the framebuffer
+	// that it's format argument cannot be used to determine the framebuffer
 	// width. Instead, read the framebuffer width from the VGA control registers :
 	frame_width = ((int)d->prmcio.cr[NV_CIO_CR_OFFSET_INDEX])
 		| (0x700 & ((int)d->prmcio.cr[NV_CIO_CRE_RPC0_INDEX] << 3))
@@ -694,8 +680,14 @@ void cxbx_gl_update_displaymode(NV2AState *d) {
 	frame_width *= 8;
 	frame_width /= frame_pixel_bytes;
 
-	// Detect changes in framebuffer dimensions
+	// Derive frame_height from hardware registers
+	frame_height = ((int)d->prmcio.cr[NV_CIO_CR_VDE_INDEX])
+		| (((int)d->prmcio.cr[NV_CIO_CR_OVL_INDEX] & 0x02) >> 1 << 8)
+		| (((int)d->prmcio.cr[NV_CIO_CR_OVL_INDEX] & 0x40) >> 6 << 9)
+		| (((int)d->prmcio.cr[NV_CIO_CRE_LSR_INDEX] & 0x02) >> 1 << 10);
+	frame_height++;
 
+	// Detect changes in framebuffer dimensions
 	if (old_frame_gl_internal_format != frame_gl_internal_format
 		|| old_frame_gl_format != frame_gl_format
 		|| old_frame_gl_type != frame_gl_type
@@ -708,6 +700,7 @@ void cxbx_gl_update_displaymode(NV2AState *d) {
 		old_frame_height = frame_height;
 		if (frame_gl_texture) {
 			// Destroy the texture if format changed
+			// Test case : XDK sample DolphinClassic
 			glDeleteTextures(1, &frame_gl_texture);
 			frame_gl_texture = 0;
 		}
@@ -768,7 +761,8 @@ void cxbx_gl_render_framebuffer(NV2AState *d)
 		glTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_RGBA, cfi.gl_swizzle_mask);
 	}
 
-#if 0 // old
+//#define BLIT_FRAMEBUFFER
+#ifdef BLIT_FRAMEBUFFER
 	// If we need to create an OpenGL framebuffer, do so
 	static GLuint framebuffer = -1;
 	if (framebuffer == -1) {
@@ -788,7 +782,7 @@ void cxbx_gl_render_framebuffer(NV2AState *d)
 	GL_CHECK();
 #endif
 
-#if 0 // old
+#ifdef BLIT_FRAMEBUFFER
 	// Copy frame texture to an internal frame buffer
 	glBindFramebuffer(GL_READ_FRAMEBUFFER, framebuffer);
 	glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, frame_gl_texture, /*level=*/0);

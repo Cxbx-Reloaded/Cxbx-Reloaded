@@ -256,9 +256,6 @@ XBSYSAPI EXPORTNUM(2) VOID NTAPI xboxkrnl::AvSendTVEncoderOption
 	}
 }
 
-// Cached Display Mode format, used by NV2A to deermine framebuffer format
-ULONG g_AvDisplayModeFormat = 0;
-
 // ******************************************************************
 // * 0x0003 - AvSetDisplayMode()
 // ******************************************************************
@@ -313,10 +310,6 @@ XBSYSAPI EXPORTNUM(3) xboxkrnl::ULONG NTAPI xboxkrnl::AvSetDisplayMode
 		break;
 	}
 
-	// HACK: Store D3D format that was set, so we can decode it in nv2a swap
-	// TODO: Fix this so nv2a state is used to get these values...
-	g_AvDisplayModeFormat = Format;
-
 	Pitch /= 8;
 
 	if (AvpCurrentMode == Mode) {
@@ -329,7 +322,6 @@ XBSYSAPI EXPORTNUM(3) xboxkrnl::ULONG NTAPI xboxkrnl::AvSetDisplayMode
 
 		AvSendTVEncoderOption(RegisterBase, AV_OPTION_FLICKER_FILTER, 5, NULL);
 		AvSendTVEncoderOption(RegisterBase, AV_OPTION_ENABLE_LUMA_FILTER, FALSE, NULL);
-		AvpCurrentMode = Mode;
 
 		RETURN(STATUS_SUCCESS);
 	}
