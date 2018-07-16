@@ -34,7 +34,7 @@
 #ifndef VERTEXBUFFER_H
 #define VERTEXBUFFER_H
 
-#include "Cxbx.h"
+#include "CxbxCommon.h"
 //#include <ctime> // Conflict with io.h
 
 #define MAX_NBR_STREAMS 16

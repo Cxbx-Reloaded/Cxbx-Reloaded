@@ -34,7 +34,7 @@
 #ifndef EMUX86_H
 #define EMUX86_H
 
-#include "Cxbx.h"
+#include "CxbxCommon.h"
 #include <cstdint>
 #include <windows.h>
 

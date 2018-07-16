@@ -36,7 +36,7 @@
 
 #pragma once
 
-#include "Cxbx.h"
+#include "CxbxCommon.h"
 
 // dump pixel shader definition to file
 void DumpPixelShaderDefToFile( X_D3DPIXELSHADERDEF* pPSDef, const char* pszCode );

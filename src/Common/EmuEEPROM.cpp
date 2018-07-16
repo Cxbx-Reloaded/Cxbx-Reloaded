@@ -44,7 +44,7 @@ namespace xboxkrnl
 #include <stdio.h> // For printf
 #include <shlobj.h> // For HANDLE, CreateFile, CreateFileMapping, MapViewOfFile
 
-#include "Cxbx.h" // For DbgPrintf
+#include "CxbxCommon.h" // For DbgPrintf
 #include "EmuEEPROM.h" // For EEPROMInfo, EEPROMInfos
 #include "..\CxbxKrnl\Emu.h" // For EmuWarning
 #include "..\..\src\devices\LED.h" // For SetLEDSequence

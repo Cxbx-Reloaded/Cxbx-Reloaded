@@ -34,7 +34,7 @@
 #ifndef VERTEXSHADER_H
 #define VERTEXSHADER_H
 
-#include "Cxbx.h"
+#include "CxbxCommon.h"
 
 // nv2a microcode header
 typedef struct

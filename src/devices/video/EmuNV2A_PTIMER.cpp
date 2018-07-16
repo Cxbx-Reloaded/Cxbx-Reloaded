@@ -39,7 +39,7 @@
 // *
 // ******************************************************************
 
-#include "Cxbx.h"
+#include "CxbxCommon.h"
 
 /* PTIMER - time measurement and time-based alarms */
 static uint64_t ptimer_get_clock(NV2AState * d)

@@ -40,7 +40,7 @@
 #include <sstream> // For std::stringstream
 #include <iostream> // For std::cout
 #include <iomanip> // For std::setw
-#include "Cxbx.h" // For g_bPrintfOn
+#include "CxbxCommon.h" // For g_bPrintfOn
 
 
 //

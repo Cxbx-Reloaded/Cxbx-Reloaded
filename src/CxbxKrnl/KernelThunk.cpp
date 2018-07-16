@@ -41,7 +41,7 @@ namespace xboxkrnl
     #include <xboxkrnl/xboxkrnl.h>
 };
 
-#include "Cxbx.h" // For CxbxKrnl_KernelThunkTable
+#include "CxbxCommon.h" // For CxbxKrnl_KernelThunkTable
 #include "CxbxKrnl.h" // For UINT
 
 #define FUNC(f) f

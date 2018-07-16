@@ -34,7 +34,7 @@
 #ifndef DBGCONSOLE_H
 #define DBGCONSOLE_H
 
-#include "Cxbx.h"
+#include "CxbxCommon.h"
 
 // debug console input
 class DbgConsole
