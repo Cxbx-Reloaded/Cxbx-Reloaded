@@ -37,7 +37,7 @@
 #include "XidGamepad.h"
 #include "USBDevice.h"
 
-#define LOG_STR_GAMEPAD "Gamepad"
+#define LOG_STR_GAMEPAD "Gamepad:"
 
 #define USB_CLASS_XID  0x58
 #define USB_DT_XID     0x42
@@ -90,7 +90,6 @@ struct USBXIDState {
 
 	const XIDDesc* xid_desc;            // xid-specific descriptor
 
-	//QEMUPutKbdEntry *kbd_entry;
 	bool in_dirty;                      // indicates a change in the button's state
 	XIDGamepadReport in_state;          // Get_Report struct
 	XIDGamepadOutputReport out_state;   // Ser_Report struct
@@ -273,7 +272,6 @@ int XidGamepad::UsbXid_Initfn(XboxDeviceState* dev)
 
 	m_XidState->in_state.bLength = sizeof(m_XidState->in_state);
 	m_XidState->out_state.length = sizeof(m_XidState->out_state);
-	//m_XidState->kbd_entry = qemu_add_kbd_event_handler(xbox_gamepad_keyboard_event, m_XidState); TODO
 	m_XidState->xid_desc = &desc_xid_xbox_gamepad;
 
 	return 0;

@@ -309,6 +309,12 @@
     <ClCompile Include="..\..\src\Common\Win32\InlineFunc.cpp">
       <Filter>Cross Platform\Win32</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\Common\Input\InputConfig.cpp">
+      <Filter>Shared\Input</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\Common\Input\SDL2_Device.cpp">
+      <Filter>Shared\Input</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\Cxbx\DlgControllerConfig.h">
@@ -605,6 +611,12 @@
     <ClInclude Include="..\..\src\Common\Win32\XBPortMapping.h">
       <Filter>Emulator</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\Common\Input\InputConfig.h">
+      <Filter>Shared\Input</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Common\Input\SDL2_Device.h">
+      <Filter>Shared\Input</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\resource\Splash.jpg">
@@ -734,6 +746,9 @@
     </Filter>
     <Filter Include="Cross Platform\Linux">
       <UniqueIdentifier>{3d3739b8-aeee-4bf1-ac1b-8623e7288dda}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shared\Input">
+      <UniqueIdentifier>{76faeca9-d66f-43fb-9efa-ffb0668f8843}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

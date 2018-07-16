@@ -140,15 +140,15 @@
 /* Bitfields for the first word of an Isochronous Transfer Desciptor.  */
 /* CC & DI - same as in the General Transfer Desciptor */
 #define OHCI_TD_SF_SHIFT  0
-#define OHCI_TD_SF_MASK   (0xffff<<OHCI_TD_SF_SHIFT)
+#define OHCI_TD_SF_MASK   (0xFFFF<<OHCI_TD_SF_SHIFT)
 #define OHCI_TD_FC_SHIFT  24
 #define OHCI_TD_FC_MASK   (7<<OHCI_TD_FC_SHIFT)
 
 /* Isochronous Transfer Desciptor - Offset / PacketStatusWord */
 #define OHCI_TD_PSW_CC_SHIFT 12
-#define OHCI_TD_PSW_CC_MASK  (0xf<<OHCI_TD_PSW_CC_SHIFT)
+#define OHCI_TD_PSW_CC_MASK  (0xF<<OHCI_TD_PSW_CC_SHIFT)
 #define OHCI_TD_PSW_SIZE_SHIFT 0
-#define OHCI_TD_PSW_SIZE_MASK  (0xfff<<OHCI_TD_PSW_SIZE_SHIFT)
+#define OHCI_TD_PSW_SIZE_MASK  (0xFFF<<OHCI_TD_PSW_SIZE_SHIFT)
 
 /* Mask the four least significant bits in an ED address */
 #define OHCI_DPTR_MASK    0xFFFFFFF0
