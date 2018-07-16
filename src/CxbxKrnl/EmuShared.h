@@ -52,6 +52,7 @@ enum {
 	LLE_APU = 1 << 0,
 	LLE_GPU = 1 << 1,
 	LLE_JIT = 1 << 2,
+	LLE_USB = 1 << 3,
 };
 
 // Kernel boot flags

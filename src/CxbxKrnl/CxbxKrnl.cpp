@@ -567,6 +567,7 @@ void PrintCurrentConfigurationLog()
 		printf("---------------------------- LLE CONFIG ----------------------------\n");
 		printf("LLE for APU is %s\n", bLLE_APU ? "enabled" : "disabled");
 		printf("LLE for GPU is %s\n", bLLE_GPU ? "enabled" : "disabled");
+		printf("LLE for USB is %s\n", bLLE_USB ? "enabled" : "disabled");
 		printf("LLE for JIT is %s\n", bLLE_JIT ? "enabled" : "disabled");
 	}
 
@@ -1296,6 +1297,7 @@ __declspec(noreturn) void CxbxKrnlInit
 		g_EmuShared->GetFlagsLLE(&CxbxLLE_Flags);
 		bLLE_APU = (CxbxLLE_Flags & LLE_APU) > 0;
 		bLLE_GPU = (CxbxLLE_Flags & LLE_GPU) > 0;
+		bLLE_USB = (CxbxLLE_Flags & LLE_USB) > 0;
 		bLLE_JIT = (CxbxLLE_Flags & LLE_JIT) > 0;
 	}
 
