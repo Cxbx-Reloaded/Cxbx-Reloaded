@@ -289,9 +289,13 @@ VOID WINAPI XTL::EMUPATCH(XInitDevices)
         g_hInputHandle[v] = 0;
     }
 */
-
-	InitXboxControllerHostBridge();
-
+	if (bLLE_USB) {
+		XB_trampoline(VOID, WINAPI, XInitDevices, (DWORD, PXDEVICE_PREALLOC_TYPE));
+		XB_XInitDevices(dwPreallocTypeCount, PreallocTypes);
+	}
+	else {
+		InitXboxControllerHostBridge();
+	}
 }
 
 bool TitleIsJSRF()
@@ -394,6 +398,11 @@ DWORD WINAPI XTL::EMUPATCH(XGetDevices)
 
 	LOG_FUNC_ONE_ARG(DeviceType);
 
+	if (bLLE_USB) {
+		XB_trampoline(DWORD, WINAPI, XGetDevices, (PXPP_DEVICE_TYPE));
+		RETURN(XB_XGetDevices(DeviceType));
+	}
+
 	UCHAR oldIrql = xboxkrnl::KeRaiseIrqlToDpcLevel();
 
 	DWORD ret = DeviceType->CurrentConnected;
@@ -446,6 +455,11 @@ BOOL WINAPI XTL::EMUPATCH(XGetDeviceChanges)
 		LOG_FUNC_ARG(pdwInsertions)
 		LOG_FUNC_ARG(pdwRemovals)
 	LOG_FUNC_END;
+
+	if (bLLE_USB) {
+		XB_trampoline(BOOL, WINAPI, XGetDeviceChanges, (PXPP_DEVICE_TYPE, PDWORD, PDWORD));
+		RETURN(XB_XGetDeviceChanges(DeviceType, pdwInsertions, pdwRemovals));
+	}
 
 	BOOL ret = FALSE;
     
@@ -521,6 +535,11 @@ HANDLE WINAPI XTL::EMUPATCH(XInputOpen)
 		LOG_FUNC_ARG(dwSlot)
 		LOG_FUNC_ARG(pPollingParameters)
 		LOG_FUNC_END;
+
+	if (bLLE_USB) {
+		XB_trampoline(HANDLE, WINAPI, XInputOpen, (PXPP_DEVICE_TYPE, DWORD, DWORD, PX_XINPUT_POLLING_PARAMETERS));
+		RETURN(XB_XInputOpen(DeviceType, dwPort, dwSlot, pPollingParameters));
+	}
 
     X_POLLING_PARAMETERS_HANDLE *pph = 0;
     //OLD_XINPUT
@@ -624,6 +643,12 @@ VOID WINAPI XTL::EMUPATCH(XInputClose)
 
 	LOG_FUNC_ONE_ARG(hDevice);
 
+	if (bLLE_USB) {
+		XB_trampoline(VOID, WINAPI, XInputClose, (HANDLE));
+		XB_XInputClose(hDevice);
+		return;
+	}
+
     X_POLLING_PARAMETERS_HANDLE *pph = (X_POLLING_PARAMETERS_HANDLE*)hDevice;
 	DWORD dwPort = pph->dwPort;
 	//NULL out the input handle corresponds to port.
@@ -676,6 +701,12 @@ DWORD WINAPI XTL::EMUPATCH(XInputPoll)
 	FUNC_EXPORTS
 
 	LOG_FUNC_ONE_ARG(hDevice);
+
+	if (bLLE_USB) {
+		XB_trampoline(DWORD, WINAPI, XInputPoll, (HANDLE));
+		RETURN(XB_XInputPoll(hDevice));
+	}
+
     //OLD_XINPUT
 /*    X_POLLING_PARAMETERS_HANDLE *pph = (X_POLLING_PARAMETERS_HANDLE*)hDevice;
 
@@ -753,6 +784,11 @@ DWORD WINAPI XTL::EMUPATCH(XInputGetCapabilities)
 		LOG_FUNC_ARG(hDevice)
 		LOG_FUNC_ARG_OUT(pCapabilities)
 		LOG_FUNC_END;
+
+	if (bLLE_USB) {
+		XB_trampoline(DWORD, WINAPI, XInputGetCapabilities, (HANDLE, PX_XINPUT_CAPABILITIES));
+		RETURN(XB_XInputGetCapabilities(hDevice, pCapabilities));
+	}
 
     DWORD ret = ERROR_DEVICE_NOT_CONNECTED;
 
@@ -1034,6 +1070,11 @@ DWORD WINAPI XTL::EMUPATCH(XInputGetState)
 		LOG_FUNC_ARG_OUT(pState)
 		LOG_FUNC_END;
 
+	if (bLLE_USB) {
+		XB_trampoline(DWORD, WINAPI, XInputGetState, (HANDLE, PX_XINPUT_STATE));
+		RETURN(XB_XInputGetState(hDevice, pState));
+	}
+
     DWORD ret = ERROR_INVALID_HANDLE;
     //OLD_XINPUT
     /*
@@ -1124,6 +1165,11 @@ DWORD WINAPI XTL::EMUPATCH(XInputSetState)
 		LOG_FUNC_ARG(hDevice)
 		LOG_FUNC_ARG(pFeedback)
 		LOG_FUNC_END;
+
+	if (bLLE_USB) {
+		XB_trampoline(DWORD, WINAPI, XInputSetState, (HANDLE, PX_XINPUT_FEEDBACK));
+		RETURN(XB_XInputSetState(hDevice, pFeedback));
+	}
 
     DWORD ret = ERROR_IO_PENDING;
     //OLD_XINPUT
@@ -1902,6 +1948,11 @@ DWORD WINAPI XTL::EMUPATCH(XGetDeviceEnumerationStatus)()
 
 	LOG_FUNC();
 
+	if (bLLE_USB) {
+		XB_trampoline(DWORD, WINAPI, XGetDeviceEnumerationStatus, ());
+		RETURN(XB_XGetDeviceEnumerationStatus());
+	}
+
 	LOG_UNIMPLEMENTED();
 
 	RETURN(XDEVICE_ENUMERATION_IDLE);
@@ -1922,6 +1973,11 @@ DWORD WINAPI XTL::EMUPATCH(XInputGetDeviceDescription)
 		LOG_FUNC_ARG(hDevice)
 		LOG_FUNC_ARG(pDescription)
 		LOG_FUNC_END;
+
+	if (bLLE_USB) {
+		XB_trampoline(DWORD, WINAPI, XInputGetDeviceDescription, (HANDLE, PVOID));
+		RETURN(XB_XInputGetDeviceDescription(hDevice, pDescription));
+	}
 
 	// TODO: Lightgun support?
 	LOG_UNIMPLEMENTED();
