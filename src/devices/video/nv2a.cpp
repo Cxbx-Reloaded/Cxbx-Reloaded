@@ -793,7 +793,7 @@ void cxbx_gl_render_framebuffer(NV2AState *d)
 	// Detach internal framebuffer
 	glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
 #else
-	// Draw frame texture to an internal frame buffer
+	// Draw frame texture to host frame buffer
 	glUseProgram(GetFramebufferShaderProgram());
 	GL_CHECK();
 	glUniform1i(m_framebuffer_gl_uniform_location_texture, SAMP_TEXCOORD);
