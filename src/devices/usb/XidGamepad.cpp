@@ -176,12 +176,12 @@ XIDDesc::XIDDesc()
 
 static const XIDDesc desc_xid_xbox_gamepad;
 
-int XidGamepad::Init(int pport)
+int XidGamepad::Init(int port)
 {
-	if (pport > 4 || pport < 1) { return -1; };
+	if (port > 4 || port < 1) { return -1; };
 
 	XboxDeviceState* dev = ClassInitFn();
-	int rc = UsbXidClaimPort(dev, pport);
+	int rc = UsbXidClaimPort(dev, port);
 	if (rc != 0) {
 		return rc;
 	}
@@ -218,21 +218,19 @@ XboxDeviceState* XidGamepad::ClassInitFn()
 	return dev;
 }
 
-int XidGamepad::UsbXidClaimPort(XboxDeviceState* dev, int pport)
+int XidGamepad::UsbXidClaimPort(XboxDeviceState* dev, int port)
 {
 	int i;
-	int usb_port;
 	int port_offset;
 	std::vector<USBPort*>::iterator it;
 
 	assert(dev->Port == nullptr);
 
-	usb_port = PlayerToUsbArray[pport];
 	for (int j = 0; j < 4; j++) {
 		if (g_HubObjArray[j]) {
 			i = 0;
-			for (auto port : g_HubObjArray[j]->m_UsbDev->m_FreePorts) {
-				if (port->Path == (std::to_string(usb_port) + ".2")) {
+			for (auto usb_port : g_HubObjArray[j]->m_UsbDev->m_FreePorts) {
+				if (usb_port->Path == (std::to_string(port) + ".2")) {
 					m_UsbDev = g_HubObjArray[j]->m_UsbDev;
 					break;
 				}
@@ -241,7 +239,7 @@ int XidGamepad::UsbXidClaimPort(XboxDeviceState* dev, int pport)
 		}
 	}
 	if (m_UsbDev == nullptr) {
-		EmuWarning("Port requested %d.%d not found (in use?)", usb_port, 2);
+		EmuWarning("Port requested %d.%d not found (in use?)", port, 2);
 		return -1;
 	}
 	it = m_UsbDev->m_FreePorts.begin() + i;

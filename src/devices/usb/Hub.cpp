@@ -81,15 +81,6 @@
 extern USBDevice* g_USB0;
 extern USBDevice* g_USB1;
 
-// This array is used to translate an xbox player to the corresponding usb port
-// The port associations are taken from XQEMU
-int PlayerToUsbArray[] = {
-	-1,
-	3,
-	4,
-	1,
-	2,
-};
 
 struct USBHubPort {
 	USBPort port;          // downstream port status
@@ -177,12 +168,12 @@ static const uint8_t HubDescriptor[] =
 	0xFF,           //  u8  PortPwrCtrlMask; all 1's for compatibility reasons
 };
 
-int Hub::Init(int pport)
+int Hub::Init(int port)
 {
-	if (pport > 4 || pport < 1) { return -1; };
+	if (port > 4 || port < 1) { return -1; };
 
 	XboxDeviceState* dev = ClassInitFn();
-    int rc = UsbHubClaimPort(dev, pport);
+    int rc = UsbHubClaimPort(dev, port);
     if (rc != 0) {
         return rc;
     }
@@ -219,30 +210,28 @@ XboxDeviceState* Hub::ClassInitFn()
 	return dev;
 }
 
-int Hub::UsbHubClaimPort(XboxDeviceState* dev, int pport)
+int Hub::UsbHubClaimPort(XboxDeviceState* dev, int port)
 {
 	int i;
-	int usb_port;
 	std::vector<USBPort*>::iterator it;
 
 	assert(dev->Port == nullptr);
 
 	i = 0;
-	usb_port = PlayerToUsbArray[pport];
-	if (usb_port > 2) {
+	if (port > 2) {
 		m_UsbDev = g_USB0;
 	}
 	else {
 		m_UsbDev = g_USB1;
 	}
-	for (auto port : m_UsbDev->m_FreePorts) {
-		if (port->Path == std::to_string(usb_port)) {
+	for (auto usb_port : m_UsbDev->m_FreePorts) {
+		if (usb_port->Path == std::to_string(port)) {
 			break;
 		}
 		i++;
 	}
 	if (i == 2) {
-		EmuWarning("Port requested %d not found (in use?)", usb_port);
+		EmuWarning("Port requested %d not found (in use?)", port);
 		return -1;
 	}
 	it = m_UsbDev->m_FreePorts.begin() + i;

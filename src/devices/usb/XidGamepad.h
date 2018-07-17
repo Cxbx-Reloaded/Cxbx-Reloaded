@@ -48,7 +48,7 @@ class XidGamepad
 {
 	public:
 		// initialize this peripheral
-		int Init(int pport);
+		int Init(int port);
 		// destroy gamepad resources
 		void XidCleanUp();
 
@@ -64,7 +64,7 @@ class XidGamepad
 		// initialize various member variables/functions
 		XboxDeviceState* ClassInitFn();
 		// reserve a usb port for this gamepad
-		int UsbXidClaimPort(XboxDeviceState* dev, int pport);
+		int UsbXidClaimPort(XboxDeviceState* dev, int port);
 		// free the usb port used by this gamepad
 		void UsbXidReleasePort(XboxDeviceState* dev);
 		// see USBDeviceClass for comments about these functions

@@ -51,7 +51,7 @@ class Hub
 		USBDevice* m_UsbDev = nullptr;
 
 		// initialize this peripheral
-		int Init(int pport);
+		int Init(int port);
 		// destroy hub resources
 		void HubCleanUp();
 		
@@ -87,6 +87,5 @@ class Hub
 };
 
 extern Hub* g_HubObjArray[4];
-extern int PlayerToUsbArray[5];
 
 #endif
