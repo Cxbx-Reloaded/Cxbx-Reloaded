@@ -75,6 +75,14 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		return EXIT_FAILURE;
 	}
 
+	bool bElevated = CxbxIsElevated();
+
+	if (bElevated) {
+		if (IsNewProcessLaunched()) {
+			ExitProcess(0);
+		}
+	}
+
 	/*! initialize shared memory */
 	EmuShared::Init();
 
@@ -83,7 +91,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     /* check if process is launch with elevated access then prompt for continue on or not. */
 	if (!bFirstLaunch) {
-		bool bElevated = CxbxIsElevated();
 		if (bElevated && !bFirstLaunch) {
 			int ret = MessageBox(NULL, "Cxbx-Reloaded has detected that it has been launched with Administrator rights.\n"
 								"\nThis is dangerous, as a maliciously modified Xbox titles could take control of your system.\n"

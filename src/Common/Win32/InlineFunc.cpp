@@ -37,6 +37,8 @@
 #if defined(_WIN32) || defined(WIN32)
 
 #include "..\..\CxbxKrnl\CxbxKrnl.h"
+#include <WinSafer.h> // For the Safer API functions
+#include <sddl.h> // For ConvertStringSidToSid
 
 // Source: https://stackoverflow.com/questions/8046097/how-to-check-if-a-process-has-the-administrative-rights
 bool CxbxIsElevated() {
@@ -53,6 +55,72 @@ bool CxbxIsElevated() {
 		CloseHandle(hToken);
 	}
 	return fRet;
+}
+
+// Source: https://stackoverflow.com/questions/16099787/removing-administrator-privilages-from-process
+bool IsNewProcessLaunched()
+{
+	// Create the restricted token.
+
+	SAFER_LEVEL_HANDLE hLevel = NULL;
+	if (!SaferCreateLevel(SAFER_SCOPEID_USER, SAFER_LEVELID_NORMALUSER, SAFER_LEVEL_OPEN, &hLevel, NULL))
+	{
+		return false;
+	}
+
+	HANDLE hRestrictedToken = NULL;
+	if (!SaferComputeTokenFromLevel(hLevel, NULL, &hRestrictedToken, 0, NULL))
+	{
+		SaferCloseLevel(hLevel);
+		return false;
+	}
+
+	SaferCloseLevel(hLevel);
+
+	// Set the token to medium integrity.
+
+	TOKEN_MANDATORY_LABEL tml = { 0 };
+	tml.Label.Attributes = SE_GROUP_INTEGRITY;
+	// alternatively, use CreateWellKnownSid(WinMediumLabelSid) instead...
+	if (!ConvertStringSidToSid(TEXT("S-1-16-8192"), &(tml.Label.Sid)))
+	{
+		CloseHandle(hRestrictedToken);
+		return false;
+	}
+
+	if (!SetTokenInformation(hRestrictedToken, TokenIntegrityLevel, &tml, sizeof(tml) + GetLengthSid(tml.Label.Sid)))
+	{
+		LocalFree(tml.Label.Sid);
+		CloseHandle(hRestrictedToken);
+		return false;
+	}
+
+	LocalFree(tml.Label.Sid);
+
+	// Create startup info
+
+	STARTUPINFO si = { 0 };
+	si.cb = sizeof(si);
+	si.lpDesktop = "winsta0\\default";
+
+	PROCESS_INFORMATION pi = { 0 };
+
+	// Get the current executable's name
+	TCHAR exePath[MAX_PATH + 1] = { 0 };
+	GetModuleFileName(NULL, exePath, MAX_PATH);
+
+	// Start the new (non-elevated) restricted process
+	if (!CreateProcessAsUser(hRestrictedToken, exePath, NULL, NULL, NULL, TRUE, NORMAL_PRIORITY_CLASS, NULL, NULL, &si, &pi))
+	{
+		CloseHandle(hRestrictedToken);
+		return false;
+	}
+
+	CloseHandle(hRestrictedToken);
+	CloseHandle(pi.hThread);
+	CloseHandle(pi.hProcess);
+
+	return true;
 }
 
 bool CxbxExec(std::string &execCommand, HANDLE* hProcess, bool requestHandleProcess) {

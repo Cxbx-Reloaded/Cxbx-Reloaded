@@ -297,6 +297,8 @@ bool CxbxExec(std::string &execCommand, HANDLE* hProcess, bool requestHandleProc
 
 bool CxbxIsElevated();
 
+bool IsNewProcessLaunched();
+
 /*! kernel thunk table */
 extern uint32 CxbxKrnl_KernelThunkTable[379];
 
