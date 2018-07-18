@@ -35,6 +35,7 @@
 // ******************************************************************
 
 #include "Xbox.h" // For HardwareModel
+#include "..\CxbxKrnl\HLEIntercept.h"
 
 PCIBus* g_PCIBus;
 SMBus* g_SMBus;
@@ -130,8 +131,10 @@ void InitXboxHardware(HardwareModel hardwareModel)
 	g_NVNet = new NVNetDevice();
 	g_NV2A = new NV2ADevice();
 	g_ADM1032 = new ADM1032Device();
-	g_USB0 = new USBDevice();
-	g_USB1 = new USBDevice();
+	if (bLLE_USB) {
+		g_USB0 = new USBDevice();
+		g_USB1 = new USBDevice();
+	}
 
 	// Connect devices to SM bus
 	g_SMBus->ConnectDevice(SMBUS_ADDRESS_SYSTEM_MICRO_CONTROLLER, g_SMC); // W 0x20 R 0x21
@@ -160,8 +163,10 @@ void InitXboxHardware(HardwareModel hardwareModel)
 	//g_PCIBus->ConnectDevice(PCI_DEVID(0, PCI_DEVFN(5, 0)), g_NVAPU);
 	//g_PCIBus->ConnectDevice(PCI_DEVID(0, PCI_DEVFN(6, 0)), g_AC97);
 	g_PCIBus->ConnectDevice(PCI_DEVID(1, PCI_DEVFN(0, 0)), g_NV2A, NV2A_ADDR);
-	g_PCIBus->ConnectDevice(PCI_DEVID(0, PCI_DEVFN(2, 0)), g_USB0, USB0_BASE);
-	g_PCIBus->ConnectDevice(PCI_DEVID(0, PCI_DEVFN(3, 0)), g_USB1, USB1_BASE);
+	if (bLLE_USB) {
+		g_PCIBus->ConnectDevice(PCI_DEVID(0, PCI_DEVFN(2, 0)), g_USB0, USB0_BASE);
+		g_PCIBus->ConnectDevice(PCI_DEVID(0, PCI_DEVFN(3, 0)), g_USB1, USB1_BASE);
+	}
 
 	// TODO : Handle other SMBUS Addresses, like PIC_ADDRESS, XCALIBUR_ADDRESS
 	// Resources : http://pablot.com/misc/fancontroller.cpp

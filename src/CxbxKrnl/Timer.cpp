@@ -34,7 +34,9 @@
 // *
 // ******************************************************************
 
+#ifdef _WIN32
 #include <windows.h>
+#endif
 #include <thread>
 #include <vector>
 #include "Timer.h"
@@ -107,6 +109,10 @@ void ClockThread(TimerObject* Timer)
 				return;
 			}
 			Timer->Callback(Timer->Opaque);
+			if (Timer->Exit.load()) {
+				Timer_Destroy(Timer);
+				return;
+			}
 			NewExpireTime = GetNextExpireTime(Timer);
 		}
 	}

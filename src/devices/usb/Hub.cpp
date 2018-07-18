@@ -81,6 +81,8 @@
 extern USBDevice* g_USB0;
 extern USBDevice* g_USB1;
 
+Hub* g_HubObjArray[4] = { nullptr };
+
 
 struct USBHubPort {
 	USBPort port;          // downstream port status
@@ -688,4 +690,12 @@ void Hub::HubCleanUp()
 	delete m_HubState;
 	m_pPeripheralFuncStruct = nullptr;
 	m_HubState = nullptr;
+}
+
+void Hub::HubDestroy()
+{
+	while (m_UsbDev->m_HostController->m_bFrameTime) {}
+	m_UsbDev->m_HostController->m_bFrameTime = true;
+	m_pPeripheralFuncStruct->handle_destroy();
+	m_UsbDev->m_HostController->m_bFrameTime = false;
 }

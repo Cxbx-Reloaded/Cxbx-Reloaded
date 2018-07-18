@@ -35,7 +35,12 @@
 // ******************************************************************
 
 #include "InputConfig.h"
+#include "..\devices\usb\XidGamepad.h"
+#include "..\..\CxbxKrnl\EmuKrnl.h" // For EmuWarning
+#include <thread>
 
+
+InputDeviceManager* g_InputDeviceManager = nullptr;
 
 InputDeviceManager::InputDeviceManager()
 {
@@ -53,6 +58,7 @@ InputDeviceManager::~InputDeviceManager()
 int InputDeviceManager::EnumSdl2Devices()
 {
 	int NumOfJoysticks;
+	int NumInvalidJoysticks;
 	SDL2Devices* pDev;
 	SDL_GameController* pController;
 	std::vector<SDL2Devices*>::iterator it;
@@ -60,16 +66,19 @@ int InputDeviceManager::EnumSdl2Devices()
 	NumOfJoysticks = SDL_NumJoysticks();
 	if (NumOfJoysticks < 0) {
 		EmuWarning("Failed to enumerate joysticks. The error was: %s", SDL_GetError());
-		return -1;
+		return 0;
 	}
-	SDL_GameControllerButtonBind;
+
+	NumInvalidJoysticks = 0;
+
 	for (int i = 0; i < NumOfJoysticks; i++) {
 		if (SDL_IsGameController(i)) {
 			pDev = new SDL2Devices();
 			pDev->m_Index = i;
 			m_Sdl2Devices.push_back(pDev);
 		}
-		// this joystick not supported at the moment
+		// this joystick is not supported at the moment
+		NumInvalidJoysticks++;
 	}
 
 	for (it = m_Sdl2Devices.begin(); it != m_Sdl2Devices.end();) {
@@ -78,13 +87,153 @@ int InputDeviceManager::EnumSdl2Devices()
 			EmuWarning("Failed to open game controller %s. The error was %s\n", SDL_GameControllerNameForIndex((*it)->m_Index), SDL_GetError());
 			delete (*it);
 			it = m_Sdl2Devices.erase(it);
+			NumInvalidJoysticks++;
 		}
 		else {
 			printf("Found game controller %s\n", SDL_GameControllerName(pController));
 			(*it)->m_Gamepad = pController;
 			(*it)->m_jyID = SDL_JoystickInstanceID(SDL_GameControllerGetJoystick(pController));
+			(*it)->m_Attached = 1;
 			++it;
 		}
+	}
+
+	return NumOfJoysticks - NumInvalidJoysticks;
+}
+
+int InputDeviceManager::ConnectDeviceToXbox(int port, int type)
+{
+	int ret = -1;
+	std::vector<SDL2Devices*>::iterator it;
+
+	if (port > 4 || port < 1) { return ret; };
+
+	for (it = m_Sdl2Devices.begin(); it != m_Sdl2Devices.end(); ++it) {
+		if ((*it)->m_Index == (port - 1)) {
+			--port;
+			break;
+		}
+	}
+
+	if (it == m_Sdl2Devices.end()) {
+		EmuWarning("Attempted to connect a device not yet enumerated.\n");
+		return ret;
+	}
+
+	switch (type)
+	{
+		case MS_CONTROLLER_DUKE: {
+			if (g_HubObjArray[port] == nullptr) {
+				g_HubObjArray[port] = new Hub;
+				ret = g_HubObjArray[port]->Init(port);
+				if (ret) {
+					delete g_HubObjArray[port];
+					g_HubObjArray[port] = nullptr;
+					break;
+				}
+				if (g_XidControllerObjArray[port] == nullptr) {
+					g_XidControllerObjArray[port] = new XidGamepad;
+					ret = g_XidControllerObjArray[port]->Init(port);
+					if (ret) {
+						g_HubObjArray[port]->HubDestroy();
+						delete g_HubObjArray[port];
+						g_HubObjArray[port] = nullptr;
+						delete g_XidControllerObjArray[port];
+						g_XidControllerObjArray[port] = nullptr;
+					}
+				}
+				else {
+					ret = -1;
+					g_HubObjArray[port]->HubDestroy();
+					delete g_HubObjArray[port];
+					g_HubObjArray[port] = nullptr;
+					EmuWarning("Xid controller already present at port %d.2\n", port + 1);
+				}
+			}
+			else {
+				EmuWarning("Hub already present at port %d\n", port + 1);
+			}
+			break;
+		}
+
+		case MS_CONTROLLER_S:
+		case LIGHT_GUN:
+		case STEERING_WHEEL:
+		case MEMORY_UNIT:
+		case IR_DONGLE:
+		case STEEL_BATTALION_CONTROLLER: {
+			printf("This device type is not yet supported\n");
+			break;
+		}
+
+		default:
+			EmuWarning("Attempted to attach an unknown device type\n");
+	}
+
+	if (!ret) {
+		(*it)->m_Type = type;
+		(*it)->m_Attached = 1;
+	}
+
+	return ret;
+}
+
+void InputDeviceManager::DisconnectDeviceFromXbox(int port)
+{
+	std::vector<SDL2Devices*>::iterator it;
+
+	if (port < 1) { return; }
+
+	for (it = m_Sdl2Devices.begin(); it != m_Sdl2Devices.end(); ++it) {
+		if ((*it)->m_Index == (port - 1)) {
+			--port;
+			break;
+		}
+	}
+
+	if (it == m_Sdl2Devices.end()) {
+		// Not necessarily a bug. This could also be triggered by detaching an unsupported joystick
+		return;
+	}
+
+	if (port + 1 > 4) {
+		delete (*it);
+		m_Sdl2Devices.erase(it);
+		return;
+	}
+
+	switch ((*it)->m_Type)
+	{
+		case MS_CONTROLLER_DUKE: {
+			if (g_HubObjArray[port] != nullptr && g_XidControllerObjArray[port] != nullptr) {
+				g_HubObjArray[port]->HubDestroy();
+				delete g_HubObjArray[port];
+				g_HubObjArray[port] = nullptr;
+				delete g_XidControllerObjArray[port];
+				g_XidControllerObjArray[port] = nullptr;
+				delete (*it);
+				m_Sdl2Devices.erase(it);
+				// Here, we could also see if there are detached devices that have a matching type and bound buttons, so that it can immediately
+				// be used instead of remaining inactive (example: 5 controllers and 1st is detached -> 5th can be used if it has bindings)
+			}
+			else {
+				EmuWarning("Attempted to disconnect a device not attached to the Xbox.\n");
+			}
+			break;
+		}
+
+		case MS_CONTROLLER_S:
+		case LIGHT_GUN:
+		case STEERING_WHEEL:
+		case MEMORY_UNIT:
+		case IR_DONGLE:
+		case STEEL_BATTALION_CONTROLLER: {
+			printf("This device type is not yet supported\n");
+			break;
+		}
+
+		default:
+			EmuWarning("Attempted to detach an unknown device type\n");
 	}
 }
 
@@ -128,6 +277,29 @@ void InputDeviceManager::InputThread(InputDeviceManager* pVoid)
 					break;
 				}
 
+				case SDL_JOYDEVICEADDED: {
+					bool found = false;
+					for (auto dev : pVoid->m_Sdl2Devices) {
+						if (dev->m_Index == event.jdevice.which) {
+							// already enumerated, skipping
+							found = true;
+							break;
+						}
+					}
+					if (!found) {
+						// for now we only support a single controller at port 1, more will be added later
+						if (!pVoid->IsValidController(event.jdevice.which) && event.jdevice.which == 0) {
+							pVoid->ConnectDeviceToXbox(1, MS_CONTROLLER_DUKE);
+						}
+					}
+					break;
+				}
+
+				case SDL_JOYDEVICEREMOVED: {
+					pVoid->DisconnectDeviceFromXbox(event.jdevice.which + 1);
+					break;
+				}
+
 				case SDL_CONTROLLERBUTTONUP:
 				case SDL_CONTROLLERBUTTONDOWN: {
 					pVoid->UpdateButtonState(event.cbutton.which, event.cbutton.button, event.cbutton.state);
@@ -137,6 +309,13 @@ void InputDeviceManager::InputThread(InputDeviceManager* pVoid)
 				case SDL_CONTROLLERAXISMOTION: {
 					pVoid->UpdateAxisState(event.caxis.which, event.caxis.axis, event.caxis.value);
 					break;
+				}
+
+				case SDL_CONTROLLERDEVICEADDED: {
+
+				}
+				case SDL_CONTROLLERDEVICEREMOVED: {
+
 				}
 
 				case SDL_QUIT: {
@@ -249,4 +428,52 @@ void InputDeviceManager::UpdateAxisState(SDL_JoystickID id, uint8_t axis_index, 
 	}
 
 	ControllerObj->UpdateAxisState(xbox_button, state);
+}
+
+int InputDeviceManager::IsValidController(int index)
+{
+	SDL2Devices* pDev;
+	SDL_GameController* pController;
+
+	if (SDL_IsGameController(index)) {
+		pDev = new SDL2Devices();
+		pDev->m_Index = index;
+		m_Sdl2Devices.push_back(pDev);
+	}
+	else {
+		// this joystick is not supported at the moment
+		return -1;
+	}
+
+	pController = SDL_GameControllerOpen(pDev->m_Index);
+	if (pController == nullptr) {
+		EmuWarning("Failed to open game controller %s. The error was %s\n", SDL_GameControllerNameForIndex(pDev->m_Index), SDL_GetError());
+		delete pDev;
+		m_Sdl2Devices.erase(m_Sdl2Devices.begin() + index);
+		return -1;
+	}
+	else if (pDev->m_Index > 3) {
+		printf("More than 4 controllers detected. Putting game controller %s in detached state\n",
+			SDL_GameControllerName(pController));
+		pDev->m_Attached = 0;
+		return -1;
+	}
+	else {
+		printf("Found game controller %s\n", SDL_GameControllerName(pController));
+		pDev->m_Gamepad = pController;
+		pDev->m_jyID = SDL_JoystickInstanceID(SDL_GameControllerGetJoystick(pController));
+		return 0;
+	}
+}
+
+SDL2Devices* InputDeviceManager::FindDeviceFromXboxPort(int port)
+{
+	if (port > 4 || port < 1) { return nullptr; };
+
+	for (auto it = m_Sdl2Devices.begin(); it != m_Sdl2Devices.end(); ++it) {
+		if ((*it)->m_Index == (port - 1)) {
+			return *it;
+		}
+	}
+	return nullptr;
 }

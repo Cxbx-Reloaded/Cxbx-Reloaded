@@ -60,6 +60,10 @@ class SDL2Devices
 		SDL_GameController* m_Gamepad;
 		// id of this controller
 		SDL_JoystickID m_jyID;
+		// attach/detach state of this controller
+		int m_Attached;
+		// indicates the xbox device emulated by this controller
+		int m_Type = DEVICE_INVALID;
 
 		// update analog button state
 		void UpdateAnalogButtonState(uint8_t xbox_button, uint8_t state);
@@ -73,10 +77,13 @@ class SDL2Devices
 		int GetBoundButton(int sdl_key);
 		// update bBindingsChanged flag
 		void SetChangedBinding(bool bFlag) { m_bBindingsChanged = bFlag; }
+		// read the current button state of a device
+		void ReadButtonState(uint16_t* wButtons, uint8_t* bAnalogButtons, int16_t* sThumbLX,
+			int16_t* sThumbLY, int16_t* sThumbRX, int16_t* sThumbRY);
 
 
 	private:
-		// default bindings
+		// default bindings (hardcoded for now)
 		const int m_ButtonMap_Analog[8][2] = {
 			{ GAMEPAD_A, SDL_CONTROLLER_BUTTON_A },
 			{ GAMEPAD_B, SDL_CONTROLLER_BUTTON_B },

@@ -36,6 +36,7 @@
 
 #include "XidGamepad.h"
 #include "USBDevice.h"
+#include "Common/Input/InputConfig.h"
 
 #define LOG_STR_GAMEPAD "Gamepad:"
 
@@ -46,6 +47,8 @@
 #define HID_SET_REPORT       0x09
 #define XID_GET_CAPABILITIES 0x01
 
+
+XidGamepad* g_XidControllerObjArray[4];
 
 #pragma pack(1)
 
@@ -239,9 +242,10 @@ int XidGamepad::UsbXidClaimPort(XboxDeviceState* dev, int port)
 		}
 	}
 	if (m_UsbDev == nullptr) {
-		EmuWarning("Port requested %d.%d not found (in use?)", port, 2);
+		EmuWarning("Port requested %d.2 not found (in use?)", port);
 		return -1;
 	}
+	m_Port = port;
 	it = m_UsbDev->m_FreePorts.begin() + i;
 	dev->Port = *it;
 	(*it)->Dev = dev;
@@ -316,6 +320,12 @@ void XidGamepad::UsbXid_HandleControl(XboxDeviceState* dev, USBPacket* p,
 			if (value == 0x100) {
 				assert(m_XidState->in_state.bLength <= length);
 				// m_XidState->in_state.bReportId++; /* FIXME: I'm not sure if bReportId is just a counter */
+				SDL2Devices* controller = g_InputDeviceManager->FindDeviceFromXboxPort(m_Port);
+				if (controller != nullptr) {
+					controller->ReadButtonState(&m_XidState->in_state.wButtons, m_XidState->in_state.bAnalogButtons,
+						&m_XidState->in_state.sThumbLX, &m_XidState->in_state.sThumbLY, &m_XidState->in_state.sThumbRX,
+						&m_XidState->in_state.sThumbRY);
+				}
 				std::memcpy(data, &m_XidState->in_state, m_XidState->in_state.bLength);
 				p->ActualLength = m_XidState->in_state.bLength;
 			}

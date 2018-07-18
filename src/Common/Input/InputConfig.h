@@ -39,8 +39,6 @@
 
 #include <vector>
 #include <atomic>
-#include <thread>
-#include "..\..\CxbxKrnl\EmuKrnl.h" // For EmuWarning
 #include "SDL.h"
 
 #define GAMEPAD_A                 0
@@ -51,7 +49,7 @@
 #define GAMEPAD_WHITE             5
 #define GAMEPAD_LEFT_TRIGGER      6
 #define GAMEPAD_RIGHT_TRIGGER     7
-								  
+
 #define GAMEPAD_DPAD_UP           8
 #define GAMEPAD_DPAD_DOWN         9
 #define GAMEPAD_DPAD_LEFT         10
@@ -75,13 +73,35 @@
 #include "SDL2_Device.h"
 
 
+/* enum indicating the device type to attach to the virtual xbox */
+typedef enum {
+	DEVICE_INVALID = 0,
+	MS_CONTROLLER_DUKE,
+	MS_CONTROLLER_S,
+	LIGHT_GUN,
+	STEERING_WHEEL,
+	MEMORY_UNIT,
+	IR_DONGLE,
+	STEEL_BATTALION_CONTROLLER,
+};
+
+
 class InputDeviceManager
 {
 	public:
 		InputDeviceManager();
 		~InputDeviceManager();
-	
+
+		// enumerate all available sdl2 controllers
 		int EnumSdl2Devices();
+		// start input event processing thread
+		void StartInputThread();
+		// connect the enumerated device to the virtual xbox
+		int ConnectDeviceToXbox(int port, int type);
+		// disconnect a device from the emulated xbox
+		void DisconnectDeviceFromXbox(int port);
+		// find the device attached to the supplied xbox port
+		SDL2Devices* FindDeviceFromXboxPort(int port);
 
 
 	private:
@@ -90,8 +110,6 @@ class InputDeviceManager
 
 		// assign the button binding to the devices
 		//void AssignBindings();
-		// start input event processing thread
-		void StartInputThread();
 		// input thread
 		static void InputThread(InputDeviceManager* pVoid);
 		// updates the button state of a joystick
@@ -100,6 +118,10 @@ class InputDeviceManager
 		void UpdateHatState(SDL_JoystickID id, uint8_t hat_index, uint8_t state);
 		// updates the axis state of a joystick
 		void UpdateAxisState(SDL_JoystickID id, uint8_t axis_index, int16_t state);
+		// checks if the controller attached can be used by sdl
+		int IsValidController(int index);
 };
+
+extern InputDeviceManager* g_InputDeviceManager;
 
 #endif

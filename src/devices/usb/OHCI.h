@@ -140,6 +140,10 @@ struct OHCI_Registers
 class OHCI
 {
 	public:
+		// Indicates that the timer thread is accessing the OHCI object. Necessary because the input thread from the
+		// InputDeviceManager will access us when it needs to destroy a device
+		std::atomic_bool m_bFrameTime;
+
 		// constructor
 		OHCI(int Irqn, USBDevice* UsbObj);
 		// destructor

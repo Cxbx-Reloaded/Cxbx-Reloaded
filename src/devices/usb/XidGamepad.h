@@ -42,7 +42,6 @@
 
 struct USBXIDState; // forward declare
 
-
 /* Class which implements an xbox gamepad */
 class XidGamepad
 {
@@ -60,6 +59,8 @@ class XidGamepad
 		USBXIDState* m_XidState = nullptr;
 		// gamepad class functions
 		USBDeviceClass* m_pPeripheralFuncStruct = nullptr;
+		// xbox port this gamepad is attached to
+		int m_Port = 0;
 
 		// initialize various member variables/functions
 		XboxDeviceState* ClassInitFn();
@@ -76,5 +77,7 @@ class XidGamepad
 			int request, int value, int index, int length, uint8_t* data);
 		void UsbXid_HandleData(XboxDeviceState* dev, USBPacket* p);
 };
+
+extern XidGamepad* g_XidControllerObjArray[4];
 
 #endif

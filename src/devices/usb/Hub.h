@@ -50,10 +50,10 @@ class Hub
 		// usb device this hub is attached to
 		USBDevice* m_UsbDev = nullptr;
 
-		// initialize this peripheral
+		// initialize this hub
 		int Init(int port);
-		// destroy hub resources
-		void HubCleanUp();
+		// start hub destruction
+		void HubDestroy();
 		
 		
 	private:
@@ -84,6 +84,8 @@ class Hub
 		void UsbHubReleasePort(XboxDeviceState* dev);
 		// retieve the name of the feature of the usb request
 		std::string GetFeatureName(int feature);
+		// destroy hub resources
+		void HubCleanUp();
 };
 
 extern Hub* g_HubObjArray[4];

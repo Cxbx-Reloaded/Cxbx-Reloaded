@@ -35,6 +35,7 @@
 // ******************************************************************
 
 #include "SDL2_Device.h"
+#include <assert.h>
 
 
 int SDL2Devices::GetBoundButton(int sdl_key)
@@ -195,5 +196,21 @@ void SDL2Devices::UpdateAxisState(uint8_t xbox_button, int16_t state)
 
 		default:
 			assert(0);
+	}
+}
+
+void SDL2Devices::ReadButtonState(uint16_t* wButtons, uint8_t* bAnalogButtons, int16_t* sThumbLX,
+	int16_t* sThumbLY, int16_t* sThumbRX, int16_t* sThumbRY)
+{
+	if (bStateDirty) {
+		*wButtons = m_State.wButtons.load();
+		*sThumbLX = m_State.sThumbLX.load();
+		*sThumbLY = m_State.sThumbLY.load();
+		*sThumbRX = m_State.sThumbRX.load();
+		*sThumbRY = m_State.sThumbRY.load();
+		for (int i = 0; i < 8; ++i) {
+			bAnalogButtons[i] = m_State.bAnalogButtons[i].load();
+		}
+		bStateDirty = false;
 	}
 }
