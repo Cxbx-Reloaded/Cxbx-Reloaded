@@ -199,7 +199,7 @@ void SDL2Devices::UpdateAxisState(uint8_t xbox_button, int16_t state)
 	}
 }
 
-void SDL2Devices::ReadButtonState(uint16_t* wButtons, uint8_t* bAnalogButtons, int16_t* sThumbLX,
+bool SDL2Devices::ReadButtonState(uint16_t* wButtons, uint8_t* bAnalogButtons, int16_t* sThumbLX,
 	int16_t* sThumbLY, int16_t* sThumbRX, int16_t* sThumbRY)
 {
 	if (bStateDirty) {
@@ -212,5 +212,7 @@ void SDL2Devices::ReadButtonState(uint16_t* wButtons, uint8_t* bAnalogButtons, i
 			bAnalogButtons[i] = m_State.bAnalogButtons[i].load();
 		}
 		bStateDirty = false;
+		return true;
 	}
+	return false;
 }

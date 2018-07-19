@@ -177,11 +177,14 @@ int Hub::Init(int port)
 	XboxDeviceState* dev = ClassInitFn();
     int rc = UsbHubClaimPort(dev, port);
     if (rc != 0) {
+		m_UsbDev->m_HostController->m_bFrameTime = false;
         return rc;
     }
 	m_UsbDev->USB_EpInit(dev);
     m_UsbDev->USB_DeviceInit(dev);
     m_UsbDev->USB_DeviceAttach(dev);
+
+	m_UsbDev->m_HostController->m_bFrameTime = false;
 
 	return 0;
 }
@@ -226,6 +229,10 @@ int Hub::UsbHubClaimPort(XboxDeviceState* dev, int port)
 	else {
 		m_UsbDev = g_USB1;
 	}
+
+	while (m_UsbDev->m_HostController->m_bFrameTime) {}
+	m_UsbDev->m_HostController->m_bFrameTime = true;
+
 	for (auto usb_port : m_UsbDev->m_FreePorts) {
 		if (usb_port->Path == std::to_string(port)) {
 			break;

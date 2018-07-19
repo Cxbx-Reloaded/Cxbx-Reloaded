@@ -76,6 +76,9 @@ class XidGamepad
 		void UsbXid_HandleControl(XboxDeviceState* dev, USBPacket* p,
 			int request, int value, int index, int length, uint8_t* data);
 		void UsbXid_HandleData(XboxDeviceState* dev, USBPacket* p);
+		// this should update the vibration strenght of the real controller this gamepad represents.
+		// It doesn't do anything at the moment
+		void UpdateForceFeedback();
 };
 
 extern XidGamepad* g_XidControllerObjArray[4];

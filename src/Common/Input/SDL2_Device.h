@@ -78,7 +78,7 @@ class SDL2Devices
 		// update bBindingsChanged flag
 		void SetChangedBinding(bool bFlag) { m_bBindingsChanged = bFlag; }
 		// read the current button state of a device
-		void ReadButtonState(uint16_t* wButtons, uint8_t* bAnalogButtons, int16_t* sThumbLX,
+		bool ReadButtonState(uint16_t* wButtons, uint8_t* bAnalogButtons, int16_t* sThumbLX,
 			int16_t* sThumbLY, int16_t* sThumbRX, int16_t* sThumbRY);
 
 
