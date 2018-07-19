@@ -1043,11 +1043,6 @@ int EmuX86_OpcodeSize(uint8_t *Eip)
 
 bool EmuX86_DecodeException(LPEXCEPTION_POINTERS e)
 {
-	// Only decode instructions which reside in the loaded Xbe
-	if (e->ContextRecord->Eip > XBE_MAX_VA || e->ContextRecord->Eip < XBE_IMAGE_BASE) {
-		return false;
-	}
-
 	// Decoded instruction information.
 	// Opcode handler note : 
 	// If an opcode or one of it's operand can't be decoded, that's a clear failure.
@@ -1136,5 +1131,8 @@ opcode_error:
 void EmuX86_Init()
 {
 	DbgPrintf("X86 : Initializing distorm version %d\n", distorm_version());
+
+	AddVectoredExceptionHandler(/*FirstHandler=*/ULONG(true), lleException);
+
 	EmuX86_InitContextRecordOffsetByRegisterType();
 }
