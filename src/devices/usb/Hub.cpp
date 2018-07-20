@@ -34,8 +34,17 @@
 // *
 // ******************************************************************
 
+#define _XBOXKRNL_DEFEXTRN_
+
+// prevent name collisions
+namespace xboxkrnl
+{
+	#include <xboxkrnl/xboxkrnl.h> // For PKINTERRUPT, etc.
+};
+
 #include "OHCI.h"
 #include "Hub.h"
+#include "CxbxKrnl\EmuKrnl.h"  // For EmuWarning
 
 #define LOG_STR_HUB "Hub"
 
@@ -96,62 +105,61 @@ struct USBHubState {
 	USBHubPort ports[NUM_PORTS]; // downstream ports of the hub
 };
 
-USBDescIface::USBDescIface()
-{
-	std::memset(this, 0, sizeof(USBDescIface));
-	eps = new USBDescEndpoint();
-	bInterfaceNumber = 0;
-	bNumEndpoints = 1;
-	bInterfaceClass = USB_CLASS_HUB;
-	eps->bEndpointAddress = USB_DIR_IN | 0x01;
-	eps->bmAttributes = USB_ENDPOINT_XFER_INT;
-	eps->wMaxPacketSize = 1 + (NUM_PORTS + 7) / 8;
-	eps->bInterval = 0xFF;
-}
+static const USBDescEndpoint desc_endp_hub = {
+	USB_DIR_IN | 0x01,        // bEndpointAddress;
+	USB_ENDPOINT_XFER_INT,    // bmAttributes;
+	1 + (NUM_PORTS + 7) / 8,  // wMaxPacketSize;
+	0xFF,                     // bInterval;
+	0,                        // bRefresh;
+	0,                        // bSynchAddress
+	0,                        // is_audio
+	nullptr                   // extra
+};
 
-USBDescIface::~USBDescIface()
-{
-	delete eps;
-}
+static const USBDescIface desc_iface_hub = {
+	0,                // bInterfaceNumber;
+	0,                // bAlternateSetting;
+	1,                // bNumEndpoints;
+	USB_CLASS_HUB,    // bInterfaceClass;
+	0,                // bInterfaceSubClass
+	0,                // bInterfaceProtocol
+	0,                // iInterface
+	0,                // ndesc
+	nullptr,          // descs
+	&desc_endp_hub
+};
 
-static const USBDescIface desc_iface_hub;
+static const USBDescConfig desc_config_hub = {
+	1,     // bNumInterfaces
+	1,     // bConfigurationValue
+	0,     // iConfiguration
+	0xE0,  // bmAttributes
+	0,     // bMaxPower
+	1,     // nif
+	&desc_iface_hub
+};
 
-USBDescDevice::USBDescDevice()
-{
-	std::memset(this, 0, sizeof(USBDescDevice));
-	USBDescConfig* pUSBDescConfig = new USBDescConfig();
-	bcdUSB = 0x0110;
-	bDeviceClass = USB_CLASS_HUB;
-	bMaxPacketSize0 = 8;
-	bNumConfigurations = 1;
-	pUSBDescConfig->bNumInterfaces = 1;
-	pUSBDescConfig->bConfigurationValue = 1;
-	pUSBDescConfig->bmAttributes = 0xE0;
-	pUSBDescConfig->nif = 1;
-	pUSBDescConfig->ifs = &desc_iface_hub;
-	confs = pUSBDescConfig;
-}
+static const USBDescDevice desc_device_hub = {
+	0x0110,         // bcdUSB
+	USB_CLASS_HUB,  // bDeviceClass
+	0,              // bDeviceSubClass
+	0,              // bDeviceProtocol
+	8,              // bMaxPacketSize0
+	1,              // bNumConfigurations
+	&desc_config_hub
+};
 
-USBDescDevice::~USBDescDevice()
-{
-	delete confs;
-}
-
-static const USBDescDevice desc_device_hub;
-
-USBDesc::USBDesc()
-{
-	std::memset(this, 0, sizeof(USBDesc));
-	id.idVendor = 0x0409;
-	id.idProduct = 0x55AA;
-	id.bcdDevice = 0x0101;
-	id.iManufacturer = STR_MANUFACTURER;
-	id.iProduct = STR_PRODUCT;
-	id.iSerialNumber = STR_SERIALNUMBER;
-	full = &desc_device_hub;
-}
-
-static const USBDesc desc_hub;
+static const USBDesc desc_hub = {
+	{
+		0x0409,            // idVendor
+		0x55AA,            // idProduct
+		0x0101,            // bcdDevice
+		STR_MANUFACTURER,  // iManufacturer
+		STR_PRODUCT,       // iProduct
+		STR_SERIALNUMBER   // iSerialNumber
+	},
+	&desc_device_hub
+};
 
 // Class-specific hub descriptor. Remember to update DeviceRemovable and PortPwrCtrlMask if you change NUM_PORTS since their values depend on
 // the number of downstream ports available on the hub! Also note that this descriptor cannot be put in the descs member of the interface descriptor

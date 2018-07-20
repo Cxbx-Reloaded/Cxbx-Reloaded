@@ -34,7 +34,7 @@
 #ifndef ERROR_H
 #define ERROR_H
 
-#include "CxbxCommon.h"
+#include "Cxbx.h"
 
 #include <string>
 

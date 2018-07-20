@@ -34,9 +34,18 @@
 // *
 // ******************************************************************
 
+#define _XBOXKRNL_DEFEXTRN_
+
+// prevent name collisions
+namespace xboxkrnl
+{
+	#include <xboxkrnl/xboxkrnl.h> // For PKINTERRUPT, etc.
+};
+
 #include "USBDevice.h"
 #include "OHCI.h"
 #include "CxbxKrnl\EmuKrnl.h"  // For EmuWarning
+#include "CxbxCommon.h"
 
 #define LOG_STR_USB "Usb"
 
@@ -628,7 +637,7 @@ void USBDevice::USB_EPsetType(XboxDeviceState* dev, int pid, int ep, uint8_t typ
 	uep->Type = type;
 }
 
-uint8_t USBDevice::USB_EPsetIfnum(XboxDeviceState* dev, int pid, int ep, uint8_t ifnum)
+void USBDevice::USB_EPsetIfnum(XboxDeviceState* dev, int pid, int ep, uint8_t ifnum)
 {
 	USBEndpoint* uep = USB_GetEP(dev, pid, ep);
 	uep->IfNum = ifnum;
@@ -1031,7 +1040,7 @@ int USBDevice::USBDesc_HandleStandardGetDescriptor(XboxDeviceState* dev, USBPack
 			break;
 		}
 
-		// Dropped from XQEMU descriptor types USB_DT_DEVICE_QUALIFIER (6), USB_DT_OTHER_SPEED_CONFIG (7) -> usb 2.0 only and reserved on usb 3.0,
+		// Dropped from XQEMU descriptor types USB_DT_DEVICE_QUALIFIER (6), USB_DT_OTHER_SPEED_CONFIG (7) -> usb 2.0 only and reserved in usb 3.0,
 		// USB_DT_BOS (15) and USB_DT_DEBUG (10) -> usb 3.0 only
 
 		default:
@@ -1168,9 +1177,9 @@ int USBDevice::USB_ReadInterfaceDesc(const USBDescIface* iface, int flags, uint8
 	return pos;
 }
 
-int USBDevice::USB_ReadOtherDesc(const USBDescOther* desc, uint8_t* dest, size_t len)
+size_t USBDevice::USB_ReadOtherDesc(const USBDescOther* desc, uint8_t* dest, size_t len)
 {
-	int bLength = desc->length ? desc->length : desc->data[0];
+	size_t bLength = desc->length ? desc->length : desc->data[0];
 
 	if (len < bLength) {
 		return -1;
@@ -1182,15 +1191,15 @@ int USBDevice::USB_ReadOtherDesc(const USBDescOther* desc, uint8_t* dest, size_t
 
 int USBDevice::USB_ReadEndpointDesc(const USBDescEndpoint* ep, int flags, uint8_t* dest, size_t len)
 {
-	uint8_t bLength = ep->is_audio ? 0x09 : 0x07; // an endpoint descriptor is 7 bytes large (or 9 if it is an audio device)
-	uint8_t extralen = ep->extra ? ep->extra[0] : 0;
+	size_t bLength = ep->is_audio ? 0x09 : 0x07; // an endpoint descriptor is 7 bytes large (or 9 if it is an audio device)
+	size_t extralen = ep->extra ? ep->extra[0] : 0;
 	USBDescriptor* d = reinterpret_cast<USBDescriptor*>(dest);
 
 	if (len < bLength + extralen) {
 		return -1;
 	}
 
-	d->bLength = bLength;
+	d->bLength = static_cast<uint8_t>(bLength);
 	d->bDescriptorType = USB_DT_ENDPOINT;
 
 	d->u.endpoint.bEndpointAddress = ep->bEndpointAddress;
@@ -1214,7 +1223,8 @@ int USBDevice::USB_ReadEndpointDesc(const USBDescEndpoint* ep, int flags, uint8_
 
 int USBDevice::USB_ReadStringDesc(XboxDeviceState* dev, int index, uint8_t* dest, size_t len)
 {
-	uint8_t bLength, pos, i;
+	size_t bLength, i;
+	unsigned int pos;
 	const char* str;
 
 	if (len < 4) {

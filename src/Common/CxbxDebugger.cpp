@@ -32,7 +32,7 @@
 // *
 // ******************************************************************
 
-#include "CxbxCommon.h"
+#include "Cxbx.h"
 #include "CxbxKrnl/EmuShared.h"
 #include "CxbxDebugger.h"
 

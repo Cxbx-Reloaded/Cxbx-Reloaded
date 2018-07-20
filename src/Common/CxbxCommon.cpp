@@ -9,7 +9,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Common->Cxbx.cpp
+// *   Cxbx->Common->CxbxCommon.cpp
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -36,6 +36,7 @@
 
 // The intent of this file is to add general functions which are not kernel specific (for those CxbxKrnl.h should be used instead)
 
+#include "CxbxCommon.h"
 #include "CxbxKrnl\CxbxKrnl.h"
 
 #ifndef MIN

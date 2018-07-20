@@ -293,7 +293,6 @@
     <ClCompile Include="..\..\src\devices\usb\Hub.cpp">
       <Filter>Hardware\Usb</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\Common\CxbxCommon.cpp" />
     <ClCompile Include="..\..\src\devices\usb\XidGamepad.cpp">
       <Filter>Hardware\Usb</Filter>
     </ClCompile>
@@ -314,6 +313,9 @@
     </ClCompile>
     <ClCompile Include="..\..\src\Common\Input\SDL2_Device.cpp">
       <Filter>Shared\Input</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\Common\CxbxCommon.cpp">
+      <Filter>Cross Platform</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -599,9 +601,6 @@
     <ClInclude Include="..\..\src\devices\usb\UsbCommon.h">
       <Filter>Hardware\Usb</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\CxbxCommon.h">
-      <Filter>Shared</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\devices\usb\XidGamepad.h">
       <Filter>Hardware\Usb</Filter>
     </ClInclude>
@@ -616,6 +615,12 @@
     </ClInclude>
     <ClInclude Include="..\..\src\Common\Input\SDL2_Device.h">
       <Filter>Shared\Input</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Cxbx.h">
+      <Filter>Shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Common\CxbxCommon.h">
+      <Filter>Cross Platform</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

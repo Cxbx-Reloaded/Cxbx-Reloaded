@@ -72,7 +72,7 @@ inline uint64_t GetTime_NS(TimerObject* Timer)
 	clock_gettime(CLOCK_MONOTONIC_RAW, &ts);
 	uint64_t Ret = Muldiv64(ts.tv_sec, SCALE_S, 1) + ts.tv_nsec;
 #else
-#error
+#error "Unsupported OS"
 #endif
 	return Timer->Type == CLOCK_REALTIME ? Ret : Ret / Timer->SlowdownFactor;
 }
@@ -162,6 +162,6 @@ void Timer_Init()
 #elif __linux__
 	ClockFrequency = 0;
 #else
-#error
+#error "Unsupported OS"
 #endif
 }

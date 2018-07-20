@@ -367,6 +367,7 @@
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\src\Common\CxbxCommon.h" />
     <ClInclude Include="..\..\src\Common\Input\InputConfig.h" />
     <ClInclude Include="..\..\src\Common\Input\SDL2_Device.h" />
     <ClInclude Include="..\..\src\Common\Win32\Threads.h" />
@@ -383,7 +384,7 @@
     <ClInclude Include="..\..\src\Common\Win32\AlignPrefix1.h" />
     <ClInclude Include="..\..\src\Common\XDVDFS Tools\buffered_io.h" />
     <ClInclude Include="..\..\src\Common\XDVDFS Tools\xdvdfs.h" />
-    <ClInclude Include="..\..\src\CxbxCommon.h" />
+    <ClInclude Include="..\..\src\Cxbx.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\CxbxKrnl.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\DbgConsole.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\EmuD3D8.h" />
@@ -744,16 +745,6 @@
     <ClCompile Include="..\..\src\CxbxKrnl\gloffscreen\glextensions.cpp" />
     <ClCompile Include="..\..\src\CxbxKrnl\gloffscreen\gloffscreen_common.cpp" />
     <ClCompile Include="..\..\src\CxbxKrnl\gloffscreen\gloffscreen_wgl.cpp" />
-    <ClCompile Include="..\..\src\CxbxKrnl\HLEDataBase.cpp">
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug_USB_Packets|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug_Direct3D9|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug_USB_Packets|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug_Direct3D9|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
-    </ClCompile>
     <ClCompile Include="..\..\src\CxbxKrnl\HLEIntercept.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug_USB_Packets|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>

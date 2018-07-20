@@ -34,8 +34,17 @@
 // *
 // ******************************************************************
 
+#define _XBOXKRNL_DEFEXTRN_
+
+/* prevent name collisions */
+namespace xboxkrnl
+{
+	#include <xboxkrnl/xboxkrnl.h>
+};
+
 #include "OHCI.h"
 #include "CxbxKrnl\EmuKrnl.h"  // For HalSystemInterrupt
+#include "CxbxCommon.h"
 
 #define LOG_STR_OHCI "Ohci"
 

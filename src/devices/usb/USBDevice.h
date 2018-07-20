@@ -57,7 +57,7 @@ class USBDevice : public PCIDevice {
 		void Init(unsigned int address);
 		void Reset() {}
 	
-		uint32_t IORead(int barIndex, uint32_t port, unsigned size) {}
+		uint32_t IORead(int barIndex, uint32_t port, unsigned size) { return 0; }
 		void IOWrite(int barIndex, uint32_t port, uint32_t value, unsigned size) {}
 		uint32_t MMIORead(int barIndex, uint32_t addr, unsigned size);
 		void MMIOWrite(int barIndex, uint32_t addr, uint32_t value, unsigned size);
@@ -146,7 +146,7 @@ class USBDevice : public PCIDevice {
 		// set the type of the endpoint
 		void USB_EPsetType(XboxDeviceState* dev, int pid, int ep, uint8_t type);
 		// set the interface number of the endpoint
-		uint8_t USB_EPsetIfnum(XboxDeviceState* dev, int pid, int ep, uint8_t ifnum);
+		void USB_EPsetIfnum(XboxDeviceState* dev, int pid, int ep, uint8_t ifnum);
 		// set the maximum packet size parameter of the endpoint
 		void USB_EPsetMaxPacketSize(XboxDeviceState* dev, int pid, int ep, uint16_t raw);
 		// assign port numbers (also for hubs)
@@ -184,7 +184,7 @@ class USBDevice : public PCIDevice {
 		// return the binary rapresentation of interface descriptors
 		int USB_ReadInterfaceDesc(const USBDescIface* iface, int flags, uint8_t* dest, size_t len);
 		// return the binary rapresentation of class-specific descriptors
-		int USB_ReadOtherDesc(const USBDescOther* desc, uint8_t* dest, size_t len);
+		size_t USB_ReadOtherDesc(const USBDescOther* desc, uint8_t* dest, size_t len);
 		// return the binary rapresentation of endpoint descriptors
 		int USB_ReadEndpointDesc(const USBDescEndpoint* ep, int flags, uint8_t* dest, size_t len);
 		// return the binary rapresentation of string descriptors

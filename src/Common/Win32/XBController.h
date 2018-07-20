@@ -34,7 +34,7 @@
 #ifndef XBCONTROLLER_H
 #define XBCONTROLLER_H
 
-#include "CxbxCommon.h"
+#include "Cxbx.h"
 #include "Common/Error.h"
 #include "Mutex.h"
 

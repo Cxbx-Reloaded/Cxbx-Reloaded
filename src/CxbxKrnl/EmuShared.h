@@ -34,7 +34,7 @@
 #ifndef EMUSHARED_H
 #define EMUSHARED_H
 
-#include "CxbxCommon.h"
+#include "Cxbx.h"
 #include "Common/Win32/XBController.h"
 #include "Common/Win32/XBVideo.h"
 #include "Common/Win32/XBAudio.h"

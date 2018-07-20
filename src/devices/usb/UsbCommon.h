@@ -39,7 +39,6 @@
 
 #include "CxbxCommon.h"
 #include "..\devices\video\queue.h"
-#include "..\CxbxKrnl\EmuKrnl.h" // For EmuWarning
 #include <functional>
 
 #define USB_MAX_ENDPOINTS  15
@@ -157,10 +156,13 @@ typedef enum {
 	STR_MANUFACTURER = 1,
 	STR_PRODUCT,
 	STR_SERIALNUMBER,
-};
+}
+STRING_DESC_INDEX;
 
+// Forward declarations
 struct USBPacket;
 struct XboxDeviceState;
+struct USBPortOps;
 
 /* String descriptor */
 struct USBDescString {
@@ -203,9 +205,7 @@ struct USBDescIface {
 
     uint8_t                   ndesc;              // number of device-specific class descriptors (if any)
     USBDescOther*             descs;              // pointer to the extra class descriptors
-    USBDescEndpoint*          eps;                // endpoints supported by this interface
-	USBDescIface();
-	~USBDescIface();
+    const USBDescEndpoint*          eps;                // endpoints supported by this interface
 };
 
 /*
@@ -234,8 +234,6 @@ struct USBDescDevice {
     uint8_t                   bMaxPacketSize0;    // maximum packet size for endpoint zero (only 8, 16, 32, or 64 are valid)
     uint8_t                   bNumConfigurations; // number of possible configurations
     const USBDescConfig*      confs;              // configurations supported by this device
-	USBDescDevice();
-	~USBDescDevice();
 };
 
 /* Device descriptor part 2 */
@@ -252,7 +250,6 @@ struct USBDescID {
 struct USBDesc {
     USBDescID                 id;   // id-specific info of the device descriptor
     const USBDescDevice*      full; // remaining fields of the device descriptor
-	USBDesc();
 };
 
 #pragma pack(1)
@@ -324,6 +321,63 @@ struct USBEndpoint {
 	bool Halted;                      // indicates that the endpoint is halted
 	XboxDeviceState* Dev;             // device this endpoint belongs to
 	QTAILQ_HEAD(, USBPacket) Queue;   // queue of packets to this endpoint
+};
+
+/* Struct describing the status of a usb port */
+struct USBPort {
+	XboxDeviceState* Dev;         // usb device (if present)
+	USBPortOps* Operations;       // functions to call when a port event happens
+	int SpeedMask;                // usb speeds supported
+	std::string Path;             // the number of the port + 1, used to create a serial number for this device
+	int PortIndex;                // internal port index
+};
+
+/* Struct which stores general functions/variables regarding the peripheral */
+struct USBDeviceClass {
+	std::function<int(XboxDeviceState* dev)> init;
+
+	// Walk (enabled) downstream ports, check for a matching device.
+	// Only hubs implement this.
+	std::function<XboxDeviceState*(XboxDeviceState* dev, uint8_t addr)> find_device;
+
+	// Called when a packet is canceled.
+	std::function<void(XboxDeviceState* dev, USBPacket* p)> cancel_packet;
+
+	// Called when device is destroyed.
+	std::function<void(void)> handle_destroy;
+
+	// Attach the device
+	std::function<void(XboxDeviceState* dev)> handle_attach;
+
+	// Reset the device
+	std::function<void(XboxDeviceState* dev)> handle_reset;
+
+	// Process control request.
+	// Called from handle_packet().
+	// Status gets stored in p->status, and if p->status == USB_RET_SUCCESS
+	// then the number of bytes transferred is stored in p->actual_length
+	std::function<void(XboxDeviceState* dev, USBPacket* p, int request, int value,
+		int index, int length, uint8_t *data)> handle_control;
+
+	// Process data transfers (both BULK and ISOC).
+	// Called from handle_packet().
+	// Status gets stored in p->status, and if p->status == USB_RET_SUCCESS
+	// then the number of bytes transferred is stored in p->actual_length
+	std::function<void(XboxDeviceState* dev, USBPacket* p)> handle_data;
+
+	std::function<void(XboxDeviceState* dev, int Interface,
+		int alt_old, int alt_new)> set_interface;
+
+	// Called when the hcd is done queuing packets for an endpoint, only
+	// necessary for devices which can return USB_RET_ADD_TO_QUEUE.
+	std::function<void(XboxDeviceState* dev, USBEndpoint* ep)> flush_ep_queue;
+
+	// Called by the hcd to let the device know the queue for an endpoint
+	// has been unlinked / stopped. Optional may be NULL.
+	std::function<void(XboxDeviceState* Dev, USBEndpoint* EP)> ep_stopped;
+
+	const char* product_desc;  // friendly name of the device
+	const USBDesc* usb_desc;   // device descriptor
 };
 
 /* definition of an Xbox usb device */
@@ -400,63 +454,6 @@ struct USBPortOps {
 	* the packet originated when a hub is involved.
 	*/
 	std::function<void(USBPort* port, USBPacket* p)> complete;
-};
-
-/* Struct describing the status of a usb port */
-struct USBPort {
-	XboxDeviceState* Dev;         // usb device (if present)
-	USBPortOps* Operations;       // functions to call when a port event happens
-	int SpeedMask;                // usb speeds supported
-	std::string Path;             // the number of the port + 1, used to create a serial number for this device
-	int PortIndex;                // internal port index
-};
-
-/* Struct which stores general functions/variables regarding the peripheral */
-struct USBDeviceClass {
-	std::function<int(XboxDeviceState* dev)> init;
-
-	// Walk (enabled) downstream ports, check for a matching device.
-	// Only hubs implement this.
-	std::function<XboxDeviceState*(XboxDeviceState* dev, uint8_t addr)> find_device;
-
-	// Called when a packet is canceled.
-	std::function<void(XboxDeviceState* dev, USBPacket* p)> cancel_packet;
-
-	// Called when device is destroyed.
-	std::function<void(void)> handle_destroy;
-
-	// Attach the device
-	std::function<void(XboxDeviceState* dev)> handle_attach;
-
-	// Reset the device
-	std::function<void(XboxDeviceState* dev)> handle_reset;
-
-	// Process control request.
-	// Called from handle_packet().
-	// Status gets stored in p->status, and if p->status == USB_RET_SUCCESS
-	// then the number of bytes transferred is stored in p->actual_length
-	std::function<void(XboxDeviceState* dev, USBPacket* p, int request, int value,
-		int index, int length, uint8_t *data)> handle_control;
-
-	// Process data transfers (both BULK and ISOC).
-	// Called from handle_packet().
-	// Status gets stored in p->status, and if p->status == USB_RET_SUCCESS
-	// then the number of bytes transferred is stored in p->actual_length
-	std::function<void(XboxDeviceState* dev, USBPacket* p)> handle_data;
-
-	std::function<void(XboxDeviceState* dev, int Interface,
-		int alt_old, int alt_new)> set_interface;
-
-	// Called when the hcd is done queuing packets for an endpoint, only
-	// necessary for devices which can return USB_RET_ADD_TO_QUEUE.
-	std::function<void(XboxDeviceState* dev, USBEndpoint* ep)> flush_ep_queue;
-
-	// Called by the hcd to let the device know the queue for an endpoint
-	// has been unlinked / stopped. Optional may be NULL.
-	std::function<void(XboxDeviceState* Dev, USBEndpoint* EP)> ep_stopped;
-
-	const char* product_desc;  // friendly name of the device
-	const USBDesc* usb_desc;   // device descriptor
 };
 
 #endif

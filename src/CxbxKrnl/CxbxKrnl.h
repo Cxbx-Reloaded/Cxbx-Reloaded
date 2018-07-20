@@ -34,7 +34,7 @@
 #ifndef CXBXKRNL_H
 #define CXBXKRNL_H
 
-#include "CxbxCommon.h"
+#include "Cxbx.h"
 #include "Common/Xbe.h"
 
 #undef FIELD_OFFSET     // prevent macro redefinition warnings

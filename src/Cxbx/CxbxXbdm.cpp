@@ -42,7 +42,7 @@
 #include <cctype>
 #include <clocale>
 
-#include "CxbxCommon.h"
+#include "Cxbx.h"
 #include "Logging.h"
 
 namespace xbdm {

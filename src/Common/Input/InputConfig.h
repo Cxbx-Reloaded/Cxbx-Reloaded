@@ -70,8 +70,6 @@
 
 #define BUTTON_MASK(button) (1 << ((button) - GAMEPAD_DPAD_UP))
 
-#include "SDL2_Device.h"
-
 
 /* enum indicating the device type to attach to the virtual xbox */
 typedef enum {
@@ -83,7 +81,10 @@ typedef enum {
 	MEMORY_UNIT,
 	IR_DONGLE,
 	STEEL_BATTALION_CONTROLLER,
-};
+}
+XBOX_INPUT_DEVICE;
+
+class SDL2Devices; // forward declare
 
 
 class InputDeviceManager

@@ -34,10 +34,6 @@
 #ifndef CXBX_H
 #define CXBX_H
 
-#include <stdint.h>
-#include <assert.h>
-#include <processthreadsapi.h>
-
 #define FUNC_EXPORTS __pragma(comment(linker, "/EXPORT:" __FUNCTION__ "=" __FUNCDNAME__))
 
 /*! \name primitive typedefs */
@@ -160,36 +156,5 @@ extern volatile bool g_bPrintfOn;
 #else
 #define CxbxSetThreadName(Name)
 #endif
-
-
-/* This is a linux struct for vectored I/O. See readv() and writev() */
-struct IoVec
-{
-	void* Iov_Base;  // Starting address
-	size_t Iov_Len;  // Number of bytes to transfer
-};
-
-struct IOVector
-{
-	IoVec* IoVecStruct;
-	int IoVecNumber;      // number of I/O buffers supplied
-	int AllocNumber;      // number of IoVec structs currently allocated
-	size_t Size;          // total size of all I/O buffers supplied
-};
-
-inline uint64_t Muldiv64(uint64_t a, uint32_t b, uint32_t c);
-
-void IoVecReset(IOVector* qiov);
-void IoVecAdd(IOVector* qiov, void* base, size_t len);
-size_t IoVecTobuffer(const IoVec* iov, const unsigned int iov_cnt, size_t offset, void *buf, size_t bytes);
-size_t IoVecFromBuffer(const IoVec* iov, unsigned int iov_cnt, size_t offset, void* buf, size_t bytes);
-
-void WriteDwords(xbaddr Paddr, uint32_t* Buffer, int Number);
-void GetDwords(xbaddr Paddr, uint32_t* Buffer, int Number);
-void GetWords(xbaddr Paddr, uint16_t* Buffer, int Number);
-void WriteWords(xbaddr Paddr, uint16_t* Buffer, int Number);
-
-#define GET_WORD_LOW(value) (uint8_t)((value) & 0xFF)
-#define GET_WORD_HIGH(value) (uint8_t)(((value) >> 8) & 0xFF)
 
 #endif

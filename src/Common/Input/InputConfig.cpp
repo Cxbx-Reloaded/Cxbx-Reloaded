@@ -34,7 +34,16 @@
 // *
 // ******************************************************************
 
+#define _XBOXKRNL_DEFEXTRN_
+
+// prevent name collisions
+namespace xboxkrnl
+{
+	#include <xboxkrnl/xboxkrnl.h> // For PKINTERRUPT, etc.
+};
+
 #include "InputConfig.h"
+#include "SDL2_Device.h"
 #include "..\devices\usb\XidGamepad.h"
 #include "..\..\CxbxKrnl\EmuKrnl.h" // For EmuWarning
 #include <thread>
@@ -324,6 +333,7 @@ void InputDeviceManager::InputThread(InputDeviceManager* pVoid)
 				}
 
 				default:
+					break;
 			}
 		}
 	}
@@ -377,6 +387,7 @@ void InputDeviceManager::UpdateButtonState(SDL_JoystickID id, uint8_t button, ui
 			break;
 		}
 		default:
+			break;
 	}
 }
 

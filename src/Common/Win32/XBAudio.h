@@ -34,7 +34,7 @@
 #ifndef XBAUDIO_H
 #define XBAUDIO_H
 
-#include "CxbxCommon.h"
+#include "Cxbx.h"
 #include "Common/Error.h"
 #include "Mutex.h"
 

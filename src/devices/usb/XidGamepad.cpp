@@ -34,10 +34,20 @@
 // *
 // ******************************************************************
 
+#define _XBOXKRNL_DEFEXTRN_
+
+// prevent name collisions
+namespace xboxkrnl
+{
+	#include <xboxkrnl/xboxkrnl.h> // For PKINTERRUPT, etc.
+};
+
 #include "XidGamepad.h"
 #include "USBDevice.h"
 #include "Common/Input/InputConfig.h"
+#include "Common/Input/SDL2_Device.h"
 #include "OHCI.h"
+#include "CxbxKrnl\EmuKrnl.h"  // For EmuWarning
 
 #define LOG_STR_GAMEPAD "Gamepad:"
 
@@ -63,7 +73,6 @@ struct XIDDesc {
 	uint8_t bMaxInputReportSize;
 	uint8_t bMaxOutputReportSize;
 	uint16_t wAlternateProductIds[4];
-	XIDDesc();
 };
 
 /* Struct used by the Get_Report request -> button's state */
@@ -100,86 +109,84 @@ struct USBXIDState {
 	XIDGamepadOutputReport out_state_capabilities;  // Get_Capabilities struct (out)
 };
 
-USBDescIface::USBDescIface()
-{
-	std::memset(this, 0, sizeof(USBDescIface));
-	eps = new USBDescEndpoint[2]();
-	bInterfaceNumber = 0;
-	bNumEndpoints = 2;
-	bInterfaceClass = USB_CLASS_XID;
-	bInterfaceSubClass = 0x42;
-	bInterfaceProtocol = 0x00;
-	eps->bEndpointAddress = USB_DIR_IN | 0x02;
-	eps->bmAttributes = USB_ENDPOINT_XFER_INT;
-	eps->wMaxPacketSize = 0x20;
-	eps->bInterval = 4;
-	eps++;
-	eps->bEndpointAddress = USB_DIR_OUT | 0x02;
-	eps->bmAttributes = USB_ENDPOINT_XFER_INT;
-	eps->wMaxPacketSize = 0x20;
-	eps->bInterval = 4;
-}
+static const USBDescEndpoint desc_endp_xbox_gamepad[2] = {
+	{
+		USB_DIR_IN | 0x02,       // bEndpointAddress;
+		USB_ENDPOINT_XFER_INT,   // bmAttributes;
+		0x20,                    // wMaxPacketSize;
+		4,                       // bInterval;
+		0,                       // bRefresh;
+		0,                       // bSynchAddress
+		0,                       // is_audio
+		nullptr                  // extra
+	},
+	{
+		USB_DIR_OUT | 0x02,
+		USB_ENDPOINT_XFER_INT,
+		0x20,
+		4,
+		0,
+		0,
+		0,
+		nullptr
+	}
+};
 
-USBDescIface::~USBDescIface()
-{
-	delete[] eps;
-}
+static const USBDescIface desc_iface_xbox_gamepad = {
+	0,                // bInterfaceNumber;
+	0,                // bAlternateSetting;
+	2,                // bNumEndpoints;
+	USB_CLASS_XID,    // bInterfaceClass;
+	0x42,             // bInterfaceSubClass
+	0x00,             // bInterfaceProtocol
+	0,                // iInterface
+	0,                // ndesc
+	nullptr,          // descs
+	desc_endp_xbox_gamepad
+};
 
-static const USBDescIface desc_iface_xbox_gamepad;
+static const USBDescConfig desc_config_xbox_gamepad = {
+	1,     // bNumInterfaces
+	1,     // bConfigurationValue
+	0,     // iConfiguration
+	0x80,  // bmAttributes
+	50,    // bMaxPower
+	1,     // nif
+	&desc_iface_xbox_gamepad
+};
 
-USBDescDevice::USBDescDevice()
-{
-	std::memset(this, 0, sizeof(USBDescDevice));
-	USBDescConfig* pUSBDescConfig = new USBDescConfig();
-	bcdUSB = 0x0110;
-	bMaxPacketSize0 = 0x40;
-	bNumConfigurations = 1;
-	pUSBDescConfig->bNumInterfaces = 1;
-	pUSBDescConfig->bConfigurationValue = 1;
-	pUSBDescConfig->bmAttributes = 0x80;
-	pUSBDescConfig->bMaxPower = 50;
-	pUSBDescConfig->nif = 1;
-	pUSBDescConfig->ifs = &desc_iface_xbox_gamepad;
-	confs = pUSBDescConfig;
-}
+static const USBDescDevice desc_device_xbox_gamepad = {
+	0x0110,   // bcdUSB
+	0,        // bDeviceClass
+	0,        // bDeviceSubClass
+	0,        // bDeviceProtocol
+	0x40,     // bMaxPacketSize0
+	1,        // bNumConfigurations
+	&desc_config_xbox_gamepad
+};
 
-USBDescDevice::~USBDescDevice()
-{
-	delete confs;
-}
+static const USBDesc desc_xbox_gamepad = {
+	{
+		0x045E,            // idVendor
+		0x0202,            // idProduct
+		0x0100,            // bcdDevice
+		STR_MANUFACTURER,  // iManufacturer
+		STR_PRODUCT,       // iProduct
+		STR_SERIALNUMBER   // iSerialNumber
+	},
+	&desc_device_xbox_gamepad
+};
 
-static const USBDescDevice desc_device_xbox_gamepad;
-
-USBDesc::USBDesc()
-{
-	std::memset(this, 0, sizeof(USBDesc));
-	id.idVendor = 0x045E;
-	id.idProduct = 0x0202;
-	id.bcdDevice = 0x0100;
-	id.iManufacturer = STR_MANUFACTURER;
-	id.iProduct = STR_PRODUCT;
-	id.iSerialNumber = STR_SERIALNUMBER;
-	full = &desc_device_xbox_gamepad;
-}
-
-static const USBDesc desc_xbox_gamepad;
-
-XIDDesc::XIDDesc()
-{
-	bLength = 0x10;
-	bDescriptorType = USB_DT_XID;
-	bcdXid = 0x100;
-	bType = 1;
-	bSubType = 1;
-	bMaxInputReportSize = 20;
-	bMaxOutputReportSize = 6;
-	wAlternateProductIds[0] = 0xFFFF;
-	wAlternateProductIds[1] = 0xFFFF;
-	wAlternateProductIds[2] = 0xFFFF;
-	wAlternateProductIds[3] = 0xFFFF;
-}
-
-static const XIDDesc desc_xid_xbox_gamepad;
+static const XIDDesc desc_xid_xbox_gamepad = {
+	0x10,        // bLength
+	USB_DT_XID,  // bDescriptorType
+	0x100,       // bcdXid
+	1,           // bType
+	1,           // bSubType
+	20,          // bMaxInputReportSize
+	6,           // bMaxOutputReportSize
+	{ 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF }  // wAlternateProductIds
+};
 
 int XidGamepad::Init(int port)
 {
@@ -229,7 +236,6 @@ XboxDeviceState* XidGamepad::ClassInitFn()
 int XidGamepad::UsbXidClaimPort(XboxDeviceState* dev, int port)
 {
 	int i;
-	int port_offset;
 	std::vector<USBPort*>::iterator it;
 
 	assert(dev->Port == nullptr);
@@ -525,7 +531,7 @@ void XidGamepad::XidCleanUp()
 void XidGamepad::UpdateForceFeedback()
 {
 	// JayFoxRox's remarks: "Xbox -> XID packets were not tested
-	// The handling out output packets / force feedback was not checked."
+	// The handling of output packets / force feedback was not checked."
 	// For the above reason we don't implement vibration support for now since the current
 	// implementation is untested and could potentially contain errors
 

@@ -40,7 +40,7 @@
 #include "glib_compat.h" // For GHashTable, g_hash_table_new, g_hash_table_lookup, g_hash_table_insert
 #endif
 
-#include "CxbxCommon.h" // For xbaddr
+#include "Cxbx.h" // For xbaddr
 #include "devices\PCIDevice.h" // For PCIDevice
 
 #include <queue>
