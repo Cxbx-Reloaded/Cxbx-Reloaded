@@ -232,10 +232,10 @@ int Hub::UsbHubClaimPort(XboxDeviceState* dev, int port)
 
 	i = 0;
 	if (port > 2) {
-		m_UsbDev = g_USB0;
+		m_UsbDev = g_USB1;
 	}
 	else {
-		m_UsbDev = g_USB1;
+		m_UsbDev = g_USB0;
 	}
 
 	while (m_UsbDev->m_HostController->m_bFrameTime) {}

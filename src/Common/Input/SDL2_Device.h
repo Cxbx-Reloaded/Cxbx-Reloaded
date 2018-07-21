@@ -54,15 +54,15 @@ struct ButtonState {
 class SDL2Devices
 {
 	public:
-		// index of this device
+		// index of this joystick
 		int m_Index;
-		// game controller object as used by SDL
-		SDL_GameController* m_Gamepad;
+		// joystick object as used by SDL
+		SDL_Joystick* m_Joystick;
 		// id of this controller
 		SDL_JoystickID m_jyID;
-		// attach/detach state of this controller
+		// attach/detach state of this joystick
 		int m_Attached;
-		// indicates the xbox device emulated by this controller
+		// indicates the xbox device emulated by this joystick
 		int m_Type = DEVICE_INVALID;
 
 		// update analog button state
@@ -112,7 +112,7 @@ class SDL2Devices
 		};
 		// m_HatIndex is added to HAT_CONSTANT to avoid collisions between it and the sdl button indices 
 		int m_HatIndex = HAT_CONSTANT;
-		// current button state of this controlller
+		// current button state of this joystick
 		ButtonState m_State;
 		// signals that the current bindings should be updated
 		std::atomic_bool m_bBindingsChanged;

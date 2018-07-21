@@ -79,13 +79,13 @@ void SDL2Devices::UpdateAnalogButtonState(uint8_t xbox_button, uint8_t state)
 	}
 
 	if (xbox_button == GAMEPAD_LEFT_TRIGGER) {
-		m_State.bAnalogButtons[m_ButtonMap_Analog[6][0]] = SDL_GameControllerGetAxis(m_Gamepad, SDL_CONTROLLER_AXIS_TRIGGERLEFT) >> 8;
+		m_State.bAnalogButtons[m_ButtonMap_Analog[6][0]] = SDL_JoystickGetAxis(m_Joystick, SDL_CONTROLLER_AXIS_TRIGGERLEFT) >> 8;
 		bStateDirty = true;
 		return;
 	}
 
 	if (xbox_button == GAMEPAD_RIGHT_TRIGGER) {
-		m_State.bAnalogButtons[m_ButtonMap_Analog[7][0]] = SDL_GameControllerGetAxis(m_Gamepad, SDL_CONTROLLER_AXIS_TRIGGERLEFT) >> 8;
+		m_State.bAnalogButtons[m_ButtonMap_Analog[7][0]] = SDL_JoystickGetAxis(m_Joystick, SDL_CONTROLLER_AXIS_TRIGGERLEFT) >> 8;
 		bStateDirty = true;
 		return;
 	}

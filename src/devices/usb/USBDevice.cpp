@@ -102,6 +102,7 @@ void USBDevice::USB_RegisterPort(USBPort* Port, int Index, int SpeedMask, USBPor
 	Port->PortIndex = Index;
 	Port->SpeedMask = SpeedMask;
 	Port->Operations = Ops;
+	Port->Dev = nullptr;
 	USB_PortLocation(Port, nullptr, Index + 1);
 	m_FreePorts.push_back(Port);
 }
@@ -761,7 +762,7 @@ void USBDevice::USBDesc_Init(XboxDeviceState* dev)
 {
 	const USBDesc* desc = USBDesc_GetUsbDeviceDesc(dev);
 
-	assert(desc != NULL);
+	assert(desc != nullptr);
 	dev->Speed = USB_SPEED_FULL;
 	dev->SpeedMask = 0;
 	if (desc->full) {

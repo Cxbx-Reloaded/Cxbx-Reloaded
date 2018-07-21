@@ -53,7 +53,7 @@ InputDeviceManager* g_InputDeviceManager = nullptr;
 
 InputDeviceManager::InputDeviceManager()
 {
-	if (SDL_InitSubSystem(SDL_INIT_GAMECONTROLLER) < 0) {
+	if (SDL_InitSubSystem(SDL_INIT_JOYSTICK) < 0) {
 		CxbxKrnlCleanup("Failed to initialize SDL2 input subsystem. The error was: %s\n", SDL_GetError());
 		return;
 	}
@@ -69,7 +69,7 @@ int InputDeviceManager::EnumSdl2Devices()
 	int NumOfJoysticks;
 	int NumInvalidJoysticks;
 	SDL2Devices* pDev;
-	SDL_GameController* pController;
+	SDL_Joystick* pJoystick;
 	std::vector<SDL2Devices*>::iterator it;
 
 	NumOfJoysticks = SDL_NumJoysticks();
@@ -81,27 +81,23 @@ int InputDeviceManager::EnumSdl2Devices()
 	NumInvalidJoysticks = 0;
 
 	for (int i = 0; i < NumOfJoysticks; i++) {
-		if (SDL_IsGameController(i)) {
-			pDev = new SDL2Devices();
-			pDev->m_Index = i;
-			m_Sdl2Devices.push_back(pDev);
-		}
-		// this joystick is not supported at the moment
-		NumInvalidJoysticks++;
+		pDev = new SDL2Devices();
+		pDev->m_Index = i;
+		m_Sdl2Devices.push_back(pDev);
 	}
 
 	for (it = m_Sdl2Devices.begin(); it != m_Sdl2Devices.end();) {
-		pController = SDL_GameControllerOpen((*it)->m_Index);
-		if (pController == nullptr) {
-			EmuWarning("Failed to open game controller %s. The error was %s\n", SDL_GameControllerNameForIndex((*it)->m_Index), SDL_GetError());
+		pJoystick = SDL_JoystickOpen((*it)->m_Index);
+		if (pJoystick == nullptr) {
+			EmuWarning("Failed to open joystick %s. The error was %s\n", SDL_GameControllerNameForIndex((*it)->m_Index), SDL_GetError());
 			delete (*it);
 			it = m_Sdl2Devices.erase(it);
 			NumInvalidJoysticks++;
 		}
 		else {
-			printf("Found game controller %s\n", SDL_GameControllerName(pController));
-			(*it)->m_Gamepad = pController;
-			(*it)->m_jyID = SDL_JoystickInstanceID(SDL_GameControllerGetJoystick(pController));
+			printf("Found joystick %s\n", SDL_JoystickName(pJoystick));
+			(*it)->m_Joystick = pJoystick;
+			(*it)->m_jyID = SDL_JoystickInstanceID(pJoystick);
 			(*it)->m_Attached = 1;
 			++it;
 		}
@@ -134,7 +130,7 @@ int InputDeviceManager::ConnectDeviceToXbox(int port, int type)
 		case MS_CONTROLLER_DUKE: {
 			if (g_HubObjArray[port] == nullptr) {
 				g_HubObjArray[port] = new Hub;
-				ret = g_HubObjArray[port]->Init(port);
+				ret = g_HubObjArray[port]->Init(port + 1);
 				if (ret) {
 					delete g_HubObjArray[port];
 					g_HubObjArray[port] = nullptr;
@@ -142,7 +138,7 @@ int InputDeviceManager::ConnectDeviceToXbox(int port, int type)
 				}
 				if (g_XidControllerObjArray[port] == nullptr) {
 					g_XidControllerObjArray[port] = new XidGamepad;
-					ret = g_XidControllerObjArray[port]->Init(port);
+					ret = g_XidControllerObjArray[port]->Init(port + 1);
 					if (ret) {
 						g_HubObjArray[port]->HubDestroy();
 						delete g_HubObjArray[port];
@@ -262,7 +258,6 @@ void InputDeviceManager::InputThread(InputDeviceManager* pVoid)
 	}
 
 	SDL_JoystickEventState(SDL_ENABLE);
-	SDL_GameControllerEventState(SDL_ENABLE);
 
 	while (bContinue)
 	{
@@ -309,23 +304,23 @@ void InputDeviceManager::InputThread(InputDeviceManager* pVoid)
 					break;
 				}
 
-				case SDL_CONTROLLERBUTTONUP:
-				case SDL_CONTROLLERBUTTONDOWN: {
-					pVoid->UpdateButtonState(event.cbutton.which, event.cbutton.button, event.cbutton.state);
-					break;
-				}
+				//case SDL_CONTROLLERBUTTONUP:
+				//case SDL_CONTROLLERBUTTONDOWN: {
+				//	pVoid->UpdateButtonState(event.cbutton.which, event.cbutton.button, event.cbutton.state);
+				//	break;
+				//}
 
-				case SDL_CONTROLLERAXISMOTION: {
-					pVoid->UpdateAxisState(event.caxis.which, event.caxis.axis, event.caxis.value);
-					break;
-				}
+				//case SDL_CONTROLLERAXISMOTION: {
+				//	pVoid->UpdateAxisState(event.caxis.which, event.caxis.axis, event.caxis.value);
+				//	break;
+				//}
 
-				case SDL_CONTROLLERDEVICEADDED: {
+				//case SDL_CONTROLLERDEVICEADDED: {
 
-				}
-				case SDL_CONTROLLERDEVICEREMOVED: {
+				//}
+				//case SDL_CONTROLLERDEVICEREMOVED: {
 
-				}
+				//}
 
 				case SDL_QUIT: {
 					bContinue = false;
@@ -386,6 +381,7 @@ void InputDeviceManager::UpdateButtonState(SDL_JoystickID id, uint8_t button, ui
 			ControllerObj->UpdateDigitalButtonState(xbox_button, state);
 			break;
 		}
+
 		default:
 			break;
 	}
@@ -444,7 +440,7 @@ void InputDeviceManager::UpdateAxisState(SDL_JoystickID id, uint8_t axis_index, 
 int InputDeviceManager::IsValidController(int index)
 {
 	SDL2Devices* pDev;
-	SDL_GameController* pController;
+	SDL_Joystick* pJoystick;
 
 	if (SDL_IsGameController(index)) {
 		pDev = new SDL2Devices();
@@ -456,23 +452,22 @@ int InputDeviceManager::IsValidController(int index)
 		return -1;
 	}
 
-	pController = SDL_GameControllerOpen(pDev->m_Index);
-	if (pController == nullptr) {
+	pJoystick = SDL_JoystickOpen(pDev->m_Index);
+	if (pJoystick == nullptr) {
 		EmuWarning("Failed to open game controller %s. The error was %s\n", SDL_GameControllerNameForIndex(pDev->m_Index), SDL_GetError());
 		delete pDev;
 		m_Sdl2Devices.erase(m_Sdl2Devices.begin() + index);
 		return -1;
 	}
 	else if (pDev->m_Index > 3) {
-		printf("More than 4 controllers detected. Putting game controller %s in detached state\n",
-			SDL_GameControllerName(pController));
+		printf("More than 4 controllers detected. Putting game controller %s in detached state\n", SDL_JoystickName(pJoystick));
 		pDev->m_Attached = 0;
 		return -1;
 	}
 	else {
-		printf("Found game controller %s\n", SDL_GameControllerName(pController));
-		pDev->m_Gamepad = pController;
-		pDev->m_jyID = SDL_JoystickInstanceID(SDL_GameControllerGetJoystick(pController));
+		printf("Found game controller %s\n", SDL_JoystickName(pJoystick));
+		pDev->m_Joystick = pJoystick;
+		pDev->m_jyID = SDL_JoystickInstanceID(pJoystick);
 		return 0;
 	}
 }

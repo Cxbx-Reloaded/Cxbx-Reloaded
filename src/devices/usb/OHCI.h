@@ -160,7 +160,7 @@ class OHCI
 		// all the registers available on the OHCI standard
 		OHCI_Registers m_Registers;
 		// end-of-frame timer
-		TimerObject* m_pEOFtimer;
+		TimerObject* m_pEOFtimer = nullptr;
 		// time at which a SOF was sent
 		uint64_t m_SOFtime;
 		// the duration of a usb frame
@@ -178,9 +178,9 @@ class OHCI
 		// Done Queue Interrupt Counter
 		int m_DoneCount;
 		// the address of the pending TD
-		xbaddr m_AsyncTD;
+		xbaddr m_AsyncTD = xbnull;
 		// ergo720: I think it signals that a TD has been processed completely
-		bool m_AsyncComplete;
+		bool m_AsyncComplete = 0;
 
 		// EOF callback wrapper
 		static void OHCI_FrameBoundaryWrapper(void* pVoid);

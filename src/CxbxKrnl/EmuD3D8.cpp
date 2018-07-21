@@ -1452,9 +1452,12 @@ static DWORD WINAPI EmuRenderWindow(LPVOID lpVoid)
         SetFocus(CxbxKrnl_hEmuParent);
     }
 
-    // initialize direct input
-    if(!XTL::EmuDInputInit())
-        CxbxKrnlCleanup("Could not initialize DirectInput!");
+    // initialize direct input only if LLE USB is off
+	if (!bLLE_USB) {
+		if (!XTL::EmuDInputInit()) {
+			CxbxKrnlCleanup("Could not initialize DirectInput!");
+		}
+	}
 
     DbgPrintf("EmuD3D8: Message-Pump thread is running.\n");
 

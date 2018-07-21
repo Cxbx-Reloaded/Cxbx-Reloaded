@@ -284,8 +284,11 @@ void CDECL EmuRegisterSymbol(const char* library_str,
         // Do nothing if emulating LLE APU
     } else if (bLLE_GPU && ((library_flag & XbSymbolLib_XGRAPHC) || (library_flag & XbSymbolLib_D3D8) || (library_flag & XbSymbolLib_D3D8LTCG) > 0)) {
         // Do nothing if emulating LLE GPU
-	} else if (bLLE_USB && (library_flag & XbSymbolLib_XAPILIB) > 0) {
-		// Do nothing if emulating LLE USB
+	} else if (bLLE_USB && ((std::strcmp(symbol_str, "XInitDevices") == 0) || (std::strcmp(symbol_str, "XGetDevices") == 0) || (std::strcmp(symbol_str, "XGetDeviceChanges") == 0) ||
+		(std::strcmp(symbol_str, "XInputOpen") == 0) || (std::strcmp(symbol_str, "XInputClose") == 0) || (std::strcmp(symbol_str, "XInputPoll") == 0) ||
+		(std::strcmp(symbol_str, "XInputGetCapabilities") == 0) || (std::strcmp(symbol_str, "XInputGetState") == 0) || (std::strcmp(symbol_str, "XInputSetState") == 0) ||
+		(std::strcmp(symbol_str, "XGetDeviceEnumerationStatus") == 0) || (std::strcmp(symbol_str, "XInputGetDeviceDescription") == 0) || (std::strcmp(symbol_str, "XID_fCloseDevice") == 0))) {
+		// Do nothing for the xinput functions if emulating LLE USB
     } else {
         // Or else check if patch exist then patch it.
 
