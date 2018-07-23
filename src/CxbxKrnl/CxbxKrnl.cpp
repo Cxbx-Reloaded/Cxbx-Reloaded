@@ -671,9 +671,11 @@ static unsigned int WINAPI CxbxKrnlInterruptThread(PVOID param)
 	InitSoftwareInterrupts();
 #endif
 
-	while (g_bEnableAllInterrupts) {
-		TriggerPendingConnectedInterrupts();
-		Sleep(1);
+	while (true) {
+		if (g_bEnableAllInterrupts) {
+			TriggerPendingConnectedInterrupts();
+			Sleep(1);
+		}
 	}
 
 	return 0;
