@@ -1092,6 +1092,14 @@ uint32_t OHCI::OHCI_ReadRegister(xbaddr Addr)
 				ret = m_Registers.RhPort[1].HcRhPortStatus | OHCI_PORT_PPS;
 				break;
 
+			case 23:
+				ret = 0;
+				break;
+
+			case 24:
+				ret = 0;
+				break;
+
 			default:
 				EmuWarning("%s: Read register operation with bad offset %u. Ignoring.", LOG_STR_OHCI, Addr >> 2);
 		}
@@ -1221,6 +1229,12 @@ void OHCI::OHCI_WriteRegister(xbaddr Addr, uint32_t Value)
 
 			case 22: // RhPort 1
 				OHCI_PortSetStatus(1, Value);
+				break;
+
+			case 23:
+				break;
+
+			case 24:
 				break;
 
 			default:

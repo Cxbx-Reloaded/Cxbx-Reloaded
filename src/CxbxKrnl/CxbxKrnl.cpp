@@ -108,6 +108,9 @@ bool g_bIsRetail = false;
 DWORD_PTR g_CPUXbox = 0;
 DWORD_PTR g_CPUOthers = 0;
 
+// Indicates to enable/disable all interrupts when cli and sti instructions are executed
+std::atomic_bool g_bEnableAllInterrupts = true;
+
 // Set by the VMManager during initialization. Exported because it's needed in other parts of the emu
 size_t g_SystemMaxMemory = 0;
 
@@ -668,7 +671,7 @@ static unsigned int WINAPI CxbxKrnlInterruptThread(PVOID param)
 	InitSoftwareInterrupts();
 #endif
 
-	while (true) {
+	while (g_bEnableAllInterrupts) {
 		TriggerPendingConnectedInterrupts();
 		Sleep(1);
 	}
