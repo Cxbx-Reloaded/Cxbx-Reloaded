@@ -4877,6 +4877,10 @@ void CreateHostResource(XTL::X_D3DResource *pResource, DWORD D3DUsage, int iText
 		if (EmuXBFormatRequiresConversionToARGB(X_Format)) {
 			bConvertToARGB = true;
 			PCFormat = XTL::D3DFMT_A8R8G8B8;
+
+			// Unset D3DUSAGE_DEPTHSTENCIL: It's not possible for ARGB textures to be depth stencils
+			// Fixes CreateTexture error in Virtua Cop 3 (Chihiro)
+			D3DUsage &= ~D3DUSAGE_DEPTHSTENCIL;
 		}
 		else {
 			// TODO : Nuance the following, because the Direct3D 8 docs states
