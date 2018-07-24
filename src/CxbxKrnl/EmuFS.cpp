@@ -128,7 +128,7 @@ NT_TIB *GetNtTib()
 
 xboxkrnl::KPCR* KeGetPcr();
 
-uint32_t fs_lock;
+uint32_t fs_lock = 0;
 
 __declspec(naked) void LockFSInternal()
 {
