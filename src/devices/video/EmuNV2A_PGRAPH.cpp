@@ -4313,7 +4313,7 @@ static int upload_gl_texture(GLenum gl_target,
                                                   s.width, s.height, 1,
                                                   s.pitch, 0);
 
-        resulting_format = converted ? converted_format : resulting_format;
+        resulting_format = converted ? converted_format : s.color_format;
         ColorFormatInfo cf = kelvin_color_format_map[resulting_format];
         glTexImage2D(gl_target, 0, cf.gl_internal_format,
                      s.width, s.height, 0,
@@ -4376,7 +4376,7 @@ static int upload_gl_texture(GLenum gl_target,
                                                           width, height, 1,
                                                           pitch, 0);
 
-                resulting_format = converted ? converted_format : resulting_format;
+                resulting_format = converted ? converted_format : s.color_format;
                 ColorFormatInfo cf = kelvin_color_format_map[resulting_format];
                 glTexImage2D(gl_target, level, cf.gl_internal_format,
                              width, height, 0,
@@ -4390,7 +4390,7 @@ static int upload_gl_texture(GLenum gl_target,
                     g_free(unswizzled);
                 }
 
-                texture_data += width * height * f.bytes_per_pixel;
+                texture_data += pitch * height;
             }
 
             width /= 2;
@@ -4419,7 +4419,7 @@ static int upload_gl_texture(GLenum gl_target,
                                                       width, height, depth,
                                                       row_pitch, slice_pitch);
 
-            resulting_format = converted ? converted_format : resulting_format;
+            resulting_format = converted ? converted_format : s.color_format;
             ColorFormatInfo cf = kelvin_color_format_map[resulting_format];
             glTexImage3D(gl_target, level, cf.gl_internal_format,
                          width, height, depth, 0,
