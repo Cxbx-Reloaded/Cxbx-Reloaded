@@ -2063,8 +2063,23 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
                 // Direct3D8: (WARN) :Device that was created without D3DCREATE_MULTITHREADED is being used by a thread other than the creation thread.
                 g_EmuCDPD.BehaviorFlags |= D3DCREATE_MULTITHREADED;
 
+				// If a depth stencil format is set, enable AutoDepthStencil
+				if (g_EmuCDPD.HostPresentationParameters.AutoDepthStencilFormat != 0) {
+					g_EmuCDPD.HostPresentationParameters.EnableAutoDepthStencil = TRUE;
+				}
+
+				// If the depth stencil format is unsupported by the host, use a sensible fallback
+				if (g_pDirect3D->CheckDeviceFormat(
+					D3DADAPTER_DEFAULT,
+					XTL::D3DDEVTYPE_HAL,
+					g_EmuCDPD.HostPresentationParameters.BackBufferFormat,
+					D3DUSAGE_DEPTHSTENCIL,
+					XTL::D3DRTYPE_SURFACE,
+					g_EmuCDPD.HostPresentationParameters.AutoDepthStencilFormat) != D3D_OK) {
+					g_EmuCDPD.HostPresentationParameters.AutoDepthStencilFormat = XTL::D3DFMT_D24S8;
+				}
+
 				// For some reason, D3DFMT_D16_LOCKABLE as the AudoDepthStencil causes CreateDevice to fail...
-				g_EmuCDPD.HostPresentationParameters.EnableAutoDepthStencil = TRUE;
 				if (g_EmuCDPD.HostPresentationParameters.AutoDepthStencilFormat == XTL::D3DFMT_D16_LOCKABLE) {
 					g_EmuCDPD.HostPresentationParameters.AutoDepthStencilFormat = XTL::D3DFMT_D16;
 				}
