@@ -4220,7 +4220,11 @@ static const
     /*pDefines=*/nullptr,
     /*pInclude=*/nullptr,
 #endif
-    /*Flags=*/D3DXASM_SKIPVALIDATION,
+#ifndef CXBX_USE_D3D9
+	/*Flags=*/D3DXASM_SKIPVALIDATION,
+#else
+	/*Flags=*/0,
+#endif
 #ifndef CXBX_USE_D3D9
 	/*ppConstants=*/NULL,
 #endif

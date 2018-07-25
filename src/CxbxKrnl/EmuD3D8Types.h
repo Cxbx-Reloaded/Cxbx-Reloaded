@@ -48,8 +48,8 @@
 #include <d3dx9math.h> // for D3DXVECTOR4, etc
 #include <d3dx9tex.h>
 
-#include <dxerr.h>
-#pragma comment(lib, "dxerr.lib") // See https://blogs.msdn.microsoft.com/chuckw/2012/04/24/wheres-dxerr-lib/
+#include <dxerr9.h>
+//#pragma comment(lib, "dxerr.lib") // See https://blogs.msdn.microsoft.com/chuckw/2012/04/24/wheres-dxerr-lib/
 
 // If the above doesn't compile, install the June 2010 DirectX SDK
 // from https://www.microsoft.com/en-us/download/details.aspx?id=6812
@@ -66,8 +66,10 @@
 #define D3DENUM_NO_WHQL_LEVEL 0 // default in Direct3D 9
 
 // Alias all host Direct3D 9 symbols to generic symbols
+#define DXGetErrorString         DXGetErrorString9A
+#define DXGetErrorDescription    DXGetErrorDescription9A
 #define Direct3DCreate			 Direct3DCreate9
-#define D3DXAssembleShader		 D3DXCompileShader
+#define D3DXAssembleShader		 D3DXAssembleShader
 #define FullScreen_PresentationInterval PresentationInterval // a field in D3DPRESENT_PARAMETERS
 #define D3DLockData              void
 #define PixelShaderConstantType  float

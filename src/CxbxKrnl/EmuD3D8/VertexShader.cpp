@@ -2394,6 +2394,7 @@ extern HRESULT XTL::EmuRecompileVshFunction
 	DWORD		 *pRecompiledDeclaration
 )
 {
+#ifndef CXBX_USE_D3D9
     VSH_SHADER_HEADER   *pShaderHeader = (VSH_SHADER_HEADER*)pFunction;
     DWORD               *pToken;
     boolean             EOI = false;
@@ -2506,10 +2507,9 @@ extern HRESULT XTL::EmuRecompileVshFunction
 		}
 		else
 		{
-
 			hRet = D3DXAssembleShader(pShaderDisassembly,
                                   strlen(pShaderDisassembly),
-                                  D3DXASM_SKIPVALIDATION,
+					              D3DXASM_SKIPVALIDATION,
                                   NULL,
                                   ppRecompiled,
                                   &pErrors);
@@ -2530,6 +2530,9 @@ extern HRESULT XTL::EmuRecompileVshFunction
     free(pShader);
 
     return hRet;
+#else
+	return D3D_OK;
+#endif
 }
 
 extern void XTL::FreeVertexDynamicPatch(CxbxVertexShader *pVertexShader)
@@ -2540,6 +2543,7 @@ extern void XTL::FreeVertexDynamicPatch(CxbxVertexShader *pVertexShader)
 // Checks for failed vertex shaders, and shaders that would need patching
 boolean VshHandleIsValidShader(DWORD Handle)
 {
+#ifndef CXBX_USE_D3D9
 	//printf( "VS = 0x%.08X\n", Handle );
 
     XTL::CxbxVertexShader *pVertexShader = XTL::MapXboxVertexShaderHandleToCxbxVertexShader(Handle);
@@ -2560,6 +2564,7 @@ boolean VshHandleIsValidShader(DWORD Handle)
         }
         */
     }
+#endif
     return TRUE;
 }
 
