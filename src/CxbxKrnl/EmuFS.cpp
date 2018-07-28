@@ -130,23 +130,18 @@ xboxkrnl::KPCR* KeGetPcr();
 
 uint32_t fs_lock = 0;
 
-__declspec(naked) void LockFSInternal()
-{
-	__asm {
-		mov eax, 1
-		xchg eax, [fs_lock]
-		test eax, eax
-		jnz LockFSInternal
-		ret
-	}
-}
-
 __declspec(naked) void LockFS()
 {
 	__asm {
-		push eax
-		call LockFSInternal
-		pop eax
+		pushfd
+		pushad
+		spinlock :
+		mov eax, 1
+		xchg eax, fs_lock
+		test eax, eax
+		jnz spinlock
+		popad
+		popfd
 		ret
 	}
 }
@@ -154,10 +149,12 @@ __declspec(naked) void LockFS()
 __declspec(naked) void UnlockFS()
 {
 	__asm {
-		push eax
+		pushfd
+		pushad
 		xor eax, eax
-		xchg eax, [fs_lock]
-		pop eax
+		xchg eax, fs_lock
+		popad
+		popfd
 		ret
 	}
 }
