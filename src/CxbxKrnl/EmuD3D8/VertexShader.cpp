@@ -2432,7 +2432,6 @@ extern HRESULT XTL::EmuRecompileVshFunction
 	DWORD		 *pRecompiledDeclaration
 )
 {
-#ifndef CXBX_USE_D3D9
     VSH_SHADER_HEADER   *pShaderHeader = (VSH_SHADER_HEADER*)pFunction;
     DWORD               *pToken;
     boolean             EOI = false;
@@ -2536,21 +2535,43 @@ extern HRESULT XTL::EmuRecompileVshFunction
 				"dp4 oPos.z, v0, c98\n"
 				"dp4 oPos.w, v0, c99\n";
 
-			hRet = D3DXAssembleShader(dummy,
+			hRet = D3DXAssembleShader(
+				dummy,
 				strlen(dummy),
-				D3DXASM_SKIPVALIDATION,
-				NULL,
-				ppRecompiled,
-				NULL);
+#ifdef CXBX_USE_D3D9
+				/*pDefines=*/nullptr,
+				/*pInclude=*/nullptr,
+#endif
+#ifndef CXBX_USE_D3D9
+				/*Flags=*/D3DXASM_SKIPVALIDATION,
+#else
+				/*Flags=*/0,
+#endif
+#ifndef CXBX_USE_D3D9
+				/*ppConstants=*/NULL,
+#endif
+				/*ppCompiledShader=*/ppRecompiled,
+				/*ppCompilationErrors*/nullptr);
 		}
 		else
 		{
-			hRet = D3DXAssembleShader(pShaderDisassembly,
-                                  strlen(pShaderDisassembly),
-					              D3DXASM_SKIPVALIDATION,
-                                  NULL,
-                                  ppRecompiled,
-                                  &pErrors);
+			hRet = D3DXAssembleShader(
+				pShaderDisassembly,
+				strlen(pShaderDisassembly),
+#ifdef CXBX_USE_D3D9
+				/*pDefines=*/nullptr,
+				/*pInclude=*/nullptr,
+#endif
+#ifndef CXBX_USE_D3D9
+				/*Flags=*/D3DXASM_SKIPVALIDATION,
+#else
+				/*Flags=*/0,
+#endif
+#ifndef CXBX_USE_D3D9
+				/*ppConstants=*/NULL,
+#endif
+				/*ppCompiledShader=*/ppRecompiled,
+				/*ppCompilationErrors*/&pErrors);
 		}
 
         if (FAILED(hRet))
@@ -2568,9 +2589,6 @@ extern HRESULT XTL::EmuRecompileVshFunction
     free(pShader);
 
     return hRet;
-#else
-	return D3D_OK;
-#endif
 }
 
 extern void XTL::FreeVertexDynamicPatch(CxbxVertexShader *pVertexShader)

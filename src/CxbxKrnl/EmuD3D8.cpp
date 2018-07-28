@@ -2995,6 +2995,8 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SelectVertexShader)
 		#ifndef CXBX_USE_D3D9
 
         CxbxVertexShader *pVertexShader = MapXboxVertexShaderHandleToCxbxVertexShader(Handle);
+		hret = g_PD3DDevice->SetVertexDeclaration(pVertexShader->pHostDeclaration);
+		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetVertexDeclaration(VshHandleIsVertexShader)");
 		hRet = g_pD3DDevice->SetVertexShader(pVertexShader->Handle);
 		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetVertexShader(VshHandleIsVertexShader)");
 		#else
@@ -3005,6 +3007,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SelectVertexShader)
     else if(Handle == NULL)
     {
 #ifdef CXBX_USE_D3D9
+		hRet = g_pD3DDevice->SetVertexDeclaration(nullptr);
 		hRet = g_pD3DDevice->SetVertexShader(nullptr);
 		hRet = g_pD3DDevice->SetFVF(D3DFVF_XYZ | D3DFVF_TEX0);
 #else
@@ -3506,7 +3509,6 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateVertexShader)
     DWORD           Usage
 )
 {
-#ifndef CXBX_USE_D3D9
 	FUNC_EXPORTS
 
 	LOG_FUNC_BEGIN
@@ -3555,97 +3557,116 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateVertexShader)
     DWORD        Handle = 0;
 
     HRESULT hRet = XTL::EmuRecompileVshDeclaration((DWORD*)pDeclaration,
-                                                   &pRecompiledDeclaration,
+                                                   (XTL::D3DVERTEXELEMENT9**)&pRecompiledDeclaration,
                                                    &DeclarationSize,
                                                    pFunction == NULL,
                                                    &pVertexShader->VertexShaderInfo);
 
-    if(SUCCEEDED(hRet) && pFunction)
-    {
+
+	if (SUCCEEDED(hRet) && pFunction)
+	{
 		boolean bUseDeclarationOnly = 0;
 
-        hRet = XTL::EmuRecompileVshFunction((DWORD*)pFunction,
-                                            &pRecompiledBuffer,
-                                            &VertexShaderSize,
-                                            g_VertexShaderConstantMode == X_D3DSCM_NORESERVEDCONSTANTS,
-											&bUseDeclarationOnly,
-											pRecompiledDeclaration);
-        if(SUCCEEDED(hRet))
-        {
-			if(!bUseDeclarationOnly)
+		hRet = XTL::EmuRecompileVshFunction((DWORD*)pFunction,
+			&pRecompiledBuffer,
+			&VertexShaderSize,
+			g_VertexShaderConstantMode == X_D3DSCM_NORESERVEDCONSTANTS,
+			&bUseDeclarationOnly,
+			pRecompiledDeclaration);
+		if (SUCCEEDED(hRet))
+		{
+			if (!bUseDeclarationOnly)
 				pRecompiledFunction = (DWORD*)pRecompiledBuffer->GetBufferPointer();
 			else
 				pRecompiledFunction = NULL;
-        }
-        else
-        {
-            pRecompiledFunction = NULL;
-            EmuWarning("Couldn't recompile vertex shader function.");
-            hRet = D3D_OK; // Try using a fixed function vertex shader instead
-        }
-    }
+		}
+		else
+		{
+			pRecompiledFunction = NULL;
+			EmuWarning("Couldn't recompile vertex shader function.");
+		}
+	}
 
-    //DbgPrintf("MaxVertexShaderConst = %d\n", g_D3DCaps.MaxVertexShaderConst);
+	//DbgPrintf("MaxVertexShaderConst = %d\n", g_D3DCaps.MaxVertexShaderConst);
 
-    if(SUCCEEDED(hRet))
-    {
-        hRet = g_pD3DDevice->CreateVertexShader
-        (
+	// Create the vertex declaration
+	hRet = g_pD3DDevice->CreateVertexDeclaration((XTL::D3DVERTEXELEMENT9*)pRecompiledDeclaration, &pVertexShader->pHostDeclaration);
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateVertexDeclaration");
+	g_pD3DDevice->SetVertexDeclaration(pVertexShader->pHostDeclaration);
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetVertexDeclaration");
+
+	if (SUCCEEDED(hRet) && pRecompiledFunction != nullptr)
+	{
+		hRet = g_pD3DDevice->CreateVertexShader
+		(
 #ifndef CXBX_USE_D3D9
-            pRecompiledDeclaration,
+			pRecompiledDeclaration,
 #endif
-            pRecompiledFunction,
+			pRecompiledFunction,
 #ifdef CXBX_USE_D3D9
 			(IDirect3DVertexShader9**)&Handle
 #else
 			&Handle,
 			g_dwVertexShaderUsage   // TODO: HACK: Xbox has extensions!
 #endif
-        );
+		);
 		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateVertexShader");
+	}
 
-        if(pRecompiledBuffer != nullptr)
-        {
-            pRecompiledBuffer->Release();
-            pRecompiledBuffer = nullptr;
-        }
+	//* Fallback to dummy shader.
+	if (FAILED(hRet) && pRecompiledFunction != nullptr)
+	{
+		static const char dummy[] =
+			"vs.1.1\n"
+			"dp4 oPos.x, v0, c96\n"
+			"dp4 oPos.y, v0, c97\n"
+			"dp4 oPos.z, v0, c98\n"
+			"dp4 oPos.w, v0, c99\n";
 
-        //* Fallback to dummy shader.
-        if(FAILED(hRet))
-        {
-            static const char dummy[] =
-                "vs.1.1\n"
-				"dp4 oPos.x, v0, c96\n"
-				"dp4 oPos.y, v0, c97\n"
-				"dp4 oPos.z, v0, c98\n"
-				"dp4 oPos.w, v0, c99\n";
+		EmuWarning("Trying fallback:\n%s", dummy);
 
-            EmuWarning("Trying fallback:\n%s", dummy);
-            hRet = D3DXAssembleShader(dummy,
-                                      strlen(dummy),
-                                      D3DXASM_SKIPVALIDATION,
-                                      NULL,
-                                      &pRecompiledBuffer,
-                                      NULL);
-			DEBUG_D3DRESULT(hRet, "D3DXAssembleShader");
-
-			hRet = g_pD3DDevice->CreateVertexShader
-            (
-#ifndef CXBX_USE_D3D9
-				pRecompiledDeclaration,
-#endif
-				(DWORD*)pRecompiledBuffer->GetBufferPointer(),
+		hRet = D3DXAssembleShader(
+			dummy,
+			strlen(dummy),
 #ifdef CXBX_USE_D3D9
-				(IDirect3DVertexShader9**)&Handle
-#else
-				&Handle,
-				g_dwVertexShaderUsage   // TODO: HACK: Xbox has extensions!
+			/*pDefines=*/nullptr,
+			/*pInclude=*/nullptr,
 #endif
-			);
-			DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateVertexShader(fallback)");
-		}
-        //*/
-    }
+#ifndef CXBX_USE_D3D9
+			/*Flags=*/D3DXASM_SKIPVALIDATION,
+#else
+			/*Flags=*/0,
+#endif
+#ifndef CXBX_USE_D3D9
+			/*ppConstants=*/NULL,
+#endif
+			/*ppCompiledShader=*/&pRecompiledBuffer,
+			/*ppCompilationErrors*/nullptr);
+
+		DEBUG_D3DRESULT(hRet, "D3DXAssembleShader");
+
+		hRet = g_pD3DDevice->CreateVertexShader
+		(
+#ifndef CXBX_USE_D3D9
+			pRecompiledDeclaration,
+#endif
+			(DWORD*)pRecompiledBuffer->GetBufferPointer(),
+#ifdef CXBX_USE_D3D9
+			(IDirect3DVertexShader9**)&Handle
+#else
+			&Handle,
+			g_dwVertexShaderUsage   // TODO: HACK: Xbox has extensions!
+#endif
+		);
+		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateVertexShader(fallback)");
+	}
+
+	if (pRecompiledBuffer != nullptr)
+	{
+		pRecompiledBuffer->Release();
+		pRecompiledBuffer = nullptr;
+	}
+	
     // Save the status, to remove things later
     pVertexShader->Status = hRet;
 
@@ -3709,9 +3730,6 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateVertexShader)
     
 
     return hRet;
-#else
-	return D3D_OK;
-#endif
 }
 
 // LTCG specific D3DDevice_SetVertexShaderConstant function...
@@ -8415,7 +8433,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DeleteVertexShader)
     DWORD Handle
 )
 {
-#ifndef CXBX_USE_D3D9
 	FUNC_EXPORTS
 
 	LOG_FUNC_ONE_ARG(Handle);
@@ -8429,6 +8446,10 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DeleteVertexShader)
     {
         X_D3DVertexShader *pD3DVertexShader = (X_D3DVertexShader *)(Handle & 0x7FFFFFFF);
         CxbxVertexShader *pVertexShader = MapXboxVertexShaderHandleToCxbxVertexShader(Handle);
+
+		if (pVertexShader->pHostDeclaration) {
+			pVertexShader->pHostDeclaration->Release();
+		}
 
         HostVertexShaderHandle = pVertexShader->Handle;
 		g_VMManager.Deallocate((VAddr)pVertexShader->pDeclaration);
@@ -8444,9 +8465,8 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DeleteVertexShader)
         g_VMManager.Deallocate((VAddr)pD3DVertexShader);
     }
 
-    HRESULT hRet = g_pD3DDevice->DeleteVertexShader(HostVertexShaderHandle);
+	HRESULT hRet = ((IDirect3DVertexShader9*)HostVertexShaderHandle)->Release();
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->DeleteVertexShader");
-#endif
 }
 
 // ******************************************************************
