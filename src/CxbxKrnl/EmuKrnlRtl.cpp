@@ -1280,7 +1280,10 @@ XBSYSAPI EXPORTNUM(295) xboxkrnl::VOID NTAPI xboxkrnl::RtlLeaveCriticalSectionAn
     LOG_FUNC_ONE_ARG(CriticalSection);
 
     RtlLeaveCriticalSection(CriticalSection);
-    KeLeaveCriticalRegion();
+
+	if (CriticalSection->RecursionCount == 0) {
+		KeLeaveCriticalRegion();
+	}
 }
 
 // ******************************************************************
