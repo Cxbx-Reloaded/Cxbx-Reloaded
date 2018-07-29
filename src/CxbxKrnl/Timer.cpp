@@ -80,7 +80,7 @@ inline uint64_t GetTime_NS(TimerObject* Timer)
 // Calculates the next expire time of the timer
 static inline uint64_t GetNextExpireTime(TimerObject* Timer)
 {
-	return GetTime_NS(Timer) + Timer->ExpireTime_MS.load() * SCALE_MS;
+	return GetTime_NS(Timer) + Timer->ExpireTime_MS.load();
 }
 
 // Deallocates the memory of the timer
@@ -146,6 +146,7 @@ TimerObject* Timer_Create(pTimerCB Callback, void* Arg, unsigned int Factor)
 }
 
 // Starts the timer
+// Expire_MS must be expressed in NS
 void Timer_Start(TimerObject* Timer, uint64_t Expire_MS)
 {
 	Timer->ExpireTime_MS.store(Expire_MS);

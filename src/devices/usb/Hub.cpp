@@ -238,7 +238,7 @@ int Hub::UsbHubClaimPort(XboxDeviceState* dev, int port)
 		m_UsbDev = g_USB0;
 	}
 
-	while (m_UsbDev->m_HostController->m_bFrameTime) {}
+	while (m_UsbDev->m_HostController->m_bFrameTime) { Sleep(1); }
 	m_UsbDev->m_HostController->m_bFrameTime = true;
 
 	for (auto usb_port : m_UsbDev->m_FreePorts) {
@@ -709,7 +709,7 @@ void Hub::HubCleanUp()
 
 void Hub::HubDestroy()
 {
-	while (m_UsbDev->m_HostController->m_bFrameTime) {}
+	while (m_UsbDev->m_HostController->m_bFrameTime) { Sleep(1); }
 	m_UsbDev->m_HostController->m_bFrameTime = true;
 	m_pPeripheralFuncStruct->handle_destroy();
 	m_UsbDev->m_HostController->m_bFrameTime = false;

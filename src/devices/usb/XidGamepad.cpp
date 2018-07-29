@@ -257,7 +257,7 @@ int XidGamepad::UsbXidClaimPort(XboxDeviceState* dev, int port)
 		return -1;
 	}
 
-	while (m_UsbDev->m_HostController->m_bFrameTime) {}
+	while (m_UsbDev->m_HostController->m_bFrameTime) { Sleep(1); }
 	m_UsbDev->m_HostController->m_bFrameTime = true;
 
 	m_Port = port;

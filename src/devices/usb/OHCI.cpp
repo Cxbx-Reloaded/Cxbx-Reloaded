@@ -123,7 +123,7 @@ namespace xboxkrnl
 #define OHCI_ED_EN_MASK   (0xF<<OHCI_ED_EN_SHIFT)     // EndpointNumber
 #define OHCI_ED_D_SHIFT   11
 #define OHCI_ED_D_MASK    (3<<OHCI_ED_D_SHIFT)        // Direction
-#define OHCI_ED_S         (1<<13)
+#define OHCI_ED_S         (1<<13)                     // Speed
 #define OHCI_ED_K         (1<<14)                     // sKip
 #define OHCI_ED_F         (1<<15)                     // Format
 #define OHCI_ED_MPS_SHIFT 16
@@ -131,7 +131,7 @@ namespace xboxkrnl
 
 /* Flags in the HeadP field of an ED */
 #define OHCI_ED_H         1                           // Halted
-#define OHCI_ED_C         2
+#define OHCI_ED_C         2                           // toggleCarry
 
 /* Bitfields for the first word of a TD */
 #define OHCI_TD_R         (1<<18)                     // bufferRounding
@@ -142,7 +142,7 @@ namespace xboxkrnl
 #define OHCI_TD_T0        (1<<24)
 #define OHCI_TD_T1        (1<<25)                     // DataToggle (T0 and T1)
 #define OHCI_TD_EC_SHIFT  26
-#define OHCI_TD_EC_MASK   (3<<OHCI_TD_EC_SHIFT)
+#define OHCI_TD_EC_MASK   (3<<OHCI_TD_EC_SHIFT)       // ErrorCount
 #define OHCI_TD_CC_SHIFT  28
 #define OHCI_TD_CC_MASK   (0xF<<OHCI_TD_CC_SHIFT)     // ConditionCode
 
@@ -197,6 +197,16 @@ namespace xboxkrnl
 #define OHCI_OFFSET_MASK  0xFFF
 
 
+// Temporary output (useful for debugging LLE USB)
+#define DEBUG
+
+#ifdef DEBUG
+
+#define TestOut printf
+
+#endif // DEBUG
+
+
 OHCI::OHCI(int Irq, USBDevice* UsbObj)
 {
 	int offset = 0;
@@ -225,7 +235,7 @@ OHCI::OHCI(int Irq, USBDevice* UsbObj)
 	}
 	OHCI_PacketInit(&m_UsbPacket);
 
-	m_UsbFrameTime = 1000000ULL; // 1 ms
+	m_UsbFrameTime = 1000000ULL; // 1 ms expressed in ns
 	m_TicksPerUsbTick = 1000000000ULL / USB_HZ; // 83
 
 	// Do a hardware reset
@@ -241,8 +251,11 @@ void OHCI::OHCI_FrameBoundaryWorker()
 {
 	OHCI_HCCA hcca;
 
-	while (m_bFrameTime) {}
+	while (m_bFrameTime) { Sleep(1); }
 	m_bFrameTime = true;
+
+	TestOut("Frame processing started\n");
+	TestOut("HcControl: 0x%X, HcFmNumber: 0x%X, HcInterruptStatus: 0x%X\n", m_Registers.HcControl, m_Registers.HcFmNumber, m_Registers.HcInterruptStatus);
 
 	if (OHCI_ReadHCCA(m_Registers.HcHCCA, &hcca)) {
 		EmuWarning("%s: HCCA read error at physical address 0x%X", m_Registers.HcHCCA, LOG_STR_OHCI);
@@ -276,9 +289,12 @@ void OHCI::OHCI_FrameBoundaryWorker()
 		return;
 	}
 
+	TestOut("HcFmRemaining: 0x%X, HcFmInterval: 0x%X - before\n", m_Registers.HcFmRemaining, m_Registers.HcFmInterval);
 	// From the standard: "This bit is loaded from the FrameIntervalToggle field of
 	// HcFmInterval whenever FrameRemaining reaches 0."
-	m_Registers.HcFmRemaining = (m_Registers.HcFmRemaining & ~OHCI_FMR_FRT) | (m_Registers.HcFmInterval & OHCI_FMI_FIT);
+	m_Registers.HcFmRemaining = (m_Registers.HcFmInterval & OHCI_FMI_FIT) == 0 ?
+		m_Registers.HcFmRemaining & ~OHCI_FMR_FRT : m_Registers.HcFmRemaining | OHCI_FMR_FRT;
+	TestOut("HcFmRemaining: 0x%X, HcFmInterval: 0x%X - after\n", m_Registers.HcFmRemaining, m_Registers.HcFmInterval);
 
 	// Increment frame number
 	m_Registers.HcFmNumber = (m_Registers.HcFmNumber + 1) & 0xFFFF; // prevent overflow
@@ -318,6 +334,10 @@ void OHCI::OHCI_FrameBoundaryWorker()
 		EmuWarning("%s: HCCA write error at physical address 0x%X", LOG_STR_OHCI, m_Registers.HcHCCA);
 		OHCI_FatalError();
 	}
+
+	TestOut("Frame processing ended\n");
+	TestOut("HcControl: 0x%X, HcFmNumber: 0x%X, HcInterruptStatus: 0x%X\n", m_Registers.HcControl, m_Registers.HcFmNumber, m_Registers.HcInterruptStatus);
+
 	m_bFrameTime = false;
 }
 
@@ -325,11 +345,12 @@ void OHCI::OHCI_FatalError()
 {
 	// According to the standard, an OHCI will stop operating, and set itself into error state
 	// (which can be queried by MMIO). Instead of calling directly CxbxKrnlCleanup, we let the
-	// HCD know the problem so it can try to solve it
+	// HCD know the problem so that it can try to solve it
 
 	OHCI_SetInterrupt(OHCI_INTR_UE);
 	OHCI_BusStop();
 	DbgPrintf("%s: an unrecoverable error occoured!\n", LOG_STR_OHCI);
+	TestOut("Fatal error");
 }
 
 bool OHCI::OHCI_ReadHCCA(xbaddr Paddr, OHCI_HCCA* Hcca)
@@ -469,7 +490,7 @@ bool OHCI::OHCI_CopyIsoTD(uint32_t start_addr, uint32_t end_addr, uint8_t* Buffe
 	if (n == Length) {
 		return false; // no bytes left to copy
 	}
-	ptr = end_addr & ~0xfffu;
+	ptr = end_addr & ~0xFFFu;
 	Buffer += n;
 	if (OHCI_FindAndCopyTD(ptr, Buffer, Length - n, bIsWrite)) {
 		return true; // error
@@ -864,13 +885,8 @@ void OHCI::OHCI_StateReset()
 	m_OldHcControl = 0;
 
 	// Reset all registers
-	// Remark: the standard says that RemoteWakeupConnected bit should be set during POST, cleared during hw reset
-	// and ignored during a sw reset. However, VBox sets it on hw reset and XQEMU clears it. Considering that the Xbox
-	// doesn't do POST, I will clear it.
 	m_Registers.HcRevision = 0x10;
 	m_Registers.HcControl = 0;
-	m_Registers.HcControl &= ~OHCI_CTL_HCFS;
-	m_Registers.HcControl |= Reset;
 	m_Registers.HcCommandStatus = 0;
 	m_Registers.HcInterruptStatus = 0;
 	m_Registers.HcInterrupt = OHCI_INTR_MIE; // enable interrupts
@@ -916,7 +932,8 @@ void OHCI::OHCI_StateReset()
 void OHCI::OHCI_BusStart()
 {
 	// Create the EOF timer. Let's try a factor of 50 (1 virtual ms -> 50 real ms)
-	m_pEOFtimer = Timer_Create(OHCI_FrameBoundaryWrapper, this, 50);
+	m_pEOFtimer = Timer_Create(OHCI_FrameBoundaryWrapper, this, 100);
+	TestOut("Bus start.\n");
 
 	DbgPrintf("%s: Operational mode event\n", LOG_STR_OHCI);
 
@@ -931,12 +948,15 @@ void OHCI::OHCI_BusStop()
 		Timer_Exit(m_pEOFtimer);
 	}
 	m_pEOFtimer = nullptr;
+	TestOut("Bus stop\n");
 }
 
 void OHCI::OHCI_SOF(bool bCreate)
 {
 	// set current SOF time
 	m_SOFtime = GetTime_NS(m_pEOFtimer);
+
+	TestOut("OHCI_SOF -> m_SOFtime is 0x%X\n", m_SOFtime);
 
 	// make timer expire at SOF + 1 virtual ms from now
 	if (bCreate) {
@@ -952,6 +972,8 @@ void OHCI::OHCI_ChangeState(uint32_t Value)
 	m_Registers.HcControl = Value;
 	uint32_t NewState = m_Registers.HcControl & OHCI_CTL_HCFS;
 
+	TestOut("OldState 0x%X\n", OldState);
+
 	// no state change
 	if (OldState == NewState) {
 		return;
@@ -961,19 +983,23 @@ void OHCI::OHCI_ChangeState(uint32_t Value)
 	{
 		case Operational:
 			OHCI_BusStart();
+			TestOut("NewState Operational\n");
 			break;
 
 		case Suspend:
 			OHCI_BusStop();
 			DbgPrintf("%s: Suspend mode event\n", LOG_STR_OHCI);
+			TestOut("NewState Suspend\n");
 			break;
 
 		case Resume:
 			DbgPrintf("%s: Resume mode event\n", LOG_STR_OHCI);
+			TestOut("NewState Resume\n");
 			break;
 
 		case Reset:
 			OHCI_StateReset();
+			TestOut("NewState Reset\n");
 			break;
 
 		default:
@@ -1004,100 +1030,124 @@ uint32_t OHCI::OHCI_ReadRegister(xbaddr Addr)
 		{
 			case 0: // HcRevision
 				ret = m_Registers.HcRevision;
+				TestOut("m_Registers.HcRevision: 0x%X\n", m_Registers.HcRevision);
 				break;
 
 			case 1: // HcControl
 				ret = m_Registers.HcControl;
+				TestOut("m_Registers.HcControl: 0x%X\n", m_Registers.HcControl);
 				break;
 
 			case 2: // HcCommandStatus
 				ret = m_Registers.HcCommandStatus;
+				TestOut("m_Registers.HcCommandStatus: 0x%X\n", m_Registers.HcCommandStatus);
 				break;
 
 			case 3: // HcInterruptStatus
 				ret = m_Registers.HcInterruptStatus;
+				TestOut("m_Registers.HcInterruptStatus: 0x%X\n", m_Registers.HcInterruptStatus);
 				break;
 
 			case 4: // HcInterruptEnable
 			case 5: // HcInterruptDisable
 				ret = m_Registers.HcInterrupt;
+				TestOut("m_Registers.HcInterrupt: 0x%X\n", m_Registers.HcInterrupt);
 				break;
 
 			case 6: // HcHCCA
 				ret = m_Registers.HcHCCA;
+				TestOut("m_Registers.HcHCCA: 0x%X\n", m_Registers.HcHCCA);
 				break;
 
 			case 7: // HcPeriodCurrentED
 				ret = m_Registers.HcPeriodCurrentED;
+				TestOut("m_Registers.HcPeriodCurrentED: 0x%X\n", m_Registers.HcPeriodCurrentED);
 				break;
 
 			case 8: // HcControlHeadED
 				ret = m_Registers.HcControlHeadED;
+				TestOut("m_Registers.HcControlHeadED: 0x%X\n", m_Registers.HcControlHeadED);
 				break;
 
 			case 9: // HcControlCurrentED
 				ret = m_Registers.HcControlCurrentED;
+				TestOut("m_Registers.HcControlCurrentED: 0x%X\n", m_Registers.HcControlCurrentED);
 				break;
 
 			case 10: // HcBulkHeadED
 				ret = m_Registers.HcBulkHeadED;
+				TestOut("m_Registers.HcBulkHeadED: 0x%X\n", m_Registers.HcBulkHeadED);
 				break;
 
 			case 11: // HcBulkCurrentED
 				ret = m_Registers.HcBulkCurrentED;
+				TestOut("m_Registers.HcBulkCurrentED: 0x%X\n", m_Registers.HcBulkCurrentED);
 				break;
 
 			case 12: // HcDoneHead
 				ret = m_Registers.HcDoneHead;
+				TestOut("m_Registers.HcDoneHead: 0x%X\n", m_Registers.HcDoneHead);
 				break;
 
 			case 13: // HcFmInterval
 				ret = m_Registers.HcFmInterval;
+				TestOut("m_Registers.HcFmInterval: 0x%X\n", m_Registers.HcFmInterval);
 				break;
 
 			case 14: // HcFmRemaining
 				ret = OHCI_GetFrameRemaining();
+				TestOut("m_Registers.HcFmRemaining: 0x%X\n", m_Registers.HcFmRemaining);
 				break;
 
 			case 15: // HcFmNumber
 				ret = m_Registers.HcFmNumber;
+				TestOut("m_Registers.HcFmNumber: 0x%X\n", m_Registers.HcFmNumber);
 				break;
 
 			case 16: // HcPeriodicStart
 				ret = m_Registers.HcPeriodicStart;
+				TestOut("m_Registers.HcPeriodicStart: 0x%X\n", m_Registers.HcPeriodicStart);
 				break;
 
 			case 17: // HcLSThreshold
 				ret = m_Registers.HcLSThreshold;
+				TestOut("m_Registers.HcLSThreshold: 0x%X\n", m_Registers.HcLSThreshold);
 				break;
 
 			case 18: // HcRhDescriptorA
 				ret = m_Registers.HcRhDescriptorA;
+				TestOut("m_Registers.HcRhDescriptorA: 0x%X\n", m_Registers.HcRhDescriptorA);
 				break;
 
 			case 19: // HcRhDescriptorB
 				ret = m_Registers.HcRhDescriptorB;
+				TestOut("m_Registers.HcRhDescriptorB: 0x%X\n", m_Registers.HcRhDescriptorB);
 				break;
 
 			case 20: // HcRhStatus
 				ret = m_Registers.HcRhStatus;
+				TestOut("m_Registers.HcRhStatus: 0x%X\n", m_Registers.HcRhStatus);
 				break;
 
 			// Always report that the port power is on since the Xbox cannot switch off the electrical current to it
 			case 21: // RhPort 0
 				ret = m_Registers.RhPort[0].HcRhPortStatus | OHCI_PORT_PPS;
+				TestOut("m_Registers.RhPort[0].HcRhPortStatus: 0x%X\n", m_Registers.RhPort[0].HcRhPortStatus | OHCI_PORT_PPS);
 				break;
 
 			case 22: // RhPort 1
 				ret = m_Registers.RhPort[1].HcRhPortStatus | OHCI_PORT_PPS;
+				TestOut("m_Registers.RhPort[1].HcRhPortStatus: 0x%X\n", m_Registers.RhPort[1].HcRhPortStatus | OHCI_PORT_PPS);
 				break;
 
 			case 23:
-				ret = 0;
+				ret = 0 | OHCI_PORT_PPS;
+				TestOut("m_Registers.RhPort[2].HcRhPortStatus: 0x%X\n", ret);
 				break;
 
 			case 24:
-				ret = 0;
+				ret = 0 | OHCI_PORT_PPS;
+				TestOut("m_Registers.RhPort[3].HcRhPortStatus: 0x%X\n", ret);
 				break;
 
 			default:
@@ -1119,15 +1169,19 @@ void OHCI::OHCI_WriteRegister(xbaddr Addr, uint32_t Value)
 		{
 			case 0: // HcRevision
 				// This register is read-only
+				TestOut("W m_Registers.HcRevision: 0x%X\n", Value);
 				break;
 
 			case 1: // HcControl
+				TestOut("W m_Registers.HcControl: 0x%X\n", Value);
 				OHCI_ChangeState(Value);
+				TestOut("W m_Registers.HcControl: 0x%X\n", m_Registers.HcControl);
 				break;
 
 			case 2: // HcCommandStatus
 			{
 				// SOC is read-only
+				TestOut("W m_Registers.HcCommandStatus: 0x%X\n", Value);
 				Value &= ~OHCI_STATUS_SOC;
 
 				// From the standard: "The Host Controller must ensure that bits written as 1 become set
@@ -1138,103 +1192,141 @@ void OHCI::OHCI_WriteRegister(xbaddr Addr, uint32_t Value)
 					// Do a hardware reset
 					OHCI_StateReset();
 				}
+				TestOut("W m_Registers.HcCommandStatus: 0x%X\n", m_Registers.HcCommandStatus);
 			}
 			break;
 
 			case 3: // HcInterruptStatus
+				TestOut("W m_Registers.HcInterruptStatus: 0x%X\n", Value);
 				m_Registers.HcInterruptStatus &= ~Value;
 				OHCI_UpdateInterrupt();
+				TestOut("W m_Registers.HcInterruptStatus: 0x%X\n", m_Registers.HcInterruptStatus);
 				break;
 
 			case 4: // HcInterruptEnable
+				TestOut("W m_Registers.HcInterruptEnable: 0x%X\n", Value);
 				m_Registers.HcInterrupt |= Value;
 				OHCI_UpdateInterrupt();
+				TestOut("W m_Registers.HcInterruptEnable: 0x%X\n", m_Registers.HcInterrupt);
 				break;
 
 			case 5: // HcInterruptDisable
+				TestOut("W m_Registers.HcInterruptDisable: 0x%X\n", Value);
 				m_Registers.HcInterrupt &= ~Value;
 				OHCI_UpdateInterrupt();
+				TestOut("W m_Registers.HcInterruptDisable: 0x%X\n", m_Registers.HcInterrupt);
 				break;
 
 			case 6: // HcHCCA
 				// The standard says the minimum alignment is 256 bytes and so bits 0 through 7 are always zero
+				TestOut("W m_Registers.HcHCCA: 0x%X\n", Value);
 				m_Registers.HcHCCA = Value & OHCI_HCCA_MASK;
+				TestOut("W m_Registers.HcHCCA: 0x%X\n", m_Registers.HcHCCA);
 				break;
 
 			case 7: // HcPeriodCurrentED
 				// This register is read-only
+				TestOut("W m_Registers.HcPeriodCurrentED: 0x%X\n", Value);
 				break;
 
 			case 8: // HcControlHeadED
+				TestOut("W m_Registers.HcControlHeadED: 0x%X\n", Value);
 				m_Registers.HcControlHeadED = Value & OHCI_DPTR_MASK;
+				TestOut("W m_Registers.HcControlHeadED: 0x%X\n", m_Registers.HcControlHeadED);
 				break;
 
 			case 9: // HcControlCurrentED
+				TestOut("W m_Registers.HcControlCurrentED: 0x%X\n", Value);
 				m_Registers.HcControlCurrentED = Value & OHCI_DPTR_MASK;
+				TestOut("W m_Registers.HcControlCurrentED: 0x%X\n", m_Registers.HcControlCurrentED);
 				break;
 
 			case 10: // HcBulkHeadED
+				TestOut("W m_Registers.HcBulkHeadED: 0x%X\n", Value);
 				m_Registers.HcBulkHeadED = Value & OHCI_DPTR_MASK;
+				TestOut("W m_Registers.HcBulkHeadED: 0x%X\n", m_Registers.HcBulkHeadED);
 				break;
 
 			case 11: // HcBulkCurrentED
+				TestOut("W m_Registers.HcBulkCurrentED: 0x%X\n", Value);
 				m_Registers.HcBulkCurrentED = Value & OHCI_DPTR_MASK;
+				TestOut("W m_Registers.HcBulkCurrentED: 0x%X\n", m_Registers.HcBulkCurrentED);
 				break;
 
 			case 12: // HcDoneHead
+				TestOut("W m_Registers.HcDoneHead: 0x%X\n", Value);
 				// This register is read-only
 				break;
 
 			case 13: // HcFmInterval
 			{
-				if ((Value & OHCI_FMI_FIT) != (m_Registers.HcFmInterval & OHCI_FMI_FIT)) {
+				TestOut("W m_Registers.HcFmInterval: 0x%X\n", Value);
+				if ((Value & OHCI_FMI_FI) != (m_Registers.HcFmInterval & OHCI_FMI_FI)) {
 					DbgPrintf("%s: Changing frame interval duration. New value is %u\n", LOG_STR_OHCI, Value & OHCI_FMI_FI);
 				}
 				m_Registers.HcFmInterval = Value & ~0xC000;
+				TestOut("W m_Registers.HcFmInterval: 0x%X\n", m_Registers.HcFmInterval);
 			}
 			break;
 
 			case 14: // HcFmRemaining
 				// This register is read-only
+				TestOut("W m_Registers.HcFmRemaining: 0x%X\n", Value);
 				break;
 
 			case 15: // HcFmNumber
 				// This register is read-only
+				TestOut("W m_Registers.HcFmNumber: 0x%X\n", Value);
 				break;
 
 			case 16: // HcPeriodicStart
+				TestOut("W m_Registers.HcPeriodicStart: 0x%X\n", Value);
 				m_Registers.HcPeriodicStart = Value & 0x3FFF;
+				TestOut("W m_Registers.HcPeriodicStart: 0x%X\n", m_Registers.HcPeriodicStart);
 				break;
 
 			case 17: // HcLSThreshold
+				TestOut("W m_Registers.HcLSThreshold: 0x%X\n", Value);
 				m_Registers.HcLSThreshold = Value & 0xFFF;
+				TestOut("W m_Registers.HcLSThreshold: 0x%X\n", m_Registers.HcLSThreshold);
 				break;
 
 			case 18: // HcRhDescriptorA
+				TestOut("W m_Registers.HcRhDescriptorA: 0x%X\n", Value);
 				m_Registers.HcRhDescriptorA &= ~OHCI_RHA_RW_MASK;
 				m_Registers.HcRhDescriptorA |= Value & OHCI_RHA_RW_MASK; // ??
+				TestOut("W m_Registers.HcRhDescriptorA: 0x%X\n", m_Registers.HcRhDescriptorA);
 				break;
 
 			case 19: // HcRhDescriptorB
+				TestOut("W m_Registers.HcRhDescriptorB: 0x%X\n", Value);
 				// Don't do anything, the attached devices are all removable and PowerSwitchingMode is always 0
 				break;
 
 			case 20: // HcRhStatus
+				TestOut("W m_Registers.HcRhStatus: 0x%X\n", Value);
 				OHCI_SetHubStatus(Value);
+				TestOut("W m_Registers.HcRhStatus: 0x%X\n", m_Registers.HcRhStatus);
 				break;
 
 			case 21: // RhPort 0
+				TestOut("W m_Registers.RhPort 0: 0x%X\n", Value);
 				OHCI_PortSetStatus(0, Value);
+				TestOut("W m_Registers.RhPort 0: 0x%X\n", m_Registers.RhPort[0].HcRhPortStatus);
 				break;
 
 			case 22: // RhPort 1
+				TestOut("W m_Registers.RhPort 1: 0x%X\n", Value);
 				OHCI_PortSetStatus(1, Value);
+				TestOut("W m_Registers.RhPort 1: 0x%X\n", m_Registers.RhPort[1].HcRhPortStatus);
 				break;
 
 			case 23:
+				TestOut("W m_Registers.RhPort 2: 0x%X\n", Value);
 				break;
 
 			case 24:
+				TestOut("W m_Registers.RhPort 3: 0x%X\n", Value);
 				break;
 
 			default:
@@ -1246,9 +1338,10 @@ void OHCI::OHCI_WriteRegister(xbaddr Addr, uint32_t Value)
 void OHCI::OHCI_UpdateInterrupt()
 {
 	if ((m_Registers.HcInterrupt & OHCI_INTR_MIE) && (m_Registers.HcInterruptStatus & m_Registers.HcInterrupt)) {
+		HalSystemInterrupts[m_IrqNum].Assert(false);
 		HalSystemInterrupts[m_IrqNum].Assert(true);
+		TestOut("Fired interrupt -> m_Registers.HcInterruptStatus is 0x%X\n", m_Registers.HcInterruptStatus);
 	}
-	else { HalSystemInterrupts[m_IrqNum].Assert(false); }
 }
 
 void OHCI::OHCI_SetInterrupt(uint32_t Value)
@@ -1430,6 +1523,8 @@ void OHCI::OHCI_Detach(USBPort* Port)
 	OHCIPort* port = &m_Registers.RhPort[Port->PortIndex];
 	uint32_t old_state = port->HcRhPortStatus;
 
+	TestOut("OHCI_Detach\n");
+
 	OHCI_AsyncCancelDevice(Port->Dev);
 
 	// set connect status
@@ -1456,6 +1551,8 @@ void OHCI::OHCI_Attach(USBPort* Port)
 	OHCIPort* port = &m_Registers.RhPort[Port->PortIndex];
 	uint32_t old_state = port->HcRhPortStatus;
 
+	TestOut("OHCI_Attach\n");
+
 	// set connect status
 	port->HcRhPortStatus |= OHCI_PORT_CCS | OHCI_PORT_CSC;
 
@@ -1481,11 +1578,13 @@ void OHCI::OHCI_Attach(USBPort* Port)
 
 void OHCI::OHCI_ChildDetach(XboxDeviceState* child)
 {
+	TestOut("OHCI_ChildDetach\n");
 	OHCI_AsyncCancelDevice(child);
 }
 
 void OHCI::OHCI_Wakeup(USBPort* port1)
 {
+	TestOut("OHCI_Wakeup\n");
 	OHCIPort* port = &m_Registers.RhPort[port1->PortIndex];
 	uint32_t intr = 0;
 	if (port->HcRhPortStatus & OHCI_PORT_PSS) {
@@ -1522,7 +1621,7 @@ void OHCI::OHCI_AsyncCancelDevice(XboxDeviceState* dev)
 		m_UsbDevice->USB_IsPacketInflight(&m_UsbPacket) &&
 		m_UsbPacket.Endpoint->Dev == dev) {
 		m_UsbDevice->USB_CancelPacket(&m_UsbPacket);
-		m_AsyncTD = 0;
+		m_AsyncTD = xbnull;
 	}
 }
 

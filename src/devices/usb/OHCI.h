@@ -49,6 +49,7 @@
 // EOF: end of frame; the end of a USB-defined frame
 // ED: endpoint descriptor; a memory structure used by the HC to communicate with an endpoint
 // TD: transfer descriptor; a memory structure used by the HC to transfer a block of data to/from a device endpoint
+// HCCA: Host Controller Communications Area; shared memory between the HC and HCD
 
 
 /* endpoint descriptor */
@@ -157,7 +158,7 @@ class OHCI
 	private:
 		// pointer to g_USB0 or g_USB1
 		USBDevice* m_UsbDevice = nullptr;
-		// all the registers available on the OHCI standard
+		// all the registers available in the OHCI standard
 		OHCI_Registers m_Registers;
 		// end-of-frame timer
 		TimerObject* m_pEOFtimer = nullptr;
@@ -246,7 +247,7 @@ class OHCI
 		// process an isochronous TD
 		int OHCI_ServiceIsoTD(OHCI_ED* ed, int completion);
 		// find the usb device with the supplied address
-		XboxDeviceState* OHCI::OHCI_FindDevice(uint8_t Addr);
+		XboxDeviceState* OHCI_FindDevice(uint8_t Addr);
 		// cancel a packet when a device is removed
 		void OHCI_AsyncCancelDevice(XboxDeviceState* dev);
 		// Process Control and Bulk lists

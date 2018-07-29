@@ -108,7 +108,7 @@ bool g_bIsRetail = false;
 DWORD_PTR g_CPUXbox = 0;
 DWORD_PTR g_CPUOthers = 0;
 
-// Indicates to enable/disable all interrupts when cli and sti instructions are executed
+// Indicates to disable/enable all interrupts when cli and sti instructions are executed
 std::atomic_bool g_bEnableAllInterrupts = true;
 
 // Set by the VMManager during initialization. Exported because it's needed in other parts of the emu
@@ -654,7 +654,7 @@ void TriggerPendingConnectedInterrupts()
 {
 	for (int i = 0; i < MAX_BUS_INTERRUPT_LEVEL; i++) {
 		// If the interrupt is pending and connected, process it
-		if (HalSystemInterrupts[i].IsPending() && EmuInterruptList[i] && EmuInterruptList[i]->Connected) {
+		if (g_bEnableAllInterrupts && HalSystemInterrupts[i].IsPending() && EmuInterruptList[i] && EmuInterruptList[i]->Connected) {
 			HalSystemInterrupts[i].Trigger(EmuInterruptList[i]);
 		}
 	}
@@ -672,10 +672,8 @@ static unsigned int WINAPI CxbxKrnlInterruptThread(PVOID param)
 #endif
 
 	while (true) {
-		if (g_bEnableAllInterrupts) {
-			TriggerPendingConnectedInterrupts();
-			Sleep(1);
-		}
+		TriggerPendingConnectedInterrupts();
+		Sleep(1);
 	}
 
 	return 0;
