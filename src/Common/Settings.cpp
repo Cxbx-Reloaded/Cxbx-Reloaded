@@ -235,6 +235,25 @@ bool Settings::LoadFile(std::string file_path)
 
 	// ==== Hack End ============
 
+	// ==== Video Begin =========
+
+	// Video - Resolution config
+	si_data = m_si.GetValue(section_video, sect_video_keys.VideoResolution, /*Default=*/nullptr);
+	if (si_data == nullptr) {
+		m_video.szVideoResolution[0] = '\0';
+	}
+	else {
+		strncpy(m_video.szVideoResolution, si_data, ARRAYSIZE(m_video.szVideoResolution));
+	}
+
+	m_video.adapter = m_si.GetLongValue(section_video, sect_video_keys.adapter, /*Default=*/0);
+	m_video.direct3DDevice = m_si.GetLongValue(section_video, sect_video_keys.Direct3DDevice, /*Default=*/0);
+	m_video.bVSync = m_si.GetBoolValue(section_video, sect_video_keys.VSync, /*Default=*/false);
+	m_video.bFullScreen = m_si.GetBoolValue(section_video, sect_video_keys.FullScreen, /*Default=*/false);
+	m_video.bHardwareYUV = m_si.GetBoolValue(section_video, sect_video_keys.HardwareYUV, /*Default=*/false);
+
+	// ==== Video End ===========
+
 	// ==== Audio Begin =========
 
 	// Audio - Adapter config
@@ -267,6 +286,18 @@ bool Settings::Save(std::string file_path)
 
 	// Minimal need is 25, 0x37 for GUID.
 	char si_value[64]; 
+
+	// ==== Video Begin =========
+
+	m_si.SetValue(section_video, sect_video_keys.VideoResolution, m_video.szVideoResolution, nullptr, true);
+
+	m_si.SetLongValue(section_video, sect_video_keys.adapter, m_video.adapter, nullptr, true, true);
+	m_si.SetLongValue(section_video, sect_video_keys.Direct3DDevice, m_video.direct3DDevice, nullptr, true, true);
+	m_si.SetBoolValue(section_video, sect_video_keys.VSync, m_video.bVSync, nullptr, true);
+	m_si.SetBoolValue(section_video, sect_video_keys.FullScreen, m_video.bFullScreen, nullptr, true);
+	m_si.SetBoolValue(section_video, sect_video_keys.HardwareYUV, m_video.bHardwareYUV, nullptr, true);
+
+	// ==== Video End ===========
 
 	// ==== Audio Begin =========
 
