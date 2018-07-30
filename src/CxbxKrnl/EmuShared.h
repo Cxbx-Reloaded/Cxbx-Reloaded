@@ -149,18 +149,21 @@ class EmuShared : public Mutex
 		// ******************************************************************
 		// * Hack Flag Accessors
 		// ******************************************************************
-		void GetDisablePixelShaders(int* value) { Lock(); *value = m_DisablePixelShaders; Unlock(); }
-		void SetDisablePixelShaders(int* value) { Lock(); m_DisablePixelShaders = *value; Unlock(); }
-		void GetUncapFramerate(int* value) { Lock(); *value = m_UncapFramerate; Unlock(); }
-		void SetUncapFramerate(int* value) { Lock(); m_UncapFramerate = *value; Unlock(); }
-		void GetUseAllCores(int* value) { Lock(); *value = m_UseAllCores; Unlock(); }
-		void SetUseAllCores(int* value) { Lock(); m_UseAllCores = *value; Unlock(); }
-		void GetSkipRdtscPatching(int* value) { Lock(); *value = m_SkipRdtscPatching; Unlock(); }
-		void SetSkipRdtscPatching(int* value) { Lock(); m_SkipRdtscPatching = *value; Unlock(); }
-		void GetScaleViewport(int* value) { Lock(); *value = m_ScaleViewport; Unlock(); }
-		void SetScaleViewport(int* value) { Lock(); m_ScaleViewport = *value; Unlock(); }
-		void GetDirectHostBackBufferAccess(int* value) { Lock(); *value = m_DirectHostBackBufferAccess; Unlock(); }
-		void SetDirectHostBackBufferAccess(int* value) { Lock(); m_DirectHostBackBufferAccess = *value; Unlock(); }
+		void GetHackSettings(Settings::s_hack *hacks) { Lock(); *hacks = m_hacks; Unlock(); }
+		void SetHackSettings(Settings::s_hack *hacks) { Lock(); m_hacks = *hacks; Unlock(); }
+
+		void GetDisablePixelShaders(int* value) { Lock(); *value = m_hacks.DisablePixelShaders; Unlock(); }
+		void SetDisablePixelShaders(int* value) { Lock(); m_hacks.DisablePixelShaders = *value; Unlock(); }
+		void GetUncapFramerate(int* value) { Lock(); *value = m_hacks.UncapFramerate; Unlock(); }
+		void SetUncapFramerate(int* value) { Lock(); m_hacks.UncapFramerate = *value; Unlock(); }
+		void GetUseAllCores(int* value) { Lock(); *value = m_hacks.UseAllCores; Unlock(); }
+		void SetUseAllCores(int* value) { Lock(); m_hacks.UseAllCores = *value; Unlock(); }
+		void GetSkipRdtscPatching(int* value) { Lock(); *value = m_hacks.SkipRdtscPatching; Unlock(); }
+		void SetSkipRdtscPatching(int* value) { Lock(); m_hacks.SkipRdtscPatching = *value; Unlock(); }
+		void GetScaleViewport(int* value) { Lock(); *value = m_hacks.ScaleViewport; Unlock(); }
+		void SetScaleViewport(int* value) { Lock(); m_hacks.ScaleViewport = *value; Unlock(); }
+		void GetDirectHostBackBufferAccess(int* value) { Lock(); *value = m_hacks.DirectHostBackBufferAccess; Unlock(); }
+		void SetDirectHostBackBufferAccess(int* value) { Lock(); m_hacks.DirectHostBackBufferAccess = *value; Unlock(); }
 
 		// ******************************************************************
 		// * MSpF/Benchmark values Accessors
@@ -244,14 +247,11 @@ class EmuShared : public Mutex
 		DInputController m_XBController;
 		Settings::s_video m_video;
 		Settings::s_audio m_audio;
+		Settings::s_hack m_hacks;
 		char         m_XbePath[MAX_PATH];
 		int          m_BootFlags;
 		int          m_FlagsLLE;
 		int          m_Reserved1;
-		int          m_DisablePixelShaders;
-		int          m_UncapFramerate;
-		int          m_UseAllCores;
-		int          m_SkipRdtscPatching;
 		float        m_MSpF;
 		float        m_FPS;
 		bool         m_bReserved1;
@@ -259,8 +259,6 @@ class EmuShared : public Mutex
 		bool         m_bReady;
 		bool         m_bEmulating;
 		int          m_LedSequence[4];
-		int          m_ScaleViewport;
-		int          m_DirectHostBackBufferAccess;
 		char         m_StorageLocation[MAX_PATH];
 		bool         m_bFirstLaunch;
 		bool         m_bReserved2;

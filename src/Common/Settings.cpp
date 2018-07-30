@@ -85,6 +85,16 @@ static struct {
 	const char* codec_unknown = "UnknownCodec";
 } sect_audio_keys;
 
+static const char* section_hack = "hack";
+static struct {
+	const char* DisablePixelShaders = "DisablePixelShaders";
+	const char* UncapFramerate = "UncapFramerate";
+	const char* UseAllCores = "UseAllCores";
+	const char* SkipRdtscPatching = "SkipRdtscPatching";
+	const char* ScaleViewPort = "ScaleViewPort";
+	const char* DirectHostBackBufferAccess = "DirectHostBackBufferAccess";
+} sect_hack_keys;
+
 std::string GenerateCurrentFileDirectoryStr()
 {
 	// NOTE: There is no cross-platform support for getting file's current directory.
@@ -214,6 +224,17 @@ bool Settings::LoadFile(std::string file_path)
 	}
 	m_file_path = file_path;
 
+	// ==== Hack Begin ==========
+
+	m_hacks.DisablePixelShaders = m_si.GetBoolValue(section_hack, sect_hack_keys.DisablePixelShaders, /*Default=*/false);
+	m_hacks.UncapFramerate = m_si.GetBoolValue(section_hack, sect_hack_keys.UncapFramerate, /*Default=*/false);
+	m_hacks.UseAllCores = m_si.GetBoolValue(section_hack, sect_hack_keys.UseAllCores, /*Default=*/false);
+	m_hacks.SkipRdtscPatching = m_si.GetBoolValue(section_hack, sect_hack_keys.SkipRdtscPatching, /*Default=*/false);
+	m_hacks.ScaleViewport = m_si.GetBoolValue(section_hack, sect_hack_keys.ScaleViewPort, /*Default=*/false);
+	m_hacks.DirectHostBackBufferAccess = m_si.GetBoolValue(section_hack, sect_hack_keys.DirectHostBackBufferAccess, /*Default=*/true);
+
+	// ==== Hack End ============
+
 	// ==== Audio Begin =========
 
 	// Audio - Adapter config
@@ -262,6 +283,17 @@ bool Settings::Save(std::string file_path)
 	m_si.SetBoolValue(section_audio, sect_audio_keys.codec_unknown, m_audio.codec_unknown, nullptr, true);
 
 	// ==== Audio End ===========
+
+	// ==== Hack Begin ==========
+
+	m_si.SetBoolValue(section_hack, sect_hack_keys.DisablePixelShaders, m_hacks.DisablePixelShaders, nullptr, true);
+	m_si.SetBoolValue(section_hack, sect_hack_keys.UncapFramerate, m_hacks.UncapFramerate, nullptr, true);
+	m_si.SetBoolValue(section_hack, sect_hack_keys.UseAllCores, m_hacks.UseAllCores, nullptr, true);
+	m_si.SetBoolValue(section_hack, sect_hack_keys.SkipRdtscPatching, m_hacks.SkipRdtscPatching, nullptr, true);
+	m_si.SetBoolValue(section_hack, sect_hack_keys.ScaleViewPort, m_hacks.ScaleViewport, nullptr, true);
+	m_si.SetBoolValue(section_hack, sect_hack_keys.DirectHostBackBufferAccess, m_hacks.DirectHostBackBufferAccess, nullptr, true);
+
+	// ==== Hack End ============
 
 	SI_Error siError;
 	if (!file_path.empty()) {

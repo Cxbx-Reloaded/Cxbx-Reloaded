@@ -1497,32 +1497,32 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                 break;
 
 			case ID_HACKS_DISABLEPIXELSHADERS:
-				m_DisablePixelShaders = !m_DisablePixelShaders;
+				g_Settings->m_hacks.DisablePixelShaders = !g_Settings->m_hacks.DisablePixelShaders;
 				RefreshMenus();
 				break;
 
 			case ID_HACKS_UNCAPFRAMERATE:
-				m_UncapFramerate = !m_UncapFramerate;
+				g_Settings->m_hacks.UncapFramerate = !g_Settings->m_hacks.UncapFramerate;
 				RefreshMenus();
 				break;
 
 			case ID_HACKS_RUNXBOXTHREADSONALLCORES:
-				m_UseAllCores = !m_UseAllCores;
+				g_Settings->m_hacks.UseAllCores = !g_Settings->m_hacks.UseAllCores;
 				RefreshMenus();
 				break;
 
 			case ID_HACKS_SKIPRDTSCPATCHING:
-				m_SkipRdtscPatching = !m_SkipRdtscPatching;
+				g_Settings->m_hacks.SkipRdtscPatching = !g_Settings->m_hacks.SkipRdtscPatching;
 				RefreshMenus();
 				break;
 
 			case ID_HACKS_SCALEVIEWPORT:
-				m_ScaleViewport = !m_ScaleViewport;
+				g_Settings->m_hacks.ScaleViewport = !g_Settings->m_hacks.ScaleViewport;
 				RefreshMenus();
 				break;
 
 			case ID_HACKS_RENDERDIRECTLYTOHOSTBACKBUFFER:
-				m_DirectHostBackBufferAccess = !m_DirectHostBackBufferAccess;
+				g_Settings->m_hacks.DirectHostBackBufferAccess = !g_Settings->m_hacks.DirectHostBackBufferAccess;
 				RefreshMenus();
 				break;
 
@@ -1945,22 +1945,22 @@ void WndMain::RefreshMenus()
 			//chk_flag = (m_FlagsLLE & LLE_USB) ? MF_CHECKED : MF_UNCHECKED; // Reenable this when LLE USB actually works
 			//CheckMenuItem(settings_menu, ID_EMULATION_LLE_USB, chk_flag);
 
-			chk_flag = (m_DisablePixelShaders) ? MF_CHECKED : MF_UNCHECKED;
+			chk_flag = (g_Settings->m_hacks.DisablePixelShaders) ? MF_CHECKED : MF_UNCHECKED;
 			CheckMenuItem(settings_menu, ID_HACKS_DISABLEPIXELSHADERS, chk_flag);
 
-			chk_flag = (m_UncapFramerate) ? MF_CHECKED : MF_UNCHECKED;
+			chk_flag = (g_Settings->m_hacks.UncapFramerate) ? MF_CHECKED : MF_UNCHECKED;
 			CheckMenuItem(settings_menu, ID_HACKS_UNCAPFRAMERATE, chk_flag);
 
-			chk_flag = (m_UseAllCores) ? MF_CHECKED : MF_UNCHECKED;
+			chk_flag = (g_Settings->m_hacks.UseAllCores) ? MF_CHECKED : MF_UNCHECKED;
 			CheckMenuItem(settings_menu, ID_HACKS_RUNXBOXTHREADSONALLCORES, chk_flag);
 
-			chk_flag = (m_SkipRdtscPatching) ? MF_CHECKED : MF_UNCHECKED;
+			chk_flag = (g_Settings->m_hacks.SkipRdtscPatching) ? MF_CHECKED : MF_UNCHECKED;
 			CheckMenuItem(settings_menu, ID_HACKS_SKIPRDTSCPATCHING, chk_flag);
       
-			chk_flag = (m_ScaleViewport) ? MF_CHECKED : MF_UNCHECKED;
+			chk_flag = (g_Settings->m_hacks.ScaleViewport) ? MF_CHECKED : MF_UNCHECKED;
 			CheckMenuItem(settings_menu, ID_HACKS_SCALEVIEWPORT, chk_flag);
 
-			chk_flag = (m_DirectHostBackBufferAccess) ? MF_CHECKED : MF_UNCHECKED;
+			chk_flag = (g_Settings->m_hacks.DirectHostBackBufferAccess) ? MF_CHECKED : MF_UNCHECKED;
 			CheckMenuItem(settings_menu, ID_HACKS_RENDERDIRECTLYTOHOSTBACKBUFFER, chk_flag);
 
 			//bad
@@ -2368,14 +2368,9 @@ void WndMain::StartEmulation(HWND hwndParent, DebuggerState LocalDebuggerState /
 
 	// register LLE flags with emulator process
 	g_EmuShared->SetFlagsLLE(&m_FlagsLLE);
+	// register Hacks settings
+	g_EmuShared->SetHackSettings(&g_Settings->m_hacks);
 
-	// register Hacks with emulator process
-	g_EmuShared->SetDisablePixelShaders(&m_DisablePixelShaders);
-	g_EmuShared->SetUncapFramerate(&m_UncapFramerate);
-	g_EmuShared->SetUseAllCores(&m_UseAllCores);
-	g_EmuShared->SetSkipRdtscPatching(&m_SkipRdtscPatching);
-	g_EmuShared->SetScaleViewport(&m_ScaleViewport);
-	g_EmuShared->SetDirectHostBackBufferAccess(&m_DirectHostBackBufferAccess);
 
 	// register storage location with emulator process
 	g_EmuShared->SetStorageLocation(m_StorageLocation);
@@ -2390,7 +2385,7 @@ void WndMain::StartEmulation(HWND hwndParent, DebuggerState LocalDebuggerState /
 	m_prevWindowLoc.x = curWindowPos.left - m_prevWindowLoc.x;
 	m_prevWindowLoc.y = curWindowPos.top - m_prevWindowLoc.y;
 
-	if (m_ScaleViewport) {
+	if (g_Settings->m_hacks.ScaleViewport) {
 		// Set the window size to emulation dimensions
 		// Note : Doing this here assures the emulation process will use
 		// the configured dimensions (because if done inside the emulation
