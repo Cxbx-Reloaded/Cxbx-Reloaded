@@ -51,6 +51,7 @@ namespace xboxkrnl {
 #include "EmuFS.h"
 #include "EmuShared.h"
 #include "EmuXTL.h"
+#include "Common/Settings.hpp"
 
 
 #ifndef _DEBUG_TRACE
@@ -194,7 +195,7 @@ XTL::X_XFileMediaObject::_vtbl XTL::X_XFileMediaObject::vtbl =
 #define vector_ds_stream std::vector<XTL::X_CDirectSoundStream*>
 
 // Static Variable(s)
-XBAudio                             g_XBAudio = XBAudio();
+static Settings::s_audio            g_XBAudio = { 0 };
 extern LPDIRECTSOUND8               g_pDSound8 = nullptr; //This is necessary in order to allow share with EmuDSoundInline.hpp
 static LPDIRECTSOUNDBUFFER          g_pDSoundPrimaryBuffer = nullptr;
 //TODO: RadWolfie - How to implement support if primary does not permit it for DSP usage?
@@ -228,7 +229,7 @@ extern "C" {
 
 void CxbxInitAudio()
 {
-    g_EmuShared->GetXBAudio(&g_XBAudio);
+    g_EmuShared->GetAudioSettings(&g_XBAudio);
 }
 
 #ifdef __cplusplus
@@ -269,7 +270,7 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreate)
     g_bDSoundCreateCalled = TRUE;
 
     if (!initialized || g_pDSound8 == nullptr) {
-        hRet = DirectSoundCreate8(&g_XBAudio.GetAudioAdapter(), &g_pDSound8, NULL);
+        hRet = DirectSoundCreate8(&g_XBAudio.adapterGUID, &g_pDSound8, NULL);
 
         LPCSTR dsErrorMsg = nullptr;
 

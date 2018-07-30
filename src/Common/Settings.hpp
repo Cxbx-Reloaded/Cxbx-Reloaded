@@ -48,6 +48,14 @@ public:
 	bool LoadFile(std::string file_path);
 	bool Save(std::string file_path = "");
 
+	// Audio settings
+	struct s_audio {
+		GUID adapterGUID;
+		bool codec_pcm ;
+		bool codec_xadpcm;
+		bool codec_unknown;
+	} m_audio;
+
 private:
 	std::string m_file_path = "";
 	CSimpleIniA m_si;

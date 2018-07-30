@@ -181,9 +181,6 @@
     <ClCompile Include="..\..\src\Cxbx\DlgAudioConfig.cpp">
       <Filter>GUI</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\Common\Win32\XBAudio.cpp">
-      <Filter>Shared</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\CxbxKrnl\PhysicalMemory.cpp">
       <Filter>Emulator</Filter>
     </ClCompile>
@@ -471,9 +468,6 @@
     </ClInclude>
     <ClInclude Include="..\..\src\Cxbx\DlgAudioConfig.h">
       <Filter>GUI</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\Common\Win32\XBAudio.h">
-      <Filter>Shared</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\CxbxKrnl\PhysicalMemory.h">
       <Filter>Emulator</Filter>

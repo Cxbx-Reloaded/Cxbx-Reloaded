@@ -2357,6 +2357,9 @@ void WndMain::StartEmulation(HWND hwndParent, DebuggerState LocalDebuggerState /
     // Reset to default
     g_EmuShared->Reset();
 
+	// register Audio settings
+	g_EmuShared->SetAudioSettings(&g_Settings->m_audio);
+
     // register xbe path with emulator process
     g_EmuShared->SetXbePath(m_Xbe->m_szPath);
 

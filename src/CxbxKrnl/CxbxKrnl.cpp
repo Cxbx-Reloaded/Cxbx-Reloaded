@@ -590,14 +590,14 @@ void PrintCurrentConfigurationLog()
 
 	// Print current audio configuration
 	{
-		XBAudio XBAudioConf;
-		g_EmuShared->GetXBAudio(&XBAudioConf);
+		Settings::s_audio XBAudioConf;
+		g_EmuShared->GetAudioSettings(&XBAudioConf);
 
 		printf("--------------------------- AUDIO CONFIG ---------------------------\n");
-		printf("Audio Adapter: %s\n", XBAudioConf.GetAudioAdapter().Data1 == 0 ? "Primary Audio Device" : "Secondary Audio Device");
-		printf("PCM is %s\n", XBAudioConf.GetPCM() ? "enabled" : "disabled");
-		printf("XADPCM is %s\n", XBAudioConf.GetXADPCM() ? "enabled" : "disabled");
-		printf("Unknown Codec is %s\n", XBAudioConf.GetUnknownCodec() ? "enabled" : "disabled");
+		printf("Audio Adapter: %s\n", XBAudioConf.adapterGUID.Data1 == 0 ? "Primary Audio Device" : "Secondary Audio Device");
+		printf("PCM is %s\n", XBAudioConf.codec_pcm ? "enabled" : "disabled");
+		printf("XADPCM is %s\n", XBAudioConf.codec_xadpcm ? "enabled" : "disabled");
+		printf("Unknown Codec is %s\n", XBAudioConf.codec_unknown ? "enabled" : "disabled");
 	}
 
 	// Print Enabled Hacks

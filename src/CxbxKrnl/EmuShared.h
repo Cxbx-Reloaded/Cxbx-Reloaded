@@ -37,7 +37,8 @@
 #include "Cxbx.h"
 #include "Common/Win32/DInputController.h"
 #include "Common/Win32/XBVideo.h"
-#include "Common/Win32/XBAudio.h"
+#include "Common/Settings.hpp"
+#include "Mutex.h"
 
 #include <memory.h>
 
@@ -119,8 +120,8 @@ class EmuShared : public Mutex
 		// ******************************************************************
 		// * Xbox Audio Accessors
 		// ******************************************************************
-		void GetXBAudio(      XBAudio *audio) { Lock(); *audio = XBAudio(m_XBAudio); Unlock(); }
-		void SetXBAudio(const XBAudio *audio) { Lock(); m_XBAudio = XBAudio(*audio); Unlock(); }
+		void GetAudioSettings(      Settings::s_audio *audio) { Lock(); *audio = m_audio; Unlock(); }
+		void SetAudioSettings(const Settings::s_audio *audio) { Lock(); m_audio = *audio; Unlock(); }
 
 		// ******************************************************************
 		// * DirectInput Controller Accessors
@@ -243,7 +244,7 @@ class EmuShared : public Mutex
 		// ******************************************************************
 		DInputController m_XBController;
 		XBVideo      m_XBVideo;
-		XBAudio      m_XBAudio;
+		Settings::s_audio m_audio;
 		char         m_XbePath[MAX_PATH];
 		int          m_BootFlags;
 		int          m_FlagsLLE;
