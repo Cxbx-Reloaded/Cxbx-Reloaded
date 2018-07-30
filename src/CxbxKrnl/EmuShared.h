@@ -35,7 +35,6 @@
 #define EMUSHARED_H
 
 #include "Cxbx.h"
-#include "Common/Win32/DInputController.h"
 #include "Common/Settings.hpp"
 #include "Mutex.h"
 
@@ -125,8 +124,8 @@ class EmuShared : public Mutex
 		// ******************************************************************
 		// * DirectInput Controller Accessors
 		// ******************************************************************
-		void GetXBController(      DInputController *ctrl) { Lock(); *ctrl = DInputController(m_XBController); Unlock(); }
-		void SetXBController(const DInputController *ctrl) { Lock(); m_XBController = DInputController(*ctrl); Unlock(); }
+		void GetControllerDInputSettings(      Settings::s_controller_dinput *ctrl) { Lock(); *ctrl = m_controller_dinput; Unlock(); }
+		void SetControllerDInputSettings(const Settings::s_controller_dinput *ctrl) { Lock(); m_controller_dinput = *ctrl; Unlock(); }
 		void GetControllerPortSettings(      Settings::s_controller_port *ctrl) { Lock(); *ctrl = m_controller_port; Unlock(); }
 		void SetControllerPortSettings(const Settings::s_controller_port *ctrl) { Lock(); m_controller_port = *ctrl; Unlock(); }
 
@@ -246,7 +245,7 @@ class EmuShared : public Mutex
 		// ******************************************************************
 		// * Shared configuration
 		// ******************************************************************
-		DInputController m_XBController;
+		Settings::s_controller_dinput m_controller_dinput;
 		Settings::s_controller_port m_controller_port;
 		Settings::s_video m_video;
 		Settings::s_audio m_audio;
