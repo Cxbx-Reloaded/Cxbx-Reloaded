@@ -314,6 +314,9 @@
     <ClCompile Include="..\..\src\Common\CxbxCommon.cpp">
       <Filter>Cross Platform</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\Common\Settings.cpp">
+      <Filter>Cross Platform</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\src\Common\Win32\DInputController.cpp">
       <Filter>Shared</Filter>
     </ClCompile>
@@ -613,10 +616,11 @@
     <ClInclude Include="..\..\src\Common\Input\SDL2_Device.h">
       <Filter>Shared\Input</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\Cxbx.h">
-      <Filter>Shared</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\Common\CxbxCommon.h">
+      <Filter>Cross Platform</Filter>
+    </ClInclude>
+    <ClInclude Include="DlgXboxControllerPortMapping.h" />
+    <ClInclude Include="..\..\src\Common\Settings.hpp">
       <Filter>Cross Platform</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\Common\Win32\DInputController.h">

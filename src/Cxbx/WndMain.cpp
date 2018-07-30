@@ -42,6 +42,9 @@
 #include "DlgXboxControllerPortMapping.h"
 #include "Common/XbePrinter.h" // For DumpInformation
 #include "CxbxKrnl/EmuShared.h"
+#include "CxbxKrnl/EmuXTL.h"
+#include "Common/Settings.hpp"
+
 #include "..\CxbxKrnl\CxbxKrnl.h" // For CxbxConvertArgToString and CxbxExec
 #include "ResCxbx.h"
 #include "CxbxVersion.h"
@@ -461,6 +464,7 @@ WndMain::~WndMain()
 				RegSetValueEx(hKey, "DataStorageLocation", 0, dwType, (PBYTE)m_StorageLocation, dwSize);
 			}
         }
+        g_Settings->Save();
     }
 
     // Close opened debugger monitor if there is one
@@ -474,6 +478,7 @@ WndMain::~WndMain()
 
         free(m_CxbxDebugFilename);
         free(m_KrnlDebugFilename);
+        delete g_Settings;
     }
 }
 

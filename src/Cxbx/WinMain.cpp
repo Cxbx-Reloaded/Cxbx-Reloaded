@@ -39,6 +39,7 @@
 #include "CxbxKrnl/CxbxKrnl.h"
 #include "CxbxKrnl/Emu.h"
 #include "CxbxKrnl/EmuShared.h"
+#include "Common/Settings.hpp"
 #include <commctrl.h>
 
 // Enable Visual Styles
@@ -75,6 +76,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		return EXIT_FAILURE;
 	}
 
+	bool bRet;
+
 	/*! initialize shared memory */
 	EmuShared::Init();
 
@@ -94,9 +97,32 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			}
 		}
 		g_EmuShared->SetIsFirstLaunch(true);
+
+        g_Settings = new Settings();
+
+        if (g_Settings == nullptr) {
+            MessageBox(nullptr, szSettings_alloc_error, "Cxbx-Reloaded", MB_OK);
+            EmuShared::Cleanup();
+            return EXIT_FAILURE;
+        }
+
+        bRet = g_Settings->Init();
+        if (!bRet) {
+            EmuShared::Cleanup();
+            return EXIT_FAILURE;
+        }
 	}
 
 	if (__argc >= 2 && strcmp(__argv[1], "/load") == 0 && strlen(__argv[2]) > 0)  {
+
+		if (g_Settings != nullptr) {
+
+            // TODO: Load settings to EmuShared data.
+
+            // We don't need to keep Settings open plus allow emulator to use unused memory.
+            delete g_Settings;
+            g_Settings = nullptr;
+		}
 
 		/* Initialize Cxbx File Paths */
 		CxbxInitFilePaths();
@@ -104,6 +130,23 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		CxbxKrnlMain(__argc, __argv);
 		return EXIT_SUCCESS;
 	}
+
+    // If 2nd GUI executable is launched, load settings file for GUI for editable support.
+    if (g_Settings == nullptr) {
+        g_Settings = new Settings();
+
+        if (g_Settings == nullptr) {
+            MessageBox(nullptr, szSettings_alloc_error, "Cxbx-Reloaded", MB_OK);
+            EmuShared::Cleanup();
+            return EXIT_FAILURE;
+        }
+
+        bRet = g_Settings->Init();
+        if (!bRet) {
+            EmuShared::Cleanup();
+            return EXIT_FAILURE;
+        }
+    }
 
 	INITCOMMONCONTROLSEX icc;
 	icc.dwSize = sizeof(icc);
