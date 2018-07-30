@@ -169,301 +169,104 @@ WndMain::WndMain(HINSTANCE x_hInstance) :
 	m_bXbeChanged(false),
 	m_bIsStarted(false),
 	m_hwndChild(nullptr),
-	m_KrnlDebug(DM_NONE),
-	m_CxbxDebug(DM_NONE),
-	m_FlagsLLE(0),
-	m_StorageToggle(CXBX_DATA_APPDATA),
-	m_StorageLocation(""),
-	m_dwRecentXbe(0),
 	m_hDebuggerProc(nullptr),
 	m_hDebuggerMonitorThread(),
 	m_prevWindowLoc({ -1, -1 })
 {
-    // initialize members
-    {
-        m_classname = "WndMain";
-        m_wndname   = "Cxbx-Reloaded " _CXBX_VERSION;
+	// initialize members
+	{
+		m_classname = "WndMain";
+		m_wndname   = "Cxbx-Reloaded " _CXBX_VERSION;
+	}
 
-        m_XbeFilename = (char*)calloc(1, MAX_PATH);
+	// load configuration from registry
+	{
+		char szDebugPath[MAX_PATH];
+		char szDebugName[MAX_PATH];
 
-        m_CxbxDebugFilename = (char*)calloc(1, MAX_PATH);
-        m_KrnlDebugFilename = (char*)calloc(1, MAX_PATH);
+		switch (g_Settings->m_gui.DataStorageToggle) {
+			case CXBX_DATA_APPDATA:
+			default:
+				SHGetSpecialFolderPath(NULL, m_StorageLocation, CSIDL_APPDATA, TRUE);
+				g_Settings->m_gui.DataStorageToggle = CXBX_DATA_APPDATA;
+				strncat(m_StorageLocation, "\\Cxbx-Reloaded", MAX_PATH);
+				break;
 
-        for(int v=0;v<RECENT_XBE_SIZE;v++)
-            m_szRecentXbe[v] = 0;
-    }
+			case CXBX_DATA_CURDIR:
+				GetCurrentDirectory(MAX_PATH, m_StorageLocation);
+				break;
 
-    // load configuration from registry
-    {
-        DWORD   dwDisposition, dwType, dwSize;
-        HKEY    hKey;
+			case CXBX_DATA_CUSTOM:
+				SHGetSpecialFolderPath(NULL, m_StorageLocation, CSIDL_APPDATA, TRUE);
+				strncpy(m_StorageLocation, g_Settings->m_gui.szCustomLocation.c_str(), MAX_PATH);
+				break;
+		}
+		// NOTE: This is a requirement for pre-verification from GUI. Used in CxbxInitFilePaths function.
+		g_EmuShared->SetStorageLocation(m_StorageLocation);
 
-        if(RegCreateKeyEx(HKEY_CURRENT_USER, "Software\\Cxbx-Reloaded", 0, NULL, REG_OPTION_NON_VOLATILE, KEY_QUERY_VALUE, NULL, &hKey, &dwDisposition) == ERROR_SUCCESS)
-        {
-			LONG result = ERROR_SUCCESS;
+		// Prevent using an incorrect path from the registry if the debug folders have been moved
+		if (g_Settings->m_gui.CxbxDebugMode == DM_FILE) {
 
-			dwType = REG_DWORD; dwSize = sizeof(DWORD);
-			result = RegQueryValueEx(hKey, "LLEFLAGS", NULL, &dwType, (PBYTE)&m_FlagsLLE, &dwSize);
-			if (result != ERROR_SUCCESS) {
-				m_FlagsLLE = 0;
+			if(g_Settings->m_gui.szCxbxDebugFile.size() == 0) {
+				g_Settings->m_gui.CxbxDebugMode = DM_NONE;
 			}
+			else {
+				strcpy(szDebugName, strrchr(g_Settings->m_gui.szCxbxDebugFile.c_str(), '\\'));
 
-			dwType = REG_DWORD; dwSize = sizeof(DWORD);
-			result = RegQueryValueEx(hKey, "HackDisablePixelShaders", NULL, &dwType, (PBYTE)&m_DisablePixelShaders, &dwSize);
-			if (result != ERROR_SUCCESS) {
-				m_DisablePixelShaders = 0;
-			}
-
-			dwType = REG_DWORD; dwSize = sizeof(DWORD);
-			result = RegQueryValueEx(hKey, "HackUncapFrameRate", NULL, &dwType, (PBYTE)&m_UncapFramerate, &dwSize);
-			if (result != ERROR_SUCCESS) {
-				m_UncapFramerate = 0;
-			}
-
-			dwType = REG_DWORD; dwSize = sizeof(DWORD);
-			result = RegQueryValueEx(hKey, "HackUseAllCores", NULL, &dwType, (PBYTE)&m_UseAllCores, &dwSize);
-			if (result != ERROR_SUCCESS) {
-				m_UseAllCores = 0;
-			}
-
-			dwType = REG_DWORD; dwSize = sizeof(DWORD);
-			result = RegQueryValueEx(hKey, "HackSkipRdtscPatching", NULL, &dwType, (PBYTE)&m_SkipRdtscPatching, &dwSize);
-			if (result != ERROR_SUCCESS) {
-				m_SkipRdtscPatching = 0;
-			}
-
-			dwType = REG_DWORD; dwSize = sizeof(DWORD);
-			result = RegQueryValueEx(hKey, "HackScaleViewport", NULL, &dwType, (PBYTE)&m_ScaleViewport, &dwSize);
-			if (result != ERROR_SUCCESS) {
-				m_ScaleViewport = 0;
-			}
-
-			dwType = REG_DWORD; dwSize = sizeof(DWORD);
-			result = RegQueryValueEx(hKey, "HackDirectBackBufferAccess", NULL, &dwType, (PBYTE)&m_DirectHostBackBufferAccess, &dwSize);
-			if (result != ERROR_SUCCESS) {
-				m_DirectHostBackBufferAccess = 1;
-			}
-
-
-			dwType = REG_DWORD; dwSize = sizeof(DWORD);
-			result = RegQueryValueEx(hKey, "CxbxDebug", NULL, &dwType, (PBYTE)&m_CxbxDebug, &dwSize);
-			if (result != ERROR_SUCCESS) {
-				m_CxbxDebug = DebugMode::DM_NONE;
-			}
-
-			dwType = REG_DWORD; dwSize = sizeof(DWORD);
-			result = RegQueryValueEx(hKey, "KrnlDebug", NULL, &dwType, (PBYTE)&m_KrnlDebug, &dwSize);
-			if (result != ERROR_SUCCESS) {
-				m_KrnlDebug = DebugMode::DM_NONE;
-			}
-
-            dwType = REG_DWORD; dwSize = sizeof(DWORD);
-			result = RegQueryValueEx(hKey, "RecentXbe", NULL, &dwType, (PBYTE)&m_dwRecentXbe, &dwSize);
-			if (result != ERROR_SUCCESS) {
-				m_dwRecentXbe = 0;
-			}
-
-			dwType = REG_SZ; dwSize = MAX_PATH; ULONG lErrCodeCxbxDebugFilename;
-			lErrCodeCxbxDebugFilename = RegQueryValueEx(hKey, "CxbxDebugFilename", NULL, &dwType, (PBYTE)m_CxbxDebugFilename, &dwSize);
-			if (lErrCodeCxbxDebugFilename != ERROR_SUCCESS) {
-				m_CxbxDebugFilename[0] = '\0';
-			}
-
-			dwType = REG_SZ; dwSize = MAX_PATH; LONG lErrCodeKrnlDebugFilename;
-			lErrCodeKrnlDebugFilename = RegQueryValueEx(hKey, "KrnlDebugFilename", NULL, &dwType, (PBYTE)m_KrnlDebugFilename, &dwSize);
-			if (lErrCodeKrnlDebugFilename != ERROR_SUCCESS) {
-				m_KrnlDebugFilename[0] = '\0';
-			}
-
-			dwType = REG_DWORD; dwSize = sizeof(DWORD);
-			result = RegQueryValueEx(hKey, "DataStorageToggle", NULL, &dwType, (PBYTE)&m_StorageToggle, &dwSize);
-			if (result != ERROR_SUCCESS) {
-				m_StorageToggle = CXBX_DATA_APPDATA;
-			}
-
-			switch (m_StorageToggle) {
-				case CXBX_DATA_APPDATA:
-				default:
-					SHGetSpecialFolderPath(NULL, m_StorageLocation, CSIDL_APPDATA, TRUE);
-					m_StorageToggle = CXBX_DATA_APPDATA;
-					strncat(m_StorageLocation, "\\Cxbx-Reloaded", MAX_PATH);
-					break;
-
-				case CXBX_DATA_CURDIR:
-					GetCurrentDirectory(MAX_PATH, m_StorageLocation);
-					break;
-
-				case CXBX_DATA_CUSTOM:
-			 		dwType = REG_SZ; dwSize = MAX_PATH;
-			 		result = RegQueryValueEx(hKey, "DataStorageLocation", NULL, &dwType, (PBYTE)&m_StorageLocation, &dwSize);
-			 		if (result != ERROR_SUCCESS) {
-						SHGetSpecialFolderPath(NULL, m_StorageLocation, CSIDL_APPDATA, TRUE);
-						strncat(m_StorageLocation, "\\Cxbx-Reloaded", MAX_PATH);
-					}
-					break;
-			}
-			// NOTE: This is a requirement for pre-verification from GUI. Used in CxbxInitFilePaths function.
-			g_EmuShared->SetStorageLocation(m_StorageLocation);
-
-			// Prevent using an incorrect path from the registry if the debug folders have been moved
-			if (m_CxbxDebug == DM_FILE)
-			{
-				if(lErrCodeCxbxDebugFilename == ERROR_FILE_NOT_FOUND || strlen(m_CxbxDebugFilename) == 0)
-				{
-					m_CxbxDebug = DM_NONE;
+				if(g_Settings->m_gui.szCxbxDebugFile.size() < strlen(szDebugName)) {
+					g_Settings->m_gui.szCxbxDebugFile = "";
+					g_Settings->m_gui.CxbxDebugMode = DM_NONE;
 				}
-				else
-				{
-					char *CxbxDebugPath = (char*)calloc(1, MAX_PATH);
-					char *CxbxDebugName = (char*)calloc(1, MAX_PATH);
+				else {
+					strncpy(szDebugPath, g_Settings->m_gui.szCxbxDebugFile.c_str(), g_Settings->m_gui.szCxbxDebugFile.size() - strlen(szDebugName));
 
-					strcpy(CxbxDebugName, strrchr(m_CxbxDebugFilename, '\\'));
-
-					if(strlen(m_CxbxDebugFilename) < strlen(CxbxDebugName))
-					{
-						memset((char*)m_CxbxDebugFilename, '\0', MAX_PATH);
-						m_CxbxDebug = DM_NONE;
+					if(PathFileExists((LPCSTR)szDebugPath) == FALSE) {
+						g_Settings->m_gui.szCxbxDebugFile = "";
+						g_Settings->m_gui.CxbxDebugMode = DM_NONE;
 					}
-					else
-					{
-						strncpy(CxbxDebugPath, m_CxbxDebugFilename, strlen(m_CxbxDebugFilename) - strlen(CxbxDebugName));
-						if(PathFileExists((LPCSTR)CxbxDebugPath) == FALSE)
-						{
-							memset((char*)m_CxbxDebugFilename, '\0', MAX_PATH);
-							m_CxbxDebug = DM_NONE;
-						}
-					}
-					free(CxbxDebugPath);
-					free(CxbxDebugName);
 				}
 			}
+		}
 
-			if (m_KrnlDebug == DM_FILE)
-			{
-				if(lErrCodeKrnlDebugFilename == ERROR_FILE_NOT_FOUND || strlen(m_KrnlDebugFilename) == 0)
-				{
-					m_KrnlDebug = DM_NONE;
+		if (g_Settings->m_emulate.KrnlDebugMode == DM_FILE) {
+
+			if(strlen(g_Settings->m_emulate.szKrnlDebug) == 0) {
+				g_Settings->m_emulate.KrnlDebugMode = DM_NONE;
+			}
+			else {
+				strcpy(szDebugName, strrchr(g_Settings->m_emulate.szKrnlDebug, '\\'));
+
+				if(strlen(g_Settings->m_emulate.szKrnlDebug) < strlen(szDebugName)) {
+					memset(g_Settings->m_emulate.szKrnlDebug, '\0', MAX_PATH);
+					g_Settings->m_emulate.KrnlDebugMode = DM_NONE;
 				}
-				else
-				{
-					char *KrnlDebugPath = (char*)calloc(1, MAX_PATH);
-					char *KrnlDebugName = (char*)calloc(1, MAX_PATH);
+				else {
+					strncpy(szDebugPath, g_Settings->m_emulate.szKrnlDebug, strlen(g_Settings->m_emulate.szKrnlDebug) - strlen(szDebugName));
 
-					strcpy(KrnlDebugName, strrchr(m_KrnlDebugFilename, '\\'));
-
-					if(strlen(m_KrnlDebugFilename) < strlen(KrnlDebugName))
-					{
-						memset((char*)m_KrnlDebugFilename, '\0', MAX_PATH);
-						m_KrnlDebug = DM_NONE;
+					if(PathFileExists((LPCSTR)szDebugPath) == FALSE) {
+						memset(g_Settings->m_emulate.szKrnlDebug, '\0', MAX_PATH);
+						g_Settings->m_emulate.KrnlDebugMode = DM_NONE;
 					}
-					else
-					{
-						strncpy(KrnlDebugPath, m_KrnlDebugFilename, strlen(m_KrnlDebugFilename) - strlen(KrnlDebugName));
-						if(PathFileExists((LPCSTR)KrnlDebugPath) == FALSE)
-						{
-							memset((char*)m_KrnlDebugFilename, '\0', MAX_PATH);
-							m_KrnlDebug = DM_NONE;
-						}
-					}
-					free(KrnlDebugPath);
-					free(KrnlDebugName);
 				}
 			}
+		}
 
-            int v=0;
+		unsigned int i = 0;
+		do {
+			if (g_Settings->m_gui.szRecentXbeFiles[i].size() == 0) {
+				break;
+			}
+			i++;
+		} while (i < RECENT_XBE_LIST_MAX);
 
-            for(v=0;v<m_dwRecentXbe;v++)
-            {
-                char buffer[32];
-
-                sprintf(buffer, "RecentXbe%d", v);
-
-                m_szRecentXbe[v] = (char*)calloc(1, MAX_PATH);
-
-                dwType = REG_SZ; dwSize = MAX_PATH;
-                result = RegQueryValueEx(hKey, buffer, NULL, &dwType, (PBYTE)m_szRecentXbe[v], &dwSize);
-				if (result != ERROR_SUCCESS) {
-					m_szRecentXbe[v] = "";
-				}
-
-            }
-
-            RegCloseKey(hKey);
-        }
-    }
-
-    return;
+		m_dwRecentXbe = i;
+	}
 }
 
 WndMain::~WndMain()
 {
     // save configuration to registry
     if (g_SaveOnExit) {
-        DWORD   dwDisposition, dwType, dwSize;
-        HKEY    hKey;
-
-        if(RegCreateKeyEx(HKEY_CURRENT_USER, "Software\\Cxbx-Reloaded", 0, NULL, REG_OPTION_NON_VOLATILE, KEY_SET_VALUE, NULL, &hKey, &dwDisposition) == ERROR_SUCCESS)
-        {
-            int v=0;
-
-            for(v=0;v<m_dwRecentXbe;v++)
-            {
-                char buffer[32];
-
-                sprintf(buffer, "RecentXbe%d", v);
-
-                dwType = REG_SZ; dwSize = MAX_PATH;
-
-                RegSetValueEx(hKey, buffer, 0, dwType, (PBYTE)m_szRecentXbe[v], dwSize);
-
-                free(m_szRecentXbe[v]);
-            }
-
-			dwType = REG_DWORD; dwSize = sizeof(DWORD);
-			RegSetValueEx(hKey, "LLEFLAGS", 0, dwType, (PBYTE)&m_FlagsLLE, dwSize);
-
-			dwType = REG_DWORD; dwSize = sizeof(DWORD);
-			RegSetValueEx(hKey, "HackDisablePixelShaders", 0, dwType, (PBYTE)&m_DisablePixelShaders, dwSize);
-
-			dwType = REG_DWORD; dwSize = sizeof(DWORD);
-			RegSetValueEx(hKey, "HackUncapFrameRate", 0, dwType, (PBYTE)&m_UncapFramerate, dwSize);
-
-			dwType = REG_DWORD; dwSize = sizeof(DWORD);
-			RegSetValueEx(hKey, "HackUseAllCores", 0, dwType, (PBYTE)&m_UseAllCores, dwSize);
-
-			dwType = REG_DWORD; dwSize = sizeof(DWORD);
-			RegSetValueEx(hKey, "HackSkipRdtscPatching", 0, dwType, (PBYTE)&m_SkipRdtscPatching, dwSize);
-
-			dwType = REG_DWORD; dwSize = sizeof(DWORD);
-			RegSetValueEx(hKey, "HackScaleViewport", 0, dwType, (PBYTE)&m_ScaleViewport, dwSize);
-
-			dwType = REG_DWORD; dwSize = sizeof(DWORD);
-			RegSetValueEx(hKey, "HackDirectBackBufferAccess", 0, dwType, (PBYTE)&m_DirectHostBackBufferAccess, dwSize);
-
-			dwType = REG_DWORD; dwSize = sizeof(DWORD);
-            RegSetValueEx(hKey, "CxbxDebug", 0, dwType, (PBYTE)&m_CxbxDebug, dwSize);
-
-            dwType = REG_DWORD; dwSize = sizeof(DWORD);
-            RegSetValueEx(hKey, "KrnlDebug", 0, dwType, (PBYTE)&m_KrnlDebug, dwSize);
-
-            dwType = REG_DWORD; dwSize = sizeof(DWORD);
-            RegSetValueEx(hKey, "RecentXbe", 0, dwType, (PBYTE)&m_dwRecentXbe, dwSize);
-
-            dwType = REG_SZ; dwSize = MAX_PATH;
-            RegSetValueEx(hKey, "CxbxDebugFilename", 0, dwType, (PBYTE)m_CxbxDebugFilename, dwSize);
-
-            dwType = REG_SZ; dwSize = MAX_PATH;
-            RegSetValueEx(hKey, "KrnlDebugFilename", 0, dwType, (PBYTE)m_KrnlDebugFilename, dwSize);
-
-			dwType = REG_DWORD; dwSize = sizeof(DWORD);
-			RegSetValueEx(hKey, "DataStorageToggle", 0, dwType, (PBYTE)&m_StorageToggle, dwSize);
-
-			// NOTE: Save custom directory provided by user only.
-			if (m_StorageToggle == CXBX_DATA_CUSTOM) {
-				dwType = REG_SZ; dwSize = MAX_PATH;
-				RegSetValueEx(hKey, "DataStorageLocation", 0, dwType, (PBYTE)m_StorageLocation, dwSize);
-			}
-        }
         g_Settings->Save();
     }
 
@@ -473,11 +276,6 @@ WndMain::~WndMain()
     // cleanup allocations
     {
         delete m_Xbe;
-
-        free(m_XbeFilename);
-
-        free(m_CxbxDebugFilename);
-        free(m_KrnlDebugFilename);
         delete g_Settings;
     }
 }
@@ -601,7 +399,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 							pCMD->dwChildProcID = lParam; // lParam is process ID.
 							std::thread(CrashMonitorWrapper, pCMD).detach();
 
-							g_EmuShared->SetFlagsLLE(&m_FlagsLLE);
+							g_EmuShared->SetFlagsLLE(&g_Settings->m_emulate.FlagsLLE);
 							g_EmuShared->SetIsEmulating(true); // NOTE: Putting in here raise to low or medium risk due to debugger will launch itself. (Current workaround)
 							g_EmuShared->SetIsReady(true);
 							break;
@@ -1269,8 +1067,9 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 						break;
 					}
 
-					m_StorageToggle = CXBX_DATA_CUSTOM;
+					g_Settings->m_gui.DataStorageToggle = CXBX_DATA_CUSTOM;
 					strncpy(m_StorageLocation, szDirTemp.c_str(), MAX_PATH);
+					g_Settings->m_gui.szCustomLocation = m_StorageLocation;
 					RefreshMenus();
 				}
 			}
@@ -1281,7 +1080,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 				char szDir[MAX_PATH];
 
 				SHGetSpecialFolderPath(NULL, szDir, CSIDL_APPDATA, TRUE);
-				m_StorageToggle = CXBX_DATA_APPDATA;
+				g_Settings->m_gui.DataStorageToggle = CXBX_DATA_APPDATA;
 				strncpy(m_StorageLocation, szDir, MAX_PATH);
 				strncat(m_StorageLocation, "\\Cxbx-Reloaded", MAX_PATH);
 				RefreshMenus();
@@ -1292,7 +1091,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 			{
 
 				GetCurrentDirectory(MAX_PATH, m_StorageLocation);
-				m_StorageToggle = CXBX_DATA_CURDIR;
+				g_Settings->m_gui.DataStorageToggle = CXBX_DATA_CURDIR;
 				RefreshMenus();
 			}
 			break;
@@ -1337,11 +1136,12 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
 			case ID_EMULATION_DEBUGOUTPUTKERNEL_CONSOLE:
 			{
-				if (m_KrnlDebug == DM_NONE || m_KrnlDebug == DM_FILE)
-					m_KrnlDebug = DM_CONSOLE;
-				else
-					m_KrnlDebug = DM_NONE;
-
+				if (g_Settings->m_emulate.KrnlDebugMode == DM_NONE || g_Settings->m_emulate.KrnlDebugMode == DM_FILE) {
+					g_Settings->m_emulate.KrnlDebugMode = DM_CONSOLE;
+				}
+				else {
+					g_Settings->m_emulate.KrnlDebugMode = DM_NONE;
+				}
 				MessageBox(m_hwnd, "This will not take effect until the next time emulation is started.\n", "Cxbx-Reloaded", MB_OK);
 
 				RefreshMenus();
@@ -1352,9 +1152,8 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
 			case ID_EMULATION_DEBUGOUTPUTKERNEL_FILE:
 			{
-				if (m_KrnlDebug == DM_FILE)
-				{
-					m_KrnlDebug = DM_NONE;
+				if (g_Settings->m_emulate.KrnlDebugMode == DM_FILE) {
+					g_Settings->m_emulate.KrnlDebugMode = DM_NONE;
 
 					RefreshMenus();
 
@@ -1382,9 +1181,9 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 					{
 						MessageBox(m_hwnd, "This will not take effect until emulation is (re)started.\n", "Cxbx-Reloaded", MB_OK);
 
-						strncpy(m_KrnlDebugFilename, ofn.lpstrFile, MAX_PATH - 1);
+						strncpy(g_Settings->m_emulate.szKrnlDebug, ofn.lpstrFile, MAX_PATH - 1);
 
-						m_KrnlDebug = DM_FILE;
+						g_Settings->m_emulate.KrnlDebugMode = DM_FILE;
 
 						RefreshMenus();
 
@@ -1396,11 +1195,12 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
 			case ID_EMULATION_DEBUGOUTPUTGUI_CONSOLE:
 			{
-				if (m_CxbxDebug == DM_NONE || m_CxbxDebug == DM_FILE)
-					m_CxbxDebug = DM_CONSOLE;
-				else
-					m_CxbxDebug = DM_NONE;
-
+				if (g_Settings->m_gui.CxbxDebugMode == DM_NONE || g_Settings->m_gui.CxbxDebugMode == DM_FILE) {
+					g_Settings->m_gui.CxbxDebugMode = DM_CONSOLE;
+				}
+				else {
+					g_Settings->m_gui.CxbxDebugMode = DM_NONE;
+				}
 				RefreshMenus();
 
 				UpdateDebugConsoles();
@@ -1409,9 +1209,9 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
 			case ID_EMULATION_DEBUGOUTPUTGUI_FILE:
 			{
-				if (m_CxbxDebug == DM_FILE)
+				if (g_Settings->m_gui.CxbxDebugMode == DM_FILE)
 				{
-					m_CxbxDebug = DM_NONE;
+					g_Settings->m_gui.CxbxDebugMode = DM_NONE;
 
 					RefreshMenus();
 
@@ -1437,9 +1237,9 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
 					if (GetSaveFileName(&ofn) != FALSE)
 					{
-						strncpy(m_CxbxDebugFilename, ofn.lpstrFile, MAX_PATH - 1);
+						g_Settings->m_gui.szCxbxDebugFile = ofn.lpstrFile;
 
-						m_CxbxDebug = DM_FILE;
+						g_Settings->m_gui.CxbxDebugMode = DM_FILE;
 
 						RefreshMenus();
 
@@ -1452,21 +1252,21 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
 			case ID_EMULATION_LLE_JIT:
 			{
-				m_FlagsLLE = m_FlagsLLE ^ LLE_JIT;
+				g_Settings->m_emulate.FlagsLLE = g_Settings->m_emulate.FlagsLLE ^ LLE_JIT;
 				RefreshMenus();
 			}
 			break;
 
 			case ID_EMULATION_LLE_APU:
 			{
-				m_FlagsLLE = m_FlagsLLE ^ LLE_APU;
+				g_Settings->m_emulate.FlagsLLE = g_Settings->m_emulate.FlagsLLE ^ LLE_APU;
 				RefreshMenus();
 			}
 			break;
 
 			case ID_EMULATION_LLE_GPU:
 			{
-				m_FlagsLLE = m_FlagsLLE ^ LLE_GPU;
+				g_Settings->m_emulate.FlagsLLE = g_Settings->m_emulate.FlagsLLE ^ LLE_GPU;
 				RefreshMenus();
 			}
 			break;
@@ -1893,36 +1693,38 @@ void WndMain::RefreshMenus()
 			HMENU emul_debg = GetSubMenu(view_menu, 0);
 			HMENU emul_krnl = GetSubMenu(view_menu, 1);
 
-			if (m_KrnlDebug == DM_CONSOLE)
-			{
-				CheckMenuItem(emul_krnl, ID_EMULATION_DEBUGOUTPUTKERNEL_CONSOLE, MF_CHECKED);
-				CheckMenuItem(emul_krnl, ID_EMULATION_DEBUGOUTPUTKERNEL_FILE, MF_UNCHECKED);
-			}
-			else if (m_KrnlDebug == DM_FILE)
-			{
-				CheckMenuItem(emul_krnl, ID_EMULATION_DEBUGOUTPUTKERNEL_CONSOLE, MF_UNCHECKED);
-				CheckMenuItem(emul_krnl, ID_EMULATION_DEBUGOUTPUTKERNEL_FILE, MF_CHECKED);
-			}
-			else
-			{
-				CheckMenuItem(emul_krnl, ID_EMULATION_DEBUGOUTPUTKERNEL_CONSOLE, MF_UNCHECKED);
-				CheckMenuItem(emul_krnl, ID_EMULATION_DEBUGOUTPUTKERNEL_FILE, MF_UNCHECKED);
+			switch (g_Settings->m_emulate.KrnlDebugMode) {
+				case DM_CONSOLE:
+					CheckMenuItem(emul_krnl, ID_EMULATION_DEBUGOUTPUTKERNEL_CONSOLE, MF_CHECKED);
+					CheckMenuItem(emul_krnl, ID_EMULATION_DEBUGOUTPUTKERNEL_FILE, MF_UNCHECKED);
+					break;
+
+				case DM_FILE:
+					CheckMenuItem(emul_krnl, ID_EMULATION_DEBUGOUTPUTKERNEL_CONSOLE, MF_UNCHECKED);
+					CheckMenuItem(emul_krnl, ID_EMULATION_DEBUGOUTPUTKERNEL_FILE, MF_CHECKED);
+					break;
+
+				default:
+					CheckMenuItem(emul_krnl, ID_EMULATION_DEBUGOUTPUTKERNEL_CONSOLE, MF_UNCHECKED);
+					CheckMenuItem(emul_krnl, ID_EMULATION_DEBUGOUTPUTKERNEL_FILE, MF_UNCHECKED);
+					break;
 			}
 
-			if (m_CxbxDebug == DM_CONSOLE)
-			{
-				CheckMenuItem(emul_debg, ID_EMULATION_DEBUGOUTPUTGUI_CONSOLE, MF_CHECKED);
-				CheckMenuItem(emul_debg, ID_EMULATION_DEBUGOUTPUTGUI_FILE, MF_UNCHECKED);
-			}
-			else if (m_CxbxDebug == DM_FILE)
-			{
-				CheckMenuItem(emul_debg, ID_EMULATION_DEBUGOUTPUTGUI_CONSOLE, MF_UNCHECKED);
-				CheckMenuItem(emul_debg, ID_EMULATION_DEBUGOUTPUTGUI_FILE, MF_CHECKED);
-			}
-			else
-			{
-				CheckMenuItem(emul_debg, ID_EMULATION_DEBUGOUTPUTGUI_CONSOLE, MF_UNCHECKED);
-				CheckMenuItem(emul_debg, ID_EMULATION_DEBUGOUTPUTGUI_FILE, MF_UNCHECKED);
+			switch (g_Settings->m_gui.CxbxDebugMode) {
+				case DM_CONSOLE:
+					CheckMenuItem(emul_debg, ID_EMULATION_DEBUGOUTPUTGUI_CONSOLE, MF_CHECKED);
+					CheckMenuItem(emul_debg, ID_EMULATION_DEBUGOUTPUTGUI_FILE, MF_UNCHECKED);
+					break;
+
+				case DM_FILE:
+					CheckMenuItem(emul_debg, ID_EMULATION_DEBUGOUTPUTGUI_CONSOLE, MF_UNCHECKED);
+					CheckMenuItem(emul_debg, ID_EMULATION_DEBUGOUTPUTGUI_FILE, MF_CHECKED);
+					break;
+
+				default:
+					CheckMenuItem(emul_debg, ID_EMULATION_DEBUGOUTPUTGUI_CONSOLE, MF_UNCHECKED);
+					CheckMenuItem(emul_debg, ID_EMULATION_DEBUGOUTPUTGUI_FILE, MF_UNCHECKED);
+					break;
 			}
 		}
 
@@ -1933,13 +1735,13 @@ void WndMain::RefreshMenus()
 			// enable/disable clear current hle cache
 			EnableMenuItem(settings_menu, ID_CACHE_CLEARHLECACHE_CURRENT, MF_BYCOMMAND | MF_WhenXbeLoadedNotRunning);
 
-			UINT chk_flag = (m_FlagsLLE & LLE_JIT) ? MF_CHECKED : MF_UNCHECKED;
+			UINT chk_flag = (g_Settings->m_emulate.FlagsLLE & LLE_JIT) ? MF_CHECKED : MF_UNCHECKED;
 			CheckMenuItem(settings_menu, ID_EMULATION_LLE_JIT, chk_flag);
 
-			chk_flag = (m_FlagsLLE & LLE_APU) ? MF_CHECKED : MF_UNCHECKED;
+			chk_flag = (g_Settings->m_emulate.FlagsLLE & LLE_APU) ? MF_CHECKED : MF_UNCHECKED;
 			CheckMenuItem(settings_menu, ID_EMULATION_LLE_APU, chk_flag);
 
-			chk_flag = (m_FlagsLLE & LLE_GPU) ? MF_CHECKED : MF_UNCHECKED;
+			chk_flag = (g_Settings->m_emulate.FlagsLLE & LLE_GPU) ? MF_CHECKED : MF_UNCHECKED;
 			CheckMenuItem(settings_menu, ID_EMULATION_LLE_GPU, chk_flag);
 
 			//chk_flag = (m_FlagsLLE & LLE_USB) ? MF_CHECKED : MF_UNCHECKED; // Reenable this when LLE USB actually works
@@ -1963,19 +1765,19 @@ void WndMain::RefreshMenus()
 			chk_flag = (g_Settings->m_hacks.DirectHostBackBufferAccess) ? MF_CHECKED : MF_UNCHECKED;
 			CheckMenuItem(settings_menu, ID_HACKS_RENDERDIRECTLYTOHOSTBACKBUFFER, chk_flag);
 
-			//bad
-			switch (m_StorageToggle)
-			{
+			switch (g_Settings->m_gui.DataStorageToggle) {
 				case CXBX_DATA_APPDATA:
 					CheckMenuItem(settings_menu, ID_SETTINGS_CONFIG_DLOCAPPDATA, MF_CHECKED);
 					CheckMenuItem(settings_menu, ID_SETTINGS_CONFIG_DLOCCURDIR, MF_UNCHECKED);
 					CheckMenuItem(settings_menu, ID_SETTINGS_CONFIG_DLOCCUSTOM, MF_UNCHECKED);
 					break;
+
 				case CXBX_DATA_CURDIR:
 					CheckMenuItem(settings_menu, ID_SETTINGS_CONFIG_DLOCAPPDATA, MF_UNCHECKED);
 					CheckMenuItem(settings_menu, ID_SETTINGS_CONFIG_DLOCCURDIR, MF_CHECKED);
 					CheckMenuItem(settings_menu, ID_SETTINGS_CONFIG_DLOCCUSTOM, MF_UNCHECKED);
 					break;
+
 				case CXBX_DATA_CUSTOM:
 					CheckMenuItem(settings_menu, ID_SETTINGS_CONFIG_DLOCAPPDATA, MF_UNCHECKED);
 					CheckMenuItem(settings_menu, ID_SETTINGS_CONFIG_DLOCCURDIR, MF_UNCHECKED);
@@ -2003,37 +1805,37 @@ void WndMain::RefreshMenus()
 // update debug consoles
 void WndMain::UpdateDebugConsoles()
 {
-    if(m_CxbxDebug == DM_CONSOLE)
-    {
-        if(AllocConsole())
-        {
-            freopen("CONOUT$", "wt", stdout);
+    switch (g_Settings->m_gui.CxbxDebugMode) {
+        case DM_CONSOLE:
+            if (AllocConsole()) {
+                freopen("CONOUT$", "wt", stdout);
 
-            SetConsoleTitle("Cxbx-Reloaded : Debug Console");
+                SetConsoleTitle("Cxbx-Reloaded : Debug Console");
 
-            SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_RED);
+                SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_RED);
+
+                printf("%s", "WndMain: Debug console allocated.\n");
+
+                SetForegroundWindow(m_hwnd);
+            }
+            break;
+
+        case DM_FILE:
+            FreeConsole();
+
+            freopen(g_Settings->m_gui.szCxbxDebugFile.c_str(), "wt", stdout);
 
             printf("%s", "WndMain: Debug console allocated.\n");
+            break;
 
-            SetForegroundWindow(m_hwnd);
-        }
-    }
-    else if(m_CxbxDebug == DM_FILE)
-    {
-        FreeConsole();
+        default:
+            FreeConsole();
 
-        freopen(m_CxbxDebugFilename, "wt", stdout);
+            char buffer[16];
 
-        printf("%s", "WndMain: Debug console allocated.\n");
-    }
-    else
-    {
-        FreeConsole();
-
-        char buffer[16];
-
-        if(GetConsoleTitle(buffer, 16) != NULL)
-            freopen("nul", "w", stdout);
+            if(GetConsoleTitle(buffer, 16) != NULL)
+                freopen("nul", "w", stdout);
+            break;
     }
 }
 
@@ -2068,7 +1870,7 @@ void WndMain::UpdateRecentFiles()
         // NOTE: Resource defines ID_FILE_RXBE_0 through ID_FILE_RXBE_9 must be in order
         for(int v=0;v<max;v++)
         {
-            sprintf(szBuffer, "&%d : %s", v, m_szRecentXbe[v]);
+            sprintf(szBuffer, "&%d : %s", v, g_Settings->m_gui.szRecentXbeFiles[v]);
             AppendMenu(RXbeMenu, MF_STRING, ID_FILE_RXBE_0 + v, szBuffer);
         }
     }
@@ -2152,62 +1954,47 @@ void WndMain::OpenXbe(const char *x_filename)
     }
 
     // save this xbe to the list of recent xbe files
-    if(m_XbeFilename[0] != '\0')
-    {
+    if(m_XbeFilename[0] != '\0') {
         bool found = false;
 
         // if this filename already exists, temporarily remove it
-        for(int c=0, r=0;c<m_dwRecentXbe;c++, r++)
-        {
-            if(strcmp(m_szRecentXbe[c], m_XbeFilename) == 0)
-            {
+        for(int c=0, r=0;c<m_dwRecentXbe;c++, r++) {
+            if(strcmp(g_Settings->m_gui.szRecentXbeFiles[c].c_str(), m_XbeFilename) == 0) {
                 found = true;
                 r++;
             }
 
-            if(r != c)
-            {
-                if(m_szRecentXbe[r] == 0 || r > m_dwRecentXbe - 1)
-                {
-                    free(m_szRecentXbe[c]);
-                    m_szRecentXbe[c] = 0;
+            if(r != c) {
+                if(g_Settings->m_gui.szRecentXbeFiles[r].c_str() == 0 || r > m_dwRecentXbe - 1) {
+                    g_Settings->m_gui.szRecentXbeFiles[c] = "";
                 }
-                else
-                {
-                    strncpy(m_szRecentXbe[c], m_szRecentXbe[r], MAX_PATH-1);
+                else {
+                    g_Settings->m_gui.szRecentXbeFiles[c] = g_Settings->m_gui.szRecentXbeFiles[r];
                 }
             }
         }
 
-        if(found)
+        if (found) {
             m_dwRecentXbe--;
+        }
 
         // move all items down one, removing the last one if necessary
-        for(int v=RECENT_XBE_SIZE-1;v>0;v--)
-        {
-            if(m_szRecentXbe[v-1] == 0)
-            {
-                free(m_szRecentXbe[v]);
-                m_szRecentXbe[v] = 0;
+        for (int v=RECENT_XBE_LIST_MAX-1;v>0;v--) {
+
+            if(g_Settings->m_gui.szRecentXbeFiles[v-1].size() == 0) {
+                g_Settings->m_gui.szRecentXbeFiles[v] = "";
             }
-            else
-            {
-                if(m_szRecentXbe[v] == 0)
-                    m_szRecentXbe[v] = (char*)calloc(1, MAX_PATH);
-                strncpy(m_szRecentXbe[v], m_szRecentXbe[v-1], MAX_PATH-1);
+            else {
+                g_Settings->m_gui.szRecentXbeFiles[v] = g_Settings->m_gui.szRecentXbeFiles[v - 1];
             }
         }
 
         // add new item as first index
-        {
-            if(m_szRecentXbe[0] == 0)
-                m_szRecentXbe[0] = (char*)calloc(1, MAX_PATH);
+        g_Settings->m_gui.szRecentXbeFiles[0] = m_XbeFilename;
 
-            strcpy(m_szRecentXbe[0], m_XbeFilename);
-        }
-
-        if(m_dwRecentXbe < RECENT_XBE_SIZE)
+        if (m_dwRecentXbe < RECENT_XBE_LIST_MAX) {
             m_dwRecentXbe++;
+        }
     }
 
     UpdateRecentFiles();
@@ -2354,8 +2141,14 @@ void WndMain::StartEmulation(HWND hwndParent, DebuggerState LocalDebuggerState /
         return;
     }
 
-    // Reset to default
-    g_EmuShared->Reset();
+	// Reset to default
+	g_EmuShared->Reset();
+
+	// register xbe path with emulator process
+	g_EmuShared->SetXbePath(m_Xbe->m_szPath);
+
+	// register Emulate settings
+	g_EmuShared->SetEmulateSettings(&g_Settings->m_emulate);
 
 	// register Video settings
 	g_EmuShared->SetVideoSettings(&g_Settings->m_video);
@@ -2363,11 +2156,10 @@ void WndMain::StartEmulation(HWND hwndParent, DebuggerState LocalDebuggerState /
 	// register Audio settings
 	g_EmuShared->SetAudioSettings(&g_Settings->m_audio);
 
-    // register xbe path with emulator process
-    g_EmuShared->SetXbePath(m_Xbe->m_szPath);
+	// register Controller settings
+	g_EmuShared->SetControllerDInputSettings(&g_Settings->m_controller_dinput);
+	g_EmuShared->SetControllerPortSettings(&g_Settings->m_controller_port);
 
-	// register LLE flags with emulator process
-	g_EmuShared->SetFlagsLLE(&m_FlagsLLE);
 	// register Hacks settings
 	g_EmuShared->SetHackSettings(&g_Settings->m_hacks);
 
@@ -2406,7 +2198,7 @@ void WndMain::StartEmulation(HWND hwndParent, DebuggerState LocalDebuggerState /
 		g_EmuShared->SetDebuggingFlag(&AttachLocalDebugger);
 
         std::string szProcArgsBuffer;
-        XTL::CxbxConvertArgToString(szProcArgsBuffer, szExeFileName, m_XbeFilename, hwndParent, m_KrnlDebug, m_KrnlDebugFilename);
+        XTL::CxbxConvertArgToString(szProcArgsBuffer, szExeFileName, m_XbeFilename, hwndParent, g_Settings->m_emulate.KrnlDebugMode, g_Settings->m_emulate.szKrnlDebug);
 
         if (AttachLocalDebugger) {
 
@@ -2590,7 +2382,7 @@ void WndMain::DrawLedBitmap(HWND hwnd, bool bdefault)
 	else { // draw colored bitmap
 		int LedSequence[4] = { XBOX_LED_COLOUR_OFF, XBOX_LED_COLOUR_OFF, XBOX_LED_COLOUR_OFF, XBOX_LED_COLOUR_OFF };
 		static int LedSequenceOffset = 0;
-		int FlagsLLE = 0;
+		uint FlagsLLE = 0;
 
 		g_EmuShared->GetLedSequence(LedSequence);
 

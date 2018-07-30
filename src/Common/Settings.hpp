@@ -40,6 +40,13 @@
 
 #define szSettings_alloc_error "ERROR: Unable to allocate Settings class."
 
+// Cxbx-Reloaded's data storage location.
+typedef enum _CXBX_DATA {
+	CXBX_DATA_APPDATA = 0,
+	CXBX_DATA_CURDIR = 1,
+	CXBX_DATA_CUSTOM = 2,
+} CXBX_DATA;
+
 // ******************************************************************
 // * Maximum number of devices allowed
 // ******************************************************************
@@ -64,6 +71,23 @@ public:
 	bool LoadUserConfig();
 	bool LoadFile(std::string file_path);
 	bool Save(std::string file_path = "");
+
+	// GUI settings
+	struct s_gui {
+		DebugMode CxbxDebugMode;
+		std::string szCxbxDebugFile;
+		std::string szRecentXbeFiles[10];
+		uint DataStorageToggle;
+		std::string szCustomLocation = "";
+	} m_gui;
+
+	// Emulate settings
+	struct s_emulate {
+		uint FlagsLLE;
+		DebugMode KrnlDebugMode;
+		char szKrnlDebug[MAX_PATH] = "";
+		char szStorageLocation[MAX_PATH] = "";
+	} m_emulate;
 
 	// Video settings
 	struct s_video {

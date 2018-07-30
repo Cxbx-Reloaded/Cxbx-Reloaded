@@ -48,6 +48,7 @@ enum {
 };
 
 enum {
+	LLE_NONE = 0,
 	LLE_APU = 1 << 0,
 	LLE_GPU = 1 << 1,
 	LLE_JIT = 1 << 2,
@@ -107,6 +108,12 @@ class EmuShared : public Mutex
 		void SetKrnlProcID(unsigned int krnlProcID) { Lock(); m_dwKrnlProcID = krnlProcID; Unlock(); }
 
 		// ******************************************************************
+		// * Xbox Emulate Accessors
+		// ******************************************************************
+		void GetEmulateSettings(      Settings::s_emulate *emulate) { Lock(); *emulate = m_emulate; Unlock(); }
+		void SetEmulateSettings(const Settings::s_emulate *emulate) { Lock(); m_emulate = *emulate; Unlock(); }
+
+		// ******************************************************************
 		// * Xbox Video Accessors
 		// ******************************************************************
 		void GetVideoSettings(      Settings::s_video *video) { Lock(); *video = m_video; Unlock(); }
@@ -119,7 +126,7 @@ class EmuShared : public Mutex
 		void SetAudioSettings(const Settings::s_audio *audio) { Lock(); m_audio = *audio; Unlock(); }
 
 		// ******************************************************************
-		// * DirectInput Controller Accessors
+		// * Xbox Controller Accessors
 		// ******************************************************************
 		void GetControllerDInputSettings(      Settings::s_controller_dinput *ctrl) { Lock(); *ctrl = m_controller_dinput; Unlock(); }
 		void SetControllerDInputSettings(const Settings::s_controller_dinput *ctrl) { Lock(); m_controller_dinput = *ctrl; Unlock(); }
@@ -129,14 +136,14 @@ class EmuShared : public Mutex
 		// ******************************************************************
 		// * Xbe Path Accessors
 		// ******************************************************************
-		void GetXbePath(      char *path) { Lock(); strcpy(path, m_XbePath); Unlock(); }
-		void SetXbePath(const char *path) { Lock(); strcpy(m_XbePath, path); Unlock(); }
+		void GetXbePath(      char *path) { Lock(); strncpy(path, m_XbePath, MAX_PATH); Unlock(); }
+		void SetXbePath(const char *path) { Lock(); strncpy(m_XbePath, path, MAX_PATH); Unlock(); }
 
 		// ******************************************************************
 		// * LLE Flags Accessors
 		// ******************************************************************
-		void GetFlagsLLE(      int *flags) { Lock(); *flags = m_FlagsLLE; Unlock(); }
-		void SetFlagsLLE(const int *flags) { Lock(); m_FlagsLLE = *flags; Unlock(); }
+		void GetFlagsLLE(      uint *flags) { Lock(); *flags = m_emulate.FlagsLLE; Unlock(); }
+		void SetFlagsLLE(const uint *flags) { Lock(); m_emulate.FlagsLLE = *flags; Unlock(); }
 
 		// ******************************************************************
 		// * Boot flag Accessors
@@ -206,8 +213,8 @@ class EmuShared : public Mutex
 		// ******************************************************************
 		// * File storage location
 		// ******************************************************************
-		void GetStorageLocation(char *path) { Lock(); strcpy(path, m_StorageLocation); Unlock(); }
-		void SetStorageLocation(char *path) { Lock(); strcpy(m_StorageLocation, path); Unlock(); }
+		void GetStorageLocation(char *path) { Lock(); strncpy(path, m_emulate.szStorageLocation, MAX_PATH); Unlock(); }
+		void SetStorageLocation(char *path) { Lock(); strncpy(m_emulate.szStorageLocation, path, MAX_PATH); Unlock(); }
 
 		// ******************************************************************
 		// * Reset specific variables to default for kernel mode.
@@ -244,12 +251,12 @@ class EmuShared : public Mutex
 		// ******************************************************************
 		Settings::s_controller_dinput m_controller_dinput;
 		Settings::s_controller_port m_controller_port;
+		Settings::s_emulate m_emulate;
 		Settings::s_video m_video;
 		Settings::s_audio m_audio;
 		Settings::s_hack m_hacks;
 		char         m_XbePath[MAX_PATH];
 		int          m_BootFlags;
-		int          m_FlagsLLE;
 		int          m_Reserved1;
 		float        m_MSpF;
 		float        m_FPS;
@@ -258,7 +265,6 @@ class EmuShared : public Mutex
 		bool         m_bReady;
 		bool         m_bEmulating;
 		int          m_LedSequence[4];
-		char         m_StorageLocation[MAX_PATH];
 		bool         m_bFirstLaunch;
 		bool         m_bReserved2;
 		bool         m_bReserved3;

@@ -333,7 +333,7 @@ void EmuD3D_Init_DeferredStates()
 // Update shared structure with GUI process
 void EmuUpdateLLEStatus(uint32_t XbLibScan)
 {
-    int FlagsLLE;
+    uint FlagsLLE;
     g_EmuShared->GetFlagsLLE(&FlagsLLE);
 
     if ((FlagsLLE & LLE_GPU) == false
@@ -400,7 +400,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
     }
 
     EmuUpdateLLEStatus(XbLibScan);
-    int gFlagsLLE;
+    uint gFlagsLLE;
     g_EmuShared->GetFlagsLLE(&gFlagsLLE);
 
     printf("\n");

@@ -1304,7 +1304,7 @@ __declspec(noreturn) void CxbxKrnlInit
 
 	// Read which components need to be LLE'ed :
 	{
-		int CxbxLLE_Flags;
+		uint CxbxLLE_Flags;
 		g_EmuShared->GetFlagsLLE(&CxbxLLE_Flags);
 		bLLE_APU = (CxbxLLE_Flags & LLE_APU) > 0;
 		bLLE_GPU = (CxbxLLE_Flags & LLE_GPU) > 0;

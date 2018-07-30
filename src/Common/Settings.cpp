@@ -66,6 +66,22 @@ Settings* g_Settings = nullptr;
 #define szSettings_settings_file "/settings.ini"
 #define szSettings_cxbx_reloaded_directory "/Cxbx-Reloaded"
 
+static const char* section_gui = "gui";
+static struct {
+	const char* CxbxDebugMode = "CxbxDebugMode";
+	const char* CxbxDebugLogFile = "CxbxDebugLogFile";
+	const char* RecentXbeFiles = "RecentXbeFiles";
+	const char* DataStorageToggle = "DataStorageToggle";
+	const char* DataCustomLocation = "DataCustomLocation";
+} sect_gui_keys;
+
+static const char* section_emulate = "emulate";
+static struct {
+	const char* FlagsLLE = "FlagsLLE";
+	const char* KrnlDebugMode = "KrnlDebugMode";
+	const char* KrnlDebugLogFile = "KrnlDebugLogFile";
+} sect_emulate_keys;
+
 static const char* section_video = "video";
 static struct {
 	const char* VideoResolution = "VideoResolution";
@@ -239,6 +255,60 @@ bool Settings::LoadFile(std::string file_path)
 	}
 	m_file_path = file_path;
 
+	// ==== GUI Begin ===========
+
+	m_gui.CxbxDebugMode = (DebugMode)m_si.GetLongValue(section_gui, sect_gui_keys.CxbxDebugMode, /*Default=*/DM_NONE);
+	si_data = m_si.GetValue(section_gui, sect_gui_keys.CxbxDebugLogFile, /*Default=*/nullptr);
+	if (si_data != nullptr) {
+		m_gui.szCxbxDebugFile = si_data;
+	}
+	else {
+		m_gui.szCxbxDebugFile = "";
+	}
+
+	m_gui.DataStorageToggle = m_si.GetLongValue(section_gui, sect_gui_keys.DataStorageToggle, /*Default=*/CXBX_DATA_APPDATA);
+	si_data = m_si.GetValue(section_gui, sect_gui_keys.DataCustomLocation, /*Default=*/nullptr);
+	if (si_data != nullptr) {
+		m_gui.szCustomLocation = si_data;
+	}
+	else {
+		m_gui.szCustomLocation = "";
+	}
+
+	// GUI - Recent xbe file paths
+	bRet = m_si.GetAllValues(section_gui, sect_gui_keys.RecentXbeFiles, si_list);/*Default=empty list*/
+	if (!bRet) {
+		for (uint i = 0; i < 10; i++) {
+			m_gui.szRecentXbeFiles[i] = "";
+		}
+	}
+	else {
+		si_list_iterator = si_list.begin();
+		for (uint i = 0; i < 10; i++,si_list_iterator++) {
+			if (si_list_iterator == si_list.end()) {
+				m_gui.szRecentXbeFiles[i] = "";
+				continue;
+			}
+			m_gui.szRecentXbeFiles[i] = si_list_iterator->pItem;
+		}
+	}
+
+	// ==== GUI End =============
+
+	// ==== Emulate Begin =======
+
+	m_emulate.FlagsLLE = m_si.GetLongValue(section_emulate, sect_emulate_keys.FlagsLLE, /*Default=*/LLE_NONE);
+	m_emulate.KrnlDebugMode = (DebugMode)m_si.GetLongValue(section_emulate, sect_emulate_keys.KrnlDebugMode, /*Default=*/DM_NONE);
+	si_data = m_si.GetValue(section_emulate, sect_emulate_keys.KrnlDebugLogFile, /*Default=*/nullptr);
+	if (si_data != nullptr) {
+		strncpy(m_emulate.szKrnlDebug, si_data, MAX_PATH);
+	}
+	else {
+		m_emulate.szKrnlDebug[0] = '\0';
+	}
+
+	// ==== Emulate End =========
+
 	// ==== Hack Begin ==========
 
 	m_hacks.DisablePixelShaders = m_si.GetBoolValue(section_hack, sect_hack_keys.DisablePixelShaders, /*Default=*/false);
@@ -353,6 +423,30 @@ bool Settings::Save(std::string file_path)
 
 	// Minimal need is 25, 0x37 for GUID.
 	char si_value[64]; 
+
+	// ==== GUI Begin ===========
+
+	m_si.SetLongValue(section_gui, sect_gui_keys.CxbxDebugMode, m_gui.CxbxDebugMode, nullptr, true, true);
+	m_si.SetValue(section_gui, sect_gui_keys.CxbxDebugLogFile, m_gui.szCxbxDebugFile.c_str(), nullptr, true);
+	m_si.SetLongValue(section_gui, sect_gui_keys.DataStorageToggle, m_gui.DataStorageToggle, nullptr, true, true);
+	m_si.SetValue(section_gui, sect_gui_keys.DataCustomLocation, m_gui.szCustomLocation.c_str(), nullptr, true);
+
+	// First force overwrite existing value
+	m_si.SetValue(section_gui, sect_gui_keys.RecentXbeFiles, m_gui.szRecentXbeFiles[0].c_str(), nullptr, true);
+	// Then append recent xbe file strings
+	for (uint i = 1; i < 10; i++) {
+		m_si.SetValue(section_gui, sect_gui_keys.RecentXbeFiles, m_gui.szRecentXbeFiles[i].c_str(), nullptr, false);
+	}
+
+	// ==== GUI End =============
+
+	// ==== Emulate Begin =======
+
+	m_si.SetLongValue(section_emulate, sect_emulate_keys.FlagsLLE, m_emulate.FlagsLLE, nullptr, true, true);
+	m_si.SetLongValue(section_emulate, sect_emulate_keys.KrnlDebugMode, m_emulate.KrnlDebugMode, nullptr, true, true);
+	m_si.SetValue(section_emulate, sect_emulate_keys.KrnlDebugLogFile, m_emulate.szKrnlDebug, nullptr, true);
+
+	// ==== Emulate End =========
 
 	// ==== Video Begin =========
 
