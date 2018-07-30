@@ -58,6 +58,8 @@ namespace xboxkrnl
 #define HID_SET_REPORT       0x09
 #define XID_GET_CAPABILITIES 0x01
 
+// To avoid including Xbox.h
+extern USBDevice* g_USB0;
 
 XidGamepad* g_XidControllerObjArray[4];
 
@@ -240,28 +242,26 @@ int XidGamepad::UsbXidClaimPort(XboxDeviceState* dev, int port)
 
 	assert(dev->Port == nullptr);
 
-	for (int j = 0; j < 4; j++) {
-		if (g_HubObjArray[j]) {
-			i = 0;
-			for (auto usb_port : g_HubObjArray[j]->m_UsbDev->m_FreePorts) {
-				if (usb_port->Path == (std::to_string(port) + ".2")) {
-					m_UsbDev = g_HubObjArray[j]->m_UsbDev;
-					break;
-				}
-				i++;
-			}
-		}
-	}
-	if (m_UsbDev == nullptr) {
-		EmuWarning("Port requested %d.2 not found (in use?)", port);
-		return -1;
-	}
+	m_UsbDev = g_USB0;
+	it = m_UsbDev->m_FreePorts.end();
+	i = 0;
 
 	while (m_UsbDev->m_HostController->m_bFrameTime) { Sleep(1); }
 	m_UsbDev->m_HostController->m_bFrameTime = true;
 
+	for (auto usb_port : m_UsbDev->m_FreePorts) {
+		if (usb_port->Path == (std::to_string(port) + ".2")) {
+			it = m_UsbDev->m_FreePorts.begin() + i;
+			break;
+		}
+		i++;
+	}
+	if (it == m_UsbDev->m_FreePorts.end()) {
+		EmuWarning("Port requested %d.2 not found (in use?)", port);
+		return -1;
+	}
+
 	m_Port = port;
-	it = m_UsbDev->m_FreePorts.begin() + i;
 	dev->Port = *it;
 	(*it)->Dev = dev;
 	m_UsbDev->m_FreePorts.erase(it);

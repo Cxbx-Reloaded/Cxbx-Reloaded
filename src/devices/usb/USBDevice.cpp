@@ -69,14 +69,8 @@ void USBDevice::Init(unsigned int address)
 	m_DeviceId = 0x01C2;
 	m_VendorId = PCI_VENDOR_ID_NVIDIA;
 
-	if (address == USB0_BASE) {
-		m_HostController = new OHCI(1, this);
-		m_PciPath = "pci.0:02.0";
-		return;
-	}
-
-	m_HostController = new OHCI(9, this);
-	m_PciPath = "pci.0:03.0";
+	m_HostController = new OHCI(this);
+	m_PciPath = "pci.0:02.0";
 }
 
 uint32_t USBDevice::MMIORead(int barIndex, uint32_t addr, unsigned size)
@@ -739,7 +733,6 @@ void USBDevice::USB_CreateSerial(XboxDeviceState* dev, std::string&& str)
 {
 	const USBDesc* desc = USBDesc_GetUsbDeviceDesc(dev);
 	int index = desc->id.iSerialNumber;
-	std::string str2;
 
 	assert(index != 0 && str.empty() == false);
 	str += '-';
@@ -995,7 +988,7 @@ int USBDevice::USBDesc_HandleControl(XboxDeviceState* dev, USBPacket *p,
 			// From the standard: "This request allows the host to select an alternate setting for the specified interface"
 			// wValue = Alternative Setting; wIndex = Interface
 			ret = USBDesc_SetInterface(dev, index, value);
-			DbgPrintf("%s; received standard SetInterface() request for device at address 0x%X. Interface selected is %d, Alternative Setting \
+			DbgPrintf("%s: received standard SetInterface() request for device at address 0x%X. Interface selected is %d, Alternative Setting \
 is %d and returned %d\n", LOG_STR_USB, dev->Addr, index, value, ret);
 			break;
 		}
@@ -1252,7 +1245,7 @@ int USBDevice::USB_ReadStringDesc(XboxDeviceState* dev, int index, uint8_t* dest
 	// From the standard: "The UNICODE string descriptor is not NULL-terminated. The string length is
 	// computed by subtracting two from the value of the first byte of the descriptor"
 
-	bLength = strlen(str) * 2 + 2;
+	bLength = std::strlen(str) * 2 + 2;
 	dest[0] = bLength;
 	dest[1] = USB_DT_STRING;
 	i = 0; pos = 2;

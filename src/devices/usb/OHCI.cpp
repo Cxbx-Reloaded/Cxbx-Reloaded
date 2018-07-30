@@ -207,12 +207,11 @@ namespace xboxkrnl
 #endif // DEBUG
 
 
-OHCI::OHCI(int Irq, USBDevice* UsbObj)
+OHCI::OHCI(USBDevice* UsbObj)
 {
 	int offset = 0;
 	USBPortOps* ops;
 
-	m_IrqNum = Irq;
 	m_UsbDevice = UsbObj;
 	m_bFrameTime = false;
 	ops = new USBPortOps();
@@ -226,12 +225,8 @@ OHCI::OHCI(int Irq, USBDevice* UsbObj)
 		ops->complete     = std::bind(&OHCI::OHCI_AsyncCompletePacket, this, _1, _2);
 	}
 
-	if (m_IrqNum == 9) {
-		offset = 2;
-	}
-
-	for (int i = 0; i < 2; i++) {
-		m_UsbDevice->USB_RegisterPort(&m_Registers.RhPort[i].UsbPort, i + offset, USB_SPEED_MASK_LOW | USB_SPEED_MASK_FULL, ops);
+	for (int i = 0; i < 4; i++) {
+		m_UsbDevice->USB_RegisterPort(&m_Registers.RhPort[i].UsbPort, i, USB_SPEED_MASK_LOW | USB_SPEED_MASK_FULL, ops);
 	}
 	OHCI_PacketInit(&m_UsbPacket);
 
@@ -863,7 +858,7 @@ XboxDeviceState* OHCI::OHCI_FindDevice(uint8_t Addr)
 	XboxDeviceState* dev;
 	int i;
 
-	for (i = 0; i < 2; i++) {
+	for (i = 0; i < 4; i++) {
 		if ((m_Registers.RhPort[i].HcRhPortStatus & OHCI_PORT_PES) == 0) {
 			continue; // port is disabled
 		}
@@ -905,13 +900,13 @@ void OHCI::OHCI_StateReset()
 	m_Registers.HcPeriodicStart = 0;
 	m_Registers.HcLSThreshold = OHCI_LS_THRESH;
 
-	m_Registers.HcRhDescriptorA = OHCI_RHA_NPS | 2; // The xbox lacks the hw to switch off the power on the ports and has 2 ports per HC
+	m_Registers.HcRhDescriptorA = OHCI_RHA_NOCP | OHCI_RHA_NPS | 4; // The xbox lacks the hw to switch off the power on the ports and has 4 ports per HC
 	m_Registers.HcRhDescriptorB = 0; // The attached devices are removable and use PowerSwitchingMode to control the power on the ports
 	m_Registers.HcRhStatus = 0;
 
 	m_DoneCount = 7;
 
-	for (int i = 0; i < 2; i++)
+	for (int i = 0; i < 4; i++)
 	{
 		OHCIPort* Port = &m_Registers.RhPort[i];
 		Port->HcRhPortStatus = 0;
@@ -1132,21 +1127,21 @@ uint32_t OHCI::OHCI_ReadRegister(xbaddr Addr)
 			// Always report that the port power is on since the Xbox cannot switch off the electrical current to it
 			case 21: // RhPort 0
 				ret = m_Registers.RhPort[0].HcRhPortStatus | OHCI_PORT_PPS;
-				TestOut("m_Registers.RhPort[0].HcRhPortStatus: 0x%X\n", m_Registers.RhPort[0].HcRhPortStatus | OHCI_PORT_PPS);
+				TestOut("m_Registers.RhPort[0].HcRhPortStatus: 0x%X\n", ret);
 				break;
 
 			case 22: // RhPort 1
 				ret = m_Registers.RhPort[1].HcRhPortStatus | OHCI_PORT_PPS;
-				TestOut("m_Registers.RhPort[1].HcRhPortStatus: 0x%X\n", m_Registers.RhPort[1].HcRhPortStatus | OHCI_PORT_PPS);
+				TestOut("m_Registers.RhPort[1].HcRhPortStatus: 0x%X\n", ret);
 				break;
 
 			case 23:
-				ret = 0 | OHCI_PORT_PPS;
+				ret = m_Registers.RhPort[2].HcRhPortStatus | OHCI_PORT_PPS;
 				TestOut("m_Registers.RhPort[2].HcRhPortStatus: 0x%X\n", ret);
 				break;
 
 			case 24:
-				ret = 0 | OHCI_PORT_PPS;
+				ret = m_Registers.RhPort[3].HcRhPortStatus | OHCI_PORT_PPS;
 				TestOut("m_Registers.RhPort[3].HcRhPortStatus: 0x%X\n", ret);
 				break;
 
@@ -1321,12 +1316,16 @@ void OHCI::OHCI_WriteRegister(xbaddr Addr, uint32_t Value)
 				TestOut("W m_Registers.RhPort 1: 0x%X\n", m_Registers.RhPort[1].HcRhPortStatus);
 				break;
 
-			case 23:
+			case 23: // RhPort 2
 				TestOut("W m_Registers.RhPort 2: 0x%X\n", Value);
+				OHCI_PortSetStatus(2, Value);
+				TestOut("W m_Registers.RhPort 2: 0x%X\n", m_Registers.RhPort[2].HcRhPortStatus);
 				break;
 
-			case 24:
+			case 24: // RhPort 3
 				TestOut("W m_Registers.RhPort 3: 0x%X\n", Value);
+				OHCI_PortSetStatus(3, Value);
+				TestOut("W m_Registers.RhPort 3: 0x%X\n", m_Registers.RhPort[3].HcRhPortStatus);
 				break;
 
 			default:
@@ -1338,8 +1337,8 @@ void OHCI::OHCI_WriteRegister(xbaddr Addr, uint32_t Value)
 void OHCI::OHCI_UpdateInterrupt()
 {
 	if ((m_Registers.HcInterrupt & OHCI_INTR_MIE) && (m_Registers.HcInterruptStatus & m_Registers.HcInterrupt)) {
-		HalSystemInterrupts[m_IrqNum].Assert(false);
-		HalSystemInterrupts[m_IrqNum].Assert(true);
+		HalSystemInterrupts[1].Assert(false);
+		HalSystemInterrupts[1].Assert(true);
 		TestOut("Fired interrupt -> m_Registers.HcInterruptStatus is 0x%X\n", m_Registers.HcInterruptStatus);
 	}
 }
@@ -1378,7 +1377,7 @@ void OHCI::OHCI_StopEndpoints()
 	XboxDeviceState* dev;
 	int i, j;
 
-	for (i = 0; i < 2; i++) {
+	for (i = 0; i < 4; i++) {
 		dev = m_Registers.RhPort[i].UsbPort.Dev;
 		if (dev && dev->Attached) {
 			m_UsbDevice->USB_DeviceEPstopped(dev, &dev->EP_ctl);
@@ -1404,7 +1403,7 @@ void OHCI::OHCI_SetHubStatus(uint32_t Value)
 	if (Value & OHCI_RHS_LPS) {
 		int i;
 
-		for (i = 0; i < 2; i++) {
+		for (i = 0; i < 4; i++) {
 			OHCI_PortPower(i, 0);
 		}	
 		DbgPrintf("%s: powered down all ports\n", LOG_STR_OHCI);
@@ -1413,7 +1412,7 @@ void OHCI::OHCI_SetHubStatus(uint32_t Value)
 	if (Value & OHCI_RHS_LPSC) {
 		int i;
 
-		for (i = 0; i < 2; i++) {
+		for (i = 0; i < 4; i++) {
 			OHCI_PortPower(i, 1);
 		}	
 		DbgPrintf("%s: powered up all ports\n", LOG_STR_OHCI);

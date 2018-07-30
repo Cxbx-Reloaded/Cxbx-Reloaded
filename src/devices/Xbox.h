@@ -80,6 +80,5 @@ extern EEPROMDevice* g_EEPROM;
 extern NVNetDevice* g_NVNet;
 extern NV2ADevice* g_NV2A;
 extern USBDevice* g_USB0;
-extern USBDevice* g_USB1;
 
 extern void InitXboxHardware(HardwareModel hardwareModel);

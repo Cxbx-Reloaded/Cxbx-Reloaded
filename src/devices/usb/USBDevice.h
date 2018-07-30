@@ -106,7 +106,7 @@ class USBDevice : public PCIDevice {
 		void USB_PacketCheckState(USBPacket* p, USBPacketState expected);
 		// process the packet
 		void USB_ProcessOne(USBPacket* p);
-		//
+		// TODO
 		void USB_DoParameter(XboxDeviceState* s, USBPacket* p);
 		// process a setup token
 		void USB_DoTokenSetup(XboxDeviceState* s, USBPacket* p);

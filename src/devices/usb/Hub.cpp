@@ -88,7 +88,6 @@ namespace xboxkrnl
 
 // To avoid including Xbox.h
 extern USBDevice* g_USB0;
-extern USBDevice* g_USB1;
 
 Hub* g_HubObjArray[4] = { nullptr };
 
@@ -230,28 +229,24 @@ int Hub::UsbHubClaimPort(XboxDeviceState* dev, int port)
 
 	assert(dev->Port == nullptr);
 
+	m_UsbDev = g_USB0;
+	it = m_UsbDev->m_FreePorts.end();
 	i = 0;
-	if (port > 2) {
-		m_UsbDev = g_USB1;
-	}
-	else {
-		m_UsbDev = g_USB0;
-	}
 
 	while (m_UsbDev->m_HostController->m_bFrameTime) { Sleep(1); }
 	m_UsbDev->m_HostController->m_bFrameTime = true;
 
 	for (auto usb_port : m_UsbDev->m_FreePorts) {
 		if (usb_port->Path == std::to_string(port)) {
+			it = m_UsbDev->m_FreePorts.begin() + i;
 			break;
 		}
 		i++;
 	}
-	if (i == 2) {
+	if (it == m_UsbDev->m_FreePorts.end()) {
 		EmuWarning("Port requested %d not found (in use?)", port);
 		return -1;
 	}
-	it = m_UsbDev->m_FreePorts.begin() + i;
 	dev->Port = *it;
 	(*it)->Dev = dev;
 	m_UsbDev->m_FreePorts.erase(it);

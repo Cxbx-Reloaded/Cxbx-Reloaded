@@ -133,7 +133,7 @@ struct OHCI_Registers
 	uint32_t HcRhDescriptorA;
 	uint32_t HcRhDescriptorB;
 	uint32_t HcRhStatus;
-	OHCIPort RhPort[2]; // 2 ports per HC, for a total of 4 USB ports
+	OHCIPort RhPort[4]; // 4 ports per HC
 };
 
 
@@ -146,7 +146,7 @@ class OHCI
 		std::atomic_bool m_bFrameTime;
 
 		// constructor
-		OHCI(int Irqn, USBDevice* UsbObj);
+		OHCI(USBDevice* UsbObj);
 		// destructor
 		~OHCI() {}
 		// read a register
@@ -174,8 +174,6 @@ class OHCI
 		uint8_t m_UsbBuffer[8192] = {};
 		// the value of HcControl in the previous frame
 		uint32_t m_OldHcControl;
-		// irq number
-		int m_IrqNum;
 		// Done Queue Interrupt Counter
 		int m_DoneCount;
 		// the address of the pending TD

@@ -66,7 +66,7 @@
 #define AC97_BASE                               0xFEC00000
 #define AC97_SIZE                               0x1000
 #define USB0_BASE                               0xFED00000
-#define USB1_BASE                               0xFED08000
+#define USB1_BASE                               0xFED08000 // alpha kits only
 #define USB_SIZE                                0x1000
 #define NVNet_BASE                              0xFEF00000
 #define NVNet_SIZE                              0x400
