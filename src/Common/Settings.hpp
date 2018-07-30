@@ -66,6 +66,16 @@ public:
 		bool codec_unknown;
 	} m_audio;
 
+	// Hack settings
+	struct s_hack {
+		bool DisablePixelShaders;
+		bool UncapFramerate;
+		bool UseAllCores;
+		bool SkipRdtscPatching;
+		bool ScaleViewport;
+		bool DirectHostBackBufferAccess;
+	} m_hacks;
+
 private:
 	std::string m_file_path = "";
 	CSimpleIniA m_si;
