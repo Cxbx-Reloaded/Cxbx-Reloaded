@@ -94,9 +94,6 @@
     <ClCompile Include="..\..\src\Common\Win32\Mutex.cpp">
       <Filter>Shared</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\Common\Win32\XBController.cpp">
-      <Filter>Shared</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\Common\Xbe.cpp">
       <Filter>Shared</Filter>
     </ClCompile>
@@ -317,6 +314,9 @@
     <ClCompile Include="..\..\src\Common\CxbxCommon.cpp">
       <Filter>Cross Platform</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\Common\Win32\DInputController.cpp">
+      <Filter>Shared</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\Cxbx\DlgControllerConfig.h">
@@ -365,9 +365,6 @@
       <Filter>Shared</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\Cxbx\ResCxbx.h">
-      <Filter>Shared</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\Common\Win32\XBController.h">
       <Filter>Shared</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\Common\Xbe.h">
@@ -621,6 +618,9 @@
     </ClInclude>
     <ClInclude Include="..\..\src\Common\CxbxCommon.h">
       <Filter>Cross Platform</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Common\Win32\DInputController.h">
+      <Filter>Shared</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
