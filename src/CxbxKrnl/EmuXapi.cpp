@@ -51,6 +51,7 @@ namespace xboxkrnl
 #include "EmuKrnl.h" // For DefaultLaunchDataPage
 #include "EmuFile.h"
 #include "EmuFS.h"
+#include "EmuXTL.h"
 #include "EmuShared.h"
 #include "../Common/Win32/XBPortMapping.h"
 #include "HLEIntercept.h"
@@ -80,8 +81,6 @@ PFARPROC1 fnCxbxVSBCOpen;
 //typedef DWORD(*fnCxbxVSBCSetState)(UCHAR *);
 //typedef DWORD(*fnCxbxVSBCGetState)(UCHAR *);
 XTL::PXPP_DEVICE_TYPE gDeviceType_Gamepad = nullptr;
-
-#include "EmuXTL.h"
 
 
 XTL::X_POLLING_PARAMETERS_HANDLE g_pph[4];
@@ -123,8 +122,10 @@ int FindDeviceInfoIndexByDeviceType(XTL::PXPP_DEVICE_TYPE DeviceType)
 //this is called in the end of SetupXboxDeviceTypes(), later we'll move this code to accept user configuration.
 void InitXboxControllerHostBridge(void)
 {
-    //load host type and port configuration from registry.
-    XBPortMappingLoad("Software\\Cxbx-Reloaded\\XboxPortHostMapping");
+    //load host type and port configuration from settings.
+    Settings::s_controller_port ControllerPortMap;
+    g_EmuShared->GetControllerPortSettings(&ControllerPortMap);
+    XBPortMappingSet(ControllerPortMap);
     total_xinput_gamepad = XTL::XInputGamepad_Connected();
     
     int port;

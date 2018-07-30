@@ -34,11 +34,13 @@
 // *
 // ******************************************************************
 
-#include "CxbxKrnl/EmuShared.h"
+#include "Common/Settings.hpp" // for g_Settings
+
 #include "DlgXboxControllerPortMapping.h"
 #include "../Common/Win32/XBPortMapping.h"
 #include "Windowsx.h"
 #include "ResCxbx.h"
+#include "CxbxKrnl/EmuXTL.h"
 
 #include <cstdio>
 
@@ -70,8 +72,8 @@ INT_PTR CALLBACK DlgXboxControllerPortMappingProc(HWND hWndDlg, UINT uMsg, WPARA
         {
             /*! set window icon */
             SetClassLong(hWndDlg, GCL_HICON, (LONG)LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_CXBX)));
-            //Load saved configuration from registry.
-            XBPortMappingLoad("Software\\Cxbx-Reloaded\\XboxPortHostMapping");//"Software\\Cxbx-Reloaded\\XboxPortHostMapping"
+            // Load configuration from settings.
+            XBPortMappingSet(g_Settings->m_controller_port);
             //Init dialog selections per global array contenst.
             XTL::DWORD port = 0;
             int index = 0;
@@ -140,8 +142,8 @@ INT_PTR CALLBACK DlgXboxControllerPortMappingProc(HWND hWndDlg, UINT uMsg, WPARA
                 EndDialog(hWndDlg, wParam);
                 break;
             case IDC_HOST_APPLY:
-                //save configuration to registry.
-                XBPortMappingSave("Software\\Cxbx-Reloaded\\XboxPortHostMapping");
+                // Save configuration to settings.
+                XBPortMappingGet(g_Settings->m_controller_port);
                 EndDialog(hWndDlg, wParam);
                 break;
             //set host type and host port in global array xbox to host bridge for xbox port 0

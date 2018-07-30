@@ -40,6 +40,11 @@
 
 #define szSettings_alloc_error "ERROR: Unable to allocate Settings class."
 
+// ******************************************************************
+// * Maximum number of devices allowed
+// ******************************************************************
+#define XBCTRL_MAX_GAMEPAD_PORTS 4
+
 class Settings
 {
 public:
@@ -65,6 +70,11 @@ public:
 		bool codec_xadpcm;
 		bool codec_unknown;
 	} m_audio;
+
+	struct s_controller_port {
+		uint XboxPortMapHostType[XBCTRL_MAX_GAMEPAD_PORTS] = { 1, 1, 1, 1 };
+		uint XboxPortMapHostPort[XBCTRL_MAX_GAMEPAD_PORTS] = { 0, 1, 2, 3 };
+	} m_controller_port;
 
 	// Hack settings
 	struct s_hack {

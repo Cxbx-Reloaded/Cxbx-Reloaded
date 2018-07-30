@@ -85,6 +85,13 @@ static struct {
 	const char* codec_unknown = "UnknownCodec";
 } sect_audio_keys;
 
+static const char* section_controller_port = "controller-port";
+// All keys so far are dynamic
+static struct {
+	const char* xbox_port_x_host_type = "XboxPort%dHostType";
+	const char* xbox_port_x_host_port = "XboxPort%dHostPort";
+} sect_controller_port_keys;
+
 static const char* section_hack = "hack";
 static struct {
 	const char* DisablePixelShaders = "DisablePixelShaders";
@@ -274,6 +281,23 @@ bool Settings::LoadFile(std::string file_path)
 	m_audio.codec_unknown = m_si.GetBoolValue(section_audio, sect_audio_keys.codec_unknown, /*Default=*/true, nullptr);
 
 	// ==== Audio End ===========
+
+	// ==== Controller Begin ====
+
+	int v = 0;
+	char szKeyName[64];
+
+	for (v = 0; v < XBCTRL_MAX_GAMEPAD_PORTS; v++) {
+		sprintf_s(szKeyName, sect_controller_port_keys.xbox_port_x_host_type, v);
+		m_controller_port.XboxPortMapHostType[v] = m_si.GetLongValue(section_controller_port, szKeyName, /*Default=*/1, nullptr);
+	}
+
+	for (v = 0; v < XBCTRL_MAX_GAMEPAD_PORTS; v++) {
+		sprintf_s(szKeyName, sect_controller_port_keys.xbox_port_x_host_port, v);
+		m_controller_port.XboxPortMapHostPort[v] = m_si.GetLongValue(section_controller_port, szKeyName, /*Default=*/v, nullptr);
+	}
+
+	// ==== Controller End ======
 
 	return true;
 }

@@ -127,6 +127,8 @@ class EmuShared : public Mutex
 		// ******************************************************************
 		void GetXBController(      DInputController *ctrl) { Lock(); *ctrl = DInputController(m_XBController); Unlock(); }
 		void SetXBController(const DInputController *ctrl) { Lock(); m_XBController = DInputController(*ctrl); Unlock(); }
+		void GetControllerPortSettings(      Settings::s_controller_port *ctrl) { Lock(); *ctrl = m_controller_port; Unlock(); }
+		void SetControllerPortSettings(const Settings::s_controller_port *ctrl) { Lock(); m_controller_port = *ctrl; Unlock(); }
 
 		// ******************************************************************
 		// * Xbe Path Accessors
@@ -245,6 +247,7 @@ class EmuShared : public Mutex
 		// * Shared configuration
 		// ******************************************************************
 		DInputController m_XBController;
+		Settings::s_controller_port m_controller_port;
 		Settings::s_video m_video;
 		Settings::s_audio m_audio;
 		Settings::s_hack m_hacks;
