@@ -85,6 +85,14 @@ static struct {
 	const char* codec_unknown = "UnknownCodec";
 } sect_audio_keys;
 
+static const char* section_controller_dinput = "controller-dinput";
+// All keys so far are dynamic
+static struct {
+	const char* device_name = "DeviceName 0x%.02X";
+	const char* object_name = "Object : \"%s\"";
+	const char* object_name_value = "%08X %08X %08X";
+} sect_controller_dinput_keys;
+
 static const char* section_controller_port = "controller-port";
 // All keys so far are dynamic
 static struct {
@@ -287,6 +295,41 @@ bool Settings::LoadFile(std::string file_path)
 	int v = 0;
 	char szKeyName[64];
 
+	// ******************************************************************
+	// * Load Device Names
+	// ******************************************************************
+	for (v = 0; v < XBCTRL_MAX_DEVICES; v++) {
+		sprintf_s(szKeyName, sect_controller_dinput_keys.device_name, v);
+		si_data = m_si.GetValue(section_controller_dinput, szKeyName, /*Default=*/nullptr);
+
+		if (si_data == nullptr) {
+			// default is a null string
+			m_controller_dinput.DeviceName[v][0] = '\0';
+		}
+		else {
+			strncpy(m_controller_dinput.DeviceName[v], si_data, MAX_PATH);
+		}
+	}
+
+	// ******************************************************************
+	// * Load Object Configuration
+	// ******************************************************************
+	for (v = 0; v<XBCTRL_OBJECT_COUNT; v++) {
+		sprintf(szKeyName, sect_controller_dinput_keys.object_name, m_controller_dinput.XboxControllerObjectNameLookup[v]);
+		si_data = m_si.GetValue(section_controller_dinput, szKeyName, /*Default=*/nullptr);
+
+		if (si_data == nullptr) {
+			// default object configuration
+			m_controller_dinput.ObjectConfig[v].dwDevice = -1;
+			m_controller_dinput.ObjectConfig[v].dwInfo = -1;
+			m_controller_dinput.ObjectConfig[v].dwFlags = 0;
+		}
+		else {
+			sscanf(si_data, sect_controller_dinput_keys.object_name_value, &m_controller_dinput.ObjectConfig[v].dwDevice,
+				&m_controller_dinput.ObjectConfig[v].dwInfo, &m_controller_dinput.ObjectConfig[v].dwFlags);
+		}
+	}
+
 	for (v = 0; v < XBCTRL_MAX_GAMEPAD_PORTS; v++) {
 		sprintf_s(szKeyName, sect_controller_port_keys.xbox_port_x_host_type, v);
 		m_controller_port.XboxPortMapHostType[v] = m_si.GetLongValue(section_controller_port, szKeyName, /*Default=*/1, nullptr);
@@ -339,6 +382,53 @@ bool Settings::Save(std::string file_path)
 
 	// ==== Audio End ===========
 
+	// ==== Controller Begin ====
+
+	int v = 0;
+	char szKeyName[64];
+
+	// ******************************************************************
+	// * Save Device Names
+	// ******************************************************************
+	for (v = 0; v < XBCTRL_MAX_DEVICES; v++) {
+		sprintf_s(szKeyName, sect_controller_dinput_keys.device_name, v);
+
+		if (m_controller_dinput.DeviceName[v][0] == 0) {
+			m_si.Delete(section_controller_dinput, szKeyName, true);
+		}
+		else {
+			m_si.SetValue(section_controller_dinput, szKeyName, m_controller_dinput.DeviceName[v], nullptr, true);
+		}
+	}
+
+	// ******************************************************************
+	// * Save Object Configuration
+	// ******************************************************************
+	for (v = 0; v<XBCTRL_OBJECT_COUNT; v++) {
+		sprintf(szKeyName, sect_controller_dinput_keys.object_name, m_controller_dinput.XboxControllerObjectNameLookup[v]);
+
+		if (m_controller_dinput.ObjectConfig[v].dwDevice == -1) {
+			m_si.Delete(section_controller_dinput, szKeyName, true);
+		}
+		else {
+			sprintf_s(si_value, sect_controller_dinput_keys.object_name_value, m_controller_dinput.ObjectConfig[v].dwDevice,
+				m_controller_dinput.ObjectConfig[v].dwInfo, m_controller_dinput.ObjectConfig[v].dwFlags);
+			m_si.SetValue(section_controller_dinput, szKeyName, si_value, nullptr, true);
+		}
+	}
+
+	for (v = 0; v < XBCTRL_MAX_GAMEPAD_PORTS; v++) {
+		sprintf_s(szKeyName, sect_controller_port_keys.xbox_port_x_host_type, v);
+		m_si.SetLongValue(section_controller_port, szKeyName, m_controller_port.XboxPortMapHostType[v], nullptr, true, true);
+	}
+
+	for (v = 0; v < XBCTRL_MAX_GAMEPAD_PORTS; v++) {
+		sprintf_s(szKeyName, sect_controller_port_keys.xbox_port_x_host_port, v);
+		m_si.SetLongValue(section_controller_port, szKeyName, m_controller_port.XboxPortMapHostPort[v], nullptr, true, true);
+	}
+
+	// ==== Controller End ======
+
 	// ==== Hack Begin ==========
 
 	m_si.SetBoolValue(section_hack, sect_hack_keys.DisablePixelShaders, m_hacks.DisablePixelShaders, nullptr, true);
@@ -361,3 +451,25 @@ bool Settings::Save(std::string file_path)
 	return (siError == SI_OK);
 }
 
+// ******************************************************************
+// * Input Device Name Lookup Table
+// ******************************************************************
+const char *Settings::s_controller_dinput::XboxControllerObjectNameLookup[XBCTRL_OBJECT_COUNT] =
+{
+	// ******************************************************************
+	// * Analog Axis
+	// ******************************************************************
+	"LThumbPosX", "LThumbNegX", "LThumbPosY", "LThumbNegY",
+	"RThumbPosX", "RThumbNegX", "RThumbPosY", "RThumbNegY",
+
+	// ******************************************************************
+	// * Analog Buttons
+	// ******************************************************************
+	"A", "B", "X", "Y", "Black", "White", "LTrigger", "RTrigger",
+
+	// ******************************************************************
+	// * Digital Buttons
+	// ******************************************************************
+	"DPadUp", "DPadDown", "DPadLeft", "DPadRight",
+	"Back", "Start", "LThumb", "RThumb"
+};

@@ -43,7 +43,8 @@
 #include <windows.h>
 
 #include "CxbxKrnl/EmuXTL.h"
-
+#include "Common/Settings.hpp"
+/*
 // ******************************************************************
 // * Xbox Controller Object IDs
 // ******************************************************************
@@ -101,7 +102,7 @@ struct XBCtrlObjectCfg
     int dwDevice;   // offset into m_InputDevice
     int dwInfo;     // extended information, depending on dwFlags
     int dwFlags;    // flags explaining the data format
-};
+};*/
 
 // ******************************************************************
 // * class: DInputController
@@ -114,12 +115,6 @@ class DInputController : public Error
         // ******************************************************************
         DInputController();
        ~DInputController();
-
-        // ******************************************************************
-        // * Registry Load/Save
-        // ******************************************************************
-        void Load(const char *szRegistryKey);
-        void Save(const char *szRegistryKey);
 
         // ******************************************************************
         // * Configuration
@@ -147,9 +142,9 @@ class DInputController : public Error
         bool DeviceIsUsed(const char *szDeviceName);
 
         // ******************************************************************
-        // * Input Device Name Lookup Table
+        // * Settings for DirectInput Device(s)
         // ******************************************************************
-        static const char *m_DeviceNameLookup[XBCTRL_OBJECT_COUNT];
+        Settings::s_controller_dinput m_settings;
 
     private:
         // ******************************************************************
@@ -178,16 +173,6 @@ class DInputController : public Error
         // ******************************************************************
         friend BOOL CALLBACK WrapEnumGameCtrlCallback(XTL::LPCDIDEVICEINSTANCE lpddi, LPVOID pvRef);
         friend BOOL CALLBACK WrapEnumObjectsCallback(XTL::LPCDIDEVICEOBJECTINSTANCE lpddoi, LPVOID pvRef);
-
-        // ******************************************************************
-        // * Device Names
-        // ******************************************************************
-        char m_DeviceName[XBCTRL_MAX_DEVICES][260];
-
-        // ******************************************************************
-        // * Object Configuration
-        // ******************************************************************
-        XBCtrlObjectCfg m_ObjectConfig[XBCTRL_OBJECT_COUNT];
 
         // ******************************************************************
         // * DirectInput
@@ -220,7 +205,6 @@ class DInputController : public Error
         // ******************************************************************
         int m_dwInputDeviceCount;
         int m_dwCurObject;
-
 };
 
 // ******************************************************************

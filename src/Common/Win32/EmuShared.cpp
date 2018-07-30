@@ -151,10 +151,8 @@ EmuShared::~EmuShared()
 
 void EmuShared::Load()
 {
-	m_XBController.Load("Software\\Cxbx-Reloaded\\XBController");
 }
 
 void EmuShared::Save()
 {
-	m_XBController.Save("Software\\Cxbx-Reloaded\\XBController");
 }

@@ -43,7 +43,19 @@
 // ******************************************************************
 // * Maximum number of devices allowed
 // ******************************************************************
+#define XBCTRL_MAX_DEVICES XBCTRL_OBJECT_COUNT
+
 #define XBCTRL_MAX_GAMEPAD_PORTS 4
+
+// ******************************************************************
+// * Xbox Controller Object Config
+// ******************************************************************
+struct XBCtrlObjectCfg
+{
+	int dwDevice;   // offset into m_InputDevice
+	int dwInfo;     // extended information, depending on dwFlags
+	int dwFlags;    // flags explaining the data format
+};
 
 class Settings
 {
@@ -70,6 +82,26 @@ public:
 		bool codec_xadpcm;
 		bool codec_unknown;
 	} m_audio;
+
+	// Controller settings
+	struct s_controller_dinput {
+
+		// ******************************************************************
+		// * Input Device Name Lookup Table
+		// ******************************************************************
+		static const char *XboxControllerObjectNameLookup[XBCTRL_OBJECT_COUNT];
+
+		// ******************************************************************
+		// * Device Names
+		// ******************************************************************
+		char DeviceName[XBCTRL_MAX_DEVICES][MAX_PATH];
+
+		// ******************************************************************
+		// * Object Configuration
+		// ******************************************************************
+		XBCtrlObjectCfg ObjectConfig[XBCTRL_OBJECT_COUNT];
+
+	} m_controller_dinput;
 
 	struct s_controller_port {
 		uint XboxPortMapHostType[XBCTRL_MAX_GAMEPAD_PORTS] = { 1, 1, 1, 1 };

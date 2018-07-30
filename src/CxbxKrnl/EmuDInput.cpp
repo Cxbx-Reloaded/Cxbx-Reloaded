@@ -40,22 +40,23 @@
 #include "Emu.h"
 #include "EmuXTL.h"
 #include "EmuShared.h"
+#include "Common/Win32/DInputController.h"
 
 // ******************************************************************
 // * Static Variable(s)
 // ******************************************************************
-static DInputController g_XBController;
+static DInputController g_DInputController;
 
 // ******************************************************************
 // * XTL::EmuDInputInit
 // ******************************************************************
 bool XTL::EmuDInputInit()
 {
-    g_EmuShared->GetXBController(&g_XBController);
+    g_EmuShared->GetControllerDInputSettings(&g_DInputController.m_settings);
 
-    g_XBController.ListenBegin(g_hEmuWindow);
+    g_DInputController.ListenBegin(g_hEmuWindow);
 
-    if(g_XBController.HasError())
+    if(g_DInputController.HasError())
         return false;
 
     return true;
@@ -66,7 +67,7 @@ bool XTL::EmuDInputInit()
 // ******************************************************************
 void XTL::EmuDInputCleanup()
 {
-    g_XBController.ListenEnd();
+    g_DInputController.ListenEnd();
 }
 
 //emulated dwPacketNumber for DirectInput controller
@@ -77,13 +78,13 @@ DWORD dwPacketNumber_DirectInput = 0;
 // ******************************************************************
 void XTL::EmuDInputPoll(XTL::PX_XINPUT_STATE pXboxController)
 {
-    g_XBController.ListenPoll(pXboxController);
+    g_DInputController.ListenPoll(pXboxController);
 	//increment of emulated PacketNumber and report back to Controller.
 	dwPacketNumber_DirectInput++;
 	pXboxController->dwPacketNumber = dwPacketNumber_DirectInput;
 
-    if(g_XBController.HasError())
-        MessageBox(NULL, g_XBController.GetError().c_str(), "Cxbx-Reloaded [*UNHANDLED!*]", MB_OK);  // TODO: Handle this!
+    if(g_DInputController.HasError())
+        MessageBox(NULL, g_DInputController.GetError().c_str(), "Cxbx-Reloaded [*UNHANDLED!*]", MB_OK);  // TODO: Handle this!
 
     return;
 }
