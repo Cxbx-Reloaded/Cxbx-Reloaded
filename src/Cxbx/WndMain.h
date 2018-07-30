@@ -241,16 +241,6 @@ class WndMain : public Wnd
 		// ******************************************************************		
 		int         m_XInputEnabled;
 
-		// ******************************************************************
-		// * Hack Flags
-		// ******************************************************************	
-		int         m_DisablePixelShaders;
-		int         m_UncapFramerate;
-		int         m_UseAllCores;
-		int         m_SkipRdtscPatching;
-		int         m_ScaleViewport;
-		int         m_DirectHostBackBufferAccess;
-
         // ******************************************************************
         // * debug output filenames
         // ******************************************************************
