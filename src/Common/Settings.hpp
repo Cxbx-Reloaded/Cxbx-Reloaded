@@ -48,6 +48,50 @@ typedef enum _CXBX_DATA {
 } CXBX_DATA;
 
 // ******************************************************************
+// * Xbox Controller Object IDs
+// ******************************************************************
+enum XBCtrlObject
+{
+	// ******************************************************************
+	// * Analog Axis
+	// ******************************************************************
+	XBCTRL_OBJECT_LTHUMBPOSX = 0,
+	XBCTRL_OBJECT_LTHUMBNEGX,
+	XBCTRL_OBJECT_LTHUMBPOSY,
+	XBCTRL_OBJECT_LTHUMBNEGY,
+	XBCTRL_OBJECT_RTHUMBPOSX,
+	XBCTRL_OBJECT_RTHUMBNEGX,
+	XBCTRL_OBJECT_RTHUMBPOSY,
+	XBCTRL_OBJECT_RTHUMBNEGY,
+	// ******************************************************************
+	// * Analog Buttons
+	// ******************************************************************
+	XBCTRL_OBJECT_A,
+	XBCTRL_OBJECT_B,
+	XBCTRL_OBJECT_X,
+	XBCTRL_OBJECT_Y,
+	XBCTRL_OBJECT_BLACK,
+	XBCTRL_OBJECT_WHITE,
+	XBCTRL_OBJECT_LTRIGGER,
+	XBCTRL_OBJECT_RTRIGGER,
+	// ******************************************************************
+	// * Digital Buttons
+	// ******************************************************************
+	XBCTRL_OBJECT_DPADUP,
+	XBCTRL_OBJECT_DPADDOWN,
+	XBCTRL_OBJECT_DPADLEFT,
+	XBCTRL_OBJECT_DPADRIGHT,
+	XBCTRL_OBJECT_BACK,
+	XBCTRL_OBJECT_START,
+	XBCTRL_OBJECT_LTHUMB,
+	XBCTRL_OBJECT_RTHUMB,
+	// ******************************************************************
+	// * Total number of components
+	// ******************************************************************
+	XBCTRL_OBJECT_COUNT
+};
+
+// ******************************************************************
 // * Maximum number of devices allowed
 // ******************************************************************
 #define XBCTRL_MAX_DEVICES XBCTRL_OBJECT_COUNT
