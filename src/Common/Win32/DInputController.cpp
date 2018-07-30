@@ -9,7 +9,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->XBController.cpp
+// *   Cxbx->Win32->DInputController.cpp
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -33,7 +33,7 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#include "XBController.h"
+#include "DInputController.h"
 
 #include "CxbxKrnl/EmuShared.h"
 #include "CxbxKrnl/EmuXTL.h"
@@ -42,9 +42,9 @@
 #define FIELD_OFFSET(type,field)  ((ULONG)&(((type *)0)->field))
 
 // ******************************************************************
-// * func: XBController::XBController
+// * func: DInputController::DInputController
 // ******************************************************************
-XBController::XBController()
+DInputController::DInputController()
 {
     m_CurrentState = XBCTRL_STATE_NONE;
 
@@ -71,9 +71,9 @@ XBController::XBController()
 }
 
 // ******************************************************************
-// * func: XBController::~XBController
+// * func: DInputController::~DInputController
 // ******************************************************************
-XBController::~XBController()
+DInputController::~DInputController()
 {
     if(m_CurrentState == XBCTRL_STATE_CONFIG)
         ConfigEnd();
@@ -82,9 +82,9 @@ XBController::~XBController()
 }
 
 // ******************************************************************
-// * func: XBController::Load
+// * func: DInputController::Load
 // ******************************************************************
-void XBController::Load(const char *szRegistryKey)
+void DInputController::Load(const char *szRegistryKey)
 {
     if(m_CurrentState != XBCTRL_STATE_NONE)
     {
@@ -147,9 +147,9 @@ void XBController::Load(const char *szRegistryKey)
 }
 
 // ******************************************************************
-// * func: XBController::Save
+// * func: DInputController::Save
 // ******************************************************************
-void XBController::Save(const char *szRegistryKey)
+void DInputController::Save(const char *szRegistryKey)
 {
     if(m_CurrentState != XBCTRL_STATE_NONE)
     {
@@ -210,9 +210,9 @@ void XBController::Save(const char *szRegistryKey)
 }
 
 // ******************************************************************
-// * func: XBController::ConfigBegin
+// * func: DInputController::ConfigBegin
 // ******************************************************************
-void XBController::ConfigBegin(HWND hwnd, XBCtrlObject object)
+void DInputController::ConfigBegin(HWND hwnd, XBCtrlObject object)
 {
     if(m_CurrentState != XBCTRL_STATE_NONE)
     {
@@ -237,9 +237,9 @@ void XBController::ConfigBegin(HWND hwnd, XBCtrlObject object)
 }
 
 // ******************************************************************
-// * func: XBController::ConfigPoll
+// * func: DInputController::ConfigPoll
 // ******************************************************************
-bool XBController::ConfigPoll(char *szStatus)
+bool DInputController::ConfigPoll(char *szStatus)
 {
     if(m_CurrentState != XBCTRL_STATE_CONFIG)
     {
@@ -424,9 +424,9 @@ bool XBController::ConfigPoll(char *szStatus)
 }
 
 // ******************************************************************
-// * func: XBController::ConfigEnd
+// * func: DInputController::ConfigEnd
 // ******************************************************************
-void XBController::ConfigEnd()
+void DInputController::ConfigEnd()
 {
     if(m_CurrentState != XBCTRL_STATE_CONFIG)
     {
@@ -442,9 +442,9 @@ void XBController::ConfigEnd()
 }
 
 // ******************************************************************
-// * func: XBController::ListenBegin
+// * func: DInputController::ListenBegin
 // ******************************************************************
-void XBController::ListenBegin(HWND hwnd)
+void DInputController::ListenBegin(HWND hwnd)
 {
     int v=0;
 
@@ -474,9 +474,9 @@ void XBController::ListenBegin(HWND hwnd)
 }
 
 // ******************************************************************
-// * func: XBController::ListenPoll
+// * func: DInputController::ListenPoll
 // ******************************************************************
-void XBController::ListenPoll(XTL::X_XINPUT_STATE *Controller)
+void DInputController::ListenPoll(XTL::X_XINPUT_STATE *Controller)
 {
     if(Controller == NULL)
         return;
@@ -760,9 +760,9 @@ void XBController::ListenPoll(XTL::X_XINPUT_STATE *Controller)
 }
 
 // ******************************************************************
-// * func: XBController::ListenEnd
+// * func: DInputController::ListenEnd
 // ******************************************************************
-void XBController::ListenEnd()
+void DInputController::ListenEnd()
 {
     if(m_CurrentState != XBCTRL_STATE_LISTEN)
     {
@@ -778,9 +778,9 @@ void XBController::ListenEnd()
 }
 
 // ******************************************************************
-// * func: XBController::DeviceIsUsed
+// * func: DInputController::DeviceIsUsed
 // ******************************************************************
-bool XBController::DeviceIsUsed(const char *szDeviceName)
+bool DInputController::DeviceIsUsed(const char *szDeviceName)
 {
     for(int v=0;v<XBCTRL_MAX_DEVICES;v++)
     {
@@ -795,9 +795,9 @@ bool XBController::DeviceIsUsed(const char *szDeviceName)
 }
 
 // ******************************************************************
-// * func: XBController::DInputInit
+// * func: DInputController::DInputInit
 // ******************************************************************
-void XBController::DInputInit(HWND hwnd)
+void DInputController::DInputInit(HWND hwnd)
 {
     m_dwInputDeviceCount = NULL;
 
@@ -898,9 +898,9 @@ void XBController::DInputInit(HWND hwnd)
 }
 
 // ******************************************************************
-// * func: XBController::DInputCleanup
+// * func: DInputController::DInputCleanup
 // ******************************************************************
-void XBController::DInputCleanup()
+void DInputController::DInputCleanup()
 {
     for(int v=m_dwInputDeviceCount-1;v>=0;v--)
     {
@@ -921,9 +921,9 @@ void XBController::DInputCleanup()
 }
 
 // ******************************************************************
-// * func: XBController::Map
+// * func: DInputController::Map
 // ******************************************************************
-void XBController::Map(XBCtrlObject object, const char *szDeviceName, int dwInfo, int dwFlags)
+void DInputController::Map(XBCtrlObject object, const char *szDeviceName, int dwInfo, int dwFlags)
 {
     // Initialize InputMapping instance
     m_ObjectConfig[object].dwDevice = Insert(szDeviceName);
@@ -947,9 +947,9 @@ void XBController::Map(XBCtrlObject object, const char *szDeviceName, int dwInfo
 }
 
 // ******************************************************************
-// * func: XBController::Insert
+// * func: DInputController::Insert
 // ******************************************************************
-int XBController::Insert(const char *szDeviceName)
+int DInputController::Insert(const char *szDeviceName)
 {
     int v=0;
 
@@ -976,9 +976,9 @@ int XBController::Insert(const char *szDeviceName)
 }
 
 // ******************************************************************
-// * func: XBController::ReorderObjects
+// * func: DInputController::ReorderObjects
 // ******************************************************************
-void XBController::ReorderObjects(const char *szDeviceName, int pos)
+void DInputController::ReorderObjects(const char *szDeviceName, int pos)
 {
     int old = -1, v=0;
 
@@ -1017,9 +1017,9 @@ void XBController::ReorderObjects(const char *szDeviceName, int pos)
 }
 
 // ******************************************************************
-// * func: XBController::EnumGameCtrlCallback
+// * func: DInputController::EnumGameCtrlCallback
 // ******************************************************************
-BOOL XBController::EnumGameCtrlCallback(XTL::LPCDIDEVICEINSTANCE lpddi)
+BOOL DInputController::EnumGameCtrlCallback(XTL::LPCDIDEVICEINSTANCE lpddi)
 {
     if(m_CurrentState == XBCTRL_STATE_LISTEN && !DeviceIsUsed(lpddi->tszInstanceName))
         return DIENUM_CONTINUE;
@@ -1040,9 +1040,9 @@ BOOL XBController::EnumGameCtrlCallback(XTL::LPCDIDEVICEINSTANCE lpddi)
 }
 
 // ******************************************************************
-// * func: XBController::EnumObjectsCallback
+// * func: DInputController::EnumObjectsCallback
 // ******************************************************************
-BOOL XBController::EnumObjectsCallback(XTL::LPCDIDEVICEOBJECTINSTANCE lpddoi)
+BOOL DInputController::EnumObjectsCallback(XTL::LPCDIDEVICEOBJECTINSTANCE lpddoi)
 {
     if(lpddoi->dwType & DIDFT_AXIS)
     {
@@ -1095,7 +1095,7 @@ BOOL XBController::EnumObjectsCallback(XTL::LPCDIDEVICEOBJECTINSTANCE lpddoi)
 // ******************************************************************
 BOOL CALLBACK WrapEnumGameCtrlCallback(XTL::LPCDIDEVICEINSTANCE lpddi, LPVOID pvRef)
 {
-    XBController *context = (XBController*)pvRef;
+    DInputController *context = (DInputController*)pvRef;
 
     return context->EnumGameCtrlCallback(lpddi);
 }
@@ -1105,7 +1105,7 @@ BOOL CALLBACK WrapEnumGameCtrlCallback(XTL::LPCDIDEVICEINSTANCE lpddi, LPVOID pv
 // ******************************************************************
 BOOL CALLBACK WrapEnumObjectsCallback(XTL::LPCDIDEVICEOBJECTINSTANCE lpddoi, LPVOID pvRef)
 {
-    XBController *context = (XBController*)pvRef;
+    DInputController *context = (DInputController*)pvRef;
 
     return context->EnumObjectsCallback(lpddoi);
 }
@@ -1113,7 +1113,7 @@ BOOL CALLBACK WrapEnumObjectsCallback(XTL::LPCDIDEVICEOBJECTINSTANCE lpddoi, LPV
 // ******************************************************************
 // * Input Device Name Lookup Table
 // ******************************************************************
-const char *XBController::m_DeviceNameLookup[XBCTRL_OBJECT_COUNT] =
+const char *DInputController::m_DeviceNameLookup[XBCTRL_OBJECT_COUNT] =
 {
     // ******************************************************************
     // * Analog Axis

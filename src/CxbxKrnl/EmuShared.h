@@ -35,7 +35,7 @@
 #define EMUSHARED_H
 
 #include "Cxbx.h"
-#include "Common/Win32/XBController.h"
+#include "Common/Win32/DInputController.h"
 #include "Common/Win32/XBVideo.h"
 #include "Common/Win32/XBAudio.h"
 
@@ -123,10 +123,10 @@ class EmuShared : public Mutex
 		void SetXBAudio(const XBAudio *audio) { Lock(); m_XBAudio = XBAudio(*audio); Unlock(); }
 
 		// ******************************************************************
-		// * Xbox Controller Accessors
+		// * DirectInput Controller Accessors
 		// ******************************************************************
-		void GetXBController(      XBController *ctrl) { Lock(); *ctrl = XBController(m_XBController); Unlock(); }
-		void SetXBController(const XBController *ctrl) { Lock(); m_XBController = XBController(*ctrl); Unlock(); }
+		void GetXBController(      DInputController *ctrl) { Lock(); *ctrl = DInputController(m_XBController); Unlock(); }
+		void SetXBController(const DInputController *ctrl) { Lock(); m_XBController = DInputController(*ctrl); Unlock(); }
 
 		// ******************************************************************
 		// * Xbe Path Accessors
@@ -241,7 +241,7 @@ class EmuShared : public Mutex
 		// ******************************************************************
 		// * Shared configuration
 		// ******************************************************************
-		XBController m_XBController;
+		DInputController m_XBController;
 		XBVideo      m_XBVideo;
 		XBAudio      m_XBAudio;
 		char         m_XbePath[MAX_PATH];

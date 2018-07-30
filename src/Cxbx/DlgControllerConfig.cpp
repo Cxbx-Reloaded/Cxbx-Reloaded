@@ -50,7 +50,7 @@ static VOID ConfigureInput(HWND hWndDlg, HWND hWndButton, XBCtrlObject object);
 static VOID EnableButtonWindows(HWND hWndDlg, HWND hExclude, BOOL bEnable);
 
 /*! controller configuration */
-static XBController g_XBController;
+static DInputController g_XBController;
 /*! changes flag */
 static BOOL g_bHasChanges = FALSE;
 

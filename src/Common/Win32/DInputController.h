@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->Cxbx->XBController.h
+// *   Cxbx->Win32->Cxbx->DInputController.h
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -31,8 +31,8 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#ifndef XBCONTROLLER_H
-#define XBCONTROLLER_H
+#ifndef DINPUTCONTROLLER_H
+#define DINPUTCONTROLLER_H
 
 #include "Cxbx.h"
 #include "Common/Error.h"
@@ -104,16 +104,16 @@ struct XBCtrlObjectCfg
 };
 
 // ******************************************************************
-// * class: XBController
+// * class: DInputController
 // ******************************************************************
-class XBController : public Error
+class DInputController : public Error
 {
     public:
         // ******************************************************************
         // * Initialization
         // ******************************************************************
-        XBController();
-       ~XBController();
+        DInputController();
+       ~DInputController();
 
         // ******************************************************************
         // * Registry Load/Save
