@@ -97,9 +97,6 @@
     <ClCompile Include="..\..\src\Common\Xbe.cpp">
       <Filter>Shared</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\Common\Win32\XBVideo.cpp">
-      <Filter>Shared</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\CxbxKrnl\CxbxKrnl.cpp">
       <Filter>Emulator</Filter>
     </ClCompile>
@@ -368,9 +365,6 @@
       <Filter>Shared</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\Common\Xbe.h">
-      <Filter>Shared</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\Common\Win32\XBVideo.h">
       <Filter>Shared</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\CxbxKrnl\CxbxKrnl.h">

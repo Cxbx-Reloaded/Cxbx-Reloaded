@@ -119,10 +119,10 @@ void WndMain::ResizeWindow(HWND hwnd, bool bForGUI)
 	m_h = 480;
 	if (!bForGUI) {
 		// For emulation, get the configured window dimensions
-		XBVideo XBVideoConf;
-		g_EmuShared->GetXBVideo(&XBVideoConf);
+		Settings::s_video XBVideoConf;
+		g_EmuShared->GetVideoSettings(&XBVideoConf);
 
-		const char* resolution = XBVideoConf.GetVideoResolution();
+		const char* resolution = XBVideoConf.szVideoResolution;
 		if (2 != sscanf(resolution, "%d x %d", &m_w, &m_h)) {
 			DbgPrintf("Couldn't parse resolution : %s.\n", resolution);
 		}
@@ -2356,6 +2356,9 @@ void WndMain::StartEmulation(HWND hwndParent, DebuggerState LocalDebuggerState /
 
     // Reset to default
     g_EmuShared->Reset();
+
+	// register Video settings
+	g_EmuShared->SetVideoSettings(&g_Settings->m_video);
 
 	// register Audio settings
 	g_EmuShared->SetAudioSettings(&g_Settings->m_audio);

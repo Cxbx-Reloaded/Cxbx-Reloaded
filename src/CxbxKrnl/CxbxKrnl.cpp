@@ -577,15 +577,15 @@ void PrintCurrentConfigurationLog()
 
 	// Print current video configuration (DirectX/HLE)
 	if (!bLLE_GPU) {
-		XBVideo XBVideoConf;
-		g_EmuShared->GetXBVideo(&XBVideoConf);
+		Settings::s_video XBVideoConf;
+		g_EmuShared->GetVideoSettings(&XBVideoConf);
 
 		printf("--------------------------- VIDEO CONFIG ---------------------------\n");
-		printf("Direct3D Device: %s\n", XBVideoConf.GetDirect3DDevice() == 0 ? "Direct3D HAL (Hardware Accelerated)" : "Direct3D REF (Software)");
-		printf("Video Resolution: %s\n", XBVideoConf.GetVideoResolution());
-		printf("Force VSync is %s\n", XBVideoConf.GetVSync() ? "enabled" : "disabled");
-		printf("Fullscreen is %s\n", XBVideoConf.GetFullscreen() ? "enabled" : "disabled");
-		printf("Hardware YUV is %s\n", XBVideoConf.GetHardwareYUV() ? "enabled" : "disabled");
+		printf("Direct3D Device: %s\n", XBVideoConf.direct3DDevice == 0 ? "Direct3D HAL (Hardware Accelerated)" : "Direct3D REF (Software)");
+		printf("Video Resolution: %s\n", XBVideoConf.szVideoResolution);
+		printf("Force VSync is %s\n", XBVideoConf.bVSync ? "enabled" : "disabled");
+		printf("Fullscreen is %s\n", XBVideoConf.bFullScreen ? "enabled" : "disabled");
+		printf("Hardware YUV is %s\n", XBVideoConf.bHardwareYUV ? "enabled" : "disabled");
 	}
 
 	// Print current audio configuration

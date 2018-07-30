@@ -36,7 +36,6 @@
 
 #include "Cxbx.h"
 #include "Common/Win32/DInputController.h"
-#include "Common/Win32/XBVideo.h"
 #include "Common/Settings.hpp"
 #include "Mutex.h"
 
@@ -114,8 +113,8 @@ class EmuShared : public Mutex
 		// ******************************************************************
 		// * Xbox Video Accessors
 		// ******************************************************************
-		void GetXBVideo(      XBVideo *video) { Lock(); *video = XBVideo(m_XBVideo); Unlock(); }
-		void SetXBVideo(const XBVideo *video) { Lock(); m_XBVideo = XBVideo(*video); Unlock(); }
+		void GetVideoSettings(      Settings::s_video *video) { Lock(); *video = m_video; Unlock(); }
+		void SetVideoSettings(const Settings::s_video *video) { Lock(); m_video = *video; Unlock(); }
 
 		// ******************************************************************
 		// * Xbox Audio Accessors
@@ -243,7 +242,7 @@ class EmuShared : public Mutex
 		// * Shared configuration
 		// ******************************************************************
 		DInputController m_XBController;
-		XBVideo      m_XBVideo;
+		Settings::s_video m_video;
 		Settings::s_audio m_audio;
 		char         m_XbePath[MAX_PATH];
 		int          m_BootFlags;

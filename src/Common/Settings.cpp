@@ -66,6 +66,16 @@ Settings* g_Settings = nullptr;
 #define szSettings_settings_file "/settings.ini"
 #define szSettings_cxbx_reloaded_directory "/Cxbx-Reloaded"
 
+static const char* section_video = "video";
+static struct {
+	const char* VideoResolution = "VideoResolution";
+	const char* adapter = "adapter";
+	const char* Direct3DDevice = "Direct3DDevice";
+	const char* VSync = "VSync";
+	const char* FullScreen = "FullScreen";
+	const char* HardwareYUV = "HardwareYUV";
+} sect_video_keys;
+
 static const char* section_audio = "audio";
 static struct {
 	const char* adapter = "adapter";

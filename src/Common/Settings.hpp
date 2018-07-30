@@ -48,6 +48,16 @@ public:
 	bool LoadFile(std::string file_path);
 	bool Save(std::string file_path = "");
 
+	// Video settings
+	struct s_video {
+		char szVideoResolution[100] = "";
+		uint adapter;
+		uint direct3DDevice;
+		bool bVSync;
+		bool bFullScreen;
+		bool bHardwareYUV;
+	} m_video;
+
 	// Audio settings
 	struct s_audio {
 		GUID adapterGUID;
