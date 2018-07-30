@@ -135,7 +135,6 @@ void EmuShared::Cleanup()
 // ******************************************************************
 EmuShared::EmuShared()
 {
-	Load();
 	m_bDebugging = false;
 	m_bEmulating = false;
 	m_bFirstLaunch = false;
@@ -145,14 +144,5 @@ EmuShared::EmuShared()
 // * Deconstructor
 // ******************************************************************
 EmuShared::~EmuShared()
-{
-	Save();
-}
-
-void EmuShared::Load()
-{
-}
-
-void EmuShared::Save()
 {
 }

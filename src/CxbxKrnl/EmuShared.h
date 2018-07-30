@@ -77,9 +77,6 @@ class EmuShared : public Mutex
 		// ******************************************************************
 		static void Init();
 
-		void Load();
-		void Save();
-
 		// ******************************************************************
 		// * Each process needs to call this to cleanup shared memory
 		// ******************************************************************
