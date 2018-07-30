@@ -58,7 +58,7 @@ namespace xboxkrnl
 #include "Logging.h"
 #include "EmuD3D8Logging.h"
 #include "HLEIntercept.h" // for bLLE_GPU
-#include "Cxbx\\ResCxbx.h"
+#include "Cxbx/ResCxbx.h"
 
 #include <assert.h>
 #include <process.h>
