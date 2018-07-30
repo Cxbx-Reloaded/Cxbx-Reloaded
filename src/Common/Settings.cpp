@@ -100,6 +100,57 @@ bool Settings::Init()
 
 	bool bRet = LoadUserConfig();
 
+	// Enter setup installer process
+	if (!bRet) {
+
+		std::string saveFile;
+#ifdef RETRO_API_VERSION // TODO: Change me to #ifndef QT_VERSION
+		// Can only have one option without Qt.
+		saveFile = GenerateCurrentFileDirectoryStr();
+		saveFile.append(szSettings_settings_file);
+
+#else // Only support for Qt compile build.
+		int iRet = MessageBox(nullptr, szSettings_save_user_option_message, "Cxbx-Reloaded", MB_YESNOCANCEL | MB_ICONQUESTION);
+
+		if (iRet == IDYES) {
+			saveFile = GenerateCurrentFileDirectoryStr();
+			saveFile.append(szSettings_settings_file);
+		}
+		else if (iRet == IDNO){
+			saveFile = GenerateUserProfileDirectoryStr();
+			if (saveFile.size() == 0) {
+				return false;
+			}
+
+			// Check if data directory exist.
+			bRet = std::filesystem::exists(saveFile);
+			if (!bRet) {
+				// Then try create data directory.
+				bRet = std::filesystem::create_directory(saveFile);
+				if (!bRet) {
+					// Unable to create a data directory
+					return false;
+				}
+			}
+
+			saveFile.append(szSettings_settings_file);
+		}
+		else {
+			return false;
+		}
+#endif
+
+		bRet = Save(saveFile);
+
+		// Check if saving a file is a success.
+		if (!bRet) {
+			MessageBox(nullptr, szSettings_setup_error, "Cxbx-Reloaded", MB_OK);
+			return false;
+		}
+
+		// Final check if able to auto load settings file.
+		bRet = LoadUserConfig();
+	}
 	return bRet;
 }
 
