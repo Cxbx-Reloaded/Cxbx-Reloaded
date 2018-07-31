@@ -178,7 +178,7 @@ class OHCI
 		int m_DoneCount;
 		// the address of the pending TD
 		xbaddr m_AsyncTD = xbnull;
-		// indicates if there is s a pending asynchronous packet to process
+		// indicates if there is a pending asynchronous packet to process
 		int m_AsyncComplete = 0;
 
 		// EOF callback wrapper

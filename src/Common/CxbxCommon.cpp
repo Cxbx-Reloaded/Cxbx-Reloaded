@@ -44,6 +44,10 @@
 #endif
 
 
+// Acknowledgment: all the functions present at the moment are from XQEMU (GPLv2)
+// https://xqemu.com/
+
+
 // Disable a compiler warning relative to uint64_t -> uint32_t conversions in Muldiv64. This function is taken from
 // XQEMU so it should be safe regardless
 #pragma warning(push)

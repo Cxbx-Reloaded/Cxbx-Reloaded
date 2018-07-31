@@ -57,6 +57,7 @@ namespace xboxkrnl
 
 
 // Acknowledgment: XQEMU (GPLv2)
+// https://xqemu.com/
 
 
 void USBDevice::Init(unsigned int address)

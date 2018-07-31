@@ -87,6 +87,7 @@ namespace xboxkrnl
 
 
 // Acknowledgment: XQEMU (GPLv2)
+// https://xqemu.com/
 
 
 // To avoid including Xbox.h

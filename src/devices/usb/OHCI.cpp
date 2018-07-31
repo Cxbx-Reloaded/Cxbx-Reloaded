@@ -202,6 +202,7 @@ namespace xboxkrnl
 
 
 // Acknowledgment: XQEMU (GPLv2)
+// https://xqemu.com/
 
 
 OHCI::OHCI(USBDevice* UsbObj)

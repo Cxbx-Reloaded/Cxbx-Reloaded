@@ -417,16 +417,16 @@ struct XboxDeviceState {
 
 /* Structure used to hold information about an active USB packet */
 struct USBPacket {
-	int Pid;                                 // Packet ID (used to identify the type of packet that is being sent)
-	uint32_t Id;                             // Paddr of the TD for this packet 
-	USBEndpoint* Endpoint;                   // endpoint this packet is transferred to
-	unsigned int Stream;		             
-	IOVector IoVec;                          // used to perform vectored I/O
-	uint64_t Parameter;                      // control transfers
-	bool ShortNotOK;                         // the bufferRounding mode of the TD for this packet
-	bool IntReq;                             // whether or not to generate an interrupt for this packet (DelayInterrupt of the TD is zero)
-	int Status;                              // USB_RET_* status code
-	int ActualLength;                        // number of bytes actually written to DataBuffer
+	int Pid;                             // Packet ID (used to identify the type of packet that is being sent)
+	uint32_t Id;                         // Paddr of the TD for this packet 
+	USBEndpoint* Endpoint;               // endpoint this packet is transferred to
+	unsigned int Stream;		         
+	IOVector IoVec;                      // used to perform vectored I/O
+	uint64_t Parameter;                  // this seems to be used only in xhci and it's 0 otherwise. If so, this can be removed
+	bool ShortNotOK;                     // the bufferRounding mode of the TD for this packet
+	bool IntReq;                         // whether or not to generate an interrupt for this packet (DelayInterrupt of the TD is zero)
+	int Status;                          // USB_RET_* status code
+	int ActualLength;                    // number of bytes actually written to DataBuffer
 	// Internal use by the USB layer
 	USBPacketState State;
 	QTAILQ_ENTRY(USBPacket) Queue;
