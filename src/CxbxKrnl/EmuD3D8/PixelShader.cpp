@@ -6501,30 +6501,3 @@ void XTL::PrintPixelShaderDefContents( X_D3DPIXELSHADERDEF* pPSDef )
 			{*/
 	}
 }
-
-HRESULT XTL::EmuRecompilePshDef( X_D3DPIXELSHADERDEF* pPSDef, LPD3DXBUFFER* ppRecompiled )
-{
-	char szPshString[2048];		// I'm sure that's big enough...
-	
-	// Dump the contents of the PixelShader def
-#ifdef _DEBUG_TRACK_PS
-//	DumpPixelShaderDefToFile( pPSDef );
-
-	// Azurik like to create and destroy the same shader every frame! O_o
-//	PrintPixelShaderDefContents( pPSDef );
-#endif
-
-	// First things first, set the pixel shader version
-	// TODO: ps.1.1 might be a better idea...
-	sprintf(szPshString, "%s", "ps.1.0\n");
-
-	// Handle Texture declarations
-	// PSTEXTUREModes is stored in a different address in D3D_RenderStates than pPSDef
-	// So we must read it from the render array instead (pPSDef in this case is a pointer to the RenderState array, NOT the shader itself)
-	if(TemporaryPixelShaderRenderStates[X_D3DRS_PSTEXTUREMODES] != 0)
-	{
-	}
-
-	return S_OK;
-}
-

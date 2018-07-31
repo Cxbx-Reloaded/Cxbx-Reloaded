@@ -42,8 +42,6 @@
 void DumpPixelShaderDefToFile( X_D3DPIXELSHADERDEF* pPSDef, const char* pszCode );
 // print relevant contents to the debug console
 void PrintPixelShaderDefContents( X_D3DPIXELSHADERDEF* pDSDef );
-// Recompile Xbox PixelShader def
-HRESULT EmuRecompilePshDef( X_D3DPIXELSHADERDEF* pPSDef, LPD3DXBUFFER* ppRecompiled );
 
 // PatrickvL's Dxbx pixel shader translation
 VOID DxbxUpdateActivePixelShader(); // NOPATCH
