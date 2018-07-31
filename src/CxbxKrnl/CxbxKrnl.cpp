@@ -1301,7 +1301,7 @@ __declspec(noreturn) void CxbxKrnlInit
 		g_EmuShared->GetFlagsLLE(&CxbxLLE_Flags);
 		bLLE_APU = (CxbxLLE_Flags & LLE_APU) > 0;
 		bLLE_GPU = (CxbxLLE_Flags & LLE_GPU) > 0;
-		bLLE_USB = (CxbxLLE_Flags & LLE_USB) > 0;
+		//bLLE_USB = (CxbxLLE_Flags & LLE_USB) > 0; // Reenable this when LLE USB actually works
 		bLLE_JIT = (CxbxLLE_Flags & LLE_JIT) > 0;
 	}
 
@@ -1465,6 +1465,7 @@ __declspec(noreturn) void CxbxKrnlInit
 	InitXboxHardware(HardwareModel::Revision1_5); // TODO : Make configurable
 
 	if (bLLE_USB) {
+#if 0 // Reenable this when LLE USB actually works
 		int ret;
 		g_InputDeviceManager = new InputDeviceManager;
 		ret = g_InputDeviceManager->EnumSdl2Devices();
@@ -1473,6 +1474,7 @@ __declspec(noreturn) void CxbxKrnlInit
 			// Temporary: the device type and bindings should be read from emushared, for now always assume one xbox controller
 			g_InputDeviceManager->ConnectDeviceToXbox(1, MS_CONTROLLER_DUKE);
 		}
+#endif
 	}
 
 	// Now the hardware devices exist, couple the EEPROM buffer to it's device

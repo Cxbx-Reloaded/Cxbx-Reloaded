@@ -56,6 +56,9 @@ namespace xboxkrnl
 #define SETUP_STATE_PARAM   4
 
 
+// Acknowledgment: XQEMU (GPLv2)
+
+
 void USBDevice::Init(unsigned int address)
 {
 	PCIBarRegister r;
@@ -203,10 +206,9 @@ void USBDevice::USB_PacketSetup(USBPacket* p, int Pid, USBEndpoint* Ep, unsigned
 	p->Stream = Stream;
 	p->Status = USB_RET_SUCCESS;
 	p->ActualLength = 0;
-	p->Parameter = 0;
+	p->Parameter = 0ULL;
 	p->ShortNotOK = ShortNotOK;
 	p->IntReq = IntReq;
-	p->Combined = nullptr;
 	IoVecReset(&p->IoVec);
 	p->State = USB_PACKET_SETUP;
 }
@@ -505,7 +507,7 @@ void USBDevice::DoTokenOut(XboxDeviceState* s, USBPacket* p)
 
 void USBDevice::USB_PacketCopy(USBPacket* p, void* ptr, size_t bytes)
 {
-	IOVector* iov = p->Combined ? &p->Combined->IoVec : &p->IoVec;
+	IOVector* iov = &p->IoVec;
 
 	assert(p->ActualLength >= 0);
 	assert(p->ActualLength + bytes <= iov->Size);

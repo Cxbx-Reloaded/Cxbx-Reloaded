@@ -36,7 +36,7 @@
 
 #ifndef INPUTCONFIG_H_
 #define INPUTCONFIG_H_
-
+#if 0 // Reenable this when LLE USB actually works
 #include <vector>
 #include <atomic>
 #include "SDL.h"
@@ -124,5 +124,5 @@ class InputDeviceManager
 };
 
 extern InputDeviceManager* g_InputDeviceManager;
-
+#endif
 #endif

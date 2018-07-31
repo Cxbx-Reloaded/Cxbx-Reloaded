@@ -58,6 +58,10 @@ namespace xboxkrnl
 #define HID_SET_REPORT       0x09
 #define XID_GET_CAPABILITIES 0x01
 
+
+// Acknowledgment: XQEMU (GPLv2)
+
+
 // To avoid including Xbox.h
 extern USBDevice* g_USB0;
 
@@ -351,6 +355,7 @@ void XidGamepad::UsbXid_HandleControl(XboxDeviceState* dev, USBPacket* p,
 			// If the buffer has the correct length the full input data is transferred."
 			if (value == 0x0100) {
 				if (length <= m_XidState->in_state.bLength) {
+#if 0 // Reenable this when LLE USB actually works
 					SDL2Devices* controller = g_InputDeviceManager->FindDeviceFromXboxPort(m_Port);
 					if (controller != nullptr) {
 						controller->ReadButtonState(&m_XidState->in_state.wButtons, m_XidState->in_state.bAnalogButtons,
@@ -363,6 +368,7 @@ void XidGamepad::UsbXid_HandleControl(XboxDeviceState* dev, USBPacket* p,
 						p->Status = USB_RET_STALL;
 						assert(0);
 					}
+#endif
 					std::memcpy(data, &m_XidState->in_state, m_XidState->in_state.bLength);
 					p->ActualLength = length;
 				}
@@ -478,6 +484,7 @@ void XidGamepad::UsbXid_HandleData(XboxDeviceState* dev, USBPacket* p)
 	switch (p->Pid) {
 	case USB_TOKEN_IN: {
 		if (p->Endpoint->Num == 2) {
+#if 0 // Reenable this when LLE USB actually works
 			SDL2Devices* controller = g_InputDeviceManager->FindDeviceFromXboxPort(m_Port);
 			if (controller != nullptr) {
 				bool ret;
@@ -488,8 +495,10 @@ void XidGamepad::UsbXid_HandleData(XboxDeviceState* dev, USBPacket* p)
 					m_UsbDev->USB_PacketCopy(p, &m_XidState->in_state, m_XidState->in_state.bLength);
 				}
 				else {
+#endif
 					p->Status = USB_RET_NAK;
 				}
+#if 0 // Reenable this when LLE USB actually works
 			}
 			else {
 				p->Status = USB_RET_STALL;
@@ -499,6 +508,7 @@ void XidGamepad::UsbXid_HandleData(XboxDeviceState* dev, USBPacket* p)
 		else {
 			assert(0);
 		}
+#endif
 		break;
 	}
 

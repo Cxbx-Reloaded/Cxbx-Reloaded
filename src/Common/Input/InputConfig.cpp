@@ -33,7 +33,7 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-
+#if 0 // Reenable this when LLE USB actually works
 #define _XBOXKRNL_DEFEXTRN_
 
 // prevent name collisions
@@ -483,3 +483,4 @@ SDL2Devices* InputDeviceManager::FindDeviceFromXboxPort(int port)
 	}
 	return nullptr;
 }
+#endif

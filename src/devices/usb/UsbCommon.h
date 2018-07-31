@@ -205,7 +205,7 @@ struct USBDescIface {
 
     uint8_t                   ndesc;              // number of device-specific class descriptors (if any)
     USBDescOther*             descs;              // pointer to the extra class descriptors
-    const USBDescEndpoint*          eps;                // endpoints supported by this interface
+    const USBDescEndpoint*    eps;                // endpoints supported by this interface
 };
 
 /*
@@ -415,12 +415,6 @@ struct XboxDeviceState {
 	const USBDescIface* Ifaces[USB_MAX_INTERFACES]; // interface in use
 };
 
-struct USBCombinedPacket {
-	USBPacket* First;
-	QTAILQ_HEAD(packets_head, USBPacket) Packets;
-	IOVector IoVec;
-};
-
 /* Structure used to hold information about an active USB packet */
 struct USBPacket {
 	int Pid;                                 // Packet ID (used to identify the type of packet that is being sent)
@@ -435,9 +429,7 @@ struct USBPacket {
 	int ActualLength;                        // number of bytes actually written to DataBuffer
 	// Internal use by the USB layer
 	USBPacketState State;
-	USBCombinedPacket* Combined;
 	QTAILQ_ENTRY(USBPacket) Queue;
-	QTAILQ_ENTRY(USBPacket) CombinedEntry;
 };
 
 struct USBPortOps {

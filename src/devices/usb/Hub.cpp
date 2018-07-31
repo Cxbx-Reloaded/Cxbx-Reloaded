@@ -46,7 +46,7 @@ namespace xboxkrnl
 #include "Hub.h"
 #include "CxbxKrnl\EmuKrnl.h"  // For EmuWarning
 
-#define LOG_STR_HUB "Hub"
+#define LOG_STR_HUB "Hub:"
 
 #define NUM_PORTS 8
 
@@ -84,6 +84,9 @@ namespace xboxkrnl
 #define PORT_C_SUSPEND      18
 #define PORT_C_OVERCURRENT	19
 #define PORT_C_RESET		20
+
+
+// Acknowledgment: XQEMU (GPLv2)
 
 
 // To avoid including Xbox.h
@@ -372,7 +375,7 @@ void Hub::UsbHub_HandleControl(XboxDeviceState* dev, USBPacket* p,
 				goto fail;
 			}
 			port = &m_HubState->ports[n];
-			DbgPrintf("%s: %s GetPortStatus -> Address 0x%X, wIndex %d, wPortStatus %d, wPortChange %d\n",
+			DbgPrintf("%s %s GetPortStatus -> Address 0x%X, wIndex %d, wPortStatus %d, wPortChange %d\n",
 				LOG_STR_HUB, __func__, m_HubState->dev.Addr, index, port->wPortStatus, port->wPortChange);
 			data[0] = port->wPortStatus;
 			data[1] = port->wPortStatus >> 8;
@@ -397,7 +400,7 @@ void Hub::UsbHub_HandleControl(XboxDeviceState* dev, USBPacket* p,
 			USBHubPort* port;
 			XboxDeviceState* dev;
 
-			DbgPrintf("%s: %s SetPortFeature -> Address 0x%X, wIndex %d, Feature %s\n",
+			DbgPrintf("%s %s SetPortFeature -> Address 0x%X, wIndex %d, Feature %s\n",
 				LOG_STR_HUB, __func__, m_HubState->dev.Addr, index, GetFeatureName(value));
 
 			if (n >= NUM_PORTS) {
@@ -435,7 +438,7 @@ void Hub::UsbHub_HandleControl(XboxDeviceState* dev, USBPacket* p,
 			unsigned int n = index - 1;
 			USBHubPort *port;
 
-			DbgPrintf("%s: %s ClearPortFeature -> Address 0x%X, wIndex %d, Feature %s\n",
+			DbgPrintf("%s %s ClearPortFeature -> Address 0x%X, wIndex %d, Feature %s\n",
 				LOG_STR_HUB, __func__, m_HubState->dev.Addr, index, GetFeatureName(value));
 
 			if (n >= NUM_PORTS) {
@@ -522,7 +525,7 @@ void Hub::UsbHub_HandleData(XboxDeviceState* dev, USBPacket* p)
 						p->Status = USB_RET_BABBLE;
 						return;
 					}
-					DbgPrintf("%s: %s Address 0x%X, Status %d\n", LOG_STR_HUB, __func__, m_HubState->dev.Addr, status);
+					DbgPrintf("%s %s Address 0x%X, Status %d\n", LOG_STR_HUB, __func__, m_HubState->dev.Addr, status);
 					for (i = 0; i < n; i++) {
 						buf[i] = status >> (8 * i);
 					}

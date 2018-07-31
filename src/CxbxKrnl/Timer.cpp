@@ -115,6 +115,7 @@ void ClockThread(TimerObject* Timer)
 			}
 			NewExpireTime = GetNextExpireTime(Timer);
 		}
+		Sleep(1); // prevent burning the cpu
 	}
 }
 

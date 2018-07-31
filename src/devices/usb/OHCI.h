@@ -178,8 +178,8 @@ class OHCI
 		int m_DoneCount;
 		// the address of the pending TD
 		xbaddr m_AsyncTD = xbnull;
-		// ergo720: I think it signals that a TD has been processed completely
-		bool m_AsyncComplete = 0;
+		// indicates if there is s a pending asynchronous packet to process
+		int m_AsyncComplete = 0;
 
 		// EOF callback wrapper
 		static void OHCI_FrameBoundaryWrapper(void* pVoid);
