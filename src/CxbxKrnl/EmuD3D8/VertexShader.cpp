@@ -1821,8 +1821,8 @@ static DWORD VshConvertToken_CONSTMEM(
     // D3DVSD_CONST
     DbgVshPrintf("\tD3DVSD_CONST(");
 
-    DWORD ConstantAddress = (*pToken & X_D3DVSD_CONSTADDRESSMASK) >> X_D3DVSD_CONSTADDRESSSHIFT;
-    DWORD Count           = (*pToken & X_D3DVSD_CONSTCOUNTMASK) >> X_D3DVSD_CONSTCOUNTSHIFT;
+    XTL::DWORD ConstantAddress = (*pToken & X_D3DVSD_CONSTADDRESSMASK) >> X_D3DVSD_CONSTADDRESSSHIFT;
+    XTL::DWORD Count           = (*pToken & X_D3DVSD_CONSTCOUNTMASK) >> X_D3DVSD_CONSTCOUNTSHIFT;
     DbgVshPrintf("%d, %d),\n", ConstantAddress, Count);
 
 #ifdef CXBX_USE_D3D9
