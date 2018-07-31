@@ -4176,9 +4176,11 @@ PSH_RECOMPILED_SHADER DxbxRecompilePixelShader(XTL::X_D3DPIXELSHADERDEF *pPSDef)
 {
 static const
   char *szDiffusePixelShader =
-    "ps.1.0\n" 
-    "tex t0\n" 
-	"mov r0, t0\n";
+    "ps_2_x\n"
+	"dcl_2d s0\n"
+    "dcl t0.xy\n" 
+	"texld r0, t0, s0\n"
+	"mov oC0, r0\n";
   std::string ConvertedPixelShaderStr;
   DWORD hRet;
   XTL::LPD3DXBUFFER pShader;
@@ -4209,7 +4211,7 @@ static const
   if (hRet != D3D_OK)
   {
     EmuWarning("Could not create pixel shader");
-	EmuWarning(std::string((char*)pErrors->GetBufferPointer(), pErrors->GetBufferSize()).c_str());
+	//EmuWarning(std::string((char*)pErrors->GetBufferPointer(), pErrors->GetBufferSize()).c_str());
 
 	printf(ConvertedPixelShaderStr.c_str());
 
@@ -4231,8 +4233,11 @@ static const
     /*ppCompiledShader=*/&pShader,
     /*ppCompilationErrors*/&pErrors);
 
-	if (hRet != D3D_OK)
-      XTL::CxbxKrnlCleanup("Cannot fall back to the most simple pixel shader!");
+	if (hRet != D3D_OK) {
+		EmuWarning("Could not create pixel shader");
+		EmuWarning(std::string((char*)pErrors->GetBufferPointer(), pErrors->GetBufferSize()).c_str());
+		XTL::CxbxKrnlCleanup("Cannot fall back to the most simple pixel shader!");
+	}
 
     EmuWarning("We're lying about the creation of a pixel shader!");
   }
