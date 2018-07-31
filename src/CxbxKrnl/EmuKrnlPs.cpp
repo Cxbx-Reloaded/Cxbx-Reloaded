@@ -185,7 +185,6 @@ static unsigned int WINAPI PCSTProxy
 			lea         ebp, [esp - 4]
 			jmp near    esi
 		}
-
 	}
 	__except (EmuException(GetExceptionInformation()))
 	{

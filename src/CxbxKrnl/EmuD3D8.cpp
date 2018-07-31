@@ -130,7 +130,7 @@ struct {
 // D3D based variables
 static GUID                         g_ddguid;               // DirectDraw driver GUID
 static XTL::IDirect3D              *g_pDirect3D = nullptr;
-static XTL::D3DCAPS                 g_D3DCaps = {};         // Direct3D Caps
+XTL::D3DCAPS					    g_D3DCaps = {};         // Direct3D Caps
 
 // wireframe toggle
 static int                          g_iWireframe    = 0;
@@ -1974,6 +1974,10 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
 					// NOTE: It is possible to fix multisampling by having the host backbuffer normal size, the Xbox backbuffer being multisamples
 					// and scaling that way, but that can be done as a future PR
 					g_EmuCDPD.HostPresentationParameters.MultiSampleType = XTL::D3DMULTISAMPLE_NONE;
+#ifdef CXBX_USE_D3D9
+					g_EmuCDPD.HostPresentationParameters.MultiSampleQuality = 0;
+#endif
+
 					/*
                     if(g_EmuCDPD.XboxPresentationParameters.MultiSampleType != 0) {
                         // TODO: Check card for multisampling abilities
@@ -2059,16 +2063,36 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
 				// Dxbx addition : Prevent Direct3D from changing the FPU Control word :
 				g_EmuCDPD.BehaviorFlags |= D3DCREATE_FPU_PRESERVE;
 
-	            // Address debug DirectX runtime warning in _DEBUG builds
                 // Direct3D8: (WARN) :Device that was created without D3DCREATE_MULTITHREADED is being used by a thread other than the creation thread.
-                #ifdef _DEBUG
-                    g_EmuCDPD.BehaviorFlags |= D3DCREATE_MULTITHREADED;
-                #endif
+                g_EmuCDPD.BehaviorFlags |= D3DCREATE_MULTITHREADED;
+
+				// If a depth stencil format is set, enable AutoDepthStencil
+				if (g_EmuCDPD.HostPresentationParameters.AutoDepthStencilFormat != 0) {
+					g_EmuCDPD.HostPresentationParameters.EnableAutoDepthStencil = TRUE;
+				}
+
+				// If the depth stencil format is unsupported by the host, use a sensible fallback
+				if (g_pDirect3D->CheckDeviceFormat(
+					D3DADAPTER_DEFAULT,
+					XTL::D3DDEVTYPE_HAL,
+					g_EmuCDPD.HostPresentationParameters.BackBufferFormat,
+					D3DUSAGE_DEPTHSTENCIL,
+					XTL::D3DRTYPE_SURFACE,
+					g_EmuCDPD.HostPresentationParameters.AutoDepthStencilFormat) != D3D_OK) {
+					g_EmuCDPD.HostPresentationParameters.AutoDepthStencilFormat = XTL::D3DFMT_D24S8;
+				}
 
 				// For some reason, D3DFMT_D16_LOCKABLE as the AudoDepthStencil causes CreateDevice to fail...
 				if (g_EmuCDPD.HostPresentationParameters.AutoDepthStencilFormat == XTL::D3DFMT_D16_LOCKABLE) {
 					g_EmuCDPD.HostPresentationParameters.AutoDepthStencilFormat = XTL::D3DFMT_D16;
 				}
+
+				// DirectX9 doesn't support 0 as a swap effect
+#ifdef CXBX_USE_D3D9
+				if (g_EmuCDPD.HostPresentationParameters.SwapEffect == 0) {
+					g_EmuCDPD.HostPresentationParameters.SwapEffect = XTL::D3DSWAPEFFECT_DISCARD;
+				}
+#endif
 
                 // redirect to windows Direct3D
                 g_EmuCDPD.hRet = g_pDirect3D->CreateDevice(
@@ -2971,9 +2995,15 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SelectVertexShader)
 
     if(VshHandleIsVertexShader(Handle))
     {
+		#ifndef CXBX_USE_D3D9
+
         CxbxVertexShader *pVertexShader = MapXboxVertexShaderHandleToCxbxVertexShader(Handle);
 		hRet = g_pD3DDevice->SetVertexShader(pVertexShader->Handle);
 		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetVertexShader(VshHandleIsVertexShader)");
+		#else
+			hRet = D3D_OK;
+			EmuWarning("SetVertexShader (non-FVF) unimplemented for D3D9");
+		#endif
     }
     else if(Handle == NULL)
     {
@@ -2991,8 +3021,13 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SelectVertexShader)
 
         if(pVertexShader != NULL)
         {
+#ifndef CXBX_USE_D3D9
 			hRet = g_pD3DDevice->SetVertexShader(((CxbxVertexShader *)((X_D3DVertexShader *)g_VertexShaderSlots[Address])->Handle)->Handle);
 			DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetVertexShader(pVertexShader)");
+#else
+			hRet = D3D_OK;
+			EmuWarning("SetVertexShader (non-FVF) unimplemented for D3D9");
+#endif
 		}
         else
         {
@@ -3474,6 +3509,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateVertexShader)
     DWORD           Usage
 )
 {
+#ifndef CXBX_USE_D3D9
 	FUNC_EXPORTS
 
 	LOG_FUNC_BEGIN
@@ -3558,10 +3594,16 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateVertexShader)
     {
         hRet = g_pD3DDevice->CreateVertexShader
         (
+#ifndef CXBX_USE_D3D9
             pRecompiledDeclaration,
+#endif
             pRecompiledFunction,
-            &Handle,
-            g_dwVertexShaderUsage   // TODO: HACK: Xbox has extensions!
+#ifdef CXBX_USE_D3D9
+			(IDirect3DVertexShader9**)&Handle
+#else
+			&Handle,
+			g_dwVertexShaderUsage   // TODO: HACK: Xbox has extensions!
+#endif
         );
 		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateVertexShader");
 
@@ -3592,11 +3634,17 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateVertexShader)
 
 			hRet = g_pD3DDevice->CreateVertexShader
             (
-                pRecompiledDeclaration,
-                (DWORD*)pRecompiledBuffer->GetBufferPointer(),
-                &Handle,
-                g_dwVertexShaderUsage
-            );
+#ifndef CXBX_USE_D3D9
+				pRecompiledDeclaration,
+#endif
+				(DWORD*)pRecompiledBuffer->GetBufferPointer(),
+#ifdef CXBX_USE_D3D9
+				(IDirect3DVertexShader9**)&Handle
+#else
+				&Handle,
+				g_dwVertexShaderUsage   // TODO: HACK: Xbox has extensions!
+#endif
+			);
 			DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateVertexShader(fallback)");
 		}
         //*/
@@ -3664,6 +3712,9 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateVertexShader)
     
 
     return hRet;
+#else
+	return D3D_OK;
+#endif
 }
 
 // LTCG specific D3DDevice_SetVertexShaderConstant function...
@@ -4880,6 +4931,10 @@ void CreateHostResource(XTL::X_D3DResource *pResource, DWORD D3DUsage, int iText
 		if (EmuXBFormatRequiresConversionToARGB(X_Format)) {
 			bConvertToARGB = true;
 			PCFormat = XTL::D3DFMT_A8R8G8B8;
+
+			// Unset D3DUSAGE_DEPTHSTENCIL: It's not possible for ARGB textures to be depth stencils
+			// Fixes CreateTexture error in Virtua Cop 3 (Chihiro)
+			D3DUsage &= ~D3DUSAGE_DEPTHSTENCIL;
 		}
 		else {
 			// TODO : Nuance the following, because the Direct3D 8 docs states
@@ -5043,7 +5098,7 @@ void CreateHostResource(XTL::X_D3DResource *pResource, DWORD D3DUsage, int iText
 					true, // Lockable
 					&pNewHostSurface
 #ifdef CXBX_USE_D3D9
-					, nullptr, // pSharedHandle
+					, nullptr // pSharedHandle
 #endif
 				);
 				DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateRenderTarget");
@@ -6982,7 +7037,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexShader)
     HRESULT hRet = D3D_OK;
 
     g_CurrentXboxVertexShaderHandle = Handle;
-
     // Store viewport offset and scale in constant registers 58 (c-38) and
     // 59 (c-37) used for screen space transformation.
     if(g_VertexShaderConstantMode != X_D3DSCM_NORESERVEDCONSTANTS)
@@ -7002,6 +7056,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexShader)
 #endif
     }
 
+#ifndef CXBX_USE_D3D9
     DWORD HostVertexShaderHandle;
     if(VshHandleIsVertexShader(Handle))
     {
@@ -7054,12 +7109,22 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexShader)
 			// TODO : Instead of changing the FVF here, see if (and which) users need to be updated.
 		}
     }
-
-#ifdef CXBX_USE_D3D9
-	hRet = g_pD3DDevice->SetVertexShader(nullptr);
-	hRet = g_pD3DDevice->SetFVF(HostVertexShaderHandle);
-#else
 	hRet = g_pD3DDevice->SetVertexShader(HostVertexShaderHandle);
+#else
+	if (VshHandleIsVertexShader(Handle)) {
+#ifndef CXBX_USE_D3D9
+
+		CxbxVertexShader *pVertexShader = MapXboxVertexShaderHandleToCxbxVertexShader(Handle);
+		hRet = g_pD3DDevice->SetVertexShader(pVertexShader->Handle);
+		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetVertexShader(VshHandleIsVertexShader)");
+#else
+		hRet = D3D_OK;
+		EmuWarning("SetVertexShader (non-FVF) unimplemented for D3D9");
+#endif
+	} else {
+		hRet = g_pD3DDevice->SetVertexShader(nullptr);
+		hRet = g_pD3DDevice->SetFVF(Handle);
+	}
 #endif
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetVertexShader");    
 }
@@ -8353,6 +8418,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DeleteVertexShader)
     DWORD Handle
 )
 {
+#ifndef CXBX_USE_D3D9
 	FUNC_EXPORTS
 
 	LOG_FUNC_ONE_ARG(Handle);
@@ -8382,7 +8448,8 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DeleteVertexShader)
     }
 
     HRESULT hRet = g_pD3DDevice->DeleteVertexShader(HostVertexShaderHandle);
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->DeleteVertexShader");    
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->DeleteVertexShader");
+#endif
 }
 
 // ******************************************************************
@@ -8450,6 +8517,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_GetVertexShaderConstant)
     DWORD ConstantCount
 )
 {
+#ifndef CXBX_USE_D3D9
 	FUNC_EXPORTS
 
 	LOG_FUNC_BEGIN
@@ -8465,7 +8533,8 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_GetVertexShaderConstant)
         ConstantCount
     );
 
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->GetVertexShaderConstant");    
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->GetVertexShaderConstant");
+#endif
 }
 
 // ******************************************************************

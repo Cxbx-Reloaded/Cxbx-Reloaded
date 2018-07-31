@@ -990,7 +990,11 @@ VOID XTL::EmuFlushIVB()
 
 	CxbxDrawPrimitiveUP(DrawContext);
 	if (bFVF) {
-		hRet = g_pD3DDevice->SetVertexShader(g_CurrentXboxVertexShaderHandle);
+#ifdef CXBX_USE_D3D9
+	hRet = g_pD3DDevice->SetFVF(g_CurrentXboxVertexShaderHandle);
+#else
+	hRet = g_pD3DDevice->SetVertexShader(g_CurrentXboxVertexShaderHandle);
+#endif
 		//DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetVertexShader");
 	}
     g_InlineVertexBuffer_TableOffset = 0; // Might not be needed (also cleared in D3DDevice_Begin)

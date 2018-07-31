@@ -1433,6 +1433,44 @@ static boolean VshConvertShader(VSH_XBOX_SHADER *pShader,
             pIntermediate->ILU = ILU_RCP;
         }
 
+		if (pIntermediate->InstructionType == IMD_ILU && pIntermediate->ILU == ILU_EXP)
+		{
+			// EXP on DX8 requires that exactly one swizzle is specified on the output
+
+			// Count how many swizzles are set
+			int swizzles = 0;
+			for (int i = 0; i < 4; i++) {
+				if (pIntermediate->Parameters[0].Parameter.Swizzle[i]) {
+					swizzles++;
+				}
+			}
+
+			// If we had more than 1 swizzle, set the same swizzle on the ouput as the input
+			// Test case: THP2X
+			if (swizzles > 1) {
+				int swizzle = (pIntermediate->Output.Mask[0]) | (pIntermediate->Output.Mask[1] << 1) | (pIntermediate->Output.Mask[2] << 2) | (pIntermediate->Output.Mask[3] << 3);
+				switch (swizzle)
+				{
+				case 1:
+					VshSetSwizzle(&pIntermediate->Parameters[0], SWIZZLE_X, SWIZZLE_X, SWIZZLE_X, SWIZZLE_X);
+					break;
+				case 2:
+					VshSetSwizzle(&pIntermediate->Parameters[0], SWIZZLE_Y, SWIZZLE_Y, SWIZZLE_Y, SWIZZLE_Y);
+					break;
+				case 4:
+					VshSetSwizzle(&pIntermediate->Parameters[0], SWIZZLE_Z, SWIZZLE_Z, SWIZZLE_Z, SWIZZLE_Z);
+					break;
+				case 8:
+					VshSetSwizzle(&pIntermediate->Parameters[0], SWIZZLE_W, SWIZZLE_W, SWIZZLE_W, SWIZZLE_W);
+					break;
+				case 15:
+				default:
+					LOG_TEST_CASE("exp instruction with invalid swizzle");
+					break;
+				}
+			}
+		}
+
         if(pIntermediate->Output.Type == IMD_OUTPUT_R)
         {
             RUsage[pIntermediate->Output.Address] = TRUE;
@@ -1821,8 +1859,8 @@ static DWORD VshConvertToken_CONSTMEM(
     // D3DVSD_CONST
     DbgVshPrintf("\tD3DVSD_CONST(");
 
-    DWORD ConstantAddress = (*pToken & X_D3DVSD_CONSTADDRESSMASK) >> X_D3DVSD_CONSTADDRESSSHIFT;
-    DWORD Count           = (*pToken & X_D3DVSD_CONSTCOUNTMASK) >> X_D3DVSD_CONSTCOUNTSHIFT;
+    XTL::DWORD ConstantAddress = (*pToken & X_D3DVSD_CONSTADDRESSMASK) >> X_D3DVSD_CONSTADDRESSSHIFT;
+    XTL::DWORD Count           = (*pToken & X_D3DVSD_CONSTCOUNTMASK) >> X_D3DVSD_CONSTCOUNTSHIFT;
     DbgVshPrintf("%d, %d),\n", ConstantAddress, Count);
 
 #ifdef CXBX_USE_D3D9
@@ -2394,6 +2432,7 @@ extern HRESULT XTL::EmuRecompileVshFunction
 	DWORD		 *pRecompiledDeclaration
 )
 {
+#ifndef CXBX_USE_D3D9
     VSH_SHADER_HEADER   *pShaderHeader = (VSH_SHADER_HEADER*)pFunction;
     DWORD               *pToken;
     boolean             EOI = false;
@@ -2473,17 +2512,17 @@ extern HRESULT XTL::EmuRecompileVshFunction
 		}
 
         char* pShaderDisassembly = (char*)malloc(pShader->IntermediateCount * 100); // Should be plenty
-        DbgVshPrintf("-- Before conversion --\n");
+		DbgVshPrintf("-- Before conversion --\n");
         VshWriteShader(pShader, pShaderDisassembly, FALSE);
-        DbgVshPrintf("%s", pShaderDisassembly);
-        DbgVshPrintf("-----------------------\n");
+		DbgVshPrintf("%s", pShaderDisassembly);
+		DbgVshPrintf("-----------------------\n");
 
         VshConvertShader(pShader, bNoReservedConstants, declaredRegisters);
         VshWriteShader(pShader, pShaderDisassembly, TRUE);
 
-        DbgVshPrintf("-- After conversion ---\n");
-        DbgVshPrintf("%s", pShaderDisassembly);
-        DbgVshPrintf("-----------------------\n");
+		DbgVshPrintf("-- After conversion ---\n");
+		DbgVshPrintf("%s", pShaderDisassembly);
+		DbgVshPrintf("-----------------------\n");
 
         // HACK: Azurik. Prevent Direct3D from trying to assemble this.
 		if(!strcmp(pShaderDisassembly, "vs.1.1\n"))
@@ -2506,10 +2545,9 @@ extern HRESULT XTL::EmuRecompileVshFunction
 		}
 		else
 		{
-
 			hRet = D3DXAssembleShader(pShaderDisassembly,
                                   strlen(pShaderDisassembly),
-                                  D3DXASM_SKIPVALIDATION,
+					              D3DXASM_SKIPVALIDATION,
                                   NULL,
                                   ppRecompiled,
                                   &pErrors);
@@ -2530,6 +2568,9 @@ extern HRESULT XTL::EmuRecompileVshFunction
     free(pShader);
 
     return hRet;
+#else
+	return D3D_OK;
+#endif
 }
 
 extern void XTL::FreeVertexDynamicPatch(CxbxVertexShader *pVertexShader)
@@ -2540,6 +2581,7 @@ extern void XTL::FreeVertexDynamicPatch(CxbxVertexShader *pVertexShader)
 // Checks for failed vertex shaders, and shaders that would need patching
 boolean VshHandleIsValidShader(DWORD Handle)
 {
+#ifndef CXBX_USE_D3D9
 	//printf( "VS = 0x%.08X\n", Handle );
 
     XTL::CxbxVertexShader *pVertexShader = XTL::MapXboxVertexShaderHandleToCxbxVertexShader(Handle);
@@ -2560,6 +2602,7 @@ boolean VshHandleIsValidShader(DWORD Handle)
         }
         */
     }
+#endif
     return TRUE;
 }
 

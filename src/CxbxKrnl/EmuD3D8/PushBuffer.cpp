@@ -177,7 +177,7 @@ DWORD CxbxGetStrideFromVertexShaderHandle(DWORD dwVertexShader)
 {
 	using namespace XTL;
 
-	DWORD Stride = 0;
+	XTL::DWORD Stride = 0;
 
 	if (VshHandleIsVertexShader(dwVertexShader)) {
 		// Test-case : Crash 'n' Burn [45530014]
@@ -337,7 +337,7 @@ void HLE_pgraph_handle_method(
 				//DWORD vertex data array, 
 				//To be used as a replacement for DrawVerticesUP, the caller needs to set the vertex format using IDirect3DDevice8::SetVertexShader before calling BeginPush. All attributes in the vertex format must be padded DWORD multiples, and the vertex attributes must be specified in the canonical FVF ordering (position followed by weight, normal, diffuse, and so on).
 				// retrieve vertex shader
-				DWORD dwVertexShader = g_CurrentXboxVertexShaderHandle;
+				XTL::DWORD dwVertexShader = g_CurrentXboxVertexShaderHandle;
 				if (dwVertexShader == 0) {
 					LOG_TEST_CASE("FVF Vertex Shader is null");
 					dwVertexShader = -1;
@@ -345,9 +345,9 @@ void HLE_pgraph_handle_method(
 
 				// render vertices
 				if (dwVertexShader != -1) {
-					DWORD dwVertexStride = CxbxGetStrideFromVertexShaderHandle(dwVertexShader);
+					XTL::DWORD dwVertexStride = CxbxGetStrideFromVertexShaderHandle(dwVertexShader);
 					if (dwVertexStride > 0) {
-						UINT VertexCount = (pg->inline_array_length * sizeof(DWORD)) / dwVertexStride;
+						XTL::UINT VertexCount = (pg->inline_array_length * sizeof(XTL::DWORD)) / dwVertexStride;
 						CxbxDrawContext DrawContext = {};
 
 						DrawContext.XboxPrimitiveType = (X_D3DPRIMITIVETYPE)pg->primitive_mode;

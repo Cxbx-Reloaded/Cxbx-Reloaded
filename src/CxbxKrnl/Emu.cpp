@@ -239,80 +239,134 @@ void EmuExceptionNonBreakpointUnhandledShow(LPEXCEPTION_POINTERS e)
 	}
 }
 
-// exception handler
-bool IsRdtscInstruction(xbaddr addr);
-extern int EmuException(LPEXCEPTION_POINTERS e)
+// Returns weither the given address is part of an Xbox managed memory region
+bool IsXboxCodeAddress(xbaddr addr)
 {
-    g_bEmuException = true;
-	if (e->ExceptionRecord->ExceptionCode == STATUS_BREAKPOINT)
-	{
-		// notify user
-		if (EmuExceptionBreakpointAsk(e))
-		{
-			// We're allowed to continue :
-			g_bEmuException = false;
-			return EXCEPTION_CONTINUE_EXECUTION;
+	// TODO : Replace the following with a (fast) check weither
+	// the given address lies in xbox allocated virtual memory,
+	// for example by g_VMManager.CheckConflictingVMA(addr, 0).
+	return (addr >= XBE_IMAGE_BASE) && (addr <= XBE_MAX_VA);
+	// Note : Not IS_USER_ADDRESS(), that would include host DLL code
+}
+
+void genericException(EXCEPTION_POINTERS *e) {
+	// Try to report this exception to the debugger, which may allow handling of this exception
+	if (CxbxDebugger::CanReport()) {
+		bool DebuggerHandled = false;
+		CxbxDebugger::ReportAndHandleException(e->ExceptionRecord, DebuggerHandled);
+		if (!DebuggerHandled) {
+			// Kill the process immediately without the Cxbx notifier
+			EmuExceptionExitProcess();
 		}
+
+		// Bypass exception
 	}
-	else
-	{
-		// Check if this exception came from rdtsc, but only whe g_PatchCpuFrequency hack is set.
-		if (e->ExceptionRecord->ExceptionCode == STATUS_PRIVILEGED_INSTRUCTION && !g_SkipRdtscPatching )
-		{
+	else {
+		// notify user
+		EmuExceptionNonBreakpointUnhandledShow(e);
+	}
+}
+
+static thread_local bool bOverrideException;
+
+bool IsRdtscInstruction(xbaddr addr);
+ULONGLONG CxbxRdTsc(bool xbox);
+bool lleTryHandleException(EXCEPTION_POINTERS *e)
+{
+	// Initalize local thread variable
+	bOverrideException = false;
+
+	// Only handle exceptions which originate from Xbox code
+	if (!IsXboxCodeAddress(e->ContextRecord->Eip)) {
+		return false;
+	}
+
+	// Make sure access-violations reach EmuX86_DecodeException() as soon as possible
+	if (e->ExceptionRecord->ExceptionCode != EXCEPTION_ACCESS_VIOLATION) {
+		switch (e->ExceptionRecord->ExceptionCode) {
+		case STATUS_PRIVILEGED_INSTRUCTION:
+			// Check if this exception came from rdtsc 
 			if (IsRdtscInstruction(e->ContextRecord->Eip)) {
-				LARGE_INTEGER PerformanceCount;
-				PerformanceCount.QuadPart = xboxkrnl::KeQueryPerformanceCounter();
+				// If so, use a return value that updates with Xbox frequency;
+				// Avoid the overhead of xboxkrnl::KeQueryPerformanceCounter,
+				// by calling directly into it's backing implementation:
+				ULARGE_INTEGER PerformanceCount;
+				PerformanceCount.QuadPart = CxbxRdTsc(/*xbox=*/true);
 				e->ContextRecord->Eax = PerformanceCount.LowPart;
 				e->ContextRecord->Edx = PerformanceCount.HighPart;
 				e->ContextRecord->Eip += 2;
-				g_bEmuException = false;
-				return EXCEPTION_CONTINUE_EXECUTION;
+				return true;
 			}
-		}
-
-        // Skip past CxbxDebugger-specific exceptions thrown when an unsupported was attached (ie Visual Studio)
-        if (CxbxDebugger::IsDebuggerException(e->ExceptionRecord->ExceptionCode))
-        {
-            g_bEmuException = false;
-            return EXCEPTION_CONTINUE_EXECUTION;
-        }
-
-		// Pass the exception to our X86 implementation, to try and execute the failing instruction
-		if (EmuX86_DecodeException(e))
-		{
-			// We're allowed to continue :
-			g_bEmuException = false;
-			return EXCEPTION_CONTINUE_EXECUTION;
-		}
-		
-		// Try to Report this exception to the debugger, which may allow handling of this exception
-		if (CxbxDebugger::CanReport())
-		{
-			bool DebuggerHandled = false;
-			CxbxDebugger::ReportAndHandleException(e->ExceptionRecord, DebuggerHandled);
-
-			if (DebuggerHandled)
-			{
-				// Bypass exception
-				g_bEmuException = false;
-				return EXCEPTION_CONTINUE_SEARCH;
+			break;
+		case STATUS_BREAKPOINT:
+			// Pass breakpoint down to EmuException since VEH doesn't have call stack viewable.
+			return false;
+		default:
+			// Skip past CxbxDebugger-specific exceptions thrown when an unsupported was attached (ie Visual Studio)
+			if (CxbxDebugger::IsDebuggerException(e->ExceptionRecord->ExceptionCode)) {
+				return true;
 			}
-			else
-			{
-				// Kill the process immediately without the Cxbx notifier
-				EmuExceptionExitProcess();
-			}
-		}
-		else
-		{
-			// notify user
-			EmuExceptionNonBreakpointUnhandledShow(e);
 		}
 	}
 
+	// Pass the exception to our X86 implementation, to try and execute the failing instruction
+	if (EmuX86_DecodeException(e)) {
+		// We're allowed to continue :
+		return true;
+	}
+
+	genericException(e);
+
+	// We do not need EmuException to handle it again.
+	bOverrideException = true;
+
 	// Unhandled exception :
+	return false;
+}
+
+// Only for LLE emulation coding (to help performance a little bit better)
+LONG NTAPI lleException(EXCEPTION_POINTERS *e)
+{
+	g_bEmuException = true;
+	LONG result = lleTryHandleException(e) ? EXCEPTION_CONTINUE_EXECUTION : EXCEPTION_CONTINUE_SEARCH;
 	g_bEmuException = false;
-    return EXCEPTION_CONTINUE_SEARCH;
+	return result;
+}
+
+// Only for Cxbx emulation coding (to catch all of last resort exception may occur.)
+bool EmuTryHandleException(EXCEPTION_POINTERS *e)
+{
+
+	// Check if lle exception is already called first before emu exception.
+	if (bOverrideException) {
+		return false;
+	}
+
+	if (e->ExceptionRecord->ExceptionCode != EXCEPTION_ACCESS_VIOLATION) {
+		switch (e->ExceptionRecord->ExceptionCode) {
+		case STATUS_BREAKPOINT:
+			// Let user choose between continue or break
+			return EmuExceptionBreakpointAsk(e);
+		default:
+			// Skip past CxbxDebugger-specific exceptions thrown when an unsupported was attached (ie Visual Studio)
+			if (CxbxDebugger::IsDebuggerException(e->ExceptionRecord->ExceptionCode)) {
+				return true;
+			}
+		}
+	}
+
+	genericException(e);
+
+	// Unhandled exception :
+	return false;
+}
+
+int EmuException(EXCEPTION_POINTERS *e)
+{
+	g_bEmuException = true;
+	LONG result = EmuTryHandleException(e) ? EXCEPTION_CONTINUE_EXECUTION : EXCEPTION_CONTINUE_SEARCH;
+	g_bEmuException = false;
+	return result;
 }
 
 // exception handle for that tough final exit :)
