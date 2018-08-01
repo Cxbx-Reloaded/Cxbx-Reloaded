@@ -351,7 +351,6 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 							pCMD->dwChildProcID = lParam; // lParam is process ID.
 							std::thread(CrashMonitorWrapper, pCMD).detach();
 
-							g_EmuShared->SetFlagsLLE(&g_Settings->m_emulate.FlagsLLE);
 							g_EmuShared->SetIsEmulating(true); // NOTE: Putting in here raise to low or medium risk due to debugger will launch itself. (Current workaround)
 							g_EmuShared->SetIsReady(true);
 							break;
@@ -2330,7 +2329,7 @@ void WndMain::DrawLedBitmap(HWND hwnd, bool bdefault)
 		ActiveLEDColor = LedSequence[LedSequenceOffset & 3];
 		++LedSequenceOffset;
 
-		g_EmuShared->GetFlagsLLE(&FlagsLLE);
+		g_EmuShared->GetFlagsLLEStatus(&FlagsLLE);
 		// Set LLE flags string based on selected LLE flags
 		if (FlagsLLE & LLE_APU) {
 			strcat(flagString, "A");

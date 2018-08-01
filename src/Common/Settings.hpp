@@ -109,6 +109,14 @@ struct XBCtrlObjectCfg
 	int dwFlags;    // flags explaining the data format
 };
 
+enum {
+	LLE_NONE = 0,
+	LLE_APU = 1 << 0,
+	LLE_GPU = 1 << 1,
+	LLE_JIT = 1 << 2,
+	LLE_USB = 1 << 3,
+};
+
 class Settings
 {
 public:

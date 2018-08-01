@@ -1305,7 +1305,7 @@ __declspec(noreturn) void CxbxKrnlInit
 	// Read which components need to be LLE'ed :
 	{
 		uint CxbxLLE_Flags;
-		g_EmuShared->GetFlagsLLE(&CxbxLLE_Flags);
+		g_EmuShared->GetFlagsLLEStatus(&CxbxLLE_Flags);
 		bLLE_APU = (CxbxLLE_Flags & LLE_APU) > 0;
 		bLLE_GPU = (CxbxLLE_Flags & LLE_GPU) > 0;
 		//bLLE_USB = (CxbxLLE_Flags & LLE_USB) > 0; // Reenable this when LLE USB actually works

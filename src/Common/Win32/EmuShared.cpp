@@ -138,7 +138,7 @@ void EmuShared::Cleanup()
 EmuShared::EmuShared()
 {
 	m_bDebugging = false;
-	m_bEmulating = false;
+	m_bEmulating_status = false;
 	m_bFirstLaunch = false;
 }
 

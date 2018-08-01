@@ -47,14 +47,6 @@ enum {
 	XBOX_LED_COLOUR_ORANGE,
 };
 
-enum {
-	LLE_NONE = 0,
-	LLE_APU = 1 << 0,
-	LLE_GPU = 1 << 1,
-	LLE_JIT = 1 << 2,
-	LLE_USB = 1 << 3,
-};
-
 // Kernel boot flags
 enum {
 	BOOT_NONE =           0,
@@ -92,14 +84,14 @@ class EmuShared : public Mutex
 		// ******************************************************************
 		// * Check if parent process is emulating title
 		// ******************************************************************
-		void GetIsEmulating(bool *isEmulating) { Lock(); *isEmulating = m_bEmulating; Unlock(); }
-		void SetIsEmulating(const bool isEmulating) { Lock(); m_bEmulating = isEmulating; Unlock(); }
+		void GetIsEmulating(bool *isEmulating) { Lock(); *isEmulating = m_bEmulating_status; Unlock(); }
+		void SetIsEmulating(const bool isEmulating) { Lock(); m_bEmulating_status = isEmulating; Unlock(); }
 
 		// ******************************************************************
 		// * Each child process need to wait until parent process is ready
 		// ******************************************************************
-		void GetIsReady(bool *isReady) { Lock(); *isReady = m_bReady; Unlock(); }
-		void SetIsReady(const bool isReady) { Lock(); m_bReady = isReady; Unlock(); }
+		void GetIsReady(bool *isReady) { Lock(); *isReady = m_bReady_status; Unlock(); }
+		void SetIsReady(const bool isReady) { Lock(); m_bReady_status = isReady; Unlock(); }
 
 		// ******************************************************************
 		// * Check if previous kernel mode process is running.
@@ -144,12 +136,14 @@ class EmuShared : public Mutex
 		// ******************************************************************
 		void GetFlagsLLE(      uint *flags) { Lock(); *flags = m_emulate.FlagsLLE; Unlock(); }
 		void SetFlagsLLE(const uint *flags) { Lock(); m_emulate.FlagsLLE = *flags; Unlock(); }
+		void GetFlagsLLEStatus(      uint *flags) { Lock(); *flags = m_FlagsLLE_status; Unlock(); }
+		void SetFlagsLLEStatus(const uint flags) { Lock(); m_FlagsLLE_status = flags; Unlock(); }
 
 		// ******************************************************************
 		// * Boot flag Accessors
 		// ******************************************************************
-		void GetBootFlags(int *value) { Lock(); *value = m_BootFlags; Unlock(); }
-		void SetBootFlags(const int *value) { Lock(); m_BootFlags = *value; Unlock(); }
+		void GetBootFlags(int *value) { Lock(); *value = m_BootFlags_status; Unlock(); }
+		void SetBootFlags(const int *value) { Lock(); m_BootFlags_status = *value; Unlock(); }
 
 		// ******************************************************************
 		// * Hack Flag Accessors
@@ -173,14 +167,14 @@ class EmuShared : public Mutex
 		// ******************************************************************
 		// * MSpF/Benchmark values Accessors
 		// ******************************************************************
-		void GetCurrentMSpF(float *value) { Lock(); *value = m_MSpF; Unlock(); }
-		void SetCurrentMSpF(const float *value) { Lock(); m_MSpF = *value; Unlock(); }
+		void GetCurrentMSpF(float *value) { Lock(); *value = m_MSpF_status; Unlock(); }
+		void SetCurrentMSpF(const float *value) { Lock(); m_MSpF_status = *value; Unlock(); }
 
 		// ******************************************************************
 		// * FPS/Benchmark values Accessors
 		// ******************************************************************
-		void GetCurrentFPS(float *value) { Lock(); *value = m_FPS; Unlock(); }
-		void SetCurrentFPS(const float *value) { Lock(); m_FPS = *value; Unlock(); }
+		void GetCurrentFPS(float *value) { Lock(); *value = m_FPS_status; Unlock(); }
+		void SetCurrentFPS(const float *value) { Lock(); m_FPS_status = *value; Unlock(); }
 
 		// ******************************************************************
 		// * Debugging flag Accessors
@@ -196,7 +190,7 @@ class EmuShared : public Mutex
 			Lock();
 			for (int i = 0; i < 4; ++i)
 			{
-				value[i] = m_LedSequence[i];
+				value[i] = m_LedSequence_status[i];
 			}
 			Unlock();
 		}
@@ -205,7 +199,7 @@ class EmuShared : public Mutex
 			Lock();
 			for (int i = 0; i < 4; ++i)
 			{
-				m_LedSequence[i] = value[i];
+				m_LedSequence_status[i] = value[i];
 			}
 			Unlock();
 		}
@@ -222,9 +216,10 @@ class EmuShared : public Mutex
 		void ResetKrnl()
 		{
 			Lock();
-			m_BootFlags = 0;
-			m_MSpF = 0.0f;
-			m_FPS = 0.0f;
+			m_BootFlags_status = 0;
+			m_MSpF_status = 0.0f;
+			m_FPS_status = 0.0f;
+			m_FlagsLLE_status = m_emulate.FlagsLLE;
 			Unlock();
 		}
 
@@ -250,15 +245,15 @@ class EmuShared : public Mutex
 		// * Shared configuration
 		// ******************************************************************
 		char         m_XbePath[MAX_PATH]; // TODO: Do we really need this? We can use command line since it contain xbe file.
-		int          m_BootFlags;
-		int          m_Reserved1;
-		float        m_MSpF;
-		float        m_FPS;
+		int          m_BootFlags_status;
+		unsigned int m_FlagsLLE_status;
+		float        m_MSpF_status;
+		float        m_FPS_status;
 		bool         m_bReserved1;
 		bool         m_bDebugging;
-		bool         m_bReady;
-		bool         m_bEmulating;
-		int          m_LedSequence[4];
+		bool         m_bReady_status;
+		bool         m_bEmulating_status;
+		int          m_LedSequence_status[4];
 		bool         m_bFirstLaunch;
 		bool         m_bReserved2;
 		bool         m_bReserved3;
