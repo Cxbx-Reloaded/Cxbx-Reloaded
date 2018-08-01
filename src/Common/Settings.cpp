@@ -531,12 +531,21 @@ bool Settings::Save(std::string file_path)
 	SI_Error siError;
 	if (!file_path.empty()) {
 		siError = m_si.SaveFile(file_path.c_str(), true);
+
+		if (siError == SI_OK) {
+			m_file_path = file_path;
+		}
 	}
 	else {
 		siError = m_si.SaveFile(m_file_path.c_str(), true);
 	}
 
 	return (siError == SI_OK);
+}
+
+void Settings::Delete()
+{
+    std::filesystem::remove(m_file_path);
 }
 
 // Universal update to EmuShared from both standalone kernel, and GUI process.

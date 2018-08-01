@@ -96,14 +96,10 @@ void ClearHLECache(char sStorageLocation[MAX_PATH])
 	printf("Cleared HLE Cache\n");
 }
 
-void WndMain::InitializeSettings() {
-	HKEY hKey;
-	if (RegOpenKeyEx(HKEY_CURRENT_USER, "Software\\Cxbx-Reloaded", 0, KEY_ENUMERATE_SUB_KEYS | DELETE | KEY_QUERY_VALUE | KEY_SET_VALUE, &hKey) == ERROR_SUCCESS) {
-		RegDeleteTree(hKey, NULL);
-		RegCloseKey(hKey);
-
-		g_SaveOnExit = false;
-	}
+void WndMain::InitializeSettings()
+{
+	g_Settings->Delete();
+	g_SaveOnExit = false;
 }
 
 #define TIMERID_FPS 0
