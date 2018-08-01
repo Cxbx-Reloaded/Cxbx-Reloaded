@@ -126,7 +126,7 @@ static struct {
 	const char* DirectHostBackBufferAccess = "DirectHostBackBufferAccess";
 } sect_hack_keys;
 
-std::string GenerateCurrentFileDirectoryStr()
+std::string GenerateCurrentDirectoryStr()
 {
 	// NOTE: There is no cross-platform support for getting file's current directory.
 	return std::filesystem::current_path().generic_string();
@@ -166,14 +166,14 @@ bool Settings::Init()
 		std::string saveFile;
 #ifdef RETRO_API_VERSION // TODO: Change me to #ifndef QT_VERSION
 		// Can only have one option without Qt.
-		saveFile = GenerateCurrentFileDirectoryStr();
+		saveFile = GenerateCurrentDirectoryStr();
 		saveFile.append(szSettings_settings_file);
 
 #else // Only support for Qt compile build.
 		int iRet = MessageBox(nullptr, szSettings_save_user_option_message, "Cxbx-Reloaded", MB_YESNOCANCEL | MB_ICONQUESTION);
 
 		if (iRet == IDYES) {
-			saveFile = GenerateCurrentFileDirectoryStr();
+			saveFile = GenerateCurrentDirectoryStr();
 			saveFile.append(szSettings_settings_file);
 		}
 		else if (iRet == IDNO){
@@ -216,7 +216,7 @@ bool Settings::Init()
 
 bool Settings::LoadUserConfig()
 {
-	std::string fileSearch = GenerateCurrentFileDirectoryStr();
+	std::string fileSearch = GenerateCurrentDirectoryStr();
 
 	fileSearch.append(szSettings_settings_file);
 
@@ -543,6 +543,60 @@ bool Settings::Save(std::string file_path)
 	}
 
 	return (siError == SI_OK);
+}
+
+// Universal update to EmuShared from both standalone kernel, and GUI process.
+void Settings::Sync()
+{
+	// register Emulate settings
+	g_EmuShared->SetEmulateSettings(&m_emulate);
+
+	// register Video settings
+	g_EmuShared->SetVideoSettings(&m_video);
+
+	// register Audio settings
+	g_EmuShared->SetAudioSettings(&m_audio);
+
+	// register Controller settings
+	g_EmuShared->SetControllerDInputSettings(&m_controller_dinput);
+	g_EmuShared->SetControllerPortSettings(&m_controller_port);
+
+	// register Hacks settings
+	g_EmuShared->SetHackSettings(&m_hacks);
+
+	// register data location setting
+	std::string data_location = GetDataLocation();
+	g_EmuShared->SetStorageLocation(data_location.c_str());
+}
+std::string Settings::GetDataLocation()
+{
+	std::string data_location;
+	switch (m_gui.DataStorageToggle) {
+		default:
+#ifdef RETRO_API_VERSION // TODO: Change me to #ifndef QT_VERSION
+
+			m_gui.DataStorageToggle = CXBX_DATA_CURDIR;
+
+#else // Only support for Qt compile build.
+
+			m_gui.DataStorageToggle = CXBX_DATA_APPDATA;
+			// If unknown value, default to CXBX_DATA_APPDATA (below, don't use break)
+
+		case CXBX_DATA_APPDATA:
+			data_location = GenerateUserProfileDirectoryStr();
+			break;
+#endif
+
+		case CXBX_DATA_CURDIR:
+			data_location = GenerateCurrentDirectoryStr();
+			break;
+
+		case CXBX_DATA_CUSTOM:
+			data_location = m_gui.szCustomLocation;
+			break;
+	}
+
+	return data_location;
 }
 
 // ******************************************************************

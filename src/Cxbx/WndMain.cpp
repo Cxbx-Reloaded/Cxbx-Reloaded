@@ -185,10 +185,13 @@ WndMain::WndMain(HINSTANCE x_hInstance) :
 		char szDebugName[MAX_PATH];
 
 		switch (g_Settings->m_gui.DataStorageToggle) {
-			case CXBX_DATA_APPDATA:
 			default:
-				SHGetSpecialFolderPath(NULL, m_StorageLocation, CSIDL_APPDATA, TRUE);
+
 				g_Settings->m_gui.DataStorageToggle = CXBX_DATA_APPDATA;
+				// If unknown value, default to CXBX_DATA_APPDATA (below, don't use break)
+
+			case CXBX_DATA_APPDATA:
+				SHGetSpecialFolderPath(NULL, m_StorageLocation, CSIDL_APPDATA, TRUE);
 				strncat(m_StorageLocation, "\\Cxbx-Reloaded", MAX_PATH);
 				break;
 
@@ -2147,21 +2150,8 @@ void WndMain::StartEmulation(HWND hwndParent, DebuggerState LocalDebuggerState /
 	// register xbe path with emulator process
 	g_EmuShared->SetXbePath(m_Xbe->m_szPath);
 
-	// register Emulate settings
-	g_EmuShared->SetEmulateSettings(&g_Settings->m_emulate);
-
-	// register Video settings
-	g_EmuShared->SetVideoSettings(&g_Settings->m_video);
-
-	// register Audio settings
-	g_EmuShared->SetAudioSettings(&g_Settings->m_audio);
-
-	// register Controller settings
-	g_EmuShared->SetControllerDInputSettings(&g_Settings->m_controller_dinput);
-	g_EmuShared->SetControllerPortSettings(&g_Settings->m_controller_port);
-
-	// register Hacks settings
-	g_EmuShared->SetHackSettings(&g_Settings->m_hacks);
+	// register all emulator settings to kernel process
+	g_Settings->Sync();
 
 
 	// register storage location with emulator process

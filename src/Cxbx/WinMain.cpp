@@ -117,7 +117,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 		if (g_Settings != nullptr) {
 
-			// TODO: Load settings to EmuShared data.
+			g_Settings->Sync();
 
 			// We don't need to keep Settings open plus allow emulator to use unused memory.
 			delete g_Settings;

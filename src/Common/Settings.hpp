@@ -26,7 +26,8 @@
 // *  If not, write to the Free Software Foundation, Inc.,
 // *  59 Temple Place - Suite 330, Bostom, MA 02111-1307, USA.
 // *
-// *  (c) 2018 RadWolfie
+// *  (c) 2002-2003 Aaron Robinson <caustik@caustik.com>
+// *  (c) 2017-2018 RadWolfie
 // *
 // *  All rights reserved
 // *
@@ -115,6 +116,8 @@ public:
 	bool LoadUserConfig();
 	bool LoadFile(std::string file_path);
 	bool Save(std::string file_path = "");
+	void Sync();
+	std::string GetDataLocation();
 
 	// GUI settings
 	struct s_gui {
