@@ -249,13 +249,7 @@ class EmuShared : public Mutex
 		// ******************************************************************
 		// * Shared configuration
 		// ******************************************************************
-		Settings::s_controller_dinput m_controller_dinput;
-		Settings::s_controller_port m_controller_port;
-		Settings::s_emulate m_emulate;
-		Settings::s_video m_video;
-		Settings::s_audio m_audio;
-		Settings::s_hack m_hacks;
-		char         m_XbePath[MAX_PATH];
+		char         m_XbePath[MAX_PATH]; // TODO: Do we really need this? We can use command line since it contain xbe file.
 		int          m_BootFlags;
 		int          m_Reserved1;
 		float        m_MSpF;
@@ -270,6 +264,16 @@ class EmuShared : public Mutex
 		bool         m_bReserved3;
 		bool         m_bReserved4;
 		unsigned int m_dwKrnlProcID; // Only used for kernel mode level.
+		int          m_Reserved99[32]; // Reserve space
+
+		// Settings class in memory should not be tampered by third-party.
+		// Third-party program should only be allow to edit settings.ini file.
+		Settings::s_controller_dinput m_controller_dinput;
+		Settings::s_controller_port m_controller_port;
+		Settings::s_emulate m_emulate;
+		Settings::s_video m_video;
+		Settings::s_audio m_audio;
+		Settings::s_hack m_hacks;
 };
 
 // ******************************************************************

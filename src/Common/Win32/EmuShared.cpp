@@ -73,6 +73,7 @@ void EmuShared::Init()
     // * Create the shared memory "file"
     // ******************************************************************
     {
+        std::string emuSharedStr = "Local\\EmuShared-s" + std::to_string(settings_version);
         hMapObject = CreateFileMapping
         (
             INVALID_HANDLE_VALUE,   // Paging file
@@ -80,7 +81,7 @@ void EmuShared::Init()
             PAGE_READWRITE,         // read/write access
             0,                      // size: high 32 bits
             sizeof(EmuShared),      // size: low 32 bits
-            "Local\\EmuShared"      // name of map object
+            emuSharedStr.c_str()    // name of map object
         );
 
         if(hMapObject == NULL)
@@ -110,8 +111,9 @@ void EmuShared::Init()
     // ******************************************************************
     // * Executed only on first initialization of shared memory
     // ******************************************************************
-    if(bRequireConstruction)
+    if (bRequireConstruction) {
         g_EmuShared->EmuShared::EmuShared();
+    }
 
     g_EmuShared->m_RefCount++;
 }

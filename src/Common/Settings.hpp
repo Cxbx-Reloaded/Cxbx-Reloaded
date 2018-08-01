@@ -197,5 +197,6 @@ private:
 
 // Settings manager
 extern Settings* g_Settings;
+extern const uint settings_version;
 
 #endif

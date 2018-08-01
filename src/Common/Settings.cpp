@@ -49,6 +49,9 @@ static_assert(false, "Please implement support for cross-platform's user profile
 #include <QStandardPaths> // for cross-platform's user profile support
 #endif
 
+// NOTE: Update settings_version when add/edit/delete setting's structure.
+const uint settings_version = 2;
+
 Settings* g_Settings = nullptr;
 
 #define szSettings_setup_error "ERROR: Either setup have a problem or do not have write permission to directory."
