@@ -2992,17 +2992,11 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SelectVertexShader)
 
     if(VshHandleIsVertexShader(Handle))
     {
-		#ifndef CXBX_USE_D3D9
-
         CxbxVertexShader *pVertexShader = MapXboxVertexShaderHandleToCxbxVertexShader(Handle);
-		hret = g_PD3DDevice->SetVertexDeclaration(pVertexShader->pHostDeclaration);
+		hRet = g_pD3DDevice->SetVertexDeclaration(pVertexShader->pHostDeclaration);
 		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetVertexDeclaration(VshHandleIsVertexShader)");
-		hRet = g_pD3DDevice->SetVertexShader(pVertexShader->Handle);
+		hRet = g_pD3DDevice->SetVertexShader((XTL::IDirect3DVertexShader9*)pVertexShader->Handle);
 		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetVertexShader(VshHandleIsVertexShader)");
-		#else
-			hRet = D3D_OK;
-			EmuWarning("SetVertexShader (non-FVF) unimplemented for D3D9");
-		#endif
     }
     else if(Handle == NULL)
     {
@@ -3025,8 +3019,8 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SelectVertexShader)
 			hRet = g_pD3DDevice->SetVertexShader(((CxbxVertexShader *)((X_D3DVertexShader *)g_VertexShaderSlots[Address])->Handle)->Handle);
 			DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetVertexShader(pVertexShader)");
 #else
-			hRet = D3D_OK;
-			EmuWarning("SetVertexShader (non-FVF) unimplemented for D3D9");
+			hRet = g_pD3DDevice->SetVertexDeclaration((XTL::IDirect3DVertexDeclaration9*)((CxbxVertexShader *)((X_D3DVertexShader *)g_VertexShaderSlots[Address])->Handle)->pDeclaration);
+			hRet = g_pD3DDevice->SetVertexShader((XTL::IDirect3DVertexShader9*)((CxbxVertexShader *)((X_D3DVertexShader *)g_VertexShaderSlots[Address])->Handle)->Handle);
 #endif
 		}
         else
@@ -7127,15 +7121,10 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexShader)
 	hRet = g_pD3DDevice->SetVertexShader(HostVertexShaderHandle);
 #else
 	if (VshHandleIsVertexShader(Handle)) {
-#ifndef CXBX_USE_D3D9
-
-		CxbxVertexShader *pVertexShader = MapXboxVertexShaderHandleToCxbxVertexShader(Handle);
-		hRet = g_pD3DDevice->SetVertexShader(pVertexShader->Handle);
+ 		CxbxVertexShader *pVertexShader = MapXboxVertexShaderHandleToCxbxVertexShader(Handle);
+		hRet = g_pD3DDevice->SetVertexDeclaration(pVertexShader->pHostDeclaration);
+		hRet = g_pD3DDevice->SetVertexShader((XTL::IDirect3DVertexShader9*)pVertexShader->Handle);
 		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetVertexShader(VshHandleIsVertexShader)");
-#else
-		hRet = D3D_OK;
-		EmuWarning("SetVertexShader (non-FVF) unimplemented for D3D9");
-#endif
 	} else {
 		hRet = g_pD3DDevice->SetVertexShader(nullptr);
 		hRet = g_pD3DDevice->SetFVF(Handle);
