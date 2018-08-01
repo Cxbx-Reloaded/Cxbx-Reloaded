@@ -53,8 +53,10 @@
 
 #include <assert.h>
 #include "devices\Xbox.h" // For g_PCIBus
+#include <atomic>
 
 extern uint32_t GetAPUTime();
+extern std::atomic_bool g_bEnableAllInterrupts;
 
 //
 // Read & write handlers handlers for I/O
@@ -1012,6 +1014,16 @@ bool EmuX86_Opcode_TEST(LPEXCEPTION_POINTERS e, _DInst& info)
 	return true;
 }
 
+void EmuX86_Opcode_CLI()
+{
+	g_bEnableAllInterrupts = false;
+}
+
+void EmuX86_Opcode_STI()
+{
+	g_bEnableAllInterrupts = true;
+}
+
 bool EmuX86_DecodeOpcode(const uint8_t *Eip, _DInst &info)
 {
 	unsigned int decodedInstructionsCount = 0;
@@ -1111,6 +1123,16 @@ bool EmuX86_DecodeException(LPEXCEPTION_POINTERS e)
 		// Chase: Hollywood Stunt Driver hits this
 		EmuWarning("WRMSR instruction ignored");
 		break;
+	case I_CLI: {
+		// Disable all interrupts
+		EmuX86_Opcode_CLI();
+		break;
+	}
+	case I_STI: {
+		// Enable all interrupts
+		EmuX86_Opcode_STI();
+		break;
+	}
 	default:
 		EmuWarning("Unhandled instruction : %u", info.opcode);
 		e->ContextRecord->Eip += info.size;

@@ -9,7 +9,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   src->devices->video->EmuNV2A_PVPE.cpp
+// *   Cxbx->CxbxKrnl->Timer.h
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -28,44 +28,37 @@
 // *  If not, write to the Free Software Foundation, Inc.,
 // *  59 Temple Place - Suite 330, Bostom, MA 02111-1307, USA.
 // *
-// *  nv2a.cpp is heavily based on code from XQEMU
-// *  Copyright(c) 2012 espes
-// *  Copyright(c) 2015 Jannik Vogel
-// *  https://github.com/espes/xqemu/blob/xbox/hw/xbox/nv2a.c
-// *  (c) 2017-2018 Luke Usher <luke.usher@outlook.com>
-// *  (c) 2018 Patrick van Logchem <pvanlogchem@gmail.com>
+// *  (c) 2018      ergo720
 // *
 // *  All rights reserved
 // *
 // ******************************************************************
 
-// TODO: Remove disabled warning once case are add to PVPE switch.
-#pragma warning(push)
-#pragma warning(disable: 4065)
+#ifndef TIMER_H
+#define TIMER_H
 
-DEVICE_READ32(PVPE)
+#include <atomic>
+
+/* typedef of the timer object and the callback function */
+typedef void(*pTimerCB)(void*);
+typedef struct _TimerObject
 {
-	DEVICE_READ32_SWITCH() {
-	default:
-		DEBUG_READ32_UNHANDLED(PVPE); // TODO : DEVICE_READ32_REG(pvpe);
-		break;
-	}
-
-	DEVICE_READ32_END(PVPE);
+	int Type;                            // timer type (virtual or real)
+	std::atomic_uint64_t ExpireTime_MS;  // when the timer expires (ms)
+	std::atomic_bool Exit;               // indicates that the timer should be destroyed
+	pTimerCB Callback;                   // function to call when the timer expires
+	void* Opaque;                        // opaque argument to pass to the callback
+	unsigned int SlowdownFactor;         // how much the time is slowed down (virtual clocks only)
 }
-#pragma warning(pop)
+TimerObject;
 
-// TODO: Remove disabled warning once case are add to PVPE switch.
-#pragma warning(push)
-#pragma warning(disable: 4065)
-DEVICE_WRITE32(PVPE)
-{
-	switch (addr) {
-	default:
-		DEBUG_WRITE32_UNHANDLED(PVPE); // TODO : DEVICE_WRITE32_REG(pvpe);
-		break;
-	}
 
-	DEVICE_WRITE32_END(PVPE);
-}
-#pragma warning(pop)
+/* Timer exported functions */
+TimerObject* Timer_Create(pTimerCB Callback, void* Arg, unsigned int Factor);
+void Timer_Start(TimerObject* Timer, uint64_t Expire_MS);
+void Timer_Exit(TimerObject* Timer);
+void Timer_ChangeExpireTime(TimerObject* Timer, uint64_t Expire_ms);
+inline uint64_t GetTime_NS(TimerObject* Timer);
+void Timer_Init();
+
+#endif

@@ -9,7 +9,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   src->devices->video->EmuNV2A_PVPE.cpp
+// *   Cxbx->Common->CxbxCommon.h
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -28,44 +28,47 @@
 // *  If not, write to the Free Software Foundation, Inc.,
 // *  59 Temple Place - Suite 330, Bostom, MA 02111-1307, USA.
 // *
-// *  nv2a.cpp is heavily based on code from XQEMU
-// *  Copyright(c) 2012 espes
-// *  Copyright(c) 2015 Jannik Vogel
-// *  https://github.com/espes/xqemu/blob/xbox/hw/xbox/nv2a.c
-// *  (c) 2017-2018 Luke Usher <luke.usher@outlook.com>
-// *  (c) 2018 Patrick van Logchem <pvanlogchem@gmail.com>
+// *  (c) 2018      ergo720
 // *
 // *  All rights reserved
 // *
 // ******************************************************************
 
-// TODO: Remove disabled warning once case are add to PVPE switch.
-#pragma warning(push)
-#pragma warning(disable: 4065)
+#ifndef CXBX_COMMON_H
+#define CXBX_COMMON_H
 
-DEVICE_READ32(PVPE)
+#include "Cxbx.h"
+#include <stdint.h>
+#include <assert.h>
+
+/* This is a linux struct for vectored I/O. See readv() and writev() */
+struct IoVec
 {
-	DEVICE_READ32_SWITCH() {
-	default:
-		DEBUG_READ32_UNHANDLED(PVPE); // TODO : DEVICE_READ32_REG(pvpe);
-		break;
-	}
+	void* Iov_Base;  // Starting address
+	size_t Iov_Len;  // Number of bytes to transfer
+};
 
-	DEVICE_READ32_END(PVPE);
-}
-#pragma warning(pop)
-
-// TODO: Remove disabled warning once case are add to PVPE switch.
-#pragma warning(push)
-#pragma warning(disable: 4065)
-DEVICE_WRITE32(PVPE)
+struct IOVector
 {
-	switch (addr) {
-	default:
-		DEBUG_WRITE32_UNHANDLED(PVPE); // TODO : DEVICE_WRITE32_REG(pvpe);
-		break;
-	}
+	IoVec* IoVecStruct;
+	int IoVecNumber;      // number of I/O buffers supplied
+	int AllocNumber;      // number of IoVec structs currently allocated
+	size_t Size;          // total size of all I/O buffers supplied
+};
 
-	DEVICE_WRITE32_END(PVPE);
-}
-#pragma warning(pop)
+uint64_t Muldiv64(uint64_t a, uint32_t b, uint32_t c);
+
+void IoVecReset(IOVector* qiov);
+void IoVecAdd(IOVector* qiov, void* base, size_t len);
+size_t IoVecTobuffer(const IoVec* iov, const unsigned int iov_cnt, size_t offset, void *buf, size_t bytes);
+size_t IoVecFromBuffer(const IoVec* iov, unsigned int iov_cnt, size_t offset, void* buf, size_t bytes);
+
+void WriteDwords(xbaddr Paddr, uint32_t* Buffer, int Number);
+void GetDwords(xbaddr Paddr, uint32_t* Buffer, int Number);
+void GetWords(xbaddr Paddr, uint16_t* Buffer, int Number);
+void WriteWords(xbaddr Paddr, uint16_t* Buffer, int Number);
+
+#define GET_WORD_LOW(value) (uint8_t)((value) & 0xFF)
+#define GET_WORD_HIGH(value) (uint8_t)(((value) >> 8) & 0xFF)
+
+#endif

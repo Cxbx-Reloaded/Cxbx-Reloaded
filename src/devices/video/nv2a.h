@@ -55,11 +55,8 @@
 #include "qemu-thread.h" // For qemu_mutex, etc
 #include "nv2a_shaders.h" // For ShaderBinding
 
-#define NV2A_ADDR  0xFD000000
-#define NV2A_SIZE             0x01000000
-
 #define NV_PMC_SIZE                 0x001000
-#define _NV_PFIFO_SIZE               0x002000 // Underscore prefix to prevent clash with NV_PFIFO_SIZE
+#define _NV_PFIFO_SIZE              0x002000 // Underscore prefix to prevent clash with NV_PFIFO_SIZE
 #define NV_PVIDEO_SIZE              0x001000
 #define NV_PTIMER_SIZE              0x001000
 #define NV_PFB_SIZE                 0x001000

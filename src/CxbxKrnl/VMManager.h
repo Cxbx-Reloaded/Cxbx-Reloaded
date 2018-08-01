@@ -221,7 +221,7 @@ class VMManager : public PhysicalMemory
 		// merges the specified vma with adjacent ones if possible
 		VMAIter MergeAdjacentVMA(VMAIter vma_handle, MemoryRegionType Type);
 		// checks if the specified range is completely inside a vma
-		VMAIter CheckConflictingVMA(VAddr addr, size_t Size);
+		VMAIter CheckConflictingVMA(VAddr addr, size_t Size, bool* bOverflow);
 		// changes the access permissions of a block of memory
 		void UpdateMemoryPermissions(VAddr addr, size_t Size, DWORD Perms);
 		// restores persistent memory

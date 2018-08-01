@@ -244,6 +244,7 @@
 #define ID_EMULATION_LLE_APU            40039
 #define ID_EMULATION_LLE_GPU            40040
 #define ID_EMULATION_LLE_JIT            40041
+//#define ID_EMULATION_LLE_USB            40042 // Reenable this when LLE USB actually works
 #define ID_SETTINGS_CONFIG_CONTROLLER   40046
 #define ID_SETTINGS_CONFIG_VIDEO        40047
 #define ID_SETTINGS_CONFIG_AUDIO        40048

@@ -281,6 +281,21 @@
     <ClCompile Include="..\..\src\CxbxKrnl\PoolManager.cpp">
       <Filter>Emulator</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\CxbxKrnl\Timer.cpp">
+      <Filter>Emulator</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\devices\usb\OHCI.cpp">
+      <Filter>Hardware\Usb</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\devices\usb\USBDevice.cpp">
+      <Filter>Hardware\Usb</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\devices\usb\Hub.cpp">
+      <Filter>Hardware\Usb</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\devices\usb\XidGamepad.cpp">
+      <Filter>Hardware\Usb</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\src\Cxbx\DlgXboxControllerPortMapping.cpp">
       <Filter>GUI</Filter>
     </ClCompile>
@@ -292,6 +307,15 @@
     </ClCompile>
     <ClCompile Include="..\..\src\Common\Win32\InlineFunc.cpp">
       <Filter>Cross Platform\Win32</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\Common\Input\InputConfig.cpp">
+      <Filter>Shared\Input</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\Common\Input\SDL2_Device.cpp">
+      <Filter>Shared\Input</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\Common\CxbxCommon.cpp">
+      <Filter>Cross Platform</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -327,9 +351,6 @@
     </ClInclude>
     <ClInclude Include="..\..\src\CxbxKrnl\EmuKrnlLogging.h">
       <Filter>Kernel</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\Cxbx.h">
-      <Filter>Shared</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\CxbxKrnl\Emu.h">
       <Filter>Shared</Filter>
@@ -565,11 +586,41 @@
     <ClInclude Include="..\..\src\CxbxKrnl\PoolManager.h">
       <Filter>Emulator</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\CxbxKrnl\Timer.h">
+      <Filter>Emulator</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\devices\usb\OHCI.h">
+      <Filter>Hardware\Usb</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\devices\usb\USBDevice.h">
+      <Filter>Hardware\Usb</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\devices\usb\Hub.h">
+      <Filter>Hardware\Usb</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\devices\usb\UsbCommon.h">
+      <Filter>Hardware\Usb</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\devices\usb\XidGamepad.h">
+      <Filter>Hardware\Usb</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\src\Cxbx\DlgXboxControllerPortMapping.h">
       <Filter>GUI</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\Common\Win32\XBPortMapping.h">
       <Filter>Emulator</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Common\Input\InputConfig.h">
+      <Filter>Shared\Input</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Common\Input\SDL2_Device.h">
+      <Filter>Shared\Input</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Cxbx.h">
+      <Filter>Shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Common\CxbxCommon.h">
+      <Filter>Cross Platform</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -680,6 +731,9 @@
     <Filter Include="Hardware\X86">
       <UniqueIdentifier>{9efb9cfc-2731-4edb-8dd0-36950b0263df}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Hardware\Usb">
+      <UniqueIdentifier>{379f4b26-2444-4fda-90eb-d93e7d5938a2}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Code Format">
       <UniqueIdentifier>{0e125cbe-fb2e-41ef-a381-6effd9fabd35}</UniqueIdentifier>
     </Filter>
@@ -697,6 +751,9 @@
     </Filter>
     <Filter Include="Cross Platform\Linux">
       <UniqueIdentifier>{3d3739b8-aeee-4bf1-ac1b-8623e7288dda}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shared\Input">
+      <UniqueIdentifier>{76faeca9-d66f-43fb-9efa-ffb0668f8843}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

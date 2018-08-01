@@ -70,6 +70,8 @@ namespace xboxkrnl
 #include "devices\Xbox.h" // For InitXboxHardware()
 #include "devices\LED.h" // For LED::Sequence
 #include "EmuSha.h" // For the SHA1 functions
+#include "Timer.h" // For Timer_Init
+#include "..\Common\Input\InputConfig.h" // For the InputDeviceManager
 
 /*! thread local storage */
 Xbe::TLS *CxbxKrnl_TLS = NULL;
@@ -105,6 +107,9 @@ bool g_bIsDebug = false;
 bool g_bIsRetail = false;
 DWORD_PTR g_CPUXbox = 0;
 DWORD_PTR g_CPUOthers = 0;
+
+// Indicates to disable/enable all interrupts when cli and sti instructions are executed
+std::atomic_bool g_bEnableAllInterrupts = true;
 
 // Set by the VMManager during initialization. Exported because it's needed in other parts of the emu
 size_t g_SystemMaxMemory = 0;
@@ -566,6 +571,7 @@ void PrintCurrentConfigurationLog()
 		printf("---------------------------- LLE CONFIG ----------------------------\n");
 		printf("LLE for APU is %s\n", bLLE_APU ? "enabled" : "disabled");
 		printf("LLE for GPU is %s\n", bLLE_GPU ? "enabled" : "disabled");
+		printf("LLE for USB is %s\n", bLLE_USB ? "enabled" : "disabled");
 		printf("LLE for JIT is %s\n", bLLE_JIT ? "enabled" : "disabled");
 	}
 
@@ -666,7 +672,9 @@ static unsigned int WINAPI CxbxKrnlInterruptThread(PVOID param)
 #endif
 
 	while (true) {
-		TriggerPendingConnectedInterrupts();
+		if (g_bEnableAllInterrupts) {
+			TriggerPendingConnectedInterrupts();
+		}
 		Sleep(1);
 	}
 
@@ -1243,7 +1251,9 @@ __declspec(noreturn) void CxbxKrnlInit
 
 	// for unicode conversions
 	setlocale(LC_ALL, "English");
+	// Initialize time-related variables for the kernel and the timers
 	CxbxInitPerformanceCounters();
+	Timer_Init();
 #ifdef _DEBUG
 //	CxbxPopupMessage("Attach a Debugger");
 //  Debug child processes using https://marketplace.visualstudio.com/items?itemName=GreggMiskelly.MicrosoftChildProcessDebuggingPowerTool
@@ -1297,6 +1307,7 @@ __declspec(noreturn) void CxbxKrnlInit
 		g_EmuShared->GetFlagsLLE(&CxbxLLE_Flags);
 		bLLE_APU = (CxbxLLE_Flags & LLE_APU) > 0;
 		bLLE_GPU = (CxbxLLE_Flags & LLE_GPU) > 0;
+		//bLLE_USB = (CxbxLLE_Flags & LLE_USB) > 0; // Reenable this when LLE USB actually works
 		bLLE_JIT = (CxbxLLE_Flags & LLE_JIT) > 0;
 	}
 
@@ -1453,9 +1464,24 @@ __declspec(noreturn) void CxbxKrnlInit
 
 	EmuHLEIntercept(pXbeHeader);
 
-	SetupXboxDeviceTypes();
+	if (!bLLE_USB) {
+		SetupXboxDeviceTypes();
+	}
 
 	InitXboxHardware(HardwareModel::Revision1_5); // TODO : Make configurable
+
+	if (bLLE_USB) {
+#if 0 // Reenable this when LLE USB actually works
+		int ret;
+		g_InputDeviceManager = new InputDeviceManager;
+		ret = g_InputDeviceManager->EnumSdl2Devices();
+		g_InputDeviceManager->StartInputThread();
+		if (ret > 0) {
+			// Temporary: the device type and bindings should be read from emushared, for now always assume one xbox controller
+			g_InputDeviceManager->ConnectDeviceToXbox(1, MS_CONTROLLER_DUKE);
+		}
+#endif
+	}
 
 	// Now the hardware devices exist, couple the EEPROM buffer to it's device
 	g_EEPROM->SetEEPROM((uint8_t*)EEPROM);

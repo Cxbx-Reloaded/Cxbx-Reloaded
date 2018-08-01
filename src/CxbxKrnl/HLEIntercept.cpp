@@ -67,6 +67,7 @@ uint32 g_BuildVersion = 0;
 
 bool bLLE_APU = false; // Set this to true for experimental APU (sound) LLE
 bool bLLE_GPU = false; // Set this to true for experimental GPU (graphics) LLE
+bool bLLE_USB = false; // Set this to true for experimental USB (input) LLE
 bool bLLE_JIT = false; // Set this to true for experimental JIT
 
 void* GetXboxFunctionPointer(std::string functionName)
@@ -283,6 +284,11 @@ void CDECL EmuRegisterSymbol(const char* library_str,
         // Do nothing if emulating LLE APU
     } else if (bLLE_GPU && ((library_flag & XbSymbolLib_XGRAPHC) || (library_flag & XbSymbolLib_D3D8) || (library_flag & XbSymbolLib_D3D8LTCG) > 0)) {
         // Do nothing if emulating LLE GPU
+	} else if (bLLE_USB && ((std::strcmp(symbol_str, "XInitDevices") == 0) || (std::strcmp(symbol_str, "XGetDevices") == 0) || (std::strcmp(symbol_str, "XGetDeviceChanges") == 0) ||
+		(std::strcmp(symbol_str, "XInputOpen") == 0) || (std::strcmp(symbol_str, "XInputClose") == 0) || (std::strcmp(symbol_str, "XInputPoll") == 0) ||
+		(std::strcmp(symbol_str, "XInputGetCapabilities") == 0) || (std::strcmp(symbol_str, "XInputGetState") == 0) || (std::strcmp(symbol_str, "XInputSetState") == 0) ||
+		(std::strcmp(symbol_str, "XGetDeviceEnumerationStatus") == 0) || (std::strcmp(symbol_str, "XInputGetDeviceDescription") == 0) || (std::strcmp(symbol_str, "XID_fCloseDevice") == 0))) {
+		// Do nothing for the xinput functions if emulating LLE USB
     } else {
         // Or else check if patch exist then patch it.
 
@@ -344,6 +350,14 @@ void EmuUpdateLLEStatus(uint32_t XbLibScan)
         FlagsLLE ^= LLE_APU;
         EmuOutputMessage(XB_OUTPUT_MESSAGE_INFO, "Fallback to LLE APU.");
     }
+#if 0 // Reenable this when LLE USB actually works
+	if ((FlagsLLE & LLE_USB) == false
+		&& (XbLibScan & XbSymbolLib_XAPILIB) == 0) {
+		bLLE_USB = true;
+		FlagsLLE ^= LLE_USB;
+		EmuOutputMessage(XB_OUTPUT_MESSAGE_INFO, "Fallback to LLE USB.");
+	}
+#endif
     g_EmuShared->SetFlagsLLE(&FlagsLLE);
 }
 

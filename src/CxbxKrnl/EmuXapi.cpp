@@ -291,7 +291,6 @@ VOID WINAPI XTL::EMUPATCH(XInitDevices)
 */
 
 	InitXboxControllerHostBridge();
-
 }
 
 bool TitleIsJSRF()
@@ -676,6 +675,7 @@ DWORD WINAPI XTL::EMUPATCH(XInputPoll)
 	FUNC_EXPORTS
 
 	LOG_FUNC_ONE_ARG(hDevice);
+
     //OLD_XINPUT
 /*    X_POLLING_PARAMETERS_HANDLE *pph = (X_POLLING_PARAMETERS_HANDLE*)hDevice;
 
@@ -1019,7 +1019,7 @@ void EmuSBCGetState(XTL::PX_SBC_GAMEPAD pSBCGamepad, XTL::PX_XINPUT_GAMEPAD pXIG
     XboxSBCGamepad = *pSBCGamepad;
 }
 // ******************************************************************
-// * patch: InputGetState
+// * patch: XInputGetState
 // ******************************************************************
 DWORD WINAPI XTL::EMUPATCH(XInputGetState)
 (
@@ -1110,7 +1110,7 @@ DWORD WINAPI XTL::EMUPATCH(XInputGetState)
 }
 
 // ******************************************************************
-// * patch: InputSetState
+// * patch: XInputSetState
 // ******************************************************************
 DWORD WINAPI XTL::EMUPATCH(XInputSetState)
 (
