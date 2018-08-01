@@ -116,7 +116,8 @@ public:
 	bool LoadUserConfig();
 	bool LoadFile(std::string file_path);
 	bool Save(std::string file_path = "");
-	void Sync();
+	void SyncToEmulator();
+	void Verify();
 	std::string GetDataLocation();
 
 	// GUI settings

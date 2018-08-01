@@ -215,8 +215,7 @@ bool Settings::LoadUserConfig()
 	fileSearch.append(szSettings_settings_file);
 
 	// Check and see if file exist from portable, current, directory.
-	FILE* fileExist = fopen(fileSearch.c_str(), "r");
-	if (fileExist == nullptr) {
+	if (std::filesystem::exists(fileSearch) == false) {
 
 		fileSearch = GenerateUserProfileDirectoryStr();
 		if (fileSearch.size() == 0) {
@@ -225,12 +224,10 @@ bool Settings::LoadUserConfig()
 		fileSearch.append(szSettings_settings_file);
 
 		// Check if user profile directory settings file exist
-		fileExist = fopen(fileSearch.c_str(), "r");
-		if (fileExist == nullptr) {
+		if (std::filesystem::exists(fileSearch) == false) {
 			return false;
 		}
 	}
-	fclose(fileExist);
 
 	return LoadFile(fileSearch);
 }
@@ -540,7 +537,7 @@ bool Settings::Save(std::string file_path)
 }
 
 // Universal update to EmuShared from both standalone kernel, and GUI process.
-void Settings::Sync()
+void Settings::SyncToEmulator()
 {
 	// register Emulate settings
 	g_EmuShared->SetEmulateSettings(&m_emulate);
@@ -562,6 +559,60 @@ void Settings::Sync()
 	std::string data_location = GetDataLocation();
 	g_EmuShared->SetStorageLocation(data_location.c_str());
 }
+
+void Settings::Verify()
+{
+	// Prevent using an incorrect path from the registry if the debug folders have been moved
+	char szDebugPath[MAX_PATH];
+	char szDebugName[MAX_PATH];
+
+	if (m_gui.CxbxDebugMode == DM_FILE) {
+
+		if(m_gui.szCxbxDebugFile.size() == 0) {
+			m_gui.CxbxDebugMode = DM_NONE;
+		}
+		else {
+			strcpy(szDebugName, strrchr(m_gui.szCxbxDebugFile.c_str(), '\\'));
+
+			if(m_gui.szCxbxDebugFile.size() < strlen(szDebugName)) {
+				m_gui.szCxbxDebugFile = "";
+				m_gui.CxbxDebugMode = DM_NONE;
+			}
+			else {
+				strncpy(szDebugPath, m_gui.szCxbxDebugFile.c_str(), m_gui.szCxbxDebugFile.size() - strlen(szDebugName));
+
+				if(std::filesystem::exists(szDebugPath) == false) {
+					m_gui.szCxbxDebugFile = "";
+					m_gui.CxbxDebugMode = DM_NONE;
+				}
+			}
+		}
+	}
+
+	if (m_emulate.KrnlDebugMode == DM_FILE) {
+
+		if(strlen(m_emulate.szKrnlDebug) == 0) {
+			m_emulate.KrnlDebugMode = DM_NONE;
+		}
+		else {
+			strcpy(szDebugName, strrchr(m_emulate.szKrnlDebug, '\\'));
+
+			if(strlen(m_emulate.szKrnlDebug) < strlen(szDebugName)) {
+				memset(m_emulate.szKrnlDebug, '\0', MAX_PATH);
+				m_emulate.KrnlDebugMode = DM_NONE;
+			}
+			else {
+				strncpy(szDebugPath, m_emulate.szKrnlDebug, strlen(m_emulate.szKrnlDebug) - strlen(szDebugName));
+
+				if(std::filesystem::exists(szDebugPath) == false) {
+					memset(m_emulate.szKrnlDebug, '\0', MAX_PATH);
+					m_emulate.KrnlDebugMode = DM_NONE;
+				}
+			}
+		}
+	}
+}
+
 std::string Settings::GetDataLocation()
 {
 	std::string data_location;

@@ -179,10 +179,8 @@ WndMain::WndMain(HINSTANCE x_hInstance) :
 		m_wndname   = "Cxbx-Reloaded " _CXBX_VERSION;
 	}
 
-	// load configuration from registry
+	// load configuration from settings file
 	{
-		char szDebugPath[MAX_PATH];
-		char szDebugName[MAX_PATH];
 
 		switch (g_Settings->m_gui.DataStorageToggle) {
 			default:
@@ -207,52 +205,7 @@ WndMain::WndMain(HINSTANCE x_hInstance) :
 		// NOTE: This is a requirement for pre-verification from GUI. Used in CxbxInitFilePaths function.
 		g_EmuShared->SetStorageLocation(m_StorageLocation);
 
-		// Prevent using an incorrect path from the registry if the debug folders have been moved
-		if (g_Settings->m_gui.CxbxDebugMode == DM_FILE) {
-
-			if(g_Settings->m_gui.szCxbxDebugFile.size() == 0) {
-				g_Settings->m_gui.CxbxDebugMode = DM_NONE;
-			}
-			else {
-				strcpy(szDebugName, strrchr(g_Settings->m_gui.szCxbxDebugFile.c_str(), '\\'));
-
-				if(g_Settings->m_gui.szCxbxDebugFile.size() < strlen(szDebugName)) {
-					g_Settings->m_gui.szCxbxDebugFile = "";
-					g_Settings->m_gui.CxbxDebugMode = DM_NONE;
-				}
-				else {
-					strncpy(szDebugPath, g_Settings->m_gui.szCxbxDebugFile.c_str(), g_Settings->m_gui.szCxbxDebugFile.size() - strlen(szDebugName));
-
-					if(PathFileExists((LPCSTR)szDebugPath) == FALSE) {
-						g_Settings->m_gui.szCxbxDebugFile = "";
-						g_Settings->m_gui.CxbxDebugMode = DM_NONE;
-					}
-				}
-			}
-		}
-
-		if (g_Settings->m_emulate.KrnlDebugMode == DM_FILE) {
-
-			if(strlen(g_Settings->m_emulate.szKrnlDebug) == 0) {
-				g_Settings->m_emulate.KrnlDebugMode = DM_NONE;
-			}
-			else {
-				strcpy(szDebugName, strrchr(g_Settings->m_emulate.szKrnlDebug, '\\'));
-
-				if(strlen(g_Settings->m_emulate.szKrnlDebug) < strlen(szDebugName)) {
-					memset(g_Settings->m_emulate.szKrnlDebug, '\0', MAX_PATH);
-					g_Settings->m_emulate.KrnlDebugMode = DM_NONE;
-				}
-				else {
-					strncpy(szDebugPath, g_Settings->m_emulate.szKrnlDebug, strlen(g_Settings->m_emulate.szKrnlDebug) - strlen(szDebugName));
-
-					if(PathFileExists((LPCSTR)szDebugPath) == FALSE) {
-						memset(g_Settings->m_emulate.szKrnlDebug, '\0', MAX_PATH);
-						g_Settings->m_emulate.KrnlDebugMode = DM_NONE;
-					}
-				}
-			}
-		}
+		g_Settings->Verify();
 
 		unsigned int i = 0;
 		do {
@@ -2151,7 +2104,7 @@ void WndMain::StartEmulation(HWND hwndParent, DebuggerState LocalDebuggerState /
 	g_EmuShared->SetXbePath(m_Xbe->m_szPath);
 
 	// register all emulator settings to kernel process
-	g_Settings->Sync();
+	g_Settings->SyncToEmulator();
 
 
 	// register storage location with emulator process

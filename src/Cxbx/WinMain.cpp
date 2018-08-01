@@ -117,7 +117,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 		if (g_Settings != nullptr) {
 
-			g_Settings->Sync();
+			g_Settings->Verify();
+			g_Settings->SyncToEmulator();
 
 			// We don't need to keep Settings open plus allow emulator to use unused memory.
 			delete g_Settings;
