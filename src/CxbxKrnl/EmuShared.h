@@ -87,25 +87,25 @@ class EmuShared : public Mutex
 		// * Check if shared memory is used on launch
 		// ******************************************************************
 		void GetIsFirstLaunch(bool *isFirstLaunch) { Lock(); *isFirstLaunch = m_bFirstLaunch; Unlock(); }
-		void SetIsFirstLaunch(bool isFirstLaunch) { Lock(); m_bFirstLaunch = isFirstLaunch; Unlock(); }
+		void SetIsFirstLaunch(const bool isFirstLaunch) { Lock(); m_bFirstLaunch = isFirstLaunch; Unlock(); }
 
 		// ******************************************************************
 		// * Check if parent process is emulating title
 		// ******************************************************************
 		void GetIsEmulating(bool *isEmulating) { Lock(); *isEmulating = m_bEmulating; Unlock(); }
-		void SetIsEmulating(bool isEmulating) { Lock(); m_bEmulating = isEmulating; Unlock(); }
+		void SetIsEmulating(const bool isEmulating) { Lock(); m_bEmulating = isEmulating; Unlock(); }
 
 		// ******************************************************************
 		// * Each child process need to wait until parent process is ready
 		// ******************************************************************
 		void GetIsReady(bool *isReady) { Lock(); *isReady = m_bReady; Unlock(); }
-		void SetIsReady(bool isReady) { Lock(); m_bReady = isReady; Unlock(); }
+		void SetIsReady(const bool isReady) { Lock(); m_bReady = isReady; Unlock(); }
 
 		// ******************************************************************
 		// * Check if previous kernel mode process is running.
 		// ******************************************************************
 		void GetKrnlProcID(unsigned int *krnlProcID) { Lock(); *krnlProcID = m_dwKrnlProcID; Unlock(); }
-		void SetKrnlProcID(unsigned int krnlProcID) { Lock(); m_dwKrnlProcID = krnlProcID; Unlock(); }
+		void SetKrnlProcID(const unsigned int krnlProcID) { Lock(); m_dwKrnlProcID = krnlProcID; Unlock(); }
 
 		// ******************************************************************
 		// * Xbox Emulate Accessors
@@ -149,7 +149,7 @@ class EmuShared : public Mutex
 		// * Boot flag Accessors
 		// ******************************************************************
 		void GetBootFlags(int *value) { Lock(); *value = m_BootFlags; Unlock(); }
-		void SetBootFlags(int *value) { Lock(); m_BootFlags = *value; Unlock(); }
+		void SetBootFlags(const int *value) { Lock(); m_BootFlags = *value; Unlock(); }
 
 		// ******************************************************************
 		// * Hack Flag Accessors
@@ -158,35 +158,35 @@ class EmuShared : public Mutex
 		void SetHackSettings(Settings::s_hack *hacks) { Lock(); m_hacks = *hacks; Unlock(); }
 
 		void GetDisablePixelShaders(int* value) { Lock(); *value = m_hacks.DisablePixelShaders; Unlock(); }
-		void SetDisablePixelShaders(int* value) { Lock(); m_hacks.DisablePixelShaders = *value; Unlock(); }
+		void SetDisablePixelShaders(const int* value) { Lock(); m_hacks.DisablePixelShaders = *value; Unlock(); }
 		void GetUncapFramerate(int* value) { Lock(); *value = m_hacks.UncapFramerate; Unlock(); }
-		void SetUncapFramerate(int* value) { Lock(); m_hacks.UncapFramerate = *value; Unlock(); }
+		void SetUncapFramerate(const int* value) { Lock(); m_hacks.UncapFramerate = *value; Unlock(); }
 		void GetUseAllCores(int* value) { Lock(); *value = m_hacks.UseAllCores; Unlock(); }
-		void SetUseAllCores(int* value) { Lock(); m_hacks.UseAllCores = *value; Unlock(); }
+		void SetUseAllCores(const int* value) { Lock(); m_hacks.UseAllCores = *value; Unlock(); }
 		void GetSkipRdtscPatching(int* value) { Lock(); *value = m_hacks.SkipRdtscPatching; Unlock(); }
-		void SetSkipRdtscPatching(int* value) { Lock(); m_hacks.SkipRdtscPatching = *value; Unlock(); }
+		void SetSkipRdtscPatching(const int* value) { Lock(); m_hacks.SkipRdtscPatching = *value; Unlock(); }
 		void GetScaleViewport(int* value) { Lock(); *value = m_hacks.ScaleViewport; Unlock(); }
-		void SetScaleViewport(int* value) { Lock(); m_hacks.ScaleViewport = *value; Unlock(); }
+		void SetScaleViewport(const int* value) { Lock(); m_hacks.ScaleViewport = *value; Unlock(); }
 		void GetDirectHostBackBufferAccess(int* value) { Lock(); *value = m_hacks.DirectHostBackBufferAccess; Unlock(); }
-		void SetDirectHostBackBufferAccess(int* value) { Lock(); m_hacks.DirectHostBackBufferAccess = *value; Unlock(); }
+		void SetDirectHostBackBufferAccess(const int* value) { Lock(); m_hacks.DirectHostBackBufferAccess = *value; Unlock(); }
 
 		// ******************************************************************
 		// * MSpF/Benchmark values Accessors
 		// ******************************************************************
 		void GetCurrentMSpF(float *value) { Lock(); *value = m_MSpF; Unlock(); }
-		void SetCurrentMSpF(float *value) { Lock(); m_MSpF = *value; Unlock(); }
+		void SetCurrentMSpF(const float *value) { Lock(); m_MSpF = *value; Unlock(); }
 
 		// ******************************************************************
 		// * FPS/Benchmark values Accessors
 		// ******************************************************************
 		void GetCurrentFPS(float *value) { Lock(); *value = m_FPS; Unlock(); }
-		void SetCurrentFPS(float *value) { Lock(); m_FPS = *value; Unlock(); }
+		void SetCurrentFPS(const float *value) { Lock(); m_FPS = *value; Unlock(); }
 
 		// ******************************************************************
 		// * Debugging flag Accessors
 		// ******************************************************************
 		void GetDebuggingFlag(bool *value) { Lock(); *value = m_bDebugging; Unlock(); }
-		void SetDebuggingFlag(bool *value) { Lock(); m_bDebugging = *value; Unlock(); }
+		void SetDebuggingFlag(const bool *value) { Lock(); m_bDebugging = *value; Unlock(); }
 
 		// ******************************************************************
 		// * Xbox LED values Accessors
@@ -214,7 +214,7 @@ class EmuShared : public Mutex
 		// * File storage location
 		// ******************************************************************
 		void GetStorageLocation(char *path) { Lock(); strncpy(path, m_emulate.szStorageLocation, MAX_PATH); Unlock(); }
-		void SetStorageLocation(char *path) { Lock(); strncpy(m_emulate.szStorageLocation, path, MAX_PATH); Unlock(); }
+		void SetStorageLocation(const char *path) { Lock(); strncpy(m_emulate.szStorageLocation, path, MAX_PATH); Unlock(); }
 
 		// ******************************************************************
 		// * Reset specific variables to default for kernel mode.
