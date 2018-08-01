@@ -1723,7 +1723,7 @@ xboxkrnl::NTSTATUS VMManager::XbAllocateVirtualMemory(VAddr* addr, ULONG ZeroBit
 	}
 
 	if (AlignedCapturedBase >= XBE_IMAGE_BASE + ROUND_UP_4K(CxbxKrnl_Xbe->m_Header.dwSizeofImage) &&
-	(g_XbeType != true ? AlignedCapturedBase < CHIHIRO_MEMORY_SIZE : AlignedCapturedBase < XBE_MAX_VA))
+	(g_bIsRetail != true ? AlignedCapturedBase < CHIHIRO_MEMORY_SIZE : AlignedCapturedBase < XBE_MAX_VA))
 	{
 		// We can't commit on the memory placeholder after the xbe image or in the reserved area after it (128 MiB systems only)
 
