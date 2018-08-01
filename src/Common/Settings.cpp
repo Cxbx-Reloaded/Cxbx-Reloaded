@@ -568,8 +568,7 @@ void Settings::SyncToEmulator()
 	g_EmuShared->SetHackSettings(&m_hacks);
 
 	// register data location setting
-	std::string data_location = GetDataLocation();
-	g_EmuShared->SetStorageLocation(data_location.c_str());
+	g_EmuShared->SetStorageLocation(GetDataLocation().c_str());
 }
 
 void Settings::Verify()
@@ -627,7 +626,12 @@ void Settings::Verify()
 
 std::string Settings::GetDataLocation()
 {
-	std::string data_location;
+
+	// Optimization purpose for not require to re-process when toggle state has not changed.
+	if (m_current_DataStorageToggle == m_gui.DataStorageToggle) {
+		return m_current_data_location;
+	}
+
 	switch (m_gui.DataStorageToggle) {
 		default:
 #ifdef RETRO_API_VERSION // TODO: Change me to #ifndef QT_VERSION
@@ -640,20 +644,21 @@ std::string Settings::GetDataLocation()
 			// If unknown value, default to CXBX_DATA_APPDATA (below, don't use break)
 
 		case CXBX_DATA_APPDATA:
-			data_location = GenerateUserProfileDirectoryStr();
+			m_current_data_location = GenerateUserProfileDirectoryStr();
 			break;
 #endif
 
 		case CXBX_DATA_CURDIR:
-			data_location = GenerateCurrentDirectoryStr();
+			m_current_data_location = GenerateCurrentDirectoryStr();
 			break;
 
 		case CXBX_DATA_CUSTOM:
-			data_location = m_gui.szCustomLocation;
+			m_current_data_location = m_gui.szCustomLocation;
 			break;
 	}
+	m_current_DataStorageToggle = m_gui.DataStorageToggle;
 
-	return data_location;
+	return m_current_data_location;
 }
 
 // ******************************************************************

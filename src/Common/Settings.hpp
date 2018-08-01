@@ -202,6 +202,8 @@ public:
 private:
 	std::string m_file_path = "";
 	CSimpleIniA m_si;
+	std::string m_current_data_location;
+	uint m_current_DataStorageToggle = -1;
 };
 
 // Settings manager

@@ -218,11 +218,6 @@ class WndMain : public Wnd
         bool        m_bCreated;
 
 		// ******************************************************************
-		// * Storage location
-		// ******************************************************************
-		char        m_StorageLocation[MAX_PATH];
-
-		// ******************************************************************
 		// * Previous GUI window location (before start emulation)
 		// ******************************************************************
 		POINT       m_prevWindowLoc;

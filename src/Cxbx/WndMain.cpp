@@ -68,7 +68,7 @@ static int splashLogoWidth, splashLogoHeight;
 
 bool g_SaveOnExit = true;
 
-void ClearHLECache(char sStorageLocation[MAX_PATH])
+void ClearHLECache(const char sStorageLocation[MAX_PATH])
 {
 	std::string cacheDir = std::string(sStorageLocation) + "\\HLECache\\";
 	std::string fullpath = cacheDir + "*.ini";
@@ -177,31 +177,12 @@ WndMain::WndMain(HINSTANCE x_hInstance) :
 
 	// load configuration from settings file
 	{
-
-		switch (g_Settings->m_gui.DataStorageToggle) {
-			default:
-
-				g_Settings->m_gui.DataStorageToggle = CXBX_DATA_APPDATA;
-				// If unknown value, default to CXBX_DATA_APPDATA (below, don't use break)
-
-			case CXBX_DATA_APPDATA:
-				SHGetSpecialFolderPath(NULL, m_StorageLocation, CSIDL_APPDATA, TRUE);
-				strncat(m_StorageLocation, "\\Cxbx-Reloaded", MAX_PATH);
-				break;
-
-			case CXBX_DATA_CURDIR:
-				GetCurrentDirectory(MAX_PATH, m_StorageLocation);
-				break;
-
-			case CXBX_DATA_CUSTOM:
-				SHGetSpecialFolderPath(NULL, m_StorageLocation, CSIDL_APPDATA, TRUE);
-				strncpy(m_StorageLocation, g_Settings->m_gui.szCustomLocation.c_str(), MAX_PATH);
-				break;
-		}
-		// NOTE: This is a requirement for pre-verification from GUI. Used in CxbxInitFilePaths function.
-		g_EmuShared->SetStorageLocation(m_StorageLocation);
+		// NOTE: Settings has already been initalized/load from file before WndMain constructed.
 
 		g_Settings->Verify();
+
+		// NOTE: This is a requirement for pre-verification from GUI. Used in CxbxInitFilePaths function.
+		g_EmuShared->SetStorageLocation(g_Settings->GetDataLocation().c_str());
 
 		unsigned int i = 0;
 		do {
@@ -1019,8 +1000,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 					}
 
 					g_Settings->m_gui.DataStorageToggle = CXBX_DATA_CUSTOM;
-					strncpy(m_StorageLocation, szDirTemp.c_str(), MAX_PATH);
-					g_Settings->m_gui.szCustomLocation = m_StorageLocation;
+					g_Settings->m_gui.szCustomLocation = szDirTemp;
 					RefreshMenus();
 				}
 			}
@@ -1028,20 +1008,13 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
 			case ID_SETTINGS_CONFIG_DLOCAPPDATA:
 			{
-				char szDir[MAX_PATH];
-
-				SHGetSpecialFolderPath(NULL, szDir, CSIDL_APPDATA, TRUE);
 				g_Settings->m_gui.DataStorageToggle = CXBX_DATA_APPDATA;
-				strncpy(m_StorageLocation, szDir, MAX_PATH);
-				strncat(m_StorageLocation, "\\Cxbx-Reloaded", MAX_PATH);
 				RefreshMenus();
 			}
 			break;
 
 			case ID_SETTINGS_CONFIG_DLOCCURDIR:
 			{
-
-				GetCurrentDirectory(MAX_PATH, m_StorageLocation);
 				g_Settings->m_gui.DataStorageToggle = CXBX_DATA_CURDIR;
 				RefreshMenus();
 			}
@@ -1049,14 +1022,14 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
 			case ID_CACHE_CLEARHLECACHE_ALL:
 			{
-				ClearHLECache(m_StorageLocation);
+				ClearHLECache(g_Settings->GetDataLocation().c_str());
 				MessageBox(m_hwnd, "The entire HLE Cache has been cleared.", "Cxbx-Reloaded", MB_OK);
 			}
 			break;
 
 			case ID_CACHE_CLEARHLECACHE_CURRENT:
 			{
-				std::string cacheDir = std::string(m_StorageLocation) + "\\HLECache\\";
+				std::string cacheDir = g_Settings->GetDataLocation() + "\\HLECache\\";
 
 				// Hash the loaded XBE's header, use it as a filename
 				uint32_t uiHash = XXHash32::hash((void*)&m_Xbe->m_Header, sizeof(Xbe::Header), 0);
@@ -2020,7 +1993,7 @@ void WndMain::OpenMRU(int mru)
 // Open the dashboard xbe if found
 void WndMain::OpenDashboard()
 {
-	std::string DashboardPath = std::string(m_StorageLocation) + std::string("\\EmuDisk\\Partition2\\xboxdash.xbe");
+	std::string DashboardPath = g_Settings->GetDataLocation() + std::string("\\EmuDisk\\Partition2\\xboxdash.xbe");
 	OpenXbe(DashboardPath.c_str());
 }
 
@@ -2101,10 +2074,6 @@ void WndMain::StartEmulation(HWND hwndParent, DebuggerState LocalDebuggerState /
 
 	// register all emulator settings to kernel process
 	g_Settings->SyncToEmulator();
-
-
-	// register storage location with emulator process
-	g_EmuShared->SetStorageLocation(m_StorageLocation);
 
 	// Preserve previous GUI window location.
 	HWND hOwner = GetParent(m_hwnd);
