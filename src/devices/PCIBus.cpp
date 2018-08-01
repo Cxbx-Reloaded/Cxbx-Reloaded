@@ -37,7 +37,7 @@
 #include "PCIBus.h"
 #include <cstdio>
 
-void PCIBus::ConnectDevice(uint32_t deviceId, PCIDevice *pDevice, unsigned int address)
+void PCIBus::ConnectDevice(uint32_t deviceId, PCIDevice *pDevice)
 {
 	if (m_Devices.find(deviceId) != m_Devices.end()) {
 		printf("PCIBus: Attempting to connect two devices to the same device address\n");
@@ -45,7 +45,7 @@ void PCIBus::ConnectDevice(uint32_t deviceId, PCIDevice *pDevice, unsigned int a
 	}
 
 	m_Devices[deviceId] = pDevice;
-	pDevice->Init(address);
+	pDevice->Init();
 }
 
 void PCIBus::IOWriteConfigAddress(uint32_t pData) 

@@ -304,24 +304,6 @@ void InputDeviceManager::InputThread(InputDeviceManager* pVoid)
 					break;
 				}
 
-				//case SDL_CONTROLLERBUTTONUP:
-				//case SDL_CONTROLLERBUTTONDOWN: {
-				//	pVoid->UpdateButtonState(event.cbutton.which, event.cbutton.button, event.cbutton.state);
-				//	break;
-				//}
-
-				//case SDL_CONTROLLERAXISMOTION: {
-				//	pVoid->UpdateAxisState(event.caxis.which, event.caxis.axis, event.caxis.value);
-				//	break;
-				//}
-
-				//case SDL_CONTROLLERDEVICEADDED: {
-
-				//}
-				//case SDL_CONTROLLERDEVICEREMOVED: {
-
-				//}
-
 				case SDL_QUIT: {
 					bContinue = false;
 					break;

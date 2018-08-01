@@ -49,7 +49,7 @@ MCPXDevice::MCPXDevice(MCPXRevision revision)
 
 // PCI Device functions
 
-void MCPXDevice::Init(unsigned int address)
+void MCPXDevice::Init()
 {
 //	m_DeviceId = ?;
 //	m_VendorId = PCI_VENDOR_ID_NVIDIA;

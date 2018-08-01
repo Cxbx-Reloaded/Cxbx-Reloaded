@@ -514,14 +514,14 @@ void EmuNVNet_Write(xbaddr addr, uint32_t value, int size)
 
 // PCI Device functions
 
-void NVNetDevice::Init(unsigned int address)
+void NVNetDevice::Init()
 {
 	PCIBarRegister r;
 
 	// Register Memory bar :
 	r.Raw.type = PCI_BAR_TYPE_MEMORY;
-	r.Memory.address = address >> 4;
-	RegisterBAR(0, NVNet_SIZE, r.value);
+	r.Memory.address = NVNET_BASE >> 4;
+	RegisterBAR(0, NVNET_SIZE, r.value);
 
 	// Register IO bar :
 	r.Raw.type = PCI_BAR_TYPE_IO;

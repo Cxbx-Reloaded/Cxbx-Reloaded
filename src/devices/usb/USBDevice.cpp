@@ -60,13 +60,13 @@ namespace xboxkrnl
 // https://xqemu.com/
 
 
-void USBDevice::Init(unsigned int address)
+void USBDevice::Init()
 {
 	PCIBarRegister r;
 
 	// Register Memory bar :
 	r.Raw.type = PCI_BAR_TYPE_MEMORY;
-	r.Memory.address = address >> 4;
+	r.Memory.address = USB0_BASE >> 4;
 	RegisterBAR(0, USB_SIZE, r.value);
 
 	// Taken from https://github.com/docbrown/vxb/wiki/Xbox-Hardware-Information

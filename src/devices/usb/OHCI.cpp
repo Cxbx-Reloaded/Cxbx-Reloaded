@@ -916,7 +916,7 @@ void OHCI::OHCI_StateReset()
 void OHCI::OHCI_BusStart()
 {
 	// Create the EOF timer. Let's try a factor of 50 (1 virtual ms -> 50 real ms)
-	m_pEOFtimer = Timer_Create(OHCI_FrameBoundaryWrapper, this, 100);
+	m_pEOFtimer = Timer_Create(OHCI_FrameBoundaryWrapper, this, 50);
 
 	DbgPrintf("%s Operational mode event\n", LOG_STR_OHCI);
 

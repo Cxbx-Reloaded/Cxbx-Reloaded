@@ -68,8 +68,8 @@
 #define USB0_BASE                               0xFED00000
 #define USB1_BASE                               0xFED08000 // alpha kits only
 #define USB_SIZE                                0x1000
-#define NVNet_BASE                              0xFEF00000
-#define NVNet_SIZE                              0x400
+#define NVNET_BASE                              0xFEF00000
+#define NVNET_SIZE                              0x400
 #define BIOS_BASE                               0xFF000000 // this takes into account that the bios covers the top 16 MiB of memory
 #define BIOS_XBOX_SIZE                          0xFFFE00
 #define BIOS_CHIHIRO_SIZE                       0x1000000
@@ -123,7 +123,7 @@ typedef struct {
 class PCIDevice {
 	// PCI Device Interface
 public:
-	virtual void Init(unsigned int address) = 0;
+	virtual void Init() = 0;
 	virtual void Reset() = 0;
 	virtual uint32_t IORead(int barIndex, uint32_t port, unsigned size) = 0;
 	virtual void IOWrite(int barIndex, uint32_t port, uint32_t value, unsigned size) = 0;

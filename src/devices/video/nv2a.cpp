@@ -846,13 +846,13 @@ NV2ADevice::~NV2ADevice()
 
 // PCI Device functions
 
-void NV2ADevice::Init(unsigned int address)
+void NV2ADevice::Init()
 {
 	PCIBarRegister r;
 
 	// Register Memory bar :
 	r.Raw.type = PCI_BAR_TYPE_MEMORY;
-	r.Memory.address = address >> 4;
+	r.Memory.address = NV2A_ADDR >> 4;
 	RegisterBAR(0, NV2A_SIZE, r.value);
 
 	// Register physical memory on bar 1

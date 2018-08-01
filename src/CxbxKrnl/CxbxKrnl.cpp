@@ -654,7 +654,7 @@ void TriggerPendingConnectedInterrupts()
 {
 	for (int i = 0; i < MAX_BUS_INTERRUPT_LEVEL; i++) {
 		// If the interrupt is pending and connected, process it
-		if (g_bEnableAllInterrupts && HalSystemInterrupts[i].IsPending() && EmuInterruptList[i] && EmuInterruptList[i]->Connected) {
+		if (HalSystemInterrupts[i].IsPending() && EmuInterruptList[i] && EmuInterruptList[i]->Connected) {
 			HalSystemInterrupts[i].Trigger(EmuInterruptList[i]);
 		}
 	}
@@ -672,7 +672,9 @@ static unsigned int WINAPI CxbxKrnlInterruptThread(PVOID param)
 #endif
 
 	while (true) {
-		TriggerPendingConnectedInterrupts();
+		if (g_bEnableAllInterrupts) {
+			TriggerPendingConnectedInterrupts();
+		}
 		Sleep(1);
 	}
 

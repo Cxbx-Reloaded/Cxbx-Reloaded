@@ -637,7 +637,7 @@ public:
 	~NV2ADevice();
 
 	// PCI Device functions
-	void Init(unsigned int address);
+	void Init();
 	void Reset();
 
 	uint32_t IORead(int barIndex, uint32_t port, unsigned size);

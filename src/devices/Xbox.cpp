@@ -156,19 +156,19 @@ void InitXboxHardware(HardwareModel hardwareModel)
 	}
 
 	// Connect devices to PCI bus
-	g_PCIBus->ConnectDevice(PCI_DEVID(0, PCI_DEVFN(1, 1)), g_SMBus, 0xC000);
-	g_PCIBus->ConnectDevice(PCI_DEVID(0, PCI_DEVFN(4, 0)), g_NVNet, NVNet_BASE);
+	g_PCIBus->ConnectDevice(PCI_DEVID(0, PCI_DEVFN(1, 1)), g_SMBus);
+	g_PCIBus->ConnectDevice(PCI_DEVID(0, PCI_DEVFN(4, 0)), g_NVNet);
 	//g_PCIBus->ConnectDevice(PCI_DEVID(0, PCI_DEVFN(4, 1)), g_MCPX); // MCPX device ID = 0x0808 ?
 	//g_PCIBus->ConnectDevice(PCI_DEVID(0, PCI_DEVFN(5, 0)), g_NVAPU);
 	//g_PCIBus->ConnectDevice(PCI_DEVID(0, PCI_DEVFN(6, 0)), g_AC97);
-	g_PCIBus->ConnectDevice(PCI_DEVID(1, PCI_DEVFN(0, 0)), g_NV2A, NV2A_ADDR);
+	g_PCIBus->ConnectDevice(PCI_DEVID(1, PCI_DEVFN(0, 0)), g_NV2A);
 	if (bLLE_USB) {
 		// ergo720: according to some research done by LukeUsher, only Xbox Alpha Kits have a two HCs configuration. This seems to also be confirmed by the xboxdevwiki,
 		// which states that it has a xircom PGPCI2(OPTI 82C861) 2 USB port PCI card -> 2 ports, not 4. Finally, I disassembled various xbe's and discovered that the number
 		// of ports per HC is hardcoded as 4 in the driver instead of being detected at runtime by reading the HcRhDescriptorA register and so a game would have to be
 		// recompiled to support 2 HCs, which further confirms the point. Because we are not going to emulate an Alpha Kit, we can simply ignore the USB1 device.
 
-		g_PCIBus->ConnectDevice(PCI_DEVID(0, PCI_DEVFN(2, 0)), g_USB0, USB0_BASE);
+		g_PCIBus->ConnectDevice(PCI_DEVID(0, PCI_DEVFN(2, 0)), g_USB0);
 	}
 
 	// TODO : Handle other SMBUS Addresses, like PIC_ADDRESS, XCALIBUR_ADDRESS

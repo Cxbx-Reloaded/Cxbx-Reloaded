@@ -38,11 +38,11 @@
 
 #include "SMBus.h"
 
-void SMBus::Init(unsigned int address)
+void SMBus::Init()
 {
 	PCIBarRegister r;
 	r.Raw.type = PCI_BAR_TYPE_IO;
-	r.IO.address = address;
+	r.IO.address = 0xC000;
 	RegisterBAR(1, 32, r.value);
 
 	m_DeviceId = 0x01B4;

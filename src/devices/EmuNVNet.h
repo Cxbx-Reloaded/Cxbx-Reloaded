@@ -39,7 +39,7 @@
 class NVNetDevice : public PCIDevice {
 public:
 	// PCI Device functions
-	void Init(unsigned int address);
+	void Init();
 	void Reset();
 	uint32_t IORead(int barIndex, uint32_t port, unsigned size);
 	void IOWrite(int barIndex, uint32_t port, uint32_t value, unsigned size);
