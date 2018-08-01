@@ -1777,22 +1777,21 @@ void WndMain::UpdateDebugConsoles()
             break;
 
         case DM_FILE:
-            fclose(stdout);
-            FreeConsole();
 
             freopen(g_Settings->m_gui.szCxbxDebugFile.c_str(), "wt", stdout);
+            FreeConsole();
 
             printf("%s", "WndMain: Debug console allocated.\n");
             break;
 
         default:
-            fclose(stdout);
-            FreeConsole();
 
-            char buffer[16];
+            if (GetConsoleWindow() != NULL) {
+                fclose(stdout);
+                FreeConsole();
+            }
+            freopen("nul", "w", stdout);
 
-            if(GetConsoleTitle(buffer, 16) != NULL)
-                freopen("nul", "w", stdout);
             break;
     }
 }
