@@ -139,6 +139,15 @@ typedef enum _PageType
 }PageType;
 
 
+/* enum describing the memory layouts available on the Xbox */
+typedef enum _MmLayout
+{
+	MmChihiro = 1,
+	MmDebug,
+	MmRetail,
+}MmLayout;
+
+
 /* Lock count variables for the PFN database */
 #define LOCK_COUNT_UNIT             2
 #define LOCK_COUNT_MAXIMUM          0xFFFE
@@ -231,6 +240,10 @@ class PhysicalMemory
 		size_t m_NV2AInstanceMemoryBytes = NV2A_INSTANCE_PAGE_COUNT << PAGE_SHIFT;
 		// boolean that indicates that the extra 64 MiB on a devkit can be used for heap/Nt allocations
 		bool m_bAllowNonDebuggerOnTop64MiB = true;
+		// the memory layout that the VMManager is emulating
+		bool m_MmLayoutChihiro = false;
+		bool m_MmLayoutDebug = false;
+		bool m_MmLayoutRetail = false;
 
 	
 		// protected constructor so PhysicalMemory can only be inherited from

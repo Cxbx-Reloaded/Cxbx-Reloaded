@@ -499,7 +499,7 @@ bool OHCI::OHCI_FindAndCopyTD(xbaddr Paddr, uint8_t* Buffer, int Length, bool bI
 		return true; // error
 	}
 
-	if (g_bIsRetail) {
+	if (g_SystemMaxMemory == XBOX_MEMORY_SIZE) {
 		if (Paddr < XBOX_MEMORY_SIZE) {
 			offset = CONTIGUOUS_MEMORY_BASE;
 		}

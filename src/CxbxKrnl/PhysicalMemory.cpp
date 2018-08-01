@@ -90,7 +90,7 @@ void PhysicalMemory::WritePfn(PFN pfn_start, PFN pfn_end, PMMPTE pPte, PageType 
 		TempPF.Default = 0;
 		while (pfn_start <= pfn_end)
 		{
-			if (g_bIsRetail || g_bIsDebug) {
+			if (m_MmLayoutRetail || m_MmLayoutDebug) {
 				*XBOX_PFN_ELEMENT(pfn_start) = TempPF;
 			}
 			else { *CHIHIRO_PFN_ELEMENT(pfn_start) = TempPF; }
@@ -111,7 +111,7 @@ void PhysicalMemory::WritePfn(PFN pfn_start, PFN pfn_end, PMMPTE pPte, PageType 
 			}
 			else { TempPF.PTPageFrame.PtesUsed = 0; } // we are writing a pfn of a PT
 
-			if (g_bIsRetail || g_bIsDebug) {
+			if (m_MmLayoutRetail || m_MmLayoutDebug) {
 				*XBOX_PFN_ELEMENT(pfn_start) = TempPF;
 			}
 			else { *CHIHIRO_PFN_ELEMENT(pfn_start) = TempPF; }
@@ -294,7 +294,7 @@ bool PhysicalMemory::RemoveFree(PFN_COUNT NumberOfPages, PFN* result, PFN_COUNT 
 					LIST_ENTRY_ACCESS_RECORD(ListEntry, FreeBlock, ListEntry)->size = PfnCount;
 				}
 			}
-			if (g_bIsDebug && (PfnStart + PfnCount >= DEBUGKIT_FIRST_UPPER_HALF_PAGE)) {
+			if (m_MmLayoutDebug && (PfnStart + PfnCount >= DEBUGKIT_FIRST_UPPER_HALF_PAGE)) {
 				m_DebuggerPagesAvailable -= NumberOfPages;
 				assert(m_DebuggerPagesAvailable <= DEBUGKIT_FIRST_UPPER_HALF_PAGE);
 			}
@@ -364,7 +364,7 @@ void PhysicalMemory::InsertFree(PFN start, PFN end)
 				delete block;
 			}
 
-			if (g_bIsDebug && (start >= DEBUGKIT_FIRST_UPPER_HALF_PAGE)) {
+			if (m_MmLayoutDebug && (start >= DEBUGKIT_FIRST_UPPER_HALF_PAGE)) {
 				m_DebuggerPagesAvailable += size;
 				assert(m_DebuggerPagesAvailable <= DEBUGKIT_FIRST_UPPER_HALF_PAGE);
 			}
@@ -751,7 +751,7 @@ PXBOX_PFN PhysicalMemory::GetPfnOfPT(PMMPTE pPte)
 	PMMPTE PointerPde = GetPteAddress(pPte);
 	// PointerPde should have already been written to by AllocatePT
 	assert(PointerPde->Hardware.Valid != 0);
-	if (g_bIsRetail || g_bIsDebug) {
+	if (m_MmLayoutRetail || m_MmLayoutDebug) {
 		PTpfn = XBOX_PFN_ELEMENT(PointerPde->Hardware.PFN);
 	}
 	else { PTpfn = CHIHIRO_PFN_ELEMENT(PointerPde->Hardware.PFN); }
