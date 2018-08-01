@@ -38,12 +38,6 @@
 #include "CxbxKrnl/Emu.h"
 #include "CxbxKrnl/EmuShared.h"
 
-#include <filesystem>
-#ifdef _EXPERIMENTAL_FILESYSTEM_
-namespace std {
-	namespace filesystem = std::experimental::filesystem;
-}
-#endif
 // TODO: Implement Qt support when real CPU emulation is available.
 #ifndef QT_VERSION // NOTE: Non-Qt will be using current directory for data
 #include <ShlObj.h> // For SHGetSpecialFolderPath and CSIDL_APPDATA
