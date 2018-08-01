@@ -1777,6 +1777,7 @@ void WndMain::UpdateDebugConsoles()
             break;
 
         case DM_FILE:
+            fclose(stdout);
             FreeConsole();
 
             freopen(g_Settings->m_gui.szCxbxDebugFile.c_str(), "wt", stdout);
@@ -1785,6 +1786,7 @@ void WndMain::UpdateDebugConsoles()
             break;
 
         default:
+            fclose(stdout);
             FreeConsole();
 
             char buffer[16];
