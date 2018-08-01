@@ -1541,7 +1541,7 @@ void CxbxInitFilePaths()
 	// Make sure our data folder exists :
 	int result = SHCreateDirectoryEx(nullptr, szFolder_CxbxReloadedData, nullptr);
 	if ((result != ERROR_SUCCESS) && (result != ERROR_ALREADY_EXISTS)) {
-		CxbxKrnlCleanup("CxbxInitFilePaths : Couldn't create Cxbx-Reloaded AppData folder!");
+		CxbxKrnlCleanup("CxbxInitFilePaths : Couldn't create Cxbx-Reloaded's data folder!");
 	}
 
 	// Make sure the EmuDisk folder exists
