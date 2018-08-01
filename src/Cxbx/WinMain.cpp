@@ -98,19 +98,19 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		}
 		g_EmuShared->SetIsFirstLaunch(true);
 
-        g_Settings = new Settings();
+		g_Settings = new Settings();
 
-        if (g_Settings == nullptr) {
-            MessageBox(nullptr, szSettings_alloc_error, "Cxbx-Reloaded", MB_OK);
-            EmuShared::Cleanup();
-            return EXIT_FAILURE;
-        }
+		if (g_Settings == nullptr) {
+			MessageBox(nullptr, szSettings_alloc_error, "Cxbx-Reloaded", MB_OK);
+			EmuShared::Cleanup();
+			return EXIT_FAILURE;
+		}
 
-        bRet = g_Settings->Init();
-        if (!bRet) {
-            EmuShared::Cleanup();
-            return EXIT_FAILURE;
-        }
+		bRet = g_Settings->Init();
+		if (!bRet) {
+			EmuShared::Cleanup();
+			return EXIT_FAILURE;
+		}
 	}
 
 	if (__argc >= 2 && strcmp(__argv[1], "/load") == 0 && strlen(__argv[2]) > 0)  {

@@ -328,7 +328,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
                 m_SplashDC   = CreateCompatibleDC(hDC);
                 m_LogoDC   = CreateCompatibleDC(hDC);
-				
+
                 m_OrigBmp  = (HBITMAP)SelectObject(m_SplashDC, m_SplashBmp);
                 m_OrigLogo = (HBITMAP)SelectObject(m_LogoDC, m_LogoBmp);
 
@@ -1518,7 +1518,7 @@ void WndMain::LoadGameLogo()
 	}
 
 	gameLogoWidth = 0;
-	gameLogoHeight = 0;	
+	gameLogoHeight = 0;
 
 	uint8 *ImageData = NULL;
 	XTL::X_D3DPixelContainer XboxPixelContainer = {};
@@ -1545,7 +1545,7 @@ void WndMain::LoadGameLogo()
 		ImageData = (uint8 *)(pSection + sizeof(DWORD) + pDDSHeader->dwSize);
 		//gameLogoHeight = pDDSHeader->dwHeight;
 		//gameLogoWidth = pDDSHeader->dwWidth;
-		
+
 		// TODO : Use PixelCopy code here to decode. For now, fake it :
 		XTL::CxbxSetPixelContainerHeader(&XboxPixelContainer,
 			0, // Common - could be X_D3DCOMMON_TYPE_TEXTURE
@@ -1979,7 +1979,7 @@ void WndMain::OpenXbe(const char *x_filename)
         }
 
         // move all items down one, removing the last one if necessary
-        for (int v=RECENT_XBE_LIST_MAX-1;v>0;v--) {
+        for (int v = RECENT_XBE_LIST_MAX - 1;v > 0; v--) {
 
             if(g_Settings->m_gui.szRecentXbeFiles[v-1].size() == 0) {
                 g_Settings->m_gui.szRecentXbeFiles[v] = "";
