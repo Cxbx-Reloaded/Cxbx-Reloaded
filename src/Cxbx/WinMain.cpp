@@ -115,7 +115,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 	if (__argc >= 2 && strcmp(__argv[1], "/load") == 0 && strlen(__argv[2]) > 0)  {
 
-		// NOTE: This is designated for standalone launch without GUI
+		// NOTE: This is designated for standalone kernel mode launch without GUI
 		if (g_Settings != nullptr) {
 
 			// Reset to default
