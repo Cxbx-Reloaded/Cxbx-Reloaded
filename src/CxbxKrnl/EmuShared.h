@@ -126,12 +126,6 @@ class EmuShared : public Mutex
 		void SetControllerPortSettings(const Settings::s_controller_port *ctrl) { Lock(); m_controller_port = *ctrl; Unlock(); }
 
 		// ******************************************************************
-		// * Xbe Path Accessors
-		// ******************************************************************
-		void GetXbePath(      char *path) { Lock(); strncpy(path, m_XbePath, MAX_PATH); Unlock(); }
-		void SetXbePath(const char *path) { Lock(); strncpy(m_XbePath, path, MAX_PATH); Unlock(); }
-
-		// ******************************************************************
 		// * LLE Flags Accessors
 		// ******************************************************************
 		void GetFlagsLLE(      uint *flags) { Lock(); *flags = m_emulate.FlagsLLE; Unlock(); }
@@ -245,7 +239,6 @@ class EmuShared : public Mutex
 		// ******************************************************************
 		// * Shared configuration
 		// ******************************************************************
-		char         m_XbePath[MAX_PATH]; // TODO: Do we really need this? We can use command line since it contain xbe file.
 		int          m_BootFlags_status;
 		unsigned int m_FlagsLLE_status;
 		float        m_MSpF_status;

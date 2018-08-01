@@ -98,6 +98,7 @@ char szFolder_CxbxReloadedData[MAX_PATH] = { 0 };
 char szFilePath_EEPROM_bin[MAX_PATH] = { 0 };
 char szFilePath_memory_bin[MAX_PATH] = { 0 };
 char szFilePath_page_tables[MAX_PATH] = { 0 };
+char szFilePath_Xbe[MAX_PATH] = { 0 };
 
 std::string CxbxBasePath;
 HANDLE CxbxBasePathHandle;
@@ -1078,9 +1079,9 @@ void CxbxKrnlMain(int argc, char* argv[])
 	// Now we can load and run the XBE :
 	// MapAndRunXBE(XbePath, DCHandle);
 	{
-		// Load Xbe (this one will reside above WinMain's virtual_memory_placeholder) 
-		g_EmuShared->SetXbePath(xbePath.c_str());
-		CxbxKrnl_Xbe = new Xbe(xbePath.c_str(), false); // TODO : Instead of using the Xbe class, port Dxbx _ReadXbeBlock()
+		strncpy(szFilePath_Xbe, xbePath.c_str(), MAX_PATH - 1);
+		// Load Xbe (this one will reside above WinMain's virtual_memory_placeholder)
+		CxbxKrnl_Xbe = new Xbe(szFilePath_Xbe, false); // TODO : Instead of using the Xbe class, port Dxbx _ReadXbeBlock()
 
 		if (CxbxKrnl_Xbe->HasFatalError()) {
 			CxbxKrnlCleanup(CxbxKrnl_Xbe->GetError().c_str());
@@ -1341,7 +1342,7 @@ __declspec(noreturn) void CxbxKrnlInit
 
 	// Determine XBE Path
 	memset(szBuffer, 0, MAX_PATH);
-	g_EmuShared->GetXbePath(szBuffer);
+	strncpy(szBuffer, szFilePath_Xbe, MAX_PATH);
 	std::string xbePath(szBuffer);
 	PathRemoveFileSpec(szBuffer);
 	std::string xbeDirectory(szBuffer);
