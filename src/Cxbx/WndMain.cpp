@@ -1758,7 +1758,7 @@ void WndMain::RefreshMenus()
 
 			chk_flag = (g_Settings->m_hacks.SkipRdtscPatching) ? MF_CHECKED : MF_UNCHECKED;
 			CheckMenuItem(settings_menu, ID_HACKS_SKIPRDTSCPATCHING, chk_flag);
-      
+
 			chk_flag = (g_Settings->m_hacks.ScaleViewport) ? MF_CHECKED : MF_UNCHECKED;
 			CheckMenuItem(settings_menu, ID_HACKS_SCALEVIEWPORT, chk_flag);
 

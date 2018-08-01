@@ -117,11 +117,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 		if (g_Settings != nullptr) {
 
-            // TODO: Load settings to EmuShared data.
+			// TODO: Load settings to EmuShared data.
 
-            // We don't need to keep Settings open plus allow emulator to use unused memory.
-            delete g_Settings;
-            g_Settings = nullptr;
+			// We don't need to keep Settings open plus allow emulator to use unused memory.
+			delete g_Settings;
+			g_Settings = nullptr;
 		}
 
 		/* Initialize Cxbx File Paths */
@@ -131,22 +131,22 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		return EXIT_SUCCESS;
 	}
 
-    // If 2nd GUI executable is launched, load settings file for GUI for editable support.
-    if (g_Settings == nullptr) {
-        g_Settings = new Settings();
+	// If 2nd GUI executable is launched, load settings file for GUI for editable support.
+	if (g_Settings == nullptr) {
+		g_Settings = new Settings();
 
-        if (g_Settings == nullptr) {
-            MessageBox(nullptr, szSettings_alloc_error, "Cxbx-Reloaded", MB_OK);
-            EmuShared::Cleanup();
-            return EXIT_FAILURE;
-        }
+		if (g_Settings == nullptr) {
+			MessageBox(nullptr, szSettings_alloc_error, "Cxbx-Reloaded", MB_OK);
+			EmuShared::Cleanup();
+			return EXIT_FAILURE;
+		}
 
-        bRet = g_Settings->Init();
-        if (!bRet) {
-            EmuShared::Cleanup();
-            return EXIT_FAILURE;
-        }
-    }
+		bRet = g_Settings->Init();
+		if (!bRet) {
+			EmuShared::Cleanup();
+			return EXIT_FAILURE;
+		}
+	}
 
 	INITCOMMONCONTROLSEX icc;
 	icc.dwSize = sizeof(icc);
