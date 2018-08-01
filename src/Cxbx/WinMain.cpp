@@ -89,8 +89,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		bool bElevated = CxbxIsElevated();
 		if (bElevated && !bFirstLaunch) {
 			int ret = MessageBox(NULL, "Cxbx-Reloaded has detected that it has been launched with Administrator rights.\n"
-								"\nThis is dangerous, as a maliciously modified Xbox titles could take control of your system.\n"
-								"\nAre you sure you want to continue?", "Cxbx-Reloaded", MB_YESNO | MB_ICONWARNING);
+			                    "\nThis is dangerous, as a maliciously modified Xbox titles could take control of your system.\n"
+			                    "\nAre you sure you want to continue?", "Cxbx-Reloaded", MB_YESNO | MB_ICONWARNING);
 			if (ret != IDYES) {
 				EmuShared::Cleanup();
 				return EXIT_FAILURE;
@@ -115,7 +115,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 	if (__argc >= 2 && strcmp(__argv[1], "/load") == 0 && strlen(__argv[2]) > 0)  {
 
+		// NOTE: This is designated for standalone launch without GUI
 		if (g_Settings != nullptr) {
+
+			// Reset to default
+			g_EmuShared->Reset();
 
 			g_Settings->Verify();
 			g_Settings->SyncToEmulator();
@@ -123,6 +127,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			// We don't need to keep Settings open plus allow emulator to use unused memory.
 			delete g_Settings;
 			g_Settings = nullptr;
+
+			// Perform identical to what GUI will do to certain EmuShared's variable before launch.
+			g_EmuShared->SetIsEmulating(true);
+
+			// NOTE: This setting the ready status is optional. Internal kernel process is checking if GUI is running.
+			// Except if enforce check, then we need to re-set ready status every time for non-GUI.
+			//g_EmuShared->SetIsReady(true);
 		}
 
 		/* Initialize Cxbx File Paths */
