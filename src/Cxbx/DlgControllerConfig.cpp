@@ -301,6 +301,11 @@ VOID ConfigureInput(HWND hWndDlg, HWND hWndButton, XBCtrlObject object)
             sprintf(szBuffer, "%d", (v+19)/20);
 
             SetWindowText(hWndButton, szBuffer);
+
+            // NOTE: This fix false positive of non-responding message when inputting all keys at once.
+            // Source: https://msdn.microsoft.com/en-us/library/windows/desktop/ms633526%28v=vs.85%29.aspx
+            MSG Msg;
+            PeekMessage(&Msg, hWndDlg, 0, 0, PM_NOREMOVE);
         }
 
         if(g_DInputController.HasError())
