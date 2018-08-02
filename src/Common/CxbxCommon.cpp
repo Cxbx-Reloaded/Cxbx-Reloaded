@@ -180,9 +180,6 @@ void unix2dos(std::string& string)
 {
 	size_t position = 0;
 	while (true) {
-		if (position > string.length()) {
-			break;
-		}
 		position = string.find('\n', position);
 		if (position == std::string::npos) {
 			break;
