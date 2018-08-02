@@ -145,6 +145,10 @@ public:
 		char szKrnlDebug[MAX_PATH] = "";
 		char szStorageLocation[MAX_PATH] = "";
 		bool allowAdminPrivilege;
+		bool Reserved2 = 0;
+		bool Reserved3 = 0;
+		bool Reserved4 = 0;
+		int  Reserved99[10] = { 0 };
 	} m_core;
 
 	// Video settings
@@ -155,6 +159,8 @@ public:
 		bool bVSync;
 		bool bFullScreen;
 		bool bHardwareYUV;
+		bool Reserved4 = 0;
+		int  Reserved99[10] = { 0 };
 	} m_video;
 
 	// Audio settings
@@ -163,6 +169,8 @@ public:
 		bool codec_pcm ;
 		bool codec_xadpcm;
 		bool codec_unknown;
+		bool Reserved4 = 0;
+		int  Reserved99[14] = { 0 };
 	} m_audio;
 
 	// Controller settings
@@ -198,6 +206,9 @@ public:
 		bool SkipRdtscPatching;
 		bool ScaleViewport;
 		bool DirectHostBackBufferAccess;
+		bool Reserved7 = 0;
+		bool Reserved8 = 0;
+		int  Reserved99[8] = { 0 };
 	} m_hacks;
 
 private:
