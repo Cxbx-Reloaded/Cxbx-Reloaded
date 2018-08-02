@@ -1252,6 +1252,11 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 				RefreshMenus();
 				break;
 
+			case ID_SETTINGS_ALLOWADMINPRIVILEGE:
+				g_Settings->m_core.allowAdminPrivilege = !g_Settings->m_core.allowAdminPrivilege;
+				RefreshMenus();
+				break;
+
             case ID_HELP_ABOUT:
             {
 				ShowAboutDialog(hwnd);
@@ -1710,6 +1715,9 @@ void WndMain::RefreshMenus()
 					CheckMenuItem(settings_menu, ID_SETTINGS_CONFIG_DLOCCUSTOM, MF_CHECKED);
 					break;
 			}
+
+			chk_flag = (g_Settings->m_core.allowAdminPrivilege) ? MF_CHECKED : MF_UNCHECKED;
+			CheckMenuItem(settings_menu, ID_SETTINGS_ALLOWADMINPRIVILEGE, chk_flag);
 		}
 
         // emulation menu
