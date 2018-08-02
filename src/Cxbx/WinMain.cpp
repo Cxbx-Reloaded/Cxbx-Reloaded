@@ -103,7 +103,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 		bool bElevated = CxbxIsElevated();
 
-		if (bElevated && !g_Settings->m_gui.allowAdminPrivilege) {
+		if (bElevated && !g_Settings->m_core.allowAdminPrivilege) {
 			int ret = MessageBox(NULL, "Cxbx-Reloaded has detected that it has been launched with Administrator rights.\n"
 			                    "\nThis is dangerous, as a maliciously modified Xbox titles could take control of your system.\n"
 			                    "\nAre you sure you want to continue?", "Cxbx-Reloaded", MB_YESNO | MB_ICONWARNING);
