@@ -2609,9 +2609,6 @@ void WndMain::DrawLedBitmap(HWND hwnd, bool bdefault)
 		if (FlagsLLE == 0) {
 			sprintf(flagString, "HLE");
 		}
-		else if ((FlagsLLE & LLE_GPU) == 0) {
-			strcat(flagString, " HLE");
-		}
 	}
 
 	SelectObject(m_LedDC, m_Brushes[ActiveLEDColor]);
