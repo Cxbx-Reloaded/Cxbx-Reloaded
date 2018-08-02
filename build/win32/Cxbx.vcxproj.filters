@@ -349,6 +349,9 @@
     <ClInclude Include="..\..\src\CxbxKrnl\EmuKrnlLogging.h">
       <Filter>Kernel</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\Cxbx.h">
+      <Filter>Shared</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\src\CxbxKrnl\Emu.h">
       <Filter>Shared</Filter>
     </ClInclude>
