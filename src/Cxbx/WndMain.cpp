@@ -1062,11 +1062,11 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
 			case ID_EMULATION_DEBUGOUTPUTKERNEL_CONSOLE:
 			{
-				if (g_Settings->m_emulate.KrnlDebugMode == DM_NONE || g_Settings->m_emulate.KrnlDebugMode == DM_FILE) {
-					g_Settings->m_emulate.KrnlDebugMode = DM_CONSOLE;
+				if (g_Settings->m_core.KrnlDebugMode == DM_NONE || g_Settings->m_core.KrnlDebugMode == DM_FILE) {
+					g_Settings->m_core.KrnlDebugMode = DM_CONSOLE;
 				}
 				else {
-					g_Settings->m_emulate.KrnlDebugMode = DM_NONE;
+					g_Settings->m_core.KrnlDebugMode = DM_NONE;
 				}
 				MessageBox(m_hwnd, "This will not take effect until the next time emulation is started.\n", "Cxbx-Reloaded", MB_OK);
 
@@ -1078,8 +1078,8 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
 			case ID_EMULATION_DEBUGOUTPUTKERNEL_FILE:
 			{
-				if (g_Settings->m_emulate.KrnlDebugMode == DM_FILE) {
-					g_Settings->m_emulate.KrnlDebugMode = DM_NONE;
+				if (g_Settings->m_core.KrnlDebugMode == DM_FILE) {
+					g_Settings->m_core.KrnlDebugMode = DM_NONE;
 
 					RefreshMenus();
 
@@ -1107,9 +1107,9 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 					{
 						MessageBox(m_hwnd, "This will not take effect until emulation is (re)started.\n", "Cxbx-Reloaded", MB_OK);
 
-						strncpy(g_Settings->m_emulate.szKrnlDebug, ofn.lpstrFile, MAX_PATH - 1);
+						strncpy(g_Settings->m_core.szKrnlDebug, ofn.lpstrFile, MAX_PATH - 1);
 
-						g_Settings->m_emulate.KrnlDebugMode = DM_FILE;
+						g_Settings->m_core.KrnlDebugMode = DM_FILE;
 
 						RefreshMenus();
 
@@ -1178,28 +1178,28 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
 			case ID_EMULATION_LLE_JIT:
 			{
-				g_Settings->m_emulate.FlagsLLE = g_Settings->m_emulate.FlagsLLE ^ LLE_JIT;
+				g_Settings->m_core.FlagsLLE = g_Settings->m_core.FlagsLLE ^ LLE_JIT;
 				RefreshMenus();
 			}
 			break;
 
 			case ID_EMULATION_LLE_APU:
 			{
-				g_Settings->m_emulate.FlagsLLE = g_Settings->m_emulate.FlagsLLE ^ LLE_APU;
+				g_Settings->m_core.FlagsLLE = g_Settings->m_core.FlagsLLE ^ LLE_APU;
 				RefreshMenus();
 			}
 			break;
 
 			case ID_EMULATION_LLE_GPU:
 			{
-				g_Settings->m_emulate.FlagsLLE = g_Settings->m_emulate.FlagsLLE ^ LLE_GPU;
+				g_Settings->m_core.FlagsLLE = g_Settings->m_core.FlagsLLE ^ LLE_GPU;
 				RefreshMenus();
 			}
 			break;
 #if 0 // Reenable this when LLE USB actually works
 			case ID_EMULATION_LLE_USB:
 			{
-				g_Settings->m_emulate.FlagsLLE = g_Settings->m_emulate.FlagsLLE ^ LLE_USB;
+				g_Settings->m_core.FlagsLLE = g_Settings->m_core.FlagsLLE ^ LLE_USB;
 				RefreshMenus();
 			}
 			break;
@@ -1619,7 +1619,7 @@ void WndMain::RefreshMenus()
 			HMENU emul_debg = GetSubMenu(view_menu, 0);
 			HMENU emul_krnl = GetSubMenu(view_menu, 1);
 
-			switch (g_Settings->m_emulate.KrnlDebugMode) {
+			switch (g_Settings->m_core.KrnlDebugMode) {
 				case DM_CONSOLE:
 					CheckMenuItem(emul_krnl, ID_EMULATION_DEBUGOUTPUTKERNEL_CONSOLE, MF_CHECKED);
 					CheckMenuItem(emul_krnl, ID_EMULATION_DEBUGOUTPUTKERNEL_FILE, MF_UNCHECKED);
@@ -1661,16 +1661,16 @@ void WndMain::RefreshMenus()
 			// enable/disable clear current hle cache
 			EnableMenuItem(settings_menu, ID_CACHE_CLEARHLECACHE_CURRENT, MF_BYCOMMAND | MF_WhenXbeLoadedNotRunning);
 
-			UINT chk_flag = (g_Settings->m_emulate.FlagsLLE & LLE_JIT) ? MF_CHECKED : MF_UNCHECKED;
+			UINT chk_flag = (g_Settings->m_core.FlagsLLE & LLE_JIT) ? MF_CHECKED : MF_UNCHECKED;
 			CheckMenuItem(settings_menu, ID_EMULATION_LLE_JIT, chk_flag);
 
-			chk_flag = (g_Settings->m_emulate.FlagsLLE & LLE_APU) ? MF_CHECKED : MF_UNCHECKED;
+			chk_flag = (g_Settings->m_core.FlagsLLE & LLE_APU) ? MF_CHECKED : MF_UNCHECKED;
 			CheckMenuItem(settings_menu, ID_EMULATION_LLE_APU, chk_flag);
 
-			chk_flag = (g_Settings->m_emulate.FlagsLLE & LLE_GPU) ? MF_CHECKED : MF_UNCHECKED;
+			chk_flag = (g_Settings->m_core.FlagsLLE & LLE_GPU) ? MF_CHECKED : MF_UNCHECKED;
 			CheckMenuItem(settings_menu, ID_EMULATION_LLE_GPU, chk_flag);
 
-			//chk_flag = (g_Settings->m_emulate.FlagsLLE & LLE_USB) ? MF_CHECKED : MF_UNCHECKED; // Reenable this when LLE USB actually works
+			//chk_flag = (g_Settings->m_core.FlagsLLE & LLE_USB) ? MF_CHECKED : MF_UNCHECKED; // Reenable this when LLE USB actually works
 			//CheckMenuItem(settings_menu, ID_EMULATION_LLE_USB, chk_flag);
 
 			chk_flag = (g_Settings->m_hacks.DisablePixelShaders) ? MF_CHECKED : MF_UNCHECKED;
@@ -2105,7 +2105,7 @@ void WndMain::StartEmulation(HWND hwndParent, DebuggerState LocalDebuggerState /
 		g_EmuShared->SetDebuggingFlag(&AttachLocalDebugger);
 
         std::string szProcArgsBuffer;
-        XTL::CxbxConvertArgToString(szProcArgsBuffer, szExeFileName, m_XbeFilename, hwndParent, g_Settings->m_emulate.KrnlDebugMode, g_Settings->m_emulate.szKrnlDebug);
+        XTL::CxbxConvertArgToString(szProcArgsBuffer, szExeFileName, m_XbeFilename, hwndParent, g_Settings->m_core.KrnlDebugMode, g_Settings->m_core.szKrnlDebug);
 
         if (AttachLocalDebugger) {
 

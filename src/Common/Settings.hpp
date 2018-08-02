@@ -136,16 +136,16 @@ public:
 		std::string szRecentXbeFiles[10];
 		uint DataStorageToggle;
 		std::string szCustomLocation = "";
-		bool allowAdminPrivilege;
 	} m_gui;
 
-	// Emulate settings
-	struct s_emulate {
+	// Core settings
+	struct s_core {
 		uint FlagsLLE;
 		DebugMode KrnlDebugMode;
 		char szKrnlDebug[MAX_PATH] = "";
 		char szStorageLocation[MAX_PATH] = "";
-	} m_emulate;
+		bool allowAdminPrivilege;
+	} m_core;
 
 	// Video settings
 	struct s_video {

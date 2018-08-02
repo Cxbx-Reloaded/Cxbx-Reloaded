@@ -71,15 +71,15 @@ static struct {
 	const char* RecentXbeFiles = "RecentXbeFiles";
 	const char* DataStorageToggle = "DataStorageToggle";
 	const char* DataCustomLocation = "DataCustomLocation";
-	const char* AllowAdminPrivilege = "AllowAdminPrivilege";
 } sect_gui_keys;
 
-static const char* section_emulate = "emulate";
+static const char* section_core = "core";
 static struct {
 	const char* FlagsLLE = "FlagsLLE";
 	const char* KrnlDebugMode = "KrnlDebugMode";
 	const char* KrnlDebugLogFile = "KrnlDebugLogFile";
-} sect_emulate_keys;
+	const char* AllowAdminPrivilege = "AllowAdminPrivilege";
+} sect_core_keys;
 
 static const char* section_video = "video";
 static struct {
@@ -289,23 +289,23 @@ bool Settings::LoadFile(std::string file_path)
 		}
 	}
 
-	m_gui.allowAdminPrivilege = m_si.GetLongValue(section_gui, sect_gui_keys.AllowAdminPrivilege, /*Default=*/false);
-
 	// ==== GUI End =============
 
-	// ==== Emulate Begin =======
+	// ==== Core Begin ==========
 
-	m_emulate.FlagsLLE = m_si.GetLongValue(section_emulate, sect_emulate_keys.FlagsLLE, /*Default=*/LLE_NONE);
-	m_emulate.KrnlDebugMode = (DebugMode)m_si.GetLongValue(section_emulate, sect_emulate_keys.KrnlDebugMode, /*Default=*/DM_NONE);
-	si_data = m_si.GetValue(section_emulate, sect_emulate_keys.KrnlDebugLogFile, /*Default=*/nullptr);
+	m_core.FlagsLLE = m_si.GetLongValue(section_core, sect_core_keys.FlagsLLE, /*Default=*/LLE_NONE);
+	m_core.KrnlDebugMode = (DebugMode)m_si.GetLongValue(section_core, sect_core_keys.KrnlDebugMode, /*Default=*/DM_NONE);
+	si_data = m_si.GetValue(section_core, sect_core_keys.KrnlDebugLogFile, /*Default=*/nullptr);
 	if (si_data != nullptr) {
-		strncpy(m_emulate.szKrnlDebug, si_data, MAX_PATH);
+		strncpy(m_core.szKrnlDebug, si_data, MAX_PATH);
 	}
 	else {
-		m_emulate.szKrnlDebug[0] = '\0';
+		m_core.szKrnlDebug[0] = '\0';
 	}
 
-	// ==== Emulate End =========
+	m_core.allowAdminPrivilege = m_si.GetLongValue(section_core, sect_core_keys.AllowAdminPrivilege, /*Default=*/false);
+
+	// ==== Core End ============
 
 	// ==== Hack Begin ==========
 
@@ -438,13 +438,13 @@ bool Settings::Save(std::string file_path)
 
 	// ==== GUI End =============
 
-	// ==== Emulate Begin =======
+	// ==== Core Begin ==========
 
-	m_si.SetLongValue(section_emulate, sect_emulate_keys.FlagsLLE, m_emulate.FlagsLLE, nullptr, true, true);
-	m_si.SetLongValue(section_emulate, sect_emulate_keys.KrnlDebugMode, m_emulate.KrnlDebugMode, nullptr, true, true);
-	m_si.SetValue(section_emulate, sect_emulate_keys.KrnlDebugLogFile, m_emulate.szKrnlDebug, nullptr, true);
+	m_si.SetLongValue(section_core, sect_core_keys.FlagsLLE, m_core.FlagsLLE, nullptr, true, true);
+	m_si.SetLongValue(section_core, sect_core_keys.KrnlDebugMode, m_core.KrnlDebugMode, nullptr, true, true);
+	m_si.SetValue(section_core, sect_core_keys.KrnlDebugLogFile, m_core.szKrnlDebug, nullptr, true);
 
-	// ==== Emulate End =========
+	// ==== Core End ============
 
 	// ==== Video Begin =========
 
@@ -555,8 +555,8 @@ void Settings::Delete()
 // Universal update to EmuShared from both standalone kernel, and GUI process.
 void Settings::SyncToEmulator()
 {
-	// register Emulate settings
-	g_EmuShared->SetEmulateSettings(&m_emulate);
+	// register Core settings
+	g_EmuShared->SetCoreSettings(&m_core);
 
 	// register Video settings
 	g_EmuShared->SetVideoSettings(&m_video);
@@ -604,24 +604,24 @@ void Settings::Verify()
 		}
 	}
 
-	if (m_emulate.KrnlDebugMode == DM_FILE) {
+	if (m_core.KrnlDebugMode == DM_FILE) {
 
-		if(strlen(m_emulate.szKrnlDebug) == 0) {
-			m_emulate.KrnlDebugMode = DM_NONE;
+		if(strlen(m_core.szKrnlDebug) == 0) {
+			m_core.KrnlDebugMode = DM_NONE;
 		}
 		else {
-			strcpy(szDebugName, strrchr(m_emulate.szKrnlDebug, '\\'));
+			strcpy(szDebugName, strrchr(m_core.szKrnlDebug, '\\'));
 
-			if(strlen(m_emulate.szKrnlDebug) < strlen(szDebugName)) {
-				memset(m_emulate.szKrnlDebug, '\0', MAX_PATH);
-				m_emulate.KrnlDebugMode = DM_NONE;
+			if(strlen(m_core.szKrnlDebug) < strlen(szDebugName)) {
+				memset(m_core.szKrnlDebug, '\0', MAX_PATH);
+				m_core.KrnlDebugMode = DM_NONE;
 			}
 			else {
-				strncpy(szDebugPath, m_emulate.szKrnlDebug, strlen(m_emulate.szKrnlDebug) - strlen(szDebugName));
+				strncpy(szDebugPath, m_core.szKrnlDebug, strlen(m_core.szKrnlDebug) - strlen(szDebugName));
 
 				if(std::filesystem::exists(szDebugPath) == false) {
-					memset(m_emulate.szKrnlDebug, '\0', MAX_PATH);
-					m_emulate.KrnlDebugMode = DM_NONE;
+					memset(m_core.szKrnlDebug, '\0', MAX_PATH);
+					m_core.KrnlDebugMode = DM_NONE;
 				}
 			}
 		}

@@ -100,10 +100,10 @@ class EmuShared : public Mutex
 		void SetKrnlProcID(const unsigned int krnlProcID) { Lock(); m_dwKrnlProcID = krnlProcID; Unlock(); }
 
 		// ******************************************************************
-		// * Xbox Emulate Accessors
+		// * Xbox Core Accessors
 		// ******************************************************************
-		void GetEmulateSettings(      Settings::s_emulate *emulate) { Lock(); *emulate = m_emulate; Unlock(); }
-		void SetEmulateSettings(const Settings::s_emulate *emulate) { Lock(); m_emulate = *emulate; Unlock(); }
+		void GetCoreSettings(      Settings::s_core *emulate) { Lock(); *emulate = m_core; Unlock(); }
+		void SetCoreSettings(const Settings::s_core *emulate) { Lock(); m_core = *emulate; Unlock(); }
 
 		// ******************************************************************
 		// * Xbox Video Accessors
@@ -128,8 +128,8 @@ class EmuShared : public Mutex
 		// ******************************************************************
 		// * LLE Flags Accessors
 		// ******************************************************************
-		void GetFlagsLLE(      uint *flags) { Lock(); *flags = m_emulate.FlagsLLE; Unlock(); }
-		void SetFlagsLLE(const uint *flags) { Lock(); m_emulate.FlagsLLE = *flags; Unlock(); }
+		void GetFlagsLLE(      uint *flags) { Lock(); *flags = m_core.FlagsLLE; Unlock(); }
+		void SetFlagsLLE(const uint *flags) { Lock(); m_core.FlagsLLE = *flags; Unlock(); }
 		void GetFlagsLLEStatus(      uint *flags) { Lock(); *flags = m_FlagsLLE_status; Unlock(); }
 		void SetFlagsLLEStatus(const uint flags) { Lock(); m_FlagsLLE_status = flags; Unlock(); }
 
@@ -201,8 +201,8 @@ class EmuShared : public Mutex
 		// ******************************************************************
 		// * File storage location
 		// ******************************************************************
-		void GetStorageLocation(char *path) { Lock(); strncpy(path, m_emulate.szStorageLocation, MAX_PATH); Unlock(); }
-		void SetStorageLocation(const char *path) { Lock(); strncpy(m_emulate.szStorageLocation, path, MAX_PATH); Unlock(); }
+		void GetStorageLocation(char *path) { Lock(); strncpy(path, m_core.szStorageLocation, MAX_PATH); Unlock(); }
+		void SetStorageLocation(const char *path) { Lock(); strncpy(m_core.szStorageLocation, path, MAX_PATH); Unlock(); }
 
 		// ******************************************************************
 		// * Reset specific variables to default for kernel mode.
@@ -213,7 +213,7 @@ class EmuShared : public Mutex
 			m_BootFlags_status = 0;
 			m_MSpF_status = 0.0f;
 			m_FPS_status = 0.0f;
-			m_FlagsLLE_status = m_emulate.FlagsLLE;
+			m_FlagsLLE_status = m_core.FlagsLLE;
 			Unlock();
 		}
 
@@ -259,7 +259,7 @@ class EmuShared : public Mutex
 		// Third-party program should only be allow to edit settings.ini file.
 		Settings::s_controller_dinput m_controller_dinput;
 		Settings::s_controller_port m_controller_port;
-		Settings::s_emulate m_emulate;
+		Settings::s_core m_core;
 		Settings::s_video m_video;
 		Settings::s_audio m_audio;
 		Settings::s_hack m_hacks;
