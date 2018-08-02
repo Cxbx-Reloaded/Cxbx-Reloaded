@@ -111,6 +111,23 @@ INT_PTR CALLBACK DlgAboutProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 				SizeofResource(GetModuleHandle(NULL), rContributors)
 			);
 
+			size_t position = 0;
+			while (true) {
+				if (position > contributors.length()) {
+					break;
+				}
+				position = contributors.find('\n', position);
+				if (position == std::string::npos) {
+					break;
+				}
+				if (position != 0 && contributors.compare(position - 1, 2U, "\r\n") == 0) {
+					position++;
+					continue;
+				}
+				contributors.insert(position, 1, '\r');
+				position += 2;
+			}
+
 			tab = CreateWindowEx(
 				NULL, "EDIT", contributors.c_str(),
 				WS_CHILD | WS_VSCROLL |ES_MULTILINE | ES_READONLY,
@@ -133,6 +150,23 @@ INT_PTR CALLBACK DlgAboutProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 				(char*)LockResource(LoadResource(GetModuleHandle(NULL), rCopying)),
 				SizeofResource(GetModuleHandle(NULL), rCopying)
 			);
+
+			position = 0;
+			while (true) {
+				if (position > copying.length()) {
+					break;
+				}
+				position = copying.find('\n', position);
+				if (position == std::string::npos) {
+					break;
+				}
+				if (position != 0 && copying.compare(position - 1, 2U, "\r\n") == 0) {
+					position++;
+					continue;
+				}
+				copying.insert(position, 1, '\r');
+				position += 2;
+			}
 
 			tab = CreateWindowEx(
 				NULL, "EDIT", copying.c_str(),
