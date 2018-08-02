@@ -303,7 +303,7 @@ bool Settings::LoadFile(std::string file_path)
 		m_core.szKrnlDebug[0] = '\0';
 	}
 
-	m_core.allowAdminPrivilege = m_si.GetLongValue(section_core, sect_core_keys.AllowAdminPrivilege, /*Default=*/false);
+	m_core.allowAdminPrivilege = m_si.GetBoolValue(section_core, sect_core_keys.AllowAdminPrivilege, /*Default=*/false);
 
 	// ==== Core End ============
 
@@ -443,6 +443,7 @@ bool Settings::Save(std::string file_path)
 	m_si.SetLongValue(section_core, sect_core_keys.FlagsLLE, m_core.FlagsLLE, nullptr, true, true);
 	m_si.SetLongValue(section_core, sect_core_keys.KrnlDebugMode, m_core.KrnlDebugMode, nullptr, true, true);
 	m_si.SetValue(section_core, sect_core_keys.KrnlDebugLogFile, m_core.szKrnlDebug, nullptr, true);
+	m_si.SetBoolValue(section_core, sect_core_keys.AllowAdminPrivilege, m_core.allowAdminPrivilege, nullptr, true);
 
 	// ==== Core End ============
 
