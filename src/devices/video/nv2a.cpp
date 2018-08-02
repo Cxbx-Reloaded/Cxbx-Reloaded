@@ -761,7 +761,7 @@ void cxbx_gl_render_framebuffer(NV2AState *d)
 		glTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_RGBA, cfi.gl_swizzle_mask);
 	}
 
-//#define BLIT_FRAMEBUFFER
+#define BLIT_FRAMEBUFFER
 #ifdef BLIT_FRAMEBUFFER
 	// If we need to create an OpenGL framebuffer, do so
 	static GLuint framebuffer = -1;
