@@ -34,10 +34,6 @@
 #ifndef EMUD3D8TYPES_H
 #define EMUD3D8TYPES_H
 
-//#define CXBX_USE_D3D9 // Declared in the Debug_Direct3D9 build configuration
-
-#ifdef CXBX_USE_D3D9
-
 #undef UNICODE // make sure dxerr.h DXGetErrorString is aliassed to *A, not *W
 
 // include direct3d 9x headers
@@ -101,47 +97,6 @@
 typedef D3DLIGHT9 X_D3DLIGHT8;
 typedef D3DMATERIAL9 X_D3DMATERIAL8;
 typedef D3DVIEWPORT9 X_D3DVIEWPORT8;
-
-#else
-
-// include direct3d 8x headers
-#define DIRECT3D_VERSION 0x0800
-#include <d3d8.h>
-#include <d3dx8math.h> // For D3DXVECTOR4, etc
-#include <d3dx8tex.h>
-#include <dxerr8.h> // For DXGetErrorString8A, DXGetErrorDescription8A
-
-// Alias all host Direct3D 8 symbols to generic symbols
-#define Direct3DCreate			 Direct3DCreate8
-#define DXGetErrorString         DXGetErrorString8A
-#define DXGetErrorDescription    DXGetErrorDescription8A
-#define D3DLockData              BYTE
-#define PixelShaderConstantType  void
-
-#define D3DADAPTER_IDENTIFIER    D3DADAPTER_IDENTIFIER8
-#define D3DCAPS                  D3DCAPS8
-#define D3DVERTEXELEMENT         DWORD
-#define D3DVIEWPORT              D3DVIEWPORT8
-
-#define IDirect3D                IDirect3D8
-#define IDirect3DDevice          IDirect3DDevice8
-#define IDirect3DResource        IDirect3DResource8
-#define IDirect3DBaseTexture     IDirect3DBaseTexture8
-#define IDirect3DTexture         IDirect3DTexture8
-#define IDirect3DVolumeTexture   IDirect3DVolumeTexture8
-#define IDirect3DCubeTexture     IDirect3DCubeTexture8
-#define IDirect3DVertexBuffer    IDirect3DVertexBuffer8
-#define IDirect3DIndexBuffer     IDirect3DIndexBuffer8
-#define IDirect3DSurface         IDirect3DSurface8
-#define IDirect3DVolume          IDirect3DVolume8
-#define IDirect3DSwapChain       IDirect3DSwapChain8
-
-// TODO : Declare these aliasses as Xbox type
-typedef D3DLIGHT8 X_D3DLIGHT8;
-typedef D3DMATERIAL8 X_D3DMATERIAL8;
-typedef D3DVIEWPORT8 X_D3DVIEWPORT8;
-
-#endif // Direct3d8
 
 // TODO: fill out these enumeration tables for convienance
 typedef D3DSWAPEFFECT X_D3DSWAPEFFECT;

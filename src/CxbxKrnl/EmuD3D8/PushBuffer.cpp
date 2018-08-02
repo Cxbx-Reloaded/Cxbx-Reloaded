@@ -49,9 +49,7 @@
 
 // TODO: Find somewhere to put this that doesn't conflict with XTL::
 extern void EmuUpdateActiveTextureStages();
-#ifdef CXBX_USE_D3D9
 extern DWORD g_XboxBaseVertexIndex;
-#endif
 
 const char *NV2AMethodToString(DWORD dwMethod); // forward
 

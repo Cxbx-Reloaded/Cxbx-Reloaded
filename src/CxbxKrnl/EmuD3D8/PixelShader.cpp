@@ -4197,14 +4197,9 @@ static const
   hRet = D3DXAssembleShader(
     ConvertedPixelShaderStr.c_str(),
     ConvertedPixelShaderStr.length(),
-#ifdef CXBX_USE_D3D9
     /*pDefines=*/nullptr,
     /*pInclude=*/nullptr,
-#endif
     /*Flags=*/0, // D3DXASM_DEBUG,
-#ifndef CXBX_USE_D3D9
-    /*ppConstants=*/NULL,
-#endif
     /*ppCompiledShader=*/&pShader,
     /*ppCompilationErrors*/&pErrors);
 
@@ -4218,20 +4213,11 @@ static const
     hRet = D3DXAssembleShader(
       szDiffusePixelShader,
       strlen(szDiffusePixelShader),
-#ifdef CXBX_USE_D3D9
-    /*pDefines=*/nullptr,
-    /*pInclude=*/nullptr,
-#endif
-#ifndef CXBX_USE_D3D9
-	/*Flags=*/D3DXASM_SKIPVALIDATION,
-#else
-	/*Flags=*/0,
-#endif
-#ifndef CXBX_USE_D3D9
-	/*ppConstants=*/NULL,
-#endif
-    /*ppCompiledShader=*/&pShader,
-    /*ppCompilationErrors*/&pErrors);
+      /*pDefines=*/nullptr,
+      /*pInclude=*/nullptr,
+	  /*Flags=*/0, // Was D3DXASM_SKIPVALIDATION,
+      /*ppCompiledShader=*/&pShader,
+      /*ppCompilationErrors*/&pErrors);
 
 	if (hRet != D3D_OK) {
 		EmuWarning("Could not create pixel shader");
@@ -4250,11 +4236,7 @@ static const
       hRet = g_pD3DDevice->CreatePixelShader
       (
         pFunction,
-#ifdef CXBX_USE_D3D9
         (XTL::IDirect3DPixelShader9**)(&(Result.ConvertedHandle)) //fixme
-#else
-        /*out*/&(Result.ConvertedHandle)
-#endif
       );
 
 	  if (hRet != D3D_OK) {
@@ -4338,17 +4320,9 @@ VOID XTL::DxbxUpdateActivePixelShader() // NOPATCH
     // pixel shader, to avoid many unnecessary state changes on the local side).
     ConvertedPixelShaderHandle = RecompiledPixelShader->ConvertedHandle;
 
-#ifdef CXBX_USE_D3D9
     g_pD3DDevice->GetPixelShader(/*out*/(IDirect3DPixelShader9**)(&CurrentPixelShader));
-#else
-    g_pD3DDevice->GetPixelShader(/*out*/&CurrentPixelShader);
-#endif
     if (CurrentPixelShader != ConvertedPixelShaderHandle)
-#ifdef CXBX_USE_D3D9
 		g_pD3DDevice->SetPixelShader((IDirect3DPixelShader9*)ConvertedPixelShaderHandle);
-#else
-		g_pD3DDevice->SetPixelShader(ConvertedPixelShaderHandle);
-#endif
 
     // Note : We set the constants /after/ setting the shader, so that any
     // constants in the shader declaration can be overwritten (this will be
@@ -4400,11 +4374,7 @@ VOID XTL::DxbxUpdateActivePixelShader() // NOPATCH
         Register_ = RecompiledPixelShader->ConstMapping[i];
         // TODO : Avoid the following setter if it's no different from the previous update (this might speed things up)
         // Set the value locally in this register :
-#ifdef CXBX_USE_D3D9
         g_pD3DDevice->SetPixelShaderConstantF
-#else
-		g_pD3DDevice->SetPixelShaderConstant
-#endif
 		(
 			Register_, 
 			(PixelShaderConstantType*)(&fColor),
@@ -4416,11 +4386,7 @@ VOID XTL::DxbxUpdateActivePixelShader() // NOPATCH
   else
   {
     ConvertedPixelShaderHandle = 0;
-#ifdef CXBX_USE_D3D9
 	g_pD3DDevice->SetPixelShader((IDirect3DPixelShader9*)ConvertedPixelShaderHandle);
-#else
-	g_pD3DDevice->SetPixelShader(ConvertedPixelShaderHandle);
-#endif
   }
 }
 

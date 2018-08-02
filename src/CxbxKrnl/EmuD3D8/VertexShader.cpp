@@ -1683,12 +1683,6 @@ static DWORD VshGetDeclarationSize(DWORD *pDeclaration)
     return Pos + 1;
 }
 
-#ifndef CXBX_USE_D3D9
-namespace XTL {
-typedef DWORD D3DDECLUSAGE;
-}
-#endif
-
 #define D3DDECLUSAGE_UNSUPPORTED ((D3DDECLUSAGE)-1)
 
 XTL::D3DDECLUSAGE Xb2PCRegisterType
@@ -1700,9 +1694,8 @@ XTL::D3DDECLUSAGE Xb2PCRegisterType
 	using namespace XTL;
 
 	D3DDECLUSAGE PCRegisterType;
-#ifdef CXBX_USE_D3D9
 	DWORD PCUsageIndex = 0;
-#endif
+
 	// For fixed function vertex shaders, print D3DVSDE_*, for custom shaders print numbered registers.
 	if (IsFixedFunction) {
 		switch (VertexRegister)
@@ -1713,52 +1706,27 @@ XTL::D3DDECLUSAGE Xb2PCRegisterType
 			break;
 		case X_D3DVSDE_POSITION: // 0
 			DbgVshPrintf("D3DVSDE_POSITION");
-#ifdef CXBX_USE_D3D9
 			PCRegisterType = D3DDECLUSAGE_POSITION;
-#else
-			PCRegisterType = D3DVSDE_POSITION;
-#endif
 			break;
 		case X_D3DVSDE_BLENDWEIGHT: // 1
 			DbgVshPrintf("D3DVSDE_BLENDWEIGHT");
-#ifdef CXBX_USE_D3D9
 			PCRegisterType = D3DDECLUSAGE_BLENDWEIGHT;
-#else
-			PCRegisterType = D3DVSDE_BLENDWEIGHT;
-#endif
 			break;
 		case X_D3DVSDE_NORMAL: // 2
 			DbgVshPrintf("D3DVSDE_NORMAL");
-#ifdef CXBX_USE_D3D9
 			PCRegisterType = D3DDECLUSAGE_NORMAL;
-#else
-			PCRegisterType = D3DVSDE_NORMAL;
-#endif
 			break;
 		case X_D3DVSDE_DIFFUSE: // 3
 			DbgVshPrintf("D3DVSDE_DIFFUSE");
-#ifdef CXBX_USE_D3D9
 			PCRegisterType = D3DDECLUSAGE_COLOR; PCUsageIndex = 0;
-#else
-			PCRegisterType = D3DVSDE_DIFFUSE;
-#endif
 			break;
 		case X_D3DVSDE_SPECULAR: // 4
 			DbgVshPrintf("D3DVSDE_SPECULAR");
-#ifdef CXBX_USE_D3D9
 			PCRegisterType = D3DDECLUSAGE_COLOR; PCUsageIndex = 1;
-#else
-			PCRegisterType = D3DVSDE_SPECULAR;
-#endif
 			break;
 		case X_D3DVSDE_FOG: // 5
-#ifdef CXBX_USE_D3D9
 			DbgVshPrintf("D3DVSDE_FOG");
 			PCRegisterType = D3DDECLUSAGE_FOG;
-#else
-			DbgVshPrintf("D3DVSDE_FOG /* xbox ext. */");
-			PCRegisterType = D3DDECLUSAGE_UNSUPPORTED;
-#endif
 			break;
 		case X_D3DVSDE_BACKDIFFUSE: // 7
 			DbgVshPrintf("D3DVSDE_BACKDIFFUSE /* xbox ext. */");
@@ -1770,35 +1738,19 @@ XTL::D3DDECLUSAGE Xb2PCRegisterType
 			break;
 		case X_D3DVSDE_TEXCOORD0: // 9
 			DbgVshPrintf("D3DVSDE_TEXCOORD0");
-#ifdef CXBX_USE_D3D9
 			PCRegisterType = D3DDECLUSAGE_TEXCOORD; PCUsageIndex = 0;
-#else
-			PCRegisterType = D3DVSDE_TEXCOORD0;
-#endif
 			break;
 		case X_D3DVSDE_TEXCOORD1: // 10
 			DbgVshPrintf("D3DVSDE_TEXCOORD1");
-#ifdef CXBX_USE_D3D9
 			PCRegisterType = D3DDECLUSAGE_TEXCOORD; PCUsageIndex = 1;
-#else
-			PCRegisterType = D3DVSDE_TEXCOORD1;
-#endif
 			break;
 		case X_D3DVSDE_TEXCOORD2: // 11
 			DbgVshPrintf("D3DVSDE_TEXCOORD2");
-#ifdef CXBX_USE_D3D9
 			PCRegisterType = D3DDECLUSAGE_TEXCOORD; PCUsageIndex = 2;
-#else
-			PCRegisterType = D3DVSDE_TEXCOORD2;
-#endif
 			break;
 		case X_D3DVSDE_TEXCOORD3: // 12
 			DbgVshPrintf("D3DVSDE_TEXCOORD3");
-#ifdef CXBX_USE_D3D9
 			PCRegisterType = D3DDECLUSAGE_TEXCOORD; PCUsageIndex = 3;
-#else
-			PCRegisterType = D3DVSDE_TEXCOORD3;
-#endif
 			break;
 		default:
 			DbgVshPrintf("%d /* unknown register */", VertexRegister);
@@ -1811,9 +1763,7 @@ XTL::D3DDECLUSAGE Xb2PCRegisterType
 	}
 
     return PCRegisterType;
-#ifdef CXBX_USE_D3D9
 	// TODO : Also return (and use) PCUsageIndex
-#endif
 }
 
 static inline DWORD VshGetTokenType(DWORD Token)
@@ -2043,20 +1993,7 @@ static void VshConvertToken_STREAMDATA_REG(
 {
     using namespace XTL;
 
-#if CXBX_USE_D3D9
 	extern XTL::D3DCAPS g_D3DCaps;
-#endif
-
-#if !CXBX_USE_D3D9 // For simpler support for both Direct3D 8 and 9, use these '9' constants in below '8' code paths too:
-#define	D3DDECLTYPE_FLOAT1 D3DVSDT_FLOAT1
-#define	D3DDECLTYPE_FLOAT2 D3DVSDT_FLOAT2
-#define	D3DDECLTYPE_FLOAT3 D3DVSDT_FLOAT3
-#define	D3DDECLTYPE_FLOAT4 D3DVSDT_FLOAT4
-#define	D3DDECLTYPE_D3DCOLOR D3DVSDT_D3DCOLOR
-#define	D3DDECLTYPE_SHORT2 D3DVSDT_SHORT2
-#define	D3DDECLTYPE_SHORT4 D3DVSDT_SHORT4
-#define	D3DDECLTYPE_UNUSED 0xFF
-#endif
 
     XTL::DWORD VertexRegister = VshGetVertexRegister(*pToken);
     XTL::DWORD HostVertexRegister;
@@ -2109,13 +2046,11 @@ static void VshConvertToken_STREAMDATA_REG(
 		break;
 	case X_D3DVSDT_NORMSHORT1: // 0x11:
 		DbgVshPrintf("D3DVSDT_NORMSHORT1 /* xbox ext. */");
-#if CXBX_USE_D3D9
 		if (g_D3DCaps.DeclTypes & D3DDTCAPS_SHORT2N) {
 			HostVertexElementDataType = D3DDECLTYPE_SHORT2N;
 			HostVertexElementByteSize = 2 * sizeof(SHORT);
 		}
 		else
-#endif
 		{
 			HostVertexElementDataType = D3DDECLTYPE_FLOAT1;
 			HostVertexElementByteSize = 1 * sizeof(FLOAT);
@@ -2123,7 +2058,6 @@ static void VshConvertToken_STREAMDATA_REG(
 		NeedPatching = TRUE;
 		break;
 	case X_D3DVSDT_NORMSHORT2: // 0x21:
-#if CXBX_USE_D3D9
 		if (g_D3DCaps.DeclTypes & D3DDTCAPS_SHORT2N) {
 			DbgVshPrintf("D3DVSDT_NORMSHORT2");
 			HostVertexElementDataType = D3DDECLTYPE_SHORT2N;
@@ -2131,7 +2065,6 @@ static void VshConvertToken_STREAMDATA_REG(
 			// No need for patching in D3D9
 		}
 		else
-#endif
 		{
 			DbgVshPrintf("D3DVSDT_NORMSHORT2 /* xbox ext. */");
 			HostVertexElementDataType = D3DDECLTYPE_FLOAT2;
@@ -2141,13 +2074,11 @@ static void VshConvertToken_STREAMDATA_REG(
 		break;
 	case X_D3DVSDT_NORMSHORT3: // 0x31:
 		DbgVshPrintf("D3DVSDT_NORMSHORT3 /* xbox ext. */");
-#if CXBX_USE_D3D9
 		if (g_D3DCaps.DeclTypes & D3DDTCAPS_SHORT4N) {
 			HostVertexElementDataType = D3DDECLTYPE_SHORT4N;
 			HostVertexElementByteSize = 4 * sizeof(SHORT);
 		}
 		else
-#endif
 		{
 			HostVertexElementDataType = D3DDECLTYPE_FLOAT3;
 			HostVertexElementByteSize = 3 * sizeof(FLOAT);
@@ -2155,7 +2086,6 @@ static void VshConvertToken_STREAMDATA_REG(
 		NeedPatching = TRUE;
 		break;
 	case X_D3DVSDT_NORMSHORT4: // 0x41:
-#if CXBX_USE_D3D9
 		if (g_D3DCaps.DeclTypes & D3DDTCAPS_SHORT4N) {
 			DbgVshPrintf("D3DVSDT_NORMSHORT4");
 			HostVertexElementDataType = D3DDECLTYPE_SHORT4N;
@@ -2163,7 +2093,6 @@ static void VshConvertToken_STREAMDATA_REG(
 			// No need for patching in D3D9
 		}
 		else
-#endif
 		{
 			DbgVshPrintf("D3DVSDT_NORMSHORT4 /* xbox ext. */");
 			HostVertexElementDataType = D3DDECLTYPE_FLOAT4;
@@ -2191,13 +2120,11 @@ static void VshConvertToken_STREAMDATA_REG(
 		break;
 	case X_D3DVSDT_PBYTE1: // 0x14:
 		DbgVshPrintf("D3DVSDT_PBYTE1 /* xbox ext. */");
-#if CXBX_USE_D3D9
 		if (g_D3DCaps.DeclTypes & D3DDTCAPS_UBYTE4N) {
 			HostVertexElementDataType = D3DDECLTYPE_UBYTE4N;
 			HostVertexElementByteSize = 4 * sizeof(BYTE);
 		}
 		else
-#endif
 		{
 			HostVertexElementDataType = D3DDECLTYPE_FLOAT1;
 			HostVertexElementByteSize = 1 * sizeof(FLOAT);
@@ -2206,13 +2133,11 @@ static void VshConvertToken_STREAMDATA_REG(
 		break;
 	case X_D3DVSDT_PBYTE2: // 0x24:
 		DbgVshPrintf("D3DVSDT_PBYTE2 /* xbox ext. */");
-#if CXBX_USE_D3D9
 		if (g_D3DCaps.DeclTypes & D3DDTCAPS_UBYTE4N) {
 			HostVertexElementDataType = D3DDECLTYPE_UBYTE4N;
 			HostVertexElementByteSize = 4 * sizeof(BYTE);
 		}
 		else
-#endif
 		{
 			HostVertexElementDataType = D3DDECLTYPE_FLOAT2;
 			HostVertexElementByteSize = 2 * sizeof(FLOAT);
@@ -2221,13 +2146,11 @@ static void VshConvertToken_STREAMDATA_REG(
 		break;
 	case X_D3DVSDT_PBYTE3: // 0x34:
 		DbgVshPrintf("D3DVSDT_PBYTE3 /* xbox ext. */");
-#if CXBX_USE_D3D9
 		if (g_D3DCaps.DeclTypes & D3DDTCAPS_UBYTE4N) {
 			HostVertexElementDataType = D3DDECLTYPE_UBYTE4N;
 			HostVertexElementByteSize = 4 * sizeof(BYTE);
 		}
 		else
-#endif
 		{
 			HostVertexElementDataType = D3DDECLTYPE_FLOAT3;
 			HostVertexElementByteSize = 3 * sizeof(FLOAT);
@@ -2236,7 +2159,6 @@ static void VshConvertToken_STREAMDATA_REG(
 		break;
 	case X_D3DVSDT_PBYTE4: // 0x44:
 		// Test-case : Panzer
-#if CXBX_USE_D3D9
 		if (g_D3DCaps.DeclTypes & D3DDTCAPS_UBYTE4N) {
 			DbgVshPrintf("D3DVSDT_PBYTE4");
 			HostVertexElementDataType = D3DDECLTYPE_UBYTE4N;
@@ -2244,7 +2166,6 @@ static void VshConvertToken_STREAMDATA_REG(
 			// No need for patching when D3D9 supports D3DDECLTYPE_UBYTE4N
 		}
 		else
-#endif
 		{
 			DbgVshPrintf("D3DVSDT_PBYTE4 /* xbox ext. */");
 			HostVertexElementDataType = D3DDECLTYPE_FLOAT4;
@@ -2538,18 +2459,9 @@ extern HRESULT XTL::EmuRecompileVshFunction
 			hRet = D3DXAssembleShader(
 				dummy,
 				strlen(dummy),
-#ifdef CXBX_USE_D3D9
 				/*pDefines=*/nullptr,
 				/*pInclude=*/nullptr,
-#endif
-#ifndef CXBX_USE_D3D9
-				/*Flags=*/D3DXASM_SKIPVALIDATION,
-#else
-				/*Flags=*/0,
-#endif
-#ifndef CXBX_USE_D3D9
-				/*ppConstants=*/NULL,
-#endif
+				/*Flags=*/0, // Was D3DXASM_SKIPVALIDATION,
 				/*ppCompiledShader=*/ppRecompiled,
 				/*ppCompilationErrors*/nullptr);
 		}
@@ -2558,18 +2470,9 @@ extern HRESULT XTL::EmuRecompileVshFunction
 			hRet = D3DXAssembleShader(
 				pShaderDisassembly,
 				strlen(pShaderDisassembly),
-#ifdef CXBX_USE_D3D9
 				/*pDefines=*/nullptr,
 				/*pInclude=*/nullptr,
-#endif
-#ifndef CXBX_USE_D3D9
-				/*Flags=*/D3DXASM_SKIPVALIDATION,
-#else
-				/*Flags=*/0,
-#endif
-#ifndef CXBX_USE_D3D9
-				/*ppConstants=*/NULL,
-#endif
+				/*Flags=*/0, // Was D3DXASM_SKIPVALIDATION,
 				/*ppCompiledShader=*/ppRecompiled,
 				/*ppCompilationErrors*/&pErrors);
 		}
