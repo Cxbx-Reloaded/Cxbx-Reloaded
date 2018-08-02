@@ -40,6 +40,7 @@
 #include "Cxbx.h"
 #include <stdint.h>
 #include <assert.h>
+#include <string>
 
 /* This is a linux struct for vectored I/O. See readv() and writev() */
 struct IoVec
@@ -67,6 +68,8 @@ void WriteDwords(xbaddr Paddr, uint32_t* Buffer, int Number);
 void GetDwords(xbaddr Paddr, uint32_t* Buffer, int Number);
 void GetWords(xbaddr Paddr, uint16_t* Buffer, int Number);
 void WriteWords(xbaddr Paddr, uint16_t* Buffer, int Number);
+
+void unix2dos(std::string& string);
 
 #define GET_WORD_LOW(value) (uint8_t)((value) & 0xFF)
 #define GET_WORD_HIGH(value) (uint8_t)(((value) >> 8) & 0xFF)

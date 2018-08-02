@@ -44,7 +44,7 @@
 #endif
 
 
-// Acknowledgment: all the functions present at the moment are from XQEMU (GPLv2)
+// Acknowledgment: some the functions present are from XQEMU (GPLv2)
 // https://xqemu.com/
 
 
@@ -173,5 +173,25 @@ void WriteWords(xbaddr Paddr, uint16_t* Buffer, int Number)
 {
 	for (int i = 0; i < Number; i++, Buffer++, Paddr += sizeof(*Buffer)) {
 		std::memcpy(reinterpret_cast<void*>(Paddr + CONTIGUOUS_MEMORY_BASE), Buffer, 2); // dropped big -> little endian conversion from XQEMU
+	}
+}
+
+void unix2dos(std::string& string)
+{
+	size_t position = 0;
+	while (true) {
+		if (position > string.length()) {
+			break;
+		}
+		position = string.find('\n', position);
+		if (position == std::string::npos) {
+			break;
+		}
+		if (position != 0 && string.compare(position - 1, 2U, "\r\n") == 0) {
+			position++;
+			continue;
+		}
+		string.insert(position, 1, '\r');
+		position += 2;
 	}
 }
