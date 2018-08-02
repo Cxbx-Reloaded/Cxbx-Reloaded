@@ -99,7 +99,7 @@ DEVICE_WRITE32(PRAMDAC)
 		break;
 
 	default: 
-		//DEVICE_WRITE32_REG(pramdac); // Was : DEBUG_WRITE32_UNHANDLED(PRAMDAC);
+		DEVICE_WRITE32_REG(pramdac); // Was : DEBUG_WRITE32_UNHANDLED(PRAMDAC);
 		break;
 	}
 

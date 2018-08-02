@@ -460,6 +460,29 @@ typedef struct Cache1State {
 	std::queue<CacheEntry*> working_cache;
 } Cache1State;
 
+typedef struct OverlayState {
+	bool video_buffer_use;
+	int pitch;
+	bool is_transparent;
+#ifdef DEBUG
+	hwaddr base;
+	hwaddr limit;
+#endif
+	hwaddr offset;
+	uint32_t in_height;
+	uint32_t in_width;
+	int out_x;
+	int out_y;
+	int out_width;
+	int out_height;
+
+	bool covers_framebuffer;
+	int old_in_width;
+	int old_in_height;
+	int old_pitch;
+	GLuint gl_texture;
+} OverlayState;
+
 typedef struct ChannelControl {
 	xbaddr dma_put;
 	xbaddr dma_get;
@@ -506,7 +529,8 @@ typedef struct NV2AState {
     struct {
 		uint32_t pending_interrupts;
 		uint32_t enabled_interrupts;
-		QemuCond interrupt_cond;
+		//QemuCond interrupt_cond; // pvideo.interrupt_cond not used (yet)
+		OverlayState overlays[2]; // NV2A supports 2 video overlays
 		uint32_t regs[NV_PVIDEO_SIZE]; // TODO : union
     } pvideo;
 
@@ -565,6 +589,8 @@ typedef struct NV2ABlockInfo {
 	uint64_t size;
 	MemoryRegionOps ops;
 } NV2ABlockInfo;
+
+const NV2ABlockInfo* EmuNV2A_Block(xbaddr addr);
 
 #if 0
 // Valid after PCI init :
@@ -642,7 +668,9 @@ public:
 
 	uint32_t IORead(int barIndex, uint32_t port, unsigned size);
 	void IOWrite(int barIndex, uint32_t port, uint32_t value, unsigned size);
+	uint32_t BlockRead(const NV2ABlockInfo* block, uint32_t addr, unsigned size);
 	uint32_t MMIORead(int barIndex, uint32_t addr, unsigned size);
+	void BlockWrite(const NV2ABlockInfo* block, uint32_t addr, uint32_t value, unsigned size);
 	void MMIOWrite(int barIndex, uint32_t addr, uint32_t value, unsigned size);
 
 	static void UpdateHostDisplay(NV2AState *d);
