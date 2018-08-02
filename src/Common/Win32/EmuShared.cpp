@@ -140,6 +140,13 @@ EmuShared::EmuShared()
 	m_bDebugging = false;
 	m_bEmulating_status = false;
 	m_bFirstLaunch = false;
+
+	// Reserve space (default to 0)
+	m_bReserved1 = false;
+	m_bReserved2 = false;
+	m_bReserved3 = false;
+	m_bReserved4 = false;
+	memset(m_Reserved99, 0, sizeof(m_Reserved99));
 }
 
 // ******************************************************************
