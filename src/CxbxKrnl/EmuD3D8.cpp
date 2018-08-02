@@ -1422,15 +1422,31 @@ static DWORD WINAPI EmuRenderWindow(LPVOID lpVoid)
 
     // create the window
     {
-        HWND hwndParent = GetDesktopWindow();
-        DWORD dwStyle = WS_POPUP;
+		// Peform selection if running in GUI or kernel mode first.
+		HWND hwndParent = (!CxbxKrnl_hEmuParent ? GetDesktopWindow() : CxbxKrnl_hEmuParent);
+		DWORD dwStyle = WS_POPUP;
 		RECT windowRect = { 0 };
 
-        if (!g_XBVideo.bFullScreen) {
-			hwndParent = CxbxKrnl_hEmuParent;
-			GetWindowRect(hwndParent, &windowRect);
-			dwStyle = (CxbxKrnl_hEmuParent == 0) ? WS_OVERLAPPEDWINDOW : WS_CHILD;
-        }
+		// Obtain the selected resolution from GUI or full desktop screen in kernel mode.
+		if (!GetWindowRect(hwndParent, &windowRect)) {
+			// Fall back resolution if failed
+			windowRect = { 0, 0, 640, 480 };
+		}
+
+		// Then perform additional checks if not running in full screen.
+		if (!g_XBVideo.bFullScreen) {
+
+			// If running as kernel mode, force use the xbox's default resolution.
+			if (!CxbxKrnl_hEmuParent) {
+				// Xbox default resolution (standalone window is resizable by the way)
+				windowRect.right = 640;
+				windowRect.bottom = 480;
+				dwStyle = WS_OVERLAPPEDWINDOW;
+			}
+			else {
+				dwStyle = WS_CHILD;
+			}
+		}
 
         g_hEmuWindow = CreateWindow
         (
