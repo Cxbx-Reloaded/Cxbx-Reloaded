@@ -71,6 +71,7 @@ static struct {
 	const char* RecentXbeFiles = "RecentXbeFiles";
 	const char* DataStorageToggle = "DataStorageToggle";
 	const char* DataCustomLocation = "DataCustomLocation";
+	const char* AllowAdminPrivilege = "AllowAdminPrivilege";
 } sect_gui_keys;
 
 static const char* section_emulate = "emulate";
@@ -287,6 +288,8 @@ bool Settings::LoadFile(std::string file_path)
 			m_gui.szRecentXbeFiles[i] = si_list_iterator->pItem;
 		}
 	}
+
+	m_gui.allowAdminPrivilege = m_si.GetLongValue(section_gui, sect_gui_keys.AllowAdminPrivilege, /*Default=*/false);
 
 	// ==== GUI End =============
 

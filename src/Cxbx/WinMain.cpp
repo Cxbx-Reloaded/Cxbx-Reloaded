@@ -86,17 +86,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     /* check if process is launch with elevated access then prompt for continue on or not. */
 	if (!bFirstLaunch) {
-		bool bElevated = CxbxIsElevated();
-		if (bElevated && !bFirstLaunch) {
-			int ret = MessageBox(NULL, "Cxbx-Reloaded has detected that it has been launched with Administrator rights.\n"
-			                    "\nThis is dangerous, as a maliciously modified Xbox titles could take control of your system.\n"
-			                    "\nAre you sure you want to continue?", "Cxbx-Reloaded", MB_YESNO | MB_ICONWARNING);
-			if (ret != IDYES) {
-				EmuShared::Cleanup();
-				return EXIT_FAILURE;
-			}
-		}
-		g_EmuShared->SetIsFirstLaunch(true);
 
 		g_Settings = new Settings();
 
@@ -111,6 +100,19 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			EmuShared::Cleanup();
 			return EXIT_FAILURE;
 		}
+
+		bool bElevated = CxbxIsElevated();
+
+		if (bElevated && !g_Settings->m_gui.allowAdminPrivilege) {
+			int ret = MessageBox(NULL, "Cxbx-Reloaded has detected that it has been launched with Administrator rights.\n"
+			                    "\nThis is dangerous, as a maliciously modified Xbox titles could take control of your system.\n"
+			                    "\nAre you sure you want to continue?", "Cxbx-Reloaded", MB_YESNO | MB_ICONWARNING);
+			if (ret != IDYES) {
+				EmuShared::Cleanup();
+				return EXIT_FAILURE;
+			}
+		}
+		g_EmuShared->SetIsFirstLaunch(true);
 	}
 
 	if (__argc >= 2 && strcmp(__argv[1], "/load") == 0 && strlen(__argv[2]) > 0)  {

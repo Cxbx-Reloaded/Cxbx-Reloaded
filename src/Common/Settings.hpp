@@ -136,6 +136,7 @@ public:
 		std::string szRecentXbeFiles[10];
 		uint DataStorageToggle;
 		std::string szCustomLocation = "";
+		bool allowAdminPrivilege;
 	} m_gui;
 
 	// Emulate settings
