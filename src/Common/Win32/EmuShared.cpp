@@ -56,7 +56,7 @@ HANDLE hMapObject = NULL;
 // ******************************************************************
 // * func: EmuShared::EmuSharedInit
 // ******************************************************************
-void EmuShared::Init()
+void EmuShared::Init(DWORD guiProcessID)
 {
     // ******************************************************************
     // * Ensure initialization only occurs once
@@ -73,7 +73,7 @@ void EmuShared::Init()
     // * Create the shared memory "file"
     // ******************************************************************
     {
-        std::string emuSharedStr = "Local\\EmuShared-s" + std::to_string(settings_version);
+        std::string emuSharedStr = "Local\\EmuShared-s" + std::to_string(settings_version) + "-p" + std::to_string(guiProcessID);
         hMapObject = CreateFileMapping
         (
             INVALID_HANDLE_VALUE,   // Paging file

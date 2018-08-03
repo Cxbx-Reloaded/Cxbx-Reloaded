@@ -76,10 +76,31 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		return EXIT_FAILURE;
 	}
 
-	bool bRet;
+	bool bRet, bKernel;
+	HWND hWnd = nullptr;
+	DWORD guiProcessID = 0;
+
+	if (__argc >= 2 && std::strcmp(__argv[1], "/load") == 0 && std::strlen(__argv[2]) > 0) {
+		bKernel = true;
+
+		// Perform check if command line contain gui's hWnd value.
+		if (__argc > 2) {
+			hWnd = (HWND)std::stoi(__argv[3], nullptr, 10);
+
+			hWnd = IsWindow(hWnd) ? hWnd : nullptr;
+			if (hWnd != nullptr) {
+				// We don't need thread ID from window handle.
+				GetWindowThreadProcessId(hWnd, &guiProcessID);
+			}
+		}
+	}
+	else {
+		bKernel = false;
+		guiProcessID = GetCurrentProcessId();
+	}
 
 	/*! initialize shared memory */
-	EmuShared::Init();
+	EmuShared::Init(guiProcessID);
 
 	bool bFirstLaunch;
 	g_EmuShared->GetIsFirstLaunch(&bFirstLaunch);
@@ -115,7 +136,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		g_EmuShared->SetIsFirstLaunch(true);
 	}
 
-	if (__argc >= 2 && strcmp(__argv[1], "/load") == 0 && strlen(__argv[2]) > 0)  {
+	if (bKernel) {
 
 		// NOTE: This is designated for standalone kernel mode launch without GUI
 		if (g_Settings != nullptr) {
