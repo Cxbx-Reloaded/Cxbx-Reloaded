@@ -55,121 +55,71 @@ namespace NtDll
 	#include "EmuNtDll.h"
 };
 
-// ******************************************************************
-// * 0x014F - XcSHAInit()
-// ******************************************************************
-XBSYSAPI EXPORTNUM(335) xboxkrnl::VOID NTAPI xboxkrnl::XcSHAInit
+
+// The following are the default implementations of the crypto functions
+
+xboxkrnl::VOID NTAPI JumpedSHAInit
 (
-	IN PUCHAR pbSHAContext
+	xboxkrnl::PUCHAR pbSHAContext
 )
 {
-	LOG_FUNC_ONE_ARG_TYPE(PBYTE, pbSHAContext);
-
-	// The sha1 context supplied by this function has an extra 24 bytes at the beginning which are unsed by our implementation,
+	// The sha1 context supplied to this function has an extra 24 bytes at the beginning which are unsed by our implementation,
 	// so we skip them. The same is true for XcSHAUpdate and XcSHAFinal
 
 	SHA1Init((SHA1_CTX*)(pbSHAContext + 24));
 }
 
-// ******************************************************************
-// * 0x0150 - XcSHAUpdate()
-// ******************************************************************
-XBSYSAPI EXPORTNUM(336) xboxkrnl::VOID NTAPI xboxkrnl::XcSHAUpdate
+xboxkrnl::VOID NTAPI JumpedSHAUpdate
 (
-	PUCHAR pbSHAContext,
-	PUCHAR pbInput,
-	ULONG dwInputLength
+	xboxkrnl::PUCHAR pbSHAContext,
+	xboxkrnl::PUCHAR pbInput,
+	xboxkrnl::ULONG dwInputLength
 )
 {
-	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG_OUT(pbSHAContext)
-		LOG_FUNC_ARG_OUT(pbInput)
-		LOG_FUNC_ARG(dwInputLength)
-	LOG_FUNC_END;
-
 	SHA1Update((SHA1_CTX*)(pbSHAContext + 24), pbInput, dwInputLength);
 }
 
-// ******************************************************************
-// * 0x0151 - XcSHAFinal()
-// ******************************************************************
-XBSYSAPI EXPORTNUM(337) xboxkrnl::VOID NTAPI xboxkrnl::XcSHAFinal
+xboxkrnl::VOID NTAPI JumpedSHAFinal
 (
-	IN PUCHAR pbSHAContext,
-	IN PUCHAR pbDigest
+	xboxkrnl::PUCHAR pbSHAContext,
+	xboxkrnl::PUCHAR pbDigest
 )
 {
-	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG_TYPE(PBYTE, pbSHAContext)
-		LOG_FUNC_ARG_TYPE(PBYTE, pbDigest)
-	LOG_FUNC_END;
-
 	SHA1Final(pbDigest, (SHA1_CTX*)(pbSHAContext + 24));
 }
 
-// ******************************************************************
-// * 0x0152 - XcRC4Key()
-// ******************************************************************
-XBSYSAPI EXPORTNUM(338) xboxkrnl::VOID NTAPI xboxkrnl::XcRC4Key
+xboxkrnl::VOID NTAPI JumpedRC4Key
 (
-	IN PUCHAR pbKeyStruct,
-	IN ULONG dwKeyLength,
-	IN PUCHAR pbKey
+	xboxkrnl::PUCHAR pbKeyStruct,
+	xboxkrnl::ULONG dwKeyLength,
+	xboxkrnl::PUCHAR pbKey
 )
 {
-	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG_TYPE(PBYTE, pbKeyStruct)
-		LOG_FUNC_ARG(dwKeyLength)
-		LOG_FUNC_ARG_TYPE(PBYTE, pbKey)
-		LOG_FUNC_END;
-
 	Rc4Initialise((Rc4Context*)pbKeyStruct, pbKey, dwKeyLength, 0);
 }
 
-// ******************************************************************
-// * 0x0153 - XcRC4Crypt
-// ******************************************************************
-XBSYSAPI EXPORTNUM(339) xboxkrnl::VOID NTAPI xboxkrnl::XcRC4Crypt
+xboxkrnl::VOID NTAPI JumpedRC4Crypt
 (
-	IN PUCHAR pbKeyStruct,
-	IN ULONG dwInputLength,
-	IN PUCHAR pbInput
+	xboxkrnl::PUCHAR pbKeyStruct,
+	xboxkrnl::ULONG dwInputLength,
+	xboxkrnl::PUCHAR pbInput
 )
 {
-	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG_TYPE(PBYTE, pbKeyStruct)
-		LOG_FUNC_ARG(dwInputLength)
-		LOG_FUNC_ARG_TYPE(PBYTE, pbInput)
-		LOG_FUNC_END;
-
 	Rc4Xor((Rc4Context*)pbKeyStruct, pbInput, pbInput, dwInputLength);
 }
 
-// ******************************************************************
-// * 0x0154 - XcHMAC()
-// ******************************************************************
-XBSYSAPI EXPORTNUM(340) xboxkrnl::VOID NTAPI xboxkrnl::XcHMAC
+xboxkrnl::VOID NTAPI JumpedHMAC
 (
-	IN PBYTE pbKeyMaterial,
-	IN ULONG cbKeyMaterial,
-	IN PBYTE pbData,
-	IN ULONG cbData,
-	IN PBYTE pbData2,
-	IN ULONG cbData2,
-	OUT PBYTE HmacData
+	xboxkrnl::PBYTE pbKeyMaterial,
+	xboxkrnl::ULONG cbKeyMaterial,
+	xboxkrnl::PBYTE pbData,
+	xboxkrnl::ULONG cbData,
+	xboxkrnl::PBYTE pbData2,
+	xboxkrnl::ULONG cbData2,
+	xboxkrnl::PBYTE HmacData
 )
 {
-	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(pbKeyMaterial)
-		LOG_FUNC_ARG(cbKeyMaterial)
-		LOG_FUNC_ARG(pbData)
-		LOG_FUNC_ARG(cbData)
-		LOG_FUNC_ARG(pbData2)
-		LOG_FUNC_ARG(cbData2)
-		LOG_FUNC_ARG_OUT(HmacData)
-		LOG_FUNC_END;
-
-	if (cbKeyMaterial > 64)	{
+	if (cbKeyMaterial > 64) {
 		cbKeyMaterial = 64;
 	}
 
@@ -199,12 +149,387 @@ XBSYSAPI EXPORTNUM(340) xboxkrnl::VOID NTAPI xboxkrnl::XcHMAC
 	}
 
 	BYTE Temp[64 + A_SHA_DIGEST_LEN];
-	SHA1Final(Temp + 64 , &ShaContext);
+	SHA1Final(Temp + 64, &ShaContext);
 	RtlCopyMemory(Temp, Pad2, 64);
 
 	SHA1Init(&ShaContext);
 	SHA1Update(&ShaContext, Temp, sizeof(Temp));
 	SHA1Final(HmacData, &ShaContext);
+}
+
+xboxkrnl::ULONG NTAPI JumpedPKEncPublic
+(
+	xboxkrnl::PUCHAR pbPubKey,
+	xboxkrnl::PUCHAR pbInput,
+	xboxkrnl::PUCHAR pbOutput
+)
+{
+	ULONG ret = 0;
+
+	LOG_UNIMPLEMENTED();
+
+	return ret;
+}
+
+xboxkrnl::ULONG NTAPI JumpedPKDecPrivate
+(
+	xboxkrnl::PUCHAR pbPrvKey,
+	xboxkrnl::PUCHAR pbInput,
+	xboxkrnl::PUCHAR pbOutput
+)
+{
+	ULONG ret = 0;
+
+	LOG_UNIMPLEMENTED();
+
+	return ret;
+}
+
+xboxkrnl::ULONG NTAPI JumpedPKGetKeyLen
+(
+	xboxkrnl::PUCHAR pbPubKey
+)
+{
+	ULONG ret = 0;
+
+	LOG_UNIMPLEMENTED();
+
+	return ret;
+}
+
+xboxkrnl::BOOLEAN NTAPI JumpedVerifyPKCS1Signature
+(
+	xboxkrnl::PUCHAR pbSig,
+	xboxkrnl::PUCHAR pbPubKey,
+	xboxkrnl::PUCHAR pbDigest
+)
+{
+	BOOLEAN ret = TRUE;
+
+	LOG_UNIMPLEMENTED();
+
+	return ret;
+}
+
+xboxkrnl::ULONG NTAPI JumpedModExp
+(
+	xboxkrnl::LPDWORD pA,
+	xboxkrnl::LPDWORD pB,
+	xboxkrnl::LPDWORD pC,
+	xboxkrnl::LPDWORD pD,
+	xboxkrnl::ULONG dwN
+)
+{
+	ULONG ret = 0;
+
+	LOG_UNIMPLEMENTED();
+
+	return ret;
+}
+
+xboxkrnl::VOID NTAPI JumpedDESKeyParity
+(
+	xboxkrnl::PUCHAR pbKey,
+	xboxkrnl::ULONG dwKeyLength
+)
+{
+	LOG_UNIMPLEMENTED();
+}
+
+xboxkrnl::VOID NTAPI JumpedKeyTable
+(
+	xboxkrnl::ULONG dwCipher,
+	xboxkrnl::PUCHAR pbKeyTable,
+	xboxkrnl::PUCHAR pbKey
+)
+{
+	LOG_UNIMPLEMENTED();
+}
+
+xboxkrnl::VOID NTAPI JumpedBlockCrypt
+(
+	xboxkrnl::ULONG dwCipher,
+	xboxkrnl::PUCHAR pbOutput,
+	xboxkrnl::PUCHAR pbInput,
+	xboxkrnl::PUCHAR pbKeyTable,
+	xboxkrnl::ULONG dwOp
+)
+{
+	LOG_UNIMPLEMENTED();
+}
+
+xboxkrnl::VOID NTAPI JumpedBlockCryptCBC
+(
+	xboxkrnl::ULONG dwCipher,
+	xboxkrnl::ULONG dwInputLength,
+	xboxkrnl::PUCHAR pbOutput,
+	xboxkrnl::PUCHAR pbInput,
+	xboxkrnl::PUCHAR pbKeyTable,
+	xboxkrnl::ULONG dwOp,
+	xboxkrnl::PUCHAR pbFeedback
+)
+{
+	LOG_UNIMPLEMENTED();
+}
+
+xboxkrnl::ULONG NTAPI JumpedCryptService
+(
+	xboxkrnl::ULONG dwOp,
+	xboxkrnl::PVOID pArgs
+)
+{
+	ULONG ret = 0;
+
+	LOG_UNIMPLEMENTED();
+
+	return ret;
+}
+
+/* This struct contains the original crypto functions exposed by the kernel */
+const xboxkrnl::CRYPTO_VECTOR DefaultCryptoStruct =
+{
+	JumpedSHAInit,
+	JumpedSHAUpdate,
+	JumpedSHAFinal,
+	JumpedRC4Key,
+	JumpedRC4Crypt,
+	JumpedHMAC,
+	JumpedPKEncPublic,
+	JumpedPKDecPrivate,
+	JumpedPKGetKeyLen,
+	JumpedVerifyPKCS1Signature,
+	JumpedModExp,
+	JumpedDESKeyParity,
+	JumpedKeyTable,
+	JumpedBlockCrypt,
+	JumpedBlockCryptCBC,
+	JumpedCryptService
+};
+
+/* This struct contains the updated crypto functions which can be changed by the title with XcUpdateCrypto */
+xboxkrnl::CRYPTO_VECTOR UpdatedCryptoStruct =
+{
+	JumpedSHAInit,
+	JumpedSHAUpdate,
+	JumpedSHAFinal,
+	JumpedRC4Key,
+	JumpedRC4Crypt,
+	JumpedHMAC,
+	JumpedPKEncPublic,
+	JumpedPKDecPrivate,
+	JumpedPKGetKeyLen,
+	JumpedVerifyPKCS1Signature,
+	JumpedModExp,
+	JumpedDESKeyParity,
+	JumpedKeyTable,
+	JumpedBlockCrypt,
+	JumpedBlockCryptCBC,
+	JumpedCryptService
+};
+
+// ******************************************************************
+// * 0x015F - XcUpdateCrypto()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(351) xboxkrnl::VOID NTAPI xboxkrnl::XcUpdateCrypto
+(
+	IN PCRYPTO_VECTOR pNewVector,
+	OUT PCRYPTO_VECTOR pROMVector OPTIONAL
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(pNewVector)
+		LOG_FUNC_ARG_OUT(pROMVector)
+		LOG_FUNC_END;
+
+	// This function changes the default crypto function implementations with those supplied by the title (if not NULL)
+
+	if (pNewVector->pXcSHAInit)
+	{
+		UpdatedCryptoStruct.pXcSHAInit = pNewVector->pXcSHAInit;
+	}
+	if (pNewVector->pXcSHAUpdate)
+	{
+		UpdatedCryptoStruct.pXcSHAUpdate = pNewVector->pXcSHAUpdate;
+	}
+	if (pNewVector->pXcSHAFinal)
+	{
+		UpdatedCryptoStruct.pXcSHAFinal = pNewVector->pXcSHAFinal;
+	}
+	if (pNewVector->pXcRC4Key)
+	{
+		UpdatedCryptoStruct.pXcRC4Key = pNewVector->pXcRC4Key;
+	}
+	if (pNewVector->pXcRC4Crypt)
+	{
+		UpdatedCryptoStruct.pXcRC4Crypt = pNewVector->pXcRC4Crypt;
+	}
+	if (pNewVector->pXcHMAC)
+	{
+		UpdatedCryptoStruct.pXcHMAC = pNewVector->pXcHMAC;
+	}
+	if (pNewVector->pXcPKEncPublic)
+	{
+		UpdatedCryptoStruct.pXcPKEncPublic = pNewVector->pXcPKEncPublic;
+	}
+	if (pNewVector->pXcPKDecPrivate)
+	{
+		UpdatedCryptoStruct.pXcPKDecPrivate = pNewVector->pXcPKDecPrivate;
+	}
+	if (pNewVector->pXcPKGetKeyLen)
+	{
+		UpdatedCryptoStruct.pXcPKGetKeyLen = pNewVector->pXcPKGetKeyLen;
+	}
+	if (pNewVector->pXcVerifyPKCS1Signature)
+	{
+		UpdatedCryptoStruct.pXcVerifyPKCS1Signature = pNewVector->pXcVerifyPKCS1Signature;
+	}
+	if (pNewVector->pXcModExp)
+	{
+		UpdatedCryptoStruct.pXcModExp = pNewVector->pXcModExp;
+	}
+	if (pNewVector->pXcDESKeyParity)
+	{
+		UpdatedCryptoStruct.pXcDESKeyParity = pNewVector->pXcDESKeyParity;
+	}
+	if (pNewVector->pXcKeyTable)
+	{
+		UpdatedCryptoStruct.pXcKeyTable = pNewVector->pXcKeyTable;
+	}
+	if (pNewVector->pXcBlockCrypt)
+	{
+		UpdatedCryptoStruct.pXcBlockCrypt = pNewVector->pXcBlockCrypt;
+	}
+	if (pNewVector->pXcBlockCryptCBC)
+	{
+		UpdatedCryptoStruct.pXcBlockCryptCBC = pNewVector->pXcBlockCryptCBC;
+	}
+	if (pNewVector->pXcCryptService)
+	{
+		UpdatedCryptoStruct.pXcCryptService = pNewVector->pXcCryptService;
+	}
+
+	// Return to the title the original implementations if it supplied an out buffer
+
+	if (pROMVector)
+	{
+		*pROMVector = DefaultCryptoStruct;
+	}
+}
+
+// The following functions simply jump to the corresponding registered crypto functions
+
+// ******************************************************************
+// * 0x014F - XcSHAInit()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(335) xboxkrnl::VOID NTAPI xboxkrnl::XcSHAInit
+(
+	IN PUCHAR pbSHAContext
+)
+{
+	LOG_FUNC_ONE_ARG_TYPE(PBYTE, pbSHAContext);
+
+	UpdatedCryptoStruct.pXcSHAInit(pbSHAContext);
+}
+
+// ******************************************************************
+// * 0x0150 - XcSHAUpdate()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(336) xboxkrnl::VOID NTAPI xboxkrnl::XcSHAUpdate
+(
+	PUCHAR pbSHAContext,
+	PUCHAR pbInput,
+	ULONG dwInputLength
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG_OUT(pbSHAContext)
+		LOG_FUNC_ARG_OUT(pbInput)
+		LOG_FUNC_ARG(dwInputLength)
+	LOG_FUNC_END;
+
+	UpdatedCryptoStruct.pXcSHAUpdate(pbSHAContext, pbInput, dwInputLength);
+}
+
+// ******************************************************************
+// * 0x0151 - XcSHAFinal()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(337) xboxkrnl::VOID NTAPI xboxkrnl::XcSHAFinal
+(
+	IN PUCHAR pbSHAContext,
+	IN PUCHAR pbDigest
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG_TYPE(PBYTE, pbSHAContext)
+		LOG_FUNC_ARG_TYPE(PBYTE, pbDigest)
+	LOG_FUNC_END;
+
+	UpdatedCryptoStruct.pXcSHAFinal(pbDigest, pbSHAContext);
+}
+
+// ******************************************************************
+// * 0x0152 - XcRC4Key()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(338) xboxkrnl::VOID NTAPI xboxkrnl::XcRC4Key
+(
+	IN PUCHAR pbKeyStruct,
+	IN ULONG dwKeyLength,
+	IN PUCHAR pbKey
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG_TYPE(PBYTE, pbKeyStruct)
+		LOG_FUNC_ARG(dwKeyLength)
+		LOG_FUNC_ARG_TYPE(PBYTE, pbKey)
+	LOG_FUNC_END;
+
+	UpdatedCryptoStruct.pXcRC4Key(pbKeyStruct, dwKeyLength, pbKey);
+}
+
+// ******************************************************************
+// * 0x0153 - XcRC4Crypt
+// ******************************************************************
+XBSYSAPI EXPORTNUM(339) xboxkrnl::VOID NTAPI xboxkrnl::XcRC4Crypt
+(
+	IN PUCHAR pbKeyStruct,
+	IN ULONG dwInputLength,
+	IN PUCHAR pbInput
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG_TYPE(PBYTE, pbKeyStruct)
+		LOG_FUNC_ARG(dwInputLength)
+		LOG_FUNC_ARG_TYPE(PBYTE, pbInput)
+	LOG_FUNC_END;
+
+	UpdatedCryptoStruct.pXcRC4Crypt(pbKeyStruct, dwInputLength, pbInput);
+}
+
+// ******************************************************************
+// * 0x0154 - XcHMAC()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(340) xboxkrnl::VOID NTAPI xboxkrnl::XcHMAC
+(
+	IN PBYTE pbKeyMaterial,
+	IN ULONG cbKeyMaterial,
+	IN PBYTE pbData,
+	IN ULONG cbData,
+	IN PBYTE pbData2,
+	IN ULONG cbData2,
+	OUT PBYTE HmacData
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(pbKeyMaterial)
+		LOG_FUNC_ARG(cbKeyMaterial)
+		LOG_FUNC_ARG(pbData)
+		LOG_FUNC_ARG(cbData)
+		LOG_FUNC_ARG(pbData2)
+		LOG_FUNC_ARG(cbData2)
+		LOG_FUNC_ARG_OUT(HmacData)
+	LOG_FUNC_END;
+
+	UpdatedCryptoStruct.pXcHMAC(pbKeyMaterial, cbKeyMaterial, pbData, cbData, pbData2, cbData2, HmacData);
 }
 
 // ******************************************************************
@@ -221,11 +546,9 @@ XBSYSAPI EXPORTNUM(341) xboxkrnl::ULONG NTAPI xboxkrnl::XcPKEncPublic
 		LOG_FUNC_ARG_TYPE(PBYTE, pbPubKey)
 		LOG_FUNC_ARG_TYPE(PBYTE, pbInput)
 		LOG_FUNC_ARG_OUT(pbOutput)
-		LOG_FUNC_END;
+	LOG_FUNC_END;
 
-	ULONG ret = 0;
-
-	LOG_UNIMPLEMENTED();
+	ULONG ret = UpdatedCryptoStruct.pXcPKEncPublic(pbPubKey, pbInput, pbOutput);
 
 	RETURN(ret);
 }
@@ -244,11 +567,9 @@ XBSYSAPI EXPORTNUM(342) xboxkrnl::ULONG NTAPI xboxkrnl::XcPKDecPrivate
 		LOG_FUNC_ARG_TYPE(PBYTE, pbPrvKey)
 		LOG_FUNC_ARG_TYPE(PBYTE, pbInput)
 		LOG_FUNC_ARG_OUT(pbOutput)
-		LOG_FUNC_END;
+	LOG_FUNC_END;
 
-	ULONG ret = 0;
-
-	LOG_UNIMPLEMENTED();
+	ULONG ret = UpdatedCryptoStruct.pXcPKDecPrivate(pbPrvKey, pbInput, pbOutput);
 
 	RETURN(ret);
 }
@@ -263,9 +584,7 @@ XBSYSAPI EXPORTNUM(343) xboxkrnl::ULONG NTAPI xboxkrnl::XcPKGetKeyLen
 {
 	LOG_FUNC_ONE_ARG_TYPE(PBYTE, pbPubKey);
 
-	ULONG ret = 0;
-
-	LOG_UNIMPLEMENTED();
+	ULONG ret = UpdatedCryptoStruct.pXcPKGetKeyLen(pbPubKey);
 
 	RETURN(ret);
 }
@@ -284,11 +603,9 @@ XBSYSAPI EXPORTNUM(344) xboxkrnl::BOOLEAN NTAPI xboxkrnl::XcVerifyPKCS1Signature
 		LOG_FUNC_ARG_TYPE(PBYTE, pbSig)
 		LOG_FUNC_ARG_TYPE(PBYTE, pbPubKey)
 		LOG_FUNC_ARG_TYPE(PBYTE, pbDigest)
-		LOG_FUNC_END;
+	LOG_FUNC_END;
 
-	BOOLEAN ret = TRUE;
-
-	LOG_UNIMPLEMENTED();
+	BOOLEAN ret = UpdatedCryptoStruct.pXcVerifyPKCS1Signature(pbSig, pbPubKey, pbDigest);
 
 	RETURN(ret);
 }
@@ -311,11 +628,9 @@ XBSYSAPI EXPORTNUM(345) xboxkrnl::ULONG NTAPI xboxkrnl::XcModExp
 		LOG_FUNC_ARG(pC)
 		LOG_FUNC_ARG(pD)
 		LOG_FUNC_ARG(dwN)
-		LOG_FUNC_END;
+	LOG_FUNC_END;
 
-	ULONG ret = 0;
-
-	LOG_UNIMPLEMENTED();
+	ULONG ret = UpdatedCryptoStruct.pXcModExp(pA, pB, pC, pD, dwN);
 
 	RETURN(ret);
 }
@@ -332,9 +647,9 @@ XBSYSAPI EXPORTNUM(346) xboxkrnl::VOID NTAPI xboxkrnl::XcDESKeyParity
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG_TYPE(PBYTE, pbKey)
 		LOG_FUNC_ARG(dwKeyLength)
-		LOG_FUNC_END;
+	LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED();
+	UpdatedCryptoStruct.pXcDESKeyParity(pbKey, dwKeyLength);
 }
 
 // ******************************************************************
@@ -351,9 +666,9 @@ XBSYSAPI EXPORTNUM(347) xboxkrnl::VOID NTAPI xboxkrnl::XcKeyTable
 		LOG_FUNC_ARG(dwCipher)
 		LOG_FUNC_ARG_OUT(pbKeyTable)
 		LOG_FUNC_ARG_TYPE(PBYTE, pbKey)
-		LOG_FUNC_END;
+	LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED();
+	UpdatedCryptoStruct.pXcKeyTable(dwCipher, pbKeyTable, pbKey);
 }
 
 // ******************************************************************
@@ -374,9 +689,9 @@ XBSYSAPI EXPORTNUM(348) xboxkrnl::VOID NTAPI xboxkrnl::XcBlockCrypt
 		LOG_FUNC_ARG_TYPE(PBYTE, pbInput)
 		LOG_FUNC_ARG_TYPE(PBYTE, pbKeyTable)
 		LOG_FUNC_ARG(dwOp)
-		LOG_FUNC_END;
+	LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED();
+	UpdatedCryptoStruct.pXcBlockCrypt(dwCipher, pbOutput, pbInput, pbKeyTable, dwOp);
 }
 
 // ******************************************************************
@@ -401,9 +716,9 @@ XBSYSAPI EXPORTNUM(349) xboxkrnl::VOID NTAPI xboxkrnl::XcBlockCryptCBC
 		LOG_FUNC_ARG_TYPE(PBYTE, pbKeyTable)
 		LOG_FUNC_ARG(dwOp)
 		LOG_FUNC_ARG_TYPE(PBYTE, pbFeedback)
-		LOG_FUNC_END;
+	LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED();
+	UpdatedCryptoStruct.pXcBlockCryptCBC(dwCipher, dwInputLength, pbOutput, pbInput, pbKeyTable, dwOp, pbFeedback);
 }
 
 // ******************************************************************
@@ -418,30 +733,9 @@ XBSYSAPI EXPORTNUM(350) xboxkrnl::ULONG NTAPI xboxkrnl::XcCryptService
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(dwOp)
 		LOG_FUNC_ARG(pArgs)
-		LOG_FUNC_END;
+	LOG_FUNC_END;
 
-	ULONG ret = 0;
-
-	LOG_UNIMPLEMENTED();
+	ULONG ret = UpdatedCryptoStruct.pXcCryptService(dwOp, pArgs);
 
 	RETURN(ret);
-}
-
-typedef PVOID PCRYPTO_VECTOR;
-
-// ******************************************************************
-// * 0x015F - XcUpdateCrypto()
-// ******************************************************************
-XBSYSAPI EXPORTNUM(351) xboxkrnl::VOID NTAPI xboxkrnl::XcUpdateCrypto
-(
-	IN PCRYPTO_VECTOR pNewVector,
-	OUT PCRYPTO_VECTOR pROMVector OPTIONAL
-)
-{
-	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(pNewVector)
-		LOG_FUNC_ARG_OUT(pROMVector)
-		LOG_FUNC_END;
-
-	LOG_UNIMPLEMENTED();
 }
