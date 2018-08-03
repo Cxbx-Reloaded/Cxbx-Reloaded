@@ -84,6 +84,8 @@ std::string FormatTitleId(uint32_t title_id)
 	// EG: MS-001 for 1st tile published by MS, EA-002 for 2nd title by EA, etc
 	// Some special Xbes (Dashboard, XDK Samples) use non-alphanumeric serials
 	// We fall back to Hex for those
+	// ergo720: we cannot use isalnum() here because it will treat chars in the range -1 - 255 as valid ascii chars which can
+	// lead to unicode characters being printed in the title (e.g.: dashboard uses 0xFE and 0xFE)
 	uint8_t pTitleId1 = (title_id >> 24) & 0xFF;
 	uint8_t pTitleId2 = (title_id >> 16) & 0xFF;
 
