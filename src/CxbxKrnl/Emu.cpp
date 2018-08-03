@@ -84,8 +84,8 @@ std::string FormatTitleId(uint32_t title_id)
 	// EG: MS-001 for 1st tile published by MS, EA-002 for 2nd title by EA, etc
 	// Some special Xbes (Dashboard, XDK Samples) use non-alphanumeric serials
 	// We fall back to Hex for those
-	char pTitleId1 = (title_id >> 24) & 0xFF;
-	char pTitleId2 = (title_id >> 16) & 0xFF;
+	unsigned char pTitleId1 = (title_id >> 24) & 0xFF;
+	unsigned char pTitleId2 = (title_id >> 16) & 0xFF;
 
 	if (!isalnum(pTitleId1) || !isalnum(pTitleId2)) {
 		// Prefix was non-printable, so we need to print a hex reprentation of the entire title_id
