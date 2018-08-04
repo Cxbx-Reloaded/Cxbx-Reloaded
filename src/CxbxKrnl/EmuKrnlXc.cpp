@@ -307,25 +307,7 @@ const xboxkrnl::CRYPTO_VECTOR DefaultCryptoStruct =
 };
 
 /* This struct contains the updated crypto functions which can be changed by the title with XcUpdateCrypto */
-xboxkrnl::CRYPTO_VECTOR UpdatedCryptoStruct =
-{
-	JumpedSHAInit,
-	JumpedSHAUpdate,
-	JumpedSHAFinal,
-	JumpedRC4Key,
-	JumpedRC4Crypt,
-	JumpedHMAC,
-	JumpedPKEncPublic,
-	JumpedPKDecPrivate,
-	JumpedPKGetKeyLen,
-	JumpedVerifyPKCS1Signature,
-	JumpedModExp,
-	JumpedDESKeyParity,
-	JumpedKeyTable,
-	JumpedBlockCrypt,
-	JumpedBlockCryptCBC,
-	JumpedCryptService
-};
+xboxkrnl::CRYPTO_VECTOR UpdatedCryptoStruct = DefaultCryptoStruct;
 
 // ******************************************************************
 // * 0x015F - XcUpdateCrypto()
@@ -339,7 +321,7 @@ XBSYSAPI EXPORTNUM(351) xboxkrnl::VOID NTAPI xboxkrnl::XcUpdateCrypto
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pNewVector)
 		LOG_FUNC_ARG_OUT(pROMVector)
-		LOG_FUNC_END;
+	LOG_FUNC_END;
 
 	// This function changes the default crypto function implementations with those supplied by the title (if not NULL)
 
@@ -464,7 +446,7 @@ XBSYSAPI EXPORTNUM(337) xboxkrnl::VOID NTAPI xboxkrnl::XcSHAFinal
 		LOG_FUNC_ARG_TYPE(PBYTE, pbDigest)
 	LOG_FUNC_END;
 
-	UpdatedCryptoStruct.pXcSHAFinal(pbDigest, pbSHAContext);
+	UpdatedCryptoStruct.pXcSHAFinal(pbSHAContext, pbDigest);
 }
 
 // ******************************************************************
