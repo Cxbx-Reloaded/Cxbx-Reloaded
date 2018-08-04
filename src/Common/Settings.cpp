@@ -58,8 +58,8 @@ Settings* g_Settings = nullptr;
 #define szSettings_setup_error "ERROR: Either setup have a problem or do not have write permission to directory."
 #define szSettings_init_error "ERROR: Unable to initialize Settings class."
 #define szSettings_save_user_option_message "If you want to save your settings in current/portable directory,\nclick 'Yes'." \
-											"\n\nIf you want to store your settings in user profile directory,\nclick 'No'." \
-											"\n\nClicking cancel will abort Cxbx-Reloaded."
+                                            "\n\nIf you want to store your settings in user profile directory,\nclick 'No'." \
+                                            "\n\nClicking cancel will abort Cxbx-Reloaded."
 
 #define szSettings_settings_file "/settings.ini"
 #define szSettings_cxbx_reloaded_directory "/Cxbx-Reloaded"
@@ -241,6 +241,7 @@ bool Settings::LoadFile(std::string file_path)
 {
 	bool bRet;
 	const char* si_data;
+	int iStatus;
 	std::list<CSimpleIniA::Entry> si_list;
 	std::list<CSimpleIniA::Entry>::iterator si_list_iterator;
 
@@ -255,38 +256,47 @@ bool Settings::LoadFile(std::string file_path)
 
 	m_gui.CxbxDebugMode = (DebugMode)m_si.GetLongValue(section_gui, sect_gui_keys.CxbxDebugMode, /*Default=*/DM_NONE);
 	si_data = m_si.GetValue(section_gui, sect_gui_keys.CxbxDebugLogFile, /*Default=*/nullptr);
-	if (si_data != nullptr) {
-		m_gui.szCxbxDebugFile = si_data;
+	// Fallback to null string if value is empty or contain bigger string.
+	if (si_data == nullptr || std::strlen(si_data) >= MAX_PATH) {
+		m_gui.szCxbxDebugFile = "";
 	}
 	else {
-		m_gui.szCxbxDebugFile = "";
+		m_gui.szCxbxDebugFile = si_data;
 	}
 
 	m_gui.DataStorageToggle = m_si.GetLongValue(section_gui, sect_gui_keys.DataStorageToggle, /*Default=*/CXBX_DATA_APPDATA);
 	si_data = m_si.GetValue(section_gui, sect_gui_keys.DataCustomLocation, /*Default=*/nullptr);
-	if (si_data != nullptr) {
-		m_gui.szCustomLocation = si_data;
+	// Fallback to null string if value is empty or contain bigger string.
+	if (si_data == nullptr || std::strlen(si_data) >= MAX_PATH) {
+		m_gui.szCustomLocation = "";
 	}
 	else {
-		m_gui.szCustomLocation = "";
+		m_gui.szCustomLocation = si_data;
 	}
 
 	// GUI - Recent xbe file paths
+	uint index = 0;
+	uint list_max = std::size(m_gui.szRecentXbeFiles);
 	bRet = m_si.GetAllValues(section_gui, sect_gui_keys.RecentXbeFiles, si_list);/*Default=empty list*/
-	if (!bRet) {
-		for (uint i = 0; i < 10; i++) {
-			m_gui.szRecentXbeFiles[i] = "";
-		}
-	}
-	else {
+	if (bRet) {
 		si_list_iterator = si_list.begin();
-		for (uint i = 0; i < 10; i++,si_list_iterator++) {
-			if (si_list_iterator == si_list.end()) {
-				m_gui.szRecentXbeFiles[i] = "";
+		for (si_list_iterator; si_list_iterator != si_list.end(); si_list_iterator++) {
+			// Exit loop when list has reach the limit.
+			if (index == list_max) {
+				break;
+			}
+			// Do not accept any file path greater or equal to MAX_PATH
+			if (std::strlen(si_list_iterator->pItem) >= MAX_PATH) {
 				continue;
 			}
-			m_gui.szRecentXbeFiles[i] = si_list_iterator->pItem;
+			m_gui.szRecentXbeFiles[index] = si_list_iterator->pItem;
+			index++;
 		}
+	}
+	// Set all or remaining recent xbe file paths to null string
+	while (index < list_max) {
+		m_gui.szRecentXbeFiles[index] = "";
+		index++;
 	}
 
 	// ==== GUI End =============
@@ -296,11 +306,12 @@ bool Settings::LoadFile(std::string file_path)
 	m_core.FlagsLLE = m_si.GetLongValue(section_core, sect_core_keys.FlagsLLE, /*Default=*/LLE_NONE);
 	m_core.KrnlDebugMode = (DebugMode)m_si.GetLongValue(section_core, sect_core_keys.KrnlDebugMode, /*Default=*/DM_NONE);
 	si_data = m_si.GetValue(section_core, sect_core_keys.KrnlDebugLogFile, /*Default=*/nullptr);
-	if (si_data != nullptr) {
-		strncpy(m_core.szKrnlDebug, si_data, MAX_PATH);
+	// Fallback to null string if value is empty or contain bigger string.
+	if (si_data == nullptr || std::strlen(si_data) >= MAX_PATH) {
+		m_core.szKrnlDebug[0] = '\0';
 	}
 	else {
-		m_core.szKrnlDebug[0] = '\0';
+		std::strncpy(m_core.szKrnlDebug, si_data, MAX_PATH);
 	}
 
 	m_core.allowAdminPrivilege = m_si.GetBoolValue(section_core, sect_core_keys.AllowAdminPrivilege, /*Default=*/false);
@@ -322,11 +333,12 @@ bool Settings::LoadFile(std::string file_path)
 
 	// Video - Resolution config
 	si_data = m_si.GetValue(section_video, sect_video_keys.VideoResolution, /*Default=*/nullptr);
-	if (si_data == nullptr) {
+	// Fallback to null string if value is empty or contain bigger string.
+	if (si_data == nullptr || std::strlen(si_data) >= std::size(m_video.szVideoResolution)) {
 		m_video.szVideoResolution[0] = '\0';
 	}
 	else {
-		strncpy(m_video.szVideoResolution, si_data, ARRAYSIZE(m_video.szVideoResolution));
+		std::strncpy(m_video.szVideoResolution, si_data, std::size(m_video.szVideoResolution));
 	}
 
 	m_video.adapter = m_si.GetLongValue(section_video, sect_video_keys.adapter, /*Default=*/0);
@@ -346,10 +358,15 @@ bool Settings::LoadFile(std::string file_path)
 		m_audio.adapterGUID = { 0 };
 	}
 	else {
-		sscanf(si_data, sect_audio_keys.adapter_value,
-			&m_audio.adapterGUID.Data1, &m_audio.adapterGUID.Data2, &m_audio.adapterGUID.Data3,
-			&m_audio.adapterGUID.Data4[0], &m_audio.adapterGUID.Data4[1], &m_audio.adapterGUID.Data4[2], &m_audio.adapterGUID.Data4[3],
-			&m_audio.adapterGUID.Data4[4], &m_audio.adapterGUID.Data4[5], &m_audio.adapterGUID.Data4[6], &m_audio.adapterGUID.Data4[7]);
+		iStatus = std::sscanf(si_data, sect_audio_keys.adapter_value,
+		            &m_audio.adapterGUID.Data1, &m_audio.adapterGUID.Data2, &m_audio.adapterGUID.Data3,
+		            &m_audio.adapterGUID.Data4[0], &m_audio.adapterGUID.Data4[1], &m_audio.adapterGUID.Data4[2], &m_audio.adapterGUID.Data4[3],
+		            &m_audio.adapterGUID.Data4[4], &m_audio.adapterGUID.Data4[5], &m_audio.adapterGUID.Data4[6], &m_audio.adapterGUID.Data4[7]);
+
+		// Fallback to primary audio device if file contain invalid value.
+		if (iStatus != 11 /*= total arguments*/) {
+			m_audio.adapterGUID = { 0 };
+		}
 	}
 
 	m_audio.codec_pcm = m_si.GetBoolValue(section_audio, sect_audio_keys.codec_pcm, /*Default=*/true, nullptr);
@@ -367,15 +384,16 @@ bool Settings::LoadFile(std::string file_path)
 	// * Load Device Names
 	// ******************************************************************
 	for (v = 0; v < XBCTRL_MAX_DEVICES; v++) {
-		sprintf_s(szKeyName, sect_controller_dinput_keys.device_name, v);
+		std::sprintf(szKeyName, sect_controller_dinput_keys.device_name, v);
 		si_data = m_si.GetValue(section_controller_dinput, szKeyName, /*Default=*/nullptr);
 
-		if (si_data == nullptr) {
+		// Fallback to null string if value is empty or contain bigger string.
+		if (si_data == nullptr || std::strlen(si_data) >= MAX_PATH) {
 			// default is a null string
 			m_controller_dinput.DeviceName[v][0] = '\0';
 		}
 		else {
-			strncpy(m_controller_dinput.DeviceName[v], si_data, MAX_PATH);
+			std::strncpy(m_controller_dinput.DeviceName[v], si_data, MAX_PATH);
 		}
 	}
 
@@ -383,7 +401,7 @@ bool Settings::LoadFile(std::string file_path)
 	// * Load Object Configuration
 	// ******************************************************************
 	for (v = 0; v<XBCTRL_OBJECT_COUNT; v++) {
-		sprintf(szKeyName, sect_controller_dinput_keys.object_name, m_controller_dinput.XboxControllerObjectNameLookup[v]);
+		std::sprintf(szKeyName, sect_controller_dinput_keys.object_name, m_controller_dinput.XboxControllerObjectNameLookup[v]);
 		si_data = m_si.GetValue(section_controller_dinput, szKeyName, /*Default=*/nullptr);
 
 		if (si_data == nullptr) {
@@ -393,18 +411,25 @@ bool Settings::LoadFile(std::string file_path)
 			m_controller_dinput.ObjectConfig[v].dwFlags = 0;
 		}
 		else {
-			sscanf(si_data, sect_controller_dinput_keys.object_name_value, &m_controller_dinput.ObjectConfig[v].dwDevice,
-				&m_controller_dinput.ObjectConfig[v].dwInfo, &m_controller_dinput.ObjectConfig[v].dwFlags);
+			iStatus = std::sscanf(si_data, sect_controller_dinput_keys.object_name_value, &m_controller_dinput.ObjectConfig[v].dwDevice,
+			            &m_controller_dinput.ObjectConfig[v].dwInfo, &m_controller_dinput.ObjectConfig[v].dwFlags);
+
+			// Fallback to default object configuration if file contain invalid value.
+			if (iStatus != 3 /*= total arguments*/) {
+				m_controller_dinput.ObjectConfig[v].dwDevice = -1;
+				m_controller_dinput.ObjectConfig[v].dwInfo = -1;
+				m_controller_dinput.ObjectConfig[v].dwFlags = 0;
+			}
 		}
 	}
 
 	for (v = 0; v < XBCTRL_MAX_GAMEPAD_PORTS; v++) {
-		sprintf_s(szKeyName, sect_controller_port_keys.xbox_port_x_host_type, v);
+		std::sprintf(szKeyName, sect_controller_port_keys.xbox_port_x_host_type, v);
 		m_controller_port.XboxPortMapHostType[v] = m_si.GetLongValue(section_controller_port, szKeyName, /*Default=*/1, nullptr);
 	}
 
 	for (v = 0; v < XBCTRL_MAX_GAMEPAD_PORTS; v++) {
-		sprintf_s(szKeyName, sect_controller_port_keys.xbox_port_x_host_port, v);
+		std::sprintf(szKeyName, sect_controller_port_keys.xbox_port_x_host_port, v);
 		m_controller_port.XboxPortMapHostPort[v] = m_si.GetLongValue(section_controller_port, szKeyName, /*Default=*/v, nullptr);
 	}
 
@@ -462,7 +487,7 @@ bool Settings::Save(std::string file_path)
 	// ==== Audio Begin =========
 
 	// Audio - Adapter config
-	sprintf_s(si_value, sect_audio_keys.adapter_value,
+	std::sprintf(si_value, sect_audio_keys.adapter_value,
 		m_audio.adapterGUID.Data1, m_audio.adapterGUID.Data2, m_audio.adapterGUID.Data3,
 		m_audio.adapterGUID.Data4[0], m_audio.adapterGUID.Data4[1], m_audio.adapterGUID.Data4[2], m_audio.adapterGUID.Data4[3],
 		m_audio.adapterGUID.Data4[4], m_audio.adapterGUID.Data4[5], m_audio.adapterGUID.Data4[6], m_audio.adapterGUID.Data4[7]);
@@ -484,7 +509,7 @@ bool Settings::Save(std::string file_path)
 	// * Save Device Names
 	// ******************************************************************
 	for (v = 0; v < XBCTRL_MAX_DEVICES; v++) {
-		sprintf_s(szKeyName, sect_controller_dinput_keys.device_name, v);
+		std::sprintf(szKeyName, sect_controller_dinput_keys.device_name, v);
 
 		if (m_controller_dinput.DeviceName[v][0] == 0) {
 			m_si.Delete(section_controller_dinput, szKeyName, true);
@@ -498,25 +523,25 @@ bool Settings::Save(std::string file_path)
 	// * Save Object Configuration
 	// ******************************************************************
 	for (v = 0; v<XBCTRL_OBJECT_COUNT; v++) {
-		sprintf(szKeyName, sect_controller_dinput_keys.object_name, m_controller_dinput.XboxControllerObjectNameLookup[v]);
+		std::sprintf(szKeyName, sect_controller_dinput_keys.object_name, m_controller_dinput.XboxControllerObjectNameLookup[v]);
 
 		if (m_controller_dinput.ObjectConfig[v].dwDevice == -1) {
 			m_si.Delete(section_controller_dinput, szKeyName, true);
 		}
 		else {
-			sprintf_s(si_value, sect_controller_dinput_keys.object_name_value, m_controller_dinput.ObjectConfig[v].dwDevice,
+			std::sprintf(si_value, sect_controller_dinput_keys.object_name_value, m_controller_dinput.ObjectConfig[v].dwDevice,
 				m_controller_dinput.ObjectConfig[v].dwInfo, m_controller_dinput.ObjectConfig[v].dwFlags);
 			m_si.SetValue(section_controller_dinput, szKeyName, si_value, nullptr, true);
 		}
 	}
 
 	for (v = 0; v < XBCTRL_MAX_GAMEPAD_PORTS; v++) {
-		sprintf_s(szKeyName, sect_controller_port_keys.xbox_port_x_host_type, v);
+		std::sprintf(szKeyName, sect_controller_port_keys.xbox_port_x_host_type, v);
 		m_si.SetLongValue(section_controller_port, szKeyName, m_controller_port.XboxPortMapHostType[v], nullptr, true, true);
 	}
 
 	for (v = 0; v < XBCTRL_MAX_GAMEPAD_PORTS; v++) {
-		sprintf_s(szKeyName, sect_controller_port_keys.xbox_port_x_host_port, v);
+		std::sprintf(szKeyName, sect_controller_port_keys.xbox_port_x_host_port, v);
 		m_si.SetLongValue(section_controller_port, szKeyName, m_controller_port.XboxPortMapHostPort[v], nullptr, true, true);
 	}
 
@@ -588,14 +613,14 @@ void Settings::Verify()
 			m_gui.CxbxDebugMode = DM_NONE;
 		}
 		else {
-			strcpy(szDebugName, strrchr(m_gui.szCxbxDebugFile.c_str(), '\\'));
+			std::strcpy(szDebugName, strrchr(m_gui.szCxbxDebugFile.c_str(), '\\'));
 
-			if(m_gui.szCxbxDebugFile.size() < strlen(szDebugName)) {
+			if(m_gui.szCxbxDebugFile.size() < std::strlen(szDebugName)) {
 				m_gui.szCxbxDebugFile = "";
 				m_gui.CxbxDebugMode = DM_NONE;
 			}
 			else {
-				strncpy(szDebugPath, m_gui.szCxbxDebugFile.c_str(), m_gui.szCxbxDebugFile.size() - strlen(szDebugName));
+				std::strncpy(szDebugPath, m_gui.szCxbxDebugFile.c_str(), m_gui.szCxbxDebugFile.size() - std::strlen(szDebugName));
 
 				if(std::filesystem::exists(szDebugPath) == false) {
 					m_gui.szCxbxDebugFile = "";
@@ -607,18 +632,18 @@ void Settings::Verify()
 
 	if (m_core.KrnlDebugMode == DM_FILE) {
 
-		if(strlen(m_core.szKrnlDebug) == 0) {
+		if(std::strlen(m_core.szKrnlDebug) == 0) {
 			m_core.KrnlDebugMode = DM_NONE;
 		}
 		else {
-			strcpy(szDebugName, strrchr(m_core.szKrnlDebug, '\\'));
+			std::strcpy(szDebugName, strrchr(m_core.szKrnlDebug, '\\'));
 
-			if(strlen(m_core.szKrnlDebug) < strlen(szDebugName)) {
+			if(std::strlen(m_core.szKrnlDebug) < std::strlen(szDebugName)) {
 				memset(m_core.szKrnlDebug, '\0', MAX_PATH);
 				m_core.KrnlDebugMode = DM_NONE;
 			}
 			else {
-				strncpy(szDebugPath, m_core.szKrnlDebug, strlen(m_core.szKrnlDebug) - strlen(szDebugName));
+				std::strncpy(szDebugPath, m_core.szKrnlDebug, std::strlen(m_core.szKrnlDebug) - std::strlen(szDebugName));
 
 				if(std::filesystem::exists(szDebugPath) == false) {
 					memset(m_core.szKrnlDebug, '\0', MAX_PATH);
