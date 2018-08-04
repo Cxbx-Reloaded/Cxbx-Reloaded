@@ -183,7 +183,10 @@ INT_PTR CALLBACK DlgVideoConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPAR
 
                         lRet = SendMessage(hVideoResolution, CB_GETLBTEXT, (WPARAM)lRet, (LPARAM)szBuffer);
 
-                        strncpy(g_XBVideo.szVideoResolution, szBuffer, ARRAYSIZE(g_XBVideo.szVideoResolution));
+                        strncpy(g_XBVideo.szVideoResolution, szBuffer, std::size(g_XBVideo.szVideoResolution));
+
+                        // For prevent buffer overflow whenever copy string from another location.
+                        g_XBVideo.szVideoResolution[std::size(g_XBVideo.szVideoResolution)-1] = '\0';
                     }
 
                     /*! save fullscreen/vsync/YUV options */
