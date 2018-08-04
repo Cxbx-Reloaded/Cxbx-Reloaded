@@ -412,7 +412,43 @@ XBSYSAPI EXPORTNUM(350) ULONG NTAPI XcCryptService
 	IN PVOID pArgs
 );
 
-typedef PVOID PCRYPTO_VECTOR; // TODO : Expand
+/* Function pointers which point to all the kernel crypto functions. Used by PCRYPTO_VECTOR. */
+typedef VOID(NTAPI *pfXcSHAInit)(PUCHAR pbSHAContext);
+typedef VOID(NTAPI *pfXcSHAUpdate)(PUCHAR pbSHAContext, PUCHAR pbInput, ULONG dwInputLength);
+typedef VOID(NTAPI *pfXcSHAFinal)(PUCHAR pbSHAContext, PUCHAR pbDigest);
+typedef VOID(NTAPI *pfXcRC4Key)(PUCHAR pbKeyStruct, ULONG dwKeyLength, PUCHAR pbKey);
+typedef VOID(NTAPI *pfXcRC4Crypt)(PUCHAR pbKeyStruct, ULONG dwInputLength, PUCHAR pbInput);
+typedef VOID(NTAPI *pfXcHMAC)(PBYTE pbKeyMaterial, ULONG cbKeyMaterial, PBYTE pbData, ULONG cbData, PBYTE pbData2, ULONG cbData2, PBYTE HmacData);
+typedef ULONG(NTAPI *pfXcPKEncPublic)(PUCHAR pbPubKey, PUCHAR pbInput, PUCHAR pbOutput);
+typedef ULONG(NTAPI *pfXcPKDecPrivate)(PUCHAR pbPrvKey, PUCHAR pbInput, PUCHAR pbOutput);
+typedef ULONG(NTAPI *pfXcPKGetKeyLen)(PUCHAR pbPubKey);
+typedef BOOLEAN(NTAPI *pfXcVerifyPKCS1Signature)(PUCHAR pbSig, PUCHAR pbPubKey, PUCHAR pbDigest);
+typedef ULONG(NTAPI *pfXcModExp)(LPDWORD pA, LPDWORD pB, LPDWORD pC, LPDWORD pD, ULONG dwN);
+typedef VOID(NTAPI *pfXcDESKeyParity)(PUCHAR pbKey, ULONG dwKeyLength);
+typedef VOID(NTAPI *pfXcKeyTable)(ULONG dwCipher, PUCHAR pbKeyTable, PUCHAR pbKey);
+typedef VOID(NTAPI *pfXcBlockCrypt)(ULONG dwCipher, PUCHAR pbOutput, PUCHAR pbInput, PUCHAR pbKeyTable, ULONG dwOp);
+typedef VOID(NTAPI *pfXcBlockCryptCBC)(ULONG dwCipher, ULONG dwInputLength, PUCHAR pbOutput, PUCHAR pbInput, PUCHAR pbKeyTable, ULONG dwOp, PUCHAR pbFeedback);
+typedef ULONG(NTAPI *pfXcCryptService)(ULONG dwOp, PVOID pArgs);
+
+/* Struct which contains all the pointers to the crypto functions */
+typedef struct {
+	pfXcSHAInit pXcSHAInit;
+	pfXcSHAUpdate pXcSHAUpdate;
+	pfXcSHAFinal pXcSHAFinal;
+	pfXcRC4Key pXcRC4Key;
+	pfXcRC4Crypt pXcRC4Crypt;
+	pfXcHMAC pXcHMAC;
+	pfXcPKEncPublic pXcPKEncPublic;
+	pfXcPKDecPrivate pXcPKDecPrivate;
+	pfXcPKGetKeyLen pXcPKGetKeyLen;
+	pfXcVerifyPKCS1Signature pXcVerifyPKCS1Signature;
+	pfXcModExp pXcModExp;
+	pfXcDESKeyParity pXcDESKeyParity;
+	pfXcKeyTable pXcKeyTable;
+	pfXcBlockCrypt pXcBlockCrypt;
+	pfXcBlockCryptCBC pXcBlockCryptCBC;
+	pfXcCryptService pXcCryptService;
+} CRYPTO_VECTOR, *PCRYPTO_VECTOR;
 
 // ******************************************************************
 // * 0x015F - XcUpdateCrypto()
@@ -525,5 +561,3 @@ XBSYSAPI EXPORTNUM(373) NTSTATUS NTAPI IrtSweep // PROFILING
 );
 
 #endif
-
-
