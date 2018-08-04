@@ -60,10 +60,8 @@ namespace xboxkrnl
 #include "CxbxDebugger.h"
 #include "EmuX86.h"
 
-#include <shlobj.h>
 #include <clocale>
 #include <process.h>
-#include <Shlwapi.h>
 #include <time.h> // For time()
 #include <sstream> // For std::ostringstream
 
@@ -870,13 +868,13 @@ void CxbxKrnlMain(int argc, char* argv[])
 	// Get DCHandle :
 	HWND hWnd = 0;
 	if (argc > 2) {
-		hWnd = (HWND)StrToInt(argv[3]);
+		hWnd = (HWND)std::atoi(argv[3]);
 	}
 
 	// Get KernelDebugMode :
 	DebugMode DbgMode = DebugMode::DM_NONE;
 	if (argc > 3) {
-		DbgMode = (DebugMode)StrToInt(argv[4]);
+		DbgMode = (DebugMode)std::atoi(argv[4]);
 	}
 
 	// Get KernelDebugFileName :
@@ -1344,8 +1342,8 @@ __declspec(noreturn) void CxbxKrnlInit
 	memset(szBuffer, 0, MAX_PATH);
 	strncpy(szBuffer, szFilePath_Xbe, MAX_PATH);
 	std::string xbePath(szBuffer);
-	PathRemoveFileSpec(szBuffer);
 	std::string xbeDirectory(szBuffer);
+	xbeDirectory = xbeDirectory.substr(0, xbeDirectory.find_last_of("\\/"));
 	CxbxBasePathHandle = CreateFile(CxbxBasePath.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
 	memset(szBuffer, 0, MAX_PATH);
 	// Games may assume they are running from CdRom :
@@ -1540,15 +1538,15 @@ void CxbxInitFilePaths()
 	g_EmuShared->GetStorageLocation(szFolder_CxbxReloadedData);
 
 	// Make sure our data folder exists :
-	int result = SHCreateDirectoryEx(nullptr, szFolder_CxbxReloadedData, nullptr);
-	if ((result != ERROR_SUCCESS) && (result != ERROR_ALREADY_EXISTS)) {
+	bool result = std::filesystem::exists(szFolder_CxbxReloadedData);
+	if (!result && !std::filesystem::create_directory(szFolder_CxbxReloadedData)) {
 		CxbxKrnlCleanup("CxbxInitFilePaths : Couldn't create Cxbx-Reloaded's data folder!");
 	}
 
 	// Make sure the EmuDisk folder exists
 	std::string emuDisk = std::string(szFolder_CxbxReloadedData) + std::string("\\EmuDisk");
-	result = SHCreateDirectoryEx(nullptr, emuDisk.c_str(), nullptr);
-	if ((result != ERROR_SUCCESS) && (result != ERROR_ALREADY_EXISTS)) {
+	result = std::filesystem::exists(emuDisk);
+	if (!result && !std::filesystem::create_directory(emuDisk)) {
 		CxbxKrnlCleanup("CxbxInitFilePaths : Couldn't create Cxbx-Reloaded EmuDisk folder!");
 	}
 
