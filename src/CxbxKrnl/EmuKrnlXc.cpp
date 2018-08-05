@@ -56,6 +56,10 @@ namespace NtDll
 };
 
 
+// Used by JumpedDESKeyParity
+static const xboxkrnl::BYTE DESParityTable[] = { 0x00,0x01,0x01,0x02,0x01,0x02,0x02,0x03,0x01,0x02,0x02,0x03,0x02,0x03,0x03,0x04 };
+
+
 // The following are the default implementations of the crypto functions
 
 xboxkrnl::VOID NTAPI JumpedSHAInit
@@ -233,7 +237,15 @@ xboxkrnl::VOID NTAPI JumpedDESKeyParity
 	xboxkrnl::ULONG dwKeyLength
 )
 {
-	LOG_UNIMPLEMENTED();
+	// This function sets the parity on the DES key to be odd
+	// Test case: Halo, Tenchu, dashboard, Splinter Cell 1 and 2, ...
+
+	for (DWORD i = 0; i < dwKeyLength; i++)
+	{
+		if (!((DESParityTable[pbKey[i] >> 4] + DESParityTable[pbKey[i] & 0x0F]) % 2)) {
+			pbKey[i] = pbKey[i] ^ 0x01;
+		}
+	}
 }
 
 xboxkrnl::VOID NTAPI JumpedKeyTable
