@@ -42,6 +42,36 @@
 // TODO : Use Boost.Format http://www.boost.org/doc/libs/1_53_0/libs/format/index.html
 thread_local std::string _logThreadPrefix;
 
+std::atomic_bool g_EnabledModules[static_cast<unsigned int>(_CXBXR_MODULE::MAX)] = { false };
+const char* g_EnumModules2String[static_cast<unsigned int>(_CXBXR_MODULE::MAX)] = {
+	"CXBX",
+	"XBE",
+	"INIT",
+	"VMEM",
+	"PMEM",
+	"POOLMEM",
+	"D3D8",
+	"XAPI",
+	"XBDM",
+	"AV",
+	"DBG",
+	"EX",
+	"FS",
+	"HAL",
+	"IO",
+	"KD",
+	"KE",
+	"KI",
+	"MM",
+	"NT",
+	"OB",
+	"PS",
+	"RTL",
+	"XC",
+	"XE",
+};
+std::atomic_uint g_CurrentLogLevel = static_cast<unsigned int>(LOG_LEVEL::INFO);
+
 const bool needs_escape(const wint_t _char)
 {
 	// Escaping is needed for control characters,

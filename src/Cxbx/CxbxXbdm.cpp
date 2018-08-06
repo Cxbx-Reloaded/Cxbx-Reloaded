@@ -36,7 +36,7 @@
 #define _CXBXKRNL_INTERNAL
 #define _XBOXKRNL_DEFEXTRN_
 
-#define LOG_PREFIX "XBDM"
+#define LOG_PREFIX CXBXR_MODULE::XBDM
 
 #include <cstdio>
 #include <cctype>
@@ -47,85 +47,85 @@
 
 namespace xbdm {
 	// 0x0001 (1)
-	void DmAllocatePool() { LOG_FUNC(); LOG_UNIMPLEMENTED(); }
+	void DmAllocatePool() { LOG_FUNC(LOG_PREFIX); LOG_UNIMPLEMENTED(LOG_PREFIX); }
 	// 0x0002 (2)
-	void DmAllocatePoolWithTag() { LOG_FUNC(); LOG_UNIMPLEMENTED(); }
+	void DmAllocatePoolWithTag() { LOG_FUNC(LOG_PREFIX); LOG_UNIMPLEMENTED(LOG_PREFIX); }
 	// 0x0003 (3)
-	void DmCloseCounters() { LOG_FUNC(); LOG_UNIMPLEMENTED(); }
+	void DmCloseCounters() { LOG_FUNC(LOG_PREFIX); LOG_UNIMPLEMENTED(LOG_PREFIX); }
 	// 0x0004 (4)
-	void DmCloseLoadedModules() { LOG_FUNC(); LOG_UNIMPLEMENTED(); }
+	void DmCloseLoadedModules() { LOG_FUNC(LOG_PREFIX); LOG_UNIMPLEMENTED(LOG_PREFIX); }
 	// 0x0005 (5)
-	void DmCloseModuleSections() { LOG_FUNC(); LOG_UNIMPLEMENTED(); }
+	void DmCloseModuleSections() { LOG_FUNC(LOG_PREFIX); LOG_UNIMPLEMENTED(LOG_PREFIX); }
 	// 0x0006 (6)
-	void DmCloseNotificationSession() { LOG_FUNC(); LOG_UNIMPLEMENTED(); }
+	void DmCloseNotificationSession() { LOG_FUNC(LOG_PREFIX); LOG_UNIMPLEMENTED(LOG_PREFIX); }
 	// 0x0007 (7)
-	void DmClosePerformanceCounter() { LOG_FUNC(); LOG_UNIMPLEMENTED(); }
+	void DmClosePerformanceCounter() { LOG_FUNC(LOG_PREFIX); LOG_UNIMPLEMENTED(LOG_PREFIX); }
 	// 0x0008 (8)
-	void DmContinueThread() { LOG_FUNC(); LOG_UNIMPLEMENTED(); }
+	void DmContinueThread() { LOG_FUNC(LOG_PREFIX); LOG_UNIMPLEMENTED(LOG_PREFIX); }
 	// 0x0009 (9)
-	void DmFreePool() { LOG_FUNC(); LOG_UNIMPLEMENTED(); }
+	void DmFreePool() { LOG_FUNC(LOG_PREFIX); LOG_UNIMPLEMENTED(LOG_PREFIX); }
 	// 0x000A (10)
-	void DmGetMemory() { LOG_FUNC(); LOG_UNIMPLEMENTED(); }
+	void DmGetMemory() { LOG_FUNC(LOG_PREFIX); LOG_UNIMPLEMENTED(LOG_PREFIX); }
 	// 0x000B (11)
-	void DmGetModuleLongName() { LOG_FUNC(); LOG_UNIMPLEMENTED(); }
+	void DmGetModuleLongName() { LOG_FUNC(LOG_PREFIX); LOG_UNIMPLEMENTED(LOG_PREFIX); }
 	// 0x000C (12)
-	void DmGetProcAddress() { LOG_FUNC(); LOG_UNIMPLEMENTED(); }
+	void DmGetProcAddress() { LOG_FUNC(LOG_PREFIX); LOG_UNIMPLEMENTED(LOG_PREFIX); }
 	// 0x000D (13)
-	void DmGetThreadContext() { LOG_FUNC(); LOG_UNIMPLEMENTED(); }
+	void DmGetThreadContext() { LOG_FUNC(LOG_PREFIX); LOG_UNIMPLEMENTED(LOG_PREFIX); }
 	// 0x000E (14)
-	void DmGetThreadInfo() { LOG_FUNC(); LOG_UNIMPLEMENTED(); }
+	void DmGetThreadInfo() { LOG_FUNC(LOG_PREFIX); LOG_UNIMPLEMENTED(LOG_PREFIX); }
 	// 0x000F (15)
-	void DmGetThreadList() { LOG_FUNC(); LOG_UNIMPLEMENTED(); }
+	void DmGetThreadList() { LOG_FUNC(LOG_PREFIX); LOG_UNIMPLEMENTED(LOG_PREFIX); }
 	// 0x0010 (16)
-	void DmGetXbeInfo() { LOG_FUNC(); LOG_UNIMPLEMENTED(); }
+	void DmGetXbeInfo() { LOG_FUNC(LOG_PREFIX); LOG_UNIMPLEMENTED(LOG_PREFIX); }
 	// 0x0011 (17)
-	void DmGetXboxName() { LOG_FUNC(); LOG_UNIMPLEMENTED(); }
+	void DmGetXboxName() { LOG_FUNC(LOG_PREFIX); LOG_UNIMPLEMENTED(LOG_PREFIX); }
 	// 0x0012 (18)
-	void DmGetXtlData() { LOG_FUNC(); LOG_UNIMPLEMENTED(); }
+	void DmGetXtlData() { LOG_FUNC(LOG_PREFIX); LOG_UNIMPLEMENTED(LOG_PREFIX); }
 	// 0x0013 (19)
-	void DmGo() { LOG_FUNC(); LOG_UNIMPLEMENTED(); }
+	void DmGo() { LOG_FUNC(LOG_PREFIX); LOG_UNIMPLEMENTED(LOG_PREFIX); }
 	// 0x0014 (20)
-	void DmHaltThread() { LOG_FUNC(); LOG_UNIMPLEMENTED(); }
+	void DmHaltThread() { LOG_FUNC(LOG_PREFIX); LOG_UNIMPLEMENTED(LOG_PREFIX); }
 	// 0x0015 (21)
-	void DmIsDebuggerPresent() { LOG_FUNC(); LOG_UNIMPLEMENTED(); }
+	void DmIsDebuggerPresent() { LOG_FUNC(LOG_PREFIX); LOG_UNIMPLEMENTED(LOG_PREFIX); }
 	// 0x0016 (22)
-	void DmIsThreadStopped() { LOG_FUNC(); LOG_UNIMPLEMENTED(); }
+	void DmIsThreadStopped() { LOG_FUNC(LOG_PREFIX); LOG_UNIMPLEMENTED(LOG_PREFIX); }
 	// 0x0017 (23)
-	void DmLoadExtension() { LOG_FUNC(); LOG_UNIMPLEMENTED(); }
+	void DmLoadExtension() { LOG_FUNC(LOG_PREFIX); LOG_UNIMPLEMENTED(LOG_PREFIX); }
 	// 0x0018 (24)
-	void DmNotify() { LOG_FUNC(); LOG_UNIMPLEMENTED(); }
+	void DmNotify() { LOG_FUNC(LOG_PREFIX); LOG_UNIMPLEMENTED(LOG_PREFIX); }
 	// 0x0019 (25)
-	void DmOpenNotificationSession() { LOG_FUNC(); LOG_UNIMPLEMENTED(); }
+	void DmOpenNotificationSession() { LOG_FUNC(LOG_PREFIX); LOG_UNIMPLEMENTED(LOG_PREFIX); }
 	// 0x001A (26)
-	void DmOpenPerformanceCounter() { LOG_FUNC(); LOG_UNIMPLEMENTED(); }
+	void DmOpenPerformanceCounter() { LOG_FUNC(LOG_PREFIX); LOG_UNIMPLEMENTED(LOG_PREFIX); }
 	// 0x001B (27)
-	void DmQueryPerformanceCounterHandle() { LOG_FUNC(); LOG_UNIMPLEMENTED(); }
+	void DmQueryPerformanceCounterHandle() { LOG_FUNC(LOG_PREFIX); LOG_UNIMPLEMENTED(LOG_PREFIX); }
 	// 0x001C (28)
-	void DmReboot() { LOG_FUNC(); LOG_UNIMPLEMENTED(); }
+	void DmReboot() { LOG_FUNC(LOG_PREFIX); LOG_UNIMPLEMENTED(LOG_PREFIX); }
 	// 0x001D (29) Unassigned
 
 	// 0x001E (30)
 	HRESULT DmRegisterCommandProcessor(LPCSTR sz, void *pfn) // PDM_CMDPROC  pfn
 	{ 
-		LOG_FUNC_BEGIN
+		LOG_FUNC_BEGIN(LOG_PREFIX)
 			LOG_FUNC_ARG(sz)
 			LOG_FUNC_ARG(pfn)
 			LOG_FUNC_END; 
 
-		LOG_UNIMPLEMENTED(); // TODO : Connect the command processor callback to Cxbx'x debug console
+		LOG_UNIMPLEMENTED(LOG_PREFIX); // TODO : Connect the command processor callback to Cxbx'x debug console
 
 		return S_OK;
 	}
 
 	// 0x001F (31) Unassigned
 	// 0x0020 (32)
-	void DmRegisterNotificationProcessor() { LOG_FUNC(); LOG_UNIMPLEMENTED(); }
+	void DmRegisterNotificationProcessor() { LOG_FUNC(LOG_PREFIX); LOG_UNIMPLEMENTED(LOG_PREFIX); }
 	// 0x0021 (33)
-	void DmRegisterPerformanceCounter() { LOG_FUNC(); LOG_UNIMPLEMENTED(); }
+	void DmRegisterPerformanceCounter() { LOG_FUNC(LOG_PREFIX); LOG_UNIMPLEMENTED(LOG_PREFIX); }
 	// 0x0022 (34)
-	void DmRemoveBreakpoint() { LOG_FUNC(); LOG_UNIMPLEMENTED(); }
+	void DmRemoveBreakpoint() { LOG_FUNC(LOG_PREFIX); LOG_UNIMPLEMENTED(LOG_PREFIX); }
 	// 0x0023 (35)
-	void DmResumeThread() { LOG_FUNC(); LOG_UNIMPLEMENTED(); }
+	void DmResumeThread() { LOG_FUNC(LOG_PREFIX); LOG_UNIMPLEMENTED(LOG_PREFIX); }
 
 	// 0x0024 (36)
 	void DmSendNotificationString(LPCSTR sz)
@@ -135,77 +135,77 @@ namespace xbdm {
 	}
 
 	// 0x0025 (37)
-	void DmSetBreakpoint() { LOG_FUNC(); LOG_UNIMPLEMENTED(); }
+	void DmSetBreakpoint() { LOG_FUNC(LOG_PREFIX); LOG_UNIMPLEMENTED(LOG_PREFIX); }
 	// 0x0026 (38)
-	void DmSetDataBreakpoint() { LOG_FUNC(); LOG_UNIMPLEMENTED(); }
+	void DmSetDataBreakpoint() { LOG_FUNC(LOG_PREFIX); LOG_UNIMPLEMENTED(LOG_PREFIX); }
 	// 0x0027 (39)
-	void DmSetInitialBreakpoint() { LOG_FUNC(); LOG_UNIMPLEMENTED(); }
+	void DmSetInitialBreakpoint() { LOG_FUNC(LOG_PREFIX); LOG_UNIMPLEMENTED(LOG_PREFIX); }
 	// 0x0028 (40)
-	void DmSetMemory() { LOG_FUNC(); LOG_UNIMPLEMENTED(); }
+	void DmSetMemory() { LOG_FUNC(LOG_PREFIX); LOG_UNIMPLEMENTED(LOG_PREFIX); }
 	// 0x0029 (41)
-	void DmSetThreadContext() { LOG_FUNC(); LOG_UNIMPLEMENTED(); }
+	void DmSetThreadContext() { LOG_FUNC(LOG_PREFIX); LOG_UNIMPLEMENTED(LOG_PREFIX); }
 	// 0x002A (42)
-	void DmSetTitle() { LOG_FUNC(); LOG_UNIMPLEMENTED(); }
+	void DmSetTitle() { LOG_FUNC(LOG_PREFIX); LOG_UNIMPLEMENTED(LOG_PREFIX); }
 	// 0x002B (43)
-	void DmSetXboxName() { LOG_FUNC(); LOG_UNIMPLEMENTED(); }
+	void DmSetXboxName() { LOG_FUNC(LOG_PREFIX); LOG_UNIMPLEMENTED(LOG_PREFIX); }
 	// 0x002C (44)
-	void DmStartProfile() { LOG_FUNC(); LOG_UNIMPLEMENTED(); }
+	void DmStartProfile() { LOG_FUNC(LOG_PREFIX); LOG_UNIMPLEMENTED(LOG_PREFIX); }
 	// 0x002D (45)
-	void DmStop() { LOG_FUNC(); LOG_UNIMPLEMENTED(); }
+	void DmStop() { LOG_FUNC(LOG_PREFIX); LOG_UNIMPLEMENTED(LOG_PREFIX); }
 	// 0x002E (46)
-	void DmStopOn() { LOG_FUNC(); LOG_UNIMPLEMENTED(); }
+	void DmStopOn() { LOG_FUNC(LOG_PREFIX); LOG_UNIMPLEMENTED(LOG_PREFIX); }
 	// 0x002F (47)
-	void DmStopProfile() { LOG_FUNC(); LOG_UNIMPLEMENTED(); }
+	void DmStopProfile() { LOG_FUNC(LOG_PREFIX); LOG_UNIMPLEMENTED(LOG_PREFIX); }
 	// 0x0030 (48)
-	void DmSuspendThread() { LOG_FUNC(); LOG_UNIMPLEMENTED(); }
+	void DmSuspendThread() { LOG_FUNC(LOG_PREFIX); LOG_UNIMPLEMENTED(LOG_PREFIX); }
 	// 0x0031 (49)
-	void DmThreadUserData() { LOG_FUNC(); LOG_UNIMPLEMENTED(); }
+	void DmThreadUserData() { LOG_FUNC(LOG_PREFIX); LOG_UNIMPLEMENTED(LOG_PREFIX); }
 	// 0x0032 (50)
-	void DmUnloadExtension() { LOG_FUNC(); LOG_UNIMPLEMENTED(); }
+	void DmUnloadExtension() { LOG_FUNC(LOG_PREFIX); LOG_UNIMPLEMENTED(LOG_PREFIX); }
 	// 0x0033 (51)
-	void DmWalkLoadedModules() { LOG_FUNC(); LOG_UNIMPLEMENTED(); }
+	void DmWalkLoadedModules() { LOG_FUNC(LOG_PREFIX); LOG_UNIMPLEMENTED(LOG_PREFIX); }
 	// 0x0034 (52)
-	void DmWalkModuleSections() { LOG_FUNC(); LOG_UNIMPLEMENTED(); }
+	void DmWalkModuleSections() { LOG_FUNC(LOG_PREFIX); LOG_UNIMPLEMENTED(LOG_PREFIX); }
 	// 0x0035 (53)
-	void DmWalkPerformanceCounters() { LOG_FUNC(); LOG_UNIMPLEMENTED(); }
+	void DmWalkPerformanceCounters() { LOG_FUNC(LOG_PREFIX); LOG_UNIMPLEMENTED(LOG_PREFIX); }
 	// 0x0036 (54)
-	void PsGetCurrentThreadId() { LOG_FUNC(); LOG_UNIMPLEMENTED(); }
+	void PsGetCurrentThreadId() { LOG_FUNC(LOG_PREFIX); LOG_UNIMPLEMENTED(LOG_PREFIX); }
 	// 0x0037 (55)
-	void DmEnableGPUCounter() { LOG_FUNC(); LOG_UNIMPLEMENTED(); }
+	void DmEnableGPUCounter() { LOG_FUNC(LOG_PREFIX); LOG_UNIMPLEMENTED(LOG_PREFIX); }
 	// 0x0038 (56)
-	void DmIsBreakpoint() { LOG_FUNC(); LOG_UNIMPLEMENTED(); }
+	void DmIsBreakpoint() { LOG_FUNC(LOG_PREFIX); LOG_UNIMPLEMENTED(LOG_PREFIX); }
 	// 0x0039 (57)
-	void DmCloseUserList() { LOG_FUNC(); LOG_UNIMPLEMENTED(); }
+	void DmCloseUserList() { LOG_FUNC(LOG_PREFIX); LOG_UNIMPLEMENTED(LOG_PREFIX); }
 	// 0x003A (58)
-	void DmSetUserAccess() { LOG_FUNC(); LOG_UNIMPLEMENTED(); }
+	void DmSetUserAccess() { LOG_FUNC(LOG_PREFIX); LOG_UNIMPLEMENTED(LOG_PREFIX); }
 	// 0x003B (59)
-	void DmGetUserAccess() { LOG_FUNC(); LOG_UNIMPLEMENTED(); }
+	void DmGetUserAccess() { LOG_FUNC(LOG_PREFIX); LOG_UNIMPLEMENTED(LOG_PREFIX); }
 	// 0x003C (60)
-	void DmWalkUserList() { LOG_FUNC(); LOG_UNIMPLEMENTED(); }
+	void DmWalkUserList() { LOG_FUNC(LOG_PREFIX); LOG_UNIMPLEMENTED(LOG_PREFIX); }
 	// 0x003D (61)
-	void DmAddUser() { LOG_FUNC(); LOG_UNIMPLEMENTED(); }
+	void DmAddUser() { LOG_FUNC(LOG_PREFIX); LOG_UNIMPLEMENTED(LOG_PREFIX); }
 	// 0x003E (62)
-	void DmEnableSecurity() { LOG_FUNC(); LOG_UNIMPLEMENTED(); }
+	void DmEnableSecurity() { LOG_FUNC(LOG_PREFIX); LOG_UNIMPLEMENTED(LOG_PREFIX); }
 	// 0x003F (63)
-	void DmIsSecurityEnabled() { LOG_FUNC(); LOG_UNIMPLEMENTED(); }
+	void DmIsSecurityEnabled() { LOG_FUNC(LOG_PREFIX); LOG_UNIMPLEMENTED(LOG_PREFIX); }
 	// 0x0040 (64)
-	void DmRemoveUser() { LOG_FUNC(); LOG_UNIMPLEMENTED(); }
+	void DmRemoveUser() { LOG_FUNC(LOG_PREFIX); LOG_UNIMPLEMENTED(LOG_PREFIX); }
 	// 0x0041 (65)
-	void _CAP_Start_Profiling() { LOG_FUNC(); LOG_UNIMPLEMENTED(); }
+	void _CAP_Start_Profiling() { LOG_FUNC(LOG_PREFIX); LOG_UNIMPLEMENTED(LOG_PREFIX); }
 	// 0x0042 (66)
-	void _CAP_End_Profiling() { LOG_FUNC(); LOG_UNIMPLEMENTED(); }
+	void _CAP_End_Profiling() { LOG_FUNC(LOG_PREFIX); LOG_UNIMPLEMENTED(LOG_PREFIX); }
 	// 0x0043 (67)
-	void DmProfileControl() { LOG_FUNC(); LOG_UNIMPLEMENTED(); }
+	void DmProfileControl() { LOG_FUNC(LOG_PREFIX); LOG_UNIMPLEMENTED(LOG_PREFIX); }
 	// 0x0044 (68)
-	void _penter() { LOG_FUNC(); LOG_UNIMPLEMENTED(); }
+	void _penter() { LOG_FUNC(LOG_PREFIX); LOG_UNIMPLEMENTED(LOG_PREFIX); }
 	// 0x0045 (69)
-	void _pexit() { LOG_FUNC(); LOG_UNIMPLEMENTED(); }
+	void _pexit() { LOG_FUNC(LOG_PREFIX); LOG_UNIMPLEMENTED(LOG_PREFIX); }
 	// 0x0046 (70)
-	void _CAP_Enter_Function() { LOG_FUNC(); LOG_UNIMPLEMENTED(); }
+	void _CAP_Enter_Function() { LOG_FUNC(LOG_PREFIX); LOG_UNIMPLEMENTED(LOG_PREFIX); }
 	// 0x0047 (71)
-	void _CAP_Exit_Function() { LOG_FUNC(); LOG_UNIMPLEMENTED(); }
+	void _CAP_Exit_Function() { LOG_FUNC(LOG_PREFIX); LOG_UNIMPLEMENTED(LOG_PREFIX); }
 	// 0x0048 (72)
-	void DmRegisterCommandProcessorEx() { LOG_FUNC(); LOG_UNIMPLEMENTED(); }
+	void DmRegisterCommandProcessorEx() { LOG_FUNC(LOG_PREFIX); LOG_UNIMPLEMENTED(LOG_PREFIX); }
 }
 
 uint32 Cxbx_LibXbdmThunkTable[1 + 72] =

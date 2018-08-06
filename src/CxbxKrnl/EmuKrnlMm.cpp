@@ -37,7 +37,7 @@
 // ******************************************************************
 #define _XBOXKRNL_DEFEXTRN_
 
-#define LOG_PREFIX "KRNL"
+#define LOG_PREFIX CXBXR_MODULE::MM
 
 // prevent name collisions
 namespace xboxkrnl
@@ -89,7 +89,7 @@ XBSYSAPI EXPORTNUM(165) xboxkrnl::PVOID NTAPI xboxkrnl::MmAllocateContiguousMemo
 	IN ULONG NumberOfBytes
 )
 {
-	LOG_FORWARD("MmAllocateContiguousMemoryEx");
+	LOG_FORWARD(LOG_PREFIX, "MmAllocateContiguousMemoryEx");
 
 	return MmAllocateContiguousMemoryEx(NumberOfBytes, 0, MAXULONG_PTR, 0, XBOX_PAGE_READWRITE);
 }
@@ -106,7 +106,7 @@ XBSYSAPI EXPORTNUM(166) xboxkrnl::PVOID NTAPI xboxkrnl::MmAllocateContiguousMemo
 	IN ULONG            ProtectionType
 )
 {
-	LOG_FUNC_BEGIN
+	LOG_FUNC_BEGIN(LOG_PREFIX)
 		LOG_FUNC_ARG(NumberOfBytes)
 		LOG_FUNC_ARG(LowestAcceptableAddress)
 		LOG_FUNC_ARG(HighestAcceptableAddress)
@@ -116,7 +116,7 @@ XBSYSAPI EXPORTNUM(166) xboxkrnl::PVOID NTAPI xboxkrnl::MmAllocateContiguousMemo
 
 	PVOID pRet = (PVOID)g_VMManager.AllocateContiguous(NumberOfBytes, LowestAcceptableAddress, HighestAcceptableAddress, Alignment, ProtectionType);
 
-	RETURN(pRet);
+	RETURN(LOG_PREFIX, pRet);
 }
 
 // ******************************************************************
@@ -128,14 +128,14 @@ XBSYSAPI EXPORTNUM(167) xboxkrnl::PVOID NTAPI xboxkrnl::MmAllocateSystemMemory
 	ULONG Protect
 )
 {
-	LOG_FUNC_BEGIN
+	LOG_FUNC_BEGIN(LOG_PREFIX)
 		LOG_FUNC_ARG(NumberOfBytes)
 		LOG_FUNC_ARG_TYPE(PROTECTION_TYPE, Protect)
 	LOG_FUNC_END;
 
 	PVOID addr = (PVOID)g_VMManager.AllocateSystemMemory(SystemMemoryType, Protect, NumberOfBytes, false);
 
-	RETURN(addr);
+	RETURN(LOG_PREFIX, addr);
 }
 
 // ******************************************************************
@@ -147,14 +147,14 @@ XBSYSAPI EXPORTNUM(168) xboxkrnl::PVOID NTAPI xboxkrnl::MmClaimGpuInstanceMemory
 	OUT SIZE_T *NumberOfPaddingBytes
 )
 {
-	LOG_FUNC_BEGIN
+	LOG_FUNC_BEGIN(LOG_PREFIX)
 		LOG_FUNC_ARG(NumberOfBytes)
 		LOG_FUNC_ARG_OUT(NumberOfPaddingBytes)
 	LOG_FUNC_END;
 
 	PVOID Result = (PVOID)g_VMManager.ClaimGpuMemory(NumberOfBytes, (size_t*)NumberOfPaddingBytes);
 
-	RETURN(Result);
+	RETURN(LOG_PREFIX, Result);
 }
 
 // ******************************************************************
@@ -168,7 +168,7 @@ XBSYSAPI EXPORTNUM(169) xboxkrnl::PVOID NTAPI xboxkrnl::MmCreateKernelStack
 	IN BOOLEAN  DebuggerThread
 )
 {
-	LOG_FUNC_BEGIN
+	LOG_FUNC_BEGIN(LOG_PREFIX)
 		LOG_FUNC_ARG(NumberOfBytes)
 		LOG_FUNC_ARG(DebuggerThread)
 	LOG_FUNC_END;
@@ -176,7 +176,7 @@ XBSYSAPI EXPORTNUM(169) xboxkrnl::PVOID NTAPI xboxkrnl::MmCreateKernelStack
 	PVOID addr = (PVOID)g_VMManager.AllocateSystemMemory(DebuggerThread ? DebuggerType : StackType,
 		XBOX_PAGE_READWRITE, NumberOfBytes, true);
 
-	RETURN(addr);
+	RETURN(LOG_PREFIX, addr);
 }
 
 // ******************************************************************
@@ -188,7 +188,7 @@ XBSYSAPI EXPORTNUM(170) xboxkrnl::VOID NTAPI xboxkrnl::MmDeleteKernelStack
 	PVOID StackLimit
 )
 {
-	LOG_FUNC_BEGIN
+	LOG_FUNC_BEGIN(LOG_PREFIX)
 		LOG_FUNC_ARG(StackBase)
 		LOG_FUNC_ARG(StackLimit)
 	LOG_FUNC_END;
@@ -208,7 +208,7 @@ XBSYSAPI EXPORTNUM(171) xboxkrnl::VOID NTAPI xboxkrnl::MmFreeContiguousMemory
 	IN PVOID BaseAddress
 )
 {
-	LOG_FUNC_ONE_ARG(BaseAddress);
+	LOG_FUNC_ONE_ARG(LOG_PREFIX, BaseAddress);
 
 	g_VMManager.DeallocateContiguous((VAddr)BaseAddress);
 
@@ -227,14 +227,14 @@ XBSYSAPI EXPORTNUM(172) xboxkrnl::ULONG NTAPI xboxkrnl::MmFreeSystemMemory
 	ULONG NumberOfBytes
 )
 {
-	LOG_FUNC_BEGIN
+	LOG_FUNC_BEGIN(LOG_PREFIX)
 		LOG_FUNC_ARG(BaseAddress)
 		LOG_FUNC_ARG(NumberOfBytes)
 	LOG_FUNC_END;
 
 	ULONG FreedPagesNumber = g_VMManager.DeallocateSystemMemory(SystemMemoryType, (VAddr)BaseAddress, NumberOfBytes);
 
-	RETURN(FreedPagesNumber);
+	RETURN(LOG_PREFIX, FreedPagesNumber);
 }
 
 // ******************************************************************
@@ -248,14 +248,14 @@ XBSYSAPI EXPORTNUM(173) xboxkrnl::PHYSICAL_ADDRESS NTAPI xboxkrnl::MmGetPhysical
 	IN PVOID   BaseAddress
 )
 {
-	LOG_FUNC_ONE_ARG_OUT(BaseAddress);
+	LOG_FUNC_ONE_ARG_OUT(LOG_PREFIX, BaseAddress);
 	
 	// this will crash if the memory pages weren't unlocked with
 	// MmLockUnlockBufferPages, emulate this???
 
 	PAddr addr = g_VMManager.TranslateVAddrToPAddr((VAddr)BaseAddress);
 
-	RETURN(addr);
+	RETURN(LOG_PREFIX, addr);
 }
 
 // ******************************************************************
@@ -266,13 +266,13 @@ XBSYSAPI EXPORTNUM(174) xboxkrnl::BOOLEAN NTAPI xboxkrnl::MmIsAddressValid
 	IN PVOID   VirtualAddress
 )
 {
-	LOG_FUNC_ONE_ARG_OUT(VirtualAddress);
+	LOG_FUNC_ONE_ARG_OUT(LOG_PREFIX, VirtualAddress);
 
 	BOOLEAN Ret = FALSE;
 
 	if (g_VMManager.IsValidVirtualAddress((VAddr)VirtualAddress)) { Ret = TRUE; }
 
-	RETURN(Ret);
+	RETURN(LOG_PREFIX, Ret);
 }
 
 // ******************************************************************
@@ -285,7 +285,7 @@ XBSYSAPI EXPORTNUM(175) xboxkrnl::VOID NTAPI xboxkrnl::MmLockUnlockBufferPages
 	IN BOOLEAN			UnlockPages
 )
 {
-	LOG_FUNC_BEGIN
+	LOG_FUNC_BEGIN(LOG_PREFIX)
 		LOG_FUNC_ARG(BaseAddress)
 		LOG_FUNC_ARG(NumberOfBytes)
 		LOG_FUNC_ARG(UnlockPages)
@@ -305,7 +305,7 @@ XBSYSAPI EXPORTNUM(176) xboxkrnl::VOID NTAPI xboxkrnl::MmLockUnlockPhysicalPage
 	IN BOOLEAN UnlockPage
 )
 {
-	LOG_FUNC_BEGIN
+	LOG_FUNC_BEGIN(LOG_PREFIX)
 		LOG_FUNC_ARG(PhysicalAddress)
 		LOG_FUNC_ARG(UnlockPage)
 	LOG_FUNC_END;
@@ -333,7 +333,7 @@ XBSYSAPI EXPORTNUM(177) xboxkrnl::PVOID NTAPI xboxkrnl::MmMapIoSpace
 	IN ULONG            ProtectionType
 )
 {
-	LOG_FUNC_BEGIN
+	LOG_FUNC_BEGIN(LOG_PREFIX)
 		LOG_FUNC_ARG(PhysicalAddress)
 		LOG_FUNC_ARG(NumberOfBytes)
 		LOG_FUNC_ARG_TYPE(PROTECTION_TYPE, ProtectionType)
@@ -341,7 +341,7 @@ XBSYSAPI EXPORTNUM(177) xboxkrnl::PVOID NTAPI xboxkrnl::MmMapIoSpace
 
 	PVOID pRet = (PVOID)g_VMManager.MapDeviceMemory(PhysicalAddress, NumberOfBytes, ProtectionType);
 
-	RETURN(pRet);
+	RETURN(LOG_PREFIX, pRet);
 }
 
 // ******************************************************************
@@ -354,7 +354,7 @@ XBSYSAPI EXPORTNUM(178) xboxkrnl::VOID NTAPI xboxkrnl::MmPersistContiguousMemory
 	IN BOOLEAN Persist
 )
 {
-	LOG_FUNC_BEGIN
+	LOG_FUNC_BEGIN(LOG_PREFIX)
 		LOG_FUNC_ARG(BaseAddress)
 		LOG_FUNC_ARG(NumberOfBytes)
 		LOG_FUNC_ARG(Persist)
@@ -371,11 +371,11 @@ XBSYSAPI EXPORTNUM(179) xboxkrnl::ULONG NTAPI xboxkrnl::MmQueryAddressProtect
 	IN PVOID VirtualAddress
 )
 {
-	LOG_FUNC_ONE_ARG(VirtualAddress);
+	LOG_FUNC_ONE_ARG(LOG_PREFIX, VirtualAddress);
 
 	ULONG Result = g_VMManager.QueryProtection((VAddr)VirtualAddress);
 	
-	RETURN(Result);
+	RETURN(LOG_PREFIX, Result);
 }
 
 // ******************************************************************
@@ -386,11 +386,11 @@ XBSYSAPI EXPORTNUM(180) xboxkrnl::ULONG NTAPI xboxkrnl::MmQueryAllocationSize
 	IN PVOID   BaseAddress
 )
 {
-	LOG_FUNC_ONE_ARG(BaseAddress);
+	LOG_FUNC_ONE_ARG(LOG_PREFIX, BaseAddress);
 
 	ULONG Size = g_VMManager.QuerySize((VAddr)BaseAddress, false);
 
-	RETURN(Size);
+	RETURN(LOG_PREFIX, Size);
 }
 
 // ******************************************************************
@@ -401,7 +401,7 @@ XBSYSAPI EXPORTNUM(181) xboxkrnl::NTSTATUS NTAPI xboxkrnl::MmQueryStatistics
 	OUT PMM_STATISTICS MemoryStatistics
 )
 {
-	LOG_FUNC_ONE_ARG_OUT(MemoryStatistics);
+	LOG_FUNC_ONE_ARG_OUT(LOG_PREFIX, MemoryStatistics);
 
 	NTSTATUS ret;
 
@@ -409,7 +409,7 @@ XBSYSAPI EXPORTNUM(181) xboxkrnl::NTSTATUS NTAPI xboxkrnl::MmQueryStatistics
 	{
 		EmuWarning("KNRL: MmQueryStatistics : PMM_STATISTICS MemoryStatistics is nullptr!\n");
 		LOG_IGNORED();
-		RETURN(STATUS_INVALID_PARAMETER);
+		RETURN(LOG_PREFIX, STATUS_INVALID_PARAMETER);
 	}
 
 	if (MemoryStatistics->Length == sizeof(MM_STATISTICS))
@@ -434,7 +434,7 @@ XBSYSAPI EXPORTNUM(181) xboxkrnl::NTSTATUS NTAPI xboxkrnl::MmQueryStatistics
 		ret = STATUS_INVALID_PARAMETER;
 	}
 
-	RETURN(ret);
+	RETURN(LOG_PREFIX, ret);
 }
 
 // ******************************************************************
@@ -447,7 +447,7 @@ XBSYSAPI EXPORTNUM(182) xboxkrnl::VOID NTAPI xboxkrnl::MmSetAddressProtect
 	IN ULONG NewProtect
 )
 {
-	LOG_FUNC_BEGIN
+	LOG_FUNC_BEGIN(LOG_PREFIX)
 		LOG_FUNC_ARG(BaseAddress)
 		LOG_FUNC_ARG(NumberOfBytes)
 		LOG_FUNC_ARG_TYPE(PROTECTION_TYPE, NewProtect)
@@ -468,7 +468,7 @@ XBSYSAPI EXPORTNUM(183) xboxkrnl::VOID NTAPI xboxkrnl::MmUnmapIoSpace
 	IN ULONG NumberOfBytes
 )
 {
-	LOG_FUNC_BEGIN
+	LOG_FUNC_BEGIN(LOG_PREFIX)
 		LOG_FUNC_ARG(BaseAddress)
 		LOG_FUNC_ARG(NumberOfBytes)
 	LOG_FUNC_END;
@@ -485,7 +485,7 @@ XBSYSAPI EXPORTNUM(374) xboxkrnl::PVOID NTAPI xboxkrnl::MmDbgAllocateMemory
 	IN ULONG Protect
 )
 {
-	LOG_FUNC_BEGIN
+	LOG_FUNC_BEGIN(LOG_PREFIX)
 		LOG_FUNC_ARG(NumberOfBytes)
 		LOG_FUNC_ARG_TYPE(PROTECTION_TYPE, Protect)
 	LOG_FUNC_END;
@@ -496,7 +496,7 @@ XBSYSAPI EXPORTNUM(374) xboxkrnl::PVOID NTAPI xboxkrnl::MmDbgAllocateMemory
 	PVOID addr = (PVOID)g_VMManager.AllocateSystemMemory(DebuggerType, Protect, NumberOfBytes, false);
 	if (addr) { RtlFillMemoryUlong((void*)addr, ROUND_UP_4K(NumberOfBytes), 0); } // debugger pages are zeroed
 
-	RETURN(addr);
+	RETURN(LOG_PREFIX, addr);
 }
 
 // ******************************************************************
@@ -508,7 +508,7 @@ XBSYSAPI EXPORTNUM(375) xboxkrnl::ULONG NTAPI xboxkrnl::MmDbgFreeMemory
 	IN ULONG NumberOfBytes
 )
 {
-	LOG_FUNC_BEGIN
+	LOG_FUNC_BEGIN(LOG_PREFIX)
 		LOG_FUNC_ARG(BaseAddress)
 		LOG_FUNC_ARG(NumberOfBytes)
 	LOG_FUNC_END;
@@ -518,7 +518,7 @@ XBSYSAPI EXPORTNUM(375) xboxkrnl::ULONG NTAPI xboxkrnl::MmDbgFreeMemory
 
 	ULONG FreedPagesNumber = g_VMManager.DeallocateSystemMemory(DebuggerType, (VAddr)BaseAddress, NumberOfBytes);
 
-	RETURN(FreedPagesNumber);
+	RETURN(LOG_PREFIX, FreedPagesNumber);
 }
 
 // ******************************************************************
@@ -526,14 +526,14 @@ XBSYSAPI EXPORTNUM(375) xboxkrnl::ULONG NTAPI xboxkrnl::MmDbgFreeMemory
 // ******************************************************************
 XBSYSAPI EXPORTNUM(376) xboxkrnl::ULONG NTAPI xboxkrnl::MmDbgQueryAvailablePages(void)
 {
-	LOG_FUNC();
+	LOG_FUNC(LOG_PREFIX);
 
 	// This should only be called by debug xbe's
 	assert(g_bIsDebug);
 
 	ULONG FreeDebuggerPageNumber = g_VMManager.QueryNumberOfFreeDebuggerPages();
 
-	RETURN(FreeDebuggerPageNumber);
+	RETURN(LOG_PREFIX, FreeDebuggerPageNumber);
 }
 
 // ******************************************************************
@@ -545,7 +545,7 @@ XBSYSAPI EXPORTNUM(377) xboxkrnl::VOID NTAPI xboxkrnl::MmDbgReleaseAddress
 	IN PULONG Opaque
 )
 {
-	LOG_FUNC_BEGIN
+	LOG_FUNC_BEGIN(LOG_PREFIX)
 		LOG_FUNC_ARG(VirtualAddress)
 		LOG_FUNC_ARG(Opaque)
 	LOG_FUNC_END;
@@ -565,7 +565,7 @@ XBSYSAPI EXPORTNUM(378) xboxkrnl::PVOID NTAPI xboxkrnl::MmDbgWriteCheck
 	IN PULONG Opaque
 )
 {
-	LOG_FUNC_BEGIN
+	LOG_FUNC_BEGIN(LOG_PREFIX)
 		LOG_FUNC_ARG(VirtualAddress)
 		LOG_FUNC_ARG(Opaque)
 	LOG_FUNC_END;
@@ -575,5 +575,5 @@ XBSYSAPI EXPORTNUM(378) xboxkrnl::PVOID NTAPI xboxkrnl::MmDbgWriteCheck
 
 	PVOID addr = (PVOID)g_VMManager.DbgTestPte((VAddr)VirtualAddress, (PMMPTE)Opaque, true);
 
-	RETURN(addr);
+	RETURN(LOG_PREFIX, addr);
 }
