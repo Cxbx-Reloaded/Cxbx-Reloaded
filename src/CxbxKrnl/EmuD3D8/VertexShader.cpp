@@ -837,13 +837,13 @@ static void VshWriteShader(VSH_XBOX_SHADER *pShader,
 					dclStream << "dcl_normal";
 					break;
 				case XTL::D3DDECLUSAGE_COLOR:
-					dclStream << "dcl_color" << pRecompiled->UsageIndex;
+					dclStream << "dcl_color" << (int)pRecompiled->UsageIndex;
 					break;
 				case XTL::D3DDECLUSAGE_FOG:
 					dclStream << "dcl_fog";
 					break;
 				case XTL::D3DDECLUSAGE_TEXCOORD:
-					dclStream << "dcl_texcoord" << pRecompiled->UsageIndex;
+					dclStream << "dcl_texcoord" << (int)pRecompiled->UsageIndex;
 					break;
 				case XTL::D3DDECLUSAGE_PSIZE:
 					dclStream << "dcl_psize";
