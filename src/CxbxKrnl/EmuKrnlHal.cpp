@@ -601,14 +601,11 @@ XBSYSAPI EXPORTNUM(49) xboxkrnl::VOID DECLSPEC_NORETURN NTAPI xboxkrnl::HalRetur
 
 		xboxkrnl::HalWriteSMBusValue(SMBUS_ADDRESS_SYSTEM_MICRO_CONTROLLER, SMC_COMMAND_SCRATCH, 0, SMC_SCRATCH_DISPLAY_FATAL_ERROR);
 
-		char szWorkingDirectoy[MAX_PATH];
-		g_EmuShared->GetXbePath(szWorkingDirectoy);
-
 		std::string szProcArgsBuffer;
-		CxbxConvertArgToString(szProcArgsBuffer, szFilePath_CxbxReloaded_Exe, szWorkingDirectoy, CxbxKrnl_hEmuParent, CxbxKrnl_DebugMode, CxbxKrnl_DebugFileName.c_str());
+		CxbxConvertArgToString(szProcArgsBuffer, szFilePath_CxbxReloaded_Exe, szFilePath_Xbe, CxbxKrnl_hEmuParent, CxbxKrnl_DebugMode, CxbxKrnl_DebugFileName.c_str());
 
 		if (!CxbxExec(szProcArgsBuffer, nullptr, false)) {
-			CxbxKrnlCleanup("Could not launch %s", szWorkingDirectoy);
+			CxbxKrnlCleanup("Could not launch %s", szFilePath_Xbe);
 		}
 		break;
 	}

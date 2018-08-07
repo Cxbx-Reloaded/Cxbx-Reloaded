@@ -333,7 +333,7 @@ void EmuD3D_Init_DeferredStates()
 // Update shared structure with GUI process
 void EmuUpdateLLEStatus(uint32_t XbLibScan)
 {
-    int FlagsLLE;
+    uint FlagsLLE;
     g_EmuShared->GetFlagsLLE(&FlagsLLE);
 
     if ((FlagsLLE & LLE_GPU) == false
@@ -358,7 +358,7 @@ void EmuUpdateLLEStatus(uint32_t XbLibScan)
 		EmuOutputMessage(XB_OUTPUT_MESSAGE_INFO, "Fallback to LLE USB.");
 	}
 #endif
-    g_EmuShared->SetFlagsLLE(&FlagsLLE);
+    g_EmuShared->SetFlagsLLEStatus(FlagsLLE);
 }
 
 // NOTE: EmuHLEIntercept do not get to be in XbSymbolDatabase, do the intecept in Cxbx project only.
@@ -400,8 +400,8 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
     }
 
     EmuUpdateLLEStatus(XbLibScan);
-    int gFlagsLLE;
-    g_EmuShared->GetFlagsLLE(&gFlagsLLE);
+    uint gFlagsLLE;
+    g_EmuShared->GetFlagsLLEStatus(&gFlagsLLE);
 
     printf("\n");
     printf("*******************************************************************************\n");

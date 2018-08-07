@@ -157,4 +157,13 @@ extern volatile bool g_bPrintfOn;
 #define CxbxSetThreadName(Name)
 #endif
 
+// NOTE: The reason filesystem is here is for force compress "experimental" namespace
+// to work with same old and new filesystem's functions. Untested, yet should work fine.
+#include <filesystem>
+#ifdef _EXPERIMENTAL_FILESYSTEM_
+namespace std {
+	namespace filesystem = std::experimental::filesystem;
+}
+#endif
+
 #endif

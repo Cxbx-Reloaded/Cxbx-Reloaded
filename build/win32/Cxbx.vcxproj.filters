@@ -94,13 +94,7 @@
     <ClCompile Include="..\..\src\Common\Win32\Mutex.cpp">
       <Filter>Shared</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\Common\Win32\XBController.cpp">
-      <Filter>Shared</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\Common\Xbe.cpp">
-      <Filter>Shared</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\Common\Win32\XBVideo.cpp">
       <Filter>Shared</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\CxbxKrnl\CxbxKrnl.cpp">
@@ -183,9 +177,6 @@
     </ClCompile>
     <ClCompile Include="..\..\src\Cxbx\DlgAudioConfig.cpp">
       <Filter>GUI</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\Common\Win32\XBAudio.cpp">
-      <Filter>Shared</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\CxbxKrnl\PhysicalMemory.cpp">
       <Filter>Emulator</Filter>
@@ -317,6 +308,12 @@
     <ClCompile Include="..\..\src\Common\CxbxCommon.cpp">
       <Filter>Cross Platform</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\Common\Settings.cpp">
+      <Filter>Cross Platform</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\Common\Win32\DInputController.cpp">
+      <Filter>Shared</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\Cxbx\DlgControllerConfig.h">
@@ -352,6 +349,9 @@
     <ClInclude Include="..\..\src\CxbxKrnl\EmuKrnlLogging.h">
       <Filter>Kernel</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\Cxbx.h">
+      <Filter>Shared</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\src\CxbxKrnl\Emu.h">
       <Filter>Shared</Filter>
     </ClInclude>
@@ -367,13 +367,7 @@
     <ClInclude Include="..\..\src\Cxbx\ResCxbx.h">
       <Filter>Shared</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\Common\Win32\XBController.h">
-      <Filter>Shared</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\Common\Xbe.h">
-      <Filter>Shared</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\Common\Win32\XBVideo.h">
       <Filter>Shared</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\CxbxKrnl\CxbxKrnl.h">
@@ -471,9 +465,6 @@
     </ClInclude>
     <ClInclude Include="..\..\src\Cxbx\DlgAudioConfig.h">
       <Filter>GUI</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\Common\Win32\XBAudio.h">
-      <Filter>Shared</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\CxbxKrnl\PhysicalMemory.h">
       <Filter>Emulator</Filter>
@@ -616,11 +607,15 @@
     <ClInclude Include="..\..\src\Common\Input\SDL2_Device.h">
       <Filter>Shared\Input</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\Cxbx.h">
-      <Filter>Shared</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\Common\CxbxCommon.h">
       <Filter>Cross Platform</Filter>
+    </ClInclude>
+    <ClInclude Include="DlgXboxControllerPortMapping.h" />
+    <ClInclude Include="..\..\src\Common\Settings.hpp">
+      <Filter>Cross Platform</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Common\Win32\DInputController.h">
+      <Filter>Shared</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

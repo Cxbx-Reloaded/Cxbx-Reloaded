@@ -56,7 +56,7 @@ HANDLE hMapObject = NULL;
 // ******************************************************************
 // * func: EmuShared::EmuSharedInit
 // ******************************************************************
-void EmuShared::Init()
+void EmuShared::Init(DWORD guiProcessID)
 {
     // ******************************************************************
     // * Ensure initialization only occurs once
@@ -73,6 +73,8 @@ void EmuShared::Init()
     // * Create the shared memory "file"
     // ******************************************************************
     {
+        // NOTE: guiProcessID support is not available due to 2+ emulation is causing problem with graphic screen.
+        std::string emuSharedStr = "Local\\EmuShared-s" + std::to_string(settings_version);// +"-p" + std::to_string(guiProcessID);
         hMapObject = CreateFileMapping
         (
             INVALID_HANDLE_VALUE,   // Paging file
@@ -80,7 +82,7 @@ void EmuShared::Init()
             PAGE_READWRITE,         // read/write access
             0,                      // size: high 32 bits
             sizeof(EmuShared),      // size: low 32 bits
-            "Local\\EmuShared"      // name of map object
+            emuSharedStr.c_str()    // name of map object
         );
 
         if(hMapObject == NULL)
@@ -110,8 +112,9 @@ void EmuShared::Init()
     // ******************************************************************
     // * Executed only on first initialization of shared memory
     // ******************************************************************
-    if(bRequireConstruction)
+    if (bRequireConstruction) {
         g_EmuShared->EmuShared::EmuShared();
+    }
 
     g_EmuShared->m_RefCount++;
 }
@@ -135,10 +138,16 @@ void EmuShared::Cleanup()
 // ******************************************************************
 EmuShared::EmuShared()
 {
-	Load();
 	m_bDebugging = false;
-	m_bEmulating = false;
+	m_bEmulating_status = false;
 	m_bFirstLaunch = false;
+
+	// Reserve space (default to 0)
+	m_bReserved1 = false;
+	m_bReserved2 = false;
+	m_bReserved3 = false;
+	m_bReserved4 = false;
+	memset(m_Reserved99, 0, sizeof(m_Reserved99));
 }
 
 // ******************************************************************
@@ -146,19 +155,4 @@ EmuShared::EmuShared()
 // ******************************************************************
 EmuShared::~EmuShared()
 {
-	Save();
-}
-
-void EmuShared::Load()
-{
-	m_XBController.Load("Software\\Cxbx-Reloaded\\XBController");
-    m_XBVideo.Load("Software\\Cxbx-Reloaded\\XBVideo");
-    m_XBAudio.Load("Software\\Cxbx-Reloaded\\XBAudio");
-}
-
-void EmuShared::Save()
-{
-	m_XBController.Save("Software\\Cxbx-Reloaded\\XBController");
-    m_XBVideo.Save("Software\\Cxbx-Reloaded\\XBVideo");
-    m_XBAudio.Save("Software\\Cxbx-Reloaded\\XBAudio");
 }

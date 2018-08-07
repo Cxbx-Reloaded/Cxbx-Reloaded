@@ -42,14 +42,7 @@
 // ******************************************************************
 // * constants
 // ******************************************************************
-#define RECENT_XBE_SIZE 10
-
-// Cxbx-Reloaded's data storage location.
-typedef enum _CXBX_DATA {
-	CXBX_DATA_APPDATA   = 0,
-	CXBX_DATA_CURDIR    = 1,
-	CXBX_DATA_CUSTOM    = 2,
-} CXBX_DATA;
+#define RECENT_XBE_LIST_MAX 10
 
 typedef struct _Crash_Manager_Data {
 	LPVOID  pWndMain;
@@ -205,7 +198,7 @@ class WndMain : public Wnd
         // ******************************************************************
         // * cached filenames
         // ******************************************************************
-        char       *m_XbeFilename;
+        char        m_XbeFilename[MAX_PATH];
 
         // ******************************************************************
         // * cached window, process, and thread handle
@@ -218,50 +211,11 @@ class WndMain : public Wnd
         // * Recent Xbe files
         // ******************************************************************
         int         m_dwRecentXbe;
-        char       *m_szRecentXbe[RECENT_XBE_SIZE];
 
         // ******************************************************************
         // * is this window fully initialized?
         // ******************************************************************
         bool        m_bCreated;
-
-        // ******************************************************************
-        // * current debug mode type
-        // ******************************************************************
-        DebugMode   m_CxbxDebug;
-        DebugMode   m_KrnlDebug;
-
-		// ******************************************************************
-		// * LLE flags
-		// ******************************************************************
-		int         m_FlagsLLE;
-
-		// ******************************************************************
-		// * XInput Enabled Flag
-		// ******************************************************************		
-		int         m_XInputEnabled;
-
-		// ******************************************************************
-		// * Hack Flags
-		// ******************************************************************	
-		int         m_DisablePixelShaders;
-		int         m_UncapFramerate;
-		int         m_UseAllCores;
-		int         m_SkipRdtscPatching;
-		int         m_ScaleViewport;
-		int         m_DirectHostBackBufferAccess;
-
-        // ******************************************************************
-        // * debug output filenames
-        // ******************************************************************
-        char       *m_CxbxDebugFilename;
-        char       *m_KrnlDebugFilename;
-
-		// ******************************************************************
-		// * Storage location
-		// ******************************************************************
-		CXBX_DATA   m_StorageToggle;
-		char        m_StorageLocation[MAX_PATH];
 
 		// ******************************************************************
 		// * Previous GUI window location (before start emulation)

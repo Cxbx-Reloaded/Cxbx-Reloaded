@@ -58,7 +58,7 @@ namespace xboxkrnl
 #include "Logging.h"
 #include "EmuD3D8Logging.h"
 #include "HLEIntercept.h" // for bLLE_GPU
-#include "Cxbx\\ResCxbx.h"
+#include "Cxbx/ResCxbx.h"
 
 #include <assert.h>
 #include <process.h>
@@ -102,7 +102,7 @@ static XTL::LPDIRECTDRAW7           g_pDD7          = NULL; // DirectDraw7
 static XTL::DDCAPS                  g_DriverCaps          = { 0 };
 static HBRUSH                       g_hBgBrush      = NULL; // Background Brush
 static volatile bool                g_bRenderWindowActive = false;
-static XBVideo                      g_XBVideo;
+static Settings::s_video            g_XBVideo;
 static XTL::D3DVBLANKCALLBACK       g_pVBCallback   = NULL; // Vertical-Blank callback routine
 static std::condition_variable		g_VBConditionVariable;	// Used in BlockUntilVerticalBlank
 static std::mutex					g_VBConditionMutex;		// Used in BlockUntilVerticalBlank
@@ -485,9 +485,9 @@ const char *D3DErrorString(HRESULT hResult)
 
 VOID XTL::CxbxInitWindow(bool bFullInit)
 {
-    g_EmuShared->GetXBVideo(&g_XBVideo);
+    g_EmuShared->GetVideoSettings(&g_XBVideo);
 
-    if(g_XBVideo.GetFullscreen())
+    if(g_XBVideo.bFullScreen)
         CxbxKrnl_hEmuParent = NULL;
 
     // create timing thread
@@ -1342,8 +1342,8 @@ VOID XTL::EmuD3DInit()
 	// Initialise CreateDevice Proxy Data struct
 	{
 		g_EmuCDPD = {0};
-		g_EmuCDPD.Adapter = g_XBVideo.GetDisplayAdapter();
-		g_EmuCDPD.DeviceType = (g_XBVideo.GetDirect3DDevice() == 0) ? D3DDEVTYPE_HAL : D3DDEVTYPE_REF;
+		g_EmuCDPD.Adapter = g_XBVideo.adapter;
+		g_EmuCDPD.DeviceType = (g_XBVideo.direct3DDevice == 0) ? D3DDEVTYPE_HAL : D3DDEVTYPE_REF;
 		g_EmuCDPD.hFocusWindow = g_hEmuWindow;
 	}
 
@@ -1422,15 +1422,31 @@ static DWORD WINAPI EmuRenderWindow(LPVOID lpVoid)
 
     // create the window
     {
-        HWND hwndParent = GetDesktopWindow();
-        DWORD dwStyle = WS_POPUP;
+		// Peform selection if running in GUI or kernel mode first.
+		HWND hwndParent = (!CxbxKrnl_hEmuParent ? GetDesktopWindow() : CxbxKrnl_hEmuParent);
+		DWORD dwStyle = WS_POPUP;
 		RECT windowRect = { 0 };
 
-        if (!g_XBVideo.GetFullscreen()) {
-			hwndParent = CxbxKrnl_hEmuParent;
-			GetWindowRect(hwndParent, &windowRect);
-			dwStyle = (CxbxKrnl_hEmuParent == 0) ? WS_OVERLAPPEDWINDOW : WS_CHILD;
-        }
+		// Obtain the selected resolution from GUI or full desktop screen in kernel mode.
+		if (!GetWindowRect(hwndParent, &windowRect)) {
+			// Fall back resolution if failed
+			windowRect = { 0, 0, 640, 480 };
+		}
+
+		// Then perform additional checks if not running in full screen.
+		if (!g_XBVideo.bFullScreen) {
+
+			// If running as kernel mode, force use the xbox's default resolution.
+			if (!CxbxKrnl_hEmuParent) {
+				// Xbox default resolution (standalone window is resizable by the way)
+				windowRect.right = 640;
+				windowRect.bottom = 480;
+				dwStyle = WS_OVERLAPPEDWINDOW;
+			}
+			else {
+				dwStyle = WS_CHILD;
+			}
+		}
 
         g_hEmuWindow = CreateWindow
         (
@@ -1444,10 +1460,10 @@ static DWORD WINAPI EmuRenderWindow(LPVOID lpVoid)
         );
     }
 
-    ShowWindow(g_hEmuWindow, ((CxbxKrnl_hEmuParent == 0) || g_XBVideo.GetFullscreen()) ? SW_SHOWDEFAULT : SW_SHOWMAXIMIZED);
+    ShowWindow(g_hEmuWindow, ((CxbxKrnl_hEmuParent == 0) || g_XBVideo.bFullScreen) ? SW_SHOWDEFAULT : SW_SHOWMAXIMIZED);
     UpdateWindow(g_hEmuWindow);
 
-    if(!g_XBVideo.GetFullscreen() && (CxbxKrnl_hEmuParent != NULL))
+    if(!g_XBVideo.bFullScreen && (CxbxKrnl_hEmuParent != NULL))
     {
         SetFocus(CxbxKrnl_hEmuParent);
     }
@@ -1511,7 +1527,7 @@ static DWORD WINAPI EmuRenderWindow(LPVOID lpVoid)
 // simple helper function
 void ToggleFauxFullscreen(HWND hWnd)
 {
-    if(g_XBVideo.GetFullscreen())
+    if(g_XBVideo.bFullScreen)
         return;
 
     static LONG lRestore = 0, lRestoreEx = 0;
@@ -1599,7 +1615,7 @@ static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
             /*! disable fullscreen if we are set to faux mode, and faux fullscreen is active */
             if(wParam == VK_ESCAPE)
             {
-                if(g_XBVideo.GetFullscreen())
+                if(g_XBVideo.bFullScreen)
                 {
                     SendMessage(hWnd, WM_CLOSE, 0, 0);
                 }
@@ -1647,7 +1663,7 @@ static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 
                 case SIZE_MINIMIZED:
                 {
-                    if(g_XBVideo.GetFullscreen())
+                    if(g_XBVideo.bFullScreen)
                         CxbxKrnlCleanup(NULL);
 
                     if(!g_bEmuSuspended)
@@ -1676,7 +1692,7 @@ static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 
         case WM_SETCURSOR:
         {
-            if(g_XBVideo.GetFullscreen() || g_bIsFauxFullscreen)
+            if(g_XBVideo.bFullScreen || g_bIsFauxFullscreen)
             {
                 SetCursor(NULL);
                 return D3D_OK; // = 0
@@ -1939,9 +1955,9 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
 
 				// make adjustments to parameters to make sense with windows Direct3D
                 {
-                    g_EmuCDPD.HostPresentationParameters.Windowed = !g_XBVideo.GetFullscreen();
+                    g_EmuCDPD.HostPresentationParameters.Windowed = !g_XBVideo.bFullScreen;
 
-                    if(g_XBVideo.GetVSync())
+                    if(g_XBVideo.bVSync)
 #ifdef CXBX_USE_D3D9
                         g_EmuCDPD.HostPresentationParameters.SwapEffect = XTL::D3DSWAPEFFECT_COPY;
 #else
@@ -1951,11 +1967,11 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
                     g_EmuCDPD.HostPresentationParameters.BackBufferFormat       = XTL::EmuXB2PC_D3DFormat(g_EmuCDPD.XboxPresentationParameters.BackBufferFormat);
 					g_EmuCDPD.HostPresentationParameters.AutoDepthStencilFormat = XTL::EmuXB2PC_D3DFormat(g_EmuCDPD.XboxPresentationParameters.AutoDepthStencilFormat);
 
-                    if(!g_XBVideo.GetVSync() && (g_D3DCaps.PresentationIntervals & D3DPRESENT_INTERVAL_IMMEDIATE) && g_XBVideo.GetFullscreen())
+                    if(!g_XBVideo.bVSync && (g_D3DCaps.PresentationIntervals & D3DPRESENT_INTERVAL_IMMEDIATE) && g_XBVideo.bFullScreen)
                         g_EmuCDPD.HostPresentationParameters.FullScreen_PresentationInterval = D3DPRESENT_INTERVAL_IMMEDIATE;
                     else
                     {
-                        if(g_D3DCaps.PresentationIntervals & D3DPRESENT_INTERVAL_ONE && g_XBVideo.GetFullscreen())
+                        if(g_D3DCaps.PresentationIntervals & D3DPRESENT_INTERVAL_ONE && g_XBVideo.bFullScreen)
                             g_EmuCDPD.HostPresentationParameters.FullScreen_PresentationInterval = D3DPRESENT_INTERVAL_ONE;
                         else
                             g_EmuCDPD.HostPresentationParameters.FullScreen_PresentationInterval = D3DPRESENT_INTERVAL_DEFAULT;
@@ -1996,7 +2012,7 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
                     // retrieve resolution from configuration
                     if(g_EmuCDPD.HostPresentationParameters.Windowed)
                     {
-						const char* resolution = g_XBVideo.GetVideoResolution();
+						const char* resolution = g_XBVideo.szVideoResolution;
 						if (2 != sscanf(resolution, "%u x %u", &g_EmuCDPD.HostPresentationParameters.BackBufferWidth, &g_EmuCDPD.HostPresentationParameters.BackBufferHeight)) {
 							DbgPrintf("EmuCreateDeviceProxy: Couldn't parse resolution : %s.\n", resolution);
 						}
@@ -2018,7 +2034,7 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
                     {
                         char szBackBufferFormat[16] = {};
 
-						const char* resolution = g_XBVideo.GetVideoResolution();
+						const char* resolution = g_XBVideo.szVideoResolution;
 						if (4 != sscanf(resolution, "%u x %u %*dbit %s (%u hz)",
 							&g_EmuCDPD.HostPresentationParameters.BackBufferWidth,
 							&g_EmuCDPD.HostPresentationParameters.BackBufferHeight,

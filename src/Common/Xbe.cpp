@@ -47,9 +47,9 @@ namespace xboxkrnl
 #include <locale> // For ctime
 #include "devices\LED.h" // For LED::Sequence
 #include "CxbxKrnl/CxbxKrnl.h" // For CxbxKrnlPrintUEM
-#include "CxbxKrnl/EmuShared.h" // Include this to avoid including EmuXapi.h and EmuD3D8.h
 #include "CxbxKrnl\EmuSha.h" // For the SHA functions
 #include "CxbxKrnl\EmuRsa.h" // For the RSA functions
+#include "CxbxKrnl/EmuXTL.h" // For LDT_FROM_DASHBOARD and CxbxInitWindow
 
 namespace fs = std::experimental::filesystem;
 

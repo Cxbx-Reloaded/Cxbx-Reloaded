@@ -39,6 +39,7 @@
 #include "CxbxKrnl/CxbxKrnl.h"
 #include "CxbxKrnl/Emu.h"
 #include "CxbxKrnl/EmuShared.h"
+#include "Common/Settings.hpp"
 #include <commctrl.h>
 
 // Enable Visual Styles
@@ -68,26 +69,65 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	if ((UINT_PTR)GetModuleHandle(nullptr) != CXBX_BASE_ADDR)
 	{
 		/*! CXBX_BASE_ADDR is defined as 0x00010000, which is the base address of
-			the Cxbx.exe host executable.
+		    the Cxbx.exe host executable.
 		    Set in Cxbx Project options, Linker, Advanced, Base Address */
 		MessageBox(NULL, "Cxbx.exe is not loaded to base address 0x00010000 (which is a requirement for Xbox emulation)", "Cxbx-Reloaded",
 			MB_OK | MB_ICONERROR);
 		return EXIT_FAILURE;
 	}
 
+	bool bRet, bKernel;
+	HWND hWnd = nullptr;
+	DWORD guiProcessID = 0;
+
+	if (__argc >= 2 && std::strcmp(__argv[1], "/load") == 0 && std::strlen(__argv[2]) > 0) {
+		bKernel = true;
+
+		// Perform check if command line contain gui's hWnd value.
+		if (__argc > 2) {
+			hWnd = (HWND)std::stoi(__argv[3], nullptr, 10);
+
+			hWnd = IsWindow(hWnd) ? hWnd : nullptr;
+			if (hWnd != nullptr) {
+				// We don't need thread ID from window handle.
+				GetWindowThreadProcessId(hWnd, &guiProcessID);
+			}
+		}
+	}
+	else {
+		bKernel = false;
+		guiProcessID = GetCurrentProcessId();
+	}
+
 	/*! initialize shared memory */
-	EmuShared::Init();
+	EmuShared::Init(guiProcessID);
 
 	bool bFirstLaunch;
 	g_EmuShared->GetIsFirstLaunch(&bFirstLaunch);
 
     /* check if process is launch with elevated access then prompt for continue on or not. */
 	if (!bFirstLaunch) {
+
+		g_Settings = new Settings();
+
+		if (g_Settings == nullptr) {
+			MessageBox(nullptr, szSettings_alloc_error, "Cxbx-Reloaded", MB_OK);
+			EmuShared::Cleanup();
+			return EXIT_FAILURE;
+		}
+
+		bRet = g_Settings->Init();
+		if (!bRet) {
+			EmuShared::Cleanup();
+			return EXIT_FAILURE;
+		}
+
 		bool bElevated = CxbxIsElevated();
-		if (bElevated && !bFirstLaunch) {
+
+		if (bElevated && !g_Settings->m_core.allowAdminPrivilege) {
 			int ret = MessageBox(NULL, "Cxbx-Reloaded has detected that it has been launched with Administrator rights.\n"
-								"\nThis is dangerous, as a maliciously modified Xbox titles could take control of your system.\n"
-								"\nAre you sure you want to continue?", "Cxbx-Reloaded", MB_YESNO | MB_ICONWARNING);
+			                    "\nThis is dangerous, as a maliciously modified Xbox titles could take control of your system.\n"
+			                    "\nAre you sure you want to continue?", "Cxbx-Reloaded", MB_YESNO | MB_ICONWARNING);
 			if (ret != IDYES) {
 				EmuShared::Cleanup();
 				return EXIT_FAILURE;
@@ -96,13 +136,51 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		g_EmuShared->SetIsFirstLaunch(true);
 	}
 
-	if (__argc >= 2 && strcmp(__argv[1], "/load") == 0 && strlen(__argv[2]) > 0)  {
+	if (bKernel) {
+
+		// NOTE: This is designated for standalone kernel mode launch without GUI
+		if (g_Settings != nullptr) {
+
+			// Reset to default
+			g_EmuShared->Reset();
+
+			g_Settings->Verify();
+			g_Settings->SyncToEmulator();
+
+			// We don't need to keep Settings open plus allow emulator to use unused memory.
+			delete g_Settings;
+			g_Settings = nullptr;
+
+			// Perform identical to what GUI will do to certain EmuShared's variable before launch.
+			g_EmuShared->SetIsEmulating(true);
+
+			// NOTE: This setting the ready status is optional. Internal kernel process is checking if GUI is running.
+			// Except if enforce check, then we need to re-set ready status every time for non-GUI.
+			//g_EmuShared->SetIsReady(true);
+		}
 
 		/* Initialize Cxbx File Paths */
 		CxbxInitFilePaths();
 
 		CxbxKrnlMain(__argc, __argv);
 		return EXIT_SUCCESS;
+	}
+
+	// If 2nd GUI executable is launched, load settings file for GUI for editable support.
+	if (g_Settings == nullptr) {
+		g_Settings = new Settings();
+
+		if (g_Settings == nullptr) {
+			MessageBox(nullptr, szSettings_alloc_error, "Cxbx-Reloaded", MB_OK);
+			EmuShared::Cleanup();
+			return EXIT_FAILURE;
+		}
+
+		bRet = g_Settings->Init();
+		if (!bRet) {
+			EmuShared::Cleanup();
+			return EXIT_FAILURE;
+		}
 	}
 
 	INITCOMMONCONTROLSEX icc;
