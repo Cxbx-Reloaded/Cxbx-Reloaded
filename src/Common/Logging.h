@@ -60,8 +60,13 @@ typedef enum class _CXBXR_MODULE {
 	PMEM,
 	POOLMEM,
 	D3D8,
+	DSOUND,
 	XAPI,
+	XACT,
+	XGRP,
+	XONLINE,
 	// kernel
+	KRNL,
 	XBDM,
 	AV,
 	DBG,
@@ -255,7 +260,6 @@ extern thread_local std::string _logThreadPrefix;
 
 #define LOG_FUNC_BEGIN_NO_INIT(cxbxr_module) \
 	do { if(g_bPrintfOn) { \
-		unsigned int CxbxrModule = static_cast<unsigned int>(cxbxr_module); \
 		bool _had_arg = false; \
 		std::stringstream msg; \
 		msg << _logThreadPrefix << _logFuncPrefix << "(";

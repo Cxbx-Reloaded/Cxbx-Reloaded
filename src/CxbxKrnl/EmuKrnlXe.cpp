@@ -36,7 +36,7 @@
 // ******************************************************************
 #define _XBOXKRNL_DEFEXTRN_
 
-#define LOG_PREFIX "KRNL"
+#define LOG_PREFIX CXBXR_MODULE::XE
 
 // prevent name collisions
 namespace xboxkrnl
@@ -75,7 +75,7 @@ XBSYSAPI EXPORTNUM(327) xboxkrnl::NTSTATUS NTAPI xboxkrnl::XeLoadSection
 	IN PXBEIMAGE_SECTION Section
 )
 {
-	LOG_FUNC_BEGIN
+	LOG_FUNC_BEGIN(LOG_PREFIX)
 		LOG_FUNC_ARG(Section)
 		LOG_FUNC_END;
 
@@ -110,7 +110,7 @@ XBSYSAPI EXPORTNUM(327) xboxkrnl::NTSTATUS NTAPI xboxkrnl::XeLoadSection
 		Section->SectionReferenceCount++;
 	}
 	
-	RETURN(ret);
+	RETURN(LOG_PREFIX, ret);
 }
 
 // ******************************************************************
@@ -125,7 +125,7 @@ XBSYSAPI EXPORTNUM(328) xboxkrnl::NTSTATUS NTAPI xboxkrnl::XeUnloadSection
 	IN PXBEIMAGE_SECTION Section
 )
 {
-	LOG_FUNC_BEGIN
+	LOG_FUNC_BEGIN(LOG_PREFIX)
 		LOG_FUNC_ARG(Section)
 		LOG_FUNC_END;
 
@@ -169,7 +169,7 @@ XBSYSAPI EXPORTNUM(328) xboxkrnl::NTSTATUS NTAPI xboxkrnl::XeUnloadSection
 		ret = STATUS_SUCCESS;
 	}
 
-	RETURN(ret);
+	RETURN(LOG_PREFIX, ret);
 }
 
 // ******************************************************************

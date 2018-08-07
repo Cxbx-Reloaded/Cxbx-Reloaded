@@ -35,7 +35,7 @@
 // ******************************************************************
 #define _XBOXKRNL_DEFEXTRN_
 
-#define LOG_PREFIX "KRNL"
+#define LOG_PREFIX CXBXR_MODULE::KRNL
 
 // prevent name collisions
 namespace xboxkrnl
@@ -230,7 +230,7 @@ XBSYSAPI EXPORTNUM(51) xboxkrnl::LONG FASTCALL xboxkrnl::KRNL(InterlockedCompare
 	IN LONG  Comparand
 )
 {
-	LOG_FUNC_BEGIN
+	LOG_FUNC_BEGIN(LOG_PREFIX)
 		LOG_FUNC_ARG(Destination)
 		LOG_FUNC_ARG(Exchange)
 		LOG_FUNC_ARG(Comparand)
@@ -238,7 +238,7 @@ XBSYSAPI EXPORTNUM(51) xboxkrnl::LONG FASTCALL xboxkrnl::KRNL(InterlockedCompare
 
 	LONG res = InterlockedCompareExchange((NtDll::PLONG)Destination, (NtDll::LONG)Exchange, (NtDll::LONG)Comparand);
 
-	RETURN(res);
+	RETURN(LOG_PREFIX, res);
 }
 
 // ******************************************************************
@@ -250,11 +250,11 @@ XBSYSAPI EXPORTNUM(52) xboxkrnl::LONG FASTCALL xboxkrnl::KRNL(InterlockedDecreme
 	IN OUT PLONG Addend
 )
 {
-	LOG_FUNC_ONE_ARG(Addend);
+	LOG_FUNC_ONE_ARG(LOG_PREFIX, Addend);
 
 	LONG res = InterlockedDecrement((NtDll::PLONG)Addend);
 
-	RETURN(res);
+	RETURN(LOG_PREFIX, res);
 }
 
 // ******************************************************************
@@ -266,11 +266,11 @@ XBSYSAPI EXPORTNUM(53) xboxkrnl::LONG FASTCALL xboxkrnl::KRNL(InterlockedIncreme
 	IN OUT PLONG Addend
 )
 {
-	LOG_FUNC_ONE_ARG(Addend);
+	LOG_FUNC_ONE_ARG(LOG_PREFIX, Addend);
 
 	LONG res = InterlockedIncrement((NtDll::PLONG)Addend);
 
-	RETURN(res);
+	RETURN(LOG_PREFIX, res);
 }
 
 // ******************************************************************
@@ -283,14 +283,14 @@ XBSYSAPI EXPORTNUM(54) xboxkrnl::LONG FASTCALL xboxkrnl::KRNL(InterlockedExchang
 	IN LONG Value
 )
 {
-	LOG_FUNC_BEGIN
+	LOG_FUNC_BEGIN(LOG_PREFIX)
 		LOG_FUNC_ARG(Destination)
 		LOG_FUNC_ARG(Value)
 		LOG_FUNC_END;
 
 	LONG res = InterlockedExchange((NtDll::PLONG)Destination, (NtDll::LONG)Value);
 
-	RETURN(res);
+	RETURN(LOG_PREFIX, res);
 }
 
 // ******************************************************************
@@ -303,14 +303,14 @@ XBSYSAPI EXPORTNUM(55) xboxkrnl::LONG FASTCALL xboxkrnl::KRNL(InterlockedExchang
 	IN LONG	Value
 )
 {
-	LOG_FUNC_BEGIN
+	LOG_FUNC_BEGIN(LOG_PREFIX)
 		LOG_FUNC_ARG(Addend)
 		LOG_FUNC_ARG(Value)
 		LOG_FUNC_END;
 
 	LONG res = InterlockedExchangeAdd((NtDll::PLONG)Addend, (NtDll::LONG)Value);
 
-	RETURN(res);
+	RETURN(LOG_PREFIX, res);
 }
 
 // ******************************************************************
@@ -323,11 +323,11 @@ XBSYSAPI EXPORTNUM(56) xboxkrnl::PSINGLE_LIST_ENTRY FASTCALL xboxkrnl::KRNL(Inte
 	IN xboxkrnl::PSLIST_HEADER ListHead
 )
 {
-	LOG_FUNC_ONE_ARG(ListHead);
+	LOG_FUNC_ONE_ARG(LOG_PREFIX, ListHead);
 
 	PSINGLE_LIST_ENTRY res = (PSINGLE_LIST_ENTRY)InterlockedFlushSList((::PSLIST_HEADER)ListHead);
 
-	RETURN(res);
+	RETURN(LOG_PREFIX, res);
 }
 
 // ******************************************************************
@@ -339,11 +339,11 @@ XBSYSAPI EXPORTNUM(57) xboxkrnl::PSLIST_ENTRY FASTCALL xboxkrnl::KRNL(Interlocke
 	IN PSLIST_HEADER ListHead
 )
 {
-	LOG_FUNC_ONE_ARG(ListHead);
+	LOG_FUNC_ONE_ARG(LOG_PREFIX, ListHead);
 
 	PSLIST_ENTRY res = (PSLIST_ENTRY)InterlockedPopEntrySList((::PSLIST_HEADER)ListHead);
 
-	RETURN(res);
+	RETURN(LOG_PREFIX, res);
 }
 
 // ******************************************************************
@@ -356,14 +356,14 @@ XBSYSAPI EXPORTNUM(58) xboxkrnl::PSLIST_ENTRY FASTCALL xboxkrnl::KRNL(Interlocke
 	IN PSLIST_ENTRY ListEntry
 )
 {
-	LOG_FUNC_BEGIN
+	LOG_FUNC_BEGIN(LOG_PREFIX)
 		LOG_FUNC_ARG(ListHead)
 		LOG_FUNC_ARG(ListEntry)
 		LOG_FUNC_END;
 
 	PSLIST_ENTRY res = (PSLIST_ENTRY)InterlockedPushEntrySList((::PSLIST_HEADER)ListHead, (::PSLIST_ENTRY)ListEntry);
 
-	RETURN(res);
+	RETURN(LOG_PREFIX, res);
 }
 
 // ******************************************************************
@@ -377,7 +377,7 @@ XBSYSAPI EXPORTNUM(160) xboxkrnl::KIRQL FASTCALL xboxkrnl::KfRaiseIrql
     IN KIRQL NewIrql
 )
 {
-	LOG_FUNC_ONE_ARG_TYPE(KIRQL_TYPE, NewIrql);
+	LOG_FUNC_ONE_ARG_TYPE(LOG_PREFIX, KIRQL_TYPE, NewIrql);
 
 	// Inlined KeGetCurrentIrql() :
 	PKPCR Pcr = KeGetPcr();
@@ -406,7 +406,7 @@ XBSYSAPI EXPORTNUM(161) xboxkrnl::VOID FASTCALL xboxkrnl::KfLowerIrql
     IN KIRQL NewIrql
 )
 {
-	LOG_FUNC_ONE_ARG_TYPE(KIRQL_TYPE, NewIrql);
+	LOG_FUNC_ONE_ARG_TYPE(LOG_PREFIX, KIRQL_TYPE, NewIrql);
 
 	KPCR* Pcr = KeGetPcr();
 
@@ -454,12 +454,12 @@ XBSYSAPI EXPORTNUM(163) xboxkrnl::VOID FASTCALL xboxkrnl::KiUnlockDispatcherData
 	IN KIRQL OldIrql
 )
 {
-	LOG_FUNC_ONE_ARG_TYPE(KIRQL_TYPE, OldIrql);
+	LOG_FUNC_ONE_ARG_TYPE(LOG_PREFIX, KIRQL_TYPE, OldIrql);
 
 	if (!(KeGetCurrentPrcb()->DpcRoutineActive)) // Avoid KeIsExecutingDpc(), as that logs
 		HalRequestSoftwareInterrupt(DISPATCH_LEVEL);
 
-	LOG_INCOMPLETE(); // TODO : Thread-switch?
+	LOG_INCOMPLETE(LOG_PREFIX); // TODO : Thread-switch?
 
 	KfLowerIrql(OldIrql);
 }
@@ -472,9 +472,9 @@ XBSYSAPI EXPORTNUM(252) xboxkrnl::DWORD NTAPI xboxkrnl::PhyGetLinkState
 	IN ULONG	Mode
 )
 {
-	LOG_FUNC_ONE_ARG(Mode);
+	LOG_FUNC_ONE_ARG(LOG_PREFIX, Mode);
 	
-	LOG_UNIMPLEMENTED();
+	LOG_UNIMPLEMENTED(LOG_PREFIX);
 	
 	return 0; // Was XNET_ETHERNET_LINK_ACTIVE | XNET_ETHERNET_LINK_100MBPS | XNET_ETHERNET_LINK_FULL_DUPLEX;
 }
@@ -488,14 +488,14 @@ XBSYSAPI EXPORTNUM(253) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PhyInitialize
 	IN PVOID	Parameter2
 )
 {
-	LOG_FUNC_BEGIN
+	LOG_FUNC_BEGIN(LOG_PREFIX)
 		LOG_FUNC_ARG(forceReset)
 		LOG_FUNC_ARG(Parameter2)
 		LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED();
+	LOG_UNIMPLEMENTED(LOG_PREFIX);
 
-	RETURN(S_OK);
+	RETURN(LOG_PREFIX, S_OK);
 }
 
 // ******************************************************************
@@ -515,7 +515,7 @@ XBSYSAPI EXPORTNUM(361) xboxkrnl::INT CDECL xboxkrnl::RtlSnprintf
 	...
 )
 {
-	LOG_FUNC_BEGIN
+	LOG_FUNC_BEGIN(LOG_PREFIX)
 		LOG_FUNC_ARG(string)
 		LOG_FUNC_ARG(count)
 		LOG_FUNC_ARG(format)
@@ -528,7 +528,7 @@ XBSYSAPI EXPORTNUM(361) xboxkrnl::INT CDECL xboxkrnl::RtlSnprintf
 	INT Result = snprintf(string, count, format, ap);
 	va_end(ap);
 
-	RETURN(Result);
+	RETURN(LOG_PREFIX, Result);
 }
 
 // ******************************************************************
@@ -541,7 +541,7 @@ XBSYSAPI EXPORTNUM(362) xboxkrnl::INT CDECL xboxkrnl::RtlSprintf
 	...
 )
 {
-	LOG_FUNC_BEGIN
+	LOG_FUNC_BEGIN(LOG_PREFIX)
 		LOG_FUNC_ARG(string)
 		LOG_FUNC_ARG(format)
 		LOG_FUNC_END;
@@ -553,7 +553,7 @@ XBSYSAPI EXPORTNUM(362) xboxkrnl::INT CDECL xboxkrnl::RtlSprintf
 	INT Result = sprintf(string, format, ap);
 	va_end(ap);
 
-	RETURN(Result);
+	RETURN(LOG_PREFIX, Result);
 }
 
 // ******************************************************************
@@ -567,7 +567,7 @@ XBSYSAPI EXPORTNUM(363) xboxkrnl::INT CDECL xboxkrnl::RtlVsnprintf
 	...
 )
 {
-	LOG_FUNC_BEGIN
+	LOG_FUNC_BEGIN(LOG_PREFIX)
 		LOG_FUNC_ARG(string)
 		LOG_FUNC_ARG(count)
 		LOG_FUNC_ARG(format)
@@ -580,7 +580,7 @@ XBSYSAPI EXPORTNUM(363) xboxkrnl::INT CDECL xboxkrnl::RtlVsnprintf
 	INT Result = vsnprintf(string, count, format, ap);
 	va_end(ap);
 
-	RETURN(Result);
+	RETURN(LOG_PREFIX, Result);
 }
 
 // ******************************************************************
@@ -593,7 +593,7 @@ XBSYSAPI EXPORTNUM(364) xboxkrnl::INT CDECL xboxkrnl::RtlVsprintf
 	...
 )
 {
-	LOG_FUNC_BEGIN
+	LOG_FUNC_BEGIN(LOG_PREFIX)
 		LOG_FUNC_ARG(string)
 		LOG_FUNC_ARG(format)
 		LOG_FUNC_END;
@@ -605,7 +605,7 @@ XBSYSAPI EXPORTNUM(364) xboxkrnl::INT CDECL xboxkrnl::RtlVsprintf
 	INT Result = vsprintf(string, format, ap);
 	va_end(ap);
 
-	RETURN(Result);
+	RETURN(LOG_PREFIX, Result);
 }
 
 // ******************************************************************
@@ -616,11 +616,11 @@ XBSYSAPI EXPORTNUM(367) xboxkrnl::NTSTATUS NTAPI xboxkrnl::UnknownAPI367
 	// UNKNOWN ARGUMENTS
 )
 {
-	LOG_FUNC();
+	LOG_FUNC(LOG_PREFIX);
 
-	LOG_UNIMPLEMENTED();
+	LOG_UNIMPLEMENTED(LOG_PREFIX);
 
-	RETURN(S_OK);
+	RETURN(LOG_PREFIX, S_OK);
 }
 
 // ******************************************************************
@@ -631,11 +631,11 @@ XBSYSAPI EXPORTNUM(368) xboxkrnl::NTSTATUS NTAPI xboxkrnl::UnknownAPI368
 	// UNKNOWN ARGUMENTS
 )
 {
-	LOG_FUNC();
+	LOG_FUNC(LOG_PREFIX);
 
-	LOG_UNIMPLEMENTED();
+	LOG_UNIMPLEMENTED(LOG_PREFIX);
 
-	RETURN(S_OK);
+	RETURN(LOG_PREFIX, S_OK);
 }
 
 // ******************************************************************
@@ -646,11 +646,11 @@ XBSYSAPI EXPORTNUM(369) xboxkrnl::NTSTATUS NTAPI xboxkrnl::UnknownAPI369
 	// UNKNOWN ARGUMENTS
 )
 {
-	LOG_FUNC();
+	LOG_FUNC(LOG_PREFIX);
 
-	LOG_UNIMPLEMENTED();
+	LOG_UNIMPLEMENTED(LOG_PREFIX);
 
-	RETURN(S_OK);
+	RETURN(LOG_PREFIX, S_OK);
 }
 
 // ******************************************************************
@@ -662,14 +662,14 @@ XBSYSAPI EXPORTNUM(370) xboxkrnl::NTSTATUS NTAPI xboxkrnl::XProfpControl // PROF
 	ULONG Param
 )
 {
-	LOG_FUNC_BEGIN
+	LOG_FUNC_BEGIN(LOG_PREFIX)
 		LOG_FUNC_ARG(Action)
 		LOG_FUNC_ARG(Param)
 		LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED();
+	LOG_UNIMPLEMENTED(LOG_PREFIX);
 
-	RETURN(S_OK);
+	RETURN(LOG_PREFIX, S_OK);
 }
 
 // ******************************************************************
@@ -680,11 +680,11 @@ XBSYSAPI EXPORTNUM(371) xboxkrnl::NTSTATUS NTAPI xboxkrnl::XProfpGetData // PROF
 	// NO ARGUMENTS
 )
 {
-	LOG_FUNC();
+	LOG_FUNC(LOG_PREFIX);
 
-	LOG_UNIMPLEMENTED();
+	LOG_UNIMPLEMENTED(LOG_PREFIX);
 
-	RETURN(S_OK);
+	RETURN(LOG_PREFIX, S_OK);
 }
 
 // ******************************************************************
@@ -695,11 +695,11 @@ XBSYSAPI EXPORTNUM(372) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IrtClientInitFast // 
 	// UNKNOWN ARGUMENTS
 )
 {
-	LOG_FUNC();
+	LOG_FUNC(LOG_PREFIX);
 
-	LOG_UNIMPLEMENTED();
+	LOG_UNIMPLEMENTED(LOG_PREFIX);
 
-	RETURN(S_OK);
+	RETURN(LOG_PREFIX, S_OK);
 }
 
 // ******************************************************************
@@ -710,9 +710,9 @@ XBSYSAPI EXPORTNUM(373) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IrtSweep // PROFILING
 	// UNKNOWN ARGUMENTS
 )
 {
-	LOG_FUNC();
+	LOG_FUNC(LOG_PREFIX);
 
-	LOG_UNIMPLEMENTED();
+	LOG_UNIMPLEMENTED(LOG_PREFIX);
 
-	RETURN(S_OK);
+	RETURN(LOG_PREFIX, S_OK);
 }

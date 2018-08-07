@@ -36,7 +36,7 @@
 // ******************************************************************
 #define _XBOXKRNL_DEFEXTRN_
 
-#define LOG_PREFIX "KRNL"
+#define LOG_PREFIX CXBXR_MODULE::RTL
 #define CHECK_ALIGNMENT(size, alignment) (((size) % (alignment)) == 0) // For RtlFillMemoryUlong
 
 // prevent name collisions
@@ -159,7 +159,7 @@ XBSYSAPI EXPORTNUM(260) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlAnsiStringToUnicod
 	IN UCHAR           AllocateDestinationString
 )
 {
-	LOG_FUNC_BEGIN
+	LOG_FUNC_BEGIN(LOG_PREFIX)
 		LOG_FUNC_ARG_OUT(DestinationString)
 		LOG_FUNC_ARG(SourceString)
 		LOG_FUNC_ARG(AllocateDestinationString)
@@ -187,7 +187,7 @@ XBSYSAPI EXPORTNUM(260) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlAnsiStringToUnicod
 	RtlMultiByteToUnicodeN((PWSTR)DestinationString->Buffer, (ULONG)DestinationString->Length, NULL, SourceString->Buffer, SourceString->Length);
 	DestinationString->Buffer[DestinationString->Length / sizeof(WCHAR)] = 0;
 
-	RETURN(STATUS_SUCCESS);
+	RETURN(LOG_PREFIX, STATUS_SUCCESS);
 }
 
 // ******************************************************************
@@ -199,7 +199,7 @@ XBSYSAPI EXPORTNUM(261) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlAppendStringToStri
 	IN PSTRING Source
 )
 {
-	LOG_FUNC_BEGIN
+	LOG_FUNC_BEGIN(LOG_PREFIX)
 		LOG_FUNC_ARG(Destination)
 		LOG_FUNC_ARG(Source)
 		LOG_FUNC_END;
@@ -220,7 +220,7 @@ XBSYSAPI EXPORTNUM(261) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlAppendStringToStri
 		}
 	}
 
-	RETURN(result);
+	RETURN(LOG_PREFIX, result);
 }
 
 // ******************************************************************
@@ -232,7 +232,7 @@ XBSYSAPI EXPORTNUM(262) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlAppendUnicodeStrin
 	IN PUNICODE_STRING Source
 )
 {
-	LOG_FUNC_BEGIN
+	LOG_FUNC_BEGIN(LOG_PREFIX)
 		LOG_FUNC_ARG(Destination)
 		LOG_FUNC_ARG(Source)
 		LOG_FUNC_END;
@@ -256,7 +256,7 @@ XBSYSAPI EXPORTNUM(262) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlAppendUnicodeStrin
 		}
 	}
 
-	RETURN(result);
+	RETURN(LOG_PREFIX, result);
 }
 
 // ******************************************************************
@@ -268,7 +268,7 @@ XBSYSAPI EXPORTNUM(263) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlAppendUnicodeToStr
 	IN LPCWSTR Source
 )
 {
-	LOG_FUNC_BEGIN
+	LOG_FUNC_BEGIN(LOG_PREFIX)
 		LOG_FUNC_ARG(Destination)
 		LOG_FUNC_ARG(Source)
 		LOG_FUNC_END;
@@ -281,7 +281,7 @@ XBSYSAPI EXPORTNUM(263) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlAppendUnicodeToStr
 		result = RtlAppendUnicodeStringToString(Destination, &unicodeString);
 	}
 
-	RETURN(result);
+	RETURN(LOG_PREFIX, result);
 }
 
 // ******************************************************************
@@ -296,7 +296,7 @@ XBSYSAPI EXPORTNUM(264) xboxkrnl::VOID NTAPI xboxkrnl::RtlAssert
 	PCHAR   Message
 )
 {
-	LOG_FUNC_BEGIN
+	LOG_FUNC_BEGIN(LOG_PREFIX)
 		LOG_FUNC_ARG(FailedAssertion)
 		LOG_FUNC_ARG(FileName)
 		LOG_FUNC_ARG(LineNumber)
@@ -314,11 +314,11 @@ XBSYSAPI EXPORTNUM(265) xboxkrnl::VOID NTAPI xboxkrnl::RtlCaptureContext
 	IN PCONTEXT ContextRecord
 )
 {
-	LOG_FUNC_ONE_ARG(ContextRecord);
+	LOG_FUNC_ONE_ARG(LOG_PREFIX, ContextRecord);
 
 	// NOTE: this function expects the caller to be __cdecl, or else it fails
 
-	LOG_UNIMPLEMENTED();
+	LOG_UNIMPLEMENTED(LOG_PREFIX);
 }
 
 // ******************************************************************
@@ -332,16 +332,16 @@ XBSYSAPI EXPORTNUM(266) xboxkrnl::USHORT NTAPI xboxkrnl::RtlCaptureStackBackTrac
 	OUT PULONG BackTraceHash
 )
 {
-	LOG_FUNC_BEGIN
+	LOG_FUNC_BEGIN(LOG_PREFIX)
 		LOG_FUNC_ARG(FramesToSkip)
 		LOG_FUNC_ARG(FramesToCapture)
 		LOG_FUNC_ARG_OUT(BackTrace)
 		LOG_FUNC_ARG_OUT(BackTraceHash)
 	LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED();
+	LOG_UNIMPLEMENTED(LOG_PREFIX);
 
-	RETURN(NULL);
+	RETURN(LOG_PREFIX, NULL);
 }
 
 // ******************************************************************
@@ -354,7 +354,7 @@ XBSYSAPI EXPORTNUM(267) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlCharToInteger
 	OUT    PULONG Value
 )
 {
-	LOG_FUNC_BEGIN
+	LOG_FUNC_BEGIN(LOG_PREFIX)
 		LOG_FUNC_ARG(String)
 		LOG_FUNC_ARG(Base)
 		LOG_FUNC_ARG(Value)
@@ -428,7 +428,7 @@ XBSYSAPI EXPORTNUM(267) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlCharToInteger
 	}
 
     *Value = bMinus ? (0 - RunningTotal) : RunningTotal;
-	RETURN(STATUS_SUCCESS);
+	RETURN(LOG_PREFIX, STATUS_SUCCESS);
 }
 
 // ******************************************************************
@@ -443,7 +443,7 @@ XBSYSAPI EXPORTNUM(268) xboxkrnl::SIZE_T NTAPI xboxkrnl::RtlCompareMemory
 	IN SIZE_T      Length
 )
 {
-	LOG_FUNC_BEGIN
+	LOG_FUNC_BEGIN(LOG_PREFIX)
 		LOG_FUNC_ARG(Source1)
 		LOG_FUNC_ARG(Source2)
 		LOG_FUNC_ARG(Length)
@@ -460,7 +460,7 @@ XBSYSAPI EXPORTNUM(268) xboxkrnl::SIZE_T NTAPI xboxkrnl::RtlCompareMemory
 		}
 	}
 
-	RETURN(result);
+	RETURN(LOG_PREFIX, result);
 }
 
 // ******************************************************************
@@ -473,7 +473,7 @@ XBSYSAPI EXPORTNUM(269) xboxkrnl::SIZE_T NTAPI xboxkrnl::RtlCompareMemoryUlong
 	IN ULONG Pattern
 )
 {
-	LOG_FUNC_BEGIN
+	LOG_FUNC_BEGIN(LOG_PREFIX)
 		LOG_FUNC_ARG(Source)
 		LOG_FUNC_ARG(Length)
 		LOG_FUNC_ARG(Pattern)
@@ -492,7 +492,7 @@ XBSYSAPI EXPORTNUM(269) xboxkrnl::SIZE_T NTAPI xboxkrnl::RtlCompareMemoryUlong
 
 	SIZE_T result = (SIZE_T)((PCHAR)ptr - (PCHAR)Source);
 
-	RETURN(result);
+	RETURN(LOG_PREFIX, result);
 }
 
 // ******************************************************************
@@ -505,7 +505,7 @@ XBSYSAPI EXPORTNUM(270) xboxkrnl::LONG NTAPI xboxkrnl::RtlCompareString
 	IN BOOLEAN CaseInSensitive
 )
 {
-	LOG_FUNC_BEGIN
+	LOG_FUNC_BEGIN(LOG_PREFIX)
 		LOG_FUNC_ARG(String1)
 		LOG_FUNC_ARG(String2)
 		LOG_FUNC_ARG(CaseInSensitive)
@@ -527,7 +527,7 @@ XBSYSAPI EXPORTNUM(270) xboxkrnl::LONG NTAPI xboxkrnl::RtlCompareString
 		result = strncmp(str1, str2, maxLen);
 	}
 
-	RETURN(result);
+	RETURN(LOG_PREFIX, result);
 }
 
 // ******************************************************************
@@ -540,7 +540,7 @@ XBSYSAPI EXPORTNUM(271) xboxkrnl::LONG NTAPI xboxkrnl::RtlCompareUnicodeString
 	IN BOOLEAN CaseInSensitive
 )
 {
-	LOG_FUNC_BEGIN
+	LOG_FUNC_BEGIN(LOG_PREFIX)
 		LOG_FUNC_ARG(String1)
 		LOG_FUNC_ARG(String2)
 		LOG_FUNC_ARG(CaseInSensitive)
@@ -562,7 +562,7 @@ XBSYSAPI EXPORTNUM(271) xboxkrnl::LONG NTAPI xboxkrnl::RtlCompareUnicodeString
 		result = wcsncmp(str1, str2, maxLen);
 	}
 
-	RETURN(result);
+	RETURN(LOG_PREFIX, result);
 }
 
 // ******************************************************************
@@ -574,7 +574,7 @@ XBSYSAPI EXPORTNUM(272) xboxkrnl::VOID NTAPI xboxkrnl::RtlCopyString
 	IN PSTRING SourceString OPTIONAL
 )
 {
-	LOG_FUNC_BEGIN
+	LOG_FUNC_BEGIN(LOG_PREFIX)
 		LOG_FUNC_ARG_OUT(DestinationString)
 		LOG_FUNC_ARG(SourceString)
 		LOG_FUNC_END;
@@ -604,7 +604,7 @@ XBSYSAPI EXPORTNUM(273) xboxkrnl::VOID NTAPI xboxkrnl::RtlCopyUnicodeString
 	IN PUNICODE_STRING SourceString OPTIONAL
 )
 {
-	LOG_FUNC_BEGIN
+	LOG_FUNC_BEGIN(LOG_PREFIX)
 		LOG_FUNC_ARG_OUT(DestinationString)
 		LOG_FUNC_ARG(SourceString)
 		LOG_FUNC_END;
@@ -634,7 +634,7 @@ XBSYSAPI EXPORTNUM(274) xboxkrnl::BOOLEAN NTAPI xboxkrnl::RtlCreateUnicodeString
 	IN PCWSTR SourceString
 )
 {
-	LOG_FUNC_BEGIN
+	LOG_FUNC_BEGIN(LOG_PREFIX)
 		LOG_FUNC_ARG_OUT(DestinationString)
 		LOG_FUNC_ARG(SourceString)
 		LOG_FUNC_END;
@@ -652,7 +652,7 @@ XBSYSAPI EXPORTNUM(274) xboxkrnl::BOOLEAN NTAPI xboxkrnl::RtlCreateUnicodeString
 		DestinationString->Length = (USHORT)(bufferSize - sizeof(UNICODE_NULL));
 	}
 
-	RETURN(result);
+	RETURN(LOG_PREFIX, result);
 }
 
 // ******************************************************************
@@ -663,11 +663,11 @@ XBSYSAPI EXPORTNUM(275) xboxkrnl::WCHAR NTAPI xboxkrnl::RtlDowncaseUnicodeChar
 	IN WCHAR SourceCharacter
 )
 {
-	LOG_FUNC_ONE_ARG(SourceCharacter);
+	LOG_FUNC_ONE_ARG(LOG_PREFIX, SourceCharacter);
 
 	WCHAR result = towlower(SourceCharacter);
 
-	RETURN(result);
+	RETURN(LOG_PREFIX, result);
 }
 
 // ******************************************************************
@@ -680,7 +680,7 @@ XBSYSAPI EXPORTNUM(276) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlDowncaseUnicodeStr
 	IN BOOLEAN AllocateDestinationString
 )
 {
-	LOG_FUNC_BEGIN
+	LOG_FUNC_BEGIN(LOG_PREFIX)
 		LOG_FUNC_ARG_OUT(DestinationString)
 		LOG_FUNC_ARG(SourceString)
 		LOG_FUNC_ARG(AllocateDestinationString)
@@ -710,7 +710,7 @@ XBSYSAPI EXPORTNUM(276) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlDowncaseUnicodeStr
 
 	DestinationString->Length = SourceString->Length;
 
-	RETURN(result);
+	RETURN(LOG_PREFIX, result);
 }
 
 // ******************************************************************
@@ -721,7 +721,7 @@ XBSYSAPI EXPORTNUM(277) xboxkrnl::VOID NTAPI xboxkrnl::RtlEnterCriticalSection
     IN PRTL_CRITICAL_SECTION CriticalSection
 )
 {
-    LOG_FUNC_ONE_ARG(CriticalSection);
+    LOG_FUNC_ONE_ARG(LOG_PREFIX, CriticalSection);
 
     HANDLE thread = (HANDLE)KeGetCurrentThread();
 
@@ -763,7 +763,7 @@ XBSYSAPI EXPORTNUM(278) xboxkrnl::VOID NTAPI xboxkrnl::RtlEnterCriticalSectionAn
     IN PRTL_CRITICAL_SECTION CriticalSection
 )
 {
-    LOG_FUNC_ONE_ARG(CriticalSection);
+    LOG_FUNC_ONE_ARG(LOG_PREFIX, CriticalSection);
 
     KeEnterCriticalRegion();
     RtlEnterCriticalSection(CriticalSection);
@@ -779,7 +779,7 @@ XBSYSAPI EXPORTNUM(279) xboxkrnl::BOOLEAN NTAPI xboxkrnl::RtlEqualString
 	IN BOOLEAN CaseInSensitive
 )
 {
-	LOG_FUNC_BEGIN
+	LOG_FUNC_BEGIN(LOG_PREFIX)
 		LOG_FUNC_ARG(String1)
 		LOG_FUNC_ARG(String2)
 		LOG_FUNC_ARG(CaseInSensitive)
@@ -819,7 +819,7 @@ XBSYSAPI EXPORTNUM(279) xboxkrnl::BOOLEAN NTAPI xboxkrnl::RtlEqualString
 		}
 	}
 
-	RETURN(bRet);
+	RETURN(LOG_PREFIX, bRet);
 }
 
 // ******************************************************************
@@ -832,7 +832,7 @@ XBSYSAPI EXPORTNUM(280) xboxkrnl::BOOLEAN NTAPI xboxkrnl::RtlEqualUnicodeString
 	IN BOOLEAN CaseInSensitive
 )
 {
-	LOG_FUNC_BEGIN
+	LOG_FUNC_BEGIN(LOG_PREFIX)
 		LOG_FUNC_ARG(String1)
 		LOG_FUNC_ARG(String2)
 		LOG_FUNC_ARG(CaseInSensitive)
@@ -873,7 +873,7 @@ XBSYSAPI EXPORTNUM(280) xboxkrnl::BOOLEAN NTAPI xboxkrnl::RtlEqualUnicodeString
 		}
 	}
 
-	RETURN(bRet);
+	RETURN(LOG_PREFIX, bRet);
 }
 
 // ******************************************************************
@@ -885,7 +885,7 @@ XBSYSAPI EXPORTNUM(281) xboxkrnl::LARGE_INTEGER NTAPI xboxkrnl::RtlExtendedInteg
 	IN LONG Multiplier
 )
 {
-	LOG_FUNC_BEGIN
+	LOG_FUNC_BEGIN(LOG_PREFIX)
 		LOG_FUNC_ARG(Multiplicand)
 		LOG_FUNC_ARG(Multiplier)
 		LOG_FUNC_END;
@@ -894,7 +894,7 @@ XBSYSAPI EXPORTNUM(281) xboxkrnl::LARGE_INTEGER NTAPI xboxkrnl::RtlExtendedInteg
 
 	ret.QuadPart = Multiplicand.QuadPart* (LONGLONG)Multiplier;
 
-	RETURN(ret);
+	RETURN(LOG_PREFIX, ret);
 }
 
 // ******************************************************************
@@ -907,7 +907,7 @@ XBSYSAPI EXPORTNUM(282) xboxkrnl::LARGE_INTEGER NTAPI xboxkrnl::RtlExtendedLarge
 	IN	PULONG Remainder // OUT? OPTIONAL?
 )
 {
-	LOG_FUNC_BEGIN
+	LOG_FUNC_BEGIN(LOG_PREFIX)
 		LOG_FUNC_ARG(Dividend)
 		LOG_FUNC_ARG(Divisor)
 		LOG_FUNC_ARG(Remainder)
@@ -920,7 +920,7 @@ XBSYSAPI EXPORTNUM(282) xboxkrnl::LARGE_INTEGER NTAPI xboxkrnl::RtlExtendedLarge
 
 	ret.QuadPart = Dividend.QuadPart / (LONGLONG)Divisor;
 
-	RETURN(ret);
+	RETURN(LOG_PREFIX, ret);
 }
 
 #define LOWER_32(A) ((A) & 0xffffffff)
@@ -936,7 +936,7 @@ XBSYSAPI EXPORTNUM(283) xboxkrnl::LARGE_INTEGER NTAPI xboxkrnl::RtlExtendedMagic
 	IN	CCHAR ShiftCount
 )
 {
-	LOG_FUNC_BEGIN
+	LOG_FUNC_BEGIN(LOG_PREFIX)
 		LOG_FUNC_ARG(Dividend)
 		LOG_FUNC_ARG(MagicDivisor)
 		LOG_FUNC_ARG(ShiftCount)
@@ -979,7 +979,7 @@ XBSYSAPI EXPORTNUM(283) xboxkrnl::LARGE_INTEGER NTAPI xboxkrnl::RtlExtendedMagic
 	   result.QuadPart = -result.QuadPart;
 	}
 
-	RETURN(result);
+	RETURN(LOG_PREFIX, result);
 }
 
 // ******************************************************************
@@ -992,7 +992,7 @@ XBSYSAPI EXPORTNUM(284) xboxkrnl::VOID NTAPI xboxkrnl::RtlFillMemory
 	IN BYTE  Fill
 )
 {
-	LOG_FUNC_BEGIN
+	LOG_FUNC_BEGIN(LOG_PREFIX)
 		LOG_FUNC_ARG(Destination)
 		LOG_FUNC_ARG(Length)
 		LOG_FUNC_ARG(Fill)
@@ -1011,7 +1011,7 @@ XBSYSAPI EXPORTNUM(285) xboxkrnl::VOID NTAPI xboxkrnl::RtlFillMemoryUlong
 	IN ULONG Pattern
 )
 {
-	LOG_FUNC_BEGIN
+	LOG_FUNC_BEGIN(LOG_PREFIX)
 		LOG_FUNC_ARG(Destination)
 		LOG_FUNC_ARG(Length)
 		LOG_FUNC_ARG(Pattern)
@@ -1041,7 +1041,7 @@ XBSYSAPI EXPORTNUM(286) xboxkrnl::VOID NTAPI xboxkrnl::RtlFreeAnsiString
 	IN OUT PANSI_STRING AnsiString
 )
 {
-	LOG_FUNC_ONE_ARG(AnsiString);
+	LOG_FUNC_ONE_ARG(LOG_PREFIX, AnsiString);
 
 	if (AnsiString->Buffer) {
 		ExFreePool(AnsiString->Buffer);
@@ -1057,7 +1057,7 @@ XBSYSAPI EXPORTNUM(287) xboxkrnl::VOID NTAPI xboxkrnl::RtlFreeUnicodeString
 	IN OUT PUNICODE_STRING UnicodeString
 )
 {
-	LOG_FUNC_ONE_ARG(UnicodeString);
+	LOG_FUNC_ONE_ARG(LOG_PREFIX, UnicodeString);
 
 	if (UnicodeString->Buffer) {
 		ExFreePool(UnicodeString->Buffer);
@@ -1074,12 +1074,12 @@ XBSYSAPI EXPORTNUM(288) xboxkrnl::VOID NTAPI xboxkrnl::RtlGetCallersAddress
 	OUT PVOID *CallersCaller
 )
 {
-	LOG_FUNC_BEGIN
+	LOG_FUNC_BEGIN(LOG_PREFIX)
 		LOG_FUNC_ARG_OUT(CallersAddress)
 		LOG_FUNC_ARG_OUT(CallersCaller)
 	LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED();
+	LOG_UNIMPLEMENTED(LOG_PREFIX);
 }
 
 // ******************************************************************
@@ -1091,7 +1091,7 @@ XBSYSAPI EXPORTNUM(289) xboxkrnl::VOID NTAPI xboxkrnl::RtlInitAnsiString
 	IN     PCSZ         SourceString
 )
 {
-	LOG_FUNC_BEGIN
+	LOG_FUNC_BEGIN(LOG_PREFIX)
 		LOG_FUNC_ARG_OUT(DestinationString)
 		LOG_FUNC_ARG(SourceString)
 		LOG_FUNC_END;
@@ -1117,7 +1117,7 @@ XBSYSAPI EXPORTNUM(290) xboxkrnl::VOID NTAPI xboxkrnl::RtlInitUnicodeString
 	IN     PCWSTR         SourceString
 )
 {
-	LOG_FUNC_BEGIN
+	LOG_FUNC_BEGIN(LOG_PREFIX)
 		LOG_FUNC_ARG_OUT(DestinationString)
 		LOG_FUNC_ARG(SourceString)
 		LOG_FUNC_END;
@@ -1141,7 +1141,7 @@ XBSYSAPI EXPORTNUM(291) xboxkrnl::VOID NTAPI xboxkrnl::RtlInitializeCriticalSect
     IN PRTL_CRITICAL_SECTION CriticalSection
 )
 {
-    LOG_FUNC_ONE_ARG(CriticalSection);
+    LOG_FUNC_ONE_ARG(LOG_PREFIX, CriticalSection);
 
     CriticalSection->LockCount = -1;
     // Sets byte 0 = 1, and byte 2 = 4 of Unknown[0] for some reason
@@ -1167,7 +1167,7 @@ XBSYSAPI EXPORTNUM(292) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlIntegerToChar
 	IN PSZ String
 )
 {
-	LOG_FUNC_BEGIN
+	LOG_FUNC_BEGIN(LOG_PREFIX)
 		LOG_FUNC_ARG(Value)
 		LOG_FUNC_ARG(Base)
 		LOG_FUNC_ARG(OutputLength)
@@ -1212,7 +1212,7 @@ XBSYSAPI EXPORTNUM(292) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlIntegerToChar
 		RtlCopyMemory(String, pos, len + 1);
 	}
 
-	RETURN(STATUS_SUCCESS);
+	RETURN(LOG_PREFIX, STATUS_SUCCESS);
 }
 
 // ******************************************************************
@@ -1225,7 +1225,7 @@ XBSYSAPI EXPORTNUM(293) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlIntegerToUnicodeSt
 	IN     PUNICODE_STRING String
 )
 {
-	LOG_FUNC_BEGIN
+	LOG_FUNC_BEGIN(LOG_PREFIX)
 		LOG_FUNC_ARG(Value)
 		LOG_FUNC_ARG(Base)
 		LOG_FUNC_ARG_OUT(String)
@@ -1244,7 +1244,7 @@ XBSYSAPI EXPORTNUM(293) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlIntegerToUnicodeSt
         Status = RtlAnsiStringToUnicodeString(String, &AnsiString, FALSE);
     }
 
-	RETURN(Status);
+	RETURN(LOG_PREFIX, Status);
 }
 
 // ******************************************************************
@@ -1255,7 +1255,7 @@ XBSYSAPI EXPORTNUM(294) xboxkrnl::VOID NTAPI xboxkrnl::RtlLeaveCriticalSection
     IN PRTL_CRITICAL_SECTION CriticalSection
 )
 {
-    LOG_FUNC_ONE_ARG(CriticalSection);
+    LOG_FUNC_ONE_ARG(LOG_PREFIX, CriticalSection);
 
     CriticalSection->RecursionCount--;
     CriticalSection->LockCount--;
@@ -1277,7 +1277,7 @@ XBSYSAPI EXPORTNUM(295) xboxkrnl::VOID NTAPI xboxkrnl::RtlLeaveCriticalSectionAn
     IN PRTL_CRITICAL_SECTION CriticalSection
 )
 {
-    LOG_FUNC_ONE_ARG(CriticalSection);
+    LOG_FUNC_ONE_ARG(LOG_PREFIX, CriticalSection);
 
     RtlLeaveCriticalSection(CriticalSection);
 
@@ -1294,7 +1294,7 @@ XBSYSAPI EXPORTNUM(296) xboxkrnl::CHAR NTAPI xboxkrnl::RtlLowerChar
 	CHAR Character
 )
 {
-	LOG_FUNC_ONE_ARG(Character);
+	LOG_FUNC_ONE_ARG(LOG_PREFIX, Character);
 	
 	BYTE CharCode = (BYTE)Character;
 
@@ -1309,7 +1309,7 @@ XBSYSAPI EXPORTNUM(296) xboxkrnl::CHAR NTAPI xboxkrnl::RtlLowerChar
 		CharCode ^= 0x20;
 	}
 
-	RETURN((CHAR)CharCode);
+	RETURN(LOG_PREFIX, (CHAR)CharCode);
 }
 
 // ******************************************************************
@@ -1321,7 +1321,7 @@ XBSYSAPI EXPORTNUM(297) xboxkrnl::VOID NTAPI xboxkrnl::RtlMapGenericMask
 	IN PGENERIC_MAPPING GenericMapping
 )
 {
-	LOG_FUNC_BEGIN
+	LOG_FUNC_BEGIN(LOG_PREFIX)
 		LOG_FUNC_ARG(AccessMask)
 		LOG_FUNC_ARG(GenericMapping)
 		LOG_FUNC_END;
@@ -1352,7 +1352,7 @@ XBSYSAPI EXPORTNUM(298) xboxkrnl::VOID NTAPI xboxkrnl::RtlMoveMemory
 	IN SIZE_T                Length
 )
 {
-	LOG_FUNC_BEGIN
+	LOG_FUNC_BEGIN(LOG_PREFIX)
 		LOG_FUNC_ARG(Destination)
 		LOG_FUNC_ARG(Source)
 		LOG_FUNC_ARG(Length)
@@ -1373,7 +1373,7 @@ XBSYSAPI EXPORTNUM(299) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlMultiByteToUnicode
 	IN     ULONG BytesInMultiByteString
 )
 {
-	LOG_FUNC_BEGIN
+	LOG_FUNC_BEGIN(LOG_PREFIX)
 		LOG_FUNC_ARG(UnicodeString)
 		LOG_FUNC_ARG(MaxBytesInUnicodeString);
 		LOG_FUNC_ARG(BytesInUnicodeString);
@@ -1396,7 +1396,7 @@ XBSYSAPI EXPORTNUM(299) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlMultiByteToUnicode
 		numChars--;
 	}
 
-	RETURN(STATUS_SUCCESS);
+	RETURN(LOG_PREFIX, STATUS_SUCCESS);
 }
 
 // ******************************************************************
@@ -1409,7 +1409,7 @@ XBSYSAPI EXPORTNUM(300) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlMultiByteToUnicode
 	IN ULONG BytesInMultiByteString
 )
 {
-	LOG_FUNC_BEGIN
+	LOG_FUNC_BEGIN(LOG_PREFIX)
 		LOG_FUNC_ARG(BytesInUnicodeString)
 		LOG_FUNC_ARG(MultiByteString);
 		LOG_FUNC_ARG(BytesInMultiByteString)
@@ -1417,7 +1417,7 @@ XBSYSAPI EXPORTNUM(300) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlMultiByteToUnicode
 
 	*BytesInUnicodeString = BytesInMultiByteString * sizeof(WCHAR);
 
-	RETURN(STATUS_SUCCESS);
+	RETURN(LOG_PREFIX, STATUS_SUCCESS);
 }
 
 // ******************************************************************
@@ -1428,7 +1428,7 @@ XBSYSAPI EXPORTNUM(301) xboxkrnl::ULONG NTAPI xboxkrnl::RtlNtStatusToDosError
 	IN NTSTATUS Status
 )
 {
-	LOG_FUNC_ONE_ARG(Status);
+	LOG_FUNC_ONE_ARG(LOG_PREFIX, Status);
 
 	ULONG ret = NtDll::RtlNtStatusToDosError(Status);
 /* https://doxygen.reactos.org/de/ddc/sdk_2lib_2rtl_2error_8c.html#aaad43f3dbf8784c2ca1ef07748199f20
@@ -1476,7 +1476,7 @@ no_mapping:
     DbgPrintf("no mapping for %08x\n", Status);
 	ret = ERROR_MR_MID_NOT_FOUND;
 */
-	RETURN(ret);
+	RETURN(LOG_PREFIX, ret);
 }
 
 #define TICKSPERSEC        10000000
@@ -1519,9 +1519,9 @@ XBSYSAPI EXPORTNUM(302) xboxkrnl::VOID NTAPI xboxkrnl::RtlRaiseException
 	IN PEXCEPTION_RECORD ExceptionRecord
 )
 {
-	LOG_FUNC_ONE_ARG(ExceptionRecord);
+	LOG_FUNC_ONE_ARG(LOG_PREFIX, ExceptionRecord);
 
-	LOG_UNIMPLEMENTED();
+	LOG_UNIMPLEMENTED(LOG_PREFIX);
 }
 
 // ******************************************************************
@@ -1532,9 +1532,9 @@ XBSYSAPI EXPORTNUM(303) xboxkrnl::VOID NTAPI xboxkrnl::RtlRaiseStatus
 	IN NTSTATUS Status
 )
 {
-	LOG_FUNC_ONE_ARG(Status);
+	LOG_FUNC_ONE_ARG(LOG_PREFIX, Status);
 
-	LOG_UNIMPLEMENTED();
+	LOG_UNIMPLEMENTED(LOG_PREFIX);
 }
 
 // ******************************************************************
@@ -1546,7 +1546,7 @@ XBSYSAPI EXPORTNUM(304) xboxkrnl::BOOLEAN NTAPI xboxkrnl::RtlTimeFieldsToTime
 	OUT PLARGE_INTEGER  Time
 )
 {
-	LOG_FUNC_BEGIN
+	LOG_FUNC_BEGIN(LOG_PREFIX)
 		LOG_FUNC_ARG(TimeFields)
 		LOG_FUNC_ARG_OUT(Time)
 		LOG_FUNC_END;
@@ -1594,7 +1594,7 @@ XBSYSAPI EXPORTNUM(304) xboxkrnl::BOOLEAN NTAPI xboxkrnl::RtlTimeFieldsToTime
 		TimeFields->Second) * 1000 +
 		TimeFields->Millisecond) * TICKSPERMSEC;
 
-	RETURN(TRUE);
+	RETURN(LOG_PREFIX, TRUE);
 }
 
 // ******************************************************************
@@ -1606,7 +1606,7 @@ XBSYSAPI EXPORTNUM(305) xboxkrnl::VOID NTAPI xboxkrnl::RtlTimeToTimeFields
 	OUT PTIME_FIELDS    TimeFields
 )
 {
-	LOG_FUNC_BEGIN
+	LOG_FUNC_BEGIN(LOG_PREFIX)
 		LOG_FUNC_ARG(Time)
 		LOG_FUNC_ARG_OUT(TimeFields)
 		LOG_FUNC_END;
@@ -1668,7 +1668,7 @@ XBSYSAPI EXPORTNUM(306) xboxkrnl::BOOLEAN NTAPI xboxkrnl::RtlTryEnterCriticalSec
 	IN PRTL_CRITICAL_SECTION CriticalSection
 )
 {
-	LOG_FUNC_ONE_ARG(CriticalSection);
+	LOG_FUNC_ONE_ARG(LOG_PREFIX, CriticalSection);
 
     BOOLEAN ret = false;
     HANDLE thread = (HANDLE)KeGetCurrentThread();
@@ -1687,7 +1687,7 @@ XBSYSAPI EXPORTNUM(306) xboxkrnl::BOOLEAN NTAPI xboxkrnl::RtlTryEnterCriticalSec
     }
 
     // Return the host value until the xbox kernel is fully implemented
-    RETURN(TryEnterHostCriticalSection(CriticalSection));
+    RETURN(LOG_PREFIX, TryEnterHostCriticalSection(CriticalSection));
 }
 
 // ******************************************************************
@@ -1698,11 +1698,11 @@ XBSYSAPI EXPORTNUM(307) xboxkrnl::ULONG FASTCALL xboxkrnl::RtlUlongByteSwap
 	IN ULONG Source
 )
 {
-	LOG_FUNC_ONE_ARG(Source);
+	LOG_FUNC_ONE_ARG(LOG_PREFIX, Source);
 
 	ULONG ret = (Source >> 24) | ((Source & 0xFF0000) >> 8) | ((Source & 0xFF00) << 8) | ((Source & 0xFF) << 24);
 
-	RETURN(ret);
+	RETURN(LOG_PREFIX, ret);
 }
 
 DWORD WINAPI RtlUnicodeStringToAnsiSize(const xboxkrnl::UNICODE_STRING *str)
@@ -1722,7 +1722,7 @@ XBSYSAPI EXPORTNUM(308) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlUnicodeStringToAns
 	IN     BOOLEAN         AllocateDestinationString
 )
 {
-	LOG_FUNC_BEGIN
+	LOG_FUNC_BEGIN(LOG_PREFIX)
 		LOG_FUNC_ARG_OUT(DestinationString)
 		LOG_FUNC_ARG(SourceString)
 		LOG_FUNC_ARG(AllocateDestinationString)
@@ -1750,7 +1750,7 @@ XBSYSAPI EXPORTNUM(308) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlUnicodeStringToAns
     RtlUnicodeToMultiByteN(DestinationString->Buffer, DestinationString->Length, NULL, (PWSTR)SourceString->Buffer, (ULONG)SourceString->Length);
 	DestinationString->Buffer[DestinationString->Length] = 0;
 
-	RETURN(ret);
+	RETURN(LOG_PREFIX, ret);
 }
 
 // ******************************************************************
@@ -1763,7 +1763,7 @@ XBSYSAPI EXPORTNUM(309) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlUnicodeStringToInt
 	IN     PULONG Value
 )
 {
-	LOG_FUNC_BEGIN
+	LOG_FUNC_BEGIN(LOG_PREFIX)
 		LOG_FUNC_ARG(String)
 		LOG_FUNC_ARG(Base)
 		LOG_FUNC_ARG(Value)
@@ -1849,7 +1849,7 @@ XBSYSAPI EXPORTNUM(309) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlUnicodeStringToInt
  
 	*Value = bMinus ? (0 - RunningTotal) : RunningTotal;
 
-	RETURN(STATUS_SUCCESS);
+	RETURN(LOG_PREFIX, STATUS_SUCCESS);
 }
 
 // ******************************************************************
@@ -1864,7 +1864,7 @@ XBSYSAPI EXPORTNUM(310) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlUnicodeToMultiByte
 	IN ULONG BytesInUnicodeString
 )
 {
-	LOG_FUNC_BEGIN
+	LOG_FUNC_BEGIN(LOG_PREFIX)
 		LOG_FUNC_ARG_OUT(MultiByteString)
 		LOG_FUNC_ARG(MaxBytesInMultiByteString)
 		LOG_FUNC_ARG(BytesInMultiByteString)
@@ -1887,7 +1887,7 @@ XBSYSAPI EXPORTNUM(310) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlUnicodeToMultiByte
 		numChars--;
 	}
 
-	RETURN(STATUS_SUCCESS);
+	RETURN(LOG_PREFIX, STATUS_SUCCESS);
 }
 
 // ******************************************************************
@@ -1900,7 +1900,7 @@ XBSYSAPI EXPORTNUM(311) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlUnicodeToMultiByte
 	IN ULONG BytesInUnicodeString
 )
 {
-	LOG_FUNC_BEGIN
+	LOG_FUNC_BEGIN(LOG_PREFIX)
 		LOG_FUNC_ARG(BytesInMultiByteString)
 		LOG_FUNC_ARG(UnicodeString)
 		LOG_FUNC_ARG(BytesInUnicodeString)
@@ -1908,7 +1908,7 @@ XBSYSAPI EXPORTNUM(311) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlUnicodeToMultiByte
 
 	*BytesInMultiByteString = BytesInUnicodeString * sizeof(WCHAR);
 
-	RETURN(STATUS_SUCCESS);
+	RETURN(LOG_PREFIX, STATUS_SUCCESS);
 }
 
 // ******************************************************************
@@ -1922,14 +1922,14 @@ XBSYSAPI EXPORTNUM(312) xboxkrnl::VOID NTAPI xboxkrnl::RtlUnwind
 	IN PVOID ReturnValue
 )
 {
-	LOG_FUNC_BEGIN
+	LOG_FUNC_BEGIN(LOG_PREFIX)
 		LOG_FUNC_ARG(TargetFrame)
 		LOG_FUNC_ARG(TargetIp)
 		LOG_FUNC_ARG(ExceptionRecord)
 		LOG_FUNC_ARG(ReturnValue)
 	LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED();
+	LOG_UNIMPLEMENTED(LOG_PREFIX);
 }
 
 // ******************************************************************
@@ -1940,11 +1940,11 @@ XBSYSAPI EXPORTNUM(313) xboxkrnl::WCHAR NTAPI xboxkrnl::RtlUpcaseUnicodeChar
 	IN WCHAR SourceCharacter
 )
 {
-	LOG_FUNC_ONE_ARG(SourceCharacter);
+	LOG_FUNC_ONE_ARG(LOG_PREFIX, SourceCharacter);
 
 	WCHAR result = towupper(SourceCharacter);
 
-	RETURN(result);
+	RETURN(LOG_PREFIX, result);
 }
 
 // ******************************************************************
@@ -1957,7 +1957,7 @@ XBSYSAPI EXPORTNUM(314) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlUpcaseUnicodeStrin
 	IN  BOOLEAN AllocateDestinationString
 )
 {
-	LOG_FUNC_BEGIN
+	LOG_FUNC_BEGIN(LOG_PREFIX)
 		LOG_FUNC_ARG_OUT(DestinationString)
 		LOG_FUNC_ARG(SourceString)
 		LOG_FUNC_ARG(AllocateDestinationString)
@@ -1985,7 +1985,7 @@ XBSYSAPI EXPORTNUM(314) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlUpcaseUnicodeStrin
 
 	DestinationString->Length = SourceString->Length;
 
-	RETURN(STATUS_SUCCESS);
+	RETURN(LOG_PREFIX, STATUS_SUCCESS);
 }
 
 // ******************************************************************
@@ -2000,7 +2000,7 @@ XBSYSAPI EXPORTNUM(315) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlUpcaseUnicodeToMul
 	IN ULONG BytesInUnicodeString
 )
 {
-	LOG_FUNC_BEGIN
+	LOG_FUNC_BEGIN(LOG_PREFIX)
 		LOG_FUNC_ARG_OUT(MultiByteString)
 		LOG_FUNC_ARG(MaxBytesInMultiByteString)
 		LOG_FUNC_ARG(BytesInMultiByteString)
@@ -2026,7 +2026,7 @@ XBSYSAPI EXPORTNUM(315) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlUpcaseUnicodeToMul
 		numChars--;
 	}
 
-	RETURN(STATUS_SUCCESS);
+	RETURN(LOG_PREFIX, STATUS_SUCCESS);
 }
 
 // ******************************************************************
@@ -2037,7 +2037,7 @@ XBSYSAPI EXPORTNUM(316) xboxkrnl::CHAR NTAPI xboxkrnl::RtlUpperChar
 	CHAR Character
 )
 {
-	LOG_FUNC_ONE_ARG(Character);
+	LOG_FUNC_ONE_ARG(LOG_PREFIX, Character);
 
 	BYTE CharCode = (BYTE)Character;
 	
@@ -2057,7 +2057,7 @@ XBSYSAPI EXPORTNUM(316) xboxkrnl::CHAR NTAPI xboxkrnl::RtlUpperChar
 		CharCode = '?';
 	}
 	
-	RETURN((CHAR)CharCode);
+	RETURN(LOG_PREFIX, (CHAR)CharCode);
 }
 
 // ******************************************************************
@@ -2069,7 +2069,7 @@ XBSYSAPI EXPORTNUM(317) xboxkrnl::VOID NTAPI xboxkrnl::RtlUpperString
 	IN  PSTRING SourceString
 )
 {
-	LOG_FUNC_BEGIN
+	LOG_FUNC_BEGIN(LOG_PREFIX)
 		LOG_FUNC_ARG_OUT(DestinationString)
 		LOG_FUNC_ARG(SourceString)
 		LOG_FUNC_END;
@@ -2096,11 +2096,11 @@ XBSYSAPI EXPORTNUM(318) xboxkrnl::USHORT FASTCALL xboxkrnl::RtlUshortByteSwap
 	IN USHORT Source
 )
 {
-	LOG_FUNC_ONE_ARG(Source);
+	LOG_FUNC_ONE_ARG(LOG_PREFIX, Source);
 
 	USHORT ret = (Source >> 8) | ((Source & 0xFF) << 8);
 
-	RETURN(ret);
+	RETURN(LOG_PREFIX, ret);
 }
 
 // ******************************************************************
@@ -2113,15 +2113,15 @@ XBSYSAPI EXPORTNUM(319) xboxkrnl::ULONG NTAPI xboxkrnl::RtlWalkFrameChain
 	IN ULONG Flags
 )
 {
-	LOG_FUNC_BEGIN
+	LOG_FUNC_BEGIN(LOG_PREFIX)
 		LOG_FUNC_ARG_OUT(Callers)
 		LOG_FUNC_ARG(Count)
 		LOG_FUNC_ARG(Flags)
 	LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED();
+	LOG_UNIMPLEMENTED(LOG_PREFIX);
 
-	RETURN(NULL);
+	RETURN(LOG_PREFIX, NULL);
 }
 
 // ******************************************************************
@@ -2133,7 +2133,7 @@ XBSYSAPI EXPORTNUM(320) xboxkrnl::VOID NTAPI xboxkrnl::RtlZeroMemory
 	IN SIZE_T           Length
 )
 {
-	LOG_FUNC_BEGIN
+	LOG_FUNC_BEGIN(LOG_PREFIX)
 		LOG_FUNC_ARG(Destination)
 		LOG_FUNC_ARG(Length)
 		LOG_FUNC_END;
@@ -2151,7 +2151,7 @@ XBSYSAPI EXPORTNUM(352) xboxkrnl::VOID NTAPI xboxkrnl::RtlRip
 	PCHAR	Message
 )
 {
-	LOG_FUNC_BEGIN
+	LOG_FUNC_BEGIN(LOG_PREFIX)
 		LOG_FUNC_ARG(ApiName)
 		LOG_FUNC_ARG(Expression)
 		LOG_FUNC_ARG(Message)

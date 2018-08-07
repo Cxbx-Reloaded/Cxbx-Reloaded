@@ -35,9 +35,10 @@
 // ******************************************************************
 
 
-#define LOG_PREFIX "PMEM"
+#define LOG_PREFIX CXBXR_MODULE::PMEM
 
 #include "PhysicalMemory.h"
+#include "Logging.h"
 #include <assert.h>
 
 

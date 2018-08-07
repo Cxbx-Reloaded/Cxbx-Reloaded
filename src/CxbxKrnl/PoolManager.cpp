@@ -34,7 +34,7 @@
 // *
 // ******************************************************************
 
-#define LOG_PREFIX "POOLMEM"
+#define LOG_PREFIX CXBXR_MODULE::POOLMEM
 
 #include "PoolManager.h"
 #include "Logging.h"
@@ -75,7 +75,7 @@ void PoolManager::InitializePool()
 
 VAddr PoolManager::AllocatePool(size_t Size, uint32_t Tag)
 {
-	LOG_FUNC_BEGIN
+	LOG_FUNC_BEGIN(LOG_PREFIX)
 		LOG_FUNC_ARG(Size)
 		LOG_FUNC_ARG(Tag)
 	LOG_FUNC_END;
@@ -115,7 +115,7 @@ VAddr PoolManager::AllocatePool(size_t Size, uint32_t Tag)
 			Unlock();
 		}
 
-		RETURN(reinterpret_cast<VAddr>(Entry));
+		RETURN(LOG_PREFIX, reinterpret_cast<VAddr>(Entry));
 	}
 
 	ListNumber = ((Size + POOL_OVERHEAD + (POOL_SMALLEST_BLOCK - 1)) >> POOL_BLOCK_SHIFT);
@@ -142,7 +142,7 @@ VAddr PoolManager::AllocatePool(size_t Size, uint32_t Tag)
 			Entry->PoolTag = Tag;
 			(reinterpret_cast<PULONG>((reinterpret_cast<PCHAR>(Entry) + POOL_OVERHEAD)))[0] = 0;
 
-			RETURN(reinterpret_cast<VAddr>(Entry) + POOL_OVERHEAD);
+			RETURN(LOG_PREFIX, reinterpret_cast<VAddr>(Entry) + POOL_OVERHEAD);
 		}
 	}
 
@@ -202,7 +202,7 @@ VAddr PoolManager::AllocatePool(size_t Size, uint32_t Tag)
 				Entry->PoolTag = Tag;
 				(reinterpret_cast<PULONGLONG>((reinterpret_cast<PCHAR>(Entry) + POOL_OVERHEAD)))[0] = 0;
 
-				RETURN(reinterpret_cast<VAddr>(Entry) + POOL_OVERHEAD);
+				RETURN(LOG_PREFIX, reinterpret_cast<VAddr>(Entry) + POOL_OVERHEAD);
 			}
 			ListHead += 1;
 
@@ -216,7 +216,7 @@ VAddr PoolManager::AllocatePool(size_t Size, uint32_t Tag)
 			EmuWarning(LOG_PREFIX " AllocatePool returns nullptr");
 			Unlock();
 
-			RETURN(reinterpret_cast<VAddr>(Entry));
+			RETURN(LOG_PREFIX, reinterpret_cast<VAddr>(Entry));
 		}
 		PoolDesc->TotalPages += 1;
 		Entry->PoolType = 0;
@@ -238,7 +238,7 @@ VAddr PoolManager::AllocatePool(size_t Size, uint32_t Tag)
 
 void PoolManager::DeallocatePool(VAddr addr)
 {
-	LOG_FUNC_ONE_ARG(addr);
+	LOG_FUNC_ONE_ARG(LOG_PREFIX, addr);
 
 	PPOOL_HEADER Entry;
 	ULONG Index;
@@ -341,19 +341,19 @@ void PoolManager::DeallocatePool(VAddr addr)
 
 size_t PoolManager::QueryPoolSize(VAddr addr)
 {
-	LOG_FUNC_ONE_ARG(addr);
+	LOG_FUNC_ONE_ARG(LOG_PREFIX, addr);
 
 	PPOOL_HEADER Entry;
 	size_t size;
 
 	if (CHECK_ALIGNMENT(addr, PAGE_SIZE)) {
-		RETURN(g_VMManager.QuerySize(addr));
+		RETURN(LOG_PREFIX, g_VMManager.QuerySize(addr));
 	}
 
 	Entry = reinterpret_cast<PPOOL_HEADER>(reinterpret_cast<PCHAR>(addr) - POOL_OVERHEAD);
 	size = static_cast<size_t>((Entry->BlockSize << POOL_BLOCK_SHIFT) - POOL_OVERHEAD);
 
-	RETURN(size);
+	RETURN(LOG_PREFIX, size);
 }
 
 void PoolManager::Lock()
