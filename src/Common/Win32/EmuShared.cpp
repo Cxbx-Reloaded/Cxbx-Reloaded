@@ -73,7 +73,8 @@ void EmuShared::Init(DWORD guiProcessID)
     // * Create the shared memory "file"
     // ******************************************************************
     {
-        std::string emuSharedStr = "Local\\EmuShared-s" + std::to_string(settings_version) + "-p" + std::to_string(guiProcessID);
+        // NOTE: guiProcessID support is not available due to 2+ emulation is causing problem with graphic screen.
+        std::string emuSharedStr = "Local\\EmuShared-s" + std::to_string(settings_version);// +"-p" + std::to_string(guiProcessID);
         hMapObject = CreateFileMapping
         (
             INVALID_HANDLE_VALUE,   // Paging file
