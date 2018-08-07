@@ -4206,7 +4206,7 @@ static const
   if (hRet != D3D_OK)
   {
     EmuWarning("Could not create pixel shader");
-	//EmuWarning(std::string((char*)pErrors->GetBufferPointer(), pErrors->GetBufferSize()).c_str());
+	EmuWarning(std::string((char*)pErrors->GetBufferPointer(), pErrors->GetBufferSize()).c_str());
 
 	printf(ConvertedPixelShaderStr.c_str());
 

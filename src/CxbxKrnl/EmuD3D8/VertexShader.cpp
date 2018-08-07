@@ -1545,6 +1545,28 @@ static boolean VshConvertShader(VSH_XBOX_SHADER *pShader,
 			}
 		}
 
+		for (int j = 0; j < 3; j++)
+		{
+			//if(pIntermediate->Parameters[j].Active)
+			{
+				if (pIntermediate->Parameters[j].Parameter.ParameterType == PARAM_R)
+				{
+					RUsage[pIntermediate->Parameters[j].Parameter.Address] = TRUE;
+				}
+				// Make constant registers range from 0 to 192 instead of -96 to 96
+				if (pIntermediate->Parameters[j].Parameter.ParameterType == PARAM_C)
+				{
+					//if(pIntermediate->Parameters[j].Parameter.Address < 0)
+					pIntermediate->Parameters[j].Parameter.Address += 96;
+				}
+
+				if (pIntermediate->Parameters[j].Parameter.ParameterType == PARAM_V) {
+					printf("v%d usage\n", pIntermediate->Parameters[j].Parameter.Address);
+					RegVUsage[pIntermediate->Parameters[j].Parameter.Address] = TRUE;
+				}
+			}
+		}
+
         if(pIntermediate->Output.Type == IMD_OUTPUT_R)
         {
             RUsage[pIntermediate->Output.Address] = TRUE;
@@ -1556,26 +1578,7 @@ static boolean VshConvertShader(VSH_XBOX_SHADER *pShader,
 				pIntermediate->Output.Address += 96;
         }
 
-        for (int j = 0; j < 3; j++)
-        {
-            //if(pIntermediate->Parameters[j].Active)
-            {
-                if(pIntermediate->Parameters[j].Parameter.ParameterType == PARAM_R)
-                {
-                    RUsage[pIntermediate->Parameters[j].Parameter.Address] = TRUE;
-                }
-                // Make constant registers range from 0 to 192 instead of -96 to 96
-                if(pIntermediate->Parameters[j].Parameter.ParameterType == PARAM_C)
-                {
-					//if(pIntermediate->Parameters[j].Parameter.Address < 0)
-						pIntermediate->Parameters[j].Parameter.Address += 96;
-                }
-
-				if (pIntermediate->Parameters[j].Parameter.ParameterType == PARAM_V) {
-					RegVUsage[pIntermediate->Parameters[j].Parameter.Address] = TRUE;
-				}
-            }
-        }
+  
 
         if(pIntermediate->InstructionType == IMD_MAC && pIntermediate->MAC == MAC_DPH)
         {
