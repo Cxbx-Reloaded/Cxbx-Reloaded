@@ -399,7 +399,7 @@ extern thread_local std::string _logThreadPrefix;
 #define RETURN(cxbxr_module, r) do { LOG_CHECK_ENABLED(cxbxr_module, LOG_LEVEL::DEBUG) { LOG_FUNC_RESULT(r) return r; } } while (0)
 
 // RETURN_TYPE logs the given typed result and then returns it (so this should appear last in functions)
-#define RETURN_TYPE(type, r) do { LOG_CHECK_ENABLED(cxbxr_module, LOG_LEVEL::DEBUG) { LOG_FUNC_RESULT_TYPE(type, r) return r; } } while (0)
+#define RETURN_TYPE(cxbxr_module, type, r) do { LOG_CHECK_ENABLED(cxbxr_module, LOG_LEVEL::DEBUG) { LOG_FUNC_RESULT_TYPE(type, r) return r; } } while (0)
 
 #define LOG_ONCE(msg, ...) { static bool bFirstTime = true; if(bFirstTime) { bFirstTime = false; DbgPrintf("TRAC: " ## msg, __VA_ARGS__); } }
 

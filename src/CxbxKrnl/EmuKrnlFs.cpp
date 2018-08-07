@@ -36,7 +36,7 @@
 // ******************************************************************
 #define _XBOXKRNL_DEFEXTRN_
 
-#define LOG_PREFIX "KRNL"
+#define LOG_PREFIX CXBXR_MODULE::FS
 
 // prevent name collisions
 namespace xboxkrnl
@@ -65,9 +65,9 @@ xboxkrnl::LONG g_FscNumberOfCachePages = 16; // 16 = default number of file syst
 // ******************************************************************
 XBSYSAPI EXPORTNUM(35) xboxkrnl::ULONG NTAPI xboxkrnl::FscGetCacheSize()
 {
-	LOG_FUNC();
+	LOG_FUNC(LOG_PREFIX);
 
-	RETURN(g_FscNumberOfCachePages);
+	RETURN(LOG_PREFIX, g_FscNumberOfCachePages);
 }
 
 // ******************************************************************
@@ -75,9 +75,9 @@ XBSYSAPI EXPORTNUM(35) xboxkrnl::ULONG NTAPI xboxkrnl::FscGetCacheSize()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(36) xboxkrnl::VOID NTAPI xboxkrnl::FscInvalidateIdleBlocks()
 {
-	LOG_FUNC();
+	LOG_FUNC(LOG_PREFIX);
 
-	LOG_UNIMPLEMENTED();
+	LOG_UNIMPLEMENTED(LOG_PREFIX);
 }
 
 // ******************************************************************
@@ -88,7 +88,7 @@ XBSYSAPI EXPORTNUM(37) xboxkrnl::NTSTATUS NTAPI xboxkrnl::FscSetCacheSize
 	ULONG NumberOfCachePages
 )
 {
-	LOG_FUNC_ONE_ARG(NumberOfCachePages);
+	LOG_FUNC_ONE_ARG(LOG_PREFIX, NumberOfCachePages);
 
 	NTSTATUS ret = STATUS_SUCCESS;
 
@@ -102,6 +102,6 @@ XBSYSAPI EXPORTNUM(37) xboxkrnl::NTSTATUS NTAPI xboxkrnl::FscSetCacheSize
 		g_FscNumberOfCachePages = NumberOfCachePages;
 	}
 
-	RETURN(ret);
+	RETURN(LOG_PREFIX, ret);
 }
 

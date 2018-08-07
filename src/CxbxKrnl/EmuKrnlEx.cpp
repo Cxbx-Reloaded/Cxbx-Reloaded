@@ -36,7 +36,7 @@
 // ******************************************************************
 #define _XBOXKRNL_DEFEXTRN_
 
-#define LOG_PREFIX "KRNL"
+#define LOG_PREFIX CXBXR_MODULE::EX
 
 // prevent name collisions
 namespace xboxkrnl
@@ -159,12 +159,12 @@ XBSYSAPI EXPORTNUM(12) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExAcquireReadWriteLock
 	IN PERWLOCK ReadWriteLock
 )
 {
-	LOG_FUNC_ONE_ARG(ReadWriteLock);
+	LOG_FUNC_ONE_ARG(LOG_PREFIX, ReadWriteLock);
 
 	// KeWaitForSingleObject
-	LOG_UNIMPLEMENTED();
+	LOG_UNIMPLEMENTED(LOG_PREFIX);
 
-	RETURN(S_OK);
+	RETURN(LOG_PREFIX, S_OK);
 }
 
 // ******************************************************************
@@ -176,12 +176,12 @@ XBSYSAPI EXPORTNUM(13) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExAcquireReadWriteLock
 	IN PERWLOCK ReadWriteLock
 )
 {
-	LOG_FUNC_ONE_ARG(ReadWriteLock);
+	LOG_FUNC_ONE_ARG(LOG_PREFIX, ReadWriteLock);
 
 	// KeWaitForSingleObject
-	LOG_UNIMPLEMENTED();
+	LOG_UNIMPLEMENTED(LOG_PREFIX);
 
-	RETURN(S_OK);
+	RETURN(LOG_PREFIX, S_OK);
 }
 
 // ******************************************************************
@@ -192,7 +192,7 @@ XBSYSAPI EXPORTNUM(14) xboxkrnl::PVOID NTAPI xboxkrnl::ExAllocatePool
 	IN SIZE_T NumberOfBytes
 )
 {
-	LOG_FORWARD("ExAllocatePoolWithTag");
+	LOG_FORWARD(LOG_PREFIX, "ExAllocatePoolWithTag");
 
 	return ExAllocatePoolWithTag(NumberOfBytes, 'enoN'); // = "None" in reverse
 }
@@ -209,14 +209,14 @@ XBSYSAPI EXPORTNUM(15) xboxkrnl::PVOID NTAPI xboxkrnl::ExAllocatePoolWithTag
 	IN ULONG Tag
 )
 {
-	LOG_FUNC_BEGIN
+	LOG_FUNC_BEGIN(LOG_PREFIX)
 		LOG_FUNC_ARG(NumberOfBytes)
 		LOG_FUNC_ARG(Tag)
 	LOG_FUNC_END;
 
 	PVOID pRet = reinterpret_cast<PVOID>(g_PoolManager.AllocatePool(NumberOfBytes, Tag));
 
-	RETURN(pRet);
+	RETURN(LOG_PREFIX, pRet);
 }
 
 // ******************************************************************
@@ -241,7 +241,7 @@ XBSYSAPI EXPORTNUM(17) xboxkrnl::VOID NTAPI xboxkrnl::ExFreePool
 	IN PVOID	P
 )
 {
-	LOG_FUNC_ONE_ARG(P);
+	LOG_FUNC_ONE_ARG(LOG_PREFIX, P);
 
 	g_PoolManager.DeallocatePool(reinterpret_cast<VAddr>(P));
 }
@@ -255,7 +255,7 @@ XBSYSAPI EXPORTNUM(18) xboxkrnl::VOID NTAPI xboxkrnl::ExInitializeReadWriteLock
 	IN PERWLOCK ReadWriteLock
 )
 {
-	LOG_FUNC_ONE_ARG(ReadWriteLock);
+	LOG_FUNC_ONE_ARG(LOG_PREFIX, ReadWriteLock);
 
 	ReadWriteLock->LockCount = -1;
 	ReadWriteLock->WritersWaitingCount = 0;
@@ -276,7 +276,7 @@ XBSYSAPI EXPORTNUM(19) xboxkrnl::LARGE_INTEGER NTAPI xboxkrnl::ExInterlockedAddL
 	IN OUT PKSPIN_LOCK Lock
 )
 {
-	LOG_FUNC_BEGIN
+	LOG_FUNC_BEGIN(LOG_PREFIX)
 		LOG_FUNC_ARG(Addend)
 // TODO : operator<<(LARGE_INTERGER) enables 		LOG_FUNC_ARG(Increment)
 		LOG_FUNC_ARG(Lock)
@@ -311,7 +311,7 @@ XBSYSAPI EXPORTNUM(20) xboxkrnl::VOID FASTCALL xboxkrnl::ExInterlockedAddLargeSt
 	IN ULONG Increment
 )
 {
-	LOG_FUNC_BEGIN
+	LOG_FUNC_BEGIN(LOG_PREFIX)
 		LOG_FUNC_ARG(Addend)
 		LOG_FUNC_ARG(Increment)
 		LOG_FUNC_END;
@@ -331,7 +331,7 @@ XBSYSAPI EXPORTNUM(21) xboxkrnl::LONGLONG FASTCALL xboxkrnl::ExInterlockedCompar
 	IN PLONGLONG Comparand
 )
 {
-	LOG_FUNC_BEGIN
+	LOG_FUNC_BEGIN(LOG_PREFIX)
 		LOG_FUNC_ARG_OUT(Destination)
 		LOG_FUNC_ARG(Exchange)
 		LOG_FUNC_ARG(Comparand)
@@ -342,7 +342,7 @@ XBSYSAPI EXPORTNUM(21) xboxkrnl::LONGLONG FASTCALL xboxkrnl::ExInterlockedCompar
 	LONGLONG Result = *Comparand;
 	Target.compare_exchange_strong(Result, *Exchange);
 
-	RETURN(Result);
+	RETURN(LOG_PREFIX, Result);
 }
 
 // ******************************************************************
@@ -367,11 +367,11 @@ XBSYSAPI EXPORTNUM(23) xboxkrnl::ULONG NTAPI xboxkrnl::ExQueryPoolBlockSize
 	IN PVOID PoolBlock
 )
 {
-	LOG_FUNC_ONE_ARG(PoolBlock);
+	LOG_FUNC_ONE_ARG(LOG_PREFIX, PoolBlock);
 
 	ULONG ret = g_PoolManager.QueryPoolSize(reinterpret_cast<VAddr>(PoolBlock));
 
-	RETURN(ret);
+	RETURN(LOG_PREFIX, ret);
 }
 
 // ******************************************************************
@@ -386,7 +386,7 @@ XBSYSAPI EXPORTNUM(24) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExQueryNonVolatileSett
 	OUT PSIZE_T ResultLength OPTIONAL
 )
 {
-	LOG_FUNC_BEGIN
+	LOG_FUNC_BEGIN(LOG_PREFIX)
 		LOG_FUNC_ARG_TYPE(XC_VALUE_INDEX, ValueIndex)
 		LOG_FUNC_ARG_OUT(Type)
 		LOG_FUNC_ARG_OUT(Value)
@@ -448,7 +448,7 @@ XBSYSAPI EXPORTNUM(24) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExQueryNonVolatileSett
 		Status = STATUS_OBJECT_NAME_NOT_FOUND;
 	}
 
-	RETURN(Status);
+	RETURN(LOG_PREFIX, Status);
 }
 
 // ******************************************************************
@@ -461,7 +461,7 @@ XBSYSAPI EXPORTNUM(25) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExReadWriteRefurbInfo
 	IN BOOLEAN	bIsWriteMode
 )
 {
-	LOG_FUNC_BEGIN
+	LOG_FUNC_BEGIN(LOG_PREFIX)
 		LOG_FUNC_ARG(pRefurbInfo)
 		LOG_FUNC_ARG(dwBufferSize)
 		LOG_FUNC_ARG(bIsWriteMode)
@@ -525,9 +525,9 @@ XBSYSAPI EXPORTNUM(25) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExReadWriteRefurbInfo
 		Result = STATUS_UNSUCCESSFUL; // This may never happen!
 */
 
-	LOG_IGNORED();
+	LOG_IGNORED(LOG_PREFIX);
 
-	RETURN(Result);
+	RETURN(LOG_PREFIX, Result);
 }
 
 // ******************************************************************
@@ -539,10 +539,10 @@ XBSYSAPI EXPORTNUM(26) xboxkrnl::VOID NTAPI xboxkrnl::ExRaiseException
 	IN PEXCEPTION_RECORD ExceptionRecord
 )
 {
-	LOG_FUNC_ONE_ARG(ExceptionRecord);
+	LOG_FUNC_ONE_ARG(LOG_PREFIX, ExceptionRecord);
 
 	// RtlRaiseException(ExceptionRecord);
-	LOG_UNIMPLEMENTED();
+	LOG_UNIMPLEMENTED(LOG_PREFIX);
 }
 
 // ******************************************************************
@@ -554,9 +554,9 @@ XBSYSAPI EXPORTNUM(27) xboxkrnl::VOID NTAPI xboxkrnl::ExRaiseStatus
 	IN NTSTATUS Status
 )
 {
-	LOG_FUNC_ONE_ARG(Status);
+	LOG_FUNC_ONE_ARG(LOG_PREFIX, Status);
 
-	LOG_UNIMPLEMENTED();
+	LOG_UNIMPLEMENTED(LOG_PREFIX);
 }
 
 // ******************************************************************
@@ -568,11 +568,11 @@ XBSYSAPI EXPORTNUM(28) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExReleaseReadWriteLock
 	IN PERWLOCK ReadWriteLock
 )
 {
-	LOG_FUNC_ONE_ARG(ReadWriteLock);
+	LOG_FUNC_ONE_ARG(LOG_PREFIX, ReadWriteLock);
 
-	LOG_UNIMPLEMENTED();
+	LOG_UNIMPLEMENTED(LOG_PREFIX);
 
-	RETURN(S_OK);
+	RETURN(LOG_PREFIX, S_OK);
 }
 
 // ******************************************************************
@@ -586,7 +586,7 @@ XBSYSAPI EXPORTNUM(29) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExSaveNonVolatileSetti
 	IN  SIZE_T			   ValueLength
 )
 {
-	LOG_FUNC_BEGIN
+	LOG_FUNC_BEGIN(LOG_PREFIX)
 		LOG_FUNC_ARG_TYPE(XC_VALUE_INDEX, ValueIndex)
 		LOG_FUNC_ARG(Type) // unused (see Note below)
 		LOG_FUNC_ARG(Value)
@@ -599,7 +599,7 @@ XBSYSAPI EXPORTNUM(29) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExSaveNonVolatileSetti
 
 	// Don't allow writing to the eeprom encrypted area
 	if (ValueIndex == XC_ENCRYPTED_SECTION)
-		RETURN(STATUS_OBJECT_NAME_NOT_FOUND);
+		RETURN(LOG_PREFIX, STATUS_OBJECT_NAME_NOT_FOUND);
 
 	// handle eeprom write
 	if (g_bIsDebug || ValueIndex <= XC_MAX_OS || ValueIndex > XC_MAX_FACTORY)
@@ -644,7 +644,7 @@ XBSYSAPI EXPORTNUM(29) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExSaveNonVolatileSetti
 		Status = STATUS_OBJECT_NAME_NOT_FOUND;
 	}
 
-	RETURN(Status);
+	RETURN(LOG_PREFIX, Status);
 }
 
 // ******************************************************************
@@ -685,14 +685,14 @@ XBSYSAPI EXPORTNUM(32) xboxkrnl::PLIST_ENTRY FASTCALL xboxkrnl::ExfInterlockedIn
 	IN PLIST_ENTRY ListEntry
 )
 {
-	LOG_FUNC_BEGIN
+	LOG_FUNC_BEGIN(LOG_PREFIX)
 		LOG_FUNC_ARG(ListHead)
 		LOG_FUNC_ARG(ListEntry)
 		LOG_FUNC_END;
 
 	/* Disable interrupts and acquire the spinlock */
 	// BOOLEAN Enable = _ExiDisableInteruptsAndAcquireSpinlock(Lock);
-	LOG_INCOMPLETE(); // TODO : Lock
+	LOG_INCOMPLETE(LOG_PREFIX); // TODO : Lock
 
 	/* Save the first entry */
 	PLIST_ENTRY FirstEntry = ListHead->Flink;
@@ -706,7 +706,7 @@ XBSYSAPI EXPORTNUM(32) xboxkrnl::PLIST_ENTRY FASTCALL xboxkrnl::ExfInterlockedIn
 	if (FirstEntry == ListHead)
 		FirstEntry = NULL;
 
-	RETURN(FirstEntry);
+	RETURN(LOG_PREFIX, FirstEntry);
 }
 
 // ******************************************************************
@@ -719,14 +719,14 @@ XBSYSAPI EXPORTNUM(33) xboxkrnl::PLIST_ENTRY FASTCALL xboxkrnl::ExfInterlockedIn
 	IN PLIST_ENTRY ListEntry
 )
 {
-	LOG_FUNC_BEGIN
+	LOG_FUNC_BEGIN(LOG_PREFIX)
 		LOG_FUNC_ARG(ListHead)
 		LOG_FUNC_ARG(ListEntry)
 		LOG_FUNC_END;
 
 	/* Disable interrupts and acquire the spinlock */
 	// BOOLEAN Enable = _ExiDisableInteruptsAndAcquireSpinlock(Lock);
-	LOG_INCOMPLETE(); // TODO : Lock
+	LOG_INCOMPLETE(LOG_PREFIX); // TODO : Lock
 
 	/* Save the last entry */
 	PLIST_ENTRY LastEntry = ListHead->Blink;
@@ -741,7 +741,7 @@ XBSYSAPI EXPORTNUM(33) xboxkrnl::PLIST_ENTRY FASTCALL xboxkrnl::ExfInterlockedIn
 	if (LastEntry == ListHead) 
 		LastEntry = NULL;
 
-	RETURN(LastEntry);
+	RETURN(LOG_PREFIX, LastEntry);
 }
 
 // ******************************************************************
@@ -753,11 +753,11 @@ XBSYSAPI EXPORTNUM(34) xboxkrnl::PLIST_ENTRY FASTCALL xboxkrnl::ExfInterlockedRe
 	IN PLIST_ENTRY ListHead
 )
 {
-	LOG_FUNC_ONE_ARG(ListHead);
+	LOG_FUNC_ONE_ARG(LOG_PREFIX, ListHead);
 
 	/* Disable interrupts and acquire the spinlock */
 	// BOOLEAN Enable = _ExiDisableInteruptsAndAcquireSpinlock(Lock);
-	LOG_INCOMPLETE(); // TODO : Lock
+	LOG_INCOMPLETE(LOG_PREFIX); // TODO : Lock
 
 	PLIST_ENTRY ListEntry;
 
@@ -781,6 +781,6 @@ XBSYSAPI EXPORTNUM(34) xboxkrnl::PLIST_ENTRY FASTCALL xboxkrnl::ExfInterlockedRe
 	// _ExiReleaseSpinLockAndRestoreInterupts(Lock, Enable);
 
 	/* Return the entry */
-	RETURN(ListEntry);
+	RETURN(LOG_PREFIX, ListEntry);
 
 }
