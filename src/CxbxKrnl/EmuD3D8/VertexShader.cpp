@@ -42,6 +42,7 @@
 #include "CxbxKrnl/EmuXTL.h"
 #include "CxbxKrnl/EmuD3D8Types.h" // For X_D3DVSDE_*
 
+
 #include <unordered_map>
 
 #ifdef CXBX_USE_VS30
@@ -1688,13 +1689,14 @@ static DWORD VshGetDeclarationSize(DWORD *pDeclaration)
 XTL::D3DDECLUSAGE Xb2PCRegisterType
 (
 	DWORD VertexRegister,
-	boolean IsFixedFunction
+	boolean IsFixedFunction,
+	DWORD& PCUsageIndex
 )
 {
 	using namespace XTL;
 
 	D3DDECLUSAGE PCRegisterType;
-	DWORD PCUsageIndex = 0;
+	PCUsageIndex = 0;
 
 	// For fixed function vertex shaders, print D3DVSDE_*, for custom shaders print numbered registers.
 	if (IsFixedFunction) {
@@ -1763,7 +1765,6 @@ XTL::D3DDECLUSAGE Xb2PCRegisterType
 	}
 
     return PCRegisterType;
-	// TODO : Also return (and use) PCUsageIndex
 }
 
 static inline DWORD VshGetTokenType(DWORD Token)
@@ -1842,6 +1843,7 @@ static void VshConvertToken_TESSELATOR(
 )
 {
     using namespace XTL;
+	DWORD Index;
 
     // TODO: Investigate why Xb2PCRegisterType is only used for fixed function vertex shaders
     if(*pToken & X_D3DVSD_MASK_TESSUV)
@@ -1850,13 +1852,13 @@ static void VshConvertToken_TESSELATOR(
         XTL::DWORD NewVertexRegister = VertexRegister;
 
         DbgVshPrintf("\tD3DVSD_TESSUV(");
-		NewVertexRegister = Xb2PCRegisterType(VertexRegister, IsFixedFunction);
+		NewVertexRegister = Xb2PCRegisterType(VertexRegister, IsFixedFunction, Index);
         DbgVshPrintf("),\n");
 
 #ifdef CXBX_USE_D3D9
 		// TODO : Expand on the setting of this TESSUV register element :
 		pRecompiled->Usage = D3DDECLUSAGE(NewVertexRegister);
-		pRecompiled->UsageIndex = 0; // TODO : Get Index from Xb2PCRegisterType
+		pRecompiled->UsageIndex = Xb2PCRegisterType(NewVertexRegister, IsFixedFunction, Index); // TODO : Get Index from Xb2PCRegisterType
 #else
 		*pRecompiled = D3DVSD_TESSUV(NewVertexRegister);
 #endif
@@ -1871,14 +1873,14 @@ static void VshConvertToken_TESSELATOR(
         XTL::DWORD NewVertexRegisterOut = VertexRegisterOut;
 
         DbgVshPrintf("\tD3DVSD_TESSNORMAL(");
-        NewVertexRegisterIn = Xb2PCRegisterType(VertexRegisterIn, IsFixedFunction);
+        NewVertexRegisterIn = Xb2PCRegisterType(VertexRegisterIn, IsFixedFunction, Index);
         DbgVshPrintf(", ");
 #ifdef CXBX_USE_D3D9
 		// TODO : Expand on the setting of this TESSNORMAL input register element :
 		pRecompiled->Usage = D3DDECLUSAGE(NewVertexRegisterIn);
 		pRecompiled->UsageIndex = 0; // TODO : Get Index from Xb2PCRegisterType
 #endif
-        NewVertexRegisterOut = Xb2PCRegisterType(VertexRegisterOut, IsFixedFunction);
+        NewVertexRegisterOut = Xb2PCRegisterType(VertexRegisterOut, IsFixedFunction, Index);
         DbgVshPrintf("),\n");
 
 #ifdef CXBX_USE_D3D9
@@ -1928,6 +1930,8 @@ static void VshConvertToken_STREAM(
         // new stream
 		pPatchData->pCurrentVertexShaderStreamInfo = &(pPatchData->pVertexShaderInfoToSet->VertexStreams[StreamNumber]);
 		pPatchData->pCurrentVertexShaderStreamInfo->NeedPatch = FALSE;
+		pPatchData->pCurrentVertexShaderStreamInfo->DeclPosition = FALSE;
+		pPatchData->pCurrentVertexShaderStreamInfo->CurrentStreamNumber = 0;
 		pPatchData->pCurrentVertexShaderStreamInfo->HostVertexStride = 0;
 		pPatchData->pCurrentVertexShaderStreamInfo->NumberOfVertexElements = 0;
 
@@ -1941,6 +1945,7 @@ static void VshConvertToken_STREAM(
 		*pRecompiled = D3DVSD_STREAM(StreamNumber);
 #endif
 
+		pPatchData->pCurrentVertexShaderStreamInfo->CurrentStreamNumber = VshGetVertexStream(*pToken);
 		pPatchData->pVertexShaderInfoToSet->NumberOfVertexStreams++;
 		// TODO : Keep a bitmask for all StreamNumber's seen?
     }
@@ -1998,14 +2003,16 @@ static void VshConvertToken_STREAMDATA_REG(
     XTL::DWORD VertexRegister = VshGetVertexRegister(*pToken);
     XTL::DWORD HostVertexRegister;
 	XTL::BOOL NeedPatching = FALSE;
+	XTL::DWORD Index;
 
     DbgVshPrintf("\t\tD3DVSD_REG(");
-    HostVertexRegister = Xb2PCRegisterType(VertexRegister, IsFixedFunction);
+    HostVertexRegister = Xb2PCRegisterType(VertexRegister, IsFixedFunction, Index);
     DbgVshPrintf(", ");
 
     XTL::DWORD XboxVertexElementDataType = (*pToken & X_D3DVSD_DATATYPEMASK) >> X_D3DVSD_DATATYPESHIFT;
     XTL::DWORD HostVertexElementDataType = 0;
 	XTL::DWORD HostVertexElementByteSize = 0;
+	XTL::D3DDECLUSAGE HostUsage = D3DDECLUSAGE(0);
 
 	switch (XboxVertexElementDataType)
 	{
@@ -2013,16 +2020,24 @@ static void VshConvertToken_STREAMDATA_REG(
 		DbgVshPrintf("D3DVSDT_FLOAT1");
 		HostVertexElementDataType = D3DDECLTYPE_FLOAT1;
 		HostVertexElementByteSize = 1 * sizeof(FLOAT);
+		HostUsage = D3DDECLUSAGE_BLENDWEIGHT;
 		break;
 	case X_D3DVSDT_FLOAT2: // 0x22:
 		DbgVshPrintf("D3DVSDT_FLOAT2");
 		HostVertexElementDataType = D3DDECLTYPE_FLOAT2;
 		HostVertexElementByteSize = 2 * sizeof(FLOAT);
+		HostUsage = D3DDECLUSAGE_TEXCOORD;
 		break;
 	case X_D3DVSDT_FLOAT3: // 0x32:
 		DbgVshPrintf("D3DVSDT_FLOAT3");
 		HostVertexElementDataType = D3DDECLTYPE_FLOAT3;
 		HostVertexElementByteSize = 3 * sizeof(FLOAT);
+		if (!pPatchData->pCurrentVertexShaderStreamInfo->DeclPosition) {
+			pPatchData->pCurrentVertexShaderStreamInfo->DeclPosition = true;
+			HostUsage = D3DDECLUSAGE_POSITION;
+		} else {
+			HostUsage = D3DDECLUSAGE_NORMAL;
+		}
 		break;
 	case X_D3DVSDT_FLOAT4: // 0x42:
 		DbgVshPrintf("D3DVSDT_FLOAT4");
@@ -2033,6 +2048,7 @@ static void VshConvertToken_STREAMDATA_REG(
 		DbgVshPrintf("D3DVSDT_D3DCOLOR");
 		HostVertexElementDataType = D3DDECLTYPE_D3DCOLOR;
 		HostVertexElementByteSize = 1 * sizeof(D3DCOLOR);
+		HostUsage = D3DDECLUSAGE_COLOR;
 		break;
 	case X_D3DVSDT_SHORT2: // 0x25:
 		DbgVshPrintf("D3DVSDT_SHORT2");
@@ -2197,7 +2213,14 @@ static void VshConvertToken_STREAMDATA_REG(
 	pPatchData->pCurrentVertexShaderStreamInfo->NeedPatch |= NeedPatching;
 
 #ifdef CXBX_USE_D3D9
-	// TODO
+	pRecompiled->Stream = pPatchData->pCurrentVertexShaderStreamInfo->CurrentStreamNumber;
+	pRecompiled->Offset = pPatchData->pCurrentVertexShaderStreamInfo->HostVertexStride;
+	pRecompiled->Type = HostVertexElementDataType;
+	pRecompiled->Method = D3DDECLMETHOD_DEFAULT;
+	pRecompiled->Usage = HostUsage;
+	pRecompiled->UsageIndex = Index;
+
+	pRecompiled++;
 #else
 	*pRecompiled = D3DVSD_REG(HostVertexRegister, HostVertexElementDataType);
 #endif
@@ -2298,19 +2321,12 @@ DWORD XTL::EmuRecompileVshDeclaration
 
     // Calculate size of declaration
     DWORD DeclarationSize = VshGetDeclarationSize(pDeclaration);
-#ifdef CXBX_USE_D3D9
 	// For Direct3D9, we need to reserve at least twice the number of elements, as one token can generate two registers (in and out) :
 	DeclarationSize *= sizeof(D3DVERTEXELEMENT) * 2;
-#else
-	// For Direct3D8, tokens are the same size as on Xbox (DWORD) and are translated in-place :
-	DeclarationSize *= sizeof(DWORD);
-#endif
+
 	D3DVERTEXELEMENT *pRecompiled = (D3DVERTEXELEMENT *)malloc(DeclarationSize);
-#ifdef CXBX_USE_D3D9
 	memset(pRecompiled, 0, DeclarationSize);
-#else
-    memcpy(pRecompiled, pDeclaration, DeclarationSize);
-#endif
+
 	uint8_t *pRecompiledBufferOverflow = ((uint8_t*)pRecompiled) + DeclarationSize;
     *ppRecompiledDeclaration = pRecompiled;
     *pDeclarationSize = DeclarationSize;
@@ -2333,6 +2349,8 @@ DWORD XTL::EmuRecompileVshDeclaration
 		pRecompiled += Step;
 #endif
 	}
+
+	*pRecompiled = D3DDECL_END();
 
 	VshEndPreviousStreamPatch(&PatchData);
     DbgVshPrintf("\tD3DVSD_END()\n};\n");

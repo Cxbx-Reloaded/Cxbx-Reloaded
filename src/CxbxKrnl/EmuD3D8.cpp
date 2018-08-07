@@ -3511,6 +3511,12 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateVertexShader)
                                                    &pVertexShader->VertexShaderInfo);
 
 
+	// Create the vertex declaration
+	hRet = g_pD3DDevice->CreateVertexDeclaration((XTL::D3DVERTEXELEMENT9*)pRecompiledDeclaration, &pVertexShader->pHostDeclaration);
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateVertexDeclaration");
+	g_pD3DDevice->SetVertexDeclaration(pVertexShader->pHostDeclaration);
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetVertexDeclaration");
+
 	if (SUCCEEDED(hRet) && pFunction)
 	{
 		boolean bUseDeclarationOnly = 0;
@@ -3537,12 +3543,6 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateVertexShader)
 
 	//DbgPrintf("MaxVertexShaderConst = %d\n", g_D3DCaps.MaxVertexShaderConst);
 
-	// Create the vertex declaration
-	hRet = g_pD3DDevice->CreateVertexDeclaration((XTL::D3DVERTEXELEMENT9*)pRecompiledDeclaration, &pVertexShader->pHostDeclaration);
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateVertexDeclaration");
-	g_pD3DDevice->SetVertexDeclaration(pVertexShader->pHostDeclaration);
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetVertexDeclaration");
-
 	if (SUCCEEDED(hRet) && pRecompiledFunction != nullptr)
 	{
 		hRet = g_pD3DDevice->CreateVertexShader
@@ -3554,10 +3554,11 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateVertexShader)
 	}
 
 	//* Fallback to dummy shader.
-	if (FAILED(hRet) && pRecompiledFunction != nullptr)
+	if (FAILED(hRet))
 	{
 		static const char dummy[] =
 			"vs.1.1\n"
+			"dcl_position v0\n"
 			"dp4 oPos.x, v0, c96\n"
 			"dp4 oPos.y, v0, c97\n"
 			"dp4 oPos.z, v0, c98\n"
@@ -3648,9 +3649,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateVertexShader)
         }
 #endif // _DEBUG_TRACK_VS
         //hRet = D3D_OK;
-    }
-
-    
+    }    
 
     return hRet;
 }

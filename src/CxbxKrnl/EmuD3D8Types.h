@@ -493,8 +493,10 @@ CxbxVertexShaderStreamElement;
 typedef struct _CxbxVertexShaderStreamInfo
 {
     BOOL  NeedPatch;       // This is to know whether it's data which must be patched
+	BOOL DeclPosition;
     DWORD HostVertexStride;
     DWORD NumberOfVertexElements;        // Number of the stream data types
+	DWORD CurrentStreamNumber;
 	CxbxVertexShaderStreamElement VertexElements[32];
 }
 CxbxVertexShaderStreamInfo;
