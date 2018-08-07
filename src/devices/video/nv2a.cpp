@@ -43,7 +43,7 @@
 // ******************************************************************
 #define _XBOXKRNL_DEFEXTRN_
 
-#define LOG_PREFIX "NV2A"
+#define LOG_PREFIX CXBXR_MODULE::NV2A
 
 // prevent name collisions
 namespace xboxkrnl
@@ -66,6 +66,7 @@ namespace xboxkrnl
 #include "CxbxKrnl\EmuFS.h"
 #include "CxbxKrnl\EmuKrnl.h"
 #include "CxbxKrnl\HLEIntercept.h"
+#include "Logging.h"
 
 #include "vga.h"
 #include "nv2a.h" // For NV2AState

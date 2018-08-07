@@ -35,7 +35,7 @@
 // ******************************************************************
 #define _XBOXKRNL_DEFEXTRN_
 
-#define LOG_PREFIX "KRNL"
+#define LOG_PREFIX CXBXR_MODULE::FS
 
 // prevent name collisions
 namespace xboxkrnl
@@ -47,6 +47,7 @@ namespace xboxkrnl
 #include "EmuFS.h"
 #include "CxbxKrnl.h"
 #include "VMManager.h"
+#include "Logging.h"
 
 #undef FIELD_OFFSET     // prevent macro redefinition warnings
 #include <windows.h>

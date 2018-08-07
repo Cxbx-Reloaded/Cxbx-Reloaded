@@ -48,8 +48,9 @@ namespace xboxkrnl
 #include "Common/Input/SDL2_Device.h"
 #include "OHCI.h"
 #include "CxbxKrnl\EmuKrnl.h"  // For EmuWarning
+#include "Logging.h"
 
-#define LOG_STR_GAMEPAD "Gamepad:"
+#define LOG_PREFIX CXBXR_MODULE::XIDCTRL
 
 #define USB_CLASS_XID  0x58
 #define USB_DT_XID     0x42

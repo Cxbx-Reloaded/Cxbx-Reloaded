@@ -46,8 +46,9 @@ namespace xboxkrnl
 #include "OHCI.h"
 #include "CxbxKrnl\EmuKrnl.h"  // For EmuWarning
 #include "CxbxCommon.h"
+#include "Logging.h"
 
-#define LOG_STR_USB "Usb"
+#define LOG_PREFIX CXBXR_MODULE::USB
 
 #define SETUP_STATE_IDLE    0
 #define SETUP_STATE_SETUP   1

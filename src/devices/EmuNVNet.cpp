@@ -40,7 +40,7 @@
 // ******************************************************************
 #define _XBOXKRNL_DEFEXTRN_
 
-#define LOG_PREFIX "NET " // Intentional extra space to align on 4 characters
+#define LOG_PREFIX CXBXR_MODULE::NET
 
 // prevent name collisions
 
@@ -54,6 +54,7 @@ namespace xboxkrnl
 #include "CxbxKrnl\EmuKrnl.h"
 
 #include "EmuNVNet.h"
+#include "Logging.h"
 
 // NVNET Register Definitions
 // Taken from XQEMU

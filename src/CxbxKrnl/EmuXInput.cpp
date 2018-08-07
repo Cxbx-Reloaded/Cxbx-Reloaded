@@ -35,7 +35,7 @@
 // ******************************************************************
 #define _XBOXKRNL_DEFEXTRN_
 
-#define LOG_PREFIX "XINP"
+#define LOG_PREFIX CXBXR_MODULE::XINP
 
 #include "Emu.h"
 #include "EmuXTL.h"
@@ -43,6 +43,7 @@
 #include "EmuXInput.h"
 
 #include <xinput.h>
+#include "Logging.h"
 
 
 // ******************************************************************

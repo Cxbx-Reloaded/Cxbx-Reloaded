@@ -35,7 +35,7 @@
 // ******************************************************************
 #define _XBOXKRNL_DEFEXTRN_
 
-#define LOG_PREFIX "PSHB"
+#define LOG_PREFIX CXBXR_MODULE::PSHB
 
 #include <assert.h> // For assert()
 

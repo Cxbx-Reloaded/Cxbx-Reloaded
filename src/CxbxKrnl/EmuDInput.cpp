@@ -35,12 +35,13 @@
 // ******************************************************************
 #define _XBOXKRNL_DEFEXTRN_
 
-#define LOG_PREFIX "DINP"
+#define LOG_PREFIX CXBXR_MODULE::DINP
 
 #include "Emu.h"
 #include "EmuXTL.h"
 #include "EmuShared.h"
 #include "Common/Win32/DInputController.h"
+#include "Logging.h"
 
 // ******************************************************************
 // * Static Variable(s)

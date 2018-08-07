@@ -45,8 +45,9 @@ namespace xboxkrnl
 #include "OHCI.h"
 #include "Hub.h"
 #include "CxbxKrnl\EmuKrnl.h"  // For EmuWarning
+#include "Logging.h"
 
-#define LOG_STR_HUB "Hub:"
+#define LOG_PREFIX CXBXR_MODULE::HUB
 
 #define NUM_PORTS 8
 

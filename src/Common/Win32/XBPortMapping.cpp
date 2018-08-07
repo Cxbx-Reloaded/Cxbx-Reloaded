@@ -35,7 +35,7 @@
 // ******************************************************************
 #define _XBOXKRNL_DEFEXTRN_
 
-#define LOG_PREFIX "XBPM"
+#define LOG_PREFIX CXBXR_MODULE::XBPM
 
 #undef FIELD_OFFSET     // prevent macro redefinition warnings
 /* prevent name collisions */
@@ -47,6 +47,7 @@ namespace xboxkrnl
 #include <Shlwapi.h>
 #include "CxbxKrnl/EmuShared.h"
 #include "Common/Settings.hpp"
+#include "Logging.h"
 
 static Settings::s_controller_port g_ControllerPortMap;
 

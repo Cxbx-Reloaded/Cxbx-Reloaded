@@ -35,7 +35,7 @@
 // ******************************************************************
 #define _XBOXKRNL_DEFEXTRN_
 
-#define LOG_PREFIX "X86 " // Intentional extra space to align on 4 characters
+#define LOG_PREFIX CXBXR_MODULE::X86
 
 // Link the library into our project.
 #pragma comment(lib, "distorm.lib")
@@ -54,6 +54,7 @@
 #include <assert.h>
 #include "devices\Xbox.h" // For g_PCIBus
 #include <atomic>
+#include "Logging.h"
 
 extern uint32_t GetAPUTime();
 extern std::atomic_bool g_bEnableAllInterrupts;

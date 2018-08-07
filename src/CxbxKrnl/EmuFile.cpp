@@ -35,7 +35,7 @@
 // ******************************************************************
 #define _XBOXKRNL_DEFEXTRN_
 
-#define LOG_PREFIX "FILE"
+#define LOG_PREFIX CXBXR_MODULE::FILE
 
 #include "EmuFile.h"
 #include <vector>
@@ -49,6 +49,7 @@
 #pragma warning(default:4005)
 #include "CxbxKrnl.h"
 #include "VMManager.h"
+#include "Logging.h"
 
 #include <experimental/filesystem>
 

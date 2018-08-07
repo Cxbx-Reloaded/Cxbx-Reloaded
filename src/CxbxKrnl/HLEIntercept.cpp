@@ -34,7 +34,7 @@
 // *
 // ******************************************************************
 
-#define LOG_PREFIX "HLE " // Intentional extra space to align on 4 characters
+#define LOG_PREFIX CXBXR_MODULE::HLE
 
 #include <cmath>
 #include <iomanip> // For std::setfill and std::setw
@@ -44,6 +44,7 @@
 #include "EmuXTL.h"
 #include "EmuShared.h"
 #include "CxbxDebugger.h"
+#include "Logging.h"
 #pragma comment(lib, "XbSymbolDatabase.lib")
 #include "../../import/XbSymbolDatabase/XbSymbolDatabase.h"
 #include "HLEIntercept.h"

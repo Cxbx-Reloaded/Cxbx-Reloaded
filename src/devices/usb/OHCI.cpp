@@ -45,8 +45,9 @@ namespace xboxkrnl
 #include "OHCI.h"
 #include "CxbxKrnl\EmuKrnl.h"  // For HalSystemInterrupt
 #include "CxbxCommon.h"
+#include "Logging.h"
 
-#define LOG_STR_OHCI "Ohci:"
+#define LOG_PREFIX CXBXR_MODULE::OHCI
 
 /* Define these two if you want to dump usb packets */
 //#define DEBUG_ISOCH

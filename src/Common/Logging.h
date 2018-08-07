@@ -65,8 +65,25 @@ typedef enum class _CXBXR_MODULE {
 	XACT,
 	XGRP,
 	XONLINE,
+	XBDM,
+	PSHB,
+	DINP,
+	XINP,
+	FILE,
+	FS,
+	X86,
+	HLE,
+	NET,
+	MCPX,
+	NV2A,
+	OHCI,
+	USB,
+	HUB,
+	XIDCTRL,
 	// kernel
 	KRNL,
+	LOG,
+	XBOX,
 	XBDM,
 	AV,
 	DBG,
@@ -77,6 +94,7 @@ typedef enum class _CXBXR_MODULE {
 	KD,
 	KE,
 	KI,
+	KD,
 	MM,
 	NT,
 	OB,
@@ -265,9 +283,9 @@ extern thread_local std::string _logThreadPrefix;
 		msg << _logThreadPrefix << _logFuncPrefix << "(";
 
 #define LOG_FUNC_BEGIN(cxbxr_module) \
-	LOG_CHECK_ENABLED(cxbxr_module, LOG_LEVEL::DEBUG) { \
 		LOG_INIT \
-		LOG_FUNC_BEGIN_NO_INIT(cxbxr_module)
+		LOG_CHECK_ENABLED(cxbxr_module, LOG_LEVEL::DEBUG) { \
+			LOG_FUNC_BEGIN_NO_INIT(cxbxr_module)
 
 // LOG_FUNC_ARG writes output via all available ostream << operator overloads, sanitizing and adding detail where possible
 #define LOG_FUNC_ARG(arg) \

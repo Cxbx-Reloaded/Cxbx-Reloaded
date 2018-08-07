@@ -36,13 +36,15 @@
 // ******************************************************************
 #define _XBOXKRNL_DEFEXTRN_
 
-#define LOG_PREFIX "KRNL"
+#define LOG_PREFIX CXBXR_MODULE::KD
 
 // prevent name collisions
 namespace xboxkrnl
 {
 #include <xboxkrnl/xboxkrnl.h> // For KdDebuggerEnabled, etc.
 };
+
+#include "Logging.h"
 
 // ******************************************************************
 // * 0x0058 - KdDebuggerEnabled
