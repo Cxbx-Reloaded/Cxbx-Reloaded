@@ -607,61 +607,47 @@ void Settings::SyncToEmulator()
 	g_EmuShared->SetStorageLocation(GetDataLocation().c_str());
 }
 
-void Settings::Verify()
+void verifyDebugFilePath(DebugMode& debug_mode, std::string& file_path)
 {
 	// Prevent using an incorrect path from the registry if the debug folders have been moved
-	char szDebugPath[MAX_PATH];
-	char szDebugName[MAX_PATH];
-	unsigned int strLen;
+	std::string szDebugPath;
+	std::string szDebugName;
 
-	if (m_gui.CxbxDebugMode == DM_FILE) {
+	if (debug_mode == DM_FILE) {
 
-		if(m_gui.szCxbxDebugFile.size() == 0) {
-			m_gui.CxbxDebugMode = DM_NONE;
+		if(file_path.size() == 0 || file_path.size() >= MAX_PATH) {
+			debug_mode = DM_NONE;
 		}
 		else {
-			std::strcpy(szDebugName, strrchr(m_gui.szCxbxDebugFile.c_str(), '\\'));
+			szDebugName = file_path.substr(file_path.find_last_of("\\/"), std::string::npos);
 
-			if(m_gui.szCxbxDebugFile.size() < std::strlen(szDebugName)) {
-				m_gui.szCxbxDebugFile = "";
-				m_gui.CxbxDebugMode = DM_NONE;
+			if(file_path.size() < szDebugName.size()) {
+				file_path = "";
+				debug_mode = DM_NONE;
 			}
 			else {
-				strLen = m_gui.szCxbxDebugFile.size() - std::strlen(szDebugName);
-				std::strncpy(szDebugPath, m_gui.szCxbxDebugFile.c_str(), strLen);
-				szDebugPath[strLen] = '\0'; // Require to include terminate string.
+				szDebugPath = file_path.substr(0, file_path.size() - szDebugName.size());
 
 				if(std::experimental::filesystem::exists(szDebugPath) == false) {
-					m_gui.szCxbxDebugFile = "";
-					m_gui.CxbxDebugMode = DM_NONE;
+					file_path = "";
+					debug_mode = DM_NONE;
 				}
 			}
 		}
 	}
+}
 
-	if (m_core.KrnlDebugMode == DM_FILE) {
+void Settings::Verify()
+{
+	std::string szKrnlDebug = m_core.szKrnlDebug; // Temporary placeholder until m_core.szKrnlDebug is replace to std::string.
 
-		if(std::strlen(m_core.szKrnlDebug) == 0) {
-			m_core.KrnlDebugMode = DM_NONE;
-		}
-		else {
-			std::strcpy(szDebugName, strrchr(m_core.szKrnlDebug, '\\'));
+	verifyDebugFilePath(m_gui.CxbxDebugMode, m_gui.szCxbxDebugFile);
 
-			if(std::strlen(m_core.szKrnlDebug) < std::strlen(szDebugName)) {
-				memset(m_core.szKrnlDebug, '\0', MAX_PATH);
-				m_core.KrnlDebugMode = DM_NONE;
-			}
-			else {
-				strLen = std::strlen(m_core.szKrnlDebug) - std::strlen(szDebugName);
-				std::strncpy(szDebugPath, m_core.szKrnlDebug, strLen);
-				szDebugPath[strLen] = '\0'; // Require to include terminate string.
+	verifyDebugFilePath(m_core.KrnlDebugMode, szKrnlDebug);
 
-				if(std::experimental::filesystem::exists(szDebugPath) == false) {
-					memset(m_core.szKrnlDebug, '\0', MAX_PATH);
-					m_core.KrnlDebugMode = DM_NONE;
-				}
-			}
-		}
+	// Set to null string once if contain invalid path.
+	if (m_core.szKrnlDebug[0] != '\0' && szKrnlDebug.size() == 0) {
+		std::memset(m_core.szKrnlDebug, 0, MAX_PATH);
 	}
 }
 
