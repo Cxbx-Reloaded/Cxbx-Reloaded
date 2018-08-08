@@ -209,8 +209,6 @@ bool Settings::Init()
 		// Call LoadUserConfig, this will load the config, applying defaults for any missing fields
 		bRet = LoadUserConfig();
 
-		// Check if loading the file is a success.
-		bRet = true;
 		if (!bRet) {
 			MessageBox(nullptr, szSettings_setup_error, "Cxbx-Reloaded", MB_OK);
 			return false;
