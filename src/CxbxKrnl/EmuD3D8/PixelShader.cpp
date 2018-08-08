@@ -4176,9 +4176,11 @@ PSH_RECOMPILED_SHADER DxbxRecompilePixelShader(XTL::X_D3DPIXELSHADERDEF *pPSDef)
 {
 static const
   char *szDiffusePixelShader =
-    "ps.1.0\n" 
-    "tex t0\n" 
-	"mov r0, t0\n";
+    "ps_2_x\n"
+	"dcl_2d s0\n"
+    "dcl t0.xy\n" 
+	"texld r0, t0, s0\n"
+	"mov oC0, r0\n";
   std::string ConvertedPixelShaderStr;
   DWORD hRet;
   XTL::LPD3DXBUFFER pShader;
@@ -4195,14 +4197,9 @@ static const
   hRet = D3DXAssembleShader(
     ConvertedPixelShaderStr.c_str(),
     ConvertedPixelShaderStr.length(),
-#ifdef CXBX_USE_D3D9
     /*pDefines=*/nullptr,
     /*pInclude=*/nullptr,
-#endif
     /*Flags=*/0, // D3DXASM_DEBUG,
-#ifndef CXBX_USE_D3D9
-    /*ppConstants=*/NULL,
-#endif
     /*ppCompiledShader=*/&pShader,
     /*ppCompilationErrors*/&pErrors);
 
@@ -4216,23 +4213,17 @@ static const
     hRet = D3DXAssembleShader(
       szDiffusePixelShader,
       strlen(szDiffusePixelShader),
-#ifdef CXBX_USE_D3D9
-    /*pDefines=*/nullptr,
-    /*pInclude=*/nullptr,
-#endif
-#ifndef CXBX_USE_D3D9
-	/*Flags=*/D3DXASM_SKIPVALIDATION,
-#else
-	/*Flags=*/0,
-#endif
-#ifndef CXBX_USE_D3D9
-	/*ppConstants=*/NULL,
-#endif
-    /*ppCompiledShader=*/&pShader,
-    /*ppCompilationErrors*/&pErrors);
+      /*pDefines=*/nullptr,
+      /*pInclude=*/nullptr,
+	  /*Flags=*/0, // Was D3DXASM_SKIPVALIDATION,
+      /*ppCompiledShader=*/&pShader,
+      /*ppCompilationErrors*/&pErrors);
 
-	if (hRet != D3D_OK)
-      XTL::CxbxKrnlCleanup("Cannot fall back to the most simple pixel shader!");
+	if (hRet != D3D_OK) {
+		EmuWarning("Could not create pixel shader");
+		EmuWarning(std::string((char*)pErrors->GetBufferPointer(), pErrors->GetBufferSize()).c_str());
+		XTL::CxbxKrnlCleanup("Cannot fall back to the most simple pixel shader!");
+	}
 
     EmuWarning("We're lying about the creation of a pixel shader!");
   }
@@ -4245,11 +4236,7 @@ static const
       hRet = g_pD3DDevice->CreatePixelShader
       (
         pFunction,
-#ifdef CXBX_USE_D3D9
         (XTL::IDirect3DPixelShader9**)(&(Result.ConvertedHandle)) //fixme
-#else
-        /*out*/&(Result.ConvertedHandle)
-#endif
       );
 
 	  if (hRet != D3D_OK) {
@@ -4333,17 +4320,9 @@ VOID XTL::DxbxUpdateActivePixelShader() // NOPATCH
     // pixel shader, to avoid many unnecessary state changes on the local side).
     ConvertedPixelShaderHandle = RecompiledPixelShader->ConvertedHandle;
 
-#ifdef CXBX_USE_D3D9
     g_pD3DDevice->GetPixelShader(/*out*/(IDirect3DPixelShader9**)(&CurrentPixelShader));
-#else
-    g_pD3DDevice->GetPixelShader(/*out*/&CurrentPixelShader);
-#endif
     if (CurrentPixelShader != ConvertedPixelShaderHandle)
-#ifdef CXBX_USE_D3D9
 		g_pD3DDevice->SetPixelShader((IDirect3DPixelShader9*)ConvertedPixelShaderHandle);
-#else
-		g_pD3DDevice->SetPixelShader(ConvertedPixelShaderHandle);
-#endif
 
     // Note : We set the constants /after/ setting the shader, so that any
     // constants in the shader declaration can be overwritten (this will be
@@ -4395,11 +4374,7 @@ VOID XTL::DxbxUpdateActivePixelShader() // NOPATCH
         Register_ = RecompiledPixelShader->ConstMapping[i];
         // TODO : Avoid the following setter if it's no different from the previous update (this might speed things up)
         // Set the value locally in this register :
-#ifdef CXBX_USE_D3D9
         g_pD3DDevice->SetPixelShaderConstantF
-#else
-		g_pD3DDevice->SetPixelShaderConstant
-#endif
 		(
 			Register_, 
 			(PixelShaderConstantType*)(&fColor),
@@ -4411,11 +4386,7 @@ VOID XTL::DxbxUpdateActivePixelShader() // NOPATCH
   else
   {
     ConvertedPixelShaderHandle = 0;
-#ifdef CXBX_USE_D3D9
 	g_pD3DDevice->SetPixelShader((IDirect3DPixelShader9*)ConvertedPixelShaderHandle);
-#else
-	g_pD3DDevice->SetPixelShader(ConvertedPixelShaderHandle);
-#endif
   }
 }
 
@@ -6496,30 +6467,3 @@ void XTL::PrintPixelShaderDefContents( X_D3DPIXELSHADERDEF* pPSDef )
 			{*/
 	}
 }
-
-HRESULT XTL::EmuRecompilePshDef( X_D3DPIXELSHADERDEF* pPSDef, LPD3DXBUFFER* ppRecompiled )
-{
-	char szPshString[2048];		// I'm sure that's big enough...
-	
-	// Dump the contents of the PixelShader def
-#ifdef _DEBUG_TRACK_PS
-//	DumpPixelShaderDefToFile( pPSDef );
-
-	// Azurik like to create and destroy the same shader every frame! O_o
-//	PrintPixelShaderDefContents( pPSDef );
-#endif
-
-	// First things first, set the pixel shader version
-	// TODO: ps.1.1 might be a better idea...
-	sprintf(szPshString, "%s", "ps.1.0\n");
-
-	// Handle Texture declarations
-	// PSTEXTUREModes is stored in a different address in D3D_RenderStates than pPSDef
-	// So we must read it from the render array instead (pPSDef in this case is a pointer to the RenderState array, NOT the shader itself)
-	if(TemporaryPixelShaderRenderStates[X_D3DRS_PSTEXTUREMODES] != 0)
-	{
-	}
-
-	return S_OK;
-}
-

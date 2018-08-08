@@ -610,7 +610,6 @@
     <ClInclude Include="..\..\src\Common\CxbxCommon.h">
       <Filter>Cross Platform</Filter>
     </ClInclude>
-    <ClInclude Include="DlgXboxControllerPortMapping.h" />
     <ClInclude Include="..\..\src\Common\Settings.hpp">
       <Filter>Cross Platform</Filter>
     </ClInclude>

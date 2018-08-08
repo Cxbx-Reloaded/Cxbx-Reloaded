@@ -313,10 +313,8 @@ VOID RefreshDirect3DDevice()
         /*! enumerate display modes */
         {
             uint32 dwAdapterModeCount = g_pDirect3D->GetAdapterModeCount(
-				g_XBVideo.adapter
-#ifdef CXBX_USE_D3D9
+                g_XBVideo.adapter
 				, XTL::D3DFMT_X8R8G8B8
-#endif
 			);
 
             SendMessage(g_hVideoResolution, CB_ADDSTRING, 0, (LPARAM)"Automatic (Default)");
@@ -329,10 +327,8 @@ VOID RefreshDirect3DDevice()
                 XTL::D3DDISPLAYMODE displayMode;
 
                 g_pDirect3D->EnumAdapterModes(
-					g_XBVideo.adapter, 
-#ifdef CXBX_USE_D3D9
+					g_XBVideo.adapter,
 					XTL::D3DFMT_X8R8G8B8,
-#endif
 					v,
 					&displayMode
 				);

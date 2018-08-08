@@ -100,10 +100,8 @@ bool GetCachedVertexBufferObject(DWORD pXboxDataPtr, DWORD size, XTL::IDirect3DV
 			D3DUSAGE_WRITEONLY | D3DUSAGE_DYNAMIC,
 			0,
 			XTL::D3DPOOL_DEFAULT,
-			&newBuffer.pHostVertexBuffer
-#ifdef CXBX_USE_D3D9
-			, nullptr
-#endif
+			&newBuffer.pHostVertexBuffer,
+			nullptr
 		);
 		if (FAILED(hRet)) {
 			CxbxKrnlCleanup("Failed to create vertex buffer");
@@ -132,10 +130,8 @@ bool GetCachedVertexBufferObject(DWORD pXboxDataPtr, DWORD size, XTL::IDirect3DV
 		D3DUSAGE_WRITEONLY | D3DUSAGE_DYNAMIC,
 		0,
 		XTL::D3DPOOL_DEFAULT,
-		&buffer->pHostVertexBuffer
-#ifdef CXBX_USE_D3D9
-		, nullptr
-#endif
+		&buffer->pHostVertexBuffer,
+		nullptr
 	);
 	if (FAILED(hRet)) {
 		CxbxKrnlCleanup("Failed to create vertex buffer");
@@ -165,9 +161,7 @@ void ActivatePatchedStream
 		HRESULT hRet = g_pD3DDevice->SetStreamSource(
 			uiStream, 
 			pPatchedStream->pCachedHostVertexBuffer, 
-#ifdef CXBX_USE_D3D9
 			0, // OffsetInBytes
-#endif
 			pPatchedStream->uiCachedHostVertexStride);
 		//DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetStreamSource");
 		if (FAILED(hRet)) {
@@ -294,9 +288,7 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
     UINT             uiStream
 )
 {
-#if CXBX_USE_D3D9
 	extern XTL::D3DCAPS g_D3DCaps;
-#endif
 
 	bool bVshHandleIsFVF = VshHandleIsFVF(pDrawContext->hVertexShader);
 	DWORD XboxFVF = bVshHandleIsFVF ? pDrawContext->hVertexShader : 0;
@@ -381,9 +373,7 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
 			HRESULT hRet = g_pD3DDevice->SetStreamSource(
 				uiStream, 
 				nullptr, 
-#ifdef CXBX_USE_D3D9
 				0, // OffsetInBytes
-#endif
 				0);
 //			DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetStreamSource");
 			if (FAILED(hRet)) {
@@ -429,14 +419,12 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
 				case X_D3DVSDT_NORMSHORT1: { // 0x11:
 					// Test-cases : Halo - Combat Evolved
 					XboxElementByteSize = 1 * sizeof(SHORT);
-#if CXBX_USE_D3D9
 					if (g_D3DCaps.DeclTypes & D3DDTCAPS_SHORT2N) {
 						// Make it SHORT2N
 						pHostVertexAsShort[0] = pXboxVertexAsShort[0];
 						pHostVertexAsShort[1] = 0;
 					}
 					else
-#endif
 					{
 						// Make it FLOAT1
 						pHostVertexAsFloat[0] = NormShortToFloat(pXboxVertexAsShort[0]);
@@ -447,7 +435,6 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
 				case X_D3DVSDT_NORMSHORT2: { // 0x21:
 					// Test-cases : Baldur's Gate: Dark Alliance 2, F1 2002, Gun, Halo - Combat Evolved, Scrapland 
 					XboxElementByteSize = 2 * sizeof(SHORT);
-#if CXBX_USE_D3D9
 					if (g_D3DCaps.DeclTypes & D3DDTCAPS_SHORT2N) {
 						// No need for patching when D3D9 supports D3DDECLTYPE_SHORT2N
 						// TODO : goto default; // ??
@@ -458,7 +445,6 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
 						pHostVertexAsShort[1] = pXboxVertexAsShort[1];
 					}
 					else
-#endif
 					{
 						// Make it FLOAT2
 						pHostVertexAsFloat[0] = NormShortToFloat(pXboxVertexAsShort[0]);
@@ -469,7 +455,6 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
 				case X_D3DVSDT_NORMSHORT3: { // 0x31:
 					// Test-cases : Cel Damage, Constantine, Destroy All Humans!
 					XboxElementByteSize = 3 * sizeof(SHORT);
-#if CXBX_USE_D3D9
 					if (g_D3DCaps.DeclTypes & D3DDTCAPS_SHORT4N) {
 						// Make it SHORT4N
 						pHostVertexAsShort[0] = pXboxVertexAsShort[0];
@@ -478,7 +463,6 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
 						pHostVertexAsShort[3] = 32767; // TODO : verify
 					}
 					else
-#endif
 					{
 						// Make it FLOAT3
 						pHostVertexAsFloat[0] = NormShortToFloat(pXboxVertexAsShort[0]);
@@ -490,7 +474,6 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
 				case X_D3DVSDT_NORMSHORT4: { // 0x41:
 					// Test-cases : Judge Dredd: Dredd vs Death, NHL Hitz 2002, Silent Hill 2, Sneakers, Tony Hawk Pro Skater 4
 					XboxElementByteSize = 4 * sizeof(SHORT);
-#if CXBX_USE_D3D9
 					if (g_D3DCaps.DeclTypes & D3DDTCAPS_SHORT4N) {
 						// No need for patching when D3D9 supports D3DDECLTYPE_SHORT4N
 						// TODO : goto default; // ??
@@ -503,7 +486,6 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
 						pHostVertexAsShort[3] = pXboxVertexAsShort[3];
 					}
 					else
-#endif
 					{
 						// Make it FLOAT4
 						pHostVertexAsFloat[0] = NormShortToFloat(pXboxVertexAsShort[0]);
@@ -552,7 +534,6 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
 				}
 				case X_D3DVSDT_PBYTE1: { // 0x14:
 					XboxElementByteSize = 1 * sizeof(BYTE);
-#if CXBX_USE_D3D9
 					if (g_D3DCaps.DeclTypes & D3DDTCAPS_UBYTE4N) {
 						// Make it UBYTE4N
 						pHostVertexAsByte[0] = pXboxVertexAsByte[0];
@@ -561,7 +542,6 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
 						pHostVertexAsByte[3] = 255; // TODO : Verify
 					}
 					else
-#endif
 					{
 						// Make it FLOAT1
 						pHostVertexAsFloat[0] = ByteToFloat(pXboxVertexAsByte[0]);
@@ -570,7 +550,6 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
 				}
 				case X_D3DVSDT_PBYTE2: { // 0x24:
 					XboxElementByteSize = 2 * sizeof(BYTE);
-#if CXBX_USE_D3D9
 					if (g_D3DCaps.DeclTypes & D3DDTCAPS_UBYTE4N) {
 						// Make it UBYTE4N
 						pHostVertexAsByte[0] = pXboxVertexAsByte[0];
@@ -579,7 +558,6 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
 						pHostVertexAsByte[3] = 255; // TODO : Verify
 					}
 					else
-#endif
 					{
 						// Make it FLOAT2
 						pHostVertexAsFloat[0] = ByteToFloat(pXboxVertexAsByte[0]);
@@ -590,7 +568,6 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
 				case X_D3DVSDT_PBYTE3: { // 0x34:
 					// Test-cases : Turok
 					XboxElementByteSize = 3 * sizeof(BYTE);
-#if CXBX_USE_D3D9
 					if (g_D3DCaps.DeclTypes & D3DDTCAPS_UBYTE4N) {
 						// Make it UBYTE4N
 						pHostVertexAsByte[0] = pXboxVertexAsByte[0];
@@ -599,7 +576,6 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
 						pHostVertexAsByte[3] = 255; // TODO : Verify
 					}
 					else
-#endif
 					{
 						// Make it FLOAT3
 						pHostVertexAsFloat[0] = ByteToFloat(pXboxVertexAsByte[0]);
@@ -611,7 +587,6 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
 				case X_D3DVSDT_PBYTE4: { // 0x44:
 					// Test-case : Jet Set Radio Future
 					XboxElementByteSize = 4 * sizeof(BYTE);
-#if CXBX_USE_D3D9
 					if (g_D3DCaps.DeclTypes & D3DDTCAPS_UBYTE4N) {
 						// No need for patching when D3D9 supports D3DDECLTYPE_UBYTE4N
 						// TODO : goto default; // ??
@@ -624,7 +599,6 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
 						pHostVertexAsByte[3] = pXboxVertexAsByte[3];
 					}
 					else
-#endif
 					{
 						// Make it FLOAT4
 						pHostVertexAsFloat[0] = ByteToFloat(pXboxVertexAsByte[0]);
@@ -979,22 +953,14 @@ VOID XTL::EmuFlushIVB()
 	HRESULT hRet;
 
 	if (bFVF) {
-#ifdef CXBX_USE_D3D9
 		g_pD3DDevice->SetVertexShader(nullptr);
 		hRet = g_pD3DDevice->SetFVF(dwCurFVF);
-#else
-		hRet = g_pD3DDevice->SetVertexShader(dwCurFVF);
-#endif
 		//DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetVertexShader");
 	}
 
 	CxbxDrawPrimitiveUP(DrawContext);
 	if (bFVF) {
-#ifdef CXBX_USE_D3D9
-	hRet = g_pD3DDevice->SetFVF(g_CurrentXboxVertexShaderHandle);
-#else
-	hRet = g_pD3DDevice->SetVertexShader(g_CurrentXboxVertexShaderHandle);
-#endif
+		hRet = g_pD3DDevice->SetFVF(g_CurrentXboxVertexShaderHandle);
 		//DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetVertexShader");
 	}
     g_InlineVertexBuffer_TableOffset = 0; // Might not be needed (also cleared in D3DDevice_Begin)

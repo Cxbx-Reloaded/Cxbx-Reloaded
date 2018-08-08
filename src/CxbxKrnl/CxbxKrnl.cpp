@@ -1538,15 +1538,15 @@ void CxbxInitFilePaths()
 	g_EmuShared->GetStorageLocation(szFolder_CxbxReloadedData);
 
 	// Make sure our data folder exists :
-	bool result = std::filesystem::exists(szFolder_CxbxReloadedData);
-	if (!result && !std::filesystem::create_directory(szFolder_CxbxReloadedData)) {
+	bool result = std::experimental::filesystem::exists(szFolder_CxbxReloadedData);
+	if (!result && !std::experimental::filesystem::create_directory(szFolder_CxbxReloadedData)) {
 		CxbxKrnlCleanup("CxbxInitFilePaths : Couldn't create Cxbx-Reloaded's data folder!");
 	}
 
 	// Make sure the EmuDisk folder exists
 	std::string emuDisk = std::string(szFolder_CxbxReloadedData) + std::string("\\EmuDisk");
-	result = std::filesystem::exists(emuDisk);
-	if (!result && !std::filesystem::create_directory(emuDisk)) {
+	result = std::experimental::filesystem::exists(emuDisk);
+	if (!result && !std::experimental::filesystem::create_directory(emuDisk)) {
 		CxbxKrnlCleanup("CxbxInitFilePaths : Couldn't create Cxbx-Reloaded EmuDisk folder!");
 	}
 
