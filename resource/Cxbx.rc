@@ -485,6 +485,7 @@ BEGIN
         POPUP "&LLE (Experimental)",            65535,MFT_STRING,MFS_ENABLED
         BEGIN
             MENUITEM "LLE &GPU",                    ID_EMULATION_LLE_GPU,MFT_STRING,MFS_ENABLED
+			//MENUITEM "LLE &USB",					ID_EMULATION_LLE_USB,MFT_STRING,MFS_ENABLED // Reenable this when LLE USB actually works
         END
         POPUP "Hacks",                          65535,MFT_STRING,MFS_ENABLED
         BEGIN
@@ -498,6 +499,7 @@ BEGIN
             MENUITEM "Skip rdtsc patching",         ID_HACKS_SKIPRDTSCPATCHING,MFT_STRING,MFS_ENABLED
             MENUITEM "Scale Xbox viewport to host (and back)", ID_HACKS_SCALEVIEWPORT,MFT_STRING,MFS_ENABLED
         END
+        MENUITEM "Allow Admin Privilege",       ID_SETTINGS_ALLOWADMINPRIVILEGE,MFT_STRING,MFS_ENABLED
         MENUITEM MFT_SEPARATOR
         MENUITEM "Reset To Defaults",           ID_SETTINGS_INITIALIZE,MFT_STRING,MFS_ENABLED
     END

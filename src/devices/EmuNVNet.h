@@ -35,8 +35,6 @@
 
 #include "PCIDevice.h" // For PCIDevice
 
-#define NVNET_ADDR  0xFEF00000 
-#define NVNET_SIZE  0x00000400
 
 class NVNetDevice : public PCIDevice {
 public:

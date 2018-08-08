@@ -244,6 +244,7 @@
 #define ID_EMULATION_LLE_APU            40039
 #define ID_EMULATION_LLE_GPU            40040
 #define ID_EMULATION_LLE_JIT            40041
+//#define ID_EMULATION_LLE_USB            40042 // Reenable this when LLE USB actually works
 #define ID_SETTINGS_CONFIG_CONTROLLER   40046
 #define ID_SETTINGS_CONFIG_VIDEO        40047
 #define ID_SETTINGS_CONFIG_AUDIO        40048
@@ -280,6 +281,7 @@
 #define ID_SETTINGS_CONFIG_DLOCCUSTOM   40104
 #define ID_SETTINGS_CONFIG_DLOCAPPDATA  40105
 #define ID_SETTINGS_CONFIG_DLOCCURDIR   40106
+#define ID_SETTINGS_ALLOWADMINPRIVILEGE 40107
 #define IDC_STATIC                      -1
 
 // Next default values for new objects
@@ -287,7 +289,7 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        135
-#define _APS_NEXT_COMMAND_VALUE         40107
+#define _APS_NEXT_COMMAND_VALUE         40108
 #define _APS_NEXT_CONTROL_VALUE         1256
 #define _APS_NEXT_SYMED_VALUE           104
 #endif

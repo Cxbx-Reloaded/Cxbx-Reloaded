@@ -1578,7 +1578,7 @@ static boolean VshConvertShader(VSH_XBOX_SHADER *pShader,
 				pIntermediate->Output.Address += 96;
         }
 
-  
+
 
         if(pIntermediate->InstructionType == IMD_MAC && pIntermediate->MAC == MAC_DPH)
         {

@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->Cxbx->XBController.h
+// *   Cxbx->Win32->Cxbx->DInputController.h
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -31,8 +31,8 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#ifndef XBCONTROLLER_H
-#define XBCONTROLLER_H
+#ifndef DINPUTCONTROLLER_H
+#define DINPUTCONTROLLER_H
 
 #include "Cxbx.h"
 #include "Common/Error.h"
@@ -43,7 +43,8 @@
 #include <windows.h>
 
 #include "CxbxKrnl/EmuXTL.h"
-
+#include "Common/Settings.hpp"
+/*
 // ******************************************************************
 // * Xbox Controller Object IDs
 // ******************************************************************
@@ -101,25 +102,19 @@ struct XBCtrlObjectCfg
     int dwDevice;   // offset into m_InputDevice
     int dwInfo;     // extended information, depending on dwFlags
     int dwFlags;    // flags explaining the data format
-};
+};*/
 
 // ******************************************************************
-// * class: XBController
+// * class: DInputController
 // ******************************************************************
-class XBController : public Error
+class DInputController : public Error
 {
     public:
         // ******************************************************************
         // * Initialization
         // ******************************************************************
-        XBController();
-       ~XBController();
-
-        // ******************************************************************
-        // * Registry Load/Save
-        // ******************************************************************
-        void Load(const char *szRegistryKey);
-        void Save(const char *szRegistryKey);
+        DInputController();
+       ~DInputController();
 
         // ******************************************************************
         // * Configuration
@@ -147,9 +142,9 @@ class XBController : public Error
         bool DeviceIsUsed(const char *szDeviceName);
 
         // ******************************************************************
-        // * Input Device Name Lookup Table
+        // * Settings for DirectInput Device(s)
         // ******************************************************************
-        static const char *m_DeviceNameLookup[XBCTRL_OBJECT_COUNT];
+        Settings::s_controller_dinput m_settings;
 
     private:
         // ******************************************************************
@@ -178,16 +173,6 @@ class XBController : public Error
         // ******************************************************************
         friend BOOL CALLBACK WrapEnumGameCtrlCallback(XTL::LPCDIDEVICEINSTANCE lpddi, LPVOID pvRef);
         friend BOOL CALLBACK WrapEnumObjectsCallback(XTL::LPCDIDEVICEOBJECTINSTANCE lpddoi, LPVOID pvRef);
-
-        // ******************************************************************
-        // * Device Names
-        // ******************************************************************
-        char m_DeviceName[XBCTRL_MAX_DEVICES][260];
-
-        // ******************************************************************
-        // * Object Configuration
-        // ******************************************************************
-        XBCtrlObjectCfg m_ObjectConfig[XBCTRL_OBJECT_COUNT];
 
         // ******************************************************************
         // * DirectInput
@@ -220,7 +205,6 @@ class XBController : public Error
         // ******************************************************************
         int m_dwInputDeviceCount;
         int m_dwCurObject;
-
 };
 
 // ******************************************************************

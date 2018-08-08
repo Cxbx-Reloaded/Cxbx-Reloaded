@@ -34,8 +34,6 @@
 #ifndef XBPORTMAPPING_H
 #define XBPORTMAPPING_H
 
-#include "../CxbxKrnl/EmuXapi.h"
-
 extern void SetXboxPortToHostPort(DWORD dwXboxPort, DWORD dwHostType, DWORD dwHostPort);
 
 extern void GetXboxPortToHostPort(DWORD dwXboxPort, DWORD &dwHostType, DWORD &dwHostPort);
@@ -44,12 +42,12 @@ extern DWORD GetXboxPortMapHostType(DWORD dwXboxPort);
 
 extern DWORD GetXboxPortMapHostPort(DWORD dwXboxPort);
 // ******************************************************************
-// * Load Configuration from Registry
+// * Set configuration
 // ******************************************************************
-extern void XBPortMappingLoad(const char *szRegistryKey);
+extern void XBPortMappingSet(Settings::s_controller_port &controller_port_settings);
 
 // ******************************************************************
-// * Save Configuration from Registry
+// * Get configuration
 // ******************************************************************
-extern void XBPortMappingSave(const char *szRegistryKey);
+extern void XBPortMappingGet(Settings::s_controller_port &controller_port_settings);
 #endif

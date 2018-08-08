@@ -58,7 +58,9 @@ namespace NtDll
 #include "EmuX86.h"
 
 #include "EmuKrnlAvModes.h"
+#include "devices\Xbox.h" // For g_NV2A
 #include "devices\video\nv2a_int.h"
+#include "devices\video\nv2a.h" // For NV2ABlockInfo, EmuNV2A_Block()
 
 #ifndef VOID
 #define VOID void
@@ -87,27 +89,34 @@ VOID REG_WR32(VOID* Ptr, xboxkrnl::ULONG Addr, xboxkrnl::ULONG Val)
 
 VOID CRTC_WR(VOID* Ptr, xboxkrnl::UCHAR i, xboxkrnl::UCHAR d)
 {
-	REG_WR08(Ptr, NV_PRMCIO_CRX__COLOR, i);
-	REG_WR08(Ptr, NV_PRMCIO_CR__COLOR, d);
+	static const NV2ABlockInfo* block = EmuNV2A_Block(NV_PRMCIO_CRX__COLOR);
+
+	g_NV2A->BlockWrite(block, NV_PRMCIO_CRX__COLOR, i, sizeof(uint8_t));
+	g_NV2A->BlockWrite(block, NV_PRMCIO_CR__COLOR, d, sizeof(uint8_t));
 }
 
 VOID SRX_WR(VOID *Ptr, xboxkrnl::UCHAR i, xboxkrnl::UCHAR d)
-
 {
-	REG_WR08(Ptr, NV_PRMVIO_SRX, i);
-	REG_WR08(Ptr, NV_PRMVIO_SR, (d));
+	static const NV2ABlockInfo* block = EmuNV2A_Block(NV_PRMVIO_SRX);
+
+	g_NV2A->BlockWrite(block, NV_PRMVIO_SRX, i, sizeof(uint8_t));
+	g_NV2A->BlockWrite(block, NV_PRMVIO_SR, d, sizeof(uint8_t));
 }
 
 VOID GRX_WR(VOID *Ptr, xboxkrnl::UCHAR i, xboxkrnl::UCHAR d)
 {
-	REG_WR08(Ptr, NV_PRMVIO_GRX, i);
-	REG_WR08(Ptr, NV_PRMVIO_GX, (d));
+	static const NV2ABlockInfo* block = EmuNV2A_Block(NV_PRMVIO_GRX);
+
+	g_NV2A->BlockWrite(block, NV_PRMVIO_GRX, i, sizeof(uint8_t));
+	g_NV2A->BlockWrite(block, NV_PRMVIO_GX, d, sizeof(uint8_t));
 }
 
 VOID ARX_WR(VOID *Ptr, xboxkrnl::UCHAR i, xboxkrnl::UCHAR d)
 {
-	REG_WR08(Ptr, NV_PRMCIO_ARX, i);
-	REG_WR08(Ptr, NV_PRMCIO_ARX, (d));
+	static const NV2ABlockInfo* block = EmuNV2A_Block(NV_PRMCIO_ARX);
+
+	g_NV2A->BlockWrite(block, NV_PRMCIO_ARX, i, sizeof(uint8_t));
+	g_NV2A->BlockWrite(block, NV_PRMCIO_ARX, d, sizeof(uint8_t));
 }
 
 
@@ -247,9 +256,6 @@ XBSYSAPI EXPORTNUM(2) VOID NTAPI xboxkrnl::AvSendTVEncoderOption
 	}
 }
 
-// Cached Display Mode format, used by NV2A to deermine framebuffer format
-ULONG g_AvDisplayModeFormat = 0;
-
 // ******************************************************************
 // * 0x0003 - AvSetDisplayMode()
 // ******************************************************************
@@ -304,16 +310,11 @@ XBSYSAPI EXPORTNUM(3) xboxkrnl::ULONG NTAPI xboxkrnl::AvSetDisplayMode
 		break;
 	}
 
-	// HACK: Store D3D format that was set, so we can decode it in nv2a swap
-	// TODO: Fix this so nv2a state is used to get these values...
-	g_AvDisplayModeFormat = Format;
-
 	Pitch /= 8;
 
-	if (AvpCurrentMode == Mode)
-	{
+	if (AvpCurrentMode == Mode) {
 		REG_WR32(RegisterBase, NV_PRAMDAC_GENERAL_CONTROL, GeneralControl);
-		CRTC_WR(RegisterBase, NV_CIO_SR_LOCK_INDEX, NV_CIO_SR_UNLOCK_RW_VALUE); /* crtc lock */
+		CRTC_WR(RegisterBase, NV_CIO_SR_LOCK_INDEX /*=0x1c*/, NV_CIO_SR_UNLOCK_RW_VALUE); /* crtc lock */
 		CRTC_WR(RegisterBase, NV_CIO_CR_OFFSET_INDEX /*=0x13*/, (UCHAR)(Pitch & 0xFF)); /* sets screen pitch */
 		CRTC_WR(RegisterBase, NV_CIO_CRE_RPC0_INDEX /*=0x19*/, (UCHAR)((Pitch & 0x700) >> 3)); /* repaint control 0 */
 		CRTC_WR(RegisterBase, NV_CIO_CRE_PIXEL_INDEX /*=0x28*/, 0x80 | CR28Depth);
@@ -321,10 +322,11 @@ XBSYSAPI EXPORTNUM(3) xboxkrnl::ULONG NTAPI xboxkrnl::AvSetDisplayMode
 
 		AvSendTVEncoderOption(RegisterBase, AV_OPTION_FLICKER_FILTER, 5, NULL);
 		AvSendTVEncoderOption(RegisterBase, AV_OPTION_ENABLE_LUMA_FILTER, FALSE, NULL);
-		AvpCurrentMode = Mode;
 
 		RETURN(STATUS_SUCCESS);
 	}
+
+	CRTC_WR(RegisterBase, NV_CIO_CRE_PIXEL_INDEX /*=0x28*/, 0x80 | CR28Depth);
 
 	// TODO: Lots of setup/TV encoder configuration
 	// Ignored for now since we don't emulate that stuff yet...
@@ -341,9 +343,9 @@ XBSYSAPI EXPORTNUM(3) xboxkrnl::ULONG NTAPI xboxkrnl::AvSetDisplayMode
 	}
 
 	if (Mode & AV_MODE_FLAGS_SCART)	{
-		REG_WR32(RegisterBase, 0x680630, 0);
-		REG_WR32(RegisterBase, 0x6808C4, 0);
-		REG_WR32(RegisterBase, 0x68084C, 0);
+		REG_WR32(RegisterBase, 0x00680630, 0); // NV_RAMDAC + 0x0630
+		REG_WR32(RegisterBase, 0x006808C4, 0); // NV_RAMDAC + 0x08C4
+		REG_WR32(RegisterBase, 0x0068084C, 0); // NV_RAMDAC + 0x084C
 	}
 
 	const UCHAR* pByte = AvpSRXRegisters;
@@ -371,7 +373,7 @@ XBSYSAPI EXPORTNUM(3) xboxkrnl::ULONG NTAPI xboxkrnl::AvSetDisplayMode
 
 	REG_WR08(RegisterBase, NV_PRMCIO_ARX, 0x20);
 
-	CRTC_WR(RegisterBase, 0x11, 0x00);
+	CRTC_WR(RegisterBase, NV_CIO_CR_VRE_INDEX /*=0x11*/, 0x00);
 	pByte = AvpCRTCRegisters[iCRTC];
 	pByteMax = pByte + sizeof(AvpCRTCRegisters[0]);
 
@@ -379,15 +381,19 @@ XBSYSAPI EXPORTNUM(3) xboxkrnl::ULONG NTAPI xboxkrnl::AvSetDisplayMode
 		UCHAR Register = AvpCRTCRegisters[0][i];
 		UCHAR Data = *pByte;
 
-		if (Register == 0x13) {
+		switch (Register) {
+		case NV_CIO_CR_OFFSET_INDEX /*=0x13*/:
 			Data = (UCHAR)(Pitch & 0xFF);
-		} else if (Register == 0x19) {
+			break;
+		case NV_CIO_CRE_RPC0_INDEX /*=0x19*/:
 			Data |= (UCHAR)((Pitch & 0x700) >> 3);
-		} else if (Register == 0x25) {
+			break;
+		case NV_CIO_CRE_LSR_INDEX /*=0x25*/:
 			Data |= (UCHAR)((Pitch & 0x800) >> 6);
+			break;
 		}
 
-		CRTC_WR(RegisterBase, AvpCRTCRegisters[0][i], Data);
+		CRTC_WR(RegisterBase, Register, Data);
 	}
 
 	// TODO: More TV Encoder stuff...

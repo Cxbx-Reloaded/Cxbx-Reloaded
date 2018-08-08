@@ -34,7 +34,7 @@
 // *
 // ******************************************************************
 
-#include "CxbxKrnl/EmuShared.h"
+#include "Common/Settings.hpp" // for g_Settings
 
 #include "DlgAudioConfig.h"
 #include "ResCxbx.h"
@@ -49,7 +49,7 @@ static BOOL CALLBACK DSEnumProc(LPGUID lpGUID, LPCTSTR lpszDesc, LPCTSTR lpszDrv
 static VOID RefreshAudioAdapter();
 
 /*! audio configuration */
-static XBAudio g_XBAudio;
+static Settings::s_audio g_XBAudio;
 /*! changes flag */
 static BOOL g_bHasChanges = FALSE;
 /*! handle to audio adapter list window */
@@ -61,7 +61,7 @@ VOID ShowAudioConfig(HWND hwnd)
     g_bHasChanges = FALSE;
 
     /*! retrieve audio configuration */
-    g_EmuShared->GetXBAudio(&g_XBAudio);
+    g_XBAudio = g_Settings->m_audio;
 
     /*! show dialog box */
     DialogBox(GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_AUDIO_CFG), hwnd, DlgAudioConfigProc);
@@ -82,7 +82,7 @@ BOOL CALLBACK DSEnumProc(LPGUID lpGUID, LPCTSTR lpszDesc, LPCTSTR lpszDrvName, L
         binGUID = { 0 };
     }
 
-    GUID curGUID = g_XBAudio.GetAudioAdapter();
+    GUID curGUID = g_XBAudio.adapterGUID;
 
     /*! activate configured audio adapter */
     if (curGUID == binGUID) {
@@ -108,7 +108,7 @@ INT_PTR CALLBACK DlgAudioConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPAR
 
                 SendMessage(g_hAudioAdapter, CB_RESETCONTENT, 0, 0);
 
-                XTL::DirectSoundEnumerate(&DSEnumProc, NULL);
+                DirectSoundEnumerate(&DSEnumProc, NULL);
             }
 
             /*! refresh UI based on currently selected audio adapter */
@@ -116,11 +116,11 @@ INT_PTR CALLBACK DlgAudioConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPAR
 
             /*! check appropriate options */
             {
-                SendMessage(GetDlgItem(hWndDlg, IDC_AC_PCM), BM_SETCHECK, (WPARAM)g_XBAudio.GetPCM(), 0);
+                SendMessage(GetDlgItem(hWndDlg, IDC_AC_PCM), BM_SETCHECK, (WPARAM)g_XBAudio.codec_pcm, 0);
 
-                SendMessage(GetDlgItem(hWndDlg, IDC_AC_XADPCM), BM_SETCHECK, (WPARAM)g_XBAudio.GetXADPCM(), 0);
+                SendMessage(GetDlgItem(hWndDlg, IDC_AC_XADPCM), BM_SETCHECK, (WPARAM)g_XBAudio.codec_xadpcm, 0);
 
-                SendMessage(GetDlgItem(hWndDlg, IDC_AC_UNKNOWN_CODEC), BM_SETCHECK, (WPARAM)g_XBAudio.GetUnknownCodec(), 0);
+                SendMessage(GetDlgItem(hWndDlg, IDC_AC_UNKNOWN_CODEC), BM_SETCHECK, (WPARAM)g_XBAudio.codec_unknown, 0);
             }
         }
         break;
@@ -163,21 +163,21 @@ INT_PTR CALLBACK DlgAudioConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPAR
 
                     /*! save PCM/XADPCM/UnknownCodec options */
                     {
-						LRESULT lRet = SendMessage(GetDlgItem(hWndDlg, IDC_AC_PCM), BM_GETCHECK, 0, 0);
+                        LRESULT lRet = SendMessage(GetDlgItem(hWndDlg, IDC_AC_PCM), BM_GETCHECK, 0, 0);
 
-                        g_XBAudio.SetPCM(lRet == BST_CHECKED);
+                        g_XBAudio.codec_pcm = (lRet == BST_CHECKED);
 
                         lRet = SendMessage(GetDlgItem(hWndDlg, IDC_AC_XADPCM), BM_GETCHECK, 0, 0);
 
-                        g_XBAudio.SetXADPCM(lRet == BST_CHECKED);
+                        g_XBAudio.codec_xadpcm = (lRet == BST_CHECKED);
 
                         lRet = SendMessage(GetDlgItem(hWndDlg, IDC_AC_UNKNOWN_CODEC), BM_GETCHECK, 0, 0);
 
-                        g_XBAudio.SetUnknownCodec(lRet == BST_CHECKED);
+                        g_XBAudio.codec_unknown = (lRet == BST_CHECKED);
                     }
 
                     /*! save audio configuration */
-                    g_EmuShared->SetXBAudio(&g_XBAudio);
+                    g_Settings->m_audio = g_XBAudio;
 
                     EndDialog(hWndDlg, wParam);
                 }
@@ -203,7 +203,7 @@ VOID RefreshAudioAdapter()
 {
     /*! save configured audio adapter */
     {
-        GUID oldGUID = g_XBAudio.GetAudioAdapter();
+        GUID oldGUID = g_XBAudio.adapterGUID;
 
         DWORD dwAudioAdapter = (DWORD)SendMessage(g_hAudioAdapter, CB_GETCURSEL, 0, 0);
         
@@ -222,13 +222,13 @@ VOID RefreshAudioAdapter()
         if(binGUID != oldGUID) {
             g_bHasChanges = TRUE;
 
-            g_XBAudio.SetAudioAdapter(binGUID);
+            g_XBAudio.adapterGUID = binGUID;
         }
 
         // Force save default audio device if selected audio device is invalid.
         if (pGUID == (LPGUID)CB_ERR) {
             SendMessage(g_hAudioAdapter, CB_SETCURSEL, 0, 0);
-            g_EmuShared->SetXBAudio(&g_XBAudio);
+            g_Settings->m_audio = g_XBAudio;
             MessageBox(nullptr, "Your selected audio adapter is invalid,\n"
                                 "reverting to default audio adapter.", "Cxbx-Reloaded", MB_OK | MB_ICONEXCLAMATION);
         }

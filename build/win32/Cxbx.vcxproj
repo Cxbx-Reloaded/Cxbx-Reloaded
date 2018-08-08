@@ -77,7 +77,7 @@
     </Midl>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>..\..\src\Common;..\..\src;..\..\src\Common\Win32;%(AdditionalIncludeDirectories);..\..\import\OpenXDK\include;..\..\import\distorm\include;..\..\import\glew-2.0.0\include;..\..\import\subhook\;..\..\import\DirectX9\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\src\Common;..\..\src;..\..\src\Common\Win32;%(AdditionalIncludeDirectories);..\..\import\OpenXDK\include;..\..\import\distorm\include;..\..\import\glew-2.0.0\include;..\..\import\subhook\;..\..\import\DirectX9\include;..\..\import\simpleini</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>NOMINMAX;_WIN32_WINNT=0x0601;WIN32;CXBX_USE_D3D9;_DEBUG;_WINDOWS;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -138,7 +138,7 @@
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
-      <AdditionalIncludeDirectories>..\..\src;..\..\src\Common;..\..\src\Common\Win32\;%(AdditionalIncludeDirectories);..\..\import\OpenXDK\include;..\..\import\distorm\include;..\..\import\glew-2.0.0\include;..\..\src\Common\Win32;..\..\import\subhook\;..\..\import\DirectX9\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\src;..\..\src\Common;..\..\src\Common\Win32\;%(AdditionalIncludeDirectories);..\..\import\OpenXDK\include;..\..\import\distorm\include;..\..\import\glew-2.0.0\include;..\..\src\Common\Win32;..\..\import\subhook\;..\..\import\DirectX9\include;..\..\import\simpleini</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>NOMINMAX;_WIN32_WINNT=0x0601;WIN32;CXBX_USE_D3D9;NDEBUG;_WINDOWS;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
@@ -196,9 +196,12 @@
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\src\Common\CxbxCommon.h" />
+    <ClInclude Include="..\..\src\Common\Input\InputConfig.h" />
+    <ClInclude Include="..\..\src\Common\Input\SDL2_Device.h" />
+    <ClInclude Include="..\..\src\Common\Settings.hpp" />
     <ClInclude Include="..\..\src\Common\Win32\Threads.h" />
     <ClInclude Include="..\..\src\Common\CxbxDebugger.h" />
-    <ClInclude Include="..\..\src\Common\Win32\XBAudio.h" />
     <ClInclude Include="..\..\src\Common\Win32\XBPortMapping.h" />
     <ClInclude Include="..\..\src\Common\XADPCM.h" />
     <ClInclude Include="..\..\src\Common\XbePrinter.h" />
@@ -247,6 +250,7 @@
     <ClInclude Include="..\..\src\CxbxKrnl\PoolManager.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\ReservedMemory.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\ResourceTracker.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\Timer.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\VMManager.h" />
     <ClInclude Include="..\..\src\CxbxVersion.h" />
     <ClInclude Include="..\..\src\Cxbx\CxbxXbdm.h" />
@@ -263,9 +267,8 @@
     <ClInclude Include="..\..\src\Cxbx\ResCxbx.h" />
     <ClInclude Include="..\..\src\Cxbx\Wnd.h" />
     <ClInclude Include="..\..\src\Cxbx\WndMain.h" />
-    <ClInclude Include="..\..\src\Common\Win32\XBController.h" />
+    <ClInclude Include="..\..\src\Common\Win32\DInputController.h" />
     <ClInclude Include="..\..\src\Common\Xbe.h" />
-    <ClInclude Include="..\..\src\Common\Win32\XBVideo.h" />
     <ClInclude Include="..\..\src\devices\ADM1032Device.h" />
     <ClInclude Include="..\..\src\devices\EEPROMDevice.h" />
     <ClInclude Include="..\..\src\devices\EmuNVNet.h" />
@@ -276,6 +279,11 @@
     <ClInclude Include="..\..\src\devices\SMBus.h" />
     <ClInclude Include="..\..\src\devices\SMCDevice.h" />
     <ClInclude Include="..\..\src\devices\SMDevice.h" />
+    <ClInclude Include="..\..\src\devices\usb\Hub.h" />
+    <ClInclude Include="..\..\src\devices\usb\OHCI.h" />
+    <ClInclude Include="..\..\src\devices\usb\UsbCommon.h" />
+    <ClInclude Include="..\..\src\devices\usb\USBDevice.h" />
+    <ClInclude Include="..\..\src\devices\usb\XidGamepad.h" />
     <ClInclude Include="..\..\src\devices\video\nv2a.h" />
     <ClInclude Include="..\..\src\devices\video\nv2a_debug.h" />
     <ClInclude Include="..\..\src\devices\video\nv2a_int.h" />
@@ -328,10 +336,13 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\src\Common\CxbxCommon.cpp" />
+    <ClCompile Include="..\..\src\Common\Input\InputConfig.cpp" />
+    <ClCompile Include="..\..\src\Common\Input\SDL2_Device.cpp" />
+    <ClCompile Include="..\..\src\Common\Settings.cpp" />
     <ClCompile Include="..\..\src\Common\Win32\InlineFunc.cpp" />
     <ClCompile Include="..\..\src\Common\Win32\Threads.cpp" />
     <ClCompile Include="..\..\src\Common\CxbxDebugger.cpp" />
-    <ClCompile Include="..\..\src\Common\Win32\XBAudio.cpp" />
     <ClCompile Include="..\..\src\Common\Win32\XBPortMapping.cpp" />
     <ClCompile Include="..\..\src\Common\XbePrinter.cpp" />
     <ClCompile Include="..\..\src\CxbxKrnl\crc32c.cpp" />
@@ -503,6 +514,7 @@
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
+    <ClCompile Include="..\..\src\CxbxKrnl\Timer.cpp" />
     <ClCompile Include="..\..\src\CxbxKrnl\VMManager.cpp" />
     <ClCompile Include="..\..\src\Cxbx\CxbxXbdm.cpp" />
     <ClCompile Include="..\..\src\Cxbx\DlgAbout.cpp" />
@@ -551,7 +563,7 @@
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
-    <ClCompile Include="..\..\src\Common\Win32\XBController.cpp">
+    <ClCompile Include="..\..\src\Common\Win32\DInputController.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -565,7 +577,9 @@
     </ClCompile>
     <ClCompile Include="..\..\src\Common\Win32\XBVideo.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug_Direct3D9|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug_Direct3D9|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
@@ -578,6 +592,10 @@
     <ClCompile Include="..\..\src\devices\SMBus.cpp" />
     <ClCompile Include="..\..\src\devices\SMCDevice.cpp" />
     <ClCompile Include="..\..\src\devices\SMDevice.cpp" />
+    <ClCompile Include="..\..\src\devices\usb\Hub.cpp" />
+    <ClCompile Include="..\..\src\devices\usb\OHCI.cpp" />
+    <ClCompile Include="..\..\src\devices\usb\USBDevice.cpp" />
+    <ClCompile Include="..\..\src\devices\usb\XidGamepad.cpp" />
     <ClCompile Include="..\..\src\devices\video\nv2a.cpp" />
     <ClCompile Include="..\..\src\devices\video\nv2a_debug.cpp" />
     <ClCompile Include="..\..\src\devices\video\nv2a_psh.cpp" />

@@ -53,16 +53,15 @@ namespace xboxkrnl
 #include "EmuEEPROM.h" // For CxbxRestoreEEPROM, EEPROM, XboxFactoryGameRegion
 #include "EmuKrnl.h"
 #include "EmuShared.h"
+#include "EmuXTL.h"
 #include "HLEIntercept.h"
 #include "ReservedMemory.h" // For virtual_memory_placeholder
 #include "VMManager.h"
 #include "CxbxDebugger.h"
 #include "EmuX86.h"
 
-#include <shlobj.h>
 #include <clocale>
 #include <process.h>
-#include <Shlwapi.h>
 #include <time.h> // For time()
 #include <sstream> // For std::ostringstream
 
@@ -70,6 +69,8 @@ namespace xboxkrnl
 #include "devices\Xbox.h" // For InitXboxHardware()
 #include "devices\LED.h" // For LED::Sequence
 #include "EmuSha.h" // For the SHA1 functions
+#include "Timer.h" // For Timer_Init
+#include "..\Common\Input\InputConfig.h" // For the InputDeviceManager
 
 /*! thread local storage */
 Xbe::TLS *CxbxKrnl_TLS = NULL;
@@ -95,6 +96,7 @@ char szFolder_CxbxReloadedData[MAX_PATH] = { 0 };
 char szFilePath_EEPROM_bin[MAX_PATH] = { 0 };
 char szFilePath_memory_bin[MAX_PATH] = { 0 };
 char szFilePath_page_tables[MAX_PATH] = { 0 };
+char szFilePath_Xbe[MAX_PATH] = { 0 };
 
 std::string CxbxBasePath;
 HANDLE CxbxBasePathHandle;
@@ -105,6 +107,9 @@ bool g_bIsDebug = false;
 bool g_bIsRetail = false;
 DWORD_PTR g_CPUXbox = 0;
 DWORD_PTR g_CPUOthers = 0;
+
+// Indicates to disable/enable all interrupts when cli and sti instructions are executed
+std::atomic_bool g_bEnableAllInterrupts = true;
 
 // Set by the VMManager during initialization. Exported because it's needed in other parts of the emu
 size_t g_SystemMaxMemory = 0;
@@ -566,32 +571,33 @@ void PrintCurrentConfigurationLog()
 		printf("---------------------------- LLE CONFIG ----------------------------\n");
 		printf("LLE for APU is %s\n", bLLE_APU ? "enabled" : "disabled");
 		printf("LLE for GPU is %s\n", bLLE_GPU ? "enabled" : "disabled");
+		printf("LLE for USB is %s\n", bLLE_USB ? "enabled" : "disabled");
 		printf("LLE for JIT is %s\n", bLLE_JIT ? "enabled" : "disabled");
 	}
 
 	// Print current video configuration (DirectX/HLE)
 	if (!bLLE_GPU) {
-		XBVideo XBVideoConf;
-		g_EmuShared->GetXBVideo(&XBVideoConf);
+		Settings::s_video XBVideoConf;
+		g_EmuShared->GetVideoSettings(&XBVideoConf);
 
 		printf("--------------------------- VIDEO CONFIG ---------------------------\n");
-		printf("Direct3D Device: %s\n", XBVideoConf.GetDirect3DDevice() == 0 ? "Direct3D HAL (Hardware Accelerated)" : "Direct3D REF (Software)");
-		printf("Video Resolution: %s\n", XBVideoConf.GetVideoResolution());
-		printf("Force VSync is %s\n", XBVideoConf.GetVSync() ? "enabled" : "disabled");
-		printf("Fullscreen is %s\n", XBVideoConf.GetFullscreen() ? "enabled" : "disabled");
-		printf("Hardware YUV is %s\n", XBVideoConf.GetHardwareYUV() ? "enabled" : "disabled");
+		printf("Direct3D Device: %s\n", XBVideoConf.direct3DDevice == 0 ? "Direct3D HAL (Hardware Accelerated)" : "Direct3D REF (Software)");
+		printf("Video Resolution: %s\n", XBVideoConf.szVideoResolution);
+		printf("Force VSync is %s\n", XBVideoConf.bVSync ? "enabled" : "disabled");
+		printf("Fullscreen is %s\n", XBVideoConf.bFullScreen ? "enabled" : "disabled");
+		printf("Hardware YUV is %s\n", XBVideoConf.bHardwareYUV ? "enabled" : "disabled");
 	}
 
 	// Print current audio configuration
 	{
-		XBAudio XBAudioConf;
-		g_EmuShared->GetXBAudio(&XBAudioConf);
+		Settings::s_audio XBAudioConf;
+		g_EmuShared->GetAudioSettings(&XBAudioConf);
 
 		printf("--------------------------- AUDIO CONFIG ---------------------------\n");
-		printf("Audio Adapter: %s\n", XBAudioConf.GetAudioAdapter().Data1 == 0 ? "Primary Audio Device" : "Secondary Audio Device");
-		printf("PCM is %s\n", XBAudioConf.GetPCM() ? "enabled" : "disabled");
-		printf("XADPCM is %s\n", XBAudioConf.GetXADPCM() ? "enabled" : "disabled");
-		printf("Unknown Codec is %s\n", XBAudioConf.GetUnknownCodec() ? "enabled" : "disabled");
+		printf("Audio Adapter: %s\n", XBAudioConf.adapterGUID.Data1 == 0 ? "Primary Audio Device" : "Secondary Audio Device");
+		printf("PCM is %s\n", XBAudioConf.codec_pcm ? "enabled" : "disabled");
+		printf("XADPCM is %s\n", XBAudioConf.codec_xadpcm ? "enabled" : "disabled");
+		printf("Unknown Codec is %s\n", XBAudioConf.codec_unknown ? "enabled" : "disabled");
 	}
 
 	// Print Enabled Hacks
@@ -666,7 +672,9 @@ static unsigned int WINAPI CxbxKrnlInterruptThread(PVOID param)
 #endif
 
 	while (true) {
-		TriggerPendingConnectedInterrupts();
+		if (g_bEnableAllInterrupts) {
+			TriggerPendingConnectedInterrupts();
+		}
 		Sleep(1);
 	}
 
@@ -860,13 +868,13 @@ void CxbxKrnlMain(int argc, char* argv[])
 	// Get DCHandle :
 	HWND hWnd = 0;
 	if (argc > 2) {
-		hWnd = (HWND)StrToInt(argv[3]);
+		hWnd = (HWND)std::atoi(argv[3]);
 	}
 
 	// Get KernelDebugMode :
 	DebugMode DbgMode = DebugMode::DM_NONE;
 	if (argc > 3) {
-		DbgMode = (DebugMode)StrToInt(argv[4]);
+		DbgMode = (DebugMode)std::atoi(argv[4]);
 	}
 
 	// Get KernelDebugFileName :
@@ -1069,9 +1077,9 @@ void CxbxKrnlMain(int argc, char* argv[])
 	// Now we can load and run the XBE :
 	// MapAndRunXBE(XbePath, DCHandle);
 	{
-		// Load Xbe (this one will reside above WinMain's virtual_memory_placeholder) 
-		g_EmuShared->SetXbePath(xbePath.c_str());
-		CxbxKrnl_Xbe = new Xbe(xbePath.c_str(), false); // TODO : Instead of using the Xbe class, port Dxbx _ReadXbeBlock()
+		strncpy(szFilePath_Xbe, xbePath.c_str(), MAX_PATH - 1);
+		// Load Xbe (this one will reside above WinMain's virtual_memory_placeholder)
+		CxbxKrnl_Xbe = new Xbe(szFilePath_Xbe, false); // TODO : Instead of using the Xbe class, port Dxbx _ReadXbeBlock()
 
 		if (CxbxKrnl_Xbe->HasFatalError()) {
 			CxbxKrnlCleanup(CxbxKrnl_Xbe->GetError().c_str());
@@ -1243,7 +1251,9 @@ __declspec(noreturn) void CxbxKrnlInit
 
 	// for unicode conversions
 	setlocale(LC_ALL, "English");
+	// Initialize time-related variables for the kernel and the timers
 	CxbxInitPerformanceCounters();
+	Timer_Init();
 #ifdef _DEBUG
 //	CxbxPopupMessage("Attach a Debugger");
 //  Debug child processes using https://marketplace.visualstudio.com/items?itemName=GreggMiskelly.MicrosoftChildProcessDebuggingPowerTool
@@ -1293,10 +1303,11 @@ __declspec(noreturn) void CxbxKrnlInit
 
 	// Read which components need to be LLE'ed :
 	{
-		int CxbxLLE_Flags;
-		g_EmuShared->GetFlagsLLE(&CxbxLLE_Flags);
+		uint CxbxLLE_Flags;
+		g_EmuShared->GetFlagsLLEStatus(&CxbxLLE_Flags);
 		bLLE_APU = (CxbxLLE_Flags & LLE_APU) > 0;
 		bLLE_GPU = (CxbxLLE_Flags & LLE_GPU) > 0;
+		//bLLE_USB = (CxbxLLE_Flags & LLE_USB) > 0; // Reenable this when LLE USB actually works
 		bLLE_JIT = (CxbxLLE_Flags & LLE_JIT) > 0;
 	}
 
@@ -1329,10 +1340,10 @@ __declspec(noreturn) void CxbxKrnlInit
 
 	// Determine XBE Path
 	memset(szBuffer, 0, MAX_PATH);
-	g_EmuShared->GetXbePath(szBuffer);
+	strncpy(szBuffer, szFilePath_Xbe, MAX_PATH);
 	std::string xbePath(szBuffer);
-	PathRemoveFileSpec(szBuffer);
 	std::string xbeDirectory(szBuffer);
+	xbeDirectory = xbeDirectory.substr(0, xbeDirectory.find_last_of("\\/"));
 	CxbxBasePathHandle = CreateFile(CxbxBasePath.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
 	memset(szBuffer, 0, MAX_PATH);
 	// Games may assume they are running from CdRom :
@@ -1453,9 +1464,24 @@ __declspec(noreturn) void CxbxKrnlInit
 
 	EmuHLEIntercept(pXbeHeader);
 
-	SetupXboxDeviceTypes();
+	if (!bLLE_USB) {
+		SetupXboxDeviceTypes();
+	}
 
 	InitXboxHardware(HardwareModel::Revision1_5); // TODO : Make configurable
+
+	if (bLLE_USB) {
+#if 0 // Reenable this when LLE USB actually works
+		int ret;
+		g_InputDeviceManager = new InputDeviceManager;
+		ret = g_InputDeviceManager->EnumSdl2Devices();
+		g_InputDeviceManager->StartInputThread();
+		if (ret > 0) {
+			// Temporary: the device type and bindings should be read from emushared, for now always assume one xbox controller
+			g_InputDeviceManager->ConnectDeviceToXbox(1, MS_CONTROLLER_DUKE);
+		}
+#endif
+	}
 
 	// Now the hardware devices exist, couple the EEPROM buffer to it's device
 	g_EEPROM->SetEEPROM((uint8_t*)EEPROM);
@@ -1512,15 +1538,15 @@ void CxbxInitFilePaths()
 	g_EmuShared->GetStorageLocation(szFolder_CxbxReloadedData);
 
 	// Make sure our data folder exists :
-	int result = SHCreateDirectoryEx(nullptr, szFolder_CxbxReloadedData, nullptr);
-	if ((result != ERROR_SUCCESS) && (result != ERROR_ALREADY_EXISTS)) {
-		CxbxKrnlCleanup("CxbxInitFilePaths : Couldn't create Cxbx-Reloaded AppData folder!");
+	bool result = std::filesystem::exists(szFolder_CxbxReloadedData);
+	if (!result && !std::filesystem::create_directory(szFolder_CxbxReloadedData)) {
+		CxbxKrnlCleanup("CxbxInitFilePaths : Couldn't create Cxbx-Reloaded's data folder!");
 	}
 
 	// Make sure the EmuDisk folder exists
 	std::string emuDisk = std::string(szFolder_CxbxReloadedData) + std::string("\\EmuDisk");
-	result = SHCreateDirectoryEx(nullptr, emuDisk.c_str(), nullptr);
-	if ((result != ERROR_SUCCESS) && (result != ERROR_ALREADY_EXISTS)) {
+	result = std::filesystem::exists(emuDisk);
+	if (!result && !std::filesystem::create_directory(emuDisk)) {
 		CxbxKrnlCleanup("CxbxInitFilePaths : Couldn't create Cxbx-Reloaded EmuDisk folder!");
 	}
 
@@ -1693,6 +1719,8 @@ void CxbxKrnlShutDown()
 	// Clear all kernel boot flags. These (together with the shared memory) persist until Cxbx-Reloaded is closed otherwise.
 	int BootFlags = 0;
 	g_EmuShared->SetBootFlags(&BootFlags);
+
+	delete g_NV2A; // TODO : g_pXbox
 
 	if (CxbxKrnl_hEmuParent != NULL)
 		SendMessage(CxbxKrnl_hEmuParent, WM_PARENTNOTIFY, WM_DESTROY, 0);

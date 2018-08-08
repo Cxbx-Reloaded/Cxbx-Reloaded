@@ -157,7 +157,8 @@ dashboard from non-retail xbe?");
 	// We also reserve the remaining region from the reserved xbe image memory up to XBE_MAX_VA since we know it's
 	// occupied by our memory placeholder and cannot be allocated anyway. We cannot just call XbAllocateVirtualMemory
 	// since that would result in an increase in the reserved memory usage and also, with XBOX_MEM_RESERVE, the starting
-	// address will be rounded down to a 64K boundary, which will likely result in an incorrect base address
+	// address will be rounded down to a 64K boundary, which will likely result in an incorrect base address. Once the
+	// memory placeholder is gone, this can be removed
 
 	if (XBE_MAX_VA - CxbxKrnl_Xbe->m_Header.dwSizeofImage - XBE_IMAGE_BASE > 0)
 	{
@@ -169,6 +170,12 @@ dashboard from non-retail xbe?");
 	// Reserve the xbe image memory. Doing this now allows us to avoid calling XbAllocateVirtualMemory later
 	ConstructVMA(XBE_IMAGE_BASE, ROUND_UP_4K(CxbxKrnl_Xbe->m_Header.dwSizeofImage), UserRegion, ReservedVma, false, XBOX_PAGE_READWRITE);
 
+	// ergo720: another hack. On 128 MiB systems, also reserve the 64 MiB following the memory placeholder so that the VMManager
+	// is forbidden from making allocations there and the LLE OHCI can distinguish identity mapped addresses from contiguous addresses.
+	// Once LLE CPU and MMU are implemented, this can be removed
+	if (g_bIsRetail != true) {
+		ConstructVMA(XBE_IMAGE_BASE + XBE_MAX_VA, XBOX_MEMORY_SIZE - XBE_IMAGE_BASE, UserRegion, ReservedVma, false);
+	}
 
 	if (g_bIsChihiro) {
 		printf(LOG_PREFIX " Page table for Chihiro arcade initialized!\n");
@@ -1591,6 +1598,7 @@ xboxkrnl::NTSTATUS VMManager::XbAllocateVirtualMemory(VAddr* addr, ULONG ZeroBit
 	VMAIter it;
 	bool bDestructVmaOnFailure = false;
 	bool bUpdatePteProtections = false;
+	bool bOverflow;
 
 	// Invalid base address
 	if (CapturedBase > HIGHEST_VMA_ADDRESS) { RETURN(STATUS_INVALID_PARAMETER); }
@@ -1654,16 +1662,22 @@ xboxkrnl::NTSTATUS VMManager::XbAllocateVirtualMemory(VAddr* addr, ULONG ZeroBit
 		}
 		else
 		{
-			// A base address was specified. We could check with CheckConflictingVMA to see if it's already allocated but even it is free, there
-			// could still be host allocations in the vma. So we just attempt to map the block and see if it fails or not
-
 			AlignedCapturedBase = ROUND_DOWN(CapturedBase, X64KB);
 			AlignedCapturedSize = ROUND_UP_4K(CapturedSize);
+			it = CheckConflictingVMA(AlignedCapturedBase, AlignedCapturedSize, &bOverflow);
+
+			if (it != m_MemoryRegionArray[UserRegion].RegionMap.end())
+			{
+				// Reserved vma, report an error
+
+				status = STATUS_CONFLICTING_ADDRESSES;
+				goto Exit;
+			}
 
 			if ((VAddr)VirtualAlloc((void*)AlignedCapturedBase, AlignedCapturedSize, MEM_RESERVE,
 				ConvertXboxToWinProtection(PatchXboxPermissions(Protect)) & ~(PAGE_WRITECOMBINE | PAGE_NOCACHE)) != AlignedCapturedBase)
 			{
-				// Something else is already mapped there, report an error
+				// An host allocation is already mapped there, report an error
 
 				status = STATUS_CONFLICTING_ADDRESSES;
 				goto Exit;
@@ -1698,11 +1712,20 @@ xboxkrnl::NTSTATUS VMManager::XbAllocateVirtualMemory(VAddr* addr, ULONG ZeroBit
 	AlignedCapturedBase = ROUND_DOWN_4K(CapturedBase);
 	AlignedCapturedSize = (PAGES_SPANNED(CapturedBase, CapturedSize)) << PAGE_SHIFT;
 
-	it = CheckConflictingVMA(AlignedCapturedBase, AlignedCapturedSize);
+	it = CheckConflictingVMA(AlignedCapturedBase, AlignedCapturedSize, &bOverflow);
 
-	if (it == m_MemoryRegionArray[UserRegion].RegionMap.end() || it->second.type != ReservedVma)
+	if (it == m_MemoryRegionArray[UserRegion].RegionMap.end() || bOverflow)
 	{
-		// The specified region is not completely inside a reserved vma
+		// The specified region is not completely inside a reserved vma or it's free
+
+		status = STATUS_CONFLICTING_ADDRESSES;
+		goto Exit;
+	}
+
+	if (AlignedCapturedBase >= XBE_IMAGE_BASE + ROUND_UP_4K(CxbxKrnl_Xbe->m_Header.dwSizeofImage) &&
+	(g_bIsRetail != true ? AlignedCapturedBase < CHIHIRO_MEMORY_SIZE : AlignedCapturedBase < XBE_MAX_VA))
+	{
+		// We can't commit on the memory placeholder after the xbe image or in the reserved area after it (128 MiB systems only)
 
 		status = STATUS_CONFLICTING_ADDRESSES;
 		goto Exit;
@@ -1765,10 +1788,9 @@ xboxkrnl::NTSTATUS VMManager::XbAllocateVirtualMemory(VAddr* addr, ULONG ZeroBit
 		PointerPte++;
 	}
 
-	// Actually commit the requested range. Because of the check done by CheckConflictingVMA, this call shouldn't fail now but we still
-	// check to see if it succeeds or not...
+	// Actually commit the requested range but don't if we are committing an xbe section so that XeLoadSection works as expected
 
-	if (AlignedCapturedBase >= XBE_MAX_VA)
+	if (AlignedCapturedBase >= XBE_IMAGE_BASE + ROUND_UP_4K(CxbxKrnl_Xbe->m_Header.dwSizeofImage))
 	{
 		if (!VirtualAlloc((void*)AlignedCapturedBase, AlignedCapturedSize, MEM_COMMIT,
 			(ConvertXboxToWinProtection(PatchXboxPermissions(Protect))) & ~(PAGE_WRITECOMBINE | PAGE_NOCACHE)))
@@ -1828,6 +1850,7 @@ xboxkrnl::NTSTATUS VMManager::XbFreeVirtualMemory(VAddr* addr, size_t* Size, DWO
 	PFN TempPfn;
 	PageType BusyType;
 	VMAIter it;
+	bool bOverflow;
 
 
 	// Only MEM_DECOMMIT and MEM_RELEASE are valid
@@ -1850,19 +1873,19 @@ xboxkrnl::NTSTATUS VMManager::XbFreeVirtualMemory(VAddr* addr, size_t* Size, DWO
 
 	Lock();
 
-	it = CheckConflictingVMA(AlignedCapturedBase, AlignedCapturedSize);
+	it = CheckConflictingVMA(AlignedCapturedBase, AlignedCapturedSize, &bOverflow);
 
-	if (it == m_MemoryRegionArray[UserRegion].RegionMap.end() || it->second.type != ReservedVma)
+	if (it == m_MemoryRegionArray[UserRegion].RegionMap.end())
 	{
-		// Vma not found, report an error
+		// Free vma, report an error
 
 		status = STATUS_MEMORY_NOT_ALLOCATED;
 		goto Exit;
 	}
 
-	if (it->first + it->second.size - 1 < AlignedCapturedBase + AlignedCapturedSize - 1)
+	if (bOverflow)
 	{
-		// The provided ending adddress spans beyond the end of the vma, report an error
+		// The provided ending adddress is beyond the end of the vma, report an error
 
 		status = STATUS_UNABLE_TO_FREE_VM;
 		goto Exit;
@@ -1985,6 +2008,7 @@ xboxkrnl::NTSTATUS VMManager::XbVirtualProtect(VAddr* addr, size_t* Size, DWORD*
 	MMPTE NewPermsPte;
 	MMPTE OldPermsPte;
 	VMAIter it;
+	bool bOverflow;
 
 
 	// Invalid base address
@@ -2003,11 +2027,19 @@ xboxkrnl::NTSTATUS VMManager::XbVirtualProtect(VAddr* addr, size_t* Size, DWORD*
 
 	Lock();
 
-	it = CheckConflictingVMA(AlignedCapturedBase, AlignedCapturedSize);
+	it = CheckConflictingVMA(AlignedCapturedBase, AlignedCapturedSize, &bOverflow);
 
-	if (it == m_MemoryRegionArray[UserRegion].RegionMap.end() || it->second.type != ReservedVma)
+	if (it == m_MemoryRegionArray[UserRegion].RegionMap.end())
 	{
-		// Vma not found, report an error
+		// Free vma, report an error
+
+		status = STATUS_CONFLICTING_ADDRESSES;
+		goto Exit;
+	}
+
+	if (it->first + it->second.size - 1 < AlignedCapturedBase + AlignedCapturedSize - 1)
+	{
+		// The requested ending address is beyond the vma, report an error
 
 		status = STATUS_CONFLICTING_ADDRESSES;
 		goto Exit;
@@ -2126,6 +2158,22 @@ xboxkrnl::NTSTATUS VMManager::XbVirtualMemoryStatistics(VAddr addr, xboxkrnl::PM
 	}
 
 	Lock();
+
+	// ergo720: hack. Always report as reserved the region after the memory placeholder and below 0x8000000 if we are emulating
+	// a 128 MiB system regardless of what VirtualQuery says. Once LLE CPU and MMU are implemented, this can be removed
+
+	if (g_bIsRetail != true && addr >= XBE_IMAGE_BASE + XBE_MAX_VA && addr < CHIHIRO_MEMORY_SIZE) {
+		memory_statistics->AllocationBase = (void*)(XBE_IMAGE_BASE + XBE_MAX_VA);
+		memory_statistics->AllocationProtect = XBOX_PAGE_NOACCESS;
+		memory_statistics->BaseAddress = (void*)ROUND_DOWN_4K(addr);
+		memory_statistics->RegionSize = CHIHIRO_MEMORY_SIZE - ROUND_DOWN_4K(addr);
+		memory_statistics->State = XBOX_MEM_RESERVE;
+		memory_statistics->Protect = XBOX_PAGE_NOACCESS;
+		memory_statistics->Type = XBOX_MEM_PRIVATE;
+
+		Unlock();
+		return STATUS_SUCCESS;
+	}
 
 	// Locate the vma containing the supplied address
 
@@ -2401,8 +2449,36 @@ PAddr VMManager::TranslateVAddrToPAddr(const VAddr addr)
 
 	PAddr PAddr;
 	PMMPTE PointerPte;
+	MemoryRegionType Type = COUNTRegion;
 
 	Lock();
+
+	// ergo720: boring, this hack identity maps allocations served by VirtualAlloc to keep the LLE OHCI working (see OHCI_ReadHCCA
+	// for more details). Once LLE CPU and MMU are implemented, this can be removed
+
+	if (IS_USER_ADDRESS(addr)) { Type = UserRegion; }
+	else if (IS_PHYSICAL_ADDRESS(addr)) { Type = ContiguousRegion; }
+	else if (IS_SYSTEM_ADDRESS(addr)) { Type = SystemRegion; }
+	else if (IS_DEVKIT_ADDRESS(addr)) { Type = DevkitRegion; }
+
+	if (Type != COUNTRegion && Type != ContiguousRegion) {
+		if (IsValidVirtualAddress(addr)) {
+			if (Type == UserRegion) {
+				EmuWarning("Applying identity mapping hack to allocation at address 0x%X", addr);
+				Unlock();
+				RETURN(addr); // committed pages in the user region always use VirtualAlloc
+			}
+			VMAIter it = GetVMAIterator(addr, Type);
+			if (it != m_MemoryRegionArray[Type].RegionMap.end() && it->second.type != FreeVma && it->second.bFragmented) {
+				EmuWarning("Applying identity mapping hack to allocation at address 0x%X", addr);
+				Unlock();
+				RETURN(addr); // committed pages in the system-devkit regions can use VirtualAlloc because of fragmentation
+			}
+		}
+		else {
+			goto InvalidAddress;
+		}
+	}
 
 	PointerPte = GetPdeAddress(addr);
 	if (PointerPte->Hardware.Valid == 0) { // invalid pde -> addr is invalid
@@ -2598,12 +2674,17 @@ VMAIter VMManager::CheckExistenceVMA(VAddr addr, MemoryRegionType Type, size_t S
 	}
 }
 
-VMAIter VMManager::CheckConflictingVMA(VAddr addr, size_t Size)
+VMAIter VMManager::CheckConflictingVMA(VAddr addr, size_t Size, bool* bOverflow)
 {
+	*bOverflow = false;
 	VMAIter it = GetVMAIterator(addr, UserRegion);
 
-	if (it != m_MemoryRegionArray[UserRegion].RegionMap.end() && it->first <= addr && it->second.size >= Size)
+	if (it != m_MemoryRegionArray[UserRegion].RegionMap.end() && it->second.type != FreeVma)
 	{
+		if (it->first + it->second.size - 1 < addr + Size - 1) {
+			*bOverflow = true;
+		}
+
 		return it; // conflict
 	}
 

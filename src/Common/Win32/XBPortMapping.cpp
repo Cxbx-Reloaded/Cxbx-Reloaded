@@ -45,132 +45,22 @@ namespace xboxkrnl
 };
 
 #include <Shlwapi.h>
-//#include "CxbxKrnl.h"
-//#include "Logging.h"
-//#include "Emu.h"
-//#include "EmuKrnl.h" // For DefaultLaunchDataPage
-//#include "EmuFile.h"
-//#include "EmuFS.h"
-//#include "EmuShared.h"
-//#include "HLEIntercept.h"
-//#include "CxbxVSBC/CxbxVSBC.h"
-//#include "Windef.h"
-//#include <vector>
+#include "CxbxKrnl/EmuShared.h"
+#include "Common/Settings.hpp"
 
+static Settings::s_controller_port g_ControllerPortMap;
 
-DWORD g_XboxPortMapHostType[] = { 1,1,1,1 };
-DWORD g_XboxPortMapHostPort[] = { 0,1,2,3 };
-
-// XInputSetState status waiters
-
-void XBPortMappingLoad(const char *szRegistryKey)
+void XBPortMappingSet(Settings::s_controller_port &controller_port_settings)
 {
-    {
-        DWORD   dwDisposition, dwType, dwSize;
-        HKEY    hKey;
-
-        if (RegCreateKeyEx(HKEY_CURRENT_USER, szRegistryKey, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_QUERY_VALUE, NULL, &hKey, &dwDisposition) == ERROR_SUCCESS)
-        {
-            dwType = REG_DWORD; dwSize = sizeof(DWORD);
-            LSTATUS result;
-            result = RegQueryValueEx(hKey, "XboxPort0HostType", NULL, &dwType, (PBYTE)&g_XboxPortMapHostType[0], &dwSize);
-            if (result != ERROR_SUCCESS) {
-                //default to use XInput
-                g_XboxPortMapHostType[0] = 1;
-            }
-
-            dwType = REG_DWORD; dwSize = sizeof(DWORD);
-            result = RegQueryValueEx(hKey, "XboxPort0HostPort", NULL, &dwType, (PBYTE)&g_XboxPortMapHostPort[0], &dwSize);
-            if (result != ERROR_SUCCESS) {
-                g_XboxPortMapHostPort[0] = 0;
-            }
-
-            dwType = REG_DWORD; dwSize = sizeof(DWORD);
-            result = RegQueryValueEx(hKey, "XboxPort1HostType", NULL, &dwType, (PBYTE)&g_XboxPortMapHostType[1], &dwSize);
-            if (result != ERROR_SUCCESS) {
-                //default to use XInput
-                g_XboxPortMapHostType[1] = 1;
-            }
-
-            dwType = REG_DWORD; dwSize = sizeof(DWORD);
-            result = RegQueryValueEx(hKey, "XboxPort1HostPort", NULL, &dwType, (PBYTE)&g_XboxPortMapHostPort[1], &dwSize);
-            if (result != ERROR_SUCCESS) {
-                g_XboxPortMapHostPort[1] = 1;
-            }
-
-            dwType = REG_DWORD; dwSize = sizeof(DWORD);
-            result = RegQueryValueEx(hKey, "XboxPort2HostType", NULL, &dwType, (PBYTE)&g_XboxPortMapHostType[2], &dwSize);
-            if (result != ERROR_SUCCESS) {
-                //default to use XInput
-                g_XboxPortMapHostType[2] = 1;
-            }
-
-            dwType = REG_DWORD; dwSize = sizeof(DWORD);
-            result = RegQueryValueEx(hKey, "XboxPort2HostPort", NULL, &dwType, (PBYTE)&g_XboxPortMapHostPort[2], &dwSize);
-            if (result != ERROR_SUCCESS) {
-                g_XboxPortMapHostPort[2] = 2;
-            }
-
-            dwType = REG_DWORD; dwSize = sizeof(DWORD);
-            result = RegQueryValueEx(hKey, "XboxPort3HostType", NULL, &dwType, (PBYTE)&g_XboxPortMapHostType[3], &dwSize);
-            if (result != ERROR_SUCCESS) {
-                //default to use XInput
-                g_XboxPortMapHostType[3] = 1;
-            }
-
-            dwType = REG_DWORD; dwSize = sizeof(DWORD);
-            result = RegQueryValueEx(hKey, "XboxPort3HostPort", NULL, &dwType, (PBYTE)&g_XboxPortMapHostPort[3], &dwSize);
-            if (result != ERROR_SUCCESS) {
-                g_XboxPortMapHostPort[3] = 3;
-            }
-
-            RegCloseKey(hKey);
-        }
-    }
+    g_ControllerPortMap = controller_port_settings;
 }
 
 // ******************************************************************
 // * func: Save
 // ******************************************************************
-void XBPortMappingSave(const char *szRegistryKey)
+void XBPortMappingGet(Settings::s_controller_port &controller_port_settings)
 {
-    // ******************************************************************
-    // * Save Configuration to Registry
-    // ******************************************************************
-    //if (g_SaveOnExit) {
-        DWORD   dwDisposition, dwType, dwSize;
-        HKEY    hKey;
-
-        if (RegCreateKeyEx(HKEY_CURRENT_USER, szRegistryKey, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_SET_VALUE, NULL, &hKey, &dwDisposition) == ERROR_SUCCESS)
-        {
-            dwType = REG_DWORD; dwSize = sizeof(DWORD);
-            RegSetValueEx(hKey, "XboxPort0HostType", 0, dwType, (PBYTE)&g_XboxPortMapHostType[0], dwSize);
-
-            dwType = REG_DWORD; dwSize = sizeof(DWORD);
-            RegSetValueEx(hKey, "XboxPort0HostPort", 0, dwType, (PBYTE)&g_XboxPortMapHostPort[0], dwSize);
-
-            dwType = REG_DWORD; dwSize = sizeof(DWORD);
-            RegSetValueEx(hKey, "XboxPort1HostType", 0, dwType, (PBYTE)&g_XboxPortMapHostType[1], dwSize);
-
-            dwType = REG_DWORD; dwSize = sizeof(DWORD);
-            RegSetValueEx(hKey, "XboxPort1HostPort", 0, dwType, (PBYTE)&g_XboxPortMapHostPort[1], dwSize);
-
-            dwType = REG_DWORD; dwSize = sizeof(DWORD);
-            RegSetValueEx(hKey, "XboxPort2HostType", 0, dwType, (PBYTE)&g_XboxPortMapHostType[2], dwSize);
-
-            dwType = REG_DWORD; dwSize = sizeof(DWORD);
-            RegSetValueEx(hKey, "XboxPort2HostPort", 0, dwType, (PBYTE)&g_XboxPortMapHostPort[2], dwSize);
-
-            dwType = REG_DWORD; dwSize = sizeof(DWORD);
-            RegSetValueEx(hKey, "XboxPort3HostType", 0, dwType, (PBYTE)&g_XboxPortMapHostType[3], dwSize);
-
-            dwType = REG_DWORD; dwSize = sizeof(DWORD);
-            RegSetValueEx(hKey, "XboxPort3HostPort", 0, dwType, (PBYTE)&g_XboxPortMapHostPort[3], dwSize);
-
-
-            RegCloseKey(hKey);
-        }
-    //}
+    controller_port_settings = g_ControllerPortMap;
 }
 
 //Set HostType and HostPort setting from global array per xbox port. The setted value will take effect from next time xbe loading.
@@ -178,23 +68,23 @@ void SetXboxPortToHostPort(DWORD dwXboxPort, DWORD dwHostType, DWORD dwHostPort)
 {
     //set host type and host port in global array per xbox port, will be used when xbe get reloaded.
     //only host type and host port can be set in this time. because the xbox DeviceType can only be determined when loading the xbe.
-    g_XboxPortMapHostType[dwXboxPort] = dwHostType;
-    g_XboxPortMapHostPort[dwXboxPort] = dwHostPort;
+    g_ControllerPortMap.XboxPortMapHostType[dwXboxPort] = dwHostType;
+    g_ControllerPortMap.XboxPortMapHostPort[dwXboxPort] = dwHostPort;
 }
 //retrieve HostType and HostPort setting from global array per xbox port.
 void GetXboxPortToHostPort(DWORD dwXboxPort, DWORD &dwHostType, DWORD &dwHostPort)
 {
     //get Host Type and Host Port per xbox port
-    dwHostType = g_XboxPortMapHostType[dwXboxPort];
-    dwHostPort = g_XboxPortMapHostPort[dwXboxPort];
+    dwHostType = g_ControllerPortMap.XboxPortMapHostType[dwXboxPort];
+    dwHostPort = g_ControllerPortMap.XboxPortMapHostPort[dwXboxPort];
 }
 
 DWORD GetXboxPortMapHostType(DWORD dwXboxPort)
 {
-    return g_XboxPortMapHostType[dwXboxPort];
+    return g_ControllerPortMap.XboxPortMapHostType[dwXboxPort];
 }
 
 DWORD GetXboxPortMapHostPort(DWORD dwXboxPort)
 {
-    return g_XboxPortMapHostPort[dwXboxPort];
+    return g_ControllerPortMap.XboxPortMapHostPort[dwXboxPort];
 }

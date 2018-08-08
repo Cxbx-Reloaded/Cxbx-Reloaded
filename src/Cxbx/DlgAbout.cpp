@@ -39,6 +39,7 @@
 #include "CxbxVersion.h"
 #include "DlgAbout.h"
 #include "ResCxbx.h"
+#include "CxbxCommon.h"
 
 #include <commctrl.h>
 #include <string>
@@ -111,6 +112,8 @@ INT_PTR CALLBACK DlgAboutProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 				SizeofResource(GetModuleHandle(NULL), rContributors)
 			);
 
+			unix2dos(contributors);
+
 			tab = CreateWindowEx(
 				NULL, "EDIT", contributors.c_str(),
 				WS_CHILD | WS_VSCROLL |ES_MULTILINE | ES_READONLY,
@@ -133,6 +136,8 @@ INT_PTR CALLBACK DlgAboutProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 				(char*)LockResource(LoadResource(GetModuleHandle(NULL), rCopying)),
 				SizeofResource(GetModuleHandle(NULL), rCopying)
 			);
+
+			unix2dos(copying);
 
 			tab = CreateWindowEx(
 				NULL, "EDIT", copying.c_str(),

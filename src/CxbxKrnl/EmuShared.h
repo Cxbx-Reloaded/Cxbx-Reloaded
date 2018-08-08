@@ -35,9 +35,8 @@
 #define EMUSHARED_H
 
 #include "Cxbx.h"
-#include "Common/Win32/XBController.h"
-#include "Common/Win32/XBVideo.h"
-#include "Common/Win32/XBAudio.h"
+#include "Common/Settings.hpp"
+#include "Mutex.h"
 
 #include <memory.h>
 
@@ -46,12 +45,6 @@ enum {
 	XBOX_LED_COLOUR_GREEN,
 	XBOX_LED_COLOUR_RED,
 	XBOX_LED_COLOUR_ORANGE,
-};
-
-enum {
-	LLE_APU = 1 << 0,
-	LLE_GPU = 1 << 1,
-	LLE_JIT = 1 << 2,
 };
 
 // Kernel boot flags
@@ -75,10 +68,7 @@ class EmuShared : public Mutex
 		// ******************************************************************
 		// * Each process needs to call this to initialize shared memory
 		// ******************************************************************
-		static void Init();
-
-		void Load();
-		void Save();
+		static void Init(DWORD guiProcessID);
 
 		// ******************************************************************
 		// * Each process needs to call this to cleanup shared memory
@@ -89,95 +79,102 @@ class EmuShared : public Mutex
 		// * Check if shared memory is used on launch
 		// ******************************************************************
 		void GetIsFirstLaunch(bool *isFirstLaunch) { Lock(); *isFirstLaunch = m_bFirstLaunch; Unlock(); }
-		void SetIsFirstLaunch(bool isFirstLaunch) { Lock(); m_bFirstLaunch = isFirstLaunch; Unlock(); }
+		void SetIsFirstLaunch(const bool isFirstLaunch) { Lock(); m_bFirstLaunch = isFirstLaunch; Unlock(); }
 
 		// ******************************************************************
 		// * Check if parent process is emulating title
 		// ******************************************************************
-		void GetIsEmulating(bool *isEmulating) { Lock(); *isEmulating = m_bEmulating; Unlock(); }
-		void SetIsEmulating(bool isEmulating) { Lock(); m_bEmulating = isEmulating; Unlock(); }
+		void GetIsEmulating(bool *isEmulating) { Lock(); *isEmulating = m_bEmulating_status; Unlock(); }
+		void SetIsEmulating(const bool isEmulating) { Lock(); m_bEmulating_status = isEmulating; Unlock(); }
 
 		// ******************************************************************
 		// * Each child process need to wait until parent process is ready
 		// ******************************************************************
-		void GetIsReady(bool *isReady) { Lock(); *isReady = m_bReady; Unlock(); }
-		void SetIsReady(bool isReady) { Lock(); m_bReady = isReady; Unlock(); }
+		void GetIsReady(bool *isReady) { Lock(); *isReady = m_bReady_status; Unlock(); }
+		void SetIsReady(const bool isReady) { Lock(); m_bReady_status = isReady; Unlock(); }
 
 		// ******************************************************************
 		// * Check if previous kernel mode process is running.
 		// ******************************************************************
 		void GetKrnlProcID(unsigned int *krnlProcID) { Lock(); *krnlProcID = m_dwKrnlProcID; Unlock(); }
-		void SetKrnlProcID(unsigned int krnlProcID) { Lock(); m_dwKrnlProcID = krnlProcID; Unlock(); }
+		void SetKrnlProcID(const unsigned int krnlProcID) { Lock(); m_dwKrnlProcID = krnlProcID; Unlock(); }
+
+		// ******************************************************************
+		// * Xbox Core Accessors
+		// ******************************************************************
+		void GetCoreSettings(      Settings::s_core *emulate) { Lock(); *emulate = m_core; Unlock(); }
+		void SetCoreSettings(const Settings::s_core *emulate) { Lock(); m_core = *emulate; Unlock(); }
 
 		// ******************************************************************
 		// * Xbox Video Accessors
 		// ******************************************************************
-		void GetXBVideo(      XBVideo *video) { Lock(); *video = XBVideo(m_XBVideo); Unlock(); }
-		void SetXBVideo(const XBVideo *video) { Lock(); m_XBVideo = XBVideo(*video); Unlock(); }
+		void GetVideoSettings(      Settings::s_video *video) { Lock(); *video = m_video; Unlock(); }
+		void SetVideoSettings(const Settings::s_video *video) { Lock(); m_video = *video; Unlock(); }
 
 		// ******************************************************************
 		// * Xbox Audio Accessors
 		// ******************************************************************
-		void GetXBAudio(      XBAudio *audio) { Lock(); *audio = XBAudio(m_XBAudio); Unlock(); }
-		void SetXBAudio(const XBAudio *audio) { Lock(); m_XBAudio = XBAudio(*audio); Unlock(); }
+		void GetAudioSettings(      Settings::s_audio *audio) { Lock(); *audio = m_audio; Unlock(); }
+		void SetAudioSettings(const Settings::s_audio *audio) { Lock(); m_audio = *audio; Unlock(); }
 
 		// ******************************************************************
 		// * Xbox Controller Accessors
 		// ******************************************************************
-		void GetXBController(      XBController *ctrl) { Lock(); *ctrl = XBController(m_XBController); Unlock(); }
-		void SetXBController(const XBController *ctrl) { Lock(); m_XBController = XBController(*ctrl); Unlock(); }
-
-		// ******************************************************************
-		// * Xbe Path Accessors
-		// ******************************************************************
-		void GetXbePath(      char *path) { Lock(); strcpy(path, m_XbePath); Unlock(); }
-		void SetXbePath(const char *path) { Lock(); strcpy(m_XbePath, path); Unlock(); }
+		void GetControllerDInputSettings(      Settings::s_controller_dinput *ctrl) { Lock(); *ctrl = m_controller_dinput; Unlock(); }
+		void SetControllerDInputSettings(const Settings::s_controller_dinput *ctrl) { Lock(); m_controller_dinput = *ctrl; Unlock(); }
+		void GetControllerPortSettings(      Settings::s_controller_port *ctrl) { Lock(); *ctrl = m_controller_port; Unlock(); }
+		void SetControllerPortSettings(const Settings::s_controller_port *ctrl) { Lock(); m_controller_port = *ctrl; Unlock(); }
 
 		// ******************************************************************
 		// * LLE Flags Accessors
 		// ******************************************************************
-		void GetFlagsLLE(      int *flags) { Lock(); *flags = m_FlagsLLE; Unlock(); }
-		void SetFlagsLLE(const int *flags) { Lock(); m_FlagsLLE = *flags; Unlock(); }
+		void GetFlagsLLE(      uint *flags) { Lock(); *flags = m_core.FlagsLLE; Unlock(); }
+		void SetFlagsLLE(const uint *flags) { Lock(); m_core.FlagsLLE = *flags; Unlock(); }
+		void GetFlagsLLEStatus(      uint *flags) { Lock(); *flags = m_FlagsLLE_status; Unlock(); }
+		void SetFlagsLLEStatus(const uint flags) { Lock(); m_FlagsLLE_status = flags; Unlock(); }
 
 		// ******************************************************************
 		// * Boot flag Accessors
 		// ******************************************************************
-		void GetBootFlags(int *value) { Lock(); *value = m_BootFlags; Unlock(); }
-		void SetBootFlags(int *value) { Lock(); m_BootFlags = *value; Unlock(); }
+		void GetBootFlags(int *value) { Lock(); *value = m_BootFlags_status; Unlock(); }
+		void SetBootFlags(const int *value) { Lock(); m_BootFlags_status = *value; Unlock(); }
 
 		// ******************************************************************
 		// * Hack Flag Accessors
 		// ******************************************************************
-		void GetDisablePixelShaders(int* value) { Lock(); *value = m_DisablePixelShaders; Unlock(); }
-		void SetDisablePixelShaders(int* value) { Lock(); m_DisablePixelShaders = *value; Unlock(); }
-		void GetUncapFramerate(int* value) { Lock(); *value = m_UncapFramerate; Unlock(); }
-		void SetUncapFramerate(int* value) { Lock(); m_UncapFramerate = *value; Unlock(); }
-		void GetUseAllCores(int* value) { Lock(); *value = m_UseAllCores; Unlock(); }
-		void SetUseAllCores(int* value) { Lock(); m_UseAllCores = *value; Unlock(); }
-		void GetSkipRdtscPatching(int* value) { Lock(); *value = m_SkipRdtscPatching; Unlock(); }
-		void SetSkipRdtscPatching(int* value) { Lock(); m_SkipRdtscPatching = *value; Unlock(); }
-		void GetScaleViewport(int* value) { Lock(); *value = m_ScaleViewport; Unlock(); }
-		void SetScaleViewport(int* value) { Lock(); m_ScaleViewport = *value; Unlock(); }
-		void GetDirectHostBackBufferAccess(int* value) { Lock(); *value = m_DirectHostBackBufferAccess; Unlock(); }
-		void SetDirectHostBackBufferAccess(int* value) { Lock(); m_DirectHostBackBufferAccess = *value; Unlock(); }
+		void GetHackSettings(Settings::s_hack *hacks) { Lock(); *hacks = m_hacks; Unlock(); }
+		void SetHackSettings(Settings::s_hack *hacks) { Lock(); m_hacks = *hacks; Unlock(); }
+
+		void GetDisablePixelShaders(int* value) { Lock(); *value = m_hacks.DisablePixelShaders; Unlock(); }
+		void SetDisablePixelShaders(const int* value) { Lock(); m_hacks.DisablePixelShaders = *value; Unlock(); }
+		void GetUncapFramerate(int* value) { Lock(); *value = m_hacks.UncapFramerate; Unlock(); }
+		void SetUncapFramerate(const int* value) { Lock(); m_hacks.UncapFramerate = *value; Unlock(); }
+		void GetUseAllCores(int* value) { Lock(); *value = m_hacks.UseAllCores; Unlock(); }
+		void SetUseAllCores(const int* value) { Lock(); m_hacks.UseAllCores = *value; Unlock(); }
+		void GetSkipRdtscPatching(int* value) { Lock(); *value = m_hacks.SkipRdtscPatching; Unlock(); }
+		void SetSkipRdtscPatching(const int* value) { Lock(); m_hacks.SkipRdtscPatching = *value; Unlock(); }
+		void GetScaleViewport(int* value) { Lock(); *value = m_hacks.ScaleViewport; Unlock(); }
+		void SetScaleViewport(const int* value) { Lock(); m_hacks.ScaleViewport = *value; Unlock(); }
+		void GetDirectHostBackBufferAccess(int* value) { Lock(); *value = m_hacks.DirectHostBackBufferAccess; Unlock(); }
+		void SetDirectHostBackBufferAccess(const int* value) { Lock(); m_hacks.DirectHostBackBufferAccess = *value; Unlock(); }
 
 		// ******************************************************************
 		// * MSpF/Benchmark values Accessors
 		// ******************************************************************
-		void GetCurrentMSpF(float *value) { Lock(); *value = m_MSpF; Unlock(); }
-		void SetCurrentMSpF(float *value) { Lock(); m_MSpF = *value; Unlock(); }
+		void GetCurrentMSpF(float *value) { Lock(); *value = m_MSpF_status; Unlock(); }
+		void SetCurrentMSpF(const float *value) { Lock(); m_MSpF_status = *value; Unlock(); }
 
 		// ******************************************************************
 		// * FPS/Benchmark values Accessors
 		// ******************************************************************
-		void GetCurrentFPS(float *value) { Lock(); *value = m_FPS; Unlock(); }
-		void SetCurrentFPS(float *value) { Lock(); m_FPS = *value; Unlock(); }
+		void GetCurrentFPS(float *value) { Lock(); *value = m_FPS_status; Unlock(); }
+		void SetCurrentFPS(const float *value) { Lock(); m_FPS_status = *value; Unlock(); }
 
 		// ******************************************************************
 		// * Debugging flag Accessors
 		// ******************************************************************
 		void GetDebuggingFlag(bool *value) { Lock(); *value = m_bDebugging; Unlock(); }
-		void SetDebuggingFlag(bool *value) { Lock(); m_bDebugging = *value; Unlock(); }
+		void SetDebuggingFlag(const bool *value) { Lock(); m_bDebugging = *value; Unlock(); }
 
 		// ******************************************************************
 		// * Xbox LED values Accessors
@@ -187,7 +184,7 @@ class EmuShared : public Mutex
 			Lock();
 			for (int i = 0; i < 4; ++i)
 			{
-				value[i] = m_LedSequence[i];
+				value[i] = m_LedSequence_status[i];
 			}
 			Unlock();
 		}
@@ -196,7 +193,7 @@ class EmuShared : public Mutex
 			Lock();
 			for (int i = 0; i < 4; ++i)
 			{
-				m_LedSequence[i] = value[i];
+				m_LedSequence_status[i] = value[i];
 			}
 			Unlock();
 		}
@@ -204,8 +201,8 @@ class EmuShared : public Mutex
 		// ******************************************************************
 		// * File storage location
 		// ******************************************************************
-		void GetStorageLocation(char *path) { Lock(); strcpy(path, m_StorageLocation); Unlock(); }
-		void SetStorageLocation(char *path) { Lock(); strcpy(m_StorageLocation, path); Unlock(); }
+		void GetStorageLocation(char *path) { Lock(); strncpy(path, m_core.szStorageLocation, MAX_PATH); Unlock(); }
+		void SetStorageLocation(const char *path) { Lock(); strncpy(m_core.szStorageLocation, path, MAX_PATH); Unlock(); }
 
 		// ******************************************************************
 		// * Reset specific variables to default for kernel mode.
@@ -213,9 +210,10 @@ class EmuShared : public Mutex
 		void ResetKrnl()
 		{
 			Lock();
-			m_BootFlags = 0;
-			m_MSpF = 0.0f;
-			m_FPS = 0.0f;
+			m_BootFlags_status = 0;
+			m_MSpF_status = 0.0f;
+			m_FPS_status = 0.0f;
+			m_FlagsLLE_status = m_core.FlagsLLE;
 			Unlock();
 		}
 
@@ -226,6 +224,7 @@ class EmuShared : public Mutex
 		{
 			Lock();
 			ResetKrnl();
+			m_bEmulating_status = 0;
 			m_dwKrnlProcID = 0;
 			Unlock();
 		}
@@ -240,32 +239,30 @@ class EmuShared : public Mutex
 		// ******************************************************************
 		// * Shared configuration
 		// ******************************************************************
-		XBController m_XBController;
-		XBVideo      m_XBVideo;
-		XBAudio      m_XBAudio;
-		char         m_XbePath[MAX_PATH];
-		int          m_BootFlags;
-		int          m_FlagsLLE;
-		int          m_Reserved1;
-		int          m_DisablePixelShaders;
-		int          m_UncapFramerate;
-		int          m_UseAllCores;
-		int          m_SkipRdtscPatching;
-		float        m_MSpF;
-		float        m_FPS;
+		int          m_BootFlags_status;
+		unsigned int m_FlagsLLE_status;
+		float        m_MSpF_status;
+		float        m_FPS_status;
 		bool         m_bReserved1;
 		bool         m_bDebugging;
-		bool         m_bReady;
-		bool         m_bEmulating;
-		int          m_LedSequence[4];
-		int          m_ScaleViewport;
-		int          m_DirectHostBackBufferAccess;
-		char         m_StorageLocation[MAX_PATH];
+		bool         m_bReady_status;
+		bool         m_bEmulating_status;
+		int          m_LedSequence_status[4];
 		bool         m_bFirstLaunch;
 		bool         m_bReserved2;
 		bool         m_bReserved3;
 		bool         m_bReserved4;
 		unsigned int m_dwKrnlProcID; // Only used for kernel mode level.
+		int          m_Reserved99[32]; // Reserve space
+
+		// Settings class in memory should not be tampered by third-party.
+		// Third-party program should only be allow to edit settings.ini file.
+		Settings::s_controller_dinput m_controller_dinput;
+		Settings::s_controller_port m_controller_port;
+		Settings::s_core m_core;
+		Settings::s_video m_video;
+		Settings::s_audio m_audio;
+		Settings::s_hack m_hacks;
 };
 
 // ******************************************************************

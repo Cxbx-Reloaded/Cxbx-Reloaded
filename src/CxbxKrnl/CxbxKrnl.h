@@ -104,27 +104,6 @@ extern "C" {
 #define CONTIGUOUS_MEMORY_CHIHIRO_SIZE          (128 * ONE_MB)
 #define XBOX_PFN_ADDRESS                        ((XBOX_PFN_DATABASE_PHYSICAL_PAGE << PAGE_SHIFT) + (PCHAR)KSEG0_BASE)
 #define CHIHIRO_PFN_ADDRESS                     ((CHIHIRO_PFN_DATABASE_PHYSICAL_PAGE << PAGE_SHIFT) + (PCHAR)KSEG0_BASE)
-#define NV2A_MEMORY_BASE                        0xFD000000 // See NV2A_ADDR
-#define NV2A_MEMORY_SIZE                        0x01000000 // See NV2A_SIZE
-#define NV2A_PRAMIN_ADDR                        0xFD700000
-#define NV2A_PRAMIN_SIZE                        0x100000
-#define NV2A_USER_ADDR                          0xFD800000
-#define NV2A_USER_SIZE                          0x800000
-#define APU_BASE                                0xFE800000
-#define APU_SIZE                                0x80000
-#define AC97_BASE                               0xFEC00000
-#define AC97_SIZE                               0x1000
-#define USB0_BASE                               0xFED00000
-#define USB0_SIZE                               0x1000
-#define USB1_BASE                               0xFED08000
-#define USB1_SIZE                               0x1000
-#define NVNet_BASE                              0xFEF00000
-#define NVNet_SIZE                              0x400
-#define BIOS_BASE                               0xFF000000 // this takes into account that the bios covers the top 16 MiB of memory
-#define BIOS_XBOX_SIZE                          0xFFFE00
-#define BIOS_CHIHIRO_SIZE                       0x1000000
-#define MCPX_BASE                               0xFFFFFE00
-#define MCPX_SIZE                               0x200
 #define MAX_VIRTUAL_ADDRESS                     0xFFFFFFFF
 
 /*! base addresses of various components */
@@ -329,6 +308,7 @@ extern std::string CxbxKrnl_DebugFileName;
 extern char szFilePath_CxbxReloaded_Exe[MAX_PATH];
 extern char szFolder_CxbxReloadedData[MAX_PATH];
 extern char szFilePath_EEPROM_bin[MAX_PATH];
+extern char szFilePath_Xbe[MAX_PATH];
 
 #ifdef __cplusplus
 }

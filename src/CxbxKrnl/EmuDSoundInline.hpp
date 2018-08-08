@@ -1714,15 +1714,15 @@ inline HRESULT HybridDirectSoundBuffer_SetVolume(
     lVolume += Xb_volumeMixbin - Xb_dwHeadroom;
 
     if ((dwEmuFlags & DSE_FLAG_PCM) > 0) {
-        if (!g_XBAudio.GetPCM()) {
+        if (!g_XBAudio.codec_pcm) {
             lVolume = DSBVOLUME_MIN;
         }
     } else if ((dwEmuFlags & DSE_FLAG_XADPCM) > 0) {
-        if (!g_XBAudio.GetXADPCM()) {
+        if (!g_XBAudio.codec_xadpcm) {
             lVolume = DSBVOLUME_MIN;
         }
     } else if ((dwEmuFlags & DSE_FLAG_PCM_UNKNOWN) > 0) {
-        if (!g_XBAudio.GetUnknownCodec()) {
+        if (!g_XBAudio.codec_unknown) {
             lVolume = DSBVOLUME_MIN;
         }
     }

@@ -34,11 +34,13 @@
 // *
 // ******************************************************************
 
-#include "CxbxKrnl/EmuShared.h"
+#include "Common/Settings.hpp" // for g_Settings
 
 #include "DlgControllerConfig.h"
 #include "ResCxbx.h"
+#include "Common/Win32/DInputController.h"
 
+#define DIRECTINPUT_VERSION 0x0800
 #include <dinput.h>
 #include <cstdio>
 
@@ -50,7 +52,7 @@ static VOID ConfigureInput(HWND hWndDlg, HWND hWndButton, XBCtrlObject object);
 static VOID EnableButtonWindows(HWND hWndDlg, HWND hExclude, BOOL bEnable);
 
 /*! controller configuration */
-static XBController g_XBController;
+static DInputController g_DInputController;
 /*! changes flag */
 static BOOL g_bHasChanges = FALSE;
 
@@ -60,7 +62,7 @@ VOID ShowControllerConfig(HWND hwnd)
     g_bHasChanges = FALSE;
 
     /*! retrieve controller configuration */
-    g_EmuShared->GetXBController(&g_XBController);
+    g_DInputController.m_settings = g_Settings->m_controller_dinput;
 
     /*! show dialog box */
     DialogBox(GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_CONTROLLER_CFG), hwnd, DlgControllerConfigProc);
@@ -114,7 +116,7 @@ INT_PTR CALLBACK DlgControllerConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam,
                     break;
 
                 case IDC_INPUT_CONFIG_ACCEPT:
-                    g_EmuShared->SetXBController(&g_XBController);
+                    g_Settings->m_controller_dinput = g_DInputController.m_settings;
                     EndDialog(hWndDlg, wParam);
                     break;
 
@@ -286,7 +288,7 @@ VOID ConfigureInput(HWND hWndDlg, HWND hWndButton, XBCtrlObject object)
     SetWindowText(GetDlgItem(hWndDlg, IDC_CONFIG_STATUS), "Waiting for your input...");
     GetWindowText(hWndButton, szOrgText, 32);
 
-    g_XBController.ConfigBegin(hWndDlg, object);
+    g_DInputController.ConfigBegin(hWndDlg, object);
 
     // wait for input, or 5 second timeout
     for(int v=100;v>0;v--)
@@ -299,14 +301,19 @@ VOID ConfigureInput(HWND hWndDlg, HWND hWndButton, XBCtrlObject object)
             sprintf(szBuffer, "%d", (v+19)/20);
 
             SetWindowText(hWndButton, szBuffer);
+
+            // NOTE: This fix false positive of non-responding message when inputting all keys at once.
+            // Source: https://msdn.microsoft.com/en-us/library/windows/desktop/ms633526%28v=vs.85%29.aspx
+            MSG Msg;
+            PeekMessage(&Msg, hWndDlg, 0, 0, PM_NOREMOVE);
         }
 
-        if(g_XBController.HasError())
+        if(g_DInputController.HasError())
         {
             goto cleanup;
         }
 
-        if(g_XBController.ConfigPoll(szNewText))
+        if(g_DInputController.ConfigPoll(szNewText))
         {
             break;
         }
@@ -314,13 +321,13 @@ VOID ConfigureInput(HWND hWndDlg, HWND hWndButton, XBCtrlObject object)
         Sleep(50);
     }
 
-    if(g_XBController.HasError())
+    if(g_DInputController.HasError())
     {
         goto cleanup;
     }
     else
     {
-        g_XBController.ConfigEnd();
+        g_DInputController.ConfigEnd();
     }
 
 cleanup:
@@ -330,9 +337,9 @@ cleanup:
 
     /*! update window with status */
     {
-        if(g_XBController.HasError())
+        if(g_DInputController.HasError())
         {
-            sprintf(szNewText, "%s", g_XBController.GetError().c_str());
+            sprintf(szNewText, "%s", g_DInputController.GetError().c_str());
         }
 
         SetWindowText(hWndButton, szOrgText);

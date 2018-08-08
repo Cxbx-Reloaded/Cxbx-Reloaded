@@ -520,7 +520,7 @@ void NVNetDevice::Init()
 
 	// Register Memory bar :
 	r.Raw.type = PCI_BAR_TYPE_MEMORY;
-	r.Memory.address = NVNET_ADDR >> 4;
+	r.Memory.address = NVNET_BASE >> 4;
 	RegisterBAR(0, NVNET_SIZE, r.value);
 
 	// Register IO bar :
