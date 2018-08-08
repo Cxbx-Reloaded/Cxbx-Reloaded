@@ -123,6 +123,7 @@ public:
 	bool Init();
 	bool LoadUserConfig();
 	bool LoadFile(std::string file_path);
+	bool LoadConfig();
 	bool Save(std::string file_path = "");
 	void Delete();
 	void SyncToEmulator();

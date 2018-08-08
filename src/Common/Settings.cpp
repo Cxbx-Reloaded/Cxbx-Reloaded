@@ -38,8 +38,7 @@
 #include "Settings.hpp"
 #include "CxbxKrnl/Emu.h"
 #include "CxbxKrnl/EmuShared.h"
-#include <filesystem>
-#include <fstream>
+#include <experimental/filesystem>
 
 // TODO: Implement Qt support when real CPU emulation is available.
 #ifndef QT_VERSION // NOTE: Non-Qt will be using current directory for data
@@ -198,16 +197,8 @@ bool Settings::Init()
 #endif
 		saveFile.append(szSettings_settings_file);
 
-		// If the config file does not exists, create a blank one
-		// We can't call Save here because that overrides default values with false!
-		if (!std::experimental::filesystem::exists(saveFile)) {
-			std::ofstream ofs(saveFile, std::ofstream::out);
-			ofs << "\n";
-			ofs.close();			
-		}
-
-		// Call LoadUserConfig, this will load the config, applying defaults for any missing fields
-		bRet = LoadUserConfig();
+		// Call LoadConfig, this will load the config, applying defaults for any missing fields
+		bRet = LoadConfig();
 
 		if (!bRet) {
 			MessageBox(nullptr, szSettings_setup_error, "Cxbx-Reloaded", MB_OK);
@@ -245,9 +236,6 @@ bool Settings::LoadUserConfig()
 
 bool Settings::LoadFile(std::string file_path)
 {
-	bool bRet;
-	const char* si_data;
-	int iStatus;
 	std::list<CSimpleIniA::Entry> si_list;
 	std::list<CSimpleIniA::Entry>::iterator si_list_iterator;
 
@@ -257,6 +245,17 @@ bool Settings::LoadFile(std::string file_path)
 		return false;
 	}
 	m_file_path = file_path;
+
+	return LoadConfig();
+}
+
+bool Settings::LoadConfig()
+{
+	bool bRet;
+	const char* si_data;
+	int iStatus;
+	std::list<CSimpleIniA::Entry> si_list;
+	std::list<CSimpleIniA::Entry>::iterator si_list_iterator;
 
 	// ==== GUI Begin ===========
 
