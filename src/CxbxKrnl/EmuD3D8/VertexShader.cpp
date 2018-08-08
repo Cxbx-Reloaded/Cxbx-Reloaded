@@ -45,8 +45,7 @@
 #include "CxbxKrnl/EmuD3D8Types.h" // For X_D3DVSDE_*
 #include <sstream>
 #include <unordered_map>
-
-
+#include <array>
 
 #ifdef CXBX_USE_VS30
 //#define CXBX_USE_VS30 // Separate the port to Vertex Shader model 3.0 from the port to Direct3D9
@@ -485,7 +484,7 @@ static const char* OReg_Name[] =
     "a0.x"
 };
 
-bool RegVUsage[16];
+std::array<bool, 16> RegVUsage;
 
 /* TODO : map non-FVF Xbox vertex shader handle to CxbxVertexShader (a struct containing a host Xbox vertex shader handle and the original members)
 std::unordered_map<DWORD, CxbxVertexShader> g_CxbxVertexShaders;
@@ -1470,12 +1469,11 @@ static boolean VshConvertShader(VSH_XBOX_SHADER *pShader,
         // Combining not supported in vs.1.1
         pIntermediate->IsCombined = FALSE;
 
-        /*
         if(pIntermediate->Output.Type == IMD_OUTPUT_O && pIntermediate->Output.Address == OREG_OFOG)
         {
             // The PC shader assembler doesn't like masks on scalar registers
             VshSetOutputMask(&pIntermediate->Output, TRUE, TRUE, TRUE, TRUE);
-        }*/
+        }
 
         if(pIntermediate->InstructionType == IMD_ILU && pIntermediate->ILU == ILU_RCC)
         {
@@ -2470,7 +2468,7 @@ extern HRESULT XTL::EmuRecompileVshFunction
 
     if(SUCCEEDED(hRet))
     {
-		RegVUsage[16] = { FALSE };
+		RegVUsage.fill(false);
 
         for (pToken = (DWORD*)((uint08*)pFunction + sizeof(VSH_SHADER_HEADER)); !EOI; pToken += VSH_INSTRUCTION_SIZE)
         {
