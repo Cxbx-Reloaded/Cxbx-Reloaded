@@ -1805,7 +1805,7 @@ void WndMain::UpdateRecentFiles()
         // NOTE: Resource defines ID_FILE_RXBE_0 through ID_FILE_RXBE_9 must be in order
         for(int v=0;v<max;v++)
         {
-            sprintf(szBuffer, "&%d : %s", v, g_Settings->m_gui.szRecentXbeFiles[v]);
+            sprintf(szBuffer, "&%d : %s", v, g_Settings->m_gui.szRecentXbeFiles[v].c_str());
             AppendMenu(RXbeMenu, MF_STRING, ID_FILE_RXBE_0 + v, szBuffer);
         }
     }
