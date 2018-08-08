@@ -1764,6 +1764,29 @@ static DWORD VshGetDeclarationSize(DWORD *pDeclaration)
 
 #define D3DDECLUSAGE_UNSUPPORTED ((D3DDECLUSAGE)-1)
 
+// From D3D8to9
+static const BYTE DeclAddressUsages[][2] =
+{
+	{ XTL::D3DDECLUSAGE_POSITION, 0 },
+	{ XTL::D3DDECLUSAGE_BLENDWEIGHT, 0 },
+	{ XTL::D3DDECLUSAGE_BLENDINDICES, 0 },
+	{ XTL::D3DDECLUSAGE_NORMAL, 0 },
+	{ XTL::D3DDECLUSAGE_PSIZE, 0 },
+	{ XTL::D3DDECLUSAGE_COLOR, 0 },
+	{ XTL::D3DDECLUSAGE_COLOR, 1 },
+	{ XTL::D3DDECLUSAGE_TEXCOORD, 0 },
+	{ XTL::D3DDECLUSAGE_TEXCOORD, 1 },
+	{ XTL::D3DDECLUSAGE_TEXCOORD, 2 },
+	{ XTL::D3DDECLUSAGE_TEXCOORD, 3 },
+	{ XTL::D3DDECLUSAGE_TEXCOORD, 4 },
+	{ XTL::D3DDECLUSAGE_TEXCOORD, 5 },
+	{ XTL::D3DDECLUSAGE_TEXCOORD, 6 },
+	{ XTL::D3DDECLUSAGE_TEXCOORD, 7 },
+	{ XTL::D3DDECLUSAGE_POSITION, 1 },
+	{ XTL::D3DDECLUSAGE_NORMAL, 1 }
+};
+
+
 XTL::D3DDECLUSAGE Xb2PCRegisterType
 (
 	DWORD VertexRegister,
@@ -1775,6 +1798,12 @@ XTL::D3DDECLUSAGE Xb2PCRegisterType
 
 	D3DDECLUSAGE PCRegisterType;
 	PCUsageIndex = 0;
+
+	if (!IsFixedFunction) {
+		DbgVshPrintf("%d", VertexRegister);
+		PCUsageIndex = DeclAddressUsages[VertexRegister][1];
+		return (D3DDECLUSAGE)DeclAddressUsages[VertexRegister][0];
+	}
 
 	switch (VertexRegister)
 	{
