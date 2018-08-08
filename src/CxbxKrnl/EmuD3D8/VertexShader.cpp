@@ -791,6 +791,30 @@ static void VshWriteParameter(VSH_IMD_PARAMETER *pParameter,
     }
 }
 
+
+// From D3D8to9
+static const BYTE DeclAddressUsages[][2] =
+{
+	{ XTL::D3DDECLUSAGE_POSITION, 0 },
+	{ XTL::D3DDECLUSAGE_BLENDWEIGHT, 0 },
+	{ XTL::D3DDECLUSAGE_BLENDINDICES, 0 },
+	{ XTL::D3DDECLUSAGE_NORMAL, 0 },
+	{ XTL::D3DDECLUSAGE_PSIZE, 0 },
+	{ XTL::D3DDECLUSAGE_COLOR, 0 },
+	{ XTL::D3DDECLUSAGE_COLOR, 1 },
+	{ XTL::D3DDECLUSAGE_TEXCOORD, 0 },
+	{ XTL::D3DDECLUSAGE_TEXCOORD, 1 },
+	{ XTL::D3DDECLUSAGE_TEXCOORD, 2 },
+	{ XTL::D3DDECLUSAGE_TEXCOORD, 3 },
+	{ XTL::D3DDECLUSAGE_TEXCOORD, 4 },
+	{ XTL::D3DDECLUSAGE_TEXCOORD, 5 },
+	{ XTL::D3DDECLUSAGE_TEXCOORD, 6 },
+	{ XTL::D3DDECLUSAGE_TEXCOORD, 7 },
+	{ XTL::D3DDECLUSAGE_POSITION, 1 },
+	{ XTL::D3DDECLUSAGE_NORMAL, 1 }
+};
+
+
 static void VshWriteShader(VSH_XBOX_SHADER *pShader,
                            char* pDisassembly,
 						   XTL::D3DVERTEXELEMENT *pRecompiled,
@@ -824,8 +848,11 @@ static void VshWriteShader(VSH_XBOX_SHADER *pShader,
 		int i = 0;
 		do {
 			if (RegVUsage[i]) {
+				DWORD PCUsageIndex = DeclAddressUsages[i][1];
+				DWORD usage = DeclAddressUsages[i][0];
+
 				std::stringstream dclStream;
-				switch (pRecompiled->Usage) {
+				switch (usage) {
 				case XTL::D3DDECLUSAGE_POSITION:
 					dclStream << "dcl_position";
 					break;
@@ -839,29 +866,28 @@ static void VshWriteShader(VSH_XBOX_SHADER *pShader,
 					dclStream << "dcl_normal";
 					break;
 				case XTL::D3DDECLUSAGE_COLOR:
-					dclStream << "dcl_color" << (int)pRecompiled->UsageIndex;
+					dclStream << "dcl_color" << (int)PCUsageIndex;
 					break;
 				case XTL::D3DDECLUSAGE_FOG:
 					dclStream << "dcl_fog";
 					break;
 				case XTL::D3DDECLUSAGE_TEXCOORD:
-					dclStream << "dcl_texcoord" << (int)pRecompiled->UsageIndex;
+					dclStream << "dcl_texcoord" << (int)PCUsageIndex;
 					break;
 				case XTL::D3DDECLUSAGE_PSIZE:
 					dclStream << "dcl_psize";
 					break;
 				default:
-					dclStream << "dcl_unknown ("<< (int)pRecompiled->Usage << ")";
+					dclStream << "dcl_unknown ("<< (int)PCUsageIndex << ")";
 					LOG_TEST_CASE("Encountered unknown declaration");
 					break;
 				}
 
 				DisassemblyPos += sprintf(pDisassembly + DisassemblyPos, "%s v%d\n", dclStream.str().c_str(), i);
-				pRecompiled++;
 			}
 
 			i++;
-		} while (pRecompiled->Stream < 255 && i < 16);
+		} while (i < 16);
 	}
 
     for (int i = 0; i < pShader->IntermediateCount && (i < 128 || !Truncate); i++)
@@ -1562,7 +1588,6 @@ static boolean VshConvertShader(VSH_XBOX_SHADER *pShader,
 				}
 
 				if (pIntermediate->Parameters[j].Parameter.ParameterType == PARAM_V) {
-					printf("v%d usage\n", pIntermediate->Parameters[j].Parameter.Address);
 					RegVUsage[pIntermediate->Parameters[j].Parameter.Address] = TRUE;
 				}
 			}
@@ -1766,29 +1791,6 @@ static DWORD VshGetDeclarationSize(DWORD *pDeclaration)
 }
 
 #define D3DDECLUSAGE_UNSUPPORTED ((D3DDECLUSAGE)-1)
-
-// From D3D8to9
-static const BYTE DeclAddressUsages[][2] =
-{
-	{ XTL::D3DDECLUSAGE_POSITION, 0 },
-	{ XTL::D3DDECLUSAGE_BLENDWEIGHT, 0 },
-	{ XTL::D3DDECLUSAGE_BLENDINDICES, 0 },
-	{ XTL::D3DDECLUSAGE_NORMAL, 0 },
-	{ XTL::D3DDECLUSAGE_PSIZE, 0 },
-	{ XTL::D3DDECLUSAGE_COLOR, 0 },
-	{ XTL::D3DDECLUSAGE_COLOR, 1 },
-	{ XTL::D3DDECLUSAGE_TEXCOORD, 0 },
-	{ XTL::D3DDECLUSAGE_TEXCOORD, 1 },
-	{ XTL::D3DDECLUSAGE_TEXCOORD, 2 },
-	{ XTL::D3DDECLUSAGE_TEXCOORD, 3 },
-	{ XTL::D3DDECLUSAGE_TEXCOORD, 4 },
-	{ XTL::D3DDECLUSAGE_TEXCOORD, 5 },
-	{ XTL::D3DDECLUSAGE_TEXCOORD, 6 },
-	{ XTL::D3DDECLUSAGE_TEXCOORD, 7 },
-	{ XTL::D3DDECLUSAGE_POSITION, 1 },
-	{ XTL::D3DDECLUSAGE_NORMAL, 1 }
-};
-
 
 XTL::D3DDECLUSAGE Xb2PCRegisterType
 (
