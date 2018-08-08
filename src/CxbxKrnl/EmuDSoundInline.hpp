@@ -379,7 +379,7 @@ inline void DSoundGenericUnlock(
         HRESULT hRet = pDSBuffer->Unlock(Host_lock.pLockPtr1, Host_lock.dwLockBytes1, Host_lock.pLockPtr2, Host_lock.dwLockBytes2);
 
         if (hRet != DS_OK) {
-            CxbxKrnlCleanup("DirectSoundBuffer Unlock Failed!");
+            CxbxKrnlCleanup(LOG_PREFIX, "DirectSoundBuffer Unlock Failed!");
         }
 
         Host_lock.pLockPtr1 = nullptr;
@@ -395,12 +395,12 @@ inline void DSoundBufferCreate(LPDSBUFFERDESC pDSBufferDesc, LPDIRECTSOUNDBUFFER
     HRESULT hRetDS = g_pDSound8->CreateSoundBuffer(pDSBufferDesc, &pTempBuffer, NULL);
 
     if (hRetDS != DS_OK) {
-        CxbxKrnlCleanup("CreateSoundBuffer error: 0x%08X", hRetDS);
+        CxbxKrnlCleanup(LOG_PREFIX, "CreateSoundBuffer error: 0x%08X", hRetDS);
     } else {
         hRetDS = pTempBuffer->QueryInterface(IID_IDirectSoundBuffer8, (LPVOID*)&(pDSBuffer));
         pTempBuffer->Release();
         if (hRetDS != DS_OK) {
-            CxbxKrnlCleanup("Create IDirectSoundBuffer8 error: 0x%08X", hRetDS);
+            CxbxKrnlCleanup(LOG_PREFIX, "Create IDirectSoundBuffer8 error: 0x%08X", hRetDS);
         }
     }
 }
@@ -495,7 +495,7 @@ inline void DSoundBufferRelease(
     if (pDS3DBuffer != nullptr) {
         refCount = pDS3DBuffer->Release();
         if (refCount > 0) {
-            CxbxKrnlCleanup("Nope, wasn't fully cleaned up.");
+            CxbxKrnlCleanup(LOG_PREFIX, "Nope, wasn't fully cleaned up.");
         }
     }
 
@@ -558,7 +558,7 @@ inline void DSoundBufferResizeUpdate(
     hRet = pThis->EmuDirectSoundBuffer8->Lock(0, 0, &pThis->Host_lock.pLockPtr1, &pThis->Host_lock.dwLockBytes1,
                                               nullptr, nullptr, DSBLOCK_ENTIREBUFFER);
     if (hRet != DS_OK) {
-        CxbxKrnlCleanup("Unable to lock region buffer!");
+        CxbxKrnlCleanup(LOG_PREFIX, "Unable to lock region buffer!");
     }
     DSoundGenericUnlock(pThis->EmuFlags,
                         pThis->EmuDirectSoundBuffer8,
@@ -631,7 +631,7 @@ inline void DSoundBufferReplace(
     HRESULT hRet = pDSBuffer->GetStatus(&dwStatus);
 
     if (hRet != DS_OK) {
-        CxbxKrnlCleanup("Unable to retrieve current status for replace DS buffer!");
+        CxbxKrnlCleanup(LOG_PREFIX, "Unable to retrieve current status for replace DS buffer!");
     }
 
     pDSBuffer->Stop();
@@ -639,7 +639,7 @@ inline void DSoundBufferReplace(
     hRet = pDSBuffer->GetCurrentPosition(&dwPlayCursor, nullptr);
 
     if (hRet != DS_OK) {
-        CxbxKrnlCleanup("Unable to retrieve current position for replace DS buffer!");
+        CxbxKrnlCleanup(LOG_PREFIX, "Unable to retrieve current position for replace DS buffer!");
     }
 
     // TODO: Untested if transfer buffer to new audio buffer is necessary.

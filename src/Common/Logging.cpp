@@ -49,7 +49,7 @@ const char* g_EnumModules2String[static_cast<unsigned int>(CXBXR_MODULE::MAX)] =
 	"INIT",
 	"VMEM",
 	"PMEM",
-	"GUI,"
+	"GUI",
 	"EEPR",
 	"RSA",
 	"POOLMEM",

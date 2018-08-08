@@ -38,6 +38,7 @@
 
 #define LOG_PREFIX CXBXR_MODULE::GUI
 
+#include "Logging.h"
 #include "WndMain.h"
 #include "DlgAbout.h"
 #include "DlgControllerConfig.h"

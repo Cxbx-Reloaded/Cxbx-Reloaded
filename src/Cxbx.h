@@ -139,19 +139,6 @@ extern volatile bool g_bPrintfOn;
 #pragma warning(disable : 4477)
 #endif
 
-/*! DbgPrintf enabled if _DEBUG_TRACE is set */
-#ifdef _DEBUG_TRACE
-	#define DbgPrintf(cxbxr_module, fmt, ...) { \
-		if (g_EnabledModules[static_cast<unsigned int>(cxbxr_module)] && static_cast<unsigned int>(LOG_LEVEL::DEBUG) >= g_CurrentLogLevel) { \
-			CXBX_CHECK_INTEGRITY(); \
-			if(g_bPrintfOn) printf("[0x%.4X] %s: "##fmt, GetCurrentThreadId(), g_EnumModules2String[static_cast<unsigned int>(cxbxr_module)], ##__VA_ARGS__); \
-		} \
-     }
-#else
-	inline void null_func(...) { }
-	#define DbgPrintf null_func
-#endif
-
 #if WIN32
 #include "Win32\Threads.h"
 #define CxbxSetThreadName(Name) SetCurrentThreadName(Name)

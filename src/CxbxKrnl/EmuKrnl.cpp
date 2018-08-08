@@ -391,7 +391,7 @@ XBSYSAPI EXPORTNUM(160) xboxkrnl::KIRQL FASTCALL xboxkrnl::KfRaiseIrql
 		KeBugCheckEx(IRQL_NOT_GREATER_OR_EQUAL, (PVOID)OldIrql, (PVOID)NewIrql, 0, 0);
 	}
 
-	RETURN_TYPE(KIRQL_TYPE, OldIrql);
+	RETURN_TYPE(LOG_PREFIX, KIRQL_TYPE, OldIrql);
 }
 
 inline int bsr(const uint32_t a) { DWORD result; _BitScanReverse(&result, a); return result; }

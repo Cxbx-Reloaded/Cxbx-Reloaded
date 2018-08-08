@@ -70,7 +70,7 @@ void PoolManager::InitializePool()
 		Lookaside->AllocateHits = 0;
 	}
 
-	printf(LOG_PREFIX " Pool manager initialized!\n");
+	printf("%s: Pool manager initialized!\n", LOG_PREFIX);
 }
 
 VAddr PoolManager::AllocatePool(size_t Size, uint32_t Tag)

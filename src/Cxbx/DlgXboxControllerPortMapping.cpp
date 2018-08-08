@@ -34,6 +34,9 @@
 // *
 // ******************************************************************
 
+// Without this, you'll get a ton of errors from the std libraty for some unknown reason...
+#include "Logging.h"
+
 #include "Common/Settings.hpp" // for g_Settings
 
 #include "DlgXboxControllerPortMapping.h"
@@ -42,7 +45,6 @@
 #include "ResCxbx.h"
 #include "CxbxKrnl/EmuXTL.h"
 
-#include <cstdio>
 
 /*! windows dialog procedure */
 static INT_PTR CALLBACK DlgXboxControllerPortMappingProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);

@@ -99,7 +99,7 @@ XBSYSAPI EXPORTNUM(7) xboxkrnl::NTSTATUS NTAPI xboxkrnl::DbgLoadImageSymbols
 
 	LOG_UNIMPLEMENTED(LOG_PREFIX);
 
-	RETURN(result);
+	RETURN(LOG_PREFIX, result);
 }
 
 // ******************************************************************
@@ -128,7 +128,7 @@ XBSYSAPI EXPORTNUM(8) xboxkrnl::ULONG _cdecl xboxkrnl::DbgPrint
 		fflush(stdout);
 	}
 
-	RETURN(STATUS_SUCCESS);
+	RETURN(LOG_PREFIX, STATUS_SUCCESS);
 }
 
 // ******************************************************************
@@ -152,7 +152,7 @@ XBSYSAPI EXPORTNUM(10) xboxkrnl::ULONG NTAPI xboxkrnl::DbgPrompt
 
 	LOG_UNIMPLEMENTED(LOG_PREFIX);
 
-	RETURN(result);
+	RETURN(LOG_PREFIX, result);
 }
 
 // ******************************************************************

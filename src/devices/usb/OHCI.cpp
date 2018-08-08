@@ -799,7 +799,7 @@ int OHCI::OHCI_ServiceTD(OHCI_ED* Ed)
 			switch (ret) {
 				case USB_RET_IOERROR:
 				case USB_RET_NODEV:
-					DbgPrintf(LOG_PREFIX, "Received DEV ERROR\n", );
+					DbgPrintf(LOG_PREFIX, "Received DEV ERROR\n");
 					OHCI_SET_BM(td.Flags, TD_CC, OHCI_CC_DEVICENOTRESPONDING);
 					break;
 				case USB_RET_NAK:
@@ -1680,7 +1680,7 @@ int OHCI::OHCI_ServiceIsoTD(OHCI_ED* ed, int completion)
 	}
 
 	if ((relative_frame_number < frame_count) && (start_offset > next_offset)) {
-		printf("%s ISO_TD start_offset=0x%.8x > next_offset=0x%.8x\n", start_offset, next_offset);
+		printf("ISO_TD start_offset=0x%.8x > next_offset=0x%.8x\n", start_offset, next_offset);
 		return 1;
 	}
 

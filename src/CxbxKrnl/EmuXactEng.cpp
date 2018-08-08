@@ -96,7 +96,7 @@ void WINAPI XTL::EMUPATCH(XACTEngineDoWork)()
 {
 	//FUNC_EXPORTS
 
-	LOG_FUNC();
+	LOG_FUNC(LOG_PREFIX);
 
 	// TODO: Anything else required here?
 	// AFAIK, this function just calls DirectSoundDoWork()
