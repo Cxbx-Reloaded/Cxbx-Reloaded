@@ -166,7 +166,6 @@ bool Settings::Init()
 #ifdef RETRO_API_VERSION // TODO: Change me to #ifndef QT_VERSION
 		// Can only have one option without Qt.
 		saveFile = GenerateCurrentDirectoryStr();
-		saveFile.append(szSettings_settings_file);
 
 #else // Only support for Qt compile build.
 		int iRet = MessageBox(nullptr, szSettings_save_user_option_message, "Cxbx-Reloaded", MB_YESNOCANCEL | MB_ICONQUESTION);
