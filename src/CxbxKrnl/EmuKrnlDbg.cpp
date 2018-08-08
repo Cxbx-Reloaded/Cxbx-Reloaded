@@ -54,7 +54,7 @@ namespace NtDll
 };
 
 
-#include "Emu.h" // For EmuWarning()
+#include "Emu.h" // For EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, )
 
 // ******************************************************************
 // * 0x0005 - DbgBreakPoint()

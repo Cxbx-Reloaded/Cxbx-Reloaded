@@ -94,7 +94,7 @@ void CxbxCreatePartitionHeaderFile(std::string filename, bool partition0 = false
 {
 	HANDLE hf = CreateFile(filename.c_str(), GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 0, 0);
 	if (!hf) {
-		CxbxKrnlCleanup("CxbxCreatePartitionHeaderFile Failed\nUnable to create file: %s (%s)", filename);
+		CxbxKrnlCleanup(LOG_PREFIX, "CxbxCreatePartitionHeaderFile Failed\nUnable to create file: %s (%s)", filename);
 		return;
 	}
 
@@ -114,7 +114,7 @@ XboxPartitionTable CxbxGetPartitionTable()
 	XboxPartitionTable table;
 	FILE* fp = fopen((CxbxBasePath + "Partition0.bin").c_str(), "rb");
 	if (fp == nullptr) {
-		CxbxKrnlCleanup("CxbxGetPartitionTable Failed:\nUnable to open file: %s", (CxbxBasePath + "Partition0.bin").c_str());
+		CxbxKrnlCleanup(LOG_PREFIX, "CxbxGetPartitionTable Failed:\nUnable to open file: %s", (CxbxBasePath + "Partition0.bin").c_str());
 	}
 
 	fread(&table, sizeof(XboxPartitionTable), 1, fp);
@@ -150,7 +150,7 @@ int CxbxGetPartitionNumberFromHandle(HANDLE hFile)
 	// Get which partition number is being accessed, by parsing the filename and extracting the last portion 
 	char buffer[MAX_PATH] = {0};
 	if (!GetFinalPathNameByHandle(hFile, buffer, MAX_PATH, VOLUME_NAME_DOS)) {
-		CxbxKrnlCleanup("CxbxGetPartitionNumberFromHandle Failed:\nUnable to determine path for HANDLE 0x%08X", hFile);
+		CxbxKrnlCleanup(LOG_PREFIX, "CxbxGetPartitionNumberFromHandle Failed:\nUnable to determine path for HANDLE 0x%08X", hFile);
 	}
 
 	std::string bufferString(buffer);
@@ -166,7 +166,7 @@ std::string CxbxGetPartitionDataPathFromHandle(HANDLE hFile)
 	// Get which partition number is being accessed, by parsing the filename and extracting the last portion 
 	char buffer[MAX_PATH] = {0};
 	if (!GetFinalPathNameByHandle(hFile, buffer, MAX_PATH, VOLUME_NAME_DOS)) {
-		CxbxKrnlCleanup("CxbxGetPartitionDataPathFromHandle Failed:\nUnable to determine path for HANDLE 0x%08X", hFile);
+		CxbxKrnlCleanup(LOG_PREFIX, "CxbxGetPartitionDataPathFromHandle Failed:\nUnable to determine path for HANDLE 0x%08X", hFile);
 	}
 
 	std::string bufferString(buffer);
@@ -181,7 +181,7 @@ void CxbxFormatPartitionByHandle(HANDLE hFile)
 
 	// Sanity check, make sure we are actually deleting something within the Cxbx-Reloaded folder
 	if (partitionPath.find("Cxbx-Reloaded") == std::string::npos) {
-		EmuWarning("Attempting to format a path that is not within a Cxbx-Reloaded data folder... Ignoring!\n");
+		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Attempting to format a path that is not within a Cxbx-Reloaded data folder... Ignoring!\n");
 		return;
 	}
 
@@ -378,7 +378,7 @@ NTSTATUS CxbxConvertFilePath(
 					NtSymbolicLinkObject = FindNtSymbolicLinkObjectByRootHandle(g_hCurDir);
 					RelativePath.erase(0, 5); // Remove '$HOME'
 				} else
-					CxbxKrnlCleanup(("Unsupported path macro : " + OriginalPath).c_str());
+					CxbxKrnlCleanup(LOG_PREFIX, ("Unsupported path macro : " + OriginalPath).c_str());
 			}
 			// Check if the path starts with a relative path indicator :
 			else if (RelativePath[0] == '.') // "4x4 Evo 2" needs this
@@ -439,7 +439,7 @@ NTSTATUS CxbxConvertFilePath(
 		replace_all( RelativePath, "\\\\", "\\" );
 
 		if (g_bPrintfOn) {
-			DbgPrintf("FILE: %s Corrected path...\n", aFileAPIName.c_str());
+			DbgPrintf(LOG_PREFIX, "%s Corrected path...\n", aFileAPIName.c_str());
 			printf("  Org:\"%s\"\n", OriginalPath.c_str());
 			if (_strnicmp(HostPath.c_str(), CxbxBasePath.c_str(), CxbxBasePath.length()) == 0) {
 				printf("  New:\"$CxbxPath\\%s%s\"\n", (HostPath.substr(CxbxBasePath.length(), std::string::npos)).c_str(), RelativePath.c_str());
@@ -649,12 +649,12 @@ NTSTATUS EmuNtSymbolicLinkObject::Init(std::string aSymbolicLinkName, std::strin
 				if (RootDirectoryHandle == INVALID_HANDLE_VALUE)
 				{
 					result = STATUS_DEVICE_DOES_NOT_EXIST; // TODO : Is this the correct error?
-					CxbxKrnlCleanup((std::string("Could not map ") + HostSymbolicLinkPath).c_str());
+					CxbxKrnlCleanup(LOG_PREFIX, (std::string("Could not map ") + HostSymbolicLinkPath).c_str());
 				}
 				else
 				{
 					NtSymbolicLinkObjects[DriveLetter - 'A'] = this;
-					DbgPrintf("FILE: Linked \"%s\" to \"%s\" (residing at \"%s\")\n", aSymbolicLinkName.c_str(), aFullPath.c_str(), HostSymbolicLinkPath.c_str());
+					DbgPrintf(LOG_PREFIX, "Linked \"%s\" to \"%s\" (residing at \"%s\")\n", aSymbolicLinkName.c_str(), aFullPath.c_str(), HostSymbolicLinkPath.c_str());
 				}
 			}
 		}

@@ -40,6 +40,8 @@
 #define VERTICES_PER_QUAD 4
 #define TRIANGLES_PER_QUAD 2
 
+#define LOG_PREFIX_D3DCVT CXBXR_MODULE::D3DCVT
+
 // simple render state encoding lookup table
 #define X_D3DRSSE_UNK 0x7fffffff
 extern CONST DWORD EmuD3DRenderStateSimpleEncoded[174];
@@ -94,7 +96,7 @@ else if((uint32)State < 20)
 else if((uint32)State > 255)
     State = (D3DTRANSFORMSTATETYPE)(State - 250);
 else
-    CxbxKrnlCleanup("Unknown Transform State Type (%d)", State);
+    CxbxKrnlCleanup(LOG_PREFIX_D3DCVT, "Unknown Transform State Type (%d)", State);
 //*/
 
 // convert from xbox to pc texture transform state types
@@ -109,7 +111,7 @@ inline D3DTRANSFORMSTATETYPE EmuXB2PC_D3DTS(D3DTRANSFORMSTATETYPE State)
     else if((uint32)State == 10) // Max
         return (D3DTRANSFORMSTATETYPE)(D3DTS_TEXTURE7 + 1);
 
-    CxbxKrnlCleanup("Unknown Transform State Type (%d)", State);
+    CxbxKrnlCleanup(LOG_PREFIX_D3DCVT, "Unknown Transform State Type (%d)", State);
 
     return State;
 }
@@ -131,17 +133,17 @@ inline D3DBLENDOP EmuXB2PC_D3DBLENDOP(X_D3DBLENDOP Value)
 			return D3DBLENDOP_MAX;
 		case 0xF006:
 			{
-				EmuWarning("D3DBLENDOP_ADDSIGNED is not supported!");
+				EmuLog(LOG_PREFIX_D3DCVT, LOG_LEVEL::WARNING, "D3DBLENDOP_ADDSIGNED is not supported!");
 				return D3DBLENDOP_ADD;
 			};
 		case 0xF005:
 			{
-				EmuWarning("D3DBLENDOP_REVSUBTRACTSIGNED is not supported!");
+				EmuLog(LOG_PREFIX_D3DCVT, LOG_LEVEL::WARNING, "D3DBLENDOP_REVSUBTRACTSIGNED is not supported!");
 				return D3DBLENDOP_REVSUBTRACT;
 			}
     }
 
-    EmuWarning("Unknown D3DBLENDOP (0x%.08X)", Value);
+    EmuLog(LOG_PREFIX_D3DCVT, LOG_LEVEL::WARNING, "Unknown D3DBLENDOP (0x%.08X)", Value);
 
     return (D3DBLENDOP)D3DBLENDOP_ADD;
 }
@@ -154,7 +156,7 @@ inline D3DBLEND EmuXB2PC_D3DBLEND(X_D3DBLEND Value)
     else if(Value < 0x309)
         return (D3DBLEND)((Value & 0xF) + 3);
 
-    EmuWarning("Unknown Xbox D3DBLEND Extension (0x%.08X)", Value);
+    EmuLog(LOG_PREFIX_D3DCVT, LOG_LEVEL::WARNING, "Unknown Xbox D3DBLEND Extension (0x%.08X)", Value);
 	return D3DBLEND_ONE;
 }
 
@@ -199,7 +201,7 @@ inline D3DSTENCILOP EmuXB2PC_D3DSTENCILOP(X_D3DSTENCILOP Value)
 		return D3DSTENCILOP_DECR;
 
 	default:
-		CxbxKrnlCleanup("Unknown D3DSTENCILOP (0x%.08X)", Value);
+		CxbxKrnlCleanup(LOG_PREFIX_D3DCVT, "Unknown D3DSTENCILOP (0x%.08X)", Value);
 	}
 
 	return (D3DSTENCILOP) Value;

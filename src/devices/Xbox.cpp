@@ -60,7 +60,7 @@ MCPXRevision MCPXRevisionFromHardwareModel(HardwareModel hardwareModel)
 	case Revision1_6:
 		return MCPXRevision::MCPX_X3;
 	case DebugKit:
-		// EmuWarning("Guessing MCPXVersion");
+		// EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Guessing MCPXVersion");
 		return MCPXRevision::MCPX_X2;
 	default:
 		// UNREACHABLE(hardwareModel);
@@ -79,7 +79,7 @@ SCMRevision SCMRevisionFromHardwareModel(HardwareModel hardwareModel)
 	case Revision1_4:
 	case Revision1_5:
 	case Revision1_6:
-		// EmuWarning("Guessing SCMRevision");
+		// EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Guessing SCMRevision");
 		return SCMRevision::P2L; // Assumption; Our SCM returns PIC version string "P05"
 	case DebugKit:
 		return SCMRevision::D01; // Our SCM returns PIC version string "DXB"

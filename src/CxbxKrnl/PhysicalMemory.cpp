@@ -553,7 +553,7 @@ DWORD PhysicalMemory::PatchXboxPermissions(DWORD Perms)
 		{
 			// One of XBOX_PAGE_READONLY or XBOX_PAGE_READWRITE must be specified
 
-			DbgPrintf("PMEM: PatchXboxPermissions: Memory permissions bug detected\n");
+			DbgPrintf(LOG_PREFIX, "%s: Memory permissions bug detected\n", __func__);
 			return XBOX_PAGE_EXECUTE_READWRITE;
 		}
 
@@ -574,7 +574,7 @@ DWORD PhysicalMemory::PatchXboxPermissions(DWORD Perms)
 			// If we reach here it means that both XBOX_PAGE_READONLY and XBOX_PAGE_READWRITE were specified, and so the
 			// input is probably invalid
 
-			DbgPrintf("PMEM: PatchXboxPermissions: Memory permissions bug detected\n");
+			DbgPrintf(LOG_PREFIX, "%s: Memory permissions bug detected\n", __func__);
 			return XBOX_PAGE_EXECUTE_READWRITE;
 		}
 	}
@@ -640,7 +640,7 @@ DWORD PhysicalMemory::ConvertXboxToWinProtection(DWORD Perms)
 			// If we reach here it means that more than one permission modifier was specified, and so the input is
 			// probably invalid
 
-			DbgPrintf("PMEM: ConvertXboxToWinProtection: Memory permissions bug detected\n");
+			DbgPrintf(LOG_PREFIX, "%s: Memory permissions bug detected\n", __func__);
 			return PAGE_EXECUTE_READWRITE;
 		}
 	}
@@ -738,7 +738,7 @@ bool PhysicalMemory::IsMappable(PFN_COUNT PagesRequested, bool bRetailRegion, bo
 	bool ret = false;
 	if (bRetailRegion && m_PhysicalPagesAvailable >= PagesRequested) { ret = true; }
 	if (bDebugRegion && m_DebuggerPagesAvailable >= PagesRequested) { ret = true; }
-	if (!ret) { EmuWarning(LOG_PREFIX " Out of physical memory!"); }
+	if (!ret) { EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Out of physical memory!"); }
 
 	return ret;
 }

@@ -93,14 +93,14 @@ DEVICE_WRITE32(PRMCIO)
 			if (d->prmcio.cr_index == VGA_CRTC_OVERFLOW) {
 				d->prmcio.cr[VGA_CRTC_OVERFLOW] = (d->prmcio.cr[VGA_CRTC_OVERFLOW] & ~0x10) |
 					(value & 0x10);
-				EmuWarning("TODO: vbe_update_vgaregs");
+				EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "TODO: vbe_update_vgaregs");
 				//vbe_update_vgaregs();
 			}
 			return;
 		}
 
 		d->prmcio.cr[d->prmcio.cr_index] = value;
-		EmuWarning("TODO: vbe_update_vgaregs");
+		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "TODO: vbe_update_vgaregs");
 		//vbe_update_vgaregs();
 
 		switch (d->prmcio.cr_index) {
@@ -112,7 +112,7 @@ DEVICE_WRITE32(PRMCIO)
 			case VGA_CRTC_V_SYNC_END:
 			case VGA_CRTC_MODE:
 				// TODO: s->update_retrace_info(s);
-				EmuWarning("TODO: update_retrace_info");
+				EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "TODO: update_retrace_info");
 				break;
 			}
 		break;

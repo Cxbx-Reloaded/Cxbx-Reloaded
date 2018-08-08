@@ -47,7 +47,7 @@ namespace xboxkrnl
 #include "Logging.h" // For LOG_FUNC()
 #include "EmuKrnlLogging.h"
 #include "CxbxKrnl.h" // For CxbxKrnlCleanup
-#include "Emu.h" // For EmuWarning()
+#include "Emu.h" // For EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, )
 #include "EmuFile.h" // For CxbxCreateSymbolicLink(), etc.
 #include "CxbxDebugger.h"
 
@@ -303,11 +303,11 @@ XBSYSAPI EXPORTNUM(66) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoCreateFile
 
 	if (FAILED(ret))
 	{
-		EmuWarning("KRNL: IoCreateFile Failed! (%s)\n", NtStatusToString(ret));
+		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "IoCreateFile Failed! (%s)\n", NtStatusToString(ret));
 	}
 	else
 	{
-		DbgPrintf("KRNL: IoCreateFile = 0x%.8X\n", *FileHandle);
+		DbgPrintf(LOG_PREFIX, "IoCreateFile = 0x%.8X\n", *FileHandle);
 	}
 
 	RETURN(LOG_PREFIX, ret);

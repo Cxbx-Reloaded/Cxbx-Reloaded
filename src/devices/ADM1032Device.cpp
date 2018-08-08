@@ -34,9 +34,10 @@
 // *
 // ******************************************************************
 
+#define LOG_PREFIX CXBXR_MODULE::ADM
+
 #include "ADM1032Device.h"
 #include "..\CxbxKrnl\Emu.h" // For EmuWarning
-
 
 void ADM1032Device::Init()
 {
@@ -51,7 +52,7 @@ uint8_t ADM1032Device::ReadByte(uint8_t command)
 	if (command == 0x0) { return m_MBTemperature; }
 	else if(command == 0x1) { return m_CPUTemperature; }
 
-	EmuWarning("Unknown read command sent to the temperature sensor. The command was %d", command);
+	EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Unknown read command sent to the temperature sensor. The command was %d", command);
 
 	return 0;
 }

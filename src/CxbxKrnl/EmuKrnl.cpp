@@ -156,7 +156,7 @@ extern DWORD ExecuteDpcQueue();
 void KiUnexpectedInterrupt()
 {
 	xboxkrnl::KeBugCheck(TRAP_CAUSE_UNKNOWN); // see
-	CxbxKrnlCleanup("Unexpected Software Interrupt!");
+	CxbxKrnlCleanup(LOG_PREFIX, "Unexpected Software Interrupt!");
 }
 
 void CallSoftwareInterrupt(const xboxkrnl::KIRQL SoftwareIrql)
@@ -166,7 +166,7 @@ void CallSoftwareInterrupt(const xboxkrnl::KIRQL SoftwareIrql)
 		KiUnexpectedInterrupt();
 		break;
 	case APC_LEVEL: // = 1 // HalpApcInterrupt        
-		EmuWarning("Unimplemented Software Interrupt (APC)"); // TODO : ExecuteApcQueue();
+		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Unimplemented Software Interrupt (APC)"); // TODO : ExecuteApcQueue();
 		break;
 	case DISPATCH_LEVEL: // = 2
 		ExecuteDpcQueue();

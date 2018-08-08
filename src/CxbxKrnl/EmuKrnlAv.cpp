@@ -53,7 +53,7 @@ namespace NtDll
 #include "EmuNtDll.h"
 };
 
-#include "Emu.h" // For EmuWarning()
+#include "Emu.h" // For EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, )
 #include "EmuXTL.h"
 #include "EmuX86.h"
 

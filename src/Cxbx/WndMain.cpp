@@ -35,6 +35,9 @@
 // *  All rights reserved
 // *
 // ******************************************************************
+
+#define LOG_PREFIX CXBXR_MODULE::GUI
+
 #include "WndMain.h"
 #include "DlgAbout.h"
 #include "DlgControllerConfig.h"
@@ -122,7 +125,7 @@ void WndMain::ResizeWindow(HWND hwnd, bool bForGUI)
 
 		const char* resolution = XBVideoConf.szVideoResolution;
 		if (2 != sscanf(resolution, "%d x %d", &m_w, &m_h)) {
-			DbgPrintf("Couldn't parse resolution : %s.\n", resolution);
+			DbgPrintf(LOG_PREFIX, "Couldn't parse resolution : %s.\n", resolution);
 		}
 	}
 

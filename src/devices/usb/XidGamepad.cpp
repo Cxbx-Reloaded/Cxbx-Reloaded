@@ -36,6 +36,8 @@
 
 #define _XBOXKRNL_DEFEXTRN_
 
+#define LOG_PREFIX CXBXR_MODULE::XIDCTRL
+
 // prevent name collisions
 namespace xboxkrnl
 {
@@ -49,8 +51,6 @@ namespace xboxkrnl
 #include "OHCI.h"
 #include "CxbxKrnl\EmuKrnl.h"  // For EmuWarning
 #include "Logging.h"
-
-#define LOG_PREFIX CXBXR_MODULE::XIDCTRL
 
 #define USB_CLASS_XID  0x58
 #define USB_DT_XID     0x42
@@ -263,7 +263,7 @@ int XidGamepad::UsbXidClaimPort(XboxDeviceState* dev, int port)
 		i++;
 	}
 	if (it == m_UsbDev->m_FreePorts.end()) {
-		EmuWarning("Port requested %d.2 not found (in use?)", port);
+		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Port requested %d.2 not found (in use?)", port);
 		return -1;
 	}
 
@@ -330,7 +330,7 @@ void XidGamepad::UsbXid_Attach(XboxDeviceState* dev)
 
 void XidGamepad::UsbXid_HandleReset()
 {
-	DbgPrintf("%s reset event\n", LOG_STR_GAMEPAD);
+	DbgPrintf(LOG_PREFIX, "reset event\n");
 }
 
 void XidGamepad::UsbXid_HandleControl(XboxDeviceState* dev, USBPacket* p,
@@ -338,7 +338,7 @@ void XidGamepad::UsbXid_HandleControl(XboxDeviceState* dev, USBPacket* p,
 {
 	int ret = m_UsbDev->USBDesc_HandleControl(dev, p, request, value, index, length, data);
 	if (ret >= 0) {
-		DbgPrintf("%s handled by USBDesc_HandleControl, ret is %d\n", LOG_STR_GAMEPAD, ret);
+		DbgPrintf(LOG_PREFIX, "handled by USBDesc_HandleControl, ret is %d\n", ret);
 		return;
 	}
 
@@ -348,7 +348,7 @@ void XidGamepad::UsbXid_HandleControl(XboxDeviceState* dev, USBPacket* p,
 			// From the HID standard: "The Get_Report request allows the host to receive a report via the Control pipe.
 			// The wValue field specifies the Report Type in the high byte and the Report ID in the low byte. Set Report ID
 			// to 0 (zero) if Report IDs are not used. 01 = input, 02 = output, 03 = feature, 04-FF = reserved"
-			DbgPrintf("%s GET_REPORT 0x%X\n", LOG_STR_GAMEPAD, value);
+			DbgPrintf(LOG_PREFIX, "GET_REPORT 0x%X\n", value);
 			// JayFoxRox's analysis: "This 0x0100 case is for input.
 			// This is the case where the Xbox wants to read input data from the controller.
 			// Confirmed with a real Duke controller :
@@ -389,7 +389,7 @@ void XidGamepad::UsbXid_HandleControl(XboxDeviceState* dev, USBPacket* p,
 			// setting the state of input, output, or feature controls. The meaning of the request fields for the Set_Report
 			// request is the same as for the Get_Report request, however the data direction is reversed and the Report
 			// Data is sent from host to device."
-			DbgPrintf("%s SET_REPORT 0x%X\n", LOG_STR_GAMEPAD, value);
+			DbgPrintf(LOG_PREFIX, "SET_REPORT 0x%X\n", value);
 			// JayFoxRox's analysis: "The 0x0200 case below is for output.
 			// This is the case where the Xbox wants to write rumble data to the controller.
 			// To my knowledge :
@@ -419,7 +419,7 @@ void XidGamepad::UsbXid_HandleControl(XboxDeviceState* dev, USBPacket* p,
 
 		// XID-specific requests
 		case VendorInterfaceRequest | USB_REQ_GET_DESCRIPTOR: {
-			DbgPrintf("%s GET_DESCRIPTOR 0x%x\n", LOG_STR_GAMEPAD, value);
+			DbgPrintf(LOG_PREFIX, "GET_DESCRIPTOR 0x%x\n", value);
 			if (value == 0x4200) {
 				assert(m_XidState->xid_desc->bLength <= length);
 				std::memcpy(data, m_XidState->xid_desc, m_XidState->xid_desc->bLength);
@@ -433,7 +433,7 @@ void XidGamepad::UsbXid_HandleControl(XboxDeviceState* dev, USBPacket* p,
 		}
 
 		case VendorInterfaceRequest | XID_GET_CAPABILITIES: {
-			DbgPrintf("%s XID_GET_CAPABILITIES 0x%x\n", LOG_STR_GAMEPAD, value);
+			DbgPrintf(LOG_PREFIX, "XID_GET_CAPABILITIES 0x%x\n", value);
 			if (value == 0x0100) {
 				if (length > m_XidState->in_state_capabilities.bLength) {
 					length = m_XidState->in_state_capabilities.bLength;
@@ -457,7 +457,7 @@ void XidGamepad::UsbXid_HandleControl(XboxDeviceState* dev, USBPacket* p,
 
 		case ((USB_DIR_IN | USB_TYPE_CLASS | USB_RECIP_DEVICE) << 8) | USB_REQ_GET_DESCRIPTOR: {
 			/* FIXME: ! */
-			DbgPrintf("%s unknown xpad request 0x%X: value = 0x%X\n", LOG_STR_GAMEPAD, request, value);
+			DbgPrintf(LOG_PREFIX, "unknown xpad request 0x%X: value = 0x%X\n", request, value);
 			std::memset(data, 0x00, length);
 			//FIXME: Intended for the hub: usbd_get_hub_descriptor, UT_READ_CLASS?!
 			p->Status = USB_RET_STALL;
@@ -467,14 +467,14 @@ void XidGamepad::UsbXid_HandleControl(XboxDeviceState* dev, USBPacket* p,
 
 		case ((USB_DIR_OUT | USB_TYPE_STANDARD | USB_RECIP_ENDPOINT) << 8) | USB_REQ_CLEAR_FEATURE: {
 			/* FIXME: ! */
-			DbgPrintf("%s unknown xpad request 0x%X: value = 0x%X\n", LOG_STR_GAMEPAD, request, value);
+			DbgPrintf(LOG_PREFIX, "unknown xpad request 0x%X: value = 0x%X\n", request, value);
 			std::memset(data, 0x00, length);
 			p->Status = USB_RET_STALL;
 			break;
 		}
 
 		default:
-			DbgPrintf("%s USB stalled on request 0x%X value 0x%X\n", LOG_STR_GAMEPAD, request, value);
+			DbgPrintf(LOG_PREFIX, "USB stalled on request 0x%X value 0x%X\n", request, value);
 			p->Status = USB_RET_STALL;
 			assert(0);
 			break;
@@ -548,7 +548,7 @@ void XidGamepad::UpdateForceFeedback()
 	// implementation is untested and could potentially contain errors
 
 	/* FIXME: Check actuator endianess */
-	DbgPrintf("Set rumble power to left: 0x%X and right: 0x%X\n",
+	DbgPrintf(LOG_PREFIX, "Set rumble power to left: 0x%X and right: 0x%X\n",
 		m_XidState->out_state.left_actuator_strength,
 		m_XidState->out_state.right_actuator_strength);
 }

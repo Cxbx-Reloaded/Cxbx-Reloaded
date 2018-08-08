@@ -36,13 +36,12 @@
 // *
 // ******************************************************************
 #define _XBOXKRNL_DEFEXTRN_
+#define LOG_PREFIX CXBXR_MODULE::DSOUND
 
 // prevent name collisions
 namespace xboxkrnl {
     #include <xboxkrnl/xboxkrnl.h>
 };
-
-#define LOG_PREFIX CXBXR_MODULE::DSOUND
 
 #include <dsound.h>
 #include <thread>
@@ -218,7 +217,7 @@ static void dsound_thread_worker(LPVOID);
 #define RETURN_RESULT_CHECK(hRet) { \
     static bool bPopupShown = false; if (!bPopupShown && hRet) { bPopupShown = true; \
     printf("Return result report: 0x%08X\nIn %s (%s)\n", hRet, __func__, __FILE__); \
-    EmuWarning("An issue has been found. Please report game title and console's output of return result," \
+    EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "An issue has been found. Please report game title and console's output of return result," \
     " function, and file name to https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/issues/485"); } return hRet; }
 
 #include "EmuDSoundInline.hpp"
@@ -303,13 +302,13 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreate)
         }
 
         if (dsErrorMsg != nullptr) {
-            CxbxKrnlCleanup(dsErrorMsg, hRet);
+            CxbxKrnlCleanup(LOG_PREFIX, dsErrorMsg, hRet);
         }
 
         hRet = g_pDSound8->SetCooperativeLevel(g_hEmuWindow, DSSCL_PRIORITY);
 
         if (hRet != DS_OK) {
-            CxbxKrnlCleanup("g_pDSound8->SetCooperativeLevel Failed!");
+            CxbxKrnlCleanup(LOG_PREFIX, "g_pDSound8->SetCooperativeLevel Failed!");
         }
 
         // clear sound buffer cache
@@ -337,7 +336,7 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreate)
         hRet = g_pDSound8->CreateSoundBuffer(&bufferDesc, &g_pDSoundPrimaryBuffer, nullptr);
 
         if (hRet != DS_OK) {
-            CxbxKrnlCleanup("Creating primary buffer for DirectSound Failed!");
+            CxbxKrnlCleanup(LOG_PREFIX, "Creating primary buffer for DirectSound Failed!");
         }
 
         /* Quote from MDSN "For the primary buffer, you must use the
@@ -350,7 +349,7 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreate)
         hRet = g_pDSoundPrimaryBuffer->QueryInterface(IID_IDirectSound3DListener8, (LPVOID*)&g_pDSoundPrimary3DListener8);
 
         if (hRet != DS_OK) {
-            CxbxKrnlCleanup("Creating primary 3D Listener for DirectSound Failed!");
+            CxbxKrnlCleanup(LOG_PREFIX, "Creating primary 3D Listener for DirectSound Failed!");
         }
 
         initialized = true;
@@ -936,7 +935,7 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateBuffer)
 
         hRet = XTL::EMUPATCH(DirectSoundCreate)(NULL, &g_pDSound8, NULL);
         if (hRet != DS_OK) {
-            CxbxKrnlCleanup("Unable to initialize DirectSound!");
+            CxbxKrnlCleanup(LOG_PREFIX, "Unable to initialize DirectSound!");
         }
     }
 
@@ -962,7 +961,7 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateBuffer)
         DWORD dwAcceptableMask = 0x00000010 | 0x00000020 | 0x00000080 | 0x00000100 | 0x00020000 | 0x00040000 /*| 0x00080000*/;
 
         if (pdsbd->dwFlags & (~dwAcceptableMask)) {
-            EmuWarning("Use of unsupported pdsbd->dwFlags mask(s) (0x%.08X)", pdsbd->dwFlags & (~dwAcceptableMask));
+            EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Use of unsupported pdsbd->dwFlags mask(s) (0x%.08X)", pdsbd->dwFlags & (~dwAcceptableMask));
         }
 
         // HACK: Hot fix for titles not giving CTRL3D flag. Xbox might accept it, however the host does not.
@@ -985,7 +984,7 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateBuffer)
         GeneratePCMFormat(DSBufferDesc, pdsbd->lpwfxFormat, (*ppBuffer)->EmuFlags, pdsbd->dwBufferBytes, &(*ppBuffer)->X_BufferCache, (*ppBuffer)->X_BufferCacheSize);
         (*ppBuffer)->EmuBufferDesc = DSBufferDesc;
 
-        DbgPrintf("EmuDSound: DirectSoundCreateBuffer, *ppBuffer := 0x%08X, bytes := 0x%08X\n", *ppBuffer, (*ppBuffer)->EmuBufferDesc.dwBufferBytes);
+        DbgPrintf(LOG_PREFIX, "DirectSoundCreateBuffer, *ppBuffer := 0x%08X, bytes := 0x%08X\n", *ppBuffer, (*ppBuffer)->EmuBufferDesc.dwBufferBytes);
 
         DSoundBufferCreate(&DSBufferDesc, (*ppBuffer)->EmuDirectSoundBuffer8);
         if (pdsbd->dwFlags & DSBCAPS_CTRL3D) {
@@ -1218,7 +1217,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Lock)
     }
 
     if (hRet != DS_OK) {
-        CxbxKrnlCleanup("DirectSoundBuffer Lock Failed!");
+        CxbxKrnlCleanup(LOG_PREFIX, "DirectSoundBuffer Lock Failed!");
     }
 
     // Host lock position
@@ -1486,7 +1485,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetCurrentPosition)
     HRESULT hRet = pThis->EmuDirectSoundBuffer8->SetCurrentPosition(dwNewPosition);
 
     if (hRet != DS_OK) {
-        EmuWarning("SetCurrentPosition Failed!");
+        EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "SetCurrentPosition Failed!");
     }
 
     leaveCriticalSection;
@@ -1545,7 +1544,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Play)
                         pThis->X_lock.dwLockBytes2);
 
     if (dwFlags & ~(X_DSBPLAY_LOOPING | X_DSBPLAY_FROMSTART | X_DSBPLAY_SYNCHPLAYBACK)) {
-        CxbxKrnlCleanup("Unsupported Playing Flags");
+        CxbxKrnlCleanup(LOG_PREFIX, "Unsupported Playing Flags");
     }
     pThis->EmuPlayFlags = dwFlags;
 
@@ -1568,7 +1567,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Play)
     if (hRet == DS_OK) {
         if (dwFlags & X_DSBPLAY_FROMSTART) {
             if (pThis->EmuDirectSoundBuffer8->SetCurrentPosition(0) != DS_OK) {
-                EmuWarning("Rewinding buffer failed!");
+                EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Rewinding buffer failed!");
             }
         }
         if ((pThis->EmuFlags & DSE_FLAG_SYNCHPLAYBACK_CONTROL) == 0) {
@@ -1738,7 +1737,7 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateStream)
 
         hRet = XTL::EMUPATCH(DirectSoundCreate)(NULL, &g_pDSound8, NULL);
         if (hRet != DS_OK) {
-            CxbxKrnlCleanup("Unable to initialize DirectSound!");
+            CxbxKrnlCleanup(LOG_PREFIX, "Unable to initialize DirectSound!");
         }
     }
 
@@ -1766,7 +1765,7 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateStream)
         DWORD dwAcceptableMask = 0x00000010; // TODO: Note 0x00040000 is being ignored (DSSTREAMCAPS_LOCDEFER)
 
         if (pdssd->dwFlags & (~dwAcceptableMask)) {
-            EmuWarning("Use of unsupported pdssd->dwFlags mask(s) (0x%.08X)", pdssd->dwFlags & (~dwAcceptableMask));
+            EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Use of unsupported pdssd->dwFlags mask(s) (0x%.08X)", pdssd->dwFlags & (~dwAcceptableMask));
         }
         DSBufferDesc.dwSize = sizeof(DSBUFFERDESC);
         //DSBufferDesc->dwFlags = (pdssd->dwFlags & dwAcceptableMask) | DSBCAPS_CTRLVOLUME | DSBCAPS_GETCURRENTPOSITION2;
@@ -1799,7 +1798,7 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateStream)
         (*ppStream)->Xb_lpvContext = pdssd->lpvContext;
         //TODO: Implement mixbin variable support. Or just merge pdssd struct into DS Stream class.
 
-        DbgPrintf("EmuDSound: DirectSoundCreateStream, *ppStream := 0x%.08X\n", *ppStream);
+        DbgPrintf(LOG_PREFIX, "DirectSoundCreateStream, *ppStream := 0x%.08X\n", *ppStream);
 
         DSoundBufferCreate(&DSBufferDesc, (*ppStream)->EmuDirectSoundBuffer8);
         if (DSBufferDesc.dwFlags & DSBCAPS_CTRL3D) {
@@ -1859,7 +1858,7 @@ VOID WINAPI XTL::EMUPATCH(CMcpxStream_Dummy_0x10)(DWORD dwDummy1, DWORD dwDummy2
 
     // Causes deadlock in Halo...
     // TODO: Verify that this is a Vista related problem (I HATE Vista!)
-//    EmuWarning("EmuCMcpxStream_Dummy_0x10 is ignored!");
+//    EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "EmuCMcpxStream_Dummy_0x10 is ignored!");
 
     leaveCriticalSection;
 
@@ -1991,7 +1990,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_GetInfo)
 		LOG_FUNC_END;
 
     // TODO: A (real) implementation?
-    EmuWarning("EmuDirectSound_CDirectSoundStream_GetInfo is not yet supported!");
+    EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "EmuDirectSound_CDirectSoundStream_GetInfo is not yet supported!");
 
     if (pInfo) {
         pInfo->dwFlags = XMO_STREAMF_FIXED_SAMPLE_SIZE;
@@ -2132,7 +2131,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_Process)
         //TODO: What to do with output buffer audio variable? Need test case or functional source code.
         // NOTE: pOutputBuffer is reserved, must be set to NULL from titles.
         if (pOutputBuffer != xbnullptr) {
-            LOG_TEST_CASE("pOutputBuffer is not nullptr, please report title test case to issue tracker. Thanks!");
+            LOG_TEST_CASE(LOG_PREFIX, "pOutputBuffer is not nullptr, please report title test case to issue tracker. Thanks!");
         }
 
     } else {
@@ -3005,7 +3004,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound_EnableHeadphones)
 		LOG_FUNC_END;
 
     //Windows Vista and later does not set speaker configuration from SetSpeakerConfig function.
-    EmuWarning("EmuIDirectSound_EnableHeadphones ignored");
+    EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "EmuIDirectSound_EnableHeadphones ignored");
 
 	leaveCriticalSection;
 
@@ -3311,7 +3310,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_PlayEx)
 
     //TODO: Need implement support for rtTimeStamp.
     if (rtTimeStamp != 0) {
-        EmuWarning("Not implemented for rtTimeStamp greater than 0 of %08d", rtTimeStamp);
+        EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Not implemented for rtTimeStamp greater than 0 of %08d", rtTimeStamp);
     }
 
     HRESULT hRet = XTL::EMUPATCH(IDirectSoundBuffer_Play)(pThis, NULL, NULL, dwFlags);
@@ -3348,7 +3347,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound_GetCaps)
         pDSCaps->dwFree2DBuffers = (pDSCaps->dwFreeBufferSGEs == 0 ? 0 : 0x200 /* TODO: Replace me to g_dwFree2DBuffers*/ );
         pDSCaps->dwFree3DBuffers = (pDSCaps->dwFreeBufferSGEs == 0 ? 0 : 0x200 /* TODO: Replace me to g_dwFree3DBuffers*/ );
 
-        DbgPrintf("X_DSCAPS: dwFree2DBuffers = %8X | dwFree3DBuffers = %8X | dwFreeBufferSGEs = %08X | dwMemAlloc = %08X\n", pDSCaps->dwFree2DBuffers, pDSCaps->dwFree3DBuffers, pDSCaps->dwFreeBufferSGEs, pDSCaps->dwMemoryAllocated);
+        DbgPrintf(LOG_PREFIX, "X_DSCAPS: dwFree2DBuffers = %8X | dwFree3DBuffers = %8X | dwFreeBufferSGEs = %08X | dwMemAlloc = %08X\n", pDSCaps->dwFree2DBuffers, pDSCaps->dwFree3DBuffers, pDSCaps->dwFreeBufferSGEs, pDSCaps->dwMemoryAllocated);
     }
 
     leaveCriticalSection;
@@ -3729,12 +3728,12 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetNotificationPositions)
             if (hRet == DS_OK) {
                 hRet = pNotify->SetNotificationPositions(dwNotifyCount, paNotifies);
                 if (hRet != DS_OK) {
-                    EmuWarning("Could not set notification position(s)!");
+                    EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Could not set notification position(s)!");
                 }
 
                 pNotify->Release();
             } else {
-                EmuWarning("Could not create notification interface!");
+                EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Could not create notification interface!");
             }
         }
     }

@@ -637,7 +637,7 @@ static void pgraph_handle_method(NV2AState *d,
 			context_surfaces_2d->dest_offset = parameter & 0x07FFFFFF;
 			break;
 		default:
-			EmuWarning("NV2A: Unknown NV_CONTEXT_SURFACES_2D Method: 0x%08X\n", method);
+			EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Unknown NV_CONTEXT_SURFACES_2D Method: 0x%08X\n", method);
 		}
 	
 		break; 
@@ -730,7 +730,7 @@ static void pgraph_handle_method(NV2AState *d,
 
 			break;
 		default:
-			EmuWarning("NV2A: Unknown NV_IMAGE_BLIT Method: 0x%08X\n", method);
+			EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Unknown NV_IMAGE_BLIT Method: 0x%08X\n", method);
 		}
 		break;
 	}

@@ -141,9 +141,11 @@ extern volatile bool g_bPrintfOn;
 
 /*! DbgPrintf enabled if _DEBUG_TRACE is set */
 #ifdef _DEBUG_TRACE
-	#define DbgPrintf(fmt, ...) { \
-        CXBX_CHECK_INTEGRITY(); \
-        if(g_bPrintfOn) printf("[0x%.4X] "##fmt, GetCurrentThreadId(), ##__VA_ARGS__); \
+	#define DbgPrintf(cxbxr_module, fmt, ...) { \
+		if (g_EnabledModules[static_cast<unsigned int>(cxbxr_module)] && static_cast<unsigned int>(LOG_LEVEL::DEBUG) >= g_CurrentLogLevel) { \
+			CXBX_CHECK_INTEGRITY(); \
+			if(g_bPrintfOn) printf("[0x%.4X] %s: "##fmt, GetCurrentThreadId(), g_EnumModules2String[static_cast<unsigned int>(cxbxr_module)], ##__VA_ARGS__); \
+		} \
      }
 #else
 	inline void null_func(...) { }

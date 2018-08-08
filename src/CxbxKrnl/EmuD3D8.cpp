@@ -34,10 +34,10 @@
 // *
 // ******************************************************************
 #define _XBOXKRNL_DEFEXTRN_
+#define LOG_PREFIX CXBXR_MODULE::D3D8
+
 #include "xxhash32.h"
 #include <condition_variable>
-
-#define LOG_PREFIX CXBXR_MODULE::D3D8
 
 // prevent name collisions
 namespace xboxkrnl
@@ -226,7 +226,7 @@ g_EmuCDPD = {0};
 	do { \
 		if (FAILED(hRet)) \
 			if(g_bPrintfOn) \
-				DbgPrintf("%s : %s D3D error (0x%.08X: %s)\n", __func__, message, hRet, D3DErrorString(hRet)); \
+				DbgPrintf(LOG_PREFIX, "%s : %s D3D error (0x%.08X: %s)\n", __func__, message, hRet, D3DErrorString(hRet)); \
 	} while (0)
 
 #endif
@@ -520,7 +520,7 @@ VOID XTL::CxbxInitWindow(bool bFullInit)
 		if (hRenderWindowThread == NULL) {
 			char szBuffer[1024] = { 0 };
 			sprintf(szBuffer, "Creating EmuRenderWindowThread Failed: %08X", GetLastError());
-			CxbxPopupMessage(CxbxMsgDlgIcon_Error, szBuffer);
+			CxbxPopupMessage(LOG_PREFIX, LOG_LEVEL::FATAL, CxbxMsgDlgIcon_Error, szBuffer);
 			EmuShared::Cleanup();
 			ExitProcess(0);
 		}
@@ -688,7 +688,7 @@ inline bool IsResourceTypeGPUReadable(const DWORD ResourceType)
 		// assert(false); // Fixup's are not allowed to be registered
 		break;
 	default:
-		CxbxKrnlCleanup("Unhandled resource type");
+		CxbxKrnlCleanup(LOG_PREFIX, "Unhandled resource type");
 	}
 
 	return false;
@@ -816,7 +816,7 @@ XTL::IDirect3DResource *GetHostResource(XTL::X_D3DResource *pXboxResource, DWORD
 	auto key = GetHostResourceKey(pXboxResource);
 	auto it = g_XboxDirect3DResources.find(key);
 	if (it == g_XboxDirect3DResources.end() || !it->second.pHostResource) {
-		EmuWarning("GetHostResource: Resource not registered or does not have a host counterpart!");
+		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "GetHostResource: Resource not registered or does not have a host counterpart!");
 		return nullptr;
 	}
 
@@ -922,7 +922,7 @@ void SetHostResource(XTL::X_D3DResource* pXboxResource, XTL::IDirect3DResource* 
 	auto& resourceInfo = g_XboxDirect3DResources[key];	// Implicitely inserts a new entry if not already existing
 
 	if (resourceInfo.pHostResource) {
-		EmuWarning("SetHostResource: Overwriting an existing host resource");
+		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "SetHostResource: Overwriting an existing host resource");
 	}
 
 	resourceInfo.pHostResource = pHostResource;
@@ -1352,7 +1352,7 @@ VOID XTL::EmuD3DInit()
         // xbox Direct3DCreate8 returns "1" always, so we need our own ptr
         g_pDirect3D = Direct3DCreate(D3D_SDK_VERSION);
         if(g_pDirect3D == NULL)
-            CxbxKrnlCleanup("Could not initialize Direct3D8!");
+            CxbxKrnlCleanup(LOG_PREFIX, "Could not initialize Direct3D8!");
 
         g_pDirect3D->GetDeviceCaps(g_EmuCDPD.Adapter, g_EmuCDPD.DeviceType, &g_D3DCaps);
 
@@ -1471,11 +1471,11 @@ static DWORD WINAPI EmuRenderWindow(LPVOID lpVoid)
     // initialize direct input only if LLE USB is off
 	if (!bLLE_USB) {
 		if (!XTL::EmuDInputInit()) {
-			CxbxKrnlCleanup("Could not initialize DirectInput!");
+			CxbxKrnlCleanup(LOG_PREFIX, "Could not initialize DirectInput!");
 		}
 	}
 
-    DbgPrintf("EmuD3D8: Message-Pump thread is running.\n");
+    DbgPrintf(LOG_PREFIX, "Message-Pump thread is running.\n");
 
     SetFocus(g_hEmuWindow);
 
@@ -1518,7 +1518,7 @@ static DWORD WINAPI EmuRenderWindow(LPVOID lpVoid)
 
         delete dbgConsole;
 
-        CxbxKrnlCleanup(NULL);
+        CxbxKrnlCleanup(LOG_PREFIX, NULL);
     }
 
     return 0;
@@ -1664,7 +1664,7 @@ static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
                 case SIZE_MINIMIZED:
                 {
                     if(g_XBVideo.bFullScreen)
-                        CxbxKrnlCleanup(NULL);
+                        CxbxKrnlCleanup(LOG_PREFIX, NULL);
 
                     if(!g_bEmuSuspended)
                     {
@@ -1729,7 +1729,7 @@ static DWORD WINAPI EmuUpdateTickCount(LPVOID)
     // since callbacks come from here
 	InitXboxThread(g_CPUOthers); // avoid Xbox1 core for lowest possible latency
 
-    DbgPrintf("EmuD3D8: Timing thread is running.\n");
+    DbgPrintf(LOG_PREFIX, "Timing thread is running.\n");
 
     // current vertical blank count
     int curvb = 0;
@@ -1890,18 +1890,18 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
 
 	CxbxSetThreadName("Cxbx CreateDevice Proxy");
 
-    DbgPrintf("EmuD3D8: CreateDevice proxy thread is running.\n");
+    DbgPrintf(LOG_PREFIX, "CreateDevice proxy thread is running.\n");
 
     while(true)
     {
         // if we have been signalled, create the device with cached parameters
         if(g_EmuCDPD.bReady)
         {
-            DbgPrintf("EmuD3D8: CreateDevice proxy thread received request.\n");
+            DbgPrintf(LOG_PREFIX, "CreateDevice proxy thread received request.\n");
 
             // only one device should be created at once
             if (g_pD3DDevice != nullptr) {
-                DbgPrintf("EmuD3D8: CreateDevice proxy thread releasing old Device.\n");
+                DbgPrintf(LOG_PREFIX, "CreateDevice proxy thread releasing old Device.\n");
 
                 g_pD3DDevice->EndScene();
 
@@ -1945,10 +1945,10 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
 
             if (g_EmuCDPD.bCreate) {
                 if(g_EmuCDPD.XboxPresentationParameters.BufferSurfaces[0] != NULL)
-                    EmuWarning("BufferSurfaces[0] : 0x%.08X", g_EmuCDPD.XboxPresentationParameters.BufferSurfaces[0]);
+                    EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "BufferSurfaces[0] : 0x%.08X", g_EmuCDPD.XboxPresentationParameters.BufferSurfaces[0]);
 
                 if(g_EmuCDPD.XboxPresentationParameters.DepthStencilSurface != NULL)
-                    EmuWarning("DepthStencilSurface : 0x%.08X", g_EmuCDPD.XboxPresentationParameters.DepthStencilSurface);
+                    EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "DepthStencilSurface : 0x%.08X", g_EmuCDPD.XboxPresentationParameters.DepthStencilSurface);
 
 				// Make a binary copy of the Xbox D3DPRESENT_PARAMETERS
 				memcpy(&g_EmuCDPD.HostPresentationParameters, &(g_EmuCDPD.XboxPresentationParameters), sizeof(XTL::D3DPRESENT_PARAMETERS));
@@ -1977,7 +1977,7 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
 					// TODO: Enumerate maximum BackBufferCount if possible.
 					if(g_EmuCDPD.XboxPresentationParameters.BackBufferCount > 1)
 					{
-						EmuWarning("Limiting BackBufferCount to 1...");
+						EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Limiting BackBufferCount to 1...");
 						g_EmuCDPD.HostPresentationParameters.BackBufferCount = 1;
 					}
 
@@ -1995,8 +1995,8 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
 							// Test-case : Galleon
                             g_EmuCDPD.HostPresentationParameters.MultiSampleType = XTL::D3DMULTISAMPLE_2_SAMPLES;
 						else {
-							// CxbxKrnlCleanup("Unknown MultiSampleType (0x%.08X)", g_EmuCDPD.XboxPresentationParameters.MultiSampleType);
-							EmuWarning("MultiSampleType 0x%.08X is not supported!", g_EmuCDPD.XboxPresentationParameters.MultiSampleType);
+							// CxbxKrnlCleanup(LOG_PREFIX, "Unknown MultiSampleType (0x%.08X)", g_EmuCDPD.XboxPresentationParameters.MultiSampleType);
+							EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "MultiSampleType 0x%.08X is not supported!", g_EmuCDPD.XboxPresentationParameters.MultiSampleType);
 							g_EmuCDPD.HostPresentationParameters.MultiSampleType = XTL::D3DMULTISAMPLE_NONE;
 						}
                     }*/
@@ -2008,13 +2008,13 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
                     {
 						const char* resolution = g_XBVideo.szVideoResolution;
 						if (2 != sscanf(resolution, "%u x %u", &g_EmuCDPD.HostPresentationParameters.BackBufferWidth, &g_EmuCDPD.HostPresentationParameters.BackBufferHeight)) {
-							DbgPrintf("EmuCreateDeviceProxy: Couldn't parse resolution : %s.\n", resolution);
+							DbgPrintf(LOG_PREFIX, "EmuCreateDeviceProxy: Couldn't parse resolution : %s.\n", resolution);
 						}
 						else {
 							if (g_EmuCDPD.HostPresentationParameters.BackBufferWidth == 640)
-								DbgPrintf("EmuCreateDeviceProxy: Default width wasn't updated.\n");
+								DbgPrintf(LOG_PREFIX, "EmuCreateDeviceProxy: Default width wasn't updated.\n");
 							if (g_EmuCDPD.HostPresentationParameters.BackBufferWidth == 480)
-								DbgPrintf("EmuCreateDeviceProxy: Default height wasn't updated.\n");
+								DbgPrintf(LOG_PREFIX, "EmuCreateDeviceProxy: Default height wasn't updated.\n");
 						}
 
                         XTL::D3DDISPLAYMODE D3DDisplayMode;
@@ -2034,13 +2034,13 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
 							&g_EmuCDPD.HostPresentationParameters.BackBufferHeight,
 							szBackBufferFormat,
 							&g_EmuCDPD.HostPresentationParameters.FullScreen_RefreshRateInHz)) {
-							DbgPrintf("EmuCreateDeviceProxy: Couldn't parse resolution : %s.\n", resolution);
+							DbgPrintf(LOG_PREFIX, "EmuCreateDeviceProxy: Couldn't parse resolution : %s.\n", resolution);
 						}
 						else {
 							if (g_EmuCDPD.HostPresentationParameters.BackBufferWidth == 640)
-								DbgPrintf("EmuCreateDeviceProxy: Default width wasn't updated.\n");
+								DbgPrintf(LOG_PREFIX, "EmuCreateDeviceProxy: Default width wasn't updated.\n");
 							if (g_EmuCDPD.HostPresentationParameters.BackBufferWidth == 480)
-								DbgPrintf("EmuCreateDeviceProxy: Default height wasn't updated.\n");
+								DbgPrintf(LOG_PREFIX, "EmuCreateDeviceProxy: Default height wasn't updated.\n");
 						}
 
                         if(strcmp(szBackBufferFormat, "x1r5g5b5") == 0)
@@ -2057,14 +2057,14 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
                 // detect vertex processing capabilities
                 if((g_D3DCaps.DevCaps & D3DDEVCAPS_HWTRANSFORMANDLIGHT) && g_EmuCDPD.DeviceType == XTL::D3DDEVTYPE_HAL)
                 {
-                    DbgPrintf("EmuD3D8: Using hardware vertex processing\n");
+                    DbgPrintf(LOG_PREFIX, "Using hardware vertex processing\n");
 
                     g_EmuCDPD.BehaviorFlags = D3DCREATE_HARDWARE_VERTEXPROCESSING;
                     g_dwVertexShaderUsage = 0;
                 }
                 else
                 {
-                    DbgPrintf("EmuD3D8: Using software vertex processing\n");
+                    DbgPrintf(LOG_PREFIX, "Using software vertex processing\n");
 
                     g_EmuCDPD.BehaviorFlags = D3DCREATE_SOFTWARE_VERTEXPROCESSING;
                     g_dwVertexShaderUsage = D3DUSAGE_SOFTWAREPROCESSING;
@@ -2114,7 +2114,7 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
 				DEBUG_D3DRESULT(g_EmuCDPD.hRet, "IDirect3D::CreateDevice");
 
                 if(FAILED(g_EmuCDPD.hRet))
-                    CxbxKrnlCleanup("IDirect3D::CreateDevice failed");
+                    CxbxKrnlCleanup(LOG_PREFIX, "IDirect3D::CreateDevice failed");
 
 				// Which texture formats does this device support?
 				memset(g_bSupportsFormatSurface, false, sizeof(g_bSupportsFormatSurface));
@@ -2196,7 +2196,7 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
 					}
 
 					if(FAILED(hRet))
-                        CxbxKrnlCleanup("Could not initialize DirectDraw7");
+                        CxbxKrnlCleanup(LOG_PREFIX, "Could not initialize DirectDraw7");
 
 					hRet = g_pDD7->GetCaps(&g_DriverCaps, nullptr);
 					DEBUG_D3DRESULT(hRet, "g_pDD7->GetCaps");
@@ -2205,7 +2205,7 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
 					DEBUG_D3DRESULT(hRet, "g_pDD7->SetCooperativeLevel");
 
                     if(FAILED(hRet))
-                        CxbxKrnlCleanup("Could not set cooperative level");
+                        CxbxKrnlCleanup(LOG_PREFIX, "Could not set cooperative level");
                 }
 
 				// Dump all supported DirectDraw FourCC format codes
@@ -2218,7 +2218,7 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
                     g_pDD7->GetFourCCCodes(&dwCodes, lpCodes);
                     for(DWORD v=0;v<dwCodes;v++)
                     {
-						DbgPrintf("EmuD3D8: FourCC[%d] = %.4s\n", v, (char *)&(lpCodes[v]));
+						DbgPrintf(LOG_PREFIX, "FourCC[%d] = %.4s\n", v, (char *)&(lpCodes[v]));
 						// Map known FourCC codes to Xbox Format
 						int X_Format;
 						switch (lpCodes[v]) {
@@ -2243,7 +2243,7 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
 
 						// Warn if CheckDeviceFormat didn't report this format
 						if (!g_bSupportsFormatTexture[X_Format]) {
-							EmuWarning("EmuD3D8: FourCC format %.4s not previously detected via CheckDeviceFormat()! Enabling it.", (char *)&(lpCodes[v]));
+							EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "FourCC format %.4s not previously detected via CheckDeviceFormat()! Enabling it.", (char *)&(lpCodes[v]));
 							// TODO : If this warning never shows, detecting FourCC's could be removed entirely. For now, enable the format :
 							g_bSupportsFormatTexture[X_Format] = true;
 						}
@@ -2416,7 +2416,7 @@ void CxbxUpdateActiveIndexBuffer
 		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateIndexBuffer");
 
 		if (FAILED(hRet))
-			CxbxKrnlCleanup("CxbxUpdateActiveIndexBuffer: IndexBuffer Create Failed!");
+			CxbxKrnlCleanup(LOG_PREFIX, "CxbxUpdateActiveIndexBuffer: IndexBuffer Create Failed!");
 	}
 
 	// If the data needs updating, do so
@@ -2430,10 +2430,10 @@ void CxbxUpdateActiveIndexBuffer
 		D3DLockData* pData = nullptr;
 		indexBuffer.pHostIndexBuffer->Lock(0, 0, &pData, D3DLOCK_DISCARD);
 		if (pData == nullptr) {
-			CxbxKrnlCleanup("CxbxUpdateActiveIndexBuffer: Could not lock index buffer!");
+			CxbxKrnlCleanup(LOG_PREFIX, "CxbxUpdateActiveIndexBuffer: Could not lock index buffer!");
 		}
 
-		DbgPrintf("CxbxUpdateActiveIndexBuffer: Copying %d indices (D3DFMT_INDEX16)\n", IndexCount);
+		DbgPrintf(LOG_PREFIX, "CxbxUpdateActiveIndexBuffer: Copying %d indices (D3DFMT_INDEX16)\n", IndexCount);
 		memcpy(pData, pIndexData, IndexCount * sizeof(XTL::INDEX16));
 
 		indexBuffer.pHostIndexBuffer->Unlock();
@@ -2445,7 +2445,7 @@ void CxbxUpdateActiveIndexBuffer
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetIndices");
 
 	if (FAILED(hRet))
-		CxbxKrnlCleanup("CxbxUpdateActiveIndexBuffer: SetIndices Failed!");
+		CxbxKrnlCleanup(LOG_PREFIX, "CxbxUpdateActiveIndexBuffer: SetIndices Failed!");
 }
 
 // LTCG specific Direct3D_CreateDevice function...
@@ -2691,7 +2691,7 @@ PDWORD WINAPI XTL::EMUPATCH(D3DDevice_BeginPush)(DWORD Count)
 
 	if (g_pPrimaryPB != nullptr)
 	{
-		EmuWarning("D3DDevice_BeginPush called without D3DDevice_EndPush in between?!");
+		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "D3DDevice_BeginPush called without D3DDevice_EndPush in between?!");
 		delete[] g_pPrimaryPB; // prevent a memory leak
 	}
 
@@ -2719,7 +2719,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_BeginPush2)(DWORD Count, DWORD** ppPush)
 
 	if (g_pPrimaryPB != nullptr)
 	{
-		EmuWarning("D3DDevice_BeginPush2 called without D3DDevice_EndPush in between?!");
+		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "D3DDevice_BeginPush2 called without D3DDevice_EndPush in between?!");
 		delete[] g_pPrimaryPB; // prevent a memory leak
 	}
 
@@ -2741,7 +2741,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_EndPush)(DWORD *pPush)
 	LOG_FUNC_ONE_ARG(LOG_PREFIX, pPush);
 
 	if (g_pPrimaryPB == nullptr)
-		EmuWarning("D3DDevice_EndPush called without preceding D3DDevice_BeginPush?!");
+		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "D3DDevice_EndPush called without preceding D3DDevice_BeginPush?!");
 	else
 	{
 		EmuExecutePushBufferRaw(g_pPrimaryPB, g_dwPrimaryPBCount * sizeof(DWORD));
@@ -2879,7 +2879,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_LoadVertexShader_4)
 	//	LOG_FUNC_ARG(Handle)
 	//	LOG_FUNC_ARG(Address)
 	//	LOG_FUNC_END;
-	DbgPrintf("D3DDevice_LoadVertexShader_4(Handle : %d Address : %08x);\n", Handle, Address);
+	DbgPrintf(LOG_PREFIX, "D3DDevice_LoadVertexShader_4(Handle : %d Address : %08x);\n", Handle, Address);
 
 	// Handle is always address of an Xbox VertexShader struct, or-ed with 1 (X_D3DFVF_RESERVED0)
 	// An Xbox VertexShader contains : a 'Vshd' signature, flags, a size, a program (and constants)
@@ -3017,13 +3017,13 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SelectVertexShader)
 		}
         else
         {
-            EmuWarning("g_VertexShaderSlots[%d] = 0", Address);
+            EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "g_VertexShaderSlots[%d] = 0", Address);
 		}
     }
 
 	if (FAILED(hRet))
 	{
-		EmuWarning("We're lying about setting a vertext shader!");
+		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "We're lying about setting a vertext shader!");
 
 		hRet = D3D_OK;
 	}
@@ -3129,7 +3129,7 @@ XTL::X_D3DSurface* WINAPI XTL::EMUPATCH(D3DDevice_GetBackBuffer2)
 		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->GetFrontBuffer");
 
 		if (FAILED(hRet)) {
-			EmuWarning("Could not retrieve primary surface, using backbuffer");
+			EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Could not retrieve primary surface, using backbuffer");
 			SetHostSurface(pBackBuffer, nullptr);
 			pCachedPrimarySurface->Release();
 			pCachedPrimarySurface = nullptr;
@@ -3163,7 +3163,7 @@ XTL::X_D3DSurface* WINAPI XTL::EMUPATCH(D3DDevice_GetBackBuffer2)
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->GetBackBuffer");
 
 	if (FAILED(hRet))
-		CxbxKrnlCleanup("Unable to retrieve back buffer");
+		CxbxKrnlCleanup(LOG_PREFIX, "Unable to retrieve back buffer");
 
 	SetHostSurface(pBackBuffer, pCurrentHostBackBuffer);
 
@@ -3189,19 +3189,19 @@ XTL::X_D3DSurface* WINAPI XTL::EMUPATCH(D3DDevice_GetBackBuffer2)
 
 	// Now pXboxBackbuffer points to the requested Xbox backbuffer
 	if (pXboxBackBuffer == nullptr) {
-		CxbxKrnlCleanup("D3DDevice_GetBackBuffer2: Could not get Xbox backbuffer");
+		CxbxKrnlCleanup(LOG_PREFIX, "D3DDevice_GetBackBuffer2: Could not get Xbox backbuffer");
 	}
 
 	auto pCopySrcSurface = GetHostSurface(pXboxBackBuffer, D3DUSAGE_RENDERTARGET);
 	if (pCopySrcSurface == nullptr) {
-		EmuWarning("Failed to get Host Resource for Xbox Back Buffer");
+		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Failed to get Host Resource for Xbox Back Buffer");
 		return pXboxBackBuffer;
 	}
 
 	D3DLOCKED_RECT copyLockedRect;
 	HRESULT hRet = pCopySrcSurface->LockRect(&copyLockedRect, NULL, D3DLOCK_READONLY);
 	if (hRet != D3D_OK) {
-		EmuWarning("Could not lock Host Resource for Xbox Back Buffer");
+		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Could not lock Host Resource for Xbox Back Buffer");
 		return pXboxBackBuffer;
 	}
 
@@ -3209,7 +3209,7 @@ XTL::X_D3DSurface* WINAPI XTL::EMUPATCH(D3DDevice_GetBackBuffer2)
 
 	hRet = pCopySrcSurface->GetDesc(&copySurfaceDesc);
 	if (hRet != D3D_OK) {
-		EmuWarning("Could not get Xbox Back Buffer Host Surface Desc");
+		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Could not get Xbox Back Buffer Host Surface Desc");
 	} else {
 		DWORD Size = copyLockedRect.Pitch * copySurfaceDesc.Height; // TODO : What about mipmap levels?
 		// Finally, do the copy from the converted host resource to the xbox resource
@@ -3329,7 +3329,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetViewport)
 				HostViewPort.MaxZ = pViewport->MaxZ;
 			}
 			else {
-				EmuWarning("GetHostRenderTargetDimensions failed - SetViewport sets Xbox viewport instead!");
+				EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "GetHostRenderTargetDimensions failed - SetViewport sets Xbox viewport instead!");
 			}
 		}
 	}
@@ -3375,7 +3375,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_GetViewportOffsetAndScale)
 		LOG_FUNC_ARG(pScale)
 		LOG_FUNC_END;
 
-	// LOG_TEST_CASE("D3DDevice_GetViewportOffsetAndScale"); // Get us some test-cases
+	// LOG_TEST_CASE(LOG_PREFIX, "D3DDevice_GetViewportOffsetAndScale"); // Get us some test-cases
 	// Test case : 007: From Russia with Love
 	// Test case : Army Men?: Sarge's War
 	// Test case : BeatDown - Fists of Vengeance
@@ -3486,7 +3486,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateVertexShader)
 		LOG_FUNC_END;
 
 	if (g_pD3DDevice == nullptr) {
-		LOG_TEST_CASE("D3DDevice_CreateVertexShader called before Direct3D_CreateDevice");
+		LOG_TEST_CASE(LOG_PREFIX, "D3DDevice_CreateVertexShader called before Direct3D_CreateDevice");
 		// We lie to allow the game to continue for now, but it probably won't work well
 		return STATUS_SUCCESS;
 	}
@@ -3562,11 +3562,11 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateVertexShader)
 		else
 		{
 			pRecompiledFunction = NULL;
-			EmuWarning("Couldn't recompile vertex shader function.");
+			EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Couldn't recompile vertex shader function.");
 		}
 	}
 
-	//DbgPrintf("MaxVertexShaderConst = %d\n", g_D3DCaps.MaxVertexShaderConst);
+    //DbgPrintf(LOG_PREFIX, "MaxVertexShaderConst = %d\n", g_D3DCaps.MaxVertexShaderConst);
 
 	if (SUCCEEDED(hRet) && pRecompiledFunction != nullptr)
 	{
@@ -3662,7 +3662,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateVertexShader)
             char pFileName[30];
             static int FailedShaderCount = 0;
             VSH_SHADER_HEADER *pHeader = (VSH_SHADER_HEADER*)pFunction;
-            EmuWarning("Couldn't create vertex shader!");
+            EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Couldn't create vertex shader!");
             sprintf(pFileName, "failed%05d.xvu", FailedShaderCount);
             FILE *f = fopen(pFileName, "wb");
             if(f)
@@ -3751,7 +3751,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexShaderConstant)
 
     if(FAILED(hRet))
     {
-        EmuWarning("We're lying about setting a vertex shader constant!");
+        EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "We're lying about setting a vertex shader constant!");
         hRet = D3D_OK;
     }   
 }
@@ -3862,7 +3862,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetTexture_4)
 	//	LOG_FUNC_ARG(Stage)
 	//	LOG_FUNC_ARG(pTexture)
 	//	LOG_FUNC_END;
-	DbgPrintf("D3DDevice_SetTexture_4(Stage : %d pTexture : %08x);\n", Stage, pTexture);
+	DbgPrintf(LOG_PREFIX, "D3DDevice_SetTexture_4(Stage : %d pTexture : %08x);\n", Stage, pTexture);
 
 	// Call the Xbox implementation of this function, to properly handle reference counting for us
 	//XB_trampoline(VOID, WINAPI, D3DDevice_SetTexture_4, (X_D3DBaseTexture*));
@@ -3924,16 +3924,16 @@ VOID __fastcall XTL::EMUPATCH(D3DDevice_SwitchTexture)
     }
 
     if (Stage == -1) {
-		LOG_TEST_CASE("D3DDevice_SwitchTexture Unknown Method");
-        EmuWarning("Unknown Method (0x%.08X)", Method);
+		LOG_TEST_CASE(LOG_PREFIX, "D3DDevice_SwitchTexture Unknown Method");
+        EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Unknown Method (0x%.08X)", Method);
     }
     else {
 		// Switch Texture updates the data pointer of an active texture using pushbuffer commands
 		if (EmuD3DActiveTexture[Stage] == xbnullptr) {
-			LOG_TEST_CASE("D3DDevice_SwitchTexture without an active texture");
+			LOG_TEST_CASE(LOG_PREFIX, "D3DDevice_SwitchTexture without an active texture");
 		}
 		else {
-			//LOG_TEST_CASE("Using CxbxActiveTextureCopies");
+			//LOG_TEST_CASE(LOG_PREFIX, "Using CxbxActiveTextureCopies");
 			// See https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/issues/1159
 			// Test-case : Arena Football
 			// Test-case : Call of Duty 2: Big Red One
@@ -4089,7 +4089,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexData4f)
 		}
 
 		g_InlineVertexBuffer_Table = (struct _D3DIVB*)realloc(g_InlineVertexBuffer_Table, sizeof(struct _D3DIVB) * g_InlineVertexBuffer_TableLength);
-		DbgPrintf("Reallocated g_InlineVertexBuffer_Table to %d entries\n", g_InlineVertexBuffer_TableLength);
+		DbgPrintf(LOG_PREFIX, "Reallocated g_InlineVertexBuffer_Table to %d entries\n", g_InlineVertexBuffer_TableLength);
 	}
 
 	// Is this the initial call after D3DDevice_Begin() ?
@@ -4171,7 +4171,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexData4f)
 				// These are alright
 				break;
 			default:
-				EmuWarning("D3DDevice_SetVertexData4f unexpected FVF when selecting D3DFVF_XYZ(RHW) : %x", g_InlineVertexBuffer_FVF);
+				EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "D3DDevice_SetVertexData4f unexpected FVF when selecting D3DFVF_XYZ(RHW) : %x", g_InlineVertexBuffer_FVF);
 				// TODO : How to resolve this?
 			}
 
@@ -4202,7 +4202,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexData4f)
 				// These are alright
 				break;
 			default:
-				EmuWarning("D3DDevice_SetVertexData4f unexpected FVF when processing X_D3DVSDE_BLENDWEIGHT : %x", g_InlineVertexBuffer_FVF);
+				EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "D3DDevice_SetVertexData4f unexpected FVF when processing X_D3DVSDE_BLENDWEIGHT : %x", g_InlineVertexBuffer_FVF);
 				g_InlineVertexBuffer_FVF &= ~D3DFVF_POSITION_MASK; // for now, remove prior position mask, leading to blending below
 				g_InlineVertexBuffer_FVF |= D3DFVF_XYZB1;
 				// TODO: How to select blendweight D3DFVF_XYZB2 or up?
@@ -4238,7 +4238,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexData4f)
 		case X_D3DVSDE_FOG: // Xbox extension
 		{
 			g_InlineVertexBuffer_Table[o].Fog = a; // TODO : What about the other (b, c and d) arguments?
-			EmuWarning("Host Direct3D8 doesn''t support FVF FOG");
+			EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Host Direct3D8 doesn''t support FVF FOG");
 			break;
 		}
 
@@ -4247,14 +4247,14 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexData4f)
 		case X_D3DVSDE_BACKDIFFUSE: // Xbox extension
 		{
 			g_InlineVertexBuffer_Table[o].BackDiffuse = D3DCOLOR_COLORVALUE(a, b, c, d);
-			EmuWarning("Host Direct3D8 doesn''t support FVF BACKDIFFUSE");
+			EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Host Direct3D8 doesn''t support FVF BACKDIFFUSE");
 			break;
 		}
 
 		case X_D3DVSDE_BACKSPECULAR: // Xbox extension
 		{
 			g_InlineVertexBuffer_Table[o].BackSpecular = D3DCOLOR_COLORVALUE(a, b, c, d);
-			EmuWarning("Host Direct3D8 doesn''t support FVF BACKSPECULAR");
+			EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Host Direct3D8 doesn''t support FVF BACKSPECULAR");
 			break;
 		}
 
@@ -4318,7 +4318,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexData4f)
 		}
 
 		default:
-			EmuWarning("Unknown IVB Register : %d", Register);
+			EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Unknown IVB Register : %d", Register);
 	}
 }
 
@@ -4475,7 +4475,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_Clear)
 		if (Flags & X_D3DCLEAR_TARGET) {
 			// TODO: D3DCLEAR_TARGET_A, *R, *G, *B don't exist on windows
 			if ((Flags & X_D3DCLEAR_TARGET) != X_D3DCLEAR_TARGET)
-				EmuWarning("Unsupported : Partial D3DCLEAR_TARGET flag(s) for D3DDevice_Clear : 0x%.08X", Flags & X_D3DCLEAR_TARGET);
+				EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Unsupported : Partial D3DCLEAR_TARGET flag(s) for D3DDevice_Clear : 0x%.08X", Flags & X_D3DCLEAR_TARGET);
 		
 			HostFlags |= D3DCLEAR_TARGET;
 		}
@@ -4485,7 +4485,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_Clear)
 			if (g_bHasDepth)
 				HostFlags |= D3DCLEAR_ZBUFFER;
 			else
-				EmuWarning("Unsupported : D3DCLEAR_ZBUFFER flag for D3DDevice_Clear without ZBuffer");
+				EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Unsupported : D3DCLEAR_ZBUFFER flag for D3DDevice_Clear without ZBuffer");
 		}
 
 		// Only clear depth buffer and stencil if present
@@ -4496,11 +4496,11 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_Clear)
 			if (g_bHasStencil)
 				HostFlags |= D3DCLEAR_STENCIL;
 			else
-				EmuWarning("Unsupported : D3DCLEAR_STENCIL flag for D3DDevice_Clear without ZBuffer");
+				EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Unsupported : D3DCLEAR_STENCIL flag for D3DDevice_Clear without ZBuffer");
 		}
 
         if(Flags & ~(X_D3DCLEAR_TARGET | X_D3DCLEAR_ZBUFFER | X_D3DCLEAR_STENCIL))
-            EmuWarning("Unsupported Flag(s) for D3DDevice_Clear : 0x%.08X", Flags & ~(X_D3DCLEAR_TARGET | X_D3DCLEAR_ZBUFFER | X_D3DCLEAR_STENCIL));
+            EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Unsupported Flag(s) for D3DDevice_Clear : 0x%.08X", Flags & ~(X_D3DCLEAR_TARGET | X_D3DCLEAR_ZBUFFER | X_D3DCLEAR_STENCIL));
     }
 
 	DWORD dwFillMode;
@@ -4580,7 +4580,7 @@ DWORD WINAPI XTL::EMUPATCH(D3DDevice_Swap)
 
 	// TODO: Ensure this flag is always the same across library versions
 	if (Flags != 0 && Flags != CXBX_SWAP_PRESENT_FORWARD)
-			EmuWarning("XTL::EmuD3DDevice_Swap: Flags != 0");
+			EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "XTL::EmuD3DDevice_Swap: Flags != 0");
 
 	// Fetch the host backbuffer
 	XTL::IDirect3DSurface *pCurrentHostBackBuffer = nullptr;
@@ -4619,7 +4619,7 @@ DWORD WINAPI XTL::EMUPATCH(D3DDevice_Swap)
 					/* ColorKey = */ 0);
 
 				if (hRet != D3D_OK) {
-					EmuWarning("Couldn't blit Xbox BackBuffer to host BackBuffer : %X", hRet);
+					EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Couldn't blit Xbox BackBuffer to host BackBuffer : %X", hRet);
 				}
 			}
 		}
@@ -4628,7 +4628,7 @@ DWORD WINAPI XTL::EMUPATCH(D3DDevice_Swap)
 		if (g_OverlayProxy.Surface.Common) {
 			X_D3DFORMAT X_Format = GetXboxPixelContainerFormat(&g_OverlayProxy.Surface);
 			if (X_Format != X_D3DFMT_YUY2) {
-				LOG_TEST_CASE("Xbox overlay surface isn't using X_D3DFMT_YUY2");
+				LOG_TEST_CASE(LOG_PREFIX, "Xbox overlay surface isn't using X_D3DFMT_YUY2");
 			}
 
 			// Interpret the Xbox overlay data (depending the color space conversion render state)
@@ -4694,7 +4694,7 @@ DWORD WINAPI XTL::EMUPATCH(D3DDevice_Swap)
 
 			DEBUG_D3DRESULT(hRet, "D3DXLoadSurfaceFromMemory - UpdateOverlay could not convert buffer!\n");
 			if (hRet != D3D_OK) {
-				EmuWarning("Couldn't blit Xbox overlay to host BackBuffer : %X", hRet);
+				EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Couldn't blit Xbox overlay to host BackBuffer : %X", hRet);
 			}
 		}
 
@@ -4797,7 +4797,7 @@ void CreateHostResource(XTL::X_D3DResource *pResource, DWORD D3DUsage, int iText
 	case XTL::X_D3DRTYPE_PALETTE: ResourceTypeName = "Palette"; break;
 	case XTL::X_D3DRTYPE_FIXUP: ResourceTypeName = "Fixup"; break;
 	default:
-		EmuWarning("CreateHostResource :-> Unrecognized Xbox Resource Type 0x%.08X", XboxResourceType);
+		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "CreateHostResource :-> Unrecognized Xbox Resource Type 0x%.08X", XboxResourceType);
 		return;
 	}
 
@@ -4812,9 +4812,9 @@ void CreateHostResource(XTL::X_D3DResource *pResource, DWORD D3DUsage, int iText
 	VAddr VirtualAddr = (VAddr)GetDataFromXboxResource(pResource);
 	if ((VirtualAddr & ~PHYSICAL_MAP_BASE) == 0) {
 		// TODO: Fix or handle this situation..?
-		LOG_TEST_CASE("CreateHostResource : VirtualAddr == 0");
+		LOG_TEST_CASE(LOG_PREFIX, "CreateHostResource : VirtualAddr == 0");
 		// This is probably an unallocated resource, mapped into contiguous memory (0x80000000 OR 0xF0000000)
-		EmuWarning("CreateHostResource :-> %s carries no data - skipping conversion", ResourceTypeName);
+		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "CreateHostResource :-> %s carries no data - skipping conversion", ResourceTypeName);
 		return;
 	}
 
@@ -4847,7 +4847,7 @@ void CreateHostResource(XTL::X_D3DResource *pResource, DWORD D3DUsage, int iText
 				DEBUG_D3DRESULT(hRet, "pHostParentTexture->GetSurfaceLevel");
 				if (hRet == D3D_OK) {
 					SetHostSurface(pXboxSurface, pNewHostSurface);
-					DbgPrintf("CreateHostResource : Successfully created surface level (%u, 0x%.08X, 0x%.08X)\n",
+					DbgPrintf(LOG_PREFIX, "CreateHostResource : Successfully created surface level (%u, 0x%.08X, 0x%.08X)\n",
 						SurfaceLevel, pResource, pNewHostSurface);
 					return;
 				}
@@ -4855,7 +4855,7 @@ void CreateHostResource(XTL::X_D3DResource *pResource, DWORD D3DUsage, int iText
 			}
 			}
 
-			EmuWarning("Failed getting host surface level - falling through to regular surface creation");
+			EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Failed getting host surface level - falling through to regular surface creation");
 		}
 		// fall through
 	}
@@ -4872,12 +4872,12 @@ void CreateHostResource(XTL::X_D3DResource *pResource, DWORD D3DUsage, int iText
 			DEBUG_D3DRESULT(hRet, "pParentHostVolumeTexture->GetVolumeLevel");
 			if (hRet == D3D_OK) {
 				SetHostVolume(pXboxVolume, pNewHostVolume);
-				DbgPrintf("CreateHostResource : Successfully created volume level (%u, 0x%.08X, 0x%.08X)\n",
+				DbgPrintf(LOG_PREFIX, "CreateHostResource : Successfully created volume level (%u, 0x%.08X, 0x%.08X)\n",
 					VolumeLevel, pResource, pNewHostVolume);
 				return;
 			}
 
-			EmuWarning("Failed getting host volume level - falling through to regular volume creation");
+			EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Failed getting host volume level - falling through to regular volume creation");
 		}
 		// fall through
 	}
@@ -4906,7 +4906,7 @@ void CreateHostResource(XTL::X_D3DResource *pResource, DWORD D3DUsage, int iText
 			if (EmuXBFormatIsRenderTarget(X_Format))
 				D3DUsage |= D3DUSAGE_RENDERTARGET;
 			else
-				EmuWarning("Updating RenderTarget %s with an incompatible format!", ResourceTypeName);
+				EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Updating RenderTarget %s with an incompatible format!", ResourceTypeName);
 		}
 
 		// Determine the format we'll be using on host D3D
@@ -4982,21 +4982,21 @@ void CreateHostResource(XTL::X_D3DResource *pResource, DWORD D3DUsage, int iText
 				// Otherwise, choose a fallback for the format not supported on host
 				switch (X_Format) {
 				case XTL::X_D3DFMT_LIN_D24S8: { // Note : This case could be removed, as the default below can handle it too
-					EmuWarning("D3DFMT_LIN_D24S8 %s not supported - using D3DFMT_A8R8G8B8!", ResourceTypeName);
+					EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "D3DFMT_LIN_D24S8 %s not supported - using D3DFMT_A8R8G8B8!", ResourceTypeName);
 					// Note : This cannot set bConvertToARGB - we just copy it as-is
 					PCFormat = XTL::D3DFMT_A8R8G8B8;
 					break;
 				}
 				case XTL::X_D3DFMT_LIN_D16: {
 					// Test case : Turok (when entering menu)
-					EmuWarning("D3DFMT_LIN_D16 %s not supported - USING D3DFMT_R5G6B5!", ResourceTypeName);
+					EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "D3DFMT_LIN_D16 %s not supported - USING D3DFMT_R5G6B5!", ResourceTypeName);
 					// Note : This cannot set bConvertToARGB - we just copy it as-is
 					PCFormat = XTL::D3DFMT_R5G6B5; // TODO : Do something smarter
 					break;
 				}
 				case XTL::X_D3DFMT_X1R5G5B5: { // Note : This case could be removed, as the default below can handle it too
 					// Test case : JSRF (after loading)
-					EmuWarning("D3DFMT_X1R5G5B5 %s will be converted to ARGB", ResourceTypeName);
+					EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "D3DFMT_X1R5G5B5 %s will be converted to ARGB", ResourceTypeName);
 					bConvertToARGB = true;
 					PCFormat = XTL::D3DFMT_A8R8G8B8;
 					break;
@@ -5004,13 +5004,13 @@ void CreateHostResource(XTL::X_D3DResource *pResource, DWORD D3DUsage, int iText
 				default:
 					// Can the format be converted to ARGB?
 					if (EmuXBFormatCanBeConvertedToARGB(X_Format)) {
-						EmuWarning("Xbox %s Format %x will be converted to ARGB", ResourceTypeName, X_Format);
+						EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Xbox %s Format %x will be converted to ARGB", ResourceTypeName, X_Format);
 						bConvertToARGB = true;
 						PCFormat = XTL::D3DFMT_A8R8G8B8;
 					}
 					else {
 						// Otherwise, use a best matching format
-						/*CxbxKrnlCleanup*/EmuWarning("Encountered a completely incompatible %s format!", ResourceTypeName);
+						/*CxbxKrnlCleanup*/EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Encountered a completely incompatible %s format!", ResourceTypeName);
 						PCFormat = EmuXB2PC_D3DFormat(X_Format);
 					}
 				}
@@ -5044,21 +5044,21 @@ void CreateHostResource(XTL::X_D3DResource *pResource, DWORD D3DUsage, int iText
 		CxbxGetPixelContainerMeasures(pPixelContainer, 0, &dwWidth, &dwHeight, &dwDepth, &dwRowPitch, &dwSlicePitch);
 
 		if (dwDepth != 1) {
-			LOG_TEST_CASE("CreateHostResource : Depth != 1");
+			LOG_TEST_CASE(LOG_PREFIX, "CreateHostResource : Depth != 1");
 		}
 
 		// The following is necessary for DXT* textures (4x4 blocks minimum)
 		// TODO: Figure out if this is necessary under other circumstances?
 		if (bCompressed) {
 			if (dwWidth < dwMinSize) {
-				LOG_TEST_CASE("CreateHostResource : dwWidth < dwMinSize");
-				EmuWarning("Expanding %s width (%d->%d)", ResourceTypeName, dwWidth, dwMinSize);
+				LOG_TEST_CASE(LOG_PREFIX, "CreateHostResource : dwWidth < dwMinSize");
+				EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Expanding %s width (%d->%d)", ResourceTypeName, dwWidth, dwMinSize);
 				dwWidth = dwMinSize;
 			}
 
 			if (dwHeight < dwMinSize) {
-				LOG_TEST_CASE("CreateHostResource : dwHeight < dwMinSize");
-				EmuWarning("Expanding %s height (%d->%d)", ResourceTypeName, dwHeight, dwMinSize);
+				LOG_TEST_CASE(LOG_PREFIX, "CreateHostResource : dwHeight < dwMinSize");
+				EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Expanding %s height (%d->%d)", ResourceTypeName, dwHeight, dwMinSize);
 				dwHeight = dwMinSize;
 			}
 		}
@@ -5104,29 +5104,29 @@ void CreateHostResource(XTL::X_D3DResource *pResource, DWORD D3DUsage, int iText
 			// If this succeeds, the surface may not render correctly, but it won't crash
 			if (hRet != D3D_OK) {
 				if (D3DUsage & D3DUSAGE_DEPTHSTENCIL) {
-					EmuWarning("CreateDepthStencilSurface Failed\n\nError: %s\nDesc: %s",
+					EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "CreateDepthStencilSurface Failed\n\nError: %s\nDesc: %s",
 						XTL::DXGetErrorString(hRet), XTL::DXGetErrorDescription(hRet));
 				}
 				else {
-					EmuWarning("CreateImageSurface Failed\n\nError: %s\nDesc: %s",
+					EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "CreateImageSurface Failed\n\nError: %s\nDesc: %s",
 						XTL::DXGetErrorString(hRet), XTL::DXGetErrorDescription(hRet));
 				}
 
-				EmuWarning("Trying Fallback");
+				EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Trying Fallback");
 				hRet = g_pD3DDevice->CreateOffscreenPlainSurface(dwWidth, dwHeight, PCFormat, D3DPool, &pNewHostSurface, nullptr);
 			}
 
 			// If the fallback failed, show an error and exit execution.
 			if (hRet != D3D_OK) {
 				// We cannot safely continue in this state.
-				CxbxKrnlCleanup("CreateImageSurface Failed!\n\nError: %s\nDesc: %s",
+				CxbxKrnlCleanup(LOG_PREFIX, "CreateImageSurface Failed!\n\nError: %s\nDesc: %s",
 					XTL::DXGetErrorString(hRet), XTL::DXGetErrorDescription(hRet));
 			}
 
 			SetHostSurface(pResource, pNewHostSurface);
-			DbgPrintf("CreateHostResource : Successfully created %s (0x%.08X, 0x%.08X)\n",
+			DbgPrintf(LOG_PREFIX, "CreateHostResource : Successfully created %s (0x%.08X, 0x%.08X)\n",
 				ResourceTypeName, pResource, pNewHostSurface);
-			DbgPrintf("CreateHostResource : Width : %d, Height : %d, Format : %d\n",
+			DbgPrintf(LOG_PREFIX, "CreateHostResource : Width : %d, Height : %d, Format : %d\n",
 				dwWidth, dwHeight, PCFormat);
 			break;
 		}
@@ -5139,7 +5139,7 @@ void CreateHostResource(XTL::X_D3DResource *pResource, DWORD D3DUsage, int iText
 			// and retrieve and convert all of it's GetVolumeLevel() slices.
 			pNewHostVolume = nullptr;
 			// SetHostVolume(pResource, pNewHostVolume);
-			// DbgPrintf("CreateHostResource : Successfully created %s (0x%.08X, 0x%.08X)\n",
+			// DbgPrintf(LOG_PREFIX, "CreateHostResource : Successfully created %s (0x%.08X, 0x%.08X)\n",
 			//	ResourceTypeName, pResource, pNewHostVolume);
 			break;
 		}
@@ -5188,12 +5188,12 @@ void CreateHostResource(XTL::X_D3DResource *pResource, DWORD D3DUsage, int iText
 
 
 			if (hRet != D3D_OK) {
-				CxbxKrnlCleanup("CreateTexture Failed!\n\n"
+				CxbxKrnlCleanup(LOG_PREFIX, "CreateTexture Failed!\n\n"
 					"Error: 0x%X\nFormat: %d\nDimensions: %dx%d", hRet, PCFormat, dwWidth, dwHeight);
 			}
 
 			SetHostTexture(pResource, pNewHostTexture);
-			DbgPrintf("CreateHostResource : Successfully created %s (0x%.08X, 0x%.08X)\n",
+			DbgPrintf(LOG_PREFIX, "CreateHostResource : Successfully created %s (0x%.08X, 0x%.08X)\n",
 				ResourceTypeName, pResource, pNewHostTexture);
 			break;
 		}
@@ -5206,18 +5206,18 @@ void CreateHostResource(XTL::X_D3DResource *pResource, DWORD D3DUsage, int iText
 			DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateVolumeTexture");
 
 			if (hRet != D3D_OK) {
-				CxbxKrnlCleanup("CreateVolumeTexture Failed!\n\nError: %s\nDesc: %s",
+				CxbxKrnlCleanup(LOG_PREFIX, "CreateVolumeTexture Failed!\n\nError: %s\nDesc: %s",
 					XTL::DXGetErrorString(hRet), XTL::DXGetErrorDescription(hRet));
 			}
 
 			SetHostVolumeTexture(pResource, pNewHostVolumeTexture);
-			DbgPrintf("CreateHostResource : Successfully created %s (0x%.08X, 0x%.08X)\n",
+			DbgPrintf(LOG_PREFIX, "CreateHostResource : Successfully created %s (0x%.08X, 0x%.08X)\n",
 				ResourceTypeName, pResource, pNewHostVolumeTexture);
 			break;
 		}
 
 		case XTL::X_D3DRTYPE_CUBETEXTURE: {
-			DbgPrintf("CreateCubeTexture(%d, %d, 0, %d, D3DPOOL_MANAGED)\n", dwWidth,
+			DbgPrintf(LOG_PREFIX, "CreateCubeTexture(%d, %d, 0, %d, D3DPOOL_MANAGED)\n", dwWidth,
 				dwMipMapLevels, PCFormat);
 
 			hRet = g_pD3DDevice->CreateCubeTexture(dwWidth, dwMipMapLevels, D3DUsage,
@@ -5227,7 +5227,7 @@ void CreateHostResource(XTL::X_D3DResource *pResource, DWORD D3DUsage, int iText
 			DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateCubeTexture");
 
 			if (hRet != D3D_OK) {
-				CxbxKrnlCleanup("CreateCubeTexture Failed!\n\nError: \nDesc: "/*,
+				CxbxKrnlCleanup(LOG_PREFIX, "CreateCubeTexture Failed!\n\nError: \nDesc: "/*,
 					DXGetErrorString(hRet), DXGetErrorDescription(hRet)*/);
 			}
 
@@ -5235,7 +5235,7 @@ void CreateHostResource(XTL::X_D3DResource *pResource, DWORD D3DUsage, int iText
 			// TODO : Because cube face surfaces can be used as a render-target,
 			// we should call SetHostSurface() on all 6 faces, so that when Xbox
 			// code accesses a face, the host counterpart is already registered!
-			DbgPrintf("CreateHostResource : Successfully created %s (0x%.08X, 0x%.08X)\n",
+			DbgPrintf(LOG_PREFIX, "CreateHostResource : Successfully created %s (0x%.08X, 0x%.08X)\n",
 				ResourceTypeName, pResource, pNewHostCubeTexture);
 			break;
 		}
@@ -5295,7 +5295,7 @@ void CreateHostResource(XTL::X_D3DResource *pResource, DWORD D3DUsage, int iText
 				} // switch XboxResourceType
 
 				if (hRet != D3D_OK) {
-					EmuWarning("Locking host %s failed!", ResourceTypeName);
+					EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Locking host %s failed!", ResourceTypeName);
 					continue; // This often happens on depth-stencil surfaces - let's ignore their copies for now
 				}
 
@@ -5321,7 +5321,7 @@ void CreateHostResource(XTL::X_D3DResource *pResource, DWORD D3DUsage, int iText
 
 				// Do we need to convert to ARGB?
 				if (bConvertToARGB) {
-					DbgPrintf("Unsupported texture format, expanding to D3DFMT_A8R8G8B8");
+					DbgPrintf(LOG_PREFIX, "Unsupported texture format, expanding to D3DFMT_A8R8G8B8");
 
 					// Convert a row at a time, using a libyuv-like callback approach :
 					if (!ConvertD3DTextureToARGBBuffer(
@@ -5330,7 +5330,7 @@ void CreateHostResource(XTL::X_D3DResource *pResource, DWORD D3DUsage, int iText
 						pDst, dwDstRowPitch, dwDstSlicePitch,
 						dwDepth,
 						iTextureStage)) {
-						CxbxKrnlCleanup("Unhandled conversion!");
+						CxbxKrnlCleanup(LOG_PREFIX, "Unhandled conversion!");
 					}
 				}
 				else if (bSwizzled) {
@@ -5394,7 +5394,7 @@ void CreateHostResource(XTL::X_D3DResource *pResource, DWORD D3DUsage, int iText
 				}
 
 				if (hRet != D3D_OK) {
-					EmuWarning("Unlocking host %s failed!", ResourceTypeName);
+					EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Unlocking host %s failed!", ResourceTypeName);
 				}
 
 				if (face == XTL::D3DCUBEMAP_FACE_POSITIVE_X) {
@@ -5483,12 +5483,12 @@ void CreateHostResource(XTL::X_D3DResource *pResource, DWORD D3DUsage, int iText
 		dwSize = g_VMManager.QuerySize(VirtualAddr);
 		if (dwSize == 0) {
 			// TODO: once this is known to be working, remove the warning
-			EmuWarning("Push buffer allocation size unknown");
+			EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Push buffer allocation size unknown");
 			pPushBuffer->Lock = X_D3DRESOURCE_LOCK_FLAG_NOSIZE;
 			break;
 		}
 
-		DbgPrintf("CreateHostResource : Successfully created %S (0x%.08X, 0x%.08X, 0x%.08X)\n", ResourceTypeName, pResource->Data, pPushBuffer->Size, pPushBuffer->AllocationSize);
+		DbgPrintf(LOG_PREFIX, "CreateHostResource : Successfully created %S (0x%.08X, 0x%.08X, 0x%.08X)\n", ResourceTypeName, pResource->Data, pPushBuffer->Size, pPushBuffer->AllocationSize);
 		break;
 	}
 
@@ -5497,7 +5497,7 @@ void CreateHostResource(XTL::X_D3DResource *pResource, DWORD D3DUsage, int iText
 	case XTL::X_D3DRTYPE_FIXUP: {
 		XTL::X_D3DFixup *pFixup = (XTL::X_D3DFixup*)pResource;
 
-		EmuWarning("X_D3DRTYPE_FIXUP is not yet supported\n"
+		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "X_D3DRTYPE_FIXUP is not yet supported\n"
 			"0x%.08X (pFixup->Common) \n"
 			"0x%.08X (pFixup->Data)   \n"
 			"0x%.08X (pFixup->Lock)   \n"
@@ -5702,7 +5702,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetTextureState_TexCoordIndex_4)
 	// Check for 0x00040000 instead.
 
 	if (Value >= 0x00040000) {
-		EmuWarning("EmuD3DDevice_SetTextureState_TexCoordIndex: Unknown TexCoordIndex Value (0x%.08X)", Value);
+		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "EmuD3DDevice_SetTextureState_TexCoordIndex: Unknown TexCoordIndex Value (0x%.08X)", Value);
 		return;
 	}
 
@@ -5732,7 +5732,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetTextureState_TexCoordIndex)
 	// Check for 0x00040000 instead.
 
 	if (Value >= 0x00040000) {
-		EmuWarning("EmuD3DDevice_SetTextureState_TexCoordIndex: Unknown TexCoordIndex Value (0x%.08X)", Value);
+		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "EmuD3DDevice_SetTextureState_TexCoordIndex: Unknown TexCoordIndex Value (0x%.08X)", Value);
 		return;
 	}
 
@@ -5816,7 +5816,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetTextureState_BorderColor_4)
 	//	LOG_FUNC_ARG(Stage)
 	//	LOG_FUNC_ARG(Value)
 	//	LOG_FUNC_END;
-	DbgPrintf("D3DDevice_SetTextureState_BorderColor_4(Stage : %d Value : %d);\n", Stage, Value);
+	DbgPrintf(LOG_PREFIX, "D3DDevice_SetTextureState_BorderColor_4(Stage : %d Value : %d);\n", Stage, Value);
 
     HRESULT hRet;
 	hRet = g_pD3DDevice->SetSamplerState(Stage, D3DSAMP_BORDERCOLOR, Value);
@@ -5918,7 +5918,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetTextureState_BumpEnv_8)
 	//	LOG_FUNC_ARG(Type)
 	//	LOG_FUNC_ARG(Value)
 	//	LOG_FUNC_END;
-	DbgPrintf("D3DDevice_SetTextureState_BumpEnv_8(Stage : %d Type : %d Value : %d);\n", Stage, Type, Value);
+	DbgPrintf(LOG_PREFIX, "D3DDevice_SetTextureState_BumpEnv_8(Stage : %d Type : %d Value : %d);\n", Stage, Type, Value);
 
 	HRESULT hRet = D3D_OK;
 
@@ -6249,7 +6249,7 @@ VOID __fastcall XTL::EMUPATCH(D3DDevice_SetRenderState_Simple)
 			}
 		}
 
-		EmuWarning("RenderState_Simple(0x%.08X (%s), 0x%.08X) is unsupported!", Method, name.c_str(), Value);
+		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "RenderState_Simple(0x%.08X (%s), 0x%.08X) is unsupported!", Method, name.c_str(), Value);
 	}
     else
     {
@@ -6270,89 +6270,89 @@ VOID __fastcall XTL::EMUPATCH(D3DDevice_SetRenderState_Simple)
                 if(OrigValue & (1L<<24))
                     Value |= D3DCOLORWRITEENABLE_ALPHA;
 
-                DbgPrintf("D3DRS_COLORWRITEENABLE := 0x%.08X\n", Value);
+                DbgPrintf(LOG_PREFIX, "D3DRS_COLORWRITEENABLE := 0x%.08X\n", Value);
             }
             break;
 
             case D3DRS_SHADEMODE:
                 Value = EmuXB2PC_D3DSHADEMODE(Value);
-                DbgPrintf("D3DRS_SHADEMODE := 0x%.08X\n", Value);
+                DbgPrintf(LOG_PREFIX, "D3DRS_SHADEMODE := 0x%.08X\n", Value);
                 break;
 
             case D3DRS_BLENDOP:
                 Value = EmuXB2PC_D3DBLENDOP(Value);
-                DbgPrintf("D3DRS_BLENDOP := 0x%.08X\n", Value);
+                DbgPrintf(LOG_PREFIX, "D3DRS_BLENDOP := 0x%.08X\n", Value);
                 break;
 
             case D3DRS_SRCBLEND:
                 Value = EmuXB2PC_D3DBLEND(Value);
-                DbgPrintf("D3DRS_SRCBLEND := 0x%.08X\n", Value);
+                DbgPrintf(LOG_PREFIX, "D3DRS_SRCBLEND := 0x%.08X\n", Value);
                 break;
 
             case D3DRS_DESTBLEND:
                 Value = EmuXB2PC_D3DBLEND(Value);
-                DbgPrintf("D3DRS_DESTBLEND := 0x%.08X\n", Value);
+                DbgPrintf(LOG_PREFIX, "D3DRS_DESTBLEND := 0x%.08X\n", Value);
                 break;
 
             case D3DRS_ZFUNC:
                 Value = EmuXB2PC_D3DCMPFUNC(Value);
-                DbgPrintf("D3DRS_ZFUNC := 0x%.08X\n", Value);
+                DbgPrintf(LOG_PREFIX, "D3DRS_ZFUNC := 0x%.08X\n", Value);
                 break;
 
             case D3DRS_ALPHAFUNC:
                 Value = EmuXB2PC_D3DCMPFUNC(Value);
-                DbgPrintf("D3DRS_ALPHAFUNC := 0x%.08X\n", Value);
+                DbgPrintf(LOG_PREFIX, "D3DRS_ALPHAFUNC := 0x%.08X\n", Value);
                 break;
 
             case D3DRS_ALPHATESTENABLE:
-                DbgPrintf("D3DRS_ALPHATESTENABLE := 0x%.08X\n", Value);
+                DbgPrintf(LOG_PREFIX, "D3DRS_ALPHATESTENABLE := 0x%.08X\n", Value);
                 break;
 
             case D3DRS_ALPHABLENDENABLE:
-                DbgPrintf("D3DRS_ALPHABLENDENABLE := 0x%.08X\n", Value);
+                DbgPrintf(LOG_PREFIX, "D3DRS_ALPHABLENDENABLE := 0x%.08X\n", Value);
                 break;
 
             case D3DRS_ALPHAREF:
-                DbgPrintf("D3DRS_ALPHAREF := %lf\n", DWtoF(Value));
+                DbgPrintf(LOG_PREFIX, "D3DRS_ALPHAREF := %lf\n", DWtoF(Value));
                 break;
 
             case D3DRS_ZWRITEENABLE:
-                DbgPrintf("D3DRS_ZWRITEENABLE := 0x%.08X\n", Value);
+                DbgPrintf(LOG_PREFIX, "D3DRS_ZWRITEENABLE := 0x%.08X\n", Value);
                 break;
 
             case D3DRS_DITHERENABLE:
-                DbgPrintf("D3DRS_DITHERENABLE := 0x%.08X\n", Value);
+                DbgPrintf(LOG_PREFIX, "D3DRS_DITHERENABLE := 0x%.08X\n", Value);
                 break;
 
 			case D3DRS_STENCILZFAIL:
 				Value = EmuXB2PC_D3DSTENCILOP(Value);
-				DbgPrintf("D3DRS_STENCILZFAIL := 0x%.08X\n", Value);
+				DbgPrintf(LOG_PREFIX, "D3DRS_STENCILZFAIL := 0x%.08X\n", Value);
 				break;
 
 			case D3DRS_STENCILPASS:
 				Value = EmuXB2PC_D3DSTENCILOP(Value);
-				DbgPrintf("D3DRS_STENCILPASS := 0x%.08X\n", Value);
+				DbgPrintf(LOG_PREFIX, "D3DRS_STENCILPASS := 0x%.08X\n", Value);
 				break;
 
 			case D3DRS_STENCILFUNC:
 				Value = EmuXB2PC_D3DCMPFUNC(Value);
-				DbgPrintf("D3DRS_STENCILFUNC := 0x%.08X\n", Value);
+				DbgPrintf(LOG_PREFIX, "D3DRS_STENCILFUNC := 0x%.08X\n", Value);
 				break;
 
 			case D3DRS_STENCILREF:
-				DbgPrintf("D3DRS_STENCILREF := 0x%.08X\n", Value);
+				DbgPrintf(LOG_PREFIX, "D3DRS_STENCILREF := 0x%.08X\n", Value);
 				break;
 
 			case D3DRS_STENCILMASK:
-				DbgPrintf("D3DRS_STENCILMASK := 0x%.08X\n", Value);
+				DbgPrintf(LOG_PREFIX, "D3DRS_STENCILMASK := 0x%.08X\n", Value);
 				break;
 
 			case D3DRS_STENCILWRITEMASK:
-				DbgPrintf("D3DRS_STENCILWRITEMASK := 0x%.08X\n", Value);
+				DbgPrintf(LOG_PREFIX, "D3DRS_STENCILWRITEMASK := 0x%.08X\n", Value);
 				break;
 
             default:
-                CxbxKrnlCleanup("Unsupported RenderState (0x%.08X)", State);
+                CxbxKrnlCleanup(LOG_PREFIX, "Unsupported RenderState (0x%.08X)", State);
                 break;
         };
 
@@ -6382,7 +6382,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderState_VertexBlend)
     } else if(Value == 5) {
         Value = 3;
     } else {
-        LOG_TEST_CASE("Unsupported D3DVERTEXBLENDFLAGS (%d)", Value);
+        LOG_TEST_CASE(LOG_PREFIX, "Unsupported D3DVERTEXBLENDFLAGS (%d)", Value);
         return;
 	}
 
@@ -6430,7 +6430,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderState_CullMode)
             Value = D3DCULL_CCW;
             break;
         default:
-            CxbxKrnlCleanup("EmuD3DDevice_SetRenderState_CullMode: Unknown Cullmode (%d)", Value);
+            CxbxKrnlCleanup(LOG_PREFIX, "EmuD3DDevice_SetRenderState_CullMode: Unknown Cullmode (%d)", Value);
     }
 
 	HRESULT hRet = g_pD3DDevice->SetRenderState(D3DRS_CULLMODE, Value);
@@ -6882,7 +6882,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetStreamSource_4)
 	//	LOG_FUNC_ARG(pStreamData)
 	//	LOG_FUNC_ARG(Stride)
 	//	LOG_FUNC_END;
-	DbgPrintf("D3DDevice_SetStreamSource_4(StreamNumber : %08X pStreamData : %08X Stride : %08X);\n", StreamNumber, pStreamData, Stride);
+	DbgPrintf(LOG_PREFIX, "D3DDevice_SetStreamSource_4(StreamNumber : %08X pStreamData : %08X Stride : %08X);\n", StreamNumber, pStreamData, Stride);
 
 	// Forward to Xbox implementation
 	// This should stop us having to patch GetStreamSource!
@@ -6917,7 +6917,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetStreamSource_8)
 	//	LOG_FUNC_ARG(pStreamData)
 	//	LOG_FUNC_ARG(Stride)
 	//	LOG_FUNC_END;
-	DbgPrintf("D3DDevice_SetStreamSource_8(StreamNumber : %08X pStreamData : %08X Stride : %08X);\n", StreamNumber, pStreamData, Stride);
+	DbgPrintf(LOG_PREFIX, "D3DDevice_SetStreamSource_8(StreamNumber : %08X pStreamData : %08X Stride : %08X);\n", StreamNumber, pStreamData, Stride);
 
 	// Forward to Xbox implementation
 	// This should stop us having to patch GetStreamSource!
@@ -7107,7 +7107,7 @@ void CxbxAssureQuadListD3DIndexBuffer(UINT NrOfQuadVertices)
 		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateIndexBuffer");
 
 		if (FAILED(hRet))
-			CxbxKrnlCleanup("CxbxAssureQuadListD3DIndexBuffer : IndexBuffer Create Failed!");
+			CxbxKrnlCleanup(LOG_PREFIX, "CxbxAssureQuadListD3DIndexBuffer : IndexBuffer Create Failed!");
 
 		// Put quadlist-to-triangle-list index mappings into this buffer :
 		XTL::INDEX16* pIndexBufferData = nullptr;
@@ -7115,7 +7115,7 @@ void CxbxAssureQuadListD3DIndexBuffer(UINT NrOfQuadVertices)
 		DEBUG_D3DRESULT(hRet, "pQuadToTriangleD3DIndexBuffer->Lock");
 
 		if (pIndexBufferData == nullptr)
-			CxbxKrnlCleanup("CxbxAssureQuadListD3DIndexBuffer : Could not lock index buffer!");
+			CxbxKrnlCleanup(LOG_PREFIX, "CxbxAssureQuadListD3DIndexBuffer : Could not lock index buffer!");
 
 		memcpy(pIndexBufferData, CxbxAssureQuadListIndexBuffer(NrOfQuadVertices), uiIndexBufferSize);
 
@@ -7127,7 +7127,7 @@ void CxbxAssureQuadListD3DIndexBuffer(UINT NrOfQuadVertices)
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetIndices");
 
 	if (FAILED(hRet))
-		CxbxKrnlCleanup("CxbxAssureQuadListD3DIndexBuffer : SetIndices Failed!"); // +DxbxD3DErrorString(hRet));
+		CxbxKrnlCleanup(LOG_PREFIX, "CxbxAssureQuadListD3DIndexBuffer : SetIndices Failed!"); // +DxbxD3DErrorString(hRet));
 }
 
 // TODO : Move to own file
@@ -7149,7 +7149,7 @@ void CxbxDrawIndexedClosingLine(XTL::INDEX16 LowIndex, XTL::INDEX16 HighIndex)
 			nullptr // pSharedHandle
 		);
 		if (FAILED(hRet))
-			CxbxKrnlCleanup("Unable to create pClosingLineLoopIndexBuffer for D3DPT_LINELOOP emulation");
+			CxbxKrnlCleanup(LOG_PREFIX, "Unable to create pClosingLineLoopIndexBuffer for D3DPT_LINELOOP emulation");
 	}
 
 	XTL::INDEX16 *pCxbxClosingLineLoopIndexBufferData = nullptr;
@@ -7283,7 +7283,7 @@ void XTL::CxbxDrawIndexed(CxbxDrawContext &DrawContext)
 		g_dwPrimPerFrame += DrawContext.dwHostPrimitiveCount;
 		if (DrawContext.XboxPrimitiveType == X_D3DPT_LINELOOP) {
 			// Close line-loops using a final single line, drawn from the end to the start vertex
-			LOG_TEST_CASE("X_D3DPT_LINELOOP");
+			LOG_TEST_CASE(LOG_PREFIX, "X_D3DPT_LINELOOP");
 			// Read the end and start index from the supplied index data
 			LowIndex = DrawContext.pIndexData[0];
 			HighIndex = DrawContext.pIndexData[DrawContext.dwHostPrimitiveCount];
@@ -7316,7 +7316,7 @@ void XTL::CxbxDrawPrimitiveUP(CxbxDrawContext &DrawContext)
 	CxbxVertexBufferConverter VertexBufferConverter = {};
 	VertexBufferConverter.Apply(&DrawContext);
 	if (DrawContext.XboxPrimitiveType == X_D3DPT_QUADLIST) {
-		// LOG_TEST_CASE("X_D3DPT_QUADLIST"); // X-Marbles and XDK Sample PlayField hits this case
+		// LOG_TEST_CASE(LOG_PREFIX, "X_D3DPT_QUADLIST"); // X-Marbles and XDK Sample PlayField hits this case
 		// Draw quadlists using a single 'quad-to-triangle mapping' index buffer :
 		INDEX16 *pIndexData = CxbxAssureQuadListIndexBuffer(DrawContext.dwVertexCount);
 		// Convert quad vertex-count to triangle vertex count :
@@ -7439,7 +7439,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetPixelShader_0)
 
 	//LOG_FUNC_ONE_ARG(LOG_PREFIX, Handle);
 
-	DbgPrintf("D3DDevice_SetPixelShader_0(Handle : %d);\n", Handle);
+	DbgPrintf(LOG_PREFIX, "D3DDevice_SetPixelShader_0(Handle : %d);\n", Handle);
 
 	// Call the Xbox function to make sure D3D structures get set
 	//XB_trampoline(VOID, WINAPI, D3DDevice_SetPixelShader_0, ());
@@ -7488,7 +7488,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawVertices)
 	// Dxbx Note : In DrawVertices and DrawIndexedVertices, PrimitiveType may not be D3DPT_POLYGON
 
 	if (!EmuD3DValidVertexCount(PrimitiveType, VertexCount)) {
-		LOG_TEST_CASE("Invalid VertexCount");
+		LOG_TEST_CASE(LOG_PREFIX, "Invalid VertexCount");
 		return;
 	}
 
@@ -7505,9 +7505,9 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawVertices)
 		CxbxVertexBufferConverter VertexBufferConverter = {};
 		VertexBufferConverter.Apply(&DrawContext);
 		if (DrawContext.XboxPrimitiveType == X_D3DPT_QUADLIST) {
-			// LOG_TEST_CASE("X_D3DPT_QUADLIST"); // ?X-Marbles and XDK Sample (Cartoon, ?maybe PlayField?) hits this case
+			// LOG_TEST_CASE(LOG_PREFIX, "X_D3DPT_QUADLIST"); // ?X-Marbles and XDK Sample (Cartoon, ?maybe PlayField?) hits this case
 			if (StartVertex > 0) {
-				LOG_TEST_CASE("X_D3DPT_QUADLIST StartVertex > 0");
+				LOG_TEST_CASE(LOG_PREFIX, "X_D3DPT_QUADLIST StartVertex > 0");
 				// test-case : BLiNX: the time sweeper
 				// test-case : Halo - Combat Evolved
 				// test-case : Worms 3D Special Edition
@@ -7538,7 +7538,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawVertices)
 			g_dwPrimPerFrame += primCount;
 		}
 		else {
-			// if (StartVertex > 0) LOG_TEST_CASE("StartVertex > 0 (non-quad)"); // Verified test case : XDK Sample (PlayField)
+			// if (StartVertex > 0) LOG_TEST_CASE(LOG_PREFIX, "StartVertex > 0 (non-quad)"); // Verified test case : XDK Sample (PlayField)
 			HRESULT hRet = g_pD3DDevice->DrawPrimitive(
 				EmuXB2PC_D3DPrimitiveType(DrawContext.XboxPrimitiveType),
 				DrawContext.dwStartVertex,
@@ -7549,7 +7549,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawVertices)
 			g_dwPrimPerFrame += DrawContext.dwHostPrimitiveCount;
 			if (DrawContext.XboxPrimitiveType == X_D3DPT_LINELOOP) {
 				// Close line-loops using a final single line, drawn from the end to the start vertex
-				LOG_TEST_CASE("X_D3DPT_LINELOOP"); // TODO : Text-cases needed
+				LOG_TEST_CASE(LOG_PREFIX, "X_D3DPT_LINELOOP"); // TODO : Text-cases needed
 				INDEX16 LowIndex = (INDEX16)DrawContext.dwStartVertex;
 				INDEX16 HighIndex = (INDEX16)(DrawContext.dwStartVertex + DrawContext.dwHostPrimitiveCount);
 				// Draw the closing line using a helper function (which will SetIndices)
@@ -7589,7 +7589,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawVerticesUP)
 		LOG_FUNC_END;
 
 	if (!EmuD3DValidVertexCount(PrimitiveType, VertexCount)) {
-		LOG_TEST_CASE("Invalid VertexCount");
+		LOG_TEST_CASE(LOG_PREFIX, "Invalid VertexCount");
 		return;
 	}
 
@@ -7641,7 +7641,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVertices)
 		LOG_FUNC_END;
 
 	if (!EmuD3DValidVertexCount(PrimitiveType, VertexCount)) {
-		LOG_TEST_CASE("Invalid VertexCount");
+		LOG_TEST_CASE(LOG_PREFIX, "Invalid VertexCount");
 		return;
 	}
 
@@ -7699,7 +7699,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVerticesUP)
 		LOG_FUNC_END;
 
 	if (!EmuD3DValidVertexCount(PrimitiveType, VertexCount)) {
-		LOG_TEST_CASE("Invalid VertexCount");
+		LOG_TEST_CASE(LOG_PREFIX, "Invalid VertexCount");
 		return;
 	}
 
@@ -7726,7 +7726,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVerticesUP)
 			// This is slower (because of call-overhead) but doesn't require any index buffer patching
 
 			// Draw 1 quad as a 2 triangles in a fan (which both have the same winding order) :
-			// LOG_TEST_CASE("X_D3DPT_QUADLIST"); // Test-case : Buffy: The Vampire Slayer, FastLoad XDK Sample
+			// LOG_TEST_CASE(LOG_PREFIX, "X_D3DPT_QUADLIST"); // Test-case : Buffy: The Vampire Slayer, FastLoad XDK Sample
 			INDEX16* pWalkIndexData = (INDEX16*)pIndexData;
 			int iNumVertices = (int)VertexCount;
 			while (iNumVertices >= VERTICES_PER_QUAD) {
@@ -7758,7 +7758,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVerticesUP)
 			INDEX16 LowIndex, HighIndex;
 			WalkIndexBuffer(LowIndex, HighIndex, (INDEX16*)pIndexData, DrawContext.dwVertexCount);
 
-			// LOG_TEST_CASE("DrawIndexedPrimitiveUP"); // Test-case : Burnout, Namco Museum 50th Anniversary
+			// LOG_TEST_CASE(LOG_PREFIX, "DrawIndexedPrimitiveUP"); // Test-case : Burnout, Namco Museum 50th Anniversary
 			HRESULT hRet = g_pD3DDevice->DrawIndexedPrimitiveUP(
 				EmuXB2PC_D3DPrimitiveType(DrawContext.XboxPrimitiveType),
 				LowIndex, // MinVertexIndex
@@ -7774,7 +7774,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVerticesUP)
 			g_dwPrimPerFrame += DrawContext.dwHostPrimitiveCount;
 			if (DrawContext.XboxPrimitiveType == X_D3DPT_LINELOOP) {
 				// Close line-loops using a final single line, drawn from the end to the start vertex
-				LOG_TEST_CASE("X_D3DPT_LINELOOP"); // TODO : Which titles reach this case?
+				LOG_TEST_CASE(LOG_PREFIX, "X_D3DPT_LINELOOP"); // TODO : Which titles reach this case?
 				// Read the end and start index from the supplied index data
 				LowIndex = ((INDEX16*)pIndexData)[0];
 				HighIndex = ((INDEX16*)pIndexData)[DrawContext.dwHostPrimitiveCount];
@@ -8014,7 +8014,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderTarget)
 		pRenderTarget = g_pXboxRenderTarget;
 		// If there's no Xbox render target yet, fallback to the Xbox back buffer
 		if (pRenderTarget == xbnullptr) {
-			LOG_TEST_CASE("SetRenderTarget fallback to backbuffer");
+			LOG_TEST_CASE(LOG_PREFIX, "SetRenderTarget fallback to backbuffer");
 			pRenderTarget = g_XboxBackBufferSurface;
 		}
     }
@@ -8032,7 +8032,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderTarget)
 		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->GetBackBuffer");
 
 		if (FAILED(hRet)) {
-			CxbxKrnlCleanup("Could not get host backbuffer");
+			CxbxKrnlCleanup(LOG_PREFIX, "Could not get host backbuffer");
 		}
 	}
 
@@ -8261,7 +8261,7 @@ VOID __stdcall XTL::EMUPATCH(D3DDevice_DeleteVertexShader_0)
 		mov Handle, eax
 	}
 
-	LOG_TEST_CASE("Validate this function!");
+	LOG_TEST_CASE(LOG_PREFIX, "Validate this function!");
 	return EMUPATCH(D3DDevice_DeleteVertexShader)(Handle);
 }
 
@@ -8536,7 +8536,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_LoadVertexShaderProgram)
     {
 		DWORD hNewShader = 0;
 
-		// Save the contents of the existing vertex shader program
+		// Save the contents of the existing vertex shader programLOG_TEST_CASE(LOG_PREFIX, 
 		DWORD* pDeclaration = (DWORD*) malloc( pVertexShader->DeclarationSize );
 		memmove( pDeclaration, pVertexShader->pDeclaration, pVertexShader->DeclarationSize );
 
@@ -8544,14 +8544,14 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_LoadVertexShaderProgram)
 		HRESULT hr = EMUPATCH(D3DDevice_CreateVertexShader)( pDeclaration, pFunction, &hNewShader, 0 );
 		free(pDeclaration);
 		if( FAILED( hr ) )
-			CxbxKrnlCleanup( "Error creating new vertex shader!" );
+			CxbxKrnlCleanup(LOG_PREFIX, "Error creating new vertex shader!" );
 
 		EMUPATCH(D3DDevice_LoadVertexShader)(hNewShader, Address);
 		EMUPATCH(D3DDevice_SelectVertexShader)(hNewShader, Address);
 
 		g_LoadVertexShaderProgramCache[shaderCacheKey] = hNewShader;
 
-		EmuWarning("Vertex Shader Cache Size: %d", g_LoadVertexShaderProgramCache.size());
+		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Vertex Shader Cache Size: %d", g_LoadVertexShaderProgramCache.size());
     }
 }
 
@@ -8736,7 +8736,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_SetDepthClipPlanes)
         break;
 
         default:
-            EmuWarning("Unknown SetDepthClipPlanes Flags provided");;
+            EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Unknown SetDepthClipPlanes Flags provided");;
     }
 
     // TODO
@@ -8829,7 +8829,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetScreenSpaceOffset)
 		LOG_FUNC_ARG(y)
 		LOG_FUNC_END;
 
-    EmuWarning("EmuD3DDevice_SetScreenSpaceOffset ignored");
+    EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "EmuD3DDevice_SetScreenSpaceOffset ignored");
 }
 
 // ******************************************************************
@@ -9263,7 +9263,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_GetMaterial)
 
 	if(FAILED(hRet))
     {
-		EmuWarning("We're lying about getting a material!");
+		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "We're lying about getting a material!");
         hRet = D3D_OK;
     }
 }
@@ -9292,7 +9292,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetPixelShaderConstant_4)
     //    LOG_FUNC_ARG(pConstantData)
     //    LOG_FUNC_ARG(ConstantCount)
     //    LOG_FUNC_END;
-    DbgPrintf("D3DDevice_SetPixelShaderConstant_4(Register : %d pConstantData : %08X ConstantCount : %d);\n", Register, pConstantData, ConstantCount);
+    DbgPrintf(LOG_PREFIX, "D3DDevice_SetPixelShaderConstant_4(Register : %d pConstantData : %08X ConstantCount : %d);\n", Register, pConstantData, ConstantCount);
 
     // TODO: This hack is necessary for Vertex Shaders on XDKs prior to 4361, but if this
     // causes problems with pixel shaders, feel free to comment out the hack below.
@@ -9309,7 +9309,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetPixelShaderConstant_4)
 
     if(FAILED(hRet))
     {
-        EmuWarning("We're lying about setting a pixel shader constant!");
+        EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "We're lying about setting a pixel shader constant!");
 
         hRet = D3D_OK;
     }

@@ -48,7 +48,7 @@ namespace xboxkrnl
 #include "Logging.h" // For LOG_FUNC()
 #include "EmuKrnlLogging.h"
 #include "CxbxKrnl.h" // For CxbxKrnlCleanup, CxbxConvertArgToString, and CxbxExec
-#include "Emu.h" // For EmuWarning()
+#include "Emu.h" // For EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, )
 #include "EmuKrnl.h"
 #include "EmuX86.h" // HalReadWritePciSpace needs this
 #include "EmuShared.h"
@@ -239,7 +239,7 @@ XBSYSAPI EXPORTNUM(44) xboxkrnl::ULONG NTAPI xboxkrnl::HalGetInterruptVector
 			*Irql = (KIRQL)VECTOR2IRQL(dwVector);
 
 #ifdef _DEBUG_TRACE
-		DbgPrintf("KRNL: HalGetInterruptVector(): Interrupt vector requested for %d (%s)\n", 
+		DbgPrintf(LOG_PREFIX, "HalGetInterruptVector(): Interrupt vector requested for %d (%s)\n", 
 			BusInterruptLevel, IRQNames[BusInterruptLevel]);
 #endif
 	}
@@ -478,7 +478,7 @@ XBSYSAPI EXPORTNUM(49) xboxkrnl::VOID DECLSPEC_NORETURN NTAPI xboxkrnl::HalRetur
 
 	switch (Routine) {
 	case ReturnFirmwareHalt:
-		CxbxKrnlCleanup("Emulated Xbox is halted");
+		CxbxKrnlCleanup(LOG_PREFIX, "Emulated Xbox is halted");
 		break;
 
 	case ReturnFirmwareReboot:
@@ -583,7 +583,7 @@ XBSYSAPI EXPORTNUM(49) xboxkrnl::VOID DECLSPEC_NORETURN NTAPI xboxkrnl::HalRetur
 				CxbxConvertArgToString(szProcArgsBuffer, szFilePath_CxbxReloaded_Exe, XbePath.c_str(), CxbxKrnl_hEmuParent, CxbxKrnl_DebugMode, CxbxKrnl_DebugFileName.c_str());
 
 				if (!CxbxExec(szProcArgsBuffer, nullptr, false)) {
-					CxbxKrnlCleanup("Could not launch %s", XbePath.c_str());
+					CxbxKrnlCleanup(LOG_PREFIX, "Could not launch %s", XbePath.c_str());
 				}
 			}
 		}
@@ -605,7 +605,7 @@ XBSYSAPI EXPORTNUM(49) xboxkrnl::VOID DECLSPEC_NORETURN NTAPI xboxkrnl::HalRetur
 		CxbxConvertArgToString(szProcArgsBuffer, szFilePath_CxbxReloaded_Exe, szFilePath_Xbe, CxbxKrnl_hEmuParent, CxbxKrnl_DebugMode, CxbxKrnl_DebugFileName.c_str());
 
 		if (!CxbxExec(szProcArgsBuffer, nullptr, false)) {
-			CxbxKrnlCleanup("Could not launch %s", szFilePath_Xbe);
+			CxbxKrnlCleanup(LOG_PREFIX, "Could not launch %s", szFilePath_Xbe);
 		}
 		break;
 	}

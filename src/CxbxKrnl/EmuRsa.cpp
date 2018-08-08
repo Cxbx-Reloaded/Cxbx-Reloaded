@@ -36,6 +36,8 @@
 // This rsa implementation is directly borrowed from the xbedump tool of XQEMU (GPLv2 license)
 // https://github.com/xqemu/xbedump
 
+#define LOG_PREFIX CXBXR_MODULE::RSA
+
 #include "EmuRsa.h"
 #include "Emu.h" // For EmuWarning
 #include <cstring>
@@ -225,7 +227,7 @@ giant newgiant(int numshorts)
 	giant 		thegiant;
 
 	if (numshorts > MAX_SHORTS) {
-		EmuWarning("Requested giant too big.");
+		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Requested giant too big.");
 	}
 	if (numshorts <= 0)
 		numshorts = MAX_SHORTS;

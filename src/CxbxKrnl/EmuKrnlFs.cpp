@@ -36,7 +36,7 @@
 // ******************************************************************
 #define _XBOXKRNL_DEFEXTRN_
 
-#define LOG_PREFIX CXBXR_MODULE::FS
+#define LOG_PREFIX CXBXR_MODULE::FSC
 
 // prevent name collisions
 namespace xboxkrnl
@@ -53,7 +53,7 @@ namespace NtDll
 #include "EmuNtDll.h"
 };
 
-#include "Emu.h" // For EmuWarning()
+#include "Emu.h" // For EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, )
 
 #define FSCACHE_MAXIMUM_NUMBER_OF_CACHE_PAGES 2048
 

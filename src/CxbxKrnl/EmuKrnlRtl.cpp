@@ -55,7 +55,7 @@ namespace NtDll
 };
 
 #include "CxbxKrnl.h" // For CxbxKrnlCleanup()
-#include "Emu.h" // For EmuWarning()
+#include "Emu.h" // For EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, )
 #include <assert.h>
 
 #ifdef _WIN32
@@ -80,7 +80,7 @@ static void add_critical_section(
         critical_sections[xbox_crit_section] = host_crit_section;
     }
     else {
-        DbgPrintf("Critical Section key %p already exists\n", xbox_crit_section);
+        DbgPrintf(LOG_PREFIX, "Critical Section key %p already exists\n", xbox_crit_section);
     }
 }
 
@@ -303,7 +303,7 @@ XBSYSAPI EXPORTNUM(264) xboxkrnl::VOID NTAPI xboxkrnl::RtlAssert
 		LOG_FUNC_ARG(Message)
 		LOG_FUNC_END;
 
-	CxbxPopupMessage(CxbxMsgDlgIcon_Warn, "RtlAssert() raised by emulated program - consult Debug log");
+	CxbxPopupMessage(LOG_PREFIX, LOG_LEVEL::WARNING, CxbxMsgDlgIcon_Warn, "RtlAssert() raised by emulated program - consult Debug log");
 }
 
 // ******************************************************************
@@ -742,7 +742,7 @@ XBSYSAPI EXPORTNUM(277) xboxkrnl::VOID NTAPI xboxkrnl::RtlEnterCriticalSection
             );
             if(!NT_SUCCESS(result))
             {
-                CxbxKrnlCleanup("Waiting for event of a critical section returned %lx.", result);
+                CxbxKrnlCleanup(LOG_PREFIX, "Waiting for event of a critical section returned %lx.", result);
             };
             CriticalSection->OwningThread = thread;
             CriticalSection->RecursionCount = 1;
@@ -1473,7 +1473,7 @@ XBSYSAPI EXPORTNUM(301) xboxkrnl::ULONG NTAPI xboxkrnl::RtlNtStatusToDosError
 		return LOWORD(Status);
 
 no_mapping:
-    DbgPrintf("no mapping for %08x\n", Status);
+    DbgPrintf(LOG_PREFIX, "no mapping for %08x\n", Status);
 	ret = ERROR_MR_MID_NOT_FOUND;
 */
 	RETURN(LOG_PREFIX, ret);
@@ -2157,6 +2157,6 @@ XBSYSAPI EXPORTNUM(352) xboxkrnl::VOID NTAPI xboxkrnl::RtlRip
 		LOG_FUNC_ARG(Message)
 		LOG_FUNC_END;
 
-	EmuWarning("RtlRip@%s:\n\nASSERT FAILED:\n%s\n\nDescription:\n%s",
+	EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "RtlRip@%s:\n\nASSERT FAILED:\n%s\n\nDescription:\n%s",
 		ApiName, Expression, Message);
 }

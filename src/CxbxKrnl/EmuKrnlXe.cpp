@@ -47,7 +47,6 @@ namespace xboxkrnl
 #include "CxbxKrnl.h" // For CxbxKrnl_Xbe
 #include "Logging.h" // For LOG_FUNC()
 #include "EmuKrnlLogging.h"
-#include "Emu.h" // For EmuWarning()
 #include "VMManager.h"
 
 // ******************************************************************

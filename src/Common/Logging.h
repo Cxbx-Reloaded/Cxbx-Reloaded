@@ -53,33 +53,43 @@ typedef enum class _LOG_LEVEL {
 
 typedef enum class _CXBXR_MODULE {
 	// general
-	CXBX = 0,
+	CXBXR = 0,
 	XBE,
 	INIT,
 	VMEM,
 	PMEM,
+	GUI,
+	EEPR,
+	RSA,
 	POOLMEM,
 	D3D8,
+	D3DST,
+	D3DCVT,
 	DSOUND,
 	XAPI,
 	XACT,
 	XGRP,
 	XONLINE,
-	XBDM,
+	FS,
 	PSHB,
+	PXSH,
+	VTXSH,
+	VTXB,
 	DINP,
 	XINP,
+	SDL2,
 	FILE,
-	FS,
 	X86,
 	HLE,
 	NET,
 	MCPX,
 	NV2A,
+	SMC,
 	OHCI,
 	USB,
 	HUB,
 	XIDCTRL,
+	ADM,
 	// kernel
 	KRNL,
 	LOG,
@@ -88,13 +98,12 @@ typedef enum class _CXBXR_MODULE {
 	AV,
 	DBG,
 	EX,
-	FS,
+	FSC,
 	HAL,
 	IO,
 	KD,
 	KE,
 	KI,
-	KD,
 	MM,
 	NT,
 	OB,
@@ -106,8 +115,8 @@ typedef enum class _CXBXR_MODULE {
 	MAX,
 }CXBXR_MODULE;
 
-extern std::atomic_bool g_EnabledModules[static_cast<unsigned int>(_CXBXR_MODULE::MAX)];
-extern const char* g_EnumModules2String[static_cast<unsigned int>(_CXBXR_MODULE::MAX)];
+extern std::atomic_bool g_EnabledModules[static_cast<unsigned int>(CXBXR_MODULE::MAX)];
+extern const char* g_EnumModules2String[static_cast<unsigned int>(CXBXR_MODULE::MAX)];
 extern std::atomic_uint g_CurrentLogLevel;
 
 //
@@ -242,16 +251,6 @@ extern thread_local std::string _logThreadPrefix;
 #define LOG_CHECK_ENABLED(cxbxr_module, level) \
 	if (g_EnabledModules[static_cast<unsigned int>(cxbxr_module)] && static_cast<unsigned int>(level) >= g_CurrentLogLevel)
 
-// Writes the log to stdout
-#define LOG_WRITE(cxbxr_module, string) \
-	std::cout << g_EnumModules2String[static_cast<unsigned int>(cxbxr_module)] << ": " << string;
-
-// Writes the log at debug level
-#define LOG_WRITE_DEBUG(cxbxr_module, string) \
-	LOG_CHECK_ENABLED(cxbxr_module, LOG_LEVEL::DEBUG) { \
-		LOG_WRITE(cxbxr_module, string) \
-	}
-
 #define LOG_THREAD_INIT \
 	if (_logThreadPrefix.length() == 0) { \
 		std::stringstream tmp; \
@@ -320,8 +319,8 @@ extern thread_local std::string _logThreadPrefix;
 
 // LOG_FORWARD indicates that an api is implemented by a forward to another API
 #define LOG_FORWARD(cxbxr_module, api) \
+	LOG_INIT \
 	LOG_CHECK_ENABLED(cxbxr_module, LOG_LEVEL::DEBUG) { \
-		LOG_INIT \
 		do { if(g_bPrintfOn) { \
 			std::cout << _logThreadPrefix << _logFuncPrefix << " forwarding to "#api"...\n"; \
 		} } while (0); \
@@ -418,14 +417,14 @@ extern thread_local std::string _logThreadPrefix;
 #define LOG_FUNC_ONE_ARG_OUT(cxbxr_module, arg) LOG_FUNC_BEGIN(cxbxr_module) LOG_FUNC_ARG_OUT(arg) LOG_FUNC_END 
 
 // RETURN logs the given result and then returns it (so this should appear last in functions)
-#define RETURN(cxbxr_module, r) do { LOG_CHECK_ENABLED(cxbxr_module, LOG_LEVEL::DEBUG) { LOG_FUNC_RESULT(r) return r; } } while (0)
+#define RETURN(cxbxr_module, r) do { LOG_CHECK_ENABLED(cxbxr_module, LOG_LEVEL::DEBUG) { LOG_FUNC_RESULT(r) } return r; } while (0)
 
 // RETURN_TYPE logs the given typed result and then returns it (so this should appear last in functions)
-#define RETURN_TYPE(cxbxr_module, type, r) do { LOG_CHECK_ENABLED(cxbxr_module, LOG_LEVEL::DEBUG) { LOG_FUNC_RESULT_TYPE(type, r) return r; } } while (0)
+#define RETURN_TYPE(cxbxr_module, type, r) do { LOG_CHECK_ENABLED(cxbxr_module, LOG_LEVEL::DEBUG) { LOG_FUNC_RESULT_TYPE(type, r) } return r; } while (0)
 
-#define LOG_ONCE(msg, ...) { static bool bFirstTime = true; if(bFirstTime) { bFirstTime = false; DbgPrintf("TRAC: " ## msg, __VA_ARGS__); } }
+#define LOG_ONCE(msg, ...) { static bool bFirstTime = true; if(bFirstTime) { bFirstTime = false; DbgPrintf(LOG_PREFIX, "TRAC: " ## msg, __VA_ARGS__); } }
 
-#define LOG_XBOX_CALL(func) DbgPrintf("TRAC: Xbox " ## func ## "() call\n");
+#define LOG_XBOX_CALL(func) DbgPrintf(LOG_PREFIX, "TRAC: Xbox " ## func ## "() call\n");
 #define LOG_FIRST_XBOX_CALL(func) LOG_ONCE("First Xbox " ## func ## "() call\n");
 
 //

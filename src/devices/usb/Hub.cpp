@@ -36,6 +36,8 @@
 
 #define _XBOXKRNL_DEFEXTRN_
 
+#define LOG_PREFIX CXBXR_MODULE::HUB
+
 // prevent name collisions
 namespace xboxkrnl
 {
@@ -46,8 +48,6 @@ namespace xboxkrnl
 #include "Hub.h"
 #include "CxbxKrnl\EmuKrnl.h"  // For EmuWarning
 #include "Logging.h"
-
-#define LOG_PREFIX CXBXR_MODULE::HUB
 
 #define NUM_PORTS 8
 
@@ -249,7 +249,7 @@ int Hub::UsbHubClaimPort(XboxDeviceState* dev, int port)
 		i++;
 	}
 	if (it == m_UsbDev->m_FreePorts.end()) {
-		EmuWarning("Port requested %d not found (in use?)", port);
+		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Port requested %d not found (in use?)", port);
 		return -1;
 	}
 	dev->Port = *it;
@@ -377,8 +377,8 @@ void Hub::UsbHub_HandleControl(XboxDeviceState* dev, USBPacket* p,
 				goto fail;
 			}
 			port = &m_HubState->ports[n];
-			DbgPrintf("%s %s GetPortStatus -> Address 0x%X, wIndex %d, wPortStatus %d, wPortChange %d\n",
-				LOG_STR_HUB, __func__, m_HubState->dev.Addr, index, port->wPortStatus, port->wPortChange);
+			DbgPrintf(LOG_PREFIX, "%s GetPortStatus -> Address 0x%X, wIndex %d, wPortStatus %d, wPortChange %d\n",
+				__func__, m_HubState->dev.Addr, index, port->wPortStatus, port->wPortChange);
 			data[0] = port->wPortStatus;
 			data[1] = port->wPortStatus >> 8;
 			data[2] = port->wPortChange;
@@ -402,8 +402,8 @@ void Hub::UsbHub_HandleControl(XboxDeviceState* dev, USBPacket* p,
 			USBHubPort* port;
 			XboxDeviceState* dev;
 
-			DbgPrintf("%s %s SetPortFeature -> Address 0x%X, wIndex %d, Feature %s\n",
-				LOG_STR_HUB, __func__, m_HubState->dev.Addr, index, GetFeatureName(value));
+			DbgPrintf(LOG_PREFIX, "%s SetPortFeature -> Address 0x%X, wIndex %d, Feature %s\n",
+				__func__, m_HubState->dev.Addr, index, GetFeatureName(value));
 
 			if (n >= NUM_PORTS) {
 				goto fail;
@@ -440,8 +440,8 @@ void Hub::UsbHub_HandleControl(XboxDeviceState* dev, USBPacket* p,
 			unsigned int n = index - 1;
 			USBHubPort *port;
 
-			DbgPrintf("%s %s ClearPortFeature -> Address 0x%X, wIndex %d, Feature %s\n",
-				LOG_STR_HUB, __func__, m_HubState->dev.Addr, index, GetFeatureName(value));
+			DbgPrintf(LOG_PREFIX, "%s ClearPortFeature -> Address 0x%X, wIndex %d, Feature %s\n",
+				__func__, m_HubState->dev.Addr, index, GetFeatureName(value));
 
 			if (n >= NUM_PORTS) {
 				goto fail;
@@ -527,7 +527,7 @@ void Hub::UsbHub_HandleData(XboxDeviceState* dev, USBPacket* p)
 						p->Status = USB_RET_BABBLE;
 						return;
 					}
-					DbgPrintf("%s %s Address 0x%X, Status %d\n", LOG_STR_HUB, __func__, m_HubState->dev.Addr, status);
+					DbgPrintf(LOG_PREFIX, "%s Address 0x%X, Status %d\n", __func__, m_HubState->dev.Addr, status);
 					for (i = 0; i < n; i++) {
 						buf[i] = status >> (8 * i);
 					}
