@@ -832,6 +832,9 @@ static void VshWriteShader(VSH_XBOX_SHADER *pShader,
 				case XTL::D3DDECLUSAGE_BLENDWEIGHT:
 					dclStream << "dcl_blendweight";
 					break;
+				case XTL::D3DDECLUSAGE_BLENDINDICES:
+					dclStream << "dcl_blendindices";
+					break;
 				case XTL::D3DDECLUSAGE_NORMAL:
 					dclStream << "dcl_normal";
 					break;
