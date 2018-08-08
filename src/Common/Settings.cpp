@@ -38,8 +38,7 @@
 #include "Settings.hpp"
 #include "CxbxKrnl/Emu.h"
 #include "CxbxKrnl/EmuShared.h"
-#include <filesystem>
-#include <fstream>
+#include <experimental/filesystem>
 
 // TODO: Implement Qt support when real CPU emulation is available.
 #ifndef QT_VERSION // NOTE: Non-Qt will be using current directory for data
@@ -167,7 +166,6 @@ bool Settings::Init()
 #ifdef RETRO_API_VERSION // TODO: Change me to #ifndef QT_VERSION
 		// Can only have one option without Qt.
 		saveFile = GenerateCurrentDirectoryStr();
-		saveFile.append(szSettings_settings_file);
 
 #else // Only support for Qt compile build.
 		int iRet = MessageBox(nullptr, szSettings_save_user_option_message, "Cxbx-Reloaded", MB_YESNOCANCEL | MB_ICONQUESTION);
@@ -198,16 +196,8 @@ bool Settings::Init()
 #endif
 		saveFile.append(szSettings_settings_file);
 
-		// If the config file does not exists, create a blank one
-		// We can't call Save here because that overrides default values with false!
-		if (!std::experimental::filesystem::exists(saveFile)) {
-			std::ofstream ofs(saveFile, std::ofstream::out);
-			ofs << "\n";
-			ofs.close();			
-		}
-
-		// Call LoadUserConfig, this will load the config, applying defaults for any missing fields
-		bRet = LoadUserConfig();
+		// Call LoadConfig, this will load the config, applying defaults for any missing fields
+		bRet = LoadConfig();
 
 		if (!bRet) {
 			MessageBox(nullptr, szSettings_setup_error, "Cxbx-Reloaded", MB_OK);
@@ -245,9 +235,6 @@ bool Settings::LoadUserConfig()
 
 bool Settings::LoadFile(std::string file_path)
 {
-	bool bRet;
-	const char* si_data;
-	int iStatus;
 	std::list<CSimpleIniA::Entry> si_list;
 	std::list<CSimpleIniA::Entry>::iterator si_list_iterator;
 
@@ -257,6 +244,17 @@ bool Settings::LoadFile(std::string file_path)
 		return false;
 	}
 	m_file_path = file_path;
+
+	return LoadConfig();
+}
+
+bool Settings::LoadConfig()
+{
+	bool bRet;
+	const char* si_data;
+	int iStatus;
+	std::list<CSimpleIniA::Entry> si_list;
+	std::list<CSimpleIniA::Entry>::iterator si_list_iterator;
 
 	// ==== GUI Begin ===========
 
@@ -607,56 +605,47 @@ void Settings::SyncToEmulator()
 	g_EmuShared->SetStorageLocation(GetDataLocation().c_str());
 }
 
-void Settings::Verify()
+void verifyDebugFilePath(DebugMode& debug_mode, std::string& file_path)
 {
 	// Prevent using an incorrect path from the registry if the debug folders have been moved
-	char szDebugPath[MAX_PATH];
-	char szDebugName[MAX_PATH];
+	std::string szDebugPath;
+	std::string szDebugName;
 
-	if (m_gui.CxbxDebugMode == DM_FILE) {
+	if (debug_mode == DM_FILE) {
 
-		if(m_gui.szCxbxDebugFile.size() == 0) {
-			m_gui.CxbxDebugMode = DM_NONE;
+		if(file_path.size() == 0 || file_path.size() >= MAX_PATH) {
+			debug_mode = DM_NONE;
 		}
 		else {
-			std::strcpy(szDebugName, strrchr(m_gui.szCxbxDebugFile.c_str(), '\\'));
+			szDebugName = file_path.substr(file_path.find_last_of("\\/"), std::string::npos);
 
-			if(m_gui.szCxbxDebugFile.size() < std::strlen(szDebugName)) {
-				m_gui.szCxbxDebugFile = "";
-				m_gui.CxbxDebugMode = DM_NONE;
+			if(file_path.size() < szDebugName.size()) {
+				file_path = "";
+				debug_mode = DM_NONE;
 			}
 			else {
-				std::strncpy(szDebugPath, m_gui.szCxbxDebugFile.c_str(), m_gui.szCxbxDebugFile.size() - std::strlen(szDebugName));
+				szDebugPath = file_path.substr(0, file_path.size() - szDebugName.size());
 
 				if(std::experimental::filesystem::exists(szDebugPath) == false) {
-					m_gui.szCxbxDebugFile = "";
-					m_gui.CxbxDebugMode = DM_NONE;
+					file_path = "";
+					debug_mode = DM_NONE;
 				}
 			}
 		}
 	}
+}
 
-	if (m_core.KrnlDebugMode == DM_FILE) {
+void Settings::Verify()
+{
+	std::string szKrnlDebug = m_core.szKrnlDebug; // Temporary placeholder until m_core.szKrnlDebug is replace to std::string.
 
-		if(std::strlen(m_core.szKrnlDebug) == 0) {
-			m_core.KrnlDebugMode = DM_NONE;
-		}
-		else {
-			std::strcpy(szDebugName, strrchr(m_core.szKrnlDebug, '\\'));
+	verifyDebugFilePath(m_gui.CxbxDebugMode, m_gui.szCxbxDebugFile);
 
-			if(std::strlen(m_core.szKrnlDebug) < std::strlen(szDebugName)) {
-				memset(m_core.szKrnlDebug, '\0', MAX_PATH);
-				m_core.KrnlDebugMode = DM_NONE;
-			}
-			else {
-				std::strncpy(szDebugPath, m_core.szKrnlDebug, std::strlen(m_core.szKrnlDebug) - std::strlen(szDebugName));
+	verifyDebugFilePath(m_core.KrnlDebugMode, szKrnlDebug);
 
-				if(std::experimental::filesystem::exists(szDebugPath) == false) {
-					memset(m_core.szKrnlDebug, '\0', MAX_PATH);
-					m_core.KrnlDebugMode = DM_NONE;
-				}
-			}
-		}
+	// Set to null string once if contain invalid path.
+	if (m_core.szKrnlDebug[0] != '\0' && szKrnlDebug.size() == 0) {
+		std::memset(m_core.szKrnlDebug, 0, MAX_PATH);
 	}
 }
 
