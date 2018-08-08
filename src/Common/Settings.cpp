@@ -612,6 +612,7 @@ void Settings::Verify()
 	// Prevent using an incorrect path from the registry if the debug folders have been moved
 	char szDebugPath[MAX_PATH];
 	char szDebugName[MAX_PATH];
+	unsigned int strLen;
 
 	if (m_gui.CxbxDebugMode == DM_FILE) {
 
@@ -626,7 +627,9 @@ void Settings::Verify()
 				m_gui.CxbxDebugMode = DM_NONE;
 			}
 			else {
-				std::strncpy(szDebugPath, m_gui.szCxbxDebugFile.c_str(), m_gui.szCxbxDebugFile.size() - std::strlen(szDebugName));
+				strLen = m_gui.szCxbxDebugFile.size() - std::strlen(szDebugName);
+				std::strncpy(szDebugPath, m_gui.szCxbxDebugFile.c_str(), strLen);
+				szDebugPath[strLen] = '\0'; // Require to include terminate string.
 
 				if(std::experimental::filesystem::exists(szDebugPath) == false) {
 					m_gui.szCxbxDebugFile = "";
@@ -649,7 +652,9 @@ void Settings::Verify()
 				m_core.KrnlDebugMode = DM_NONE;
 			}
 			else {
-				std::strncpy(szDebugPath, m_core.szKrnlDebug, std::strlen(m_core.szKrnlDebug) - std::strlen(szDebugName));
+				strLen = std::strlen(m_core.szKrnlDebug) - std::strlen(szDebugName);
+				std::strncpy(szDebugPath, m_core.szKrnlDebug, strLen);
+				szDebugPath[strLen] = '\0'; // Require to include terminate string.
 
 				if(std::experimental::filesystem::exists(szDebugPath) == false) {
 					memset(m_core.szKrnlDebug, '\0', MAX_PATH);
