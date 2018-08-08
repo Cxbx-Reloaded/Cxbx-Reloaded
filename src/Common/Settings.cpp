@@ -38,6 +38,7 @@
 #include "Settings.hpp"
 #include "CxbxKrnl/Emu.h"
 #include "CxbxKrnl/EmuShared.h"
+#include <filesystem>
 
 // TODO: Implement Qt support when real CPU emulation is available.
 #ifndef QT_VERSION // NOTE: Non-Qt will be using current directory for data
@@ -128,10 +129,10 @@ static struct {
 std::string GenerateCurrentDirectoryStr()
 {
 	// NOTE: There is no cross-platform support for getting file's current directory.
-	return std::filesystem::current_path().generic_string();
+	return std::experimental::filesystem::current_path().generic_string();
 }
 
-// NOTE: This function will be only have Qt support, std::filesystem doesn't have generic support.
+// NOTE: This function will be only have Qt support, std::experimental::filesystem doesn't have generic support.
 // Plus appending support for each OSes are not worthy to work on.
 std::string GenerateUserProfileDirectoryStr()
 {
@@ -182,10 +183,10 @@ bool Settings::Init()
 			}
 
 			// Check if data directory exist.
-			bRet = std::filesystem::exists(saveFile);
+			bRet = std::experimental::filesystem::exists(saveFile);
 			if (!bRet) {
 				// Then try create data directory.
-				bRet = std::filesystem::create_directory(saveFile);
+				bRet = std::experimental::filesystem::create_directory(saveFile);
 				if (!bRet) {
 					// Unable to create a data directory
 					return false;
@@ -220,7 +221,7 @@ bool Settings::LoadUserConfig()
 	fileSearch.append(szSettings_settings_file);
 
 	// Check and see if file exist from portable, current, directory.
-	if (std::filesystem::exists(fileSearch) == false) {
+	if (std::experimental::filesystem::exists(fileSearch) == false) {
 
 		fileSearch = GenerateUserProfileDirectoryStr();
 		if (fileSearch.size() == 0) {
@@ -229,7 +230,7 @@ bool Settings::LoadUserConfig()
 		fileSearch.append(szSettings_settings_file);
 
 		// Check if user profile directory settings file exist
-		if (std::filesystem::exists(fileSearch) == false) {
+		if (std::experimental::filesystem::exists(fileSearch) == false) {
 			return false;
 		}
 	}
@@ -575,7 +576,7 @@ bool Settings::Save(std::string file_path)
 
 void Settings::Delete()
 {
-    std::filesystem::remove(m_file_path);
+    std::experimental::filesystem::remove(m_file_path);
 }
 
 // Universal update to EmuShared from both standalone kernel, and GUI process.
@@ -622,7 +623,7 @@ void Settings::Verify()
 			else {
 				std::strncpy(szDebugPath, m_gui.szCxbxDebugFile.c_str(), m_gui.szCxbxDebugFile.size() - std::strlen(szDebugName));
 
-				if(std::filesystem::exists(szDebugPath) == false) {
+				if(std::experimental::filesystem::exists(szDebugPath) == false) {
 					m_gui.szCxbxDebugFile = "";
 					m_gui.CxbxDebugMode = DM_NONE;
 				}
@@ -645,7 +646,7 @@ void Settings::Verify()
 			else {
 				std::strncpy(szDebugPath, m_core.szKrnlDebug, std::strlen(m_core.szKrnlDebug) - std::strlen(szDebugName));
 
-				if(std::filesystem::exists(szDebugPath) == false) {
+				if(std::experimental::filesystem::exists(szDebugPath) == false) {
 					memset(m_core.szKrnlDebug, '\0', MAX_PATH);
 					m_core.KrnlDebugMode = DM_NONE;
 				}
