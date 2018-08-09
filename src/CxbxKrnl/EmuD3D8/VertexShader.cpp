@@ -2129,22 +2129,32 @@ static void VshConvertToken_STREAMDATA_REG(
 		DbgVshPrintf("D3DVSDT_FLOAT2");
 		HostVertexElementDataType = D3DDECLTYPE_FLOAT2;
 		HostVertexElementByteSize = 2 * sizeof(FLOAT);
+		//HostVertexRegister = D3DDECLUSAGE_TEXCOORD;	
 		break;
 	case X_D3DVSDT_FLOAT3: // 0x32:
 		DbgVshPrintf("D3DVSDT_FLOAT3");
 		HostVertexElementDataType = D3DDECLTYPE_FLOAT3;
 		HostVertexElementByteSize = 3 * sizeof(FLOAT);
+
+		/*
+		if (pPatchData->pCurrentVertexShaderStreamInfo->DeclPosition) {
+			pPatchData->pCurrentVertexShaderStreamInfo->DeclPosition = true;
+			HostVertexRegister = D3DDECLUSAGE_POSITION;
+		} else {
+			HostVertexRegister = D3DDECLUSAGE_NORMAL;
+		} */
 		break;
 	case X_D3DVSDT_FLOAT4: // 0x42:
 		DbgVshPrintf("D3DVSDT_FLOAT4");
 		HostVertexElementDataType = D3DDECLTYPE_FLOAT4;
 		HostVertexElementByteSize = 4 * sizeof(FLOAT);
+		//HostVertexRegister = D3DDECLUSAGE_COLOR;
 		break;
 	case X_D3DVSDT_D3DCOLOR: // 0x40:
 		DbgVshPrintf("D3DVSDT_D3DCOLOR");
 		HostVertexElementDataType = D3DDECLTYPE_D3DCOLOR;
 		HostVertexElementByteSize = 1 * sizeof(D3DCOLOR);
-		HostVertexRegister = D3DDECLUSAGE_COLOR;
+		//HostVertexRegister = D3DDECLUSAGE_COLOR;
 		break;
 	case X_D3DVSDT_SHORT2: // 0x25:
 		DbgVshPrintf("D3DVSDT_SHORT2");
