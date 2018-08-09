@@ -1498,7 +1498,7 @@ static boolean VshConvertShader(VSH_XBOX_SHADER *pShader,
         // Combining not supported in vs.1.1
         pIntermediate->IsCombined = FALSE;
 
-        if(pIntermediate->Output.Type == IMD_OUTPUT_O && pIntermediate->Output.Address == OREG_OFOG)
+        if(pIntermediate->Output.Type == IMD_OUTPUT_O && (pIntermediate->Output.Address == OREG_OPTS || pIntermediate->Output.Address == OREG_OFOG))
         {
             // The PC shader assembler doesn't like masks on scalar registers
             VshSetOutputMask(&pIntermediate->Output, TRUE, TRUE, TRUE, TRUE);
