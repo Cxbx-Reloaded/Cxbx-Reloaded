@@ -492,6 +492,7 @@ static const char* OReg_Name[] =
 };
 
 std::array<bool, 16> RegVUsage;
+std::array<int, 16> RegVDeclUsage;
 
 /* TODO : map non-FVF Xbox vertex shader handle to CxbxVertexShader (a struct containing a host Xbox vertex shader handle and the original members)
 std::unordered_map<DWORD, CxbxVertexShader> g_CxbxVertexShaders;
@@ -858,6 +859,11 @@ static void VshWriteShader(VSH_XBOX_SHADER *pShader,
 				DWORD PCUsageIndex = DeclAddressUsages[i][1];
 				DWORD usage = DeclAddressUsages[i][0];
 
+				// If an override exists, use it
+				if (RegVDeclUsage[i] >= 0) {
+					usage = RegVDeclUsage[i];
+				}
+
 				std::stringstream dclStream;
 				switch (usage) {
 				case XTL::D3DDECLUSAGE_POSITION:
@@ -894,7 +900,7 @@ static void VshWriteShader(VSH_XBOX_SHADER *pShader,
 			}
 
 			i++;
-		} while (i < RegVUsage.size());
+		} while (i < RegVUsage.size());;
 	}
 
     for (int i = 0; i < pShader->IntermediateCount && (i < VSH_MAX_INSTRUCTION_COUNT || !Truncate); i++)
@@ -2094,21 +2100,22 @@ static void VshConvertToken_STREAMDATA_REG(
 	CxbxVertexShaderPatch *pPatchData
 )
 {
-    using namespace XTL;
+	using namespace XTL;
 
 	extern XTL::D3DCAPS g_D3DCaps;
 
-    XTL::DWORD VertexRegister = VshGetVertexRegister(*pToken);
-    XTL::DWORD HostVertexRegister;
+	XTL::DWORD VertexRegister = VshGetVertexRegister(*pToken);
+	XTL::DWORD HostVertexRegister;
 	XTL::BOOL NeedPatching = FALSE;
 	XTL::DWORD Index;
 
-    DbgVshPrintf("\t\tD3DVSD_REG(");
-    HostVertexRegister = Xb2PCRegisterType(VertexRegister, IsFixedFunction, Index);
-    DbgVshPrintf(", ");
+	DbgVshPrintf("\t\tD3DVSD_REG(");
+	DWORD XboxVertexRegister = Xb2PCRegisterType(VertexRegister, IsFixedFunction, Index);
+	HostVertexRegister = XboxVertexRegister;
+	DbgVshPrintf(", ");
 
-    XTL::DWORD XboxVertexElementDataType = (*pToken & X_D3DVSD_DATATYPEMASK) >> X_D3DVSD_DATATYPESHIFT;
-    XTL::DWORD HostVertexElementDataType = 0;
+	XTL::DWORD XboxVertexElementDataType = (*pToken & X_D3DVSD_DATATYPEMASK) >> X_D3DVSD_DATATYPESHIFT;
+	XTL::DWORD HostVertexElementDataType = 0;
 	XTL::DWORD HostVertexElementByteSize = 0;
 
 	switch (XboxVertexElementDataType)
@@ -2279,20 +2286,20 @@ static void VshConvertToken_STREAMDATA_REG(
 		}
 		break;
 	case X_D3DVSDT_FLOAT2H: // 0x72:
-        DbgVshPrintf("D3DVSDT_FLOAT2H /* xbox ext. */");
-        HostVertexElementDataType = D3DDECLTYPE_FLOAT4;
-		HostVertexElementByteSize = 4*sizeof(FLOAT);
-        NeedPatching = TRUE;
-        break;
+		DbgVshPrintf("D3DVSDT_FLOAT2H /* xbox ext. */");
+		HostVertexElementDataType = D3DDECLTYPE_FLOAT4;
+		HostVertexElementByteSize = 4 * sizeof(FLOAT);
+		NeedPatching = TRUE;
+		break;
 	case X_D3DVSDT_NONE: // 0x02:
 		DbgVshPrintf("D3DVSDT_NONE /* xbox ext. */");
-        HostVertexElementDataType = D3DDECLTYPE_UNUSED;
-        // NeedPatching = TRUE; // TODO : This seems to cause regressions?
-        break;
-    default:
-        DbgVshPrintf("Unknown data type for D3DVSD_REG: 0x%02X\n", XboxVertexElementDataType);
-        break;
-    }
+		HostVertexElementDataType = D3DDECLTYPE_UNUSED;
+		// NeedPatching = TRUE; // TODO : This seems to cause regressions?
+		break;
+	default:
+		DbgVshPrintf("Unknown data type for D3DVSD_REG: 0x%02X\n", XboxVertexElementDataType);
+		break;
+	}
 
 	// save patching information
 	XTL::CxbxVertexShaderStreamElement *pCurrentElement = &(pPatchData->pCurrentVertexShaderStreamInfo->VertexElements[pPatchData->pCurrentVertexShaderStreamInfo->NumberOfVertexElements]);
@@ -2308,6 +2315,11 @@ static void VshConvertToken_STREAMDATA_REG(
 	pRecompiled->Method = D3DDECLMETHOD_DEFAULT;
 	pRecompiled->Usage = HostVertexRegister;
 	pRecompiled->UsageIndex = Index;
+
+	// If the xbox and host register number and usage differ, store an override!
+	if (XboxVertexRegister != HostVertexRegister) {
+		RegVDeclUsage[XboxVertexRegister] = HostVertexRegister;
+	}
 
 	pRecompiled++;
 #else
@@ -2400,6 +2412,8 @@ DWORD XTL::EmuRecompileVshDeclaration
     CxbxVertexShaderInfo *pVertexShaderInfo
 )
 {
+	RegVDeclUsage.fill(-1);
+
     // First of all some info:
     // We have to figure out which flags are set and then
     // we have to patch their params
