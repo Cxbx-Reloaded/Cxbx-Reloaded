@@ -63,6 +63,13 @@
 #define VSH_XBOX_MAX_INSTRUCTION_COUNT 136  // The maximum Xbox shader instruction count
 #define VSH_MAX_INTERMEDIATE_COUNT     1024 // The maximum number of intermediate format slots
 
+#define VSH_MAX_TEMPORARY_REGISTERS 32
+#define VSH_VS11_MAX_INSTRUCTION_COUNT 128
+#define VSH_VS2X_MAX_INSTRUCTION_COUNT 256
+#define VSH_VS30_MAX_INSTRUCTION_COUNT 512
+
+#define VSH_MAX_INSTRUCTION_COUNT VSH_VS2X_MAX_INSTRUCTION_COUNT
+
 #define X_D3DVSD_MASK_TESSUV 0x10000000
 #define X_D3DVSD_MASK_SKIP 0x10000000 // Skips (normally) dwords
 #define X_D3DVSD_MASK_SKIPBYTES 0x08000000 // Skips bytes (no, really?!)
@@ -447,7 +454,7 @@ static const char* MAC_OpCode[] =
     "max",
     "slt",
     "sge",
-    "mov", // really "arl" Dxbx note : Alias for 'mov a0.x'
+    "mova", // really "arl" Dxbx note : Alias for 'mov a0.x'
     "???",
     "???"
 };
@@ -485,6 +492,7 @@ static const char* OReg_Name[] =
 };
 
 std::array<bool, 16> RegVUsage;
+std::array<int, 16> RegVDeclUsage;
 
 /* TODO : map non-FVF Xbox vertex shader handle to CxbxVertexShader (a struct containing a host Xbox vertex shader handle and the original members)
 std::unordered_map<DWORD, CxbxVertexShader> g_CxbxVertexShaders;
@@ -827,7 +835,7 @@ static void VshWriteShader(VSH_XBOX_SHADER *pShader,
 #ifdef CXBX_USE_VS30
             DisassemblyPos += sprintf(pDisassembly + DisassemblyPos, "vs.3.0\n");
 #else
-            DisassemblyPos += sprintf(pDisassembly + DisassemblyPos, "vs.1.1\n");
+            DisassemblyPos += sprintf(pDisassembly + DisassemblyPos, "vs.2.x\n");
 #endif
             break;
         case VERSION_XVS:
@@ -850,6 +858,11 @@ static void VshWriteShader(VSH_XBOX_SHADER *pShader,
 			if (RegVUsage[i]) {
 				DWORD PCUsageIndex = DeclAddressUsages[i][1];
 				DWORD usage = DeclAddressUsages[i][0];
+
+				// If an override exists, use it
+				if (RegVDeclUsage[i] >= 0) {
+					usage = RegVDeclUsage[i];
+				}
 
 				std::stringstream dclStream;
 				switch (usage) {
@@ -887,14 +900,14 @@ static void VshWriteShader(VSH_XBOX_SHADER *pShader,
 			}
 
 			i++;
-		} while (i < 16);
+		} while (i < RegVUsage.size());;
 	}
 
-    for (int i = 0; i < pShader->IntermediateCount && (i < 128 || !Truncate); i++)
+    for (int i = 0; i < pShader->IntermediateCount && (i < VSH_MAX_INSTRUCTION_COUNT || !Truncate); i++)
     {
         VSH_INTERMEDIATE_FORMAT *pIntermediate = &pShader->Intermediate[i];
 
-        if(i == 128)
+        if(i == VSH_MAX_INSTRUCTION_COUNT)
         {
             DisassemblyPos += sprintf(pDisassembly + DisassemblyPos, "; -- Passing the truncation limit --\n");
         }
@@ -1128,62 +1141,10 @@ static boolean VshAddInstructionMAC_ARL(VSH_SHADER_INSTRUCTION *pInstruction,
     return TRUE;
 }
 
-/*
 // Dxbx addition : Scalar instructions reading from W should read from X instead
-boolean DxbxFixupScalarParameter(VSH_SHADER_INSTRUCTION *pInstruction,
-	VSH_XBOX_SHADER *pShader,
-	VSH_PARAMETER *pParameter)
-{
-	boolean Result;
-	int i;
-	boolean WIsWritten;
-
-	// The DirectX vertex shader language specifies that the exp, log, rcc, rcp, and rsq instructions
-	// all operate on the "w" component of the input. But the microcode versions of these instructions
-	// actually operate on the "x" component of the input.
-	Result = false;
-
-	// Test if this is a scalar instruction :
-	if (pInstruction->ILU in [ILU_RCP, ILU_RCC, ILU_RSQ, ILU_EXP, ILU_LOG])
-	{
-		// Test if this parameter reads all components, including W (TODO : Or should we fixup any W reading swizzle?) :
-		if ((pParameter->Swizzle[0] = SWIZZLE_X)
-			&& (pParameter->Swizzle[1] = SWIZZLE_Y)
-			&& (pParameter->Swizzle[2] = SWIZZLE_Z)
-			&& (pParameter->Swizzle[3] = SWIZZLE_W))
-		{
-			// Also test that the .W component is never written to before:
-			WIsWritten = false;
-			for (i = 0; i < pShader->IntermediateCount; i++)
-			{
-				// Stop when we reached this instruction :
-				if (&(pShader->Intermediate[i]) == pInstruction)
-					break;
-
-				// Check if this instruction writes to the .W component of the same input parameter :
-				if (((pShader->Intermediate[i].Output.Type == IMD_OUTPUT_C) && (pParameter->ParameterType == PARAM_C))
-					|| ((pShader->Intermediate[i].Output.Type == IMD_OUTPUT_R) && (pParameter->ParameterType == PARAM_R)))
-				{
-					WIsWritten = (pShader->Intermediate[i].Output.Address == pParameter->Address)
-						&& ((pShader->Intermediate[i].Output.Mask && MASK_W) > 0);
-					if (WIsWritten)
-						break;
-				}
-			}
-
-			if (!WIsWritten)
-			{
-				// Change the read from W into a read from X (this fixes the XDK VolumeLight sample) :
-				VshSetSwizzle(pParameter, SWIZZLE_X, SWIZZLE_X, SWIZZLE_X, SWIZZLE_X);
-				DbgVshPrintf("Dxbx fixup on scalar instruction applied; Changed read of uninitialized W into a read of X!\n");
-				Result = true;
-			}
-		}
-	}
-
-	return Result;
-}
-*/
+static boolean DxbxFixupScalarParameter(VSH_SHADER_INSTRUCTION *pInstruction,
+    VSH_XBOX_SHADER *pShader,
+    VSH_PARAMETER *pParameter);
 
 static boolean VshAddInstructionILU_R(VSH_SHADER_INSTRUCTION *pInstruction,
                                       VSH_XBOX_SHADER        *pShader,
@@ -1195,10 +1156,9 @@ static boolean VshAddInstructionILU_R(VSH_SHADER_INSTRUCTION *pInstruction,
         return FALSE;
     }
 
-/* TODO
 	// Dxbx note : Scalar instructions read from C, but use X instead of W, fix that :
-	DxbxFixupScalarParameter(pInstruction, pShader, &pInstruction.C);
-*/
+	DxbxFixupScalarParameter(pInstruction, pShader, &pInstruction->C);
+
 	pIntermediate = VshNewIntermediate(pShader);
     pIntermediate->IsCombined = IsCombined;
 
@@ -1302,16 +1262,25 @@ static void VshConvertToIntermediate(VSH_SHADER_INSTRUCTION *pInstruction,
     (void)VshAddInstructionILU_O(pInstruction, pShader, IsCombined);
 }
 
+static inline void VshSetSwizzle(VSH_PARAMETER *pParameter,
+    VSH_SWIZZLE       x,
+    VSH_SWIZZLE       y,
+    VSH_SWIZZLE       z,
+    VSH_SWIZZLE       w)
+{
+    pParameter->Swizzle[0] = x;
+    pParameter->Swizzle[1] = y;
+    pParameter->Swizzle[2] = z;
+    pParameter->Swizzle[3] = w;
+}
+
 static inline void VshSetSwizzle(VSH_IMD_PARAMETER *pParameter,
                                  VSH_SWIZZLE       x,
                                  VSH_SWIZZLE       y,
                                  VSH_SWIZZLE       z,
                                  VSH_SWIZZLE       w)
 {
-    pParameter->Parameter.Swizzle[0] = x;
-    pParameter->Parameter.Swizzle[1] = y;
-    pParameter->Parameter.Swizzle[2] = z;
-    pParameter->Parameter.Swizzle[3] = w;
+    VshSetSwizzle(&pParameter->Parameter, x, y, z, w);
 }
 
 static inline void VshSetOutputMask(VSH_IMD_OUTPUT* pOutput,
@@ -1325,6 +1294,45 @@ static inline void VshSetOutputMask(VSH_IMD_OUTPUT* pOutput,
     pOutput->Mask[2] = MaskZ;
     pOutput->Mask[3] = MaskW;
 }
+
+// Dxbx addition : Scalar instructions reading from W should read from X instead
+static boolean DxbxFixupScalarParameter(VSH_SHADER_INSTRUCTION *pInstruction,
+    VSH_XBOX_SHADER *pShader,
+    VSH_PARAMETER *pParameter)
+{
+    boolean Result;
+    int i;
+    boolean WIsWritten;
+    boolean XIsWritten;
+
+    // The DirectX vertex shader language specifies that the exp, log, rcc, rcp, and rsq instructions
+    // all operate on the "w" component of the input. But the microcode versions of these instructions
+    // actually operate on the "x" component of the input.
+    Result = false;
+
+    // Test if this is a scalar instruction :
+    if (pInstruction->ILU == ILU_RCP ||
+        pInstruction->ILU == ILU_RCC ||
+        pInstruction->ILU == ILU_RSQ ||
+        pInstruction->ILU == ILU_EXP ||
+        pInstruction->ILU == ILU_LOG)
+    {
+        // Test if this parameter reads all components, including W (TODO : Or should we fixup any W reading swizzle?) :
+        if ((pParameter->Swizzle[0] == SWIZZLE_X)
+            && (pParameter->Swizzle[1] == SWIZZLE_Y)
+            && (pParameter->Swizzle[2] == SWIZZLE_Z)
+            && (pParameter->Swizzle[3] == SWIZZLE_W))
+        {
+            // Change the read from W into a read from X (this fixes the XDK VolumeLight sample) :
+            VshSetSwizzle(pParameter, SWIZZLE_X, SWIZZLE_X, SWIZZLE_X, SWIZZLE_X);
+            DbgVshPrintf("Dxbx fixup on scalar instruction applied; Changed read of uninitialized W into a read of X!\n");
+            Result = true;
+        }
+    }
+
+    return Result;
+}
+
 /*
     mul oPos.xyz, r12, c-38
     +rcc r1.x, r12.w
@@ -1478,7 +1486,13 @@ static boolean VshConvertShader(VSH_XBOX_SHADER *pShader,
 								bool			*pDeclaredRegisters
 )
 {
-    boolean RUsage[13] = { FALSE };
+    using namespace XTL;
+
+    extern XTL::D3DCAPS g_D3DCaps;
+
+    const DWORD temporaryCount = g_D3DCaps.VS20Caps.NumTemps;
+
+    boolean RUsage[VSH_MAX_TEMPORARY_REGISTERS] = { FALSE };
     // TODO: What about state shaders and such?
     pShader->ShaderHeader.Version = VERSION_VS;
 
@@ -1498,7 +1512,7 @@ static boolean VshConvertShader(VSH_XBOX_SHADER *pShader,
         // Combining not supported in vs.1.1
         pIntermediate->IsCombined = FALSE;
 
-        if(pIntermediate->Output.Type == IMD_OUTPUT_O && pIntermediate->Output.Address == OREG_OFOG)
+        if(pIntermediate->Output.Type == IMD_OUTPUT_O && (pIntermediate->Output.Address == OREG_OPTS || pIntermediate->Output.Address == OREG_OFOG))
         {
             // The PC shader assembler doesn't like masks on scalar registers
             VshSetOutputMask(&pIntermediate->Output, TRUE, TRUE, TRUE, TRUE);
@@ -1510,30 +1524,35 @@ static boolean VshConvertShader(VSH_XBOX_SHADER *pShader,
             pIntermediate->ILU = ILU_RCP;
         }
 
-		// Fix when RSQ reads from unitialized components
-		if (pIntermediate->InstructionType == IMD_ILU && pIntermediate->ILU == ILU_RSQ) {
-			int swizzle = (pIntermediate->Output.Mask[0]) | (pIntermediate->Output.Mask[1] << 1) | (pIntermediate->Output.Mask[2] << 2) | (pIntermediate->Output.Mask[3] << 3);
-			switch (swizzle)
-			{
-			case 1:
-				VshSetSwizzle(&pIntermediate->Parameters[0], SWIZZLE_X, SWIZZLE_X, SWIZZLE_X, SWIZZLE_X);
-				break;
-			case 2:
-				VshSetSwizzle(&pIntermediate->Parameters[0], SWIZZLE_Y, SWIZZLE_Y, SWIZZLE_Y, SWIZZLE_Y);
-				break;
-			case 4:
-				VshSetSwizzle(&pIntermediate->Parameters[0], SWIZZLE_Z, SWIZZLE_Z, SWIZZLE_Z, SWIZZLE_Z);
-				break;
-			case 8:
-				VshSetSwizzle(&pIntermediate->Parameters[0], SWIZZLE_W, SWIZZLE_W, SWIZZLE_W, SWIZZLE_W);
-				break;
-			case 15:
-			default:
-				LOG_TEST_CASE("rsq instruction with invalid swizzle");
-				break;
-			}
-		}
+        auto sw = pIntermediate->Parameters[0].Parameter.Swizzle;
+        bool singleSwizzle = sw[0] == sw[1] && sw[1] == sw[2] && sw[2] == sw[3];
 
+        if (!singleSwizzle)
+        {
+            // Fix when RSQ reads from unitialized components
+            if (pIntermediate->InstructionType == IMD_ILU && pIntermediate->ILU == ILU_RSQ) {
+                int swizzle = (pIntermediate->Output.Mask[0]) | (pIntermediate->Output.Mask[1] << 1) | (pIntermediate->Output.Mask[2] << 2) | (pIntermediate->Output.Mask[3] << 3);
+                switch (swizzle)
+                {
+                case 1:
+                    VshSetSwizzle(&pIntermediate->Parameters[0], SWIZZLE_X, SWIZZLE_X, SWIZZLE_X, SWIZZLE_X);
+                    break;
+                case 2:
+                    VshSetSwizzle(&pIntermediate->Parameters[0], SWIZZLE_Y, SWIZZLE_Y, SWIZZLE_Y, SWIZZLE_Y);
+                    break;
+                case 4:
+                    VshSetSwizzle(&pIntermediate->Parameters[0], SWIZZLE_Z, SWIZZLE_Z, SWIZZLE_Z, SWIZZLE_Z);
+                    break;
+                case 8:
+                    VshSetSwizzle(&pIntermediate->Parameters[0], SWIZZLE_W, SWIZZLE_W, SWIZZLE_W, SWIZZLE_W);
+                    break;
+                case 15:
+                default:
+                    LOG_TEST_CASE("rsq instruction with invalid swizzle");
+                    break;
+                }
+            }
+        }
 		if (pIntermediate->InstructionType == IMD_ILU && pIntermediate->ILU == ILU_EXP)
 		{
 			// EXP on DX8 requires that exactly one swizzle is specified on the output
@@ -1618,8 +1637,10 @@ static boolean VshConvertShader(VSH_XBOX_SHADER *pShader,
 
 				// attempt to find unused register...
 				int outRegister = -1;
-				for (int j = 11; j >= 0; --j)
+				for (int j = temporaryCount - 1; j >= 0; --j)
 				{
+                    if (j == 12) continue;
+
 					if(!RUsage[j])
 					{
 						outRegister = j;
@@ -1700,10 +1721,10 @@ static boolean VshConvertShader(VSH_XBOX_SHADER *pShader,
         }
     }
     int16 R12Replacement = -1;
-    if(RUsage[12])
+    if(temporaryCount <= 12 && RUsage[12])
     {
         // Sigh, they absolutely had to use r12, didn't they?
-        for (int i = 11; i >= 0; i--)
+        for (int i = temporaryCount - 1; i >= 0; i--)
         {
             if(!RUsage[i])
             {
@@ -2079,21 +2100,22 @@ static void VshConvertToken_STREAMDATA_REG(
 	CxbxVertexShaderPatch *pPatchData
 )
 {
-    using namespace XTL;
+	using namespace XTL;
 
 	extern XTL::D3DCAPS g_D3DCaps;
 
-    XTL::DWORD VertexRegister = VshGetVertexRegister(*pToken);
-    XTL::DWORD HostVertexRegister;
+	XTL::DWORD VertexRegister = VshGetVertexRegister(*pToken);
+	XTL::DWORD HostVertexRegister;
 	XTL::BOOL NeedPatching = FALSE;
 	XTL::DWORD Index;
 
-    DbgVshPrintf("\t\tD3DVSD_REG(");
-    HostVertexRegister = Xb2PCRegisterType(VertexRegister, IsFixedFunction, Index);
-    DbgVshPrintf(", ");
+	DbgVshPrintf("\t\tD3DVSD_REG(");
+	DWORD XboxVertexRegister = Xb2PCRegisterType(VertexRegister, IsFixedFunction, Index);
+	HostVertexRegister = XboxVertexRegister;
+	DbgVshPrintf(", ");
 
-    XTL::DWORD XboxVertexElementDataType = (*pToken & X_D3DVSD_DATATYPEMASK) >> X_D3DVSD_DATATYPESHIFT;
-    XTL::DWORD HostVertexElementDataType = 0;
+	XTL::DWORD XboxVertexElementDataType = (*pToken & X_D3DVSD_DATATYPEMASK) >> X_D3DVSD_DATATYPESHIFT;
+	XTL::DWORD HostVertexElementDataType = 0;
 	XTL::DWORD HostVertexElementByteSize = 0;
 
 	switch (XboxVertexElementDataType)
@@ -2107,22 +2129,32 @@ static void VshConvertToken_STREAMDATA_REG(
 		DbgVshPrintf("D3DVSDT_FLOAT2");
 		HostVertexElementDataType = D3DDECLTYPE_FLOAT2;
 		HostVertexElementByteSize = 2 * sizeof(FLOAT);
+		//HostVertexRegister = D3DDECLUSAGE_TEXCOORD;	
 		break;
 	case X_D3DVSDT_FLOAT3: // 0x32:
 		DbgVshPrintf("D3DVSDT_FLOAT3");
 		HostVertexElementDataType = D3DDECLTYPE_FLOAT3;
 		HostVertexElementByteSize = 3 * sizeof(FLOAT);
+
+		/*
+		if (pPatchData->pCurrentVertexShaderStreamInfo->DeclPosition) {
+			pPatchData->pCurrentVertexShaderStreamInfo->DeclPosition = true;
+			HostVertexRegister = D3DDECLUSAGE_POSITION;
+		} else {
+			HostVertexRegister = D3DDECLUSAGE_NORMAL;
+		} */
 		break;
 	case X_D3DVSDT_FLOAT4: // 0x42:
 		DbgVshPrintf("D3DVSDT_FLOAT4");
 		HostVertexElementDataType = D3DDECLTYPE_FLOAT4;
 		HostVertexElementByteSize = 4 * sizeof(FLOAT);
+		//HostVertexRegister = D3DDECLUSAGE_COLOR;
 		break;
 	case X_D3DVSDT_D3DCOLOR: // 0x40:
 		DbgVshPrintf("D3DVSDT_D3DCOLOR");
 		HostVertexElementDataType = D3DDECLTYPE_D3DCOLOR;
 		HostVertexElementByteSize = 1 * sizeof(D3DCOLOR);
-		HostVertexRegister = D3DDECLUSAGE_COLOR;
+		//HostVertexRegister = D3DDECLUSAGE_COLOR;
 		break;
 	case X_D3DVSDT_SHORT2: // 0x25:
 		DbgVshPrintf("D3DVSDT_SHORT2");
@@ -2264,20 +2296,20 @@ static void VshConvertToken_STREAMDATA_REG(
 		}
 		break;
 	case X_D3DVSDT_FLOAT2H: // 0x72:
-        DbgVshPrintf("D3DVSDT_FLOAT2H /* xbox ext. */");
-        HostVertexElementDataType = D3DDECLTYPE_FLOAT4;
-		HostVertexElementByteSize = 4*sizeof(FLOAT);
-        NeedPatching = TRUE;
-        break;
+		DbgVshPrintf("D3DVSDT_FLOAT2H /* xbox ext. */");
+		HostVertexElementDataType = D3DDECLTYPE_FLOAT4;
+		HostVertexElementByteSize = 4 * sizeof(FLOAT);
+		NeedPatching = TRUE;
+		break;
 	case X_D3DVSDT_NONE: // 0x02:
 		DbgVshPrintf("D3DVSDT_NONE /* xbox ext. */");
-        HostVertexElementDataType = D3DDECLTYPE_UNUSED;
-        // NeedPatching = TRUE; // TODO : This seems to cause regressions?
-        break;
-    default:
-        DbgVshPrintf("Unknown data type for D3DVSD_REG: 0x%02X\n", XboxVertexElementDataType);
-        break;
-    }
+		HostVertexElementDataType = D3DDECLTYPE_UNUSED;
+		// NeedPatching = TRUE; // TODO : This seems to cause regressions?
+		break;
+	default:
+		DbgVshPrintf("Unknown data type for D3DVSD_REG: 0x%02X\n", XboxVertexElementDataType);
+		break;
+	}
 
 	// save patching information
 	XTL::CxbxVertexShaderStreamElement *pCurrentElement = &(pPatchData->pCurrentVertexShaderStreamInfo->VertexElements[pPatchData->pCurrentVertexShaderStreamInfo->NumberOfVertexElements]);
@@ -2293,6 +2325,11 @@ static void VshConvertToken_STREAMDATA_REG(
 	pRecompiled->Method = D3DDECLMETHOD_DEFAULT;
 	pRecompiled->Usage = HostVertexRegister;
 	pRecompiled->UsageIndex = Index;
+
+	// If the xbox and host register number and usage differ, store an override!
+	if (XboxVertexRegister != HostVertexRegister) {
+		RegVDeclUsage[XboxVertexRegister] = HostVertexRegister;
+	}
 
 	pRecompiled++;
 #else
@@ -2385,6 +2422,8 @@ DWORD XTL::EmuRecompileVshDeclaration
     CxbxVertexShaderInfo *pVertexShaderInfo
 )
 {
+	RegVDeclUsage.fill(-1);
+
     // First of all some info:
     // We have to figure out which flags are set and then
     // we have to patch their params
@@ -2432,6 +2471,8 @@ DWORD XTL::EmuRecompileVshDeclaration
     return D3D_OK;
 }
 
+extern XTL::D3DCAPS g_D3DCaps;
+
 // recompile xbox vertex shader function
 extern HRESULT XTL::EmuRecompileVshFunction
 (
@@ -2440,9 +2481,12 @@ extern HRESULT XTL::EmuRecompileVshFunction
     DWORD        *pOriginalSize,
     boolean      bNoReservedConstants,
 	boolean		 *pbUseDeclarationOnly,
-	DWORD		 *pRecompiledDeclaration
+	DWORD		 *pRecompiledDeclaration,
+    DWORD        DeclarationSize
 )
 {
+    const DWORD temporaryCount = g_D3DCaps.VS20Caps.NumTemps;
+
     VSH_SHADER_HEADER   *pShaderHeader = (VSH_SHADER_HEADER*)pFunction;
     DWORD               *pToken;
     boolean             EOI = false;
@@ -2453,11 +2497,12 @@ extern HRESULT XTL::EmuRecompileVshFunction
 	// Build an array of registers that are declared
 	// This is used to remove instructions that haven't been declared
 	// as they cause CreateVertexShader to fail
-	bool declaredRegisters[13] = { false };
+	bool declaredRegisters[VSH_MAX_TEMPORARY_REGISTERS] = { false };
 	DWORD* pDeclToken = pRecompiledDeclaration;
+    DWORD* pDeclEnd = (DWORD*)((BYTE*)pDeclToken + DeclarationSize);
 	do {
 		DWORD regNum = *pDeclToken & X_D3DVSD_VERTEXREGMASK;
-		if (regNum > 12) {
+		if (regNum >= temporaryCount /*12*/) {
 			// Lego Star Wars hits this
 			LOG_TEST_CASE("RegNum > 12");
 			pDeclToken++;
@@ -2466,7 +2511,7 @@ extern HRESULT XTL::EmuRecompileVshFunction
 
 		declaredRegisters[regNum] = true;
 		pDeclToken++;
-	} while (*pDeclToken != X_D3DVSD_END());
+	} while (pDeclToken < pDeclEnd && *pDeclToken != X_D3DVSD_END());
 
     // TODO: support this situation..
     if(pFunction == NULL)
@@ -2536,12 +2581,12 @@ extern HRESULT XTL::EmuRecompileVshFunction
 		DbgVshPrintf("-----------------------\n");
 
         // HACK: Azurik. Prevent Direct3D from trying to assemble this.
-		if(!strcmp(pShaderDisassembly, "vs.1.1\n"))
+		if(!strcmp(pShaderDisassembly, "vs.2.x\n"))
 		{
 			EmuWarning("Replacing empty vertex shader with fallback");
 
 			static const char dummy[] =
-				"vs.1.1\n"
+				"vs.2.x\n"
 				"dp4 oPos.x, v0, c96\n"
 				"dp4 oPos.y, v0, c97\n"
 				"dp4 oPos.z, v0, c98\n"
