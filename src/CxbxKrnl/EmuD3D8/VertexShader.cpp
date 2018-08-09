@@ -1128,62 +1128,10 @@ static boolean VshAddInstructionMAC_ARL(VSH_SHADER_INSTRUCTION *pInstruction,
     return TRUE;
 }
 
-/*
 // Dxbx addition : Scalar instructions reading from W should read from X instead
-boolean DxbxFixupScalarParameter(VSH_SHADER_INSTRUCTION *pInstruction,
-	VSH_XBOX_SHADER *pShader,
-	VSH_PARAMETER *pParameter)
-{
-	boolean Result;
-	int i;
-	boolean WIsWritten;
-
-	// The DirectX vertex shader language specifies that the exp, log, rcc, rcp, and rsq instructions
-	// all operate on the "w" component of the input. But the microcode versions of these instructions
-	// actually operate on the "x" component of the input.
-	Result = false;
-
-	// Test if this is a scalar instruction :
-	if (pInstruction->ILU in [ILU_RCP, ILU_RCC, ILU_RSQ, ILU_EXP, ILU_LOG])
-	{
-		// Test if this parameter reads all components, including W (TODO : Or should we fixup any W reading swizzle?) :
-		if ((pParameter->Swizzle[0] = SWIZZLE_X)
-			&& (pParameter->Swizzle[1] = SWIZZLE_Y)
-			&& (pParameter->Swizzle[2] = SWIZZLE_Z)
-			&& (pParameter->Swizzle[3] = SWIZZLE_W))
-		{
-			// Also test that the .W component is never written to before:
-			WIsWritten = false;
-			for (i = 0; i < pShader->IntermediateCount; i++)
-			{
-				// Stop when we reached this instruction :
-				if (&(pShader->Intermediate[i]) == pInstruction)
-					break;
-
-				// Check if this instruction writes to the .W component of the same input parameter :
-				if (((pShader->Intermediate[i].Output.Type == IMD_OUTPUT_C) && (pParameter->ParameterType == PARAM_C))
-					|| ((pShader->Intermediate[i].Output.Type == IMD_OUTPUT_R) && (pParameter->ParameterType == PARAM_R)))
-				{
-					WIsWritten = (pShader->Intermediate[i].Output.Address == pParameter->Address)
-						&& ((pShader->Intermediate[i].Output.Mask && MASK_W) > 0);
-					if (WIsWritten)
-						break;
-				}
-			}
-
-			if (!WIsWritten)
-			{
-				// Change the read from W into a read from X (this fixes the XDK VolumeLight sample) :
-				VshSetSwizzle(pParameter, SWIZZLE_X, SWIZZLE_X, SWIZZLE_X, SWIZZLE_X);
-				DbgVshPrintf("Dxbx fixup on scalar instruction applied; Changed read of uninitialized W into a read of X!\n");
-				Result = true;
-			}
-		}
-	}
-
-	return Result;
-}
-*/
+static boolean DxbxFixupScalarParameter(VSH_SHADER_INSTRUCTION *pInstruction,
+    VSH_XBOX_SHADER *pShader,
+    VSH_PARAMETER *pParameter);
 
 static boolean VshAddInstructionILU_R(VSH_SHADER_INSTRUCTION *pInstruction,
                                       VSH_XBOX_SHADER        *pShader,
@@ -1195,10 +1143,9 @@ static boolean VshAddInstructionILU_R(VSH_SHADER_INSTRUCTION *pInstruction,
         return FALSE;
     }
 
-/* TODO
 	// Dxbx note : Scalar instructions read from C, but use X instead of W, fix that :
-	DxbxFixupScalarParameter(pInstruction, pShader, &pInstruction.C);
-*/
+	DxbxFixupScalarParameter(pInstruction, pShader, &pInstruction->C);
+
 	pIntermediate = VshNewIntermediate(pShader);
     pIntermediate->IsCombined = IsCombined;
 
@@ -1302,16 +1249,25 @@ static void VshConvertToIntermediate(VSH_SHADER_INSTRUCTION *pInstruction,
     (void)VshAddInstructionILU_O(pInstruction, pShader, IsCombined);
 }
 
+static inline void VshSetSwizzle(VSH_PARAMETER *pParameter,
+    VSH_SWIZZLE       x,
+    VSH_SWIZZLE       y,
+    VSH_SWIZZLE       z,
+    VSH_SWIZZLE       w)
+{
+    pParameter->Swizzle[0] = x;
+    pParameter->Swizzle[1] = y;
+    pParameter->Swizzle[2] = z;
+    pParameter->Swizzle[3] = w;
+}
+
 static inline void VshSetSwizzle(VSH_IMD_PARAMETER *pParameter,
                                  VSH_SWIZZLE       x,
                                  VSH_SWIZZLE       y,
                                  VSH_SWIZZLE       z,
                                  VSH_SWIZZLE       w)
 {
-    pParameter->Parameter.Swizzle[0] = x;
-    pParameter->Parameter.Swizzle[1] = y;
-    pParameter->Parameter.Swizzle[2] = z;
-    pParameter->Parameter.Swizzle[3] = w;
+    VshSetSwizzle(&pParameter->Parameter, x, y, z, w);
 }
 
 static inline void VshSetOutputMask(VSH_IMD_OUTPUT* pOutput,
@@ -1325,6 +1281,45 @@ static inline void VshSetOutputMask(VSH_IMD_OUTPUT* pOutput,
     pOutput->Mask[2] = MaskZ;
     pOutput->Mask[3] = MaskW;
 }
+
+// Dxbx addition : Scalar instructions reading from W should read from X instead
+static boolean DxbxFixupScalarParameter(VSH_SHADER_INSTRUCTION *pInstruction,
+    VSH_XBOX_SHADER *pShader,
+    VSH_PARAMETER *pParameter)
+{
+    boolean Result;
+    int i;
+    boolean WIsWritten;
+    boolean XIsWritten;
+
+    // The DirectX vertex shader language specifies that the exp, log, rcc, rcp, and rsq instructions
+    // all operate on the "w" component of the input. But the microcode versions of these instructions
+    // actually operate on the "x" component of the input.
+    Result = false;
+
+    // Test if this is a scalar instruction :
+    if (pInstruction->ILU == ILU_RCP ||
+        pInstruction->ILU == ILU_RCC ||
+        pInstruction->ILU == ILU_RSQ ||
+        pInstruction->ILU == ILU_EXP ||
+        pInstruction->ILU == ILU_LOG)
+    {
+        // Test if this parameter reads all components, including W (TODO : Or should we fixup any W reading swizzle?) :
+        if ((pParameter->Swizzle[0] == SWIZZLE_X)
+            && (pParameter->Swizzle[1] == SWIZZLE_Y)
+            && (pParameter->Swizzle[2] == SWIZZLE_Z)
+            && (pParameter->Swizzle[3] == SWIZZLE_W))
+        {
+            // Change the read from W into a read from X (this fixes the XDK VolumeLight sample) :
+            VshSetSwizzle(pParameter, SWIZZLE_X, SWIZZLE_X, SWIZZLE_X, SWIZZLE_X);
+            DbgVshPrintf("Dxbx fixup on scalar instruction applied; Changed read of uninitialized W into a read of X!\n");
+            Result = true;
+        }
+    }
+
+    return Result;
+}
+
 /*
     mul oPos.xyz, r12, c-38
     +rcc r1.x, r12.w
@@ -1510,30 +1505,35 @@ static boolean VshConvertShader(VSH_XBOX_SHADER *pShader,
             pIntermediate->ILU = ILU_RCP;
         }
 
-		// Fix when RSQ reads from unitialized components
-		if (pIntermediate->InstructionType == IMD_ILU && pIntermediate->ILU == ILU_RSQ) {
-			int swizzle = (pIntermediate->Output.Mask[0]) | (pIntermediate->Output.Mask[1] << 1) | (pIntermediate->Output.Mask[2] << 2) | (pIntermediate->Output.Mask[3] << 3);
-			switch (swizzle)
-			{
-			case 1:
-				VshSetSwizzle(&pIntermediate->Parameters[0], SWIZZLE_X, SWIZZLE_X, SWIZZLE_X, SWIZZLE_X);
-				break;
-			case 2:
-				VshSetSwizzle(&pIntermediate->Parameters[0], SWIZZLE_Y, SWIZZLE_Y, SWIZZLE_Y, SWIZZLE_Y);
-				break;
-			case 4:
-				VshSetSwizzle(&pIntermediate->Parameters[0], SWIZZLE_Z, SWIZZLE_Z, SWIZZLE_Z, SWIZZLE_Z);
-				break;
-			case 8:
-				VshSetSwizzle(&pIntermediate->Parameters[0], SWIZZLE_W, SWIZZLE_W, SWIZZLE_W, SWIZZLE_W);
-				break;
-			case 15:
-			default:
-				LOG_TEST_CASE("rsq instruction with invalid swizzle");
-				break;
-			}
-		}
+        auto sw = pIntermediate->Parameters[0].Parameter.Swizzle;
+        bool singleSwizzle = sw[0] == sw[1] && sw[1] == sw[2] && sw[2] == sw[3];
 
+        if (!singleSwizzle)
+        {
+            // Fix when RSQ reads from unitialized components
+            if (pIntermediate->InstructionType == IMD_ILU && pIntermediate->ILU == ILU_RSQ) {
+                int swizzle = (pIntermediate->Output.Mask[0]) | (pIntermediate->Output.Mask[1] << 1) | (pIntermediate->Output.Mask[2] << 2) | (pIntermediate->Output.Mask[3] << 3);
+                switch (swizzle)
+                {
+                case 1:
+                    VshSetSwizzle(&pIntermediate->Parameters[0], SWIZZLE_X, SWIZZLE_X, SWIZZLE_X, SWIZZLE_X);
+                    break;
+                case 2:
+                    VshSetSwizzle(&pIntermediate->Parameters[0], SWIZZLE_Y, SWIZZLE_Y, SWIZZLE_Y, SWIZZLE_Y);
+                    break;
+                case 4:
+                    VshSetSwizzle(&pIntermediate->Parameters[0], SWIZZLE_Z, SWIZZLE_Z, SWIZZLE_Z, SWIZZLE_Z);
+                    break;
+                case 8:
+                    VshSetSwizzle(&pIntermediate->Parameters[0], SWIZZLE_W, SWIZZLE_W, SWIZZLE_W, SWIZZLE_W);
+                    break;
+                case 15:
+                default:
+                    LOG_TEST_CASE("rsq instruction with invalid swizzle");
+                    break;
+                }
+            }
+        }
 		if (pIntermediate->InstructionType == IMD_ILU && pIntermediate->ILU == ILU_EXP)
 		{
 			// EXP on DX8 requires that exactly one swizzle is specified on the output
