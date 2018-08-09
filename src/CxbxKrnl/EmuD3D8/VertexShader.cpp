@@ -63,6 +63,13 @@
 #define VSH_XBOX_MAX_INSTRUCTION_COUNT 136  // The maximum Xbox shader instruction count
 #define VSH_MAX_INTERMEDIATE_COUNT     1024 // The maximum number of intermediate format slots
 
+#define VSH_MAX_TEMPORARY_REGISTERS 32
+#define VSH_VS11_MAX_INSTRUCTION_COUNT 128
+#define VSH_VS2X_MAX_INSTRUCTION_COUNT 256
+#define VSH_VS30_MAX_INSTRUCTION_COUNT 512
+
+#define VSH_MAX_INSTRUCTION_COUNT VSH_VS2X_MAX_INSTRUCTION_COUNT
+
 #define X_D3DVSD_MASK_TESSUV 0x10000000
 #define X_D3DVSD_MASK_SKIP 0x10000000 // Skips (normally) dwords
 #define X_D3DVSD_MASK_SKIPBYTES 0x08000000 // Skips bytes (no, really?!)
@@ -447,7 +454,7 @@ static const char* MAC_OpCode[] =
     "max",
     "slt",
     "sge",
-    "mov", // really "arl" Dxbx note : Alias for 'mov a0.x'
+    "mova", // really "arl" Dxbx note : Alias for 'mov a0.x'
     "???",
     "???"
 };
@@ -827,7 +834,7 @@ static void VshWriteShader(VSH_XBOX_SHADER *pShader,
 #ifdef CXBX_USE_VS30
             DisassemblyPos += sprintf(pDisassembly + DisassemblyPos, "vs.3.0\n");
 #else
-            DisassemblyPos += sprintf(pDisassembly + DisassemblyPos, "vs.1.1\n");
+            DisassemblyPos += sprintf(pDisassembly + DisassemblyPos, "vs.2.x\n");
 #endif
             break;
         case VERSION_XVS:
@@ -887,14 +894,14 @@ static void VshWriteShader(VSH_XBOX_SHADER *pShader,
 			}
 
 			i++;
-		} while (i < 16);
+		} while (i < RegVUsage.size());
 	}
 
-    for (int i = 0; i < pShader->IntermediateCount && (i < 128 || !Truncate); i++)
+    for (int i = 0; i < pShader->IntermediateCount && (i < VSH_MAX_INSTRUCTION_COUNT || !Truncate); i++)
     {
         VSH_INTERMEDIATE_FORMAT *pIntermediate = &pShader->Intermediate[i];
 
-        if(i == 128)
+        if(i == VSH_MAX_INSTRUCTION_COUNT)
         {
             DisassemblyPos += sprintf(pDisassembly + DisassemblyPos, "; -- Passing the truncation limit --\n");
         }
@@ -1473,7 +1480,13 @@ static boolean VshConvertShader(VSH_XBOX_SHADER *pShader,
 								bool			*pDeclaredRegisters
 )
 {
-    boolean RUsage[13] = { FALSE };
+    using namespace XTL;
+
+    extern XTL::D3DCAPS g_D3DCaps;
+
+    const DWORD temporaryCount = g_D3DCaps.VS20Caps.NumTemps;
+
+    boolean RUsage[VSH_MAX_TEMPORARY_REGISTERS] = { FALSE };
     // TODO: What about state shaders and such?
     pShader->ShaderHeader.Version = VERSION_VS;
 
@@ -1618,8 +1631,10 @@ static boolean VshConvertShader(VSH_XBOX_SHADER *pShader,
 
 				// attempt to find unused register...
 				int outRegister = -1;
-				for (int j = 11; j >= 0; --j)
+				for (int j = temporaryCount - 1; j >= 0; --j)
 				{
+                    if (j == 12) continue;
+
 					if(!RUsage[j])
 					{
 						outRegister = j;
@@ -1700,10 +1715,10 @@ static boolean VshConvertShader(VSH_XBOX_SHADER *pShader,
         }
     }
     int16 R12Replacement = -1;
-    if(RUsage[12])
+    if(temporaryCount <= 12 && RUsage[12])
     {
         // Sigh, they absolutely had to use r12, didn't they?
-        for (int i = 11; i >= 0; i--)
+        for (int i = temporaryCount - 1; i >= 0; i--)
         {
             if(!RUsage[i])
             {
@@ -2432,6 +2447,8 @@ DWORD XTL::EmuRecompileVshDeclaration
     return D3D_OK;
 }
 
+extern XTL::D3DCAPS g_D3DCaps;
+
 // recompile xbox vertex shader function
 extern HRESULT XTL::EmuRecompileVshFunction
 (
@@ -2444,6 +2461,8 @@ extern HRESULT XTL::EmuRecompileVshFunction
     DWORD        DeclarationSize
 )
 {
+    const DWORD temporaryCount = g_D3DCaps.VS20Caps.NumTemps;
+
     VSH_SHADER_HEADER   *pShaderHeader = (VSH_SHADER_HEADER*)pFunction;
     DWORD               *pToken;
     boolean             EOI = false;
@@ -2454,12 +2473,12 @@ extern HRESULT XTL::EmuRecompileVshFunction
 	// Build an array of registers that are declared
 	// This is used to remove instructions that haven't been declared
 	// as they cause CreateVertexShader to fail
-	bool declaredRegisters[13] = { false };
+	bool declaredRegisters[VSH_MAX_TEMPORARY_REGISTERS] = { false };
 	DWORD* pDeclToken = pRecompiledDeclaration;
     DWORD* pDeclEnd = (DWORD*)((BYTE*)pDeclToken + DeclarationSize);
 	do {
 		DWORD regNum = *pDeclToken & X_D3DVSD_VERTEXREGMASK;
-		if (regNum > 12) {
+		if (regNum >= temporaryCount /*12*/) {
 			// Lego Star Wars hits this
 			LOG_TEST_CASE("RegNum > 12");
 			pDeclToken++;
@@ -2538,12 +2557,12 @@ extern HRESULT XTL::EmuRecompileVshFunction
 		DbgVshPrintf("-----------------------\n");
 
         // HACK: Azurik. Prevent Direct3D from trying to assemble this.
-		if(!strcmp(pShaderDisassembly, "vs.1.1\n"))
+		if(!strcmp(pShaderDisassembly, "vs.2.x\n"))
 		{
 			EmuWarning("Replacing empty vertex shader with fallback");
 
 			static const char dummy[] =
-				"vs.1.1\n"
+				"vs.2.x\n"
 				"dp4 oPos.x, v0, c96\n"
 				"dp4 oPos.y, v0, c97\n"
 				"dp4 oPos.z, v0, c98\n"
