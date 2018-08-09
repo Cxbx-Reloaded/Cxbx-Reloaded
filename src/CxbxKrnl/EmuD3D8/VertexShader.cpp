@@ -2440,7 +2440,8 @@ extern HRESULT XTL::EmuRecompileVshFunction
     DWORD        *pOriginalSize,
     boolean      bNoReservedConstants,
 	boolean		 *pbUseDeclarationOnly,
-	DWORD		 *pRecompiledDeclaration
+	DWORD		 *pRecompiledDeclaration,
+    DWORD        DeclarationSize
 )
 {
     VSH_SHADER_HEADER   *pShaderHeader = (VSH_SHADER_HEADER*)pFunction;
@@ -2455,6 +2456,7 @@ extern HRESULT XTL::EmuRecompileVshFunction
 	// as they cause CreateVertexShader to fail
 	bool declaredRegisters[13] = { false };
 	DWORD* pDeclToken = pRecompiledDeclaration;
+    DWORD* pDeclEnd = (DWORD*)((BYTE*)pDeclToken + DeclarationSize);
 	do {
 		DWORD regNum = *pDeclToken & X_D3DVSD_VERTEXREGMASK;
 		if (regNum > 12) {
@@ -2466,7 +2468,7 @@ extern HRESULT XTL::EmuRecompileVshFunction
 
 		declaredRegisters[regNum] = true;
 		pDeclToken++;
-	} while (*pDeclToken != X_D3DVSD_END());
+	} while (pDeclToken < pDeclEnd && *pDeclToken != X_D3DVSD_END());
 
     // TODO: support this situation..
     if(pFunction == NULL)

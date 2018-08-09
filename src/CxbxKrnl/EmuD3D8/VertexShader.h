@@ -67,7 +67,8 @@ extern HRESULT EmuRecompileVshFunction
     DWORD        *pOriginalSize,
     boolean      bNoReservedConstants,
 	boolean		 *pbUseDeclarationOnly,
-	DWORD		 *pRecompiledDeclaration
+	DWORD		 *pRecompiledDeclaration,
+    DWORD        DeclarationSize
 );
 
 extern void FreeVertexDynamicPatch(CxbxVertexShader *pVertexShader);
