@@ -360,13 +360,12 @@ void DInputController::ListenPoll(XTL::X_XINPUT_STATE *Controller)
     HRESULT hRet=0;
     DWORD dwFlags=0;
 
+    // Test case: Smashing Drive, pointer of X_XINPUT_STATE is reused for other controller ports.
+    // By setting Gamepad to zero'd no longer have conflict with input changes from other controller port.
     // ******************************************************************
-    // * Default values necessary for axis
+    // * Set default values
     // ******************************************************************
-    Controller->Gamepad.sThumbLX = 0;
-    Controller->Gamepad.sThumbLY = 0;
-    Controller->Gamepad.sThumbRX = 0;
-    Controller->Gamepad.sThumbRY = 0;
+    Controller->Gamepad = { 0 };
 
     XTL::DIJOYSTATE JoyState = { 0 };
 	BYTE KeyboardState[256] = { 0 };
