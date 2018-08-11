@@ -506,7 +506,8 @@ enum PSH_OPCODE
 	PO_DEF,
 	PO_DCL, // Note : ps.2.0 and up only
 	PO_TEX,
-	PO_TEXBEM,
+    PO_TEXLD, // Note : ps.1.4 only
+    PO_TEXBEM,
 	PO_TEXBEML,
 	PO_TEXBRDF, // Xbox ext.
 	PO_TEXCOORD,
@@ -551,6 +552,7 @@ const struct { char *mn; int _Out; int _In; char *note; } PSH_OPCODE_DEFS[/*PSH_
 	{/* PO_DEF */ /*mn:*/"def",  /*_Out: */ 1, /*_In: */ 4, /*note:*/"" }, // Output must be a PARAM_C, arguments must be 4 floats [0.00f .. 1.00f]
 	{/* PO_DCL */ /*mn:*/"dcl",  /*_Out: */ 1, /*_In: */ 0, /*note:*/"" }, // Note : ps.2.0 and up only
 	{/* PO_TEX */ /*mn:*/"tex",  /*_Out: */ 1, /*_In: */ 0, /*note:*/"" },
+    {/* PO_TEXLD */ /*mn:*/"texld",  /*_Out: */ 1, /*_In: */ 1, /*note:*/"" }, // Note : ps.1.4 and up only
 	{/* PO_TEXBEM */ /*mn:*/"texbem",  /*_Out: */ 1, /*_In: */ 1, /*note:*/"" },
 	{/* PO_TEXBEML */ /*mn:*/"texbeml",  /*_Out: */ 1, /*_In: */ 1, /*note:*/"" },
 	{/* PO_TEXBRDF */ /*mn:*/"texbrdf",  /*_Out: */ 1, /*_In: */ 1, /*note:*/"" }, // /*note: */ Not supported by Direct3D8 ?
@@ -615,11 +617,6 @@ const char *PSH_ARGUMENT_TYPE_Str[/*PSH_ARGUMENT_TYPE*/] = {
 	"c"        // 16 r     Yes     No       Xbox has 8*c0,c1=16, while PC D3D8 has only 8, we try to reduce that in FixupPixelShader
 };
 
-constexpr int FakeRegNr_Sum = 2;
-constexpr int FakeRegNr_Prod = 3;
-constexpr int FakeRegNr_Xmm1 = 4;
-constexpr int FakeRegNr_Xmm2 = 5;
-
 constexpr int XFC_COMBINERSTAGENR = XTL::X_PSH_COMBINECOUNT; // Always call XFC 'stage 9', 1 after the 8th combiner
 
 constexpr int PSH_XBOX_MAX_C_REGISTER_COUNT = 16;
@@ -631,6 +628,11 @@ constexpr int PSH_XBOX_CONSTANT_FOG = PSH_XBOX_MAX_C_REGISTER_COUNT; // = 16
 constexpr int PSH_XBOX_CONSTANT_FC0 = PSH_XBOX_CONSTANT_FOG + 1; // = 17
 constexpr int PSH_XBOX_CONSTANT_FC1 = PSH_XBOX_CONSTANT_FC0 + 1; // = 18
 constexpr int PSH_XBOX_CONSTANT_MAX = PSH_XBOX_CONSTANT_FC1 + 1; // = 19
+
+constexpr int FakeRegNr_Sum = PSH_XBOX_MAX_T_REGISTER_COUNT + 0;
+constexpr int FakeRegNr_Prod = PSH_XBOX_MAX_T_REGISTER_COUNT + 1;
+constexpr int FakeRegNr_Xmm1 = PSH_XBOX_MAX_T_REGISTER_COUNT + 2;
+constexpr int FakeRegNr_Xmm2 = PSH_XBOX_MAX_T_REGISTER_COUNT + 3;
 
 enum PSH_INST_MODIFIER {
 	INSMOD_NONE, // y =  x
@@ -2839,13 +2841,13 @@ bool PSH_XBOX_SHADER::ConvertXMMToNative_Except3RdOutput(int i)
 
   if (Cur->Output[0].Type == PARAM_DISCARD) 
   {
-    Cur->Output[0].Type = PARAM_R;
+    Cur->Output[0].Type = PARAM_T;
     Cur->Output[0].Address = FakeRegNr_Xmm1; // 'r4'
   }
 
   if (Cur->Output[1].Type == PARAM_DISCARD) 
   {
-    Cur->Output[1].Type = PARAM_R;
+    Cur->Output[1].Type = PARAM_T;
     Cur->Output[1].Address = FakeRegNr_Xmm2; // 'r5'
   }
 
@@ -2981,7 +2983,7 @@ void PSH_XBOX_SHADER::ConvertXFCToNative(int i)
       case PARAM_V1R0_SUM:
       {
         // Change SUM into a fake register, which will be resolved later :
-        CurArg->Type = PARAM_R;
+        CurArg->Type = PARAM_T;
         CurArg->Address = FakeRegNr_Sum; // 'r2'
         NeedsSum = true;
 		break;
@@ -2990,7 +2992,7 @@ void PSH_XBOX_SHADER::ConvertXFCToNative(int i)
 	  case PARAM_EF_PROD:
       {
         // Change PROD into a fake register, which will be resolved later :
-        CurArg->Type = PARAM_R;
+        CurArg->Type = PARAM_T;
         CurArg->Address = FakeRegNr_Prod; // 'r3'
         NeedsProd = true;
 		break;
@@ -3010,7 +3012,7 @@ void PSH_XBOX_SHADER::ConvertXFCToNative(int i)
   {
     // Add a new opcode that calculates r0*v1 :
     Ins.Initialize(PO_MUL);
-    Ins.Output[0].SetRegister(PARAM_R, FakeRegNr_Sum, MASK_RGBA); // 'r2'
+    Ins.Output[0].SetRegister(PARAM_T, FakeRegNr_Sum, MASK_RGBA); // 'r2'
 
     Ins.Parameters[0].SetRegister(PARAM_R, 0, MASK_RGB);
     Ins.Parameters[1].SetRegister(PARAM_V, 1, MASK_RGB);
@@ -3032,7 +3034,7 @@ void PSH_XBOX_SHADER::ConvertXFCToNative(int i)
   {
     // Add a new opcode that calculates E*F :
     Ins.Initialize(PO_MUL);
-    Ins.Output[0].SetRegister(PARAM_R, FakeRegNr_Prod, MASK_RGBA); // 'r3'
+    Ins.Output[0].SetRegister(PARAM_T, FakeRegNr_Prod, MASK_RGBA); // 'r3'
     Ins.Parameters[0] = Cur.Parameters[4]; // E
     Ins.Parameters[1] = Cur.Parameters[5]; // F
     InsertIntermediate(&Ins, InsertPos);
@@ -3271,10 +3273,10 @@ bool PSH_XBOX_SHADER::CombineInstructions()
     // Check if there are two consecutive opcodes reading from a fake R register;
     // We outputted these ourselves, in order to ease the conversion and profit
     // from having generic optimizations in one place :
-    if ( (Op0->Output[0].Type == PARAM_R)
-    && (Op0->Output[0].Address >= PSH_XBOX_MAX_R_REGISTER_COUNT)
-    && (Op1->Output[0].Type == PARAM_R)
-    && (Op1->Output[0].Address >= PSH_XBOX_MAX_R_REGISTER_COUNT))
+    if ( (Op0->Output[0].Type == PARAM_T)
+    && (Op0->Output[0].Address >= PSH_XBOX_MAX_T_REGISTER_COUNT)
+    && (Op1->Output[0].Type == PARAM_T)
+    && (Op1->Output[0].Address >= PSH_XBOX_MAX_T_REGISTER_COUNT))
     {
       // Did we output those from a CND opcode (originally XMMC) ?
       if (Op2->Opcode == PO_CND)
@@ -3428,6 +3430,20 @@ bool PSH_XBOX_SHADER::CombineInstructions()
 
         // We can optimize if the MOV-output is written to again before the end of the shader :
         CanOptimize = true;
+
+        // ensure this is not "constant with modifier" optimization pattern to prevent infinite loop
+        for (int p = 0; p < 7; p++)
+        {
+            if ((Op0->Parameters[0].Type == PARAM_C)
+                && (Intermediate[j].Parameters[p].Type == Op0->Output[0].Type)
+                && (Intermediate[j].Parameters[p].Address == Op0->Output[0].Address)
+                && (Intermediate[j].Parameters[p].Modifiers != 0))
+            {
+                CanOptimize = false;
+                break;
+            }
+        };
+
         if (Intermediate[j].WritesToRegister(Op0->Output[0].Type, Op0->Output[0].Address, MASK_RGBA))
           break;
 
@@ -3467,10 +3483,10 @@ bool PSH_XBOX_SHADER::CombineInstructions()
     // Fix Dolphin :
     //  mul r3, r0,t0 ; d0=s0*s1
     //  mov r0.rgb, r3 ; d0=s0 final combiner - FOG not emulated, using 1.
-    if ( (Op0->Output[0].Type == PARAM_R)
-    && (Op0->Output[0].Address >= PSH_XBOX_MAX_R_REGISTER_COUNT)
-    && (Op1->Parameters[0].Type == PARAM_R)
-    && (Op1->Parameters[0].Address >= PSH_XBOX_MAX_R_REGISTER_COUNT))
+    if ( (Op0->Output[0].Type == PARAM_T)
+    && (Op0->Output[0].Address >= PSH_XBOX_MAX_T_REGISTER_COUNT)
+    && (Op1->Parameters[0].Type == PARAM_T)
+    && (Op1->Parameters[0].Address >= PSH_XBOX_MAX_T_REGISTER_COUNT))
     {
       if ( (Op0->Opcode == PO_MUL)
       && (Op1->Opcode == PO_MOV))
@@ -3485,7 +3501,7 @@ bool PSH_XBOX_SHADER::CombineInstructions()
     }
 
     // Fix Crash bandicoot xfc leftover r3 :
-    if (Op0->Output[0].IsRegister(PARAM_R, FakeRegNr_Prod)) // 'r3'
+    if (Op0->Output[0].IsRegister(PARAM_T, FakeRegNr_Prod)) // 'r3'
     {
       // The final combiner uses r3, try to use r1 instead :
       if (IsRegisterFreeFromIndexOnwards(i, PARAM_R, 1))
@@ -3715,14 +3731,14 @@ bool PSH_XBOX_SHADER::FixupPixelShader()
   // TODO : Convert numeric arguments (-2, -1, 0, 1, 2) into modifiers on the other argument
   // TODO : Complete to port to D3D9 to support all 18 constants (including C8..C15 + FC0+FC1)
 
+  if (CombineInstructions())
+      Result = true;
+
   if (MoveRemovableParametersRight())
     Result = true;
 
   if (FixConstantModifiers())
 	  Result = true;
-
-  if (CombineInstructions())
-    Result = true;
 
   // Simplify instructions, which can help to compress the result :
   i = IntermediateCount;
@@ -4161,7 +4177,7 @@ PSH_RECOMPILED_SHADER XTL_EmuRecompilePshDef(XTL::X_D3DPIXELSHADERDEF *pPSDef)
 #if 0 // Once PS.1.4 can be generated, enable this :
 	extern XTL::D3DCAPS g_D3DCaps;
 
-	PSVersion = g_D3DCaps.PixelShaderVersion;
+    PSVersion = g_D3DCaps.PixelShaderVersion;
 #endif
 	// TODO : Make the pixel shader version configurable
 
