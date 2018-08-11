@@ -867,7 +867,7 @@ static void VshWriteShader(VSH_XBOX_SHADER *pShader,
 				std::stringstream dclStream;
 				switch (usage) {
 				case XTL::D3DDECLUSAGE_POSITION:
-					dclStream << "dcl_position";
+                    dclStream << "dcl_position" << (int)PCUsageIndex;
 					break;
 				case XTL::D3DDECLUSAGE_BLENDWEIGHT:
 					dclStream << "dcl_blendweight";
