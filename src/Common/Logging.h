@@ -262,7 +262,7 @@ extern thread_local std::string _logThreadPrefix;
 	static thread_local std::string _logFuncPrefix; \
 	if (_logFuncPrefix.length() == 0) {	\
 		std::stringstream tmp; \
-		tmp << g_EnumModules2String[static_cast<unsigned int>(LOG_PREFIX)] << ": " << (func != nullptr ? remove_emupatch_prefix(func) : ""); \
+		tmp << g_EnumModules2String[static_cast<unsigned int>(LOG_PREFIX)] << (func != nullptr ? remove_emupatch_prefix(func) : ""); \
 		_logFuncPrefix = tmp.str(); \
 	}
 
@@ -275,7 +275,7 @@ extern thread_local std::string _logThreadPrefix;
 #define LOG_FINIT \
 	_logFuncPrefix.clear(); // Reset prefix, to show caller changes
 
-#define LOG_FUNC_BEGIN_NO_INIT(cxbxr_module) \
+#define LOG_FUNC_BEGIN_NO_INIT \
 	do { if(g_bPrintfOn) { \
 		bool _had_arg = false; \
 		std::stringstream msg; \
@@ -284,7 +284,7 @@ extern thread_local std::string _logThreadPrefix;
 #define LOG_FUNC_BEGIN(cxbxr_module) \
 		LOG_INIT \
 		LOG_CHECK_ENABLED(cxbxr_module, LOG_LEVEL::DEBUG) { \
-			LOG_FUNC_BEGIN_NO_INIT(cxbxr_module)
+			LOG_FUNC_BEGIN_NO_INIT
 
 // LOG_FUNC_ARG writes output via all available ostream << operator overloads, sanitizing and adding detail where possible
 #define LOG_FUNC_ARG(arg) \
@@ -399,6 +399,27 @@ extern thread_local std::string _logThreadPrefix;
 			} \
 		} while(0)
 
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 4477)
+#endif
+
+/*! DbgPrintf enabled if _DEBUG_TRACE is set */
+#ifdef _DEBUG_TRACE
+#define DbgPrintf(cxbxr_module, fmt, ...) { \
+		LOG_CHECK_ENABLED(cxbxr_module, LOG_LEVEL::DEBUG) { \
+			CXBX_CHECK_INTEGRITY(); \
+			if(g_bPrintfOn) printf("[0x%.4X] %s: "##fmt, GetCurrentThreadId(), g_EnumModules2String[static_cast<unsigned int>(cxbxr_module)], ##__VA_ARGS__); \
+		} \
+     }
+#else
+inline void null_func(...) { }
+#define DbgPrintf null_func
+#endif
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 
 //
 // Short hand function logging defines :
@@ -511,22 +532,5 @@ LOGRENDER_HEADER_BY_REF(Type)                                   \
 //
 
 LOGRENDER_HEADER_BY_REF(PVOID);
-
-#ifdef _MSC_VER
-#pragma warning(disable : 4477)
-#endif
-
-/*! DbgPrintf enabled if _DEBUG_TRACE is set */
-#ifdef _DEBUG_TRACE
-#define DbgPrintf(cxbxr_module, fmt, ...) { \
-		LOG_CHECK_ENABLED(cxbxr_module, LOG_LEVEL::DEBUG) { \
-			CXBX_CHECK_INTEGRITY(); \
-			if(g_bPrintfOn) printf("[0x%.4X] %s: "##fmt, GetCurrentThreadId(), g_EnumModules2String[static_cast<unsigned int>(cxbxr_module)], ##__VA_ARGS__); \
-		} \
-     }
-#else
-inline void null_func(...) { }
-#define DbgPrintf null_func
-#endif
 
 #endif _LOGGING_H

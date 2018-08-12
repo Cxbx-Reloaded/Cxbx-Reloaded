@@ -1,6 +1,6 @@
 ﻿//{{NO_DEPENDENCIES}}
 // Microsoft Visual C++ generated include file.
-// Used by c:\Users\Aaron\source\repos\cxbx-reloaded2\resource\Cxbx.rc
+// Used by C:\Users\anonymous\Documents\xbox\Cxbx-Reloaded\resource\Cxbx.rc
 //
 #define IDI_CXBX                        101
 #define IDB_SPLASH                      102
@@ -8,6 +8,7 @@
 #define IDB_LOGO                        106
 #define IDB_ABOUT                       108
 #define IDD_CONTROLLER_CFG              111
+#define IDD_LOGGING_CFG                 112
 #define IDD_VIDEO_CFG                   113
 #define IDD_AUDIO_CFG                   114
 #define IDD_EEPROM_CFG                  115
@@ -19,6 +20,69 @@
 #define IDS_UEM                         123
 #define IDD_CONTROLLER_HOST_MAPPING     131
 #define IDD_VIRTUAL_SBC_FEEDBACK        133
+#define IDC_LOG_ENABLE_GENERAL          894
+#define IDC_LOG_DISABLE_GENERAL         895
+#define IDC_LOG_ENABLE_KERNEL           896
+#define IDC_LOG_DISABLE_KERNEL          897
+#define IDC_LOG_CUSTOM_GENERAL          898
+#define IDC_LOG_CUSTOM_KERNEL           899
+#define IDC_LOG_CXBXR                   900
+#define IDC_LOG_XBE                     901
+#define IDC_LOG_INIT                    902
+#define IDC_LOG_VMEM                    903
+#define IDC_LOG_PMEM                    904
+#define IDC_LOG_GUI                     905
+#define IDC_LOG_EEPR                    906
+#define IDC_LOG_RSA                     907
+#define IDC_LOG_POOLMEM                 908
+#define IDC_LOG_D3D8                    909
+#define IDC_LOG_D3DST                   910
+#define IDC_LOG_D3DCVT                  911
+#define IDC_LOG_DSOUND                  912
+#define IDC_LOG_XAPI                    913
+#define IDC_LOG_XACT                    914
+#define IDC_LOG_XGRP                    915
+#define IDC_LOG_XONLINE                 916
+#define IDC_LOG_FS                      917
+#define IDC_LOG_PSHB                    918
+#define IDC_LOG_PXSH                    919
+#define IDC_LOG_VTXSH                   920
+#define IDC_LOG_VTXB                    921
+#define IDC_LOG_DINP                    922
+#define IDC_LOG_XINP                    923
+#define IDC_LOG_SDL2                    924
+#define IDC_LOG_FILE                    925
+#define IDC_LOG_X86                     926
+#define IDC_LOG_HLE                     927
+#define IDC_LOG_NET                     928
+#define IDC_LOG_MCPX                    929
+#define IDC_LOG_NV2A                    930
+#define IDC_LOG_SMC                     931
+#define IDC_LOG_OHCI                    932
+#define IDC_LOG_USB                     933
+#define IDC_LOG_HUB                     934
+#define IDC_LOG_XIDCTRL                 935
+#define IDC_LOG_ADM                     936
+#define IDC_LOG_KRNL                    937
+#define IDC_LOG_LOG                     938
+#define IDC_LOG_XBOX                    939
+#define IDC_LOG_XBDM                    940
+#define IDC_LOG_AV                      941
+#define IDC_LOG_DBG                     942
+#define IDC_LOG_EX                      943
+#define IDC_LOG_FSC                     944
+#define IDC_LOG_HAL                     945
+#define IDC_LOG_IO                      946
+#define IDC_LOG_KD                      947
+#define IDC_LOG_KE                      948
+#define IDC_LOG_KI                      949
+#define IDC_LOG_MM                      950
+#define IDC_LOG_NT                      951
+#define IDC_LOG_OB                      952
+#define IDC_LOG_PS                      953
+#define IDC_LOG_RTL                     954
+#define IDC_LOG_XC                      955
+#define IDC_LOG_XE                      956
 #define IDC_SET_X                       1000
 #define IDC_SET_Y                       1001
 #define IDC_SET_A                       1002
@@ -224,6 +288,9 @@
 #define IDC_PB_BUFFER_MATERIAL          1270
 #define IDC_PB_VT_LOCATION_MEASUREMENT4 1271
 #define IDC_PB_FILT_CONTROL_SYSTEM      1272
+#define IDC_EVENT_LV                    1273
+#define IDC_CXBXR_EVENTS                1274
+#define IDC_KERNEL_EVENTS               1275
 #define ID_FILE_EXIT                    40005
 #define ID_HELP_ABOUT                   40008
 #define ID_EMULATION_START              40009
@@ -244,7 +311,6 @@
 #define ID_EMULATION_LLE_APU            40039
 #define ID_EMULATION_LLE_GPU            40040
 #define ID_EMULATION_LLE_JIT            40041
-//#define ID_EMULATION_LLE_USB            40042 // Reenable this when LLE USB actually works
 #define ID_SETTINGS_CONFIG_CONTROLLER   40046
 #define ID_SETTINGS_CONFIG_VIDEO        40047
 #define ID_SETTINGS_CONFIG_AUDIO        40048
@@ -282,6 +348,7 @@
 #define ID_SETTINGS_CONFIG_DLOCAPPDATA  40105
 #define ID_SETTINGS_CONFIG_DLOCCURDIR   40106
 #define ID_SETTINGS_ALLOWADMINPRIVILEGE 40107
+#define ID_SETTINGS_CONFIG_LOGGING      40108
 #define IDC_STATIC                      -1
 
 // Next default values for new objects

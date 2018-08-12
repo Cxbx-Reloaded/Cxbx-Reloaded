@@ -259,6 +259,7 @@
     <ClInclude Include="..\..\src\Cxbx\DlgAudioConfig.h" />
     <ClInclude Include="..\..\src\Cxbx\DlgControllerConfig.h" />
     <ClInclude Include="..\..\src\Cxbx\DlgEepromConfig.h" />
+    <ClInclude Include="..\..\src\Cxbx\DlgLoggingConfig.h" />
     <ClInclude Include="..\..\src\Cxbx\DlgVideoConfig.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\Emu.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\EmuShared.h" />
@@ -527,6 +528,7 @@
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="..\..\src\Cxbx\DlgEepromConfig.cpp" />
+    <ClCompile Include="..\..\src\Cxbx\DlgLoggingConfig.cpp" />
     <ClCompile Include="..\..\src\Cxbx\DlgVideoConfig.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>

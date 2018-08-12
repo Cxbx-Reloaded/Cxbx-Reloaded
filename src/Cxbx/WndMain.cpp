@@ -45,6 +45,7 @@
 #include "DlgVideoConfig.h"
 #include "DlgAudioConfig.h"
 #include "DlgEepromConfig.h"
+#include "DlgLoggingConfig.h"
 #include "DlgXboxControllerPortMapping.h"
 #include "Common/XbePrinter.h" // For DumpInformation
 #include "CxbxKrnl/EmuShared.h"
@@ -958,6 +959,12 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 					break;
 				}
 				ShowEepromConfig(hwnd);
+			}
+			break;
+
+			case ID_SETTINGS_CONFIG_LOGGING:
+			{
+				ShowLoggingConfig(hwnd, m_hwndChild);
 			}
 			break;
 

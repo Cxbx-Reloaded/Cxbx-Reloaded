@@ -57,6 +57,13 @@ enum {
 	BOOT_QUICK_REBOOT =   1 << 4,
 };
 
+// Log variables used by WM_COPYDATA
+#define LOG_ID 1
+struct LogData {
+	int Level;
+	unsigned int LoggedModules[NUM_INTEGERS_LOG];
+};
+
 // ******************************************************************
 // * EmuShared : Shared memory
 // ******************************************************************

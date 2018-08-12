@@ -52,7 +52,7 @@ static_assert(false, "Please implement support for cross-platform's user profile
 #endif
 
 // NOTE: Update settings_version when add/edit/delete setting's structure.
-const uint settings_version = 2;
+const uint settings_version = 3;
 
 Settings* g_Settings = nullptr;
 
@@ -79,6 +79,9 @@ static struct {
 	const char* KrnlDebugMode = "KrnlDebugMode";
 	const char* KrnlDebugLogFile = "KrnlDebugLogFile";
 	const char* AllowAdminPrivilege = "AllowAdminPrivilege";
+	const char* LoggedModules1 = "LoggedModules1";
+	const char* LoggedModules2 = "LoggedModules2";
+	const char* LogLevel = "LogLevel";
 } sect_core_keys;
 
 static const char* section_video = "video";
@@ -285,7 +288,7 @@ bool Settings::LoadConfig()
 	if (bRet) {
 		si_list_iterator = si_list.begin();
 		for (si_list_iterator; si_list_iterator != si_list.end(); si_list_iterator++) {
-			// Exit loop when list has reach the limit.
+			// Exit loop when list has reached the limit.
 			if (index == list_max) {
 				break;
 			}
@@ -319,6 +322,10 @@ bool Settings::LoadConfig()
 	}
 
 	m_core.allowAdminPrivilege = m_si.GetBoolValue(section_core, sect_core_keys.AllowAdminPrivilege, /*Default=*/false);
+
+	m_core.LoggedModules[0] = m_si.GetLongValue(section_gui, sect_core_keys.LoggedModules1, /*Default=*/0x0);
+	m_core.LoggedModules[1] = m_si.GetLongValue(section_gui, sect_core_keys.LoggedModules2, /*Default=*/0x0);
+	m_core.LogLevel = m_si.GetLongValue(section_gui, sect_core_keys.LogLevel, 3);
 
 	// ==== Core End ============
 
@@ -473,6 +480,9 @@ bool Settings::Save(std::string file_path)
 	m_si.SetLongValue(section_core, sect_core_keys.KrnlDebugMode, m_core.KrnlDebugMode, nullptr, true, true);
 	m_si.SetValue(section_core, sect_core_keys.KrnlDebugLogFile, m_core.szKrnlDebug, nullptr, true);
 	m_si.SetBoolValue(section_core, sect_core_keys.AllowAdminPrivilege, m_core.allowAdminPrivilege, nullptr, true);
+	m_si.SetLongValue(section_gui, sect_core_keys.LoggedModules1, m_core.LoggedModules[0], nullptr, true, true);
+	m_si.SetLongValue(section_gui, sect_core_keys.LoggedModules2, m_core.LoggedModules[1], nullptr, true, true);
+	m_si.SetLongValue(section_gui, sect_core_keys.LogLevel, m_core.LogLevel, nullptr, false, true);
 
 	// ==== Core End ============
 

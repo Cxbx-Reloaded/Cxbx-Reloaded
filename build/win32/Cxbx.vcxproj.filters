@@ -314,6 +314,9 @@
     <ClCompile Include="..\..\src\Common\Win32\DInputController.cpp">
       <Filter>Shared</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\Cxbx\DlgLoggingConfig.cpp">
+      <Filter>GUI</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\Cxbx\DlgControllerConfig.h">
@@ -615,6 +618,9 @@
     </ClInclude>
     <ClInclude Include="..\..\src\Common\Win32\DInputController.h">
       <Filter>Shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Cxbx\DlgLoggingConfig.h">
+      <Filter>GUI</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

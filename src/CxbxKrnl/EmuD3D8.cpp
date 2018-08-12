@@ -1597,6 +1597,37 @@ static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 		}
 		break;
 
+		case WM_COPYDATA:
+		{
+			COPYDATASTRUCT* pCopyData = reinterpret_cast<COPYDATASTRUCT*>(lParam);
+			switch (pCopyData->dwData)
+			{
+				case LOG_ID:
+				{
+					if (pCopyData->cbData == sizeof(LogData)) {
+						LogData Data = *reinterpret_cast<LogData*>(pCopyData->lpData);
+						g_CurrentLogLevel = Data.Level;
+						for (unsigned int index = static_cast<unsigned int>(CXBXR_MODULE::CXBXR); index < static_cast<unsigned int>(CXBXR_MODULE::MAX); index++) {
+							if (Data.LoggedModules[index / 32] & (1 << index)) {
+								g_EnabledModules[index] = true;
+							}
+							else {
+								g_EnabledModules[index] = false;
+							}
+						}
+					}
+					else {
+						EmuLog(CXBXR_MODULE::GUI, LOG_LEVEL::WARNING, "COPYDATASTRUCT with id LOG_ID with abnormal size %zu", pCopyData->cbData);
+					}
+				}
+				break;
+
+				default:
+					break;
+			}
+		}
+		break;
+
         case WM_SYSKEYDOWN:
         {
             if(wParam == VK_RETURN)
