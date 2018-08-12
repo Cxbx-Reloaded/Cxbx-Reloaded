@@ -119,7 +119,6 @@ extern struct _D3DIVB
 
 extern UINT g_InlineVertexBuffer_TableLength;
 extern UINT g_InlineVertexBuffer_TableOffset;
-extern UINT g_InlineVertexBuffer_DiffuseFlag;
 
 extern VOID EmuFlushIVB();
 

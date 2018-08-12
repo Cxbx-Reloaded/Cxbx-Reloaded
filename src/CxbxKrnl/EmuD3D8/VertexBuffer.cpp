@@ -60,7 +60,6 @@ extern DWORD                   XTL::g_InlineVertexBuffer_FVF = 0;
 extern struct XTL::_D3DIVB    *XTL::g_InlineVertexBuffer_Table = nullptr;
 extern UINT                    XTL::g_InlineVertexBuffer_TableLength = 0;
 extern UINT                    XTL::g_InlineVertexBuffer_TableOffset = 0;
-extern UINT                    XTL::g_InlineVertexBuffer_DiffuseFlag = 0;
 
 FLOAT *g_InlineVertexBuffer_pData = nullptr;
 UINT   g_InlineVertexBuffer_DataSize = 0;
