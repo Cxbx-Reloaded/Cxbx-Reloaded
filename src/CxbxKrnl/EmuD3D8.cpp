@@ -4068,14 +4068,14 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexData4f)
 	FUNC_EXPORTS
 
 	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(Register)
-		LOG_FUNC_ARG(a)
-		LOG_FUNC_ARG(b)
-		LOG_FUNC_ARG(c)
-		LOG_FUNC_ARG(d)
-		LOG_FUNC_END;
+	LOG_FUNC_ARG(Register)
+	LOG_FUNC_ARG(a)
+	LOG_FUNC_ARG(b)
+	LOG_FUNC_ARG(c)
+	LOG_FUNC_ARG(d)
+	LOG_FUNC_END;
 
-    HRESULT hRet = D3D_OK;
+	HRESULT hRet = D3D_OK;
 
 	// Grow g_InlineVertexBuffer_Table to contain at least current, and a potentially next vertex
 	if (g_InlineVertexBuffer_TableLength <= g_InlineVertexBuffer_TableOffset + 1) {
@@ -4100,18 +4100,25 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexData4f)
 	}
 
 	int o = g_InlineVertexBuffer_TableOffset;
+	static bool m_DiffuseSet = false;
 	uint FVFPosType = g_InlineVertexBuffer_FVF & D3DFVF_POSITION_MASK;
 
-    switch(Register)
-    {
-        case X_D3DVSDE_VERTEX:
-        case X_D3DVSDE_POSITION:
-        {
+	switch(Register)
+	{
+		case X_D3DVSDE_VERTEX:
+		case X_D3DVSDE_POSITION:
+		{
 			// Note : Setting position signals completion of a vertex
-            g_InlineVertexBuffer_Table[o].Position.x = a;
-            g_InlineVertexBuffer_Table[o].Position.y = b;
+			g_InlineVertexBuffer_Table[o].Position.x = a;
+			g_InlineVertexBuffer_Table[o].Position.y = b;
 			g_InlineVertexBuffer_Table[o].Position.z = c;
 			g_InlineVertexBuffer_Table[o].Rhw = d; // Was : 1.0f; // Dxbx note : Why set Rhw to 1.0? And why ignore d?
+			
+			if (o > 0 && !m_DiffuseSet) {
+				g_InlineVertexBuffer_Table[o].Diffuse = g_InlineVertexBuffer_Table[o - 1].Diffuse;
+			}
+
+			m_DiffuseSet = false;
 
 			switch (g_InlineVertexBuffer_FVF & D3DFVF_POSITION_MASK) {
 			case 0:
@@ -4147,13 +4154,13 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexData4f)
 			uiPreviousOffset = g_InlineVertexBuffer_TableOffset;
 	
 			break;
-        }
+		}
 
 		case X_D3DVSDE_BLENDWEIGHT:
 		{
-            g_InlineVertexBuffer_Table[o].Blend[0] = a;
-            g_InlineVertexBuffer_Table[o].Blend[1] = b;
-            g_InlineVertexBuffer_Table[o].Blend[2] = c;
+			g_InlineVertexBuffer_Table[o].Blend[0] = a;
+			g_InlineVertexBuffer_Table[o].Blend[1] = b;
+			g_InlineVertexBuffer_Table[o].Blend[2] = c;
 			g_InlineVertexBuffer_Table[o].Blend[3] = d;
 			// TODO: Test the above. 
 			// Xbox supports up to 4 blendweights
@@ -4176,30 +4183,31 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexData4f)
 			}
 
 			break;
-        }
+		}
 
 		case X_D3DVSDE_NORMAL:
-        {
-            g_InlineVertexBuffer_Table[o].Normal.x = a;
-            g_InlineVertexBuffer_Table[o].Normal.y = b;
+		{
+			g_InlineVertexBuffer_Table[o].Normal.x = a;
+			g_InlineVertexBuffer_Table[o].Normal.y = b;
 			g_InlineVertexBuffer_Table[o].Normal.z = c;
-            g_InlineVertexBuffer_FVF |= D3DFVF_NORMAL;
+			g_InlineVertexBuffer_FVF |= D3DFVF_NORMAL;
 			break;
-        }
+		}
 
-        case X_D3DVSDE_DIFFUSE:
-        {
-            g_InlineVertexBuffer_Table[o].Diffuse = D3DCOLOR_COLORVALUE(a, b, c, d);
-            g_InlineVertexBuffer_FVF |= D3DFVF_DIFFUSE;
+		case X_D3DVSDE_DIFFUSE:
+		{
+			g_InlineVertexBuffer_Table[o].Diffuse = D3DCOLOR_COLORVALUE(a, b, c, d);
+			g_InlineVertexBuffer_FVF |= D3DFVF_DIFFUSE;
+			m_DiffuseSet = true;
 			break;
-        }
+		}
 
 		case X_D3DVSDE_SPECULAR:
-        {
-            g_InlineVertexBuffer_Table[o].Specular = D3DCOLOR_COLORVALUE(a, b, c, d);
-            g_InlineVertexBuffer_FVF |= D3DFVF_SPECULAR;
+		{
+			g_InlineVertexBuffer_Table[o].Specular = D3DCOLOR_COLORVALUE(a, b, c, d);
+			g_InlineVertexBuffer_FVF |= D3DFVF_SPECULAR;
 			break;
-        }
+		}
 
 		case X_D3DVSDE_FOG: // Xbox extension
 		{
@@ -4225,25 +4233,25 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexData4f)
 		}
 
 		case X_D3DVSDE_TEXCOORD0:
-        {
-            g_InlineVertexBuffer_Table[o].TexCoord[0].x = a;
+		{
+			g_InlineVertexBuffer_Table[o].TexCoord[0].x = a;
 			g_InlineVertexBuffer_Table[o].TexCoord[0].y = b;
 			g_InlineVertexBuffer_Table[o].TexCoord[0].z = c;
 			g_InlineVertexBuffer_Table[o].TexCoord[0].w = d;
-            if ((g_InlineVertexBuffer_FVF & D3DFVF_TEXCOUNT_MASK) < D3DFVF_TEX1) {
+			if ((g_InlineVertexBuffer_FVF & D3DFVF_TEXCOUNT_MASK) < D3DFVF_TEX1) {
 				// Dxbx fix : Use mask, else the format might get expanded incorrectly :
 				g_InlineVertexBuffer_FVF &= ~D3DFVF_TEXCOUNT_MASK;
 				g_InlineVertexBuffer_FVF |= D3DFVF_TEX1;
 				// Dxbx note : Correct usage of D3DFVF_TEX1 (and the other cases below)
 				// can be tested with "Daphne Xbox" (the Laserdisc Arcade Game Emulator).
-            }
+			}
 
 			break;
-        }
+		}
 
 		case X_D3DVSDE_TEXCOORD1:
-        {
-            g_InlineVertexBuffer_Table[o].TexCoord[1].x = a;
+		{
+			g_InlineVertexBuffer_Table[o].TexCoord[1].x = a;
 			g_InlineVertexBuffer_Table[o].TexCoord[1].y = b;
 			g_InlineVertexBuffer_Table[o].TexCoord[1].z = c;
 			g_InlineVertexBuffer_Table[o].TexCoord[1].w = d;
@@ -4253,11 +4261,11 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexData4f)
 			}
 
 			break;
-        }
+		}
 
 		case X_D3DVSDE_TEXCOORD2:
-        {
-            g_InlineVertexBuffer_Table[o].TexCoord[2].x = a;
+		{
+			g_InlineVertexBuffer_Table[o].TexCoord[2].x = a;
 			g_InlineVertexBuffer_Table[o].TexCoord[2].y = b;
 			g_InlineVertexBuffer_Table[o].TexCoord[2].z = c;
 			g_InlineVertexBuffer_Table[o].TexCoord[2].w = d;
@@ -4267,11 +4275,11 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexData4f)
 			}
 
 			break;
-        }
+		}
 
 		case X_D3DVSDE_TEXCOORD3:
-        {
-            g_InlineVertexBuffer_Table[o].TexCoord[3].x = a;
+		{
+			g_InlineVertexBuffer_Table[o].TexCoord[3].x = a;
 			g_InlineVertexBuffer_Table[o].TexCoord[3].y = b;
 			g_InlineVertexBuffer_Table[o].TexCoord[3].z = c;
 			g_InlineVertexBuffer_Table[o].TexCoord[3].w = d;
@@ -4280,12 +4288,12 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexData4f)
 				g_InlineVertexBuffer_FVF |= D3DFVF_TEX4;
 			}
 
-	        break;
-        }
+			break;
+		}
 
-        default:
-            EmuWarning("Unknown IVB Register : %d", Register);
-    }   
+		default:
+			EmuWarning("Unknown IVB Register : %d", Register);
+	}
 }
 
 // ******************************************************************
