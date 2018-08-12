@@ -4068,12 +4068,12 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexData4f)
 	FUNC_EXPORTS
 
 	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(Register)
-		LOG_FUNC_ARG(a)
-		LOG_FUNC_ARG(b)
-		LOG_FUNC_ARG(c)
-		LOG_FUNC_ARG(d)
-		LOG_FUNC_END;
+	LOG_FUNC_ARG(Register)
+	LOG_FUNC_ARG(a)
+	LOG_FUNC_ARG(b)
+	LOG_FUNC_ARG(c)
+	LOG_FUNC_ARG(d)
+	LOG_FUNC_END;
 
     HRESULT hRet = D3D_OK;
 
@@ -4112,6 +4112,12 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexData4f)
             g_InlineVertexBuffer_Table[o].Position.y = b;
 			g_InlineVertexBuffer_Table[o].Position.z = c;
 			g_InlineVertexBuffer_Table[o].Rhw = d; // Was : 1.0f; // Dxbx note : Why set Rhw to 1.0? And why ignore d?
+
+			if (o > 0 && g_InlineVertexBuffer_DiffuseFlag == 0) {
+				g_InlineVertexBuffer_Table[o].Diffuse = g_InlineVertexBuffer_Table[o - 1].Diffuse;
+			}
+
+			g_InlineVertexBuffer_DiffuseFlag = 0;
 
 			switch (g_InlineVertexBuffer_FVF & D3DFVF_POSITION_MASK) {
 			case 0:
@@ -4189,8 +4195,9 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexData4f)
 
         case X_D3DVSDE_DIFFUSE:
         {
-            g_InlineVertexBuffer_Table[o].Diffuse = D3DCOLOR_COLORVALUE(a, b, c, d);
+			g_InlineVertexBuffer_Table[o].Diffuse = D3DCOLOR_COLORVALUE(a, b, c, d);
             g_InlineVertexBuffer_FVF |= D3DFVF_DIFFUSE;
+			g_InlineVertexBuffer_DiffuseFlag = 1;
 			break;
         }
 
