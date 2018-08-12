@@ -4100,7 +4100,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexData4f)
 	}
 
 	int o = g_InlineVertexBuffer_TableOffset;
-	static bool m_DiffuseSet = false;
 	uint FVFPosType = g_InlineVertexBuffer_FVF & D3DFVF_POSITION_MASK;
 
 	switch(Register)
@@ -4113,12 +4112,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexData4f)
 			g_InlineVertexBuffer_Table[o].Position.y = b;
 			g_InlineVertexBuffer_Table[o].Position.z = c;
 			g_InlineVertexBuffer_Table[o].Rhw = d; // Was : 1.0f; // Dxbx note : Why set Rhw to 1.0? And why ignore d?
-
-			if (o > 0 && !m_DiffuseSet) {
-				g_InlineVertexBuffer_Table[o].Diffuse = g_InlineVertexBuffer_Table[o - 1].Diffuse;
-			}
-
-			m_DiffuseSet = false;
 
 			switch (g_InlineVertexBuffer_FVF & D3DFVF_POSITION_MASK) {
 			case 0:
@@ -4147,11 +4140,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexData4f)
 			// Start a new vertex
 			g_InlineVertexBuffer_TableOffset++;
 			// Copy all attributes of the previous vertex (if any) to the new vertex
-			static UINT uiPreviousOffset = ~0; // Can't use 0, as that may be copied too
-			if (uiPreviousOffset != ~0) {
-				g_InlineVertexBuffer_Table[g_InlineVertexBuffer_TableOffset] = g_InlineVertexBuffer_Table[uiPreviousOffset];
-			}
-			uiPreviousOffset = g_InlineVertexBuffer_TableOffset;
+			g_InlineVertexBuffer_Table[g_InlineVertexBuffer_TableOffset] = g_InlineVertexBuffer_Table[o];
 	
 			break;
 		}
@@ -4198,7 +4187,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexData4f)
 		{
 			g_InlineVertexBuffer_Table[o].Diffuse = D3DCOLOR_COLORVALUE(a, b, c, d);
 			g_InlineVertexBuffer_FVF |= D3DFVF_DIFFUSE;
-			m_DiffuseSet = true;
 			break;
 		}
 
