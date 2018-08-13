@@ -8246,7 +8246,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DeleteVertexShader)
 
     if(VshHandleIsVertexShader(Handle))
     {
-        X_D3DVertexShader *pD3DVertexShader = (X_D3DVertexShader *)(Handle & 0x7FFFFFFF);
+        X_D3DVertexShader *pD3DVertexShader = VshHandleToXboxVertexShader(Handle);
         CxbxVertexShader *pVertexShader = MapXboxVertexShaderHandleToCxbxVertexShader(Handle);
 
 		if (pVertexShader->pHostDeclaration) {

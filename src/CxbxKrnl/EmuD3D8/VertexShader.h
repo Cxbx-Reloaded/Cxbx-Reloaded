@@ -83,11 +83,12 @@ extern boolean IsValidCurrentShader(void);
 // exist above the XBE reserved region, not great, but it'l do for now.
 inline boolean VshHandleIsFVF(DWORD Handle) { return (Handle > NULL) && (Handle <= XBE_MAX_VA); }
 inline boolean VshHandleIsVertexShader(DWORD Handle) { return (Handle > XBE_MAX_VA) ? TRUE : FALSE; }
+inline X_D3DVertexShader *VshHandleToXboxVertexShader(DWORD Handle) { return (X_D3DVertexShader *)Handle;}
 
 inline CxbxVertexShader *MapXboxVertexShaderHandleToCxbxVertexShader(DWORD Handle)
 {
 	if (VshHandleIsVertexShader(Handle)) {
-		X_D3DVertexShader *pD3DVertexShader = (X_D3DVertexShader *)Handle;
+		X_D3DVertexShader *pD3DVertexShader = VshHandleToXboxVertexShader(Handle);
 		//assert(pD3DVertexShader != nullptr);
 		return (CxbxVertexShader *)(pD3DVertexShader->Handle);
 	}
