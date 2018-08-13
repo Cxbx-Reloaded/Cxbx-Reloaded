@@ -475,6 +475,43 @@ void HLE_pgraph_handle_method(
 	} // switch
 }
 
+void HLE_write_NV2A_vertex_attribute_slot(unsigned slot, uint32_t parameter)
+{
+	// Write value to HLE version of the NV2A
+#if 0 // TODO : Enable this once HLE_pgraph_handle_method supports NV097_SET_VERTEX_DATA4UB :
+	HLE_pgraph_handle_method(&pgraph_state,
+		/*subchannel=*/0,
+		/*method=*/NV097_SET_VERTEX_DATA4UB + (4 * slot),
+		parameter);
+#else
+	// EmuNV2A_PGRAPH immitation
+	PGRAPHState *pg = &pgraph_state;
+
+	VertexAttribute *vertex_attribute = &pg->vertex_attributes[slot];
+	//pgraph_allocate_inline_buffer_vertices(pg, slot);	// Present in LLE pgraph_handle_method() but not needed here
+	vertex_attribute->inline_value[0] = (parameter & 0xFF) / 255.0f;
+	vertex_attribute->inline_value[1] = ((parameter >> 8) & 0xFF) / 255.0f;
+	vertex_attribute->inline_value[2] = ((parameter >> 16) & 0xFF) / 255.0f;
+	vertex_attribute->inline_value[3] = ((parameter >> 24) & 0xFF) / 255.0f;
+#endif
+}
+
+uint32_t HLE_read_NV2A_vertex_attribute_slot(unsigned slot)
+{
+	// EmuNV2A_PGRAPH immitation
+	PGRAPHState *pg = &pgraph_state;
+	// See CASE_16(NV097_SET_VERTEX_DATA4UB, 4) in LLE pgraph_handle_method()
+	VertexAttribute *vertex_attribute = &pg->vertex_attributes[slot];
+	// Inverse of D3DDevice_SetVertexDataColor
+	uint8_t a = uint8_t(vertex_attribute->inline_value[0] * 255.0f);
+	uint8_t b = uint8_t(vertex_attribute->inline_value[1] * 255.0f);
+	uint8_t c = uint8_t(vertex_attribute->inline_value[2] * 255.0f);
+	uint8_t d = uint8_t(vertex_attribute->inline_value[3] * 255.0f);
+	uint32_t value = a + (b << 8) + (c << 16) + (d << 24);
+
+	return value;
+}
+
 // For now, skip the cache, but handle the pgraph method directly
 // Note : Here's where the method gets multiplied by four!
 // Note 2 : pg is read from local scope, and ni is unused (same in LLE)
