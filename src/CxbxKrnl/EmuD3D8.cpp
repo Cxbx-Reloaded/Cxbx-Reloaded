@@ -4053,6 +4053,9 @@ DWORD FloatsToDWORD(FLOAT d, FLOAT a, FLOAT b, FLOAT c)
 	return ca | cr | cg | cb;
 }
 
+extern void HLE_write_NV2A_vertex_attribute_slot(unsigned slot, uint32_t parameter); // Declared in PushBuffer.cpp
+extern uint32_t HLE_read_NV2A_vertex_attribute_slot(unsigned VertexSlot); // Declared in PushBuffer.cpp
+
 // ******************************************************************
 // * patch: D3DDevice_SetVertexData4f
 // ******************************************************************
@@ -4093,10 +4096,45 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexData4f)
 	if (g_InlineVertexBuffer_FVF == 0) {
 		// Set first vertex to zero (preventing leaks from prior Begin/End calls)
 		g_InlineVertexBuffer_Table[0] = {};
-		// Set default diffuse color to white
-		g_InlineVertexBuffer_Table[0].Diffuse = D3DCOLOR_ARGB(255, 255, 255, 255);
-		// TODO : Handle D3DUSAGE_PERSISTENTDIFFUSE, D3DUSAGE_PERSISTENTSPECULAR,
-		// D3DUSAGE_PERSISTENTBACKDIFFUSE, and D3DUSAGE_PERSISTENTBACKSPECULAR 
+
+		// Get the vertex shader flags (if any is active) :
+		uint32_t ActiveVertexAttributeFlags = 0;
+		if (VshHandleIsVertexShader(g_CurrentXboxVertexShaderHandle)) {
+			LOG_TEST_CASE("D3DDevice_SetVertexData4f with active VertexShader");
+			X_D3DVertexShader *pXboxVertexShader = VshHandleToXboxVertexShader(g_CurrentXboxVertexShaderHandle);
+			if (!(pXboxVertexShader->Flags & 0x10/*=X_VERTEXSHADER_PROGRAM*/)) {
+				ActiveVertexAttributeFlags = pXboxVertexShader->Flags;
+			}
+		}
+
+		// Handle persistent vertex attribute flags, by resetting non-persistent colors
+		// to their default value (and leaving the persistent colors alone - see the
+		// "Copy all attributes of the previous vertex" comment below) :
+		static const uint32_t ColorBlack = D3DCOLOR_ARGB(0, 0, 0, 0);
+		static const uint32_t ColorWhite = D3DCOLOR_ARGB(255, 255, 255, 255);
+
+		// If needed, write default vertex colors to HLE NV2A pgraph :
+		if (!(ActiveVertexAttributeFlags & X_D3DUSAGE_PERSISTENTDIFFUSE)) {
+			HLE_write_NV2A_vertex_attribute_slot(X_D3DVSDE_DIFFUSE, ColorWhite);
+		}
+
+		if (!(ActiveVertexAttributeFlags & X_D3DUSAGE_PERSISTENTSPECULAR)) {
+			HLE_write_NV2A_vertex_attribute_slot(X_D3DVSDE_SPECULAR, ColorBlack);
+		}
+
+		if (!(ActiveVertexAttributeFlags & X_D3DUSAGE_PERSISTENTBACKDIFFUSE)) {
+			HLE_write_NV2A_vertex_attribute_slot(X_D3DVSDE_BACKDIFFUSE, ColorWhite);
+		}
+
+		if (!(ActiveVertexAttributeFlags & X_D3DUSAGE_PERSISTENTBACKSPECULAR)) {
+			HLE_write_NV2A_vertex_attribute_slot(X_D3DVSDE_BACKSPECULAR, ColorBlack);
+		}
+
+		// Read starting vertex colors from HLE NV2A pgraph :
+		g_InlineVertexBuffer_Table[0].Diffuse = HLE_read_NV2A_vertex_attribute_slot(X_D3DVSDE_DIFFUSE);
+		g_InlineVertexBuffer_Table[0].Specular = HLE_read_NV2A_vertex_attribute_slot(X_D3DVSDE_SPECULAR);
+		g_InlineVertexBuffer_Table[0].BackDiffuse = HLE_read_NV2A_vertex_attribute_slot(X_D3DVSDE_BACKDIFFUSE);
+		g_InlineVertexBuffer_Table[0].BackSpecular = HLE_read_NV2A_vertex_attribute_slot(X_D3DVSDE_BACKSPECULAR);
 	}
 
 	int o = g_InlineVertexBuffer_TableOffset;
