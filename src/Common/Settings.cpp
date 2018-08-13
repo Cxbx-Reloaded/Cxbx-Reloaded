@@ -79,8 +79,7 @@ static struct {
 	const char* KrnlDebugMode = "KrnlDebugMode";
 	const char* KrnlDebugLogFile = "KrnlDebugLogFile";
 	const char* AllowAdminPrivilege = "AllowAdminPrivilege";
-	const char* LoggedModules1 = "LoggedModules1";
-	const char* LoggedModules2 = "LoggedModules2";
+	const char* LoggedModules = "LoggedModules";
 	const char* LogLevel = "LogLevel";
 } sect_core_keys;
 
@@ -182,7 +181,7 @@ bool Settings::Init()
 				return false;
 			}
 
-			// Check if data directory exist.
+			// Check if data directory exists.
 			bRet = std::experimental::filesystem::exists(saveFile);
 			if (!bRet) {
 				// Then try create data directory.
@@ -218,7 +217,7 @@ bool Settings::LoadUserConfig()
 
 	fileSearch.append(szSettings_settings_file);
 
-	// Check and see if file exist from portable, current, directory.
+	// Check and see if file exists from portable, current, directory.
 	if (std::experimental::filesystem::exists(fileSearch) == false) {
 
 		fileSearch = GenerateUserProfileDirectoryStr();
@@ -227,7 +226,7 @@ bool Settings::LoadUserConfig()
 		}
 		fileSearch.append(szSettings_settings_file);
 
-		// Check if user profile directory settings file exist
+		// Check if the user profile directory settings file exists.
 		if (std::experimental::filesystem::exists(fileSearch) == false) {
 			return false;
 		}
@@ -273,7 +272,7 @@ bool Settings::LoadConfig()
 
 	m_gui.DataStorageToggle = m_si.GetLongValue(section_gui, sect_gui_keys.DataStorageToggle, /*Default=*/CXBX_DATA_APPDATA);
 	si_data = m_si.GetValue(section_gui, sect_gui_keys.DataCustomLocation, /*Default=*/nullptr);
-	// Fallback to null string if value is empty or contain bigger string.
+	// Fallback to null string if value is empty or contains a bigger string.
 	if (si_data == nullptr || std::strlen(si_data) >= MAX_PATH) {
 		m_gui.szCustomLocation = "";
 	}
@@ -288,7 +287,7 @@ bool Settings::LoadConfig()
 	if (bRet) {
 		si_list_iterator = si_list.begin();
 		for (si_list_iterator; si_list_iterator != si_list.end(); si_list_iterator++) {
-			// Exit loop when list has reached the limit.
+			// Exit loop when the list has reached the limit.
 			if (index == list_max) {
 				break;
 			}
@@ -323,9 +322,29 @@ bool Settings::LoadConfig()
 
 	m_core.allowAdminPrivilege = m_si.GetBoolValue(section_core, sect_core_keys.AllowAdminPrivilege, /*Default=*/false);
 
-	m_core.LoggedModules[0] = m_si.GetLongValue(section_gui, sect_core_keys.LoggedModules1, /*Default=*/0x0);
-	m_core.LoggedModules[1] = m_si.GetLongValue(section_gui, sect_core_keys.LoggedModules2, /*Default=*/0x0);
-	m_core.LogLevel = m_si.GetLongValue(section_gui, sect_core_keys.LogLevel, 3);
+	m_core.LogLevel = m_si.GetLongValue(section_core, sect_core_keys.LogLevel, 2);
+	si_list.clear();
+	index = 0;
+	list_max = std::size(m_core.LoggedModules);
+	bRet = m_si.GetAllValues(section_core, sect_core_keys.LoggedModules, si_list);
+	if (bRet) {
+		si_list_iterator = si_list.begin();
+		for (si_list_iterator; si_list_iterator != si_list.end(); si_list_iterator++) {
+			// Exit loop when the list has reached the limit.
+			if (index == list_max) {
+				break;
+			}
+			if (std::strncmp(si_list_iterator->pItem, "0x", 2) == 0) {
+				si_list_iterator->pItem += 2;
+			}
+			m_core.LoggedModules[index] = std::strtoul(si_list_iterator->pItem, nullptr, 16);
+			index++;
+		}
+	}
+	while (index < list_max) {
+		m_core.LoggedModules[index] = 0;
+		index++;
+	}
 
 	// ==== Core End ============
 
@@ -480,9 +499,16 @@ bool Settings::Save(std::string file_path)
 	m_si.SetLongValue(section_core, sect_core_keys.KrnlDebugMode, m_core.KrnlDebugMode, nullptr, true, true);
 	m_si.SetValue(section_core, sect_core_keys.KrnlDebugLogFile, m_core.szKrnlDebug, nullptr, true);
 	m_si.SetBoolValue(section_core, sect_core_keys.AllowAdminPrivilege, m_core.allowAdminPrivilege, nullptr, true);
-	m_si.SetLongValue(section_gui, sect_core_keys.LoggedModules1, m_core.LoggedModules[0], nullptr, true, true);
-	m_si.SetLongValue(section_gui, sect_core_keys.LoggedModules2, m_core.LoggedModules[1], nullptr, true, true);
-	m_si.SetLongValue(section_gui, sect_core_keys.LogLevel, m_core.LogLevel, nullptr, false, true);
+	m_si.SetLongValue(section_core, sect_core_keys.LogLevel, m_core.LogLevel, nullptr, false, true);
+
+	std::stringstream stream;
+	stream << "0x" << std::hex << m_core.LoggedModules[0];
+	m_si.SetValue(section_core, sect_core_keys.LoggedModules, stream.str().c_str(), nullptr, true);
+	for (uint i = 1; i < NUM_INTEGERS_LOG; i++) {
+		stream.str("");
+		stream << "0x" << std::hex << m_core.LoggedModules[i];
+		m_si.SetValue(section_core, sect_core_keys.LoggedModules, stream.str().c_str(), nullptr, false);
+	}
 
 	// ==== Core End ============
 

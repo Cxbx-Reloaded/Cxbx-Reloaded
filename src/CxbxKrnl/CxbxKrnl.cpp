@@ -931,7 +931,7 @@ void CxbxKrnlMain(int argc, char* argv[])
 		// because the child windows doesn't exist yet at this point
 		g_CurrentLogLevel = Core.LogLevel;
 		for (unsigned int index = static_cast<unsigned int>(CXBXR_MODULE::CXBXR); index < static_cast<unsigned int>(CXBXR_MODULE::MAX); index++) {
-			if (Core.LoggedModules[index / 32] & (1 << index)) {
+			if (Core.LoggedModules[index / 32] & (1 << (index % 32))) {
 				g_EnabledModules[index] = true;
 			}
 			else {

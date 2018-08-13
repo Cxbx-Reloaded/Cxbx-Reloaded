@@ -1608,7 +1608,7 @@ static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 						LogData Data = *reinterpret_cast<LogData*>(pCopyData->lpData);
 						g_CurrentLogLevel = Data.Level;
 						for (unsigned int index = static_cast<unsigned int>(CXBXR_MODULE::CXBXR); index < static_cast<unsigned int>(CXBXR_MODULE::MAX); index++) {
-							if (Data.LoggedModules[index / 32] & (1 << index)) {
+							if (Data.LoggedModules[index / 32] & (1 << (index % 32))) {
 								g_EnabledModules[index] = true;
 							}
 							else {

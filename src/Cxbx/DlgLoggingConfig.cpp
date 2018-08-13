@@ -138,17 +138,17 @@ INT_PTR CALLBACK DlgLogConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM
 				SendMessage(hHandle, CB_SETITEMDATA, index, TempLevel);
 				TempLevel++;
 			}
-			TempLevel -= static_cast<unsigned int>(LOG_LEVEL::FATAL);
+			TempLevel = static_cast<unsigned int>(LOG_LEVEL::DEBUG);
 			for (; TempLevel < static_cast<unsigned int>(LOG_LEVEL::MAX); TempLevel++) {
 				if (TempLevel == LogLevel) {
-					SendMessage(hHandle, CB_SETCURSEL, TempLevel, 0);
+					SendMessage(hHandle, CB_SETCURSEL, TempLevel - 1, 0);
 					break;
 				}
 			}
 
 			counter = 0;
 			for (index = static_cast<unsigned int>(CXBXR_MODULE::CXBXR); index < static_cast<unsigned int>(CXBXR_MODULE::KRNL); index++) {
-				if (LoggedModules[index / 32] & (1 << index)) {
+				if (LoggedModules[index / 32] & (1 << (index % 32))) {
 					SendMessage(GetDlgItem(hWndDlg, g_DlgIndexes[index]), BM_SETCHECK, BST_CHECKED, 0);
 					counter++;
 				}
@@ -175,7 +175,7 @@ INT_PTR CALLBACK DlgLogConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM
 
 			counter = 0;
 			for (index = static_cast<unsigned int>(CXBXR_MODULE::KRNL); index < static_cast<unsigned int>(CXBXR_MODULE::MAX); index++) {
-				if (LoggedModules[index / 32] & (1 << index)) {
+				if (LoggedModules[index / 32] & (1 << (index % 32))) {
 					SendMessage(GetDlgItem(hWndDlg, g_DlgIndexes[index]), BM_SETCHECK, BST_CHECKED, 0);
 					counter++;
 				}
@@ -191,7 +191,7 @@ INT_PTR CALLBACK DlgLogConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM
 				SendMessage(GetDlgItem(hWndDlg, IDC_LOG_ENABLE_KERNEL), BM_SETCHECK, BST_CHECKED, 0);
 			}
 			else if (counter == 0) {
-				for (index = static_cast<unsigned int>(CXBXR_MODULE::KRNL); index < static_cast<unsigned int>(CXBXR_MODULE::KRNL); index++) {
+				for (index = static_cast<unsigned int>(CXBXR_MODULE::KRNL); index < static_cast<unsigned int>(CXBXR_MODULE::MAX); index++) {
 					EnableWindow(GetDlgItem(hWndDlg, g_DlgIndexes[index]), FALSE);
 				}
 				SendMessage(GetDlgItem(hWndDlg, IDC_LOG_DISABLE_KERNEL), BM_SETCHECK, BST_CHECKED, 0);
@@ -211,11 +211,10 @@ INT_PTR CALLBACK DlgLogConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM
 				unsigned int LoggedModules[NUM_INTEGERS_LOG] = { 0 };
 				HWND hControl = GetDlgItem(hWndDlg, IDC_EVENT_LV);
 				unsigned int LogLevel = SendMessage(hControl, CB_GETITEMDATA, SendMessage(hControl, CB_GETCURSEL, 0, 0), 0);
-				COPYDATASTRUCT CopyData;
 
 				for (unsigned int index = static_cast<unsigned int>(CXBXR_MODULE::CXBXR); index < static_cast<unsigned int>(CXBXR_MODULE::MAX); index++) {
 					if (SendMessage(GetDlgItem(hWndDlg, g_DlgIndexes[index]), BM_GETCHECK, 0, 0) == BST_CHECKED) {
-						LoggedModules[index / 32] |= (1 << index);
+						LoggedModules[index / 32] |= (1 << (index % 32));
 					}
 				}
 				
@@ -226,7 +225,7 @@ INT_PTR CALLBACK DlgLogConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM
 				// Update the logging variables for the GUI process
 				g_CurrentLogLevel = LogLevel;
 				for (unsigned int index = static_cast<unsigned int>(CXBXR_MODULE::CXBXR); index < static_cast<unsigned int>(CXBXR_MODULE::MAX); index++) {
-					if (LoggedModules[index / 32] & (1 << index)) {
+					if (LoggedModules[index / 32] & (1 << (index % 32))) {
 						g_EnabledModules[index] = true;
 					}
 					else {
@@ -236,6 +235,7 @@ INT_PTR CALLBACK DlgLogConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM
 
 				// Also inform the kernel process if it exists
 				if (g_ChildWnd) {
+					COPYDATASTRUCT CopyData;
 					LogData Data;
 					Data.Level = LogLevel;
 					std::memcpy(Data.LoggedModules, LoggedModules, NUM_INTEGERS_LOG);
@@ -261,12 +261,76 @@ INT_PTR CALLBACK DlgLogConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM
 					}
 					break;
 
-				case IDC_LOG_ENABLE_GENERAL:
-				case IDC_LOG_DISABLE_GENERAL:
-				case IDC_LOG_ENABLE_KERNEL:
-				case IDC_LOG_DISABLE_KERNEL:
-				case IDC_LOG_CUSTOM_GENERAL:
-				case IDC_LOG_CUSTOM_KERNEL:
+				case IDC_LOG_ENABLE_GENERAL: {
+					if (HIWORD(wParam) == BN_CLICKED) {
+						for (unsigned int index = static_cast<unsigned int>(CXBXR_MODULE::CXBXR); index < static_cast<unsigned int>(CXBXR_MODULE::KRNL);
+							index++) {
+							SendMessage(GetDlgItem(hWndDlg, g_DlgIndexes[index]), BM_SETCHECK, BST_CHECKED, 0);
+							EnableWindow(GetDlgItem(hWndDlg, g_DlgIndexes[index]), FALSE);
+						}
+						g_bHasChanges = true;
+					}
+				}
+				break;
+
+				case IDC_LOG_DISABLE_GENERAL: {
+					if (HIWORD(wParam) == BN_CLICKED) {
+						for (unsigned int index = static_cast<unsigned int>(CXBXR_MODULE::CXBXR); index < static_cast<unsigned int>(CXBXR_MODULE::KRNL);
+							index++) {
+							SendMessage(GetDlgItem(hWndDlg, g_DlgIndexes[index]), BM_SETCHECK, BST_UNCHECKED, 0);
+							EnableWindow(GetDlgItem(hWndDlg, g_DlgIndexes[index]), FALSE);
+						}
+						g_bHasChanges = true;
+					}
+				}
+				break;
+
+				case IDC_LOG_ENABLE_KERNEL: {
+					if (HIWORD(wParam) == BN_CLICKED) {
+						for (unsigned int index = static_cast<unsigned int>(CXBXR_MODULE::KRNL); index < static_cast<unsigned int>(CXBXR_MODULE::MAX);
+							index++) {
+							SendMessage(GetDlgItem(hWndDlg, g_DlgIndexes[index]), BM_SETCHECK, BST_CHECKED, 0);
+							EnableWindow(GetDlgItem(hWndDlg, g_DlgIndexes[index]), FALSE);
+						}
+						g_bHasChanges = true;
+					}
+				}
+				break;
+
+				case IDC_LOG_DISABLE_KERNEL: {
+					if (HIWORD(wParam) == BN_CLICKED) {
+						for (unsigned int index = static_cast<unsigned int>(CXBXR_MODULE::KRNL); index < static_cast<unsigned int>(CXBXR_MODULE::MAX);
+							index++) {
+							SendMessage(GetDlgItem(hWndDlg, g_DlgIndexes[index]), BM_SETCHECK, BST_UNCHECKED, 0);
+							EnableWindow(GetDlgItem(hWndDlg, g_DlgIndexes[index]), FALSE);
+						}
+						g_bHasChanges = true;
+					}
+				}
+				break;
+
+				case IDC_LOG_CUSTOM_GENERAL: {
+					if (HIWORD(wParam) == BN_CLICKED) {
+						for (unsigned int index = static_cast<unsigned int>(CXBXR_MODULE::CXBXR); index < static_cast<unsigned int>(CXBXR_MODULE::KRNL);
+							index++) {
+							EnableWindow(GetDlgItem(hWndDlg, g_DlgIndexes[index]), TRUE);
+						}
+						g_bHasChanges = true;
+					}
+				}
+				break;
+
+				case IDC_LOG_CUSTOM_KERNEL: {
+					if (HIWORD(wParam) == BN_CLICKED) {
+						for (unsigned int index = static_cast<unsigned int>(CXBXR_MODULE::KRNL); index < static_cast<unsigned int>(CXBXR_MODULE::MAX);
+							index++) {
+							EnableWindow(GetDlgItem(hWndDlg, g_DlgIndexes[index]), TRUE);
+						}
+						g_bHasChanges = true;
+					}
+				}
+				break;
+
 				case IDC_LOG_CXBXR:  
 				case IDC_LOG_XBE:
 				case IDC_LOG_INIT: 
