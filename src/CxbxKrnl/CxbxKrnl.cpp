@@ -925,7 +925,7 @@ void CxbxKrnlMain(int argc, char* argv[])
 	g_EmuShared->GetCoreSettings(&Core);
 
 	// Set up the logging variables for the kernel process during initialization. Note that we cannot use WM_COPYDATA here
-	// because the child windows doesn't exist yet at this point
+	// because the child window doesn't exist yet at this point
 	g_CurrentLogLevel = Core.LogLevel;
 	for (int index = to_underlying(CXBXR_MODULE::CXBXR); index < to_underlying(CXBXR_MODULE::MAX); index++) {
 		if (Core.LoggedModules[index / 32] & (1 << (index % 32))) {
