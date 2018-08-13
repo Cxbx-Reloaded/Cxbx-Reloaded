@@ -41,6 +41,7 @@
 #include <stdint.h>
 #include <assert.h>
 #include <string>
+#include <type_traits>
 
 /* This is a linux struct for vectored I/O. See readv() and writev() */
 struct IoVec
@@ -70,6 +71,13 @@ void GetWords(xbaddr Paddr, uint16_t* Buffer, int Number);
 void WriteWords(xbaddr Paddr, uint16_t* Buffer, int Number);
 
 void unix2dos(std::string& string);
+
+// Retrieves the underlying integer value of a scoped enumerator. It allows to avoid using static_cast every time
+template <typename E>
+constexpr typename std::underlying_type<E>::type to_underlying(E e) noexcept
+{
+	return static_cast<std::underlying_type_t<E>>(e);
+}
 
 #define GET_WORD_LOW(value) (uint8_t)((value) & 0xFF)
 #define GET_WORD_HIGH(value) (uint8_t)(((value) >> 8) & 0xFF)

@@ -893,7 +893,7 @@ static void VshWriteShader(VSH_XBOX_SHADER *pShader,
 					break;
 				default:
 					dclStream << "dcl_unknown ("<< (int)PCUsageIndex << ")";
-					LOG_TEST_CASE("Encountered unknown declaration");
+					LOG_TEST_CASE(LOG_PREFIX, "Encountered unknown declaration");
 					break;
 				}
 
@@ -1549,7 +1549,7 @@ static boolean VshConvertShader(VSH_XBOX_SHADER *pShader,
                     break;
                 case 15:
                 default:
-                    LOG_TEST_CASE("rsq instruction with invalid swizzle");
+                    LOG_TEST_CASE(LOG_PREFIX, "rsq instruction with invalid swizzle");
                     break;
                 }
             }

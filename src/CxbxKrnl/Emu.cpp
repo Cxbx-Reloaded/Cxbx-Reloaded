@@ -116,8 +116,8 @@ void NTAPI EmuLog(CXBXR_MODULE cxbxr_module, LOG_LEVEL level, const char *szWarn
 
 			LOG_THREAD_INIT;
 
-			std::cout << _logThreadPrefix << (level == LOG_LEVEL::WARNING ? "WARN -> " : "-> ")
-				<< g_EnumModules2String[static_cast<unsigned int>(cxbxr_module)] << ": ";
+			std::cout << _logThreadPrefix << (level == LOG_LEVEL::WARNING ? "WARN: " : "")
+				<< g_EnumModules2String[to_underlying(cxbxr_module)];
 
 			va_start(argp, szWarningMessage);
 

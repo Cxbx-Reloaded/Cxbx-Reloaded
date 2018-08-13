@@ -930,7 +930,7 @@ void CxbxKrnlMain(int argc, char* argv[])
 		// Set up the logging variables for the kernel process during initialization. Note that we cannot use WM_COPYDATA here
 		// because the child windows doesn't exist yet at this point
 		g_CurrentLogLevel = Core.LogLevel;
-		for (unsigned int index = static_cast<unsigned int>(CXBXR_MODULE::CXBXR); index < static_cast<unsigned int>(CXBXR_MODULE::MAX); index++) {
+		for (int index = to_underlying(CXBXR_MODULE::CXBXR); index < to_underlying(CXBXR_MODULE::MAX); index++) {
 			if (Core.LoggedModules[index / 32] & (1 << (index % 32))) {
 				g_EnabledModules[index] = true;
 			}
@@ -1109,7 +1109,7 @@ void CxbxKrnlMain(int argc, char* argv[])
 			printf("[0x%X] INIT: Valid xbe signature. Xbe is legit\n", GetCurrentThreadId());
 		}
 		else {
-			EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Invalid xbe signature. Homebrew, tampered or pirated xbe?");
+			printf("[0x%X] INIT: Invalid xbe signature. Homebrew, tampered or pirated xbe?", GetCurrentThreadId());
 		}
 
 		// Check the integrity of the xbe sections
@@ -1122,7 +1122,7 @@ void CxbxKrnlMain(int argc, char* argv[])
 			CalcSHA1Hash(SHADigest, CxbxKrnl_Xbe->m_bzSection[sectionIndex], RawSize);
 
 			if (memcmp(SHADigest, (CxbxKrnl_Xbe->m_SectionHeader)[sectionIndex].bzSectionDigest, A_SHA_DIGEST_LEN) != 0) {
-				EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "SHA hash of section %s doesn't match, possible section corruption", CxbxKrnl_Xbe->m_szSectionName[sectionIndex]);
+				printf("[0x%X] INIT: SHA hash of section %s doesn't match, possible section corruption", GetCurrentThreadId(), CxbxKrnl_Xbe->m_szSectionName[sectionIndex]);
 			}
 			else {
 				printf("[0x%X] INIT: SHA hash check of section %s successful\n", GetCurrentThreadId(), CxbxKrnl_Xbe->m_szSectionName[sectionIndex]);
@@ -1157,7 +1157,7 @@ void CxbxKrnlMain(int argc, char* argv[])
 			if ((sectionHeaders[i].Flags & XBEIMAGE_SECTION_PRELOAD) != 0) {
 				NTSTATUS result = xboxkrnl::XeLoadSection(&sectionHeaders[i]);
 				if (FAILED(result)) {
-					CxbxKrnlCleanup(LOG_PREFIX, "Failed to preload XBE section: %s", CxbxKrnl_Xbe->m_szSectionName[i]);
+					CxbxKrnlCleanup(LOG_PREFIX_INIT, "Failed to preload XBE section: %s", CxbxKrnl_Xbe->m_szSectionName[i]);
 				}
 			}
 		}

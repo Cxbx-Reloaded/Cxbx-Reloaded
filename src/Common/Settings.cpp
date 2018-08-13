@@ -322,7 +322,7 @@ bool Settings::LoadConfig()
 
 	m_core.allowAdminPrivilege = m_si.GetBoolValue(section_core, sect_core_keys.AllowAdminPrivilege, /*Default=*/false);
 
-	m_core.LogLevel = m_si.GetLongValue(section_core, sect_core_keys.LogLevel, 2);
+	m_core.LogLevel = m_si.GetLongValue(section_core, sect_core_keys.LogLevel, 1);
 	si_list.clear();
 	index = 0;
 	list_max = std::size(m_core.LoggedModules);
@@ -337,7 +337,7 @@ bool Settings::LoadConfig()
 			if (std::strncmp(si_list_iterator->pItem, "0x", 2) == 0) {
 				si_list_iterator->pItem += 2;
 			}
-			m_core.LoggedModules[index] = std::strtoul(si_list_iterator->pItem, nullptr, 16);
+			m_core.LoggedModules[index] = std::strtol(si_list_iterator->pItem, nullptr, 16);
 			index++;
 		}
 	}
@@ -504,7 +504,7 @@ bool Settings::Save(std::string file_path)
 	std::stringstream stream;
 	stream << "0x" << std::hex << m_core.LoggedModules[0];
 	m_si.SetValue(section_core, sect_core_keys.LoggedModules, stream.str().c_str(), nullptr, true);
-	for (uint i = 1; i < NUM_INTEGERS_LOG; i++) {
+	for (int i = 1; i < NUM_INTEGERS_LOG; i++) {
 		stream.str("");
 		stream << "0x" << std::hex << m_core.LoggedModules[i];
 		m_si.SetValue(section_core, sect_core_keys.LoggedModules, stream.str().c_str(), nullptr, false);

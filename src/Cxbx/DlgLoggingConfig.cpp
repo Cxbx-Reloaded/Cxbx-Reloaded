@@ -119,10 +119,10 @@ INT_PTR CALLBACK DlgLogConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM
 		{
 			HWND hHandle;
 			int counter;
-			unsigned int index;
-			unsigned int TempLevel;
-			unsigned int LoggedModules[NUM_INTEGERS_LOG];
-			unsigned int LogLevel;
+			int index;
+			int TempLevel;
+			int LoggedModules[NUM_INTEGERS_LOG];
+			int LogLevel;
 
 			// Set window icon
 			SetClassLong(hWndDlg, GCL_HICON, (LONG)LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_CXBX)));
@@ -132,22 +132,22 @@ INT_PTR CALLBACK DlgLogConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM
 			LogLevel = g_Settings->m_core.LogLevel;
 
 			hHandle = GetDlgItem(hWndDlg, IDC_EVENT_LV);
-			TempLevel = static_cast<unsigned int>(LOG_LEVEL::DEBUG);
+			TempLevel = to_underlying(LOG_LEVEL::DEBUG);
 			for (auto i : { "Debug" , "Info" ,"Warning", "Fatal" }) {
 				LRESULT index = SendMessage(hHandle, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(i));
 				SendMessage(hHandle, CB_SETITEMDATA, index, TempLevel);
 				TempLevel++;
 			}
-			TempLevel = static_cast<unsigned int>(LOG_LEVEL::DEBUG);
-			for (; TempLevel < static_cast<unsigned int>(LOG_LEVEL::MAX); TempLevel++) {
+			TempLevel = to_underlying(LOG_LEVEL::DEBUG);
+			for (; TempLevel < to_underlying(LOG_LEVEL::MAX); TempLevel++) {
 				if (TempLevel == LogLevel) {
-					SendMessage(hHandle, CB_SETCURSEL, TempLevel - 1, 0);
+					SendMessage(hHandle, CB_SETCURSEL, TempLevel, 0);
 					break;
 				}
 			}
 
 			counter = 0;
-			for (index = static_cast<unsigned int>(CXBXR_MODULE::CXBXR); index < static_cast<unsigned int>(CXBXR_MODULE::KRNL); index++) {
+			for (index = to_underlying(CXBXR_MODULE::CXBXR); index < to_underlying(CXBXR_MODULE::KRNL); index++) {
 				if (LoggedModules[index / 32] & (1 << (index % 32))) {
 					SendMessage(GetDlgItem(hWndDlg, g_DlgIndexes[index]), BM_SETCHECK, BST_CHECKED, 0);
 					counter++;
@@ -157,14 +157,14 @@ INT_PTR CALLBACK DlgLogConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM
 				}
 			}
 
-			if (counter == static_cast<unsigned int>(CXBXR_MODULE::KRNL)) {
-				for (index = static_cast<unsigned int>(CXBXR_MODULE::CXBXR); index < static_cast<unsigned int>(CXBXR_MODULE::KRNL); index++) {
+			if (counter == to_underlying(CXBXR_MODULE::KRNL)) {
+				for (index = to_underlying(CXBXR_MODULE::CXBXR); index < to_underlying(CXBXR_MODULE::KRNL); index++) {
 					EnableWindow(GetDlgItem(hWndDlg, g_DlgIndexes[index]), FALSE);
 				}
 				SendMessage(GetDlgItem(hWndDlg, IDC_LOG_ENABLE_GENERAL), BM_SETCHECK, BST_CHECKED, 0);
 			}
 			else if (counter == 0) {
-				for (index = static_cast<unsigned int>(CXBXR_MODULE::CXBXR); index < static_cast<unsigned int>(CXBXR_MODULE::KRNL); index++) {
+				for (index = to_underlying(CXBXR_MODULE::CXBXR); index < to_underlying(CXBXR_MODULE::KRNL); index++) {
 					EnableWindow(GetDlgItem(hWndDlg, g_DlgIndexes[index]), FALSE);
 				}
 				SendMessage(GetDlgItem(hWndDlg, IDC_LOG_DISABLE_GENERAL), BM_SETCHECK, BST_CHECKED, 0);
@@ -174,7 +174,7 @@ INT_PTR CALLBACK DlgLogConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM
 			}
 
 			counter = 0;
-			for (index = static_cast<unsigned int>(CXBXR_MODULE::KRNL); index < static_cast<unsigned int>(CXBXR_MODULE::MAX); index++) {
+			for (index = to_underlying(CXBXR_MODULE::KRNL); index < to_underlying(CXBXR_MODULE::MAX); index++) {
 				if (LoggedModules[index / 32] & (1 << (index % 32))) {
 					SendMessage(GetDlgItem(hWndDlg, g_DlgIndexes[index]), BM_SETCHECK, BST_CHECKED, 0);
 					counter++;
@@ -184,14 +184,14 @@ INT_PTR CALLBACK DlgLogConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM
 				}
 			}
 
-			if (counter == static_cast<unsigned int>(CXBXR_MODULE::MAX)) {
-				for (index = static_cast<unsigned int>(CXBXR_MODULE::KRNL); index < static_cast<unsigned int>(CXBXR_MODULE::MAX); index++) {
+			if (counter == to_underlying(CXBXR_MODULE::MAX)) {
+				for (index = to_underlying(CXBXR_MODULE::KRNL); index < to_underlying(CXBXR_MODULE::MAX); index++) {
 					EnableWindow(GetDlgItem(hWndDlg, g_DlgIndexes[index]), FALSE);
 				}
 				SendMessage(GetDlgItem(hWndDlg, IDC_LOG_ENABLE_KERNEL), BM_SETCHECK, BST_CHECKED, 0);
 			}
 			else if (counter == 0) {
-				for (index = static_cast<unsigned int>(CXBXR_MODULE::KRNL); index < static_cast<unsigned int>(CXBXR_MODULE::MAX); index++) {
+				for (index = to_underlying(CXBXR_MODULE::KRNL); index < to_underlying(CXBXR_MODULE::MAX); index++) {
 					EnableWindow(GetDlgItem(hWndDlg, g_DlgIndexes[index]), FALSE);
 				}
 				SendMessage(GetDlgItem(hWndDlg, IDC_LOG_DISABLE_KERNEL), BM_SETCHECK, BST_CHECKED, 0);
@@ -208,11 +208,11 @@ INT_PTR CALLBACK DlgLogConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM
 		case WM_CLOSE:
 		{
 			if (g_bHasChanges) {
-				unsigned int LoggedModules[NUM_INTEGERS_LOG] = { 0 };
+				int LoggedModules[NUM_INTEGERS_LOG] = { 0 };
 				HWND hControl = GetDlgItem(hWndDlg, IDC_EVENT_LV);
-				unsigned int LogLevel = SendMessage(hControl, CB_GETITEMDATA, SendMessage(hControl, CB_GETCURSEL, 0, 0), 0);
+				int LogLevel = SendMessage(hControl, CB_GETITEMDATA, SendMessage(hControl, CB_GETCURSEL, 0, 0), 0);
 
-				for (unsigned int index = static_cast<unsigned int>(CXBXR_MODULE::CXBXR); index < static_cast<unsigned int>(CXBXR_MODULE::MAX); index++) {
+				for (int index = to_underlying(CXBXR_MODULE::CXBXR); index < to_underlying(CXBXR_MODULE::MAX); index++) {
 					if (SendMessage(GetDlgItem(hWndDlg, g_DlgIndexes[index]), BM_GETCHECK, 0, 0) == BST_CHECKED) {
 						LoggedModules[index / 32] |= (1 << (index % 32));
 					}
@@ -224,7 +224,7 @@ INT_PTR CALLBACK DlgLogConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM
 
 				// Update the logging variables for the GUI process
 				g_CurrentLogLevel = LogLevel;
-				for (unsigned int index = static_cast<unsigned int>(CXBXR_MODULE::CXBXR); index < static_cast<unsigned int>(CXBXR_MODULE::MAX); index++) {
+				for (int index = to_underlying(CXBXR_MODULE::CXBXR); index < to_underlying(CXBXR_MODULE::MAX); index++) {
 					if (LoggedModules[index / 32] & (1 << (index % 32))) {
 						g_EnabledModules[index] = true;
 					}
@@ -238,7 +238,9 @@ INT_PTR CALLBACK DlgLogConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM
 					COPYDATASTRUCT CopyData;
 					LogData Data;
 					Data.Level = LogLevel;
-					std::memcpy(Data.LoggedModules, LoggedModules, NUM_INTEGERS_LOG);
+					for (int i = 0; i < NUM_INTEGERS_LOG; i++) {
+						Data.LoggedModules[i] = LoggedModules[i];
+					}
 					CopyData.dwData = LOG_ID;
 					CopyData.cbData = sizeof(LogData);
 					CopyData.lpData = &Data;
@@ -263,7 +265,7 @@ INT_PTR CALLBACK DlgLogConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM
 
 				case IDC_LOG_ENABLE_GENERAL: {
 					if (HIWORD(wParam) == BN_CLICKED) {
-						for (unsigned int index = static_cast<unsigned int>(CXBXR_MODULE::CXBXR); index < static_cast<unsigned int>(CXBXR_MODULE::KRNL);
+						for (int index = to_underlying(CXBXR_MODULE::CXBXR); index < to_underlying(CXBXR_MODULE::KRNL);
 							index++) {
 							SendMessage(GetDlgItem(hWndDlg, g_DlgIndexes[index]), BM_SETCHECK, BST_CHECKED, 0);
 							EnableWindow(GetDlgItem(hWndDlg, g_DlgIndexes[index]), FALSE);
@@ -275,7 +277,7 @@ INT_PTR CALLBACK DlgLogConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM
 
 				case IDC_LOG_DISABLE_GENERAL: {
 					if (HIWORD(wParam) == BN_CLICKED) {
-						for (unsigned int index = static_cast<unsigned int>(CXBXR_MODULE::CXBXR); index < static_cast<unsigned int>(CXBXR_MODULE::KRNL);
+						for (int index = to_underlying(CXBXR_MODULE::CXBXR); index < to_underlying(CXBXR_MODULE::KRNL);
 							index++) {
 							SendMessage(GetDlgItem(hWndDlg, g_DlgIndexes[index]), BM_SETCHECK, BST_UNCHECKED, 0);
 							EnableWindow(GetDlgItem(hWndDlg, g_DlgIndexes[index]), FALSE);
@@ -287,7 +289,7 @@ INT_PTR CALLBACK DlgLogConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM
 
 				case IDC_LOG_ENABLE_KERNEL: {
 					if (HIWORD(wParam) == BN_CLICKED) {
-						for (unsigned int index = static_cast<unsigned int>(CXBXR_MODULE::KRNL); index < static_cast<unsigned int>(CXBXR_MODULE::MAX);
+						for (int index = to_underlying(CXBXR_MODULE::KRNL); index < to_underlying(CXBXR_MODULE::MAX);
 							index++) {
 							SendMessage(GetDlgItem(hWndDlg, g_DlgIndexes[index]), BM_SETCHECK, BST_CHECKED, 0);
 							EnableWindow(GetDlgItem(hWndDlg, g_DlgIndexes[index]), FALSE);
@@ -299,7 +301,7 @@ INT_PTR CALLBACK DlgLogConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM
 
 				case IDC_LOG_DISABLE_KERNEL: {
 					if (HIWORD(wParam) == BN_CLICKED) {
-						for (unsigned int index = static_cast<unsigned int>(CXBXR_MODULE::KRNL); index < static_cast<unsigned int>(CXBXR_MODULE::MAX);
+						for (int index = to_underlying(CXBXR_MODULE::KRNL); index < to_underlying(CXBXR_MODULE::MAX);
 							index++) {
 							SendMessage(GetDlgItem(hWndDlg, g_DlgIndexes[index]), BM_SETCHECK, BST_UNCHECKED, 0);
 							EnableWindow(GetDlgItem(hWndDlg, g_DlgIndexes[index]), FALSE);
@@ -311,7 +313,7 @@ INT_PTR CALLBACK DlgLogConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM
 
 				case IDC_LOG_CUSTOM_GENERAL: {
 					if (HIWORD(wParam) == BN_CLICKED) {
-						for (unsigned int index = static_cast<unsigned int>(CXBXR_MODULE::CXBXR); index < static_cast<unsigned int>(CXBXR_MODULE::KRNL);
+						for (int index = to_underlying(CXBXR_MODULE::CXBXR); index < to_underlying(CXBXR_MODULE::KRNL);
 							index++) {
 							EnableWindow(GetDlgItem(hWndDlg, g_DlgIndexes[index]), TRUE);
 						}
@@ -322,7 +324,7 @@ INT_PTR CALLBACK DlgLogConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM
 
 				case IDC_LOG_CUSTOM_KERNEL: {
 					if (HIWORD(wParam) == BN_CLICKED) {
-						for (unsigned int index = static_cast<unsigned int>(CXBXR_MODULE::KRNL); index < static_cast<unsigned int>(CXBXR_MODULE::MAX);
+						for (int index = to_underlying(CXBXR_MODULE::KRNL); index < to_underlying(CXBXR_MODULE::MAX);
 							index++) {
 							EnableWindow(GetDlgItem(hWndDlg, g_DlgIndexes[index]), TRUE);
 						}

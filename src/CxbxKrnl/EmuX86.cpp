@@ -47,7 +47,7 @@
 #include "mnemonics.h"
 
 #include "CxbxKrnl.h"
-#include "Emu.h" // For EmuWarning
+#include "Emu.h" // For EmuLog
 #include "EmuX86.h"
 #include "HLEIntercept.h" // for bLLE_GPU
 

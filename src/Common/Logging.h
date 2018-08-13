@@ -41,10 +41,10 @@
 #include <iostream> // For std::cout
 #include <iomanip> // For std::setw
 #include <atomic> // For atomic_bool and atomic_uint
-#include "Cxbx.h" // For g_bPrintfOn
+#include "CxbxCommon.h" // For g_bPrintfOn and to_underlying
 
 typedef enum class _LOG_LEVEL {
-	DEBUG = 1,
+	DEBUG = 0,
 	INFO,
 	WARNING,
 	FATAL,
@@ -115,9 +115,9 @@ typedef enum class _CXBXR_MODULE {
 	MAX,
 }CXBXR_MODULE;
 
-extern std::atomic_bool g_EnabledModules[static_cast<unsigned int>(CXBXR_MODULE::MAX)];
-extern const char* g_EnumModules2String[static_cast<unsigned int>(CXBXR_MODULE::MAX)];
-extern std::atomic_uint g_CurrentLogLevel;
+extern std::atomic_bool g_EnabledModules[to_underlying(CXBXR_MODULE::MAX)];
+extern const char* g_EnumModules2String[to_underlying(CXBXR_MODULE::MAX)];
+extern std::atomic_int g_CurrentLogLevel;
 
 //
 // __FILENAME__
@@ -249,7 +249,7 @@ extern thread_local std::string _logThreadPrefix;
 
 // Checks if this log should be printed or not
 #define LOG_CHECK_ENABLED(cxbxr_module, level) \
-	if (g_EnabledModules[static_cast<unsigned int>(cxbxr_module)] && static_cast<unsigned int>(level) >= g_CurrentLogLevel)
+	if (g_EnabledModules[to_underlying(cxbxr_module)] && to_underlying(level) >= g_CurrentLogLevel)
 
 #define LOG_THREAD_INIT \
 	if (_logThreadPrefix.length() == 0) { \
@@ -262,7 +262,7 @@ extern thread_local std::string _logThreadPrefix;
 	static thread_local std::string _logFuncPrefix; \
 	if (_logFuncPrefix.length() == 0) {	\
 		std::stringstream tmp; \
-		tmp << g_EnumModules2String[static_cast<unsigned int>(LOG_PREFIX)] << (func != nullptr ? remove_emupatch_prefix(func) : ""); \
+		tmp << g_EnumModules2String[to_underlying(LOG_PREFIX)] << (func != nullptr ? remove_emupatch_prefix(func) : ""); \
 		_logFuncPrefix = tmp.str(); \
 	}
 
@@ -409,7 +409,7 @@ extern thread_local std::string _logThreadPrefix;
 #define DbgPrintf(cxbxr_module, fmt, ...) { \
 		LOG_CHECK_ENABLED(cxbxr_module, LOG_LEVEL::DEBUG) { \
 			CXBX_CHECK_INTEGRITY(); \
-			if(g_bPrintfOn) printf("[0x%.4X] %s: "##fmt, GetCurrentThreadId(), g_EnumModules2String[static_cast<unsigned int>(cxbxr_module)], ##__VA_ARGS__); \
+			if(g_bPrintfOn) printf("[0x%.4X] %s"##fmt, GetCurrentThreadId(), g_EnumModules2String[to_underlying(cxbxr_module)], ##__VA_ARGS__); \
 		} \
      }
 #else

@@ -3567,7 +3567,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateVertexShader)
 
 	if (FAILED(hRet)) {
 		// NOTE: This is a fatal error because it ALWAYS triggers a crash within DrawVertices if not set
-		CxbxKrnlCleanup("Failed to create Vertex Declaration");
+		CxbxKrnlCleanup(LOG_PREFIX , "Failed to create Vertex Declaration");
 	}
 	g_pD3DDevice->SetVertexDeclaration(pVertexShader->pHostDeclaration);
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetVertexDeclaration");
@@ -3620,7 +3620,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateVertexShader)
 			"dp4 oPos.z, v0, c98\n"
 			"dp4 oPos.w, v0, c99\n";
 
-		EmuWarning("Trying fallback:\n%s", dummy);
+		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Trying fallback:\n%s", dummy);
 
 		hRet = D3DXAssembleShader(
 			dummy,
@@ -6413,7 +6413,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderState_VertexBlend)
     } else if(Value == 5) {
         Value = 3;
     } else {
-        LOG_TEST_CASE(LOG_PREFIX, "Unsupported D3DVERTEXBLENDFLAGS (%d)", Value);
+        LOG_TEST_CASE(LOG_PREFIX, "Unsupported D3DVERTEXBLENDFLAGS (%d)");
         return;
 	}
 
