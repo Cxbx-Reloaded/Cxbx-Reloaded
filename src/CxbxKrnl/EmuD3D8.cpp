@@ -4131,7 +4131,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexData4f)
 		// Get the vertex shader flags (if any is active) :
 		uint32_t ActiveVertexAttributeFlags = 0;
 		if (VshHandleIsVertexShader(g_CurrentXboxVertexShaderHandle)) {
-			LOG_TEST_CASE("D3DDevice_SetVertexData4f with active VertexShader");
+			LOG_TEST_CASE(LOG_PREFIX, "D3DDevice_SetVertexData4f with active VertexShader");
 			X_D3DVertexShader *pXboxVertexShader = VshHandleToXboxVertexShader(g_CurrentXboxVertexShaderHandle);
 			if (!(pXboxVertexShader->Flags & 0x10/*=X_VERTEXSHADER_PROGRAM*/)) {
 				ActiveVertexAttributeFlags = pXboxVertexShader->Flags;

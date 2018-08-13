@@ -122,14 +122,16 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			return EXIT_FAILURE;
 		}
 
-		// Set up the logging variables for the GUI process
-		g_CurrentLogLevel = g_Settings->m_core.LogLevel;
-		for (unsigned int index = static_cast<unsigned int>(CXBXR_MODULE::CXBXR); index < static_cast<unsigned int>(CXBXR_MODULE::MAX); index++) {
-			if (g_Settings->m_core.LoggedModules[index / 32] & (1 << (index % 32))) {
-				g_EnabledModules[index] = true;
-			}
-			else {
-				g_EnabledModules[index] = false;
+		if (!bKernel) {
+			// Set up the logging variables for the GUI process
+			g_CurrentLogLevel = g_Settings->m_core.LogLevel;
+			for (unsigned int index = static_cast<unsigned int>(CXBXR_MODULE::CXBXR); index < static_cast<unsigned int>(CXBXR_MODULE::MAX); index++) {
+				if (g_Settings->m_core.LoggedModules[index / 32] & (1 << (index % 32))) {
+					g_EnabledModules[index] = true;
+				}
+				else {
+					g_EnabledModules[index] = false;
+				}
 			}
 		}
 

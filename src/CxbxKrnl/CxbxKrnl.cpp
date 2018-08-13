@@ -921,23 +921,23 @@ void CxbxKrnlMain(int argc, char* argv[])
 
 	g_CurrentProcessHandle = GetCurrentProcess(); // OpenProcess(PROCESS_ALL_ACCESS, FALSE, GetCurrentProcessId());
 
+	Settings::s_core Core;
+	g_EmuShared->GetCoreSettings(&Core);
+
+	// Set up the logging variables for the kernel process during initialization. Note that we cannot use WM_COPYDATA here
+	// because the child windows doesn't exist yet at this point
+	g_CurrentLogLevel = Core.LogLevel;
+	for (int index = to_underlying(CXBXR_MODULE::CXBXR); index < to_underlying(CXBXR_MODULE::MAX); index++) {
+		if (Core.LoggedModules[index / 32] & (1 << (index % 32))) {
+			g_EnabledModules[index] = true;
+		}
+		else {
+			g_EnabledModules[index] = false;
+		}
+	}
+
 	if (CxbxKrnl_hEmuParent != NULL) {
 		SendMessage(CxbxKrnl_hEmuParent, WM_PARENTNOTIFY, MAKELONG(WM_USER, ID_KRNL_IS_READY), GetCurrentProcessId());
-
-		Settings::s_core Core;
-		g_EmuShared->GetCoreSettings(&Core);
-
-		// Set up the logging variables for the kernel process during initialization. Note that we cannot use WM_COPYDATA here
-		// because the child windows doesn't exist yet at this point
-		g_CurrentLogLevel = Core.LogLevel;
-		for (int index = to_underlying(CXBXR_MODULE::CXBXR); index < to_underlying(CXBXR_MODULE::MAX); index++) {
-			if (Core.LoggedModules[index / 32] & (1 << (index % 32))) {
-				g_EnabledModules[index] = true;
-			}
-			else {
-				g_EnabledModules[index] = false;
-			}
-		}
 
 		// Force wait until GUI process is ready
 		do {
