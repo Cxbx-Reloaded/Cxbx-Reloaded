@@ -337,7 +337,7 @@ bool Settings::LoadConfig()
 			if (std::strncmp(si_list_iterator->pItem, "0x", 2) == 0) {
 				si_list_iterator->pItem += 2;
 			}
-			m_core.LoggedModules[index] = std::strtol(si_list_iterator->pItem, nullptr, 16);
+			m_core.LoggedModules[index] = std::strtoul(si_list_iterator->pItem, nullptr, 16);
 			index++;
 		}
 	}

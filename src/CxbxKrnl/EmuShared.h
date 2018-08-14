@@ -61,7 +61,7 @@ enum {
 #define LOG_ID 1
 struct LogData {
 	int Level;
-	int LoggedModules[NUM_INTEGERS_LOG];
+	uint LoggedModules[NUM_INTEGERS_LOG];
 };
 
 // ******************************************************************

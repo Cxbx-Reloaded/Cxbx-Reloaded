@@ -88,6 +88,12 @@ typedef uint8_t uint8; // TODO : Remove
 #include <process.h>
 #include <locale.h>
 
+
+#define DbgPshPrintf \
+	LOG_CHECK_ENABLED(LOG_PREFIX, LOG_LEVEL::DEBUG) \
+		if(g_bPrintfOn) printf
+
+
 //#include "EmuD3DPixelShader.h"
 
 /*---------------------------------------------------------------------------*/

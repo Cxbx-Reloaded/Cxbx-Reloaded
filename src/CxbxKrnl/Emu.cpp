@@ -102,7 +102,6 @@ std::string FormatTitleId(uint32_t title_id)
 }
 
 // print out a warning message to the kernel debug log file
-#ifdef _DEBUG_WARNINGS
 void NTAPI EmuLog(CXBXR_MODULE cxbxr_module, LOG_LEVEL level, const char *szWarningMessage, ...)
 {
 	if (szWarningMessage == NULL) {
@@ -132,7 +131,6 @@ void NTAPI EmuLog(CXBXR_MODULE cxbxr_module, LOG_LEVEL level, const char *szWarn
 		}
 	}
 }
-#endif
 
 std::string EIPToString(xbaddr EIP)
 {

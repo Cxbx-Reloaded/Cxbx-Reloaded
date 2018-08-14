@@ -121,7 +121,7 @@ INT_PTR CALLBACK DlgLogConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM
 			int counter;
 			int index;
 			int TempLevel;
-			int LoggedModules[NUM_INTEGERS_LOG];
+			uint LoggedModules[NUM_INTEGERS_LOG];
 			int LogLevel;
 
 			// Set window icon
@@ -184,7 +184,7 @@ INT_PTR CALLBACK DlgLogConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM
 				}
 			}
 
-			if (counter == to_underlying(CXBXR_MODULE::MAX)) {
+			if (counter == (to_underlying(CXBXR_MODULE::MAX) - to_underlying(CXBXR_MODULE::KRNL))) {
 				for (index = to_underlying(CXBXR_MODULE::KRNL); index < to_underlying(CXBXR_MODULE::MAX); index++) {
 					EnableWindow(GetDlgItem(hWndDlg, g_DlgIndexes[index]), FALSE);
 				}
@@ -207,49 +207,7 @@ INT_PTR CALLBACK DlgLogConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM
 
 		case WM_CLOSE:
 		{
-			if (g_bHasChanges) {
-				int LoggedModules[NUM_INTEGERS_LOG] = { 0 };
-				HWND hControl = GetDlgItem(hWndDlg, IDC_EVENT_LV);
-				int LogLevel = SendMessage(hControl, CB_GETITEMDATA, SendMessage(hControl, CB_GETCURSEL, 0, 0), 0);
-
-				for (int index = to_underlying(CXBXR_MODULE::CXBXR); index < to_underlying(CXBXR_MODULE::MAX); index++) {
-					if (SendMessage(GetDlgItem(hWndDlg, g_DlgIndexes[index]), BM_GETCHECK, 0, 0) == BST_CHECKED) {
-						LoggedModules[index / 32] |= (1 << (index % 32));
-					}
-				}
-				
-				g_Settings->m_core.LoggedModules[0] = LoggedModules[0];
-				g_Settings->m_core.LoggedModules[1] = LoggedModules[1];
-				g_Settings->m_core.LogLevel = LogLevel;
-
-				// Update the logging variables for the GUI process
-				g_CurrentLogLevel = LogLevel;
-				for (int index = to_underlying(CXBXR_MODULE::CXBXR); index < to_underlying(CXBXR_MODULE::MAX); index++) {
-					if (LoggedModules[index / 32] & (1 << (index % 32))) {
-						g_EnabledModules[index] = true;
-					}
-					else {
-						g_EnabledModules[index] = false;
-					}
-				}
-
-				// Also inform the kernel process if it exists
-				if (g_ChildWnd) {
-					COPYDATASTRUCT CopyData;
-					LogData Data;
-					Data.Level = LogLevel;
-					for (int i = 0; i < NUM_INTEGERS_LOG; i++) {
-						Data.LoggedModules[i] = LoggedModules[i];
-					}
-					CopyData.dwData = LOG_ID;
-					CopyData.cbData = sizeof(LogData);
-					CopyData.lpData = &Data;
-					SendMessage(g_ChildWnd, WM_COPYDATA, reinterpret_cast<WPARAM>(hWndDlg), reinterpret_cast<LPARAM>(&CopyData));
-				}
-			}
-
-			g_ChildWnd = NULL;
-			EndDialog(hWndDlg, wParam);
+			PostMessage(hWndDlg, WM_COMMAND, IDC_LOG_CANCEL, 0);
 		}
 		break;
 
@@ -257,6 +215,59 @@ INT_PTR CALLBACK DlgLogConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM
 		{
 			switch (LOWORD(wParam))
 			{
+				case IDC_LOG_CANCEL:
+				{
+					g_ChildWnd = NULL;
+					EndDialog(hWndDlg, wParam);
+				}
+				break;
+
+				case IDC_LOG_ACCEPT:
+				{
+					if (g_bHasChanges) {
+						uint LoggedModules[NUM_INTEGERS_LOG] = { 0 };
+						HWND hControl = GetDlgItem(hWndDlg, IDC_EVENT_LV);
+						int LogLevel = SendMessage(hControl, CB_GETITEMDATA, SendMessage(hControl, CB_GETCURSEL, 0, 0), 0);
+
+						for (int index = to_underlying(CXBXR_MODULE::CXBXR); index < to_underlying(CXBXR_MODULE::MAX); index++) {
+							if (SendMessage(GetDlgItem(hWndDlg, g_DlgIndexes[index]), BM_GETCHECK, 0, 0) == BST_CHECKED) {
+								LoggedModules[index / 32] |= (1 << (index % 32));
+							}
+						}
+
+						g_Settings->m_core.LoggedModules[0] = LoggedModules[0];
+						g_Settings->m_core.LoggedModules[1] = LoggedModules[1];
+						g_Settings->m_core.LogLevel = LogLevel;
+
+						// Update the logging variables for the GUI process
+						g_CurrentLogLevel = LogLevel;
+						for (int index = to_underlying(CXBXR_MODULE::CXBXR); index < to_underlying(CXBXR_MODULE::MAX); index++) {
+							if (LoggedModules[index / 32] & (1 << (index % 32))) {
+								g_EnabledModules[index] = true;
+							}
+							else {
+								g_EnabledModules[index] = false;
+							}
+						}
+
+						// Also inform the kernel process if it exists
+						if (g_ChildWnd) {
+							COPYDATASTRUCT CopyData;
+							LogData Data;
+							Data.Level = LogLevel;
+							for (int i = 0; i < NUM_INTEGERS_LOG; i++) {
+								Data.LoggedModules[i] = LoggedModules[i];
+							}
+							CopyData.dwData = LOG_ID;
+							CopyData.cbData = sizeof(LogData);
+							CopyData.lpData = &Data;
+							SendMessage(g_ChildWnd, WM_COPYDATA, reinterpret_cast<WPARAM>(hWndDlg), reinterpret_cast<LPARAM>(&CopyData));
+						}
+					}
+					PostMessage(hWndDlg, WM_COMMAND, IDC_LOG_CANCEL, 0);
+				}
+				break;
+
 				case IDC_EVENT_LV:
 					if (HIWORD(wParam) == CBN_SELCHANGE) {
 						g_bHasChanges = true;

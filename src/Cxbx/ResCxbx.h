@@ -20,6 +20,8 @@
 #define IDS_UEM                         123
 #define IDD_CONTROLLER_HOST_MAPPING     131
 #define IDD_VIRTUAL_SBC_FEEDBACK        133
+#define IDC_LOG_CANCEL                  892
+#define IDC_LOG_ACCEPT                  893
 #define IDC_LOG_ENABLE_GENERAL          894
 #define IDC_LOG_DISABLE_GENERAL         895
 #define IDC_LOG_ENABLE_KERNEL           896

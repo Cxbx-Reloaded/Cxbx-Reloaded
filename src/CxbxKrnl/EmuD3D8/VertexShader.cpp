@@ -52,6 +52,10 @@
 //#define CXBX_USE_VS30 // Separate the port to Vertex Shader model 3.0 from the port to Direct3D9
 #endif
 
+#define DbgVshPrintf \
+	LOG_CHECK_ENABLED(LOG_PREFIX, LOG_LEVEL::DEBUG) \
+		if(g_bPrintfOn) printf
+
 // ****************************************************************************
 // * Vertex shader function recompiler
 // ****************************************************************************

@@ -42,11 +42,7 @@
 #include <multimon.h>
 
 // print out a log message to the kernel debug log file if level is high enough
-#ifdef _DEBUG_WARNINGS
 void NTAPI EmuLog(CXBXR_MODULE cxbxr_module, LOG_LEVEL level, const char *szWarningMessage, ...);
-#else
-inline void NTAPI EmuLog(CXBXR_MODULE cxbxr_module, LOG_LEVEL level, const char *szWarningMessage, ...) { }
-#endif
 
 std::string FormatTitleId(uint32_t title_id);
 

@@ -49,11 +49,4 @@ VOID DxbxUpdateActivePixelShader(); // NOPATCH
 // TODO: Remove this once the Render State code has been fully ported from Dxbx/Wip_LessVertexPatching
 extern DWORD TemporaryPixelShaderRenderStates[X_D3DRS_PSTEXTUREMODES + 1];
 
-#ifdef _DEBUG_TRACK_PS
-#define DbgPshPrintf if(g_bPrintfOn) printf
-#else
-inline void null_func_psh(...) { }
-#define DbgPshPrintf XTL::null_func_psh
-#endif
-
 #endif // PIXELSHADER_H

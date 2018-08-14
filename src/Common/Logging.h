@@ -266,8 +266,6 @@ extern thread_local std::string _logThreadPrefix;
 		_logFuncPrefix = tmp.str(); \
 	}
 
-#ifdef _DEBUG_TRACE
-
 #define LOG_INIT \
 	LOG_THREAD_INIT \
 	LOG_FUNC_INIT(__func__)
@@ -325,23 +323,6 @@ extern thread_local std::string _logThreadPrefix;
 			std::cout << _logThreadPrefix << _logFuncPrefix << " forwarding to "#api"...\n"; \
 		} } while (0); \
 	}
-
-
-#else // _DEBUG_TRACE
-
-#define LOG_FINIT
-#define LOG_INIT
-#define LOG_FUNC_BEGIN_NO_INIT
-#define LOG_FUNC_BEGIN
-#define LOG_FUNC_ARG(arg)
-#define LOG_FUNC_ARG_TYPE(type, arg)
-#define LOG_FUNC_ARG_OUT(arg)
-#define LOG_FUNC_END
-#define LOG_FUNC_RESULT(r)
-#define LOG_FUNC_RESULT_TYPE(type, r)
-#define LOG_FORWARD(cxbxr_module, arg)
-
-#endif //  _DEBUG_TRACE
 
 // LOG_IGNORED indicates that Cxbx consiously ignores an api
 #define LOG_IGNORED(cxbxr_module) \
@@ -404,18 +385,12 @@ extern thread_local std::string _logThreadPrefix;
 #pragma warning(disable : 4477)
 #endif
 
-/*! DbgPrintf enabled if _DEBUG_TRACE is set */
-#ifdef _DEBUG_TRACE
 #define DbgPrintf(cxbxr_module, fmt, ...) { \
 		LOG_CHECK_ENABLED(cxbxr_module, LOG_LEVEL::DEBUG) { \
 			CXBX_CHECK_INTEGRITY(); \
 			if(g_bPrintfOn) printf("[0x%.4X] %s"##fmt, GetCurrentThreadId(), g_EnumModules2String[to_underlying(cxbxr_module)], ##__VA_ARGS__); \
 		} \
      }
-#else
-inline void null_func(...) { }
-#define DbgPrintf null_func
-#endif
 
 #ifdef _MSC_VER
 #pragma warning(pop)

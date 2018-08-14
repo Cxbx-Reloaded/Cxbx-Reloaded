@@ -73,12 +73,6 @@ typedef u32              xbaddr;
 #define xbnull  0
 
 #ifdef _DEBUG
-/*! define this to track vertex buffers */
-#define _DEBUG_TRACK_VB
-/*! define this to track vertex shaders */
-#define _DEBUG_TRACK_VS
-/*! define this to track pixel shaders */
-#define _DEBUG_TRACK_PS
 /*! define this to track memory allocations */
 //#define _DEBUG_ALLOC
 #endif
@@ -86,8 +80,6 @@ typedef u32              xbaddr;
 #ifdef _DEBUG
 #define _DEBUG_TRACE 1
 #endif
-/*! define this to trace warnings */
-#define _DEBUG_WARNINGS
 /*! define this to trace vertex shader constants */
 #define _DEBUG_TRACK_VS_CONST
 /*! define this to print current configuration at kernel startup */

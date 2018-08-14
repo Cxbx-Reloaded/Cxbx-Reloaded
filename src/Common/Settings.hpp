@@ -151,7 +151,7 @@ public:
 		char szKrnlDebug[MAX_PATH] = "";
 		char szStorageLocation[MAX_PATH] = "";
 		bool allowAdminPrivilege;
-		int LoggedModules[NUM_INTEGERS_LOG];
+		uint LoggedModules[NUM_INTEGERS_LOG];
 		int LogLevel = 1;
 		bool Reserved2 = 0;
 		bool Reserved3 = 0;

@@ -37,7 +37,6 @@
 
 #define LOG_PREFIX CXBXR_MODULE::LOG
 
-#ifdef _DEBUG
 // prevent name collisions
 namespace xboxkrnl
 {
@@ -454,4 +453,3 @@ LOGRENDER(UNICODE_STRING)
 }
 
 }; // end of namespace xboxkrnl;
-#endif

@@ -211,25 +211,15 @@ struct EmuD3D8CreateDeviceProxyData
 }
 g_EmuCDPD = {0};
 
-#ifdef _DEBUG_TRACE
-
 #define DEBUG_D3DRESULT(hRet, message) \
 	do { \
-		if (FAILED(hRet)) \
-			if(g_bPrintfOn) \
-				printf("%s%s : %s D3D error (0x%.08X: %s)\n", _logThreadPrefix.c_str(), _logFuncPrefix.c_str(), message, hRet, D3DErrorString(hRet)); \
+		LOG_CHECK_ENABLED(CXBXR_MODULE::D3D8, LOG_LEVEL::DEBUG) { \
+			if (FAILED(hRet)) \
+				if(g_bPrintfOn) \
+					printf("%s%s : %s D3D error (0x%.08X: %s)\n", _logThreadPrefix.c_str(), _logFuncPrefix.c_str(), message, hRet, D3DErrorString(hRet)); \
+		} \
 	} while (0)
 
-#else
-
-#define DEBUG_D3DRESULT(hRet, message) \
-	do { \
-		if (FAILED(hRet)) \
-			if(g_bPrintfOn) \
-				DbgPrintf(LOG_PREFIX, "%s : %s D3D error (0x%.08X: %s)\n", __func__, message, hRet, D3DErrorString(hRet)); \
-	} while (0)
-
-#endif
 
 // TODO: This should be a D3DDevice structure
 DWORD* g_XboxD3DDevice;

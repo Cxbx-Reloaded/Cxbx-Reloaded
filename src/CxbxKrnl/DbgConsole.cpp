@@ -110,7 +110,6 @@ void DbgConsole::Reset()
     m_szInput[0] = '\0';
 }
 
-#if defined(_DEBUG_TRACK_VB)
 typedef enum _ETAction
 {
     ETA_ENABLE  = 0,
@@ -170,7 +169,6 @@ static void EnableTracker(ResourceTracker &trackTotal, ResourceTracker &tracker,
 
     return;
 }
-#endif
 
 void DbgConsole::ParseCommand()
 {
@@ -193,12 +191,12 @@ void DbgConsole::ParseCommand()
         printf("CxbxDbg:  Quit/Exit       [Q]     : Stop Emulation\n");
         printf("CxbxDbg:  Trace           [T]     : Toggle Debug Trace\n");
 
-        #ifdef _DEBUG_TRACK_VB
-        printf("CxbxDbg:  ListVB          [LVB]   : List Active Vertex Buffers\n");
-        printf("CxbxDbg:  DisableVB       [DVB #] : Disable Active Vertex Buffer(s)\n");
-        printf("CxbxDbg:  EnableVB        [EVB #] : Enable Active Vertex Buffer(s)\n");
-        printf("CxbxDbg:  DumpStreamCache [DSC]   : Dumps the patched streams cache\n");
-        #endif
+		LOG_CHECK_ENABLED(CXBXR_MODULE::VTXB, LOG_LEVEL::DEBUG) {
+			printf("CxbxDbg:  ListVB          [LVB]   : List Active Vertex Buffers\n");
+			printf("CxbxDbg:  DisableVB       [DVB #] : Disable Active Vertex Buffer(s)\n");
+			printf("CxbxDbg:  EnableVB        [EVB #] : Enable Active Vertex Buffer(s)\n");
+			printf("CxbxDbg:  DumpStreamCache [DSC]   : Dumps the patched streams cache\n");
+		}
 
         #ifdef _DEBUG_ALLOC
         printf("CxbxDbg:  DumpMem         [DMEM]  : Dump the heap allocation tracking table\n");
@@ -219,65 +217,69 @@ void DbgConsole::ParseCommand()
         g_bPrintfOn = !g_bPrintfOn;
         printf("CxbxDbg: Trace is now %s\n", g_bPrintfOn ? "ON" : "OFF");
     }
-    #ifdef _DEBUG_TRACK_VB
     else if(_stricmp(szCmd, "lvb") == 0 || _stricmp(szCmd, "ListVB") == 0)
     {
-        int v=0;
+		LOG_CHECK_ENABLED(CXBXR_MODULE::VTXB, LOG_LEVEL::DEBUG) {
+			int v = 0;
 
-        g_VBTrackTotal.Lock();
+			g_VBTrackTotal.Lock();
 
-        RTNode *cur = g_VBTrackTotal.getHead();
+			RTNode *cur = g_VBTrackTotal.getHead();
 
-        while(cur != NULL && cur->pNext != NULL)
-        {
-            bool enabled = g_VBTrackDisable.exists(cur->pResource);
+			while (cur != NULL && cur->pNext != NULL)
+			{
+				bool enabled = g_VBTrackDisable.exists(cur->pResource);
 
-            printf("CxbxDbg: %.2d : 0x%p (%s)\n", v++, cur->pResource, enabled ? "enabled" : "disabled");
+				printf("CxbxDbg: %.2d : 0x%p (%s)\n", v++, cur->pResource, enabled ? "enabled" : "disabled");
 
-            cur = cur->pNext;
-        }
+				cur = cur->pNext;
+			}
 
-        g_VBTrackTotal.Unlock();
+			g_VBTrackTotal.Unlock();
+		}
     }
     else if(_stricmp(szCmd, "dvb") == 0 || _stricmp(szCmd, "DisableVB") == 0)
     {
-        int n=0, m=0;
+		LOG_CHECK_ENABLED(CXBXR_MODULE::VTXB, LOG_LEVEL::DEBUG) {
+			int n = 0, m = 0;
 
-        int c = sscanf(m_szInput, "%*s %d-%d", &n, &m);
+			int c = sscanf(m_szInput, "%*s %d-%d", &n, &m);
 
-        if(c == 1)
-        {
-            EnableTracker(g_VBTrackTotal, g_VBTrackDisable, n, n, ETA_DISABLE);
-        }
-        else if(c == 2)
-        {
-            EnableTracker(g_VBTrackTotal, g_VBTrackDisable, n, m, ETA_DISABLE);
-        }
-        else
-        {
-            printf("CxbxDbg: Syntax Incorrect (dvb #)\n");
-        }
+			if (c == 1)
+			{
+				EnableTracker(g_VBTrackTotal, g_VBTrackDisable, n, n, ETA_DISABLE);
+			}
+			else if (c == 2)
+			{
+				EnableTracker(g_VBTrackTotal, g_VBTrackDisable, n, m, ETA_DISABLE);
+			}
+			else
+			{
+				printf("CxbxDbg: Syntax Incorrect (dvb #)\n");
+			}
+		}
     }
     else if(_stricmp(szCmd, "evb") == 0 || _stricmp(szCmd, "EnableVB") == 0)
     {
-        int n=0, m=0;
+		LOG_CHECK_ENABLED(CXBXR_MODULE::VTXB, LOG_LEVEL::DEBUG) {
+			int n = 0, m = 0;
 
-        int c = sscanf(m_szInput, "%*s %d-%d", &n, &m);
+			int c = sscanf(m_szInput, "%*s %d-%d", &n, &m);
 
-        if(c == 1)
-        {
-            EnableTracker(g_VBTrackTotal, g_VBTrackDisable, n, n, ETA_ENABLE);
-        }
-        else if(c == 2)
-        {
-            EnableTracker(g_VBTrackTotal, g_VBTrackDisable, n, m, ETA_ENABLE);
-        }
-        else
-        {
-            printf("CxbxDbg: Syntax Incorrect (dvb #)\n");
-        }
+			if (c == 1)
+			{
+				EnableTracker(g_VBTrackTotal, g_VBTrackDisable, n, n, ETA_ENABLE);
+			}
+			else if (c == 2)
+			{
+				EnableTracker(g_VBTrackTotal, g_VBTrackDisable, n, m, ETA_ENABLE);
+			}
+			else
+			{
+				printf("CxbxDbg: Syntax Incorrect (dvb #)\n");
+			}
+		}
     }
-    #endif
     #ifdef _DEBUG_ALLOC
     else if(_stricmp(szCmd, "dmem") == 0 || _stricmp(szCmd, "DumpMem") == 0)
     {
