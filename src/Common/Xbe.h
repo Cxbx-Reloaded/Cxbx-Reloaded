@@ -46,6 +46,11 @@
 #define XPR_IMAGE_DATA_SIZE (XPR_IMAGE_WH * XPR_IMAGE_WH) / 2
 #define XPR_IMAGE_HDR_SIZE 2048
 
+namespace xboxkrnl
+{
+	typedef struct _XBE_SECTION	XBEIMAGE_SECTION, *PXBEIMAGE_SECTION;
+}
+
 // Xbe (Xbox Executable) file object
 class Xbe : public Error
 {
@@ -56,8 +61,11 @@ class Xbe : public Error
         // deconstructor
        ~Xbe();
 
-	   // find an image by name
-	   void *FindSection(char *zsSectionName);
+		// find an section by name
+		void *FindSection(char *zsSectionName);
+
+		// Find a section by its definition
+		void* FindSection(xboxkrnl::PXBEIMAGE_SECTION section);
 
         // export to Xbe file
         void Export(const char *x_szXbeFilename);
