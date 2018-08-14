@@ -921,18 +921,22 @@ void CxbxKrnlMain(int argc, char* argv[])
 
 	g_CurrentProcessHandle = GetCurrentProcess(); // OpenProcess(PROCESS_ALL_ACCESS, FALSE, GetCurrentProcessId());
 
-	Settings::s_core Core;
-	g_EmuShared->GetCoreSettings(&Core);
+	{
+		int LogLevel;
+		uint LoggedModules[NUM_INTEGERS_LOG];
+		g_EmuShared->GetLogLv(&LogLevel);
+		g_EmuShared->GetLogModules(LoggedModules);
 
-	// Set up the logging variables for the kernel process during initialization. Note that we cannot use WM_COPYDATA here
-	// because the child window doesn't exist yet at this point
-	g_CurrentLogLevel = Core.LogLevel;
-	for (int index = to_underlying(CXBXR_MODULE::CXBXR); index < to_underlying(CXBXR_MODULE::MAX); index++) {
-		if (Core.LoggedModules[index / 32] & (1 << (index % 32))) {
-			g_EnabledModules[index] = true;
-		}
-		else {
-			g_EnabledModules[index] = false;
+		// Set up the logging variables for the kernel process during initialization. Note that we cannot use WM_COPYDATA here
+		// because the child window doesn't exist yet at this point
+		g_CurrentLogLevel = LogLevel;
+		for (int index = to_underlying(CXBXR_MODULE::CXBXR); index < to_underlying(CXBXR_MODULE::MAX); index++) {
+			if (LoggedModules[index / 32] & (1 << (index % 32))) {
+				g_EnabledModules[index] = true;
+			}
+			else {
+				g_EnabledModules[index] = false;
+			}
 		}
 	}
 

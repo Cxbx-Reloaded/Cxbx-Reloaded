@@ -206,6 +206,34 @@ class EmuShared : public Mutex
 		}
 
 		// ******************************************************************
+		// * Log Level value Accessors
+		// ******************************************************************
+		void GetLogLv(int *value) { Lock(); *value = m_core.LogLevel; Unlock(); }
+		void SetLogLv(int *value) { Lock(); m_core.LogLevel = *value; Unlock(); }
+
+		// ******************************************************************
+		// * Log modules value Accessors
+		// ******************************************************************
+		void GetLogModules(uint *value)
+		{
+			Lock();
+			for (int i = 0; i < NUM_INTEGERS_LOG; ++i)
+			{
+				value[i] = m_core.LoggedModules[i];
+			}
+			Unlock();
+		}
+		void SetLogModules(uint *value)
+		{
+			Lock();
+			for (int i = 0; i < NUM_INTEGERS_LOG; ++i)
+			{
+				m_core.LoggedModules[i] = value[i];
+			}
+			Unlock();
+		}
+
+		// ******************************************************************
 		// * File storage location
 		// ******************************************************************
 		void GetStorageLocation(char *path) { Lock(); strncpy(path, m_core.szStorageLocation, MAX_PATH); Unlock(); }

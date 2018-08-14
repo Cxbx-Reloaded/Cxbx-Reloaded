@@ -239,6 +239,10 @@ INT_PTR CALLBACK DlgLogConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM
 						g_Settings->m_core.LoggedModules[1] = LoggedModules[1];
 						g_Settings->m_core.LogLevel = LogLevel;
 
+						// This is necessary because otherwise relaunched xbe's in multi-xbe titles will still use the old settings
+						g_EmuShared->SetLogLv(&LogLevel);
+						g_EmuShared->SetLogModules(LoggedModules);
+
 						// Update the logging variables for the GUI process
 						g_CurrentLogLevel = LogLevel;
 						for (int index = to_underlying(CXBXR_MODULE::CXBXR); index < to_underlying(CXBXR_MODULE::MAX); index++) {
