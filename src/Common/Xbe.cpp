@@ -770,11 +770,13 @@ uint08 *Xbe::GetLogoBitmap(uint32 x_dwSize)
     return 0;
 }
 
-
-void *Xbe::FindSection(char *zsSectionName)
+void *Xbe::FindSection(char *zsSectionName, uint32_t fileAddress)
 {
+	// It is possible for multiple sections to exist with the same name
+	// For now, we implement these cases by using an optional fileAddress paramater
+	// Fixes a crash with the Xbox Wireless Adapter Setup Disc
 	for (uint32 v = 0; v < m_Header.dwSections; v++) {
-		if (strcmp(m_szSectionName[v], zsSectionName) == 0) {
+		if ((fileAddress == 0 || m_SectionHeader[v].dwRawAddr == fileAddress) && (strcmp(m_szSectionName[v], zsSectionName) == 0)) {
 			if (m_SectionHeader[v].dwVirtualAddr > 0 && m_SectionHeader[v].dwVirtualSize > 0) {
 				return m_bzSection[v];
 			}

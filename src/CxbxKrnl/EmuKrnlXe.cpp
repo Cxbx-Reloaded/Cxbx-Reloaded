@@ -81,7 +81,7 @@ XBSYSAPI EXPORTNUM(327) xboxkrnl::NTSTATUS NTAPI xboxkrnl::XeLoadSection
 
 	NTSTATUS ret = STATUS_SUCCESS;
 
-	void* sectionData = CxbxKrnl_Xbe->FindSection((char*)std::string(Section->SectionName, 9).c_str());
+	void* sectionData = CxbxKrnl_Xbe->FindSection((char*)std::string(Section->SectionName, 9).c_str(), Section->FileAddress);
 	if (sectionData != nullptr) {
 		// If the reference count was zero, load the section
 		if (Section->SectionReferenceCount == 0) {

@@ -57,7 +57,7 @@ class Xbe : public Error
        ~Xbe();
 
 	   // find an image by name
-	   void *FindSection(char *zsSectionName);
+	   void *FindSection(char *zsSectionName, uint32_t fileAddress = 0);
 
         // export to Xbe file
         void Export(const char *x_szXbeFilename);
