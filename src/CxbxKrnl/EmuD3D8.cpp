@@ -6382,7 +6382,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderState_VertexBlend)
     } else if(Value == 5) {
         Value = 3;
     } else {
-        LOG_TEST_CASE("Unsupported D3DVERTEXBLENDFLAGS (%d)", Value);
+        LOG_TEST_CASE("Unsupported D3DVERTEXBLENDFLAGS");
         return;
 	}
 
@@ -7229,7 +7229,12 @@ void XTL::CxbxDrawIndexed(CxbxDrawContext &DrawContext)
 	CxbxUpdateActiveIndexBuffer(DrawContext.pIndexData, DrawContext.dwVertexCount);
 
 	CxbxVertexBufferConverter VertexBufferConverter = {};
-	VertexBufferConverter.Apply(&DrawContext);
+
+	//Walk through index buffer
+	// Determine highest and lowest index in use :
+	INDEX16 LowIndex, HighIndex;
+	WalkIndexBuffer(LowIndex, HighIndex, &(DrawContext.pIndexData[DrawContext.dwStartVertex]), DrawContext.dwVertexCount);
+	VertexBufferConverter.Apply(&DrawContext, LowIndex);
 
 	if (DrawContext.XboxPrimitiveType == X_D3DPT_QUADLIST) {
 		UINT uiStartIndex = 0;
@@ -7242,9 +7247,6 @@ void XTL::CxbxDrawIndexed(CxbxDrawContext &DrawContext)
 		// Test-cases : XDK samples reaching this case are : DisplacementMap, Ripple
 		// Test-case : XDK Samples (Billboard, BumpLens, DebugKeyboard, Gamepad, Lensflare, PerfTest?VolumeLight, PointSprites, Tiling, VolumeFog, VolumeSprites, etc)
 		while (iNumVertices >= VERTICES_PER_QUAD) {
-			// Determine highest and lowest index in use :
-			INDEX16 LowIndex;
-			INDEX16 HighIndex;
 			WalkIndexBuffer(LowIndex, HighIndex, &(DrawContext.pIndexData[uiStartIndex]), VERTICES_PER_QUAD);
 
 			// Emulate a quad by drawing each as a fan of 2 triangles
@@ -7264,11 +7266,6 @@ void XTL::CxbxDrawIndexed(CxbxDrawContext &DrawContext)
 		}
 	}
 	else {
-		//Walk through index buffer
-		// Determine highest and lowest index in use :
-		INDEX16 LowIndex, HighIndex;
-		WalkIndexBuffer(LowIndex,  HighIndex, &(DrawContext.pIndexData[DrawContext.dwStartVertex]), DrawContext.dwVertexCount);
-
 		// Primitives other than X_D3DPT_QUADLIST can be drawn using one DrawIndexedPrimitive call :
 		HRESULT hRet = g_pD3DDevice->DrawIndexedPrimitive(
 			EmuXB2PC_D3DPrimitiveType(DrawContext.XboxPrimitiveType),
