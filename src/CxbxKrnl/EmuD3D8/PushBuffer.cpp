@@ -133,7 +133,7 @@ void XTL::EmuExecutePushBuffer
 {
 	//Check whether Fixup exists or not. 
 	if (pFixup != NULL) {
-		LOG_TEST_CASE(LOG_PREFIX, "PushBuffer has fixups");
+		LOG_TEST_CASE("PushBuffer has fixups");
 		//Interpret address of PushBuffer Data and Fixup Data
 		UINT8* pPushBufferData = (UINT8*)pPushBuffer->Data;
 		UINT8* pFixupData = (UINT8*)(pFixup->Data + pFixup->Run);
@@ -187,7 +187,7 @@ DWORD CxbxGetStrideFromVertexShaderHandle(DWORD dwVertexShader)
 		// Test-case : Prince of Persia: The Sands of Time [5553001d]
 		// Test-case : RPM Tuning [Top Gear RPM Tuning] [4B420007]
 		// Test-case : SpyHunter 2 [4D57001B]
-		//LOG_TEST_CASE(LOG_PREFIX, "Non-FVF Vertex Shaders not yet (completely) supported for PushBuffer emulation!");
+		//LOG_TEST_CASE("Non-FVF Vertex Shaders not yet (completely) supported for PushBuffer emulation!");
 
 		CxbxVertexShader *pVertexShader = MapXboxVertexShaderHandleToCxbxVertexShader(dwVertexShader);
 		if (pVertexShader) {
@@ -196,7 +196,7 @@ DWORD CxbxGetStrideFromVertexShaderHandle(DWORD dwVertexShader)
 				Stride = pVertexShader->VertexShaderInfo.VertexStreams[0].HostVertexStride;
 			}
 			else {
-				LOG_TEST_CASE(LOG_PREFIX, "Non-FVF Vertex Shaders with multiple streams not supported for PushBuffer emulation!");
+				LOG_TEST_CASE("Non-FVF Vertex Shaders with multiple streams not supported for PushBuffer emulation!");
 			}
 		}
 	}
@@ -205,7 +205,7 @@ DWORD CxbxGetStrideFromVertexShaderHandle(DWORD dwVertexShader)
 			Stride = DxbxFVFToVertexSizeInBytes(dwVertexShader, /*bIncludeTextures=*/true);
 		}
 		else {
-			LOG_TEST_CASE(LOG_PREFIX, "Invalid Vertex Shader not supported for PushBuffer emulation!");
+			LOG_TEST_CASE("Invalid Vertex Shader not supported for PushBuffer emulation!");
 		}
 	}
 
@@ -226,7 +226,7 @@ void HLE_pgraph_handle_method(
 
 	// Skip all commands not intended for channel 0 (3D)
 	if (subchannel > 0) {
-		LOG_TEST_CASE(LOG_PREFIX, "Pushbuffer subchannel > 0");
+		LOG_TEST_CASE("Pushbuffer subchannel > 0");
 		return; // For now, don't even attempt to run through
 	}
 
@@ -240,7 +240,7 @@ void HLE_pgraph_handle_method(
 	switch (method) {
 
 	case 0: {
-		LOG_TEST_CASE(LOG_PREFIX, "Pushbuffer method == 0");
+		LOG_TEST_CASE("Pushbuffer method == 0");
 		break;
 	}
 	case NV097_NO_OPERATION: { // 0x00000100, NV2A_NOP, No Operation, followed parameters are no use. this operation triggers DPC which is not implemented in HLE
@@ -264,14 +264,14 @@ void HLE_pgraph_handle_method(
 	case NV2A_VP_UPLOAD_CONST(3): {
 		// Can't use NOINCREMENT_FLAG, parameters is constant matrix, 4X4 matrix has 16 DWORDs, maximum of 32 DWORD writes
 		//load constant matrix to empty slot
-		LOG_TEST_CASE(LOG_PREFIX, "NV2A_VP_UPLOAD_CONST");
+		LOG_TEST_CASE("NV2A_VP_UPLOAD_CONST");
 		break;
 	}
 	case NV097_SET_BEGIN_END: { // 0x000017FC, NV2A_VERTEX_BEGIN_END, D3DPUSH_SET_BEGIN_END, 1 DWORD parameter
 		if (parameter == 0) { // Parameter == 0 means SetEnd, EndPush()
 			// Trigger all draws from here
 			if (pg->draw_arrays_length) {
-				LOG_TEST_CASE(LOG_PREFIX, "PushBuffer : Draw Arrays");
+				LOG_TEST_CASE("PushBuffer : Draw Arrays");
 				assert(pg->inline_buffer_length == 0);
 				assert(pg->inline_array_length == 0);
 				assert(pg->inline_elements_length == 0);
@@ -288,7 +288,7 @@ void HLE_pgraph_handle_method(
 #endif
 			}
 			else if (pg->inline_buffer_length) {
-				LOG_TEST_CASE(LOG_PREFIX, "PushBuffer : Inline Buffer");
+				LOG_TEST_CASE("PushBuffer : Inline Buffer");
 				assert(pg->draw_arrays_length == 0);
 				assert(pg->inline_array_length == 0);
 				assert(pg->inline_elements_length == 0);
@@ -337,7 +337,7 @@ void HLE_pgraph_handle_method(
 				// retrieve vertex shader
 				XTL::DWORD dwVertexShader = g_CurrentXboxVertexShaderHandle;
 				if (dwVertexShader == 0) {
-					LOG_TEST_CASE(LOG_PREFIX, "FVF Vertex Shader is null");
+					LOG_TEST_CASE("FVF Vertex Shader is null");
 					dwVertexShader = -1;
 				}
 
@@ -399,7 +399,7 @@ void HLE_pgraph_handle_method(
 #endif
 			}
 			else {
-				LOG_TEST_CASE(LOG_PREFIX, "EMPTY NV097_SET_BEGIN_END");
+				LOG_TEST_CASE("EMPTY NV097_SET_BEGIN_END");
 			}
 		}
 		else {
@@ -420,7 +420,7 @@ void HLE_pgraph_handle_method(
 		break;
 	}
 	case NV097_ARRAY_ELEMENT16: { // 0x1800, NV2A_VB_ELEMENT_U16
-		//LOG_TEST_CASE(LOG_PREFIX, "NV2A_VB_ELEMENT_U16");
+		//LOG_TEST_CASE("NV2A_VB_ELEMENT_U16");
 		// Test-case : Turok (in main menu)
 		// Test-case : Hunter Redeemer
 		// Test-case : Otogi (see https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/pull/1113#issuecomment-385593814)
@@ -432,7 +432,7 @@ void HLE_pgraph_handle_method(
 		break;
 	}
 	case NV097_ARRAY_ELEMENT32: { // 0x1808, NV2A_VB_ELEMENT_U32, Index Array Data
-		//LOG_TEST_CASE(LOG_PREFIX, "NV2A_VB_ELEMENT_U32");
+		//LOG_TEST_CASE("NV2A_VB_ELEMENT_U32");
 		// Test-case : Turok (in main menu)
 		assert(pg->inline_elements_length < NV2A_MAX_BATCH_LENGTH);
 		pg__inline_elements[
@@ -463,13 +463,13 @@ void HLE_pgraph_handle_method(
 	case NV097_SET_TRANSFORM_CONSTANT_LOAD: { // 0x00001EA4, NV2A_VP_UPLOAD_CONST_ID, D3DPUSH_SET_TRANSFORM_CONSTANT_LOAD
 		// Add 96 to constant index parameter, one parameter=CONSTANT + 96
 		// Retrieve transform constant index and add 96 to it.
-		LOG_TEST_CASE(LOG_PREFIX, "NV2A_VP_UPLOAD_CONST_ID");
+		LOG_TEST_CASE("NV2A_VP_UPLOAD_CONST_ID");
 		break;
 	}
 	default: { // default case, handling any other unknown methods.
 		char message[256] = {};
 		sprintf(message, "Unhandled PushBuffer Operation : %s (0x%.04X)", NV2AMethodToString(method), method);
-		LOG_TEST_CASE(LOG_PREFIX, message);
+		LOG_TEST_CASE(message);
 		break;
 	}
 	} // switch
@@ -626,7 +626,7 @@ extern void XTL::EmuExecutePushBufferRaw
     while (dma_get != dma_put) {
 		// Check if loop reaches end of pushbuffer
 		if (dma_get >= dma_limit) {
-			LOG_TEST_CASE(LOG_PREFIX, "Last pushbuffer instruction exceeds END of Data");
+			LOG_TEST_CASE("Last pushbuffer instruction exceeds END of Data");
 			// TODO : throw DMA_PUSHER(MEM_FAULT);
 			return; // For now, don't even attempt to run through
 		}
@@ -661,18 +661,18 @@ extern void XTL::EmuExecutePushBufferRaw
 		case COMMAND_TYPE_NONE:
 			break; // fall through
 		case COMMAND_TYPE_JUMP_LONG:
-			LOG_TEST_CASE(LOG_PREFIX, "Pushbuffer COMMAND_TYPE_JUMP_LONG");
+			LOG_TEST_CASE("Pushbuffer COMMAND_TYPE_JUMP_LONG");
 			dma_get_jmp_shadow = dma_get;
 			dma_get = (uint32_t *)(CONTIGUOUS_MEMORY_BASE | (word & COMMAND_WORD_MASK_JUMP_LONG));
 			continue; // while
 		case COMMAND_TYPE_CALL: // Note : NV2A return is said not to work?
 			if (subr_active) {
-				LOG_TEST_CASE(LOG_PREFIX, "Pushbuffer COMMAND_TYPE_CALL while another call was active!");
+				LOG_TEST_CASE("Pushbuffer COMMAND_TYPE_CALL while another call was active!");
 				// TODO : throw DMA_PUSHER(CALL_SUBR_ACTIVE);
 				return; // For now, don't even attempt to run through
 			}
 			else {
-				LOG_TEST_CASE(LOG_PREFIX, "Pushbuffer COMMAND_TYPE_CALL");
+				LOG_TEST_CASE("Pushbuffer COMMAND_TYPE_CALL");
 			}
 
 			subr_return = dma_get;
@@ -680,7 +680,7 @@ extern void XTL::EmuExecutePushBufferRaw
 			dma_get = (uint32_t *)(CONTIGUOUS_MEMORY_BASE | (word & COMMAND_WORD_MASK_JUMP_LONG));
 			continue; // while
 		default:
-			LOG_TEST_CASE(LOG_PREFIX, "Pushbuffer COMMAND_TYPE unknown");
+			LOG_TEST_CASE("Pushbuffer COMMAND_TYPE unknown");
 			// TODO : throw DMA_PUSHER(INVALID_CMD);
 			return; // For now, don't even attempt to run through
 		} // switch type
@@ -690,7 +690,7 @@ extern void XTL::EmuExecutePushBufferRaw
 			dma_state.ni = false;
 			break;
 		case COMMAND_INSTRUCTION_JUMP:
-			LOG_TEST_CASE(LOG_PREFIX, "Pushbuffer COMMAND_INSTRUCTION_JUMP");
+			LOG_TEST_CASE("Pushbuffer COMMAND_INSTRUCTION_JUMP");
 			dma_get_jmp_shadow = dma_get;
 			dma_get = (uint32_t *)(CONTIGUOUS_MEMORY_BASE | (word & COMMAND_WORD_MASK_JUMP));
 			continue; // while
@@ -698,7 +698,7 @@ extern void XTL::EmuExecutePushBufferRaw
 			dma_state.ni = true;
 			break;
 		default:
-			LOG_TEST_CASE(LOG_PREFIX, "Pushbuffer COMMAND_INSTRUCTION unknown");
+			LOG_TEST_CASE("Pushbuffer COMMAND_INSTRUCTION unknown");
 			// TODO : throw DMA_PUSHER(INVALID_CMD);
 			return; // For now, don't even attempt to run through
 		} // switch instruction
@@ -711,15 +711,15 @@ extern void XTL::EmuExecutePushBufferRaw
 			break; // fall through
 		case COMMAND_FLAGS_RETURN: // Note : NV2A return is said not to work?
 			if (word != 0x00020000) {
-				LOG_TEST_CASE(LOG_PREFIX, "Pushbuffer COMMAND_FLAGS_RETURN with additional bits?!");
+				LOG_TEST_CASE("Pushbuffer COMMAND_FLAGS_RETURN with additional bits?!");
 				return; // For now, don't even attempt to run through
 			}
 			else {
-				LOG_TEST_CASE(LOG_PREFIX, "Pushbuffer COMMAND_FLAGS_RETURN");
+				LOG_TEST_CASE("Pushbuffer COMMAND_FLAGS_RETURN");
 			}
 
 			if (!subr_active) {
-				LOG_TEST_CASE(LOG_PREFIX, "Pushbuffer COMMAND_FLAGS_RETURN while another call was active!");
+				LOG_TEST_CASE("Pushbuffer COMMAND_FLAGS_RETURN while another call was active!");
 				// TODO : throw DMA_PUSHER(RET_SUBR_INACTIVE);
 				return; // For now, don't even attempt to run through
 			}
@@ -729,15 +729,15 @@ extern void XTL::EmuExecutePushBufferRaw
 			continue; // while
 		default:
 			if (command.flags == COMMAND_FLAGS_SLI_CONDITIONAL) {
-				LOG_TEST_CASE(LOG_PREFIX, "Pushbuffer COMMAND_FLAGS_SLI_CONDITIONAL (NV40+) not available on NV2A");
+				LOG_TEST_CASE("Pushbuffer COMMAND_FLAGS_SLI_CONDITIONAL (NV40+) not available on NV2A");
 			} else if (command.flags == COMMAND_FLAGS_LONG_NON_INCREASING_METHODS) {
-				LOG_TEST_CASE(LOG_PREFIX, "Pushbuffer COMMAND_FLAGS_LONG_NON_INCREASING_METHODS [IB-mode only] not available on NV2A");
+				LOG_TEST_CASE("Pushbuffer COMMAND_FLAGS_LONG_NON_INCREASING_METHODS [IB-mode only] not available on NV2A");
 				/// No need to do: dma_state.mthd = command.method; dma_state.ni = true;
 				/// dma_state.mcnt = *dma_get++ & 0x00FFFFFF; // Long NI method command count is read from low 24 bits of next word
 				/// dma_get += dma_state.mcnt; // To be safe, skip method data
 				/// continue;
 			} else {
-				LOG_TEST_CASE(LOG_PREFIX, "Pushbuffer COMMAND_FLAGS unknown");
+				LOG_TEST_CASE("Pushbuffer COMMAND_FLAGS unknown");
 			}
 
 			/// dma_get += command.method_count; // To be safe, skip method data

@@ -3396,7 +3396,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_GetViewportOffsetAndScale)
 		LOG_FUNC_ARG(pScale)
 		LOG_FUNC_END;
 
-	// LOG_TEST_CASE(LOG_PREFIX, "D3DDevice_GetViewportOffsetAndScale"); // Get us some test-cases
+	// LOG_TEST_CASE("D3DDevice_GetViewportOffsetAndScale"); // Get us some test-cases
 	// Test case : 007: From Russia with Love
 	// Test case : Army Men?: Sarge's War
 	// Test case : BeatDown - Fists of Vengeance
@@ -3507,7 +3507,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateVertexShader)
 		LOG_FUNC_END;
 
 	if (g_pD3DDevice == nullptr) {
-		LOG_TEST_CASE(LOG_PREFIX, "D3DDevice_CreateVertexShader called before Direct3D_CreateDevice");
+		LOG_TEST_CASE("D3DDevice_CreateVertexShader called before Direct3D_CreateDevice");
 		// We lie to allow the game to continue for now, but it probably won't work well
 		return STATUS_SUCCESS;
 	}
@@ -3945,16 +3945,16 @@ VOID __fastcall XTL::EMUPATCH(D3DDevice_SwitchTexture)
     }
 
     if (Stage == -1) {
-		LOG_TEST_CASE(LOG_PREFIX, "D3DDevice_SwitchTexture Unknown Method");
+		LOG_TEST_CASE("D3DDevice_SwitchTexture Unknown Method");
         EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Unknown Method (0x%.08X)", Method);
     }
     else {
 		// Switch Texture updates the data pointer of an active texture using pushbuffer commands
 		if (EmuD3DActiveTexture[Stage] == xbnullptr) {
-			LOG_TEST_CASE(LOG_PREFIX, "D3DDevice_SwitchTexture without an active texture");
+			LOG_TEST_CASE("D3DDevice_SwitchTexture without an active texture");
 		}
 		else {
-			//LOG_TEST_CASE(LOG_PREFIX, "Using CxbxActiveTextureCopies");
+			//LOG_TEST_CASE("Using CxbxActiveTextureCopies");
 			// See https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/issues/1159
 			// Test-case : Arena Football
 			// Test-case : Call of Duty 2: Big Red One
@@ -4121,7 +4121,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexData4f)
 		// Get the vertex shader flags (if any is active) :
 		uint32_t ActiveVertexAttributeFlags = 0;
 		if (VshHandleIsVertexShader(g_CurrentXboxVertexShaderHandle)) {
-			LOG_TEST_CASE(LOG_PREFIX, "D3DDevice_SetVertexData4f with active VertexShader");
+			LOG_TEST_CASE("D3DDevice_SetVertexData4f with active VertexShader");
 			X_D3DVertexShader *pXboxVertexShader = VshHandleToXboxVertexShader(g_CurrentXboxVertexShaderHandle);
 			if (!(pXboxVertexShader->Flags & 0x10/*=X_VERTEXSHADER_PROGRAM*/)) {
 				ActiveVertexAttributeFlags = pXboxVertexShader->Flags;
@@ -4649,7 +4649,7 @@ DWORD WINAPI XTL::EMUPATCH(D3DDevice_Swap)
 		if (g_OverlayProxy.Surface.Common) {
 			X_D3DFORMAT X_Format = GetXboxPixelContainerFormat(&g_OverlayProxy.Surface);
 			if (X_Format != X_D3DFMT_YUY2) {
-				LOG_TEST_CASE(LOG_PREFIX, "Xbox overlay surface isn't using X_D3DFMT_YUY2");
+				LOG_TEST_CASE("Xbox overlay surface isn't using X_D3DFMT_YUY2");
 			}
 
 			// Interpret the Xbox overlay data (depending the color space conversion render state)
@@ -4833,7 +4833,7 @@ void CreateHostResource(XTL::X_D3DResource *pResource, DWORD D3DUsage, int iText
 	VAddr VirtualAddr = (VAddr)GetDataFromXboxResource(pResource);
 	if ((VirtualAddr & ~PHYSICAL_MAP_BASE) == 0) {
 		// TODO: Fix or handle this situation..?
-		LOG_TEST_CASE(LOG_PREFIX, "CreateHostResource : VirtualAddr == 0");
+		LOG_TEST_CASE("CreateHostResource : VirtualAddr == 0");
 		// This is probably an unallocated resource, mapped into contiguous memory (0x80000000 OR 0xF0000000)
 		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "CreateHostResource :-> %s carries no data - skipping conversion", ResourceTypeName);
 		return;
@@ -5065,20 +5065,20 @@ void CreateHostResource(XTL::X_D3DResource *pResource, DWORD D3DUsage, int iText
 		CxbxGetPixelContainerMeasures(pPixelContainer, 0, &dwWidth, &dwHeight, &dwDepth, &dwRowPitch, &dwSlicePitch);
 
 		if (dwDepth != 1) {
-			LOG_TEST_CASE(LOG_PREFIX, "CreateHostResource : Depth != 1");
+			LOG_TEST_CASE("CreateHostResource : Depth != 1");
 		}
 
 		// The following is necessary for DXT* textures (4x4 blocks minimum)
 		// TODO: Figure out if this is necessary under other circumstances?
 		if (bCompressed) {
 			if (dwWidth < dwMinSize) {
-				LOG_TEST_CASE(LOG_PREFIX, "CreateHostResource : dwWidth < dwMinSize");
+				LOG_TEST_CASE("CreateHostResource : dwWidth < dwMinSize");
 				EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Expanding %s width (%d->%d)", ResourceTypeName, dwWidth, dwMinSize);
 				dwWidth = dwMinSize;
 			}
 
 			if (dwHeight < dwMinSize) {
-				LOG_TEST_CASE(LOG_PREFIX, "CreateHostResource : dwHeight < dwMinSize");
+				LOG_TEST_CASE("CreateHostResource : dwHeight < dwMinSize");
 				EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Expanding %s height (%d->%d)", ResourceTypeName, dwHeight, dwMinSize);
 				dwHeight = dwMinSize;
 			}
@@ -6403,7 +6403,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderState_VertexBlend)
     } else if(Value == 5) {
         Value = 3;
     } else {
-        LOG_TEST_CASE(LOG_PREFIX, "Unsupported D3DVERTEXBLENDFLAGS (%d)");
+        LOG_TEST_CASE("Unsupported D3DVERTEXBLENDFLAGS (%d)");
         return;
 	}
 
@@ -7304,7 +7304,7 @@ void XTL::CxbxDrawIndexed(CxbxDrawContext &DrawContext)
 		g_dwPrimPerFrame += DrawContext.dwHostPrimitiveCount;
 		if (DrawContext.XboxPrimitiveType == X_D3DPT_LINELOOP) {
 			// Close line-loops using a final single line, drawn from the end to the start vertex
-			LOG_TEST_CASE(LOG_PREFIX, "X_D3DPT_LINELOOP");
+			LOG_TEST_CASE("X_D3DPT_LINELOOP");
 			// Read the end and start index from the supplied index data
 			LowIndex = DrawContext.pIndexData[0];
 			HighIndex = DrawContext.pIndexData[DrawContext.dwHostPrimitiveCount];
@@ -7337,7 +7337,7 @@ void XTL::CxbxDrawPrimitiveUP(CxbxDrawContext &DrawContext)
 	CxbxVertexBufferConverter VertexBufferConverter = {};
 	VertexBufferConverter.Apply(&DrawContext);
 	if (DrawContext.XboxPrimitiveType == X_D3DPT_QUADLIST) {
-		// LOG_TEST_CASE(LOG_PREFIX, "X_D3DPT_QUADLIST"); // X-Marbles and XDK Sample PlayField hits this case
+		// LOG_TEST_CASE("X_D3DPT_QUADLIST"); // X-Marbles and XDK Sample PlayField hits this case
 		// Draw quadlists using a single 'quad-to-triangle mapping' index buffer :
 		INDEX16 *pIndexData = CxbxAssureQuadListIndexBuffer(DrawContext.dwVertexCount);
 		// Convert quad vertex-count to triangle vertex count :
@@ -7509,7 +7509,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawVertices)
 	// Dxbx Note : In DrawVertices and DrawIndexedVertices, PrimitiveType may not be D3DPT_POLYGON
 
 	if (!EmuD3DValidVertexCount(PrimitiveType, VertexCount)) {
-		LOG_TEST_CASE(LOG_PREFIX, "Invalid VertexCount");
+		LOG_TEST_CASE("Invalid VertexCount");
 		return;
 	}
 
@@ -7526,9 +7526,9 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawVertices)
 		CxbxVertexBufferConverter VertexBufferConverter = {};
 		VertexBufferConverter.Apply(&DrawContext);
 		if (DrawContext.XboxPrimitiveType == X_D3DPT_QUADLIST) {
-			// LOG_TEST_CASE(LOG_PREFIX, "X_D3DPT_QUADLIST"); // ?X-Marbles and XDK Sample (Cartoon, ?maybe PlayField?) hits this case
+			// LOG_TEST_CASE("X_D3DPT_QUADLIST"); // ?X-Marbles and XDK Sample (Cartoon, ?maybe PlayField?) hits this case
 			if (StartVertex > 0) {
-				LOG_TEST_CASE(LOG_PREFIX, "X_D3DPT_QUADLIST StartVertex > 0");
+				LOG_TEST_CASE("X_D3DPT_QUADLIST StartVertex > 0");
 				// test-case : BLiNX: the time sweeper
 				// test-case : Halo - Combat Evolved
 				// test-case : Worms 3D Special Edition
@@ -7559,7 +7559,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawVertices)
 			g_dwPrimPerFrame += primCount;
 		}
 		else {
-			// if (StartVertex > 0) LOG_TEST_CASE(LOG_PREFIX, "StartVertex > 0 (non-quad)"); // Verified test case : XDK Sample (PlayField)
+			// if (StartVertex > 0) LOG_TEST_CASE("StartVertex > 0 (non-quad)"); // Verified test case : XDK Sample (PlayField)
 			HRESULT hRet = g_pD3DDevice->DrawPrimitive(
 				EmuXB2PC_D3DPrimitiveType(DrawContext.XboxPrimitiveType),
 				DrawContext.dwStartVertex,
@@ -7570,7 +7570,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawVertices)
 			g_dwPrimPerFrame += DrawContext.dwHostPrimitiveCount;
 			if (DrawContext.XboxPrimitiveType == X_D3DPT_LINELOOP) {
 				// Close line-loops using a final single line, drawn from the end to the start vertex
-				LOG_TEST_CASE(LOG_PREFIX, "X_D3DPT_LINELOOP"); // TODO : Text-cases needed
+				LOG_TEST_CASE("X_D3DPT_LINELOOP"); // TODO : Text-cases needed
 				INDEX16 LowIndex = (INDEX16)DrawContext.dwStartVertex;
 				INDEX16 HighIndex = (INDEX16)(DrawContext.dwStartVertex + DrawContext.dwHostPrimitiveCount);
 				// Draw the closing line using a helper function (which will SetIndices)
@@ -7610,7 +7610,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawVerticesUP)
 		LOG_FUNC_END;
 
 	if (!EmuD3DValidVertexCount(PrimitiveType, VertexCount)) {
-		LOG_TEST_CASE(LOG_PREFIX, "Invalid VertexCount");
+		LOG_TEST_CASE("Invalid VertexCount");
 		return;
 	}
 
@@ -7662,7 +7662,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVertices)
 		LOG_FUNC_END;
 
 	if (!EmuD3DValidVertexCount(PrimitiveType, VertexCount)) {
-		LOG_TEST_CASE(LOG_PREFIX, "Invalid VertexCount");
+		LOG_TEST_CASE("Invalid VertexCount");
 		return;
 	}
 
@@ -7720,7 +7720,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVerticesUP)
 		LOG_FUNC_END;
 
 	if (!EmuD3DValidVertexCount(PrimitiveType, VertexCount)) {
-		LOG_TEST_CASE(LOG_PREFIX, "Invalid VertexCount");
+		LOG_TEST_CASE("Invalid VertexCount");
 		return;
 	}
 
@@ -7747,7 +7747,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVerticesUP)
 			// This is slower (because of call-overhead) but doesn't require any index buffer patching
 
 			// Draw 1 quad as a 2 triangles in a fan (which both have the same winding order) :
-			// LOG_TEST_CASE(LOG_PREFIX, "X_D3DPT_QUADLIST"); // Test-case : Buffy: The Vampire Slayer, FastLoad XDK Sample
+			// LOG_TEST_CASE("X_D3DPT_QUADLIST"); // Test-case : Buffy: The Vampire Slayer, FastLoad XDK Sample
 			INDEX16* pWalkIndexData = (INDEX16*)pIndexData;
 			int iNumVertices = (int)VertexCount;
 			while (iNumVertices >= VERTICES_PER_QUAD) {
@@ -7779,7 +7779,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVerticesUP)
 			INDEX16 LowIndex, HighIndex;
 			WalkIndexBuffer(LowIndex, HighIndex, (INDEX16*)pIndexData, DrawContext.dwVertexCount);
 
-			// LOG_TEST_CASE(LOG_PREFIX, "DrawIndexedPrimitiveUP"); // Test-case : Burnout, Namco Museum 50th Anniversary
+			// LOG_TEST_CASE("DrawIndexedPrimitiveUP"); // Test-case : Burnout, Namco Museum 50th Anniversary
 			HRESULT hRet = g_pD3DDevice->DrawIndexedPrimitiveUP(
 				EmuXB2PC_D3DPrimitiveType(DrawContext.XboxPrimitiveType),
 				LowIndex, // MinVertexIndex
@@ -7795,7 +7795,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVerticesUP)
 			g_dwPrimPerFrame += DrawContext.dwHostPrimitiveCount;
 			if (DrawContext.XboxPrimitiveType == X_D3DPT_LINELOOP) {
 				// Close line-loops using a final single line, drawn from the end to the start vertex
-				LOG_TEST_CASE(LOG_PREFIX, "X_D3DPT_LINELOOP"); // TODO : Which titles reach this case?
+				LOG_TEST_CASE("X_D3DPT_LINELOOP"); // TODO : Which titles reach this case?
 				// Read the end and start index from the supplied index data
 				LowIndex = ((INDEX16*)pIndexData)[0];
 				HighIndex = ((INDEX16*)pIndexData)[DrawContext.dwHostPrimitiveCount];
@@ -8035,7 +8035,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderTarget)
 		pRenderTarget = g_pXboxRenderTarget;
 		// If there's no Xbox render target yet, fallback to the Xbox back buffer
 		if (pRenderTarget == xbnullptr) {
-			LOG_TEST_CASE(LOG_PREFIX, "SetRenderTarget fallback to backbuffer");
+			LOG_TEST_CASE("SetRenderTarget fallback to backbuffer");
 			pRenderTarget = g_XboxBackBufferSurface;
 		}
     }
@@ -8282,7 +8282,7 @@ VOID __stdcall XTL::EMUPATCH(D3DDevice_DeleteVertexShader_0)
 		mov Handle, eax
 	}
 
-	LOG_TEST_CASE(LOG_PREFIX, "Validate this function!");
+	LOG_TEST_CASE("Validate this function!");
 	return EMUPATCH(D3DDevice_DeleteVertexShader)(Handle);
 }
 

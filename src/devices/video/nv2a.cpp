@@ -987,7 +987,7 @@ void cxbx_gl_render_overlays(NV2AState *d)
 
 		// Detect some special cases, for later finetuning
 		if (overlay_in_s != 0 || overlay_in_t != 0 || !overlay.covers_framebuffer) {
-			LOG_TEST_CASE(LOG_PREFIX, "Non-standard overlay dimensions");
+			LOG_TEST_CASE("Non-standard overlay dimensions");
 		}
 
 		// Convert UV coordinates to [0.0, 1.0]

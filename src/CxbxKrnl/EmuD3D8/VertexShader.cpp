@@ -897,7 +897,7 @@ static void VshWriteShader(VSH_XBOX_SHADER *pShader,
 					break;
 				default:
 					dclStream << "dcl_unknown ("<< (int)PCUsageIndex << ")";
-					LOG_TEST_CASE(LOG_PREFIX, "Encountered unknown declaration");
+					LOG_TEST_CASE("Encountered unknown declaration");
 					break;
 				}
 
@@ -1553,7 +1553,7 @@ static boolean VshConvertShader(VSH_XBOX_SHADER *pShader,
                     break;
                 case 15:
                 default:
-                    LOG_TEST_CASE(LOG_PREFIX, "rsq instruction with invalid swizzle");
+                    LOG_TEST_CASE("rsq instruction with invalid swizzle");
                     break;
                 }
             }
@@ -1590,7 +1590,7 @@ static boolean VshConvertShader(VSH_XBOX_SHADER *pShader,
 					break;
 				case 15:
 				default:
-					LOG_TEST_CASE(LOG_PREFIX, "exp instruction with invalid swizzle");
+					LOG_TEST_CASE("exp instruction with invalid swizzle");
 					break;
 				}
 			}
@@ -2509,7 +2509,7 @@ extern HRESULT XTL::EmuRecompileVshFunction
 		DWORD regNum = *pDeclToken & X_D3DVSD_VERTEXREGMASK;
 		if (regNum >= temporaryCount /*12*/) {
 			// Lego Star Wars hits this
-			LOG_TEST_CASE(LOG_PREFIX, "RegNum > 12");
+			LOG_TEST_CASE("RegNum > 12");
 			pDeclToken++;
 			continue;
 		}

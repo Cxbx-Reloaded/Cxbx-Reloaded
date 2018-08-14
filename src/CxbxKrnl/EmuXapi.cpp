@@ -1686,7 +1686,7 @@ DWORD WINAPI XTL::EMUPATCH(XGetLaunchInfo)
 	// For this, we need a test-case that hits this function, and run that
 	// with and without this patch enabled. Behavior should be identical.
 	// When this is verified, this patch can be removed.
-	LOG_TEST_CASE(LOG_PREFIX, "Unpatching test needed");
+	LOG_TEST_CASE("Unpatching test needed");
 
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pdwLaunchDataType)

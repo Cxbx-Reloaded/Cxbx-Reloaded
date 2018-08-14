@@ -2131,7 +2131,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_Process)
         //TODO: What to do with output buffer audio variable? Need test case or functional source code.
         // NOTE: pOutputBuffer is reserved, must be set to NULL from titles.
         if (pOutputBuffer != xbnullptr) {
-            LOG_TEST_CASE(LOG_PREFIX, "pOutputBuffer is not nullptr, please report title test case to issue tracker. Thanks!");
+            LOG_TEST_CASE("pOutputBuffer is not nullptr, please report title test case to issue tracker. Thanks!");
         }
 
     } else {

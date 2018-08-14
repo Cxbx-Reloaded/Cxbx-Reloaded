@@ -300,7 +300,7 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
 	if (bVshHandleIsFVF) {
 		DWORD dwTexN = (XboxFVF & D3DFVF_TEXCOUNT_MASK) >> D3DFVF_TEXCOUNT_SHIFT;
 		if (dwTexN > X_D3DTS_STAGECOUNT) {
-			LOG_TEST_CASE(LOG_PREFIX, "FVF,dwTexN > X_D3DTS_STAGECOUNT");
+			LOG_TEST_CASE("FVF,dwTexN > X_D3DTS_STAGECOUNT");
 		}
 
 		// Check for active linear textures.
@@ -620,7 +620,7 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
 				}
 				case X_D3DVSDT_NONE: { // 0x02: // Skip it
 					// Test-case : WWE RAW2
-					LOG_TEST_CASE(LOG_PREFIX, "X_D3DVSDT_NONE");
+					LOG_TEST_CASE("X_D3DVSDT_NONE");
 					break;
 				}
 				default: {
@@ -654,7 +654,7 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
 		if (bNeedTextureNormalization) {
 			uiTextureCoordinatesByteOffsetInVertex = XTL::DxbxFVFToVertexSizeInBytes(XboxFVF, /*bIncludeTextures=*/false);
 			if (bNeedVertexPatching) {
-				LOG_TEST_CASE(LOG_PREFIX, "Potential xbox vs host texture-offset difference! (bNeedVertexPatching within bNeedTextureNormalization)");
+				LOG_TEST_CASE("Potential xbox vs host texture-offset difference! (bNeedVertexPatching within bNeedTextureNormalization)");
 			}
 			// As long as vertices aren't resized / patched up until the texture coordinates,
 			// the uiTextureCoordinatesByteOffsetInVertex on host will match Xbox 
@@ -668,14 +668,14 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
 #if 0
 				// Check Z. TODO : Why reset Z from 0.0 to 1.0 ? (Maybe fog-related?)
 				if (pVertexDataAsFloat[2] == 0.0f) {
-					// LOG_TEST_CASE(LOG_PREFIX, "D3DFVF_XYZRHW (Z)"); // Test-case : Many XDK Samples (AlphaFog, PointSprites)
+					// LOG_TEST_CASE("D3DFVF_XYZRHW (Z)"); // Test-case : Many XDK Samples (AlphaFog, PointSprites)
 					pVertexDataAsFloat[2] = 1.0f;
 				}
 #endif
 #if 1
 				// Check RHW. TODO : Why reset from 0.0 to 1.0 ? (Maybe 1.0 indicates that the vertices are not to be transformed)
 				if (pVertexDataAsFloat[3] == 0.0f) {
-					// LOG_TEST_CASE(LOG_PREFIX, "D3DFVF_XYZRHW (RHW)"); // Test-case : Many XDK Samples (AlphaFog, PointSprites)
+					// LOG_TEST_CASE("D3DFVF_XYZRHW (RHW)"); // Test-case : Many XDK Samples (AlphaFog, PointSprites)
 					pVertexDataAsFloat[3] = 1.0f;
 				}
 #endif
@@ -688,10 +688,10 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
 					if (pActivePixelContainer[i].bTexIsLinear) {
 						switch (pActivePixelContainer[i].NrTexCoords) {
 						case 0:
-							LOG_TEST_CASE(LOG_PREFIX, "Normalize 0D?");
+							LOG_TEST_CASE("Normalize 0D?");
 							break;
 						case 1:
-							LOG_TEST_CASE(LOG_PREFIX, "Normalize 1D");
+							LOG_TEST_CASE("Normalize 1D");
 							pVertexUVData[0] /= pActivePixelContainer[i].Width;
 							break;
 						case 2:
@@ -699,14 +699,14 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
 							pVertexUVData[1] /= pActivePixelContainer[i].Height;
 							break;
 						case 3:
-							LOG_TEST_CASE(LOG_PREFIX, "Normalize 3D");
+							LOG_TEST_CASE("Normalize 3D");
 							// Test case : HeatShimmer
 							pVertexUVData[0] /= pActivePixelContainer[i].Width;
 							pVertexUVData[1] /= pActivePixelContainer[i].Height;
 							pVertexUVData[2] /= pActivePixelContainer[i].Depth;
 							break;
 						default:
-							LOG_TEST_CASE(LOG_PREFIX, "Normalize ?D");
+							LOG_TEST_CASE("Normalize ?D");
 							break;
 						}
 					}
@@ -790,7 +790,7 @@ void XTL::CxbxVertexBufferConverter::Apply(CxbxDrawContext *pDrawContext)
 		// Convex polygon is the same as a triangle fan.
 		// No need to set : pDrawContext->XboxPrimitiveType = X_D3DPT_TRIANGLEFAN;
 		// Test-case : Panzer Dragoon ORTA (when entering in-game)
-		LOG_TEST_CASE(LOG_PREFIX, "X_D3DPT_POLYGON");
+		LOG_TEST_CASE("X_D3DPT_POLYGON");
 	}
 }
 
