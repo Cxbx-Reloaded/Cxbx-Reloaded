@@ -246,7 +246,7 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreate)
 {
     FUNC_EXPORTS;
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pguidDeviceId)
 		LOG_FUNC_ARG_OUT(ppDirectSound)
 		LOG_FUNC_ARG(pUnknown)
@@ -379,7 +379,7 @@ ULONG WINAPI XTL::EMUPATCH(IDirectSound_AddRef)
 
     enterCriticalSection;
 
-	LOG_FUNC_ONE_ARG(LOG_PREFIX, pThis);
+	LOG_FUNC_ONE_ARG(pThis);
 
     ULONG uRet = g_pDSound8->AddRef();
 
@@ -401,7 +401,7 @@ ULONG WINAPI XTL::EMUPATCH(IDirectSound_Release)
 
     enterCriticalSection;
 
-	LOG_FUNC_ONE_ARG(LOG_PREFIX, pThis);
+	LOG_FUNC_ONE_ARG(pThis);
 
     ULONG uRet = g_pDSound8->Release();
     if (uRet == 0) {
@@ -426,7 +426,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSound_GetSpeakerConfig)
 
     enterCriticalSection;
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG_OUT(pdwSpeakerConfig)
 		LOG_FUNC_END;
@@ -447,7 +447,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound_SynchPlayback)
 {
     FUNC_EXPORTS;
 
-	LOG_FUNC_ONE_ARG(LOG_PREFIX, pThis);
+	LOG_FUNC_ONE_ARG(pThis);
 
     return XTL::EMUPATCH(CDirectSound_SynchPlayback)(pThis);
 }
@@ -467,7 +467,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound_DownloadEffectsImage)
 
     enterCriticalSection;
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(pvImageBuffer)
 		LOG_FUNC_ARG(dwImageSize)
@@ -477,7 +477,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound_DownloadEffectsImage)
 
     // This function is relative to DSP for Interactive 3-D Audio Level 2 (I3DL2)
 
-    LOG_NOT_SUPPORTED(LOG_PREFIX);
+    LOG_NOT_SUPPORTED();
 
     leaveCriticalSection;
 
@@ -497,7 +497,7 @@ VOID WINAPI XTL::EMUPATCH(DirectSoundDoWork)()
 
     enterCriticalSection;
 
-	LOG_FUNC(LOG_PREFIX);
+	LOG_FUNC();
 
     xboxkrnl::LARGE_INTEGER getTime;
     xboxkrnl::KeQuerySystemTime(&getTime);
@@ -597,7 +597,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound_SetOrientation)
 
     enterCriticalSection;
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(xFront)
 		LOG_FUNC_ARG(yFront)
@@ -636,7 +636,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound_SetDistanceFactor)
 {
     FUNC_EXPORTS;
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(fDistanceFactor)
 		LOG_FUNC_ARG(dwApply)
@@ -656,7 +656,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound_SetRolloffFactor)
 {
     FUNC_EXPORTS;
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(fRolloffFactor)
 		LOG_FUNC_ARG(dwApply)
@@ -676,7 +676,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound_SetDopplerFactor)
 {
     FUNC_EXPORTS;
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(fDopplerFactor)
 		LOG_FUNC_ARG(dwApply)
@@ -698,7 +698,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound_SetI3DL2Listener)
 
     enterCriticalSection;
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(pds3dl)
 		LOG_FUNC_ARG(dwApply)
@@ -706,7 +706,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound_SetI3DL2Listener)
 
     // This function is relative to DSP, although it needs SetFX from LPDIRECTSOUNDBUFFER8 or LPDIRECTSOUNDFXI3DL2REVERB8 class.
 
-    LOG_NOT_SUPPORTED(LOG_PREFIX);
+    LOG_NOT_SUPPORTED();
 
     leaveCriticalSection;
 
@@ -726,13 +726,13 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound_SetMixBinHeadroom)
 
     enterCriticalSection;
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(dwMixBinMask)
 		LOG_FUNC_ARG(dwHeadroom)
 		LOG_FUNC_END;
 
-    LOG_UNIMPLEMENTED(LOG_PREFIX);
+    LOG_UNIMPLEMENTED();
 
     leaveCriticalSection;
 
@@ -751,12 +751,12 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetMixBins)
 
     enterCriticalSection;
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(pMixBins)
 		LOG_FUNC_END;
 
-    LOG_UNIMPLEMENTED(LOG_PREFIX);
+    LOG_UNIMPLEMENTED();
 
     leaveCriticalSection;
 
@@ -777,7 +777,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetMixBinVolumes_12)
 
     enterCriticalSection;
 
-    LOG_FUNC_BEGIN(LOG_PREFIX)
+    LOG_FUNC_BEGIN
         LOG_FUNC_ARG(pThis)
         LOG_FUNC_ARG(dwMixBinMask)
         LOG_FUNC_ARG(alVolumes)
@@ -786,7 +786,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetMixBinVolumes_12)
     // NOTE: Use this function for XDK 3911 only because the implementation was changed
     // somewhere around the December 2001 (4134) update (or earlier, maybe).
 
-    LOG_UNIMPLEMENTED(LOG_PREFIX);
+    LOG_UNIMPLEMENTED();
 
     leaveCriticalSection;
 
@@ -804,7 +804,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetMixBinVolumes_8)
 {
     FUNC_EXPORTS;
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(pMixBins)
 		LOG_FUNC_END;
@@ -827,7 +827,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound_SetPosition)
 
     enterCriticalSection;
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(x)
 		LOG_FUNC_ARG(y)
@@ -857,7 +857,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound_SetVelocity)
 
     enterCriticalSection;
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(x)
 		LOG_FUNC_ARG(y)
@@ -886,7 +886,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound_SetAllParameters)
 
     enterCriticalSection;
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(pDS3DListenerParameters)
 		LOG_FUNC_ARG(dwApply)
@@ -910,7 +910,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSound_CommitDeferredSettings)
 
     enterCriticalSection;
 
-	LOG_FUNC_ONE_ARG(LOG_PREFIX, pThis);
+	LOG_FUNC_ONE_ARG(pThis);
 
     HRESULT hRet = g_pDSoundPrimary3DListener8->CommitDeferredSettings();
 
@@ -941,7 +941,7 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateBuffer)
 
     enterCriticalSection;
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pdsbd)
 		LOG_FUNC_ARG_OUT(ppBuffer)
 		LOG_FUNC_END;
@@ -1018,7 +1018,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound_CreateSoundBuffer)
 {
     FUNC_EXPORTS;
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(pdsbd)
 		LOG_FUNC_ARG_OUT(ppBuffer)
@@ -1041,7 +1041,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetBufferData)
 
     enterCriticalSection;
 
-    LOG_FUNC_BEGIN(LOG_PREFIX)
+    LOG_FUNC_BEGIN
         LOG_FUNC_ARG(pThis)
         LOG_FUNC_ARG(pvBufferData)
         LOG_FUNC_ARG(dwBufferBytes)
@@ -1130,7 +1130,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetPlayRegion)
 
     enterCriticalSection;
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(dwPlayStart)
 		LOG_FUNC_ARG(dwPlayLength)
@@ -1183,7 +1183,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Lock)
 
     enterCriticalSection;
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(dwOffset)
 		LOG_FUNC_ARG(dwBytes)
@@ -1257,7 +1257,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Unlock)
 
     enterCriticalSection;
 
-    LOG_FUNC_BEGIN(LOG_PREFIX)
+    LOG_FUNC_BEGIN
         LOG_FUNC_ARG(pThis)
         LOG_FUNC_ARG(ppvAudioPtr1)
         LOG_FUNC_ARG(pdwAudioBytes1)
@@ -1302,7 +1302,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetHeadroom)
 {
     FUNC_EXPORTS;
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(dwHeadroom)
 		LOG_FUNC_END;
@@ -1324,7 +1324,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetLoopRegion)
 
     enterCriticalSection;
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(dwLoopStart)
 		LOG_FUNC_ARG(dwLoopLength)
@@ -1366,7 +1366,7 @@ ULONG WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Release)
 
     enterCriticalSection;
 
-	LOG_FUNC_ONE_ARG(LOG_PREFIX, pThis);
+	LOG_FUNC_ONE_ARG(pThis);
 
     ULONG uRet = 0;
 
@@ -1411,7 +1411,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetPitch)
 {
     FUNC_EXPORTS;
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(lPitch)
 		LOG_FUNC_END;
@@ -1431,7 +1431,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_GetStatus)
 
     enterCriticalSection;
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG_OUT(pdwStatus)
 		LOG_FUNC_END;
@@ -1474,7 +1474,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetCurrentPosition)
 
     enterCriticalSection;
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(dwNewPosition)
 		LOG_FUNC_END;
@@ -1504,7 +1504,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_GetCurrentPosition)
 {
     FUNC_EXPORTS;
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG_OUT(pdwCurrentPlayCursor)
 		LOG_FUNC_ARG_OUT(pdwCurrentWriteCursor)
@@ -1527,7 +1527,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Play)
 
     enterCriticalSection;
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(dwReserved1)
 		LOG_FUNC_ARG(dwReserved2)
@@ -1591,7 +1591,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Stop)
 
     enterCriticalSection;
 
-	LOG_FUNC_ONE_ARG(LOG_PREFIX, pThis);
+	LOG_FUNC_ONE_ARG(pThis);
 
     HRESULT hRet = D3D_OK;
 
@@ -1619,7 +1619,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_StopEx)
 
     enterCriticalSection;
 
-    LOG_FUNC_BEGIN(LOG_PREFIX)
+    LOG_FUNC_BEGIN
         LOG_FUNC_ARG(pThis)
         LOG_FUNC_ARG(rtTimeStamp)
         LOG_FUNC_ARG(dwFlags)
@@ -1694,7 +1694,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetVolume)
 {
     FUNC_EXPORTS;
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(lVolume)
 		LOG_FUNC_END;
@@ -1713,7 +1713,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetFrequency)
 {
     FUNC_EXPORTS;
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(dwFrequency)
 		LOG_FUNC_END;
@@ -1743,7 +1743,7 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateStream)
 
     enterCriticalSection;
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pdssd)
 		LOG_FUNC_ARG_OUT(ppStream)
 		LOG_FUNC_END;
@@ -1832,7 +1832,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound_CreateSoundStream)
 {
     FUNC_EXPORTS;
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(pdssd)
 		LOG_FUNC_ARG_OUT(ppStream)
@@ -1851,7 +1851,7 @@ VOID WINAPI XTL::EMUPATCH(CMcpxStream_Dummy_0x10)(DWORD dwDummy1, DWORD dwDummy2
 
     enterCriticalSection;
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(dwDummy1)
 		LOG_FUNC_ARG(dwDummy2)
 		LOG_FUNC_END;
@@ -1875,7 +1875,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetVolume)
 {
     FUNC_EXPORTS;
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(lVolume)
 		LOG_FUNC_END;
@@ -1897,7 +1897,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetRolloffFactor)
 
     enterCriticalSection;
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(fRolloffFactor)
 		LOG_FUNC_ARG(dwApply)
@@ -1905,7 +1905,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetRolloffFactor)
 
     // NOTE: SetRolloffFactor is only supported for host primary buffer's 3D Listener.
 
-    LOG_UNIMPLEMENTED(LOG_PREFIX);
+    LOG_UNIMPLEMENTED();
 
     leaveCriticalSection;
 
@@ -1921,7 +1921,7 @@ ULONG WINAPI XTL::EMUPATCH(CDirectSoundStream_AddRef)
 {
     FUNC_EXPORTS;
 
-	LOG_FUNC_ONE_ARG(LOG_PREFIX, pThis);
+	LOG_FUNC_ONE_ARG(pThis);
 
     return HybridDirectSoundBuffer_AddRef(pThis->EmuDirectSoundBuffer8);
 }
@@ -1937,7 +1937,7 @@ ULONG WINAPI XTL::EMUPATCH(CDirectSoundStream_Release)
 
     enterCriticalSection;
 
-	LOG_FUNC_ONE_ARG(LOG_PREFIX, pThis);
+	LOG_FUNC_ONE_ARG(pThis);
 
     ULONG uRet = 0;
     if (pThis != 0 && (pThis->EmuDirectSoundBuffer8 != 0)) {
@@ -1984,7 +1984,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_GetInfo)
 
     enterCriticalSection;
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG_OUT(pInfo)
 		LOG_FUNC_END;
@@ -2016,7 +2016,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_GetStatus)
 
     enterCriticalSection;
 
-    LOG_FUNC_BEGIN(LOG_PREFIX)
+    LOG_FUNC_BEGIN
         LOG_FUNC_ARG(pThis)
         LOG_FUNC_ARG_OUT(pdwStatus)
         LOG_FUNC_END;
@@ -2075,7 +2075,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_Process)
 
     enterCriticalSection;
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(pInputBuffer)
 		LOG_FUNC_ARG(pOutputBuffer)
@@ -2156,7 +2156,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_Discontinuity)
 
     enterCriticalSection;
 
-	LOG_FUNC_ONE_ARG(LOG_PREFIX, pThis);
+	LOG_FUNC_ONE_ARG(pThis);
 
     // NOTE: Perform check if has pending data. if so, stop stream.
     // default ret = DSERR_GENERIC
@@ -2190,7 +2190,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_Flush)
 
     enterCriticalSection;
 
-	LOG_FUNC_ONE_ARG(LOG_PREFIX, pThis);
+	LOG_FUNC_ONE_ARG(pThis);
 
     DSoundBufferSynchPlaybackFlagRemove(pThis->EmuFlags);
 
@@ -2216,7 +2216,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSound_SynchPlayback)
 
     enterCriticalSection;
 
-	LOG_FUNC_ONE_ARG(LOG_PREFIX, pThis);
+	LOG_FUNC_ONE_ARG(pThis);
 
     //TODO: Test case Rayman 3 - Hoodlum Havoc, Battlestar Galactica, Miami Vice, and ...?
 
@@ -2258,7 +2258,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_Pause)
 {
     FUNC_EXPORTS;
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(dwPause)
 		LOG_FUNC_END;
@@ -2277,7 +2277,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetHeadroom)
 {
     FUNC_EXPORTS;
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(dwHeadroom)
 		LOG_FUNC_END;
@@ -2298,7 +2298,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetConeAngles)
 {
     FUNC_EXPORTS;
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(dwInsideConeAngle)
 		LOG_FUNC_ARG(dwOutsideConeAngle)
@@ -2319,7 +2319,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetConeOutsideVolume)
 {
     FUNC_EXPORTS;
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(lConeOutsideVolume)
 		LOG_FUNC_ARG(dwApply)
@@ -2339,7 +2339,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetAllParameters)
 {
     FUNC_EXPORTS;
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(pc3DBufferParameters)
 		LOG_FUNC_ARG(dwApply)
@@ -2359,7 +2359,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetMaxDistance)
 {
     FUNC_EXPORTS;
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(flMaxDistance)
 		LOG_FUNC_ARG(dwApply)
@@ -2379,7 +2379,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetMinDistance)
 {
     FUNC_EXPORTS;
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(fMinDistance)
 		LOG_FUNC_ARG(dwApply)
@@ -2401,7 +2401,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetVelocity)
 {
     FUNC_EXPORTS;
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(x)
 		LOG_FUNC_ARG(y)
@@ -2425,7 +2425,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetConeOrientation)
 {
     FUNC_EXPORTS;
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(x)
 		LOG_FUNC_ARG(y)
@@ -2449,7 +2449,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetPosition)
 {
     FUNC_EXPORTS;
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(x)
 		LOG_FUNC_ARG(y)
@@ -2470,7 +2470,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetFrequency)
 {
     FUNC_EXPORTS;
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(dwFrequency)
 		LOG_FUNC_END;
@@ -2490,12 +2490,12 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetMixBins)
 
     enterCriticalSection;
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(pMixBins)
 		LOG_FUNC_END;
 
-    LOG_UNIMPLEMENTED(LOG_PREFIX);
+    LOG_UNIMPLEMENTED();
 
     leaveCriticalSection;
 
@@ -2514,7 +2514,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetMaxDistance)
 {
     FUNC_EXPORTS;
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(flMaxDistance)
 		LOG_FUNC_ARG(dwApply)
@@ -2534,7 +2534,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetMinDistance)
 {
     FUNC_EXPORTS;
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(flMinDistance)
 		LOG_FUNC_ARG(dwApply)
@@ -2556,7 +2556,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetRolloffFactor)
 
     enterCriticalSection;
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(flRolloffFactor)
 		LOG_FUNC_ARG(dwApply)
@@ -2564,7 +2564,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetRolloffFactor)
 
     // NOTE: SetRolloffFactor is only supported for host primary buffer's 3D Listener.
 
-    LOG_UNIMPLEMENTED(LOG_PREFIX);
+    LOG_UNIMPLEMENTED();
 
     leaveCriticalSection;
 
@@ -2584,7 +2584,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetDistanceFactor)
 
     enterCriticalSection;
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(flDistanceFactor)
 		LOG_FUNC_ARG(dwApply)
@@ -2607,7 +2607,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetConeAngles)
 {
     FUNC_EXPORTS;
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(dwInsideConeAngle)
 		LOG_FUNC_ARG(dwOutsideConeAngle)
@@ -2630,7 +2630,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetConeOrientation)
 {
     FUNC_EXPORTS;
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(x)
 		LOG_FUNC_ARG(y)
@@ -2652,7 +2652,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetConeOutsideVolume)
 {
     FUNC_EXPORTS;
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(lConeOutsideVolume)
 		LOG_FUNC_ARG(dwApply)
@@ -2674,7 +2674,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetPosition)
 {
     FUNC_EXPORTS;
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(x)
 		LOG_FUNC_ARG(y)
@@ -2698,7 +2698,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetVelocity)
 {
     FUNC_EXPORTS;
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(x)
 		LOG_FUNC_ARG(y)
@@ -2720,7 +2720,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetDopplerFactor)
 {
     FUNC_EXPORTS;
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(flDopplerFactor)
 		LOG_FUNC_ARG(dwApply)
@@ -2742,7 +2742,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetI3DL2Source)
 
     enterCriticalSection;
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(pds3db)
 		LOG_FUNC_ARG(dwApply)
@@ -2752,7 +2752,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetI3DL2Source)
 
     // NOTE: DSP relative function
 
-    LOG_NOT_SUPPORTED(LOG_PREFIX);
+    LOG_NOT_SUPPORTED();
 
     leaveCriticalSection;
 
@@ -2770,7 +2770,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetMode)
 {
     FUNC_EXPORTS;
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(dwMode)
 		LOG_FUNC_ARG(dwApply)
@@ -2792,7 +2792,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetFormat)
 
     enterCriticalSection;
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(pwfxFormat)
 		LOG_FUNC_END;
@@ -2818,9 +2818,9 @@ void WINAPI XTL::EMUPATCH(DirectSoundUseFullHRTF)
 
     //NOTE: enter/leave criticalsection is not required! Titles are calling it before DirectSoundCreate.
 
-	LOG_FUNC(LOG_PREFIX);
+	LOG_FUNC();
 
-    LOG_IGNORED(LOG_PREFIX);
+    LOG_IGNORED();
 }
 
 // ******************************************************************
@@ -2834,9 +2834,9 @@ void WINAPI XTL::EMUPATCH(DirectSoundUseLightHRTF)
 
     //NOTE: enter/leave criticalsection is not required! Titles are calling it before DirectSoundCreate.
 
-	LOG_FUNC(LOG_PREFIX);
+	LOG_FUNC();
 
-    LOG_IGNORED(LOG_PREFIX);
+    LOG_IGNORED();
 }
 
 // ******************************************************************
@@ -2850,9 +2850,9 @@ void WINAPI XTL::EMUPATCH(DirectSoundUseFullHRTF4Channel)
 
     //NOTE: enter/leave criticalsection is not required! Titles are calling it before DirectSoundCreate.
 
-	LOG_FUNC(LOG_PREFIX);
+	LOG_FUNC();
 
-    LOG_IGNORED(LOG_PREFIX);
+    LOG_IGNORED();
 }
 
 // ******************************************************************
@@ -2866,9 +2866,9 @@ void WINAPI XTL::EMUPATCH(DirectSoundUseLightHRTF4Channel)
 
     //NOTE: enter/leave criticalsection is not required! Titles are calling it before DirectSoundCreate.
 
-	LOG_FUNC(LOG_PREFIX);
+	LOG_FUNC();
 
-    LOG_IGNORED(LOG_PREFIX);
+    LOG_IGNORED();
 }
 
 // ******************************************************************
@@ -2883,14 +2883,14 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetLFO) //Low Frequency Oscillat
 
     enterCriticalSection;
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(pLFODesc)
 		LOG_FUNC_END;
 
     // NOTE: DSP relative function
 
-    LOG_NOT_SUPPORTED(LOG_PREFIX);
+    LOG_NOT_SUPPORTED();
 
     leaveCriticalSection;
 
@@ -2909,14 +2909,14 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetLFO)
 
     enterCriticalSection;
 
-    LOG_FUNC_BEGIN(LOG_PREFIX)
+    LOG_FUNC_BEGIN
         LOG_FUNC_ARG(pThis)
         LOG_FUNC_ARG(pLFODesc)
         LOG_FUNC_END;
 
     // NOTE: DSP relative function
 
-    LOG_NOT_SUPPORTED(LOG_PREFIX);
+    LOG_NOT_SUPPORTED();
 
     leaveCriticalSection;
 
@@ -2936,7 +2936,7 @@ VOID WINAPI XTL::EMUPATCH(XAudioCreateAdpcmFormat)
 
     enterCriticalSection;
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(nChannels)
 		LOG_FUNC_ARG(nSamplesPerSec)
 		LOG_FUNC_ARG(pwfx)
@@ -2969,7 +2969,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetRolloffCurve)
 
     enterCriticalSection;
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(pflPoints)
 		LOG_FUNC_ARG(dwPointCount)
@@ -2978,7 +2978,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetRolloffCurve)
 
     // NOTE: Individual 3D buffer function.
 
-    LOG_NOT_SUPPORTED(LOG_PREFIX);
+    LOG_NOT_SUPPORTED();
 
     leaveCriticalSection;
 
@@ -2998,7 +2998,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound_EnableHeadphones)
 
     enterCriticalSection;
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(fEnabled)
 		LOG_FUNC_END;
@@ -3020,7 +3020,7 @@ ULONG WINAPI XTL::EMUPATCH(IDirectSoundBuffer_AddRef)
 {
     FUNC_EXPORTS;
 
-	LOG_FUNC_ONE_ARG(LOG_PREFIX, pThis);
+	LOG_FUNC_ONE_ARG(pThis);
 
     return HybridDirectSoundBuffer_AddRef(pThis->EmuDirectSoundBuffer8);
 }
@@ -3036,7 +3036,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Pause)
 {
     FUNC_EXPORTS;
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(dwPause)
 		LOG_FUNC_END;
@@ -3068,7 +3068,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_PauseEx)
 
         enterCriticalSection;
 
-        LOG_FUNC_BEGIN(LOG_PREFIX)
+        LOG_FUNC_BEGIN
             LOG_FUNC_ARG(pThis)
             LOG_FUNC_ARG(rtTimestamp)
             LOG_FUNC_ARG(dwPause)
@@ -3095,7 +3095,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound_GetOutputLevels)
 
     enterCriticalSection;
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG_OUT(pOutputLevels)
 		LOG_FUNC_ARG(bResetPeakValues)
@@ -3105,7 +3105,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound_GetOutputLevels)
 
     // NOTE: It ask for access to real time output (require capture device I believe).
 
-    LOG_NOT_SUPPORTED(LOG_PREFIX);
+    LOG_NOT_SUPPORTED();
 
     leaveCriticalSection;
 
@@ -3124,14 +3124,14 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetEG)
 
     enterCriticalSection;
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(pEnvelopeDesc)
 		LOG_FUNC_END;
 
     // NOTE: DSP relative function
 
-    LOG_NOT_SUPPORTED(LOG_PREFIX);
+    LOG_NOT_SUPPORTED();
 
     leaveCriticalSection;
 
@@ -3151,7 +3151,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_FlushEx)
 
     enterCriticalSection;
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(rtTimeStamp)
 		LOG_FUNC_ARG(dwFlags)
@@ -3199,7 +3199,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetMode)
 {
     FUNC_EXPORTS;
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(dwMode)
 		LOG_FUNC_ARG(dwApply)
@@ -3222,14 +3222,14 @@ HRESULT WINAPI XTL::EMUPATCH(XAudioDownloadEffectsImage)
 
     enterCriticalSection;
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pszImageName)
 		LOG_FUNC_ARG(pImageLoc)
 		LOG_FUNC_ARG(dwFlags)
 		LOG_FUNC_ARG(ppImageDesc)
 		LOG_FUNC_END;
 
-	LOG_NOT_SUPPORTED(LOG_PREFIX);
+	LOG_NOT_SUPPORTED();
 
     leaveCriticalSection;
 
@@ -3248,14 +3248,14 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetFilter)
 
     enterCriticalSection;
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(pFilterDesc)
 		LOG_FUNC_END;
 
     // NOTE: DSP relative function
 
-    LOG_NOT_SUPPORTED(LOG_PREFIX);
+    LOG_NOT_SUPPORTED();
 
     leaveCriticalSection;
 
@@ -3274,14 +3274,14 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetFilter)
 
     enterCriticalSection;
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(pFilterDesc)
 		LOG_FUNC_END;
 
     // NOTE: DSP relative function
 
-    LOG_NOT_SUPPORTED(LOG_PREFIX);
+    LOG_NOT_SUPPORTED();
 
     leaveCriticalSection;
 
@@ -3302,7 +3302,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_PlayEx)
 
     enterCriticalSection;
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(rtTimeStamp)
 		LOG_FUNC_ARG(dwFlags)
@@ -3332,7 +3332,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound_GetCaps)
 
     enterCriticalSection;
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG_OUT(pDSCaps)
 		LOG_FUNC_END;
@@ -3365,7 +3365,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetPitch)
 {
     FUNC_EXPORTS;
 
-    LOG_FUNC_BEGIN(LOG_PREFIX)
+    LOG_FUNC_BEGIN
         LOG_FUNC_ARG(pThis)
         LOG_FUNC_ARG(lPitch)
         LOG_FUNC_END;
@@ -3382,7 +3382,7 @@ DWORD WINAPI XTL::EMUPATCH(DirectSoundGetSampleTime)()
 
     enterCriticalSection;
 
-	LOG_FUNC(LOG_PREFIX);
+	LOG_FUNC();
 
 	DWORD dwRet = GetAPUTime();
 
@@ -3405,7 +3405,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetMixBinVolumes_12)
 
     enterCriticalSection;
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(dwMixBinMask)
 		LOG_FUNC_ARG(alVolumes)
@@ -3414,7 +3414,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetMixBinVolumes_12)
     // NOTE: Use this function for XDK 3911 only because the implementation was changed
     // somewhere around the March 2002 (4361) update (or earlier, maybe).
 
-    LOG_UNIMPLEMENTED(LOG_PREFIX);
+    LOG_UNIMPLEMENTED();
 
     leaveCriticalSection;
 
@@ -3432,7 +3432,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetMixBinVolumes_8)
 {
     FUNC_EXPORTS;
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(pMixBins)
 		LOG_FUNC_END;
@@ -3453,7 +3453,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetI3DL2Source)
 
     enterCriticalSection;
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(pds3db)
 		LOG_FUNC_ARG(dwApply)
@@ -3463,7 +3463,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetI3DL2Source)
 
     // NOTE: DSP relative function
 
-    LOG_NOT_SUPPORTED(LOG_PREFIX);
+    LOG_NOT_SUPPORTED();
 
     leaveCriticalSection;
 
@@ -3481,7 +3481,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetAllParameters)
 {
     FUNC_EXPORTS;
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(pc3DBufferParameters)
 		LOG_FUNC_ARG(dwApply)
@@ -3502,7 +3502,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetFormat)
 
     enterCriticalSection;
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(pwfxFormat)
 		LOG_FUNC_END;
@@ -3536,7 +3536,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetOutputBuffer)
 
     enterCriticalSection;
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(pOutputBuffer)
 		LOG_FUNC_END;
@@ -3545,7 +3545,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetOutputBuffer)
     // Test case: MultiPass sample
     // Best to emulate this LLE instead of HLE.
 
-    LOG_NOT_SUPPORTED(LOG_PREFIX);
+    LOG_NOT_SUPPORTED();
 
     leaveCriticalSection;
 
@@ -3564,7 +3564,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetOutputBuffer)
 
     enterCriticalSection;
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(pOutputBuffer)
 		LOG_FUNC_END;
@@ -3573,7 +3573,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetOutputBuffer)
     // Test case: Red Faction 2
     // Best to emulate this LLE instead of HLE.
 
-    LOG_NOT_SUPPORTED(LOG_PREFIX);
+    LOG_NOT_SUPPORTED();
 
     leaveCriticalSection;
 
@@ -3592,12 +3592,12 @@ HRESULT WINAPI XTL::EMUPATCH(XFileCreateMediaObjectEx)
 
     enterCriticalSection;
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(hFile)
 		LOG_FUNC_ARG_OUT(ppMediaObject)
 		LOG_FUNC_END;
 
-    LOG_UNIMPLEMENTED(LOG_PREFIX);
+    LOG_UNIMPLEMENTED();
 
     leaveCriticalSection;
 
@@ -3618,13 +3618,13 @@ HRESULT WINAPI XTL::EMUPATCH(XWaveFileCreateMediaObject)
 
     enterCriticalSection;
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pszFileName)
 		LOG_FUNC_ARG(ppwfxFormat)
 		LOG_FUNC_ARG_OUT(ppMediaObject)
 		LOG_FUNC_END;
 
-    LOG_UNIMPLEMENTED(LOG_PREFIX);
+    LOG_UNIMPLEMENTED();
 
     leaveCriticalSection;
 
@@ -3643,14 +3643,14 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetEG)
 
     enterCriticalSection;
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(pEnvelopeDesc)
 		LOG_FUNC_END;
 
     // NOTE: DSP relative function
 
-    LOG_NOT_SUPPORTED(LOG_PREFIX);
+    LOG_NOT_SUPPORTED();
 
     leaveCriticalSection;
 
@@ -3672,7 +3672,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound_GetEffectData)
 
     enterCriticalSection;
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(dwEffectIndex)
 		LOG_FUNC_ARG(dwOffset)
@@ -3682,7 +3682,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound_GetEffectData)
 
     // NOTE: DSP relative function
 
-    LOG_NOT_SUPPORTED(LOG_PREFIX);
+    LOG_NOT_SUPPORTED();
 
     /* RadWolfie: Should not allocate memory, xbox xbe is just asking for input data, not allocate then input data...
     if (!pvData) {
@@ -3707,7 +3707,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetNotificationPositions)
 
     enterCriticalSection;
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(dwNotifyCount)
 		LOG_FUNC_ARG(paNotifies)
@@ -3757,14 +3757,14 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetRolloffCurve)
 
     enterCriticalSection;
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(pflPoints)
 		LOG_FUNC_ARG(dwPointCount)
 		LOG_FUNC_ARG(dwApply)
 		LOG_FUNC_END;
 
-    LOG_UNIMPLEMENTED(LOG_PREFIX);
+    LOG_UNIMPLEMENTED();
 
     leaveCriticalSection;
 
@@ -3787,7 +3787,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound_SetEffectData)
 
     enterCriticalSection;
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(dwEffectIndex)
 		LOG_FUNC_ARG(dwOffset)
@@ -3798,7 +3798,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound_SetEffectData)
 
     // NOTE: DSP relative function
 
-    LOG_NOT_SUPPORTED(LOG_PREFIX);
+    LOG_NOT_SUPPORTED();
 
     leaveCriticalSection;
 
@@ -3817,12 +3817,12 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Use3DVoiceData)
 
     enterCriticalSection;
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(pUnknown)
 		LOG_FUNC_END;
 
-    LOG_NOT_SUPPORTED(LOG_PREFIX);
+    LOG_NOT_SUPPORTED();
 
     leaveCriticalSection;
 
@@ -3843,13 +3843,13 @@ HRESULT WINAPI XTL::EMUPATCH(XFileCreateMediaObjectAsync)
 
     enterCriticalSection;
 
-    LOG_FUNC_BEGIN(LOG_PREFIX)
+    LOG_FUNC_BEGIN
         LOG_FUNC_ARG(hFile)
         LOG_FUNC_ARG(dwMaxPackets)
         LOG_FUNC_ARG_OUT(ppMediaObject)
         LOG_FUNC_END;
 
-    LOG_UNIMPLEMENTED(LOG_PREFIX);
+    LOG_UNIMPLEMENTED();
 
     *ppMediaObject = new X_XFileMediaObject();
 
@@ -3873,14 +3873,14 @@ HRESULT WINAPI XTL::EMUPATCH(XFileMediaObject_Seek)
 
     enterCriticalSection;
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(lOffset)
 		LOG_FUNC_ARG(dwOrigin)
 		LOG_FUNC_ARG(pdwAbsolute)
 		LOG_FUNC_END;
 
-    LOG_UNIMPLEMENTED(LOG_PREFIX);
+    LOG_UNIMPLEMENTED();
 
     leaveCriticalSection;
 
@@ -3897,9 +3897,9 @@ VOID WINAPI XTL::EMUPATCH(XFileMediaObject_DoWork)(X_XFileMediaObject* pThis)
 
     enterCriticalSection;
 
-	LOG_FUNC_ONE_ARG(LOG_PREFIX, pThis);
+	LOG_FUNC_ONE_ARG(pThis);
 
-    LOG_UNIMPLEMENTED(LOG_PREFIX);
+    LOG_UNIMPLEMENTED();
 
     leaveCriticalSection;
 }
@@ -3917,12 +3917,12 @@ HRESULT WINAPI XTL::EMUPATCH(XFileMediaObject_GetStatus)
 
     enterCriticalSection;
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG_OUT(pdwStatus)
 		LOG_FUNC_END;
 
-    LOG_UNIMPLEMENTED(LOG_PREFIX);
+    LOG_UNIMPLEMENTED();
 
     leaveCriticalSection;
 
@@ -3942,12 +3942,12 @@ HRESULT WINAPI XTL::EMUPATCH(XFileMediaObject_GetInfo)
 
     enterCriticalSection;
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG_OUT(pInfo)
 		LOG_FUNC_END;
 
-    LOG_UNIMPLEMENTED(LOG_PREFIX);
+    LOG_UNIMPLEMENTED();
 
     leaveCriticalSection;
 
@@ -3968,13 +3968,13 @@ HRESULT WINAPI XTL::EMUPATCH(XFileMediaObject_Process)
 
     enterCriticalSection;
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(pInputBuffer)
 		LOG_FUNC_ARG(pOutputBuffer)
 		LOG_FUNC_END;
 
-    LOG_UNIMPLEMENTED(LOG_PREFIX);
+    LOG_UNIMPLEMENTED();
 
     leaveCriticalSection;
 
@@ -3993,7 +3993,7 @@ ULONG WINAPI XTL::EMUPATCH(XFileMediaObject_AddRef)
 
     enterCriticalSection;
 
-	LOG_FUNC_ONE_ARG(LOG_PREFIX, pThis);
+	LOG_FUNC_ONE_ARG(pThis);
 
     ULONG Ret = 0;
 
@@ -4018,7 +4018,7 @@ ULONG WINAPI XTL::EMUPATCH(XFileMediaObject_Release)
 
     enterCriticalSection;
 
-	LOG_FUNC_ONE_ARG(LOG_PREFIX, pThis);
+	LOG_FUNC_ONE_ARG(pThis);
 
     ULONG Ret = 0;
 
@@ -4046,9 +4046,9 @@ HRESULT WINAPI XTL::EMUPATCH(XFileMediaObject_Discontinuity)
 
     enterCriticalSection;
 
-	LOG_FUNC_ONE_ARG(LOG_PREFIX, pThis);
+	LOG_FUNC_ONE_ARG(pThis);
 
-	LOG_UNIMPLEMENTED(LOG_PREFIX);
+	LOG_UNIMPLEMENTED();
 
     leaveCriticalSection;
 
@@ -4067,7 +4067,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound_GetSpeakerConfig)
 
     enterCriticalSection;
 
-    LOG_FUNC_BEGIN(LOG_PREFIX)
+    LOG_FUNC_BEGIN
         LOG_FUNC_ARG(pThis)
         LOG_FUNC_ARG_OUT(pdwSpeakerConfig)
     LOG_FUNC_END;
@@ -4091,7 +4091,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound_CommitDeferredSettings)
 
     enterCriticalSection;
 
-    LOG_FUNC_ONE_ARG(LOG_PREFIX, pThis);
+    LOG_FUNC_ONE_ARG(pThis);
 
     HRESULT hRet = DS_OK;
     if (g_pDSoundPrimary3DListener8 != nullptr) {
@@ -4115,11 +4115,11 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound_CommitEffectData)
 
     enterCriticalSection;
 
-    LOG_FUNC_ONE_ARG(LOG_PREFIX, pThis);
+    LOG_FUNC_ONE_ARG(pThis);
 
     // NOTE: DSP relative function.
 
-    LOG_NOT_SUPPORTED(LOG_PREFIX);
+    LOG_NOT_SUPPORTED();
 
     leaveCriticalSection;
 
@@ -4139,7 +4139,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_PauseEx)
 
         enterCriticalSection;
 
-        LOG_FUNC_BEGIN(LOG_PREFIX)
+        LOG_FUNC_BEGIN
             LOG_FUNC_ARG(pThis)
             LOG_FUNC_ARG(rtTimestamp)
             LOG_FUNC_ARG(dwPause)
@@ -4172,7 +4172,7 @@ HRESULT WINAPI XTL::EMUPATCH(XFileCreateMediaObject)
 
     enterCriticalSection;
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pstrFileName)
 		LOG_FUNC_ARG(dwDesiredAccess)
 		LOG_FUNC_ARG(dwShareMode)
@@ -4181,7 +4181,7 @@ HRESULT WINAPI XTL::EMUPATCH(XFileCreateMediaObject)
 		LOG_FUNC_ARG_OUT(ppMediaObject)
 		LOG_FUNC_END;
 
-    LOG_UNIMPLEMENTED(LOG_PREFIX);
+    LOG_UNIMPLEMENTED();
 
     leaveCriticalSection;
 
@@ -4202,13 +4202,13 @@ HRESULT WINAPI XTL::EMUPATCH(XWaveFileCreateMediaObjectEx)
 
     enterCriticalSection;
 
-    LOG_FUNC_BEGIN(LOG_PREFIX)
+    LOG_FUNC_BEGIN
         LOG_FUNC_ARG(pszFileName)
         LOG_FUNC_ARG(hFile)
         LOG_FUNC_ARG_OUT(ppMediaObject)
         LOG_FUNC_END;
 
-    LOG_UNIMPLEMENTED(LOG_PREFIX);
+    LOG_UNIMPLEMENTED();
 
     leaveCriticalSection;
 
@@ -4228,13 +4228,13 @@ HRESULT WINAPI XTL::EMUPATCH(XAudioSetEffectData)
 
     enterCriticalSection;
 
-    LOG_FUNC_BEGIN(LOG_PREFIX)
+    LOG_FUNC_BEGIN
         LOG_FUNC_ARG(dwEffectIndex)
         LOG_FUNC_ARG(pDesc)
         LOG_FUNC_ARG(pRawDesc)
         LOG_FUNC_END;
 
-    LOG_NOT_SUPPORTED(LOG_PREFIX);
+    LOG_NOT_SUPPORTED();
 
     leaveCriticalSection;
 
@@ -4252,7 +4252,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetDistanceFactor)
 {
     FUNC_EXPORTS;
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(flDistanceFactor)
 		LOG_FUNC_ARG(dwApply)
@@ -4272,7 +4272,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetDopplerFactor)
 {
     FUNC_EXPORTS;
 
-    LOG_FUNC_BEGIN(LOG_PREFIX)
+    LOG_FUNC_BEGIN
         LOG_FUNC_ARG(pThis)
         LOG_FUNC_ARG(flDopplerFactor)
         LOG_FUNC_ARG(dwApply)
@@ -4293,12 +4293,12 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_GetVoiceProperties)
 
     enterCriticalSection;
 
-    LOG_FUNC_BEGIN(LOG_PREFIX)
+    LOG_FUNC_BEGIN
         LOG_FUNC_ARG(pThis)
         LOG_FUNC_ARG_OUT(pVoiceProps)
         LOG_FUNC_END;
 
-    LOG_UNIMPLEMENTED(LOG_PREFIX);
+    LOG_UNIMPLEMENTED();
 
     leaveCriticalSection;
 
@@ -4317,12 +4317,12 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_GetVoiceProperties)
 
     enterCriticalSection;
 
-    LOG_FUNC_BEGIN(LOG_PREFIX)
+    LOG_FUNC_BEGIN
         LOG_FUNC_ARG(pThis)
         LOG_FUNC_ARG_OUT(pVoiceProps)
         LOG_FUNC_END;
 
-    LOG_UNIMPLEMENTED(LOG_PREFIX);
+    LOG_UNIMPLEMENTED();
 
     leaveCriticalSection;
 
@@ -4339,7 +4339,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundStream_SetVolume)
 {
     FUNC_EXPORTS;
 
-    LOG_FUNC_BEGIN(LOG_PREFIX)
+    LOG_FUNC_BEGIN
         LOG_FUNC_ARG(pThis)
         LOG_FUNC_ARG(lVolume)
         LOG_FUNC_END;
@@ -4358,7 +4358,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundStream_SetPitch)
 {
     FUNC_EXPORTS;
 
-    LOG_FUNC_BEGIN(LOG_PREFIX)
+    LOG_FUNC_BEGIN
         LOG_FUNC_ARG(pThis)
         LOG_FUNC_ARG(lPitch)
         LOG_FUNC_END;
@@ -4375,7 +4375,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundStream_SetLFO)
     LPCDSLFODESC            pLFODesc) {
     FUNC_EXPORTS;
 
-    LOG_FUNC_BEGIN(LOG_PREFIX)
+    LOG_FUNC_BEGIN
         LOG_FUNC_ARG(pThis)
         LOG_FUNC_ARG(pLFODesc)
         LOG_FUNC_END;
@@ -4393,7 +4393,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundStream_SetEG)
 {
     FUNC_EXPORTS;
 
-    LOG_FUNC_BEGIN(LOG_PREFIX)
+    LOG_FUNC_BEGIN
         LOG_FUNC_ARG(pThis)
         LOG_FUNC_ARG(pEnvelopeDesc)
         LOG_FUNC_END;
@@ -4411,7 +4411,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundStream_SetFilter)
 {
     FUNC_EXPORTS;
 
-    LOG_FUNC_BEGIN(LOG_PREFIX)
+    LOG_FUNC_BEGIN
         LOG_FUNC_ARG(pThis)
         LOG_FUNC_ARG(pFilterDesc)
         LOG_FUNC_END;
@@ -4429,7 +4429,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundStream_SetHeadroom)
 {
     FUNC_EXPORTS;
 
-    LOG_FUNC_BEGIN(LOG_PREFIX)
+    LOG_FUNC_BEGIN
         LOG_FUNC_ARG(pThis)
         LOG_FUNC_ARG(dwHeadroom)
         LOG_FUNC_END;
@@ -4447,7 +4447,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundStream_SetFrequency)
 {
     FUNC_EXPORTS;
 
-    LOG_FUNC_BEGIN(LOG_PREFIX)
+    LOG_FUNC_BEGIN
         LOG_FUNC_ARG(pThis)
         LOG_FUNC_ARG(dwFrequency)
         LOG_FUNC_END;
@@ -4465,7 +4465,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundStream_SetMixBins)
 {
     FUNC_EXPORTS;
 
-    LOG_FUNC_BEGIN(LOG_PREFIX)
+    LOG_FUNC_BEGIN
         LOG_FUNC_ARG(pThis)
         LOG_FUNC_ARG(pMixBins)
         LOG_FUNC_END;

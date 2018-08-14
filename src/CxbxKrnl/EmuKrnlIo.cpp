@@ -59,13 +59,13 @@ XBSYSAPI EXPORTNUM(59) xboxkrnl::PVOID NTAPI xboxkrnl::IoAllocateIrp
 	IN CCHAR StackSize
 )
 {
-	LOG_FUNC_ONE_ARG(LOG_PREFIX, StackSize);
+	LOG_FUNC_ONE_ARG(StackSize);
 
-	LOG_UNIMPLEMENTED(LOG_PREFIX);
+	LOG_UNIMPLEMENTED();
 
 	xboxkrnl::PVOID ret = nullptr;
 
-	RETURN(LOG_PREFIX, ret);
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -81,7 +81,7 @@ XBSYSAPI EXPORTNUM(60) xboxkrnl::PVOID NTAPI xboxkrnl::IoBuildAsynchronousFsdReq
 	OUT PIO_STATUS_BLOCK IoStatusBlock OPTIONAL
 )
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(MajorFunction)
 		LOG_FUNC_ARG(DeviceObject)
 		LOG_FUNC_ARG_OUT(Buffer)
@@ -92,9 +92,9 @@ XBSYSAPI EXPORTNUM(60) xboxkrnl::PVOID NTAPI xboxkrnl::IoBuildAsynchronousFsdReq
 
 	xboxkrnl::PVOID ret = nullptr;
 
-	LOG_UNIMPLEMENTED(LOG_PREFIX);
+	LOG_UNIMPLEMENTED();
 
-	RETURN(LOG_PREFIX, ret);
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -113,7 +113,7 @@ XBSYSAPI EXPORTNUM(61) xboxkrnl::PVOID NTAPI xboxkrnl::IoBuildDeviceIoControlReq
 	OUT PIO_STATUS_BLOCK IoStatusBlock OPTIONAL
 )
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(IoControlCode)
 		LOG_FUNC_ARG(DeviceObject)
 		LOG_FUNC_ARG(InputBuffer)
@@ -127,9 +127,9 @@ XBSYSAPI EXPORTNUM(61) xboxkrnl::PVOID NTAPI xboxkrnl::IoBuildDeviceIoControlReq
 
 	xboxkrnl::PVOID ret = nullptr;
 
-	LOG_UNIMPLEMENTED(LOG_PREFIX);
+	LOG_UNIMPLEMENTED();
 
-	RETURN(LOG_PREFIX, ret);
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -146,7 +146,7 @@ XBSYSAPI EXPORTNUM(62) xboxkrnl::PVOID NTAPI xboxkrnl::IoBuildSynchronousFsdRequ
 	OUT PIO_STATUS_BLOCK IoStatusBlock
 )
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(MajorFunction)
 		LOG_FUNC_ARG(DeviceObject)
 		LOG_FUNC_ARG_OUT(Buffer)
@@ -158,9 +158,9 @@ XBSYSAPI EXPORTNUM(62) xboxkrnl::PVOID NTAPI xboxkrnl::IoBuildSynchronousFsdRequ
 
 	xboxkrnl::PVOID ret = nullptr;
 
-	LOG_UNIMPLEMENTED(LOG_PREFIX);
+	LOG_UNIMPLEMENTED();
 
-	RETURN(LOG_PREFIX, ret);
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -175,7 +175,7 @@ XBSYSAPI EXPORTNUM(63) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoCheckShareAccess
 	IN BOOLEAN Update
 )
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(DesiredAccess)
 		LOG_FUNC_ARG(DesiredShareAccess)
 		LOG_FUNC_ARG_OUT(FileObject)
@@ -183,9 +183,9 @@ XBSYSAPI EXPORTNUM(63) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoCheckShareAccess
 		LOG_FUNC_ARG(Update)
 		LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED(LOG_PREFIX);
+	LOG_UNIMPLEMENTED();
 
-	RETURN(LOG_PREFIX, S_OK);
+	RETURN(S_OK);
 }
 
 // ******************************************************************
@@ -215,7 +215,7 @@ XBSYSAPI EXPORTNUM(65) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoCreateDevice
 	OUT PDEVICE_OBJECT*		DeviceObject
 )
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(DriverObject)
 		LOG_FUNC_ARG(DeviceExtensionSize)
 		LOG_FUNC_ARG(DeviceName)
@@ -224,9 +224,9 @@ XBSYSAPI EXPORTNUM(65) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoCreateDevice
 		LOG_FUNC_ARG_OUT(DeviceObject)
 		LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED(LOG_PREFIX);
+	LOG_UNIMPLEMENTED();
 
-	RETURN(LOG_PREFIX, STATUS_SUCCESS);
+	RETURN(STATUS_SUCCESS);
 }
 
 // ******************************************************************
@@ -246,7 +246,7 @@ XBSYSAPI EXPORTNUM(66) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoCreateFile
 	IN  ULONG               Options
 )
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG_OUT(FileHandle)
 		LOG_FUNC_ARG(DesiredAccess)
 		LOG_FUNC_ARG(ObjectAttributes)
@@ -310,7 +310,7 @@ XBSYSAPI EXPORTNUM(66) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoCreateFile
 		DbgPrintf(LOG_PREFIX, "IoCreateFile = 0x%.8X\n", *FileHandle);
 	}
 
-	RETURN(LOG_PREFIX, ret);
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -322,14 +322,14 @@ XBSYSAPI EXPORTNUM(67) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoCreateSymbolicLink
 	IN PSTRING DeviceName
 )
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(SymbolicLinkName)
 		LOG_FUNC_ARG(DeviceName)
 		LOG_FUNC_END;
 
 	NTSTATUS ret = CxbxCreateSymbolicLink(PSTRING_to_string(SymbolicLinkName), PSTRING_to_string(DeviceName));
 
-	RETURN(LOG_PREFIX, ret);
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -340,9 +340,9 @@ XBSYSAPI EXPORTNUM(68) xboxkrnl::VOID NTAPI xboxkrnl::IoDeleteDevice
 	IN PDEVICE_OBJECT Irql
 )
 {
-	LOG_FUNC_ONE_ARG(LOG_PREFIX, Irql);
+	LOG_FUNC_ONE_ARG(Irql);
 
-	LOG_UNIMPLEMENTED(LOG_PREFIX);
+	LOG_UNIMPLEMENTED();
 }
 
 // ******************************************************************
@@ -353,7 +353,7 @@ XBSYSAPI EXPORTNUM(69) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoDeleteSymbolicLink
 	IN PSTRING SymbolicLinkName
 )
 {
-	LOG_FUNC_ONE_ARG(LOG_PREFIX, SymbolicLinkName);
+	LOG_FUNC_ONE_ARG(SymbolicLinkName);
 
 	EmuNtSymbolicLinkObject* symbolicLink = FindNtSymbolicLinkObjectByName(PSTRING_to_string(SymbolicLinkName));
 
@@ -363,7 +363,7 @@ XBSYSAPI EXPORTNUM(69) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoDeleteSymbolicLink
 		// Destroy the object once all handles to it are closed too :
 		ret = symbolicLink->NtClose();
 
-	RETURN(LOG_PREFIX, ret);
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -402,9 +402,9 @@ XBSYSAPI EXPORTNUM(72) xboxkrnl::VOID NTAPI xboxkrnl::IoFreeIrp
 	IN PIRP Irp
 )
 {
-	LOG_FUNC_ONE_ARG(LOG_PREFIX, Irp);
+	LOG_FUNC_ONE_ARG(Irp);
 
-	LOG_UNIMPLEMENTED(LOG_PREFIX);
+	LOG_UNIMPLEMENTED();
 }
 
 // ******************************************************************
@@ -417,7 +417,7 @@ XBSYSAPI EXPORTNUM(73) xboxkrnl::PVOID NTAPI xboxkrnl::IoInitializeIrp
 	IN CCHAR StackSize
 )
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(Irp)
 		LOG_FUNC_ARG(PacketSize)
 		LOG_FUNC_ARG(StackSize)
@@ -425,9 +425,9 @@ XBSYSAPI EXPORTNUM(73) xboxkrnl::PVOID NTAPI xboxkrnl::IoInitializeIrp
 
 	xboxkrnl::PVOID ret = nullptr;
 
-	LOG_UNIMPLEMENTED(LOG_PREFIX);
+	LOG_UNIMPLEMENTED();
 
-	RETURN(LOG_PREFIX, ret);
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -439,14 +439,14 @@ XBSYSAPI EXPORTNUM(74) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoInvalidDeviceRequest
 	IN PIRP Irp
 )
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(DeviceObject)
 		LOG_FUNC_ARG(Irp)
 		LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED(LOG_PREFIX);
+	LOG_UNIMPLEMENTED();
 
-	RETURN(LOG_PREFIX, S_OK);
+	RETURN(S_OK);
 }
 
 // ******************************************************************
@@ -461,7 +461,7 @@ XBSYSAPI EXPORTNUM(75) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoQueryFileInformation
 	OUT PULONG ReturnedLength
 )
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(FileObject)
 		LOG_FUNC_ARG(FileInformationClass)
 		LOG_FUNC_ARG(Length)
@@ -470,9 +470,9 @@ XBSYSAPI EXPORTNUM(75) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoQueryFileInformation
 		LOG_FUNC_END;
 
 	// Dxbx note : This is almost identical to NtQueryInformationFile
-	LOG_UNIMPLEMENTED(LOG_PREFIX);
+	LOG_UNIMPLEMENTED();
 
-	RETURN(LOG_PREFIX, S_OK);
+	RETURN(S_OK);
 }
 
 // ******************************************************************
@@ -487,7 +487,7 @@ XBSYSAPI EXPORTNUM(76) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoQueryVolumeInformati
 	OUT PULONG ReturnedLength
 )
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(FileObject)
 		LOG_FUNC_ARG(FsInformationClass)
 		LOG_FUNC_ARG(Length)
@@ -497,9 +497,9 @@ XBSYSAPI EXPORTNUM(76) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoQueryVolumeInformati
 
 	// Dxbx note : This is almost identical to NtQueryVolumeInformationFile
 	// DxbxPC2XB_FS_INFORMATION
-	LOG_UNIMPLEMENTED(LOG_PREFIX);
+	LOG_UNIMPLEMENTED();
 
-	RETURN(LOG_PREFIX, S_OK);
+	RETURN(S_OK);
 }
 
 // ******************************************************************
@@ -510,9 +510,9 @@ XBSYSAPI EXPORTNUM(77) xboxkrnl::VOID NTAPI xboxkrnl::IoQueueThreadIrp
 	IN PIRP Irp
 )
 {
-	LOG_FUNC_ONE_ARG(LOG_PREFIX, Irp);
+	LOG_FUNC_ONE_ARG(Irp);
 
-	LOG_UNIMPLEMENTED(LOG_PREFIX);
+	LOG_UNIMPLEMENTED();
 }
 
 // ******************************************************************
@@ -524,12 +524,12 @@ XBSYSAPI EXPORTNUM(78) xboxkrnl::VOID NTAPI xboxkrnl::IoRemoveShareAccess
 	IN PSHARE_ACCESS ShareAccess
 )
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(FileObject)
 		LOG_FUNC_ARG(ShareAccess)
 		LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED(LOG_PREFIX);
+	LOG_UNIMPLEMENTED();
 }
 
 // ******************************************************************
@@ -544,7 +544,7 @@ XBSYSAPI EXPORTNUM(79) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoSetIoCompletion
 	IN ULONG IoStatusInformation
 )
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(IoCompletion)
 		LOG_FUNC_ARG(KeyContext)
 		LOG_FUNC_ARG(ApcContext)
@@ -552,9 +552,9 @@ XBSYSAPI EXPORTNUM(79) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoSetIoCompletion
 		LOG_FUNC_ARG(IoStatusInformation)
 		LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED(LOG_PREFIX);
+	LOG_UNIMPLEMENTED();
 
-	RETURN(LOG_PREFIX, S_OK);
+	RETURN(S_OK);
 }
 
 // ******************************************************************
@@ -568,7 +568,7 @@ XBSYSAPI EXPORTNUM(80) xboxkrnl::CCHAR NTAPI xboxkrnl::IoSetShareAccess
 	OUT PSHARE_ACCESS ShareAccess
 )
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(DesiredAccess)
 		LOG_FUNC_ARG(DesiredShareAccess)
 		LOG_FUNC_ARG(FileObject)
@@ -577,9 +577,9 @@ XBSYSAPI EXPORTNUM(80) xboxkrnl::CCHAR NTAPI xboxkrnl::IoSetShareAccess
 
 	xboxkrnl::CCHAR ret = 0; // ShareAccess->OpenCount;
 
-	LOG_UNIMPLEMENTED(LOG_PREFIX);
+	LOG_UNIMPLEMENTED();
 	
-	RETURN(LOG_PREFIX, ret);
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -590,9 +590,9 @@ XBSYSAPI EXPORTNUM(81) xboxkrnl::VOID NTAPI xboxkrnl::IoStartNextPacket
 	IN PDEVICE_OBJECT DeviceObject
 )
 {
-	LOG_FUNC_ONE_ARG(LOG_PREFIX, DeviceObject);
+	LOG_FUNC_ONE_ARG(DeviceObject);
 
-	LOG_UNIMPLEMENTED(LOG_PREFIX);
+	LOG_UNIMPLEMENTED();
 }
 
 // ******************************************************************
@@ -604,12 +604,12 @@ XBSYSAPI EXPORTNUM(82) xboxkrnl::VOID NTAPI xboxkrnl::IoStartNextPacketByKey
 	IN ULONG Key
 )
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(DeviceObject)
 		LOG_FUNC_ARG(Key)
 		LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED(LOG_PREFIX);
+	LOG_UNIMPLEMENTED();
 }
 
 // ******************************************************************
@@ -622,13 +622,13 @@ XBSYSAPI EXPORTNUM(83) xboxkrnl::VOID NTAPI xboxkrnl::IoStartPacket
 	OUT PULONG Key OPTIONAL
 )
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(DeviceObject)
 		LOG_FUNC_ARG(Irp)
 		LOG_FUNC_ARG_OUT(Key)
 		LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED(LOG_PREFIX);
+	LOG_UNIMPLEMENTED();
 }
 
 // ******************************************************************
@@ -651,7 +651,7 @@ XBSYSAPI EXPORTNUM(84) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoSynchronousDeviceIoC
 	IN BOOLEAN InternalDeviceIoControl
 )
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(IoControlCode)
 		LOG_FUNC_ARG(DeviceObject)
 		LOG_FUNC_ARG(InputBuffer)
@@ -662,9 +662,9 @@ XBSYSAPI EXPORTNUM(84) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoSynchronousDeviceIoC
 		LOG_FUNC_ARG(InternalDeviceIoControl)
 		LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED(LOG_PREFIX);
+	LOG_UNIMPLEMENTED();
 
-	RETURN(LOG_PREFIX, S_OK);
+	RETURN(S_OK);
 }
 
 // ******************************************************************
@@ -679,7 +679,7 @@ XBSYSAPI EXPORTNUM(85) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoSynchronousFsdReques
 	IN PLARGE_INTEGER StartingOffset OPTIONAL
 )
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(MajorFunction)
 		LOG_FUNC_ARG(DeviceObject)
 		LOG_FUNC_ARG_OUT(Buffer)
@@ -687,9 +687,9 @@ XBSYSAPI EXPORTNUM(85) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoSynchronousFsdReques
 		LOG_FUNC_ARG(StartingOffset)
 		LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED(LOG_PREFIX);
+	LOG_UNIMPLEMENTED();
 
-	RETURN(LOG_PREFIX, S_OK);
+	RETURN(S_OK);
 }
 
 // ******************************************************************
@@ -701,14 +701,14 @@ XBSYSAPI EXPORTNUM(86) xboxkrnl::NTSTATUS FASTCALL xboxkrnl::IofCallDriver
 	IN PIRP Irp
 )
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(DeviceObject)
 		LOG_FUNC_ARG(Irp)
 		LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED(LOG_PREFIX);
+	LOG_UNIMPLEMENTED();
 
-	RETURN(LOG_PREFIX, S_OK);
+	RETURN(S_OK);
 }
 
 // ******************************************************************
@@ -720,12 +720,12 @@ XBSYSAPI EXPORTNUM(87) xboxkrnl::VOID FASTCALL xboxkrnl::IofCompleteRequest
 	IN CCHAR PriorityBoost
 )
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(Irp)
 		LOG_FUNC_ARG(PriorityBoost)
 		LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED(LOG_PREFIX);
+	LOG_UNIMPLEMENTED();
 }
 
 // ******************************************************************
@@ -736,13 +736,13 @@ XBSYSAPI EXPORTNUM(90) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoDismountVolume
 	IN PDEVICE_OBJECT DeviceObject
 )
 {
-	LOG_FUNC_ONE_ARG(LOG_PREFIX, DeviceObject);
+	LOG_FUNC_ONE_ARG(DeviceObject);
 
 	NTSTATUS ret = STATUS_SUCCESS;
 
-	LOG_UNIMPLEMENTED(LOG_PREFIX);
+	LOG_UNIMPLEMENTED();
 
-	RETURN(LOG_PREFIX, ret);
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -753,14 +753,14 @@ XBSYSAPI EXPORTNUM(91) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoDismountVolumeByName
 	IN PSTRING VolumeName
 )
 {
-	LOG_FUNC_ONE_ARG(LOG_PREFIX, VolumeName);
+	LOG_FUNC_ONE_ARG(VolumeName);
 
 	NTSTATUS ret = STATUS_SUCCESS;
 
 	// TODO: Anything?
-	LOG_UNIMPLEMENTED(LOG_PREFIX);
+	LOG_UNIMPLEMENTED();
 
-	RETURN(LOG_PREFIX, ret);
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -771,11 +771,11 @@ XBSYSAPI EXPORTNUM(359) xboxkrnl::CCHAR NTAPI xboxkrnl::IoMarkIrpMustComplete
 	IN PIRP Irp
 )
 {
-	LOG_FUNC_ONE_ARG(LOG_PREFIX, Irp);
+	LOG_FUNC_ONE_ARG(Irp);
 
 	xboxkrnl::CCHAR ret = 0; // ShareAccess->OpenCount;
 
-	LOG_UNIMPLEMENTED(LOG_PREFIX);
+	LOG_UNIMPLEMENTED();
 
-	RETURN(LOG_PREFIX, ret);
+	RETURN(ret);
 }

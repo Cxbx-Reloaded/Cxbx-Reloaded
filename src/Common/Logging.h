@@ -279,9 +279,9 @@ extern thread_local std::string _logThreadPrefix;
 		std::stringstream msg; \
 		msg << _logThreadPrefix << _logFuncPrefix << "(";
 
-#define LOG_FUNC_BEGIN(cxbxr_module) \
+#define LOG_FUNC_BEGIN \
 		LOG_INIT \
-		LOG_CHECK_ENABLED(cxbxr_module, LOG_LEVEL::DEBUG) { \
+		LOG_CHECK_ENABLED(LOG_PREFIX, LOG_LEVEL::DEBUG) { \
 			LOG_FUNC_BEGIN_NO_INIT
 
 // LOG_FUNC_ARG writes output via all available ostream << operator overloads, sanitizing and adding detail where possible
@@ -316,20 +316,20 @@ extern thread_local std::string _logThreadPrefix;
 	std::cout << _logThreadPrefix << _logFuncPrefix << " returns " << (type)r << "\n";
 
 // LOG_FORWARD indicates that an api is implemented by a forward to another API
-#define LOG_FORWARD(cxbxr_module, api) \
+#define LOG_FORWARD(api) \
 	LOG_INIT \
-	LOG_CHECK_ENABLED(cxbxr_module, LOG_LEVEL::DEBUG) { \
+	LOG_CHECK_ENABLED(LOG_PREFIX, LOG_LEVEL::DEBUG) { \
 		do { if(g_bPrintfOn) { \
 			std::cout << _logThreadPrefix << _logFuncPrefix << " forwarding to "#api"...\n"; \
 		} } while (0); \
 	}
 
 // LOG_IGNORED indicates that Cxbx consiously ignores an api
-#define LOG_IGNORED(cxbxr_module) \
+#define LOG_IGNORED() \
 	do { \
 		static bool b_echoOnce = true; \
 			if(g_bPrintfOn && b_echoOnce) { \
-				LOG_CHECK_ENABLED(cxbxr_module, LOG_LEVEL::INFO) { \
+				LOG_CHECK_ENABLED(LOG_PREFIX, LOG_LEVEL::INFO) { \
 					LOG_THREAD_INIT \
 					LOG_FUNC_INIT(__func__) \
 					std::cout << _logThreadPrefix << "WARN: " << _logFuncPrefix << " ignored!\n"; \
@@ -339,11 +339,11 @@ extern thread_local std::string _logThreadPrefix;
 		} while(0)
 
 // LOG_UNIMPLEMENTED indicates that Cxbx is missing an implementation of an api
-#define LOG_UNIMPLEMENTED(cxbxr_module) \
+#define LOG_UNIMPLEMENTED() \
 	do { \
 		static bool b_echoOnce = true; \
 			if(g_bPrintfOn && b_echoOnce) { \
-				LOG_CHECK_ENABLED(cxbxr_module, LOG_LEVEL::INFO) { \
+				LOG_CHECK_ENABLED(LOG_PREFIX, LOG_LEVEL::INFO) { \
 					LOG_THREAD_INIT \
 					LOG_FUNC_INIT(__func__) \
 					std::cout << _logThreadPrefix << "WARN: " << _logFuncPrefix << " unimplemented!\n"; \
@@ -353,11 +353,11 @@ extern thread_local std::string _logThreadPrefix;
 		} while(0)
 
 // LOG_INCOMPLETE indicates that Cxbx is missing part of an implementation of an api
-#define LOG_INCOMPLETE(cxbxr_module) \
+#define LOG_INCOMPLETE() \
 	do { \
 		static bool b_echoOnce = true; \
 			if(g_bPrintfOn && b_echoOnce) { \
-				LOG_CHECK_ENABLED(cxbxr_module, LOG_LEVEL::INFO) { \
+				LOG_CHECK_ENABLED(LOG_PREFIX, LOG_LEVEL::INFO) { \
 					LOG_THREAD_INIT \
 					LOG_FUNC_INIT(__func__) \
 					std::cout << _logThreadPrefix << "WARN: " << _logFuncPrefix << " incomplete!\n"; \
@@ -367,11 +367,11 @@ extern thread_local std::string _logThreadPrefix;
 		} while(0)
 
 // LOG_NOT_SUPPORTED indicates that Cxbx cannot implement (part of) an api
-#define LOG_NOT_SUPPORTED(cxbxr_module) \
+#define LOG_NOT_SUPPORTED() \
 	do { \
 		static bool b_echoOnce = true; \
 			if(g_bPrintfOn && b_echoOnce) { \
-				LOG_CHECK_ENABLED(cxbxr_module, LOG_LEVEL::INFO) { \
+				LOG_CHECK_ENABLED(LOG_PREFIX, LOG_LEVEL::INFO) { \
 					LOG_THREAD_INIT \
 					LOG_FUNC_INIT(__func__) \
 					std::cout << _logThreadPrefix << "WARN: " << _logFuncPrefix << " not supported!\n"; \
@@ -401,22 +401,22 @@ extern thread_local std::string _logThreadPrefix;
 //
 
 // Log function without arguments
-#define LOG_FUNC(cxbxr_module) LOG_FUNC_BEGIN(cxbxr_module) LOG_FUNC_END
+#define LOG_FUNC() LOG_FUNC_BEGIN LOG_FUNC_END
 
 // Log function with one argument
-#define LOG_FUNC_ONE_ARG(cxbxr_module, arg) LOG_FUNC_BEGIN(cxbxr_module) LOG_FUNC_ARG(arg) LOG_FUNC_END 
+#define LOG_FUNC_ONE_ARG(arg) LOG_FUNC_BEGIN LOG_FUNC_ARG(arg) LOG_FUNC_END 
 
 // Log function with one typed argument
-#define LOG_FUNC_ONE_ARG_TYPE(cxbxr_module, type, arg) LOG_FUNC_BEGIN(cxbxr_module) LOG_FUNC_ARG_TYPE(type, arg) LOG_FUNC_END 
+#define LOG_FUNC_ONE_ARG_TYPE(type, arg) LOG_FUNC_BEGIN LOG_FUNC_ARG_TYPE(type, arg) LOG_FUNC_END 
 
 // Log function with one out argument
-#define LOG_FUNC_ONE_ARG_OUT(cxbxr_module, arg) LOG_FUNC_BEGIN(cxbxr_module) LOG_FUNC_ARG_OUT(arg) LOG_FUNC_END 
+#define LOG_FUNC_ONE_ARG_OUT(arg) LOG_FUNC_BEGIN LOG_FUNC_ARG_OUT(arg) LOG_FUNC_END 
 
 // RETURN logs the given result and then returns it (so this should appear last in functions)
-#define RETURN(cxbxr_module, r) do { LOG_CHECK_ENABLED(cxbxr_module, LOG_LEVEL::DEBUG) { LOG_FUNC_RESULT(r) } return r; } while (0)
+#define RETURN(r) do { LOG_CHECK_ENABLED(LOG_PREFIX, LOG_LEVEL::DEBUG) { LOG_FUNC_RESULT(r) } return r; } while (0)
 
 // RETURN_TYPE logs the given typed result and then returns it (so this should appear last in functions)
-#define RETURN_TYPE(cxbxr_module, type, r) do { LOG_CHECK_ENABLED(cxbxr_module, LOG_LEVEL::DEBUG) { LOG_FUNC_RESULT_TYPE(type, r) } return r; } while (0)
+#define RETURN_TYPE(type, r) do { LOG_CHECK_ENABLED(LOG_PREFIX, LOG_LEVEL::DEBUG) { LOG_FUNC_RESULT_TYPE(type, r) } return r; } while (0)
 
 #define LOG_ONCE(msg, ...) { static bool bFirstTime = true; if(bFirstTime) { bFirstTime = false; DbgPrintf(LOG_PREFIX, "TRAC: " ## msg, __VA_ARGS__); } }
 

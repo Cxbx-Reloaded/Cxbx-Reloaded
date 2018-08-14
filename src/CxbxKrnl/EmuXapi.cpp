@@ -273,7 +273,7 @@ VOID WINAPI XTL::EMUPATCH(XInitDevices)
 {
 	FUNC_EXPORTS
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(dwPreallocTypeCount)
 		LOG_FUNC_ARG((DWORD)PreallocTypes)
 		LOG_FUNC_END;
@@ -392,7 +392,7 @@ DWORD WINAPI XTL::EMUPATCH(XGetDevices)
 {
 	FUNC_EXPORTS
 
-	LOG_FUNC_ONE_ARG(LOG_PREFIX, DeviceType);
+	LOG_FUNC_ONE_ARG(DeviceType);
 
 	UCHAR oldIrql = xboxkrnl::KeRaiseIrqlToDpcLevel();
 
@@ -422,7 +422,7 @@ DWORD WINAPI XTL::EMUPATCH(XGetDevices)
 
 	xboxkrnl::KfLowerIrql(oldIrql);
 
-	RETURN(LOG_PREFIX, ret);
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -441,7 +441,7 @@ BOOL WINAPI XTL::EMUPATCH(XGetDeviceChanges)
 {
 	FUNC_EXPORTS
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(DeviceType)
 		LOG_FUNC_ARG(pdwInsertions)
 		LOG_FUNC_ARG(pdwRemovals)
@@ -499,7 +499,7 @@ BOOL WINAPI XTL::EMUPATCH(XGetDeviceChanges)
 		ret = TRUE;
 	}
 
-	RETURN(LOG_PREFIX, ret);
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -515,7 +515,7 @@ HANDLE WINAPI XTL::EMUPATCH(XInputOpen)
 {
 	FUNC_EXPORTS
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(DeviceType)
 		LOG_FUNC_ARG(dwPort)
 		LOG_FUNC_ARG(dwSlot)
@@ -573,7 +573,7 @@ HANDLE WINAPI XTL::EMUPATCH(XInputOpen)
 */
 	g_bXInputOpenCalled = true;
 
-	//RETURN(LOG_PREFIX, (HANDLE)pph);
+	//RETURN((HANDLE)pph);
     //code above are not used at all, in future we might remove them.
     if (dwPort >= 0 && dwPort < 4) {
         //check if the bridged xbox controller at this port matches the DeviceType, if matches, setup the device handle and return it.
@@ -622,7 +622,7 @@ VOID WINAPI XTL::EMUPATCH(XInputClose)
 {
 	FUNC_EXPORTS
 
-	LOG_FUNC_ONE_ARG(LOG_PREFIX, hDevice);
+	LOG_FUNC_ONE_ARG(hDevice);
 
     X_POLLING_PARAMETERS_HANDLE *pph = (X_POLLING_PARAMETERS_HANDLE*)hDevice;
 	DWORD dwPort = pph->dwPort;
@@ -675,7 +675,7 @@ DWORD WINAPI XTL::EMUPATCH(XInputPoll)
 {
 	FUNC_EXPORTS
 
-	LOG_FUNC_ONE_ARG(LOG_PREFIX, hDevice);
+	LOG_FUNC_ONE_ARG(hDevice);
 
     //OLD_XINPUT
 /*    X_POLLING_PARAMETERS_HANDLE *pph = (X_POLLING_PARAMETERS_HANDLE*)hDevice;
@@ -736,7 +736,7 @@ DWORD WINAPI XTL::EMUPATCH(XInputPoll)
 
 
 
-	RETURN(LOG_PREFIX, ERROR_SUCCESS);
+	RETURN(ERROR_SUCCESS);
 }
 
 // ******************************************************************
@@ -750,7 +750,7 @@ DWORD WINAPI XTL::EMUPATCH(XInputGetCapabilities)
 {
 	FUNC_EXPORTS
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(hDevice)
 		LOG_FUNC_ARG_OUT(pCapabilities)
 		LOG_FUNC_END;
@@ -791,7 +791,7 @@ DWORD WINAPI XTL::EMUPATCH(XInputGetCapabilities)
         }
     }
     
-	RETURN(LOG_PREFIX, ret);
+	RETURN(ret);
 }
 
 //variable names correlated to X_SBC_FEEDBACK, mapped to each nibble accordingly.
@@ -1030,7 +1030,7 @@ DWORD WINAPI XTL::EMUPATCH(XInputGetState)
 {
 	FUNC_EXPORTS
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(hDevice)
 		LOG_FUNC_ARG_OUT(pState)
 		LOG_FUNC_END;
@@ -1107,7 +1107,7 @@ DWORD WINAPI XTL::EMUPATCH(XInputGetState)
         }
     }
     
-	RETURN(LOG_PREFIX, ret);
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -1121,7 +1121,7 @@ DWORD WINAPI XTL::EMUPATCH(XInputSetState)
 {
 	FUNC_EXPORTS
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(hDevice)
 		LOG_FUNC_ARG(pFeedback)
 		LOG_FUNC_END;
@@ -1238,7 +1238,7 @@ DWORD WINAPI XTL::EMUPATCH(XInputSetState)
         }
     }
 
-	RETURN(LOG_PREFIX, ret);
+	RETURN(ret);
 }
 
 
@@ -1253,7 +1253,7 @@ BOOL WINAPI XTL::EMUPATCH(SetThreadPriorityBoost)
 {
 	FUNC_EXPORTS
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(hThread)
 		LOG_FUNC_ARG(DisablePriorityBoost)
 		LOG_FUNC_END;
@@ -1263,7 +1263,7 @@ BOOL WINAPI XTL::EMUPATCH(SetThreadPriorityBoost)
     if(bRet == FALSE)
         EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "SetThreadPriorityBoost Failed!");
 
-	RETURN(LOG_PREFIX, bRet);
+	RETURN(bRet);
 }
 
 // ******************************************************************
@@ -1277,7 +1277,7 @@ BOOL WINAPI XTL::EMUPATCH(SetThreadPriority)
 {
 	FUNC_EXPORTS
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(hThread)
 		LOG_FUNC_ARG(nPriority)
 		LOG_FUNC_END;
@@ -1287,7 +1287,7 @@ BOOL WINAPI XTL::EMUPATCH(SetThreadPriority)
     if(bRet == FALSE)
         EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "SetThreadPriority Failed!");
 
-	RETURN(LOG_PREFIX, bRet);
+	RETURN(bRet);
 }
 
 
@@ -1301,14 +1301,14 @@ int WINAPI XTL::EMUPATCH(GetThreadPriority)
 {
 	FUNC_EXPORTS
 
-	LOG_FUNC_ONE_ARG(LOG_PREFIX, hThread);
+	LOG_FUNC_ONE_ARG(hThread);
 
     int iRet = GetThreadPriority(hThread);
 
     if(iRet == THREAD_PRIORITY_ERROR_RETURN)
         EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "GetThreadPriority Failed!");
 
-	RETURN(LOG_PREFIX, iRet);
+	RETURN(iRet);
 }
 
 // ******************************************************************
@@ -1322,14 +1322,14 @@ BOOL WINAPI XTL::EMUPATCH(GetExitCodeThread)
 {
 	FUNC_EXPORTS
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(hThread)
 		LOG_FUNC_ARG(lpExitCode)
 		LOG_FUNC_END;
 
     BOOL bRet = GetExitCodeThread(hThread, lpExitCode);
 
-	RETURN(LOG_PREFIX, bRet);
+	RETURN(bRet);
 }
 
 // ******************************************************************
@@ -1343,7 +1343,7 @@ VOID WINAPI XTL::EMUPATCH(XapiThreadStartup)
 {
 	//FUNC_EXPORTS
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(dwDummy1)
 		LOG_FUNC_ARG(dwDummy2)
 		LOG_FUNC_END;
@@ -1378,7 +1378,7 @@ VOID WINAPI XTL::EMUPATCH(XRegisterThreadNotifyRoutine)
 {
 	//FUNC_EXPORTS
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThreadNotification)
 		LOG_FUNC_ARG(fRegister)
 		LOG_FUNC_END;
@@ -1447,7 +1447,7 @@ LPVOID WINAPI XTL::EMUPATCH(CreateFiber)
 {
 	FUNC_EXPORTS
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(dwStackSize)
 		LOG_FUNC_ARG((PVOID)lpStartRoutine)
 		LOG_FUNC_ARG(lpParameter)
@@ -1460,7 +1460,7 @@ LPVOID WINAPI XTL::EMUPATCH(CreateFiber)
 	context->lpStartRoutine = lpStartRoutine;
 	context->lpParameter = lpParameter;
 		
-	RETURN(LOG_PREFIX, CreateFiber(dwStackSize, (LPFIBER_START_ROUTINE)EmuFiberStartup, context));
+	RETURN(CreateFiber(dwStackSize, (LPFIBER_START_ROUTINE)EmuFiberStartup, context));
 }
 
 // ******************************************************************
@@ -1472,7 +1472,7 @@ VOID WINAPI XTL::EMUPATCH(DeleteFiber)
 )
 {
 	FUNC_EXPORTS
-	LOG_FUNC_ONE_ARG(LOG_PREFIX, (DWORD)DeleteFiber);
+	LOG_FUNC_ONE_ARG((DWORD)DeleteFiber);
 
 	DeleteFiber(lpFiber);
 }
@@ -1486,7 +1486,7 @@ VOID WINAPI XTL::EMUPATCH(SwitchToFiber)
 )
 {
 	FUNC_EXPORTS
-	LOG_FUNC_ONE_ARG(LOG_PREFIX, lpFiber);
+	LOG_FUNC_ONE_ARG(lpFiber);
 
 	SwitchToFiber(lpFiber);
 }
@@ -1500,11 +1500,11 @@ LPVOID WINAPI XTL::EMUPATCH(ConvertThreadToFiber)
 )
 {
 	FUNC_EXPORTS
-	LOG_FUNC_ONE_ARG(LOG_PREFIX, lpParameter);
+	LOG_FUNC_ONE_ARG(lpParameter);
 		
 	LPVOID pRet = ConvertThreadToFiber(lpParameter);
 	
-	RETURN(LOG_PREFIX, pRet);
+	RETURN(pRet);
 }
 
 // ******************************************************************
@@ -1533,7 +1533,7 @@ DWORD WINAPI XTL::EMUPATCH(QueueUserAPC)
 {
 	//FUNC_EXPORTS
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG_TYPE(PVOID, pfnAPC)
 		LOG_FUNC_ARG(hThread)
 		LOG_FUNC_ARG(dwData)
@@ -1552,7 +1552,7 @@ DWORD WINAPI XTL::EMUPATCH(QueueUserAPC)
 	if(!dwRet)
 		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "QueueUserAPC failed!");
 
-	RETURN(LOG_PREFIX, dwRet);
+	RETURN(dwRet);
 }
 
 #if 0 // Handled by WaitForSingleObject
@@ -1569,7 +1569,7 @@ BOOL WINAPI XTL::EMUPATCH(GetOverlappedResult)
 {
 	//FUNC_EXPORTS
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(hFile)
 		LOG_FUNC_ARG(lpOverlapped)
 		LOG_FUNC_ARG(lpNumberOfBytesTransferred)
@@ -1581,7 +1581,7 @@ BOOL WINAPI XTL::EMUPATCH(GetOverlappedResult)
 //	if(bWait)
 //		bRet = TRUE; // Sucker...
 
-	RETURN(LOG_PREFIX, bRet);
+	RETURN(bRet);
 }
 #endif
 
@@ -1604,7 +1604,7 @@ DWORD WINAPI XTL::EMUPATCH(XLaunchNewImageA)
 	// and probably "Panzer Dragoon Orta"), but these
 	// titles don't come this far as-of yet.
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(lpTitlePath)
 		LOG_FUNC_ARG(pLaunchData)
 		LOG_FUNC_END;
@@ -1621,7 +1621,7 @@ DWORD WINAPI XTL::EMUPATCH(XLaunchNewImageA)
 			PVOID LaunchDataVAddr = xboxkrnl::MmAllocateContiguousMemory(sizeof(xboxkrnl::LAUNCH_DATA_PAGE));
 			if (!LaunchDataVAddr)
 			{
-				RETURN(LOG_PREFIX, STATUS_NO_MEMORY);
+				RETURN(STATUS_NO_MEMORY);
 			}
 			xboxkrnl::LaunchDataPage = (xboxkrnl::LAUNCH_DATA_PAGE*)LaunchDataVAddr;
 		}
@@ -1666,7 +1666,7 @@ DWORD WINAPI XTL::EMUPATCH(XLaunchNewImageA)
 	xboxkrnl::HalReturnToFirmware(xboxkrnl::ReturnFirmwareQuickReboot);
 
 	// If this function succeeds, it doesn't get a chance to return anything.
-	RETURN(LOG_PREFIX, ERROR_GEN_FAILURE);
+	RETURN(ERROR_GEN_FAILURE);
 }
 
 #if 0 // patch disabled
@@ -1688,7 +1688,7 @@ DWORD WINAPI XTL::EMUPATCH(XGetLaunchInfo)
 	// When this is verified, this patch can be removed.
 	LOG_TEST_CASE(LOG_PREFIX, "Unpatching test needed");
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pdwLaunchDataType)
 		LOG_FUNC_ARG(pLaunchData)
 		LOG_FUNC_END;
@@ -1716,7 +1716,7 @@ DWORD WINAPI XTL::EMUPATCH(XGetLaunchInfo)
 		}
 	}
 
-	RETURN(LOG_PREFIX, ret);
+	RETURN(ret);
 }
 #endif
 
@@ -1729,10 +1729,10 @@ VOID WINAPI XTL::EMUPATCH(XSetProcessQuantumLength)
 )
 {
 	FUNC_EXPORTS
-	LOG_FUNC_ONE_ARG(LOG_PREFIX, dwMilliseconds);
+	LOG_FUNC_ONE_ARG(dwMilliseconds);
 
 	// TODO: Implement?
-	LOG_IGNORED(LOG_PREFIX);
+	LOG_IGNORED();
 }
 	
 // ******************************************************************
@@ -1747,7 +1747,7 @@ DWORD WINAPI XTL::EMUPATCH(SignalObjectAndWait)
 )
 {
 	FUNC_EXPORTS
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(hObjectToSignal)
 		LOG_FUNC_ARG(hObjectToWaitOn)
 		LOG_FUNC_ARG(dwMilliseconds)
@@ -1756,7 +1756,7 @@ DWORD WINAPI XTL::EMUPATCH(SignalObjectAndWait)
 
 	DWORD dwRet = SignalObjectAndWait( hObjectToSignal, hObjectToWaitOn, dwMilliseconds, bAlertable ); 
 
-	RETURN(LOG_PREFIX, dwRet);
+	RETURN(dwRet);
 }
 
 // ******************************************************************
@@ -1773,7 +1773,7 @@ MMRESULT WINAPI XTL::EMUPATCH(timeSetEvent)
 {
 	FUNC_EXPORTS
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(uDelay)
 		LOG_FUNC_ARG(uResolution)
 		LOG_FUNC_ARG_TYPE(PVOID, fptc)
@@ -1783,7 +1783,7 @@ MMRESULT WINAPI XTL::EMUPATCH(timeSetEvent)
 
 	MMRESULT Ret = timeSetEvent( uDelay, uResolution, fptc, (DWORD_PTR) dwUser, fuEvent );
 
-	RETURN(LOG_PREFIX, Ret);
+	RETURN(Ret);
 }
 
 // ******************************************************************
@@ -1796,11 +1796,11 @@ MMRESULT WINAPI XTL::EMUPATCH(timeKillEvent)
 {
 	FUNC_EXPORTS
 
-	LOG_FUNC_ONE_ARG(LOG_PREFIX, uTimerID);
+	LOG_FUNC_ONE_ARG(uTimerID);
 
 	MMRESULT Ret = timeKillEvent( uTimerID );
 
-	RETURN(LOG_PREFIX, Ret);
+	RETURN(Ret);
 }
 
 // ******************************************************************
@@ -1816,7 +1816,7 @@ VOID WINAPI XTL::EMUPATCH(RaiseException)
 {
 	FUNC_EXPORTS
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(dwExceptionCode)
 		LOG_FUNC_ARG(dwExceptionFlags)
 		LOG_FUNC_ARG(nNumberOfArguments)
@@ -1826,7 +1826,7 @@ VOID WINAPI XTL::EMUPATCH(RaiseException)
 	// TODO: Implement or not?
 //	RaiseException(dwExceptionCode, dwExceptionFlags, nNumberOfArguments, (*(ULONG_PTR**) &lpArguments));
 
-	LOG_UNIMPLEMENTED(LOG_PREFIX);
+	LOG_UNIMPLEMENTED();
 }
 
 // ******************************************************************
@@ -1841,7 +1841,7 @@ DWORD WINAPI XTL::EMUPATCH(XMountMUA)
 {
 	FUNC_EXPORTS
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(dwPort)
 		LOG_FUNC_ARG(dwSlot)
 		LOG_FUNC_ARG(pchDrive)
@@ -1850,7 +1850,7 @@ DWORD WINAPI XTL::EMUPATCH(XMountMUA)
 	// TODO: Actually allow memory card emulation? This might make transferring
 	// game saves a bit easier if the memory card directory was configurable. =]
 
-	RETURN(LOG_PREFIX, E_FAIL);
+	RETURN(E_FAIL);
 }
 
 // ******************************************************************
@@ -1865,16 +1865,16 @@ DWORD WINAPI XTL::EMUPATCH(XMountAlternateTitleA)
 {
 	FUNC_EXPORTS
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(lpRootPath)
 		LOG_FUNC_ARG(dwAltTitleId)
 		LOG_FUNC_ARG(pchDrive)
 		LOG_FUNC_END;
 
 	// TODO: Anything?
-	LOG_UNIMPLEMENTED(LOG_PREFIX);
+	LOG_UNIMPLEMENTED();
 
-	RETURN(LOG_PREFIX, ERROR_SUCCESS);
+	RETURN(ERROR_SUCCESS);
 }
 
 // ******************************************************************
@@ -1887,11 +1887,11 @@ DWORD WINAPI XTL::EMUPATCH(XUnmountAlternateTitleA)
 {
 	FUNC_EXPORTS
 
-	LOG_FUNC_ONE_ARG(LOG_PREFIX, chDrive);
+	LOG_FUNC_ONE_ARG(chDrive);
 
-	LOG_UNIMPLEMENTED(LOG_PREFIX);
+	LOG_UNIMPLEMENTED();
 
-	RETURN(LOG_PREFIX, ERROR_SUCCESS);
+	RETURN(ERROR_SUCCESS);
 }
 
 // ******************************************************************
@@ -1901,11 +1901,11 @@ DWORD WINAPI XTL::EMUPATCH(XGetDeviceEnumerationStatus)()
 {
 	FUNC_EXPORTS
 
-	LOG_FUNC(LOG_PREFIX);
+	LOG_FUNC();
 
-	LOG_UNIMPLEMENTED(LOG_PREFIX);
+	LOG_UNIMPLEMENTED();
 
-	RETURN(LOG_PREFIX, XDEVICE_ENUMERATION_IDLE);
+	RETURN(XDEVICE_ENUMERATION_IDLE);
 }
 
 // ******************************************************************
@@ -1919,15 +1919,15 @@ DWORD WINAPI XTL::EMUPATCH(XInputGetDeviceDescription)
 {
 	FUNC_EXPORTS
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(hDevice)
 		LOG_FUNC_ARG(pDescription)
 		LOG_FUNC_END;
 
 	// TODO: Lightgun support?
-	LOG_UNIMPLEMENTED(LOG_PREFIX);
+	LOG_UNIMPLEMENTED();
 
-	RETURN(LOG_PREFIX, ERROR_NOT_SUPPORTED); // ERROR_DEVICE_NOT_CONNECTED;
+	RETURN(ERROR_NOT_SUPPORTED); // ERROR_DEVICE_NOT_CONNECTED;
 }
 
 // ******************************************************************
@@ -1942,16 +1942,16 @@ DWORD WINAPI XTL::EMUPATCH(XMountMURootA)
 {
 	FUNC_EXPORTS
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(dwPort)
 		LOG_FUNC_ARG(dwSlot)
 		LOG_FUNC_ARG(pchDrive)
 		LOG_FUNC_END;
 
 	// TODO: The params are probably wrong...
-	LOG_UNIMPLEMENTED(LOG_PREFIX);
+	LOG_UNIMPLEMENTED();
 
-	RETURN(LOG_PREFIX, ERROR_SUCCESS);
+	RETURN(ERROR_SUCCESS);
 }
 
 // ******************************************************************
@@ -1963,6 +1963,6 @@ VOID WINAPI XTL::EMUPATCH(OutputDebugStringA)
 )
 {
 	FUNC_EXPORTS
-	LOG_FUNC_ONE_ARG(LOG_PREFIX, lpOutputString);
+	LOG_FUNC_ONE_ARG(lpOutputString);
 	printf("OutputDebugStringA: %s\n", lpOutputString);
 }

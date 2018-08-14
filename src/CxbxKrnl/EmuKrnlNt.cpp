@@ -82,7 +82,7 @@ XBSYSAPI EXPORTNUM(184) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtAllocateVirtualMemo
 	IN DWORD         Protect
 )
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG_TYPE(PULONG, BaseAddress)
 		LOG_FUNC_ARG(ZeroBits)
 		LOG_FUNC_ARG(AllocationSize)
@@ -93,7 +93,7 @@ XBSYSAPI EXPORTNUM(184) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtAllocateVirtualMemo
 	NTSTATUS ret = g_VMManager.XbAllocateVirtualMemory((VAddr*)BaseAddress, ZeroBits, (size_t*)AllocationSize,
 		AllocationType, Protect);
 
-	RETURN(LOG_PREFIX, ret);
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -105,7 +105,7 @@ XBSYSAPI EXPORTNUM(185) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCancelTimer
 	OUT PBOOLEAN CurrentState OPTIONAL
 )
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(TimerHandle)
 		LOG_FUNC_ARG(CurrentState)
 		LOG_FUNC_END;
@@ -119,7 +119,7 @@ XBSYSAPI EXPORTNUM(185) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCancelTimer
 	if (FAILED(ret))
 		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "NtCancelTimer failed!");
 
-	RETURN(LOG_PREFIX, ret);
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -130,14 +130,14 @@ XBSYSAPI EXPORTNUM(186) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtClearEvent
 	IN HANDLE EventHandle
 )
 {
-	LOG_FUNC_ONE_ARG(LOG_PREFIX, EventHandle);
+	LOG_FUNC_ONE_ARG(EventHandle);
 
 	NTSTATUS ret = NtDll::NtClearEvent(EventHandle);
 
 	if (FAILED(ret))
 		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "NtClearEvent Failed!");
 
-	RETURN(LOG_PREFIX, ret);
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -148,7 +148,7 @@ XBSYSAPI EXPORTNUM(187) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtClose
 	IN HANDLE Handle
 )
 {
-	LOG_FUNC_ONE_ARG(LOG_PREFIX, Handle);
+	LOG_FUNC_ONE_ARG(Handle);
 
 	NTSTATUS ret = STATUS_SUCCESS;
 
@@ -158,7 +158,7 @@ XBSYSAPI EXPORTNUM(187) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtClose
 		EmuHandle *iEmuHandle = HandleToEmuHandle(Handle);
 		ret = iEmuHandle->NtClose();
 
-		LOG_UNIMPLEMENTED(LOG_PREFIX); // TODO : Base this on the Ob* functions
+		LOG_UNIMPLEMENTED(); // TODO : Base this on the Ob* functions
 	}
     else
     {
@@ -183,7 +183,7 @@ XBSYSAPI EXPORTNUM(187) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtClose
 		}
     }
 
-	RETURN(LOG_PREFIX, ret);
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -195,7 +195,7 @@ XBSYSAPI EXPORTNUM(188) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateDirectoryObje
 	IN  POBJECT_ATTRIBUTES  ObjectAttributes
 )
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG_OUT(DirectoryHandle)
 		LOG_FUNC_ARG(ObjectAttributes)
 		LOG_FUNC_END;
@@ -222,7 +222,7 @@ XBSYSAPI EXPORTNUM(188) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateDirectoryObje
 	else
 		DbgPrintf(LOG_PREFIX, "NtCreateDirectoryObject DirectoryHandle = 0x%.8X\n", *DirectoryHandle);
 
-	RETURN(LOG_PREFIX, ret);
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -236,7 +236,7 @@ XBSYSAPI EXPORTNUM(189) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateEvent
 	IN  BOOLEAN             InitialState
 )
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG_OUT(EventHandle)
 		LOG_FUNC_ARG(ObjectAttributes)
 		LOG_FUNC_ARG(EventType)
@@ -259,9 +259,9 @@ XBSYSAPI EXPORTNUM(189) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateEvent
 		}
 	}
 
-	RETURN(LOG_PREFIX, Status);
+	RETURN(Status);
 */
-	LOG_INCOMPLETE(LOG_PREFIX); // TODO : Verify arguments, use ObCreateObject, KeInitializeEvent and ObInsertObject instead of this:
+	LOG_INCOMPLETE(); // TODO : Verify arguments, use ObCreateObject, KeInitializeEvent and ObInsertObject instead of this:
 
 	// initialize object attributes
 	NativeObjectAttributes nativeObjectAttributes;
@@ -302,7 +302,7 @@ XBSYSAPI EXPORTNUM(189) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateEvent
 	else
 		DbgPrintf(LOG_PREFIX, "NtCreateEvent EventHandle = 0x%.8X\n", *EventHandle);
 
-	RETURN(LOG_PREFIX, ret);
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -321,7 +321,7 @@ XBSYSAPI EXPORTNUM(190) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateFile
 	IN  ULONG               CreateOptions
 )
 {
-	LOG_FORWARD(LOG_PREFIX, "IoCreateFile");
+	LOG_FORWARD("IoCreateFile");
 
 	// TODO : How to base IoCreateFile on ObCreateObject, KeInitialize and ObInsertObject ?
 
@@ -349,16 +349,16 @@ XBSYSAPI EXPORTNUM(191) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateIoCompletion
 	IN ULONG Count
 )
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG_OUT(IoCompletionHandle)
 		LOG_FUNC_ARG(DesiredAccess)
 		LOG_FUNC_ARG(ObjectAttributes)
 		LOG_FUNC_ARG(Count)
 	LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED(LOG_PREFIX);
+	LOG_UNIMPLEMENTED();
 
-	RETURN(LOG_PREFIX, STATUS_NOT_IMPLEMENTED);
+	RETURN(STATUS_NOT_IMPLEMENTED);
 }
 
 // ******************************************************************
@@ -371,7 +371,7 @@ XBSYSAPI EXPORTNUM(192) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateMutant
 	IN  BOOLEAN             InitialOwner
 )
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG_OUT(MutantHandle)
 		LOG_FUNC_ARG(ObjectAttributes)
 		LOG_FUNC_ARG(InitialOwner)
@@ -393,9 +393,9 @@ XBSYSAPI EXPORTNUM(192) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateMutant
 		}
 	}
 
-	RETURN(LOG_PREFIX, Status);
+	RETURN(Status);
 */
-	LOG_INCOMPLETE(LOG_PREFIX); // TODO : Verify arguments, use ObCreateObject, KeInitializeMutant and ObInsertObject instead of this:
+	LOG_INCOMPLETE(); // TODO : Verify arguments, use ObCreateObject, KeInitializeMutant and ObInsertObject instead of this:
 
 	// initialize object attributes
 	NativeObjectAttributes nativeObjectAttributes;
@@ -430,7 +430,7 @@ XBSYSAPI EXPORTNUM(192) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateMutant
 	else
 		DbgPrintf(LOG_PREFIX, "NtCreateMutant MutantHandle = 0x%.8X\n", *MutantHandle);
 
-	RETURN(LOG_PREFIX, ret);
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -444,7 +444,7 @@ XBSYSAPI EXPORTNUM(193) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateSemaphore
 	IN  ULONG               MaximumCount
 )
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG_OUT(SemaphoreHandle)
 		LOG_FUNC_ARG(ObjectAttributes)
 		LOG_FUNC_ARG(InitialCount)
@@ -467,9 +467,9 @@ XBSYSAPI EXPORTNUM(193) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateSemaphore
 		}
 	}
 
-	RETURN(LOG_PREFIX, Status);
+	RETURN(Status);
 */
-	LOG_INCOMPLETE(LOG_PREFIX); // TODO : Verify arguments, use ObCreateObject, KeInitializeSemaphore and ObInsertObject instead of this:
+	LOG_INCOMPLETE(); // TODO : Verify arguments, use ObCreateObject, KeInitializeSemaphore and ObInsertObject instead of this:
 
 	// TODO : Is this the correct ACCESS_MASK? :
 	const ACCESS_MASK DesiredAccess = SEMAPHORE_ALL_ACCESS;
@@ -505,7 +505,7 @@ XBSYSAPI EXPORTNUM(193) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateSemaphore
 	else
 		DbgPrintf(LOG_PREFIX, "NtCreateSemaphore SemaphoreHandle = 0x%.8X\n", *SemaphoreHandle);
 
-	RETURN(LOG_PREFIX, ret);
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -518,7 +518,7 @@ XBSYSAPI EXPORTNUM(194) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateTimer
 	IN TIMER_TYPE TimerType
 )
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG_OUT(TimerHandle)
 		LOG_FUNC_ARG(ObjectAttributes)
 		LOG_FUNC_ARG(TimerType)
@@ -540,9 +540,9 @@ XBSYSAPI EXPORTNUM(194) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateTimer
 		}
 	}
 
-	RETURN(LOG_PREFIX, Status);
+	RETURN(Status);
 */
-	LOG_INCOMPLETE(LOG_PREFIX); // TODO : Verify arguments, use ObCreateObject, KeInitializeTimerEx and ObInsertObject instead of this:
+	LOG_INCOMPLETE(); // TODO : Verify arguments, use ObCreateObject, KeInitializeTimerEx and ObInsertObject instead of this:
 
 	// TODO : Is this the correct ACCESS_MASK? :
 	const ACCESS_MASK DesiredAccess = TIMER_ALL_ACCESS;
@@ -565,7 +565,7 @@ XBSYSAPI EXPORTNUM(194) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateTimer
 	else
 		DbgPrintf(LOG_PREFIX, "NtCreateTimer TimerHandle = 0x%.8X\n", *TimerHandle);
 
-	RETURN(LOG_PREFIX, ret);
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -576,7 +576,7 @@ XBSYSAPI EXPORTNUM(195) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtDeleteFile
 	IN POBJECT_ATTRIBUTES ObjectAttributes
 )
 {
-	LOG_FUNC_ONE_ARG(LOG_PREFIX, ObjectAttributes);
+	LOG_FUNC_ONE_ARG(ObjectAttributes);
 
 	NativeObjectAttributes nativeObjectAttributes;
 	NTSTATUS ret = CxbxObjectAttributesToNT(
@@ -593,7 +593,7 @@ XBSYSAPI EXPORTNUM(195) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtDeleteFile
 	if (FAILED(ret))
 		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "NtDeleteFile Failed!");
 	
-	RETURN(LOG_PREFIX, ret);
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -613,7 +613,7 @@ XBSYSAPI EXPORTNUM(196) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtDeviceIoControlFile
 	IN ULONG OutputBufferLength
 )
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(FileHandle)
 		LOG_FUNC_ARG(Event)
 		LOG_FUNC_ARG(ApcRoutine)
@@ -668,10 +668,10 @@ XBSYSAPI EXPORTNUM(196) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtDeviceIoControlFile
 		break;
 	}
 	default:
-		LOG_UNIMPLEMENTED(LOG_PREFIX);
+		LOG_UNIMPLEMENTED();
 	}
 
-	RETURN(LOG_PREFIX, ret);
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -684,7 +684,7 @@ XBSYSAPI EXPORTNUM(197) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtDuplicateObject
 	DWORD   Options
 )
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(SourceHandle)
 		LOG_FUNC_ARG(TargetHandle)
 		LOG_FUNC_ARG(Options)
@@ -730,7 +730,7 @@ XBSYSAPI EXPORTNUM(197) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtDuplicateObject
 	if (ret != STATUS_SUCCESS)
 		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Object was not duplicated!");
 
-	RETURN(LOG_PREFIX, ret);
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -742,18 +742,18 @@ XBSYSAPI EXPORTNUM(198) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtFlushBuffersFile
 	OUT PIO_STATUS_BLOCK IoStatusBlock
 )
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(FileHandle)
 		LOG_FUNC_ARG_OUT(IoStatusBlock)
 		LOG_FUNC_END;
 	NTSTATUS ret = STATUS_SUCCESS;
 	
 	if (IsEmuHandle(FileHandle)) 
-		LOG_UNIMPLEMENTED(LOG_PREFIX);
+		LOG_UNIMPLEMENTED();
 	else
 		ret = NtDll::NtFlushBuffersFile(FileHandle, (NtDll::IO_STATUS_BLOCK*)IoStatusBlock);
 
-	RETURN(LOG_PREFIX, ret);
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -769,7 +769,7 @@ XBSYSAPI EXPORTNUM(199) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtFreeVirtualMemory
 	IN ULONG      FreeType
 )
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(BaseAddress)
 		LOG_FUNC_ARG(FreeSize)
 		LOG_FUNC_ARG_TYPE(ALLOCATION_TYPE, FreeType)
@@ -777,7 +777,7 @@ XBSYSAPI EXPORTNUM(199) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtFreeVirtualMemory
 
 	NTSTATUS ret = g_VMManager.XbFreeVirtualMemory((VAddr*)BaseAddress, (size_t*)FreeSize, FreeType);
 
-	RETURN(LOG_PREFIX, ret);
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -797,7 +797,7 @@ XBSYSAPI EXPORTNUM(200) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtFsControlFile
 	IN ULONG                OutputBufferLength
 )
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(FileHandle)
 		LOG_FUNC_ARG(Event)
 		LOG_FUNC_ARG(ApcRoutine)
@@ -822,8 +822,8 @@ XBSYSAPI EXPORTNUM(200) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtFsControlFile
 			break;
 	}
 
-	LOG_UNIMPLEMENTED(LOG_PREFIX);
-	RETURN(LOG_PREFIX, ret);
+	LOG_UNIMPLEMENTED();
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -835,7 +835,7 @@ XBSYSAPI EXPORTNUM(201) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtOpenDirectoryObject
 	IN POBJECT_ATTRIBUTES ObjectAttributes
 )
 {
-	LOG_FORWARD(LOG_PREFIX, "ObOpenObjectByName");
+	LOG_FORWARD("ObOpenObjectByName");
 
 	return ObOpenObjectByName(ObjectAttributes, &ObDirectoryObjectType, NULL, DirectoryHandle);
 }
@@ -858,7 +858,7 @@ XBSYSAPI EXPORTNUM(202) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtOpenFile
 	IN  ULONG               OpenOptions
 )
 {
-	LOG_FORWARD(LOG_PREFIX, "IoCreateFile");
+	LOG_FORWARD("IoCreateFile");
 
 	return xboxkrnl::IoCreateFile(
 		FileHandle,
@@ -883,11 +883,11 @@ XBSYSAPI EXPORTNUM(203) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtOpenSymbolicLinkObj
 )
 {
 	/* TODO :
-	LOG_FORWARD(LOG_PREFIX, "ObOpenObjectByName");
+	LOG_FORWARD("ObOpenObjectByName");
 
 	return ObOpenObjectByName(ObjectAttributes, &ObSymbolicLinkObjectType, NULL, LinkHandle);
 	*/
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG_OUT(LinkHandle)
 		LOG_FUNC_ARG(ObjectAttributes)
 		LOG_FUNC_END;
@@ -908,7 +908,7 @@ XBSYSAPI EXPORTNUM(203) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtOpenSymbolicLinkObj
 	else
 		DbgPrintf(LOG_PREFIX, "NtOpenSymbolicLinkObject LinkHandle^ = 0x%.8X", *LinkHandle);
 
-	RETURN(LOG_PREFIX, ret);
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -922,7 +922,7 @@ XBSYSAPI EXPORTNUM(204) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtProtectVirtualMemor
 	OUT PULONG OldProtect
 )
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(BaseAddress)
 		LOG_FUNC_ARG(RegionSize)
 		LOG_FUNC_ARG_TYPE(PROTECTION_TYPE, NewProtect)
@@ -934,7 +934,7 @@ XBSYSAPI EXPORTNUM(204) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtProtectVirtualMemor
 	NTSTATUS ret = g_VMManager.XbVirtualProtect((VAddr*)BaseAddress, (size_t*)RegionSize, &Perms);
 	*OldProtect = Perms;
 
-	RETURN(LOG_PREFIX, ret);
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -946,7 +946,7 @@ XBSYSAPI EXPORTNUM(205) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtPulseEvent
 	OUT PLONG	PreviousState OPTIONAL
 )
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(EventHandle)
 		LOG_FUNC_ARG_OUT(PreviousState)
 		LOG_FUNC_END;
@@ -960,7 +960,7 @@ XBSYSAPI EXPORTNUM(205) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtPulseEvent
 	if (FAILED(ret))
 		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "NtPulseEvent failed!");
 
-	RETURN(LOG_PREFIX, ret);
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -975,7 +975,7 @@ XBSYSAPI EXPORTNUM(206) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueueApcThread
 	IN ULONG                ApcReserved OPTIONAL
 )
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(ThreadHandle)
 		LOG_FUNC_ARG(ApcRoutine)
 		LOG_FUNC_ARG(ApcRoutineContext)
@@ -1030,7 +1030,7 @@ XBSYSAPI EXPORTNUM(206) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueueApcThread
 		g_DuplicateHandles.erase( ThreadHandle );
 	}
 
-	RETURN(LOG_PREFIX, ret);
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -1050,7 +1050,7 @@ XBSYSAPI EXPORTNUM(207) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryDirectoryFile
 	IN  BOOLEAN                     RestartScan
 )
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(FileHandle)
 		LOG_FUNC_ARG(Event)
 		LOG_FUNC_ARG(ApcRoutine)
@@ -1130,7 +1130,7 @@ XBSYSAPI EXPORTNUM(207) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryDirectoryFile
 	// TODO: Cache the last search result for quicker access with CreateFile (xbox does this internally!)
 	free(NtFileDirInfo);
 
-	RETURN(LOG_PREFIX, ret);
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -1146,7 +1146,7 @@ XBSYSAPI EXPORTNUM(208) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryDirectoryObjec
 	OUT PULONG ReturnedLength OPTIONAL
 )
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(DirectoryHandle)
 		LOG_FUNC_ARG_OUT(Buffer)
 		LOG_FUNC_ARG(Length)
@@ -1155,9 +1155,9 @@ XBSYSAPI EXPORTNUM(208) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryDirectoryObjec
 		LOG_FUNC_ARG_OUT(ReturnedLength)
 	LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED(LOG_PREFIX);
+	LOG_UNIMPLEMENTED();
 
-	RETURN(LOG_PREFIX, STATUS_SUCCESS);
+	RETURN(STATUS_SUCCESS);
 }
 
 // ******************************************************************
@@ -1169,7 +1169,7 @@ XBSYSAPI EXPORTNUM(209) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryEvent
 	OUT PEVENT_BASIC_INFORMATION EventInformation
 )
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(EventHandle)
 		LOG_FUNC_ARG_OUT(EventInformation)
 		LOG_FUNC_END;
@@ -1184,7 +1184,7 @@ XBSYSAPI EXPORTNUM(209) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryEvent
 	if (ret != STATUS_SUCCESS)
 		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "NtQueryEvent failed! (%s)", NtStatusToString(ret));
 
-	RETURN(LOG_PREFIX, ret);
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -1196,7 +1196,7 @@ XBSYSAPI EXPORTNUM(210) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryFullAttributes
 	OUT xboxkrnl::PFILE_NETWORK_OPEN_INFORMATION   Attributes
 )
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(ObjectAttributes)
 		LOG_FUNC_ARG_OUT(Attributes)
 		LOG_FUNC_END;
@@ -1221,7 +1221,7 @@ XBSYSAPI EXPORTNUM(210) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryFullAttributes
 	if (FAILED(ret))
 		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "NtQueryFullAttributesFile failed! (0x%.08X)", ret);
 
-	RETURN(LOG_PREFIX, ret);
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -1236,7 +1236,7 @@ XBSYSAPI EXPORTNUM(211) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryInformationFil
 	IN  FILE_INFORMATION_CLASS      FileInformationClass
 )
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(FileHandle)
 		LOG_FUNC_ARG_OUT(IoStatusBlock)
 		LOG_FUNC_ARG_OUT(FileInformation)
@@ -1288,7 +1288,7 @@ XBSYSAPI EXPORTNUM(211) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryInformationFil
 	if (convRet == STATUS_BUFFER_OVERFLOW)
 		return convRet;
 
-	RETURN(LOG_PREFIX, ret);
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -1300,14 +1300,14 @@ XBSYSAPI EXPORTNUM(212) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryIoCompletion
 	OUT PIO_COMPLETION_BASIC_INFORMATION IoCompletionInformation
 )
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(IoCompletionHandle)
 		LOG_FUNC_ARG_OUT(IoCompletionInformation)
 	LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED(LOG_PREFIX);
+	LOG_UNIMPLEMENTED();
 
-	RETURN(LOG_PREFIX, STATUS_SUCCESS);
+	RETURN(STATUS_SUCCESS);
 }
 
 // ******************************************************************
@@ -1319,7 +1319,7 @@ XBSYSAPI EXPORTNUM(213) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryMutant
 	OUT PMUTANT_BASIC_INFORMATION MutantInformation
 )
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(MutantHandle)
 		LOG_FUNC_ARG_OUT(MutantInformation)
 		LOG_FUNC_END;
@@ -1334,7 +1334,7 @@ XBSYSAPI EXPORTNUM(213) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryMutant
 	if (ret != STATUS_SUCCESS)
 		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "NtQueryMutant failed! (%s)", NtStatusToString(ret));
 
-	RETURN(LOG_PREFIX, ret);
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -1346,7 +1346,7 @@ XBSYSAPI EXPORTNUM(214) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQuerySemaphore
 	OUT PSEMAPHORE_BASIC_INFORMATION SemaphoreInformation
 )
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(SemaphoreHandle)
 		LOG_FUNC_ARG_OUT(SemaphoreInformation)
 		LOG_FUNC_END;
@@ -1361,7 +1361,7 @@ XBSYSAPI EXPORTNUM(214) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQuerySemaphore
 	if (ret != STATUS_SUCCESS)
 		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "NtQuerySemaphore failed! (%s)", NtStatusToString(ret));
 
-	RETURN(LOG_PREFIX, ret);
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -1374,7 +1374,7 @@ XBSYSAPI EXPORTNUM(215) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQuerySymbolicLinkOb
 	OUT PULONG ReturnedLength OPTIONAL
 )
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(LinkHandle)
 		LOG_FUNC_ARG_OUT(LinkTarget)
 		LOG_FUNC_ARG_OUT(ReturnedLength)
@@ -1414,7 +1414,7 @@ XBSYSAPI EXPORTNUM(215) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQuerySymbolicLinkOb
 	if (ret != STATUS_SUCCESS)
 		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "NtQuerySymbolicLinkObject failed! (%s)", NtStatusToString(ret));
 
-	RETURN(LOG_PREFIX, ret);
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -1426,7 +1426,7 @@ XBSYSAPI EXPORTNUM(216) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryTimer
 	OUT PTIMER_BASIC_INFORMATION TimerInformation
 )
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(TimerHandle)
 		LOG_FUNC_ARG_OUT(TimerInformation)
 		LOG_FUNC_END;
@@ -1441,7 +1441,7 @@ XBSYSAPI EXPORTNUM(216) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryTimer
 		/*OUT ReturnLength*/nullptr
 	);
 
-	RETURN(LOG_PREFIX, ret);
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -1453,7 +1453,7 @@ XBSYSAPI EXPORTNUM(217) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryVirtualMemory
 	OUT PMEMORY_BASIC_INFORMATION   Buffer
 )
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(BaseAddress)
 		LOG_FUNC_ARG_OUT(Buffer)
 	LOG_FUNC_END;
@@ -1461,8 +1461,8 @@ XBSYSAPI EXPORTNUM(217) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryVirtualMemory
 	if (!Buffer)
 	{
 		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "NtQueryVirtualMemory : PMEMORY_BASIC_INFORMATION Buffer is nullptr!\n");
-		LOG_IGNORED(LOG_PREFIX);
-		RETURN(LOG_PREFIX, STATUS_INVALID_PARAMETER);
+		LOG_IGNORED();
+		RETURN(STATUS_INVALID_PARAMETER);
 	}
 
 	NTSTATUS ret = g_VMManager.XbVirtualMemoryStatistics((VAddr)BaseAddress, Buffer);
@@ -1504,7 +1504,7 @@ XBSYSAPI EXPORTNUM(217) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryVirtualMemory
 	}
 	#endif
 
-	RETURN(LOG_PREFIX, ret);
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -1519,7 +1519,7 @@ XBSYSAPI EXPORTNUM(218) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryVolumeInformat
 	IN  FS_INFORMATION_CLASS        FileInformationClass
 )
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(FileHandle)
 		LOG_FUNC_ARG_OUT(IoStatusBlock)
 		LOG_FUNC_ARG_OUT(FileInformation)
@@ -1549,7 +1549,7 @@ XBSYSAPI EXPORTNUM(218) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryVolumeInformat
 		XboxSizeInfo->TotalAllocationUnits.QuadPart = partitionTable.TableEntries[partitionNumber - 1].LBASize / XboxSizeInfo->SectorsPerAllocationUnit;
 		XboxSizeInfo->AvailableAllocationUnits.QuadPart = partitionTable.TableEntries[partitionNumber - 1].LBASize / XboxSizeInfo->SectorsPerAllocationUnit;
 
-		RETURN(LOG_PREFIX, STATUS_SUCCESS);
+		RETURN(STATUS_SUCCESS);
 	}
 
 	// Get the required size for the host buffer
@@ -1617,7 +1617,7 @@ XBSYSAPI EXPORTNUM(218) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryVolumeInformat
 		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "NtQueryVolumeInformationFile failed! (%s)\n", NtStatusToString(ret));
 	}
 
-	RETURN(LOG_PREFIX, ret);
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -1635,7 +1635,7 @@ XBSYSAPI EXPORTNUM(219) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtReadFile
 	IN  PLARGE_INTEGER  ByteOffset OPTIONAL
 )
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(FileHandle)
 		LOG_FUNC_ARG(Event)
 		LOG_FUNC_ARG(ApcRoutine)
@@ -1674,7 +1674,7 @@ XBSYSAPI EXPORTNUM(219) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtReadFile
         EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "NtReadFile Failed! (0x%.08X)", ret);
     }
 
-	RETURN(LOG_PREFIX, ret);
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -1692,7 +1692,7 @@ XBSYSAPI EXPORTNUM(220) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtReadFileScatter
 	IN PLARGE_INTEGER ByteOffset OPTIONAL
 )
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(FileHandle)
 		LOG_FUNC_ARG(Event)
 		LOG_FUNC_ARG(ApcRoutine)
@@ -1703,9 +1703,9 @@ XBSYSAPI EXPORTNUM(220) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtReadFileScatter
 		LOG_FUNC_ARG(ByteOffset)
 	LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED(LOG_PREFIX);
+	LOG_UNIMPLEMENTED();
 
-	RETURN(LOG_PREFIX, STATUS_SUCCESS);
+	RETURN(STATUS_SUCCESS);
 }
 
 // ******************************************************************
@@ -1717,7 +1717,7 @@ XBSYSAPI EXPORTNUM(221) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtReleaseMutant
 	OUT PLONG   PreviousCount
 )
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(MutantHandle)
 		LOG_FUNC_ARG_OUT(PreviousCount)
 		LOG_FUNC_END;
@@ -1728,7 +1728,7 @@ XBSYSAPI EXPORTNUM(221) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtReleaseMutant
 	if (FAILED(ret))
 		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "NtReleaseMutant Failed!");
 
-	RETURN(LOG_PREFIX, STATUS_SUCCESS); // TODO : RETURN(LOG_PREFIX, ret);
+	RETURN(STATUS_SUCCESS); // TODO : RETURN(ret);
 }
 
 // ******************************************************************
@@ -1741,7 +1741,7 @@ XBSYSAPI EXPORTNUM(222) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtReleaseSemaphore
 	OUT PULONG              PreviousCount OPTIONAL
 )
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(SemaphoreHandle)
 		LOG_FUNC_ARG(ReleaseCount)
 		LOG_FUNC_ARG_OUT(PreviousCount)
@@ -1755,7 +1755,7 @@ XBSYSAPI EXPORTNUM(222) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtReleaseSemaphore
 	if (FAILED(ret))
 		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "NtReleaseSemaphore failed!");
 
-	RETURN(LOG_PREFIX, ret);
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -1770,7 +1770,7 @@ XBSYSAPI EXPORTNUM(223) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtRemoveIoCompletion
 	IN PLARGE_INTEGER Timeout OPTIONAL
 )
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(IoCompletionHandle)
 		LOG_FUNC_ARG_OUT(KeyContext)
 		LOG_FUNC_ARG_OUT(ApcContext)
@@ -1778,9 +1778,9 @@ XBSYSAPI EXPORTNUM(223) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtRemoveIoCompletion
 		LOG_FUNC_ARG(Timeout)
 	LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED(LOG_PREFIX);
+	LOG_UNIMPLEMENTED();
 
-	RETURN(LOG_PREFIX, STATUS_SUCCESS);
+	RETURN(STATUS_SUCCESS);
 }
 
 // ******************************************************************
@@ -1792,7 +1792,7 @@ XBSYSAPI EXPORTNUM(224) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtResumeThread
 	OUT PULONG PreviousSuspendCount
 )
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(ThreadHandle)
 		LOG_FUNC_ARG_OUT(PreviousSuspendCount)
 		LOG_FUNC_END;
@@ -1805,7 +1805,7 @@ XBSYSAPI EXPORTNUM(224) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtResumeThread
 
 	//Sleep(10);
 
-	RETURN(LOG_PREFIX, ret);
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -1817,7 +1817,7 @@ XBSYSAPI EXPORTNUM(225) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtSetEvent
 	OUT PLONG  PreviousState
 )
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(EventHandle)
 		LOG_FUNC_ARG_OUT(PreviousState)
 		LOG_FUNC_END;
@@ -1829,7 +1829,7 @@ XBSYSAPI EXPORTNUM(225) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtSetEvent
 	if (FAILED(ret))
 		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "NtSetEvent Failed!");
 
-	RETURN(LOG_PREFIX, ret);
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -1844,7 +1844,7 @@ XBSYSAPI EXPORTNUM(226) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtSetInformationFile
 	IN  FILE_INFORMATION_CLASS   FileInformationClass
 )
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(FileHandle)
 		LOG_FUNC_ARG_OUT(IoStatusBlock)
 		LOG_FUNC_ARG(FileInformation)
@@ -1861,7 +1861,7 @@ XBSYSAPI EXPORTNUM(226) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtSetInformationFile
 		Length,
 		FileInformationClass);
 
-	RETURN(LOG_PREFIX, ret);
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -1876,7 +1876,7 @@ XBSYSAPI EXPORTNUM(227) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtSetIoCompletion
 	IN ULONG_PTR IoStatusInformation
 )
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(IoCompletionHandle)
 		LOG_FUNC_ARG(KeyContext)
 		LOG_FUNC_ARG(ApcContext)
@@ -1884,9 +1884,9 @@ XBSYSAPI EXPORTNUM(227) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtSetIoCompletion
 		LOG_FUNC_ARG(IoStatusInformation)
 	LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED(LOG_PREFIX);
+	LOG_UNIMPLEMENTED();
 
-	RETURN(LOG_PREFIX, STATUS_SUCCESS);
+	RETURN(STATUS_SUCCESS);
 }
 
 // ******************************************************************
@@ -1898,7 +1898,7 @@ XBSYSAPI EXPORTNUM(228) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtSetSystemTime
 	OUT PLARGE_INTEGER			PreviousTime OPTIONAL
 )
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(SystemTime)
 		LOG_FUNC_ARG_OUT(PreviousTime)
 		LOG_FUNC_END;
@@ -1929,7 +1929,7 @@ XBSYSAPI EXPORTNUM(228) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtSetSystemTime
 		}
 	}
 
-	RETURN(LOG_PREFIX, ret);
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -1947,7 +1947,7 @@ XBSYSAPI EXPORTNUM(229) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtSetTimerEx
 	OUT PBOOLEAN PreviousState OPTIONAL
 )
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(TimerHandle)
 		LOG_FUNC_ARG(DueTime)
 		LOG_FUNC_ARG(TimerApcRoutine)
@@ -1972,7 +1972,7 @@ XBSYSAPI EXPORTNUM(229) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtSetTimerEx
 	if (FAILED(ret))
 		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "NtSetTimerEx failed!");
 
-	RETURN(LOG_PREFIX, ret);
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -1987,7 +1987,7 @@ XBSYSAPI EXPORTNUM(230) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtSignalAndWaitForSin
 	IN PLARGE_INTEGER Timeout OPTIONAL
 )
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(SignalHandle)
 		LOG_FUNC_ARG(WaitHandle)
 		LOG_FUNC_ARG(WaitMode)
@@ -1995,9 +1995,9 @@ XBSYSAPI EXPORTNUM(230) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtSignalAndWaitForSin
 		LOG_FUNC_ARG(Timeout)
 	LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED(LOG_PREFIX);
+	LOG_UNIMPLEMENTED();
 
-	RETURN(LOG_PREFIX, STATUS_SUCCESS);
+	RETURN(STATUS_SUCCESS);
 }
 
 // ******************************************************************
@@ -2009,7 +2009,7 @@ XBSYSAPI EXPORTNUM(231) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtSuspendThread
 	OUT PULONG  PreviousSuspendCount OPTIONAL
 )
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(ThreadHandle)
 		LOG_FUNC_ARG_OUT(PreviousSuspendCount)
 		LOG_FUNC_END;
@@ -2020,7 +2020,7 @@ XBSYSAPI EXPORTNUM(231) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtSuspendThread
 
 	// TODO : Once we do our own thread-switching, implement NtSuspendThread using KeSuspendThread
 
-	RETURN(LOG_PREFIX, ret);
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -2033,7 +2033,7 @@ XBSYSAPI EXPORTNUM(232) xboxkrnl::VOID NTAPI xboxkrnl::NtUserIoApcDispatcher
 	ULONG            Reserved
 )
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(ApcContext)
 		LOG_FUNC_ARG(IoStatusBlock)
 		LOG_FUNC_ARG(Reserved)
@@ -2066,7 +2066,7 @@ XBSYSAPI EXPORTNUM(233) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtWaitForSingleObject
     IN  PLARGE_INTEGER   Timeout
 )
 {
-	LOG_FORWARD(LOG_PREFIX, "KeWaitForMultipleObjects");
+	LOG_FORWARD("KeWaitForMultipleObjects");
 
 	return xboxkrnl::KeWaitForMultipleObjects(
 		/*Count=*/1,
@@ -2091,7 +2091,7 @@ XBSYSAPI EXPORTNUM(234) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtWaitForSingleObject
 	IN  PLARGE_INTEGER  Timeout
 )
 {
-	LOG_FORWARD(LOG_PREFIX, "KeWaitForMultipleObjects");
+	LOG_FORWARD("KeWaitForMultipleObjects");
 
 	return xboxkrnl::KeWaitForMultipleObjects(
 		/*Count=*/1,
@@ -2118,7 +2118,7 @@ XBSYSAPI EXPORTNUM(235) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtWaitForMultipleObje
 	IN  PLARGE_INTEGER  Timeout
 )
 {
-	LOG_FORWARD(LOG_PREFIX, "KeWaitForMultipleObjects");
+	LOG_FORWARD("KeWaitForMultipleObjects");
 
 	return xboxkrnl::KeWaitForMultipleObjects(
 		Count,
@@ -2149,7 +2149,7 @@ XBSYSAPI EXPORTNUM(236) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtWriteFile
 	IN  PLARGE_INTEGER  ByteOffset OPTIONAL
 )
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(FileHandle)
 		LOG_FUNC_ARG(Event)
 		LOG_FUNC_ARG(ApcRoutine)
@@ -2187,7 +2187,7 @@ XBSYSAPI EXPORTNUM(236) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtWriteFile
 	if (FAILED(ret))
 		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "NtWriteFile Failed! (0x%.08X)", ret);
 
-	RETURN(LOG_PREFIX, ret);
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -2205,7 +2205,7 @@ XBSYSAPI EXPORTNUM(237) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtWriteFileGather
 	IN PLARGE_INTEGER ByteOffset OPTIONAL
 )
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(FileHandle)
 		LOG_FUNC_ARG(Event)
 		LOG_FUNC_ARG(ApcRoutine)
@@ -2216,9 +2216,9 @@ XBSYSAPI EXPORTNUM(237) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtWriteFileGather
 		LOG_FUNC_ARG(ByteOffset)
 	LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED(LOG_PREFIX);
+	LOG_UNIMPLEMENTED();
 
-	RETURN(LOG_PREFIX, STATUS_SUCCESS);
+	RETURN(STATUS_SUCCESS);
 }
 
 // ******************************************************************

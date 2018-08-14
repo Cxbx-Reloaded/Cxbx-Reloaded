@@ -74,7 +74,7 @@ XBSYSAPI EXPORTNUM(327) xboxkrnl::NTSTATUS NTAPI xboxkrnl::XeLoadSection
 	IN PXBEIMAGE_SECTION Section
 )
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(Section)
 		LOG_FUNC_END;
 
@@ -109,7 +109,7 @@ XBSYSAPI EXPORTNUM(327) xboxkrnl::NTSTATUS NTAPI xboxkrnl::XeLoadSection
 		Section->SectionReferenceCount++;
 	}
 	
-	RETURN(LOG_PREFIX, ret);
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -124,7 +124,7 @@ XBSYSAPI EXPORTNUM(328) xboxkrnl::NTSTATUS NTAPI xboxkrnl::XeUnloadSection
 	IN PXBEIMAGE_SECTION Section
 )
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(Section)
 		LOG_FUNC_END;
 
@@ -168,7 +168,7 @@ XBSYSAPI EXPORTNUM(328) xboxkrnl::NTSTATUS NTAPI xboxkrnl::XeUnloadSection
 		ret = STATUS_SUCCESS;
 	}
 
-	RETURN(LOG_PREFIX, ret);
+	RETURN(ret);
 }
 
 // ******************************************************************

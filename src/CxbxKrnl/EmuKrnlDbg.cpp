@@ -61,9 +61,9 @@ namespace NtDll
 // ******************************************************************
 XBSYSAPI EXPORTNUM(5) xboxkrnl::VOID NTAPI xboxkrnl::DbgBreakPoint()
 {
-	LOG_FUNC(LOG_PREFIX);
+	LOG_FUNC();
 
-	LOG_UNIMPLEMENTED(LOG_PREFIX);
+	LOG_UNIMPLEMENTED();
 }
 
 // ******************************************************************
@@ -74,9 +74,9 @@ XBSYSAPI EXPORTNUM(6) xboxkrnl::VOID NTAPI xboxkrnl::DbgBreakPointWithStatus
 	IN ULONG Status 
 )
 {
-	LOG_FUNC_ONE_ARG(LOG_PREFIX, Status);
+	LOG_FUNC_ONE_ARG(Status);
 
-	LOG_UNIMPLEMENTED(LOG_PREFIX);
+	LOG_UNIMPLEMENTED();
 }
 
 // ******************************************************************
@@ -89,7 +89,7 @@ XBSYSAPI EXPORTNUM(7) xboxkrnl::NTSTATUS NTAPI xboxkrnl::DbgLoadImageSymbols
 	IN ULONG_PTR ProcessId
 )
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX);
+	LOG_FUNC_BEGIN;
 		LOG_FUNC_ARG(Name)
 		LOG_FUNC_ARG(Base)
 		LOG_FUNC_ARG(ProcessId)
@@ -97,9 +97,9 @@ XBSYSAPI EXPORTNUM(7) xboxkrnl::NTSTATUS NTAPI xboxkrnl::DbgLoadImageSymbols
 
 	NTSTATUS result = S_OK;
 
-	LOG_UNIMPLEMENTED(LOG_PREFIX);
+	LOG_UNIMPLEMENTED();
 
-	RETURN(LOG_PREFIX, result);
+	RETURN(result);
 }
 
 // ******************************************************************
@@ -110,7 +110,7 @@ XBSYSAPI EXPORTNUM(8) xboxkrnl::ULONG _cdecl xboxkrnl::DbgPrint
 	PCHAR  Format, ...
 )
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX);
+	LOG_FUNC_BEGIN;
 		LOG_FUNC_ARG(Format)
 		LOG_FUNC_ARG("...")
 		LOG_FUNC_END;
@@ -128,7 +128,7 @@ XBSYSAPI EXPORTNUM(8) xboxkrnl::ULONG _cdecl xboxkrnl::DbgPrint
 		fflush(stdout);
 	}
 
-	RETURN(LOG_PREFIX, STATUS_SUCCESS);
+	RETURN(STATUS_SUCCESS);
 }
 
 // ******************************************************************
@@ -142,7 +142,7 @@ XBSYSAPI EXPORTNUM(10) xboxkrnl::ULONG NTAPI xboxkrnl::DbgPrompt
 	IN ULONG MaximumResponseLength
 )
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX);
+	LOG_FUNC_BEGIN;
 		LOG_FUNC_ARG(Prompt)
 		LOG_FUNC_ARG_OUT(Response)
 		LOG_FUNC_ARG(MaximumResponseLength)
@@ -150,9 +150,9 @@ XBSYSAPI EXPORTNUM(10) xboxkrnl::ULONG NTAPI xboxkrnl::DbgPrompt
 
 	NTSTATUS result = S_OK;
 
-	LOG_UNIMPLEMENTED(LOG_PREFIX);
+	LOG_UNIMPLEMENTED();
 
-	RETURN(LOG_PREFIX, result);
+	RETURN(result);
 }
 
 // ******************************************************************
@@ -166,11 +166,11 @@ XBSYSAPI EXPORTNUM(11) xboxkrnl::VOID NTAPI xboxkrnl::DbgUnLoadImageSymbols
 	IN ULONG_PTR ProcessId
 )
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX);
+	LOG_FUNC_BEGIN;
 		LOG_FUNC_ARG(Name)
 		LOG_FUNC_ARG(Base)
 		LOG_FUNC_ARG(ProcessId)
 		LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED(LOG_PREFIX);
+	LOG_UNIMPLEMENTED();
 }

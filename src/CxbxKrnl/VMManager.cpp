@@ -465,7 +465,7 @@ void VMManager::ConstructVMA(VAddr Start, size_t Size, MemoryRegionType Type, VM
 
 VAddr VMManager::DbgTestPte(VAddr addr, PMMPTE Pte, bool bWriteCheck)
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(addr)
 		LOG_FUNC_ARG(*(PULONG)Pte)
 		LOG_FUNC_ARG(bWriteCheck)
@@ -478,7 +478,7 @@ VAddr VMManager::DbgTestPte(VAddr addr, PMMPTE Pte, bool bWriteCheck)
 
 	if (bWriteCheck)
 	{
-		if (!IsValidVirtualAddress(addr)) { Unlock(); RETURN(LOG_PREFIX, ret); }
+		if (!IsValidVirtualAddress(addr)) { Unlock(); RETURN(ret); }
 
 		Pte->Default = 0;
 		PointerPte = GetPdeAddress(addr);
@@ -505,7 +505,7 @@ VAddr VMManager::DbgTestPte(VAddr addr, PMMPTE Pte, bool bWriteCheck)
 
 	Unlock();
 
-	RETURN(LOG_PREFIX, ret);
+	RETURN(ret);
 }
 
 PFN_COUNT VMManager::QueryNumberOfFreeDebuggerPages()
@@ -533,7 +533,7 @@ void VMManager::MemoryStatistics(xboxkrnl::PMM_STATISTICS memory_statistics)
 
 VAddr VMManager::ClaimGpuMemory(size_t Size, size_t* BytesToSkip)
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(Size)
 		LOG_FUNC_ARG(*BytesToSkip)
 	LOG_FUNC_END;
@@ -598,12 +598,12 @@ VAddr VMManager::ClaimGpuMemory(size_t Size, size_t* BytesToSkip)
 		Unlock();
 	}
 
-	RETURN(LOG_PREFIX, (VAddr)CONVERT_PFN_TO_CONTIGUOUS_PHYSICAL(m_HighestPage + 1) - *BytesToSkip);
+	RETURN((VAddr)CONVERT_PFN_TO_CONTIGUOUS_PHYSICAL(m_HighestPage + 1) - *BytesToSkip);
 }
 
 void VMManager::PersistMemory(VAddr addr, size_t Size, bool bPersist)
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(addr)
 		LOG_FUNC_ARG(Size)
 		LOG_FUNC_ARG(bPersist)
@@ -743,7 +743,7 @@ void VMManager::RestorePersistentMemory()
 
 VAddr VMManager::Allocate(size_t Size)
 {
-	LOG_FUNC_ONE_ARG(LOG_PREFIX, Size);
+	LOG_FUNC_ONE_ARG(Size);
 
 	MMPTE TempPte;
 	PMMPTE PointerPte;
@@ -759,7 +759,7 @@ VAddr VMManager::Allocate(size_t Size)
 	// widespread in the D3D patches. I think that most of those functions should use the Nt or the heap functions instead,
 	// but, until those are properly implemented, this routine is here to stay
 
-	if (!Size) { RETURN(LOG_PREFIX, NULL); }
+	if (!Size) { RETURN(NULL); }
 
 	Lock();
 
@@ -839,26 +839,26 @@ VAddr VMManager::Allocate(size_t Size)
 	UpdateMemoryPermissions(addr, PteNumber << PAGE_SHIFT, XBOX_PAGE_EXECUTE_READWRITE);
 
 	Unlock();
-	RETURN(LOG_PREFIX, addr);
+	RETURN(addr);
 
 	Fail:
 	Unlock();
-	RETURN(LOG_PREFIX, NULL);
+	RETURN(NULL);
 }
 
 VAddr VMManager::AllocateZeroed(size_t Size)
 {
-	LOG_FORWARD(LOG_PREFIX, "g_VMManager.Allocate");
+	LOG_FORWARD("g_VMManager.Allocate");
 
 	VAddr addr = Allocate(Size);
 	if (addr) { xboxkrnl::RtlFillMemoryUlong((void*)addr, ROUND_UP_4K(Size), 0); }
 
-	RETURN(LOG_PREFIX, addr);
+	RETURN(addr);
 }
 
 VAddr VMManager::AllocateSystemMemory(PageType BusyType, DWORD Perms, size_t Size, bool bAddGuardPage)
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(BusyType)
 		LOG_FUNC_ARG(Perms)
 		LOG_FUNC_ARG(Size)
@@ -882,7 +882,7 @@ VAddr VMManager::AllocateSystemMemory(PageType BusyType, DWORD Perms, size_t Siz
 	// NOTE: AllocateSystemMemory won't allocate a physical page for the guard page (if requested) and just adds an extra
 	// unallocated virtual page in front of the mapped allocation. For this reason we will decommmit later the extra guard page allocated
 
-	if (!Size || !ConvertXboxToSystemPteProtection(Perms, &TempPte)) { RETURN(LOG_PREFIX, NULL); }
+	if (!Size || !ConvertXboxToSystemPteProtection(Perms, &TempPte)) { RETURN(NULL); }
 
 	Lock();
 
@@ -987,16 +987,16 @@ VAddr VMManager::AllocateSystemMemory(PageType BusyType, DWORD Perms, size_t Siz
 	ConstructVMA(addr, PteNumber << PAGE_SHIFT, MemoryType, AllocatedVma, bVAlloc);
 
 	Unlock();
-	RETURN(LOG_PREFIX, addr);
+	RETURN(addr);
 
 	Fail:
 	Unlock();
-	RETURN(LOG_PREFIX, NULL);
+	RETURN(NULL);
 }
 
 VAddr VMManager::AllocateContiguous(size_t Size, PAddr LowestAddress, PAddr HighestAddress, ULONG Alignment, DWORD Perms)
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(Size)
 		LOG_FUNC_ARG(LowestAddress)
 		LOG_FUNC_ARG(HighestAddress)
@@ -1015,7 +1015,7 @@ VAddr VMManager::AllocateContiguous(size_t Size, PAddr LowestAddress, PAddr High
 	PFN_COUNT PteNumber;
 	VAddr addr;
 
-	if (!Size || !ConvertXboxToSystemPteProtection(Perms, &TempPte)) { RETURN(LOG_PREFIX, NULL); }
+	if (!Size || !ConvertXboxToSystemPteProtection(Perms, &TempPte)) { RETURN(NULL); }
 
 	PteNumber = ROUND_UP_4K(Size) >> PAGE_SHIFT;
 	LowerPfn = LowestAddress >> PAGE_SHIFT;
@@ -1055,16 +1055,16 @@ VAddr VMManager::AllocateContiguous(size_t Size, PAddr LowestAddress, PAddr High
 	UpdateMemoryPermissions(addr, PteNumber << PAGE_SHIFT, Perms);
 
 	Unlock();
-	RETURN(LOG_PREFIX, addr);
+	RETURN(addr);
 
 	Fail:
 	Unlock();
-	RETURN(LOG_PREFIX, NULL);
+	RETURN(NULL);
 }
 
 VAddr VMManager::MapDeviceMemory(PAddr Paddr, size_t Size, DWORD Perms)
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(Paddr)
 		LOG_FUNC_ARG(Size)
 		LOG_FUNC_ARG(Perms)
@@ -1078,14 +1078,14 @@ VAddr VMManager::MapDeviceMemory(PAddr Paddr, size_t Size, DWORD Perms)
 	VAddr addr;
 	MappingFn MappingRoutine;
 
-	if (!Size || !ConvertXboxToSystemPteProtection(Perms, &TempPte)) { RETURN(LOG_PREFIX, NULL); }
+	if (!Size || !ConvertXboxToSystemPteProtection(Perms, &TempPte)) { RETURN(NULL); }
 
 	// Is it a physical address for hardware devices (flash, NV2A, etc) ?
 	if (Paddr >= XBOX_WRITE_COMBINED_BASE /*&& Paddr + Size <= XBOX_UNCACHED_END*/)
 	{
 		// Return physical address as virtual (accesses will go through EmuException)
 
-		RETURN(LOG_PREFIX, Paddr);
+		RETURN(Paddr);
 	}
 
 	// The requested address is not a known device address so we have to create a mapping for it. Even though this won't
@@ -1117,16 +1117,16 @@ VAddr VMManager::MapDeviceMemory(PAddr Paddr, size_t Size, DWORD Perms)
 	ConstructVMA(addr, PteNumber << PAGE_SHIFT, SystemRegion, ReservedVma, true);
 
 	Unlock();
-	RETURN(LOG_PREFIX, addr + BYTE_OFFSET(Paddr));
+	RETURN(addr + BYTE_OFFSET(Paddr));
 
 	Fail:
 	Unlock();
-	RETURN(LOG_PREFIX, NULL);
+	RETURN(NULL);
 }
 
 void VMManager::Deallocate(VAddr addr)
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(addr)
 	LOG_FUNC_END;
 
@@ -1185,7 +1185,7 @@ void VMManager::Deallocate(VAddr addr)
 
 void VMManager::DeallocateContiguous(VAddr addr)
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(addr)
 	LOG_FUNC_END;
 
@@ -1225,7 +1225,7 @@ void VMManager::DeallocateContiguous(VAddr addr)
 
 PFN_COUNT VMManager::DeallocateSystemMemory(PageType BusyType, VAddr addr, size_t Size)
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(addr)
 		LOG_FUNC_ARG(Size)
 	LOG_FUNC_END;
@@ -1257,7 +1257,7 @@ PFN_COUNT VMManager::DeallocateSystemMemory(PageType BusyType, VAddr addr, size_
 	if (it == m_MemoryRegionArray[MemoryType].RegionMap.end() || it->second.type == FreeVma)
 	{
 		Unlock();
-		RETURN(LOG_PREFIX, NULL);
+		RETURN(NULL);
 	}
 
 	// Calculate the size of the original allocation
@@ -1301,12 +1301,12 @@ PFN_COUNT VMManager::DeallocateSystemMemory(PageType BusyType, VAddr addr, size_
 	DeallocatePT(bGuardPageAdded ? Size + PAGE_SIZE : Size, addr);
 
 	Unlock();
-	RETURN(LOG_PREFIX, bGuardPageAdded ? ++PteNumber : PteNumber);
+	RETURN(bGuardPageAdded ? ++PteNumber : PteNumber);
 }
 
 void VMManager::UnmapDeviceMemory(VAddr addr, size_t Size)
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(addr)
 		LOG_FUNC_ARG(Size)
 	LOG_FUNC_END;
@@ -1349,7 +1349,7 @@ void VMManager::UnmapDeviceMemory(VAddr addr, size_t Size)
 
 void VMManager::Protect(VAddr addr, size_t Size, DWORD NewPerms)
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(addr)
 		LOG_FUNC_ARG(Size)
 		LOG_FUNC_ARG(NewPerms)
@@ -1401,7 +1401,7 @@ void VMManager::Protect(VAddr addr, size_t Size, DWORD NewPerms)
 
 DWORD VMManager::QueryProtection(VAddr addr)
 {
-	LOG_FUNC_ONE_ARG(LOG_PREFIX, addr);
+	LOG_FUNC_ONE_ARG(addr);
 
 	PMMPTE PointerPte;
 	MMPTE TempPte;
@@ -1442,12 +1442,12 @@ DWORD VMManager::QueryProtection(VAddr addr)
 
 	Unlock();
 
-	RETURN(LOG_PREFIX, Protect);
+	RETURN(Protect);
 }
 
 size_t VMManager::QuerySize(VAddr addr, bool bCxbxCaller)
 {
-	LOG_FUNC_ONE_ARG(LOG_PREFIX, addr);
+	LOG_FUNC_ONE_ARG(addr);
 
 	PMMPTE PointerPte;
 	PFN_COUNT PagesNumber;
@@ -1469,7 +1469,7 @@ size_t VMManager::QuerySize(VAddr addr, bool bCxbxCaller)
 		{
 			DbgPrintf(LOG_PREFIX, "QuerySize: Unknown memory region queried.\n");
 			Unlock();
-			RETURN(LOG_PREFIX, Size);
+			RETURN(Size);
 		}
 
 		VMAIter it = GetVMAIterator(addr, Type);
@@ -1500,12 +1500,12 @@ size_t VMManager::QuerySize(VAddr addr, bool bCxbxCaller)
 
 	Unlock();
 
-	RETURN(LOG_PREFIX, Size);
+	RETURN(Size);
 }
 
 void VMManager::LockBufferOrSinglePage(PAddr paddr, VAddr addr, size_t Size, bool bUnLock)
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(paddr)
 		LOG_FUNC_ARG(addr)
 		LOG_FUNC_ARG(Size)
@@ -1573,7 +1573,7 @@ void VMManager::LockBufferOrSinglePage(PAddr paddr, VAddr addr, size_t Size, boo
 
 xboxkrnl::NTSTATUS VMManager::XbAllocateVirtualMemory(VAddr* addr, ULONG ZeroBits, size_t* Size, DWORD AllocationType, DWORD Protect)
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(*addr)
 		LOG_FUNC_ARG(ZeroBits)
 		LOG_FUNC_ARG(*Size)
@@ -1601,28 +1601,28 @@ xboxkrnl::NTSTATUS VMManager::XbAllocateVirtualMemory(VAddr* addr, ULONG ZeroBit
 	bool bOverflow;
 
 	// Invalid base address
-	if (CapturedBase > HIGHEST_VMA_ADDRESS) { RETURN(LOG_PREFIX, STATUS_INVALID_PARAMETER); }
+	if (CapturedBase > HIGHEST_VMA_ADDRESS) { RETURN(STATUS_INVALID_PARAMETER); }
 
 	// Invalid region size
-	if (((HIGHEST_VMA_ADDRESS + 1) - CapturedBase) < CapturedSize) { RETURN(LOG_PREFIX, STATUS_INVALID_PARAMETER); }
+	if (((HIGHEST_VMA_ADDRESS + 1) - CapturedBase) < CapturedSize) { RETURN(STATUS_INVALID_PARAMETER); }
 
 	// Size cannot be zero
-	if (CapturedSize == 0) { RETURN(LOG_PREFIX, STATUS_INVALID_PARAMETER); }
+	if (CapturedSize == 0) { RETURN(STATUS_INVALID_PARAMETER); }
 
 	// Limit number of zero bits upto 21
-	if (ZeroBits > MAXIMUM_ZERO_BITS) { RETURN(LOG_PREFIX, STATUS_INVALID_PARAMETER); }
+	if (ZeroBits > MAXIMUM_ZERO_BITS) { RETURN(STATUS_INVALID_PARAMETER); }
 
 	// Check for unknown MEM flags
 	if(AllocationType & ~(XBOX_MEM_COMMIT | XBOX_MEM_RESERVE | XBOX_MEM_TOP_DOWN | XBOX_MEM_RESET
-		| XBOX_MEM_NOZERO)) { RETURN(LOG_PREFIX, STATUS_INVALID_PARAMETER); }
+		| XBOX_MEM_NOZERO)) { RETURN(STATUS_INVALID_PARAMETER); }
 
 	// No other flags allowed in combination with MEM_RESET
-	if ((AllocationType & XBOX_MEM_RESET) && (AllocationType != XBOX_MEM_RESET)) { RETURN(LOG_PREFIX, STATUS_INVALID_PARAMETER); }
+	if ((AllocationType & XBOX_MEM_RESET) && (AllocationType != XBOX_MEM_RESET)) { RETURN(STATUS_INVALID_PARAMETER); }
 
 	// At least MEM_RESET, MEM_COMMIT or MEM_RESERVE must be set
-	if ((AllocationType & (XBOX_MEM_COMMIT | XBOX_MEM_RESERVE | XBOX_MEM_RESET)) == 0) { RETURN(LOG_PREFIX, STATUS_INVALID_PARAMETER); }
+	if ((AllocationType & (XBOX_MEM_COMMIT | XBOX_MEM_RESERVE | XBOX_MEM_RESET)) == 0) { RETURN(STATUS_INVALID_PARAMETER); }
 
-	if (!ConvertXboxToPteProtection(Protect, &TempPte)) { RETURN(LOG_PREFIX, STATUS_INVALID_PAGE_PROTECTION); }
+	if (!ConvertXboxToPteProtection(Protect, &TempPte)) { RETURN(STATUS_INVALID_PAGE_PROTECTION); }
 
 	DbgPrintf(LOG_PREFIX, "%s requested range : 0x%.8X - 0x%.8X\n", __func__, CapturedBase, CapturedBase + CapturedSize);
 
@@ -1738,7 +1738,7 @@ xboxkrnl::NTSTATUS VMManager::XbAllocateVirtualMemory(VAddr* addr, ULONG ZeroBit
 		*Size = AlignedCapturedSize;
 
 		Unlock();
-		RETURN(LOG_PREFIX, STATUS_SUCCESS);
+		RETURN(STATUS_SUCCESS);
 	}
 
 	// Figure out the number of physical pages we need to allocate. Note that NtAllocateVirtualMemory can do overlapped allocations so we
@@ -1817,7 +1817,7 @@ xboxkrnl::NTSTATUS VMManager::XbAllocateVirtualMemory(VAddr* addr, ULONG ZeroBit
 	*addr = AlignedCapturedBase;
 	*Size = AlignedCapturedSize;
 	Unlock();
-	RETURN(LOG_PREFIX, STATUS_SUCCESS);
+	RETURN(STATUS_SUCCESS);
 
 	Exit:
 	if (bDestructVmaOnFailure)
@@ -1826,12 +1826,12 @@ xboxkrnl::NTSTATUS VMManager::XbAllocateVirtualMemory(VAddr* addr, ULONG ZeroBit
 		DestructVMA(AlignedCapturedBase, UserRegion, AlignedCapturedSize);
 	}
 	Unlock();
-	RETURN(LOG_PREFIX, status);
+	RETURN(status);
 }
 
 xboxkrnl::NTSTATUS VMManager::XbFreeVirtualMemory(VAddr* addr, size_t* Size, DWORD FreeType)
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(*addr)
 		LOG_FUNC_ARG(*Size)
 		LOG_FUNC_ARG(FreeType)
@@ -1852,19 +1852,19 @@ xboxkrnl::NTSTATUS VMManager::XbFreeVirtualMemory(VAddr* addr, size_t* Size, DWO
 
 
 	// Only MEM_DECOMMIT and MEM_RELEASE are valid
-	if ((FreeType & ~(XBOX_MEM_DECOMMIT | XBOX_MEM_RELEASE)) != 0) { RETURN(LOG_PREFIX, STATUS_INVALID_PARAMETER); }
+	if ((FreeType & ~(XBOX_MEM_DECOMMIT | XBOX_MEM_RELEASE)) != 0) { RETURN(STATUS_INVALID_PARAMETER); }
 
 	// MEM_DECOMMIT and MEM_RELEASE must not be specified together
 	if (((FreeType & (XBOX_MEM_DECOMMIT | XBOX_MEM_RELEASE)) == 0) ||
 		((FreeType & (XBOX_MEM_DECOMMIT | XBOX_MEM_RELEASE)) == (XBOX_MEM_DECOMMIT | XBOX_MEM_RELEASE))) {
-		RETURN(LOG_PREFIX, STATUS_INVALID_PARAMETER);
+		RETURN(STATUS_INVALID_PARAMETER);
 	}
 
 	// Invalid base address
-	if (CapturedBase > HIGHEST_USER_ADDRESS) { RETURN(LOG_PREFIX, STATUS_INVALID_PARAMETER); }
+	if (CapturedBase > HIGHEST_USER_ADDRESS) { RETURN(STATUS_INVALID_PARAMETER); }
 
 	// Invalid region size
-	if ((HIGHEST_USER_ADDRESS - CapturedBase) < CapturedSize) { RETURN(LOG_PREFIX, STATUS_INVALID_PARAMETER); }
+	if ((HIGHEST_USER_ADDRESS - CapturedBase) < CapturedSize) { RETURN(STATUS_INVALID_PARAMETER); }
 
 	AlignedCapturedBase = ROUND_DOWN_4K(CapturedBase);
 	AlignedCapturedSize = (PAGES_SPANNED(CapturedBase, CapturedSize)) << PAGE_SHIFT;
@@ -1981,12 +1981,12 @@ xboxkrnl::NTSTATUS VMManager::XbFreeVirtualMemory(VAddr* addr, size_t* Size, DWO
 
 	Exit:
 	Unlock();
-	RETURN(LOG_PREFIX, status);
+	RETURN(status);
 }
 
 xboxkrnl::NTSTATUS VMManager::XbVirtualProtect(VAddr* addr, size_t* Size, DWORD* Protect)
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(*addr)
 		LOG_FUNC_ARG(*Size)
 		LOG_FUNC_ARG(*Protect)
@@ -2010,15 +2010,15 @@ xboxkrnl::NTSTATUS VMManager::XbVirtualProtect(VAddr* addr, size_t* Size, DWORD*
 
 
 	// Invalid base address
-	if (CapturedBase > HIGHEST_USER_ADDRESS) { RETURN(LOG_PREFIX, STATUS_INVALID_PARAMETER); }
+	if (CapturedBase > HIGHEST_USER_ADDRESS) { RETURN(STATUS_INVALID_PARAMETER); }
 
 	// Invalid region size
-	if ((HIGHEST_USER_ADDRESS - CapturedBase) < CapturedSize) { RETURN(LOG_PREFIX, STATUS_INVALID_PARAMETER); }
+	if ((HIGHEST_USER_ADDRESS - CapturedBase) < CapturedSize) { RETURN(STATUS_INVALID_PARAMETER); }
 
 	// Size cannot be zero
-	if (CapturedSize == 0) { RETURN(LOG_PREFIX, STATUS_INVALID_PARAMETER); }
+	if (CapturedSize == 0) { RETURN(STATUS_INVALID_PARAMETER); }
 
-	if (!ConvertXboxToPteProtection(NewPerms, &NewPermsPte)) { RETURN(LOG_PREFIX, STATUS_INVALID_PAGE_PROTECTION); }
+	if (!ConvertXboxToPteProtection(NewPerms, &NewPermsPte)) { RETURN(STATUS_INVALID_PAGE_PROTECTION); }
 
 	AlignedCapturedBase = ROUND_DOWN_4K(CapturedBase);
 	AlignedCapturedSize = (PAGES_SPANNED(CapturedBase, CapturedSize)) << PAGE_SHIFT;
@@ -2107,7 +2107,7 @@ xboxkrnl::NTSTATUS VMManager::XbVirtualProtect(VAddr* addr, size_t* Size, DWORD*
 
 	Exit:
 	Unlock();
-	RETURN(LOG_PREFIX, status);
+	RETURN(status);
 }
 
 xboxkrnl::NTSTATUS VMManager::XbVirtualMemoryStatistics(VAddr addr, xboxkrnl::PMEMORY_BASIC_INFORMATION memory_statistics)
@@ -2404,7 +2404,7 @@ VAddr VMManager::ReserveBlockWithVirtualAlloc(VAddr StartingAddr, size_t Size, s
 
 bool VMManager::IsValidVirtualAddress(const VAddr addr)
 {
-	LOG_FUNC_ONE_ARG(LOG_PREFIX, addr);
+	LOG_FUNC_ONE_ARG(addr);
 
 	PMMPTE PointerPte;
 
@@ -2434,16 +2434,16 @@ bool VMManager::IsValidVirtualAddress(const VAddr addr)
 
 	ValidAddress:
 	Unlock();
-	RETURN(LOG_PREFIX, true);
+	RETURN(true);
 
 	InvalidAddress:
 	Unlock();
-	RETURN(LOG_PREFIX, false);
+	RETURN(false);
 }
 
 PAddr VMManager::TranslateVAddrToPAddr(const VAddr addr)
 {
-	LOG_FUNC_ONE_ARG(LOG_PREFIX, addr);
+	LOG_FUNC_ONE_ARG(addr);
 
 	PAddr PAddr;
 	PMMPTE PointerPte;
@@ -2464,13 +2464,13 @@ PAddr VMManager::TranslateVAddrToPAddr(const VAddr addr)
 			if (Type == UserRegion) {
 				EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Applying identity mapping hack to allocation at address 0x%X", addr);
 				Unlock();
-				RETURN(LOG_PREFIX, addr); // committed pages in the user region always use VirtualAlloc
+				RETURN(addr); // committed pages in the user region always use VirtualAlloc
 			}
 			VMAIter it = GetVMAIterator(addr, Type);
 			if (it != m_MemoryRegionArray[Type].RegionMap.end() && it->second.type != FreeVma && it->second.bFragmented) {
 				EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Applying identity mapping hack to allocation at address 0x%X", addr);
 				Unlock();
-				RETURN(LOG_PREFIX, addr); // committed pages in the system-devkit regions can use VirtualAlloc because of fragmentation
+				RETURN(addr); // committed pages in the system-devkit regions can use VirtualAlloc because of fragmentation
 			}
 		}
 		else {
@@ -2499,11 +2499,11 @@ PAddr VMManager::TranslateVAddrToPAddr(const VAddr addr)
 	PAddr += (PointerPte->Hardware.PFN << PAGE_SHIFT);
 
 	Unlock();
-	RETURN(LOG_PREFIX, PAddr);
+	RETURN(PAddr);
 
 	InvalidAddress:
 	Unlock();
-	RETURN(LOG_PREFIX, NULL);
+	RETURN(NULL);
 }
 
 void VMManager::Lock()

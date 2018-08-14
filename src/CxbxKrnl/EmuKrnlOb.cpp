@@ -85,7 +85,7 @@ xboxkrnl::BOOLEAN xboxkrnl::ObpCreatePermanentDirectoryObject(
 	OUT xboxkrnl::POBJECT_DIRECTORY *DirectoryObject
 )
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(DirectoryName)
 		LOG_FUNC_ARG(DirectoryObject)
 		LOG_FUNC_END;
@@ -97,18 +97,18 @@ xboxkrnl::BOOLEAN xboxkrnl::ObpCreatePermanentDirectoryObject(
 	NTSTATUS status = NtCreateDirectoryObject(&Handle, &ObjectAttributes);
 
 	if (!NT_SUCCESS(status)) {
-		RETURN(LOG_PREFIX, FALSE);
+		RETURN(FALSE);
 	}
 	
 	status = ObReferenceObjectByHandle(Handle, &ObDirectoryObjectType, (PVOID *)DirectoryObject);
 	
 	if (!NT_SUCCESS(status)) {
-		RETURN(LOG_PREFIX, FALSE);
+		RETURN(FALSE);
 	}
 
 	NtClose(Handle);
 	
-	RETURN(LOG_PREFIX, TRUE);
+	RETURN(TRUE);
 }
 
 xboxkrnl::NTSTATUS xboxkrnl::ObpReferenceObjectByName(
@@ -336,7 +336,7 @@ xboxkrnl::BOOLEAN xboxkrnl::ObpExtendObjectHandleTable()
 
 xboxkrnl::HANDLE xboxkrnl::ObpCreateObjectHandle(xboxkrnl::PVOID Object)
 {
-	LOG_FUNC_ONE_ARG(LOG_PREFIX, Object);
+	LOG_FUNC_ONE_ARG(Object);
 
 	HANDLE Handle;
 	PVOID *HandleContents;
@@ -407,7 +407,7 @@ XBSYSAPI EXPORTNUM(239) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ObCreateObject
 	OUT PVOID *Object
 )
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(ObjectType)
 		LOG_FUNC_ARG(ObjectAttributes)
 		LOG_FUNC_ARG(ObjectBodySize)
@@ -418,7 +418,7 @@ XBSYSAPI EXPORTNUM(239) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ObCreateObject
 		POBJECT_HEADER ObjectHeader = (POBJECT_HEADER)ObjectType->AllocateProcedure(FIELD_OFFSET(OBJECT_HEADER, Body) + ObjectBodySize, ObjectType->PoolTag);
 
 		if (ObjectHeader == nullptr) {
-			RETURN(LOG_PREFIX, STATUS_INSUFFICIENT_RESOURCES);
+			RETURN(STATUS_INSUFFICIENT_RESOURCES);
 		}
 
 		ObjectHeader->PointerCount = 1;
@@ -428,7 +428,7 @@ XBSYSAPI EXPORTNUM(239) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ObCreateObject
 
 		*Object = &ObjectHeader->Body;
 		
-		RETURN(LOG_PREFIX, STATUS_SUCCESS);
+		RETURN(STATUS_SUCCESS);
 	}
 
 	OBJECT_STRING RemainingName = *ObjectAttributes->ObjectName;
@@ -473,7 +473,7 @@ XBSYSAPI EXPORTNUM(239) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ObCreateObject
 
 	*Object = &ObjectHeader->Body;
 
-	RETURN(LOG_PREFIX, STATUS_SUCCESS);
+	RETURN(STATUS_SUCCESS);
 }
 
 // ******************************************************************
@@ -612,7 +612,7 @@ XBSYSAPI EXPORTNUM(241) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ObInsertObject
 	OUT PHANDLE ReturnedHandle
 )
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(Object)
 		LOG_FUNC_ARG(ObjectAttributes)
 		LOG_FUNC_ARG(ObjectPointerBias)
@@ -753,7 +753,7 @@ CleanupAndExit:
 	ObfDereferenceObject(Object);
 	*ReturnedHandle = Handle;
 
-	RETURN(LOG_PREFIX, status);
+	RETURN(status);
 }
 
 // ******************************************************************
@@ -764,9 +764,9 @@ XBSYSAPI EXPORTNUM(242) xboxkrnl::VOID NTAPI xboxkrnl::ObMakeTemporaryObject
 	IN PVOID Object
 )
 {
-	LOG_FUNC_ONE_ARG(LOG_PREFIX, Object);
+	LOG_FUNC_ONE_ARG(Object);
 
-	LOG_UNIMPLEMENTED(LOG_PREFIX);
+	LOG_UNIMPLEMENTED();
 	assert(false);
 }
 
@@ -781,17 +781,17 @@ XBSYSAPI EXPORTNUM(243) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ObOpenObjectByName
 	OUT PHANDLE Handle
 )
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(ObjectAttributes)
 		LOG_FUNC_ARG(ObjectType)
 		LOG_FUNC_ARG(ParseContext)
 		LOG_FUNC_ARG_OUT(Handle)
 		LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED(LOG_PREFIX);
+	LOG_UNIMPLEMENTED();
 	assert(false);
 
-	RETURN(LOG_PREFIX, STATUS_SUCCESS);
+	RETURN(STATUS_SUCCESS);
 }
 
 // ******************************************************************
@@ -804,16 +804,16 @@ XBSYSAPI EXPORTNUM(244) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ObOpenObjectByPointer
 	OUT PHANDLE Handle
 )
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(Object)
 		LOG_FUNC_ARG(ObjectType)
 		LOG_FUNC_ARG_OUT(Handle)
 		LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED(LOG_PREFIX);
+	LOG_UNIMPLEMENTED();
 	assert(false);
 
-	RETURN(LOG_PREFIX, STATUS_SUCCESS);
+	RETURN(STATUS_SUCCESS);
 }
 
 // ******************************************************************
@@ -832,7 +832,7 @@ XBSYSAPI EXPORTNUM(246) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ObReferenceObjectByHa
 	OUT PVOID *ReturnedObject
 )
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(Handle)
 		LOG_FUNC_ARG(ObjectType)
 		LOG_FUNC_ARG_OUT(ReturnedObject)
@@ -872,7 +872,7 @@ XBSYSAPI EXPORTNUM(246) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ObReferenceObjectByHa
 
 	*ReturnedObject = NULL;
 
-	RETURN(LOG_PREFIX, status);
+	RETURN(status);
 }
 
 // ******************************************************************
@@ -887,7 +887,7 @@ XBSYSAPI EXPORTNUM(247) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ObReferenceObjectByNa
 	OUT PVOID *Object
 )
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(ObjectName)
 		LOG_FUNC_ARG(Attributes) // TODO : Use, how?
 		LOG_FUNC_ARG(ObjectType)
@@ -896,7 +896,7 @@ XBSYSAPI EXPORTNUM(247) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ObReferenceObjectByNa
 		LOG_FUNC_END;
 
 	NTSTATUS result = ObpReferenceObjectByName(NULL, ObjectName, Attributes, ObjectType, ParseContext, Object);
-	RETURN(LOG_PREFIX, result);
+	RETURN(result);
 }
 
 // ******************************************************************
@@ -908,7 +908,7 @@ XBSYSAPI EXPORTNUM(248) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ObReferenceObjectByPo
 	IN POBJECT_TYPE ObjectType
 )
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(Object)
 		LOG_FUNC_ARG(ObjectType)
 		LOG_FUNC_END;
@@ -917,10 +917,10 @@ XBSYSAPI EXPORTNUM(248) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ObReferenceObjectByPo
 
 	if (ObjectType == ObjectHeader->Type) {
 		InterlockedIncrement(&ObjectHeader->PointerCount);
-		RETURN(LOG_PREFIX, STATUS_SUCCESS);
+		RETURN(STATUS_SUCCESS);
 	} 
 	
-	RETURN(LOG_PREFIX, STATUS_OBJECT_TYPE_MISMATCH);
+	RETURN(STATUS_OBJECT_TYPE_MISMATCH);
 }
 
 // ******************************************************************
@@ -945,7 +945,7 @@ XBSYSAPI EXPORTNUM(250) xboxkrnl::VOID FASTCALL xboxkrnl::ObfDereferenceObject
 	IN PVOID Object
 )
 {
-	LOG_FUNC_ONE_ARG_OUT(LOG_PREFIX, Object);
+	LOG_FUNC_ONE_ARG_OUT(Object);
 
 	POBJECT_HEADER ObjectHeader = OBJECT_TO_OBJECT_HEADER(Object);
 	
@@ -973,6 +973,6 @@ XBSYSAPI EXPORTNUM(251) xboxkrnl::VOID FASTCALL xboxkrnl::ObfReferenceObject
 	IN PVOID Object
 )
 {
-	LOG_FUNC_ONE_ARG_OUT(LOG_PREFIX, Object);
+	LOG_FUNC_ONE_ARG_OUT(Object);
 	InterlockedIncrement(&OBJECT_TO_OBJECT_HEADER(Object)->PointerCount);
 }

@@ -172,9 +172,9 @@ xboxkrnl::PVOID xboxkrnl::AvSavedDataAddress = xbnullptr;
 // ******************************************************************
 XBSYSAPI EXPORTNUM(1) xboxkrnl::PVOID NTAPI xboxkrnl::AvGetSavedDataAddress(void)
 {
-	LOG_FUNC(LOG_PREFIX);
+	LOG_FUNC();
 
-	RETURN(LOG_PREFIX, AvSavedDataAddress);
+	RETURN(AvSavedDataAddress);
 }
 
 // ******************************************************************
@@ -188,7 +188,7 @@ XBSYSAPI EXPORTNUM(2) VOID NTAPI xboxkrnl::AvSendTVEncoderOption
 	OUT ULONG   *Result
 )
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX);
+	LOG_FUNC_BEGIN;
 		LOG_FUNC_ARG(RegisterBase)
 		LOG_FUNC_ARG(Option)
 		LOG_FUNC_ARG(Param)
@@ -200,55 +200,55 @@ XBSYSAPI EXPORTNUM(2) VOID NTAPI xboxkrnl::AvSendTVEncoderOption
 
 	switch (Option) {
 	case AV_OPTION_MACROVISION_MODE:
-		LOG_UNIMPLEMENTED(LOG_PREFIX);
+		LOG_UNIMPLEMENTED();
 		break;
 	case AV_OPTION_ENABLE_CC:
-		LOG_UNIMPLEMENTED(LOG_PREFIX);
+		LOG_UNIMPLEMENTED();
 		break;
 	case AV_OPTION_DISABLE_CC:
-		LOG_UNIMPLEMENTED(LOG_PREFIX);
+		LOG_UNIMPLEMENTED();
 		break;
 	case AV_OPTION_SEND_CC_DATA:
-		LOG_UNIMPLEMENTED(LOG_PREFIX);
+		LOG_UNIMPLEMENTED();
 		break;
 	case AV_QUERY_CC_STATUS:
-		LOG_UNIMPLEMENTED(LOG_PREFIX);
+		LOG_UNIMPLEMENTED();
 		break;
 	case AV_QUERY_AV_CAPABILITIES:
 		*Result = AvQueryAvCapabilities();
 		break;
 	case AV_OPTION_BLANK_SCREEN:
-		LOG_UNIMPLEMENTED(LOG_PREFIX);
+		LOG_UNIMPLEMENTED();
 		break;
 	case AV_OPTION_MACROVISION_COMMIT:
-		LOG_UNIMPLEMENTED(LOG_PREFIX);
+		LOG_UNIMPLEMENTED();
 		break;
 	case AV_OPTION_FLICKER_FILTER:
-		LOG_UNIMPLEMENTED(LOG_PREFIX);
+		LOG_UNIMPLEMENTED();
 		break;
 	case AV_OPTION_ZERO_MODE:
-		LOG_UNIMPLEMENTED(LOG_PREFIX);
+		LOG_UNIMPLEMENTED();
 		break;
 	case AV_OPTION_QUERY_MODE:
-		LOG_UNIMPLEMENTED(LOG_PREFIX);
+		LOG_UNIMPLEMENTED();
 		break;
 	case AV_OPTION_ENABLE_LUMA_FILTER:
-		LOG_UNIMPLEMENTED(LOG_PREFIX);
+		LOG_UNIMPLEMENTED();
 		break;
 	case AV_OPTION_GUESS_FIELD:
-		LOG_UNIMPLEMENTED(LOG_PREFIX);
+		LOG_UNIMPLEMENTED();
 		break;
 	case AV_QUERY_ENCODER_TYPE:
-		LOG_UNIMPLEMENTED(LOG_PREFIX);
+		LOG_UNIMPLEMENTED();
 		break;
 	case AV_QUERY_MODE_TABLE_VERSION:
-		LOG_UNIMPLEMENTED(LOG_PREFIX);
+		LOG_UNIMPLEMENTED();
 		break;
 	case AV_OPTION_CGMS:
-		LOG_UNIMPLEMENTED(LOG_PREFIX);
+		LOG_UNIMPLEMENTED();
 		break;
 	case AV_OPTION_WIDESCREEN:
-		LOG_UNIMPLEMENTED(LOG_PREFIX);
+		LOG_UNIMPLEMENTED();
 		break;
 	default:
 		// do nothing
@@ -269,7 +269,7 @@ XBSYSAPI EXPORTNUM(3) xboxkrnl::ULONG NTAPI xboxkrnl::AvSetDisplayMode
 	IN  ULONG   FrameBuffer
 )
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX);
+	LOG_FUNC_BEGIN;
 		LOG_FUNC_ARG(RegisterBase)
 		LOG_FUNC_ARG(Step)
 		LOG_FUNC_ARG(Mode)
@@ -323,7 +323,7 @@ XBSYSAPI EXPORTNUM(3) xboxkrnl::ULONG NTAPI xboxkrnl::AvSetDisplayMode
 		AvSendTVEncoderOption(RegisterBase, AV_OPTION_FLICKER_FILTER, 5, NULL);
 		AvSendTVEncoderOption(RegisterBase, AV_OPTION_ENABLE_LUMA_FILTER, FALSE, NULL);
 
-		RETURN(LOG_PREFIX, STATUS_SUCCESS);
+		RETURN(STATUS_SUCCESS);
 	}
 
 	CRTC_WR(RegisterBase, NV_CIO_CRE_PIXEL_INDEX /*=0x28*/, 0x80 | CR28Depth);
@@ -331,7 +331,7 @@ XBSYSAPI EXPORTNUM(3) xboxkrnl::ULONG NTAPI xboxkrnl::AvSetDisplayMode
 	// TODO: Lots of setup/TV encoder configuration
 	// Ignored for now since we don't emulate that stuff yet...
 
-	LOG_INCOMPLETE(LOG_PREFIX);
+	LOG_INCOMPLETE();
 
 	REG_WR32(RegisterBase, NV_PRAMDAC_GENERAL_CONTROL, GeneralControl);
 
@@ -401,7 +401,7 @@ XBSYSAPI EXPORTNUM(3) xboxkrnl::ULONG NTAPI xboxkrnl::AvSetDisplayMode
 	REG_WR32(RegisterBase, NV_PCRTC_START, FrameBuffer);
 	AvpCurrentMode = Mode;
 
-	RETURN(LOG_PREFIX, STATUS_SUCCESS);
+	RETURN(STATUS_SUCCESS);
 }
 
 // ******************************************************************
@@ -412,7 +412,7 @@ XBSYSAPI EXPORTNUM(4) VOID NTAPI xboxkrnl::AvSetSavedDataAddress
 	IN  PVOID   Address
 )
 {
-	LOG_FUNC_ONE_ARG(LOG_PREFIX, Address);
+	LOG_FUNC_ONE_ARG(Address);
 
 	AvSavedDataAddress = Address;
 }

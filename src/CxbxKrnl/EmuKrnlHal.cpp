@@ -87,7 +87,7 @@ XBSYSAPI EXPORTNUM(9) xboxkrnl::VOID NTAPI xboxkrnl::HalReadSMCTrayState
 	DWORD*	Count
 )
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(State)
 		LOG_FUNC_ARG(Count)
 		LOG_FUNC_END;
@@ -119,7 +119,7 @@ XBSYSAPI EXPORTNUM(38) xboxkrnl::VOID FASTCALL xboxkrnl::HalClearSoftwareInterru
 	KIRQL Request
 )
 {
-	LOG_FUNC_ONE_ARG_TYPE(LOG_PREFIX, KIRQL_TYPE, Request);
+	LOG_FUNC_ONE_ARG_TYPE(KIRQL_TYPE, Request);
 
 	// Mask out this interrupt request
 	DWORD InterruptMask = 1 << Request;
@@ -134,7 +134,7 @@ XBSYSAPI EXPORTNUM(39) xboxkrnl::VOID NTAPI xboxkrnl::HalDisableSystemInterrupt
 	IN ULONG BusInterruptLevel
 )
 {
-	LOG_FUNC_ONE_ARG(LOG_PREFIX, BusInterruptLevel);
+	LOG_FUNC_ONE_ARG(BusInterruptLevel);
 
 	HalSystemInterrupts[BusInterruptLevel].Disable();
 }
@@ -167,7 +167,7 @@ XBSYSAPI EXPORTNUM(43) xboxkrnl::VOID NTAPI xboxkrnl::HalEnableSystemInterrupt
 	IN KINTERRUPT_MODE InterruptMode
 )
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(BusInterruptLevel)
 		LOG_FUNC_ARG(InterruptMode)
 		LOG_FUNC_END;
@@ -219,7 +219,7 @@ XBSYSAPI EXPORTNUM(44) xboxkrnl::ULONG NTAPI xboxkrnl::HalGetInterruptVector
 	OUT PKIRQL  Irql
 )
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(BusInterruptLevel)
 		LOG_FUNC_ARG_OUT(Irql)
 		LOG_FUNC_END;
@@ -244,7 +244,7 @@ XBSYSAPI EXPORTNUM(44) xboxkrnl::ULONG NTAPI xboxkrnl::HalGetInterruptVector
 #endif
 	}
 
-	RETURN(LOG_PREFIX, dwVector);
+	RETURN(dwVector);
 }
 
 // ******************************************************************
@@ -258,7 +258,7 @@ XBSYSAPI EXPORTNUM(45) xboxkrnl::NTSTATUS NTAPI xboxkrnl::HalReadSMBusValue
 	OUT PULONG              DataValue
 )
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(Address)
 		LOG_FUNC_ARG(Command)
 		LOG_FUNC_ARG(ReadWord)
@@ -292,7 +292,7 @@ XBSYSAPI EXPORTNUM(45) xboxkrnl::NTSTATUS NTAPI xboxkrnl::HalReadSMBusValue
 
 	// TODO : Reenable interrupts
 
-	RETURN(LOG_PREFIX, Status);
+	RETURN(Status);
 }
 
 // ******************************************************************
@@ -309,7 +309,7 @@ XBSYSAPI EXPORTNUM(46) xboxkrnl::VOID NTAPI xboxkrnl::HalReadWritePCISpace
 	IN BOOLEAN WritePCISpace
 )
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(BusNumber)
 		LOG_FUNC_ARG(SlotNumber)
 		LOG_FUNC_ARG(RegisterNumber)
@@ -381,7 +381,7 @@ XBSYSAPI EXPORTNUM(47) xboxkrnl::VOID NTAPI xboxkrnl::HalRegisterShutdownNotific
 	IN BOOLEAN Register
 )
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(ShutdownRegistration)
 		LOG_FUNC_ARG(Register)
 	LOG_FUNC_END;
@@ -440,7 +440,7 @@ XBSYSAPI EXPORTNUM(48) xboxkrnl::VOID FASTCALL xboxkrnl::HalRequestSoftwareInter
 	IN KIRQL Request
 )
 {
-	LOG_FUNC_ONE_ARG_TYPE(LOG_PREFIX, KIRQL_TYPE, Request);
+	LOG_FUNC_ONE_ARG_TYPE(KIRQL_TYPE, Request);
 
 	DWORD InterruptMask = 1 << Request;
 	bool interrupt_flag = DisableInterrupts();
@@ -474,7 +474,7 @@ XBSYSAPI EXPORTNUM(49) xboxkrnl::VOID DECLSPEC_NORETURN NTAPI xboxkrnl::HalRetur
 	RETURN_FIRMWARE Routine
 )
 {
-	LOG_FUNC_ONE_ARG(LOG_PREFIX, Routine);
+	LOG_FUNC_ONE_ARG(Routine);
 
 	switch (Routine) {
 	case ReturnFirmwareHalt:
@@ -482,11 +482,11 @@ XBSYSAPI EXPORTNUM(49) xboxkrnl::VOID DECLSPEC_NORETURN NTAPI xboxkrnl::HalRetur
 		break;
 
 	case ReturnFirmwareReboot:
-		LOG_UNIMPLEMENTED(LOG_PREFIX); // fall through
+		LOG_UNIMPLEMENTED(); // fall through
 	case ReturnFirmwareQuickReboot:
 	{
 		if (xboxkrnl::LaunchDataPage == NULL)
-			LOG_UNIMPLEMENTED(LOG_PREFIX);
+			LOG_UNIMPLEMENTED();
 		else
 		{
 			// Save the launch data page to disk for later.
@@ -591,7 +591,7 @@ XBSYSAPI EXPORTNUM(49) xboxkrnl::VOID DECLSPEC_NORETURN NTAPI xboxkrnl::HalRetur
 	};
 
 	case ReturnFirmwareHard:
-		LOG_UNIMPLEMENTED(LOG_PREFIX);
+		LOG_UNIMPLEMENTED();
 		break;
 
 	case ReturnFirmwareFatal:
@@ -611,11 +611,11 @@ XBSYSAPI EXPORTNUM(49) xboxkrnl::VOID DECLSPEC_NORETURN NTAPI xboxkrnl::HalRetur
 	}
 
 	case ReturnFirmwareAll:
-		LOG_UNIMPLEMENTED(LOG_PREFIX);
+		LOG_UNIMPLEMENTED();
 		break;
 
 	default:
-		LOG_UNIMPLEMENTED(LOG_PREFIX);
+		LOG_UNIMPLEMENTED();
 	}
 
 	EmuShared::Cleanup();
@@ -633,7 +633,7 @@ XBSYSAPI EXPORTNUM(50) xboxkrnl::NTSTATUS NTAPI xboxkrnl::HalWriteSMBusValue
 	IN  ULONG               DataValue
 )
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(Address)
 		LOG_FUNC_ARG(Command)
 		LOG_FUNC_ARG(WriteWord)
@@ -662,7 +662,7 @@ XBSYSAPI EXPORTNUM(50) xboxkrnl::NTSTATUS NTAPI xboxkrnl::HalWriteSMBusValue
 
 	// TODO : Reenable interrupts
 
-	RETURN(LOG_PREFIX, Status);
+	RETURN(Status);
 }
 
 // ******************************************************************
@@ -675,7 +675,7 @@ XBSYSAPI EXPORTNUM(329) xboxkrnl::VOID NTAPI xboxkrnl::READ_PORT_BUFFER_UCHAR
 	IN ULONG  Count
 )
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(Port)
 		LOG_FUNC_ARG(Buffer)
 		LOG_FUNC_ARG(Count)
@@ -695,7 +695,7 @@ XBSYSAPI EXPORTNUM(330) xboxkrnl::VOID NTAPI xboxkrnl::READ_PORT_BUFFER_USHORT
 	IN ULONG   Count
 )
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(Port)
 		LOG_FUNC_ARG(Buffer)
 		LOG_FUNC_ARG(Count)
@@ -715,7 +715,7 @@ XBSYSAPI EXPORTNUM(331) xboxkrnl::VOID NTAPI xboxkrnl::READ_PORT_BUFFER_ULONG
 	IN ULONG  Count
 )
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(Port)
 		LOG_FUNC_ARG(Buffer)
 		LOG_FUNC_ARG(Count)
@@ -735,7 +735,7 @@ XBSYSAPI EXPORTNUM(332) xboxkrnl::VOID NTAPI xboxkrnl::WRITE_PORT_BUFFER_UCHAR
 	IN ULONG  Count
 )
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(Port)
 		LOG_FUNC_ARG(Buffer)
 		LOG_FUNC_ARG(Count)
@@ -755,7 +755,7 @@ XBSYSAPI EXPORTNUM(333) xboxkrnl::VOID NTAPI xboxkrnl::WRITE_PORT_BUFFER_USHORT
 	IN ULONG   Count
 )
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(Port)
 		LOG_FUNC_ARG(Buffer)
 		LOG_FUNC_ARG(Count)
@@ -775,7 +775,7 @@ XBSYSAPI EXPORTNUM(334) xboxkrnl::VOID NTAPI xboxkrnl::WRITE_PORT_BUFFER_ULONG
 	IN ULONG  Count
 )
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(Port)
 		LOG_FUNC_ARG(Buffer)
 		LOG_FUNC_ARG(Count)
@@ -799,13 +799,13 @@ XBSYSAPI EXPORTNUM(358) xboxkrnl::BOOLEAN NTAPI xboxkrnl::HalIsResetOrShutdownPe
 (
 )
 {
-	LOG_FUNC(LOG_PREFIX);
+	LOG_FUNC();
 
 	BOOLEAN ret = FALSE;
 
 	if (ResetOrShutdownCommandCode != 0) { ret = TRUE; }
 
-	RETURN(LOG_PREFIX, ret);
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -816,13 +816,13 @@ XBSYSAPI EXPORTNUM(360) xboxkrnl::NTSTATUS NTAPI xboxkrnl::HalInitiateShutdown
 (
 )
 {
-	LOG_FUNC(LOG_PREFIX);
+	LOG_FUNC();
 	
 	ResetOrShutdownCommandCode = SMC_COMMAND_RESET;
 	ResetOrShutdownDataValue = SMC_RESET_ASSERT_SHUTDOWN;
 	xboxkrnl::HalWriteSMBusValue(SMBUS_ADDRESS_SYSTEM_MICRO_CONTROLLER, ResetOrShutdownCommandCode, 0, ResetOrShutdownDataValue);
 
-	RETURN(LOG_PREFIX, S_OK);
+	RETURN(S_OK);
 }
 
 // ******************************************************************
@@ -837,9 +837,9 @@ XBSYSAPI EXPORTNUM(365) xboxkrnl::VOID NTAPI xboxkrnl::HalEnableSecureTrayEject
 (
 )
 {
-	LOG_FUNC(LOG_PREFIX);
+	LOG_FUNC();
 
-	LOG_UNIMPLEMENTED(LOG_PREFIX);
+	LOG_UNIMPLEMENTED();
 }
 
 // ******************************************************************
@@ -851,11 +851,11 @@ XBSYSAPI EXPORTNUM(366) xboxkrnl::NTSTATUS NTAPI xboxkrnl::HalWriteSMCScratchReg
 	IN DWORD ScratchRegister
 )
 {
-	LOG_FUNC_ONE_ARG(LOG_PREFIX, ScratchRegister);
+	LOG_FUNC_ONE_ARG(ScratchRegister);
 
 //	HalpSMCScratchRegister = ScratchRegister;
 
 	NTSTATUS Res = HalWriteSMBusValue(SMBUS_ADDRESS_SYSTEM_MICRO_CONTROLLER, SMC_COMMAND_SCRATCH, /*WordFlag:*/false, ScratchRegister);
 
-	RETURN(LOG_PREFIX, Res);
+	RETURN(Res);
 }

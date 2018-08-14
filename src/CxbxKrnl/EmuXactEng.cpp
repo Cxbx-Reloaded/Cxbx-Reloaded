@@ -75,7 +75,7 @@ HRESULT WINAPI XTL::EMUPATCH(XACTEngineCreate)
 {
 	//FUNC_EXPORTS
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pParams)
 		LOG_FUNC_ARG(ppEngine)
 		LOG_FUNC_END;
@@ -86,7 +86,7 @@ HRESULT WINAPI XTL::EMUPATCH(XACTEngineCreate)
 
 		
 	
-	RETURN(LOG_PREFIX, S_OK);
+	RETURN(S_OK);
 }
 
 // ******************************************************************
@@ -96,7 +96,7 @@ void WINAPI XTL::EMUPATCH(XACTEngineDoWork)()
 {
 	//FUNC_EXPORTS
 
-	LOG_FUNC(LOG_PREFIX);
+	LOG_FUNC();
 
 	// TODO: Anything else required here?
 	// AFAIK, this function just calls DirectSoundDoWork()
@@ -121,7 +121,7 @@ HRESULT WINAPI XTL::EMUPATCH(IXACTEngine_RegisterWaveBank)
 {
 	//FUNC_EXPORTS
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(pvData)
 		LOG_FUNC_ARG(dwSize)
@@ -132,7 +132,7 @@ HRESULT WINAPI XTL::EMUPATCH(IXACTEngine_RegisterWaveBank)
 
 	*ppWaveBank = (X_XACTWaveBank*)g_VMManager.AllocateZeroed(sizeof( X_XACTWaveBank ));
 
-	RETURN(LOG_PREFIX, S_OK);
+	RETURN(S_OK);
 }
 
 // ******************************************************************
@@ -147,7 +147,7 @@ HRESULT WINAPI XTL::EMUPATCH(IXACTEngine_RegisterStreamedWaveBank)
 {
 	//FUNC_EXPORTS
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(pParams)
 		LOG_FUNC_ARG(ppWaveBank)
@@ -157,7 +157,7 @@ HRESULT WINAPI XTL::EMUPATCH(IXACTEngine_RegisterStreamedWaveBank)
 
 	*ppWaveBank = (X_XACTWaveBank*)g_VMManager.AllocateZeroed(sizeof( X_XACTWaveBank ));
 
-	RETURN(LOG_PREFIX, S_OK);
+	RETURN(S_OK);
 }
 
 // ******************************************************************
@@ -173,7 +173,7 @@ HRESULT WINAPI XTL::EMUPATCH(IXACTEngine_CreateSoundBank)
 {
 	//FUNC_EXPORTS
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(pvData)
 		LOG_FUNC_ARG(dwSize)
@@ -184,7 +184,7 @@ HRESULT WINAPI XTL::EMUPATCH(IXACTEngine_CreateSoundBank)
 
 	*ppSoundBank = (X_XACTSoundBank*)g_VMManager.AllocateZeroed(sizeof( X_XACTSoundBank ));
 
-	RETURN(LOG_PREFIX, S_OK);
+	RETURN(S_OK);
 }
 
 // ******************************************************************
@@ -201,7 +201,7 @@ HRESULT WINAPI XTL::EMUPATCH(IXACTEngine_DownloadEffectsImage)
 {
 	//FUNC_EXPORTS
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(pvData)
 		LOG_FUNC_ARG(dwSize)
@@ -211,7 +211,7 @@ HRESULT WINAPI XTL::EMUPATCH(IXACTEngine_DownloadEffectsImage)
 
 	// TODO: Implement
 
-	RETURN(LOG_PREFIX, S_OK);
+	RETURN(S_OK);
 }
 
 // ******************************************************************
@@ -226,7 +226,7 @@ HRESULT WINAPI XTL::EMUPATCH(IXACTEngine_CreateSoundSource)
 {
 	//FUNC_EXPORTS
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(dwFlags)
 		LOG_FUNC_ARG(ppSoundSource)
@@ -234,7 +234,7 @@ HRESULT WINAPI XTL::EMUPATCH(IXACTEngine_CreateSoundSource)
 
 	*ppSoundSource = (X_XACTSoundSource*)g_VMManager.AllocateZeroed(sizeof( X_XACTSoundSource ));
 
-	RETURN(LOG_PREFIX, S_OK);
+	RETURN(S_OK);
 }
 
 // ******************************************************************
@@ -248,12 +248,12 @@ HRESULT WINAPI XTL::EMUPATCH(IXACTEngine_EnableHeadphones)
 {
 	//FUNC_EXPORTS
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(fEnabled)
 		LOG_FUNC_END;
 
-	RETURN(LOG_PREFIX, S_OK);
+	RETURN(S_OK);
 }
 
 // ******************************************************************
@@ -273,7 +273,7 @@ HRESULT WINAPI XTL::EMUPATCH(IXACTEngine_SetListenerOrientation)
 {
 	//FUNC_EXPORTS
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(xFront)
 		LOG_FUNC_ARG(yFront)
@@ -284,7 +284,7 @@ HRESULT WINAPI XTL::EMUPATCH(IXACTEngine_SetListenerOrientation)
 		LOG_FUNC_ARG(dwApply)
 		LOG_FUNC_END;
 
-	RETURN(LOG_PREFIX, S_OK);
+	RETURN(S_OK);
 }
 
 // ******************************************************************
@@ -301,7 +301,7 @@ HRESULT WINAPI XTL::EMUPATCH(IXACTEngine_SetListenerPosition)
 {
 	//FUNC_EXPORTS
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(x)
 		LOG_FUNC_ARG(y)
@@ -309,7 +309,7 @@ HRESULT WINAPI XTL::EMUPATCH(IXACTEngine_SetListenerPosition)
 		LOG_FUNC_ARG(dwApply)
 		LOG_FUNC_END;
 
-	RETURN(LOG_PREFIX, S_OK);
+	RETURN(S_OK);
 }
 
 // ******************************************************************
@@ -326,7 +326,7 @@ HRESULT WINAPI XTL::EMUPATCH(IXACTEngine_SetListenerVelocity)
 {
 	//FUNC_EXPORTS
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(x)
 		LOG_FUNC_ARG(y)
@@ -334,7 +334,7 @@ HRESULT WINAPI XTL::EMUPATCH(IXACTEngine_SetListenerVelocity)
 		LOG_FUNC_ARG(dwApply)
 		LOG_FUNC_END;
 
-	RETURN(LOG_PREFIX, S_OK);
+	RETURN(S_OK);
 }
 
 // ******************************************************************
@@ -349,13 +349,13 @@ HRESULT WINAPI XTL::EMUPATCH(IXACTEngine_SetMasterVolume)
 {
 	//FUNC_EXPORTS
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(wCategory)
 		LOG_FUNC_ARG(lVolume)
 		LOG_FUNC_END;
 
-	RETURN(LOG_PREFIX, S_OK);
+	RETURN(S_OK);
 }
 
 // ******************************************************************
@@ -368,9 +368,9 @@ HRESULT WINAPI XTL::EMUPATCH(IXACTEngine_CommitDeferredSettings)
 {
 	//FUNC_EXPORTS
 
-	LOG_FUNC_ONE_ARG(LOG_PREFIX, pThis);
+	LOG_FUNC_ONE_ARG(pThis);
 
-	RETURN(LOG_PREFIX, S_OK);
+	RETURN(S_OK);
 }
 
 // ******************************************************************
@@ -385,13 +385,13 @@ HRESULT WINAPI XTL::EMUPATCH(IXACTSoundBank_GetSoundCueIndexFromFriendlyName)
 {
 	//FUNC_EXPORTS
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(pFriendlyName)
 		LOG_FUNC_ARG(pdwSoundCueIndex)
 		LOG_FUNC_END;
 
-	RETURN(LOG_PREFIX, S_OK);
+	RETURN(S_OK);
 }
 
 // ******************************************************************
@@ -408,7 +408,7 @@ HRESULT WINAPI XTL::EMUPATCH(IXACTSoundBank_Play)
 {
 	//FUNC_EXPORTS
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(dwSoundCueIndex)
 		LOG_FUNC_ARG(pSoundSource)
@@ -416,7 +416,7 @@ HRESULT WINAPI XTL::EMUPATCH(IXACTSoundBank_Play)
 		LOG_FUNC_ARG(ppSoundCue)
 		LOG_FUNC_END;
 
-	RETURN(LOG_PREFIX, S_OK);
+	RETURN(S_OK);
 }
 
 // ******************************************************************
@@ -432,14 +432,14 @@ HRESULT WINAPI XTL::EMUPATCH(IXACTSoundBank_Stop)
 {
 	//FUNC_EXPORTS
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(dwSoundCueIndex)
 		LOG_FUNC_ARG(dwFlags)
 		LOG_FUNC_ARG(pSoundCue)
 		LOG_FUNC_END;
 
-	RETURN(LOG_PREFIX, S_OK);
+	RETURN(S_OK);
 }
 
 // ******************************************************************
@@ -456,7 +456,7 @@ HRESULT WINAPI XTL::EMUPATCH(IXACTSoundSource_SetPosition)
 {
 	//FUNC_EXPORTS
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(x)
 		LOG_FUNC_ARG(y)
@@ -464,7 +464,7 @@ HRESULT WINAPI XTL::EMUPATCH(IXACTSoundSource_SetPosition)
 		LOG_FUNC_ARG(dwApply)
 		LOG_FUNC_END;
 
-	RETURN(LOG_PREFIX, S_OK);
+	RETURN(S_OK);
 }
 
 // ******************************************************************
@@ -481,7 +481,7 @@ HRESULT WINAPI XTL::EMUPATCH(IXACTSoundSource_SetVelocity)
 {
 	//FUNC_EXPORTS
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(x)
 		LOG_FUNC_ARG(y)
@@ -489,7 +489,7 @@ HRESULT WINAPI XTL::EMUPATCH(IXACTSoundSource_SetVelocity)
 		LOG_FUNC_ARG(dwApply)
 		LOG_FUNC_END;
 
-	RETURN(LOG_PREFIX, S_OK);
+	RETURN(S_OK);
 }
 
 // ******************************************************************
@@ -503,12 +503,12 @@ HRESULT WINAPI XTL::EMUPATCH(IXACTEngine_RegisterNotification)
 {
 	//FUNC_EXPORTS
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(pNotificationDesc)
 		LOG_FUNC_END;
 
-	RETURN(LOG_PREFIX, S_OK);
+	RETURN(S_OK);
 }
 
 // ******************************************************************
@@ -523,7 +523,7 @@ HRESULT WINAPI XTL::EMUPATCH(IXACTEngine_GetNotification)
 {
 	//FUNC_EXPORTS
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(pNotificationDesc)
 		LOG_FUNC_ARG(pNotification)
@@ -532,7 +532,7 @@ HRESULT WINAPI XTL::EMUPATCH(IXACTEngine_GetNotification)
 	// TODO: The contents of XACT_NOTIFICATION can vary from one XDK to the next.
 	// The definition for 4627 is different than 5558.
 
-	RETURN(LOG_PREFIX, S_OK);
+	RETURN(S_OK);
 }
 
 // ******************************************************************
@@ -546,7 +546,7 @@ HRESULT WINAPI XTL::EMUPATCH(IXACTEngine_UnRegisterWaveBank)
 {
 	//FUNC_EXPORTS
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(pWaveBank)
 		LOG_FUNC_END;
@@ -559,5 +559,5 @@ HRESULT WINAPI XTL::EMUPATCH(IXACTEngine_UnRegisterWaveBank)
 //	if(pWaveBank)
 //		g_VMManager.Deallocate((VAddr)pWaveBank);
 
-	RETURN(LOG_PREFIX, S_OK);
+	RETURN(S_OK);
 }

@@ -54,7 +54,7 @@ int WINAPI XTL::EMUPATCH(WSAStartup)
 {
 	FUNC_EXPORTS
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(wVersionRequested)
 		LOG_FUNC_ARG(lpWSAData)
 		LOG_FUNC_END;
@@ -64,7 +64,7 @@ int WINAPI XTL::EMUPATCH(WSAStartup)
 	// in the 4920 dashboard.
     int ret = WSAStartup(MAKEWORD(2,2) /*wVersionRequested, lpWSAData);
 
-	RETURN(LOG_PREFIX, ret);
+	RETURN(ret);
 }
 
 /*
@@ -78,12 +78,12 @@ INT WINAPI XTL::EMUPATCH(XNetStartup)
 {
 	FUNC_EXPORTS
 
-	LOG_FUNC_ONE_ARG(LOG_PREFIX, pDummy);
+	LOG_FUNC_ONE_ARG(pDummy);
 
 	// Fake Successfull...hehehe...sucker...hehehehehe
 	INT ret = 0;
 
-	RETURN(LOG_PREFIX, ret);
+	RETURN(ret);
 }
 
 
@@ -99,7 +99,7 @@ SOCKET WINAPI XTL::EMUPATCH(socket)
 {
 	FUNC_EXPORTS
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(af)
 		LOG_FUNC_ARG(type)
 		LOG_FUNC_ARG(protocol)
@@ -107,7 +107,7 @@ SOCKET WINAPI XTL::EMUPATCH(socket)
 
     SOCKET ret = socket(af, type, protocol);
 
-	RETURN(LOG_PREFIX, ret);
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -122,7 +122,7 @@ int WINAPI XTL::EMUPATCH(connect)
 {
 	FUNC_EXPORTS
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(s)
 		LOG_FUNC_ARG(name)
 		LOG_FUNC_ARG(namelen)
@@ -130,7 +130,7 @@ int WINAPI XTL::EMUPATCH(connect)
 
 	int ret = connect(s, name, namelen);
 
-	RETURN(LOG_PREFIX, ret);
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -146,7 +146,7 @@ int WINAPI XTL::EMUPATCH(send)
 {
 	FUNC_EXPORTS
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(s)
 		LOG_FUNC_ARG(buf)
 		LOG_FUNC_ARG(len)
@@ -155,7 +155,7 @@ int WINAPI XTL::EMUPATCH(send)
 
 	int ret = send(s, buf, len, flags);
 
-	RETURN(LOG_PREFIX, ret);
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -171,7 +171,7 @@ int WINAPI XTL::EMUPATCH(recv)
 {
 	FUNC_EXPORTS
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(s)
 		LOG_FUNC_ARG(buf)
 		LOG_FUNC_ARG(len)
@@ -180,7 +180,7 @@ int WINAPI XTL::EMUPATCH(recv)
 
 	int ret = recv(s, buf, len, flags);
 
-	RETURN(LOG_PREFIX, ret);
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -195,7 +195,7 @@ int WINAPI XTL::EMUPATCH(bind)
 {
 	FUNC_EXPORTS
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(s)
 		LOG_FUNC_ARG(name)
 		LOG_FUNC_ARG(namelen)
@@ -205,7 +205,7 @@ int WINAPI XTL::EMUPATCH(bind)
 
     int ret = bind(s, name, namelen);
 
-	RETURN(LOG_PREFIX, ret);
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -219,7 +219,7 @@ int WINAPI XTL::EMUPATCH(listen)
 {
 	FUNC_EXPORTS
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(s)
 		LOG_FUNC_ARG(backlog)
 		LOG_FUNC_END;
@@ -228,7 +228,7 @@ int WINAPI XTL::EMUPATCH(listen)
 
     int ret = listen(s, backlog);
 
-	RETURN(LOG_PREFIX, ret);
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -243,7 +243,7 @@ int WINAPI XTL::EMUPATCH(ioctlsocket)
 {
 	FUNC_EXPORTS
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(s)
 		LOG_FUNC_ARG(cmd)
 		LOG_FUNC_ARG(argp)
@@ -251,7 +251,7 @@ int WINAPI XTL::EMUPATCH(ioctlsocket)
 
     int ret = ioctlsocket(s, cmd, argp);
 
-	RETURN(LOG_PREFIX, ret);
+	RETURN(ret);
 }
 */
 
@@ -264,7 +264,7 @@ HRESULT WINAPI XOnlineLaunchNewImage
     LPVOID	pLaunchData
 )
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(lpImagePath)
 		LOG_FUNC_ARG(pLaunchData)
 		LOG_FUNC_END;
@@ -273,7 +273,7 @@ HRESULT WINAPI XOnlineLaunchNewImage
 
 	HRESULT ret = E_FAIL;
 
-	RETURN(LOG_PREFIX, ret);
+	RETURN(ret);
 }
 
 /*
@@ -291,7 +291,7 @@ HRESULT WINAPI XTL::EMUPATCH(XOnlineLogon)
 {
 	FUNC_EXPORTS
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pUsers)
 		LOG_FUNC_ARG(pdwServiceIDs)
 		LOG_FUNC_ARG(dwServices)
@@ -303,6 +303,6 @@ HRESULT WINAPI XTL::EMUPATCH(XOnlineLogon)
 
 	HRESULT ret = HRESULT(0x80151000L);	// XONLINE_E_LOGON_NO_NETWORK_CONNECTION
 
-	RETURN(LOG_PREFIX, ret);
+	RETURN(ret);
 }
 */

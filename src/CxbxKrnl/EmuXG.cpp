@@ -55,9 +55,9 @@ PVOID WINAPI XTL::EMUPATCH(XGIsSwizzledFormat)
 )
 {
 	//FUNC_EXPORTS
-	LOG_FUNC_ONE_ARG(LOG_PREFIX, Format);
+	LOG_FUNC_ONE_ARG(Format);
 
-	RETURN(LOG_PREFIX, FALSE);
+	RETURN(FALSE);
 }
 
 #if 0 // Leave unpatched
@@ -77,7 +77,7 @@ VOID WINAPI XTL::EMUPATCH(XGSwizzleRect)
 )
 {
 	FUNC_EXPORTS
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pSource)
 		LOG_FUNC_ARG(Pitch)
 		LOG_FUNC_ARG(pRect)
@@ -141,7 +141,7 @@ VOID WINAPI XTL::EMUPATCH(XGSwizzleBox)
 {
 	//FUNC_EXPORTS
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pSource)
 		LOG_FUNC_ARG(RowPitch)
 		LOG_FUNC_ARG(SlicePitch)
@@ -203,7 +203,7 @@ HRESULT WINAPI XTL::EMUPATCH(XGWriteSurfaceOrTextureToXPR)
 {
 	//FUNC_EXPORTS
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pResource)
 		LOG_FUNC_ARG(cPath)
 		LOG_FUNC_ARG(bWriteSurfaceAsTexture)
@@ -213,9 +213,9 @@ HRESULT WINAPI XTL::EMUPATCH(XGWriteSurfaceOrTextureToXPR)
 	// and write the surface/texture to a file, or output a generic .xbx
 	// file and be done with it.
 
-	LOG_IGNORED(LOG_PREFIX); // (Temporarily) ignoring EmuXGWriteSurfaceOrTextureToXPR. Need file specs.
+	LOG_IGNORED(); // (Temporarily) ignoring EmuXGWriteSurfaceOrTextureToXPR. Need file specs.
 
-	RETURN(LOG_PREFIX, S_OK);
+	RETURN(S_OK);
 }
 
 // ******************************************************************
@@ -236,7 +236,7 @@ VOID WINAPI XTL::EMUPATCH(XGSetTextureHeader)
 {
 	//FUNC_EXPORTS
 
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(Width)
 		LOG_FUNC_ARG(Height)
 		LOG_FUNC_ARG(Levels)
@@ -299,7 +299,7 @@ VOID WINAPI XTL::EMUPATCH(XGSetTextureHeader)
 //{
 //		FUNC_EXPORTS
 //
-//		LOG_FUNC_BEGIN(LOG_PREFIX)
+//		LOG_FUNC_BEGIN
 //			LOG_FUNC_ARG(pFontData)
 //			LOG_FUNC_ARG(uFontDataSize)
 //			LOG_FUNC_ARG(ppFont)
@@ -309,5 +309,5 @@ VOID WINAPI XTL::EMUPATCH(XGSetTextureHeader)
 //
 //	 
 //
-//	RETURN(LOG_PREFIX, E_FAIL);
+//	RETURN(E_FAIL);
 //}

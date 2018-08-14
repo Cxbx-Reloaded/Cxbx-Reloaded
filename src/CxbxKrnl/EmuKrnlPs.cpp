@@ -87,7 +87,7 @@ void LOG_PCSTProxy
 	HANDLE hStartedEvent
 )
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(StartRoutine)
 		LOG_FUNC_ARG(StartContext)
 		LOG_FUNC_ARG(SystemRoutine)
@@ -232,7 +232,7 @@ XBSYSAPI EXPORTNUM(254) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PsCreateSystemThread
 	IN  BOOLEAN         DebuggerThread
 )
 {
-	LOG_FORWARD(LOG_PREFIX, "PsCreateSystemThreadEx");
+	LOG_FORWARD("PsCreateSystemThreadEx");
 
 	return PsCreateSystemThreadEx(
 		/*OUT*/ThreadHandle,
@@ -278,7 +278,7 @@ XBSYSAPI EXPORTNUM(255) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PsCreateSystemThreadE
 	IN  PKSYSTEM_ROUTINE SystemRoutine OPTIONAL
 )
 {
-	LOG_FUNC_BEGIN(LOG_PREFIX)
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG_OUT(ThreadHandle)
 		LOG_FUNC_ARG(ThreadExtensionSize)
 		LOG_FUNC_ARG(KernelStackSize)
@@ -366,7 +366,7 @@ XBSYSAPI EXPORTNUM(255) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PsCreateSystemThreadE
 			*ThreadId = (xboxkrnl::HANDLE)dwThreadId;
 	}
 
-	RETURN(LOG_PREFIX, STATUS_SUCCESS);
+	RETURN(STATUS_SUCCESS);
 }
 
 // ******************************************************************
@@ -377,19 +377,19 @@ XBSYSAPI EXPORTNUM(256) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PsQueryStatistics
 	IN OUT PPS_STATISTICS ProcessStatistics
 )
 {
-	LOG_FUNC_ONE_ARG_OUT(LOG_PREFIX, ProcessStatistics);
+	LOG_FUNC_ONE_ARG_OUT(ProcessStatistics);
 
 	NTSTATUS ret = STATUS_SUCCESS;
 
 	if (ProcessStatistics->Length == sizeof(PS_STATISTICS)) {
-		LOG_INCOMPLETE(LOG_PREFIX); // TODO : Return number of threads and handles that currently exist
+		LOG_INCOMPLETE(); // TODO : Return number of threads and handles that currently exist
 		ProcessStatistics->ThreadCount = 1;
 		ProcessStatistics->HandleCount = 1;
 	} else {
 		ret = STATUS_INVALID_PARAMETER;
 	}
 
-	RETURN(LOG_PREFIX, ret);
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -400,7 +400,7 @@ XBSYSAPI EXPORTNUM(257) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PsSetCreateThreadNoti
 	IN PCREATE_THREAD_NOTIFY_ROUTINE NotifyRoutine
 )
 {
-	LOG_FUNC_ONE_ARG(LOG_PREFIX, NotifyRoutine);
+	LOG_FUNC_ONE_ARG(NotifyRoutine);
 
 	NTSTATUS ret = STATUS_INSUFFICIENT_RESOURCES;
 
@@ -424,7 +424,7 @@ XBSYSAPI EXPORTNUM(257) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PsSetCreateThreadNoti
 		}
 	}
 
-	RETURN(LOG_PREFIX, ret);
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -438,7 +438,7 @@ XBSYSAPI EXPORTNUM(258) xboxkrnl::VOID NTAPI xboxkrnl::PsTerminateSystemThread
 	IN NTSTATUS ExitStatus
 )
 {
-	LOG_FUNC_ONE_ARG(LOG_PREFIX, ExitStatus);
+	LOG_FUNC_ONE_ARG(ExitStatus);
 
 	// call thread notification routine(s)
 	if (g_iThreadNotificationCount != 0)
