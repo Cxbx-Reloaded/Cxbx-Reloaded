@@ -521,9 +521,9 @@ VOID XTL::CxbxInitWindow(bool bFullInit)
 			SetThreadAffinityMask(hRenderWindowThread, g_CPUOthers);
 
         while(!g_bRenderWindowActive)
-            SwitchToThread(); 
+            Sleep(0); 
 
-		SwitchToThread();
+		Sleep(0);
     }
 
 	SetFocus(g_hEmuWindow);
@@ -1490,7 +1490,7 @@ static DWORD WINAPI EmuRenderWindow(LPVOID lpVoid)
             }
             else
             {
-				SwitchToThread();
+				Sleep(0);
 
                 // if we've just switched back to display off, clear buffer & display prompt
                 if(!g_bPrintfOn && lPrintfOn)

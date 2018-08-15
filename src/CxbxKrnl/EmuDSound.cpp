@@ -558,7 +558,7 @@ VOID WINAPI XTL::EMUPATCH(DirectSoundDoWork)()
 static void dsound_thread_worker(LPVOID nullPtr)
 {
     while (true) {
-        SwitchToThread();
+        Sleep(0);
 
         enterCriticalSection;
 
