@@ -239,33 +239,15 @@ INT_PTR CALLBACK DlgLogConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM
 						g_Settings->m_core.LoggedModules[1] = LoggedModules[1];
 						g_Settings->m_core.LogLevel = LogLevel;
 
-						// This is necessary because otherwise relaunched xbe's in multi-xbe titles will still use the old settings
-						g_EmuShared->SetLogLv(&LogLevel);
-						g_EmuShared->SetLogModules(LoggedModules);
-
 						// Update the logging variables for the GUI process
-						g_CurrentLogLevel = LogLevel;
-						for (int index = to_underlying(CXBXR_MODULE::CXBXR); index < to_underlying(CXBXR_MODULE::MAX); index++) {
-							if (LoggedModules[index / 32] & (1 << (index % 32))) {
-								g_EnabledModules[index] = true;
-							}
-							else {
-								g_EnabledModules[index] = false;
-							}
-						}
+						set_log_config(LogLevel, LoggedModules);
 
 						// Also inform the kernel process if it exists
 						if (g_ChildWnd) {
-							COPYDATASTRUCT CopyData;
-							LogData Data;
-							Data.Level = LogLevel;
-							for (int i = 0; i < NUM_INTEGERS_LOG; i++) {
-								Data.LoggedModules[i] = LoggedModules[i];
-							}
-							CopyData.dwData = LOG_ID;
-							CopyData.cbData = sizeof(LogData);
-							CopyData.lpData = &Data;
-							SendMessage(g_ChildWnd, WM_COPYDATA, reinterpret_cast<WPARAM>(hWndDlg), reinterpret_cast<LPARAM>(&CopyData));
+							// Sync updated log to kernel process to use run-time settings.
+							g_EmuShared->SetLogLv(&LogLevel);
+							g_EmuShared->SetLogModules(LoggedModules);
+							SendMessage(g_ChildWnd, WM_COMMAND, MAKEWPARAM(ID_SYNC_CONFIG_LOGGING, 0), 0);
 						}
 					}
 					PostMessage(hWndDlg, WM_COMMAND, IDC_LOG_CANCEL, 0);

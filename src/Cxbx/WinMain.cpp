@@ -122,18 +122,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			return EXIT_FAILURE;
 		}
 
-		if (!bKernel) {
-			// Set up the logging variables for the GUI process
-			g_CurrentLogLevel = g_Settings->m_core.LogLevel;
-			for (int index = to_underlying(CXBXR_MODULE::CXBXR); index < to_underlying(CXBXR_MODULE::MAX); index++) {
-				if (g_Settings->m_core.LoggedModules[index / 32] & (1 << (index % 32))) {
-					g_EnabledModules[index] = true;
-				}
-				else {
-					g_EnabledModules[index] = false;
-				}
-			}
-		}
+		get_log_settings();
 
 		bool bElevated = CxbxIsElevated();
 
@@ -194,6 +183,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			EmuShared::Cleanup();
 			return EXIT_FAILURE;
 		}
+
+		get_log_settings();
 	}
 
 	INITCOMMONCONTROLSEX icc;

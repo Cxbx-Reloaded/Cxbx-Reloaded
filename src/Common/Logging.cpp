@@ -37,6 +37,8 @@
 #include <windows.h> // for PULONG
 
 #include "Logging.h"
+#include "Common/Settings.hpp"
+#include "CxbxKrnl/EmuShared.h"
 
 // For thread_local, see : http://en.cppreference.com/w/cpp/language/storage_duration
 // TODO : Use Boost.Format http://www.boost.org/doc/libs/1_53_0/libs/format/index.html
@@ -103,6 +105,34 @@ const char* g_EnumModules2String[to_underlying(CXBXR_MODULE::MAX)] = {
 	"XE      ",
 };
 std::atomic_int g_CurrentLogLevel = to_underlying(LOG_LEVEL::INFO);
+
+// Set up the logging variables for the GUI process
+inline void get_log_settings()
+{
+	set_log_config(g_Settings->m_core.LogLevel, g_Settings->m_core.LoggedModules);
+}
+
+inline void sync_log_config()
+{
+	int LogLevel;
+	uint LoggedModules[NUM_INTEGERS_LOG];
+	g_EmuShared->GetLogLv(&LogLevel);
+	g_EmuShared->GetLogModules(LoggedModules);
+	set_log_config(LogLevel, LoggedModules);
+}
+
+void set_log_config(int LogLevel, uint* LoggedModules)
+{
+	g_CurrentLogLevel = LogLevel;
+	for (int index = to_underlying(CXBXR_MODULE::CXBXR); index < to_underlying(CXBXR_MODULE::MAX); index++) {
+		if (LoggedModules[index / 32] & (1 << (index % 32))) {
+			g_EnabledModules[index] = true;
+		}
+		else {
+			g_EnabledModules[index] = false;
+		}
+	}
+}
 
 const bool needs_escape(const wint_t _char)
 {

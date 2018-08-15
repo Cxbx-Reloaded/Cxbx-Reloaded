@@ -1587,28 +1587,14 @@ static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 		}
 		break;
 
-		case WM_COPYDATA:
+		case WM_COMMAND:
 		{
-			COPYDATASTRUCT* pCopyData = reinterpret_cast<COPYDATASTRUCT*>(lParam);
-			switch (pCopyData->dwData)
+			switch (LOWORD(wParam))
 			{
-				case LOG_ID:
+				case ID_SYNC_CONFIG_LOGGING:
 				{
-					if (pCopyData->cbData == sizeof(LogData)) {
-						LogData Data = *reinterpret_cast<LogData*>(pCopyData->lpData);
-						g_CurrentLogLevel = Data.Level;
-						for (int index = to_underlying(CXBXR_MODULE::CXBXR); index < to_underlying(CXBXR_MODULE::MAX); index++) {
-							if (Data.LoggedModules[index / 32] & (1 << (index % 32))) {
-								g_EnabledModules[index] = true;
-							}
-							else {
-								g_EnabledModules[index] = false;
-							}
-						}
-					}
-					else {
-						EmuLog(CXBXR_MODULE::GUI, LOG_LEVEL::WARNING, "COPYDATASTRUCT with id LOG_ID with abnormal size %zu", pCopyData->cbData);
-					}
+					// Sync run-time config log settings from GUI process.
+					sync_log_config();
 				}
 				break;
 

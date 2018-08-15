@@ -119,6 +119,12 @@ extern std::atomic_bool g_EnabledModules[to_underlying(CXBXR_MODULE::MAX)];
 extern const char* g_EnumModules2String[to_underlying(CXBXR_MODULE::MAX)];
 extern std::atomic_int g_CurrentLogLevel;
 
+extern inline void get_log_settings();
+
+extern inline void sync_log_config();
+
+void set_log_config(int LogLevel, uint* LoggedModules);
+
 //
 // __FILENAME__
 //
