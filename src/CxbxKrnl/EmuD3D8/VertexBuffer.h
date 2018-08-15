@@ -75,7 +75,7 @@ class CxbxVertexBufferConverter
         CxbxVertexBufferConverter();
        ~CxbxVertexBufferConverter();
 
-        void Apply(CxbxDrawContext *pPatchDesc);
+	   void Apply(CxbxDrawContext *pPatchDesc, DWORD StartIndex = 0);
     private:
 
         UINT m_uiNbrStreams;
@@ -91,7 +91,7 @@ class CxbxVertexBufferConverter
         UINT GetNbrStreams(CxbxDrawContext *pPatchDesc);
 
         // Patches the types of the stream
-        void ConvertStream(CxbxDrawContext *pPatchDesc, UINT uiStream);
+        void ConvertStream(CxbxDrawContext *pPatchDesc, UINT uiStream, DWORD StartIndex);
 };
 
 // inline vertex buffer emulation

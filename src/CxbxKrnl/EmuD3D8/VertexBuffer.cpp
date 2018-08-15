@@ -286,7 +286,8 @@ inline FLOAT ByteToFloat(const BYTE value)
 void XTL::CxbxVertexBufferConverter::ConvertStream
 (
 	CxbxDrawContext *pDrawContext,
-    UINT             uiStream
+    UINT             uiStream,
+	DWORD			 StartIndex
 )
 {
 	extern XTL::D3DCAPS g_D3DCaps;
@@ -405,7 +406,7 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
 	
 	if (bNeedVertexPatching) {
 	    // assert(bNeedStreamCopy || "bNeedVertexPatching implies bNeedStreamCopy (but copies via conversions");
-		for (uint32 uiVertex = 0; uiVertex < uiVertexCount; uiVertex++) {
+		for (uint32 uiVertex = StartIndex; uiVertex < uiVertexCount; uiVertex++) {
 			uint08 *pXboxVertexAsByte = &pXboxVertexData[uiVertex * uiXboxVertexStride];
 			uint08 *pHostVertexAsByte = &pHostVertexData[uiVertex * uiHostVertexStride];
 			for (UINT uiElement = 0; uiElement < pVertexShaderStreamInfo->NumberOfVertexElements; uiElement++) {
@@ -660,7 +661,7 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
 			// the uiTextureCoordinatesByteOffsetInVertex on host will match Xbox 
 		}
 
-		for (uint32 uiVertex = 0; uiVertex < uiVertexCount; uiVertex++) {
+		for (uint32 uiVertex = StartIndex; uiVertex < uiVertexCount; uiVertex++) {
 			FLOAT *pVertexDataAsFloat = (FLOAT*)(&pHostVertexData[uiVertex * uiHostVertexStride]);
 
 			// Handle pre-transformed vertices (which bypass the vertex shader pipeline)
@@ -743,7 +744,7 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
 		/*Release=*/!bNeedStreamCopy); // Release when it won't get cached
 }
 
-void XTL::CxbxVertexBufferConverter::Apply(CxbxDrawContext *pDrawContext)
+void XTL::CxbxVertexBufferConverter::Apply(CxbxDrawContext *pDrawContext, DWORD StartIndex)
 {
 	if ((pDrawContext->XboxPrimitiveType < X_D3DPT_POINTLIST) || (pDrawContext->XboxPrimitiveType > X_D3DPT_POLYGON))
 		CxbxKrnlCleanup(LOG_PREFIX, "Unknown primitive type: 0x%.02X\n", pDrawContext->XboxPrimitiveType);
@@ -765,7 +766,7 @@ void XTL::CxbxVertexBufferConverter::Apply(CxbxDrawContext *pDrawContext)
     for(UINT uiStream = 0; uiStream < m_uiNbrStreams; uiStream++) {
 		// TODO: Check for cached vertex buffer, and use it if possible
 
-		ConvertStream(pDrawContext, uiStream);
+		ConvertStream(pDrawContext, uiStream, StartIndex);
 
 		// TODO: Cache Vertex Buffer Data
     }

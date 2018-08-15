@@ -770,7 +770,6 @@ uint08 *Xbe::GetLogoBitmap(uint32 x_dwSize)
     return 0;
 }
 
-
 void *Xbe::FindSection(char *zsSectionName)
 {
 	for (uint32 v = 0; v < m_Header.dwSections; v++) {
@@ -778,6 +777,17 @@ void *Xbe::FindSection(char *zsSectionName)
 			if (m_SectionHeader[v].dwVirtualAddr > 0 && m_SectionHeader[v].dwVirtualSize > 0) {
 				return m_bzSection[v];
 			}
+		}
+	}
+
+	return NULL;
+}
+
+void* Xbe::FindSection(xboxkrnl::PXBEIMAGE_SECTION section)
+{
+	for (uint32 v = 0; v < m_Header.dwSections; v++) {
+		if (m_SectionHeader[v].dwRawAddr == section->FileAddress && (m_SectionHeader[v].dwVirtualAddr > 0 && m_SectionHeader[v].dwVirtualSize > 0)) {
+			return m_bzSection[v];
 		}
 	}
 
