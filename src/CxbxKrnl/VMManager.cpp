@@ -78,31 +78,30 @@ void VMManager::Initialize(HANDLE memory_view, HANDLE pagetables_view, int BootF
 	ConstructMemoryRegion(SYSTEM_MEMORY_BASE, SYSTEM_MEMORY_SIZE, SystemRegion);
 	ConstructMemoryRegion(DEVKIT_MEMORY_BASE, DEVKIT_MEMORY_SIZE, DevkitRegion);
 
+	unsigned char PreviousLayout;
 	if ((BootFlags & BOOT_QUICK_REBOOT) != 0)
 	{
-		UCHAR PreviousXbeType = *(UCHAR*)(CONTIGUOUS_MEMORY_BASE + PAGE_SIZE - 9);
-		if (PreviousXbeType != g_XbeType)
-		{
-			// We cannot handle the case where we rebooted to an xbe type different then the previous one we came from, since the RestorePersistentMemory
-			// expects the memory layout to always be the same between reboots (like it should be). The only legit case is when a chihiro xbe
-			// reboots to the dashboard, but even then it should actually reboot to a chihiro-specific xbe loader. Another possibility is that
-			// the xbe has been tampered with: the entry point and the kernel thunk addresses have been xored with a different key to make it
-			// appear to be of a different type.
+		// Restore the memory layout we were emulating in the previous session
 
-			CxbxKrnlCleanup(LOG_PREFIX, "Rebooted xbe type doesn't match with the xbe type that performed the reboot. Tampered xbe or rebooting to the \
-dashboard from non-retail xbe?");
-		}
+		PreviousLayout = *(unsigned char*)(CONTIGUOUS_MEMORY_BASE + PAGE_SIZE - 9);
+		m_MmLayoutChihiro = (PreviousLayout == MmChihiro);
+		m_MmLayoutDebug = (PreviousLayout == MmDebug);
+		m_MmLayoutRetail = (PreviousLayout == MmRetail);
 	}
 	else
 	{
 		// Save the type of xbe we are emulating in this emulation session. This information will be needed if the current xbe performs
 		// a quick reboot
 
-		*(UCHAR*)(CONTIGUOUS_MEMORY_BASE + PAGE_SIZE - 9) = g_XbeType;
+		m_MmLayoutChihiro = (g_XbeType == xtChihiro);
+		m_MmLayoutDebug = (g_XbeType == xtDebug);
+		m_MmLayoutRetail = (g_XbeType == xtRetail);
+
+		PreviousLayout = m_MmLayoutChihiro ? MmChihiro : (m_MmLayoutDebug ? MmDebug : MmRetail);
 	}
 
 	// Set up general memory variables according to the xbe type
-	if (g_bIsChihiro)
+	if (m_MmLayoutChihiro)
 	{
 		m_MaxContiguousPfn = CHIHIRO_CONTIGUOUS_MEMORY_LIMIT;
 		g_SystemMaxMemory = CHIHIRO_MEMORY_SIZE;
@@ -111,7 +110,7 @@ dashboard from non-retail xbe?");
 		m_NV2AInstancePage = CHIHIRO_INSTANCE_PHYSICAL_PAGE;
 		m_MemoryRegionArray[ContiguousRegion].RegionMap[CONTIGUOUS_MEMORY_BASE].size = CONTIGUOUS_MEMORY_CHIHIRO_SIZE;
 	}
-	else if (g_bIsDebug)
+	else if (m_MmLayoutDebug)
 	{
 		g_SystemMaxMemory = CHIHIRO_MEMORY_SIZE;
 		m_DebuggerPagesAvailable = X64M_PHYSICAL_PAGE;
@@ -140,6 +139,7 @@ dashboard from non-retail xbe?");
 		// But right now it persists the whole block". So we also clear the entire mapped memory.bin since we are not quick rebooting
 		xboxkrnl::RtlFillMemoryUlong((void*)CONTIGUOUS_MEMORY_BASE, g_SystemMaxMemory, 0);
 		xboxkrnl::RtlFillMemoryUlong((void*)PAGE_TABLES_BASE, PAGE_TABLES_SIZE, 0);
+		*(unsigned char*)(CONTIGUOUS_MEMORY_BASE + PAGE_SIZE - 9) = PreviousLayout;
 		InitializePfnDatabase();
 	}
 	else {
@@ -173,14 +173,14 @@ dashboard from non-retail xbe?");
 	// ergo720: another hack. On 128 MiB systems, also reserve the 64 MiB following the memory placeholder so that the VMManager
 	// is forbidden from making allocations there and the LLE OHCI can distinguish identity mapped addresses from contiguous addresses.
 	// Once LLE CPU and MMU are implemented, this can be removed
-	if (g_bIsRetail != true) {
+	if (m_MmLayoutRetail != true) {
 		ConstructVMA(XBE_IMAGE_BASE + XBE_MAX_VA, XBOX_MEMORY_SIZE - XBE_IMAGE_BASE, UserRegion, ReservedVma, false);
 	}
 
-	if (g_bIsChihiro) {
+	if (m_MmLayoutChihiro) {
 		printf("Page table for Chihiro arcade initialized!\n");
 	}
-	else if (g_bIsDebug) {
+	else if (m_MmLayoutDebug) {
 		printf("Page table for Debug console initialized!\n");
 	}
 	else { printf("Page table for Retail console initialized!\n"); }
@@ -250,11 +250,11 @@ void VMManager::InitializePfnDatabase()
 	// just a guess of mine, I could be wrong on this...
 
 	// Construct the pfn's of the pages holding the pfn database
-	if (g_bIsRetail) {
+	if (m_MmLayoutRetail) {
 		pfn = XBOX_PFN_DATABASE_PHYSICAL_PAGE;
 		pfn_end = XBOX_PFN_DATABASE_PHYSICAL_PAGE + 16 - 1;
 	}
-	else if (g_bIsDebug) {
+	else if (m_MmLayoutDebug) {
 		pfn = XBOX_PFN_DATABASE_PHYSICAL_PAGE;
 		pfn_end = XBOX_PFN_DATABASE_PHYSICAL_PAGE + 32 - 1;
 	}
@@ -273,10 +273,10 @@ void VMManager::InitializePfnDatabase()
 	WritePte(PointerPte, EndingPte, TempPte, pfn);
 	ConstructVMA(addr, (pfn_end - pfn + 1) << PAGE_SHIFT, ContiguousRegion, AllocatedVma, false);
 
-	if (g_bIsDebug) { m_PhysicalPagesAvailable += 16; m_DebuggerPagesAvailable -= 16; }
+	if (m_MmLayoutDebug) { m_PhysicalPagesAvailable += 16; m_DebuggerPagesAvailable -= 16; }
 
 	// Construct the pfn's of the pages holding the nv2a instance memory
-	if (g_bIsRetail || g_bIsDebug) {
+	if (m_MmLayoutRetail || m_MmLayoutDebug) {
 		pfn = XBOX_INSTANCE_PHYSICAL_PAGE;
 		pfn_end = XBOX_INSTANCE_PHYSICAL_PAGE + NV2A_INSTANCE_PAGE_COUNT - 1;
 	}
@@ -297,7 +297,7 @@ void VMManager::InitializePfnDatabase()
 	ConstructVMA(addr, NV2A_INSTANCE_PAGE_COUNT << PAGE_SHIFT, ContiguousRegion, AllocatedVma, false);
 
 
-	if (g_bIsDebug)
+	if (m_MmLayoutDebug)
 	{
 		// Debug kits have two nv2a instance memory, another at the top of the 128 MiB
 
@@ -339,11 +339,11 @@ void VMManager::ReinitializePfnDatabase()
 
 
 	// Update the allocation of the pfn database
-	if (g_bIsRetail) {
+	if (m_MmLayoutRetail) {
 		pfn = XBOX_PFN_DATABASE_PHYSICAL_PAGE;
 		pfn_end = XBOX_PFN_DATABASE_PHYSICAL_PAGE + 16 - 1;
 	}
-	else if (g_bIsDebug) {
+	else if (m_MmLayoutDebug) {
 		pfn = XBOX_PFN_DATABASE_PHYSICAL_PAGE;
 		pfn_end = XBOX_PFN_DATABASE_PHYSICAL_PAGE + 32 - 1;
 	}
@@ -352,7 +352,7 @@ void VMManager::ReinitializePfnDatabase()
 		pfn_end = CHIHIRO_PFN_DATABASE_PHYSICAL_PAGE + 32 - 1;
 	}
 	RestorePersistentAllocation((VAddr)CONVERT_PFN_TO_CONTIGUOUS_PHYSICAL(pfn), pfn, pfn_end, UnknownType);
-	if (g_bIsDebug) { m_PhysicalPagesAvailable += 16; m_DebuggerPagesAvailable -= 16; }
+	if (m_MmLayoutDebug) { m_PhysicalPagesAvailable += 16; m_DebuggerPagesAvailable -= 16; }
 
 
 	{
@@ -363,7 +363,7 @@ void VMManager::ReinitializePfnDatabase()
 		// Re-construct the allocation of the nv2a instance memory
 		// NOTE: the entire instance memory is persisted during a quick reboot, however, it doesn't change anything to re-construct it
 		// here since we would just have to move this block of code to a specific vmmanager reboot routine called in HalReturnToFirmware
-		if (g_bIsRetail || g_bIsDebug) {
+		if (m_MmLayoutRetail || m_MmLayoutDebug) {
 			pfn = XBOX_INSTANCE_PHYSICAL_PAGE;
 			pfn_end = XBOX_INSTANCE_PHYSICAL_PAGE + NV2A_INSTANCE_PAGE_COUNT - 1;
 		}
@@ -380,7 +380,7 @@ void VMManager::ReinitializePfnDatabase()
 		WritePte(GetPteAddress(addr), GetPteAddress(CONVERT_PFN_TO_CONTIGUOUS_PHYSICAL(pfn_end)), TempPte, pfn);
 
 
-		if (g_bIsDebug)
+		if (m_MmLayoutDebug)
 		{
 			// Debug kits have two nv2a instance memory, another at the top of the 128 MiB
 
@@ -518,7 +518,7 @@ void VMManager::MemoryStatistics(xboxkrnl::PMM_STATISTICS memory_statistics)
 	Lock();
 
 	memory_statistics->TotalPhysicalPages = g_SystemMaxMemory >> PAGE_SHIFT;
-	memory_statistics->AvailablePages = g_bIsDebug && m_bAllowNonDebuggerOnTop64MiB ?
+	memory_statistics->AvailablePages = m_MmLayoutDebug && m_bAllowNonDebuggerOnTop64MiB ?
 		m_PhysicalPagesAvailable + m_DebuggerPagesAvailable : m_PhysicalPagesAvailable;
 	memory_statistics->VirtualMemoryBytesCommitted = (m_PagesByUsage[VirtualMemoryType] +
 		m_PagesByUsage[ImageType]) << PAGE_SHIFT;
@@ -541,7 +541,7 @@ VAddr VMManager::ClaimGpuMemory(size_t Size, size_t* BytesToSkip)
 	// Note that, even though devkits have 128 MiB, there's no need to have a different case for those, since the instance
 	// memory is still located 0x10000 bytes from the top of memory just like retail consoles
 
-	if (g_bIsChihiro)
+	if (m_MmLayoutChihiro)
 		*BytesToSkip = 0;
 	else
 		*BytesToSkip = CONVERT_PFN_TO_CONTIGUOUS_PHYSICAL(X64M_PHYSICAL_PAGE) -
@@ -575,7 +575,7 @@ VAddr VMManager::ClaimGpuMemory(size_t Size, size_t* BytesToSkip)
 			InsertFree(pfn, EndingPfn);
 			DestructVMA((VAddr)CONVERT_PFN_TO_CONTIGUOUS_PHYSICAL(pfn), ContiguousRegion, m_NV2AInstanceMemoryBytes - Size);
 
-			if (g_bIsDebug)
+			if (m_MmLayoutDebug)
 			{
 				// Devkits have also another nv2a instance memory at the top of memory, so free also that
 				// 3fe0: nv2a; 3ff0: pfn; 4000 + 3fe0: nv2a; 4000 + 3fe0 + 10: free
@@ -675,7 +675,7 @@ void VMManager::RestorePersistentMemory()
 	PMMPTE PointerPte = GetPteAddress(CONTIGUOUS_MEMORY_BASE);
 	PMMPTE EndingPte;
 
-	if (g_bIsRetail) {
+	if (m_MmLayoutRetail) {
 		EndingPte = GetPteAddress(CONTIGUOUS_MEMORY_BASE + CONTIGUOUS_MEMORY_XBOX_SIZE - 1);
 	}
 	else {
@@ -703,10 +703,10 @@ void VMManager::RestorePersistentMemory()
 	xboxkrnl::RtlFillMemoryUlong((void*)EndingPte, PAGE_TABLES_END + 1 - (VAddr)EndingPte, 0);
 
 	// Zero all the entries of the PFN database
-	if (g_bIsRetail) {
+	if (m_MmLayoutRetail) {
 		xboxkrnl::RtlFillMemoryUlong((void*)XBOX_PFN_ADDRESS, X64KB, 0); // Xbox: 64 KiB
 	}
-	else if (g_bIsChihiro) {
+	else if (m_MmLayoutChihiro) {
 		xboxkrnl::RtlFillMemoryUlong((void*)CHIHIRO_PFN_ADDRESS, X64KB * 2, 0); // Chihiro: 128 KiB
 	}
 	else {
@@ -765,11 +765,11 @@ VAddr VMManager::Allocate(size_t Size)
 
 	PteNumber = ROUND_UP_4K(Size) >> PAGE_SHIFT;
 
-	if (!IsMappable(PteNumber, true, g_bIsDebug && m_bAllowNonDebuggerOnTop64MiB ? true : false)) { goto Fail; }
+	if (!IsMappable(PteNumber, true, m_MmLayoutDebug && m_bAllowNonDebuggerOnTop64MiB ? true : false)) { goto Fail; }
 
 	ConvertXboxToPteProtection(XBOX_PAGE_EXECUTE_READWRITE, &TempPte);
 
-	if (RemoveFree(PteNumber, &pfn, 0, 0, g_bIsDebug && !m_bAllowNonDebuggerOnTop64MiB ? XBOX_HIGHEST_PHYSICAL_PAGE
+	if (RemoveFree(PteNumber, &pfn, 0, 0, m_MmLayoutDebug && !m_bAllowNonDebuggerOnTop64MiB ? XBOX_HIGHEST_PHYSICAL_PAGE
 		: m_HighestPage)) // MapViewOfFileEx path
 	{
 		MappingRoutine = &VMManager::MapBlockWithMapViewOfFileEx;
@@ -820,7 +820,7 @@ VAddr VMManager::Allocate(size_t Size)
 		// With VirtualAlloc we grab one page at a time to avoid fragmentation issues
 		while (PointerPte <= EndingPte)
 		{
-			RemoveFree(1, &TempPfn, 0, 0, g_bIsDebug && !m_bAllowNonDebuggerOnTop64MiB ? XBOX_HIGHEST_PHYSICAL_PAGE
+			RemoveFree(1, &TempPfn, 0, 0, m_MmLayoutDebug && !m_bAllowNonDebuggerOnTop64MiB ? XBOX_HIGHEST_PHYSICAL_PAGE
 				: m_HighestPage);
 			WritePfn(TempPfn, TempPfn, PointerPte, ImageType);
 			WritePte(PointerPte, PointerPte, TempPte, TempPfn);
@@ -1537,7 +1537,7 @@ void VMManager::LockBufferOrSinglePage(PAddr paddr, VAddr addr, size_t Size, boo
 
 				if (pfn <= m_HighestPage)
 				{
-					if (g_bIsRetail || g_bIsDebug) {
+					if (m_MmLayoutRetail || m_MmLayoutDebug) {
 						PfnEntry = XBOX_PFN_ELEMENT(pfn);
 					}
 					else { PfnEntry = CHIHIRO_PFN_ELEMENT(pfn); }
@@ -1553,7 +1553,7 @@ void VMManager::LockBufferOrSinglePage(PAddr paddr, VAddr addr, size_t Size, boo
 	else // lock a single page
 	{
 		pfn = paddr >> PAGE_SHIFT;
-		if (g_bIsRetail || g_bIsDebug) {
+		if (m_MmLayoutRetail || m_MmLayoutDebug) {
 			PfnEntry = XBOX_PFN_ELEMENT(pfn);
 		}
 		else { PfnEntry = CHIHIRO_PFN_ELEMENT(pfn); }
@@ -1722,7 +1722,7 @@ xboxkrnl::NTSTATUS VMManager::XbAllocateVirtualMemory(VAddr* addr, ULONG ZeroBit
 	}
 
 	if (AlignedCapturedBase >= XBE_IMAGE_BASE + ROUND_UP_4K(CxbxKrnl_Xbe->m_Header.dwSizeofImage) &&
-	(g_bIsRetail != true ? AlignedCapturedBase < CHIHIRO_MEMORY_SIZE : AlignedCapturedBase < XBE_MAX_VA))
+	(m_MmLayoutRetail != true ? AlignedCapturedBase < CHIHIRO_MEMORY_SIZE : AlignedCapturedBase < XBE_MAX_VA))
 	{
 		// We can't commit on the memory placeholder after the xbe image or in the reserved area after it (128 MiB systems only)
 
@@ -1756,7 +1756,7 @@ xboxkrnl::NTSTATUS VMManager::XbAllocateVirtualMemory(VAddr* addr, ULONG ZeroBit
 		PointerPte++;
 	}
 
-	if (!IsMappable(PteNumber, true, g_bIsDebug && m_bAllowNonDebuggerOnTop64MiB ? true : false))
+	if (!IsMappable(PteNumber, true, m_MmLayoutDebug && m_bAllowNonDebuggerOnTop64MiB ? true : false))
 	{
 		status = STATUS_NO_MEMORY;
 		goto Exit;
@@ -1779,7 +1779,7 @@ xboxkrnl::NTSTATUS VMManager::XbAllocateVirtualMemory(VAddr* addr, ULONG ZeroBit
 	{
 		if (PointerPte->Default == 0)
 		{
-			RemoveFree(1, &TempPfn, 0, 0, g_bIsDebug && !m_bAllowNonDebuggerOnTop64MiB ? XBOX_HIGHEST_PHYSICAL_PAGE : m_HighestPage);
+			RemoveFree(1, &TempPfn, 0, 0, m_MmLayoutDebug && !m_bAllowNonDebuggerOnTop64MiB ? XBOX_HIGHEST_PHYSICAL_PAGE : m_HighestPage);
 			WritePfn(TempPfn, TempPfn, PointerPte, BusyType);
 			WritePte(PointerPte, PointerPte, TempPte, TempPfn);
 		}
@@ -1952,7 +1952,7 @@ xboxkrnl::NTSTATUS VMManager::XbFreeVirtualMemory(VAddr* addr, size_t* Size, DWO
 		{
 			TempPfn = PointerPte->Hardware.PFN;
 			InsertFree(TempPfn, TempPfn);
-			if (g_bIsRetail || g_bIsDebug) {
+			if (m_MmLayoutRetail || m_MmLayoutDebug) {
 				BusyType = (PageType)(XBOX_PFN_ELEMENT(TempPfn)->Busy.BusyType);
 			}
 			else { BusyType = (PageType)(CHIHIRO_PFN_ELEMENT(TempPfn)->Busy.BusyType); }
@@ -2136,7 +2136,7 @@ xboxkrnl::NTSTATUS VMManager::XbVirtualMemoryStatistics(VAddr addr, xboxkrnl::PM
 	// ergo720: hack. Always report as reserved the region after the memory placeholder and below 0x8000000 if we are emulating
 	// a 128 MiB system regardless of what VirtualQuery says. Once LLE CPU and MMU are implemented, this can be removed
 
-	if (g_bIsRetail != true && addr >= XBE_IMAGE_BASE + XBE_MAX_VA && addr < CHIHIRO_MEMORY_SIZE) {
+	if (m_MmLayoutRetail != true && addr >= XBE_IMAGE_BASE + XBE_MAX_VA && addr < CHIHIRO_MEMORY_SIZE) {
 		memory_statistics->AllocationBase = (void*)(XBE_IMAGE_BASE + XBE_MAX_VA);
 		memory_statistics->AllocationProtect = XBOX_PAGE_NOACCESS;
 		memory_statistics->BaseAddress = (void*)ROUND_DOWN_4K(addr);
