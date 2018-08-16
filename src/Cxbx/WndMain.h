@@ -221,6 +221,17 @@ class WndMain : public Wnd
 		// * Previous GUI window location (before start emulation)
 		// ******************************************************************
 		POINT       m_prevWindowLoc;
+
+		// ******************************************************************
+		// * Kernel process status
+		// ******************************************************************
+		float               m_FPS_status;
+		float               m_MSpF_status;
+		union {
+			UINT            m_LedSeq_status_block;
+			UCHAR           m_LedSeq_status[4];
+		};
+		UINT                m_FlagsLLE_status;
 };
 
 #endif

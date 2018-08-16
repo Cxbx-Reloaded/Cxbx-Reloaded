@@ -299,12 +299,12 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                 case WM_CREATE:
                 {
 					if (m_hwndChild == NULL) {
-						float fps = 0.0f;
-						float mspf = 0.0f;
-						int LedSequence[4] = { XBOX_LED_COLOUR_GREEN, XBOX_LED_COLOUR_GREEN, XBOX_LED_COLOUR_GREEN, XBOX_LED_COLOUR_GREEN };
-						g_EmuShared->SetCurrentMSpF(&mspf);
-						g_EmuShared->SetCurrentFPS(&fps);
-						g_EmuShared->SetLedSequence(LedSequence);
+						m_FPS_status = 0.0f;
+						m_MSpF_status = 0.0f;
+						m_LedSeq_status_block = (XBOX_LED_COLOUR_GREEN << 24) |
+						                        (XBOX_LED_COLOUR_GREEN << 16) |
+						                        (XBOX_LED_COLOUR_GREEN << 8) |
+						                        (XBOX_LED_COLOUR_GREEN);
 						SetTimer(hwnd, TIMERID_FPS, 1000, (TIMERPROC)NULL);
 						SetTimer(hwnd, TIMERID_LED, XBOX_LED_FLASH_PERIOD, (TIMERPROC)NULL);
 						m_hwndChild = GetWindow(hwnd, GW_CHILD);
@@ -1277,6 +1277,18 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
             case ID_HELP_HOMEPAGE:
                 ShellExecute(NULL, "open", "https://github.com/Cxbx-Reloaded/Cxbx-Reloaded", NULL, NULL, SW_SHOWNORMAL);
                 break;
+
+			case ID_GUI_STATUS_LLE_FLAGS:
+				m_FlagsLLE_status = static_cast<UINT>(lParam);
+				break;
+
+			case ID_GUI_STATUS_XBOX_LED_COLOUR:
+				m_LedSeq_status_block = static_cast<UINT>(lParam);
+				break;
+
+			case ID_GUI_STATUS_LOG_ENABLED:
+				// TODO: Add support for log indication status.
+				break;
             }
 
             break;
@@ -1848,12 +1860,11 @@ void WndMain::UpdateCaption()
 		mii.dwTypeData = &sMenu[0];
 
 		if (m_bIsStarted) {
-			if (g_EmuShared != NULL) {
-				float currentFPSVal = 0;
-				float currentMSpFVal = 0;
-				g_EmuShared->GetCurrentFPS(&currentFPSVal);
-				g_EmuShared->GetCurrentMSpF(&currentMSpFVal);
-				sprintf(sMenu, "FPS: %.2f  MS / F : %.2f", currentFPSVal, currentMSpFVal);
+			if (g_EmuShared != nullptr) {
+				g_EmuShared->GetCurrentFPS(&m_FPS_status);
+				m_MSpF_status = (float)(1000.0 / (m_FPS_status == 0 ? 0.001 : m_FPS_status));
+
+				sprintf(sMenu, "FPS: %.2f  MS / F : %.2f", m_FPS_status, m_MSpF_status);
 			}
 		}
 		else {
@@ -2089,6 +2100,9 @@ void WndMain::StartEmulation(HWND hwndParent, DebuggerState LocalDebuggerState /
 
 	// Reset to default
 	g_EmuShared->Reset();
+	m_FPS_status = 0.0f;
+	m_MSpF_status = 0.0f;
+	m_FlagsLLE_status = g_Settings->m_core.FlagsLLE;
 
 	// register all emulator settings to kernel process
 	g_Settings->SyncToEmulator();
@@ -2306,31 +2320,27 @@ void WndMain::DrawLedBitmap(HWND hwnd, bool bdefault)
 		sprintf(flagString, " ");
 	}
 	else { // draw colored bitmap
-		int LedSequence[4] = { XBOX_LED_COLOUR_OFF, XBOX_LED_COLOUR_OFF, XBOX_LED_COLOUR_OFF, XBOX_LED_COLOUR_OFF };
 		static int LedSequenceOffset = 0;
 		uint FlagsLLE = 0;
 
-		g_EmuShared->GetLedSequence(LedSequence);
-
 		// Select active color and cycle through all 4 phases in the sequence
-		ActiveLEDColor = LedSequence[LedSequenceOffset & 3];
+		ActiveLEDColor = m_LedSeq_status[LedSequenceOffset & 3];
 		++LedSequenceOffset;
 
-		g_EmuShared->GetFlagsLLEStatus(&FlagsLLE);
 		// Set LLE flags string based on selected LLE flags
-		if (FlagsLLE & LLE_APU) {
+		if (m_FlagsLLE_status & LLE_APU) {
 			strcat(flagString, "A");
 		}
-		if (FlagsLLE & LLE_GPU) {
+		if (m_FlagsLLE_status & LLE_GPU) {
 			strcat(flagString, "G");
 		}
-		if (FlagsLLE & LLE_USB) {
+		if (m_FlagsLLE_status & LLE_USB) {
 			strcat(flagString, "U");
 		}
-		if (FlagsLLE & LLE_JIT) {
+		if (m_FlagsLLE_status & LLE_JIT) {
 			strcat(flagString, "J");
 		}
-		if (FlagsLLE == 0) {
+		if (m_FlagsLLE_status == 0) {
 			sprintf(flagString, "HLE");
 		}
 	}

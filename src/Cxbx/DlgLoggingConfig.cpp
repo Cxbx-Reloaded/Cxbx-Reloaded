@@ -36,6 +36,7 @@
 #include "CxbxKrnl/EmuShared.h"
 #include "DlgLoggingConfig.h"
 #include "ResCxbx.h"
+#include "Common/IPCHybrid.hpp"
 
 
 static bool g_bHasChanges = false;
@@ -247,7 +248,7 @@ INT_PTR CALLBACK DlgLogConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM
 							// Sync updated log to kernel process to use run-time settings.
 							g_EmuShared->SetLogLv(&LogLevel);
 							g_EmuShared->SetLogModules(LoggedModules);
-							SendMessage(g_ChildWnd, WM_COMMAND, MAKEWPARAM(ID_SYNC_CONFIG_LOGGING, 0), 0);
+							ipc_send_kernel_update(IPC_UPDATE_KERNEL::CONFIG_LOGGING_SYNC, 0, reinterpret_cast<std::uintptr_t>(g_ChildWnd));
 						}
 					}
 					PostMessage(hWndDlg, WM_COMMAND, IDC_LOG_CANCEL, 0);

@@ -1314,10 +1314,10 @@ __declspec(noreturn) void CxbxKrnlInit
 		printf("[0x%.4X] INIT: Initialized dummy kernel image header.\n", GetCurrentThreadId());
 	}
 
-	// Read which components need to be LLE'ed :
+	// Read which components need to be LLE'ed per user request
 	{
 		uint CxbxLLE_Flags;
-		g_EmuShared->GetFlagsLLEStatus(&CxbxLLE_Flags);
+		g_EmuShared->GetFlagsLLE(&CxbxLLE_Flags);
 		bLLE_APU = (CxbxLLE_Flags & LLE_APU) > 0;
 		bLLE_GPU = (CxbxLLE_Flags & LLE_GPU) > 0;
 		//bLLE_USB = (CxbxLLE_Flags & LLE_USB) > 0; // Reenable this when LLE USB actually works
@@ -1857,9 +1857,6 @@ static unsigned int					g_Frames = 0;
 static void UpdateCurrentMSpFAndFPS() {
 	if (g_EmuShared) {
 		static float currentFPSVal = 30;
-
-		float currentMSpFVal = (float)(1000.0 / (currentFPSVal == 0 ? 0.001 : currentFPSVal));
-		g_EmuShared->SetCurrentMSpF(&currentMSpFVal);
 
 		currentFPSVal = (float)(g_Frames*0.5 + currentFPSVal * 0.5);
 		g_EmuShared->SetCurrentFPS(&currentFPSVal);

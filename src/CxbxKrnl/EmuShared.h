@@ -37,15 +37,16 @@
 #include "Cxbx.h"
 #include "Common/Settings.hpp"
 #include "Mutex.h"
+#include "Common/IPCHybrid.hpp"
 
 #include <memory.h>
 
-enum {
+typedef enum _XBOX_LED_COLOUR: unsigned char {
 	XBOX_LED_COLOUR_OFF,
 	XBOX_LED_COLOUR_GREEN,
 	XBOX_LED_COLOUR_RED,
 	XBOX_LED_COLOUR_ORANGE,
-};
+} XBOX_LED_COLOUR;
 
 // Kernel boot flags
 enum {
@@ -130,8 +131,6 @@ class EmuShared : public Mutex
 		// ******************************************************************
 		void GetFlagsLLE(      uint *flags) { Lock(); *flags = m_core.FlagsLLE; Unlock(); }
 		void SetFlagsLLE(const uint *flags) { Lock(); m_core.FlagsLLE = *flags; Unlock(); }
-		void GetFlagsLLEStatus(      uint *flags) { Lock(); *flags = m_FlagsLLE_status; Unlock(); }
-		void SetFlagsLLEStatus(const uint flags) { Lock(); m_FlagsLLE_status = flags; Unlock(); }
 
 		// ******************************************************************
 		// * Boot flag Accessors
@@ -159,12 +158,6 @@ class EmuShared : public Mutex
 		void SetDirectHostBackBufferAccess(const int* value) { Lock(); m_hacks.DirectHostBackBufferAccess = *value; Unlock(); }
 
 		// ******************************************************************
-		// * MSpF/Benchmark values Accessors
-		// ******************************************************************
-		void GetCurrentMSpF(float *value) { Lock(); *value = m_MSpF_status; Unlock(); }
-		void SetCurrentMSpF(const float *value) { Lock(); m_MSpF_status = *value; Unlock(); }
-
-		// ******************************************************************
 		// * FPS/Benchmark values Accessors
 		// ******************************************************************
 		void GetCurrentFPS(float *value) { Lock(); *value = m_FPS_status; Unlock(); }
@@ -175,28 +168,6 @@ class EmuShared : public Mutex
 		// ******************************************************************
 		void GetDebuggingFlag(bool *value) { Lock(); *value = m_bDebugging; Unlock(); }
 		void SetDebuggingFlag(const bool *value) { Lock(); m_bDebugging = *value; Unlock(); }
-
-		// ******************************************************************
-		// * Xbox LED values Accessors
-		// ******************************************************************
-		void GetLedSequence(int *value)
-		{
-			Lock();
-			for (int i = 0; i < 4; ++i)
-			{
-				value[i] = m_LedSequence_status[i];
-			}
-			Unlock();
-		}
-		void SetLedSequence(int *value)
-		{
-			Lock();
-			for (int i = 0; i < 4; ++i)
-			{
-				m_LedSequence_status[i] = value[i];
-			}
-			Unlock();
-		}
 
 		// ******************************************************************
 		// * Log Level value Accessors
@@ -239,9 +210,7 @@ class EmuShared : public Mutex
 		{
 			Lock();
 			m_BootFlags_status = 0;
-			m_MSpF_status = 0.0f;
 			m_FPS_status = 0.0f;
-			m_FlagsLLE_status = m_core.FlagsLLE;
 			Unlock();
 		}
 
@@ -268,14 +237,14 @@ class EmuShared : public Mutex
 		// * Shared configuration
 		// ******************************************************************
 		int          m_BootFlags_status;
-		unsigned int m_FlagsLLE_status;
-		float        m_MSpF_status;
-		float        m_FPS_status;
+		unsigned int m_Reserved5;
+		float        m_Reserved6;
+		float        m_FPS_status; // NOTE: If move into ipc_send_gui_update will spam GUI's message system (one message per frame)
 		bool         m_bReserved1;
 		bool         m_bDebugging;
 		bool         m_bReady_status;
 		bool         m_bEmulating_status;
-		int          m_LedSequence_status[4];
+		int          m_Reserved7[4];
 		bool         m_bFirstLaunch;
 		bool         m_bReserved2;
 		bool         m_bReserved3;
