@@ -167,21 +167,28 @@ static unsigned int WINAPI PCSTProxy
 	}
 
 	// use the special calling convention
-	// Given the non-standard calling convention (requiring
-	// the first argument in ebp+4) we need the below __asm.
-	//
-	// Otherwise, this call would have looked something like this :
-	// ((xboxkrnl::PKSYSTEM_ROUTINE)SystemRoutine)(
-	//	  (xboxkrnl::PKSTART_ROUTINE)StartRoutine,
-	//	  StartContext);
-	__asm
+	__try
 	{
-		mov         esi, SystemRoutine
-		push        StartContext
-		push        StartRoutine
-		push        offset callComplete
-		lea         ebp, [esp - 4]
-		jmp near    esi
+		// Given the non-standard calling convention (requiring
+		// the first argument in ebp+4) we need the below __asm.
+		//
+		// Otherwise, this call would have looked something like this :
+		// ((xboxkrnl::PKSYSTEM_ROUTINE)SystemRoutine)(
+		//	  (xboxkrnl::PKSTART_ROUTINE)StartRoutine, 
+		//	  StartContext);
+		__asm
+		{
+			mov         esi, SystemRoutine
+			push        StartContext
+			push        StartRoutine
+			push        offset callComplete
+			lea         ebp, [esp - 4]
+			jmp near    esi
+		}
+	}
+	__except (EmuException(GetExceptionInformation()))
+	{
+		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Problem with ExceptionFilter!");
 	}
 
 callComplete:
@@ -200,7 +207,16 @@ void PspSystemThreadStartup
 	IN PVOID StartContext
 )
 {
-	(StartRoutine)(StartContext);
+	__try
+	{
+		(StartRoutine)(StartContext);
+	}
+	__except (EmuException(GetExceptionInformation()))
+	// TODO : Call PspUnhandledExceptionInSystemThread(GetExceptionInformation())
+	{
+		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Problem with ExceptionFilter!"); // TODO : Disable?
+	}
+
 	xboxkrnl::PsTerminateSystemThread(STATUS_SUCCESS);
 }
 
