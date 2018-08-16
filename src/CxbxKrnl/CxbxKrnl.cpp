@@ -195,14 +195,7 @@ void SetupPerTitleKeys()
 
 void CxbxLaunchXbe(void(*Entry)())
 {
-	__try
-	{
-		Entry();
-	}
-	__except (EmuException(GetExceptionInformation()))
-	{
-		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Problem with ExceptionFilter");
-	}
+	Entry();
 }
 
 // Entry point address XOR keys per Xbe type (Retail, Debug or Chihiro) :
