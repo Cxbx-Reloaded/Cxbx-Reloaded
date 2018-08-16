@@ -1974,13 +1974,9 @@ static void VshConvertToken_TESSELATOR(
 		NewVertexRegister = Xb2PCRegisterType(VertexRegister, IsFixedFunction, Index);
         DbgVshPrintf("),\n");
 
-#ifdef CXBX_USE_D3D9
 		// TODO : Expand on the setting of this TESSUV register element :
 		pRecompiled->Usage = D3DDECLUSAGE(NewVertexRegister);
 		pRecompiled->UsageIndex = Xb2PCRegisterType(NewVertexRegister, IsFixedFunction, Index); // TODO : Get Index from Xb2PCRegisterType
-#else
-		*pRecompiled = D3DVSD_TESSUV(NewVertexRegister);
-#endif
 	}
     // D3DVSD_TESSNORMAL
     else
@@ -1994,22 +1990,16 @@ static void VshConvertToken_TESSELATOR(
         DbgVshPrintf("\tD3DVSD_TESSNORMAL(");
         NewVertexRegisterIn = Xb2PCRegisterType(VertexRegisterIn, IsFixedFunction, Index);
         DbgVshPrintf(", ");
-#ifdef CXBX_USE_D3D9
 		// TODO : Expand on the setting of this TESSNORMAL input register element :
 		pRecompiled->Usage = D3DDECLUSAGE(NewVertexRegisterIn);
 		pRecompiled->UsageIndex = 0; // TODO : Get Index from Xb2PCRegisterType
-#endif
         NewVertexRegisterOut = Xb2PCRegisterType(VertexRegisterOut, IsFixedFunction, Index);
         DbgVshPrintf("),\n");
 
-#ifdef CXBX_USE_D3D9
 		// TODO : Expand on the setting of this TESSNORMAL output register element :
 		pRecompiled++;
 		pRecompiled->Usage = D3DDECLUSAGE(NewVertexRegisterOut);
 		pRecompiled->UsageIndex = 0; // TODO : Get Index from Xb2PCRegisterType
-#else
-        *pRecompiled = D3DVSD_TESSNORMAL(NewVertexRegisterIn, NewVertexRegisterOut);
-#endif
 	}
 }
 
@@ -2068,12 +2058,7 @@ static void VshConvertToken_STREAMDATA_SKIP(
 
     XTL::DWORD SkipCount = (*pToken & X_D3DVSD_SKIPCOUNTMASK) >> X_D3DVSD_SKIPCOUNTSHIFT;
     DbgVshPrintf("\tD3DVSD_SKIP(%d),\n", SkipCount);
-#ifdef CXBX_USE_D3D9
 	pPatchData->pCurrentVertexShaderStreamInfo->HostVertexStride += (SkipCount * sizeof(DWORD));
-#else
-	// D3DVSD_SKIP is encoded identically on host Direct3D8.
-	*pRecompiled = D3DVSD_SKIP(SkipCount);
-#endif
 }
 
 static void VshConvertToken_STREAMDATA_SKIPBYTES(
@@ -2091,11 +2076,7 @@ static void VshConvertToken_STREAMDATA_SKIPBYTES(
         EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "D3DVSD_SKIPBYTES can't be converted to D3DVSD_SKIP, not divisble by 4.");
     }
 
-#ifdef CXBX_USE_D3D9
 	pPatchData->pCurrentVertexShaderStreamInfo->HostVertexStride += SkipBytesCount;
-#else
-	*pRecompiled = D3DVSD_SKIP(SkipBytesCount / sizeof(XTL::DWORD));
-#endif
 }
 
 static void VshConvertToken_STREAMDATA_REG(
@@ -2323,7 +2304,6 @@ static void VshConvertToken_STREAMDATA_REG(
 	pPatchData->pCurrentVertexShaderStreamInfo->NumberOfVertexElements++;
 	pPatchData->pCurrentVertexShaderStreamInfo->NeedPatch |= NeedPatching;
 
-#ifdef CXBX_USE_D3D9
 	pRecompiled->Stream = pPatchData->pCurrentVertexShaderStreamInfo->CurrentStreamNumber;
 	pRecompiled->Offset = pPatchData->pCurrentVertexShaderStreamInfo->HostVertexStride;
 	pRecompiled->Type = HostVertexElementDataType;
@@ -2337,9 +2317,6 @@ static void VshConvertToken_STREAMDATA_REG(
 	}
 
 	pRecompiled++;
-#else
-	*pRecompiled = D3DVSD_REG(HostVertexRegister, HostVertexElementDataType);
-#endif
 
     pPatchData->pCurrentVertexShaderStreamInfo->HostVertexStride += HostVertexElementByteSize;
 
@@ -2643,7 +2620,7 @@ extern void XTL::FreeVertexDynamicPatch(CxbxVertexShader *pVertexShader)
 // Checks for failed vertex shaders, and shaders that would need patching
 boolean VshHandleIsValidShader(DWORD Handle)
 {
-#ifndef CXBX_USE_D3D9
+#if 0
 	//printf( "VS = 0x%.08X\n", Handle );
 
     XTL::CxbxVertexShader *pVertexShader = XTL::MapXboxVertexShaderHandleToCxbxVertexShader(Handle);
