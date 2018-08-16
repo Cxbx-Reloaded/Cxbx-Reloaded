@@ -886,6 +886,9 @@ void CxbxKrnlMain(int argc, char* argv[])
 		DebugFileName = argv[5];
 	}
 
+	int BootFlags;
+	g_EmuShared->GetBootFlags(&BootFlags);
+
 	// debug console allocation (if configured)
 	if (DbgMode == DM_CONSOLE)
 	{
@@ -906,10 +909,11 @@ void CxbxKrnlMain(int argc, char* argv[])
 	else
 	{
 		FreeConsole();
-		if (DbgMode == DM_FILE)
-			freopen(DebugFileName.c_str(), "wt", stdout);
-		else
-		{
+		if (DbgMode == DM_FILE) {
+			// Peform clean write to kernel log for first boot. Unless multi-xbe boot occur then perform append to existing log.
+			freopen(DebugFileName.c_str(), ((BootFlags == DebugMode::DM_NONE) ? "wt" : "at"), stdout);
+		}
+		else {
 			char buffer[16];
 			if (GetConsoleTitle(buffer, 16) != NULL)
 				freopen("nul", "w", stdout);
@@ -932,7 +936,7 @@ void CxbxKrnlMain(int argc, char* argv[])
 	}
 
 	if (CxbxKrnl_hEmuParent != NULL) {
-		SendMessage(CxbxKrnl_hEmuParent, WM_PARENTNOTIFY, MAKELONG(WM_USER, ID_KRNL_IS_READY), GetCurrentProcessId());
+		ipc_send_gui_update(IPC_UPDATE_GUI::KRNL_IS_READY, static_cast<UINT>(GetCurrentProcessId()));
 
 		// Force wait until GUI process is ready
 		do {
@@ -983,8 +987,9 @@ void CxbxKrnlMain(int argc, char* argv[])
 		CxbxKrnlShutDown();
 	}
 
-	int BootFlags = BOOT_NONE;
-	g_EmuShared->GetBootFlags(&BootFlags);
+	bool isLogEnabled;
+	g_EmuShared->GetIsKrnlLogEnabled(&isLogEnabled);
+	g_bPrintfOn = isLogEnabled;
 
 	g_EmuShared->ResetKrnl();
 

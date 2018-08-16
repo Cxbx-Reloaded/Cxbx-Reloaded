@@ -46,6 +46,7 @@ typedef enum class _IPC_UPDATE_GUI {
 	  LLE_FLAGS = 0
 	, XBOX_LED_COLOUR
 	, LOG_ENABLED
+	, KRNL_IS_READY
 } IPC_UPDATE_GUI;
 
 void ipc_send_gui_update(IPC_UPDATE_GUI command, const unsigned int value);

@@ -181,7 +181,10 @@
 #define IDC_EE_480P                     1093
 #define IDC_EE_720P                     1094
 #define IDC_EE_1080I                    1095
-#define ID_KRNL_IS_READY                1096
+#define ID_GUI_STATUS_KRNL_IS_READY     4096
+#define ID_GUI_STATUS_LLE_FLAGS         4097
+#define ID_GUI_STATUS_XBOX_LED_COLOUR   4098
+#define ID_GUI_STATUS_LOG_ENABLED       4099
 #define IDC_XBOX_PORT_0                 1158
 #define IDC_HOST_NOTCONNECT_0_0         1159
 #define IDC_HOST_XINPUT_0_0             1160
@@ -352,9 +355,7 @@
 #define ID_SETTINGS_ALLOWADMINPRIVILEGE 40107
 #define ID_SETTINGS_CONFIG_LOGGING      40108
 #define ID_SYNC_CONFIG_LOGGING          40109
-#define ID_GUI_STATUS_LLE_FLAGS         40110
-#define ID_GUI_STATUS_XBOX_LED_COLOUR   40111
-#define ID_GUI_STATUS_LOG_ENABLED       40112
+#define ID_LOG                          40110
 #define IDC_STATIC                      -1
 
 // Next default values for new objects
@@ -362,7 +363,7 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        135
-#define _APS_NEXT_COMMAND_VALUE         40113
+#define _APS_NEXT_COMMAND_VALUE         40111
 #define _APS_NEXT_CONTROL_VALUE         1256
 #define _APS_NEXT_SYMED_VALUE           104
 #endif

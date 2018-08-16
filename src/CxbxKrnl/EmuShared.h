@@ -164,6 +164,12 @@ class EmuShared : public Mutex
 		void SetCurrentFPS(const float *value) { Lock(); m_FPS_status = *value; Unlock(); }
 
 		// ******************************************************************
+		// * FPS/Benchmark values Accessors
+		// ******************************************************************
+		void GetIsKrnlLogEnabled(bool *value) { Lock(); *value = m_Krnl_Log_enabled; Unlock(); }
+		void SetIsKrnlLogEnabled(const bool value) { Lock(); m_Krnl_Log_enabled = value; Unlock(); }
+
+		// ******************************************************************
 		// * Debugging flag Accessors
 		// ******************************************************************
 		void GetDebuggingFlag(bool *value) { Lock(); *value = m_bDebugging; Unlock(); }
@@ -240,7 +246,7 @@ class EmuShared : public Mutex
 		unsigned int m_Reserved5;
 		float        m_Reserved6;
 		float        m_FPS_status; // NOTE: If move into ipc_send_gui_update will spam GUI's message system (one message per frame)
-		bool         m_bReserved1;
+		bool         m_Krnl_Log_enabled; // Is require in order to preserve previous set for support multi-xbe.
 		bool         m_bDebugging;
 		bool         m_bReady_status;
 		bool         m_bEmulating_status;

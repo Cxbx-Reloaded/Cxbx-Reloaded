@@ -70,6 +70,10 @@ void ipc_send_gui_update(IPC_UPDATE_GUI command, const unsigned int value)
 			cmdParam = ID_GUI_STATUS_LOG_ENABLED;
 			break;
 
+		case IPC_UPDATE_GUI::KRNL_IS_READY:
+			cmdParam = ID_GUI_STATUS_KRNL_IS_READY;
+			break;
+
 		default:
 			cmdParam = 0;
 			break;
@@ -77,7 +81,7 @@ void ipc_send_gui_update(IPC_UPDATE_GUI command, const unsigned int value)
 
 	// Verify command parameter is valid
 	if (cmdParam != 0) {
-		SendMessage(CxbxKrnl_hEmuParent, WM_COMMAND, MAKEWPARAM(cmdParam, 0), value);
+		SendMessage(CxbxKrnl_hEmuParent, WM_PARENTNOTIFY, MAKEWPARAM(cmdParam, 0), value);
 	}
 }
 

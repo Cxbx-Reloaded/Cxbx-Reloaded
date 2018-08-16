@@ -133,6 +133,9 @@ class WndMain : public Wnd
 		// * update title bar caption with xbe name and FPS/MSF
 		// ******************************************************************
 		void UpdateCaption();
+		void RefreshAllStatus();
+		void UpdateFpsStatus();
+		void UpdateLogStatus();
 
 		// ******************************************************************
 		// * crash monitoring wrapper function
@@ -232,6 +235,7 @@ class WndMain : public Wnd
 			UCHAR           m_LedSeq_status[4];
 		};
 		UINT                m_FlagsLLE_status;
+		bool                m_LogKrnl_status;
 };
 
 #endif

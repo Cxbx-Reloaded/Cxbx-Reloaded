@@ -1640,6 +1640,7 @@ static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
             else if(wParam == VK_F8)
             {
                 g_bPrintfOn = !g_bPrintfOn;
+                ipc_send_gui_update(IPC_UPDATE_GUI::LOG_ENABLED, static_cast<UINT>(g_bPrintfOn));
             }
             else if(wParam == VK_F10)
             {
