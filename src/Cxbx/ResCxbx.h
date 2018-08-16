@@ -181,10 +181,10 @@
 #define IDC_EE_480P                     1093
 #define IDC_EE_720P                     1094
 #define IDC_EE_1080I                    1095
-#define ID_GUI_STATUS_KRNL_IS_READY     4096
-#define ID_GUI_STATUS_LLE_FLAGS         4097
-#define ID_GUI_STATUS_XBOX_LED_COLOUR   4098
-#define ID_GUI_STATUS_LOG_ENABLED       4099
+#define ID_GUI_STATUS_KRNL_IS_READY     1096
+#define ID_GUI_STATUS_LLE_FLAGS         1097
+#define ID_GUI_STATUS_XBOX_LED_COLOUR   1098
+#define ID_GUI_STATUS_LOG_ENABLED       1099
 #define IDC_XBOX_PORT_0                 1158
 #define IDC_HOST_NOTCONNECT_0_0         1159
 #define IDC_HOST_XINPUT_0_0             1160

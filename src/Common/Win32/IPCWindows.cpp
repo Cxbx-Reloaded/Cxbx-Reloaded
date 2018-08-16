@@ -81,7 +81,7 @@ void ipc_send_gui_update(IPC_UPDATE_GUI command, const unsigned int value)
 
 	// Verify command parameter is valid
 	if (cmdParam != 0) {
-		SendMessage(CxbxKrnl_hEmuParent, WM_PARENTNOTIFY, MAKEWPARAM(cmdParam, 0), value);
+		SendMessage(CxbxKrnl_hEmuParent, WM_PARENTNOTIFY, MAKEWPARAM(WM_COMMAND, cmdParam), value);
 	}
 }
 

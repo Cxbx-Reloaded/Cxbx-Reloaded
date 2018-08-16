@@ -331,31 +331,32 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 				}
 				case WM_COMMAND:
 				{
-					case ID_GUI_STATUS_LLE_FLAGS:
-						m_FlagsLLE_status = static_cast<UINT>(lParam);
-						break;
+					switch (HIWORD(wParam)) {
+						case ID_GUI_STATUS_LLE_FLAGS:
+							m_FlagsLLE_status = static_cast<UINT>(lParam);
+							break;
 
-					case ID_GUI_STATUS_XBOX_LED_COLOUR:
-						m_LedSeq_status_block = static_cast<UINT>(lParam);
-						break;
+						case ID_GUI_STATUS_XBOX_LED_COLOUR:
+							m_LedSeq_status_block = static_cast<UINT>(lParam);
+							break;
 
-					case ID_GUI_STATUS_LOG_ENABLED:
-						m_LogKrnl_status = static_cast<bool>(lParam);
-						UpdateLogStatus();
-						break;
+						case ID_GUI_STATUS_LOG_ENABLED:
+							m_LogKrnl_status = static_cast<bool>(lParam);
+							UpdateLogStatus();
+							break;
 
-					// NOTE: If anything need to set before kernel process start do anything, do it here.
-					case ID_GUI_STATUS_KRNL_IS_READY: {
-						Crash_Manager_Data* pCMD = (Crash_Manager_Data*)malloc(sizeof(Crash_Manager_Data));
-						pCMD->pWndMain = this;
-						pCMD->dwChildProcID = lParam; // lParam is process ID.
-						std::thread(CrashMonitorWrapper, pCMD).detach();
+						// NOTE: If anything need to set before kernel process start do anything, do it here.
+						case ID_GUI_STATUS_KRNL_IS_READY: {
+							Crash_Manager_Data* pCMD = (Crash_Manager_Data*)malloc(sizeof(Crash_Manager_Data));
+							pCMD->pWndMain = this;
+							pCMD->dwChildProcID = lParam; // lParam is process ID.
+							std::thread(CrashMonitorWrapper, pCMD).detach();
 
-						g_EmuShared->SetIsEmulating(true); // NOTE: Putting in here raise to low or medium risk due to debugger will launch itself. (Current workaround)
-						g_EmuShared->SetIsReady(true);
-						break;
+							g_EmuShared->SetIsEmulating(true); // NOTE: Putting in here raise to low or medium risk due to debugger will launch itself. (Current workaround)
+							g_EmuShared->SetIsReady(true);
+							break;
+						}
 					}
-
 				}
 				break;
 			}
