@@ -55,14 +55,17 @@ void SetLEDSequence(LED::Sequence aLEDSequence)
 	// See http://xboxdevwiki.net/PIC#The_LED
 	DbgPrintf(LOG_PREFIX, "SetLEDSequence : %u\n", (byte)aLEDSequence);
 
-	int LedSequence[4] = { XBOX_LED_COLOUR_OFF, XBOX_LED_COLOUR_OFF, XBOX_LED_COLOUR_OFF, XBOX_LED_COLOUR_OFF };
+    union {
+        UINT  LedSequenceBlock;
+        UCHAR LedSequence[4] = { XBOX_LED_COLOUR_OFF, XBOX_LED_COLOUR_OFF, XBOX_LED_COLOUR_OFF, XBOX_LED_COLOUR_OFF };
+    };
 
 	LedSequence[0] = ((aLEDSequence >> 6) & 2) | ((aLEDSequence >> 3) & 1);
 	LedSequence[1] = ((aLEDSequence >> 5) & 2) | ((aLEDSequence >> 2) & 1);
 	LedSequence[2] = ((aLEDSequence >> 4) & 2) | ((aLEDSequence >> 1) & 1);
 	LedSequence[3] = ((aLEDSequence >> 3) & 2) | ((aLEDSequence >> 0) & 1);
 
-	g_EmuShared->SetLedSequence(LedSequence);
+	ipc_send_gui_update(IPC_UPDATE_GUI::XBOX_LED_COLOUR, LedSequenceBlock);
 }
 
 /* SMCDevice */
