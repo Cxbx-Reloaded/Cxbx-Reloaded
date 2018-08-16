@@ -1877,8 +1877,13 @@ void WndMain::UpdateFpsStatus()
 	if (m_bIsStarted) {
 		if (g_EmuShared != nullptr) {
 			g_EmuShared->GetCurrentFPS(&m_FPS_status);
-			m_MSpF_status = (float)(1000.0 / (m_FPS_status == 0 ? 0.001 : m_FPS_status));
 
+			if (m_FPS_status == 0.0f) {
+				m_MSpF_status = 0.0f;
+			}
+			else {
+				m_MSpF_status = (float)(1000.0 / m_FPS_status);
+			}
 			std::sprintf(sMenu, "FPS: %.2f  MS / F : %.2f", m_FPS_status, m_MSpF_status);
 		}
 	}
