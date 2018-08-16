@@ -161,18 +161,12 @@ DWORD ExecuteDpcQueue()
 		// Set DpcRoutineActive to support KeIsExecutingDpc:
 		KeGetCurrentPrcb()->DpcRoutineActive = TRUE; // Experimental
 		DbgPrintf(LOG_PREFIX, "Global DpcQueue, calling DPC at 0x%.8X\n", pkdpc->DeferredRoutine);
-		__try {
-			// Call the Deferred Procedure  :
-			pkdpc->DeferredRoutine(
-				pkdpc,
-				pkdpc->DeferredContext,
-				pkdpc->SystemArgument1,
-				pkdpc->SystemArgument2);
-		} __except (EmuException(GetExceptionInformation()))
-		{
-			EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Problem with ExceptionFilter!");
-		}
-
+		// Call the Deferred Procedure  :
+		pkdpc->DeferredRoutine(
+			pkdpc,
+			pkdpc->DeferredContext,
+			pkdpc->SystemArgument1,
+			pkdpc->SystemArgument2);
 		KeGetCurrentPrcb()->DpcRoutineActive = FALSE; // Experimental
 	}
 
@@ -206,16 +200,11 @@ DWORD ExecuteDpcQueue()
 
 			DbgPrintf(LOG_PREFIX, "Global TimerQueue, calling DPC at 0x%.8X\n", pkdpc->DeferredRoutine);
 
-			__try {
-				pkdpc->DeferredRoutine(
-					pkdpc,
-					pkdpc->DeferredContext,
-					pkdpc->SystemArgument1,
-					pkdpc->SystemArgument2);
-			} __except (EmuException(GetExceptionInformation()))
-			{
-				EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Problem with ExceptionFilter!");
-			}
+			pkdpc->DeferredRoutine(
+				pkdpc,
+				pkdpc->DeferredContext,
+				pkdpc->SystemArgument1,
+				pkdpc->SystemArgument2);
 		}
 	}
 
