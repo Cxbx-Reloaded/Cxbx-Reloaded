@@ -912,6 +912,12 @@ void CxbxKrnlMain(int argc, char* argv[])
 		if (DbgMode == DM_FILE) {
 			// Peform clean write to kernel log for first boot. Unless multi-xbe boot occur then perform append to existing log.
 			freopen(DebugFileName.c_str(), ((BootFlags == DebugMode::DM_NONE) ? "wt" : "at"), stdout);
+			// Append separator for better readability after reboot.
+			if (BootFlags != DebugMode::DM_NONE) {
+				std::cout << "                                                                  " << std::endl
+				          << "\/\/\/REBOOT\/\/\/REBOOT\/\/\/REBOOT\/\/\/REBOOT\/\/\/REBOOT\/\/\/" << std::endl
+				          << "                                                                  " << std::endl;
+			}
 		}
 		else {
 			char buffer[16];
