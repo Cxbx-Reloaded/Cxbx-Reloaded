@@ -78,11 +78,12 @@ void VMManager::Initialize(HANDLE memory_view, HANDLE pagetables_view, int BootF
 	ConstructMemoryRegion(SYSTEM_MEMORY_BASE, SYSTEM_MEMORY_SIZE, SystemRegion);
 	ConstructMemoryRegion(DEVKIT_MEMORY_BASE, DEVKIT_MEMORY_SIZE, DevkitRegion);
 
+	unsigned char PreviousLayout;
 	if ((BootFlags & BOOT_QUICK_REBOOT) != 0)
 	{
 		// Restore the memory layout we were emulating in the previous session
 
-		unsigned char PreviousLayout = *(unsigned char*)(CONTIGUOUS_MEMORY_BASE + PAGE_SIZE - 9);
+		PreviousLayout = *(unsigned char*)(CONTIGUOUS_MEMORY_BASE + PAGE_SIZE - 9);
 		m_MmLayoutChihiro = (PreviousLayout == MmChihiro);
 		m_MmLayoutDebug = (PreviousLayout == MmDebug);
 		m_MmLayoutRetail = (PreviousLayout == MmRetail);
@@ -96,7 +97,7 @@ void VMManager::Initialize(HANDLE memory_view, HANDLE pagetables_view, int BootF
 		m_MmLayoutDebug = (g_XbeType == xtDebug);
 		m_MmLayoutRetail = (g_XbeType == xtRetail);
 
-		*(unsigned char*)(CONTIGUOUS_MEMORY_BASE + PAGE_SIZE - 9) = m_MmLayoutChihiro ? MmChihiro : (m_MmLayoutDebug ? MmDebug : MmRetail);
+		PreviousLayout = m_MmLayoutChihiro ? MmChihiro : (m_MmLayoutDebug ? MmDebug : MmRetail);
 	}
 
 	// Set up general memory variables according to the xbe type
@@ -138,6 +139,7 @@ void VMManager::Initialize(HANDLE memory_view, HANDLE pagetables_view, int BootF
 		// But right now it persists the whole block". So we also clear the entire mapped memory.bin since we are not quick rebooting
 		xboxkrnl::RtlFillMemoryUlong((void*)CONTIGUOUS_MEMORY_BASE, g_SystemMaxMemory, 0);
 		xboxkrnl::RtlFillMemoryUlong((void*)PAGE_TABLES_BASE, PAGE_TABLES_SIZE, 0);
+		*(unsigned char*)(CONTIGUOUS_MEMORY_BASE + PAGE_SIZE - 9) = PreviousLayout;
 		InitializePfnDatabase();
 	}
 	else {
@@ -2134,7 +2136,7 @@ xboxkrnl::NTSTATUS VMManager::XbVirtualMemoryStatistics(VAddr addr, xboxkrnl::PM
 	// ergo720: hack. Always report as reserved the region after the memory placeholder and below 0x8000000 if we are emulating
 	// a 128 MiB system regardless of what VirtualQuery says. Once LLE CPU and MMU are implemented, this can be removed
 
-	if (g_bIsRetail != true && addr >= XBE_IMAGE_BASE + XBE_MAX_VA && addr < CHIHIRO_MEMORY_SIZE) {
+	if (m_MmLayoutRetail != true && addr >= XBE_IMAGE_BASE + XBE_MAX_VA && addr < CHIHIRO_MEMORY_SIZE) {
 		memory_statistics->AllocationBase = (void*)(XBE_IMAGE_BASE + XBE_MAX_VA);
 		memory_statistics->AllocationProtect = XBOX_PAGE_NOACCESS;
 		memory_statistics->BaseAddress = (void*)ROUND_DOWN_4K(addr);
