@@ -36,7 +36,7 @@
 // ******************************************************************
 #define _XBOXKRNL_DEFEXTRN_
 
-#define LOG_PREFIX "KRNL"
+#define LOG_PREFIX CXBXR_MODULE::KE
 
 // prevent name collisions
 namespace xboxkrnl
@@ -54,7 +54,7 @@ namespace NtDll
 };
 
 #include "CxbxKrnl.h" // For CxbxKrnlCleanup
-#include "Emu.h" // For EmuWarning()
+#include "Emu.h" // For EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, )
 #include "EmuKrnl.h" // For InitializeListHead(), etc.
 #include "EmuKrnlKi.h" // For KiRemoveTreeTimer(), KiInsertTreeTimer()
 #include "EmuFile.h" // For IsEmuHandle(), NtStatusToString()
@@ -97,7 +97,7 @@ xboxkrnl::KPCR* KeGetPcr()
 	Pcr = (xboxkrnl::PKPCR)__readfsdword(TIB_ArbitraryDataSlot);
 
 	if (Pcr == nullptr) {
-		EmuWarning("KeGetPCR returned nullptr: Was this called from a non-xbox thread?");
+		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "KeGetPCR returned nullptr: Was this called from a non-xbox thread?");
 		// Attempt to salvage the situation by calling InitXboxThread to setup KPCR in place
 		InitXboxThread(g_CPUXbox);
 		Pcr = (xboxkrnl::PKPCR)__readfsdword(TIB_ArbitraryDataSlot);
@@ -160,7 +160,7 @@ DWORD ExecuteDpcQueue()
 		pkdpc->Inserted = FALSE;
 		// Set DpcRoutineActive to support KeIsExecutingDpc:
 		KeGetCurrentPrcb()->DpcRoutineActive = TRUE; // Experimental
-		DbgPrintf("KRNL: Global DpcQueue, calling DPC at 0x%.8X\n", pkdpc->DeferredRoutine);
+		DbgPrintf(LOG_PREFIX, "Global DpcQueue, calling DPC at 0x%.8X\n", pkdpc->DeferredRoutine);
 		__try {
 			// Call the Deferred Procedure  :
 			pkdpc->DeferredRoutine(
@@ -170,7 +170,7 @@ DWORD ExecuteDpcQueue()
 				pkdpc->SystemArgument2);
 		} __except (EmuException(GetExceptionInformation()))
 		{
-			EmuWarning("Problem with ExceptionFilter!");
+			EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Problem with ExceptionFilter!");
 		}
 
 		KeGetCurrentPrcb()->DpcRoutineActive = FALSE; // Experimental
@@ -204,7 +204,7 @@ DWORD ExecuteDpcQueue()
 			if (pkdpc == nullptr)
 				break; // while
 
-			DbgPrintf("KRNL: Global TimerQueue, calling DPC at 0x%.8X\n", pkdpc->DeferredRoutine);
+			DbgPrintf(LOG_PREFIX, "Global TimerQueue, calling DPC at 0x%.8X\n", pkdpc->DeferredRoutine);
 
 			__try {
 				pkdpc->DeferredRoutine(
@@ -214,7 +214,7 @@ DWORD ExecuteDpcQueue()
 					pkdpc->SystemArgument2);
 			} __except (EmuException(GetExceptionInformation()))
 			{
-				EmuWarning("Problem with ExceptionFilter!");
+				EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Problem with ExceptionFilter!");
 			}
 		}
 	}
@@ -235,7 +235,7 @@ void InitDpcAndTimerThread()
 	InitializeListHead(&(g_DpcData.DpcQueue));
 	InitializeListHead(&(g_DpcData.TimerQueue));
 
-	DbgPrintf("INIT: Creating DPC event\n");
+	DbgPrintf(CXBXR_MODULE::INIT, "Creating DPC event\n");
 	g_DpcData.DpcEvent = CreateEvent(/*lpEventAttributes=*/nullptr, /*bManualReset=*/FALSE, /*bInitialState=*/FALSE, /*lpName=*/nullptr);
 }
 
@@ -396,7 +396,7 @@ XBSYSAPI EXPORTNUM(96) xboxkrnl::NTSTATUS NTAPI xboxkrnl::KeBugCheckEx
 	int result = MessageBoxA(g_hEmuWindow, buffer, "KeBugCheck", MB_YESNO | MB_ICONWARNING);
 
 	if (result == IDNO)	{
-		CxbxKrnlCleanup(NULL);
+		CxbxKrnlCleanup(LOG_PREFIX, NULL);
 	}
 
 	KeBugCheckIgnored = true;
@@ -1055,7 +1055,7 @@ XBSYSAPI EXPORTNUM(123) xboxkrnl::LONG NTAPI xboxkrnl::KePulseEvent
 
 	// Fetch the host event and signal it, if present
 	if (g_KeEventHandles.find(Event) == g_KeEventHandles.end()) {
-		EmuWarning("KePulseEvent called on a non-existant event!");
+		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "KePulseEvent called on a non-existant event!");
 	}
 	else {
 		PulseEvent(g_KeEventHandles[Event]);
@@ -1120,9 +1120,9 @@ XBSYSAPI EXPORTNUM(126) xboxkrnl::ULONGLONG NTAPI xboxkrnl::KeQueryPerformanceCo
 	ULONGLONG ret;
 
 	//no matter rdtsc is patched or not, we should always return a scaled performance counter here.
-	DbgPrintf("host tick count       : %lu\n", CxbxRdTsc(/*xbox=*/false));
+	DbgPrintf(LOG_PREFIX, "host tick count       : %lu\n", CxbxRdTsc(/*xbox=*/false));
 	ret = CxbxRdTsc(/*xbox=*/true);
-	DbgPrintf("emulated tick count   : %lu\n", ret);
+	DbgPrintf(LOG_PREFIX, "emulated tick count   : %lu\n", ret);
 	
 	RETURN(ret);
 }
@@ -1381,7 +1381,7 @@ XBSYSAPI EXPORTNUM(138) xboxkrnl::LONG NTAPI xboxkrnl::KeResetEvent
 
 	// Fetch the host event and signal it, if present
 	if (g_KeEventHandles.find(Event) == g_KeEventHandles.end()) {
-		EmuWarning("KeResetEvent called on a non-existant event!");
+		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "KeResetEvent called on a non-existant event!");
 	}
 	else {
 		ResetEvent(g_KeEventHandles[Event]);
@@ -1523,7 +1523,7 @@ XBSYSAPI EXPORTNUM(145) xboxkrnl::LONG NTAPI xboxkrnl::KeSetEvent
 
 	// Fetch the host event and signal it, if present
 	if (g_KeEventHandles.find(Event) == g_KeEventHandles.end()) {
-		EmuWarning("KeSetEvent called on a non-existant event. Creating it!");
+		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "KeSetEvent called on a non-existant event. Creating it!");
 		// TODO: Find out why some XDKs do not call KeInitializeEvent first
 
 		//We can check the event type from the internal structure, see https://www.geoffchappell.com/studies/windows/km/ntoskrnl/structs/kobjects.htm?tx=111
@@ -1631,7 +1631,7 @@ XBSYSAPI EXPORTNUM(150) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeSetTimerEx
 	LARGE_INTEGER SystemTime;
 
 	if (Timer->Header.Type != TimerNotificationObject && Timer->Header.Type != TimerSynchronizationObject) {
-		CxbxKrnlCleanup("Assertion: '(Timer)->Header.Type == TimerNotificationObject) || ((Timer)->Header.Type == TimerSynchronizationObject)' in KeSetTimerEx()");
+		CxbxKrnlCleanup(LOG_PREFIX, "Assertion: '(Timer)->Header.Type == TimerNotificationObject) || ((Timer)->Header.Type == TimerSynchronizationObject)' in KeSetTimerEx()");
 	}
 
 	// Same as KeCancelTimer(Timer) :
@@ -1807,7 +1807,7 @@ XBSYSAPI EXPORTNUM(158) xboxkrnl::NTSTATUS NTAPI xboxkrnl::KeWaitForMultipleObje
 	std::vector<HANDLE> ntdllObjects;
 
 	for (uint i = 0; i < Count; i++) {
-		DbgPrintf("Object: 0x%08X\n", Object[i]);
+		DbgPrintf(LOG_PREFIX, "Object: 0x%08X\n", Object[i]);
 		if (g_KeEventHandles.find((PKEVENT)Object[i]) == g_KeEventHandles.end()) {
 			ntdllObjects.push_back(Object[i]);
 		} else {
@@ -1828,7 +1828,7 @@ XBSYSAPI EXPORTNUM(158) xboxkrnl::NTSTATUS NTAPI xboxkrnl::KeWaitForMultipleObje
 			(NtDll::PLARGE_INTEGER)Timeout);
 
 		if (FAILED(ret))
-			EmuWarning("KeWaitForMultipleObjects failed! (%s)", NtStatusToString(ret));
+			EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "KeWaitForMultipleObjects failed! (%s)", NtStatusToString(ret));
 	}
 	
 	if (nativeObjects.size() > 0) {
@@ -1840,7 +1840,7 @@ XBSYSAPI EXPORTNUM(158) xboxkrnl::NTSTATUS NTAPI xboxkrnl::KeWaitForMultipleObje
 			(NtDll::PLARGE_INTEGER)Timeout);
 
 		if (FAILED(ret))
-			EmuWarning("KeWaitForMultipleObjects failed! (%s)", NtStatusToString(ret));
+			EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "KeWaitForMultipleObjects failed! (%s)", NtStatusToString(ret));
 	}
 
 	RETURN(ret);

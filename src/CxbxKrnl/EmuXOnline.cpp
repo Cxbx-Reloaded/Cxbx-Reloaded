@@ -35,7 +35,7 @@
 // ******************************************************************
 #define _XBOXKRNL_DEFEXTRN_
 
-#define LOG_PREFIX "XONL"
+#define LOG_PREFIX CXBXR_MODULE::XONLINE
 
 #include "Emu.h"
 #include "Logging.h"

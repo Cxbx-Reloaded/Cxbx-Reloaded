@@ -1037,7 +1037,7 @@ XTL::D3DFORMAT XTL::EmuXB2PC_D3DFormat(X_D3DFORMAT Format)
 	{
 		const FormatInfo *info = &FormatInfos[Format];
 		if (info->warning != nullptr) {
-			DbgPrintf("EmuXB2PC_D3DFormat %s\n", info->warning);
+			DbgPrintf(LOG_PREFIX_D3DCVT, "EmuXB2PC_D3DFormat %s\n", info->warning);
 		}
 
 		return info->pc;
@@ -1049,7 +1049,7 @@ XTL::D3DFORMAT XTL::EmuXB2PC_D3DFormat(X_D3DFORMAT Format)
 	case ((X_D3DFORMAT)0xffffffff):
 		return D3DFMT_UNKNOWN; // TODO -oCXBX: Not sure if this counts as swizzled or not...
 	default:
-		CxbxKrnlCleanup("EmuXB2PC_D3DFormat: Unknown Format (0x%.08X)", Format);
+		CxbxKrnlCleanup(LOG_PREFIX_D3DCVT, "EmuXB2PC_D3DFormat: Unknown Format (0x%.08X)", Format);
 	}
 
 	return D3DFMT_UNKNOWN;
@@ -1131,7 +1131,7 @@ XTL::X_D3DFORMAT XTL::EmuPC2XB_D3DFormat(D3DFORMAT Format, bool bPreferLinear)
 		result = X_D3DFMT_VERTEXDATA;
 		break;
 	default:
-		CxbxKrnlCleanup("EmuPC2XB_D3DFormat: Unknown Format (%d)", Format);
+		CxbxKrnlCleanup(LOG_PREFIX_D3DCVT, "EmuPC2XB_D3DFormat: Unknown Format (%d)", Format);
     }
 
     return result;
@@ -1183,7 +1183,7 @@ XTL::D3DMULTISAMPLE_TYPE XTL::EmuXB2PC_D3DMultiSampleFormat(DWORD Type)
 		result = D3DMULTISAMPLE_9_SAMPLES;
 		break;
 	default:
-		EmuWarning("Unknown Multisample Type (0x%X)!\x0d\x0a.", Type);
+		EmuLog(LOG_PREFIX_D3DCVT, LOG_LEVEL::WARNING, "Unknown Multisample Type (0x%X)!\x0d\x0a.", Type);
 		result = D3DMULTISAMPLE_NONE;
 	}
 	return result;

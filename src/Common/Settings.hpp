@@ -109,6 +109,11 @@ struct XBCtrlObjectCfg
 	int dwFlags;    // flags explaining the data format
 };
 
+// ******************************************************************
+// * Define number of integers required to store logging settings
+// ******************************************************************
+#define NUM_INTEGERS_LOG 2
+
 enum {
 	LLE_NONE = 0,
 	LLE_APU = 1 << 0,
@@ -146,6 +151,8 @@ public:
 		char szKrnlDebug[MAX_PATH] = "";
 		char szStorageLocation[MAX_PATH] = "";
 		bool allowAdminPrivilege;
+		uint LoggedModules[NUM_INTEGERS_LOG];
+		int LogLevel = 1;
 		bool Reserved2 = 0;
 		bool Reserved3 = 0;
 		bool Reserved4 = 0;

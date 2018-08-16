@@ -36,6 +36,7 @@
 
 #include "Cxbx.h"
 #include "Common/Xbe.h"
+#include "Logging.h"
 
 #undef FIELD_OFFSET     // prevent macro redefinition warnings
 #include <windows.h>
@@ -205,20 +206,14 @@ typedef enum _CxbxMsgDlgIcon {
 
 } CxbxMsgDlgIcon;
 
-void CxbxPopupMessage(CxbxMsgDlgIcon icon, const char *message, ...);
+void CxbxPopupMessage(CXBXR_MODULE cxbxr_module, LOG_LEVEL level, CxbxMsgDlgIcon icon, const char *message, ...);
 
-#ifdef _DEBUG
 #define LOG_TEST_CASE(message) do { static bool bTestCaseLogged = false; \
     if (!bTestCaseLogged) { bTestCaseLogged = true; \
-    CxbxPopupMessage(CxbxMsgDlgIcon_Info, "Please report that %s shows the following message:\nLOG_TEST_CASE: %s\nIn %s (%s line %d)", \
-    CxbxKrnl_Xbe->m_szAsciiTitle, message, __func__, __FILE__, __LINE__); } } while(0)
+	LOG_CHECK_ENABLED(LOG_PREFIX, LOG_LEVEL::INFO) { \
+		CxbxPopupMessage(LOG_PREFIX, LOG_LEVEL::INFO, CxbxMsgDlgIcon_Info, "Please report that %s shows the following message:\nLOG_TEST_CASE: %s\nIn %s (%s line %d)", \
+		CxbxKrnl_Xbe->m_szAsciiTitle, message, __func__, __FILE__, __LINE__); } } } while (0)
 // was g_pCertificate->wszTitleName
-#else
-#define LOG_TEST_CASE(message) do { static bool bTestCaseLogged = false; \
-    if (!bTestCaseLogged) { bTestCaseLogged = true; \
-    printf("LOG_TEST_CASE: %s\nIn %s (%s line %d)", \
-    message, __func__, __FILE__, __LINE__); } } while(0)
-#endif
 
 extern Xbe::Certificate *g_pCertificate;
 
@@ -234,7 +229,7 @@ void CxbxKrnlMain(int argc, char* argv[]);
 __declspec(noreturn) void CxbxKrnlInit(void *pTLSData, Xbe::TLS *pTLS, Xbe::LibraryVersion *LibraryVersion, DebugMode DbgMode, const char *szDebugFilename, Xbe::Header *XbeHeader, uint32 XbeHeaderSize, void (*Entry)(), int BootFlags);
 
 /*! cleanup emulation */
-__declspec(noreturn) void CxbxKrnlCleanup(const char *szErrorMessage, ...);
+__declspec(noreturn) void CxbxKrnlCleanup(CXBXR_MODULE cxbxr_module, const char *szErrorMessage, ...);
 
 /*! register a thread handle */
 void CxbxKrnlRegisterThread(HANDLE hThread);

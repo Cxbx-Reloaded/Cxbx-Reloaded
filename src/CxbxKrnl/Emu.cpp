@@ -49,7 +49,6 @@ namespace xboxkrnl
 #include "EmuShared.h"
 #include "HLEIntercept.h"
 #include "CxbxDebugger.h"
-#include "Logging.h"
 
 #ifdef _DEBUG
 #include <Dbghelp.h>
@@ -103,34 +102,35 @@ std::string FormatTitleId(uint32_t title_id)
 }
 
 // print out a warning message to the kernel debug log file
-#ifdef _DEBUG_WARNINGS
-void NTAPI EmuWarning(const char *szWarningMessage, ...)
+void NTAPI EmuLog(CXBXR_MODULE cxbxr_module, LOG_LEVEL level, const char *szWarningMessage, ...)
 {
-    if (szWarningMessage == NULL) {
-        return;
-    }
+	if (szWarningMessage == NULL) {
+		return;
+	}
 
-    if(g_bPrintfOn) {
+	LOG_CHECK_ENABLED(cxbxr_module, level) {
+		if (g_bPrintfOn) {
 
-        va_list argp;
+			va_list argp;
 
-        LOG_THREAD_INIT;
+			LOG_THREAD_INIT;
 
-        std::cout << _logThreadPrefix << "WARN: ";
+			std::cout << _logThreadPrefix << (level == LOG_LEVEL::WARNING ? "WARN: " : "")
+				<< g_EnumModules2String[to_underlying(cxbxr_module)];
 
-        va_start(argp, szWarningMessage);
+			va_start(argp, szWarningMessage);
 
-        vfprintf(stdout, szWarningMessage, argp);
+			vfprintf(stdout, szWarningMessage, argp);
 
-        va_end(argp);
+			va_end(argp);
 
-        fprintf(stdout, "\n");
+			fprintf(stdout, "\n");
 
-        fflush(stdout);
+			fflush(stdout);
 
-    }
+		}
+	}
 }
-#endif
 
 std::string EIPToString(xbaddr EIP)
 {

@@ -35,6 +35,7 @@
 // *
 // ******************************************************************
 #define _XBOXKRNL_DEFEXTRN_
+#define LOG_PREFIX CXBXR_MODULE::VTXB
 
 #include "CxbxKrnl/VMManager.h"
 #include "CxbxKrnl/xxhash32.h" // For XXHash32::hash()
@@ -104,7 +105,7 @@ bool GetCachedVertexBufferObject(DWORD pXboxDataPtr, DWORD size, XTL::IDirect3DV
 			nullptr
 		);
 		if (FAILED(hRet)) {
-			CxbxKrnlCleanup("Failed to create vertex buffer");
+			CxbxKrnlCleanup(LOG_PREFIX, "Failed to create vertex buffer");
 		}
 		
 		g_HostVertexBuffers[pXboxDataPtr] = newBuffer;
@@ -134,7 +135,7 @@ bool GetCachedVertexBufferObject(DWORD pXboxDataPtr, DWORD size, XTL::IDirect3DV
 		nullptr
 	);
 	if (FAILED(hRet)) {
-		CxbxKrnlCleanup("Failed to create vertex buffer");
+		CxbxKrnlCleanup(LOG_PREFIX, "Failed to create vertex buffer");
 	}
 
 	*pVertexBuffer = buffer->pHostVertexBuffer;
@@ -165,7 +166,7 @@ void ActivatePatchedStream
 			pPatchedStream->uiCachedHostVertexStride);
 		//DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetStreamSource");
 		if (FAILED(hRet)) {
-			CxbxKrnlCleanup("Failed to set the type patched buffer as the new stream source!\n");
+			CxbxKrnlCleanup(LOG_PREFIX, "Failed to set the type patched buffer as the new stream source!\n");
 			// TODO : Cartoon hits the above case when the vertex cache size is 0.
 		}
 
@@ -349,7 +350,7 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
     if (pDrawContext->pXboxVertexStreamZeroData != xbnullptr) {
 		// There should only be one stream (stream zero) in this case
 		if (uiStream != 0) {
-			CxbxKrnlCleanup("Trying to patch a Draw..UP with more than stream zero!");
+			CxbxKrnlCleanup(LOG_PREFIX, "Trying to patch a Draw..UP with more than stream zero!");
 		}
 
 		pXboxVertexData = (uint08 *)pDrawContext->pXboxVertexStreamZeroData;
@@ -360,7 +361,7 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
 		if (bNeedStreamCopy) {
 			pHostVertexData = (uint08*)malloc(dwHostVertexDataSize);
 			if (pHostVertexData == nullptr) {
-				CxbxKrnlCleanup("Couldn't allocate the new stream zero buffer");
+				CxbxKrnlCleanup(LOG_PREFIX, "Couldn't allocate the new stream zero buffer");
 			}
 		}
 		else {
@@ -378,7 +379,7 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
 				0);
 //			DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetStreamSource");
 			if (FAILED(hRet)) {
-				EmuWarning("g_pD3DDevice->SetStreamSource(uiStream, nullptr, 0)");
+				EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "g_pD3DDevice->SetStreamSource(uiStream, nullptr, 0)");
 			}
 
 			return;
@@ -396,7 +397,7 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
 		GetCachedVertexBufferObject(pXboxVertexBuffer->Data, dwHostVertexDataSize, &pNewHostVertexBuffer);
 
         if (FAILED(pNewHostVertexBuffer->Lock(0, 0, (D3DLockData **)&pHostVertexData, D3DLOCK_DISCARD))) {
-            CxbxKrnlCleanup("Couldn't lock the new buffer");
+            CxbxKrnlCleanup(LOG_PREFIX, "Couldn't lock the new buffer");
         }
 
 		// Copy stream for patching and caching.
@@ -746,7 +747,7 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
 void XTL::CxbxVertexBufferConverter::Apply(CxbxDrawContext *pDrawContext, DWORD StartIndex)
 {
 	if ((pDrawContext->XboxPrimitiveType < X_D3DPT_POINTLIST) || (pDrawContext->XboxPrimitiveType > X_D3DPT_POLYGON))
-		CxbxKrnlCleanup("Unknown primitive type: 0x%.02X\n", pDrawContext->XboxPrimitiveType);
+		CxbxKrnlCleanup(LOG_PREFIX, "Unknown primitive type: 0x%.02X\n", pDrawContext->XboxPrimitiveType);
 
     if (VshHandleIsVertexShader(pDrawContext->hVertexShader)) {
         m_pVertexShaderInfo = &(MapXboxVertexShaderHandleToCxbxVertexShader(pDrawContext->hVertexShader)->VertexShaderInfo);
@@ -802,24 +803,24 @@ VOID XTL::EmuFlushIVB()
     bool bFVF = VshHandleIsFVF(g_CurrentXboxVertexShaderHandle);
     DWORD dwCurFVF = (bFVF) ? g_CurrentXboxVertexShaderHandle : g_InlineVertexBuffer_FVF;
 
-    DbgPrintf("g_InlineVertexBuffer_TableOffset := %d\n", g_InlineVertexBuffer_TableOffset);
+    DbgPrintf(LOG_PREFIX, "g_InlineVertexBuffer_TableOffset := %d\n", g_InlineVertexBuffer_TableOffset);
 
 	// Check the given FVF
 	switch (dwCurFVF & D3DFVF_POSITION_MASK) {
 	case 0: // No position ?
 		if (bFVF) {
-			EmuWarning("EmuFlushIVB(): g_CurrentXboxVertexShaderHandle isn't a valid FVF - using D3DFVF_XYZRHW instead!");
+			EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "EmuFlushIVB(): g_CurrentXboxVertexShaderHandle isn't a valid FVF - using D3DFVF_XYZRHW instead!");
 			dwCurFVF |= D3DFVF_XYZRHW;
 		}
 		else {
-			EmuWarning("EmuFlushIVB(): using g_InlineVertexBuffer_FVF instead of current FVF!");
+			EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "EmuFlushIVB(): using g_InlineVertexBuffer_FVF instead of current FVF!");
 			dwCurFVF = g_InlineVertexBuffer_FVF;
 		}
 		break;
 	case D3DFVF_XYZRHW:
 		// D3DFVF_NORMAL isn't allowed in combination with D3DFVF_XYZRHW 
 		if (dwCurFVF & D3DFVF_NORMAL) {
-			EmuWarning("EmuFlushIVB(): Normal encountered while D3DFVF_XYZRHW is given - switching back to D3DFVF_XYZ!");
+			EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "EmuFlushIVB(): Normal encountered while D3DFVF_XYZRHW is given - switching back to D3DFVF_XYZ!");
 			dwCurFVF &= ~D3DFVF_POSITION_MASK;
 			dwCurFVF |= D3DFVF_XYZ;
 		}
@@ -854,37 +855,37 @@ VOID XTL::EmuFlushIVB()
         *pVertexBufferData++ = g_InlineVertexBuffer_Table[v].Position.z;
 		if (dwPos == D3DFVF_XYZRHW) {
             *pVertexBufferData++ = g_InlineVertexBuffer_Table[v].Rhw;
-            DbgPrintf("IVB Position := {%f, %f, %f, %f}\n", g_InlineVertexBuffer_Table[v].Position.x, g_InlineVertexBuffer_Table[v].Position.y, g_InlineVertexBuffer_Table[v].Position.z, g_InlineVertexBuffer_Table[v].Rhw);
+            DbgPrintf(LOG_PREFIX, "IVB Position := {%f, %f, %f, %f}\n", g_InlineVertexBuffer_Table[v].Position.x, g_InlineVertexBuffer_Table[v].Position.y, g_InlineVertexBuffer_Table[v].Position.z, g_InlineVertexBuffer_Table[v].Rhw);
 		}
 		else { // XYZRHW cannot be combined with NORMAL, but the other XYZ formats can :
 			switch (dwPos) {
 			case D3DFVF_XYZ:
-				DbgPrintf("IVB Position := {%f, %f, %f}\n", g_InlineVertexBuffer_Table[v].Position.x, g_InlineVertexBuffer_Table[v].Position.y, g_InlineVertexBuffer_Table[v].Position.z);
+				DbgPrintf(LOG_PREFIX, "IVB Position := {%f, %f, %f}\n", g_InlineVertexBuffer_Table[v].Position.x, g_InlineVertexBuffer_Table[v].Position.y, g_InlineVertexBuffer_Table[v].Position.z);
 				break;
 			case D3DFVF_XYZB1:
 				*pVertexBufferData++ = g_InlineVertexBuffer_Table[v].Blend[0];
-				DbgPrintf("IVB Position := {%f, %f, %f, %f}\n", g_InlineVertexBuffer_Table[v].Position.x, g_InlineVertexBuffer_Table[v].Position.y, g_InlineVertexBuffer_Table[v].Position.z, g_InlineVertexBuffer_Table[v].Blend[0]);
+				DbgPrintf(LOG_PREFIX, "IVB Position := {%f, %f, %f, %f}\n", g_InlineVertexBuffer_Table[v].Position.x, g_InlineVertexBuffer_Table[v].Position.y, g_InlineVertexBuffer_Table[v].Position.z, g_InlineVertexBuffer_Table[v].Blend[0]);
 				break;
 			case D3DFVF_XYZB2:
 				*pVertexBufferData++ = g_InlineVertexBuffer_Table[v].Blend[0];
 				*pVertexBufferData++ = g_InlineVertexBuffer_Table[v].Blend[1];
-				DbgPrintf("IVB Position := {%f, %f, %f, %f, %f}\n", g_InlineVertexBuffer_Table[v].Position.x, g_InlineVertexBuffer_Table[v].Position.y, g_InlineVertexBuffer_Table[v].Position.z, g_InlineVertexBuffer_Table[v].Blend[0], g_InlineVertexBuffer_Table[v].Blend[1]);
+				DbgPrintf(LOG_PREFIX, "IVB Position := {%f, %f, %f, %f, %f}\n", g_InlineVertexBuffer_Table[v].Position.x, g_InlineVertexBuffer_Table[v].Position.y, g_InlineVertexBuffer_Table[v].Position.z, g_InlineVertexBuffer_Table[v].Blend[0], g_InlineVertexBuffer_Table[v].Blend[1]);
 				break;
 			case D3DFVF_XYZB3:
 				*pVertexBufferData++ = g_InlineVertexBuffer_Table[v].Blend[0];
 				*pVertexBufferData++ = g_InlineVertexBuffer_Table[v].Blend[1];
 				*pVertexBufferData++ = g_InlineVertexBuffer_Table[v].Blend[2];
-				DbgPrintf("IVB Position := {%f, %f, %f, %f, %f, %f}\n", g_InlineVertexBuffer_Table[v].Position.x, g_InlineVertexBuffer_Table[v].Position.y, g_InlineVertexBuffer_Table[v].Position.z, g_InlineVertexBuffer_Table[v].Blend[0], g_InlineVertexBuffer_Table[v].Blend[1], g_InlineVertexBuffer_Table[v].Blend[2]);
+				DbgPrintf(LOG_PREFIX, "IVB Position := {%f, %f, %f, %f, %f, %f}\n", g_InlineVertexBuffer_Table[v].Position.x, g_InlineVertexBuffer_Table[v].Position.y, g_InlineVertexBuffer_Table[v].Position.z, g_InlineVertexBuffer_Table[v].Blend[0], g_InlineVertexBuffer_Table[v].Blend[1], g_InlineVertexBuffer_Table[v].Blend[2]);
 				break;
 			case D3DFVF_XYZB4:
 				*pVertexBufferData++ = g_InlineVertexBuffer_Table[v].Blend[0];
 				*pVertexBufferData++ = g_InlineVertexBuffer_Table[v].Blend[1];
 				*pVertexBufferData++ = g_InlineVertexBuffer_Table[v].Blend[2];
 				*pVertexBufferData++ = g_InlineVertexBuffer_Table[v].Blend[3];
-				DbgPrintf("IVB Position := {%f, %f, %f, %f, %f, %f, %f}\n", g_InlineVertexBuffer_Table[v].Position.x, g_InlineVertexBuffer_Table[v].Position.y, g_InlineVertexBuffer_Table[v].Position.z, g_InlineVertexBuffer_Table[v].Blend[0], g_InlineVertexBuffer_Table[v].Blend[1], g_InlineVertexBuffer_Table[v].Blend[2], g_InlineVertexBuffer_Table[v].Blend[3]);
+				DbgPrintf(LOG_PREFIX, "IVB Position := {%f, %f, %f, %f, %f, %f, %f}\n", g_InlineVertexBuffer_Table[v].Position.x, g_InlineVertexBuffer_Table[v].Position.y, g_InlineVertexBuffer_Table[v].Position.z, g_InlineVertexBuffer_Table[v].Blend[0], g_InlineVertexBuffer_Table[v].Blend[1], g_InlineVertexBuffer_Table[v].Blend[2], g_InlineVertexBuffer_Table[v].Blend[3]);
 				break;
 			default:
-				CxbxKrnlCleanup("Unsupported Position Mask (FVF := 0x%.08X dwPos := 0x%.08X)", dwCurFVF, dwPos);
+				CxbxKrnlCleanup(LOG_PREFIX, "Unsupported Position Mask (FVF := 0x%.08X dwPos := 0x%.08X)", dwCurFVF, dwPos);
 				break;
 			}
 
@@ -892,25 +893,25 @@ VOID XTL::EmuFlushIVB()
 				*pVertexBufferData++ = g_InlineVertexBuffer_Table[v].Normal.x;
 				*pVertexBufferData++ = g_InlineVertexBuffer_Table[v].Normal.y;
 				*pVertexBufferData++ = g_InlineVertexBuffer_Table[v].Normal.z;
-				DbgPrintf("IVB Normal := {%f, %f, %f}\n", g_InlineVertexBuffer_Table[v].Normal.x, g_InlineVertexBuffer_Table[v].Normal.y, g_InlineVertexBuffer_Table[v].Normal.z);
+				DbgPrintf(LOG_PREFIX, "IVB Normal := {%f, %f, %f}\n", g_InlineVertexBuffer_Table[v].Normal.x, g_InlineVertexBuffer_Table[v].Normal.y, g_InlineVertexBuffer_Table[v].Normal.z);
 			}
 		}
 
 #if 0 // TODO : Was this supported on Xbox from some point in time (pun intended)?
 		if (dwCurFVF & D3DFVF_PSIZE) {
 			*(DWORD*)pVertexBufferData++ = g_InlineVertexBuffer_Table[v].PointSize;
-			DbgPrintf("IVB PointSize := 0x%.08X\n", g_InlineVertexBuffer_Table[v].PointSize);
+			DbgPrintf(LOG_PREFIX, "IVB PointSize := 0x%.08X\n", g_InlineVertexBuffer_Table[v].PointSize);
 		}
 #endif
 
         if (dwCurFVF & D3DFVF_DIFFUSE) {
             *(DWORD*)pVertexBufferData++ = g_InlineVertexBuffer_Table[v].Diffuse;
-            DbgPrintf("IVB Diffuse := 0x%.08X\n", g_InlineVertexBuffer_Table[v].Diffuse);
+            DbgPrintf(LOG_PREFIX, "IVB Diffuse := 0x%.08X\n", g_InlineVertexBuffer_Table[v].Diffuse);
         }
 
 		if (dwCurFVF & D3DFVF_SPECULAR) {
 			*(DWORD*)pVertexBufferData++ = g_InlineVertexBuffer_Table[v].Specular;
-			DbgPrintf("IVB Specular := 0x%.08X\n", g_InlineVertexBuffer_Table[v].Specular);
+			DbgPrintf(LOG_PREFIX, "IVB Specular := 0x%.08X\n", g_InlineVertexBuffer_Table[v].Specular);
 		}
 
 		for (uint i = 0; i < dwTexN; i++) {
@@ -927,10 +928,10 @@ VOID XTL::EmuFlushIVB()
 
 			if (g_bPrintfOn) {
 				switch (TexSize[i]) {
-				case 1: DbgPrintf("IVB TexCoord%d := {%f}\n", i + 1, g_InlineVertexBuffer_Table[v].TexCoord[i].x); break;
-				case 2: DbgPrintf("IVB TexCoord%d := {%f, %f}\n", i + 1, g_InlineVertexBuffer_Table[v].TexCoord[i].x, g_InlineVertexBuffer_Table[v].TexCoord[i].y); break;
-				case 3: DbgPrintf("IVB TexCoord%d := {%f, %f, %f}\n", i + 1, g_InlineVertexBuffer_Table[v].TexCoord[i].x, g_InlineVertexBuffer_Table[v].TexCoord[i].y, g_InlineVertexBuffer_Table[v].TexCoord[i].z); break;
-				case 4: DbgPrintf("IVB TexCoord%d := {%f, %f, %f, %f}\n", i + 1, g_InlineVertexBuffer_Table[v].TexCoord[i].x, g_InlineVertexBuffer_Table[v].TexCoord[i].y, g_InlineVertexBuffer_Table[v].TexCoord[i].z, g_InlineVertexBuffer_Table[v].TexCoord[i].w); break;
+				case 1: DbgPrintf(LOG_PREFIX, "IVB TexCoord%d := {%f}\n", i + 1, g_InlineVertexBuffer_Table[v].TexCoord[i].x); break;
+				case 2: DbgPrintf(LOG_PREFIX, "IVB TexCoord%d := {%f, %f}\n", i + 1, g_InlineVertexBuffer_Table[v].TexCoord[i].x, g_InlineVertexBuffer_Table[v].TexCoord[i].y); break;
+				case 3: DbgPrintf(LOG_PREFIX, "IVB TexCoord%d := {%f, %f, %f}\n", i + 1, g_InlineVertexBuffer_Table[v].TexCoord[i].x, g_InlineVertexBuffer_Table[v].TexCoord[i].y, g_InlineVertexBuffer_Table[v].TexCoord[i].z); break;
+				case 4: DbgPrintf(LOG_PREFIX, "IVB TexCoord%d := {%f, %f, %f, %f}\n", i + 1, g_InlineVertexBuffer_Table[v].TexCoord[i].x, g_InlineVertexBuffer_Table[v].TexCoord[i].y, g_InlineVertexBuffer_Table[v].TexCoord[i].z, g_InlineVertexBuffer_Table[v].TexCoord[i].w); break;
 				}
 			}
         }
@@ -938,7 +939,7 @@ VOID XTL::EmuFlushIVB()
 		if (v == 0) {
 			uint VertexBufferUsage = (uintptr_t)pVertexBufferData - (uintptr_t)g_InlineVertexBuffer_pData;
 			if (VertexBufferUsage != uiStride) {
-				CxbxKrnlCleanup("EmuFlushIVB uses wrong stride!");
+				CxbxKrnlCleanup(LOG_PREFIX, "EmuFlushIVB uses wrong stride!");
 			}
 		}
 	}

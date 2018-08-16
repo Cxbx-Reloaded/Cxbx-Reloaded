@@ -36,7 +36,7 @@
 // ******************************************************************
 #define _XBOXKRNL_DEFEXTRN_
 
-#define LOG_PREFIX "KRNL"
+#define LOG_PREFIX CXBXR_MODULE::XE
 
 // prevent name collisions
 namespace xboxkrnl
@@ -47,7 +47,6 @@ namespace xboxkrnl
 #include "CxbxKrnl.h" // For CxbxKrnl_Xbe
 #include "Logging.h" // For LOG_FUNC()
 #include "EmuKrnlLogging.h"
-#include "Emu.h" // For EmuWarning()
 #include "VMManager.h"
 
 // ******************************************************************

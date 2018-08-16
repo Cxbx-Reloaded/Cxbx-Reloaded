@@ -122,6 +122,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			return EXIT_FAILURE;
 		}
 
+		get_log_settings();
+
 		bool bElevated = CxbxIsElevated();
 
 		if (bElevated && !g_Settings->m_core.allowAdminPrivilege) {
@@ -181,6 +183,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			EmuShared::Cleanup();
 			return EXIT_FAILURE;
 		}
+
+		get_log_settings();
 	}
 
 	INITCOMMONCONTROLSEX icc;

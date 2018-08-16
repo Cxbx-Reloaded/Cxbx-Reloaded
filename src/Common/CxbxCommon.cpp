@@ -144,7 +144,7 @@ size_t IoVecFromBuffer(const IoVec* iov, unsigned int iov_cnt, size_t offset, vo
 // by VirtualAlloc (see comment on OHCI_ReadHCCA for more details). Once LLE CPU and MMU are implemented, this will no
 // longer be the case. Also note that the physical pages can be modified while being read/written
 
-// read an array of DWORDs in memory
+// Read an array of DWORDs in memory
 void GetDwords(xbaddr Paddr, uint32_t* Buffer, int Number)
 {
 	for (int i = 0; i < Number; i++, Buffer++, Paddr += sizeof(*Buffer)) {
@@ -152,7 +152,7 @@ void GetDwords(xbaddr Paddr, uint32_t* Buffer, int Number)
 	}
 }
 
-// write an array of DWORDs in memory
+// Write an array of DWORDs in memory
 void WriteDwords(xbaddr Paddr, uint32_t* Buffer, int Number)
 {
 	for (int i = 0; i < Number; i++, Buffer++, Paddr += sizeof(*Buffer)) {
@@ -160,7 +160,7 @@ void WriteDwords(xbaddr Paddr, uint32_t* Buffer, int Number)
 	}
 }
 
-// read an array of WORDs in memory
+// Read an array of WORDs in memory
 void GetWords(xbaddr Paddr, uint16_t* Buffer, int Number)
 {
 	for (int i = 0; i < Number; i++, Buffer++, Paddr += sizeof(*Buffer)) {
@@ -168,7 +168,7 @@ void GetWords(xbaddr Paddr, uint16_t* Buffer, int Number)
 	}
 }
 
-// write an array of WORDs in memory
+// Write an array of WORDs in memory
 void WriteWords(xbaddr Paddr, uint16_t* Buffer, int Number)
 {
 	for (int i = 0; i < Number; i++, Buffer++, Paddr += sizeof(*Buffer)) {
@@ -176,6 +176,7 @@ void WriteWords(xbaddr Paddr, uint16_t* Buffer, int Number)
 	}
 }
 
+// Converts LF to CRLF line endings
 void unix2dos(std::string& string)
 {
 	size_t position = 0;

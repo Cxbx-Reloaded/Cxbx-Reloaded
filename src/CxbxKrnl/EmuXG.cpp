@@ -35,7 +35,7 @@
 // ******************************************************************
 #define _XBOXKRNL_DEFEXTRN_
 
-#define LOG_PREFIX "XGRP"
+#define LOG_PREFIX CXBXR_MODULE::XGRP
 
 #undef FIELD_OFFSET     // prevent macro redefinition warnings
 #include <windows.h>
@@ -95,7 +95,7 @@ VOID WINAPI XTL::EMUPATCH(XGSwizzleRect)
     else
     {
         if(pPoint != NULL && (pPoint->x != 0 || pPoint->y != 0))
-            CxbxKrnlCleanup("Temporarily unsupported swizzle (very easy fix)");
+            CxbxKrnlCleanup(LOG_PREFIX, "Temporarily unsupported swizzle (very easy fix)");
 
         DWORD dwMaxY = Height;
         DWORD dwChunkSize = Width;
@@ -163,7 +163,7 @@ VOID WINAPI XTL::EMUPATCH(XGSwizzleBox)
 		else
 		{
 			if(pPoint != NULL && (pPoint->u != 0 || pPoint->v != 0 || pPoint->w != 0))
-				CxbxKrnlCleanup("Temporarily unsupported swizzle (very easy fix)");
+				CxbxKrnlCleanup(LOG_PREFIX, "Temporarily unsupported swizzle (very easy fix)");
 
 			DWORD dwMaxY = Height;
 			DWORD dwMaxZ = Depth;
@@ -249,10 +249,10 @@ VOID WINAPI XTL::EMUPATCH(XGSetTextureHeader)
 		LOG_FUNC_END;
 
 	/*if( Data != 0 )
-		CxbxKrnlCleanup( "Data != 0 (XGSetTextureHeader)" );
+		CxbxKrnlCleanup(LOG_PREFIX, "Data != 0 (XGSetTextureHeader)" );
 
 	if( Pitch != 0 )
-		CxbxKrnlCleanup( "Pitch != 0 (XGSetTextureHeader)" );*/
+		CxbxKrnlCleanup(LOG_PREFIX, "Pitch != 0 (XGSetTextureHeader)" );*/
 
 	pTexture->Common = X_D3DCOMMON_TYPE_TEXTURE + 1; // Set refcount to 1
 	pTexture->Data = Data;

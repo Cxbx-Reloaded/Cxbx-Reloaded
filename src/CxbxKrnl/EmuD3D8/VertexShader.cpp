@@ -35,6 +35,7 @@
 // *
 // ******************************************************************
 #define _XBOXKRNL_DEFEXTRN_
+#define LOG_PREFIX CXBXR_MODULE::VTXSH
 
 #define _DEBUG_TRACK_VS
 
@@ -50,6 +51,10 @@
 #ifdef CXBX_USE_VS30
 //#define CXBX_USE_VS30 // Separate the port to Vertex Shader model 3.0 from the port to Direct3D9
 #endif
+
+#define DbgVshPrintf \
+	LOG_CHECK_ENABLED(LOG_PREFIX, LOG_LEVEL::DEBUG) \
+		if(g_bPrintfOn) printf
 
 // ****************************************************************************
 // * Vertex shader function recompiler
@@ -612,7 +617,7 @@ static void VshParseInstruction(uint32                 *pShaderToken,
         pInstruction->A.Address = ConvertCRegister(VshGetField(pShaderToken, FLD_CONST));
         break;
     default:
-        EmuWarning("Invalid instruction, parameter A type unknown %d", pInstruction->A.ParameterType);
+        EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Invalid instruction, parameter A type unknown %d", pInstruction->A.ParameterType);
         return;
     }
     pInstruction->A.Neg = VshGetField(pShaderToken, FLD_A_NEG);
@@ -959,7 +964,7 @@ static void VshWriteShader(VSH_XBOX_SHADER *pShader,
 					DisassemblyPos += sprintf(pDisassembly + DisassemblyPos, "%s", OReg_Name[pIntermediate->Output.Address]);
                 break;
             default:
-                CxbxKrnlCleanup("Invalid output register in vertex shader!");
+                CxbxKrnlCleanup(LOG_PREFIX, "Invalid output register in vertex shader!");
                 break;
             }
             VshWriteOutputMask(pIntermediate->Output.Mask, pDisassembly, &DisassemblyPos);
@@ -1021,7 +1026,7 @@ static void VshVerifyBufferBounds(VSH_XBOX_SHADER *pShader)
 {
     if(pShader->IntermediateCount == VSH_MAX_INTERMEDIATE_COUNT)
     {
-        CxbxKrnlCleanup("Shader exceeds conversion buffer!");
+        CxbxKrnlCleanup(LOG_PREFIX, "Shader exceeds conversion buffer!");
     }
 }
 
@@ -1408,7 +1413,7 @@ static void VshRemoveScreenSpaceInstructions(VSH_XBOX_SHADER *pShader)
     // them, or (c) doesn't reserve c-38 and c-37 for scale and offset.
     if(deleted != 3)
     {
-        EmuWarning("Applying screen space vertex shader patching hack!");
+        EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Applying screen space vertex shader patching hack!");
         for (int i = 0; i < pShader->IntermediateCount; i++)
         {
             VSH_INTERMEDIATE_FORMAT* pIntermediate = &pShader->Intermediate[i];
@@ -1473,7 +1478,7 @@ static void VshRemoveUndeclaredRegisters(VSH_XBOX_SHADER *pShader, bool	*pDeclar
 
 			bool used = pDeclaredRegisters[pIntermediate->Parameters[p].Parameter.Address];
 			if (!used) {
-				EmuWarning("Deleting usage of undeclared register v%d", pIntermediate->Parameters[p].Parameter.Address);
+				EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Deleting usage of undeclared register v%d", pIntermediate->Parameters[p].Parameter.Address);
 				VshDeleteIntermediate(pShader, i);
 			}
 		}
@@ -1633,7 +1638,7 @@ static boolean VshConvertShader(VSH_XBOX_SHADER *pShader,
             if(pIntermediate->Output.Type != IMD_OUTPUT_R)
             {
                 // TODO: Complete dph support
-                EmuWarning("Can't simulate dph for other than output r registers (yet)");
+                EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Can't simulate dph for other than output r registers (yet)");
 
 				// attempt to find unused register...
 				int outRegister = -1;
@@ -1734,7 +1739,7 @@ static boolean VshConvertShader(VSH_XBOX_SHADER *pShader,
         }
         if(R12Replacement == -1)
         {
-            EmuWarning("Vertex shader uses all r registers, including r12; impossible to convert!");
+            EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Vertex shader uses all r registers, including r12; impossible to convert!");
             return FALSE;
         }
         for (int j = 0; j < pShader->IntermediateCount; j++)
@@ -1926,7 +1931,7 @@ static void VshConvertToken_NOP(
     // D3DVSD_NOP
     if(*pToken != DEF_VSH_NOP)
     {
-        EmuWarning("Token NOP found, but extra parameters are given!");
+        EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Token NOP found, but extra parameters are given!");
     }
     DbgVshPrintf("\tD3DVSD_NOP(),\n");
 }
@@ -2083,7 +2088,7 @@ static void VshConvertToken_STREAMDATA_SKIPBYTES(
 
     DbgVshPrintf("\tD3DVSD_SKIPBYTES(%d), /* xbox ext. */\n", SkipBytesCount);
     if (SkipBytesCount % sizeof(XTL::DWORD)) {
-        EmuWarning("D3DVSD_SKIPBYTES can't be converted to D3DVSD_SKIP, not divisble by 4.");
+        EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "D3DVSD_SKIPBYTES can't be converted to D3DVSD_SKIP, not divisble by 4.");
     }
 
 #ifdef CXBX_USE_D3D9
@@ -2342,7 +2347,7 @@ static void VshConvertToken_STREAMDATA_REG(
 
     if(HostVertexElementDataType == D3DDECLTYPE_UNUSED)
     {
-        EmuWarning("/* WARNING: Fatal type mismatch, no fitting type! */");
+        EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "/* WARNING: Fatal type mismatch, no fitting type! */");
     }
 }
 
@@ -2523,7 +2528,7 @@ extern HRESULT XTL::EmuRecompileVshFunction
 
     if(!pShader)
     {
-        EmuWarning("Couldn't allocate memory for vertex shader conversion buffer");
+        EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Couldn't allocate memory for vertex shader conversion buffer");
         return E_OUTOFMEMORY;
     }
     pShader->ShaderHeader = *pShaderHeader;
@@ -2532,15 +2537,15 @@ extern HRESULT XTL::EmuRecompileVshFunction
         case VERSION_XVS:
             break;
         case VERSION_XVSS:
-            EmuWarning("Might not support vertex state shaders?");
+            EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Might not support vertex state shaders?");
             hRet = E_FAIL;
             break;
         case VERSION_XVSW:
-            EmuWarning("Might not support vertex read/write shaders?");
+            EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Might not support vertex read/write shaders?");
             hRet = E_FAIL;
             break;
         default:
-            EmuWarning("Unknown vertex shader version 0x%02X", pShaderHeader->Version);
+            EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Unknown vertex shader version 0x%02X", pShaderHeader->Version);
             hRet = E_FAIL;
             break;
     }
@@ -2563,7 +2568,7 @@ extern HRESULT XTL::EmuRecompileVshFunction
 
 		// Do not attempt to compile empty shaders
 		if (pShader->IntermediateCount == 0) {
-			EmuWarning("Skipped empty Vertex Shader");
+			EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Skipped empty Vertex Shader");
 			return STATUS_INVALID_PARAMETER;
 		}
 
@@ -2583,7 +2588,7 @@ extern HRESULT XTL::EmuRecompileVshFunction
         // HACK: Azurik. Prevent Direct3D from trying to assemble this.
 		if(!strcmp(pShaderDisassembly, "vs.2.x\n"))
 		{
-			EmuWarning("Replacing empty vertex shader with fallback");
+			EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Replacing empty vertex shader with fallback");
 
 			static const char dummy[] =
 				"vs.2.x\n"
@@ -2615,8 +2620,8 @@ extern HRESULT XTL::EmuRecompileVshFunction
 
         if (FAILED(hRet))
         {
-            EmuWarning("Couldn't assemble recompiled vertex shader");
-			EmuWarning("%s", pErrors->GetBufferPointer());
+            EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Couldn't assemble recompiled vertex shader");
+			EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "%s", pErrors->GetBufferPointer());
         }
 
 		if( pErrors )

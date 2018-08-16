@@ -99,7 +99,7 @@ inline void XADPCM2PCMFormat(LPWAVEFORMATEX lpwfxFormat)
 {
 
 #if 0 //For testing purpose if XADPCM to PCM is not accurate.
-    DbgPrintf("EmuDSound: XADPCM WAVEFORMATEX\n"
+    DbgPrintf(LOG_PREFIX, "EmuDSound: XADPCM WAVEFORMATEX\n"
               "{\n"
               "   wFormatTag              : 0x%.04hX\n"
               "   nChannels               : 0x%.02hd\n"
@@ -141,7 +141,7 @@ inline void XADPCM2PCMFormat(LPWAVEFORMATEX lpwfxFormat)
 #endif
 
 #if 0 //For testing purpose if XADPCM to PCM is not accurate.
-    DbgPrintf("EmuDSound: Converted to PCM WAVEFORMATEX\n"
+    DbgPrintf(LOG_PREFIX, "EmuDSound: Converted to PCM WAVEFORMATEX\n"
               "{\n"
               "   wFormatTag              : 0x%.04hX\n"
               "   nChannels               : 0x%.02hd\n"
@@ -255,7 +255,7 @@ inline void GeneratePCMFormat(
             bIsSpecial = true;
             dwEmuFlags |= DSE_FLAG_RECIEVEDATA;
 
-            EmuWarning("Creating dummy WAVEFORMATEX (pdsbd->lpwfxFormat = xbnullptr)...");
+            EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Creating dummy WAVEFORMATEX (pdsbd->lpwfxFormat = xbnullptr)...");
 
             // HACK: This is a special sound buffer, create dummy WAVEFORMATEX data.
             // It's supposed to recieve data rather than generate it.  Buffers created
@@ -379,7 +379,7 @@ inline void DSoundGenericUnlock(
         HRESULT hRet = pDSBuffer->Unlock(Host_lock.pLockPtr1, Host_lock.dwLockBytes1, Host_lock.pLockPtr2, Host_lock.dwLockBytes2);
 
         if (hRet != DS_OK) {
-            CxbxKrnlCleanup("DirectSoundBuffer Unlock Failed!");
+            CxbxKrnlCleanup(LOG_PREFIX, "DirectSoundBuffer Unlock Failed!");
         }
 
         Host_lock.pLockPtr1 = nullptr;
@@ -395,19 +395,19 @@ inline void DSoundBufferCreate(LPDSBUFFERDESC pDSBufferDesc, LPDIRECTSOUNDBUFFER
     HRESULT hRetDS = g_pDSound8->CreateSoundBuffer(pDSBufferDesc, &pTempBuffer, NULL);
 
     if (hRetDS != DS_OK) {
-        CxbxKrnlCleanup("CreateSoundBuffer error: 0x%08X", hRetDS);
+        CxbxKrnlCleanup(LOG_PREFIX, "CreateSoundBuffer error: 0x%08X", hRetDS);
     } else {
         hRetDS = pTempBuffer->QueryInterface(IID_IDirectSoundBuffer8, (LPVOID*)&(pDSBuffer));
         pTempBuffer->Release();
         if (hRetDS != DS_OK) {
-            CxbxKrnlCleanup("Create IDirectSoundBuffer8 error: 0x%08X", hRetDS);
+            CxbxKrnlCleanup(LOG_PREFIX, "Create IDirectSoundBuffer8 error: 0x%08X", hRetDS);
         }
     }
 }
 inline void DSound3DBufferCreate(LPDIRECTSOUNDBUFFER8 pDSBuffer, LPDIRECTSOUND3DBUFFER8 &pDS3DBuffer) {
     HRESULT hRetDS3D = pDSBuffer->QueryInterface(IID_IDirectSound3DBuffer, (LPVOID*)&(pDS3DBuffer));
     if (hRetDS3D != DS_OK) {
-        EmuWarning("CreateSound3DBuffer Failed!");
+        EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "CreateSound3DBuffer Failed!");
         pDS3DBuffer = nullptr;
     }
 }
@@ -495,7 +495,7 @@ inline void DSoundBufferRelease(
     if (pDS3DBuffer != nullptr) {
         refCount = pDS3DBuffer->Release();
         if (refCount > 0) {
-            CxbxKrnlCleanup("Nope, wasn't fully cleaned up.");
+            CxbxKrnlCleanup(LOG_PREFIX, "Nope, wasn't fully cleaned up.");
         }
     }
 
@@ -558,7 +558,7 @@ inline void DSoundBufferResizeUpdate(
     hRet = pThis->EmuDirectSoundBuffer8->Lock(0, 0, &pThis->Host_lock.pLockPtr1, &pThis->Host_lock.dwLockBytes1,
                                               nullptr, nullptr, DSBLOCK_ENTIREBUFFER);
     if (hRet != DS_OK) {
-        CxbxKrnlCleanup("Unable to lock region buffer!");
+        CxbxKrnlCleanup(LOG_PREFIX, "Unable to lock region buffer!");
     }
     DSoundGenericUnlock(pThis->EmuFlags,
                         pThis->EmuDirectSoundBuffer8,
@@ -631,7 +631,7 @@ inline void DSoundBufferReplace(
     HRESULT hRet = pDSBuffer->GetStatus(&dwStatus);
 
     if (hRet != DS_OK) {
-        CxbxKrnlCleanup("Unable to retrieve current status for replace DS buffer!");
+        CxbxKrnlCleanup(LOG_PREFIX, "Unable to retrieve current status for replace DS buffer!");
     }
 
     pDSBuffer->Stop();
@@ -639,7 +639,7 @@ inline void DSoundBufferReplace(
     hRet = pDSBuffer->GetCurrentPosition(&dwPlayCursor, nullptr);
 
     if (hRet != DS_OK) {
-        CxbxKrnlCleanup("Unable to retrieve current position for replace DS buffer!");
+        CxbxKrnlCleanup(LOG_PREFIX, "Unable to retrieve current position for replace DS buffer!");
     }
 
     // TODO: Untested if transfer buffer to new audio buffer is necessary.
@@ -735,7 +735,7 @@ inline void DSoundStreamClearPacket(
         BOOL checkHandle = SetEvent(unionEventContext);
         if (checkHandle == 0) {
             DWORD error = GetLastError();
-            EmuWarning("DSOUND: Unable to set event on packet's hCompletionEvent. %8X | error = %8X", unionEventContext, error);
+            EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Unable to set event on packet's hCompletionEvent. %8X | error = %8X", unionEventContext, error);
         }
     }
 }
@@ -942,7 +942,7 @@ inline HRESULT HybridDirectSoundBuffer_GetCurrentPosition(
     HRESULT hRet = pDSBuffer->GetCurrentPosition(&dwCurrentPlayCursor, &dwCurrentWriteCursor);
 
     if (hRet != DS_OK) {
-        EmuWarning("GetCurrentPosition Failed!");
+        EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "GetCurrentPosition Failed!");
     }
 
     if (pdwCurrentPlayCursor != xbnullptr) {
@@ -1070,7 +1070,7 @@ inline HRESULT HybridDirectSoundBuffer_Play(
     // rewind buffer
     if ((dwFlags & X_DSBPLAY_FROMSTART)) {
         if (pDSBuffer->SetCurrentPosition(0) != DS_OK) {
-            EmuWarning("Rewinding buffer failed!");
+            EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Rewinding buffer failed!");
         }
 
         dwFlags &= ~X_DSBPLAY_FROMSTART;
@@ -1729,7 +1729,7 @@ inline HRESULT HybridDirectSoundBuffer_SetVolume(
     if (lVolume <= -6400 && lVolume != DSBVOLUME_MIN) {
         lVolume = DSBVOLUME_MIN;
     } else if (lVolume > 0) {
-        EmuWarning("HybridDirectSoundBuffer_SetVolume has received greater than 0: %ld", lVolume);
+        EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "HybridDirectSoundBuffer_SetVolume has received greater than 0: %ld", lVolume);
         lVolume = 0;
     }
     if ((dwEmuFlags & DSE_FLAG_DEBUG_MUTE) > 0) {

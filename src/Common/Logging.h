@@ -40,8 +40,90 @@
 #include <sstream> // For std::stringstream
 #include <iostream> // For std::cout
 #include <iomanip> // For std::setw
-#include "Cxbx.h" // For g_bPrintfOn
+#include <atomic> // For atomic_bool and atomic_uint
+#include "CxbxCommon.h" // For g_bPrintfOn and to_underlying
 
+typedef enum class _LOG_LEVEL {
+	DEBUG = 0,
+	INFO,
+	WARNING,
+	FATAL,
+	MAX,
+}LOG_LEVEL;
+
+typedef enum class _CXBXR_MODULE {
+	// general
+	CXBXR = 0,
+	XBE,
+	INIT,
+	VMEM,
+	PMEM,
+	GUI,
+	EEPR,
+	RSA,
+	POOLMEM,
+	D3D8,
+	D3DST,
+	D3DCVT,
+	DSOUND,
+	XAPI,
+	XACT,
+	XGRP,
+	XONLINE,
+	FS,
+	PSHB,
+	PXSH,
+	VTXSH,
+	VTXB,
+	DINP,
+	XINP,
+	SDL2,
+	FILE,
+	X86,
+	HLE,
+	NET,
+	MCPX,
+	NV2A,
+	SMC,
+	OHCI,
+	USB,
+	HUB,
+	XIDCTRL,
+	ADM,
+	// kernel
+	KRNL,
+	LOG,
+	XBOX,
+	XBDM,
+	AV,
+	DBG,
+	EX,
+	FSC,
+	HAL,
+	IO,
+	KD,
+	KE,
+	KI,
+	MM,
+	NT,
+	OB,
+	PS,
+	RTL,
+	XC,
+	XE,
+	// max
+	MAX,
+}CXBXR_MODULE;
+
+extern std::atomic_bool g_EnabledModules[to_underlying(CXBXR_MODULE::MAX)];
+extern const char* g_EnumModules2String[to_underlying(CXBXR_MODULE::MAX)];
+extern std::atomic_int g_CurrentLogLevel;
+
+extern inline void get_log_settings();
+
+extern inline void sync_log_config();
+
+void set_log_config(int LogLevel, uint* LoggedModules);
 
 //
 // __FILENAME__
@@ -171,6 +253,10 @@ constexpr const char* remove_emupatch_prefix(const char* str) {
 // TODO : Use Boost.Format http://www.boost.org/doc/libs/1_53_0/libs/format/index.html
 extern thread_local std::string _logThreadPrefix;
 
+// Checks if this log should be printed or not
+#define LOG_CHECK_ENABLED(cxbxr_module, level) \
+	if (g_EnabledModules[to_underlying(cxbxr_module)] && to_underlying(level) >= g_CurrentLogLevel)
+
 #define LOG_THREAD_INIT \
 	if (_logThreadPrefix.length() == 0) { \
 		std::stringstream tmp; \
@@ -182,11 +268,9 @@ extern thread_local std::string _logThreadPrefix;
 	static thread_local std::string _logFuncPrefix; \
 	if (_logFuncPrefix.length() == 0) {	\
 		std::stringstream tmp; \
-		tmp << LOG_PREFIX << ": " << (func != nullptr ? remove_emupatch_prefix(func) : ""); \
+		tmp << g_EnumModules2String[to_underlying(LOG_PREFIX)] << (func != nullptr ? remove_emupatch_prefix(func) : ""); \
 		_logFuncPrefix = tmp.str(); \
 	}
-
-#ifdef _DEBUG_TRACE
 
 #define LOG_INIT \
 	LOG_THREAD_INIT \
@@ -202,8 +286,9 @@ extern thread_local std::string _logThreadPrefix;
 		msg << _logThreadPrefix << _logFuncPrefix << "(";
 
 #define LOG_FUNC_BEGIN \
-	LOG_INIT \
-	LOG_FUNC_BEGIN_NO_INIT
+		LOG_INIT \
+		LOG_CHECK_ENABLED(LOG_PREFIX, LOG_LEVEL::DEBUG) { \
+			LOG_FUNC_BEGIN_NO_INIT
 
 // LOG_FUNC_ARG writes output via all available ostream << operator overloads, sanitizing and adding detail where possible
 #define LOG_FUNC_ARG(arg) \
@@ -222,10 +307,11 @@ extern thread_local std::string _logThreadPrefix;
 
 // LOG_FUNC_END closes off function and optional argument logging
 #define LOG_FUNC_END \
-		if (_had_arg) msg << "\n"; \
-		msg << ");\n"; \
-		std::cout << msg.str(); \
-	} } while (0)
+			if (_had_arg) msg << "\n"; \
+			msg << ");\n"; \
+			std::cout << msg.str(); \
+		} } while (0); \
+	}
 
 // LOG_FUNC_RESULT logs the function return result
 #define LOG_FUNC_RESULT(r) \
@@ -238,74 +324,83 @@ extern thread_local std::string _logThreadPrefix;
 // LOG_FORWARD indicates that an api is implemented by a forward to another API
 #define LOG_FORWARD(api) \
 	LOG_INIT \
-	do { if(g_bPrintfOn) { \
-		std::cout << _logThreadPrefix << _logFuncPrefix << " forwarding to "#api"...\n"; \
-	} } while (0)
-
-#else // _DEBUG_TRACE
-
-#define LOG_FINIT
-#define LOG_INIT
-#define LOG_FUNC_BEGIN_NO_INIT
-#define LOG_FUNC_BEGIN
-#define LOG_FUNC_ARG(arg)
-#define LOG_FUNC_ARG_TYPE(type, arg)
-#define LOG_FUNC_ARG_OUT(arg)
-#define LOG_FUNC_END
-#define LOG_FUNC_RESULT(r)
-#define LOG_FUNC_RESULT_TYPE(type, r)
-#define LOG_FORWARD(arg)
-
-#endif //  _DEBUG_TRACE
+	LOG_CHECK_ENABLED(LOG_PREFIX, LOG_LEVEL::DEBUG) { \
+		do { if(g_bPrintfOn) { \
+			std::cout << _logThreadPrefix << _logFuncPrefix << " forwarding to "#api"...\n"; \
+		} } while (0); \
+	}
 
 // LOG_IGNORED indicates that Cxbx consiously ignores an api
 #define LOG_IGNORED() \
 	do { \
 		static bool b_echoOnce = true; \
-		if(g_bPrintfOn && b_echoOnce) { \
-			LOG_THREAD_INIT \
-			LOG_FUNC_INIT(__func__) \
-			std::cout << _logThreadPrefix << "WARN: " << _logFuncPrefix << " ignored!\n"; \
-			b_echoOnce = false; \
-		} \
-	} while(0)
+			if(g_bPrintfOn && b_echoOnce) { \
+				LOG_CHECK_ENABLED(LOG_PREFIX, LOG_LEVEL::INFO) { \
+					LOG_THREAD_INIT \
+					LOG_FUNC_INIT(__func__) \
+					std::cout << _logThreadPrefix << "WARN: " << _logFuncPrefix << " ignored!\n"; \
+					b_echoOnce = false; \
+				} \
+			} \
+		} while(0)
 
 // LOG_UNIMPLEMENTED indicates that Cxbx is missing an implementation of an api
 #define LOG_UNIMPLEMENTED() \
 	do { \
 		static bool b_echoOnce = true; \
-		if(g_bPrintfOn && b_echoOnce) { \
-			LOG_THREAD_INIT \
-			LOG_FUNC_INIT(__func__) \
-			std::cout << _logThreadPrefix << "WARN: " << _logFuncPrefix << " unimplemented!\n"; \
-			b_echoOnce = false; \
-		} \
-	 } while(0)
+			if(g_bPrintfOn && b_echoOnce) { \
+				LOG_CHECK_ENABLED(LOG_PREFIX, LOG_LEVEL::INFO) { \
+					LOG_THREAD_INIT \
+					LOG_FUNC_INIT(__func__) \
+					std::cout << _logThreadPrefix << "WARN: " << _logFuncPrefix << " unimplemented!\n"; \
+					b_echoOnce = false; \
+				} \
+			} \
+		} while(0)
 
 // LOG_INCOMPLETE indicates that Cxbx is missing part of an implementation of an api
 #define LOG_INCOMPLETE() \
 	do { \
 		static bool b_echoOnce = true; \
-		if(g_bPrintfOn && b_echoOnce) { \
-			LOG_THREAD_INIT \
-			LOG_FUNC_INIT(__func__) \
-			std::cout << _logThreadPrefix << "WARN: " << _logFuncPrefix << " incomplete!\n"; \
-			b_echoOnce = false; \
-		} \
-	} while(0)
+			if(g_bPrintfOn && b_echoOnce) { \
+				LOG_CHECK_ENABLED(LOG_PREFIX, LOG_LEVEL::INFO) { \
+					LOG_THREAD_INIT \
+					LOG_FUNC_INIT(__func__) \
+					std::cout << _logThreadPrefix << "WARN: " << _logFuncPrefix << " incomplete!\n"; \
+					b_echoOnce = false; \
+				} \
+			} \
+		} while(0)
 
 // LOG_NOT_SUPPORTED indicates that Cxbx cannot implement (part of) an api
 #define LOG_NOT_SUPPORTED() \
 	do { \
 		static bool b_echoOnce = true; \
-		if(g_bPrintfOn && b_echoOnce) { \
-			LOG_THREAD_INIT \
-			LOG_FUNC_INIT(__func__) \
-			std::cout << _logThreadPrefix << "WARN: " << _logFuncPrefix << " not supported!\n"; \
-			b_echoOnce = false; \
-		} \
-	} while(0)
+			if(g_bPrintfOn && b_echoOnce) { \
+				LOG_CHECK_ENABLED(LOG_PREFIX, LOG_LEVEL::INFO) { \
+					LOG_THREAD_INIT \
+					LOG_FUNC_INIT(__func__) \
+					std::cout << _logThreadPrefix << "WARN: " << _logFuncPrefix << " not supported!\n"; \
+					b_echoOnce = false; \
+				} \
+			} \
+		} while(0)
 
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 4477)
+#endif
+
+#define DbgPrintf(cxbxr_module, fmt, ...) { \
+		LOG_CHECK_ENABLED(cxbxr_module, LOG_LEVEL::DEBUG) { \
+			CXBX_CHECK_INTEGRITY(); \
+			if(g_bPrintfOn) printf("[0x%.4X] %s"##fmt, GetCurrentThreadId(), g_EnumModules2String[to_underlying(cxbxr_module)], ##__VA_ARGS__); \
+		} \
+     }
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 
 //
 // Short hand function logging defines :
@@ -324,14 +419,14 @@ extern thread_local std::string _logThreadPrefix;
 #define LOG_FUNC_ONE_ARG_OUT(arg) LOG_FUNC_BEGIN LOG_FUNC_ARG_OUT(arg) LOG_FUNC_END 
 
 // RETURN logs the given result and then returns it (so this should appear last in functions)
-#define RETURN(r) do { LOG_FUNC_RESULT(r) return r; } while (0)
+#define RETURN(r) do { LOG_CHECK_ENABLED(LOG_PREFIX, LOG_LEVEL::DEBUG) { LOG_FUNC_RESULT(r) } return r; } while (0)
 
 // RETURN_TYPE logs the given typed result and then returns it (so this should appear last in functions)
-#define RETURN_TYPE(type, r) do { LOG_FUNC_RESULT_TYPE(type, r) return r; } while (0)
+#define RETURN_TYPE(type, r) do { LOG_CHECK_ENABLED(LOG_PREFIX, LOG_LEVEL::DEBUG) { LOG_FUNC_RESULT_TYPE(type, r) } return r; } while (0)
 
-#define LOG_ONCE(msg, ...) { static bool bFirstTime = true; if(bFirstTime) { bFirstTime = false; DbgPrintf("TRAC: " ## msg, __VA_ARGS__); } }
+#define LOG_ONCE(msg, ...) { static bool bFirstTime = true; if(bFirstTime) { bFirstTime = false; DbgPrintf(LOG_PREFIX, "TRAC: " ## msg, __VA_ARGS__); } }
 
-#define LOG_XBOX_CALL(func) DbgPrintf("TRAC: Xbox " ## func ## "() call\n");
+#define LOG_XBOX_CALL(func) DbgPrintf(LOG_PREFIX, "TRAC: Xbox " ## func ## "() call\n");
 #define LOG_FIRST_XBOX_CALL(func) LOG_ONCE("First Xbox " ## func ## "() call\n");
 
 //

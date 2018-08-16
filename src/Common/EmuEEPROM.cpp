@@ -34,6 +34,8 @@
 // *
 // ******************************************************************
 #define _XBOXKRNL_DEFEXTRN_
+#define LOG_PREFIX CXBXR_MODULE::EEPR
+#define LOG_PREFIX_INIT CXBXR_MODULE::INIT
 
 // prevent name collisions
 namespace xboxkrnl
@@ -128,7 +130,7 @@ xboxkrnl::XBOX_EEPROM *CxbxRestoreEEPROM(char *szFilePath_EEPROM_bin)
 			/* hTemplateFile */nullptr);
 		if (hFileEEPROM == INVALID_HANDLE_VALUE)
 		{
-			DbgPrintf("INIT: Couldn't create EEPROM.bin file!\n");
+			DbgPrintf(LOG_PREFIX_INIT, "Couldn't create EEPROM.bin file!\n");
 			return nullptr;
 		}
 	}
@@ -146,7 +148,7 @@ xboxkrnl::XBOX_EEPROM *CxbxRestoreEEPROM(char *szFilePath_EEPROM_bin)
 		/**/nullptr);
 	if (hFileMappingEEPROM == NULL)
 	{
-		DbgPrintf("INIT: Couldn't create EEPROM.bin file mapping!\n");
+		DbgPrintf(LOG_PREFIX_INIT, "Couldn't create EEPROM.bin file mapping!\n");
 		return nullptr;
 	}
 
@@ -155,7 +157,7 @@ xboxkrnl::XBOX_EEPROM *CxbxRestoreEEPROM(char *szFilePath_EEPROM_bin)
 	unsigned int FileSize = len_li.u.LowPart;
 	if (FileSize != 256)
 	{
-		CxbxKrnlCleanup("CxbxRestoreEEPROM : EEPROM.bin file is not 256 bytes large!\n");
+		CxbxKrnlCleanup(LOG_PREFIX, "%s : EEPROM.bin file is not 256 bytes large!\n", __func__);
 		return nullptr;
 	}
 
@@ -167,7 +169,7 @@ xboxkrnl::XBOX_EEPROM *CxbxRestoreEEPROM(char *szFilePath_EEPROM_bin)
 		/* dwFileOffsetLow */0,
 		EEPROM_SIZE);
 	if (pEEPROM == nullptr) {
-		DbgPrintf("INIT: Couldn't map EEPROM.bin into memory!\n");
+		DbgPrintf(LOG_PREFIX_INIT, "Couldn't map EEPROM.bin into memory!\n");
 		return nullptr;
 	}
 
@@ -183,12 +185,12 @@ xboxkrnl::XBOX_EEPROM *CxbxRestoreEEPROM(char *szFilePath_EEPROM_bin)
         // This must be done last to include all initialized data in the CRC
         gen_section_CRCs(pEEPROM);
 
-		DbgPrintf("INIT: Initialized default EEPROM\n");
+		DbgPrintf(LOG_PREFIX_INIT, "Initialized default EEPROM\n");
 	}
 	else
 	{
 		XboxFactoryGameRegion = pEEPROM->EncryptedSettings.GameRegion;
-		DbgPrintf("INIT: Loaded EEPROM.bin\n");
+		DbgPrintf(LOG_PREFIX_INIT, "Loaded EEPROM.bin\n");
 	}
 
 	// Read the HDD (and eventually also the online) keys stored in the eeprom file. Users can input them in the eeprom menu
@@ -200,7 +202,7 @@ xboxkrnl::XBOX_EEPROM *CxbxRestoreEEPROM(char *szFilePath_EEPROM_bin)
 	if (memcmp(Checksum, pEEPROM->EncryptedSettings.Checksum, 20))
 	{
 		// The checksums do not match. Log this error and flash the LED (red, off, red, off)
-		EmuWarning("Stored and calculated checksums don't match. Possible eeprom corruption");
+		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Stored and calculated checksums don't match. Possible eeprom corruption");
 		SetLEDSequence(0xA0);
 	}
 

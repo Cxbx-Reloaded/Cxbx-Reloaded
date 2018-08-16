@@ -35,6 +35,8 @@
 // ******************************************************************
 #define _XBOXKRNL_DEFEXTRN_
 
+#define LOG_PREFIX CXBXR_MODULE::SMC
+
 /* prevent name collisions */
 namespace xboxkrnl
 {
@@ -51,7 +53,7 @@ namespace xboxkrnl
 void SetLEDSequence(LED::Sequence aLEDSequence)
 {
 	// See http://xboxdevwiki.net/PIC#The_LED
-	DbgPrintf("SMC : SetLEDSequence : %u\n", (byte)aLEDSequence);
+	DbgPrintf(LOG_PREFIX, "SetLEDSequence : %u\n", (byte)aLEDSequence);
 
 	int LedSequence[4] = { XBOX_LED_COLOUR_OFF, XBOX_LED_COLOUR_OFF, XBOX_LED_COLOUR_OFF, XBOX_LED_COLOUR_OFF };
 

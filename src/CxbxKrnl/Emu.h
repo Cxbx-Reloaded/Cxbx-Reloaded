@@ -35,17 +35,14 @@
 #define EMU_H
 
 #include "Common/Xbe.h"
+#include "Logging.h"
 
 #undef FIELD_OFFSET     // prevent macro redefinition warnings
 #include <windows.h>
 #include <multimon.h>
 
-// print out a warning message to the kernel debug log file
-#ifdef _DEBUG_WARNINGS
-void NTAPI EmuWarning(const char *szWarningMessage, ...);
-#else
-inline void NTAPI EmuWarning(const char *szWarningMessage, ...) { }
-#endif
+// print out a log message to the kernel debug log file if level is high enough
+void NTAPI EmuLog(CXBXR_MODULE cxbxr_module, LOG_LEVEL level, const char *szWarningMessage, ...);
 
 std::string FormatTitleId(uint32_t title_id);
 

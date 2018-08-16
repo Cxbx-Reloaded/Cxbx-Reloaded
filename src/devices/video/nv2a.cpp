@@ -43,7 +43,7 @@
 // ******************************************************************
 #define _XBOXKRNL_DEFEXTRN_
 
-#define LOG_PREFIX "NV2A"
+#define LOG_PREFIX CXBXR_MODULE::NV2A
 
 // prevent name collisions
 namespace xboxkrnl
@@ -66,6 +66,7 @@ namespace xboxkrnl
 #include "CxbxKrnl\EmuFS.h"
 #include "CxbxKrnl\EmuKrnl.h"
 #include "CxbxKrnl\HLEIntercept.h"
+#include "Logging.h"
 
 #include "vga.h"
 #include "nv2a.h" // For NV2AState
@@ -163,11 +164,11 @@ static void update_irq(NV2AState *d)
 #include "EmuNV2A_DEBUG.cpp"
 
 
-#define DEBUG_READ32(DEV)              DbgPrintf("X86 : Rd32 NV2A " #DEV "(0x%08X) = 0x%08X [Handled %s]\n", addr, result, DebugNV_##DEV##(addr))
-#define DEBUG_READ32_UNHANDLED(DEV)  { DbgPrintf("X86 : Rd32 NV2A " #DEV "(0x%08X) = 0x%08X [Unhandled %s]\n", addr, result, DebugNV_##DEV##(addr)); return result; }
+#define DEBUG_READ32(DEV)              DbgPrintf(CXBXR_MODULE::X86, "Rd32 NV2A " #DEV "(0x%08X) = 0x%08X [Handled %s]\n", addr, result, DebugNV_##DEV##(addr))
+#define DEBUG_READ32_UNHANDLED(DEV)  { DbgPrintf(CXBXR_MODULE::X86, "Rd32 NV2A " #DEV "(0x%08X) = 0x%08X [Unhandled %s]\n", addr, result, DebugNV_##DEV##(addr)); return result; }
 
-#define DEBUG_WRITE32(DEV)             DbgPrintf("X86 : Wr32 NV2A " #DEV "(0x%08X, 0x%08X) [Handled %s]\n", addr, value, DebugNV_##DEV##(addr))
-#define DEBUG_WRITE32_UNHANDLED(DEV) { DbgPrintf("X86 : Wr32 NV2A " #DEV "(0x%08X, 0x%08X) [Unhandled %s]\n", addr, value, DebugNV_##DEV##(addr)); return; }
+#define DEBUG_WRITE32(DEV)             DbgPrintf(CXBXR_MODULE::X86, "Wr32 NV2A " #DEV "(0x%08X, 0x%08X) [Handled %s]\n", addr, value, DebugNV_##DEV##(addr))
+#define DEBUG_WRITE32_UNHANDLED(DEV) { DbgPrintf(CXBXR_MODULE::X86, "Wr32 NV2A " #DEV "(0x%08X, 0x%08X) [Unhandled %s]\n", addr, value, DebugNV_##DEV##(addr)); return; }
 
 #define DEVICE_READ32(DEV) uint32_t EmuNV2A_##DEV##_Read32(NV2AState *d, xbaddr addr)
 #define DEVICE_READ32_SWITCH() uint32_t result = 0; switch (addr) 
@@ -1152,7 +1153,7 @@ void CxbxReserveNV2AMemory(NV2AState *d)
 		MEM_RESERVE, // Don't allocate actual physical storage in memory
 		PAGE_NOACCESS); // Any access must result in an access violation exception (handled in EmuException/EmuX86_DecodeException)
 	if (memory == NULL) {
-		EmuWarning("Couldn't reserve NV2A memory, continuing assuming we'll receive (and handle) access violation exceptions anyway...");
+		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Couldn't reserve NV2A memory, continuing assuming we'll receive (and handle) access violation exceptions anyway...");
 		return;
 	}
 
@@ -1168,7 +1169,7 @@ void CxbxReserveNV2AMemory(NV2AState *d)
 		MEM_COMMIT, // No MEM_RESERVE |
 		PAGE_READWRITE);
 	if (d->pramin.ramin_ptr == NULL) {
-		EmuWarning("Couldn't allocate NV2A PRAMIN memory");
+		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Couldn't allocate NV2A PRAMIN memory");
 		return;
 	}
 
@@ -1302,7 +1303,7 @@ uint32_t NV2ADevice::MMIORead(int barIndex, uint32_t addr, unsigned size)
 	}
 	}
 
-	EmuWarning("NV2ADevice::MMIORead: Unhandled barIndex %d, addr %08X, size %d", barIndex, addr, size);
+	EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "NV2ADevice::MMIORead: Unhandled barIndex %d, addr %08X, size %d", barIndex, addr, size);
 	return 0;
 }
 
@@ -1369,5 +1370,5 @@ void NV2ADevice::MMIOWrite(int barIndex, uint32_t addr, uint32_t value, unsigned
 	}
 	}
 
-	EmuWarning("NV2ADevice::MMIOWrite: Unhandled barIndex %d, addr %08X, value %08X, size %d", barIndex, addr, value, size);
+	EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "NV2ADevice::MMIOWrite: Unhandled barIndex %d, addr %08X, value %08X, size %d", barIndex, addr, value, size);
 }

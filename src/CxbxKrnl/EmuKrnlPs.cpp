@@ -36,7 +36,7 @@
 // ******************************************************************
 #define _XBOXKRNL_DEFEXTRN_
 
-#define LOG_PREFIX "KRNL"
+#define LOG_PREFIX CXBXR_MODULE::PS
 #include <CxbxUtil.h>
 
 // prevent name collisions
@@ -50,7 +50,7 @@ namespace xboxkrnl
 #include "Logging.h" // For LOG_FUNC()
 #include "EmuKrnlLogging.h"
 #include "CxbxKrnl.h" // For CxbxKrnl_TLS
-#include "Emu.h" // For EmuWarning()
+#include "Emu.h" // For EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, )
 #include "EmuFS.h" // For EmuGenerateFS
 #include "EmuXTL.h"
 
@@ -160,7 +160,7 @@ static unsigned int WINAPI PCSTProxy
 			if (pfnNotificationRoutine == NULL)
 				continue;
 
-			DbgPrintf("KRNL: Calling pfnNotificationRoutine[%d] (0x%.8X)\n", g_iThreadNotificationCount, pfnNotificationRoutine);
+			DbgPrintf(LOG_PREFIX, "Calling pfnNotificationRoutine[%d] (0x%.8X)\n", g_iThreadNotificationCount, pfnNotificationRoutine);
 
 			pfnNotificationRoutine(TRUE);
 		}
@@ -188,7 +188,7 @@ static unsigned int WINAPI PCSTProxy
 	}
 	__except (EmuException(GetExceptionInformation()))
 	{
-		EmuWarning("Problem with ExceptionFilter!");
+		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Problem with ExceptionFilter!");
 	}
 
 callComplete:
@@ -214,7 +214,7 @@ void PspSystemThreadStartup
 	__except (EmuException(GetExceptionInformation()))
 	// TODO : Call PspUnhandledExceptionInSystemThread(GetExceptionInformation())
 	{
-		EmuWarning("Problem with ExceptionFilter!"); // TODO : Disable?
+		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Problem with ExceptionFilter!"); // TODO : Disable?
 	}
 
 	xboxkrnl::PsTerminateSystemThread(STATUS_SUCCESS);
@@ -309,7 +309,7 @@ XBSYSAPI EXPORTNUM(255) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PsCreateSystemThreadE
 		HANDLE hStartedEvent = CreateEvent(NULL, FALSE, FALSE, TEXT("PCSTProxyEvent"));
 		if (hStartedEvent == NULL) {
 			std::string errorMessage = CxbxGetLastErrorString("PsCreateSystemThreadEx could not create PCSTProxyEvent");
-			CxbxKrnlCleanup(errorMessage.c_str());
+			CxbxKrnlCleanup(LOG_PREFIX, errorMessage.c_str());
 		}
 
         // PCSTProxy is responsible for cleaning up this pointer
@@ -327,18 +327,18 @@ XBSYSAPI EXPORTNUM(255) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PsCreateSystemThreadE
 		// Give the thread chance to start
 		Sleep(100);
 
-        EmuWarning("KRNL: Waiting for Xbox proxy thread to start...\n");
+        EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "KRNL: Waiting for Xbox proxy thread to start...\n");
 
         while (bWait) {
             dwThreadWait = WaitForSingleObject(hStartedEvent, 300);
             switch (dwThreadWait) {
                 case WAIT_TIMEOUT: { // The time-out interval elapsed, and the object's state is nonsignaled.
-					EmuWarning("KRNL: Timeout while waiting for Xbox proxy thread to start...\n");
+					EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "KRNL: Timeout while waiting for Xbox proxy thread to start...\n");
                     bWait = false;
                     break;
                 }
                 case WAIT_OBJECT_0: { // The state of the specified object is signaled.
-					DbgPrintf("KRNL: Xbox proxy thread is started.\n");
+					DbgPrintf(LOG_PREFIX, "Xbox proxy thread is started.\n");
                     bWait = false;
                     break;
                 }
@@ -347,7 +347,7 @@ XBSYSAPI EXPORTNUM(255) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PsCreateSystemThreadE
 						bWait = false;
 
 					std::string ErrorStr = CxbxGetLastErrorString("KRNL: While waiting for Xbox proxy thread to start");
-					EmuWarning("%s\n", ErrorStr.c_str());
+					EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "%s\n", ErrorStr.c_str());
 					break;
                 }
             }
@@ -358,7 +358,7 @@ XBSYSAPI EXPORTNUM(255) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PsCreateSystemThreadE
 		hStartedEvent = NULL;
 
 		// Log ThreadID identical to how GetCurrentThreadID() is rendered :
-		EmuWarning("KRNL: Created Xbox proxy thread. Handle : 0x%X, ThreadId : [0x%.4X]\n", *ThreadHandle, dwThreadId);
+		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "KRNL: Created Xbox proxy thread. Handle : 0x%X, ThreadId : [0x%.4X]\n", *ThreadHandle, dwThreadId);
 
 		CxbxKrnlRegisterThread(*ThreadHandle);
 
@@ -408,7 +408,7 @@ XBSYSAPI EXPORTNUM(257) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PsSetCreateThreadNoti
 
 	// I honestly don't expect this to happen, but if it does...
 	if (g_iThreadNotificationCount >= PSP_MAX_CREATE_THREAD_NOTIFY)
-		CxbxKrnlCleanup("Too many thread notification routines installed\n");
+		CxbxKrnlCleanup(LOG_PREFIX, "Too many thread notification routines installed\n");
 
 	// Find an empty spot in the thread notification array
 	for (int i = 0; i < PSP_MAX_CREATE_THREAD_NOTIFY; i++)
@@ -451,7 +451,7 @@ XBSYSAPI EXPORTNUM(258) xboxkrnl::VOID NTAPI xboxkrnl::PsTerminateSystemThread
 			if (pfnNotificationRoutine == NULL)
 				continue;
 
-			DbgPrintf("KRNL: Calling pfnNotificationRoutine[%d] (0x%.8X)\n", g_iThreadNotificationCount, pfnNotificationRoutine);
+			DbgPrintf(LOG_PREFIX, "Calling pfnNotificationRoutine[%d] (0x%.8X)\n", g_iThreadNotificationCount, pfnNotificationRoutine);
 
 			pfnNotificationRoutine(FALSE);
 		}

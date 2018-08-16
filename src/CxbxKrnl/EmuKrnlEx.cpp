@@ -36,7 +36,7 @@
 // ******************************************************************
 #define _XBOXKRNL_DEFEXTRN_
 
-#define LOG_PREFIX "KRNL"
+#define LOG_PREFIX CXBXR_MODULE::EX
 
 // prevent name collisions
 namespace xboxkrnl
@@ -56,7 +56,7 @@ namespace NtDll
 };
 
 #include "CxbxKrnl.h" // For CxbxKrnlCleanup
-#include "Emu.h" // For EmuWarning()
+#include "Emu.h" // For EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, )
 #include "EmuKrnl.h" // For InsertHeadList, InsertTailList, RemoveHeadList
 
 #include <atomic> // for std::atomic
@@ -145,7 +145,7 @@ static bool eeprom_data_is_valid(xboxkrnl::XC_VALUE_INDEX index)
         checksum = eeprom_section_checksum(FactorySettings_data, sizeof(EEPROM->FactorySettings));
     }
     else {
-        EmuWarning("WARNING: Eeprom ValueIndex 0x%X does not have a checksum\n", index);
+        EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Eeprom ValueIndex 0x%X does not have a checksum\n", index);
     }
     return checksum == valid_checksum;
 }

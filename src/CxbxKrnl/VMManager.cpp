@@ -40,7 +40,7 @@
 // Citra website: https://citra-emu.org/
 
 
-#define LOG_PREFIX "VMEM"
+#define LOG_PREFIX CXBXR_MODULE::VMEM
 
 #include "PoolManager.h"
 #include "Logging.h"
@@ -89,7 +89,7 @@ void VMManager::Initialize(HANDLE memory_view, HANDLE pagetables_view, int BootF
 			// the xbe has been tampered with: the entry point and the kernel thunk addresses have been xored with a different key to make it
 			// appear to be of a different type.
 
-			CxbxKrnlCleanup("Rebooted xbe type doesn't match with the xbe type that performed the reboot. Tampered xbe or rebooting to the \
+			CxbxKrnlCleanup(LOG_PREFIX, "Rebooted xbe type doesn't match with the xbe type that performed the reboot. Tampered xbe or rebooting to the \
 dashboard from non-retail xbe?");
 		}
 	}
@@ -178,12 +178,12 @@ dashboard from non-retail xbe?");
 	}
 
 	if (g_bIsChihiro) {
-		printf(LOG_PREFIX " Page table for Chihiro arcade initialized!\n");
+		printf("Page table for Chihiro arcade initialized!\n");
 	}
 	else if (g_bIsDebug) {
-		printf(LOG_PREFIX " Page table for Debug console initialized!\n");
+		printf("Page table for Debug console initialized!\n");
 	}
-	else { printf(LOG_PREFIX " Page table for Retail console initialized!\n"); }
+	else { printf("Page table for Retail console initialized!\n"); }
 }
 
 void VMManager::ConstructMemoryRegion(VAddr Start, size_t Size, MemoryRegionType Type)
@@ -434,7 +434,7 @@ void VMManager::ConstructVMA(VAddr Start, size_t Size, MemoryRegionType Type, VM
 	{
 		// Already at the beginning of the map, bail out immediately
 
-		EmuWarning(LOG_PREFIX " Can't find any more free space in the memory region %d! Virtual memory exhausted?", Type);
+		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Can't find any more free space in the memory region %d! Virtual memory exhausted?", Type);
 		m_MemoryRegionArray[Type].LastFree = m_MemoryRegionArray[Type].RegionMap.end();
 		return;
 	}
@@ -456,7 +456,7 @@ void VMManager::ConstructVMA(VAddr Start, size_t Size, MemoryRegionType Type, VM
 	// ergo720: I don't expect this to happen since it would mean we have exhausted the virtual space in the memory region,
 	// but it's just in case it does
 
-	EmuWarning(LOG_PREFIX " Can't find any more free space in the memory region %d! Virtual memory exhausted?", Type);
+	EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Can't find any more free space in the memory region %d! Virtual memory exhausted?", Type);
 
 	m_MemoryRegionArray[Type].LastFree = m_MemoryRegionArray[Type].RegionMap.end();
 
@@ -593,7 +593,7 @@ VAddr VMManager::ClaimGpuMemory(size_t Size, size_t* BytesToSkip)
 		}
 		m_NV2AInstanceMemoryBytes = Size;
 
-		DbgPrintf("VMEM: MmClaimGpuInstanceMemory : Allocated bytes remaining = 0x%.8X\n", m_NV2AInstanceMemoryBytes);
+		DbgPrintf(LOG_PREFIX, "MmClaimGpuInstanceMemory : Allocated bytes remaining = 0x%.8X\n", m_NV2AInstanceMemoryBytes);
 
 		Unlock();
 	}
@@ -640,12 +640,12 @@ void VMManager::PersistMemory(VAddr addr, size_t Size, bool bPersist)
 			if (bPersist)
 			{
 				*(VAddr*)(CONTIGUOUS_MEMORY_BASE + PAGE_SIZE - 4) = addr;
-				DbgPrintf("KNRL: Persisting LaunchDataPage\n");
+				DbgPrintf(LOG_PREFIX, "Persisting LaunchDataPage\n");
 			}
 			else
 			{
 				*(VAddr*)(CONTIGUOUS_MEMORY_BASE + PAGE_SIZE - 4) = NULL;
-				DbgPrintf("KNRL: Forgetting LaunchDataPage\n");
+				DbgPrintf(LOG_PREFIX, "Forgetting LaunchDataPage\n");
 			}
 		}
 		else
@@ -653,12 +653,12 @@ void VMManager::PersistMemory(VAddr addr, size_t Size, bool bPersist)
 			if (bPersist)
 			{
 				*(VAddr*)(CONTIGUOUS_MEMORY_BASE + PAGE_SIZE - 8) = addr;
-				DbgPrintf("KNRL: Persisting FrameBuffer\n");
+				DbgPrintf(LOG_PREFIX, "Persisting FrameBuffer\n");
 			}
 			else
 			{
 				*(VAddr*)(CONTIGUOUS_MEMORY_BASE + PAGE_SIZE - 8) = NULL;
-				DbgPrintf("KNRL: Forgetting FrameBuffer\n");
+				DbgPrintf(LOG_PREFIX, "Forgetting FrameBuffer\n");
 			}
 		}
 	}
@@ -726,7 +726,7 @@ void VMManager::RestorePersistentMemory()
 			RestorePersistentAllocation(LauchDataAddress, GetPteAddress(LauchDataAddress)->Hardware.PFN,
 				GetPteAddress(LauchDataAddress)->Hardware.PFN, ContiguousType);
 
-			DbgPrintf("VMEM: Restored LaunchDataPage\n");
+			DbgPrintf(LOG_PREFIX, "Restored LaunchDataPage\n");
 		}
 
 		if (FrameBufferAddress != 0 && IS_PHYSICAL_ADDRESS(FrameBufferAddress)) {
@@ -736,7 +736,7 @@ void VMManager::RestorePersistentMemory()
 			RestorePersistentAllocation(FrameBufferAddress, GetPteAddress(FrameBufferAddress)->Hardware.PFN,
 				GetPteAddress(FrameBufferAddress)->Hardware.PFN + (QuerySize(FrameBufferAddress, false) >> PAGE_SHIFT) - 1, ContiguousType);
 
-			DbgPrintf("VMEM: Restored FrameBuffer\n");
+			DbgPrintf(LOG_PREFIX, "Restored FrameBuffer\n");
 		}
 	}
 }
@@ -1467,7 +1467,7 @@ size_t VMManager::QuerySize(VAddr addr, bool bCxbxCaller)
 		else if(IS_USER_ADDRESS(addr)) { Type = UserRegion; }
 		else
 		{
-			DbgPrintf("VMEM: QuerySize: Unknown memory region queried.\n");
+			DbgPrintf(LOG_PREFIX, "QuerySize: Unknown memory region queried.\n");
 			Unlock();
 			RETURN(Size);
 		}
@@ -1624,7 +1624,7 @@ xboxkrnl::NTSTATUS VMManager::XbAllocateVirtualMemory(VAddr* addr, ULONG ZeroBit
 
 	if (!ConvertXboxToPteProtection(Protect, &TempPte)) { RETURN(STATUS_INVALID_PAGE_PROTECTION); }
 
-	DbgPrintf("VMEM: XbAllocateVirtualMemory requested range : 0x%.8X - 0x%.8X\n", CapturedBase, CapturedBase + CapturedSize);
+	DbgPrintf(LOG_PREFIX, "%s requested range : 0x%.8X - 0x%.8X\n", __func__, CapturedBase, CapturedBase + CapturedSize);
 
 	Lock();
 
@@ -1691,8 +1691,7 @@ xboxkrnl::NTSTATUS VMManager::XbAllocateVirtualMemory(VAddr* addr, ULONG ZeroBit
 		{
 			// XBOX_MEM_COMMIT was not specified, so we are done with the allocation
 
-			DbgPrintf("VMEM: XbAllocateVirtualMemory resulting range : 0x%.8X - 0x%.8X\n", AlignedCapturedBase,
-				AlignedCapturedBase + AlignedCapturedSize);
+			DbgPrintf(LOG_PREFIX, "%s resulting range : 0x%.8X - 0x%.8X\n", __func__, AlignedCapturedBase, AlignedCapturedBase + AlignedCapturedSize);
 
 			*addr = AlignedCapturedBase;
 			*Size = AlignedCapturedSize;
@@ -1795,13 +1794,13 @@ xboxkrnl::NTSTATUS VMManager::XbAllocateVirtualMemory(VAddr* addr, ULONG ZeroBit
 		if (!VirtualAlloc((void*)AlignedCapturedBase, AlignedCapturedSize, MEM_COMMIT,
 			(ConvertXboxToWinProtection(PatchXboxPermissions(Protect))) & ~(PAGE_WRITECOMBINE | PAGE_NOCACHE)))
 		{
-			DbgPrintf("VMEM: XbAllocateVirtualMemory: VirtualAlloc failed to commit the memory! The error was %d\n", GetLastError());
+			DbgPrintf(LOG_PREFIX, "%s: VirtualAlloc failed to commit the memory! The error was %d\n", __func__, GetLastError());
 		}
 	}
 
 	// Because VirtualAlloc always zeros the memory for us, XBOX_MEM_NOZERO is still unsupported
 
-	if (AllocationType & XBOX_MEM_NOZERO) { DbgPrintf("VMEM: XBOX_MEM_NOZERO flag is not supported!\n"); }
+	if (AllocationType & XBOX_MEM_NOZERO) { DbgPrintf(LOG_PREFIX, "XBOX_MEM_NOZERO flag is not supported!\n"); }
 
 	// If some pte's were detected to have different permissions in the above check, we need to update those as well
 
@@ -1813,8 +1812,7 @@ xboxkrnl::NTSTATUS VMManager::XbAllocateVirtualMemory(VAddr* addr, ULONG ZeroBit
 		XbVirtualProtect(&TempAddr, &TempSize, &TempProtect);
 	}
 
-	DbgPrintf("VMEM: XbAllocateVirtualMemory resulting range : 0x%.8X - 0x%.8X\n", AlignedCapturedBase,
-		AlignedCapturedBase + AlignedCapturedSize);
+	DbgPrintf(LOG_PREFIX, "%s resulting range : 0x%.8X - 0x%.8X\n", __func__, AlignedCapturedBase, AlignedCapturedBase + AlignedCapturedSize);
 
 	*addr = AlignedCapturedBase;
 	*Size = AlignedCapturedSize;
@@ -1973,7 +1971,7 @@ xboxkrnl::NTSTATUS VMManager::XbFreeVirtualMemory(VAddr* addr, size_t* Size, DWO
 
 		if (!VirtualFree((void*)AlignedCapturedBase, AlignedCapturedSize, MEM_DECOMMIT))
 		{
-			DbgPrintf("VMEM: XbFreeVirtualMemory: VirtualFree failed to decommit the memory! The error was %d\n", GetLastError());
+			DbgPrintf(LOG_PREFIX, "%s: VirtualFree failed to decommit the memory! The error was %d\n", __func__, GetLastError());
 		}
 	}
 
@@ -2135,6 +2133,22 @@ xboxkrnl::NTSTATUS VMManager::XbVirtualMemoryStatistics(VAddr addr, xboxkrnl::PM
 		return STATUS_INVALID_PARAMETER;
 	}
 
+	// ergo720: hack. Always report as reserved the region after the memory placeholder and below 0x8000000 if we are emulating
+	// a 128 MiB system regardless of what VirtualQuery says. Once LLE CPU and MMU are implemented, this can be removed
+
+	if (g_bIsRetail != true && addr >= XBE_IMAGE_BASE + XBE_MAX_VA && addr < CHIHIRO_MEMORY_SIZE) {
+		memory_statistics->AllocationBase = (void*)(XBE_IMAGE_BASE + XBE_MAX_VA);
+		memory_statistics->AllocationProtect = XBOX_PAGE_NOACCESS;
+		memory_statistics->BaseAddress = (void*)ROUND_DOWN_4K(addr);
+		memory_statistics->RegionSize = CHIHIRO_MEMORY_SIZE - ROUND_DOWN_4K(addr);
+		memory_statistics->State = XBOX_MEM_RESERVE;
+		memory_statistics->Protect = XBOX_PAGE_NOACCESS;
+		memory_statistics->Type = XBOX_MEM_PRIVATE;
+
+		Unlock();
+		return STATUS_SUCCESS;
+	}
+
 	// If it's not in the XBE, report actual host allocations
 	// The game will see allocations it didn't make, but at least it has a chance to
 	// not try to allocate memory our emulator already occupied.
@@ -2158,22 +2172,6 @@ xboxkrnl::NTSTATUS VMManager::XbVirtualMemoryStatistics(VAddr addr, xboxkrnl::PM
 	}
 
 	Lock();
-
-	// ergo720: hack. Always report as reserved the region after the memory placeholder and below 0x8000000 if we are emulating
-	// a 128 MiB system regardless of what VirtualQuery says. Once LLE CPU and MMU are implemented, this can be removed
-
-	if (g_bIsRetail != true && addr >= XBE_IMAGE_BASE + XBE_MAX_VA && addr < CHIHIRO_MEMORY_SIZE) {
-		memory_statistics->AllocationBase = (void*)(XBE_IMAGE_BASE + XBE_MAX_VA);
-		memory_statistics->AllocationProtect = XBOX_PAGE_NOACCESS;
-		memory_statistics->BaseAddress = (void*)ROUND_DOWN_4K(addr);
-		memory_statistics->RegionSize = CHIHIRO_MEMORY_SIZE - ROUND_DOWN_4K(addr);
-		memory_statistics->State = XBOX_MEM_RESERVE;
-		memory_statistics->Protect = XBOX_PAGE_NOACCESS;
-		memory_statistics->Type = XBOX_MEM_PRIVATE;
-
-		Unlock();
-		return STATUS_SUCCESS;
-	}
 
 	// Locate the vma containing the supplied address
 
@@ -2331,7 +2329,7 @@ VAddr VMManager::MapMemoryBlock(MappingFn MappingRoutine, MemoryRegionType Type,
 	{
 		// We are already at the beginning of the map, so bail out immediately
 
-		EmuWarning(LOG_PREFIX " Failed to map a memory block in the virtual region %d!", Type);
+		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Failed to map a memory block in the virtual region %d!", Type);
 		return NULL;
 	}
 
@@ -2362,7 +2360,7 @@ VAddr VMManager::MapMemoryBlock(MappingFn MappingRoutine, MemoryRegionType Type,
 	// We have failed to map the block. This is likely because the virtual space is fragmented or there are too many
 	// host allocations in the memory region. Log this error and bail out
 
-	EmuWarning(LOG_PREFIX " Failed to map a memory block in the virtual region %d!", Type);
+	EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Failed to map a memory block in the virtual region %d!", Type);
 
 	return NULL;
 }
@@ -2464,13 +2462,13 @@ PAddr VMManager::TranslateVAddrToPAddr(const VAddr addr)
 	if (Type != COUNTRegion && Type != ContiguousRegion) {
 		if (IsValidVirtualAddress(addr)) {
 			if (Type == UserRegion) {
-				EmuWarning("Applying identity mapping hack to allocation at address 0x%X", addr);
+				EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Applying identity mapping hack to allocation at address 0x%X", addr);
 				Unlock();
 				RETURN(addr); // committed pages in the user region always use VirtualAlloc
 			}
 			VMAIter it = GetVMAIterator(addr, Type);
 			if (it != m_MemoryRegionArray[Type].RegionMap.end() && it->second.type != FreeVma && it->second.bFragmented) {
-				EmuWarning("Applying identity mapping hack to allocation at address 0x%X", addr);
+				EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Applying identity mapping hack to allocation at address 0x%X", addr);
 				Unlock();
 				RETURN(addr); // committed pages in the system-devkit regions can use VirtualAlloc because of fragmentation
 			}
@@ -2644,7 +2642,7 @@ void VMManager::UpdateMemoryPermissions(VAddr addr, size_t Size, DWORD Perms)
 	DWORD dummy;
 	if (!VirtualProtect((void*)addr, Size, WindowsPerms & ~(PAGE_WRITECOMBINE | PAGE_NOCACHE), &dummy))
 	{
-		DbgPrintf("VMEM: VirtualProtect failed. The error code was %d\n", GetLastError());
+		DbgPrintf(LOG_PREFIX, "VirtualProtect failed. The error code was %d\n", GetLastError());
 	}
 }
 
@@ -2662,14 +2660,14 @@ VMAIter VMManager::CheckExistenceVMA(VAddr addr, MemoryRegionType Type, size_t S
 			{
 				return it;
 			}
-			DbgPrintf("VMEM: Located vma but sizes don't match\n");
+			DbgPrintf(LOG_PREFIX, "Located vma but sizes don't match\n");
 			return m_MemoryRegionArray[Type].RegionMap.end();
 		}
 		return it;
 	}
 	else
 	{
-		DbgPrintf("VMEM: Vma not found or doesn't start at the supplied address\n");
+		DbgPrintf(LOG_PREFIX, "Vma not found or doesn't start at the supplied address\n");
 		return m_MemoryRegionArray[Type].RegionMap.end();
 	}
 }
@@ -2717,7 +2715,7 @@ void VMManager::DestructVMA(VAddr addr, MemoryRegionType Type, size_t Size)
 
 			if (!ret)
 			{
-				DbgPrintf("VMEM: Deallocation routine failed with error %d\n", GetLastError());
+				DbgPrintf(LOG_PREFIX, "Deallocation routine failed with error %d\n", GetLastError());
 			}
 	}
 
@@ -2743,7 +2741,7 @@ void VMManager::DestructVMA(VAddr addr, MemoryRegionType Type, size_t Size)
 	}
 	else
 	{
-		DbgPrintf("VMEM: std::prev(CarvedVmaIt) was not free\n");
+		DbgPrintf(LOG_PREFIX, "std::prev(CarvedVmaIt) was not free\n");
 
 		it = CarvedVmaIt;
 
@@ -2771,7 +2769,7 @@ void VMManager::DestructVMA(VAddr addr, MemoryRegionType Type, size_t Size)
 			--it;
 		}
 
-		EmuWarning(LOG_PREFIX " Can't find any more free space in the memory region %d! Virtual memory exhausted?", Type);
+		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Can't find any more free space in the memory region %d! Virtual memory exhausted?", Type);
 
 		m_MemoryRegionArray[Type].LastFree = m_MemoryRegionArray[Type].RegionMap.end();
 

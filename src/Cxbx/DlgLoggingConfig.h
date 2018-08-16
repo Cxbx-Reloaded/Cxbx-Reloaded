@@ -1,5 +1,3 @@
-// This is an open source non-commercial project. Dear PVS-Studio, please check it.
-// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 // ******************************************************************
 // *
 // *    .,-:::::    .,::      .::::::::.    .,::      .:
@@ -9,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->EmuKrnlEx.cpp
+// *   Cxbx->Cxbx->DlgLoggingConfig.h
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -28,31 +26,15 @@
 // *  If not, write to the Free Software Foundation, Inc.,
 // *  59 Temple Place - Suite 330, Bostom, MA 02111-1307, USA.
 // *
-// *  (c) 2002-2003 Aaron Robinson <caustik@caustik.com>
-// *  (c) 2016 Patrick van Logchem <pvanlogchem@gmail.com>
+// *  (c) 2018 ergo720
 // *
 // *  All rights reserved
 // *
 // ******************************************************************
-#define _XBOXKRNL_DEFEXTRN_
 
-#define LOG_PREFIX CXBXR_MODULE::KD
+#ifndef DLGLOGGINGCONFIG_H
+#define DLGLOGGINGCONFIG_H
 
-// prevent name collisions
-namespace xboxkrnl
-{
-#include <xboxkrnl/xboxkrnl.h> // For KdDebuggerEnabled, etc.
-};
+VOID ShowLoggingConfig(HWND hwnd, HWND ChildWnd);
 
-#include "Logging.h"
-
-// ******************************************************************
-// * 0x0058 - KdDebuggerEnabled
-// ******************************************************************
-XBSYSAPI EXPORTNUM(88) xboxkrnl::BOOLEAN xboxkrnl::KdDebuggerEnabled = false;
-
-// ******************************************************************
-// * 0x0059 - KdDebuggerNotPresent
-// ******************************************************************
-// Source:ReactOS
-XBSYSAPI EXPORTNUM(89) xboxkrnl::BOOLEAN xboxkrnl::KdDebuggerNotPresent = true;
+#endif

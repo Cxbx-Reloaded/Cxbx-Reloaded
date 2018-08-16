@@ -71,6 +71,8 @@
 //    #include <xboxkrnl/xboxkrnl.h>
 //};
 
+#define LOG_PREFIX CXBXR_MODULE::PXSH
+
 #include "CxbxKrnl/Emu.h"
 #include "CxbxKrnl/EmuFS.h"
 #include "CxbxKrnl/EmuXTL.h"
@@ -85,6 +87,12 @@ typedef uint8_t uint8; // TODO : Remove
 
 #include <process.h>
 #include <locale.h>
+
+
+#define DbgPshPrintf \
+	LOG_CHECK_ENABLED(LOG_PREFIX, LOG_LEVEL::DEBUG) \
+		if(g_bPrintfOn) printf
+
 
 //#include "EmuD3DPixelShader.h"
 
@@ -1381,7 +1389,7 @@ bool PSH_IMD_ARGUMENT::Decode(const DWORD Value, DWORD aMask, TArgumentType Argu
       Type = PARAM_EF_PROD;
 	  break;
   default :
-    DbgPrintf("INVALID ARGUMENT!\n");
+    DbgPrintf(LOG_PREFIX, "INVALID ARGUMENT!\n");
 
     Result = false;
   }
@@ -1972,8 +1980,8 @@ void PSH_XBOX_SHADER::Log(const char *PhaseStr)
 {
   //if (MayLog(lfUnit))
   {
-    DbgPrintf("New decoding - %s :\n", PhaseStr);
-	DbgPrintf("%s\n", ToString().c_str());
+    DbgPrintf(LOG_PREFIX, "New decoding - %s :\n", PhaseStr);
+	DbgPrintf(LOG_PREFIX, "%s\n", ToString().c_str());
   }
 }
 
@@ -2153,7 +2161,7 @@ PSH_RECOMPILED_SHADER PSH_XBOX_SHADER::Decode(XTL::X_D3DPIXELSHADERDEF *pPSDef)
   //if (MayLog(LogFlags))
   {
     // print relevant contents to the debug console
-    DbgPrintf("%s\n", DecodedToString(pPSDef).c_str());
+    DbgPrintf(LOG_PREFIX, "%s\n", DecodedToString(pPSDef).c_str());
   }
 
   // TODO:
@@ -2550,7 +2558,7 @@ bool PSH_XBOX_SHADER::MoveRemovableParametersRight()
     if (Result >= MaxConstantFloatRegisters)
       Result = 0;
 
-    EmuWarning("; Too many constants to emulate, this pixel shader will give unexpected output!");
+    EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "; Too many constants to emulate, this pixel shader will give unexpected output!");
 	return Result;
   }
 
@@ -2730,7 +2738,7 @@ bool PSH_XBOX_SHADER::RemoveUselessWrites()
       if ( (CurArg->Address < MaxTemporaryRegisters)
       && ((RegUsage[CurArg->Type][CurArg->Address] & CurArg->Mask) == 0))
       {
-        DbgPrintf("; Removed useless assignment to register %s\n", CurArg->ToString().c_str());
+        DbgPrintf(LOG_PREFIX, "; Removed useless assignment to register %s\n", CurArg->ToString().c_str());
         CurArg->Type = PARAM_DISCARD;
         Result = true;
       }
@@ -3027,7 +3035,7 @@ void PSH_XBOX_SHADER::ConvertXFCToNative(int i)
 
     InsertIntermediate(&Ins, InsertPos);
     ++InsertPos;
-    DbgPrintf("; Inserted final combiner calculation of V1R0_sum register\n");
+    DbgPrintf(LOG_PREFIX, "; Inserted final combiner calculation of V1R0_sum register\n");
   }
 
   if (NeedsProd)
@@ -3039,7 +3047,7 @@ void PSH_XBOX_SHADER::ConvertXFCToNative(int i)
     Ins.Parameters[1] = Cur.Parameters[5]; // F
     InsertIntermediate(&Ins, InsertPos);
     ++InsertPos;
-    DbgPrintf("; Inserted final combiner calculation of EF_prod register\n");
+    DbgPrintf(LOG_PREFIX, "; Inserted final combiner calculation of EF_prod register\n");
   }
 
   // The final combiner calculates : r0.rgb=s0*s1 + (1-s0)*s2 + s3
@@ -3202,7 +3210,7 @@ bool PSH_XBOX_SHADER::FixConstantModifiers()
 				Ins.Parameters[0].Modifiers = 0;
 				Ins.CommentString = "Inserted to avoid constant modifier (applied below on register)";
 				InsertIntermediate(&Ins, i);
-				DbgPrintf("; Used intermediate move to avoid constant modifier\n");
+				DbgPrintf(LOG_PREFIX, "; Used intermediate move to avoid constant modifier\n");
 				Result = true;
 			}
 		}
@@ -3290,7 +3298,7 @@ bool PSH_XBOX_SHADER::CombineInstructions()
           Op2->Parameters[2] = Op1->Parameters[0];
           DeleteIntermediate(i);
           DeleteIntermediate(i);
-          DbgPrintf("; Changed temporary MUL,MUL,CND via MOV,MOV,CND into a single CND\n");
+          DbgPrintf(LOG_PREFIX, "; Changed temporary MUL,MUL,CND via MOV,MOV,CND into a single CND\n");
           Result = true;
           continue;
         }
@@ -3315,7 +3323,7 @@ bool PSH_XBOX_SHADER::CombineInstructions()
             Op2->Modifier = Op0->Modifier;
             DeleteIntermediate(i);
             DeleteIntermediate(i);
-            DbgPrintf("; Changed temporary MUL,MUL,ADD into a single LRP\n");
+            DbgPrintf(LOG_PREFIX, "; Changed temporary MUL,MUL,ADD into a single LRP\n");
             Result = true;
             continue;
           }
@@ -3332,7 +3340,7 @@ bool PSH_XBOX_SHADER::CombineInstructions()
             Op2->Modifier = Op0->Modifier;
             DeleteIntermediate(i);
             DeleteIntermediate(i);
-            DbgPrintf("; Changed temporary MUL,MUL,ADD into a single MAD\n");
+            DbgPrintf(LOG_PREFIX, "; Changed temporary MUL,MUL,ADD into a single MAD\n");
             Result = true;
             continue;
           }
@@ -3347,7 +3355,7 @@ bool PSH_XBOX_SHADER::CombineInstructions()
           Op1->Parameters[2] = Op0->Output[0];
           // Remove the trailing ADD :
           DeleteIntermediate(i+2);
-          DbgPrintf("; Changed temporary MUL,MUL,ADD into a MUL,MAD\n");
+          DbgPrintf(LOG_PREFIX, "; Changed temporary MUL,MUL,ADD into a MUL,MAD\n");
           Result = true;
           continue;
         }
@@ -3364,7 +3372,7 @@ bool PSH_XBOX_SHADER::CombineInstructions()
           Op2->Parameters[1] = Op1->Parameters[0];
           DeleteIntermediate(i);
           DeleteIntermediate(i);
-          DbgPrintf("; Changed temporary MUL,MUL,ADD into a MUL\n");
+          DbgPrintf(LOG_PREFIX, "; Changed temporary MUL,MUL,ADD into a MUL\n");
           Result = true;
           continue;
         }
@@ -3389,7 +3397,7 @@ bool PSH_XBOX_SHADER::CombineInstructions()
           Op0->Opcode = PO_MAD;
           Op0->Parameters[2] = Op1->Parameters[1];
           DeleteIntermediate(i+1);
-          DbgPrintf("; Changed MUL,ADD into a single MAD\n");
+          DbgPrintf(LOG_PREFIX, "; Changed MUL,ADD into a single MAD\n");
           Result = true;
           continue;
         }
@@ -3474,7 +3482,7 @@ bool PSH_XBOX_SHADER::CombineInstructions()
         if (CanOptimize)
         {
           DeleteIntermediate(i);
-          DbgPrintf("; Moved MOV input into following instructions\n3");
+          DbgPrintf(LOG_PREFIX, "; Moved MOV input into following instructions\n3");
           Result = true;
         }
       }
@@ -3494,7 +3502,7 @@ bool PSH_XBOX_SHADER::CombineInstructions()
         // > mul r0.rgb, r0,t0
         Op0->Output[0] = Op1->Output[0];
         DeleteIntermediate(i+1);
-        DbgPrintf("; Changed temporary MUL,MOV into a MUL\n");
+        DbgPrintf(LOG_PREFIX, "; Changed temporary MUL,MOV into a MUL\n");
         Result = true;
         continue;
       }
@@ -3507,7 +3515,7 @@ bool PSH_XBOX_SHADER::CombineInstructions()
       if (IsRegisterFreeFromIndexOnwards(i, PARAM_R, 1))
       {
         ReplaceRegisterFromIndexOnwards(i, Op0->Output[0].Type, Op0->Output[0].Address, PARAM_R, 1);
-        DbgPrintf("; Changed fake register by r1\n");
+        DbgPrintf(LOG_PREFIX, "; Changed fake register by r1\n");
         Result = true;
         continue;
       }
@@ -3535,7 +3543,7 @@ bool PSH_XBOX_SHADER::SimplifyMOV(PPSH_INTERMEDIATE_FORMAT Cur)
     if (CanSimplify)
     {
       Cur->Opcode = PO_NOP; // This nop will be removed in a recursive fixup
-      DbgPrintf("; Changed MOV into a NOP\n");
+      DbgPrintf(LOG_PREFIX, "; Changed MOV into a NOP\n");
       return true;
     }
   }
@@ -3551,7 +3559,7 @@ bool PSH_XBOX_SHADER::SimplifyMOV(PPSH_INTERMEDIATE_FORMAT Cur)
     Cur->Parameters[0].Address = 0;
     Cur->Parameters[0].Modifiers = 0;
     Cur->Parameters[1] = Cur->Parameters[0];
-    DbgPrintf("; Changed MOV 0 into a SUB v0,v0\n");
+    DbgPrintf(LOG_PREFIX, "; Changed MOV 0 into a SUB v0,v0\n");
     return true;
   }
 
@@ -3588,7 +3596,7 @@ bool PSH_XBOX_SHADER::SimplifyMOV(PPSH_INTERMEDIATE_FORMAT Cur)
     // Try to simulate all factors (0.5, 1.0 and 2.0) using an output modifier :
     Cur->ScaleOutput(Factor);
 
-	DbgPrintf("; Changed MOV {const} into a SUB_factor 1-v0,-v0\n");
+	DbgPrintf(LOG_PREFIX, "; Changed MOV {const} into a SUB_factor 1-v0,-v0\n");
 	return true;
   }
   return false;
@@ -3601,7 +3609,7 @@ bool PSH_XBOX_SHADER::SimplifyADD(PPSH_INTERMEDIATE_FORMAT Cur)
   {
     // Change it into a MOV (the first argument is already in-place)
     Cur->Opcode = PO_MOV;
-    DbgPrintf("; Changed ADD s0,0 into a MOV s0\n");
+    DbgPrintf(LOG_PREFIX, "; Changed ADD s0,0 into a MOV s0\n");
     return true;
   }
   return false;
@@ -3615,7 +3623,7 @@ bool PSH_XBOX_SHADER::SimplifyMAD(PPSH_INTERMEDIATE_FORMAT Cur)
     // Change it into s2 :
     Cur->Opcode = PO_MOV;
     Cur->Parameters[0] = Cur->Parameters[2];
-    DbgPrintf("; Changed MAD s0,0 into a MOV s0\n");
+    DbgPrintf(LOG_PREFIX, "; Changed MAD s0,0 into a MOV s0\n");
     return true;
   }
 
@@ -3625,7 +3633,7 @@ bool PSH_XBOX_SHADER::SimplifyMAD(PPSH_INTERMEDIATE_FORMAT Cur)
     // Change it into s0+s2 :
     Cur->Opcode = PO_ADD;
     Cur->Parameters[1] = Cur->Parameters[2];
-    DbgPrintf("; Changed MAD s0,1,s2 into a ADD s0,s2\n");
+    DbgPrintf(LOG_PREFIX, "; Changed MAD s0,1,s2 into a ADD s0,s2\n");
     return true;
   }
 
@@ -3636,7 +3644,7 @@ bool PSH_XBOX_SHADER::SimplifyMAD(PPSH_INTERMEDIATE_FORMAT Cur)
     Cur->Opcode = PO_SUB;
     Cur->Parameters[1] = Cur->Parameters[0];
     Cur->Parameters[0] = Cur->Parameters[2];
-    DbgPrintf("; Changed MAD s0,-1,s2 into a SUB s2,s0\n");
+    DbgPrintf(LOG_PREFIX, "; Changed MAD s0,-1,s2 into a SUB s2,s0\n");
     return true;
   }
   return false;
@@ -3649,7 +3657,7 @@ bool PSH_XBOX_SHADER::SimplifySUB(PPSH_INTERMEDIATE_FORMAT Cur)
   {
     // Change it into a MOV (the first argument is already in-place)
     Cur->Opcode = PO_MOV;
-    DbgPrintf("; Changed SUB x, 0 into a MOV x\n");
+    DbgPrintf(LOG_PREFIX, "; Changed SUB x, 0 into a MOV x\n");
     return true;
   }
   return false;
@@ -3663,7 +3671,7 @@ bool PSH_XBOX_SHADER::SimplifyMUL(PPSH_INTERMEDIATE_FORMAT Cur)
     // Change it into a MOV (the 0 argument will be resolve in a recursive MOV fixup) :
     Cur->Opcode = PO_MOV;
     Cur->Parameters[0].SetConstValue(0.0);
-    DbgPrintf("; Changed MUL s0,0 into a MOV 0\n");
+    DbgPrintf(LOG_PREFIX, "; Changed MUL s0,0 into a MOV 0\n");
     return true;
   }
 
@@ -3673,7 +3681,7 @@ bool PSH_XBOX_SHADER::SimplifyMUL(PPSH_INTERMEDIATE_FORMAT Cur)
     // Change it into a simple MOV and scale the output instead :
     Cur->Opcode = PO_MOV;
     Cur->ScaleOutput(Cur->Parameters[1].GetConstValue());
-    DbgPrintf("; Changed MUL s0,{const} into a MOV_factor s0\n");
+    DbgPrintf(LOG_PREFIX, "; Changed MUL s0,{const} into a MOV_factor s0\n");
     return true;
   }
   return false;
@@ -3688,7 +3696,7 @@ bool  PSH_XBOX_SHADER::SimplifyLRP(PPSH_INTERMEDIATE_FORMAT Cur)
   {
     // Change it into a MUL (calculating the left part : s0*s1 :
     Cur->Opcode = PO_MUL;
-    DbgPrintf("; Changed LRP s0,s1,s2 (where (1-s0)*s2=0) into a MUL s0,s1\n");
+    DbgPrintf(LOG_PREFIX, "; Changed LRP s0,s1,s2 (where (1-s0)*s2=0) into a MUL s0,s1\n");
     return true;
   }
 
@@ -3699,7 +3707,7 @@ bool  PSH_XBOX_SHADER::SimplifyLRP(PPSH_INTERMEDIATE_FORMAT Cur)
     Cur->Opcode = PO_MUL;
     Cur->Parameters[0].Invert();
     Cur->Parameters[1] = Cur->Parameters[2];
-    DbgPrintf("; Changed LRP s0,s1,s2 (where s0*s1=0) into a MUL (1-s0),s2\n");
+    DbgPrintf(LOG_PREFIX, "; Changed LRP s0,s1,s2 (where s0*s1=0) into a MUL (1-s0),s2\n");
     return true;
   }
 
@@ -3710,7 +3718,7 @@ bool  PSH_XBOX_SHADER::SimplifyLRP(PPSH_INTERMEDIATE_FORMAT Cur)
     Cur->Opcode = PO_MAD;
     Cur->Parameters[2] = Cur->Parameters[0];
     Cur->Parameters[2].Invert();
-    DbgPrintf("; Changed LRP s0,s1,1 into a MAD s0,s1,1-s0\n");
+    DbgPrintf(LOG_PREFIX, "; Changed LRP s0,s1,1 into a MAD s0,s1,1-s0\n");
 	return true;
   }
   return false;
@@ -4221,8 +4229,8 @@ static const
 
   if (hRet != D3D_OK)
   {
-    EmuWarning("Could not create pixel shader");
-	EmuWarning(std::string((char*)pErrors->GetBufferPointer(), pErrors->GetBufferSize()).c_str());
+    EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Could not create pixel shader");
+	EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, std::string((char*)pErrors->GetBufferPointer(), pErrors->GetBufferSize()).c_str());
 
 	printf(ConvertedPixelShaderStr.c_str());
 
@@ -4236,12 +4244,12 @@ static const
       /*ppCompilationErrors*/&pErrors);
 
 	if (hRet != D3D_OK) {
-		EmuWarning("Could not create pixel shader");
-		EmuWarning(std::string((char*)pErrors->GetBufferPointer(), pErrors->GetBufferSize()).c_str());
-		XTL::CxbxKrnlCleanup("Cannot fall back to the most simple pixel shader!");
+		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Could not create pixel shader");
+		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, std::string((char*)pErrors->GetBufferPointer(), pErrors->GetBufferSize()).c_str());
+		XTL::CxbxKrnlCleanup(LOG_PREFIX, "Cannot fall back to the most simple pixel shader!");
 	}
 
-    EmuWarning("We're lying about the creation of a pixel shader!");
+    EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "We're lying about the creation of a pixel shader!");
   }
 
   if (pShader)
@@ -4608,7 +4616,7 @@ inline void HandleInputOutput
 		// 6928: check this as I doubt whether it works really like that
 		/*if(strcmp(szInput[i], "r1")==0)
 		{
-		//	DbgPrintf("channel: %s\n", szChannels[i]);
+		//	DbgPrintf(LOG_PREFIX, "channel: %s\n", szChannels[i]);
 		//	Sleep(3000);
 
 			if((strcmp(szChannels[i], ".a")==0) && (!bR1AWritten)) {
@@ -4813,7 +4821,7 @@ inline void HandleInputOutput
 			//EmuWarningMsg("THIS IS WRONG, FIX ME!");
 			//if(!szOutput[1][0])
 			//	strcpy(szOut1, szOutput[2]);
-			DbgPrintf("(!szOutput[0][0] || !szOutput[1][0]) && szOutput[2][0] = TRUE!\n");
+			DbgPrintf(LOG_PREFIX, "(!szOutput[0][0] || !szOutput[1][0]) && szOutput[2][0] = TRUE!\n");
 
 			BOOL bUsable=TRUE;
 			for(i=2; i<4; i++)
@@ -4827,7 +4835,7 @@ inline void HandleInputOutput
 
 			strcpy(szOut, szOutput[2]);
 
-			DbgPrintf("BUsable = TRUE, new output: %s\n", szOut);
+			DbgPrintf(LOG_PREFIX, "BUsable = TRUE, new output: %s\n", szOut);
 
 			}
 			else {
@@ -5131,7 +5139,7 @@ inline void HandleInputOutput
 
 			if (bEFProduct)
 			{
-				EmuWarning("EF Product and V1R0 register used at the same time!");
+				EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "EF Product and V1R0 register used at the same time!");
 			}
 			else
 			{
@@ -5652,7 +5660,7 @@ inline BOOL OptimizeOperation
 		{
 			if (szMod[0])
 			{
-				EmuWarning("Pixel Shader: Destination modifier present!");
+				EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Destination modifier present!");
 			}
 			switch (eOpTypes[2])
 			{
@@ -5777,7 +5785,7 @@ inline BOOL OptimizeOperation
 					{
 						if (szOutputs[2][0] != 'r')
 						{
-							EmuWarning("Pixel Shader: Destination not temporary register!");
+							EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Destination not temporary register!");
 						}
 						// ab input
 						iOffset += sprintf(szCommand + iOffset, "mul%s r1, %s, %s\n",
@@ -6109,7 +6117,7 @@ inline BOOL OptimizeOperation
 			}
 			if (!bHandled)
 			{
-				EmuWarning("Unhandled pixel shader instruction!");
+				EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Unhandled pixel shader instruction!");
 			}
 // 			if (strcmp(szOps[2], "add") == 0)
 // 			{
@@ -6123,7 +6131,7 @@ inline BOOL OptimizeOperation
 // 				}
 // 				else
 // 				{
-// 					EmuWarning("Unhandled pixel shader instruction!");
+// 					EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Unhandled pixel shader instruction!");
 // 				}
 // 			}
 // 			else if (strcmp(szOps[2], "cnd") == 0)
@@ -6138,12 +6146,12 @@ inline BOOL OptimizeOperation
 // 				}
 // 				else
 // 				{
-// 					EmuWarning("Unhandled pixel shader instruction!");
+// 					EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Unhandled pixel shader instruction!");
 // 				}
 // 			}
 // 			else
 // 			{
-// 				EmuWarning("Unhandled pixel shader instruction!");
+// 				EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Unhandled pixel shader instruction!");
 // 			}
 		}
 	}

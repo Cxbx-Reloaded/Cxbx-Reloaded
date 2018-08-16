@@ -96,11 +96,4 @@ inline CxbxVertexShader *MapXboxVertexShaderHandleToCxbxVertexShader(DWORD Handl
 	return nullptr;
 }
 
-#ifdef _DEBUG_TRACK_VS
-#define DbgVshPrintf if(g_bPrintfOn) printf
-#else
-inline void null_func_vsh(...) { }
-#define DbgVshPrintf XTL::null_func_vsh
-#endif
-
 #endif

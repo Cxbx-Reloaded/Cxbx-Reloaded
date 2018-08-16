@@ -33,6 +33,10 @@
 // *  All rights reserved
 // *
 // ******************************************************************
+
+// Without this, you'll get a ton of errors from the std library for some unknown reason...
+#include "Logging.h"
+
 #include "DInputController.h"
 
 #include "CxbxKrnl/EmuShared.h"

@@ -36,13 +36,15 @@
 // ******************************************************************
 #define _XBOXKRNL_DEFEXTRN_
 
-#define LOG_PREFIX "KRNL"
+#define LOG_PREFIX CXBXR_MODULE::XBOX
 
 // prevent name collisions
 namespace xboxkrnl
 {
 #include <xboxkrnl/xboxkrnl.h> // For XboxEEPROMKey, etc.
 };
+
+#include "Logging.h"
 
 // Certificate Key
 // Not exported but used to generate per-title keys
@@ -102,4 +104,3 @@ XBSYSAPI EXPORTNUM(353) xboxkrnl::XBOX_KEY_DATA xboxkrnl::XboxLANKey = { 0 };
 // ******************************************************************
 XBSYSAPI EXPORTNUM(354) xboxkrnl::XBOX_KEY_DATA xboxkrnl::XboxAlternateSignatureKeys[ALTERNATE_SIGNATURE_COUNT] = { 0 };
 
-	

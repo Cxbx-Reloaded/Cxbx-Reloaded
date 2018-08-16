@@ -35,7 +35,7 @@
 // ******************************************************************
 #define _XBOXKRNL_DEFEXTRN_
 
-#define LOG_PREFIX "XACT"
+#define LOG_PREFIX CXBXR_MODULE::XACT
 
 // prevent name collisions
 namespace xboxkrnl

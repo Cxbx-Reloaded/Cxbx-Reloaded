@@ -37,7 +37,7 @@
 // ******************************************************************
 #define _XBOXKRNL_DEFEXTRN_
 
-#define LOG_PREFIX "KRNL"
+#define LOG_PREFIX CXBXR_MODULE::MM
 
 // prevent name collisions
 namespace xboxkrnl
@@ -49,7 +49,7 @@ namespace xboxkrnl
 #include "EmuKrnl.h" // For DefaultLaunchDataPage
 #include "EmuKrnlLogging.h"
 #include "CxbxKrnl.h" // For CxbxKrnlCleanup
-#include "Emu.h" // For EmuWarning()
+#include "Emu.h" // For EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, )
 #include "VMManager.h"
 #include "EmuShared.h"
 #include <assert.h>
@@ -407,7 +407,7 @@ XBSYSAPI EXPORTNUM(181) xboxkrnl::NTSTATUS NTAPI xboxkrnl::MmQueryStatistics
 
 	if (!MemoryStatistics)
 	{
-		EmuWarning("KNRL: MmQueryStatistics : PMM_STATISTICS MemoryStatistics is nullptr!\n");
+		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "MmQueryStatistics : PMM_STATISTICS MemoryStatistics is nullptr!\n");
 		LOG_IGNORED();
 		RETURN(STATUS_INVALID_PARAMETER);
 	}
@@ -416,21 +416,21 @@ XBSYSAPI EXPORTNUM(181) xboxkrnl::NTSTATUS NTAPI xboxkrnl::MmQueryStatistics
 	{
 		g_VMManager.MemoryStatistics(MemoryStatistics);
 
-		DbgPrintf("   MemoryStatistics->Length                      = 0x%.08X\n", MemoryStatistics->Length);
-		DbgPrintf("   MemoryStatistics->TotalPhysicalPages          = 0x%.08X\n", MemoryStatistics->TotalPhysicalPages);
-		DbgPrintf("   MemoryStatistics->AvailablePages              = 0x%.08X\n", MemoryStatistics->AvailablePages);
-		DbgPrintf("   MemoryStatistics->VirtualMemoryBytesCommitted = 0x%.08X\n", MemoryStatistics->VirtualMemoryBytesCommitted);
-		DbgPrintf("   MemoryStatistics->VirtualMemoryBytesReserved  = 0x%.08X\n", MemoryStatistics->VirtualMemoryBytesReserved);
-		DbgPrintf("   MemoryStatistics->CachePagesCommitted         = 0x%.08X\n", MemoryStatistics->CachePagesCommitted);
-		DbgPrintf("   MemoryStatistics->PoolPagesCommitted          = 0x%.08X\n", MemoryStatistics->PoolPagesCommitted);
-		DbgPrintf("   MemoryStatistics->StackPagesCommitted         = 0x%.08X\n", MemoryStatistics->StackPagesCommitted);
-		DbgPrintf("   MemoryStatistics->ImagePagesCommitted         = 0x%.08X\n", MemoryStatistics->ImagePagesCommitted);
+		DbgPrintf(LOG_PREFIX, "   MemoryStatistics->Length                      = 0x%.08X\n", MemoryStatistics->Length);
+		DbgPrintf(LOG_PREFIX, "   MemoryStatistics->TotalPhysicalPages          = 0x%.08X\n", MemoryStatistics->TotalPhysicalPages);
+		DbgPrintf(LOG_PREFIX, "   MemoryStatistics->AvailablePages              = 0x%.08X\n", MemoryStatistics->AvailablePages);
+		DbgPrintf(LOG_PREFIX, "   MemoryStatistics->VirtualMemoryBytesCommitted = 0x%.08X\n", MemoryStatistics->VirtualMemoryBytesCommitted);
+		DbgPrintf(LOG_PREFIX, "   MemoryStatistics->VirtualMemoryBytesReserved  = 0x%.08X\n", MemoryStatistics->VirtualMemoryBytesReserved);
+		DbgPrintf(LOG_PREFIX, "   MemoryStatistics->CachePagesCommitted         = 0x%.08X\n", MemoryStatistics->CachePagesCommitted);
+		DbgPrintf(LOG_PREFIX, "   MemoryStatistics->PoolPagesCommitted          = 0x%.08X\n", MemoryStatistics->PoolPagesCommitted);
+		DbgPrintf(LOG_PREFIX, "   MemoryStatistics->StackPagesCommitted         = 0x%.08X\n", MemoryStatistics->StackPagesCommitted);
+		DbgPrintf(LOG_PREFIX, "   MemoryStatistics->ImagePagesCommitted         = 0x%.08X\n", MemoryStatistics->ImagePagesCommitted);
 
 		ret = STATUS_SUCCESS;
 	}
 	else
 	{
-		EmuWarning("KRNL: MmQueryStatistics with unusual size -> 0x%.8X", MemoryStatistics->Length);
+		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "MmQueryStatistics with unusual size -> 0x%.8X", MemoryStatistics->Length);
 		ret = STATUS_INVALID_PARAMETER;
 	}
 

@@ -36,7 +36,7 @@
 #define _CXBXKRNL_INTERNAL
 #define _XBOXKRNL_DEFEXTRN_
 
-#define LOG_PREFIX "XBDM"
+#define LOG_PREFIX CXBXR_MODULE::XBDM
 
 #include <cstdio>
 #include <cctype>
@@ -131,7 +131,7 @@ namespace xbdm {
 	void DmSendNotificationString(LPCSTR sz)
 	{ 
 		// Just send this string to Cxbx's debug output :
-		DbgPrintf("%s\n", sz);
+		DbgPrintf(LOG_PREFIX, "%s\n", sz);
 	}
 
 	// 0x0025 (37)

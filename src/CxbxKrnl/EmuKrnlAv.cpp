@@ -36,7 +36,7 @@
 // ******************************************************************
 #define _XBOXKRNL_DEFEXTRN_
 
-#define LOG_PREFIX "KRNL"
+#define LOG_PREFIX CXBXR_MODULE::AV
 
 // prevent name collisions
 namespace xboxkrnl
@@ -53,7 +53,7 @@ namespace NtDll
 #include "EmuNtDll.h"
 };
 
-#include "Emu.h" // For EmuWarning()
+#include "Emu.h" // For EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, )
 #include "EmuXTL.h"
 #include "EmuX86.h"
 
@@ -188,7 +188,7 @@ XBSYSAPI EXPORTNUM(2) VOID NTAPI xboxkrnl::AvSendTVEncoderOption
 	OUT ULONG   *Result
 )
 {
-	LOG_FUNC_BEGIN
+	LOG_FUNC_BEGIN;
 		LOG_FUNC_ARG(RegisterBase)
 		LOG_FUNC_ARG(Option)
 		LOG_FUNC_ARG(Param)
@@ -269,7 +269,7 @@ XBSYSAPI EXPORTNUM(3) xboxkrnl::ULONG NTAPI xboxkrnl::AvSetDisplayMode
 	IN  ULONG   FrameBuffer
 )
 {
-	LOG_FUNC_BEGIN
+	LOG_FUNC_BEGIN;
 		LOG_FUNC_ARG(RegisterBase)
 		LOG_FUNC_ARG(Step)
 		LOG_FUNC_ARG(Mode)

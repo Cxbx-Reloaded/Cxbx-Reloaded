@@ -34,6 +34,9 @@
 // *
 // ******************************************************************
 
+// Without this, you'll get a ton of errors from the std library for some unknown reason...
+#include "Logging.h"
+
 #include "Common/Settings.hpp" // for g_Settings
 
 #include "DlgVideoConfig.h"

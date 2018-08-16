@@ -35,10 +35,11 @@
 // ******************************************************************
 #define _XBOXKRNL_DEFEXTRN_
 
-#define LOG_PREFIX "MCPX"
+#define LOG_PREFIX CXBXR_MODULE::MCPX
 
 
 #include "MCPXDevice.h"
+#include "Logging.h"
 
 /* MCPXDevice */
 
