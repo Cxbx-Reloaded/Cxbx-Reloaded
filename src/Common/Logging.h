@@ -51,7 +51,7 @@ typedef enum class _LOG_LEVEL {
 	MAX,
 }LOG_LEVEL;
 
-typedef enum class _CXBXR_MODULE {
+typedef enum class _CXBXR_MODULE: unsigned int {
 	// general
 	CXBXR = 0,
 	XBE,

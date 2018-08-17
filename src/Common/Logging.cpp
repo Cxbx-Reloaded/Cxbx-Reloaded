@@ -124,7 +124,7 @@ inline void sync_log_config()
 void set_log_config(int LogLevel, uint* LoggedModules)
 {
 	g_CurrentLogLevel = LogLevel;
-	for (int index = to_underlying(CXBXR_MODULE::CXBXR); index < to_underlying(CXBXR_MODULE::MAX); index++) {
+	for (unsigned int index = to_underlying(CXBXR_MODULE::CXBXR); index < to_underlying(CXBXR_MODULE::MAX); index++) {
 		if (LoggedModules[index / 32] & (1 << (index % 32))) {
 			g_EnabledModules[index] = true;
 		}

@@ -114,13 +114,13 @@ VOID ShowLoggingConfig(HWND hwnd, HWND ChildWnd)
 
 INT_PTR CALLBACK DlgLogConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+	unsigned int index;
 	switch (uMsg)
 	{
 		case WM_INITDIALOG:
 		{
 			HWND hHandle;
 			int counter;
-			int index;
 			int TempLevel;
 			uint LoggedModules[NUM_INTEGERS_LOG];
 			int LogLevel;
@@ -230,7 +230,7 @@ INT_PTR CALLBACK DlgLogConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM
 						HWND hControl = GetDlgItem(hWndDlg, IDC_EVENT_LV);
 						int LogLevel = SendMessage(hControl, CB_GETITEMDATA, SendMessage(hControl, CB_GETCURSEL, 0, 0), 0);
 
-						for (int index = to_underlying(CXBXR_MODULE::CXBXR); index < to_underlying(CXBXR_MODULE::MAX); index++) {
+						for (index = to_underlying(CXBXR_MODULE::CXBXR); index < to_underlying(CXBXR_MODULE::MAX); index++) {
 							if (SendMessage(GetDlgItem(hWndDlg, g_DlgIndexes[index]), BM_GETCHECK, 0, 0) == BST_CHECKED) {
 								LoggedModules[index / 32] |= (1 << (index % 32));
 							}
@@ -263,7 +263,7 @@ INT_PTR CALLBACK DlgLogConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM
 
 				case IDC_LOG_ENABLE_GENERAL: {
 					if (HIWORD(wParam) == BN_CLICKED) {
-						for (int index = to_underlying(CXBXR_MODULE::CXBXR); index < to_underlying(CXBXR_MODULE::KRNL);
+						for (index = to_underlying(CXBXR_MODULE::CXBXR); index < to_underlying(CXBXR_MODULE::KRNL);
 							index++) {
 							SendMessage(GetDlgItem(hWndDlg, g_DlgIndexes[index]), BM_SETCHECK, BST_CHECKED, 0);
 							EnableWindow(GetDlgItem(hWndDlg, g_DlgIndexes[index]), FALSE);
@@ -275,7 +275,7 @@ INT_PTR CALLBACK DlgLogConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM
 
 				case IDC_LOG_DISABLE_GENERAL: {
 					if (HIWORD(wParam) == BN_CLICKED) {
-						for (int index = to_underlying(CXBXR_MODULE::CXBXR); index < to_underlying(CXBXR_MODULE::KRNL);
+						for (index = to_underlying(CXBXR_MODULE::CXBXR); index < to_underlying(CXBXR_MODULE::KRNL);
 							index++) {
 							SendMessage(GetDlgItem(hWndDlg, g_DlgIndexes[index]), BM_SETCHECK, BST_UNCHECKED, 0);
 							EnableWindow(GetDlgItem(hWndDlg, g_DlgIndexes[index]), FALSE);
@@ -287,7 +287,7 @@ INT_PTR CALLBACK DlgLogConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM
 
 				case IDC_LOG_ENABLE_KERNEL: {
 					if (HIWORD(wParam) == BN_CLICKED) {
-						for (int index = to_underlying(CXBXR_MODULE::KRNL); index < to_underlying(CXBXR_MODULE::MAX);
+						for (index = to_underlying(CXBXR_MODULE::KRNL); index < to_underlying(CXBXR_MODULE::MAX);
 							index++) {
 							SendMessage(GetDlgItem(hWndDlg, g_DlgIndexes[index]), BM_SETCHECK, BST_CHECKED, 0);
 							EnableWindow(GetDlgItem(hWndDlg, g_DlgIndexes[index]), FALSE);
@@ -299,7 +299,7 @@ INT_PTR CALLBACK DlgLogConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM
 
 				case IDC_LOG_DISABLE_KERNEL: {
 					if (HIWORD(wParam) == BN_CLICKED) {
-						for (int index = to_underlying(CXBXR_MODULE::KRNL); index < to_underlying(CXBXR_MODULE::MAX);
+						for (index = to_underlying(CXBXR_MODULE::KRNL); index < to_underlying(CXBXR_MODULE::MAX);
 							index++) {
 							SendMessage(GetDlgItem(hWndDlg, g_DlgIndexes[index]), BM_SETCHECK, BST_UNCHECKED, 0);
 							EnableWindow(GetDlgItem(hWndDlg, g_DlgIndexes[index]), FALSE);
@@ -311,7 +311,7 @@ INT_PTR CALLBACK DlgLogConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM
 
 				case IDC_LOG_CUSTOM_GENERAL: {
 					if (HIWORD(wParam) == BN_CLICKED) {
-						for (int index = to_underlying(CXBXR_MODULE::CXBXR); index < to_underlying(CXBXR_MODULE::KRNL);
+						for (index = to_underlying(CXBXR_MODULE::CXBXR); index < to_underlying(CXBXR_MODULE::KRNL);
 							index++) {
 							EnableWindow(GetDlgItem(hWndDlg, g_DlgIndexes[index]), TRUE);
 						}
@@ -322,7 +322,7 @@ INT_PTR CALLBACK DlgLogConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM
 
 				case IDC_LOG_CUSTOM_KERNEL: {
 					if (HIWORD(wParam) == BN_CLICKED) {
-						for (int index = to_underlying(CXBXR_MODULE::KRNL); index < to_underlying(CXBXR_MODULE::MAX);
+						for (index = to_underlying(CXBXR_MODULE::KRNL); index < to_underlying(CXBXR_MODULE::MAX);
 							index++) {
 							EnableWindow(GetDlgItem(hWndDlg, g_DlgIndexes[index]), TRUE);
 						}
