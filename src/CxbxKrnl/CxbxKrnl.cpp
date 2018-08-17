@@ -914,9 +914,7 @@ void CxbxKrnlMain(int argc, char* argv[])
 			freopen(DebugFileName.c_str(), ((BootFlags == DebugMode::DM_NONE) ? "wt" : "at"), stdout);
 			// Append separator for better readability after reboot.
 			if (BootFlags != DebugMode::DM_NONE) {
-				std::cout << "                                                                  " << std::endl
-				          << "\/\/\/REBOOT\/\/\/REBOOT\/\/\/REBOOT\/\/\/REBOOT\/\/\/REBOOT\/\/\/" << std::endl
-				          << "                                                                  " << std::endl;
+				std::cout << "\n------REBOOT------REBOOT------REBOOT------REBOOT------REBOOT------" << std::endl;
 			}
 		}
 		else {
