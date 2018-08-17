@@ -620,6 +620,7 @@ BEGIN
     END
     MENUITEM " ",                           ID_FPS,MFT_STRING | MFT_RIGHTJUSTIFY,MFS_ENABLED
     MENUITEM " ",                           ID_LED,MFT_STRING,MFS_ENABLED
+    MENUITEM " ",                           ID_LOG,MFT_STRING,MFS_ENABLED
 END
 
 
