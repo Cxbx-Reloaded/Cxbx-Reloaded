@@ -34,8 +34,6 @@
 #ifndef CXBX_H
 #define CXBX_H
 
-#include <atomic>
-
 #define FUNC_EXPORTS __pragma(comment(linker, "/EXPORT:" __FUNCTION__ "=" __FUNCDNAME__))
 
 /*! \name primitive typedefs */
@@ -127,7 +125,7 @@ extern bool g_SaveOnExit;
 #define MAXIMUM_XBOX_THREADS 256
 
 /*! runtime DbgPrintf toggle boolean */
-extern std::atomic_bool g_bPrintfOn;
+extern volatile bool g_bPrintfOn;
 
 #ifdef _MSC_VER
 #pragma warning(disable : 4477)
