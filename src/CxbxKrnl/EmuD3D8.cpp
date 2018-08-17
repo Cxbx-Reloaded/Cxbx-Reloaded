@@ -1594,8 +1594,8 @@ static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 				case ID_SYNC_CONFIG_LOGGING:
 				{
 					// Sync run-time config log settings from GUI process.
-					sync_log_config();
-					generate_active_log_filter_output(CXBXR_MODULE::CXBXR);
+					log_sync_config();
+					log_generate_active_filter_output(CXBXR_MODULE::CXBXR);
 				}
 				break;
 

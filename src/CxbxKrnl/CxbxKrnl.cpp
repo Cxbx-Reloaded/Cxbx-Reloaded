@@ -930,7 +930,7 @@ void CxbxKrnlMain(int argc, char* argv[])
 	g_CurrentProcessHandle = GetCurrentProcess(); // OpenProcess(PROCESS_ALL_ACCESS, FALSE, GetCurrentProcessId());
 
 	// Set up the logging variables for the kernel process during initialization.
-	sync_log_config();
+	log_sync_config();
 
 	if (CxbxKrnl_hEmuParent != NULL) {
 		ipc_send_gui_update(IPC_UPDATE_GUI::KRNL_IS_READY, static_cast<UINT>(GetCurrentProcessId()));
@@ -1012,7 +1012,7 @@ void CxbxKrnlMain(int argc, char* argv[])
 
 	// Log once, since multi-xbe boot is appending to file instead of overwrite.
 	if (BootFlags == BOOT_NONE) {
-		generate_active_log_filter_output(CXBXR_MODULE::INIT);
+		log_generate_active_filter_output(CXBXR_MODULE::INIT);
 	}
 
 	// Detect Wine
