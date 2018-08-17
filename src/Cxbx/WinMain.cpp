@@ -187,6 +187,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		get_log_settings();
 	}
 
+	// Possible optional output for GUI
+	generate_active_log_filter_output(CXBXR_MODULE::INIT);
+
 	INITCOMMONCONTROLSEX icc;
 	icc.dwSize = sizeof(icc);
 	icc.dwICC = ICC_WIN95_CLASSES;

@@ -134,6 +134,23 @@ void set_log_config(int LogLevel, uint* LoggedModules)
 	}
 }
 
+// Generate active log filter output.
+void generate_active_log_filter_output(const CXBXR_MODULE cxbxr_module)
+{
+	LOG_THREAD_INIT;
+	std::string generic_output_str = _logThreadPrefix + g_EnumModules2String[to_underlying(cxbxr_module)];
+
+	std::cout << generic_output_str << "Current log level: " << g_CurrentLogLevel << std::endl;
+
+	generic_output_str.append("Active log filter: ");
+	for (unsigned int index = to_underlying(CXBXR_MODULE::CXBXR); index < to_underlying(CXBXR_MODULE::MAX); index++) {
+		if (g_EnabledModules[index]) {
+			std::cout << generic_output_str << g_EnumModules2String[index] << "\n";
+		}
+	}
+	std::cout << std::flush;
+}
+
 const bool needs_escape(const wint_t _char)
 {
 	// Escaping is needed for control characters,

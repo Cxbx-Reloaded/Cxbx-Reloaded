@@ -1595,6 +1595,7 @@ static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 				{
 					// Sync run-time config log settings from GUI process.
 					sync_log_config();
+					generate_active_log_filter_output(CXBXR_MODULE::CXBXR);
 				}
 				break;
 
@@ -1640,6 +1641,8 @@ static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
             else if(wParam == VK_F8)
             {
                 g_bPrintfOn = !g_bPrintfOn;
+                LOG_THREAD_INIT;
+                std::cout << _logThreadPrefix << g_EnumModules2String[to_underlying(CXBXR_MODULE::CXBXR)] << "Enable log is " << g_bPrintfOn << std::endl;
                 ipc_send_gui_update(IPC_UPDATE_GUI::LOG_ENABLED, static_cast<UINT>(g_bPrintfOn));
             }
             else if(wParam == VK_F10)

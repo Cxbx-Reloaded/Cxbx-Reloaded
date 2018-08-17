@@ -125,6 +125,8 @@ extern inline void sync_log_config();
 
 void set_log_config(int LogLevel, uint* LoggedModules);
 
+void generate_active_log_filter_output(const CXBXR_MODULE cxbxr_module);
+
 //
 // __FILENAME__
 //

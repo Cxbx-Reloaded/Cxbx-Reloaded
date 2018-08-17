@@ -242,6 +242,7 @@ INT_PTR CALLBACK DlgLogConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM
 
 						// Update the logging variables for the GUI process
 						set_log_config(LogLevel, LoggedModules);
+						generate_active_log_filter_output(CXBXR_MODULE::GUI);
 
 						// Also inform the kernel process if it exists
 						if (g_ChildWnd) {
