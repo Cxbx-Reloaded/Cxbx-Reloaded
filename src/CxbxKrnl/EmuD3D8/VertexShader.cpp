@@ -471,7 +471,7 @@ static const char* ILU_OpCode[] =
     "rcp",
     "rcc",
     "rsq",
-    "exp",
+    "frc", // The Xbox EXP instruction behaves like FRC on PC, so we just translate it as frc. Fixes broken polygons in THPS2X
     "log",
     "lit"
 };
@@ -1319,7 +1319,6 @@ static boolean DxbxFixupScalarParameter(VSH_SHADER_INSTRUCTION *pInstruction,
     if (pInstruction->ILU == ILU_RCP ||
         pInstruction->ILU == ILU_RCC ||
         pInstruction->ILU == ILU_RSQ ||
-        pInstruction->ILU == ILU_EXP ||
         pInstruction->ILU == ILU_LOG)
     {
         // Test if this parameter reads all components, including W (TODO : Or should we fixup any W reading swizzle?) :
@@ -1558,43 +1557,6 @@ static boolean VshConvertShader(VSH_XBOX_SHADER *pShader,
                 }
             }
         }
-		if (pIntermediate->InstructionType == IMD_ILU && pIntermediate->ILU == ILU_EXP)
-		{
-			// EXP on DX8 requires that exactly one swizzle is specified on the output
-
-			// Count how many swizzles are set
-			int swizzles = 0;
-			for (int i = 0; i < 4; i++) {
-				if (pIntermediate->Parameters[0].Parameter.Swizzle[i]) {
-					swizzles++;
-				}
-			}
-
-			// If we had more than 1 swizzle, set the same swizzle on the ouput as the input
-			// Test case: THP2X
-			if (swizzles > 1) {
-				int swizzle = (pIntermediate->Output.Mask[0]) | (pIntermediate->Output.Mask[1] << 1) | (pIntermediate->Output.Mask[2] << 2) | (pIntermediate->Output.Mask[3] << 3);
-				switch (swizzle)
-				{
-				case 1:
-					VshSetSwizzle(&pIntermediate->Parameters[0], SWIZZLE_X, SWIZZLE_X, SWIZZLE_X, SWIZZLE_X);
-					break;
-				case 2:
-					VshSetSwizzle(&pIntermediate->Parameters[0], SWIZZLE_Y, SWIZZLE_Y, SWIZZLE_Y, SWIZZLE_Y);
-					break;
-				case 4:
-					VshSetSwizzle(&pIntermediate->Parameters[0], SWIZZLE_Z, SWIZZLE_Z, SWIZZLE_Z, SWIZZLE_Z);
-					break;
-				case 8:
-					VshSetSwizzle(&pIntermediate->Parameters[0], SWIZZLE_W, SWIZZLE_W, SWIZZLE_W, SWIZZLE_W);
-					break;
-				case 15:
-				default:
-					LOG_TEST_CASE("exp instruction with invalid swizzle");
-					break;
-				}
-			}
-		}
 
 		for (int j = 0; j < 3; j++)
 		{
