@@ -1206,25 +1206,25 @@ float PSH_IMD_ARGUMENT::GetConstValue()
   float Result = Multiplier;
 
   // y = 1-x     -> 0..1 >    1..0
-  if ((Modifiers & (1 << ARGMOD_INVERT)) > 0)    Result = 1.0f-Result;
+  if (HasModifier(ARGMOD_INVERT))    Result = 1.0f-Result;
 
   // y = -x      -> 0..1 >    0..-1
-  if ((Modifiers & (1 << ARGMOD_NEGATE)) > 0)    Result = -Result;
+  if (HasModifier(ARGMOD_NEGATE))    Result = -Result;
 
   // y =  x-0.5  -> 0..1 > -0.5..0.5
-  if ((Modifiers & (1 << ARGMOD_BIAS)) > 0)      Result = Result-0.5f;
+  if (HasModifier (ARGMOD_BIAS))      Result = Result-0.5f;
 
   // y =  x*2    -> 0..1 >    0..2
-  if ((Modifiers & (1 << ARGMOD_SCALE_X2)) > 0)  Result = Result*2.0f;
+  if (HasModifier(ARGMOD_SCALE_X2))  Result = Result*2.0f;
 
   // y = (x*2)-1 -> 0..1 >   -1..1
-  if ((Modifiers & (1 << ARGMOD_SCALE_BX2)) > 0) Result = (Result*2.0f)-1.0f;
+  if (HasModifier(ARGMOD_SCALE_BX2)) Result = (Result*2.0f)-1.0f;
 
   // y =  x*4    -> 0..1 >    0..4
-  if ((Modifiers & (1 << ARGMOD_SCALE_X4)) > 0)  Result = Result*4.0f;
+  if (HasModifier(ARGMOD_SCALE_X4))  Result = Result*4.0f;
 
   // y =  x/2    -> 0..1 >    0..0.5
-  if ((Modifiers & (1 << ARGMOD_SCALE_D2)) > 0)  Result = Result/2.0f;
+  if (HasModifier(ARGMOD_SCALE_D2))  Result = Result/2.0f;
 
   return Result;
 } // GetConstValue
@@ -1362,7 +1362,7 @@ std::string PSH_IMD_ARGUMENT::ToString()
   if (UsesRegister())
   {
     for (DWORD Modifier = ARGMOD_IDENTITY; Modifier < ARGMOD_BLUE_REPLICATE; Modifier++)
-      if ((1 << Modifier) & Modifiers) {
+      if (HasModifier((PSH_ARG_MODIFIER)Modifier)) {
 		char buffer[256];
 		Result = std::string(buffer, sprintf(buffer, PSH_ARG_MODIFIER_Str[Modifier], Result.c_str()));
 	  }
@@ -1597,7 +1597,7 @@ bool PSH_IMD_ARGUMENT::Decode(const DWORD Value, DWORD aMask, TArgumentType Argu
 
 void PSH_IMD_ARGUMENT::Invert()
 {
-  if ((Modifiers & (1 << ARGMOD_INVERT)) == 0)
+  if (!HasModifier(ARGMOD_INVERT))
     Modifiers = Modifiers | (1 << ARGMOD_INVERT);
   else
     Modifiers = Modifiers & ~(1 << ARGMOD_INVERT);
@@ -1605,7 +1605,7 @@ void PSH_IMD_ARGUMENT::Invert()
 
 void PSH_IMD_ARGUMENT::Negate()
 {
-  if ((Modifiers & (1 << ARGMOD_NEGATE)) == 0)
+  if (!HasModifier(ARGMOD_NEGATE))
     Modifiers = Modifiers | (1 << ARGMOD_NEGATE);
   else
     Modifiers = Modifiers & ~(1 << ARGMOD_NEGATE);
@@ -4071,7 +4071,7 @@ bool PSH_XBOX_SHADER::FinalizeShader()
       return false;
 
     // Is the left argument inverted and the right not (or the other way around) ?
-    if ((ParamLeft->Modifiers & (1 << ARGMOD_INVERT)) != (ParamRight->Modifiers & (1 << ARGMOD_INVERT)))
+    if (ParamLeft->HasModifier(ARGMOD_INVERT) != ParamRight->HasModifier(ARGMOD_INVERT))
     {
       // In that case, already move the arguments over to AddOpcode so we create a LRP :
       AddOpcode->Parameters[0] = *ParamLeft;
