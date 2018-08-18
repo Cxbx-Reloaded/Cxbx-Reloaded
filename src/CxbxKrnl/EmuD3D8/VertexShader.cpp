@@ -1161,9 +1161,6 @@ static boolean VshAddInstructionILU_R(VSH_SHADER_INSTRUCTION *pInstruction,
         return FALSE;
     }
 
-	// Dxbx note : Scalar instructions read from C, but use X instead of W, fix that :
-	DxbxFixupScalarParameter(pInstruction, pShader, &pInstruction->C);
-
 	pIntermediate = VshNewIntermediate(pShader);
     pIntermediate->IsCombined = IsCombined;
 
@@ -1230,6 +1227,9 @@ static void VshConvertToIntermediate(VSH_SHADER_INSTRUCTION *pInstruction,
     //   +ILU
     //   +ILU
     boolean IsCombined = FALSE;
+
+    // Dxbx note : Scalar instructions read from C, but use X instead of W, fix that :
+    DxbxFixupScalarParameter(pInstruction, pShader, &pInstruction->C);
 
     if(VshAddInstructionMAC_R(pInstruction, pShader, IsCombined))
     {
