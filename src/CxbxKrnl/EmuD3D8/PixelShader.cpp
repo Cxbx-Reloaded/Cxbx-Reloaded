@@ -1271,7 +1271,6 @@ bool PSH_IMD_ARGUMENT::SetScaleConstRegister(float factor)
     {
         factor = -factor;
         modifiers = (1 << ARGMOD_NEGATE);
-        result = true;
     }
 
     if (factor == 1.0f)
@@ -1740,7 +1739,7 @@ void PSH_INTERMEDIATE_FORMAT::ScaleOutput(float aFactor)
     // Double the output modifier :
     switch (Modifier) {
 	  case INSMOD_D8:
-        Modifier = INSMOD_D2;
+        Modifier = INSMOD_D4;
 		break;
 	  case INSMOD_D4:
         Modifier = INSMOD_D2;
@@ -2536,7 +2535,7 @@ bool PSH_XBOX_SHADER::DecodeTextureModes(XTL::X_D3DPIXELSHADERDEF *pPSDef)
 {
   int InsertPos;
   PSH_INTERMEDIATE_FORMAT Ins = {};
-  PSH_INTERMEDIATE_FORMAT InsertIns[XTL::X_D3DTS_STAGECOUNT] = {};
+  PSH_INTERMEDIATE_FORMAT InsertIns[XTL::X_D3DTS_STAGECOUNT] = {}; // default initialized to PO_COMMENT instructions
   int Stage;
 
   bool Result = false;
@@ -2548,7 +2547,6 @@ bool PSH_XBOX_SHADER::DecodeTextureModes(XTL::X_D3DPIXELSHADERDEF *pPSDef)
 
   if (m_PSVersion >= D3DPS_VERSION(2, 0))
   {
-      Result = true;
       Ins.Initialize(PO_DCL);
 	  for (Stage = 0; Stage < XTL::X_D3DTS_STAGECOUNT; Stage++)
 	  {
@@ -2562,6 +2560,7 @@ bool PSH_XBOX_SHADER::DecodeTextureModes(XTL::X_D3DPIXELSHADERDEF *pPSDef)
                   Ins.Output[0].SetRegister(PARAM_S, Stage, MASK_RGBA);
                   InsertIntermediate(&Ins, InsertPos);
                   ++InsertPos;
+                  Result = true;
                   break;
               }
               case PS_TEXTUREMODES_PROJECT3D: // argb = texture(r/q, s/q, t/q) Note : 3d textures are sampled using PS_TEXTUREMODES_CUBEMAP
@@ -2570,6 +2569,7 @@ bool PSH_XBOX_SHADER::DecodeTextureModes(XTL::X_D3DPIXELSHADERDEF *pPSDef)
                   Ins.Output[0].SetRegister(PARAM_S, Stage, MASK_RGBA);
                   InsertIntermediate(&Ins, InsertPos);
                   ++InsertPos;
+                  Result = true;
                   break;
               }
               case PS_TEXTUREMODES_CUBEMAP: // argb = cubemap(r/q, s/q, t/q)
@@ -2578,6 +2578,7 @@ bool PSH_XBOX_SHADER::DecodeTextureModes(XTL::X_D3DPIXELSHADERDEF *pPSDef)
                   Ins.Output[0].SetRegister(PARAM_S, Stage, MASK_RGBA);
                   InsertIntermediate(&Ins, InsertPos);
                   ++InsertPos;
+                  Result = true;
                   break;
               }
           }
@@ -2586,7 +2587,8 @@ bool PSH_XBOX_SHADER::DecodeTextureModes(XTL::X_D3DPIXELSHADERDEF *pPSDef)
           Ins.Output[0].SetRegister(PARAM_T, Stage, MASK_RGBA);
 		  InsertIntermediate(&Ins, InsertPos);
 		  ++InsertPos;
-		}
+          Result = true;
+        }
 	  }
 
       for (int j = 0; j < PSH_XBOX_MAX_V_REGISTER_COUNT; ++j)
@@ -2595,6 +2597,7 @@ bool PSH_XBOX_SHADER::DecodeTextureModes(XTL::X_D3DPIXELSHADERDEF *pPSDef)
           Ins.Output[0].SetRegister(PARAM_V, j, MASK_RGBA);
           InsertIntermediate(&Ins, InsertPos);
           ++InsertPos;
+          Result = true;
       }
   }
 
@@ -2915,10 +2918,13 @@ bool PSH_XBOX_SHADER::ConvertConstantsToNative(XTL::X_D3DPIXELSHADERDEF *pPSDef,
 
     NewIns.Initialize(PO_DEF);
 
+    // Add constants used to represent common powers of 2 used by instruction and argument modifiers
+    // Represent constant 0.0 and common powers of 2 divisions
     NewIns.Output[0].SetRegister(PARAM_C, _HandleConst(PSH_XBOX_CONSTANT_MUL1, Recompiled, &NativeConstInUse[0], &EmittedNewConstant), MASK_RGBA);
     _SetColor(NewIns, { 0.0, 1.0 / 2.0, 1.0 / 4.0, 1.0 / 8.0 });
     InsertIntermediate(&NewIns, 1);
 
+    // Represent common powers of 2 constants, also used as multipliers
     NewIns.Output[0].SetRegister(PARAM_C, _HandleConst(PSH_XBOX_CONSTANT_MUL0, Recompiled, &NativeConstInUse[0], &EmittedNewConstant), MASK_RGBA);
     _SetColor(NewIns, {1.0, 2.0, 4.0, 8.0});
     InsertIntermediate(&NewIns, 1);
@@ -3462,19 +3468,14 @@ int PSH_XBOX_SHADER::MaxRegisterCount(PSH_ARGUMENT_TYPE aRegType)
     {
     case PARAM_R:
         return MaxTemporaryRegisters;
-        break;
     case PARAM_T:
         return MaxTextureCoordinateRegisters;
-        break;
     case PARAM_V:
         return MaxInputColorRegisters;
-        break;
     case PARAM_C:
         return MaxConstantFloatRegisters;
-        break;
     case PARAM_S:
         return MaxSamplerRegisters;
-        break;
     }
 
     return 0;
@@ -3884,7 +3885,10 @@ bool PSH_XBOX_SHADER::FixConstantParameters()
 
         for (int p = 0; p < PSH_OPCODE_DEFS[Cur->Opcode]._In; ++p)
         {
-            if (Cur->Parameters[p].Type == PARAM_VALUE && Cur->Parameters[p].SetScaleConstRegister(Cur->Parameters[p].GetConstValue()))
+            if (Cur->Parameters[p].Type != PARAM_VALUE)
+                continue;
+
+            if (Cur->Parameters[p].SetScaleConstRegister(Cur->Parameters[p].GetConstValue()))
             {
                 DbgPrintf(LOG_PREFIX, "; Replaced constant value with constant register\n");
                 Result = true;
@@ -4526,8 +4530,9 @@ bool PSH_XBOX_SHADER::SimplifyMAD(PPSH_INTERMEDIATE_FORMAT Cur, int index)
           Ins.Initialize(PO_MOV);
           Ins.Modifier = INSMOD_D2;
           Ins.Output[0] = Ins.Parameters[0] = Cur->Parameters[1];
+          Ins.CommentString = "; Inserted to perform division by 2";
           InsertIntermediate(&Ins, index);
-          DbgPrintf(LOG_PREFIX, "; Changed MAD 0.5,s1,s2 into a MOV s1, s1 ADD s1, s2\n");
+          DbgPrintf(LOG_PREFIX, "; Changed MAD 0.5,s1,s2 into a MOV_d2 s1, s1 ADD s1, s2\n");
       }
       else
       {
@@ -4549,8 +4554,9 @@ bool PSH_XBOX_SHADER::SimplifyMAD(PPSH_INTERMEDIATE_FORMAT Cur, int index)
           Ins.Initialize(PO_MOV);
           Ins.Modifier = INSMOD_D2;
           Ins.Output[0] = Ins.Parameters[0] = Cur->Parameters[0];
+          Ins.CommentString = "; Inserted to perform division by 2";
           InsertIntermediate(&Ins, index);
-          DbgPrintf(LOG_PREFIX, "; Changed MAD s0,0.5,s2 into a MOV s0, s0 ADD s0, s2\n");
+          DbgPrintf(LOG_PREFIX, "; Changed MAD s0,0.5,s2 into a MOV_d2 s0, s0 ADD s0, s2\n");
       }
       else
       {
