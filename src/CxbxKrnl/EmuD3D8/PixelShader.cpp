@@ -944,7 +944,7 @@ struct PSH_XBOX_SHADER {
 	void ConvertXDMToNative(int i);
 	void ConvertXDDToNative(int i);
 	void ConvertXFCToNative(int i);
-	bool FixConstantModifiers();
+	bool FixArgumentModifiers();
 	bool CombineInstructions();
 	bool RemoveNops();
 	bool SimplifyMOV(PPSH_INTERMEDIATE_FORMAT Cur);
@@ -3668,7 +3668,7 @@ void PSH_XBOX_SHADER::ReplaceRegisterFromIndexOnwards(int aIndex,
   }
 }
 
-bool PSH_XBOX_SHADER::FixConstantModifiers()
+bool PSH_XBOX_SHADER::FixArgumentModifiers()
 {
 	int i;
 	PPSH_INTERMEDIATE_FORMAT Cur;
@@ -3688,14 +3688,12 @@ bool PSH_XBOX_SHADER::FixConstantModifiers()
 			continue;
 
         int InsertPos = i;
-        // Detect modifiers on constant arguments
+        // Detect modifiers on constant and arguments
 		for (int p = 0; p < 7 && p < PSH_OPCODE_DEFS[Cur->Opcode]._In; p++) {
 			if ((Cur->Parameters[p].Type == PARAM_C || (m_PSVersion >= D3DPS_VERSION(2, 0) && Cur->Parameters[p].UsesRegister()))
 				&& ((Cur->Parameters[p].Modifiers & ~ARGMOD_NEGATE) != 0)) {
-				// Insert a MOV to the destination register,
-				// so the modifier can be applied on that,
-				// instead of on this constant argument.
-				PSH_INTERMEDIATE_FORMAT Ins = {};
+
+                PSH_INTERMEDIATE_FORMAT Ins = {};
                 PSH_IMD_ARGUMENT Arg = {};
 
                 if (m_PSVersion >= D3DPS_VERSION(2, 0))
@@ -3704,44 +3702,13 @@ bool PSH_XBOX_SHADER::FixConstantModifiers()
 
                     int excludeAddress = Cur->Output[0].Type == PARAM_R ? Cur->Output[0].Address : -1;
 
-                    int output = NextFreeRegisterFromIndexUntil(InsertPos, PARAM_R, InsertPos, 0, excludeAddress);
+                    PSH_ARGUMENT_TYPE type = PARAM_R;
+                    int address = NextFreeRegisterFromIndexUntil(InsertPos, PARAM_R, InsertPos, 0, excludeAddress);
 
-                    bool skipInsert = false;
-                    if (Arg.Type == PARAM_R
-                        && RegisterIsFreeFromIndexUntil(InsertPos+1, Arg.Type, Arg.Address) > InsertPos)
+                    if (IsValidNativeOutputRegister(Arg.Type, Arg.Address) && RegisterIsFreeFromIndexUntil(InsertPos + 1, Arg.Type, Arg.Address) > InsertPos)
                     {
-                        output = Arg.Address;
-                        skipInsert = true;
-                    }
-
-                    Ins.Initialize(PO_MOV);
-                    // No need to check if output is a constant - those cannot be assigned to anyway
-                    Ins.Output[0].SetRegister(PARAM_R, output, Cur->Parameters[p].Mask);
-                    // Move constant into register
-                    Ins.Parameters[0] = Cur->Parameters[p];
-                    for (int q = p; q < PSH_OPCODE_DEFS[Cur->Opcode]._In; q++)
-                    {
-                        // overwrite all matching parameters to avoid duplicate instructions
-                        if (Arg.Type == Cur->Parameters[q].Type
-                            && Arg.Address == Cur->Parameters[q].Address
-                            && Arg.Mask == Cur->Parameters[q].Mask
-                            && Arg.Modifiers == Cur->Parameters[q].Modifiers
-                            && Arg.Multiplier == Cur->Parameters[q].Multiplier)
-                        {
-                            Cur->Parameters[q] = Ins.Output[0];
-                            // Apply modifier to register instead of constant
-                            Cur->Parameters[q].Modifiers = Ins.Parameters[0].Modifiers;
-                        }
-                    }
-                    Ins.Parameters[0].Modifiers = 0;
-                    Ins.CommentString = "Inserted to avoid constant modifier (applied below on register)";
-                    if (!skipInsert)
-                    {
-                        InsertIntermediate(&Ins, InsertPos);
-                        ++InsertPos;
-                        ++Cur;
-                        DbgPrintf(LOG_PREFIX, "; Used intermediate move to avoid constant modifier\n");
-                        Result = true;
+                        type = Arg.Type;
+                        address = Arg.Address;
                     }
 
                     for (int modifier = ARGMOD_INVERT; modifier < ARGMOD_SATURATE; ++modifier)
@@ -3760,10 +3727,10 @@ bool PSH_XBOX_SHADER::FixConstantModifiers()
                                 {
                                     Ins.Initialize(PO_SUB);
                                     // No need to check if output is a constant - those cannot be assigned to anyway
-                                    Ins.Output[0].SetRegister(PARAM_R, output, Arg.Mask);
+                                    Ins.Output[0].SetRegister(type, address, Arg.Mask);
                                     // Move constant into register
                                     Ins.Parameters[1].SetScaleConstRegister(1.0f, Recompiled);
-                                    Ins.Parameters[0] = Ins.Output[0];
+                                    Ins.Parameters[0] = Cur->Parameters[p];
                                     Ins.Parameters[0].Modifiers = 0;
                                     ++modifier;
                                 }
@@ -3771,10 +3738,10 @@ bool PSH_XBOX_SHADER::FixConstantModifiers()
                                 {
                                     Ins.Initialize(PO_SUB);
                                     // No need to check if output is a constant - those cannot be assigned to anyway
-                                    Ins.Output[0].SetRegister(PARAM_R, output, Arg.Mask);
+                                    Ins.Output[0].SetRegister(type, address, Arg.Mask);
                                     // Move constant into register
                                     Ins.Parameters[0].SetScaleConstRegister(1.0f, Recompiled);
-                                    Ins.Parameters[1] = Ins.Output[0];
+                                    Ins.Parameters[0] = Cur->Parameters[p];
                                     Ins.Parameters[1].Modifiers = 0;
                                 }
                                 needInsert = true;
@@ -3786,9 +3753,9 @@ bool PSH_XBOX_SHADER::FixConstantModifiers()
                             break;
                                 Ins.Initialize(PO_MOV);
                                 // No need to check if output is a constant - those cannot be assigned to anyway
-                                Ins.Output[0].SetRegister(PARAM_R, output, Arg.Mask);
+                                Ins.Output[0].SetRegister(type, address, Arg.Mask);
                                 // Move constant into register
-                                Ins.Parameters[0] = Ins.Output[0];
+                                Ins.Parameters[0] = Cur->Parameters[p];
                                 Ins.Parameters[0].Modifiers = (1 << ARGMOD_NEGATE);
                                 needInsert = true;
 
@@ -3798,10 +3765,10 @@ bool PSH_XBOX_SHADER::FixConstantModifiers()
                             {
                                 Ins.Initialize(PO_SUB);
                                 // No need to check if output is a constant - those cannot be assigned to anyway
-                                Ins.Output[0].SetRegister(PARAM_R, output, Arg.Mask);
+                                Ins.Output[0].SetRegister(type, address, Arg.Mask);
                                 // Move constant into register
                                 Ins.Parameters[1].SetScaleConstRegister(0.5f, Recompiled);
-                                Ins.Parameters[0] = Ins.Output[0];
+                                Ins.Parameters[0] = Cur->Parameters[p];
                                 Ins.Parameters[0].Modifiers = 0;
                                 needInsert = true;
 
@@ -3811,10 +3778,10 @@ bool PSH_XBOX_SHADER::FixConstantModifiers()
                             {
                                 Ins.Initialize(PO_MUL);
                                 // No need to check if output is a constant - those cannot be assigned to anyway
-                                Ins.Output[0].SetRegister(PARAM_R, output, Arg.Mask);
+                                Ins.Output[0].SetRegister(type, address, Arg.Mask);
                                 // Move constant into register
                                 Ins.Parameters[1].SetScaleConstRegister(2.0f, Recompiled);
-                                Ins.Parameters[0] = Ins.Output[0];
+                                Ins.Parameters[0] = Cur->Parameters[p];
                                 Ins.Parameters[0].Modifiers = 0;
                                 needInsert = true;
 
@@ -3824,11 +3791,11 @@ bool PSH_XBOX_SHADER::FixConstantModifiers()
                             {
                                 Ins.Initialize(PO_MAD);
                                 // No need to check if output is a constant - those cannot be assigned to anyway
-                                Ins.Output[0].SetRegister(PARAM_R, output, Arg.Mask);
+                                Ins.Output[0].SetRegister(type, address, Arg.Mask);
                                 // Move constant into register
                                 Ins.Parameters[2].SetScaleConstRegister(-1.0f, Recompiled);
                                 Ins.Parameters[1].SetScaleConstRegister(2.0f, Recompiled);
-                                Ins.Parameters[0] = Ins.Output[0];
+                                Ins.Parameters[0] = Cur->Parameters[p];
                                 Ins.Parameters[0].Modifiers = 0;
                                 needInsert = true;
 
@@ -3838,10 +3805,10 @@ bool PSH_XBOX_SHADER::FixConstantModifiers()
                             {
                                 Ins.Initialize(PO_MUL);
                                 // No need to check if output is a constant - those cannot be assigned to anyway
-                                Ins.Output[0].SetRegister(PARAM_R, output, Arg.Mask);
+                                Ins.Output[0].SetRegister(type, address, Arg.Mask);
                                 // Move constant into register
                                 Ins.Parameters[1].SetScaleConstRegister(4.0f, Recompiled);
-                                Ins.Parameters[0] = Ins.Output[0];
+                                Ins.Parameters[0] = Cur->Parameters[p];
                                 Ins.Parameters[0].Modifiers = 0;
                                 needInsert = true;
 
@@ -3851,15 +3818,27 @@ bool PSH_XBOX_SHADER::FixConstantModifiers()
                             {
                                 Ins.Initialize(PO_MUL);
                                 // No need to check if output is a constant - those cannot be assigned to anyway
-                                Ins.Output[0].SetRegister(PARAM_R, output, Arg.Mask);
+                                Ins.Output[0].SetRegister(type, address, Arg.Mask);
                                 // Move constant into register
                                 Ins.Parameters[1].SetScaleConstRegister(0.5f, Recompiled);
-                                Ins.Parameters[0] = Ins.Output[0];
+                                Ins.Parameters[0] = Cur->Parameters[p];
                                 Ins.Parameters[0].Modifiers = 0;
                                 needInsert = true;
 
                                 break;
-                        }
+                            }
+                        default:
+                            {
+                                Ins.Initialize(PO_MOV);
+                                // No need to check if output is a constant - those cannot be assigned to anyway
+                                Ins.Output[0].SetRegister(type, address, Arg.Mask);
+                                // Move constant into register
+                                Ins.Parameters[0] = Cur->Parameters[p];
+                                Ins.Parameters[0].Modifiers = 0;
+                                needInsert = true;
+
+                                break;
+                            }
                         }
 
                         if (needInsert == true)
@@ -3875,7 +3854,7 @@ bool PSH_XBOX_SHADER::FixConstantModifiers()
                                 {
                                     Cur->Parameters[q] = Ins.Output[0];
                                     // Apply modifier to register instead of constant
-                                    Cur->Parameters[q].Modifiers = Arg.Modifiers & (~0 << (modifier + 1));
+                                    Cur->Parameters[q].Modifiers = (Arg.Modifiers & ARGMOD_NEGATE) | (Arg.Modifiers & (~0 << (modifier + 1)));
                                 }
                             }
                             Ins.CommentString = "Inserted to avoid constant modifier (applied below on register)";
@@ -3889,6 +3868,9 @@ bool PSH_XBOX_SHADER::FixConstantModifiers()
                 }
                 else
                 {
+                    // Insert a MOV to the destination register,
+                    // so the modifier can be applied on that,
+                    // instead of on this constant argument.
                     Ins.Initialize(PO_MOV);
                     // No need to check if output is a constant - those cannot be assigned to anyway
                     Ins.Output[0] = Cur->Output[0];
@@ -3908,7 +3890,7 @@ bool PSH_XBOX_SHADER::FixConstantModifiers()
 		}
 	}
 	return Result;
-} // FixConstantModifiers
+} // FixArgumentModifiers
 
 bool PSH_XBOX_SHADER::FixConstantParameters()
 {
@@ -4768,7 +4750,7 @@ bool PSH_XBOX_SHADER::FixupPixelShader()
   if (MoveRemovableParametersRight())
     Result = true;
 
-  if (FixConstantModifiers())
+  if (FixArgumentModifiers())
 	  Result = true;
 
   // Simplify instructions, which can help to compress the result :
@@ -4866,11 +4848,11 @@ bool PSH_XBOX_SHADER::FixMissingR0a()
 
   // Detect a read of r0.a without a write, as we need to insert a "MOV r0.a, t0.a" as default (like the xbox has) :
   R0aDefaultInsertPos = -1;
-  for (i = StartPos; i < IntermediateCount; i++)
+  for (i = 0; i < IntermediateCount; i++)
   {
     Cur = &(Intermediate[i]);
-    if (!Cur->IsArithmetic())
-      continue;
+    if (Cur->Opcode < PO_TEX)
+        continue;
 
     // Make sure if we insert at all, it'll be after the DEF's :
     if (R0aDefaultInsertPos < 0) 
@@ -4921,11 +4903,11 @@ bool PSH_XBOX_SHADER::FixMissingR1a()
 
 	// Detect a read of r1.a without a write, as we need to insert a "MOV r1.a, t1.a" as default (like the xbox has) :
 	R1aDefaultInsertPos = -1;
-	for (i = StartPos; i < IntermediateCount; i++)
+	for (i = 0; i < IntermediateCount; i++)
 	{
 		Cur = &(Intermediate[i]);
-		if (!Cur->IsArithmetic())
-			continue;
+        if (Cur->Opcode < PO_TEX)
+            continue;
 
 		// First, check if r1.a is read by this opcode :
 		if (Cur->ReadsFromRegister(PARAM_R, 1, MASK_A))
