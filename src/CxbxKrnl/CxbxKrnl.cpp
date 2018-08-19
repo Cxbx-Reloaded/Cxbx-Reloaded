@@ -686,13 +686,13 @@ static unsigned int WINAPI CxbxKrnlInterruptThread(PVOID param)
 
 std::vector<xbaddr> g_RdtscPatches;
 
+#define OPCODE_PATCH_RDTSC 0x90EF  // OUT DX, EAX; NOP
+
 bool IsRdtscInstruction(xbaddr addr)
 {
-	// First the fastest check - is this a patch? (see PatchRdtsc)
-	uint8_t* opAddr = (uint8_t*)addr;
-	// Note : Check second opcode first, as that's most likely to fail fast
-	return (opAddr[1] == 0x90) // NOP
-		&& (opAddr[0] == 0xEF) // OUT DX, EAX
+	// First the fastest check - does addr contain exact patch from PatchRdtsc?
+	// Second check - is addr on the rdtsc patch list?
+	return (*(uint16_t*)addr == OPCODE_PATCH_RDTSC)
 		// Note : It's not needed to check for g_SkipRdtscPatching,
 		// as when that's set, the g_RdtscPatches vector will be empty
 		// anyway, failing this lookup :
@@ -701,15 +701,13 @@ bool IsRdtscInstruction(xbaddr addr)
 
 void PatchRdtsc(xbaddr addr)
 {
-	uint8_t* opAddr = (uint8_t*)addr;
 	// Patch away rdtsc with an opcode we can intercept
 	// We use a privilaged instruction rather than int 3 for debugging
 	// When using int 3, attached debuggers trap and rdtsc is used often enough
 	// that it makes Cxbx-Reloaded unusable
 	// A privilaged instruction (like OUT) does not suffer from this
 	printf("INIT: Patching rdtsc opcode at 0x%.8X\n", (DWORD)addr);
-	opAddr[0] = 0xEF; // OUT DX, EAX
-	opAddr[1] = 0x90; // NOP
+	*(uint16_t*)addr = OPCODE_PATCH_RDTSC;
 	g_RdtscPatches.push_back(addr);
 }
 

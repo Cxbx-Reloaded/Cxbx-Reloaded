@@ -1615,6 +1615,12 @@ static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
             {
                 PostMessage(hWnd, WM_CLOSE, 0, 0);
             }
+            // NOTE: Windows does not send F10 key message to WM_KEYDOWN.
+            // Source: https://docs.microsoft.com/en-us/windows/desktop/inputdev/wm-syskeydown
+            else if(wParam == VK_F10)
+            {
+                ToggleFauxFullscreen(hWnd);
+            }
         }
         break;
 
@@ -1645,10 +1651,6 @@ static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
                 LOG_THREAD_INIT;
                 std::cout << _logThreadPrefix << g_EnumModules2String[to_underlying(CXBXR_MODULE::CXBXR)] << "Enable log is " << g_bPrintfOn << std::endl;
                 ipc_send_gui_update(IPC_UPDATE_GUI::LOG_ENABLED, static_cast<UINT>(g_bPrintfOn));
-            }
-            else if(wParam == VK_F10)
-            {
-                ToggleFauxFullscreen(hWnd);
             }
             else if(wParam == VK_F11)
             {
@@ -1707,7 +1709,7 @@ static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
             if(g_XBVideo.bFullScreen || g_bIsFauxFullscreen)
             {
                 SetCursor(NULL);
-                return D3D_OK; // = 0
+                return S_OK; // = Is not part of D3D8 handling.
             }
 
             return DefWindowProc(hWnd, msg, wParam, lParam);
@@ -1718,7 +1720,7 @@ static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
             return DefWindowProc(hWnd, msg, wParam, lParam);
     }
 
-    return D3D_OK; // = 0
+    return S_OK; // = Is not part of D3D8 handling.
 }
 
 std::chrono::time_point<std::chrono::steady_clock, std::chrono::duration<double, std::nano>> GetNextVBlankTime()
