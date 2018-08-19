@@ -886,6 +886,9 @@ void CxbxKrnlMain(int argc, char* argv[])
 		DebugFileName = argv[5];
 	}
 
+	int BootFlags;
+	g_EmuShared->GetBootFlags(&BootFlags);
+
 	// debug console allocation (if configured)
 	if (DbgMode == DM_CONSOLE)
 	{
@@ -906,10 +909,15 @@ void CxbxKrnlMain(int argc, char* argv[])
 	else
 	{
 		FreeConsole();
-		if (DbgMode == DM_FILE)
-			freopen(DebugFileName.c_str(), "wt", stdout);
-		else
-		{
+		if (DbgMode == DM_FILE) {
+			// Peform clean write to kernel log for first boot. Unless multi-xbe boot occur then perform append to existing log.
+			freopen(DebugFileName.c_str(), ((BootFlags == DebugMode::DM_NONE) ? "wt" : "at"), stdout);
+			// Append separator for better readability after reboot.
+			if (BootFlags != DebugMode::DM_NONE) {
+				std::cout << "\n------REBOOT------REBOOT------REBOOT------REBOOT------REBOOT------\n" << std::endl;
+			}
+		}
+		else {
 			char buffer[16];
 			if (GetConsoleTitle(buffer, 16) != NULL)
 				freopen("nul", "w", stdout);
@@ -921,18 +929,11 @@ void CxbxKrnlMain(int argc, char* argv[])
 
 	g_CurrentProcessHandle = GetCurrentProcess(); // OpenProcess(PROCESS_ALL_ACCESS, FALSE, GetCurrentProcessId());
 
-	{
-		int LogLevel;
-		uint LoggedModules[NUM_INTEGERS_LOG];
-		g_EmuShared->GetLogLv(&LogLevel);
-		g_EmuShared->GetLogModules(LoggedModules);
-
-		// Set up the logging variables for the kernel process during initialization.
-		set_log_config(LogLevel, LoggedModules);
-	}
+	// Set up the logging variables for the kernel process during initialization.
+	log_sync_config();
 
 	if (CxbxKrnl_hEmuParent != NULL) {
-		SendMessage(CxbxKrnl_hEmuParent, WM_PARENTNOTIFY, MAKELONG(WM_USER, ID_KRNL_IS_READY), GetCurrentProcessId());
+		ipc_send_gui_update(IPC_UPDATE_GUI::KRNL_IS_READY, static_cast<UINT>(GetCurrentProcessId()));
 
 		// Force wait until GUI process is ready
 		do {
@@ -983,8 +984,9 @@ void CxbxKrnlMain(int argc, char* argv[])
 		CxbxKrnlShutDown();
 	}
 
-	int BootFlags = BOOT_NONE;
-	g_EmuShared->GetBootFlags(&BootFlags);
+	bool isLogEnabled;
+	g_EmuShared->GetIsKrnlLogEnabled(&isLogEnabled);
+	g_bPrintfOn = isLogEnabled;
 
 	g_EmuShared->ResetKrnl();
 
@@ -1006,6 +1008,11 @@ void CxbxKrnlMain(int argc, char* argv[])
 #else
 		printf("[0x%.4X] INIT: Debug Trace Disabled.\n", GetCurrentThreadId());
 #endif
+	}
+
+	// Log once, since multi-xbe boot is appending to file instead of overwrite.
+	if (BootFlags == BOOT_NONE) {
+		log_generate_active_filter_output(CXBXR_MODULE::INIT);
 	}
 
 	// Detect Wine
@@ -1314,10 +1321,10 @@ __declspec(noreturn) void CxbxKrnlInit
 		printf("[0x%.4X] INIT: Initialized dummy kernel image header.\n", GetCurrentThreadId());
 	}
 
-	// Read which components need to be LLE'ed :
+	// Read which components need to be LLE'ed per user request
 	{
 		uint CxbxLLE_Flags;
-		g_EmuShared->GetFlagsLLEStatus(&CxbxLLE_Flags);
+		g_EmuShared->GetFlagsLLE(&CxbxLLE_Flags);
 		bLLE_APU = (CxbxLLE_Flags & LLE_APU) > 0;
 		bLLE_GPU = (CxbxLLE_Flags & LLE_GPU) > 0;
 		//bLLE_USB = (CxbxLLE_Flags & LLE_USB) > 0; // Reenable this when LLE USB actually works
@@ -1857,9 +1864,6 @@ static unsigned int					g_Frames = 0;
 static void UpdateCurrentMSpFAndFPS() {
 	if (g_EmuShared) {
 		static float currentFPSVal = 30;
-
-		float currentMSpFVal = (float)(1000.0 / (currentFPSVal == 0 ? 0.001 : currentFPSVal));
-		g_EmuShared->SetCurrentMSpF(&currentMSpFVal);
 
 		currentFPSVal = (float)(g_Frames*0.5 + currentFPSVal * 0.5);
 		g_EmuShared->SetCurrentFPS(&currentFPSVal);

@@ -122,7 +122,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			return EXIT_FAILURE;
 		}
 
-		get_log_settings();
+		log_get_settings();
 
 		bool bElevated = CxbxIsElevated();
 
@@ -184,8 +184,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			return EXIT_FAILURE;
 		}
 
-		get_log_settings();
+		log_get_settings();
 	}
+
+	// Possible optional output for GUI
+	log_generate_active_filter_output(CXBXR_MODULE::INIT);
 
 	INITCOMMONCONTROLSEX icc;
 	icc.dwSize = sizeof(icc);

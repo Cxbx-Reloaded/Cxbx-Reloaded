@@ -51,7 +51,7 @@ typedef enum class _LOG_LEVEL {
 	MAX,
 }LOG_LEVEL;
 
-typedef enum class _CXBXR_MODULE {
+typedef enum class _CXBXR_MODULE: unsigned int {
 	// general
 	CXBXR = 0,
 	XBE,
@@ -119,11 +119,13 @@ extern std::atomic_bool g_EnabledModules[to_underlying(CXBXR_MODULE::MAX)];
 extern const char* g_EnumModules2String[to_underlying(CXBXR_MODULE::MAX)];
 extern std::atomic_int g_CurrentLogLevel;
 
-extern inline void get_log_settings();
+extern inline void log_get_settings();
 
-extern inline void sync_log_config();
+extern inline void log_sync_config();
 
-void set_log_config(int LogLevel, uint* LoggedModules);
+void log_set_config(int LogLevel, uint* LoggedModules);
+
+void log_generate_active_filter_output(const CXBXR_MODULE cxbxr_module);
 
 //
 // __FILENAME__
@@ -419,10 +421,10 @@ extern thread_local std::string _logThreadPrefix;
 #define LOG_FUNC_ONE_ARG_OUT(arg) LOG_FUNC_BEGIN LOG_FUNC_ARG_OUT(arg) LOG_FUNC_END 
 
 // RETURN logs the given result and then returns it (so this should appear last in functions)
-#define RETURN(r) do { LOG_CHECK_ENABLED(LOG_PREFIX, LOG_LEVEL::DEBUG) { LOG_FUNC_RESULT(r) } return r; } while (0)
+#define RETURN(r) do { if (g_bPrintfOn) LOG_CHECK_ENABLED(LOG_PREFIX, LOG_LEVEL::DEBUG) { LOG_FUNC_RESULT(r) } return r; } while (0)
 
 // RETURN_TYPE logs the given typed result and then returns it (so this should appear last in functions)
-#define RETURN_TYPE(type, r) do { LOG_CHECK_ENABLED(LOG_PREFIX, LOG_LEVEL::DEBUG) { LOG_FUNC_RESULT_TYPE(type, r) } return r; } while (0)
+#define RETURN_TYPE(type, r) do { if (g_bPrintfOn) LOG_CHECK_ENABLED(LOG_PREFIX, LOG_LEVEL::DEBUG) { LOG_FUNC_RESULT_TYPE(type, r) } return r; } while (0)
 
 #define LOG_ONCE(msg, ...) { static bool bFirstTime = true; if(bFirstTime) { bFirstTime = false; DbgPrintf(LOG_PREFIX, "TRAC: " ## msg, __VA_ARGS__); } }
 

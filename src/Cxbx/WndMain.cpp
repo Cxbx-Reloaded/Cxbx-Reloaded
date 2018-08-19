@@ -109,7 +109,7 @@ void WndMain::InitializeSettings()
 	g_SaveOnExit = false;
 }
 
-#define TIMERID_FPS 0
+#define TIMERID_ACTIVE_EMULATION 0
 #define TIMERID_LED 1
 
 void WndMain::ResizeWindow(HWND hwnd, bool bForGUI)
@@ -166,15 +166,16 @@ void WndMain::ResizeWindow(HWND hwnd, bool bForGUI)
 }
 
 WndMain::WndMain(HINSTANCE x_hInstance) :
-	Wnd(x_hInstance),
-	m_bCreated(false),
-	m_Xbe(nullptr),
-	m_bXbeChanged(false),
-	m_bIsStarted(false),
-	m_hwndChild(nullptr),
-	m_hDebuggerProc(nullptr),
-	m_hDebuggerMonitorThread(),
-	m_prevWindowLoc({ -1, -1 })
+	Wnd(x_hInstance)
+	, m_bCreated(false)
+	, m_Xbe(nullptr)
+	, m_bXbeChanged(false)
+	, m_bIsStarted(false)
+	, m_hwndChild(nullptr)
+	, m_hDebuggerProc(nullptr)
+	, m_hDebuggerMonitorThread()
+	, m_prevWindowLoc({ -1, -1 })
+	, m_LogKrnl_status(false)
 {
 	// initialize members
 	{
@@ -291,21 +292,21 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
         }
         break;
 
-        // NOTE: WM_PARENTNOTIFY was triggered by kernel process' graphic window creation.
-        case WM_PARENTNOTIFY:
-        {
-            switch(LOWORD(wParam))
-            {
-                case WM_CREATE:
-                {
+		// NOTE: WM_PARENTNOTIFY was triggered by kernel process' graphic window creation.
+		case WM_PARENTNOTIFY:
+		{
+			switch(LOWORD(wParam))
+			{
+				case WM_CREATE:
+				{
 					if (m_hwndChild == NULL) {
-						float fps = 0.0f;
-						float mspf = 0.0f;
-						int LedSequence[4] = { XBOX_LED_COLOUR_GREEN, XBOX_LED_COLOUR_GREEN, XBOX_LED_COLOUR_GREEN, XBOX_LED_COLOUR_GREEN };
-						g_EmuShared->SetCurrentMSpF(&mspf);
-						g_EmuShared->SetCurrentFPS(&fps);
-						g_EmuShared->SetLedSequence(LedSequence);
-						SetTimer(hwnd, TIMERID_FPS, 1000, (TIMERPROC)NULL);
+						m_FPS_status = 0.0f;
+						m_MSpF_status = 0.0f;
+						m_LedSeq_status_block = (XBOX_LED_COLOUR_GREEN << 24) |
+						                        (XBOX_LED_COLOUR_GREEN << 16) |
+						                        (XBOX_LED_COLOUR_GREEN << 8) |
+						                        (XBOX_LED_COLOUR_GREEN);
+						SetTimer(hwnd, TIMERID_ACTIVE_EMULATION, 1000, (TIMERPROC)NULL);
 						SetTimer(hwnd, TIMERID_LED, XBOX_LED_FLASH_PERIOD, (TIMERPROC)NULL);
 						m_hwndChild = GetWindow(hwnd, GW_CHILD);
 						UpdateCaption();
@@ -314,26 +315,38 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 					else {
 						m_hwndChild = GetWindow(hwnd, GW_CHILD);
 					}
-                }
-                break;
+				}
+				break;
 
-                case WM_DESTROY:
-                {
+				case WM_DESTROY:
+				{
 					// (HWND)HIWORD(wParam) seems to be NULL, so we can't compare to m_hwndChild
 					if (m_hwndChild != NULL) { // Let's hope this signal originated from the only child window
-						KillTimer(hwnd, TIMERID_FPS);
+						KillTimer(hwnd, TIMERID_ACTIVE_EMULATION);
 						KillTimer(hwnd, TIMERID_LED);
 						m_hwndChild = NULL;
 						StopEmulation();
 						DrawLedBitmap(hwnd, true);
 					}
-                }
-                break;
+				}
+				case WM_COMMAND:
+				{
+					switch (HIWORD(wParam)) {
+						case ID_GUI_STATUS_LLE_FLAGS:
+							m_FlagsLLE_status = static_cast<UINT>(lParam);
+							break;
 
-				case WM_USER: {
-					 switch(HIWORD(wParam)) {
+						case ID_GUI_STATUS_XBOX_LED_COLOUR:
+							m_LedSeq_status_block = static_cast<UINT>(lParam);
+							break;
+
+						case ID_GUI_STATUS_LOG_ENABLED:
+							m_LogKrnl_status = static_cast<bool>(lParam);
+							UpdateLogStatus();
+							break;
+
 						// NOTE: If anything need to set before kernel process start do anything, do it here.
-						case ID_KRNL_IS_READY: {
+						case ID_GUI_STATUS_KRNL_IS_READY: {
 							Crash_Manager_Data* pCMD = (Crash_Manager_Data*)malloc(sizeof(Crash_Manager_Data));
 							pCMD->pWndMain = this;
 							pCMD->dwChildProcID = lParam; // lParam is process ID.
@@ -344,8 +357,8 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 							break;
 						}
 					}
-					break;
 				}
+				break;
 			}
 		};
 		break; // added per PVS suggestion.
@@ -354,9 +367,9 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 		{
 			switch (wParam)
 			{
-				case TIMERID_FPS:
+				case TIMERID_ACTIVE_EMULATION:
 				{
-					UpdateCaption();
+					RefreshAllStatus();
 				}
 				break;
 
@@ -1277,6 +1290,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
             case ID_HELP_HOMEPAGE:
                 ShellExecute(NULL, "open", "https://github.com/Cxbx-Reloaded/Cxbx-Reloaded", NULL, NULL, SW_SHOWNORMAL);
                 break;
+
             }
 
             break;
@@ -1668,6 +1682,7 @@ void WndMain::RefreshMenus()
 					CheckMenuItem(emul_debg, ID_EMULATION_DEBUGOUTPUTGUI_FILE, MF_UNCHECKED);
 					break;
 			}
+			UpdateLogStatus();
 		}
 
 		// settings menu
@@ -1745,6 +1760,8 @@ void WndMain::RefreshMenus()
             EnableMenuItem(emul_menu, ID_EMULATION_STOP, MF_BYCOMMAND | MF_WhenXbeLoadedAndRunning);
         }
     }
+    // NOTE: Must force draw menu bar since sometime status doesn't show the new change.
+    DrawMenuBar(m_hwnd);
 }
 
 // update debug consoles
@@ -1839,32 +1856,73 @@ void WndMain::UpdateCaption()
 
 		i += sprintf(AsciiTitle + i, "%s v1.%02d (%s)", FormatTitleId(m_Xbe->m_Certificate.dwTitleId).c_str(), m_Xbe->m_Certificate.dwVersion, m_Xbe->m_szAsciiTitle);
 
-		// Append FPS menu text
-		HMENU hMenu = GetMenu(m_hwnd);
-		MENUITEMINFO mii;
-		mii.cbSize = sizeof mii;
-		mii.fMask = MIIM_STRING;
-		char sMenu[32];
-		mii.dwTypeData = &sMenu[0];
+		UpdateFpsStatus();
+		UpdateLogStatus();
 
-		if (m_bIsStarted) {
-			if (g_EmuShared != NULL) {
-				float currentFPSVal = 0;
-				float currentMSpFVal = 0;
-				g_EmuShared->GetCurrentFPS(&currentFPSVal);
-				g_EmuShared->GetCurrentMSpF(&currentMSpFVal);
-				sprintf(sMenu, "FPS: %.2f  MS / F : %.2f", currentFPSVal, currentMSpFVal);
-			}
-		}
-		else {
-			// Hide FPS if we're not currently emulating
-			sprintf(sMenu, " ");
-		}
-
-		SetMenuItemInfo(hMenu, ID_FPS, FALSE, &mii);
 	}
 
 	SetWindowText(m_hwnd, AsciiTitle);
+}
+
+void WndMain::UpdateFpsStatus()
+{
+	// Append FPS menu text
+	HMENU hMenu = GetMenu(m_hwnd);
+	MENUITEMINFO mii;
+	mii.cbSize = sizeof mii;
+	mii.fMask = MIIM_STRING;
+	char sMenu[32];
+	mii.dwTypeData = &sMenu[0];
+
+	if (m_bIsStarted) {
+		if (g_EmuShared != nullptr) {
+			g_EmuShared->GetCurrentFPS(&m_FPS_status);
+
+			if (m_FPS_status == 0.0f) {
+				m_MSpF_status = 0.0f;
+			}
+			else {
+				m_MSpF_status = (float)(1000.0 / m_FPS_status);
+			}
+			std::sprintf(sMenu, "FPS: %.2f  MS / F : %.2f", m_FPS_status, m_MSpF_status);
+		}
+	}
+	else {
+		// Hide FPS if we're not currently emulating
+		std::sprintf(sMenu, " ");
+	}
+
+	SetMenuItemInfo(hMenu, ID_FPS, FALSE, &mii);
+}
+
+void WndMain::UpdateLogStatus()
+{
+	// Append FPS menu text
+	char sMenu[32];
+	HMENU hMenu = GetMenu(m_hwnd);
+	MENUITEMINFO mii;
+	mii.cbSize = sizeof mii;
+	mii.fMask = MIIM_STRING;
+	mii.dwTypeData = &sMenu[0];
+
+	std::strcpy(sMenu, "LOG:");
+
+	if (g_Settings->m_gui.CxbxDebugMode != DebugMode::DM_NONE) {
+		std::strcat(sMenu, "G");
+	}
+
+	if (m_bIsStarted && m_LogKrnl_status) {
+		std::strcat(sMenu, "K");
+	}
+
+	SetMenuItemInfo(hMenu, ID_LOG, FALSE, &mii);
+}
+
+void WndMain::RefreshAllStatus()
+{
+	UpdateFpsStatus();
+	UpdateLogStatus();
+	DrawMenuBar(m_hwnd);
 }
 
 // open an xbe file
@@ -2089,6 +2147,10 @@ void WndMain::StartEmulation(HWND hwndParent, DebuggerState LocalDebuggerState /
 
 	// Reset to default
 	g_EmuShared->Reset();
+	m_FPS_status = 0.0f;
+	m_MSpF_status = 0.0f;
+	m_FlagsLLE_status = g_Settings->m_core.FlagsLLE;
+	m_LogKrnl_status = g_Settings->m_core.KrnlDebugMode != DebugMode::DM_NONE;
 
 	// register all emulator settings to kernel process
 	g_Settings->SyncToEmulator();
@@ -2235,7 +2297,7 @@ void WndMain::CrashMonitor(DWORD dwChildProcID)
 
 	// Crash clean up.
 
-	KillTimer(m_hwnd, TIMERID_FPS);
+	KillTimer(m_hwnd, TIMERID_ACTIVE_EMULATION);
 	KillTimer(m_hwnd, TIMERID_LED);
 	m_hwndChild = NULL;
 	m_bIsStarted = false;
@@ -2306,31 +2368,27 @@ void WndMain::DrawLedBitmap(HWND hwnd, bool bdefault)
 		sprintf(flagString, " ");
 	}
 	else { // draw colored bitmap
-		int LedSequence[4] = { XBOX_LED_COLOUR_OFF, XBOX_LED_COLOUR_OFF, XBOX_LED_COLOUR_OFF, XBOX_LED_COLOUR_OFF };
 		static int LedSequenceOffset = 0;
 		uint FlagsLLE = 0;
 
-		g_EmuShared->GetLedSequence(LedSequence);
-
 		// Select active color and cycle through all 4 phases in the sequence
-		ActiveLEDColor = LedSequence[LedSequenceOffset & 3];
+		ActiveLEDColor = m_LedSeq_status[LedSequenceOffset & 3];
 		++LedSequenceOffset;
 
-		g_EmuShared->GetFlagsLLEStatus(&FlagsLLE);
 		// Set LLE flags string based on selected LLE flags
-		if (FlagsLLE & LLE_APU) {
+		if (m_FlagsLLE_status & LLE_APU) {
 			strcat(flagString, "A");
 		}
-		if (FlagsLLE & LLE_GPU) {
+		if (m_FlagsLLE_status & LLE_GPU) {
 			strcat(flagString, "G");
 		}
-		if (FlagsLLE & LLE_USB) {
+		if (m_FlagsLLE_status & LLE_USB) {
 			strcat(flagString, "U");
 		}
-		if (FlagsLLE & LLE_JIT) {
+		if (m_FlagsLLE_status & LLE_JIT) {
 			strcat(flagString, "J");
 		}
-		if (FlagsLLE == 0) {
+		if (m_FlagsLLE_status == 0) {
 			sprintf(flagString, "HLE");
 		}
 	}

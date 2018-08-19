@@ -317,6 +317,9 @@
     <ClCompile Include="..\..\src\Cxbx\DlgLoggingConfig.cpp">
       <Filter>GUI</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\Common\Win32\IPCWindows.cpp">
+      <Filter>Cross Platform\Win32</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\Cxbx\DlgControllerConfig.h">
@@ -621,6 +624,9 @@
     </ClInclude>
     <ClInclude Include="..\..\src\Cxbx\DlgLoggingConfig.h">
       <Filter>GUI</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Common\IPCHybrid.hpp">
+      <Filter>Cross Platform</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -107,24 +107,24 @@ const char* g_EnumModules2String[to_underlying(CXBXR_MODULE::MAX)] = {
 std::atomic_int g_CurrentLogLevel = to_underlying(LOG_LEVEL::INFO);
 
 // Set up the logging variables for the GUI process
-inline void get_log_settings()
+inline void log_get_settings()
 {
-	set_log_config(g_Settings->m_core.LogLevel, g_Settings->m_core.LoggedModules);
+	log_set_config(g_Settings->m_core.LogLevel, g_Settings->m_core.LoggedModules);
 }
 
-inline void sync_log_config()
+inline void log_sync_config()
 {
 	int LogLevel;
 	uint LoggedModules[NUM_INTEGERS_LOG];
 	g_EmuShared->GetLogLv(&LogLevel);
 	g_EmuShared->GetLogModules(LoggedModules);
-	set_log_config(LogLevel, LoggedModules);
+	log_set_config(LogLevel, LoggedModules);
 }
 
-void set_log_config(int LogLevel, uint* LoggedModules)
+void log_set_config(int LogLevel, uint* LoggedModules)
 {
 	g_CurrentLogLevel = LogLevel;
-	for (int index = to_underlying(CXBXR_MODULE::CXBXR); index < to_underlying(CXBXR_MODULE::MAX); index++) {
+	for (unsigned int index = to_underlying(CXBXR_MODULE::CXBXR); index < to_underlying(CXBXR_MODULE::MAX); index++) {
 		if (LoggedModules[index / 32] & (1 << (index % 32))) {
 			g_EnabledModules[index] = true;
 		}
@@ -132,6 +132,23 @@ void set_log_config(int LogLevel, uint* LoggedModules)
 			g_EnabledModules[index] = false;
 		}
 	}
+}
+
+// Generate active log filter output.
+void log_generate_active_filter_output(const CXBXR_MODULE cxbxr_module)
+{
+	LOG_THREAD_INIT;
+	std::string generic_output_str = _logThreadPrefix + g_EnumModules2String[to_underlying(cxbxr_module)];
+
+	std::cout << generic_output_str << "Current log level: " << g_CurrentLogLevel << std::endl;
+
+	generic_output_str.append("Active log filter: ");
+	for (unsigned int index = to_underlying(CXBXR_MODULE::CXBXR); index < to_underlying(CXBXR_MODULE::MAX); index++) {
+		if (g_EnabledModules[index]) {
+			std::cout << generic_output_str << g_EnumModules2String[index] << "\n";
+		}
+	}
+	std::cout << std::flush;
 }
 
 const bool needs_escape(const wint_t _char)

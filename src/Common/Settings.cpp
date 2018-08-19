@@ -623,6 +623,7 @@ void Settings::SyncToEmulator()
 {
 	// register Core settings
 	g_EmuShared->SetCoreSettings(&m_core);
+	g_EmuShared->SetIsKrnlLogEnabled(m_core.KrnlDebugMode != DebugMode::DM_NONE);
 
 	// register Video settings
 	g_EmuShared->SetVideoSettings(&m_video);

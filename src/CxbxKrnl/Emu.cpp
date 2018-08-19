@@ -68,6 +68,12 @@ bool g_SkipRdtscPatching = false;
 bool g_ScaleViewport = false;
 bool g_DirectHostBackBufferAccess = false;
 
+const char log_debug[] = "DEBUG: ";
+const char log_info[]  = "INFO : ";
+const char log_warn[]  = "WARN : ";
+const char log_fatal[] = "FATAL: ";
+const char log_unkwn[] = "???? : ";
+
 // Delta added to host SystemTime, used in xboxkrnl::KeQuerySystemTime and xboxkrnl::NtSetSystemTime
 LARGE_INTEGER	HostSystemTimeDelta = {};
 
@@ -112,10 +118,29 @@ void NTAPI EmuLog(CXBXR_MODULE cxbxr_module, LOG_LEVEL level, const char *szWarn
 		if (g_bPrintfOn) {
 
 			va_list argp;
+			const char* level_str;
 
 			LOG_THREAD_INIT;
 
-			std::cout << _logThreadPrefix << (level == LOG_LEVEL::WARNING ? "WARN: " : "")
+			switch (level) {
+				default:
+					level_str = log_unkwn;
+					break;
+				case LOG_LEVEL::DEBUG:
+					level_str = log_debug;
+					break;
+				case LOG_LEVEL::INFO:
+					level_str = log_info;
+					break;
+				case LOG_LEVEL::WARNING:
+					level_str = log_warn;
+					break;
+				case LOG_LEVEL::FATAL:
+					level_str = log_fatal;
+					break;
+			}
+
+			std::cout << _logThreadPrefix << level_str
 				<< g_EnumModules2String[to_underlying(cxbxr_module)];
 
 			va_start(argp, szWarningMessage);
