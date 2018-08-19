@@ -1641,6 +1641,7 @@ static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
             else if(wParam == VK_F8)
             {
                 g_bPrintfOn = !g_bPrintfOn;
+                g_EmuShared->SetIsKrnlLogEnabled(g_bPrintfOn);
                 LOG_THREAD_INIT;
                 std::cout << _logThreadPrefix << g_EnumModules2String[to_underlying(CXBXR_MODULE::CXBXR)] << "Enable log is " << g_bPrintfOn << std::endl;
                 ipc_send_gui_update(IPC_UPDATE_GUI::LOG_ENABLED, static_cast<UINT>(g_bPrintfOn));
