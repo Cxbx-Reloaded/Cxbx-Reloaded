@@ -305,7 +305,7 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreate)
             CxbxKrnlCleanup(LOG_PREFIX, dsErrorMsg, hRet);
         }
 
-        hRet = g_pDSound8->SetCooperativeLevel(g_hEmuWindow, DSSCL_PRIORITY);
+        hRet = g_pDSound8->SetCooperativeLevel(GET_FRONT_WINDOW_HANDLE, DSSCL_PRIORITY);
 
         if (hRet != DS_OK) {
             CxbxKrnlCleanup(LOG_PREFIX, "g_pDSound8->SetCooperativeLevel Failed!");

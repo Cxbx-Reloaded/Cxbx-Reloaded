@@ -1676,7 +1676,7 @@ void CxbxKrnlSuspend()
     {
         char szBuffer[256];
 
-        HWND hWnd = (CxbxKrnl_hEmuParent != NULL) ? CxbxKrnl_hEmuParent : g_hEmuWindow;
+        HWND hWnd = GET_FRONT_WINDOW_HANDLE;
 
         GetWindowText(hWnd, szBuffer, 255 - 10);
 
@@ -1696,7 +1696,7 @@ void CxbxKrnlResume()
     {
         char szBuffer[256];
 
-        HWND hWnd = (CxbxKrnl_hEmuParent != NULL) ? CxbxKrnl_hEmuParent : g_hEmuWindow;
+        HWND hWnd = GET_FRONT_WINDOW_HANDLE;
 
         GetWindowText(hWnd, szBuffer, 255);
 
