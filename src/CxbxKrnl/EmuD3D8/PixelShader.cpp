@@ -1267,7 +1267,7 @@ bool PSH_IMD_ARGUMENT::SetScaleConstRegister(float factor, const PSH_RECOMPILED_
 {
     bool result = false;
 
-    PSH_ARG_MODIFIERs modifiers = Modifiers;
+    PSH_ARG_MODIFIERs modifiers = 0;
     DWORD mask = Mask;
     int address = Address;
 
@@ -1342,6 +1342,7 @@ bool PSH_IMD_ARGUMENT::SetScaleConstRegister(float factor, const PSH_RECOMPILED_
         Address = address;
         Mask = mask;
         Modifiers = modifiers;
+        Multiplier = 1.0f;
     }
 
     return result;
@@ -2394,6 +2395,9 @@ PSH_RECOMPILED_SHADER PSH_XBOX_SHADER::Decode(XTL::X_D3DPIXELSHADERDEF *pPSDef)
 
   if (FixConstantParameters())
       Log("FixConstantParameters");
+
+  if (FixArgumentModifiers())
+      Log("FixArgumentModifiers");
 
   if (FixInstructionModifiers())
       Log("FixInstructionModifiers");
@@ -3691,7 +3695,7 @@ bool PSH_XBOX_SHADER::FixArgumentModifiers()
         // Detect modifiers on constant and arguments
 		for (int p = 0; p < 7 && p < PSH_OPCODE_DEFS[Cur->Opcode]._In; p++) {
 			if ((Cur->Parameters[p].Type == PARAM_C || (m_PSVersion >= D3DPS_VERSION(2, 0) && Cur->Parameters[p].UsesRegister()))
-				&& ((Cur->Parameters[p].Modifiers & ~ARGMOD_NEGATE) != 0)) {
+				&& ((Cur->Parameters[p].Modifiers & ~(1 << ARGMOD_NEGATE)) != 0)) {
 
                 PSH_INTERMEDIATE_FORMAT Ins = {};
                 PSH_IMD_ARGUMENT Arg = {};
@@ -3732,6 +3736,7 @@ bool PSH_XBOX_SHADER::FixArgumentModifiers()
                                     Ins.Parameters[1].SetScaleConstRegister(1.0f, Recompiled);
                                     Ins.Parameters[0] = Cur->Parameters[p];
                                     Ins.Parameters[0].Modifiers = 0;
+                                    Ins.CommentString = "Inserted to replace 'invert' with 'negate' argument modifier (register - 1)";
                                     ++modifier;
                                 }
                                 else
@@ -3741,8 +3746,9 @@ bool PSH_XBOX_SHADER::FixArgumentModifiers()
                                     Ins.Output[0].SetRegister(type, address, Arg.Mask);
                                     // Move constant into register
                                     Ins.Parameters[0].SetScaleConstRegister(1.0f, Recompiled);
-                                    Ins.Parameters[0] = Cur->Parameters[p];
+                                    Ins.Parameters[1] = Cur->Parameters[p];
                                     Ins.Parameters[1].Modifiers = 0;
+                                    Ins.CommentString = "Inserted to replace 'invert' argument modifier (1 - register)";
                                 }
                                 needInsert = true;
 
@@ -3750,6 +3756,8 @@ bool PSH_XBOX_SHADER::FixArgumentModifiers()
                             }
                         case ARGMOD_NEGATE:
                             {
+                            // Skip as this modifier is still supported in current shader models
+                            // Included here for completeness
                             break;
                                 Ins.Initialize(PO_MOV);
                                 // No need to check if output is a constant - those cannot be assigned to anyway
@@ -3757,6 +3765,7 @@ bool PSH_XBOX_SHADER::FixArgumentModifiers()
                                 // Move constant into register
                                 Ins.Parameters[0] = Cur->Parameters[p];
                                 Ins.Parameters[0].Modifiers = (1 << ARGMOD_NEGATE);
+                                Ins.CommentString = "Inserted to replace 'negate' argument modifier (-register)";
                                 needInsert = true;
 
                                 break;
@@ -3770,6 +3779,7 @@ bool PSH_XBOX_SHADER::FixArgumentModifiers()
                                 Ins.Parameters[1].SetScaleConstRegister(0.5f, Recompiled);
                                 Ins.Parameters[0] = Cur->Parameters[p];
                                 Ins.Parameters[0].Modifiers = 0;
+                                Ins.CommentString = "Inserted to replace 'bias' argument modifier (register - 0.5)";
                                 needInsert = true;
 
                                 break;
@@ -3783,6 +3793,7 @@ bool PSH_XBOX_SHADER::FixArgumentModifiers()
                                 Ins.Parameters[1].SetScaleConstRegister(2.0f, Recompiled);
                                 Ins.Parameters[0] = Cur->Parameters[p];
                                 Ins.Parameters[0].Modifiers = 0;
+                                Ins.CommentString = "Inserted to replace 'x2' argument modifier (2 * register)";
                                 needInsert = true;
 
                                 break;
@@ -3797,6 +3808,7 @@ bool PSH_XBOX_SHADER::FixArgumentModifiers()
                                 Ins.Parameters[1].SetScaleConstRegister(2.0f, Recompiled);
                                 Ins.Parameters[0] = Cur->Parameters[p];
                                 Ins.Parameters[0].Modifiers = 0;
+                                Ins.CommentString = "Inserted to replace 'bx2' argument modifier (2 * register - 1)";
                                 needInsert = true;
 
                                 break;
@@ -3810,6 +3822,7 @@ bool PSH_XBOX_SHADER::FixArgumentModifiers()
                                 Ins.Parameters[1].SetScaleConstRegister(4.0f, Recompiled);
                                 Ins.Parameters[0] = Cur->Parameters[p];
                                 Ins.Parameters[0].Modifiers = 0;
+                                Ins.CommentString = "Inserted to replace 'x4' argument modifier (4 * register)";
                                 needInsert = true;
 
                                 break;
@@ -3823,6 +3836,7 @@ bool PSH_XBOX_SHADER::FixArgumentModifiers()
                                 Ins.Parameters[1].SetScaleConstRegister(0.5f, Recompiled);
                                 Ins.Parameters[0] = Cur->Parameters[p];
                                 Ins.Parameters[0].Modifiers = 0;
+                                Ins.CommentString = "Inserted to replace 'd2' argument modifier (0.5 * register)";
                                 needInsert = true;
 
                                 break;
@@ -3835,6 +3849,7 @@ bool PSH_XBOX_SHADER::FixArgumentModifiers()
                                 // Move constant into register
                                 Ins.Parameters[0] = Cur->Parameters[p];
                                 Ins.Parameters[0].Modifiers = 0;
+                                Ins.CommentString = "Inserted to replace argument with modifier";
                                 needInsert = true;
 
                                 break;
@@ -3854,14 +3869,13 @@ bool PSH_XBOX_SHADER::FixArgumentModifiers()
                                 {
                                     Cur->Parameters[q] = Ins.Output[0];
                                     // Apply modifier to register instead of constant
-                                    Cur->Parameters[q].Modifiers = (Arg.Modifiers & ARGMOD_NEGATE) | (Arg.Modifiers & (~0 << (modifier + 1)));
+                                    Cur->Parameters[q].Modifiers = (Arg.Modifiers & (1 << ARGMOD_NEGATE)) | (Arg.Modifiers & (~0 << (modifier + 1)));
                                 }
                             }
-                            Ins.CommentString = "Inserted to avoid constant modifier (applied below on register)";
                             InsertIntermediate(&Ins, InsertPos);
                             ++InsertPos;
                             ++Cur;
-                            DbgPrintf(LOG_PREFIX, "; Used intermediate move to avoid constant modifier\n");
+                            DbgPrintf(LOG_PREFIX, "; Used intermediate move to avoid argument modifier\n");
                             Result = true;
                         }
                     }
@@ -4745,13 +4759,10 @@ bool PSH_XBOX_SHADER::FixupPixelShader()
   // TODO : Complete to port to D3D9 to support all 18 constants (including C8..C15 + FC0+FC1)
 
   if (CombineInstructions())
-      Result = true;
+    Result = true;
 
   if (MoveRemovableParametersRight())
     Result = true;
-
-  if (FixArgumentModifiers())
-	  Result = true;
 
   // Simplify instructions, which can help to compress the result :
   i = IntermediateCount;
