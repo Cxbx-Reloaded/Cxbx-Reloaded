@@ -65,83 +65,6 @@ namespace NtDll
 #undef RtlMoveMemory
 #undef RtlZeroMemory
 
-#include <map> // For critical section map
-#include <Synchapi.h> // For native CriticalSections
-
-static std::map<xboxkrnl::PRTL_CRITICAL_SECTION, CRITICAL_SECTION> critical_sections;
-
-static void add_critical_section(
-    xboxkrnl::PRTL_CRITICAL_SECTION xbox_crit_section,
-    CRITICAL_SECTION host_crit_section
-)
-{
-    // Key not found
-    if(critical_sections.find(xbox_crit_section) == critical_sections.end()) {
-        critical_sections[xbox_crit_section] = host_crit_section;
-    }
-    else {
-        DbgPrintf(LOG_PREFIX, "Critical Section key %p already exists\n", xbox_crit_section);
-    }
-}
-
-static CRITICAL_SECTION* find_critical_section(
-    xboxkrnl::PRTL_CRITICAL_SECTION xbox_crit_section
-)
-{
-    // Key found
-    if(critical_sections.find(xbox_crit_section) != critical_sections.end()) {
-        return &critical_sections[xbox_crit_section];
-    }
-
-    return NULL;
-}
-
-static void InitHostCriticalSection(xboxkrnl::PRTL_CRITICAL_SECTION xbox_crit_section)
-{
-    CRITICAL_SECTION host_crit_section;
-    InitializeCriticalSection(&host_crit_section);
-    add_critical_section(xbox_crit_section, host_crit_section);
-    //Initalize the host event for the critical section
-    KeInitializeEvent((xboxkrnl::PRKEVENT)xbox_crit_section, (xboxkrnl::EVENT_TYPE)xboxkrnl::NotificationEvent, FALSE);
-}
-
-static void EnterHostCriticalSection(xboxkrnl::PRTL_CRITICAL_SECTION xbox_crit_section)
-{
-    // This is required because it is possible for a game to create a critical
-    // section without calling RtlInitializeCriticalSection, which means that
-    // there is no host critical section. This hack allows us to create the
-    // missing critical section. The real Xbox RtlEnterCriticalSection function
-    // does not create a critical section if it does not exist.
-    CRITICAL_SECTION* host_crit_section = find_critical_section(xbox_crit_section);
-    if(host_crit_section == NULL) {
-        InitHostCriticalSection(xbox_crit_section);
-        host_crit_section = find_critical_section(xbox_crit_section);
-    }
-
-    EnterCriticalSection(host_crit_section);
-}
-
-static void LeaveHostCriticalSection(xboxkrnl::PRTL_CRITICAL_SECTION xbox_crit_section)
-{
-    LeaveCriticalSection(find_critical_section(xbox_crit_section));
-}
-
-static BOOL TryEnterHostCriticalSection(xboxkrnl::PRTL_CRITICAL_SECTION xbox_crit_section)
-{
-    // This is required because it is possible for a game to create a critical
-    // section without calling RtlInitializeCriticalSection, which means that
-    // there is no host critical section. This hack allows us to create the
-    // missing critical section. The real Xbox RtlEnterCriticalSection function
-    // does not create a critical section if it does not exist.
-    CRITICAL_SECTION* host_crit_section = find_critical_section(xbox_crit_section);
-    if(host_crit_section == NULL) {
-        InitHostCriticalSection(xbox_crit_section);
-        host_crit_section = find_critical_section(xbox_crit_section);
-    }
-
-    return TryEnterCriticalSection(host_crit_section);
-}
-
 #endif // _WIN32
 
 DWORD WINAPI RtlAnsiStringToUnicodeSize(const xboxkrnl::STRING *str)
@@ -751,8 +674,6 @@ XBSYSAPI EXPORTNUM(277) xboxkrnl::VOID NTAPI xboxkrnl::RtlEnterCriticalSection
             CriticalSection->RecursionCount++;
         }
     }
-
-    EnterHostCriticalSection(CriticalSection);
 }
 
 // ******************************************************************
@@ -1143,17 +1064,10 @@ XBSYSAPI EXPORTNUM(291) xboxkrnl::VOID NTAPI xboxkrnl::RtlInitializeCriticalSect
 {
     LOG_FUNC_ONE_ARG(CriticalSection);
 
-    CriticalSection->LockCount = -1;
-    // Sets byte 0 = 1, and byte 2 = 4 of Unknown[0] for some reason
-    CriticalSection->Unknown[0] = (CriticalSection->Unknown[0] & ~0xFF) | 0x1;
-    CriticalSection->Unknown[0] = (CriticalSection->Unknown[0] & ~0xFF0000) | 0x40000;
-    CriticalSection->Unknown[1] = 0;
-    CriticalSection->Unknown[3] = (DWORD)&CriticalSection->Unknown[2];
-    CriticalSection->Unknown[2] = (DWORD)&CriticalSection->Unknown[2];
+	KeInitializeEvent((PRKEVENT)&CriticalSection->Event, SynchronizationEvent, FALSE);
+	CriticalSection->LockCount = -1;
     CriticalSection->RecursionCount = 0;
     CriticalSection->OwningThread = 0;
-
-    InitHostCriticalSection(CriticalSection);
 }
 
 // ******************************************************************
@@ -1265,8 +1179,6 @@ XBSYSAPI EXPORTNUM(294) xboxkrnl::VOID NTAPI xboxkrnl::RtlLeaveCriticalSection
             KeSetEvent((PRKEVENT)CriticalSection, (KPRIORITY)1, (BOOLEAN)0);
         }
     }
-
-    LeaveHostCriticalSection(CriticalSection);
 }
 
 // ******************************************************************
@@ -1686,8 +1598,7 @@ XBSYSAPI EXPORTNUM(306) xboxkrnl::BOOLEAN NTAPI xboxkrnl::RtlTryEnterCriticalSec
         }
     }
 
-    // Return the host value until the xbox kernel is fully implemented
-    RETURN(TryEnterHostCriticalSection(CriticalSection));
+    RETURN(ret);
 }
 
 // ******************************************************************

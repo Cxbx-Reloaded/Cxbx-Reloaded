@@ -2066,17 +2066,15 @@ XBSYSAPI EXPORTNUM(233) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtWaitForSingleObject
     IN  PLARGE_INTEGER   Timeout
 )
 {
-	LOG_FORWARD("KeWaitForMultipleObjects");
+	LOG_FORWARD("NtWaitForMultipleObjectsEx");
 
-	return xboxkrnl::KeWaitForMultipleObjects(
+	return xboxkrnl::NtWaitForMultipleObjectsEx(
 		/*Count=*/1,
 		&Handle,
 		/*WaitType=*/WaitAll,
-		/*WaitReason=*/WrUserRequest,
 		/*WaitMode=*/KernelMode,
 		Alertable,
-		Timeout,
-		/*WaitBlockArray*/NULL
+		Timeout
 	);
 }
 
@@ -2091,17 +2089,15 @@ XBSYSAPI EXPORTNUM(234) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtWaitForSingleObject
 	IN  PLARGE_INTEGER  Timeout
 )
 {
-	LOG_FORWARD("KeWaitForMultipleObjects");
+	LOG_FORWARD("NtWaitForMultipleObjectsEx");
 
-	return xboxkrnl::KeWaitForMultipleObjects(
+	return xboxkrnl::NtWaitForMultipleObjectsEx(
 		/*Count=*/1,
 		&Handle,
 		/*WaitType=*/WaitAll,
-		/*WaitReason=*/WrUserRequest,
 		WaitMode,
 		Alertable,
-		Timeout,
-		/*WaitBlockArray*/NULL
+		Timeout
 	);
 }
 
@@ -2118,17 +2114,21 @@ XBSYSAPI EXPORTNUM(235) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtWaitForMultipleObje
 	IN  PLARGE_INTEGER  Timeout
 )
 {
-	LOG_FORWARD("KeWaitForMultipleObjects");
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Count)
+		LOG_FUNC_ARG(Handles)
+		LOG_FUNC_ARG(WaitType)
+		LOG_FUNC_ARG(WaitMode)
+		LOG_FUNC_ARG(Alertable)
+		LOG_FUNC_ARG(Timeout)
+		LOG_FUNC_END;
 
-	return xboxkrnl::KeWaitForMultipleObjects(
+	return NtDll::NtWaitForMultipleObjects(
 		Count,
 		Handles,
-		WaitType,
-		/*WaitReason=*/WrUserRequest,
-		WaitMode,
+		(NtDll::OBJECT_WAIT_TYPE)WaitType,
 		Alertable,
-		Timeout,
-		/*WaitBlockArray*/NULL);
+		(NtDll::PLARGE_INTEGER)Timeout);
 }
 
 // ******************************************************************
