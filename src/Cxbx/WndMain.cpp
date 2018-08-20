@@ -1771,39 +1771,39 @@ void WndMain::UpdateDebugConsoles()
 #ifdef _WINDOWS_
 	HANDLE stdHandle = GetStdHandle(STD_OUTPUT_HANDLE);
 #endif
-    switch (g_Settings->m_gui.CxbxDebugMode) {
-        case DM_CONSOLE:
-            if (AllocConsole()) {
-                std::freopen("CONOUT$", "wt", stdout);
+	switch (g_Settings->m_gui.CxbxDebugMode) {
+		case DM_CONSOLE:
+			if (AllocConsole()) {
+				std::freopen("CONOUT$", "wt", stdout);
 
-                SetConsoleTitle("Cxbx-Reloaded : Debug Console");
+				SetConsoleTitle("Cxbx-Reloaded : Debug Console");
 
-                SetConsoleTextAttribute(stdHandle, FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_RED);
+				SetConsoleTextAttribute(stdHandle, FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_RED);
 
-                std::printf("%s", "WndMain: Debug console allocated.\n");
+				std::printf("%s", "WndMain: Debug console allocated.\n");
 
-                SetForegroundWindow(m_hwnd);
-            }
-            break;
+				SetForegroundWindow(m_hwnd);
+			}
+			break;
 
-        case DM_FILE:
+		case DM_FILE:
 
-            std::freopen(g_Settings->m_gui.szCxbxDebugFile.c_str(), "wt", stdout);
-            FreeConsole();
+			std::freopen(g_Settings->m_gui.szCxbxDebugFile.c_str(), "wt", stdout);
+			FreeConsole();
 
-            std::printf("%s", "WndMain: Debug console allocated.\n");
-            break;
+			std::printf("%s", "WndMain: Debug console allocated.\n");
+			break;
 
-        default:
+		default:
 
-            if (GetConsoleWindow() != NULL) {
-                std::fclose(stdout);
-                FreeConsole();
-            }
-            std::freopen("nul", "w", stdout);
+			if (GetConsoleWindow() != NULL) {
+				std::fclose(stdout);
+				FreeConsole();
+			}
+			std::freopen("nul", "w", stdout);
 
-            break;
-    }
+			break;
+	}
 
 	// NOTE: This is a Windows fix for ability to get std::cout to output onto console/file.
 	// Not sure if linux/unix is affected too.
