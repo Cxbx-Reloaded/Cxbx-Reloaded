@@ -66,6 +66,7 @@
 #include <sstream> // for std::stringstream
 #include <fstream>
 #include <iostream>
+#include <fcntl.h> // for _O_TEXT
 #include "CxbxKrnl/xxhash32.h" // for XXHash32::hash
 
 #define XBOX_LED_FLASH_PERIOD 176 // if you know a more accurate value, put it here
@@ -1767,16 +1768,19 @@ void WndMain::RefreshMenus()
 // update debug consoles
 void WndMain::UpdateDebugConsoles()
 {
+#ifdef _WINDOWS_
+	HANDLE stdHandle = GetStdHandle(STD_OUTPUT_HANDLE);
+#endif
     switch (g_Settings->m_gui.CxbxDebugMode) {
         case DM_CONSOLE:
             if (AllocConsole()) {
-                freopen("CONOUT$", "wt", stdout);
+                std::freopen("CONOUT$", "wt", stdout);
 
                 SetConsoleTitle("Cxbx-Reloaded : Debug Console");
 
-                SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_RED);
+                SetConsoleTextAttribute(stdHandle, FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_RED);
 
-                printf("%s", "WndMain: Debug console allocated.\n");
+                std::printf("%s", "WndMain: Debug console allocated.\n");
 
                 SetForegroundWindow(m_hwnd);
             }
@@ -1784,22 +1788,44 @@ void WndMain::UpdateDebugConsoles()
 
         case DM_FILE:
 
-            freopen(g_Settings->m_gui.szCxbxDebugFile.c_str(), "wt", stdout);
+            std::freopen(g_Settings->m_gui.szCxbxDebugFile.c_str(), "wt", stdout);
             FreeConsole();
 
-            printf("%s", "WndMain: Debug console allocated.\n");
+            std::printf("%s", "WndMain: Debug console allocated.\n");
             break;
 
         default:
 
             if (GetConsoleWindow() != NULL) {
-                fclose(stdout);
+                std::fclose(stdout);
                 FreeConsole();
             }
-            freopen("nul", "w", stdout);
+            std::freopen("nul", "w", stdout);
 
             break;
     }
+
+	// NOTE: This is a Windows fix for ability to get std::cout to output onto console/file.
+	// Not sure if linux/unix is affected too.
+#ifdef _WINDOWS_
+	if (stdHandle != INVALID_HANDLE_VALUE) {
+		int fileDesc = _open_osfhandle((intptr_t)stdHandle, _O_TEXT);
+
+		if (fileDesc != -1) {
+			FILE* file = _fdopen(fileDesc, "wt");
+
+			if (file != NULL) {
+				int dup2Result = _dup2(_fileno(file), _fileno(stdout));
+				if (dup2Result == 0) {
+					std::setvbuf(stdout, NULL, _IONBF, 0);
+				}
+				std::fclose(file);
+			}
+		}
+	}
+	std::wcout.clear();
+	std::cout.clear();
+#endif
 }
 
 // update recent files menu
