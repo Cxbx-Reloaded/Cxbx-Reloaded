@@ -655,18 +655,20 @@ XBSYSAPI EXPORTNUM(277) xboxkrnl::VOID NTAPI xboxkrnl::RtlEnterCriticalSection
     }
     else {
         if(CriticalSection->OwningThread != thread) {
-            NTSTATUS result;
-            result = KeWaitForSingleObject(
-                (PVOID)CriticalSection,
-                (KWAIT_REASON)0,
-                (KPROCESSOR_MODE)0,
-                (BOOLEAN)0,
-                (PLARGE_INTEGER)0
-            );
-            if(!NT_SUCCESS(result))
-            {
-                CxbxKrnlCleanup(LOG_PREFIX, "Waiting for event of a critical section returned %lx.", result);
-            };
+			if (CriticalSection->OwningThread != nullptr) {
+				NTSTATUS result;
+				result = KeWaitForSingleObject(
+					(PVOID)CriticalSection,
+					(KWAIT_REASON)0,
+					(KPROCESSOR_MODE)0,
+					(BOOLEAN)0,
+					(PLARGE_INTEGER)0
+				);
+				if (!NT_SUCCESS(result))
+				{
+					CxbxKrnlCleanup(LOG_PREFIX, "Waiting for event of a critical section returned %lx.", result);
+				};
+			}
             CriticalSection->OwningThread = thread;
             CriticalSection->RecursionCount = 1;
         }

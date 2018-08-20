@@ -1737,7 +1737,7 @@ PS_STATISTICS, *PPS_STATISTICS;
 // ******************************************************************
 typedef struct _RTL_CRITICAL_SECTION
 {
-    DWORD               Unknown[4];                                     // 0x00
+	DISPATCHER_HEADER	Event;			                                // 0x00
     LONG                LockCount;                                      // 0x10
     LONG                RecursionCount;                                 // 0x14
     HANDLE              OwningThread;                                   // 0x18

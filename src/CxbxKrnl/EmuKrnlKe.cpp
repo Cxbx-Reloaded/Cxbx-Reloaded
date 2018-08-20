@@ -130,14 +130,14 @@ xboxkrnl::ULONGLONG LARGE_INTEGER2ULONGLONG(xboxkrnl::LARGE_INTEGER value)
 
 void FASTCALL KiWaitSatisfyAll
 (
-	IN xboxkrnl::PRKWAIT_BLOCK WaitBlock
+	IN xboxkrnl::PKWAIT_BLOCK WaitBlock
 )
 {
 	using namespace xboxkrnl;
 
 	PKMUTANT Object;
 	PRKTHREAD Thread;
-	PRKWAIT_BLOCK WaitBlock1;
+	PKWAIT_BLOCK WaitBlock1;
 
 	WaitBlock1 = WaitBlock;
 	Thread = WaitBlock1->Thread;
@@ -1611,7 +1611,7 @@ XBSYSAPI EXPORTNUM(145) xboxkrnl::LONG NTAPI xboxkrnl::KeSetEvent
 	if (IsListEmpty(&Event->Header.WaitListHead) != FALSE) {
 		Event->Header.SignalState = 1;
 	} else {
-		PRKWAIT_BLOCK WaitBlock = CONTAINING_RECORD(Event->Header.WaitListHead.Flink, KWAIT_BLOCK, WaitListEntry);
+		PKWAIT_BLOCK WaitBlock = CONTAINING_RECORD(Event->Header.WaitListHead.Flink, KWAIT_BLOCK, WaitListEntry);
 		if ((Event->Header.Type == NotificationEvent) ||
 			(WaitBlock->WaitType != WaitAny)) {
 			if (OldState == 0) {
@@ -2025,7 +2025,7 @@ XBSYSAPI EXPORTNUM(158) xboxkrnl::NTSTATUS NTAPI xboxkrnl::KeWaitForMultipleObje
 				}
 
 				// Setup a timer for the thread
-				PRKTIMER Timer = &Thread->Timer;
+				PKTIMER Timer = &Thread->Timer;
 				PKWAIT_BLOCK WaitTimer = &Thread->TimerWaitBlock;
 				WaitBlock->NextWaitBlock = WaitTimer;
 				Timer->Header.WaitListHead.Flink = &WaitTimer->WaitListEntry;
@@ -2204,7 +2204,7 @@ XBSYSAPI EXPORTNUM(159) xboxkrnl::NTSTATUS NTAPI xboxkrnl::KeWaitForSingleObject
 				}
 
 				// Setup a timer for the thread
-				PRKTIMER Timer = &Thread->Timer;
+				PKTIMER Timer = &Thread->Timer;
 				PKWAIT_BLOCK WaitTimer = &Thread->TimerWaitBlock;
 				WaitBlock->NextWaitBlock = WaitTimer;
 				Timer->Header.WaitListHead.Flink = &WaitTimer->WaitListEntry;
