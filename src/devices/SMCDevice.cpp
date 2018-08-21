@@ -104,10 +104,10 @@ uint8_t SMCDevice::ReadByte(uint8_t command)
 	case SMC_COMMAND_VERSION: // 0x01 PIC version string
 		// See http://xboxdevwiki.net/PIC#PIC_version_string
 		switch (m_revision) {
-		case SCMRevision::P01: buffer[0] = "P01"[m_PICVersionStringIndex]; break;
-		case SCMRevision::P2L: buffer[0] = "P05"[m_PICVersionStringIndex]; break; // ??
-		case SCMRevision::D01: buffer[0] = "DXB"[m_PICVersionStringIndex]; break;
-		case SCMRevision::D05: buffer[0] = "D05"[m_PICVersionStringIndex]; break; // ??
+		case SCMRevision::P01: buffer[1] = "P01"[m_PICVersionStringIndex]; break;
+		case SCMRevision::P2L: buffer[1] = "P05"[m_PICVersionStringIndex]; break; // ??
+		case SCMRevision::D01: buffer[1] = "DXB"[m_PICVersionStringIndex]; break;
+		case SCMRevision::D05: buffer[1] = "D05"[m_PICVersionStringIndex]; break; // ??
 		// default: UNREACHABLE(m_revision);
 		}
 
