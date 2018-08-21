@@ -917,7 +917,7 @@ struct PSH_XBOX_SHADER {
 	std::string DecodedToString(XTL::X_D3DPIXELSHADERDEF *pPSDef);
 	bool _NextIs2D(int Stage);
 	bool DecodeTextureModes(XTL::X_D3DPIXELSHADERDEF *pPSDef);
-    bool InsertTextureModeInstruction(XTL::X_D3DPIXELSHADERDEF *pPSDef, int Stage, PSH_OPCODE opcode, std::vector<PSH_INTERMEDIATE_FORMAT>& InsertIns, int& InsertPos, int& component);
+    bool InsertTextureModeInstruction(XTL::X_D3DPIXELSHADERDEF *pPSDef, int Stage, PSH_OPCODE opcode, std::vector<PSH_INTERMEDIATE_FORMAT>& InsertIns, int& InsertPos);
 	bool MoveRemovableParametersRight();
 	void ConvertXboxOpcodesToNative(XTL::X_D3DPIXELSHADERDEF *pPSDef);
 	void _SetColor(/*var OUT*/PSH_INTERMEDIATE_FORMAT &NewIns, XTL::D3DCOLOR ConstColor);
@@ -2593,7 +2593,6 @@ bool PSH_XBOX_SHADER::DecodeTextureModes(XTL::X_D3DPIXELSHADERDEF *pPSDef)
   int InsertPos;
   PSH_INTERMEDIATE_FORMAT Ins = {};
   std::vector<PSH_INTERMEDIATE_FORMAT> InsertIns;
-  int component = 0;
   int Stage;
 
   InsertIns.reserve(32); // arbitrary allotment of instructions
@@ -2752,7 +2751,7 @@ bool PSH_XBOX_SHADER::DecodeTextureModes(XTL::X_D3DPIXELSHADERDEF *pPSDef)
       continue;
     }
 
-    InsertTextureModeInstruction(pPSDef, Stage, Opcode, InsertIns, InsertPos, component);
+    InsertTextureModeInstruction(pPSDef, Stage, Opcode, InsertIns, InsertPos);
     Result = true;
   }
   if (Result)
@@ -2770,7 +2769,7 @@ bool PSH_XBOX_SHADER::DecodeTextureModes(XTL::X_D3DPIXELSHADERDEF *pPSDef)
   return Result;
 }
 
-bool PSH_XBOX_SHADER::InsertTextureModeInstruction(XTL::X_D3DPIXELSHADERDEF *pPSDef, int Stage, PSH_OPCODE opcode, std::vector<PSH_INTERMEDIATE_FORMAT>& InsertIns, int& InsertPos, int& component)
+bool PSH_XBOX_SHADER::InsertTextureModeInstruction(XTL::X_D3DPIXELSHADERDEF *pPSDef, int Stage, PSH_OPCODE opcode, std::vector<PSH_INTERMEDIATE_FORMAT>& InsertIns, int& InsertPos)
 {
   PSH_INTERMEDIATE_FORMAT Ins = {};
 
@@ -2795,12 +2794,47 @@ bool PSH_XBOX_SHADER::InsertTextureModeInstruction(XTL::X_D3DPIXELSHADERDEF *pPS
         inputStage = PSInputTexture[Stage];
         break;
     case PO_TEXM3X2TEX:
+    {
+        inputStage = PSInputTexture[Stage];
+
+        Ins.Initialize(PO_DP3);
+        Ins.Output[0].SetRegister(PARAM_R, 1, MASK_R);
+        Ins.Parameters[0].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + Stage - 1, 0);
+        Ins.Parameters[1].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + inputStage, 0);
+        InsertIns.emplace_back(Ins);
+        Ins.Initialize(PO_DP3);
+        Ins.Output[0].SetRegister(PARAM_R, 1, MASK_G);
+        Ins.Parameters[0].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + Stage - 0, 0);
+        Ins.Parameters[1].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + inputStage, 0);
+        InsertIns.emplace_back(Ins);
+
+        Ins.CommentString = "";
+        Ins.Initialize(PO_TEXLD2);
+        Ins.Output[0].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + Stage, 0);
+        Ins.Parameters[0].SetRegister(PARAM_R, 1, 0);
+        Ins.Parameters[1].SetRegister(PARAM_S, Stage, 0);
+        InsertIns.emplace_back(Ins);
+
+        opcode = PO_MOV;
+        needsInitialization = true;
+        break;
+    }
     case PO_TEXM3X3TEX:
     {
         inputStage = PSInputTexture[Stage];
 
         Ins.Initialize(PO_DP3);
-        Ins.Output[0].SetRegister(PARAM_R, 1, 1 << component);
+        Ins.Output[0].SetRegister(PARAM_R, 1, MASK_R);
+        Ins.Parameters[0].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + Stage-2, 0);
+        Ins.Parameters[1].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + inputStage, 0);
+        InsertIns.emplace_back(Ins);
+        Ins.Initialize(PO_DP3);
+        Ins.Output[0].SetRegister(PARAM_R, 1, MASK_G);
+        Ins.Parameters[0].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + Stage-1, 0);
+        Ins.Parameters[1].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + inputStage, 0);
+        InsertIns.emplace_back(Ins);
+        Ins.Initialize(PO_DP3);
+        Ins.Output[0].SetRegister(PARAM_R, 1, MASK_B);
         Ins.Parameters[0].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + Stage, 0);
         Ins.Parameters[1].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + inputStage, 0);
         InsertIns.emplace_back(Ins);
@@ -2821,26 +2855,40 @@ bool PSH_XBOX_SHADER::InsertTextureModeInstruction(XTL::X_D3DPIXELSHADERDEF *pPS
         inputStage = PSInputTexture[Stage];
 
         Ins.Initialize(PO_DP3);
-        Ins.Output[0].SetRegister(PARAM_R, 1, 1 << component);
-        Ins.Parameters[0].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + Stage, 0);
+        Ins.Output[0].SetRegister(PARAM_R, 1, MASK_R);
+        Ins.Parameters[0].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + Stage - 1, 0);
+        Ins.Parameters[1].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + inputStage, 0);
+        InsertIns.emplace_back(Ins);
+        Ins.Initialize(PO_DP3);
+        Ins.Output[0].SetRegister(PARAM_R, 1, MASK_G);
+        Ins.Parameters[0].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + Stage - 0, 0);
         Ins.Parameters[1].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + inputStage, 0);
         InsertIns.emplace_back(Ins);
 
         Ins.CommentString = "";
         Ins.Initialize(PO_RCP);
-        Ins.Output[0].SetRegister(PARAM_R, 1, 1 << component);
-        Ins.Parameters[0].SetRegister(PARAM_R, 1, 1 << component);
+        Ins.Output[0].SetRegister(PARAM_R, 1, MASK_B);
+        Ins.Parameters[0].SetRegister(PARAM_R, 1, MASK_G);
         InsertIns.emplace_back(Ins);
 
         Ins.Initialize(PO_MUL);
-        Ins.Output[0].SetRegister(PARAM_R, 1, 1 << (component - 0));
-        Ins.Parameters[0].SetRegister(PARAM_R, 1, 1 << (component - 1));
-        Ins.Parameters[1].SetRegister(PARAM_R, 1, 1 << (component - 0));
+        Ins.Modifier = INSMOD_SAT;
+        Ins.Output[0].SetRegister(PARAM_R, 1, MASK_B);
+        Ins.Parameters[0].SetRegister(PARAM_R, 1, MASK_R);
+        Ins.Parameters[1].SetRegister(PARAM_R, 1, MASK_B);
+        InsertIns.emplace_back(Ins);
+
+        Ins.Initialize(PO_CMP);
+        Ins.Output[0].SetRegister(PARAM_R, 1, MASK_B);
+        Ins.Parameters[0].SetRegister(PARAM_R, 1, MASK_G);
+        Ins.Parameters[0].Modifiers = (1 << ARGMOD_NEGATE);
+        Ins.Parameters[1].SetScaleConstRegister(1.0, Recompiled);
+        Ins.Parameters[2].SetRegister(PARAM_R, 1, MASK_B);
         InsertIns.emplace_back(Ins);
 
         Ins.Initialize(PO_MOV);
         Ins.Output[0].SetRegister(PARAM_oDepth, 0, 0);
-        Ins.Parameters[0].SetRegister(PARAM_R, 1, 1 << (component - 0));
+        Ins.Parameters[0].SetRegister(PARAM_R, 1, MASK_B);
         InsertIns.emplace_back(Ins);
 
         opcode = PO_MOV;
@@ -2852,14 +2900,24 @@ bool PSH_XBOX_SHADER::InsertTextureModeInstruction(XTL::X_D3DPIXELSHADERDEF *pPS
         inputStage = PSInputTexture[Stage];
 
         Ins.Initialize(PO_DP3);
-        Ins.Output[0].SetRegister(PARAM_R, 1, 1 << component);
-        Ins.Parameters[0].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + Stage, 0);
+        Ins.Output[0].SetRegister(PARAM_R, 1, MASK_R);
+        Ins.Parameters[0].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + Stage - 2, 0);
+        Ins.Parameters[1].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + inputStage, 0);
+        InsertIns.emplace_back(Ins);
+        Ins.Initialize(PO_DP3);
+        Ins.Output[0].SetRegister(PARAM_R, 1, MASK_G);
+        Ins.Parameters[0].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + Stage - 1, 0);
+        Ins.Parameters[1].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + inputStage, 0);
+        InsertIns.emplace_back(Ins);
+        Ins.Initialize(PO_DP3);
+        Ins.Output[0].SetRegister(PARAM_R, 1, MASK_B);
+        Ins.Parameters[0].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + Stage - 0, 0);
         Ins.Parameters[1].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + inputStage, 0);
         InsertIns.emplace_back(Ins);
 
         Ins.Initialize(PO_TEXLD2);
         Ins.Output[0].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + Stage, 0);
-        Ins.Parameters[0].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + Stage, 0);
+        Ins.Parameters[0].SetRegister(PARAM_R, 1, 0);
         Ins.Parameters[1].SetRegister(PARAM_S, Stage, 0);
         InsertIns.emplace_back(Ins);
 
@@ -2873,8 +2931,18 @@ bool PSH_XBOX_SHADER::InsertTextureModeInstruction(XTL::X_D3DPIXELSHADERDEF *pPS
         inputStage = PSInputTexture[Stage];
 
         Ins.Initialize(PO_DP3);
-        Ins.Output[0].SetRegister(PARAM_R, 1, 1 << component);
-        Ins.Parameters[0].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + Stage, 0);
+        Ins.Output[0].SetRegister(PARAM_R, 1, MASK_R);
+        Ins.Parameters[0].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + Stage - 2, 0);
+        Ins.Parameters[1].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + inputStage, 0);
+        InsertIns.emplace_back(Ins);
+        Ins.Initialize(PO_DP3);
+        Ins.Output[0].SetRegister(PARAM_R, 1, MASK_G);
+        Ins.Parameters[0].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + Stage - 1, 0);
+        Ins.Parameters[1].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + inputStage, 0);
+        InsertIns.emplace_back(Ins);
+        Ins.Initialize(PO_DP3);
+        Ins.Output[0].SetRegister(PARAM_R, 1, MASK_B);
+        Ins.Parameters[0].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + Stage - 0, 0);
         Ins.Parameters[1].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + inputStage, 0);
         InsertIns.emplace_back(Ins);
 
@@ -3020,12 +3088,6 @@ bool PSH_XBOX_SHADER::InsertTextureModeInstruction(XTL::X_D3DPIXELSHADERDEF *pPS
     {
         inputStage = PSInputTexture[Stage];
 
-        Ins.Initialize(PO_DP3);
-        Ins.Output[0].SetRegister(PARAM_R, 1, 1 << component);
-        Ins.Parameters[0].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + Stage, 0);
-        Ins.Parameters[1].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + inputStage, 0);
-        InsertIns.emplace_back(Ins);
-
         opcode = PO_MOV;
         needsInitialization = true;
         break;
@@ -3074,7 +3136,7 @@ bool PSH_XBOX_SHADER::InsertTextureModeInstruction(XTL::X_D3DPIXELSHADERDEF *pPS
     // For those texture modes that need it, add the source stage as argument :
     if (PSH_OPCODE_DEFS[Ins.Opcode]._In >= 1)
     {
-        Ins.Parameters[0].SetRegister(PARAM_T, inputStage, 0);
+        Ins.Parameters[0].SetRegister(PARAM_T, Stage, 0);
 
       switch (PSDotMapping[Stage]) {
         case PS_DOTMAPPING_MINUS1_TO_1_D3D:
@@ -5023,6 +5085,8 @@ bool PSH_XBOX_SHADER::FixupCND(PPSH_INTERMEDIATE_FORMAT Cur, int index)
     Ins.Parameters[0] = Cur->Parameters[0];
     Ins.Parameters[1].SetScaleConstRegister(0.5f, Recompiled);
     Cur->Parameters[0] = Ins.Output[0];
+    Cur->Parameters[0].Modifiers = (1 << ARGMOD_NEGATE);
+    std::swap(Cur->Parameters[1], Cur->Parameters[2]);
     Ins.CommentString = Cur->CommentString = "; Changed CND into SUB CMP";
     InsertIntermediate(&Ins, index);
     DbgPrintf(LOG_PREFIX, "; Changed CND into SUB CMP\n");
