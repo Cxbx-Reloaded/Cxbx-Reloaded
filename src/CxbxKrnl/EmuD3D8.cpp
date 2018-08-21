@@ -8281,43 +8281,46 @@ VOID __stdcall XTL::EMUPATCH(D3DDevice_DeleteVertexShader_0)
 // ******************************************************************
 VOID WINAPI XTL::EMUPATCH(D3DDevice_DeleteVertexShader)
 (
-    DWORD Handle
-)
+	DWORD Handle
+	)
 {
 	FUNC_EXPORTS
 
-	LOG_FUNC_ONE_ARG(Handle);
+		LOG_FUNC_ONE_ARG(Handle);
 
 	// Handle is always address of an Xbox VertexShader struct, or-ed with 1 (X_D3DFVF_RESERVED0)
 	// It's reference count is lowered. If it reaches zero (0), the struct is freed.
 
 	DWORD HostVertexShaderHandle = 0;
 
-    if(VshHandleIsVertexShader(Handle))
-    {
-        X_D3DVertexShader *pD3DVertexShader = VshHandleToXboxVertexShader(Handle);
-        CxbxVertexShader *pVertexShader = MapXboxVertexShaderHandleToCxbxVertexShader(Handle);
+	if (VshHandleIsVertexShader(Handle))
+	{
+		X_D3DVertexShader *pD3DVertexShader = VshHandleToXboxVertexShader(Handle);
+		CxbxVertexShader *pVertexShader = MapXboxVertexShaderHandleToCxbxVertexShader(Handle);
 
 		if (pVertexShader->pHostDeclaration) {
 			pVertexShader->pHostDeclaration->Release();
 		}
 
-        HostVertexShaderHandle = pVertexShader->Handle;
+		HostVertexShaderHandle = pVertexShader->Handle;
 		g_VMManager.Deallocate((VAddr)pVertexShader->pDeclaration);
 
-        if(pVertexShader->pFunction)
-        {
+		if (pVertexShader->pFunction)
+		{
 			g_VMManager.Deallocate((VAddr)pVertexShader->pFunction);
-        }
+		}
 
-        FreeVertexDynamicPatch(pVertexShader);
+		FreeVertexDynamicPatch(pVertexShader);
 
 		g_VMManager.Deallocate((VAddr)pVertexShader);
-        g_VMManager.Deallocate((VAddr)pD3DVertexShader);
-    }
+		g_VMManager.Deallocate((VAddr)pD3DVertexShader);
+	}
 
-	HRESULT hRet = ((IDirect3DVertexShader9*)HostVertexShaderHandle)->Release();
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->DeleteVertexShader");
+	// Don't attempt to release invalid null handles
+	if (HostVertexShaderHandle) {
+		HRESULT hRet = ((IDirect3DVertexShader9*)HostVertexShaderHandle)->Release();
+		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->DeleteVertexShader");
+	}
 }
 
 // ******************************************************************
