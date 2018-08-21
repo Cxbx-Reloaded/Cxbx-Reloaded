@@ -149,6 +149,8 @@ typedef long                            NTSTATUS;
 
 #define NT_SUCCESS(Status)              ((NTSTATUS) (Status) >= 0)
 #define STATUS_SUCCESS                   ((DWORD   )0x00000000L)
+#define STATUS_ABANDONED                 ((DWORD   )0x00000080L)
+#define STATUS_MUTANT_LIMIT_EXCEEDED     ((DWORD   )0xC0000191L)
 #ifndef STATUS_PENDING
 #define STATUS_PENDING                   ((DWORD   )0x00000103L)
 #endif
@@ -1607,11 +1609,13 @@ typedef struct _KFLOATING_SAVE
 }
 KFLOATING_SAVE, *PKFLOATING_SAVE;
 
+#define DISPATCHER_OBJECT_TYPE_MASK 0x7
 // ******************************************************************
 // * KOBJECTS
 // ******************************************************************
 typedef enum _KOBJECTS
 {
+	EventSynchronizationObject = 1,
 	MutantObject = 2,
 	QueueObject = 4,
 	SemaphoreObject = 5,
