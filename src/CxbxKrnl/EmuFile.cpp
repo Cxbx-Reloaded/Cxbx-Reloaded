@@ -456,12 +456,12 @@ NTSTATUS CxbxConvertFilePath(
 
 		if (g_bPrintfOn) {
 			DbgPrintf(LOG_PREFIX, "%s Corrected path...\n", aFileAPIName.c_str());
-			printf("  Org:\"%s\"\n", OriginalPath.c_str());
+			DbgPrintf(LOG_PREFIX, "  Org:\"%s\"\n", OriginalPath.c_str());
 			if (_strnicmp(HostPath.c_str(), CxbxBasePath.c_str(), CxbxBasePath.length()) == 0) {
-				printf("  New:\"$CxbxPath\\%s%s\"\n", (HostPath.substr(CxbxBasePath.length(), std::string::npos)).c_str(), RelativePath.c_str());
+				DbgPrintf(LOG_PREFIX, "  New:\"$CxbxPath\\%s%s\"\n", (HostPath.substr(CxbxBasePath.length(), std::string::npos)).c_str(), RelativePath.c_str());
 			}
 			else
-				printf("  New:\"$XbePath\\%s\"\n", RelativePath.c_str());
+				DbgPrintf(LOG_PREFIX, "  New:\"$XbePath\\%s\"\n", RelativePath.c_str());
 		}
 	}
 	else
