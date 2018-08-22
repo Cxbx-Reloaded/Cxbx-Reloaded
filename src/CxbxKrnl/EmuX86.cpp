@@ -54,6 +54,7 @@
 #include <assert.h>
 #include "devices\Xbox.h" // For g_PCIBus
 #include <atomic>
+#include <map>
 #include "Logging.h"
 
 extern uint32_t GetAPUTime();
@@ -290,7 +291,7 @@ void EmuX86_InitContextRecordOffsetByRegisterType()
 	ContextRecordOffsetByRegisterType[R_MM7] = offsetof(CONTEXT, ExtendedRegisters[(10 + 7) * 16]);
 	// Unsupported by XBox CPU : R_XMM0, R_XMM1, R_XMM2, R_XMM3, R_XMM4, R_XMM5, R_XMM6, R_XMM7, R_XMM8, R_XMM9, R_XMM10, R_XMM11, R_XMM12, R_XMM13, R_XMM14, R_XMM15,
 	// Unsupported by XBox CPU : R_YMM0, R_YMM1, R_YMM2, R_YMM3, R_YMM4, R_YMM5, R_YMM6, R_YMM7, R_YMM8, R_YMM9, R_YMM10, R_YMM11, R_YMM12, R_YMM13, R_YMM14, R_YMM15,
-	// Unsupported by XBox CPU : R_CR0, R_UNUSED0, R_CR2, R_CR3, R_CR4, R_UNUSED1, R_UNUSED2, R_UNUSED3, R_CR8,
+	// Unsupported by XBox CPU : R_UNUSED0, R_CR0, R_CR2, R_CR3, R_CR4, R_UNUSED1, R_UNUSED2, R_UNUSED3, R_CR8,
 	ContextRecordOffsetByRegisterType[R_DR0] = offsetof(CONTEXT, Dr0);
 	ContextRecordOffsetByRegisterType[R_DR1] = offsetof(CONTEXT, Dr1);
 	ContextRecordOffsetByRegisterType[R_DR2] = offsetof(CONTEXT, Dr2);
@@ -337,13 +338,32 @@ void EmuX86_InitContextRecordOffsetByRegisterType()
 	!BYTE    ExtendedRegisters[MAXIMUM_SUPPORTED_EXTENSION];*/
 }
 
+std::map<uint8_t, uint32_t> g_MemoryBackedRegisters;
+
+void EmuX86_InitMemoryBackedRegisters()
+{
+	g_MemoryBackedRegisters[R_CR0] = 0;
+	g_MemoryBackedRegisters[R_CR2] = 0;
+	g_MemoryBackedRegisters[R_CR3] = 0;
+	g_MemoryBackedRegisters[R_CR4] = 0;
+}
+
 inline void * EmuX86_GetRegisterPointer(const LPEXCEPTION_POINTERS e, const uint8_t reg)
 {
 	int offset = ContextRecordOffsetByRegisterType[reg];
-	if (offset > 0)
+	if (offset > 0) {
 		return (void*)((uintptr_t)(e->ContextRecord) + offset);
+	}
 
-	assert(false);
+	// Xbox titles use some registers thatare not accessible in user mode
+	// They are also not available in the Context/Exception Record, so we can't map them
+	// Instead, we store the values in a key->value map.
+	auto it = g_MemoryBackedRegisters.find(reg);
+	if (it != g_MemoryBackedRegisters.end()) {
+		return &it->second;
+	}
+
+	assert(false); 
 	return nullptr;
 }
 
@@ -1158,4 +1178,5 @@ void EmuX86_Init()
 	AddVectoredExceptionHandler(/*FirstHandler=*/ULONG(true), lleException);
 
 	EmuX86_InitContextRecordOffsetByRegisterType();
+	EmuX86_InitMemoryBackedRegisters();
 }
