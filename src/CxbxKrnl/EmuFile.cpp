@@ -363,14 +363,11 @@ NTSTATUS CxbxConvertFilePath(
 
 	// Check if we where called from a File-handling API :
 	if (!aFileAPIName.empty()) {
-		// Disabled, see CxbxKrnl.cpp (search Chihiro) for more details
-#if 0
 		if (RelativePath.compare(DriveMbrom) == 0) {
 			*RootDirectory = CxbxBasePathHandle;
 			HostPath = CxbxBasePath;
 			RelativePath = MediaBoardRomFile;
-		} else
-#endif if (!partitionHeader) {
+		} else if (!partitionHeader) {
 			// Check if the path starts with a volume indicator :
 			if ((RelativePath.length() >= 2) && (RelativePath[1] == ':')) {
 				// Look up the symbolic link information using the drive letter :
