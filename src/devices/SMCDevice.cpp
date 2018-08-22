@@ -79,8 +79,8 @@ void SMCDevice::Init()
 {
 	m_PICVersionStringIndex = 0;
 	buffer[SMC_COMMAND_AV_PACK] = 1; // AV_PACK_HDTV: see http://xboxdevwiki.net/PIC#The_AV_Pack
-									 // We can't use the existing constant because SMC flags and kernel flags
-								     // different values!
+	                                 // We can't use the existing constant because SMC flags and kernel flags
+	                                 // different values!
 	buffer[SMC_COMMAND_LED_SEQUENCE] = LED::GREEN;
 	buffer[SMC_COMMAND_SCRATCH] = 0; // http://xboxdevwiki.net/PIC#Scratch_register_values
 }
