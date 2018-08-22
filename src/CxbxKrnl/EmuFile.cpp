@@ -494,7 +494,7 @@ NTSTATUS CxbxObjectAttributesToNT(
 	}
 
 	// Is there a filename API given?
-	if (aFileAPIName.size() > 0)
+	if (aFileAPIName.size() > 0 && (int)RootDirectory <= 0)
 	{
 		// Then interpret the ObjectName as a filename, and update it to host relative :
 		NTSTATUS result = CxbxConvertFilePath(ObjectName, /*OUT*/RelativeHostPath, /*OUT*/&RootDirectory, aFileAPIName, partitionHeader);
