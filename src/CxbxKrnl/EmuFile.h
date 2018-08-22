@@ -59,6 +59,7 @@ namespace NtDll
 // TODO : Move to a better suited file
 //std::ostream& operator<<(std::ostream& os, const NtDll::NTSTATUS& value);
 
+extern const std::string MediaBoardRomFile;
 extern const std::string DrivePrefix;
 extern const std::string DriveSerial;
 extern const std::string DriveCdRom0;
