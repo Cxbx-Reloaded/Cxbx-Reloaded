@@ -70,6 +70,7 @@ namespace xboxkrnl
 #include "devices\EEPROMDevice.h" // For g_EEPROM
 #include "devices\Xbox.h" // For InitXboxHardware()
 #include "devices\LED.h" // For LED::Sequence
+#include "devices\SMCDevice.h" // For SMC Access
 #include "EmuSha.h" // For the SHA1 functions
 #include "Timer.h" // For Timer_Init
 #include "..\Common\Input\InputConfig.h" // For the InputDeviceManager
@@ -1487,6 +1488,9 @@ __declspec(noreturn) void CxbxKrnlInit
 	}
 
 	InitXboxHardware(HardwareModel::Revision1_5); // TODO : Make configurable
+
+	// Read Xbox video mode from the SMC, store it in HalBootSMCVideoMode
+	xboxkrnl::HalReadSMBusValue(SMBUS_ADDRESS_SYSTEM_MICRO_CONTROLLER, SMC_COMMAND_AV_PACK, FALSE, &xboxkrnl::HalBootSMCVideoMode);
 
 	if (bLLE_USB) {
 #if 0 // Reenable this when LLE USB actually works
