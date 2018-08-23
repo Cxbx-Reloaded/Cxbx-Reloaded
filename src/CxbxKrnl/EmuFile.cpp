@@ -373,7 +373,7 @@ NTSTATUS CxbxConvertFilePath(
 				if ((RelativePath.length() > 0) && (RelativePath[0] == ':'))
 					RelativePath.erase(0, 1);  // xbmp needs this, as it accesses 'e::\'
 			}
-            else if (RelativePath[0] == '$') {
+			else if (RelativePath[0] == '$') {
 				if (RelativePath.compare(0, 5, "$HOME") == 0) // "xbmp" needs this
 				{
 					NtSymbolicLinkObject = FindNtSymbolicLinkObjectByRootHandle(g_hCurDir);
