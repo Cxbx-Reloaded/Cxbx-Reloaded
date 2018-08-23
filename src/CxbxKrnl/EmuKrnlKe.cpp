@@ -1906,6 +1906,8 @@ xboxkrnl::PLARGE_INTEGER FASTCALL KiComputeWaitInterval(
 	}
 }
 
+xboxkrnl::LIST_ENTRY KiWaitInListHead;
+
 // ******************************************************************
 // * 0x009E - KeWaitForMultipleObjects()
 // ******************************************************************
@@ -2018,7 +2020,7 @@ XBSYSAPI EXPORTNUM(158) xboxkrnl::NTSTATUS NTAPI xboxkrnl::KeWaitForMultipleObje
 
 			// Handle a Timeout if specified
 			if (Timeout != nullptr) {
-				// If the timeout is 0, do not wait
+				// If the timeout is 0, do not `
 				if (!(Timeout->u.LowPart | Timeout->u.HighPart)) {
 					WaitStatus = (NTSTATUS)(STATUS_TIMEOUT);
 					goto NoWait;
@@ -2055,6 +2057,7 @@ XBSYSAPI EXPORTNUM(158) xboxkrnl::NTSTATUS NTAPI xboxkrnl::KeWaitForMultipleObje
 			TODO: We can't implement this and the return values until we have our own thread schedular
 			For now, we'll have to implement waiting here instead of the schedular.
 			This code can all be enabled once we have CPU emulation and our own schedular in v1.0
+			*/
 
 			// Insert the WaitBlock
 			InsertTailList(&ObjectMutant->Header.WaitListHead, &WaitBlock->WaitListEntry);
@@ -2062,28 +2065,27 @@ XBSYSAPI EXPORTNUM(158) xboxkrnl::NTSTATUS NTAPI xboxkrnl::KeWaitForMultipleObje
 			// If the current thread is processing a queue object, wake other treads using the same queue
 			PRKQUEUE Queue = (PRKQUEUE)Thread->Queue;
 			if (Queue != NULL) {
-			KiActivateWaiterQueue(Queue);
+				// TODO:KiActivateWaiterQueue(Queue);
 			}
 
 			// Insert the thread into the Wait List
 			Thread->Alertable = Alertable;
 			Thread->WaitMode = WaitMode;
 			Thread->WaitReason = (UCHAR)WaitReason;
-			Thread->WaitTime = KiQueryLowTickCount();
-			Thread->State = Waiting;
-			KiInsertWaitList(WaitMode, Thread);
+			Thread->WaitTime = KeTickCount;
+			//Thread->State = Waiting;
+			//KiInsertWaitList(WaitMode, Thread);
 
-			WaitStatus = (NTSTATUS)KiSwapThread();
+			//WaitStatus = (NTSTATUS)KiSwapThread();
 
 			if (WaitStatus == STATUS_USER_APC) {
-			// TODO: KiDeliverUserApc();
+				// TODO: KiDeliverUserApc();
 			}
 
 			// If the thread was not awakened for an APC, return the Wait Status
-			if (WaitStatus != STATUS_KERNEL_APC) {
-			return WaitStatus;
-			}
-			*/
+			//if (WaitStatus != STATUS_KERNEL_APC) {
+			//	return WaitStatus;
+			//}
 
 			// TODO: Remove this after we have our own schedular and the above is implemented
 			Sleep(10);
@@ -2180,7 +2182,7 @@ XBSYSAPI EXPORTNUM(159) xboxkrnl::NTSTATUS NTAPI xboxkrnl::KeWaitForSingleObject
 					}
 				}
 			}
-			else if (ObjectMutant->Header.SignalState) {
+			else if (ObjectMutant->Header.SignalState > 0) {
 				// Otherwise, if the signal state is > 0, we can still just satisfy the wait
 				KiWaitSatisfyOther(ObjectMutant);
 				WaitStatus = STATUS_SUCCESS;
@@ -2188,6 +2190,7 @@ XBSYSAPI EXPORTNUM(159) xboxkrnl::NTSTATUS NTAPI xboxkrnl::KeWaitForSingleObject
 			}
 
 			// If we reached here, the wait could not be satisfied immediately, so we must setup a WaitBlock
+			Thread->WaitBlockList = WaitBlock;
 			WaitBlock->Object = Object;
 			WaitBlock->WaitKey = (CSHORT)(STATUS_SUCCESS);
 			WaitBlock->WaitType = WaitAny;
@@ -2221,39 +2224,40 @@ XBSYSAPI EXPORTNUM(159) xboxkrnl::NTSTATUS NTAPI xboxkrnl::KeWaitForSingleObject
 				WaitBlock->NextWaitBlock = WaitBlock;
 			}
 
-			/* 
+			/*
 				TODO: We can't implement this and the return values until we have our own thread schedular
 				For now, we'll have to implement waiting here instead of the schedular.
 				This code can all be enabled once we have CPU emulation and our own schedular in v1.0
-
-				// Insert the WaitBlock
-				InsertTailList(&ObjectMutant->Header.WaitListHead, &WaitBlock->WaitListEntry);
-
-				// If the current thread is processing a queue object, wake other treads using the same queue
-				PRKQUEUE Queue = (PRKQUEUE)Thread->Queue;
-				if (Queue != NULL) {
-					KiActivateWaiterQueue(Queue);
-				}
-
-				// Insert the thread into the Wait List
-				Thread->Alertable = Alertable;
-				Thread->WaitMode = WaitMode;
-				Thread->WaitReason = (UCHAR)WaitReason;
-				Thread->WaitTime = KiQueryLowTickCount();
-				Thread->State = Waiting;
-				KiInsertWaitList(WaitMode, Thread);
-
-				WaitStatus = (NTSTATUS)KiSwapThread();
-
-				if (WaitStatus == STATUS_USER_APC) {
-					// TODO: KiDeliverUserApc();
-				}
-
-				// If the thread was not awakened for an APC, return the Wait Status
-				if (WaitStatus != STATUS_KERNEL_APC) {
-					return WaitStatus;
-				}
 			*/
+
+			// Insert the WaitBlock
+			InsertTailList(&ObjectMutant->Header.WaitListHead, &WaitBlock->WaitListEntry);
+
+			// If the current thread is processing a queue object, wake other treads using the same queue
+			PRKQUEUE Queue = (PRKQUEUE)Thread->Queue;
+			if (Queue != NULL) {
+				// TODO: KiActivateWaiterQueue(Queue);
+			}
+
+			// Insert the thread into the Wait List
+			Thread->Alertable = Alertable;
+			Thread->WaitMode = WaitMode;
+			Thread->WaitReason = (UCHAR)WaitReason;
+			Thread->WaitTime = KeTickCount;
+			// TODO: Thread->State = Waiting;
+			//KiInsertWaitList(WaitMode, Thread);
+
+			/*
+			WaitStatus = (NTSTATUS)KiSwapThread();
+
+			if (WaitStatus == STATUS_USER_APC) {
+				// TODO: KiDeliverUserApc();
+			}
+
+			// If the thread was not awakened for an APC, return the Wait Status
+			if (WaitStatus != STATUS_KERNEL_APC) {
+				return WaitStatus;
+			} */
 
 			// TODO: Remove this after we have our own schedular and the above is implemented
 			Sleep(10);
