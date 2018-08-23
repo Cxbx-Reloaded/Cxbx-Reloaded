@@ -2048,7 +2048,7 @@ XBSYSAPI EXPORTNUM(158) xboxkrnl::NTSTATUS NTAPI xboxkrnl::KeWaitForMultipleObje
 			WaitBlock = &WaitBlockArray[0];
 			do {
 				ObjectMutant = (PKMUTANT)WaitBlock->Object;
-				InsertTailList(&ObjectMutant->Header.WaitListHead, &WaitBlock->WaitListEntry);
+				//InsertTailList(&ObjectMutant->Header.WaitListHead, &WaitBlock->WaitListEntry);
 				WaitBlock = WaitBlock->NextWaitBlock;
 			} while (WaitBlock != &WaitBlockArray[0]);
 
@@ -2060,7 +2060,7 @@ XBSYSAPI EXPORTNUM(158) xboxkrnl::NTSTATUS NTAPI xboxkrnl::KeWaitForMultipleObje
 			*/
 
 			// Insert the WaitBlock
-			InsertTailList(&ObjectMutant->Header.WaitListHead, &WaitBlock->WaitListEntry);
+			//InsertTailList(&ObjectMutant->Header.WaitListHead, &WaitBlock->WaitListEntry);
 
 			// If the current thread is processing a queue object, wake other treads using the same queue
 			PRKQUEUE Queue = (PRKQUEUE)Thread->Queue;
@@ -2231,7 +2231,7 @@ XBSYSAPI EXPORTNUM(159) xboxkrnl::NTSTATUS NTAPI xboxkrnl::KeWaitForSingleObject
 			*/
 
 			// Insert the WaitBlock
-			InsertTailList(&ObjectMutant->Header.WaitListHead, &WaitBlock->WaitListEntry);
+			//InsertTailList(&ObjectMutant->Header.WaitListHead, &WaitBlock->WaitListEntry);
 
 			// If the current thread is processing a queue object, wake other treads using the same queue
 			PRKQUEUE Queue = (PRKQUEUE)Thread->Queue;
