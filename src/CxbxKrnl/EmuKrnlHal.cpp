@@ -539,7 +539,7 @@ XBSYSAPI EXPORTNUM(49) xboxkrnl::VOID DECLSPEC_NORETURN NTAPI xboxkrnl::HalRetur
 			std::string XbePath = TitlePath;
 			// Convert Xbox XBE Path to Windows Path
 			{
-				HANDLE rootDirectoryHandle;
+				HANDLE rootDirectoryHandle = nullptr;
 				std::wstring wXbePath;
 				// We pretend to come from NtCreateFile to force symbolic link resolution
 				CxbxConvertFilePath(TitlePath, wXbePath, &rootDirectoryHandle, "NtCreateFile");

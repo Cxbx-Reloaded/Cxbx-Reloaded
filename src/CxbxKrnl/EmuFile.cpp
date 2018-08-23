@@ -344,9 +344,9 @@ void replace_all(std::string& str, const std::string& from, const std::string& t
 }
 
 NTSTATUS CxbxConvertFilePath(
-	std::string RelativeXboxPath, 
-	OUT std::wstring &RelativeHostPath, 
-	OUT NtDll::HANDLE *RootDirectory,
+	std::string RelativeXboxPath,
+	OUT std::wstring &RelativeHostPath,
+	IN OUT NtDll::HANDLE *RootDirectory,
 	std::string aFileAPIName,
 	bool partitionHeader)
 {
@@ -372,7 +372,8 @@ NTSTATUS CxbxConvertFilePath(
 				// If the remaining path starts with a ':', remove it (to prevent errors) :
 				if ((RelativePath.length() > 0) && (RelativePath[0] == ':'))
 					RelativePath.erase(0, 1);  // xbmp needs this, as it accesses 'e::\'
-			} else if (RelativePath[0] == '$') {
+			}
+            else if (RelativePath[0] == '$') {
 				if (RelativePath.compare(0, 5, "$HOME") == 0) // "xbmp" needs this
 				{
 					NtSymbolicLinkObject = FindNtSymbolicLinkObjectByRootHandle(g_hCurDir);
@@ -381,8 +382,7 @@ NTSTATUS CxbxConvertFilePath(
 					CxbxKrnlCleanup(LOG_PREFIX, ("Unsupported path macro : " + OriginalPath).c_str());
 			}
 			// Check if the path starts with a relative path indicator :
-			else if (RelativePath[0] == '.') // "4x4 Evo 2" needs this
-			{
+			else if (RelativePath[0] == '.') {// "4x4 Evo 2" needs this
 				NtSymbolicLinkObject = FindNtSymbolicLinkObjectByRootHandle(g_hCurDir);
 				RelativePath.erase(0, 1); // Remove the '.'
 			} else {
@@ -395,7 +395,6 @@ NTSTATUS CxbxConvertFilePath(
 				// Fixup RelativePath path here
 				if (NtSymbolicLinkObject != NULL)
 					RelativePath.erase(0, NtSymbolicLinkObject->XboxSymbolicLinkPath.length()); // Remove '\Device\Harddisk0\Partition2'
-				// else TODO : Turok requests 'gamedata.dat' without a preceding path, we probably need 'CurrentDir'-functionality
 			}
 
 			if (NtSymbolicLinkObject == NULL) {
@@ -407,10 +406,27 @@ NTSTATUS CxbxConvertFilePath(
 					// And set Root to the folder containing the partition-folders :
 					*RootDirectory = CxbxBasePathHandle;
 					HostPath = CxbxBasePath;
-				} else {
-					// Finally, Assume relative to Xbe path
+				}
+				// NOTE: RootDirectory cannot be ignored.
+				// Any special handling for it should be done below.
+				else if (RootDirectory == nullptr) {
+					// Assume relative to Xbe path
 					NtSymbolicLinkObject = FindNtSymbolicLinkObjectByRootHandle(g_hCurDir);
 				}
+				else if (RootDirectory == (NtDll::HANDLE)-4) {
+					// NOTE: A handle of -4 on the Xbox signifies the path should be in the BaseNamedObjects namespace.
+					// This handle doesn't exist on Windows, so we prefix the name instead. (note from LukeUsher)
+					// Handle special root directory constants
+					RootDirectory = NULL;
+
+					if (OriginalPath.size() == 0){
+						RelativePath = "\\BaseNamedObjects";
+					} else {
+						RelativePath = "\\BaseNamedObjects\\" + OriginalPath;
+					}
+				}
+				// else {} // NOTE: Allow RootDirectory handle to take control of relative path.
+				// Test-case: Turok Evolution
 			}
 
 			if (NtSymbolicLinkObject != NULL) {
@@ -482,28 +498,18 @@ NTSTATUS CxbxObjectAttributesToNT(
 	std::wstring RelativeHostPath;
 	NtDll::HANDLE RootDirectory = ObjectAttributes->RootDirectory;
 
-	// Handle special root directory constants
-	if (RootDirectory == (NtDll::HANDLE)-4) { 
-		RootDirectory = NULL;
-
-		if (ObjectName.size() == 0){
-			ObjectName = "\\BaseNamedObjects";
-		} else {
-			ObjectName = "\\BaseNamedObjects\\" + ObjectName;
+	// Is there a filename API given?
+	if (aFileAPIName.size() > 0) {
+		// Then interpret the ObjectName as a filename, and update it to host relative :
+		NTSTATUS result = CxbxConvertFilePath(ObjectName, /*OUT*/RelativeHostPath, /*IN OUT*/&RootDirectory, aFileAPIName, partitionHeader);
+		if (FAILED(result)) {
+			return result;
 		}
 	}
-
-	// Is there a filename API given?
-	if (aFileAPIName.size() > 0 && (int)RootDirectory <= 0)
-	{
-		// Then interpret the ObjectName as a filename, and update it to host relative :
-		NTSTATUS result = CxbxConvertFilePath(ObjectName, /*OUT*/RelativeHostPath, /*OUT*/&RootDirectory, aFileAPIName, partitionHeader);
-		if (FAILED(result))
-			return result;
-	}
-	else
+	else {
 		// When not called from a file-handling API, just convert the ObjectName to a wide string :
 		RelativeHostPath = string_to_wstring(ObjectName);
+	}
 
 	// Copy the wide string to the unicode string
 	wcscpy_s(nativeObjectAttributes.wszObjectName, RelativeHostPath.c_str());
@@ -747,8 +753,8 @@ NtDll::FILE_LINK_INFORMATION * _XboxToNTLinkInfo(xboxkrnl::FILE_LINK_INFORMATION
 	// Convert the path from Xbox to native
 	std::string originalFileName(xboxLinkInfo->FileName, xboxLinkInfo->FileNameLength);
 	std::wstring convertedFileName;
-	NtDll::HANDLE RootDirectory;
-	NTSTATUS res = CxbxConvertFilePath(originalFileName, /*OUT*/convertedFileName, /*OUT*/&RootDirectory, "NtSetInformationFile");
+	NtDll::HANDLE RootDirectory = nullptr;
+	NTSTATUS res = CxbxConvertFilePath(originalFileName, /*OUT*/convertedFileName, /*IN OUT*/&RootDirectory, "NtSetInformationFile");
 	// TODO : handle if(FAILED(res))
 
 	// Build the native FILE_LINK_INFORMATION struct
@@ -767,8 +773,8 @@ NtDll::FILE_RENAME_INFORMATION * _XboxToNTRenameInfo(xboxkrnl::FILE_RENAME_INFOR
 	// Convert the path from Xbox to native
 	std::string originalFileName(xboxRenameInfo->FileName.Buffer, xboxRenameInfo->FileName.Length);
 	std::wstring convertedFileName;
-	NtDll::HANDLE RootDirectory;
-	NTSTATUS res = CxbxConvertFilePath(originalFileName, /*OUT*/convertedFileName, /*OUT*/&RootDirectory, "NtSetInformationFile");
+	NtDll::HANDLE RootDirectory = nullptr;
+	NTSTATUS res = CxbxConvertFilePath(originalFileName, /*OUT*/convertedFileName, /*IN OUT*/&RootDirectory, "NtSetInformationFile");
 	// TODO : handle if(FAILED(res))
 
 	// Build the native FILE_RENAME_INFORMATION struct
