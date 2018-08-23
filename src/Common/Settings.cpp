@@ -155,6 +155,31 @@ std::string GenerateUserProfileDirectoryStr()
 	return genDirectory;
 }
 
+std::string TrimQuoteFromString(const char* data)
+{
+	// Safeguard before continue on.
+	if (data == nullptr) {
+		return "";
+	}
+
+	std::string trim_str = data;
+	size_t len = trim_str.size();
+	if (len > 0) {
+		// New method, in order to support spaces inside DeviceName value.
+		if (data[0] == '"') {
+			len--; // Let's decrement since it also can act as offset too.
+			if (trim_str.at(len) == '"') {
+				len--;
+			}
+			trim_str = trim_str.substr(1, len);
+		}
+		// Old method, don't do anything special.
+	}
+	return trim_str;
+}
+
+#define AppendQuoteToString(d) "\"" + std::string(d) + "\""
+
 bool Settings::Init()
 {
 	m_si.SetMultiKey(true);
@@ -257,6 +282,7 @@ bool Settings::LoadConfig()
 	int iStatus;
 	std::list<CSimpleIniA::Entry> si_list;
 	std::list<CSimpleIniA::Entry>::iterator si_list_iterator;
+	std::string trim_str;
 
 	// ==== GUI Begin ===========
 
@@ -423,7 +449,8 @@ bool Settings::LoadConfig()
 			m_controller_dinput.DeviceName[v][0] = '\0';
 		}
 		else {
-			std::strncpy(m_controller_dinput.DeviceName[v], si_data, MAX_PATH);
+			trim_str = TrimQuoteFromString(si_data);
+			std::strncpy(m_controller_dinput.DeviceName[v], trim_str.c_str(), MAX_PATH);
 		}
 	}
 
@@ -475,7 +502,8 @@ bool Settings::Save(std::string file_path)
 	}
 
 	// Minimal need is 25, 0x37 for GUID.
-	char si_value[64]; 
+	char si_value[64];
+	std::string quote_str;
 
 	// ==== GUI Begin ===========
 
@@ -555,7 +583,8 @@ bool Settings::Save(std::string file_path)
 			m_si.Delete(section_controller_dinput, szKeyName, true);
 		}
 		else {
-			m_si.SetValue(section_controller_dinput, szKeyName, m_controller_dinput.DeviceName[v], nullptr, true);
+			quote_str = AppendQuoteToString(m_controller_dinput.DeviceName[v]);
+			m_si.SetValue(section_controller_dinput, szKeyName, quote_str.c_str(), nullptr, true);
 		}
 	}
 
