@@ -2020,7 +2020,7 @@ XBSYSAPI EXPORTNUM(158) xboxkrnl::NTSTATUS NTAPI xboxkrnl::KeWaitForMultipleObje
 
 			// Handle a Timeout if specified
 			if (Timeout != nullptr) {
-				// If the timeout is 0, do not `
+				// If the timeout is 0, do not wait
 				if (!(Timeout->u.LowPart | Timeout->u.HighPart)) {
 					WaitStatus = (NTSTATUS)(STATUS_TIMEOUT);
 					goto NoWait;
