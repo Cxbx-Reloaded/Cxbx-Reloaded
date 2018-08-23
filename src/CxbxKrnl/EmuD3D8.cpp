@@ -5953,6 +5953,9 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetTextureState_BumpEnv_8)
         case 26:    // X_D3DTSS_BUMPENVLSCALE
 			hRet = g_pD3DDevice->SetTextureStageState(Stage, D3DTSS_BUMPENVLSCALE, Value);
             break;
+        case 27:    // X_D3DTSS_BUMPENVLOFFSET
+            hRet = g_pD3DDevice->SetTextureStageState(Stage, D3DTSS_BUMPENVLOFFSET, Value);
+            break;
     }
 
 	//DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetTextureStageState");
@@ -5994,6 +5997,9 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetTextureState_BumpEnv)
             break;
         case 26:    // X_D3DTSS_BUMPENVLSCALE
 			hRet = g_pD3DDevice->SetTextureStageState(Stage, D3DTSS_BUMPENVLSCALE, Value);
+            break;
+        case 27:    // X_D3DTSS_BUMPENVLOFFSET
+			hRet = g_pD3DDevice->SetTextureStageState(Stage, D3DTSS_BUMPENVLOFFSET, Value);
             break;
     }
 
@@ -7403,14 +7409,14 @@ void EmuUpdateActiveTextureStages()
 
 void XTL::CxbxUpdateNativeD3DResources()
 {
-	EmuUpdateActiveTextureStages();
+    EmuUpdateActiveTextureStages();
 
 	// If Pixel Shaders are not disabled, process them
 	if (!g_DisablePixelShaders) {
 		XTL::DxbxUpdateActivePixelShader();
 	}
 
-	XTL::EmuUpdateDeferredStates();
+    XTL::EmuUpdateDeferredStates();
 /* TODO : Port these :
 	DxbxUpdateActiveVertexShader();
 	DxbxUpdateActiveTextures();

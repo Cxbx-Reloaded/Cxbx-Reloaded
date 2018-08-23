@@ -304,7 +304,7 @@ void XTL::EmuUpdateDeferredStates()
 					g_pD3DDevice->SetTextureStageState(v, D3DTSS_COLOROP, D3DTOP_LERP);
 					break;
 				case X_D3DTOP_BUMPENVMAP:
-					g_pD3DDevice->SetTextureStageState(v, D3DTSS_COLOROP, D3DTOP_MULTIPLYADD);
+					g_pD3DDevice->SetTextureStageState(v, D3DTSS_COLOROP, D3DTOP_BUMPENVMAP);
 					break;
 				case X_D3DTOP_BUMPENVMAPLUMINANCE:
 					g_pD3DDevice->SetTextureStageState(v, D3DTSS_COLOROP, D3DTOP_BUMPENVMAPLUMINANCE);

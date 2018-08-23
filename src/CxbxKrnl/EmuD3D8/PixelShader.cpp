@@ -525,15 +525,15 @@ enum PSH_OPCODE
 	PO_TEXCOORD,
     PO_TEXCRD, // Note: ps.1.4 only
 	PO_TEXKILL,
-	PO_TEXDP3, // Note : ps.1.3 only
+    PO_TEXREG2AR,
+    PO_TEXREG2GB,
+    PO_TEXDP3, // Note : ps.1.3 only
 	PO_TEXDP3TEX, // Note : ps.1.3 only
 	PO_TEXM3X2TEX,
 	PO_TEXM3X2DEPTH, // Note : requires ps.1.3 and a preceding texm3x2pad
 	PO_TEXM3X3DIFF, // Xbox ext.
 	PO_TEXM3X3VSPEC,
 	PO_TEXM3X3TEX, // Note : Uses a cube texture
-	PO_TEXREG2AR,
-	PO_TEXREG2GB,
 	PO_TEXM3X2PAD, // Note : Must be combined with texm3x2tex or texm3x2depth
 	PO_TEXM3X3PAD,
 	PO_TEXM3X3SPEC, // NOTE : NEEDS 3 ARGUMENTS!
@@ -655,7 +655,9 @@ constexpr int PSH_XBOX_CONSTANT_FC0 = PSH_XBOX_CONSTANT_FOG + 1; // = 17
 constexpr int PSH_XBOX_CONSTANT_FC1 = PSH_XBOX_CONSTANT_FC0 + 1; // = 18
 constexpr int PSH_XBOX_CONSTANT_MUL0 = PSH_XBOX_CONSTANT_FC1 + 1; // = 19
 constexpr int PSH_XBOX_CONSTANT_MUL1 = PSH_XBOX_CONSTANT_MUL0 + 1; // = 20
-constexpr int PSH_XBOX_CONSTANT_MAX = PSH_XBOX_CONSTANT_MUL1 + 1; // = 21
+constexpr int PSH_XBOX_CONSTANT_BEM = PSH_XBOX_CONSTANT_MUL1 + 1; // = 21
+constexpr int PSH_XBOX_CONSTANT_LUM = PSH_XBOX_CONSTANT_BEM + 4; // = 25
+constexpr int PSH_XBOX_CONSTANT_MAX = PSH_XBOX_CONSTANT_LUM + 4; // = 29
 
 constexpr int FakeRegNr_Sum = PSH_XBOX_MAX_T_REGISTER_COUNT + 0;
 constexpr int FakeRegNr_Prod = PSH_XBOX_MAX_T_REGISTER_COUNT + 1;
@@ -832,7 +834,8 @@ typedef struct _PSH_IMD_ARGUMENT {
 	void SetRegister(PSH_ARGUMENT_TYPE aRegType, int16 aAddress, DWORD aMask);
     bool HasModifier(PSH_ARG_MODIFIER modifier);
     bool SetScaleConstRegister(float factor, const PSH_RECOMPILED_SHADER& pRecompiled);
-	std::string ToString();
+    bool SetScaleBemLumRegister(XTL::D3DTEXTURESTAGESTATETYPE factor, int stage, const PSH_RECOMPILED_SHADER& pRecompiled);
+    std::string ToString();
 	bool Decode(const DWORD Value, DWORD aMask, TArgumentType ArgumentType);
 	void Invert();
 	void Negate();
@@ -917,6 +920,9 @@ struct PSH_XBOX_SHADER {
 	std::string DecodedToString(XTL::X_D3DPIXELSHADERDEF *pPSDef);
 	bool _NextIs2D(int Stage);
 	bool DecodeTextureModes(XTL::X_D3DPIXELSHADERDEF *pPSDef);
+    int GetTextureStageModifiers(int Stage);
+    void InsertTex3x2Instructions(int Stage, int inputStage, std::vector<PSH_INTERMEDIATE_FORMAT>& InsertIns);
+    void InsertTex3x3Instructions(int Stage, int inputStage, std::vector<PSH_INTERMEDIATE_FORMAT>& InsertIns);
     bool InsertTextureModeInstruction(XTL::X_D3DPIXELSHADERDEF *pPSDef, int Stage, PSH_OPCODE opcode, std::vector<PSH_INTERMEDIATE_FORMAT>& InsertIns, int& InsertPos);
 	bool MoveRemovableParametersRight();
 	void ConvertXboxOpcodesToNative(XTL::X_D3DPIXELSHADERDEF *pPSDef);
@@ -969,6 +975,11 @@ struct PSH_XBOX_SHADER {
 	bool FixUninitializedReads();
 	bool FixOverusedRegisters();
     bool FinalizeShader();
+
+    static void GetPSTextureModes(XTL::X_D3DPIXELSHADERDEF* pPSDef, PS_TEXTUREMODES psTextureModes[XTL::X_D3DTS_STAGECOUNT]);
+    static void GetPSDotMapping(XTL::X_D3DPIXELSHADERDEF* pPSDef, PS_DOTMAPPING psDotMapping[XTL::X_D3DTS_STAGECOUNT]);
+    static void GetPSCompareModes(XTL::X_D3DPIXELSHADERDEF* pPSDef, DWORD psCompareModes[XTL::X_D3DTS_STAGECOUNT]);
+    static void GetPSInputTexture(XTL::X_D3DPIXELSHADERDEF* pPSDef, int psInputTexture[XTL::X_D3DTS_STAGECOUNT]);
 };
 
 /*
@@ -1353,6 +1364,75 @@ bool PSH_IMD_ARGUMENT::SetScaleConstRegister(float factor, const PSH_RECOMPILED_
     return result;
 }
 
+bool PSH_IMD_ARGUMENT::SetScaleBemLumRegister(XTL::D3DTEXTURESTAGESTATETYPE factor, int stage, const PSH_RECOMPILED_SHADER& pRecompiled)
+{
+    bool result = false;
+
+    PSH_ARG_MODIFIERs modifiers = 0;
+    DWORD mask = Mask;
+    int address = Address;
+
+    const int mappedConstant0 = pRecompiled.ConstMapping[PSH_XBOX_CONSTANT_BEM + stage];
+    const int mappedConstant1 = pRecompiled.ConstMapping[PSH_XBOX_CONSTANT_LUM + stage];
+
+    switch (factor)
+    {
+    case XTL::D3DTSS_BUMPENVMAT00:
+    {
+        address = mappedConstant0;
+        mask = MASK_R;
+        result = true;
+        break;
+    }
+    case XTL::D3DTSS_BUMPENVMAT01:
+    {
+        address = mappedConstant0;
+        mask = MASK_G;
+        result = true;
+        break;
+    }
+    case XTL::D3DTSS_BUMPENVMAT11:
+    {
+        address = mappedConstant0;
+        mask = MASK_B;
+        result = true;
+        break;
+    }
+    case XTL::D3DTSS_BUMPENVMAT10:
+    {
+        address = mappedConstant0;
+        mask = MASK_A;
+        result = true;
+        break;
+    }
+    case XTL::D3DTSS_BUMPENVLSCALE:
+    {
+        address = mappedConstant1;
+        mask = MASK_R;
+        result = true;
+        break;
+    }
+    case XTL::D3DTSS_BUMPENVLOFFSET:
+    {
+        address = mappedConstant1;
+        mask = MASK_G;
+        result = true;
+        break;
+    }
+    }
+
+    if (result)
+    {
+        Type = PARAM_C;
+        Address = address;
+        Mask = mask;
+        Modifiers = modifiers;
+        Multiplier = 1.0f;
+    }
+
+    return result;
+}
+
 std::string PSH_IMD_ARGUMENT::ToString()
 {
   std::string Result;
@@ -1630,10 +1710,17 @@ _PSH_INTERMEDIATE_FORMAT *PSH_INTERMEDIATE_FORMAT::Initialize(const PSH_OPCODE a
   int i;
 
   Opcode = aOpcode;
+  Modifier = INSMOD_NONE;
   for (i = 0; i < 3; i++)
-    Output[i].Multiplier = 1.0f;
+  {
+      Output[i] = {};
+      Output[i].Multiplier = 1.0f;
+  }
   for (i = 0; i < 7; i++)
-    Parameters[i].Multiplier = 1.0f;
+  {
+      Parameters[i] = {};
+      Parameters[i].Multiplier = 1.0f;
+  }
 
   return this;
 }
@@ -2262,6 +2349,36 @@ std::string PSH_XBOX_SHADER::OriginalToString(XTL::X_D3DPIXELSHADERDEF *pPSDef) 
                   pPSDef->PSC1Mapping,
                   pPSDef->PSFinalCombinerConstants));
 }
+void PSH_XBOX_SHADER::GetPSTextureModes(XTL::X_D3DPIXELSHADERDEF* pPSDef, PS_TEXTUREMODES psTextureModes[XTL::X_D3DTS_STAGECOUNT])
+{
+    for (int i = 0; i < XTL::X_D3DTS_STAGECOUNT; i++)
+    {
+        psTextureModes[i] = (PS_TEXTUREMODES)((XTL::TemporaryPixelShaderRenderStates[XTL::X_D3DRS_PSTEXTUREMODES] >> (i * 5)) & 0x1F);
+    }
+}
+void PSH_XBOX_SHADER::GetPSDotMapping(XTL::X_D3DPIXELSHADERDEF* pPSDef, PS_DOTMAPPING psDotMapping[XTL::X_D3DTS_STAGECOUNT])
+{
+    psDotMapping[0] = (PS_DOTMAPPING)(0);
+    psDotMapping[1] = (PS_DOTMAPPING)((pPSDef->PSDotMapping >> 0) & 0x7);
+    psDotMapping[2] = (PS_DOTMAPPING)((pPSDef->PSDotMapping >> 4) & 0x7);
+    psDotMapping[3] = (PS_DOTMAPPING)((pPSDef->PSDotMapping >> 8) & 0x7);
+}
+
+void PSH_XBOX_SHADER::GetPSCompareModes(XTL::X_D3DPIXELSHADERDEF* pPSDef, DWORD psCompareModes[XTL::X_D3DTS_STAGECOUNT])
+{
+    for (int i = 0; i < XTL::X_D3DTS_STAGECOUNT; i++)
+    {
+        psCompareModes[i] = (pPSDef->PSCompareMode >> (i * 4)) & 0xF;
+    }
+}
+
+void PSH_XBOX_SHADER::GetPSInputTexture(XTL::X_D3DPIXELSHADERDEF* pPSDef, int psInputTexture[XTL::X_D3DTS_STAGECOUNT])
+{
+    psInputTexture[0] = -1; // Stage 0 has no predecessors
+    psInputTexture[1] = 0; // Stage 1 can only use stage 0
+    psInputTexture[2] = (pPSDef->PSInputTexture >> 16) & 0x1; // Stage 2 can use stage 0 or 1
+    psInputTexture[3] = (pPSDef->PSInputTexture >> 20) & 0x3; // Stage 3 can only use stage 0, 1 or 2
+}
 
 PSH_RECOMPILED_SHADER PSH_XBOX_SHADER::Decode(XTL::X_D3DPIXELSHADERDEF *pPSDef)
 {
@@ -2274,21 +2391,10 @@ PSH_RECOMPILED_SHADER PSH_XBOX_SHADER::Decode(XTL::X_D3DPIXELSHADERDEF *pPSDef)
   if (IsRunning(TITLEID_AZURIK))
     LogFlags = LogFlags | lfExtreme;*/
 
-  for (i = 0; i < XTL::X_D3DTS_STAGECOUNT; i++)
-  {
-    PSTextureModes[i] = (PS_TEXTUREMODES)((XTL::TemporaryPixelShaderRenderStates[XTL::X_D3DRS_PSTEXTUREMODES] >> (i*5)) & 0x1F);
-    PSCompareMode[i] = (pPSDef->PSCompareMode >> (i*4)) & 0xF;
-  }
-
-  PSDotMapping[0] = (PS_DOTMAPPING)(0);
-  PSDotMapping[1] = (PS_DOTMAPPING)((pPSDef->PSDotMapping >> 0) & 0x7);
-  PSDotMapping[2] = (PS_DOTMAPPING)((pPSDef->PSDotMapping >> 4) & 0x7);
-  PSDotMapping[3] = (PS_DOTMAPPING)((pPSDef->PSDotMapping >> 8) & 0x7);
-
-  PSInputTexture[0] = -1; // Stage 0 has no predecessors
-  PSInputTexture[1] = 0; // Stage 1 can only use stage 0
-  PSInputTexture[2] = (pPSDef->PSInputTexture >> 16) & 0x1; // Stage 2 can use stage 0 or 1
-  PSInputTexture[3] = (pPSDef->PSInputTexture >> 20) & 0x3; // Stage 3 can only use stage 0, 1 or 2
+  GetPSTextureModes(pPSDef, PSTextureModes);
+  GetPSCompareModes(pPSDef, PSCompareMode);
+  GetPSDotMapping(pPSDef, PSDotMapping);
+  GetPSInputTexture(pPSDef, PSInputTexture);
 
   NumberOfCombiners = (pPSDef->PSCombinerCount >> 0) & 0xF;
   CombinerCountFlags = (pPSDef->PSCombinerCount >> 8);
@@ -2756,17 +2862,88 @@ bool PSH_XBOX_SHADER::DecodeTextureModes(XTL::X_D3DPIXELSHADERDEF *pPSDef)
   }
   if (Result)
   {
-      for (auto& insert : InsertIns)
+      for (int i = 0; i < InsertIns.size(); ++i)
       {
-          if (insert.Opcode != PO_COMMENT)
+          if (i >= XTL::X_D3DTS_STAGECOUNT || InsertIns[i].Opcode != PO_COMMENT)
           {
-              InsertIntermediate(&insert, InsertPos);
+              InsertIntermediate(&InsertIns[i], InsertPos);
               ++InsertPos;
           }
       }
   }
   StartPos = InsertPos + 1;
   return Result;
+}
+
+int PSH_XBOX_SHADER::GetTextureStageModifiers(int Stage)
+{
+    int modifiers = 0;
+    switch (PSDotMapping[Stage])
+    {
+    case PS_DOTMAPPING_ZERO_TO_ONE:
+        break;
+    case PS_DOTMAPPING_MINUS1_TO_1_D3D:
+        modifiers = (1 << ARGMOD_SCALE_BX2);
+        break;
+    case PS_DOTMAPPING_MINUS1_TO_1_GL:
+        break;
+    case PS_DOTMAPPING_MINUS1_TO_1:
+        break;
+    case PS_DOTMAPPING_HILO_1:
+        break;
+    case PS_DOTMAPPING_HILO_HEMISPHERE:
+        break;
+    default:
+        break;
+    }
+
+    return modifiers;
+}
+
+void PSH_XBOX_SHADER::InsertTex3x2Instructions(int Stage, int inputStage, std::vector<PSH_INTERMEDIATE_FORMAT>& InsertIns)
+{
+    PSH_INTERMEDIATE_FORMAT Ins = {};
+
+    const int modifiers = GetTextureStageModifiers(Stage);
+
+    Ins.Initialize(PO_DP3);
+    Ins.Output[0].SetRegister(PARAM_R, 1, MASK_R);
+    Ins.Parameters[0].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + Stage - 1, 0);
+    Ins.Parameters[1].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + inputStage, 0);
+    Ins.Parameters[1].Modifiers = modifiers;
+    InsertIns.emplace_back(Ins);
+    Ins.Initialize(PO_DP3);
+    Ins.Output[0].SetRegister(PARAM_R, 1, MASK_G);
+    Ins.Parameters[0].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + Stage - 0, 0);
+    Ins.Parameters[1].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + inputStage, 0);
+    Ins.Parameters[1].Modifiers = modifiers;
+    InsertIns.emplace_back(Ins);
+}
+
+void PSH_XBOX_SHADER::InsertTex3x3Instructions(int Stage, int inputStage, std::vector<PSH_INTERMEDIATE_FORMAT>& InsertIns)
+{
+    PSH_INTERMEDIATE_FORMAT Ins = {};
+
+    const int modifiers = GetTextureStageModifiers(Stage);
+
+    Ins.Initialize(PO_DP3);
+    Ins.Output[0].SetRegister(PARAM_R, 1, MASK_R);
+    Ins.Parameters[0].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + Stage - 2, 0);
+    Ins.Parameters[1].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + inputStage, 0);
+    Ins.Parameters[1].Modifiers = modifiers;
+    InsertIns.emplace_back(Ins);
+    Ins.Initialize(PO_DP3);
+    Ins.Output[0].SetRegister(PARAM_R, 1, MASK_G);
+    Ins.Parameters[0].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + Stage - 1, 0);
+    Ins.Parameters[1].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + inputStage, 0);
+    Ins.Parameters[1].Modifiers = modifiers;
+    InsertIns.emplace_back(Ins);
+    Ins.Initialize(PO_DP3);
+    Ins.Output[0].SetRegister(PARAM_R, 1, MASK_B);
+    Ins.Parameters[0].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + Stage - 0, 0);
+    Ins.Parameters[1].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + inputStage, 0);
+    Ins.Parameters[1].Modifiers = modifiers;
+    InsertIns.emplace_back(Ins);
 }
 
 bool PSH_XBOX_SHADER::InsertTextureModeInstruction(XTL::X_D3DPIXELSHADERDEF *pPSDef, int Stage, PSH_OPCODE opcode, std::vector<PSH_INTERMEDIATE_FORMAT>& InsertIns, int& InsertPos)
@@ -2785,11 +2962,69 @@ bool PSH_XBOX_SHADER::InsertTextureModeInstruction(XTL::X_D3DPIXELSHADERDEF *pPS
     switch (opcode)
     {
     case PO_TEXBEM:
-        inputStage = PSInputTexture[Stage];
-        break;
     case PO_TEXBEML:
+    {
         inputStage = PSInputTexture[Stage];
+
+        if (m_PSVersion >= D3DPS_VERSION(1, 4))
+        {
+            Ins.Initialize(PO_MAD);
+            Ins.Output[0].SetRegister(PARAM_R, 1, MASK_R);
+            Ins.Parameters[0].SetScaleBemLumRegister(XTL::D3DTSS_BUMPENVMAT00, Stage, Recompiled);
+            Ins.Parameters[1].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + inputStage, MASK_R);
+            Ins.Parameters[2].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + Stage, MASK_R);
+            InsertIns.emplace_back(Ins);
+            Ins.Initialize(PO_MAD);
+            Ins.Output[0].SetRegister(PARAM_R, 1, MASK_R);
+            Ins.Parameters[0].SetScaleBemLumRegister(XTL::D3DTSS_BUMPENVMAT10, Stage, Recompiled);
+            Ins.Parameters[1].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + inputStage, MASK_G);
+            Ins.Parameters[2].SetRegister(PARAM_R, 1, MASK_R);
+            InsertIns.emplace_back(Ins);
+            //
+            Ins.Initialize(PO_MAD);
+            Ins.Output[0].SetRegister(PARAM_R, 1, MASK_G);
+            Ins.Parameters[0].SetScaleBemLumRegister(XTL::D3DTSS_BUMPENVMAT01, Stage, Recompiled);
+            Ins.Parameters[1].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + inputStage, MASK_R);
+            Ins.Parameters[2].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + Stage, MASK_G);
+            InsertIns.emplace_back(Ins);
+            Ins.Initialize(PO_MAD);
+            Ins.Output[0].SetRegister(PARAM_R, 1, MASK_G);
+            Ins.Parameters[0].SetScaleBemLumRegister(XTL::D3DTSS_BUMPENVMAT11, Stage, Recompiled);
+            Ins.Parameters[1].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + inputStage, MASK_G);
+            Ins.Parameters[2].SetRegister(PARAM_R, 1, MASK_G);
+            InsertIns.emplace_back(Ins);
+
+            Ins.CommentString = "";
+            Ins.Initialize(PO_TEXLD2);
+            Ins.Output[0].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + Stage, 0);
+            Ins.Parameters[0].SetRegister(PARAM_R, 1, 0);
+            Ins.Parameters[1].SetRegister(PARAM_S, Stage, 0);
+            Ins.Parameters[1].Modifiers = 0;
+            InsertIns.emplace_back(Ins);
+
+            if (opcode == PO_TEXBEML)
+            {
+                //
+                Ins.Initialize(PO_MAD);
+                Ins.Output[0].SetRegister(PARAM_R, 1, MASK_B);
+                Ins.Parameters[0].SetScaleBemLumRegister(XTL::D3DTSS_BUMPENVLSCALE, Stage, Recompiled);
+                Ins.Parameters[1].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + inputStage, MASK_B);
+                Ins.Parameters[2].SetScaleBemLumRegister(XTL::D3DTSS_BUMPENVLOFFSET, Stage, Recompiled);
+                InsertIns.emplace_back(Ins);
+                //
+                Ins.Initialize(PO_MUL);
+                Ins.Output[0].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + Stage, 0);
+                Ins.Parameters[0].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + Stage, 0);
+                Ins.Parameters[1].SetRegister(PARAM_R, 1, MASK_B);
+                InsertIns.emplace_back(Ins);
+            }
+
+            opcode = PO_MOV;
+            inputStage = Stage;
+            needsInitialization = true;
+        }
         break;
+    }
     case PO_TEXBRDF:
         inputStage = PSInputTexture[Stage];
         break;
@@ -2797,132 +3032,102 @@ bool PSH_XBOX_SHADER::InsertTextureModeInstruction(XTL::X_D3DPIXELSHADERDEF *pPS
     {
         inputStage = PSInputTexture[Stage];
 
-        Ins.Initialize(PO_DP3);
-        Ins.Output[0].SetRegister(PARAM_R, 1, MASK_R);
-        Ins.Parameters[0].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + Stage - 1, 0);
-        Ins.Parameters[1].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + inputStage, 0);
-        InsertIns.emplace_back(Ins);
-        Ins.Initialize(PO_DP3);
-        Ins.Output[0].SetRegister(PARAM_R, 1, MASK_G);
-        Ins.Parameters[0].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + Stage - 0, 0);
-        Ins.Parameters[1].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + inputStage, 0);
-        InsertIns.emplace_back(Ins);
+        if (m_PSVersion >= D3DPS_VERSION(1, 4))
+        {
+            InsertTex3x2Instructions(Stage, inputStage, InsertIns);
 
-        Ins.CommentString = "";
-        Ins.Initialize(PO_TEXLD2);
-        Ins.Output[0].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + Stage, 0);
-        Ins.Parameters[0].SetRegister(PARAM_R, 1, 0);
-        Ins.Parameters[1].SetRegister(PARAM_S, Stage, 0);
-        InsertIns.emplace_back(Ins);
+            Ins.CommentString = "";
+            Ins.Initialize(PO_TEXLD2);
+            Ins.Output[0].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + Stage, 0);
+            Ins.Parameters[0].SetRegister(PARAM_R, 1, 0);
+            Ins.Parameters[1].SetRegister(PARAM_S, Stage, 0);
+            InsertIns.emplace_back(Ins);
 
-        opcode = PO_MOV;
-        needsInitialization = true;
+            opcode = PO_MOV;
+            inputStage = Stage;
+            needsInitialization = true;
+        }
         break;
     }
     case PO_TEXM3X3TEX:
     {
         inputStage = PSInputTexture[Stage];
 
-        Ins.Initialize(PO_DP3);
-        Ins.Output[0].SetRegister(PARAM_R, 1, MASK_R);
-        Ins.Parameters[0].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + Stage-2, 0);
-        Ins.Parameters[1].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + inputStage, 0);
-        InsertIns.emplace_back(Ins);
-        Ins.Initialize(PO_DP3);
-        Ins.Output[0].SetRegister(PARAM_R, 1, MASK_G);
-        Ins.Parameters[0].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + Stage-1, 0);
-        Ins.Parameters[1].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + inputStage, 0);
-        InsertIns.emplace_back(Ins);
-        Ins.Initialize(PO_DP3);
-        Ins.Output[0].SetRegister(PARAM_R, 1, MASK_B);
-        Ins.Parameters[0].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + Stage, 0);
-        Ins.Parameters[1].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + inputStage, 0);
-        InsertIns.emplace_back(Ins);
+        if (m_PSVersion >= D3DPS_VERSION(1, 4))
+        {
+            InsertTex3x3Instructions(Stage, inputStage, InsertIns);
 
-        Ins.CommentString = "";
-        Ins.Initialize(PO_TEXLD2);
-        Ins.Output[0].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + Stage, 0);
-        Ins.Parameters[0].SetRegister(PARAM_R, 1, 0);
-        Ins.Parameters[1].SetRegister(PARAM_S, Stage, 0);
-        InsertIns.emplace_back(Ins);
+            Ins.CommentString = "";
+            Ins.Initialize(PO_TEXLD2);
+            Ins.Output[0].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + Stage, 0);
+            Ins.Parameters[0].SetRegister(PARAM_R, 1, 0);
+            Ins.Parameters[1].SetRegister(PARAM_S, Stage, 0);
+            InsertIns.emplace_back(Ins);
 
-        opcode = PO_MOV;
-        needsInitialization = true;
+            opcode = PO_MOV;
+            inputStage = Stage;
+            needsInitialization = true;
+        }
         break;
     }
     case PO_TEXM3X2DEPTH:
     {
         inputStage = PSInputTexture[Stage];
 
-        Ins.Initialize(PO_DP3);
-        Ins.Output[0].SetRegister(PARAM_R, 1, MASK_R);
-        Ins.Parameters[0].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + Stage - 1, 0);
-        Ins.Parameters[1].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + inputStage, 0);
-        InsertIns.emplace_back(Ins);
-        Ins.Initialize(PO_DP3);
-        Ins.Output[0].SetRegister(PARAM_R, 1, MASK_G);
-        Ins.Parameters[0].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + Stage - 0, 0);
-        Ins.Parameters[1].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + inputStage, 0);
-        InsertIns.emplace_back(Ins);
+        if (m_PSVersion >= D3DPS_VERSION(1, 4))
+        {
+            InsertTex3x2Instructions(Stage, inputStage, InsertIns);
 
-        Ins.CommentString = "";
-        Ins.Initialize(PO_RCP);
-        Ins.Output[0].SetRegister(PARAM_R, 1, MASK_B);
-        Ins.Parameters[0].SetRegister(PARAM_R, 1, MASK_G);
-        InsertIns.emplace_back(Ins);
+            Ins.CommentString = "";
+            Ins.Initialize(PO_RCP);
+            Ins.Output[0].SetRegister(PARAM_R, 1, MASK_B);
+            Ins.Parameters[0].SetRegister(PARAM_R, 1, MASK_G);
+            InsertIns.emplace_back(Ins);
 
-        Ins.Initialize(PO_MUL);
-        Ins.Modifier = INSMOD_SAT;
-        Ins.Output[0].SetRegister(PARAM_R, 1, MASK_B);
-        Ins.Parameters[0].SetRegister(PARAM_R, 1, MASK_R);
-        Ins.Parameters[1].SetRegister(PARAM_R, 1, MASK_B);
-        InsertIns.emplace_back(Ins);
+            Ins.Initialize(PO_MUL);
+            Ins.Modifier = INSMOD_SAT;
+            Ins.Output[0].SetRegister(PARAM_R, 1, MASK_B);
+            Ins.Parameters[0].SetRegister(PARAM_R, 1, MASK_R);
+            Ins.Parameters[1].SetRegister(PARAM_R, 1, MASK_B);
+            InsertIns.emplace_back(Ins);
 
-        Ins.Initialize(PO_CMP);
-        Ins.Output[0].SetRegister(PARAM_R, 1, MASK_B);
-        Ins.Parameters[0].SetRegister(PARAM_R, 1, MASK_G);
-        Ins.Parameters[0].Modifiers = (1 << ARGMOD_NEGATE);
-        Ins.Parameters[1].SetScaleConstRegister(1.0, Recompiled);
-        Ins.Parameters[2].SetRegister(PARAM_R, 1, MASK_B);
-        InsertIns.emplace_back(Ins);
+            Ins.Initialize(PO_CMP);
+            Ins.Output[0].SetRegister(PARAM_R, 1, MASK_B);
+            Ins.Parameters[0].SetRegister(PARAM_R, 1, MASK_G);
+            Ins.Parameters[0].Modifiers = (1 << ARGMOD_NEGATE);
+            Ins.Parameters[1].SetScaleConstRegister(1.0, Recompiled);
+            Ins.Parameters[2].SetRegister(PARAM_R, 1, MASK_B);
+            InsertIns.emplace_back(Ins);
 
-        Ins.Initialize(PO_MOV);
-        Ins.Output[0].SetRegister(PARAM_oDepth, 0, 0);
-        Ins.Parameters[0].SetRegister(PARAM_R, 1, MASK_B);
-        InsertIns.emplace_back(Ins);
+            Ins.Initialize(PO_MOV);
+            Ins.Output[0].SetRegister(PARAM_oDepth, 0, 0);
+            Ins.Parameters[0].SetRegister(PARAM_R, 1, MASK_B);
+            InsertIns.emplace_back(Ins);
 
-        opcode = PO_MOV;
-        needsInitialization = true;
+            opcode = PO_MOV;
+            inputStage = Stage;
+            needsInitialization = true;
+        }
         break;
     }
     case PO_TEXM3X3DIFF:
     {
         inputStage = PSInputTexture[Stage];
 
-        Ins.Initialize(PO_DP3);
-        Ins.Output[0].SetRegister(PARAM_R, 1, MASK_R);
-        Ins.Parameters[0].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + Stage - 2, 0);
-        Ins.Parameters[1].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + inputStage, 0);
-        InsertIns.emplace_back(Ins);
-        Ins.Initialize(PO_DP3);
-        Ins.Output[0].SetRegister(PARAM_R, 1, MASK_G);
-        Ins.Parameters[0].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + Stage - 1, 0);
-        Ins.Parameters[1].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + inputStage, 0);
-        InsertIns.emplace_back(Ins);
-        Ins.Initialize(PO_DP3);
-        Ins.Output[0].SetRegister(PARAM_R, 1, MASK_B);
-        Ins.Parameters[0].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + Stage - 0, 0);
-        Ins.Parameters[1].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + inputStage, 0);
-        InsertIns.emplace_back(Ins);
+        if (m_PSVersion >= D3DPS_VERSION(1, 4))
+        {
+            InsertTex3x3Instructions(Stage, inputStage, InsertIns);
 
-        Ins.Initialize(PO_TEXLD2);
-        Ins.Output[0].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + Stage, 0);
-        Ins.Parameters[0].SetRegister(PARAM_R, 1, 0);
-        Ins.Parameters[1].SetRegister(PARAM_S, Stage, 0);
-        InsertIns.emplace_back(Ins);
+            Ins.Initialize(PO_TEXLD2);
+            Ins.Output[0].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + Stage, 0);
+            Ins.Parameters[0].SetRegister(PARAM_R, 1, 0);
+            Ins.Parameters[1].SetRegister(PARAM_S, Stage, 0);
+            InsertIns.emplace_back(Ins);
 
-        opcode = PO_MOV;
-        needsInitialization = true;
+            opcode = PO_MOV;
+            inputStage = Stage;
+            needsInitialization = true;
+        }
         break;
     }
     case PO_TEXM3X3VSPEC:
@@ -2930,157 +3135,159 @@ bool PSH_XBOX_SHADER::InsertTextureModeInstruction(XTL::X_D3DPIXELSHADERDEF *pPS
     {
         inputStage = PSInputTexture[Stage];
 
-        Ins.Initialize(PO_DP3);
-        Ins.Output[0].SetRegister(PARAM_R, 1, MASK_R);
-        Ins.Parameters[0].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + Stage - 2, 0);
-        Ins.Parameters[1].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + inputStage, 0);
-        InsertIns.emplace_back(Ins);
-        Ins.Initialize(PO_DP3);
-        Ins.Output[0].SetRegister(PARAM_R, 1, MASK_G);
-        Ins.Parameters[0].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + Stage - 1, 0);
-        Ins.Parameters[1].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + inputStage, 0);
-        InsertIns.emplace_back(Ins);
-        Ins.Initialize(PO_DP3);
-        Ins.Output[0].SetRegister(PARAM_R, 1, MASK_B);
-        Ins.Parameters[0].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + Stage - 0, 0);
-        Ins.Parameters[1].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + inputStage, 0);
-        InsertIns.emplace_back(Ins);
-
-        int baseRegister = PSH_XBOX_MAX_R_REGISTER_COUNT + PSH_XBOX_MAX_T_REGISTER_COUNT;
-
-        // get eye-ray vector
-        Ins.CommentString = "get eye-ray vector";
-        if (opcode == PO_TEXM3X3VSPEC)
+        if (m_PSVersion >= D3DPS_VERSION(1, 4))
         {
-            // E.x
-            Ins.Initialize(PO_MOV);
-            Ins.Output[0].SetRegister(PARAM_R, baseRegister + 0, MASK_R);
-            Ins.Parameters[0].SetRegister(PARAM_T, Stage - 2, MASK_A);
+            InsertTex3x3Instructions(Stage, inputStage, InsertIns);
+
+            int baseRegister = PSH_XBOX_MAX_R_REGISTER_COUNT + PSH_XBOX_MAX_T_REGISTER_COUNT;
+
+            // get eye-ray vector
+            Ins.Initialize(PO_COMMENT);
+            Ins.CommentString = "; get eye-ray vector";
             InsertIns.emplace_back(Ins);
-            // E.y
-            Ins.Initialize(PO_MOV);
-            Ins.Output[0].SetRegister(PARAM_R, baseRegister + 0, MASK_G);
-            Ins.Parameters[0].SetRegister(PARAM_T, Stage - 1, MASK_A);
+            if (opcode == PO_TEXM3X3VSPEC)
+            {
+                // E.x
+                Ins.Initialize(PO_MOV);
+                Ins.Output[0].SetRegister(PARAM_R, baseRegister + 0, MASK_R);
+                Ins.Parameters[0].SetRegister(PARAM_T, Stage - 2, MASK_A);
+                InsertIns.emplace_back(Ins);
+                // E.y
+                Ins.Initialize(PO_MOV);
+                Ins.Output[0].SetRegister(PARAM_R, baseRegister + 0, MASK_G);
+                Ins.Parameters[0].SetRegister(PARAM_T, Stage - 1, MASK_A);
+                InsertIns.emplace_back(Ins);
+                // E.z
+                Ins.Initialize(PO_MOV);
+                Ins.Output[0].SetRegister(PARAM_R, baseRegister + 0, MASK_B);
+                Ins.Parameters[0].SetRegister(PARAM_T, Stage - 0, MASK_A);
+                InsertIns.emplace_back(Ins);
+                // E.w
+                Ins.Initialize(PO_MOV);
+                Ins.Output[0].SetRegister(PARAM_R, baseRegister + 0, MASK_A);
+                Ins.Parameters[0].SetScaleConstRegister(0.0, Recompiled);
+                InsertIns.emplace_back(Ins);
+            }
+            else
+            {
+                // E
+                Ins.Initialize(PO_MOV);
+                Ins.Output[0].SetRegister(PARAM_R, baseRegister + 0, 0);
+                Ins.Parameters[0].SetRegister(PARAM_C, 0, 0);
+                InsertIns.emplace_back(Ins);
+            }
+
+            // compute reflection vector
+            Ins.Initialize(PO_COMMENT);
+            Ins.CommentString = "; compute reflection vector";
             InsertIns.emplace_back(Ins);
-            // E.z
-            Ins.Initialize(PO_MOV);
-            Ins.Output[0].SetRegister(PARAM_R, baseRegister + 0, MASK_B);
-            Ins.Parameters[0].SetRegister(PARAM_T, Stage - 0, MASK_A);
+            // N.E
+            Ins.Initialize(PO_DP3);
+            Ins.Output[0].SetRegister(PARAM_R, baseRegister + 1, MASK_R);
+            Ins.Parameters[0].SetRegister(PARAM_R, 1, 0);
+            Ins.Parameters[1].SetRegister(PARAM_R, baseRegister + 0, 0);
             InsertIns.emplace_back(Ins);
-            // E.w
-            Ins.Initialize(PO_MOV);
-            Ins.Output[0].SetRegister(PARAM_R, baseRegister + 0, MASK_A);
-            Ins.Parameters[0].SetScaleConstRegister(0.0, Recompiled);
+            // 2 * (N.E)
+            Ins.Initialize(PO_MUL);
+            Ins.Output[0].SetRegister(PARAM_R, baseRegister + 1, MASK_R);
+            Ins.Parameters[0].SetRegister(PARAM_R, baseRegister + 1, MASK_R);
+            Ins.Parameters[1].SetScaleConstRegister(2.0, Recompiled);
             InsertIns.emplace_back(Ins);
+            // N.N
+            Ins.Initialize(PO_DP3);
+            Ins.Output[0].SetRegister(PARAM_R, baseRegister + 1, MASK_G);
+            Ins.Parameters[0].SetRegister(PARAM_R, 1, 0);
+            Ins.Parameters[1].SetRegister(PARAM_R, 1, 0);
+            InsertIns.emplace_back(Ins);
+            // 1 / (N.N)
+            Ins.Initialize(PO_RCP);
+            Ins.Output[0].SetRegister(PARAM_R, baseRegister + 1, MASK_G);
+            Ins.Parameters[0].SetRegister(PARAM_R, baseRegister + 1, MASK_G);
+            InsertIns.emplace_back(Ins);
+            // 2 * N.E / N.N
+            Ins.Initialize(PO_MUL);
+            Ins.Output[0].SetRegister(PARAM_R, baseRegister + 1, MASK_R);
+            Ins.Parameters[0].SetRegister(PARAM_R, baseRegister + 1, MASK_R);
+            Ins.Parameters[1].SetRegister(PARAM_R, baseRegister + 1, MASK_G);
+            InsertIns.emplace_back(Ins);
+            // 2 * N.E / N.N * N - E
+            Ins.Initialize(PO_MAD);
+            Ins.Output[0].SetRegister(PARAM_R, 1, 0);
+            Ins.Parameters[0].SetRegister(PARAM_R, 1, 0);
+            Ins.Parameters[1].SetRegister(PARAM_R, baseRegister + 1, MASK_R);
+            Ins.Parameters[2].SetRegister(PARAM_R, baseRegister + 0, 0);
+            Ins.Parameters[2].Modifiers = (1 << ARGMOD_NEGATE);
+            InsertIns.emplace_back(Ins);
+
+            Ins.CommentString = "";
+            Ins.Initialize(PO_TEXLD2);
+            Ins.Output[0].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + Stage, 0);
+            Ins.Parameters[0].SetRegister(PARAM_R, 1, 0);
+            Ins.Parameters[1].SetRegister(PARAM_S, Stage, 0);
+            InsertIns.emplace_back(Ins);
+
+            opcode = PO_MOV;
+            inputStage = Stage;
+            needsInitialization = true;
         }
-        else
-        {
-            // E
-            Ins.Initialize(PO_MOV);
-            Ins.Output[0].SetRegister(PARAM_R, baseRegister + 0, 0);
-            Ins.Parameters[0].SetRegister(PARAM_C, 0, 0);
-            InsertIns.emplace_back(Ins);
-        }
-
-        // compute reflection vector
-        Ins.CommentString = "compute reflection vector";
-        // N.E
-        Ins.Initialize(PO_DP3);
-        Ins.Output[0].SetRegister(PARAM_R, baseRegister + 1, MASK_R);
-        Ins.Parameters[0].SetRegister(PARAM_R, 1, 0);
-        Ins.Parameters[1].SetRegister(PARAM_R, baseRegister + 0, 0);
-        InsertIns.emplace_back(Ins);
-        // 2 * (N.E)
-        Ins.Initialize(PO_MUL);
-        Ins.Output[0].SetRegister(PARAM_R, baseRegister + 1, MASK_R);
-        Ins.Parameters[0].SetRegister(PARAM_R, baseRegister + 1, MASK_R);
-        Ins.Parameters[1].SetScaleConstRegister(2.0, Recompiled);
-        InsertIns.emplace_back(Ins);
-        // N.N
-        Ins.Initialize(PO_DP3);
-        Ins.Output[0].SetRegister(PARAM_R, baseRegister + 1, MASK_G);
-        Ins.Parameters[0].SetRegister(PARAM_R, 1, 0);
-        Ins.Parameters[1].SetRegister(PARAM_R, 1, 0);
-        InsertIns.emplace_back(Ins);
-        // 1 / (N.N)
-        Ins.Initialize(PO_RCP);
-        Ins.Output[0].SetRegister(PARAM_R, baseRegister + 1, MASK_G);
-        Ins.Parameters[0].SetRegister(PARAM_R, baseRegister + 1, MASK_G);
-        InsertIns.emplace_back(Ins);
-        // 2 * N.E / N.N
-        Ins.Initialize(PO_MUL);
-        Ins.Output[0].SetRegister(PARAM_R, baseRegister + 1, MASK_R);
-        Ins.Parameters[0].SetRegister(PARAM_R, baseRegister + 1, MASK_R);
-        Ins.Parameters[1].SetRegister(PARAM_R, baseRegister + 1, MASK_G);
-        InsertIns.emplace_back(Ins);
-        // 2 * N.E / N.N * N - E
-        Ins.Initialize(PO_MAD);
-        Ins.Output[0].SetRegister(PARAM_R, 1, 0);
-        Ins.Parameters[0].SetRegister(PARAM_R, 1, 0);
-        Ins.Parameters[1].SetRegister(PARAM_R, baseRegister + 1, MASK_R);
-        Ins.Parameters[2].SetRegister(PARAM_R, baseRegister + 0, 0);
-        Ins.Parameters[2].Modifiers = (1 << ARGMOD_NEGATE);
-        InsertIns.emplace_back(Ins);
-
-        Ins.CommentString = "";
-        Ins.Initialize(PO_TEXLD2);
-        Ins.Output[0].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + Stage, 0);
-        Ins.Parameters[0].SetRegister(PARAM_R, 1, 0);
-        Ins.Parameters[1].SetRegister(PARAM_S, Stage, 0);
-        InsertIns.emplace_back(Ins);
-
-        opcode = PO_MOV;
-        needsInitialization = true;
         break;
     }
     case PO_TEXREG2AR:
     {
         inputStage = PSInputTexture[Stage];
 
-        // E.x
-        Ins.Initialize(PO_MOV);
-        Ins.Output[0].SetRegister(PARAM_R, 1, MASK_R);
-        Ins.Parameters[0].SetRegister(PARAM_T, Stage, MASK_A);
-        InsertIns.emplace_back(Ins);
-        // E.y
-        Ins.Initialize(PO_MOV);
-        Ins.Output[0].SetRegister(PARAM_R, 1, MASK_G);
-        Ins.Parameters[0].SetRegister(PARAM_T, Stage, MASK_R);
-        InsertIns.emplace_back(Ins);
+        if (m_PSVersion >= D3DPS_VERSION(1, 4))
+        {
+            // E.x
+            Ins.Initialize(PO_MOV);
+            Ins.Output[0].SetRegister(PARAM_R, 1, MASK_R);
+            Ins.Parameters[0].SetRegister(PARAM_T, Stage, MASK_A);
+            InsertIns.emplace_back(Ins);
+            // E.y
+            Ins.Initialize(PO_MOV);
+            Ins.Output[0].SetRegister(PARAM_R, 1, MASK_G);
+            Ins.Parameters[0].SetRegister(PARAM_T, Stage, MASK_R);
+            InsertIns.emplace_back(Ins);
 
-        Ins.Initialize(PO_TEXLD2);
-        Ins.Output[0].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + Stage, 0);
-        Ins.Parameters[0].SetRegister(PARAM_R, 1, 0);
-        Ins.Parameters[1].SetRegister(PARAM_S, Stage, 0);
-        InsertIns.emplace_back(Ins);
+            Ins.Initialize(PO_TEXLD2);
+            Ins.Output[0].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + Stage, 0);
+            Ins.Parameters[0].SetRegister(PARAM_R, 1, 0);
+            Ins.Parameters[1].SetRegister(PARAM_S, Stage, 0);
+            InsertIns.emplace_back(Ins);
 
-        opcode = PO_MOV;
-        needsInitialization = true;
+            opcode = PO_MOV;
+            inputStage = Stage;
+            needsInitialization = true;
+        }
         break;
     }
     case PO_TEXREG2GB:
     {
         inputStage = PSInputTexture[Stage];
 
-        // E.x
-        Ins.Initialize(PO_MOV);
-        Ins.Output[0].SetRegister(PARAM_R, 1, MASK_R);
-        Ins.Parameters[0].SetRegister(PARAM_T, Stage, MASK_G);
-        InsertIns.emplace_back(Ins);
-        // E.y
-        Ins.Initialize(PO_MOV);
-        Ins.Output[0].SetRegister(PARAM_R, 1, MASK_G);
-        Ins.Parameters[0].SetRegister(PARAM_T, Stage, MASK_B);
-        InsertIns.emplace_back(Ins);
+        if (m_PSVersion >= D3DPS_VERSION(1, 4))
+        {
+            // E.x
+            Ins.Initialize(PO_MOV);
+            Ins.Output[0].SetRegister(PARAM_R, 1, MASK_R);
+            Ins.Parameters[0].SetRegister(PARAM_T, Stage, MASK_G);
+            InsertIns.emplace_back(Ins);
+            // E.y
+            Ins.Initialize(PO_MOV);
+            Ins.Output[0].SetRegister(PARAM_R, 1, MASK_G);
+            Ins.Parameters[0].SetRegister(PARAM_T, Stage, MASK_B);
+            InsertIns.emplace_back(Ins);
 
-        Ins.Initialize(PO_TEXLD2);
-        Ins.Output[0].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + Stage, 0);
-        Ins.Parameters[0].SetRegister(PARAM_R, 1, 0);
-        Ins.Parameters[1].SetRegister(PARAM_S, Stage, 0);
-        InsertIns.emplace_back(Ins);
+            Ins.Initialize(PO_TEXLD2);
+            Ins.Output[0].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + Stage, 0);
+            Ins.Parameters[0].SetRegister(PARAM_R, 1, 0);
+            Ins.Parameters[1].SetRegister(PARAM_S, Stage, 0);
+            InsertIns.emplace_back(Ins);
 
-        opcode = PO_MOV;
-        needsInitialization = true;
+            opcode = PO_MOV;
+            inputStage = Stage;
+            needsInitialization = true;
+        }
         break;
     }
     case PO_TEXM3X2PAD:
@@ -3088,8 +3295,12 @@ bool PSH_XBOX_SHADER::InsertTextureModeInstruction(XTL::X_D3DPIXELSHADERDEF *pPS
     {
         inputStage = PSInputTexture[Stage];
 
-        opcode = PO_MOV;
-        needsInitialization = true;
+        if (m_PSVersion >= D3DPS_VERSION(1, 4))
+        {
+            opcode = PO_MOV;
+            inputStage = Stage;
+            needsInitialization = true;
+        }
         break;
     }
 
@@ -3136,15 +3347,12 @@ bool PSH_XBOX_SHADER::InsertTextureModeInstruction(XTL::X_D3DPIXELSHADERDEF *pPS
     // For those texture modes that need it, add the source stage as argument :
     if (PSH_OPCODE_DEFS[Ins.Opcode]._In >= 1)
     {
-        Ins.Parameters[0].SetRegister(PARAM_T, Stage, 0);
+        Ins.Parameters[0].SetRegister(PARAM_T, inputStage, 0);
 
-      switch (PSDotMapping[Stage]) {
-        case PS_DOTMAPPING_MINUS1_TO_1_D3D:
-          Ins.Parameters[0].Modifiers = (1 << ARGMOD_SCALE_BX2);
-		  break;
-        default:
-            break;
-      }
+        if (Ins.Opcode >= PO_TEXDP3TEX && Ins.Opcode <= PO_TEXM3X3SPEC)
+        {
+            Ins.Parameters[0].Modifiers = GetTextureStageModifiers(Stage);
+        }
     }
 
     if (PSH_OPCODE_DEFS[Ins.Opcode]._In >= 2)
@@ -3323,6 +3531,15 @@ bool PSH_XBOX_SHADER::ConvertConstantsToNative(XTL::X_D3DPIXELSHADERDEF *pPSDef,
     NewIns.Output[0].SetRegister(PARAM_C, _HandleConst(PSH_XBOX_CONSTANT_MUL0, Recompiled, &NativeConstInUse[0], &EmittedNewConstant), MASK_RGBA);
     _SetColor(NewIns, {1.0, 2.0, 4.0, 8.0});
     InsertIntermediate(&NewIns, 1);
+
+    if (m_PSVersion >= D3DPS_VERSION(1, 4))
+    {
+        for (i = 0; i < XTL::X_D3DTS_STAGECOUNT; i++)
+        {
+            _HandleConst(PSH_XBOX_CONSTANT_BEM + i, Recompiled, &NativeConstInUse[0], &EmittedNewConstant);
+            _HandleConst(PSH_XBOX_CONSTANT_LUM + i, Recompiled, &NativeConstInUse[0], &EmittedNewConstant);
+        }
+    }
 
   // Loop over all opcodes to update the constant-indexes (Xbox uses C0 and C1 in each combiner) :
   for (i = 0; i < IntermediateCount; i++)
@@ -4033,7 +4250,8 @@ bool PSH_XBOX_SHADER::FixArgumentModifiers()
 	{
 		--i;
 		Cur = &(Intermediate[i]);
-		if (!Cur->IsArithmetic())
+		if ((m_PSVersion < D3DPS_VERSION(2, 0) && !Cur->IsArithmetic())
+            || (m_PSVersion >= D3DPS_VERSION(2, 0) && Cur->Opcode < PO_TEX))
 			continue;
 		
         if (m_PSVersion < D3DPS_VERSION(2, 0) && Cur->Opcode == PO_MOV)
@@ -4261,6 +4479,9 @@ bool PSH_XBOX_SHADER::FixConstantParameters()
 
     bool Result = false;
 
+    if (m_PSVersion < D3DPS_VERSION(1, 4))
+        return false;
+
     // Do a bottom-to-top pass, preventing constant-modifiers via additional MOV's:
     i = IntermediateCount;
     while (i > StartPos)
@@ -4294,6 +4515,9 @@ bool PSH_XBOX_SHADER::FixInstructionModifiers()
     PSH_INTERMEDIATE_FORMAT Ins = {};
 
     bool Result = false;
+
+    if (m_PSVersion < D3DPS_VERSION(2, 0))
+        return false;
 
     // Do a bottom-to-top pass, preventing constant-modifiers via additional MOV's:
     i = IntermediateCount;
@@ -4782,7 +5006,7 @@ bool PSH_XBOX_SHADER::SimplifyMOV(PPSH_INTERMEDIATE_FORMAT Cur)
   if (Cur->Parameters[0].GetConstValue() == 0.0)
   {
     // Attempt to find a constant with the value 0, and use that if present.
-      if (!Cur->Parameters[0].SetScaleConstRegister(0.0f, Recompiled))
+      if (m_PSVersion < D3DPS_VERSION(1, 4) || !Cur->Parameters[0].SetScaleConstRegister(0.0f, Recompiled))
       {
           // Simulate 0 by subtracting a (guaranteed) register from itself :
           // Fixup via "sub d0=v0,v0" :
@@ -4807,7 +5031,7 @@ bool PSH_XBOX_SHADER::SimplifyMOV(PPSH_INTERMEDIATE_FORMAT Cur)
     // TODO : If there's a constant equal to GetConstValue(), use that.
     Factor = Cur->Parameters[0].GetConstValue();
 
-    if (!Cur->Parameters[0].SetScaleConstRegister(Factor, Recompiled))
+    if (m_PSVersion < D3DPS_VERSION(1,4) || !Cur->Parameters[0].SetScaleConstRegister(Factor, Recompiled))
     {
         // Fixup via a SUB (which can calculate a constant value) :
         Cur->Opcode = PO_SUB;
@@ -4908,7 +5132,7 @@ bool PSH_XBOX_SHADER::SimplifyMAD(PPSH_INTERMEDIATE_FORMAT Cur, int index)
   // Is this 0.5*s1+s2 ?
   if (Cur->Parameters[0].GetConstValue() == 0.5f && Cur->Parameters[1].UsesRegister())
   {
-      if (!Cur->Parameters[0].SetScaleConstRegister(0.5f, Recompiled))
+      if (m_PSVersion < D3DPS_VERSION(1, 4) || !Cur->Parameters[0].SetScaleConstRegister(0.5f, Recompiled))
       {
           // Change it into s2 :
           Cur->Opcode = PO_ADD;
@@ -4932,7 +5156,7 @@ bool PSH_XBOX_SHADER::SimplifyMAD(PPSH_INTERMEDIATE_FORMAT Cur, int index)
   // Is this s0*0.5+s2 ?
   if (Cur->Parameters[1].GetConstValue() == 0.5f && Cur->Parameters[0].UsesRegister())
   {
-      if (!Cur->Parameters[1].SetScaleConstRegister(0.5f, Recompiled))
+      if (m_PSVersion < D3DPS_VERSION(1, 4) || !Cur->Parameters[1].SetScaleConstRegister(0.5f, Recompiled))
       {
           // Change it into s2 :
           Cur->Opcode = PO_ADD;
@@ -5318,6 +5542,9 @@ bool PSH_XBOX_SHADER::FixUninitializedReads()
     PPSH_INTERMEDIATE_FORMAT Cur;
     PSH_INTERMEDIATE_FORMAT NewIns = {};
     bool Result = false;
+
+    if (m_PSVersion < D3DPS_VERSION(1, 4))
+        return false;
 
     int readPositions[32][4] = {};
     int writePositions[32][4] = {};
@@ -6008,6 +6235,24 @@ VOID XTL::DxbxUpdateActivePixelShader() // NOPATCH
       g_pD3DDevice.SetRenderState(D3DRS_FOGENABLE, BOOL_FALSE);
     }
 */
+    //PS_TEXTUREMODES psTextureModes[XTL::X_D3DTS_STAGECOUNT];
+    //PSH_XBOX_SHADER::GetPSTextureModes(pPSDef, psTextureModes);
+    //
+    //for (i = 0; i < XTL::X_D3DTS_STAGECOUNT; i++)
+    //{
+    //    switch (psTextureModes[i])
+    //    {
+    //    case PS_TEXTUREMODES_BUMPENVMAP:
+    //        g_pD3DDevice->SetTextureStageState(i, XTL::D3DTSS_COLOROP, XTL::D3DTOP_BUMPENVMAP);
+    //        break;
+    //    case PS_TEXTUREMODES_BUMPENVMAP_LUM:
+    //        g_pD3DDevice->SetTextureStageState(i, XTL::D3DTSS_COLOROP, XTL::D3DTOP_BUMPENVMAPLUMINANCE);
+    //        break;
+    //    default:
+    //        break;
+    //    }
+    //}
+
     // Set constants, not based on g_PixelShaderConstants, but based on
     // the render state slots containing the pixel shader constants,
     // as these could have been updated via SetRenderState or otherwise :
@@ -6024,23 +6269,55 @@ VOID XTL::DxbxUpdateActivePixelShader() // NOPATCH
             // Note : FOG.RGB is correct like this, but FOG.a should be coming
             // from the vertex shader (oFog) - however, D3D8 does not forward this...
 			g_pD3DDevice->GetRenderState(D3DRS_FOGCOLOR, &dwColor);
+            fColor = dwColor;
 			break;
 		  case PSH_XBOX_CONSTANT_FC0:
             //dwColor = *XTL::EmuMappedD3DRenderState[XTL::X_D3DRS_PSFINALCOMBINERCONSTANT0];
-			dwColor = TemporaryPixelShaderRenderStates[XTL::X_D3DRS_PSFINALCOMBINERCONSTANT0];
+              fColor = dwColor = TemporaryPixelShaderRenderStates[XTL::X_D3DRS_PSFINALCOMBINERCONSTANT0];
 			break;
 		  case PSH_XBOX_CONSTANT_FC1:
             //dwColor = *XTL::EmuMappedD3DRenderState[XTL::X_D3DRS_PSFINALCOMBINERCONSTANT1];
-			dwColor = TemporaryPixelShaderRenderStates[XTL::X_D3DRS_PSFINALCOMBINERCONSTANT1];
+              fColor = dwColor = TemporaryPixelShaderRenderStates[XTL::X_D3DRS_PSFINALCOMBINERCONSTANT1];
 			break;
-	    default:
+          case PSH_XBOX_CONSTANT_MUL0:
+          case PSH_XBOX_CONSTANT_MUL1:
+              continue;
+          case PSH_XBOX_CONSTANT_BEM + 0:
+          case PSH_XBOX_CONSTANT_BEM + 1:
+          case PSH_XBOX_CONSTANT_BEM + 2:
+          case PSH_XBOX_CONSTANT_BEM + 3:
+          {
+              int stage = i - PSH_XBOX_CONSTANT_BEM;
+              DWORD* value = (DWORD*)&fColor;
+
+              g_pD3DDevice->GetTextureStageState(stage, D3DTSS_BUMPENVMAT00, &value[0]);
+              g_pD3DDevice->GetTextureStageState(stage, D3DTSS_BUMPENVMAT01, &value[1]);
+              g_pD3DDevice->GetTextureStageState(stage, D3DTSS_BUMPENVMAT11, &value[2]);
+              g_pD3DDevice->GetTextureStageState(stage, D3DTSS_BUMPENVMAT10, &value[3]);
+              break;
+          }
+          case PSH_XBOX_CONSTANT_LUM + 0:
+          case PSH_XBOX_CONSTANT_LUM + 1:
+          case PSH_XBOX_CONSTANT_LUM + 2:
+          case PSH_XBOX_CONSTANT_LUM + 3:
+          {
+              int stage = i - PSH_XBOX_CONSTANT_LUM;
+              DWORD* value = (DWORD*)&fColor;
+
+              g_pD3DDevice->GetTextureStageState(stage, D3DTSS_BUMPENVLSCALE, &value[0]);
+              g_pD3DDevice->GetTextureStageState(stage, D3DTSS_BUMPENVLOFFSET, &value[1]);
+              value[2] = 0;
+              value[3] = 0;
+              break;
+          }
+          default:
             //dwColor = *XTL::EmuMappedD3DRenderState[XTL::X_D3DRS_PSCONSTANT0_0 + i];
-			dwColor = TemporaryPixelShaderRenderStates[XTL::X_D3DRS_PSCONSTANT0_0 + i];
+              fColor = dwColor = TemporaryPixelShaderRenderStates[XTL::X_D3DRS_PSCONSTANT0_0 + i];
 			break;
         }
 
         // Convert it back to 4 floats  :
-        fColor = dwColor;
+        //fColor = dwColor;
         // Read the register we can use on PC :
         Register_ = RecompiledPixelShader->ConstMapping[i];
         // TODO : Avoid the following setter if it's no different from the previous update (this might speed things up)
