@@ -154,28 +154,8 @@ void VMManager::Initialize(HANDLE memory_view, HANDLE pagetables_view, int BootF
 	// Construct the page directory
 	InitializePageDirectory();
 
-	// We also reserve the remaining region from the reserved xbe image memory up to XBE_MAX_VA since we know it's
-	// occupied by our memory placeholder and cannot be allocated anyway. We cannot just call XbAllocateVirtualMemory
-	// since that would result in an increase in the reserved memory usage and also, with XBOX_MEM_RESERVE, the starting
-	// address will be rounded down to a 64K boundary, which will likely result in an incorrect base address. Once the
-	// memory placeholder is gone, this can be removed
-
-	if (XBE_MAX_VA - CxbxKrnl_Xbe->m_Header.dwSizeofImage - XBE_IMAGE_BASE > 0)
-	{
-		ConstructVMA(XBE_IMAGE_BASE + ROUND_UP_4K(CxbxKrnl_Xbe->m_Header.dwSizeofImage),
-			ROUND_DOWN_4K(XBE_MAX_VA - CxbxKrnl_Xbe->m_Header.dwSizeofImage - XBE_IMAGE_BASE), UserRegion, ReservedVma,
-			false);
-	}
-
 	// Reserve the xbe image memory. Doing this now allows us to avoid calling XbAllocateVirtualMemory later
 	ConstructVMA(XBE_IMAGE_BASE, ROUND_UP_4K(CxbxKrnl_Xbe->m_Header.dwSizeofImage), UserRegion, ReservedVma, false, XBOX_PAGE_READWRITE);
-
-	// ergo720: another hack. On 128 MiB systems, also reserve the 64 MiB following the memory placeholder so that the VMManager
-	// is forbidden from making allocations there and the LLE OHCI can distinguish identity mapped addresses from contiguous addresses.
-	// Once LLE CPU and MMU are implemented, this can be removed
-	if (m_MmLayoutRetail != true) {
-		ConstructVMA(XBE_IMAGE_BASE + XBE_MAX_VA, XBOX_MEMORY_SIZE - XBE_IMAGE_BASE, UserRegion, ReservedVma, false);
-	}
 
 	if (m_MmLayoutChihiro) {
 		printf("Page table for Chihiro arcade initialized!\n");
@@ -1674,13 +1654,27 @@ xboxkrnl::NTSTATUS VMManager::XbAllocateVirtualMemory(VAddr* addr, ULONG ZeroBit
 				goto Exit;
 			}
 
-			if ((VAddr)VirtualAlloc((void*)AlignedCapturedBase, AlignedCapturedSize, MEM_RESERVE,
-				ConvertXboxToWinProtection(PatchXboxPermissions(Protect)) & ~(PAGE_WRITECOMBINE | PAGE_NOCACHE)) != AlignedCapturedBase)
-			{
-				// An host allocation is already mapped there, report an error
+			// Hack: check if the title is attempting to reserve in the region between the reserved xbe image memory up to XBE_MAX_VA.
+			// Once the memory placeholder is gone, this can be removed.
+			// Note: this will not work if the title attempts to reserve inside the placeholder with a size that makes the
+			// allocation exceed the end of the placeholder at XBE_MAX_VA (e.g.: Fable does this!) and it doesn't accept
+			// any other address but the requested one (e.g.: Project Zero 1 does this!). No title is known to do this, but it's
+			// teoretically possible...
 
-				status = STATUS_CONFLICTING_ADDRESSES;
-				goto Exit;
+			if (AlignedCapturedBase < XBE_MAX_VA && AlignedCapturedBase >= ROUND_UP_4K(CxbxKrnl_Xbe->m_Header.dwSizeofImage) + XBE_IMAGE_BASE
+				&& AlignedCapturedBase + AlignedCapturedSize - 1 < XBE_MAX_VA)
+			{
+				// Don't do anything, ConstructVMA will be called below to track the allocation inside the placeholder
+			}
+			else {
+				if ((VAddr)VirtualAlloc((void*)AlignedCapturedBase, AlignedCapturedSize, MEM_RESERVE,
+					ConvertXboxToWinProtection(PatchXboxPermissions(Protect)) & ~(PAGE_WRITECOMBINE | PAGE_NOCACHE)) != AlignedCapturedBase)
+				{
+					// An host allocation is already mapped there, report an error
+
+					status = STATUS_CONFLICTING_ADDRESSES;
+					goto Exit;
+				}
 			}
 		}
 
@@ -1716,15 +1710,6 @@ xboxkrnl::NTSTATUS VMManager::XbAllocateVirtualMemory(VAddr* addr, ULONG ZeroBit
 	if (it == m_MemoryRegionArray[UserRegion].RegionMap.end() || bOverflow)
 	{
 		// The specified region is not completely inside a reserved vma or it's free
-
-		status = STATUS_CONFLICTING_ADDRESSES;
-		goto Exit;
-	}
-
-	if (AlignedCapturedBase >= XBE_IMAGE_BASE + ROUND_UP_4K(CxbxKrnl_Xbe->m_Header.dwSizeofImage) &&
-	(m_MmLayoutRetail != true ? AlignedCapturedBase < CHIHIRO_MEMORY_SIZE : AlignedCapturedBase < XBE_MAX_VA))
-	{
-		// We can't commit on the memory placeholder after the xbe image or in the reserved area after it (128 MiB systems only)
 
 		status = STATUS_CONFLICTING_ADDRESSES;
 		goto Exit;
@@ -1787,9 +1772,10 @@ xboxkrnl::NTSTATUS VMManager::XbAllocateVirtualMemory(VAddr* addr, ULONG ZeroBit
 		PointerPte++;
 	}
 
-	// Actually commit the requested range but don't if we are committing an xbe section so that XeLoadSection works as expected
+	// Actually commit the requested range but don't if it's inside the placeholder or we are committing an xbe section so that
+	// XeLoadSection works as expected
 
-	if (AlignedCapturedBase >= XBE_IMAGE_BASE + ROUND_UP_4K(CxbxKrnl_Xbe->m_Header.dwSizeofImage))
+	if (AlignedCapturedBase >= XBE_MAX_VA)
 	{
 		if (!VirtualAlloc((void*)AlignedCapturedBase, AlignedCapturedSize, MEM_COMMIT,
 			(ConvertXboxToWinProtection(PatchXboxPermissions(Protect))) & ~(PAGE_WRITECOMBINE | PAGE_NOCACHE)))
@@ -1969,9 +1955,12 @@ xboxkrnl::NTSTATUS VMManager::XbFreeVirtualMemory(VAddr* addr, size_t* Size, DWO
 	{
 		// With XBOX_MEM_DECOMMIT DestructVMA is not called and so we have to call VirtualFree ourselves
 
-		if (!VirtualFree((void*)AlignedCapturedBase, AlignedCapturedSize, MEM_DECOMMIT))
+		if (AlignedCapturedBase >= XBE_MAX_VA)
 		{
-			DbgPrintf(LOG_PREFIX, "%s: VirtualFree failed to decommit the memory! The error was %d\n", __func__, GetLastError());
+			if (!VirtualFree((void*)AlignedCapturedBase, AlignedCapturedSize, MEM_DECOMMIT))
+			{
+				DbgPrintf(LOG_PREFIX, "%s: VirtualFree failed to decommit the memory! The error was %d\n", __func__, GetLastError());
+			}
 		}
 	}
 
@@ -2027,17 +2016,9 @@ xboxkrnl::NTSTATUS VMManager::XbVirtualProtect(VAddr* addr, size_t* Size, DWORD*
 
 	it = CheckConflictingVMA(AlignedCapturedBase, AlignedCapturedSize, &bOverflow);
 
-	if (it == m_MemoryRegionArray[UserRegion].RegionMap.end())
+	if (it == m_MemoryRegionArray[UserRegion].RegionMap.end() || bOverflow)
 	{
-		// Free vma, report an error
-
-		status = STATUS_CONFLICTING_ADDRESSES;
-		goto Exit;
-	}
-
-	if (it->first + it->second.size - 1 < AlignedCapturedBase + AlignedCapturedSize - 1)
-	{
-		// The requested ending address is beyond the vma, report an error
+		// Free vma or the requested ending address is beyond the vma, report an error
 
 		status = STATUS_CONFLICTING_ADDRESSES;
 		goto Exit;
@@ -2128,25 +2109,8 @@ xboxkrnl::NTSTATUS VMManager::XbVirtualMemoryStatistics(VAddr addr, xboxkrnl::PM
 	{
 		// The memory in the user region is allocated in multiples of 64K, so this means that the last possible vma cannot start beyond
 		// HIGHEST_VMA_ADDRESS. This is true for allocations done by both XbAllocateVirtualMemory and Allocate, which both will be counted.
-		// The allocations done by the host are invisible here (like they should be)
 
 		return STATUS_INVALID_PARAMETER;
-	}
-
-	// ergo720: hack. Always report as reserved the region after the memory placeholder and below 0x8000000 if we are emulating
-	// a 128 MiB system regardless of what VirtualQuery says. Once LLE CPU and MMU are implemented, this can be removed
-
-	if (m_MmLayoutRetail != true && addr >= XBE_IMAGE_BASE + XBE_MAX_VA && addr < CHIHIRO_MEMORY_SIZE) {
-		memory_statistics->AllocationBase = (void*)(XBE_IMAGE_BASE + XBE_MAX_VA);
-		memory_statistics->AllocationProtect = XBOX_PAGE_NOACCESS;
-		memory_statistics->BaseAddress = (void*)ROUND_DOWN_4K(addr);
-		memory_statistics->RegionSize = CHIHIRO_MEMORY_SIZE - ROUND_DOWN_4K(addr);
-		memory_statistics->State = XBOX_MEM_RESERVE;
-		memory_statistics->Protect = XBOX_PAGE_NOACCESS;
-		memory_statistics->Type = XBOX_MEM_PRIVATE;
-
-		Unlock();
-		return STATUS_SUCCESS;
 	}
 
 	// If it's not in the XBE, report actual host allocations
@@ -2178,7 +2142,6 @@ xboxkrnl::NTSTATUS VMManager::XbVirtualMemoryStatistics(VAddr addr, xboxkrnl::PM
 	it = GetVMAIterator(addr, UserRegion);
 
 	// NOTE: we count the first 64K block below 0x10000 and the reserved area in the memory placeholder after the xbe image as free areas
-	// TODO: should allocations made by Allocate be visible to this function or not?
 
 	if (addr < LOWEST_USER_ADDRESS
 		|| (addr >= XBE_IMAGE_BASE + ROUND_UP_4K(CxbxKrnl_Xbe->m_Header.dwSizeofImage) && addr < XBE_MAX_VA)
@@ -2447,31 +2410,48 @@ PAddr VMManager::TranslateVAddrToPAddr(const VAddr addr)
 
 	PAddr PAddr;
 	PMMPTE PointerPte;
-	MemoryRegionType Type = COUNTRegion;
+	//MemoryRegionType Type;
 
 	Lock();
 
-	// ergo720: boring, this hack identity maps allocations served by VirtualAlloc to keep the LLE OHCI working (see OHCI_ReadHCCA
-	// for more details). Once LLE CPU and MMU are implemented, this can be removed
+	// ergo720: horrendous hack, this identity maps all allocations done by the VMManager to keep the LLE OHCI working
+	// (see OHCI_ReadHCCA for more details). Once LLE CPU and MMU are implemented, this can be removed
 
-	if (IS_USER_ADDRESS(addr)) { Type = UserRegion; }
-	else if (IS_PHYSICAL_ADDRESS(addr)) { Type = ContiguousRegion; }
-	else if (IS_SYSTEM_ADDRESS(addr)) { Type = SystemRegion; }
-	else if (IS_DEVKIT_ADDRESS(addr)) { Type = DevkitRegion; }
+	//if (IS_USER_ADDRESS(addr)) { Type = UserRegion; }
+	//else if (IS_PHYSICAL_ADDRESS(addr)) { Type = ContiguousRegion; }
+	//else if (IS_SYSTEM_ADDRESS(addr)) { Type = SystemRegion; }
+	//else if (IS_DEVKIT_ADDRESS(addr)) { Type = DevkitRegion; }
+	//else { Type = COUNTRegion; }
 
-	if (Type != COUNTRegion && Type != ContiguousRegion) {
+	if (true/*(addr >= PAGE_TABLES_BASE && addr <= PAGE_TABLES_END) || (Type != COUNTRegion && Type != ContiguousRegion)*/) {
 		if (IsValidVirtualAddress(addr)) {
+			EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Applying identity mapping hack to allocation at address 0x%X", addr);
+			Unlock();
+			RETURN(addr);
+			/*
 			if (Type == UserRegion) {
 				EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Applying identity mapping hack to allocation at address 0x%X", addr);
 				Unlock();
 				RETURN(addr); // committed pages in the user region always use VirtualAlloc
 			}
-			VMAIter it = GetVMAIterator(addr, Type);
-			if (it != m_MemoryRegionArray[Type].RegionMap.end() && it->second.type != FreeVma && it->second.bFragmented) {
+			else if (Type != COUNTRegion) {
+				VMAIter it = GetVMAIterator(addr, Type);
+				if (it != m_MemoryRegionArray[Type].RegionMap.end() && it->second.type != FreeVma && it->second.bFragmented) {
+					EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Applying identity mapping hack to allocation at address 0x%X", addr);
+					Unlock();
+					RETURN(addr); // committed pages in the system-devkit regions can use VirtualAlloc because of fragmentation
+				}
+			}
+			else {
+				// This is the special case of the page tables region at 0xC0000000. This area doesn't have a memory region assigned to,
+				// and never uses VirtualAlloc, but it's still affected by the above problem since its physical pages don't come from
+				// our memory.bin at 0x80000000, so it needs the hack as well.
+
 				EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Applying identity mapping hack to allocation at address 0x%X", addr);
 				Unlock();
-				RETURN(addr); // committed pages in the system-devkit regions can use VirtualAlloc because of fragmentation
+				RETURN(addr);
 			}
+			*/
 		}
 		else {
 			goto InvalidAddress;

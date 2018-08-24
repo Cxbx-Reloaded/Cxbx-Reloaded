@@ -140,15 +140,11 @@ size_t IoVecFromBuffer(const IoVec* iov, unsigned int iov_cnt, size_t offset, vo
 	return done;
 }
 
-// ergo720: note that GetDwords and WriteDwords will reliably work only if the allocation was served by MapViewOfFileEx and not
-// by VirtualAlloc (see comment on OHCI_ReadHCCA for more details). Once LLE CPU and MMU are implemented, this will no
-// longer be the case. Also note that the physical pages can be modified while being read/written
-
 // Read an array of DWORDs in memory
 void GetDwords(xbaddr Paddr, uint32_t* Buffer, int Number)
 {
 	for (int i = 0; i < Number; i++, Buffer++, Paddr += sizeof(*Buffer)) {
-		std::memcpy(Buffer, reinterpret_cast<void*>(Paddr + CONTIGUOUS_MEMORY_BASE), 4); // dropped little -> big endian conversion from XQEMU
+		std::memcpy(Buffer, reinterpret_cast<void*>(Paddr), 4); // dropped little -> big endian conversion from XQEMU
 	}
 }
 
@@ -156,7 +152,7 @@ void GetDwords(xbaddr Paddr, uint32_t* Buffer, int Number)
 void WriteDwords(xbaddr Paddr, uint32_t* Buffer, int Number)
 {
 	for (int i = 0; i < Number; i++, Buffer++, Paddr += sizeof(*Buffer)) {
-		std::memcpy(reinterpret_cast<void*>(Paddr + CONTIGUOUS_MEMORY_BASE), Buffer, 4); // dropped big -> little endian conversion from XQEMU
+		std::memcpy(reinterpret_cast<void*>(Paddr), Buffer, 4); // dropped big -> little endian conversion from XQEMU
 	}
 }
 
@@ -164,7 +160,7 @@ void WriteDwords(xbaddr Paddr, uint32_t* Buffer, int Number)
 void GetWords(xbaddr Paddr, uint16_t* Buffer, int Number)
 {
 	for (int i = 0; i < Number; i++, Buffer++, Paddr += sizeof(*Buffer)) {
-		std::memcpy(Buffer, reinterpret_cast<void*>(Paddr + CONTIGUOUS_MEMORY_BASE), 2); // dropped little -> big endian conversion from XQEMU
+		std::memcpy(Buffer, reinterpret_cast<void*>(Paddr), 2); // dropped little -> big endian conversion from XQEMU
 	}
 }
 
@@ -172,7 +168,7 @@ void GetWords(xbaddr Paddr, uint16_t* Buffer, int Number)
 void WriteWords(xbaddr Paddr, uint16_t* Buffer, int Number)
 {
 	for (int i = 0; i < Number; i++, Buffer++, Paddr += sizeof(*Buffer)) {
-		std::memcpy(reinterpret_cast<void*>(Paddr + CONTIGUOUS_MEMORY_BASE), Buffer, 2); // dropped big -> little endian conversion from XQEMU
+		std::memcpy(reinterpret_cast<void*>(Paddr), Buffer, 2); // dropped big -> little endian conversion from XQEMU
 	}
 }
 
