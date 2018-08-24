@@ -2088,7 +2088,7 @@ XBSYSAPI EXPORTNUM(158) xboxkrnl::NTSTATUS NTAPI xboxkrnl::KeWaitForMultipleObje
 			//}
 
 			// TODO: Remove this after we have our own schedular and the above is implemented
-			Sleep(10);
+			Sleep(0);
 
 			// Reduce the timout if necessary
 			if (Timeout != nullptr) {
@@ -2096,8 +2096,10 @@ XBSYSAPI EXPORTNUM(158) xboxkrnl::NTSTATUS NTAPI xboxkrnl::KeWaitForMultipleObje
 			}
 		}
 
-		// Raise IRQL to DISPATCH_LEVEL and lock the database
-		KiLockDispatcherDatabase(&Thread->WaitIrql);
+		// Raise IRQL to DISPATCH_LEVEL and lock the database (only if it's not already at this level)
+		if (KeGetCurrentIrql() != DISPATCH_LEVEL) {
+			KiLockDispatcherDatabase(&Thread->WaitIrql);
+		}
 	} while (TRUE);
 
 	// The waiting thead has been alerted, or an APC needs to be delivered
@@ -2260,7 +2262,7 @@ XBSYSAPI EXPORTNUM(159) xboxkrnl::NTSTATUS NTAPI xboxkrnl::KeWaitForSingleObject
 			} */
 
 			// TODO: Remove this after we have our own schedular and the above is implemented
-			Sleep(10);
+			Sleep(0);
 
 			// Reduce the timout if necessary
 			if (Timeout != nullptr) {
@@ -2269,7 +2271,9 @@ XBSYSAPI EXPORTNUM(159) xboxkrnl::NTSTATUS NTAPI xboxkrnl::KeWaitForSingleObject
 		}
 
 		// Raise IRQL to DISPATCH_LEVEL and lock the database
-		KiLockDispatcherDatabase(&Thread->WaitIrql);
+		if (KeGetCurrentIrql() != DISPATCH_LEVEL) {
+			KiLockDispatcherDatabase(&Thread->WaitIrql);
+		}
 	} while (TRUE);
 
 	// The waiting thead has been alerted, or an APC needs to be delivered
