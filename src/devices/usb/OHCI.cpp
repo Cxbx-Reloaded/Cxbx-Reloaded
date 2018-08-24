@@ -340,7 +340,8 @@ void OHCI::OHCI_FatalError()
 
 bool OHCI::OHCI_ReadHCCA(xbaddr Paddr, OHCI_HCCA* Hcca)
 {
-	// ergo720: there could be a peculiar problem if the shared memory between HCD and HC is allocated by the
+	// ergo720: what's written below is true if we identity map only allocations served by VirtualAlloc.
+	// There could be a peculiar problem if the shared memory between HCD and HC is allocated by the
 	// VMManager with VirtualAlloc: the physical allocation would not reside in memory.bin and if we tried to
 	// access the physical address of it, we would access an empty page. In practice, I disassembled various
 	// xbe's of my games and discovered that this shared memory is allocated with MmAllocateContiguousMemory
@@ -350,7 +351,7 @@ bool OHCI::OHCI_ReadHCCA(xbaddr Paddr, OHCI_HCCA* Hcca)
 	// NOTE: this shared memory contains the HCCA + EDs and TDs
 
 	if (Paddr != xbnull) {
-		std::memcpy(Hcca, reinterpret_cast<void*>(Paddr + CONTIGUOUS_MEMORY_BASE), sizeof(OHCI_HCCA));
+		std::memcpy(Hcca, reinterpret_cast<void*>(Paddr), sizeof(OHCI_HCCA));
 		return false;
 	}
 
@@ -363,7 +364,7 @@ bool OHCI::OHCI_WriteHCCA(xbaddr Paddr, OHCI_HCCA* Hcca)
 		// We need to calculate the offset of the HccaFrameNumber member to avoid overwriting HccaInterrruptTable
 		size_t OffsetOfFrameNumber = offsetof(OHCI_HCCA, HccaFrameNumber);
 
-		std::memcpy(reinterpret_cast<void*>(Paddr + OffsetOfFrameNumber + CONTIGUOUS_MEMORY_BASE),
+		std::memcpy(reinterpret_cast<void*>(Paddr + OffsetOfFrameNumber),
 			reinterpret_cast<uint8_t*>(Hcca) + OffsetOfFrameNumber, 8);
 		return false;
 	}
@@ -485,36 +486,15 @@ bool OHCI::OHCI_CopyIsoTD(uint32_t start_addr, uint32_t end_addr, uint8_t* Buffe
 
 bool OHCI::OHCI_FindAndCopyTD(xbaddr Paddr, uint8_t* Buffer, int Length, bool bIsWrite)
 {
-	// ergo720: the buffer pointed to by Paddr can be anywhere in memory (it depends on how the xbe has
-	// allocated it) so, sadly, we cannot make any assumptions here regarding its location like we did
-	// in OHCI_ReadHCCA and the problem with VirtualAlloc can arise this time. Because of the hack in
-	// TranslateVAddrToPAddr, VirtualAlloc allocations are identity mapped and addresses below 0x4000000
-	// (Xbox) or 0x8000000 (Chihiro, Devkit) cannot be used by the VMManager for anything but to allocate
-	// xbe sections. This means that if Paddr is higher than the maximum possible physical address, then
-	// we know it's an identity mapped address, otherwise it's a contiguous address
-
-	int offset = 0;
-
 	if (Paddr == xbnull) {
 		return true; // error
 	}
 
-	if (g_SystemMaxMemory == XBOX_MEMORY_SIZE) {
-		if (Paddr < XBOX_MEMORY_SIZE) {
-			offset = CONTIGUOUS_MEMORY_BASE;
-		}
-	}
-	else {
-		if (Paddr < CHIHIRO_MEMORY_SIZE) {
-			offset = CONTIGUOUS_MEMORY_BASE;
-		}
-	}
-
 	if (bIsWrite) {
-		std::memcpy(reinterpret_cast<void*>(Paddr + offset), Buffer, Length);
+		std::memcpy(reinterpret_cast<void*>(Paddr), Buffer, Length);
 	}
 	else {
-		std::memcpy(Buffer, reinterpret_cast<void*>(Paddr + offset), Length);
+		std::memcpy(Buffer, reinterpret_cast<void*>(Paddr), Length);
 	}
 
 	return false;
