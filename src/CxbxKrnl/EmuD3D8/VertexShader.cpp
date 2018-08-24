@@ -1914,7 +1914,7 @@ static DWORD VshConvertToken_CONSTMEM(
 
 	// TODO
 
-    return Count;
+    return Count * 4 + 1;
 }
 
 static void VshConvertToken_TESSELATOR(
