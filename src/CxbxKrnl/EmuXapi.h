@@ -910,9 +910,9 @@ int WINAPI EMUPATCH(lstrcmpiW)
 // ******************************************************************
 DWORD WINAPI EMUPATCH(XMountMUA)
 (
-	DWORD dwPort,                  
-	DWORD dwSlot,                  
-	PCHAR pchDrive               
+	DWORD dwPort,
+	DWORD dwSlot,
+	PCHAR pchDrive
 );
 
 // ******************************************************************
@@ -920,25 +920,25 @@ DWORD WINAPI EMUPATCH(XMountMUA)
 // ******************************************************************
 DWORD WINAPI EMUPATCH(XMountMURootA)
 (
-	DWORD dwPort,                  
-	DWORD dwSlot,                  
-	PCHAR pchDrive               
+	DWORD dwPort,
+	DWORD dwSlot,
+	PCHAR pchDrive
 );
 
 // ******************************************************************
 // * patch: XMountAlternateTitleA
 // ******************************************************************
-DWORD WINAPI EMUPATCH(XMountAlternateTitleA)
+/*DWORD WINAPI EMUPATCH(XMountAlternateTitleA)
 (
-	LPCSTR		lpRootPath,               
-	DWORD		dwAltTitleId,               
-	PCHAR		pchDrive               
-);
+	LPCSTR lpRootPath,
+	DWORD  dwAltTitleId,
+	PCHAR  pchDrive
+);*/
 
 // ******************************************************************
 // * patch: XUnmountAlternateTitleA
 // ******************************************************************
-DWORD WINAPI EMUPATCH(XUnmountAlternateTitleA)(CHAR chDrive);
+//DWORD WINAPI EMUPATCH(XUnmountAlternateTitleA)(CHAR chDrive);
 
 // ******************************************************************
 // * patch: MoveFileA
