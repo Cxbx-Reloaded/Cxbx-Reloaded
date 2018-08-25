@@ -75,14 +75,111 @@ typedef struct _DpcData {
 
 DpcData g_DpcData = { 0 }; // Note : g_DpcData is initialized in InitDpcAndTimerThread()
 
-std::map<xboxkrnl::PRKEVENT, HANDLE> g_KeEventHandles;
-
 xboxkrnl::ULONGLONG LARGE_INTEGER2ULONGLONG(xboxkrnl::LARGE_INTEGER value)
 {
 	// Weird construction because there doesn't seem to exist an implicit
 	// conversion of LARGE_INTEGER to ULONGLONG :
 	return *((PULONGLONG)&value);
 }
+
+#define KiWaitSatisfyMutant(_Object_, _Thread_) {                            \
+    (_Object_)->Header.SignalState -= 1;                                     \
+    if ((_Object_)->Header.SignalState == 0) {                               \
+        (_Object_)->OwnerThread = (_Thread_);                                \
+        if ((_Object_)->Abandoned == TRUE) {                                 \
+            (_Object_)->Abandoned = FALSE;                                   \
+            (_Thread_)->WaitStatus = STATUS_ABANDONED;                       \
+        }                                                                    \
+                                                                             \
+        InsertHeadList((_Thread_)->MutantListHead.Blink,                     \
+                       &(_Object_)->MutantListEntry);                        \
+    }                                                                        \
+}
+
+#define KiWaitSatisfyOther(_Object_) {                                       \
+    if (((_Object_)->Header.Type & DISPATCHER_OBJECT_TYPE_MASK) == EventSynchronizationObject) { \
+        (_Object_)->Header.SignalState = 0;                                  \
+                                                                             \
+    } else if ((_Object_)->Header.Type == SemaphoreObject) {                 \
+        (_Object_)->Header.SignalState -= 1;                                 \
+                                                                             \
+    }                                                                        \
+}
+
+#define KiWaitSatisfyAny(_Object_, _Thread_) {                               \
+    if (((_Object_)->Header.Type & DISPATCHER_OBJECT_TYPE_MASK) == EventSynchronizationObject) { \
+        (_Object_)->Header.SignalState = 0;                                  \
+                                                                             \
+    } else if ((_Object_)->Header.Type == SemaphoreObject) {                 \
+        (_Object_)->Header.SignalState -= 1;                                 \
+                                                                             \
+    } else if ((_Object_)->Header.Type == MutantObject) {                    \
+        (_Object_)->Header.SignalState -= 1;                                 \
+        if ((_Object_)->Header.SignalState == 0) {                           \
+            (_Object_)->OwnerThread = (_Thread_);                            \
+            if ((_Object_)->Abandoned == TRUE) {                             \
+                (_Object_)->Abandoned = FALSE;                               \
+                (_Thread_)->WaitStatus = STATUS_ABANDONED;                   \
+            }                                                                \
+                                                                             \
+            InsertHeadList((_Thread_)->MutantListHead.Blink,                 \
+                           &(_Object_)->MutantListEntry);                    \
+        }                                                                    \
+    }                                                                        \
+}
+
+void FASTCALL KiWaitSatisfyAll
+(
+	IN xboxkrnl::PKWAIT_BLOCK WaitBlock
+)
+{
+	using namespace xboxkrnl;
+
+	PKMUTANT Object;
+	PRKTHREAD Thread;
+	PKWAIT_BLOCK WaitBlock1;
+
+	WaitBlock1 = WaitBlock;
+	Thread = WaitBlock1->Thread;
+	do {
+		if (WaitBlock1->WaitKey != (CSHORT)STATUS_TIMEOUT) {
+			Object = (PKMUTANT)WaitBlock1->Object;
+			KiWaitSatisfyAny(Object, Thread);
+		}
+
+		WaitBlock1 = WaitBlock1->NextWaitBlock;
+	} while (WaitBlock1 != WaitBlock);
+
+	return;
+}
+
+#define TestForAlertPending(Alertable) \
+    if (Alertable) { \
+        if (Thread->Alerted[WaitMode] != FALSE) { \
+            Thread->Alerted[WaitMode] = FALSE; \
+            WaitStatus = STATUS_ALERTED; \
+            break; \
+        } else if ((WaitMode != KernelMode) && \
+                  (IsListEmpty(&Thread->ApcState.ApcListHead[UserMode])) == FALSE) { \
+            Thread->ApcState.UserApcPending = TRUE; \
+            WaitStatus = STATUS_USER_APC; \
+            break; \
+        } else if (Thread->Alerted[KernelMode] != FALSE) { \
+            Thread->Alerted[KernelMode] = FALSE; \
+            WaitStatus = STATUS_ALERTED; \
+            break; \
+        } \
+    } else if ((WaitMode != KernelMode) && (Thread->ApcState.UserApcPending)) { \
+        WaitStatus = STATUS_USER_APC; \
+        break; \
+    }
+
+#define KiInsertWaitList(_WaitMode, _Thread) {                  \
+    PLIST_ENTRY _ListHead;                                      \
+    _ListHead = &KiWaitInListHead;                              \
+    InsertTailList(_ListHead, &(_Thread)->WaitListEntry);       \
+}
+
 
 // ******************************************************************
 // * KeGetPcr()
@@ -647,22 +744,6 @@ XBSYSAPI EXPORTNUM(108) xboxkrnl::VOID NTAPI xboxkrnl::KeInitializeEvent
 	Event->Header.Size = sizeof(KEVENT) / sizeof(LONG);
 	Event->Header.SignalState = SignalState;
 	InitializeListHead(&(Event->Header.WaitListHead)); 
-
-
-	// Create a Windows event, to be used in KeWaitForObject
-	// TODO: This doesn't check for events that are already initialized
-	// This shouldn't happen, except on shoddily coded titles so we
-	// ignore it for now
-	HANDLE hostEvent;
-	if (Type == NotificationEvent)
-	{
-		hostEvent = CreateEvent(NULL, TRUE, SignalState, NULL);
-	}
-	else {
-		hostEvent = CreateEvent(NULL, FALSE, SignalState, NULL);
-	}
-
-	g_KeEventHandles[Event] = hostEvent;
 }
 
 // ******************************************************************
@@ -1053,17 +1134,29 @@ XBSYSAPI EXPORTNUM(123) xboxkrnl::LONG NTAPI xboxkrnl::KePulseEvent
 		LOG_FUNC_ARG(Wait)
 		LOG_FUNC_END;
 
-	// Fetch the host event and signal it, if present
-	if (g_KeEventHandles.find(Event) == g_KeEventHandles.end()) {
-		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "KePulseEvent called on a non-existant event!");
-	}
-	else {
-		PulseEvent(g_KeEventHandles[Event]);
+	KIRQL OldIrql;
+	KiLockDispatcherDatabase(&OldIrql);
+	LONG OldState = Event->Header.SignalState;
+	if ((OldState == 0) && (IsListEmpty(&Event->Header.WaitListHead) == FALSE)) {
+		Event->Header.SignalState = 1;
+		// TODO: KiWaitTest(Event, Increment);
+		// For now, we just sleep to give other threads time to wake
+		// KiWaitTest and related functions require correct thread scheduling to implement first
+		// This will have to wait until CPU emulation at v1.0
+		Sleep(1);
 	}
 
-	LOG_UNIMPLEMENTED();
+	Event->Header.SignalState = 0;
 
-	RETURN(0);
+	if (Wait != FALSE) {
+		PRKTHREAD Thread = KeGetCurrentThread();
+		Thread->WaitIrql = OldIrql;
+		Thread->WaitNext = Wait;
+	} else {
+		KiUnlockDispatcherDatabase(OldIrql);
+	}
+
+	RETURN(OldState);
 }
 
 XBSYSAPI EXPORTNUM(124) xboxkrnl::LONG NTAPI xboxkrnl::KeQueryBasePriorityThread
@@ -1375,20 +1468,14 @@ XBSYSAPI EXPORTNUM(138) xboxkrnl::LONG NTAPI xboxkrnl::KeResetEvent
 {
 	LOG_FUNC_ONE_ARG(Event);
 
-	// TODO : Untested & incomplete
-	LONG ret = Event->Header.SignalState;
+	KIRQL OldIrql;
+	KiLockDispatcherDatabase(&OldIrql);
+
+	LONG OldState = Event->Header.SignalState;
 	Event->Header.SignalState = 0;
 
-	// Fetch the host event and signal it, if present
-	if (g_KeEventHandles.find(Event) == g_KeEventHandles.end()) {
-		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "KeResetEvent called on a non-existant event!");
-	}
-	else {
-		ResetEvent(g_KeEventHandles[Event]);
-	}
-
-
-	return ret;
+	KiUnlockDispatcherDatabase(OldIrql);
+	return OldState;	
 }
 
 // ******************************************************************
@@ -1517,29 +1604,40 @@ XBSYSAPI EXPORTNUM(145) xboxkrnl::LONG NTAPI xboxkrnl::KeSetEvent
 		LOG_FUNC_ARG(Wait)
 		LOG_FUNC_END;
 
-	// TODO : Untested & incomplete
-	LONG ret = Event->Header.SignalState;
-	Event->Header.SignalState = TRUE;
+	KIRQL OldIrql;
+	KiLockDispatcherDatabase(&OldIrql);
 
-	// Fetch the host event and signal it, if present
-	if (g_KeEventHandles.find(Event) == g_KeEventHandles.end()) {
-		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "KeSetEvent called on a non-existant event. Creating it!");
-		// TODO: Find out why some XDKs do not call KeInitializeEvent first
-
-		//We can check the event type from the internal structure, see https://www.geoffchappell.com/studies/windows/km/ntoskrnl/structs/kobjects.htm?tx=111
-		if ((Event->Header.Type & 0x7F) == 0x01)
-		{
-			KeInitializeEvent(Event, NotificationEvent, TRUE);
-		}
-		else {
-			KeInitializeEvent(Event, SynchronizationEvent, TRUE);
-		}
-
+	LONG OldState = Event->Header.SignalState;
+	if (IsListEmpty(&Event->Header.WaitListHead) != FALSE) {
+		Event->Header.SignalState = 1;
 	} else {
-		SetEvent(g_KeEventHandles[Event]);
+		PKWAIT_BLOCK WaitBlock = CONTAINING_RECORD(Event->Header.WaitListHead.Flink, KWAIT_BLOCK, WaitListEntry);
+		if ((Event->Header.Type == NotificationEvent) ||
+			(WaitBlock->WaitType != WaitAny)) {
+			if (OldState == 0) {
+				Event->Header.SignalState = 1;
+				// TODO: KiWaitTest(Event, Increment);
+				// For now, we just sleep to give other threads time to wake
+				// See KePulseEvent
+				Sleep(1);
+			}
+		} else {
+			// TODO: KiUnwaitThread(WaitBlock->Thread, (NTSTATUS)WaitBlock->WaitKey, Increment);
+			// For now, we just sleep to give other threads time to wake
+			// See KePulseEvent
+			Sleep(1);
+		}
 	}
 
-	RETURN(ret);
+	if (Wait != FALSE) {
+		PRKTHREAD Thread = KeGetCurrentThread();
+		Thread->WaitNext = Wait;
+		Thread->WaitIrql = OldIrql;
+	} else {
+		KiUnlockDispatcherDatabase(OldIrql);
+	}
+
+	RETURN(OldState);
 }
 
 XBSYSAPI EXPORTNUM(146) xboxkrnl::VOID NTAPI xboxkrnl::KeSetEventBoostPriority
@@ -1552,8 +1650,26 @@ XBSYSAPI EXPORTNUM(146) xboxkrnl::VOID NTAPI xboxkrnl::KeSetEventBoostPriority
 		LOG_FUNC_ARG(Event)
 		LOG_FUNC_ARG(Thread)
 		LOG_FUNC_END;
+	KIRQL OldIrql;
+	KiLockDispatcherDatabase(&OldIrql);
 
-	LOG_UNIMPLEMENTED();
+	if (IsListEmpty(&Event->Header.WaitListHead) != FALSE) {
+		Event->Header.SignalState = 1;
+	} else {
+		PRKTHREAD WaitThread = CONTAINING_RECORD(Event->Header.WaitListHead.Flink, KWAIT_BLOCK, WaitListEntry)->Thread;
+
+		if (Thread != nullptr) {
+			*Thread = WaitThread;
+		}
+
+		WaitThread->Quantum = WaitThread->ApcState.Process->ThreadQuantum;
+		// TODO: KiUnwaitThread(WaitThread, STATUS_SUCCESS, 1);
+		// For now, we just sleep to give other threads time to wake
+		// See KePulseEvent
+		Sleep(1);
+	}
+
+	KiUnlockDispatcherDatabase(OldIrql);
 }
 
 XBSYSAPI EXPORTNUM(147) xboxkrnl::KPRIORITY NTAPI xboxkrnl::KeSetPriorityProcess
@@ -1772,6 +1888,26 @@ const xboxkrnl::ULONG CLOCK_TIME_INCREMENT = 0x2710;
 // ******************************************************************
 XBSYSAPI EXPORTNUM(157) xboxkrnl::ULONG xboxkrnl::KeTimeIncrement = CLOCK_TIME_INCREMENT;
 
+
+xboxkrnl::PLARGE_INTEGER FASTCALL KiComputeWaitInterval(
+	IN xboxkrnl::PLARGE_INTEGER OriginalTime,
+	IN xboxkrnl::PLARGE_INTEGER DueTime,
+	IN OUT xboxkrnl::PLARGE_INTEGER NewTime
+)
+{
+	if (OriginalTime->QuadPart >= 0) {
+		return OriginalTime;
+
+	}
+	else {
+		NewTime->QuadPart = xboxkrnl::KeQueryInterruptTime();
+		NewTime->QuadPart -= DueTime->QuadPart;
+		return NewTime;
+	}
+}
+
+xboxkrnl::LIST_ENTRY KiWaitInListHead;
+
 // ******************************************************************
 // * 0x009E - KeWaitForMultipleObjects()
 // ******************************************************************
@@ -1798,52 +1934,195 @@ XBSYSAPI EXPORTNUM(158) xboxkrnl::NTSTATUS NTAPI xboxkrnl::KeWaitForMultipleObje
 		LOG_FUNC_ARG(WaitBlockArray)
 		LOG_FUNC_END;
 
-	NTSTATUS ret = STATUS_SUCCESS;
+	// If the lock is not already held, lock it
+	PRKTHREAD Thread = KeGetCurrentThread();
+	if (Thread->WaitNext) {
+		Thread->WaitNext = FALSE;
+	}
+	else {
+		KiLockDispatcherDatabase(&Thread->WaitIrql);
+	}
 
-	// Take the input and build two arrays: One of handles created by our kernel and one for not
-	// Handles created by our kernel need to be forwarded to WaitForMultipleObjects while handles
-	// created by Windows need to be forwarded to NtDll::KeWaitForMultipleObjects
-	std::vector<HANDLE> nativeObjects;
-	std::vector<HANDLE> ntdllObjects;
-
-	for (uint i = 0; i < Count; i++) {
-		DbgPrintf(LOG_PREFIX, "Object: 0x%08X\n", Object[i]);
-		if (g_KeEventHandles.find((PKEVENT)Object[i]) == g_KeEventHandles.end()) {
-			ntdllObjects.push_back(Object[i]);
-		} else {
-			nativeObjects.push_back(g_KeEventHandles[(PRKEVENT)Object[i]]);
+	// Wait Loop
+	// This loop ends 
+	PLARGE_INTEGER OriginalTime = Timeout;
+	LARGE_INTEGER DueTime, NewTime;
+	KWAIT_BLOCK StackWaitBlock;
+	PKWAIT_BLOCK WaitBlock = &StackWaitBlock;
+	BOOLEAN WaitSatisfied;
+	NTSTATUS WaitStatus;
+	PKMUTANT ObjectMutant;
+	do {
+		// Check if we need to let an APC run. This should immediately trigger APC interrupt via a call to UnlockDispatcherDatabase
+		if (Thread->ApcState.KernelApcPending && (Thread->WaitIrql < APC_LEVEL)) {
+			KiUnlockDispatcherDatabase(Thread->WaitIrql);
 		}
+		else {
+			WaitSatisfied = TRUE;
+			Thread->WaitStatus = STATUS_SUCCESS;
+
+			for (LONG Index = 0; Index < Count; Index += 1) {
+				ObjectMutant = (PKMUTANT)Object[Index];
+				if (WaitType == WaitAny) {
+					if (ObjectMutant->Header.Type == MutantObject) {
+						// If the object is a mutant object and it has been acquired MINGLONG times, raise an exception
+						// If the mutant is signalled, we can satisfy the wait
+						if ((ObjectMutant->Header.SignalState > 0) || (Thread == ObjectMutant->OwnerThread)) {
+							if (ObjectMutant->Header.SignalState != MINLONG) {
+								KiWaitSatisfyMutant(ObjectMutant, Thread);
+								WaitStatus = (NTSTATUS)(Thread->WaitStatus);
+								goto NoWait;
+							}
+							else {
+								KiUnlockDispatcherDatabase(Thread->WaitIrql);
+								ExRaiseStatus(STATUS_MUTANT_LIMIT_EXCEEDED);
+							}
+						}
+					}
+					else if (ObjectMutant->Header.SignalState) {
+						// Otherwise, if the signal state is > 0, we can still just satisfy the wait
+						KiWaitSatisfyOther(ObjectMutant);
+						WaitStatus = STATUS_SUCCESS;
+						goto NoWait;
+					}
+				} else {
+					if (ObjectMutant->Header.Type == MutantObject) {
+						if ((Thread == ObjectMutant->OwnerThread) &&	(ObjectMutant->Header.SignalState == MINLONG)) {
+							KiUnlockDispatcherDatabase(Thread->WaitIrql);
+							ExRaiseStatus(STATUS_MUTANT_LIMIT_EXCEEDED);
+						} else if ((ObjectMutant->Header.SignalState <= 0) && (Thread != ObjectMutant->OwnerThread)) {
+							WaitSatisfied = FALSE;
+						}
+					} else if (ObjectMutant->Header.SignalState <= 0) {
+						WaitSatisfied = FALSE;
+					}
+				}
+
+
+				// If we reached here, the wait could not be satisfied immediately, so we must setup a WaitBlock
+				WaitBlock = &WaitBlockArray[Index];
+				WaitBlock->Object = ObjectMutant;
+				WaitBlock->WaitKey = (CSHORT)(Index);
+				WaitBlock->WaitType = WaitType;
+				WaitBlock->Thread = Thread;
+				WaitBlock->NextWaitBlock = &WaitBlockArray[Index + 1];
+			}
+
+			// Check if the wait can be satisfied immediately
+			if ((WaitType == WaitAll) && (WaitSatisfied)) {
+				WaitBlock->NextWaitBlock = &WaitBlockArray[0];
+				KiWaitSatisfyAll(WaitBlock);
+				WaitStatus = (NTSTATUS)Thread->WaitStatus;
+				goto NoWait;
+			}	
+
+			TestForAlertPending(Alertable);
+
+			// Handle a Timeout if specified
+			if (Timeout != nullptr) {
+				// If the timeout is 0, do not wait
+				if (!(Timeout->u.LowPart | Timeout->u.HighPart)) {
+					WaitStatus = (NTSTATUS)(STATUS_TIMEOUT);
+					goto NoWait;
+				}
+
+				// Setup a timer for the thread
+				PKTIMER Timer = &Thread->Timer;
+				PKWAIT_BLOCK WaitTimer = &Thread->TimerWaitBlock;
+				WaitBlock->NextWaitBlock = WaitTimer;
+				Timer->Header.WaitListHead.Flink = &WaitTimer->WaitListEntry;
+				Timer->Header.WaitListHead.Blink = &WaitTimer->WaitListEntry;
+				WaitTimer->NextWaitBlock = WaitBlock;
+				if (KiInsertTreeTimer(Timer, *Timeout) == FALSE) {
+					WaitStatus = (NTSTATUS)STATUS_TIMEOUT;
+					goto NoWait;
+				}
+
+				DueTime.QuadPart = Timer->DueTime.QuadPart;
+			}
+			else {
+				WaitBlock->NextWaitBlock = WaitBlock;
+			}
+
+			WaitBlock->NextWaitBlock = &WaitBlockArray[0];
+			WaitBlock = &WaitBlockArray[0];
+			do {
+				ObjectMutant = (PKMUTANT)WaitBlock->Object;
+				//InsertTailList(&ObjectMutant->Header.WaitListHead, &WaitBlock->WaitListEntry);
+				WaitBlock = WaitBlock->NextWaitBlock;
+			} while (WaitBlock != &WaitBlockArray[0]);
+
+
+			/*
+			TODO: We can't implement this and the return values until we have our own thread schedular
+			For now, we'll have to implement waiting here instead of the schedular.
+			This code can all be enabled once we have CPU emulation and our own schedular in v1.0
+			*/
+
+			// Insert the WaitBlock
+			//InsertTailList(&ObjectMutant->Header.WaitListHead, &WaitBlock->WaitListEntry);
+
+			// If the current thread is processing a queue object, wake other treads using the same queue
+			PRKQUEUE Queue = (PRKQUEUE)Thread->Queue;
+			if (Queue != NULL) {
+				// TODO:KiActivateWaiterQueue(Queue);
+			}
+
+			// Insert the thread into the Wait List
+			Thread->Alertable = Alertable;
+			Thread->WaitMode = WaitMode;
+			Thread->WaitReason = (UCHAR)WaitReason;
+			Thread->WaitTime = KeTickCount;
+			//Thread->State = Waiting;
+			//KiInsertWaitList(WaitMode, Thread);
+
+			//WaitStatus = (NTSTATUS)KiSwapThread();
+
+			if (WaitStatus == STATUS_USER_APC) {
+				// TODO: KiDeliverUserApc();
+			}
+
+			// If the thread was not awakened for an APC, return the Wait Status
+			//if (WaitStatus != STATUS_KERNEL_APC) {
+			//	return WaitStatus;
+			//}
+
+			// TODO: Remove this after we have our own schedular and the above is implemented
+			Sleep(0);
+
+			// Reduce the timout if necessary
+			if (Timeout != nullptr) {
+				Timeout = KiComputeWaitInterval(OriginalTime, &DueTime, &NewTime);
+			}
+		}
+
+		// Raise IRQL to DISPATCH_LEVEL and lock the database (only if it's not already at this level)
+		if (KeGetCurrentIrql() != DISPATCH_LEVEL) {
+			KiLockDispatcherDatabase(&Thread->WaitIrql);
+		}
+	} while (TRUE);
+
+	// The waiting thead has been alerted, or an APC needs to be delivered
+	// So unlock the dispatcher database, lower the IRQ and return the status
+	KiUnlockDispatcherDatabase(Thread->WaitIrql);
+	if (WaitStatus == STATUS_USER_APC) {
+		//TODO: KiDeliverUserApc();
 	}
 
-	if (ntdllObjects.size() > 0) {
-		// TODO : What should we do with the (currently ignored)
-		//        WaitReason, WaitMode, WaitBlockArray?
+	RETURN(WaitStatus);
 
-		// Unused arguments : WaitReason, WaitMode, WaitBlockArray
-		ret = NtDll::NtWaitForMultipleObjects(
-			ntdllObjects.size(),
-			&ntdllObjects[0],
-			(NtDll::OBJECT_WAIT_TYPE)WaitType,
-			Alertable,
-			(NtDll::PLARGE_INTEGER)Timeout);
+NoWait:
+	// The wait was satisfied without actually waiting
+	// Unlock the database and return the status
+	//TODO: KiAdjustQuantumThread(Thread);
 
-		if (FAILED(ret))
-			EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "KeWaitForMultipleObjects failed! (%s)", NtStatusToString(ret));
-	}
-	
-	if (nativeObjects.size() > 0) {
-		ret = NtDll::NtWaitForMultipleObjects(
-			nativeObjects.size(),
-			&nativeObjects[0],
-			(NtDll::OBJECT_WAIT_TYPE)WaitType,
-			Alertable,
-			(NtDll::PLARGE_INTEGER)Timeout);
+	KiUnlockDispatcherDatabase(Thread->WaitIrql);
 
-		if (FAILED(ret))
-			EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "KeWaitForMultipleObjects failed! (%s)", NtStatusToString(ret));
+	if (WaitStatus == STATUS_USER_APC) {
+		// TODO: KiDeliverUserApc();
 	}
 
-	RETURN(ret);
+	RETURN(WaitStatus);
 }
 
 // ******************************************************************
@@ -1858,16 +2137,164 @@ XBSYSAPI EXPORTNUM(159) xboxkrnl::NTSTATUS NTAPI xboxkrnl::KeWaitForSingleObject
 	IN PLARGE_INTEGER Timeout OPTIONAL
 )
 {
-	LOG_FORWARD("KeWaitForMultipleObjects");
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Object)
+		LOG_FUNC_ARG(WaitReason)
+		LOG_FUNC_ARG(WaitMode)
+		LOG_FUNC_ARG(Alertable)
+		LOG_FUNC_ARG(Timeout)
+		LOG_FUNC_END;
 
-	return xboxkrnl::KeWaitForMultipleObjects(
-		/*Count=*/1,
-		&Object,
-		/*WaitType=*/WaitAll,
-		WaitReason,
-		WaitMode,
-		Alertable,
-		Timeout,
-		/*WaitBlockArray*/NULL
-	);
+	// If the lock is not already held, lock it
+	PRKTHREAD Thread = KeGetCurrentThread();
+	if (Thread->WaitNext) {
+		Thread->WaitNext = FALSE;
+	}
+	else {
+		KiLockDispatcherDatabase(&Thread->WaitIrql);
+	}
+
+	// Wait Loop
+	// This loop ends 
+	PLARGE_INTEGER OriginalTime = Timeout;
+	LARGE_INTEGER DueTime, NewTime;
+	KWAIT_BLOCK StackWaitBlock;
+	PKWAIT_BLOCK WaitBlock = &StackWaitBlock;
+	NTSTATUS WaitStatus;
+	do {
+		// Check if we need to let an APC run. This should immediately trigger APC interrupt via a call to UnlockDispatcherDatabase
+		if (Thread->ApcState.KernelApcPending && (Thread->WaitIrql < APC_LEVEL)) {
+			KiUnlockDispatcherDatabase(Thread->WaitIrql);
+		} else {
+			PKMUTANT ObjectMutant = (PKMUTANT)Object;
+			Thread->WaitStatus = STATUS_SUCCESS;
+
+			if (ObjectMutant->Header.Type == MutantObject) {
+				// If the object is a mutant object and it has been acquired MINGLONG times, raise an exception
+				// If the mutant is signalled, we can satisfy the wait
+				if ((ObjectMutant->Header.SignalState > 0) || (Thread == ObjectMutant->OwnerThread)) {
+					if (ObjectMutant->Header.SignalState != MINLONG) {
+						KiWaitSatisfyMutant(ObjectMutant, Thread);
+						WaitStatus = (NTSTATUS)(Thread->WaitStatus);
+						goto NoWait;
+					}
+					else {
+						KiUnlockDispatcherDatabase(Thread->WaitIrql);
+						ExRaiseStatus(STATUS_MUTANT_LIMIT_EXCEEDED);
+					}
+				}
+			}
+			else if (ObjectMutant->Header.SignalState > 0) {
+				// Otherwise, if the signal state is > 0, we can still just satisfy the wait
+				KiWaitSatisfyOther(ObjectMutant);
+				WaitStatus = STATUS_SUCCESS;
+				goto NoWait;
+			}
+
+			// If we reached here, the wait could not be satisfied immediately, so we must setup a WaitBlock
+			Thread->WaitBlockList = WaitBlock;
+			WaitBlock->Object = Object;
+			WaitBlock->WaitKey = (CSHORT)(STATUS_SUCCESS);
+			WaitBlock->WaitType = WaitAny;
+			WaitBlock->Thread = Thread;
+
+			TestForAlertPending(Alertable);
+
+			// Handle a Timeout if specified
+			if (Timeout != nullptr) {
+				// If the timeout is 0, do not wait
+				if (!(Timeout->u.LowPart | Timeout->u.HighPart)) {
+					WaitStatus = (NTSTATUS)(STATUS_TIMEOUT);
+					goto NoWait;
+				}
+
+				// Setup a timer for the thread
+				PKTIMER Timer = &Thread->Timer;
+				PKWAIT_BLOCK WaitTimer = &Thread->TimerWaitBlock;
+				WaitBlock->NextWaitBlock = WaitTimer;
+				Timer->Header.WaitListHead.Flink = &WaitTimer->WaitListEntry;
+				Timer->Header.WaitListHead.Blink = &WaitTimer->WaitListEntry;
+				WaitTimer->NextWaitBlock = WaitBlock;
+				if (KiInsertTreeTimer(Timer, *Timeout) == FALSE) {
+					WaitStatus = (NTSTATUS)STATUS_TIMEOUT;
+					goto NoWait;
+				}
+
+				DueTime.QuadPart = Timer->DueTime.QuadPart;
+			}
+			else {
+				WaitBlock->NextWaitBlock = WaitBlock;
+			}
+
+			/*
+				TODO: We can't implement this and the return values until we have our own thread schedular
+				For now, we'll have to implement waiting here instead of the schedular.
+				This code can all be enabled once we have CPU emulation and our own schedular in v1.0
+			*/
+
+			// Insert the WaitBlock
+			//InsertTailList(&ObjectMutant->Header.WaitListHead, &WaitBlock->WaitListEntry);
+
+			// If the current thread is processing a queue object, wake other treads using the same queue
+			PRKQUEUE Queue = (PRKQUEUE)Thread->Queue;
+			if (Queue != NULL) {
+				// TODO: KiActivateWaiterQueue(Queue);
+			}
+
+			// Insert the thread into the Wait List
+			Thread->Alertable = Alertable;
+			Thread->WaitMode = WaitMode;
+			Thread->WaitReason = (UCHAR)WaitReason;
+			Thread->WaitTime = KeTickCount;
+			// TODO: Thread->State = Waiting;
+			//KiInsertWaitList(WaitMode, Thread);
+
+			/*
+			WaitStatus = (NTSTATUS)KiSwapThread();
+
+			if (WaitStatus == STATUS_USER_APC) {
+				// TODO: KiDeliverUserApc();
+			}
+
+			// If the thread was not awakened for an APC, return the Wait Status
+			if (WaitStatus != STATUS_KERNEL_APC) {
+				return WaitStatus;
+			} */
+
+			// TODO: Remove this after we have our own schedular and the above is implemented
+			Sleep(0);
+
+			// Reduce the timout if necessary
+			if (Timeout != nullptr) {
+				Timeout = KiComputeWaitInterval(OriginalTime, &DueTime,	&NewTime);
+			}
+		}
+
+		// Raise IRQL to DISPATCH_LEVEL and lock the database
+		if (KeGetCurrentIrql() != DISPATCH_LEVEL) {
+			KiLockDispatcherDatabase(&Thread->WaitIrql);
+		}
+	} while (TRUE);
+
+	// The waiting thead has been alerted, or an APC needs to be delivered
+	// So unlock the dispatcher database, lower the IRQ and return the status
+	KiUnlockDispatcherDatabase(Thread->WaitIrql);
+	if (WaitStatus == STATUS_USER_APC) {
+		//TODO: KiDeliverUserApc();
+	}
+
+	RETURN(WaitStatus);
+
+NoWait:
+	// The wait was satisfied without actually waiting
+	// Unlock the database and return the status
+	//TODO: KiAdjustQuantumThread(Thread);
+
+	KiUnlockDispatcherDatabase(Thread->WaitIrql);
+
+	if (WaitStatus == STATUS_USER_APC) {
+		// TODO: KiDeliverUserApc();
+	}
+
+	RETURN(WaitStatus);
 }

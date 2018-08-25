@@ -78,7 +78,9 @@ SMCDevice::SMCDevice(SCMRevision revision)
 void SMCDevice::Init()
 {
 	m_PICVersionStringIndex = 0;
-	buffer[SMC_COMMAND_AV_PACK] = AV_PACK_HDTV; // see http://xboxdevwiki.net/PIC#The_AV_Pack
+	buffer[SMC_COMMAND_AV_PACK] = 1; // AV_PACK_HDTV: see http://xboxdevwiki.net/PIC#The_AV_Pack
+	                                 // We can't use the existing constant because SMC flags and kernel flags
+	                                 // different values!
 	buffer[SMC_COMMAND_LED_SEQUENCE] = LED::GREEN;
 	buffer[SMC_COMMAND_SCRATCH] = 0; // http://xboxdevwiki.net/PIC#Scratch_register_values
 }
@@ -104,10 +106,10 @@ uint8_t SMCDevice::ReadByte(uint8_t command)
 	case SMC_COMMAND_VERSION: // 0x01 PIC version string
 		// See http://xboxdevwiki.net/PIC#PIC_version_string
 		switch (m_revision) {
-		case SCMRevision::P01: buffer[0] = "P01"[m_PICVersionStringIndex]; break;
-		case SCMRevision::P2L: buffer[0] = "P05"[m_PICVersionStringIndex]; break; // ??
-		case SCMRevision::D01: buffer[0] = "DXB"[m_PICVersionStringIndex]; break;
-		case SCMRevision::D05: buffer[0] = "D05"[m_PICVersionStringIndex]; break; // ??
+		case SCMRevision::P01: buffer[1] = "P01"[m_PICVersionStringIndex]; break;
+		case SCMRevision::P2L: buffer[1] = "P05"[m_PICVersionStringIndex]; break; // ??
+		case SCMRevision::D01: buffer[1] = "DXB"[m_PICVersionStringIndex]; break;
+		case SCMRevision::D05: buffer[1] = "D05"[m_PICVersionStringIndex]; break; // ??
 		// default: UNREACHABLE(m_revision);
 		}
 

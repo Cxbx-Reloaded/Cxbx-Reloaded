@@ -120,17 +120,29 @@ VOID ARX_WR(VOID *Ptr, xboxkrnl::UCHAR i, xboxkrnl::UCHAR d)
 }
 
 
-
-
 // Global Variable(s)
 PVOID g_pPersistedData = NULL;
 ULONG AvpCurrentMode = 0;
 
+ULONG AvSMCVideoModeToAVPack(ULONG VideoMode)
+{
+	switch (VideoMode)
+	{
+	case 0x0: return AV_PACK_SCART;
+	case 0x1: return AV_PACK_HDTV;
+	case 0x2: return AV_PACK_VGA;
+	case 0x3: return AV_PACK_RFU;
+	case 0x4: return AV_PACK_SVIDEO;
+	case 0x6: return AV_PACK_STANDARD;
+	}
+
+	return AV_PACK_NONE;
+}
+
+
 ULONG AvQueryAvCapabilities()
 {
-	// This is the only AV mode we currently emulate, so we can hardcode the return value
-	// TODO: Once we add the ability to change av pack, read HalSmcVideoMode) and convert it to a AV_PACK_*
-	ULONG avpack = AV_PACK_HDTV;
+	ULONG avpack = AvSMCVideoModeToAVPack(xboxkrnl::HalBootSMCVideoMode);
 	ULONG type;
 	ULONG resultSize;
 

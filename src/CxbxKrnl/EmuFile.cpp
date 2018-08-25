@@ -203,12 +203,13 @@ void CxbxFormatPartitionByHandle(HANDLE hFile)
 	printf("Formatted EmuDisk Partition%d\n", CxbxGetPartitionNumberFromHandle(hFile));
 }
 
+const std::string MediaBoardRomFile = "fpr21042_m29w160et.bin";
 const std::string DrivePrefix = "\\??\\";
 const std::string DriveSerial = DrivePrefix + "serial:";
 const std::string DriveCdRom0 = DrivePrefix + "CdRom0:"; // CD-ROM device
-const std::string DriveMbfs = DrivePrefix + "mbfs:"; // media board's file system area device
-const std::string DriveMbcom = DrivePrefix + "mbcom:"; // media board's communication area device
-const std::string DriveMbrom = DrivePrefix + "mbrom:"; // media board's boot ROM device
+const std::string DriveMbfs = "mbfs:"; // media board's file system area device
+const std::string DriveMbcom = "mbcom:"; // media board's communication area device
+const std::string DriveMbrom = "mbrom0:"; // media board's boot ROM device
 const std::string DriveA = DrivePrefix + "A:"; // A: could be CDROM
 const std::string DriveC = DrivePrefix + "C:"; // C: is HDD0
 const std::string DriveD = DrivePrefix + "D:"; // D: is DVD Player
@@ -362,7 +363,11 @@ NTSTATUS CxbxConvertFilePath(
 
 	// Check if we where called from a File-handling API :
 	if (!aFileAPIName.empty()) {
-		if (!partitionHeader) {
+		if (RelativePath.compare(DriveMbrom) == 0) {
+			*RootDirectory = CxbxBasePathHandle;
+			HostPath = CxbxBasePath;
+			RelativePath = MediaBoardRomFile;
+		} else if (!partitionHeader) {
 			// Check if the path starts with a volume indicator :
 			if ((RelativePath.length() >= 2) && (RelativePath[1] == ':')) {
 				// Look up the symbolic link information using the drive letter :
@@ -378,14 +383,16 @@ NTSTATUS CxbxConvertFilePath(
 				{
 					NtSymbolicLinkObject = FindNtSymbolicLinkObjectByRootHandle(g_hCurDir);
 					RelativePath.erase(0, 5); // Remove '$HOME'
-				} else
+				}
+				else
 					CxbxKrnlCleanup(LOG_PREFIX, ("Unsupported path macro : " + OriginalPath).c_str());
 			}
 			// Check if the path starts with a relative path indicator :
 			else if (RelativePath[0] == '.') {// "4x4 Evo 2" needs this
 				NtSymbolicLinkObject = FindNtSymbolicLinkObjectByRootHandle(g_hCurDir);
 				RelativePath.erase(0, 1); // Remove the '.'
-			} else {
+			}
+			else {
 				// TODO : How should we handle accesses to the serial: (?semi-)volume?
 				if (RelativePath.compare(0, 7, "serial:") == 0)
 					return STATUS_UNRECOGNIZED_VOLUME;
@@ -456,12 +463,12 @@ NTSTATUS CxbxConvertFilePath(
 
 		if (g_bPrintfOn) {
 			DbgPrintf(LOG_PREFIX, "%s Corrected path...\n", aFileAPIName.c_str());
-			printf("  Org:\"%s\"\n", OriginalPath.c_str());
+			DbgPrintf(LOG_PREFIX, "  Org:\"%s\"\n", OriginalPath.c_str());
 			if (_strnicmp(HostPath.c_str(), CxbxBasePath.c_str(), CxbxBasePath.length()) == 0) {
-				printf("  New:\"$CxbxPath\\%s%s\"\n", (HostPath.substr(CxbxBasePath.length(), std::string::npos)).c_str(), RelativePath.c_str());
+				DbgPrintf(LOG_PREFIX, "  New:\"$CxbxPath\\%s%s\"\n", (HostPath.substr(CxbxBasePath.length(), std::string::npos)).c_str(), RelativePath.c_str());
 			}
 			else
-				printf("  New:\"$XbePath\\%s\"\n", RelativePath.c_str());
+				DbgPrintf(LOG_PREFIX, "  New:\"$XbePath\\%s\"\n", RelativePath.c_str());
 		}
 	}
 	else

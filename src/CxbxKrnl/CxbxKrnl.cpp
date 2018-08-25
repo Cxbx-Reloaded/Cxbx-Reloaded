@@ -70,6 +70,7 @@ namespace xboxkrnl
 #include "devices\EEPROMDevice.h" // For g_EEPROM
 #include "devices\Xbox.h" // For InitXboxHardware()
 #include "devices\LED.h" // For LED::Sequence
+#include "devices\SMCDevice.h" // For SMC Access
 #include "EmuSha.h" // For the SHA1 functions
 #include "Timer.h" // For Timer_Init
 #include "..\Common\Input\InputConfig.h" // For the InputDeviceManager
@@ -1137,7 +1138,23 @@ void CxbxKrnlMain(int argc, char* argv[])
 		g_bIsDebug = (g_XbeType == xtDebug);
 		g_bIsRetail = (g_XbeType == xtRetail);
 
+		// Disabled: The media board rom fails to run because it REQUIRES LLE USB, which is not yet enabled.
+		// Chihiro games can be ran directly for now. 
+		// This just means that you cannot access the Chihiro test menus and related stuff, games should still be okay
+#if 0   
+		// If the Xbe is Chihiro, and we were not launched by SEGABOOT, we need to load SEGABOOT from the Chihiro Media Board rom instead!
+		// TODO: We also need to store the path of the loaded game, and mount it as the mediaboard filesystem
+		// TODO: How to we detect who launched us, to prevent a reboot-loop
+		if (g_bIsChihiro) {
+			std::string chihiroMediaBoardRom = std::string(szFolder_CxbxReloadedData) + std::string("/EmuDisk/") + MediaBoardRomFile;
+			if (!std::experimental::filesystem::exists(chihiroMediaBoardRom)) {
+				CxbxKrnlCleanup(LOG_PREFIX, "Chihiro Media Board ROM (fpr21042_m29w160et.bin) could not be found");
+			}
 
+			delete CxbxKrnl_Xbe;
+			CxbxKrnl_Xbe = new Xbe(chihiroMediaBoardRom.c_str(), false);
+		}
+#endif
 		// Initialize the virtual manager
 		g_VMManager.Initialize(hMemoryBin, hPageTables, BootFlags);
 
@@ -1488,6 +1505,13 @@ __declspec(noreturn) void CxbxKrnlInit
 
 	InitXboxHardware(HardwareModel::Revision1_5); // TODO : Make configurable
 
+	// Read Xbox video mode from the SMC, store it in HalBootSMCVideoMode
+	xboxkrnl::HalReadSMBusValue(SMBUS_ADDRESS_SYSTEM_MICRO_CONTROLLER, SMC_COMMAND_AV_PACK, FALSE, &xboxkrnl::HalBootSMCVideoMode);
+
+	// TODO: move much of this stuff to xboxkrnl::init();
+	extern xboxkrnl::LIST_ENTRY KiWaitInListHead;
+	InitializeListHead(&KiWaitInListHead);
+
 	if (bLLE_USB) {
 #if 0 // Reenable this when LLE USB actually works
 		int ret;
@@ -1519,6 +1543,12 @@ __declspec(noreturn) void CxbxKrnlInit
 	// Required until we perfect emulation of X2 DVD Authentication
 	// See: https://multimedia.cx/eggs/xbox-sphinx-protocol/
 	ApplyMediaPatches();
+
+	// Chihiro games require more patches
+	// The chihiro BIOS does this to bypass XAPI cache init
+	if (g_bIsChihiro) {
+		CxbxKrnl_XbeHeader->dwInitFlags.bDontSetupHarddisk = true;
+	}
 
 	if(!g_SkipRdtscPatching)
 	{ 

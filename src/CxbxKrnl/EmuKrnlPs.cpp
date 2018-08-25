@@ -327,13 +327,13 @@ XBSYSAPI EXPORTNUM(255) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PsCreateSystemThreadE
 		// Give the thread chance to start
 		Sleep(100);
 
-        EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "KRNL: Waiting for Xbox proxy thread to start...\n");
+		DbgPrintf(LOG_PREFIX, "Waiting for Xbox proxy thread to start...\n");
 
         while (bWait) {
             dwThreadWait = WaitForSingleObject(hStartedEvent, 300);
             switch (dwThreadWait) {
                 case WAIT_TIMEOUT: { // The time-out interval elapsed, and the object's state is nonsignaled.
-					EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "KRNL: Timeout while waiting for Xbox proxy thread to start...\n");
+					EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Timeout while waiting for Xbox proxy thread to start...\n");
                     bWait = false;
                     break;
                 }
@@ -346,7 +346,7 @@ XBSYSAPI EXPORTNUM(255) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PsCreateSystemThreadE
 					if (dwThreadWait == WAIT_FAILED) // The function has failed
 						bWait = false;
 
-					std::string ErrorStr = CxbxGetLastErrorString("KRNL: While waiting for Xbox proxy thread to start");
+					std::string ErrorStr = CxbxGetLastErrorString("While waiting for Xbox proxy thread to start");
 					EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "%s\n", ErrorStr.c_str());
 					break;
                 }
@@ -358,7 +358,7 @@ XBSYSAPI EXPORTNUM(255) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PsCreateSystemThreadE
 		hStartedEvent = NULL;
 
 		// Log ThreadID identical to how GetCurrentThreadID() is rendered :
-		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "KRNL: Created Xbox proxy thread. Handle : 0x%X, ThreadId : [0x%.4X]\n", *ThreadHandle, dwThreadId);
+		DbgPrintf(LOG_PREFIX, "Created Xbox proxy thread. Handle : 0x%X, ThreadId : [0x%.4X]\n", *ThreadHandle, dwThreadId);
 
 		CxbxKrnlRegisterThread(*ThreadHandle);
 
