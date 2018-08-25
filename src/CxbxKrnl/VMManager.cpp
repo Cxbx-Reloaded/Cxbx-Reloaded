@@ -1085,7 +1085,10 @@ VAddr VMManager::MapDeviceMemory(PAddr Paddr, size_t Size, DWORD Perms)
 	if (!addr) { goto Fail; }
 
 	// check if we have to construct the PT's for this allocation
-	if (!AllocatePT(PteNumber << PAGE_SHIFT, addr)) { goto Fail; }
+	if (!AllocatePT(PteNumber << PAGE_SHIFT, addr)) {
+		VirtualFree((void*)addr, 0, MEM_RELEASE);
+		goto Fail;
+	}
 
 	// Finally, write the pte's
 	PointerPte = GetPteAddress(addr);
@@ -1646,9 +1649,9 @@ xboxkrnl::NTSTATUS VMManager::XbAllocateVirtualMemory(VAddr* addr, ULONG ZeroBit
 			AlignedCapturedSize = ROUND_UP_4K(CapturedSize);
 			it = CheckConflictingVMA(AlignedCapturedBase, AlignedCapturedSize, &bOverflow);
 
-			if (it != m_MemoryRegionArray[UserRegion].RegionMap.end())
+			if (it != m_MemoryRegionArray[UserRegion].RegionMap.end() || bOverflow)
 			{
-				// Reserved vma, report an error
+				// Reserved vma or we are overflowing a free vma, report an error
 
 				status = STATUS_CONFLICTING_ADDRESSES;
 				goto Exit;
@@ -2657,12 +2660,19 @@ VMAIter VMManager::CheckConflictingVMA(VAddr addr, size_t Size, bool* bOverflow)
 	*bOverflow = false;
 	VMAIter it = GetVMAIterator(addr, UserRegion);
 
-	if (it != m_MemoryRegionArray[UserRegion].RegionMap.end() && it->second.type != FreeVma)
-	{
-		if (it->first + it->second.size - 1 < addr + Size - 1) {
-			*bOverflow = true;
-		}
+	if (it == m_MemoryRegionArray[UserRegion].RegionMap.end()) {
+		// Pretend we are overflowing since an overflow is always an error. Otherwise, end() will be interpreted
+		// as a found free VMA.
 
+		*bOverflow = true;
+		return it;
+	}
+
+	if (it->first + it->second.size - 1 < addr + Size - 1) {
+		*bOverflow = true;
+	}
+
+	if (it->second.type != FreeVma) {
 		return it; // conflict
 	}
 
