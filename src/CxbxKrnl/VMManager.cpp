@@ -156,6 +156,7 @@ void VMManager::Initialize(HANDLE memory_view, HANDLE pagetables_view, int BootF
 
 	// Reserve the xbe image memory. Doing this now allows us to avoid calling XbAllocateVirtualMemory later
 	ConstructVMA(XBE_IMAGE_BASE, ROUND_UP_4K(CxbxKrnl_Xbe->m_Header.dwSizeofImage), UserRegion, ReservedVma, false, XBOX_PAGE_READWRITE);
+	m_VirtualMemoryBytesReserved += ROUND_UP_4K(CxbxKrnl_Xbe->m_Header.dwSizeofImage);
 
 	if (m_MmLayoutChihiro) {
 		printf("Page table for Chihiro arcade initialized!\n");
