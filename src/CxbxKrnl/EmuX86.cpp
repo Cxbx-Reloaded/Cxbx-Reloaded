@@ -1094,6 +1094,11 @@ bool EmuX86_DecodeException(LPEXCEPTION_POINTERS e)
 	case I_AND:
 		if (EmuX86_Opcode_AND(e, info)) break;
 		goto opcode_error;
+	case I_CLI: {
+		// Disable all interrupts
+		EmuX86_Opcode_CLI();
+		break;
+	}
 	case I_CMP:
 		if (EmuX86_Opcode_CMP(e, info)) break;
 		goto opcode_error;
@@ -1114,6 +1119,11 @@ bool EmuX86_DecodeException(LPEXCEPTION_POINTERS e)
 		goto opcode_error;
 	case I_INVD: // Flush internal caches; initiate flushing of external caches.
 		break; // We can safely ignore this
+	case I_INVLPG: {
+		// This instruction invalidates the TLB entry specified with the source operand. Since we don't emulate
+		// the TLB yet, we can safely ignore this. Test case: Fable.
+		break;
+	}
 	case I_MOV:
 		if (EmuX86_Opcode_MOV(e, info)) break;
 		goto opcode_error;
@@ -1129,6 +1139,11 @@ bool EmuX86_DecodeException(LPEXCEPTION_POINTERS e)
 	case I_OUT:
 		if (EmuX86_Opcode_OUT(e, info)) break;
 		goto opcode_error;
+	case I_STI: {
+		// Enable all interrupts
+		EmuX86_Opcode_STI();
+		break;
+	}
 	case I_SUB:
 		if (EmuX86_Opcode_SUB(e, info)) break;
 		goto opcode_error;
@@ -1144,16 +1159,6 @@ bool EmuX86_DecodeException(LPEXCEPTION_POINTERS e)
 		// Chase: Hollywood Stunt Driver hits this
 		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "WRMSR instruction ignored");
 		break;
-	case I_CLI: {
-		// Disable all interrupts
-		EmuX86_Opcode_CLI();
-		break;
-	}
-	case I_STI: {
-		// Enable all interrupts
-		EmuX86_Opcode_STI();
-		break;
-	}
 	default:
 		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Unhandled instruction : %u", info.opcode);
 		e->ContextRecord->Eip += info.size;
