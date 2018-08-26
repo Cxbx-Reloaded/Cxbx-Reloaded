@@ -1406,7 +1406,7 @@ __declspec(noreturn) void CxbxKrnlInit
 	std::string xbeDirectory(szBuffer);
 	size_t lastFind = xbeDirectory.find(';');
 	// First find if there is a semicolon when dashboard or title disc (such as demo disc) has it.
-	// Then we must obey the "root" directory it asked for.
+	// Then we must obey the current directory it asked for.
 	if (lastFind != std::string::npos) {
 		if (xbeDirectory.find(';', lastFind + 1) != std::string::npos) {
 			CxbxKrnlCleanup(LOG_PREFIX_INIT, "Cannot contain multiple of ; symbol.");

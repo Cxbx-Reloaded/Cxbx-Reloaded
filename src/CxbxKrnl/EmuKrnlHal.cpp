@@ -575,7 +575,7 @@ XBSYSAPI EXPORTNUM(49) xboxkrnl::VOID DECLSPEC_NORETURN NTAPI xboxkrnl::HalRetur
 				QuickReboot |= BOOT_QUICK_REBOOT;
 				g_EmuShared->SetBootFlags(&QuickReboot);
 
-				// Some titles (Xbox Dashboard and retail/demo discs) use ";" as a root directory path seperator
+				// Some titles (Xbox Dashboard and retail/demo discs) use ";" as a current directory path seperator
 				// This process is handled during initialization. No speical handling here required.
 
 				std::string szProcArgsBuffer;
