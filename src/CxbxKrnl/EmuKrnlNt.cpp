@@ -1397,13 +1397,12 @@ XBSYSAPI EXPORTNUM(215) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQuerySymbolicLinkOb
 	} else {
 		if (LinkTarget != NULL)
 		{
-			if (LinkTarget->Length > LinkTarget->MaximumLength)
-			{
-				ret = STATUS_BUFFER_TOO_SMALL;
-				LinkTarget->Length = LinkTarget->MaximumLength;
+			if (LinkTarget->MaximumLength >= symbolicLinkObject->XboxSymbolicLinkPath.length() + sizeof(char)) {
+				copy_string_to_PSTRING_to(symbolicLinkObject->XboxSymbolicLinkPath, LinkTarget);
 			}
-
-			copy_string_to_PSTRING_to(symbolicLinkObject->XboxSymbolicLinkPath, LinkTarget);
+			else {
+				ret = STATUS_BUFFER_TOO_SMALL;
+			}
 		}
 
 		if (ReturnedLength != NULL)

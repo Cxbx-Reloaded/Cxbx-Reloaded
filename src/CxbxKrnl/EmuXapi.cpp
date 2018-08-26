@@ -1854,47 +1854,6 @@ DWORD WINAPI XTL::EMUPATCH(XMountMUA)
 }
 
 // ******************************************************************
-// * patch: XMountAlternateTitleA
-// ******************************************************************
-DWORD WINAPI XTL::EMUPATCH(XMountAlternateTitleA)
-(
-	LPCSTR		lpRootPath,               
-	DWORD		dwAltTitleId,               
-	PCHAR		pchDrive               
-)
-{
-	FUNC_EXPORTS
-
-	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(lpRootPath)
-		LOG_FUNC_ARG(dwAltTitleId)
-		LOG_FUNC_ARG(pchDrive)
-		LOG_FUNC_END;
-
-	// TODO: Anything?
-	LOG_UNIMPLEMENTED();
-
-	RETURN(ERROR_SUCCESS);
-}
-
-// ******************************************************************
-// * patch: XUnmountAlternateTitleA
-// ******************************************************************
-DWORD WINAPI XTL::EMUPATCH(XUnmountAlternateTitleA)
-(
-	CHAR chDrive
-)
-{
-	FUNC_EXPORTS
-
-	LOG_FUNC_ONE_ARG(chDrive);
-
-	LOG_UNIMPLEMENTED();
-
-	RETURN(ERROR_SUCCESS);
-}
-
-// ******************************************************************
 // * patch: XGetDeviceEnumerationStatus
 // ******************************************************************
 DWORD WINAPI XTL::EMUPATCH(XGetDeviceEnumerationStatus)()
