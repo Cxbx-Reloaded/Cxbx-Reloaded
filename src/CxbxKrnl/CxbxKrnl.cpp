@@ -99,7 +99,7 @@ char szFolder_CxbxReloadedData[MAX_PATH] = { 0 };
 char szFilePath_EEPROM_bin[MAX_PATH] = { 0 };
 char szFilePath_memory_bin[MAX_PATH] = { 0 };
 char szFilePath_page_tables[MAX_PATH] = { 0 };
-char szFilePath_Xbe[MAX_PATH] = { 0 };
+char szFilePath_Xbe[MAX_PATH*2] = { 0 }; // NOTE: LAUNCH_DATA_HEADER's szLaunchPath is MAX_PATH*2 = 520
 
 std::string CxbxBasePath;
 HANDLE CxbxBasePathHandle;
@@ -1096,9 +1096,33 @@ void CxbxKrnlMain(int argc, char* argv[])
 	// Now we can load and run the XBE :
 	// MapAndRunXBE(XbePath, DCHandle);
 	{
+		// NOTE: This is a safety to clean the file path for any malicious file path attempt.
+		// Might want to move this into a utility function.
+		size_t n, i;
+		// Remove useless slashes before and after semicolon.
+		std::string semicolon_search[] = { "\\;", ";\\", "/;", ";/" };
+		std::string semicolon_str = ";";
+		for (n = 0, i = 0; i < semicolon_search->size(); i++, n = 0) {
+			while ((n = xbePath.find(semicolon_search[i], n)) != std::string::npos) {
+				xbePath.replace(n, semicolon_search[i].size(), semicolon_str);
+				n += semicolon_str.size();
+			}
+		}
+		// Remove extra slashes.
+		std::string slash_search[] = { "\\\\", "//" };
+		std::string slash_str = "/";
+		for (n = 0, i = 0; i < slash_search->size(); i++, n = 0) {
+			while ((n = xbePath.find(slash_search[i], n)) != std::string::npos) {
+				xbePath.replace(n, slash_search[i].size(), slash_str);
+				n += slash_str.size();
+			}
+		}
+
+		// Once clean up process is done, proceed set to global variable string.
 		strncpy(szFilePath_Xbe, xbePath.c_str(), MAX_PATH - 1);
+		std::replace(xbePath.begin(), xbePath.end(), ';', '/');
 		// Load Xbe (this one will reside above WinMain's virtual_memory_placeholder)
-		CxbxKrnl_Xbe = new Xbe(szFilePath_Xbe, false); // TODO : Instead of using the Xbe class, port Dxbx _ReadXbeBlock()
+		CxbxKrnl_Xbe = new Xbe(xbePath.c_str(), false); // TODO : Instead of using the Xbe class, port Dxbx _ReadXbeBlock()
 
 		if (CxbxKrnl_Xbe->HasFatalError()) {
 			CxbxKrnlCleanup(LOG_PREFIX, CxbxKrnl_Xbe->GetError().c_str());
@@ -1368,19 +1392,32 @@ __declspec(noreturn) void CxbxKrnlInit
 #endif
 	
 	// Initialize devices :
-	char szBuffer[MAX_PATH];
+	char szBuffer[sizeof(szFilePath_Xbe)];
 	g_EmuShared->GetStorageLocation(szBuffer);
 
 	CxbxBasePath = std::string(szBuffer) + "\\EmuDisk\\";
 
 	// Determine XBE Path
-	memset(szBuffer, 0, MAX_PATH);
-	strncpy(szBuffer, szFilePath_Xbe, MAX_PATH);
+	strncpy(szBuffer, szFilePath_Xbe, sizeof(szBuffer)-1);
+	szBuffer[sizeof(szBuffer) - 1] = '\0'; // Safely null terminate at the end.
+
 	std::string xbePath(szBuffer);
+	std::replace(xbePath.begin(), xbePath.end(), ';', '/');
 	std::string xbeDirectory(szBuffer);
-	xbeDirectory = xbeDirectory.substr(0, xbeDirectory.find_last_of("\\/"));
+	size_t lastFind = xbeDirectory.find(';');
+	// First find if there is a semicolon when dashboard or title disc (such as demo disc) has it.
+	// Then we must obey the current directory it asked for.
+	if (lastFind != std::string::npos) {
+		if (xbeDirectory.find(';', lastFind + 1) != std::string::npos) {
+			CxbxKrnlCleanup(LOG_PREFIX_INIT, "Cannot contain multiple of ; symbol.");
+		}
+		xbeDirectory = xbeDirectory.substr(0, lastFind);
+	}
+	else {
+		xbeDirectory = xbeDirectory.substr(0, xbeDirectory.find_last_of("\\/"));
+	}
 	CxbxBasePathHandle = CreateFile(CxbxBasePath.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
-	memset(szBuffer, 0, MAX_PATH);
+	memset(szBuffer, 0, sizeof(szBuffer));
 	// Games may assume they are running from CdRom :
 	CxbxDefaultXbeDriveIndex = CxbxRegisterDeviceHostPath(DeviceCdrom0, xbeDirectory);
 	// Partition 0 contains configuration data, and is accessed as a native file, instead as a folder :
