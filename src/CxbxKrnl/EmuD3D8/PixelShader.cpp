@@ -4098,7 +4098,7 @@ bool PSH_XBOX_SHADER::IsValidNativeOutputRegister(PSH_ARGUMENT_TYPE aRegType, in
     bool valid = (PARAM_R == aRegType) && (MaxRegisterCount(PARAM_R) > index);
 
     if (m_PSVersion <= D3DPS_VERSION(1, 3))
-        valid = valid || ((PARAM_T == aRegType) && (MaxRegisterCount(PARAM_R) > index));
+        valid = valid || ((PARAM_T == aRegType) && (MaxRegisterCount(PARAM_T) > index));
 
     return valid;
 }
