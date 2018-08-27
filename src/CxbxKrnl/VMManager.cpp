@@ -1120,15 +1120,16 @@ void VMManager::Deallocate(VAddr addr)
 	PFN EndingPfn;
 	PFN_COUNT PteNumber;
 	VMAIter it;
+	bool bOverflow;
 
 	assert(CHECK_ALIGNMENT(addr, PAGE_SIZE)); // all starting addresses in the user region are page aligned
 	assert(IS_USER_ADDRESS(addr));
 
 	Lock();
 
-	it = CheckExistenceVMA(addr, UserRegion);
+	it = CheckConflictingVMA(addr, 0, UserRegion, &bOverflow);
 
-	if (it == m_MemoryRegionArray[UserRegion].RegionMap.end() || it->second.type == FreeVma)
+	if (it == m_MemoryRegionArray[UserRegion].RegionMap.end() || bOverflow)
 	{
 		Unlock();
 		return;
@@ -1161,7 +1162,7 @@ void VMManager::Deallocate(VAddr addr)
 	}
 
 	WritePte(StartingPte, EndingPte, *StartingPte, 0, true);
-	DestructVMA(it->first, UserRegion, it->second.size); // does Deallocate ever attempt to decommit only a part of the original allocation?
+	DestructVMA(it->first, UserRegion, it->second.size);
 	DeallocatePT(PteNumber << PAGE_SHIFT, addr);
 
 	Unlock();
@@ -1178,15 +1179,16 @@ void VMManager::DeallocateContiguous(VAddr addr)
 	PFN pfn;
 	PFN EndingPfn;
 	VMAIter it;
+	bool bOverflow;
 
 	assert(CHECK_ALIGNMENT(addr, PAGE_SIZE)); // all starting addresses in the contiguous region are page aligned
 	assert(IS_PHYSICAL_ADDRESS(addr));
 
 	Lock();
 
-	it = CheckExistenceVMA(addr, ContiguousRegion);
+	it = CheckConflictingVMA(addr, 0, ContiguousRegion, &bOverflow);
 
-	if (it == m_MemoryRegionArray[ContiguousRegion].RegionMap.end() || it->second.type == FreeVma)
+	if (it == m_MemoryRegionArray[ContiguousRegion].RegionMap.end() || bOverflow)
 	{
 		Unlock();
 		return;
@@ -1222,13 +1224,12 @@ PFN_COUNT VMManager::DeallocateSystemMemory(PageType BusyType, VAddr addr, size_
 	VMAIter it;
 	MemoryRegionType MemoryType = SystemRegion;
 	bool bGuardPageAdded = false;
+	bool bOverflow;
 
 	assert(CHECK_ALIGNMENT(addr, PAGE_SIZE)); // all starting addresses in the system region are page aligned
 
 	Lock();
 
-	// We cannot do the size check because the functions that call this can provide 0 as size, meaning 
-	// that we have to calculate it ourselves
 	if (BusyType == DebuggerType)
 	{
 		assert(IS_DEVKIT_ADDRESS(addr));
@@ -1236,9 +1237,9 @@ PFN_COUNT VMManager::DeallocateSystemMemory(PageType BusyType, VAddr addr, size_
 	}
 	else { assert(IS_SYSTEM_ADDRESS(addr)); }
 
-	it = GetVMAIterator(addr, MemoryType);
+	it = CheckConflictingVMA(addr, 0, MemoryType, &bOverflow);
 
-	if (it == m_MemoryRegionArray[MemoryType].RegionMap.end() || it->second.type == FreeVma)
+	if (it == m_MemoryRegionArray[MemoryType].RegionMap.end() || bOverflow)
 	{
 		Unlock();
 		RETURN(NULL);
@@ -1303,22 +1304,24 @@ void VMManager::UnmapDeviceMemory(VAddr addr, size_t Size)
 		PMMPTE EndingPte;
 		PFN_COUNT PteNumber;
 		VMAIter it;
+		bool bOverflow;
 
 		// The starting address of a device can be unaligned since MapDeviceMemory returns an offset from the aligned
 		// mapped address, so we won't assert the address here
 
 		Lock();
 
-		it = CheckExistenceVMA(addr, SystemRegion, PAGES_SPANNED(addr, Size) << PAGE_SHIFT);
+		Size = PAGES_SPANNED(addr, Size) << PAGE_SHIFT;
+		it = CheckConflictingVMA(addr, Size, SystemRegion, &bOverflow);
 
-		if (it == m_MemoryRegionArray[SystemRegion].RegionMap.end() || it->second.type == FreeVma)
+		if (it == m_MemoryRegionArray[SystemRegion].RegionMap.end() || bOverflow)
 		{
 			Unlock();
 			return;
 		}
 
 		StartingPte = GetPteAddress(addr);
-		EndingPte = StartingPte + (it->second.size >> PAGE_SHIFT) - 1;
+		EndingPte = StartingPte + (Size >> PAGE_SHIFT) - 1;
 		PteNumber = EndingPte - StartingPte + 1;
 
 		WritePte(StartingPte, EndingPte, *StartingPte, 0, true);
@@ -1349,17 +1352,6 @@ void VMManager::Protect(VAddr addr, size_t Size, DWORD NewPerms)
 	if (!Size || !ConvertXboxToSystemPteProtection(NewPerms, &NewPermsPte)) { return; }
 
 	Lock();
-
-	// This routine is allowed to change the protections of only a part of the pages of an allocation, and the supplied
-	// address doesn't necessarily need to be the starting address of the vma, meaning we can't check the vma existence
-	// with CheckExistenceVMA
-
-	#ifdef _DEBUG_TRACE
-	MemoryRegionType MemoryType = IS_PHYSICAL_ADDRESS(addr) ? ContiguousRegion : SystemRegion;
-	VMAIter it = GetVMAIterator(addr, MemoryType);
-	assert(it != m_MemoryRegionArray[MemoryType].RegionMap.end() && addr >= it->first &&
-		addr < it->first + it->second.size && it->second.type != FreeVma);
-	#endif
 
 	PointerPte = GetPteAddress(addr);
 	EndingPte = GetPteAddress(addr + Size - 1);
@@ -1648,7 +1640,7 @@ xboxkrnl::NTSTATUS VMManager::XbAllocateVirtualMemory(VAddr* addr, ULONG ZeroBit
 		{
 			AlignedCapturedBase = ROUND_DOWN(CapturedBase, X64KB);
 			AlignedCapturedSize = ROUND_UP_4K(CapturedSize);
-			it = CheckConflictingVMA(AlignedCapturedBase, AlignedCapturedSize, &bOverflow);
+			it = CheckConflictingVMA(AlignedCapturedBase, AlignedCapturedSize, UserRegion, &bOverflow);
 
 			if (it != m_MemoryRegionArray[UserRegion].RegionMap.end() || bOverflow)
 			{
@@ -1709,7 +1701,7 @@ xboxkrnl::NTSTATUS VMManager::XbAllocateVirtualMemory(VAddr* addr, ULONG ZeroBit
 	AlignedCapturedBase = ROUND_DOWN_4K(CapturedBase);
 	AlignedCapturedSize = (PAGES_SPANNED(CapturedBase, CapturedSize)) << PAGE_SHIFT;
 
-	it = CheckConflictingVMA(AlignedCapturedBase, AlignedCapturedSize, &bOverflow);
+	it = CheckConflictingVMA(AlignedCapturedBase, AlignedCapturedSize, UserRegion, &bOverflow);
 
 	if (it == m_MemoryRegionArray[UserRegion].RegionMap.end() || bOverflow)
 	{
@@ -1861,7 +1853,7 @@ xboxkrnl::NTSTATUS VMManager::XbFreeVirtualMemory(VAddr* addr, size_t* Size, DWO
 
 	Lock();
 
-	it = CheckConflictingVMA(AlignedCapturedBase, AlignedCapturedSize, &bOverflow);
+	it = CheckConflictingVMA(AlignedCapturedBase, AlignedCapturedSize, UserRegion, &bOverflow);
 
 	if (it == m_MemoryRegionArray[UserRegion].RegionMap.end())
 	{
@@ -2018,7 +2010,7 @@ xboxkrnl::NTSTATUS VMManager::XbVirtualProtect(VAddr* addr, size_t* Size, DWORD*
 
 	Lock();
 
-	it = CheckConflictingVMA(AlignedCapturedBase, AlignedCapturedSize, &bOverflow);
+	it = CheckConflictingVMA(AlignedCapturedBase, AlignedCapturedSize, UserRegion, &bOverflow);
 
 	if (it == m_MemoryRegionArray[UserRegion].RegionMap.end() || bOverflow)
 	{
@@ -2630,38 +2622,12 @@ void VMManager::UpdateMemoryPermissions(VAddr addr, size_t Size, DWORD Perms)
 	}
 }
 
-VMAIter VMManager::CheckExistenceVMA(VAddr addr, MemoryRegionType Type, size_t Size)
-{
-	// Note that this routine expects an aligned size when specified (since all vma's are allocated size aligned to a page
-	// boundary). The caller should do this.
-
-	VMAIter it = GetVMAIterator(addr, Type);
-	if (it != m_MemoryRegionArray[Type].RegionMap.end() && it->first == addr)
-	{
-		if (Size)
-		{
-			if (it->second.size == Size)
-			{
-				return it;
-			}
-			DbgPrintf(LOG_PREFIX, "Located vma but sizes don't match\n");
-			return m_MemoryRegionArray[Type].RegionMap.end();
-		}
-		return it;
-	}
-	else
-	{
-		DbgPrintf(LOG_PREFIX, "Vma not found or doesn't start at the supplied address\n");
-		return m_MemoryRegionArray[Type].RegionMap.end();
-	}
-}
-
-VMAIter VMManager::CheckConflictingVMA(VAddr addr, size_t Size, bool* bOverflow)
+VMAIter VMManager::CheckConflictingVMA(VAddr addr, size_t Size, MemoryRegionType Type, bool* bOverflow)
 {
 	*bOverflow = false;
-	VMAIter it = GetVMAIterator(addr, UserRegion);
+	VMAIter it = GetVMAIterator(addr, Type);
 
-	if (it == m_MemoryRegionArray[UserRegion].RegionMap.end()) {
+	if (it == m_MemoryRegionArray[Type].RegionMap.end()) {
 		// Pretend we are overflowing since an overflow is always an error. Otherwise, end() will be interpreted
 		// as a found free VMA.
 
@@ -2669,7 +2635,7 @@ VMAIter VMManager::CheckConflictingVMA(VAddr addr, size_t Size, bool* bOverflow)
 		return it;
 	}
 
-	if (it->first + it->second.size - 1 < addr + Size - 1) {
+	if (Size != 0 && (it->first + it->second.size - 1 < addr + Size - 1)) {
 		*bOverflow = true;
 	}
 
@@ -2677,7 +2643,7 @@ VMAIter VMManager::CheckConflictingVMA(VAddr addr, size_t Size, bool* bOverflow)
 		return it; // conflict
 	}
 
-	return m_MemoryRegionArray[UserRegion].RegionMap.end(); // no conflict
+	return m_MemoryRegionArray[Type].RegionMap.end(); // no conflict
 }
 
 void VMManager::DestructVMA(VAddr addr, MemoryRegionType Type, size_t Size)
