@@ -2109,10 +2109,12 @@ xboxkrnl::NTSTATUS VMManager::XbVirtualMemoryStatistics(VAddr addr, xboxkrnl::PM
 		return STATUS_INVALID_PARAMETER;
 	}
 
-	// If it's not in the XBE, report actual host allocations
-	// The game will see allocations it didn't make, but at least it has a chance to
+	// If it's not in the placeholder, report actual host allocations. The game will see allocations it didn't make, but at least it has a chance to
 	// not try to allocate memory our emulator already occupied.
-	if (addr > XBE_IMAGE_BASE + ROUND_UP_4K(CxbxKrnl_Xbe->m_Header.dwSizeofImage))
+	// Note1: VirtualQuery will always report the placeholder as committed, even when the VMManager will report it as free, so we need to query it
+	// ourselves to correctly report committed/free areas in the placeholder.
+	// Note2: when LLE CPU is implemented, this can be removed.
+	if (addr >= XBE_MAX_VA)
 	{
 		MEMORY_BASIC_INFORMATION info;
 		if (VirtualQuery((void*)addr, &info, sizeof(info)))
@@ -2134,17 +2136,12 @@ xboxkrnl::NTSTATUS VMManager::XbVirtualMemoryStatistics(VAddr addr, xboxkrnl::PM
 	Lock();
 
 	// Locate the vma containing the supplied address
-
 	it = GetVMAIterator(addr, UserRegion);
 
-	// NOTE: we count the first 64K block below 0x10000 and the reserved area in the memory placeholder after the xbe image as free areas
+	if (addr < LOWEST_USER_ADDRESS || (it != m_MemoryRegionArray[UserRegion].RegionMap.end() && it->second.type == FreeVma)) {
 
-	if (addr < LOWEST_USER_ADDRESS
-		|| (addr >= XBE_IMAGE_BASE + ROUND_UP_4K(CxbxKrnl_Xbe->m_Header.dwSizeofImage) && addr < XBE_MAX_VA)
-		|| (it != m_MemoryRegionArray[UserRegion].RegionMap.end() && it->second.type == FreeVma)) {
-
-		if (addr < LOWEST_USER_ADDRESS)
-		{
+		// The address belongs to a free VMA, so we have little to do.
+		if (addr < LOWEST_USER_ADDRESS) {
 			RegionSize = LOWEST_USER_ADDRESS - ROUND_DOWN_4K(addr);
 		}
 		else { RegionSize = it->first + it->second.size - ROUND_DOWN_4K(addr); }
