@@ -1297,6 +1297,15 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
             break;
         }
 
+		case WM_MOVE:
+		{
+			// Redraw the window on move, prevents corrupt background image that happens
+			// when windows doesn't call the WM_DRAW event when the window is moved too quickly.
+			InvalidateRect(NULL, NULL, false);
+			UpdateWindow(hwnd);
+			break;
+		}
+
         case WM_CLOSE:
         {
             if(m_Xbe != nullptr)
