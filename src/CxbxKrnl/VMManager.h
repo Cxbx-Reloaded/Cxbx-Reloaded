@@ -206,8 +206,6 @@ class VMManager : public PhysicalMemory
 		void ConstructVMA(VAddr Start, size_t Size, MemoryRegionType Type, VMAType VmaType, bool bFragFlag, DWORD Perms = XBOX_PAGE_NOACCESS);
 		// destructs a vma
 		void DestructVMA(VAddr addr, MemoryRegionType Type, size_t Size);
-		// checks if a vma exists at the supplied address. Also checks its size if specified
-		VMAIter CheckExistenceVMA(VAddr addr, MemoryRegionType Type, size_t Size = 0);
 		// removes a vma block from the mapped memory
 		VMAIter UnmapVMA(VMAIter vma_handle, MemoryRegionType Type);
 		// carves a vma of a specific size at the specified address by splitting free vma's
@@ -220,8 +218,8 @@ class VMManager : public PhysicalMemory
 		VMAIter SplitVMA(VMAIter vma_handle, u32 offset_in_vma, MemoryRegionType Type);
 		// merges the specified vma with adjacent ones if possible
 		VMAIter MergeAdjacentVMA(VMAIter vma_handle, MemoryRegionType Type);
-		// checks if the specified range is completely inside a vma
-		VMAIter CheckConflictingVMA(VAddr addr, size_t Size, bool* bOverflow);
+		// checks if the specified range conflicts with another non-free vma
+		VMAIter CheckConflictingVMA(VAddr addr, size_t Size, MemoryRegionType Type, bool* bOverflow);
 		// changes the access permissions of a block of memory
 		void UpdateMemoryPermissions(VAddr addr, size_t Size, DWORD Perms);
 		// restores persistent memory
