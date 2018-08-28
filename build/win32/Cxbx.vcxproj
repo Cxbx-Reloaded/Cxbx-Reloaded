@@ -248,6 +248,7 @@
     <ClInclude Include="..\..\src\CxbxKrnl\gloffscreen\glextensions.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\gloffscreen\gloffscreen.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\HLEIntercept.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEPatches.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\LibRc4.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\PhysicalMemory.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\PoolManager.h" />
@@ -504,6 +505,7 @@
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
+    <ClCompile Include="..\..\src\CxbxKrnl\HLEPatches.cpp" />
     <ClCompile Include="..\..\src\CxbxKrnl\KernelThunk.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>

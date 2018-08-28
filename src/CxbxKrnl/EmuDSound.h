@@ -618,6 +618,8 @@ class X_XFileMediaObject
         UINT                EmuRefCount;
 };
 
+extern "C" {
+
 // ******************************************************************
 // * patch: DirectSoundCreate
 // ******************************************************************
@@ -1939,3 +1941,4 @@ HRESULT WINAPI EMUPATCH(IDirectSoundStream_SetMixBins)
     X_CDirectSoundStream*   pThis,
     PVOID                   pMixBins);
 #endif
+}
