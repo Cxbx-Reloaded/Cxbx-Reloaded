@@ -52,7 +52,7 @@ int WINAPI XTL::EMUPATCH(WSAStartup)
     WSADATA    *lpWSAData
 )
 {
-	FUNC_EXPORTS
+
 
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(wVersionRequested)
@@ -76,7 +76,7 @@ INT WINAPI XTL::EMUPATCH(XNetStartup)
     const PVOID pDummy
 )
 {
-	FUNC_EXPORTS
+
 
 	LOG_FUNC_ONE_ARG(pDummy);
 
@@ -97,7 +97,7 @@ SOCKET WINAPI XTL::EMUPATCH(socket)
     int   protocol
 )
 {
-	FUNC_EXPORTS
+
 
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(af)
@@ -120,7 +120,7 @@ int WINAPI XTL::EMUPATCH(connect)
 	int namelen
 )
 {
-	FUNC_EXPORTS
+
 
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(s)
@@ -144,7 +144,7 @@ int WINAPI XTL::EMUPATCH(send)
 	int flags
 )
 {
-	FUNC_EXPORTS
+
 
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(s)
@@ -169,7 +169,7 @@ int WINAPI XTL::EMUPATCH(recv)
 	int flags
 )
 {
-	FUNC_EXPORTS
+
 
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(s)
@@ -193,7 +193,7 @@ int WINAPI XTL::EMUPATCH(bind)
 	int namelen
 )
 {
-	FUNC_EXPORTS
+
 
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(s)
@@ -217,7 +217,7 @@ int WINAPI XTL::EMUPATCH(listen)
 	int backlog
 )
 {
-	FUNC_EXPORTS
+
 
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(s)
@@ -241,7 +241,7 @@ int WINAPI XTL::EMUPATCH(ioctlsocket)
 	u_long FAR *argp
 )
 {
-	FUNC_EXPORTS
+
 
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(s)
@@ -289,7 +289,7 @@ HRESULT WINAPI XTL::EMUPATCH(XOnlineLogon)
     HANDLE	pHandle
 )
 {
-	FUNC_EXPORTS
+
 
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pUsers)

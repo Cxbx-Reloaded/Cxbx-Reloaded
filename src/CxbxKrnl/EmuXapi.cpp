@@ -271,7 +271,7 @@ VOID WINAPI XTL::EMUPATCH(XInitDevices)
 	PXDEVICE_PREALLOC_TYPE	PreallocTypes
 )
 {
-	FUNC_EXPORTS
+
 
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(dwPreallocTypeCount)
@@ -390,7 +390,7 @@ DWORD WINAPI XTL::EMUPATCH(XGetDevices)
     PXPP_DEVICE_TYPE DeviceType
 )
 {
-	FUNC_EXPORTS
+
 
 	LOG_FUNC_ONE_ARG(DeviceType);
 
@@ -439,7 +439,7 @@ BOOL WINAPI XTL::EMUPATCH(XGetDeviceChanges)
     PDWORD           pdwRemovals
 )
 {
-	FUNC_EXPORTS
+
 
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(DeviceType)
@@ -513,7 +513,7 @@ HANDLE WINAPI XTL::EMUPATCH(XInputOpen)
     IN PX_XINPUT_POLLING_PARAMETERS   pPollingParameters OPTIONAL
 )
 {
-	FUNC_EXPORTS
+
 
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(DeviceType)
@@ -620,7 +620,7 @@ VOID WINAPI XTL::EMUPATCH(XInputClose)
     IN HANDLE hDevice
 )
 {
-	FUNC_EXPORTS
+
 
 	LOG_FUNC_ONE_ARG(hDevice);
 
@@ -673,7 +673,7 @@ DWORD WINAPI XTL::EMUPATCH(XInputPoll)
     IN HANDLE hDevice
 )
 {
-	FUNC_EXPORTS
+
 
 	LOG_FUNC_ONE_ARG(hDevice);
 
@@ -748,7 +748,7 @@ DWORD WINAPI XTL::EMUPATCH(XInputGetCapabilities)
     OUT PX_XINPUT_CAPABILITIES pCapabilities
 )
 {
-	FUNC_EXPORTS
+
 
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(hDevice)
@@ -1028,7 +1028,7 @@ DWORD WINAPI XTL::EMUPATCH(XInputGetState)
     OUT PX_XINPUT_STATE  pState
 )
 {
-	FUNC_EXPORTS
+
 
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(hDevice)
@@ -1119,7 +1119,7 @@ DWORD WINAPI XTL::EMUPATCH(XInputSetState)
     IN OUT PX_XINPUT_FEEDBACK pFeedback
 )
 {
-	FUNC_EXPORTS
+
 
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(hDevice)
@@ -1251,7 +1251,7 @@ BOOL WINAPI XTL::EMUPATCH(SetThreadPriorityBoost)
     BOOL    DisablePriorityBoost
 )
 {
-	FUNC_EXPORTS
+
 
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(hThread)
@@ -1275,7 +1275,7 @@ BOOL WINAPI XTL::EMUPATCH(SetThreadPriority)
     int     nPriority
 )
 {
-	FUNC_EXPORTS
+
 
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(hThread)
@@ -1299,7 +1299,7 @@ int WINAPI XTL::EMUPATCH(GetThreadPriority)
     HANDLE  hThread
 )
 {
-	FUNC_EXPORTS
+
 
 	LOG_FUNC_ONE_ARG(hThread);
 
@@ -1320,7 +1320,7 @@ BOOL WINAPI XTL::EMUPATCH(GetExitCodeThread)
     LPDWORD lpExitCode
 )
 {
-	FUNC_EXPORTS
+
 
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(hThread)
@@ -1445,7 +1445,7 @@ LPVOID WINAPI XTL::EMUPATCH(CreateFiber)
 	LPVOID					lpParameter
 )
 {
-	FUNC_EXPORTS
+
 
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(dwStackSize)
@@ -1471,7 +1471,7 @@ VOID WINAPI XTL::EMUPATCH(DeleteFiber)
 	LPVOID					lpFiber
 )
 {
-	FUNC_EXPORTS
+
 	LOG_FUNC_ONE_ARG((DWORD)DeleteFiber);
 
 	DeleteFiber(lpFiber);
@@ -1485,7 +1485,7 @@ VOID WINAPI XTL::EMUPATCH(SwitchToFiber)
 	LPVOID lpFiber 
 )
 {
-	FUNC_EXPORTS
+
 	LOG_FUNC_ONE_ARG(lpFiber);
 
 	SwitchToFiber(lpFiber);
@@ -1499,7 +1499,7 @@ LPVOID WINAPI XTL::EMUPATCH(ConvertThreadToFiber)
 	LPVOID lpParameter
 )
 {
-	FUNC_EXPORTS
+
 	LOG_FUNC_ONE_ARG(lpParameter);
 		
 	LPVOID pRet = ConvertThreadToFiber(lpParameter);
@@ -1515,7 +1515,7 @@ BOOL WINAPI XTL::EMUPATCH(QueryPerformanceCounter)
 	LARGE_INTEGER * lpPerformanceCount
 )
 {
-	FUNC_EXPORTS;
+
 	
 	lpPerformanceCount->QuadPart = xboxkrnl::KeQueryPerformanceCounter();
 	return TRUE;
@@ -1679,7 +1679,7 @@ DWORD WINAPI XTL::EMUPATCH(XGetLaunchInfo)
 	PLAUNCH_DATA	pLaunchData
 )
 {
-	FUNC_EXPORTS
+
 
 	// TODO : This patch can be removed once we're sure all XAPI library
 	// functions indirectly reference our xboxkrnl::LaunchDataPage variable.
@@ -1728,7 +1728,7 @@ VOID WINAPI XTL::EMUPATCH(XSetProcessQuantumLength)
     DWORD dwMilliseconds
 )
 {
-	FUNC_EXPORTS
+
 	LOG_FUNC_ONE_ARG(dwMilliseconds);
 
 	// TODO: Implement?
@@ -1746,7 +1746,7 @@ DWORD WINAPI XTL::EMUPATCH(SignalObjectAndWait)
 	BOOL	bAlertable
 )
 {
-	FUNC_EXPORTS
+
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(hObjectToSignal)
 		LOG_FUNC_ARG(hObjectToWaitOn)
@@ -1771,7 +1771,7 @@ MMRESULT WINAPI XTL::EMUPATCH(timeSetEvent)
 	UINT			fuEvent
 )
 {
-	FUNC_EXPORTS
+
 
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(uDelay)
@@ -1794,7 +1794,7 @@ MMRESULT WINAPI XTL::EMUPATCH(timeKillEvent)
 	UINT uTimerID  
 )
 {
-	FUNC_EXPORTS
+
 
 	LOG_FUNC_ONE_ARG(uTimerID);
 
@@ -1814,7 +1814,7 @@ VOID WINAPI XTL::EMUPATCH(RaiseException)
 	CONST ULONG_PTR *lpArguments		   // array of arguments
 )
 {
-	FUNC_EXPORTS
+
 
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(dwExceptionCode)
@@ -1839,7 +1839,7 @@ DWORD WINAPI XTL::EMUPATCH(XMountMUA)
 	PCHAR pchDrive               
 )
 {
-	FUNC_EXPORTS
+
 
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(dwPort)
@@ -1858,7 +1858,7 @@ DWORD WINAPI XTL::EMUPATCH(XMountMUA)
 // ******************************************************************
 DWORD WINAPI XTL::EMUPATCH(XGetDeviceEnumerationStatus)()
 {
-	FUNC_EXPORTS
+
 
 	LOG_FUNC();
 
@@ -1876,7 +1876,7 @@ DWORD WINAPI XTL::EMUPATCH(XInputGetDeviceDescription)
     PVOID	pDescription
 )
 {
-	FUNC_EXPORTS
+
 
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(hDevice)
@@ -1899,7 +1899,7 @@ DWORD WINAPI XTL::EMUPATCH(XMountMURootA)
 	PCHAR pchDrive               
 )
 {
-	FUNC_EXPORTS
+
 
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(dwPort)
@@ -1921,7 +1921,7 @@ VOID WINAPI XTL::EMUPATCH(OutputDebugStringA)
 	IN LPCSTR lpOutputString
 )
 {
-	FUNC_EXPORTS
+
 	LOG_FUNC_ONE_ARG(lpOutputString);
 	printf("OutputDebugStringA: %s\n", lpOutputString);
 }

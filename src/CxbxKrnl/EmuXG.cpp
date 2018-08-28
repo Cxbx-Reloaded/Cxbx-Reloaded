@@ -76,7 +76,7 @@ VOID WINAPI XTL::EMUPATCH(XGSwizzleRect)
     DWORD         BytesPerPixel
 )
 {
-	FUNC_EXPORTS
+
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pSource)
 		LOG_FUNC_ARG(Pitch)
@@ -297,7 +297,7 @@ VOID WINAPI XTL::EMUPATCH(XGSetTextureHeader)
 //	void			**ppFont
 //)
 //{
-//		FUNC_EXPORTS
+//	
 //
 //		LOG_FUNC_BEGIN
 //			LOG_FUNC_ARG(pFontData)

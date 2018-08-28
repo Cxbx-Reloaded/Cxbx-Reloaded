@@ -320,6 +320,9 @@
     <ClCompile Include="..\..\src\Common\Win32\IPCWindows.cpp">
       <Filter>Cross Platform\Win32</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\CxbxKrnl\HLEPatches.cpp">
+      <Filter>Emulator</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\Cxbx\DlgControllerConfig.h">
@@ -627,6 +630,9 @@
     </ClInclude>
     <ClInclude Include="..\..\src\Common\IPCHybrid.hpp">
       <Filter>Cross Platform</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEPatches.h">
+      <Filter>Emulator</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
