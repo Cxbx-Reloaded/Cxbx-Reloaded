@@ -5820,7 +5820,7 @@ bool PSH_XBOX_SHADER::FixOverusedRegisters()
                     InsertIntermediate(&Ins, InsertPos);
                     ++InsertPos;
 
-                    ReplaceInputRegisterFromIndexOnwards(InsertPos, Intermediate[i].Parameters[p].Type, Intermediate[i].Parameters[p].Address, PARAM_R, output, InsertPos);
+                    ReplaceInputRegisterFromIndexOnwards(InsertPos, Intermediate[InsertPos].Parameters[p].Type, Intermediate[InsertPos].Parameters[p].Address, PARAM_R, output, InsertPos);
                     Result = true;
                     break;
                 }
@@ -5840,7 +5840,7 @@ bool PSH_XBOX_SHADER::FixOverusedRegisters()
                     InsertIntermediate(&Ins, InsertPos);
                     ++InsertPos;
 
-                    ReplaceInputRegisterFromIndexOnwards(InsertPos, Intermediate[i].Parameters[p].Type, Intermediate[i].Parameters[p].Address, PARAM_R, output, InsertPos);
+                    ReplaceInputRegisterFromIndexOnwards(InsertPos, Intermediate[InsertPos].Parameters[p].Type, Intermediate[InsertPos].Parameters[p].Address, PARAM_R, output, InsertPos);
                     Result = true;
                     break;
                 }
