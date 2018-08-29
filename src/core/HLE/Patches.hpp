@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->HLEPatches.h
+// *   src->core->HLE->Patches.hpp
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -31,8 +31,12 @@
 // *  All rights reserved
 // *
 // ******************************************************************
+#ifndef HLEPATCHES_HPP
+#define HLEPATCHES_HPP
 
 #include <string>
 
 void EmuInstallPatches();
 void* GetPatchedFunctionTrampoline(std::string functionName);
+
+#endif

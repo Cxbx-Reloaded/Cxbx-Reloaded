@@ -145,8 +145,8 @@
     <ClCompile Include="..\..\src\CxbxKrnl\EmuXOnline.cpp">
       <Filter>Emulator</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\CxbxKrnl\HLEIntercept.cpp">
-      <Filter>Emulator</Filter>
+    <ClCompile Include="..\..\src\core\HLE\Intercept.cpp">
+      <Filter>core\HLE</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\CxbxKrnl\KernelThunk.cpp">
       <Filter>Kernel</Filter>
@@ -320,11 +320,6 @@
     <ClCompile Include="..\..\src\Common\Win32\IPCWindows.cpp">
       <Filter>Cross Platform\Win32</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\CxbxKrnl\HLEPatches.cpp">
-      <Filter>Emulator</Filter>
-    </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
     <ClInclude Include="..\..\src\Cxbx\DlgControllerConfig.h">
       <Filter>GUI</Filter>
     </ClInclude>
@@ -427,8 +422,8 @@
     <ClInclude Include="..\..\src\CxbxKrnl\EmuXTL.h">
       <Filter>Emulator</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\CxbxKrnl\HLEIntercept.h">
-      <Filter>Emulator</Filter>
+    <ClInclude Include="..\..\src\core\HLE\Intercept.hpp">
+      <Filter>core\HLE</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\CxbxKrnl\LibRc4.h">
       <Filter>Emulator</Filter>
@@ -631,9 +626,12 @@
     <ClInclude Include="..\..\src\Common\IPCHybrid.hpp">
       <Filter>Cross Platform</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\CxbxKrnl\HLEPatches.h">
-      <Filter>Emulator</Filter>
+    <ClInclude Include="..\..\src\core\HLE\Patches.hpp">
+      <Filter>core\HLE</Filter>
     </ClInclude>
+    <ClCompile Include="..\..\src\core\HLE\Patches.cpp">
+      <Filter>core\HLE</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\resource\Splash.jpg">
@@ -766,6 +764,12 @@
     </Filter>
     <Filter Include="Shared\Input">
       <UniqueIdentifier>{76faeca9-d66f-43fb-9efa-ffb0668f8843}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="core">
+      <UniqueIdentifier>{6d7b4608-3bf3-401f-924e-52617798e6b8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="core\HLE">
+      <UniqueIdentifier>{563da04b-4c54-4c1b-a055-809ce0f5bf97}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

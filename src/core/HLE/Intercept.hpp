@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->HLEIntercept.h
+// *   src->core->HLE->Intercept.hpp
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -31,8 +31,8 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#ifndef HLEINTERCEPT_H
-#define HLEINTERCEPT_H
+#ifndef HLEINTERCEPT_HPP
+#define HLEINTERCEPT_HPP
 
 #include <map>
 
@@ -57,4 +57,4 @@ void* GetXboxFunctionPointer(std::string functionName);
 void VerifyHLEDataBase();
 #endif
 
-#endif // HLEINTERCEPT_H
+#endif

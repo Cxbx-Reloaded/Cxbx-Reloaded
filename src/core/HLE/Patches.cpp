@@ -35,11 +35,11 @@
 // *
 // ******************************************************************
 
-#include "CxbxKrnl.h"
-#include "Emu.h"
-#include "EmuXTL.h"
-#include "HLEPatches.h"
-#include "HLEIntercept.h"
+#include "CxbxKrnl/CxbxKrnl.h"
+#include "CxbxKrnl/Emu.h"
+#include "CxbxKrnl/EmuXTL.h"
+#include "Patches.hpp"
+#include "Intercept.hpp"
 
 #include <map>
 #include <unordered_map>

@@ -38,18 +38,18 @@
 
 #include <cmath>
 #include <iomanip> // For std::setfill and std::setw
-#include "CxbxKrnl.h"
-#include "Emu.h"
-#include "EmuFS.h"
-#include "EmuXTL.h"
-#include "EmuShared.h"
-#include "CxbxDebugger.h"
+#include "CxbxKrnl/CxbxKrnl.h"
+#include "CxbxKrnl/Emu.h"
+#include "CxbxKrnl/EmuFS.h"
+#include "CxbxKrnl/EmuXTL.h"
+#include "CxbxKrnl/EmuShared.h"
+#include "Common/CxbxDebugger.h"
 #include "Logging.h"
 #pragma comment(lib, "XbSymbolDatabase.lib")
 #include "../../import/XbSymbolDatabase/XbSymbolDatabase.h"
-#include "HLEIntercept.h"
-#include "HLEPatches.h"
-#include "xxhash32.h"
+#include "Intercept.hpp"
+#include "Patches.hpp"
+#include "CxbxKrnl/xxhash32.h"
 #include <Shlwapi.h>
 #include <shlobj.h>
 #include <unordered_map>

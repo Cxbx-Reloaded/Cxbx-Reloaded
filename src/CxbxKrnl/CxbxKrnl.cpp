@@ -56,7 +56,7 @@ namespace xboxkrnl
 #include "EmuKrnl.h"
 #include "EmuShared.h"
 #include "EmuXTL.h"
-#include "HLEIntercept.h"
+#include "core/HLE/Intercept.hpp"
 #include "ReservedMemory.h" // For virtual_memory_placeholder
 #include "VMManager.h"
 #include "CxbxDebugger.h"
