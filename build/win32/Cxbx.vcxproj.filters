@@ -112,8 +112,8 @@
     <ClCompile Include="..\..\src\CxbxKrnl\EmuDInput.cpp">
       <Filter>Emulator</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\CxbxKrnl\EmuDSound.cpp">
-      <Filter>Emulator</Filter>
+    <ClCompile Include="..\..\src\core\HLE\DSound\DirectSound\DirectSound.cpp">
+      <Filter>core\HLE\DSound\DirectSound</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\CxbxKrnl\EmuFile.cpp">
       <Filter>Emulator</Filter>
@@ -389,8 +389,8 @@
     <ClInclude Include="..\..\src\CxbxKrnl\EmuDInput.h">
       <Filter>Emulator</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\CxbxKrnl\EmuDSound.h">
-      <Filter>Emulator</Filter>
+    <ClInclude Include="..\..\src\core\HLE\DSound\DirectSound\DirectSound.hpp">
+      <Filter>core\HLE\DSound\DirectSound</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\CxbxKrnl\EmuFile.h">
       <Filter>Emulator</Filter>
@@ -464,8 +464,8 @@
     <ClInclude Include="..\..\src\Common\XADPCM.h">
       <Filter>Shared</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\CxbxKrnl\EmuDSoundInline.hpp">
-      <Filter>Emulator</Filter>
+    <ClInclude Include="..\..\src\core\HLE\DSound\DirectSound\DirectSoundInline.hpp">
+      <Filter>core\HLE\DSound\DirectSound</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\Cxbx\DlgAudioConfig.h">
       <Filter>GUI</Filter>
@@ -770,6 +770,12 @@
     </Filter>
     <Filter Include="core\HLE">
       <UniqueIdentifier>{563da04b-4c54-4c1b-a055-809ce0f5bf97}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="core\HLE\DSound">
+      <UniqueIdentifier>{5fcb96a1-736d-4749-ba21-a87dedc72427}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="core\HLE\DSound\DirectSound">
+      <UniqueIdentifier>{9b3e7b4d-161e-4eeb-9338-3368e134b439}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

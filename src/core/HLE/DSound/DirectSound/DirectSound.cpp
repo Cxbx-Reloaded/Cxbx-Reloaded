@@ -45,11 +45,11 @@ namespace xboxkrnl {
 
 #include <dsound.h>
 #include <thread>
-#include "CxbxKrnl.h"
-#include "Emu.h"
-#include "EmuFS.h"
-#include "EmuShared.h"
-#include "EmuXTL.h"
+#include "CxbxKrnl/CxbxKrnl.h"
+#include "CxbxKrnl/Emu.h"
+#include "CxbxKrnl/EmuFS.h"
+#include "CxbxKrnl/EmuShared.h"
+#include "CxbxKrnl/EmuXTL.h"
 #include "Common/Settings.hpp"
 
 
@@ -220,7 +220,7 @@ static void dsound_thread_worker(LPVOID);
     EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "An issue has been found. Please report game title and console's output of return result," \
     " function, and file name to https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/issues/485"); } return hRet; }
 
-#include "EmuDSoundInline.hpp"
+#include "DirectSoundInline.hpp"
 
 #ifdef __cplusplus
 extern "C" {

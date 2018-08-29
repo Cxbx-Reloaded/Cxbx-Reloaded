@@ -228,8 +228,8 @@
     <ClInclude Include="..\..\src\CxbxKrnl\EmuD3D8\VertexBuffer.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\EmuD3D8\VertexShader.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\EmuDInput.h" />
-    <ClInclude Include="..\..\src\CxbxKrnl\EmuDSound.h" />
-    <ClInclude Include="..\..\src\CxbxKrnl\EmuDSoundInline.hpp" />
+    <ClInclude Include="..\..\src\core\HLE\DSound\DirectSound\DirectSound.hpp" />
+    <ClInclude Include="..\..\src\core\HLE\DSound\DirectSound\DirectSoundInline.hpp" />
     <ClInclude Include="..\..\src\CxbxKrnl\EmuFile.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\EmuFS.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\EmuKrnlAvModes.h" />
@@ -425,12 +425,7 @@
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
-    <ClCompile Include="..\..\src\CxbxKrnl\EmuDSound.cpp">
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
-    </ClCompile>
+    <ClCompile Include="..\..\src\core\HLE\DSound\DirectSound\DirectSound.cpp" />
     <ClCompile Include="..\..\src\CxbxKrnl\EmuFile.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>

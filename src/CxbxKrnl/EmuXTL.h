@@ -47,7 +47,7 @@ namespace XTL
 	#include "EmuD3D8\PixelShader.h"
     #include "EmuD3D8\State.h"
     #include "EmuDInput.h"
-    #include "EmuDSound.h"
+    #include "core/HLE/DSound/DirectSound/DirectSound.hpp"
     #include "EmuXOnline.h"
     #include "EmuXG.h"
 	#include "EmuXactEng.h"
