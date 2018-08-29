@@ -37,9 +37,9 @@
 
 #define LOG_PREFIX CXBXR_MODULE::DINP
 
-#include "Emu.h"
-#include "EmuXTL.h"
-#include "EmuShared.h"
+#include "CxbxKrnl/Emu.h"
+#include "CxbxKrnl/EmuXTL.h"
+#include "CxbxKrnl/EmuShared.h"
 #include "Common/Win32/DInputController.h"
 #include "Logging.h"
 

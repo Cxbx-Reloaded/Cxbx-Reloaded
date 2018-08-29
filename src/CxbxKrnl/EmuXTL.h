@@ -38,7 +38,7 @@
 
 namespace XTL
 {
-    #include "EmuXapi.h"
+    #include "core/HLE/XAPI/Xapi.h"
     #include "EmuD3D8.h"
     #include "EmuD3D8\Convert.h"
     #include "EmuD3D8\VertexBuffer.h"
@@ -46,12 +46,12 @@ namespace XTL
     #include "EmuD3D8\VertexShader.h"
 	#include "EmuD3D8\PixelShader.h"
     #include "EmuD3D8\State.h"
-    #include "EmuDInput.h"
+    #include "core/HLE/XAPI/XInput/DInput.h"
     #include "core/HLE/DSound/DirectSound/DirectSound.hpp"
     #include "EmuXOnline.h"
     #include "EmuXG.h"
 	#include "EmuXactEng.h"
-	#include "EmuXInput.h"
+	#include "core/HLE/XAPI/XInput/XInput.h"
 }
 
 extern XTL::IDirect3DDevice    *g_pD3DDevice;

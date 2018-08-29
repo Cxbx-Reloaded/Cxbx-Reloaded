@@ -37,10 +37,10 @@
 
 #define LOG_PREFIX CXBXR_MODULE::XINP
 
-#include "Emu.h"
-#include "EmuXTL.h"
-#include "EmuShared.h"
-#include "EmuXInput.h"
+#include "CxbxKrnl/Emu.h"
+#include "CxbxKrnl/EmuXTL.h"
+#include "CxbxKrnl/EmuShared.h"
+#include "XInput.h"
 
 #include <xinput.h>
 #include "Logging.h"

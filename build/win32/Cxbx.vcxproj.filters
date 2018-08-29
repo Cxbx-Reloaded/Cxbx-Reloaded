@@ -109,8 +109,8 @@
     <ClCompile Include="..\..\src\CxbxKrnl\EmuD3D8.cpp">
       <Filter>Emulator</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\CxbxKrnl\EmuDInput.cpp">
-      <Filter>Emulator</Filter>
+    <ClCompile Include="..\..\src\core\HLE\XAPI\XInput\DInput.cpp">
+      <Filter>core\HLE\XAPI\XInput</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\core\HLE\DSound\DirectSound\DirectSound.cpp">
       <Filter>core\HLE\DSound\DirectSound</Filter>
@@ -133,14 +133,14 @@
     <ClCompile Include="..\..\src\CxbxKrnl\EmuXactEng.cpp">
       <Filter>Emulator</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\CxbxKrnl\EmuXapi.cpp">
-      <Filter>Emulator</Filter>
+    <ClCompile Include="..\..\src\core\HLE\XAPI\Xapi.cpp">
+      <Filter>core\HLE\XAPI</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\CxbxKrnl\EmuXG.cpp">
       <Filter>Emulator</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\CxbxKrnl\EmuXInput.cpp">
-      <Filter>Emulator</Filter>
+    <ClCompile Include="..\..\src\core\HLE\XAPI\XInput\XInput.cpp">
+      <Filter>core\HLE\XAPI\XInput</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\CxbxKrnl\EmuXOnline.cpp">
       <Filter>Emulator</Filter>
@@ -386,8 +386,8 @@
     <ClInclude Include="..\..\src\CxbxKrnl\EmuD3D8Types.h">
       <Filter>Emulator</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\CxbxKrnl\EmuDInput.h">
-      <Filter>Emulator</Filter>
+    <ClInclude Include="..\..\src\core\HLE\XAPI\XInput\DInput.h">
+      <Filter>core\HLE\XAPI\XInput</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\core\HLE\DSound\DirectSound\DirectSound.hpp">
       <Filter>core\HLE\DSound\DirectSound</Filter>
@@ -407,14 +407,14 @@
     <ClInclude Include="..\..\src\CxbxKrnl\EmuXactEng.h">
       <Filter>Emulator</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\CxbxKrnl\EmuXapi.h">
-      <Filter>Emulator</Filter>
+    <ClInclude Include="..\..\src\core\HLE\XAPI\Xapi.h">
+      <Filter>core\HLE\XAPI</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\CxbxKrnl\EmuXG.h">
       <Filter>Emulator</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\CxbxKrnl\EmuXInput.h">
-      <Filter>Emulator</Filter>
+    <ClInclude Include="..\..\src\core\HLE\XAPI\XInput\XInput.h">
+      <Filter>core\HLE\XAPI\XInput</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\CxbxKrnl\EmuXOnline.h">
       <Filter>Emulator</Filter>
@@ -776,6 +776,12 @@
     </Filter>
     <Filter Include="core\HLE\DSound\DirectSound">
       <UniqueIdentifier>{9b3e7b4d-161e-4eeb-9338-3368e134b439}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="core\HLE\XAPI">
+      <UniqueIdentifier>{6f4e7159-1112-4a80-9e76-11963812811e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="core\HLE\XAPI\XInput">
+      <UniqueIdentifier>{69e32fa9-3fcd-400a-8d45-66b7ec3d555c}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

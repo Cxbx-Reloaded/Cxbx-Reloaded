@@ -45,14 +45,14 @@ namespace xboxkrnl
 };
 
 #include <Shlwapi.h>
-#include "CxbxKrnl.h"
+#include "CxbxKrnl/CxbxKrnl.h"
 #include "Logging.h"
-#include "Emu.h"
-#include "EmuKrnl.h" // For DefaultLaunchDataPage
-#include "EmuFile.h"
-#include "EmuFS.h"
-#include "EmuXTL.h"
-#include "EmuShared.h"
+#include "CxbxKrnl/Emu.h"
+#include "CxbxKrnl/EmuKrnl.h" // For DefaultLaunchDataPage
+#include "CxbxKrnl/EmuFile.h"
+#include "CxbxKrnl/EmuFS.h"
+#include "CxbxKrnl/EmuXTL.h"
+#include "CxbxKrnl/EmuShared.h"
 #include "../Common/Win32/XBPortMapping.h"
 #include "core/HLE/Intercept.hpp"
 #include "CxbxVSBC/CxbxVSBC.h"
