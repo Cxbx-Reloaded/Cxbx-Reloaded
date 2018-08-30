@@ -105,17 +105,23 @@ typedef struct _XBOX_PFN {
 	{
 		ULONG Default;
 		struct {
-			ULONG LockCount : 16;  // Set to prevent page relocation. Used by MmLockUnlockPhysicalPage and others
-			ULONG Busy : 1;        // If set, PFN is in use
+			ULONG LockCount : 16;     // Set to prevent page relocation. Used by MmLockUnlockPhysicalPage and others
+			ULONG Busy : 1;           // If set, PFN is in use
 			ULONG Unused : 1;
-			ULONG PteIndex : 10;   // Offset in the PT that maps the pte (it seems to be needed only for page relocations)
-			ULONG BusyType : 4;    // What the page is used for
+			ULONG PteIndex : 10;      // Offset in the PT that maps the pte (it seems to be needed only for page relocations)
+			ULONG BusyType : 4;       // What the page is used for
 		} Busy;
 		struct {
-			ULONG LockCount : 16;  // Set to prevent page relocation. Used by MmLockUnlockPhysicalPage and others
-			ULONG Busy : 1;        // If set, PFN is in use
-			ULONG PtesUsed : 11;   // Number of used pte's in the PT pointed by the pde
-			ULONG BusyType : 4;    // What the page is used for (must be VirtualPageTableType or SystemPageTableType)
+			ULONG LockCount : 16;     // Set to prevent page relocation. Used by MmLockUnlockPhysicalPage and others
+			ULONG Busy : 1;           // If set, PFN is in use
+			ULONG ElementIndex : 11;  // Array index of this cache element
+			ULONG BusyType : 4;       // What the page is used for (must be CacheType)
+		} FsCache;
+		struct {
+			ULONG LockCount : 16;     // Set to prevent page relocation. Used by MmLockUnlockPhysicalPage and others
+			ULONG Busy : 1;           // If set, PFN is in use
+			ULONG PtesUsed : 11;      // Number of used pte's in the PT pointed by the pde
+			ULONG BusyType : 4;       // What the page is used for (must be VirtualPageTableType or SystemPageTableType)
 		} PTPageFrame;
 	};
 } XBOX_PFN, *PXBOX_PFN;

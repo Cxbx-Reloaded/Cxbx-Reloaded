@@ -72,13 +72,8 @@ void PhysicalMemory::InitializePageDirectory()
 		TempPte.Default += PAGE_SIZE_LARGE; // increase PFN
 	}
 
-
 	// NOTE: we don't need to unmap the rest of the system physical region because that mapping is done by the 2BL
 	// on the Xbox, which is not present here on Cxbx-Reloaded
-
-	// Here we should also reserve some system pte's for the file system cache. However, the implementation of the kernel
-	// file cache functions is basically non-existent at the moment and relies on ExAllocatePoolWithTag, which is not
-	// correctly implemented. So, for now, we keep on ignoring this allocation
 }
 
 void PhysicalMemory::WritePfn(PFN pfn_start, PFN pfn_end, PMMPTE pPte, PageType BusyType, bool bZero)
