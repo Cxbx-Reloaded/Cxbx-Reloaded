@@ -73,8 +73,6 @@ HRESULT WINAPI XTL::EMUPATCH(XACTEngineCreate)
 	X_XACTEngine** ppEngine
 )
 {
-	//FUNC_EXPORTS
-
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pParams)
 		LOG_FUNC_ARG(ppEngine)
@@ -94,8 +92,6 @@ HRESULT WINAPI XTL::EMUPATCH(XACTEngineCreate)
 // ******************************************************************
 void WINAPI XTL::EMUPATCH(XACTEngineDoWork)()
 {
-	//FUNC_EXPORTS
-
 	LOG_FUNC();
 
 	// TODO: Anything else required here?
@@ -119,8 +115,6 @@ HRESULT WINAPI XTL::EMUPATCH(IXACTEngine_RegisterWaveBank)
 	X_XACTWaveBank**	ppWaveBank
 )
 {
-	//FUNC_EXPORTS
-
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(pvData)
@@ -145,8 +139,6 @@ HRESULT WINAPI XTL::EMUPATCH(IXACTEngine_RegisterStreamedWaveBank)
 	X_XACTWaveBank**						ppWaveBank
 )
 {
-	//FUNC_EXPORTS
-
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(pParams)
@@ -171,8 +163,6 @@ HRESULT WINAPI XTL::EMUPATCH(IXACTEngine_CreateSoundBank)
 	X_XACTSoundBank**	ppSoundBank
 )
 {
-	//FUNC_EXPORTS
-
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(pvData)
@@ -199,8 +189,6 @@ HRESULT WINAPI XTL::EMUPATCH(IXACTEngine_DownloadEffectsImage)
 	LPVOID*				ppImageDesc
 )
 {
-	//FUNC_EXPORTS
-
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(pvData)
@@ -224,8 +212,6 @@ HRESULT WINAPI XTL::EMUPATCH(IXACTEngine_CreateSoundSource)
 	X_XACTSoundSource** ppSoundSource
 )
 {
-	//FUNC_EXPORTS
-
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(dwFlags)
@@ -246,8 +232,6 @@ HRESULT WINAPI XTL::EMUPATCH(IXACTEngine_EnableHeadphones)
 	BOOL				fEnabled
 )
 {
-	//FUNC_EXPORTS
-
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(fEnabled)
@@ -271,8 +255,6 @@ HRESULT WINAPI XTL::EMUPATCH(IXACTEngine_SetListenerOrientation)
 	DWORD			dwApply
 )
 {
-	//FUNC_EXPORTS
-
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(xFront)
@@ -299,8 +281,6 @@ HRESULT WINAPI XTL::EMUPATCH(IXACTEngine_SetListenerPosition)
 	DWORD			dwApply
 )
 {
-	//FUNC_EXPORTS
-
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(x)
@@ -324,8 +304,6 @@ HRESULT WINAPI XTL::EMUPATCH(IXACTEngine_SetListenerVelocity)
 	DWORD			dwApply
 )
 {
-	//FUNC_EXPORTS
-
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(x)
@@ -347,8 +325,6 @@ HRESULT WINAPI XTL::EMUPATCH(IXACTEngine_SetMasterVolume)
     LONG			lVolume
 )
 {
-	//FUNC_EXPORTS
-
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(wCategory)
@@ -366,8 +342,6 @@ HRESULT WINAPI XTL::EMUPATCH(IXACTEngine_CommitDeferredSettings)
 	X_XACTEngine* pThis
 )
 {
-	//FUNC_EXPORTS
-
 	LOG_FUNC_ONE_ARG(pThis);
 
 	RETURN(S_OK);
@@ -383,8 +357,6 @@ HRESULT WINAPI XTL::EMUPATCH(IXACTSoundBank_GetSoundCueIndexFromFriendlyName)
 	DWORD*				pdwSoundCueIndex
 )
 {
-	//FUNC_EXPORTS
-
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(pFriendlyName)
@@ -406,8 +378,6 @@ HRESULT WINAPI XTL::EMUPATCH(IXACTSoundBank_Play)
 	X_XACTSoundCue**	ppSoundCue
 )
 {
-	//FUNC_EXPORTS
-
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(dwSoundCueIndex)
@@ -430,8 +400,6 @@ HRESULT WINAPI XTL::EMUPATCH(IXACTSoundBank_Stop)
 	X_XACTSoundCue*		pSoundCue
 )
 {
-	//FUNC_EXPORTS
-
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(dwSoundCueIndex)
@@ -454,8 +422,6 @@ HRESULT WINAPI XTL::EMUPATCH(IXACTSoundSource_SetPosition)
     DWORD				dwApply
 )
 {
-	//FUNC_EXPORTS
-
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(x)
@@ -479,8 +445,6 @@ HRESULT WINAPI XTL::EMUPATCH(IXACTSoundSource_SetVelocity)
     DWORD				dwApply
 )
 {
-	//FUNC_EXPORTS
-
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(x)
@@ -501,8 +465,6 @@ HRESULT WINAPI XTL::EMUPATCH(IXACTEngine_RegisterNotification)
     PCXACT_NOTIFICATION_DESCRIPTION pNotificationDesc
 )
 {
-	//FUNC_EXPORTS
-
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(pNotificationDesc)
@@ -521,8 +483,6 @@ HRESULT WINAPI XTL::EMUPATCH(IXACTEngine_GetNotification)
     LPVOID						    pNotification
 )
 {
-	//FUNC_EXPORTS
-
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(pNotificationDesc)
@@ -544,8 +504,6 @@ HRESULT WINAPI XTL::EMUPATCH(IXACTEngine_UnRegisterWaveBank)
     X_XACTWaveBank*	pWaveBank
 )
 {
-	//FUNC_EXPORTS
-
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(pWaveBank)

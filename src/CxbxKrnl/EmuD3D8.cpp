@@ -2470,8 +2470,6 @@ HRESULT WINAPI XTL::EMUPATCH(Direct3D_CreateDevice_4)
     X_D3DPRESENT_PARAMETERS     *pPresentationParameters
 )
 {
-
-
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pPresentationParameters)
 		LOG_FUNC_END;
@@ -2525,8 +2523,6 @@ HRESULT WINAPI XTL::EMUPATCH(Direct3D_CreateDevice_16)
     X_D3DPRESENT_PARAMETERS     *pPresentationParameters
 )
 {
-
-
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(Adapter)
 		LOG_FUNC_ARG(DeviceType)
@@ -2578,9 +2574,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetIndices)
 	UINT                BaseVertexIndex
 )
 {
-
-
-		LOG_FUNC_BEGIN
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pIndexData)
 		LOG_FUNC_ARG(BaseVertexIndex)
 		LOG_FUNC_END;
@@ -2605,8 +2599,6 @@ HRESULT WINAPI XTL::EMUPATCH(Direct3D_CreateDevice)
     IDirect3DDevice           **ppReturnedDeviceInterface
 )
 {
-
-
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(Adapter)
 		LOG_FUNC_ARG(DeviceType)
@@ -2699,8 +2691,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_GetDisplayFieldStatus)(X_D3DFIELD_STATUS *pF
 // ******************************************************************
 PDWORD WINAPI XTL::EMUPATCH(D3DDevice_BeginPush)(DWORD Count)
 {
-
-
 	LOG_FUNC_ONE_ARG(Count);
 
 	if (g_pPrimaryPB != nullptr)
@@ -2724,9 +2714,7 @@ PDWORD WINAPI XTL::EMUPATCH(D3DDevice_BeginPush)(DWORD Count)
 // ******************************************************************
 VOID WINAPI XTL::EMUPATCH(D3DDevice_BeginPush2)(DWORD Count, DWORD** ppPush)
 {
-
-
-		LOG_FUNC_BEGIN
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(Count)
 		LOG_FUNC_ARG(ppPush)
 		LOG_FUNC_END;
@@ -2750,8 +2738,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_BeginPush2)(DWORD Count, DWORD** ppPush)
 // ******************************************************************
 VOID WINAPI XTL::EMUPATCH(D3DDevice_EndPush)(DWORD *pPush)
 {
-
-
 	LOG_FUNC_ONE_ARG(pPush);
 
 	if (g_pPrimaryPB == nullptr)
@@ -2770,8 +2756,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_EndPush)(DWORD *pPush)
 // ******************************************************************
 VOID WINAPI XTL::EMUPATCH(D3DDevice_BeginVisibilityTest)()
 {
-
-
 	LOG_FUNC();
 
 	LOG_UNIMPLEMENTED();
@@ -2784,8 +2768,6 @@ HRESULT __stdcall XTL::EMUPATCH(D3DDevice_EndVisibilityTest_0)
 (
 )
 {
-;
-
 	DWORD                       Index;
 
 	__asm {
@@ -2803,8 +2785,6 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_EndVisibilityTest)
     DWORD                       Index
 )
 {
-
-
 	LOG_FUNC_ONE_ARG(Index);
 
 	LOG_UNIMPLEMENTED();
@@ -2817,8 +2797,6 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_EndVisibilityTest)
 // ******************************************************************
 VOID WINAPI XTL::EMUPATCH(D3DDevice_SetBackBufferScale)(FLOAT x, FLOAT y)
 {
-
-
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(x)
 		LOG_FUNC_ARG(y)
@@ -2837,8 +2815,6 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_GetVisibilityTestResult)
     ULONGLONG                  *pTimeStamp
 )
 {
-
-
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(Index)
 		LOG_FUNC_ARG(pResult)
@@ -2853,8 +2829,6 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_GetVisibilityTestResult)
     if(pTimeStamp != 0)
         *pTimeStamp = 0;
 
-    
-
     return D3D_OK;
 }
 // LTCG specific D3DDevice_LoadVertexShader function...
@@ -2864,8 +2838,6 @@ VOID __stdcall XTL::EMUPATCH(D3DDevice_LoadVertexShader_0)
 (
 )
 {
-;
-
     DWORD                       Handle;
     DWORD                       Address;
 
@@ -2884,8 +2856,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_LoadVertexShader_4)
     DWORD                       Address
 )
 {
-
-
 	DWORD           Handle;
 	__asm mov Handle, eax;
 
@@ -2919,8 +2889,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_LoadVertexShader)
     DWORD                       Address
 )
 {
-
-
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(Handle)
 		LOG_FUNC_ARG(Address)
@@ -2948,8 +2916,6 @@ VOID __stdcall XTL::EMUPATCH(D3DDevice_SelectVertexShader_0)
 (
 )
 {
-;
-
     DWORD                       Handle;
     DWORD                       Address;
 
@@ -2969,8 +2935,6 @@ VOID __stdcall XTL::EMUPATCH(D3DDevice_SelectVertexShader_4)
     DWORD                       Address
 )
 {
-
-
 	DWORD           Handle;
 	__asm mov Handle, eax;
 
@@ -2986,8 +2950,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SelectVertexShader)
     DWORD                       Address
 )
 {
-
-
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(Handle)
 		LOG_FUNC_ARG(Address)
@@ -3052,8 +3014,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetGammaRamp)
     CONST X_D3DGAMMARAMP   *pRamp
 )
 {
-
-
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(dwFlags)
 		LOG_FUNC_ARG(pRamp)
@@ -3085,8 +3045,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_GetGammaRamp)
     X_D3DGAMMARAMP     *pRamp
 )
 {
-
-
 	LOG_FUNC_ONE_ARG(pRamp);
 
     D3DGAMMARAMP *pGammaRamp = (D3DGAMMARAMP *)malloc(sizeof(D3DGAMMARAMP));
@@ -3114,8 +3072,6 @@ XTL::X_D3DSurface* WINAPI XTL::EMUPATCH(D3DDevice_GetBackBuffer2)
     INT                 BackBuffer
 )
 {
-
-
 	LOG_FUNC_ONE_ARG(BackBuffer);
 
 	X_D3DSurface* pXboxBackBuffer = nullptr;
@@ -3246,8 +3202,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_GetBackBuffer)
     X_D3DSurface      **ppBackBuffer
 )
 {
-
-
 	LOG_FORWARD("D3DDevice_GetBackBuffer2");
 
     *ppBackBuffer = EMUPATCH(D3DDevice_GetBackBuffer2)(BackBuffer);
@@ -3301,8 +3255,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetViewport)
     CONST X_D3DVIEWPORT8 *pViewport
 )
 {
-
-
 	LOG_FUNC_ONE_ARG(pViewport);
 
 	D3DVIEWPORT HostViewPort = *pViewport;
@@ -3360,8 +3312,6 @@ VOID __stdcall XTL::EMUPATCH(D3DDevice_GetViewportOffsetAndScale_0)
 (
 )
 {
-	//
-
     D3DXVECTOR4 *pOffset;
     D3DXVECTOR4 *pScale;
 
@@ -3382,8 +3332,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_GetViewportOffsetAndScale)
 	X_D3DXVECTOR4 *pScale
 )
 {
-
-
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pOffset)
 		LOG_FUNC_ARG(pScale)
@@ -3454,8 +3402,6 @@ VOID __stdcall XTL::EMUPATCH(D3DDevice_SetShaderConstantMode_0)
 (
 )
 {
-;
-
 	XTL::X_VERTEXSHADERCONSTANTMODE param;
 	__asm {
 		mov param, eax;
@@ -3472,8 +3418,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetShaderConstantMode)
     XTL::X_VERTEXSHADERCONSTANTMODE Mode
 )
 {
-
-
 	LOG_FUNC_ONE_ARG(Mode);
 
     g_VertexShaderConstantMode = Mode;
@@ -3490,8 +3434,6 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateVertexShader)
     DWORD           Usage
 )
 {
-
-
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pDeclaration)
 		LOG_FUNC_ARG(pFunction)
@@ -3700,8 +3642,6 @@ VOID __stdcall XTL::EMUPATCH(D3DDevice_SetVertexShaderConstant_8)
 (
 )
 {
-;
-
 	static uint32 returnAddr;
 
 #ifdef _DEBUG_TRACE
@@ -3728,8 +3668,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexShaderConstant)
     DWORD       ConstantCount
 )
 {
-
-
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(Register)
 		LOG_FUNC_ARG(pConstantData)
@@ -3779,8 +3717,6 @@ VOID __fastcall XTL::EMUPATCH(D3DDevice_SetVertexShaderConstant1)
     CONST PVOID pConstantData
 )
 {
-
-
 	LOG_FORWARD("D3DDevice_SetVertexShaderConstant");
 
     EMUPATCH(D3DDevice_SetVertexShaderConstant)(Register, pConstantData, 1);
@@ -3795,8 +3731,6 @@ VOID __fastcall XTL::EMUPATCH(D3DDevice_SetVertexShaderConstant1Fast)
     CONST PVOID pConstantData
 )
 {
-
-
 	LOG_FORWARD("D3DDevice_SetVertexShaderConstant");
 
 	// Redirect to the standard version.
@@ -3813,8 +3747,6 @@ VOID __fastcall XTL::EMUPATCH(D3DDevice_SetVertexShaderConstant4)
     CONST PVOID pConstantData
 )
 {
-
-
 	LOG_FORWARD("D3DDevice_SetVertexShaderConstant");
 
 	EMUPATCH(D3DDevice_SetVertexShaderConstant)(Register, pConstantData, 4);
@@ -3830,8 +3762,6 @@ VOID __fastcall XTL::EMUPATCH(D3DDevice_SetVertexShaderConstantNotInline)
     DWORD       ConstantCount
 )
 {
-
-
 	LOG_FORWARD("D3DDevice_SetVertexShaderConstant");
 
 	EMUPATCH(D3DDevice_SetVertexShaderConstant)(Register, pConstantData, ConstantCount / 4);
@@ -3847,8 +3777,6 @@ VOID __fastcall XTL::EMUPATCH(D3DDevice_SetVertexShaderConstantNotInlineFast)
     DWORD       ConstantCount
 )
 {
-
-
 	LOG_FORWARD("D3DDevice_SetVertexShaderConstant");
 
 	// Redirect to the standard version.
@@ -3867,8 +3795,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetTexture_4)
 	X_D3DBaseTexture  *pTexture
 )
 {
-;
-
 	DWORD           Stage;
 	__asm mov Stage, eax;
 
@@ -3894,8 +3820,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetTexture)
 	X_D3DBaseTexture  *pTexture
 )
 {
-
-
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(Stage)
 		LOG_FUNC_ARG(pTexture)
@@ -3918,8 +3842,6 @@ VOID __fastcall XTL::EMUPATCH(D3DDevice_SwitchTexture)
     DWORD           Format
 )
 {
-
-
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(Method)
 		LOG_FUNC_ARG(Data)
@@ -3993,8 +3915,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_Begin)
     X_D3DPRIMITIVETYPE     PrimitiveType
 )
 {
-
-
 	LOG_FUNC_ONE_ARG(PrimitiveType);
 
     g_InlineVertexBuffer_PrimitiveType = PrimitiveType;
@@ -4012,8 +3932,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexData2f)
     FLOAT   b
 )
 {
-
-
 	LOG_FORWARD("D3DDevice_SetVertexData4f");
 
     EMUPATCH(D3DDevice_SetVertexData4f)(Register, a, b, 0.0f, 1.0f);
@@ -4032,8 +3950,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexData2s)
     SHORT   b
 )
 {
-
-
 	LOG_FORWARD("D3DDevice_SetVertexData4f");
 
 	float fa, fb;
@@ -4082,8 +3998,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexData4f)
     FLOAT   d
 )
 {
-
-
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(Register)
 		LOG_FUNC_ARG(a)
@@ -4348,8 +4262,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexData4ub)
 	BYTE	d
 )
 {
-
-
 	LOG_FORWARD("D3DDevice_SetVertexData4f");
 
 	float fa = a / 255.0f;
@@ -4372,8 +4284,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexData4s)
 	SHORT	d
 )
 {
-
-
 	LOG_FORWARD("D3DDevice_SetVertexData4f");
 
 	float fa, fb, fc, fd;
@@ -4410,8 +4320,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexDataColor)
     D3DCOLOR    Color
 )
 {
-
-
 	LOG_FORWARD("D3DDevice_SetVertexData4f");
 
     FLOAT a = ((Color & 0xFF000000) >> 24) / 255.0f;
@@ -4427,8 +4335,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexDataColor)
 // ******************************************************************
 VOID WINAPI XTL::EMUPATCH(D3DDevice_End)()
 {
-
-
 	LOG_FUNC();
 
     if(g_InlineVertexBuffer_TableOffset > 0)
@@ -4448,8 +4354,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_RunPushBuffer)
     X_D3DFixup            *pFixup
 )
 {
-
-
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pPushBuffer)
 		LOG_FUNC_ARG(pFixup)
@@ -4471,8 +4375,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_Clear)
     DWORD           Stencil
 )
 {
-
-
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(Count)
 		LOG_FUNC_ARG(pRects)
@@ -4548,8 +4450,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_Present)
     PVOID       pDummy2
 )
 {
-
-
 	// LOG_FORWARD("D3DDevice_Swap");
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pSourceRect)
@@ -4570,8 +4470,6 @@ DWORD XTL::EMUPATCH(D3DDevice_Swap_0)
 (
 )
 {
-;
-
 	uint32_t param;
 	__asm {
 		mov param, eax;
@@ -4588,8 +4486,6 @@ DWORD WINAPI XTL::EMUPATCH(D3DDevice_Swap)
 	DWORD Flags
 )
 {
-
-
 	LOG_FUNC_ONE_ARG(Flags);
 
 	// TODO: Ensure this flag is always the same across library versions
@@ -4788,9 +4684,6 @@ DWORD WINAPI XTL::EMUPATCH(D3DDevice_Swap)
 // Was patch: IDirect3DResource8_Register
 void CreateHostResource(XTL::X_D3DResource *pResource, DWORD D3DUsage, int iTextureStage, DWORD dwSize)
 {
-
-	// DO NOT FUNC_EXPORTS!
-
 	if (pResource == xbnullptr)
 		return;
 
@@ -5530,10 +5423,9 @@ void CreateHostResource(XTL::X_D3DResource *pResource, DWORD D3DUsage, int iText
 ULONG WINAPI XTL::EMUPATCH(D3DResource_Release)
 (
 	X_D3DResource      *pThis
-	)
+)
 {
-
-		LOG_FUNC_ONE_ARG(pThis);
+	LOG_FUNC_ONE_ARG(pThis);
 
 	// Backup the key now, as the Xbox resource may be wiped out by the following release call!
 	auto key = GetHostResourceKey(pThis);
@@ -5574,8 +5466,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_EnableOverlay)
     BOOL Enable
 )
 {
-
-
 	LOG_FUNC_ONE_ARG(Enable);
 	
 	// The Xbox D3DDevice_EnableOverlay call merely resets the active
@@ -5597,8 +5487,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_UpdateOverlay)
 	D3DCOLOR      ColorKey
 )
 {
-
-
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pSurface)
 		LOG_FUNC_ARG(SrcRect)
@@ -5635,8 +5523,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_UpdateOverlay)
 // ******************************************************************
 BOOL WINAPI XTL::EMUPATCH(D3DDevice_GetOverlayUpdateStatus)()
 {
-
-
 	LOG_FUNC();    
 
 	LOG_UNIMPLEMENTED();
@@ -5650,8 +5536,6 @@ BOOL WINAPI XTL::EMUPATCH(D3DDevice_GetOverlayUpdateStatus)()
 // ******************************************************************
 VOID WINAPI XTL::EMUPATCH(D3DDevice_BlockUntilVerticalBlank)()
 {
-
-
 	LOG_FUNC();
 
 	std::unique_lock<std::mutex> lk(g_VBConditionMutex);
@@ -5666,8 +5550,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVerticalBlankCallback)
     D3DVBLANKCALLBACK pCallback
 )
 {
-
-
 	LOG_FUNC_ONE_ARG(pCallback);
 
     g_pVBCallback = pCallback;    
@@ -5680,8 +5562,6 @@ VOID __stdcall XTL::EMUPATCH(D3DDevice_SetTextureState_TexCoordIndex_0)
 (
 )
 {
-;
-
 	DWORD Stage;
 	DWORD Value;
 
@@ -5700,8 +5580,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetTextureState_TexCoordIndex_4)
     DWORD Value
 )
 {
-
-
 	DWORD           Stage;
 	__asm mov Stage, esi;
 
@@ -5733,8 +5611,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetTextureState_TexCoordIndex)
     DWORD Value
 )
 {
-
-
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(Stage)
 		LOG_FUNC_ARG(Value)
@@ -5762,8 +5638,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderState_TwoSidedLighting)
     DWORD Value
 )
 {
-
-
 	LOG_FUNC_ONE_ARG(Value);
 
 	LOG_NOT_SUPPORTED();
@@ -5777,8 +5651,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderState_BackFillMode)
     DWORD Value
 )
 {
-
-
 	LOG_FUNC_ONE_ARG(Value);
 
 	// blueshogun96 12/4/07
@@ -5800,8 +5672,6 @@ VOID XTL::EMUPATCH(D3DDevice_SetTextureState_BorderColor_0)
 (
 )
 {
-;
-
 	DWORD Stage;
 	DWORD Value;
 
@@ -5821,8 +5691,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetTextureState_BorderColor_4)
     DWORD Value
 )
 {
-
-
     DWORD Stage;
 	__asm mov Stage, eax;
 
@@ -5846,8 +5714,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetTextureState_BorderColor)
     DWORD Value
 )
 {
-
-
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(Stage)
 		LOG_FUNC_ARG(Value)
@@ -5865,8 +5731,6 @@ VOID XTL::EMUPATCH(D3DDevice_SetTextureState_ColorKeyColor_0)
 (
 )
 {
-;
-
 	DWORD Stage;
 	DWORD Value;
 
@@ -5885,8 +5749,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetTextureState_ColorKeyColor_4)
     DWORD Value
 )
 {
-
-
     DWORD Stage;
 	__asm mov Stage, eax;
 
@@ -5902,8 +5764,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetTextureState_ColorKeyColor)
     DWORD Value
 )
 {
-
-
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(Stage)
 		LOG_FUNC_ARG(Value)
@@ -5922,8 +5782,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetTextureState_BumpEnv_8)
     DWORD                      Value
 )
 {
-;
-
 	DWORD           Stage;
 	__asm mov Stage, eax;
 
@@ -5968,8 +5826,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetTextureState_BumpEnv)
     DWORD                      Value
 )
 {
-
-
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(Stage)
 		LOG_FUNC_ARG(Type)
@@ -6008,8 +5864,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderState_FrontFace)
     DWORD Value
 )
 {
-
-
 	LOG_FUNC_ONE_ARG(Value);
 
 	LOG_NOT_SUPPORTED();
@@ -6023,8 +5877,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderState_LogicOp)
     DWORD Value
 )
 {
-
-
 	LOG_FUNC_ONE_ARG(Value);
 
 	LOG_NOT_SUPPORTED();
@@ -6038,8 +5890,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderState_NormalizeNormals)
     DWORD Value
 )
 {
-
-
 	LOG_FUNC_ONE_ARG(Value);
 
     HRESULT hRet = g_pD3DDevice->SetRenderState(D3DRS_NORMALIZENORMALS, Value);
@@ -6054,8 +5904,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderState_TextureFactor)
     DWORD Value
 )
 {
-
-
 	LOG_FUNC_ONE_ARG(Value);
 
 	HRESULT hRet = g_pD3DDevice->SetRenderState(D3DRS_TEXTUREFACTOR, Value);
@@ -6070,8 +5918,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderState_ZBias)
     DWORD Value
 )
 {
-
-
 	LOG_FUNC_ONE_ARG(Value);
 
 	HRESULT hRet;
@@ -6091,8 +5937,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderState_EdgeAntiAlias)
     DWORD Value
 )
 {
-
-
 	LOG_FUNC_ONE_ARG(Value);
 
 //  TODO: Analyze performance and compatibility (undefined behavior on PC with triangles or points)
@@ -6110,8 +5954,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderState_FillMode)
     DWORD Value
 )
 {
-
-
 	LOG_FUNC_ONE_ARG(Value);
 
     DWORD dwFillMode;
@@ -6138,8 +5980,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderState_FogColor)
     DWORD Value
 )
 {
-
-
 	LOG_FUNC_ONE_ARG(Value);
 
 	HRESULT hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGCOLOR, Value);
@@ -6154,8 +5994,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderState_Dxt1NoiseEnable)
     DWORD Value
 )
 {
-
-
 	LOG_FUNC_ONE_ARG(Value);
 
 	LOG_UNIMPLEMENTED();
@@ -6170,8 +6008,6 @@ VOID __fastcall XTL::EMUPATCH(D3DDevice_SetRenderState_Simple)
     DWORD Value
 )
 {
-
-
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(Method)
 		LOG_FUNC_ARG(Value)
@@ -6410,7 +6246,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderState_PSTextureModes)
     DWORD Value
 )
 {
-
 	LOG_FUNC_ONE_ARG(Value);
 
 	XTL::TemporaryPixelShaderRenderStates[XTL::X_D3DRS_PSTEXTUREMODES] = Value;
@@ -6424,8 +6259,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderState_CullMode)
     DWORD Value
 )
 {
-
-
 	LOG_FUNC_ONE_ARG(Value);
 
     // convert from Xbox D3D to PC D3D enumeration
@@ -6457,8 +6290,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderState_LineWidth)
     DWORD Value
 )
 {
-
-
 	LOG_FUNC_ONE_ARG(Value);
 
     // TODO: Convert to PC format??
@@ -6474,8 +6305,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderState_StencilFail)
     DWORD Value
 )
 {
-
-
 	LOG_FUNC_ONE_ARG(Value);
 
 	HRESULT hRet = g_pD3DDevice->SetRenderState(D3DRS_STENCILFAIL, Value);
@@ -6490,8 +6319,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderState_OcclusionCullEnable)
     DWORD Value
 )
 {
-
-
 	LOG_FUNC_ONE_ARG(Value);
 
 	LOG_NOT_SUPPORTED();
@@ -6505,8 +6332,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderState_StencilCullEnable)
     DWORD Value
 )
 {
-
-
 	LOG_FUNC_ONE_ARG(Value);
 
 	LOG_NOT_SUPPORTED();
@@ -6520,8 +6345,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderState_RopZCmpAlwaysRead)
     DWORD Value
 )
 {
-
-
 	LOG_FUNC_ONE_ARG(Value);
 
 	LOG_NOT_SUPPORTED();
@@ -6535,8 +6358,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderState_RopZRead)
     DWORD Value
 )
 {
-
-
 	LOG_FUNC_ONE_ARG(Value);
 
 	LOG_NOT_SUPPORTED();
@@ -6550,8 +6371,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderState_DoNotCullUncompressed)
     DWORD Value
 )
 {
-
-
 	LOG_FUNC_ONE_ARG(Value);
 
 	LOG_NOT_SUPPORTED();
@@ -6565,8 +6384,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderState_ZEnable)
     DWORD Value
 )
 {
-
-
 	LOG_FUNC_ONE_ARG(Value);
 
 	HRESULT hRet = g_pD3DDevice->SetRenderState(D3DRS_ZENABLE, Value);
@@ -6581,8 +6398,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderState_StencilEnable)
     DWORD Value
 )
 {
-
-
 	LOG_FUNC_ONE_ARG(Value);
 
 	HRESULT hRet = g_pD3DDevice->SetRenderState(D3DRS_STENCILENABLE, Value);
@@ -6597,8 +6412,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderState_MultiSampleAntiAlias)
     DWORD Value
 )
 {
-
-
 	LOG_FUNC_ONE_ARG(Value);
 
 	HRESULT hRet = g_pD3DDevice->SetRenderState(D3DRS_MULTISAMPLEANTIALIAS, Value);
@@ -6613,8 +6426,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderState_MultiSampleMask)
     DWORD Value
 )
 {
-
-
 	LOG_FUNC_ONE_ARG(Value);
 
 	HRESULT hRet = g_pD3DDevice->SetRenderState(D3DRS_MULTISAMPLEMASK, Value);
@@ -6629,8 +6440,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderState_MultiSampleMode)
     DWORD Value
 )
 {
-
-
 	LOG_FUNC_ONE_ARG(Value);
 
 	LOG_NOT_SUPPORTED();
@@ -6644,8 +6453,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderState_MultiSampleRenderTargetMode)
     DWORD Value
 )
 {
-
-
 	LOG_FUNC_ONE_ARG(Value);
 
 	LOG_NOT_SUPPORTED();
@@ -6659,8 +6466,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderState_ShadowFunc)
     DWORD Value
 )
 {
-
-
 	LOG_FUNC_ONE_ARG(Value);
 
     // ShadowFunc reflects the following Xbox-only extension
@@ -6689,8 +6494,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderState_YuvEnable)
     BOOL Enable
 )
 {
-
-
 	LOG_FUNC_ONE_ARG(Enable);
 
     g_bColorSpaceConvertYuvToRgb = (Enable != FALSE);
@@ -6702,8 +6505,6 @@ VOID __stdcall XTL::EMUPATCH(D3DDevice_SetTransform_0)
 (
 )
 {
-;
-
 	D3DTRANSFORMSTATETYPE param1;
 	CONST D3DMATRIX *param2;
 
@@ -6724,8 +6525,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetTransform)
     CONST D3DMATRIX      *pMatrix
 )
 {
-
-
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(State)
 		LOG_FUNC_ARG(pMatrix)
@@ -6767,9 +6566,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_MultiplyTransform)
 	CONST D3DMATRIX      *pMatrix
 )
 {
-
-
-		LOG_FUNC_BEGIN
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(State)
 		LOG_FUNC_ARG(pMatrix)
 		LOG_FUNC_END;
@@ -6790,8 +6587,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_GetTransform)
     D3DMATRIX            *pMatrix
 )
 {
-
-
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(State)
 		LOG_FUNC_ARG(pMatrix)
@@ -6816,8 +6611,6 @@ VOID WINAPI XTL::EMUPATCH(Lock2DSurface)
 	DWORD                Flags
 	)
 {
-
-
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pPixelContainer)
 		LOG_FUNC_ARG(FaceType)
@@ -6850,8 +6643,6 @@ VOID WINAPI XTL::EMUPATCH(Lock3DSurface)
 	DWORD				Flags
 	)
 {
-
-
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pPixelContainer)
 		LOG_FUNC_ARG(Level)
@@ -6879,8 +6670,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetStreamSource_4)
     UINT                Stride
 )
 {
-
-
     UINT                StreamNumber;
     X_D3DVertexBuffer  *pStreamData;
 
@@ -6916,8 +6705,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetStreamSource_8)
     UINT                Stride
 )
 {
-
-
     UINT                StreamNumber;
 
 	__asm {
@@ -6952,8 +6739,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetStreamSource)
     UINT                Stride
 )
 {
-
-
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(StreamNumber)
 		LOG_FUNC_ARG(pStreamData)
@@ -6979,8 +6764,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexShader)
     DWORD Handle
 )
 {
-
-
 	LOG_FUNC_ONE_ARG(Handle);
 
 	// Checks if the Handle has bit 0 set - if not, it's a FVF
@@ -7441,8 +7224,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetPixelShader_0)
 (
 )
 {
-;
-
 	DWORD           Handle;
 	__asm mov Handle, eax;
 
@@ -7465,7 +7246,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetPixelShader)
 	DWORD           Handle
 )
 {
-
 	LOG_FUNC_ONE_ARG(Handle);
 
 	// Call the Xbox function to make sure D3D structures get set
@@ -7486,8 +7266,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawVertices)
     UINT               VertexCount
 )
 {
-
-
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(PrimitiveType)
 		LOG_FUNC_ARG(StartVertex)
@@ -7588,8 +7366,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawVerticesUP)
     UINT                VertexStreamZeroStride
 )
 {
-
-
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(PrimitiveType)
 		LOG_FUNC_ARG(VertexCount)
@@ -7637,8 +7413,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVertices)
     CONST PWORD         pIndexData
 )
 {
-
-
 	// Test-cases : XDK samples (Cartoon, Gamepad)
 	// Note : In gamepad.xbe, the gamepad is drawn by D3DDevice_DrawIndexedVertices
 	// Dxbx Note : In DrawVertices and DrawIndexedVertices, PrimitiveType may not be D3DPT_POLYGON
@@ -7697,8 +7471,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVerticesUP)
     UINT                VertexStreamZeroStride
 )
 {
-
-
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(PrimitiveType)
 		LOG_FUNC_ARG(VertexCount)
@@ -7823,8 +7595,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_GetLight)
     X_D3DLIGHT8     *pLight
 )
 {
-
-
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(Index)
 		LOG_FUNC_ARG(pLight)
@@ -7843,8 +7613,6 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_SetLight)
     CONST X_D3DLIGHT8 *pLight
 )
 {
-
-
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(Index)
 		LOG_FUNC_ARG(pLight)
@@ -7864,8 +7632,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetMaterial)
     CONST X_D3DMATERIAL8 *pMaterial
 )
 {
-
-
 	LOG_FUNC_ONE_ARG(pMaterial);
 
     HRESULT hRet = g_pD3DDevice->SetMaterial(pMaterial);
@@ -7881,8 +7647,6 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_LightEnable)
     BOOL             bEnable
 )
 {
-
-
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(Index)
 		LOG_FUNC_ARG(bEnable)
@@ -7930,8 +7694,6 @@ HRESULT WINAPI XTL::EMUPATCH(D3DCubeTexture_GetCubeMapSurface)
 	X_D3DSurface**		ppCubeMapSurface
 )
 {
-
-
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(FaceType)
@@ -7963,9 +7725,7 @@ XTL::X_D3DSurface* WINAPI XTL::EMUPATCH(D3DCubeTexture_GetCubeMapSurface2)
 	UINT				Level
 )
 {
-
-
-		LOG_FUNC_BEGIN
+	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(FaceType)
 		LOG_FUNC_ARG(Level)
@@ -7993,8 +7753,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderTarget)
     X_D3DSurface    *pNewZStencil
 )
 {
-
-
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pRenderTarget)
 		LOG_FUNC_ARG(pNewZStencil)
@@ -8076,8 +7834,6 @@ VOID __stdcall XTL::EMUPATCH(D3DDevice_SetPalette_4)
 (
 )
 {
-;
-
 	static uint32 returnAddr;
 
 #ifdef _DEBUG_TRACE
@@ -8103,8 +7859,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetPalette)
     X_D3DPalette *pPalette
 )
 {
-
-
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(Stage)
 		LOG_FUNC_ARG(pPalette)
@@ -8135,13 +7889,11 @@ VOID WINAPI XTL::EMUPATCH(D3DPalette_Lock)
 	DWORD           Flags
 )
 {
-
-	
 	LOG_FUNC_BEGIN
-	LOG_FUNC_ARG(pThis)
-	LOG_FUNC_ARG_OUT(ppColors)
-	LOG_FUNC_ARG(Flags)
-	LOG_FUNC_END;
+		LOG_FUNC_ARG(pThis)
+		LOG_FUNC_ARG_OUT(ppColors)
+		LOG_FUNC_ARG(Flags)
+		LOG_FUNC_END;
 
 	XB_trampoline(VOID, WINAPI, D3DPalette_Lock, (X_D3DPalette*, D3DCOLOR**, DWORD));
 	XB_D3DPalette_Lock(pThis, ppColors, Flags);
@@ -8163,8 +7915,6 @@ XTL::D3DCOLOR * WINAPI XTL::EMUPATCH(D3DPalette_Lock2)
 	DWORD           Flags
 )
 {
-
-
 	LOG_FUNC_BEGIN
 	LOG_FUNC_ARG(pThis)
 	LOG_FUNC_ARG(Flags)
@@ -8190,8 +7940,6 @@ VOID __stdcall XTL::EMUPATCH(D3DDevice_SetFlickerFilter_0)
 (
 )
 {
-;
-
 	DWORD         Filter;
 
 	__asm {
@@ -8209,8 +7957,6 @@ void WINAPI XTL::EMUPATCH(D3DDevice_SetFlickerFilter)
     DWORD         Filter
 )
 {
-
-
 	LOG_FUNC_ONE_ARG(Filter);
 
 	LOG_IGNORED();
@@ -8224,8 +7970,6 @@ void WINAPI XTL::EMUPATCH(D3DDevice_SetSoftDisplayFilter)
     BOOL Enable
 )
 {
-
-
 	LOG_FUNC_ONE_ARG(Enable);
 
 	LOG_IGNORED();
@@ -8240,8 +7984,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_GetVertexShaderSize)
     UINT* pSize
 )
 {
-
-
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(Handle)
 		LOG_FUNC_ARG(pSize)
@@ -8262,8 +8004,6 @@ VOID __stdcall XTL::EMUPATCH(D3DDevice_DeleteVertexShader_0)
 (
 )
 {
-;
-
 	DWORD Handle;
 
 	__asm {
@@ -8282,8 +8022,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DeleteVertexShader)
 	DWORD Handle
 	)
 {
-
-
 		LOG_FUNC_ONE_ARG(Handle);
 
 	// Handle is always address of an Xbox VertexShader struct, or-ed with 1 (X_D3DFVF_RESERVED0)
@@ -8330,8 +8068,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SelectVertexShaderDirect)
     DWORD                    Address
 )
 {
-
-
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pVAF)
 		LOG_FUNC_ARG(Address)
@@ -8348,8 +8084,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_GetShaderConstantMode)
     DWORD *pMode
 )
 {
-
-
 	LOG_FUNC_ONE_ARG(pMode);
         
     if(pMode)
@@ -8366,8 +8100,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_GetVertexShader)
     DWORD *pHandle
 )
 {
-
-
 	LOG_FUNC_ONE_ARG(pHandle);
 
     if(pHandle)
@@ -8386,8 +8118,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_GetVertexShaderConstant)
     DWORD ConstantCount
 )
 {
-
-
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(Register)
 		LOG_FUNC_ARG(pConstantData)
@@ -8421,8 +8151,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexShaderInputDirect)
     X_STREAMINPUT           *pStreamInputs
 )
 {
-
-
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pVAF)
 		LOG_FUNC_ARG(StreamCount)
@@ -8446,8 +8174,6 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_GetVertexShaderInput)
     X_STREAMINPUT      *pStreamInputs
 )
 {
-
-
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pHandle)
 		LOG_FUNC_ARG(pStreamCount)
@@ -8469,8 +8195,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexShaderInput)
     X_STREAMINPUT     *pStreamInputs
 )
 {
-
-
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(Handle)
 		LOG_FUNC_ARG(StreamCount)
@@ -8496,8 +8220,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_RunVertexStateShader)
     CONST FLOAT *pData
 )
 {
-
-
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(Address)
 		LOG_FUNC_ARG(pData)
@@ -8520,8 +8242,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_LoadVertexShaderProgram)
     DWORD        Address
 )
 {
-
-
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pFunction)
 		LOG_FUNC_ARG(Address)
@@ -8576,8 +8296,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_GetVertexShaderType)
     DWORD *pType
 )
 {
-
-
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(Handle)
 		LOG_FUNC_ARG(pType)
@@ -8604,8 +8322,6 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_GetVertexShaderDeclaration)
     DWORD *pSizeOfData
 )
 {
-
-
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(Handle)
 		LOG_FUNC_ARG(pData)
@@ -8652,8 +8368,6 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_GetVertexShaderFunction)
     DWORD *pSizeOfData
 )
 {
-
-
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(Handle)
 		LOG_FUNC_ARG(pData)
@@ -8699,8 +8413,6 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_SetDepthClipPlanes)
     DWORD Flags
 )
 {
-
-
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(Near)
 		LOG_FUNC_ARG(Far)
@@ -8763,8 +8475,6 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_SetDepthClipPlanes)
 // ******************************************************************
 DWORD WINAPI XTL::EMUPATCH(D3DDevice_InsertFence)()
 {
-
-
 	LOG_FUNC();
 
     // TODO: Actually implement this
@@ -8783,8 +8493,6 @@ BOOL WINAPI XTL::EMUPATCH(D3DDevice_IsFencePending)
     DWORD Fence
 )
 {
-
-
 	LOG_FUNC_ONE_ARG(Fence);
 
 	// TODO: Implement
@@ -8801,8 +8509,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_BlockOnFence)
     DWORD Fence
 )
 {
-
-
 	LOG_FUNC_ONE_ARG(Fence);
 
     // TODO: Implement
@@ -8817,8 +8523,6 @@ VOID WINAPI XTL::EMUPATCH(D3DResource_BlockUntilNotBusy)
     X_D3DResource *pThis
 )
 {
-
-
 	LOG_FUNC_ONE_ARG(pThis);
 
     // TODO: Implement
@@ -8834,8 +8538,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetScreenSpaceOffset)
     FLOAT y
 )
 {
-
-
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(x)
 		LOG_FUNC_ARG(y)
@@ -8854,8 +8556,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_InsertCallback)
 	DWORD				Context
 )
 {
-
-
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(Type)
 		LOG_FUNC_ARG(pCallback)
@@ -8880,8 +8580,6 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_DrawRectPatch)
 	CONST D3DRECTPATCH_INFO *pRectPatchInfo
 )
 {
-
-
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(Handle)
 		LOG_FUNC_ARG(pNumSegs)
@@ -8906,8 +8604,6 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_DrawTriPatch)
 	CONST D3DTRIPATCH_INFO* pTriPatchInfo
 )
 {
-
-
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(Handle)
 		LOG_FUNC_ARG(pNumSegs)
@@ -8931,8 +8627,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_GetProjectionViewportMatrix)
 	D3DXMATRIX *pProjectionViewport
 )
 {
-
-
 	LOG_FUNC_ONE_ARG(pProjectionViewport);
 
 	// blueshogun96 1/25/10
@@ -8987,8 +8681,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_GetProjectionViewportMatrix)
 // ******************************************************************
 VOID WINAPI XTL::EMUPATCH(D3DDevice_SetStateVB)( ULONG Unknown1 )
 {
-
-
 	LOG_FUNC_ONE_ARG(Unknown1);
 
 	// TODO: Anything?
@@ -9002,8 +8694,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetStateVB)( ULONG Unknown1 )
 // ******************************************************************
 VOID WINAPI XTL::EMUPATCH(D3DDevice_SetStateUP)()
 {
-
-
 	LOG_FUNC();
 
 	LOG_UNIMPLEMENTED();
@@ -9018,8 +8708,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetStateUP)()
 // ******************************************************************
 void WINAPI XTL::EMUPATCH(D3DDevice_SetStipple)( DWORD* pPattern )
 {
-
-
 	LOG_FUNC_ONE_ARG(pPattern);
 
 	// We need an OpenGL port... badly
@@ -9035,8 +8723,6 @@ void WINAPI XTL::EMUPATCH(D3DDevice_SetSwapCallback)
 	D3DSWAPCALLBACK		pCallback
 )
 {
-
-
 	LOG_FUNC_ONE_ARG(pCallback);
 
     g_pSwapCallback = pCallback;
@@ -9047,8 +8733,6 @@ void WINAPI XTL::EMUPATCH(D3DDevice_SetSwapCallback)
 // ******************************************************************
 HRESULT WINAPI XTL::EMUPATCH(D3DDevice_PersistDisplay)()
 {
-
-
 	LOG_FUNC();
 
 	HRESULT hRet = D3D_OK;
@@ -9078,8 +8762,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_PrimeVertexCache)
 	WORD *pIndexData
 )
 {
-
-
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(VertexCount)
 		LOG_FUNC_ARG(pIndexData)
@@ -9097,8 +8779,6 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_SetRenderState_SampleAlpha)
 	DWORD dwSampleAlpha
 )
 {
-
-
 	LOG_FUNC_ONE_ARG(dwSampleAlpha);
 
 	// TODO: Implement?
@@ -9120,8 +8800,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetModelView)
 	CONST D3DMATRIX *pComposite
 )
 {
-
-
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pModelView)
 		LOG_FUNC_ARG(pInverseModelView)
@@ -9137,8 +8815,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetModelView)
 // ******************************************************************
 void WINAPI XTL::EMUPATCH(D3DDevice_FlushVertexCache)()
 {
-
-
 	LOG_FUNC();
 
 	LOG_UNIMPLEMENTED();
@@ -9149,8 +8825,6 @@ void WINAPI XTL::EMUPATCH(D3DDevice_FlushVertexCache)()
 // ******************************************************************
 HRESULT WINAPI XTL::EMUPATCH(D3DDevice_GetModelView)(D3DXMATRIX* pModelView)
 {
-
-
 	LOG_FUNC_ONE_ARG(pModelView);
 
 	D3DXMATRIX mtxWorld, mtxView;
@@ -9172,8 +8846,6 @@ DWORD PushBuffer[64 * 1024 / sizeof(DWORD)];
 // ******************************************************************
 void WINAPI XTL::EMUPATCH(D3D_SetCommonDebugRegisters)()
 {
-
-
 	LOG_FUNC();
 
 	// NOTE: I added this because I was too lazy to deal with emulating certain render
@@ -9188,8 +8860,6 @@ void WINAPI XTL::EMUPATCH(D3D_SetCommonDebugRegisters)()
 // ******************************************************************
 BOOL WINAPI XTL::EMUPATCH(D3DDevice_IsBusy)()
 {
-
-
 		LOG_FUNC();
 
 	// NOTE: This function returns FALSE when the NV2A FIFO is empty/complete, or NV_PGRAPH_STATUS = 0
@@ -9203,8 +8873,6 @@ BOOL WINAPI XTL::EMUPATCH(D3DDevice_IsBusy)()
 // ******************************************************************
 void WINAPI XTL::EMUPATCH(D3D_BlockOnTime)( DWORD Unknown1, int Unknown2 )
 {
-
-
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(Unknown1)
 		LOG_FUNC_ARG(Unknown2)
@@ -9229,8 +8897,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderTargetFast)
     DWORD			Flags
 )
 {
-
-
 	LOG_FORWARD("D3DDevice_SetRenderTarget");
 
 	// Redirect to the standard version.
@@ -9246,8 +8912,6 @@ void WINAPI XTL::EMUPATCH(D3D_LazySetPointParams)
 	void* Device
 )
 {
-
-
 	LOG_FUNC_ONE_ARG(Device);
 
 	LOG_UNIMPLEMENTED();
@@ -9261,8 +8925,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_GetMaterial)
 	X_D3DMATERIAL8* pMaterial
 )
 {
-
-
 	LOG_FUNC_ONE_ARG(pMaterial);
 
 	HRESULT hRet = D3D_OK;
