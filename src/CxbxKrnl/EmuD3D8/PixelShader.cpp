@@ -513,22 +513,27 @@ enum PSH_OPCODE
 	PO_PS,
 	PO_DEF,
 	PO_DCL, // Note : ps.2.0 and up only
-	PO_TEX,
+    PO_DCL_2D, // Note : ps.2.0 and up only
+    PO_DCL_CUBE, // Note : ps.2.0 and up only
+    PO_DCL_VOLUME, // Note : ps.2.0 and up only
+    PO_TEX,
     PO_TEXLD, // Note : ps.1.4 only
+    PO_TEXLD2, // Note : ps.2.0 and up only
     PO_TEXBEM,
 	PO_TEXBEML,
 	PO_TEXBRDF, // Xbox ext.
 	PO_TEXCOORD,
+    PO_TEXCRD, // Note: ps.1.4 only
 	PO_TEXKILL,
-	PO_TEXDP3, // Note : ps.1.3 only
+    PO_TEXREG2AR,
+    PO_TEXREG2GB,
+    PO_TEXDP3, // Note : ps.1.3 only
 	PO_TEXDP3TEX, // Note : ps.1.3 only
 	PO_TEXM3X2TEX,
 	PO_TEXM3X2DEPTH, // Note : requires ps.1.3 and a preceding texm3x2pad
 	PO_TEXM3X3DIFF, // Xbox ext.
 	PO_TEXM3X3VSPEC,
 	PO_TEXM3X3TEX, // Note : Uses a cube texture
-	PO_TEXREG2AR,
-	PO_TEXREG2GB,
 	PO_TEXM3X2PAD, // Note : Must be combined with texm3x2tex or texm3x2depth
 	PO_TEXM3X3PAD,
 	PO_TEXM3X3SPEC, // NOTE : NEEDS 3 ARGUMENTS!
@@ -544,7 +549,8 @@ enum PSH_OPCODE
 	PO_MUL,
 	PO_NOP,
 	PO_SUB,
-	// Xbox1 opcodes :
+    PO_RCP, // Note: ps.2.0 and up only
+    // Xbox1 opcodes :
 	PO_XMMA,
 	PO_XMMC,
 	PO_XDM,
@@ -559,12 +565,17 @@ const struct { char *mn; int _Out; int _In; char *note; } PSH_OPCODE_DEFS[/*PSH_
 	{/* PO_PS */  /*mn:*/"ps",   /*_Out: */ 0, /*_In: */ 0, /*note:*/"" }, // Must occur once
 	{/* PO_DEF */ /*mn:*/"def",  /*_Out: */ 1, /*_In: */ 4, /*note:*/"" }, // Output must be a PARAM_C, arguments must be 4 floats [0.00f .. 1.00f]
 	{/* PO_DCL */ /*mn:*/"dcl",  /*_Out: */ 1, /*_In: */ 0, /*note:*/"" }, // Note : ps.2.0 and up only
+	{/* PO_DCL_2D */ /*mn:*/"dcl_2d",  /*_Out: */ 1, /*_In: */ 0, /*note:*/"" }, // Note : ps.2.0 and up only
+	{/* PO_DCL_CUBE */ /*mn:*/"dcl_cube",  /*_Out: */ 1, /*_In: */ 0, /*note:*/"" }, // Note : ps.2.0 and up only
+	{/* PO_DCL_VOLUME */ /*mn:*/"dcl_volume",  /*_Out: */ 1, /*_In: */ 0, /*note:*/"" }, // Note : ps.2.0 and up only
 	{/* PO_TEX */ /*mn:*/"tex",  /*_Out: */ 1, /*_In: */ 0, /*note:*/"" },
     {/* PO_TEXLD */ /*mn:*/"texld",  /*_Out: */ 1, /*_In: */ 1, /*note:*/"" }, // Note : ps.1.4 and up only
+    {/* PO_TEXLD2 */ /*mn:*/"texld",  /*_Out: */ 1, /*_In: */ 2, /*note:*/"" }, // Note : ps.1.4 and up only
 	{/* PO_TEXBEM */ /*mn:*/"texbem",  /*_Out: */ 1, /*_In: */ 1, /*note:*/"" },
 	{/* PO_TEXBEML */ /*mn:*/"texbeml",  /*_Out: */ 1, /*_In: */ 1, /*note:*/"" },
 	{/* PO_TEXBRDF */ /*mn:*/"texbrdf",  /*_Out: */ 1, /*_In: */ 1, /*note:*/"" }, // /*note: */ Not supported by Direct3D8 ?
 	{/* PO_TEXCOORD */ /*mn:*/"texcoord",  /*_Out: */ 1, /*_In: */ 0, /*note:*/"" },
+	{/* PO_TEXCRD */ /*mn:*/"texcrd",  /*_Out: */ 1, /*_In: */ 1, /*note:*/"" }, // Note: ps.1.4 only
 	{/* PO_TEXKILL */ /*mn:*/"texkill",  /*_Out: */ 1, /*_In: */ 0, /*note:*/"" },
 	{/* PO_TEXDP3 */ /*mn:*/"texdp3",  /*_Out: */ 1, /*_In: */ 1, /*note:*/"" },
 	{/* PO_TEXDP3TEX */ /*mn:*/"texdp3tex",  /*_Out: */ 1, /*_In: */ 1, /*note:*/"" },
@@ -590,6 +601,7 @@ const struct { char *mn; int _Out; int _In; char *note; } PSH_OPCODE_DEFS[/*PSH_
 	{/* PO_MUL */ /*mn:*/"mul",  /*_Out: */ 1, /*_In: */ 2, /*note:*/"d0=s0*s1" },
 	{/* PO_NOP */ /*mn:*/"nop",  /*_Out: */ 0, /*_In: */ 0, /*note:*/"" },
 	{/* PO_SUB */ /*mn:*/"sub",  /*_Out: */ 1, /*_In: */ 2, /*note:*/"d0=s0-s1" },
+	{/* PO_RCP */ /*mn:*/"rcp",  /*_Out: */ 1, /*_In: */ 1, /*note:*/"d0=1/s0" }, // Note: ps.2.0 and up only
 	// Xbox-only {NV2A} opcodes :
 	{/* PO_XMMA */  /*mn:*/"xmma", /*_Out: */ 3, /*_In: */ 4, /*note:*/"d0=s0*s1, d1=s2*s3, d2={s0*s1}+{s2*s3}" },
 	{/* PO_XMMC */  /*mn:*/"xmmc", /*_Out: */ 3, /*_In: */ 4, /*note:*/"d0=s0*s1, d1=s2*s3, d2={r0.a>0.5}?{s0*s1}:{s2*s3}" },
@@ -606,10 +618,13 @@ enum PSH_ARGUMENT_TYPE
 	PARAM_FOG,        // Final combiner only; Read-only register fog register
 	PARAM_V1R0_SUM,   // Final combiner only; Read-only register that contains the result of V1+R0
 	PARAM_EF_PROD,    // Final combiner only; Read-only register that contains the result of final combiner parameters E * F
-	PARAM_R,          // Temporary registers (unassigned except r0.a, which on NV2A is initially set to t0.a)
+    PARAM_oDepth,     // Output depth register
+    PARAM_R,          // Temporary registers (unassigned except r0.a, which on NV2A is initially set to t0.a)
 	PARAM_T,          // Textures
 	PARAM_V,          // Vertex colors
-	PARAM_C           // Constant registers, set by def opcodes or SetPixelShaderConstant
+	PARAM_C,          // Constant registers, set by def opcodes or SetPixelShaderConstant
+    PARAM_S,          // Sampler registers
+    PARAM_oC,         // Output color registers
 };
 
 const char *PSH_ARGUMENT_TYPE_Str[/*PSH_ARGUMENT_TYPE*/] = {
@@ -619,10 +634,13 @@ const char *PSH_ARGUMENT_TYPE_Str[/*PSH_ARGUMENT_TYPE*/] = {
 	"fog",     // 1  r     Yes     No       Only for final combiner parameter
 	"sum",     // 1  r     Yes     No       Only for final combiner parameter
 	"prod",    // 1  r     Yes     No       Only for final combiner parameter
-	"r",       // 2  r/w   Yes     Yes      We fake a few extra registers and resolve them in FixupPixelShader
+    "oDepth",  //
+    "r",       // 2  r/w   Yes     Yes      We fake a few extra registers and resolve them in FixupPixelShader
 	"t",       // 4  r/w   Yes     Yes      D3D9 cannot write to these!
 	"v",       // 2  r     Yes     Yes
-	"c"        // 16 r     Yes     No       Xbox has 8*c0,c1=16, while PC D3D8 has only 8, we try to reduce that in FixupPixelShader
+	"c",       // 16 r     Yes     No       Xbox has 8*c0,c1=16, while PC D3D8 has only 8, we try to reduce that in FixupPixelShader
+    "s",       // 16 -     No      Yes      
+    "oC",      //
 };
 
 constexpr int XFC_COMBINERSTAGENR = XTL::X_PSH_COMBINECOUNT; // Always call XFC 'stage 9', 1 after the 8th combiner
@@ -635,7 +653,11 @@ constexpr int PSH_XBOX_MAX_V_REGISTER_COUNT = 2;
 constexpr int PSH_XBOX_CONSTANT_FOG = PSH_XBOX_MAX_C_REGISTER_COUNT; // = 16
 constexpr int PSH_XBOX_CONSTANT_FC0 = PSH_XBOX_CONSTANT_FOG + 1; // = 17
 constexpr int PSH_XBOX_CONSTANT_FC1 = PSH_XBOX_CONSTANT_FC0 + 1; // = 18
-constexpr int PSH_XBOX_CONSTANT_MAX = PSH_XBOX_CONSTANT_FC1 + 1; // = 19
+constexpr int PSH_XBOX_CONSTANT_MUL0 = PSH_XBOX_CONSTANT_FC1 + 1; // = 19
+constexpr int PSH_XBOX_CONSTANT_MUL1 = PSH_XBOX_CONSTANT_MUL0 + 1; // = 20
+constexpr int PSH_XBOX_CONSTANT_BEM = PSH_XBOX_CONSTANT_MUL1 + 1; // = 21
+constexpr int PSH_XBOX_CONSTANT_LUM = PSH_XBOX_CONSTANT_BEM + 4; // = 25
+constexpr int PSH_XBOX_CONSTANT_MAX = PSH_XBOX_CONSTANT_LUM + 4; // = 29
 
 constexpr int FakeRegNr_Sum = PSH_XBOX_MAX_T_REGISTER_COUNT + 0;
 constexpr int FakeRegNr_Prod = PSH_XBOX_MAX_T_REGISTER_COUNT + 1;
@@ -649,7 +671,10 @@ enum PSH_INST_MODIFIER {
 	INSMOD_BX2,  // y = (x - 0.5) *   2  // Xbox only : TODO : Fixup occurrances!
 	INSMOD_X4,   // y =  x        *   4
 	INSMOD_D2,   // y =  x        * 0.5
-	INSMOD_SAT   // Xbox doesn"t support this, but has ARGMOD_SATURATE instead
+	INSMOD_SAT,  // Xbox doesn"t support this, but has ARGMOD_SATURATE instead
+    INSMOD_X8,   // y =  x        *   8   // ps 1.4 only
+    INSMOD_D4,   // y =  x        * 0.25  // ps 1.4 only
+    INSMOD_D8,   // y =  x        * 0.125 // ps 1.4 only
 };
 
 const char *PSH_INST_MODIFIER_Str[/*PSH_INST_MODIFIER*/] = {
@@ -659,7 +684,10 @@ const char *PSH_INST_MODIFIER_Str[/*PSH_INST_MODIFIER*/] = {
 	"_bx2",
 	"_x4",
 	"_d2",
-	"_sat"
+	"_sat",
+    "_x8",
+    "_d4",
+    "_d8",
 };
 
 // Four argument modifiers (applied in this order) :
@@ -769,6 +797,7 @@ struct RPSFinalCombiner {
 	void Decode(const DWORD PSFinalCombinerInputsABCD, const DWORD PSFinalCombinerInputsEFG, const DWORD PSFinalCombinerConstants);
 };
 
+constexpr DWORD MASK_NONE = 0x000;
 constexpr DWORD MASK_R = 0x001;
 constexpr DWORD MASK_G = 0x002;
 constexpr DWORD MASK_B = 0x004;
@@ -780,6 +809,15 @@ enum
 	TArgumentType {
 	atInput, atOutput, atFinalCombiner
 };
+
+typedef struct _PSH_RECOMPILED_SHADER {
+    XTL::X_D3DPIXELSHADERDEF PSDef;
+    std::string NewShaderStr;
+    DWORD ConvertedHandle;
+    bool ConstInUse[PSH_XBOX_CONSTANT_MAX];
+    int ConstMapping[PSH_XBOX_CONSTANT_MAX];
+} PSH_RECOMPILED_SHADER,
+*PPSH_RECOMPILED_SHADER;
 
 typedef struct _PSH_IMD_ARGUMENT {
 	PSH_ARGUMENT_TYPE Type; // For parameters: R, T, V or C  For output : Discard, R, T or V
@@ -794,7 +832,10 @@ typedef struct _PSH_IMD_ARGUMENT {
 	bool IsRegister(PSH_ARGUMENT_TYPE aRegType, int16 aAddress); // overload;
 	bool IsRegister(PSH_ARGUMENT_TYPE aRegType, int16 aAddress, DWORD aMask); // overload;
 	void SetRegister(PSH_ARGUMENT_TYPE aRegType, int16 aAddress, DWORD aMask);
-	std::string ToString();
+    bool HasModifier(PSH_ARG_MODIFIER modifier);
+    bool SetScaleConstRegister(float factor, const PSH_RECOMPILED_SHADER& pRecompiled);
+    bool SetScaleBemLumRegister(XTL::D3DTEXTURESTAGESTATETYPE factor, int stage, const PSH_RECOMPILED_SHADER& pRecompiled);
+    std::string ToString();
 	bool Decode(const DWORD Value, DWORD aMask, TArgumentType ArgumentType);
 	void Invert();
 	void Negate();
@@ -819,6 +860,7 @@ typedef struct _PSH_INTERMEDIATE_FORMAT {
 	void ScaleOutput(float aFactor);
 	bool ReadsFromRegister(PSH_ARGUMENT_TYPE aRegType, int aAddress); // overload;
 	bool ReadsFromRegister(PSH_ARGUMENT_TYPE aRegType, int aAddress, DWORD aMask); // overload;
+	bool ReadsFromRegister(PSH_ARGUMENT_TYPE aRegType, int aAddress, int& addressCount, int& total); // overload;
 	bool WritesToRegister(PSH_ARGUMENT_TYPE aRegType, int aAddress); // overload;
 	bool WritesToRegister(PSH_ARGUMENT_TYPE aRegType, int aAddress, DWORD aMask); // overload;
 	void SwapParameter(const int Index1, const int Index2);
@@ -831,15 +873,6 @@ typedef struct _PSH_INTERMEDIATE_FORMAT {
 } PSH_INTERMEDIATE_FORMAT,
 *PPSH_INTERMEDIATE_FORMAT;
 
-typedef struct _PSH_RECOMPILED_SHADER {
-	XTL::X_D3DPIXELSHADERDEF PSDef;
-	std::string NewShaderStr;
-	DWORD ConvertedHandle;
-	bool ConstInUse[PSH_XBOX_CONSTANT_MAX];
-	int ConstMapping[PSH_XBOX_CONSTANT_MAX];
-} PSH_RECOMPILED_SHADER,
-*PPSH_RECOMPILED_SHADER;
-
 struct PSH_XBOX_SHADER {
 	uint32 m_PSVersion; // see D3DPS_VERSION - https://msdn.microsoft.com/en-us/library/windows/desktop/bb172592(v=vs.85).aspx
 	int MaxConstantFloatRegisters;
@@ -849,8 +882,8 @@ struct PSH_XBOX_SHADER {
 	int MaxInputColorRegisters;
 	int PSH_PC_MAX_REGISTER_COUNT;
 
-	// Reserve enough slots for all shaders, so we need space for 2 constants, 4 texture addressing codes and 5 lines per opcode : :
-	PSH_INTERMEDIATE_FORMAT Intermediate[2 + XTL::X_D3DTS_STAGECOUNT + (XTL::X_PSH_COMBINECOUNT * 5) + 1];
+	// Reserve enough slots for all shaders, so we need space for 2 constants, 5 lines per texture addressing codes and 10 lines per opcode : :
+	PSH_INTERMEDIATE_FORMAT Intermediate[2 + (XTL::X_D3DTS_STAGECOUNT * 5) + (XTL::X_PSH_COMBINECOUNT * 10) + 1];
 	int IntermediateCount;
 
 	PS_TEXTUREMODES PSTextureModes[XTL::X_D3DTS_STAGECOUNT];
@@ -870,6 +903,10 @@ struct PSH_XBOX_SHADER {
 	bool CombinerHasUniqueC0;
 	bool CombinerHasUniqueC1;
 
+    int StartPos;
+
+    PSH_RECOMPILED_SHADER Recompiled = {};
+
 	void SetPSVersion(const uint32 PSVersion);
 
 	std::string ToString();
@@ -883,17 +920,33 @@ struct PSH_XBOX_SHADER {
 	std::string DecodedToString(XTL::X_D3DPIXELSHADERDEF *pPSDef);
 	bool _NextIs2D(int Stage);
 	bool DecodeTextureModes(XTL::X_D3DPIXELSHADERDEF *pPSDef);
+    int GetTextureStageModifiers(int Stage);
+    void InsertTex3x2Instructions(int Stage, int inputStage, std::vector<PSH_INTERMEDIATE_FORMAT>& InsertIns);
+    void InsertTex3x3Instructions(int Stage, int inputStage, std::vector<PSH_INTERMEDIATE_FORMAT>& InsertIns);
+    bool InsertTextureModeInstruction(XTL::X_D3DPIXELSHADERDEF *pPSDef, int Stage, PSH_OPCODE opcode, std::vector<PSH_INTERMEDIATE_FORMAT>& InsertIns, int& InsertPos);
 	bool MoveRemovableParametersRight();
 	void ConvertXboxOpcodesToNative(XTL::X_D3DPIXELSHADERDEF *pPSDef);
 	void _SetColor(/*var OUT*/PSH_INTERMEDIATE_FORMAT &NewIns, XTL::D3DCOLOR ConstColor);
-	int _MapConstant(int ConstNr, bool *NativeConstInUse);
+    void _SetColor(/*var OUT*/PSH_INTERMEDIATE_FORMAT &NewIns, XTL::D3DCOLORVALUE ConstColor);
+    int _MapConstant(int ConstNr, bool *NativeConstInUse);
 	int _HandleConst(int XboxConst, /*var OUT*/PSH_RECOMPILED_SHADER *Recompiled, bool *NativeConstInUse, bool *EmittedNewConstant);
 	bool ConvertConstantsToNative(XTL::X_D3DPIXELSHADERDEF *pPSDef, /*var OUT*/PSH_RECOMPILED_SHADER *Recompiled);
 	bool RemoveUselessWrites();
-	bool IsRegisterFreeFromIndexOnwards(int aIndex, PSH_ARGUMENT_TYPE aRegType, int16 aAddress);
-	void ReplaceRegisterFromIndexOnwards(int aIndex,
+    int MaxRegisterCount(PSH_ARGUMENT_TYPE aRegType);
+    bool IsValidNativeOutputRegister(PSH_ARGUMENT_TYPE aRegType, int index = -1);
+    int RegisterIsFreeFromIndexUntil(int aIndex, PSH_ARGUMENT_TYPE aRegType, int16 aAddress);
+    int RegisterIsUsedFromIndexUntil(int aIndex, PSH_ARGUMENT_TYPE aRegType, int16 aAddress);
+    int NextFreeRegisterFromIndexUntil(int aIndex, PSH_ARGUMENT_TYPE aRegType, int bIndex = -1, int startAddress = 0, int excludeAddress = -1);
+    bool IsRegisterFreeFromIndexOnwards(int aIndex, PSH_ARGUMENT_TYPE aRegType, int16 aAddress);
+    void ReplaceInputRegisterFromIndexOnwards(int aIndex,
+        PSH_ARGUMENT_TYPE aSrcRegType, int16 aSrcAddress,
+        PSH_ARGUMENT_TYPE aDstRegType, int16 aDstAddress, int endIndex = -1);
+    void ReplaceOutputRegisterFromIndexOnwards(int aIndex,
+        PSH_ARGUMENT_TYPE aSrcRegType, int16 aSrcAddress,
+        PSH_ARGUMENT_TYPE aDstRegType, int16 aDstAddress, int endIndex = -1);
+    void ReplaceRegisterFromIndexOnwards(int aIndex,
 		PSH_ARGUMENT_TYPE aSrcRegType, int16 aSrcAddress,
-		PSH_ARGUMENT_TYPE aDstRegType, int16 aDstAddress);
+		PSH_ARGUMENT_TYPE aDstRegType, int16 aDstAddress, int endIndex = -1, bool replaceInput = true, bool replaceOutput = true);
 	bool ConvertXMMToNative_Except3RdOutput(int i);
 	void ConvertXPSToNative(int i);
 	void ConvertXMMAToNative(int i);
@@ -901,20 +954,32 @@ struct PSH_XBOX_SHADER {
 	void ConvertXDMToNative(int i);
 	void ConvertXDDToNative(int i);
 	void ConvertXFCToNative(int i);
-	bool FixConstantModifiers();
+	bool FixArgumentModifiers();
 	bool CombineInstructions();
 	bool RemoveNops();
 	bool SimplifyMOV(PPSH_INTERMEDIATE_FORMAT Cur);
 	bool SimplifyADD(PPSH_INTERMEDIATE_FORMAT Cur);
-	bool SimplifyMAD(PPSH_INTERMEDIATE_FORMAT Cur);
+	bool SimplifyMAD(PPSH_INTERMEDIATE_FORMAT Cur, int index);
 	bool SimplifySUB(PPSH_INTERMEDIATE_FORMAT Cur);
 	bool SimplifyMUL(PPSH_INTERMEDIATE_FORMAT Cur);
-	bool SimplifyLRP(PPSH_INTERMEDIATE_FORMAT Cur);
+	bool SimplifyLRP(PPSH_INTERMEDIATE_FORMAT Cur, int index);
+	bool FixupCND(PPSH_INTERMEDIATE_FORMAT Cur, int index);
 	bool FixupPixelShader();
 	bool FixInvalidSrcSwizzle();
 	bool FixMissingR0a();
 	bool FixMissingR1a();
 	bool FixCoIssuedOpcodes();
+    bool FixInvalidDstRegister();
+	bool FixConstantParameters();
+    bool FixInstructionModifiers();
+	bool FixUninitializedReads();
+	bool FixOverusedRegisters();
+    bool FinalizeShader();
+
+    static void GetPSTextureModes(XTL::X_D3DPIXELSHADERDEF* pPSDef, PS_TEXTUREMODES psTextureModes[XTL::X_D3DTS_STAGECOUNT]);
+    static void GetPSDotMapping(XTL::X_D3DPIXELSHADERDEF* pPSDef, PS_DOTMAPPING psDotMapping[XTL::X_D3DTS_STAGECOUNT]);
+    static void GetPSCompareModes(XTL::X_D3DPIXELSHADERDEF* pPSDef, DWORD psCompareModes[XTL::X_D3DTS_STAGECOUNT]);
+    static void GetPSInputTexture(XTL::X_D3DPIXELSHADERDEF* pPSDef, int psInputTexture[XTL::X_D3DTS_STAGECOUNT]);
 };
 
 /*
@@ -1161,25 +1226,25 @@ float PSH_IMD_ARGUMENT::GetConstValue()
   float Result = Multiplier;
 
   // y = 1-x     -> 0..1 >    1..0
-  if ((Modifiers & (1 << ARGMOD_INVERT)) > 0)    Result = 1.0f-Result;
+  if (HasModifier(ARGMOD_INVERT))    Result = 1.0f-Result;
 
   // y = -x      -> 0..1 >    0..-1
-  if ((Modifiers & (1 << ARGMOD_NEGATE)) > 0)    Result = -Result;
+  if (HasModifier(ARGMOD_NEGATE))    Result = -Result;
 
   // y =  x-0.5  -> 0..1 > -0.5..0.5
-  if ((Modifiers & (1 << ARGMOD_BIAS)) > 0)      Result = Result-0.5f;
+  if (HasModifier (ARGMOD_BIAS))      Result = Result-0.5f;
 
   // y =  x*2    -> 0..1 >    0..2
-  if ((Modifiers & (1 << ARGMOD_SCALE_X2)) > 0)  Result = Result*2.0f;
+  if (HasModifier(ARGMOD_SCALE_X2))  Result = Result*2.0f;
 
   // y = (x*2)-1 -> 0..1 >   -1..1
-  if ((Modifiers & (1 << ARGMOD_SCALE_BX2)) > 0) Result = (Result*2.0f)-1.0f;
+  if (HasModifier(ARGMOD_SCALE_BX2)) Result = (Result*2.0f)-1.0f;
 
   // y =  x*4    -> 0..1 >    0..4
-  if ((Modifiers & (1 << ARGMOD_SCALE_X4)) > 0)  Result = Result*4.0f;
+  if (HasModifier(ARGMOD_SCALE_X4))  Result = Result*4.0f;
 
   // y =  x/2    -> 0..1 >    0..0.5
-  if ((Modifiers & (1 << ARGMOD_SCALE_D2)) > 0)  Result = Result/2.0f;
+  if (HasModifier(ARGMOD_SCALE_D2))  Result = Result/2.0f;
 
   return Result;
 } // GetConstValue
@@ -1192,7 +1257,7 @@ bool PSH_IMD_ARGUMENT::UsesRegister()
 bool PSH_IMD_ARGUMENT::IsRegister(PSH_ARGUMENT_TYPE aRegType, int16 aAddress)
 {
 	return (Type == aRegType)
-		&& (Address == aAddress);
+		&& (Address == aAddress || aAddress == -1);
 }
 
 bool PSH_IMD_ARGUMENT::IsRegister(PSH_ARGUMENT_TYPE aRegType, int16 aAddress, DWORD aMask)
@@ -1207,6 +1272,165 @@ void PSH_IMD_ARGUMENT::SetRegister(PSH_ARGUMENT_TYPE aRegType, int16 aAddress, D
 	Type = aRegType;
 	Address = aAddress;
 	Mask = aMask;
+}
+
+bool PSH_IMD_ARGUMENT::HasModifier(PSH_ARG_MODIFIER modifier)
+{
+    return (Modifiers & (1 << modifier)) != 0;
+}
+
+bool PSH_IMD_ARGUMENT::SetScaleConstRegister(float factor, const PSH_RECOMPILED_SHADER& pRecompiled)
+{
+    bool result = false;
+
+    PSH_ARG_MODIFIERs modifiers = 0;
+    DWORD mask = Mask;
+    int address = Address;
+
+    const int mappedConstant0 = pRecompiled.ConstMapping[PSH_XBOX_CONSTANT_MUL0];
+    const int mappedConstant1 = pRecompiled.ConstMapping[PSH_XBOX_CONSTANT_MUL1];
+
+    if (factor < 0.0f)
+    {
+        factor = -factor;
+        modifiers = (1 << ARGMOD_NEGATE);
+    }
+
+    if (factor == 1.0f)
+    {
+        address = mappedConstant0;
+        mask = MASK_R;
+        result = true;
+    }
+
+    else if (factor == 2.0f)
+    {
+        address = mappedConstant0;
+        mask = MASK_G;
+        result = true;
+    }
+
+    else if (factor == 4.0f)
+    {
+        address = mappedConstant0;
+        mask = MASK_B;
+        result = true;
+    }
+
+    else if (factor == 8.0f)
+    {
+        address = mappedConstant0;
+        mask = MASK_A;
+        result = true;
+    }
+
+    else if (factor == 0.0f)
+    {
+        address = mappedConstant1;
+        mask = MASK_R;
+        result = true;
+    }
+
+    else if (factor == 1.0f / 2.0f)
+    {
+        address = mappedConstant1;
+        mask = MASK_G;
+        result = true;
+    }
+
+    else if (factor == 1.0f / 4.0f)
+    {
+        address = mappedConstant1;
+        mask = MASK_B;
+        result = true;
+    }
+
+    else if (factor == 1.0f / 8.0f)
+    {
+        address = mappedConstant1;
+        mask = MASK_A;
+        result = true;
+    }
+
+    if (result)
+    {
+        Type = PARAM_C;
+        Address = address;
+        Mask = mask;
+        Modifiers = modifiers;
+        Multiplier = 1.0f;
+    }
+
+    return result;
+}
+
+bool PSH_IMD_ARGUMENT::SetScaleBemLumRegister(XTL::D3DTEXTURESTAGESTATETYPE factor, int stage, const PSH_RECOMPILED_SHADER& pRecompiled)
+{
+    bool result = false;
+
+    PSH_ARG_MODIFIERs modifiers = 0;
+    DWORD mask = Mask;
+    int address = Address;
+
+    const int mappedConstant0 = pRecompiled.ConstMapping[PSH_XBOX_CONSTANT_BEM + stage];
+    const int mappedConstant1 = pRecompiled.ConstMapping[PSH_XBOX_CONSTANT_LUM + stage];
+
+    switch (factor)
+    {
+    case XTL::D3DTSS_BUMPENVMAT00:
+    {
+        address = mappedConstant0;
+        mask = MASK_R;
+        result = true;
+        break;
+    }
+    case XTL::D3DTSS_BUMPENVMAT01:
+    {
+        address = mappedConstant0;
+        mask = MASK_G;
+        result = true;
+        break;
+    }
+    case XTL::D3DTSS_BUMPENVMAT11:
+    {
+        address = mappedConstant0;
+        mask = MASK_B;
+        result = true;
+        break;
+    }
+    case XTL::D3DTSS_BUMPENVMAT10:
+    {
+        address = mappedConstant0;
+        mask = MASK_A;
+        result = true;
+        break;
+    }
+    case XTL::D3DTSS_BUMPENVLSCALE:
+    {
+        address = mappedConstant1;
+        mask = MASK_R;
+        result = true;
+        break;
+    }
+    case XTL::D3DTSS_BUMPENVLOFFSET:
+    {
+        address = mappedConstant1;
+        mask = MASK_G;
+        result = true;
+        break;
+    }
+    }
+
+    if (result)
+    {
+        Type = PARAM_C;
+        Address = address;
+        Mask = mask;
+        Modifiers = modifiers;
+        Multiplier = 1.0f;
+    }
+
+    return result;
 }
 
 std::string PSH_IMD_ARGUMENT::ToString()
@@ -1230,7 +1454,7 @@ std::string PSH_IMD_ARGUMENT::ToString()
   if (UsesRegister())
   {
     for (DWORD Modifier = ARGMOD_IDENTITY; Modifier < ARGMOD_BLUE_REPLICATE; Modifier++)
-      if ((1 << Modifier) & Modifiers) {
+      if (HasModifier((PSH_ARG_MODIFIER)Modifier)) {
 		char buffer[256];
 		Result = std::string(buffer, sprintf(buffer, PSH_ARG_MODIFIER_Str[Modifier], Result.c_str()));
 	  }
@@ -1465,7 +1689,7 @@ bool PSH_IMD_ARGUMENT::Decode(const DWORD Value, DWORD aMask, TArgumentType Argu
 
 void PSH_IMD_ARGUMENT::Invert()
 {
-  if ((Modifiers & (1 << ARGMOD_INVERT)) == 0)
+  if (!HasModifier(ARGMOD_INVERT))
     Modifiers = Modifiers | (1 << ARGMOD_INVERT);
   else
     Modifiers = Modifiers & ~(1 << ARGMOD_INVERT);
@@ -1473,7 +1697,7 @@ void PSH_IMD_ARGUMENT::Invert()
 
 void PSH_IMD_ARGUMENT::Negate()
 {
-  if ((Modifiers & (1 << ARGMOD_NEGATE)) == 0)
+  if (!HasModifier(ARGMOD_NEGATE))
     Modifiers = Modifiers | (1 << ARGMOD_NEGATE);
   else
     Modifiers = Modifiers & ~(1 << ARGMOD_NEGATE);
@@ -1486,10 +1710,17 @@ _PSH_INTERMEDIATE_FORMAT *PSH_INTERMEDIATE_FORMAT::Initialize(const PSH_OPCODE a
   int i;
 
   Opcode = aOpcode;
+  Modifier = INSMOD_NONE;
   for (i = 0; i < 3; i++)
-    Output[i].Multiplier = 1.0f;
+  {
+      Output[i] = {};
+      Output[i].Multiplier = 1.0f;
+  }
   for (i = 0; i < 7; i++)
-    Parameters[i].Multiplier = 1.0f;
+  {
+      Parameters[i] = {};
+      Parameters[i].Multiplier = 1.0f;
+  }
 
   return this;
 }
@@ -1580,6 +1811,9 @@ void PSH_INTERMEDIATE_FORMAT::ScaleOutput(float aFactor)
   {
     // Half the output modifier :
     switch (Modifier) {
+      case INSMOD_X8:
+        Modifier = INSMOD_X4;
+		break;
       case INSMOD_X4:
         Modifier = INSMOD_X2;
 		break;
@@ -1588,6 +1822,12 @@ void PSH_INTERMEDIATE_FORMAT::ScaleOutput(float aFactor)
 		break;
 	  case INSMOD_NONE:
         Modifier = INSMOD_D2;
+		break;
+	  case INSMOD_D2:
+        Modifier = INSMOD_D4;
+		break;
+	  case INSMOD_D4:
+        Modifier = INSMOD_D8;
 		break;
 	}
 
@@ -1598,6 +1838,12 @@ void PSH_INTERMEDIATE_FORMAT::ScaleOutput(float aFactor)
   {
     // Double the output modifier :
     switch (Modifier) {
+	  case INSMOD_D8:
+        Modifier = INSMOD_D4;
+		break;
+	  case INSMOD_D4:
+        Modifier = INSMOD_D2;
+		break;
 	  case INSMOD_D2:
         Modifier = INSMOD_NONE;
 		break;
@@ -1606,6 +1852,9 @@ void PSH_INTERMEDIATE_FORMAT::ScaleOutput(float aFactor)
 		break;
 	  case INSMOD_X2:
         Modifier = INSMOD_X4;
+		break;
+	  case INSMOD_X4:
+        Modifier = INSMOD_X8;
 		break;
     }
 
@@ -1645,6 +1894,38 @@ bool PSH_INTERMEDIATE_FORMAT::ReadsFromRegister(PSH_ARGUMENT_TYPE aRegType, int 
   }
 
   return false;
+}
+
+// Used to determine the number of accesses to a register type within an instruction
+// For use when determining register access limitations on certain instructions
+// addressCount = the number of different registers read of the specified type
+// total = the number of accesses to the spcified register type
+bool PSH_INTERMEDIATE_FORMAT::ReadsFromRegister(PSH_ARGUMENT_TYPE aRegType, int aAddress, int& addressCount, int& total) // overload;
+{
+    int i;
+    bool Result;
+    bool RegisterUsage[256] = { false };
+
+    addressCount = 0;
+    total = 0;
+
+    // Check all parameters :
+    for (i = 0; i < PSH_OPCODE_DEFS[Opcode]._In; i++)
+    {
+        // Check if one of them reads from the given register :
+        Result = Parameters[i].IsRegister(aRegType, aAddress, 0);
+        if (Result)
+        {
+            ++total;
+            if (!RegisterUsage[Parameters[i].Address])
+            {
+                RegisterUsage[Parameters[i].Address] = true;
+                ++addressCount;
+            }
+        }
+    }
+
+    return total > 0;
 }
 
 bool PSH_INTERMEDIATE_FORMAT::WritesToRegister(PSH_ARGUMENT_TYPE aRegType, int aAddress) // overload;
@@ -2068,33 +2349,52 @@ std::string PSH_XBOX_SHADER::OriginalToString(XTL::X_D3DPIXELSHADERDEF *pPSDef) 
                   pPSDef->PSC1Mapping,
                   pPSDef->PSFinalCombinerConstants));
 }
+void PSH_XBOX_SHADER::GetPSTextureModes(XTL::X_D3DPIXELSHADERDEF* pPSDef, PS_TEXTUREMODES psTextureModes[XTL::X_D3DTS_STAGECOUNT])
+{
+    for (int i = 0; i < XTL::X_D3DTS_STAGECOUNT; i++)
+    {
+        psTextureModes[i] = (PS_TEXTUREMODES)((XTL::TemporaryPixelShaderRenderStates[XTL::X_D3DRS_PSTEXTUREMODES] >> (i * 5)) & 0x1F);
+    }
+}
+void PSH_XBOX_SHADER::GetPSDotMapping(XTL::X_D3DPIXELSHADERDEF* pPSDef, PS_DOTMAPPING psDotMapping[XTL::X_D3DTS_STAGECOUNT])
+{
+    psDotMapping[0] = (PS_DOTMAPPING)(0);
+    psDotMapping[1] = (PS_DOTMAPPING)((pPSDef->PSDotMapping >> 0) & 0x7);
+    psDotMapping[2] = (PS_DOTMAPPING)((pPSDef->PSDotMapping >> 4) & 0x7);
+    psDotMapping[3] = (PS_DOTMAPPING)((pPSDef->PSDotMapping >> 8) & 0x7);
+}
+
+void PSH_XBOX_SHADER::GetPSCompareModes(XTL::X_D3DPIXELSHADERDEF* pPSDef, DWORD psCompareModes[XTL::X_D3DTS_STAGECOUNT])
+{
+    for (int i = 0; i < XTL::X_D3DTS_STAGECOUNT; i++)
+    {
+        psCompareModes[i] = (pPSDef->PSCompareMode >> (i * 4)) & 0xF;
+    }
+}
+
+void PSH_XBOX_SHADER::GetPSInputTexture(XTL::X_D3DPIXELSHADERDEF* pPSDef, int psInputTexture[XTL::X_D3DTS_STAGECOUNT])
+{
+    psInputTexture[0] = -1; // Stage 0 has no predecessors
+    psInputTexture[1] = 0; // Stage 1 can only use stage 0
+    psInputTexture[2] = (pPSDef->PSInputTexture >> 16) & 0x1; // Stage 2 can use stage 0 or 1
+    psInputTexture[3] = (pPSDef->PSInputTexture >> 20) & 0x3; // Stage 3 can only use stage 0, 1 or 2
+}
 
 PSH_RECOMPILED_SHADER PSH_XBOX_SHADER::Decode(XTL::X_D3DPIXELSHADERDEF *pPSDef)
 {
   int i;
-  PSH_RECOMPILED_SHADER Result = {};
-  Result.PSDef = *pPSDef;
+  Recompiled = {};
+  Recompiled.PSDef = *pPSDef;
 
   /* Azurik likes to create and destroy the same shader every frame! O_o
   LogFlags = lfUnit;
   if (IsRunning(TITLEID_AZURIK))
     LogFlags = LogFlags | lfExtreme;*/
 
-  for (i = 0; i < XTL::X_D3DTS_STAGECOUNT; i++)
-  {
-    PSTextureModes[i] = (PS_TEXTUREMODES)((XTL::TemporaryPixelShaderRenderStates[XTL::X_D3DRS_PSTEXTUREMODES] >> (i*5)) & 0x1F);
-    PSCompareMode[i] = (pPSDef->PSCompareMode >> (i*4)) & 0xF;
-  }
-
-  PSDotMapping[0] = (PS_DOTMAPPING)(0);
-  PSDotMapping[1] = (PS_DOTMAPPING)((pPSDef->PSDotMapping >> 0) & 0x7);
-  PSDotMapping[2] = (PS_DOTMAPPING)((pPSDef->PSDotMapping >> 4) & 0x7);
-  PSDotMapping[3] = (PS_DOTMAPPING)((pPSDef->PSDotMapping >> 8) & 0x7);
-
-  PSInputTexture[0] = -1; // Stage 0 has no predecessors
-  PSInputTexture[1] = 0; // Stage 1 can only use stage 0
-  PSInputTexture[2] = (pPSDef->PSInputTexture >> 16) & 0x1; // Stage 2 can use stage 0 or 1
-  PSInputTexture[3] = (pPSDef->PSInputTexture >> 20) & 0x3; // Stage 3 can only use stage 0, 1 or 2
+  GetPSTextureModes(pPSDef, PSTextureModes);
+  GetPSCompareModes(pPSDef, PSCompareMode);
+  GetPSDotMapping(pPSDef, PSDotMapping);
+  GetPSInputTexture(pPSDef, PSInputTexture);
 
   NumberOfCombiners = (pPSDef->PSCombinerCount >> 0) & 0xF;
   CombinerCountFlags = (pPSDef->PSCombinerCount >> 8);
@@ -2181,8 +2481,12 @@ PSH_RECOMPILED_SHADER PSH_XBOX_SHADER::Decode(XTL::X_D3DPIXELSHADERDEF *pPSDef)
       Log("RemoveNops");
   }
 
-  if (ConvertConstantsToNative(pPSDef, /*Recompiled=*/&Result))
+  if (ConvertConstantsToNative(pPSDef, /*Recompiled=*/&Recompiled))
     Log("ConvertConstantsToNative");
+
+  // Handle Texture declarations :
+  if (DecodeTextureModes(pPSDef))
+    Log("DecodeTextureModes");
 
   ConvertXboxOpcodesToNative(pPSDef);
   Log("ConvertXboxOpcodesToNative");
@@ -2197,9 +2501,17 @@ PSH_RECOMPILED_SHADER PSH_XBOX_SHADER::Decode(XTL::X_D3DPIXELSHADERDEF *pPSDef)
   if (FixupPixelShader())
     Log("FixupPixelShader");
 
-  // Handle Texture declarations :
-  if (DecodeTextureModes(pPSDef))
-    Log("DecodeTextureModes");
+  if (FixInvalidDstRegister())
+      Log("FixInvalidDstRegister");
+
+  if (FixConstantParameters())
+      Log("FixConstantParameters");
+
+  if (FixArgumentModifiers())
+      Log("FixArgumentModifiers");
+
+  if (FixInstructionModifiers())
+      Log("FixInstructionModifiers");
 
   if (FixInvalidSrcSwizzle())
     Log("FixInvalidSrcSwizzle");
@@ -2213,10 +2525,19 @@ PSH_RECOMPILED_SHADER PSH_XBOX_SHADER::Decode(XTL::X_D3DPIXELSHADERDEF *pPSDef)
   if (FixCoIssuedOpcodes())
     Log("FixCoIssuedOpcodes");
 
+  if (FixOverusedRegisters())
+    Log("FixOverusedRegisters");
+
+  if (FixUninitializedReads())
+	  Log("FixUninitializedReads");
+
+  if (FinalizeShader())
+      Log("FinalizeShader");
+
   Log("End result");
 
-  Result.NewShaderStr = ToString();
-  return Result;
+  Recompiled.NewShaderStr = ToString();
+  return Recompiled;
 }
 
 std::string PSH_XBOX_SHADER::DecodedToString(XTL::X_D3DPIXELSHADERDEF *pPSDef)
@@ -2346,7 +2667,10 @@ std::string PSH_XBOX_SHADER::DecodedToString(XTL::X_D3DPIXELSHADERDEF *pPSDef)
 
   bool _OpcodeMustStayBeforeTextureMode(PSH_OPCODE Opcode, int i)
   {
-	  // Before texture modes, only keep the first comment (the one mentioning "xps" got converted into "ps") 
+      if (Opcode == PO_XPS)
+          return true;
+
+      // Before texture modes, only keep the first comment (the one mentioning "xps" got converted into "ps") 
 	  if (Opcode == PO_COMMENT)
 		  return (i == 0);
 
@@ -2355,6 +2679,9 @@ std::string PSH_XBOX_SHADER::DecodedToString(XTL::X_D3DPIXELSHADERDEF *pPSDef)
 
 	  if (Opcode == PO_DEF)
 		  return true;
+
+      if (Opcode >= PO_DCL && Opcode <= PO_DCL_VOLUME)
+          return true;
 
 	  return false;
   }
@@ -2371,7 +2698,11 @@ bool PSH_XBOX_SHADER::DecodeTextureModes(XTL::X_D3DPIXELSHADERDEF *pPSDef)
 {
   int InsertPos;
   PSH_INTERMEDIATE_FORMAT Ins = {};
+  std::vector<PSH_INTERMEDIATE_FORMAT> InsertIns;
   int Stage;
+
+  InsertIns.reserve(32); // arbitrary allotment of instructions
+  InsertIns.resize(XTL::X_D3DTS_STAGECOUNT); // default initialized to PO_COMMENT instructions
 
   bool Result = false;
 
@@ -2382,20 +2713,86 @@ bool PSH_XBOX_SHADER::DecodeTextureModes(XTL::X_D3DPIXELSHADERDEF *pPSDef)
 
   if (m_PSVersion >= D3DPS_VERSION(2, 0))
   {
-	  Ins.Initialize(PO_DCL);
+      Ins.Initialize(PO_DCL);
 	  for (Stage = 0; Stage < XTL::X_D3DTS_STAGECOUNT; Stage++)
 	  {
-		if (PSTextureModes[Stage] != PS_TEXTUREMODES_NONE)
+		if (PSTextureModes[Stage] != PS_TEXTUREMODES_NONE || Stage < PSH_XBOX_MAX_T_REGISTER_COUNT)
 		{
-		  Ins.Output[0].SetRegister(PARAM_T, Stage, MASK_RGBA);
+          switch (PSTextureModes[Stage])
+          {
+              case PS_TEXTUREMODES_PROJECT2D: // argb = texture(r/q, s/q)      TODO : Apply the division via D3DTOP_BUMPENVMAP ?
+              case PS_TEXTUREMODES_BUMPENVMAP:
+              case PS_TEXTUREMODES_BUMPENVMAP_LUM:
+              case PS_TEXTUREMODES_DOT_ST:
+              case PS_TEXTUREMODES_DPNDNT_AR:
+              case PS_TEXTUREMODES_DPNDNT_GB:
+              {
+                  Ins.Opcode = PO_DCL_2D;
+                  Ins.Output[0].SetRegister(PARAM_S, Stage, MASK_RGBA);
+                  InsertIntermediate(&Ins, InsertPos);
+                  ++InsertPos;
+                  Result = true;
+                  break;
+              }
+              case PS_TEXTUREMODES_PROJECT3D: // argb = texture(r/q, s/q, t/q) Note : 3d textures are sampled using PS_TEXTUREMODES_CUBEMAP
+              case PS_TEXTUREMODES_BRDF:
+              case PS_TEXTUREMODES_DOT_STR_3D:
+              {
+                  Ins.Opcode = PO_DCL_VOLUME;
+                  Ins.Output[0].SetRegister(PARAM_S, Stage, MASK_RGBA);
+                  InsertIntermediate(&Ins, InsertPos);
+                  ++InsertPos;
+                  Result = true;
+                  break;
+              }
+              case PS_TEXTUREMODES_CUBEMAP: // argb = cubemap(r/q, s/q, t/q)
+              case PS_TEXTUREMODES_DOT_RFLCT_DIFF:
+              case PS_TEXTUREMODES_DOT_RFLCT_SPEC:
+              case PS_TEXTUREMODES_DOT_STR_CUBE:
+              case PS_TEXTUREMODES_DOT_RFLCT_SPEC_CONST:
+              {
+                  Ins.Opcode = PO_DCL_CUBE;
+                  Ins.Output[0].SetRegister(PARAM_S, Stage, MASK_RGBA);
+                  InsertIntermediate(&Ins, InsertPos);
+                  ++InsertPos;
+                  Result = true;
+                  break;
+              }
+          }
+
+          Ins.Opcode = PO_DCL;
+          Ins.Output[0].SetRegister(PARAM_T, Stage, MASK_RGBA);
 		  InsertIntermediate(&Ins, InsertPos);
 		  ++InsertPos;
-		  Result = true;
-		}
+          Result = true;
+        }
 	  }
+
+      for (int j = 0; j < PSH_XBOX_MAX_V_REGISTER_COUNT; ++j)
+      {
+          Ins.Opcode = PO_DCL;
+          Ins.Output[0].SetRegister(PARAM_V, j, MASK_RGBA);
+          InsertIntermediate(&Ins, InsertPos);
+          ++InsertPos;
+          Result = true;
+      }
   }
 
-  Ins.Initialize(PO_TEX);
+  PSH_OPCODE Opcode;
+
+  if (m_PSVersion < D3DPS_VERSION(1, 4))
+  {
+      Opcode = PO_TEX;
+  }
+  else if (m_PSVersion < D3DPS_VERSION(2, 0))
+  {
+      Opcode = PO_TEXLD;
+  }
+  else
+  {
+      Opcode = PO_TEXLD2;
+  }
+
   for (Stage = 0; Stage < XTL::X_D3DTS_STAGECOUNT; Stage++)
   {
     // TODO : Apply conversions when PS_GLOBALFLAGS_TEXMODE_ADJUST is set (but ... how to check the texture type? read D3DRS_PSTEXTUREMODES?)
@@ -2405,53 +2802,567 @@ bool PSH_XBOX_SHADER::DecodeTextureModes(XTL::X_D3DPIXELSHADERDEF *pPSDef)
       case PS_TEXTUREMODES_PROJECT2D: // argb = texture(r/q, s/q)      TODO : Apply the division via D3DTOP_BUMPENVMAP ?
 	  case PS_TEXTUREMODES_PROJECT3D: // argb = texture(r/q, s/q, t/q) Note : 3d textures are sampled using PS_TEXTUREMODES_CUBEMAP
 	  case PS_TEXTUREMODES_CUBEMAP: { // argb = cubemap(r/q, s/q, t/q)
-		  if (m_PSVersion >= D3DPS_VERSION(2, 0))
-			  continue;
+          if (m_PSVersion < D3DPS_VERSION(1, 4))
+          {
+              Opcode = PO_TEX;
+          }
+          else if (m_PSVersion < D3DPS_VERSION(2, 0))
+          {
+              Opcode = PO_TEXLD;
+          }
+          else
+          {
+              Opcode = PO_TEXLD2;
+          }
 
-		  Ins.Opcode = PO_TEX;
+          if (m_PSVersion >= D3DPS_VERSION(3, 0))
+			  continue;
 		  break;
 	  }
-	  case PS_TEXTUREMODES_PASSTHRU: Ins.Opcode = PO_TEXCOORD; break;
-	  case PS_TEXTUREMODES_CLIPPLANE: Ins.Opcode = PO_TEXKILL; break;
-	  case PS_TEXTUREMODES_BUMPENVMAP: Ins.Opcode = PO_TEXBEM; break;
-	  case PS_TEXTUREMODES_BUMPENVMAP_LUM: Ins.Opcode = PO_TEXBEML; break;
-//    case PS_TEXTUREMODES_BRDF: Ins.Opcode = PO_TEXBRDF; break; // Note : Not supported by Direct3D8 ?
-	  case PS_TEXTUREMODES_DOT_ST: Ins.Opcode = PO_TEXM3X2TEX; break;
-	  case PS_TEXTUREMODES_DOT_ZW: Ins.Opcode = PO_TEXM3X2DEPTH; break; // Note : requires ps.1.3 and a preceding texm3x2pad
-//    case PS_TEXTUREMODES_DOT_RFLCT_DIFF: Ins.Opcode = PO_TEXM3X3DIFF; break; // Note : Not supported by Direct3D8 ?
-	  case PS_TEXTUREMODES_DOT_RFLCT_SPEC: Ins.Opcode = PO_TEXM3X3VSPEC; break;
-	  case PS_TEXTUREMODES_DOT_STR_3D: Ins.Opcode = PO_TEXM3X3TEX; break; // Note : Uses a 3d texture
-	  case PS_TEXTUREMODES_DOT_STR_CUBE: Ins.Opcode = PO_TEXM3X3TEX; break; // Note : Uses a cube texture
-	  case PS_TEXTUREMODES_DPNDNT_AR: Ins.Opcode = PO_TEXREG2AR; break;
-	  case PS_TEXTUREMODES_DPNDNT_GB: Ins.Opcode = PO_TEXREG2GB; break;
+      case PS_TEXTUREMODES_NONE:
+      case PS_TEXTUREMODES_PASSTHRU:
+          if (m_PSVersion < D3DPS_VERSION(1, 4))
+          {
+              Opcode = PO_TEXCOORD;
+              break;
+          }
+          else if (m_PSVersion < D3DPS_VERSION(2, 0))
+          {
+              Opcode = PO_TEXCRD;
+              break;
+          }
+
+          Opcode = PO_MOV;
+          break;
+	  case PS_TEXTUREMODES_CLIPPLANE: Opcode = PO_TEXKILL; break;
+	  case PS_TEXTUREMODES_BUMPENVMAP: Opcode = PO_TEXBEM; break;
+	  case PS_TEXTUREMODES_BUMPENVMAP_LUM: Opcode = PO_TEXBEML; break;
+      case PS_TEXTUREMODES_BRDF: Opcode = PO_TEXBRDF; break; // Note : Not supported by Direct3D8 ?
+	  case PS_TEXTUREMODES_DOT_ST: Opcode = PO_TEXM3X2TEX; break;
+	  case PS_TEXTUREMODES_DOT_ZW: Opcode = PO_TEXM3X2DEPTH; break; // Note : requires ps.1.3 and a preceding texm3x2pad
+      case PS_TEXTUREMODES_DOT_RFLCT_DIFF: Opcode = PO_TEXM3X3DIFF; break; // Note : Not supported by Direct3D8 ?
+	  case PS_TEXTUREMODES_DOT_RFLCT_SPEC: Opcode = PO_TEXM3X3VSPEC; break;
+	  case PS_TEXTUREMODES_DOT_STR_3D: Opcode = PO_TEXM3X3TEX; break; // Note : Uses a 3d texture
+	  case PS_TEXTUREMODES_DOT_STR_CUBE: Opcode = PO_TEXM3X3TEX; break; // Note : Uses a cube texture
+	  case PS_TEXTUREMODES_DPNDNT_AR: Opcode = PO_TEXREG2AR; break;
+	  case PS_TEXTUREMODES_DPNDNT_GB: Opcode = PO_TEXREG2GB; break;
 	  case PS_TEXTUREMODES_DOTPRODUCT:
         if (_NextIs2D(Stage))
-          Ins.Opcode = PO_TEXM3X2PAD;
+          Opcode = PO_TEXM3X2PAD;
         else
-          Ins.Opcode = PO_TEXM3X3PAD;
+          Opcode = PO_TEXM3X3PAD;
 		break;
-	  case PS_TEXTUREMODES_DOT_RFLCT_SPEC_CONST: Ins.Opcode = PO_TEXM3X3SPEC; break; // Note : Needs 3 arguments!
+	  case PS_TEXTUREMODES_DOT_RFLCT_SPEC_CONST: Opcode = PO_TEXM3X3SPEC; break; // Note : Needs 3 arguments!
     default:
       continue;
     }
 
-    Ins.Output[0].SetRegister(PARAM_T, Stage, 0);
+    InsertTextureModeInstruction(pPSDef, Stage, Opcode, InsertIns, InsertPos);
+    Result = true;
+  }
+  if (Result)
+  {
+      for (int i = 0; i < InsertIns.size(); ++i)
+      {
+          if (i >= XTL::X_D3DTS_STAGECOUNT || InsertIns[i].Opcode != PO_COMMENT)
+          {
+              InsertIntermediate(&InsertIns[i], InsertPos);
+              ++InsertPos;
+          }
+      }
+  }
+  StartPos = InsertPos + 1;
+  return Result;
+}
+
+int PSH_XBOX_SHADER::GetTextureStageModifiers(int Stage)
+{
+    int modifiers = 0;
+    switch (PSDotMapping[Stage])
+    {
+    case PS_DOTMAPPING_ZERO_TO_ONE:
+        break;
+    case PS_DOTMAPPING_MINUS1_TO_1_D3D:
+        modifiers = (1 << ARGMOD_SCALE_BX2);
+        break;
+    case PS_DOTMAPPING_MINUS1_TO_1_GL:
+        break;
+    case PS_DOTMAPPING_MINUS1_TO_1:
+        break;
+    case PS_DOTMAPPING_HILO_1:
+        break;
+    case PS_DOTMAPPING_HILO_HEMISPHERE:
+        break;
+    default:
+        break;
+    }
+
+    return modifiers;
+}
+
+void PSH_XBOX_SHADER::InsertTex3x2Instructions(int Stage, int inputStage, std::vector<PSH_INTERMEDIATE_FORMAT>& InsertIns)
+{
+    PSH_INTERMEDIATE_FORMAT Ins = {};
+
+    const int modifiers = GetTextureStageModifiers(Stage);
+
+    Ins.Initialize(PO_DP3);
+    Ins.Output[0].SetRegister(PARAM_R, 1, MASK_R);
+    Ins.Parameters[0].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + Stage - 1, 0);
+    Ins.Parameters[1].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + inputStage, 0);
+    Ins.Parameters[1].Modifiers = modifiers;
+    InsertIns.emplace_back(Ins);
+    Ins.Initialize(PO_DP3);
+    Ins.Output[0].SetRegister(PARAM_R, 1, MASK_G);
+    Ins.Parameters[0].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + Stage - 0, 0);
+    Ins.Parameters[1].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + inputStage, 0);
+    Ins.Parameters[1].Modifiers = modifiers;
+    InsertIns.emplace_back(Ins);
+}
+
+void PSH_XBOX_SHADER::InsertTex3x3Instructions(int Stage, int inputStage, std::vector<PSH_INTERMEDIATE_FORMAT>& InsertIns)
+{
+    PSH_INTERMEDIATE_FORMAT Ins = {};
+
+    const int modifiers = GetTextureStageModifiers(Stage);
+
+    Ins.Initialize(PO_DP3);
+    Ins.Output[0].SetRegister(PARAM_R, 1, MASK_R);
+    Ins.Parameters[0].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + Stage - 2, 0);
+    Ins.Parameters[1].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + inputStage, 0);
+    Ins.Parameters[1].Modifiers = modifiers;
+    InsertIns.emplace_back(Ins);
+    Ins.Initialize(PO_DP3);
+    Ins.Output[0].SetRegister(PARAM_R, 1, MASK_G);
+    Ins.Parameters[0].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + Stage - 1, 0);
+    Ins.Parameters[1].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + inputStage, 0);
+    Ins.Parameters[1].Modifiers = modifiers;
+    InsertIns.emplace_back(Ins);
+    Ins.Initialize(PO_DP3);
+    Ins.Output[0].SetRegister(PARAM_R, 1, MASK_B);
+    Ins.Parameters[0].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + Stage - 0, 0);
+    Ins.Parameters[1].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + inputStage, 0);
+    Ins.Parameters[1].Modifiers = modifiers;
+    InsertIns.emplace_back(Ins);
+}
+
+bool PSH_XBOX_SHADER::InsertTextureModeInstruction(XTL::X_D3DPIXELSHADERDEF *pPSDef, int Stage, PSH_OPCODE opcode, std::vector<PSH_INTERMEDIATE_FORMAT>& InsertIns, int& InsertPos)
+{
+  PSH_INTERMEDIATE_FORMAT Ins = {};
+
+  bool Result = false;
+
+    PSH_ARGUMENT_TYPE type = PARAM_T;
+    int inputStage = Stage;
+    int mask = 0;
+
+    // TODO: Refactor and optimize
+    // TODO: Update handling to support 1.4?
+    bool needsInitialization = false;
+    switch (opcode)
+    {
+    case PO_TEXBEM:
+    case PO_TEXBEML:
+    {
+        inputStage = PSInputTexture[Stage];
+
+        if (m_PSVersion >= D3DPS_VERSION(1, 4))
+        {
+            Ins.Initialize(PO_MAD);
+            Ins.Output[0].SetRegister(PARAM_R, 1, MASK_R);
+            Ins.Parameters[0].SetScaleBemLumRegister(XTL::D3DTSS_BUMPENVMAT00, Stage, Recompiled);
+            Ins.Parameters[1].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + inputStage, MASK_R);
+            Ins.Parameters[2].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + Stage, MASK_R);
+            InsertIns.emplace_back(Ins);
+            Ins.Initialize(PO_MAD);
+            Ins.Output[0].SetRegister(PARAM_R, 1, MASK_R);
+            Ins.Parameters[0].SetScaleBemLumRegister(XTL::D3DTSS_BUMPENVMAT10, Stage, Recompiled);
+            Ins.Parameters[1].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + inputStage, MASK_G);
+            Ins.Parameters[2].SetRegister(PARAM_R, 1, MASK_R);
+            InsertIns.emplace_back(Ins);
+            //
+            Ins.Initialize(PO_MAD);
+            Ins.Output[0].SetRegister(PARAM_R, 1, MASK_G);
+            Ins.Parameters[0].SetScaleBemLumRegister(XTL::D3DTSS_BUMPENVMAT01, Stage, Recompiled);
+            Ins.Parameters[1].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + inputStage, MASK_R);
+            Ins.Parameters[2].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + Stage, MASK_G);
+            InsertIns.emplace_back(Ins);
+            Ins.Initialize(PO_MAD);
+            Ins.Output[0].SetRegister(PARAM_R, 1, MASK_G);
+            Ins.Parameters[0].SetScaleBemLumRegister(XTL::D3DTSS_BUMPENVMAT11, Stage, Recompiled);
+            Ins.Parameters[1].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + inputStage, MASK_G);
+            Ins.Parameters[2].SetRegister(PARAM_R, 1, MASK_G);
+            InsertIns.emplace_back(Ins);
+
+            Ins.CommentString = "";
+            Ins.Initialize(PO_TEXLD2);
+            Ins.Output[0].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + Stage, 0);
+            Ins.Parameters[0].SetRegister(PARAM_R, 1, 0);
+            Ins.Parameters[1].SetRegister(PARAM_S, Stage, 0);
+            Ins.Parameters[1].Modifiers = 0;
+            InsertIns.emplace_back(Ins);
+
+            if (opcode == PO_TEXBEML)
+            {
+                //
+                Ins.Initialize(PO_MAD);
+                Ins.Output[0].SetRegister(PARAM_R, 1, MASK_B);
+                Ins.Parameters[0].SetScaleBemLumRegister(XTL::D3DTSS_BUMPENVLSCALE, Stage, Recompiled);
+                Ins.Parameters[1].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + inputStage, MASK_B);
+                Ins.Parameters[2].SetScaleBemLumRegister(XTL::D3DTSS_BUMPENVLOFFSET, Stage, Recompiled);
+                InsertIns.emplace_back(Ins);
+                //
+                Ins.Initialize(PO_MUL);
+                Ins.Output[0].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + Stage, 0);
+                Ins.Parameters[0].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + Stage, 0);
+                Ins.Parameters[1].SetRegister(PARAM_R, 1, MASK_B);
+                InsertIns.emplace_back(Ins);
+            }
+
+            opcode = PO_MOV;
+            inputStage = Stage;
+            needsInitialization = true;
+        }
+        break;
+    }
+    case PO_TEXBRDF:
+        inputStage = PSInputTexture[Stage];
+        break;
+    case PO_TEXM3X2TEX:
+    {
+        inputStage = PSInputTexture[Stage];
+
+        if (m_PSVersion >= D3DPS_VERSION(1, 4))
+        {
+            InsertTex3x2Instructions(Stage, inputStage, InsertIns);
+
+            Ins.CommentString = "";
+            Ins.Initialize(PO_TEXLD2);
+            Ins.Output[0].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + Stage, 0);
+            Ins.Parameters[0].SetRegister(PARAM_R, 1, 0);
+            Ins.Parameters[1].SetRegister(PARAM_S, Stage, 0);
+            InsertIns.emplace_back(Ins);
+
+            opcode = PO_MOV;
+            inputStage = Stage;
+            needsInitialization = true;
+        }
+        break;
+    }
+    case PO_TEXM3X3TEX:
+    {
+        inputStage = PSInputTexture[Stage];
+
+        if (m_PSVersion >= D3DPS_VERSION(1, 4))
+        {
+            InsertTex3x3Instructions(Stage, inputStage, InsertIns);
+
+            Ins.CommentString = "";
+            Ins.Initialize(PO_TEXLD2);
+            Ins.Output[0].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + Stage, 0);
+            Ins.Parameters[0].SetRegister(PARAM_R, 1, 0);
+            Ins.Parameters[1].SetRegister(PARAM_S, Stage, 0);
+            InsertIns.emplace_back(Ins);
+
+            opcode = PO_MOV;
+            inputStage = Stage;
+            needsInitialization = true;
+        }
+        break;
+    }
+    case PO_TEXM3X2DEPTH:
+    {
+        inputStage = PSInputTexture[Stage];
+
+        if (m_PSVersion >= D3DPS_VERSION(1, 4))
+        {
+            InsertTex3x2Instructions(Stage, inputStage, InsertIns);
+
+            Ins.CommentString = "";
+            Ins.Initialize(PO_RCP);
+            Ins.Output[0].SetRegister(PARAM_R, 1, MASK_B);
+            Ins.Parameters[0].SetRegister(PARAM_R, 1, MASK_G);
+            InsertIns.emplace_back(Ins);
+
+            Ins.Initialize(PO_MUL);
+            Ins.Modifier = INSMOD_SAT;
+            Ins.Output[0].SetRegister(PARAM_R, 1, MASK_B);
+            Ins.Parameters[0].SetRegister(PARAM_R, 1, MASK_R);
+            Ins.Parameters[1].SetRegister(PARAM_R, 1, MASK_B);
+            InsertIns.emplace_back(Ins);
+
+            Ins.Initialize(PO_CMP);
+            Ins.Output[0].SetRegister(PARAM_R, 1, MASK_B);
+            Ins.Parameters[0].SetRegister(PARAM_R, 1, MASK_G);
+            Ins.Parameters[0].Modifiers = (1 << ARGMOD_NEGATE);
+            Ins.Parameters[1].SetScaleConstRegister(1.0, Recompiled);
+            Ins.Parameters[2].SetRegister(PARAM_R, 1, MASK_B);
+            InsertIns.emplace_back(Ins);
+
+            Ins.Initialize(PO_MOV);
+            Ins.Output[0].SetRegister(PARAM_oDepth, 0, 0);
+            Ins.Parameters[0].SetRegister(PARAM_R, 1, MASK_B);
+            InsertIns.emplace_back(Ins);
+
+            opcode = PO_MOV;
+            inputStage = Stage;
+            needsInitialization = true;
+        }
+        break;
+    }
+    case PO_TEXM3X3DIFF:
+    {
+        inputStage = PSInputTexture[Stage];
+
+        if (m_PSVersion >= D3DPS_VERSION(1, 4))
+        {
+            InsertTex3x3Instructions(Stage, inputStage, InsertIns);
+
+            Ins.Initialize(PO_TEXLD2);
+            Ins.Output[0].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + Stage, 0);
+            Ins.Parameters[0].SetRegister(PARAM_R, 1, 0);
+            Ins.Parameters[1].SetRegister(PARAM_S, Stage, 0);
+            InsertIns.emplace_back(Ins);
+
+            opcode = PO_MOV;
+            inputStage = Stage;
+            needsInitialization = true;
+        }
+        break;
+    }
+    case PO_TEXM3X3VSPEC:
+    case PO_TEXM3X3SPEC:
+    {
+        inputStage = PSInputTexture[Stage];
+
+        if (m_PSVersion >= D3DPS_VERSION(1, 4))
+        {
+            InsertTex3x3Instructions(Stage, inputStage, InsertIns);
+
+            int baseRegister = PSH_XBOX_MAX_R_REGISTER_COUNT + PSH_XBOX_MAX_T_REGISTER_COUNT;
+
+            // get eye-ray vector
+            Ins.Initialize(PO_COMMENT);
+            Ins.CommentString = "; get eye-ray vector";
+            InsertIns.emplace_back(Ins);
+            if (opcode == PO_TEXM3X3VSPEC)
+            {
+                // E.x
+                Ins.Initialize(PO_MOV);
+                Ins.Output[0].SetRegister(PARAM_R, baseRegister + 0, MASK_R);
+                Ins.Parameters[0].SetRegister(PARAM_T, Stage - 2, MASK_A);
+                InsertIns.emplace_back(Ins);
+                // E.y
+                Ins.Initialize(PO_MOV);
+                Ins.Output[0].SetRegister(PARAM_R, baseRegister + 0, MASK_G);
+                Ins.Parameters[0].SetRegister(PARAM_T, Stage - 1, MASK_A);
+                InsertIns.emplace_back(Ins);
+                // E.z
+                Ins.Initialize(PO_MOV);
+                Ins.Output[0].SetRegister(PARAM_R, baseRegister + 0, MASK_B);
+                Ins.Parameters[0].SetRegister(PARAM_T, Stage - 0, MASK_A);
+                InsertIns.emplace_back(Ins);
+                // E.w
+                Ins.Initialize(PO_MOV);
+                Ins.Output[0].SetRegister(PARAM_R, baseRegister + 0, MASK_A);
+                Ins.Parameters[0].SetScaleConstRegister(0.0, Recompiled);
+                InsertIns.emplace_back(Ins);
+            }
+            else
+            {
+                // E
+                Ins.Initialize(PO_MOV);
+                Ins.Output[0].SetRegister(PARAM_R, baseRegister + 0, 0);
+                Ins.Parameters[0].SetRegister(PARAM_C, 0, 0);
+                InsertIns.emplace_back(Ins);
+            }
+
+            // compute reflection vector
+            Ins.Initialize(PO_COMMENT);
+            Ins.CommentString = "; compute reflection vector";
+            InsertIns.emplace_back(Ins);
+            // N.E
+            Ins.Initialize(PO_DP3);
+            Ins.Output[0].SetRegister(PARAM_R, baseRegister + 1, MASK_R);
+            Ins.Parameters[0].SetRegister(PARAM_R, 1, 0);
+            Ins.Parameters[1].SetRegister(PARAM_R, baseRegister + 0, 0);
+            InsertIns.emplace_back(Ins);
+            // 2 * (N.E)
+            Ins.Initialize(PO_MUL);
+            Ins.Output[0].SetRegister(PARAM_R, baseRegister + 1, MASK_R);
+            Ins.Parameters[0].SetRegister(PARAM_R, baseRegister + 1, MASK_R);
+            Ins.Parameters[1].SetScaleConstRegister(2.0, Recompiled);
+            InsertIns.emplace_back(Ins);
+            // N.N
+            Ins.Initialize(PO_DP3);
+            Ins.Output[0].SetRegister(PARAM_R, baseRegister + 1, MASK_G);
+            Ins.Parameters[0].SetRegister(PARAM_R, 1, 0);
+            Ins.Parameters[1].SetRegister(PARAM_R, 1, 0);
+            InsertIns.emplace_back(Ins);
+            // 1 / (N.N)
+            Ins.Initialize(PO_RCP);
+            Ins.Output[0].SetRegister(PARAM_R, baseRegister + 1, MASK_G);
+            Ins.Parameters[0].SetRegister(PARAM_R, baseRegister + 1, MASK_G);
+            InsertIns.emplace_back(Ins);
+            // 2 * N.E / N.N
+            Ins.Initialize(PO_MUL);
+            Ins.Output[0].SetRegister(PARAM_R, baseRegister + 1, MASK_R);
+            Ins.Parameters[0].SetRegister(PARAM_R, baseRegister + 1, MASK_R);
+            Ins.Parameters[1].SetRegister(PARAM_R, baseRegister + 1, MASK_G);
+            InsertIns.emplace_back(Ins);
+            // 2 * N.E / N.N * N - E
+            Ins.Initialize(PO_MAD);
+            Ins.Output[0].SetRegister(PARAM_R, 1, 0);
+            Ins.Parameters[0].SetRegister(PARAM_R, 1, 0);
+            Ins.Parameters[1].SetRegister(PARAM_R, baseRegister + 1, MASK_R);
+            Ins.Parameters[2].SetRegister(PARAM_R, baseRegister + 0, 0);
+            Ins.Parameters[2].Modifiers = (1 << ARGMOD_NEGATE);
+            InsertIns.emplace_back(Ins);
+
+            Ins.CommentString = "";
+            Ins.Initialize(PO_TEXLD2);
+            Ins.Output[0].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + Stage, 0);
+            Ins.Parameters[0].SetRegister(PARAM_R, 1, 0);
+            Ins.Parameters[1].SetRegister(PARAM_S, Stage, 0);
+            InsertIns.emplace_back(Ins);
+
+            opcode = PO_MOV;
+            inputStage = Stage;
+            needsInitialization = true;
+        }
+        break;
+    }
+    case PO_TEXREG2AR:
+    {
+        inputStage = PSInputTexture[Stage];
+
+        if (m_PSVersion >= D3DPS_VERSION(1, 4))
+        {
+            // E.x
+            Ins.Initialize(PO_MOV);
+            Ins.Output[0].SetRegister(PARAM_R, 1, MASK_R);
+            Ins.Parameters[0].SetRegister(PARAM_T, Stage, MASK_A);
+            InsertIns.emplace_back(Ins);
+            // E.y
+            Ins.Initialize(PO_MOV);
+            Ins.Output[0].SetRegister(PARAM_R, 1, MASK_G);
+            Ins.Parameters[0].SetRegister(PARAM_T, Stage, MASK_R);
+            InsertIns.emplace_back(Ins);
+
+            Ins.Initialize(PO_TEXLD2);
+            Ins.Output[0].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + Stage, 0);
+            Ins.Parameters[0].SetRegister(PARAM_R, 1, 0);
+            Ins.Parameters[1].SetRegister(PARAM_S, Stage, 0);
+            InsertIns.emplace_back(Ins);
+
+            opcode = PO_MOV;
+            inputStage = Stage;
+            needsInitialization = true;
+        }
+        break;
+    }
+    case PO_TEXREG2GB:
+    {
+        inputStage = PSInputTexture[Stage];
+
+        if (m_PSVersion >= D3DPS_VERSION(1, 4))
+        {
+            // E.x
+            Ins.Initialize(PO_MOV);
+            Ins.Output[0].SetRegister(PARAM_R, 1, MASK_R);
+            Ins.Parameters[0].SetRegister(PARAM_T, Stage, MASK_G);
+            InsertIns.emplace_back(Ins);
+            // E.y
+            Ins.Initialize(PO_MOV);
+            Ins.Output[0].SetRegister(PARAM_R, 1, MASK_G);
+            Ins.Parameters[0].SetRegister(PARAM_T, Stage, MASK_B);
+            InsertIns.emplace_back(Ins);
+
+            Ins.Initialize(PO_TEXLD2);
+            Ins.Output[0].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + Stage, 0);
+            Ins.Parameters[0].SetRegister(PARAM_R, 1, 0);
+            Ins.Parameters[1].SetRegister(PARAM_S, Stage, 0);
+            InsertIns.emplace_back(Ins);
+
+            opcode = PO_MOV;
+            inputStage = Stage;
+            needsInitialization = true;
+        }
+        break;
+    }
+    case PO_TEXM3X2PAD:
+    case PO_TEXM3X3PAD:
+    {
+        inputStage = PSInputTexture[Stage];
+
+        if (m_PSVersion >= D3DPS_VERSION(1, 4))
+        {
+            opcode = PO_MOV;
+            inputStage = Stage;
+            needsInitialization = true;
+        }
+        break;
+    }
+
+    case PO_TEXLD:
+    case PO_TEXLD2:
+    case PO_TEXCRD:
+    case PO_MOV:
+        needsInitialization = true;
+        break;
+    default:
+        break;
+    }
+
+    Ins.Initialize(opcode);
+
+    if (needsInitialization)
+    {
+        type = PARAM_R;
+
+        // Insert move instructions in reverse order to prevent overwriting wrong register
+        // Create instructions to move loaded temporary registers into extra temporary registers
+        InsertIns[XTL::X_D3DTS_STAGECOUNT - Stage - 1].Initialize(PO_MOV);
+        InsertIns[XTL::X_D3DTS_STAGECOUNT - Stage - 1].Output[0].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + Stage, 0);
+        InsertIns[XTL::X_D3DTS_STAGECOUNT - Stage - 1].Parameters[0].SetRegister(PARAM_R, Stage, 0);
+
+        if (Ins.Opcode == PO_TEXCRD)
+        {
+            mask = MASK_RGB;
+        }
+        else
+        {
+        }
+
+        // Replace texture coordinate register usage up until first usage as output
+        int lastUsed = RegisterIsUsedFromIndexUntil(InsertPos, PARAM_T, Stage);
+
+        if (lastUsed >= 0)
+        {
+            ReplaceInputRegisterFromIndexOnwards(InsertPos, PARAM_T, Stage, PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + Stage, lastUsed);
+        }
+    }
+    Ins.Output[0].SetRegister(type, Stage, mask);
 
     // For those texture modes that need it, add the source stage as argument :
     if (PSH_OPCODE_DEFS[Ins.Opcode]._In >= 1)
     {
-      Ins.Parameters[0].SetRegister(PARAM_T, PSInputTexture[Stage], 0);
+        Ins.Parameters[0].SetRegister(PARAM_T, inputStage, 0);
 
-      switch (PSDotMapping[Stage]) {
-        case PS_DOTMAPPING_MINUS1_TO_1_D3D:
-          Ins.Parameters[0].Modifiers = (1 << ARGMOD_SCALE_BX2);
-		  break;
-      }
+        if (Ins.Opcode >= PO_TEXDP3TEX && Ins.Opcode <= PO_TEXM3X3SPEC)
+        {
+            Ins.Parameters[0].Modifiers = GetTextureStageModifiers(Stage);
+        }
     }
 
     if (PSH_OPCODE_DEFS[Ins.Opcode]._In >= 2)
     {
-      // Add the third argument :
+        if (m_PSVersion >= D3DPS_VERSION(2, 0) && Ins.Opcode == PO_TEXLD2)
+        {
+            Ins.Parameters[1].SetRegister(PARAM_S, Stage, 0);
+        }
+
+        // Add the third argument :
       switch (PSTextureModes[Stage]) {
         case PS_TEXTUREMODES_DOT_RFLCT_SPEC_CONST:
         {
@@ -2469,7 +3380,7 @@ bool PSH_XBOX_SHADER::DecodeTextureModes(XTL::X_D3DPIXELSHADERDEF *pPSDef)
     InsertIntermediate(&Ins, InsertPos);
     ++InsertPos;
     Result = true;
-  }
+
   return Result;
 }
 
@@ -2481,7 +3392,7 @@ bool PSH_XBOX_SHADER::MoveRemovableParametersRight()
 
   // For all opcodes, try to put constant and discarded arguments in the rightmost slot, to ease following analysis :
   i = IntermediateCount;
-  while (i > 0)
+  while (i > StartPos)
   {
     --i;
 
@@ -2533,6 +3444,14 @@ bool PSH_XBOX_SHADER::MoveRemovableParametersRight()
     NewIns.Parameters[1].SetConstValue(XColor.g);
     NewIns.Parameters[2].SetConstValue(XColor.b);
     NewIns.Parameters[3].SetConstValue(XColor.a);
+  }
+
+  void PSH_XBOX_SHADER::_SetColor(/*var OUT*/PSH_INTERMEDIATE_FORMAT &NewIns, XTL::D3DCOLORVALUE ConstColor)
+  {
+      NewIns.Parameters[0].SetConstValue(ConstColor.r);
+      NewIns.Parameters[1].SetConstValue(ConstColor.g);
+      NewIns.Parameters[2].SetConstValue(ConstColor.b);
+      NewIns.Parameters[3].SetConstValue(ConstColor.a);
   }
 
   // Try to fixup constants above the limit (c7 for PS.1.3) :
@@ -2597,6 +3516,30 @@ bool PSH_XBOX_SHADER::ConvertConstantsToNative(XTL::X_D3DPIXELSHADERDEF *pPSDef,
   // Note : Recompiled.ConstMapping and Recompiled.ConstInUse[i] are still empty here.
   for (i = 0; i < MaxConstantFloatRegisters; i++)
     NativeConstInUse[i] = false;
+
+    Result = true;
+
+    NewIns.Initialize(PO_DEF);
+
+    // Add constants used to represent common powers of 2 used by instruction and argument modifiers
+    // Represent constant 0.0 and common powers of 2 divisions
+    NewIns.Output[0].SetRegister(PARAM_C, _HandleConst(PSH_XBOX_CONSTANT_MUL1, Recompiled, &NativeConstInUse[0], &EmittedNewConstant), MASK_RGBA);
+    _SetColor(NewIns, { 0.0, 1.0 / 2.0, 1.0 / 4.0, 1.0 / 8.0 });
+    InsertIntermediate(&NewIns, 1);
+
+    // Represent common powers of 2 constants, also used as multipliers
+    NewIns.Output[0].SetRegister(PARAM_C, _HandleConst(PSH_XBOX_CONSTANT_MUL0, Recompiled, &NativeConstInUse[0], &EmittedNewConstant), MASK_RGBA);
+    _SetColor(NewIns, {1.0, 2.0, 4.0, 8.0});
+    InsertIntermediate(&NewIns, 1);
+
+    if (m_PSVersion >= D3DPS_VERSION(1, 4))
+    {
+        for (i = 0; i < XTL::X_D3DTS_STAGECOUNT; i++)
+        {
+            _HandleConst(PSH_XBOX_CONSTANT_BEM + i, Recompiled, &NativeConstInUse[0], &EmittedNewConstant);
+            _HandleConst(PSH_XBOX_CONSTANT_LUM + i, Recompiled, &NativeConstInUse[0], &EmittedNewConstant);
+        }
+    }
 
   // Loop over all opcodes to update the constant-indexes (Xbox uses C0 and C1 in each combiner) :
   for (i = 0; i < IntermediateCount; i++)
@@ -2694,6 +3637,7 @@ bool PSH_XBOX_SHADER::ConvertConstantsToNative(XTL::X_D3DPIXELSHADERDEF *pPSDef,
 		// PO_DEF opcodes go after the initial PO_XPS (which is not yet replaced by PO_COMMENT+PO_PS,
 		// see ConvertXboxOpcodesToNative calling ConvertXPSToNative for that)
         InsertIntermediate(&NewIns, 1);
+        Result = true;
       }
     } // for arguments
   } // for opcodes
@@ -2719,7 +3663,7 @@ bool PSH_XBOX_SHADER::RemoveUselessWrites()
     RegUsage[PARAM_DISCARD][i] = MASK_RGBA;
 
   i = IntermediateCount;
-  while (i > 0)
+  while (i > StartPos)
   {
     --i;
     Cur = &(Intermediate[i]);
@@ -3085,7 +4029,7 @@ void PSH_XBOX_SHADER::ConvertXFCToNative(int i)
     Ins.Output[0].SetRegister(PARAM_R, 0, MASK_A);
     Ins.Parameters[0] = Cur.Parameters[6];
     InsertIntermediate(&Ins, InsertPos);
-//    ++InsertPos;
+    ++InsertPos;
   }
 }
 
@@ -3097,7 +4041,7 @@ bool PSH_XBOX_SHADER::RemoveNops()
 
   bool Result = false;
   i = IntermediateCount;
-  while (i > 0)
+  while (i > StartPos)
   {
     --i;
     Cur = &(Intermediate[i]);
@@ -3130,6 +4074,108 @@ bool PSH_XBOX_SHADER::RemoveNops()
   return Result;
 }
 
+int PSH_XBOX_SHADER::MaxRegisterCount(PSH_ARGUMENT_TYPE aRegType)
+{
+    switch (aRegType)
+    {
+    case PARAM_R:
+        return MaxTemporaryRegisters;
+    case PARAM_T:
+        return MaxTextureCoordinateRegisters;
+    case PARAM_V:
+        return MaxInputColorRegisters;
+    case PARAM_C:
+        return MaxConstantFloatRegisters;
+    case PARAM_S:
+        return MaxSamplerRegisters;
+    }
+
+    return 0;
+}
+
+bool PSH_XBOX_SHADER::IsValidNativeOutputRegister(PSH_ARGUMENT_TYPE aRegType, int index /*= -1*/)
+{
+    bool valid = (PARAM_R == aRegType) && (MaxRegisterCount(PARAM_R) > index);
+
+    if (m_PSVersion <= D3DPS_VERSION(1, 3))
+        valid = valid || ((PARAM_T == aRegType) && (MaxRegisterCount(PARAM_T) > index));
+
+    return valid;
+}
+
+int PSH_XBOX_SHADER::RegisterIsFreeFromIndexUntil(int aIndex, PSH_ARGUMENT_TYPE aRegType, int16 aAddress)
+{
+    int i;
+    PPSH_INTERMEDIATE_FORMAT Cur;
+
+    for (i = aIndex; i < IntermediateCount; i++)
+    {
+        Cur = &(Intermediate[i]);
+        // Detect a read :
+        if (Cur->ReadsFromRegister(aRegType, aAddress))
+        {
+            return -1;
+        }
+        // Detect a write :
+        if (Cur->WritesToRegister(aRegType, aAddress))
+        {
+            break;
+        }
+    }
+
+    return i;
+}
+
+int PSH_XBOX_SHADER::RegisterIsUsedFromIndexUntil(int aIndex, PSH_ARGUMENT_TYPE aRegType, int16 aAddress)
+{
+    int result = -1;
+    int i;
+    PPSH_INTERMEDIATE_FORMAT Cur;
+
+    for (i = aIndex; i < IntermediateCount; i++)
+    {
+        Cur = &(Intermediate[i]);
+        // Detect a read :
+        if (Cur->ReadsFromRegister(aRegType, aAddress))
+        {
+            result = i;
+        }
+        // Detect a write :
+        if (Cur->WritesToRegister(aRegType, aAddress))
+        {
+            break;
+        }
+    }
+
+    return result;
+}
+
+int PSH_XBOX_SHADER::NextFreeRegisterFromIndexUntil(int aIndex, PSH_ARGUMENT_TYPE aRegType, int bIndex /*= -1*/, int startAddress /*= 0*/, int excludeAddress /*= -1*/)
+{
+    const int registerCount = MaxRegisterCount(aRegType);
+
+    if (bIndex < 0 || bIndex < aIndex)
+        bIndex = IntermediateCount;
+
+    if (startAddress < 0)
+        startAddress = 0;
+
+    int i;
+
+    for (i = startAddress; i < registerCount; i++)
+    {
+        if (i == excludeAddress)
+            continue;
+
+        if (RegisterIsFreeFromIndexUntil(aIndex, aRegType, i) >= bIndex)
+        {
+            return i;
+        }
+    }
+
+    return -1;
+}
+
 bool PSH_XBOX_SHADER::IsRegisterFreeFromIndexOnwards(int aIndex, PSH_ARGUMENT_TYPE aRegType, int16 aAddress)
 {
   int i;
@@ -3149,29 +4195,49 @@ bool PSH_XBOX_SHADER::IsRegisterFreeFromIndexOnwards(int aIndex, PSH_ARGUMENT_TY
   return true;
 }
 
+void PSH_XBOX_SHADER::ReplaceInputRegisterFromIndexOnwards(int aIndex,
+    PSH_ARGUMENT_TYPE aSrcRegType, int16 aSrcAddress,
+    PSH_ARGUMENT_TYPE aDstRegType, int16 aDstAddress, int endIndex /*= -1*/)
+{
+    ReplaceRegisterFromIndexOnwards(aIndex, aSrcRegType, aSrcAddress, aDstRegType, aDstAddress, endIndex, true, false);
+}
+
+void PSH_XBOX_SHADER::ReplaceOutputRegisterFromIndexOnwards(int aIndex,
+    PSH_ARGUMENT_TYPE aSrcRegType, int16 aSrcAddress,
+    PSH_ARGUMENT_TYPE aDstRegType, int16 aDstAddress, int endIndex /*= -1*/)
+{
+    ReplaceRegisterFromIndexOnwards(aIndex, aSrcRegType, aSrcAddress, aDstRegType, aDstAddress, endIndex, false, true);
+}
+
 void PSH_XBOX_SHADER::ReplaceRegisterFromIndexOnwards(int aIndex,
 	PSH_ARGUMENT_TYPE aSrcRegType, int16 aSrcAddress,
-	PSH_ARGUMENT_TYPE aDstRegType, int16 aDstAddress)
+	PSH_ARGUMENT_TYPE aDstRegType, int16 aDstAddress, int endIndex /*= -1*/, bool replaceInput /*= true*/, bool replaceOutput /*= true*/)
 {
   int i;
   int j;
   PPSH_INTERMEDIATE_FORMAT Cur;
 
-  for (i = aIndex; i < IntermediateCount; i++)
+  for (i = aIndex; i < IntermediateCount && (i <= endIndex || endIndex == -1); i++)
   {
     Cur = &(Intermediate[i]);
 
-    for (j = 0; j < PSH_OPCODE_DEFS[Cur->Opcode]._Out; j++)
-      if (Cur->Output[j].IsRegister(aSrcRegType, aSrcAddress))
-        Cur->Output[j].SetRegister(aDstRegType, aDstAddress, Cur->Output[j].Mask);
+    if (replaceOutput)
+    {
+        for (j = 0; j < PSH_OPCODE_DEFS[Cur->Opcode]._Out; j++)
+            if (Cur->Output[j].IsRegister(aSrcRegType, aSrcAddress))
+                Cur->Output[j].SetRegister(aDstRegType, aDstAddress, Cur->Output[j].Mask);
+    }
 
-    for (j = 0; j < PSH_OPCODE_DEFS[Cur->Opcode]._In; j++)
-      if (Cur->Parameters[j].IsRegister(aSrcRegType, aSrcAddress))
-        Cur->Parameters[j].SetRegister(aDstRegType, aDstAddress, Cur->Parameters[j].Mask);
+    if (replaceInput)
+    {
+        for (j = 0; j < PSH_OPCODE_DEFS[Cur->Opcode]._In; j++)
+            if (Cur->Parameters[j].IsRegister(aSrcRegType, aSrcAddress))
+                Cur->Parameters[j].SetRegister(aDstRegType, aDstAddress, Cur->Parameters[j].Mask);
+    }
   }
 }
 
-bool PSH_XBOX_SHADER::FixConstantModifiers()
+bool PSH_XBOX_SHADER::FixArgumentModifiers()
 {
 	int i;
 	PPSH_INTERMEDIATE_FORMAT Cur;
@@ -3184,39 +4250,427 @@ bool PSH_XBOX_SHADER::FixConstantModifiers()
 	{
 		--i;
 		Cur = &(Intermediate[i]);
-		if (!Cur->IsArithmetic())
+		if ((m_PSVersion < D3DPS_VERSION(2, 0) && !Cur->IsArithmetic())
+            || (m_PSVersion >= D3DPS_VERSION(2, 0) && Cur->Opcode < PO_TEX))
 			continue;
 		
-		if (Cur->Opcode == PO_MOV)
-			continue;
+        if (m_PSVersion < D3DPS_VERSION(2, 0) && Cur->Opcode == PO_MOV)
+            continue;
 
-		// Detect modifiers on constant arguments
-		for (int p = 0; p < 7; p++) {
-			if ((Cur->Parameters[p].Type == PARAM_C)
-				&& (Cur->Parameters[p].Modifiers != 0)) {
-				// Insert a MOV to the destination register,
-				// so the modifier can be applied on that,
-				// instead of on this constant argument.
-				PSH_INTERMEDIATE_FORMAT Ins = {};
+        int InsertPos = i;
+        // Detect modifiers on constant and arguments
+		for (int p = 0; p < 7 && p < PSH_OPCODE_DEFS[Cur->Opcode]._In; p++) {
+			if ((Cur->Parameters[p].Type == PARAM_C || (m_PSVersion >= D3DPS_VERSION(2, 0) && Cur->Parameters[p].UsesRegister()))
+				&& ((Cur->Parameters[p].Modifiers & ~(1 << ARGMOD_NEGATE)) != 0)) {
 
-				Ins.Initialize(PO_MOV);
-				// No need to check if output is a constant - those cannot be assigned to anyway
-				Ins.Output[0] = Cur->Output[0];
-				// Move constant into register
-				Ins.Parameters[0] = Cur->Parameters[p];
-				Cur->Parameters[p] = Ins.Output[0];
-				// Apply modifier to register instead of constant
-				Cur->Parameters[p].Modifiers = Ins.Parameters[0].Modifiers;
-				Ins.Parameters[0].Modifiers = 0;
-				Ins.CommentString = "Inserted to avoid constant modifier (applied below on register)";
-				InsertIntermediate(&Ins, i);
-				DbgPrintf(LOG_PREFIX, "; Used intermediate move to avoid constant modifier\n");
-				Result = true;
+                PSH_INTERMEDIATE_FORMAT Ins = {};
+                PSH_IMD_ARGUMENT Arg = {};
+
+                if (m_PSVersion >= D3DPS_VERSION(2, 0))
+                {
+                    Arg = Cur->Parameters[p];
+
+                    int excludeAddress = Cur->Output[0].Type == PARAM_R ? Cur->Output[0].Address : -1;
+
+                    PSH_ARGUMENT_TYPE type = PARAM_R;
+                    int address = NextFreeRegisterFromIndexUntil(InsertPos, PARAM_R, InsertPos, 0, excludeAddress);
+
+                    if (IsValidNativeOutputRegister(Arg.Type, Arg.Address) && RegisterIsFreeFromIndexUntil(InsertPos + 1, Arg.Type, Arg.Address) > InsertPos)
+                    {
+                        type = Arg.Type;
+                        address = Arg.Address;
+                    }
+
+                    for (int modifier = ARGMOD_INVERT; modifier < ARGMOD_SATURATE; ++modifier)
+                    {
+                        Arg = Cur->Parameters[p];
+
+                        if (!Arg.HasModifier((PSH_ARG_MODIFIER)modifier))
+                            continue;
+
+                        bool needInsert = false;
+                        switch ((PSH_ARG_MODIFIER)modifier)
+                        {
+                        case ARGMOD_INVERT:
+                            {
+                                if (Arg.HasModifier(ARGMOD_NEGATE))
+                                {
+                                    Ins.Initialize(PO_SUB);
+                                    // No need to check if output is a constant - those cannot be assigned to anyway
+                                    Ins.Output[0].SetRegister(type, address, Arg.Mask);
+                                    // Move constant into register
+                                    Ins.Parameters[1].SetScaleConstRegister(1.0f, Recompiled);
+                                    Ins.Parameters[0] = Cur->Parameters[p];
+                                    Ins.Parameters[0].Modifiers = 0;
+                                    Ins.CommentString = "Inserted to replace 'invert' with 'negate' argument modifier (register - 1)";
+                                    ++modifier;
+                                }
+                                else
+                                {
+                                    Ins.Initialize(PO_SUB);
+                                    // No need to check if output is a constant - those cannot be assigned to anyway
+                                    Ins.Output[0].SetRegister(type, address, Arg.Mask);
+                                    // Move constant into register
+                                    Ins.Parameters[0].SetScaleConstRegister(1.0f, Recompiled);
+                                    Ins.Parameters[1] = Cur->Parameters[p];
+                                    Ins.Parameters[1].Modifiers = 0;
+                                    Ins.CommentString = "Inserted to replace 'invert' argument modifier (1 - register)";
+                                }
+                                needInsert = true;
+
+                                break;
+                            }
+                        case ARGMOD_NEGATE:
+                            {
+                            // Skip as this modifier is still supported in current shader models
+                            // Included here for completeness
+                            break;
+                                Ins.Initialize(PO_MOV);
+                                // No need to check if output is a constant - those cannot be assigned to anyway
+                                Ins.Output[0].SetRegister(type, address, Arg.Mask);
+                                // Move constant into register
+                                Ins.Parameters[0] = Cur->Parameters[p];
+                                Ins.Parameters[0].Modifiers = (1 << ARGMOD_NEGATE);
+                                Ins.CommentString = "Inserted to replace 'negate' argument modifier (-register)";
+                                needInsert = true;
+
+                                break;
+                            }
+                        case ARGMOD_BIAS:
+                            {
+                                Ins.Initialize(PO_SUB);
+                                // No need to check if output is a constant - those cannot be assigned to anyway
+                                Ins.Output[0].SetRegister(type, address, Arg.Mask);
+                                // Move constant into register
+                                Ins.Parameters[1].SetScaleConstRegister(0.5f, Recompiled);
+                                Ins.Parameters[0] = Cur->Parameters[p];
+                                Ins.Parameters[0].Modifiers = 0;
+                                Ins.CommentString = "Inserted to replace 'bias' argument modifier (register - 0.5)";
+                                needInsert = true;
+
+                                break;
+                        }
+                        case ARGMOD_SCALE_X2:
+                            {
+                                Ins.Initialize(PO_MUL);
+                                // No need to check if output is a constant - those cannot be assigned to anyway
+                                Ins.Output[0].SetRegister(type, address, Arg.Mask);
+                                // Move constant into register
+                                Ins.Parameters[1].SetScaleConstRegister(2.0f, Recompiled);
+                                Ins.Parameters[0] = Cur->Parameters[p];
+                                Ins.Parameters[0].Modifiers = 0;
+                                Ins.CommentString = "Inserted to replace 'x2' argument modifier (2 * register)";
+                                needInsert = true;
+
+                                break;
+                        }
+                        case ARGMOD_SCALE_BX2:
+                            {
+                                Ins.Initialize(PO_MAD);
+                                // No need to check if output is a constant - those cannot be assigned to anyway
+                                Ins.Output[0].SetRegister(type, address, Arg.Mask);
+                                // Move constant into register
+                                Ins.Parameters[2].SetScaleConstRegister(-1.0f, Recompiled);
+                                Ins.Parameters[1].SetScaleConstRegister(2.0f, Recompiled);
+                                Ins.Parameters[0] = Cur->Parameters[p];
+                                Ins.Parameters[0].Modifiers = 0;
+                                Ins.CommentString = "Inserted to replace 'bx2' argument modifier (2 * register - 1)";
+                                needInsert = true;
+
+                                break;
+                        }
+                        case ARGMOD_SCALE_X4:
+                            {
+                                Ins.Initialize(PO_MUL);
+                                // No need to check if output is a constant - those cannot be assigned to anyway
+                                Ins.Output[0].SetRegister(type, address, Arg.Mask);
+                                // Move constant into register
+                                Ins.Parameters[1].SetScaleConstRegister(4.0f, Recompiled);
+                                Ins.Parameters[0] = Cur->Parameters[p];
+                                Ins.Parameters[0].Modifiers = 0;
+                                Ins.CommentString = "Inserted to replace 'x4' argument modifier (4 * register)";
+                                needInsert = true;
+
+                                break;
+                        }
+                        case ARGMOD_SCALE_D2:
+                            {
+                                Ins.Initialize(PO_MUL);
+                                // No need to check if output is a constant - those cannot be assigned to anyway
+                                Ins.Output[0].SetRegister(type, address, Arg.Mask);
+                                // Move constant into register
+                                Ins.Parameters[1].SetScaleConstRegister(0.5f, Recompiled);
+                                Ins.Parameters[0] = Cur->Parameters[p];
+                                Ins.Parameters[0].Modifiers = 0;
+                                Ins.CommentString = "Inserted to replace 'd2' argument modifier (0.5 * register)";
+                                needInsert = true;
+
+                                break;
+                            }
+                        default:
+                            {
+                                Ins.Initialize(PO_MOV);
+                                // No need to check if output is a constant - those cannot be assigned to anyway
+                                Ins.Output[0].SetRegister(type, address, Arg.Mask);
+                                // Move constant into register
+                                Ins.Parameters[0] = Cur->Parameters[p];
+                                Ins.Parameters[0].Modifiers = 0;
+                                Ins.CommentString = "Inserted to replace argument with modifier";
+                                needInsert = true;
+
+                                break;
+                            }
+                        }
+
+                        if (needInsert == true)
+                        {
+                            for (int q = p; q < PSH_OPCODE_DEFS[Cur->Opcode]._In; q++)
+                            {
+                                // overwrite all matching parameters to avoid duplicate instructions
+                                if (Arg.Type == Cur->Parameters[q].Type
+                                    && Arg.Address == Cur->Parameters[q].Address
+                                    && Arg.Mask == Cur->Parameters[q].Mask
+                                    && Arg.Modifiers == Cur->Parameters[q].Modifiers
+                                    && Arg.Multiplier == Cur->Parameters[q].Multiplier)
+                                {
+                                    Cur->Parameters[q] = Ins.Output[0];
+                                    // Apply modifier to register instead of constant
+                                    Cur->Parameters[q].Modifiers = (Arg.Modifiers & (1 << ARGMOD_NEGATE)) | (Arg.Modifiers & (~0 << (modifier + 1)));
+                                }
+                            }
+                            InsertIntermediate(&Ins, InsertPos);
+                            ++InsertPos;
+                            ++Cur;
+                            DbgPrintf(LOG_PREFIX, "; Used intermediate move to avoid argument modifier\n");
+                            Result = true;
+                        }
+                    }
+                }
+                else
+                {
+                    // Insert a MOV to the destination register,
+                    // so the modifier can be applied on that,
+                    // instead of on this constant argument.
+                    Ins.Initialize(PO_MOV);
+                    // No need to check if output is a constant - those cannot be assigned to anyway
+                    Ins.Output[0] = Cur->Output[0];
+                    // Move constant into register
+                    Ins.Parameters[0] = Cur->Parameters[p];
+                    Cur->Parameters[p] = Ins.Output[0];
+                    // Apply modifier to register instead of constant
+                    Cur->Parameters[p].Modifiers = Ins.Parameters[0].Modifiers;
+                    Ins.Parameters[0].Modifiers = 0;
+                    Ins.CommentString = "Inserted to avoid constant modifier (applied below on register)";
+                    InsertIntermediate(&Ins, InsertPos);
+                    ++InsertPos;
+                    DbgPrintf(LOG_PREFIX, "; Used intermediate move to avoid constant modifier\n");
+                    Result = true;
+                }
 			}
 		}
 	}
 	return Result;
-} // FixConstantModifiers
+} // FixArgumentModifiers
+
+bool PSH_XBOX_SHADER::FixConstantParameters()
+{
+    int i;
+    PPSH_INTERMEDIATE_FORMAT Cur;
+
+    bool Result = false;
+
+    if (m_PSVersion < D3DPS_VERSION(1, 4))
+        return false;
+
+    // Do a bottom-to-top pass, preventing constant-modifiers via additional MOV's:
+    i = IntermediateCount;
+    while (i > StartPos)
+    {
+        --i;
+        Cur = &(Intermediate[i]);
+
+        if (!Cur->IsArithmetic())
+            continue;
+
+        for (int p = 0; p < PSH_OPCODE_DEFS[Cur->Opcode]._In; ++p)
+        {
+            if (Cur->Parameters[p].Type != PARAM_VALUE)
+                continue;
+
+            if (Cur->Parameters[p].SetScaleConstRegister(Cur->Parameters[p].GetConstValue(), Recompiled))
+            {
+                DbgPrintf(LOG_PREFIX, "; Replaced constant value with constant register\n");
+                Result = true;
+            }
+        }
+    }
+    return Result;
+} // FixConstantParameters
+
+bool PSH_XBOX_SHADER::FixInstructionModifiers()
+{
+    int i;
+    int InsertPos;
+    PPSH_INTERMEDIATE_FORMAT Cur;
+    PSH_INTERMEDIATE_FORMAT Ins = {};
+
+    bool Result = false;
+
+    if (m_PSVersion < D3DPS_VERSION(2, 0))
+        return false;
+
+    // Do a bottom-to-top pass, preventing constant-modifiers via additional MOV's:
+    i = IntermediateCount;
+    while (i > StartPos)
+    {
+        InsertPos = i;
+        --i;
+        Cur = &(Intermediate[i]);
+
+        if (!Cur->IsArithmetic())
+            continue;
+
+        bool insert = true;
+        switch (Cur->Modifier)
+        {
+        case INSMOD_BIAS: // y =  x - 0.5         // Xbox only : TODO : Fixup occurrances!
+        {
+            Ins.Initialize(PO_SUB);
+            Ins.Output[0] = Ins.Parameters[0] = Cur->Output[0];
+            Ins.Parameters[1].SetScaleConstRegister(0.5f, Recompiled);
+            Ins.CommentString = "; Inserted adjustment by constant register for INST_bias";
+            DbgPrintf(LOG_PREFIX, "; Inserted adjustment by constant register for INST_bias\n");
+            break;
+        }
+        case INSMOD_X2:   // y =  x        *   2
+        {
+            if (m_PSVersion < D3DPS_VERSION(2, 0))
+            {
+                insert = false;
+                break;
+            }
+            Ins.Initialize(PO_MUL);
+            Ins.Output[0] = Ins.Parameters[0] = Cur->Output[0];
+            Ins.Parameters[1].SetScaleConstRegister(2.0f, Recompiled);
+            Ins.CommentString = "; Inserted adjustment by constant register for INST_x2";
+            DbgPrintf(LOG_PREFIX, "; Inserted adjustment by constant register for INST_x2\n");
+            break;
+        }
+        case INSMOD_BX2:  // y = (x - 0.5) *   2  // Xbox only : TODO : Fixup occurrances!
+        {
+            Ins.Initialize(PO_MAD);
+            Ins.Output[0] = Ins.Parameters[0] = Cur->Output[0];
+            Ins.Parameters[1].SetScaleConstRegister(2.0f, Recompiled);
+            Ins.Parameters[2].SetScaleConstRegister(-1.0f, Recompiled);
+            Ins.CommentString = "; Inserted adjustment by constant register for INST_bx2";
+            DbgPrintf(LOG_PREFIX, "; Inserted adjustment by constant register for INST_bx2\n");
+            break;
+        }
+        case INSMOD_X4:   // y =  x        *   4
+        {
+            if (m_PSVersion < D3DPS_VERSION(2, 0))
+            {
+                insert = false;
+                break;
+            }
+            Ins.Initialize(PO_MUL);
+            Ins.Output[0] = Ins.Parameters[0] = Cur->Output[0];
+            Ins.Parameters[1].SetScaleConstRegister(4.0f, Recompiled);
+            Ins.CommentString = "; Inserted adjustment by constant register for INST_x4";
+            DbgPrintf(LOG_PREFIX, "; Inserted adjustment by constant register for INST_x4\n");
+            break;
+        }
+        case INSMOD_D2:   // y =  x        * 0.5
+        {
+            if (m_PSVersion < D3DPS_VERSION(2, 0))
+            {
+                insert = false;
+                break;
+            }
+            Ins.Initialize(PO_MUL);
+            Ins.Output[0] = Ins.Parameters[0] = Cur->Output[0];
+            Ins.Parameters[1].SetScaleConstRegister(0.5f, Recompiled);
+            Ins.CommentString = "; Inserted adjustment by constant register for INST_d2";
+            DbgPrintf(LOG_PREFIX, "; Inserted adjustment by constant register for INST_d2\n");
+            break;
+        }
+        case INSMOD_X8:   // y =  x        *   8   // ps 1.4 only
+        {
+            if (m_PSVersion == D3DPS_VERSION(1, 4))
+            {
+                insert = false;
+                break;
+            }
+            Ins.Initialize(PO_MUL);
+            Ins.Output[0] = Ins.Parameters[0] = Cur->Output[0];
+            Ins.Parameters[1].SetScaleConstRegister(8.0f, Recompiled);
+            Ins.CommentString = "; Inserted adjustment by constant register for INST_x8";
+            DbgPrintf(LOG_PREFIX, "; Inserted adjustment by constant register for INST_x8\n");
+            break;
+        }
+        case INSMOD_D4:   // y =  x        * 0.25  // ps 1.4 only
+        {
+            if (m_PSVersion == D3DPS_VERSION(1, 4))
+            {
+                insert = false;
+                break;
+            }
+            Ins.Initialize(PO_MUL);
+            Ins.Output[0] = Ins.Parameters[0] = Cur->Output[0];
+            Ins.Parameters[1].SetScaleConstRegister(0.25f, Recompiled);
+            Ins.CommentString = "; Inserted adjustment by constant register for INST_d4";
+            DbgPrintf(LOG_PREFIX, "; Inserted adjustment by constant register for INST_d4\n");
+            break;
+        }
+        case INSMOD_D8:   // y =  x        * 0.125 // ps 1.4 only
+        {
+            if (m_PSVersion == D3DPS_VERSION(1, 4))
+            {
+                insert = false;
+                break;
+            }
+            Ins.Initialize(PO_MUL);
+            Ins.Output[0] = Ins.Parameters[0] = Cur->Output[0];
+            Ins.Parameters[1].SetScaleConstRegister(0.125f, Recompiled);
+            Ins.CommentString = "; Inserted adjustment by constant register for INST_d8";
+            DbgPrintf(LOG_PREFIX, "; Inserted adjustment by constant register for INST_d8\n");
+            break;
+        }
+        case INSMOD_SAT:  // Xbox doesn"t support this, but has ARGMOD_SATURATE instead
+        case INSMOD_NONE: // y =  x
+        default:
+            insert = false;
+            break;
+        }
+
+        if (insert)
+        {
+            Cur->Modifier = INSMOD_NONE;
+            InsertIntermediate(&Ins, InsertPos);
+            Result = true;
+        }
+    }
+    return Result;
+} // FixInstructionModifiers
+
+bool PSH_XBOX_SHADER::FinalizeShader()
+{
+    PSH_INTERMEDIATE_FORMAT Ins = {};
+
+    bool Result = false;
+
+    if (m_PSVersion >= D3DPS_VERSION(2, 0))
+    {
+        Result = true;
+
+        Ins.Initialize(PO_MOV);
+        Ins.Output[0].SetRegister(PARAM_oC, 0, MASK_RGBA);
+        Ins.Parameters[0].SetRegister(PARAM_R, 0, MASK_RGBA);
+        InsertIntermediate(&Ins, IntermediateCount);
+    }
+
+    return Result;
+} // FinalizeShader
 
 //bool PSH_XBOX_SHADER::CombineInstructions()
 
@@ -3233,7 +4687,7 @@ bool PSH_XBOX_SHADER::FixConstantModifiers()
       return false;
 
     // Is the left argument inverted and the right not (or the other way around) ?
-    if ((ParamLeft->Modifiers & (1 << ARGMOD_INVERT)) != (ParamRight->Modifiers & (1 << ARGMOD_INVERT)))
+    if (ParamLeft->HasModifier(ARGMOD_INVERT) != ParamRight->HasModifier(ARGMOD_INVERT))
     {
       // In that case, already move the arguments over to AddOpcode so we create a LRP :
       AddOpcode->Parameters[0] = *ParamLeft;
@@ -3271,7 +4725,7 @@ bool PSH_XBOX_SHADER::CombineInstructions()
   bool Result = false;
 
   i = IntermediateCount - 1;
-  while (i > 0)
+  while (i > StartPos)
   {
     --i;
     Op0 = &(Intermediate[i+0]);
@@ -3440,7 +4894,7 @@ bool PSH_XBOX_SHADER::CombineInstructions()
         CanOptimize = true;
 
         // ensure this is not "constant with modifier" optimization pattern to prevent infinite loop
-        for (int p = 0; p < 7; p++)
+        for (int p = 0; p < PSH_OPCODE_DEFS[Intermediate[j].Opcode]._In; p++)
         {
             if ((Op0->Parameters[0].Type == PARAM_C)
                 && (Intermediate[j].Parameters[p].Type == Op0->Output[0].Type)
@@ -3551,15 +5005,23 @@ bool PSH_XBOX_SHADER::SimplifyMOV(PPSH_INTERMEDIATE_FORMAT Cur)
   // Does this MOV put a 0 (zero) in the output?
   if (Cur->Parameters[0].GetConstValue() == 0.0)
   {
-    // TODO : Find a constant with the value 0, and use that if present.
-    // Simulate 0 by subtracting a (guaranteed) register from itself :
-    // Fixup via "sub d0=v0,v0" :
-    Cur->Opcode = PO_SUB;
-    Cur->Parameters[0].Type = PARAM_V;
-    Cur->Parameters[0].Address = 0;
-    Cur->Parameters[0].Modifiers = 0;
-    Cur->Parameters[1] = Cur->Parameters[0];
-    DbgPrintf(LOG_PREFIX, "; Changed MOV 0 into a SUB v0,v0\n");
+    // Attempt to find a constant with the value 0, and use that if present.
+      if (m_PSVersion < D3DPS_VERSION(1, 4) || !Cur->Parameters[0].SetScaleConstRegister(0.0f, Recompiled))
+      {
+          // Simulate 0 by subtracting a (guaranteed) register from itself :
+          // Fixup via "sub d0=v0,v0" :
+          Cur->Opcode = PO_SUB;
+          Cur->Parameters[0].Type = PARAM_V;
+          Cur->Parameters[0].Address = 0;
+          Cur->Parameters[0].Modifiers = 0;
+          Cur->Parameters[1] = Cur->Parameters[0];
+          DbgPrintf(LOG_PREFIX, "; Changed MOV 0 into a SUB v0,v0\n");
+      }
+      else
+      {
+          DbgPrintf(LOG_PREFIX, "; Changed MOV 0 into a MOV c0\n");
+      }
+
     return true;
   }
 
@@ -3569,34 +5031,41 @@ bool PSH_XBOX_SHADER::SimplifyMOV(PPSH_INTERMEDIATE_FORMAT Cur)
     // TODO : If there's a constant equal to GetConstValue(), use that.
     Factor = Cur->Parameters[0].GetConstValue();
 
-    // Fixup via a SUB (which can calculate a constant value) :
-    Cur->Opcode = PO_SUB;
-    Cur->Parameters[0].Type = PARAM_V;
-    Cur->Parameters[0].Address = 0;
-
-    if (Factor < 0.0)
+    if (m_PSVersion < D3DPS_VERSION(1,4) || !Cur->Parameters[0].SetScaleConstRegister(Factor, Recompiled))
     {
-      // Simulate -1 by calculating it via a (guaranteed) register :
-      // We follow this : (-v0) - (1-v0) = -v0 - 1 + v0 = -1
-      Cur->Parameters[0].Modifiers = (1 << ARGMOD_NEGATE);
-      Cur->Parameters[1] = Cur->Parameters[0];
-      Cur->Parameters[1].Modifiers = (1 << ARGMOD_INVERT);
-      // Go on with a positive factor, to ease the scaling :
-      Factor = -Factor;
+        // Fixup via a SUB (which can calculate a constant value) :
+        Cur->Opcode = PO_SUB;
+        Cur->Parameters[0].Type = PARAM_V;
+        Cur->Parameters[0].Address = 0;
+
+        if (Factor < 0.0)
+        {
+            // Simulate -1 by calculating it via a (guaranteed) register :
+            // We follow this : (-v0) - (1-v0) = -v0 - 1 + v0 = -1
+            Cur->Parameters[0].Modifiers = (1 << ARGMOD_NEGATE);
+            Cur->Parameters[1] = Cur->Parameters[0];
+            Cur->Parameters[1].Modifiers = (1 << ARGMOD_INVERT);
+            // Go on with a positive factor, to ease the scaling :
+            Factor = -Factor;
+        }
+        else
+        {
+            // Simulate 1 by calculating it via a (guaranteed) register :
+            // We follow this : (1-v0) - (-v0) = (1-v0) + v0 = 1
+            Cur->Parameters[0].Modifiers = (1 << ARGMOD_INVERT);
+            Cur->Parameters[1] = Cur->Parameters[0];
+            Cur->Parameters[1].Modifiers = (1 << ARGMOD_NEGATE);
+        }
+
+        // Try to simulate all factors (0.5, 1.0 and 2.0) using an output modifier :
+        Cur->ScaleOutput(Factor);
+
+        DbgPrintf(LOG_PREFIX, "; Changed MOV {const} into a SUB_factor 1-v0,-v0\n");
     }
     else
     {
-      // Simulate 1 by calculating it via a (guaranteed) register :
-      // We follow this : (1-v0) - (-v0) = (1-v0) + v0 = 1
-      Cur->Parameters[0].Modifiers = (1 << ARGMOD_INVERT);
-      Cur->Parameters[1] = Cur->Parameters[0];
-      Cur->Parameters[1].Modifiers = (1 << ARGMOD_NEGATE);
+        DbgPrintf(LOG_PREFIX, "; Changed MOV {const} into a MOV c#\n");
     }
-
-    // Try to simulate all factors (0.5, 1.0 and 2.0) using an output modifier :
-    Cur->ScaleOutput(Factor);
-
-	DbgPrintf(LOG_PREFIX, "; Changed MOV {const} into a SUB_factor 1-v0,-v0\n");
 	return true;
   }
   return false;
@@ -3615,16 +5084,26 @@ bool PSH_XBOX_SHADER::SimplifyADD(PPSH_INTERMEDIATE_FORMAT Cur)
   return false;
 }
 
-bool PSH_XBOX_SHADER::SimplifyMAD(PPSH_INTERMEDIATE_FORMAT Cur)
+bool PSH_XBOX_SHADER::SimplifyMAD(PPSH_INTERMEDIATE_FORMAT Cur, int index)
 {
-  // Is this s0*0+s2 ?
-  if (Cur->Parameters[1].GetConstValue() == 0.0)
+  // Is this 0*s1+s2 or s0*0+s2 ?
+  if (Cur->Parameters[0].GetConstValue() == 0.0
+      || Cur->Parameters[1].GetConstValue() == 0.0)
   {
     // Change it into s2 :
     Cur->Opcode = PO_MOV;
     Cur->Parameters[0] = Cur->Parameters[2];
     DbgPrintf(LOG_PREFIX, "; Changed MAD s0,0 into a MOV s0\n");
     return true;
+  }
+
+  // Is this s0*s1+0 ?
+  if (Cur->Parameters[2].GetConstValue() == 0.0)
+  {
+      // Change it into s0*s1 :
+      Cur->Opcode = PO_MUL;
+      DbgPrintf(LOG_PREFIX, "; Changed MAD s0, s1,0 into a MUL s0, s1\n");
+      return true;
   }
 
   // Is this s0*1+s2 ?
@@ -3646,6 +5125,56 @@ bool PSH_XBOX_SHADER::SimplifyMAD(PPSH_INTERMEDIATE_FORMAT Cur)
     Cur->Parameters[0] = Cur->Parameters[2];
     DbgPrintf(LOG_PREFIX, "; Changed MAD s0,-1,s2 into a SUB s2,s0\n");
     return true;
+  }
+
+  PSH_INTERMEDIATE_FORMAT Ins = {};
+
+  // Is this 0.5*s1+s2 ?
+  if (Cur->Parameters[0].GetConstValue() == 0.5f && Cur->Parameters[1].UsesRegister())
+  {
+      if (m_PSVersion < D3DPS_VERSION(1, 4) || !Cur->Parameters[0].SetScaleConstRegister(0.5f, Recompiled))
+      {
+          // Change it into s2 :
+          Cur->Opcode = PO_ADD;
+          Cur->Parameters[0] = Cur->Parameters[1];
+          Cur->Parameters[1] = Cur->Parameters[2];
+
+          Ins.Initialize(PO_MOV);
+          Ins.Modifier = INSMOD_D2;
+          Ins.Output[0] = Ins.Parameters[0] = Cur->Parameters[1];
+          Ins.CommentString = "; Inserted to perform division by 2";
+          InsertIntermediate(&Ins, index);
+          DbgPrintf(LOG_PREFIX, "; Changed MAD 0.5,s1,s2 into a MOV_d2 s1, s1 ADD s1, s2\n");
+      }
+      else
+      {
+          DbgPrintf(LOG_PREFIX, "; Changed MAD 0.5,s1,s2 into a MAD c#,s1,s2\n");
+      }
+      return true;
+  }
+
+  // Is this s0*0.5+s2 ?
+  if (Cur->Parameters[1].GetConstValue() == 0.5f && Cur->Parameters[0].UsesRegister())
+  {
+      if (m_PSVersion < D3DPS_VERSION(1, 4) || !Cur->Parameters[1].SetScaleConstRegister(0.5f, Recompiled))
+      {
+          // Change it into s2 :
+          Cur->Opcode = PO_ADD;
+          Cur->Parameters[0] = Cur->Parameters[0];
+          Cur->Parameters[1] = Cur->Parameters[2];
+
+          Ins.Initialize(PO_MOV);
+          Ins.Modifier = INSMOD_D2;
+          Ins.Output[0] = Ins.Parameters[0] = Cur->Parameters[0];
+          Ins.CommentString = "; Inserted to perform division by 2";
+          InsertIntermediate(&Ins, index);
+          DbgPrintf(LOG_PREFIX, "; Changed MAD s0,0.5,s2 into a MOV_d2 s0, s0 ADD s0, s2\n");
+      }
+      else
+      {
+          DbgPrintf(LOG_PREFIX, "; Changed MAD s0,0.5,s2 into a MAD s0,c#,s2\n");
+      }
+      return true;
   }
   return false;
 }
@@ -3687,7 +5216,7 @@ bool PSH_XBOX_SHADER::SimplifyMUL(PPSH_INTERMEDIATE_FORMAT Cur)
   return false;
 } // SimplifyMUL
 
-bool  PSH_XBOX_SHADER::SimplifyLRP(PPSH_INTERMEDIATE_FORMAT Cur)
+bool  PSH_XBOX_SHADER::SimplifyLRP(PPSH_INTERMEDIATE_FORMAT Cur, int index)
 {
   // LRP calculates : d0=s0*s1+(1-s0)*s2 which can also be read as : d0=s0*(s1-s2)+s2
 
@@ -3721,8 +5250,72 @@ bool  PSH_XBOX_SHADER::SimplifyLRP(PPSH_INTERMEDIATE_FORMAT Cur)
     DbgPrintf(LOG_PREFIX, "; Changed LRP s0,s1,1 into a MAD s0,s1,1-s0\n");
 	return true;
   }
+
+  // Is it d0=s0*(1-s2)+s2 ?
+  if (Cur->Parameters[1].GetConstValue() == 1.0)
+  {
+      // Change it into a d0=s0*(1-s2)+s2
+      Cur->Opcode = PO_MAD;
+      Cur->Parameters[1] = Cur->Parameters[2];
+      Cur->Parameters[1].Invert();
+      DbgPrintf(LOG_PREFIX, "; Changed LRP s0,1,s2 into a MAD s0,1-s2,s2\n");
+      return true;
+  }
+
+  int output = NextFreeRegisterFromIndexUntil(index, PARAM_R, index, 0, Cur->Output[0].Address);
+
+  if (output >= 0)
+  {
+      bool insert = false;
+      for (int p = 0; p < PSH_OPCODE_DEFS[Cur->Opcode]._In; ++p)
+      {
+          if (Cur->Output[0].Type == Cur->Parameters[p].Type
+              && Cur->Output[0].Address == Cur->Parameters[p].Address)
+          {
+              insert = true;
+              Cur->Parameters[p].Address = output;
+          }
+      }
+      if (insert)
+      {
+          PSH_INTERMEDIATE_FORMAT Ins = {};
+
+          Ins.Initialize(PO_MOV);
+          Ins.Output[0].SetRegister(PARAM_R, output, 0);
+          Ins.Parameters[0].SetRegister(Cur->Output[0].Type, Cur->Output[0].Address, 0);
+          Ins.CommentString = "; Inserted to avoid LRP parameters referencing the output register";
+          InsertIntermediate(&Ins, index);
+          DbgPrintf(LOG_PREFIX, "; Changed LRP s0,1,s2 into a MAD s0,1-s2,s2\n");
+          return true;
+      }
+  }
+
   return false;
 } // SimplifyLRP
+
+bool PSH_XBOX_SHADER::FixupCND(PPSH_INTERMEDIATE_FORMAT Cur, int index)
+{
+    if (m_PSVersion < D3DPS_VERSION(2, 0))
+        return false;
+
+    PSH_INTERMEDIATE_FORMAT Ins = {};
+
+    // TODO: Look into using predicate register
+    Cur->Opcode = PO_CMP;
+
+    int output = NextFreeRegisterFromIndexUntil(index, PARAM_R, index);
+    Ins.Initialize(PO_SUB);
+    Ins.Output[0].SetRegister(PARAM_R, output, Cur->Parameters[0].Mask);
+    Ins.Parameters[0] = Cur->Parameters[0];
+    Ins.Parameters[1].SetScaleConstRegister(0.5f, Recompiled);
+    Cur->Parameters[0] = Ins.Output[0];
+    Cur->Parameters[0].Modifiers = (1 << ARGMOD_NEGATE);
+    std::swap(Cur->Parameters[1], Cur->Parameters[2]);
+    Ins.CommentString = Cur->CommentString = "; Changed CND into SUB CMP";
+    InsertIntermediate(&Ins, index);
+    DbgPrintf(LOG_PREFIX, "; Changed CND into SUB CMP\n");
+    return true;
+}
 
 bool PSH_XBOX_SHADER::FixupPixelShader()
 {
@@ -3740,17 +5333,14 @@ bool PSH_XBOX_SHADER::FixupPixelShader()
   // TODO : Complete to port to D3D9 to support all 18 constants (including C8..C15 + FC0+FC1)
 
   if (CombineInstructions())
-      Result = true;
+    Result = true;
 
   if (MoveRemovableParametersRight())
     Result = true;
 
-  if (FixConstantModifiers())
-	  Result = true;
-
   // Simplify instructions, which can help to compress the result :
   i = IntermediateCount;
-  while (i > 0)
+  while (i > StartPos)
   {
     --i;
     Cur = &(Intermediate[i]);
@@ -3767,7 +5357,7 @@ bool PSH_XBOX_SHADER::FixupPixelShader()
 		break;
 
 	  case PO_MAD:
-        if (SimplifyMAD(Cur))
+        if (SimplifyMAD(Cur, i))
           Result = true;
 		break;
 
@@ -3782,7 +5372,12 @@ bool PSH_XBOX_SHADER::FixupPixelShader()
 		break;
 
       case PO_LRP:
-        if (SimplifyLRP(Cur))
+        if (SimplifyLRP(Cur, i))
+          Result = true;
+		break;
+
+      case PO_CND:
+        if (FixupCND(Cur, i))
           Result = true;
 		break;
 	} // case
@@ -3804,7 +5399,7 @@ bool PSH_XBOX_SHADER::FixInvalidSrcSwizzle()
   PPSH_IMD_ARGUMENT CurArg;
 
   bool Result = false;
-  for (i = 0; i < IntermediateCount; i++)
+  for (i = StartPos; i < IntermediateCount; i++)
   {
     Cur = &(Intermediate[i]);
     // Is this an arithmetic opcode?
@@ -3841,8 +5436,8 @@ bool PSH_XBOX_SHADER::FixMissingR0a()
   for (i = 0; i < IntermediateCount; i++)
   {
     Cur = &(Intermediate[i]);
-    if (!Cur->IsArithmetic())
-      continue;
+    if (Cur->Opcode < PO_TEX)
+        continue;
 
     // Make sure if we insert at all, it'll be after the DEF's :
     if (R0aDefaultInsertPos < 0) 
@@ -3866,7 +5461,15 @@ bool PSH_XBOX_SHADER::FixMissingR0a()
     NewIns.Initialize(PO_MOV);
     NewIns.Output[0].SetRegister(PARAM_R, 0, MASK_A);
     NewIns.Parameters[0] = NewIns.Output[0];
-    NewIns.Parameters[0].Type = PARAM_T;
+    if (m_PSVersion != D3DPS_VERSION(1, 4))
+    {
+        NewIns.Parameters[0].Type = PARAM_T;
+    }
+    else
+    {
+        NewIns.Parameters[0].Type = PARAM_R;
+        NewIns.Parameters[0].Address += PSH_XBOX_MAX_R_REGISTER_COUNT;
+    }
     NewIns.CommentString = "Inserted r0.a default";
     InsertIntermediate(&NewIns, R0aDefaultInsertPos);
     return true;
@@ -3888,8 +5491,8 @@ bool PSH_XBOX_SHADER::FixMissingR1a()
 	for (i = 0; i < IntermediateCount; i++)
 	{
 		Cur = &(Intermediate[i]);
-		if (!Cur->IsArithmetic())
-			continue;
+        if (Cur->Opcode < PO_TEX)
+            continue;
 
 		// First, check if r1.a is read by this opcode :
 		if (Cur->ReadsFromRegister(PARAM_R, 1, MASK_A))
@@ -3913,7 +5516,15 @@ bool PSH_XBOX_SHADER::FixMissingR1a()
 		NewIns.Initialize(PO_MOV);
 		NewIns.Output[0].SetRegister(PARAM_R, 1, MASK_A);
 		NewIns.Parameters[0] = NewIns.Output[0];
-		NewIns.Parameters[0].Type = PARAM_T;
+        if (m_PSVersion != D3DPS_VERSION(1, 4))
+        {
+            NewIns.Parameters[0].Type = PARAM_T;
+        }
+        else
+        {
+            NewIns.Parameters[0].Type = PARAM_R;
+            NewIns.Parameters[0].Address += PSH_XBOX_MAX_R_REGISTER_COUNT;
+        }
 		NewIns.CommentString = "Inserted r1.a default";
 		InsertIntermediate(&NewIns, R1aDefaultInsertPos);
 		return true;
@@ -3921,6 +5532,119 @@ bool PSH_XBOX_SHADER::FixMissingR1a()
 
 	return false;
 } // FixMissingR1a
+
+bool PSH_XBOX_SHADER::FixUninitializedReads()
+// On the Xbox, the alpha portion of the R1 register is initialized to
+// the alpha component of texture 1 if texturing is enabled for texture 1 :
+{
+    int R1aDefaultInsertPos;
+    int i;
+    PPSH_INTERMEDIATE_FORMAT Cur;
+    PSH_INTERMEDIATE_FORMAT NewIns = {};
+    bool Result = false;
+
+    if (m_PSVersion < D3DPS_VERSION(1, 4))
+        return false;
+
+    int readPositions[32][4] = {};
+    int writePositions[32][4] = {};
+    int initPositions[32] = {};
+    int initMasks[32] = {};
+
+    // Detect a read of r1.a without a write, as we need to insert a "MOV r1.a, t1.a" as default (like the xbox has) :
+    R1aDefaultInsertPos = -1;
+    for (i = 0; i < IntermediateCount; i++)
+    {
+        Cur = &(Intermediate[i]);
+
+        for (int j = 0; j < MaxRegisterCount(PARAM_R); ++j)
+        {
+            // check reads
+            if (readPositions[j][0] == 0 && Cur->ReadsFromRegister(PARAM_R, j, MASK_R))
+            {
+                readPositions[j][0] = i;
+            }
+            if (readPositions[j][1] == 0 && Cur->ReadsFromRegister(PARAM_R, j, MASK_G))
+            {
+                readPositions[j][1] = i;
+            }
+            if (readPositions[j][2] == 0 && Cur->ReadsFromRegister(PARAM_R, j, MASK_B))
+            {
+                readPositions[j][2] = i;
+            }
+            if (readPositions[j][3] == 0 && Cur->ReadsFromRegister(PARAM_R, j, MASK_A))
+            {
+                readPositions[j][3] = i;
+            }
+
+            // check writes
+            if (writePositions[j][0] == 0 && Cur->WritesToRegister(PARAM_R, j, MASK_R))
+            {
+                writePositions[j][0] = i;
+            }
+            if (writePositions[j][1] == 0 && Cur->WritesToRegister(PARAM_R, j, MASK_G))
+            {
+                writePositions[j][1] = i;
+            }
+            if (writePositions[j][2] == 0 && Cur->WritesToRegister(PARAM_R, j, MASK_B))
+            {
+                writePositions[j][2] = i;
+            }
+            if (writePositions[j][3] == 0 && Cur->WritesToRegister(PARAM_R, j, MASK_A))
+            {
+                writePositions[j][3] = i;
+            }
+        }
+    }
+
+    for (int j = 0; j < MaxRegisterCount(PARAM_R); ++j)
+    {
+        int mask = 0;
+        int pos = IntermediateCount;
+        for (int i = 0; i < 4; ++i)
+        {
+            if (readPositions[j][i] <= writePositions[j][i] && readPositions[j][i] != 0)
+            {
+                mask |= (1 << i);
+                pos = std::min(pos, readPositions[j][i]);
+            }
+        }
+
+        initPositions[j] = pos;
+        initMasks[j] = mask;
+    }
+
+    NewIns.Initialize(PO_MOV);
+    NewIns.CommentString = "; Inserted to initialize register";
+    for (int j = 0; j < MaxRegisterCount(PARAM_R); ++j)
+    {
+        int mask = initMasks[j];
+        if (mask)
+        {
+            // Insert a new opcode : MOV r#.???, c0.???
+            NewIns.Output[0].SetRegister(PARAM_R, j, mask);
+            NewIns.Parameters[0].SetScaleConstRegister(0.0f, Recompiled);
+            // r0 and r1 take their alpha from the repsective texture coordinate
+            if (j < PSH_XBOX_MAX_R_REGISTER_COUNT)
+            {
+                if (m_PSVersion == D3DPS_VERSION(1, 4))
+                {
+                    mask = MASK_A;
+                    NewIns.Parameters[0].SetScaleConstRegister(1.0f, Recompiled);
+                }
+                else
+                {
+                    mask &= MASK_RGB;
+                }
+            }
+
+            InsertIntermediate(&NewIns, std::min(StartPos, initPositions[j]));
+            Result = true;
+        }
+    }
+
+    return Result;
+} // FixUninitializedReads
 
 
 bool PSH_XBOX_SHADER::FixCoIssuedOpcodes()
@@ -3971,7 +5695,7 @@ bool PSH_XBOX_SHADER::FixCoIssuedOpcodes()
   // Start with Alpha, so the first opcode doesn't become a write-combined opcode (which isn't possible) :
   PrevMask = MASK_A;
   PrevOpcode = PO_COMMENT;
-  for (i = 0; i < IntermediateCount; i++)
+  for (i = StartPos; i < IntermediateCount; i++)
   {
     Cur = &(Intermediate[i]);
     // Is this an arithmetic opcode?
@@ -3980,7 +5704,7 @@ bool PSH_XBOX_SHADER::FixCoIssuedOpcodes()
       // Set IsCombined only when previous opcode doesn't write to Alpha, while this opcode writes only to Alpha :
       NewIsCombined = (PrevOpcode != PO_DP3)
                    && ((PrevMask & MASK_A) == 0)
-                   && (Cur->Output[0].Mask == MASK_A);
+                   && (Cur->Output[0].Mask == MASK_A) && m_PSVersion < D3DPS_VERSION(2, 0);
 
       if (Cur->IsCombined != NewIsCombined)
       {
@@ -3994,6 +5718,156 @@ bool PSH_XBOX_SHADER::FixCoIssuedOpcodes()
   }
   return Result;
 }
+
+bool PSH_XBOX_SHADER::FixInvalidDstRegister()
+{
+    int i, j;
+    PPSH_INTERMEDIATE_FORMAT Cur;
+    PPSH_IMD_ARGUMENT CurArg;
+
+    bool Result = false;
+    for (i = IntermediateCount - 1; i >= StartPos; --i)
+    {
+        Cur = &(Intermediate[i]);
+        // Is this an arithmetic opcode?
+        if (!Cur->IsArithmetic())
+            continue;
+
+        // Loop over the output arguments :
+        for (j = 0; j < PSH_OPCODE_DEFS[Cur->Opcode]._Out; j++)
+        {
+            CurArg = &(Cur->Output[j]);
+
+            if (IsValidNativeOutputRegister(CurArg->Type, CurArg->Address))
+                continue;
+
+            int lastUsed = RegisterIsUsedFromIndexUntil(i + 1, CurArg->Type, CurArg->Address);
+
+            PSH_ARGUMENT_TYPE dstType = PARAM_R;
+            int dstIndex = -1;
+
+            if (IsValidNativeOutputRegister(PARAM_T))
+            {
+                dstType = PARAM_T;
+                dstIndex = NextFreeRegisterFromIndexUntil(i + 1, PARAM_T, lastUsed);
+            }
+
+            if (dstIndex == -1)
+            {
+                dstType = PARAM_R;
+                dstIndex = NextFreeRegisterFromIndexUntil(i + 1, PARAM_R, lastUsed);
+            }
+
+            if (dstIndex != -1)
+            {
+                Result = true;
+
+                if (Cur->ReadsFromRegister(CurArg->Type, CurArg->Address))
+                {
+                    if (lastUsed >= 0) ++lastUsed;
+
+                    PSH_INTERMEDIATE_FORMAT Ins = {};
+
+                    Ins.Initialize(PO_MOV);
+                    Ins.Output[0].SetRegister(dstType, dstIndex, 0);
+                    Ins.Parameters[0].SetRegister(CurArg->Type, CurArg->Address, 0);
+                    InsertIntermediate(&Ins, i);
+                    ++Cur;
+                    CurArg = &(Cur->Output[j]);
+                }
+
+                ReplaceInputRegisterFromIndexOnwards(i + 1, CurArg->Type, CurArg->Address, dstType, dstIndex, lastUsed);
+
+                CurArg->Type = dstType;
+                CurArg->Address = dstIndex;
+            }
+        }
+    }
+    return Result;
+}
+
+// TODO: Refactor and optimize
+// TODO: Adjust constants for ps vesion < 2.0
+bool PSH_XBOX_SHADER::FixOverusedRegisters()
+{
+    int i;
+
+    bool Result = false;
+
+    PSH_INTERMEDIATE_FORMAT Ins = {};
+    Ins.Initialize(PO_MOV);
+
+    // For all opcodes, try to put constant and discarded arguments in the rightmost slot, to ease following analysis :
+    i = IntermediateCount;
+    while (i > StartPos)
+    {
+        --i;
+
+        int InsertPos = i;
+
+        int addressCount = 0;
+        int total = 0;
+        while (Intermediate[i].ReadsFromRegister(PARAM_C, -1, addressCount, total) && (addressCount > 1 || total > 2))
+        {
+            for (int p = 0; p < PSH_OPCODE_DEFS[Intermediate[i].Opcode]._In; ++p)
+            {
+                if (Intermediate[i].Parameters[p].Type == PARAM_C)
+                {
+                    int output = NextFreeRegisterFromIndexUntil(i, PARAM_R, i);
+
+                    Ins.Output[0].SetRegister(PARAM_R, output, 0);
+                    Ins.Parameters[0].SetRegister(Intermediate[i].Parameters[p].Type, Intermediate[i].Parameters[p].Address, 0);
+                    InsertIntermediate(&Ins, InsertPos);
+                    ++InsertPos;
+
+                    ReplaceInputRegisterFromIndexOnwards(InsertPos, Intermediate[InsertPos].Parameters[p].Type, Intermediate[InsertPos].Parameters[p].Address, PARAM_R, output, InsertPos);
+                    Result = true;
+                    break;
+                }
+            }
+        }
+
+        while (Intermediate[i].ReadsFromRegister(PARAM_V, -1, addressCount, total) && (addressCount > 1))
+        {
+            for (int p = 0; p < PSH_OPCODE_DEFS[Intermediate[i].Opcode]._In; ++p)
+            {
+                if (Intermediate[i].Parameters[p].Type == PARAM_V)
+                {
+                    int output = NextFreeRegisterFromIndexUntil(i, PARAM_R, i);
+
+                    Ins.Output[0].SetRegister(PARAM_R, output, 0);
+                    Ins.Parameters[0].SetRegister(Intermediate[i].Parameters[p].Type, Intermediate[i].Parameters[p].Address, 0);
+                    InsertIntermediate(&Ins, InsertPos);
+                    ++InsertPos;
+
+                    ReplaceInputRegisterFromIndexOnwards(InsertPos, Intermediate[InsertPos].Parameters[p].Type, Intermediate[InsertPos].Parameters[p].Address, PARAM_R, output, InsertPos);
+                    Result = true;
+                    break;
+                }
+            }
+        }
+
+        while (Intermediate[i].ReadsFromRegister(PARAM_T, -1, addressCount, total) && (addressCount > 1 || total > 1))
+        {
+            for (int p = 0; p < PSH_OPCODE_DEFS[Intermediate[i].Opcode]._In; ++p)
+            {
+                if (Intermediate[i].Parameters[p].Type == PARAM_T)
+                {
+                    int output = NextFreeRegisterFromIndexUntil(i, PARAM_R, i);
+                    Ins.Output[0].SetRegister(PARAM_R, output, 0);
+                    Ins.Parameters[0].SetRegister(Intermediate[i].Parameters[p].Type, Intermediate[i].Parameters[p].Address, 0);
+                    InsertIntermediate(&Ins, InsertPos);
+                    ++InsertPos;
+
+                    ReplaceInputRegisterFromIndexOnwards(InsertPos, Intermediate[InsertPos].Parameters[p].Type, Intermediate[InsertPos].Parameters[p].Address, PARAM_R, output, InsertPos);
+                    Result = true;
+                    break;
+                }
+            }
+        }
+    }
+    return Result;
+} // FixOverusedRegisters
 
 // TODO : FocusBlur sample needs a zero in 'cnd' opcode
 
@@ -4180,7 +6054,7 @@ void XTL_DumpPixelShaderToFile(XTL::X_D3DPIXELSHADERDEF *pPSDef)
 
 PSH_RECOMPILED_SHADER XTL_EmuRecompilePshDef(XTL::X_D3DPIXELSHADERDEF *pPSDef)
 {
-	uint32 PSVersion = D3DPS_VERSION(1, 3); // Use pixel shader model 1.3 by default
+	uint32 PSVersion = D3DPS_VERSION(2, 0); // Use pixel shader model 1.3 by default
 
 #if 0 // Once PS.1.4 can be generated, enable this :
 	extern XTL::D3DCAPS g_D3DCaps;
@@ -4361,6 +6235,24 @@ VOID XTL::DxbxUpdateActivePixelShader() // NOPATCH
       g_pD3DDevice.SetRenderState(D3DRS_FOGENABLE, BOOL_FALSE);
     }
 */
+    //PS_TEXTUREMODES psTextureModes[XTL::X_D3DTS_STAGECOUNT];
+    //PSH_XBOX_SHADER::GetPSTextureModes(pPSDef, psTextureModes);
+    //
+    //for (i = 0; i < XTL::X_D3DTS_STAGECOUNT; i++)
+    //{
+    //    switch (psTextureModes[i])
+    //    {
+    //    case PS_TEXTUREMODES_BUMPENVMAP:
+    //        g_pD3DDevice->SetTextureStageState(i, XTL::D3DTSS_COLOROP, XTL::D3DTOP_BUMPENVMAP);
+    //        break;
+    //    case PS_TEXTUREMODES_BUMPENVMAP_LUM:
+    //        g_pD3DDevice->SetTextureStageState(i, XTL::D3DTSS_COLOROP, XTL::D3DTOP_BUMPENVMAPLUMINANCE);
+    //        break;
+    //    default:
+    //        break;
+    //    }
+    //}
+
     // Set constants, not based on g_PixelShaderConstants, but based on
     // the render state slots containing the pixel shader constants,
     // as these could have been updated via SetRenderState or otherwise :
@@ -4377,23 +6269,55 @@ VOID XTL::DxbxUpdateActivePixelShader() // NOPATCH
             // Note : FOG.RGB is correct like this, but FOG.a should be coming
             // from the vertex shader (oFog) - however, D3D8 does not forward this...
 			g_pD3DDevice->GetRenderState(D3DRS_FOGCOLOR, &dwColor);
+            fColor = dwColor;
 			break;
 		  case PSH_XBOX_CONSTANT_FC0:
             //dwColor = *XTL::EmuMappedD3DRenderState[XTL::X_D3DRS_PSFINALCOMBINERCONSTANT0];
-			dwColor = TemporaryPixelShaderRenderStates[XTL::X_D3DRS_PSFINALCOMBINERCONSTANT0];
+              fColor = dwColor = TemporaryPixelShaderRenderStates[XTL::X_D3DRS_PSFINALCOMBINERCONSTANT0];
 			break;
 		  case PSH_XBOX_CONSTANT_FC1:
             //dwColor = *XTL::EmuMappedD3DRenderState[XTL::X_D3DRS_PSFINALCOMBINERCONSTANT1];
-			dwColor = TemporaryPixelShaderRenderStates[XTL::X_D3DRS_PSFINALCOMBINERCONSTANT1];
+              fColor = dwColor = TemporaryPixelShaderRenderStates[XTL::X_D3DRS_PSFINALCOMBINERCONSTANT1];
 			break;
-	    default:
+          case PSH_XBOX_CONSTANT_MUL0:
+          case PSH_XBOX_CONSTANT_MUL1:
+              continue;
+          case PSH_XBOX_CONSTANT_BEM + 0:
+          case PSH_XBOX_CONSTANT_BEM + 1:
+          case PSH_XBOX_CONSTANT_BEM + 2:
+          case PSH_XBOX_CONSTANT_BEM + 3:
+          {
+              int stage = i - PSH_XBOX_CONSTANT_BEM;
+              DWORD* value = (DWORD*)&fColor;
+
+              g_pD3DDevice->GetTextureStageState(stage, D3DTSS_BUMPENVMAT00, &value[0]);
+              g_pD3DDevice->GetTextureStageState(stage, D3DTSS_BUMPENVMAT01, &value[1]);
+              g_pD3DDevice->GetTextureStageState(stage, D3DTSS_BUMPENVMAT11, &value[2]);
+              g_pD3DDevice->GetTextureStageState(stage, D3DTSS_BUMPENVMAT10, &value[3]);
+              break;
+          }
+          case PSH_XBOX_CONSTANT_LUM + 0:
+          case PSH_XBOX_CONSTANT_LUM + 1:
+          case PSH_XBOX_CONSTANT_LUM + 2:
+          case PSH_XBOX_CONSTANT_LUM + 3:
+          {
+              int stage = i - PSH_XBOX_CONSTANT_LUM;
+              DWORD* value = (DWORD*)&fColor;
+
+              g_pD3DDevice->GetTextureStageState(stage, D3DTSS_BUMPENVLSCALE, &value[0]);
+              g_pD3DDevice->GetTextureStageState(stage, D3DTSS_BUMPENVLOFFSET, &value[1]);
+              value[2] = 0;
+              value[3] = 0;
+              break;
+          }
+          default:
             //dwColor = *XTL::EmuMappedD3DRenderState[XTL::X_D3DRS_PSCONSTANT0_0 + i];
-			dwColor = TemporaryPixelShaderRenderStates[XTL::X_D3DRS_PSCONSTANT0_0 + i];
+              fColor = dwColor = TemporaryPixelShaderRenderStates[XTL::X_D3DRS_PSCONSTANT0_0 + i];
 			break;
         }
 
         // Convert it back to 4 floats  :
-        fColor = dwColor;
+        //fColor = dwColor;
         // Read the register we can use on PC :
         Register_ = RecompiledPixelShader->ConstMapping[i];
         // TODO : Avoid the following setter if it's no different from the previous update (this might speed things up)
