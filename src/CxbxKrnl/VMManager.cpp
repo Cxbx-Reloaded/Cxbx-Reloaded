@@ -45,6 +45,8 @@
 #include "PoolManager.h"
 #include "Logging.h"
 #include "EmuShared.h"
+#include "EmuKrnlFs.h"
+#include "EmuKrnl.h"
 #include <assert.h>
 
 
@@ -157,6 +159,11 @@ void VMManager::Initialize(HANDLE memory_view, HANDLE pagetables_view, int BootF
 	// Reserve the xbe image memory. Doing this now allows us to avoid calling XbAllocateVirtualMemory later
 	ConstructVMA(XBE_IMAGE_BASE, ROUND_UP_4K(CxbxKrnl_Xbe->m_Header.dwSizeofImage), UserRegion, ReservedVma, false, XBOX_PAGE_READWRITE);
 	m_VirtualMemoryBytesReserved += ROUND_UP_4K(CxbxKrnl_Xbe->m_Header.dwSizeofImage);
+
+	// Allocate the default 64 KiB of system file cache memory and setup the locks
+	g_FscSetCacheSizeEvent = CreateEventA(nullptr, FALSE, TRUE, nullptr);
+	g_FscWaitingForElementEvent = CreateEventA(nullptr, FALSE, FALSE, nullptr);
+	xboxkrnl::FscSetCacheSize(DEFAULT_CACHE_PAGE_NUMBER);
 
 	if (m_MmLayoutChihiro) {
 		printf("Page table for Chihiro arcade initialized!\n");
@@ -975,6 +982,71 @@ VAddr VMManager::AllocateSystemMemory(PageType BusyType, DWORD Perms, size_t Siz
 	RETURN(NULL);
 }
 
+xboxkrnl::NTSTATUS VMManager::AllocateFileCacheMemory(PFN_COUNT NumberOfCachePages)
+{
+	LOG_FUNC_ONE_ARG(NumberOfCachePages);
+
+	xboxkrnl::PFSCACHE_ELEMENT NewElementArray;
+	PCHAR CacheBuffer;
+	ULONG Index;
+	PFN PageFrameNumber;
+	PXBOX_PFN PageFrame;
+
+	Lock();
+
+	assert(NumberOfCachePages > g_FscNumberOfCachePages);
+
+	NewElementArray = (xboxkrnl::PFSCACHE_ELEMENT)g_PoolManager.AllocatePool(sizeof(xboxkrnl::FSCACHE_ELEMENT) * NumberOfCachePages, 'AcsF');
+
+	if (NewElementArray == xbnullptr) {
+		Unlock();
+		return STATUS_INSUFFICIENT_RESOURCES;
+	}
+
+	CacheBuffer = (PCHAR)AllocateSystemMemory(CacheType, XBOX_PAGE_READONLY, (NumberOfCachePages - g_FscNumberOfCachePages) << PAGE_SHIFT, false);
+
+	if (CacheBuffer == xbnullptr) {
+		g_PoolManager.DeallocatePool((VAddr)NewElementArray);
+		Unlock();
+		return STATUS_INSUFFICIENT_RESOURCES;
+	}
+
+	if (g_FscElementArray != nullptr) {
+		RtlCopyMemory(NewElementArray, g_FscElementArray, sizeof(xboxkrnl::FSCACHE_ELEMENT) * g_FscNumberOfCachePages);
+	}
+
+	for (Index = g_FscNumberOfCachePages; Index < NumberOfCachePages; Index++) {
+
+		NewElementArray[Index].CacheExtension = nullptr;
+		NewElementArray[Index].CacheBuffer = CacheBuffer;
+
+		PageFrameNumber = GetPteAddress(CacheBuffer)->Hardware.PFN;
+		if (m_MmLayoutRetail || m_MmLayoutDebug) {
+			PageFrame = XBOX_PFN_ELEMENT(PageFrameNumber);
+		}
+		else { PageFrame = CHIHIRO_PFN_ELEMENT(PageFrameNumber); }
+
+		assert(PageFrame->Busy.Busy != 0);
+		assert(PageFrame->Busy.BusyType == CacheType);
+
+		PageFrame->FsCache.ElementIndex = Index;
+
+		CacheBuffer += PAGE_SIZE;
+	}
+
+	if (g_FscElementArray != nullptr) {
+		g_PoolManager.DeallocatePool((VAddr)g_FscElementArray);
+	}
+
+	g_FscElementArray = NewElementArray;
+	g_FscNumberOfCachePages = NumberOfCachePages;
+
+	xboxkrnl::FscBuildElementLruList();
+
+	Unlock();
+	return STATUS_SUCCESS;
+}
+
 VAddr VMManager::AllocateContiguous(size_t Size, PAddr LowestAddress, PAddr HighestAddress, ULONG Alignment, DWORD Perms)
 {
 	LOG_FUNC_BEGIN
@@ -1212,6 +1284,7 @@ void VMManager::DeallocateContiguous(VAddr addr)
 PFN_COUNT VMManager::DeallocateSystemMemory(PageType BusyType, VAddr addr, size_t Size)
 {
 	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(BusyType)
 		LOG_FUNC_ARG(addr)
 		LOG_FUNC_ARG(Size)
 	LOG_FUNC_END;
@@ -1287,6 +1360,112 @@ PFN_COUNT VMManager::DeallocateSystemMemory(PageType BusyType, VAddr addr, size_
 
 	Unlock();
 	RETURN(bGuardPageAdded ? ++PteNumber : PteNumber);
+}
+
+xboxkrnl::NTSTATUS VMManager::DeallocateFileCacheMemory(PFN_COUNT NumberOfCachePages)
+{
+	LOG_FUNC_ONE_ARG(NumberOfCachePages);
+
+	xboxkrnl::PFSCACHE_ELEMENT NewElementArray;
+	ULONG PagesToRelease;
+	ULONG Index;
+	xboxkrnl::PFSCACHE_ELEMENT Element;
+	ULONG NewIndex;
+	PFN PageFrameNumber;
+	PXBOX_PFN PageFrame;
+
+	Lock();
+
+	assert(NumberOfCachePages < g_FscNumberOfCachePages);
+
+	if (NumberOfCachePages != 0) {
+
+		NewElementArray = (xboxkrnl::PFSCACHE_ELEMENT)g_PoolManager.AllocatePool(sizeof(xboxkrnl::FSCACHE_ELEMENT) * NumberOfCachePages, 'AcsF');
+
+		if (NewElementArray == xbnullptr) {
+			return STATUS_INSUFFICIENT_RESOURCES;
+		}
+	}
+	else {
+		NewElementArray = xbnullptr;
+	}
+
+	PagesToRelease = g_FscNumberOfCachePages - NumberOfCachePages;
+
+	ReleaseMoreElements:
+	for (Index = g_FscNumberOfCachePages; Index > 0; Index--) {
+		Element = &g_FscElementArray[Index - 1];
+
+		if (Element->UsageCount == 0 && !Element->DeletePending) {
+			Element->DeletePending = TRUE;
+			Element->CacheExtension = nullptr;
+
+			RemoveEntryList(&Element->ListEntry);
+			InitializeListHead(&Element->ListEntry);
+
+			PagesToRelease--;
+
+			if (PagesToRelease == 0) {
+				break;
+			}
+		}
+	}
+
+	// ergo720: this has the potential to lead to deadlocks if the above loop doesn't remove all the requested elements.
+	// However, UsageCount and DeletePending are always seen as zero and FALSE and so the loop will always remove all the elements.
+	// This is because they are changed by the other internal Fsc functions, which are not implemented yet.
+	// Test case: Dashboard, RalliSport Challenge.
+
+	if (PagesToRelease != 0) {
+		Unlock();
+		//KeWaitForSingleObject(&g_FscWaitingForElementEvent, Executive, KernelMode, FALSE, NULL);
+		WaitForSingleObject(g_FscWaitingForElementEvent, INFINITE);
+
+		Lock();
+		goto ReleaseMoreElements;
+	}
+
+	NewIndex = 0;
+
+	for (Index = 0; Index < g_FscNumberOfCachePages; Index++) {
+
+		Element = &g_FscElementArray[Index];
+
+		if (Element->DeletePending) {
+			DeallocateSystemMemory(CacheType, ROUND_DOWN_4K((VAddr)Element->CacheBuffer), PAGE_SIZE);
+		}
+		else {
+			NewElementArray[NewIndex] = *Element;
+			PageFrameNumber = GetPteAddress(Element->CacheBuffer)->Hardware.PFN;
+			if (m_MmLayoutRetail || m_MmLayoutDebug) {
+				PageFrame = XBOX_PFN_ELEMENT(PageFrameNumber);
+			}
+			else { PageFrame = CHIHIRO_PFN_ELEMENT(PageFrameNumber); }
+
+			assert(PageFrame->Busy.Busy != 0);
+			assert(PageFrame->Busy.BusyType == CacheType);
+
+			PageFrame->FsCache.ElementIndex = NewIndex;
+
+			NewIndex++;
+		}
+	}
+
+	assert(NewIndex == NumberOfCachePages);
+
+	g_PoolManager.DeallocatePool((VAddr)g_FscElementArray);
+
+	g_FscElementArray = NewElementArray;
+	g_FscNumberOfCachePages = NumberOfCachePages;
+
+	xboxkrnl::FscBuildElementLruList();
+
+	//while (!IsListEmpty(&g_FscWaitingForElementEvent.Header.WaitListHead)) {
+	//	//KeSetEvent(&g_FscWaitingForElementEvent, 0, FALSE);
+	//}
+
+	Unlock();
+	return STATUS_SUCCESS;
 }
 
 void VMManager::UnmapDeviceMemory(VAddr addr, size_t Size)

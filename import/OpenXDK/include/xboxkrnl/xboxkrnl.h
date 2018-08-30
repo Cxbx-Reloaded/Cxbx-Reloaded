@@ -2663,6 +2663,32 @@ typedef struct _IO_COMPLETION_BASIC_INFORMATION {
 	LONG Depth;
 } IO_COMPLETION_BASIC_INFORMATION, *PIO_COMPLETION_BASIC_INFORMATION;
 
+
+// This structure contains per device data as required by the system cache manager
+typedef struct _FSCACHE_EXTENSION {
+	PDEVICE_OBJECT TargetDeviceObject;
+	LARGE_INTEGER PartitionLength;
+	ULONG SectorSize;
+} FSCACHE_EXTENSION, *PFSCACHE_EXTENSION;
+
+// System cache entry structure
+typedef struct _FSCACHE_ELEMENT {
+	ULONG BlockNumber;
+	PFSCACHE_EXTENSION CacheExtension;
+	union {
+		struct {
+			ULONG UsageCount : 8;
+			ULONG ReadInProgress : 1;
+			ULONG ReadWaiters : 1;
+			ULONG DeletePending : 1;
+			ULONG Reserved : 1;
+			ULONG CacheBufferBits : 20;
+		};
+		PCHAR CacheBuffer;
+	};
+	LIST_ENTRY ListEntry;
+} FSCACHE_ELEMENT, *PFSCACHE_ELEMENT;
+
 // ******************************************************************
 // * Debug
 // ******************************************************************

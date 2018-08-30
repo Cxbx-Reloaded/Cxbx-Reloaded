@@ -30,6 +30,7 @@
 // *
 // *  (c) 2002-2003 Aaron Robinson <caustik@caustik.com>
 // *  (c) 2016 Patrick van Logchem <pvanlogchem@gmail.com>
+// *  (c) 2018 ergo720
 // *
 // *  All rights reserved
 // *
@@ -54,11 +55,24 @@ namespace NtDll
 };
 
 #include "Emu.h" // For EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, )
+#include "VMManager.h"
+#include "EmuKrnlFs.h"
+#include "EmuKrnl.h"
 
 #define FSCACHE_MAXIMUM_NUMBER_OF_CACHE_PAGES 2048
 
-// global variables
-xboxkrnl::LONG g_FscNumberOfCachePages = 16; // 16 = default number of file system cache pages
+// Synchronization event for FscSetCacheSize.
+HANDLE g_FscSetCacheSizeEvent;
+// Synchronization event for when the number of free cache elements is not zero.
+HANDLE g_FscWaitingForElementEvent;
+
+// default number of file system cache pages
+xboxkrnl::ULONG g_FscNumberOfCachePages;
+// array of the system cache elements
+xboxkrnl::PFSCACHE_ELEMENT g_FscElementArray;
+// doubly linked list of cache elements ordered with the policy LRU (least recently used)
+xboxkrnl::LIST_ENTRY g_FscLruList;
+
 
 // ******************************************************************
 // * 0x0023 - FscGetCacheSize()
@@ -77,7 +91,36 @@ XBSYSAPI EXPORTNUM(36) xboxkrnl::VOID NTAPI xboxkrnl::FscInvalidateIdleBlocks()
 {
 	LOG_FUNC();
 
-	LOG_UNIMPLEMENTED();
+	PLIST_ENTRY NextListEntry;
+	PFSCACHE_ELEMENT Element;
+
+	g_VMManager.Lock();
+
+	NextListEntry = g_FscLruList.Blink;
+
+	while (NextListEntry != &g_FscLruList) {
+		Element = CONTAINING_RECORD(NextListEntry, FSCACHE_ELEMENT, ListEntry);
+		NextListEntry = Element->ListEntry.Blink;
+
+		if (Element->CacheExtension == nullptr) {
+			break;
+		}
+
+		if (Element->UsageCount == 0) {
+			assert(!Element->DeletePending);
+
+			Element->CacheExtension = nullptr;
+
+			RemoveEntryList(&Element->ListEntry);
+			InsertHeadList(&g_FscLruList, &Element->ListEntry);
+
+			//if (!IsListEmpty(&g_FscWaitingForElementEvent.Header.WaitListHead)) {
+			//	KeSetEvent(&g_FscWaitingForElementEvent, 0, FALSE);
+			//}
+		}
+	}
+
+	g_VMManager.Unlock();
 }
 
 // ******************************************************************
@@ -90,18 +133,53 @@ XBSYSAPI EXPORTNUM(37) xboxkrnl::NTSTATUS NTAPI xboxkrnl::FscSetCacheSize
 {
 	LOG_FUNC_ONE_ARG(NumberOfCachePages);
 
-	NTSTATUS ret = STATUS_SUCCESS;
+	xboxkrnl::NTSTATUS status;
 
-	if (NumberOfCachePages > FSCACHE_MAXIMUM_NUMBER_OF_CACHE_PAGES)
-		ret = STATUS_INVALID_PARAMETER;
-	else
-	{
-		// TODO : Actually allocate file system cache pages, for example do something like this :
-		// if (NumberOfCachePages < g_FscNumberOfCachePages) FscShrinkCacheSize(NumberOfCachePages)
-		// if (NumberOfCachePages > g_FscNumberOfCachePages) FscGrowCacheSize(NumberOfCachePages), possibly return STATUS_INSUFFICIENT_RESOURCES
-		g_FscNumberOfCachePages = NumberOfCachePages;
+	//KeWaitForSingleObject(&g_FscSetCacheSizeEvent, Executive, KernelMode, FALSE, NULL);
+	WaitForSingleObject(g_FscSetCacheSizeEvent, INFINITE);
+
+	if (NumberOfCachePages > FSCACHE_MAXIMUM_NUMBER_OF_CACHE_PAGES) {
+		status = STATUS_INVALID_PARAMETER;
+	}
+	else if (NumberOfCachePages > g_FscNumberOfCachePages) {
+		status = g_VMManager.AllocateFileCacheMemory(NumberOfCachePages);
+	}
+	else if (NumberOfCachePages < g_FscNumberOfCachePages) {
+		status = g_VMManager.DeallocateFileCacheMemory(NumberOfCachePages);
+	}
+	else {
+		status = STATUS_SUCCESS;
 	}
 
-	RETURN(ret);
+	//KeSetEvent(&g_FscSetCacheSizeEvent, 0, FALSE);
+	SetEvent(g_FscSetCacheSizeEvent);
+
+	RETURN(status);
 }
 
+// ******************************************************************
+// * The following are internal Fsc functions not exported by the kernel
+// ******************************************************************
+
+xboxkrnl::VOID xboxkrnl::FscBuildElementLruList()
+{
+	LOG_FUNC();
+
+	PFSCACHE_ELEMENT ElementArray;
+	ULONG NumberOfCachePages;
+	ULONG Index;
+
+	InitializeListHead(&g_FscLruList);
+
+	ElementArray = g_FscElementArray;
+	NumberOfCachePages = g_FscNumberOfCachePages;
+
+	for (Index = 0; Index < NumberOfCachePages; Index++) {
+		if (ElementArray[Index].CacheExtension == nullptr) {
+			InsertHeadList(&g_FscLruList, &ElementArray[Index].ListEntry);
+		}
+		else {
+			InsertTailList(&g_FscLruList, &ElementArray[Index].ListEntry);
+		}
+	}
+}

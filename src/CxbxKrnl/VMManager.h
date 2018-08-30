@@ -127,12 +127,16 @@ class VMManager : public PhysicalMemory
 		VAddr AllocateZeroed(size_t size);
 		// allocates memory in the system region
 		VAddr AllocateSystemMemory(PageType BusyType, DWORD Perms, size_t Size, bool bAddGuardPage);
+		// allocates memory for the system file cache
+		xboxkrnl::NTSTATUS AllocateFileCacheMemory(PFN_COUNT NumberOfCachePages);
 		// allocates memory in the contiguous region
 		VAddr AllocateContiguous(size_t Size, PAddr LowestAddress, PAddr HighestAddress, ULONG Alignment, DWORD Perms);
 		// maps device memory in the system region
 		VAddr MapDeviceMemory(PAddr Paddr, size_t Size, DWORD Perms);
 		// deallocates memory in the system region
 		PFN_COUNT DeallocateSystemMemory(PageType BusyType, VAddr addr, size_t Size);
+		// deallocates memory for the system file cache
+		xboxkrnl::NTSTATUS DeallocateFileCacheMemory(PFN_COUNT NumberOfCachePages);
 		// deallocates memory in the contiguous region
 		void DeallocateContiguous(VAddr addr);
 		// unmaps device memory in the system region
@@ -167,6 +171,10 @@ class VMManager : public PhysicalMemory
 		xboxkrnl::NTSTATUS XbVirtualProtect(VAddr* addr, size_t* Size, DWORD* Protect);
 		// xbox implementation of NtQueryVirtualMemory
 		xboxkrnl::NTSTATUS XbVirtualMemoryStatistics(VAddr addr, xboxkrnl::PMEMORY_BASIC_INFORMATION memory_statistics);
+		// acquires the critical section
+		void Lock();
+		// releases the critical section
+		void Unlock();
 
 	
 	private:
@@ -226,10 +234,6 @@ class VMManager : public PhysicalMemory
 		void RestorePersistentMemory();
 		// restores a persistent allocation
 		void RestorePersistentAllocation(VAddr addr, PFN StartingPfn, PFN EndingPfn, PageType Type);
-		// acquires the critical section
-		void Lock();
-		// releases the critical section
-		void Unlock();
 };
 
 

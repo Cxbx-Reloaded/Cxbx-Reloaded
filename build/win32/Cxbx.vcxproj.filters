@@ -634,6 +634,9 @@
     <ClInclude Include="..\..\src\CxbxKrnl\HLEPatches.h">
       <Filter>Emulator</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\CxbxKrnl\EmuKrnlFs.h">
+      <Filter>Kernel</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\resource\Splash.jpg">

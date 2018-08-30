@@ -233,6 +233,7 @@
     <ClInclude Include="..\..\src\CxbxKrnl\EmuFile.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\EmuFS.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\EmuKrnlAvModes.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\EmuKrnlFs.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\EmuKrnlKi.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\EmuKrnlLogging.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\EmuNtDll.h" />
