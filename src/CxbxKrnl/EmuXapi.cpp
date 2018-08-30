@@ -1341,8 +1341,6 @@ VOID WINAPI XTL::EMUPATCH(XapiThreadStartup)
     DWORD dwDummy2
 )
 {
-	//FUNC_EXPORTS
-
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(dwDummy1)
 		LOG_FUNC_ARG(dwDummy2)
@@ -1376,8 +1374,6 @@ VOID WINAPI XTL::EMUPATCH(XRegisterThreadNotifyRoutine)
     BOOL                    fRegister
 )
 {
-	//FUNC_EXPORTS
-
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThreadNotification)
 		LOG_FUNC_ARG(fRegister)
@@ -1531,8 +1527,6 @@ DWORD WINAPI XTL::EMUPATCH(QueueUserAPC)
 	DWORD		dwData
 )
 {
-	//FUNC_EXPORTS
-
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG_TYPE(PVOID, pfnAPC)
 		LOG_FUNC_ARG(hThread)
@@ -1567,8 +1561,6 @@ BOOL WINAPI XTL::EMUPATCH(GetOverlappedResult)
 	BOOL			bWait
 )
 {
-	//FUNC_EXPORTS
-
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(hFile)
 		LOG_FUNC_ARG(lpOverlapped)
@@ -1594,8 +1586,6 @@ DWORD WINAPI XTL::EMUPATCH(XLaunchNewImageA)
 	PLAUNCH_DATA	pLaunchData
 )
 {
-	//FUNC_EXPORTS
-
 	// Note : This can be tested using "Innocent tears",
 	// which relaunches different xbes between scenes;
 	// One for menus, one for fmvs, etc.
