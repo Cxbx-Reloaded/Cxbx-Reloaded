@@ -9,7 +9,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->EmuXG.cpp
+// *   core->HLE->XGRAPHIC->XGraphic.cpp
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -40,11 +40,11 @@
 #undef FIELD_OFFSET     // prevent macro redefinition warnings
 #include <windows.h>
 
-#include "Emu.h"
-#include "EmuFS.h"
-#include "Logging.h"
-#include "EmuXTL.h"
-#include "EmuD3D8Logging.h" // for log rendering of X_D3DFORMAT, etc.
+#include "CxbxKrnl/Emu.h"
+#include "CxbxKrnl/EmuFS.h"
+#include "Common/Logging.h"
+#include "CxbxKrnl/EmuXTL.h"
+#include "CxbxKrnl/EmuD3D8Logging.h" // for log rendering of X_D3DFORMAT, etc.
 
 // ******************************************************************
 // * patch: XGIsSwizzledFormat

@@ -241,7 +241,7 @@
     <ClInclude Include="..\..\src\CxbxKrnl\EmuX86.h" />
     <ClInclude Include="..\..\src\core\HLE\XACTENG\XactEng.h" />
     <ClInclude Include="..\..\src\core\HLE\XAPI\Xapi.h" />
-    <ClInclude Include="..\..\src\CxbxKrnl\EmuXG.h" />
+    <ClInclude Include="..\..\src\core\HLE\XGRAPHIC\XGraphic.h" />
     <ClInclude Include="..\..\src\core\HLE\XAPI\OHCI\XInput\XInput.h" />
     <ClInclude Include="..\..\src\core\HLE\XONLINE\XOnline.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\EmuXTL.h" />
@@ -468,7 +468,7 @@
     <ClCompile Include="..\..\src\CxbxKrnl\EmuX86.cpp" />
     <ClCompile Include="..\..\src\core\HLE\XACTENG\XactEng.cpp" />
     <ClCompile Include="..\..\src\core\HLE\XAPI\Xapi.cpp" />
-    <ClCompile Include="..\..\src\CxbxKrnl\EmuXG.cpp">
+    <ClCompile Include="..\..\src\core\HLE\XGRAPHIC\XGraphic.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>

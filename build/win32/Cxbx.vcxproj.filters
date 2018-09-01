@@ -136,8 +136,8 @@
     <ClCompile Include="..\..\src\core\HLE\XAPI\Xapi.cpp">
       <Filter>core\HLE\XAPI</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\CxbxKrnl\EmuXG.cpp">
-      <Filter>Emulator</Filter>
+    <ClCompile Include="..\..\src\core\HLE\XGRAPHIC\XGraphic.cpp">
+      <Filter>core\HLE\XGRAPHIC</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\core\HLE\XAPI\OHCI\XInput\XInput.cpp">
       <Filter>core\HLE\XAPI\OHCI\XInput</Filter>
@@ -410,8 +410,8 @@
     <ClInclude Include="..\..\src\core\HLE\XAPI\Xapi.h">
       <Filter>core\HLE\XAPI</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\CxbxKrnl\EmuXG.h">
-      <Filter>Emulator</Filter>
+    <ClInclude Include="..\..\src\core\HLE\XGRAPHIC\XGraphic.h">
+      <Filter>core\HLE\XGRAPHIC</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\core\HLE\XAPI\OHCI\XInput\XInput.h">
       <Filter>core\HLE\XAPI\OHCI\XInput</Filter>
@@ -791,6 +791,9 @@
     </Filter>
     <Filter Include="core\HLE\XONLINE">
       <UniqueIdentifier>{c6ea372d-ae98-46eb-917f-009302c000c5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="core\HLE\XGRAPHIC">
+      <UniqueIdentifier>{c494f79e-ff8e-4b45-b1c3-1da0b4b9ee49}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->EmuXG.h
+// *   core->HLE->XGRAPHIC->XGraphic.h
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -31,8 +31,8 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#ifndef EMUXG_H
-#define EMUXG_H
+#ifndef XGRAPHIC_H
+#define XGRAPHIC_H
 
 typedef struct _XGPOINT3D
 {

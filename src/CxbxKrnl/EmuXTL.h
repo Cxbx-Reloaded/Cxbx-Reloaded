@@ -49,7 +49,7 @@ namespace XTL
     #include "core/HLE/XAPI/OHCI/XInput/DInput.h"
     #include "core/HLE/DSound/DirectSound/DirectSound.hpp"
     #include "core/HLE/XONLINE/XOnline.h"
-    #include "EmuXG.h"
+    #include "core/HLE/XGRAPHIC/XGraphic.h"
 	#include "core/HLE/XACTENG/XactEng.h"
 	#include "core/HLE/XAPI/OHCI/XInput/XInput.h"
 }
