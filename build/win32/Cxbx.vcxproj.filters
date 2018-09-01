@@ -109,8 +109,8 @@
     <ClCompile Include="..\..\src\CxbxKrnl\EmuD3D8.cpp">
       <Filter>Emulator</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\core\HLE\XAPI\XInput\DInput.cpp">
-      <Filter>core\HLE\XAPI\XInput</Filter>
+    <ClCompile Include="..\..\src\core\HLE\XAPI\OHCI\XInput\DInput.cpp">
+      <Filter>core\HLE\XAPI\OHCI\XInput</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\core\HLE\DSound\DirectSound\DirectSound.cpp">
       <Filter>core\HLE\DSound\DirectSound</Filter>
@@ -139,8 +139,8 @@
     <ClCompile Include="..\..\src\CxbxKrnl\EmuXG.cpp">
       <Filter>Emulator</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\core\HLE\XAPI\XInput\XInput.cpp">
-      <Filter>core\HLE\XAPI\XInput</Filter>
+    <ClCompile Include="..\..\src\core\HLE\XAPI\OHCI\XInput\XInput.cpp">
+      <Filter>core\HLE\XAPI\OHCI\XInput</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\CxbxKrnl\EmuXOnline.cpp">
       <Filter>Emulator</Filter>
@@ -386,8 +386,8 @@
     <ClInclude Include="..\..\src\CxbxKrnl\EmuD3D8Types.h">
       <Filter>Emulator</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\core\HLE\XAPI\XInput\DInput.h">
-      <Filter>core\HLE\XAPI\XInput</Filter>
+    <ClInclude Include="..\..\src\core\HLE\XAPI\OHCI\XInput\DInput.h">
+      <Filter>core\HLE\XAPI\OHCI\XInput</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\core\HLE\DSound\DirectSound\DirectSound.hpp">
       <Filter>core\HLE\DSound\DirectSound</Filter>
@@ -413,8 +413,8 @@
     <ClInclude Include="..\..\src\CxbxKrnl\EmuXG.h">
       <Filter>Emulator</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\core\HLE\XAPI\XInput\XInput.h">
-      <Filter>core\HLE\XAPI\XInput</Filter>
+    <ClInclude Include="..\..\src\core\HLE\XAPI\OHCI\XInput\XInput.h">
+      <Filter>core\HLE\XAPI\OHCI\XInput</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\CxbxKrnl\EmuXOnline.h">
       <Filter>Emulator</Filter>
@@ -780,7 +780,10 @@
     <Filter Include="core\HLE\XAPI">
       <UniqueIdentifier>{6f4e7159-1112-4a80-9e76-11963812811e}</UniqueIdentifier>
     </Filter>
-    <Filter Include="core\HLE\XAPI\XInput">
+    <Filter Include="core\HLE\XAPI\OHCI">
+      <UniqueIdentifier>{f9c6738c-bb93-4de5-b3ae-490f2d80fa74}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="core\HLE\XAPI\OHCI\XInput">
       <UniqueIdentifier>{69e32fa9-3fcd-400a-8d45-66b7ec3d555c}</UniqueIdentifier>
     </Filter>
   </ItemGroup>

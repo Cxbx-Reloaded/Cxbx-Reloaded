@@ -46,12 +46,12 @@ namespace XTL
     #include "EmuD3D8\VertexShader.h"
 	#include "EmuD3D8\PixelShader.h"
     #include "EmuD3D8\State.h"
-    #include "core/HLE/XAPI/XInput/DInput.h"
+    #include "core/HLE/XAPI/OHCI/XInput/DInput.h"
     #include "core/HLE/DSound/DirectSound/DirectSound.hpp"
     #include "EmuXOnline.h"
     #include "EmuXG.h"
 	#include "EmuXactEng.h"
-	#include "core/HLE/XAPI/XInput/XInput.h"
+	#include "core/HLE/XAPI/OHCI/XInput/XInput.h"
 }
 
 extern XTL::IDirect3DDevice    *g_pD3DDevice;

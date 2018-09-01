@@ -1,5 +1,3 @@
-// This is an open source non-commercial project. Dear PVS-Studio, please check it.
-// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 // ******************************************************************
 // *
 // *    .,-:::::    .,::      .::::::::.    .,::      .:
@@ -9,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->EmuDInput.cpp
+// *   src->core->HLE->XAPI->OHCI->XInput->DInput.h
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -33,59 +31,25 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#define _XBOXKRNL_DEFEXTRN_
+#ifndef EMUDINPUT_H
+#define EMUDINPUT_H
 
-#define LOG_PREFIX CXBXR_MODULE::DINP
-
-#include "CxbxKrnl/Emu.h"
-#include "CxbxKrnl/EmuXTL.h"
-#include "CxbxKrnl/EmuShared.h"
-#include "Common/Win32/DInputController.h"
-#include "Logging.h"
+#define DIRECTINPUT_VERSION 0x0800
+#include <dinput.h>
 
 // ******************************************************************
-// * Static Variable(s)
+// * patch: DInputInit
 // ******************************************************************
-static DInputController g_DInputController;
-
-// ******************************************************************
-// * XTL::EmuDInputInit
-// ******************************************************************
-bool XTL::EmuDInputInit()
-{
-    g_EmuShared->GetControllerDInputSettings(&g_DInputController.m_settings);
-
-    g_DInputController.ListenBegin(g_hEmuWindow);
-
-    if(g_DInputController.HasError())
-        return false;
-
-    return true;
-}
+extern bool EmuDInputInit();
 
 // ******************************************************************
-// * XTL::EmuDInputCleanup
+// * patch: DInputCleanup
 // ******************************************************************
-void XTL::EmuDInputCleanup()
-{
-    g_DInputController.ListenEnd();
-}
-
-//emulated dwPacketNumber for DirectInput controller
-DWORD dwPacketNumber_DirectInput = 0;
+extern void EmuDInputCleanup();
 
 // ******************************************************************
-// * XTL::EmuDInputPoll
+// * patch: DInputPoll
 // ******************************************************************
-void XTL::EmuDInputPoll(XTL::PX_XINPUT_STATE pXboxController)
-{
-    g_DInputController.ListenPoll(pXboxController);
-	//increment of emulated PacketNumber and report back to Controller.
-	dwPacketNumber_DirectInput++;
-	pXboxController->dwPacketNumber = dwPacketNumber_DirectInput;
+extern void EmuDInputPoll(PX_XINPUT_STATE Controller);
 
-    if(g_DInputController.HasError())
-        MessageBox(NULL, g_DInputController.GetError().c_str(), "Cxbx-Reloaded [*UNHANDLED!*]", MB_OK);  // TODO: Handle this!
-
-    return;
-}
+#endif
