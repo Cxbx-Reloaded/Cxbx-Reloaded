@@ -9,7 +9,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->EmuXOnline.cpp
+// *   src->core->HLE->XONLINE->XOnline.cpp
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -37,10 +37,10 @@
 
 #define LOG_PREFIX CXBXR_MODULE::XONLINE
 
-#include "Emu.h"
-#include "Logging.h"
-#include "EmuFS.h"
-#include "EmuXTL.h"
+#include "CxbxKrnl/Emu.h"
+#include "Common/Logging.h"
+#include "CxbxKrnl/EmuFS.h"
+#include "CxbxKrnl/EmuXTL.h"
 
 /*
 // ******************************************************************

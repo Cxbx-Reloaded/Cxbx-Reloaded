@@ -48,7 +48,7 @@ namespace XTL
     #include "EmuD3D8\State.h"
     #include "core/HLE/XAPI/OHCI/XInput/DInput.h"
     #include "core/HLE/DSound/DirectSound/DirectSound.hpp"
-    #include "EmuXOnline.h"
+    #include "core/HLE/XONLINE/XOnline.h"
     #include "EmuXG.h"
 	#include "core/HLE/XACTENG/XactEng.h"
 	#include "core/HLE/XAPI/OHCI/XInput/XInput.h"

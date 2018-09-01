@@ -142,8 +142,8 @@
     <ClCompile Include="..\..\src\core\HLE\XAPI\OHCI\XInput\XInput.cpp">
       <Filter>core\HLE\XAPI\OHCI\XInput</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\CxbxKrnl\EmuXOnline.cpp">
-      <Filter>Emulator</Filter>
+    <ClCompile Include="..\..\src\core\HLE\XONLINE\XOnline.cpp">
+      <Filter>core\HLE\XONLINE</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\core\HLE\Intercept.cpp">
       <Filter>core\HLE</Filter>
@@ -416,8 +416,8 @@
     <ClInclude Include="..\..\src\core\HLE\XAPI\OHCI\XInput\XInput.h">
       <Filter>core\HLE\XAPI\OHCI\XInput</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\CxbxKrnl\EmuXOnline.h">
-      <Filter>Emulator</Filter>
+    <ClInclude Include="..\..\src\core\HLE\XONLINE\XOnline.h">
+      <Filter>core\HLE\XONLINE</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\CxbxKrnl\EmuXTL.h">
       <Filter>Emulator</Filter>
@@ -788,6 +788,9 @@
     </Filter>
     <Filter Include="core\HLE\XACTENG">
       <UniqueIdentifier>{dd1295ad-f875-47dc-a6bb-d5679452f236}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="core\HLE\XONLINE">
+      <UniqueIdentifier>{c6ea372d-ae98-46eb-917f-009302c000c5}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

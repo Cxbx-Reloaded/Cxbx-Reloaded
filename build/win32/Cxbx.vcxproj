@@ -243,7 +243,7 @@
     <ClInclude Include="..\..\src\core\HLE\XAPI\Xapi.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\EmuXG.h" />
     <ClInclude Include="..\..\src\core\HLE\XAPI\OHCI\XInput\XInput.h" />
-    <ClInclude Include="..\..\src\CxbxKrnl\EmuXOnline.h" />
+    <ClInclude Include="..\..\src\core\HLE\XONLINE\XOnline.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\EmuXTL.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\gloffscreen\glextensions.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\gloffscreen\gloffscreen.h" />
@@ -475,12 +475,7 @@
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="..\..\src\core\HLE\XAPI\OHCI\XInput\XInput.cpp" />
-    <ClCompile Include="..\..\src\CxbxKrnl\EmuXOnline.cpp">
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
-    </ClCompile>
+    <ClCompile Include="..\..\src\core\HLE\XONLINE\XOnline.cpp" />
     <ClCompile Include="..\..\src\CxbxKrnl\gloffscreen\glextensions.cpp" />
     <ClCompile Include="..\..\src\CxbxKrnl\gloffscreen\gloffscreen_common.cpp" />
     <ClCompile Include="..\..\src\CxbxKrnl\gloffscreen\gloffscreen_wgl.cpp" />

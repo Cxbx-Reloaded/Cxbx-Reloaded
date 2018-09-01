@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->EmuXOnline.h
+// *   src->core->HLE->XONLINE->XOnline.h
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -31,8 +31,8 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#ifndef EMUXONLINE_H
-#define EMUXONLINE_H
+#ifndef XONLINE_H
+#define XONLINE_H
 
 
 // Flags returned by XNetGetEthernetLinkStatus()
