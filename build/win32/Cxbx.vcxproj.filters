@@ -130,8 +130,8 @@
     <ClCompile Include="..\..\src\Common\Win32\EmuShared.cpp">
       <Filter>Emulator</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\CxbxKrnl\EmuXactEng.cpp">
-      <Filter>Emulator</Filter>
+    <ClCompile Include="..\..\src\core\HLE\XACTENG\XactEng.cpp">
+      <Filter>core\HLE\XACTENG</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\core\HLE\XAPI\Xapi.cpp">
       <Filter>core\HLE\XAPI</Filter>
@@ -404,8 +404,8 @@
     <ClInclude Include="..\..\src\CxbxKrnl\EmuSha.h">
       <Filter>Emulator</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\CxbxKrnl\EmuXactEng.h">
-      <Filter>Emulator</Filter>
+    <ClInclude Include="..\..\src\core\HLE\XACTENG\XactEng.h">
+      <Filter>core\HLE\XACTENG</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\core\HLE\XAPI\Xapi.h">
       <Filter>core\HLE\XAPI</Filter>
@@ -785,6 +785,9 @@
     </Filter>
     <Filter Include="core\HLE\XAPI\OHCI\XInput">
       <UniqueIdentifier>{69e32fa9-3fcd-400a-8d45-66b7ec3d555c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="core\HLE\XACTENG">
+      <UniqueIdentifier>{dd1295ad-f875-47dc-a6bb-d5679452f236}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

@@ -9,7 +9,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->EmuXactEng.cpp
+// *   src->core->HLE->XACTENG->XactEng.cpp
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -43,13 +43,13 @@ namespace xboxkrnl
     #include <xboxkrnl/xboxkrnl.h>
 };
 
-#include "CxbxKrnl.h"
-#include "Logging.h"
-#include "Emu.h"
-#include "EmuFS.h"
-#include "EmuShared.h"
-#include "EmuXTL.h"
-#include "VMManager.h"
+#include "CxbxKrnl/CxbxKrnl.h"
+#include "Common/Logging.h"
+#include "CxbxKrnl/Emu.h"
+#include "CxbxKrnl/EmuFS.h"
+#include "CxbxKrnl/EmuShared.h"
+#include "CxbxKrnl/EmuXTL.h"
+#include "CxbxKrnl/VMManager.h"
 
 #include <mmreg.h>
 #include <msacm.h>

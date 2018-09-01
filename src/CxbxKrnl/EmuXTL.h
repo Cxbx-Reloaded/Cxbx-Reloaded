@@ -50,7 +50,7 @@ namespace XTL
     #include "core/HLE/DSound/DirectSound/DirectSound.hpp"
     #include "EmuXOnline.h"
     #include "EmuXG.h"
-	#include "EmuXactEng.h"
+	#include "core/HLE/XACTENG/XactEng.h"
 	#include "core/HLE/XAPI/OHCI/XInput/XInput.h"
 }
 
