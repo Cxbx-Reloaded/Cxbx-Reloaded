@@ -795,6 +795,9 @@
     <Filter Include="core\HLE\XGRAPHIC">
       <UniqueIdentifier>{c494f79e-ff8e-4b45-b1c3-1da0b4b9ee49}</UniqueIdentifier>
     </Filter>
+    <Filter Include="core\HLE\D3D8">
+      <UniqueIdentifier>{6f39b9de-ab9d-4780-b687-2d930f86738e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\..\resource\Cxbx.rc">
