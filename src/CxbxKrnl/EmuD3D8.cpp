@@ -6392,6 +6392,9 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderState_ZEnable)
 {
 	LOG_FUNC_ONE_ARG(Value);
 
+	XB_trampoline(VOID, WINAPI, D3DDevice_SetRenderState_ZEnable, (DWORD));
+	XB_D3DDevice_SetRenderState_ZEnable(Value);
+
 	HRESULT hRet = g_pD3DDevice->SetRenderState(D3DRS_ZENABLE, Value);
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetRenderState");
 }
