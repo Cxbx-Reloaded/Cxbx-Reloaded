@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->EmuXTL.h
+// *   src->core->HLE->Patches.hpp
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -26,37 +26,17 @@
 // *  If not, write to the Free Software Foundation, Inc.,
 // *  59 Temple Place - Suite 330, Bostom, MA 02111-1307, USA.
 // *
-// *  (c) 2002-2003 Aaron Robinson <caustik@caustik.com>
+// *  (c) 2018 Luke Usher <luke.usher@outlook.com>
 // *
 // *  All rights reserved
 // *
 // ******************************************************************
-#ifndef EMUXTL_H
-#define EMUXTL_H
+#ifndef HLEPATCHES_HPP
+#define HLEPATCHES_HPP
 
-#include <vector>  // Needed for EmuDSound.h file, must be outside of XTL namespace.
+#include <string>
 
-namespace XTL
-{
-    #include "core/HLE/XAPI/Xapi.h"
-    #include "EmuD3D8.h"
-    #include "EmuD3D8\Convert.h"
-    #include "EmuD3D8\VertexBuffer.h"
-    #include "EmuD3D8\PushBuffer.h"
-    #include "EmuD3D8\VertexShader.h"
-	#include "EmuD3D8\PixelShader.h"
-    #include "EmuD3D8\State.h"
-    #include "core/HLE/XAPI/OHCI/XInput/DInput.h"
-    #include "core/HLE/DSOUND/DirectSound/DirectSound.hpp"
-    #include "core/HLE/XONLINE/XOnline.h"
-    #include "core/HLE/XGRAPHIC/XGraphic.h"
-	#include "core/HLE/XACTENG/XactEng.h"
-	#include "core/HLE/XAPI/OHCI/XInput/XInput.h"
-}
-
-extern XTL::IDirect3DDevice    *g_pD3DDevice;
-extern DWORD                    g_CurrentXboxVertexShaderHandle;
-extern XTL::X_PixelShader*		g_D3DActivePixelShader;
-extern BOOL                     g_bIsFauxFullscreen;
+void EmuInstallPatches();
+void* GetPatchedFunctionTrampoline(std::string functionName);
 
 #endif

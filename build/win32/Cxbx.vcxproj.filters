@@ -109,11 +109,11 @@
     <ClCompile Include="..\..\src\CxbxKrnl\EmuD3D8.cpp">
       <Filter>Emulator</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\CxbxKrnl\EmuDInput.cpp">
-      <Filter>Emulator</Filter>
+    <ClCompile Include="..\..\src\core\HLE\XAPI\OHCI\XInput\DInput.cpp">
+      <Filter>core\HLE\XAPI\OHCI\XInput</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\CxbxKrnl\EmuDSound.cpp">
-      <Filter>Emulator</Filter>
+    <ClCompile Include="..\..\src\core\HLE\DSOUND\DirectSound\DirectSound.cpp">
+      <Filter>core\HLE\DSOUND\DirectSound</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\CxbxKrnl\EmuFile.cpp">
       <Filter>Emulator</Filter>
@@ -130,23 +130,23 @@
     <ClCompile Include="..\..\src\Common\Win32\EmuShared.cpp">
       <Filter>Emulator</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\CxbxKrnl\EmuXactEng.cpp">
-      <Filter>Emulator</Filter>
+    <ClCompile Include="..\..\src\core\HLE\XACTENG\XactEng.cpp">
+      <Filter>core\HLE\XACTENG</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\CxbxKrnl\EmuXapi.cpp">
-      <Filter>Emulator</Filter>
+    <ClCompile Include="..\..\src\core\HLE\XAPI\Xapi.cpp">
+      <Filter>core\HLE\XAPI</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\CxbxKrnl\EmuXG.cpp">
-      <Filter>Emulator</Filter>
+    <ClCompile Include="..\..\src\core\HLE\XGRAPHIC\XGraphic.cpp">
+      <Filter>core\HLE\XGRAPHIC</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\CxbxKrnl\EmuXInput.cpp">
-      <Filter>Emulator</Filter>
+    <ClCompile Include="..\..\src\core\HLE\XAPI\OHCI\XInput\XInput.cpp">
+      <Filter>core\HLE\XAPI\OHCI\XInput</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\CxbxKrnl\EmuXOnline.cpp">
-      <Filter>Emulator</Filter>
+    <ClCompile Include="..\..\src\core\HLE\XONLINE\XOnline.cpp">
+      <Filter>core\HLE\XONLINE</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\CxbxKrnl\HLEIntercept.cpp">
-      <Filter>Emulator</Filter>
+    <ClCompile Include="..\..\src\core\HLE\Intercept.cpp">
+      <Filter>core\HLE</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\CxbxKrnl\KernelThunk.cpp">
       <Filter>Kernel</Filter>
@@ -320,11 +320,6 @@
     <ClCompile Include="..\..\src\Common\Win32\IPCWindows.cpp">
       <Filter>Cross Platform\Win32</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\CxbxKrnl\HLEPatches.cpp">
-      <Filter>Emulator</Filter>
-    </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
     <ClInclude Include="..\..\src\Cxbx\DlgControllerConfig.h">
       <Filter>GUI</Filter>
     </ClInclude>
@@ -391,11 +386,11 @@
     <ClInclude Include="..\..\src\CxbxKrnl\EmuD3D8Types.h">
       <Filter>Emulator</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\CxbxKrnl\EmuDInput.h">
-      <Filter>Emulator</Filter>
+    <ClInclude Include="..\..\src\core\HLE\XAPI\OHCI\XInput\DInput.h">
+      <Filter>core\HLE\XAPI\OHCI\XInput</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\CxbxKrnl\EmuDSound.h">
-      <Filter>Emulator</Filter>
+    <ClInclude Include="..\..\src\core\HLE\DSOUND\DirectSound\DirectSound.hpp">
+      <Filter>core\HLE\DSOUND\DirectSound</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\CxbxKrnl\EmuFile.h">
       <Filter>Emulator</Filter>
@@ -409,26 +404,26 @@
     <ClInclude Include="..\..\src\CxbxKrnl\EmuSha.h">
       <Filter>Emulator</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\CxbxKrnl\EmuXactEng.h">
-      <Filter>Emulator</Filter>
+    <ClInclude Include="..\..\src\core\HLE\XACTENG\XactEng.h">
+      <Filter>core\HLE\XACTENG</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\CxbxKrnl\EmuXapi.h">
-      <Filter>Emulator</Filter>
+    <ClInclude Include="..\..\src\core\HLE\XAPI\Xapi.h">
+      <Filter>core\HLE\XAPI</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\CxbxKrnl\EmuXG.h">
-      <Filter>Emulator</Filter>
+    <ClInclude Include="..\..\src\core\HLE\XGRAPHIC\XGraphic.h">
+      <Filter>core\HLE\XGRAPHIC</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\CxbxKrnl\EmuXInput.h">
-      <Filter>Emulator</Filter>
+    <ClInclude Include="..\..\src\core\HLE\XAPI\OHCI\XInput\XInput.h">
+      <Filter>core\HLE\XAPI\OHCI\XInput</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\CxbxKrnl\EmuXOnline.h">
-      <Filter>Emulator</Filter>
+    <ClInclude Include="..\..\src\core\HLE\XONLINE\XOnline.h">
+      <Filter>core\HLE\XONLINE</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\CxbxKrnl\EmuXTL.h">
       <Filter>Emulator</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\CxbxKrnl\HLEIntercept.h">
-      <Filter>Emulator</Filter>
+    <ClInclude Include="..\..\src\core\HLE\Intercept.hpp">
+      <Filter>core\HLE</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\CxbxKrnl\LibRc4.h">
       <Filter>Emulator</Filter>
@@ -469,8 +464,8 @@
     <ClInclude Include="..\..\src\Common\XADPCM.h">
       <Filter>Shared</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\CxbxKrnl\EmuDSoundInline.hpp">
-      <Filter>Emulator</Filter>
+    <ClInclude Include="..\..\src\core\HLE\DSOUND\DirectSound\DirectSoundInline.hpp">
+      <Filter>core\HLE\DSOUND\DirectSound</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\Cxbx\DlgAudioConfig.h">
       <Filter>GUI</Filter>
@@ -631,9 +626,12 @@
     <ClInclude Include="..\..\src\Common\IPCHybrid.hpp">
       <Filter>Cross Platform</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\CxbxKrnl\HLEPatches.h">
-      <Filter>Emulator</Filter>
+    <ClInclude Include="..\..\src\core\HLE\Patches.hpp">
+      <Filter>core\HLE</Filter>
     </ClInclude>
+    <ClCompile Include="..\..\src\core\HLE\Patches.cpp">
+      <Filter>core\HLE</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\resource\Splash.jpg">
@@ -766,6 +764,39 @@
     </Filter>
     <Filter Include="Shared\Input">
       <UniqueIdentifier>{76faeca9-d66f-43fb-9efa-ffb0668f8843}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="core">
+      <UniqueIdentifier>{6d7b4608-3bf3-401f-924e-52617798e6b8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="core\HLE">
+      <UniqueIdentifier>{563da04b-4c54-4c1b-a055-809ce0f5bf97}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="core\HLE\DSOUND">
+      <UniqueIdentifier>{5fcb96a1-736d-4749-ba21-a87dedc72427}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="core\HLE\DSOUND\DirectSound">
+      <UniqueIdentifier>{9b3e7b4d-161e-4eeb-9338-3368e134b439}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="core\HLE\XAPI">
+      <UniqueIdentifier>{6f4e7159-1112-4a80-9e76-11963812811e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="core\HLE\XAPI\OHCI">
+      <UniqueIdentifier>{f9c6738c-bb93-4de5-b3ae-490f2d80fa74}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="core\HLE\XAPI\OHCI\XInput">
+      <UniqueIdentifier>{69e32fa9-3fcd-400a-8d45-66b7ec3d555c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="core\HLE\XACTENG">
+      <UniqueIdentifier>{dd1295ad-f875-47dc-a6bb-d5679452f236}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="core\HLE\XONLINE">
+      <UniqueIdentifier>{c6ea372d-ae98-46eb-917f-009302c000c5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="core\HLE\XGRAPHIC">
+      <UniqueIdentifier>{c494f79e-ff8e-4b45-b1c3-1da0b4b9ee49}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="core\HLE\D3D8">
+      <UniqueIdentifier>{6f39b9de-ab9d-4780-b687-2d930f86738e}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->EmuXapi.h
+// *   src->core->HLE->XAPI->Xapi.h
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -31,8 +31,8 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#ifndef EMUXAPI_H
-#define EMUXAPI_H
+#ifndef XAPI_H
+#define XAPI_H
 
 // ******************************************************************
 // * calling conventions

@@ -49,7 +49,7 @@
 #include "CxbxKrnl.h"
 #include "Emu.h" // For EmuLog
 #include "EmuX86.h"
-#include "HLEIntercept.h" // for bLLE_GPU
+#include "core/HLE/Intercept.hpp" // for bLLE_GPU
 
 #include <assert.h>
 #include "devices\Xbox.h" // For g_PCIBus

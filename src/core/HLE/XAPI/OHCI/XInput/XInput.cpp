@@ -9,7 +9,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->EmuDInput.cpp
+// *   src->core->HLE->XAPI->OHCI->XInput->DInput.cpp
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -37,10 +37,10 @@
 
 #define LOG_PREFIX CXBXR_MODULE::XINP
 
-#include "Emu.h"
-#include "EmuXTL.h"
-#include "EmuShared.h"
-#include "EmuXInput.h"
+#include "CxbxKrnl/Emu.h"
+#include "CxbxKrnl/EmuXTL.h"
+#include "CxbxKrnl/EmuShared.h"
+#include "XInput.h"
 
 #include <xinput.h>
 #include "Logging.h"

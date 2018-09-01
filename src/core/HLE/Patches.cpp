@@ -10,7 +10,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->HLEPatches.cpp
+// *   src->core->HLE->Patches.cpp
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -35,11 +35,11 @@
 // *
 // ******************************************************************
 
-#include "CxbxKrnl.h"
-#include "Emu.h"
-#include "EmuXTL.h"
-#include "HLEPatches.h"
-#include "HLEIntercept.h"
+#include "CxbxKrnl/CxbxKrnl.h"
+#include "CxbxKrnl/Emu.h"
+#include "CxbxKrnl/EmuXTL.h"
+#include "Patches.hpp"
+#include "Intercept.hpp"
 
 #include <map>
 #include <unordered_map>

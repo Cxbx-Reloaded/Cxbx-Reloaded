@@ -65,7 +65,7 @@ namespace xboxkrnl
 #include "CxbxKrnl\Emu.h"
 #include "CxbxKrnl\EmuFS.h"
 #include "CxbxKrnl\EmuKrnl.h"
-#include "CxbxKrnl\HLEIntercept.h"
+#include "core/HLE/Intercept.hpp"
 #include "Logging.h"
 
 #include "vga.h"

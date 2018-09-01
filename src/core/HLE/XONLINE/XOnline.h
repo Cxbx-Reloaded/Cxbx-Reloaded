@@ -1,5 +1,3 @@
-// This is an open source non-commercial project. Dear PVS-Studio, please check it.
-// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 // ******************************************************************
 // *
 // *    .,-:::::    .,::      .::::::::.    .,::      .:
@@ -9,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->EmuDInput.cpp
+// *   src->core->HLE->XONLINE->XOnline.h
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -33,59 +31,109 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#define _XBOXKRNL_DEFEXTRN_
+#ifndef XONLINE_H
+#define XONLINE_H
 
-#define LOG_PREFIX CXBXR_MODULE::DINP
 
-#include "Emu.h"
-#include "EmuXTL.h"
-#include "EmuShared.h"
-#include "Common/Win32/DInputController.h"
-#include "Logging.h"
-
-// ******************************************************************
-// * Static Variable(s)
-// ******************************************************************
-static DInputController g_DInputController;
+// Flags returned by XNetGetEthernetLinkStatus()
+#define XNET_ETHERNET_LINK_ACTIVE           0x01
+#define XNET_ETHERNET_LINK_100MBPS          0x02
+#define XNET_ETHERNET_LINK_10MBPS           0x04
+#define XNET_ETHERNET_LINK_FULL_DUPLEX      0x08
+#define XNET_ETHERNET_LINK_HALF_DUPLEX      0x10
 
 // ******************************************************************
-// * XTL::EmuDInputInit
+// * patch: WSAStartup
 // ******************************************************************
-bool XTL::EmuDInputInit()
-{
-    g_EmuShared->GetControllerDInputSettings(&g_DInputController.m_settings);
-
-    g_DInputController.ListenBegin(g_hEmuWindow);
-
-    if(g_DInputController.HasError())
-        return false;
-
-    return true;
-}
+int WINAPI EMUPATCH(WSAStartup)
+(
+    WORD        wVersionRequested,
+    WSADATA    *lpWSAData
+);
 
 // ******************************************************************
-// * XTL::EmuDInputCleanup
+// * patch: XNetStartup
 // ******************************************************************
-void XTL::EmuDInputCleanup()
-{
-    g_DInputController.ListenEnd();
-}
-
-//emulated dwPacketNumber for DirectInput controller
-DWORD dwPacketNumber_DirectInput = 0;
+INT WINAPI EMUPATCH(XNetStartup)
+(
+    const PVOID pDummy
+);
 
 // ******************************************************************
-// * XTL::EmuDInputPoll
+// * patch: XNetGetEthernetLinkStatus
 // ******************************************************************
-void XTL::EmuDInputPoll(XTL::PX_XINPUT_STATE pXboxController)
-{
-    g_DInputController.ListenPoll(pXboxController);
-	//increment of emulated PacketNumber and report back to Controller.
-	dwPacketNumber_DirectInput++;
-	pXboxController->dwPacketNumber = dwPacketNumber_DirectInput;
+DWORD WINAPI EMUPATCH(XNetGetEthernetLinkStatus)();
 
-    if(g_DInputController.HasError())
-        MessageBox(NULL, g_DInputController.GetError().c_str(), "Cxbx-Reloaded [*UNHANDLED!*]", MB_OK);  // TODO: Handle this!
+// ******************************************************************
+// * patch: XOnlineLaunchNewImage
+// ******************************************************************
+HRESULT WINAPI XOnlineLaunchNewImage
+(
+    LPCSTR	lpImagePath,
+    LPVOID	pLaunchData
+);
 
-    return;
-}
+// ******************************************************************
+// * patch: XOnlineLogon
+// ******************************************************************
+HRESULT WINAPI EMUPATCH(XOnlineLogon)
+(
+    VOID*	pUsers,
+    DWORD*	pdwServiceIDs,
+    DWORD	dwServices,
+    HANDLE	hEvent,
+    HANDLE	pHandle
+);
+
+SOCKET WINAPI EMUPATCH(socket)
+(
+    int   af,
+    int   type,
+    int   protocol
+);
+
+int WINAPI EMUPATCH(connect)
+(
+    SOCKET s,
+    const struct sockaddr FAR *name,
+    int namelen
+);
+
+int WINAPI EMUPATCH(send)
+(
+    SOCKET s,
+    const char FAR *buf,
+    int len,
+    int flags
+);
+
+int WINAPI EMUPATCH(recv)
+(
+    SOCKET s,
+    char FAR *buf,
+    int len,
+    int flags
+);
+
+
+int WINAPI EMUPATCH(bind)
+(
+    SOCKET s, 
+    const struct sockaddr FAR *name, 
+    int namelen
+);
+
+int WINAPI EMUPATCH(listen)
+(
+    SOCKET s, 
+    int backlog
+);
+
+int WINAPI EMUPATCH(ioctlsocket)
+(
+    SOCKET s, 
+    long cmd, 
+    u_long FAR *argp
+);
+
+#endif

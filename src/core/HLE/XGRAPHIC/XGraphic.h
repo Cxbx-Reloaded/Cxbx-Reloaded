@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->EmuXOnline.h
+// *   core->HLE->XGRAPHIC->XGraphic.h
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -31,109 +31,93 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#ifndef EMUXONLINE_H
-#define EMUXONLINE_H
+#ifndef XGRAPHIC_H
+#define XGRAPHIC_H
 
-
-// Flags returned by XNetGetEthernetLinkStatus()
-#define XNET_ETHERNET_LINK_ACTIVE           0x01
-#define XNET_ETHERNET_LINK_100MBPS          0x02
-#define XNET_ETHERNET_LINK_10MBPS           0x04
-#define XNET_ETHERNET_LINK_FULL_DUPLEX      0x08
-#define XNET_ETHERNET_LINK_HALF_DUPLEX      0x10
+typedef struct _XGPOINT3D
+{
+    DWORD u;
+    DWORD v;
+    DWORD w;
+}
+XGPOINT3D;
 
 // ******************************************************************
-// * patch: WSAStartup
+// * patch: XGIsSwizzledFormat
 // ******************************************************************
-int WINAPI EMUPATCH(WSAStartup)
+PVOID WINAPI EMUPATCH(XGIsSwizzledFormat)
 (
-    WORD        wVersionRequested,
-    WSADATA    *lpWSAData
+    X_D3DFORMAT     Format
+);
+
+#if 0 // Leave unpatched
+// ******************************************************************
+// * patch: XGSwizzleRect
+// ******************************************************************
+VOID WINAPI EMUPATCH(XGSwizzleRect)
+(
+    LPCVOID       pSource,
+    DWORD         Pitch,
+    LPCRECT       pRect,
+    LPVOID        pDest,
+    DWORD         Width,
+    DWORD         Height,
+    CONST LPPOINT pPoint,
+    DWORD         BytesPerPixel
+);
+#endif
+
+// ******************************************************************
+// * patch: XGSwizzleBox
+// ******************************************************************
+VOID WINAPI EMUPATCH(XGSwizzleBox)
+(
+    LPCVOID          pSource,
+    DWORD            RowPitch,
+    DWORD            SlicePitch,
+    CONST D3DBOX    *pBox,
+    LPVOID           pDest,
+    DWORD            Width,
+    DWORD            Height,
+    DWORD            Depth,
+    CONST XGPOINT3D *pPoint,
+    DWORD            BytesPerPixel
 );
 
 // ******************************************************************
-// * patch: XNetStartup
+// * patch: XGWriteSurfaceOrTextureToXPR
 // ******************************************************************
-INT WINAPI EMUPATCH(XNetStartup)
-(
-    const PVOID pDummy
-);
-
-// ******************************************************************
-// * patch: XNetGetEthernetLinkStatus
-// ******************************************************************
-DWORD WINAPI EMUPATCH(XNetGetEthernetLinkStatus)();
-
-// ******************************************************************
-// * patch: XOnlineLaunchNewImage
-// ******************************************************************
-HRESULT WINAPI XOnlineLaunchNewImage
-(
-    LPCSTR	lpImagePath,
-    LPVOID	pLaunchData
+HRESULT WINAPI EMUPATCH(XGWriteSurfaceOrTextureToXPR)
+( 
+	LPVOID			pResource,
+	const char*		cPath,
+	BOOL			bWriteSurfaceAsTexture
 );
 
 // ******************************************************************
-// * patch: XOnlineLogon
+// * patch: XGSetTextureHeader
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(XOnlineLogon)
+VOID	WINAPI EMUPATCH(XGSetTextureHeader)
 (
-    VOID*	pUsers,
-    DWORD*	pdwServiceIDs,
-    DWORD	dwServices,
-    HANDLE	hEvent,
-    HANDLE	pHandle
+	UINT			Width,
+	UINT			Height,
+	UINT			Levels,
+	DWORD			Usage,
+	X_D3DFORMAT		Format,
+	D3DPOOL			Pool,
+	X_D3DTexture*	pTexture,
+	UINT			Data,
+	UINT			Pitch
 );
 
-SOCKET WINAPI EMUPATCH(socket)
+// ******************************************************************
+// * patch: XFONT_OpenBitmapFontFromMemory 
+// ******************************************************************
+HRESULT WINAPI EMUPATCH(XFONT_OpenBitmapFontFromMemory) 
 (
-    int   af,
-    int   type,
-    int   protocol
-);
-
-int WINAPI EMUPATCH(connect)
-(
-    SOCKET s,
-    const struct sockaddr FAR *name,
-    int namelen
-);
-
-int WINAPI EMUPATCH(send)
-(
-    SOCKET s,
-    const char FAR *buf,
-    int len,
-    int flags
-);
-
-int WINAPI EMUPATCH(recv)
-(
-    SOCKET s,
-    char FAR *buf,
-    int len,
-    int flags
-);
-
-
-int WINAPI EMUPATCH(bind)
-(
-    SOCKET s, 
-    const struct sockaddr FAR *name, 
-    int namelen
-);
-
-int WINAPI EMUPATCH(listen)
-(
-    SOCKET s, 
-    int backlog
-);
-
-int WINAPI EMUPATCH(ioctlsocket)
-(
-    SOCKET s, 
-    long cmd, 
-    u_long FAR *argp
+	CONST void		*pFontData,
+	unsigned		uFontDataSize,
+	void			**ppFont
 );
 
 #endif

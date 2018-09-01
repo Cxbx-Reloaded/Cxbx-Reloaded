@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->HLEPatches.h
+// *   src->core->HLE->XAPI->OHCI->XInput->DInput.h
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -26,13 +26,30 @@
 // *  If not, write to the Free Software Foundation, Inc.,
 // *  59 Temple Place - Suite 330, Bostom, MA 02111-1307, USA.
 // *
-// *  (c) 2018 Luke Usher <luke.usher@outlook.com>
+// *  (c) 2002-2003 Aaron Robinson <caustik@caustik.com>
 // *
 // *  All rights reserved
 // *
 // ******************************************************************
+#ifndef DINPUT_H
+#define DINPUT_H
 
-#include <string>
+#define DIRECTINPUT_VERSION 0x0800
+#include <dinput.h>
 
-void EmuInstallPatches();
-void* GetPatchedFunctionTrampoline(std::string functionName);
+// ******************************************************************
+// * patch: DInputInit
+// ******************************************************************
+extern bool EmuDInputInit();
+
+// ******************************************************************
+// * patch: DInputCleanup
+// ******************************************************************
+extern void EmuDInputCleanup();
+
+// ******************************************************************
+// * patch: DInputPoll
+// ******************************************************************
+extern void EmuDInputPoll(PX_XINPUT_STATE Controller);
+
+#endif

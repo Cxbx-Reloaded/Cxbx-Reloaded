@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->HLEIntercept.h
+// *   src->core->HLE->XAPI->OHCI->XInput->XInput.h
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -31,30 +31,20 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#ifndef HLEINTERCEPT_H
-#define HLEINTERCEPT_H
+#ifndef XINPUT_H
+#define XINPUT_H
 
-#include <map>
+//query the total connected xinput gamepad
+DWORD XInputGamepad_Connected(void);
 
-extern bool bLLE_APU; // Set this to true for experimental APU (sound) LLE
-extern bool bLLE_GPU; // Set this to true for experimental GPU (graphics) LLE
-extern bool bLLE_USB; // Set this to true for experimental USB (input) LLE
-extern bool bLLE_JIT; // Set this to true for experimental JIT
+// ******************************************************************
+// * patch: XInputPCPoll
+// ******************************************************************
+void EmuXInputPCPoll( DWORD dwPort, XTL::PX_XINPUT_STATE Controller );
 
-extern std::map<std::string, xbaddr> g_SymbolAddresses;
+// ******************************************************************
+// * Native implementation of XInputSetState
+// ******************************************************************
+void EmuXInputSetState(DWORD dwPort, XTL::PX_XINPUT_FEEDBACK Feedback);
 
-void EmuHLEIntercept(Xbe::Header *XbeHeader);
-
-std::string GetDetectedSymbolName(xbaddr address, int *symbolOffset);
-void* GetXboxFunctionPointer(std::string functionName);
-
-// Declares an unpatched Xbox function trampoline, callable by name (with a 'XB_' prefix attached)
-#define XB_trampoline(ret, conv, name, arguments) \
-    typedef ret(conv *XB_##name##_t)arguments; \
-    static XB_##name##_t XB_##name = (XB_##name##_t)GetXboxFunctionPointer(#name);
-
-#ifdef _DEBUG_TRACE
-void VerifyHLEDataBase();
 #endif
-
-#endif // HLEINTERCEPT_H
