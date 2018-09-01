@@ -31,8 +31,8 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#ifndef EMUXINPUT_H
-#define EMUXINPUT_H
+#ifndef XINPUT_H
+#define XINPUT_H
 
 //query the total connected xinput gamepad
 DWORD XInputGamepad_Connected(void);

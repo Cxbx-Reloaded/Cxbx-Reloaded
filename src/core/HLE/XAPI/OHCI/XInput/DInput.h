@@ -31,8 +31,8 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#ifndef EMUDINPUT_H
-#define EMUDINPUT_H
+#ifndef DINPUT_H
+#define DINPUT_H
 
 #define DIRECTINPUT_VERSION 0x0800
 #include <dinput.h>
