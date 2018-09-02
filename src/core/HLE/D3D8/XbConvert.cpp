@@ -38,7 +38,7 @@
 
 #include "CxbxKrnl/Emu.h"
 #include "CxbxKrnl/EmuXTL.h"
-#include "Convert.h"
+#include "XbConvert.h"
 
 // About format color components:
 // A = alpha, byte : 0 = fully opaque, 255 = fully transparent

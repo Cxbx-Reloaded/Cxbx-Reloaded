@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->EmuD3D8.h
+// *   core->HLE->D3D8->Direct3D9->Direct3D9.h
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -31,13 +31,13 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#ifndef EMUD3D8_H
-#define EMUD3D8_H
+#ifndef DIRECT3D9_H
+#define DIRECT3D9_H
 
-#include "EmuD3D8Types.h"
-#include "CxbxKrnl.h"
+#include "../XbD3D8Types.h"
+#include "CxbxKrnl/CxbxKrnl.h"
 #include "Common/Xbe.h"
-#include "Emu.h"
+#include "CxbxKrnl/Emu.h"
 
 #define DIRECTDRAW_VERSION 0x0700
 #include <ddraw.h>

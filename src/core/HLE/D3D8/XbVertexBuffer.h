@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->EmuD3D8->VertexBuffer.h
+// *   core->HLE->D3D8->XbVertexBuffer.h
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -31,8 +31,8 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#ifndef VERTEXBUFFER_H
-#define VERTEXBUFFER_H
+#ifndef XBVERTEXBUFFER_H
+#define XBVERTEXBUFFER_H
 
 #include "Cxbx.h"
 //#include <ctime> // Conflict with io.h

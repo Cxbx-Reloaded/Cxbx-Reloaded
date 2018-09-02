@@ -9,7 +9,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->EmuD3D8Logging.cpp
+// *   core->HLE->D3D8->XbD3D8Logging.cpp
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -36,7 +36,7 @@
 #define _XBOXKRNL_DEFEXTRN_
 
 #include "Logging.h"
-#include "EmuD3D8Logging.h"
+#include "XbD3D8Logging.h"
 
 // prevent name collisions
 namespace XTL

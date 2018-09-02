@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->EmuD3D8->Convert.h
+// *   core->HLE->D3D8->XbConvert.h
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -31,10 +31,10 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#ifndef CONVERT_H
-#define CONVERT_H
+#ifndef XBCONVERT_H
+#define XBCONVERT_H
 
-#include "CxbxKrnl.h"
+#include "CxbxKrnl/CxbxKrnl.h"
 
 #define VERTICES_PER_TRIANGLE 3
 #define VERTICES_PER_QUAD 4

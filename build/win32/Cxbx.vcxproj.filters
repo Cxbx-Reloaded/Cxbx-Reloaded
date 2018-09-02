@@ -16,23 +16,23 @@
     <ClCompile Include="..\..\src\Cxbx\WndMain.cpp">
       <Filter>GUI</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\CxbxKrnl\EmuD3D8\Convert.cpp">
-      <Filter>EmuD3D8</Filter>
+    <ClCompile Include="..\..\src\core\HLE\D3D8\XbConvert.cpp">
+      <Filter>core\HLE\D3D8</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\CxbxKrnl\EmuD3D8\PixelShader.cpp">
-      <Filter>EmuD3D8</Filter>
+    <ClCompile Include="..\..\src\core\HLE\D3D8\XbPixelShader.cpp">
+      <Filter>core\HLE\D3D8</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\CxbxKrnl\EmuD3D8\PushBuffer.cpp">
-      <Filter>EmuD3D8</Filter>
+    <ClCompile Include="..\..\src\core\HLE\D3D8\XbPushBuffer.cpp">
+      <Filter>core\HLE\D3D8</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\CxbxKrnl\EmuD3D8\State.cpp">
-      <Filter>EmuD3D8</Filter>
+    <ClCompile Include="..\..\src\core\HLE\D3D8\XbState.cpp">
+      <Filter>core\HLE\D3D8</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\CxbxKrnl\EmuD3D8\VertexBuffer.cpp">
-      <Filter>EmuD3D8</Filter>
+    <ClCompile Include="..\..\src\core\HLE\D3D8\XbVertexBuffer.cpp">
+      <Filter>core\HLE\D3D8</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\CxbxKrnl\EmuD3D8\VertexShader.cpp">
-      <Filter>EmuD3D8</Filter>
+    <ClCompile Include="..\..\src\core\HLE\D3D8\XbVertexShader.cpp">
+      <Filter>core\HLE\D3D8</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\CxbxKrnl\EmuKrnl.cpp">
       <Filter>Kernel</Filter>
@@ -106,8 +106,8 @@
     <ClCompile Include="..\..\src\CxbxKrnl\Emu.cpp">
       <Filter>Emulator</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\CxbxKrnl\EmuD3D8.cpp">
-      <Filter>Emulator</Filter>
+    <ClCompile Include="..\..\src\core\HLE\D3D8\Direct3D9\Direct3D9.cpp">
+      <Filter>core\HLE\D3D8\Direct3D9</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\core\HLE\XAPI\OHCI\XInput\DInput.cpp">
       <Filter>core\HLE\XAPI\OHCI\XInput</Filter>
@@ -172,8 +172,8 @@
     <ClCompile Include="..\..\src\Cxbx\DlgAbout.cpp">
       <Filter>GUI</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\CxbxKrnl\EmuD3D8Logging.cpp">
-      <Filter>Emulator</Filter>
+    <ClCompile Include="..\..\src\core\HLE\D3D8\XbD3D8Logging.cpp">
+      <Filter>core\HLE\D3D8</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\Cxbx\DlgAudioConfig.cpp">
       <Filter>GUI</Filter>
@@ -332,23 +332,23 @@
     <ClInclude Include="..\..\src\Cxbx\Wnd.h">
       <Filter>GUI</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\CxbxKrnl\EmuD3D8\Convert.h">
-      <Filter>EmuD3D8</Filter>
+    <ClInclude Include="..\..\src\core\HLE\D3D8\XbConvert.h">
+      <Filter>core\HLE\D3D8</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\CxbxKrnl\EmuD3D8\PixelShader.h">
-      <Filter>EmuD3D8</Filter>
+    <ClInclude Include="..\..\src\core\HLE\D3D8\XbPixelShader.h">
+      <Filter>core\HLE\D3D8</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\CxbxKrnl\EmuD3D8\PushBuffer.h">
-      <Filter>EmuD3D8</Filter>
+    <ClInclude Include="..\..\src\core\HLE\D3D8\XbPushBuffer.h">
+      <Filter>core\HLE\D3D8</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\CxbxKrnl\EmuD3D8\State.h">
-      <Filter>EmuD3D8</Filter>
+    <ClInclude Include="..\..\src\core\HLE\D3D8\XbState.h">
+      <Filter>core\HLE\D3D8</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\CxbxKrnl\EmuD3D8\VertexBuffer.h">
-      <Filter>EmuD3D8</Filter>
+    <ClInclude Include="..\..\src\core\HLE\D3D8\XbVertexBuffer.h">
+      <Filter>core\HLE\D3D8</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\CxbxKrnl\EmuD3D8\VertexShader.h">
-      <Filter>EmuD3D8</Filter>
+    <ClInclude Include="..\..\src\core\HLE\D3D8\XbVertexShader.h">
+      <Filter>core\HLE\D3D8</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\CxbxKrnl\EmuKrnlLogging.h">
       <Filter>Kernel</Filter>
@@ -380,11 +380,11 @@
     <ClInclude Include="..\..\src\CxbxKrnl\DbgConsole.h">
       <Filter>Emulator</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\CxbxKrnl\EmuD3D8.h">
-      <Filter>Emulator</Filter>
+    <ClInclude Include="..\..\src\core\HLE\D3D8\Direct3D9\Direct3D9.h">
+      <Filter>core\HLE\D3D8\Direct3D9</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\CxbxKrnl\EmuD3D8Types.h">
-      <Filter>Emulator</Filter>
+    <ClInclude Include="..\..\src\core\HLE\D3D8\XbD3D8Types.h">
+      <Filter>core\HLE\D3D8</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\core\HLE\XAPI\OHCI\XInput\DInput.h">
       <Filter>core\HLE\XAPI\OHCI\XInput</Filter>
@@ -458,8 +458,8 @@
     <ClInclude Include="..\..\src\Cxbx\DlgAbout.h">
       <Filter>GUI</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\CxbxKrnl\EmuD3D8Logging.h">
-      <Filter>Emulator</Filter>
+    <ClInclude Include="..\..\src\core\HLE\D3D8\XbD3D8Logging.h">
+      <Filter>core\HLE\D3D8</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\Common\XADPCM.h">
       <Filter>Shared</Filter>
@@ -717,9 +717,6 @@
     <Filter Include="GUI">
       <UniqueIdentifier>{445ff8dc-8414-41ad-8681-01243121d574}</UniqueIdentifier>
     </Filter>
-    <Filter Include="EmuD3D8">
-      <UniqueIdentifier>{4ee1fc9a-ee21-4764-b96f-1caf41881bab}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Kernel">
       <UniqueIdentifier>{0187aa1f-d227-4dd5-b9ae-a336795923c7}</UniqueIdentifier>
     </Filter>
@@ -797,6 +794,9 @@
     </Filter>
     <Filter Include="core\HLE\D3D8">
       <UniqueIdentifier>{6f39b9de-ab9d-4780-b687-2d930f86738e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="core\HLE\D3D8\Direct3D9">
+      <UniqueIdentifier>{c56dc02e-4531-4cd2-aac2-a3c97eec11c1}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

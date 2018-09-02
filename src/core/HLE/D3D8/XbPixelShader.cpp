@@ -9,7 +9,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->PixelShader.cpp
+// *   core->HLE->D3D8->XbPixelShader.cpp
 // *
 // *  This file is part of the Cxbx project.
 // *

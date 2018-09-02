@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->EmuD3D8Logging.h
+// *   core->HLE->D3D8->XbD3D8Logging.h
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -42,7 +42,7 @@
 
 namespace XTL
 {
-#include "EmuD3D8Types.h"
+#include "XbD3D8Types.h"
 
 // Additional types, exclusively for logging (not really enums) :
 enum D3DVS20CAPS;

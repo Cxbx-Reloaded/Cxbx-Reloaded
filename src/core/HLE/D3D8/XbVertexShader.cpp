@@ -9,7 +9,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->EmuD3D8->VertexShader.cpp
+// *   core->HLE->D3D8->XbVertexShader.cpp
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -43,7 +43,7 @@
 #include "CxbxKrnl/Emu.h"
 #include "CxbxKrnl/EmuFS.h"
 #include "CxbxKrnl/EmuXTL.h"
-#include "CxbxKrnl/EmuD3D8Types.h" // For X_D3DVSDE_*
+#include "XbD3D8Types.h" // For X_D3DVSDE_*
 #include <sstream>
 #include <unordered_map>
 #include <array>

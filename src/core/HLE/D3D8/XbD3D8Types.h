@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->EmuD3D8Types.h
+// *   core->HLE->D3D8->XbD3D8Types.h
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -31,8 +31,8 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#ifndef EMUD3D8TYPES_H
-#define EMUD3D8TYPES_H
+#ifndef XBD3D8TYPES_H
+#define XBD3D8TYPES_H
 
 #undef UNICODE // make sure dxerr.h DXGetErrorString is aliassed to *A, not *W
 

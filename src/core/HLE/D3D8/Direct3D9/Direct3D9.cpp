@@ -9,7 +9,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->EmuD3D8.cpp
+// *   core->HLE->D3D8->Direct3D9->Direct3D9.cpp
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -36,7 +36,7 @@
 #define _XBOXKRNL_DEFEXTRN_
 #define LOG_PREFIX CXBXR_MODULE::D3D8
 
-#include "xxhash32.h"
+#include "CxbxKrnl/xxhash32.h"
 #include <condition_variable>
 
 // prevent name collisions
@@ -47,16 +47,16 @@ namespace xboxkrnl
 
 #include "CxbxUtil.h"
 #include "CxbxVersion.h"
-#include "CxbxKrnl.h"
-#include "Emu.h"
-#include "EmuFS.h"
-#include "EmuShared.h"
-#include "DbgConsole.h"
-#include "ResourceTracker.h"
-#include "VMManager.h" // for g_VMManager
-#include "EmuXTL.h"
+#include "CxbxKrnl/CxbxKrnl.h"
+#include "CxbxKrnl/Emu.h"
+#include "CxbxKrnl/EmuFS.h"
+#include "CxbxKrnl/EmuShared.h"
+#include "CxbxKrnl/DbgConsole.h"
+#include "CxbxKrnl/ResourceTracker.h"
+#include "CxbxKrnl/VMManager.h" // for g_VMManager
+#include "CxbxKrnl/EmuXTL.h"
 #include "Logging.h"
-#include "EmuD3D8Logging.h"
+#include "../XbD3D8Logging.h"
 #include "core/HLE/Intercept.hpp" // for bLLE_GPU
 #include "Cxbx/ResCxbx.h"
 

@@ -209,7 +209,7 @@
     <ClInclude Include="..\..\src\Common\XADPCM.h" />
     <ClInclude Include="..\..\src\Common\XbePrinter.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\crc32c.h" />
-    <ClInclude Include="..\..\src\CxbxKrnl\EmuD3D8Logging.h" />
+    <ClInclude Include="..\..\src\core\HLE\D3D8\XbD3D8Logging.h" />
     <ClInclude Include="..\..\src\Common\EmuEEPROM.h" />
     <ClInclude Include="..\..\src\Common\Logging.h" />
     <ClInclude Include="..\..\src\Common\Win32\AlignPosfix1.h" />
@@ -219,14 +219,14 @@
     <ClInclude Include="..\..\src\Cxbx.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\CxbxKrnl.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\DbgConsole.h" />
-    <ClInclude Include="..\..\src\CxbxKrnl\EmuD3D8.h" />
-    <ClInclude Include="..\..\src\CxbxKrnl\EmuD3D8Types.h" />
-    <ClInclude Include="..\..\src\CxbxKrnl\EmuD3D8\Convert.h" />
-    <ClInclude Include="..\..\src\CxbxKrnl\EmuD3D8\PixelShader.h" />
-    <ClInclude Include="..\..\src\CxbxKrnl\EmuD3D8\PushBuffer.h" />
-    <ClInclude Include="..\..\src\CxbxKrnl\EmuD3D8\State.h" />
-    <ClInclude Include="..\..\src\CxbxKrnl\EmuD3D8\VertexBuffer.h" />
-    <ClInclude Include="..\..\src\CxbxKrnl\EmuD3D8\VertexShader.h" />
+    <ClInclude Include="..\..\src\core\HLE\D3D8\Direct3D9\Direct3D9.h" />
+    <ClInclude Include="..\..\src\core\HLE\D3D8\XbD3D8Types.h" />
+    <ClInclude Include="..\..\src\core\HLE\D3D8\XbConvert.h" />
+    <ClInclude Include="..\..\src\core\HLE\D3D8\XbPixelShader.h" />
+    <ClInclude Include="..\..\src\core\HLE\D3D8\XbPushBuffer.h" />
+    <ClInclude Include="..\..\src\core\HLE\D3D8\XbState.h" />
+    <ClInclude Include="..\..\src\core\HLE\D3D8\XbVertexBuffer.h" />
+    <ClInclude Include="..\..\src\core\HLE\D3D8\XbVertexShader.h" />
     <ClInclude Include="..\..\src\core\HLE\XAPI\OHCI\XInput\DInput.h" />
     <ClInclude Include="..\..\src\core\HLE\DSOUND\DirectSound\DirectSound.hpp" />
     <ClInclude Include="..\..\src\core\HLE\DSOUND\DirectSound\DirectSoundInline.hpp" />
@@ -352,7 +352,7 @@
     <ClCompile Include="..\..\src\Common\Win32\XBPortMapping.cpp" />
     <ClCompile Include="..\..\src\Common\XbePrinter.cpp" />
     <ClCompile Include="..\..\src\CxbxKrnl\crc32c.cpp" />
-    <ClCompile Include="..\..\src\CxbxKrnl\EmuD3D8Logging.cpp" />
+    <ClCompile Include="..\..\src\core\HLE\D3D8\XbD3D8Logging.cpp" />
     <ClCompile Include="..\..\src\Common\EmuEEPROM.cpp" />
     <ClCompile Include="..\..\src\Common\Logging.cpp" />
     <ClCompile Include="..\..\src\Common\Win32\EmuShared.cpp">
@@ -382,43 +382,13 @@
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
-    <ClCompile Include="..\..\src\CxbxKrnl\EmuD3D8.cpp">
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
-    </ClCompile>
-    <ClCompile Include="..\..\src\CxbxKrnl\EmuD3D8\Convert.cpp">
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
-    </ClCompile>
-    <ClCompile Include="..\..\src\CxbxKrnl\EmuD3D8\PixelShader.cpp" />
-    <ClCompile Include="..\..\src\CxbxKrnl\EmuD3D8\PushBuffer.cpp">
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
-    </ClCompile>
-    <ClCompile Include="..\..\src\CxbxKrnl\EmuD3D8\State.cpp">
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
-    </ClCompile>
-    <ClCompile Include="..\..\src\CxbxKrnl\EmuD3D8\VertexBuffer.cpp">
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
-    </ClCompile>
-    <ClCompile Include="..\..\src\CxbxKrnl\EmuD3D8\VertexShader.cpp">
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
-    </ClCompile>
+    <ClCompile Include="..\..\src\core\HLE\D3D8\Direct3D9\Direct3D9.cpp" />
+    <ClCompile Include="..\..\src\core\HLE\D3D8\XbConvert.cpp" />
+    <ClCompile Include="..\..\src\core\HLE\D3D8\XbPixelShader.cpp" />
+    <ClCompile Include="..\..\src\core\HLE\D3D8\XbPushBuffer.cpp" />
+    <ClCompile Include="..\..\src\core\HLE\D3D8\XbState.cpp" />
+    <ClCompile Include="..\..\src\core\HLE\D3D8\XbVertexBuffer.cpp" />
+    <ClCompile Include="..\..\src\core\HLE\D3D8\XbVertexShader.cpp" />
     <ClCompile Include="..\..\src\core\HLE\XAPI\OHCI\XInput\DInput.cpp" />
     <ClCompile Include="..\..\src\core\HLE\DSOUND\DirectSound\DirectSound.cpp" />
     <ClCompile Include="..\..\src\CxbxKrnl\EmuFile.cpp">
