@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->EmuD3D8->PushBuffer.h
+// *   core->HLE->D3D8->XbD3D8->State.h
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -26,30 +26,33 @@
 // *  If not, write to the Free Software Foundation, Inc.,
 // *  59 Temple Place - Suite 330, Bostom, MA 02111-1307, USA.
 // *
-// *  (c) 2002-2003 Aaron Robinson <caustik@caustik.com>
+// *  (c) 2002-2004 Aaron Robinson <caustik@caustik.com>
 // *
 // *  All rights reserved
 // *
 // ******************************************************************
-#ifndef PUSHBUFFER_H
-#define PUSHBUFFER_H
+#ifndef XBSTATE_H
+#define XBSTATE_H
 
-extern int DxbxFVF_GetNumberOfTextureCoordinates(DWORD dwFVF, int aTextureIndex);
-extern UINT DxbxFVFToVertexSizeInBytes(DWORD dwFVF, BOOL bIncludeTextures);
+#define X_D3DRS_UNSUPPORTED (X_D3DRS_LAST + 1)
 
-extern void CxbxDrawIndexed(CxbxDrawContext &DrawContext);
-extern void CxbxDrawPrimitiveUP(CxbxDrawContext &DrawContext);
+// XDK version independent renderstate table, containing pointers to the original locations.
+extern DWORD *EmuMappedD3DRenderState[X_D3DRS_UNSUPPORTED]; // 1 extra for the unsupported value
 
-extern void EmuExecutePushBuffer
-(
-    X_D3DPushBuffer       *pPushBuffer,
-    X_D3DFixup            *pFixup
-);
+struct X_Stream {
+    DWORD Stride;
+    DWORD Offset;
+    XTL::X_D3DVertexBuffer *pVertexBuffer;
+};
 
-extern void EmuExecutePushBufferRaw
-(
-	void *pPushData,
-	uint32_t uSizeInBytes
-);
+// EmuD3DDeferredRenderState
+extern DWORD *EmuD3DDeferredRenderState;
+
+// EmuD3DDeferredTextureState
+extern DWORD *EmuD3DDeferredTextureState;
+
+extern void EmuUpdateDeferredStates();
+
+extern void CxbxUpdateNativeD3DResources();
 
 #endif

@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->EmuD3D8->PixelShader.h
+// *   core->HLE->D3D8->XbPixelShader.h
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -31,8 +31,8 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#ifndef PIXELSHADER_H
-#define PIXELSHADER_H
+#ifndef XBPIXELSHADER_H
+#define XBPIXELSHADER_H
 
 #pragma once
 

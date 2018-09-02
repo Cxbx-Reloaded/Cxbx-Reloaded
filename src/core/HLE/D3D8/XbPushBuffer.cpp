@@ -9,7 +9,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->EmuD3D->PushBuffer.cpp
+// *   core->HLE->D3D8->XbPushBuffer.cpp
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -41,7 +41,7 @@
 
 #include "CxbxKrnl/Emu.h"
 #include "CxbxKrnl/EmuXTL.h"
-#include "CxbxKrnl/EmuD3D8Types.h" // For X_D3DFORMAT
+#include "XbD3D8Types.h" // For X_D3DFORMAT
 #include "CxbxKrnl/ResourceTracker.h"
 #include "devices/video/nv2a.h" // For PGRAPHState
 #include "devices/video/nv2a_int.h" // For NV** defines

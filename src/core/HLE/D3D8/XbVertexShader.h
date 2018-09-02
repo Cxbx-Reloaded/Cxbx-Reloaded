@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->EmuD3D8->VertexShader.h
+// *   core->HLE->D3D8->XbVertexShader.h
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -31,8 +31,8 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#ifndef VERTEXSHADER_H
-#define VERTEXSHADER_H
+#ifndef XBVERTEXSHADER_H
+#define XBVERTEXSHADER_H
 
 #include "Cxbx.h"
 
