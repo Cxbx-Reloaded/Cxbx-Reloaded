@@ -44,7 +44,7 @@
 #include "CxbxKrnl/EmuFS.h"
 #include "Common/Logging.h"
 #include "CxbxKrnl/EmuXTL.h"
-#include "CxbxKrnl/EmuD3D8Logging.h" // for log rendering of X_D3DFORMAT, etc.
+#include "core/HLE/D3D8/XbD3D8Logging.h" // for log rendering of X_D3DFORMAT, etc.
 
 // ******************************************************************
 // * patch: XGIsSwizzledFormat
