@@ -468,12 +468,7 @@
     <ClCompile Include="..\..\src\CxbxKrnl\EmuX86.cpp" />
     <ClCompile Include="..\..\src\core\HLE\XACTENG\XactEng.cpp" />
     <ClCompile Include="..\..\src\core\HLE\XAPI\Xapi.cpp" />
-    <ClCompile Include="..\..\src\core\HLE\XGRAPHIC\XGraphic.cpp">
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
-    </ClCompile>
+    <ClCompile Include="..\..\src\core\HLE\XGRAPHIC\XGraphic.cpp" />
     <ClCompile Include="..\..\src\core\HLE\XAPI\OHCI\XInput\XInput.cpp" />
     <ClCompile Include="..\..\src\core\HLE\XONLINE\XOnline.cpp" />
     <ClCompile Include="..\..\src\CxbxKrnl\gloffscreen\glextensions.cpp" />
