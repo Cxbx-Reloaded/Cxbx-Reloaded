@@ -76,9 +76,9 @@ static int splashLogoWidth, splashLogoHeight;
 
 bool g_SaveOnExit = true;
 
-void ClearHLECache(const char sStorageLocation[MAX_PATH])
+void ClearSymbolCache(const char sStorageLocation[MAX_PATH])
 {
-	std::string cacheDir = std::string(sStorageLocation) + "\\HLECache\\";
+	std::string cacheDir = std::string(sStorageLocation) + "\\SymbolCache\\";
 	std::string fullpath = cacheDir + "*.ini";
 
 	WIN32_FIND_DATA data;
@@ -90,7 +90,7 @@ void ClearHLECache(const char sStorageLocation[MAX_PATH])
 			if ((data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) == 0) {
 				fullpath = cacheDir + data.cFileName;
 
-				if (!DeleteFile(fullpath.c_str())) {
+				if (!std::experimental::filesystem::remove(fullpath)) {
 					break;
 				}
 			}
@@ -1049,14 +1049,14 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
 			case ID_CACHE_CLEARHLECACHE_ALL:
 			{
-				ClearHLECache(g_Settings->GetDataLocation().c_str());
-				MessageBox(m_hwnd, "The entire HLE Cache has been cleared.", "Cxbx-Reloaded", MB_OK);
+				ClearSymbolCache(g_Settings->GetDataLocation().c_str());
+				MessageBox(m_hwnd, "The entire Symbol Cache has been cleared.", "Cxbx-Reloaded", MB_OK);
 			}
 			break;
 
 			case ID_CACHE_CLEARHLECACHE_CURRENT:
 			{
-				std::string cacheDir = g_Settings->GetDataLocation() + "\\HLECache\\";
+				std::string cacheDir = g_Settings->GetDataLocation() + "\\SymbolCache\\";
 
 				// Hash the loaded XBE's header, use it as a filename
 				uint32_t uiHash = XXHash32::hash((void*)&m_Xbe->m_Header, sizeof(Xbe::Header), 0);
@@ -1066,8 +1066,8 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 				sstream << cacheDir << szTitleName << "-" << std::hex << uiHash << ".ini";
 				std::string fullpath = sstream.str();
 
-				if (DeleteFile(fullpath.c_str())) {
-					MessageBox(m_hwnd, "This title's HLE Cache entry has been cleared.", "Cxbx-Reloaded", MB_OK);
+				if (std::experimental::filesystem::remove(fullpath)) {
+					MessageBox(m_hwnd, "This title's Symbol Cache entry has been cleared.", "Cxbx-Reloaded", MB_OK);
 				}
 			}
 			break;
