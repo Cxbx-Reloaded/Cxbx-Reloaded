@@ -19,13 +19,12 @@ Cxbx-Reloaded is not yet ready for general release, but the latest development b
 
 ### Latest Stable
 Grab these if you just want to use the emulator to play games.
-* [Latest Stable (Release Build)](https://ci.appveyor.com/api/projects/SoullessSentinel/cxbx-reloaded/artifacts/export/Release.zip?branch=master&job=Configuration:%20Release&pr=false)
-* [Latest Stable (Debug Build)](https://ci.appveyor.com/api/projects/SoullessSentinel/cxbx-reloaded/artifacts/export/Debug.zip?branch=master&job=Configuration:%20Debug&pr=false)
+* [Latest Stable Build](https://ci.appveyor.com/api/projects/SoullessSentinel/cxbx-reloaded/artifacts/export/Release.zip?branch=master&job=Configuration:%20Release&pr=false)
+
 
 ### Development Builds
 Grab these builds if you want to test the latest and greatest features. These builds are likely to be more unstable than release builds, and are not recommended for just playing games.
-* [Latest Development Build (Release)](https://ci.appveyor.com/api/projects/SoullessSentinel/cxbx-reloaded/artifacts/export/Release.zip?branch=develop&job=Configuration:%20Release&pr=false)
-* [Latest Development Build (Debug)](https://ci.appveyor.com/api/projects/SoullessSentinel/cxbx-reloaded/artifacts/export/Debug.zip?branch=develop&job=Configuration:%20Debug&pr=false)
+* [Latest Development Build](https://ci.appveyor.com/api/projects/SoullessSentinel/cxbx-reloaded/artifacts/export/Release.zip?branch=develop&job=Configuration:%20Release&pr=false)
 
 * [Full build history](https://ci.appveyor.com/project/SoullessSentinel/cxbx-reloaded/history)
 
