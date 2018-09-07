@@ -561,7 +561,6 @@ struct X_D3DResource
 
 // special resource lock flags
 #define X_D3DRESOURCE_LOCK_FLAG_NOSIZE  0xEFFFFFFF
-#define X_D3DRESOURCE_LOCK_PALETTE 0x8000BEEF
 
 // Lock flags
 #define X_D3DLOCK_NOFLUSH               0x00000010 // Xbox extension

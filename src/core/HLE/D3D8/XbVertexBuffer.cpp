@@ -43,9 +43,6 @@
 #include "CxbxKrnl/EmuXTL.h"
 #include "CxbxKrnl/ResourceTracker.h"
 
-// TODO: Find somewhere to put this that doesn't conflict with XTL::
-extern void EmuUpdateActiveTextureStages();
-
 #include <ctime>
 #include <unordered_map>
 #include <chrono>

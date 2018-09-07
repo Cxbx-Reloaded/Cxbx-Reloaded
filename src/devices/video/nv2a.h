@@ -386,7 +386,8 @@ typedef struct PGRAPHState {
 	GLuint gl_inline_array_buffer;
 
 	unsigned int inline_elements_length;
-	uint32_t inline_elements[NV2A_MAX_BATCH_LENGTH];
+	uint16_t inline_elements[NV2A_MAX_BATCH_LENGTH]; // Cxbx-Reloaded TODO : Restore uint32_t once HLE_draw_inline_elements can using that
+
 
 	unsigned int inline_buffer_length;
 
@@ -408,13 +409,17 @@ typedef struct PGRAPHState {
 static void lockGL_(PGRAPHState* pg, unsigned int line) {
 	//printf("Locking from line %d\n", line);
 	qemu_mutex_lock(&pg->gl_lock);
-	glo_set_current(pg->gl_context);
+	if (pg->opengl_enabled) {
+		glo_set_current(pg->gl_context);
+	}
 }
 
 #define unlockGL(x) unlockGL_(x, __LINE__)
 static void unlockGL_(PGRAPHState* pg, unsigned int line) {
 	//printf("Unlocking from line %d\n", line);
-	glo_set_current(NULL);
+	if (pg->opengl_enabled) {
+		glo_set_current(NULL);
+	}
 	qemu_mutex_unlock(&pg->gl_lock);
 }
 
@@ -665,6 +670,9 @@ public:
 	// PCI Device functions
 	void Init();
 	void Reset();
+
+	// State Getter: Used for HLE reading of device state
+	NV2AState* GetDeviceState() { return m_nv2a_state; };
 
 	uint32_t IORead(int barIndex, uint32_t port, unsigned size);
 	void IOWrite(int barIndex, uint32_t port, uint32_t value, unsigned size);
