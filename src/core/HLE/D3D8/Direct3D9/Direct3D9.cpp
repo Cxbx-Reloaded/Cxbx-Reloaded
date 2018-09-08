@@ -800,9 +800,6 @@ XTL::IDirect3DResource *GetHostResource(XTL::X_D3DResource *pXboxResource, DWORD
 
 	EmuVerifyResourceIsRegistered(pXboxResource, D3DUsage, iTextureStage, /*dwSize=*/0);
 
-	if (pXboxResource->Lock == X_D3DRESOURCE_LOCK_PALETTE)
-		return nullptr;
-
 	auto key = GetHostResourceKey(pXboxResource);
 	auto it = g_XboxDirect3DResources.find(key);
 	if (it == g_XboxDirect3DResources.end() || !it->second.pHostResource) {
@@ -861,8 +858,7 @@ bool HostResourceRequiresUpdate(resource_key_t key, DWORD dwSize)
 
 	// Currently, we only dynamically update Textures and Surfaces, so if our resource
 	// isn't of these types, do nothing
-	DWORD type = GetXboxCommonResourceType(it->second.pXboxResource);
-	if (type != X_D3DCOMMON_TYPE_SURFACE && type != X_D3DCOMMON_TYPE_TEXTURE) {
+	if (!IsResourceAPixelContainer(it->second.pXboxResource)) {
 		return false;
 	}
 
@@ -1022,6 +1018,7 @@ void SetHostIndexBuffer(XTL::X_D3DResource *pXboxResource, XTL::IDirect3DIndexBu
 
 	SetHostResource(pXboxResource, (XTL::IDirect3DResource*)pHostIndexBuffer);
 }
+
 int XboxD3DPaletteSizeToBytes(const XTL::X_D3DPALETTESIZE Size)
 {
 	static int lk[4] =
@@ -2360,12 +2357,12 @@ static void EmuVerifyResourceIsRegistered(XTL::X_D3DResource *pResource, DWORD D
         //check if the same key existed in the HostResource map already. if there is a old pXboxResource in the map with the same key but different resource address, it must be freed first.
         
         if (it->second.pXboxResource != pResource) {
-            //printf("EmuVerifyResourceIsRegistered passed in XboxResource collipse HostResource map!! key : %llX , map pXboxResource : %08X , passed in pResource : %08X \n", key, it->second.pXboxResource, pResource);
-            FreeHostResource(key);
+            //printf("EmuVerifyResourceIsRegistered passed in XboxResource collides HostResource map!! key : %llX , map pXboxResource : %08X , passed in pResource : %08X \n", key, it->second.pXboxResource, pResource);
         }
-        else
-        if (!HostResourceRequiresUpdate(key, dwSize)) {
-			return;
+        else {
+			if (!HostResourceRequiresUpdate(key, dwSize)) {
+				return;
+			}
 		}
 
 		FreeHostResource(key);
@@ -3783,8 +3780,6 @@ VOID __fastcall XTL::EMUPATCH(D3DDevice_SetVertexShaderConstantNotInlineFast)
 
 	EMUPATCH(D3DDevice_SetVertexShaderConstant)(Register, pConstantData, ConstantCount / 4);
 }
-
-BOOL g_bBadIndexData = FALSE;
 
 // LTCG specific D3DDevice_SetTexture function...
 // This uses a custom calling convention where parameter is passed in EAX
@@ -7925,9 +7920,9 @@ XTL::D3DCOLOR * WINAPI XTL::EMUPATCH(D3DPalette_Lock2)
 )
 {
 	LOG_FUNC_BEGIN
-	LOG_FUNC_ARG(pThis)
-	LOG_FUNC_ARG(Flags)
-	LOG_FUNC_END;
+		LOG_FUNC_ARG(pThis)
+		LOG_FUNC_ARG(Flags)
+		LOG_FUNC_END;
 
 	XB_trampoline(XTL::D3DCOLOR*, WINAPI, D3DPalette_Lock2, (X_D3DPalette*, DWORD));
 	XTL::D3DCOLOR* pData = XB_D3DPalette_Lock2(pThis, Flags);
