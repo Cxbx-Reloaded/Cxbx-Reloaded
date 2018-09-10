@@ -127,7 +127,7 @@ NT_TIB *GetNtTib()
 }
 
 
-xboxkrnl::KPCR* KeGetPcr();
+xboxkrnl::KPCR* WINAPI KeGetPcr();
 
 uint32_t fs_lock = 0;
 
