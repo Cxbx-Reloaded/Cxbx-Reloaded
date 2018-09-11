@@ -84,7 +84,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		bKernel = true;
 
 		// Perform check if command line contain gui's hWnd value.
-		if (__argc > 2) {
+		if (__argc > 3) {
 			hWnd = (HWND)std::stoi(__argv[3], nullptr, 10);
 
 			hWnd = IsWindow(hWnd) ? hWnd : nullptr;
