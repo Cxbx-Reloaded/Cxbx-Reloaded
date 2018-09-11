@@ -869,19 +869,19 @@ void CxbxKrnlMain(int argc, char* argv[])
 
 	// Get DCHandle :
 	HWND hWnd = 0;
-	if (argc > 2) {
+	if (argc > 3) {
 		hWnd = (HWND)std::atoi(argv[3]);
 	}
 
 	// Get KernelDebugMode :
 	DebugMode DbgMode = DebugMode::DM_NONE;
-	if (argc > 3) {
+	if (argc > 4) {
 		DbgMode = (DebugMode)std::atoi(argv[4]);
 	}
 
 	// Get KernelDebugFileName :
 	std::string DebugFileName = "";
-	if (argc > 4) {
+	if (argc > 5) {
 		DebugFileName = argv[5];
 	}
 
