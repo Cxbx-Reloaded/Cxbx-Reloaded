@@ -240,8 +240,6 @@ void HLE_draw_inline_array(NV2AState *d)
 
 	using namespace XTL;
 
-	CxbxUpdateNativeD3DResources();
-
 	//DWORD vertex data array, 
 	//To be used as a replacement for DrawVerticesUP, the caller needs to set the vertex format using IDirect3DDevice8::SetVertexShader before calling BeginPush. All attributes in the vertex format must be padded DWORD multiples, and the vertex attributes must be specified in the canonical FVF ordering (position followed by weight, normal, diffuse, and so on).
 	// retrieve vertex shader
