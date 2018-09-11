@@ -1351,6 +1351,7 @@ void pgraph_handle_method(NV2AState *d,
 				parameter);
 			break;
 		case NV097_SET_DEPTH_TEST_ENABLE:
+			// Test-case : Whiplash
 			SET_MASK(pg->regs[NV_PGRAPH_CONTROL_0], NV_PGRAPH_CONTROL_0_ZENABLE,
 				parameter);
 			break;
@@ -1507,6 +1508,7 @@ void pgraph_handle_method(NV2AState *d,
 		}
 
 		case NV097_SET_DEPTH_FUNC:
+			// Test-case : Whiplash
 			SET_MASK(pg->regs[NV_PGRAPH_CONTROL_0], NV_PGRAPH_CONTROL_0_ZFUNC,
 				parameter & 0xF);
 			break;
@@ -2324,6 +2326,10 @@ void pgraph_handle_method(NV2AState *d,
 			break;
 
 		case NV097_ARRAY_ELEMENT16:
+			//LOG_TEST_CASE("NV2A_VB_ELEMENT_U16");	
+			// Test-case : Turok (in main menu)	
+			// Test-case : Hunter Redeemer	
+			// Test-case : Otogi (see https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/pull/1113#issuecomment-385593814)
 			assert(pg->inline_elements_length < NV2A_MAX_BATCH_LENGTH);
 			pg->inline_elements[
 				pg->inline_elements_length++] = parameter & 0xFFFF;
@@ -2331,6 +2337,8 @@ void pgraph_handle_method(NV2AState *d,
 				pg->inline_elements_length++] = parameter >> 16;
 			break;
 		case NV097_ARRAY_ELEMENT32:
+			//LOG_TEST_CASE("NV2A_VB_ELEMENT_U32");	
+			// Test-case : Turok (in main menu)
 			assert(pg->inline_elements_length < NV2A_MAX_BATCH_LENGTH);
 			pg->inline_elements[
 				pg->inline_elements_length++] = parameter;
@@ -2709,6 +2717,7 @@ void pgraph_handle_method(NV2AState *d,
 			break;
 
 		case NV097_SET_TRANSFORM_EXECUTION_MODE:
+			// Test-case : Whiplash
 			SET_MASK(pg->regs[NV_PGRAPH_CSV0_D], NV_PGRAPH_CSV0_D_MODE,
 				GET_MASK(parameter,
 					NV097_SET_TRANSFORM_EXECUTION_MODE_MODE));
@@ -2717,6 +2726,7 @@ void pgraph_handle_method(NV2AState *d,
 					NV097_SET_TRANSFORM_EXECUTION_MODE_RANGE_MODE));
 			break;
 		case NV097_SET_TRANSFORM_PROGRAM_CXT_WRITE_EN:
+			// Test-case : Whiplash
 			pg->enable_vertex_program_write = parameter;
 			break;
 		case NV097_SET_TRANSFORM_PROGRAM_LOAD:
