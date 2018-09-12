@@ -2459,6 +2459,46 @@ void CxbxUpdateActiveIndexBuffer
 		CxbxKrnlCleanup(LOG_PREFIX, "CxbxUpdateActiveIndexBuffer: SetIndices Failed!");
 }
 
+void Direct3D_CreateDevice_Start
+(
+	XTL::X_D3DPRESENT_PARAMETERS     *pPresentationParameters
+)
+{
+	// HACK: Disable multisampling... See comment in CreateDevice proxy for more info
+	pPresentationParameters->MultiSampleType = XTL::X_D3DMULTISAMPLE_NONE;
+
+	// create default device *before* calling Xbox Direct3D_CreateDevice trampline
+	// to avoid hitting EMUPATCH'es that need a valid g_pD3DDevice
+	{
+		// Wait until proxy is done with an existing call (i highly doubt this situation will come up)
+		while (g_EmuCDPD.bReady)
+			Sleep(10);
+
+		// Cache parameters
+		memcpy(&(g_EmuCDPD.XboxPresentationParameters), pPresentationParameters, sizeof(XTL::X_D3DPRESENT_PARAMETERS));
+
+		// Signal proxy thread (this will trigger EmuCreateDeviceProxy to call CreateDevice)
+		g_EmuCDPD.bCreate = true;
+		g_EmuCDPD.bReady = true;
+
+		// Wait until host proxy is completed (otherwise, Xbox code could hit patches that need an assigned g_pD3DDevice)
+		while (g_EmuCDPD.bReady)
+			Sleep(10);
+	}
+}
+
+void Direct3D_CreateDevice_End()
+{
+	// Set g_XboxD3DDevice to point to the Xbox D3D Device
+	auto it = g_SymbolAddresses.find("D3DDEVICE");
+	if (it != g_SymbolAddresses.end()) {
+		xbaddr dwD3DDevice = it->second;
+		if (dwD3DDevice != xbnull) {
+			g_XboxD3DDevice = *((DWORD**)dwD3DDevice);
+		}
+    }
+}
+
 // LTCG specific Direct3D_CreateDevice function...
 // This uses a custom calling convention passed unknown parameters
 // Test-case: Ninja Gaiden
@@ -2471,40 +2511,13 @@ HRESULT WINAPI XTL::EMUPATCH(Direct3D_CreateDevice_4)
 		LOG_FUNC_ARG(pPresentationParameters)
 		LOG_FUNC_END;
 
-	// HACK: Disable multisampling... See comment in CreateDevice proxy for more info
-	pPresentationParameters->MultiSampleType = XTL::X_D3DMULTISAMPLE_NONE;
-
-	// create default device *before* calling Xbox Direct3D_CreateDevice trampline
-	// to avoid hitting EMUPATCH'es that need a valid g_pD3DDevice
-	{
-		// Wait until proxy is done with an existing call (i highly doubt this situation will come up)
-		while (g_EmuCDPD.bReady)
-			Sleep(10);
-
-		// Cache parameters
-		memcpy(&(g_EmuCDPD.XboxPresentationParameters), pPresentationParameters, sizeof(X_D3DPRESENT_PARAMETERS));
-
-		// Signal proxy thread (this will trigger EmuCreateDeviceProxy to call CreateDevice)
-		g_EmuCDPD.bCreate = true;
-		g_EmuCDPD.bReady = true;
-
-		// Wait until host proxy is completed (otherwise, Xbox code could hit patches that need an assigned g_pD3DDevice)
-		while (g_EmuCDPD.bReady)
-			Sleep(10);
-	}
+	Direct3D_CreateDevice_Start(pPresentationParameters);
 
 	// Only then call Xbox CreateDevice function
 	XB_trampoline(HRESULT, WINAPI, Direct3D_CreateDevice_4, (X_D3DPRESENT_PARAMETERS*));
 	HRESULT hRet = XB_Direct3D_CreateDevice_4(pPresentationParameters);
 
-	// Set g_XboxD3DDevice to point to the Xbox D3D Device
-    xbaddr dwD3DDevice = xbnull;
-    if (g_SymbolAddresses.find("D3DDEVICE") != g_SymbolAddresses.end()) {
-        dwD3DDevice = g_SymbolAddresses["D3DDEVICE"];
-    }
-	if (dwD3DDevice != xbnull) {
-		g_XboxD3DDevice = *((DWORD**)dwD3DDevice);
-	}
+	Direct3D_CreateDevice_End();
 
 	return hRet;
 }
@@ -2527,37 +2540,13 @@ HRESULT WINAPI XTL::EMUPATCH(Direct3D_CreateDevice_16)
 		LOG_FUNC_ARG(pPresentationParameters)
 		LOG_FUNC_END;
 
-	// HACK: Disable multisampling... See comment in CreateDevice proxy for more info
-	pPresentationParameters->MultiSampleType = XTL::X_D3DMULTISAMPLE_NONE;
-
-	// create default device *before* calling Xbox Direct3D_CreateDevice trampline
-	// to avoid hitting EMUPATCH'es that need a valid g_pD3DDevice
-	{
-		// Wait until proxy is done with an existing call (i highly doubt this situation will come up)
-		while (g_EmuCDPD.bReady)
-			Sleep(10);
-
-		// Cache parameters
-		memcpy(&(g_EmuCDPD.XboxPresentationParameters), pPresentationParameters, sizeof(X_D3DPRESENT_PARAMETERS));
-
-		// Signal proxy thread (this will trigger EmuCreateDeviceProxy to call CreateDevice)
-		g_EmuCDPD.bCreate = true;
-		g_EmuCDPD.bReady = true;
-
-		// Wait until host proxy is completed (otherwise, Xbox code could hit patches that need an assigned g_pD3DDevice)
-		while (g_EmuCDPD.bReady)
-			Sleep(10);
-	}
+	Direct3D_CreateDevice_Start(pPresentationParameters);
 
 	// Only then call Xbox CreateDevice function
 	XB_trampoline(HRESULT, WINAPI, Direct3D_CreateDevice_16, (UINT, D3DDEVTYPE, HWND, X_D3DPRESENT_PARAMETERS*));
 	HRESULT hRet = XB_Direct3D_CreateDevice_16(Adapter, DeviceType, hFocusWindow, pPresentationParameters);
 
-	// Set g_XboxD3DDevice to point to the Xbox D3D Device
-    xbaddr dwD3DDevice = g_SymbolAddresses["D3DDEVICE"];
-	if (dwD3DDevice != xbnull) {
-		g_XboxD3DDevice = *((DWORD**)dwD3DDevice);
-	}
+	Direct3D_CreateDevice_End();
 
 	return hRet;
 }
@@ -2605,37 +2594,13 @@ HRESULT WINAPI XTL::EMUPATCH(Direct3D_CreateDevice)
 		LOG_FUNC_ARG(ppReturnedDeviceInterface)
 		LOG_FUNC_END;
 
-	// HACK: Disable multisampling... See comment in CreateDevice proxy for more info
-	pPresentationParameters->MultiSampleType = XTL::X_D3DMULTISAMPLE_NONE;
-
-	// create default device *before* calling Xbox Direct3D_CreateDevice trampline
-	// to avoid hitting EMUPATCH'es that need a valid g_pD3DDevice
-	{
-		// Wait until proxy is done with an existing call (i highly doubt this situation will come up)
-		while (g_EmuCDPD.bReady)
-			Sleep(10);
-
-		// Cache parameters
-		memcpy(&(g_EmuCDPD.XboxPresentationParameters), pPresentationParameters, sizeof(X_D3DPRESENT_PARAMETERS));
-
-		// Signal proxy thread (this will trigger EmuCreateDeviceProxy to call CreateDevice)
-		g_EmuCDPD.bCreate = true;
-		g_EmuCDPD.bReady = true;
-
-		// Wait until host proxy is completed (otherwise, Xbox code could hit patches that need an assigned g_pD3DDevice)
-		while (g_EmuCDPD.bReady)
-			Sleep(10);
-	}
+	Direct3D_CreateDevice_Start(pPresentationParameters);
 
 	// Only then call Xbox CreateDevice function
 	XB_trampoline(HRESULT, WINAPI, Direct3D_CreateDevice, (UINT, D3DDEVTYPE, HWND, DWORD, X_D3DPRESENT_PARAMETERS*, IDirect3DDevice**));
 	HRESULT hRet = XB_Direct3D_CreateDevice(Adapter, DeviceType, hFocusWindow, BehaviorFlags, pPresentationParameters, ppReturnedDeviceInterface);
 
-	// Set g_XboxD3DDevice to point to the Xbox D3D Device
-    xbaddr dwD3DDevice = g_SymbolAddresses["D3DDEVICE"];
-	if (dwD3DDevice != xbnull) {
-		g_XboxD3DDevice = *((DWORD**)dwD3DDevice);
-	}
+	Direct3D_CreateDevice_End();
 
 	return hRet;
 }
