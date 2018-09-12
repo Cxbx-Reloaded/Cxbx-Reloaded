@@ -41,15 +41,19 @@
 
 #include "CxbxCommon.h"
 
+#define NANOSECONDS_PER_SECOND 1000000000
+
 /* PTIMER - time measurement and time-based alarms */
 static uint64_t ptimer_get_clock(NV2AState * d)
 {
 	// Get time in nanoseconds
     uint64_t time = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
 	
-	return Muldiv64(time,
-					uint32_t(d->pramdac.core_clock_freq * d->ptimer.numerator),
-					CLOCKS_PER_SEC * d->ptimer.denominator);
+	return Muldiv64(Muldiv64(time,
+					d->pramdac.core_clock_freq,
+					NANOSECONDS_PER_SECOND), // Was CLOCKS_PER_SEC
+				d->ptimer.denominator,
+				d->ptimer.numerator);
 }
 
 DEVICE_READ32(PTIMER)
