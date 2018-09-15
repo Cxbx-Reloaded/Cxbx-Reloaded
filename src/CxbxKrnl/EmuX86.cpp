@@ -119,34 +119,45 @@ void EmuX86_IOWrite(xbaddr addr, uint32_t value, int size)
 
 uint32_t EmuX86_Mem_Read(xbaddr addr, int size)
 {
-	switch (size) {
-	case sizeof(uint32_t) :
-		return *(uint32_t*)addr;
-	case sizeof(uint16_t) :
-		return *(uint16_t*)addr;
-	case sizeof(uint8_t) :
-		return *(uint8_t*)addr;
-	default:
-		// UNREACHABLE(size);
-		return 0;
+	__try {
+
+		switch (size) {
+		case sizeof(uint32_t) :
+			return *(uint32_t*)addr;
+		case sizeof(uint16_t) :
+			return *(uint16_t*)addr;
+		case sizeof(uint8_t) :
+			return *(uint8_t*)addr;
+		default:
+			// UNREACHABLE(size);
+			return 0;
+		}
+	}
+	__except (true) {
+		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "EmuX86_Mem_Read Failed (0x%08X, %d)", addr, size);
 	}
 }
 
 void EmuX86_Mem_Write(xbaddr addr, uint32_t value, int size)
 {
-	switch (size) {
-	case sizeof(uint32_t) :
-		*(uint32_t*)addr = (uint32_t)value;
-		break;
-	case sizeof(uint16_t) :
-		*(uint16_t*)addr = (uint16_t)value;
-		break;
-	case sizeof(uint8_t) :
-		*(uint8_t*)addr = (uint8_t)value;
-		break;
-	default:
-		// UNREACHABLE(size);
-		return;
+	__try {
+		switch (size) {
+		case sizeof(uint32_t) :
+			*(uint32_t*)addr = (uint32_t)value;
+			break;
+		case sizeof(uint16_t) :
+			*(uint16_t*)addr = (uint16_t)value;
+			break;
+		case sizeof(uint8_t) :
+			*(uint8_t*)addr = (uint8_t)value;
+			break;
+		default:
+			// UNREACHABLE(size);
+			return;
+		}
+	}
+	__except (true) {
+		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "EmuX86_Mem_Write Failed (0x%08X, 0x%08X, %d)", addr, value, size);
 	}
 }
 
@@ -1179,8 +1190,12 @@ bool EmuX86_DecodeException(LPEXCEPTION_POINTERS e)
 					continue;
 				}
 				break;
-			case I_RET:
-				// RET always signifies the end of a code block
+			case I_CALL: case I_RET:
+				// RET and CALL always signify the end of a code block
+				return true;
+			case I_PUSH: case I_POP:
+				// TODO: Implement these instructions
+				// currently stubbed to prevent firing the unimplemented instruction handler
 				return true;
 			case I_ADD:
 				if (EmuX86_Opcode_ADD(e, info)) break;
