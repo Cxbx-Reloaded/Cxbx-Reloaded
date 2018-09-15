@@ -1147,8 +1147,6 @@ bool EmuX86_DecodeException(LPEXCEPTION_POINTERS e)
 
 	// Execute op-codes until we hit an unhandled instruction, or an error occurs
 	while (true) {
-		currentEip = e->ContextRecord->Eip;
-
 		if (!EmuX86_DecodeOpcode((uint8_t*)e->ContextRecord->Eip, info)) {
 			EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Error decoding opcode at 0x%08X", e->ContextRecord->Eip);
 			return false;
@@ -1157,7 +1155,7 @@ bool EmuX86_DecodeException(LPEXCEPTION_POINTERS e)
 		switch (info.opcode) { // Keep these cases alphabetically ordered and condensed
 			// Exit and branch Opcodes come first, for clarity/visibility
 			case I_JA:
-				if (EmuX86_Opcode_JXX(e, info, BITMASK(EMUX86_EFLAG_CF) & BITMASK(EMUX86_EFLAG_ZF), false)) {
+				if (EmuX86_Opcode_JXX(e, info, BITMASK(EMUX86_EFLAG_CF) | BITMASK(EMUX86_EFLAG_ZF), false)) {
 					continue;
 				}
 				break;
@@ -1172,7 +1170,7 @@ bool EmuX86_DecodeException(LPEXCEPTION_POINTERS e)
 				}
 				break;
 			case I_JBE:
-				if (EmuX86_Opcode_JXX(e, info, BITMASK(EMUX86_EFLAG_CF) & BITMASK(EMUX86_EFLAG_ZF), true)) {
+				if (EmuX86_Opcode_JXX(e, info, BITMASK(EMUX86_EFLAG_CF) | BITMASK(EMUX86_EFLAG_ZF), true)) {
 					continue;
 				}
 				break;
