@@ -135,6 +135,7 @@ uint32_t EmuX86_Mem_Read(xbaddr addr, int size)
 	}
 	__except (true) {
 		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "EmuX86_Mem_Read Failed (0x%08X, %d)", addr, size);
+		return 0;
 	}
 }
 
@@ -1070,14 +1071,14 @@ bool EmuX86_Opcode_XOR(LPEXCEPTION_POINTERS e, _DInst& info)
 	if (!EmuX86_Operand_Read(e, info, 1, &src))
 		return false;
 
-	// XOR reads and writes the same operand :
+	// OR reads and writes the same operand :
 	OperandAddress opAddr;
 	if (!EmuX86_Operand_Addr_ForReadWrite(e, info, 0, OUT opAddr))
 		return false;
 
 	uint32_t dest = EmuX86_Addr_Read(opAddr);
 
-	// XOR Destination with src
+	// OR Destination with src
 	uint32_t result = dest ^ src;
 
 	// Write back the result
