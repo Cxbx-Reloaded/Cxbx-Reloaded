@@ -1070,14 +1070,14 @@ bool EmuX86_Opcode_XOR(LPEXCEPTION_POINTERS e, _DInst& info)
 	if (!EmuX86_Operand_Read(e, info, 1, &src))
 		return false;
 
-	// OR reads and writes the same operand :
+	// XOR reads and writes the same operand :
 	OperandAddress opAddr;
 	if (!EmuX86_Operand_Addr_ForReadWrite(e, info, 0, OUT opAddr))
 		return false;
 
 	uint32_t dest = EmuX86_Addr_Read(opAddr);
 
-	// OR Destination with src
+	// XOR Destination with src
 	uint32_t result = dest ^ src;
 
 	// Write back the result
