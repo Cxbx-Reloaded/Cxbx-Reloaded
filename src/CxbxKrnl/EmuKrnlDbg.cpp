@@ -124,7 +124,8 @@ XBSYSAPI EXPORTNUM(8) xboxkrnl::ULONG _cdecl xboxkrnl::DbgPrint
 		vsprintf(szBuffer, Format, argp);
 		va_end(argp);
 
-		printf(szBuffer); // Note : missing newlines can occur
+		// Allow DbgPrint to be disabled
+		EmuLog(LOG_PREFIX, LOG_LEVEL::INFO, "%s", szBuffer);
 		fflush(stdout);
 	}
 
