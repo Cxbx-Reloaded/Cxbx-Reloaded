@@ -192,13 +192,8 @@ uint32_t EmuX86_Read(xbaddr addr, int size)
 			return value;
 		}
 
-		if (g_bEmuException) {
-			EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "EmuX86_Read(0x%08X, %d) [Unknown address]", addr, size);
-			value = 0;
-		} else {
-			// Outside EmuException, pass the memory-access through to normal memory :
-			value = EmuX86_Mem_Read(addr, size);
-		}
+		//pass the memory-access through to normal memory :
+		value = EmuX86_Mem_Read(addr, size);
 
 		DbgPrintf(LOG_PREFIX, "Read(0x%08X, %d) = 0x%08X\n", addr, size, value);
 	}
@@ -224,12 +219,7 @@ void EmuX86_Write(xbaddr addr, uint32_t value, int size)
 		return;
 	}
 
-	if (g_bEmuException) {
-		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "EmuX86_Write(0x%08X, 0x%08X) [Unknown address]", addr, value);
-		return;
-	}
-
-	// Outside EmuException, pass the memory-access through to normal memory :
+	// Pass the memory-access through to normal memory :
 	DbgPrintf(LOG_PREFIX, "Write(0x%.8X, 0x%.8X, %d)\n", addr, value, size);
 	EmuX86_Mem_Write(addr, value, size);
 }
@@ -862,6 +852,33 @@ bool EmuX86_Opcode_INC(LPEXCEPTION_POINTERS e, _DInst& info)
 	return true;
 }
 
+bool EmuX86_Opcode_JMP(LPEXCEPTION_POINTERS e, _DInst& info)
+{
+	OperandAddress opAddr;
+	EmuX86_Operand_Addr_ForReadOnly(e, info, 0, opAddr);
+
+	e->ContextRecord->Eip += opAddr.addr;
+
+	return true;
+}
+
+// Jump if condition is met 
+// Returns true if branch was taken
+bool EmuX86_Opcode_JXX(LPEXCEPTION_POINTERS e, _DInst& info, DWORD flag, bool condition)
+{
+	OperandAddress opAddr;
+	EmuX86_Operand_Addr_ForReadOnly(e, info, 0, opAddr);
+
+	// Branch if flag = condition
+	bool flagValue = (e->ContextRecord->EFlags & flag);
+	if (flagValue == condition) {
+		e->ContextRecord->Eip += opAddr.addr;
+		return true;
+	}
+
+	return false;
+}
+
 bool EmuX86_Opcode_MOV(LPEXCEPTION_POINTERS e, _DInst& info)
 {
 	// MOV reads value from source :
@@ -1035,6 +1052,37 @@ bool EmuX86_Opcode_TEST(LPEXCEPTION_POINTERS e, _DInst& info)
 	return true;
 }
 
+bool EmuX86_Opcode_XOR(LPEXCEPTION_POINTERS e, _DInst& info)
+{
+	// Read value from Source and Destination
+	uint32_t src = 0;
+	if (!EmuX86_Operand_Read(e, info, 1, &src))
+		return false;
+
+	// OR reads and writes the same operand :
+	OperandAddress opAddr;
+	if (!EmuX86_Operand_Addr_ForReadWrite(e, info, 0, OUT opAddr))
+		return false;
+
+	uint32_t dest = EmuX86_Addr_Read(opAddr);
+
+	// OR Destination with src
+	uint32_t result = dest ^ src;
+
+	// Write back the result
+	EmuX86_Addr_Write(opAddr, result);
+
+	// The OF and CF flags are cleared; the SF, ZF, and PF flags are set according to the result. The state of the AF flag is undefined.
+	EmuX86_SetFlags_OSZPC(e,
+		/*EMUX86_EFLAG_OF*/0,
+		/*EMUX86_EFLAG_SF*/SFCalc(result),
+		/*EMUX86_EFLAG_ZF*/ZFCalc(result),
+		/*EMUX86_EFLAG_PF*/PFCalc(result),
+		/*EMUX86_EFLAG_CF*/0);
+
+	return true;
+}
+
 void EmuX86_Opcode_CLI()
 {
 	g_bEnableAllInterrupts = false;
@@ -1082,97 +1130,142 @@ bool EmuX86_DecodeException(LPEXCEPTION_POINTERS e)
 	// However, if for any reason, an opcode operand cannot be read from or written to,
 	// that case may be logged, but it shouldn't fail the opcode handler.
 	_DInst info;
-	if (!EmuX86_DecodeOpcode((uint8_t*)e->ContextRecord->Eip, OUT info)) {
-		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Error decoding opcode at 0x%08X", e->ContextRecord->Eip);
-		return false;
-	}
 
-	switch (info.opcode) { // Keep these cases alphabetically ordered and condensed
-	case I_ADD:
-		if (EmuX86_Opcode_ADD(e, info)) break;
-		goto opcode_error;
-	case I_AND:
-		if (EmuX86_Opcode_AND(e, info)) break;
-		goto opcode_error;
-	case I_CLI: {
-		// Disable all interrupts
-		EmuX86_Opcode_CLI();
-		break;
-	}
-	case I_CMP:
-		if (EmuX86_Opcode_CMP(e, info)) break;
-		goto opcode_error;
-	case I_CMPXCHG:
-		if (EmuX86_Opcode_CMPXCHG(e, info)) break;
-		goto opcode_error;
-	case I_CPUID:
-		EmuX86_Opcode_CPUID(e, info);
-		break;
-	case I_DEC:
-		if (EmuX86_Opcode_DEC(e, info)) break;
-		goto opcode_error;
-	case I_IN:
-		if (EmuX86_Opcode_IN(e, info)) break;
-		goto opcode_error;
-	case I_INC:
-		if (EmuX86_Opcode_INC(e, info)) break;
-		goto opcode_error;
-	case I_INVD: // Flush internal caches; initiate flushing of external caches.
-		break; // We can safely ignore this
-	case I_INVLPG: {
-		// This instruction invalidates the TLB entry specified with the source operand. Since we don't emulate
-		// the TLB yet, we can safely ignore this. Test case: Fable.
-		break;
-	}
-	case I_MOV:
-		if (EmuX86_Opcode_MOV(e, info)) break;
-		goto opcode_error;
-	case I_MOVSX:
-		if (EmuX86_Opcode_MOVSX(e, info)) break;
-		goto opcode_error;
-	case I_MOVZX:			
-		if (EmuX86_Opcode_MOVZX(e, info)) break;
-		goto opcode_error;
-	case I_OR:
-		if (EmuX86_Opcode_OR(e, info)) break;
-		goto opcode_error;
-	case I_OUT:
-		if (EmuX86_Opcode_OUT(e, info)) break;
-		goto opcode_error;
-	case I_STI: {
-		// Enable all interrupts
-		EmuX86_Opcode_STI();
-		break;
-	}
-	case I_SUB:
-		if (EmuX86_Opcode_SUB(e, info)) break;
-		goto opcode_error;
-	case I_TEST:
-		if (EmuX86_Opcode_TEST(e, info)) break;
-		goto opcode_error;
-	case I_WBINVD: // Write back and flush internal caches; initiate writing-back and flushing of external caches.
-		break; // We can safely ignore this
-	case I_WRMSR:
-		// We do not emulate processor specific registers just yet
-		// Some titles attempt to manually set the TSC via this instruction
-		// This needs fixing eventually, but should be acceptible to ignore for now!
-		// Chase: Hollywood Stunt Driver hits this
-		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "WRMSR instruction ignored");
-		break;
-	default:
-		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Unhandled instruction : %u", info.opcode);
+	xbaddr currentEip; // Used to detect taken branches/jumps
+
+	// Execute op-codes until we hit an unhandled instruction, or an error occurs
+	while (true) {
+		currentEip = e->ContextRecord->Eip;
+
+		if (!EmuX86_DecodeOpcode((uint8_t*)e->ContextRecord->Eip, info)) {
+			EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Error decoding opcode at 0x%08X", e->ContextRecord->Eip);
+			return false;
+		}
+
+		switch (info.opcode) { // Keep these cases alphabetically ordered and condensed
+			// Exit and branch Opcodes come first, for clarity/visibility
+			case I_JA:
+				if (EmuX86_Opcode_JXX(e, info, BITMASK(EMUX86_EFLAG_CF) & BITMASK(EMUX86_EFLAG_ZF), false)) {
+					continue;
+				}
+				break;
+			case I_JAE:
+				if (EmuX86_Opcode_JXX(e, info, BITMASK(EMUX86_EFLAG_CF), false)) {
+					continue;
+				}
+				break;
+			case I_JB:
+				if (EmuX86_Opcode_JXX(e, info, BITMASK(EMUX86_EFLAG_CF), true)) {
+					continue;
+				}
+				break;
+			case I_JBE:
+				if (EmuX86_Opcode_JXX(e, info, BITMASK(EMUX86_EFLAG_CF) & BITMASK(EMUX86_EFLAG_ZF), true)) {
+					continue;
+				}
+				break;
+			case I_JNZ:
+				if (EmuX86_Opcode_JXX(e, info, BITMASK(EMUX86_EFLAG_ZF), false)) {
+					continue;
+				}
+				break;
+			case I_JMP:
+				if (EmuX86_Opcode_JMP(e, info)) {
+					continue;
+				}
+				break;
+			case I_JZ:
+				if (EmuX86_Opcode_JXX(e, info, BITMASK(EMUX86_EFLAG_ZF), true)) {
+					continue;
+				}
+				break;
+			case I_RET:
+				// RET always signifies the end of a code block
+				return true;
+			case I_ADD:
+				if (EmuX86_Opcode_ADD(e, info)) break;
+				goto opcode_error;
+			case I_AND:
+				if (EmuX86_Opcode_AND(e, info)) break;
+				goto opcode_error;
+			case I_CLI: {
+				// Disable all interrupts
+				EmuX86_Opcode_CLI();
+				break;
+			}
+			case I_CMP:
+				if (EmuX86_Opcode_CMP(e, info)) break;
+				goto opcode_error;
+			case I_CMPXCHG:
+				if (EmuX86_Opcode_CMPXCHG(e, info)) break;
+				goto opcode_error;
+			case I_CPUID:
+				EmuX86_Opcode_CPUID(e, info);
+				break;
+			case I_DEC:
+				if (EmuX86_Opcode_DEC(e, info)) break;
+				goto opcode_error;
+			case I_IN:
+				if (EmuX86_Opcode_IN(e, info)) break;
+				goto opcode_error;
+			case I_INC:
+				if (EmuX86_Opcode_INC(e, info)) break;
+				goto opcode_error;
+			case I_INVD: // Flush internal caches; initiate flushing of external caches.
+				break; // We can safely ignore this
+			case I_INVLPG: {
+				// This instruction invalidates the TLB entry specified with the source operand. Since we don't emulate
+				// the TLB yet, we can safely ignore this. Test case: Fable.
+				break;
+			}
+			case I_MOV:
+				if (EmuX86_Opcode_MOV(e, info)) break;
+				goto opcode_error;
+			case I_MOVSX:
+				if (EmuX86_Opcode_MOVSX(e, info)) break;
+				goto opcode_error;
+			case I_MOVZX:
+				if (EmuX86_Opcode_MOVZX(e, info)) break;
+				goto opcode_error;
+			case I_OR:
+				if (EmuX86_Opcode_OR(e, info)) break;
+				goto opcode_error;
+			case I_OUT:
+				if (EmuX86_Opcode_OUT(e, info)) break;
+				goto opcode_error;
+			case I_STI: {
+				// Enable all interrupts
+				EmuX86_Opcode_STI();
+				break;
+			}
+			case I_SUB:
+				if (EmuX86_Opcode_SUB(e, info)) break;
+				goto opcode_error;
+			case I_TEST:
+				if (EmuX86_Opcode_TEST(e, info)) break;
+				goto opcode_error;
+			case I_WBINVD: // Write back and flush internal caches; initiate writing-back and flushing of external caches.
+				break; // We can safely ignore this
+			case I_WRMSR:
+				// We do not emulate processor specific registers just yet
+				// Some titles attempt to manually set the TSC via this instruction
+				// This needs fixing eventually, but should be acceptible to ignore for now!
+				// Chase: Hollywood Stunt Driver hits this
+				EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "WRMSR instruction ignored");
+				break;
+			case I_XOR:
+				if (EmuX86_Opcode_XOR(e, info)) break;
+				goto opcode_error;
+			default:
+				EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Unhandled instruction : %u", info.opcode);
+				return true;
+		}
+
 		e->ContextRecord->Eip += info.size;
-		return false;
 	}
-
-	// When falling through here, the instruction was handled correctly,
-	// skip over the instruction and continue execution :
-	e->ContextRecord->Eip += info.size;
-	return true;
 
 opcode_error:
 	EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "0x%08X: Error while handling instruction %u", e->ContextRecord->Eip, info.opcode); // TODO : format decodedInstructions[0]
-	e->ContextRecord->Eip += info.size;
 	return false;
 }
 
