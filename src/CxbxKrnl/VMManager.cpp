@@ -1003,13 +1003,13 @@ VAddr VMManager::AllocateContiguous(size_t Size, PAddr LowestAddress, PAddr High
 	HigherPfn = HighestAddress >> PAGE_SHIFT;
 	PfnAlignment = Alignment >> PAGE_SHIFT;
 
-	if (!IsMappable(PteNumber, true, false)) { goto Fail; }
 	if (HigherPfn > m_MaxContiguousPfn) { HigherPfn = m_MaxContiguousPfn; }
 	if (LowerPfn > HigherPfn) { LowerPfn = HigherPfn; }
 	if (!PfnAlignment) { PfnAlignment = 1; }
 
 	Lock();
 
+	if (!IsMappable(PteNumber, true, false)) { goto Fail; }
 	if (!RemoveFree(PteNumber, &pfn, PfnAlignment, LowerPfn, HigherPfn)) { goto Fail; }
 	addr = CONTIGUOUS_MEMORY_BASE + (pfn << PAGE_SHIFT);
 
