@@ -953,6 +953,32 @@ bool EmuX86_Opcode_MOVZX(LPEXCEPTION_POINTERS e, _DInst& info)
 	return true;
 }
 
+bool EmuX86_Opcode_NOT(LPEXCEPTION_POINTERS e, _DInst& info)
+{
+	// NOT reads and writes the same operand :
+	OperandAddress opAddr;
+	if (!EmuX86_Operand_Addr_ForReadWrite(e, info, 0, OUT opAddr))
+		return false;
+
+	uint32_t dest = EmuX86_Addr_Read(opAddr);
+
+	// NOT Destination with 
+	uint32_t result = ~dest;
+
+	// Write back the result
+	EmuX86_Addr_Write(opAddr, result);
+
+	// The OF and CF flags are cleared; the SF, ZF, and PF flags are set according to the result. The state of the AF flag is undefined.
+	EmuX86_SetFlags_OSZPC(e,
+		/*EMUX86_EFLAG_OF*/0,
+		/*EMUX86_EFLAG_SF*/SFCalc(result),
+		/*EMUX86_EFLAG_ZF*/ZFCalc(result),
+		/*EMUX86_EFLAG_PF*/PFCalc(result),
+		/*EMUX86_EFLAG_CF*/0);
+
+	return true;
+}
+
 bool EmuX86_Opcode_OR(LPEXCEPTION_POINTERS e, _DInst& info)
 {
 	// Read value from Source and Destination
@@ -1000,7 +1026,79 @@ bool EmuX86_Opcode_OUT(LPEXCEPTION_POINTERS e, _DInst& info)
 
 	// Note : OUT instructions never update CPU flags
 
-return true;
+	return true;
+}
+
+
+bool EmuX86_Opcode_SBB(LPEXCEPTION_POINTERS e, _DInst& info)
+{
+	// Read value from Source and Destination
+	uint32_t src = 0;
+	if (!EmuX86_Operand_Read(e, info, 1, &src))
+		return false;
+
+	// SBB reads and writes the same operand :
+	OperandAddress opAddr;
+	if (!EmuX86_Operand_Addr_ForReadWrite(e, info, 0, OUT opAddr))
+		return false;
+
+	uint32_t dest = EmuX86_Addr_Read(opAddr);
+
+	// SUB Destination with src 
+	uint64_t result = (uint64_t)dest - (uint64_t)src;
+
+	// If the carry flag is set, subtract an additional 1
+	if (e->ContextRecord->EFlags & BITMASK(EMUX86_EFLAG_CF)) {
+		result -= 1;
+	}
+
+	// Write result back
+	EmuX86_Addr_Write(opAddr, static_cast<uint32_t>(result));
+
+	// The OF, SF, ZF, AF, PF, and CF flags are set according to the result.
+	EmuX86_SetFlags_OSZAPC(e,
+		/*EMUX86_EFLAG_OF*/OF_Sub(result, src, dest),
+		/*EMUX86_EFLAG_SF*/SFCalc(result),
+		/*EMUX86_EFLAG_ZF*/ZFCalc(result),
+		/*EMUX86_EFLAG_AF*/AFCalc(result, src, dest),
+		/*EMUX86_EFLAG_PF*/PFCalc(result),
+		/*EMUX86_EFLAG_CF*/CFCalc(result));
+
+	return true;
+}
+
+
+bool EmuX86_Opcode_SHR(LPEXCEPTION_POINTERS e, _DInst& info)
+{
+	// Read value from Source and Destination
+	uint32_t src = 0;
+	if (!EmuX86_Operand_Read(e, info, 1, &src))
+		return false;
+
+	// SHR reads and writes the same operand :
+	OperandAddress opAddr;
+	if (!EmuX86_Operand_Addr_ForReadWrite(e, info, 0, OUT opAddr))
+		return false;
+
+	uint32_t dest = EmuX86_Addr_Read(opAddr);
+
+	// Shift Destination with src
+	uint8_t carryBit = dest & 1;
+	uint64_t result = (uint64_t)dest >> (uint64_t)src;
+
+	// Write result back
+	EmuX86_Addr_Write(opAddr, static_cast<uint32_t>(result));
+
+	// The OF, SF, ZF, AF, PF, and CF flags are set according to the result.
+	EmuX86_SetFlags_OSZAPC(e,
+		/*EMUX86_EFLAG_OF*/OF_Sub(result, src, dest),
+		/*EMUX86_EFLAG_SF*/SFCalc(result),
+		/*EMUX86_EFLAG_ZF*/ZFCalc(result),
+		/*EMUX86_EFLAG_AF*/AFCalc(result, src, dest),
+		/*EMUX86_EFLAG_PF*/PFCalc(result),
+		/*EMUX86_EFLAG_CF*/carryBit);
+
+	return true;
 }
 
 bool EmuX86_Opcode_SUB(LPEXCEPTION_POINTERS e, _DInst& info)
@@ -1143,8 +1241,6 @@ bool EmuX86_DecodeException(LPEXCEPTION_POINTERS e)
 	// that case may be logged, but it shouldn't fail the opcode handler.
 	_DInst info;
 
-	xbaddr currentEip; // Used to detect taken branches/jumps
-
 	// Execute op-codes until we hit an unhandled instruction, or an error occurs
 	while (true) {
 		if (!EmuX86_DecodeOpcode((uint8_t*)e->ContextRecord->Eip, info)) {
@@ -1241,6 +1337,9 @@ bool EmuX86_DecodeException(LPEXCEPTION_POINTERS e)
 			case I_MOVZX:
 				if (EmuX86_Opcode_MOVZX(e, info)) break;
 				goto opcode_error;
+			case I_NOT:
+				if (EmuX86_Opcode_NOT(e, info)) break;
+				goto opcode_error;
 			case I_OR:
 				if (EmuX86_Opcode_OR(e, info)) break;
 				goto opcode_error;
@@ -1252,6 +1351,12 @@ bool EmuX86_DecodeException(LPEXCEPTION_POINTERS e)
 				EmuX86_Opcode_STI();
 				break;
 			}
+			case I_SBB:
+				if (EmuX86_Opcode_SBB(e, info)) break;
+				goto opcode_error;
+			case I_SHR:
+				if (EmuX86_Opcode_SHR(e, info)) break;
+				goto opcode_error;
 			case I_SUB:
 				if (EmuX86_Opcode_SUB(e, info)) break;
 				goto opcode_error;
