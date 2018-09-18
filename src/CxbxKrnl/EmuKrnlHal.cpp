@@ -76,7 +76,7 @@ LIST_ENTRY_DEFINE_HEAD(ShutdownRoutineList);
 // * Declaring this in a header causes errors with xboxkrnl
 // * namespace, so we must declare it within any file that uses it
 // ******************************************************************
-xboxkrnl::KPCR* KeGetPcr();
+xboxkrnl::KPCR* WINAPI KeGetPcr();
 
 // ******************************************************************
 // * 0x0009 - HalReadSMCTrayState()

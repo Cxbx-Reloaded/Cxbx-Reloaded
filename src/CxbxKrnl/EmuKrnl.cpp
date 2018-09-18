@@ -131,7 +131,7 @@ xboxkrnl::PLIST_ENTRY RemoveTailList(xboxkrnl::PLIST_ENTRY pListHead)
 // * Declaring this in a header causes errors with xboxkrnl
 // * namespace, so we must declare it within any file that uses it
 // ******************************************************************
-xboxkrnl::KPCR* KeGetPcr();
+xboxkrnl::KPCR* WINAPI KeGetPcr();
 
 // Interrupts
 

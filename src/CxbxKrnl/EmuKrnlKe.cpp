@@ -186,13 +186,13 @@ void FASTCALL KiWaitSatisfyAll
 // * NOTE: This is a macro on the Xbox, however we implement it 
 // * as a function so it can suit our emulated KPCR structure
 // ******************************************************************
-xboxkrnl::KPCR* KeGetPcr()
+xboxkrnl::KPCR* WINAPI KeGetPcr()
 {
 	xboxkrnl::PKPCR Pcr;
 
 	// See EmuKeSetPcr()
 	Pcr = (xboxkrnl::PKPCR)__readfsdword(TIB_ArbitraryDataSlot);
-
+	
 	if (Pcr == nullptr) {
 		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "KeGetPCR returned nullptr: Was this called from a non-xbox thread?");
 		// Attempt to salvage the situation by calling InitXboxThread to setup KPCR in place
