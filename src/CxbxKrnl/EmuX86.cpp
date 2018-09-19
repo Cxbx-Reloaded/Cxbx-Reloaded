@@ -602,6 +602,41 @@ inline void EmuX86_SetFlags_OSZAP
 	);
 }
 
+inline bool EmuX86_HasFlag(LPEXCEPTION_POINTERS e, DWORD flag)
+{
+	return (e->ContextRecord->EFlags & flag);
+}
+
+inline bool EmuX86_HasFlag_AF(LPEXCEPTION_POINTERS e)
+{
+	return EmuX86_HasFlag(e, BITMASK(EMUX86_EFLAG_AF));
+}
+
+inline bool EmuX86_HasFlag_CF(LPEXCEPTION_POINTERS e)
+{
+	return EmuX86_HasFlag(e, BITMASK(EMUX86_EFLAG_CF));
+}
+
+inline bool EmuX86_HasFlag_OF(LPEXCEPTION_POINTERS e)
+{
+	return EmuX86_HasFlag(e, BITMASK(EMUX86_EFLAG_OF));
+}
+
+inline bool EmuX86_HasFlag_PF(LPEXCEPTION_POINTERS e)
+{
+	return EmuX86_HasFlag(e, BITMASK(EMUX86_EFLAG_PF));
+}
+
+inline bool EmuX86_HasFlag_SF(LPEXCEPTION_POINTERS e)
+{
+	return EmuX86_HasFlag(e, BITMASK(EMUX86_EFLAG_SF));
+}
+
+inline bool EmuX86_HasFlag_ZF(LPEXCEPTION_POINTERS e)
+{
+	return EmuX86_HasFlag(e, BITMASK(EMUX86_EFLAG_ZF));
+}
+
 // EFLAGS Cross-Reference : http://datasheets.chipdb.org/Intel/x86/Intel%20Architecture/EFLAGS.PDF
 
 // TODO : Review these CPU flag calculations, maybe peek at how MAME or Bochs does this.
@@ -874,21 +909,37 @@ bool EmuX86_Opcode_JMP(LPEXCEPTION_POINTERS e, _DInst& info)
 	return true;
 }
 
-// Jump if condition is met 
+// Jump if condition is met
 // Returns true if branch was taken
-bool EmuX86_Opcode_JXX(LPEXCEPTION_POINTERS e, _DInst& info, DWORD flag, bool condition)
+bool EmuX86_Opcode_JXX(LPEXCEPTION_POINTERS e, _DInst& info, bool condition)
 {
-	OperandAddress opAddr;
-	EmuX86_Operand_Addr_ForReadOnly(e, info, 0, opAddr);
+	if (condition) {
+		OperandAddress opAddr;
+		EmuX86_Operand_Addr_ForReadOnly(e, info, 0, opAddr);
 
-	// Branch if flag = condition
-	bool flagValue = (e->ContextRecord->EFlags & flag);
-	if (flagValue == condition) {
 		e->ContextRecord->Eip += opAddr.addr;
 		return true;
 	}
 
 	return false;
+}
+
+bool EmuX86_Opcode_LEA(LPEXCEPTION_POINTERS e, _DInst& info)
+{
+	// LEA reads effective address from source operand :
+	OperandAddress opAddr;
+	if (!EmuX86_Operand_Addr_ForReadOnly(e, info, 1, OUT opAddr))
+		return false;
+
+	uint32_t value = opAddr.addr;
+
+	// LEA writes value to destination :
+	if (!EmuX86_Operand_Write(e, info, 0, value))
+		return false;
+
+	// Note : LEA instructions never update CPU flags
+
+	return true;
 }
 
 bool EmuX86_Opcode_MOV(LPEXCEPTION_POINTERS e, _DInst& info)
@@ -1048,7 +1099,7 @@ bool EmuX86_Opcode_SBB(LPEXCEPTION_POINTERS e, _DInst& info)
 	uint64_t result = (uint64_t)dest - (uint64_t)src;
 
 	// If the carry flag is set, subtract an additional 1
-	if (e->ContextRecord->EFlags & BITMASK(EMUX86_EFLAG_CF)) {
+	if (EmuX86_HasFlag_CF(e)) {
 		result -= 1;
 	}
 
@@ -1067,6 +1118,12 @@ bool EmuX86_Opcode_SBB(LPEXCEPTION_POINTERS e, _DInst& info)
 	return true;
 }
 
+inline void EmuX86_Opcode_SXX(LPEXCEPTION_POINTERS e, _DInst& info, bool condition)
+{
+	uint8_t value = (condition) ? 1 : 0;
+
+	EmuX86_Operand_Write(e, info, 0, value);
+}
 
 bool EmuX86_Opcode_SHR(LPEXCEPTION_POINTERS e, _DInst& info)
 {
@@ -1250,48 +1307,130 @@ bool EmuX86_DecodeException(LPEXCEPTION_POINTERS e)
 
 		switch (info.opcode) { // Keep these cases alphabetically ordered and condensed
 			// Exit and branch Opcodes come first, for clarity/visibility
-			case I_JA:
-				if (EmuX86_Opcode_JXX(e, info, BITMASK(EMUX86_EFLAG_CF) | BITMASK(EMUX86_EFLAG_ZF), false)) {
+			case I_JA: { // Jump if above (CF=0 and ZF=0).
+				if (EmuX86_Opcode_JXX(e, info, !EmuX86_HasFlag_CF(e) && !EmuX86_HasFlag_ZF(e))) {
 					continue;
 				}
 				break;
-			case I_JAE:
-				if (EmuX86_Opcode_JXX(e, info, BITMASK(EMUX86_EFLAG_CF), false)) {
+			}
+			case I_JAE: { // Jump if above or equal (CF=0).
+				if (EmuX86_Opcode_JXX(e, info, !EmuX86_HasFlag_CF(e))) {
 					continue;
 				}
 				break;
-			case I_JB:
-				if (EmuX86_Opcode_JXX(e, info, BITMASK(EMUX86_EFLAG_CF), true)) {
+			}
+			case I_JB: { // Jump if below (CF=1).
+				if (EmuX86_Opcode_JXX(e, info, EmuX86_HasFlag_CF(e))) {
 					continue;
 				}
 				break;
-			case I_JBE:
-				if (EmuX86_Opcode_JXX(e, info, BITMASK(EMUX86_EFLAG_CF) | BITMASK(EMUX86_EFLAG_ZF), true)) {
+			}
+			case I_JBE: { // Jump if below or equal (CF=1 or ZF=1).
+				if (EmuX86_Opcode_JXX(e, info, EmuX86_HasFlag_CF(e) || EmuX86_HasFlag_ZF(e))) {
 					continue;
 				}
 				break;
-			case I_JNZ:
-				if (EmuX86_Opcode_JXX(e, info, BITMASK(EMUX86_EFLAG_ZF), false)) {
+			}
+			case I_JCXZ: { // Jump if CX register is 0.
+				if (EmuX86_Opcode_JXX(e, info, ((e->ContextRecord->Ecx & 0xFF) == 0))) {
 					continue;
 				}
 				break;
-			case I_JMP:
+			}
+			case I_JECXZ: { // Jump if ECX register is 0.
+				if (EmuX86_Opcode_JXX(e, info, e->ContextRecord->Ecx == 0)) {
+					continue;
+				}
+				break;
+			}
+			case I_JG: { // Jump if greater (ZF=0 and SF=OF).
+				if (EmuX86_Opcode_JXX(e, info, !EmuX86_HasFlag_ZF(e) && (EmuX86_HasFlag_SF(e) == EmuX86_HasFlag_OF(e)))) {
+					continue;
+				}
+				break;
+			}
+			case I_JGE: { // Jump if greater or equal (SF=OF).
+				if (EmuX86_Opcode_JXX(e, info, EmuX86_HasFlag_SF(e) == EmuX86_HasFlag_OF(e))) {
+					continue;
+				}
+				break;
+			}
+			case I_JL: { // Jump if less (SF<>OF).
+				if (EmuX86_Opcode_JXX(e, info, EmuX86_HasFlag_SF(e) != EmuX86_HasFlag_OF(e))) {
+					continue;
+				}
+				break;
+			}
+			case I_JLE: { // Jump if less or equal (ZF=1 or SF<>OF).
+				if (EmuX86_Opcode_JXX(e, info, EmuX86_HasFlag_ZF(e) || (EmuX86_HasFlag_SF(e) != EmuX86_HasFlag_OF(e)))) {
+					continue;
+				}
+				break;
+			}
+			case I_JMP: {
 				if (EmuX86_Opcode_JMP(e, info)) {
 					continue;
 				}
 				break;
-			case I_JZ:
-				if (EmuX86_Opcode_JXX(e, info, BITMASK(EMUX86_EFLAG_ZF), true)) {
+			}
+			case I_JNO: { // Jump if not overflow (OF=0).
+				if (EmuX86_Opcode_JXX(e, info, !EmuX86_HasFlag_OF(e))) {
 					continue;
 				}
 				break;
-			case I_CALL: case I_RET:
+			}
+			case I_JNP: { // Jump if not parity (PF=0).
+				if (EmuX86_Opcode_JXX(e, info, !EmuX86_HasFlag_PF(e))) {
+					continue;
+				}
+				break;
+			}
+			case I_JNS: { // Jump if not sign (SF=0).
+				if (EmuX86_Opcode_JXX(e, info, !EmuX86_HasFlag_SF(e))) {
+					continue;
+				}
+				break;
+			}
+			case I_JNZ: { // Jump if not zero (ZF=0).
+				if (EmuX86_Opcode_JXX(e, info, !EmuX86_HasFlag_ZF(e))) {
+					continue;
+				}
+				break;
+			}
+			case I_JO: { // Jump if overflow (OF=1).
+				if (EmuX86_Opcode_JXX(e, info, EmuX86_HasFlag_OF(e))) {
+					continue;
+				}
+				break;
+			}
+			case I_JP: { // Jump if parity (PF=1).
+				if (EmuX86_Opcode_JXX(e, info, EmuX86_HasFlag_PF(e))) {
+					continue;
+				}
+				break;
+			}
+			case I_JS: { // Jump if sign (SF=1).
+				if (EmuX86_Opcode_JXX(e, info, EmuX86_HasFlag_SF(e))) {
+					continue;
+				}
+				break;
+			}
+			case I_JZ: { // Jump if zero (ZF = 1).
+				if (EmuX86_Opcode_JXX(e, info, EmuX86_HasFlag_ZF(e))) {
+					continue;
+				}
+				break;
+			}
+			case I_CALL:
 				// RET and CALL always signify the end of a code block
+				return true;
+			case I_RET:
 				return true;
 			case I_PUSH: case I_POP:
 				// TODO: Implement these instructions
 				// currently stubbed to prevent firing the unimplemented instruction handler
 				return true;
+
 			case I_ADD:
 				if (EmuX86_Opcode_ADD(e, info)) break;
 				goto opcode_error;
@@ -1328,6 +1467,18 @@ bool EmuX86_DecodeException(LPEXCEPTION_POINTERS e)
 				// the TLB yet, we can safely ignore this. Test case: Fable.
 				break;
 			}
+			case I_LEA: { // = 223 : Load Effective Address
+				if (EmuX86_Opcode_LEA(e, info)) break;
+				goto opcode_error;
+			}
+			case I_LFENCE: { // = 4287 : Serializes load operations.
+				__asm { lfence }; // emulate as-is (doesn't cause exceptions)
+				break;
+			}
+			case I_MFENCE: { // = 4313 : Serializes load and store operations.
+				__asm { mfence }; // emulate as-is (doesn't cause exceptions)
+				break;
+			}
 			case I_MOV:
 				if (EmuX86_Opcode_MOV(e, info)) break;
 				goto opcode_error;
@@ -1337,6 +1488,12 @@ bool EmuX86_DecodeException(LPEXCEPTION_POINTERS e)
 			case I_MOVZX:
 				if (EmuX86_Opcode_MOVZX(e, info)) break;
 				goto opcode_error;
+#if 0 // TODO : Implement EmuX86_Opcode_IMUL and enable this :
+			case I_IMUL: { // = 117 : 	Signed Multiply
+				if (EmuX86_Opcode_IMUL(e, info)) break;
+				goto opcode_error;
+			}
+#endif
 			case I_NOT:
 				if (EmuX86_Opcode_NOT(e, info)) break;
 				goto opcode_error;
@@ -1346,17 +1503,85 @@ bool EmuX86_DecodeException(LPEXCEPTION_POINTERS e)
 			case I_OUT:
 				if (EmuX86_Opcode_OUT(e, info)) break;
 				goto opcode_error;
+			case I_SBB:
+				if (EmuX86_Opcode_SBB(e, info)) break;
+				goto opcode_error;
+			case I_SETA: { // Set byte if above (CF=0 and ZF=0).
+				EmuX86_Opcode_SXX(e, info, !EmuX86_HasFlag_CF(e) && !EmuX86_HasFlag_ZF(e));
+				break;
+			}
+			case I_SETAE: { // Set byte if above or equal (CF=0).
+				EmuX86_Opcode_SXX(e, info, !EmuX86_HasFlag_CF(e));
+				break;
+			}
+			case I_SETB: { // Set byte if below (CF=1).
+				EmuX86_Opcode_SXX(e, info, EmuX86_HasFlag_CF(e));
+				break;
+			}
+			case I_SETBE: { // Set byte if below or equal (CF=1 or ZF=1).
+				EmuX86_Opcode_SXX(e, info, EmuX86_HasFlag_CF(e) || EmuX86_HasFlag_ZF(e));
+				break;
+			}
+			case I_SETG: { // Set byte if greater (ZF=0 and SF=OF).
+				EmuX86_Opcode_SXX(e, info, !EmuX86_HasFlag_ZF(e) && (EmuX86_HasFlag_SF(e) == EmuX86_HasFlag_OF(e)));
+				break;
+			}
+			case I_SETGE: { // Set byte if greater or equal (SF=OF).
+				EmuX86_Opcode_SXX(e, info, EmuX86_HasFlag_SF(e) == EmuX86_HasFlag_OF(e));
+				break;
+			}
+			case I_SETL: { // Set byte if less (SF<>OF).
+				EmuX86_Opcode_SXX(e, info, EmuX86_HasFlag_SF(e) != EmuX86_HasFlag_OF(e));
+				break;
+			}
+			case I_SETLE: { // Set byte if less or equal (ZF=1 or SF<>OF).
+				EmuX86_Opcode_SXX(e, info, EmuX86_HasFlag_ZF(e) || (EmuX86_HasFlag_SF(e) != EmuX86_HasFlag_OF(e)));
+				break;
+			}
+			case I_SETNO: { // Set byte if not overflow (OF=0).
+				EmuX86_Opcode_SXX(e, info, !EmuX86_HasFlag_OF(e));
+				break;
+			}
+			case I_SETNP: { // Set byte if not parity (PF=0).
+				EmuX86_Opcode_SXX(e, info, !EmuX86_HasFlag_PF(e));
+				break;
+			}
+			case I_SETNS: { // Set byte if not sign (SF=0).
+				EmuX86_Opcode_SXX(e, info, !EmuX86_HasFlag_SF(e));
+				break;
+			}
+			case I_SETNZ: { // Set byte if not zero (ZF=0).
+				EmuX86_Opcode_SXX(e, info, !EmuX86_HasFlag_ZF(e));
+				break;
+			}
+			case I_SETO: { // Set byte if overflow (OF=1).
+				EmuX86_Opcode_SXX(e, info, EmuX86_HasFlag_OF(e));
+				break;
+			}
+			case I_SETP: { // Set byte if parity (PF=1).
+				EmuX86_Opcode_SXX(e, info, EmuX86_HasFlag_PF(e));
+				break;
+			}
+			case I_SETS: { // Set byte if sign (SF=1).
+				EmuX86_Opcode_SXX(e, info, EmuX86_HasFlag_SF(e));
+				break;
+			}
+			case I_SETZ: { // Set byte if zero (ZF=1).
+				EmuX86_Opcode_SXX(e, info, EmuX86_HasFlag_ZF(e));
+				break;
+			}
+			case I_SFENCE: { // = 4343 : Serializes store operations.
+				__asm { sfence }; // emulate as-is (doesn't cause exceptions)
+				break;
+			}
+			case I_SHR:
+				if (EmuX86_Opcode_SHR(e, info)) break;
+				goto opcode_error;
 			case I_STI: {
 				// Enable all interrupts
 				EmuX86_Opcode_STI();
 				break;
 			}
-			case I_SBB:
-				if (EmuX86_Opcode_SBB(e, info)) break;
-				goto opcode_error;
-			case I_SHR:
-				if (EmuX86_Opcode_SHR(e, info)) break;
-				goto opcode_error;
 			case I_SUB:
 				if (EmuX86_Opcode_SUB(e, info)) break;
 				goto opcode_error;
