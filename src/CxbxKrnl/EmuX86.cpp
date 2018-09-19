@@ -968,13 +968,7 @@ bool EmuX86_Opcode_NOT(LPEXCEPTION_POINTERS e, _DInst& info)
 	// Write back the result
 	EmuX86_Addr_Write(opAddr, result);
 
-	// The OF and CF flags are cleared; the SF, ZF, and PF flags are set according to the result. The state of the AF flag is undefined.
-	EmuX86_SetFlags_OSZPC(e,
-		/*EMUX86_EFLAG_OF*/0,
-		/*EMUX86_EFLAG_SF*/SFCalc(result),
-		/*EMUX86_EFLAG_ZF*/ZFCalc(result),
-		/*EMUX86_EFLAG_PF*/PFCalc(result),
-		/*EMUX86_EFLAG_CF*/0);
+	// Flags are not effected
 
 	return true;
 }
