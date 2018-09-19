@@ -1125,6 +1125,38 @@ inline void EmuX86_Opcode_SXX(LPEXCEPTION_POINTERS e, _DInst& info, bool conditi
 	EmuX86_Operand_Write(e, info, 0, value);
 }
 
+bool EmuX86_Opcode_SHL(LPEXCEPTION_POINTERS e, _DInst& info)
+{
+	// Read value from Source and Destination
+	uint32_t src = 0;
+	if (!EmuX86_Operand_Read(e, info, 1, &src))
+		return false;
+
+	// SHL reads and writes the same operand :
+	OperandAddress opAddr;
+	if (!EmuX86_Operand_Addr_ForReadWrite(e, info, 0, OUT opAddr))
+		return false;
+
+	uint32_t dest = EmuX86_Addr_Read(opAddr);
+
+	// Shift Destination with src
+	uint64_t result = (uint64_t)dest << (uint64_t)src;
+
+	// Write result back
+	EmuX86_Addr_Write(opAddr, static_cast<uint32_t>(result));
+
+	// The OF, SF, ZF, AF, PF, and CF flags are set according to the result.
+	EmuX86_SetFlags_OSZAPC(e,
+		/*EMUX86_EFLAG_OF*/OF_Sub(result, src, dest),
+		/*EMUX86_EFLAG_SF*/SFCalc(result),
+		/*EMUX86_EFLAG_ZF*/ZFCalc(result),
+		/*EMUX86_EFLAG_AF*/AFCalc(result, src, dest),
+		/*EMUX86_EFLAG_PF*/PFCalc(result),
+		/*EMUX86_EFLAG_CF*/CFCalc(result));
+
+	return true;
+}
+
 bool EmuX86_Opcode_SHR(LPEXCEPTION_POINTERS e, _DInst& info)
 {
 	// Read value from Source and Destination
@@ -1574,6 +1606,9 @@ bool EmuX86_DecodeException(LPEXCEPTION_POINTERS e)
 				__asm { sfence }; // emulate as-is (doesn't cause exceptions)
 				break;
 			}
+			case I_SHL:
+				if (EmuX86_Opcode_SHL(e, info)) break;
+				goto opcode_error;
 			case I_SHR:
 				if (EmuX86_Opcode_SHR(e, info)) break;
 				goto opcode_error;
