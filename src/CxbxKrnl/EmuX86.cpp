@@ -1420,323 +1420,324 @@ bool EmuX86_DecodeException(LPEXCEPTION_POINTERS e)
 		}
 
 		switch (info.opcode) { // Keep these cases alphabetically ordered and condensed
-		case I_ADD:
-			if (EmuX86_Opcode_ADD(e, info)) break;
-			goto opcode_error;
-		case I_AND:
-			if (EmuX86_Opcode_AND(e, info)) break;
-			goto opcode_error;
-		case I_CALL:
-			// RET and CALL always signify the end of a code block
-			return true;
-		case I_CDQ: // = 250 : 	Convert Doubleword to Quadword
-			EmuX86_Opcode_CDQ(e, info);
-			break;
-		case I_CLI: { // = 502 : Disable all interrupts
-			EmuX86_Opcode_CLI();
-			break;
-		}
-		case I_CMP:
-			if (EmuX86_Opcode_CMP(e, info)) break;
-			goto opcode_error;
-		case I_CMPXCHG:
-			if (EmuX86_Opcode_CMPXCHG(e, info)) break;
-			goto opcode_error;
-		case I_CPUID:
-			EmuX86_Opcode_CPUID(e, info);
-			break;
-		case I_DEC:
-			if (EmuX86_Opcode_DEC(e, info)) break;
-			goto opcode_error;
+			case I_ADD:
+				if (EmuX86_Opcode_ADD(e, info)) break;
+				goto opcode_error;
+			case I_AND:
+				if (EmuX86_Opcode_AND(e, info)) break;
+				goto opcode_error;
+			case I_CALL:
+				// RET and CALL always signify the end of a code block
+				return true;
+			case I_CDQ: // = 250 : 	Convert Doubleword to Quadword
+				EmuX86_Opcode_CDQ(e, info);
+				break;
+			case I_CLI: { // = 502 : Disable all interrupts
+				EmuX86_Opcode_CLI();
+				break;
+			}
+			case I_CMP:
+				if (EmuX86_Opcode_CMP(e, info)) break;
+				goto opcode_error;
+			case I_CMPXCHG:
+				if (EmuX86_Opcode_CMPXCHG(e, info)) break;
+				goto opcode_error;
+			case I_CPUID:
+				EmuX86_Opcode_CPUID(e, info);
+				break;
+			case I_DEC:
+				if (EmuX86_Opcode_DEC(e, info)) break;
+				goto opcode_error;
 #if 0 // TODO : Implement EmuX86_Opcode_IMUL and enable this :
-		case I_IMUL: { // = 117 : 	Signed Multiply
-			if (EmuX86_Opcode_IMUL(e, info)) break;
-			goto opcode_error;
-		}
+			case I_IMUL: { // = 117 : 	Signed Multiply
+				if (EmuX86_Opcode_IMUL(e, info)) break;
+				goto opcode_error;
+			}
 #endif
-		case I_IN:
-			if (EmuX86_Opcode_IN(e, info)) break;
-			goto opcode_error;
-		case I_INC:
-			if (EmuX86_Opcode_INC(e, info)) break;
-			goto opcode_error;
-		case I_INVD: // = 555 : Flush internal caches; initiate flushing of external caches.
-			break; // Privileged Level (Ring 0) Instruction. Causes a priviledge instruction exception - We can safely ignore this
-		case I_INVLPG: { // = 1727
-			// This instruction invalidates the TLB entry specified with the source operand. Since we don't emulate
-			// the TLB yet, we can safely ignore this. Test case: Fable.
-			break;
-		}
-		case I_JA: { // = 166 : Jump if above (CF=0 and ZF=0).
-			if (EmuX86_Opcode_Jcc(e, info, !EmuX86_HasFlag_CF(e) && !EmuX86_HasFlag_ZF(e))) {
-				continue;
+			case I_IN:
+				if (EmuX86_Opcode_IN(e, info)) break;
+				goto opcode_error;
+			case I_INC:
+				if (EmuX86_Opcode_INC(e, info)) break;
+				goto opcode_error;
+			case I_INVD: // = 555 : Flush internal caches; initiate flushing of external caches.
+				break; // Privileged Level (Ring 0) Instruction. Causes a priviledge instruction exception - We can safely ignore this
+			case I_INVLPG: { // = 1727
+				// This instruction invalidates the TLB entry specified with the source operand. Since we don't emulate
+				// the TLB yet, we can safely ignore this. Test case: Fable.
+				break;
 			}
-			break;
-		}
-		case I_JAE: { // = 147 : Jump if above or equal (CF=0).
-			if (EmuX86_Opcode_Jcc(e, info, !EmuX86_HasFlag_CF(e))) {
-				continue;
+			case I_JA: { // = 166 : Jump if above (CF=0 and ZF=0).
+				if (EmuX86_Opcode_Jcc(e, info, !EmuX86_HasFlag_CF(e) && !EmuX86_HasFlag_ZF(e))) {
+					continue;
+				}
+				break;
 			}
-			break;
-		}
-		case I_JB: { // = 143 : Jump if below (CF=1).
-			if (EmuX86_Opcode_Jcc(e, info, EmuX86_HasFlag_CF(e))) {
-				continue;
+			case I_JAE: { // = 147 : Jump if above or equal (CF=0).
+				if (EmuX86_Opcode_Jcc(e, info, !EmuX86_HasFlag_CF(e))) {
+					continue;
+				}
+				break;
 			}
-			break;
-		}
-		case I_JBE: { // = 161 : Jump if below or equal (CF=1 or ZF=1).
-			if (EmuX86_Opcode_Jcc(e, info, EmuX86_HasFlag_CF(e) || EmuX86_HasFlag_ZF(e))) {
-				continue;
+			case I_JB: { // = 143 : Jump if below (CF=1).
+				if (EmuX86_Opcode_Jcc(e, info, EmuX86_HasFlag_CF(e))) {
+					continue;
+				}
+				break;
 			}
-			break;
-		}
-		case I_JCXZ: { // = 427 : Jump if CX register is 0.
-			if (EmuX86_Opcode_Jcc(e, info, ((e->ContextRecord->Ecx & 0xFF) == 0))) {
-				continue;
+			case I_JBE: { // = 161 : Jump if below or equal (CF=1 or ZF=1).
+				if (EmuX86_Opcode_Jcc(e, info, EmuX86_HasFlag_CF(e) || EmuX86_HasFlag_ZF(e))) {
+					continue;
+				}
+				break;
 			}
-			break;
-		}
-		case I_JECXZ: { // = 433 : Jump if ECX register is 0.
-			if (EmuX86_Opcode_Jcc(e, info, e->ContextRecord->Ecx == 0)) {
-				continue;
+			case I_JCXZ: { // = 427 : Jump if CX register is 0.
+				if (EmuX86_Opcode_Jcc(e, info, ((e->ContextRecord->Ecx & 0xFF) == 0))) {
+					continue;
+				}
+				break;
 			}
-			break;
-		}
-		case I_JG: { // = 202 : Jump if greater (ZF=0 and SF=OF).
-			if (EmuX86_Opcode_Jcc(e, info, !EmuX86_HasFlag_ZF(e) && (EmuX86_HasFlag_SF(e) == EmuX86_HasFlag_OF(e)))) {
-				continue;
+			case I_JECXZ: { // = 433 : Jump if ECX register is 0.
+				if (EmuX86_Opcode_Jcc(e, info, e->ContextRecord->Ecx == 0)) {
+					continue;
+				}
+				break;
 			}
-			break;
-		}
-		case I_JGE: { // = 192 : Jump if greater or equal (SF=OF).
-			if (EmuX86_Opcode_Jcc(e, info, EmuX86_HasFlag_SF(e) == EmuX86_HasFlag_OF(e))) {
-				continue;
+			case I_JG: { // = 202 : Jump if greater (ZF=0 and SF=OF).
+				if (EmuX86_Opcode_Jcc(e, info, !EmuX86_HasFlag_ZF(e) && (EmuX86_HasFlag_SF(e) == EmuX86_HasFlag_OF(e)))) {
+					continue;
+				}
+				break;
 			}
-			break;
-		}
-		case I_JL: { // = 188 : Jump if less (SF<>OF).
-			if (EmuX86_Opcode_Jcc(e, info, EmuX86_HasFlag_SF(e) != EmuX86_HasFlag_OF(e))) {
-				continue;
+			case I_JGE: { // = 192 : Jump if greater or equal (SF=OF).
+				if (EmuX86_Opcode_Jcc(e, info, EmuX86_HasFlag_SF(e) == EmuX86_HasFlag_OF(e))) {
+					continue;
+				}
+				break;
 			}
-			break;
-		}
-		case I_JLE: { // = 197 : Jump if less or equal (ZF=1 or SF<>OF).
-			if (EmuX86_Opcode_Jcc(e, info, EmuX86_HasFlag_ZF(e) || (EmuX86_HasFlag_SF(e) != EmuX86_HasFlag_OF(e)))) {
-				continue;
+			case I_JL: { // = 188 : Jump if less (SF<>OF).
+				if (EmuX86_Opcode_Jcc(e, info, EmuX86_HasFlag_SF(e) != EmuX86_HasFlag_OF(e))) {
+					continue;
+				}
+				break;
 			}
-			break;
-		}
-		case I_JMP: // = 462 : 	Jump
-		case I_JMP_FAR: { // = 467 : Jump
-			if (EmuX86_Opcode_JMP(e, info)) {
-				continue;
+			case I_JLE: { // = 197 : Jump if less or equal (ZF=1 or SF<>OF).
+				if (EmuX86_Opcode_Jcc(e, info, EmuX86_HasFlag_ZF(e) || (EmuX86_HasFlag_SF(e) != EmuX86_HasFlag_OF(e)))) {
+					continue;
+				}
+				break;
 			}
-			break;
-		}
-		case I_JNO: { // = 138 : Jump if not overflow (OF=0).
-			if (EmuX86_Opcode_Jcc(e, info, !EmuX86_HasFlag_OF(e))) {
-				continue;
+			case I_JMP: // = 462 : 	Jump
+			case I_JMP_FAR: { // = 467 : Jump
+				if (EmuX86_Opcode_JMP(e, info)) {
+					continue;
+				}
+				break;
 			}
-			break;
-		}
-		case I_JNP: { // = 183 : Jump if not parity (PF=0).
-			if (EmuX86_Opcode_Jcc(e, info, !EmuX86_HasFlag_PF(e))) {
-				continue;
+			case I_JNO: { // = 138 : Jump if not overflow (OF=0).
+				if (EmuX86_Opcode_Jcc(e, info, !EmuX86_HasFlag_OF(e))) {
+					continue;
+				}
+				break;
 			}
-			break;
-		}
-		case I_JNS: { // = 174 : Jump if not sign (SF=0).
-			if (EmuX86_Opcode_Jcc(e, info, !EmuX86_HasFlag_SF(e))) {
-				continue;
+			case I_JNP: { // = 183 : Jump if not parity (PF=0).
+				if (EmuX86_Opcode_Jcc(e, info, !EmuX86_HasFlag_PF(e))) {
+					continue;
+				}
+				break;
 			}
-			break;
-		}
-		case I_JNZ: { // = 156 : Jump if not zero (ZF=0).
-			if (EmuX86_Opcode_Jcc(e, info, !EmuX86_HasFlag_ZF(e))) {
-				continue;
+			case I_JNS: { // = 174 : Jump if not sign (SF=0).
+				if (EmuX86_Opcode_Jcc(e, info, !EmuX86_HasFlag_SF(e))) {
+					continue;
+				}
+				break;
 			}
-			break;
-		}
-		case I_JO: { // = 134 : Jump if overflow (OF=1).
-			if (EmuX86_Opcode_Jcc(e, info, EmuX86_HasFlag_OF(e))) {
-				continue;
+			case I_JNZ: { // = 156 : Jump if not zero (ZF=0).
+				if (EmuX86_Opcode_Jcc(e, info, !EmuX86_HasFlag_ZF(e))) {
+					continue;
+				}
+				break;
 			}
-			break;
-		}
-		case I_JP: { // = 179 : Jump if parity (PF=1).
-			if (EmuX86_Opcode_Jcc(e, info, EmuX86_HasFlag_PF(e))) {
-				continue;
+			case I_JO: { // = 134 : Jump if overflow (OF=1).
+				if (EmuX86_Opcode_Jcc(e, info, EmuX86_HasFlag_OF(e))) {
+					continue;
+				}
+				break;
 			}
-			break;
-		}
-		case I_JS: { // = 170 : Jump if sign (SF=1).
-			if (EmuX86_Opcode_Jcc(e, info, EmuX86_HasFlag_SF(e))) {
-				continue;
+			case I_JP: { // = 179 : Jump if parity (PF=1).
+				if (EmuX86_Opcode_Jcc(e, info, EmuX86_HasFlag_PF(e))) {
+					continue;
+				}
+				break;
 			}
-			break;
-		}
-		case I_JZ: { // = 152 : Jump if zero (ZF = 1).
-			if (EmuX86_Opcode_Jcc(e, info, EmuX86_HasFlag_ZF(e))) {
-				continue;
+			case I_JS: { // = 170 : Jump if sign (SF=1).
+				if (EmuX86_Opcode_Jcc(e, info, EmuX86_HasFlag_SF(e))) {
+					continue;
+				}
+				break;
 			}
-			break;
-		}
-		case I_LEA: { // = 223 : Load Effective Address
-			if (EmuX86_Opcode_LEA(e, info)) break;
-			goto opcode_error;
-		}
-		case I_LFENCE: { // = 4287 : Serializes load operations.
-			__asm { lfence }; // emulate as-is (doesn't cause exceptions)
-			break;
-		}
-		case I_MFENCE: { // = 4313 : Serializes load and store operations.
-			__asm { mfence }; // emulate as-is (doesn't cause exceptions)
-			break;
-		}
-		case I_MOV:
-			if (EmuX86_Opcode_MOV(e, info)) break;
-			goto opcode_error;
-		case I_MOVSX:
-			if (EmuX86_Opcode_MOVSX(e, info)) break;
-			goto opcode_error;
-		case I_MOVZX:
-			if (EmuX86_Opcode_MOVZX(e, info)) break;
-			goto opcode_error;
-		case I_NOT:
-			if (EmuX86_Opcode_NOT(e, info)) break;
-			goto opcode_error;
-		case I_OR:
-			if (EmuX86_Opcode_OR(e, info)) break;
-			goto opcode_error;
-		case I_OUT:
-			if (EmuX86_Opcode_OUT(e, info)) break;
-			goto opcode_error;
-		case I_POP: { // = 22 : Pop a Value from the Stack
-			if (EmuX86_Opcode_POP(e, info)) break;
-			goto opcode_error;
-		}
-		case I_PUSH: { // = 16 : Push Word or Doubleword Onto the Stack
-			if (EmuX86_Opcode_PUSH(e, info)) break;
-			goto opcode_error;
-		}
-		 // TODO : case I_RDPMC: // = 607 : Read Performance-Monitoring Counters; Privileged Level (Ring 0) Instruction. Causes a priviledge instruction exception
-		case I_RDTSC: // = 593 : Read Time-Stamp Counter
-			EmuX86_Opcode_RDTSC(e);
-			break;
-		case I_RET:
-			// RET and CALL always signify the end of a code block
-			return true;
-		case I_SAR: // = 1002 : Shift arithmetic right
-			EmuX86_Opcode_SAR(e, info);
-			break;
-		case I_SBB:
-			if (EmuX86_Opcode_SBB(e, info)) break;
-			goto opcode_error;
-		case I_SETA: { // Set byte if above (CF=0 and ZF=0).
-			if (EmuX86_Opcode_SETcc(e, info, !EmuX86_HasFlag_CF(e) && !EmuX86_HasFlag_ZF(e))) break;
-			goto opcode_error;
-		}
-		case I_SETAE: { // Set byte if above or equal (CF=0).
-			if (EmuX86_Opcode_SETcc(e, info, !EmuX86_HasFlag_CF(e))) break;
-			goto opcode_error;
-		}
-		case I_SETB: { // Set byte if below (CF=1).
-			if (EmuX86_Opcode_SETcc(e, info, EmuX86_HasFlag_CF(e))) break;
-			goto opcode_error;
-		}
-		case I_SETBE: { // Set byte if below or equal (CF=1 or ZF=1).
-			if (EmuX86_Opcode_SETcc(e, info, EmuX86_HasFlag_CF(e) || EmuX86_HasFlag_ZF(e))) break;
-			goto opcode_error;
-		}
-		case I_SETG: { // Set byte if greater (ZF=0 and SF=OF).
-			if (EmuX86_Opcode_SETcc(e, info, !EmuX86_HasFlag_ZF(e) && (EmuX86_HasFlag_SF(e) == EmuX86_HasFlag_OF(e)))) break;
-			goto opcode_error;
-		}
-		case I_SETGE: { // Set byte if greater or equal (SF=OF).
-			if (EmuX86_Opcode_SETcc(e, info, EmuX86_HasFlag_SF(e) == EmuX86_HasFlag_OF(e))) break;
-			goto opcode_error;
-		}
-		case I_SETL: { // Set byte if less (SF<>OF).
-			if (EmuX86_Opcode_SETcc(e, info, EmuX86_HasFlag_SF(e) != EmuX86_HasFlag_OF(e))) break;
-			goto opcode_error;
-		}
-		case I_SETLE: { // Set byte if less or equal (ZF=1 or SF<>OF).
-			if (EmuX86_Opcode_SETcc(e, info, EmuX86_HasFlag_ZF(e) || (EmuX86_HasFlag_SF(e) != EmuX86_HasFlag_OF(e)))) break;
-			goto opcode_error;
-		}
-		case I_SETNO: { // Set byte if not overflow (OF=0).
-			if (EmuX86_Opcode_SETcc(e, info, !EmuX86_HasFlag_OF(e))) break;
-			goto opcode_error;
-		}
-		case I_SETNP: { // Set byte if not parity (PF=0).
-			if (EmuX86_Opcode_SETcc(e, info, !EmuX86_HasFlag_PF(e))) break;
-			goto opcode_error;
-		}
-		case I_SETNS: { // Set byte if not sign (SF=0).
-			if (EmuX86_Opcode_SETcc(e, info, !EmuX86_HasFlag_SF(e))) break;
-			goto opcode_error;
-		}
-		case I_SETNZ: { // Set byte if not zero (ZF=0).
-			if (EmuX86_Opcode_SETcc(e, info, !EmuX86_HasFlag_ZF(e))) break;
-			goto opcode_error;
-		}
-		case I_SETO: { // Set byte if overflow (OF=1).
-			if (EmuX86_Opcode_SETcc(e, info, EmuX86_HasFlag_OF(e))) break;
-			goto opcode_error;
-		}
-		case I_SETP: { // Set byte if parity (PF=1).
-			if (EmuX86_Opcode_SETcc(e, info, EmuX86_HasFlag_PF(e))) break;
-			goto opcode_error;
-		}
-		case I_SETS: { // Set byte if sign (SF=1).
-			if (EmuX86_Opcode_SETcc(e, info, EmuX86_HasFlag_SF(e))) break;
-			goto opcode_error;
-		}
-		case I_SETZ: { // Set byte if zero (ZF=1).
-			if (EmuX86_Opcode_SETcc(e, info, EmuX86_HasFlag_ZF(e))) break;
-			goto opcode_error;
-		}
-		case I_SFENCE: { // = 4343 : Serializes store operations.
-			__asm { sfence }; // emulate as-is (doesn't cause exceptions)
-			break;
-		}
-		case I_SHL:
-			if (EmuX86_Opcode_SHL(e, info)) break;
-			goto opcode_error;
-		case I_SHR:
-			if (EmuX86_Opcode_SHR(e, info)) break;
-			goto opcode_error;
-		case I_STI: {
-			// Enable all interrupts
-			EmuX86_Opcode_STI();
-			break;
-		}
-		case I_SUB:
-			if (EmuX86_Opcode_SUB(e, info)) break;
-			goto opcode_error;
-		case I_TEST:
-			if (EmuX86_Opcode_TEST(e, info)) break;
-			goto opcode_error;
-		case I_WBINVD: // Write back and flush internal caches; initiate writing-back and flushing of external caches.
-			break; // Privileged Level (Ring 0) Instruction. Causes a priviledge instruction exception - We can safely ignore this
-		case I_WRMSR:
-			// We do not emulate processor specific registers just yet
-			// Some titles attempt to manually set the TSC via this instruction
-			// This needs fixing eventually, but should be acceptible to ignore for now!
-			// Chase: Hollywood Stunt Driver hits this
-			EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "WRMSR instruction ignored");
-			break;
-		case I_XOR:
-			if (EmuX86_Opcode_XOR(e, info)) break;
-			goto opcode_error;
-		default:
-			EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Unhandled instruction : %u", info.opcode);
-			// Fail if the first hit instruction couldn't be emulated,
-			// but let host CPU execute following (unhandled) instructions :
-			return (StartingEip != e->ContextRecord->Eip);
+			case I_JZ: { // = 152 : Jump if zero (ZF = 1).
+				if (EmuX86_Opcode_Jcc(e, info, EmuX86_HasFlag_ZF(e))) {
+					continue;
+				}
+				break;
+			}
+			case I_LEA: { // = 223 : Load Effective Address
+				if (EmuX86_Opcode_LEA(e, info)) break;
+				goto opcode_error;
+			}
+			case I_LFENCE: { // = 4287 : Serializes load operations.
+				__asm { lfence }; // emulate as-is (doesn't cause exceptions)
+				break;
+			}
+			case I_MFENCE: { // = 4313 : Serializes load and store operations.
+				__asm { mfence }; // emulate as-is (doesn't cause exceptions)
+				break;
+			}
+			case I_MOV:
+				if (EmuX86_Opcode_MOV(e, info)) break;
+				goto opcode_error;
+			case I_MOVSX:
+				if (EmuX86_Opcode_MOVSX(e, info)) break;
+				goto opcode_error;
+			case I_MOVZX:
+				if (EmuX86_Opcode_MOVZX(e, info)) break;
+				goto opcode_error;
+			case I_NOT:
+				if (EmuX86_Opcode_NOT(e, info)) break;
+				goto opcode_error;
+			case I_OR:
+				if (EmuX86_Opcode_OR(e, info)) break;
+				goto opcode_error;
+			case I_OUT:
+				if (EmuX86_Opcode_OUT(e, info)) break;
+				goto opcode_error;
+			case I_POP: { // = 22 : Pop a Value from the Stack
+				if (EmuX86_Opcode_POP(e, info)) break;
+				goto opcode_error;
+			}
+			case I_PUSH: { // = 16 : Push Word or Doubleword Onto the Stack
+				if (EmuX86_Opcode_PUSH(e, info)) break;
+				goto opcode_error;
+			}
+			 // TODO : case I_RDPMC: // = 607 : Read Performance-Monitoring Counters; Privileged Level (Ring 0) Instruction. Causes a priviledge instruction exception
+			case I_RDTSC: // = 593 : Read Time-Stamp Counter
+				EmuX86_Opcode_RDTSC(e);
+				break;
+			case I_RET:
+				// RET and CALL always signify the end of a code block
+				return true;
+			case I_SAR: // = 1002 : Shift arithmetic right
+				EmuX86_Opcode_SAR(e, info);
+				break;
+			case I_SBB:
+				if (EmuX86_Opcode_SBB(e, info)) break;
+				goto opcode_error;
+			case I_SETA: { // Set byte if above (CF=0 and ZF=0).
+				if (EmuX86_Opcode_SETcc(e, info, !EmuX86_HasFlag_CF(e) && !EmuX86_HasFlag_ZF(e))) break;
+				goto opcode_error;
+			}
+			case I_SETAE: { // Set byte if above or equal (CF=0).
+				if (EmuX86_Opcode_SETcc(e, info, !EmuX86_HasFlag_CF(e))) break;
+				goto opcode_error;
+			}
+			case I_SETB: { // Set byte if below (CF=1).
+				if (EmuX86_Opcode_SETcc(e, info, EmuX86_HasFlag_CF(e))) break;
+				goto opcode_error;
+			}
+			case I_SETBE: { // Set byte if below or equal (CF=1 or ZF=1).
+				if (EmuX86_Opcode_SETcc(e, info, EmuX86_HasFlag_CF(e) || EmuX86_HasFlag_ZF(e))) break;
+				goto opcode_error;
+			}
+			case I_SETG: { // Set byte if greater (ZF=0 and SF=OF).
+				if (EmuX86_Opcode_SETcc(e, info, !EmuX86_HasFlag_ZF(e) && (EmuX86_HasFlag_SF(e) == EmuX86_HasFlag_OF(e)))) break;
+				goto opcode_error;
+			}
+			case I_SETGE: { // Set byte if greater or equal (SF=OF).
+				if (EmuX86_Opcode_SETcc(e, info, EmuX86_HasFlag_SF(e) == EmuX86_HasFlag_OF(e))) break;
+				goto opcode_error;
+			}
+			case I_SETL: { // Set byte if less (SF<>OF).
+				if (EmuX86_Opcode_SETcc(e, info, EmuX86_HasFlag_SF(e) != EmuX86_HasFlag_OF(e))) break;
+				goto opcode_error;
+			}
+			case I_SETLE: { // Set byte if less or equal (ZF=1 or SF<>OF).
+				if (EmuX86_Opcode_SETcc(e, info, EmuX86_HasFlag_ZF(e) || (EmuX86_HasFlag_SF(e) != EmuX86_HasFlag_OF(e)))) break;
+				goto opcode_error;
+			}
+			case I_SETNO: { // Set byte if not overflow (OF=0).
+				if (EmuX86_Opcode_SETcc(e, info, !EmuX86_HasFlag_OF(e))) break;
+				goto opcode_error;
+			}
+			case I_SETNP: { // Set byte if not parity (PF=0).
+				if (EmuX86_Opcode_SETcc(e, info, !EmuX86_HasFlag_PF(e))) break;
+				goto opcode_error;
+			}
+			case I_SETNS: { // Set byte if not sign (SF=0).
+				if (EmuX86_Opcode_SETcc(e, info, !EmuX86_HasFlag_SF(e))) break;
+				goto opcode_error;
+			}
+			case I_SETNZ: { // Set byte if not zero (ZF=0).
+				if (EmuX86_Opcode_SETcc(e, info, !EmuX86_HasFlag_ZF(e))) break;
+				goto opcode_error;
+			}
+			case I_SETO: { // Set byte if overflow (OF=1).
+				if (EmuX86_Opcode_SETcc(e, info, EmuX86_HasFlag_OF(e))) break;
+				goto opcode_error;
+			}
+			case I_SETP: { // Set byte if parity (PF=1).
+				if (EmuX86_Opcode_SETcc(e, info, EmuX86_HasFlag_PF(e))) break;
+				goto opcode_error;
+			}
+			case I_SETS: { // Set byte if sign (SF=1).
+				if (EmuX86_Opcode_SETcc(e, info, EmuX86_HasFlag_SF(e))) break;
+				goto opcode_error;
+			}
+			case I_SETZ: { // Set byte if zero (ZF=1).
+				if (EmuX86_Opcode_SETcc(e, info, EmuX86_HasFlag_ZF(e))) break;
+				goto opcode_error;
+			}
+			case I_SFENCE: { // = 4343 : Serializes store operations.
+				__asm { sfence }; // emulate as-is (doesn't cause exceptions)
+				break;
+			}
+			case I_SHL:
+				if (EmuX86_Opcode_SHL(e, info)) break;
+				goto opcode_error;
+			case I_SHR:
+				if (EmuX86_Opcode_SHR(e, info)) break;
+				goto opcode_error;
+			case I_STI: {
+				// Enable all interrupts
+				EmuX86_Opcode_STI();
+				break;
+			}
+			case I_SUB:
+				if (EmuX86_Opcode_SUB(e, info)) break;
+				goto opcode_error;
+			case I_TEST:
+				if (EmuX86_Opcode_TEST(e, info)) break;
+				goto opcode_error;
+			case I_WBINVD: // Write back and flush internal caches; initiate writing-back and flushing of external caches.
+				break; // Privileged Level (Ring 0) Instruction. Causes a priviledge instruction exception - We can safely ignore this
+			case I_WRMSR:
+				// We do not emulate processor specific registers just yet
+				// Some titles attempt to manually set the TSC via this instruction
+				// This needs fixing eventually, but should be acceptible to ignore for now!
+				// Chase: Hollywood Stunt Driver hits this
+				EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "WRMSR instruction ignored");
+				break;
+			case I_XOR:
+				if (EmuX86_Opcode_XOR(e, info)) break;
+				goto opcode_error;
+			default:
+				EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Unhandled instruction : %u", info.opcode);
+				// Fail if the first hit instruction couldn't be emulated,
+				// but let host CPU execute following (unhandled) instructions :
+				return (StartingEip != e->ContextRecord->Eip);
 		} // switch info.opcode
 
+//		EmuLog(LOG_PREFIX, LOG_LEVEL::INFO, "Processed instruction : 0x%08X %u", e->ContextRecord->Eip, info.opcode);
 		e->ContextRecord->Eip += info.size;
 	} // while true
 
