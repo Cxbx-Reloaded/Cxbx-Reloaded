@@ -464,7 +464,7 @@ bool EmuX86_Operand_Addr_ForReadOnly(const LPEXCEPTION_POINTERS e, const _DInst&
 	case O_PC:
 	{
 		opAddr.is_internal_addr = false;
-		opAddr.addr = (xbaddr)e->ContextRecord->Eip + INSTRUCTION_GET_TARGET(&info);
+		opAddr.addr = (xbaddr)e->ContextRecord->Eip + (xbaddr)INSTRUCTION_GET_TARGET(&info);
 		return true;
 	}
 	case O_PTR:
@@ -915,7 +915,7 @@ bool EmuX86_Opcode_JMP(LPEXCEPTION_POINTERS e, _DInst& info)
 	OperandAddress opAddr;
 	EmuX86_Operand_Addr_ForReadOnly(e, info, 0, opAddr);
 
-	e->ContextRecord->Eip += opAddr.addr;
+	e->ContextRecord->Eip = opAddr.addr;
 
 	return true;
 }
@@ -929,7 +929,7 @@ bool EmuX86_Opcode_Jcc(LPEXCEPTION_POINTERS e, _DInst& info, bool condition)
 		OperandAddress opAddr;
 		EmuX86_Operand_Addr_ForReadOnly(e, info, 0, opAddr);
 
-		e->ContextRecord->Eip += opAddr.addr;
+		e->ContextRecord->Eip = opAddr.addr;
 		return true;
 	}
 
@@ -1091,16 +1091,15 @@ bool EmuX86_Opcode_POP(LPEXCEPTION_POINTERS e, _DInst& info)
 {
 	// Recognize POP ESP (which increments BEFORE reading from stack) :
 	bool bAccessesESP = (info.ops[0].type == O_REG) && (info.ops[0].index == R_ESP);
-	int size = info.ops[0].size / 8; // Convert size in bits into bytes
 	uint32_t value;
 
 	if (bAccessesESP) {
-		e->ContextRecord->Esp += size;
-		value = EmuX86_Mem_Read(e->ContextRecord->Esp, size);
+		e->ContextRecord->Esp += sizeof(uint32_t);
+		value = EmuX86_Mem_Read(e->ContextRecord->Esp, sizeof(uint32_t));
 	}
 	else {
-		value = EmuX86_Mem_Read(e->ContextRecord->Esp, size);
-		e->ContextRecord->Esp += size;
+		value = EmuX86_Mem_Read(e->ContextRecord->Esp, sizeof(uint32_t));
+		e->ContextRecord->Esp += sizeof(uint32_t);
 	}
 
 	if (!EmuX86_Operand_Write(e, info, 0, value))
@@ -1115,10 +1114,8 @@ bool EmuX86_Opcode_PUSH(LPEXCEPTION_POINTERS e, _DInst& info)
 	if (!EmuX86_Operand_Read(e, info, 0, &value))
 		return false;
 
-	int size = info.ops[0].size / 8; // Convert size in bits into bytes
-
-	e->ContextRecord->Esp -= size;
-	EmuX86_Mem_Write(e->ContextRecord->Esp, value, size);
+	e->ContextRecord->Esp -= sizeof(uint32_t);
+	EmuX86_Mem_Write(e->ContextRecord->Esp, value, sizeof(uint32_t));
 	return true;
 }
 
