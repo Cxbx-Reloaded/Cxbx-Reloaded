@@ -2566,7 +2566,7 @@ void EmuX86_DistormLogInstruction(const uint8_t *Eip, _DInst &info)
 #define FLAG_GET_PREFIX(flags) ((flags) & 7) // To get the LOCK/REPNZ/REP prefixes.
 */
 
-	EmuLog(LOG_PREFIX, LOG_LEVEL::INFO, output.str().c_str());
+	EmuLog(LOG_PREFIX, LOG_LEVEL::DEBUG, output.str().c_str());
 }
 
 int EmuX86_OpcodeSize(uint8_t *Eip)
