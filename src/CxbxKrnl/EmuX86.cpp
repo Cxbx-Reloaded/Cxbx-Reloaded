@@ -29,8 +29,9 @@
 // *  59 Temple Place - Suite 330, Bostom, MA 02111-1307, USA.
 // *
 // *  (c) 2002-2003 Aaron Robinson <caustik@caustik.com>
-// *  (c) 2016 Luke Usher <luke.usher@outlook.com>
-// *  All rights reserved
+// *  (c) 2016-2018 Luke Usher <luke.usher@outlook.com>
+// *  (c) 2016-2018 Patrick van Logchem <pvanlogchem@gmail.com>
+// *  All rights reserved 
 // *
 // ******************************************************************
 #define _XBOXKRNL_DEFEXTRN_
@@ -463,7 +464,7 @@ bool EmuX86_Operand_Addr_ForReadOnly(const LPEXCEPTION_POINTERS e, const _DInst&
 	case O_PC:
 	{
 		opAddr.is_internal_addr = false;
-		opAddr.addr = (xbaddr)INSTRUCTION_GET_TARGET(&info);
+		opAddr.addr = (xbaddr)e->ContextRecord->Eip + (xbaddr)INSTRUCTION_GET_TARGET(&info);
 		return true;
 	}
 	case O_PTR:
@@ -719,6 +720,16 @@ bool EmuX86_Opcode_AND(LPEXCEPTION_POINTERS e, _DInst& info)
 	return true;
 }
 
+void EmuX86_Opcode_CDQ(LPEXCEPTION_POINTERS e, _DInst& info)
+{
+	e->ContextRecord->Edx = (e->ContextRecord->Eax & 0x80000000) ? 0xFFFFFFFF : 0;
+}
+
+void EmuX86_Opcode_CLI()
+{
+	g_bEnableAllInterrupts = false;
+}
+
 bool EmuX86_Opcode_CMP(LPEXCEPTION_POINTERS e, _DInst& info)
 {
 	// Read value from Source and Destination
@@ -904,20 +915,21 @@ bool EmuX86_Opcode_JMP(LPEXCEPTION_POINTERS e, _DInst& info)
 	OperandAddress opAddr;
 	EmuX86_Operand_Addr_ForReadOnly(e, info, 0, opAddr);
 
-	e->ContextRecord->Eip += opAddr.addr;
+	e->ContextRecord->Eip = opAddr.addr;
 
 	return true;
 }
 
 // Jump if condition is met
+// https://c9x.me/x86/html/file_module_x86_id_146.html
 // Returns true if branch was taken
-bool EmuX86_Opcode_JXX(LPEXCEPTION_POINTERS e, _DInst& info, bool condition)
+bool EmuX86_Opcode_Jcc(LPEXCEPTION_POINTERS e, _DInst& info, bool condition)
 {
 	if (condition) {
 		OperandAddress opAddr;
 		EmuX86_Operand_Addr_ForReadOnly(e, info, 0, opAddr);
 
-		e->ContextRecord->Eip += opAddr.addr;
+		e->ContextRecord->Eip = opAddr.addr;
 		return true;
 	}
 
@@ -1074,6 +1086,82 @@ bool EmuX86_Opcode_OUT(LPEXCEPTION_POINTERS e, _DInst& info)
 	return true;
 }
 
+// https://c9x.me/x86/html/file_module_x86_id_248.html
+bool EmuX86_Opcode_POP(LPEXCEPTION_POINTERS e, _DInst& info)
+{
+	// Recognize POP ESP (which increments BEFORE reading from stack) :
+	bool bAccessesESP = (info.ops[0].type == O_REG) && (info.ops[0].index == R_ESP);
+	uint32_t value;
+
+	if (bAccessesESP) {
+		e->ContextRecord->Esp += sizeof(uint32_t);
+		value = EmuX86_Mem_Read(e->ContextRecord->Esp, sizeof(uint32_t));
+	}
+	else {
+		value = EmuX86_Mem_Read(e->ContextRecord->Esp, sizeof(uint32_t));
+		e->ContextRecord->Esp += sizeof(uint32_t);
+	}
+
+	if (!EmuX86_Operand_Write(e, info, 0, value))
+		return false;
+
+	return true;
+}
+
+bool EmuX86_Opcode_PUSH(LPEXCEPTION_POINTERS e, _DInst& info)
+{
+	uint32_t value;
+	if (!EmuX86_Operand_Read(e, info, 0, &value))
+		return false;
+
+	e->ContextRecord->Esp -= sizeof(uint32_t);
+	EmuX86_Mem_Write(e->ContextRecord->Esp, value, sizeof(uint32_t));
+	return true;
+}
+
+ULONGLONG CxbxRdTsc(bool xbox); // implemented in EmuKrnlKe.cpp
+void EmuX86_Opcode_RDTSC(LPEXCEPTION_POINTERS e)
+{
+	// Avoid the overhead of xboxkrnl::KeQueryPerformanceCounter,
+	// by calling directly into it's backing implementation:
+	ULARGE_INTEGER PerformanceCount;
+	PerformanceCount.QuadPart = CxbxRdTsc(/*xbox=*/true);
+	e->ContextRecord->Eax = PerformanceCount.LowPart;
+	e->ContextRecord->Edx = PerformanceCount.HighPart;
+}
+
+bool EmuX86_Opcode_SAR(LPEXCEPTION_POINTERS e, _DInst& info)
+{
+	// Read value from Source and Destination
+	uint32_t src = 0;
+	if (!EmuX86_Operand_Read(e, info, 1, &src))
+		return false;
+
+	// SAR reads and writes the same operand :
+	OperandAddress opAddr;
+	if (!EmuX86_Operand_Addr_ForReadWrite(e, info, 0, OUT opAddr))
+		return false;
+
+	uint32_t dest = EmuX86_Addr_Read(opAddr);
+
+	// Shift Destination with src WHILE KEEPING SIGN!
+	uint8_t carryBit = dest & 1;
+	int64_t result = (int64_t)dest >> (uint64_t)src;
+
+	// Write result back
+	EmuX86_Addr_Write(opAddr, static_cast<uint32_t>(result));
+
+	// The OF, SF, ZF, AF, PF, and CF flags are set according to the result.
+	EmuX86_SetFlags_OSZAPC(e,
+		/*EMUX86_EFLAG_OF*/OF_Sub(result, src, dest),
+		/*EMUX86_EFLAG_SF*/SFCalc(result),
+		/*EMUX86_EFLAG_ZF*/ZFCalc(result),
+		/*EMUX86_EFLAG_AF*/AFCalc(result, src, dest),
+		/*EMUX86_EFLAG_PF*/PFCalc(result),
+		/*EMUX86_EFLAG_CF*/carryBit);
+
+	return true;
+}
 
 bool EmuX86_Opcode_SBB(LPEXCEPTION_POINTERS e, _DInst& info)
 {
@@ -1112,11 +1200,13 @@ bool EmuX86_Opcode_SBB(LPEXCEPTION_POINTERS e, _DInst& info)
 	return true;
 }
 
-inline void EmuX86_Opcode_SXX(LPEXCEPTION_POINTERS e, _DInst& info, bool condition)
+// Set Byte on Condition
+// https://c9x.me/x86/html/file_module_x86_id_288.html
+inline bool EmuX86_Opcode_SETcc(LPEXCEPTION_POINTERS e, _DInst& info, bool condition)
 {
 	uint8_t value = (condition) ? 1 : 0;
 
-	EmuX86_Operand_Write(e, info, 0, value);
+	return EmuX86_Operand_Write(e, info, 0, value);
 }
 
 bool EmuX86_Opcode_SHL(LPEXCEPTION_POINTERS e, _DInst& info)
@@ -1182,6 +1272,11 @@ bool EmuX86_Opcode_SHR(LPEXCEPTION_POINTERS e, _DInst& info)
 		/*EMUX86_EFLAG_CF*/carryBit);
 
 	return true;
+}
+
+void EmuX86_Opcode_STI()
+{
+	g_bEnableAllInterrupts = true;
 }
 
 bool EmuX86_Opcode_SUB(LPEXCEPTION_POINTERS e, _DInst& info)
@@ -1276,16 +1371,6 @@ bool EmuX86_Opcode_XOR(LPEXCEPTION_POINTERS e, _DInst& info)
 	return true;
 }
 
-void EmuX86_Opcode_CLI()
-{
-	g_bEnableAllInterrupts = false;
-}
-
-void EmuX86_Opcode_STI()
-{
-	g_bEnableAllInterrupts = true;
-}
-
 bool EmuX86_DecodeOpcode(const uint8_t *Eip, _DInst &info)
 {
 	unsigned int decodedInstructionsCount = 0;
@@ -1303,6 +1388,1185 @@ bool EmuX86_DecodeOpcode(const uint8_t *Eip, _DInst &info)
 	distorm_decompose(&ci, &info, /*maxInstructions=*/1, &decodedInstructionsCount);
 	// and check if it successfully decoded one instruction :
 	return (decodedInstructionsCount == 1);
+}
+
+const char *Distorm_RegStrings[/*_RegisterType*/] = {
+	"RAX", "RCX", "RDX", "RBX", "RSP", "RBP", "RSI", "RDI", "R8", "R9", "R10", "R11", "R12", "R13", "R14", "R15",
+	"EAX", "ECX", "EDX", "EBX", "ESP", "EBP", "ESI", "EDI", "R8D", "R9D", "R10D", "R11D", "R12D", "R13D", "R14D", "R15D",
+	"AX", "CX", "DX", "BX", "SP", "BP", "SI", "DI", "R8W", "R9W", "R10W", "R11W", "R12W", "R13W", "R14W", "R15W",
+	"AL", "CL", "DL", "BL", "AH", "CH", "DH", "BH", "R8B", "R9B", "R10B", "R11B", "R12B", "R13B", "R14B", "R15B",
+	"SPL", "BPL", "SIL", "DIL",
+	"ES", "CS", "SS", "DS", "FS", "GS",
+	"RIP",
+	"ST0", "ST1", "ST2", "ST3", "ST4", "ST5", "ST6", "ST7",
+	"MM0", "MM1", "MM2", "MM3", "MM4", "MM5", "MM6", "MM7",
+	"XMM0", "XMM1", "XMM2", "XMM3", "XMM4", "XMM5", "XMM6", "XMM7", "XMM8", "XMM9", "XMM10", "XMM11", "XMM12", "XMM13", "XMM14", "XMM15",
+	"YMM0", "YMM1", "YMM2", "YMM3", "YMM4", "YMM5", "YMM6", "YMM7", "YMM8", "YMM9", "YMM10", "YMM11", "YMM12", "YMM13", "YMM14", "YMM15",
+	"CR0", "UNUSED0", "CR2", "CR3", "CR4", "UNUSED1", "UNUSED2", "UNUSED3", "CR8",
+	"DR0", "DR1", "DR2", "DR3", "UNUSED4", "UNUSED5", "DR6", "DR7",
+};
+
+char *Distorm_OpcodeString(const int opcode)
+{
+	switch (opcode) {
+	case I_AAA: return "AAA";
+	case I_AAD: return "AAD";
+	case I_AAM: return "AAM";
+	case I_AAS: return "AAS";
+	case I_ADC: return "ADC";
+	case I_ADD: return "ADD";
+	case I_ADDPD: return "ADDPD";
+	case I_ADDPS: return "ADDPS";
+	case I_ADDSD: return "ADDSD";
+	case I_ADDSS: return "ADDSS";
+	case I_ADDSUBPD: return "ADDSUBPD";
+	case I_ADDSUBPS: return "ADDSUBPS";
+	case I_AESDEC: return "AESDEC";
+	case I_AESDECLAST: return "AESDECLAST";
+	case I_AESENC: return "AESENC";
+	case I_AESENCLAST: return "AESENCLAST";
+	case I_AESIMC: return "AESIMC";
+	case I_AESKEYGENASSIST: return "AESKEYGENASSIST";
+	case I_AND: return "AND";
+	case I_ANDNPD: return "ANDNPD";
+	case I_ANDNPS: return "ANDNPS";
+	case I_ANDPD: return "ANDPD";
+	case I_ANDPS: return "ANDPS";
+	case I_ARPL: return "ARPL";
+	case I_BLENDPD: return "BLENDPD";
+	case I_BLENDPS: return "BLENDPS";
+	case I_BLENDVPD: return "BLENDVPD";
+	case I_BLENDVPS: return "BLENDVPS";
+	case I_BOUND: return "BOUND";
+	case I_BSF: return "BSF";
+	case I_BSR: return "BSR";
+	case I_BSWAP: return "BSWAP";
+	case I_BT: return "BT";
+	case I_BTC: return "BTC";
+	case I_BTR: return "BTR";
+	case I_BTS: return "BTS";
+	case I_CALL: return "CALL";
+	case I_CALL_FAR: return "CALL_FAR";
+	case I_CBW: return "CBW";
+	case I_CDQ: return "CDQ";
+	case I_CDQE: return "CDQE";
+	case I_CLC: return "CLC";
+	case I_CLD: return "CLD";
+	case I_CLFLUSH: return "CLFLUSH";
+	case I_CLGI: return "CLGI";
+	case I_CLI: return "CLI";
+	case I_CLTS: return "CLTS";
+	case I_CMC: return "CMC";
+	case I_CMOVA: return "CMOVA";
+	case I_CMOVAE: return "CMOVAE";
+	case I_CMOVB: return "CMOVB";
+	case I_CMOVBE: return "CMOVBE";
+	case I_CMOVG: return "CMOVG";
+	case I_CMOVGE: return "CMOVGE";
+	case I_CMOVL: return "CMOVL";
+	case I_CMOVLE: return "CMOVLE";
+	case I_CMOVNO: return "CMOVNO";
+	case I_CMOVNP: return "CMOVNP";
+	case I_CMOVNS: return "CMOVNS";
+	case I_CMOVNZ: return "CMOVNZ";
+	case I_CMOVO: return "CMOVO";
+	case I_CMOVP: return "CMOVP";
+	case I_CMOVS: return "CMOVS";
+	case I_CMOVZ: return "CMOVZ";
+	case I_CMP: return "CMP";
+	case I_CMPEQPD: return "CMPEQPD";
+	case I_CMPEQPS: return "CMPEQPS";
+	case I_CMPEQSD: return "CMPEQSD";
+	case I_CMPEQSS: return "CMPEQSS";
+	case I_CMPLEPD: return "CMPLEPD";
+	case I_CMPLEPS: return "CMPLEPS";
+	case I_CMPLESD: return "CMPLESD";
+	case I_CMPLESS: return "CMPLESS";
+	case I_CMPLTPD: return "CMPLTPD";
+	case I_CMPLTPS: return "CMPLTPS";
+	case I_CMPLTSD: return "CMPLTSD";
+	case I_CMPLTSS: return "CMPLTSS";
+	case I_CMPNEQPD: return "CMPNEQPD";
+	case I_CMPNEQPS: return "CMPNEQPS";
+	case I_CMPNEQSD: return "CMPNEQSD";
+	case I_CMPNEQSS: return "CMPNEQSS";
+	case I_CMPNLEPD: return "CMPNLEPD";
+	case I_CMPNLEPS: return "CMPNLEPS";
+	case I_CMPNLESD: return "CMPNLESD";
+	case I_CMPNLESS: return "CMPNLESS";
+	case I_CMPNLTPD: return "CMPNLTPD";
+	case I_CMPNLTPS: return "CMPNLTPS";
+	case I_CMPNLTSD: return "CMPNLTSD";
+	case I_CMPNLTSS: return "CMPNLTSS";
+	case I_CMPORDPD: return "CMPORDPD";
+	case I_CMPORDPS: return "CMPORDPS";
+	case I_CMPORDSD: return "CMPORDSD";
+	case I_CMPORDSS: return "CMPORDSS";
+	case I_CMPS: return "CMPS";
+	case I_CMPUNORDPD: return "CMPUNORDPD";
+	case I_CMPUNORDPS: return "CMPUNORDPS";
+	case I_CMPUNORDSD: return "CMPUNORDSD";
+	case I_CMPUNORDSS: return "CMPUNORDSS";
+	case I_CMPXCHG: return "CMPXCHG";
+	case I_CMPXCHG16B: return "CMPXCHG16B";
+	case I_CMPXCHG8B: return "CMPXCHG8B";
+	case I_COMISD: return "COMISD";
+	case I_COMISS: return "COMISS";
+	case I_CPUID: return "CPUID";
+	case I_CQO: return "CQO";
+	case I_CRC32: return "CRC32";
+	case I_CVTDQ2PD: return "CVTDQ2PD";
+	case I_CVTDQ2PS: return "CVTDQ2PS";
+	case I_CVTPD2DQ: return "CVTPD2DQ";
+	case I_CVTPD2PI: return "CVTPD2PI";
+	case I_CVTPD2PS: return "CVTPD2PS";
+	case I_CVTPH2PS: return "CVTPH2PS";
+	case I_CVTPI2PD: return "CVTPI2PD";
+	case I_CVTPI2PS: return "CVTPI2PS";
+	case I_CVTPS2DQ: return "CVTPS2DQ";
+	case I_CVTPS2PD: return "CVTPS2PD";
+	case I_CVTPS2PH: return "CVTPS2PH";
+	case I_CVTPS2PI: return "CVTPS2PI";
+	case I_CVTSD2SI: return "CVTSD2SI";
+	case I_CVTSD2SS: return "CVTSD2SS";
+	case I_CVTSI2SD: return "CVTSI2SD";
+	case I_CVTSI2SS: return "CVTSI2SS";
+	case I_CVTSS2SD: return "CVTSS2SD";
+	case I_CVTSS2SI: return "CVTSS2SI";
+	case I_CVTTPD2DQ: return "CVTTPD2DQ";
+	case I_CVTTPD2PI: return "CVTTPD2PI";
+	case I_CVTTPS2DQ: return "CVTTPS2DQ";
+	case I_CVTTPS2PI: return "CVTTPS2PI";
+	case I_CVTTSD2SI: return "CVTTSD2SI";
+	case I_CVTTSS2SI: return "CVTTSS2SI";
+	case I_CWD: return "CWD";
+	case I_CWDE: return "CWDE";
+	case I_DAA: return "DAA";
+	case I_DAS: return "DAS";
+	case I_DEC: return "DEC";
+	case I_DIV: return "DIV";
+	case I_DIVPD: return "DIVPD";
+	case I_DIVPS: return "DIVPS";
+	case I_DIVSD: return "DIVSD";
+	case I_DIVSS: return "DIVSS";
+	case I_DPPD: return "DPPD";
+	case I_DPPS: return "DPPS";
+	case I_EMMS: return "EMMS";
+	case I_ENTER: return "ENTER";
+	case I_EXTRACTPS: return "EXTRACTPS";
+	case I_EXTRQ: return "EXTRQ";
+	case I_F2XM1: return "F2XM1";
+	case I_FABS: return "FABS";
+	case I_FADD: return "FADD";
+	case I_FADDP: return "FADDP";
+	case I_FBLD: return "FBLD";
+	case I_FBSTP: return "FBSTP";
+	case I_FCHS: return "FCHS";
+	case I_FCLEX: return "FCLEX";
+	case I_FCMOVB: return "FCMOVB";
+	case I_FCMOVBE: return "FCMOVBE";
+	case I_FCMOVE: return "FCMOVE";
+	case I_FCMOVNB: return "FCMOVNB";
+	case I_FCMOVNBE: return "FCMOVNBE";
+	case I_FCMOVNE: return "FCMOVNE";
+	case I_FCMOVNU: return "FCMOVNU";
+	case I_FCMOVU: return "FCMOVU";
+	case I_FCOM: return "FCOM";
+	case I_FCOMI: return "FCOMI";
+	case I_FCOMIP: return "FCOMIP";
+	case I_FCOMP: return "FCOMP";
+	case I_FCOMPP: return "FCOMPP";
+	case I_FCOS: return "FCOS";
+	case I_FDECSTP: return "FDECSTP";
+	case I_FDIV: return "FDIV";
+	case I_FDIVP: return "FDIVP";
+	case I_FDIVR: return "FDIVR";
+	case I_FDIVRP: return "FDIVRP";
+	case I_FEDISI: return "FEDISI";
+	case I_FEMMS: return "FEMMS";
+	case I_FENI: return "FENI";
+	case I_FFREE: return "FFREE";
+	case I_FIADD: return "FIADD";
+	case I_FICOM: return "FICOM";
+	case I_FICOMP: return "FICOMP";
+	case I_FIDIV: return "FIDIV";
+	case I_FIDIVR: return "FIDIVR";
+	case I_FILD: return "FILD";
+	case I_FIMUL: return "FIMUL";
+	case I_FINCSTP: return "FINCSTP";
+	case I_FINIT: return "FINIT";
+	case I_FIST: return "FIST";
+	case I_FISTP: return "FISTP";
+	case I_FISTTP: return "FISTTP";
+	case I_FISUB: return "FISUB";
+	case I_FISUBR: return "FISUBR";
+	case I_FLD: return "FLD";
+	case I_FLD1: return "FLD1";
+	case I_FLDCW: return "FLDCW";
+	case I_FLDENV: return "FLDENV";
+	case I_FLDL2E: return "FLDL2E";
+	case I_FLDL2T: return "FLDL2T";
+	case I_FLDLG2: return "FLDLG2";
+	case I_FLDLN2: return "FLDLN2";
+	case I_FLDPI: return "FLDPI";
+	case I_FLDZ: return "FLDZ";
+	case I_FMUL: return "FMUL";
+	case I_FMULP: return "FMULP";
+	case I_FNCLEX: return "FNCLEX";
+	case I_FNINIT: return "FNINIT";
+	case I_FNOP: return "FNOP";
+	case I_FNSAVE: return "FNSAVE";
+	case I_FNSTCW: return "FNSTCW";
+	case I_FNSTENV: return "FNSTENV";
+	case I_FNSTSW: return "FNSTSW";
+	case I_FPATAN: return "FPATAN";
+	case I_FPREM: return "FPREM";
+	case I_FPREM1: return "FPREM1";
+	case I_FPTAN: return "FPTAN";
+	case I_FRNDINT: return "FRNDINT";
+	case I_FRSTOR: return "FRSTOR";
+	case I_FSAVE: return "FSAVE";
+	case I_FSCALE: return "FSCALE";
+	case I_FSETPM: return "FSETPM";
+	case I_FSIN: return "FSIN";
+	case I_FSINCOS: return "FSINCOS";
+	case I_FSQRT: return "FSQRT";
+	case I_FST: return "FST";
+	case I_FSTCW: return "FSTCW";
+	case I_FSTENV: return "FSTENV";
+	case I_FSTP: return "FSTP";
+	case I_FSTSW: return "FSTSW";
+	case I_FSUB: return "FSUB";
+	case I_FSUBP: return "FSUBP";
+	case I_FSUBR: return "FSUBR";
+	case I_FSUBRP: return "FSUBRP";
+	case I_FTST: return "FTST";
+	case I_FUCOM: return "FUCOM";
+	case I_FUCOMI: return "FUCOMI";
+	case I_FUCOMIP: return "FUCOMIP";
+	case I_FUCOMP: return "FUCOMP";
+	case I_FUCOMPP: return "FUCOMPP";
+	case I_FXAM: return "FXAM";
+	case I_FXCH: return "FXCH";
+	case I_FXRSTOR: return "FXRSTOR";
+	case I_FXRSTOR64: return "FXRSTOR64";
+	case I_FXSAVE: return "FXSAVE";
+	case I_FXSAVE64: return "FXSAVE64";
+	case I_FXTRACT: return "FXTRACT";
+	case I_FYL2X: return "FYL2X";
+	case I_FYL2XP1: return "FYL2XP1";
+	case I_GETSEC: return "GETSEC";
+	case I_HADDPD: return "HADDPD";
+	case I_HADDPS: return "HADDPS";
+	case I_HLT: return "HLT";
+	case I_HSUBPD: return "HSUBPD";
+	case I_HSUBPS: return "HSUBPS";
+	case I_IDIV: return "IDIV";
+	case I_IMUL: return "IMUL";
+	case I_IN: return "IN";
+	case I_INC: return "INC";
+	case I_INS: return "INS";
+	case I_INSERTPS: return "INSERTPS";
+	case I_INSERTQ: return "INSERTQ";
+	case I_INT: return "INT";
+	case I_INT1: return "INT1";
+	case I_INTO: return "INTO";
+	case I_INT_3: return "INT_3";
+	case I_INVD: return "INVD";
+	case I_INVEPT: return "INVEPT";
+	case I_INVLPG: return "INVLPG";
+	case I_INVLPGA: return "INVLPGA";
+	case I_INVPCID: return "INVPCID";
+	case I_INVVPID: return "INVVPID";
+	case I_IRET: return "IRET";
+	case I_JA: return "JA";
+	case I_JAE: return "JAE";
+	case I_JB: return "JB";
+	case I_JBE: return "JBE";
+	case I_JCXZ: return "JCXZ";
+	case I_JECXZ: return "JECXZ";
+	case I_JG: return "JG";
+	case I_JGE: return "JGE";
+	case I_JL: return "JL";
+	case I_JLE: return "JLE";
+	case I_JMP: return "JMP";
+	case I_JMP_FAR: return "JMP_FAR";
+	case I_JNO: return "JNO";
+	case I_JNP: return "JNP";
+	case I_JNS: return "JNS";
+	case I_JNZ: return "JNZ";
+	case I_JO: return "JO";
+	case I_JP: return "JP";
+	case I_JRCXZ: return "JRCXZ";
+	case I_JS: return "JS";
+	case I_JZ: return "JZ";
+	case I_LAHF: return "LAHF";
+	case I_LAR: return "LAR";
+	case I_LDDQU: return "LDDQU";
+	case I_LDMXCSR: return "LDMXCSR";
+	case I_LDS: return "LDS";
+	case I_LEA: return "LEA";
+	case I_LEAVE: return "LEAVE";
+	case I_LES: return "LES";
+	case I_LFENCE: return "LFENCE";
+	case I_LFS: return "LFS";
+	case I_LGDT: return "LGDT";
+	case I_LGS: return "LGS";
+	case I_LIDT: return "LIDT";
+	case I_LLDT: return "LLDT";
+	case I_LMSW: return "LMSW";
+	case I_LODS: return "LODS";
+	case I_LOOP: return "LOOP";
+	case I_LOOPNZ: return "LOOPNZ";
+	case I_LOOPZ: return "LOOPZ";
+	case I_LSL: return "LSL";
+	case I_LSS: return "LSS";
+	case I_LTR: return "LTR";
+	case I_LZCNT: return "LZCNT";
+	case I_MASKMOVDQU: return "MASKMOVDQU";
+	case I_MASKMOVQ: return "MASKMOVQ";
+	case I_MAXPD: return "MAXPD";
+	case I_MAXPS: return "MAXPS";
+	case I_MAXSD: return "MAXSD";
+	case I_MAXSS: return "MAXSS";
+	case I_MFENCE: return "MFENCE";
+	case I_MINPD: return "MINPD";
+	case I_MINPS: return "MINPS";
+	case I_MINSD: return "MINSD";
+	case I_MINSS: return "MINSS";
+	case I_MONITOR: return "MONITOR";
+	case I_MOV: return "MOV";
+	case I_MOVAPD: return "MOVAPD";
+	case I_MOVAPS: return "MOVAPS";
+	case I_MOVBE: return "MOVBE";
+	case I_MOVD: return "MOVD";
+	case I_MOVDDUP: return "MOVDDUP";
+	case I_MOVDQ2Q: return "MOVDQ2Q";
+	case I_MOVDQA: return "MOVDQA";
+	case I_MOVDQU: return "MOVDQU";
+	case I_MOVHLPS: return "MOVHLPS";
+	case I_MOVHPD: return "MOVHPD";
+	case I_MOVHPS: return "MOVHPS";
+	case I_MOVLHPS: return "MOVLHPS";
+	case I_MOVLPD: return "MOVLPD";
+	case I_MOVLPS: return "MOVLPS";
+	case I_MOVMSKPD: return "MOVMSKPD";
+	case I_MOVMSKPS: return "MOVMSKPS";
+	case I_MOVNTDQ: return "MOVNTDQ";
+	case I_MOVNTDQA: return "MOVNTDQA";
+	case I_MOVNTI: return "MOVNTI";
+	case I_MOVNTPD: return "MOVNTPD";
+	case I_MOVNTPS: return "MOVNTPS";
+	case I_MOVNTQ: return "MOVNTQ";
+	case I_MOVNTSD: return "MOVNTSD";
+	case I_MOVNTSS: return "MOVNTSS";
+	case I_MOVQ: return "MOVQ";
+	case I_MOVQ2DQ: return "MOVQ2DQ";
+	case I_MOVS: return "MOVS";
+	case I_MOVSD: return "MOVSD";
+	case I_MOVSHDUP: return "MOVSHDUP";
+	case I_MOVSLDUP: return "MOVSLDUP";
+	case I_MOVSS: return "MOVSS";
+	case I_MOVSX: return "MOVSX";
+	case I_MOVSXD: return "MOVSXD";
+	case I_MOVUPD: return "MOVUPD";
+	case I_MOVUPS: return "MOVUPS";
+	case I_MOVZX: return "MOVZX";
+	case I_MPSADBW: return "MPSADBW";
+	case I_MUL: return "MUL";
+	case I_MULPD: return "MULPD";
+	case I_MULPS: return "MULPS";
+	case I_MULSD: return "MULSD";
+	case I_MULSS: return "MULSS";
+	case I_MWAIT: return "MWAIT";
+	case I_NEG: return "NEG";
+	case I_NOP: return "NOP";
+	case I_NOT: return "NOT";
+	case I_OR: return "OR";
+	case I_ORPD: return "ORPD";
+	case I_ORPS: return "ORPS";
+	case I_OUT: return "OUT";
+	case I_OUTS: return "OUTS";
+	case I_PABSB: return "PABSB";
+	case I_PABSD: return "PABSD";
+	case I_PABSW: return "PABSW";
+	case I_PACKSSDW: return "PACKSSDW";
+	case I_PACKSSWB: return "PACKSSWB";
+	case I_PACKUSDW: return "PACKUSDW";
+	case I_PACKUSWB: return "PACKUSWB";
+	case I_PADDB: return "PADDB";
+	case I_PADDD: return "PADDD";
+	case I_PADDQ: return "PADDQ";
+	case I_PADDSB: return "PADDSB";
+	case I_PADDSW: return "PADDSW";
+	case I_PADDUSB: return "PADDUSB";
+	case I_PADDUSW: return "PADDUSW";
+	case I_PADDW: return "PADDW";
+	case I_PALIGNR: return "PALIGNR";
+	case I_PAND: return "PAND";
+	case I_PANDN: return "PANDN";
+	case I_PAUSE: return "PAUSE";
+	case I_PAVGB: return "PAVGB";
+	case I_PAVGUSB: return "PAVGUSB";
+	case I_PAVGW: return "PAVGW";
+	case I_PBLENDVB: return "PBLENDVB";
+	case I_PBLENDW: return "PBLENDW";
+	case I_PCLMULQDQ: return "PCLMULQDQ";
+	case I_PCMPEQB: return "PCMPEQB";
+	case I_PCMPEQD: return "PCMPEQD";
+	case I_PCMPEQQ: return "PCMPEQQ";
+	case I_PCMPEQW: return "PCMPEQW";
+	case I_PCMPESTRI: return "PCMPESTRI";
+	case I_PCMPESTRM: return "PCMPESTRM";
+	case I_PCMPGTB: return "PCMPGTB";
+	case I_PCMPGTD: return "PCMPGTD";
+	case I_PCMPGTQ: return "PCMPGTQ";
+	case I_PCMPGTW: return "PCMPGTW";
+	case I_PCMPISTRI: return "PCMPISTRI";
+	case I_PCMPISTRM: return "PCMPISTRM";
+	case I_PEXTRB: return "PEXTRB";
+	case I_PEXTRD: return "PEXTRD";
+	case I_PEXTRQ: return "PEXTRQ";
+	case I_PEXTRW: return "PEXTRW";
+	case I_PF2ID: return "PF2ID";
+	case I_PF2IW: return "PF2IW";
+	case I_PFACC: return "PFACC";
+	case I_PFADD: return "PFADD";
+	case I_PFCMPEQ: return "PFCMPEQ";
+	case I_PFCMPGE: return "PFCMPGE";
+	case I_PFCMPGT: return "PFCMPGT";
+	case I_PFMAX: return "PFMAX";
+	case I_PFMIN: return "PFMIN";
+	case I_PFMUL: return "PFMUL";
+	case I_PFNACC: return "PFNACC";
+	case I_PFPNACC: return "PFPNACC";
+	case I_PFRCP: return "PFRCP";
+	case I_PFRCPIT1: return "PFRCPIT1";
+	case I_PFRCPIT2: return "PFRCPIT2";
+	case I_PFRSQIT1: return "PFRSQIT1";
+	case I_PFRSQRT: return "PFRSQRT";
+	case I_PFSUB: return "PFSUB";
+	case I_PFSUBR: return "PFSUBR";
+	case I_PHADDD: return "PHADDD";
+	case I_PHADDSW: return "PHADDSW";
+	case I_PHADDW: return "PHADDW";
+	case I_PHMINPOSUW: return "PHMINPOSUW";
+	case I_PHSUBD: return "PHSUBD";
+	case I_PHSUBSW: return "PHSUBSW";
+	case I_PHSUBW: return "PHSUBW";
+	case I_PI2FD: return "PI2FD";
+	case I_PI2FW: return "PI2FW";
+	case I_PINSRB: return "PINSRB";
+	case I_PINSRD: return "PINSRD";
+	case I_PINSRQ: return "PINSRQ";
+	case I_PINSRW: return "PINSRW";
+	case I_PMADDUBSW: return "PMADDUBSW";
+	case I_PMADDWD: return "PMADDWD";
+	case I_PMAXSB: return "PMAXSB";
+	case I_PMAXSD: return "PMAXSD";
+	case I_PMAXSW: return "PMAXSW";
+	case I_PMAXUB: return "PMAXUB";
+	case I_PMAXUD: return "PMAXUD";
+	case I_PMAXUW: return "PMAXUW";
+	case I_PMINSB: return "PMINSB";
+	case I_PMINSD: return "PMINSD";
+	case I_PMINSW: return "PMINSW";
+	case I_PMINUB: return "PMINUB";
+	case I_PMINUD: return "PMINUD";
+	case I_PMINUW: return "PMINUW";
+	case I_PMOVMSKB: return "PMOVMSKB";
+	case I_PMOVSXBD: return "PMOVSXBD";
+	case I_PMOVSXBQ: return "PMOVSXBQ";
+	case I_PMOVSXBW: return "PMOVSXBW";
+	case I_PMOVSXDQ: return "PMOVSXDQ";
+	case I_PMOVSXWD: return "PMOVSXWD";
+	case I_PMOVSXWQ: return "PMOVSXWQ";
+	case I_PMOVZXBD: return "PMOVZXBD";
+	case I_PMOVZXBQ: return "PMOVZXBQ";
+	case I_PMOVZXBW: return "PMOVZXBW";
+	case I_PMOVZXDQ: return "PMOVZXDQ";
+	case I_PMOVZXWD: return "PMOVZXWD";
+	case I_PMOVZXWQ: return "PMOVZXWQ";
+	case I_PMULDQ: return "PMULDQ";
+	case I_PMULHRSW: return "PMULHRSW";
+	case I_PMULHRW: return "PMULHRW";
+	case I_PMULHUW: return "PMULHUW";
+	case I_PMULHW: return "PMULHW";
+	case I_PMULLD: return "PMULLD";
+	case I_PMULLW: return "PMULLW";
+	case I_PMULUDQ: return "PMULUDQ";
+	case I_POP: return "POP";
+	case I_POPA: return "POPA";
+	case I_POPCNT: return "POPCNT";
+	case I_POPF: return "POPF";
+	case I_POR: return "POR";
+	case I_PREFETCH: return "PREFETCH";
+	case I_PREFETCHNTA: return "PREFETCHNTA";
+	case I_PREFETCHT0: return "PREFETCHT0";
+	case I_PREFETCHT1: return "PREFETCHT1";
+	case I_PREFETCHT2: return "PREFETCHT2";
+	case I_PREFETCHW: return "PREFETCHW";
+	case I_PSADBW: return "PSADBW";
+	case I_PSHUFB: return "PSHUFB";
+	case I_PSHUFD: return "PSHUFD";
+	case I_PSHUFHW: return "PSHUFHW";
+	case I_PSHUFLW: return "PSHUFLW";
+	case I_PSHUFW: return "PSHUFW";
+	case I_PSIGNB: return "PSIGNB";
+	case I_PSIGND: return "PSIGND";
+	case I_PSIGNW: return "PSIGNW";
+	case I_PSLLD: return "PSLLD";
+	case I_PSLLDQ: return "PSLLDQ";
+	case I_PSLLQ: return "PSLLQ";
+	case I_PSLLW: return "PSLLW";
+	case I_PSRAD: return "PSRAD";
+	case I_PSRAW: return "PSRAW";
+	case I_PSRLD: return "PSRLD";
+	case I_PSRLDQ: return "PSRLDQ";
+	case I_PSRLQ: return "PSRLQ";
+	case I_PSRLW: return "PSRLW";
+	case I_PSUBB: return "PSUBB";
+	case I_PSUBD: return "PSUBD";
+	case I_PSUBQ: return "PSUBQ";
+	case I_PSUBSB: return "PSUBSB";
+	case I_PSUBSW: return "PSUBSW";
+	case I_PSUBUSB: return "PSUBUSB";
+	case I_PSUBUSW: return "PSUBUSW";
+	case I_PSUBW: return "PSUBW";
+	case I_PSWAPD: return "PSWAPD";
+	case I_PTEST: return "PTEST";
+	case I_PUNPCKHBW: return "PUNPCKHBW";
+	case I_PUNPCKHDQ: return "PUNPCKHDQ";
+	case I_PUNPCKHQDQ: return "PUNPCKHQDQ";
+	case I_PUNPCKHWD: return "PUNPCKHWD";
+	case I_PUNPCKLBW: return "PUNPCKLBW";
+	case I_PUNPCKLDQ: return "PUNPCKLDQ";
+	case I_PUNPCKLQDQ: return "PUNPCKLQDQ";
+	case I_PUNPCKLWD: return "PUNPCKLWD";
+	case I_PUSH: return "PUSH";
+	case I_PUSHA: return "PUSHA";
+	case I_PUSHF: return "PUSHF";
+	case I_PXOR: return "PXOR";
+	case I_RCL: return "RCL";
+	case I_RCPPS: return "RCPPS";
+	case I_RCPSS: return "RCPSS";
+	case I_RCR: return "RCR";
+	case I_RDFSBASE: return "RDFSBASE";
+	case I_RDGSBASE: return "RDGSBASE";
+	case I_RDMSR: return "RDMSR";
+	case I_RDPMC: return "RDPMC";
+	case I_RDRAND: return "RDRAND";
+	case I_RDTSC: return "RDTSC";
+	case I_RDTSCP: return "RDTSCP";
+	case I_RET: return "RET";
+	case I_RETF: return "RETF";
+	case I_ROL: return "ROL";
+	case I_ROR: return "ROR";
+	case I_ROUNDPD: return "ROUNDPD";
+	case I_ROUNDPS: return "ROUNDPS";
+	case I_ROUNDSD: return "ROUNDSD";
+	case I_ROUNDSS: return "ROUNDSS";
+	case I_RSM: return "RSM";
+	case I_RSQRTPS: return "RSQRTPS";
+	case I_RSQRTSS: return "RSQRTSS";
+	case I_SAHF: return "SAHF";
+	case I_SAL: return "SAL";
+	case I_SALC: return "SALC";
+	case I_SAR: return "SAR";
+	case I_SBB: return "SBB";
+	case I_SCAS: return "SCAS";
+	case I_SETA: return "SETA";
+	case I_SETAE: return "SETAE";
+	case I_SETB: return "SETB";
+	case I_SETBE: return "SETBE";
+	case I_SETG: return "SETG";
+	case I_SETGE: return "SETGE";
+	case I_SETL: return "SETL";
+	case I_SETLE: return "SETLE";
+	case I_SETNO: return "SETNO";
+	case I_SETNP: return "SETNP";
+	case I_SETNS: return "SETNS";
+	case I_SETNZ: return "SETNZ";
+	case I_SETO: return "SETO";
+	case I_SETP: return "SETP";
+	case I_SETS: return "SETS";
+	case I_SETZ: return "SETZ";
+	case I_SFENCE: return "SFENCE";
+	case I_SGDT: return "SGDT";
+	case I_SHL: return "SHL";
+	case I_SHLD: return "SHLD";
+	case I_SHR: return "SHR";
+	case I_SHRD: return "SHRD";
+	case I_SHUFPD: return "SHUFPD";
+	case I_SHUFPS: return "SHUFPS";
+	case I_SIDT: return "SIDT";
+	case I_SKINIT: return "SKINIT";
+	case I_SLDT: return "SLDT";
+	case I_SMSW: return "SMSW";
+	case I_SQRTPD: return "SQRTPD";
+	case I_SQRTPS: return "SQRTPS";
+	case I_SQRTSD: return "SQRTSD";
+	case I_SQRTSS: return "SQRTSS";
+	case I_STC: return "STC";
+	case I_STD: return "STD";
+	case I_STGI: return "STGI";
+	case I_STI: return "STI";
+	case I_STMXCSR: return "STMXCSR";
+	case I_STOS: return "STOS";
+	case I_STR: return "STR";
+	case I_SUB: return "SUB";
+	case I_SUBPD: return "SUBPD";
+	case I_SUBPS: return "SUBPS";
+	case I_SUBSD: return "SUBSD";
+	case I_SUBSS: return "SUBSS";
+	case I_SWAPGS: return "SWAPGS";
+	case I_SYSCALL: return "SYSCALL";
+	case I_SYSENTER: return "SYSENTER";
+	case I_SYSEXIT: return "SYSEXIT";
+	case I_SYSRET: return "SYSRET";
+	case I_TEST: return "TEST";
+	case I_TZCNT: return "TZCNT";
+	case I_UCOMISD: return "UCOMISD";
+	case I_UCOMISS: return "UCOMISS";
+	case I_UD2: return "UD2";
+	case I_UNDEFINED: return "UNDEFINED";
+	case I_UNPCKHPD: return "UNPCKHPD";
+	case I_UNPCKHPS: return "UNPCKHPS";
+	case I_UNPCKLPD: return "UNPCKLPD";
+	case I_UNPCKLPS: return "UNPCKLPS";
+	case I_VADDPD: return "VADDPD";
+	case I_VADDPS: return "VADDPS";
+	case I_VADDSD: return "VADDSD";
+	case I_VADDSS: return "VADDSS";
+	case I_VADDSUBPD: return "VADDSUBPD";
+	case I_VADDSUBPS: return "VADDSUBPS";
+	case I_VAESDEC: return "VAESDEC";
+	case I_VAESDECLAST: return "VAESDECLAST";
+	case I_VAESENC: return "VAESENC";
+	case I_VAESENCLAST: return "VAESENCLAST";
+	case I_VAESIMC: return "VAESIMC";
+	case I_VAESKEYGENASSIST: return "VAESKEYGENASSIST";
+	case I_VANDNPD: return "VANDNPD";
+	case I_VANDNPS: return "VANDNPS";
+	case I_VANDPD: return "VANDPD";
+	case I_VANDPS: return "VANDPS";
+	case I_VBLENDPD: return "VBLENDPD";
+	case I_VBLENDPS: return "VBLENDPS";
+	case I_VBLENDVPD: return "VBLENDVPD";
+	case I_VBLENDVPS: return "VBLENDVPS";
+	case I_VBROADCASTF128: return "VBROADCASTF128";
+	case I_VBROADCASTSD: return "VBROADCASTSD";
+	case I_VBROADCASTSS: return "VBROADCASTSS";
+	case I_VCMPEQPD: return "VCMPEQPD";
+	case I_VCMPEQPS: return "VCMPEQPS";
+	case I_VCMPEQSD: return "VCMPEQSD";
+	case I_VCMPEQSS: return "VCMPEQSS";
+	case I_VCMPEQ_OSPD: return "VCMPEQ_OSPD";
+	case I_VCMPEQ_OSPS: return "VCMPEQ_OSPS";
+	case I_VCMPEQ_OSSD: return "VCMPEQ_OSSD";
+	case I_VCMPEQ_OSSS: return "VCMPEQ_OSSS";
+	case I_VCMPEQ_UQPD: return "VCMPEQ_UQPD";
+	case I_VCMPEQ_UQPS: return "VCMPEQ_UQPS";
+	case I_VCMPEQ_UQSD: return "VCMPEQ_UQSD";
+	case I_VCMPEQ_UQSS: return "VCMPEQ_UQSS";
+	case I_VCMPEQ_USPD: return "VCMPEQ_USPD";
+	case I_VCMPEQ_USPS: return "VCMPEQ_USPS";
+	case I_VCMPEQ_USSD: return "VCMPEQ_USSD";
+	case I_VCMPEQ_USSS: return "VCMPEQ_USSS";
+	case I_VCMPFALSEPD: return "VCMPFALSEPD";
+	case I_VCMPFALSEPS: return "VCMPFALSEPS";
+	case I_VCMPFALSESD: return "VCMPFALSESD";
+	case I_VCMPFALSESS: return "VCMPFALSESS";
+	case I_VCMPFALSE_OSPD: return "VCMPFALSE_OSPD";
+	case I_VCMPFALSE_OSPS: return "VCMPFALSE_OSPS";
+	case I_VCMPFALSE_OSSD: return "VCMPFALSE_OSSD";
+	case I_VCMPFALSE_OSSS: return "VCMPFALSE_OSSS";
+	case I_VCMPGEPD: return "VCMPGEPD";
+	case I_VCMPGEPS: return "VCMPGEPS";
+	case I_VCMPGESD: return "VCMPGESD";
+	case I_VCMPGESS: return "VCMPGESS";
+	case I_VCMPGE_OQPD: return "VCMPGE_OQPD";
+	case I_VCMPGE_OQPS: return "VCMPGE_OQPS";
+	case I_VCMPGE_OQSD: return "VCMPGE_OQSD";
+	case I_VCMPGE_OQSS: return "VCMPGE_OQSS";
+	case I_VCMPGTPD: return "VCMPGTPD";
+	case I_VCMPGTPS: return "VCMPGTPS";
+	case I_VCMPGTSD: return "VCMPGTSD";
+	case I_VCMPGTSS: return "VCMPGTSS";
+	case I_VCMPGT_OQPD: return "VCMPGT_OQPD";
+	case I_VCMPGT_OQPS: return "VCMPGT_OQPS";
+	case I_VCMPGT_OQSD: return "VCMPGT_OQSD";
+	case I_VCMPGT_OQSS: return "VCMPGT_OQSS";
+	case I_VCMPLEPD: return "VCMPLEPD";
+	case I_VCMPLEPS: return "VCMPLEPS";
+	case I_VCMPLESD: return "VCMPLESD";
+	case I_VCMPLESS: return "VCMPLESS";
+	case I_VCMPLE_OQPD: return "VCMPLE_OQPD";
+	case I_VCMPLE_OQPS: return "VCMPLE_OQPS";
+	case I_VCMPLE_OQSD: return "VCMPLE_OQSD";
+	case I_VCMPLE_OQSS: return "VCMPLE_OQSS";
+	case I_VCMPLTPD: return "VCMPLTPD";
+	case I_VCMPLTPS: return "VCMPLTPS";
+	case I_VCMPLTSD: return "VCMPLTSD";
+	case I_VCMPLTSS: return "VCMPLTSS";
+	case I_VCMPLT_OQPD: return "VCMPLT_OQPD";
+	case I_VCMPLT_OQPS: return "VCMPLT_OQPS";
+	case I_VCMPLT_OQSD: return "VCMPLT_OQSD";
+	case I_VCMPLT_OQSS: return "VCMPLT_OQSS";
+	case I_VCMPNEQPD: return "VCMPNEQPD";
+	case I_VCMPNEQPS: return "VCMPNEQPS";
+	case I_VCMPNEQSD: return "VCMPNEQSD";
+	case I_VCMPNEQSS: return "VCMPNEQSS";
+	case I_VCMPNEQ_OQPD: return "VCMPNEQ_OQPD";
+	case I_VCMPNEQ_OQPS: return "VCMPNEQ_OQPS";
+	case I_VCMPNEQ_OQSD: return "VCMPNEQ_OQSD";
+	case I_VCMPNEQ_OQSS: return "VCMPNEQ_OQSS";
+	case I_VCMPNEQ_OSPD: return "VCMPNEQ_OSPD";
+	case I_VCMPNEQ_OSPS: return "VCMPNEQ_OSPS";
+	case I_VCMPNEQ_OSSD: return "VCMPNEQ_OSSD";
+	case I_VCMPNEQ_OSSS: return "VCMPNEQ_OSSS";
+	case I_VCMPNEQ_USPD: return "VCMPNEQ_USPD";
+	case I_VCMPNEQ_USPS: return "VCMPNEQ_USPS";
+	case I_VCMPNEQ_USSD: return "VCMPNEQ_USSD";
+	case I_VCMPNEQ_USSS: return "VCMPNEQ_USSS";
+	case I_VCMPNGEPD: return "VCMPNGEPD";
+	case I_VCMPNGEPS: return "VCMPNGEPS";
+	case I_VCMPNGESD: return "VCMPNGESD";
+	case I_VCMPNGESS: return "VCMPNGESS";
+	case I_VCMPNGE_UQPD: return "VCMPNGE_UQPD";
+	case I_VCMPNGE_UQPS: return "VCMPNGE_UQPS";
+	case I_VCMPNGE_UQSD: return "VCMPNGE_UQSD";
+	case I_VCMPNGE_UQSS: return "VCMPNGE_UQSS";
+	case I_VCMPNGTPD: return "VCMPNGTPD";
+	case I_VCMPNGTPS: return "VCMPNGTPS";
+	case I_VCMPNGTSD: return "VCMPNGTSD";
+	case I_VCMPNGTSS: return "VCMPNGTSS";
+	case I_VCMPNGT_UQPD: return "VCMPNGT_UQPD";
+	case I_VCMPNGT_UQPS: return "VCMPNGT_UQPS";
+	case I_VCMPNGT_UQSD: return "VCMPNGT_UQSD";
+	case I_VCMPNGT_UQSS: return "VCMPNGT_UQSS";
+	case I_VCMPNLEPD: return "VCMPNLEPD";
+	case I_VCMPNLEPS: return "VCMPNLEPS";
+	case I_VCMPNLESD: return "VCMPNLESD";
+	case I_VCMPNLESS: return "VCMPNLESS";
+	case I_VCMPNLE_UQPD: return "VCMPNLE_UQPD";
+	case I_VCMPNLE_UQPS: return "VCMPNLE_UQPS";
+	case I_VCMPNLE_UQSD: return "VCMPNLE_UQSD";
+	case I_VCMPNLE_UQSS: return "VCMPNLE_UQSS";
+	case I_VCMPNLTPD: return "VCMPNLTPD";
+	case I_VCMPNLTPS: return "VCMPNLTPS";
+	case I_VCMPNLTSD: return "VCMPNLTSD";
+	case I_VCMPNLTSS: return "VCMPNLTSS";
+	case I_VCMPNLT_UQPD: return "VCMPNLT_UQPD";
+	case I_VCMPNLT_UQPS: return "VCMPNLT_UQPS";
+	case I_VCMPNLT_UQSD: return "VCMPNLT_UQSD";
+	case I_VCMPNLT_UQSS: return "VCMPNLT_UQSS";
+	case I_VCMPORDPD: return "VCMPORDPD";
+	case I_VCMPORDPS: return "VCMPORDPS";
+	case I_VCMPORDSD: return "VCMPORDSD";
+	case I_VCMPORDSS: return "VCMPORDSS";
+	case I_VCMPORD_SPD: return "VCMPORD_SPD";
+	case I_VCMPORD_SPS: return "VCMPORD_SPS";
+	case I_VCMPORD_SSD: return "VCMPORD_SSD";
+	case I_VCMPORD_SSS: return "VCMPORD_SSS";
+	case I_VCMPTRUEPD: return "VCMPTRUEPD";
+	case I_VCMPTRUEPS: return "VCMPTRUEPS";
+	case I_VCMPTRUESD: return "VCMPTRUESD";
+	case I_VCMPTRUESS: return "VCMPTRUESS";
+	case I_VCMPTRUE_USPD: return "VCMPTRUE_USPD";
+	case I_VCMPTRUE_USPS: return "VCMPTRUE_USPS";
+	case I_VCMPTRUE_USSD: return "VCMPTRUE_USSD";
+	case I_VCMPTRUE_USSS: return "VCMPTRUE_USSS";
+	case I_VCMPUNORDPD: return "VCMPUNORDPD";
+	case I_VCMPUNORDPS: return "VCMPUNORDPS";
+	case I_VCMPUNORDSD: return "VCMPUNORDSD";
+	case I_VCMPUNORDSS: return "VCMPUNORDSS";
+	case I_VCMPUNORD_SPD: return "VCMPUNORD_SPD";
+	case I_VCMPUNORD_SPS: return "VCMPUNORD_SPS";
+	case I_VCMPUNORD_SSD: return "VCMPUNORD_SSD";
+	case I_VCMPUNORD_SSS: return "VCMPUNORD_SSS";
+	case I_VCOMISD: return "VCOMISD";
+	case I_VCOMISS: return "VCOMISS";
+	case I_VCVTDQ2PD: return "VCVTDQ2PD";
+	case I_VCVTDQ2PS: return "VCVTDQ2PS";
+	case I_VCVTPD2DQ: return "VCVTPD2DQ";
+	case I_VCVTPD2PS: return "VCVTPD2PS";
+	case I_VCVTPS2DQ: return "VCVTPS2DQ";
+	case I_VCVTPS2PD: return "VCVTPS2PD";
+	case I_VCVTSD2SI: return "VCVTSD2SI";
+	case I_VCVTSD2SS: return "VCVTSD2SS";
+	case I_VCVTSI2SD: return "VCVTSI2SD";
+	case I_VCVTSI2SS: return "VCVTSI2SS";
+	case I_VCVTSS2SD: return "VCVTSS2SD";
+	case I_VCVTSS2SI: return "VCVTSS2SI";
+	case I_VCVTTPD2DQ: return "VCVTTPD2DQ";
+	case I_VCVTTPS2DQ: return "VCVTTPS2DQ";
+	case I_VCVTTSD2SI: return "VCVTTSD2SI";
+	case I_VCVTTSS2SI: return "VCVTTSS2SI";
+	case I_VDIVPD: return "VDIVPD";
+	case I_VDIVPS: return "VDIVPS";
+	case I_VDIVSD: return "VDIVSD";
+	case I_VDIVSS: return "VDIVSS";
+	case I_VDPPD: return "VDPPD";
+	case I_VDPPS: return "VDPPS";
+	case I_VERR: return "VERR";
+	case I_VERW: return "VERW";
+	case I_VEXTRACTF128: return "VEXTRACTF128";
+	case I_VEXTRACTPS: return "VEXTRACTPS";
+	case I_VFMADD132PD: return "VFMADD132PD";
+	case I_VFMADD132PS: return "VFMADD132PS";
+	case I_VFMADD132SD: return "VFMADD132SD";
+	case I_VFMADD132SS: return "VFMADD132SS";
+	case I_VFMADD213PD: return "VFMADD213PD";
+	case I_VFMADD213PS: return "VFMADD213PS";
+	case I_VFMADD213SD: return "VFMADD213SD";
+	case I_VFMADD213SS: return "VFMADD213SS";
+	case I_VFMADD231PD: return "VFMADD231PD";
+	case I_VFMADD231PS: return "VFMADD231PS";
+	case I_VFMADD231SD: return "VFMADD231SD";
+	case I_VFMADD231SS: return "VFMADD231SS";
+	case I_VFMADDSUB132PD: return "VFMADDSUB132PD";
+	case I_VFMADDSUB132PS: return "VFMADDSUB132PS";
+	case I_VFMADDSUB213PD: return "VFMADDSUB213PD";
+	case I_VFMADDSUB213PS: return "VFMADDSUB213PS";
+	case I_VFMADDSUB231PD: return "VFMADDSUB231PD";
+	case I_VFMADDSUB231PS: return "VFMADDSUB231PS";
+	case I_VFMSUB132PD: return "VFMSUB132PD";
+	case I_VFMSUB132PS: return "VFMSUB132PS";
+	case I_VFMSUB132SD: return "VFMSUB132SD";
+	case I_VFMSUB132SS: return "VFMSUB132SS";
+	case I_VFMSUB213PD: return "VFMSUB213PD";
+	case I_VFMSUB213PS: return "VFMSUB213PS";
+	case I_VFMSUB213SD: return "VFMSUB213SD";
+	case I_VFMSUB213SS: return "VFMSUB213SS";
+	case I_VFMSUB231PD: return "VFMSUB231PD";
+	case I_VFMSUB231PS: return "VFMSUB231PS";
+	case I_VFMSUB231SD: return "VFMSUB231SD";
+	case I_VFMSUB231SS: return "VFMSUB231SS";
+	case I_VFMSUBADD132PD: return "VFMSUBADD132PD";
+	case I_VFMSUBADD132PS: return "VFMSUBADD132PS";
+	case I_VFMSUBADD213PD: return "VFMSUBADD213PD";
+	case I_VFMSUBADD213PS: return "VFMSUBADD213PS";
+	case I_VFMSUBADD231PD: return "VFMSUBADD231PD";
+	case I_VFMSUBADD231PS: return "VFMSUBADD231PS";
+	case I_VFNMADD132PD: return "VFNMADD132PD";
+	case I_VFNMADD132PS: return "VFNMADD132PS";
+	case I_VFNMADD132SD: return "VFNMADD132SD";
+	case I_VFNMADD132SS: return "VFNMADD132SS";
+	case I_VFNMADD213PD: return "VFNMADD213PD";
+	case I_VFNMADD213PS: return "VFNMADD213PS";
+	case I_VFNMADD213SD: return "VFNMADD213SD";
+	case I_VFNMADD213SS: return "VFNMADD213SS";
+	case I_VFNMADD231PD: return "VFNMADD231PD";
+	case I_VFNMADD231PS: return "VFNMADD231PS";
+	case I_VFNMADD231SD: return "VFNMADD231SD";
+	case I_VFNMADD231SS: return "VFNMADD231SS";
+	case I_VFNMSUB132PD: return "VFNMSUB132PD";
+	case I_VFNMSUB132PS: return "VFNMSUB132PS";
+	case I_VFNMSUB132SD: return "VFNMSUB132SD";
+	case I_VFNMSUB132SS: return "VFNMSUB132SS";
+	case I_VFNMSUB213PD: return "VFNMSUB213PD";
+	case I_VFNMSUB213PS: return "VFNMSUB213PS";
+	case I_VFNMSUB213SD: return "VFNMSUB213SD";
+	case I_VFNMSUB213SS: return "VFNMSUB213SS";
+	case I_VFNMSUB231PD: return "VFNMSUB231PD";
+	case I_VFNMSUB231PS: return "VFNMSUB231PS";
+	case I_VFNMSUB231SD: return "VFNMSUB231SD";
+	case I_VFNMSUB231SS: return "VFNMSUB231SS";
+	case I_VHADDPD: return "VHADDPD";
+	case I_VHADDPS: return "VHADDPS";
+	case I_VHSUBPD: return "VHSUBPD";
+	case I_VHSUBPS: return "VHSUBPS";
+	case I_VINSERTF128: return "VINSERTF128";
+	case I_VINSERTPS: return "VINSERTPS";
+	case I_VLDDQU: return "VLDDQU";
+	case I_VLDMXCSR: return "VLDMXCSR";
+	case I_VMASKMOVDQU: return "VMASKMOVDQU";
+	case I_VMASKMOVPD: return "VMASKMOVPD";
+	case I_VMASKMOVPS: return "VMASKMOVPS";
+	case I_VMAXPD: return "VMAXPD";
+	case I_VMAXPS: return "VMAXPS";
+	case I_VMAXSD: return "VMAXSD";
+	case I_VMAXSS: return "VMAXSS";
+	case I_VMCALL: return "VMCALL";
+	case I_VMCLEAR: return "VMCLEAR";
+	case I_VMFUNC: return "VMFUNC";
+	case I_VMINPD: return "VMINPD";
+	case I_VMINPS: return "VMINPS";
+	case I_VMINSD: return "VMINSD";
+	case I_VMINSS: return "VMINSS";
+	case I_VMLAUNCH: return "VMLAUNCH";
+	case I_VMLOAD: return "VMLOAD";
+	case I_VMMCALL: return "VMMCALL";
+	case I_VMOVAPD: return "VMOVAPD";
+	case I_VMOVAPS: return "VMOVAPS";
+	case I_VMOVD: return "VMOVD";
+	case I_VMOVDDUP: return "VMOVDDUP";
+	case I_VMOVDQA: return "VMOVDQA";
+	case I_VMOVDQU: return "VMOVDQU";
+	case I_VMOVHLPS: return "VMOVHLPS";
+	case I_VMOVHPD: return "VMOVHPD";
+	case I_VMOVHPS: return "VMOVHPS";
+	case I_VMOVLHPS: return "VMOVLHPS";
+	case I_VMOVLPD: return "VMOVLPD";
+	case I_VMOVLPS: return "VMOVLPS";
+	case I_VMOVMSKPD: return "VMOVMSKPD";
+	case I_VMOVMSKPS: return "VMOVMSKPS";
+	case I_VMOVNTDQ: return "VMOVNTDQ";
+	case I_VMOVNTDQA: return "VMOVNTDQA";
+	case I_VMOVNTPD: return "VMOVNTPD";
+	case I_VMOVNTPS: return "VMOVNTPS";
+	case I_VMOVQ: return "VMOVQ";
+	case I_VMOVSD: return "VMOVSD";
+	case I_VMOVSHDUP: return "VMOVSHDUP";
+	case I_VMOVSLDUP: return "VMOVSLDUP";
+	case I_VMOVSS: return "VMOVSS";
+	case I_VMOVUPD: return "VMOVUPD";
+	case I_VMOVUPS: return "VMOVUPS";
+	case I_VMPSADBW: return "VMPSADBW";
+	case I_VMPTRLD: return "VMPTRLD";
+	case I_VMPTRST: return "VMPTRST";
+	case I_VMREAD: return "VMREAD";
+	case I_VMRESUME: return "VMRESUME";
+	case I_VMRUN: return "VMRUN";
+	case I_VMSAVE: return "VMSAVE";
+	case I_VMULPD: return "VMULPD";
+	case I_VMULPS: return "VMULPS";
+	case I_VMULSD: return "VMULSD";
+	case I_VMULSS: return "VMULSS";
+	case I_VMWRITE: return "VMWRITE";
+	case I_VMXOFF: return "VMXOFF";
+	case I_VMXON: return "VMXON";
+	case I_VORPD: return "VORPD";
+	case I_VORPS: return "VORPS";
+	case I_VPABSB: return "VPABSB";
+	case I_VPABSD: return "VPABSD";
+	case I_VPABSW: return "VPABSW";
+	case I_VPACKSSDW: return "VPACKSSDW";
+	case I_VPACKSSWB: return "VPACKSSWB";
+	case I_VPACKUSDW: return "VPACKUSDW";
+	case I_VPACKUSWB: return "VPACKUSWB";
+	case I_VPADDB: return "VPADDB";
+	case I_VPADDD: return "VPADDD";
+	case I_VPADDQ: return "VPADDQ";
+	case I_VPADDSB: return "VPADDSB";
+	case I_VPADDSW: return "VPADDSW";
+	case I_VPADDUSW: return "VPADDUSW";
+	case I_VPADDW: return "VPADDW";
+	case I_VPALIGNR: return "VPALIGNR";
+	case I_VPAND: return "VPAND";
+	case I_VPANDN: return "VPANDN";
+	case I_VPAVGB: return "VPAVGB";
+	case I_VPAVGW: return "VPAVGW";
+	case I_VPBLENDVB: return "VPBLENDVB";
+	case I_VPBLENDW: return "VPBLENDW";
+	case I_VPCLMULQDQ: return "VPCLMULQDQ";
+	case I_VPCMPEQB: return "VPCMPEQB";
+	case I_VPCMPEQD: return "VPCMPEQD";
+	case I_VPCMPEQQ: return "VPCMPEQQ";
+	case I_VPCMPEQW: return "VPCMPEQW";
+	case I_VPCMPESTRI: return "VPCMPESTRI";
+	case I_VPCMPESTRM: return "VPCMPESTRM";
+	case I_VPCMPGTB: return "VPCMPGTB";
+	case I_VPCMPGTD: return "VPCMPGTD";
+	case I_VPCMPGTQ: return "VPCMPGTQ";
+	case I_VPCMPGTW: return "VPCMPGTW";
+	case I_VPCMPISTRI: return "VPCMPISTRI";
+	case I_VPCMPISTRM: return "VPCMPISTRM";
+	case I_VPERM2F128: return "VPERM2F128";
+	case I_VPERMILPD: return "VPERMILPD";
+	case I_VPERMILPS: return "VPERMILPS";
+	case I_VPEXTRB: return "VPEXTRB";
+	case I_VPEXTRD: return "VPEXTRD";
+	case I_VPEXTRQ: return "VPEXTRQ";
+	case I_VPEXTRW: return "VPEXTRW";
+	case I_VPHADDD: return "VPHADDD";
+	case I_VPHADDSW: return "VPHADDSW";
+	case I_VPHADDW: return "VPHADDW";
+	case I_VPHMINPOSUW: return "VPHMINPOSUW";
+	case I_VPHSUBD: return "VPHSUBD";
+	case I_VPHSUBSW: return "VPHSUBSW";
+	case I_VPHSUBW: return "VPHSUBW";
+	case I_VPINSRB: return "VPINSRB";
+	case I_VPINSRD: return "VPINSRD";
+	case I_VPINSRQ: return "VPINSRQ";
+	case I_VPINSRW: return "VPINSRW";
+	case I_VPMADDUBSW: return "VPMADDUBSW";
+	case I_VPMADDWD: return "VPMADDWD";
+	case I_VPMAXSB: return "VPMAXSB";
+	case I_VPMAXSD: return "VPMAXSD";
+	case I_VPMAXSW: return "VPMAXSW";
+	case I_VPMAXUB: return "VPMAXUB";
+	case I_VPMAXUD: return "VPMAXUD";
+	case I_VPMAXUW: return "VPMAXUW";
+	case I_VPMINSB: return "VPMINSB";
+	case I_VPMINSD: return "VPMINSD";
+	case I_VPMINSW: return "VPMINSW";
+	case I_VPMINUB: return "VPMINUB";
+	case I_VPMINUD: return "VPMINUD";
+	case I_VPMINUW: return "VPMINUW";
+	case I_VPMOVMSKB: return "VPMOVMSKB";
+	case I_VPMOVSXBD: return "VPMOVSXBD";
+	case I_VPMOVSXBQ: return "VPMOVSXBQ";
+	case I_VPMOVSXBW: return "VPMOVSXBW";
+	case I_VPMOVSXDQ: return "VPMOVSXDQ";
+	case I_VPMOVSXWD: return "VPMOVSXWD";
+	case I_VPMOVSXWQ: return "VPMOVSXWQ";
+	case I_VPMOVZXBD: return "VPMOVZXBD";
+	case I_VPMOVZXBQ: return "VPMOVZXBQ";
+	case I_VPMOVZXBW: return "VPMOVZXBW";
+	case I_VPMOVZXDQ: return "VPMOVZXDQ";
+	case I_VPMOVZXWD: return "VPMOVZXWD";
+	case I_VPMOVZXWQ: return "VPMOVZXWQ";
+	case I_VPMULDQ: return "VPMULDQ";
+	case I_VPMULHRSW: return "VPMULHRSW";
+	case I_VPMULHUW: return "VPMULHUW";
+	case I_VPMULHW: return "VPMULHW";
+	case I_VPMULLD: return "VPMULLD";
+	case I_VPMULLW: return "VPMULLW";
+	case I_VPMULUDQ: return "VPMULUDQ";
+	case I_VPOR: return "VPOR";
+	case I_VPSADBW: return "VPSADBW";
+	case I_VPSHUFB: return "VPSHUFB";
+	case I_VPSHUFD: return "VPSHUFD";
+	case I_VPSHUFHW: return "VPSHUFHW";
+	case I_VPSHUFLW: return "VPSHUFLW";
+	case I_VPSIGNB: return "VPSIGNB";
+	case I_VPSIGND: return "VPSIGND";
+	case I_VPSIGNW: return "VPSIGNW";
+	case I_VPSLLD: return "VPSLLD";
+	case I_VPSLLDQ: return "VPSLLDQ";
+	case I_VPSLLQ: return "VPSLLQ";
+	case I_VPSLLW: return "VPSLLW";
+	case I_VPSRAD: return "VPSRAD";
+	case I_VPSRAW: return "VPSRAW";
+	case I_VPSRLD: return "VPSRLD";
+	case I_VPSRLDQ: return "VPSRLDQ";
+	case I_VPSRLQ: return "VPSRLQ";
+	case I_VPSRLW: return "VPSRLW";
+	case I_VPSUBB: return "VPSUBB";
+	case I_VPSUBD: return "VPSUBD";
+	case I_VPSUBQ: return "VPSUBQ";
+	case I_VPSUBSB: return "VPSUBSB";
+	case I_VPSUBSW: return "VPSUBSW";
+	case I_VPSUBUSB: return "VPSUBUSB";
+	case I_VPSUBUSW: return "VPSUBUSW";
+	case I_VPSUBW: return "VPSUBW";
+	case I_VPTEST: return "VPTEST";
+	case I_VPUNPCKHBW: return "VPUNPCKHBW";
+	case I_VPUNPCKHDQ: return "VPUNPCKHDQ";
+	case I_VPUNPCKHQDQ: return "VPUNPCKHQDQ";
+	case I_VPUNPCKHWD: return "VPUNPCKHWD";
+	case I_VPUNPCKLBW: return "VPUNPCKLBW";
+	case I_VPUNPCKLDQ: return "VPUNPCKLDQ";
+	case I_VPUNPCKLQDQ: return "VPUNPCKLQDQ";
+	case I_VPUNPCKLWD: return "VPUNPCKLWD";
+	case I_VPXOR: return "VPXOR";
+	case I_VRCPPS: return "VRCPPS";
+	case I_VRCPSS: return "VRCPSS";
+	case I_VROUNDPD: return "VROUNDPD";
+	case I_VROUNDPS: return "VROUNDPS";
+	case I_VROUNDSD: return "VROUNDSD";
+	case I_VROUNDSS: return "VROUNDSS";
+	case I_VRSQRTPS: return "VRSQRTPS";
+	case I_VRSQRTSS: return "VRSQRTSS";
+	case I_VSHUFPD: return "VSHUFPD";
+	case I_VSHUFPS: return "VSHUFPS";
+	case I_VSQRTPD: return "VSQRTPD";
+	case I_VSQRTPS: return "VSQRTPS";
+	case I_VSQRTSD: return "VSQRTSD";
+	case I_VSQRTSS: return "VSQRTSS";
+	case I_VSTMXCSR: return "VSTMXCSR";
+	case I_VSUBPD: return "VSUBPD";
+	case I_VSUBPS: return "VSUBPS";
+	case I_VSUBSD: return "VSUBSD";
+	case I_VSUBSS: return "VSUBSS";
+	case I_VTESTPD: return "VTESTPD";
+	case I_VTESTPS: return "VTESTPS";
+	case I_VUCOMISD: return "VUCOMISD";
+	case I_VUCOMISS: return "VUCOMISS";
+	case I_VUNPCKHPD: return "VUNPCKHPD";
+	case I_VUNPCKHPS: return "VUNPCKHPS";
+	case I_VUNPCKLPD: return "VUNPCKLPD";
+	case I_VUNPCKLPS: return "VUNPCKLPS";
+	case I_VXORPD: return "VXORPD";
+	case I_VXORPS: return "VXORPS";
+	case I_VZEROALL: return "VZEROALL";
+	case I_VZEROUPPER: return "VZEROUPPER";
+	case I_WAIT: return "WAIT";
+	case I_WBINVD: return "WBINVD";
+	case I_WRFSBASE: return "WRFSBASE";
+	case I_WRGSBASE: return "WRGSBASE";
+	case I_WRMSR: return "WRMSR";
+	case I_XABORT: return "XABORT";
+	case I_XADD: return "XADD";
+	case I_XBEGIN: return "XBEGIN";
+	case I_XCHG: return "XCHG";
+	case I_XEND: return "XEND";
+	case I_XGETBV: return "XGETBV";
+	case I_XLAT: return "XLAT";
+	case I_XOR: return "XOR";
+	case I_XORPD: return "XORPD";
+	case I_XORPS: return "XORPS";
+	case I_XRSTOR: return "XRSTOR";
+	case I_XRSTOR64: return "XRSTOR64";
+	case I_XSAVE: return "XSAVE";
+	case I_XSAVE64: return "XSAVE64";
+	case I_XSAVEOPT: return "XSAVEOPT";
+	case I_XSAVEOPT64: return "XSAVEOPT64";
+	case I_XSETBV: return "XSETBV";
+	default: return "???";
+	}
+}
+
+void EmuX86_DistormLogInstruction(const uint8_t *Eip, _DInst &info)
+{
+	std::stringstream output;
+	output
+		//<< std::setfill('0')
+		<< std::setw(8) << std::hex
+		<< "Processed instruction : "
+		<< (xbaddr)Eip
+//		<< " "
+//		<< std::setw(8) << *((uint8_t*)info.addr)
+		<< " "
+		<< Distorm_OpcodeString(info.opcode)
+	;
+
+	for (int o = 0; o < 4 && info.ops[o].type != O_NONE; o++) {
+		output << ((o == 0) ? " " : ",");
+		//output << std::setw(info.ops[o].size / 4); // Convert size in bits to (hexadecimal) nibble count
+		switch (info.ops[o].type) {
+		case O_REG:  output << Distorm_RegStrings[info.ops[o].index]; break;
+		case O_IMM:  output << info.imm.dword; break;
+		case O_IMM1: output << info.imm.ex.i1; break;
+		case O_IMM2: output << info.imm.ex.i2; break;
+		case O_DISP: output << "dword ptr ds:[" << info.disp << "]"; break;
+		case O_SMEM: output << "dword ptr [" << Distorm_RegStrings[info.ops[o].index] << "+" << info.disp << "]"; break;
+		case O_MEM:  output << "[" << Distorm_RegStrings[info.ops[o].index] << "*?]"; break; // TODO O_MEM : complex memory dereference (optional fields : s / i / b / disp).
+		case O_PC:   output << (xbaddr)Eip + INSTRUCTION_GET_TARGET(&info); break;
+		case O_PTR:  output << "+" << info.imm.ptr.seg << "/" << info.imm.ptr.off; break;
+		default:     output << "?"; break;
+		}
+	}
+
+	if (FLAG_GET_PRIVILEGED(info.flags))
+		output << " // Privileged ring 0 instruction";
+
+/*
+#define FLAG_LOCK (1 << 0) // The instruction locks memory access.
+#define FLAG_REPNZ (1 << 1) // The instruction is prefixed with a REPNZ.
+#define FLAG_REP (1 << 2) // The instruction is prefixed with a REP, this can be a REPZ, it depends on the specific instruction.
+#define FLAG_HINT_TAKEN (1 << 3) // Indicates there is a hint taken for Jcc instructions only.
+#define FLAG_HINT_NOT_TAKEN (1 << 4) // Indicates there is a hint non-taken for Jcc instructions only.
+#define FLAG_IMM_SIGNED (1 << 5) // The Imm value is signed extended (E.G in 64 bit decoding mode, a 32 bit imm is usually sign extended into 64 bit imm).
+#define FLAG_DST_WR (1 << 6) // The destination operand is writable.
+#define FLAG_GET_OPSIZE(flags) (((flags) >> 8) & 3)
+#define FLAG_GET_ADDRSIZE(flags) (((flags) >> 10) & 3)
+#define FLAG_GET_PREFIX(flags) ((flags) & 7) // To get the LOCK/REPNZ/REP prefixes.
+*/
+
+	EmuLog(LOG_PREFIX, LOG_LEVEL::DEBUG, output.str().c_str());
 }
 
 int EmuX86_OpcodeSize(uint8_t *Eip)
@@ -1323,7 +2587,7 @@ bool EmuX86_DecodeException(LPEXCEPTION_POINTERS e)
 	// However, if for any reason, an opcode operand cannot be read from or written to,
 	// that case may be logged, but it shouldn't fail the opcode handler.
 	_DInst info;
-
+	DWORD StartingEip = e->ContextRecord->Eip;
 	// Execute op-codes until we hit an unhandled instruction, or an error occurs
 	while (true) {
 		if (!EmuX86_DecodeOpcode((uint8_t*)e->ContextRecord->Eip, info)) {
@@ -1331,140 +2595,23 @@ bool EmuX86_DecodeException(LPEXCEPTION_POINTERS e)
 			return false;
 		}
 
-		switch (info.opcode) { // Keep these cases alphabetically ordered and condensed
-			// Exit and branch Opcodes come first, for clarity/visibility
-			case I_JA: { // Jump if above (CF=0 and ZF=0).
-				if (EmuX86_Opcode_JXX(e, info, !EmuX86_HasFlag_CF(e) && !EmuX86_HasFlag_ZF(e))) {
-					continue;
-				}
-				break;
-			}
-			case I_JAE: { // Jump if above or equal (CF=0).
-				if (EmuX86_Opcode_JXX(e, info, !EmuX86_HasFlag_CF(e))) {
-					continue;
-				}
-				break;
-			}
-			case I_JB: { // Jump if below (CF=1).
-				if (EmuX86_Opcode_JXX(e, info, EmuX86_HasFlag_CF(e))) {
-					continue;
-				}
-				break;
-			}
-			case I_JBE: { // Jump if below or equal (CF=1 or ZF=1).
-				if (EmuX86_Opcode_JXX(e, info, EmuX86_HasFlag_CF(e) || EmuX86_HasFlag_ZF(e))) {
-					continue;
-				}
-				break;
-			}
-			case I_JCXZ: { // Jump if CX register is 0.
-				if (EmuX86_Opcode_JXX(e, info, ((e->ContextRecord->Ecx & 0xFF) == 0))) {
-					continue;
-				}
-				break;
-			}
-			case I_JECXZ: { // Jump if ECX register is 0.
-				if (EmuX86_Opcode_JXX(e, info, e->ContextRecord->Ecx == 0)) {
-					continue;
-				}
-				break;
-			}
-			case I_JG: { // Jump if greater (ZF=0 and SF=OF).
-				if (EmuX86_Opcode_JXX(e, info, !EmuX86_HasFlag_ZF(e) && (EmuX86_HasFlag_SF(e) == EmuX86_HasFlag_OF(e)))) {
-					continue;
-				}
-				break;
-			}
-			case I_JGE: { // Jump if greater or equal (SF=OF).
-				if (EmuX86_Opcode_JXX(e, info, EmuX86_HasFlag_SF(e) == EmuX86_HasFlag_OF(e))) {
-					continue;
-				}
-				break;
-			}
-			case I_JL: { // Jump if less (SF<>OF).
-				if (EmuX86_Opcode_JXX(e, info, EmuX86_HasFlag_SF(e) != EmuX86_HasFlag_OF(e))) {
-					continue;
-				}
-				break;
-			}
-			case I_JLE: { // Jump if less or equal (ZF=1 or SF<>OF).
-				if (EmuX86_Opcode_JXX(e, info, EmuX86_HasFlag_ZF(e) || (EmuX86_HasFlag_SF(e) != EmuX86_HasFlag_OF(e)))) {
-					continue;
-				}
-				break;
-			}
-			case I_JMP: {
-				if (EmuX86_Opcode_JMP(e, info)) {
-					continue;
-				}
-				break;
-			}
-			case I_JNO: { // Jump if not overflow (OF=0).
-				if (EmuX86_Opcode_JXX(e, info, !EmuX86_HasFlag_OF(e))) {
-					continue;
-				}
-				break;
-			}
-			case I_JNP: { // Jump if not parity (PF=0).
-				if (EmuX86_Opcode_JXX(e, info, !EmuX86_HasFlag_PF(e))) {
-					continue;
-				}
-				break;
-			}
-			case I_JNS: { // Jump if not sign (SF=0).
-				if (EmuX86_Opcode_JXX(e, info, !EmuX86_HasFlag_SF(e))) {
-					continue;
-				}
-				break;
-			}
-			case I_JNZ: { // Jump if not zero (ZF=0).
-				if (EmuX86_Opcode_JXX(e, info, !EmuX86_HasFlag_ZF(e))) {
-					continue;
-				}
-				break;
-			}
-			case I_JO: { // Jump if overflow (OF=1).
-				if (EmuX86_Opcode_JXX(e, info, EmuX86_HasFlag_OF(e))) {
-					continue;
-				}
-				break;
-			}
-			case I_JP: { // Jump if parity (PF=1).
-				if (EmuX86_Opcode_JXX(e, info, EmuX86_HasFlag_PF(e))) {
-					continue;
-				}
-				break;
-			}
-			case I_JS: { // Jump if sign (SF=1).
-				if (EmuX86_Opcode_JXX(e, info, EmuX86_HasFlag_SF(e))) {
-					continue;
-				}
-				break;
-			}
-			case I_JZ: { // Jump if zero (ZF = 1).
-				if (EmuX86_Opcode_JXX(e, info, EmuX86_HasFlag_ZF(e))) {
-					continue;
-				}
-				break;
-			}
-			case I_CALL:
-				// RET and CALL always signify the end of a code block
-				return true;
-			case I_RET:
-				return true;
-			case I_PUSH: case I_POP:
-				// TODO: Implement these instructions
-				// currently stubbed to prevent firing the unimplemented instruction handler
-				return true;
+		if (1) //
+			EmuX86_DistormLogInstruction((uint8_t*)e->ContextRecord->Eip, info);
 
+		switch (info.opcode) { // Keep these cases alphabetically ordered and condensed
 			case I_ADD:
 				if (EmuX86_Opcode_ADD(e, info)) break;
 				goto opcode_error;
 			case I_AND:
 				if (EmuX86_Opcode_AND(e, info)) break;
 				goto opcode_error;
-			case I_CLI: {
-				// Disable all interrupts
+			case I_CALL:
+				// RET and CALL always signify the end of a code block
+				return true;
+			case I_CDQ: // = 250 : 	Convert Doubleword to Quadword
+				EmuX86_Opcode_CDQ(e, info);
+				break;
+			case I_CLI: { // = 502 : Disable all interrupts
 				EmuX86_Opcode_CLI();
 				break;
 			}
@@ -1480,17 +2627,138 @@ bool EmuX86_DecodeException(LPEXCEPTION_POINTERS e)
 			case I_DEC:
 				if (EmuX86_Opcode_DEC(e, info)) break;
 				goto opcode_error;
+#if 0 // TODO : Implement EmuX86_Opcode_IMUL and enable this :
+			case I_IMUL: { // = 117 : 	Signed Multiply
+				if (EmuX86_Opcode_IMUL(e, info)) break;
+				goto opcode_error;
+			}
+#endif
 			case I_IN:
 				if (EmuX86_Opcode_IN(e, info)) break;
 				goto opcode_error;
 			case I_INC:
 				if (EmuX86_Opcode_INC(e, info)) break;
 				goto opcode_error;
-			case I_INVD: // Flush internal caches; initiate flushing of external caches.
-				break; // We can safely ignore this
-			case I_INVLPG: {
+			case I_INVD: // = 555 : Flush internal caches; initiate flushing of external caches.
+				break; // Privileged Level (Ring 0) Instruction. Causes a priviledge instruction exception - We can safely ignore this
+			case I_INVLPG: { // = 1727
 				// This instruction invalidates the TLB entry specified with the source operand. Since we don't emulate
 				// the TLB yet, we can safely ignore this. Test case: Fable.
+				break;
+			}
+			case I_JA: { // = 166 : Jump if above (CF=0 and ZF=0).
+				if (EmuX86_Opcode_Jcc(e, info, !EmuX86_HasFlag_CF(e) && !EmuX86_HasFlag_ZF(e))) {
+					continue;
+				}
+				break;
+			}
+			case I_JAE: { // = 147 : Jump if above or equal (CF=0).
+				if (EmuX86_Opcode_Jcc(e, info, !EmuX86_HasFlag_CF(e))) {
+					continue;
+				}
+				break;
+			}
+			case I_JB: { // = 143 : Jump if below (CF=1).
+				if (EmuX86_Opcode_Jcc(e, info, EmuX86_HasFlag_CF(e))) {
+					continue;
+				}
+				break;
+			}
+			case I_JBE: { // = 161 : Jump if below or equal (CF=1 or ZF=1).
+				if (EmuX86_Opcode_Jcc(e, info, EmuX86_HasFlag_CF(e) || EmuX86_HasFlag_ZF(e))) {
+					continue;
+				}
+				break;
+			}
+			case I_JCXZ: { // = 427 : Jump if CX register is 0.
+				if (EmuX86_Opcode_Jcc(e, info, ((e->ContextRecord->Ecx & 0xFF) == 0))) {
+					continue;
+				}
+				break;
+			}
+			case I_JECXZ: { // = 433 : Jump if ECX register is 0.
+				if (EmuX86_Opcode_Jcc(e, info, e->ContextRecord->Ecx == 0)) {
+					continue;
+				}
+				break;
+			}
+			case I_JG: { // = 202 : Jump if greater (ZF=0 and SF=OF).
+				if (EmuX86_Opcode_Jcc(e, info, !EmuX86_HasFlag_ZF(e) && (EmuX86_HasFlag_SF(e) == EmuX86_HasFlag_OF(e)))) {
+					continue;
+				}
+				break;
+			}
+			case I_JGE: { // = 192 : Jump if greater or equal (SF=OF).
+				if (EmuX86_Opcode_Jcc(e, info, EmuX86_HasFlag_SF(e) == EmuX86_HasFlag_OF(e))) {
+					continue;
+				}
+				break;
+			}
+			case I_JL: { // = 188 : Jump if less (SF<>OF).
+				if (EmuX86_Opcode_Jcc(e, info, EmuX86_HasFlag_SF(e) != EmuX86_HasFlag_OF(e))) {
+					continue;
+				}
+				break;
+			}
+			case I_JLE: { // = 197 : Jump if less or equal (ZF=1 or SF<>OF).
+				if (EmuX86_Opcode_Jcc(e, info, EmuX86_HasFlag_ZF(e) || (EmuX86_HasFlag_SF(e) != EmuX86_HasFlag_OF(e)))) {
+					continue;
+				}
+				break;
+			}
+			case I_JMP: // = 462 : 	Jump
+			case I_JMP_FAR: { // = 467 : Jump
+				if (EmuX86_Opcode_JMP(e, info)) {
+					continue;
+				}
+				break;
+			}
+			case I_JNO: { // = 138 : Jump if not overflow (OF=0).
+				if (EmuX86_Opcode_Jcc(e, info, !EmuX86_HasFlag_OF(e))) {
+					continue;
+				}
+				break;
+			}
+			case I_JNP: { // = 183 : Jump if not parity (PF=0).
+				if (EmuX86_Opcode_Jcc(e, info, !EmuX86_HasFlag_PF(e))) {
+					continue;
+				}
+				break;
+			}
+			case I_JNS: { // = 174 : Jump if not sign (SF=0).
+				if (EmuX86_Opcode_Jcc(e, info, !EmuX86_HasFlag_SF(e))) {
+					continue;
+				}
+				break;
+			}
+			case I_JNZ: { // = 156 : Jump if not zero (ZF=0).
+				if (EmuX86_Opcode_Jcc(e, info, !EmuX86_HasFlag_ZF(e))) {
+					continue;
+				}
+				break;
+			}
+			case I_JO: { // = 134 : Jump if overflow (OF=1).
+				if (EmuX86_Opcode_Jcc(e, info, EmuX86_HasFlag_OF(e))) {
+					continue;
+				}
+				break;
+			}
+			case I_JP: { // = 179 : Jump if parity (PF=1).
+				if (EmuX86_Opcode_Jcc(e, info, EmuX86_HasFlag_PF(e))) {
+					continue;
+				}
+				break;
+			}
+			case I_JS: { // = 170 : Jump if sign (SF=1).
+				if (EmuX86_Opcode_Jcc(e, info, EmuX86_HasFlag_SF(e))) {
+					continue;
+				}
+				break;
+			}
+			case I_JZ: { // = 152 : Jump if zero (ZF = 1).
+				if (EmuX86_Opcode_Jcc(e, info, EmuX86_HasFlag_ZF(e))) {
+					continue;
+				}
 				break;
 			}
 			case I_LEA: { // = 223 : Load Effective Address
@@ -1514,12 +2782,6 @@ bool EmuX86_DecodeException(LPEXCEPTION_POINTERS e)
 			case I_MOVZX:
 				if (EmuX86_Opcode_MOVZX(e, info)) break;
 				goto opcode_error;
-#if 0 // TODO : Implement EmuX86_Opcode_IMUL and enable this :
-			case I_IMUL: { // = 117 : 	Signed Multiply
-				if (EmuX86_Opcode_IMUL(e, info)) break;
-				goto opcode_error;
-			}
-#endif
 			case I_NOT:
 				if (EmuX86_Opcode_NOT(e, info)) break;
 				goto opcode_error;
@@ -1529,72 +2791,90 @@ bool EmuX86_DecodeException(LPEXCEPTION_POINTERS e)
 			case I_OUT:
 				if (EmuX86_Opcode_OUT(e, info)) break;
 				goto opcode_error;
+			case I_POP: { // = 22 : Pop a Value from the Stack
+				if (EmuX86_Opcode_POP(e, info)) break;
+				goto opcode_error;
+			}
+			case I_PUSH: { // = 16 : Push Word or Doubleword Onto the Stack
+				if (EmuX86_Opcode_PUSH(e, info)) break;
+				goto opcode_error;
+			}
+			 // TODO : case I_RDPMC: // = 607 : Read Performance-Monitoring Counters; Privileged Level (Ring 0) Instruction. Causes a priviledge instruction exception
+			case I_RDTSC: // = 593 : Read Time-Stamp Counter
+				EmuX86_Opcode_RDTSC(e);
+				break;
+			case I_RET:
+				// RET and CALL always signify the end of a code block
+				return true;
+			case I_SAR: // = 1002 : Shift arithmetic right
+				EmuX86_Opcode_SAR(e, info);
+				break;
 			case I_SBB:
 				if (EmuX86_Opcode_SBB(e, info)) break;
 				goto opcode_error;
 			case I_SETA: { // Set byte if above (CF=0 and ZF=0).
-				EmuX86_Opcode_SXX(e, info, !EmuX86_HasFlag_CF(e) && !EmuX86_HasFlag_ZF(e));
-				break;
+				if (EmuX86_Opcode_SETcc(e, info, !EmuX86_HasFlag_CF(e) && !EmuX86_HasFlag_ZF(e))) break;
+				goto opcode_error;
 			}
 			case I_SETAE: { // Set byte if above or equal (CF=0).
-				EmuX86_Opcode_SXX(e, info, !EmuX86_HasFlag_CF(e));
-				break;
+				if (EmuX86_Opcode_SETcc(e, info, !EmuX86_HasFlag_CF(e))) break;
+				goto opcode_error;
 			}
 			case I_SETB: { // Set byte if below (CF=1).
-				EmuX86_Opcode_SXX(e, info, EmuX86_HasFlag_CF(e));
-				break;
+				if (EmuX86_Opcode_SETcc(e, info, EmuX86_HasFlag_CF(e))) break;
+				goto opcode_error;
 			}
 			case I_SETBE: { // Set byte if below or equal (CF=1 or ZF=1).
-				EmuX86_Opcode_SXX(e, info, EmuX86_HasFlag_CF(e) || EmuX86_HasFlag_ZF(e));
-				break;
+				if (EmuX86_Opcode_SETcc(e, info, EmuX86_HasFlag_CF(e) || EmuX86_HasFlag_ZF(e))) break;
+				goto opcode_error;
 			}
 			case I_SETG: { // Set byte if greater (ZF=0 and SF=OF).
-				EmuX86_Opcode_SXX(e, info, !EmuX86_HasFlag_ZF(e) && (EmuX86_HasFlag_SF(e) == EmuX86_HasFlag_OF(e)));
-				break;
+				if (EmuX86_Opcode_SETcc(e, info, !EmuX86_HasFlag_ZF(e) && (EmuX86_HasFlag_SF(e) == EmuX86_HasFlag_OF(e)))) break;
+				goto opcode_error;
 			}
 			case I_SETGE: { // Set byte if greater or equal (SF=OF).
-				EmuX86_Opcode_SXX(e, info, EmuX86_HasFlag_SF(e) == EmuX86_HasFlag_OF(e));
-				break;
+				if (EmuX86_Opcode_SETcc(e, info, EmuX86_HasFlag_SF(e) == EmuX86_HasFlag_OF(e))) break;
+				goto opcode_error;
 			}
 			case I_SETL: { // Set byte if less (SF<>OF).
-				EmuX86_Opcode_SXX(e, info, EmuX86_HasFlag_SF(e) != EmuX86_HasFlag_OF(e));
-				break;
+				if (EmuX86_Opcode_SETcc(e, info, EmuX86_HasFlag_SF(e) != EmuX86_HasFlag_OF(e))) break;
+				goto opcode_error;
 			}
 			case I_SETLE: { // Set byte if less or equal (ZF=1 or SF<>OF).
-				EmuX86_Opcode_SXX(e, info, EmuX86_HasFlag_ZF(e) || (EmuX86_HasFlag_SF(e) != EmuX86_HasFlag_OF(e)));
-				break;
+				if (EmuX86_Opcode_SETcc(e, info, EmuX86_HasFlag_ZF(e) || (EmuX86_HasFlag_SF(e) != EmuX86_HasFlag_OF(e)))) break;
+				goto opcode_error;
 			}
 			case I_SETNO: { // Set byte if not overflow (OF=0).
-				EmuX86_Opcode_SXX(e, info, !EmuX86_HasFlag_OF(e));
-				break;
+				if (EmuX86_Opcode_SETcc(e, info, !EmuX86_HasFlag_OF(e))) break;
+				goto opcode_error;
 			}
 			case I_SETNP: { // Set byte if not parity (PF=0).
-				EmuX86_Opcode_SXX(e, info, !EmuX86_HasFlag_PF(e));
-				break;
+				if (EmuX86_Opcode_SETcc(e, info, !EmuX86_HasFlag_PF(e))) break;
+				goto opcode_error;
 			}
 			case I_SETNS: { // Set byte if not sign (SF=0).
-				EmuX86_Opcode_SXX(e, info, !EmuX86_HasFlag_SF(e));
-				break;
+				if (EmuX86_Opcode_SETcc(e, info, !EmuX86_HasFlag_SF(e))) break;
+				goto opcode_error;
 			}
 			case I_SETNZ: { // Set byte if not zero (ZF=0).
-				EmuX86_Opcode_SXX(e, info, !EmuX86_HasFlag_ZF(e));
-				break;
+				if (EmuX86_Opcode_SETcc(e, info, !EmuX86_HasFlag_ZF(e))) break;
+				goto opcode_error;
 			}
 			case I_SETO: { // Set byte if overflow (OF=1).
-				EmuX86_Opcode_SXX(e, info, EmuX86_HasFlag_OF(e));
-				break;
+				if (EmuX86_Opcode_SETcc(e, info, EmuX86_HasFlag_OF(e))) break;
+				goto opcode_error;
 			}
 			case I_SETP: { // Set byte if parity (PF=1).
-				EmuX86_Opcode_SXX(e, info, EmuX86_HasFlag_PF(e));
-				break;
+				if (EmuX86_Opcode_SETcc(e, info, EmuX86_HasFlag_PF(e))) break;
+				goto opcode_error;
 			}
 			case I_SETS: { // Set byte if sign (SF=1).
-				EmuX86_Opcode_SXX(e, info, EmuX86_HasFlag_SF(e));
-				break;
+				if (EmuX86_Opcode_SETcc(e, info, EmuX86_HasFlag_SF(e))) break;
+				goto opcode_error;
 			}
 			case I_SETZ: { // Set byte if zero (ZF=1).
-				EmuX86_Opcode_SXX(e, info, EmuX86_HasFlag_ZF(e));
-				break;
+				if (EmuX86_Opcode_SETcc(e, info, EmuX86_HasFlag_ZF(e))) break;
+				goto opcode_error;
 			}
 			case I_SFENCE: { // = 4343 : Serializes store operations.
 				__asm { sfence }; // emulate as-is (doesn't cause exceptions)
@@ -1618,7 +2898,7 @@ bool EmuX86_DecodeException(LPEXCEPTION_POINTERS e)
 				if (EmuX86_Opcode_TEST(e, info)) break;
 				goto opcode_error;
 			case I_WBINVD: // Write back and flush internal caches; initiate writing-back and flushing of external caches.
-				break; // We can safely ignore this
+				break; // Privileged Level (Ring 0) Instruction. Causes a priviledge instruction exception - We can safely ignore this
 			case I_WRMSR:
 				// We do not emulate processor specific registers just yet
 				// Some titles attempt to manually set the TSC via this instruction
@@ -1631,11 +2911,13 @@ bool EmuX86_DecodeException(LPEXCEPTION_POINTERS e)
 				goto opcode_error;
 			default:
 				EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Unhandled instruction : %u", info.opcode);
-				return true;
-		}
+				// Fail if the first hit instruction couldn't be emulated,
+				// but let host CPU execute following (unhandled) instructions :
+				return (StartingEip != e->ContextRecord->Eip);
+		} // switch info.opcode
 
 		e->ContextRecord->Eip += info.size;
-	}
+	} // while true
 
 opcode_error:
 	EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "0x%08X: Error while handling instruction %u", e->ContextRecord->Eip, info.opcode); // TODO : format decodedInstructions[0]

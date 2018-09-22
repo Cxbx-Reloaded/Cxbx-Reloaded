@@ -296,8 +296,8 @@ void genericException(EXCEPTION_POINTERS *e) {
 
 static thread_local bool bOverrideException;
 
-bool IsRdtscInstruction(xbaddr addr);
-ULONGLONG CxbxRdTsc(bool xbox);
+bool IsRdtscInstruction(xbaddr addr); // Implemented in CxbxKrnl.cpp
+void EmuX86_Opcode_RDTSC(EXCEPTION_POINTERS *e); // Implemented in EmuX86.cpp
 bool lleTryHandleException(EXCEPTION_POINTERS *e)
 {
 	// Initalize local thread variable
@@ -315,13 +315,8 @@ bool lleTryHandleException(EXCEPTION_POINTERS *e)
 			// Check if this exception came from rdtsc 
 			if (IsRdtscInstruction(e->ContextRecord->Eip)) {
 				// If so, use a return value that updates with Xbox frequency;
-				// Avoid the overhead of xboxkrnl::KeQueryPerformanceCounter,
-				// by calling directly into it's backing implementation:
-				ULARGE_INTEGER PerformanceCount;
-				PerformanceCount.QuadPart = CxbxRdTsc(/*xbox=*/true);
-				e->ContextRecord->Eax = PerformanceCount.LowPart;
-				e->ContextRecord->Edx = PerformanceCount.HighPart;
-				e->ContextRecord->Eip += 2;
+				EmuX86_Opcode_RDTSC(e);
+				e->ContextRecord->Eip += 2; // Skip OPCODE_PATCH_RDTSC 0xEF 0x90 (OUT DX, EAX; NOP)
 				return true;
 			}
 			break;
