@@ -1805,7 +1805,9 @@ void CxbxKrnlShutDown()
 	int BootFlags = 0;
 	g_EmuShared->SetBootFlags(&BootFlags);
 
-	delete g_NV2A; // TODO : g_pXbox
+	// NOTE: This causes a hang when exiting while NV2A is processing
+	// This is okay for now: It won't leak memory or resources since TerminateProcess will free everything
+	// delete g_NV2A; // TODO : g_pXbox
 
 	if (CxbxKrnl_hEmuParent != NULL)
 		SendMessage(CxbxKrnl_hEmuParent, WM_PARENTNOTIFY, WM_DESTROY, 0);

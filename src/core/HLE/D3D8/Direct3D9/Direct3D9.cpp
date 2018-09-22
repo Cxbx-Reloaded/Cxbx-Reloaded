@@ -1690,6 +1690,7 @@ static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 
         case WM_CLOSE:
             DestroyWindow(hWnd);
+			CxbxKrnlShutDown();
             break;
 
         case WM_SETFOCUS:
