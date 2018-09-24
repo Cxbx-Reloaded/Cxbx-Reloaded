@@ -661,8 +661,8 @@ inline bool EmuX86_HasFlag_ZF(LPEXCEPTION_POINTERS e)
 bool EmuX86_Opcode_ADD(LPEXCEPTION_POINTERS e, _DInst& info)
 {
 	// ADD reads value from source :
-	uint32_t dest = 0;
-	if (!EmuX86_Operand_Read(e, info, 1, &dest))
+	uint32_t src = 0;
+	if (!EmuX86_Operand_Read(e, info, 1, &src))
 		return false;
 
 	// ADD reads and writes the same operand :
@@ -670,7 +670,7 @@ bool EmuX86_Opcode_ADD(LPEXCEPTION_POINTERS e, _DInst& info)
 	if (!EmuX86_Operand_Addr_ForReadWrite(e, info, 0, OUT opAddr))
 		return false;
 
-	const uint32_t src = EmuX86_Addr_Read(opAddr);
+	const uint32_t dest = EmuX86_Addr_Read(opAddr);
 
 	uint32_t result = 0;
 	uint32_t eflags = e->ContextRecord->EFlags;
@@ -1071,9 +1071,20 @@ bool EmuX86_Opcode_NOT(LPEXCEPTION_POINTERS e, _DInst& info)
 		return false;
 
 	uint32_t dest = EmuX86_Addr_Read(opAddr);
+	uint32_t result = 0;
+	uint32_t eflags = e->ContextRecord->EFlags;
+	__asm {
+		push eflags			// push context eflags on the stack
+		popfd				// pop context eflags into host eflags
+		mov eax, dest
+		not eax				// perform the operation, this updates eflags for us!
+		mov result, eax
+		pushfd				// push the updated host flags onto the stack
+		pop eflags			// pop the updated host flags back into our eflags register
+	}
 
-	// NOT Destination with 
-	uint32_t result = ~dest;
+	// Write back the flags
+	e->ContextRecord->EFlags = eflags;
 
 	// Write back the result
 	EmuX86_Addr_Write(opAddr, result);
@@ -1384,13 +1395,13 @@ bool EmuX86_Opcode_SUB(LPEXCEPTION_POINTERS e, _DInst& info)
 bool EmuX86_Opcode_TEST(LPEXCEPTION_POINTERS e, _DInst& info)
 {
 	// TEST reads first value :
-	uint32_t src = 0;
-	if (!EmuX86_Operand_Read(e, info, 0, &src))
+	uint32_t dest = 0;
+	if (!EmuX86_Operand_Read(e, info, 0, &dest))
 		return false;
 
 	// TEST reads second value :
-	uint32_t dest = 0;
-	if (!EmuX86_Operand_Read(e, info, 1, &dest))
+	uint32_t src = 0;
+	if (!EmuX86_Operand_Read(e, info, 1, &src))
 		return false;
 
 	uint32_t result = 0;
