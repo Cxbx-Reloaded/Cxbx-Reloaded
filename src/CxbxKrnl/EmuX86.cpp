@@ -2547,34 +2547,74 @@ char *Distorm_OpcodeString(const int opcode)
 	}
 }
 
+void output_value(std::stringstream &output, int nibbles, uint32_t value)
+{
+	if (value < 0xA)
+		output << std::setw(1) << value;
+	else
+		output << std::setfill('0') << std::setw(nibbles) << std::right << value << 'h';
+}
+
+void output_value_disp(std::stringstream &output, int nibbles, uint32_t value)
+{
+	if (value != 0) {
+		if ((int32_t)value < 0) {
+			output << '-';
+			output_value(output, nibbles, -value);
+		}
+		else {
+			output << '+';
+			output_value(output, nibbles, value);
+		}
+	}
+}
+
 void EmuX86_DistormLogInstruction(const uint8_t *Eip, _DInst &info)
 {
 	std::stringstream output;
-	output
-		//<< std::setfill('0')
-		<< std::setw(8) << std::hex
-		<< "Processed instruction : "
-		<< (xbaddr)Eip
-//		<< " "
-//		<< std::setw(8) << *((uint8_t*)info.addr)
-		<< " "
-		<< Distorm_OpcodeString(info.opcode)
-	;
+	output << "Disassembly : "
+		<< std::setfill('0') << std::setw(8) << std::right << std::hex << std::uppercase << (xbaddr)Eip;
+	for (int b = 0; b < MAX(7, info.size); b++) {
+		if (b < info.size)
+			//output << " " << std::setfill('0') << std::setw(2) << std::right << std::hex << ((uint8_t)0+Eip[b]); // add 2 hex nibbles, not chars
+			output << " " << std::setw(2) << ((uint8_t)0+Eip[b]); // add 2 hex nibbles, not chars
+		else
+			output << "   ";
+	}
 
+	output << " " << std::setfill(' ') << std::left << std::setw(11) << Distorm_OpcodeString(info.opcode);
 	for (int o = 0; o < 4 && info.ops[o].type != O_NONE; o++) {
-		output << ((o == 0) ? " " : ",");
-		//output << std::setw(info.ops[o].size / 4); // Convert size in bits to (hexadecimal) nibble count
+		// Convert size in bits to (hexadecimal) nibble count
+		int nr_nibbles = info.ops[o].size / 4;
+		std::string size_str;
+		output << std::setfill(' ') << std::setw(1) << std::right << ((o == 0) ? " " : ",");
+		switch (info.ops[o].size) {
+		case 8: size_str = "byte ptr "; break;
+		case 16: size_str = "word ptr "; break;
+		case 32: size_str = "dword ptr "; break;
+		default: nr_nibbles = 8; size_str = ""; break;
+		}
 		switch (info.ops[o].type) {
-		case O_REG:  output << Distorm_RegStrings[info.ops[o].index]; break;
-		case O_IMM:  output << info.imm.dword; break;
-		case O_IMM1: output << info.imm.ex.i1; break;
-		case O_IMM2: output << info.imm.ex.i2; break;
-		case O_DISP: output << "dword ptr ds:[" << info.disp << "]"; break;
-		case O_SMEM: output << "dword ptr [" << Distorm_RegStrings[info.ops[o].index] << "+" << info.disp << "]"; break;
-		case O_MEM:  output << "[" << Distorm_RegStrings[info.ops[o].index] << "*?]"; break; // TODO O_MEM : complex memory dereference (optional fields : s / i / b / disp).
-		case O_PC:   output << (xbaddr)Eip + INSTRUCTION_GET_TARGET(&info); break;
-		case O_PTR:  output << "+" << info.imm.ptr.seg << "/" << info.imm.ptr.off; break;
-		default:     output << "?"; break;
+		case O_REG: output << Distorm_RegStrings[info.ops[o].index]; break;
+		case O_IMM: output_value(output, nr_nibbles, info.imm.dword); break;
+		case O_IMM1: output_value(output, nr_nibbles, info.imm.ex.i1); break;
+		case O_IMM2: output_value(output, nr_nibbles, info.imm.ex.i2); break;
+		case O_DISP: output << size_str << "ds:[";
+			         output_value(output, nr_nibbles, info.disp);
+					 output << "]"; break;
+		case O_SMEM: output << size_str << "[" << Distorm_RegStrings[info.ops[o].index];
+			         output_value_disp(output, nr_nibbles, info.disp);
+					 output << "]"; break;
+		case O_MEM: output << size_str << "[" << Distorm_RegStrings[info.base] << "+" << Distorm_RegStrings[info.ops[o].index];
+					if (info.scale >= 2) {
+						output << "*"; output_value(output, 1, info.scale);
+					}
+			        output_value_disp(output, nr_nibbles, info.disp);
+					output << "]"; break;
+		case O_PC: output_value(output, 8, (xbaddr)Eip + (xbaddr)INSTRUCTION_GET_TARGET(&info)); break;
+		case O_PTR: output << "+" << std::setfill('0') << info.imm.ptr.seg << "/";
+			        output_value(output, nr_nibbles, info.imm.ptr.off); break;
+		default: output << "?"; break;
 		}
 	}
 
@@ -2794,6 +2834,9 @@ bool EmuX86_DecodeException(LPEXCEPTION_POINTERS e)
 				if (EmuX86_Opcode_LEA(e, info)) break;
 				goto opcode_error;
 			}
+			case I_LEAVE:
+				// LEAVE often precedes RET - end of a code block
+				return true;
 			case I_LFENCE: { // = 4287 : Serializes load operations.
 				__asm { lfence }; // emulate as-is (doesn't cause exceptions)
 				break;
@@ -2942,7 +2985,7 @@ bool EmuX86_DecodeException(LPEXCEPTION_POINTERS e)
 				if (EmuX86_Opcode_XOR(e, info)) break;
 				goto opcode_error;
 			default:
-				EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Unhandled instruction : %u", info.opcode);
+				EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Unhandled instruction : %s (%u)", Distorm_OpcodeString(info.opcode), info.opcode);
 				// Fail if the first hit instruction couldn't be emulated,
 				// but let host CPU execute following (unhandled) instructions :
 				return (StartingEip != e->ContextRecord->Eip);
