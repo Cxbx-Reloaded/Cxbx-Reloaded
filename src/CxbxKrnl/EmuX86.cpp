@@ -1016,6 +1016,34 @@ bool EmuX86_Opcode_MOVZX(LPEXCEPTION_POINTERS e, _DInst& info)
 	return true;
 }
 
+bool EmuX86_Opcode_NEG(LPEXCEPTION_POINTERS e, _DInst& info)
+{
+	// NEG reads and writes the same operand :
+	OperandAddress opAddr;
+	if (!EmuX86_Operand_Addr_ForReadWrite(e, info, 0, OUT opAddr))
+		return false;
+
+	uint32_t dest = EmuX86_Addr_Read(opAddr);
+	uint32_t src = dest;
+
+	// NEG Destination
+	uint32_t result = 0-dest;
+
+	// Write back the result
+	EmuX86_Addr_Write(opAddr, result);
+
+	// The OF, SF, ZF, AF, CF, and PF flags are set according to the result.
+	EmuX86_SetFlags_OSZAPC(e,
+		/*EMUX86_EFLAG_OF*/OF_Sub(result, src, dest),
+		/*EMUX86_EFLAG_SF*/SFCalc(result),
+		/*EMUX86_EFLAG_ZF*/ZFCalc(result),
+		/*EMUX86_EFLAG_AF*/AFCalc(result, src, dest),
+		/*EMUX86_EFLAG_PF*/PFCalc(result),
+		/*EMUX86_EFLAG_CF*/(dest != 0));
+
+	return true;
+}
+
 bool EmuX86_Opcode_NOT(LPEXCEPTION_POINTERS e, _DInst& info)
 {
 	// NOT reads and writes the same operand :
@@ -2782,6 +2810,9 @@ bool EmuX86_DecodeException(LPEXCEPTION_POINTERS e)
 				goto opcode_error;
 			case I_MOVZX:
 				if (EmuX86_Opcode_MOVZX(e, info)) break;
+				goto opcode_error;
+			case I_NEG:
+				if (EmuX86_Opcode_NEG(e, info)) break;
 				goto opcode_error;
 			case I_NOT:
 				if (EmuX86_Opcode_NOT(e, info)) break;
