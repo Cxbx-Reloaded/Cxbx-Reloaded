@@ -239,7 +239,7 @@ XBSYSAPI EXPORTNUM(44) xboxkrnl::ULONG NTAPI xboxkrnl::HalGetInterruptVector
 			*Irql = (KIRQL)VECTOR2IRQL(dwVector);
 
 #ifdef _DEBUG_TRACE
-		DbgPrintf(LOG_PREFIX, "HalGetInterruptVector(): Interrupt vector requested for %d (%s)\n", 
+		DBG_PRINTF("HalGetInterruptVector(): Interrupt vector requested for %d (%s)\n", 
 			BusInterruptLevel, IRQNames[BusInterruptLevel]);
 #endif
 	}

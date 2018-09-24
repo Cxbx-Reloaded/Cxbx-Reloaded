@@ -176,7 +176,7 @@ uint32_t EmuFlash_Read32(xbaddr addr) // TODO : Move to EmuFlash.cpp
 		return -1;
 	}
 
-	DbgPrintf(LOG_PREFIX, "Read32 FLASH_ROM (0x%.8X) = 0x%.8X [HANDLED]\n", addr, r);
+	DBG_PRINTF("Read32 FLASH_ROM (0x%.8X) = 0x%.8X [HANDLED]\n", addr, r);
 	return r;
 }
 
@@ -208,7 +208,7 @@ uint32_t EmuX86_Read(xbaddr addr, int size)
 		//pass the memory-access through to normal memory :
 		value = EmuX86_Mem_Read(addr, size);
 
-		DbgPrintf(LOG_PREFIX, "Read(0x%08X, %d) = 0x%08X\n", addr, size, value);
+		DBG_PRINTF("Read(0x%08X, %d) = 0x%08X\n", addr, size, value);
 	}
 
 	return value;
@@ -233,7 +233,7 @@ void EmuX86_Write(xbaddr addr, uint32_t value, int size)
 	}
 
 	// Pass the memory-access through to normal memory :
-	DbgPrintf(LOG_PREFIX, "Write(0x%.8X, 0x%.8X, %d)\n", addr, value, size);
+	DBG_PRINTF("Write(0x%.8X, 0x%.8X, %d)\n", addr, value, size);
 	EmuX86_Mem_Write(addr, value, size);
 }
 
@@ -2595,8 +2595,9 @@ bool EmuX86_DecodeException(LPEXCEPTION_POINTERS e)
 			return false;
 		}
 
-		if (1) //
+		LOG_CHECK_ENABLED(LOG_LEVEL::DEBUG) {
 			EmuX86_DistormLogInstruction((uint8_t*)e->ContextRecord->Eip, info);
+		}
 
 		switch (info.opcode) { // Keep these cases alphabetically ordered and condensed
 			case I_ADD:
@@ -2926,7 +2927,7 @@ opcode_error:
 
 void EmuX86_Init()
 {
-	DbgPrintf(LOG_PREFIX, "Initializing distorm version %d\n", distorm_version());
+	DBG_PRINTF("Initializing distorm version %d\n", distorm_version());
 
 	AddVectoredExceptionHandler(/*FirstHandler=*/ULONG(true), lleException);
 

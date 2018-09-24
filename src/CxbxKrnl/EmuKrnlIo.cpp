@@ -307,7 +307,7 @@ XBSYSAPI EXPORTNUM(66) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoCreateFile
 	}
 	else
 	{
-		DbgPrintf(LOG_PREFIX, "IoCreateFile = 0x%.8X\n", *FileHandle);
+		DBG_PRINTF("IoCreateFile = 0x%.8X\n", *FileHandle);
 	}
 
 	RETURN(ret);

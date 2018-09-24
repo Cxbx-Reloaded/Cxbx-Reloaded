@@ -53,7 +53,7 @@ namespace xboxkrnl
 void SetLEDSequence(LED::Sequence aLEDSequence)
 {
 	// See http://xboxdevwiki.net/PIC#The_LED
-	DbgPrintf(LOG_PREFIX, "SetLEDSequence : %u\n", (byte)aLEDSequence);
+	DBG_PRINTF("SetLEDSequence : %u\n", (byte)aLEDSequence);
 
     union {
         UINT  LedSequenceBlock;

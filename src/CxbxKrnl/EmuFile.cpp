@@ -462,13 +462,13 @@ NTSTATUS CxbxConvertFilePath(
 		replace_all( RelativePath, "\\\\", "\\" );
 
 		if (g_bPrintfOn) {
-			DbgPrintf(LOG_PREFIX, "%s Corrected path...\n", aFileAPIName.c_str());
-			DbgPrintf(LOG_PREFIX, "  Org:\"%s\"\n", OriginalPath.c_str());
+			DBG_PRINTF("%s Corrected path...\n", aFileAPIName.c_str());
+			DBG_PRINTF("  Org:\"%s\"\n", OriginalPath.c_str());
 			if (_strnicmp(HostPath.c_str(), CxbxBasePath.c_str(), CxbxBasePath.length()) == 0) {
-				DbgPrintf(LOG_PREFIX, "  New:\"$CxbxPath\\%s%s\"\n", (HostPath.substr(CxbxBasePath.length(), std::string::npos)).c_str(), RelativePath.c_str());
+				DBG_PRINTF("  New:\"$CxbxPath\\%s%s\"\n", (HostPath.substr(CxbxBasePath.length(), std::string::npos)).c_str(), RelativePath.c_str());
 			}
 			else
-				DbgPrintf(LOG_PREFIX, "  New:\"$XbePath\\%s\"\n", RelativePath.c_str());
+				DBG_PRINTF("  New:\"$XbePath\\%s\"\n", RelativePath.c_str());
 		}
 	}
 	else
@@ -667,7 +667,7 @@ NTSTATUS EmuNtSymbolicLinkObject::Init(std::string aSymbolicLinkName, std::strin
 				else
 				{
 					NtSymbolicLinkObjects[DriveLetter - 'A'] = this;
-					DbgPrintf(LOG_PREFIX, "Linked \"%s\" to \"%s\" (residing at \"%s\")\n", aSymbolicLinkName.c_str(), aFullPath.c_str(), HostSymbolicLinkPath.c_str());
+					DBG_PRINTF("Linked \"%s\" to \"%s\" (residing at \"%s\")\n", aSymbolicLinkName.c_str(), aFullPath.c_str(), HostSymbolicLinkPath.c_str());
 				}
 			}
 		}

@@ -1058,7 +1058,7 @@ DWORD WINAPI XTL::EMUPATCH(XInputGetState)
 
         if((dwPort >= 0) && (dwPort <= total_xinput_gamepad))
         {
-			DbgPrintf(LOG_PREFIX, "EmuXInputGetState(): dwPort = %d\n", dwPort );
+			DBG_PRINTF("EmuXInputGetState(): dwPort = %d\n", dwPort );
 
             //for xinput, we query the state corresponds to port.
 				if (g_XInputEnabled) {

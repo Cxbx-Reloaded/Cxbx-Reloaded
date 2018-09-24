@@ -99,7 +99,7 @@ inline void XADPCM2PCMFormat(LPWAVEFORMATEX lpwfxFormat)
 {
 
 #if 0 //For testing purpose if XADPCM to PCM is not accurate.
-    DbgPrintf(LOG_PREFIX, "EmuDSound: XADPCM WAVEFORMATEX\n"
+    DBG_PRINTF("EmuDSound: XADPCM WAVEFORMATEX\n"
               "{\n"
               "   wFormatTag              : 0x%.04hX\n"
               "   nChannels               : 0x%.02hd\n"
@@ -141,7 +141,7 @@ inline void XADPCM2PCMFormat(LPWAVEFORMATEX lpwfxFormat)
 #endif
 
 #if 0 //For testing purpose if XADPCM to PCM is not accurate.
-    DbgPrintf(LOG_PREFIX, "EmuDSound: Converted to PCM WAVEFORMATEX\n"
+    DBG_PRINTF("EmuDSound: Converted to PCM WAVEFORMATEX\n"
               "{\n"
               "   wFormatTag              : 0x%.04hX\n"
               "   nChannels               : 0x%.02hd\n"

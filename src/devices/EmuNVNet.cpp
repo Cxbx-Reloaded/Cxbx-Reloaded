@@ -394,7 +394,7 @@ void EmuNVNet_UpdateIRQ()
 {
 	if (EmuNVNet_GetRegister(NvRegIrqMask, 4) &&
 		EmuNVNet_GetRegister(NvRegIrqStatus, 4)) {
-		DbgPrintf(LOG_PREFIX, "Asserting IRQ\n");
+		DBG_PRINTF("Asserting IRQ\n");
 		HalSystemInterrupts[4].Assert(true);
 	} else {
 		HalSystemInterrupts[4].Assert(false);
@@ -413,7 +413,7 @@ int EmuNVNet_MiiReadWrite(uint64_t val)
 	reg = mii_ctl & ((1 << NVREG_MIICTL_ADDRSHIFT) - 1);
 	write = mii_ctl & NVREG_MIICTL_WRITE;
 
-	DbgPrintf(LOG_PREFIX, "nvnet mii %s: phy 0x%x %s [0x%x]\n", write ? "write" : "read", phy_addr, EmuNVNet_GetMiiRegisterName(reg), reg);
+	DBG_PRINTF("nvnet mii %s: phy 0x%x %s [0x%x]\n", write ? "write" : "read", phy_addr, EmuNVNet_GetMiiRegisterName(reg), reg);
 
 	if (phy_addr != 1) {
 		return -1;
@@ -444,7 +444,7 @@ int EmuNVNet_MiiReadWrite(uint64_t val)
 
 uint32_t EmuNVNet_Read(xbaddr addr, int size)
 {
-	DbgPrintf(LOG_PREFIX, "Read%d: %s (0x%.8X)\n", size, EmuNVNet_GetRegisterName(addr), addr);
+	DBG_PRINTF("Read%d: %s (0x%.8X)\n", size, EmuNVNet_GetRegisterName(addr), addr);
 
 	switch (addr) {
 		case NvRegMIIData:
@@ -471,7 +471,7 @@ void EmuNVNet_Write(xbaddr addr, uint32_t value, int size)
 		break;
 	case NvRegTxRxControl:
 		if (value == NVREG_TXRXCTL_KICK) {
-			DbgPrintf(LOG_PREFIX, "NvRegTxRxControl = NVREG_TXRXCTL_KICK!\n");
+			DBG_PRINTF("NvRegTxRxControl = NVREG_TXRXCTL_KICK!\n");
 			EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "TODO: nvnet_dma_packet_from_guest");
 			// nvnet_dma_packet_from_guest(s);
 		}
@@ -508,7 +508,7 @@ void EmuNVNet_Write(xbaddr addr, uint32_t value, int size)
 		break;
 	}
 
-	DbgPrintf(LOG_PREFIX, "Write%d: %s (0x%.8X) = 0x%.8X\n", size, EmuNVNet_GetRegisterName(addr), addr, value);
+	DBG_PRINTF("Write%d: %s (0x%.8X) = 0x%.8X\n", size, EmuNVNet_GetRegisterName(addr), addr, value);
 }
 
 /* NVNetDevice */

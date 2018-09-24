@@ -574,7 +574,7 @@ VAddr VMManager::ClaimGpuMemory(size_t Size, size_t* BytesToSkip)
 		}
 		m_NV2AInstanceMemoryBytes = Size;
 
-		DbgPrintf(LOG_PREFIX, "MmClaimGpuInstanceMemory : Allocated bytes remaining = 0x%.8X\n", m_NV2AInstanceMemoryBytes);
+		DBG_PRINTF("MmClaimGpuInstanceMemory : Allocated bytes remaining = 0x%.8X\n", m_NV2AInstanceMemoryBytes);
 
 		Unlock();
 	}
@@ -621,12 +621,12 @@ void VMManager::PersistMemory(VAddr addr, size_t Size, bool bPersist)
 			if (bPersist)
 			{
 				*(VAddr*)(CONTIGUOUS_MEMORY_BASE + PAGE_SIZE - 4) = addr;
-				DbgPrintf(LOG_PREFIX, "Persisting LaunchDataPage\n");
+				DBG_PRINTF("Persisting LaunchDataPage\n");
 			}
 			else
 			{
 				*(VAddr*)(CONTIGUOUS_MEMORY_BASE + PAGE_SIZE - 4) = NULL;
-				DbgPrintf(LOG_PREFIX, "Forgetting LaunchDataPage\n");
+				DBG_PRINTF("Forgetting LaunchDataPage\n");
 			}
 		}
 		else
@@ -634,12 +634,12 @@ void VMManager::PersistMemory(VAddr addr, size_t Size, bool bPersist)
 			if (bPersist)
 			{
 				*(VAddr*)(CONTIGUOUS_MEMORY_BASE + PAGE_SIZE - 8) = addr;
-				DbgPrintf(LOG_PREFIX, "Persisting FrameBuffer\n");
+				DBG_PRINTF("Persisting FrameBuffer\n");
 			}
 			else
 			{
 				*(VAddr*)(CONTIGUOUS_MEMORY_BASE + PAGE_SIZE - 8) = NULL;
-				DbgPrintf(LOG_PREFIX, "Forgetting FrameBuffer\n");
+				DBG_PRINTF("Forgetting FrameBuffer\n");
 			}
 		}
 	}
@@ -707,7 +707,7 @@ void VMManager::RestorePersistentMemory()
 			RestorePersistentAllocation(LauchDataAddress, GetPteAddress(LauchDataAddress)->Hardware.PFN,
 				GetPteAddress(LauchDataAddress)->Hardware.PFN, ContiguousType);
 
-			DbgPrintf(LOG_PREFIX, "Restored LaunchDataPage\n");
+			DBG_PRINTF("Restored LaunchDataPage\n");
 		}
 
 		if (FrameBufferAddress != 0 && IS_PHYSICAL_ADDRESS(FrameBufferAddress)) {
@@ -717,7 +717,7 @@ void VMManager::RestorePersistentMemory()
 			RestorePersistentAllocation(FrameBufferAddress, GetPteAddress(FrameBufferAddress)->Hardware.PFN,
 				GetPteAddress(FrameBufferAddress)->Hardware.PFN + (QuerySize(FrameBufferAddress, false) >> PAGE_SHIFT) - 1, ContiguousType);
 
-			DbgPrintf(LOG_PREFIX, "Restored FrameBuffer\n");
+			DBG_PRINTF("Restored FrameBuffer\n");
 		}
 	}
 }
@@ -1443,7 +1443,7 @@ size_t VMManager::QuerySize(VAddr addr, bool bCxbxCaller)
 		else if(IS_USER_ADDRESS(addr)) { Type = UserRegion; }
 		else
 		{
-			DbgPrintf(LOG_PREFIX, "QuerySize: Unknown memory region queried.\n");
+			DBG_PRINTF("QuerySize: Unknown memory region queried.\n");
 			Unlock();
 			RETURN(Size);
 		}
@@ -1600,7 +1600,7 @@ xboxkrnl::NTSTATUS VMManager::XbAllocateVirtualMemory(VAddr* addr, ULONG ZeroBit
 
 	if (!ConvertXboxToPteProtection(Protect, &TempPte)) { RETURN(STATUS_INVALID_PAGE_PROTECTION); }
 
-	DbgPrintf(LOG_PREFIX, "%s requested range : 0x%.8X - 0x%.8X\n", __func__, CapturedBase, CapturedBase + CapturedSize);
+	DBG_PRINTF("%s requested range : 0x%.8X - 0x%.8X\n", __func__, CapturedBase, CapturedBase + CapturedSize);
 
 	Lock();
 
@@ -1681,7 +1681,7 @@ xboxkrnl::NTSTATUS VMManager::XbAllocateVirtualMemory(VAddr* addr, ULONG ZeroBit
 		{
 			// XBOX_MEM_COMMIT was not specified, so we are done with the allocation
 
-			DbgPrintf(LOG_PREFIX, "%s resulting range : 0x%.8X - 0x%.8X\n", __func__, AlignedCapturedBase, AlignedCapturedBase + AlignedCapturedSize);
+			DBG_PRINTF("%s resulting range : 0x%.8X - 0x%.8X\n", __func__, AlignedCapturedBase, AlignedCapturedBase + AlignedCapturedSize);
 
 			*addr = AlignedCapturedBase;
 			*Size = AlignedCapturedSize;
@@ -1776,13 +1776,13 @@ xboxkrnl::NTSTATUS VMManager::XbAllocateVirtualMemory(VAddr* addr, ULONG ZeroBit
 		if (!VirtualAlloc((void*)AlignedCapturedBase, AlignedCapturedSize, MEM_COMMIT,
 			(ConvertXboxToWinProtection(PatchXboxPermissions(Protect))) & ~(PAGE_WRITECOMBINE | PAGE_NOCACHE)))
 		{
-			DbgPrintf(LOG_PREFIX, "%s: VirtualAlloc failed to commit the memory! The error was %d\n", __func__, GetLastError());
+			DBG_PRINTF("%s: VirtualAlloc failed to commit the memory! The error was %d\n", __func__, GetLastError());
 		}
 	}
 
 	// Because VirtualAlloc always zeros the memory for us, XBOX_MEM_NOZERO is still unsupported
 
-	if (AllocationType & XBOX_MEM_NOZERO) { DbgPrintf(LOG_PREFIX, "XBOX_MEM_NOZERO flag is not supported!\n"); }
+	if (AllocationType & XBOX_MEM_NOZERO) { DBG_PRINTF("XBOX_MEM_NOZERO flag is not supported!\n"); }
 
 	// If some pte's were detected to have different permissions in the above check, we need to update those as well
 
@@ -1794,7 +1794,7 @@ xboxkrnl::NTSTATUS VMManager::XbAllocateVirtualMemory(VAddr* addr, ULONG ZeroBit
 		XbVirtualProtect(&TempAddr, &TempSize, &TempProtect);
 	}
 
-	DbgPrintf(LOG_PREFIX, "%s resulting range : 0x%.8X - 0x%.8X\n", __func__, AlignedCapturedBase, AlignedCapturedBase + AlignedCapturedSize);
+	DBG_PRINTF("%s resulting range : 0x%.8X - 0x%.8X\n", __func__, AlignedCapturedBase, AlignedCapturedBase + AlignedCapturedSize);
 
 	*addr = AlignedCapturedBase;
 	*Size = AlignedCapturedSize;
@@ -1955,7 +1955,7 @@ xboxkrnl::NTSTATUS VMManager::XbFreeVirtualMemory(VAddr* addr, size_t* Size, DWO
 		{
 			if (!VirtualFree((void*)AlignedCapturedBase, AlignedCapturedSize, MEM_DECOMMIT))
 			{
-				DbgPrintf(LOG_PREFIX, "%s: VirtualFree failed to decommit the memory! The error was %d\n", __func__, GetLastError());
+				DBG_PRINTF("%s: VirtualFree failed to decommit the memory! The error was %d\n", __func__, GetLastError());
 			}
 		}
 	}
@@ -2615,7 +2615,7 @@ void VMManager::UpdateMemoryPermissions(VAddr addr, size_t Size, DWORD Perms)
 	DWORD dummy;
 	if (!VirtualProtect((void*)addr, Size, WindowsPerms & ~(PAGE_WRITECOMBINE | PAGE_NOCACHE), &dummy))
 	{
-		DbgPrintf(LOG_PREFIX, "VirtualProtect failed. The error code was %d\n", GetLastError());
+		DBG_PRINTF("VirtualProtect failed. The error code was %d\n", GetLastError());
 	}
 }
 
@@ -2669,7 +2669,7 @@ void VMManager::DestructVMA(VAddr addr, MemoryRegionType Type, size_t Size)
 
 			if (!ret)
 			{
-				DbgPrintf(LOG_PREFIX, "Deallocation routine failed with error %d\n", GetLastError());
+				DBG_PRINTF("Deallocation routine failed with error %d\n", GetLastError());
 			}
 	}
 
@@ -2695,7 +2695,7 @@ void VMManager::DestructVMA(VAddr addr, MemoryRegionType Type, size_t Size)
 	}
 	else
 	{
-		DbgPrintf(LOG_PREFIX, "std::prev(CarvedVmaIt) was not free\n");
+		DBG_PRINTF("std::prev(CarvedVmaIt) was not free\n");
 
 		it = CarvedVmaIt;
 

@@ -416,15 +416,15 @@ XBSYSAPI EXPORTNUM(181) xboxkrnl::NTSTATUS NTAPI xboxkrnl::MmQueryStatistics
 	{
 		g_VMManager.MemoryStatistics(MemoryStatistics);
 
-		DbgPrintf(LOG_PREFIX, "   MemoryStatistics->Length                      = 0x%.08X\n", MemoryStatistics->Length);
-		DbgPrintf(LOG_PREFIX, "   MemoryStatistics->TotalPhysicalPages          = 0x%.08X\n", MemoryStatistics->TotalPhysicalPages);
-		DbgPrintf(LOG_PREFIX, "   MemoryStatistics->AvailablePages              = 0x%.08X\n", MemoryStatistics->AvailablePages);
-		DbgPrintf(LOG_PREFIX, "   MemoryStatistics->VirtualMemoryBytesCommitted = 0x%.08X\n", MemoryStatistics->VirtualMemoryBytesCommitted);
-		DbgPrintf(LOG_PREFIX, "   MemoryStatistics->VirtualMemoryBytesReserved  = 0x%.08X\n", MemoryStatistics->VirtualMemoryBytesReserved);
-		DbgPrintf(LOG_PREFIX, "   MemoryStatistics->CachePagesCommitted         = 0x%.08X\n", MemoryStatistics->CachePagesCommitted);
-		DbgPrintf(LOG_PREFIX, "   MemoryStatistics->PoolPagesCommitted          = 0x%.08X\n", MemoryStatistics->PoolPagesCommitted);
-		DbgPrintf(LOG_PREFIX, "   MemoryStatistics->StackPagesCommitted         = 0x%.08X\n", MemoryStatistics->StackPagesCommitted);
-		DbgPrintf(LOG_PREFIX, "   MemoryStatistics->ImagePagesCommitted         = 0x%.08X\n", MemoryStatistics->ImagePagesCommitted);
+		DBG_PRINTF("   MemoryStatistics->Length                      = 0x%.08X\n", MemoryStatistics->Length);
+		DBG_PRINTF("   MemoryStatistics->TotalPhysicalPages          = 0x%.08X\n", MemoryStatistics->TotalPhysicalPages);
+		DBG_PRINTF("   MemoryStatistics->AvailablePages              = 0x%.08X\n", MemoryStatistics->AvailablePages);
+		DBG_PRINTF("   MemoryStatistics->VirtualMemoryBytesCommitted = 0x%.08X\n", MemoryStatistics->VirtualMemoryBytesCommitted);
+		DBG_PRINTF("   MemoryStatistics->VirtualMemoryBytesReserved  = 0x%.08X\n", MemoryStatistics->VirtualMemoryBytesReserved);
+		DBG_PRINTF("   MemoryStatistics->CachePagesCommitted         = 0x%.08X\n", MemoryStatistics->CachePagesCommitted);
+		DBG_PRINTF("   MemoryStatistics->PoolPagesCommitted          = 0x%.08X\n", MemoryStatistics->PoolPagesCommitted);
+		DBG_PRINTF("   MemoryStatistics->StackPagesCommitted         = 0x%.08X\n", MemoryStatistics->StackPagesCommitted);
+		DBG_PRINTF("   MemoryStatistics->ImagePagesCommitted         = 0x%.08X\n", MemoryStatistics->ImagePagesCommitted);
 
 		ret = STATUS_SUCCESS;
 	}
