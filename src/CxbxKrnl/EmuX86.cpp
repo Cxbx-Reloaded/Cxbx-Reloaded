@@ -541,10 +541,10 @@ void EmuX86_Addr_Write(const OperandAddress &opAddr, const uint32_t value)
 		// Set the correct part of the register
 		switch (opAddr.size) {
 			case sizeof(uint8_t) :
-				regval = (regval & 0xFFFFFF00) | value;
+				regval = (regval & 0xFFFFFF00) | (value & 0xFF);
 				break;
 			case sizeof(uint16_t):
-				regval = (regval & 0xFFFF0000) | value;
+				regval = (regval & 0xFFFF0000) | (value & 0xFFFF);
 				break;
 		}
 		
