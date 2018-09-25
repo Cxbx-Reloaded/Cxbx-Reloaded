@@ -346,7 +346,7 @@ void USBDevice::USB_DoParameter(XboxDeviceState* s, USBPacket* p)
 	index = (s->SetupBuffer[5] << 8) | s->SetupBuffer[4];
 
 	if (s->SetupLength > sizeof(s->DataBuffer)) {
-		DbgPrintf(LOG_PREFIX, "ctrl buffer too small (%d > %zu)\n", s->SetupLength, sizeof(s->DataBuffer));
+		DBG_PRINTF("ctrl buffer too small (%d > %zu)\n", s->SetupLength, sizeof(s->DataBuffer));
 		p->Status = USB_RET_STALL;
 		return;
 	}
@@ -411,7 +411,7 @@ void USBDevice::USB_DoTokenSetup(XboxDeviceState* s, USBPacket* p)
 	}
 	else {
 		if (s->SetupLength > sizeof(s->DataBuffer)) {
-			DbgPrintf(LOG_PREFIX, "ctrl buffer too small (%d > %zu)\n", s->SetupLength, sizeof(s->DataBuffer));
+			DBG_PRINTF("ctrl buffer too small (%d > %zu)\n", s->SetupLength, sizeof(s->DataBuffer));
 			p->Status = USB_RET_STALL;
 			return;
 		}
@@ -899,7 +899,7 @@ int USBDevice::USBDesc_HandleControl(XboxDeviceState* dev, USBPacket *p,
 			// From the standard: "This request sets the device address for all future device accesses.
 			// The wValue field specifies the device address to use for all subsequent accesses"
 			dev->Addr = value;
-			DbgPrintf(LOG_PREFIX, "address 0x%X set for device %s\n", dev->Addr, dev->ProductDesc.c_str());
+			DBG_PRINTF("address 0x%X set for device %s\n", dev->Addr, dev->ProductDesc.c_str());
 			ret = 0;
 			break;
 		}
@@ -925,7 +925,7 @@ int USBDevice::USBDesc_HandleControl(XboxDeviceState* dev, USBPacket *p,
 			// From the standard: "This request sets the device configuration. The lower byte of the wValue field specifies the desired configuration.
 			// This configuration value must be zero or match a configuration value from a configuration descriptor"
 			ret = USBDesc_SetConfig(dev, value);
-			DbgPrintf(LOG_PREFIX, "received standard SetConfiguration() request for device at address 0x%X. Configuration selected is %d and returned %d\n",
+			DBG_PRINTF("received standard SetConfiguration() request for device at address 0x%X. Configuration selected is %d and returned %d\n",
 				dev->Addr, value, ret);
 			break;
 		}
@@ -959,7 +959,7 @@ int USBDevice::USBDesc_HandleControl(XboxDeviceState* dev, USBPacket *p,
 				dev->RemoteWakeup = 0;
 				ret = 0;
 			}
-			DbgPrintf(LOG_PREFIX, "received standard ClearFeature() request for device at address 0x%X. Feature selected is %d and returned %d\n",
+			DBG_PRINTF("received standard ClearFeature() request for device at address 0x%X. Feature selected is %d and returned %d\n",
 				dev->Addr, value, ret);
 			break;
 		}
@@ -971,7 +971,7 @@ int USBDevice::USBDesc_HandleControl(XboxDeviceState* dev, USBPacket *p,
 				dev->RemoteWakeup = 1;
 				ret = 0;
 			}
-			DbgPrintf(LOG_PREFIX, "received standard SetFeature() request for device at address 0x%X. Feature selected is %d and returned %d\n",
+			DBG_PRINTF("received standard SetFeature() request for device at address 0x%X. Feature selected is %d and returned %d\n",
 				dev->Addr, value, ret);
 			break;
 		}
@@ -992,7 +992,7 @@ int USBDevice::USBDesc_HandleControl(XboxDeviceState* dev, USBPacket *p,
 			// From the standard: "This request allows the host to select an alternate setting for the specified interface"
 			// wValue = Alternative Setting; wIndex = Interface
 			ret = USBDesc_SetInterface(dev, index, value);
-			DbgPrintf(LOG_PREFIX, "received standard SetInterface() request for device at address 0x%X. Interface selected is %d, Alternative Setting \
+			DBG_PRINTF("received standard SetInterface() request for device at address 0x%X. Interface selected is %d, Alternative Setting \
 is %d and returned %d\n", dev->Addr, index, value, ret);
 			break;
 		}
@@ -1020,7 +1020,7 @@ int USBDevice::USBDesc_HandleStandardGetDescriptor(XboxDeviceState* dev, USBPack
 	switch (type) {
 		case USB_DT_DEVICE: {
 			ret = USB_ReadDeviceDesc(&desc->id, dev->Device, buf, sizeof(buf));
-			DbgPrintf(LOG_PREFIX, "read operation of device descriptor of device 0x%X returns %d\n", dev->Addr, ret);
+			DBG_PRINTF("read operation of device descriptor of device 0x%X returns %d\n", dev->Addr, ret);
 			break;
 		}
 
@@ -1028,13 +1028,13 @@ int USBDevice::USBDesc_HandleStandardGetDescriptor(XboxDeviceState* dev, USBPack
 			if (index < dev->Device->bNumConfigurations) {
 				ret = USB_ReadConfigurationDesc(dev->Device->confs + index, flags, buf, sizeof(buf));
 			}
-			DbgPrintf(LOG_PREFIX, "read operation of configuration descriptor %d of device 0x%X returns %d\n", index, dev->Addr, ret);
+			DBG_PRINTF("read operation of configuration descriptor %d of device 0x%X returns %d\n", index, dev->Addr, ret);
 			break;
 		}
 
 		case USB_DT_STRING: {
 			ret = USB_ReadStringDesc(dev, index, buf, sizeof(buf));
-			DbgPrintf(LOG_PREFIX, "read operation of string descriptor %d of device 0x%X returns %d\n", index, dev->Addr, ret);
+			DBG_PRINTF("read operation of string descriptor %d of device 0x%X returns %d\n", index, dev->Addr, ret);
 			break;
 		}
 

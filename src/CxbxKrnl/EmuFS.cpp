@@ -500,7 +500,7 @@ void EmuInitFS()
 	fsInstructions.push_back({ { 0x64, 0xA1, 0x58, 0x00, 0x00, 0x00 }, &EmuFS_MovEaxFs58 });					// mov eax, large fs:58
 	fsInstructions.push_back({ { 0x64, 0xA3, 0x00, 0x00, 0x00, 0x00 }, &EmuFS_MovFs00Eax });					// mov large fs:0, eax
 
-	DbgPrintf(CXBXR_MODULE::INIT, "Patching FS Register Accesses\n");
+	DBG_PRINTF_EX(CXBXR_MODULE::INIT, "Patching FS Register Accesses\n");
 	DWORD sizeOfImage = CxbxKrnl_XbeHeader->dwSizeofImage;
 	long numberOfInstructions = fsInstructions.size();
 
@@ -510,7 +510,7 @@ void EmuInitFS()
 			continue;
 		}
 
-		DbgPrintf(CXBXR_MODULE::INIT, "Searching for FS Instruction in section %s\n", CxbxKrnl_Xbe->m_szSectionName[sectionIndex]);
+		DBG_PRINTF_EX(CXBXR_MODULE::INIT, "Searching for FS Instruction in section %s\n", CxbxKrnl_Xbe->m_szSectionName[sectionIndex]);
 		xbaddr startAddr = CxbxKrnl_Xbe->m_SectionHeader[sectionIndex].dwVirtualAddr;
 		xbaddr endAddr = startAddr + CxbxKrnl_Xbe->m_SectionHeader[sectionIndex].dwSizeofRaw;
 		for (xbaddr addr = startAddr; addr < endAddr; addr++)
@@ -527,7 +527,7 @@ void EmuInitFS()
 
 				if (memcmp((void*)addr, &fsInstructions[i].data[0], sizeOfData) == 0)
 				{
-					DbgPrintf(CXBXR_MODULE::INIT, "Patching FS Instruction at 0x%.8X\n", addr);
+					DBG_PRINTF_EX(CXBXR_MODULE::INIT, "Patching FS Instruction at 0x%.8X\n", addr);
 
 					// Write Call opcode
 					*(uint08*)addr = OPCODE_CALL_E8;
@@ -543,7 +543,7 @@ void EmuInitFS()
 		}
 	}
 	
-	DbgPrintf(CXBXR_MODULE::INIT, "Done patching FS Register Accesses\n");
+	DBG_PRINTF_EX(CXBXR_MODULE::INIT, "Done patching FS Register Accesses\n");
 }
 
 // generate fs segment selector
@@ -579,19 +579,19 @@ void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData)
 #ifdef _DEBUG_TRACE
             // dump raw TLS data
             if (pNewTLS == nullptr) {
-                DbgPrintf(LOG_PREFIX, "TLS Non-Existant (OK)\n");
+                DBG_PRINTF("TLS Non-Existant (OK)\n");
             } else {
-                DbgPrintf(LOG_PREFIX, "TLS Data Dump...\n");
+                DBG_PRINTF("TLS Data Dump...\n");
                 if (g_bPrintfOn) {
                     for (uint32 v = 0; v < dwCopySize; v++) {// Note : Don't dump dwZeroSize
 
                         uint08 *bByte = (uint08*)pNewTLS + v;
 
                         if (v % 0x10 == 0) {
-                            DbgPrintf(LOG_PREFIX, "0x%.8X:", (xbaddr)bByte);
+                            DBG_PRINTF("0x%.8X:", (xbaddr)bByte);
                         }
 
-                        // Note : Use printf instead of DbgPrintf here, which prefixes with GetCurrentThreadId() :
+                        // Note : Use printf instead of DBG_PRINTF here, which prefixes with GetCurrentThreadId() :
                         printf(" %.2X", *bByte);
                     }
 
@@ -664,5 +664,5 @@ void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData)
 	// Make the KPCR struct available to KeGetPcr()
 	EmuKeSetPcr(NewPcr);
 
-	DbgPrintf(LOG_PREFIX, "Installed KPCR in TIB_ArbitraryDataSlot (with pTLS = 0x%.8X)\n", pTLS);
+	DBG_PRINTF("Installed KPCR in TIB_ArbitraryDataSlot (with pTLS = 0x%.8X)\n", pTLS);
 }

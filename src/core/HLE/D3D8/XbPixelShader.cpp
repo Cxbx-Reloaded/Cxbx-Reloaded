@@ -90,7 +90,7 @@ typedef uint8_t uint8; // TODO : Remove
 
 
 #define DbgPshPrintf \
-	LOG_CHECK_ENABLED(LOG_PREFIX, LOG_LEVEL::DEBUG) \
+	LOG_CHECK_ENABLED(LOG_LEVEL::DEBUG) \
 		if(g_bPrintfOn) printf
 
 
@@ -1613,7 +1613,7 @@ bool PSH_IMD_ARGUMENT::Decode(const DWORD Value, DWORD aMask, TArgumentType Argu
       Type = PARAM_EF_PROD;
 	  break;
   default :
-    DbgPrintf(LOG_PREFIX, "INVALID ARGUMENT!\n");
+    DBG_PRINTF("INVALID ARGUMENT!\n");
 
     Result = false;
   }
@@ -2261,8 +2261,8 @@ void PSH_XBOX_SHADER::Log(const char *PhaseStr)
 {
   //if (MayLog(lfUnit))
   {
-    DbgPrintf(LOG_PREFIX, "New decoding - %s :\n", PhaseStr);
-	DbgPrintf(LOG_PREFIX, "%s\n", ToString().c_str());
+    DBG_PRINTF("New decoding - %s :\n", PhaseStr);
+	DBG_PRINTF("%s\n", ToString().c_str());
   }
 }
 
@@ -2461,7 +2461,7 @@ PSH_RECOMPILED_SHADER PSH_XBOX_SHADER::Decode(XTL::X_D3DPIXELSHADERDEF *pPSDef)
   //if (MayLog(LogFlags))
   {
     // print relevant contents to the debug console
-    DbgPrintf(LOG_PREFIX, "%s\n", DecodedToString(pPSDef).c_str());
+    DBG_PRINTF("%s\n", DecodedToString(pPSDef).c_str());
   }
 
   // TODO:
@@ -3682,7 +3682,7 @@ bool PSH_XBOX_SHADER::RemoveUselessWrites()
       if ( (CurArg->Address < MaxTemporaryRegisters)
       && ((RegUsage[CurArg->Type][CurArg->Address] & CurArg->Mask) == 0))
       {
-        DbgPrintf(LOG_PREFIX, "; Removed useless assignment to register %s\n", CurArg->ToString().c_str());
+        DBG_PRINTF("; Removed useless assignment to register %s\n", CurArg->ToString().c_str());
         CurArg->Type = PARAM_DISCARD;
         Result = true;
       }
@@ -3979,7 +3979,7 @@ void PSH_XBOX_SHADER::ConvertXFCToNative(int i)
 
     InsertIntermediate(&Ins, InsertPos);
     ++InsertPos;
-    DbgPrintf(LOG_PREFIX, "; Inserted final combiner calculation of V1R0_sum register\n");
+    DBG_PRINTF("; Inserted final combiner calculation of V1R0_sum register\n");
   }
 
   if (NeedsProd)
@@ -3991,7 +3991,7 @@ void PSH_XBOX_SHADER::ConvertXFCToNative(int i)
     Ins.Parameters[1] = Cur.Parameters[5]; // F
     InsertIntermediate(&Ins, InsertPos);
     ++InsertPos;
-    DbgPrintf(LOG_PREFIX, "; Inserted final combiner calculation of EF_prod register\n");
+    DBG_PRINTF("; Inserted final combiner calculation of EF_prod register\n");
   }
 
   // The final combiner calculates : r0.rgb=s0*s1 + (1-s0)*s2 + s3
@@ -4441,7 +4441,7 @@ bool PSH_XBOX_SHADER::FixArgumentModifiers()
                             InsertIntermediate(&Ins, InsertPos);
                             ++InsertPos;
                             ++Cur;
-                            DbgPrintf(LOG_PREFIX, "; Used intermediate move to avoid argument modifier\n");
+                            DBG_PRINTF("; Used intermediate move to avoid argument modifier\n");
                             Result = true;
                         }
                     }
@@ -4463,7 +4463,7 @@ bool PSH_XBOX_SHADER::FixArgumentModifiers()
                     Ins.CommentString = "Inserted to avoid constant modifier (applied below on register)";
                     InsertIntermediate(&Ins, InsertPos);
                     ++InsertPos;
-                    DbgPrintf(LOG_PREFIX, "; Used intermediate move to avoid constant modifier\n");
+                    DBG_PRINTF("; Used intermediate move to avoid constant modifier\n");
                     Result = true;
                 }
 			}
@@ -4499,7 +4499,7 @@ bool PSH_XBOX_SHADER::FixConstantParameters()
 
             if (Cur->Parameters[p].SetScaleConstRegister(Cur->Parameters[p].GetConstValue(), Recompiled))
             {
-                DbgPrintf(LOG_PREFIX, "; Replaced constant value with constant register\n");
+                DBG_PRINTF("; Replaced constant value with constant register\n");
                 Result = true;
             }
         }
@@ -4539,7 +4539,7 @@ bool PSH_XBOX_SHADER::FixInstructionModifiers()
             Ins.Output[0] = Ins.Parameters[0] = Cur->Output[0];
             Ins.Parameters[1].SetScaleConstRegister(0.5f, Recompiled);
             Ins.CommentString = "; Inserted adjustment by constant register for INST_bias";
-            DbgPrintf(LOG_PREFIX, "; Inserted adjustment by constant register for INST_bias\n");
+            DBG_PRINTF("; Inserted adjustment by constant register for INST_bias\n");
             break;
         }
         case INSMOD_X2:   // y =  x        *   2
@@ -4553,7 +4553,7 @@ bool PSH_XBOX_SHADER::FixInstructionModifiers()
             Ins.Output[0] = Ins.Parameters[0] = Cur->Output[0];
             Ins.Parameters[1].SetScaleConstRegister(2.0f, Recompiled);
             Ins.CommentString = "; Inserted adjustment by constant register for INST_x2";
-            DbgPrintf(LOG_PREFIX, "; Inserted adjustment by constant register for INST_x2\n");
+            DBG_PRINTF("; Inserted adjustment by constant register for INST_x2\n");
             break;
         }
         case INSMOD_BX2:  // y = (x - 0.5) *   2  // Xbox only : TODO : Fixup occurrances!
@@ -4563,7 +4563,7 @@ bool PSH_XBOX_SHADER::FixInstructionModifiers()
             Ins.Parameters[1].SetScaleConstRegister(2.0f, Recompiled);
             Ins.Parameters[2].SetScaleConstRegister(-1.0f, Recompiled);
             Ins.CommentString = "; Inserted adjustment by constant register for INST_bx2";
-            DbgPrintf(LOG_PREFIX, "; Inserted adjustment by constant register for INST_bx2\n");
+            DBG_PRINTF("; Inserted adjustment by constant register for INST_bx2\n");
             break;
         }
         case INSMOD_X4:   // y =  x        *   4
@@ -4577,7 +4577,7 @@ bool PSH_XBOX_SHADER::FixInstructionModifiers()
             Ins.Output[0] = Ins.Parameters[0] = Cur->Output[0];
             Ins.Parameters[1].SetScaleConstRegister(4.0f, Recompiled);
             Ins.CommentString = "; Inserted adjustment by constant register for INST_x4";
-            DbgPrintf(LOG_PREFIX, "; Inserted adjustment by constant register for INST_x4\n");
+            DBG_PRINTF("; Inserted adjustment by constant register for INST_x4\n");
             break;
         }
         case INSMOD_D2:   // y =  x        * 0.5
@@ -4591,7 +4591,7 @@ bool PSH_XBOX_SHADER::FixInstructionModifiers()
             Ins.Output[0] = Ins.Parameters[0] = Cur->Output[0];
             Ins.Parameters[1].SetScaleConstRegister(0.5f, Recompiled);
             Ins.CommentString = "; Inserted adjustment by constant register for INST_d2";
-            DbgPrintf(LOG_PREFIX, "; Inserted adjustment by constant register for INST_d2\n");
+            DBG_PRINTF("; Inserted adjustment by constant register for INST_d2\n");
             break;
         }
         case INSMOD_X8:   // y =  x        *   8   // ps 1.4 only
@@ -4605,7 +4605,7 @@ bool PSH_XBOX_SHADER::FixInstructionModifiers()
             Ins.Output[0] = Ins.Parameters[0] = Cur->Output[0];
             Ins.Parameters[1].SetScaleConstRegister(8.0f, Recompiled);
             Ins.CommentString = "; Inserted adjustment by constant register for INST_x8";
-            DbgPrintf(LOG_PREFIX, "; Inserted adjustment by constant register for INST_x8\n");
+            DBG_PRINTF("; Inserted adjustment by constant register for INST_x8\n");
             break;
         }
         case INSMOD_D4:   // y =  x        * 0.25  // ps 1.4 only
@@ -4619,7 +4619,7 @@ bool PSH_XBOX_SHADER::FixInstructionModifiers()
             Ins.Output[0] = Ins.Parameters[0] = Cur->Output[0];
             Ins.Parameters[1].SetScaleConstRegister(0.25f, Recompiled);
             Ins.CommentString = "; Inserted adjustment by constant register for INST_d4";
-            DbgPrintf(LOG_PREFIX, "; Inserted adjustment by constant register for INST_d4\n");
+            DBG_PRINTF("; Inserted adjustment by constant register for INST_d4\n");
             break;
         }
         case INSMOD_D8:   // y =  x        * 0.125 // ps 1.4 only
@@ -4633,7 +4633,7 @@ bool PSH_XBOX_SHADER::FixInstructionModifiers()
             Ins.Output[0] = Ins.Parameters[0] = Cur->Output[0];
             Ins.Parameters[1].SetScaleConstRegister(0.125f, Recompiled);
             Ins.CommentString = "; Inserted adjustment by constant register for INST_d8";
-            DbgPrintf(LOG_PREFIX, "; Inserted adjustment by constant register for INST_d8\n");
+            DBG_PRINTF("; Inserted adjustment by constant register for INST_d8\n");
             break;
         }
         case INSMOD_SAT:  // Xbox doesn"t support this, but has ARGMOD_SATURATE instead
@@ -4752,7 +4752,7 @@ bool PSH_XBOX_SHADER::CombineInstructions()
           Op2->Parameters[2] = Op1->Parameters[0];
           DeleteIntermediate(i);
           DeleteIntermediate(i);
-          DbgPrintf(LOG_PREFIX, "; Changed temporary MUL,MUL,CND via MOV,MOV,CND into a single CND\n");
+          DBG_PRINTF("; Changed temporary MUL,MUL,CND via MOV,MOV,CND into a single CND\n");
           Result = true;
           continue;
         }
@@ -4777,7 +4777,7 @@ bool PSH_XBOX_SHADER::CombineInstructions()
             Op2->Modifier = Op0->Modifier;
             DeleteIntermediate(i);
             DeleteIntermediate(i);
-            DbgPrintf(LOG_PREFIX, "; Changed temporary MUL,MUL,ADD into a single LRP\n");
+            DBG_PRINTF("; Changed temporary MUL,MUL,ADD into a single LRP\n");
             Result = true;
             continue;
           }
@@ -4794,7 +4794,7 @@ bool PSH_XBOX_SHADER::CombineInstructions()
             Op2->Modifier = Op0->Modifier;
             DeleteIntermediate(i);
             DeleteIntermediate(i);
-            DbgPrintf(LOG_PREFIX, "; Changed temporary MUL,MUL,ADD into a single MAD\n");
+            DBG_PRINTF("; Changed temporary MUL,MUL,ADD into a single MAD\n");
             Result = true;
             continue;
           }
@@ -4809,7 +4809,7 @@ bool PSH_XBOX_SHADER::CombineInstructions()
           Op1->Parameters[2] = Op0->Output[0];
           // Remove the trailing ADD :
           DeleteIntermediate(i+2);
-          DbgPrintf(LOG_PREFIX, "; Changed temporary MUL,MUL,ADD into a MUL,MAD\n");
+          DBG_PRINTF("; Changed temporary MUL,MUL,ADD into a MUL,MAD\n");
           Result = true;
           continue;
         }
@@ -4826,7 +4826,7 @@ bool PSH_XBOX_SHADER::CombineInstructions()
           Op2->Parameters[1] = Op1->Parameters[0];
           DeleteIntermediate(i);
           DeleteIntermediate(i);
-          DbgPrintf(LOG_PREFIX, "; Changed temporary MUL,MUL,ADD into a MUL\n");
+          DBG_PRINTF("; Changed temporary MUL,MUL,ADD into a MUL\n");
           Result = true;
           continue;
         }
@@ -4851,7 +4851,7 @@ bool PSH_XBOX_SHADER::CombineInstructions()
           Op0->Opcode = PO_MAD;
           Op0->Parameters[2] = Op1->Parameters[1];
           DeleteIntermediate(i+1);
-          DbgPrintf(LOG_PREFIX, "; Changed MUL,ADD into a single MAD\n");
+          DBG_PRINTF("; Changed MUL,ADD into a single MAD\n");
           Result = true;
           continue;
         }
@@ -4936,7 +4936,7 @@ bool PSH_XBOX_SHADER::CombineInstructions()
         if (CanOptimize)
         {
           DeleteIntermediate(i);
-          DbgPrintf(LOG_PREFIX, "; Moved MOV input into following instructions\n3");
+          DBG_PRINTF("; Moved MOV input into following instructions\n3");
           Result = true;
         }
       }
@@ -4956,7 +4956,7 @@ bool PSH_XBOX_SHADER::CombineInstructions()
         // > mul r0.rgb, r0,t0
         Op0->Output[0] = Op1->Output[0];
         DeleteIntermediate(i+1);
-        DbgPrintf(LOG_PREFIX, "; Changed temporary MUL,MOV into a MUL\n");
+        DBG_PRINTF("; Changed temporary MUL,MOV into a MUL\n");
         Result = true;
         continue;
       }
@@ -4969,7 +4969,7 @@ bool PSH_XBOX_SHADER::CombineInstructions()
       if (IsRegisterFreeFromIndexOnwards(i, PARAM_R, 1))
       {
         ReplaceRegisterFromIndexOnwards(i, Op0->Output[0].Type, Op0->Output[0].Address, PARAM_R, 1);
-        DbgPrintf(LOG_PREFIX, "; Changed fake register by r1\n");
+        DBG_PRINTF("; Changed fake register by r1\n");
         Result = true;
         continue;
       }
@@ -4997,7 +4997,7 @@ bool PSH_XBOX_SHADER::SimplifyMOV(PPSH_INTERMEDIATE_FORMAT Cur)
     if (CanSimplify)
     {
       Cur->Opcode = PO_NOP; // This nop will be removed in a recursive fixup
-      DbgPrintf(LOG_PREFIX, "; Changed MOV into a NOP\n");
+      DBG_PRINTF("; Changed MOV into a NOP\n");
       return true;
     }
   }
@@ -5015,11 +5015,11 @@ bool PSH_XBOX_SHADER::SimplifyMOV(PPSH_INTERMEDIATE_FORMAT Cur)
           Cur->Parameters[0].Address = 0;
           Cur->Parameters[0].Modifiers = 0;
           Cur->Parameters[1] = Cur->Parameters[0];
-          DbgPrintf(LOG_PREFIX, "; Changed MOV 0 into a SUB v0,v0\n");
+          DBG_PRINTF("; Changed MOV 0 into a SUB v0,v0\n");
       }
       else
       {
-          DbgPrintf(LOG_PREFIX, "; Changed MOV 0 into a MOV c0\n");
+          DBG_PRINTF("; Changed MOV 0 into a MOV c0\n");
       }
 
     return true;
@@ -5060,11 +5060,11 @@ bool PSH_XBOX_SHADER::SimplifyMOV(PPSH_INTERMEDIATE_FORMAT Cur)
         // Try to simulate all factors (0.5, 1.0 and 2.0) using an output modifier :
         Cur->ScaleOutput(Factor);
 
-        DbgPrintf(LOG_PREFIX, "; Changed MOV {const} into a SUB_factor 1-v0,-v0\n");
+        DBG_PRINTF("; Changed MOV {const} into a SUB_factor 1-v0,-v0\n");
     }
     else
     {
-        DbgPrintf(LOG_PREFIX, "; Changed MOV {const} into a MOV c#\n");
+        DBG_PRINTF("; Changed MOV {const} into a MOV c#\n");
     }
 	return true;
   }
@@ -5078,7 +5078,7 @@ bool PSH_XBOX_SHADER::SimplifyADD(PPSH_INTERMEDIATE_FORMAT Cur)
   {
     // Change it into a MOV (the first argument is already in-place)
     Cur->Opcode = PO_MOV;
-    DbgPrintf(LOG_PREFIX, "; Changed ADD s0,0 into a MOV s0\n");
+    DBG_PRINTF("; Changed ADD s0,0 into a MOV s0\n");
     return true;
   }
   return false;
@@ -5093,7 +5093,7 @@ bool PSH_XBOX_SHADER::SimplifyMAD(PPSH_INTERMEDIATE_FORMAT Cur, int index)
     // Change it into s2 :
     Cur->Opcode = PO_MOV;
     Cur->Parameters[0] = Cur->Parameters[2];
-    DbgPrintf(LOG_PREFIX, "; Changed MAD s0,0 into a MOV s0\n");
+    DBG_PRINTF("; Changed MAD s0,0 into a MOV s0\n");
     return true;
   }
 
@@ -5102,7 +5102,7 @@ bool PSH_XBOX_SHADER::SimplifyMAD(PPSH_INTERMEDIATE_FORMAT Cur, int index)
   {
       // Change it into s0*s1 :
       Cur->Opcode = PO_MUL;
-      DbgPrintf(LOG_PREFIX, "; Changed MAD s0, s1,0 into a MUL s0, s1\n");
+      DBG_PRINTF("; Changed MAD s0, s1,0 into a MUL s0, s1\n");
       return true;
   }
 
@@ -5112,7 +5112,7 @@ bool PSH_XBOX_SHADER::SimplifyMAD(PPSH_INTERMEDIATE_FORMAT Cur, int index)
     // Change it into s0+s2 :
     Cur->Opcode = PO_ADD;
     Cur->Parameters[1] = Cur->Parameters[2];
-    DbgPrintf(LOG_PREFIX, "; Changed MAD s0,1,s2 into a ADD s0,s2\n");
+    DBG_PRINTF("; Changed MAD s0,1,s2 into a ADD s0,s2\n");
     return true;
   }
 
@@ -5123,7 +5123,7 @@ bool PSH_XBOX_SHADER::SimplifyMAD(PPSH_INTERMEDIATE_FORMAT Cur, int index)
     Cur->Opcode = PO_SUB;
     Cur->Parameters[1] = Cur->Parameters[0];
     Cur->Parameters[0] = Cur->Parameters[2];
-    DbgPrintf(LOG_PREFIX, "; Changed MAD s0,-1,s2 into a SUB s2,s0\n");
+    DBG_PRINTF("; Changed MAD s0,-1,s2 into a SUB s2,s0\n");
     return true;
   }
 
@@ -5144,11 +5144,11 @@ bool PSH_XBOX_SHADER::SimplifyMAD(PPSH_INTERMEDIATE_FORMAT Cur, int index)
           Ins.Output[0] = Ins.Parameters[0] = Cur->Parameters[1];
           Ins.CommentString = "; Inserted to perform division by 2";
           InsertIntermediate(&Ins, index);
-          DbgPrintf(LOG_PREFIX, "; Changed MAD 0.5,s1,s2 into a MOV_d2 s1, s1 ADD s1, s2\n");
+          DBG_PRINTF("; Changed MAD 0.5,s1,s2 into a MOV_d2 s1, s1 ADD s1, s2\n");
       }
       else
       {
-          DbgPrintf(LOG_PREFIX, "; Changed MAD 0.5,s1,s2 into a MAD c#,s1,s2\n");
+          DBG_PRINTF("; Changed MAD 0.5,s1,s2 into a MAD c#,s1,s2\n");
       }
       return true;
   }
@@ -5168,11 +5168,11 @@ bool PSH_XBOX_SHADER::SimplifyMAD(PPSH_INTERMEDIATE_FORMAT Cur, int index)
           Ins.Output[0] = Ins.Parameters[0] = Cur->Parameters[0];
           Ins.CommentString = "; Inserted to perform division by 2";
           InsertIntermediate(&Ins, index);
-          DbgPrintf(LOG_PREFIX, "; Changed MAD s0,0.5,s2 into a MOV_d2 s0, s0 ADD s0, s2\n");
+          DBG_PRINTF("; Changed MAD s0,0.5,s2 into a MOV_d2 s0, s0 ADD s0, s2\n");
       }
       else
       {
-          DbgPrintf(LOG_PREFIX, "; Changed MAD s0,0.5,s2 into a MAD s0,c#,s2\n");
+          DBG_PRINTF("; Changed MAD s0,0.5,s2 into a MAD s0,c#,s2\n");
       }
       return true;
   }
@@ -5186,7 +5186,7 @@ bool PSH_XBOX_SHADER::SimplifySUB(PPSH_INTERMEDIATE_FORMAT Cur)
   {
     // Change it into a MOV (the first argument is already in-place)
     Cur->Opcode = PO_MOV;
-    DbgPrintf(LOG_PREFIX, "; Changed SUB x, 0 into a MOV x\n");
+    DBG_PRINTF("; Changed SUB x, 0 into a MOV x\n");
     return true;
   }
   return false;
@@ -5200,7 +5200,7 @@ bool PSH_XBOX_SHADER::SimplifyMUL(PPSH_INTERMEDIATE_FORMAT Cur)
     // Change it into a MOV (the 0 argument will be resolve in a recursive MOV fixup) :
     Cur->Opcode = PO_MOV;
     Cur->Parameters[0].SetConstValue(0.0);
-    DbgPrintf(LOG_PREFIX, "; Changed MUL s0,0 into a MOV 0\n");
+    DBG_PRINTF("; Changed MUL s0,0 into a MOV 0\n");
     return true;
   }
 
@@ -5210,7 +5210,7 @@ bool PSH_XBOX_SHADER::SimplifyMUL(PPSH_INTERMEDIATE_FORMAT Cur)
     // Change it into a simple MOV and scale the output instead :
     Cur->Opcode = PO_MOV;
     Cur->ScaleOutput(Cur->Parameters[1].GetConstValue());
-    DbgPrintf(LOG_PREFIX, "; Changed MUL s0,{const} into a MOV_factor s0\n");
+    DBG_PRINTF("; Changed MUL s0,{const} into a MOV_factor s0\n");
     return true;
   }
   return false;
@@ -5225,7 +5225,7 @@ bool  PSH_XBOX_SHADER::SimplifyLRP(PPSH_INTERMEDIATE_FORMAT Cur, int index)
   {
     // Change it into a MUL (calculating the left part : s0*s1 :
     Cur->Opcode = PO_MUL;
-    DbgPrintf(LOG_PREFIX, "; Changed LRP s0,s1,s2 (where (1-s0)*s2=0) into a MUL s0,s1\n");
+    DBG_PRINTF("; Changed LRP s0,s1,s2 (where (1-s0)*s2=0) into a MUL s0,s1\n");
     return true;
   }
 
@@ -5236,7 +5236,7 @@ bool  PSH_XBOX_SHADER::SimplifyLRP(PPSH_INTERMEDIATE_FORMAT Cur, int index)
     Cur->Opcode = PO_MUL;
     Cur->Parameters[0].Invert();
     Cur->Parameters[1] = Cur->Parameters[2];
-    DbgPrintf(LOG_PREFIX, "; Changed LRP s0,s1,s2 (where s0*s1=0) into a MUL (1-s0),s2\n");
+    DBG_PRINTF("; Changed LRP s0,s1,s2 (where s0*s1=0) into a MUL (1-s0),s2\n");
     return true;
   }
 
@@ -5247,7 +5247,7 @@ bool  PSH_XBOX_SHADER::SimplifyLRP(PPSH_INTERMEDIATE_FORMAT Cur, int index)
     Cur->Opcode = PO_MAD;
     Cur->Parameters[2] = Cur->Parameters[0];
     Cur->Parameters[2].Invert();
-    DbgPrintf(LOG_PREFIX, "; Changed LRP s0,s1,1 into a MAD s0,s1,1-s0\n");
+    DBG_PRINTF("; Changed LRP s0,s1,1 into a MAD s0,s1,1-s0\n");
 	return true;
   }
 
@@ -5258,7 +5258,7 @@ bool  PSH_XBOX_SHADER::SimplifyLRP(PPSH_INTERMEDIATE_FORMAT Cur, int index)
       Cur->Opcode = PO_MAD;
       Cur->Parameters[1] = Cur->Parameters[2];
       Cur->Parameters[1].Invert();
-      DbgPrintf(LOG_PREFIX, "; Changed LRP s0,1,s2 into a MAD s0,1-s2,s2\n");
+      DBG_PRINTF("; Changed LRP s0,1,s2 into a MAD s0,1-s2,s2\n");
       return true;
   }
 
@@ -5285,7 +5285,7 @@ bool  PSH_XBOX_SHADER::SimplifyLRP(PPSH_INTERMEDIATE_FORMAT Cur, int index)
           Ins.Parameters[0].SetRegister(Cur->Output[0].Type, Cur->Output[0].Address, 0);
           Ins.CommentString = "; Inserted to avoid LRP parameters referencing the output register";
           InsertIntermediate(&Ins, index);
-          DbgPrintf(LOG_PREFIX, "; Changed LRP s0,1,s2 into a MAD s0,1-s2,s2\n");
+          DBG_PRINTF("; Changed LRP s0,1,s2 into a MAD s0,1-s2,s2\n");
           return true;
       }
   }
@@ -5313,7 +5313,7 @@ bool PSH_XBOX_SHADER::FixupCND(PPSH_INTERMEDIATE_FORMAT Cur, int index)
     std::swap(Cur->Parameters[1], Cur->Parameters[2]);
     Ins.CommentString = Cur->CommentString = "; Changed CND into SUB CMP";
     InsertIntermediate(&Ins, index);
-    DbgPrintf(LOG_PREFIX, "; Changed CND into SUB CMP\n");
+    DBG_PRINTF("; Changed CND into SUB CMP\n");
     return true;
 }
 
@@ -6540,7 +6540,7 @@ inline void HandleInputOutput
 		// 6928: check this as I doubt whether it works really like that
 		/*if(strcmp(szInput[i], "r1")==0)
 		{
-		//	DbgPrintf(LOG_PREFIX, "channel: %s\n", szChannels[i]);
+		//	DBG_PRINTF("channel: %s\n", szChannels[i]);
 		//	Sleep(3000);
 
 			if((strcmp(szChannels[i], ".a")==0) && (!bR1AWritten)) {
@@ -6745,7 +6745,7 @@ inline void HandleInputOutput
 			//EmuWarningMsg("THIS IS WRONG, FIX ME!");
 			//if(!szOutput[1][0])
 			//	strcpy(szOut1, szOutput[2]);
-			DbgPrintf(LOG_PREFIX, "(!szOutput[0][0] || !szOutput[1][0]) && szOutput[2][0] = TRUE!\n");
+			DBG_PRINTF("(!szOutput[0][0] || !szOutput[1][0]) && szOutput[2][0] = TRUE!\n");
 
 			BOOL bUsable=TRUE;
 			for(i=2; i<4; i++)
@@ -6759,7 +6759,7 @@ inline void HandleInputOutput
 
 			strcpy(szOut, szOutput[2]);
 
-			DbgPrintf(LOG_PREFIX, "BUsable = TRUE, new output: %s\n", szOut);
+			DBG_PRINTF("BUsable = TRUE, new output: %s\n", szOut);
 
 			}
 			else {

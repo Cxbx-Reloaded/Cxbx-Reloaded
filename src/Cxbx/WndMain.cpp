@@ -128,7 +128,7 @@ void WndMain::ResizeWindow(HWND hwnd, bool bForGUI)
 
 		const char* resolution = XBVideoConf.szVideoResolution;
 		if (2 != sscanf(resolution, "%d x %d", &m_w, &m_h)) {
-			DbgPrintf(LOG_PREFIX, "Couldn't parse resolution : %s.\n", resolution);
+			DBG_PRINTF("Couldn't parse resolution : %s.\n", resolution);
 		}
 	}
 

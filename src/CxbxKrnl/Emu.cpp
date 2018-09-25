@@ -114,7 +114,7 @@ void NTAPI EmuLog(CXBXR_MODULE cxbxr_module, LOG_LEVEL level, const char *szWarn
 		return;
 	}
 
-	LOG_CHECK_ENABLED(cxbxr_module, level) {
+	LOG_CHECK_ENABLED_EX(cxbxr_module, level) {
 		if (g_bPrintfOn) {
 
 			va_list argp;

@@ -46,7 +46,7 @@ namespace xboxkrnl
 #include <stdio.h> // For printf
 #include <shlobj.h> // For HANDLE, CreateFile, CreateFileMapping, MapViewOfFile
 
-#include "Cxbx.h" // For DbgPrintf
+#include "Cxbx.h" // For DBG_PRINTF_EX
 #include "EmuEEPROM.h" // For EEPROMInfo, EEPROMInfos
 #include "..\CxbxKrnl\Emu.h" // For EmuWarning
 #include "..\..\src\devices\LED.h" // For SetLEDSequence
@@ -130,7 +130,7 @@ xboxkrnl::XBOX_EEPROM *CxbxRestoreEEPROM(char *szFilePath_EEPROM_bin)
 			/* hTemplateFile */nullptr);
 		if (hFileEEPROM == INVALID_HANDLE_VALUE)
 		{
-			DbgPrintf(LOG_PREFIX_INIT, "Couldn't create EEPROM.bin file!\n");
+			DBG_PRINTF_EX(LOG_PREFIX_INIT, "Couldn't create EEPROM.bin file!\n");
 			return nullptr;
 		}
 	}
@@ -148,7 +148,7 @@ xboxkrnl::XBOX_EEPROM *CxbxRestoreEEPROM(char *szFilePath_EEPROM_bin)
 		/**/nullptr);
 	if (hFileMappingEEPROM == NULL)
 	{
-		DbgPrintf(LOG_PREFIX_INIT, "Couldn't create EEPROM.bin file mapping!\n");
+		DBG_PRINTF_EX(LOG_PREFIX_INIT, "Couldn't create EEPROM.bin file mapping!\n");
 		return nullptr;
 	}
 
@@ -169,7 +169,7 @@ xboxkrnl::XBOX_EEPROM *CxbxRestoreEEPROM(char *szFilePath_EEPROM_bin)
 		/* dwFileOffsetLow */0,
 		EEPROM_SIZE);
 	if (pEEPROM == nullptr) {
-		DbgPrintf(LOG_PREFIX_INIT, "Couldn't map EEPROM.bin into memory!\n");
+		DBG_PRINTF_EX(LOG_PREFIX_INIT, "Couldn't map EEPROM.bin into memory!\n");
 		return nullptr;
 	}
 
@@ -185,12 +185,12 @@ xboxkrnl::XBOX_EEPROM *CxbxRestoreEEPROM(char *szFilePath_EEPROM_bin)
         // This must be done last to include all initialized data in the CRC
         gen_section_CRCs(pEEPROM);
 
-		DbgPrintf(LOG_PREFIX_INIT, "Initialized default EEPROM\n");
+		DBG_PRINTF_EX(LOG_PREFIX_INIT, "Initialized default EEPROM\n");
 	}
 	else
 	{
 		XboxFactoryGameRegion = pEEPROM->EncryptedSettings.GameRegion;
-		DbgPrintf(LOG_PREFIX_INIT, "Loaded EEPROM.bin\n");
+		DBG_PRINTF_EX(LOG_PREFIX_INIT, "Loaded EEPROM.bin\n");
 	}
 
 	// Read the HDD (and eventually also the online) keys stored in the eeprom file. Users can input them in the eeprom menu

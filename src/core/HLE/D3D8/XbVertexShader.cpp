@@ -53,7 +53,7 @@
 #endif
 
 #define DbgVshPrintf \
-	LOG_CHECK_ENABLED(LOG_PREFIX, LOG_LEVEL::DEBUG) \
+	LOG_CHECK_ENABLED(LOG_LEVEL::DEBUG) \
 		if(g_bPrintfOn) printf
 
 // ****************************************************************************

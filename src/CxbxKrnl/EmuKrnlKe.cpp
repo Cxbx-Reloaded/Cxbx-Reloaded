@@ -257,7 +257,7 @@ DWORD ExecuteDpcQueue()
 		pkdpc->Inserted = FALSE;
 		// Set DpcRoutineActive to support KeIsExecutingDpc:
 		KeGetCurrentPrcb()->DpcRoutineActive = TRUE; // Experimental
-		DbgPrintf(LOG_PREFIX, "Global DpcQueue, calling DPC at 0x%.8X\n", pkdpc->DeferredRoutine);
+		DBG_PRINTF("Global DpcQueue, calling DPC at 0x%.8X\n", pkdpc->DeferredRoutine);
 		__try {
 			// Call the Deferred Procedure  :
 			pkdpc->DeferredRoutine(
@@ -301,7 +301,7 @@ DWORD ExecuteDpcQueue()
 			if (pkdpc == nullptr)
 				break; // while
 
-			DbgPrintf(LOG_PREFIX, "Global TimerQueue, calling DPC at 0x%.8X\n", pkdpc->DeferredRoutine);
+			DBG_PRINTF("Global TimerQueue, calling DPC at 0x%.8X\n", pkdpc->DeferredRoutine);
 
 			__try {
 				pkdpc->DeferredRoutine(
@@ -332,7 +332,7 @@ void InitDpcAndTimerThread()
 	InitializeListHead(&(g_DpcData.DpcQueue));
 	InitializeListHead(&(g_DpcData.TimerQueue));
 
-	DbgPrintf(CXBXR_MODULE::INIT, "Creating DPC event\n");
+	DBG_PRINTF_EX(CXBXR_MODULE::INIT, "Creating DPC event\n");
 	g_DpcData.DpcEvent = CreateEvent(/*lpEventAttributes=*/nullptr, /*bManualReset=*/FALSE, /*bInitialState=*/FALSE, /*lpName=*/nullptr);
 }
 
@@ -1213,9 +1213,9 @@ XBSYSAPI EXPORTNUM(126) xboxkrnl::ULONGLONG NTAPI xboxkrnl::KeQueryPerformanceCo
 	ULONGLONG ret;
 
 	//no matter rdtsc is patched or not, we should always return a scaled performance counter here.
-	DbgPrintf(LOG_PREFIX, "host tick count       : %lu\n", CxbxRdTsc(/*xbox=*/false));
+	DBG_PRINTF("host tick count       : %lu\n", CxbxRdTsc(/*xbox=*/false));
 	ret = CxbxRdTsc(/*xbox=*/true);
-	DbgPrintf(LOG_PREFIX, "emulated tick count   : %lu\n", ret);
+	DBG_PRINTF("emulated tick count   : %lu\n", ret);
 	
 	RETURN(ret);
 }

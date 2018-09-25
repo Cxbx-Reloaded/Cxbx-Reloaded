@@ -1387,7 +1387,7 @@ XBSYSAPI EXPORTNUM(301) xboxkrnl::ULONG NTAPI xboxkrnl::RtlNtStatusToDosError
 		return LOWORD(Status);
 
 no_mapping:
-    DbgPrintf(LOG_PREFIX, "no mapping for %08x\n", Status);
+    DBG_PRINTF("no mapping for %08x\n", Status);
 	ret = ERROR_MR_MID_NOT_FOUND;
 */
 	RETURN(ret);

@@ -131,7 +131,7 @@ namespace xbdm {
 	void DmSendNotificationString(LPCSTR sz)
 	{ 
 		// Just send this string to Cxbx's debug output :
-		DbgPrintf(LOG_PREFIX, "%s\n", sz);
+		DBG_PRINTF("%s\n", sz);
 	}
 
 	// 0x0025 (37)

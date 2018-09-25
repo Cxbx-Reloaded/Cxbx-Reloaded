@@ -160,7 +160,7 @@ static unsigned int WINAPI PCSTProxy
 			if (pfnNotificationRoutine == NULL)
 				continue;
 
-			DbgPrintf(LOG_PREFIX, "Calling pfnNotificationRoutine[%d] (0x%.8X)\n", g_iThreadNotificationCount, pfnNotificationRoutine);
+			DBG_PRINTF("Calling pfnNotificationRoutine[%d] (0x%.8X)\n", g_iThreadNotificationCount, pfnNotificationRoutine);
 
 			pfnNotificationRoutine(TRUE);
 		}
@@ -327,7 +327,7 @@ XBSYSAPI EXPORTNUM(255) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PsCreateSystemThreadE
 		// Give the thread chance to start
 		Sleep(100);
 
-		DbgPrintf(LOG_PREFIX, "Waiting for Xbox proxy thread to start...\n");
+		DBG_PRINTF("Waiting for Xbox proxy thread to start...\n");
 
         while (bWait) {
             dwThreadWait = WaitForSingleObject(hStartedEvent, 300);
@@ -338,7 +338,7 @@ XBSYSAPI EXPORTNUM(255) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PsCreateSystemThreadE
                     break;
                 }
                 case WAIT_OBJECT_0: { // The state of the specified object is signaled.
-					DbgPrintf(LOG_PREFIX, "Xbox proxy thread is started.\n");
+					DBG_PRINTF("Xbox proxy thread is started.\n");
                     bWait = false;
                     break;
                 }
@@ -358,7 +358,7 @@ XBSYSAPI EXPORTNUM(255) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PsCreateSystemThreadE
 		hStartedEvent = NULL;
 
 		// Log ThreadID identical to how GetCurrentThreadID() is rendered :
-		DbgPrintf(LOG_PREFIX, "Created Xbox proxy thread. Handle : 0x%X, ThreadId : [0x%.4X]\n", *ThreadHandle, dwThreadId);
+		DBG_PRINTF("Created Xbox proxy thread. Handle : 0x%X, ThreadId : [0x%.4X]\n", *ThreadHandle, dwThreadId);
 
 		CxbxKrnlRegisterThread(*ThreadHandle);
 
@@ -451,7 +451,7 @@ XBSYSAPI EXPORTNUM(258) xboxkrnl::VOID NTAPI xboxkrnl::PsTerminateSystemThread
 			if (pfnNotificationRoutine == NULL)
 				continue;
 
-			DbgPrintf(LOG_PREFIX, "Calling pfnNotificationRoutine[%d] (0x%.8X)\n", g_iThreadNotificationCount, pfnNotificationRoutine);
+			DBG_PRINTF("Calling pfnNotificationRoutine[%d] (0x%.8X)\n", g_iThreadNotificationCount, pfnNotificationRoutine);
 
 			pfnNotificationRoutine(FALSE);
 		}

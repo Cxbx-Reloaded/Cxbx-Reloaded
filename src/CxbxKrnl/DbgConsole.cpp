@@ -191,7 +191,7 @@ void DbgConsole::ParseCommand()
         printf("CxbxDbg:  Quit/Exit       [Q]     : Stop Emulation\n");
         printf("CxbxDbg:  Trace           [T]     : Toggle Debug Trace\n");
 
-		LOG_CHECK_ENABLED(CXBXR_MODULE::VTXB, LOG_LEVEL::DEBUG) {
+		LOG_CHECK_ENABLED_EX(CXBXR_MODULE::VTXB, LOG_LEVEL::DEBUG) {
 			printf("CxbxDbg:  ListVB          [LVB]   : List Active Vertex Buffers\n");
 			printf("CxbxDbg:  DisableVB       [DVB #] : Disable Active Vertex Buffer(s)\n");
 			printf("CxbxDbg:  EnableVB        [EVB #] : Enable Active Vertex Buffer(s)\n");
@@ -219,7 +219,7 @@ void DbgConsole::ParseCommand()
     }
     else if(_stricmp(szCmd, "lvb") == 0 || _stricmp(szCmd, "ListVB") == 0)
     {
-		LOG_CHECK_ENABLED(CXBXR_MODULE::VTXB, LOG_LEVEL::DEBUG) {
+		LOG_CHECK_ENABLED_EX(CXBXR_MODULE::VTXB, LOG_LEVEL::DEBUG) {
 			int v = 0;
 
 			g_VBTrackTotal.Lock();
@@ -240,7 +240,7 @@ void DbgConsole::ParseCommand()
     }
     else if(_stricmp(szCmd, "dvb") == 0 || _stricmp(szCmd, "DisableVB") == 0)
     {
-		LOG_CHECK_ENABLED(CXBXR_MODULE::VTXB, LOG_LEVEL::DEBUG) {
+		LOG_CHECK_ENABLED_EX(CXBXR_MODULE::VTXB, LOG_LEVEL::DEBUG) {
 			int n = 0, m = 0;
 
 			int c = sscanf(m_szInput, "%*s %d-%d", &n, &m);
@@ -261,7 +261,7 @@ void DbgConsole::ParseCommand()
     }
     else if(_stricmp(szCmd, "evb") == 0 || _stricmp(szCmd, "EnableVB") == 0)
     {
-		LOG_CHECK_ENABLED(CXBXR_MODULE::VTXB, LOG_LEVEL::DEBUG) {
+		LOG_CHECK_ENABLED_EX(CXBXR_MODULE::VTXB, LOG_LEVEL::DEBUG) {
 			int n = 0, m = 0;
 
 			int c = sscanf(m_szInput, "%*s %d-%d", &n, &m);

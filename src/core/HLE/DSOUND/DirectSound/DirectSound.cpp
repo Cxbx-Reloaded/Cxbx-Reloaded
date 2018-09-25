@@ -984,7 +984,7 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateBuffer)
         GeneratePCMFormat(DSBufferDesc, pdsbd->lpwfxFormat, (*ppBuffer)->EmuFlags, pdsbd->dwBufferBytes, &(*ppBuffer)->X_BufferCache, (*ppBuffer)->X_BufferCacheSize);
         (*ppBuffer)->EmuBufferDesc = DSBufferDesc;
 
-        DbgPrintf(LOG_PREFIX, "DirectSoundCreateBuffer, *ppBuffer := 0x%08X, bytes := 0x%08X\n", *ppBuffer, (*ppBuffer)->EmuBufferDesc.dwBufferBytes);
+        DBG_PRINTF("DirectSoundCreateBuffer, *ppBuffer := 0x%08X, bytes := 0x%08X\n", *ppBuffer, (*ppBuffer)->EmuBufferDesc.dwBufferBytes);
 
         DSoundBufferCreate(&DSBufferDesc, (*ppBuffer)->EmuDirectSoundBuffer8);
         if (pdsbd->dwFlags & DSBCAPS_CTRL3D) {
@@ -1798,7 +1798,7 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateStream)
         (*ppStream)->Xb_lpvContext = pdssd->lpvContext;
         //TODO: Implement mixbin variable support. Or just merge pdssd struct into DS Stream class.
 
-        DbgPrintf(LOG_PREFIX, "DirectSoundCreateStream, *ppStream := 0x%.08X\n", *ppStream);
+        DBG_PRINTF("DirectSoundCreateStream, *ppStream := 0x%.08X\n", *ppStream);
 
         DSoundBufferCreate(&DSBufferDesc, (*ppStream)->EmuDirectSoundBuffer8);
         if (DSBufferDesc.dwFlags & DSBCAPS_CTRL3D) {
@@ -3347,7 +3347,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound_GetCaps)
         pDSCaps->dwFree2DBuffers = (pDSCaps->dwFreeBufferSGEs == 0 ? 0 : 0x200 /* TODO: Replace me to g_dwFree2DBuffers*/ );
         pDSCaps->dwFree3DBuffers = (pDSCaps->dwFreeBufferSGEs == 0 ? 0 : 0x200 /* TODO: Replace me to g_dwFree3DBuffers*/ );
 
-        DbgPrintf(LOG_PREFIX, "X_DSCAPS: dwFree2DBuffers = %8X | dwFree3DBuffers = %8X | dwFreeBufferSGEs = %08X | dwMemAlloc = %08X\n", pDSCaps->dwFree2DBuffers, pDSCaps->dwFree3DBuffers, pDSCaps->dwFreeBufferSGEs, pDSCaps->dwMemoryAllocated);
+        DBG_PRINTF("X_DSCAPS: dwFree2DBuffers = %8X | dwFree3DBuffers = %8X | dwFreeBufferSGEs = %08X | dwMemAlloc = %08X\n", pDSCaps->dwFree2DBuffers, pDSCaps->dwFree3DBuffers, pDSCaps->dwFreeBufferSGEs, pDSCaps->dwMemoryAllocated);
     }
 
     leaveCriticalSection;
