@@ -816,16 +816,24 @@ bool EmuX86_Opcode_CMPXCHG(LPEXCEPTION_POINTERS e, _DInst& info)
 	if (!EmuX86_Operand_Read(e, info, 0, &dest))
 		return false;
 
-	if (src == dest) {
+	// Setup read/write to EAX
+	// Write the destination operand into EAX
+	OperandAddress eaxOpAddr;
+	eaxOpAddr.addr = (uint32_t)EmuX86_GetRegisterPointer(e, R_EAX);
+	eaxOpAddr.is_internal_addr = true;
+	eaxOpAddr.is_register = true;
+	eaxOpAddr.size = info.ops[1].size;
+	
+	uint32_t eaxVal = EmuX86_Addr_Read(eaxOpAddr);
+
+	if (eaxVal == dest) {
 		// Write the source value to the destination operand
 		if (!EmuX86_Operand_Write(e, info, 0, src)) {
 			return false;
 		}
 	} else	{
-		// Write the dest value to the source operand
-		if (!EmuX86_Operand_Write(e, info, 1, dest)) {
-			return false;
-		}
+		// Write the desintation operand to eax
+		EmuX86_Addr_Write(eaxOpAddr, dest);
 	}
 
 	// Perform arithmatic operation for flag calculation
@@ -833,8 +841,8 @@ bool EmuX86_Opcode_CMPXCHG(LPEXCEPTION_POINTERS e, _DInst& info)
 	__asm {
 		push eflags			// push context eflags on the stack
 		popfd				// pop context eflags into host eflags
-		mov eax, dest
-		cmp eax, src		// perform the operation, this updates eflags for us!
+		mov eax, eaxVal
+		cmp eax, dest		// perform the operation, this updates eflags for us!
 		pushfd				// push the updated host flags onto the stack
 		pop eflags			// pop the updated host flags back into our eflags register
 	}
@@ -1451,7 +1459,6 @@ bool EmuX86_Opcode_TEST(LPEXCEPTION_POINTERS e, _DInst& info)
 		popfd				// pop context eflags into host eflags
 		mov eax, dest
 		test eax, src		// perform the operation, this updates eflags for us!
-		mov result, eax
 		pushfd				// push the updated host flags onto the stack
 		pop eflags			// pop the updated host flags back into our eflags register
 	}
