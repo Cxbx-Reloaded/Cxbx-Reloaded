@@ -402,9 +402,10 @@ xbaddr EmuX86_Distorm_O_MEM_Addr(const LPEXCEPTION_POINTERS e, const _DInst& inf
 }
 
 typedef struct {
-	xbaddr addr;
-	bool is_internal_addr; // If set, addr points to a CPU context (or Distorm immedate value) member (instead of Xbox memory)
-	int size; // Expressed in bytes, not bits!
+	xbaddr addr = 0;
+	bool is_internal_addr = false; // If set, addr points to a CPU context (or Distorm immedate value) member (instead of Xbox memory)
+	int size = 0; // Expressed in bytes, not bits!
+	bool is_register = false;
 } OperandAddress;
 
 bool EmuX86_Operand_Addr_ForReadOnly(const LPEXCEPTION_POINTERS e, const _DInst& info, const int operand, OperandAddress &opAddr)
@@ -419,6 +420,7 @@ bool EmuX86_Operand_Addr_ForReadOnly(const LPEXCEPTION_POINTERS e, const _DInst&
 	case O_REG:
 		opAddr.is_internal_addr = true;
 		opAddr.addr = (xbaddr)EmuX86_GetRegisterPointer(e, info.ops[operand].index);
+		opAddr.is_register = true; // This is important, as we we need to offset the address by the operand size on write, to make sure the correct bits get written
 		return true;
 	{
 	}
@@ -500,6 +502,24 @@ uint32_t EmuX86_Addr_Read(const OperandAddress &opAddr)
 {
 	assert(opAddr.size == sizeof(uint8_t) || opAddr.size == sizeof(uint16_t) || opAddr.size == sizeof(uint32_t));
 
+	// If this is a register, and is not 4 bytes, we need to mask the correct bits
+	if (opAddr.is_register && opAddr.size < sizeof(uint32_t)) {
+		// Read the register as a 32-bit value
+		uint32_t regval = *(uint32_t*)opAddr.addr;
+
+		// Set the correct part of the register
+		switch (opAddr.size) {
+		case sizeof(uint8_t) :
+			regval = regval & 0xFF;
+			break;
+		case sizeof(uint16_t) :
+			regval = regval & 0xFFFF;
+			break;
+		}
+
+		return regval;
+	}
+
 	if (opAddr.is_internal_addr) {
 		return EmuX86_Mem_Read(opAddr.addr, opAddr.size);
 	}
@@ -511,6 +531,26 @@ uint32_t EmuX86_Addr_Read(const OperandAddress &opAddr)
 void EmuX86_Addr_Write(const OperandAddress &opAddr, const uint32_t value)
 {
 	assert(opAddr.size == sizeof(uint8_t) || opAddr.size == sizeof(uint16_t) || opAddr.size == sizeof(uint32_t));
+
+	// If this is a register, and is not 4 bytes, we need to offset to set the correct bits
+	// Without this mov al, 1 would overwrite the first byte of eax rather than the last!
+	if (opAddr.is_register && opAddr.size < sizeof(uint32_t)) {
+		// Read the register as a 32-bit value
+		uint32_t regval = *(uint32_t*)opAddr.addr;
+
+		// Set the correct part of the register
+		switch (opAddr.size) {
+			case sizeof(uint8_t) :
+				regval = (regval & 0xFFFFFF00) | value;
+				break;
+			case sizeof(uint16_t):
+				regval = (regval & 0xFFFF0000) | value;
+				break;
+		}
+		
+		// Write the register back as a 32-bit value	
+		EmuX86_Mem_Write(opAddr.addr, regval, sizeof(uint32_t));
+	}
 
 	if (opAddr.is_internal_addr) {
 		EmuX86_Mem_Write(opAddr.addr, value, opAddr.size);
