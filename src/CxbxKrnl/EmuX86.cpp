@@ -402,9 +402,10 @@ xbaddr EmuX86_Distorm_O_MEM_Addr(const LPEXCEPTION_POINTERS e, const _DInst& inf
 }
 
 typedef struct {
-	xbaddr addr;
-	bool is_internal_addr; // If set, addr points to a CPU context (or Distorm immedate value) member (instead of Xbox memory)
-	int size; // Expressed in bytes, not bits!
+	xbaddr addr = 0;
+	bool is_internal_addr = false; // If set, addr points to a CPU context (or Distorm immedate value) member (instead of Xbox memory)
+	int size = 0; // Expressed in bytes, not bits!
+	bool is_register = false;
 } OperandAddress;
 
 bool EmuX86_Operand_Addr_ForReadOnly(const LPEXCEPTION_POINTERS e, const _DInst& info, const int operand, OperandAddress &opAddr)
@@ -419,6 +420,7 @@ bool EmuX86_Operand_Addr_ForReadOnly(const LPEXCEPTION_POINTERS e, const _DInst&
 	case O_REG:
 		opAddr.is_internal_addr = true;
 		opAddr.addr = (xbaddr)EmuX86_GetRegisterPointer(e, info.ops[operand].index);
+		opAddr.is_register = true; // This is important, as we we need to offset the address by the operand size on write, to make sure the correct bits get written
 		return true;
 	{
 	}
@@ -500,6 +502,24 @@ uint32_t EmuX86_Addr_Read(const OperandAddress &opAddr)
 {
 	assert(opAddr.size == sizeof(uint8_t) || opAddr.size == sizeof(uint16_t) || opAddr.size == sizeof(uint32_t));
 
+	// If this is a register, and is not 4 bytes, we need to mask the correct bits
+	if (opAddr.is_register && opAddr.size < sizeof(uint32_t)) {
+		// Read the register as a 32-bit value
+		uint32_t regval = *(uint32_t*)opAddr.addr;
+
+		// Set the correct part of the register
+		switch (opAddr.size) {
+		case sizeof(uint8_t) :
+			regval = regval & 0xFF;
+			break;
+		case sizeof(uint16_t) :
+			regval = regval & 0xFFFF;
+			break;
+		}
+
+		return regval;
+	}
+
 	if (opAddr.is_internal_addr) {
 		return EmuX86_Mem_Read(opAddr.addr, opAddr.size);
 	}
@@ -511,6 +531,26 @@ uint32_t EmuX86_Addr_Read(const OperandAddress &opAddr)
 void EmuX86_Addr_Write(const OperandAddress &opAddr, const uint32_t value)
 {
 	assert(opAddr.size == sizeof(uint8_t) || opAddr.size == sizeof(uint16_t) || opAddr.size == sizeof(uint32_t));
+
+	// If this is a register, and is not 4 bytes, we need to offset to set the correct bits
+	// Without this mov al, 1 would overwrite the first byte of eax rather than the last!
+	if (opAddr.is_register && opAddr.size < sizeof(uint32_t)) {
+		// Read the register as a 32-bit value
+		uint32_t regval = *(uint32_t*)opAddr.addr;
+
+		// Set the correct part of the register
+		switch (opAddr.size) {
+			case sizeof(uint8_t) :
+				regval = (regval & 0xFFFFFF00) | (value & 0xFF);
+				break;
+			case sizeof(uint16_t):
+				regval = (regval & 0xFFFF0000) | (value & 0xFFFF);
+				break;
+		}
+		
+		// Write the register back as a 32-bit value	
+		EmuX86_Mem_Write(opAddr.addr, regval, sizeof(uint32_t));
+	}
 
 	if (opAddr.is_internal_addr) {
 		EmuX86_Mem_Write(opAddr.addr, value, opAddr.size);
@@ -661,8 +701,8 @@ inline bool EmuX86_HasFlag_ZF(LPEXCEPTION_POINTERS e)
 bool EmuX86_Opcode_ADD(LPEXCEPTION_POINTERS e, _DInst& info)
 {
 	// ADD reads value from source :
-	uint32_t dest = 0;
-	if (!EmuX86_Operand_Read(e, info, 1, &dest))
+	uint32_t src = 0;
+	if (!EmuX86_Operand_Read(e, info, 1, &src))
 		return false;
 
 	// ADD reads and writes the same operand :
@@ -670,21 +710,25 @@ bool EmuX86_Opcode_ADD(LPEXCEPTION_POINTERS e, _DInst& info)
 	if (!EmuX86_Operand_Addr_ForReadWrite(e, info, 0, OUT opAddr))
 		return false;
 
-	const uint32_t src = EmuX86_Addr_Read(opAddr);
+	const uint32_t dest = EmuX86_Addr_Read(opAddr);
 
-	const uint64_t result = (uint64_t)dest + (uint64_t)src;
+	uint32_t result = 0;
+	uint32_t eflags = e->ContextRecord->EFlags;
+	__asm {
+		push eflags			// push context eflags on the stack
+		popfd				// pop context eflags into host eflags
+		mov eax, dest
+		add eax, src		// perform the operation, this updates eflags for us!
+		mov result, eax
+		pushfd				// push the updated host flags onto the stack
+		pop eflags			// pop the updated host flags back into our eflags register
+	}
+
+	// Write back the flags
+	e->ContextRecord->EFlags = eflags;
 
 	// Write back the result
-	EmuX86_Addr_Write(opAddr, static_cast<uint32_t>(result));
-
-	// The OF, SF, ZF, AF, CF, and PF flags are set according to the result.
-	EmuX86_SetFlags_OSZAPC(e,
-		/*EMUX86_EFLAG_OF*/OF_Add(result, src, dest),
-		/*EMUX86_EFLAG_SF*/SFCalc(result),
-		/*EMUX86_EFLAG_ZF*/ZFCalc(result),
-		/*EMUX86_EFLAG_AF*/AFCalc(result, src, dest),
-		/*EMUX86_EFLAG_PF*/PFCalc(result),
-		/*EMUX86_EFLAG_CF*/CFCalc(result));
+	EmuX86_Addr_Write(opAddr, result);
 
 	return true;
 }
@@ -703,19 +747,23 @@ bool EmuX86_Opcode_AND(LPEXCEPTION_POINTERS e, _DInst& info)
 
 	uint32_t dest = EmuX86_Addr_Read(opAddr);
 
-	// AND Destination with src
-	uint32_t result = dest & src;
+	uint32_t result = 0;
+	uint32_t eflags = e->ContextRecord->EFlags;
+	__asm {
+		push eflags			// push context eflags on the stack
+		popfd				// pop context eflags into host eflags
+		mov eax, dest
+		and eax, src		// perform the operation, this updates eflags for us!
+		mov result, eax
+		pushfd				// push the updated host flags onto the stack
+		pop eflags			// pop the updated host flags back into our eflags register
+	}
+
+	// Write back the flags
+	e->ContextRecord->EFlags = eflags;
 
 	// Write back the result
 	EmuX86_Addr_Write(opAddr, result);
-
-	// The OF and CF flags are cleared; the SF, ZF, and PF flags are set according to the result. The state of the AF flag is undefined.
-	EmuX86_SetFlags_OSZPC(e,
-		/*EMUX86_EFLAG_OF*/0, 
-		/*EMUX86_EFLAG_SF*/SFCalc(result),
-		/*EMUX86_EFLAG_ZF*/ZFCalc(result),
-		/*EMUX86_EFLAG_PF*/PFCalc(result),
-		/*EMUX86_EFLAG_CF*/0);
 
 	return true;
 }
@@ -741,17 +789,18 @@ bool EmuX86_Opcode_CMP(LPEXCEPTION_POINTERS e, _DInst& info)
 	if (!EmuX86_Operand_Read(e, info, 0, &dest))
 		return false;
 
-	// CMP Destination with src (cmp internally is a discarded subtract)
-	uint64_t result = (uint64_t)dest - (uint64_t)src;
+	uint32_t eflags = e->ContextRecord->EFlags;
+	__asm {
+		push eflags			// push context eflags on the stack
+		popfd				// pop context eflags into host eflags
+		mov eax, dest
+		cmp eax, src		// perform the operation, this updates eflags for us!
+		pushfd				// push the updated host flags onto the stack
+		pop eflags			// pop the updated host flags back into our eflags register
+	}
 
-	// The CF, OF, SF, ZF, AF, and PF flags are set according to the result.
-	EmuX86_SetFlags_OSZAPC(e, 
-		/*EMUX86_EFLAG_OF*/OF_Sub(result, src, dest),
-		/*EMUX86_EFLAG_SF*/SFCalc(result),
-		/*EMUX86_EFLAG_ZF*/ZFCalc(result),
-		/*EMUX86_EFLAG_AF*/AFCalc(result, src, dest),
-		/*EMUX86_EFLAG_PF*/PFCalc(result),
-		/*EMUX86_EFLAG_CF*/CFCalc(result));
+	// Write back the flags
+	e->ContextRecord->EFlags = eflags;
 
 	return true;
 }
@@ -767,29 +816,39 @@ bool EmuX86_Opcode_CMPXCHG(LPEXCEPTION_POINTERS e, _DInst& info)
 	if (!EmuX86_Operand_Read(e, info, 0, &dest))
 		return false;
 
-	if (src == dest) {
+	// Setup read/write to EAX
+	// Write the destination operand into EAX
+	OperandAddress eaxOpAddr;
+	eaxOpAddr.addr = (uint32_t)EmuX86_GetRegisterPointer(e, R_EAX);
+	eaxOpAddr.is_internal_addr = true;
+	eaxOpAddr.is_register = true;
+	eaxOpAddr.size = info.ops[1].size;
+	
+	uint32_t eaxVal = EmuX86_Addr_Read(eaxOpAddr);
+
+	if (eaxVal == dest) {
 		// Write the source value to the destination operand
 		if (!EmuX86_Operand_Write(e, info, 0, src)) {
 			return false;
 		}
 	} else	{
-		// Write the dest value to the source operand
-		if (!EmuX86_Operand_Write(e, info, 1, dest)) {
-			return false;
-		}
+		// Write the desintation operand to eax
+		EmuX86_Addr_Write(eaxOpAddr, dest);
 	}
 
 	// Perform arithmatic operation for flag calculation
-	uint64_t result = (uint64_t)dest - (uint64_t)src;
+	uint32_t eflags = e->ContextRecord->EFlags;
+	__asm {
+		push eflags			// push context eflags on the stack
+		popfd				// pop context eflags into host eflags
+		mov eax, eaxVal
+		cmp eax, dest		// perform the operation, this updates eflags for us!
+		pushfd				// push the updated host flags onto the stack
+		pop eflags			// pop the updated host flags back into our eflags register
+	}
 
-	// CF, PF, AF, SF, and OF are set according to the result
-	EmuX86_SetFlags_OSZAPC(e, 
-		/*EMUX86_EFLAG_OF*/OF_Sub(result, src, dest),
-		/*EMUX86_EFLAG_SF*/SFCalc(result),
-		/*EMUX86_EFLAG_ZF*/ZFCalc(result),
-		/*EMUX86_EFLAG_AF*/AFCalc(result, src, dest),
-		/*EMUX86_EFLAG_PF*/PFCalc(result),
-		/*EMUX86_EFLAG_CF*/CFCalc(result));
+	// Write back the flags
+	e->ContextRecord->EFlags = eflags;
 
 	return true;
 }
@@ -849,19 +908,23 @@ bool EmuX86_Opcode_DEC(LPEXCEPTION_POINTERS e, _DInst& info)
 
 	uint32_t dest = EmuX86_Addr_Read(opAddr);
 
-	// DEC Destination to src 
-	uint64_t result = (uint64_t)dest - (uint64_t)1;
+	uint32_t result = 0;
+	uint32_t eflags = e->ContextRecord->EFlags;
+	__asm {
+		push eflags			// push context eflags on the stack
+		popfd				// pop context eflags into host eflags
+		mov eax, dest
+		dec eax				// perform the operation, this updates eflags for us!
+		mov result, eax
+		pushfd				// push the updated host flags onto the stack
+		pop eflags			// pop the updated host flags back into our eflags register
+	}
+
+	// Write back the flags
+	e->ContextRecord->EFlags = eflags;
 
 	// Write result back
 	EmuX86_Addr_Write(opAddr, static_cast<uint32_t>(result));
-
-	// The CF flag is not affected. The OF, SF, ZF, AF, and PF flags are set according to the result.
-	EmuX86_SetFlags_OSZAP(e, 
-		/*EMUX86_EFLAG_OF*/OF_Sub(result, 1, dest),
-		/*EMUX86_EFLAG_SF*/SFCalc(result),
-		/*EMUX86_EFLAG_ZF*/ZFCalc(result),
-		/*EMUX86_EFLAG_AF*/AFCalc(result, 1, dest),
-		/*EMUX86_EFLAG_PF*/PFCalc(result));
 
 	return true;
 }
@@ -893,20 +956,24 @@ bool EmuX86_Opcode_INC(LPEXCEPTION_POINTERS e, _DInst& info)
 
 	uint32_t dest = EmuX86_Addr_Read(opAddr);
 
-	// INC Destination to src 
-	uint64_t result = (uint64_t)dest + (uint64_t)1;
+	uint32_t result = 0;
+	uint32_t eflags = e->ContextRecord->EFlags;
+	__asm {
+		push eflags			// push context eflags on the stack
+		popfd				// pop context eflags into host eflags
+		mov eax, dest
+		inc eax				// perform the operation, this updates eflags for us!
+		mov result, eax
+		pushfd				// push the updated host flags onto the stack
+		pop eflags			// pop the updated host flags back into our eflags register
+	}
+
+	// Write back the flags
+	e->ContextRecord->EFlags = eflags;
 
 	// Write result back
 	EmuX86_Addr_Write(opAddr, static_cast<uint32_t>(result));
 	
-	// The CF flag is not affected. The OF, SF, ZF, AF, and PF flags are set according to the re
-	EmuX86_SetFlags_OSZAP(e,
-		/*EMUX86_EFLAG_OF*/OF_Add(result, 1, dest),
-		/*EMUX86_EFLAG_SF*/SFCalc(result),
-		/*EMUX86_EFLAG_ZF*/ZFCalc(result),
-		/*EMUX86_EFLAG_AF*/AFCalc(result, 1, dest),
-		/*EMUX86_EFLAG_PF*/PFCalc(result));
-
 	return true;
 }
 
@@ -1052,9 +1119,20 @@ bool EmuX86_Opcode_NOT(LPEXCEPTION_POINTERS e, _DInst& info)
 		return false;
 
 	uint32_t dest = EmuX86_Addr_Read(opAddr);
+	uint32_t result = 0;
+	uint32_t eflags = e->ContextRecord->EFlags;
+	__asm {
+		push eflags			// push context eflags on the stack
+		popfd				// pop context eflags into host eflags
+		mov eax, dest
+		not eax				// perform the operation, this updates eflags for us!
+		mov result, eax
+		pushfd				// push the updated host flags onto the stack
+		pop eflags			// pop the updated host flags back into our eflags register
+	}
 
-	// NOT Destination with 
-	uint32_t result = ~dest;
+	// Write back the flags
+	e->ContextRecord->EFlags = eflags;
 
 	// Write back the result
 	EmuX86_Addr_Write(opAddr, result);
@@ -1078,19 +1156,23 @@ bool EmuX86_Opcode_OR(LPEXCEPTION_POINTERS e, _DInst& info)
 
 	uint32_t dest = EmuX86_Addr_Read(opAddr);
 
-	// OR Destination with src
-	uint32_t result = dest | src;
+	uint32_t result = 0;
+	uint32_t eflags = e->ContextRecord->EFlags;
+	__asm {
+		push eflags			// push context eflags on the stack
+		popfd				// pop context eflags into host eflags
+		mov eax, dest
+		or eax, src			// perform the operation, this updates eflags for us!
+		mov result, eax
+		pushfd				// push the updated host flags onto the stack
+		pop eflags			// pop the updated host flags back into our eflags register
+	}
+
+	// Write back the flags
+	e->ContextRecord->EFlags = eflags;
 
 	// Write back the result
 	EmuX86_Addr_Write(opAddr, result);
-
-	// The OF and CF flags are cleared; the SF, ZF, and PF flags are set according to the result. The state of the AF flag is undefined.
-	EmuX86_SetFlags_OSZPC(e,
-		/*EMUX86_EFLAG_OF*/0,
-		/*EMUX86_EFLAG_SF*/SFCalc(result),
-		/*EMUX86_EFLAG_ZF*/ZFCalc(result),
-		/*EMUX86_EFLAG_PF*/PFCalc(result),
-		/*EMUX86_EFLAG_CF*/0);
 
 	return true;
 }
@@ -1172,21 +1254,26 @@ bool EmuX86_Opcode_SAR(LPEXCEPTION_POINTERS e, _DInst& info)
 
 	uint32_t dest = EmuX86_Addr_Read(opAddr);
 
-	// Shift Destination with src WHILE KEEPING SIGN!
-	uint8_t carryBit = dest & 1;
-	int64_t result = (int64_t)dest >> (uint64_t)src;
+	uint32_t result = 0;
+	uint32_t eflags = e->ContextRecord->EFlags;
+	uint8_t byteSrc = src;
+
+	__asm {
+		push eflags			// push context eflags on the stack
+		popfd				// pop context eflags into host eflags
+		mov eax, dest
+		mov cl, byteSrc		
+		sar eax, cl			// perform the operation, this updates eflags for us!
+		mov result, eax
+		pushfd				// push the updated host flags onto the stack
+		pop eflags			// pop the updated host flags back into our eflags register
+	}
+
+	// Write back the flags
+	e->ContextRecord->EFlags = eflags;
 
 	// Write result back
 	EmuX86_Addr_Write(opAddr, static_cast<uint32_t>(result));
-
-	// The OF, SF, ZF, AF, PF, and CF flags are set according to the result.
-	EmuX86_SetFlags_OSZAPC(e,
-		/*EMUX86_EFLAG_OF*/OF_Sub(result, src, dest),
-		/*EMUX86_EFLAG_SF*/SFCalc(result),
-		/*EMUX86_EFLAG_ZF*/ZFCalc(result),
-		/*EMUX86_EFLAG_AF*/AFCalc(result, src, dest),
-		/*EMUX86_EFLAG_PF*/PFCalc(result),
-		/*EMUX86_EFLAG_CF*/carryBit);
 
 	return true;
 }
@@ -1205,25 +1292,23 @@ bool EmuX86_Opcode_SBB(LPEXCEPTION_POINTERS e, _DInst& info)
 
 	uint32_t dest = EmuX86_Addr_Read(opAddr);
 
-	// SUB Destination with src 
-	uint64_t result = (uint64_t)dest - (uint64_t)src;
-
-	// If the carry flag is set, subtract an additional 1
-	if (EmuX86_HasFlag_CF(e)) {
-		result -= 1;
+	uint32_t result = 0;
+	uint32_t eflags = e->ContextRecord->EFlags;
+	__asm {
+		push eflags			// push context eflags on the stack
+		popfd				// pop context eflags into host eflags
+		mov eax, dest
+		sbb eax, src		// perform the operation, this updates eflags for us!
+		mov result, eax
+		pushfd				// push the updated host flags onto the stack
+		pop eflags			// pop the updated host flags back into our eflags register
 	}
+
+	// Write back the flags
+	e->ContextRecord->EFlags = eflags;
 
 	// Write result back
 	EmuX86_Addr_Write(opAddr, static_cast<uint32_t>(result));
-
-	// The OF, SF, ZF, AF, PF, and CF flags are set according to the result.
-	EmuX86_SetFlags_OSZAPC(e,
-		/*EMUX86_EFLAG_OF*/OF_Sub(result, src, dest),
-		/*EMUX86_EFLAG_SF*/SFCalc(result),
-		/*EMUX86_EFLAG_ZF*/ZFCalc(result),
-		/*EMUX86_EFLAG_AF*/AFCalc(result, src, dest),
-		/*EMUX86_EFLAG_PF*/PFCalc(result),
-		/*EMUX86_EFLAG_CF*/CFCalc(result));
 
 	return true;
 }
@@ -1251,20 +1336,27 @@ bool EmuX86_Opcode_SHL(LPEXCEPTION_POINTERS e, _DInst& info)
 
 	uint32_t dest = EmuX86_Addr_Read(opAddr);
 
-	// Shift Destination with src
-	uint64_t result = (uint64_t)dest << (uint64_t)src;
+	uint32_t result = 0;
+	uint32_t eflags = e->ContextRecord->EFlags;
+	uint8_t byteSrc = src;
+
+	__asm {
+		push eflags			// push context eflags on the stack
+		popfd				// pop context eflags into host eflags
+		mov eax, dest
+		mov cl, byteSrc
+		shl eax, cl			// perform the operation, this updates eflags for us!
+		mov result, eax
+		pushfd				// push the updated host flags onto the stack
+		pop eflags			// pop the updated host flags back into our eflags register
+	}
+
+
+	// Write back the flags
+	e->ContextRecord->EFlags = eflags;
 
 	// Write result back
 	EmuX86_Addr_Write(opAddr, static_cast<uint32_t>(result));
-
-	// The OF, SF, ZF, AF, PF, and CF flags are set according to the result.
-	EmuX86_SetFlags_OSZAPC(e,
-		/*EMUX86_EFLAG_OF*/OF_Sub(result, src, dest),
-		/*EMUX86_EFLAG_SF*/SFCalc(result),
-		/*EMUX86_EFLAG_ZF*/ZFCalc(result),
-		/*EMUX86_EFLAG_AF*/AFCalc(result, src, dest),
-		/*EMUX86_EFLAG_PF*/PFCalc(result),
-		/*EMUX86_EFLAG_CF*/CFCalc(result));
 
 	return true;
 }
@@ -1283,21 +1375,27 @@ bool EmuX86_Opcode_SHR(LPEXCEPTION_POINTERS e, _DInst& info)
 
 	uint32_t dest = EmuX86_Addr_Read(opAddr);
 
-	// Shift Destination with src
-	uint8_t carryBit = dest & 1;
-	uint64_t result = (uint64_t)dest >> (uint64_t)src;
+	uint32_t result = 0;
+	uint32_t eflags = e->ContextRecord->EFlags;
+	uint8_t byteSrc = src;
+
+	__asm {
+		push eflags			// push context eflags on the stack
+		popfd				// pop context eflags into host eflags
+		mov eax, dest
+		mov cl, byteSrc
+		shr eax, cl			// perform the operation, this updates eflags for us!
+		mov result, eax
+		pushfd				// push the updated host flags onto the stack
+		pop eflags			// pop the updated host flags back into our eflags register
+	}
+
+
+	// Write back the flags
+	e->ContextRecord->EFlags = eflags;
 
 	// Write result back
 	EmuX86_Addr_Write(opAddr, static_cast<uint32_t>(result));
-
-	// The OF, SF, ZF, AF, PF, and CF flags are set according to the result.
-	EmuX86_SetFlags_OSZAPC(e,
-		/*EMUX86_EFLAG_OF*/OF_Sub(result, src, dest),
-		/*EMUX86_EFLAG_SF*/SFCalc(result),
-		/*EMUX86_EFLAG_ZF*/ZFCalc(result),
-		/*EMUX86_EFLAG_AF*/AFCalc(result, src, dest),
-		/*EMUX86_EFLAG_PF*/PFCalc(result),
-		/*EMUX86_EFLAG_CF*/carryBit);
 
 	return true;
 }
@@ -1321,20 +1419,23 @@ bool EmuX86_Opcode_SUB(LPEXCEPTION_POINTERS e, _DInst& info)
 
 	uint32_t dest = EmuX86_Addr_Read(opAddr);
 
-	// SUB Destination with src 
-	uint64_t result = (uint64_t)dest - (uint64_t)src;
+	uint32_t result = 0;
+	uint32_t eflags = e->ContextRecord->EFlags;
+	__asm {
+		push eflags			// push context eflags on the stack
+		popfd				// pop context eflags into host eflags
+		mov eax, dest
+		sub eax, src		// perform the operation, this updates eflags for us!
+		mov result, eax
+		pushfd				// push the updated host flags onto the stack
+		pop eflags			// pop the updated host flags back into our eflags register
+	}
+
+	// Write back the flags
+	e->ContextRecord->EFlags = eflags;
 
 	// Write result back
 	EmuX86_Addr_Write(opAddr, static_cast<uint32_t>(result));
-
-	// The OF, SF, ZF, AF, PF, and CF flags are set according to the result.
-	EmuX86_SetFlags_OSZAPC(e,
-		/*EMUX86_EFLAG_OF*/OF_Sub(result, src, dest),
-		/*EMUX86_EFLAG_SF*/SFCalc(result),
-		/*EMUX86_EFLAG_ZF*/ZFCalc(result),
-		/*EMUX86_EFLAG_AF*/AFCalc(result, src, dest),
-		/*EMUX86_EFLAG_PF*/PFCalc(result),
-		/*EMUX86_EFLAG_CF*/CFCalc(result));
 
 	return true;
 }
@@ -1342,28 +1443,28 @@ bool EmuX86_Opcode_SUB(LPEXCEPTION_POINTERS e, _DInst& info)
 bool EmuX86_Opcode_TEST(LPEXCEPTION_POINTERS e, _DInst& info)
 {
 	// TEST reads first value :
-	uint32_t src = 0;
-	if (!EmuX86_Operand_Read(e, info, 0, &src))
+	uint32_t dest = 0;
+	if (!EmuX86_Operand_Read(e, info, 0, &dest))
 		return false;
 
 	// TEST reads second value :
-	uint32_t dest = 0;
-	if (!EmuX86_Operand_Read(e, info, 1, &dest))
+	uint32_t src = 0;
+	if (!EmuX86_Operand_Read(e, info, 1, &src))
 		return false;
 
-	// TEST performs bitwise AND between first and second value :
-	uint32_t result = src & dest;
+	uint32_t result = 0;
+	uint32_t eflags = e->ContextRecord->EFlags;
+	__asm {
+		push eflags			// push context eflags on the stack
+		popfd				// pop context eflags into host eflags
+		mov eax, dest
+		test eax, src		// perform the operation, this updates eflags for us!
+		pushfd				// push the updated host flags onto the stack
+		pop eflags			// pop the updated host flags back into our eflags register
+	}
 
-	// https://en.wikipedia.org/wiki/TEST_(x86_instruction)
-	// The OF and CF flags are set to 0. The SF, ZF, and PF flags are set according to the result. The state of the AF flag is undefined.
-	EmuX86_SetFlags_OSZPC(e,
-		/*EMUX86_EFLAG_OF*/0,
-		/*EMUX86_EFLAG_SF*/SFCalc(result),
-		/*EMUX86_EFLAG_ZF*/ZFCalc(result),
-		/*EMUX86_EFLAG_PF*/PFCalc(result),
-		/*EMUX86_EFLAG_CF*/0);
-
-	// result is thrown away
+	// Write back the flags
+	e->ContextRecord->EFlags = eflags;
 
 	return true;
 }
@@ -1382,19 +1483,24 @@ bool EmuX86_Opcode_XOR(LPEXCEPTION_POINTERS e, _DInst& info)
 
 	uint32_t dest = EmuX86_Addr_Read(opAddr);
 
-	// XOR Destination with src
-	uint32_t result = dest ^ src;
+	uint32_t result = 0;
+	uint32_t eflags = e->ContextRecord->EFlags;
+	__asm {
+		push eflags			// push context eflags on the stack
+		popfd				// pop context eflags into host eflags
+		mov eax, dest
+		xor eax, src		// perform the operation, this updates eflags for us!
+		mov result, eax
+		pushfd				// push the updated host flags onto the stack
+		pop eflags			// pop the updated host flags back into our eflags register
+	}
+
+	// Write back the flags
+	e->ContextRecord->EFlags = eflags;
 
 	// Write back the result
 	EmuX86_Addr_Write(opAddr, result);
 
-	// The OF and CF flags are cleared; the SF, ZF, and PF flags are set according to the result. The state of the AF flag is undefined.
-	EmuX86_SetFlags_OSZPC(e,
-		/*EMUX86_EFLAG_OF*/0,
-		/*EMUX86_EFLAG_SF*/SFCalc(result),
-		/*EMUX86_EFLAG_ZF*/ZFCalc(result),
-		/*EMUX86_EFLAG_PF*/PFCalc(result),
-		/*EMUX86_EFLAG_CF*/0);
 
 	return true;
 }
