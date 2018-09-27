@@ -370,10 +370,31 @@ inline void * EmuX86_GetRegisterPointer(const LPEXCEPTION_POINTERS e, const uint
 	return nullptr;
 }
 
+int EmuX86_DistormRegSize(const uint8_t reg)
+{
+	switch (reg) {
+		case R_RAX: return 8; case R_RCX: return 8; case R_RDX: return 8; case R_RBX: return 8; case R_RSP: return 8; case R_RBP: return 8; case R_RSI: return 8; case R_RDI: return 8; case R_R8: return 8; case R_R9: return 8; case R_R10: return 8; case R_R11: return 8; case R_R12: return 8; case R_R13: return 8; case R_R14: return 8; case R_R15: return 8;
+		case R_EAX: return 4; case R_ECX: return 4; case R_EDX: return 4; case R_EBX: return 4; case R_ESP: return 4; case R_EBP: return 4; case R_ESI: return 4; case R_EDI: return 4; case R_R8D: return 4; case R_R9D: return 4; case R_R10D: return 4; case R_R11D: return 4; case R_R12D: return 4; case R_R13D: return 4; case R_R14D: return 4; case R_R15D: return 4;
+		case R_AX: return 2; case R_CX: return 2; case R_DX: return 2; case R_BX: return 2; case R_SP: return 2; case R_BP: return 2; case R_SI: return 2; case R_DI: return 2; case R_R8W: return 2; case R_R9W: return 2; case R_R10W: return 2; case R_R11W: return 2; case R_R12W: return 2; case R_R13W: return 2; case R_R14W: return 2; case R_R15W: return 2;
+		case R_AL: return 1; case R_CL: return 1; case R_DL: return 1; case R_BL: return 1; case R_AH: return 1; case R_CH: return 1; case R_DH: return 1; case R_BH: return 1; case R_R8B: return 1; case R_R9B: return 1; case R_R10B: return 1; case R_R11B: return 1; case R_R12B: return 1; case R_R13B: return 1; case R_R14B: return 1; case R_R15B: return 1;
+		case R_SPL: return 1; case R_BPL: return 1; case R_SIL: return 1; case R_DIL: return 1;
+		case R_ES: return 2; case R_CS: return 2; case R_SS: return 2; case R_DS: return 2; case R_FS: return 2; case R_GS: return 2;
+		case R_RIP: return 8;
+		case R_ST0: return 10; case R_ST1: return 10; case R_ST2: return 10; case R_ST3: return 10; case R_ST4: return 10; case R_ST5: return 10; case R_ST6: return 10; case R_ST7: return 10;
+		case R_MM0: return 10; case R_MM1: return 10; case R_MM2: return 10; case R_MM3: return 10; case R_MM4: return 10; case R_MM5: return 10; case R_MM6: return 10; case R_MM7: return 10;
+		case R_XMM0: return 16; case R_XMM1: return 16; case R_XMM2: return 16; case R_XMM3: return 16; case R_XMM4: return 16; case R_XMM5: return 16; case R_XMM6: return 16; case R_XMM7: return 16; case R_XMM8: return 16; case R_XMM9: return 16; case R_XMM10: return 16; case R_XMM11: return 16; case R_XMM12: return 16; case R_XMM13: return 16; case R_XMM14: return 16; case R_XMM15: return 16;
+		case R_YMM0: return 16; case R_YMM1: return 16; case R_YMM2: return 16; case R_YMM3: return 16; case R_YMM4: return 16; case R_YMM5: return 16; case R_YMM6: return 16; case R_YMM7: return 16; case R_YMM8: return 16; case R_YMM9: return 16; case R_YMM10: return 16; case R_YMM11: return 16; case R_YMM12: return 16; case R_YMM13: return 16; case R_YMM14: return 16; case R_YMM15: return 16;
+		case R_CR0: return 4; case R_UNUSED0: return 0; case R_CR2: return 4; case R_CR3: return 4; case R_CR4: return 4; case R_UNUSED1: return 0; case R_UNUSED2: return 0; case R_UNUSED3: return 0; case R_CR8: return 4;
+		case R_DR0: return 4; case R_DR1: return 4; case R_DR2: return 4; case R_DR3: return 4; case R_UNUSED4: return 0; case R_UNUSED5: return 0; case R_DR6: return 4; case R_DR7: return 4;
+		default: assert(false); return 0;
+	}
+}
+
 inline uint32_t EmuX86_GetRegisterValue32(const LPEXCEPTION_POINTERS e, const uint8_t reg)
 {
-	if (reg != R_NONE)
-	{
+	if (reg != R_NONE) {
+		assert(EmuX86_DistormRegSize(reg) == sizeof(uint32_t));
+
 		void* regptr = EmuX86_GetRegisterPointer(e, reg);
 		if (regptr != nullptr)
 			return *(uint32_t *)regptr;
@@ -382,104 +403,145 @@ inline uint32_t EmuX86_GetRegisterValue32(const LPEXCEPTION_POINTERS e, const ui
 	return 0;
 }
 
-xbaddr EmuX86_Distorm_O_SMEM_Addr(const LPEXCEPTION_POINTERS e, const _DInst& info, const int operand)
+uint32_t EmuX86_Distorm_read_disp(const _DInst& info)
 {
-	xbaddr base = EmuX86_GetRegisterValue32(e, info.ops[operand].index);
-
-	return base + (uint32_t)info.disp;
-}
-
-xbaddr EmuX86_Distorm_O_MEM_Addr(const LPEXCEPTION_POINTERS e, const _DInst& info, const int operand)
-{
-	xbaddr base = EmuX86_GetRegisterValue32(e, info.base);
-
-	uint32_t index = EmuX86_GetRegisterValue32(e, info.ops[operand].index);
-
-	if (info.scale >= 2)
-		return base + (index * info.scale) + (uint32_t)info.disp;
-	else
-		return base + index + (uint32_t)info.disp;
+#ifdef _DEBUG
+	// Assert disp is set according to expectations :
+	switch (info.dispSize) {
+	case 0:
+		assert(info.disp == 0); // Assume dispSize==0 implies disp==0
+		break;
+	case 8:
+		if (info.disp & 0x80) {
+			assert((info.disp & 0xFFFFFF80) == 0xFFFFFF80); // Assume 8 bit disp is sign-extended to 32 bit
+		}
+		else {
+			assert(info.disp < 0x80); // Assume positive signed 8 bit never reaches 0x80
+		}
+		break;
+	case 16:
+		if (info.disp & 0x8000) {
+			assert((info.disp & 0xFFFF8000) == 0xFFFF8000); // Assume 16 bit disp is sign-extended to 32 bit
+		}
+		else {
+			assert(info.disp < 0x8000); // Assume positive signed 16 bit never reaches 0x8000
+		}
+		break;
+	case 32:
+		break; // No checks for 32 bit
+	default:
+		assert(false); // Assume dispSize is either 0, 8, 16 or 32
+		break;
+	}
+#endif
+	return (uint32_t)info.disp;
 }
 
 typedef struct {
 	xbaddr addr = 0;
 	bool is_internal_addr = false; // If set, addr points to a CPU context (or Distorm immedate value) member (instead of Xbox memory)
 	int size = 0; // Expressed in bytes, not bits!
-	bool is_register = false;
 } OperandAddress;
 
 bool EmuX86_Operand_Addr_ForReadOnly(const LPEXCEPTION_POINTERS e, const _DInst& info, const int operand, OperandAddress &opAddr)
 {
 	opAddr.size = info.ops[operand].size / 8; // Convert size in bits into bytes
 	switch (info.ops[operand].type) {
-	case O_NONE:
+	case O_NONE: // operand is to be ignored.
 	{
-		// ignore operand
+		assert(opAddr.size == 0);
+
+		// Ignore O_NONE operand
 		return false;
 	}
-	case O_REG:
+	case O_REG: // index holds global register index.
+	{
+		assert(opAddr.size == EmuX86_DistormRegSize(info.ops[operand].index));
+
 		opAddr.is_internal_addr = true;
 		opAddr.addr = (xbaddr)EmuX86_GetRegisterPointer(e, info.ops[operand].index);
-		opAddr.is_register = true; // This is important, as we we need to offset the address by the operand size on write, to make sure the correct bits get written
 		return true;
-	{
 	}
-	case O_IMM:
+	case O_IMM: // instruction.imm.
 	{
+		assert(opAddr.size == sizeof(uint8_t) || opAddr.size == sizeof(uint16_t) || opAddr.size == sizeof(uint32_t));
+
 		opAddr.is_internal_addr = true;
 		opAddr.addr = (xbaddr)(&info.imm);
 		return true;
 	}
-	case O_IMM1:
+	case O_IMM1: // instruction.imm.ex.i1.
 	{
+		assert(opAddr.size == sizeof(uint8_t) || opAddr.size == sizeof(uint16_t) || opAddr.size == sizeof(uint32_t));
+
 		opAddr.is_internal_addr = true;
 		opAddr.addr = (xbaddr)(&info.imm.ex.i1);
 		return true;
 	}
-	case O_IMM2:
+	case O_IMM2: // instruction.imm.ex.i2.
 	{
+		assert(opAddr.size == sizeof(uint8_t) || opAddr.size == sizeof(uint16_t) || opAddr.size == sizeof(uint32_t));
+
 		opAddr.is_internal_addr = true;
 		opAddr.addr = (xbaddr)(&info.imm.ex.i2);
 		return true;
 	}
-	case O_DISP:
+	case O_DISP: // memory dereference with displacement only, instruction.disp.
 	{
+		assert(opAddr.size == sizeof(uint32_t));
+
 		opAddr.is_internal_addr = false;
-		// TODO : Does this operand require : opAddr.size = info.dispSize / 8; // ?
-		opAddr.addr = (xbaddr)info.disp;
+		opAddr.addr = EmuX86_Distorm_read_disp(info);
 		return true;
 	}
-	case O_SMEM:
+	case O_SMEM: // simple memory dereference with optional displacement(a single register memory dereference).
 	{
+		assert(opAddr.size == 0 || opAddr.size == sizeof(uint8_t) || opAddr.size == sizeof(uint16_t) || opAddr.size == sizeof(uint32_t)); // TODO : How to handle size == 0 further on?
+
 		opAddr.is_internal_addr = false;
-		// TODO : Does this operand require : opAddr.size = info.dispSize / 8; // ?
-		opAddr.addr = EmuX86_Distorm_O_SMEM_Addr(e, info, operand);
+		opAddr.addr = EmuX86_GetRegisterValue32(e, info.ops[operand].index)
+					+ EmuX86_Distorm_read_disp(info);
 		return true;
 	}
-	case O_MEM:
+	case O_MEM: // complex memory dereference(optional fields : s / i / b / disp).
 	{
+		assert(opAddr.size == 0 || opAddr.size == sizeof(uint8_t) || opAddr.size == sizeof(uint16_t) || opAddr.size == sizeof(uint32_t)); // TODO : How to handle size == 0 further on?
+		assert(info.scale < 3 || info.scale == 4 || info.scale == 8); // Assume scale is either 0, 1, 2, 4 or 8
+
+		uint32_t index = EmuX86_GetRegisterValue32(e, info.ops[operand].index);
+		if (info.scale >= 2)
+			index *= info.scale;
+
 		opAddr.is_internal_addr = false;
-		// TODO : Does this operand require : opAddr.size = info.dispSize / 8; // ?
-		opAddr.addr = EmuX86_Distorm_O_MEM_Addr(e, info, operand);
+		opAddr.addr = EmuX86_GetRegisterValue32(e, info.base) // Note : Returns 0 when base == R_NONE
+					+ index
+					+ EmuX86_Distorm_read_disp(info);
+
 		return true;
 	}
-	case O_PC:
+	case O_PC: // the relative address of a branch instruction(instruction.imm.addr).
 	{
+		assert(opAddr.size == sizeof(uint8_t) || opAddr.size == sizeof(uint32_t));
+
 		opAddr.is_internal_addr = false;
 		opAddr.addr = (xbaddr)e->ContextRecord->Eip + (xbaddr)INSTRUCTION_GET_TARGET(&info);
 		return true;
 	}
-	case O_PTR:
+	case O_PTR: // the absolute target address of a far branch instruction(instruction.imm.ptr.seg / off).
 	{
+		assert(opAddr.size == 0);
+
 		opAddr.is_internal_addr = false;
-		opAddr.addr = (xbaddr)info.imm.ptr.off; // TODO : What about info.imm.ptr.seg ?
+		opAddr.addr = (xbaddr)info.imm.ptr.off; // TODO : Needs test-case. What about info.imm.ptr.seg ?
 		return true;
 	}
 	default:
 		// UNREACHABLE(info.ops[operand].type);
+		assert(false);
 		return false;
 	}
 
+	assert(false);
 	return false;
 }
 
@@ -490,6 +552,7 @@ bool EmuX86_Operand_Addr_ForReadWrite(const LPEXCEPTION_POINTERS e, const _DInst
 	case O_IMM:
 	case O_IMM1:
 	case O_IMM2:
+		assert(false);
 		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Refused operand write-access to immedate value address!");
 		return false;
 	}
@@ -502,24 +565,6 @@ uint32_t EmuX86_Addr_Read(const OperandAddress &opAddr)
 {
 	assert(opAddr.size == sizeof(uint8_t) || opAddr.size == sizeof(uint16_t) || opAddr.size == sizeof(uint32_t));
 
-	// If this is a register, and is not 4 bytes, we need to mask the correct bits
-	if (opAddr.is_register && opAddr.size < sizeof(uint32_t)) {
-		// Read the register as a 32-bit value
-		uint32_t regval = *(uint32_t*)opAddr.addr;
-
-		// Set the correct part of the register
-		switch (opAddr.size) {
-		case sizeof(uint8_t) :
-			regval = regval & 0xFF;
-			break;
-		case sizeof(uint16_t) :
-			regval = regval & 0xFFFF;
-			break;
-		}
-
-		return regval;
-	}
-
 	if (opAddr.is_internal_addr) {
 		return EmuX86_Mem_Read(opAddr.addr, opAddr.size);
 	}
@@ -531,26 +576,6 @@ uint32_t EmuX86_Addr_Read(const OperandAddress &opAddr)
 void EmuX86_Addr_Write(const OperandAddress &opAddr, const uint32_t value)
 {
 	assert(opAddr.size == sizeof(uint8_t) || opAddr.size == sizeof(uint16_t) || opAddr.size == sizeof(uint32_t));
-
-	// If this is a register, and is not 4 bytes, we need to offset to set the correct bits
-	// Without this mov al, 1 would overwrite the first byte of eax rather than the last!
-	if (opAddr.is_register && opAddr.size < sizeof(uint32_t)) {
-		// Read the register as a 32-bit value
-		uint32_t regval = *(uint32_t*)opAddr.addr;
-
-		// Set the correct part of the register
-		switch (opAddr.size) {
-			case sizeof(uint8_t) :
-				regval = (regval & 0xFFFFFF00) | (value & 0xFF);
-				break;
-			case sizeof(uint16_t):
-				regval = (regval & 0xFFFF0000) | (value & 0xFFFF);
-				break;
-		}
-		
-		// Write the register back as a 32-bit value	
-		EmuX86_Mem_Write(opAddr.addr, regval, sizeof(uint32_t));
-	}
 
 	if (opAddr.is_internal_addr) {
 		EmuX86_Mem_Write(opAddr.addr, value, opAddr.size);
@@ -816,24 +841,24 @@ bool EmuX86_Opcode_CMPXCHG(LPEXCEPTION_POINTERS e, _DInst& info)
 	if (!EmuX86_Operand_Read(e, info, 0, &dest))
 		return false;
 
-	// Setup read/write to EAX
-	// Write the destination operand into EAX
-	OperandAddress eaxOpAddr;
-	eaxOpAddr.addr = (uint32_t)EmuX86_GetRegisterPointer(e, R_EAX);
-	eaxOpAddr.is_internal_addr = true;
-	eaxOpAddr.is_register = true;
-	eaxOpAddr.size = info.ops[1].size;
-	
-	uint32_t eaxVal = EmuX86_Addr_Read(eaxOpAddr);
 
-	if (eaxVal == dest) {
+	uint32_t mask;
+	switch (info.ops[0].size) {
+	case 8: mask = 0xFF; break; // TODO : Needs test-case
+	case 16: mask = 0xFFFF; break; // TODO : Needs test-case
+	case 32: mask = 0xFFFFFFFF; break;
+	default: assert(false); break;
+	}
+
+	uint32_t eaxVal = e->ContextRecord->Eax;
+	if ((eaxVal & mask) == (dest & mask)) {
 		// Write the source value to the destination operand
 		if (!EmuX86_Operand_Write(e, info, 0, src)) {
 			return false;
 		}
 	} else	{
-		// Write the desintation operand to eax
-		EmuX86_Addr_Write(eaxOpAddr, dest);
+		// Write the destination operand to eax
+		e->ContextRecord->Eax = (e->ContextRecord->Eax & ~mask) | (dest & mask);
 	}
 
 	// Perform arithmatic operation for flag calculation
@@ -980,10 +1005,10 @@ bool EmuX86_Opcode_INC(LPEXCEPTION_POINTERS e, _DInst& info)
 bool EmuX86_Opcode_JMP(LPEXCEPTION_POINTERS e, _DInst& info)
 {
 	OperandAddress opAddr;
-	EmuX86_Operand_Addr_ForReadOnly(e, info, 0, opAddr);
+	if (!EmuX86_Operand_Addr_ForReadOnly(e, info, 0, OUT opAddr))
+		assert(false);
 
 	e->ContextRecord->Eip = opAddr.addr;
-
 	return true;
 }
 
@@ -992,13 +1017,8 @@ bool EmuX86_Opcode_JMP(LPEXCEPTION_POINTERS e, _DInst& info)
 // Returns true if branch was taken
 bool EmuX86_Opcode_Jcc(LPEXCEPTION_POINTERS e, _DInst& info, bool condition)
 {
-	if (condition) {
-		OperandAddress opAddr;
-		EmuX86_Operand_Addr_ForReadOnly(e, info, 0, opAddr);
-
-		e->ContextRecord->Eip = opAddr.addr;
-		return true;
-	}
+	if (condition)
+		return EmuX86_Opcode_JMP(e, info);
 
 	return false;
 }
@@ -2649,21 +2669,25 @@ char *Distorm_OpcodeString(const int opcode)
 	case I_XSAVEOPT: return "XSAVEOPT";
 	case I_XSAVEOPT64: return "XSAVEOPT64";
 	case I_XSETBV: return "XSETBV";
-	default: return "???";
+	default: assert(false); return "???";
 	}
 }
 
 void output_value(std::stringstream &output, int nibbles, uint32_t value)
 {
 	if (value < 0xA)
+		// Show 0 upto 9 as 1 decimal digit
 		output << std::setw(1) << value;
 	else
 		output << std::setfill('0') << std::setw(nibbles) << std::right << value << 'h';
 }
 
-void output_value_disp(std::stringstream &output, int nibbles, uint32_t value)
+void output_value_disp(std::stringstream &output, _DInst &info)
 {
+	uint32_t value = EmuX86_Distorm_read_disp(info);
 	if (value != 0) {
+		int nibbles = info.dispSize / 4;
+		assert(nibbles == 2 || nibbles == 4 || nibbles == 8);
 		if ((int32_t)value < 0) {
 			output << '-';
 			output_value(output, nibbles, -value);
@@ -2678,6 +2702,7 @@ void output_value_disp(std::stringstream &output, int nibbles, uint32_t value)
 void EmuX86_DistormLogInstruction(const uint8_t *Eip, _DInst &info)
 {
 	std::stringstream output;
+
 	output << "Disassembly : "
 		<< std::setfill('0') << std::setw(8) << std::right << std::hex << std::uppercase << (xbaddr)Eip;
 	for (int b = 0; b < MAX(7, info.size); b++) {
@@ -2690,37 +2715,44 @@ void EmuX86_DistormLogInstruction(const uint8_t *Eip, _DInst &info)
 
 	output << " " << std::setfill(' ') << std::left << std::setw(11) << Distorm_OpcodeString(info.opcode);
 	for (int o = 0; o < 4 && info.ops[o].type != O_NONE; o++) {
-		// Convert size in bits to (hexadecimal) nibble count
-		int nr_nibbles = info.ops[o].size / 4;
+		// Convert size in bits to (hexadecimal) nibble count and a size-indicator string
+		int nr_nibbles;
 		std::string size_str;
-		output << std::setfill(' ') << std::setw(1) << std::right << ((o == 0) ? " " : ",");
+
 		switch (info.ops[o].size) {
-		case 8: size_str = "byte ptr "; break;
-		case 16: size_str = "word ptr "; break;
-		case 32: size_str = "dword ptr "; break;
-		default: nr_nibbles = 8; size_str = ""; break;
+		case 0: nr_nibbles = 8; size_str = ""; break;
+		case 8: nr_nibbles = 2; size_str = "byte ptr "; break;
+		case 16: nr_nibbles = 4; size_str = "word ptr "; break;
+		case 32: nr_nibbles = 8; size_str = "dword ptr "; break;
+		default: assert(false);
 		}
+
+		// Output register/operand separator
+		output << std::setfill(' ') << std::setw(1) << std::right << ((o == 0) ? " " : ",");
+		// Render operand to output
 		switch (info.ops[o].type) {
 		case O_REG: output << Distorm_RegStrings[info.ops[o].index]; break;
 		case O_IMM: output_value(output, nr_nibbles, info.imm.dword); break;
-		case O_IMM1: output_value(output, nr_nibbles, info.imm.ex.i1); break;
-		case O_IMM2: output_value(output, nr_nibbles, info.imm.ex.i2); break;
+		case O_IMM1: output_value(output, nr_nibbles, info.imm.ex.i1); break; // TODO : Needs test-case
+		case O_IMM2: output_value(output, nr_nibbles, info.imm.ex.i2); break; // TODO : Needs test-case
 		case O_DISP: output << size_str << "ds:[";
-			         output_value(output, nr_nibbles, info.disp);
+			         output_value(output, info.dispSize > 0 ? info.dispSize / 4 : 8, EmuX86_Distorm_read_disp(info));
 					 output << "]"; break;
 		case O_SMEM: output << size_str << "[" << Distorm_RegStrings[info.ops[o].index];
-			         output_value_disp(output, nr_nibbles, info.disp);
+			         output_value_disp(output, info);
 					 output << "]"; break;
-		case O_MEM: output << size_str << "[" << Distorm_RegStrings[info.base] << "+" << Distorm_RegStrings[info.ops[o].index];
-					if (info.scale >= 2) {
-						output << "*"; output_value(output, 1, info.scale);
-					}
-			        output_value_disp(output, nr_nibbles, info.disp);
+		case O_MEM: output << size_str << "[";
+					if (info.base != R_NONE) output << Distorm_RegStrings[info.base] << "+";
+					output << Distorm_RegStrings[info.ops[o].index];
+					if (info.scale >= 2) { output << "*"; output_value(output, 1, info.scale); }
+			        output_value_disp(output, info);
 					output << "]"; break;
 		case O_PC: output_value(output, 8, (xbaddr)Eip + (xbaddr)INSTRUCTION_GET_TARGET(&info)); break;
 		case O_PTR: output << "+" << std::setfill('0') << info.imm.ptr.seg << "/";
-			        output_value(output, nr_nibbles, info.imm.ptr.off); break;
-		default: output << "?"; break;
+			        output_value(output, nr_nibbles, info.imm.ptr.off); break; // TODO : Needs test-case
+		default:
+			assert(false);
+			output << "?"; break;
 		}
 	}
 
