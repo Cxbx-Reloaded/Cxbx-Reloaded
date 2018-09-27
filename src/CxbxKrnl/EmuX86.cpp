@@ -1568,6 +1568,7 @@ const char *Distorm_RegStrings[/*_RegisterType*/] = {
 
 char *Distorm_OpcodeString(const int opcode)
 {
+	// Note : Distorm's GET_MNEMONIC_NAME() doesn't link somehow...
 	switch (opcode) {
 	case I_AAA: return "AAA";
 	case I_AAD: return "AAD";
@@ -2705,6 +2706,12 @@ void output_value_disp(std::stringstream &output, _DInst &info)
 	}
 }
 
+void output_segment(std::stringstream &output, _DInst &info)
+{
+	if (SEGMENT_GET(info.segment) != R_NONE)
+		output << Distorm_RegStrings[SEGMENT_GET(info.segment)] << ":";
+}
+
 void EmuX86_DistormLogInstruction(const uint8_t *Eip, _DInst &info)
 {
 	std::stringstream output;
@@ -2719,7 +2726,25 @@ void EmuX86_DistormLogInstruction(const uint8_t *Eip, _DInst &info)
 			output << "   ";
 	}
 
-	output << " " << std::setfill(' ') << std::left << std::setw(11) << Distorm_OpcodeString(info.opcode);
+	output << std::setfill(' ') << std::left << std::setw(1) << " ";
+	if (info.flags & FLAG_LOCK)
+		output << "LOCK ";
+
+	if (info.flags & FLAG_REPNZ)
+		output << "REPNZ ";
+
+	if (info.flags & FLAG_REP) {
+		switch (info.opcode) {
+		case I_CMPS:
+		case I_SCAS:
+			output << "REPZ ";
+			break;
+		default:
+			output << "REP ";
+		}
+	}
+
+	output << std::setw(11) << Distorm_OpcodeString(info.opcode);
 	for (int o = 0; o < 4 && info.ops[o].type != O_NONE; o++) {
 		// Convert size in bits to (hexadecimal) nibble count and a size-indicator string
 		int nr_nibbles;
@@ -2737,28 +2762,58 @@ void EmuX86_DistormLogInstruction(const uint8_t *Eip, _DInst &info)
 		output << std::setfill(' ') << std::setw(1) << std::right << ((o == 0) ? " " : ",");
 		// Render operand to output
 		switch (info.ops[o].type) {
-		case O_REG: output << Distorm_RegStrings[info.ops[o].index]; break;
-		case O_IMM: output_value(output, nr_nibbles, info.imm.dword); break;
-		case O_IMM1: output_value(output, nr_nibbles, info.imm.ex.i1); break; // TODO : Needs test-case
-		case O_IMM2: output_value(output, nr_nibbles, info.imm.ex.i2); break; // TODO : Needs test-case
-		case O_DISP: output << size_str << "ds:[";
-			         output_value(output, info.dispSize > 0 ? info.dispSize / 4 : 8, EmuX86_Distorm_read_disp(info));
-					 output << "]"; break;
-		case O_SMEM: output << size_str << "[" << Distorm_RegStrings[info.ops[o].index];
-			         output_value_disp(output, info);
-					 output << "]"; break;
-		case O_MEM: output << size_str << "[";
-					if (info.base != R_NONE) output << Distorm_RegStrings[info.base] << "+";
-					output << Distorm_RegStrings[info.ops[o].index];
-					if (info.scale >= 2) { output << "*"; output_value(output, 1, info.scale); }
-			        output_value_disp(output, info);
-					output << "]"; break;
-		case O_PC: output_value(output, 8, (xbaddr)Eip + (xbaddr)INSTRUCTION_GET_TARGET(&info)); break;
-		case O_PTR: output << "+" << std::setfill('0') << info.imm.ptr.seg << "/";
-			        output_value(output, nr_nibbles, info.imm.ptr.off); break; // TODO : Needs test-case
+		case O_REG:
+			output << Distorm_RegStrings[info.ops[o].index];
+			break;
+		case O_IMM:
+			output_value(output, nr_nibbles, info.imm.dword);
+			break;
+		case O_IMM1: // TODO : Needs test-case
+			output_value(output, nr_nibbles, info.imm.ex.i1);
+			break;
+		case O_IMM2: // TODO : Needs test-case
+			output_value(output, nr_nibbles, info.imm.ex.i2);
+			break;
+		case O_DISP:
+			output << size_str;
+			output_segment(output, info); // Was << "ds:", so no check on default
+			output << "[";
+			output_value(output, info.dispSize > 0 ? info.dispSize / 4 : 8, EmuX86_Distorm_read_disp(info));
+			output << "]";
+			break;
+		case O_SMEM:
+			output << size_str << "[";
+			if (!SEGMENT_IS_DEFAULT(info.segment))
+				output_segment(output, info);
+			output << Distorm_RegStrings[info.ops[o].index];
+			output_value_disp(output, info);
+			output << "]";
+			break;
+		case O_MEM:
+			output << size_str << "[";
+			if (!SEGMENT_IS_DEFAULT(info.segment))
+				output_segment(output, info);
+			if (info.base != R_NONE)
+				output << Distorm_RegStrings[info.base] << "+";
+			output << Distorm_RegStrings[info.ops[o].index];
+			if (info.scale >= 2) {
+				output << "*";
+				output_value(output, 1/*nibble*/, info.scale);
+			}
+			output_value_disp(output, info);
+			output << "]";
+			break;
+		case O_PC:
+			output_value(output, 8, (xbaddr)Eip + (xbaddr)INSTRUCTION_GET_TARGET(&info));
+			break;
+		case O_PTR: // TODO : Needs test-case
+			output << "+" << std::setfill('0') << info.imm.ptr.seg << "/";
+			output_value(output, nr_nibbles, info.imm.ptr.off);
+			break;
 		default:
 			assert(false);
-			output << "?"; break;
+			output << "?";
+			break;
 		}
 	}
 
