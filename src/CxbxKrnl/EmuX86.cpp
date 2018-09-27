@@ -131,6 +131,7 @@ uint32_t EmuX86_Mem_Read(xbaddr addr, int size)
 			return *(uint8_t*)addr;
 		default:
 			// UNREACHABLE(size);
+			assert(false);
 			return 0;
 		}
 	}
@@ -155,6 +156,7 @@ void EmuX86_Mem_Write(xbaddr addr, uint32_t value, int size)
 			break;
 		default:
 			// UNREACHABLE(size);
+			assert(false);
 			return;
 		}
 	}
@@ -398,6 +400,8 @@ inline uint32_t EmuX86_GetRegisterValue32(const LPEXCEPTION_POINTERS e, const ui
 		void* regptr = EmuX86_GetRegisterPointer(e, reg);
 		if (regptr != nullptr)
 			return *(uint32_t *)regptr;
+
+		assert(false);
 	}
 
 	return 0;
@@ -552,8 +556,8 @@ bool EmuX86_Operand_Addr_ForReadWrite(const LPEXCEPTION_POINTERS e, const _DInst
 	case O_IMM:
 	case O_IMM1:
 	case O_IMM2:
-		assert(false);
 		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Refused operand write-access to immedate value address!");
+		assert(false);
 		return false;
 	}
 
@@ -1089,10 +1093,12 @@ bool EmuX86_Opcode_MOVZX(LPEXCEPTION_POINTERS e, _DInst& info)
 {
 	// MOVZX reads value from source :
 	uint32_t value = 0;
+
 	if (!EmuX86_Operand_Read(e, info, 1, &value))
 		return false;
 
-	// TODO : Implement MOVZX zero-extension!
+	// MOVZX zero-extension is implemented implicitly
+	assert(value <= 0xFFFF); // Assume input never exceeds a 16 bit value
 
 	// MOVZX writes value to destination :
 	if (!EmuX86_Operand_Write(e, info, 0, value))
@@ -2794,10 +2800,17 @@ bool EmuX86_DecodeException(LPEXCEPTION_POINTERS e)
 	// that case may be logged, but it shouldn't fail the opcode handler.
 	_DInst info;
 	DWORD StartingEip = e->ContextRecord->Eip;
+	LOG_CHECK_ENABLED(LOG_LEVEL::DEBUG) {
+			EmuLog(LOG_PREFIX, LOG_LEVEL::DEBUG, "Starting instruction emulation from 0x%08X", e->ContextRecord->Eip);
+	}
+
 	// Execute op-codes until we hit an unhandled instruction, or an error occurs
-	while (true) {
+	while (true)
+	//for (int x=0;x<1;x++)
+	{
 		if (!EmuX86_DecodeOpcode((uint8_t*)e->ContextRecord->Eip, info)) {
 			EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Error decoding opcode at 0x%08X", e->ContextRecord->Eip);
+			assert(false);
 			return false;
 		}
 
@@ -3132,8 +3145,11 @@ bool EmuX86_DecodeException(LPEXCEPTION_POINTERS e)
 		e->ContextRecord->Eip += info.size;
 	} // while true
 
+	return true;
+
 opcode_error:
-	EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "0x%08X: Error while handling instruction %u", e->ContextRecord->Eip, info.opcode); // TODO : format decodedInstructions[0]
+	EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "0x%08X: Error while handling instruction %s (%u)", e->ContextRecord->Eip, Distorm_OpcodeString(info.opcode), info.opcode);
+	assert(false);
 	return false;
 }
 

@@ -1134,7 +1134,7 @@ void CxbxKrnlMain(int argc, char* argv[])
 			printf("[0x%X] INIT: Valid xbe signature. Xbe is legit\n", GetCurrentThreadId());
 		}
 		else {
-			printf("[0x%X] INIT: Invalid xbe signature. Homebrew, tampered or pirated xbe?", GetCurrentThreadId());
+			printf("[0x%X] INIT: Invalid xbe signature. Homebrew, tampered or pirated xbe?\n", GetCurrentThreadId());
 		}
 
 		// Check the integrity of the xbe sections
@@ -1147,7 +1147,7 @@ void CxbxKrnlMain(int argc, char* argv[])
 			CalcSHA1Hash(SHADigest, CxbxKrnl_Xbe->m_bzSection[sectionIndex], RawSize);
 
 			if (memcmp(SHADigest, (CxbxKrnl_Xbe->m_SectionHeader)[sectionIndex].bzSectionDigest, A_SHA_DIGEST_LEN) != 0) {
-				printf("[0x%X] INIT: SHA hash of section %s doesn't match, possible section corruption", GetCurrentThreadId(), CxbxKrnl_Xbe->m_szSectionName[sectionIndex]);
+				printf("[0x%X] INIT: SHA hash of section %s doesn't match, possible section corruption\n", GetCurrentThreadId(), CxbxKrnl_Xbe->m_szSectionName[sectionIndex]);
 			}
 			else {
 				printf("[0x%X] INIT: SHA hash check of section %s successful\n", GetCurrentThreadId(), CxbxKrnl_Xbe->m_szSectionName[sectionIndex]);
