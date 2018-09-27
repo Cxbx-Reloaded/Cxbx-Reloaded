@@ -725,6 +725,30 @@ inline bool EmuX86_HasFlag_ZF(LPEXCEPTION_POINTERS e)
 
 // See http://x86.renejeschke.de/ for affected CPU flags per instruction
 
+void SignExtend32(uint32_t& dest, size_t from)
+{
+	int32_t signExtended = 0;
+	switch (from) {
+		case 8:
+			signExtended = (int8_t)dest;
+			break;
+		case 16:
+			signExtended = (int16_t)dest;
+			break;
+		default:
+			assert(false);
+			break;
+	}
+
+#if 0
+	if ((uint32_t)signExtended != dest) {
+		DebugBreak();
+	}
+#endif
+
+	dest = (uint32_t)signExtended;
+}
+
 // Keep opcode emulations alphabetically ordered :
 
 bool EmuX86_Opcode_ADD(LPEXCEPTION_POINTERS e, _DInst& info)
@@ -739,7 +763,10 @@ bool EmuX86_Opcode_ADD(LPEXCEPTION_POINTERS e, _DInst& info)
 	if (!EmuX86_Operand_Addr_ForReadWrite(e, info, 0, OUT opAddr))
 		return false;
 
-	const uint32_t dest = EmuX86_Addr_Read(opAddr);
+	uint32_t dest = EmuX86_Addr_Read(opAddr);
+	if (info.ops[0].size > info.ops[1].size) {
+		SignExtend32(src, info.ops[1].size);
+	}
 
 	uint32_t result = 0;
 	uint32_t eflags = e->ContextRecord->EFlags;
@@ -775,6 +802,10 @@ bool EmuX86_Opcode_AND(LPEXCEPTION_POINTERS e, _DInst& info)
 		return false;
 
 	uint32_t dest = EmuX86_Addr_Read(opAddr);
+
+	if (info.ops[0].size > info.ops[1].size) {
+		SignExtend32(src, info.ops[1].size);
+	}
 
 	uint32_t result = 0;
 	uint32_t eflags = e->ContextRecord->EFlags;
@@ -818,6 +849,10 @@ bool EmuX86_Opcode_CMP(LPEXCEPTION_POINTERS e, _DInst& info)
 	if (!EmuX86_Operand_Read(e, info, 0, &dest))
 		return false;
 
+	if (info.ops[0].size > info.ops[1].size) {
+		SignExtend32(src, info.ops[1].size);
+	}
+
 	uint32_t eflags = e->ContextRecord->EFlags;
 	__asm {
 		push eflags			// push context eflags on the stack
@@ -844,7 +879,6 @@ bool EmuX86_Opcode_CMPXCHG(LPEXCEPTION_POINTERS e, _DInst& info)
 	uint32_t dest = 0;
 	if (!EmuX86_Operand_Read(e, info, 0, &dest))
 		return false;
-
 
 	uint32_t mask;
 	switch (info.ops[0].size) {
@@ -1143,7 +1177,7 @@ bool EmuX86_Opcode_NOT(LPEXCEPTION_POINTERS e, _DInst& info)
 	OperandAddress opAddr;
 	if (!EmuX86_Operand_Addr_ForReadWrite(e, info, 0, OUT opAddr))
 		return false;
-
+	
 	uint32_t dest = EmuX86_Addr_Read(opAddr);
 	uint32_t result = 0;
 	uint32_t eflags = e->ContextRecord->EFlags;
@@ -1181,6 +1215,9 @@ bool EmuX86_Opcode_OR(LPEXCEPTION_POINTERS e, _DInst& info)
 		return false;
 
 	uint32_t dest = EmuX86_Addr_Read(opAddr);
+	if (info.ops[0].size > info.ops[1].size) {
+		SignExtend32(src, info.ops[1].size);
+	}
 
 	uint32_t result = 0;
 	uint32_t eflags = e->ContextRecord->EFlags;
@@ -1318,6 +1355,10 @@ bool EmuX86_Opcode_SBB(LPEXCEPTION_POINTERS e, _DInst& info)
 
 	uint32_t dest = EmuX86_Addr_Read(opAddr);
 
+	if (info.ops[0].size > info.ops[1].size) {
+		SignExtend32(src, info.ops[1].size);
+	}
+
 	uint32_t result = 0;
 	uint32_t eflags = e->ContextRecord->EFlags;
 	__asm {
@@ -1399,8 +1440,9 @@ bool EmuX86_Opcode_SHR(LPEXCEPTION_POINTERS e, _DInst& info)
 	if (!EmuX86_Operand_Addr_ForReadWrite(e, info, 0, OUT opAddr))
 		return false;
 
-	uint32_t dest = EmuX86_Addr_Read(opAddr);
 
+	uint32_t dest = EmuX86_Addr_Read(opAddr);
+	
 	uint32_t result = 0;
 	uint32_t eflags = e->ContextRecord->EFlags;
 	uint8_t byteSrc = src;
@@ -1444,6 +1486,10 @@ bool EmuX86_Opcode_SUB(LPEXCEPTION_POINTERS e, _DInst& info)
 		return false;
 
 	uint32_t dest = EmuX86_Addr_Read(opAddr);
+
+	if (info.ops[0].size > info.ops[1].size) {
+		SignExtend32(src, info.ops[1].size);
+	}
 
 	uint32_t result = 0;
 	uint32_t eflags = e->ContextRecord->EFlags;
@@ -1508,6 +1554,10 @@ bool EmuX86_Opcode_XOR(LPEXCEPTION_POINTERS e, _DInst& info)
 		return false;
 
 	uint32_t dest = EmuX86_Addr_Read(opAddr);
+
+	if (info.ops[0].size > info.ops[1].size) {
+		SignExtend32(src, info.ops[1].size);
+	}
 
 	uint32_t result = 0;
 	uint32_t eflags = e->ContextRecord->EFlags;
@@ -2861,7 +2911,7 @@ bool EmuX86_DecodeException(LPEXCEPTION_POINTERS e)
 
 	// Execute op-codes until we hit an unhandled instruction, or an error occurs
 	while (true)
-	//for (int x=0;x<1;x++)
+	//for (int x=0;x<3;x++)
 	{
 		if (!EmuX86_DecodeOpcode((uint8_t*)e->ContextRecord->Eip, info)) {
 			EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Error decoding opcode at 0x%08X", e->ContextRecord->Eip);
