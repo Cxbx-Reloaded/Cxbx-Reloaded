@@ -765,7 +765,7 @@ bool EmuX86_Opcode_ADD(LPEXCEPTION_POINTERS e, _DInst& info)
 
 	uint32_t dest = EmuX86_Addr_Read(opAddr);
 	if (info.ops[0].size > info.ops[1].size) {
-		SignExtend32(dest, info.ops[1].size);
+		SignExtend32(src, info.ops[1].size);
 	}
 
 	uint32_t result = 0;
