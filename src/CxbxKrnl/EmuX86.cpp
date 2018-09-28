@@ -3267,7 +3267,7 @@ bool EmuX86_DecodeException(LPEXCEPTION_POINTERS e)
 				while (counter != 0) {
 					if (EmuX86_Opcode_STOS(e, info)) {
 						counter--;
-						break;
+						continue;
 					}
 
 					goto opcode_error;
