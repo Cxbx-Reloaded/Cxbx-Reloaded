@@ -1502,6 +1502,8 @@ bool EmuX86_Opcode_STOS(LPEXCEPTION_POINTERS e, _DInst& info)
 		e->ContextRecord->Esi += size;
 		e->ContextRecord->Edi += size;
 	}
+
+	return true;
 }
 
 bool EmuX86_Opcode_SUB(LPEXCEPTION_POINTERS e, _DInst& info)
