@@ -3272,6 +3272,7 @@ bool EmuX86_DecodeException(LPEXCEPTION_POINTERS e)
 
 					goto opcode_error;
 				}
+				break;
 			}
 			case I_SUB:
 				if (EmuX86_Opcode_SUB(e, info)) break;
