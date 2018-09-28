@@ -864,11 +864,11 @@ void EmuSBCGetState(XTL::PX_SBC_GAMEPAD pSBCGamepad, XTL::PX_XINPUT_GAMEPAD pXIG
 
 
     // Analog Sticks
-    pSBCGamepad->sAimingX = pXIGamepad->sThumbRX;;
-    pSBCGamepad->sAimingY = pXIGamepad->sThumbRY;;
+    pSBCGamepad->sAimingX = pXIGamepad->sThumbRX;
+    pSBCGamepad->sAimingY = pXIGamepad->sThumbRY;
     pSBCGamepad->sRotationLever = 0;//(pXIGamepad->wButtons & XINPUT_GAMEPAD_LEFT_SHOULDER) ? 255 : 0;
-    pSBCGamepad->sSightChangeX = pXIGamepad->sThumbLX;;
-    pSBCGamepad->sSightChangeY = pXIGamepad->sThumbLY;;
+    pSBCGamepad->sSightChangeX = pXIGamepad->sThumbLX;
+    pSBCGamepad->sSightChangeY = pXIGamepad->sThumbLY;
     pSBCGamepad->wLeftPedal = ((SHORT)(pXIGamepad->bAnalogButtons[X_XINPUT_GAMEPAD_LEFT_TRIGGER]))<<8;
     pSBCGamepad->wMiddlePedal=0;// = (pXIGamepad->wButtons & XINPUT_GAMEPAD_RIGHT_SHOULDER) ? 255 : 0;
     pSBCGamepad->wRightPedal = (SHORT)(pXIGamepad->bAnalogButtons[X_XINPUT_GAMEPAD_RIGHT_TRIGGER])<<8;
