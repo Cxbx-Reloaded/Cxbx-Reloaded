@@ -4,6 +4,7 @@
  *
  * Copyright (c) 2012 espes
  * Copyright (c) 2015 Jannik Vogel
+ * Copyright (c) 2018 Matt Borgerson
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -172,6 +173,8 @@
 #define NV_PFIFO_CACHE1_PUSH1                            0x00001204
 #   define NV_PFIFO_CACHE1_PUSH1_CHID                         0x0000001F
 #   define NV_PFIFO_CACHE1_PUSH1_MODE                         0x00000100
+#       define NV_PFIFO_CACHE1_PUSH1_MODE_PIO                     0
+#       define NV_PFIFO_CACHE1_PUSH1_MODE_DMA                     1
 #define NV_PFIFO_CACHE1_PUT                              0x00001210
 #define NV_PFIFO_CACHE1_STATUS                           0x00001214
 #   define NV_PFIFO_CACHE1_STATUS_LOW_MARK                      (1 << 4)
@@ -188,6 +191,8 @@
 #   define NV_PFIFO_CACHE1_DMA_FETCH_MAX_REQS                 0x001F0000
 #define NV_PFIFO_CACHE1_DMA_STATE                        0x00001228
 #   define NV_PFIFO_CACHE1_DMA_STATE_METHOD_TYPE                (1 << 0)
+#       define NV_PFIFO_CACHE1_DMA_STATE_METHOD_TYPE_INC          0
+#       define NV_PFIFO_CACHE1_DMA_STATE_METHOD_TYPE_NON_INC      1
 #   define NV_PFIFO_CACHE1_DMA_STATE_METHOD                   0x00001FFC
 #   define NV_PFIFO_CACHE1_DMA_STATE_SUBCHANNEL               0x0000E000
 #   define NV_PFIFO_CACHE1_DMA_STATE_METHOD_COUNT             0x1FFC0000
@@ -213,6 +218,7 @@
 #define NV_PFIFO_CACHE1_PULL0                            0x00001250
 #   define NV_PFIFO_CACHE1_PULL0_ACCESS                        (1 << 0)
 #define NV_PFIFO_CACHE1_PULL1                            0x00001254
+#   define NV_PFIFO_CACHE1_PULL1_ENGINE                       0x00000003
 #define NV_PFIFO_CACHE1_HASH                             0x00001258
 #define NV_PFIFO_CACHE1_ACQUIRE_0                        0x00001260
 #define NV_PFIFO_CACHE1_ACQUIRE_1                        0x00001264
@@ -226,11 +232,17 @@
 #   define NV_PFIFO_CACHE1_DMA_GET_JMP_SHADOW_OFFSET          0x1FFFFFFC
 #define NV_PFIFO_CACHE1_DMA_RSVD_SHADOW                  0x000012A8
 #define NV_PFIFO_CACHE1_DMA_DATA_SHADOW                  0x000012AC
+#define NV_PFIFO_CACHE1_METHOD                           0x00001800
+#   define NV_PFIFO_CACHE1_METHOD_TYPE                         (1 << 0)
+#   define NV_PFIFO_CACHE1_METHOD_ADDRESS                     0x00001FFC
+#   define NV_PFIFO_CACHE1_METHOD_SUBCHANNEL                  0x0000E000
+#define NV_PFIFO_CACHE1_DATA                             0x00001804
 
 
 #define NV_PGRAPH_DEBUG_0                                0x00000080
 #define NV_PGRAPH_DEBUG_1                                0x00000084
 #define NV_PGRAPH_DEBUG_3                                0x0000008C
+#   define NV_PGRAPH_DEBUG_3_HW_CONTEXT_SWITCH                (1 << 2)
 #define NV_PGRAPH_DEBUG_4                                0x00000090
 #define NV_PGRAPH_DEBUG_5                                0x00000094
 #define NV_PGRAPH_DEBUG_8                                0x00000098
@@ -296,6 +308,13 @@
 #define NV_PGRAPH_CTX_SWITCH2                            0x00000150
 #define NV_PGRAPH_CTX_SWITCH3                            0x00000154
 #define NV_PGRAPH_CTX_SWITCH4                            0x00000158
+#   define NV_PGRAPH_CTX_SWITCH4_USER_INSTANCE                0x0000FFFF
+#define NV_PGRAPH_CTX_SWITCH5                            0x0000015C
+#define NV_PGRAPH_CTX_CACHE1                             0x00000160
+#define NV_PGRAPH_CTX_CACHE2                             0x00000180
+#define NV_PGRAPH_CTX_CACHE3                             0x000001A0
+#define NV_PGRAPH_CTX_CACHE4                             0x000001C0
+#define NV_PGRAPH_CTX_CACHE5                             0x000001E0
 #define NV_PGRAPH_STATUS                                 0x00000700
 #define NV_PGRAPH_TRAPPED_ADDR                           0x00000704
 #   define NV_PGRAPH_TRAPPED_ADDR_MTHD                        0x00001FFF
@@ -331,6 +350,7 @@
 #define NV_PGRAPH_ZCOMP_OFFSET                           0x000009A0
 #define NV_PGRAPH_FBCFG0                                 0x000009A4
 #define NV_PGRAPH_FBCFG1                                 0x000009A8
+#define NV_PGRAPH_PATT_COLOR0                            0x00000B10
 #define NV_PGRAPH_DEBUG_6                                0x00000B80
 #define NV_PGRAPH_DEBUG_7                                0x00000B84
 #define NV_PGRAPH_DEBUG_10                               0x00000B88
@@ -395,6 +415,7 @@
 #define NV_PGRAPH_CHEOPS_OFFSET                          0x00000FC4
 #   define NV_PGRAPH_CHEOPS_OFFSET_PROG_LD_PTR                  0x000000FF
 #   define NV_PGRAPH_CHEOPS_OFFSET_CONST_LD_PTR                 0x0000FF00
+#define NV_PGRAPH_DMA_STATE                              0x00001034
 #define NV_PGRAPH_BLEND                                  0x00001804
 #   define NV_PGRAPH_BLEND_EQN                                  0x00000007
 #   define NV_PGRAPH_BLEND_EN                                   (1 << 3)
@@ -536,9 +557,11 @@
 #   define NV_PGRAPH_SETUPRASTER_FRONTFACE                      (1 << 23)
 #   define NV_PGRAPH_SETUPRASTER_CULLENABLE                     (1 << 28)
 #   define NV_PGRAPH_SETUPRASTER_Z_FORMAT                       (1 << 29)
+#   define NV_PGRAPH_SETUPRASTER_WINDOWCLIPTYPE                 (1 << 31)
 #define NV_PGRAPH_SHADERCLIPMODE                         0x00001994
 #define NV_PGRAPH_SHADERCTL                              0x00001998
 #define NV_PGRAPH_SHADERPROG                             0x0000199C
+#define NV_PGRAPH_SEMAPHOREOFFSET                        0x000019A0
 #define NV_PGRAPH_SHADOWZSLOPETHRESHOLD                  0x000019A8
 #define NV_PGRAPH_SPECFOGFACTOR0                         0x000019AC
 #define NV_PGRAPH_SPECFOGFACTOR1                         0x000019B0
@@ -627,6 +650,26 @@
 #define NV_PGRAPH_TEXPALETTE1                            0x00001A38
 #define NV_PGRAPH_TEXPALETTE2                            0x00001A3C
 #define NV_PGRAPH_TEXPALETTE3                            0x00001A40
+#define NV_PGRAPH_WINDOWCLIPX0                           0x00001A44
+#   define NV_PGRAPH_WINDOWCLIPX0_XMIN                          0x00000FFF
+#   define NV_PGRAPH_WINDOWCLIPX0_XMAX                          0x0FFF0000
+#define NV_PGRAPH_WINDOWCLIPX1                           0x00001A48
+#define NV_PGRAPH_WINDOWCLIPX2                           0x00001A4C
+#define NV_PGRAPH_WINDOWCLIPX3                           0x00001A50
+#define NV_PGRAPH_WINDOWCLIPX4                           0x00001A54
+#define NV_PGRAPH_WINDOWCLIPX5                           0x00001A58
+#define NV_PGRAPH_WINDOWCLIPX6                           0x00001A5C
+#define NV_PGRAPH_WINDOWCLIPX7                           0x00001A60
+#define NV_PGRAPH_WINDOWCLIPY0                           0x00001A64
+#   define NV_PGRAPH_WINDOWCLIPY0_YMIN                          0x00000FFF
+#   define NV_PGRAPH_WINDOWCLIPY0_YMAX                          0x0FFF0000
+#define NV_PGRAPH_WINDOWCLIPY1                           0x00001A68
+#define NV_PGRAPH_WINDOWCLIPY2                           0x00001A6C
+#define NV_PGRAPH_WINDOWCLIPY3                           0x00001A70
+#define NV_PGRAPH_WINDOWCLIPY4                           0x00001A74
+#define NV_PGRAPH_WINDOWCLIPY5                           0x00001A78
+#define NV_PGRAPH_WINDOWCLIPY6                           0x00001A7C
+#define NV_PGRAPH_WINDOWCLIPY7                           0x00001A80
 #define NV_PGRAPH_ZSTENCILCLEARVALUE                     0x00001A88
 #define NV_PGRAPH_ZCLIPMIN                               0x00001A90
 #define NV_PGRAPH_ZOFFSETBIAS                            0x00001AA4
@@ -954,8 +997,13 @@
 /* graphic classes and methods */
 #define NV_SET_OBJECT                                        0x00000000
 
+#define NV_MEMORY_TO_MEMORY_FORMAT                       0x0039
+
+#define NV_CONTEXT_PATTERN                               0x0044
+#   define NV044_SET_MONOCHROME_COLOR0                        0x00000310
 
 #define NV_CONTEXT_SURFACES_2D                           0x0062
+#   define NV062_SET_OBJECT                                   0x00000000
 #   define NV062_SET_CONTEXT_DMA_IMAGE_SOURCE                 0x00000184
 #   define NV062_SET_CONTEXT_DMA_IMAGE_DESTIN                 0x00000188
 #   define NV062_SET_COLOR_FORMAT                             0x00000300
@@ -967,6 +1015,7 @@
 #   define NV062_SET_OFFSET_DESTIN                            0x0000030C
 
 #define NV_IMAGE_BLIT                                    0x009F
+#   define NV09F_SET_OBJECT                                   0x00000000
 #   define NV09F_SET_CONTEXT_SURFACES                         0x0000019C
 #   define NV09F_SET_OPERATION                                0x000002FC
 #       define NV09F_SET_OPERATION_SRCCOPY                        3
@@ -976,6 +1025,7 @@
 
 
 #define NV_KELVIN_PRIMITIVE                              0x0097
+#   define NV097_SET_OBJECT                                   0x00000000
 #   define NV097_NO_OPERATION                                 0x00000100
 #   define NV097_WAIT_FOR_IDLE                                0x00000110
 #   define NV097_SET_FLIP_READ                                0x00000120
@@ -1131,6 +1181,11 @@
 #       define NV097_SET_FOG_COLOR_GREEN                          0x0000FF00
 #       define NV097_SET_FOG_COLOR_BLUE                           0x00FF0000
 #       define NV097_SET_FOG_COLOR_ALPHA                          0xFF000000
+#   define NV097_SET_WINDOW_CLIP_TYPE                         0x000002B4
+#   define NV097_SET_WINDOW_CLIP_HORIZONTAL                   0x000002C0
+#       define NV097_SET_WINDOW_CLIP_HORIZONTAL_XMIN              0x00000FFF
+#       define NV097_SET_WINDOW_CLIP_HORIZONTAL_XMAX              0x0FFF0000
+#   define NV097_SET_WINDOW_CLIP_VERTICAL                     0x000002E0
 #   define NV097_SET_ALPHA_TEST_ENABLE                        0x00000300
 #   define NV097_SET_BLEND_ENABLE                             0x00000304
 #   define NV097_SET_CULL_FACE_ENABLE                         0x00000308
@@ -1758,6 +1813,7 @@
 #define NV2A_CRYSTAL_FREQ 16666666 // Was 13500000
 #define NV2A_NUM_CHANNELS 32
 #define NV2A_NUM_SUBCHANNELS 8
+#define NV2A_CACHE1_SIZE 128
 
 #define NV2A_MAX_BATCH_LENGTH 0x1FFFF
 #define NV2A_VERTEXSHADER_ATTRIBUTES 16

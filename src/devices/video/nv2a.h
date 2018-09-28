@@ -116,10 +116,12 @@ static int ffs(register int valu)
 
 #define GET_MASK(v, mask) (((v) & (mask)) >> (ffs(mask)-1))
 
-#define SET_MASK(v, mask, val)                                       \
-    do {                                                             \
-        (v) &= ~(mask);                                              \
-        (v) |= ((val) << (ffs(mask)-1)) & (mask);                    \
+#define SET_MASK(v, mask, val)                            \
+    do {                                                  \
+        const unsigned int __val = (val);                 \
+        const unsigned int __mask = (mask);               \
+        (v) &= ~(__mask);                                 \
+        (v) |= ((__val) << (ffs(__mask) - 1)) & (__mask); \
     } while (0)
 
 // Power-of-two CASE statements
@@ -235,52 +237,26 @@ typedef struct TextureBinding {
 } TextureBinding;
 
 typedef struct KelvinState {
-	xbaddr dma_notifies;
-	xbaddr dma_state;
-	xbaddr dma_semaphore;
-	unsigned int semaphore_offset;
+	xbaddr object_instance;
 } KelvinState;
 
 typedef struct ContextSurfaces2DState {
+	xbaddr object_instance;
 	xbaddr dma_image_source;
 	xbaddr dma_image_dest;
 	unsigned int color_format;
 	unsigned int source_pitch, dest_pitch;
 	xbaddr source_offset, dest_offset;
-
 } ContextSurfaces2DState;
 
 typedef struct ImageBlitState {
+	xbaddr object_instance;
 	xbaddr context_surfaces;
 	unsigned int operation;
 	unsigned int in_x, in_y;
 	unsigned int out_x, out_y;
 	unsigned int width, height;
-
 } ImageBlitState;
-
-typedef struct GraphicsObject {
-	uint8_t graphics_class;
-	union {
-		ContextSurfaces2DState context_surfaces_2d;
-
-		ImageBlitState image_blit;
-
-		KelvinState kelvin;
-	} data;
-} GraphicsObject;
-
-typedef struct GraphicsSubchannel {
-	xbaddr object_instance;
-	GraphicsObject object;
-	uint32_t object_cache[5];
-} GraphicsSubchannel;
-
-typedef struct GraphicsContext {
-	bool channel_3d;
-	unsigned int subchannel;
-} GraphicsContext;
-
 
 typedef struct PGRAPHState {
 	bool opengl_enabled; // == bLLE_GPU
@@ -290,24 +266,13 @@ typedef struct PGRAPHState {
 	uint32_t enabled_interrupts;
 	QemuCond interrupt_cond;
 
-	xbaddr context_table;
-	xbaddr context_address;
+	/* subchannels state we're not sure the location of... */
+	ContextSurfaces2DState context_surfaces_2d;
+	ImageBlitState image_blit;
+	KelvinState kelvin;
 
-
-	unsigned int trapped_method;
-	unsigned int trapped_subchannel;
-	unsigned int trapped_channel_id;
-	uint32_t trapped_data[2];
-	uint32_t notify_source;
-
-	bool fifo_access;
 	QemuCond fifo_access_cond;
-
 	QemuCond flip_3d;
-
-	unsigned int channel_id;
-	bool channel_valid;
-	GraphicsContext context[NV2A_NUM_CHANNELS];
 
 	xbaddr dma_color, dma_zeta;
 	Surface surface_color, surface_zeta;
@@ -333,11 +298,12 @@ typedef struct PGRAPHState {
 	float bump_env_matrix[NV2A_MAX_TEXTURES - 1][4]; /* 3 allowed stages with 2x2 matrix each */
 
 	GloContext *gl_context;
-	QemuMutex gl_lock;
-
 	GLuint gl_framebuffer;
 	GLuint gl_color_buffer, gl_zeta_buffer;
-	GraphicsSubchannel subchannel_data[NV2A_NUM_SUBCHANNELS];
+
+	xbaddr dma_state;
+	xbaddr dma_notifies;
+	xbaddr dma_semaphore;
 
 	xbaddr dma_report;
 	xbaddr report_offset;
@@ -382,7 +348,6 @@ typedef struct PGRAPHState {
 	unsigned int inline_elements_length;
 	uint16_t inline_elements[NV2A_MAX_BATCH_LENGTH]; // Cxbx-Reloaded TODO : Restore uint32_t once HLE_draw_inline_elements can using that
 
-
 	unsigned int inline_buffer_length;
 
 	unsigned int draw_arrays_length;
@@ -398,66 +363,6 @@ typedef struct PGRAPHState {
 
 	uint32_t regs[NV_PGRAPH_SIZE]; // TODO : union
 } PGRAPHState;
-
-#define lockGL(x) lockGL_(x, __LINE__)
-static void lockGL_(PGRAPHState* pg, unsigned int line) {
-	//printf("Locking from line %d\n", line);
-	qemu_mutex_lock(&pg->gl_lock);
-	if (pg->opengl_enabled) {
-		glo_set_current(pg->gl_context);
-	}
-}
-
-#define unlockGL(x) unlockGL_(x, __LINE__)
-static void unlockGL_(PGRAPHState* pg, unsigned int line) {
-	//printf("Unlocking from line %d\n", line);
-	if (pg->opengl_enabled) {
-		glo_set_current(NULL);
-	}
-	qemu_mutex_unlock(&pg->gl_lock);
-}
-
-typedef struct CacheEntry {
-	//QSIMPLEQ_ENTRY(CacheEntry) entry;
-	unsigned int method : 14;
-	unsigned int subchannel : 3;
-	bool nonincreasing;
-	uint32_t parameter;
-} CacheEntry;
-
-typedef struct Cache1State {
-	unsigned int channel_id;
-	FifoMode mode;
-
-	/* Pusher state */
-	bool push_enabled;
-	bool dma_push_enabled;
-	bool dma_push_suspended;
-	xbaddr dma_instance;
-
-	bool method_nonincreasing;
-	unsigned int method : 14;
-	unsigned int subchannel : 3;
-	unsigned int method_count : 24;
-	uint32_t dcount;
-
-	bool subroutine_active;
-	xbaddr subroutine_return;
-	xbaddr get_jmp_shadow;
-	uint32_t rsvd_shadow;
-	uint32_t data_shadow;
-	uint32_t error;
-
-	bool pull_enabled;
-	enum FIFOEngine bound_engines[NV2A_NUM_SUBCHANNELS];
-	enum FIFOEngine last_engine;
-
-	/* The actual command queue */
-	QemuMutex cache_lock;
-	QemuCond cache_cond;
-	std::queue<CacheEntry*> cache;
-	std::queue<CacheEntry*> working_cache;
-} Cache1State;
 
 typedef struct OverlayState {
 	bool video_buffer_use;
@@ -481,12 +386,6 @@ typedef struct OverlayState {
 	int old_pitch;
 	GLuint gl_texture;
 } OverlayState;
-
-typedef struct ChannelControl {
-	xbaddr dma_put;
-	xbaddr dma_get;
-	uint32_t ref;
-} ChannelControl;
 
 typedef struct NV2AState {
     // PCIDevice dev;
@@ -518,11 +417,14 @@ typedef struct NV2AState {
     } pmc;
 
     struct {
-		std::thread puller_thread;
         uint32_t pending_interrupts;
         uint32_t enabled_interrupts;
-        Cache1State cache1;
 		uint32_t regs[_NV_PFIFO_SIZE]; // TODO : union
+		QemuMutex lock;
+		std::thread puller_thread;
+		QemuCond puller_cond;
+		std::thread pusher_thread;
+		QemuCond pusher_cond;
     } pfifo;
 
     struct {
@@ -562,10 +464,6 @@ typedef struct NV2AState {
         uint32_t video_clock_coeff;
 		uint32_t regs[NV_PRAMDAC_SIZE]; // Not in xqemu/openxbox? TODO : union
     } pramdac;
-
-    struct {
-        ChannelControl channel_control[NV2A_NUM_CHANNELS];
-    } user;
 
 	// PRMCIO (Actually the VGA controller)
 	struct {
