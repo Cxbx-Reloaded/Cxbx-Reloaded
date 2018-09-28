@@ -1072,8 +1072,6 @@ void pgraph_handle_method(NV2AState *d,
 	KelvinState *kelvin = &pg->kelvin;
 
     assert(subchannel < 8);
-	// Logging is slow.. disable for now..
-	//pgraph_log_method(subchannel, object->graphics_class, method, parameter);
 
 	if (method == NV_SET_OBJECT) {
         assert(parameter < d->pramin.ramin_size);
@@ -1101,6 +1099,9 @@ void pgraph_handle_method(NV2AState *d,
 
     uint32_t graphics_class = GET_MASK(pg->regs[NV_PGRAPH_CTX_SWITCH1],
                                        NV_PGRAPH_CTX_SWITCH1_GRCLASS);
+
+	// Logging is slow.. disable for now..
+	//pgraph_log_method(subchannel, graphics_class, method, parameter);
 
     if (subchannel != 0) {
         // catches context switching issues on xbox d3d
@@ -1145,7 +1146,7 @@ void pgraph_handle_method(NV2AState *d,
 			context_surfaces_2d->dest_offset = parameter & 0x07FFFFFF;
 			break;
 		default:
-			EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Unknown NV_CONTEXT_SURFACES_2D Method: 0x%08X\n", method);
+			EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Unknown NV_CONTEXT_SURFACES_2D Method: 0x%08X", method);
 		}
 	
 		break; 
@@ -1236,7 +1237,7 @@ void pgraph_handle_method(NV2AState *d,
 
 			break;
 		default:
-			EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Unknown NV_IMAGE_BLIT Method: 0x%08X\n", method);
+			EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Unknown NV_IMAGE_BLIT Method: 0x%08X", method);
 		}
 		break;
 	}
@@ -2752,15 +2753,15 @@ void pgraph_handle_method(NV2AState *d,
 			break;
 		default:
 			NV2A_GL_DPRINTF(true, "    unhandled  (0x%02x 0x%08x)",
-					object->graphics_class, method);
+					graphics_class, method);
 			break;
 		}
 		break;
 	}
 
 	default:
-		NV2A_GL_DPRINTF(true, "Unknown Graphics Class/Method 0x%08X/0x%08X\n",
-						object->graphics_class, method);
+		NV2A_GL_DPRINTF(true, "Unknown Graphics Class/Method 0x%08X/0x%08X",
+						graphics_class, method);
 		break;
 	}
 
@@ -4658,7 +4659,7 @@ static TextureBinding* generate_texture(const TextureShape s,
 
     NV2A_GL_DLABEL(GL_TEXTURE, gl_texture,
                    "format: 0x%02X%s, %d dimensions%s, width: %d, height: %d, depth: %d",
-                   s.color_format, {"", " (SZ)", " (DXT)"}[f.encoding],
+                   s.color_format, (f.encoding == linear) ? "" : (f.encoding == swizzled) ? " (SZ)" : " (DXT)", // compressed
                    s.dimensionality, s.cubemap ? " (Cubemap)" : "",
                    s.width, s.height, s.depth);
 
