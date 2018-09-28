@@ -707,6 +707,11 @@ inline bool EmuX86_HasFlag_ZF(LPEXCEPTION_POINTERS e)
 	return EmuX86_HasFlag(e, BITMASK(EMUX86_EFLAG_ZF));
 }
 
+inline bool EmuX86_HasFlag_DF(LPEXCEPTION_POINTERS e)
+{
+	return EmuX86_HasFlag(e, BITMASK(EMUX86_EFLAG_DF));
+}
+
 // EFLAGS Cross-Reference : http://datasheets.chipdb.org/Intel/x86/Intel%20Architecture/EFLAGS.PDF
 
 // TODO : Review these CPU flag calculations, maybe peek at how MAME or Bochs does this.
@@ -1471,6 +1476,32 @@ bool EmuX86_Opcode_SHR(LPEXCEPTION_POINTERS e, _DInst& info)
 void EmuX86_Opcode_STI()
 {
 	g_bEnableAllInterrupts = true;
+}
+
+bool EmuX86_Opcode_STOS(LPEXCEPTION_POINTERS e, _DInst& info)
+{
+	// Read a value from src
+	uint32_t src = 0;
+	if (!EmuX86_Operand_Read(e, info, 1, &src))
+		return false;
+
+	// Write the value to dest
+	if (!EmuX86_Operand_Write(e, info, 0, src)) {
+		return false;
+	}
+
+	// Determine increment/decrement size
+	uint8_t size = info.ops[1].size / 8;
+
+	// Increment/decrement ESI and EDI based on the current set flags
+	if (EmuX86_HasFlag_DF(e)) {
+		e->ContextRecord->Esi -= size;
+		e->ContextRecord->Edi -= size;
+	}
+	else {
+		e->ContextRecord->Esi += size;
+		e->ContextRecord->Edi += size;
+	}
 }
 
 bool EmuX86_Opcode_SUB(LPEXCEPTION_POINTERS e, _DInst& info)
@@ -3221,6 +3252,24 @@ bool EmuX86_DecodeException(LPEXCEPTION_POINTERS e)
 				// Enable all interrupts
 				EmuX86_Opcode_STI();
 				break;
+			}
+			case I_STOS: {
+				// Handle REP prefix (if set, repeat ECX times)
+				int counter = 1;
+				if (FLAG_GET_PREFIX(info.flags) == FLAG_REP) {
+					counter = e->ContextRecord->Ecx;
+					// Make sure ECX is zero when the loop ends
+					e->ContextRecord->Ecx = 0;
+				}
+
+				while (counter != 0) {
+					if (EmuX86_Opcode_STOS(e, info)) {
+						counter--;
+						break;
+					}
+
+					goto opcode_error;
+				}
 			}
 			case I_SUB:
 				if (EmuX86_Opcode_SUB(e, info)) break;
