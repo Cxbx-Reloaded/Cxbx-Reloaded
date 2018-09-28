@@ -365,11 +365,33 @@ bool EmuTryHandleException(EXCEPTION_POINTERS *e)
 	}
 
 	if (e->ExceptionRecord->ExceptionCode != EXCEPTION_ACCESS_VIOLATION) {
+		bool isInt2Dh = *(uint16_t*)(e->ContextRecord->Eip - 2) == 0x2DCD;
+
 		switch (e->ExceptionRecord->ExceptionCode) {
 		case STATUS_BREAKPOINT:
-			// Let user choose between continue or break
+			// First, check if the breakpoint was prefixed with int 0x2dh, if so, it's NOT a breakpoint, but a Debugger Command!
+			// Note: Because of a Windows quirk, this does NOT work when a debugger is attached, we'll get an UNCATCHABLE breakpoint instead
+			// But at least this gives us a working implementaton of Xbox DbgPrint when we don't attach a debugger
+			if (isInt2Dh ){
+				e->ContextRecord->Eip += 1;
+
+				// Now perform the command (stored in EAX)
+				switch (e->ContextRecord->Eax) {
+					case 1: // DEBUG_PRINT
+						// In this case, ECX should point to an ANSI String
+						printf("DEBUG_PRINT: %s\n", ((xboxkrnl::PANSI_STRING)e->ContextRecord->Ecx)->Buffer);
+						break;
+					default:
+						printf("Unhandled Debug Command: int 2Dh, EAX = %d", e->ContextRecord->Eip);
+				}
+
+				return true;
+			}
+
+			// Otherwise, let the user choose between continue or break
 			return EmuExceptionBreakpointAsk(e);
 		default:
+			printf("Unhandled Debug Command: int 2Dh, EAX = %d", e->ContextRecord->Eip);
 			// Skip past CxbxDebugger-specific exceptions thrown when an unsupported was attached (ie Visual Studio)
 			if (CxbxDebugger::IsDebuggerException(e->ExceptionRecord->ExceptionCode)) {
 				return true;
