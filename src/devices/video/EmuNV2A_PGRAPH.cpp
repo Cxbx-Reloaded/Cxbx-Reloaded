@@ -1264,6 +1264,12 @@ void pgraph_handle_method(NV2AState *d,
 			SET_MASK(pg->regs[NV_PGRAPH_CONTROL_0],
 				NV_PGRAPH_CONTROL_0_Z_PERSPECTIVE_ENABLE,
 				z_perspective);
+
+			int color_space_convert =
+				GET_MASK(parameter, NV097_SET_CONTROL0_COLOR_SPACE_CONVERT);
+			SET_MASK(pg->regs[NV_PGRAPH_CONTROL_0],
+				NV_PGRAPH_CONTROL_0_CSCONVERT,
+				color_space_convert);
 			break;
 		}
 

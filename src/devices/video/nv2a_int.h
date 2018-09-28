@@ -477,6 +477,7 @@
 #   define NV_PGRAPH_CONTROL_0_RED_WRITE_ENABLE                 (1 << 27)
 #   define NV_PGRAPH_CONTROL_0_GREEN_WRITE_ENABLE               (1 << 28)
 #   define NV_PGRAPH_CONTROL_0_BLUE_WRITE_ENABLE                (1 << 29)
+#   define NV_PGRAPH_CONTROL_0_CSCONVERT                        (3 << 30)
 #define NV_PGRAPH_CONTROL_1                              0x00001950
 #   define NV_PGRAPH_CONTROL_1_STENCIL_TEST_ENABLE              (1 << 0)
 #   define NV_PGRAPH_CONTROL_1_STENCIL_FUNC                     0x000000F0
@@ -1110,6 +1111,7 @@
 #       define NV097_SET_CONTROL0_STENCIL_WRITE_ENABLE            (1 << 0)
 #       define NV097_SET_CONTROL0_Z_FORMAT                        (1 << 12)
 #       define NV097_SET_CONTROL0_Z_PERSPECTIVE_ENABLE            (1 << 16)
+#       define NV097_SET_CONTROL0_COLOR_SPACE_CONVERT             (0xF << 28)
 #   define NV097_SET_FOG_MODE                                 0x0000029C
 #       define NV097_SET_FOG_MODE_V_LINEAR                        0x2601
 #       define NV097_SET_FOG_MODE_V_EXP                           0x800
