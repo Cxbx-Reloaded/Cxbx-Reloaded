@@ -3002,3 +3002,16 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_GetBackMaterial)
 		hRet = D3D_OK;
 	}
 }
+
+// ******************************************************************
+// * patch: D3DDevice_SetRenderState_YuvEnable
+// ******************************************************************
+VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderState_YuvEnable)
+(
+    BOOL Enable
+)
+{
+	LOG_FUNC_ONE_ARG(Enable);
+
+    g_bColorSpaceConvertYuvToRgb = (Enable != FALSE);
+}

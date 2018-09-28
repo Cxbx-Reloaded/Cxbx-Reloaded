@@ -1271,14 +1271,6 @@ VOID WINAPI EMUPATCH(D3DDevice_SetRenderState_ShadowFunc)
 );
 
 // ******************************************************************
-// * patch: D3DDevice_SetRenderState_YuvEnable
-// ******************************************************************
-VOID WINAPI EMUPATCH(D3DDevice_SetRenderState_YuvEnable)
-(
-    BOOL Enable
-);
-
-// ******************************************************************
 // * patch: D3DDevice_SetTransform
 // ******************************************************************
 VOID WINAPI EMUPATCH(D3DDevice_SetTransform)

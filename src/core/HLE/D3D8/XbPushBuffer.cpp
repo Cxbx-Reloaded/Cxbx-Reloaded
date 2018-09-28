@@ -325,6 +325,13 @@ extern void pgraph_handle_method(
 // LLE NV2A
 extern NV2ADevice* g_NV2A;
 
+uint32_t HLE_read_NV2A_pgraph_register(const int reg)
+{
+	NV2AState* dev = g_NV2A->GetDeviceState();
+	PGRAPHState *pg = &(dev->pgraph);
+	return pg->regs[reg];
+}
+
 void HLE_write_NV2A_vertex_attribute_slot(unsigned slot, uint32_t parameter)
 {
 	// Write value to LLE NV2A device

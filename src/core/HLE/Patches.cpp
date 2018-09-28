@@ -168,7 +168,6 @@ std::map<const std::string, const xbox_patch_t> g_PatchTable = {
 	PATCH_ENTRY("D3DDevice_SetRenderState_TextureFactor", XTL::EMUPATCH(D3DDevice_SetRenderState_TextureFactor), PATCH_HLE_D3D),
 	PATCH_ENTRY("D3DDevice_SetRenderState_TwoSidedLighting", XTL::EMUPATCH(D3DDevice_SetRenderState_TwoSidedLighting), PATCH_HLE_D3D),
 	PATCH_ENTRY("D3DDevice_SetRenderState_VertexBlend", XTL::EMUPATCH(D3DDevice_SetRenderState_VertexBlend), PATCH_HLE_D3D),
-	PATCH_ENTRY("D3DDevice_SetRenderState_YuvEnable", XTL::EMUPATCH(D3DDevice_SetRenderState_YuvEnable), PATCH_HLE_D3D),
 	PATCH_ENTRY("D3DDevice_SetRenderState_ZBias", XTL::EMUPATCH(D3DDevice_SetRenderState_ZBias), PATCH_HLE_D3D),
 	PATCH_ENTRY("D3DDevice_SetRenderState_ZEnable", XTL::EMUPATCH(D3DDevice_SetRenderState_ZEnable), PATCH_HLE_D3D),
 	PATCH_ENTRY("D3DDevice_SetRenderTarget", XTL::EMUPATCH(D3DDevice_SetRenderTarget), PATCH_HLE_D3D),

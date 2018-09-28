@@ -58,6 +58,7 @@ namespace xboxkrnl
 #include "Logging.h"
 #include "../XbD3D8Logging.h"
 #include "core/HLE/Intercept.hpp" // for bLLE_GPU
+#include "devices/video/nv2a.h" // For GET_MASK, NV_PGRAPH_CONTROL_0
 #include "Cxbx/ResCxbx.h"
 
 #include <assert.h>
@@ -170,7 +171,6 @@ static UINT                         QuadToTriangleIndexBuffer_Size = 0; // = NrO
 static XTL::X_D3DSurface		   *g_XboxBackBufferSurface = NULL;
 static XTL::X_D3DSurface           *g_pXboxRenderTarget = NULL;
 static XTL::X_D3DSurface           *g_pXboxDepthStencil = NULL;
-static bool                         g_bColorSpaceConvertYuvToRgb = false;
 static DWORD                        g_dwVertexShaderUsage = 0;
 static DWORD                        g_VertexShaderSlots[136];
 
@@ -3944,6 +3944,7 @@ DWORD FloatsToDWORD(FLOAT d, FLOAT a, FLOAT b, FLOAT c)
 	return ca | cr | cg | cb;
 }
 
+extern uint32_t HLE_read_NV2A_pgraph_register(const int reg); // Declared in PushBuffer.cpp
 extern void HLE_write_NV2A_vertex_attribute_slot(unsigned slot, uint32_t parameter); // Declared in PushBuffer.cpp
 extern uint32_t HLE_read_NV2A_vertex_attribute_slot(unsigned VertexSlot); // Declared in PushBuffer.cpp
 
@@ -4504,7 +4505,24 @@ DWORD WINAPI XTL::EMUPATCH(D3DDevice_Swap)
 
 			// Interpret the Xbox overlay data (depending the color space conversion render state)
 			// as either YUV or RGB format (note that either one must be a 3 bytes per pixel format)
-			D3DFORMAT PCFormat = g_bColorSpaceConvertYuvToRgb ? D3DFMT_R8G8B8 : D3DFMT_YUY2;
+			D3DFORMAT PCFormat;
+			// TODO : Before reading from pgraph, flush all pending push-buffer commands
+			switch (GET_MASK(HLE_read_NV2A_pgraph_register(NV_PGRAPH_CONTROL_0), NV_PGRAPH_CONTROL_0_CSCONVERT)) {
+			case 0:  // = pass-through
+				PCFormat = D3DFMT_YUY2;
+				break;
+			case 1: // = CRYCB_TO_RGB
+				PCFormat = D3DFMT_YUY2; // Test-case : Turok (intro movie)
+				break;
+			case 2: // = SCRYSCB_TO_RGB
+				LOG_TEST_CASE("SCRYSCB_TO_RGB");
+				PCFormat = D3DFMT_YUY2;
+				break;
+			default:
+				LOG_TEST_CASE("Unrecognized NV_PGRAPH_CONTROL_0_CSCONVERT");
+				PCFormat = D3DFMT_YUY2;
+				break;
+			}
 
 			// Blit Xbox overlay to host backbuffer
 			uint08 *pOverlayData = (uint08*)GetDataFromXboxResource(&g_OverlayProxy.Surface);
@@ -6454,19 +6472,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderState_ShadowFunc)
 
     // this warning just gets annoying
     // LOG_UNIMPLEMENTED();	
-}
-
-// ******************************************************************
-// * patch: D3DDevice_SetRenderState_YuvEnable
-// ******************************************************************
-VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderState_YuvEnable)
-(
-    BOOL Enable
-)
-{
-	LOG_FUNC_ONE_ARG(Enable);
-
-    g_bColorSpaceConvertYuvToRgb = (Enable != FALSE);
 }
 
 // LTCG specific D3DDevice_SetTransform function...
