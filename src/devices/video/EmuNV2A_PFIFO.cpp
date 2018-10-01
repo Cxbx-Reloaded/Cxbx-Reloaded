@@ -47,9 +47,6 @@ typedef struct RAMHTEntry {
 	bool valid;
 } RAMHTEntry;
 
-static void pfifo_run_pusher(NV2AState *d); // forward declaration
-int pfifo_puller_thread(NV2AState *d);
-static uint32_t ramht_hash(NV2AState *d, uint32_t handle);
 static RAMHTEntry ramht_lookup(NV2AState *d, uint32_t handle); // forward declaration
 
 /* PFIFO - MMIO and DMA FIFO submission to PGRAPH and VPE */
