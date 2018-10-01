@@ -1258,7 +1258,7 @@ void NV2ADevice::Reset()
 	qemu_cond_broadcast(&d->pfifo.pusher_cond);
 	d->pfifo.puller_thread.join();
 	d->pfifo.pusher_thread.join();
-
+	qemu_mutex_destroy(&d->pfifo.pfifo_lock); // Cbxbx addition
 	if (d->pgraph.opengl_enabled) {
 		vblank_thread.join();
 		pvideo_destroy(d);
