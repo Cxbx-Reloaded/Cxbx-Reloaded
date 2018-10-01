@@ -52,7 +52,7 @@ static RAMHTEntry ramht_lookup(NV2AState *d, uint32_t handle); // forward declar
 /* PFIFO - MMIO and DMA FIFO submission to PGRAPH and VPE */
 DEVICE_READ32(PFIFO)
 {
-    qemu_mutex_lock(&d->pfifo.lock);
+    qemu_mutex_lock(&d->pfifo.pfifo_lock);
 
 	DEVICE_READ32_SWITCH() {
 	case NV_PFIFO_RAMHT:
@@ -75,14 +75,14 @@ DEVICE_READ32(PFIFO)
 		break;
 	}
 
-    qemu_mutex_unlock(&d->pfifo.lock);
+    qemu_mutex_unlock(&d->pfifo.pfifo_lock);
 
 	DEVICE_READ32_END(PFIFO);
 }
 
 DEVICE_WRITE32(PFIFO)
 {
-    qemu_mutex_lock(&d->pfifo.lock);
+    qemu_mutex_lock(&d->pfifo.pfifo_lock);
 
 	switch(addr) {
 		case NV_PFIFO_INTR_0:
@@ -101,7 +101,7 @@ DEVICE_WRITE32(PFIFO)
     qemu_cond_broadcast(&d->pfifo.pusher_cond);
     qemu_cond_broadcast(&d->pfifo.puller_cond);
 
-    qemu_mutex_unlock(&d->pfifo.lock);
+    qemu_mutex_unlock(&d->pfifo.pfifo_lock);
 
 	DEVICE_WRITE32_END(PFIFO);
 }
@@ -173,17 +173,17 @@ static void pfifo_run_puller(NV2AState *d)
 
 
             // TODO: this is fucked
-            qemu_mutex_lock(&d->pgraph.lock);
+            qemu_mutex_lock(&d->pgraph.pgraph_lock);
             //make pgraph busy
-            qemu_mutex_unlock(&d->pfifo.lock);
+            qemu_mutex_unlock(&d->pfifo.pfifo_lock);
 
             pgraph_switch_context(d, entry.channel_id);
             pgraph_wait_fifo_access(d);
             pgraph_handle_method(d, subchannel, 0, entry.instance);
 
             // make pgraph not busy
-            qemu_mutex_unlock(&d->pgraph.lock);
-            qemu_mutex_lock(&d->pfifo.lock);
+            qemu_mutex_unlock(&d->pgraph.pgraph_lock);
+            qemu_mutex_lock(&d->pfifo.pfifo_lock);
 
         } else if (method >= 0x100) {
             // method passed to engine
@@ -205,16 +205,16 @@ static void pfifo_run_puller(NV2AState *d)
             SET_MASK(*pull1, NV_PFIFO_CACHE1_PULL1_ENGINE, engine);
 
             // TODO: this is fucked
-            qemu_mutex_lock(&d->pgraph.lock);
+            qemu_mutex_lock(&d->pgraph.pgraph_lock);
             //make pgraph busy
-            qemu_mutex_unlock(&d->pfifo.lock);
+            qemu_mutex_unlock(&d->pfifo.pfifo_lock);
 
             pgraph_wait_fifo_access(d);
             pgraph_handle_method(d, subchannel, method, parameter);
 
             // make pgraph not busy
-            qemu_mutex_unlock(&d->pgraph.lock);
-            qemu_mutex_lock(&d->pfifo.lock);
+            qemu_mutex_unlock(&d->pgraph.pgraph_lock);
+            qemu_mutex_lock(&d->pfifo.pfifo_lock);
         } else {
             assert(false);
         }
@@ -228,16 +228,16 @@ int pfifo_puller_thread(NV2AState *d)
 
     glo_set_current(d->pgraph.gl_context);
 
-    qemu_mutex_lock(&d->pfifo.lock);
+    qemu_mutex_lock(&d->pfifo.pfifo_lock);
     while (true) {
         pfifo_run_puller(d);
-        qemu_cond_wait(&d->pfifo.puller_cond, &d->pfifo.lock);
+        qemu_cond_wait(&d->pfifo.puller_cond, &d->pfifo.pfifo_lock);
 
         if (d->exiting) {
             break;
         }
     }
-    qemu_mutex_unlock(&d->pfifo.lock);
+    qemu_mutex_unlock(&d->pfifo.pfifo_lock);
 
 	glo_set_current(NULL); // Cxbx addition
 
@@ -460,16 +460,16 @@ int pfifo_pusher_thread(NV2AState *d)
 {
 	CxbxSetThreadName("Cxbx NV2A FIFO pusher");
 
-    qemu_mutex_lock(&d->pfifo.lock);
+    qemu_mutex_lock(&d->pfifo.pfifo_lock);
     while (true) {
         pfifo_run_pusher(d);
-        qemu_cond_wait(&d->pfifo.pusher_cond, &d->pfifo.lock);
+        qemu_cond_wait(&d->pfifo.pusher_cond, &d->pfifo.pfifo_lock);
 
         if (d->exiting) {
             break;
         }
     }
-    qemu_mutex_unlock(&d->pfifo.lock);
+    qemu_mutex_unlock(&d->pfifo.pfifo_lock);
 
 	return 0;
 }

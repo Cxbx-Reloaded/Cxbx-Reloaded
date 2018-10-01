@@ -450,7 +450,7 @@ static uint64_t fast_hash(const uint8_t *data, size_t len, unsigned int samples)
 /* PGRAPH - accelerated 2d/3d drawing engine */
 DEVICE_READ32(PGRAPH)
 {
-	qemu_mutex_lock(&d->pgraph.lock);
+	qemu_mutex_lock(&d->pgraph.pgraph_lock);
 
 	DEVICE_READ32_SWITCH() {
 	case NV_PGRAPH_INTR:
@@ -463,7 +463,7 @@ DEVICE_READ32(PGRAPH)
 		DEVICE_READ32_REG(pgraph); // Was : DEBUG_READ32_UNHANDLED(PGRAPH);
 	}
 
-	qemu_mutex_unlock(&d->pgraph.lock);
+	qemu_mutex_unlock(&d->pgraph.pgraph_lock);
 
 //    reg_log_read(NV_PGRAPH, addr, r);
 
@@ -474,7 +474,7 @@ DEVICE_WRITE32(PGRAPH)
 {
 //    reg_log_write(NV_PGRAPH, addr, val);
 
-	qemu_mutex_lock(&d->pgraph.lock);
+	qemu_mutex_lock(&d->pgraph.pgraph_lock);
 
 	switch (addr) {
 	case NV_PGRAPH_INTR:
@@ -532,7 +532,7 @@ DEVICE_WRITE32(PGRAPH)
         break;
     }
 
-	qemu_mutex_unlock(&d->pgraph.lock);
+	qemu_mutex_unlock(&d->pgraph.pgraph_lock);
 
 	DEVICE_WRITE32_END(PGRAPH);
 }
@@ -1268,14 +1268,14 @@ void pgraph_handle_method(NV2AState *d,
 				pg->regs[NV_PGRAPH_NSOURCE] = NV_PGRAPH_NSOURCE_NOTIFICATION; /* TODO: check this */
 				pg->pending_interrupts |= NV_PGRAPH_INTR_ERROR;
 
-				qemu_mutex_unlock(&pg->lock);
+				qemu_mutex_unlock(&pg->pgraph_lock);
 				qemu_mutex_lock_iothread();
 				update_irq(d);
-				qemu_mutex_lock(&pg->lock);
+				qemu_mutex_lock(&pg->pgraph_lock);
 				qemu_mutex_unlock_iothread();
 
 				while (pg->pending_interrupts & NV_PGRAPH_INTR_ERROR) {
-					qemu_cond_wait(&pg->interrupt_cond, &pg->lock);
+					qemu_cond_wait(&pg->interrupt_cond, &pg->pgraph_lock);
 				}
 			}
 			break;
@@ -2650,7 +2650,7 @@ void pgraph_handle_method(NV2AState *d,
 			//qemu_mutex_unlock(&pg->pgraph_lock);
 			//qemu_mutex_lock_iothread();
 
-		uint32_t semaphore_offset = pg->regs[NV_PGRAPH_SEMAPHOREOFFSET];
+			uint32_t semaphore_offset = pg->regs[NV_PGRAPH_SEMAPHOREOFFSET];
 
 			xbaddr semaphore_dma_len;
 			uint8_t *semaphore_data = (uint8_t*)nv_dma_map(d, pg->dma_semaphore,
@@ -2784,24 +2784,24 @@ static void pgraph_switch_context(NV2AState *d, unsigned int channel_id)
         assert(!(d->pgraph.regs[NV_PGRAPH_DEBUG_3]
                 & NV_PGRAPH_DEBUG_3_HW_CONTEXT_SWITCH));
 
-		qemu_mutex_unlock(&d->pgraph.lock);
+		qemu_mutex_unlock(&d->pgraph.pgraph_lock);
 		qemu_mutex_lock_iothread();
-		d->pgraph.pending_interrupts |= NV_PGRAPH_INTR_CONTEXT_SWITCH;
+		d->pgraph.pending_interrupts |= NV_PGRAPH_INTR_CONTEXT_SWITCH; // TODO : Should this be done before unlocking pgraph_lock?
 		update_irq(d);
 
-		qemu_mutex_lock(&d->pgraph.lock);
+		qemu_mutex_lock(&d->pgraph.pgraph_lock);
 		qemu_mutex_unlock_iothread();
 
         // wait for the interrupt to be serviced
 		while (d->pgraph.pending_interrupts & NV_PGRAPH_INTR_CONTEXT_SWITCH) {
-			qemu_cond_wait(&d->pgraph.interrupt_cond, &d->pgraph.lock);
+			qemu_cond_wait(&d->pgraph.interrupt_cond, &d->pgraph.pgraph_lock);
 		}
 	}
 }
 
 static void pgraph_wait_fifo_access(NV2AState *d) {
     while (!(d->pgraph.regs[NV_PGRAPH_FIFO] & NV_PGRAPH_FIFO_ACCESS)) {
-		qemu_cond_wait(&d->pgraph.fifo_access_cond, &d->pgraph.lock);
+		qemu_cond_wait(&d->pgraph.fifo_access_cond, &d->pgraph.pgraph_lock);
 	}
 }
 
@@ -2893,7 +2893,7 @@ void pgraph_init(NV2AState *d)
 
     PGRAPHState *pg = &d->pgraph;
 
-	qemu_mutex_init(&pg->lock);
+	qemu_mutex_init(&pg->pgraph_lock);
 	qemu_cond_init(&pg->interrupt_cond);
 	qemu_cond_init(&pg->fifo_access_cond);
 	qemu_cond_init(&pg->flip_3d);
@@ -2987,7 +2987,7 @@ void pgraph_init(NV2AState *d)
 void pgraph_destroy(PGRAPHState *pg)
 {
 
-	qemu_mutex_destroy(&pg->lock);
+	qemu_mutex_destroy(&pg->pgraph_lock);
 	qemu_cond_destroy(&pg->interrupt_cond);
 	qemu_cond_destroy(&pg->fifo_access_cond);
 	qemu_cond_destroy(&pg->flip_3d);

@@ -260,7 +260,7 @@ typedef struct ImageBlitState {
 
 typedef struct PGRAPHState {
 	bool opengl_enabled; // == bLLE_GPU
-	QemuMutex lock;
+	QemuMutex pgraph_lock;
 
 	uint32_t pending_interrupts;
 	uint32_t enabled_interrupts;
@@ -420,7 +420,7 @@ typedef struct NV2AState {
         uint32_t pending_interrupts;
         uint32_t enabled_interrupts;
 		uint32_t regs[_NV_PFIFO_SIZE]; // TODO : union
-		QemuMutex lock;
+		QemuMutex pfifo_lock;
 		std::thread puller_thread;
 		QemuCond puller_cond;
 		std::thread pusher_thread;

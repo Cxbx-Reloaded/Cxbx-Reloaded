@@ -45,7 +45,7 @@ DEVICE_READ32(USER)
 	unsigned int channel_id = addr >> 16;
 	assert(channel_id < NV2A_NUM_CHANNELS);
 
-	qemu_mutex_lock(&d->pfifo.lock);
+	qemu_mutex_lock(&d->pfifo.pfifo_lock);
 
 	uint32_t channel_modes = d->pfifo.regs[NV_PFIFO_MODE];
 
@@ -81,7 +81,7 @@ DEVICE_READ32(USER)
 		assert(false);
 	}
 
-	qemu_mutex_unlock(&d->pfifo.lock);
+	qemu_mutex_unlock(&d->pfifo.pfifo_lock);
 
 	DEVICE_READ32_END(USER);
 }
@@ -91,7 +91,7 @@ DEVICE_WRITE32(USER)
 	unsigned int channel_id = addr >> 16;
 	assert(channel_id < NV2A_NUM_CHANNELS);
 
-	qemu_mutex_lock(&d->pfifo.lock);
+	qemu_mutex_lock(&d->pfifo.pfifo_lock);
 
 	uint32_t channel_modes = d->pfifo.regs[NV_PFIFO_MODE];
 	if (channel_modes & (1 << channel_id)) {
@@ -128,7 +128,7 @@ DEVICE_WRITE32(USER)
 		assert(false);
 	}
 
-    qemu_mutex_unlock(&d->pfifo.lock);
+    qemu_mutex_unlock(&d->pfifo.pfifo_lock);
 
 	DEVICE_WRITE32_END(USER);
 }

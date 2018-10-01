@@ -1235,7 +1235,7 @@ void NV2ADevice::Init()
 		vblank_thread = std::thread(nv2a_vblank_thread, d);
 	}
 
-    qemu_mutex_init(&d->pfifo.lock);
+    qemu_mutex_init(&d->pfifo.pfifo_lock);
     qemu_cond_init(&d->pfifo.puller_cond);
     qemu_cond_init(&d->pfifo.pusher_cond);
 
