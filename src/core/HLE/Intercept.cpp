@@ -306,6 +306,7 @@ void EmuD3D_Init_DeferredStates()
     if (g_SymbolAddresses.find("D3DDeferredRenderState") != g_SymbolAddresses.end()) {
         XTL::EmuD3DDeferredRenderState = (DWORD*)g_SymbolAddresses["D3DDeferredRenderState"];
     }
+
     if (g_SymbolAddresses.find("D3DDeferredTextureState") != g_SymbolAddresses.end()) {
         XTL::EmuD3DDeferredTextureState = (DWORD*)g_SymbolAddresses["D3DDeferredTextureState"];
     }
