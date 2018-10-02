@@ -516,8 +516,9 @@ typedef struct _CxbxVertexShader
     // we save them to be able to return them when necessary.
     UINT                  Size;
     DWORD                *pDeclaration;
+	DWORD                 OriginalDeclarationSize;
 	XTL::LPDIRECT3DVERTEXDECLARATION9 pHostDeclaration;
-    DWORD                 DeclarationSize;
+	DWORD                 HostDeclarationSize;
     DWORD                *pFunction;
     DWORD                 FunctionSize;
     DWORD                 Type;

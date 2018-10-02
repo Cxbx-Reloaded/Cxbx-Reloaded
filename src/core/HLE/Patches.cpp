@@ -91,7 +91,6 @@ std::map<const std::string, const xbox_patch_t> g_PatchTable = {
 	PATCH_ENTRY("D3DDevice_GetBackBuffer2", XTL::EMUPATCH(D3DDevice_GetBackBuffer2), PATCH_HLE_D3D),
 	PATCH_ENTRY("D3DDevice_GetDisplayFieldStatus", XTL::EMUPATCH(D3DDevice_GetDisplayFieldStatus), PATCH_HLE_D3D),
 	PATCH_ENTRY("D3DDevice_GetGammaRamp", XTL::EMUPATCH(D3DDevice_GetGammaRamp), PATCH_HLE_D3D),
-	PATCH_ENTRY("D3DDevice_GetLight", XTL::EMUPATCH(D3DDevice_GetLight), PATCH_HLE_D3D),
 	PATCH_ENTRY("D3DDevice_GetMaterial", XTL::EMUPATCH(D3DDevice_GetMaterial), PATCH_HLE_D3D),
 	PATCH_ENTRY("D3DDevice_GetModelView", XTL::EMUPATCH(D3DDevice_GetModelView), PATCH_HLE_D3D),
 	PATCH_ENTRY("D3DDevice_GetOverlayUpdateStatus", XTL::EMUPATCH(D3DDevice_GetOverlayUpdateStatus), PATCH_HLE_D3D),
@@ -438,7 +437,12 @@ void EmuInstallPatches()
 void* GetPatchedFunctionTrampoline(std::string functionName)
 {
 	if (g_FunctionHooks.find(functionName) != g_FunctionHooks.end()) {
-		return g_FunctionHooks[functionName].GetTrampoline();
+		auto trampoline = g_FunctionHooks[functionName].GetTrampoline();
+		if (trampoline == nullptr) {
+			EmuLog(CXBXR_MODULE::HLE, LOG_LEVEL::WARNING, "Failed to get XB_Trampoline for %s", functionName.c_str());
+		}
+
+		return trampoline;
 	}
 
 	return nullptr;

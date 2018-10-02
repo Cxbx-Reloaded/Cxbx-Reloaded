@@ -2361,7 +2361,8 @@ DWORD XTL::EmuRecompileVshDeclaration
 (
     DWORD                *pDeclaration,
 	D3DVERTEXELEMENT    **ppRecompiledDeclaration,
-    DWORD                *pDeclarationSize,
+    DWORD                *pOriginalDeclarationSize,
+	DWORD                *pHostDeclarationSize,
     boolean               IsFixedFunction,
     CxbxVertexShaderInfo *pVertexShaderInfo
 )
@@ -2378,6 +2379,8 @@ DWORD XTL::EmuRecompileVshDeclaration
 
     // Calculate size of declaration
     DWORD DeclarationSize = VshGetDeclarationSize(pDeclaration);
+	*pOriginalDeclarationSize = DeclarationSize;
+
 	// For Direct3D9, we need to reserve at least twice the number of elements, as one token can generate two registers (in and out) :
 	DeclarationSize *= sizeof(D3DVERTEXELEMENT) * 2;
 
@@ -2386,7 +2389,7 @@ DWORD XTL::EmuRecompileVshDeclaration
 
 	uint8_t *pRecompiledBufferOverflow = ((uint8_t*)pRecompiled) + DeclarationSize;
     *ppRecompiledDeclaration = pRecompiled;
-    *pDeclarationSize = DeclarationSize;
+    *pHostDeclarationSize = DeclarationSize;
 
     CxbxVertexShaderPatch PatchData = { 0 };
 	PatchData.pVertexShaderInfoToSet = pVertexShaderInfo;

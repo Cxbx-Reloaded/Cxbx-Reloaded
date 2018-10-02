@@ -3015,3 +3015,21 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderState_YuvEnable)
 
     g_bColorSpaceConvertYuvToRgb = (Enable != FALSE);
 }
+
+// ******************************************************************
+// * patch: D3DDevice_GetLight
+// ******************************************************************
+VOID WINAPI XTL::EMUPATCH(D3DDevice_GetLight)
+(
+    DWORD            Index,
+    X_D3DLIGHT8     *pLight
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Index)
+		LOG_FUNC_ARG(pLight)
+		LOG_FUNC_END;
+
+    HRESULT hRet = g_pD3DDevice->GetLight(Index, pLight);
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->GetLight");
+}

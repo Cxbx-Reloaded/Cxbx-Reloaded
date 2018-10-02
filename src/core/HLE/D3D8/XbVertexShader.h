@@ -54,7 +54,8 @@ extern DWORD EmuRecompileVshDeclaration
 (
     DWORD                *pDeclaration,
     D3DVERTEXELEMENT    **ppRecompiledDeclaration,
-    DWORD                *pDeclarationSize,
+	DWORD                *pOriginalDeclarationSize,
+	DWORD                *pHostDeclarationSize,
     boolean               IsFixedFunction,
     XTL::CxbxVertexShaderInfo *pVertexShaderInfo
 );
