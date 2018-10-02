@@ -201,7 +201,7 @@ inline D3DSTENCILOP EmuXB2PC_D3DSTENCILOP(X_D3DSTENCILOP Value)
 		return D3DSTENCILOP_DECR;
 
 	default:
-		CxbxKrnlCleanup(LOG_PREFIX_D3DCVT, "Unknown D3DSTENCILOP (0x%.08X)", Value);
+		EmuLog(LOG_PREFIX_D3DCVT, LOG_LEVEL::WARNING, "Unknown D3DSTENCILOP (0x%.08X)", Value);
 	}
 
 	return (D3DSTENCILOP) Value;
