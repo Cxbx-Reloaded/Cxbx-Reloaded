@@ -30,15 +30,15 @@
 // *
 // *  (c) 2002-2003 Aaron Robinson <caustik@caustik.com>
 // * 
-// *  nv2a.cpp is heavily based on code from XQEMU
-// *  Copyright(c) 2012 espes
-// *  Copyright(c) 2015 Jannik Vogel
+// *  This file is heavily based on code from XQEMU
+// *  https://github.com/xqemu/xqemu/blob/master/hw/xbox/nv2a/nv2a.c
+// *  Copyright (c) 2012 espes
+// *  Copyright (c) 2015 Jannik Vogel
 // *  Copyright (c) 2018 Matt Borgerson
 // *
-// *  https://github.com/espes/xqemu/blob/xbox/hw/xbox/nv2a.c
-// *
-// *  (c) 2016-2018 Luke Usher <luke.usher@outlook.com>
-// *  (c) 2017-2018 Patrick van Logchem <pvanlogchem@gmail.com>
+// *  Contributions for Cxbx-Reloaded
+// *  Copyright (c) 2017-2018 Luke Usher <luke.usher@outlook.com>
+// *  Copyright (c) 2018 Patrick van Logchem <pvanlogchem@gmail.com>
 // *
 // *  All rights reserved
 // *
@@ -101,6 +101,9 @@ struct _GError
 
 #include "CxbxKrnl/gloffscreen/glextensions.h" // for glextensions_init
 
+GLuint create_gl_shader(GLenum gl_shader_type,
+	const char *code,
+	const char *name); // forward to nv2a_shaders.cpp
 
 static void update_irq(NV2AState *d)
 {

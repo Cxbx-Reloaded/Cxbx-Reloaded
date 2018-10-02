@@ -293,6 +293,7 @@
     <ClInclude Include="..\..\src\devices\video\nv2a_debug.h" />
     <ClInclude Include="..\..\src\devices\video\nv2a_int.h" />
     <ClInclude Include="..\..\src\devices\video\nv2a_psh.h" />
+    <ClInclude Include="..\..\src\devices\video\nv2a_regs.h" />
     <ClInclude Include="..\..\src\devices\video\nv2a_shaders.h" />
     <ClInclude Include="..\..\src\devices\video\nv2a_shaders_common.h" />
     <ClInclude Include="..\..\src\devices\video\nv2a_vsh.h" />

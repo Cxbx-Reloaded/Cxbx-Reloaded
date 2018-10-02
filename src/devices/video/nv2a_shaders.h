@@ -22,12 +22,11 @@
 #define HW_NV2A_SHADERS_H
 
 #include "qstring.h"
-#include "CxbxKrnl/gloffscreen/gloffscreen.h"
+#include "CxbxKrnl/gloffscreen/gloffscreen.h" // For GLenum, etc
 
 #include "nv2a_vsh.h"
 #include "nv2a_psh.h"
-#include "nv2a_int.h"
-
+#include "nv2a_regs.h"
 
 enum ShaderPrimitiveMode {
     PRIM_TYPE_NONE,
