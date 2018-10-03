@@ -3220,11 +3220,17 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetViewport)
 {
 	LOG_FUNC_ONE_ARG(pViewport);
 
-	D3DVIEWPORT HostViewPort = *pViewport;
-
 	// Always call the Xbox SetViewPort to update D3D Internal State
 	XB_trampoline(VOID, WINAPI, D3DDevice_SetViewport, (CONST X_D3DVIEWPORT8 *));
 	XB_D3DDevice_SetViewport(pViewport);
+
+	// Host does not support pViewPort = nullptr
+	if (pViewport == nullptr) {
+		LOG_TEST_CASE("pViewport = null");
+		return;
+	}
+
+	D3DVIEWPORT HostViewPort = *pViewport;
 
 	if (g_pXboxRenderTarget) {
 		// Get current Xbox render target dimensions

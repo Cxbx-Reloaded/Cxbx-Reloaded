@@ -45,12 +45,44 @@ DWORD *XTL::EmuD3DDeferredTextureState = nullptr;
 
 extern uint32 g_BuildVersion;
 
+#include "core\HLE\Intercept.hpp" // For g_SymbolAddresses
+
 // ******************************************************************
 // * patch: UpdateDeferredStates
 // ******************************************************************
 void XTL::EmuUpdateDeferredStates()
 {
     using namespace XTL;
+
+	// Verify that EmuD3DDeferredRenderState is correct, if not, we can programatically correct it
+	// We should also flag up a warning so this can be fixed upstream in XboxSymbolDatabase!
+	// This is made possible by the registration of D3DRS_CULLMODE by XboxSymbolDatabase
+	static bool verifiedRenderStateOffset = false;
+	if (!verifiedRenderStateOffset) {
+		DWORD CullModeOffset = g_SymbolAddresses["D3DRS_CULLMODE"];
+
+		// If we found a valid CullMode offset, verify the symbol location
+		if (CullModeOffset != 0) {
+			// Calculate index of D3DRS_CULLMODE for this XDK. We start counting from the first deferred state (D3DRS_FOGENABLE)
+			DWORD CullModeIndex = 0;
+			for (int i = X_D3DRS_FOGENABLE; i < X_D3DRS_CULLMODE; i++) {
+				if (DxbxRenderStateInfo[i].V <= g_BuildVersion) {
+					CullModeIndex++;
+				}
+			}
+
+			// If the offset was incorrect, calculate the correct offset, log it, and fix it
+			if ((DWORD)(&EmuD3DDeferredRenderState[CullModeIndex]) != CullModeOffset) {
+				DWORD CorrectOffset = CullModeOffset - (CullModeIndex * sizeof(DWORD));
+				EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "EmuD3DDeferredRenderState returned by XboxSymbolDatabase (0x%08X) was incorrect: 0x%08X. Correcting to be 0x%08X.\nPlease file an issue with the XbSymbolDatabase project", EmuD3DDeferredRenderState, CorrectOffset);
+				EmuD3DDeferredRenderState = (DWORD*)CorrectOffset;
+			}
+		} else {
+			EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "D3DRS_CULLMODE could not be found. Please update the XbSymbolDatabase submodule");
+		}
+		
+		verifiedRenderStateOffset = true;
+	}		
 
     // Certain D3DRS values need to be checked on each Draw[Indexed]Vertices
     if(EmuD3DDeferredRenderState != 0)
