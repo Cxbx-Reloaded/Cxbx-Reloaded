@@ -297,12 +297,24 @@ void HLE_draw_state_update(NV2AState *d)
 	LOG_INCOMPLETE(); // TODO : Read state from pgraph, convert to D3D
 }
 
+void HLE_draw_clear(NV2AState *d)
+{
+	// PGRAPHState *pg = &d->pgraph;
+
+	using namespace XTL;
+
+	CxbxUpdateNativeD3DResources();
+
+	LOG_INCOMPLETE(); // TODO : Read state from pgraph, convert to D3D
+}
+
 // Import pgraph_draw_* variables, declared in EmuNV2A_PGRAPH.cpp :
 extern void(*pgraph_draw_arrays)(NV2AState *d);
 extern void(*pgraph_draw_inline_buffer)(NV2AState *d);
 extern void(*pgraph_draw_inline_array)(NV2AState *d);
 extern void(*pgraph_draw_inline_elements)(NV2AState *d);
 extern void(*pgraph_draw_state_update)(NV2AState *d);
+extern void(*pgraph_draw_clear)(NV2AState *d);
 
 void HLE_init_pgraph_plugins()
 {
@@ -312,6 +324,7 @@ void HLE_init_pgraph_plugins()
 	pgraph_draw_inline_array = HLE_draw_inline_array;
 	pgraph_draw_inline_elements = HLE_draw_inline_elements;
 	pgraph_draw_state_update = HLE_draw_state_update;
+	pgraph_draw_clear = HLE_draw_clear;
 }
 
 extern void pgraph_handle_method(
