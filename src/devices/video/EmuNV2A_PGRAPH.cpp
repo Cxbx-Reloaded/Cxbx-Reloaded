@@ -851,8 +851,6 @@ void OpenGL_draw_clear(NV2AState *d)
 
 	assert(pg->opengl_enabled);
 
-	lockGL(pg);
-
 	NV2A_DPRINTF("---------PRE CLEAR ------\n");
 	GLbitfield gl_mask = 0;
 
@@ -1020,6 +1018,8 @@ void OpenGL_draw_clear(NV2AState *d)
 		/* FIXME: Should this really be inverted instead of ymin? */
 		glScissor(scissor_x, scissor_y, scissor_width, scissor_height);
 
+		/* FIXME: Respect window clip?!?! */
+
 		NV2A_DPRINTF("------------------CLEAR 0x%x %d,%d - %d,%d  %x---------------\n",
 			parameter, xmin, ymin, xmax, ymax, d->pgraph.regs[NV_PGRAPH_COLORCLEARVALUE]);
 
@@ -1039,8 +1039,6 @@ void OpenGL_draw_clear(NV2AState *d)
 	}
 
 	pgraph_set_surface_dirty(pg, write_color, write_zeta);
-
-	unlockGL(pg);
 }
 
 void OpenGL_init_pgraph_plugins()
