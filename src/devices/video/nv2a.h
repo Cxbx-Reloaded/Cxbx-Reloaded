@@ -131,18 +131,10 @@ static int ffs(register int valu)
 #define CASE_32(v, step) CASE_16(v, step) : CASE_16(v + (step) * 16, step)
 #define CASE_64(v, step) CASE_32(v, step) : CASE_32(v + (step) * 32, step)
 #define CASE_128(v, step) CASE_64(v, step) : CASE_64(v + (step) * 64, step)
+#define CASE_256(v, step) CASE_128(v, step) : CASE_128(v + (step) * 128, step)
 
 // Non-power-of-two CASE statements
 #define CASE_3(v, step) CASE_2(v, step) : CASE_1(v + (step) * 2, step)
-#define CASE_12(v, step) CASE_8(v, step) : CASE_4(v + (step) * 8, step)
-#define CASE_13(v, step) CASE_8(v, step) : CASE_3(v + (step) * 8, step)
-#define CASE_28(v, step) CASE_16(v, step) : CASE_12(v + (step) * 16, step)
-#define CASE_29(v, step) CASE_16(v, step) : CASE_13(v + (step) * 16, step)
-#define CASE_61(v, step) CASE_32(v, step) : CASE_29(v + (step) * 32, step)
-#define CASE_78(v, step) CASE_64(v, step) : CASE_12(v + (step) * 64, step)
-#define CASE_125(v, step) CASE_64(v, step) : CASE_61(v + (step) * 64, step)
-#define CASE_132(v, step) CASE_128(v, step) : CASE_4(v + (step) * 128, step)
-#define CASE_253(v, step) CASE_128(v, step) : CASE_125(v + (step) * 128, step)
 
 #define NV2A_DEVICE(obj) \
     OBJECT_CHECK(NV2AState, (obj), "nv2a")

@@ -2082,8 +2082,7 @@ void pgraph_handle_method(NV2AState *d,
 		}
 
 		/* Handles NV097_SET_BACK_LIGHT_* */
-		CASE_78(NV097_SET_BACK_LIGHT_AMBIENT_COLOR, 4): {
-			// NV097_SET_BACK_LIGHT_SPECULAR_COLOR 0x00000C18 - 0x00000C00 + 0x1C8 = 0x1E0; /4= 78d
+		CASE_128(NV097_SET_BACK_LIGHT_AMBIENT_COLOR, 4): {
 			slot = (method - NV097_SET_BACK_LIGHT_AMBIENT_COLOR) / 4;
 			unsigned int part = NV097_SET_BACK_LIGHT_AMBIENT_COLOR / 4 + slot % 16;
 			slot /= 16; /* [Light index] */
@@ -2111,8 +2110,7 @@ void pgraph_handle_method(NV2AState *d,
 			break;
 		}
 		/* Handles all the light source props except for NV097_SET_BACK_LIGHT_* */
-		CASE_253(NV097_SET_LIGHT_AMBIENT_COLOR, 4): {
-			// NV097_SET_LIGHT_LOCAL_ATTENUATION 0x00001068 - 0x00001000 + 0x38C = 0x3F4; /4= 253d
+		CASE_256(NV097_SET_LIGHT_AMBIENT_COLOR, 4): {
 			slot = (method - NV097_SET_LIGHT_AMBIENT_COLOR) / 4;
 			unsigned int part = NV097_SET_LIGHT_AMBIENT_COLOR / 4 + slot % 32;
 			slot /= 32; /* [Light index] */
