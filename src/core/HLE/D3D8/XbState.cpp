@@ -74,7 +74,7 @@ void XTL::EmuUpdateDeferredStates()
 			// If the offset was incorrect, calculate the correct offset, log it, and fix it
 			if ((DWORD)(&EmuD3DDeferredRenderState[CullModeIndex]) != CullModeOffset) {
 				DWORD CorrectOffset = CullModeOffset - (CullModeIndex * sizeof(DWORD));
-				EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "EmuD3DDeferredRenderState returned by XboxSymbolDatabase (0x%08X) was incorrect: 0x%08X. Correcting to be 0x%08X.\nPlease file an issue with the XbSymbolDatabase project", EmuD3DDeferredRenderState, CorrectOffset);
+				EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "EmuD3DDeferredRenderState returned by XboxSymbolDatabase (0x%08X) was incorrect. Correcting to be 0x%08X.\nPlease file an issue with the XbSymbolDatabase project", EmuD3DDeferredRenderState, CorrectOffset);
 				EmuD3DDeferredRenderState = (DWORD*)CorrectOffset;
 			}
 		} else {
