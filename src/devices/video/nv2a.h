@@ -358,6 +358,8 @@ typedef struct PGRAPHState {
 
 	unsigned int primitive_mode;
 
+	unsigned int clear_surface;
+
 	bool enable_vertex_program_write;
 
 	uint32_t program_data[NV2A_MAX_TRANSFORM_PROGRAM_LENGTH][VSH_TOKEN_SIZE];
