@@ -690,7 +690,6 @@ void OpenGL_draw_state_update(NV2AState *d)
 	PGRAPHState *pg = &d->pgraph;
 
 	assert(pg->opengl_enabled);
-	assert(pg->shader_binding);
 
 	NV2A_GL_DGROUP_BEGIN("NV097_SET_BEGIN_END: 0x%x", pg->primitive_mode);
 
@@ -1277,15 +1276,15 @@ void pgraph_handle_method(NV2AState *d,
 				pg->notify_source = NV_PGRAPH_NSOURCE_NOTIFICATION; /* TODO: check this */
 				pg->pending_interrupts |= NV_PGRAPH_INTR_ERROR;
 
-				qemu_mutex_unlock(&d->pgraph.lock);
+				qemu_mutex_unlock(&pg->lock);
 				qemu_mutex_lock_iothread();
 				update_irq(d);
 
-				qemu_mutex_lock(&d->pgraph.lock);
+				qemu_mutex_lock(&pg->lock);
 				qemu_mutex_unlock_iothread();
 
 				while (pg->pending_interrupts & NV_PGRAPH_INTR_ERROR) {
-					qemu_cond_wait(&d->pgraph.interrupt_cond, &d->pgraph.lock);
+					qemu_cond_wait(&pg->interrupt_cond, &pg->lock);
 				}
 			}
 			break;
@@ -2679,7 +2678,7 @@ void pgraph_handle_method(NV2AState *d,
 			pgraph_update_surface(d, false, true, true);
 			unlockGL(pg);
 
-			//qemu_mutex_unlock(&d->pg->pgraph_lock);
+			//qemu_mutex_unlock(&pg->pgraph_lock);
 			//qemu_mutex_lock_iothread();
 
 			xbaddr semaphore_dma_len;
@@ -2690,7 +2689,7 @@ void pgraph_handle_method(NV2AState *d,
 
 			stl_le_p((uint32_t*)semaphore_data, parameter);
 
-			//qemu_mutex_lock(&d->pg->pgraph_lock);
+			//qemu_mutex_lock(&pg->pgraph_lock);
 			//qemu_mutex_unlock_iothread();
 
 			break;
@@ -3011,7 +3010,7 @@ void pgraph_init(NV2AState *d)
 
 //    assert(glGetError() == GL_NO_ERROR);
 
-	unlockGL(&d->pgraph);
+	unlockGL(pg);
 }
 
 void pgraph_destroy(PGRAPHState *pg)
