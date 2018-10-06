@@ -221,6 +221,14 @@ bool EmuExceptionBreakpointAsk(LPEXCEPTION_POINTERS e)
 {
 	EmuExceptionPrintDebugInformation(e, /*IsBreakpointException=*/true);
 
+	// We can skip Xbox as long as they are logged so we know about them
+	// There's no need to prevent emulation, we can just pretend we have a debugger attached and continue
+	// This is because some games (such as Crash Bandicoot) spam exceptions;
+	e->ContextRecord->Eip += EmuX86_OpcodeSize((uint8_t*)e->ContextRecord->Eip); // Skip 1 size bytes
+	return true;
+
+#if 1
+#else
 	char buffer[256];
 	sprintf(buffer,
 		"Received Breakpoint Exception (int 3) @ EIP := %s\n"
@@ -246,6 +254,7 @@ bool EmuExceptionBreakpointAsk(LPEXCEPTION_POINTERS e)
 	}
 
 	return false;
+#endif
 }
 
 void EmuExceptionNonBreakpointUnhandledShow(LPEXCEPTION_POINTERS e)
