@@ -1839,7 +1839,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound_CreateSoundStream)
 		LOG_FUNC_ARG(pUnknown)
 		LOG_FUNC_END;
 
-    return EMUPATCH(DirectSoundCreateStream)(pdssd, ppStream);;
+    return EMUPATCH(DirectSoundCreateStream)(pdssd, ppStream);
 }
 
 // ******************************************************************

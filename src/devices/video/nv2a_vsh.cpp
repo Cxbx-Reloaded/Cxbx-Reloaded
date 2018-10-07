@@ -373,7 +373,7 @@ static QString* decode_opcode_input(const uint32_t *shader_token,
         /* swizzle bits are next to the neg bit */
         QString *swizzle_str = decode_swizzle(shader_token, (VshFieldName)((int)neg_field+1));
         qstring_append(ret_str, qstring_get_str(swizzle_str));
-        QDECREF(swizzle_str);
+        qobject_unref(swizzle_str);
     }
 
     return ret_str;
@@ -463,7 +463,7 @@ static QString* decode_token(const uint32_t *shader_token)
                                     vsh_get_field(shader_token, FLD_A_R));
             qstring_append(inputs_mac, ", ");
             qstring_append(inputs_mac, qstring_get_str(input_a));
-            QDECREF(input_a);
+            qobject_unref(input_a);
         }
         if (mac_opcode_params[mac].B) {
             QString *input_b =
@@ -473,7 +473,7 @@ static QString* decode_token(const uint32_t *shader_token)
                                     vsh_get_field(shader_token, FLD_B_R));
             qstring_append(inputs_mac, ", ");
             qstring_append(inputs_mac, qstring_get_str(input_b));
-            QDECREF(input_b);
+            qobject_unref(input_b);
         }
         if (mac_opcode_params[mac].C) {
             qstring_append(inputs_mac, ", ");
@@ -486,7 +486,7 @@ static QString* decode_token(const uint32_t *shader_token)
                             vsh_get_field(shader_token, FLD_OUT_MAC_MASK),
                             mac_opcode[mac],
                             qstring_get_str(inputs_mac));
-        QDECREF(inputs_mac);
+        qobject_unref(inputs_mac);
     } else {
         ret = qstring_new();
     }
@@ -507,11 +507,11 @@ static QString* decode_token(const uint32_t *shader_token)
 
         qstring_append(ret, qstring_get_str(ilu_op));
 
-        QDECREF(inputs_c);
-        QDECREF(ilu_op);
+        qobject_unref(inputs_c);
+        qobject_unref(ilu_op);
     }
 
-    QDECREF(input_c);
+    qobject_unref(input_c);
 
     return ret;
 }
@@ -625,7 +625,16 @@ static const char* vsh_header =
     "#define ARL(dest, src) dest = _ARL(_in(src).x)\n"
     "int _ARL(float src)\n"
     "{\n"
-    "  return int(floor(src));\n"
+    "  /* Xbox GPU does specify rounding, OpenGL doesn't; so we need a bias.\n"
+    "   * Example: We probably want to floor 16.99.. to 17, not 16.\n"
+    "   * Source of error (why we get 16.99.. instead of 17.0) is typically\n"
+    "   * vertex-attributes being normalized from a byte value to float:\n"
+    "   *   17 / 255 = 0.06666.. so is this 0.06667 (ceil) or 0.06666 (floor)?\n"
+    "   * Which value we get depends on the host GPU.\n"
+    "   * If we multiply these rounded values by 255 later, we get:\n"
+    "   *   17.00 (ARL result = 17) or 16.99 (ARL result = 16).\n"
+    "   * We assume the intend was to get 17, so we add our bias to fix it. */\n"
+    "  return int(floor(src + 0.001));\n"
     "}\n"
     "\n"
     "#define SGE(dest, mask, src0, src1) dest.mask = _SGE(_in(src0), _in(src1)).mask\n"
@@ -663,13 +672,25 @@ static const char* vsh_header =
     "#define EXP(dest, mask, src) dest.mask = _EXP(_in(src).x).mask\n"
     "vec4 _EXP(float src)\n"
     "{\n"
-    "  return vec4(exp2(src));\n"
+    "  vec4 result;\n"
+    "  result.x = exp2(floor(src));\n"
+    "  result.y = src - floor(src);\n"
+    "  result.z = exp2(src);\n"
+    "  result.w = 1.0;\n"
+    "  return result;\n"
     "}\n"
     "\n"
     "#define LOG(dest, mask, src) dest.mask = _LOG(_in(src).x).mask\n"
     "vec4 _LOG(float src)\n"
     "{\n"
-    "  return vec4(log2(src));\n"
+    "  float tmp = abs(src);\n"
+    "  if (tmp == 0.0) { return vec4(-INFINITY, 1.0f, -INFINITY, 1.0f); }\n"
+    "  vec4 result;\n"
+    "  result.x = floor(log2(tmp));\n"
+    "  result.y = tmp / exp2(floor(log2(tmp)));\n"
+    "  result.z = log2(tmp);\n"
+    "  result.w = 1.0;\n"
+    "  return result;\n"
     "}\n"
     "\n"
     "#define LIT(dest, mask, src) dest.mask = _LIT(_in(src)).mask\n"
@@ -711,7 +732,7 @@ void vsh_translate(uint16_t version,
         qstring_append(body, "\n");
         qstring_append(body, qstring_get_str(token_str));
         qstring_append(body, "\n");
-        QDECREF(token_str);
+        qobject_unref(token_str);
 
         if (vsh_get_field(cur_token, FLD_FINAL)) {
             has_final = true;

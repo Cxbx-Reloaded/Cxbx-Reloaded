@@ -2377,7 +2377,7 @@ static void EmuVerifyResourceIsRegistered(XTL::X_D3DResource *pResource, DWORD D
 
 typedef struct {
 	DWORD Hash = 0;
-	DWORD IndexCount = 0;;
+	DWORD IndexCount = 0;
 	XTL::IDirect3DIndexBuffer* pHostIndexBuffer = nullptr;
 } ConvertedIndexBuffer;
 
@@ -4870,7 +4870,7 @@ void CreateHostResource(XTL::X_D3DResource *pResource, DWORD D3DUsage, int iText
 
 				// If, and ONLY if this is the default backbuffer, make sure the format matches the host backbuffer
 				if (pResource == g_XboxBackBufferSurface) {
-					PCFormat = g_EmuCDPD.HostPresentationParameters.BackBufferFormat;;
+					PCFormat = g_EmuCDPD.HostPresentationParameters.BackBufferFormat;
 				}
 			}
 			else {
@@ -8541,7 +8541,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_SetDepthClipPlanes)
         break;
 
         default:
-            EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Unknown SetDepthClipPlanes Flags provided");;
+            EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Unknown SetDepthClipPlanes Flags provided");
     }
 
     // TODO

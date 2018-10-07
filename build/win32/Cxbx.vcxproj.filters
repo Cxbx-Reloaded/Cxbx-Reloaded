@@ -808,4 +808,9 @@
     <Image Include="..\..\resource\Cxbx-R.ico" />
     <Image Include="..\..\resource\Logo-License-CC4.bmp" />
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\src\devices\video\nv2a_regs.h">
+      <Filter>Hardware\Video</Filter>
+    </ClInclude>
+  </ItemGroup>
 </Project>

@@ -905,7 +905,7 @@ static void VshWriteShader(VSH_XBOX_SHADER *pShader,
 			}
 
 			i++;
-		} while (i < RegVUsage.size());;
+		} while (i < RegVUsage.size());
 	}
 
     for (int i = 0; i < pShader->IntermediateCount && (i < VSH_MAX_INSTRUCTION_COUNT || !Truncate); i++)

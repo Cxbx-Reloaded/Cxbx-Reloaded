@@ -30,13 +30,15 @@
 // *
 // *  (c) 2002-2003 Aaron Robinson <caustik@caustik.com>
 // * 
-// *  nv2a.cpp is heavily based on code from XQEMU
-// *  Copyright(c) 2012 espes
-// *  Copyright(c) 2015 Jannik Vogel
-// *  https://github.com/espes/xqemu/blob/xbox/hw/xbox/nv2a.c
+// *  This file is heavily based on code from XQEMU
+// *  https://github.com/xqemu/xqemu/blob/master/hw/xbox/nv2a/nv2a.c
+// *  Copyright (c) 2012 espes
+// *  Copyright (c) 2015 Jannik Vogel
+// *  Copyright (c) 2018 Matt Borgerson
 // *
-// *  (c) 2016-2018 Luke Usher <luke.usher@outlook.com>
-// *  (c) 2017-2018 Patrick van Logchem <pvanlogchem@gmail.com>
+// *  Contributions for Cxbx-Reloaded
+// *  Copyright (c) 2017-2018 Luke Usher <luke.usher@outlook.com>
+// *  Copyright (c) 2018 Patrick van Logchem <pvanlogchem@gmail.com>
 // *
 // *  All rights reserved
 // *
@@ -99,6 +101,9 @@ struct _GError
 
 #include "CxbxKrnl/gloffscreen/glextensions.h" // for glextensions_init
 
+GLuint create_gl_shader(GLenum gl_shader_type,
+	const char *code,
+	const char *name); // forward to nv2a_shaders.cpp
 
 static void update_irq(NV2AState *d)
 {
@@ -1068,9 +1073,9 @@ void NV2ADevice::UpdateHostDisplay(NV2AState *d)
 		return;
 	}
 
-	lockGL(pg);
-
 	NV2A_GL_DGROUP_BEGIN("VGA Frame");
+
+	glo_set_current(pg->gl_context);
 
 	cxbx_gl_update_displaymode(d);
 
@@ -1114,7 +1119,7 @@ void NV2ADevice::UpdateHostDisplay(NV2AState *d)
 
 	NV2A_GL_DGROUP_END();
 
-	unlockGL(pg);
+//	glo_set_current(NULL);
 
 	UpdateFPSCounter();
 }
@@ -1224,8 +1229,6 @@ void NV2ADevice::Init()
 	d->pramdac.video_clock_coeff = 0x0003C20D; /* 25182Khz...? */
 
 	// Setup the conditions/mutexes
-	qemu_mutex_init(&d->pfifo.cache1.cache_lock);
-	qemu_cond_init(&d->pfifo.cache1.cache_cond);
 	pgraph_init(d);
 
 	// Only spawn VBlank thread when LLE is enabled
@@ -1235,7 +1238,16 @@ void NV2ADevice::Init()
 		vblank_thread = std::thread(nv2a_vblank_thread, d);
 	}
 
+    qemu_mutex_init(&d->pfifo.pfifo_lock);
+    qemu_cond_init(&d->pfifo.puller_cond);
+    qemu_cond_init(&d->pfifo.pusher_cond);
+
+    d->pfifo.regs[NV_PFIFO_CACHE1_STATUS] |= NV_PFIFO_CACHE1_STATUS_LOW_MARK;
+
+    /* fire up puller */
 	d->pfifo.puller_thread = std::thread(pfifo_puller_thread, d);
+    /* fire up pusher */
+	d->pfifo.pusher_thread = std::thread(pfifo_pusher_thread, d);
 }
 
 void NV2ADevice::Reset()
@@ -1244,17 +1256,18 @@ void NV2ADevice::Reset()
 	if (!d) return;
 
 	d->exiting = true;
-	qemu_cond_signal(&d->pfifo.cache1.cache_cond);
-	d->pfifo.puller_thread.join(); // was qemu_thread_join(&d->pfifo.puller_thread);
 
+	qemu_cond_broadcast(&d->pfifo.puller_cond);
+	qemu_cond_broadcast(&d->pfifo.pusher_cond);
+	d->pfifo.puller_thread.join();
+	d->pfifo.pusher_thread.join();
+	qemu_mutex_destroy(&d->pfifo.pfifo_lock); // Cbxbx addition
 	if (d->pgraph.opengl_enabled) {
 		vblank_thread.join();
 		pvideo_destroy(d);
 	}
 
 	pgraph_destroy(&d->pgraph);
-	qemu_mutex_destroy(&d->pfifo.cache1.cache_lock);
-	qemu_cond_destroy(&d->pfifo.cache1.cache_cond);
 }
 
 uint32_t NV2ADevice::IORead(int barIndex, uint32_t port, unsigned size)

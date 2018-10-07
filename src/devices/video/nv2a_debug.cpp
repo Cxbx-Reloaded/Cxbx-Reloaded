@@ -23,6 +23,7 @@
 #ifdef DEBUG_NV2A_GL
 
 #include <stdio.h>
+#include <stdbool.h>
 #include <stdarg.h>
 #include <assert.h>
 

@@ -449,7 +449,8 @@ extern void XTL::EmuExecutePushBufferRaw
 
 	// Retrieve NV2AState via the (LLE) NV2A device :
 	NV2AState *d = g_NV2A->GetDeviceState();
-	d->pgraph.channel_valid = true; // avoid assert
+	d->pgraph.regs[NV_PGRAPH_CTX_CONTROL] |= NV_PGRAPH_CTX_CONTROL_CHID; // avoid assert in pgraph_handle_method()
+
 
 	// DMA Pusher state -- see https://envytools.readthedocs.io/en/latest/hw/fifo/dma-pusher.html#pusher-state
 #if 0

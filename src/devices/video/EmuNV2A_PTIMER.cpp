@@ -28,12 +28,15 @@
 // *  If not, write to the Free Software Foundation, Inc.,
 // *  59 Temple Place - Suite 330, Bostom, MA 02111-1307, USA.
 // *
-// *  nv2a.cpp is heavily based on code from XQEMU
-// *  Copyright(c) 2012 espes
-// *  Copyright(c) 2015 Jannik Vogel
-// *  https://github.com/espes/xqemu/blob/xbox/hw/xbox/nv2a.c
-// *  (c) 2017-2018 Luke Usher <luke.usher@outlook.com>
-// *  (c) 2018 Patrick van Logchem <pvanlogchem@gmail.com>
+// *  This file is heavily based on code from XQEMU
+// *  https://github.com/xqemu/xqemu/blob/master/hw/xbox/nv2a/nv2a_ptimer.c
+// *  Copyright (c) 2012 espes
+// *  Copyright (c) 2015 Jannik Vogel
+// *  Copyright (c) 2018 Matt Borgerson
+// *
+// *  Contributions for Cxbx-Reloaded
+// *  Copyright (c) 2017-2018 Luke Usher <luke.usher@outlook.com>
+// *  Copyright (c) 2018 Patrick van Logchem <pvanlogchem@gmail.com>
 // *
 // *  All rights reserved
 // *
@@ -50,7 +53,7 @@ static uint64_t ptimer_get_clock(NV2AState * d)
     uint64_t time = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
 	
 	return Muldiv64(Muldiv64(time,
-					d->pramdac.core_clock_freq,
+					d->pramdac.core_clock_freq, // TODO : Research how this can be updated to accept uint64_t
 					NANOSECONDS_PER_SECOND), // Was CLOCKS_PER_SEC
 				d->ptimer.denominator,
 				d->ptimer.numerator);
