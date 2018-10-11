@@ -45,6 +45,7 @@
 #include "PoolManager.h"
 #include "Logging.h"
 #include "EmuShared.h"
+#include "EmuKrnl.h" // For InitializeListHead(), etc.
 #include <assert.h>
 
 
@@ -129,7 +130,7 @@ void VMManager::Initialize(HANDLE memory_view, HANDLE pagetables_view, int BootF
 	block->start = 0;
 	block->size = m_HighestPage + 1;
 	LIST_ENTRY_INITIALIZE(&block->ListEntry);
-	LIST_ENTRY_INSERT_HEAD(ListEntry, &block->ListEntry);
+	InsertHeadList(ListEntry, &block->ListEntry);
 
 	// Set up the pfn database
 	if ((BootFlags & BOOT_QUICK_REBOOT) == 0) {

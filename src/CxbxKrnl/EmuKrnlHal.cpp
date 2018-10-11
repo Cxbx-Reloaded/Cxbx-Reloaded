@@ -46,6 +46,7 @@ namespace xboxkrnl
 
 #include <Shlwapi.h> // For PathRemoveFileSpec()
 #include "Logging.h" // For LOG_FUNC()
+#include "EmuKrnl.h" // For InitializeListHead(), etc.
 #include "EmuKrnlLogging.h"
 #include "CxbxKrnl.h" // For CxbxKrnlCleanup, CxbxConvertArgToString, and CxbxExec
 #include "Emu.h" // For EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, )
@@ -398,7 +399,7 @@ XBSYSAPI EXPORTNUM(47) xboxkrnl::VOID NTAPI xboxkrnl::HalRegisterShutdownNotific
 		{
 			if (ShutdownRegistration->Priority > LIST_ENTRY_ACCESS_RECORD(ListEntry, HAL_SHUTDOWN_REGISTRATION, ListEntry)->Priority)
 			{
-				LIST_ENTRY_INSERT_TAIL(ListEntry, &ShutdownRegistration->ListEntry)
+				InsertTailList(ListEntry, &ShutdownRegistration->ListEntry);
 				break;
 			}
 			ListEntry = ListEntry->Flink;
@@ -406,7 +407,7 @@ XBSYSAPI EXPORTNUM(47) xboxkrnl::VOID NTAPI xboxkrnl::HalRegisterShutdownNotific
 
 		if (ListEntry == &ShutdownRoutineList)
 		{
-			LIST_ENTRY_INSERT_TAIL(ListEntry, &ShutdownRegistration->ListEntry)
+			InsertTailList(ListEntry, &ShutdownRegistration->ListEntry);
 		}
 	}
 	else
@@ -416,7 +417,7 @@ XBSYSAPI EXPORTNUM(47) xboxkrnl::VOID NTAPI xboxkrnl::HalRegisterShutdownNotific
 		{
 			if (ShutdownRegistration == LIST_ENTRY_ACCESS_RECORD(ListEntry, HAL_SHUTDOWN_REGISTRATION, ListEntry))
 			{
-				LIST_ENTRY_REMOVE(&ShutdownRegistration->ListEntry)
+				RemoveEntryList(&ShutdownRegistration->ListEntry);
 				break;
 			}
 			ListEntry = ListEntry->Flink;
@@ -509,7 +510,7 @@ XBSYSAPI EXPORTNUM(49) xboxkrnl::VOID DECLSPEC_NORETURN NTAPI xboxkrnl::HalRetur
 				{
 					OldIrql = KeRaiseIrqlToDpcLevel();
 
-					ListEntry = LIST_ENTRY_REMOVE_AT_HEAD(&ShutdownRoutineList)
+					ListEntry = RemoveHeadList(&ShutdownRoutineList)
 
 					KfLowerIrql(OldIrql);
 

@@ -360,49 +360,10 @@ LIST_ENTRY, *PLIST_ENTRY;
 
 #define LIST_ENTRY_DEFINE_HEAD(ListHead) xboxkrnl::LIST_ENTRY (ListHead) = { &(ListHead), &(ListHead) }
 
-#define LIST_ENTRY_INITIALIZE_HEAD(ListHead) ((ListHead)->Flink = (ListHead)->Blink = (ListHead))
-
 #define LIST_ENTRY_INITIALIZE(ListEntry) ((ListEntry)->Flink = (ListEntry)->Blink = nullptr)
 
 #define LIST_ENTRY_ACCESS_RECORD(address, type, field) \
 ((type*)((UCHAR*)(address) - (ULONG)(&((type*)0)->field)))
-
-#define IS_LIST_EMPTY(ListHead) ((ListHead)->Flink == (ListHead))
-
-#define LIST_ENTRY_INSERT_HEAD(ListHead, Entry) {\
-xboxkrnl::PLIST_ENTRY Flink;\
-Flink = (ListHead)->Flink;\
-(Entry)->Flink = Flink;\
-(Entry)->Blink = (ListHead);\
-(Flink)->Blink = Entry;\
-(ListHead)->Flink = Entry;\
-}
-
-#define LIST_ENTRY_INSERT_TAIL(ListHead, Entry) {\
-xboxkrnl::PLIST_ENTRY Blink;\
-Blink = (ListHead)->Blink;\
-(Entry)->Flink = ListHead;\
-(Entry)->Blink = Blink;\
-(Blink)->Flink = Entry;\
-(ListHead)->Blink = Entry;\
-}
-
-#define LIST_ENTRY_REMOVE(Entry) {\
-xboxkrnl::PLIST_ENTRY ExFlink;\
-xboxkrnl::PLIST_ENTRY ExBlink;\
-ExFlink = (Entry)->Flink;\
-ExBlink = (Entry)->Blink;\
-(ExFlink)->Blink = ExBlink;\
-(ExBlink)->Flink = ExFlink;\
-}
-
-#define LIST_ENTRY_REMOVE_AT_HEAD(ListHead) \
-(ListHead)->Flink;\
-LIST_ENTRY_REMOVE((ListHead)->Flink)
-
-#define REMOVE_HEAD_LIST(ListHead) \
-(ListHead)->Flink;\
-{LIST_ENTRY_REMOVE((ListHead)->Flink)}
 
 // ******************************************************************
 // * SLIST_ENTRY

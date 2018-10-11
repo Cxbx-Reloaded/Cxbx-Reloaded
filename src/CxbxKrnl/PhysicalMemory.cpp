@@ -39,6 +39,7 @@
 
 #include "PhysicalMemory.h"
 #include "Logging.h"
+#include "EmuKrnl.h" // For InitializeListHead(), etc.
 #include <assert.h>
 
 
@@ -243,7 +244,7 @@ bool PhysicalMemory::RemoveFree(PFN_COUNT NumberOfPages, PFN* result, PFN_COUNT 
 					{
 						// delete the entry if there is no free space left
 
-						LIST_ENTRY_REMOVE(ListEntry);
+						RemoveEntryList(ListEntry);
 						delete LIST_ENTRY_ACCESS_RECORD(ListEntry, FreeBlock, ListEntry);
 					}
 					else { LIST_ENTRY_ACCESS_RECORD(ListEntry, FreeBlock, ListEntry)->size = PfnCount; }
@@ -256,14 +257,14 @@ bool PhysicalMemory::RemoveFree(PFN_COUNT NumberOfPages, PFN* result, PFN_COUNT 
 					block->start = IntersectionEnd + 1;
 					block->size = PfnStart + PfnCount - IntersectionEnd - 1;
 					LIST_ENTRY_INITIALIZE(&block->ListEntry);
-					LIST_ENTRY_INSERT_HEAD(ListEntry, &block->ListEntry);
+					InsertHeadList(ListEntry, &block->ListEntry);
 
 					PfnCount = IntersectionEnd - PfnStart - NumberOfPages + 1;
 					if (!PfnCount)
 					{
 						// delete the entry if there is no free space left
 
-						LIST_ENTRY_REMOVE(ListEntry);
+						RemoveEntryList(ListEntry);
 						delete LIST_ENTRY_ACCESS_RECORD(ListEntry, FreeBlock, ListEntry);
 					}
 					else { LIST_ENTRY_ACCESS_RECORD(ListEntry, FreeBlock, ListEntry)->size = PfnCount; }
@@ -288,7 +289,7 @@ bool PhysicalMemory::RemoveFree(PFN_COUNT NumberOfPages, PFN* result, PFN_COUNT 
 					block->start = IntersectionEnd + 1;
 					block->size = PfnStart + PfnCount - IntersectionEnd - 1;
 					LIST_ENTRY_INITIALIZE(&block->ListEntry);
-					LIST_ENTRY_INSERT_HEAD(ListEntry, &block->ListEntry);
+					InsertHeadList(ListEntry, &block->ListEntry);
 
 					PfnCount = IntersectionEnd - PfnStart - NumberOfPages + 1;
 					LIST_ENTRY_ACCESS_RECORD(ListEntry, FreeBlock, ListEntry)->size = PfnCount;
@@ -327,7 +328,7 @@ void PhysicalMemory::InsertFree(PFN start, PFN end)
 			block->start = start;
 			block->size = size;
 			LIST_ENTRY_INITIALIZE(&block->ListEntry);
-			LIST_ENTRY_INSERT_HEAD(ListEntry, &block->ListEntry);
+			InsertHeadList(ListEntry, &block->ListEntry);
 
 			// Ensure that we are not freeing a part of the previous block
 			if (ListEntry != &FreeList) {
@@ -350,7 +351,7 @@ void PhysicalMemory::InsertFree(PFN start, PFN end)
 				xboxkrnl::PLIST_ENTRY temp = ListEntry->Flink;
 				LIST_ENTRY_ACCESS_RECORD(ListEntry, FreeBlock, ListEntry)->size +=
 					LIST_ENTRY_ACCESS_RECORD(temp, FreeBlock, ListEntry)->size;
-				LIST_ENTRY_REMOVE(temp);
+				RemoveEntryList(temp);
 				delete LIST_ENTRY_ACCESS_RECORD(temp, FreeBlock, ListEntry);
 			}
 			if (ListEntry->Blink != &FreeList &&
@@ -360,7 +361,7 @@ void PhysicalMemory::InsertFree(PFN start, PFN end)
 				// Merge backward
 				LIST_ENTRY_ACCESS_RECORD(ListEntry->Blink, FreeBlock, ListEntry)->size +=
 					LIST_ENTRY_ACCESS_RECORD(ListEntry, FreeBlock, ListEntry)->size;
-				LIST_ENTRY_REMOVE(ListEntry);
+				RemoveEntryList(ListEntry);
 				delete block;
 			}
 
