@@ -48,6 +48,10 @@
 #include "EmuKrnl.h" // For InitializeListHead(), etc.
 #include <assert.h>
 
+// See the links below for the details about the kernel structure LIST_ENTRY and the related functions
+// https://www.codeproject.com/Articles/800404/Understanding-LIST-ENTRY-Lists-and-Its-Importance
+// https://docs.microsoft.com/en-us/windows-hardware/drivers/kernel/singly-and-doubly-linked-lists
+#define LIST_ENTRY_INITIALIZE(ListEntry) ((ListEntry)->Flink = (ListEntry)->Blink = nullptr)
 
 VMManager g_VMManager;
 

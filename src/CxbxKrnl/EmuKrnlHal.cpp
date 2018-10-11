@@ -62,6 +62,14 @@ namespace xboxkrnl
 #include <locale>
 #include <codecvt>
 
+// See the links below for the details about the kernel structure LIST_ENTRY and the related functions
+// https://www.codeproject.com/Articles/800404/Understanding-LIST-ENTRY-Lists-and-Its-Importance
+// https://docs.microsoft.com/en-us/windows-hardware/drivers/kernel/singly-and-doubly-linked-lists
+#define LIST_ENTRY_DEFINE_HEAD(ListHead) xboxkrnl::LIST_ENTRY (ListHead) = { &(ListHead), &(ListHead) }
+#define LIST_ENTRY_ACCESS_RECORD(address, type, field) \
+((type*)((UCHAR*)(address) - (ULONG)(&((type*)0)->field)))
+
+
 volatile DWORD HalInterruptRequestRegister = APC_LEVEL | DISPATCH_LEVEL;
 HalSystemInterrupt HalSystemInterrupts[MAX_BUS_INTERRUPT_LEVEL + 1];
 
@@ -71,7 +79,6 @@ uint32_t ResetOrShutdownDataValue = 0;
 
 // global list of routines executed during a reboot
 LIST_ENTRY_DEFINE_HEAD(ShutdownRoutineList);
-
 
 // ******************************************************************
 // * Declaring this in a header causes errors with xboxkrnl
@@ -510,7 +517,7 @@ XBSYSAPI EXPORTNUM(49) xboxkrnl::VOID DECLSPEC_NORETURN NTAPI xboxkrnl::HalRetur
 				{
 					OldIrql = KeRaiseIrqlToDpcLevel();
 
-					ListEntry = RemoveHeadList(&ShutdownRoutineList)
+					ListEntry = RemoveHeadList(&ShutdownRoutineList);
 
 					KfLowerIrql(OldIrql);
 
