@@ -48,10 +48,6 @@
 #include "EmuKrnl.h" // For InitializeListHead(), etc.
 #include <assert.h>
 
-// See the links below for the details about the kernel structure LIST_ENTRY and the related functions
-// https://www.codeproject.com/Articles/800404/Understanding-LIST-ENTRY-Lists-and-Its-Importance
-// https://docs.microsoft.com/en-us/windows-hardware/drivers/kernel/singly-and-doubly-linked-lists
-#define LIST_ENTRY_INITIALIZE(ListEntry) ((ListEntry)->Flink = (ListEntry)->Blink = nullptr)
 
 VMManager g_VMManager;
 
@@ -133,7 +129,7 @@ void VMManager::Initialize(HANDLE memory_view, HANDLE pagetables_view, int BootF
 	PFreeBlock block = new FreeBlock;
 	block->start = 0;
 	block->size = m_HighestPage + 1;
-	LIST_ENTRY_INITIALIZE(&block->ListEntry);
+	block->ListEntry.Flink = block->ListEntry.Blink = nullptr; // Was LIST_ENTRY_INITIALIZE()
 	InsertHeadList(ListEntry, &block->ListEntry);
 
 	// Set up the pfn database

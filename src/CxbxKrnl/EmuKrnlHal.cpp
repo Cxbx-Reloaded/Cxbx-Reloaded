@@ -62,14 +62,6 @@ namespace xboxkrnl
 #include <locale>
 #include <codecvt>
 
-// See the links below for the details about the kernel structure LIST_ENTRY and the related functions
-// https://www.codeproject.com/Articles/800404/Understanding-LIST-ENTRY-Lists-and-Its-Importance
-// https://docs.microsoft.com/en-us/windows-hardware/drivers/kernel/singly-and-doubly-linked-lists
-#define LIST_ENTRY_DEFINE_HEAD(ListHead) xboxkrnl::LIST_ENTRY (ListHead) = { &(ListHead), &(ListHead) }
-#define LIST_ENTRY_ACCESS_RECORD(address, type, field) \
-((type*)((UCHAR*)(address) - (ULONG)(&((type*)0)->field)))
-
-
 volatile DWORD HalInterruptRequestRegister = APC_LEVEL | DISPATCH_LEVEL;
 HalSystemInterrupt HalSystemInterrupts[MAX_BUS_INTERRUPT_LEVEL + 1];
 
@@ -78,7 +70,8 @@ uint8_t ResetOrShutdownCommandCode = 0;
 uint32_t ResetOrShutdownDataValue = 0;
 
 // global list of routines executed during a reboot
-LIST_ENTRY_DEFINE_HEAD(ShutdownRoutineList);
+xboxkrnl::LIST_ENTRY ShutdownRoutineList = { &ShutdownRoutineList , &ShutdownRoutineList }; // see InitializeListHead()
+
 
 // ******************************************************************
 // * Declaring this in a header causes errors with xboxkrnl
@@ -404,7 +397,7 @@ XBSYSAPI EXPORTNUM(47) xboxkrnl::VOID NTAPI xboxkrnl::HalRegisterShutdownNotific
 		ListEntry = ShutdownRoutineList.Flink;
 		while (ListEntry != &ShutdownRoutineList)
 		{
-			if (ShutdownRegistration->Priority > LIST_ENTRY_ACCESS_RECORD(ListEntry, HAL_SHUTDOWN_REGISTRATION, ListEntry)->Priority)
+			if (ShutdownRegistration->Priority > CONTAINING_RECORD(ListEntry, HAL_SHUTDOWN_REGISTRATION, ListEntry)->Priority)
 			{
 				InsertTailList(ListEntry, &ShutdownRegistration->ListEntry);
 				break;
@@ -422,7 +415,7 @@ XBSYSAPI EXPORTNUM(47) xboxkrnl::VOID NTAPI xboxkrnl::HalRegisterShutdownNotific
 		ListEntry = ShutdownRoutineList.Flink;
 		while (ListEntry != &ShutdownRoutineList)
 		{
-			if (ShutdownRegistration == LIST_ENTRY_ACCESS_RECORD(ListEntry, HAL_SHUTDOWN_REGISTRATION, ListEntry))
+			if (ShutdownRegistration == CONTAINING_RECORD(ListEntry, HAL_SHUTDOWN_REGISTRATION, ListEntry))
 			{
 				RemoveEntryList(&ShutdownRegistration->ListEntry);
 				break;
@@ -524,7 +517,7 @@ XBSYSAPI EXPORTNUM(49) xboxkrnl::VOID DECLSPEC_NORETURN NTAPI xboxkrnl::HalRetur
 					if (ListEntry == &ShutdownRoutineList)
 						break;
 
-					ShutdownRegistration = LIST_ENTRY_ACCESS_RECORD(ListEntry, HAL_SHUTDOWN_REGISTRATION, ListEntry);
+					ShutdownRegistration = CONTAINING_RECORD(ListEntry, HAL_SHUTDOWN_REGISTRATION, ListEntry);
 					ShutdownRegistration->NotificationRoutine(ShutdownRegistration);
 				}
 				#endif
