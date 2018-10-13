@@ -1465,25 +1465,6 @@ static void VshRemoveScreenSpaceInstructions(VSH_XBOX_SHADER *pShader)
     }
 }
 
-static void VshRemoveUndeclaredRegisters(VSH_XBOX_SHADER *pShader, bool	*pDeclaredRegisters)
-{
-	for (int i = 0; i < pShader->IntermediateCount; i++) {
-		VSH_INTERMEDIATE_FORMAT* pIntermediate = &pShader->Intermediate[i];
-		for (int p = 0; p < 3; p++) {
-			// Skip parameters that are either inactive, or not vX registers
-			if (!pIntermediate->Parameters[p].Parameter.ParameterType != PARAM_V) {
-				continue;
-			}
-
-			bool used = pDeclaredRegisters[pIntermediate->Parameters[p].Parameter.Address];
-			if (!used) {
-				EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Deleting usage of undeclared register v%d", pIntermediate->Parameters[p].Parameter.Address);
-				VshDeleteIntermediate(pShader, i);
-			}
-		}
-	}
-}
-
 // Converts the intermediate format vertex shader to DirectX 8 format
 static boolean VshConvertShader(VSH_XBOX_SHADER *pShader,
                                 boolean         bNoReservedConstants,
@@ -1505,8 +1486,6 @@ static boolean VshConvertShader(VSH_XBOX_SHADER *pShader,
     {
         VshRemoveScreenSpaceInstructions(pShader);
     }
-
-	VshRemoveUndeclaredRegisters(pShader, pDeclaredRegisters);
 
     // TODO: Add routine for compacting r register usage so that at least one is freed (two if dph and r12)
 
