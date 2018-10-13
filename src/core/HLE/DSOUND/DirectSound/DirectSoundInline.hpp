@@ -1136,16 +1136,19 @@ inline HRESULT HybridDirectSound3DBuffer_SetAllParameters(
 
         hRet = pDS3DBuffer->SetAllParameters(&pDS3DBufferParamsTemp, dwApply);
         if (hRet != DS_OK) {
+			leaveCriticalSection;
             RETURN_RESULT_CHECK(hRet);
         }
 
         hRet = g_pDSoundPrimary3DListener8->SetDistanceFactor(pDS3DBufferParams->flDistanceFactor, dwApply);
         if (hRet != DS_OK) {
+			leaveCriticalSection;
             RETURN_RESULT_CHECK(hRet);
         }
 
         hRet = g_pDSoundPrimary3DListener8->SetRolloffFactor(pDS3DBufferParams->flRolloffFactor, dwApply);
         if (hRet != DS_OK) {
+			leaveCriticalSection;
             RETURN_RESULT_CHECK(hRet);
         }
 
