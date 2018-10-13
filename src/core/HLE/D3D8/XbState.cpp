@@ -90,33 +90,35 @@ void XTL::EmuUpdateDeferredStates()
 		// Loop through all deferred render states
 		for (uint RenderState = X_D3DRS_FOGENABLE; RenderState <= X_D3DRS_PATCHSEGMENTS; RenderState++) {
 			// If this render state does not have a PC counterpart, skip it
-			if (DxbxRenderStateInfo[RenderState].PC != 0) {
-				uint8_t index = RenderState - X_D3DRS_FOGENABLE;
-				// Some render states require special handling to convert to host, but most can be mapped 1:1
-				// We use a switch/case to handle the special states
-				switch (RenderState) {
-					case X_D3DRS_WRAP0: {
-						::DWORD dwConv = 0;
+			if (DxbxRenderStateInfo[RenderState].PC == 0) {
+				continue;
+			}
 
-						dwConv |= (XTL::EmuD3DDeferredRenderState[index] & 0x00000010) ? D3DWRAP_U : 0;
-						dwConv |= (XTL::EmuD3DDeferredRenderState[index] & 0x00001000) ? D3DWRAP_V : 0;
-						dwConv |= (XTL::EmuD3DDeferredRenderState[index] & 0x00100000) ? D3DWRAP_W : 0;
+			uint8_t index = RenderState - X_D3DRS_FOGENABLE;
+			// Some render states require special handling to convert to host, but most can be mapped 1:1
+			// We use a switch/case to handle the special states
+			switch (RenderState) {
+				case X_D3DRS_WRAP0: {
+					::DWORD dwConv = 0;
 
-						g_pD3DDevice->SetRenderState(D3DRS_WRAP0, dwConv);
-					} break;
-					case X_D3DRS_WRAP1: {
-						::DWORD dwConv = 0;
+					dwConv |= (XTL::EmuD3DDeferredRenderState[index] & 0x00000010) ? D3DWRAP_U : 0;
+					dwConv |= (XTL::EmuD3DDeferredRenderState[index] & 0x00001000) ? D3DWRAP_V : 0;
+					dwConv |= (XTL::EmuD3DDeferredRenderState[index] & 0x00100000) ? D3DWRAP_W : 0;
 
-						dwConv |= (XTL::EmuD3DDeferredRenderState[index] & 0x00000010) ? D3DWRAP_U : 0;
-						dwConv |= (XTL::EmuD3DDeferredRenderState[index] & 0x00001000) ? D3DWRAP_V : 0;
-						dwConv |= (XTL::EmuD3DDeferredRenderState[index] & 0x00100000) ? D3DWRAP_W : 0;
+					g_pD3DDevice->SetRenderState(D3DRS_WRAP0, dwConv);
+				} break;
+				case X_D3DRS_WRAP1: {
+					::DWORD dwConv = 0;
 
-						g_pD3DDevice->SetRenderState(D3DRS_WRAP1, dwConv);
-					} break;
-					default:
-						g_pD3DDevice->SetRenderState(DxbxRenderStateInfo[RenderState].PC, EmuD3DDeferredRenderState[index]);
-						break;
-				}
+					dwConv |= (XTL::EmuD3DDeferredRenderState[index] & 0x00000010) ? D3DWRAP_U : 0;
+					dwConv |= (XTL::EmuD3DDeferredRenderState[index] & 0x00001000) ? D3DWRAP_V : 0;
+					dwConv |= (XTL::EmuD3DDeferredRenderState[index] & 0x00100000) ? D3DWRAP_W : 0;
+
+					g_pD3DDevice->SetRenderState(D3DRS_WRAP1, dwConv);
+				} break;
+				default:
+					g_pD3DDevice->SetRenderState(DxbxRenderStateInfo[RenderState].PC, EmuD3DDeferredRenderState[index]);
+					break;
 			}
 		}
     }
