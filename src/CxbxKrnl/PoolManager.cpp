@@ -38,6 +38,7 @@
 
 #include "PoolManager.h"
 #include "Logging.h"
+#include "EmuKrnl.h" // For InitializeListHead(), etc.
 #include <assert.h>
 
 
@@ -59,7 +60,7 @@ void PoolManager::InitializePool()
 	m_NonPagedPoolDescriptor.TotalBigPages = 0;
 
 	for (Index = 0; Index < POOL_LIST_HEADS; Index++) {
-		LIST_ENTRY_INITIALIZE_HEAD(&m_NonPagedPoolDescriptor.ListHeads[Index]);
+		InitializeListHead(&m_NonPagedPoolDescriptor.ListHeads[Index]);
 	}
 
 	for (Index = 0; Index < POOL_SMALL_LISTS; Index++) {
@@ -156,8 +157,8 @@ VAddr PoolManager::AllocatePool(size_t Size, uint32_t Tag)
 
 	do {
 		do {
-			if (IS_LIST_EMPTY(ListHead) == false) {
-				Block = REMOVE_HEAD_LIST(ListHead);
+			if (IsListEmpty(ListHead) == false) {
+				Block = RemoveHeadList(ListHead);
 				Entry = reinterpret_cast<PPOOL_HEADER>((static_cast<PCHAR>(Block) - POOL_OVERHEAD));
 
 				assert(Entry->BlockSize >= NeededSize);
@@ -189,7 +190,7 @@ VAddr PoolManager::AllocatePool(size_t Size, uint32_t Tag)
 					SplitEntry->PoolType = 0;
 					Index = SplitEntry->BlockSize;
 
-					LIST_ENTRY_INSERT_TAIL(&PoolDesc->ListHeads[Index - 1], (reinterpret_cast<xboxkrnl::PLIST_ENTRY>((reinterpret_cast<PCHAR>(SplitEntry)
+					InsertTailList(&PoolDesc->ListHeads[Index - 1], (reinterpret_cast<xboxkrnl::PLIST_ENTRY>((reinterpret_cast<PCHAR>(SplitEntry)
 						+ POOL_OVERHEAD))));
 				}
 
@@ -231,7 +232,7 @@ VAddr PoolManager::AllocatePool(size_t Size, uint32_t Tag)
 		Entry->PreviousSize = 0;
 		ListHead = &PoolDesc->ListHeads[POOL_LIST_HEADS - 1];
 
-		LIST_ENTRY_INSERT_HEAD(ListHead, (reinterpret_cast<xboxkrnl::PLIST_ENTRY>((reinterpret_cast<PCHAR>(Entry) + POOL_OVERHEAD))));
+		InsertHeadList(ListHead, (reinterpret_cast<xboxkrnl::PLIST_ENTRY>((reinterpret_cast<PCHAR>(Entry) + POOL_OVERHEAD))));
 
 	} while (true);
 }
@@ -296,7 +297,7 @@ void PoolManager::DeallocatePool(VAddr addr)
 	if (PAGE_END(NextEntry) == false) {
 		if (NextEntry->PoolType == 0) {
 			Combined = true;
-			LIST_ENTRY_REMOVE((reinterpret_cast<xboxkrnl::PLIST_ENTRY>(reinterpret_cast<PCHAR>(NextEntry) + POOL_OVERHEAD)));
+			RemoveEntryList((reinterpret_cast<xboxkrnl::PLIST_ENTRY>(reinterpret_cast<PCHAR>(NextEntry) + POOL_OVERHEAD)));
 			Entry->BlockSize += NextEntry->BlockSize;
 		}
 	}
@@ -305,7 +306,7 @@ void PoolManager::DeallocatePool(VAddr addr)
 		NextEntry = reinterpret_cast<PPOOL_HEADER>(reinterpret_cast<PPOOL_BLOCK>(Entry) - Entry->PreviousSize);
 		if (NextEntry->PoolType == 0) {
 			Combined = true;
-			LIST_ENTRY_REMOVE((reinterpret_cast<xboxkrnl::PLIST_ENTRY>(reinterpret_cast<PCHAR>(NextEntry) + POOL_OVERHEAD)));
+			RemoveEntryList((reinterpret_cast<xboxkrnl::PLIST_ENTRY>(reinterpret_cast<PCHAR>(NextEntry) + POOL_OVERHEAD)));
 			NextEntry->BlockSize += Entry->BlockSize;
 			Entry = NextEntry;
 		}
@@ -327,11 +328,11 @@ void PoolManager::DeallocatePool(VAddr addr)
 			if (PAGE_END(NextEntry) == false) {
 				NextEntry->PreviousSize = Entry->BlockSize;
 			}
-			LIST_ENTRY_INSERT_TAIL(&PoolDesc->ListHeads[Index - 1], (reinterpret_cast<xboxkrnl::PLIST_ENTRY>(
+			InsertTailList(&PoolDesc->ListHeads[Index - 1], (reinterpret_cast<xboxkrnl::PLIST_ENTRY>(
 				reinterpret_cast<PCHAR>(Entry) + POOL_OVERHEAD)));
 		}
 		else {
-			LIST_ENTRY_INSERT_HEAD(&PoolDesc->ListHeads[Index - 1], (reinterpret_cast<xboxkrnl::PLIST_ENTRY>(
+			InsertHeadList(&PoolDesc->ListHeads[Index - 1], (reinterpret_cast<xboxkrnl::PLIST_ENTRY>(
 				reinterpret_cast<PCHAR>(Entry) + POOL_OVERHEAD)));
 		}
 	}

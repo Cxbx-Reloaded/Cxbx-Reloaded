@@ -39,8 +39,18 @@
 
 #include "PhysicalMemory.h"
 #include "Logging.h"
+#include "EmuKrnl.h" // For InitializeListHead(), etc.
 #include <assert.h>
 
+// See the links below for the details about the kernel structure LIST_ENTRY and the related functions
+// https://www.codeproject.com/Articles/800404/Understanding-LIST-ENTRY-Lists-and-Its-Importance
+// https://docs.microsoft.com/en-us/windows-hardware/drivers/kernel/singly-and-doubly-linked-lists
+#define LIST_ENTRY_INITIALIZE(ListEntry) ((ListEntry)->Flink = (ListEntry)->Blink = nullptr)
+
+inline FreeBlock* ListEntryToFreeBlock(xboxkrnl::PLIST_ENTRY pListEntry)
+{
+	return CONTAINING_RECORD(pListEntry, FreeBlock, ListEntry);
+}
 
 void PhysicalMemory::InitializePageDirectory()
 {
@@ -194,10 +204,10 @@ bool PhysicalMemory::RemoveFree(PFN_COUNT NumberOfPages, PFN* result, PFN_COUNT 
 
 	while (ListEntry != &FreeList)
 	{
-		if (LIST_ENTRY_ACCESS_RECORD(ListEntry, FreeBlock, ListEntry)->size >= NumberOfPages) // search for a block with enough pages
+		if (ListEntryToFreeBlock(ListEntry)->size >= NumberOfPages) // search for a block with enough pages
 		{
-			PfnStart = LIST_ENTRY_ACCESS_RECORD(ListEntry, FreeBlock, ListEntry)->start;
-			PfnCount = LIST_ENTRY_ACCESS_RECORD(ListEntry, FreeBlock, ListEntry)->size;
+			PfnStart = ListEntryToFreeBlock(ListEntry)->start;
+			PfnCount = ListEntryToFreeBlock(ListEntry)->size;
 			PfnEnd = PfnStart + PfnCount - 1;
 			IntersectionStart = start >= PfnStart ? start : PfnStart;
 			IntersectionEnd = end <= PfnEnd ? end : PfnEnd;
@@ -243,10 +253,10 @@ bool PhysicalMemory::RemoveFree(PFN_COUNT NumberOfPages, PFN* result, PFN_COUNT 
 					{
 						// delete the entry if there is no free space left
 
-						LIST_ENTRY_REMOVE(ListEntry);
-						delete LIST_ENTRY_ACCESS_RECORD(ListEntry, FreeBlock, ListEntry);
+						RemoveEntryList(ListEntry);
+						delete ListEntryToFreeBlock(ListEntry);
 					}
-					else { LIST_ENTRY_ACCESS_RECORD(ListEntry, FreeBlock, ListEntry)->size = PfnCount; }
+					else { ListEntryToFreeBlock(ListEntry)->size = PfnCount; }
 				}
 				else
 				{
@@ -256,17 +266,17 @@ bool PhysicalMemory::RemoveFree(PFN_COUNT NumberOfPages, PFN* result, PFN_COUNT 
 					block->start = IntersectionEnd + 1;
 					block->size = PfnStart + PfnCount - IntersectionEnd - 1;
 					LIST_ENTRY_INITIALIZE(&block->ListEntry);
-					LIST_ENTRY_INSERT_HEAD(ListEntry, &block->ListEntry);
+					InsertHeadList(ListEntry, &block->ListEntry);
 
 					PfnCount = IntersectionEnd - PfnStart - NumberOfPages + 1;
 					if (!PfnCount)
 					{
 						// delete the entry if there is no free space left
 
-						LIST_ENTRY_REMOVE(ListEntry);
-						delete LIST_ENTRY_ACCESS_RECORD(ListEntry, FreeBlock, ListEntry);
+						RemoveEntryList(ListEntry);
+						delete ListEntryToFreeBlock(ListEntry);
 					}
-					else { LIST_ENTRY_ACCESS_RECORD(ListEntry, FreeBlock, ListEntry)->size = PfnCount; }
+					else { ListEntryToFreeBlock(ListEntry)->size = PfnCount; }
 				}
 			}
 			else
@@ -278,7 +288,7 @@ bool PhysicalMemory::RemoveFree(PFN_COUNT NumberOfPages, PFN* result, PFN_COUNT 
 					// The free block extends before IntersectionStart
 
 					PfnCount -= NumberOfPages;
-					LIST_ENTRY_ACCESS_RECORD(ListEntry, FreeBlock, ListEntry)->size = PfnCount;
+					ListEntryToFreeBlock(ListEntry)->size = PfnCount;
 				}
 				else
 				{
@@ -288,10 +298,10 @@ bool PhysicalMemory::RemoveFree(PFN_COUNT NumberOfPages, PFN* result, PFN_COUNT 
 					block->start = IntersectionEnd + 1;
 					block->size = PfnStart + PfnCount - IntersectionEnd - 1;
 					LIST_ENTRY_INITIALIZE(&block->ListEntry);
-					LIST_ENTRY_INSERT_HEAD(ListEntry, &block->ListEntry);
+					InsertHeadList(ListEntry, &block->ListEntry);
 
 					PfnCount = IntersectionEnd - PfnStart - NumberOfPages + 1;
-					LIST_ENTRY_ACCESS_RECORD(ListEntry, FreeBlock, ListEntry)->size = PfnCount;
+					ListEntryToFreeBlock(ListEntry)->size = PfnCount;
 				}
 			}
 			if (m_MmLayoutDebug && (PfnStart + PfnCount >= DEBUGKIT_FIRST_UPPER_HALF_PAGE)) {
@@ -321,46 +331,46 @@ void PhysicalMemory::InsertFree(PFN start, PFN end)
 
 	while (true)
 	{
-		if (LIST_ENTRY_ACCESS_RECORD(ListEntry, FreeBlock, ListEntry)->start < start || ListEntry == &FreeList)
+		if (ListEntryToFreeBlock(ListEntry)->start < start || ListEntry == &FreeList)
 		{
 			PFreeBlock block = new FreeBlock;
 			block->start = start;
 			block->size = size;
 			LIST_ENTRY_INITIALIZE(&block->ListEntry);
-			LIST_ENTRY_INSERT_HEAD(ListEntry, &block->ListEntry);
+			InsertHeadList(ListEntry, &block->ListEntry);
 
 			// Ensure that we are not freeing a part of the previous block
 			if (ListEntry != &FreeList) {
-				assert(LIST_ENTRY_ACCESS_RECORD(ListEntry, FreeBlock, ListEntry)->start +
-					LIST_ENTRY_ACCESS_RECORD(ListEntry, FreeBlock, ListEntry)->size - 1 < start);
+				assert(ListEntryToFreeBlock(ListEntry)->start +
+					ListEntryToFreeBlock(ListEntry)->size - 1 < start);
 			}
 
 			ListEntry = ListEntry->Flink; // move to the new created block
 
 			// Ensure that we are not freeing a part of the next block
 			if (ListEntry->Flink != &FreeList) {
-				assert(LIST_ENTRY_ACCESS_RECORD(ListEntry->Flink, FreeBlock, ListEntry)->start > end);
+				assert(ListEntryToFreeBlock(ListEntry->Flink)->start > end);
 			}
 
 			// Check if merging is possible
 			if (ListEntry->Flink != &FreeList &&
-				start + size == LIST_ENTRY_ACCESS_RECORD(ListEntry->Flink, FreeBlock, ListEntry)->start)
+				start + size == ListEntryToFreeBlock(ListEntry->Flink)->start)
 			{
 				// Merge forward
 				xboxkrnl::PLIST_ENTRY temp = ListEntry->Flink;
-				LIST_ENTRY_ACCESS_RECORD(ListEntry, FreeBlock, ListEntry)->size +=
-					LIST_ENTRY_ACCESS_RECORD(temp, FreeBlock, ListEntry)->size;
-				LIST_ENTRY_REMOVE(temp);
-				delete LIST_ENTRY_ACCESS_RECORD(temp, FreeBlock, ListEntry);
+				ListEntryToFreeBlock(ListEntry)->size +=
+					ListEntryToFreeBlock(temp)->size;
+				RemoveEntryList(temp);
+				delete ListEntryToFreeBlock(temp);
 			}
 			if (ListEntry->Blink != &FreeList &&
-				LIST_ENTRY_ACCESS_RECORD(ListEntry->Blink, FreeBlock, ListEntry)->start +
-				LIST_ENTRY_ACCESS_RECORD(ListEntry->Blink, FreeBlock, ListEntry)->size == start)
+				ListEntryToFreeBlock(ListEntry->Blink)->start +
+				ListEntryToFreeBlock(ListEntry->Blink)->size == start)
 			{
 				// Merge backward
-				LIST_ENTRY_ACCESS_RECORD(ListEntry->Blink, FreeBlock, ListEntry)->size +=
-					LIST_ENTRY_ACCESS_RECORD(ListEntry, FreeBlock, ListEntry)->size;
-				LIST_ENTRY_REMOVE(ListEntry);
+				ListEntryToFreeBlock(ListEntry->Blink)->size +=
+					ListEntryToFreeBlock(ListEntry)->size;
+				RemoveEntryList(ListEntry);
 				delete block;
 			}
 
