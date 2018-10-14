@@ -87,107 +87,40 @@ void XTL::EmuUpdateDeferredStates()
     // Certain D3DRS values need to be checked on each Draw[Indexed]Vertices
     if(EmuD3DDeferredRenderState != 0)
     {
-        if(XTL::EmuD3DDeferredRenderState[0] != X_D3DRS_UNK)
-            g_pD3DDevice->SetRenderState(D3DRS_FOGENABLE, XTL::EmuD3DDeferredRenderState[0]);
+		// Loop through all deferred render states
+		for (uint RenderState = X_D3DRS_FOGENABLE; RenderState <= X_D3DRS_PATCHSEGMENTS; RenderState++) {
+			// If this render state does not have a PC counterpart, skip it
+			if (DxbxRenderStateInfo[RenderState].PC == 0) {
+				continue;
+			}
 
-        if(XTL::EmuD3DDeferredRenderState[1] != X_D3DRS_UNK)
-            g_pD3DDevice->SetRenderState(D3DRS_FOGTABLEMODE, XTL::EmuD3DDeferredRenderState[1]);
+			uint8_t index = RenderState - X_D3DRS_FOGENABLE;
+			// Some render states require special handling to convert to host, but most can be mapped 1:1
+			// We use a switch/case to handle the special states
+			switch (RenderState) {
+				case X_D3DRS_WRAP0: {
+					::DWORD dwConv = 0;
 
-        if(XTL::EmuD3DDeferredRenderState[2] != X_D3DRS_UNK)
-            g_pD3DDevice->SetRenderState(D3DRS_FOGSTART, XTL::EmuD3DDeferredRenderState[2]);
+					dwConv |= (XTL::EmuD3DDeferredRenderState[index] & 0x00000010) ? D3DWRAP_U : 0;
+					dwConv |= (XTL::EmuD3DDeferredRenderState[index] & 0x00001000) ? D3DWRAP_V : 0;
+					dwConv |= (XTL::EmuD3DDeferredRenderState[index] & 0x00100000) ? D3DWRAP_W : 0;
 
-        if(XTL::EmuD3DDeferredRenderState[3] != X_D3DRS_UNK)
-            g_pD3DDevice->SetRenderState(D3DRS_FOGEND, XTL::EmuD3DDeferredRenderState[3]);
+					g_pD3DDevice->SetRenderState(D3DRS_WRAP0, dwConv);
+				} break;
+				case X_D3DRS_WRAP1: {
+					::DWORD dwConv = 0;
 
-        if(XTL::EmuD3DDeferredRenderState[4] != X_D3DRS_UNK)
-            g_pD3DDevice->SetRenderState(D3DRS_FOGDENSITY, XTL::EmuD3DDeferredRenderState[4]);
+					dwConv |= (XTL::EmuD3DDeferredRenderState[index] & 0x00000010) ? D3DWRAP_U : 0;
+					dwConv |= (XTL::EmuD3DDeferredRenderState[index] & 0x00001000) ? D3DWRAP_V : 0;
+					dwConv |= (XTL::EmuD3DDeferredRenderState[index] & 0x00100000) ? D3DWRAP_W : 0;
 
-        if(XTL::EmuD3DDeferredRenderState[5] != X_D3DRS_UNK)
-            g_pD3DDevice->SetRenderState(D3DRS_RANGEFOGENABLE, XTL::EmuD3DDeferredRenderState[5]);
-
-        if(XTL::EmuD3DDeferredRenderState[6] != X_D3DRS_UNK)
-        {
-            ::DWORD dwConv = 0;
-
-            dwConv |= (XTL::EmuD3DDeferredRenderState[6] & 0x00000010) ? D3DWRAP_U : 0;
-            dwConv |= (XTL::EmuD3DDeferredRenderState[6] & 0x00001000) ? D3DWRAP_V : 0;
-            dwConv |= (XTL::EmuD3DDeferredRenderState[6] & 0x00100000) ? D3DWRAP_W : 0;
-
-            g_pD3DDevice->SetRenderState(D3DRS_WRAP0, dwConv);
-        }
-
-        if(XTL::EmuD3DDeferredRenderState[7] != X_D3DRS_UNK)
-        {
-            ::DWORD dwConv = 0;
-
-            dwConv |= (XTL::EmuD3DDeferredRenderState[7] & 0x00000010) ? D3DWRAP_U : 0;
-            dwConv |= (XTL::EmuD3DDeferredRenderState[7] & 0x00001000) ? D3DWRAP_V : 0;
-            dwConv |= (XTL::EmuD3DDeferredRenderState[7] & 0x00100000) ? D3DWRAP_W : 0;
-
-            g_pD3DDevice->SetRenderState(D3DRS_WRAP1, dwConv);
-        }
-
-        if(XTL::EmuD3DDeferredRenderState[10] != X_D3DRS_UNK)
-            g_pD3DDevice->SetRenderState(D3DRS_LIGHTING, XTL::EmuD3DDeferredRenderState[10]);
-
-        if(XTL::EmuD3DDeferredRenderState[11] != X_D3DRS_UNK)
-            g_pD3DDevice->SetRenderState(D3DRS_SPECULARENABLE, XTL::EmuD3DDeferredRenderState[11]);
-
-        if(XTL::EmuD3DDeferredRenderState[13] != X_D3DRS_UNK)
-            g_pD3DDevice->SetRenderState(D3DRS_COLORVERTEX, XTL::EmuD3DDeferredRenderState[13]);
-
-        if(XTL::EmuD3DDeferredRenderState[19] != X_D3DRS_UNK)
-            g_pD3DDevice->SetRenderState(D3DRS_DIFFUSEMATERIALSOURCE, XTL::EmuD3DDeferredRenderState[19]);
-
-        if(XTL::EmuD3DDeferredRenderState[20] != X_D3DRS_UNK)
-            g_pD3DDevice->SetRenderState(D3DRS_AMBIENTMATERIALSOURCE, XTL::EmuD3DDeferredRenderState[20]);
-
-        if(XTL::EmuD3DDeferredRenderState[21] != X_D3DRS_UNK)
-            g_pD3DDevice->SetRenderState(D3DRS_EMISSIVEMATERIALSOURCE, XTL::EmuD3DDeferredRenderState[21]);
-
-        if(XTL::EmuD3DDeferredRenderState[23] != X_D3DRS_UNK)
-            g_pD3DDevice->SetRenderState(D3DRS_AMBIENT, XTL::EmuD3DDeferredRenderState[23]);
-
-        if(XTL::EmuD3DDeferredRenderState[24] != X_D3DRS_UNK)
-            g_pD3DDevice->SetRenderState(D3DRS_POINTSIZE, XTL::EmuD3DDeferredRenderState[24]);
-
-        if(XTL::EmuD3DDeferredRenderState[25] != X_D3DRS_UNK)
-            g_pD3DDevice->SetRenderState(D3DRS_POINTSIZE_MIN, XTL::EmuD3DDeferredRenderState[25]);
-
-        if(XTL::EmuD3DDeferredRenderState[26] != X_D3DRS_UNK)
-            g_pD3DDevice->SetRenderState(D3DRS_POINTSPRITEENABLE, XTL::EmuD3DDeferredRenderState[26]);
-
-        if(XTL::EmuD3DDeferredRenderState[27] != X_D3DRS_UNK)
-            g_pD3DDevice->SetRenderState(D3DRS_POINTSCALEENABLE, XTL::EmuD3DDeferredRenderState[27]);
-
-        if(XTL::EmuD3DDeferredRenderState[28] != X_D3DRS_UNK)
-            g_pD3DDevice->SetRenderState(D3DRS_POINTSCALE_A, XTL::EmuD3DDeferredRenderState[28]);
-
-        if(XTL::EmuD3DDeferredRenderState[29] != X_D3DRS_UNK)
-            g_pD3DDevice->SetRenderState(D3DRS_POINTSCALE_B, XTL::EmuD3DDeferredRenderState[29]);
-
-        if(XTL::EmuD3DDeferredRenderState[30] != X_D3DRS_UNK)
-            g_pD3DDevice->SetRenderState(D3DRS_POINTSCALE_C, XTL::EmuD3DDeferredRenderState[30]);
-
-        if(XTL::EmuD3DDeferredRenderState[31] != X_D3DRS_UNK)
-            g_pD3DDevice->SetRenderState(D3DRS_POINTSIZE_MAX, XTL::EmuD3DDeferredRenderState[31]);
-
-		// D3DRS_PATCHSEGMENTS exists in Direct3D 8, but not in 9 !?
-        // Was if(XTL::EmuD3DDeferredRenderState[33] != X_D3DRS_UNK)
-        //    g_pD3DDevice->SetRenderState(D3DRS_PATCHSEGMENTS, XTL::EmuD3DDeferredRenderState[33]);
-
-        /** To check for unhandled RenderStates
-        for(int v=0;v<117-82;v++)
-        {
-            if(XTL::EmuD3DDeferredRenderState[v] != X_D3DRS_UNK)
-            {
-                if(v !=  0 && v !=  1 && v !=  2 && v !=  3 && v !=  4 && v !=  5 && v !=  6 && v !=  7
-                && v != 10 && v != 11 && v != 13 && v != 19 && v != 20 && v != 21 && v != 23 && v != 24
-                && v != 25 && v != 26 && v != 27 && v != 28 && v != 29 && v != 30 && v != 31 && v != 33)
-                    EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Unhandled RenderState Change @ %d (%d)", v, v + 82);
-            }
-        }
-        //**/
+					g_pD3DDevice->SetRenderState(D3DRS_WRAP1, dwConv);
+				} break;
+				default:
+					g_pD3DDevice->SetRenderState(DxbxRenderStateInfo[RenderState].PC, EmuD3DDeferredRenderState[index]);
+					break;
+			}
+		}
     }
 
 	// For below XDK 3948, the actual D3DTSS flags have different values.
