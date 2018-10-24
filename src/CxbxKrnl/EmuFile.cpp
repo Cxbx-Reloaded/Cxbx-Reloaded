@@ -320,7 +320,7 @@ std::wstring string_to_wstring(std::string const & src)
 
 std::wstring PUNICODE_STRING_to_wstring(NtDll::PUNICODE_STRING const & src)
 {
-	return std::wstring(src->Buffer, src->Length / sizeof(NtDll::WCHAR));
+return std::wstring(src->Buffer, src->Length / sizeof(NtDll::WCHAR));
 }
 
 std::string PSTRING_to_string(xboxkrnl::PSTRING const & src)
@@ -335,13 +335,13 @@ void copy_string_to_PSTRING_to(std::string const & src, const xboxkrnl::PSTRING 
 }
 
 void replace_all(std::string& str, const std::string& from, const std::string& to) {
-    if(from.empty())
-        return;
-    size_t start_pos = 0;
-    while((start_pos = str.find(from, start_pos)) != std::string::npos) {
-        str.replace(start_pos, from.length(), to);
-        start_pos += to.length(); // In case 'to' contains 'from', like replacing 'x' with 'yx'
-    }
+	if (from.empty())
+		return;
+	size_t start_pos = 0;
+	while ((start_pos = str.find(from, start_pos)) != std::string::npos) {
+		str.replace(start_pos, from.length(), to);
+		start_pos += to.length(); // In case 'to' contains 'from', like replacing 'x' with 'yx'
+	}
 }
 
 NTSTATUS CxbxConvertFilePath(
@@ -356,7 +356,7 @@ NTSTATUS CxbxConvertFilePath(
 	std::string XboxFullPath;
 	std::string HostPath;
 	EmuNtSymbolicLinkObject* NtSymbolicLinkObject = NULL;
-	
+
 	// Always trim '\??\' off :
 	if (RelativePath.compare(0, DrivePrefix.length(), DrivePrefix.c_str()) == 0)
 		RelativePath.erase(0, 4);
@@ -367,7 +367,8 @@ NTSTATUS CxbxConvertFilePath(
 			*RootDirectory = CxbxBasePathHandle;
 			HostPath = CxbxBasePath;
 			RelativePath = MediaBoardRomFile;
-		} else if (!partitionHeader) {
+		}
+		else if (!partitionHeader) {
 			// Check if the path starts with a volume indicator :
 			if ((RelativePath.length() >= 2) && (RelativePath[1] == ':')) {
 				// Look up the symbolic link information using the drive letter :
@@ -416,15 +417,21 @@ NTSTATUS CxbxConvertFilePath(
 				}
 				// NOTE: RootDirectory cannot be ignored.
 				// Any special handling for it should be done below.
-				else if (RootDirectory == nullptr) {
+				else if (*RootDirectory == nullptr) {
 					// Assume relative to Xbe path
 					NtSymbolicLinkObject = FindNtSymbolicLinkObjectByRootHandle(g_hCurDir);
 				}
-				else if (RootDirectory == (NtDll::HANDLE)-4) {
+				else if (*RootDirectory == (NtDll::HANDLE)-3) {
+					// This is a special handle that tells the API that this is a DOS device
+					// We can safely remove it and forward to the Xbe directory.
+					// Test case GTA3
+					NtSymbolicLinkObject = FindNtSymbolicLinkObjectByRootHandle(g_hCurDir);
+				}
+				else if (*RootDirectory == (NtDll::HANDLE)-4) {
 					// NOTE: A handle of -4 on the Xbox signifies the path should be in the BaseNamedObjects namespace.
 					// This handle doesn't exist on Windows, so we prefix the name instead. (note from LukeUsher)
 					// Handle special root directory constants
-					RootDirectory = NULL;
+					*RootDirectory = NULL;
 
 					if (OriginalPath.size() == 0){
 						RelativePath = "\\BaseNamedObjects";
