@@ -55,7 +55,7 @@ namespace NtDll
 };
 
 #include "CxbxKrnl.h" // For CxbxKrnlCleanup()
-#include "Emu.h" // For EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, )
+#include "Emu.h" // For EmuLog(LOG_LEVEL::WARNING, )
 #include <assert.h>
 
 #ifdef _WIN32
@@ -226,7 +226,7 @@ XBSYSAPI EXPORTNUM(264) xboxkrnl::VOID NTAPI xboxkrnl::RtlAssert
 		LOG_FUNC_ARG(Message)
 		LOG_FUNC_END;
 
-	CxbxPopupMessage(LOG_PREFIX, LOG_LEVEL::WARNING, CxbxMsgDlgIcon_Warn, "RtlAssert() raised by emulated program - consult Debug log");
+	CxbxPopupMessage(LOG_LEVEL::WARNING, CxbxMsgDlgIcon_Warn, "RtlAssert() raised by emulated program - consult Debug log");
 }
 
 // ******************************************************************
@@ -666,7 +666,7 @@ XBSYSAPI EXPORTNUM(277) xboxkrnl::VOID NTAPI xboxkrnl::RtlEnterCriticalSection
 				);
 				if (!NT_SUCCESS(result))
 				{
-					CxbxKrnlCleanup(LOG_PREFIX, "Waiting for event of a critical section returned %lx.", result);
+					CxbxKrnlCleanup("Waiting for event of a critical section returned %lx.", result);
 				};
 			}
             CriticalSection->OwningThread = thread;
@@ -2070,6 +2070,6 @@ XBSYSAPI EXPORTNUM(352) xboxkrnl::VOID NTAPI xboxkrnl::RtlRip
 		LOG_FUNC_ARG(Message)
 		LOG_FUNC_END;
 
-	EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "RtlRip@%s:\n\nASSERT FAILED:\n%s\n\nDescription:\n%s",
+	EmuLog(LOG_LEVEL::WARNING, "RtlRip@%s:\n\nASSERT FAILED:\n%s\n\nDescription:\n%s",
 		ApiName, Expression, Message);
 }

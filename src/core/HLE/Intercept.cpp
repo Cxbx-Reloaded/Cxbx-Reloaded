@@ -160,7 +160,7 @@ bool VerifySymbolAddressAgainstXRef(char *SymbolName, xbaddr Address, int XRef)
     }
 
     // For XREF_D3DTSS_TEXCOORDINDEX, Kabuki Warriors hits this case
-    CxbxPopupMessage(LOG_PREFIX, LOG_LEVEL::WARNING, CxbxMsgDlgIcon_Warn,
+    CxbxPopupMessage(LOG_LEVEL::WARNING, CxbxMsgDlgIcon_Warn,
 		"Verification of %s failed : XREF was 0x%.8X while lookup gave 0x%.8X", SymbolName, XRefAddr, Address);
     // For XREF_D3DTSS_TEXCOORDINDEX, Kabuki Warriors hits this case
     return false;
@@ -197,11 +197,11 @@ void CDECL EmuOutputMessage(xb_output_message mFlag,
             break;
         }
         case XB_OUTPUT_MESSAGE_WARN: {
-            EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "%s", message);
+            EmuLog(LOG_LEVEL::WARNING, "%s", message);
             break;
         }
         case XB_OUTPUT_MESSAGE_ERROR: {
-            CxbxKrnlCleanup(LOG_PREFIX, "%s", message);
+            CxbxKrnlCleanup("%s", message);
             break;
         }
         case XB_OUTPUT_MESSAGE_DEBUG:
@@ -243,7 +243,7 @@ void CDECL EmuRegisterSymbol(const char* library_str,
             switch (XRefDataBase[Oovpa->XRefSaveIndex]) {
                 case XREF_ADDR_NOT_FOUND:
                 {
-                    EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Found OOVPA after first finding nothing?");
+                    EmuLog(LOG_LEVEL::WARNING, "Found OOVPA after first finding nothing?");
                     // fallthrough to XREF_ADDR_UNDETERMINED
                 }
                 case XREF_ADDR_UNDETERMINED:
@@ -255,14 +255,14 @@ void CDECL EmuRegisterSymbol(const char* library_str,
                 }
                 case XREF_ADDR_DERIVE:
                 {
-                    EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Cannot derive a save index!");
+                    EmuLog(LOG_LEVEL::WARNING, "Cannot derive a save index!");
                     break;
                 }
                 default:
                 {
                     if (XRefDataBase[OovpaTable->Oovpa->XRefSaveIndex] != pFunc) {
-                        EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Found OOVPA on other address than in XRefDataBase!");
-                        EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "%s: %4d - pFunc: %08X, stored: %08X", OovpaTable->szFuncName, Oovpa->XRefSaveIndex, pFunc, XRefDataBase[Oovpa->XRefSaveIndex]);
+                        EmuLog(LOG_LEVEL::WARNING, "Found OOVPA on other address than in XRefDataBase!");
+                        EmuLog(LOG_LEVEL::WARNING, "%s: %4d - pFunc: %08X, stored: %08X", OovpaTable->szFuncName, Oovpa->XRefSaveIndex, pFunc, XRefDataBase[Oovpa->XRefSaveIndex]);
                     }
                     break;
                 }
@@ -402,7 +402,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 	// Make sure the Symbol Cache directory exists
 	std::string cachePath = std::string(szFolder_CxbxReloadedData) + "\\SymbolCache\\";
 	if (!std::experimental::filesystem::exists(cachePath) && !std::experimental::filesystem::create_directory(cachePath)) {
-		CxbxKrnlCleanup(LOG_PREFIX, "Couldn't create Cxbx-Reloaded SymbolCache folder!");
+		CxbxKrnlCleanup("Couldn't create Cxbx-Reloaded SymbolCache folder!");
 	}
 
 	// Hash the loaded XBE's header, use it as a filename
@@ -458,17 +458,17 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 				// Fix up Render state and Texture States
 				if (g_SymbolAddresses.find("D3DDeferredRenderState") == g_SymbolAddresses.end()
 				    || g_SymbolAddresses["D3DDeferredRenderState"] == 0) {
-					EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "EmuD3DDeferredRenderState was not found!");
+					EmuLog(LOG_LEVEL::WARNING, "EmuD3DDeferredRenderState was not found!");
 				}
 
 				if (g_SymbolAddresses.find("D3DDeferredTextureState") == g_SymbolAddresses.end()
 				    || g_SymbolAddresses["D3DDeferredTextureState"] == 0) {
-					EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "EmuD3DDeferredTextureState was not found!");
+					EmuLog(LOG_LEVEL::WARNING, "EmuD3DDeferredTextureState was not found!");
 				}
 
 				if (g_SymbolAddresses.find("D3DDEVICE") == g_SymbolAddresses.end()
 				    || g_SymbolAddresses["D3DDEVICE"] == 0) {
-					EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "D3DDEVICE was not found!");
+					EmuLog(LOG_LEVEL::WARNING, "D3DDEVICE was not found!");
 				}
 
 				EmuD3D_Init_DeferredStates();
@@ -501,7 +501,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 		}
 #if 0 // NOTE: This is a note for what we should do for above.
         if (BuildVersion >= 5558 && BuildVersion <= 5659 && QFEVersion > 1) {
-            EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "D3D8 version 1.0.%d.%d Title Detected: This game uses an alias version 1.0.5788", BuildVersion, QFEVersion);
+            EmuLog(LOG_LEVEL::WARNING, "D3D8 version 1.0.%d.%d Title Detected: This game uses an alias version 1.0.5788", BuildVersion, QFEVersion);
             BuildVersion = 5788;
         }
 #endif

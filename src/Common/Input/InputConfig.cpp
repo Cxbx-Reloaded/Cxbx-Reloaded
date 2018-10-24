@@ -55,7 +55,7 @@ InputDeviceManager* g_InputDeviceManager = nullptr;
 InputDeviceManager::InputDeviceManager()
 {
 	if (SDL_InitSubSystem(SDL_INIT_JOYSTICK) < 0) {
-		CxbxKrnlCleanup(LOG_PREFIX, "Failed to initialize SDL2 input subsystem. The error was: %s\n", SDL_GetError());
+		CxbxKrnlCleanup("Failed to initialize SDL2 input subsystem. The error was: %s\n", SDL_GetError());
 		return;
 	}
 }
@@ -75,7 +75,7 @@ int InputDeviceManager::EnumSdl2Devices()
 
 	NumOfJoysticks = SDL_NumJoysticks();
 	if (NumOfJoysticks < 0) {
-		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Failed to enumerate joysticks. The error was: %s", SDL_GetError());
+		EmuLog(LOG_LEVEL::WARNING, "Failed to enumerate joysticks. The error was: %s", SDL_GetError());
 		return 0;
 	}
 
@@ -90,7 +90,7 @@ int InputDeviceManager::EnumSdl2Devices()
 	for (it = m_Sdl2Devices.begin(); it != m_Sdl2Devices.end();) {
 		pJoystick = SDL_JoystickOpen((*it)->m_Index);
 		if (pJoystick == nullptr) {
-			EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Failed to open joystick %s. The error was %s\n", SDL_GameControllerNameForIndex((*it)->m_Index), SDL_GetError());
+			EmuLog(LOG_LEVEL::WARNING, "Failed to open joystick %s. The error was %s\n", SDL_GameControllerNameForIndex((*it)->m_Index), SDL_GetError());
 			delete (*it);
 			it = m_Sdl2Devices.erase(it);
 			NumInvalidJoysticks++;
@@ -122,7 +122,7 @@ int InputDeviceManager::ConnectDeviceToXbox(int port, int type)
 	}
 
 	if (it == m_Sdl2Devices.end()) {
-		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Attempted to connect a device not yet enumerated.\n");
+		EmuLog(LOG_LEVEL::WARNING, "Attempted to connect a device not yet enumerated.\n");
 		return ret;
 	}
 
@@ -153,11 +153,11 @@ int InputDeviceManager::ConnectDeviceToXbox(int port, int type)
 					g_HubObjArray[port]->HubDestroy();
 					delete g_HubObjArray[port];
 					g_HubObjArray[port] = nullptr;
-					EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Xid controller already present at port %d.2\n", port + 1);
+					EmuLog(LOG_LEVEL::WARNING, "Xid controller already present at port %d.2\n", port + 1);
 				}
 			}
 			else {
-				EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Hub already present at port %d\n", port + 1);
+				EmuLog(LOG_LEVEL::WARNING, "Hub already present at port %d\n", port + 1);
 			}
 			break;
 		}
@@ -173,7 +173,7 @@ int InputDeviceManager::ConnectDeviceToXbox(int port, int type)
 		}
 
 		default:
-			EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Attempted to attach an unknown device type\n");
+			EmuLog(LOG_LEVEL::WARNING, "Attempted to attach an unknown device type\n");
 	}
 
 	if (!ret) {
@@ -223,7 +223,7 @@ void InputDeviceManager::DisconnectDeviceFromXbox(int port)
 				// be used instead of remaining inactive (example: 5 controllers and 1st is detached -> 5th can be used if it has bindings)
 			}
 			else {
-				EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Attempted to disconnect a device not attached to the Xbox.\n");
+				EmuLog(LOG_LEVEL::WARNING, "Attempted to disconnect a device not attached to the Xbox.\n");
 			}
 			break;
 		}
@@ -239,7 +239,7 @@ void InputDeviceManager::DisconnectDeviceFromXbox(int port)
 		}
 
 		default:
-			EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Attempted to detach an unknown device type\n");
+			EmuLog(LOG_LEVEL::WARNING, "Attempted to detach an unknown device type\n");
 	}
 }
 
@@ -254,7 +254,7 @@ void InputDeviceManager::InputThread(InputDeviceManager* pVoid)
 	SDL_Event event;
 
 	if (SDL_InitSubSystem(SDL_INIT_VIDEO) < 0) {
-		CxbxKrnlCleanup(LOG_PREFIX, "Failed to initialize SDL2 video subsystem. The error was: %s\n", SDL_GetError());
+		CxbxKrnlCleanup("Failed to initialize SDL2 video subsystem. The error was: %s\n", SDL_GetError());
 		return;
 	}
 
@@ -437,7 +437,7 @@ int InputDeviceManager::IsValidController(int index)
 
 	pJoystick = SDL_JoystickOpen(pDev->m_Index);
 	if (pJoystick == nullptr) {
-		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Failed to open game controller %s. The error was %s\n", SDL_GameControllerNameForIndex(pDev->m_Index), SDL_GetError());
+		EmuLog(LOG_LEVEL::WARNING, "Failed to open game controller %s. The error was %s\n", SDL_GameControllerNameForIndex(pDev->m_Index), SDL_GetError());
 		delete pDev;
 		m_Sdl2Devices.erase(m_Sdl2Devices.begin() + index);
 		return -1;

@@ -86,7 +86,7 @@ void EmuShared::Init(DWORD guiProcessID)
         );
 
         if(hMapObject == NULL)
-            CxbxKrnlCleanup(CXBXR_MODULE::INIT, "Could not map shared memory!");
+            CxbxKrnlCleanupEx(CXBXR_MODULE::INIT, "Could not map shared memory!");
 
         if(GetLastError() == ERROR_ALREADY_EXISTS)
             bRequireConstruction = false;
@@ -106,7 +106,7 @@ void EmuShared::Init(DWORD guiProcessID)
         );
 
         if(g_EmuShared == nullptr)
-            CxbxKrnlCleanup(CXBXR_MODULE::INIT, "Could not map view of shared memory!");
+            CxbxKrnlCleanupEx(CXBXR_MODULE::INIT, "Could not map view of shared memory!");
     }
 
     // ******************************************************************

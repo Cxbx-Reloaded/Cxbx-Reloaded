@@ -97,7 +97,7 @@ uint32_t EmuX86_IORead(xbaddr addr, int size)
 		return value;
 	}
 
-	EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "EmuX86_IORead(0x%08X, %d) [Unhandled]", addr, size);
+	EmuLog(LOG_LEVEL::WARNING, "EmuX86_IORead(0x%08X, %d) [Unhandled]", addr, size);
 	return 0;
 }
 
@@ -108,7 +108,7 @@ void EmuX86_IOWrite(xbaddr addr, uint32_t value, int size)
 		return;
 	}
 
-	EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "EmuX86_IOWrite(0x%08X, 0x%04X, %d) [Unhandled]", addr, value, size);
+	EmuLog(LOG_LEVEL::WARNING, "EmuX86_IOWrite(0x%08X, 0x%04X, %d) [Unhandled]", addr, value, size);
 }
 
 //
@@ -136,7 +136,7 @@ uint32_t EmuX86_Mem_Read(xbaddr addr, int size)
 		}
 	}
 	__except (true) {
-		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "EmuX86_Mem_Read Failed (0x%08X, %d)", addr, size);
+		EmuLog(LOG_LEVEL::WARNING, "EmuX86_Mem_Read Failed (0x%08X, %d)", addr, size);
 		return 0;
 	}
 }
@@ -161,7 +161,7 @@ void EmuX86_Mem_Write(xbaddr addr, uint32_t value, int size)
 		}
 	}
 	__except (true) {
-		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "EmuX86_Mem_Write Failed (0x%08X, 0x%08X, %d)", addr, value, size);
+		EmuLog(LOG_LEVEL::WARNING, "EmuX86_Mem_Write Failed (0x%08X, 0x%08X, %d)", addr, value, size);
 	}
 }
 
@@ -174,7 +174,7 @@ uint32_t EmuFlash_Read32(xbaddr addr) // TODO : Move to EmuFlash.cpp
 		r = 0x90; // Luke's hardware revision 1.6 Xbox returns this (also since XboxKrnlVersion is set to 5838)
 		break;
 	default:
-		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Read32 FLASH_ROM (0x%.8X) [Unknown address]", addr);
+		EmuLog(LOG_LEVEL::WARNING, "Read32 FLASH_ROM (0x%.8X) [Unknown address]", addr);
 		return -1;
 	}
 
@@ -189,7 +189,7 @@ uint32_t EmuFlash_Read32(xbaddr addr) // TODO : Move to EmuFlash.cpp
 uint32_t EmuX86_Read(xbaddr addr, int size)
 {
 	if ((addr & (size - 1)) != 0) {
-		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "EmuX86_Read(0x%08X, %d) [Unaligned unimplemented]", addr, size);
+		EmuLog(LOG_LEVEL::WARNING, "EmuX86_Read(0x%08X, %d) [Unaligned unimplemented]", addr, size);
 		// LOG_UNIMPLEMENTED();
 		return 0;
 	}
@@ -219,13 +219,13 @@ uint32_t EmuX86_Read(xbaddr addr, int size)
 void EmuX86_Write(xbaddr addr, uint32_t value, int size)
 {
 	if ((addr & (size - 1)) != 0) {
-		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "EmuX86_Write(0x%08X, 0x%08X, %d) [Unaligned unimplemented]", addr, value, size);
+		EmuLog(LOG_LEVEL::WARNING, "EmuX86_Write(0x%08X, 0x%08X, %d) [Unaligned unimplemented]", addr, value, size);
 		// LOG_UNIMPLEMENTED();
 		return;
 	}
 
 	if (addr >= XBOX_FLASH_ROM_BASE) { // 0xFFF00000 - 0xFFFFFFF
-		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "EmuX86_Write(0x%08X, 0x%08X) [FLASH_ROM]", addr, value);
+		EmuLog(LOG_LEVEL::WARNING, "EmuX86_Write(0x%08X, 0x%08X) [FLASH_ROM]", addr, value);
 		return;
 	}
 
@@ -556,7 +556,7 @@ bool EmuX86_Operand_Addr_ForReadWrite(const LPEXCEPTION_POINTERS e, const _DInst
 	case O_IMM:
 	case O_IMM1:
 	case O_IMM2:
-		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Refused operand write-access to immedate value address!");
+		EmuLog(LOG_LEVEL::WARNING, "Refused operand write-access to immedate value address!");
 		assert(false);
 		return false;
 	}
@@ -2916,7 +2916,7 @@ void EmuX86_DistormLogInstruction(const uint8_t *Eip, _DInst &info)
 #define FLAG_GET_PREFIX(flags) ((flags) & 7) // To get the LOCK/REPNZ/REP prefixes.
 */
 
-	EmuLog(LOG_PREFIX, LOG_LEVEL::DEBUG, output.str().c_str());
+	EmuLog(LOG_LEVEL::DEBUG, output.str().c_str());
 }
 
 int EmuX86_OpcodeSize(uint8_t *Eip)
@@ -2925,7 +2925,7 @@ int EmuX86_OpcodeSize(uint8_t *Eip)
 	if (EmuX86_DecodeOpcode((uint8_t*)Eip, info))
 		return info.size;
 
-	EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Error decoding opcode size at 0x%.8X", Eip);
+	EmuLog(LOG_LEVEL::WARNING, "Error decoding opcode size at 0x%.8X", Eip);
 	return 1;
 }
 
@@ -2939,7 +2939,7 @@ bool EmuX86_DecodeException(LPEXCEPTION_POINTERS e)
 	_DInst info;
 	DWORD StartingEip = e->ContextRecord->Eip;
 	LOG_CHECK_ENABLED(LOG_LEVEL::DEBUG) {
-			EmuLog(LOG_PREFIX, LOG_LEVEL::DEBUG, "Starting instruction emulation from 0x%08X", e->ContextRecord->Eip);
+			EmuLog(LOG_LEVEL::DEBUG, "Starting instruction emulation from 0x%08X", e->ContextRecord->Eip);
 	}
 
 	// Execute op-codes until we hit an unhandled instruction, or an error occurs
@@ -2947,7 +2947,7 @@ bool EmuX86_DecodeException(LPEXCEPTION_POINTERS e)
 	//for (int x=0;x<3;x++)
 	{
 		if (!EmuX86_DecodeOpcode((uint8_t*)e->ContextRecord->Eip, info)) {
-			EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Error decoding opcode at 0x%08X", e->ContextRecord->Eip);
+			EmuLog(LOG_LEVEL::WARNING, "Error decoding opcode at 0x%08X", e->ContextRecord->Eip);
 			assert(false);
 			return false;
 		}
@@ -3287,13 +3287,13 @@ bool EmuX86_DecodeException(LPEXCEPTION_POINTERS e)
 				// Some titles attempt to manually set the TSC via this instruction
 				// This needs fixing eventually, but should be acceptible to ignore for now!
 				// Chase: Hollywood Stunt Driver hits this
-				EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "WRMSR instruction ignored");
+				EmuLog(LOG_LEVEL::WARNING, "WRMSR instruction ignored");
 				break;
 			case I_XOR:
 				if (EmuX86_Opcode_XOR(e, info)) break;
 				goto opcode_error;
 			default:
-				EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Unhandled instruction : %s (%u)", Distorm_OpcodeString(info.opcode), info.opcode);
+				EmuLog(LOG_LEVEL::WARNING, "Unhandled instruction : %s (%u)", Distorm_OpcodeString(info.opcode), info.opcode);
 				// Fail if the first hit instruction couldn't be emulated,
 				// but let host CPU execute following (unhandled) instructions :
 				return (StartingEip != e->ContextRecord->Eip);
@@ -3305,7 +3305,7 @@ bool EmuX86_DecodeException(LPEXCEPTION_POINTERS e)
 	return true;
 
 opcode_error:
-	EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "0x%08X: Error while handling instruction %s (%u)", e->ContextRecord->Eip, Distorm_OpcodeString(info.opcode), info.opcode);
+	EmuLog(LOG_LEVEL::WARNING, "0x%08X: Error while handling instruction %s (%u)", e->ContextRecord->Eip, Distorm_OpcodeString(info.opcode), info.opcode);
 	assert(false);
 	return false;
 }

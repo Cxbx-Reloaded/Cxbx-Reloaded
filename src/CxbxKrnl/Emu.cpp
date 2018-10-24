@@ -108,7 +108,7 @@ std::string FormatTitleId(uint32_t title_id)
 }
 
 // print out a warning message to the kernel debug log file
-void NTAPI EmuLog(CXBXR_MODULE cxbxr_module, LOG_LEVEL level, const char *szWarningMessage, ...)
+void NTAPI EmuLogEx(CXBXR_MODULE cxbxr_module, LOG_LEVEL level, const char *szWarningMessage, ...)
 {
 	if (szWarningMessage == NULL) {
 		return;

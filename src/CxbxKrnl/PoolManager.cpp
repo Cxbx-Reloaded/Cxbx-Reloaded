@@ -112,7 +112,7 @@ VAddr PoolManager::AllocatePool(size_t Size, uint32_t Tag)
 			Unlock();
 		}
 		else {
-			EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "AllocatePool returns nullptr");
+			EmuLog(LOG_LEVEL::WARNING, "AllocatePool returns nullptr");
 			Unlock();
 		}
 
@@ -214,7 +214,7 @@ VAddr PoolManager::AllocatePool(size_t Size, uint32_t Tag)
 		Entry = reinterpret_cast<PPOOL_HEADER>(g_VMManager.AllocateSystemMemory(PoolType, XBOX_PAGE_READWRITE, PAGE_SIZE, false));
 
 		if (Entry == nullptr) {
-			EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "AllocatePool returns nullptr");
+			EmuLog(LOG_LEVEL::WARNING, "AllocatePool returns nullptr");
 			Unlock();
 
 			RETURN(reinterpret_cast<VAddr>(Entry));
@@ -268,7 +268,7 @@ void PoolManager::DeallocatePool(VAddr addr)
 	assert((Entry->PoolType & POOL_TYPE_MASK) != 0);
 
 	if (!IS_POOL_HEADER_MARKED_ALLOCATED(Entry)) {
-		CxbxKrnlCleanup(LOG_PREFIX, "Pool at address 0x%X is already free!", addr);
+		CxbxKrnlCleanup("Pool at address 0x%X is already free!", addr);
 	}
 
 	MARK_POOL_HEADER_FREED(Entry);

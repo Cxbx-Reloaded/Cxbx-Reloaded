@@ -49,7 +49,7 @@ namespace xboxkrnl
 #include "EmuKrnl.h" // For DefaultLaunchDataPage
 #include "EmuKrnlLogging.h"
 #include "CxbxKrnl.h" // For CxbxKrnlCleanup
-#include "Emu.h" // For EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, )
+#include "Emu.h" // For EmuLog(LOG_LEVEL::WARNING, )
 #include "VMManager.h"
 #include "EmuShared.h"
 #include <assert.h>
@@ -407,7 +407,7 @@ XBSYSAPI EXPORTNUM(181) xboxkrnl::NTSTATUS NTAPI xboxkrnl::MmQueryStatistics
 
 	if (!MemoryStatistics)
 	{
-		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "MmQueryStatistics : PMM_STATISTICS MemoryStatistics is nullptr!\n");
+		EmuLog(LOG_LEVEL::WARNING, "MmQueryStatistics : PMM_STATISTICS MemoryStatistics is nullptr!\n");
 		LOG_IGNORED();
 		RETURN(STATUS_INVALID_PARAMETER);
 	}
@@ -430,7 +430,7 @@ XBSYSAPI EXPORTNUM(181) xboxkrnl::NTSTATUS NTAPI xboxkrnl::MmQueryStatistics
 	}
 	else
 	{
-		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "MmQueryStatistics with unusual size -> 0x%.8X", MemoryStatistics->Length);
+		EmuLog(LOG_LEVEL::WARNING, "MmQueryStatistics with unusual size -> 0x%.8X", MemoryStatistics->Length);
 		ret = STATUS_INVALID_PARAMETER;
 	}
 

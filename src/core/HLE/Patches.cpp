@@ -439,7 +439,7 @@ void* GetPatchedFunctionTrampoline(std::string functionName)
 	if (g_FunctionHooks.find(functionName) != g_FunctionHooks.end()) {
 		auto trampoline = g_FunctionHooks[functionName].GetTrampoline();
 		if (trampoline == nullptr) {
-			EmuLog(CXBXR_MODULE::HLE, LOG_LEVEL::WARNING, "Failed to get XB_Trampoline for %s", functionName.c_str());
+			EmuLogEx(CXBXR_MODULE::HLE, LOG_LEVEL::WARNING, "Failed to get XB_Trampoline for %s", functionName.c_str());
 		}
 
 		return trampoline;

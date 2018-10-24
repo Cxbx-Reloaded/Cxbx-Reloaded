@@ -206,12 +206,14 @@ typedef enum _CxbxMsgDlgIcon {
 
 } CxbxMsgDlgIcon;
 
-void CxbxPopupMessage(CXBXR_MODULE cxbxr_module, LOG_LEVEL level, CxbxMsgDlgIcon icon, const char *message, ...);
+void CxbxPopupMessageEx(CXBXR_MODULE cxbxr_module, LOG_LEVEL level, CxbxMsgDlgIcon icon, const char *message, ...);
+
+#define CxbxPopupMessage(level, icon, fmt, ...) CxbxPopupMessageEx(LOG_PREFIX, level, icon, fmt, ##__VA_ARGS__)
 
 #define LOG_TEST_CASE(message) do { static bool bTestCaseLogged = false; \
     if (!bTestCaseLogged) { bTestCaseLogged = true; \
 	LOG_CHECK_ENABLED(LOG_LEVEL::INFO) { \
-		CxbxPopupMessage(LOG_PREFIX, LOG_LEVEL::INFO, CxbxMsgDlgIcon_Info, "Please report that %s shows the following message:\nLOG_TEST_CASE: %s\nIn %s (%s line %d)", \
+		CxbxPopupMessage(LOG_LEVEL::INFO, CxbxMsgDlgIcon_Info, "Please report that %s shows the following message:\nLOG_TEST_CASE: %s\nIn %s (%s line %d)", \
 		CxbxKrnl_Xbe->m_szAsciiTitle, message, __func__, __FILE__, __LINE__); } } } while (0)
 // was g_pCertificate->wszTitleName
 
@@ -229,7 +231,9 @@ void CxbxKrnlMain(int argc, char* argv[]);
 __declspec(noreturn) void CxbxKrnlInit(void *pTLSData, Xbe::TLS *pTLS, Xbe::LibraryVersion *LibraryVersion, DebugMode DbgMode, const char *szDebugFilename, Xbe::Header *XbeHeader, uint32 XbeHeaderSize, void (*Entry)(), int BootFlags);
 
 /*! cleanup emulation */
-__declspec(noreturn) void CxbxKrnlCleanup(CXBXR_MODULE cxbxr_module, const char *szErrorMessage, ...);
+__declspec(noreturn) void CxbxKrnlCleanupEx(CXBXR_MODULE cxbxr_module, const char *szErrorMessage, ...);
+
+#define CxbxKrnlCleanup(fmt, ...) CxbxKrnlCleanupEx(LOG_PREFIX, fmt, ##__VA_ARGS__)
 
 /*! register a thread handle */
 void CxbxKrnlRegisterThread(HANDLE hThread);

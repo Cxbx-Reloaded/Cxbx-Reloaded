@@ -249,7 +249,7 @@ void OHCI::OHCI_FrameBoundaryWorker()
 	m_bFrameTime = true;
 
 	if (OHCI_ReadHCCA(m_Registers.HcHCCA, &hcca)) {
-		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "HCCA read error at physical address 0x%X", m_Registers.HcHCCA);
+		EmuLog(LOG_LEVEL::WARNING, "HCCA read error at physical address 0x%X", m_Registers.HcHCCA);
 		OHCI_FatalError();
 		m_bFrameTime = false;
 		return;
@@ -293,7 +293,7 @@ void OHCI::OHCI_FrameBoundaryWorker()
 		if (!m_Registers.HcDoneHead) {
 			// From the standard: "This is set to zero whenever HC writes the content of this
 			// register to HCCA. It also sets the WritebackDoneHead of HcInterruptStatus."
-			CxbxKrnlCleanup(LOG_PREFIX, "HcDoneHead is zero but WritebackDoneHead interrupt is not set!\n");
+			CxbxKrnlCleanup("HcDoneHead is zero but WritebackDoneHead interrupt is not set!\n");
 		}
 
 		if (m_Registers.HcInterrupt & m_Registers.HcInterruptStatus) {
@@ -320,7 +320,7 @@ void OHCI::OHCI_FrameBoundaryWorker()
 
 	// Writeback HCCA
 	if (OHCI_WriteHCCA(m_Registers.HcHCCA, &hcca)) {
-		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "HCCA write error at physical address 0x%X", m_Registers.HcHCCA);
+		EmuLog(LOG_LEVEL::WARNING, "HCCA write error at physical address 0x%X", m_Registers.HcHCCA);
 		OHCI_FatalError();
 	}
 
@@ -335,7 +335,7 @@ void OHCI::OHCI_FatalError()
 
 	OHCI_SetInterrupt(OHCI_INTR_UE);
 	OHCI_BusStop();
-	EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "an unrecoverable error occoured!\n");
+	EmuLog(LOG_LEVEL::WARNING, "an unrecoverable error occoured!\n");
 }
 
 bool OHCI::OHCI_ReadHCCA(xbaddr Paddr, OHCI_HCCA* Hcca)
@@ -516,7 +516,7 @@ int OHCI::OHCI_ServiceEDlist(xbaddr Head, int Completion)
 
 	for (current = Head; current; current = next_ed) {
 		if (OHCI_ReadED(current, &ed)) {
-			EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "ED read error at physical address 0x%X", current);
+			EmuLog(LOG_LEVEL::WARNING, "ED read error at physical address 0x%X", current);
 			OHCI_FatalError();
 			return 0;
 		}
@@ -598,7 +598,7 @@ int OHCI::OHCI_ServiceTD(OHCI_ED* Ed)
 		return 1;
 	}
 	if (OHCI_ReadTD(addr, &td)) {
-		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "TD read error at physical address 0x%X", addr);
+		EmuLog(LOG_LEVEL::WARNING, "TD read error at physical address 0x%X", addr);
 		OHCI_FatalError();
 		return 0;
 	}
@@ -646,7 +646,7 @@ int OHCI::OHCI_ServiceTD(OHCI_ED* Ed)
 			pid = USB_TOKEN_SETUP;
 			break;
 		default:
-			EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "bad direction");
+			EmuLog(LOG_LEVEL::WARNING, "bad direction");
 			return 1;
 	}
 
@@ -958,7 +958,7 @@ void OHCI::OHCI_ChangeState(uint32_t Value)
 			break;
 
 		default:
-			EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Unknown USB mode!");
+			EmuLog(LOG_LEVEL::WARNING, "Unknown USB mode!");
 	}
 }
 
@@ -1082,7 +1082,7 @@ uint32_t OHCI::OHCI_ReadRegister(xbaddr Addr)
 				break;
 
 			default:
-				EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Read register operation with bad offset %u. Ignoring.", Addr >> 2);
+				EmuLog(LOG_LEVEL::WARNING, "Read register operation with bad offset %u. Ignoring.", Addr >> 2);
 		}
 		return ret;
 	}
@@ -1221,7 +1221,7 @@ void OHCI::OHCI_WriteRegister(xbaddr Addr, uint32_t Value)
 				break;
 
 			default:
-				EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Write register operation with bad offset %u. Ignoring.", Addr >> 2);
+				EmuLog(LOG_LEVEL::WARNING, "Write register operation with bad offset %u. Ignoring.", Addr >> 2);
 		}
 	}
 }
@@ -1632,7 +1632,7 @@ int OHCI::OHCI_ServiceIsoTD(OHCI_ED* ed, int completion)
 			pid = USB_TOKEN_SETUP;
 			break;
 		default:
-			EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Bad direction %d", dir);
+			EmuLog(LOG_LEVEL::WARNING, "Bad direction %d", dir);
 			return 1;
 	}
 
