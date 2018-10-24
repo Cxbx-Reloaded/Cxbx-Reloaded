@@ -54,7 +54,7 @@ namespace NtDll
 };
 
 
-#include "Emu.h" // For EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, )
+#include "Emu.h" // For EmuLog(LOG_LEVEL::WARNING, )
 
 // ******************************************************************
 // * 0x0005 - DbgBreakPoint()
@@ -125,7 +125,7 @@ XBSYSAPI EXPORTNUM(8) xboxkrnl::ULONG _cdecl xboxkrnl::DbgPrint
 		va_end(argp);
 
 		// Allow DbgPrint to be disabled
-		EmuLog(LOG_PREFIX, LOG_LEVEL::INFO, "%s", szBuffer);
+		EmuLog(LOG_LEVEL::INFO, "%s", szBuffer);
 		fflush(stdout);
 	}
 

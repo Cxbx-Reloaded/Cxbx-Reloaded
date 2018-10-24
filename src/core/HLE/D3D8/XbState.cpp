@@ -74,11 +74,11 @@ void XTL::EmuUpdateDeferredStates()
 			// If the offset was incorrect, calculate the correct offset, log it, and fix it
 			if ((DWORD)(&EmuD3DDeferredRenderState[CullModeIndex]) != CullModeOffset) {
 				DWORD CorrectOffset = CullModeOffset - (CullModeIndex * sizeof(DWORD));
-				EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "EmuD3DDeferredRenderState returned by XboxSymbolDatabase (0x%08X) was incorrect. Correcting to be 0x%08X.\nPlease file an issue with the XbSymbolDatabase project", EmuD3DDeferredRenderState, CorrectOffset);
+				EmuLog(LOG_LEVEL::WARNING, "EmuD3DDeferredRenderState returned by XboxSymbolDatabase (0x%08X) was incorrect. Correcting to be 0x%08X.\nPlease file an issue with the XbSymbolDatabase project", EmuD3DDeferredRenderState, CorrectOffset);
 				EmuD3DDeferredRenderState = (DWORD*)CorrectOffset;
 			}
 		} else {
-			EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "D3DRS_CULLMODE could not be found. Please update the XbSymbolDatabase submodule");
+			EmuLog(LOG_LEVEL::WARNING, "D3DRS_CULLMODE could not be found. Please update the XbSymbolDatabase submodule");
 		}
 		
 		verifiedRenderStateOffset = true;
@@ -137,7 +137,7 @@ void XTL::EmuUpdateDeferredStates()
             if(pCur[0+Adjust2] != X_D3DTSS_UNK)
             {
                 if(pCur[0+Adjust2] == 5)
-					EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "ClampToEdge is unsupported (temporarily)");
+					EmuLog(LOG_LEVEL::WARNING, "ClampToEdge is unsupported (temporarily)");
 				else
 					g_pD3DDevice->SetSamplerState(v, D3DSAMP_ADDRESSU, pCur[0 + Adjust2]);
             }
@@ -145,7 +145,7 @@ void XTL::EmuUpdateDeferredStates()
             if(pCur[1+Adjust2] != X_D3DTSS_UNK)
             {
                 if(pCur[1+Adjust2] == 5)
-					EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "ClampToEdge is unsupported (temporarily)");
+					EmuLog(LOG_LEVEL::WARNING, "ClampToEdge is unsupported (temporarily)");
 				else
 					g_pD3DDevice->SetSamplerState(v, D3DSAMP_ADDRESSV, pCur[1 + Adjust2]);
             }
@@ -153,7 +153,7 @@ void XTL::EmuUpdateDeferredStates()
             if(pCur[2+Adjust2] != X_D3DTSS_UNK)
             {
                 if(pCur[2+Adjust2] == 5)
-					EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "ClampToEdge is unsupported (temporarily)");
+					EmuLog(LOG_LEVEL::WARNING, "ClampToEdge is unsupported (temporarily)");
 				else
 					g_pD3DDevice->SetSamplerState(v, D3DSAMP_ADDRESSW, pCur[2 + Adjust2]);
             }
@@ -161,7 +161,7 @@ void XTL::EmuUpdateDeferredStates()
             if(pCur[3+Adjust2] != X_D3DTSS_UNK)
             {
                 if(pCur[3+Adjust2] == 4)
-                    EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "QuinCunx is unsupported (temporarily)");
+                    EmuLog(LOG_LEVEL::WARNING, "QuinCunx is unsupported (temporarily)");
 				else
 					g_pD3DDevice->SetSamplerState(v, D3DSAMP_MAGFILTER, pCur[3 + Adjust2]);
             }
@@ -169,7 +169,7 @@ void XTL::EmuUpdateDeferredStates()
             if(pCur[4+Adjust2] != X_D3DTSS_UNK)
             {
                 if(pCur[4+Adjust2] == 4)
-					EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "QuinCunx is unsupported (temporarily)");
+					EmuLog(LOG_LEVEL::WARNING, "QuinCunx is unsupported (temporarily)");
 				else
 					g_pD3DDevice->SetSamplerState(v, D3DSAMP_MINFILTER, pCur[4 + Adjust2]);
             }
@@ -177,7 +177,7 @@ void XTL::EmuUpdateDeferredStates()
             if(pCur[5+Adjust2] != X_D3DTSS_UNK)
             {
                 if(pCur[5+Adjust2] == 4)
-					EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "QuinCunx is unsupported (temporarily)");
+					EmuLog(LOG_LEVEL::WARNING, "QuinCunx is unsupported (temporarily)");
 				else
 					g_pD3DDevice->SetSamplerState(v, D3DSAMP_MIPFILTER, pCur[5 + Adjust2]);
             }
@@ -275,7 +275,7 @@ void XTL::EmuUpdateDeferredStates()
 					g_pD3DDevice->SetTextureStageState(v, D3DTSS_COLOROP, D3DTOP_BUMPENVMAPLUMINANCE);
 					break;
 				default:
-					EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "(Temporarily) Unsupported D3DTSS_COLOROP Value (%d)", pCur[12 - Adjust1]);
+					EmuLog(LOG_LEVEL::WARNING, "(Temporarily) Unsupported D3DTSS_COLOROP Value (%d)", pCur[12 - Adjust1]);
 					break;
 				}
             }
@@ -293,7 +293,7 @@ void XTL::EmuUpdateDeferredStates()
             if(pCur[16-Adjust1] != X_D3DTSS_UNK)
             {
                 if(pCur[16-Adjust1] > 12 && pCur[16-Adjust1] != 14 && pCur[16-Adjust1] != 13)
-                    EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "(Temporarily) Unsupported D3DTSS_ALPHAOP Value (%d)", pCur[16-Adjust1]);
+                    EmuLog(LOG_LEVEL::WARNING, "(Temporarily) Unsupported D3DTSS_ALPHAOP Value (%d)", pCur[16-Adjust1]);
 				else
 				if( pCur[16-Adjust1] == 14 )
 					g_pD3DDevice->SetTextureStageState(v, D3DTSS_ALPHAOP, D3DTOP_BLENDTEXTUREALPHA);
@@ -346,7 +346,7 @@ void XTL::EmuUpdateDeferredStates()
                     }
 
                     if(pass)
-                        EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Unhandled TextureState Change @ %d->%d", v, r);
+                        EmuLog(LOG_LEVEL::WARNING, "Unhandled TextureState Change @ %d->%d", v, r);
                 }
             }
             //**/

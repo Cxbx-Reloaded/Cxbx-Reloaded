@@ -50,7 +50,7 @@ namespace xboxkrnl
 #include "Logging.h" // For LOG_FUNC()
 #include "EmuKrnlLogging.h"
 #include "CxbxKrnl.h" // For CxbxKrnl_TLS
-#include "Emu.h" // For EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, )
+#include "Emu.h" // For EmuLog(LOG_LEVEL::WARNING, )
 #include "EmuFS.h" // For EmuGenerateFS
 #include "EmuXTL.h"
 
@@ -188,7 +188,7 @@ static unsigned int WINAPI PCSTProxy
 	}
 	__except (EmuException(GetExceptionInformation()))
 	{
-		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Problem with ExceptionFilter!");
+		EmuLog(LOG_LEVEL::WARNING, "Problem with ExceptionFilter!");
 	}
 
 callComplete:
@@ -214,7 +214,7 @@ void PspSystemThreadStartup
 	__except (EmuException(GetExceptionInformation()))
 	// TODO : Call PspUnhandledExceptionInSystemThread(GetExceptionInformation())
 	{
-		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Problem with ExceptionFilter!"); // TODO : Disable?
+		EmuLog(LOG_LEVEL::WARNING, "Problem with ExceptionFilter!"); // TODO : Disable?
 	}
 
 	xboxkrnl::PsTerminateSystemThread(STATUS_SUCCESS);
@@ -309,7 +309,7 @@ XBSYSAPI EXPORTNUM(255) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PsCreateSystemThreadE
 		HANDLE hStartedEvent = CreateEvent(NULL, FALSE, FALSE, TEXT("PCSTProxyEvent"));
 		if (hStartedEvent == NULL) {
 			std::string errorMessage = CxbxGetLastErrorString("PsCreateSystemThreadEx could not create PCSTProxyEvent");
-			CxbxKrnlCleanup(LOG_PREFIX, errorMessage.c_str());
+			CxbxKrnlCleanup(errorMessage.c_str());
 		}
 
         // PCSTProxy is responsible for cleaning up this pointer
@@ -333,7 +333,7 @@ XBSYSAPI EXPORTNUM(255) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PsCreateSystemThreadE
             dwThreadWait = WaitForSingleObject(hStartedEvent, 300);
             switch (dwThreadWait) {
                 case WAIT_TIMEOUT: { // The time-out interval elapsed, and the object's state is nonsignaled.
-					EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Timeout while waiting for Xbox proxy thread to start...\n");
+					EmuLog(LOG_LEVEL::WARNING, "Timeout while waiting for Xbox proxy thread to start...\n");
                     bWait = false;
                     break;
                 }
@@ -347,7 +347,7 @@ XBSYSAPI EXPORTNUM(255) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PsCreateSystemThreadE
 						bWait = false;
 
 					std::string ErrorStr = CxbxGetLastErrorString("While waiting for Xbox proxy thread to start");
-					EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "%s\n", ErrorStr.c_str());
+					EmuLog(LOG_LEVEL::WARNING, "%s\n", ErrorStr.c_str());
 					break;
                 }
             }
@@ -408,7 +408,7 @@ XBSYSAPI EXPORTNUM(257) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PsSetCreateThreadNoti
 
 	// I honestly don't expect this to happen, but if it does...
 	if (g_iThreadNotificationCount >= PSP_MAX_CREATE_THREAD_NOTIFY)
-		CxbxKrnlCleanup(LOG_PREFIX, "Too many thread notification routines installed\n");
+		CxbxKrnlCleanup("Too many thread notification routines installed\n");
 
 	// Find an empty spot in the thread notification array
 	for (int i = 0; i < PSP_MAX_CREATE_THREAD_NOTIFY; i++)

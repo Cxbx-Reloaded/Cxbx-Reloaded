@@ -202,7 +202,7 @@ void CxbxLaunchXbe(void(*Entry)())
 	}
 	__except (EmuException(GetExceptionInformation()))
 	{
-		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Problem with ExceptionFilter");
+		EmuLog(LOG_LEVEL::WARNING, "Problem with ExceptionFilter");
 	}
 }
 
@@ -323,7 +323,7 @@ HANDLE CxbxRestoreContiguousMemory(char *szFilePath_memory_bin)
 			/* hTemplateFile */nullptr);
 		if (hFile == INVALID_HANDLE_VALUE)
 		{
-			CxbxKrnlCleanup(LOG_PREFIX, "%s : Couldn't create memory.bin file!\n", __func__);
+			CxbxKrnlCleanup("%s : Couldn't create memory.bin file!\n", __func__);
 			return nullptr;
 		}
 	}
@@ -341,7 +341,7 @@ HANDLE CxbxRestoreContiguousMemory(char *szFilePath_memory_bin)
 		/**/nullptr);
 	if (hFileMapping == NULL)
 	{
-		CxbxKrnlCleanup(LOG_PREFIX, "%s : Couldn't create contiguous memory.bin file mapping!\n", __func__);
+		CxbxKrnlCleanup("%s : Couldn't create contiguous memory.bin file mapping!\n", __func__);
 		return nullptr;
 	}
 
@@ -350,7 +350,7 @@ HANDLE CxbxRestoreContiguousMemory(char *szFilePath_memory_bin)
 	unsigned int FileSize = len_li.u.LowPart;
 	if (FileSize != CHIHIRO_MEMORY_SIZE)
 	{
-		CxbxKrnlCleanup(LOG_PREFIX, "%s : memory.bin file is not 128 MiB large!\n", __func__);
+		CxbxKrnlCleanup("%s : memory.bin file is not 128 MiB large!\n", __func__);
 		return nullptr;
 	}
 
@@ -367,7 +367,7 @@ HANDLE CxbxRestoreContiguousMemory(char *szFilePath_memory_bin)
 		if (memory)
 			UnmapViewOfFile(memory);
 
-		CxbxKrnlCleanup(LOG_PREFIX, "%s: Couldn't map contiguous memory.bin to 0x80000000!", __func__);
+		CxbxKrnlCleanup("%s: Couldn't map contiguous memory.bin to 0x80000000!", __func__);
 		return nullptr;
 	}
 
@@ -404,7 +404,7 @@ HANDLE CxbxRestoreContiguousMemory(char *szFilePath_memory_bin)
 		if (tiled_memory)
 			UnmapViewOfFile(tiled_memory);
 
-		CxbxKrnlCleanup(LOG_PREFIX, "%s: Couldn't map contiguous memory.bin into tiled memory at 0xF0000000!", __func__);
+		CxbxKrnlCleanup("%s: Couldn't map contiguous memory.bin into tiled memory at 0xF0000000!", __func__);
 		return nullptr;
 	}
 
@@ -439,7 +439,7 @@ HANDLE CxbxRestorePageTablesMemory(char* szFilePath_page_tables)
 		/* hTemplateFile */nullptr);
 		if (hFile == INVALID_HANDLE_VALUE)
 		{
-			CxbxKrnlCleanup(LOG_PREFIX, "%s : Couldn't create PageTables.bin file!\n", __func__);
+			CxbxKrnlCleanup("%s : Couldn't create PageTables.bin file!\n", __func__);
 		}
 	}
 
@@ -456,7 +456,7 @@ HANDLE CxbxRestorePageTablesMemory(char* szFilePath_page_tables)
 	/**/nullptr);
 	if (hFileMapping == NULL)
 	{
-		CxbxKrnlCleanup(LOG_PREFIX, "%s : Couldn't create PageTables.bin file mapping!\n", __func__);
+		CxbxKrnlCleanup("%s : Couldn't create PageTables.bin file mapping!\n", __func__);
 	}
 
 	LARGE_INTEGER  len_li;
@@ -464,7 +464,7 @@ HANDLE CxbxRestorePageTablesMemory(char* szFilePath_page_tables)
 	unsigned int FileSize = len_li.u.LowPart;
 	if (FileSize != PAGE_TABLES_SIZE)
 	{
-		CxbxKrnlCleanup(LOG_PREFIX, "%s : PageTables.bin file is not 4 MiB large!\n", __func__);
+		CxbxKrnlCleanup("%s : PageTables.bin file is not 4 MiB large!\n", __func__);
 	}
 
 	// Map PageTables.bin contents into memory :
@@ -480,7 +480,7 @@ HANDLE CxbxRestorePageTablesMemory(char* szFilePath_page_tables)
 		if (memory)
 			UnmapViewOfFile(memory);
 
-		CxbxKrnlCleanup(LOG_PREFIX, "%s: Couldn't map PageTables.bin to 0xC0000000!", __func__);
+		CxbxKrnlCleanup("%s: Couldn't map PageTables.bin to 0xC0000000!", __func__);
 	}
 
 	printf("[0x%.4X] INIT: Mapped %d MiB of Xbox page tables memory at 0x%.8X to 0x%.8X\n",
@@ -499,7 +499,7 @@ HANDLE CxbxRestorePageTablesMemory(char* szFilePath_page_tables)
 
 #pragma optimize("", off)
 
-void CxbxPopupMessage(CXBXR_MODULE cxbxr_module, LOG_LEVEL level, CxbxMsgDlgIcon icon, const char *message, ...)
+void CxbxPopupMessageEx(CXBXR_MODULE cxbxr_module, LOG_LEVEL level, CxbxMsgDlgIcon icon, const char *message, ...)
 {
 	char Buffer[1024];
 	va_list argp;
@@ -529,7 +529,7 @@ void CxbxPopupMessage(CXBXR_MODULE cxbxr_module, LOG_LEVEL level, CxbxMsgDlgIcon
 	vsprintf(Buffer, message, argp);
 	va_end(argp);
 
-	EmuLog(cxbxr_module, level, "Popup : %s\n", Buffer);
+	EmuLogEx(cxbxr_module, level, "Popup : %s\n", Buffer);
 
 	MessageBox(NULL, Buffer, TEXT("Cxbx-Reloaded"), uType);
 }
@@ -948,7 +948,7 @@ void CxbxKrnlMain(int argc, char* argv[])
 				Sleep(100);
 			}
 			if (!isReady) {
-				EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "GUI process is not ready!");
+				EmuLog(LOG_LEVEL::WARNING, "GUI process is not ready!");
 				int mbRet = MessageBox(NULL, "GUI process is not ready, do you wish to retry?", TEXT("Cxbx-Reloaded"),
 										MB_ICONWARNING | MB_RETRYCANCEL | MB_TOPMOST | MB_SETFOREGROUND);
 				if (mbRet == IDRETRY) {
@@ -1038,14 +1038,14 @@ void CxbxKrnlMain(int argc, char* argv[])
 		// verify base of code of our executable is 0x00001000
 		if (ExeNtHeader->OptionalHeader.BaseOfCode != CXBX_BASE_OF_CODE)
 		{
-			CxbxPopupMessage(LOG_PREFIX, LOG_LEVEL::FATAL, CxbxMsgDlgIcon_Error, "Cxbx-Reloaded executuable requires it's base of code to be 0x00001000");
+			CxbxPopupMessage(LOG_LEVEL::FATAL, CxbxMsgDlgIcon_Error, "Cxbx-Reloaded executuable requires it's base of code to be 0x00001000");
 			return; // TODO : Halt(0); 
 		}
 
 		// verify virtual_memory_placeholder is located at 0x00011000
 		if ((UINT_PTR)(&(virtual_memory_placeholder[0])) != (XBE_IMAGE_BASE + CXBX_BASE_OF_CODE))
 		{
-			CxbxPopupMessage(LOG_PREFIX, LOG_LEVEL::FATAL, CxbxMsgDlgIcon_Error, "virtual_memory_placeholder is not loaded to base address 0x00011000 (which is a requirement for Xbox emulation)");
+			CxbxPopupMessage(LOG_LEVEL::FATAL, CxbxMsgDlgIcon_Error, "virtual_memory_placeholder is not loaded to base address 0x00011000 (which is a requirement for Xbox emulation)");
 			return; // TODO : Halt(0); 
 		}
 
@@ -1086,7 +1086,7 @@ void CxbxKrnlMain(int argc, char* argv[])
 	EEPROM = CxbxRestoreEEPROM(szFilePath_EEPROM_bin);
 	if (EEPROM == nullptr)
 	{
-		CxbxPopupMessage(LOG_PREFIX, LOG_LEVEL::FATAL, CxbxMsgDlgIcon_Error, "Couldn't init EEPROM!");
+		CxbxPopupMessage(LOG_LEVEL::FATAL, CxbxMsgDlgIcon_Error, "Couldn't init EEPROM!");
 		return; // TODO : Halt(0); 
 	}
 
@@ -1125,7 +1125,7 @@ void CxbxKrnlMain(int argc, char* argv[])
 		CxbxKrnl_Xbe = new Xbe(xbePath.c_str(), false); // TODO : Instead of using the Xbe class, port Dxbx _ReadXbeBlock()
 
 		if (CxbxKrnl_Xbe->HasFatalError()) {
-			CxbxKrnlCleanup(LOG_PREFIX, CxbxKrnl_Xbe->GetError().c_str());
+			CxbxKrnlCleanup(CxbxKrnl_Xbe->GetError().c_str());
 			return;
 		}
 
@@ -1172,7 +1172,7 @@ void CxbxKrnlMain(int argc, char* argv[])
 		if (g_bIsChihiro) {
 			std::string chihiroMediaBoardRom = std::string(szFolder_CxbxReloadedData) + std::string("/EmuDisk/") + MediaBoardRomFile;
 			if (!std::experimental::filesystem::exists(chihiroMediaBoardRom)) {
-				CxbxKrnlCleanup(LOG_PREFIX, "Chihiro Media Board ROM (fpr21042_m29w160et.bin) could not be found");
+				CxbxKrnlCleanup("Chihiro Media Board ROM (fpr21042_m29w160et.bin) could not be found");
 			}
 
 			delete CxbxKrnl_Xbe;
@@ -1198,7 +1198,7 @@ void CxbxKrnlMain(int argc, char* argv[])
 			if ((sectionHeaders[i].Flags & XBEIMAGE_SECTION_PRELOAD) != 0) {
 				NTSTATUS result = xboxkrnl::XeLoadSection(&sectionHeaders[i]);
 				if (FAILED(result)) {
-					CxbxKrnlCleanup(LOG_PREFIX_INIT, "Failed to preload XBE section: %s", CxbxKrnl_Xbe->m_szSectionName[i]);
+					CxbxKrnlCleanupEx(LOG_PREFIX_INIT, "Failed to preload XBE section: %s", CxbxKrnl_Xbe->m_szSectionName[i]);
 				}
 			}
 		}
@@ -1273,7 +1273,7 @@ void LoadXboxKeys(std::string path)
 			memcpy(xboxkrnl::XboxCertificateKey, &keys[1], xboxkrnl::XBOX_KEY_LENGTH);
 		}
 		else {
-			EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Keys.bin has an incorrect filesize. Should be %d bytes", xboxkrnl::XBOX_KEY_LENGTH * 2);
+			EmuLog(LOG_LEVEL::WARNING, "Keys.bin has an incorrect filesize. Should be %d bytes", xboxkrnl::XBOX_KEY_LENGTH * 2);
 		}
 
 		fclose(fp);
@@ -1281,7 +1281,7 @@ void LoadXboxKeys(std::string path)
 	}
 
 	// If we didn't already exit the function, keys.bin could not be loaded
-	EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Failed to load Keys.bin. Cxbx-Reloaded will be unable to read Save Data from a real Xbox");
+	EmuLog(LOG_LEVEL::WARNING, "Failed to load Keys.bin. Cxbx-Reloaded will be unable to read Save Data from a real Xbox");
 }
 
 __declspec(noreturn) void CxbxKrnlInit
@@ -1314,7 +1314,7 @@ __declspec(noreturn) void CxbxKrnlInit
 	CxbxInitPerformanceCounters();
 	Timer_Init();
 #ifdef _DEBUG
-//	CxbxPopupMessage(LOG_PREFIX, LOG_LEVEL::INFO, "Attach a Debugger");
+//	CxbxPopupMessage(LOG_LEVEL::INFO, "Attach a Debugger");
 //  Debug child processes using https://marketplace.visualstudio.com/items?itemName=GreggMiskelly.MicrosoftChildProcessDebuggingPowerTool
 #endif
 
@@ -1409,7 +1409,7 @@ __declspec(noreturn) void CxbxKrnlInit
 	// Then we must obey the current directory it asked for.
 	if (lastFind != std::string::npos) {
 		if (xbeDirectory.find(';', lastFind + 1) != std::string::npos) {
-			CxbxKrnlCleanup(LOG_PREFIX_INIT, "Cannot contain multiple of ; symbol.");
+			CxbxKrnlCleanupEx(LOG_PREFIX_INIT, "Cannot contain multiple of ; symbol.");
 		}
 		xbeDirectory = xbeDirectory.substr(0, lastFind);
 	}
@@ -1500,7 +1500,7 @@ __declspec(noreturn) void CxbxKrnlInit
 	DBG_PRINTF_EX(LOG_PREFIX_INIT, "Determining CPU affinity.\n");
 	{
 		if (!GetProcessAffinityMask(g_CurrentProcessHandle, &g_CPUXbox, &g_CPUOthers))
-			CxbxKrnlCleanup(LOG_PREFIX_INIT, "GetProcessAffinityMask failed.");
+			CxbxKrnlCleanupEx(LOG_PREFIX_INIT, "GetProcessAffinityMask failed.");
 
 		// For the other threads, remove one bit from the processor mask:
 		g_CPUOthers = ((g_CPUXbox - 1) & g_CPUXbox);
@@ -1631,14 +1631,14 @@ void CxbxInitFilePaths()
 	// Make sure our data folder exists :
 	bool result = std::experimental::filesystem::exists(szFolder_CxbxReloadedData);
 	if (!result && !std::experimental::filesystem::create_directory(szFolder_CxbxReloadedData)) {
-		CxbxKrnlCleanup(LOG_PREFIX, "%s : Couldn't create Cxbx-Reloaded's data folder!", __func__);
+		CxbxKrnlCleanup("%s : Couldn't create Cxbx-Reloaded's data folder!", __func__);
 	}
 
 	// Make sure the EmuDisk folder exists
 	std::string emuDisk = std::string(szFolder_CxbxReloadedData) + std::string("\\EmuDisk");
 	result = std::experimental::filesystem::exists(emuDisk);
 	if (!result && !std::experimental::filesystem::create_directory(emuDisk)) {
-		CxbxKrnlCleanup(LOG_PREFIX, "%s : Couldn't create Cxbx-Reloaded EmuDisk folder!", __func__);
+		CxbxKrnlCleanup("%s : Couldn't create Cxbx-Reloaded EmuDisk folder!", __func__);
 	}
 
 	snprintf(szFilePath_EEPROM_bin, MAX_PATH, "%s\\EEPROM.bin", szFolder_CxbxReloadedData);
@@ -1659,7 +1659,7 @@ void CxbxInitFilePaths()
 	}
 };*/
 
-__declspec(noreturn) void CxbxKrnlCleanup(CXBXR_MODULE cxbxr_module, const char *szErrorMessage, ...)
+__declspec(noreturn) void CxbxKrnlCleanupEx(CXBXR_MODULE cxbxr_module, const char *szErrorMessage, ...)
 {
     g_bEmuException = true;
 
@@ -1675,7 +1675,7 @@ __declspec(noreturn) void CxbxKrnlCleanup(CXBXR_MODULE cxbxr_module, const char 
         vsprintf(szBuffer2, szErrorMessage, argp);
         va_end(argp);
 
-		CxbxPopupMessage(cxbxr_module, LOG_LEVEL::FATAL, CxbxMsgDlgIcon_Error, "Received Fatal Message:\n\n* %s\n", szBuffer2); // Will also DBG_PRINTF
+		CxbxPopupMessageEx(cxbxr_module, LOG_LEVEL::FATAL, CxbxMsgDlgIcon_Error, "Received Fatal Message:\n\n* %s\n", szBuffer2); // Will also DBG_PRINTF
     }
 
     printf("[0x%.4X] MAIN: Terminating Process\n", GetCurrentThreadId());
@@ -1705,7 +1705,7 @@ void CxbxKrnlRegisterThread(HANDLE hThread)
 		}
 		else {
 			auto message = CxbxGetLastErrorString("DuplicateHandle");
-			EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, message.c_str());
+			EmuLog(LOG_LEVEL::WARNING, message.c_str());
 		}
 	}
 
@@ -1722,7 +1722,7 @@ void CxbxKrnlRegisterThread(HANDLE hThread)
 
     if(v == MAXIMUM_XBOX_THREADS)
     {
-        CxbxKrnlCleanup(LOG_PREFIX, "There are too many active threads!");
+        CxbxKrnlCleanup("There are too many active threads!");
     }
 }
 
@@ -1849,13 +1849,13 @@ void CxbxKrnlPrintUEM(ULONG ErrorCode)
 		xboxkrnl::ExSaveNonVolatileSetting(xboxkrnl::XC_MAX_ALL, Type, &Eeprom, sizeof(Eeprom));
 	}
 	else {
-		CxbxKrnlCleanup(LOG_PREFIX, "Could not display the fatal error screen");
+		CxbxKrnlCleanup("Could not display the fatal error screen");
 	}
 
 	if (g_bIsChihiro)
 	{
 		// The Chihiro doesn't display the UEM
-		CxbxKrnlCleanup(LOG_PREFIX, "The running Chihiro xbe has encountered a fatal error and needs to close");
+		CxbxKrnlCleanup("The running Chihiro xbe has encountered a fatal error and needs to close");
 	}
 
 	g_CxbxFatalErrorCode = ErrorCode;
@@ -1895,11 +1895,11 @@ void CxbxPrintUEMInfo(ULONG ErrorCode)
 	if (it != UEMErrorTable.end())
 	{
 		std::string ErrorMessage = "Fatal error. " + it->second + ". This error screen will persist indefinitely. Stop the emulation to close it";
-		CxbxPopupMessage(LOG_PREFIX, LOG_LEVEL::FATAL, CxbxMsgDlgIcon_Error, ErrorMessage.c_str());
+		CxbxPopupMessage(LOG_LEVEL::FATAL, CxbxMsgDlgIcon_Error, ErrorMessage.c_str());
 	}
 	else
 	{
-		CxbxPopupMessage(LOG_PREFIX, LOG_LEVEL::FATAL, CxbxMsgDlgIcon_Error, "Unknown fatal error. This error screen will persist indefinitely. Stop the emulation to close it");
+		CxbxPopupMessage(LOG_LEVEL::FATAL, CxbxMsgDlgIcon_Error, "Unknown fatal error. This error screen will persist indefinitely. Stop the emulation to close it");
 	}
 }
 
@@ -1910,7 +1910,7 @@ __declspec(noreturn) void CxbxKrnlTerminateThread()
 
 void CxbxKrnlPanic()
 {
-    CxbxKrnlCleanup(LOG_PREFIX, "Kernel Panic!");
+    CxbxKrnlCleanup("Kernel Panic!");
 }
 
 void CxbxConvertArgToString(std::string &dest, const char* krnlExe, const char* xbeFile, HWND hwndParent, DebugMode krnlDebug, const char* krnlDebugFile) {

@@ -3477,7 +3477,7 @@ bool PSH_XBOX_SHADER::MoveRemovableParametersRight()
     if (Result >= MaxConstantFloatRegisters)
       Result = 0;
 
-    EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "; Too many constants to emulate, this pixel shader will give unexpected output!");
+    EmuLog(LOG_LEVEL::WARNING, "; Too many constants to emulate, this pixel shader will give unexpected output!");
 	return Result;
   }
 
@@ -6103,8 +6103,8 @@ static const
 
   if (hRet != D3D_OK)
   {
-    EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Could not create pixel shader");
-	EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, std::string((char*)pErrors->GetBufferPointer(), pErrors->GetBufferSize()).c_str());
+    EmuLog(LOG_LEVEL::WARNING, "Could not create pixel shader");
+	EmuLog(LOG_LEVEL::WARNING, std::string((char*)pErrors->GetBufferPointer(), pErrors->GetBufferSize()).c_str());
 
 	printf(ConvertedPixelShaderStr.c_str());
 
@@ -6118,12 +6118,12 @@ static const
       /*ppCompilationErrors*/&pErrors);
 
 	if (hRet != D3D_OK) {
-		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Could not create pixel shader");
-		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, std::string((char*)pErrors->GetBufferPointer(), pErrors->GetBufferSize()).c_str());
-		XTL::CxbxKrnlCleanup(LOG_PREFIX, "Cannot fall back to the most simple pixel shader!");
+		EmuLog(LOG_LEVEL::WARNING, "Could not create pixel shader");
+		EmuLog(LOG_LEVEL::WARNING, std::string((char*)pErrors->GetBufferPointer(), pErrors->GetBufferSize()).c_str());
+		XTL::CxbxKrnlCleanup("Cannot fall back to the most simple pixel shader!");
 	}
 
-    EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "We're lying about the creation of a pixel shader!");
+    EmuLog(LOG_LEVEL::WARNING, "We're lying about the creation of a pixel shader!");
   }
 
   if (pShader)
@@ -7063,7 +7063,7 @@ inline void HandleInputOutput
 
 			if (bEFProduct)
 			{
-				EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "EF Product and V1R0 register used at the same time!");
+				EmuLog(LOG_LEVEL::WARNING, "EF Product and V1R0 register used at the same time!");
 			}
 			else
 			{
@@ -7584,7 +7584,7 @@ inline BOOL OptimizeOperation
 		{
 			if (szMod[0])
 			{
-				EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Destination modifier present!");
+				EmuLog(LOG_LEVEL::WARNING, "Destination modifier present!");
 			}
 			switch (eOpTypes[2])
 			{
@@ -7709,7 +7709,7 @@ inline BOOL OptimizeOperation
 					{
 						if (szOutputs[2][0] != 'r')
 						{
-							EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Destination not temporary register!");
+							EmuLog(LOG_LEVEL::WARNING, "Destination not temporary register!");
 						}
 						// ab input
 						iOffset += sprintf(szCommand + iOffset, "mul%s r1, %s, %s\n",
@@ -8041,7 +8041,7 @@ inline BOOL OptimizeOperation
 			}
 			if (!bHandled)
 			{
-				EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Unhandled pixel shader instruction!");
+				EmuLog(LOG_LEVEL::WARNING, "Unhandled pixel shader instruction!");
 			}
 // 			if (strcmp(szOps[2], "add") == 0)
 // 			{
@@ -8055,7 +8055,7 @@ inline BOOL OptimizeOperation
 // 				}
 // 				else
 // 				{
-// 					EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Unhandled pixel shader instruction!");
+// 					EmuLog(LOG_LEVEL::WARNING, "Unhandled pixel shader instruction!");
 // 				}
 // 			}
 // 			else if (strcmp(szOps[2], "cnd") == 0)
@@ -8070,12 +8070,12 @@ inline BOOL OptimizeOperation
 // 				}
 // 				else
 // 				{
-// 					EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Unhandled pixel shader instruction!");
+// 					EmuLog(LOG_LEVEL::WARNING, "Unhandled pixel shader instruction!");
 // 				}
 // 			}
 // 			else
 // 			{
-// 				EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Unhandled pixel shader instruction!");
+// 				EmuLog(LOG_LEVEL::WARNING, "Unhandled pixel shader instruction!");
 // 			}
 		}
 	}

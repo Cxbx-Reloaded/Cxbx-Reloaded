@@ -210,7 +210,7 @@ void DbgConsole::ParseCommand()
     else if(_stricmp(szCmd, "q") == 0 || _stricmp(szCmd, "quit") == 0 || _stricmp(szCmd, "exit") == 0)
     {
         printf("CxbxDbg: Goodbye...\n");
-        CxbxKrnlCleanup(CXBXR_MODULE::GUI, NULL);
+        CxbxKrnlCleanupEx(CXBXR_MODULE::GUI, NULL);
     }
     else if(_stricmp(szCmd, "t") == 0 || _stricmp(szCmd, "trace") == 0)
     {

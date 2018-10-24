@@ -54,7 +54,7 @@ namespace NtDll
 };
 
 #include "CxbxKrnl.h" // For CxbxKrnlCleanup
-#include "Emu.h" // For EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, )
+#include "Emu.h" // For EmuLog(LOG_LEVEL::WARNING, )
 #include "EmuFile.h" // For EmuNtSymbolicLinkObject, NtStatusToString(), etc.
 #include "VMManager.h" // For g_VMManager
 #include "CxbxDebugger.h"
@@ -117,7 +117,7 @@ XBSYSAPI EXPORTNUM(185) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCancelTimer
 		/*OUT*/CurrentState);
 
 	if (FAILED(ret))
-		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "NtCancelTimer failed!");
+		EmuLog(LOG_LEVEL::WARNING, "NtCancelTimer failed!");
 
 	RETURN(ret);
 }
@@ -135,7 +135,7 @@ XBSYSAPI EXPORTNUM(186) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtClearEvent
 	NTSTATUS ret = NtDll::NtClearEvent(EventHandle);
 
 	if (FAILED(ret))
-		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "NtClearEvent Failed!");
+		EmuLog(LOG_LEVEL::WARNING, "NtClearEvent Failed!");
 
 	RETURN(ret);
 }
@@ -218,7 +218,7 @@ XBSYSAPI EXPORTNUM(188) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateDirectoryObje
 	}
 
 	if (FAILED(ret))
-		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "NtCreateDirectoryObject Failed!");
+		EmuLog(LOG_LEVEL::WARNING, "NtCreateDirectoryObject Failed!");
 	else
 		DBG_PRINTF("NtCreateDirectoryObject DirectoryHandle = 0x%.8X\n", *DirectoryHandle);
 
@@ -283,7 +283,7 @@ XBSYSAPI EXPORTNUM(189) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateEvent
 
 	if (FAILED(ret))
 	{
-		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Trying fallback (without object attributes)...\nError code 0x%X", ret);
+		EmuLog(LOG_LEVEL::WARNING, "Trying fallback (without object attributes)...\nError code 0x%X", ret);
 
 		// If it fails, try again but without the object attributes stucture
 		// This fixes Panzer Dragoon games on non-Vista OSes.
@@ -295,7 +295,7 @@ XBSYSAPI EXPORTNUM(189) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateEvent
 			InitialState);
 
 		if(FAILED(ret))
-			EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "NtCreateEvent Failed!");
+			EmuLog(LOG_LEVEL::WARNING, "NtCreateEvent Failed!");
 		else
 			DBG_PRINTF("NtCreateEvent EventHandle = 0x%.8X\n", *EventHandle);
 	}
@@ -413,7 +413,7 @@ XBSYSAPI EXPORTNUM(192) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateMutant
 
 	if (FAILED(ret))
 	{
-		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Trying fallback (without object attributes)...\nError code 0x%X", ret);
+		EmuLog(LOG_LEVEL::WARNING, "Trying fallback (without object attributes)...\nError code 0x%X", ret);
 
 		// If it fails, try again but without the object attributes stucture
 		ret = NtDll::NtCreateMutant(
@@ -423,7 +423,7 @@ XBSYSAPI EXPORTNUM(192) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateMutant
 			InitialOwner);
 
 		if(FAILED(ret))
-			EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "NtCreateMutant Failed!");
+			EmuLog(LOG_LEVEL::WARNING, "NtCreateMutant Failed!");
 		else
 			DBG_PRINTF("NtCreateMutant MutantHandle = 0x%.8X\n", *MutantHandle);
 	}
@@ -487,7 +487,7 @@ XBSYSAPI EXPORTNUM(193) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateSemaphore
 
 	if (FAILED(ret))
 	{
-		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Trying fallback (without object attributes)...\nError code 0x%X", ret);
+		EmuLog(LOG_LEVEL::WARNING, "Trying fallback (without object attributes)...\nError code 0x%X", ret);
 
 		// If it fails, try again but without the object attributes stucture
 		ret = NtDll::NtCreateSemaphore(
@@ -498,7 +498,7 @@ XBSYSAPI EXPORTNUM(193) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateSemaphore
 			MaximumCount);
 
 		if(FAILED(ret))
-			EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "NtCreateSemaphore failed!");
+			EmuLog(LOG_LEVEL::WARNING, "NtCreateSemaphore failed!");
 		else
 			DBG_PRINTF("NtCreateSemaphore SemaphoreHandle = 0x%.8X\n", *SemaphoreHandle);
 	}
@@ -561,7 +561,7 @@ XBSYSAPI EXPORTNUM(194) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateTimer
 	);
 
 	if (FAILED(ret))
-		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "NtCreateTimer failed!");
+		EmuLog(LOG_LEVEL::WARNING, "NtCreateTimer failed!");
 	else
 		DBG_PRINTF("NtCreateTimer TimerHandle = 0x%.8X\n", *TimerHandle);
 
@@ -591,7 +591,7 @@ XBSYSAPI EXPORTNUM(195) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtDeleteFile
 	}
 
 	if (FAILED(ret))
-		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "NtDeleteFile Failed!");
+		EmuLog(LOG_LEVEL::WARNING, "NtDeleteFile Failed!");
 	
 	RETURN(ret);
 }
@@ -728,7 +728,7 @@ XBSYSAPI EXPORTNUM(197) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtDuplicateObject
 	}
 
 	if (ret != STATUS_SUCCESS)
-		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Object was not duplicated!");
+		EmuLog(LOG_LEVEL::WARNING, "Object was not duplicated!");
 
 	RETURN(ret);
 }
@@ -904,7 +904,7 @@ XBSYSAPI EXPORTNUM(203) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtOpenSymbolicLinkObj
 	}
 
 	if (ret != STATUS_SUCCESS)
-		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "NtOpenSymbolicLinkObject failed! (%s)", NtStatusToString(ret));
+		EmuLog(LOG_LEVEL::WARNING, "NtOpenSymbolicLinkObject failed! (%s)", NtStatusToString(ret));
 	else
 		DBG_PRINTF("NtOpenSymbolicLinkObject LinkHandle^ = 0x%.8X\n", *LinkHandle);
 
@@ -958,7 +958,7 @@ XBSYSAPI EXPORTNUM(205) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtPulseEvent
 		/*OUT*/PreviousState);
 
 	if (FAILED(ret))
-		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "NtPulseEvent failed!");
+		EmuLog(LOG_LEVEL::WARNING, "NtPulseEvent failed!");
 
 	RETURN(ret);
 }
@@ -1004,11 +1004,11 @@ XBSYSAPI EXPORTNUM(206) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueueApcThread
 
 	if( FAILED( ret ) )
 	{
-		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING,  "Duplicating handle with THREAD_SET_CONTEXT..." );
+		EmuLog(LOG_LEVEL::WARNING,  "Duplicating handle with THREAD_SET_CONTEXT..." );
 
 		// If we get here, then attempt to duplicate the thread.
 		if(!DuplicateHandle(g_CurrentProcessHandle, ThreadHandle, g_CurrentProcessHandle, &hApcThread, THREAD_SET_CONTEXT,FALSE,0))
-			EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "DuplicateHandle failed!");
+			EmuLog(LOG_LEVEL::WARNING, "DuplicateHandle failed!");
 		else
 		{
 			g_DuplicateHandles[ThreadHandle] = hApcThread;	// Save this thread because we'll need to de-reference it later
@@ -1025,7 +1025,7 @@ XBSYSAPI EXPORTNUM(206) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueueApcThread
 	}
 	if (FAILED(ret))
 	{
-		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "NtQueueApcThread failed!");
+		EmuLog(LOG_LEVEL::WARNING, "NtQueueApcThread failed!");
 		CloseHandle( g_DuplicateHandles[ThreadHandle] );
 		g_DuplicateHandles.erase( ThreadHandle );
 	}
@@ -1066,7 +1066,7 @@ XBSYSAPI EXPORTNUM(207) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryDirectoryFile
 	NTSTATUS ret;
 
 	if (FileInformationClass != FileDirectoryInformation)   // Due to unicode->string conversion
-		CxbxKrnlCleanup(LOG_PREFIX, "Unsupported FileInformationClass");
+		CxbxKrnlCleanup("Unsupported FileInformationClass");
 
 	NtDll::UNICODE_STRING NtFileMask;
 
@@ -1182,7 +1182,7 @@ XBSYSAPI EXPORTNUM(209) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryEvent
 		/*ReturnLength=*/nullptr);
 
 	if (ret != STATUS_SUCCESS)
-		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "NtQueryEvent failed! (%s)", NtStatusToString(ret));
+		EmuLog(LOG_LEVEL::WARNING, "NtQueryEvent failed! (%s)", NtStatusToString(ret));
 
 	RETURN(ret);
 }
@@ -1219,7 +1219,7 @@ XBSYSAPI EXPORTNUM(210) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryFullAttributes
 	NTToXboxFileInformation(&nativeNetOpenInfo, Attributes, FileNetworkOpenInformation, sizeof(xboxkrnl::FILE_NETWORK_OPEN_INFORMATION));
 
 	if (FAILED(ret))
-		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "NtQueryFullAttributesFile failed! (0x%.08X)", ret);
+		EmuLog(LOG_LEVEL::WARNING, "NtQueryFullAttributesFile failed! (0x%.08X)", ret);
 
 	RETURN(ret);
 }
@@ -1281,7 +1281,7 @@ XBSYSAPI EXPORTNUM(211) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryInformationFil
 	free(ntFileInfo);
 
 	if (FAILED(ret))
-		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "NtQueryInformationFile failed! (0x%.08X)", ret);
+		EmuLog(LOG_LEVEL::WARNING, "NtQueryInformationFile failed! (0x%.08X)", ret);
 
 	// Prioritize the buffer overflow over real return code,
 	// in case the Xbox program decides to follow the same procedure above
@@ -1332,7 +1332,7 @@ XBSYSAPI EXPORTNUM(213) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryMutant
 		/*ReturnLength=*/nullptr);
 
 	if (ret != STATUS_SUCCESS)
-		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "NtQueryMutant failed! (%s)", NtStatusToString(ret));
+		EmuLog(LOG_LEVEL::WARNING, "NtQueryMutant failed! (%s)", NtStatusToString(ret));
 
 	RETURN(ret);
 }
@@ -1359,7 +1359,7 @@ XBSYSAPI EXPORTNUM(214) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQuerySemaphore
 		/*ReturnLength=*/nullptr);
 
 	if (ret != STATUS_SUCCESS)
-		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "NtQuerySemaphore failed! (%s)", NtStatusToString(ret));
+		EmuLog(LOG_LEVEL::WARNING, "NtQuerySemaphore failed! (%s)", NtStatusToString(ret));
 
 	RETURN(ret);
 }
@@ -1411,7 +1411,7 @@ XBSYSAPI EXPORTNUM(215) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQuerySymbolicLinkOb
 		}
 	}
 	if (ret != STATUS_SUCCESS)
-		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "NtQuerySymbolicLinkObject failed! (%s)", NtStatusToString(ret));
+		EmuLog(LOG_LEVEL::WARNING, "NtQuerySymbolicLinkObject failed! (%s)", NtStatusToString(ret));
 
 	RETURN(ret);
 }
@@ -1459,7 +1459,7 @@ XBSYSAPI EXPORTNUM(217) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryVirtualMemory
 
 	if (!Buffer)
 	{
-		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "NtQueryVirtualMemory : PMEMORY_BASIC_INFORMATION Buffer is nullptr!\n");
+		EmuLog(LOG_LEVEL::WARNING, "NtQueryVirtualMemory : PMEMORY_BASIC_INFORMATION Buffer is nullptr!\n");
 		LOG_IGNORED();
 		RETURN(STATUS_INVALID_PARAMETER);
 	}
@@ -1479,7 +1479,7 @@ XBSYSAPI EXPORTNUM(217) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryVirtualMemory
 
 	#if 0
 	if (FAILED(ret)) {
-		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "NtQueryVirtualMemory failed (%s)!", NtStatusToString(ret));
+		EmuLog(LOG_LEVEL::WARNING, "NtQueryVirtualMemory failed (%s)!", NtStatusToString(ret));
 
 		// Bugfix for "Forza Motorsport", which iterates over 2 Gb of memory in 64kb chunks,
 		// but fails on this last query. It's not done though, as after this Forza tries to
@@ -1604,7 +1604,7 @@ XBSYSAPI EXPORTNUM(218) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryVolumeInformat
 				break;
 			default:
 				// For all other types, just do a memcpy and hope for the best!
-				EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "NtQueryVolumeInformationFile: Unknown FileInformationClass");
+				EmuLog(LOG_LEVEL::WARNING, "NtQueryVolumeInformationFile: Unknown FileInformationClass");
 				memcpy_s(FileInformation, Length, NativeFileInformation, HostBufferSize);
 				break;
 		}
@@ -1613,7 +1613,7 @@ XBSYSAPI EXPORTNUM(218) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryVolumeInformat
 	_aligned_free(NativeFileInformation);
 
 	if (FAILED(ret)) {
-		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "NtQueryVolumeInformationFile failed! (%s)\n", NtStatusToString(ret));
+		EmuLog(LOG_LEVEL::WARNING, "NtQueryVolumeInformationFile failed! (%s)\n", NtStatusToString(ret));
 	}
 
 	RETURN(ret);
@@ -1670,7 +1670,7 @@ XBSYSAPI EXPORTNUM(219) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtReadFile
 		/*Key=*/nullptr);
 
     if (FAILED(ret)) {
-        EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "NtReadFile Failed! (0x%.08X)", ret);
+        EmuLog(LOG_LEVEL::WARNING, "NtReadFile Failed! (0x%.08X)", ret);
     }
 
 	RETURN(ret);
@@ -1725,7 +1725,7 @@ XBSYSAPI EXPORTNUM(221) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtReleaseMutant
 	NTSTATUS ret = NtDll::NtReleaseMutant(MutantHandle, PreviousCount);
 
 	if (FAILED(ret))
-		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "NtReleaseMutant Failed!");
+		EmuLog(LOG_LEVEL::WARNING, "NtReleaseMutant Failed!");
 
 	RETURN(STATUS_SUCCESS); // TODO : RETURN(ret);
 }
@@ -1752,7 +1752,7 @@ XBSYSAPI EXPORTNUM(222) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtReleaseSemaphore
 		PreviousCount);
 
 	if (FAILED(ret))
-		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "NtReleaseSemaphore failed!");
+		EmuLog(LOG_LEVEL::WARNING, "NtReleaseSemaphore failed!");
 
 	RETURN(ret);
 }
@@ -1826,7 +1826,7 @@ XBSYSAPI EXPORTNUM(225) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtSetEvent
 		PreviousState);
 
 	if (FAILED(ret))
-		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "NtSetEvent Failed!");
+		EmuLog(LOG_LEVEL::WARNING, "NtSetEvent Failed!");
 
 	RETURN(ret);
 }
@@ -1969,7 +1969,7 @@ XBSYSAPI EXPORTNUM(229) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtSetTimerEx
 		/*OUT*/PreviousState);
 
 	if (FAILED(ret))
-		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "NtSetTimerEx failed!");
+		EmuLog(LOG_LEVEL::WARNING, "NtSetTimerEx failed!");
 
 	RETURN(ret);
 }
@@ -2184,7 +2184,7 @@ XBSYSAPI EXPORTNUM(236) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtWriteFile
 		/*Key=*/nullptr);
 
 	if (FAILED(ret))
-		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "NtWriteFile Failed! (0x%.08X)", ret);
+		EmuLog(LOG_LEVEL::WARNING, "NtWriteFile Failed! (0x%.08X)", ret);
 
 	RETURN(ret);
 }

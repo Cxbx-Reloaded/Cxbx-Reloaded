@@ -472,7 +472,7 @@ void EmuNVNet_Write(xbaddr addr, uint32_t value, int size)
 	case NvRegTxRxControl:
 		if (value == NVREG_TXRXCTL_KICK) {
 			DBG_PRINTF("NvRegTxRxControl = NVREG_TXRXCTL_KICK!\n");
-			EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "TODO: nvnet_dma_packet_from_guest");
+			EmuLog(LOG_LEVEL::WARNING, "TODO: nvnet_dma_packet_from_guest");
 			// nvnet_dma_packet_from_guest(s);
 		}
 

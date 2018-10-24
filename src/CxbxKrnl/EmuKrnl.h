@@ -103,7 +103,7 @@ public:
 		}
 		__except (EmuException(GetExceptionInformation()))
 		{
-			EmuLog(CXBXR_MODULE::KRNL, LOG_LEVEL::WARNING, "Problem with ExceptionFilter!");
+			EmuLogEx(CXBXR_MODULE::KRNL, LOG_LEVEL::WARNING, "Problem with ExceptionFilter!");
 		}
 	}
 private:

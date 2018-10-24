@@ -157,7 +157,7 @@ xboxkrnl::XBOX_EEPROM *CxbxRestoreEEPROM(char *szFilePath_EEPROM_bin)
 	unsigned int FileSize = len_li.u.LowPart;
 	if (FileSize != 256)
 	{
-		CxbxKrnlCleanup(LOG_PREFIX, "%s : EEPROM.bin file is not 256 bytes large!\n", __func__);
+		CxbxKrnlCleanup("%s : EEPROM.bin file is not 256 bytes large!\n", __func__);
 		return nullptr;
 	}
 
@@ -202,7 +202,7 @@ xboxkrnl::XBOX_EEPROM *CxbxRestoreEEPROM(char *szFilePath_EEPROM_bin)
 	if (memcmp(Checksum, pEEPROM->EncryptedSettings.Checksum, 20))
 	{
 		// The checksums do not match. Log this error and flash the LED (red, off, red, off)
-		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Stored and calculated checksums don't match. Possible eeprom corruption");
+		EmuLog(LOG_LEVEL::WARNING, "Stored and calculated checksums don't match. Possible eeprom corruption");
 		SetLEDSequence(0xA0);
 	}
 

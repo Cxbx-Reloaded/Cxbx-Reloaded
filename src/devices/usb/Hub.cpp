@@ -249,7 +249,7 @@ int Hub::UsbHubClaimPort(XboxDeviceState* dev, int port)
 		i++;
 	}
 	if (it == m_UsbDev->m_FreePorts.end()) {
-		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Port requested %d not found (in use?)", port);
+		EmuLog(LOG_LEVEL::WARNING, "Port requested %d not found (in use?)", port);
 		return -1;
 	}
 	dev->Port = *it;

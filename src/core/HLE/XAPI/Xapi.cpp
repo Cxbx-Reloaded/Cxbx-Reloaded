@@ -189,7 +189,7 @@ void SetupXboxDeviceTypes()
 
 			// Sanity check: Where all these device offsets within Xbox memory
 			if ((deviceTableStartOffset >= g_SystemMaxMemory) || (deviceTableEndOffset >= g_SystemMaxMemory)) {
-				CxbxKrnlCleanup(LOG_PREFIX, "DeviceTable Location is outside of Xbox Memory range");
+				CxbxKrnlCleanup("DeviceTable Location is outside of Xbox Memory range");
 			}
 
 			// Iterate through the table until we find gamepad
@@ -254,7 +254,7 @@ void SetupXboxDeviceTypes()
 		}
 
 		if (gDeviceType_Gamepad == nullptr) {
-			EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "XDEVICE_TYPE_GAMEPAD was not found");
+			EmuLog(LOG_LEVEL::WARNING, "XDEVICE_TYPE_GAMEPAD was not found");
 			return;
 		}
 
@@ -331,13 +331,13 @@ bool TitleIsJSRF()
 		wcstombs(tAsciiTitle, g_pCertificate->wszTitleName, sizeof(tAsciiTitle));
 
 		if (_strnicmp(tAsciiTitle, "Jet Set Radio", 13) == 0) {
-			CxbxPopupMessage(LOG_PREFIX, LOG_LEVEL::INFO, CxbxMsgDlgIcon_Info, "Detected JSRF by name, not title ID, please report that [%08X] should be added to the list", g_pCertificate->dwTitleId);
+			CxbxPopupMessage(LOG_LEVEL::INFO, CxbxMsgDlgIcon_Info, "Detected JSRF by name, not title ID, please report that [%08X] should be added to the list", g_pCertificate->dwTitleId);
 			result = true;
 		}
 	}
 
 	if (result) {
-		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Applying JSRF Hack");
+		EmuLog(LOG_LEVEL::WARNING, "Applying JSRF Hack");
 	}
 
 	detected = true;
@@ -371,7 +371,7 @@ bool TitleIsLegoSW()
 	}
 
 	if (result) {
-		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Applying Lego Star Wars Hack");
+		EmuLog(LOG_LEVEL::WARNING, "Applying Lego Star Wars Hack");
 	}
 
 	detected = true;
@@ -1050,7 +1050,7 @@ DWORD WINAPI XTL::EMUPATCH(XInputGetState)
                 // TODO: uh..
                 //
 
-                EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "EmuXInputGetState : fAutoPoll == FALSE");
+                EmuLog(LOG_LEVEL::WARNING, "EmuXInputGetState : fAutoPoll == FALSE");
             }
         }
 
@@ -1071,7 +1071,7 @@ DWORD WINAPI XTL::EMUPATCH(XInputGetState)
         }
     }
 	else
-		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "EmuXInputGetState(): pph == NULL!");
+		EmuLog(LOG_LEVEL::WARNING, "EmuXInputGetState(): pph == NULL!");
     */
     //above code is not used at all, in future we might remove them.
     //get input state if hXboxDevice matches hDevice
@@ -1182,7 +1182,7 @@ DWORD WINAPI XTL::EMUPATCH(XInputSetState)
 
             if(v == XINPUT_SETSTATE_SLOTS)
             {
-                CxbxKrnlCleanup(LOG_PREFIX, "Ran out of XInputSetStateStatus slots!");
+                CxbxKrnlCleanup("Ran out of XInputSetStateStatus slots!");
             }
         }
 
@@ -1261,7 +1261,7 @@ BOOL WINAPI XTL::EMUPATCH(SetThreadPriorityBoost)
     BOOL bRet = SetThreadPriorityBoost(hThread, DisablePriorityBoost);
 
     if(bRet == FALSE)
-        EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "SetThreadPriorityBoost Failed!");
+        EmuLog(LOG_LEVEL::WARNING, "SetThreadPriorityBoost Failed!");
 
 	RETURN(bRet);
 }
@@ -1285,7 +1285,7 @@ BOOL WINAPI XTL::EMUPATCH(SetThreadPriority)
     BOOL bRet = SetThreadPriority(hThread, nPriority);
 
     if(bRet == FALSE)
-        EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "SetThreadPriority Failed!");
+        EmuLog(LOG_LEVEL::WARNING, "SetThreadPriority Failed!");
 
 	RETURN(bRet);
 }
@@ -1306,7 +1306,7 @@ int WINAPI XTL::EMUPATCH(GetThreadPriority)
     int iRet = GetThreadPriority(hThread);
 
     if(iRet == THREAD_PRIORITY_ERROR_RETURN)
-        EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "GetThreadPriority Failed!");
+        EmuLog(LOG_LEVEL::WARNING, "GetThreadPriority Failed!");
 
 	RETURN(iRet);
 }
@@ -1383,7 +1383,7 @@ VOID WINAPI XTL::EMUPATCH(XRegisterThreadNotifyRoutine)
     {
 		// I honestly don't expect this to happen, but if it does...
         if(g_iThreadNotificationCount >= 16)
-			CxbxKrnlCleanup(LOG_PREFIX, "Too many thread notification routines installed\n");
+			CxbxKrnlCleanup("Too many thread notification routines installed\n");
 
 		// Find an empty spot in the thread notification array
 		for(int i = 0; i < 16; i++)
@@ -1427,7 +1427,7 @@ void WINAPI EmuFiberStartup(fiber_context_t* context)
 	}
 	__except (EmuException(GetExceptionInformation()))
 	{
-		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Problem with ExceptionFilter");
+		EmuLog(LOG_LEVEL::WARNING, "Problem with ExceptionFilter");
 	}
 }
 
@@ -1540,11 +1540,11 @@ DWORD WINAPI XTL::EMUPATCH(QueueUserAPC)
 
 	HANDLE hApcThread = NULL;
 	if(!DuplicateHandle(g_CurrentProcessHandle, hThread, g_CurrentProcessHandle, &hApcThread, THREAD_SET_CONTEXT,FALSE,0))
-		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "DuplicateHandle failed!");
+		EmuLog(LOG_LEVEL::WARNING, "DuplicateHandle failed!");
 
 	dwRet = QueueUserAPC(pfnAPC, hApcThread, dwData);
 	if(!dwRet)
-		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "QueueUserAPC failed!");
+		EmuLog(LOG_LEVEL::WARNING, "QueueUserAPC failed!");
 
 	RETURN(dwRet);
 }
@@ -1642,7 +1642,7 @@ DWORD WINAPI XTL::EMUPATCH(XLaunchNewImageA)
 				// Other options include LDT_NONE, LDT_FROM_DEBUGGER_CMDLINE and LDT_FROM_UPDATE
 			}
 			else
-				CxbxKrnlCleanup(LOG_PREFIX, "The xbe rebooted to Dashboard and xboxdash.xbe could not be found");
+				CxbxKrnlCleanup("The xbe rebooted to Dashboard and xboxdash.xbe could not be found");
 		}
 
 		strncpy(&(xboxkrnl::LaunchDataPage->Header.szLaunchPath[0]), lpTitlePath, 520);

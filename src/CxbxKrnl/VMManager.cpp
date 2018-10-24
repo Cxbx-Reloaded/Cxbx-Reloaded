@@ -416,7 +416,7 @@ void VMManager::ConstructVMA(VAddr Start, size_t Size, MemoryRegionType Type, VM
 	{
 		// Already at the beginning of the map, bail out immediately
 
-		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Can't find any more free space in the memory region %d! Virtual memory exhausted?", Type);
+		EmuLog(LOG_LEVEL::WARNING, "Can't find any more free space in the memory region %d! Virtual memory exhausted?", Type);
 		m_MemoryRegionArray[Type].LastFree = m_MemoryRegionArray[Type].RegionMap.end();
 		return;
 	}
@@ -438,7 +438,7 @@ void VMManager::ConstructVMA(VAddr Start, size_t Size, MemoryRegionType Type, VM
 	// ergo720: I don't expect this to happen since it would mean we have exhausted the virtual space in the memory region,
 	// but it's just in case it does
 
-	EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Can't find any more free space in the memory region %d! Virtual memory exhausted?", Type);
+	EmuLog(LOG_LEVEL::WARNING, "Can't find any more free space in the memory region %d! Virtual memory exhausted?", Type);
 
 	m_MemoryRegionArray[Type].LastFree = m_MemoryRegionArray[Type].RegionMap.end();
 
@@ -2286,7 +2286,7 @@ VAddr VMManager::MapMemoryBlock(MappingFn MappingRoutine, MemoryRegionType Type,
 	{
 		// We are already at the beginning of the map, so bail out immediately
 
-		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Failed to map a memory block in the virtual region %d!", Type);
+		EmuLog(LOG_LEVEL::WARNING, "Failed to map a memory block in the virtual region %d!", Type);
 		return NULL;
 	}
 
@@ -2317,7 +2317,7 @@ VAddr VMManager::MapMemoryBlock(MappingFn MappingRoutine, MemoryRegionType Type,
 	// We have failed to map the block. This is likely because the virtual space is fragmented or there are too many
 	// host allocations in the memory region. Log this error and bail out
 
-	EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Failed to map a memory block in the virtual region %d!", Type);
+	EmuLog(LOG_LEVEL::WARNING, "Failed to map a memory block in the virtual region %d!", Type);
 
 	return NULL;
 }
@@ -2419,19 +2419,19 @@ PAddr VMManager::TranslateVAddrToPAddr(const VAddr addr)
 
 	if (true/*(addr >= PAGE_TABLES_BASE && addr <= PAGE_TABLES_END) || (Type != COUNTRegion && Type != ContiguousRegion)*/) {
 		if (IsValidVirtualAddress(addr)) {
-			EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Applying identity mapping hack to allocation at address 0x%X", addr);
+			EmuLog(LOG_LEVEL::WARNING, "Applying identity mapping hack to allocation at address 0x%X", addr);
 			Unlock();
 			RETURN(addr);
 			/*
 			if (Type == UserRegion) {
-				EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Applying identity mapping hack to allocation at address 0x%X", addr);
+				EmuLog(LOG_LEVEL::WARNING, "Applying identity mapping hack to allocation at address 0x%X", addr);
 				Unlock();
 				RETURN(addr); // committed pages in the user region always use VirtualAlloc
 			}
 			else if (Type != COUNTRegion) {
 				VMAIter it = GetVMAIterator(addr, Type);
 				if (it != m_MemoryRegionArray[Type].RegionMap.end() && it->second.type != FreeVma && it->second.bFragmented) {
-					EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Applying identity mapping hack to allocation at address 0x%X", addr);
+					EmuLog(LOG_LEVEL::WARNING, "Applying identity mapping hack to allocation at address 0x%X", addr);
 					Unlock();
 					RETURN(addr); // committed pages in the system-devkit regions can use VirtualAlloc because of fragmentation
 				}
@@ -2441,7 +2441,7 @@ PAddr VMManager::TranslateVAddrToPAddr(const VAddr addr)
 				// and never uses VirtualAlloc, but it's still affected by the above problem since its physical pages don't come from
 				// our memory.bin at 0x80000000, so it needs the hack as well.
 
-				EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Applying identity mapping hack to allocation at address 0x%X", addr);
+				EmuLog(LOG_LEVEL::WARNING, "Applying identity mapping hack to allocation at address 0x%X", addr);
 				Unlock();
 				RETURN(addr);
 			}
@@ -2724,7 +2724,7 @@ void VMManager::DestructVMA(VAddr addr, MemoryRegionType Type, size_t Size)
 			--it;
 		}
 
-		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Can't find any more free space in the memory region %d! Virtual memory exhausted?", Type);
+		EmuLog(LOG_LEVEL::WARNING, "Can't find any more free space in the memory region %d! Virtual memory exhausted?", Type);
 
 		m_MemoryRegionArray[Type].LastFree = m_MemoryRegionArray[Type].RegionMap.end();
 

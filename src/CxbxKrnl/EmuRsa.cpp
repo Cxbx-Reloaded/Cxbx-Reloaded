@@ -227,7 +227,7 @@ giant newgiant(int numshorts)
 	giant 		thegiant;
 
 	if (numshorts > MAX_SHORTS) {
-		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Requested giant too big.");
+		EmuLog(LOG_LEVEL::WARNING, "Requested giant too big.");
 	}
 	if (numshorts <= 0)
 		numshorts = MAX_SHORTS;

@@ -1158,7 +1158,7 @@ void CxbxReserveNV2AMemory(NV2AState *d)
 		MEM_RESERVE, // Don't allocate actual physical storage in memory
 		PAGE_NOACCESS); // Any access must result in an access violation exception (handled in EmuException/EmuX86_DecodeException)
 	if (memory == NULL) {
-		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Couldn't reserve NV2A memory, continuing assuming we'll receive (and handle) access violation exceptions anyway...");
+		EmuLog(LOG_LEVEL::WARNING, "Couldn't reserve NV2A memory, continuing assuming we'll receive (and handle) access violation exceptions anyway...");
 		return;
 	}
 
@@ -1174,7 +1174,7 @@ void CxbxReserveNV2AMemory(NV2AState *d)
 		MEM_COMMIT, // No MEM_RESERVE |
 		PAGE_READWRITE);
 	if (d->pramin.ramin_ptr == NULL) {
-		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Couldn't allocate NV2A PRAMIN memory");
+		EmuLog(LOG_LEVEL::WARNING, "Couldn't allocate NV2A PRAMIN memory");
 		return;
 	}
 
@@ -1316,7 +1316,7 @@ uint32_t NV2ADevice::MMIORead(int barIndex, uint32_t addr, unsigned size)
 	}
 	}
 
-	EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "NV2ADevice::MMIORead: Unhandled barIndex %d, addr %08X, size %d", barIndex, addr, size);
+	EmuLog(LOG_LEVEL::WARNING, "NV2ADevice::MMIORead: Unhandled barIndex %d, addr %08X, size %d", barIndex, addr, size);
 	return 0;
 }
 
@@ -1383,5 +1383,5 @@ void NV2ADevice::MMIOWrite(int barIndex, uint32_t addr, uint32_t value, unsigned
 	}
 	}
 
-	EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "NV2ADevice::MMIOWrite: Unhandled barIndex %d, addr %08X, value %08X, size %d", barIndex, addr, value, size);
+	EmuLog(LOG_LEVEL::WARNING, "NV2ADevice::MMIOWrite: Unhandled barIndex %d, addr %08X, value %08X, size %d", barIndex, addr, value, size);
 }

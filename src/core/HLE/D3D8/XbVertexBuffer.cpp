@@ -102,7 +102,7 @@ bool GetCachedVertexBufferObject(DWORD pXboxDataPtr, DWORD size, XTL::IDirect3DV
 			nullptr
 		);
 		if (FAILED(hRet)) {
-			CxbxKrnlCleanup(LOG_PREFIX, "Failed to create vertex buffer");
+			CxbxKrnlCleanup("Failed to create vertex buffer");
 		}
 		
 		g_HostVertexBuffers[pXboxDataPtr] = newBuffer;
@@ -132,7 +132,7 @@ bool GetCachedVertexBufferObject(DWORD pXboxDataPtr, DWORD size, XTL::IDirect3DV
 		nullptr
 	);
 	if (FAILED(hRet)) {
-		CxbxKrnlCleanup(LOG_PREFIX, "Failed to create vertex buffer");
+		CxbxKrnlCleanup("Failed to create vertex buffer");
 	}
 
 	*pVertexBuffer = buffer->pHostVertexBuffer;
@@ -163,7 +163,7 @@ void ActivatePatchedStream
 			pPatchedStream->uiCachedHostVertexStride);
 		//DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetStreamSource");
 		if (FAILED(hRet)) {
-			CxbxKrnlCleanup(LOG_PREFIX, "Failed to set the type patched buffer as the new stream source!\n");
+			CxbxKrnlCleanup("Failed to set the type patched buffer as the new stream source!\n");
 			// TODO : Cartoon hits the above case when the vertex cache size is 0.
 		}
 
@@ -347,7 +347,7 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
     if (pDrawContext->pXboxVertexStreamZeroData != xbnullptr) {
 		// There should only be one stream (stream zero) in this case
 		if (uiStream != 0) {
-			CxbxKrnlCleanup(LOG_PREFIX, "Trying to patch a Draw..UP with more than stream zero!");
+			CxbxKrnlCleanup("Trying to patch a Draw..UP with more than stream zero!");
 		}
 
 		pXboxVertexData = (uint08 *)pDrawContext->pXboxVertexStreamZeroData;
@@ -358,7 +358,7 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
 		if (bNeedStreamCopy) {
 			pHostVertexData = (uint08*)malloc(dwHostVertexDataSize);
 			if (pHostVertexData == nullptr) {
-				CxbxKrnlCleanup(LOG_PREFIX, "Couldn't allocate the new stream zero buffer");
+				CxbxKrnlCleanup("Couldn't allocate the new stream zero buffer");
 			}
 		}
 		else {
@@ -376,7 +376,7 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
 				0);
 //			DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetStreamSource");
 			if (FAILED(hRet)) {
-				EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "g_pD3DDevice->SetStreamSource(uiStream, nullptr, 0)");
+				EmuLog(LOG_LEVEL::WARNING, "g_pD3DDevice->SetStreamSource(uiStream, nullptr, 0)");
 			}
 
 			return;
@@ -394,7 +394,7 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
 		GetCachedVertexBufferObject(pXboxVertexBuffer->Data, dwHostVertexDataSize, &pNewHostVertexBuffer);
 
         if (FAILED(pNewHostVertexBuffer->Lock(0, 0, (D3DLockData **)&pHostVertexData, D3DLOCK_DISCARD))) {
-            CxbxKrnlCleanup(LOG_PREFIX, "Couldn't lock the new buffer");
+            CxbxKrnlCleanup("Couldn't lock the new buffer");
         }
 
 		// Copy stream for patching and caching.
@@ -744,7 +744,7 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
 void XTL::CxbxVertexBufferConverter::Apply(CxbxDrawContext *pDrawContext, DWORD StartIndex)
 {
 	if ((pDrawContext->XboxPrimitiveType < X_D3DPT_POINTLIST) || (pDrawContext->XboxPrimitiveType > X_D3DPT_POLYGON))
-		CxbxKrnlCleanup(LOG_PREFIX, "Unknown primitive type: 0x%.02X\n", pDrawContext->XboxPrimitiveType);
+		CxbxKrnlCleanup("Unknown primitive type: 0x%.02X\n", pDrawContext->XboxPrimitiveType);
 
     if (VshHandleIsVertexShader(pDrawContext->hVertexShader)) {
         m_pVertexShaderInfo = &(MapXboxVertexShaderHandleToCxbxVertexShader(pDrawContext->hVertexShader)->VertexShaderInfo);
@@ -806,18 +806,18 @@ VOID XTL::EmuFlushIVB()
 	switch (dwCurFVF & D3DFVF_POSITION_MASK) {
 	case 0: // No position ?
 		if (bFVF) {
-			EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "EmuFlushIVB(): g_CurrentXboxVertexShaderHandle isn't a valid FVF - using D3DFVF_XYZRHW instead!");
+			EmuLog(LOG_LEVEL::WARNING, "EmuFlushIVB(): g_CurrentXboxVertexShaderHandle isn't a valid FVF - using D3DFVF_XYZRHW instead!");
 			dwCurFVF |= D3DFVF_XYZRHW;
 		}
 		else {
-			EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "EmuFlushIVB(): using g_InlineVertexBuffer_FVF instead of current FVF!");
+			EmuLog(LOG_LEVEL::WARNING, "EmuFlushIVB(): using g_InlineVertexBuffer_FVF instead of current FVF!");
 			dwCurFVF = g_InlineVertexBuffer_FVF;
 		}
 		break;
 	case D3DFVF_XYZRHW:
 		// D3DFVF_NORMAL isn't allowed in combination with D3DFVF_XYZRHW 
 		if (dwCurFVF & D3DFVF_NORMAL) {
-			EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "EmuFlushIVB(): Normal encountered while D3DFVF_XYZRHW is given - switching back to D3DFVF_XYZ!");
+			EmuLog(LOG_LEVEL::WARNING, "EmuFlushIVB(): Normal encountered while D3DFVF_XYZRHW is given - switching back to D3DFVF_XYZ!");
 			dwCurFVF &= ~D3DFVF_POSITION_MASK;
 			dwCurFVF |= D3DFVF_XYZ;
 		}
@@ -882,7 +882,7 @@ VOID XTL::EmuFlushIVB()
 				DBG_PRINTF("IVB Position := {%f, %f, %f, %f, %f, %f, %f}\n", g_InlineVertexBuffer_Table[v].Position.x, g_InlineVertexBuffer_Table[v].Position.y, g_InlineVertexBuffer_Table[v].Position.z, g_InlineVertexBuffer_Table[v].Blend[0], g_InlineVertexBuffer_Table[v].Blend[1], g_InlineVertexBuffer_Table[v].Blend[2], g_InlineVertexBuffer_Table[v].Blend[3]);
 				break;
 			default:
-				CxbxKrnlCleanup(LOG_PREFIX, "Unsupported Position Mask (FVF := 0x%.08X dwPos := 0x%.08X)", dwCurFVF, dwPos);
+				CxbxKrnlCleanup("Unsupported Position Mask (FVF := 0x%.08X dwPos := 0x%.08X)", dwCurFVF, dwPos);
 				break;
 			}
 
@@ -936,7 +936,7 @@ VOID XTL::EmuFlushIVB()
 		if (v == 0) {
 			uint VertexBufferUsage = (uintptr_t)pVertexBufferData - (uintptr_t)g_InlineVertexBuffer_pData;
 			if (VertexBufferUsage != uiStride) {
-				CxbxKrnlCleanup(LOG_PREFIX, "EmuFlushIVB uses wrong stride!");
+				CxbxKrnlCleanup("EmuFlushIVB uses wrong stride!");
 			}
 		}
 	}

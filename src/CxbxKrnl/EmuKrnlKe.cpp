@@ -54,7 +54,7 @@ namespace NtDll
 };
 
 #include "CxbxKrnl.h" // For CxbxKrnlCleanup
-#include "Emu.h" // For EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, )
+#include "Emu.h" // For EmuLog(LOG_LEVEL::WARNING, )
 #include "EmuKrnl.h" // For InitializeListHead(), etc.
 #include "EmuKrnlKi.h" // For KiRemoveTreeTimer(), KiInsertTreeTimer()
 #include "EmuFile.h" // For IsEmuHandle(), NtStatusToString()
@@ -194,7 +194,7 @@ xboxkrnl::KPCR* WINAPI KeGetPcr()
 	Pcr = (xboxkrnl::PKPCR)__readfsdword(TIB_ArbitraryDataSlot);
 	
 	if (Pcr == nullptr) {
-		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "KeGetPCR returned nullptr: Was this called from a non-xbox thread?");
+		EmuLog(LOG_LEVEL::WARNING, "KeGetPCR returned nullptr: Was this called from a non-xbox thread?");
 		// Attempt to salvage the situation by calling InitXboxThread to setup KPCR in place
 		InitXboxThread(g_CPUXbox);
 		Pcr = (xboxkrnl::PKPCR)__readfsdword(TIB_ArbitraryDataSlot);
@@ -267,7 +267,7 @@ DWORD ExecuteDpcQueue()
 				pkdpc->SystemArgument2);
 		} __except (EmuException(GetExceptionInformation()))
 		{
-			EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Problem with ExceptionFilter!");
+			EmuLog(LOG_LEVEL::WARNING, "Problem with ExceptionFilter!");
 		}
 
 		KeGetCurrentPrcb()->DpcRoutineActive = FALSE; // Experimental
@@ -311,7 +311,7 @@ DWORD ExecuteDpcQueue()
 					pkdpc->SystemArgument2);
 			} __except (EmuException(GetExceptionInformation()))
 			{
-				EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Problem with ExceptionFilter!");
+				EmuLog(LOG_LEVEL::WARNING, "Problem with ExceptionFilter!");
 			}
 		}
 	}
@@ -493,7 +493,7 @@ XBSYSAPI EXPORTNUM(96) xboxkrnl::NTSTATUS NTAPI xboxkrnl::KeBugCheckEx
 	int result = MessageBoxA(g_hEmuWindow, buffer, "KeBugCheck", MB_YESNO | MB_ICONWARNING);
 
 	if (result == IDNO)	{
-		CxbxKrnlCleanup(LOG_PREFIX, NULL);
+		CxbxKrnlCleanup(NULL);
 	}
 
 	KeBugCheckIgnored = true;
@@ -1747,7 +1747,7 @@ XBSYSAPI EXPORTNUM(150) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeSetTimerEx
 	LARGE_INTEGER SystemTime;
 
 	if (Timer->Header.Type != TimerNotificationObject && Timer->Header.Type != TimerSynchronizationObject) {
-		CxbxKrnlCleanup(LOG_PREFIX, "Assertion: '(Timer)->Header.Type == TimerNotificationObject) || ((Timer)->Header.Type == TimerSynchronizationObject)' in KeSetTimerEx()");
+		CxbxKrnlCleanup("Assertion: '(Timer)->Header.Type == TimerNotificationObject) || ((Timer)->Header.Type == TimerSynchronizationObject)' in KeSetTimerEx()");
 	}
 
 	// Same as KeCancelTimer(Timer) :

@@ -748,7 +748,7 @@ bool PhysicalMemory::IsMappable(PFN_COUNT PagesRequested, bool bRetailRegion, bo
 	bool ret = false;
 	if (bRetailRegion && m_PhysicalPagesAvailable >= PagesRequested) { ret = true; }
 	if (bDebugRegion && m_DebuggerPagesAvailable >= PagesRequested) { ret = true; }
-	if (!ret) { EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Out of physical memory!"); }
+	if (!ret) { EmuLog(LOG_LEVEL::WARNING, "Out of physical memory!"); }
 
 	return ret;
 }

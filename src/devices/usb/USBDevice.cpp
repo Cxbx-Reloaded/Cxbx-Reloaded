@@ -283,7 +283,7 @@ void USBDevice::USB_PacketCheckState(USBPacket* p, USBPacketState expected)
 		return;
 	}
 
-	EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "packet state check failed!");
+	EmuLog(LOG_LEVEL::WARNING, "packet state check failed!");
 	assert(0);
 }
 
@@ -522,7 +522,7 @@ void USBDevice::USB_PacketCopy(USBPacket* p, void* ptr, size_t bytes)
 			IoVecFromBuffer(iov->IoVecStruct, iov->IoVecNumber, p->ActualLength, ptr, bytes);
 			break;
 		default:
-			CxbxKrnlCleanup(LOG_PREFIX, "%s has an invalid pid: %x\n", __func__, p->Pid);
+			CxbxKrnlCleanup("%s has an invalid pid: %x\n", __func__, p->Pid);
 	}
 	p->ActualLength += bytes;
 }
@@ -780,7 +780,7 @@ void USBDevice::USBDesc_SetDefaults(XboxDeviceState* dev)
 		break;
 	}
 	default:
-		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "unknown speed parameter %d set in %s", dev->Speed, dev->ProductDesc.c_str());
+		EmuLog(LOG_LEVEL::WARNING, "unknown speed parameter %d set in %s", dev->Speed, dev->ProductDesc.c_str());
 	}
 	USBDesc_SetConfig(dev, 0);
 }
@@ -1042,7 +1042,7 @@ int USBDevice::USBDesc_HandleStandardGetDescriptor(XboxDeviceState* dev, USBPack
 		// USB_DT_BOS (15) and USB_DT_DEBUG (10) -> usb 3.0 only
 
 		default:
-			EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "%s has a device address %d of unknown type %d (len %zd)", __func__, dev->Addr, type, len);
+			EmuLog(LOG_LEVEL::WARNING, "%s has a device address %d of unknown type %d (len %zd)", __func__, dev->Addr, type, len);
 			break;
 	}
 
