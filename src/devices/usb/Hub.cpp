@@ -34,6 +34,9 @@
 // *
 // ******************************************************************
 
+// Acknowledgment: XQEMU (GPLv2)
+// https://xqemu.com/
+
 #define _XBOXKRNL_DEFEXTRN_
 
 #define LOG_PREFIX CXBXR_MODULE::HUB
@@ -85,10 +88,6 @@ namespace xboxkrnl
 #define PORT_C_SUSPEND      18
 #define PORT_C_OVERCURRENT	19
 #define PORT_C_RESET		20
-
-
-// Acknowledgment: XQEMU (GPLv2)
-// https://xqemu.com/
 
 
 // To avoid including Xbox.h

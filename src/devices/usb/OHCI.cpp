@@ -34,6 +34,9 @@
 // *
 // ******************************************************************
 
+// Acknowledgment: XQEMU (GPLv2)
+// https://xqemu.com/
+
 #define _XBOXKRNL_DEFEXTRN_
 
 #define LOG_PREFIX CXBXR_MODULE::OHCI
@@ -200,10 +203,6 @@ namespace xboxkrnl
 
 #define OHCI_PAGE_MASK    0xFFFFF000
 #define OHCI_OFFSET_MASK  0xFFF
-
-
-// Acknowledgment: XQEMU (GPLv2)
-// https://xqemu.com/
 
 
 OHCI::OHCI(USBDevice* UsbObj)

@@ -34,6 +34,9 @@
 // *
 // ******************************************************************
 
+// Acknowledgment: some the functions present are from XQEMU (GPLv2)
+// https://xqemu.com/
+
 // The intent of this file is to add general functions which are not kernel specific (for those CxbxKrnl.h should be used instead)
 
 #include "CxbxCommon.h"
@@ -42,10 +45,6 @@
 #ifndef MIN
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
 #endif
-
-
-// Acknowledgment: some the functions present are from XQEMU (GPLv2)
-// https://xqemu.com/
 
 
 // Disable a compiler warning relative to uint64_t -> uint32_t conversions in Muldiv64. This function is taken from

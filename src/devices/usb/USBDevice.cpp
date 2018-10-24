@@ -34,6 +34,9 @@
 // *
 // ******************************************************************
 
+// Acknowledgment: XQEMU (GPLv2)
+// https://xqemu.com/
+
 #define _XBOXKRNL_DEFEXTRN_
 
 #define LOG_PREFIX CXBXR_MODULE::USB
@@ -55,10 +58,6 @@ namespace xboxkrnl
 #define SETUP_STATE_DATA    2
 #define SETUP_STATE_ACK     3
 #define SETUP_STATE_PARAM   4
-
-
-// Acknowledgment: XQEMU (GPLv2)
-// https://xqemu.com/
 
 
 void USBDevice::Init()
