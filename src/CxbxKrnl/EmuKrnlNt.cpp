@@ -906,7 +906,7 @@ XBSYSAPI EXPORTNUM(203) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtOpenSymbolicLinkObj
 	if (ret != STATUS_SUCCESS)
 		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "NtOpenSymbolicLinkObject failed! (%s)", NtStatusToString(ret));
 	else
-		DBG_PRINTF("NtOpenSymbolicLinkObject LinkHandle^ = 0x%.8X", *LinkHandle);
+		DBG_PRINTF("NtOpenSymbolicLinkObject LinkHandle^ = 0x%.8X\n", *LinkHandle);
 
 	RETURN(ret);
 }

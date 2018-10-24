@@ -5216,7 +5216,7 @@ void CreateHostResource(XTL::X_D3DResource *pResource, DWORD D3DUsage, int iText
 
 				// Do we need to convert to ARGB?
 				if (bConvertToARGB) {
-					DBG_PRINTF("Unsupported texture format, expanding to D3DFMT_A8R8G8B8");
+					DBG_PRINTF("Unsupported texture format, expanding to D3DFMT_A8R8G8B8\n");
 
 					// Convert a row at a time, using a libyuv-like callback approach :
 					if (!ConvertD3DTextureToARGBBuffer(
