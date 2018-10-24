@@ -34,6 +34,9 @@
 // *
 // ******************************************************************
 
+// Acknowledgment: XQEMU (GPLv2)
+// https://xqemu.com/
+
 #define _XBOXKRNL_DEFEXTRN_
 
 #define LOG_PREFIX CXBXR_MODULE::XIDCTRL
@@ -58,10 +61,6 @@ namespace xboxkrnl
 #define HID_GET_REPORT       0x01
 #define HID_SET_REPORT       0x09
 #define XID_GET_CAPABILITIES 0x01
-
-
-// Acknowledgment: XQEMU (GPLv2)
-// https://xqemu.com/
 
 
 // To avoid including Xbox.h
