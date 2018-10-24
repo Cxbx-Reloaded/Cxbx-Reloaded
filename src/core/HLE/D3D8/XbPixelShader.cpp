@@ -4936,7 +4936,7 @@ bool PSH_XBOX_SHADER::CombineInstructions()
         if (CanOptimize)
         {
           DeleteIntermediate(i);
-          DBG_PRINTF("; Moved MOV input into following instructions\n3");
+          DBG_PRINTF("; Moved MOV input into following instructions\n");
           Result = true;
         }
       }
