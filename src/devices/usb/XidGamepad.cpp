@@ -202,14 +202,14 @@ int XidGamepad::Init(int port)
 	XboxDeviceState* dev = ClassInitFn();
 	int rc = UsbXidClaimPort(dev, port);
 	if (rc != 0) {
-		m_UsbDev->m_HostController->m_bFrameTime = false;
+		m_UsbDev->m_HostController->m_FrameTimeMutex.unlock();
 		return rc;
 	}
 	m_UsbDev->USB_EpInit(dev);
 	m_UsbDev->USB_DeviceInit(dev);
 	m_UsbDev->USB_DeviceAttach(dev);
 
-	m_UsbDev->m_HostController->m_bFrameTime = false;
+	m_UsbDev->m_HostController->m_FrameTimeMutex.unlock();
 
 	return 0;
 }
@@ -251,8 +251,7 @@ int XidGamepad::UsbXidClaimPort(XboxDeviceState* dev, int port)
 	it = m_UsbDev->m_FreePorts.end();
 	i = 0;
 
-	while (m_UsbDev->m_HostController->m_bFrameTime) { Sleep(1); }
-	m_UsbDev->m_HostController->m_bFrameTime = true;
+	m_UsbDev->m_HostController->m_FrameTimeMutex.lock();
 
 	for (auto usb_port : m_UsbDev->m_FreePorts) {
 		if (usb_port->Path == (std::to_string(port) + ".2")) {

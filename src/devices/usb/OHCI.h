@@ -37,6 +37,7 @@
 #ifndef OHCI_H_
 #define OHCI_H_
 
+#include <mutex>
 #include "USBDevice.h"
 #include "..\CxbxKrnl\Timer.h"
 
@@ -143,7 +144,7 @@ class OHCI
 	public:
 		// Indicates that the timer thread is accessing the OHCI object. Necessary because the input thread from the
 		// InputDeviceManager will access us when it needs to create or destroy a device
-		std::atomic_bool m_bFrameTime;
+		std::mutex m_FrameTimeMutex;
 
 		// constructor
 		OHCI(USBDevice* UsbObj);

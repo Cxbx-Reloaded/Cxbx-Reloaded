@@ -211,7 +211,6 @@ OHCI::OHCI(USBDevice* UsbObj)
 	USBPortOps* ops;
 
 	m_UsbDevice = UsbObj;
-	m_bFrameTime = false;
 	ops = new USBPortOps();
 	{
 		using namespace std::placeholders;
@@ -244,13 +243,12 @@ void OHCI::OHCI_FrameBoundaryWorker()
 {
 	OHCI_HCCA hcca;
 
-	while (m_bFrameTime) { Sleep(1); }
-	m_bFrameTime = true;
+	m_FrameTimeMutex.lock();
 
 	if (OHCI_ReadHCCA(m_Registers.HcHCCA, &hcca)) {
 		EmuLog(LOG_LEVEL::WARNING, "HCCA read error at physical address 0x%X", m_Registers.HcHCCA);
 		OHCI_FatalError();
-		m_bFrameTime = false;
+		m_FrameTimeMutex.unlock();
 		return;
 	}
 
@@ -275,7 +273,7 @@ void OHCI::OHCI_FrameBoundaryWorker()
 
 	// Stop if UnrecoverableError happened or OHCI_SOF will crash
 	if (m_Registers.HcInterruptStatus & OHCI_INTR_UE) {
-		m_bFrameTime = false;
+		m_FrameTimeMutex.unlock();
 		return;
 	}
 
@@ -323,7 +321,7 @@ void OHCI::OHCI_FrameBoundaryWorker()
 		OHCI_FatalError();
 	}
 
-	m_bFrameTime = false;
+	m_FrameTimeMutex.unlock();
 }
 
 void OHCI::OHCI_FatalError()
