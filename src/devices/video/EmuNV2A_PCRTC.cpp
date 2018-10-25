@@ -55,6 +55,25 @@ DEVICE_READ32(PCRTC)
 	case NV_PCRTC_START:
 		result = d->pcrtc.start;
 		break;
+	case 0x00000808: { // Register name unknown, NV_PCRTC_SCANLINE?, this returns the current scanline 
+		// Test case: Alter Echo
+		// Hack: Increment on every call, up-to the framebuffer height, satisfying titles waiting for any value
+		// TODO: Implement this in a better/more accurate way
+		static int scanline = 0;
+
+		// Derive frame_height from hardware registers
+		int frame_height = ((int)d->prmcio.cr[NV_CIO_CR_VDE_INDEX])
+			| (((int)d->prmcio.cr[NV_CIO_CR_OVL_INDEX] & 0x02) >> 1 << 8)
+			| (((int)d->prmcio.cr[NV_CIO_CR_OVL_INDEX] & 0x40) >> 6 << 9)
+			| (((int)d->prmcio.cr[NV_CIO_CRE_LSR_INDEX] & 0x02) >> 1 << 10);
+		frame_height++;
+
+		if (scanline > frame_height + 100 /* Increase range by 100 to allow overflow into VBlank*/) {
+			scanline = 0;
+		}
+
+		result = scanline++;
+	} break;
 	default: 
 		result = 0;
 		//DEVICE_READ32_REG(pcrtc); // Was : DEBUG_READ32_UNHANDLED(PCRTC);
