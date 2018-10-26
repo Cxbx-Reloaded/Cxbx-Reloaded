@@ -55,7 +55,7 @@ DEVICE_READ32(PCRTC)
 	case NV_PCRTC_START:
 		result = d->pcrtc.start;
 		break;
-	case 0x00000808: { // Register name unknown, NV_PCRTC_SCANLINE?, this returns the current scanline 
+	case NV_PCRTC_RASTER:
 		// Test case: Alter Echo
 		// Hack: Increment on every call, up-to the framebuffer height, satisfying titles waiting for any value
 		// TODO: Implement this in a better/more accurate way
