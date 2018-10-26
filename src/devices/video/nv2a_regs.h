@@ -691,7 +691,6 @@
 #define NV_PCRTC_CONFIG                                  0x00000804
 #define NV_PCRTC_RASTER                                  0x00000808
 
-
 #define NV_PVIDEO_DEBUG_2                                0x00000088
 #define NV_PVIDEO_DEBUG_3                                0x0000008C
 #define NV_PVIDEO_INTR                                   0x00000100

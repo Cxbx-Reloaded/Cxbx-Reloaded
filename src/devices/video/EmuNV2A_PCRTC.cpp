@@ -55,20 +55,15 @@ DEVICE_READ32(PCRTC)
 	case NV_PCRTC_START:
 		result = d->pcrtc.start;
 		break;
-	case NV_PCRTC_RASTER:
+	case NV_PCRTC_RASTER: {
 		// Test case: Alter Echo
 		// Hack: Increment on every call, up-to the framebuffer height, satisfying titles waiting for any value
 		// TODO: Implement this in a better/more accurate way
 		static int scanline = 0;
 
-		// Derive frame_height from hardware registers
-		int frame_height = ((int)d->prmcio.cr[NV_CIO_CR_VDE_INDEX])
-			| (((int)d->prmcio.cr[NV_CIO_CR_OVL_INDEX] & 0x02) >> 1 << 8)
-			| (((int)d->prmcio.cr[NV_CIO_CR_OVL_INDEX] & 0x40) >> 6 << 9)
-			| (((int)d->prmcio.cr[NV_CIO_CRE_LSR_INDEX] & 0x02) >> 1 << 10);
-		frame_height++;
-
-		if (scanline > frame_height + 100 /* Increase range by 100 to allow overflow into VBlank*/) {
+		// The exact range of the timer needs verifying on hardware, but it must exceed the frame-height to account for VBlank time
+		// For now, we use a constant of 100 and Alter Echo seems happy enough.
+		if (scanline > NV2ADevice::GetFrameHeight(d) + 100) {
 			scanline = 0;
 		}
 

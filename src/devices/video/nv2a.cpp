@@ -676,22 +676,8 @@ void cxbx_gl_update_displaymode(NV2AState *d) {
 	frame_gl_format = kelvin_color_format_map[display_mode_format].gl_format;
 	frame_gl_type = kelvin_color_format_map[display_mode_format].gl_type;
 
-	// Test case : Arctic Thunder, sets a 16 bit framebuffer (R5G6B5) not via
-	// AvSetDisplayMode(), but via VGA control register writes, which implies
-	// that it's format argument cannot be used to determine the framebuffer
-	// width. Instead, read the framebuffer width from the VGA control registers :
-	frame_width = ((int)d->prmcio.cr[NV_CIO_CR_OFFSET_INDEX])
-		| (0x700 & ((int)d->prmcio.cr[NV_CIO_CRE_RPC0_INDEX] << 3))
-		| (0x800 & ((int)d->prmcio.cr[NV_CIO_CRE_LSR_INDEX] << 6));
-	frame_width *= 8;
-	frame_width /= frame_pixel_bytes;
-
-	// Derive frame_height from hardware registers
-	frame_height = ((int)d->prmcio.cr[NV_CIO_CR_VDE_INDEX])
-		| (((int)d->prmcio.cr[NV_CIO_CR_OVL_INDEX] & 0x02) >> 1 << 8)
-		| (((int)d->prmcio.cr[NV_CIO_CR_OVL_INDEX] & 0x40) >> 6 << 9)
-		| (((int)d->prmcio.cr[NV_CIO_CRE_LSR_INDEX] & 0x02) >> 1 << 10);
-	frame_height++;
+	frame_width = NV2ADevice::GetFrameWidth(d);
+	frame_height = NV2ADevice::GetFrameHeight(d);
 
 	// Detect changes in framebuffer dimensions
 	if (old_frame_gl_internal_format != frame_gl_internal_format
@@ -1384,4 +1370,30 @@ void NV2ADevice::MMIOWrite(int barIndex, uint32_t addr, uint32_t value, unsigned
 	}
 
 	EmuLog(LOG_LEVEL::WARNING, "NV2ADevice::MMIOWrite: Unhandled barIndex %d, addr %08X, value %08X, size %d", barIndex, addr, value, size);
+}
+
+int NV2ADevice::GetFrameHeight(NV2AState* d)
+{
+	// Derive frame_height from hardware registers
+	int height = ((int)d->prmcio.cr[NV_CIO_CR_VDE_INDEX])
+		| (((int)d->prmcio.cr[NV_CIO_CR_OVL_INDEX] & 0x02) >> 1 << 8)
+		| (((int)d->prmcio.cr[NV_CIO_CR_OVL_INDEX] & 0x40) >> 6 << 9)
+		| (((int)d->prmcio.cr[NV_CIO_CRE_LSR_INDEX] & 0x02) >> 1 << 10);
+
+	return height++;
+}
+
+int NV2ADevice::GetFrameWidth(NV2AState* d)
+{
+	// Test case : Arctic Thunder, sets a 16 bit framebuffer (R5G6B5) not via
+	// AvSetDisplayMode(), but via VGA control register writes, which implies
+	// that it's format argument cannot be used to determine the framebuffer
+	// width. Instead, read the framebuffer width from the VGA control registers :
+	int width = ((int)d->prmcio.cr[NV_CIO_CR_OFFSET_INDEX])
+		| (0x700 & ((int)d->prmcio.cr[NV_CIO_CRE_RPC0_INDEX] << 3))
+		| (0x800 & ((int)d->prmcio.cr[NV_CIO_CRE_LSR_INDEX] << 6));
+	width *= 8;
+	width /= frame_pixel_bytes;
+
+	return width;
 }
