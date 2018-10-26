@@ -1515,12 +1515,6 @@ __declspec(noreturn) void CxbxKrnlInit
 		}
 	}
 
-	// Set process priority to higher than default
-	// Gives a significant performance boost, even without the 'all cores' hack
-	// We could use HIGH or even REALTIME priority for a higher boost, but that would decrease host OS responsiveness
-	// TODO: Make this user configurable?
-	SetPriorityClass(GetCurrentProcess(), ABOVE_NORMAL_PRIORITY_CLASS);
-
 	// initialize graphics
 	DBG_PRINTF_EX(LOG_PREFIX_INIT, "Initializing render window.\n");
 	XTL::CxbxInitWindow(true);

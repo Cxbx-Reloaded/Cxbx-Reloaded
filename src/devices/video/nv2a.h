@@ -71,6 +71,9 @@ public:
 	void MMIOWrite(int barIndex, uint32_t addr, uint32_t value, unsigned size);
 
 	static void UpdateHostDisplay(NV2AState *d);
+
+	static int GetFrameWidth(NV2AState *d);
+	static int GetFrameHeight(NV2AState *d);
 private:
 	NV2AState *m_nv2a_state;
 };
