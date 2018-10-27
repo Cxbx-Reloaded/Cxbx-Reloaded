@@ -3427,7 +3427,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateVertexShader)
 
     // create emulated shader struct
     X_D3DVertexShader *pD3DVertexShader = (X_D3DVertexShader*)g_VMManager.AllocateZeroed(sizeof(X_D3DVertexShader));
-    CxbxVertexShader     *pVertexShader = (CxbxVertexShader*)g_VMManager.AllocateZeroed(sizeof(CxbxVertexShader));
+    CxbxVertexShader     *pVertexShader = (CxbxVertexShader*)malloc(sizeof(CxbxVertexShader));
 
     // TODO: Intelligently fill out these fields as necessary
 
@@ -3548,7 +3548,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateVertexShader)
 
     free(pRecompiledDeclaration);
 
-    pVertexShader->pDeclaration = (DWORD*)g_VMManager.Allocate(OriginalDeclarationCount * sizeof(DWORD));
+    pVertexShader->pDeclaration = (DWORD*)malloc(OriginalDeclarationCount * sizeof(DWORD));
     memcpy(pVertexShader->pDeclaration, pDeclaration, OriginalDeclarationCount * sizeof(DWORD));
 
     pVertexShader->FunctionSize = 0;
@@ -3562,7 +3562,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateVertexShader)
     {
         if(pFunction != NULL)
         {
-            pVertexShader->pFunction = (DWORD*)g_VMManager.Allocate(VertexShaderSize);
+            pVertexShader->pFunction = (DWORD*)malloc(VertexShaderSize);
             memcpy(pVertexShader->pFunction, pFunction, VertexShaderSize);
             pVertexShader->FunctionSize = VertexShaderSize;
         }
@@ -8119,16 +8119,16 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DeleteVertexShader)
 		}
 
 		HostVertexShaderHandle = pVertexShader->Handle;
-		g_VMManager.Deallocate((VAddr)pVertexShader->pDeclaration);
+		free(pVertexShader->pDeclaration);
 
 		if (pVertexShader->pFunction)
 		{
-			g_VMManager.Deallocate((VAddr)pVertexShader->pFunction);
+			free(pVertexShader->pFunction);
 		}
 
 		FreeVertexDynamicPatch(pVertexShader);
 
-		g_VMManager.Deallocate((VAddr)pVertexShader);
+		free(pVertexShader);
 		g_VMManager.Deallocate((VAddr)pD3DVertexShader);
 	}
 
