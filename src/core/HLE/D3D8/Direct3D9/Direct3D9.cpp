@@ -3433,6 +3433,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateVertexShader)
 
 	// Now, we can create the host vertex shader
 	CxbxVertexShader* hostVertexShader = (CxbxVertexShader*)malloc(sizeof(CxbxVertexShader));
+	memset(hostVertexShader, 0, sizeof(CxbxVertexShader));
 
     LPD3DXBUFFER pRecompiledBuffer = NULL;
     DWORD        *pRecompiledDeclaration = NULL;

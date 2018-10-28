@@ -2369,7 +2369,7 @@ DWORD XTL::EmuRecompileVshDeclaration
 	uint8_t *pRecompiledBufferOverflow = ((uint8_t*)pRecompiled) + HostDeclarationSize;
     *ppRecompiledDeclaration = pRecompiled;
 
-    CxbxVertexShaderPatch PatchData = { 0 };
+	CxbxVertexShaderPatch PatchData = { 0 };
 	PatchData.pVertexShaderInfoToSet = pVertexShaderInfo;
 
     DbgVshPrintf("DWORD dwVSHDecl[] =\n{\n");
