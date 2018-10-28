@@ -3414,6 +3414,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateVertexShader)
 	XB_trampoline(HRESULT, WINAPI, D3DDevice_CreateVertexShader, (CONST DWORD*, CONST DWORD*, DWORD*, DWORD));
 	HRESULT hRet = XB_D3DDevice_CreateVertexShader(pDeclaration, pFunction, pHandle, Usage);
 	if (FAILED(hRet)) {
+		LOG_TEST_CASE("XB_D3DDevice_CreateVertexShader failed");
 		RETURN(hRet);
 	}
 
@@ -8091,18 +8092,21 @@ VOID __stdcall XTL::EMUPATCH(D3DDevice_DeleteVertexShader_0)
 VOID WINAPI XTL::EMUPATCH(D3DDevice_DeleteVertexShader)
 (
 	DWORD Handle
-	)
+)
 {
-		LOG_FUNC_ONE_ARG(Handle);
+	LOG_FUNC_ONE_ARG(Handle);
+
+	XB_trampoline(void, WINAPI, D3DDevice_DeleteVertexShader, (DWORD));
+	XB_D3DDevice_DeleteVertexShader(Handle);
 
 	// Handle is always address of an Xbox VertexShader struct, or-ed with 1 (X_D3DFVF_RESERVED0)
 	// It's reference count is lowered. If it reaches zero (0), the struct is freed.
+	
 
 	DWORD HostVertexShaderHandle = 0;
 
 	if (VshHandleIsVertexShader(Handle))
 	{
-		X_D3DVertexShader *pD3DVertexShader = VshHandleToXboxVertexShader(Handle);
 		CxbxVertexShader *pVertexShader = GetCxbxVertexShader(Handle);
 
 		if (pVertexShader->pHostDeclaration) {
@@ -8121,7 +8125,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DeleteVertexShader)
 
 		free(pVertexShader);
 		SetCxbxVertexShader(Handle, nullptr);
-		g_VMManager.Deallocate((VAddr)pD3DVertexShader);
 	}
 
 	// Don't attempt to release invalid null handles
