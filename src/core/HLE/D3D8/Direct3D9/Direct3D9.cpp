@@ -3961,6 +3961,26 @@ extern void HLE_write_NV2A_vertex_attribute_slot(unsigned slot, uint32_t paramet
 extern uint32_t HLE_read_NV2A_vertex_attribute_slot(unsigned VertexSlot); // Declared in PushBuffer.cpp
 
 // ******************************************************************
+// * patch: D3DDevice_SetVertexData4f_16
+// ******************************************************************
+VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexData4f_16)
+(
+	FLOAT   a,
+	FLOAT   b,
+	FLOAT   c,
+	FLOAT   d
+)
+{
+	// This is an LTCG specific version of SetVertexData4f where the first param is passed in edi
+	int Register = 0;
+	__asm{
+		mov Register, edi
+	}
+
+	EMUPATCH(D3DDevice_SetVertexData4f)(Register, a, b, c, d);
+}
+
+// ******************************************************************
 // * patch: D3DDevice_SetVertexData4f
 // ******************************************************************
 VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexData4f)

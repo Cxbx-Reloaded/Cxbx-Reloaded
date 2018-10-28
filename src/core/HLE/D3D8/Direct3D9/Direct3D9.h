@@ -672,6 +672,17 @@ VOID WINAPI EMUPATCH(D3DDevice_SetVertexData4f)
 );
 
 // ******************************************************************
+// * patch: D3DDevice_SetVertexData4f_16
+// ******************************************************************
+VOID WINAPI EMUPATCH(D3DDevice_SetVertexData4f_16)
+(
+	FLOAT   a,
+	FLOAT   b,
+	FLOAT   c,
+	FLOAT   d
+);
+
+// ******************************************************************
 // * patch: D3DDevice_SetVertexData4ub
 // ******************************************************************
 VOID WINAPI EMUPATCH(D3DDevice_SetVertexData4ub)
