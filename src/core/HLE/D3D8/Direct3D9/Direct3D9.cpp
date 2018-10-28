@@ -3411,6 +3411,15 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateVertexShader)
 		LOG_FUNC_END;
 
 	// First, we must call the Xbox CreateVertexShader function and check for success
+	// This does the following:
+	// Allocates an Xbox VertexShader struct
+	// Sets reference count to 1
+	// Puts Usage in VertexShader->Flags
+	// If pFunction is not null, it points to DWORDS shader type, length and a binary compiled xbox vertex shader
+	// If pDeclaration is not null, it's parsed, resulting in a number of constants
+	// Parse results are pushed to the push buffer
+	// Sets other fields
+	// pHandle recieves the addres of the new shader, or-ed with 1 (D3DFVF_RESERVED0)
 	XB_trampoline(HRESULT, WINAPI, D3DDevice_CreateVertexShader, (CONST DWORD*, CONST DWORD*, DWORD*, DWORD));
 	HRESULT hRet = XB_D3DDevice_CreateVertexShader(pDeclaration, pFunction, pHandle, Usage);
 	if (FAILED(hRet)) {
@@ -3569,6 +3578,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateVertexShader)
     }
     else
     {
+		LOG_TEST_CASE("Falling back to FVF shader");
         hostVertexShader->Handle = D3DFVF_XYZ | D3DFVF_TEX0;
     }
 
@@ -8109,6 +8119,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DeleteVertexShader)
 	if (VshHandleIsVertexShader(Handle))
 	{
 		CxbxVertexShader *pVertexShader = GetCxbxVertexShader(Handle);
+		SetCxbxVertexShader(Handle, nullptr);
 
 		if (pVertexShader->pHostDeclaration) {
 			pVertexShader->pHostDeclaration->Release();
@@ -8125,7 +8136,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DeleteVertexShader)
 		FreeVertexDynamicPatch(pVertexShader);
 
 		free(pVertexShader);
-		SetCxbxVertexShader(Handle, nullptr);
 	}
 
 	// Don't attempt to release invalid null handles
