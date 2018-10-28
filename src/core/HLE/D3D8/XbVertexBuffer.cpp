@@ -759,6 +759,10 @@ void XTL::CxbxVertexBufferConverter::Apply(CxbxDrawContext *pDrawContext, DWORD 
 
     // Get the number of streams
     m_uiNbrStreams = GetNbrStreams(pDrawContext);
+	if (m_uiNbrStreams > 16) {
+		LOG_TEST_CASE("m_uiNbrStreams count > max number of streams");
+		m_uiNbrStreams = 16;
+	}
 
     for(UINT uiStream = 0; uiStream < m_uiNbrStreams; uiStream++) {
 		// TODO: Check for cached vertex buffer, and use it if possible
