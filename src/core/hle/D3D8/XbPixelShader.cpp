@@ -5613,63 +5613,35 @@ bool PSH_XBOX_SHADER::FixOverusedRegisters()
 
         int InsertPos = i;
 
-        int addressCount = 0;
-        int total = 0;
-        while (Intermediate[i].ReadsFromRegister(PARAM_C, -1, addressCount, total) && (addressCount > 1 || total > 2))
-        {
-            for (int p = 0; p < PSH_OPCODE_DEFS[Intermediate[i].Opcode]._In; ++p)
+        // Handle PARAM_C, PARAM_V and PARAM_T (in that order) :
+        for (int t = PARAM_C; t >= PARAM_T; t--) {
+            enum PSH_ARGUMENT_TYPE param_t = (enum PSH_ARGUMENT_TYPE)t;
+            int max_total = (t == PARAM_C) ? 2 : (t == PARAM_V) ? 999 : 1;
+            int addressCount = 0;
+            int total = 0;
+            while (Intermediate[i].ReadsFromRegister(param_t, -1, addressCount, total) && (addressCount > 1 || total > max_total))
             {
-                if (Intermediate[i].Parameters[p].Type == PARAM_C)
+                for (int p = 0; p < PSH_OPCODE_DEFS[Intermediate[i].Opcode]._In; ++p)
                 {
-                    int output = NextFreeRegisterFromIndexUntil(i, PARAM_R, i);
+                    if (Intermediate[i].Parameters[p].Type == param_t)
+                    {
+                        int output = NextFreeRegisterFromIndexUntil(i, PARAM_R, i);
 
-                    Ins.Output[0].SetRegister(PARAM_R, output, 0);
-                    Ins.Parameters[0].SetRegister(Intermediate[i].Parameters[p].Type, Intermediate[i].Parameters[p].Address, 0);
-                    InsertIntermediate(&Ins, InsertPos);
-                    ++InsertPos;
+                        // This prevents "error X5765: Dest register for LRP cannot be the same as first or third source register" in WWE RAW2
+                        if (Intermediate[i].Opcode == PO_LRP)
+                            if (Intermediate[i].Output[0].IsRegister(PARAM_R, output, 0))
+                                continue; // for
 
-                    ReplaceInputRegisterFromIndexOnwards(InsertPos, Intermediate[InsertPos].Parameters[p].Type, Intermediate[InsertPos].Parameters[p].Address, PARAM_R, output, InsertPos);
-                    Result = true;
-                    break;
-                }
-            }
-        }
+                        // This inserts a MOV opcode that writes to R, reading from a C, V or T register
+                        Ins.Output[0].SetRegister(PARAM_R, output, 0);
+                        Ins.Parameters[0].SetRegister(Intermediate[i].Parameters[p].Type, Intermediate[i].Parameters[p].Address, 0);
+                        InsertIntermediate(&Ins, InsertPos);
+                        ++InsertPos;
 
-        while (Intermediate[i].ReadsFromRegister(PARAM_V, -1, addressCount, total) && (addressCount > 1))
-        {
-            for (int p = 0; p < PSH_OPCODE_DEFS[Intermediate[i].Opcode]._In; ++p)
-            {
-                if (Intermediate[i].Parameters[p].Type == PARAM_V)
-                {
-                    int output = NextFreeRegisterFromIndexUntil(i, PARAM_R, i);
-
-                    Ins.Output[0].SetRegister(PARAM_R, output, 0);
-                    Ins.Parameters[0].SetRegister(Intermediate[i].Parameters[p].Type, Intermediate[i].Parameters[p].Address, 0);
-                    InsertIntermediate(&Ins, InsertPos);
-                    ++InsertPos;
-
-                    ReplaceInputRegisterFromIndexOnwards(InsertPos, Intermediate[InsertPos].Parameters[p].Type, Intermediate[InsertPos].Parameters[p].Address, PARAM_R, output, InsertPos);
-                    Result = true;
-                    break;
-                }
-            }
-        }
-
-        while (Intermediate[i].ReadsFromRegister(PARAM_T, -1, addressCount, total) && (addressCount > 1 || total > 1))
-        {
-            for (int p = 0; p < PSH_OPCODE_DEFS[Intermediate[i].Opcode]._In; ++p)
-            {
-                if (Intermediate[i].Parameters[p].Type == PARAM_T)
-                {
-                    int output = NextFreeRegisterFromIndexUntil(i, PARAM_R, i);
-                    Ins.Output[0].SetRegister(PARAM_R, output, 0);
-                    Ins.Parameters[0].SetRegister(Intermediate[i].Parameters[p].Type, Intermediate[i].Parameters[p].Address, 0);
-                    InsertIntermediate(&Ins, InsertPos);
-                    ++InsertPos;
-
-                    ReplaceInputRegisterFromIndexOnwards(InsertPos, Intermediate[InsertPos].Parameters[p].Type, Intermediate[InsertPos].Parameters[p].Address, PARAM_R, output, InsertPos);
-                    Result = true;
-                    break;
+                        ReplaceInputRegisterFromIndexOnwards(InsertPos, Intermediate[InsertPos].Parameters[p].Type, Intermediate[InsertPos].Parameters[p].Address, PARAM_R, output, InsertPos);
+                        Result = true;
+                        break;
+                    }
                 }
             }
         }
