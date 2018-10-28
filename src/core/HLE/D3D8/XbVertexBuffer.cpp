@@ -246,9 +246,13 @@ UINT XTL::CxbxVertexBufferConverter::GetNbrStreams(CxbxDrawContext *pDrawContext
 
     if(VshHandleIsVertexShader(pDrawContext->hVertexShader)) {
         CxbxVertexShaderInfo *pVertexShaderInfo = GetCxbxVertexShaderInfo(pDrawContext->hVertexShader);
-		if (pVertexShaderInfo && pVertexShaderInfo->NumberOfVertexStreams <= 16) {
+		if (pVertexShaderInfo) {
+			if (pVertexShaderInfo->NumberOfVertexStreams <= 16) {
+				return pVertexShaderInfo->NumberOfVertexStreams;
+			}
+
+			// If we reached here, pVertexShaderInfo was set,but with invalid data
 			LOG_TEST_CASE("NumberOfVertexStreams > 16");
-			return pVertexShaderInfo->NumberOfVertexStreams;
 		}
 
 		return CountActiveD3DStreams();
