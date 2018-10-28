@@ -247,7 +247,12 @@ UINT XTL::CxbxVertexBufferConverter::GetNbrStreams(CxbxDrawContext *pDrawContext
     if(VshHandleIsVertexShader(pDrawContext->hVertexShader)) {
         CxbxVertexShaderInfo *pVertexShaderInfo = GetCxbxVertexShaderInfo(pDrawContext->hVertexShader);
 		if (pVertexShaderInfo) {
-			return pVertexShaderInfo->NumberOfVertexStreams;
+			if (pVertexShaderInfo->NumberOfVertexStreams <= 16) {
+				return pVertexShaderInfo->NumberOfVertexStreams;
+			}
+
+			// If we reached here, pVertexShaderInfo was set,but with invalid data
+			LOG_TEST_CASE("NumberOfVertexStreams > 16");
 		}
 
 		return CountActiveD3DStreams();
@@ -329,6 +334,11 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
 
 	CxbxVertexShaderStreamInfo *pVertexShaderStreamInfo = nullptr;
 	if (m_pVertexShaderInfo != nullptr) {
+		if (uiStream > m_pVertexShaderInfo->NumberOfVertexStreams + 1) {
+			LOG_TEST_CASE("uiStream > NumberOfVertexStreams");
+			return;
+		}
+
 		pVertexShaderStreamInfo = &(m_pVertexShaderInfo->VertexStreams[uiStream]);
 	}
 
@@ -747,7 +757,7 @@ void XTL::CxbxVertexBufferConverter::Apply(CxbxDrawContext *pDrawContext, DWORD 
 		CxbxKrnlCleanup("Unknown primitive type: 0x%.02X\n", pDrawContext->XboxPrimitiveType);
 
     if (VshHandleIsVertexShader(pDrawContext->hVertexShader)) {
-        m_pVertexShaderInfo = &(MapXboxVertexShaderHandleToCxbxVertexShader(pDrawContext->hVertexShader)->VertexShaderInfo);
+        m_pVertexShaderInfo = &(GetCxbxVertexShader(pDrawContext->hVertexShader)->VertexShaderInfo);
     }
 
 	pDrawContext->VerticesInBuffer = GetVerticesInBuffer(
@@ -759,6 +769,10 @@ void XTL::CxbxVertexBufferConverter::Apply(CxbxDrawContext *pDrawContext, DWORD 
 
     // Get the number of streams
     m_uiNbrStreams = GetNbrStreams(pDrawContext);
+	if (m_uiNbrStreams > 16) {
+		LOG_TEST_CASE("m_uiNbrStreams count > max number of streams");
+		m_uiNbrStreams = 16;
+	}
 
     for(UINT uiStream = 0; uiStream < m_uiNbrStreams; uiStream++) {
 		// TODO: Check for cached vertex buffer, and use it if possible

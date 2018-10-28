@@ -77,24 +77,11 @@ extern void FreeVertexDynamicPatch(CxbxVertexShader *pVertexShader);
 // Checks for failed vertex shaders, and shaders that would need patching
 extern boolean IsValidCurrentShader(void);
 
-// NOTE: Comparing with 0xFFFF breaks some titles (like Kingdom Under Fire)
-// The real Xbox checks the D3DFVF_RESERVED0 flag but we can't do that without 
-// breaking rendering in many titles: CreateVertexShader needs to be unpatched first.
-// Instead, we assume any vertex shaders will be allocated by our memory manager and
-// exist above the XBE reserved region, not great, but it'l do for now.
-inline boolean VshHandleIsFVF(DWORD Handle) { return (Handle > NULL) && (Handle <= XBE_MAX_VA); }
-inline boolean VshHandleIsVertexShader(DWORD Handle) { return (Handle > XBE_MAX_VA) ? TRUE : FALSE; }
-inline X_D3DVertexShader *VshHandleToXboxVertexShader(DWORD Handle) { return (X_D3DVertexShader *)Handle;}
+inline boolean VshHandleIsVertexShader(DWORD Handle) { return (Handle & D3DFVF_RESERVED0) ? TRUE : FALSE; }
+inline boolean VshHandleIsFVF(DWORD Handle) { return !VshHandleIsVertexShader(Handle); }
+inline X_D3DVertexShader *VshHandleToXboxVertexShader(DWORD Handle) { return (X_D3DVertexShader *)(Handle & ~D3DFVF_RESERVED0);}
 
-inline CxbxVertexShader *MapXboxVertexShaderHandleToCxbxVertexShader(DWORD Handle)
-{
-	if (VshHandleIsVertexShader(Handle)) {
-		X_D3DVertexShader *pD3DVertexShader = VshHandleToXboxVertexShader(Handle);
-		//assert(pD3DVertexShader != nullptr);
-		return (CxbxVertexShader *)(pD3DVertexShader->Handle);
-	}
-
-	return nullptr;
-}
+extern CxbxVertexShader* GetCxbxVertexShader(DWORD Handle);
+extern void SetCxbxVertexShader(DWORD Handle, CxbxVertexShader* shader);
 
 #endif

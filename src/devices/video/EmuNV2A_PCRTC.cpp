@@ -57,17 +57,29 @@ DEVICE_READ32(PCRTC)
 		break;
 	case NV_PCRTC_RASTER: {
 		// Test case: Alter Echo
-		// Hack: Increment on every call, up-to the framebuffer height, satisfying titles waiting for any value
-		// TODO: Implement this in a better/more accurate way
-		static int scanline = 0;
+		// Hack: Alternate between 0, mid-frame, and end-of-frame, this is enough to satisfy any title
+		// that waits for VBlank using D3DDevice_GetRasterStatus, but not harm performance as much as
+		// the previous implementation
 
-		// The exact range of the timer needs verifying on hardware, but it must exceed the frame-height to account for VBlank time
-		// For now, we use a constant of 100 and Alter Echo seems happy enough.
-		if (scanline > NV2ADevice::GetFrameHeight(d) + 100) {
-			scanline = 0;
+		static int stage = 0;
+
+		switch (stage) {
+		case 0:
+			result = 0;
+			break;
+		case 1:
+			result = NV2ADevice::GetFrameHeight(d) / 2;
+			break;
+		case 2:
+			result = NV2ADevice::GetFrameHeight(d) + 1;
+			break;
 		}
 
-		result = scanline++;
+		stage++;
+
+		if (stage > 2) {
+			stage = 0;
+		}
 	} break;
 	default: 
 		result = 0;
