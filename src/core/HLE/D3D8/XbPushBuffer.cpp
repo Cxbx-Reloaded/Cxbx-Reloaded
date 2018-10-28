@@ -189,7 +189,7 @@ DWORD CxbxGetStrideFromVertexShaderHandle(DWORD dwVertexShader)
 		// Test-case : SpyHunter 2 [4D57001B]
 		//LOG_TEST_CASE("Non-FVF Vertex Shaders not yet (completely) supported for PushBuffer emulation!");
 
-		CxbxVertexShader *pVertexShader = MapXboxVertexShaderHandleToCxbxVertexShader(dwVertexShader);
+		CxbxVertexShader *pVertexShader = GetCxbxVertexShader(dwVertexShader);
 		if (pVertexShader) {
 			if (pVertexShader->VertexShaderInfo.NumberOfVertexStreams == 1) {
 				// Note : This assumes that the only stream in use will be stream zero :

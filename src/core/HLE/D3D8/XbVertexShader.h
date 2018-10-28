@@ -81,15 +81,7 @@ inline boolean VshHandleIsVertexShader(DWORD Handle) { return (Handle & D3DFVF_R
 inline boolean VshHandleIsFVF(DWORD Handle) { return !VshHandleIsVertexShader(Handle); }
 inline X_D3DVertexShader *VshHandleToXboxVertexShader(DWORD Handle) { return (X_D3DVertexShader *)(Handle & ~D3DFVF_RESERVED0);}
 
-inline CxbxVertexShader *MapXboxVertexShaderHandleToCxbxVertexShader(DWORD Handle)
-{
-	if (VshHandleIsVertexShader(Handle)) {
-		X_D3DVertexShader *pD3DVertexShader = VshHandleToXboxVertexShader(Handle);
-		//assert(pD3DVertexShader != nullptr);
-		return (CxbxVertexShader *)(pD3DVertexShader->Handle);
-	}
-
-	return nullptr;
-}
+extern CxbxVertexShader* GetCxbxVertexShader(DWORD Handle);
+extern void SetCxbxVertexShader(DWORD Handle, CxbxVertexShader* shader);
 
 #endif

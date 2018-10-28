@@ -747,7 +747,7 @@ void XTL::CxbxVertexBufferConverter::Apply(CxbxDrawContext *pDrawContext, DWORD 
 		CxbxKrnlCleanup("Unknown primitive type: 0x%.02X\n", pDrawContext->XboxPrimitiveType);
 
     if (VshHandleIsVertexShader(pDrawContext->hVertexShader)) {
-        m_pVertexShaderInfo = &(MapXboxVertexShaderHandleToCxbxVertexShader(pDrawContext->hVertexShader)->VertexShaderInfo);
+        m_pVertexShaderInfo = &(GetCxbxVertexShader(pDrawContext->hVertexShader)->VertexShaderInfo);
     }
 
 	pDrawContext->VerticesInBuffer = GetVerticesInBuffer(

@@ -513,7 +513,7 @@ DWORD VshHandleGetRealHandle(DWORD aHandle)
 {
 	using namespace XTL;
 
-	CxbxVertexShader *pVertexShader = MapXboxVertexShaderHandleToCxbxVertexShader(aHandle);
+	CxbxVertexShader *pVertexShader = GetCxbxVertexShader(aHandle);
 	if (pVertexShader)
 	{
 		// assert(pVertexShader);
@@ -2566,7 +2566,7 @@ boolean VshHandleIsValidShader(DWORD Handle)
 #if 0
 	//printf( "VS = 0x%.08X\n", Handle );
 
-    XTL::CxbxVertexShader *pVertexShader = XTL::MapXboxVertexShaderHandleToCxbxVertexShader(Handle);
+    XTL::CxbxVertexShader *pVertexShader = XTL::GetCxbxVertexShader(Handle);
     if (pVertexShader) {
         if (pVertexShader->Status != 0)
         {
@@ -2597,7 +2597,7 @@ extern boolean XTL::IsValidCurrentShader(void)
 
 XTL::CxbxVertexShaderInfo *GetCxbxVertexShaderInfo(DWORD Handle)
 {
-    XTL::CxbxVertexShader *pVertexShader = XTL::MapXboxVertexShaderHandleToCxbxVertexShader(Handle);
+    XTL::CxbxVertexShader *pVertexShader = XTL::GetCxbxVertexShader(Handle);
 
     for (uint32 i = 0; i < pVertexShader->VertexShaderInfo.NumberOfVertexStreams; i++)
     {
@@ -2607,4 +2607,28 @@ XTL::CxbxVertexShaderInfo *GetCxbxVertexShaderInfo(DWORD Handle)
         }
     }
     return NULL;
+}
+
+std::unordered_map<DWORD, XTL::CxbxVertexShader*> g_CxbxVertexShaders;
+
+XTL::CxbxVertexShader* XTL::GetCxbxVertexShader(DWORD Handle)
+{
+	if (VshHandleIsVertexShader(Handle)) {
+		auto it = g_CxbxVertexShaders.find(Handle);
+		if (it != g_CxbxVertexShaders.end()) {
+			return it->second;
+		}
+	}
+
+	return nullptr;
+}
+
+void XTL::SetCxbxVertexShader(DWORD Handle, XTL::CxbxVertexShader* shader)
+{
+	auto it = g_CxbxVertexShaders.find(Handle);
+	if (it != g_CxbxVertexShaders.end() && it->second != nullptr && shader != nullptr) {
+		LOG_TEST_CASE("Overwriting existing Vertex Shader");
+	}
+
+	g_CxbxVertexShaders[Handle] = shader;
 }
