@@ -3961,6 +3961,26 @@ extern void HLE_write_NV2A_vertex_attribute_slot(unsigned slot, uint32_t paramet
 extern uint32_t HLE_read_NV2A_vertex_attribute_slot(unsigned VertexSlot); // Declared in PushBuffer.cpp
 
 // ******************************************************************
+// * patch: D3DDevice_SetVertexData4f_16
+// ******************************************************************
+VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexData4f_16)
+(
+	FLOAT   a,
+	FLOAT   b,
+	FLOAT   c,
+	FLOAT   d
+)
+{
+	// This is an LTCG specific version of SetVertexData4f where the first param is passed in edi
+	int Register = 0;
+	__asm{
+		mov Register, edi
+	}
+
+	EMUPATCH(D3DDevice_SetVertexData4f)(Register, a, b, c, d);
+}
+
+// ******************************************************************
 // * patch: D3DDevice_SetVertexData4f
 // ******************************************************************
 VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexData4f)
@@ -4940,6 +4960,28 @@ void CreateHostResource(XTL::X_D3DResource *pResource, DWORD D3DUsage, int iText
 
 		// Interpret Width/Height/BPP
 		CxbxGetPixelContainerMeasures(pPixelContainer, 0, &dwWidth, &dwHeight, &dwDepth, &dwRowPitch, &dwSlicePitch);
+
+		// Each mip-map level is 1/2 the size of the previous level
+		// D3D9 forbids creation of a texture with more mip-map levels than it is divisible
+		// EG: A 256x256 texture cannot have more than 8 levels, since that would create a texture smaller than 1x1
+		// Because of this, we need to cap dwMipMapLevels when required
+		if (dwMipMapLevels > 0) {
+			// Calculate how many mip-map levels it takes to get to a texture of 1 pixels in either dimension
+			UINT highestMipMapLevel = 0;
+			UINT width = dwWidth; UINT height = dwHeight;
+			while (width > 1 && height > 1) {
+				width /= 2;
+				height /= 2;
+				highestMipMapLevel++;
+			}
+
+			// If the desired mip-map level was higher than the maximum possible, cap it
+			// Test case: Shin Megami Tensei: Nine
+			if (dwMipMapLevels > highestMipMapLevel) {
+				LOG_TEST_CASE("Too many mip-map levels");
+				dwMipMapLevels = highestMipMapLevel;
+			}
+		}
 
 		if (dwDepth != 1) {
 			LOG_TEST_CASE("CreateHostResource : Depth != 1");
