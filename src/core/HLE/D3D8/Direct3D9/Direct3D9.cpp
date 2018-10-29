@@ -4977,9 +4977,9 @@ void CreateHostResource(XTL::X_D3DResource *pResource, DWORD D3DUsage, int iText
 
 			// If the desired mip-map level was higher than the maximum possible, cap it
 			// Test case: Shin Megami Tensei: Nine
-			if (dwMipMapLevels > highestMipMapLevel) {
+			if (dwMipMapLevels > highestMipMapLevel + 1) {
 				LOG_TEST_CASE("Too many mip-map levels");
-				dwMipMapLevels = highestMipMapLevel;
+				dwMipMapLevels = highestMipMapLevel + 1;
 			}
 		}
 
