@@ -5734,7 +5734,9 @@ VOID XTL::EMUPATCH(D3DDevice_SetTextureState_BorderColor_0)
 	}
 
 
-	return EMUPATCH(D3DDevice_SetTextureState_BorderColor)(Stage, Value);
+	HRESULT hRet;
+	hRet = g_pD3DDevice->SetSamplerState(Stage, D3DSAMP_BORDERCOLOR, Value);
+	//DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetTextureStageState");
 }
 
 // This uses a custom calling convention where parameter is passed in EAX
