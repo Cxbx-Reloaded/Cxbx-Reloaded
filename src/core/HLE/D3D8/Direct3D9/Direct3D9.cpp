@@ -4977,9 +4977,9 @@ void CreateHostResource(XTL::X_D3DResource *pResource, DWORD D3DUsage, int iText
 
 			// If the desired mip-map level was higher than the maximum possible, cap it
 			// Test case: Shin Megami Tensei: Nine
-			if (dwMipMapLevels > highestMipMapLevel) {
+			if (dwMipMapLevels > highestMipMapLevel + 1) {
 				LOG_TEST_CASE("Too many mip-map levels");
-				dwMipMapLevels = highestMipMapLevel;
+				dwMipMapLevels = highestMipMapLevel + 1;
 			}
 		}
 
@@ -5734,7 +5734,9 @@ VOID XTL::EMUPATCH(D3DDevice_SetTextureState_BorderColor_0)
 	}
 
 
-	return EMUPATCH(D3DDevice_SetTextureState_BorderColor)(Stage, Value);
+	HRESULT hRet;
+	hRet = g_pD3DDevice->SetSamplerState(Stage, D3DSAMP_BORDERCOLOR, Value);
+	//DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetTextureStageState");
 }
 
 // This uses a custom calling convention where parameter is passed in EAX

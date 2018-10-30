@@ -3146,6 +3146,8 @@ bool EmuX86_DecodeException(LPEXCEPTION_POINTERS e)
 			case I_NEG:
 				if (EmuX86_Opcode_NEG(e, info)) break;
 				goto opcode_error;
+			case I_NOP: 
+				break;
 			case I_NOT:
 				if (EmuX86_Opcode_NOT(e, info)) break;
 				goto opcode_error;
