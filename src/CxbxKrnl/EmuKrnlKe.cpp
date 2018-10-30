@@ -336,22 +336,27 @@ void InitDpcAndTimerThread()
 	g_DpcData.DpcEvent = CreateEvent(/*lpEventAttributes=*/nullptr, /*bManualReset=*/FALSE, /*bInitialState=*/FALSE, /*lpName=*/nullptr);
 }
 
-// Xbox Performance Counter Frequency = 733333333 (CPU Clock)
-#define XBOX_PERFORMANCE_FREQUENCY 733333333
-ULONGLONG NativeToXbox_FactorForPerformanceFrequency;
+#define XBOX_TSC_FREQUENCY 733333333 // Xbox Time Stamp Counter Frequency = 733333333 (CPU Clock)
+#define XBOX_ACPI_FREQUENCY 3375000  // Xbox ACPI frequency (3.375 mhz)
+ULONGLONG NativeToXbox_FactorForRdtsc;
+ULONGLONG NativeToXbox_FactorForAcpi;
 
 void ConnectKeInterruptTimeToThunkTable(); // forward
 
-ULONGLONG CxbxRdTsc(bool xbox) {
+ULONGLONG CxbxGetPerformanceCounter(bool acpi) {
 	LARGE_INTEGER tsc;
+	ULARGE_INTEGER scaledTsc;
+
+	scaledTsc.QuadPart = 1000000000;
+	scaledTsc.QuadPart *= (ULONGLONG)tsc.QuadPart;
 
 	QueryPerformanceCounter(&tsc);
 
-	if (xbox && NativeToXbox_FactorForPerformanceFrequency) {
-		ULARGE_INTEGER scaledTsc;
-		scaledTsc.QuadPart = 1000000000;
-		scaledTsc.QuadPart *= (ULONGLONG)tsc.QuadPart;
-		scaledTsc.QuadPart /= NativeToXbox_FactorForPerformanceFrequency;
+	if (acpi == false && NativeToXbox_FactorForRdtsc) {
+		scaledTsc.QuadPart /= NativeToXbox_FactorForRdtsc;
+		return scaledTsc.QuadPart;
+	}	else if (acpi == true && NativeToXbox_FactorForRdtsc) {
+		scaledTsc.QuadPart /= NativeToXbox_FactorForAcpi;
 		return scaledTsc.QuadPart;
 	}
 
@@ -370,8 +375,13 @@ void CxbxInitPerformanceCounters()
 	LARGE_INTEGER t;
 	t.QuadPart = 1000000000;
 	t.QuadPart *= CxbxCalibrateTsc();
-	t.QuadPart /= XBOX_PERFORMANCE_FREQUENCY;
-	NativeToXbox_FactorForPerformanceFrequency = t.QuadPart;
+	t.QuadPart /= XBOX_TSC_FREQUENCY;
+	NativeToXbox_FactorForRdtsc = t.QuadPart;
+
+	t.QuadPart = 1000000000;
+	t.QuadPart *= CxbxCalibrateTsc();
+	t.QuadPart /= XBOX_ACPI_FREQUENCY;
+	NativeToXbox_FactorForAcpi = t.QuadPart;
 
 	ConnectKeInterruptTimeToThunkTable();
 
@@ -1205,18 +1215,14 @@ XBSYSAPI EXPORTNUM(125) xboxkrnl::ULONGLONG NTAPI xboxkrnl::KeQueryInterruptTime
 
 // ******************************************************************
 // * 0x007E - KeQueryPerformanceCounter()
+//   NOTE: The KeQueryPerformance* functions run at the ACPI clock
+//	       The XAPI QueryPerformance* functions run at the TSC clock
 // ******************************************************************
 XBSYSAPI EXPORTNUM(126) xboxkrnl::ULONGLONG NTAPI xboxkrnl::KeQueryPerformanceCounter(void)
 {
 	LOG_FUNC();
-
 	ULONGLONG ret;
-
-	//no matter rdtsc is patched or not, we should always return a scaled performance counter here.
-	DBG_PRINTF("host tick count       : %lu\n", CxbxRdTsc(/*xbox=*/false));
-	ret = CxbxRdTsc(/*xbox=*/true);
-	DBG_PRINTF("emulated tick count   : %lu\n", ret);
-	
+	ret = CxbxGetPerformanceCounter(/*acpi=*/true);
 	RETURN(ret);
 }
 
@@ -1226,11 +1232,7 @@ XBSYSAPI EXPORTNUM(126) xboxkrnl::ULONGLONG NTAPI xboxkrnl::KeQueryPerformanceCo
 XBSYSAPI EXPORTNUM(127) xboxkrnl::ULONGLONG NTAPI xboxkrnl::KeQueryPerformanceFrequency(void)
 {
 	LOG_FUNC();
-
-	// Dxbx note : We return the real Xbox1 frequency here,
-	// to make subsequent calculations behave the same as on the real Xbox1 :
-	ULONGLONG ret = XBOX_PERFORMANCE_FREQUENCY;
-
+	ULONGLONG ret = XBOX_ACPI_FREQUENCY;
 	RETURN(ret);
 }
 

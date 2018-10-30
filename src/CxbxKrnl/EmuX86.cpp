@@ -1297,13 +1297,12 @@ bool EmuX86_Opcode_PUSH(LPEXCEPTION_POINTERS e, _DInst& info)
 	return true;
 }
 
-ULONGLONG CxbxRdTsc(bool xbox); // implemented in EmuKrnlKe.cpp
+ULONGLONG CxbxGetPerformanceCounter(bool acpi); // implemented in EmuKrnlKe.cpp
 void EmuX86_Opcode_RDTSC(LPEXCEPTION_POINTERS e)
 {
-	// Avoid the overhead of xboxkrnl::KeQueryPerformanceCounter,
-	// by calling directly into it's backing implementation:
+	// We use CxbxGetPerformanceCounter. KeQueryPerformanceCounter is a differnet frequency and cannot be used!
 	ULARGE_INTEGER PerformanceCount;
-	PerformanceCount.QuadPart = CxbxRdTsc(/*xbox=*/true);
+	PerformanceCount.QuadPart = CxbxGetPerformanceCounter(/*acpi*/false);
 	e->ContextRecord->Eax = PerformanceCount.LowPart;
 	e->ContextRecord->Edx = PerformanceCount.HighPart;
 }
