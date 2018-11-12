@@ -347,10 +347,10 @@ ULONGLONG CxbxGetPerformanceCounter(bool acpi) {
 	LARGE_INTEGER tsc;
 	ULARGE_INTEGER scaledTsc;
 
+	QueryPerformanceCounter(&tsc);
+
 	scaledTsc.QuadPart = 1000000000;
 	scaledTsc.QuadPart *= (ULONGLONG)tsc.QuadPart;
-
-	QueryPerformanceCounter(&tsc);
 
 	if (acpi == false && NativeToXbox_FactorForRdtsc) {
 		scaledTsc.QuadPart /= NativeToXbox_FactorForRdtsc;

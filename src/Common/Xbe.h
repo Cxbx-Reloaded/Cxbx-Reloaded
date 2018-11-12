@@ -230,7 +230,7 @@ class Xbe : public Error
 			};
         }
         #include "AlignPosfix1.h"
-        *m_LibraryVersion, *m_KernelLibraryVersion, *m_XAPILibraryVersion;
+		*m_LibraryVersion;
 
         // Xbe thread local storage
         #include "AlignPrefix1.h"

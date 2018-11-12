@@ -252,74 +252,28 @@ Xbe::Xbe(const char *x_szFilename, bool bFromGUI)
     }
 
     // read Xbe library versions
-    if(m_Header.dwLibraryVersionsAddr != 0)
-    {
-        printf("Xbe::Xbe: Reading Library Versions...\n");
+	if (m_Header.dwLibraryVersionsAddr != 0)
+	{
+		printf("Xbe::Xbe: Reading Library Versions...\n");
 
-        fseek(XbeFile, m_Header.dwLibraryVersionsAddr - m_Header.dwBaseAddr, SEEK_SET);
+		fseek(XbeFile, m_Header.dwLibraryVersionsAddr - m_Header.dwBaseAddr, SEEK_SET);
 
-        m_LibraryVersion = new LibraryVersion[m_Header.dwLibraryVersions];
+		m_LibraryVersion = new LibraryVersion[m_Header.dwLibraryVersions];
 
-        for(uint32 v=0;v<m_Header.dwLibraryVersions;v++)
-        {
-            printf("Xbe::Xbe: Reading Library Version 0x%.04X...", v);
+		for (uint32 v = 0; v < m_Header.dwLibraryVersions; v++)
+		{
+			printf("Xbe::Xbe: Reading Library Version 0x%.04X...", v);
 
-            if(fread(&m_LibraryVersion[v], sizeof(*m_LibraryVersion), 1, XbeFile) != 1)
-            {
-                sprintf(szBuffer, "Unexpected end of file while reading Xbe Library Version %d (%Xh)", v, v);
-                SetFatalError(szBuffer);
-                goto cleanup;
-            }
+			if (fread(&m_LibraryVersion[v], sizeof(*m_LibraryVersion), 1, XbeFile) != 1)
+			{
+				sprintf(szBuffer, "Unexpected end of file while reading Xbe Library Version %d (%Xh)", v, v);
+				SetFatalError(szBuffer);
+				goto cleanup;
+			}
 
-            printf("OK\n");
-        }
-
-        // read Xbe kernel library version
-        {
-            printf("Xbe::Xbe: Reading Kernel Library Version...");
-
-            if(m_Header.dwKernelLibraryVersionAddr == 0)
-            {
-                SetFatalError("Could not locate kernel library version");
-                goto cleanup;
-            }
-
-            fseek(XbeFile, m_Header.dwKernelLibraryVersionAddr - m_Header.dwBaseAddr, SEEK_SET);
-
-            m_KernelLibraryVersion = new LibraryVersion;
-
-            if(fread(m_KernelLibraryVersion, sizeof(*m_LibraryVersion), 1, XbeFile) != 1)
-            {
-                SetFatalError("Unexpected end of file while reading Xbe Kernel Version");
-                goto cleanup;
-            }
-
-            printf("OK\n");
-        }
-
-        // read Xbe Xapi library version
-        {
-            printf("Xbe::Xbe: Reading Xapi Library Version...");
-
-            if(m_Header.dwXAPILibraryVersionAddr == 0)
-            {
-                SetFatalError("Could not locate Xapi Library Version");
-                goto cleanup;
-            }
-
-            fseek(XbeFile, m_Header.dwXAPILibraryVersionAddr - m_Header.dwBaseAddr, SEEK_SET);
-
-            m_XAPILibraryVersion = new LibraryVersion;
-
-            if(fread(m_XAPILibraryVersion, sizeof(*m_LibraryVersion), 1, XbeFile) != 1)
-            {
-                SetFatalError("Unexpected end of file while reading Xbe Xapi Version");
-                goto cleanup;
-            }
-
-            printf("OK\n");
-        }
-    }
+			printf("OK\n");
+		}
+	}
 
     // read Xbe sections
     {
@@ -412,8 +366,6 @@ Xbe::~Xbe()
         delete[] m_bzSection;
     }
 
-    delete   m_XAPILibraryVersion;
-    delete   m_KernelLibraryVersion;
     delete[] m_LibraryVersion;
     delete   m_TLS;
     delete[] m_szSectionName;
@@ -579,8 +531,6 @@ void Xbe::ConstructorInit()
     m_SectionHeader        = 0;
     m_szSectionName        = 0;
     m_LibraryVersion       = 0;
-    m_KernelLibraryVersion = 0;
-    m_XAPILibraryVersion   = 0;
     m_TLS                  = 0;
     m_bzSection            = 0;
 	m_SignatureHeader      = 0;
