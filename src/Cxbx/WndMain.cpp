@@ -2366,7 +2366,6 @@ DWORD WINAPI WndMain::DebuggerMonitor(LPVOID lpVoid)
 }
 void WndMain::DebuggerMonitorClose()
 {
-
 	if (m_hDebuggerProc != nullptr) {
 		HANDLE hDebuggerProcTemp = m_hDebuggerProc;
 		std::thread hDebuggerMonitorThreadTemp = std::thread(std::move(m_hDebuggerMonitorThread));

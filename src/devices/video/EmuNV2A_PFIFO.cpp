@@ -227,6 +227,7 @@ static void pfifo_run_puller(NV2AState *d)
 
 int pfifo_puller_thread(NV2AState *d)
 {
+	SetThreadAffinityMask(GetCurrentThread(), g_CPUOthers);
 	CxbxSetThreadName("Cxbx NV2A FIFO puller");
 
     glo_set_current(d->pgraph.gl_context);
@@ -461,6 +462,7 @@ static void pfifo_run_pusher(NV2AState *d)
 
 int pfifo_pusher_thread(NV2AState *d)
 {
+	SetThreadAffinityMask(GetCurrentThread(), g_CPUOthers);
 	CxbxSetThreadName("Cxbx NV2A FIFO pusher");
 
     qemu_mutex_lock(&d->pfifo.pfifo_lock);

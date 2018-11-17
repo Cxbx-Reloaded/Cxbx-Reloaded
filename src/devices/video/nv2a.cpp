@@ -1113,6 +1113,7 @@ void NV2ADevice::UpdateHostDisplay(NV2AState *d)
 // TODO: Fix this properly
 static void nv2a_vblank_thread(NV2AState *d)
 {
+	SetThreadAffinityMask(GetCurrentThread(), g_CPUOthers);
 	CxbxSetThreadName("Cxbx NV2A VBLANK");
 	auto nextVBlankTime = GetNextVBlankTime();
 
