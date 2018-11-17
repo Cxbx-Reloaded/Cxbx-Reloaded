@@ -1813,11 +1813,11 @@ XTL::D3DDECLUSAGE Xb2PCRegisterType
 		break;
 	case X_D3DVSDE_BACKDIFFUSE: // 7
 		DbgVshPrintf("D3DVSDE_BACKDIFFUSE /* xbox ext. */");
-		PCRegisterType = D3DDECLUSAGE_UNSUPPORTED;
+		PCRegisterType = D3DDECLUSAGE_COLOR; PCUsageIndex = 2;
 		break;
 	case X_D3DVSDE_BACKSPECULAR: // 8
 		DbgVshPrintf("D3DVSDE_BACKSPECULAR /* xbox ext. */");
-		PCRegisterType = D3DDECLUSAGE_UNSUPPORTED;
+		PCRegisterType = D3DDECLUSAGE_COLOR; PCUsageIndex = 3;
 		break;
 	case X_D3DVSDE_TEXCOORD0: // 9
 		DbgVshPrintf("D3DVSDE_TEXCOORD0");
