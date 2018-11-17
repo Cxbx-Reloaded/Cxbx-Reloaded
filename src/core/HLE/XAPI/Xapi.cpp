@@ -296,7 +296,6 @@ VOID WINAPI XTL::EMUPATCH(XInitDevices)
 
 bool TitleIsJSRF()
 {
-	return false;
 	static bool detected = false;
 	static bool result = false;
 
