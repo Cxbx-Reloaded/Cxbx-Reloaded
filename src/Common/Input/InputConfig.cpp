@@ -250,6 +250,7 @@ void InputDeviceManager::StartInputThread()
 
 void InputDeviceManager::InputThread(InputDeviceManager* pVoid)
 {
+	SetThreadAffinityMask(GetCurrentThread(), g_CPUOthers);
 	bool bContinue = true;
 	SDL_Event event;
 

@@ -557,9 +557,10 @@ VOID WINAPI XTL::EMUPATCH(DirectSoundDoWork)()
 // For Async process purpose only
 static void dsound_thread_worker(LPVOID nullPtr)
 {
-    while (true) {
-        Sleep(0);
+	SetThreadAffinityMask(GetCurrentThread(), g_CPUOthers);
 
+    while (true) {
+		Sleep(0);
         enterCriticalSection;
 
         vector_ds_stream::iterator ppDSStream = g_pDSoundStreamCache.begin();

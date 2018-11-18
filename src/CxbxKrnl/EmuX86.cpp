@@ -2942,8 +2942,11 @@ bool EmuX86_DecodeException(LPEXCEPTION_POINTERS e)
 	}
 
 	// Execute op-codes until we hit an unhandled instruction, or an error occurs
-	while (true)
-	//for (int x=0;x<3;x++)
+	//while (true)
+	// TODO: Find where the weird memory addresses come from when using the above case
+	// There is obviously something wrong with one or more of our instruction implementations
+	// For now, we only execute one instruction at a time...
+	for (int x=0;x<1;x++)
 	{
 		if (!EmuX86_DecodeOpcode((uint8_t*)e->ContextRecord->Eip, info)) {
 			EmuLog(LOG_LEVEL::WARNING, "Error decoding opcode at 0x%08X", e->ContextRecord->Eip);
@@ -3295,9 +3298,9 @@ bool EmuX86_DecodeException(LPEXCEPTION_POINTERS e)
 				goto opcode_error;
 			default:
 				EmuLog(LOG_LEVEL::WARNING, "Unhandled instruction : %s (%u)", Distorm_OpcodeString(info.opcode), info.opcode);
-				// Fail if the first hit instruction couldn't be emulated,
-				// but let host CPU execute following (unhandled) instructions :
-				return (StartingEip != e->ContextRecord->Eip);
+				// HACK: If we hit an unhandled instruction, log and skip it
+				e->ContextRecord->Eip += info.size;
+				return true;
 		} // switch info.opcode
 
 		e->ContextRecord->Eip += info.size;

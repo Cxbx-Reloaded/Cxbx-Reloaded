@@ -1465,6 +1465,21 @@ static void VshRemoveScreenSpaceInstructions(VSH_XBOX_SHADER *pShader)
     }
 }
 
+static void VshRemoveUnsupportedObRegisters(VSH_XBOX_SHADER *pShader)
+{
+	int deleted = 0;
+
+	for (int i = 0; i < pShader->IntermediateCount; i++) {
+		VSH_INTERMEDIATE_FORMAT* pIntermediate = &pShader->Intermediate[i];
+
+		if (pIntermediate->Output.Type == IMD_OUTPUT_O && (pIntermediate->Output.Address == OREG_OB0 || pIntermediate->Output.Address == OREG_OB1)) {
+			DbgVshPrintf("Deleted unsupported write to %s\n", OReg_Name[pIntermediate->Output.Address]);
+			VshDeleteIntermediate(pShader, i);
+			i--;
+		}
+	}
+}
+
 // Converts the intermediate format vertex shader to DirectX 8 format
 static boolean VshConvertShader(VSH_XBOX_SHADER *pShader,
                                 boolean         bNoReservedConstants,
@@ -1487,6 +1502,10 @@ static boolean VshConvertShader(VSH_XBOX_SHADER *pShader,
         VshRemoveScreenSpaceInstructions(pShader);
     }
 
+	// Windows does not support back-facing colours, so we remove them from the shaders
+	// Test Case: Panzer Dragoon Orta
+	VshRemoveUnsupportedObRegisters(pShader);
+
     // TODO: Add routine for compacting r register usage so that at least one is freed (two if dph and r12)
 
     for (int i = 0; i < pShader->IntermediateCount; i++)
@@ -1498,7 +1517,21 @@ static boolean VshConvertShader(VSH_XBOX_SHADER *pShader,
         if(pIntermediate->Output.Type == IMD_OUTPUT_O && (pIntermediate->Output.Address == OREG_OPTS || pIntermediate->Output.Address == OREG_OFOG))
         {
             // The PC shader assembler doesn't like masks on scalar registers
-            VshSetOutputMask(&pIntermediate->Output, TRUE, TRUE, TRUE, TRUE);
+			VshSetOutputMask(&pIntermediate->Output, TRUE, TRUE, TRUE, TRUE);
+
+			// Fix when mad or mov to a scaler input does not use a replicate swizzle
+			// MAD Test case: Panzer Dragoon Orta
+			// MOV Test case: DOA3
+			if ((pIntermediate->InstructionType == IMD_MAC && pIntermediate->MAC == MAC_MAD) ||
+				(pIntermediate->InstructionType == IMD_MAC && pIntermediate->MAC == MAC_MOV)) {
+				// Clear all but the first swizzle for each parameter
+				// TODO: Is this sufficient? Perhaps we need to be smart about which swizzle to select
+				for (int param = 0; param < 3; param++) {
+					pIntermediate->Parameters[param].Parameter.Swizzle[1] = pIntermediate->Parameters[param].Parameter.Swizzle[0];
+					pIntermediate->Parameters[param].Parameter.Swizzle[2] = pIntermediate->Parameters[param].Parameter.Swizzle[0];
+					pIntermediate->Parameters[param].Parameter.Swizzle[3] = pIntermediate->Parameters[param].Parameter.Swizzle[0];
+				}
+			}
         }
 
         if(pIntermediate->InstructionType == IMD_ILU && pIntermediate->ILU == ILU_RCC)
@@ -1813,11 +1846,11 @@ XTL::D3DDECLUSAGE Xb2PCRegisterType
 		break;
 	case X_D3DVSDE_BACKDIFFUSE: // 7
 		DbgVshPrintf("D3DVSDE_BACKDIFFUSE /* xbox ext. */");
-		PCRegisterType = D3DDECLUSAGE_UNSUPPORTED;
+		PCRegisterType = D3DDECLUSAGE_COLOR; PCUsageIndex = 2;
 		break;
 	case X_D3DVSDE_BACKSPECULAR: // 8
 		DbgVshPrintf("D3DVSDE_BACKSPECULAR /* xbox ext. */");
-		PCRegisterType = D3DDECLUSAGE_UNSUPPORTED;
+		PCRegisterType = D3DDECLUSAGE_COLOR; PCUsageIndex = 3;
 		break;
 	case X_D3DVSDE_TEXCOORD0: // 9
 		DbgVshPrintf("D3DVSDE_TEXCOORD0");

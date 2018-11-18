@@ -138,7 +138,7 @@ void InitXboxControllerHostBridge(void)
             //disconnect to host if the host port of xinput exceeds the total xinput controller connected to host.
             if (g_XboxControllerHostBridge[port].dwHostPort >= total_xinput_gamepad) {
                 g_XboxControllerHostBridge[port].dwHostType = X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_NOTCONNECT;
-                printf("InitXboxControllerHostBridge: Host XInput port greater then total xinut controller connected. disconnect xbox port from host!\n");
+                printf("InitXboxControllerHostBridge: Host XInput port greater then total xinput controller connected. disconnect xbox port from host!\n");
             }
             break;
         case X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_DINPUT:

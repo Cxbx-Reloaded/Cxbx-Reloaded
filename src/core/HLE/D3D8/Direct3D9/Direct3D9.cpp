@@ -515,11 +515,6 @@ VOID XTL::CxbxInitWindow(bool bFullInit)
 			ExitProcess(0);
 		}
 
-		// Ported from Dxbx :
-		// If possible, assign this thread to another core than the one that runs Xbox1 code :
-		if (bFullInit)
-			SetThreadAffinityMask(hRenderWindowThread, g_CPUOthers);
-
         while(!g_bRenderWindowActive)
             Sleep(0); 
 
@@ -1384,6 +1379,7 @@ static BOOL WINAPI EmuEnumDisplayDevices(GUID FAR *lpGUID, LPSTR lpDriverDescrip
 static DWORD WINAPI EmuRenderWindow(LPVOID lpVoid)
 {
 	CxbxSetThreadName("Cxbx Render Window");
+	SetThreadAffinityMask(GetCurrentThread(), g_CPUOthers);
 
     // register window class
     {
