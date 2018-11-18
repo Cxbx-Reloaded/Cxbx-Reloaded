@@ -2355,7 +2355,9 @@ void pgraph_handle_method(NV2AState *d,
 					assert(pg->inline_array_length == 0);
 					assert(pg->inline_elements_length == 0);
 
-					pgraph_draw_arrays(d);
+					if (pgraph_draw_arrays != nullptr) {
+						pgraph_draw_arrays(d);
+					}
 				} else if (pg->inline_buffer_length) {
 
 					NV2A_GL_DPRINTF(false, "Inline Buffer");
@@ -2364,7 +2366,9 @@ void pgraph_handle_method(NV2AState *d,
 					assert(pg->inline_array_length == 0);
 					assert(pg->inline_elements_length == 0);
 
-					pgraph_draw_inline_buffer(d);
+					if (pgraph_draw_inline_buffer != nullptr) {
+						pgraph_draw_inline_buffer(d);
+					}
 				} else if (pg->inline_array_length) {
 
 					NV2A_GL_DPRINTF(false, "Inline Array");
@@ -2373,7 +2377,9 @@ void pgraph_handle_method(NV2AState *d,
 					assert(pg->inline_buffer_length == 0);
 					assert(pg->inline_elements_length == 0);
 
-					pgraph_draw_inline_array(d);
+					if (pgraph_draw_inline_array != nullptr) {
+						pgraph_draw_inline_array(d);
+					}
 				} else if (pg->inline_elements_length) {
 
 					NV2A_GL_DPRINTF(false, "Inline Elements");
@@ -2382,7 +2388,9 @@ void pgraph_handle_method(NV2AState *d,
 					assert(pg->inline_buffer_length == 0);
 					assert(pg->inline_array_length == 0);
 
-					pgraph_draw_inline_elements(d);
+					if (pgraph_draw_inline_elements != nullptr) {
+						pgraph_draw_inline_elements(d);
+					}
 				} else {
 					NV2A_GL_DPRINTF(true, "EMPTY NV097_SET_BEGIN_END");
 					assert(false);
@@ -2393,7 +2401,9 @@ void pgraph_handle_method(NV2AState *d,
 
 				pg->primitive_mode = parameter;
 
-				pgraph_draw_state_update(d);
+				if (pgraph_draw_state_update != nullptr) {
+					pgraph_draw_state_update(d);
+				}
 
 				pg->inline_elements_length = 0;
 				pg->inline_array_length = 0;
@@ -2675,7 +2685,9 @@ void pgraph_handle_method(NV2AState *d,
 
 		case NV097_CLEAR_SURFACE: {
 			pg->clear_surface = parameter;
-			pgraph_draw_clear(d);
+			if (pgraph_draw_clear != nullptr) {
+				pgraph_draw_clear(d);
+			}
 			break;
 		}
 
