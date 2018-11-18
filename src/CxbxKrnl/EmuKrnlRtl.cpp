@@ -169,9 +169,8 @@ XBSYSAPI EXPORTNUM(262) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlAppendUnicodeStrin
 			result = STATUS_BUFFER_TOO_SMALL;
 		}
 		else {
-			CHAR *dstBuf = (CHAR*)(Destination->Buffer + (Destination->Length / sizeof(WCHAR)));
-			CHAR *srcBuf = (CHAR*)(Source->Buffer);
-			memmove(dstBuf, srcBuf, srcLen);
+			WCHAR *dstBuf = (WCHAR*)(Destination->Buffer + (Destination->Length / sizeof(WCHAR)));
+			memmove(dstBuf, Source->Buffer, srcLen);
 			Destination->Length += srcLen;
 			if (Destination->Length < Destination->MaximumLength) {
 				dstBuf[srcLen / sizeof(WCHAR)] = UNICODE_NULL;
