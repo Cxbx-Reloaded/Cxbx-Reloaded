@@ -306,7 +306,7 @@ XBSYSAPI EXPORTNUM(255) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PsCreateSystemThreadE
     {
         DWORD dwThreadId = 0, dwThreadWait;
         bool bWait = true;
-		HANDLE hStartedEvent = CreateEvent(NULL, FALSE, FALSE, TEXT("PCSTProxyEvent"));
+		HANDLE hStartedEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
 		if (hStartedEvent == NULL) {
 			std::string errorMessage = CxbxGetLastErrorString("PsCreateSystemThreadEx could not create PCSTProxyEvent");
 			CxbxKrnlCleanup(errorMessage.c_str());
@@ -324,13 +324,10 @@ XBSYSAPI EXPORTNUM(255) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PsCreateSystemThreadE
         *ThreadHandle = (HANDLE)_beginthreadex(NULL, KernelStackSize, PCSTProxy, iPCSTProxyParam, NULL, (uint*)&dwThreadId);
 		// Note : DO NOT use iPCSTProxyParam anymore, since ownership is transferred to the proxy (which frees it too)
 
-		// Give the thread chance to start
-		Sleep(100);
-
 		DBG_PRINTF("Waiting for Xbox proxy thread to start...\n");
 
         while (bWait) {
-            dwThreadWait = WaitForSingleObject(hStartedEvent, 300);
+            dwThreadWait = WaitForSingleObject(hStartedEvent, INFINITE);
             switch (dwThreadWait) {
                 case WAIT_TIMEOUT: { // The time-out interval elapsed, and the object's state is nonsignaled.
 					EmuLog(LOG_LEVEL::WARNING, "Timeout while waiting for Xbox proxy thread to start...\n");
