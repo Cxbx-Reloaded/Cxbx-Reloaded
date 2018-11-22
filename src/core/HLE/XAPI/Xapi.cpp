@@ -294,7 +294,7 @@ VOID WINAPI XTL::EMUPATCH(XInitDevices)
 	InitXboxControllerHostBridge();
 }
 
-bool TitleIsJSRF()
+bool TitleRequiresInputHack()
 {
 	static bool detected = false;
 	static bool result = false;
@@ -304,11 +304,14 @@ bool TitleIsJSRF()
 		return result;
 	}
 
-	// Array of known JSRF title IDs, must be 0 terminated
+	// Array of known games that require the gamepad hack
+	// TODO: Figure out WHY this is needed and fix the root cause
+	// Perhaps LLE USB/OHCI is required?
 	DWORD titleIds[] = {
 		0x49470018, // JSRF NTSC-U
 		0x5345000A, // JSRF PAL, NTSC-J
 		0x53450016, // JSRF NTSC - J(Demo)
+		0x5345000b, // GunValkyre NTSC-U
 		0
 	};
 
@@ -322,22 +325,8 @@ bool TitleIsJSRF()
 		pTitleId++;
 	}
 
-	// We didn't find a known JSRF title id, fallback to checking the title
-	// This isn't 100% effective, but could work for some versions of JSRF
-	// Because of this, we log a message to say that the title_id should be added
-	if (!result) {
-		char tAsciiTitle[40] = "Unknown";
-		setlocale(LC_ALL, "English");
-		wcstombs(tAsciiTitle, g_pCertificate->wszTitleName, sizeof(tAsciiTitle));
-
-		if (_strnicmp(tAsciiTitle, "Jet Set Radio", 13) == 0) {
-			CxbxPopupMessage(LOG_LEVEL::INFO, CxbxMsgDlgIcon_Info, "Detected JSRF by name, not title ID, please report that [%08X] should be added to the list", g_pCertificate->dwTitleId);
-			result = true;
-		}
-	}
-
 	if (result) {
-		EmuLog(LOG_LEVEL::WARNING, "Applying JSRF Hack");
+		EmuLog(LOG_LEVEL::WARNING, "Applying Smilebit Input Hack");
 	}
 
 	detected = true;
@@ -415,7 +404,7 @@ DWORD WINAPI XTL::EMUPATCH(XGetDevices)
 
     // JSRF Hack: Don't set the ChangeConnected flag. Without this, JSRF hard crashes 
 	// TODO: Why is this still needed? 
-	if (DeviceType == gDeviceType_Gamepad && TitleIsJSRF()) {
+	if (DeviceType == gDeviceType_Gamepad && TitleRequiresInputHack()) {
 		DeviceType->ChangeConnected = 0;
 	}
     ret = DeviceType->CurrentConnected;
@@ -464,7 +453,7 @@ BOOL WINAPI XTL::EMUPATCH(XGetDeviceChanges)
     }
 
     // JSRF Hack: Don't set the ChangeConnected flag. Without this, JSRF hard crashes
-	if (TitleIsJSRF()) {
+	if (TitleRequiresInputHack()) {
 		DeviceType->ChangeConnected = 0;
 	}
 
