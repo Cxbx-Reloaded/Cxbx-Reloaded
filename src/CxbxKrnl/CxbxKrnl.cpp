@@ -92,7 +92,7 @@ std::string CxbxKrnl_DebugFileName = "";
 Xbe::Certificate *g_pCertificate = NULL;
 
 /*! thread handles */
-static HANDLE g_hThreads[MAXIMUM_XBOX_THREADS] = { 0 };
+static std::vector<HANDLE> g_hThreads;
 
 char szFilePath_CxbxReloaded_Exe[MAX_PATH] = { 0 };
 char szFolder_CxbxReloadedData[MAX_PATH] = { 0 };
@@ -1703,21 +1703,7 @@ void CxbxKrnlRegisterThread(HANDLE hThread)
 		}
 	}
 
-    int v=0;
-
-    for(v=0;v<MAXIMUM_XBOX_THREADS;v++)
-    {
-        if(g_hThreads[v] == 0)
-        {
-            g_hThreads[v] = hThread;
-            break;
-        }
-    }
-
-    if(v == MAXIMUM_XBOX_THREADS)
-    {
-        CxbxKrnlCleanup("There are too many active threads!");
-    }
+	g_hThreads.push_back(hThread);
 }
 
 void CxbxKrnlSuspend()
@@ -1725,22 +1711,16 @@ void CxbxKrnlSuspend()
     if(g_bEmuSuspended || g_bEmuException)
         return;
 
-    for(int v=0;v<MAXIMUM_XBOX_THREADS;v++)
+    for (auto it = g_hThreads.begin(); it != g_hThreads.end(); ++it)
     {
-        if(g_hThreads[v] != NULL)
-        {
-            DWORD dwExitCode;
+        DWORD dwExitCode;
 
-            if(GetExitCodeThread(g_hThreads[v], &dwExitCode) && dwExitCode == STILL_ACTIVE)
-            {
-                // suspend thread if it is active
-                SuspendThread(g_hThreads[v]);
-            }
-            else
-            {
-                // remove thread from thread list if it is dead
-                g_hThreads[v] = 0;
-            }
+        if(GetExitCodeThread(*it, &dwExitCode) && dwExitCode == STILL_ACTIVE) {
+            // suspend thread if it is active
+            SuspendThread(*it);
+        } else {
+            // remove thread from thread list if it is dead
+			g_hThreads.erase(it);
         }
     }
 
@@ -1777,24 +1757,19 @@ void CxbxKrnlResume()
         SetWindowText(hWnd, szBuffer);
     }
 
-    for(int v=0;v<MAXIMUM_XBOX_THREADS;v++)
-    {
-        if(g_hThreads[v] != NULL)
-        {
-            DWORD dwExitCode;
+	for (auto it = g_hThreads.begin(); it != g_hThreads.end(); ++it)
+	{
+		DWORD dwExitCode;
 
-            if(GetExitCodeThread(g_hThreads[v], &dwExitCode) && dwExitCode == STILL_ACTIVE)
-            {
-                // resume thread if it is active
-                ResumeThread(g_hThreads[v]);
-            }
-            else
-            {
-                // remove thread from thread list if it is dead
-                g_hThreads[v] = 0;
-            }
-        }
-    }
+		if (GetExitCodeThread(*it, &dwExitCode) && dwExitCode == STILL_ACTIVE) {
+			// resume thread if it is active
+			ResumeThread(*it);
+		}
+		else {
+			// remove thread from thread list if it is dead
+			g_hThreads.erase(it);
+		}
+	}
 
     g_bEmuSuspended = false;
 }

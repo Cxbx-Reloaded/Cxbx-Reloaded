@@ -119,9 +119,6 @@ extern bool g_bIsRetail;
 /*! indicates ability to save on exit (needed for settings reset) */
 extern bool g_SaveOnExit;
 
-/*! maximum number of threads cxbx can handle */
-#define MAXIMUM_XBOX_THREADS 256
-
 /*! runtime DBG_PRINTF toggle boolean */
 extern volatile bool g_bPrintfOn;
 
