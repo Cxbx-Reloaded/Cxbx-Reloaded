@@ -367,7 +367,7 @@ XBSYSAPI EXPORTNUM(255) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PsCreateSystemThreadE
 }
 
 // ******************************************************************
-// * 0x0100 - PsQueryStatisti cs()
+// * 0x0100 - PsQueryStatistics()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(256) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PsQueryStatistics
 (
