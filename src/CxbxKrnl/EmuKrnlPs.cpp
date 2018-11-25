@@ -149,23 +149,6 @@ static unsigned int WINAPI PCSTProxy
 		// Suspend right before calling the thread notification routines
 		SuspendThread(GetCurrentThread());
 
-	// call thread notification routine(s)
-	if (g_iThreadNotificationCount != 0)
-	{
-		for (int i = 0; i < 16; i++)
-		{
-			XTL::XTHREAD_NOTIFY_PROC pfnNotificationRoutine = (XTL::XTHREAD_NOTIFY_PROC)g_pfnThreadNotification[i];
-
-			// If the routine doesn't exist, don't execute it!
-			if (pfnNotificationRoutine == NULL)
-				continue;
-
-			DBG_PRINTF("Calling pfnNotificationRoutine[%d] (0x%.8X)\n", g_iThreadNotificationCount, pfnNotificationRoutine);
-
-			pfnNotificationRoutine(TRUE);
-		}
-	}
-
 	// use the special calling convention
 	__try
 	{
@@ -321,6 +304,23 @@ XBSYSAPI EXPORTNUM(255) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PsCreateSystemThreadE
         iPCSTProxyParam->StartSuspended = CreateSuspended;
         iPCSTProxyParam->hStartedEvent = hStartedEvent;
 
+		// call thread notification routine(s)
+		if (g_iThreadNotificationCount != 0)
+		{
+			for (int i = 0; i < 16; i++)
+			{
+				XTL::XTHREAD_NOTIFY_PROC pfnNotificationRoutine = (XTL::XTHREAD_NOTIFY_PROC)g_pfnThreadNotification[i];
+
+				// If the routine doesn't exist, don't execute it!
+				if (pfnNotificationRoutine == NULL)
+					continue;
+
+				DBG_PRINTF("Calling pfnNotificationRoutine[%d] (0x%.8X)\n", g_iThreadNotificationCount, pfnNotificationRoutine);
+
+				pfnNotificationRoutine(TRUE);
+			}
+		}
+
         *ThreadHandle = (HANDLE)_beginthreadex(NULL, KernelStackSize, PCSTProxy, iPCSTProxyParam, NULL, (uint*)&dwThreadId);
 		// Note : DO NOT use iPCSTProxyParam anymore, since ownership is transferred to the proxy (which frees it too)
 
@@ -349,6 +349,7 @@ XBSYSAPI EXPORTNUM(255) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PsCreateSystemThreadE
                 }
             }
         }
+
 
 		// Release the event
 		CloseHandle(hStartedEvent);
