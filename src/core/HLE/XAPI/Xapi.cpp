@@ -358,7 +358,7 @@ bool TitleIsLegoSW()
 
 		pTitleId++;
 	}
-
+		
 	if (result) {
 		EmuLog(LOG_LEVEL::WARNING, "Applying Lego Star Wars Hack");
 	}
