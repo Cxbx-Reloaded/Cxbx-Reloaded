@@ -302,13 +302,18 @@ XBSYSAPI EXPORTNUM(255) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PsCreateSystemThreadE
         iPCSTProxyParam->StartContext = StartContext;
         iPCSTProxyParam->SystemRoutine = SystemRoutine; // NULL, XapiThreadStartup or unknown?
         iPCSTProxyParam->StartSuspended = CreateSuspended;
-        iPCSTProxyParam->hStartedEvent = hStartedEvent;
+	        iPCSTProxyParam->hStartedEvent = hStartedEvent;
 
+		/*
 		// call thread notification routine(s)
 		if (g_iThreadNotificationCount != 0)
 		{
 			for (int i = 0; i < 16; i++)
 			{
+				// TODO: This is *very* wrong, ps notification routines are NOT the same as XApi notification routines
+				// TODO: XAPI notification routines are already handeld by XapiThreadStartup and don't need to be called by us
+				// TODO: This type of notification routine is PCREATE_THREAD_NOTIFY_ROUTINE, which takes an ETHREAD pointer as well as Thread ID as input
+				// TODO: This is impossible to support currently, as we do not create or register Xbox ETHREAD objects, so we're better to skip it entirely!
 				XTL::XTHREAD_NOTIFY_PROC pfnNotificationRoutine = (XTL::XTHREAD_NOTIFY_PROC)g_pfnThreadNotification[i];
 
 				// If the routine doesn't exist, don't execute it!
@@ -319,7 +324,7 @@ XBSYSAPI EXPORTNUM(255) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PsCreateSystemThreadE
 
 				pfnNotificationRoutine(TRUE);
 			}
-		}
+		}*/
 
         *ThreadHandle = (HANDLE)_beginthreadex(NULL, KernelStackSize, PCSTProxy, iPCSTProxyParam, NULL, (uint*)&dwThreadId);
 		// Note : DO NOT use iPCSTProxyParam anymore, since ownership is transferred to the proxy (which frees it too)
@@ -438,6 +443,7 @@ XBSYSAPI EXPORTNUM(258) xboxkrnl::VOID NTAPI xboxkrnl::PsTerminateSystemThread
 {
 	LOG_FUNC_ONE_ARG(ExitStatus);
 
+	/*
 	// call thread notification routine(s)
 	if (g_iThreadNotificationCount != 0)
 	{
@@ -453,7 +459,7 @@ XBSYSAPI EXPORTNUM(258) xboxkrnl::VOID NTAPI xboxkrnl::PsTerminateSystemThread
 
 			pfnNotificationRoutine(FALSE);
 		}
-	}
+	}*/
 
 	_endthreadex(ExitStatus);
 	// ExitThread(ExitStatus);
