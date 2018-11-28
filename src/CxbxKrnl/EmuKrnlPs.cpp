@@ -130,7 +130,7 @@ static unsigned int WINAPI PCSTProxy
 	HANDLE hStartedEvent = iPCSTProxyParam->hStartedEvent;
 
 	// Once deleted, unable to directly access iPCSTProxyParam in remainder of function.
-	delete iPCSTProxyParam;
+	free(iPCSTProxyParam);
 
 	LOG_PCSTProxy(
 		StartRoutine,
@@ -145,9 +145,9 @@ static unsigned int WINAPI PCSTProxy
 
 	SetEvent(hStartedEvent);
 
-	if (StartSuspended == TRUE)
-		// Suspend right before calling the thread notification routines
+	if (StartSuspended == TRUE) {
 		SuspendThread(GetCurrentThread());
+	}
 
 	auto routine = (xboxkrnl::PKSYSTEM_ROUTINE)SystemRoutine;
 	__try
@@ -265,29 +265,30 @@ XBSYSAPI EXPORTNUM(255) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PsCreateSystemThreadE
 	if (KernelStackSize < KERNEL_STACK_SIZE)
 		KernelStackSize = KERNEL_STACK_SIZE;
 
+	// Double the stack size, this is to account for the overhead HLE patching adds to the stack
+	KernelStackSize *= 2;
+
 	// round up to the next page boundary if un-aligned
 	KernelStackSize = RoundUp(KernelStackSize, PAGE_SIZE);
-
-    static bool bFirstTime = false;
 
     // create thread, using our special proxy technique
     {
         DWORD dwThreadId = 0, dwThreadWait;
         bool bWait = true;
-		HANDLE hStartedEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
+		HANDLE hStartedEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
 		if (hStartedEvent == NULL) {
 			std::string errorMessage = CxbxGetLastErrorString("PsCreateSystemThreadEx could not create PCSTProxyEvent");
 			CxbxKrnlCleanup(errorMessage.c_str());
 		}
 
         // PCSTProxy is responsible for cleaning up this pointer
-        ::PCSTProxyParam *iPCSTProxyParam = new ::PCSTProxyParam();
+		PCSTProxyParam *iPCSTProxyParam = (PCSTProxyParam*)malloc(sizeof(PCSTProxyParam));
 
         iPCSTProxyParam->StartRoutine = StartRoutine;
         iPCSTProxyParam->StartContext = StartContext;
         iPCSTProxyParam->SystemRoutine = SystemRoutine; // NULL, XapiThreadStartup or unknown?
         iPCSTProxyParam->StartSuspended = CreateSuspended;
-	        iPCSTProxyParam->hStartedEvent = hStartedEvent;
+	    iPCSTProxyParam->hStartedEvent = hStartedEvent;
 
 		/*
 		// call thread notification routine(s)
