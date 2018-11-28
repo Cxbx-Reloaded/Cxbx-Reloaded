@@ -149,25 +149,10 @@ static unsigned int WINAPI PCSTProxy
 		// Suspend right before calling the thread notification routines
 		SuspendThread(GetCurrentThread());
 
-	// use the special calling convention
+	auto routine = (xboxkrnl::PKSYSTEM_ROUTINE)SystemRoutine;
 	__try
 	{
-		// Given the non-standard calling convention (requiring
-		// the first argument in ebp+4) we need the below __asm.
-		//
-		// Otherwise, this call would have looked something like this :
-		// ((xboxkrnl::PKSYSTEM_ROUTINE)SystemRoutine)(
-		//	  (xboxkrnl::PKSTART_ROUTINE)StartRoutine, 
-		//	  StartContext);
-		__asm
-		{
-			mov         esi, SystemRoutine
-			push        StartContext
-			push        StartRoutine
-			push        offset callComplete
-			lea         ebp, [esp - 4]
-			jmp near    esi
-		}
+		routine(xboxkrnl::PKSTART_ROUTINE(StartRoutine), StartContext);
 	}
 	__except (EmuException(GetExceptionInformation()))
 	{
