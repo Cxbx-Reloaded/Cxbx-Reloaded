@@ -852,19 +852,24 @@ VAddr VMManager::AllocateSystemMemory(PageType BusyType, DWORD Perms, size_t Siz
 	PMMPTE EndingPte;
 	PFN pfn;
 	PFN EndingPfn;
-	PFN LowestAcceptablePfn = 0;
-	PFN HighestAcceptablePfn = XBOX_HIGHEST_PHYSICAL_PAGE;
+	PFN LowestAcceptablePfn;
+	PFN HighestAcceptablePfn;
 	PFN_COUNT PteNumber;
 	PFN_COUNT PagesNumber;
 	VAddr addr;
 	MappingFn MappingRoutine;
-	bool bVAlloc = false;
-	MemoryRegionType MemoryType = SystemRegion;
+	bool bVAlloc;
+	MemoryRegionType MemoryType;
 
 	// NOTE: AllocateSystemMemory won't allocate a physical page for the guard page (if requested) and just adds an extra
 	// unallocated virtual page in front of the mapped allocation. For this reason we will decommmit later the extra guard page allocated
 
 	if (!Size || !ConvertXboxToSystemPteProtection(Perms, &TempPte)) { RETURN(NULL); }
+
+	LowestAcceptablePfn = 0;
+	HighestAcceptablePfn = m_MmLayoutDebug ? XBOX_HIGHEST_PHYSICAL_PAGE : m_HighestPage;
+	bVAlloc = false;
+	MemoryType = SystemRegion;
 
 	Lock();
 
