@@ -149,9 +149,9 @@ static unsigned int WINAPI PCSTProxy
 		SuspendThread(GetCurrentThread());
 	}
 
-	auto routine = (xboxkrnl::PKSYSTEM_ROUTINE)SystemRoutine;
 	__try
 	{
+		auto routine = (xboxkrnl::PKSYSTEM_ROUTINE)SystemRoutine;
 		routine(xboxkrnl::PKSTART_ROUTINE(StartRoutine), StartContext);
 	}
 	__except (EmuException(GetExceptionInformation()))
@@ -159,9 +159,8 @@ static unsigned int WINAPI PCSTProxy
 		EmuLog(LOG_LEVEL::WARNING, "Problem with ExceptionFilter!");
 	}
 
-callComplete:
-
 	// This will also handle thread notification :
+	LOG_TEST_CASE("Thread returned from SystemRoutine");
 	xboxkrnl::PsTerminateSystemThread(STATUS_SUCCESS);
 
 	return 0; // will never be reached
@@ -354,6 +353,9 @@ XBSYSAPI EXPORTNUM(255) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PsCreateSystemThreadE
 		if (ThreadId != NULL)
 			*ThreadId = (xboxkrnl::HANDLE)dwThreadId;
 	}
+
+	SwitchToThread();
+	Sleep(10);
 
 	RETURN(STATUS_SUCCESS);
 }
