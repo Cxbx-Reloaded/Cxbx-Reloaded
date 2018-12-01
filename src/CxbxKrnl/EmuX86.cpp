@@ -3297,7 +3297,7 @@ bool EmuX86_DecodeException(LPEXCEPTION_POINTERS e)
 				if (EmuX86_Opcode_XOR(e, info)) break;
 				goto opcode_error;
 			default:
-				EmuLog(LOG_LEVEL::WARNING, "Unhandled instruction : %s (%u)", Distorm_OpcodeString(info.opcode), info.opcode);
+				EmuLog(LOG_LEVEL::DEBUG, "Unhandled instruction : %s (%u)", Distorm_OpcodeString(info.opcode), info.opcode);
 				// HACK: If we hit an unhandled instruction, log and skip it
 				e->ContextRecord->Eip += info.size;
 				return true;

@@ -2264,6 +2264,11 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_Pause)
 		LOG_FUNC_ARG(dwPause)
 		LOG_FUNC_END;
 
+	if (!pThis) {
+		LOG_TEST_CASE("CDirectSoundStream_Pause called with pThis = nullptr");
+		return STATUS_SUCCESS;
+	}
+
     return HybridDirectSoundBuffer_Pause(pThis->EmuDirectSoundBuffer8, dwPause, pThis->EmuFlags, pThis->EmuPlayFlags,
                                         pThis->Host_isProcessing, 0LL, pThis->Xb_rtPauseEx);
 }
