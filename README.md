@@ -12,7 +12,7 @@ Cxbx-Reloaded is an emulator for running Microsoft Xbox (and eventually, Chihiro
   * GPU: Anything that supports Direct3D 9 (HLE) and OpenGL 3.3 (LLE).
 
 ### Prerequisites
-  * Visual C++ 2015 and 2017 redistributables may be required. Download them [here](https://support.microsoft.com/en-gb/help/2977003/the-latest-supported-visual-c-downloads).
+  * Visual C++ 2015 and 2017 redistributables are required. Most people should already have these, but if not, Download them [here](https://support.microsoft.com/en-gb/help/2977003/the-latest-supported-visual-c-downloads). Make sure to install the 32-bit version even if you are on a 64-bit machine, as the 64-bit build does not include both!
   
 ## Automated Builds
 Cxbx-Reloaded is not yet ready for general release, but the latest development builds can be downloaded using the links below:
