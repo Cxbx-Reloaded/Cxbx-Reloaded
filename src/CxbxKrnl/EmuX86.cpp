@@ -492,7 +492,9 @@ bool EmuX86_Operand_Addr_ForReadOnly(const LPEXCEPTION_POINTERS e, const _DInst&
 	}
 	case O_DISP: // memory dereference with displacement only, instruction.disp.
 	{
-		assert(opAddr.size == sizeof(uint32_t));
+		// Disabled as software is expected to hit this situaton, eg:
+		// TEST byte ptr DS:[FEF00098h],1
+		//assert(opAddr.size == sizeof(uint32_t));
 
 		opAddr.is_internal_addr = false;
 		opAddr.addr = EmuX86_Distorm_read_disp(info);
@@ -2779,7 +2781,7 @@ void output_value_disp(std::stringstream &output, _DInst &info)
 		assert(nibbles == 2 || nibbles == 4 || nibbles == 8);
 		if ((int32_t)value < 0) {
 			output << '-';
-			output_value(output, nibbles, -value);
+			output_value(output, nibbles, value);
 		}
 		else {
 			output << '+';

@@ -858,7 +858,7 @@ static void VshWriteShader(VSH_XBOX_SHADER *pShader,
 
 	if (Truncate) {
 		DisassemblyPos += sprintf(pDisassembly + DisassemblyPos, "; Input usage declarations --\n");
-		int i = 0;
+		unsigned i = 0;
 		do {
 			if (RegVUsage[i]) {
 				DWORD PCUsageIndex = DeclAddressUsages[i][1];
@@ -1306,9 +1306,6 @@ static boolean DxbxFixupScalarParameter(VSH_SHADER_INSTRUCTION *pInstruction,
     VSH_PARAMETER *pParameter)
 {
     boolean Result;
-    int i;
-    boolean WIsWritten;
-    boolean XIsWritten;
 
     // The DirectX vertex shader language specifies that the exp, log, rcc, rcp, and rsq instructions
     // all operate on the "w" component of the input. But the microcode versions of these instructions
@@ -1796,7 +1793,7 @@ XTL::D3DDECLUSAGE Xb2PCRegisterType
 (
 	DWORD VertexRegister,
 	boolean IsFixedFunction,
-	DWORD& PCUsageIndex
+	BYTE& PCUsageIndex
 )
 {
 	using namespace XTL;
@@ -1892,7 +1889,7 @@ static inline DWORD VshGetVertexRegisterIn(DWORD Token)
     return (Token & X_D3DVSD_VERTEXREGINMASK) >> X_D3DVSD_VERTEXREGINSHIFT;
 }
 
-static inline DWORD VshGetVertexStream(DWORD Token)
+static inline WORD VshGetVertexStream(DWORD Token)
 {
     return (Token & X_D3DVSD_STREAMNUMBERMASK) >> X_D3DVSD_STREAMNUMBERSHIFT;
 }
@@ -1936,7 +1933,7 @@ static void VshConvertToken_TESSELATOR(
 )
 {
     using namespace XTL;
-	DWORD Index;
+	BYTE Index;
 
     // TODO: Investigate why Xb2PCRegisterType is only used for fixed function vertex shaders
     if(*pToken & X_D3DVSD_MASK_TESSUV)
@@ -2030,7 +2027,7 @@ static void VshConvertToken_STREAMDATA_SKIP(
 {
     using namespace XTL;
 
-    XTL::DWORD SkipCount = (*pToken & X_D3DVSD_SKIPCOUNTMASK) >> X_D3DVSD_SKIPCOUNTSHIFT;
+    XTL::WORD SkipCount = (*pToken & X_D3DVSD_SKIPCOUNTMASK) >> X_D3DVSD_SKIPCOUNTSHIFT;
     DbgVshPrintf("\tD3DVSD_SKIP(%d),\n", SkipCount);
 	pPatchData->pCurrentVertexShaderStreamInfo->HostVertexStride += (SkipCount * sizeof(DWORD));
 }
@@ -2043,7 +2040,7 @@ static void VshConvertToken_STREAMDATA_SKIPBYTES(
 {
     using namespace XTL;
 
-    XTL::DWORD SkipBytesCount = (*pToken & X_D3DVSD_SKIPCOUNTMASK) >> X_D3DVSD_SKIPCOUNTSHIFT;
+    XTL::WORD SkipBytesCount = (*pToken & X_D3DVSD_SKIPCOUNTMASK) >> X_D3DVSD_SKIPCOUNTSHIFT;
 
     DbgVshPrintf("\tD3DVSD_SKIPBYTES(%d), /* xbox ext. */\n", SkipBytesCount);
     if (SkipBytesCount % sizeof(XTL::DWORD)) {
@@ -2065,18 +2062,18 @@ static void VshConvertToken_STREAMDATA_REG(
 	extern XTL::D3DCAPS g_D3DCaps;
 
 	XTL::DWORD VertexRegister = VshGetVertexRegister(*pToken);
-	XTL::DWORD HostVertexRegister;
+	XTL::BYTE HostVertexRegister;
 	XTL::BOOL NeedPatching = FALSE;
-	XTL::DWORD Index;
+	XTL::BYTE Index;
 
 	DbgVshPrintf("\t\tD3DVSD_REG(");
-	DWORD XboxVertexRegister = Xb2PCRegisterType(VertexRegister, IsFixedFunction, Index);
+	BYTE XboxVertexRegister = Xb2PCRegisterType(VertexRegister, IsFixedFunction, Index);
 	HostVertexRegister = XboxVertexRegister;
 	DbgVshPrintf(", ");
 
 	XTL::DWORD XboxVertexElementDataType = (*pToken & X_D3DVSD_DATATYPEMASK) >> X_D3DVSD_DATATYPESHIFT;
-	XTL::DWORD HostVertexElementDataType = 0;
-	XTL::DWORD HostVertexElementByteSize = 0;
+	XTL::BYTE HostVertexElementDataType = 0;
+	XTL::WORD HostVertexElementByteSize = 0;
 
 	switch (XboxVertexElementDataType)
 	{
