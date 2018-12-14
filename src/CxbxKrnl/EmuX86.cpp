@@ -2781,7 +2781,7 @@ void output_value_disp(std::stringstream &output, _DInst &info)
 		assert(nibbles == 2 || nibbles == 4 || nibbles == 8);
 		if ((int32_t)value < 0) {
 			output << '-';
-			output_value(output, nibbles, -value);
+			output_value(output, nibbles, value);
 		}
 		else {
 			output << '+';

@@ -1963,7 +1963,7 @@ XBSYSAPI EXPORTNUM(158) xboxkrnl::NTSTATUS NTAPI xboxkrnl::KeWaitForMultipleObje
 			WaitSatisfied = TRUE;
 			Thread->WaitStatus = STATUS_SUCCESS;
 
-			for (LONG Index = 0; Index < Count; Index += 1) {
+			for (ULONG Index = 0; Index < Count; Index += 1) {
 				ObjectMutant = (PKMUTANT)Object[Index];
 				if (WaitType == WaitAny) {
 					if (ObjectMutant->Header.Type == MutantObject) {

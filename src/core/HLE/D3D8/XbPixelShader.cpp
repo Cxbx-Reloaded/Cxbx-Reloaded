@@ -2862,7 +2862,7 @@ bool PSH_XBOX_SHADER::DecodeTextureModes(XTL::X_D3DPIXELSHADERDEF *pPSDef)
   }
   if (Result)
   {
-      for (int i = 0; i < InsertIns.size(); ++i)
+      for (unsigned i = 0; i < InsertIns.size(); ++i)
       {
           if (i >= XTL::X_D3DTS_STAGECOUNT || InsertIns[i].Opcode != PO_COMMENT)
           {

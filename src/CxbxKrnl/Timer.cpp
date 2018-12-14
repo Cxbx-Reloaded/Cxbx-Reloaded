@@ -66,7 +66,7 @@ inline uint64_t GetTime_NS(TimerObject* Timer)
 #ifdef _WIN32
 	LARGE_INTEGER li;
 	QueryPerformanceCounter(&li);
-	uint64_t Ret = Muldiv64(li.QuadPart, SCALE_S, ClockFrequency);
+	uint64_t Ret = Muldiv64(li.QuadPart, (uint32_t)SCALE_S, ClockFrequency);
 #elif __linux__
 	static struct timespec ts;
 	clock_gettime(CLOCK_MONOTONIC_RAW, &ts);
