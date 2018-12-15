@@ -293,7 +293,7 @@
     <ClCompile Include="..\..\src\Common\Win32\XBPortMapping.cpp">
       <Filter>Emulator</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\Cxbx\CxbxXbdm.cpp">
+    <ClCompile Include="..\..\src\common\xbdm\CxbxXbdm.cpp">
       <Filter>Kernel</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\Common\Win32\InlineFunc.cpp">
@@ -554,7 +554,7 @@
     <ClInclude Include="..\..\src\CxbxKrnl\EmuKrnlAvModes.h">
       <Filter>Kernel</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\Cxbx\CxbxXbdm.h">
+    <ClInclude Include="..\..\src\common\xbdm\CxbxXbdm.h">
       <Filter>Kernel</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\CxbxKrnl\gloffscreen\glextensions.h">

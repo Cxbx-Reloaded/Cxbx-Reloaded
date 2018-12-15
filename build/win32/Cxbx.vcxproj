@@ -257,7 +257,7 @@
     <ClInclude Include="..\..\src\CxbxKrnl\Timer.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\VMManager.h" />
     <ClInclude Include="..\..\src\CxbxVersion.h" />
-    <ClInclude Include="..\..\src\Cxbx\CxbxXbdm.h" />
+    <ClInclude Include="..\..\src\common\xbdm\CxbxXbdm.h" />
     <ClInclude Include="..\..\src\Cxbx\DlgAbout.h" />
     <ClInclude Include="..\..\src\Cxbx\DlgAudioConfig.h" />
     <ClInclude Include="..\..\src\Cxbx\DlgControllerConfig.h" />
@@ -464,7 +464,7 @@
     </ClCompile>
     <ClCompile Include="..\..\src\CxbxKrnl\Timer.cpp" />
     <ClCompile Include="..\..\src\CxbxKrnl\VMManager.cpp" />
-    <ClCompile Include="..\..\src\Cxbx\CxbxXbdm.cpp" />
+    <ClCompile Include="..\..\src\common\xbdm\CxbxXbdm.cpp" />
     <ClCompile Include="..\..\src\Cxbx\DlgAbout.cpp" />
     <ClCompile Include="..\..\src\Cxbx\DlgAudioConfig.cpp" />
     <ClCompile Include="..\..\src\Cxbx\DlgControllerConfig.cpp">

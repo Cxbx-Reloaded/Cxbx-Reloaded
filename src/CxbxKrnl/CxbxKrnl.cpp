@@ -46,7 +46,7 @@ namespace xboxkrnl
 
 #include "Cxbx\ResCxbx.h"
 #include "CxbxKrnl.h"
-#include "Cxbx\CxbxXbdm.h" // For Cxbx_LibXbdmThunkTable
+#include "common\xbdm\CxbxXbdm.h" // For Cxbx_LibXbdmThunkTable
 #include "CxbxVersion.h"
 #include "Emu.h"
 #include "EmuX86.h"
