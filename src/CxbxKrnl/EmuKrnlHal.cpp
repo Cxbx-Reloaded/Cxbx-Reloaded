@@ -51,7 +51,7 @@ namespace xboxkrnl
 #include "CxbxKrnl.h" // For CxbxKrnlCleanup, CxbxConvertArgToString, and CxbxExec
 #include "Emu.h" // For EmuLog(LOG_LEVEL::WARNING, )
 #include "EmuKrnl.h"
-#include "EmuX86.h" // HalReadWritePciSpace needs this
+#include "devices\x86\EmuX86.h" // HalReadWritePciSpace needs this
 #include "EmuShared.h"
 #include "EmuFile.h" // For FindNtSymbolicLinkObjectByDriveLetter
 #include "Common\EmuEEPROM.h" // For EEPROM

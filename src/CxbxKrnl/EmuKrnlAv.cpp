@@ -55,7 +55,7 @@ namespace NtDll
 
 #include "Emu.h" // For EmuLog(LOG_LEVEL::WARNING, )
 #include "EmuXTL.h"
-#include "EmuX86.h"
+#include "devices\x86\EmuX86.h"
 
 #include "EmuKrnlAvModes.h"
 #include "devices\Xbox.h" // For g_NV2A

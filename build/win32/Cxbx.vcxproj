@@ -238,7 +238,7 @@
     <ClInclude Include="..\..\src\CxbxKrnl\EmuNtDll.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\EmuRsa.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\EmuSha.h" />
-    <ClInclude Include="..\..\src\CxbxKrnl\EmuX86.h" />
+    <ClInclude Include="..\..\src\devices\x86\EmuX86.h" />
     <ClInclude Include="..\..\src\core\HLE\XACTENG\XactEng.h" />
     <ClInclude Include="..\..\src\core\HLE\XAPI\Xapi.h" />
     <ClInclude Include="..\..\src\core\HLE\XGRAPHIC\XGraphic.h" />
@@ -436,7 +436,7 @@
     </ClCompile>
     <ClCompile Include="..\..\src\CxbxKrnl\EmuRsa.cpp" />
     <ClCompile Include="..\..\src\CxbxKrnl\EmuSha.cpp" />
-    <ClCompile Include="..\..\src\CxbxKrnl\EmuX86.cpp" />
+    <ClCompile Include="..\..\src\devices\x86\EmuX86.cpp" />
     <ClCompile Include="..\..\src\core\HLE\XACTENG\XactEng.cpp" />
     <ClCompile Include="..\..\src\core\HLE\XAPI\Xapi.cpp" />
     <ClCompile Include="..\..\src\core\HLE\XGRAPHIC\XGraphic.cpp" />

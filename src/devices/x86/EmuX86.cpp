@@ -47,9 +47,9 @@
 #include "distorm.h"
 #include "mnemonics.h"
 
-#include "CxbxKrnl.h"
-#include "Emu.h" // For EmuLog
-#include "EmuX86.h"
+#include "CxbxKrnl\CxbxKrnl.h"
+#include "CxbxKrnl\Emu.h" // For EmuLog
+#include "devices\x86\EmuX86.h"
 #include "core/HLE/Intercept.hpp" // for bLLE_GPU
 
 #include <assert.h>

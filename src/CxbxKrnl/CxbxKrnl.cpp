@@ -49,7 +49,7 @@ namespace xboxkrnl
 #include "common\xbdm\CxbxXbdm.h" // For Cxbx_LibXbdmThunkTable
 #include "CxbxVersion.h"
 #include "Emu.h"
-#include "EmuX86.h"
+#include "devices\x86\EmuX86.h"
 #include "EmuFile.h"
 #include "EmuFS.h"
 #include "EmuEEPROM.h" // For CxbxRestoreEEPROM, EEPROM, XboxFactoryGameRegion
@@ -60,7 +60,6 @@ namespace xboxkrnl
 #include "ReservedMemory.h" // For virtual_memory_placeholder
 #include "VMManager.h"
 #include "CxbxDebugger.h"
-#include "EmuX86.h"
 
 #include <clocale>
 #include <process.h>

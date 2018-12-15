@@ -43,7 +43,7 @@ namespace xboxkrnl
 
 #include "CxbxKrnl.h"
 #include "Emu.h"
-#include "EmuX86.h"
+#include "devices\x86\EmuX86.h"
 #include "EmuFS.h"
 #include "EmuXTL.h"
 #include "EmuShared.h"

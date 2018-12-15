@@ -260,7 +260,7 @@
     <ClCompile Include="..\..\src\devices\video\nv2a_debug.cpp">
       <Filter>Hardware\Video</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\CxbxKrnl\EmuX86.cpp">
+    <ClCompile Include="..\..\src\devices\x86\EmuX86.cpp">
       <Filter>Hardware\X86</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\CxbxKrnl\EmuRsa.cpp">
@@ -569,7 +569,7 @@
     <ClInclude Include="..\..\src\devices\ADM1032Device.h">
       <Filter>Hardware</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\CxbxKrnl\EmuX86.h">
+    <ClInclude Include="..\..\src\devices\x86\EmuX86.h">
       <Filter>Hardware\X86</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\CxbxKrnl\EmuRsa.h">
