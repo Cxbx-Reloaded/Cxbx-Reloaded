@@ -230,12 +230,12 @@
     <ClInclude Include="..\..\src\core\HLE\XAPI\OHCI\XInput\DInput.h" />
     <ClInclude Include="..\..\src\core\HLE\DSOUND\DirectSound\DirectSound.hpp" />
     <ClInclude Include="..\..\src\core\HLE\DSOUND\DirectSound\DirectSoundInline.hpp" />
-    <ClInclude Include="..\..\src\CxbxKrnl\EmuFile.h" />
-    <ClInclude Include="..\..\src\CxbxKrnl\EmuFS.h" />
+    <ClInclude Include="..\..\src\core\kernel\support\EmuFile.h" />
+    <ClInclude Include="..\..\src\core\kernel\support\EmuFS.h" />
     <ClInclude Include="..\..\src\core\kernel\exports\EmuKrnlAvModes.h" />
     <ClInclude Include="..\..\src\core\kernel\exports\EmuKrnlKi.h" />
     <ClInclude Include="..\..\src\core\kernel\exports\EmuKrnlLogging.h" />
-    <ClInclude Include="..\..\src\CxbxKrnl\EmuNtDll.h" />
+    <ClInclude Include="..\..\src\core\kernel\support\EmuNtDll.h" />
     <ClInclude Include="..\..\src\common\crypto\EmuRsa.h" />
     <ClInclude Include="..\..\src\common\crypto\EmuSha.h" />
     <ClInclude Include="..\..\src\devices\x86\EmuX86.h" />
@@ -244,7 +244,7 @@
     <ClInclude Include="..\..\src\core\HLE\XGRAPHIC\XGraphic.h" />
     <ClInclude Include="..\..\src\core\HLE\XAPI\OHCI\XInput\XInput.h" />
     <ClInclude Include="..\..\src\core\HLE\XONLINE\XOnline.h" />
-    <ClInclude Include="..\..\src\CxbxKrnl\EmuXTL.h" />
+    <ClInclude Include="..\..\src\core\kernel\support\EmuXTL.h" />
     <ClInclude Include="..\..\src\common\util\gloffscreen\glextensions.h" />
     <ClInclude Include="..\..\src\common\util\gloffscreen\gloffscreen.h" />
     <ClInclude Include="..\..\src\core\HLE\Intercept.hpp" />
@@ -252,7 +252,7 @@
     <ClInclude Include="..\..\src\common\crypto\LibRc4.h" />
     <ClInclude Include="..\..\src\core\kernel\memory-manager\PhysicalMemory.h" />
     <ClInclude Include="..\..\src\core\kernel\memory-manager\PoolManager.h" />
-    <ClInclude Include="..\..\src\CxbxKrnl\ReservedMemory.h" />
+    <ClInclude Include="..\..\src\common\ReservedMemory.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\ResourceTracker.h" />
     <ClInclude Include="..\..\src\devices\usb\Timer.h" />
     <ClInclude Include="..\..\src\core\kernel\memory-manager\VMManager.h" />
@@ -264,7 +264,7 @@
     <ClInclude Include="..\..\src\gui\DlgEepromConfig.h" />
     <ClInclude Include="..\..\src\gui\DlgLoggingConfig.h" />
     <ClInclude Include="..\..\src\gui\DlgVideoConfig.h" />
-    <ClInclude Include="..\..\src\CxbxKrnl\Emu.h" />
+    <ClInclude Include="..\..\src\core\kernel\support\Emu.h" />
     <ClInclude Include="..\..\src\common\win32\EmuShared.h" />
     <ClInclude Include="..\..\src\common\Error.h" />
     <ClInclude Include="..\..\src\common\win32\Mutex.h" />
@@ -377,7 +377,7 @@
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
-    <ClCompile Include="..\..\src\CxbxKrnl\Emu.cpp">
+    <ClCompile Include="..\..\src\core\kernel\support\Emu.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -392,13 +392,13 @@
     <ClCompile Include="..\..\src\core\HLE\D3D8\XbVertexShader.cpp" />
     <ClCompile Include="..\..\src\core\HLE\XAPI\OHCI\XInput\DInput.cpp" />
     <ClCompile Include="..\..\src\core\HLE\DSOUND\DirectSound\DirectSound.cpp" />
-    <ClCompile Include="..\..\src\CxbxKrnl\EmuFile.cpp">
+    <ClCompile Include="..\..\src\core\kernel\support\EmuFile.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
-    <ClCompile Include="..\..\src\CxbxKrnl\EmuFS.cpp">
+    <ClCompile Include="..\..\src\core\kernel\support\EmuFS.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -428,7 +428,7 @@
     <ClCompile Include="..\..\src\core\kernel\exports\EmuKrnlXbox.cpp" />
     <ClCompile Include="..\..\src\core\kernel\exports\EmuKrnlXc.cpp" />
     <ClCompile Include="..\..\src\core\kernel\exports\EmuKrnlXe.cpp" />
-    <ClCompile Include="..\..\src\CxbxKrnl\EmuNtDll.cpp">
+    <ClCompile Include="..\..\src\core\kernel\support\EmuNtDll.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>

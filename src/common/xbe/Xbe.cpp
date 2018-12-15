@@ -49,7 +49,7 @@ namespace xboxkrnl
 #include "core\kernel\init\CxbxKrnl.h" // For CxbxKrnlPrintUEM
 #include "common\crypto\EmuSha.h" // For the SHA functions
 #include "common\crypto\EmuRsa.h" // For the RSA functions
-#include "CxbxKrnl/EmuXTL.h" // For LDT_FROM_DASHBOARD and CxbxInitWindow
+#include "core\kernel\support\EmuXTL.h" // For LDT_FROM_DASHBOARD and CxbxInitWindow
 
 namespace fs = std::experimental::filesystem;
 

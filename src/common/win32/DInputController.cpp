@@ -40,7 +40,7 @@
 #include "DInputController.h"
 
 #include "EmuShared.h"
-#include "CxbxKrnl/EmuXTL.h"
+#include "core\kernel\support\EmuXTL.h"
 
 // This is ridiculous
 #define FIELD_OFFSET(type,field)  ((ULONG)&(((type *)0)->field))

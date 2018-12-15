@@ -42,7 +42,7 @@
 #include <cstring>
 #include <windows.h>
 
-#include "CxbxKrnl/EmuXTL.h"
+#include "core\kernel\support\EmuXTL.h"
 #include "Common/Settings.hpp"
 /*
 // ******************************************************************

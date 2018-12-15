@@ -40,10 +40,10 @@
 #undef FIELD_OFFSET     // prevent macro redefinition warnings
 #include <windows.h>
 
-#include "CxbxKrnl/Emu.h"
-#include "CxbxKrnl/EmuFS.h"
+#include "core\kernel\support\Emu.h"
+#include "core\kernel\support\EmuFS.h"
 #include "Common/Logging.h"
-#include "CxbxKrnl/EmuXTL.h"
+#include "core\kernel\support\EmuXTL.h"
 #include "core/HLE/D3D8/XbD3D8Logging.h" // for log rendering of X_D3DFORMAT, etc.
 
 // ******************************************************************

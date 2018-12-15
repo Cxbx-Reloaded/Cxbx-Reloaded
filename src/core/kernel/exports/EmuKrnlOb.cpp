@@ -48,7 +48,7 @@ namespace xboxkrnl
 #include "EmuKrnlLogging.h"
 #include "core\kernel\init\CxbxKrnl.h" // For CxbxKrnlCleanup
 #include "EmuKrnl.h" // For OBJECT_TO_OBJECT_HEADER()
-#include "CxbxKrnl\EmuFile.h" // For EmuNtSymbolicLinkObject, NtStatusToString(), etc.
+#include "core\kernel\support\EmuFile.h" // For EmuNtSymbolicLinkObject, NtStatusToString(), etc.
 #include <cassert>
 
 #pragma warning(disable:4005) // Ignore redefined status values

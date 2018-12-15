@@ -36,8 +36,8 @@
 // ******************************************************************
 
 #include "core\kernel\init\CxbxKrnl.h"
-#include "CxbxKrnl/Emu.h"
-#include "CxbxKrnl/EmuXTL.h"
+#include "core\kernel\support\Emu.h"
+#include "core\kernel\support\EmuXTL.h"
 #include "Patches.hpp"
 #include "Intercept.hpp"
 

@@ -39,8 +39,8 @@
 
 #include <assert.h> // For assert()
 
-#include "CxbxKrnl/Emu.h"
-#include "CxbxKrnl/EmuXTL.h"
+#include "core\kernel\support\Emu.h"
+#include "core\kernel\support\EmuXTL.h"
 #include "XbD3D8Types.h" // For X_D3DFORMAT
 #include "CxbxKrnl/ResourceTracker.h"
 #include "devices/video/nv2a.h" // For g_NV2A, PGRAPHState

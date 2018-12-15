@@ -37,10 +37,10 @@
 #define _XBOXKRNL_DEFEXTRN_
 
 #include "core\kernel\init\CxbxKrnl.h"
-#include "CxbxKrnl\Emu.h"
+#include "core\kernel\support\Emu.h"
 #include "DbgConsole.h"
 #include "CxbxKrnl\ResourceTracker.h"
-#include "CxbxKrnl\EmuXTL.h"
+#include "core\kernel\support\EmuXTL.h"
 
 #include <conio.h>
 

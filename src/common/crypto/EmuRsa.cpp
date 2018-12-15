@@ -39,7 +39,7 @@
 #define LOG_PREFIX CXBXR_MODULE::RSA
 
 #include "EmuRsa.h"
-#include "CxbxKrnl\Emu.h" // For EmuLog
+#include "core\kernel\support\Emu.h" // For EmuLog
 #include <cstring>
 #include <assert.h>
 

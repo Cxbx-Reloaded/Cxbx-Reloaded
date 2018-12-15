@@ -37,10 +37,10 @@
 
 #define LOG_PREFIX CXBXR_MODULE::XONLINE
 
-#include "CxbxKrnl/Emu.h"
+#include "core\kernel\support\Emu.h"
 #include "Common/Logging.h"
-#include "CxbxKrnl/EmuFS.h"
-#include "CxbxKrnl/EmuXTL.h"
+#include "core\kernel\support\EmuFS.h"
+#include "core\kernel\support\EmuXTL.h"
 
 /*
 // ******************************************************************

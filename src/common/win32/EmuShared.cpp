@@ -36,7 +36,7 @@
 #define _XBOXKRNL_DEFEXTRN_
 
 #include "core\kernel\init\CxbxKrnl.h"
-#include "CxbxKrnl/Emu.h"
+#include "core\kernel\support\Emu.h"
 #include "EmuShared.h"
 
 #undef FIELD_OFFSET     // prevent macro redefinition warnings

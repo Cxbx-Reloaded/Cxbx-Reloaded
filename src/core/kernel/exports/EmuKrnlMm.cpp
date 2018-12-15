@@ -49,7 +49,7 @@ namespace xboxkrnl
 #include "EmuKrnl.h" // For DefaultLaunchDataPage
 #include "EmuKrnlLogging.h"
 #include "core\kernel\init\CxbxKrnl.h" // For CxbxKrnlCleanup
-#include "CxbxKrnl\Emu.h" // For EmuLog(LOG_LEVEL::WARNING, )
+#include "core\kernel\support\Emu.h" // For EmuLog(LOG_LEVEL::WARNING, )
 #include "core\kernel\memory-manager\VMManager.h"
 #include "EmuShared.h"
 #include <assert.h>
@@ -57,7 +57,7 @@ namespace xboxkrnl
 // prevent name collisions
 namespace NtDll
 {
-	#include "CxbxKrnl\EmuNtDll.h" // For NtAllocateVirtualMemory(), etc.
+	#include "core\kernel\support\EmuNtDll.h" // For NtAllocateVirtualMemory(), etc.
 };
 
 // ******************************************************************

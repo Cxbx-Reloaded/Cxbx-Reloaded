@@ -35,7 +35,7 @@
 #define EMUKRNL_H
 
 #include "core\kernel\init\CxbxKrnl.h"
-#include "CxbxKrnl\Emu.h"
+#include "core\kernel\support\Emu.h"
 
 // CONTAINING_RECORD macro
 // Gets the value of structure member (field - num1),given the type(MYSTRUCT, in this code) and the List_Entry head(temp, in this code)

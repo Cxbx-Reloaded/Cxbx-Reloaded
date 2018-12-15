@@ -103,7 +103,7 @@
     <ClCompile Include="..\..\src\gui\DbgConsole.cpp">
       <Filter>Emulator</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\CxbxKrnl\Emu.cpp">
+    <ClCompile Include="..\..\src\core\kernel\support\Emu.cpp">
       <Filter>Emulator</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\core\HLE\D3D8\Direct3D9\Direct3D9.cpp">
@@ -115,13 +115,13 @@
     <ClCompile Include="..\..\src\core\HLE\DSOUND\DirectSound\DirectSound.cpp">
       <Filter>core\HLE\DSOUND\DirectSound</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\CxbxKrnl\EmuFile.cpp">
+    <ClCompile Include="..\..\src\core\kernel\support\EmuFile.cpp">
       <Filter>Emulator</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\CxbxKrnl\EmuFS.cpp">
+    <ClCompile Include="..\..\src\core\kernel\support\EmuFS.cpp">
       <Filter>Emulator</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\CxbxKrnl\EmuNtDll.cpp">
+    <ClCompile Include="..\..\src\core\kernel\support\EmuNtDll.cpp">
       <Filter>Emulator</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\common\crypto\EmuSha.cpp">
@@ -356,7 +356,7 @@
     <ClInclude Include="..\..\src\Cxbx.h">
       <Filter>Shared</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\CxbxKrnl\Emu.h">
+    <ClInclude Include="..\..\src\core\kernel\support\Emu.h">
       <Filter>Shared</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\common\win32\EmuShared.h">
@@ -392,13 +392,13 @@
     <ClInclude Include="..\..\src\core\HLE\DSOUND\DirectSound\DirectSound.hpp">
       <Filter>core\HLE\DSOUND\DirectSound</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\CxbxKrnl\EmuFile.h">
+    <ClInclude Include="..\..\src\core\kernel\support\EmuFile.h">
       <Filter>Emulator</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\CxbxKrnl\EmuFS.h">
+    <ClInclude Include="..\..\src\core\kernel\support\EmuFS.h">
       <Filter>Emulator</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\CxbxKrnl\EmuNtDll.h">
+    <ClInclude Include="..\..\src\core\kernel\support\EmuNtDll.h">
       <Filter>Emulator</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\common\crypto\EmuSha.h">
@@ -419,7 +419,7 @@
     <ClInclude Include="..\..\src\core\HLE\XONLINE\XOnline.h">
       <Filter>core\HLE\XONLINE</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\CxbxKrnl\EmuXTL.h">
+    <ClInclude Include="..\..\src\core\kernel\support\EmuXTL.h">
       <Filter>Emulator</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\core\HLE\Intercept.hpp">
@@ -434,7 +434,7 @@
     <ClInclude Include="..\..\src\CxbxKrnl\ResourceTracker.h">
       <Filter>Emulator</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\CxbxKrnl\ReservedMemory.h">
+    <ClInclude Include="..\..\src\common\ReservedMemory.h">
       <Filter>Shared</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\common\win32\AlignPosfix1.h">

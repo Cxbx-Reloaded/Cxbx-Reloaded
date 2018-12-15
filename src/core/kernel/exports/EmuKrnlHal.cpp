@@ -49,11 +49,11 @@ namespace xboxkrnl
 #include "EmuKrnl.h" // For InitializeListHead(), etc.
 #include "EmuKrnlLogging.h"
 #include "core\kernel\init\CxbxKrnl.h" // For CxbxKrnlCleanup, CxbxConvertArgToString, and CxbxExec
-#include "CxbxKrnl\Emu.h" // For EmuLog(LOG_LEVEL::WARNING, )
+#include "core\kernel\support\Emu.h" // For EmuLog(LOG_LEVEL::WARNING, )
 #include "EmuKrnl.h"
 #include "devices\x86\EmuX86.h" // HalReadWritePciSpace needs this
 #include "EmuShared.h"
-#include "CxbxKrnl\EmuFile.h" // For FindNtSymbolicLinkObjectByDriveLetter
+#include "core\kernel\support\EmuFile.h" // For FindNtSymbolicLinkObjectByDriveLetter
 #include "Common\EmuEEPROM.h" // For EEPROM
 #include "devices\Xbox.h" // For g_SMBus, SMBUS_ADDRESS_SYSTEM_MICRO_CONTROLLER
 #include "devices\SMCDevice.h" // For SMC_COMMAND_SCRATCH

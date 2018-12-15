@@ -48,13 +48,13 @@ namespace xboxkrnl
 #include "common\util\CxbxUtil.h"
 #include "CxbxVersion.h"
 #include "core\kernel\init\CxbxKrnl.h"
-#include "CxbxKrnl/Emu.h"
-#include "CxbxKrnl/EmuFS.h"
+#include "core\kernel\support\Emu.h"
+#include "core\kernel\support\EmuFS.h"
 #include "EmuShared.h"
 #include "gui/DbgConsole.h"
 #include "CxbxKrnl/ResourceTracker.h"
 #include "core\kernel\memory-manager\VMManager.h" // for g_VMManager
-#include "CxbxKrnl/EmuXTL.h"
+#include "core\kernel\support\EmuXTL.h"
 #include "Logging.h"
 #include "../XbD3D8Logging.h"
 #include "core/HLE/Intercept.hpp" // for bLLE_GPU

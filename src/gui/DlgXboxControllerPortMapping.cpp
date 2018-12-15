@@ -43,7 +43,7 @@
 #include "../Common/Win32/XBPortMapping.h"
 #include "Windowsx.h"
 #include "ResCxbx.h"
-#include "CxbxKrnl/EmuXTL.h"
+#include "core\kernel\support\EmuXTL.h"
 
 
 /*! windows dialog procedure */

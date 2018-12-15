@@ -73,9 +73,9 @@
 
 #define LOG_PREFIX CXBXR_MODULE::PXSH
 
-#include "CxbxKrnl/Emu.h"
-#include "CxbxKrnl/EmuFS.h"
-#include "CxbxKrnl/EmuXTL.h"
+#include "core\kernel\support\Emu.h"
+#include "core\kernel\support\EmuFS.h"
+#include "core\kernel\support\EmuXTL.h"
 
 //#include <CxbxKrnl/EmuD3D8Types.h> // X_PSH_COMBINECOUNT
 

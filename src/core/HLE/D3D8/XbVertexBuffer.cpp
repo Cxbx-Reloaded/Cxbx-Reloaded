@@ -39,8 +39,8 @@
 
 #include "core\kernel\memory-manager\VMManager.h"
 #include "common\util\xxhash32.h" // For XXHash32::hash()
-#include "CxbxKrnl/Emu.h"
-#include "CxbxKrnl/EmuXTL.h"
+#include "core\kernel\support\Emu.h"
+#include "core\kernel\support\EmuXTL.h"
 #include "CxbxKrnl/ResourceTracker.h"
 
 #include <ctime>

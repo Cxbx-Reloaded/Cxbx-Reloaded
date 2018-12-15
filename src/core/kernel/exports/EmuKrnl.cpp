@@ -53,12 +53,12 @@ namespace xboxkrnl
 #include "EmuKrnl.h" // for HalSystemInterrupts
 #include "EmuKrnlKi.h" // for KiLockDispatcherDatabase
 #include "core\kernel\init\CxbxKrnl.h"
-#include "CxbxKrnl\EmuXTL.h"
+#include "core\kernel\support\EmuXTL.h"
 
 // prevent name collisions
 namespace NtDll
 {
-    #include "CxbxKrnl\EmuNtDll.h"
+    #include "core\kernel\support\EmuNtDll.h"
 };
 
 // See also :

@@ -64,8 +64,8 @@ namespace xboxkrnl
 #include <process.h> // For __beginthreadex(), etc.
 
 #include "core\kernel\init\CxbxKrnl.h" // For XBOX_MEMORY_SIZE, DWORD, etc
-#include "CxbxKrnl\Emu.h"
-#include "CxbxKrnl\EmuFS.h"
+#include "core\kernel\support\Emu.h"
+#include "core\kernel\support\EmuFS.h"
 #include "core\kernel\exports\EmuKrnl.h"
 #include "core/HLE/Intercept.hpp"
 #include "Logging.h"

@@ -50,7 +50,7 @@ namespace xboxkrnl
 };
 
 #include "core\kernel\init\CxbxKrnl.h"
-#include "CxbxKrnl\Emu.h"
+#include "core\kernel\support\Emu.h"
 #include "core\kernel\exports\EmuKrnl.h"
 
 #include "EmuNVNet.h"

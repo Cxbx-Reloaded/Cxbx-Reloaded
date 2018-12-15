@@ -50,14 +50,14 @@ namespace xboxkrnl
 // prevent name collisions
 namespace NtDll
 {
-	#include "CxbxKrnl\EmuNtDll.h" // For NtDelayExecution(), etc.
+	#include "core\kernel\support\EmuNtDll.h" // For NtDelayExecution(), etc.
 };
 
 #include "core\kernel\init\CxbxKrnl.h" // For CxbxKrnlCleanup
-#include "CxbxKrnl\Emu.h" // For EmuLog(LOG_LEVEL::WARNING, )
+#include "core\kernel\support\Emu.h" // For EmuLog(LOG_LEVEL::WARNING, )
 #include "EmuKrnl.h" // For InitializeListHead(), etc.
 #include "EmuKrnlKi.h" // For KiRemoveTreeTimer(), KiInsertTreeTimer()
-#include "CxbxKrnl\EmuFile.h" // For IsEmuHandle(), NtStatusToString()
+#include "core\kernel\support\EmuFile.h" // For IsEmuHandle(), NtStatusToString()
 
 #include <chrono>
 #include <thread>

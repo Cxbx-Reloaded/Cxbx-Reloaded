@@ -40,9 +40,9 @@
 #define _DEBUG_TRACK_VS
 
 #include "core\kernel\init\CxbxKrnl.h"
-#include "CxbxKrnl/Emu.h"
-#include "CxbxKrnl/EmuFS.h"
-#include "CxbxKrnl/EmuXTL.h"
+#include "core\kernel\support\Emu.h"
+#include "core\kernel\support\EmuFS.h"
+#include "core\kernel\support\EmuXTL.h"
 #include "XbD3D8Types.h" // For X_D3DVSDE_*
 #include <sstream>
 #include <unordered_map>

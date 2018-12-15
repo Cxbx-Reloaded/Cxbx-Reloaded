@@ -48,7 +48,7 @@ namespace xboxkrnl
 
 #include "Cxbx.h" // For DBG_PRINTF_EX
 #include "EmuEEPROM.h" // For EEPROMInfo, EEPROMInfos
-#include "..\CxbxKrnl\Emu.h" // For EmuWarning
+#include "core\kernel\support\Emu.h" // For EmuWarning
 #include "..\..\src\devices\LED.h" // For SetLEDSequence
 #include "..\core\kernel\init\CxbxKrnl.h"
 

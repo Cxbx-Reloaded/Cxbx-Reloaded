@@ -44,9 +44,9 @@
 #include <cmath>
 #include <iomanip> // For std::setfill and std::setw
 #include "core\kernel\init\CxbxKrnl.h"
-#include "CxbxKrnl/Emu.h"
-#include "CxbxKrnl/EmuFS.h"
-#include "CxbxKrnl/EmuXTL.h"
+#include "core\kernel\support\Emu.h"
+#include "core\kernel\support\EmuFS.h"
+#include "core\kernel\support\EmuXTL.h"
 #include "EmuShared.h"
 #include "Common/CxbxDebugger.h"
 #include "Logging.h"

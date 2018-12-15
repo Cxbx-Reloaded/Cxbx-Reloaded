@@ -36,7 +36,7 @@
 // ******************************************************************
 
 #include "Settings.hpp"
-#include "CxbxKrnl/Emu.h"
+#include "core\kernel\support\Emu.h"
 #include "EmuShared.h"
 #include <experimental/filesystem>
 

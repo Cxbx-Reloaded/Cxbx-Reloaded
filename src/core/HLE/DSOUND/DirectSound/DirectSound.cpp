@@ -46,10 +46,10 @@ namespace xboxkrnl {
 #include <dsound.h>
 #include <thread>
 #include "core\kernel\init\CxbxKrnl.h"
-#include "CxbxKrnl/Emu.h"
-#include "CxbxKrnl/EmuFS.h"
+#include "core\kernel\support\Emu.h"
+#include "core\kernel\support\EmuFS.h"
 #include "EmuShared.h"
-#include "CxbxKrnl/EmuXTL.h"
+#include "core\kernel\support\EmuXTL.h"
 #include "Common/Settings.hpp"
 
 

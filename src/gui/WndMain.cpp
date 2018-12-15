@@ -49,7 +49,7 @@
 #include "DlgXboxControllerPortMapping.h"
 #include "common\xbe\XbePrinter.h" // For DumpInformation
 #include "EmuShared.h"
-#include "CxbxKrnl/EmuXTL.h"
+#include "core\kernel\support\EmuXTL.h"
 #include "Common/Settings.hpp"
 
 #include "core\kernel\init\CxbxKrnl.h" // For CxbxConvertArgToString and CxbxExec

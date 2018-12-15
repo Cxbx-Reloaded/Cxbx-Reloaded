@@ -50,10 +50,10 @@ namespace xboxkrnl
 // prevent name collisions
 namespace NtDll
 {
-#include "CxbxKrnl\EmuNtDll.h"
+#include "core\kernel\support\EmuNtDll.h"
 };
 
-#include "CxbxKrnl\Emu.h" // For EmuLog(LOG_LEVEL::WARNING, )
+#include "core\kernel\support\Emu.h" // For EmuLog(LOG_LEVEL::WARNING, )
 
 #define FSCACHE_MAXIMUM_NUMBER_OF_CACHE_PAGES 2048
 

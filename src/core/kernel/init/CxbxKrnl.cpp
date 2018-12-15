@@ -48,14 +48,14 @@ namespace xboxkrnl
 #include "core\kernel\init\CxbxKrnl.h"
 #include "common\xbdm\CxbxXbdm.h" // For Cxbx_LibXbdmThunkTable
 #include "CxbxVersion.h"
-#include "CxbxKrnl\Emu.h"
+#include "core\kernel\support\Emu.h"
 #include "devices\x86\EmuX86.h"
-#include "CxbxKrnl\EmuFile.h"
-#include "CxbxKrnl\EmuFS.h"
+#include "core\kernel\support\EmuFile.h"
+#include "core\kernel\support\EmuFS.h"
 #include "EmuEEPROM.h" // For CxbxRestoreEEPROM, EEPROM, XboxFactoryGameRegion
 #include "core\kernel\exports\EmuKrnl.h"
 #include "EmuShared.h"
-#include "CxbxKrnl\EmuXTL.h"
+#include "core\kernel\support\EmuXTL.h"
 #include "core/HLE/Intercept.hpp"
 #include "ReservedMemory.h" // For virtual_memory_placeholder
 #include "core\kernel\memory-manager\VMManager.h"

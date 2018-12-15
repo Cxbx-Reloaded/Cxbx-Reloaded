@@ -38,8 +38,8 @@
 
 #define LOG_PREFIX CXBXR_MODULE::D3DCVT
 
-#include "CxbxKrnl/Emu.h"
-#include "CxbxKrnl/EmuXTL.h"
+#include "core\kernel\support\Emu.h"
+#include "core\kernel\support\EmuXTL.h"
 #include "XbConvert.h"
 
 // About format color components:

@@ -51,11 +51,11 @@ namespace xboxkrnl
 // prevent name collisions
 namespace NtDll
 {
-	#include "CxbxKrnl\EmuNtDll.h"
+	#include "core\kernel\support\EmuNtDll.h"
 };
 
 #include "core\kernel\init\CxbxKrnl.h" // For CxbxKrnlCleanup()
-#include "CxbxKrnl\Emu.h" // For EmuLog(LOG_LEVEL::WARNING, )
+#include "core\kernel\support\Emu.h" // For EmuLog(LOG_LEVEL::WARNING, )
 #include <assert.h>
 
 #ifdef _WIN32

@@ -50,11 +50,11 @@ namespace xboxkrnl
 // prevent name collisions
 namespace NtDll
 {
-#include "CxbxKrnl\EmuNtDll.h"
+#include "core\kernel\support\EmuNtDll.h"
 };
 
-#include "CxbxKrnl\Emu.h" // For EmuLog(LOG_LEVEL::WARNING, )
-#include "CxbxKrnl\EmuXTL.h"
+#include "core\kernel\support\Emu.h" // For EmuLog(LOG_LEVEL::WARNING, )
+#include "core\kernel\support\EmuXTL.h"
 #include "devices\x86\EmuX86.h"
 
 #include "EmuKrnlAvModes.h"
