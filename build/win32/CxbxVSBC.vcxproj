@@ -152,16 +152,16 @@
     <None Include="CxbxVSBC.def" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\src\CxbxVSBC\CxbxVSBC.cpp" />
-    <ClCompile Include="..\..\src\CxbxVSBC\DlgVirtualSBCFeedback.cpp" />
-    <ClCompile Include="..\..\src\CxbxVSBC\dllmain.cpp" />
-    <ClCompile Include="..\..\src\CxbxVSBC\stdafx.cpp" />
+    <ClCompile Include="..\..\src\vsbc\CxbxVSBC.cpp" />
+    <ClCompile Include="..\..\src\vsbc\DlgVirtualSBCFeedback.cpp" />
+    <ClCompile Include="..\..\src\vsbc\dllmain.cpp" />
+    <ClCompile Include="..\..\src\vsbc\stdafx.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\src\CxbxVSBC\CxbxVSBC.h" />
-    <ClInclude Include="..\..\src\CxbxVSBC\DlgVirtualSBCFeedback.h" />
-    <ClInclude Include="..\..\src\CxbxVSBC\stdafx.h" />
-    <ClInclude Include="..\..\src\CxbxVSBC\targetver.h" />
+    <ClInclude Include="..\..\src\vsbc\CxbxVSBC.h" />
+    <ClInclude Include="..\..\src\vsbc\DlgVirtualSBCFeedback.h" />
+    <ClInclude Include="..\..\src\vsbc\stdafx.h" />
+    <ClInclude Include="..\..\src\vsbc\targetver.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
