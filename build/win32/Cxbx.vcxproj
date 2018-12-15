@@ -199,23 +199,23 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\common\util\CxbxCommon.h" />
-    <ClInclude Include="..\..\src\Common\Input\InputConfig.h" />
-    <ClInclude Include="..\..\src\Common\Input\SDL2_Device.h" />
-    <ClInclude Include="..\..\src\Common\IPCHybrid.hpp" />
-    <ClInclude Include="..\..\src\Common\Settings.hpp" />
-    <ClInclude Include="..\..\src\Common\Win32\Threads.h" />
-    <ClInclude Include="..\..\src\Common\CxbxDebugger.h" />
-    <ClInclude Include="..\..\src\Common\Win32\XBPortMapping.h" />
-    <ClInclude Include="..\..\src\Common\XADPCM.h" />
+    <ClInclude Include="..\..\src\common\input\InputConfig.h" />
+    <ClInclude Include="..\..\src\common\input\SDL2_Device.h" />
+    <ClInclude Include="..\..\src\common\IPCHybrid.hpp" />
+    <ClInclude Include="..\..\src\common\Settings.hpp" />
+    <ClInclude Include="..\..\src\common\win32\Threads.h" />
+    <ClInclude Include="..\..\src\common\CxbxDebugger.h" />
+    <ClInclude Include="..\..\src\common\win32\XBPortMapping.h" />
+    <ClInclude Include="..\..\src\common\XADPCM.h" />
     <ClInclude Include="..\..\src\common\xbe\XbePrinter.h" />
     <ClInclude Include="..\..\src\common\util\crc32c.h" />
     <ClInclude Include="..\..\src\core\HLE\D3D8\XbD3D8Logging.h" />
-    <ClInclude Include="..\..\src\Common\EmuEEPROM.h" />
-    <ClInclude Include="..\..\src\Common\Logging.h" />
-    <ClInclude Include="..\..\src\Common\Win32\AlignPosfix1.h" />
-    <ClInclude Include="..\..\src\Common\Win32\AlignPrefix1.h" />
-    <ClInclude Include="..\..\src\Common\XDVDFS Tools\buffered_io.h" />
-    <ClInclude Include="..\..\src\Common\XDVDFS Tools\xdvdfs.h" />
+    <ClInclude Include="..\..\src\common\EmuEEPROM.h" />
+    <ClInclude Include="..\..\src\common\Logging.h" />
+    <ClInclude Include="..\..\src\common\win32\AlignPosfix1.h" />
+    <ClInclude Include="..\..\src\common\win32\AlignPrefix1.h" />
+    <ClInclude Include="..\..\src\common\xdvdfs-tools\buffered_io.h" />
+    <ClInclude Include="..\..\src\common\xdvdfs-tools\xdvdfs.h" />
     <ClInclude Include="..\..\src\Cxbx.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\CxbxKrnl.h" />
     <ClInclude Include="..\..\src\gui\DbgConsole.h" />
@@ -265,14 +265,14 @@
     <ClInclude Include="..\..\src\gui\DlgLoggingConfig.h" />
     <ClInclude Include="..\..\src\gui\DlgVideoConfig.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\Emu.h" />
-    <ClInclude Include="..\..\src\CxbxKrnl\EmuShared.h" />
-    <ClInclude Include="..\..\src\Common\Error.h" />
-    <ClInclude Include="..\..\src\Common\Win32\Mutex.h" />
+    <ClInclude Include="..\..\src\common\win32\EmuShared.h" />
+    <ClInclude Include="..\..\src\common\Error.h" />
+    <ClInclude Include="..\..\src\common\win32\Mutex.h" />
     <ClInclude Include="..\..\src\gui\DlgXboxControllerPortMapping.h" />
     <ClInclude Include="..\..\src\gui\ResCxbx.h" />
     <ClInclude Include="..\..\src\gui\Wnd.h" />
     <ClInclude Include="..\..\src\gui\WndMain.h" />
-    <ClInclude Include="..\..\src\Common\Win32\DInputController.h" />
+    <ClInclude Include="..\..\src\common\win32\DInputController.h" />
     <ClInclude Include="..\..\src\common\xbe\Xbe.h" />
     <ClInclude Include="..\..\src\devices\ADM1032Device.h" />
     <ClInclude Include="..\..\src\devices\EEPROMDevice.h" />
@@ -343,27 +343,27 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\common\util\CxbxCommon.cpp" />
-    <ClCompile Include="..\..\src\Common\Input\InputConfig.cpp" />
-    <ClCompile Include="..\..\src\Common\Input\SDL2_Device.cpp" />
-    <ClCompile Include="..\..\src\Common\Settings.cpp" />
-    <ClCompile Include="..\..\src\Common\Win32\InlineFunc.cpp" />
-    <ClCompile Include="..\..\src\Common\Win32\IPCWindows.cpp" />
-    <ClCompile Include="..\..\src\Common\Win32\Threads.cpp" />
-    <ClCompile Include="..\..\src\Common\CxbxDebugger.cpp" />
-    <ClCompile Include="..\..\src\Common\Win32\XBPortMapping.cpp" />
+    <ClCompile Include="..\..\src\common\input\InputConfig.cpp" />
+    <ClCompile Include="..\..\src\common\input\SDL2_Device.cpp" />
+    <ClCompile Include="..\..\src\common\Settings.cpp" />
+    <ClCompile Include="..\..\src\common\win32\InlineFunc.cpp" />
+    <ClCompile Include="..\..\src\common\win32\IPCWindows.cpp" />
+    <ClCompile Include="..\..\src\common\win32\Threads.cpp" />
+    <ClCompile Include="..\..\src\common\CxbxDebugger.cpp" />
+    <ClCompile Include="..\..\src\common\win32\XBPortMapping.cpp" />
     <ClCompile Include="..\..\src\common\xbe\XbePrinter.cpp" />
     <ClCompile Include="..\..\src\common\util\crc32c.cpp" />
     <ClCompile Include="..\..\src\core\HLE\D3D8\XbD3D8Logging.cpp" />
-    <ClCompile Include="..\..\src\Common\EmuEEPROM.cpp" />
-    <ClCompile Include="..\..\src\Common\Logging.cpp" />
-    <ClCompile Include="..\..\src\Common\Win32\EmuShared.cpp">
+    <ClCompile Include="..\..\src\common\EmuEEPROM.cpp" />
+    <ClCompile Include="..\..\src\common\Logging.cpp" />
+    <ClCompile Include="..\..\src\common\win32\EmuShared.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
-    <ClCompile Include="..\..\src\Common\XDVDFS Tools\buffered_io.cpp" />
-    <ClCompile Include="..\..\src\Common\XDVDFS Tools\xdvdfs.cpp" />
+    <ClCompile Include="..\..\src\common\xdvdfs-tools\buffered_io.cpp" />
+    <ClCompile Include="..\..\src\common\xdvdfs-tools\xdvdfs.cpp" />
     <ClCompile Include="..\..\src\CxbxKrnl\CxbxKrnl.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -481,13 +481,13 @@
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
-    <ClCompile Include="..\..\src\Common\Error.cpp">
+    <ClCompile Include="..\..\src\common\Error.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
-    <ClCompile Include="..\..\src\Common\Win32\Mutex.cpp">
+    <ClCompile Include="..\..\src\common\win32\Mutex.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -512,7 +512,7 @@
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
-    <ClCompile Include="..\..\src\Common\Win32\DInputController.cpp">
+    <ClCompile Include="..\..\src\common\win32\DInputController.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>

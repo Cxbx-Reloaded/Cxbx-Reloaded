@@ -39,7 +39,7 @@
 
 #include "CxbxKrnl/Emu.h"
 #include "CxbxKrnl/EmuXTL.h"
-#include "CxbxKrnl/EmuShared.h"
+#include "EmuShared.h"
 #include "XInput.h"
 
 #include <xinput.h>

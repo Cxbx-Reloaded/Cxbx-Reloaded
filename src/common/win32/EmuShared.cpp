@@ -37,7 +37,7 @@
 
 #include "CxbxKrnl/CxbxKrnl.h"
 #include "CxbxKrnl/Emu.h"
-#include "CxbxKrnl/EmuShared.h"
+#include "EmuShared.h"
 
 #undef FIELD_OFFSET     // prevent macro redefinition warnings
 #include <windows.h>

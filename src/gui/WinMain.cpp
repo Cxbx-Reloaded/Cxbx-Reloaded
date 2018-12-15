@@ -38,7 +38,7 @@
 
 #include "CxbxKrnl/CxbxKrnl.h"
 #include "CxbxKrnl/Emu.h"
-#include "CxbxKrnl/EmuShared.h"
+#include "EmuShared.h"
 #include "Common/Settings.hpp"
 #include <commctrl.h>
 

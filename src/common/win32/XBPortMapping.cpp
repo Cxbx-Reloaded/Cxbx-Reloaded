@@ -44,7 +44,7 @@ namespace xboxkrnl
 };
 
 #include <Shlwapi.h>
-#include "CxbxKrnl/EmuShared.h"
+#include "EmuShared.h"
 #include "Common/Settings.hpp"
 #include "Logging.h"
 

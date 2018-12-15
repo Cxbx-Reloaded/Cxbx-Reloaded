@@ -38,7 +38,7 @@
 
 #include "Logging.h"
 #include "Common/Settings.hpp"
-#include "CxbxKrnl/EmuShared.h"
+#include "EmuShared.h"
 
 // For thread_local, see : http://en.cppreference.com/w/cpp/language/storage_duration
 // TODO : Use Boost.Format http://www.boost.org/doc/libs/1_53_0/libs/format/index.html

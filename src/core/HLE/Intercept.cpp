@@ -47,7 +47,7 @@
 #include "CxbxKrnl/Emu.h"
 #include "CxbxKrnl/EmuFS.h"
 #include "CxbxKrnl/EmuXTL.h"
-#include "CxbxKrnl/EmuShared.h"
+#include "EmuShared.h"
 #include "Common/CxbxDebugger.h"
 #include "Logging.h"
 #pragma comment(lib, "XbSymbolDatabase.lib")

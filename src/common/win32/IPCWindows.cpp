@@ -43,7 +43,7 @@
 #include "gui/ResCxbx.h"
 
 #include "Common/IPCHybrid.hpp"
-#include "CxbxKrnl/EmuShared.h"
+#include "EmuShared.h"
 #include "Common/Settings.hpp"
 #include "Logging.h"
 

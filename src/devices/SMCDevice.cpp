@@ -44,7 +44,7 @@ namespace xboxkrnl
 };
 
 #include "CxbxKrnl\CxbxKrnl.h"
-#include "CxbxKrnl\EmuShared.h"
+#include "EmuShared.h"
 
 #include "SMCDevice.h" // For SMCDevice
 #include "ADM1032Device.h" // For ADM1032Device

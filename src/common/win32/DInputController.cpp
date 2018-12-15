@@ -39,7 +39,7 @@
 
 #include "DInputController.h"
 
-#include "CxbxKrnl/EmuShared.h"
+#include "EmuShared.h"
 #include "CxbxKrnl/EmuXTL.h"
 
 // This is ridiculous

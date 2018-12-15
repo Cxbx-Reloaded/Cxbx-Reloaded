@@ -33,7 +33,7 @@
 // ******************************************************************
 
 #include "Logging.h"
-#include "CxbxKrnl/EmuShared.h"
+#include "EmuShared.h"
 #include "DlgLoggingConfig.h"
 #include "ResCxbx.h"
 #include "Common/IPCHybrid.hpp"

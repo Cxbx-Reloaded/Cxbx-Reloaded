@@ -48,7 +48,7 @@
 #include "DlgLoggingConfig.h"
 #include "DlgXboxControllerPortMapping.h"
 #include "common\xbe\XbePrinter.h" // For DumpInformation
-#include "CxbxKrnl/EmuShared.h"
+#include "EmuShared.h"
 #include "CxbxKrnl/EmuXTL.h"
 #include "Common/Settings.hpp"
 

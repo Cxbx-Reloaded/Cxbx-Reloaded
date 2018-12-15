@@ -33,7 +33,7 @@
 // ******************************************************************
 
 #include "Cxbx.h"
-#include "CxbxKrnl/EmuShared.h"
+#include "EmuShared.h"
 #include "CxbxDebugger.h"
 
 // Note this implementation uses SEH. See the reference docs for RaiseException:

@@ -50,7 +50,7 @@ namespace xboxkrnl
 #include "CxbxKrnl/CxbxKrnl.h"
 #include "CxbxKrnl/Emu.h"
 #include "CxbxKrnl/EmuFS.h"
-#include "CxbxKrnl/EmuShared.h"
+#include "EmuShared.h"
 #include "gui/DbgConsole.h"
 #include "CxbxKrnl/ResourceTracker.h"
 #include "CxbxKrnl/VMManager.h" // for g_VMManager

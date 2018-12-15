@@ -34,7 +34,7 @@
 // *
 // ******************************************************************
 
-#include "CxbxKrnl/EmuShared.h"
+#include "EmuShared.h"
 
 #include "CxbxVersion.h"
 #include "DlgAbout.h"

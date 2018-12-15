@@ -40,7 +40,7 @@ extern "C"
 {
 #endif
 
-#include "CxbxKrnl/EmuShared.h" // For XBE_MAX_VA, XBE_IMAGE_BASE and CXBX_BASE_OF_CODE
+#include "EmuShared.h" // For XBE_MAX_VA, XBE_IMAGE_BASE and CXBX_BASE_OF_CODE
 
 // The following code reserves virtual addresses from 0x00011000 upwards;
 #define VM_PLACEHOLDER_SIZE (XBE_MAX_VA - XBE_IMAGE_BASE - CXBX_BASE_OF_CODE)

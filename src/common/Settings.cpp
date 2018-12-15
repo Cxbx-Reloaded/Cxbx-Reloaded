@@ -37,7 +37,7 @@
 
 #include "Settings.hpp"
 #include "CxbxKrnl/Emu.h"
-#include "CxbxKrnl/EmuShared.h"
+#include "EmuShared.h"
 #include <experimental/filesystem>
 
 // TODO: Implement Qt support when real CPU emulation is available.
