@@ -41,7 +41,7 @@
 #include <iostream> // For std::cout
 #include <iomanip> // For std::setw
 #include <atomic> // For atomic_bool and atomic_uint
-#include "common\util\CxbxCommon.h" // For g_bPrintfOn and to_underlying
+#include "common\util\CxbxUtil.h" // For g_bPrintfOn and to_underlying
 
 typedef enum class _LOG_LEVEL {
 	DEBUG = 0,

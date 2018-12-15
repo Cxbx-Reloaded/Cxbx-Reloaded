@@ -49,7 +49,7 @@ namespace xboxkrnl
 
 #include "OHCI.h"
 #include "core\kernel\exports\EmuKrnl.h"  // For HalSystemInterrupt
-#include "common\util\CxbxCommon.h"
+#include "common\util\CxbxUtil.h"
 #include "Logging.h"
 
 /* Define these two if you want to dump usb packets */

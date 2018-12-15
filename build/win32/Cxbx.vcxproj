@@ -198,7 +198,7 @@
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\src\common\util\CxbxCommon.h" />
+    <ClInclude Include="..\..\src\common\util\CxbxUtil.h" />
     <ClInclude Include="..\..\src\common\input\InputConfig.h" />
     <ClInclude Include="..\..\src\common\input\SDL2_Device.h" />
     <ClInclude Include="..\..\src\common\IPCHybrid.hpp" />
@@ -342,7 +342,7 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\src\common\util\CxbxCommon.cpp" />
+    <ClCompile Include="..\..\src\common\util\CxbxUtil.cpp" />
     <ClCompile Include="..\..\src\common\input\InputConfig.cpp" />
     <ClCompile Include="..\..\src\common\input\SDL2_Device.cpp" />
     <ClCompile Include="..\..\src\common\Settings.cpp" />

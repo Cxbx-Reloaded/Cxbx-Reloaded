@@ -305,7 +305,7 @@
     <ClCompile Include="..\..\src\common\input\SDL2_Device.cpp">
       <Filter>Shared\Input</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\common\util\CxbxCommon.cpp">
+    <ClCompile Include="..\..\src\common\util\CxbxUtil.cpp">
       <Filter>Cross Platform</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\common\Settings.cpp">
@@ -611,7 +611,7 @@
     <ClInclude Include="..\..\src\common\input\SDL2_Device.h">
       <Filter>Shared\Input</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\common\util\CxbxCommon.h">
+    <ClInclude Include="..\..\src\common\util\CxbxUtil.h">
       <Filter>Cross Platform</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\common\Settings.hpp">

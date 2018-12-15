@@ -40,7 +40,7 @@
 #ifndef USBCOMMON_H_
 #define USBCOMMON_H_
 
-#include "common\util\CxbxCommon.h"
+#include "common\util\CxbxUtil.h"
 #include "..\devices\video\queue.h"
 #include <functional>
 

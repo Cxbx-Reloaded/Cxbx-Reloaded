@@ -53,7 +53,7 @@ namespace xboxkrnl
 #include "core\kernel\support\EmuFS.h"
 #include "core\kernel\support\EmuXTL.h"
 #include "EmuShared.h"
-#include "..\common/win32\XBPortMapping.h"
+#include "..\common\win32\XBPortMapping.h"
 #include "core\hle\Intercept.hpp"
 #include "vsbc\CxbxVSBC.h"
 #include "Windef.h"
