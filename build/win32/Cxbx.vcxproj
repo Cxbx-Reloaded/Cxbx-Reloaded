@@ -218,7 +218,7 @@
     <ClInclude Include="..\..\src\Common\XDVDFS Tools\xdvdfs.h" />
     <ClInclude Include="..\..\src\Cxbx.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\CxbxKrnl.h" />
-    <ClInclude Include="..\..\src\CxbxKrnl\DbgConsole.h" />
+    <ClInclude Include="..\..\src\gui\DbgConsole.h" />
     <ClInclude Include="..\..\src\core\HLE\D3D8\Direct3D9\Direct3D9.h" />
     <ClInclude Include="..\..\src\core\HLE\D3D8\XbD3D8Types.h" />
     <ClInclude Include="..\..\src\core\HLE\D3D8\XbConvert.h" />
@@ -258,20 +258,20 @@
     <ClInclude Include="..\..\src\CxbxKrnl\VMManager.h" />
     <ClInclude Include="..\..\src\CxbxVersion.h" />
     <ClInclude Include="..\..\src\common\xbdm\CxbxXbdm.h" />
-    <ClInclude Include="..\..\src\Cxbx\DlgAbout.h" />
-    <ClInclude Include="..\..\src\Cxbx\DlgAudioConfig.h" />
-    <ClInclude Include="..\..\src\Cxbx\DlgControllerConfig.h" />
-    <ClInclude Include="..\..\src\Cxbx\DlgEepromConfig.h" />
-    <ClInclude Include="..\..\src\Cxbx\DlgLoggingConfig.h" />
-    <ClInclude Include="..\..\src\Cxbx\DlgVideoConfig.h" />
+    <ClInclude Include="..\..\src\gui\DlgAbout.h" />
+    <ClInclude Include="..\..\src\gui\DlgAudioConfig.h" />
+    <ClInclude Include="..\..\src\gui\DlgControllerConfig.h" />
+    <ClInclude Include="..\..\src\gui\DlgEepromConfig.h" />
+    <ClInclude Include="..\..\src\gui\DlgLoggingConfig.h" />
+    <ClInclude Include="..\..\src\gui\DlgVideoConfig.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\Emu.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\EmuShared.h" />
     <ClInclude Include="..\..\src\Common\Error.h" />
     <ClInclude Include="..\..\src\Common\Win32\Mutex.h" />
-    <ClInclude Include="..\..\src\Cxbx\DlgXboxControllerPortMapping.h" />
-    <ClInclude Include="..\..\src\Cxbx\ResCxbx.h" />
-    <ClInclude Include="..\..\src\Cxbx\Wnd.h" />
-    <ClInclude Include="..\..\src\Cxbx\WndMain.h" />
+    <ClInclude Include="..\..\src\gui\DlgXboxControllerPortMapping.h" />
+    <ClInclude Include="..\..\src\gui\ResCxbx.h" />
+    <ClInclude Include="..\..\src\gui\Wnd.h" />
+    <ClInclude Include="..\..\src\gui\WndMain.h" />
     <ClInclude Include="..\..\src\Common\Win32\DInputController.h" />
     <ClInclude Include="..\..\src\common\xbe\Xbe.h" />
     <ClInclude Include="..\..\src\devices\ADM1032Device.h" />
@@ -371,7 +371,7 @@
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <WholeProgramOptimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</WholeProgramOptimization>
     </ClCompile>
-    <ClCompile Include="..\..\src\CxbxKrnl\DbgConsole.cpp">
+    <ClCompile Include="..\..\src\gui\DbgConsole.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -465,17 +465,17 @@
     <ClCompile Include="..\..\src\devices\usb\Timer.cpp" />
     <ClCompile Include="..\..\src\CxbxKrnl\VMManager.cpp" />
     <ClCompile Include="..\..\src\common\xbdm\CxbxXbdm.cpp" />
-    <ClCompile Include="..\..\src\Cxbx\DlgAbout.cpp" />
-    <ClCompile Include="..\..\src\Cxbx\DlgAudioConfig.cpp" />
-    <ClCompile Include="..\..\src\Cxbx\DlgControllerConfig.cpp">
+    <ClCompile Include="..\..\src\gui\DlgAbout.cpp" />
+    <ClCompile Include="..\..\src\gui\DlgAudioConfig.cpp" />
+    <ClCompile Include="..\..\src\gui\DlgControllerConfig.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
-    <ClCompile Include="..\..\src\Cxbx\DlgEepromConfig.cpp" />
-    <ClCompile Include="..\..\src\Cxbx\DlgLoggingConfig.cpp" />
-    <ClCompile Include="..\..\src\Cxbx\DlgVideoConfig.cpp">
+    <ClCompile Include="..\..\src\gui\DlgEepromConfig.cpp" />
+    <ClCompile Include="..\..\src\gui\DlgLoggingConfig.cpp" />
+    <ClCompile Include="..\..\src\gui\DlgVideoConfig.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -493,20 +493,20 @@
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
-    <ClCompile Include="..\..\src\Cxbx\DlgXboxControllerPortMapping.cpp" />
-    <ClCompile Include="..\..\src\Cxbx\WinMain.cpp">
+    <ClCompile Include="..\..\src\gui\DlgXboxControllerPortMapping.cpp" />
+    <ClCompile Include="..\..\src\gui\WinMain.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
-    <ClCompile Include="..\..\src\Cxbx\Wnd.cpp">
+    <ClCompile Include="..\..\src\gui\Wnd.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
-    <ClCompile Include="..\..\src\Cxbx\WndMain.cpp">
+    <ClCompile Include="..\..\src\gui\WndMain.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>

@@ -40,7 +40,7 @@
 
 #include "Cxbx.h"
 #include "CxbxKrnl/CxbxKrnl.h"
-#include "Cxbx/ResCxbx.h"
+#include "gui/ResCxbx.h"
 
 #include "Common/IPCHybrid.hpp"
 #include "CxbxKrnl/EmuShared.h"

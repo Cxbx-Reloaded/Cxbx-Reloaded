@@ -51,7 +51,7 @@ namespace xboxkrnl
 #include "CxbxKrnl/Emu.h"
 #include "CxbxKrnl/EmuFS.h"
 #include "CxbxKrnl/EmuShared.h"
-#include "CxbxKrnl/DbgConsole.h"
+#include "gui/DbgConsole.h"
 #include "CxbxKrnl/ResourceTracker.h"
 #include "CxbxKrnl/VMManager.h" // for g_VMManager
 #include "CxbxKrnl/EmuXTL.h"
@@ -59,7 +59,7 @@ namespace xboxkrnl
 #include "../XbD3D8Logging.h"
 #include "core/HLE/Intercept.hpp" // for bLLE_GPU
 #include "devices/video/nv2a.h" // For GET_MASK, NV_PGRAPH_CONTROL_0
-#include "Cxbx/ResCxbx.h"
+#include "gui/ResCxbx.h"
 
 #include <assert.h>
 #include <process.h>

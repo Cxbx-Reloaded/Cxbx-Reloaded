@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="..\..\src\Cxbx\DlgControllerConfig.cpp">
+    <ClCompile Include="..\..\src\gui\DlgControllerConfig.cpp">
       <Filter>GUI</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\Cxbx\DlgVideoConfig.cpp">
+    <ClCompile Include="..\..\src\gui\DlgVideoConfig.cpp">
       <Filter>GUI</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\Cxbx\WinMain.cpp">
+    <ClCompile Include="..\..\src\gui\WinMain.cpp">
       <Filter>GUI</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\Cxbx\Wnd.cpp">
+    <ClCompile Include="..\..\src\gui\Wnd.cpp">
       <Filter>GUI</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\Cxbx\WndMain.cpp">
+    <ClCompile Include="..\..\src\gui\WndMain.cpp">
       <Filter>GUI</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\core\HLE\D3D8\XbConvert.cpp">
@@ -100,7 +100,7 @@
     <ClCompile Include="..\..\src\CxbxKrnl\CxbxKrnl.cpp">
       <Filter>Emulator</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\CxbxKrnl\DbgConsole.cpp">
+    <ClCompile Include="..\..\src\gui\DbgConsole.cpp">
       <Filter>Emulator</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\CxbxKrnl\Emu.cpp">
@@ -169,13 +169,13 @@
     <ClCompile Include="..\..\src\Common\EmuEEPROM.cpp">
       <Filter>Shared</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\Cxbx\DlgAbout.cpp">
+    <ClCompile Include="..\..\src\gui\DlgAbout.cpp">
       <Filter>GUI</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\core\HLE\D3D8\XbD3D8Logging.cpp">
       <Filter>core\HLE\D3D8</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\Cxbx\DlgAudioConfig.cpp">
+    <ClCompile Include="..\..\src\gui\DlgAudioConfig.cpp">
       <Filter>GUI</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\CxbxKrnl\PhysicalMemory.cpp">
@@ -266,7 +266,7 @@
     <ClCompile Include="..\..\src\CxbxKrnl\EmuRsa.cpp">
       <Filter>Emulator</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\Cxbx\DlgEepromConfig.cpp">
+    <ClCompile Include="..\..\src\gui\DlgEepromConfig.cpp">
       <Filter>GUI</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\CxbxKrnl\PoolManager.cpp">
@@ -287,7 +287,7 @@
     <ClCompile Include="..\..\src\devices\usb\XidGamepad.cpp">
       <Filter>Hardware\Usb</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\Cxbx\DlgXboxControllerPortMapping.cpp">
+    <ClCompile Include="..\..\src\gui\DlgXboxControllerPortMapping.cpp">
       <Filter>GUI</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\Common\Win32\XBPortMapping.cpp">
@@ -314,22 +314,22 @@
     <ClCompile Include="..\..\src\Common\Win32\DInputController.cpp">
       <Filter>Shared</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\Cxbx\DlgLoggingConfig.cpp">
+    <ClCompile Include="..\..\src\gui\DlgLoggingConfig.cpp">
       <Filter>GUI</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\Common\Win32\IPCWindows.cpp">
       <Filter>Cross Platform\Win32</Filter>
     </ClCompile>
-    <ClInclude Include="..\..\src\Cxbx\DlgControllerConfig.h">
+    <ClInclude Include="..\..\src\gui\DlgControllerConfig.h">
       <Filter>GUI</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\Cxbx\DlgVideoConfig.h">
+    <ClInclude Include="..\..\src\gui\DlgVideoConfig.h">
       <Filter>GUI</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\Cxbx\WndMain.h">
+    <ClInclude Include="..\..\src\gui\WndMain.h">
       <Filter>GUI</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\Cxbx\Wnd.h">
+    <ClInclude Include="..\..\src\gui\Wnd.h">
       <Filter>GUI</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\core\HLE\D3D8\XbConvert.h">
@@ -368,7 +368,7 @@
     <ClInclude Include="..\..\src\Common\Win32\Mutex.h">
       <Filter>Shared</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\Cxbx\ResCxbx.h">
+    <ClInclude Include="..\..\src\gui\ResCxbx.h">
       <Filter>Shared</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\common\xbe\Xbe.h">
@@ -377,7 +377,7 @@
     <ClInclude Include="..\..\src\CxbxKrnl\CxbxKrnl.h">
       <Filter>Emulator</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\CxbxKrnl\DbgConsole.h">
+    <ClInclude Include="..\..\src\gui\DbgConsole.h">
       <Filter>Emulator</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\core\HLE\D3D8\Direct3D9\Direct3D9.h">
@@ -455,7 +455,7 @@
     <ClInclude Include="..\..\src\CxbxVersion.h">
       <Filter>Shared</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\Cxbx\DlgAbout.h">
+    <ClInclude Include="..\..\src\gui\DlgAbout.h">
       <Filter>GUI</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\core\HLE\D3D8\XbD3D8Logging.h">
@@ -467,7 +467,7 @@
     <ClInclude Include="..\..\src\core\HLE\DSOUND\DirectSound\DirectSoundInline.hpp">
       <Filter>core\HLE\DSOUND\DirectSound</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\Cxbx\DlgAudioConfig.h">
+    <ClInclude Include="..\..\src\gui\DlgAudioConfig.h">
       <Filter>GUI</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\CxbxKrnl\PhysicalMemory.h">
@@ -575,7 +575,7 @@
     <ClInclude Include="..\..\src\CxbxKrnl\EmuRsa.h">
       <Filter>Emulator</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\Cxbx\DlgEepromConfig.h">
+    <ClInclude Include="..\..\src\gui\DlgEepromConfig.h">
       <Filter>GUI</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\CxbxKrnl\PoolManager.h">
@@ -599,7 +599,7 @@
     <ClInclude Include="..\..\src\devices\usb\XidGamepad.h">
       <Filter>Hardware\Usb</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\Cxbx\DlgXboxControllerPortMapping.h">
+    <ClInclude Include="..\..\src\gui\DlgXboxControllerPortMapping.h">
       <Filter>GUI</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\Common\Win32\XBPortMapping.h">
@@ -620,7 +620,7 @@
     <ClInclude Include="..\..\src\Common\Win32\DInputController.h">
       <Filter>Shared</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\Cxbx\DlgLoggingConfig.h">
+    <ClInclude Include="..\..\src\gui\DlgLoggingConfig.h">
       <Filter>GUI</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\Common\IPCHybrid.hpp">

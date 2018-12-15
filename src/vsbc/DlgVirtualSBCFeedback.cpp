@@ -41,7 +41,7 @@
 #include "Winuser.h"
 #include "Windowsx.h"
 #include "Commctrl.h"
-#include "../Cxbx/ResCxbx.h"
+#include "../gui/ResCxbx.h"
 
 #include <cstdio>
 

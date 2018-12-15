@@ -36,11 +36,11 @@
 // ******************************************************************
 #define _XBOXKRNL_DEFEXTRN_
 
-#include "CxbxKrnl.h"
-#include "Emu.h"
+#include "CxbxKrnl\CxbxKrnl.h"
+#include "CxbxKrnl\Emu.h"
 #include "DbgConsole.h"
-#include "ResourceTracker.h"
-#include "EmuXTL.h"
+#include "CxbxKrnl\ResourceTracker.h"
+#include "CxbxKrnl\EmuXTL.h"
 
 #include <conio.h>
 
