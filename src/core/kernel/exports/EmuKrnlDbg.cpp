@@ -50,11 +50,11 @@ namespace xboxkrnl
 // prevent name collisions
 namespace NtDll
 {
-#include "EmuNtDll.h"
+#include "CxbxKrnl\EmuNtDll.h"
 };
 
 
-#include "Emu.h" // For EmuLog(LOG_LEVEL::WARNING, )
+#include "CxbxKrnl\Emu.h" // For EmuLog(LOG_LEVEL::WARNING, )
 
 // ******************************************************************
 // * 0x0005 - DbgBreakPoint()

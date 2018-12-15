@@ -49,7 +49,7 @@ namespace xboxkrnl
 
 #include "OHCI.h"
 #include "Hub.h"
-#include "CxbxKrnl\EmuKrnl.h"  // For EmuLog
+#include "core\kernel\exports\EmuKrnl.h"  // For EmuLog
 #include "Logging.h"
 
 #define NUM_PORTS 8

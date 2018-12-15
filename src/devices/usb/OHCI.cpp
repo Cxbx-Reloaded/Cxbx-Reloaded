@@ -48,7 +48,7 @@ namespace xboxkrnl
 };
 
 #include "OHCI.h"
-#include "CxbxKrnl\EmuKrnl.h"  // For HalSystemInterrupt
+#include "core\kernel\exports\EmuKrnl.h"  // For HalSystemInterrupt
 #include "common\util\CxbxCommon.h"
 #include "Logging.h"
 

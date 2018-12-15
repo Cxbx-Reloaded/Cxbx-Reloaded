@@ -52,11 +52,11 @@ namespace xboxkrnl
 // prevent name collisions
 namespace NtDll
 {
-	#include "EmuNtDll.h" // For NtDelayExecution(), etc.
+	#include "CxbxKrnl\EmuNtDll.h" // For NtDelayExecution(), etc.
 };
 
 #include "core\kernel\init\CxbxKrnl.h" // For CxbxKrnlCleanup
-#include "Emu.h" // For EmuLog(LOG_LEVEL::WARNING, )
+#include "CxbxKrnl\Emu.h" // For EmuLog(LOG_LEVEL::WARNING, )
 #include "EmuKrnl.h" // For InsertHeadList, InsertTailList, RemoveHeadList
 
 #include <atomic> // for std::atomic

@@ -232,9 +232,9 @@
     <ClInclude Include="..\..\src\core\HLE\DSOUND\DirectSound\DirectSoundInline.hpp" />
     <ClInclude Include="..\..\src\CxbxKrnl\EmuFile.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\EmuFS.h" />
-    <ClInclude Include="..\..\src\CxbxKrnl\EmuKrnlAvModes.h" />
-    <ClInclude Include="..\..\src\CxbxKrnl\EmuKrnlKi.h" />
-    <ClInclude Include="..\..\src\CxbxKrnl\EmuKrnlLogging.h" />
+    <ClInclude Include="..\..\src\core\kernel\exports\EmuKrnlAvModes.h" />
+    <ClInclude Include="..\..\src\core\kernel\exports\EmuKrnlKi.h" />
+    <ClInclude Include="..\..\src\core\kernel\exports\EmuKrnlLogging.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\EmuNtDll.h" />
     <ClInclude Include="..\..\src\common\crypto\EmuRsa.h" />
     <ClInclude Include="..\..\src\common\crypto\EmuSha.h" />
@@ -404,30 +404,30 @@
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
-    <ClCompile Include="..\..\src\CxbxKrnl\EmuKrnl.cpp">
+    <ClCompile Include="..\..\src\core\kernel\exports\EmuKrnl.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
-    <ClCompile Include="..\..\src\CxbxKrnl\EmuKrnlAv.cpp" />
-    <ClCompile Include="..\..\src\CxbxKrnl\EmuKrnlDbg.cpp" />
-    <ClCompile Include="..\..\src\CxbxKrnl\EmuKrnlEx.cpp" />
-    <ClCompile Include="..\..\src\CxbxKrnl\EmuKrnlFs.cpp" />
-    <ClCompile Include="..\..\src\CxbxKrnl\EmuKrnlHal.cpp" />
-    <ClCompile Include="..\..\src\CxbxKrnl\EmuKrnlIo.cpp" />
-    <ClCompile Include="..\..\src\CxbxKrnl\EmuKrnlKd.cpp" />
-    <ClCompile Include="..\..\src\CxbxKrnl\EmuKrnlKe.cpp" />
-    <ClCompile Include="..\..\src\CxbxKrnl\EmuKrnlKi.cpp" />
-    <ClCompile Include="..\..\src\CxbxKrnl\EmuKrnlLogging.cpp" />
-    <ClCompile Include="..\..\src\CxbxKrnl\EmuKrnlMm.cpp" />
-    <ClCompile Include="..\..\src\CxbxKrnl\EmuKrnlNt.cpp" />
-    <ClCompile Include="..\..\src\CxbxKrnl\EmuKrnlOb.cpp" />
-    <ClCompile Include="..\..\src\CxbxKrnl\EmuKrnlPs.cpp" />
-    <ClCompile Include="..\..\src\CxbxKrnl\EmuKrnlRtl.cpp" />
-    <ClCompile Include="..\..\src\CxbxKrnl\EmuKrnlXbox.cpp" />
-    <ClCompile Include="..\..\src\CxbxKrnl\EmuKrnlXc.cpp" />
-    <ClCompile Include="..\..\src\CxbxKrnl\EmuKrnlXe.cpp" />
+    <ClCompile Include="..\..\src\core\kernel\exports\EmuKrnlAv.cpp" />
+    <ClCompile Include="..\..\src\core\kernel\exports\EmuKrnlDbg.cpp" />
+    <ClCompile Include="..\..\src\core\kernel\exports\EmuKrnlEx.cpp" />
+    <ClCompile Include="..\..\src\core\kernel\exports\EmuKrnlFs.cpp" />
+    <ClCompile Include="..\..\src\core\kernel\exports\EmuKrnlHal.cpp" />
+    <ClCompile Include="..\..\src\core\kernel\exports\EmuKrnlIo.cpp" />
+    <ClCompile Include="..\..\src\core\kernel\exports\EmuKrnlKd.cpp" />
+    <ClCompile Include="..\..\src\core\kernel\exports\EmuKrnlKe.cpp" />
+    <ClCompile Include="..\..\src\core\kernel\exports\EmuKrnlKi.cpp" />
+    <ClCompile Include="..\..\src\core\kernel\exports\EmuKrnlLogging.cpp" />
+    <ClCompile Include="..\..\src\core\kernel\exports\EmuKrnlMm.cpp" />
+    <ClCompile Include="..\..\src\core\kernel\exports\EmuKrnlNt.cpp" />
+    <ClCompile Include="..\..\src\core\kernel\exports\EmuKrnlOb.cpp" />
+    <ClCompile Include="..\..\src\core\kernel\exports\EmuKrnlPs.cpp" />
+    <ClCompile Include="..\..\src\core\kernel\exports\EmuKrnlRtl.cpp" />
+    <ClCompile Include="..\..\src\core\kernel\exports\EmuKrnlXbox.cpp" />
+    <ClCompile Include="..\..\src\core\kernel\exports\EmuKrnlXc.cpp" />
+    <ClCompile Include="..\..\src\core\kernel\exports\EmuKrnlXe.cpp" />
     <ClCompile Include="..\..\src\CxbxKrnl\EmuNtDll.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -447,7 +447,7 @@
     <ClCompile Include="..\..\src\common\util\gloffscreen\gloffscreen_wgl.cpp" />
     <ClCompile Include="..\..\src\core\HLE\Intercept.cpp" />
     <ClCompile Include="..\..\src\core\HLE\Patches.cpp" />
-    <ClCompile Include="..\..\src\CxbxKrnl\KernelThunk.cpp">
+    <ClCompile Include="..\..\src\core\kernel\exports\KernelThunk.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>

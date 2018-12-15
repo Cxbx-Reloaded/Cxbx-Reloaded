@@ -53,7 +53,7 @@ namespace xboxkrnl
 #include "CxbxKrnl\EmuFile.h"
 #include "CxbxKrnl\EmuFS.h"
 #include "EmuEEPROM.h" // For CxbxRestoreEEPROM, EEPROM, XboxFactoryGameRegion
-#include "CxbxKrnl\EmuKrnl.h"
+#include "core\kernel\exports\EmuKrnl.h"
 #include "EmuShared.h"
 #include "CxbxKrnl\EmuXTL.h"
 #include "core/HLE/Intercept.hpp"

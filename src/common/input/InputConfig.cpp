@@ -46,7 +46,7 @@ namespace xboxkrnl
 #include "InputConfig.h"
 #include "SDL2_Device.h"
 #include "..\devices\usb\XidGamepad.h"
-#include "..\..\CxbxKrnl\EmuKrnl.h" // For EmuLog
+#include "core\kernel\exports\EmuKrnl.h" // For EmuLog
 #include <thread>
 
 

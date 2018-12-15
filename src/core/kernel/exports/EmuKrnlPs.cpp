@@ -50,14 +50,14 @@ namespace xboxkrnl
 #include "Logging.h" // For LOG_FUNC()
 #include "EmuKrnlLogging.h"
 #include "core\kernel\init\CxbxKrnl.h" // For CxbxKrnl_TLS
-#include "Emu.h" // For EmuLog(LOG_LEVEL::WARNING, )
-#include "EmuFS.h" // For EmuGenerateFS
-#include "EmuXTL.h"
+#include "CxbxKrnl\Emu.h" // For EmuLog(LOG_LEVEL::WARNING, )
+#include "CxbxKrnl\EmuFS.h" // For EmuGenerateFS
+#include "CxbxKrnl\EmuXTL.h"
 
 // prevent name collisions
 namespace NtDll
 {
-#include "EmuNtDll.h"
+#include "CxbxKrnl\EmuNtDll.h"
 };
 
 #define PSP_MAX_CREATE_THREAD_NOTIFY 16 /* TODO : Should be 8 */

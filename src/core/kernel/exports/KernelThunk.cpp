@@ -439,7 +439,7 @@ uint32 CxbxKrnl_KernelThunkTable[379] =
 /* prevent name collisions */
 namespace NtDll
 {
-	#include "EmuNtDll.h"
+	#include "CxbxKrnl\EmuNtDll.h"
 };
 
 // Virtual memory location of KUSER_SHARED_DATA :

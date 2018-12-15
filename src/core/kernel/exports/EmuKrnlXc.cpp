@@ -52,7 +52,7 @@ namespace xboxkrnl
 // prevent name collisions
 namespace NtDll
 {
-	#include "EmuNtDll.h"
+	#include "CxbxKrnl\EmuNtDll.h"
 };
 
 

@@ -39,7 +39,7 @@
 
 #include "PhysicalMemory.h"
 #include "Logging.h"
-#include "CxbxKrnl\EmuKrnl.h" // For InitializeListHead(), etc.
+#include "core\kernel\exports\EmuKrnl.h" // For InitializeListHead(), etc.
 #include <assert.h>
 
 // See the links below for the details about the kernel structure LIST_ENTRY and the related functions

@@ -48,7 +48,7 @@ namespace xboxkrnl
 #include "core\kernel\init\CxbxKrnl.h"
 #include "Logging.h"
 #include "CxbxKrnl/Emu.h"
-#include "CxbxKrnl/EmuKrnl.h" // For DefaultLaunchDataPage
+#include "core\kernel\exports\EmuKrnl.h" // For DefaultLaunchDataPage
 #include "CxbxKrnl/EmuFile.h"
 #include "CxbxKrnl/EmuFS.h"
 #include "CxbxKrnl/EmuXTL.h"

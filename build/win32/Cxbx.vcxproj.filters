@@ -34,58 +34,58 @@
     <ClCompile Include="..\..\src\core\HLE\D3D8\XbVertexShader.cpp">
       <Filter>core\HLE\D3D8</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\CxbxKrnl\EmuKrnl.cpp">
+    <ClCompile Include="..\..\src\core\kernel\exports\EmuKrnl.cpp">
       <Filter>Kernel</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\CxbxKrnl\EmuKrnlAv.cpp">
+    <ClCompile Include="..\..\src\core\kernel\exports\EmuKrnlAv.cpp">
       <Filter>Kernel</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\CxbxKrnl\EmuKrnlDbg.cpp">
+    <ClCompile Include="..\..\src\core\kernel\exports\EmuKrnlDbg.cpp">
       <Filter>Kernel</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\CxbxKrnl\EmuKrnlEx.cpp">
+    <ClCompile Include="..\..\src\core\kernel\exports\EmuKrnlEx.cpp">
       <Filter>Kernel</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\CxbxKrnl\EmuKrnlFs.cpp">
+    <ClCompile Include="..\..\src\core\kernel\exports\EmuKrnlFs.cpp">
       <Filter>Kernel</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\CxbxKrnl\EmuKrnlHal.cpp">
+    <ClCompile Include="..\..\src\core\kernel\exports\EmuKrnlHal.cpp">
       <Filter>Kernel</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\CxbxKrnl\EmuKrnlIo.cpp">
+    <ClCompile Include="..\..\src\core\kernel\exports\EmuKrnlIo.cpp">
       <Filter>Kernel</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\CxbxKrnl\EmuKrnlKd.cpp">
+    <ClCompile Include="..\..\src\core\kernel\exports\EmuKrnlKd.cpp">
       <Filter>Kernel</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\CxbxKrnl\EmuKrnlKe.cpp">
+    <ClCompile Include="..\..\src\core\kernel\exports\EmuKrnlKe.cpp">
       <Filter>Kernel</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\CxbxKrnl\EmuKrnlLogging.cpp">
+    <ClCompile Include="..\..\src\core\kernel\exports\EmuKrnlLogging.cpp">
       <Filter>Kernel</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\CxbxKrnl\EmuKrnlMm.cpp">
+    <ClCompile Include="..\..\src\core\kernel\exports\EmuKrnlMm.cpp">
       <Filter>Kernel</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\CxbxKrnl\EmuKrnlNt.cpp">
+    <ClCompile Include="..\..\src\core\kernel\exports\EmuKrnlNt.cpp">
       <Filter>Kernel</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\CxbxKrnl\EmuKrnlOb.cpp">
+    <ClCompile Include="..\..\src\core\kernel\exports\EmuKrnlOb.cpp">
       <Filter>Kernel</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\CxbxKrnl\EmuKrnlPs.cpp">
+    <ClCompile Include="..\..\src\core\kernel\exports\EmuKrnlPs.cpp">
       <Filter>Kernel</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\CxbxKrnl\EmuKrnlRtl.cpp">
+    <ClCompile Include="..\..\src\core\kernel\exports\EmuKrnlRtl.cpp">
       <Filter>Kernel</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\CxbxKrnl\EmuKrnlXbox.cpp">
+    <ClCompile Include="..\..\src\core\kernel\exports\EmuKrnlXbox.cpp">
       <Filter>Kernel</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\CxbxKrnl\EmuKrnlXc.cpp">
+    <ClCompile Include="..\..\src\core\kernel\exports\EmuKrnlXc.cpp">
       <Filter>Kernel</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\CxbxKrnl\EmuKrnlXe.cpp">
+    <ClCompile Include="..\..\src\core\kernel\exports\EmuKrnlXe.cpp">
       <Filter>Kernel</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\common\Error.cpp">
@@ -148,7 +148,7 @@
     <ClCompile Include="..\..\src\core\HLE\Intercept.cpp">
       <Filter>core\HLE</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\CxbxKrnl\KernelThunk.cpp">
+    <ClCompile Include="..\..\src\core\kernel\exports\KernelThunk.cpp">
       <Filter>Kernel</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\common\crypto\LibRc4.cpp">
@@ -220,7 +220,7 @@
     <ClCompile Include="..\..\src\common\util\crc32c.cpp">
       <Filter>Shared</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\CxbxKrnl\EmuKrnlKi.cpp">
+    <ClCompile Include="..\..\src\core\kernel\exports\EmuKrnlKi.cpp">
       <Filter>Kernel</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\devices\EmuNVNet.cpp">
@@ -350,7 +350,7 @@
     <ClInclude Include="..\..\src\core\HLE\D3D8\XbVertexShader.h">
       <Filter>core\HLE\D3D8</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\CxbxKrnl\EmuKrnlLogging.h">
+    <ClInclude Include="..\..\src\core\kernel\exports\EmuKrnlLogging.h">
       <Filter>Kernel</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\Cxbx.h">
@@ -515,7 +515,7 @@
     <ClInclude Include="..\..\src\common\util\crc32c.h">
       <Filter>Shared</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\CxbxKrnl\EmuKrnlKi.h">
+    <ClInclude Include="..\..\src\core\kernel\exports\EmuKrnlKi.h">
       <Filter>Kernel</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\devices\EmuNVNet.h">
@@ -551,7 +551,7 @@
     <ClInclude Include="..\..\src\devices\video\queue.h">
       <Filter>Hardware\Video</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\CxbxKrnl\EmuKrnlAvModes.h">
+    <ClInclude Include="..\..\src\core\kernel\exports\EmuKrnlAvModes.h">
       <Filter>Kernel</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\common\xbdm\CxbxXbdm.h">
