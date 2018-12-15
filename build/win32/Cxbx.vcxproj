@@ -236,8 +236,8 @@
     <ClInclude Include="..\..\src\CxbxKrnl\EmuKrnlKi.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\EmuKrnlLogging.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\EmuNtDll.h" />
-    <ClInclude Include="..\..\src\CxbxKrnl\EmuRsa.h" />
-    <ClInclude Include="..\..\src\CxbxKrnl\EmuSha.h" />
+    <ClInclude Include="..\..\src\common\crypto\EmuRsa.h" />
+    <ClInclude Include="..\..\src\common\crypto\EmuSha.h" />
     <ClInclude Include="..\..\src\devices\x86\EmuX86.h" />
     <ClInclude Include="..\..\src\core\HLE\XACTENG\XactEng.h" />
     <ClInclude Include="..\..\src\core\HLE\XAPI\Xapi.h" />
@@ -249,7 +249,7 @@
     <ClInclude Include="..\..\src\CxbxKrnl\gloffscreen\gloffscreen.h" />
     <ClInclude Include="..\..\src\core\HLE\Intercept.hpp" />
     <ClInclude Include="..\..\src\core\HLE\Patches.hpp" />
-    <ClInclude Include="..\..\src\CxbxKrnl\LibRc4.h" />
+    <ClInclude Include="..\..\src\common\crypto\LibRc4.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\PhysicalMemory.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\PoolManager.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\ReservedMemory.h" />
@@ -434,8 +434,8 @@
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
-    <ClCompile Include="..\..\src\CxbxKrnl\EmuRsa.cpp" />
-    <ClCompile Include="..\..\src\CxbxKrnl\EmuSha.cpp" />
+    <ClCompile Include="..\..\src\common\crypto\EmuRsa.cpp" />
+    <ClCompile Include="..\..\src\common\crypto\EmuSha.cpp" />
     <ClCompile Include="..\..\src\devices\x86\EmuX86.cpp" />
     <ClCompile Include="..\..\src\core\HLE\XACTENG\XactEng.cpp" />
     <ClCompile Include="..\..\src\core\HLE\XAPI\Xapi.cpp" />
@@ -453,7 +453,7 @@
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
-    <ClCompile Include="..\..\src\CxbxKrnl\LibRc4.cpp" />
+    <ClCompile Include="..\..\src\common\crypto\LibRc4.cpp" />
     <ClCompile Include="..\..\src\CxbxKrnl\PhysicalMemory.cpp" />
     <ClCompile Include="..\..\src\CxbxKrnl\PoolManager.cpp" />
     <ClCompile Include="..\..\src\CxbxKrnl\ResourceTracker.cpp">

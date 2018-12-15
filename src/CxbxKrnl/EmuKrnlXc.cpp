@@ -46,8 +46,8 @@ namespace xboxkrnl
 
 #include "Logging.h" // For LOG_FUNC()
 #include "EmuKrnlLogging.h"
-#include "EmuSha.h" // For A_SHAInit, etc.
-#include "LibRc4.h" // For RC4 Functions
+#include "common\crypto\EmuSha.h" // For A_SHAInit, etc.
+#include "common\crypto\LibRc4.h" // For RC4 Functions
 
 // prevent name collisions
 namespace NtDll

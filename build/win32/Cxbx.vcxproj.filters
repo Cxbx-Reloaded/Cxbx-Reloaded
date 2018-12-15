@@ -124,7 +124,7 @@
     <ClCompile Include="..\..\src\CxbxKrnl\EmuNtDll.cpp">
       <Filter>Emulator</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\CxbxKrnl\EmuSha.cpp">
+    <ClCompile Include="..\..\src\common\crypto\EmuSha.cpp">
       <Filter>Emulator</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\Common\Win32\EmuShared.cpp">
@@ -151,7 +151,7 @@
     <ClCompile Include="..\..\src\CxbxKrnl\KernelThunk.cpp">
       <Filter>Kernel</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\CxbxKrnl\LibRc4.cpp">
+    <ClCompile Include="..\..\src\common\crypto\LibRc4.cpp">
       <Filter>Emulator</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\Common\Logging.cpp">
@@ -263,7 +263,7 @@
     <ClCompile Include="..\..\src\devices\x86\EmuX86.cpp">
       <Filter>Hardware\X86</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\CxbxKrnl\EmuRsa.cpp">
+    <ClCompile Include="..\..\src\common\crypto\EmuRsa.cpp">
       <Filter>Emulator</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\gui\DlgEepromConfig.cpp">
@@ -401,7 +401,7 @@
     <ClInclude Include="..\..\src\CxbxKrnl\EmuNtDll.h">
       <Filter>Emulator</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\CxbxKrnl\EmuSha.h">
+    <ClInclude Include="..\..\src\common\crypto\EmuSha.h">
       <Filter>Emulator</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\core\HLE\XACTENG\XactEng.h">
@@ -425,7 +425,7 @@
     <ClInclude Include="..\..\src\core\HLE\Intercept.hpp">
       <Filter>core\HLE</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\CxbxKrnl\LibRc4.h">
+    <ClInclude Include="..\..\src\common\crypto\LibRc4.h">
       <Filter>Emulator</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\Common\Logging.h">
@@ -572,7 +572,7 @@
     <ClInclude Include="..\..\src\devices\x86\EmuX86.h">
       <Filter>Hardware\X86</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\CxbxKrnl\EmuRsa.h">
+    <ClInclude Include="..\..\src\common\crypto\EmuRsa.h">
       <Filter>Emulator</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\gui\DlgEepromConfig.h">
