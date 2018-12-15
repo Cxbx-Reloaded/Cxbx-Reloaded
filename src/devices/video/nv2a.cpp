@@ -50,7 +50,7 @@
 // prevent name collisions
 namespace xboxkrnl
 {
-#include <xboxkrnl/xboxkrnl.h> // For PKINTERRUPT, etc.
+#include <xboxkrnl\xboxkrnl.h> // For PKINTERRUPT, etc.
 };
 
 #ifdef _MSC_VER                         // Check if MS Visual C compiler
@@ -63,11 +63,11 @@ namespace xboxkrnl
 #include <distorm.h> // For uint32_t
 #include <process.h> // For __beginthreadex(), etc.
 
-#include "CxbxKrnl\CxbxKrnl.h" // For XBOX_MEMORY_SIZE, DWORD, etc
-#include "CxbxKrnl\Emu.h"
-#include "CxbxKrnl\EmuFS.h"
-#include "CxbxKrnl\EmuKrnl.h"
-#include "core/HLE/Intercept.hpp"
+#include "core\kernel\init\CxbxKrnl.h" // For XBOX_MEMORY_SIZE, DWORD, etc
+#include "core\kernel\support\Emu.h"
+#include "core\kernel\support\EmuFS.h"
+#include "core\kernel\exports\EmuKrnl.h"
+#include "core\hle\Intercept.hpp"
 #include "Logging.h"
 
 #include "vga.h"
@@ -99,7 +99,7 @@ struct _GError
 	gchar       *message;
 };
 
-#include "CxbxKrnl/gloffscreen/glextensions.h" // for glextensions_init
+#include "common\util\gloffscreen\glextensions.h" // for glextensions_init
 
 GLuint create_gl_shader(GLenum gl_shader_type,
 	const char *code,

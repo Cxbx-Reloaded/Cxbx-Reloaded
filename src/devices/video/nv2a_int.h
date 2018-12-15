@@ -36,7 +36,7 @@
 #ifdef USE_SHADER_CACHE
 #include "glib_compat.h" // For GHashTable, g_hash_table_new, g_hash_table_lookup, g_hash_table_insert
 #endif
-#include "CxbxKrnl/gloffscreen/gloffscreen.h" // For GloContext, etc
+#include "common\util\gloffscreen\gloffscreen.h" // For GloContext, etc
 
 #include "swizzle.h"
 

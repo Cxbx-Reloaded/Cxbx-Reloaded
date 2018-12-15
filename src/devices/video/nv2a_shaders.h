@@ -22,7 +22,7 @@
 #define HW_NV2A_SHADERS_H
 
 #include "qstring.h"
-#include "CxbxKrnl/gloffscreen/gloffscreen.h" // For GLenum, etc
+#include "common\util\gloffscreen\gloffscreen.h" // For GLenum, etc
 
 #include "nv2a_vsh.h"
 #include "nv2a_psh.h"

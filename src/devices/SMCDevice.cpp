@@ -43,8 +43,8 @@ namespace xboxkrnl
 #include <xboxkrnl/xboxkrnl.h> // For xbox.h:AV_PACK_HDTV
 };
 
-#include "CxbxKrnl\CxbxKrnl.h"
-#include "CxbxKrnl\EmuShared.h"
+#include "core\kernel\init\CxbxKrnl.h"
+#include "EmuShared.h"
 
 #include "SMCDevice.h" // For SMCDevice
 #include "ADM1032Device.h" // For ADM1032Device

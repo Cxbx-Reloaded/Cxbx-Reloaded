@@ -15,30 +15,30 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\src\CxbxVSBC\CxbxVSBC.cpp">
+    <ClCompile Include="..\..\src\vsbc\CxbxVSBC.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\CxbxVSBC\DlgVirtualSBCFeedback.cpp">
+    <ClCompile Include="..\..\src\vsbc\DlgVirtualSBCFeedback.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\CxbxVSBC\dllmain.cpp">
+    <ClCompile Include="..\..\src\vsbc\dllmain.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\CxbxVSBC\stdafx.cpp">
+    <ClCompile Include="..\..\src\vsbc\stdafx.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\src\CxbxVSBC\CxbxVSBC.h">
+    <ClInclude Include="..\..\src\vsbc\CxbxVSBC.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\CxbxVSBC\DlgVirtualSBCFeedback.h">
+    <ClInclude Include="..\..\src\vsbc\DlgVirtualSBCFeedback.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\CxbxVSBC\stdafx.h">
+    <ClInclude Include="..\..\src\vsbc\stdafx.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\CxbxVSBC\targetver.h">
+    <ClInclude Include="..\..\src\vsbc\targetver.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
