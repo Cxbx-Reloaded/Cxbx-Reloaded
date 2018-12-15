@@ -39,7 +39,7 @@
 
 #include <mutex>
 #include "USBDevice.h"
-#include "..\CxbxKrnl\Timer.h"
+#include "devices\usb\Timer.h"
 
 
 // Abbreviations used:
