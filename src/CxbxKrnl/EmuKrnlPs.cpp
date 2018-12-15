@@ -49,7 +49,7 @@ namespace xboxkrnl
 
 #include "Logging.h" // For LOG_FUNC()
 #include "EmuKrnlLogging.h"
-#include "CxbxKrnl.h" // For CxbxKrnl_TLS
+#include "core\kernel\init\CxbxKrnl.h" // For CxbxKrnl_TLS
 #include "Emu.h" // For EmuLog(LOG_LEVEL::WARNING, )
 #include "EmuFS.h" // For EmuGenerateFS
 #include "EmuXTL.h"

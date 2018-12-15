@@ -45,7 +45,7 @@ namespace xboxkrnl
 };
 
 #include <Shlwapi.h>
-#include "CxbxKrnl/CxbxKrnl.h"
+#include "core\kernel\init\CxbxKrnl.h"
 #include "Logging.h"
 #include "CxbxKrnl/Emu.h"
 #include "CxbxKrnl/EmuKrnl.h" // For DefaultLaunchDataPage

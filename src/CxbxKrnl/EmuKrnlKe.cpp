@@ -53,7 +53,7 @@ namespace NtDll
 	#include "EmuNtDll.h" // For NtDelayExecution(), etc.
 };
 
-#include "CxbxKrnl.h" // For CxbxKrnlCleanup
+#include "core\kernel\init\CxbxKrnl.h" // For CxbxKrnlCleanup
 #include "Emu.h" // For EmuLog(LOG_LEVEL::WARNING, )
 #include "EmuKrnl.h" // For InitializeListHead(), etc.
 #include "EmuKrnlKi.h" // For KiRemoveTreeTimer(), KiInsertTreeTimer()

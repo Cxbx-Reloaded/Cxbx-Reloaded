@@ -55,7 +55,7 @@ namespace xboxkrnl
 
 #include "Logging.h"
 #include "EmuKrnlLogging.h"
-#include "CxbxKrnl.h"
+#include "core\kernel\init\CxbxKrnl.h"
 
 // prevent name collisions
 namespace xboxkrnl

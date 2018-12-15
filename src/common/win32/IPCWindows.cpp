@@ -39,7 +39,7 @@
 #include <windows.h>
 
 #include "Cxbx.h"
-#include "CxbxKrnl/CxbxKrnl.h"
+#include "core\kernel\init\CxbxKrnl.h"
 #include "gui/ResCxbx.h"
 
 #include "Common/IPCHybrid.hpp"

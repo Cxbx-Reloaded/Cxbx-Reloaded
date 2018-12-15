@@ -42,7 +42,7 @@ namespace xboxkrnl
 };
 
 #include "Cxbx.h" // For CxbxKrnl_KernelThunkTable
-#include "CxbxKrnl.h" // For UINT
+#include "core\kernel\init\CxbxKrnl.h" // For UINT
 
 #define FUNC(f) f
 #define VARIABLE(v) v

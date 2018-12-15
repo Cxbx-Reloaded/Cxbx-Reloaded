@@ -45,7 +45,7 @@ namespace xboxkrnl
 };
 
 #include "CxbxKrnl\Emu.h"
-#include "CxbxKrnl\CxbxKrnl.h"
+#include "core\kernel\init\CxbxKrnl.h"
 #include <windows.h>
 #include <map>
 

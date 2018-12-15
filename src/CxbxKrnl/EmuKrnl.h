@@ -34,7 +34,7 @@
 #ifndef EMUKRNL_H
 #define EMUKRNL_H
 
-#include "CxbxKrnl.h"
+#include "core\kernel\init\CxbxKrnl.h"
 #include "Emu.h"
 
 // CONTAINING_RECORD macro

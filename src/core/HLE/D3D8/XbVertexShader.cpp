@@ -39,7 +39,7 @@
 
 #define _DEBUG_TRACK_VS
 
-#include "CxbxKrnl/CxbxKrnl.h"
+#include "core\kernel\init\CxbxKrnl.h"
 #include "CxbxKrnl/Emu.h"
 #include "CxbxKrnl/EmuFS.h"
 #include "CxbxKrnl/EmuXTL.h"

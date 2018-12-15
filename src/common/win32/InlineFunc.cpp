@@ -36,7 +36,7 @@
 
 #if defined(_WIN32) || defined(WIN32)
 
-#include "..\..\CxbxKrnl\CxbxKrnl.h"
+#include "core\kernel\init\CxbxKrnl.h"
 
 // Source: https://stackoverflow.com/questions/8046097/how-to-check-if-a-process-has-the-administrative-rights
 bool CxbxIsElevated() {

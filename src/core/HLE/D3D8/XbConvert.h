@@ -34,7 +34,7 @@
 #ifndef XBCONVERT_H
 #define XBCONVERT_H
 
-#include "CxbxKrnl/CxbxKrnl.h"
+#include "core\kernel\init\CxbxKrnl.h"
 
 #define VERTICES_PER_TRIANGLE 3
 #define VERTICES_PER_QUAD 4

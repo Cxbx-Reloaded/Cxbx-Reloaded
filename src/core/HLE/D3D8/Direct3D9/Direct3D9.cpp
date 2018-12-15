@@ -47,7 +47,7 @@ namespace xboxkrnl
 
 #include "common\util\CxbxUtil.h"
 #include "CxbxVersion.h"
-#include "CxbxKrnl/CxbxKrnl.h"
+#include "core\kernel\init\CxbxKrnl.h"
 #include "CxbxKrnl/Emu.h"
 #include "CxbxKrnl/EmuFS.h"
 #include "EmuShared.h"

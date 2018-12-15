@@ -44,7 +44,7 @@ namespace xboxkrnl
 #include <xboxkrnl/xboxkrnl.h> // For XeImageFileName, etc.
 };
 
-#include "CxbxKrnl.h" // For CxbxKrnl_Xbe
+#include "core\kernel\init\CxbxKrnl.h" // For CxbxKrnl_Xbe
 #include "Logging.h" // For LOG_FUNC()
 #include "EmuKrnlLogging.h"
 #include "core\kernel\memory-manager\VMManager.h"

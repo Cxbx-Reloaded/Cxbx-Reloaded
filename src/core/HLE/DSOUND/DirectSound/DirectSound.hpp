@@ -38,7 +38,7 @@
 #undef FIELD_OFFSET     // prevent macro redefinition warnings
 
 #include <dsound.h>
-#include "CxbxKrnl.h"
+#include "core\kernel\init\CxbxKrnl.h"
 #include "Emu.h"
 
 #ifdef __cplusplus

@@ -48,7 +48,7 @@ namespace xboxkrnl
 #include "Logging.h" // For LOG_FUNC()
 #include "EmuKrnl.h" // For DefaultLaunchDataPage
 #include "EmuKrnlLogging.h"
-#include "CxbxKrnl.h" // For CxbxKrnlCleanup
+#include "core\kernel\init\CxbxKrnl.h" // For CxbxKrnlCleanup
 #include "Emu.h" // For EmuLog(LOG_LEVEL::WARNING, )
 #include "core\kernel\memory-manager\VMManager.h"
 #include "EmuShared.h"

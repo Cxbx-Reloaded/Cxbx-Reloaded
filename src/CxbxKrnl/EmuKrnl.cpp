@@ -52,7 +52,7 @@ namespace xboxkrnl
 #include "EmuKrnlLogging.h"
 #include "EmuKrnl.h" // for HalSystemInterrupts
 #include "EmuKrnlKi.h" // for KiLockDispatcherDatabase
-#include "CxbxKrnl.h"
+#include "core\kernel\init\CxbxKrnl.h"
 #include "EmuXTL.h"
 
 // prevent name collisions

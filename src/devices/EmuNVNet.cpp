@@ -49,7 +49,7 @@ namespace xboxkrnl
 	#include <xboxkrnl/xboxkrnl.h> // For PKINTERRUPT, etc.
 };
 
-#include "CxbxKrnl\CxbxKrnl.h"
+#include "core\kernel\init\CxbxKrnl.h"
 #include "CxbxKrnl\Emu.h"
 #include "CxbxKrnl\EmuKrnl.h"
 

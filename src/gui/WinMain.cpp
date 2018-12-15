@@ -36,7 +36,7 @@
 
 #include "WndMain.h"
 
-#include "CxbxKrnl/CxbxKrnl.h"
+#include "core\kernel\init\CxbxKrnl.h"
 #include "CxbxKrnl/Emu.h"
 #include "EmuShared.h"
 #include "Common/Settings.hpp"

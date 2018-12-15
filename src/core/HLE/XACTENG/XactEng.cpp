@@ -43,7 +43,7 @@ namespace xboxkrnl
     #include <xboxkrnl/xboxkrnl.h>
 };
 
-#include "CxbxKrnl/CxbxKrnl.h"
+#include "core\kernel\init\/CxbxKrnl.h"
 #include "Common/Logging.h"
 #include "CxbxKrnl/Emu.h"
 #include "CxbxKrnl/EmuFS.h"

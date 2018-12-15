@@ -53,7 +53,7 @@ namespace NtDll
 #include "EmuNtDll.h"
 };
 
-#include "CxbxKrnl.h" // For CxbxKrnlCleanup
+#include "core\kernel\init\CxbxKrnl.h" // For CxbxKrnlCleanup
 #include "Emu.h" // For EmuLog(LOG_LEVEL::WARNING, )
 #include "EmuFile.h" // For EmuNtSymbolicLinkObject, NtStatusToString(), etc.
 #include "core\kernel\memory-manager\VMManager.h" // For g_VMManager

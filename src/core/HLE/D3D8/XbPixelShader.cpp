@@ -79,7 +79,7 @@
 
 //#include <CxbxKrnl/EmuD3D8Types.h> // X_PSH_COMBINECOUNT
 
-#include "CxbxKrnl/CxbxKrnl.h" // For CxbxKrnlCleanup()
+#include "core\kernel\init\CxbxKrnl.h" // For CxbxKrnlCleanup()
 
 typedef uint8_t uint8; // TODO : Remove
 

@@ -52,7 +52,7 @@
 #include "CxbxKrnl/EmuXTL.h"
 #include "Common/Settings.hpp"
 
-#include "..\CxbxKrnl\CxbxKrnl.h" // For CxbxConvertArgToString and CxbxExec
+#include "core\kernel\init\CxbxKrnl.h" // For CxbxConvertArgToString and CxbxExec
 #include "ResCxbx.h"
 #include "CxbxVersion.h"
 #include "Shlwapi.h"

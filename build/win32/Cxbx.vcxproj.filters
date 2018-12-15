@@ -97,7 +97,7 @@
     <ClCompile Include="..\..\src\common\xbe\Xbe.cpp">
       <Filter>Shared</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\CxbxKrnl\CxbxKrnl.cpp">
+    <ClCompile Include="..\..\src\core\kernel\init\CxbxKrnl.cpp">
       <Filter>Emulator</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\gui\DbgConsole.cpp">
@@ -374,7 +374,7 @@
     <ClInclude Include="..\..\src\common\xbe\Xbe.h">
       <Filter>Shared</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\CxbxKrnl\CxbxKrnl.h">
+    <ClInclude Include="..\..\src\core\kernel\init\CxbxKrnl.h">
       <Filter>Emulator</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\gui\DbgConsole.h">

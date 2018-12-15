@@ -47,7 +47,7 @@
 #pragma warning(disable:4005) // Ignore redefined status values
 #include <ntstatus.h>
 #pragma warning(default:4005)
-#include "CxbxKrnl.h"
+#include "core\kernel\init\CxbxKrnl.h"
 #include "core\kernel\memory-manager\VMManager.h"
 #include "Logging.h"
 

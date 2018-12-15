@@ -35,7 +35,7 @@
 #define DIRECT3D9_H
 
 #include "../XbD3D8Types.h"
-#include "CxbxKrnl/CxbxKrnl.h"
+#include "core\kernel\init\CxbxKrnl.h"
 #include "common\xbe\Xbe.h"
 #include "CxbxKrnl/Emu.h"
 

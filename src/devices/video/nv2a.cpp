@@ -63,7 +63,7 @@ namespace xboxkrnl
 #include <distorm.h> // For uint32_t
 #include <process.h> // For __beginthreadex(), etc.
 
-#include "CxbxKrnl\CxbxKrnl.h" // For XBOX_MEMORY_SIZE, DWORD, etc
+#include "core\kernel\init\CxbxKrnl.h" // For XBOX_MEMORY_SIZE, DWORD, etc
 #include "CxbxKrnl\Emu.h"
 #include "CxbxKrnl\EmuFS.h"
 #include "CxbxKrnl\EmuKrnl.h"

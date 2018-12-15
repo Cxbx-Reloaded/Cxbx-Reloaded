@@ -43,7 +43,7 @@
 
 #include <cmath>
 #include <iomanip> // For std::setfill and std::setw
-#include "CxbxKrnl/CxbxKrnl.h"
+#include "core\kernel\init\CxbxKrnl.h"
 #include "CxbxKrnl/Emu.h"
 #include "CxbxKrnl/EmuFS.h"
 #include "CxbxKrnl/EmuXTL.h"

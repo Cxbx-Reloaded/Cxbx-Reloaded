@@ -54,7 +54,7 @@ namespace NtDll
 	#include "EmuNtDll.h"
 };
 
-#include "CxbxKrnl.h" // For CxbxKrnlCleanup()
+#include "core\kernel\init\CxbxKrnl.h" // For CxbxKrnlCleanup()
 #include "Emu.h" // For EmuLog(LOG_LEVEL::WARNING, )
 #include <assert.h>
 
