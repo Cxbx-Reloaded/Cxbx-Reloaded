@@ -178,10 +178,10 @@
     <ClCompile Include="..\..\src\gui\DlgAudioConfig.cpp">
       <Filter>GUI</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\CxbxKrnl\PhysicalMemory.cpp">
+    <ClCompile Include="..\..\src\core\kernel\memory-manager\PhysicalMemory.cpp">
       <Filter>Emulator</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\CxbxKrnl\VMManager.cpp">
+    <ClCompile Include="..\..\src\core\kernel\memory-manager\VMManager.cpp">
       <Filter>Emulator</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\devices\EEPROMDevice.cpp">
@@ -269,7 +269,7 @@
     <ClCompile Include="..\..\src\gui\DlgEepromConfig.cpp">
       <Filter>GUI</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\CxbxKrnl\PoolManager.cpp">
+    <ClCompile Include="..\..\src\core\kernel\memory-manager\PoolManager.cpp">
       <Filter>Emulator</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\devices\usb\Timer.cpp">
@@ -470,10 +470,10 @@
     <ClInclude Include="..\..\src\gui\DlgAudioConfig.h">
       <Filter>GUI</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\CxbxKrnl\PhysicalMemory.h">
+    <ClInclude Include="..\..\src\core\kernel\memory-manager\PhysicalMemory.h">
       <Filter>Emulator</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\CxbxKrnl\VMManager.h">
+    <ClInclude Include="..\..\src\core\kernel\memory-manager\VMManager.h">
       <Filter>Emulator</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\devices\EEPROMDevice.h">
@@ -578,7 +578,7 @@
     <ClInclude Include="..\..\src\gui\DlgEepromConfig.h">
       <Filter>GUI</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\CxbxKrnl\PoolManager.h">
+    <ClInclude Include="..\..\src\core\kernel\memory-manager\PoolManager.h">
       <Filter>Emulator</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\devices\usb\Timer.h">

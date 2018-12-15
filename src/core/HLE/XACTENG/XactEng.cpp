@@ -49,7 +49,7 @@ namespace xboxkrnl
 #include "CxbxKrnl/EmuFS.h"
 #include "EmuShared.h"
 #include "CxbxKrnl/EmuXTL.h"
-#include "CxbxKrnl/VMManager.h"
+#include "core\kernel\memory-manager\VMManager.h"
 
 #include <mmreg.h>
 #include <msacm.h>

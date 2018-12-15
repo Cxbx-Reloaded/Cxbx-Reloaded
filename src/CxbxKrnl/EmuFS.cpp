@@ -46,7 +46,7 @@ namespace xboxkrnl
 #include "EmuKrnl.h" // For InitializeListHead(), etc.
 #include "EmuFS.h"
 #include "CxbxKrnl.h"
-#include "VMManager.h"
+#include "core\kernel\memory-manager\VMManager.h"
 #include "Logging.h"
 
 #undef FIELD_OFFSET     // prevent macro redefinition warnings

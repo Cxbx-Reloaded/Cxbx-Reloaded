@@ -50,7 +50,7 @@ namespace xboxkrnl
 #include "EmuKrnlLogging.h"
 #include "CxbxKrnl.h" // For CxbxKrnlCleanup
 #include "Emu.h" // For EmuLog(LOG_LEVEL::WARNING, )
-#include "VMManager.h"
+#include "core\kernel\memory-manager\VMManager.h"
 #include "EmuShared.h"
 #include <assert.h>
 

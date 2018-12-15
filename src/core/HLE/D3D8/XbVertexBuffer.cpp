@@ -37,7 +37,7 @@
 #define _XBOXKRNL_DEFEXTRN_
 #define LOG_PREFIX CXBXR_MODULE::VTXB
 
-#include "CxbxKrnl/VMManager.h"
+#include "core\kernel\memory-manager\VMManager.h"
 #include "common\util\xxhash32.h" // For XXHash32::hash()
 #include "CxbxKrnl/Emu.h"
 #include "CxbxKrnl/EmuXTL.h"

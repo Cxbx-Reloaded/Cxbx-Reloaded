@@ -38,7 +38,7 @@
 
 #include "PoolManager.h"
 #include "Logging.h"
-#include "EmuKrnl.h" // For InitializeListHead(), etc.
+#include "CxbxKrnl\EmuKrnl.h" // For InitializeListHead(), etc.
 #include <assert.h>
 
 

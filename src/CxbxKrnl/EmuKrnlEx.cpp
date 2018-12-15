@@ -47,7 +47,7 @@ namespace xboxkrnl
 #include "Logging.h" // For LOG_FUNC()
 #include "EmuEEPROM.h" // For EmuFindEEPROMInfo, EEPROM, XboxFactoryGameRegion
 #include "EmuKrnlLogging.h"
-#include "PoolManager.h"
+#include "core\kernel\memory-manager\PoolManager.h"
 
 // prevent name collisions
 namespace NtDll

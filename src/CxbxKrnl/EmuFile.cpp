@@ -48,7 +48,7 @@
 #include <ntstatus.h>
 #pragma warning(default:4005)
 #include "CxbxKrnl.h"
-#include "VMManager.h"
+#include "core\kernel\memory-manager\VMManager.h"
 #include "Logging.h"
 
 #include <experimental/filesystem>

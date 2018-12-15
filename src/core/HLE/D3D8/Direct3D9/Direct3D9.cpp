@@ -53,7 +53,7 @@ namespace xboxkrnl
 #include "EmuShared.h"
 #include "gui/DbgConsole.h"
 #include "CxbxKrnl/ResourceTracker.h"
-#include "CxbxKrnl/VMManager.h" // for g_VMManager
+#include "core\kernel\memory-manager\VMManager.h" // for g_VMManager
 #include "CxbxKrnl/EmuXTL.h"
 #include "Logging.h"
 #include "../XbD3D8Logging.h"
