@@ -34,7 +34,7 @@
 #ifndef XBOXADPCM_H
 #define XBOXADPCM_H
 
-#include "Common/Xbe.h"
+#include "common\xbe\Xbe.h"
 
 /*
   TXboxAdpcmDecoder  0.1.3

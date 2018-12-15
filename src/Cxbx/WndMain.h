@@ -35,7 +35,7 @@
 #define WNDMAIN_H
 
 #include "Wnd.h"
-#include "Common/Xbe.h"
+#include "common\xbe\/Xbe.h"
 
 #include <thread>
 

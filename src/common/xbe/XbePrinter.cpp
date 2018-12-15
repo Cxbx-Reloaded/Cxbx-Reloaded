@@ -34,7 +34,7 @@
 // *
 // ******************************************************************
 
-#include "XbePrinter.h"
+#include "common\xbe\XbePrinter.h"
 #include "CxbxVersion.h" // For _CXBX_VERSION
 
 #include <locale> // For ctime

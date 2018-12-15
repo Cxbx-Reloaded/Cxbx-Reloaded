@@ -207,7 +207,7 @@
     <ClInclude Include="..\..\src\Common\CxbxDebugger.h" />
     <ClInclude Include="..\..\src\Common\Win32\XBPortMapping.h" />
     <ClInclude Include="..\..\src\Common\XADPCM.h" />
-    <ClInclude Include="..\..\src\Common\XbePrinter.h" />
+    <ClInclude Include="..\..\src\common\xbe\XbePrinter.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\crc32c.h" />
     <ClInclude Include="..\..\src\core\HLE\D3D8\XbD3D8Logging.h" />
     <ClInclude Include="..\..\src\Common\EmuEEPROM.h" />
@@ -273,7 +273,7 @@
     <ClInclude Include="..\..\src\Cxbx\Wnd.h" />
     <ClInclude Include="..\..\src\Cxbx\WndMain.h" />
     <ClInclude Include="..\..\src\Common\Win32\DInputController.h" />
-    <ClInclude Include="..\..\src\Common\Xbe.h" />
+    <ClInclude Include="..\..\src\common\xbe\Xbe.h" />
     <ClInclude Include="..\..\src\devices\ADM1032Device.h" />
     <ClInclude Include="..\..\src\devices\EEPROMDevice.h" />
     <ClInclude Include="..\..\src\devices\EmuNVNet.h" />
@@ -351,7 +351,7 @@
     <ClCompile Include="..\..\src\Common\Win32\Threads.cpp" />
     <ClCompile Include="..\..\src\Common\CxbxDebugger.cpp" />
     <ClCompile Include="..\..\src\Common\Win32\XBPortMapping.cpp" />
-    <ClCompile Include="..\..\src\Common\XbePrinter.cpp" />
+    <ClCompile Include="..\..\src\common\xbe\XbePrinter.cpp" />
     <ClCompile Include="..\..\src\CxbxKrnl\crc32c.cpp" />
     <ClCompile Include="..\..\src\core\HLE\D3D8\XbD3D8Logging.cpp" />
     <ClCompile Include="..\..\src\Common\EmuEEPROM.cpp" />
@@ -518,7 +518,7 @@
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
-    <ClCompile Include="..\..\src\Common\Xbe.cpp">
+    <ClCompile Include="..\..\src\common\xbe\Xbe.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>

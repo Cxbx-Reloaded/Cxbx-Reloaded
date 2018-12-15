@@ -94,7 +94,7 @@
     <ClCompile Include="..\..\src\Common\Win32\Mutex.cpp">
       <Filter>Shared</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\Common\Xbe.cpp">
+    <ClCompile Include="..\..\src\common\xbe\Xbe.cpp">
       <Filter>Shared</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\CxbxKrnl\CxbxKrnl.cpp">
@@ -208,7 +208,7 @@
     <ClCompile Include="..\..\src\devices\Xbox.cpp">
       <Filter>Hardware</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\Common\XbePrinter.cpp">
+    <ClCompile Include="..\..\src\common\xbe\XbePrinter.cpp">
       <Filter>Shared</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\Common\Win32\Threads.cpp">
@@ -371,7 +371,7 @@
     <ClInclude Include="..\..\src\Cxbx\ResCxbx.h">
       <Filter>Shared</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\Common\Xbe.h">
+    <ClInclude Include="..\..\src\common\xbe\Xbe.h">
       <Filter>Shared</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\CxbxKrnl\CxbxKrnl.h">
@@ -503,7 +503,7 @@
     <ClInclude Include="..\..\src\Common\CxbxDebugger.h">
       <Filter>Shared</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\Common\XbePrinter.h">
+    <ClInclude Include="..\..\src\common\xbe\XbePrinter.h">
       <Filter>Shared</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\Common\Win32\Threads.h">

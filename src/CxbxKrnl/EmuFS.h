@@ -35,7 +35,7 @@
 #define EMUFS_H
 
 #include <vector>
-#include "Common/Xbe.h"
+#include "common\xbe\Xbe.h"
 #undef FIELD_OFFSET     // prevent macro redefinition warnings
 #include <windows.h>
 

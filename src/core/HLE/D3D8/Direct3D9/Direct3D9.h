@@ -36,7 +36,7 @@
 
 #include "../XbD3D8Types.h"
 #include "CxbxKrnl/CxbxKrnl.h"
-#include "Common/Xbe.h"
+#include "common\xbe\Xbe.h"
 #include "CxbxKrnl/Emu.h"
 
 #define DIRECTDRAW_VERSION 0x0700

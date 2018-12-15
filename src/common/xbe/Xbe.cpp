@@ -41,7 +41,7 @@ namespace xboxkrnl
 	#include <xboxkrnl/xboxkrnl.h>
 };
 
-#include "Xbe.h"
+#include "common\xbe\Xbe.h"
 #include "CxbxUtil.h" // For RoundUp
 #include <experimental/filesystem> // filesystem related functions available on C++ 17
 #include <locale> // For ctime

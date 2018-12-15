@@ -34,7 +34,7 @@
 #ifndef EMUXACTENG_H
 #define EMUXACTENG_H
 
-#include "Common/Xbe.h"
+#include "common\xbe\Xbe.h"
 
 #undef FIELD_OFFSET     // prevent macro redefinition warnings
 #include <windows.h>
