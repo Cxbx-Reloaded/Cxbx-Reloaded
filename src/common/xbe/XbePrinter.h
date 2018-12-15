@@ -34,7 +34,7 @@
 #ifndef XBE_PRINTER_H
 #define XBE_PRINTER_H
 
-#include "Common/Error.h"
+#include "common\Error.h"
 #include "common\xbe\Xbe.h"
 
 #include <cstdio>

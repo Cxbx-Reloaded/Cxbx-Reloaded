@@ -42,7 +42,7 @@
 // prevent name collisions
 namespace xboxkrnl
 {
-    #include <xboxkrnl/xboxkrnl.h>
+    #include <xboxkrnl\xboxkrnl.h>
 };
 
 #include "common\util\CxbxUtil.h"
@@ -51,15 +51,15 @@ namespace xboxkrnl
 #include "core\kernel\support\Emu.h"
 #include "core\kernel\support\EmuFS.h"
 #include "EmuShared.h"
-#include "gui/DbgConsole.h"
-#include "CxbxKrnl/ResourceTracker.h"
+#include "gui\DbgConsole.h"
+#include "core\hle\D3D8\ResourceTracker.h"
 #include "core\kernel\memory-manager\VMManager.h" // for g_VMManager
 #include "core\kernel\support\EmuXTL.h"
 #include "Logging.h"
-#include "../XbD3D8Logging.h"
-#include "core/HLE/Intercept.hpp" // for bLLE_GPU
-#include "devices/video/nv2a.h" // For GET_MASK, NV_PGRAPH_CONTROL_0
-#include "gui/ResCxbx.h"
+#include "..\XbD3D8Logging.h"
+#include "core\hle\Intercept.hpp" // for bLLE_GPU
+#include "devices\video\nv2a.h" // For GET_MASK, NV_PGRAPH_CONTROL_0
+#include "gui\ResCxbx.h"
 
 #include <assert.h>
 #include <process.h>

@@ -39,7 +39,7 @@
 #include "core\kernel\init\CxbxKrnl.h"
 #include "core\kernel\support\Emu.h"
 #include "DbgConsole.h"
-#include "CxbxKrnl\ResourceTracker.h"
+#include "core\hle\D3D8\ResourceTracker.h"
 #include "core\kernel\support\EmuXTL.h"
 
 #include <conio.h>

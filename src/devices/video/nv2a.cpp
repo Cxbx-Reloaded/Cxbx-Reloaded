@@ -50,7 +50,7 @@
 // prevent name collisions
 namespace xboxkrnl
 {
-#include <xboxkrnl/xboxkrnl.h> // For PKINTERRUPT, etc.
+#include <xboxkrnl\xboxkrnl.h> // For PKINTERRUPT, etc.
 };
 
 #ifdef _MSC_VER                         // Check if MS Visual C compiler
@@ -67,7 +67,7 @@ namespace xboxkrnl
 #include "core\kernel\support\Emu.h"
 #include "core\kernel\support\EmuFS.h"
 #include "core\kernel\exports\EmuKrnl.h"
-#include "core/HLE/Intercept.hpp"
+#include "core\hle\Intercept.hpp"
 #include "Logging.h"
 
 #include "vga.h"

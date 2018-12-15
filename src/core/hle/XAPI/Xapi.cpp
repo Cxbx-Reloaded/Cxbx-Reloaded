@@ -41,7 +41,7 @@
 /* prevent name collisions */
 namespace xboxkrnl
 {
-	#include <xboxkrnl/xboxkrnl.h>
+	#include <xboxkrnl\xboxkrnl.h>
 };
 
 #include <Shlwapi.h>
@@ -53,9 +53,9 @@ namespace xboxkrnl
 #include "core\kernel\support\EmuFS.h"
 #include "core\kernel\support\EmuXTL.h"
 #include "EmuShared.h"
-#include "../Common/Win32/XBPortMapping.h"
-#include "core/HLE/Intercept.hpp"
-#include "vsbc/CxbxVSBC.h"
+#include "..\common/win32\XBPortMapping.h"
+#include "core\hle\Intercept.hpp"
+#include "vsbc\CxbxVSBC.h"
 #include "Windef.h"
 #include <vector>
 

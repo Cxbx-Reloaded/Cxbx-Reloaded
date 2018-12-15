@@ -45,7 +45,7 @@ namespace xboxkrnl
 
 #include <Shlwapi.h>
 #include "EmuShared.h"
-#include "Common/Settings.hpp"
+#include "common\Settings.hpp"
 #include "Logging.h"
 
 static Settings::s_controller_port g_ControllerPortMap;

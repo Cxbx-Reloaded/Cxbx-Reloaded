@@ -37,11 +37,11 @@
 // Without this, you'll get a ton of errors from the std library for some unknown reason...
 #include "Logging.h"
 
-#include "Common/Settings.hpp" // for g_Settings
+#include "common\Settings.hpp" // for g_Settings
 
 #include "DlgControllerConfig.h"
 #include "ResCxbx.h"
-#include "Common/Win32/DInputController.h"
+#include "common\Win32\DInputController.h"
 
 #define DIRECTINPUT_VERSION 0x0800
 #include <dinput.h>

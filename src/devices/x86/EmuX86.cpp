@@ -50,7 +50,7 @@
 #include "core\kernel\init\CxbxKrnl.h"
 #include "core\kernel\support\Emu.h" // For EmuLog
 #include "devices\x86\EmuX86.h"
-#include "core/HLE/Intercept.hpp" // for bLLE_GPU
+#include "core\hle\Intercept.hpp" // for bLLE_GPU
 
 #include <assert.h>
 #include "devices\Xbox.h" // For g_PCIBus

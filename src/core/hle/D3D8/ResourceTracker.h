@@ -35,7 +35,7 @@
 #define RESOURCETRACKER_H
 
 #include "Cxbx.h"
-#include "Common/Win32/Mutex.h"
+#include "common\Win32\Mutex.h"
 
 extern class ResourceTracker : public Mutex
 {

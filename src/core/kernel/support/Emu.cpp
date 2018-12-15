@@ -38,7 +38,7 @@
 // prevent name collisions
 namespace xboxkrnl
 {
-    #include <xboxkrnl/xboxkrnl.h>
+    #include <xboxkrnl\xboxkrnl.h>
 };
 
 #include "core\kernel\init\CxbxKrnl.h"
@@ -47,7 +47,7 @@ namespace xboxkrnl
 #include "EmuFS.h"
 #include "EmuXTL.h"
 #include "EmuShared.h"
-#include "core/HLE/Intercept.hpp"
+#include "core\hle\Intercept.hpp"
 #include "CxbxDebugger.h"
 
 #ifdef _DEBUG

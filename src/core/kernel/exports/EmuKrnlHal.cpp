@@ -54,7 +54,7 @@ namespace xboxkrnl
 #include "devices\x86\EmuX86.h" // HalReadWritePciSpace needs this
 #include "EmuShared.h"
 #include "core\kernel\support\EmuFile.h" // For FindNtSymbolicLinkObjectByDriveLetter
-#include "Common\EmuEEPROM.h" // For EEPROM
+#include "common\EmuEEPROM.h" // For EEPROM
 #include "devices\Xbox.h" // For g_SMBus, SMBUS_ADDRESS_SYSTEM_MICRO_CONTROLLER
 #include "devices\SMCDevice.h" // For SMC_COMMAND_SCRATCH
 

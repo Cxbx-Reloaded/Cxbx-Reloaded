@@ -36,7 +36,7 @@
 
 #include "Xbox.h" // For HardwareModel
 #include "common\xbe\Xbe.h"  // Without this HLEIntercept complains about some undefined xbe variables
-#include "core/HLE/Intercept.hpp"
+#include "core\hle\Intercept.hpp"
 
 PCIBus* g_PCIBus;
 SMBus* g_SMBus;

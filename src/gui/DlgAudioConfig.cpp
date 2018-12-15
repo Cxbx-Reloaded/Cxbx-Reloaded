@@ -34,7 +34,7 @@
 // *
 // ******************************************************************
 
-#include "Common/Settings.hpp" // for g_Settings
+#include "common\Settings.hpp" // for g_Settings
 
 #include "DlgAudioConfig.h"
 #include "ResCxbx.h"

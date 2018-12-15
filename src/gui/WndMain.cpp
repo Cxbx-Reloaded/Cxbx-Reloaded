@@ -50,7 +50,7 @@
 #include "common\xbe\XbePrinter.h" // For DumpInformation
 #include "EmuShared.h"
 #include "core\kernel\support\EmuXTL.h"
-#include "Common/Settings.hpp"
+#include "common\Settings.hpp"
 
 #include "core\kernel\init\CxbxKrnl.h" // For CxbxConvertArgToString and CxbxExec
 #include "ResCxbx.h"

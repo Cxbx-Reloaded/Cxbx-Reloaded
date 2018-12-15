@@ -40,11 +40,11 @@
 
 #include "Cxbx.h"
 #include "core\kernel\init\CxbxKrnl.h"
-#include "gui/ResCxbx.h"
+#include "gui\ResCxbx.h"
 
-#include "Common/IPCHybrid.hpp"
+#include "common\IPCHybrid.hpp"
 #include "EmuShared.h"
-#include "Common/Settings.hpp"
+#include "common\Settings.hpp"
 #include "Logging.h"
 
 

@@ -39,7 +39,7 @@
 #include "core\kernel\init\CxbxKrnl.h"
 #include "core\kernel\support\Emu.h"
 #include "EmuShared.h"
-#include "Common/Settings.hpp"
+#include "common\Settings.hpp"
 #include <commctrl.h>
 
 // Enable Visual Styles

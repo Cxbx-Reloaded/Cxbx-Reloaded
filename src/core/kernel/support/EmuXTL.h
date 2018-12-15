@@ -38,20 +38,20 @@
 
 namespace XTL
 {
-    #include "core/HLE/XAPI/Xapi.h"
-    #include "core/HLE/D3D8/Direct3D9/Direct3D9.h"
-    #include "core/HLE/D3D8/XbConvert.h"
-    #include "core/HLE/D3D8/XbVertexBuffer.h"
-    #include "core/HLE/D3D8/XbPushBuffer.h"
-    #include "core/HLE/D3D8/XbVertexShader.h"
-	#include "core/HLE/D3D8/XbPixelShader.h"
-    #include "core/HLE/D3D8/XbState.h"
-    #include "core/HLE/XAPI/OHCI/XInput/DInput.h"
-    #include "core/HLE/DSOUND/DirectSound/DirectSound.hpp"
-    #include "core/HLE/XONLINE/XOnline.h"
-    #include "core/HLE/XGRAPHIC/XGraphic.h"
-	#include "core/HLE/XACTENG/XactEng.h"
-	#include "core/HLE/XAPI/OHCI/XInput/XInput.h"
+    #include "core\hle\XAPI\Xapi.h"
+    #include "core\hle\D3D8\Direct3D9/Direct3D9.h"
+    #include "core\hle\D3D8\XbConvert.h"
+    #include "core\hle\D3D8\XbVertexBuffer.h"
+    #include "core\hle\D3D8\XbPushBuffer.h"
+    #include "core\hle\D3D8\XbVertexShader.h"
+	#include "core\hle\D3D8\XbPixelShader.h"
+    #include "core\hle\D3D8\XbState.h"
+    #include "core\hle\XAPI\OHCI\XInput\DInput.h"
+    #include "core\hle\DSOUND\DirectSound\DirectSound.hpp"
+    #include "core\hle\XONLINE\XOnline.h"
+    #include "core\hle\XGRAPHIC\XGraphic.h"
+	#include "core\hle\XACTENG\XactEng.h"
+	#include "core\hle\XAPI\OHCI\XInput\XInput.h"
 }
 
 extern XTL::IDirect3DDevice    *g_pD3DDevice;

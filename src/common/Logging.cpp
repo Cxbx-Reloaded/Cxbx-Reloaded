@@ -37,7 +37,7 @@
 #include <windows.h> // for PULONG
 
 #include "Logging.h"
-#include "Common/Settings.hpp"
+#include "common\Settings.hpp"
 #include "EmuShared.h"
 
 // For thread_local, see : http://en.cppreference.com/w/cpp/language/storage_duration

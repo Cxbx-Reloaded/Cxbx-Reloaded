@@ -40,7 +40,7 @@
 #include "core\kernel\support\Emu.h"
 #include "core\kernel\support\EmuXTL.h"
 #include "EmuShared.h"
-#include "Common/Win32/DInputController.h"
+#include "common\Win32\DInputController.h"
 #include "Logging.h"
 
 // ******************************************************************

@@ -41,7 +41,7 @@
 #include "common\util\xxhash32.h" // For XXHash32::hash()
 #include "core\kernel\support\Emu.h"
 #include "core\kernel\support\EmuXTL.h"
-#include "CxbxKrnl/ResourceTracker.h"
+#include "core\hle\D3D8\ResourceTracker.h"
 
 #include <ctime>
 #include <unordered_map>

@@ -33,7 +33,7 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#include "ResourceTracker.h"
+#include "core\hle\D3D8\ResourceTracker.h"
 
 //
 // all of our resource trackers

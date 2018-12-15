@@ -50,7 +50,7 @@ namespace xboxkrnl {
 #include "core\kernel\support\EmuFS.h"
 #include "EmuShared.h"
 #include "core\kernel\support\EmuXTL.h"
-#include "Common/Settings.hpp"
+#include "common\Settings.hpp"
 
 
 #ifndef _DEBUG_TRACE

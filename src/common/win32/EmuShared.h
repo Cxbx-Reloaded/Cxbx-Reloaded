@@ -35,9 +35,9 @@
 #define EMUSHARED_H
 
 #include "Cxbx.h"
-#include "Common/Settings.hpp"
+#include "common\Settings.hpp"
 #include "Mutex.h"
-#include "Common/IPCHybrid.hpp"
+#include "common\IPCHybrid.hpp"
 
 #include <memory.h>
 

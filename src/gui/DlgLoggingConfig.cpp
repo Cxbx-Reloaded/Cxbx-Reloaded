@@ -36,7 +36,7 @@
 #include "EmuShared.h"
 #include "DlgLoggingConfig.h"
 #include "ResCxbx.h"
-#include "Common/IPCHybrid.hpp"
+#include "common\IPCHybrid.hpp"
 
 
 static bool g_bHasChanges = false;

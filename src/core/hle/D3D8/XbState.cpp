@@ -45,7 +45,7 @@ DWORD *XTL::EmuD3DDeferredTextureState = nullptr;
 
 extern uint32 g_BuildVersion;
 
-#include "core\HLE\Intercept.hpp" // For g_SymbolAddresses
+#include "core\hle\Intercept.hpp" // For g_SymbolAddresses
 
 // ******************************************************************
 // * patch: UpdateDeferredStates

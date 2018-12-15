@@ -42,7 +42,7 @@
 #include "core\kernel\support\Emu.h"
 #include "core\kernel\support\EmuXTL.h"
 #include "XbD3D8Types.h" // For X_D3DFORMAT
-#include "CxbxKrnl/ResourceTracker.h"
+#include "core\hle\D3D8\ResourceTracker.h"
 #include "devices/video/nv2a.h" // For g_NV2A, PGRAPHState
 #include "devices/video/nv2a_int.h" // For NV** defines
 #include "Logging.h"

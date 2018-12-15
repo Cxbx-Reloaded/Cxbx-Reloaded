@@ -219,17 +219,17 @@
     <ClInclude Include="..\..\src\Cxbx.h" />
     <ClInclude Include="..\..\src\core\kernel\init\CxbxKrnl.h" />
     <ClInclude Include="..\..\src\gui\DbgConsole.h" />
-    <ClInclude Include="..\..\src\core\HLE\D3D8\Direct3D9\Direct3D9.h" />
-    <ClInclude Include="..\..\src\core\HLE\D3D8\XbD3D8Types.h" />
-    <ClInclude Include="..\..\src\core\HLE\D3D8\XbConvert.h" />
-    <ClInclude Include="..\..\src\core\HLE\D3D8\XbPixelShader.h" />
-    <ClInclude Include="..\..\src\core\HLE\D3D8\XbPushBuffer.h" />
-    <ClInclude Include="..\..\src\core\HLE\D3D8\XbState.h" />
-    <ClInclude Include="..\..\src\core\HLE\D3D8\XbVertexBuffer.h" />
-    <ClInclude Include="..\..\src\core\HLE\D3D8\XbVertexShader.h" />
-    <ClInclude Include="..\..\src\core\HLE\XAPI\OHCI\XInput\DInput.h" />
-    <ClInclude Include="..\..\src\core\HLE\DSOUND\DirectSound\DirectSound.hpp" />
-    <ClInclude Include="..\..\src\core\HLE\DSOUND\DirectSound\DirectSoundInline.hpp" />
+    <ClInclude Include="..\..\src\core\hle\D3D8\Direct3D9\Direct3D9.h" />
+    <ClInclude Include="..\..\src\core\hle\D3D8\XbD3D8Types.h" />
+    <ClInclude Include="..\..\src\core\hle\D3D8\XbConvert.h" />
+    <ClInclude Include="..\..\src\core\hle\D3D8\XbPixelShader.h" />
+    <ClInclude Include="..\..\src\core\hle\D3D8\XbPushBuffer.h" />
+    <ClInclude Include="..\..\src\core\hle\D3D8\XbState.h" />
+    <ClInclude Include="..\..\src\core\hle\D3D8\XbVertexBuffer.h" />
+    <ClInclude Include="..\..\src\core\hle\D3D8\XbVertexShader.h" />
+    <ClInclude Include="..\..\src\core\hle\XAPI\OHCI\XInput\DInput.h" />
+    <ClInclude Include="..\..\src\core\hle\DSOUND\DirectSound\DirectSound.hpp" />
+    <ClInclude Include="..\..\src\core\hle\DSOUND\DirectSound\DirectSoundInline.hpp" />
     <ClInclude Include="..\..\src\core\kernel\support\EmuFile.h" />
     <ClInclude Include="..\..\src\core\kernel\support\EmuFS.h" />
     <ClInclude Include="..\..\src\core\kernel\exports\EmuKrnlAvModes.h" />
@@ -239,21 +239,21 @@
     <ClInclude Include="..\..\src\common\crypto\EmuRsa.h" />
     <ClInclude Include="..\..\src\common\crypto\EmuSha.h" />
     <ClInclude Include="..\..\src\devices\x86\EmuX86.h" />
-    <ClInclude Include="..\..\src\core\HLE\XACTENG\XactEng.h" />
-    <ClInclude Include="..\..\src\core\HLE\XAPI\Xapi.h" />
-    <ClInclude Include="..\..\src\core\HLE\XGRAPHIC\XGraphic.h" />
-    <ClInclude Include="..\..\src\core\HLE\XAPI\OHCI\XInput\XInput.h" />
-    <ClInclude Include="..\..\src\core\HLE\XONLINE\XOnline.h" />
+    <ClInclude Include="..\..\src\core\hle\XACTENG\XactEng.h" />
+    <ClInclude Include="..\..\src\core\hle\XAPI\Xapi.h" />
+    <ClInclude Include="..\..\src\core\hle\XGRAPHIC\XGraphic.h" />
+    <ClInclude Include="..\..\src\core\hle\XAPI\OHCI\XInput\XInput.h" />
+    <ClInclude Include="..\..\src\core\hle\XONLINE\XOnline.h" />
     <ClInclude Include="..\..\src\core\kernel\support\EmuXTL.h" />
     <ClInclude Include="..\..\src\common\util\gloffscreen\glextensions.h" />
     <ClInclude Include="..\..\src\common\util\gloffscreen\gloffscreen.h" />
-    <ClInclude Include="..\..\src\core\HLE\Intercept.hpp" />
-    <ClInclude Include="..\..\src\core\HLE\Patches.hpp" />
+    <ClInclude Include="..\..\src\core\hle\Intercept.hpp" />
+    <ClInclude Include="..\..\src\core\hle\Patches.hpp" />
     <ClInclude Include="..\..\src\common\crypto\LibRc4.h" />
     <ClInclude Include="..\..\src\core\kernel\memory-manager\PhysicalMemory.h" />
     <ClInclude Include="..\..\src\core\kernel\memory-manager\PoolManager.h" />
     <ClInclude Include="..\..\src\common\ReservedMemory.h" />
-    <ClInclude Include="..\..\src\CxbxKrnl\ResourceTracker.h" />
+    <ClInclude Include="..\..\src\core\hle\D3D8\ResourceTracker.h" />
     <ClInclude Include="..\..\src\devices\usb\Timer.h" />
     <ClInclude Include="..\..\src\core\kernel\memory-manager\VMManager.h" />
     <ClInclude Include="..\..\src\CxbxVersion.h" />
@@ -353,7 +353,7 @@
     <ClCompile Include="..\..\src\common\win32\XBPortMapping.cpp" />
     <ClCompile Include="..\..\src\common\xbe\XbePrinter.cpp" />
     <ClCompile Include="..\..\src\common\util\crc32c.cpp" />
-    <ClCompile Include="..\..\src\core\HLE\D3D8\XbD3D8Logging.cpp" />
+    <ClCompile Include="..\..\src\core\hle\D3D8\XbD3D8Logging.cpp" />
     <ClCompile Include="..\..\src\common\EmuEEPROM.cpp" />
     <ClCompile Include="..\..\src\common\Logging.cpp" />
     <ClCompile Include="..\..\src\common\win32\EmuShared.cpp">
@@ -383,15 +383,15 @@
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
-    <ClCompile Include="..\..\src\core\HLE\D3D8\Direct3D9\Direct3D9.cpp" />
-    <ClCompile Include="..\..\src\core\HLE\D3D8\XbConvert.cpp" />
-    <ClCompile Include="..\..\src\core\HLE\D3D8\XbPixelShader.cpp" />
-    <ClCompile Include="..\..\src\core\HLE\D3D8\XbPushBuffer.cpp" />
-    <ClCompile Include="..\..\src\core\HLE\D3D8\XbState.cpp" />
-    <ClCompile Include="..\..\src\core\HLE\D3D8\XbVertexBuffer.cpp" />
-    <ClCompile Include="..\..\src\core\HLE\D3D8\XbVertexShader.cpp" />
-    <ClCompile Include="..\..\src\core\HLE\XAPI\OHCI\XInput\DInput.cpp" />
-    <ClCompile Include="..\..\src\core\HLE\DSOUND\DirectSound\DirectSound.cpp" />
+    <ClCompile Include="..\..\src\core\hle\D3D8\Direct3D9\Direct3D9.cpp" />
+    <ClCompile Include="..\..\src\core\hle\D3D8\XbConvert.cpp" />
+    <ClCompile Include="..\..\src\core\hle\D3D8\XbPixelShader.cpp" />
+    <ClCompile Include="..\..\src\core\hle\D3D8\XbPushBuffer.cpp" />
+    <ClCompile Include="..\..\src\core\hle\D3D8\XbState.cpp" />
+    <ClCompile Include="..\..\src\core\hle\D3D8\XbVertexBuffer.cpp" />
+    <ClCompile Include="..\..\src\core\hle\D3D8\XbVertexShader.cpp" />
+    <ClCompile Include="..\..\src\core\hle\XAPI\OHCI\XInput\DInput.cpp" />
+    <ClCompile Include="..\..\src\core\hle\DSOUND\DirectSound\DirectSound.cpp" />
     <ClCompile Include="..\..\src\core\kernel\support\EmuFile.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -437,16 +437,16 @@
     <ClCompile Include="..\..\src\common\crypto\EmuRsa.cpp" />
     <ClCompile Include="..\..\src\common\crypto\EmuSha.cpp" />
     <ClCompile Include="..\..\src\devices\x86\EmuX86.cpp" />
-    <ClCompile Include="..\..\src\core\HLE\XACTENG\XactEng.cpp" />
-    <ClCompile Include="..\..\src\core\HLE\XAPI\Xapi.cpp" />
-    <ClCompile Include="..\..\src\core\HLE\XGRAPHIC\XGraphic.cpp" />
-    <ClCompile Include="..\..\src\core\HLE\XAPI\OHCI\XInput\XInput.cpp" />
-    <ClCompile Include="..\..\src\core\HLE\XONLINE\XOnline.cpp" />
+    <ClCompile Include="..\..\src\core\hle\XACTENG\XactEng.cpp" />
+    <ClCompile Include="..\..\src\core\hle\XAPI\Xapi.cpp" />
+    <ClCompile Include="..\..\src\core\hle\XGRAPHIC\XGraphic.cpp" />
+    <ClCompile Include="..\..\src\core\hle\XAPI\OHCI\XInput\XInput.cpp" />
+    <ClCompile Include="..\..\src\core\hle\XONLINE\XOnline.cpp" />
     <ClCompile Include="..\..\src\common\util\gloffscreen\glextensions.cpp" />
     <ClCompile Include="..\..\src\common\util\gloffscreen\gloffscreen_common.cpp" />
     <ClCompile Include="..\..\src\common\util\gloffscreen\gloffscreen_wgl.cpp" />
-    <ClCompile Include="..\..\src\core\HLE\Intercept.cpp" />
-    <ClCompile Include="..\..\src\core\HLE\Patches.cpp" />
+    <ClCompile Include="..\..\src\core\hle\Intercept.cpp" />
+    <ClCompile Include="..\..\src\core\hle\Patches.cpp" />
     <ClCompile Include="..\..\src\core\kernel\exports\KernelThunk.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -456,7 +456,7 @@
     <ClCompile Include="..\..\src\common\crypto\LibRc4.cpp" />
     <ClCompile Include="..\..\src\core\kernel\memory-manager\PhysicalMemory.cpp" />
     <ClCompile Include="..\..\src\core\kernel\memory-manager\PoolManager.cpp" />
-    <ClCompile Include="..\..\src\CxbxKrnl\ResourceTracker.cpp">
+    <ClCompile Include="..\..\src\core\hle\D3D8\ResourceTracker.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>

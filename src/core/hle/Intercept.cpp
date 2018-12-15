@@ -48,10 +48,10 @@
 #include "core\kernel\support\EmuFS.h"
 #include "core\kernel\support\EmuXTL.h"
 #include "EmuShared.h"
-#include "Common/CxbxDebugger.h"
+#include "common\CxbxDebugger.h"
 #include "Logging.h"
 #pragma comment(lib, "XbSymbolDatabase.lib")
-#include "../../import/XbSymbolDatabase/XbSymbolDatabase.h"
+#include "..\..\import\XbSymbolDatabase\XbSymbolDatabase.h"
 #include "Intercept.hpp"
 #include "Patches.hpp"
 #include "common\util\xxhash32.h"
