@@ -39,7 +39,7 @@
 
 // The intent of this file is to add general functions which are not kernel specific (for those CxbxKrnl.h should be used instead)
 
-#include "CxbxCommon.h"
+#include "common\util\CxbxCommon.h"
 #include "CxbxKrnl\CxbxKrnl.h"
 
 #ifndef MIN

@@ -217,7 +217,7 @@
     <ClCompile Include="..\..\src\devices\MCPXDevice.cpp">
       <Filter>Hardware</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\CxbxKrnl\crc32c.cpp">
+    <ClCompile Include="..\..\src\common\util\crc32c.cpp">
       <Filter>Shared</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\CxbxKrnl\EmuKrnlKi.cpp">
@@ -245,13 +245,13 @@
     <ClCompile Include="..\..\src\devices\ADM1032Device.cpp">
       <Filter>Hardware</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\CxbxKrnl\gloffscreen\gloffscreen_wgl.cpp">
+    <ClCompile Include="..\..\src\common\util\gloffscreen\gloffscreen_wgl.cpp">
       <Filter>Hardware\Video\gloffscreen</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\CxbxKrnl\gloffscreen\gloffscreen_common.cpp">
+    <ClCompile Include="..\..\src\common\util\gloffscreen\gloffscreen_common.cpp">
       <Filter>Hardware\Video\gloffscreen</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\CxbxKrnl\gloffscreen\glextensions.cpp">
+    <ClCompile Include="..\..\src\common\util\gloffscreen\glextensions.cpp">
       <Filter>Hardware\Video\gloffscreen</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\devices\video\qemu-thread-win32.cpp">
@@ -305,7 +305,7 @@
     <ClCompile Include="..\..\src\Common\Input\SDL2_Device.cpp">
       <Filter>Shared\Input</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\Common\CxbxCommon.cpp">
+    <ClCompile Include="..\..\src\common\util\CxbxCommon.cpp">
       <Filter>Cross Platform</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\Common\Settings.cpp">
@@ -512,7 +512,7 @@
     <ClInclude Include="..\..\src\devices\MCPXDevice.h">
       <Filter>Hardware</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\CxbxKrnl\crc32c.h">
+    <ClInclude Include="..\..\src\common\util\crc32c.h">
       <Filter>Shared</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\CxbxKrnl\EmuKrnlKi.h">
@@ -557,10 +557,10 @@
     <ClInclude Include="..\..\src\common\xbdm\CxbxXbdm.h">
       <Filter>Kernel</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\CxbxKrnl\gloffscreen\glextensions.h">
+    <ClInclude Include="..\..\src\common\util\gloffscreen\glextensions.h">
       <Filter>Hardware\Video\gloffscreen</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\CxbxKrnl\gloffscreen\gloffscreen.h">
+    <ClInclude Include="..\..\src\common\util\gloffscreen\gloffscreen.h">
       <Filter>Hardware\Video\gloffscreen</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\devices\video\qemu-thread.h">
@@ -611,7 +611,7 @@
     <ClInclude Include="..\..\src\Common\Input\SDL2_Device.h">
       <Filter>Shared\Input</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\Common\CxbxCommon.h">
+    <ClInclude Include="..\..\src\common\util\CxbxCommon.h">
       <Filter>Cross Platform</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\Common\Settings.hpp">

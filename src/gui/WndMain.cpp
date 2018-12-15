@@ -67,7 +67,7 @@
 #include <fstream>
 #include <iostream>
 #include <fcntl.h> // for _O_TEXT
-#include "CxbxKrnl/xxhash32.h" // for XXHash32::hash
+#include "common\util\xxhash32.h" // for XXHash32::hash
 
 #define XBOX_LED_FLASH_PERIOD 176 // if you know a more accurate value, put it here
 

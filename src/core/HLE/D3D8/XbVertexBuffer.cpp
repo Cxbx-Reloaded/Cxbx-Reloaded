@@ -38,7 +38,7 @@
 #define LOG_PREFIX CXBXR_MODULE::VTXB
 
 #include "CxbxKrnl/VMManager.h"
-#include "CxbxKrnl/xxhash32.h" // For XXHash32::hash()
+#include "common\util\xxhash32.h" // For XXHash32::hash()
 #include "CxbxKrnl/Emu.h"
 #include "CxbxKrnl/EmuXTL.h"
 #include "CxbxKrnl/ResourceTracker.h"

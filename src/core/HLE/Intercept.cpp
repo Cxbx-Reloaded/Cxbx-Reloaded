@@ -54,7 +54,7 @@
 #include "../../import/XbSymbolDatabase/XbSymbolDatabase.h"
 #include "Intercept.hpp"
 #include "Patches.hpp"
-#include "CxbxKrnl/xxhash32.h"
+#include "common\util\xxhash32.h"
 #include <Shlwapi.h>
 #include <shlobj.h>
 #include <unordered_map>

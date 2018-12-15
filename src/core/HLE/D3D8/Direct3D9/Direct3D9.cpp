@@ -36,7 +36,7 @@
 #define _XBOXKRNL_DEFEXTRN_
 #define LOG_PREFIX CXBXR_MODULE::D3D8
 
-#include "CxbxKrnl/xxhash32.h"
+#include "common\util\xxhash32.h"
 #include <condition_variable>
 
 // prevent name collisions
@@ -45,7 +45,7 @@ namespace xboxkrnl
     #include <xboxkrnl/xboxkrnl.h>
 };
 
-#include "CxbxUtil.h"
+#include "common\util\CxbxUtil.h"
 #include "CxbxVersion.h"
 #include "CxbxKrnl/CxbxKrnl.h"
 #include "CxbxKrnl/Emu.h"

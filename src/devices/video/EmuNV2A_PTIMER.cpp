@@ -42,7 +42,7 @@
 // *
 // ******************************************************************
 
-#include "CxbxCommon.h"
+#include "common\util\CxbxCommon.h"
 
 #define NANOSECONDS_PER_SECOND 1000000000
 

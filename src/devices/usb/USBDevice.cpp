@@ -50,7 +50,7 @@ namespace xboxkrnl
 #include "USBDevice.h"
 #include "OHCI.h"
 #include "CxbxKrnl\EmuKrnl.h"  // For EmuLog
-#include "CxbxCommon.h"
+#include "common\util\CxbxCommon.h"
 #include "Logging.h"
 
 #define SETUP_STATE_IDLE    0

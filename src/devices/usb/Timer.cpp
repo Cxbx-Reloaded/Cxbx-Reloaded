@@ -40,7 +40,7 @@
 #include <thread>
 #include <vector>
 #include "Timer.h"
-#include "CxbxCommon.h"
+#include "common\util\CxbxCommon.h"
 #ifdef __linux__
 #include <time.h>
 #endif

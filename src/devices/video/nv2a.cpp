@@ -99,7 +99,7 @@ struct _GError
 	gchar       *message;
 };
 
-#include "CxbxKrnl/gloffscreen/glextensions.h" // for glextensions_init
+#include "common\util\gloffscreen\glextensions.h" // for glextensions_init
 
 GLuint create_gl_shader(GLenum gl_shader_type,
 	const char *code,

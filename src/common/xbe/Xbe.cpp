@@ -42,7 +42,7 @@ namespace xboxkrnl
 };
 
 #include "common\xbe\Xbe.h"
-#include "CxbxUtil.h" // For RoundUp
+#include "common\util\CxbxUtil.h" // For RoundUp
 #include <experimental/filesystem> // filesystem related functions available on C++ 17
 #include <locale> // For ctime
 #include "devices\LED.h" // For LED::Sequence

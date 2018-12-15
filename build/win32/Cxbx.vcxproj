@@ -198,7 +198,7 @@
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\src\Common\CxbxCommon.h" />
+    <ClInclude Include="..\..\src\common\util\CxbxCommon.h" />
     <ClInclude Include="..\..\src\Common\Input\InputConfig.h" />
     <ClInclude Include="..\..\src\Common\Input\SDL2_Device.h" />
     <ClInclude Include="..\..\src\Common\IPCHybrid.hpp" />
@@ -208,7 +208,7 @@
     <ClInclude Include="..\..\src\Common\Win32\XBPortMapping.h" />
     <ClInclude Include="..\..\src\Common\XADPCM.h" />
     <ClInclude Include="..\..\src\common\xbe\XbePrinter.h" />
-    <ClInclude Include="..\..\src\CxbxKrnl\crc32c.h" />
+    <ClInclude Include="..\..\src\common\util\crc32c.h" />
     <ClInclude Include="..\..\src\core\HLE\D3D8\XbD3D8Logging.h" />
     <ClInclude Include="..\..\src\Common\EmuEEPROM.h" />
     <ClInclude Include="..\..\src\Common\Logging.h" />
@@ -245,8 +245,8 @@
     <ClInclude Include="..\..\src\core\HLE\XAPI\OHCI\XInput\XInput.h" />
     <ClInclude Include="..\..\src\core\HLE\XONLINE\XOnline.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\EmuXTL.h" />
-    <ClInclude Include="..\..\src\CxbxKrnl\gloffscreen\glextensions.h" />
-    <ClInclude Include="..\..\src\CxbxKrnl\gloffscreen\gloffscreen.h" />
+    <ClInclude Include="..\..\src\common\util\gloffscreen\glextensions.h" />
+    <ClInclude Include="..\..\src\common\util\gloffscreen\gloffscreen.h" />
     <ClInclude Include="..\..\src\core\HLE\Intercept.hpp" />
     <ClInclude Include="..\..\src\core\HLE\Patches.hpp" />
     <ClInclude Include="..\..\src\common\crypto\LibRc4.h" />
@@ -342,7 +342,7 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\src\Common\CxbxCommon.cpp" />
+    <ClCompile Include="..\..\src\common\util\CxbxCommon.cpp" />
     <ClCompile Include="..\..\src\Common\Input\InputConfig.cpp" />
     <ClCompile Include="..\..\src\Common\Input\SDL2_Device.cpp" />
     <ClCompile Include="..\..\src\Common\Settings.cpp" />
@@ -352,7 +352,7 @@
     <ClCompile Include="..\..\src\Common\CxbxDebugger.cpp" />
     <ClCompile Include="..\..\src\Common\Win32\XBPortMapping.cpp" />
     <ClCompile Include="..\..\src\common\xbe\XbePrinter.cpp" />
-    <ClCompile Include="..\..\src\CxbxKrnl\crc32c.cpp" />
+    <ClCompile Include="..\..\src\common\util\crc32c.cpp" />
     <ClCompile Include="..\..\src\core\HLE\D3D8\XbD3D8Logging.cpp" />
     <ClCompile Include="..\..\src\Common\EmuEEPROM.cpp" />
     <ClCompile Include="..\..\src\Common\Logging.cpp" />
@@ -442,9 +442,9 @@
     <ClCompile Include="..\..\src\core\HLE\XGRAPHIC\XGraphic.cpp" />
     <ClCompile Include="..\..\src\core\HLE\XAPI\OHCI\XInput\XInput.cpp" />
     <ClCompile Include="..\..\src\core\HLE\XONLINE\XOnline.cpp" />
-    <ClCompile Include="..\..\src\CxbxKrnl\gloffscreen\glextensions.cpp" />
-    <ClCompile Include="..\..\src\CxbxKrnl\gloffscreen\gloffscreen_common.cpp" />
-    <ClCompile Include="..\..\src\CxbxKrnl\gloffscreen\gloffscreen_wgl.cpp" />
+    <ClCompile Include="..\..\src\common\util\gloffscreen\glextensions.cpp" />
+    <ClCompile Include="..\..\src\common\util\gloffscreen\gloffscreen_common.cpp" />
+    <ClCompile Include="..\..\src\common\util\gloffscreen\gloffscreen_wgl.cpp" />
     <ClCompile Include="..\..\src\core\HLE\Intercept.cpp" />
     <ClCompile Include="..\..\src\core\HLE\Patches.cpp" />
     <ClCompile Include="..\..\src\CxbxKrnl\KernelThunk.cpp">

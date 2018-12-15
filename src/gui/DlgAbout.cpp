@@ -39,7 +39,7 @@
 #include "CxbxVersion.h"
 #include "DlgAbout.h"
 #include "ResCxbx.h"
-#include "CxbxCommon.h"
+#include "common\util\CxbxCommon.h"
 
 #include <commctrl.h>
 #include <string>

@@ -37,7 +37,7 @@
 #define _XBOXKRNL_DEFEXTRN_
 
 #define LOG_PREFIX CXBXR_MODULE::PS
-#include <CxbxUtil.h>
+#include <common\util\CxbxUtil.h>
 
 // prevent name collisions
 namespace xboxkrnl
