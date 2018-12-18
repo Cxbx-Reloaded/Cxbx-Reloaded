@@ -456,7 +456,7 @@ int mbedtls_des_crypt_cbc(mbedtls_des_context* ctx,
 	ret = 0;
 	num_des_blocks = (length + 7) / 8;
 
-	// The original code of ReactOS correctly checks that the input lenght is a multiple of a des_block (8 bytes) but the
+	// The original code of ReactOS correctly checks that the input length is a multiple of a des_block (8 bytes) but the
 	// kernel doesn't and will encrypt up to block (lenght + 7) / 8. This means that we'll run the risk of reading some
 	// random bytes after the buffer end and/or touching invalid memory and crash. Because the real kernel does it, we'll
 	// allow this buggy behaviour for the sake of accuracy.
