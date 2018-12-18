@@ -41,13 +41,13 @@
 // in reverse order during a decryption operation. This is necessary because XcKeyTable doesn't provide an "operation" argument, that is, it
 // always generates an encryption key schedule.
 
-// NOTE: this des implementation doesn't produce exactly the same chipertext produced by the Xbox. I found that the implementation of Eric Young
+// NOTE: this des implementation doesn't produce exactly the same ciphertext produced by the Xbox. I found that the implementation of Eric Young
 // used in OpenSSL does instead, but we can't use it since it's under the Apache 2.0 license, which is incompatible with GPLv2. For reference,
 // the DES-YOUN.zip package at https://www.schneier.com/books/applied_cryptography/source.html contains a previous version of the same code under
-// the GPLv2 but again it doesn't produce the same chipertext, and modifying it to make it so would make it identical to the OpenSSL code, which
-// is probably a violation of the license, so I won't do it. In practice, as long as the code correctly decrypts the chipertext (which it does),
-// I don't think that the Xbox games will care if the chipertext is not exactly the same as on the Xbox and should work fine offline. The only
-// problem with this is that cxbxr will be unable to comunicate with a real Xbox on the network (des is used in console-to-console comunications)
+// the GPLv2 but again it doesn't produce the same ciphertext, and modifying it to make it so would make it identical to the OpenSSL code, which
+// is probably a violation of the license, so I won't do it. In practice, as long as the code correctly decrypts the ciphertext (which it does),
+// I don't think that the Xbox games will care if the ciphertext is not exactly the same as on the Xbox and should work fine offline. The only
+// problem with this is that cxbxr will be unable to communicate with a real Xbox on the network (des is used in console-to-console communications)
 // because the des key schedule generated on the console will be different and so it will fail to decrypt packets encrypted by cxbxr.
 
 
@@ -450,19 +450,23 @@ int mbedtls_des_crypt_cbc(mbedtls_des_context* ctx,
 	const unsigned char* input,
 	unsigned char* output)
 {
-	int i;
+	int i, ret, num_des_blocks;
 	unsigned char temp[8];
 
-	// I'm undecided regarding this check. The original code of ReactOS correctly checks that the input lenght is a multiple of a
-	// des_block (8 bytes) but the kernel doesn't and will encrypt up to block (lenght + 7) / 8. However, if we do that, we'll run
-	// the risk of reading some random bytes after the buffer end and/or touching invalid memory and crash.
+	ret = 0;
+	num_des_blocks = (length + 7) / 8;
+
+	// The original code of ReactOS correctly checks that the input lenght is a multiple of a des_block (8 bytes) but the
+	// kernel doesn't and will encrypt up to block (lenght + 7) / 8. This means that we'll run the risk of reading some
+	// random bytes after the buffer end and/or touching invalid memory and crash. Because the real kernel does it, we'll
+	// allow this buggy behaviour for the sake of accuracy.
 	if (length % 8) {
-		return MBEDTLS_ERR_DES_INVALID_INPUT_LENGTH;
+		ret = MBEDTLS_ERR_DES_INVALID_INPUT_LENGTH;
 	}
 
 	if (mode == MBEDTLS_DES_ENCRYPT)
 	{
-		while (length > 0)
+		while (num_des_blocks > 0)
 		{
 			for (i = 0; i < 8; i++) {
 				output[i] = (unsigned char)(input[i] ^ iv[i]);
@@ -473,12 +477,12 @@ int mbedtls_des_crypt_cbc(mbedtls_des_context* ctx,
 
 			input += 8;
 			output += 8;
-			length -= 8;
+			num_des_blocks--;
 		}
 	}
 	else /* MBEDTLS_DES_DECRYPT */
 	{
-		while (length > 0)
+		while (num_des_blocks > 0)
 		{
 			memcpy(temp, input, 8);
 			mbedtls_des_crypt_ecb(ctx, input, output, MBEDTLS_DES_DECRYPT);
@@ -491,11 +495,11 @@ int mbedtls_des_crypt_cbc(mbedtls_des_context* ctx,
 
 			input += 8;
 			output += 8;
-			length -= 8;
+			num_des_blocks--;
 		}
 	}
 
-	return 0;
+	return ret;
 }
 
 /*
@@ -614,16 +618,19 @@ int mbedtls_des3_crypt_cbc(mbedtls_des3_context* ctx,
 	const unsigned char *input,
 	unsigned char *output)
 {
-	int i;
+	int i, ret, num_des_blocks;
 	unsigned char temp[8];
 
+	ret = 0;
+	num_des_blocks = (length + 7) / 8;
+
 	if (length % 8) {
-		return MBEDTLS_ERR_DES_INVALID_INPUT_LENGTH;
+		ret = MBEDTLS_ERR_DES_INVALID_INPUT_LENGTH;
 	}
 
 	if (mode == MBEDTLS_DES_ENCRYPT)
 	{
-		while (length > 0)
+		while (num_des_blocks > 0)
 		{
 			for (i = 0; i < 8; i++) {
 				output[i] = (unsigned char)(input[i] ^ iv[i]);
@@ -634,12 +641,12 @@ int mbedtls_des3_crypt_cbc(mbedtls_des3_context* ctx,
 
 			input += 8;
 			output += 8;
-			length -= 8;
+			num_des_blocks--;
 		}
 	}
 	else /* MBEDTLS_DES_DECRYPT */
 	{
-		while (length > 0)
+		while (num_des_blocks > 0)
 		{
 			memcpy(temp, input, 8);
 			mbedtls_des3_decrypt_ecb(ctx, input, output);
@@ -652,9 +659,9 @@ int mbedtls_des3_crypt_cbc(mbedtls_des3_context* ctx,
 
 			input += 8;
 			output += 8;
-			length -= 8;
+			num_des_blocks--;
 		}
 	}
 
-	return 0;
+	return ret;
 }
