@@ -632,6 +632,9 @@
     <ClCompile Include="..\..\src\core\hle\Patches.cpp">
       <Filter>core\HLE</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\common\crypto\EmuDes.cpp">
+      <Filter>Emulator</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\resource\Splash.jpg">
@@ -811,6 +814,9 @@
   <ItemGroup>
     <ClInclude Include="..\..\src\devices\video\nv2a_regs.h">
       <Filter>Hardware\Video</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\common\crypto\EmuDes.h">
+      <Filter>Emulator</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
