@@ -48,16 +48,13 @@ namespace xboxkrnl
 #include "EmuKrnlLogging.h"
 #include "common\crypto\EmuSha.h" // For A_SHAInit, etc.
 #include "common\crypto\LibRc4.h" // For RC4 Functions
+#include "common\crypto\EmuDes.h" // For DES Functions
 
 // prevent name collisions
 namespace NtDll
 {
 	#include "core\kernel\support\EmuNtDll.h"
 };
-
-
-// Used by JumpedDESKeyParity
-static const xboxkrnl::BYTE DESParityTable[] = { 0x00,0x01,0x01,0x02,0x01,0x02,0x02,0x03,0x01,0x02,0x02,0x03,0x02,0x03,0x03,0x04 };
 
 
 // The following are the default implementations of the crypto functions
@@ -237,15 +234,7 @@ xboxkrnl::VOID NTAPI JumpedDESKeyParity
 	xboxkrnl::ULONG dwKeyLength
 )
 {
-	// This function sets the parity on the DES key to be odd
-	// Test case: Halo, Tenchu, dashboard, Splinter Cell 1 and 2, ...
-
-	for (DWORD i = 0; i < dwKeyLength; i++)
-	{
-		if (!((DESParityTable[pbKey[i] >> 4] + DESParityTable[pbKey[i] & 0x0F]) % 2)) {
-			pbKey[i] = pbKey[i] ^ 0x01;
-		}
-	}
+	mbedtls_des_key_set_parity(pbKey, dwKeyLength);
 }
 
 xboxkrnl::VOID NTAPI JumpedKeyTable
@@ -255,7 +244,12 @@ xboxkrnl::VOID NTAPI JumpedKeyTable
 	xboxkrnl::PUCHAR pbKey
 )
 {
-	LOG_UNIMPLEMENTED();
+	if (dwCipher) {
+		mbedtls_des3_set3key_enc((mbedtls_des3_context*)pbKeyTable, pbKey);
+	}
+	else {
+		mbedtls_des_setkey_enc((mbedtls_des_context*)pbKeyTable, pbKey);
+	}
 }
 
 xboxkrnl::VOID NTAPI JumpedBlockCrypt
@@ -267,7 +261,12 @@ xboxkrnl::VOID NTAPI JumpedBlockCrypt
 	xboxkrnl::ULONG dwOp
 )
 {
-	LOG_UNIMPLEMENTED();
+	if (dwCipher) {
+		mbedtls_des3_crypt_ecb((mbedtls_des3_context*)pbKeyTable, pbInput, pbOutput, dwOp);
+	}
+	else {
+		mbedtls_des_crypt_ecb((mbedtls_des_context*)pbKeyTable, pbInput, pbOutput, dwOp);
+	}
 }
 
 xboxkrnl::VOID NTAPI JumpedBlockCryptCBC
@@ -281,7 +280,18 @@ xboxkrnl::VOID NTAPI JumpedBlockCryptCBC
 	xboxkrnl::PUCHAR pbFeedback
 )
 {
-	LOG_UNIMPLEMENTED();
+	int ret;
+
+	if (dwCipher) {
+		ret = mbedtls_des3_crypt_cbc((mbedtls_des3_context*)pbKeyTable, dwOp, dwInputLength, pbFeedback, pbInput, pbOutput);
+	}
+	else {
+		ret = mbedtls_des_crypt_cbc((mbedtls_des_context*)pbKeyTable, dwOp, dwInputLength, pbFeedback, pbInput, pbOutput);
+	}
+
+	if (ret == MBEDTLS_ERR_DES_INVALID_INPUT_LENGTH) {
+		DBG_PRINTF("%s: dwInputLength was not a multiple of 8 (it was %lu)\n", __func__, dwInputLength);
+	}
 }
 
 xboxkrnl::ULONG NTAPI JumpedCryptService
@@ -290,11 +300,9 @@ xboxkrnl::ULONG NTAPI JumpedCryptService
 	xboxkrnl::PVOID pArgs
 )
 {
-	ULONG ret = 0;
+	// This seems to be a dummy function. It just returns zero regardless of the input arguments, which are left unchanged.
 
-	LOG_UNIMPLEMENTED();
-
-	return ret;
+	return 0;
 }
 
 /* This struct contains the original crypto functions exposed by the kernel */
