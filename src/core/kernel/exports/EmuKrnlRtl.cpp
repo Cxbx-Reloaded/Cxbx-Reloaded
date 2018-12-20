@@ -824,9 +824,9 @@ XBSYSAPI EXPORTNUM(281) xboxkrnl::LARGE_INTEGER NTAPI xboxkrnl::RtlExtendedInteg
 // ******************************************************************
 XBSYSAPI EXPORTNUM(282) xboxkrnl::LARGE_INTEGER NTAPI xboxkrnl::RtlExtendedLargeIntegerDivide
 (
-	IN	LARGE_INTEGER Dividend,
-	IN	ULONG Divisor,
-	IN	PULONG Remainder // OUT? OPTIONAL?
+	IN LARGE_INTEGER Dividend,
+	IN ULONG Divisor,
+	IN OUT PULONG Remainder OPTIONAL
 )
 {
 	LOG_FUNC_BEGIN
@@ -835,14 +835,32 @@ XBSYSAPI EXPORTNUM(282) xboxkrnl::LARGE_INTEGER NTAPI xboxkrnl::RtlExtendedLarge
 		LOG_FUNC_ARG(Remainder)
 		LOG_FUNC_END;
 
-	LARGE_INTEGER ret;
+	LARGE_INTEGER quotient = Dividend;
 
-	if (Remainder)
-		*Remainder = (ULONG)(Dividend.QuadPart % Divisor);
+	if (Divisor == 0) {
+		RtlRaiseStatus(STATUS_INTEGER_DIVIDE_BY_ZERO);
+	}
+	else {
+		ULONG local_remainder = 0;
+		BOOLEAN carry, remainder_carry;
 
-	ret.QuadPart = Dividend.QuadPart / (LONGLONG)Divisor;
+		// Binary division algorithm reverse engineered from real hardware.
+		for (uint8_t i = 64; i > 0; i--) {
+			carry = (quotient.QuadPart >> 63) & 0x1;
+			remainder_carry = (local_remainder >> 31) & 0x1;
+			quotient.QuadPart <<= 1;
+			local_remainder = (local_remainder << 1) | carry;
+			if (remainder_carry || (local_remainder >= Divisor)) {
+				quotient.u.LowPart += 1;
+				local_remainder -= Divisor;
+			}
+		}
+		if (Remainder) {
+			*Remainder = local_remainder;
+		}
+	}
 
-	RETURN(ret);
+	RETURN(quotient);
 }
 
 #define LOWER_32(A) ((A) & 0xffffffff)
