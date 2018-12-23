@@ -588,6 +588,7 @@ BEGIN
         POPUP "&LLE (Experimental)",            65535,MFT_STRING,MFS_ENABLED
         BEGIN
             MENUITEM "LLE &GPU",                    ID_EMULATION_LLE_GPU,MFT_STRING,MFS_ENABLED
+	        MENUITEM "LLE &USB",                    ID_EMULATION_LLE_USB,MFT_STRING,MFS_ENABLED
         END
         POPUP "Hacks",                          65535,MFT_STRING,MFS_ENABLED
         BEGIN
