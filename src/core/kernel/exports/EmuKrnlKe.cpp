@@ -897,7 +897,9 @@ XBSYSAPI EXPORTNUM(113) xboxkrnl::VOID NTAPI xboxkrnl::KeInitializeTimerEx
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(Timer)
 		LOG_FUNC_ARG(Type)
-		LOG_FUNC_END;
+	LOG_FUNC_END;
+
+	assert(Timer);
 
 	// Initialize header :
 	Timer->Header.Type = Type + TimerNotificationObject;
@@ -1742,45 +1744,53 @@ XBSYSAPI EXPORTNUM(150) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeSetTimerEx
 		LOG_FUNC_ARG(DueTime)
 		LOG_FUNC_ARG(Period)
 		LOG_FUNC_ARG(Dpc)
-		LOG_FUNC_END;
+	LOG_FUNC_END;
 
 	BOOLEAN Inserted;
+	BOOLEAN RequestInterrupt = FALSE;
 	LARGE_INTEGER Interval;
 	LARGE_INTEGER SystemTime;
+	KIRQL OldIrql;
+	ULONG Hand;
 
-	if (Timer->Header.Type != TimerNotificationObject && Timer->Header.Type != TimerSynchronizationObject) {
-		CxbxKrnlCleanup("Assertion: '(Timer)->Header.Type == TimerNotificationObject) || ((Timer)->Header.Type == TimerSynchronizationObject)' in KeSetTimerEx()");
-	}
+	assert(Timer);
+	assert(Timer->Header.Type == TimerNotificationObject || Timer->Header.Type == TimerSynchronizationObject);
+
+	// NOTE: in ReactOS, this function raises the irql to SYNCH_LEVEL and it's a nop in single-cpu systems. I disassembled the function
+	// from my kernel dump and saw that it calls KeRaiseIrqlToDpcLevel
+	KiLockDispatcherDatabase(&OldIrql);
 
 	// Same as KeCancelTimer(Timer) :
 	Inserted = Timer->Header.Inserted;
 	if (Inserted != FALSE) {
 		// Do some unlinking if already inserted in the linked list
-		KiRemoveTreeTimer(Timer);
+		KxRemoveTreeTimer(Timer);
 	}
-
-	Timer->Header.SignalState = FALSE;
+	
+	/* Set Default Timer Data */
 	Timer->Dpc = Dpc;
 	Timer->Period = Period;
+	if (!KiComputeDueTime(Timer, DueTime, &Hand))
+	{
+		/* Signal the timer */
+		RequestInterrupt = KiSignalTimer(Timer);
 
-	if (!KiInsertTreeTimer(Timer, DueTime)) {
-		if (!IsListEmpty(&(Timer->Header.WaitListHead))) {
-			// KiWaitTest(Timer, 0);
-		}
+		/* Release the dispatcher lock */
+		KiReleaseDispatcherLockFromDpcLevel();
 
-		if (Dpc != NULL) {
-			// Call the Dpc routine if one is specified
-			KeQuerySystemTime(&SystemTime);
-			KeInsertQueueDpc(Timer->Dpc, (PVOID)SystemTime.u.LowPart, (PVOID)SystemTime.u.HighPart);
-		}
-
-		if (Period != 0) {
-			// Prepare the repetition if Timer is periodic
-			Interval.QuadPart = (LONGLONG)(-10 * 1000) * Timer->Period;
-			while (!KiInsertTreeTimer(Timer, Interval))
-				;
-		}
+		/* Check if we need to do an interrupt */
+		if (RequestInterrupt) HalRequestSoftwareInterrupt(DISPATCH_LEVEL);
 	}
+	else
+	{
+		/* Insert the timer */
+		Timer->Header.SignalState = FALSE;
+		KxInsertTimer(Timer, Hand);
+	}
+
+	/* Exit the dispatcher */
+	KiExitDispatcher(OldIrql);
+
 /* Dxbx has this :
 	EnterCriticalSection(&(g_DpcData.Lock));
 	if (Timer->TimerListEntry.Flink == nullptr) 
