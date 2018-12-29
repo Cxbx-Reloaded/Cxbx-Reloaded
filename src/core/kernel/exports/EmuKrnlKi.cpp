@@ -51,7 +51,7 @@ namespace xboxkrnl
 };
 
 #include "Logging.h" // For LOG_FUNC()
-#include "EmuKrnlLogging.h"
+#include "EmuKrnl.h" // for the list support functions
 #include "EmuKrnlKi.h"
 
 // ReactOS uses a size of 512, but disassembling the kernel reveals it to be 32 instead
@@ -59,6 +59,123 @@ namespace xboxkrnl
 
 xboxkrnl::KTIMER_TABLE_ENTRY KiTimerTableListHead[TIMER_TABLE_SIZE];
 
+
+VOID xboxkrnl::KxInsertTimer(
+	IN xboxkrnl::PKTIMER Timer,
+	IN xboxkrnl::ULONG Hand
+)
+{
+	/* Try to insert the timer */
+	if (KiInsertTimerTable(Timer, Hand))
+	{
+		/* Complete it */
+		KiCompleteTimer(Timer, Hand);
+	}
+}
+
+VOID FASTCALL xboxkrnl::KiCompleteTimer(
+	IN xboxkrnl::PKTIMER Timer,
+	IN xboxkrnl::ULONG Hand
+)
+{
+	LIST_ENTRY ListHead;
+	BOOLEAN RequestInterrupt = FALSE;
+
+	/* Remove it from the timer list */
+	KiRemoveEntryTimer(Timer, Hand);
+
+	/* Link the timer list to our stack */
+	ListHead.Flink = &Timer->TimerListEntry;
+	ListHead.Blink = &Timer->TimerListEntry;
+	Timer->TimerListEntry.Flink = &ListHead;
+	Timer->TimerListEntry.Blink = &ListHead;
+
+	/* Signal the timer if it's still on our list */
+	if (!IsListEmpty(&ListHead)) {
+		RequestInterrupt = KiSignalTimer(Timer);
+	}
+
+	/* Request a DPC if needed */
+	if (RequestInterrupt) HalRequestSoftwareInterrupt(DISPATCH_LEVEL);
+}
+
+VOID xboxkrnl::KiRemoveEntryTimer(
+	IN xboxkrnl::PKTIMER Timer,
+	IN xboxkrnl::ULONG Hand
+)
+{
+	ULONG Hand;
+	PKTIMER_TABLE_ENTRY TableEntry;
+
+	/* Remove the timer from the timer list and check if it's empty */
+	if (RemoveEntryList(&Timer->TimerListEntry))
+	{
+		/* Get the respective timer table entry */
+		TableEntry = &KiTimerTableListHead[Hand];
+		if (&TableEntry->Entry == TableEntry->Entry.Flink)
+		{
+			/* Set the entry to an infinite absolute time */
+			TableEntry->Time.u.HighPart = 0xFFFFFFFF;
+		}
+	}
+
+	/* Clear the list entries so we can tell the timer is gone */
+	Timer->TimerListEntry.Flink = NULL;
+	Timer->TimerListEntry.Blink = NULL;
+}
+
+xboxkrnl::BOOLEAN FASTCALL xboxkrnl::KiInsertTimerTable(
+	IN xboxkrnl::PKTIMER Timer,
+	IN xboxkrnl::ULONG Hand
+)
+{
+	LARGE_INTEGER InterruptTime;
+	LONGLONG DueTime = Timer->DueTime.QuadPart;
+	BOOLEAN Expired = FALSE;
+	PLIST_ENTRY ListHead, NextEntry;
+	PKTIMER CurrentTimer;
+
+	DBG_PRINTF("%s: inserting Timer %p, Hand: %lu\n", __func__, Timer, Hand);
+
+	/* Check if the period is zero */
+	if (!Timer->Period) {
+		Timer->Header.SignalState = FALSE;
+	}
+
+	/* Loop the timer list backwards */
+	ListHead = &KiTimerTableListHead[Hand].Entry;
+	NextEntry = ListHead->Blink;
+	while (NextEntry != ListHead)
+	{
+		/* Get the timer */
+		CurrentTimer = CONTAINING_RECORD(NextEntry, KTIMER, TimerListEntry);
+
+		/* Now check if we can fit it before */
+		if ((ULONGLONG)DueTime >= CurrentTimer->DueTime.QuadPart) break;
+
+		/* Keep looping */
+		NextEntry = NextEntry->Blink;
+	}
+
+	/* Looped all the list, insert it here and get the interrupt time again */
+	InsertHeadList(NextEntry, &Timer->TimerListEntry);
+
+	/* Check if we didn't find it in the list */
+	if (NextEntry == ListHead)
+	{
+		/* Set the time */
+		KiTimerTableListHead[Hand].Time.QuadPart = DueTime;
+
+		/* Make sure it hasn't expired already */
+		InterruptTime.QuadPart = KeQueryInterruptTime();
+		if (DueTime <= InterruptTime.QuadPart) {
+			Expired = TRUE;
+		}
+	}
+
+	/* Return expired state */
+	return Expired;
+}
 
 xboxkrnl::BOOLEAN FASTCALL xboxkrnl::KiInsertTreeTimer(
 	IN xboxkrnl::PKTIMER Timer,
@@ -68,9 +185,6 @@ xboxkrnl::BOOLEAN FASTCALL xboxkrnl::KiInsertTreeTimer(
 	BOOLEAN Inserted = FALSE;
 	ULONG Hand = 0;
 
-	/* This should only be called at dpc level */
-	assert(KeGetCurrentIrql() == DISPATCH_LEVEL);
-
 	/* Setup the timer's due time */
 	if (KiComputeDueTime(Timer, Interval, &Hand))
 	{
@@ -78,7 +192,7 @@ xboxkrnl::BOOLEAN FASTCALL xboxkrnl::KiInsertTreeTimer(
 		if (KiInsertTimerTable(Timer, Hand))
 		{
 			/* It was already there, remove it */
-			KiRemoveEntryTimer(Timer);
+			KiRemoveEntryTimer(Timer, Hand);
 			Timer->Header.Inserted = FALSE;
 		}
 		else
@@ -88,7 +202,6 @@ xboxkrnl::BOOLEAN FASTCALL xboxkrnl::KiInsertTreeTimer(
 		}
 	}
 
-	/* Release the lock and return insert status */
 	return Inserted;
 }
 
@@ -96,7 +209,7 @@ xboxkrnl::ULONG xboxkrnl::KiComputeTimerTableIndex(
 	IN xboxkrnl::ULONGLONG Interval
 )
 {
-	return (Interval / KeMaximumIncrement) & (TIMER_TABLE_SIZE - 1);
+	return (Interval / CLOCK_TIME_INCREMENT) & (TIMER_TABLE_SIZE - 1);
 }
 
 xboxkrnl::BOOLEAN xboxkrnl::KiComputeDueTime(
@@ -142,4 +255,79 @@ xboxkrnl::BOOLEAN xboxkrnl::KiComputeDueTime(
 	*Hand = KiComputeTimerTableIndex(Timer->DueTime.QuadPart);
 	Timer->Header.Inserted = TRUE;
 	return TRUE;
+}
+
+xboxkrnl::BOOLEAN FASTCALL xboxkrnl::KiSignalTimer(
+	IN xboxkrnl::PKTIMER Timer
+)
+{
+	BOOLEAN RequestInterrupt = FALSE;
+	PKDPC Dpc = Timer->Dpc;
+	ULONG Period = Timer->Period;
+	LARGE_INTEGER Interval, SystemTime;
+
+	/* Set default values */
+	Timer->Header.Inserted = FALSE;
+	Timer->Header.SignalState = TRUE;
+
+	/* Check if the timer has waiters */
+	if (!IsListEmpty(&Timer->Header.WaitListHead))
+	{
+		/* Check the type of event */
+		if (Timer->Header.Type == TimerNotificationObject)
+		{
+			/* Unwait the thread */
+			//KxUnwaitThread(&Timer->Header, IO_NO_INCREMENT);
+		}
+		else
+		{
+			/* Otherwise unwait the thread and signal the timer */
+			//KxUnwaitThreadForEvent((PKEVENT)Timer, IO_NO_INCREMENT);
+		}
+	}
+
+	/* Check if we have a period */
+	if (Period)
+	{
+		/* Calculate the interval and insert the timer */
+		Interval.QuadPart = Int32x32To64(Period, -10000);
+		while (!KiInsertTreeTimer(Timer, Interval));
+	}
+
+	/* Check if we have a DPC */
+	if (Dpc)
+	{
+		/* Insert it in the queue */
+		KeQuerySystemTime(&SystemTime);
+		KeInsertQueueDpc(Dpc,
+			ULongToPtr(SystemTime.u.LowPart),
+			ULongToPtr(SystemTime.u.HighPart));
+		RequestInterrupt = TRUE;
+	}
+
+	/* Return whether we need to request a DPC interrupt or not */
+	return RequestInterrupt;
+}
+
+VOID xboxkrnl::KxRemoveTreeTimer(
+	IN xboxkrnl::PKTIMER Timer
+)
+{
+	ULONG Hand = KiComputeTimerTableIndex(Timer->DueTime.QuadPart);
+	PKTIMER_TABLE_ENTRY TimerEntry;
+
+	/* Set the timer as non-inserted */
+	Timer->Header.Inserted = FALSE;
+
+	/* Remove it from the timer list */
+	if (RemoveEntryList(&Timer->TimerListEntry))
+	{
+		/* Get the entry and check if it's empty */
+		TimerEntry = &KiTimerTableListHead[Hand];
+		if (IsListEmpty(&TimerEntry->Entry))
+		{
+			/* Clear the time then */
+			TimerEntry->Time.u.HighPart = 0xFFFFFFFF;
+		}
+	}
 }

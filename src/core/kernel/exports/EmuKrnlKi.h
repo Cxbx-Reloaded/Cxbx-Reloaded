@@ -33,8 +33,6 @@
 // ******************************************************************
 #pragma once
 
-namespace xboxkrnl
-{
 #define KiLockDispatcherDatabase(OldIrql)      \
 	*(OldIrql) = KeRaiseIrqlToDpcLevel()
 
@@ -48,20 +46,56 @@ namespace xboxkrnl
     (Timer)->Header.Inserted = FALSE;          \
     RemoveEntryList(&(Timer)->TimerListEntry)
 
+namespace xboxkrnl
+{
 	typedef struct _KTIMER_TABLE_ENTRY
 	{
 		LIST_ENTRY Entry;
 		ULARGE_INTEGER Time;
 	} KTIMER_TABLE_ENTRY, *PKTIMER_TABLE_ENTRY;
 
+	const ULONG CLOCK_TIME_INCREMENT = 0x2710;
+
+	VOID KxInsertTimer(
+		IN PKTIMER Timer,
+		IN ULONG Hand
+	);
+
+	VOID FASTCALL KiCompleteTimer(
+		IN PKTIMER Timer,
+		IN ULONG Hand
+		);
+
+	VOID KiRemoveEntryTimer(
+		IN PKTIMER Timer,
+		IN ULONG Hand
+	);
+
+	BOOLEAN FASTCALL KiInsertTimerTable(
+		IN PKTIMER Timer,
+		IN ULONG Hand
+	);
+
 	BOOLEAN FASTCALL KiInsertTreeTimer(
 		IN PKTIMER Timer,
 		IN LARGE_INTEGER Interval
+	);
+
+	ULONG KiComputeTimerTableIndex(
+		IN ULONGLONG Interval
 	);
 
 	BOOLEAN KiComputeDueTime(
 		IN PKTIMER Timer,
 		IN LARGE_INTEGER DueTime,
 		OUT PULONG Hand
+	);
+
+	BOOLEAN FASTCALL KiSignalTimer(
+		IN PKTIMER Timer
+	);
+
+	VOID KxRemoveTreeTimer(
+		IN PKTIMER Timer
 	);
 };

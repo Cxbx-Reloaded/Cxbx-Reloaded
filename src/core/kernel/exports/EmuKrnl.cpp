@@ -97,18 +97,21 @@ void InsertTailList(xboxkrnl::PLIST_ENTRY pListHead, xboxkrnl::PLIST_ENTRY pEntr
 
 //#define RemoveEntryList(e) do { PLIST_ENTRY f = (e)->Flink, b = (e)->Blink; f->Blink = b; b->Flink = f; (e)->Flink = (e)->Blink = NULL; } while (0)
 
-void RemoveEntryList(xboxkrnl::PLIST_ENTRY pEntry)
+// Returns TRUE if the list has become empty after removing the element, FALSE otherwise.
+xboxkrnl::BOOLEAN RemoveEntryList(xboxkrnl::PLIST_ENTRY pEntry)
 {
 	xboxkrnl::PLIST_ENTRY _EX_Flink = pEntry->Flink;
 	xboxkrnl::PLIST_ENTRY _EX_Blink = pEntry->Blink;
 
-	if (_EX_Flink != nullptr) {
+	if (_EX_Blink != nullptr) {
 		_EX_Blink->Flink = _EX_Flink;
 	}
 
 	if (_EX_Flink != nullptr) {
 		_EX_Flink->Blink = _EX_Blink;
 	}
+
+	return (_EX_Flink == _EX_Blink);
 }
 
 xboxkrnl::PLIST_ENTRY RemoveHeadList(xboxkrnl::PLIST_ENTRY pListHead)

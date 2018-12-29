@@ -1756,8 +1756,6 @@ XBSYSAPI EXPORTNUM(150) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeSetTimerEx
 	assert(Timer);
 	assert(Timer->Header.Type == TimerNotificationObject || Timer->Header.Type == TimerSynchronizationObject);
 
-	// NOTE: in ReactOS, this function raises the irql to SYNCH_LEVEL and it's a nop in single-cpu systems. I disassembled the function
-	// from my kernel dump and saw that it calls KeRaiseIrqlToDpcLevel
 	KiLockDispatcherDatabase(&OldIrql);
 
 	// Same as KeCancelTimer(Timer) :
@@ -1775,11 +1773,10 @@ XBSYSAPI EXPORTNUM(150) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeSetTimerEx
 		/* Signal the timer */
 		RequestInterrupt = KiSignalTimer(Timer);
 
-		/* Release the dispatcher lock */
-		KiReleaseDispatcherLockFromDpcLevel();
-
 		/* Check if we need to do an interrupt */
-		if (RequestInterrupt) HalRequestSoftwareInterrupt(DISPATCH_LEVEL);
+		if (RequestInterrupt) {
+			HalRequestSoftwareInterrupt(DISPATCH_LEVEL);
+		}
 	}
 	else
 	{
@@ -1789,7 +1786,7 @@ XBSYSAPI EXPORTNUM(150) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeSetTimerEx
 	}
 
 	/* Exit the dispatcher */
-	KiExitDispatcher(OldIrql);
+	KiUnlockDispatcherDatabase(OldIrql);
 
 /* Dxbx has this :
 	EnterCriticalSection(&(g_DpcData.Lock));
@@ -1892,8 +1889,6 @@ XBSYSAPI EXPORTNUM(155) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeTestAlertThread
 // * 0x009C - KeTickCount
 // ******************************************************************
 XBSYSAPI EXPORTNUM(156) xboxkrnl::DWORD VOLATILE xboxkrnl::KeTickCount = 0;
-
-const xboxkrnl::ULONG CLOCK_TIME_INCREMENT = 0x2710;
 
 // ******************************************************************
 // * 0x009D - KeTimeIncrement
