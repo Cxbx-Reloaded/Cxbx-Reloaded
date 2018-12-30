@@ -521,14 +521,24 @@ XBSYSAPI EXPORTNUM(96) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeCancelTimer
 {
 	LOG_FUNC_ONE_ARG(Timer);
 
+	KIRQL OldIrql;
 	BOOLEAN Inserted;
 
+	assert(Timer);
+
+	/* Lock the Database and Raise IRQL */
+	KiLockDispatcherDatabase(&OldIrql);
+
+	/* Check if it's inserted, and remove it if it is */
 	Inserted = Timer->Header.Inserted;
-	if (Inserted != FALSE) {
-		// Do some unlinking if already inserted in the linked list
-		KiRemoveTreeTimer(Timer);
+	if (Inserted) {
+		KxRemoveTreeTimer(Timer);
 	}
 
+	/* Release Dispatcher Lock */
+	KiUnlockDispatcherDatabase(OldIrql);
+
+	/* Return the old state */
 	RETURN(Inserted);
 }
 

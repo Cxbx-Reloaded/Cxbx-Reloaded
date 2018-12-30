@@ -42,10 +42,6 @@
 #define KiUnlockApcQueue(Thread, OldIrql)      \
 	KfLowerIrql((OldIrql))
 
-#define KiRemoveTreeTimer(Timer)               \
-    (Timer)->Header.Inserted = FALSE;          \
-    RemoveEntryList(&(Timer)->TimerListEntry)
-
 namespace xboxkrnl
 {
 	typedef struct _KTIMER_TABLE_ENTRY
