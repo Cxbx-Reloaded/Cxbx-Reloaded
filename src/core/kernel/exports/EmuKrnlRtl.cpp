@@ -1465,7 +1465,13 @@ XBSYSAPI EXPORTNUM(303) xboxkrnl::VOID NTAPI xboxkrnl::RtlRaiseStatus
 {
 	LOG_FUNC_ONE_ARG(Status);
 
-	LOG_UNIMPLEMENTED();
+	EXCEPTION_RECORD record;
+	record.ExceptionCode = Status;
+	record.ExceptionFlags = EXCEPTION_NONCONTINUABLE;
+	record.ExceptionRecord = NULL;
+	record.NumberParameters = 0;
+
+	RtlRaiseException(&record);
 }
 
 // ******************************************************************
