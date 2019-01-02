@@ -168,6 +168,7 @@ static UINT                         QuadToTriangleD3DIndexBuffer_Size = 0; // = 
 static XTL::INDEX16                *pQuadToTriangleIndexBuffer = nullptr;
 static UINT                         QuadToTriangleIndexBuffer_Size = 0; // = NrOfQuadVertices
 
+static XTL::IDirect3DSurface	   *g_DefaultHostDepthBufferSuface = NULL;
 static XTL::X_D3DSurface		   *g_XboxBackBufferSurface = NULL;
 static XTL::X_D3DSurface           *g_pXboxRenderTarget = NULL;
 static XTL::X_D3DSurface           *g_pXboxDepthStencil = NULL;
@@ -2271,13 +2272,9 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
 */
 
 				// update z-stencil surface cache
-				XTL::IDirect3DSurface *pCurrentHostDepthStencil = nullptr;
-				g_pD3DDevice->GetDepthStencilSurface(&pCurrentHostDepthStencil);
-				UpdateDepthStencilFlags(pCurrentHostDepthStencil);
-				if (pCurrentHostDepthStencil) {
-					pCurrentHostDepthStencil->Release();
-				}
-
+				g_pD3DDevice->GetDepthStencilSurface(&g_DefaultHostDepthBufferSuface);
+				UpdateDepthStencilFlags(g_DefaultHostDepthBufferSuface);
+		
 				hRet = g_pD3DDevice->CreateVertexBuffer
                 (
                     1, 0, 0, XTL::D3DPOOL_MANAGED,
@@ -3226,23 +3223,26 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetViewport)
 		return;
 	}
 
+	D3DVIEWPORT XboxViewPort = *pViewport;
 	D3DVIEWPORT HostViewPort = *pViewport;
 
 	if (g_pXboxRenderTarget) {
-		// Get current Xbox render target dimensions
+		// Clip the Xbox Viewport to the render target dimensions
+		// This is required because during SetRenderTarget, Xbox calls SetViewPort with impossibly large values
 		DWORD XboxRenderTarget_Width = GetPixelContainerWidth(g_pXboxRenderTarget);
 		DWORD XboxRenderTarget_Height = GetPixelContainerHeigth(g_pXboxRenderTarget);
 
-		// Before any scaling, adjust viewport to stay within render target bounds
-		DWORD Right = HostViewPort.X + HostViewPort.Width;
-		if (Right > XboxRenderTarget_Width) {
-			HostViewPort.Width = XboxRenderTarget_Width - HostViewPort.X;
-		}
+		DWORD left = std::max((int)pViewport->X, 0);
+		DWORD top = std::max((int)pViewport->Y, 0);
+		DWORD right = std::min((int)pViewport->X + (int)pViewport->Width, (int)XboxRenderTarget_Width);
+		DWORD bottom = std::min((int)pViewport->Y + (int)pViewport->Height, (int)XboxRenderTarget_Height);
 
-		DWORD Bottom = HostViewPort.Y + HostViewPort.Height;
-		if (Bottom > XboxRenderTarget_Height) {
-			HostViewPort.Height = XboxRenderTarget_Height - HostViewPort.Y;
-		}
+		XboxViewPort.X = left;
+		XboxViewPort.Y = top;
+		XboxViewPort.Width = right - left;
+		XboxViewPort.Height = bottom - top;
+		XboxViewPort.MinZ = pViewport->MinZ;
+		XboxViewPort.MaxZ = pViewport->MaxZ;
 
 		if (g_ScaleViewport) {
 			// Get current host render target dimensions
@@ -3251,13 +3251,13 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetViewport)
 
 			if (GetHostRenderTargetDimensions(&HostRenderTarget_Width, &HostRenderTarget_Height)) {
 				// Scale Xbox to host dimensions (avoiding hard-coding 640 x 480)
-				HostViewPort.X = ScaleDWORD(pViewport->X, XboxRenderTarget_Width, HostRenderTarget_Width);
-				HostViewPort.Y = ScaleDWORD(pViewport->Y, XboxRenderTarget_Height, HostRenderTarget_Height);
-				HostViewPort.Width = ScaleDWORD(pViewport->Width, XboxRenderTarget_Width, HostRenderTarget_Width);
-				HostViewPort.Height = ScaleDWORD(pViewport->Height, XboxRenderTarget_Height, HostRenderTarget_Height);
+				HostViewPort.X = ScaleDWORD(XboxViewPort.X, XboxRenderTarget_Width, HostRenderTarget_Width);
+				HostViewPort.Y = ScaleDWORD(XboxViewPort.Y, XboxRenderTarget_Height, HostRenderTarget_Height);
+				HostViewPort.Width = ScaleDWORD(XboxViewPort.Width, XboxRenderTarget_Width, HostRenderTarget_Width);
+				HostViewPort.Height = ScaleDWORD(XboxViewPort.Height, XboxRenderTarget_Height, HostRenderTarget_Height);
 				// TODO : Fix test-case Shenmue 2 (which halves height, leaving the bottom half unused)
-				HostViewPort.MinZ = pViewport->MinZ; // No need scale Z for now
-				HostViewPort.MaxZ = pViewport->MaxZ;
+				HostViewPort.MinZ = XboxViewPort.MinZ; // No need scale Z for now
+				HostViewPort.MaxZ = XboxViewPort.MaxZ;
 			}
 			else {
 				EmuLog(LOG_LEVEL::WARNING, "GetHostRenderTargetDimensions failed - SetViewport sets Xbox viewport instead!");
@@ -7935,6 +7935,8 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderTarget)
 			// If Direct3D 9 SetRenderTarget failed, skip setting depth stencil
 			return;
 		}
+
+		pHostDepthStencil = g_DefaultHostDepthBufferSuface;
 	}
 
 	hRet = g_pD3DDevice->SetDepthStencilSurface(pHostDepthStencil);
