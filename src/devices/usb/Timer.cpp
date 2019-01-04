@@ -39,6 +39,7 @@
 #endif
 #include <thread>
 #include <vector>
+#include <mutex>
 #include "Timer.h"
 #include "common\util\CxbxUtil.h"
 #ifdef __linux__
@@ -46,8 +47,10 @@
 #endif
 
 
+// Virtual clocks will probably become useful once LLE CPU is implemented, but for now we don't need them.
+// See the QEMUClockType QEMU_CLOCK_VIRTUAL of XQEMU for more info.
 #define CLOCK_REALTIME 0
-#define CLOCK_VIRTUALTIME  1
+//#define CLOCK_VIRTUALTIME  1
 #define SCALE_S  1000000000ULL
 #define SCALE_MS 1000000ULL
 #define SCALE_US 1000ULL
@@ -58,6 +61,8 @@
 static std::vector<TimerObject*> TimerList;
 // The frequency of the high resolution clock of the host
 static uint64_t ClockFrequency;
+// Lock to acquire when accessing TimerList
+std::mutex TimerMtx;
 
 
 // Returns the current time of the timer
@@ -74,7 +79,7 @@ inline uint64_t GetTime_NS(TimerObject* Timer)
 #else
 #error "Unsupported OS"
 #endif
-	return Timer->Type == CLOCK_REALTIME ? Ret : Ret / Timer->SlowdownFactor;
+	return Ret;
 }
 
 // Calculates the next expire time of the timer
@@ -86,13 +91,17 @@ static inline uint64_t GetNextExpireTime(TimerObject* Timer)
 // Deallocates the memory of the timer
 void Timer_Destroy(TimerObject* Timer)
 {
-	unsigned int index;
-	for (unsigned int i = 0; i < TimerList.size(); i++) {
+	unsigned int index, i;
+	std::lock_guard<std::mutex>lock(TimerMtx);
+	
+	index = TimerList.size();
+	for (i = 0; i < index; i++) {
 		if (Timer == TimerList[i]) {
 			index = i;
 		}
 	}
 
+	assert(index != TimerList.size());
 	delete Timer;
 	TimerList.erase(TimerList.begin() + index);
 }
@@ -132,15 +141,15 @@ void Timer_Exit(TimerObject* Timer)
 }
 
 // Allocates the memory for the timer object
-TimerObject* Timer_Create(pTimerCB Callback, void* Arg, unsigned int Factor)
+TimerObject* Timer_Create(pTimerCB Callback, void* Arg)
 {
+	std::lock_guard<std::mutex>lock(TimerMtx);
 	TimerObject* pTimer = new TimerObject;
-	pTimer->Type = Factor <= 1 ? CLOCK_REALTIME : CLOCK_VIRTUALTIME;
+	pTimer->Type = CLOCK_REALTIME;
 	pTimer->Callback = Callback;
 	pTimer->ExpireTime_MS.store(0);
 	pTimer->Exit.store(false);
 	pTimer->Opaque = Arg;
-	pTimer->SlowdownFactor = Factor < 1 ? 1 : Factor;
 	TimerList.emplace_back(pTimer);
 
 	return pTimer;

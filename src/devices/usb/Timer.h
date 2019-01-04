@@ -43,18 +43,17 @@
 typedef void(*pTimerCB)(void*);
 typedef struct _TimerObject
 {
-	int Type;                            // timer type (virtual or real)
+	int Type;                            // timer type
 	std::atomic_uint64_t ExpireTime_MS;  // when the timer expires (ms)
 	std::atomic_bool Exit;               // indicates that the timer should be destroyed
 	pTimerCB Callback;                   // function to call when the timer expires
 	void* Opaque;                        // opaque argument to pass to the callback
-	unsigned int SlowdownFactor;         // how much the time is slowed down (virtual clocks only)
 }
 TimerObject;
 
 
 /* Timer exported functions */
-TimerObject* Timer_Create(pTimerCB Callback, void* Arg, unsigned int Factor);
+TimerObject* Timer_Create(pTimerCB Callback, void* Arg);
 void Timer_Start(TimerObject* Timer, uint64_t Expire_MS);
 void Timer_Exit(TimerObject* Timer);
 void Timer_ChangeExpireTime(TimerObject* Timer, uint64_t Expire_ms);

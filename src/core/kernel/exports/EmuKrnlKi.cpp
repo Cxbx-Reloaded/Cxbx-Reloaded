@@ -96,7 +96,9 @@ VOID FASTCALL xboxkrnl::KiCompleteTimer(
 	}
 
 	/* Request a DPC if needed */
-	if (RequestInterrupt) HalRequestSoftwareInterrupt(DISPATCH_LEVEL);
+	if (RequestInterrupt) {
+		HalRequestSoftwareInterrupt(DISPATCH_LEVEL);
+	}
 }
 
 VOID xboxkrnl::KiRemoveEntryTimer(
@@ -122,6 +124,29 @@ VOID xboxkrnl::KiRemoveEntryTimer(
 	/* Clear the list entries so we can tell the timer is gone */
 	Timer->TimerListEntry.Flink = NULL;
 	Timer->TimerListEntry.Blink = NULL;
+}
+
+VOID xboxkrnl::KxRemoveTreeTimer(
+	IN xboxkrnl::PKTIMER Timer
+)
+{
+	ULONG Hand = KiComputeTimerTableIndex(Timer->DueTime.QuadPart);
+	PKTIMER_TABLE_ENTRY TimerEntry;
+
+	/* Set the timer as non-inserted */
+	Timer->Header.Inserted = FALSE;
+
+	/* Remove it from the timer list */
+	if (RemoveEntryList(&Timer->TimerListEntry))
+	{
+		/* Get the entry and check if it's empty */
+		TimerEntry = &KiTimerTableListHead[Hand];
+		if (IsListEmpty(&TimerEntry->Entry))
+		{
+			/* Clear the time then */
+			TimerEntry->Time.u.HighPart = 0xFFFFFFFF;
+		}
+	}
 }
 
 xboxkrnl::BOOLEAN FASTCALL xboxkrnl::KiInsertTimerTable(
@@ -307,27 +332,4 @@ xboxkrnl::BOOLEAN FASTCALL xboxkrnl::KiSignalTimer(
 
 	/* Return whether we need to request a DPC interrupt or not */
 	return RequestInterrupt;
-}
-
-VOID xboxkrnl::KxRemoveTreeTimer(
-	IN xboxkrnl::PKTIMER Timer
-)
-{
-	ULONG Hand = KiComputeTimerTableIndex(Timer->DueTime.QuadPart);
-	PKTIMER_TABLE_ENTRY TimerEntry;
-
-	/* Set the timer as non-inserted */
-	Timer->Header.Inserted = FALSE;
-
-	/* Remove it from the timer list */
-	if (RemoveEntryList(&Timer->TimerListEntry))
-	{
-		/* Get the entry and check if it's empty */
-		TimerEntry = &KiTimerTableListHead[Hand];
-		if (IsListEmpty(&TimerEntry->Entry))
-		{
-			/* Clear the time then */
-			TimerEntry->Time.u.HighPart = 0xFFFFFFFF;
-		}
-	}
 }

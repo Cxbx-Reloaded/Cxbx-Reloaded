@@ -67,6 +67,10 @@ namespace xboxkrnl
 		IN ULONG Hand
 	);
 
+	VOID KxRemoveTreeTimer(
+		IN PKTIMER Timer
+	);
+
 	BOOLEAN FASTCALL KiInsertTimerTable(
 		IN PKTIMER Timer,
 		IN ULONG Hand
@@ -88,10 +92,6 @@ namespace xboxkrnl
 	);
 
 	BOOLEAN FASTCALL KiSignalTimer(
-		IN PKTIMER Timer
-	);
-
-	VOID KxRemoveTreeTimer(
 		IN PKTIMER Timer
 	);
 };
