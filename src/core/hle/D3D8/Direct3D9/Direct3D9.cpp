@@ -4893,44 +4893,19 @@ void CreateHostResource(XTL::X_D3DResource *pResource, DWORD D3DUsage, int iText
 				}
 			}
 			else {
-				// Otherwise, choose a fallback for the format not supported on host
-				switch (X_Format) {
-				case XTL::X_D3DFMT_LIN_D24S8: { // Note : This case could be removed, as the default below can handle it too
-					EmuLog(LOG_LEVEL::WARNING, "D3DFMT_LIN_D24S8 %s not supported - using D3DFMT_A8R8G8B8!", ResourceTypeName);
-					// Note : This cannot set bConvertToARGB - we just copy it as-is
-					PCFormat = XTL::D3DFMT_A8R8G8B8;
-					break;
-				}
-				case XTL::X_D3DFMT_LIN_D16: {
-					// Test case : Turok (when entering menu)
-					EmuLog(LOG_LEVEL::WARNING, "D3DFMT_LIN_D16 %s not supported - USING D3DFMT_R5G6B5!", ResourceTypeName);
-					// Note : This cannot set bConvertToARGB - we just copy it as-is
-					PCFormat = XTL::D3DFMT_R5G6B5; // TODO : Do something smarter
-					break;
-				}
-				case XTL::X_D3DFMT_X1R5G5B5: { // Note : This case could be removed, as the default below can handle it too
-					// Test case : JSRF (after loading)
-					EmuLog(LOG_LEVEL::WARNING, "D3DFMT_X1R5G5B5 %s will be converted to ARGB", ResourceTypeName);
+				if (D3DUsage & D3DUSAGE_DEPTHSTENCIL) {
+					// If it was a depth stencil, fall back to a known supported depth format
+					EmuLog(LOG_LEVEL::WARNING, "Xbox %s Format %x will be converted to D3DFMT_D24S8", ResourceTypeName, X_Format);
+					PCFormat = XTL::D3DFMT_D24S8;
+				} else if (EmuXBFormatCanBeConvertedToARGB(X_Format)) {
+					EmuLog(LOG_LEVEL::WARNING, "Xbox %s Format %x will be converted to ARGB", ResourceTypeName, X_Format);
 					bConvertToARGB = true;
 					PCFormat = XTL::D3DFMT_A8R8G8B8;
-					break;
+				} else {
+					// Otherwise, use a best matching format
+					/*CxbxKrnlCleanup*/EmuLog(LOG_LEVEL::WARNING, "Encountered a completely incompatible %s format!", ResourceTypeName);
+					PCFormat = EmuXB2PC_D3DFormat(X_Format);
 				}
-				default:
-					// Can the format be converted to ARGB?
-					if (EmuXBFormatCanBeConvertedToARGB(X_Format)) {
-						EmuLog(LOG_LEVEL::WARNING, "Xbox %s Format %x will be converted to ARGB", ResourceTypeName, X_Format);
-						bConvertToARGB = true;
-						PCFormat = XTL::D3DFMT_A8R8G8B8;
-					}
-					else {
-						// Otherwise, use a best matching format
-						/*CxbxKrnlCleanup*/EmuLog(LOG_LEVEL::WARNING, "Encountered a completely incompatible %s format!", ResourceTypeName);
-						PCFormat = EmuXB2PC_D3DFormat(X_Format);
-					}
-				}
-
-				// Avoid using this as a depth-texture (since we're falling back on a RGB format now)
-				D3DUsage &= ~D3DUSAGE_DEPTHSTENCIL;
 			}
 		}
 
