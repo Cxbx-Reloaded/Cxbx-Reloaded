@@ -1208,12 +1208,10 @@ XBSYSAPI EXPORTNUM(125) xboxkrnl::ULONGLONG NTAPI xboxkrnl::KeQueryInterruptTime
 
 	while (true)
 	{
-		// Don't use NtDll::QueryInterruptTime, it's too new (Windows 10)
-		// Instead, read KeInterruptTime from our kernel thunk table,
-		// which we coupled to the host InterruptTime in ConnectWindowsTimersToThunkTable:
+		// Don't use NtDll::QueryInterruptTime, it's too new (Windows 10).
+		// Instead, read KeInterruptTime from our kernel thunk table.
 		InterruptTime.u.HighPart = KeInterruptTime->High1Time;
 		InterruptTime.u.LowPart = KeInterruptTime->LowPart;
-		// TODO : Should we apply HostSystemTimeDelta to InterruptTime too?
 
 		// Read InterruptTime atomically with a spinloop to avoid errors
 		// when High1Time and High2Time differ (during unprocessed overflow in LowPart).
@@ -1258,14 +1256,20 @@ XBSYSAPI EXPORTNUM(128) xboxkrnl::VOID NTAPI xboxkrnl::KeQuerySystemTime
 {
 	LOG_FUNC_ONE_ARG(CurrentTime);
 
-	if (CurrentTime != NULL)
-	{
-		LARGE_INTEGER HostSystemTime;
-		GetSystemTimeAsFileTime((LPFILETIME)&HostSystemTime); // Available since Windows 2000 (NOT on XP!)
+	LARGE_INTEGER SystemTime;
 
-		// Apply the delta set in xboxkrnl::NtSetSystemTime to get the Xbox system time :
-		CurrentTime->QuadPart = HostSystemTime.QuadPart + HostSystemTimeDelta.QuadPart;
+	while (true)
+	{
+		SystemTime.u.HighPart = KeSystemTime->High1Time;
+		SystemTime.u.LowPart = KeSystemTime->LowPart;
+
+		// Read InterruptTime atomically with a spinloop to avoid errors
+		// when High1Time and High2Time differ (during unprocessed overflow in LowPart).
+		if (SystemTime.u.HighPart == KeSystemTime->High2Time)
+			break;
 	}
+
+	*CurrentTime = SystemTime;
 }
 
 // ******************************************************************
@@ -1797,20 +1801,6 @@ XBSYSAPI EXPORTNUM(150) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeSetTimerEx
 
 	/* Exit the dispatcher */
 	KiUnlockDispatcherDatabase(OldIrql);
-
-/* Dxbx has this :
-	EnterCriticalSection(&(g_DpcData.Lock));
-	if (Timer->TimerListEntry.Flink == nullptr) 
-	{
-		Timer->DueTime.QuadPart := (DueTime.QuadPart / -10000) + CxbxXboxGetTickCount();
-		Timer->Period = Period;
-		Timer->Dpc = Dpc;
-		InsertTailList(&(g_DpcData.TimerQueue), &(Timer->TimerListEntry));
-	}
-
-	LeaveCriticalSection(&(g_DpcData.Lock));
-	SetEvent(g_DpcData.DpcEvent);
-*/
 
 	RETURN(Inserted);
 }

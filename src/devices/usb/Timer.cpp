@@ -118,10 +118,6 @@ void ClockThread(TimerObject* Timer)
 				return;
 			}
 			Timer->Callback(Timer->Opaque);
-			if (Timer->Exit.load()) {
-				Timer_Destroy(Timer);
-				return;
-			}
 			NewExpireTime = GetNextExpireTime(Timer);
 		}
 		Sleep(1); // prevent burning the cpu

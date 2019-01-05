@@ -1648,12 +1648,17 @@ KINTERRUPT_MODE;
 // ******************************************************************
 // * IRQ (Interrupt ReQuest) Priority Levels
 // ******************************************************************
-#define PASSIVE_LEVEL 0
-#define APC_LEVEL 1
+#define PASSIVE_LEVEL  0
+#define APC_LEVEL      1
 #define DISPATCH_LEVEL 2
-#define PROFILE_LEVEL 26
-#define SYNC_LEVEL 28
-#define HIGH_LEVEL 31
+#define PROFILE_LEVEL  26
+#define CLOCK1_LEVEL   28
+#define CLOCK2_LEVEL   28
+#define SYNC_LEVEL     28
+#define IPI_LEVEL      29
+#define POWER_LEVEL    30
+#define HIGH_LEVEL     31
+#define CLOCK_LEVEL    CLOCK2_LEVEL
 
 #define DISPATCH_SIZE 22
 

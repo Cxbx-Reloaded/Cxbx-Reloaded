@@ -52,6 +52,9 @@ namespace xboxkrnl
 
 	const ULONG CLOCK_TIME_INCREMENT = 0x2710;
 
+	VOID KiClockIsr(
+	);
+
 	VOID KxInsertTimer(
 		IN PKTIMER Timer,
 		IN ULONG Hand

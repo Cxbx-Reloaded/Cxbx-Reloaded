@@ -30,6 +30,7 @@
 // *
 // *  (c) 2002-2003 Aaron Robinson <caustik@caustik.com>
 // *  (c) 2016 Patrick van Logchem <pvanlogchem@gmail.com>
+// *  (c) 2019 ergo720
 // *
 // *  All rights reserved
 // *
@@ -58,7 +59,45 @@ namespace xboxkrnl
 #define TIMER_TABLE_SIZE 32
 
 xboxkrnl::KTIMER_TABLE_ENTRY KiTimerTableListHead[TIMER_TABLE_SIZE];
+xboxkrnl::KDPC KiTimerExpireDpc;
 
+
+VOID xboxkrnl::KiClockIsr()
+{
+	KIRQL OldIrql;
+	LARGE_INTEGER InterruptTime;
+	LARGE_INTEGER HostSystemTime;
+	ULONG Hand;
+
+	OldIrql = KfRaiseIrql(CLOCK_LEVEL);
+
+	// Update the interrupt time
+	InterruptTime.u.LowPart = KeInterruptTime->LowPart;
+	InterruptTime.u.HighPart = KeInterruptTime->High1Time;
+	InterruptTime.QuadPart += CLOCK_TIME_INCREMENT;
+	KeInterruptTime->High2Time = InterruptTime.u.HighPart;
+	KeInterruptTime->LowPart = InterruptTime.u.LowPart;
+	KeInterruptTime->High1Time = InterruptTime.u.HighPart;
+
+	// Update the system time
+	GetSystemTimeAsFileTime((LPFILETIME)&HostSystemTime);
+	HostSystemTime.QuadPart += HostSystemTimeDelta.QuadPart;
+	KeSystemTime->High2Time = HostSystemTime.u.HighPart;
+	KeSystemTime->LowPart = HostSystemTime.u.LowPart;
+	KeSystemTime->High1Time = HostSystemTime.u.HighPart;
+
+	// Update the tick counter
+	KeTickCount += 1;
+
+	// Check if a timer have expired
+	Hand = KeTickCount & (TIMER_TABLE_SIZE - 1);
+	if (KiTimerTableListHead[Hand].Entry.Flink != &KiTimerTableListHead[Hand].Entry &&
+		InterruptTime.QuadPart >= CONTAINING_RECORD(KiTimerTableListHead[Hand].Entry.Flink, KTIMER, TimerListEntry)->DueTime.QuadPart) {
+		KeInsertQueueDpc(&KiTimerExpireDpc, (PVOID)&KeTickCount, 0);
+	}
+
+	KfLowerIrql(OldIrql);
+}
 
 VOID xboxkrnl::KxInsertTimer(
 	IN xboxkrnl::PKTIMER Timer,
@@ -194,6 +233,7 @@ xboxkrnl::BOOLEAN FASTCALL xboxkrnl::KiInsertTimerTable(
 		/* Make sure it hasn't expired already */
 		InterruptTime.QuadPart = KeQueryInterruptTime();
 		if (DueTime <= InterruptTime.QuadPart) {
+			DBG_PRINTF("Timer %p already expired\n", Timer);
 			Expired = TRUE;
 		}
 	}
@@ -302,12 +342,12 @@ xboxkrnl::BOOLEAN FASTCALL xboxkrnl::KiSignalTimer(
 		if (Timer->Header.Type == TimerNotificationObject)
 		{
 			/* Unwait the thread */
-			//KxUnwaitThread(&Timer->Header, IO_NO_INCREMENT);
+			// KxUnwaitThread(&Timer->Header, IO_NO_INCREMENT);
 		}
 		else
 		{
 			/* Otherwise unwait the thread and signal the timer */
-			//KxUnwaitThreadForEvent((PKEVENT)Timer, IO_NO_INCREMENT);
+			// KxUnwaitThreadForEvent((PKEVENT)Timer, IO_NO_INCREMENT);
 		}
 	}
 
