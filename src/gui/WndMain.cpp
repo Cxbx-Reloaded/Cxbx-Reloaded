@@ -1991,9 +1991,11 @@ void WndMain::OpenXbe(const char *x_filename)
         return;
     }
 	
-	if (!m_Xbe->CheckXbeSignature())
+	if (!m_Xbe->CheckXbeSignature() && !g_Settings->m_core.allowAdminPrivilege)
 	{
-		int ret = MessageBox(m_hwnd, "XBE signature check failed! It's possible that hackers have injected malicious code into this game.\n\nAre you sure you wish to continue?", "Cxbx-Reloaded", MB_ICONEXCLAMATION | MB_YESNO);
+		int ret = MessageBox(m_hwnd, "XBE signature check failed!\n"
+			"\nThis is dangerous, as maliciously modified Xbox titles could take control of your system.\n"
+			"\nAre you sure you want to continue?", "Cxbx-Reloaded", MB_ICONEXCLAMATION | MB_YESNO);
 		if (ret != IDYES)
 			return;
 	}
