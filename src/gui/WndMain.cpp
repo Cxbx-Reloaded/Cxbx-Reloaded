@@ -1990,7 +1990,14 @@ void WndMain::OpenXbe(const char *x_filename)
 
         return;
     }
-
+	
+	if (!m_Xbe->CheckXbeSignature())
+	{
+		int ret = MessageBox(m_hwnd, "XBE signature check failed! It's possible that hackers have injected malicious code into this game.\n\nAre you sure you wish to continue?", "Cxbx-Reloaded", MB_ICONEXCLAMATION | MB_YESNO);
+		if (ret != IDYES)
+			return;
+	}
+	
     // save this xbe to the list of recent xbe files
     if(m_XbeFilename[0] != '\0') {
         bool found = false;
