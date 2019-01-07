@@ -54,6 +54,7 @@ namespace xboxkrnl
 #include "core\kernel\support\EmuFS.h"
 #include "EmuEEPROM.h" // For CxbxRestoreEEPROM, EEPROM, XboxFactoryGameRegion
 #include "core\kernel\exports\EmuKrnl.h"
+#include "core\kernel\exports\EmuKrnlKi.h"
 #include "EmuShared.h"
 #include "core\kernel\support\EmuXTL.h"
 #include "core\hle\Intercept.hpp"
@@ -684,6 +685,42 @@ static unsigned int WINAPI CxbxKrnlInterruptThread(PVOID param)
 	return 0;
 }
 
+static void CxbxKrnlClockThread()
+{
+	LARGE_INTEGER CurrentTicks;
+	uint64_t Delta;
+	uint64_t Microseconds;
+	unsigned int IncrementScaling;
+	static uint64_t LastTicks = 0;
+	static uint64_t Error = 0;
+	static uint64_t UnaccountedMicroseconds = 0;
+
+	// This keeps track of how many us have elapsed between two cycles, so that the xbox clocks are updated
+	// with the proper increment (instead of blindly adding a single increment at every step)
+
+	if (LastTicks == 0) {
+		QueryPerformanceCounter(&CurrentTicks);
+		LastTicks = CurrentTicks.QuadPart;
+		CurrentTicks.QuadPart = 0;
+	}
+
+	QueryPerformanceCounter(&CurrentTicks);
+	Delta = CurrentTicks.QuadPart - LastTicks;
+	LastTicks = CurrentTicks.QuadPart;
+
+	Error += (Delta * SCALE_US_IN_S);
+	Microseconds = Error / HostClockFrequency;
+	Error -= (Microseconds * HostClockFrequency);
+
+	UnaccountedMicroseconds += Microseconds;
+	IncrementScaling = UnaccountedMicroseconds / 1000; // -> 1 ms = 1000us -> time between two xbox clock interrupts
+	// Here, we should actually check if IncrementScaling is >= 1, but because this thread has a Sleep(1) call,
+	// that will never happen in practice
+	UnaccountedMicroseconds -= (IncrementScaling * 1000);
+
+	xboxkrnl::KiClockIsr(IncrementScaling);
+}
+
 std::vector<xbaddr> g_RdtscPatches;
 
 #define OPCODE_PATCH_RDTSC 0x90EF  // OUT DX, EAX; NOP
@@ -1307,11 +1344,12 @@ __declspec(noreturn) void CxbxKrnlInit
 	CxbxKrnl_XbeHeader->dwCertificateAddr = (uint32)&CxbxKrnl_Xbe->m_Certificate;
 	g_pCertificate = &CxbxKrnl_Xbe->m_Certificate;
 
+	// Initialize timer subsystem
+	Timer_Init();
 	// for unicode conversions
 	setlocale(LC_ALL, "English");
 	// Initialize time-related variables for the kernel and the timers
 	CxbxInitPerformanceCounters();
-	Timer_Init();
 #ifdef _DEBUG
 //	CxbxPopupMessage(LOG_LEVEL::INFO, "Attach a Debugger");
 //  Debug child processes using https://marketplace.visualstudio.com/items?itemName=GreggMiskelly.MicrosoftChildProcessDebuggingPowerTool

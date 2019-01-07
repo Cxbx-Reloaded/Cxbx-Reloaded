@@ -58,6 +58,7 @@ namespace NtDll
 #include "EmuKrnl.h" // For InitializeListHead(), etc.
 #include "EmuKrnlKi.h" // For KiRemoveTreeTimer(), KiInsertTreeTimer()
 #include "core\kernel\support\EmuFile.h" // For IsEmuHandle(), NtStatusToString()
+#include "devices\usb\Timer.h"
 
 #include <chrono>
 #include <thread>
@@ -363,25 +364,18 @@ ULONGLONG CxbxGetPerformanceCounter(bool acpi) {
 	return (uint64_t)tsc.QuadPart;
 }
 
-uint64_t CxbxCalibrateTsc()
-{
-	LARGE_INTEGER pf;
-	QueryPerformanceFrequency(&pf);
-	return pf.QuadPart;
-}
-
 void CxbxInitPerformanceCounters()
 {
-	LARGE_INTEGER t;
-	t.QuadPart = 1000000000;
-	t.QuadPart *= CxbxCalibrateTsc();
-	t.QuadPart /= XBOX_TSC_FREQUENCY;
-	NativeToXbox_FactorForRdtsc = t.QuadPart;
+	uint64_t t;
+	t = 1000000000;
+	t *= HostClockFrequency;
+	t /= XBOX_TSC_FREQUENCY;
+	NativeToXbox_FactorForRdtsc = t;
 
-	t.QuadPart = 1000000000;
-	t.QuadPart *= CxbxCalibrateTsc();
-	t.QuadPart /= XBOX_ACPI_FREQUENCY;
-	NativeToXbox_FactorForAcpi = t.QuadPart;
+	t = 1000000000;
+	t *= HostClockFrequency;
+	t /= XBOX_ACPI_FREQUENCY;
+	NativeToXbox_FactorForAcpi = t;
 
 	ConnectKeInterruptTimeToThunkTable();
 

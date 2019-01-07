@@ -62,7 +62,7 @@ xboxkrnl::KTIMER_TABLE_ENTRY KiTimerTableListHead[TIMER_TABLE_SIZE];
 xboxkrnl::KDPC KiTimerExpireDpc;
 
 
-VOID xboxkrnl::KiClockIsr()
+VOID xboxkrnl::KiClockIsr(unsigned int ScalingFactor)
 {
 	KIRQL OldIrql;
 	LARGE_INTEGER InterruptTime;
@@ -74,12 +74,14 @@ VOID xboxkrnl::KiClockIsr()
 	// Update the interrupt time
 	InterruptTime.u.LowPart = KeInterruptTime->LowPart;
 	InterruptTime.u.HighPart = KeInterruptTime->High1Time;
-	InterruptTime.QuadPart += CLOCK_TIME_INCREMENT;
+	InterruptTime.QuadPart += (CLOCK_TIME_INCREMENT * ScalingFactor);
 	KeInterruptTime->High2Time = InterruptTime.u.HighPart;
 	KeInterruptTime->LowPart = InterruptTime.u.LowPart;
 	KeInterruptTime->High1Time = InterruptTime.u.HighPart;
 
 	// Update the system time
+	// NOTE: I'm not sure if we should round down the host system time to the nearest multiple
+	// of the Xbox clock increment...
 	GetSystemTimeAsFileTime((LPFILETIME)&HostSystemTime);
 	HostSystemTime.QuadPart += HostSystemTimeDelta.QuadPart;
 	KeSystemTime->High2Time = HostSystemTime.u.HighPart;
@@ -87,12 +89,12 @@ VOID xboxkrnl::KiClockIsr()
 	KeSystemTime->High1Time = HostSystemTime.u.HighPart;
 
 	// Update the tick counter
-	KeTickCount += 1;
+	KeTickCount += ScalingFactor;
 
 	// Check if a timer have expired
 	Hand = KeTickCount & (TIMER_TABLE_SIZE - 1);
 	if (KiTimerTableListHead[Hand].Entry.Flink != &KiTimerTableListHead[Hand].Entry &&
-		InterruptTime.QuadPart >= CONTAINING_RECORD(KiTimerTableListHead[Hand].Entry.Flink, KTIMER, TimerListEntry)->DueTime.QuadPart) {
+		InterruptTime.QuadPart >= KiTimerTableListHead[Hand].Time.QuadPart) {
 		KeInsertQueueDpc(&KiTimerExpireDpc, (PVOID)&KeTickCount, 0);
 	}
 

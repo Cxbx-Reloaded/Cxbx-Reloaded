@@ -39,6 +39,15 @@
 
 #include <atomic>
 
+#define SCALE_NS_IN_S  1000000000
+#define SCALE_NS_IN_MS 1000000
+#define SCALE_NS_IN_US 1000
+#define SCALE_NS_IN_NS 1
+
+#define SCALE_US_IN_S  1000000
+#define SCALE_US_IN_MS 1000
+#define SCALE_US_IN_US 1
+
 /* typedef of the timer object and the callback function */
 typedef void(*pTimerCB)(void*);
 typedef struct _TimerObject
@@ -51,6 +60,8 @@ typedef struct _TimerObject
 }
 TimerObject;
 
+// The frequency of the high resolution clock of the host
+uint64_t HostClockFrequency;
 
 /* Timer exported functions */
 TimerObject* Timer_Create(pTimerCB Callback, void* Arg);

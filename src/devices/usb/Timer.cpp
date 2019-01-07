@@ -51,16 +51,10 @@
 // See the QEMUClockType QEMU_CLOCK_VIRTUAL of XQEMU for more info.
 #define CLOCK_REALTIME 0
 //#define CLOCK_VIRTUALTIME  1
-#define SCALE_S  1000000000ULL
-#define SCALE_MS 1000000ULL
-#define SCALE_US 1000ULL
-#define SCALE_NS 1ULL
 
 
 // Vector storing all the timers created
 static std::vector<TimerObject*> TimerList;
-// The frequency of the high resolution clock of the host
-static uint64_t ClockFrequency;
 // Lock to acquire when accessing TimerList
 std::mutex TimerMtx;
 
@@ -71,11 +65,11 @@ inline uint64_t GetTime_NS(TimerObject* Timer)
 #ifdef _WIN32
 	LARGE_INTEGER li;
 	QueryPerformanceCounter(&li);
-	uint64_t Ret = Muldiv64(li.QuadPart, (uint32_t)SCALE_S, ClockFrequency);
+	uint64_t Ret = Muldiv64(li.QuadPart, SCALE_NS_IN_S, HostClockFrequency);
 #elif __linux__
 	static struct timespec ts;
 	clock_gettime(CLOCK_MONOTONIC_RAW, &ts);
-	uint64_t Ret = Muldiv64(ts.tv_sec, SCALE_S, 1) + ts.tv_nsec;
+	uint64_t Ret = Muldiv64(ts.tv_sec, SCALE_NS_IN_S, 1) + ts.tv_nsec;
 #else
 #error "Unsupported OS"
 #endif
@@ -165,7 +159,7 @@ void Timer_Init()
 #ifdef _WIN32
 	LARGE_INTEGER freq;
 	QueryPerformanceFrequency(&freq);
-	ClockFrequency = freq.QuadPart;
+	HostClockFrequency = freq.QuadPart;
 #elif __linux__
 	ClockFrequency = 0;
 #else
