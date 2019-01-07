@@ -1991,13 +1991,21 @@ void WndMain::OpenXbe(const char *x_filename)
         return;
     }
 	
-	if (!m_Xbe->CheckXbeSignature() && !g_Settings->m_core.allowAdminPrivilege)
+	if (!g_Settings->m_core.allowAdminPrivilege && !m_Xbe->CheckXbeSignature())
 	{
 		int ret = MessageBox(m_hwnd, "XBE signature check failed!\n"
 			"\nThis is dangerous, as maliciously modified Xbox titles could take control of your system.\n"
 			"\nAre you sure you want to continue?", "Cxbx-Reloaded", MB_ICONEXCLAMATION | MB_YESNO);
 		if (ret != IDYES)
+		{
+			delete m_Xbe; m_Xbe = nullptr;
+			
+			RedrawWindow(m_hwnd, NULL, NULL, RDW_INVALIDATE);
+			
+			UpdateCaption();
+			
 			return;
+		}
 	}
 	
     // save this xbe to the list of recent xbe files
