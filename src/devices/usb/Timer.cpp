@@ -58,6 +58,9 @@ static std::vector<TimerObject*> TimerList;
 // Lock to acquire when accessing TimerList
 std::mutex TimerMtx;
 
+// Forward declare
+void InitXboxThread(DWORD_PTR cores);
+
 
 // Returns the current time of the timer
 inline uint64_t GetTime_NS(TimerObject* Timer)
@@ -65,11 +68,11 @@ inline uint64_t GetTime_NS(TimerObject* Timer)
 #ifdef _WIN32
 	LARGE_INTEGER li;
 	QueryPerformanceCounter(&li);
-	uint64_t Ret = Muldiv64(li.QuadPart, SCALE_NS_IN_S, HostClockFrequency);
+	uint64_t Ret = Muldiv64(li.QuadPart, SCALE_S_IN_NS, HostClockFrequency);
 #elif __linux__
 	static struct timespec ts;
 	clock_gettime(CLOCK_MONOTONIC_RAW, &ts);
-	uint64_t Ret = Muldiv64(ts.tv_sec, SCALE_NS_IN_S, 1) + ts.tv_nsec;
+	uint64_t Ret = Muldiv64(ts.tv_sec, SCALE_S_IN_NS, 1) + ts.tv_nsec;
 #else
 #error "Unsupported OS"
 #endif
@@ -103,7 +106,15 @@ void Timer_Destroy(TimerObject* Timer)
 // Thread that runs the timer
 void ClockThread(TimerObject* Timer)
 {
-	uint64_t NewExpireTime = GetNextExpireTime(Timer);
+	uint64_t NewExpireTime;
+
+	if (!Timer->Name.empty()) {
+		CxbxSetThreadName(Timer->Name.c_str());
+	}
+	if (Timer->CpuAffinity != nullptr) {
+		InitXboxThread(*Timer->CpuAffinity);
+	}
+	NewExpireTime = GetNextExpireTime(Timer);
 
 	while (true) {
 		if (GetTime_NS(Timer) > NewExpireTime) {
@@ -131,7 +142,7 @@ void Timer_Exit(TimerObject* Timer)
 }
 
 // Allocates the memory for the timer object
-TimerObject* Timer_Create(pTimerCB Callback, void* Arg)
+TimerObject* Timer_Create(TimerCB Callback, void* Arg, std::string Name, unsigned long* Affinity)
 {
 	std::lock_guard<std::mutex>lock(TimerMtx);
 	TimerObject* pTimer = new TimerObject;
@@ -140,6 +151,8 @@ TimerObject* Timer_Create(pTimerCB Callback, void* Arg)
 	pTimer->ExpireTime_MS.store(0);
 	pTimer->Exit.store(false);
 	pTimer->Opaque = Arg;
+	Name.empty() ? pTimer->Name = "Unnamed thread" : pTimer->Name = Name;
+	pTimer->CpuAffinity = Affinity;
 	TimerList.emplace_back(pTimer);
 
 	return pTimer;

@@ -183,7 +183,7 @@ class OHCI
 		int m_AsyncComplete = 0;
 
 		// EOF callback wrapper
-		static void OHCI_FrameBoundaryWrapper(void* pVoid);
+		static unsigned int OHCI_FrameBoundaryWrapper(void* pVoid);
 		// EOF callback function
 		void OHCI_FrameBoundaryWorker();
 		// inform the HCD that we got a problem here...

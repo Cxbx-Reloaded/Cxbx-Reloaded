@@ -234,9 +234,10 @@ OHCI::OHCI(USBDevice* UsbObj)
 	OHCI_StateReset();
 }
 
-void OHCI::OHCI_FrameBoundaryWrapper(void* pVoid)
+unsigned int OHCI::OHCI_FrameBoundaryWrapper(void* pVoid)
 {
 	static_cast<OHCI*>(pVoid)->OHCI_FrameBoundaryWorker();
+	return 0;
 }
 
 void OHCI::OHCI_FrameBoundaryWorker()
@@ -894,7 +895,7 @@ void OHCI::OHCI_StateReset()
 void OHCI::OHCI_BusStart()
 {
 	// Create the EOF timer.
-	m_pEOFtimer = Timer_Create(OHCI_FrameBoundaryWrapper, this);
+	m_pEOFtimer = Timer_Create(OHCI_FrameBoundaryWrapper, this, "", nullptr);
 
 	DBG_PRINTF("Operational mode event\n");
 

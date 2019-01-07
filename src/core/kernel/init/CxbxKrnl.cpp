@@ -685,7 +685,7 @@ static unsigned int WINAPI CxbxKrnlInterruptThread(PVOID param)
 	return 0;
 }
 
-static void CxbxKrnlClockThread()
+static unsigned int CxbxKrnlClockThread(void* pVoid)
 {
 	LARGE_INTEGER CurrentTicks;
 	uint64_t Delta;
@@ -708,7 +708,7 @@ static void CxbxKrnlClockThread()
 	Delta = CurrentTicks.QuadPart - LastTicks;
 	LastTicks = CurrentTicks.QuadPart;
 
-	Error += (Delta * SCALE_US_IN_S);
+	Error += (Delta * SCALE_S_IN_US);
 	Microseconds = Error / HostClockFrequency;
 	Error -= (Microseconds * HostClockFrequency);
 
@@ -719,6 +719,8 @@ static void CxbxKrnlClockThread()
 	UnaccountedMicroseconds -= (IncrementScaling * 1000);
 
 	xboxkrnl::KiClockIsr(IncrementScaling);
+
+	return 0;
 }
 
 std::vector<xbaddr> g_RdtscPatches;
@@ -1641,6 +1643,9 @@ __declspec(noreturn) void CxbxKrnlInit
 	// Create the interrupt processing thread
 	DWORD dwThreadId;
 	HANDLE hThread = (HANDLE)_beginthreadex(NULL, NULL, CxbxKrnlInterruptThread, NULL, NULL, (uint*)&dwThreadId);
+	// Start the kernel clock thread
+	TimerObject* KernelClockThr = Timer_Create(CxbxKrnlClockThread, nullptr, "Kernel clock thread", &g_CPUOthers);
+	Timer_Start(KernelClockThr, SCALE_MS_IN_NS);
 
 	DBG_PRINTF_EX(LOG_PREFIX_INIT, "Calling XBE entry point...\n");
 	CxbxLaunchXbe(Entry);
