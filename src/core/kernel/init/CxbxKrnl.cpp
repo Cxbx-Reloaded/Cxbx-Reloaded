@@ -1247,9 +1247,6 @@ void CxbxKrnlMain(int argc, char* argv[])
 		// Restore enough of the executable image headers to keep WinAPI's working :
 		RestoreExeImageHeader();
 	}
-		
-	// Before readout, make sure our kernel thunk table references the Windows host timer addresses :
-	ConnectWindowsTimersToThunkTable();
 
 	// Decode kernel thunk table address :
 	uint32_t kt = CxbxKrnl_Xbe->m_Header.dwKernelImageThunkAddr;

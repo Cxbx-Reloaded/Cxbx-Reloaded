@@ -71,10 +71,9 @@ typedef struct _DpcData {
 	CRITICAL_SECTION Lock;
 	HANDLE DpcEvent;
 	xboxkrnl::LIST_ENTRY DpcQueue; // TODO : Use KeGetCurrentPrcb()->DpcListHead instead
-	xboxkrnl::LIST_ENTRY TimerQueue;
 } DpcData;
 
-DpcData g_DpcData = { 0 }; // Note : g_DpcData is initialized in InitDpcAndTimerThread()
+DpcData g_DpcData = { 0 }; // Note : g_DpcData is initialized in InitDpcThread()
 
 xboxkrnl::ULONGLONG LARGE_INTEGER2ULONGLONG(xboxkrnl::LARGE_INTEGER value)
 {
@@ -220,23 +219,9 @@ xboxkrnl::KPRCB *KeGetCurrentPrcb()
 #define KeRaiseIrql(NewIrql, OldIrql) \
 	*(OldIrql) = KfRaiseIrql(NewIrql)
 
-ULONGLONG BootTickCount = 0;
-
-// The Xbox GetTickCount is measured in milliseconds, just like the native GetTickCount.
-// The only difference we'll take into account here, is that the Xbox will probably reboot
-// much more often than Windows, so we correct this with a 'BootTickCount' value :
-DWORD CxbxXboxGetTickCount()
-{
-	return (DWORD)(GetTickCount64() - BootTickCount);
-}
-
-DWORD ExecuteDpcQueue()
+void ExecuteDpcQueue()
 {
 	xboxkrnl::PKDPC pkdpc;
-	DWORD dwWait;
-	DWORD dwNow;
-	LONG lWait;
-	xboxkrnl::PKTIMER pktimer;
 
 	// While we're working with the DpcQueue, we need to be thread-safe :
 	EnterCriticalSection(&(g_DpcData.Lock));
@@ -274,64 +259,18 @@ DWORD ExecuteDpcQueue()
 		KeGetCurrentPrcb()->DpcRoutineActive = FALSE; // Experimental
 	}
 
-	dwWait = INFINITE;
-	if (!IsListEmpty(&(g_DpcData.TimerQueue)))
-	{
-		while (true)
-		{
-			dwNow = CxbxXboxGetTickCount();
-			dwWait = INFINITE;
-			pktimer = (xboxkrnl::PKTIMER)g_DpcData.TimerQueue.Flink;
-			pkdpc = nullptr;
-			while (pktimer != (xboxkrnl::PKTIMER)&(g_DpcData.TimerQueue))
-			{
-				lWait = (LONG)pktimer->DueTime.u.LowPart - dwNow;
-				if (lWait <= 0)
-				{
-					pktimer->DueTime.u.LowPart = pktimer->Period + dwNow;
-					pkdpc = pktimer->Dpc;
-					break; // while
-				}
-
-				if (dwWait > (DWORD)lWait)
-					dwWait = (DWORD)lWait;
-
-				pktimer = (xboxkrnl::PKTIMER)pktimer->TimerListEntry.Flink;
-			}
-
-			if (pkdpc == nullptr)
-				break; // while
-
-			DBG_PRINTF("Global TimerQueue, calling DPC at 0x%.8X\n", pkdpc->DeferredRoutine);
-
-			__try {
-				pkdpc->DeferredRoutine(
-					pkdpc,
-					pkdpc->DeferredContext,
-					pkdpc->SystemArgument1,
-					pkdpc->SystemArgument2);
-			} __except (EmuException(GetExceptionInformation()))
-			{
-				EmuLog(LOG_LEVEL::WARNING, "Problem with ExceptionFilter!");
-			}
-		}
-	}
-
 //    Assert(g_DpcData._dwThreadId == GetCurrentThreadId());
 //    Assert(g_DpcData._dwDpcThreadId == g_DpcData._dwThreadId);
 //    g_DpcData._dwDpcThreadId = 0;
 	LeaveCriticalSection(&(g_DpcData.Lock));
-
-	return dwWait;
 }
 
-void InitDpcAndTimerThread()
+void InitDpcThread()
 {
 	DWORD dwThreadId = 0;
 
 	InitializeCriticalSection(&(g_DpcData.Lock));
 	InitializeListHead(&(g_DpcData.DpcQueue));
-	InitializeListHead(&(g_DpcData.TimerQueue));
 
 	DBG_PRINTF_EX(CXBXR_MODULE::INIT, "Creating DPC event\n");
 	g_DpcData.DpcEvent = CreateEvent(/*lpEventAttributes=*/nullptr, /*bManualReset=*/FALSE, /*bInitialState=*/FALSE, /*lpName=*/nullptr);
@@ -341,8 +280,6 @@ void InitDpcAndTimerThread()
 #define XBOX_ACPI_FREQUENCY 3375000  // Xbox ACPI frequency (3.375 mhz)
 ULONGLONG NativeToXbox_FactorForRdtsc;
 ULONGLONG NativeToXbox_FactorForAcpi;
-
-void ConnectKeInterruptTimeToThunkTable(); // forward
 
 ULONGLONG CxbxGetPerformanceCounter(bool acpi) {
 	LARGE_INTEGER tsc;
@@ -377,11 +314,9 @@ void CxbxInitPerformanceCounters()
 	t /= XBOX_ACPI_FREQUENCY;
 	NativeToXbox_FactorForAcpi = t;
 
-	ConnectKeInterruptTimeToThunkTable();
-
-	// Let's initialize the Dpc and timer handling thread too,
+	// Let's initialize the Dpc handling thread too,
 	// here for now (should be called by our caller)
-	InitDpcAndTimerThread();
+	InitDpcThread();
 }
 
 // ******************************************************************
@@ -1107,14 +1042,7 @@ XBSYSAPI EXPORTNUM(121) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeIsExecutingDpc
 // ******************************************************************
 // * 0x0078 - KeInterruptTime
 // ******************************************************************
-// Dxbx note : This was once a value, but instead we now point to
-// the native Windows versions (see ConnectWindowsTimersToThunkTable) :
-XBSYSAPI EXPORTNUM(120) xboxkrnl::PKSYSTEM_TIME xboxkrnl::KeInterruptTime = nullptr; // Set by ConnectKeInterruptTimeToThunkTable
-
-void ConnectKeInterruptTimeToThunkTable()
-{
-	xboxkrnl::KeInterruptTime = (xboxkrnl::PKSYSTEM_TIME)CxbxKrnl_KernelThunkTable[120];
-}
+XBSYSAPI EXPORTNUM(120) xboxkrnl::KSYSTEM_TIME xboxkrnl::KeInterruptTime = { 0, 0, 0 };
 
 // ******************************************************************
 // * 0x007A - KeLeaveCriticalRegion()
@@ -1204,12 +1132,12 @@ XBSYSAPI EXPORTNUM(125) xboxkrnl::ULONGLONG NTAPI xboxkrnl::KeQueryInterruptTime
 	{
 		// Don't use NtDll::QueryInterruptTime, it's too new (Windows 10).
 		// Instead, read KeInterruptTime from our kernel thunk table.
-		InterruptTime.u.HighPart = KeInterruptTime->High1Time;
-		InterruptTime.u.LowPart = KeInterruptTime->LowPart;
+		InterruptTime.u.HighPart = KeInterruptTime.High1Time;
+		InterruptTime.u.LowPart = KeInterruptTime.LowPart;
 
 		// Read InterruptTime atomically with a spinloop to avoid errors
 		// when High1Time and High2Time differ (during unprocessed overflow in LowPart).
-		if (InterruptTime.u.HighPart == KeInterruptTime->High2Time)
+		if (InterruptTime.u.HighPart == KeInterruptTime.High2Time)
 			break;
 	}
 
@@ -1254,12 +1182,12 @@ XBSYSAPI EXPORTNUM(128) xboxkrnl::VOID NTAPI xboxkrnl::KeQuerySystemTime
 
 	while (true)
 	{
-		SystemTime.u.HighPart = KeSystemTime->High1Time;
-		SystemTime.u.LowPart = KeSystemTime->LowPart;
+		SystemTime.u.HighPart = KeSystemTime.High1Time;
+		SystemTime.u.LowPart = KeSystemTime.LowPart;
 
 		// Read InterruptTime atomically with a spinloop to avoid errors
 		// when High1Time and High2Time differ (during unprocessed overflow in LowPart).
-		if (SystemTime.u.HighPart == KeSystemTime->High2Time)
+		if (SystemTime.u.HighPart == KeSystemTime.High2Time)
 			break;
 	}
 
@@ -1858,9 +1786,7 @@ XBSYSAPI EXPORTNUM(153) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeSynchronizeExecution
 // ******************************************************************
 // * 0x009A - KeSystemTime
 // ******************************************************************
-// Dxbx note : This was once a value, but instead we now point to
-// the native Windows versions (see ConnectWindowsTimersToThunkTable) :
-// XBSYSAPI EXPORTNUM(154) xboxkrnl::PKSYSTEM_TIME xboxkrnl::KeSystemTime; // Used for KernelThunk[154]
+// XBSYSAPI EXPORTNUM(154) xboxkrnl::KSYSTEM_TIME xboxkrnl::KeSystemTime; // Used for KernelThunk[154]
 
 // ******************************************************************
 // * 0x009B - KeTestAlertThread()

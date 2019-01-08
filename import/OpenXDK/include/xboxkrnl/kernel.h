@@ -249,7 +249,7 @@ XBSYSAPI EXPORTNUM(119) BOOLEAN NTAPI KeInsertQueueDpc
 // ******************************************************************
 // * 0x0078 - KeInterruptTime
 // ******************************************************************
-XBSYSAPI EXPORTNUM(120) PKSYSTEM_TIME KeInterruptTime;
+XBSYSAPI EXPORTNUM(120) KSYSTEM_TIME KeInterruptTime;
 
 // ******************************************************************
 // * 0x0079 - KeIsExecutingDpc()
@@ -490,7 +490,7 @@ XBSYSAPI EXPORTNUM(153) BOOLEAN NTAPI KeSynchronizeExecution
 // ******************************************************************
 // * 0x009A - KeSystemTime
 // ******************************************************************
-XBSYSAPI EXPORTNUM(154) PKSYSTEM_TIME KeSystemTime;
+XBSYSAPI EXPORTNUM(154) KSYSTEM_TIME KeSystemTime;
 
 // ******************************************************************
 // * 0x009B - KeTestAlertThread()

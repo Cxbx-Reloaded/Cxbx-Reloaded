@@ -154,7 +154,7 @@ void RestoreInterruptMode(bool value)
 	g_bInterruptsEnabled = value;
 }
 
-extern DWORD ExecuteDpcQueue();
+extern void ExecuteDpcQueue();
 
 void KiUnexpectedInterrupt()
 {

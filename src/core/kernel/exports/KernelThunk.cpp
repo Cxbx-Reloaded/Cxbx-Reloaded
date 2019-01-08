@@ -175,7 +175,7 @@ uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)FUNC(&xboxkrnl::KeInsertQueue),                       // 0x0075 (117)
 	(uint32)FUNC(&xboxkrnl::KeInsertQueueApc),                    // 0x0076 (118)
 	(uint32)FUNC(&xboxkrnl::KeInsertQueueDpc),                    // 0x0077 (119)
-	(uint32)VARIABLE(0x0078),                                     // 0x0078 (120) KeInterruptTime (Set by ConnectWindowsTimersToThunkTable)
+	(uint32)VARIABLE(&xboxkrnl::KeInterruptTime),                 // 0x0078 (120) KeInterruptTime
 	(uint32)FUNC(&xboxkrnl::KeIsExecutingDpc),                    // 0x0079 (121)
 	(uint32)FUNC(&xboxkrnl::KeLeaveCriticalRegion),               // 0x007A (122)
 	(uint32)FUNC(&xboxkrnl::KePulseEvent),                        // 0x007B (123)
@@ -209,7 +209,7 @@ uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)FUNC(&xboxkrnl::KeStallExecutionProcessor),           // 0x0097 (151)
 	(uint32)FUNC(&xboxkrnl::KeSuspendThread),                     // 0x0098 (152)
 	(uint32)FUNC(&xboxkrnl::KeSynchronizeExecution),              // 0x0099 (153)
-	(uint32)VARIABLE(0x009A),                                     // 0x009A (154) KeSystemTime (Set by ConnectWindowsTimersToThunkTable)
+	(uint32)VARIABLE(&xboxkrnl::KeSystemTime),                    // 0x009A (154) KeSystemTime
 	(uint32)FUNC(&xboxkrnl::KeTestAlertThread),                   // 0x009B (155)
 	(uint32)VARIABLE(&xboxkrnl::KeTickCount),                     // 0x009C (156)
 	(uint32)VARIABLE(&xboxkrnl::KeTimeIncrement),                 // 0x009D (157)
@@ -435,44 +435,3 @@ uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)FUNC(&xboxkrnl::MmDbgReleaseAddress),                 // 0x0179 (377) DEVKIT ONLY!
 	(uint32)FUNC(&xboxkrnl::MmDbgWriteCheck),                     // 0x017A (378) DEVKIT ONLY!
 };
-
-/* prevent name collisions */
-namespace NtDll
-{
-	#include "core\kernel\support\EmuNtDll.h"
-};
-
-// Virtual memory location of KUSER_SHARED_DATA :
-// See http://research.microsoft.com/en-us/um/redmond/projects/invisible/src/base/md/i386/sim/_pertest2.c.htm
-// and http://research.microsoft.com/en-us/um/redmond/projects/invisible/src/base/md/i386/sim/_glue.c.htm
-// and http://processhacker.sourceforge.net/doc/ntexapi_8h_source.html
-// and http://forum.sysinternals.com/0x7ffe0000-what-is-in-it_topic10012.html
-#define MM_SHARED_USER_DATA_VA      0x7FFE0000
-#define USER_SHARED_DATA ((NtDll::KUSER_SHARED_DATA * const)MM_SHARED_USER_DATA_VA)
-
-// KUSER_SHARED_DATA Offsets
-// See http://native-nt-toolkit.googlecode.com/svn/trunk/ndk/asm.h
-// Note : KUSER_SHARED_DATA.TickCountLow seems deprecated
-const UINT USER_SHARED_DATA_TICK_COUNT = 0x320;
-
-// Here we define the addresses of the native Windows timers :
-// Source: Dxbx
-const xboxkrnl::PKSYSTEM_TIME CxbxNtTickCount = (xboxkrnl::PKSYSTEM_TIME)(MM_SHARED_USER_DATA_VA + USER_SHARED_DATA_TICK_COUNT);
-
-void ConnectWindowsTimersToThunkTable()
-{
-	// Couple the xbox thunks for xboxkrnl::KeInterruptTime and xboxkrnl::KeSystemTime
-	// to their actual counterparts on Windows, this way we won't have to spend any
-	// time on updating them ourselves, and still get highly accurate timers!
-	// See http://www.dcl.hpi.uni-potsdam.de/research/WRK/2007/08/getting-os-information-the-kuser_shared_data-structure/
-
-	// Point Xbox KeInterruptTime to host InterruptTime:
-	CxbxKrnl_KernelThunkTable[120] = (uint32)&(USER_SHARED_DATA->InterruptTime);
-
-	// Point Xbox KeSystemTime to host SystemTime; If read directly (thus skipping
-	// KeQuerySystemTime), this value is not adjusted with HostSystemTimeDelta!
-	CxbxKrnl_KernelThunkTable[154] = (uint32)&(USER_SHARED_DATA->SystemTime);
-
-	// We can't point Xbox KeTickCount to host TickCount, because it
-	// updates slower on the xbox. See EmuUpdateTickCount().
-}
