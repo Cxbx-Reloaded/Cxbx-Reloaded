@@ -449,6 +449,8 @@ XBSYSAPI EXPORTNUM(96) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeCancelTimer
 
 	assert(Timer);
 
+	KiTimerLock();
+
 	/* Lock the Database and Raise IRQL */
 	KiLockDispatcherDatabase(&OldIrql);
 
@@ -460,6 +462,8 @@ XBSYSAPI EXPORTNUM(96) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeCancelTimer
 
 	/* Release Dispatcher Lock */
 	KiUnlockDispatcherDatabase(OldIrql);
+
+	KiTimerUnlock();
 
 	/* Return the old state */
 	RETURN(Inserted);
@@ -1686,6 +1690,8 @@ XBSYSAPI EXPORTNUM(150) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeSetTimerEx
 	assert(Timer);
 	assert(Timer->Header.Type == TimerNotificationObject || Timer->Header.Type == TimerSynchronizationObject);
 
+	KiTimerLock();
+
 	KiLockDispatcherDatabase(&OldIrql);
 
 	// Same as KeCancelTimer(Timer) :
@@ -1717,6 +1723,8 @@ XBSYSAPI EXPORTNUM(150) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeSetTimerEx
 
 	/* Exit the dispatcher */
 	KiUnlockDispatcherDatabase(OldIrql);
+
+	KiTimerUnlock();
 
 	RETURN(Inserted);
 }
@@ -1946,6 +1954,7 @@ XBSYSAPI EXPORTNUM(158) xboxkrnl::NTSTATUS NTAPI xboxkrnl::KeWaitForMultipleObje
 				}
 
 				// Setup a timer for the thread
+				KiTimerLock();
 				PKTIMER Timer = &Thread->Timer;
 				PKWAIT_BLOCK WaitTimer = &Thread->TimerWaitBlock;
 				WaitBlock->NextWaitBlock = WaitTimer;
@@ -1954,10 +1963,12 @@ XBSYSAPI EXPORTNUM(158) xboxkrnl::NTSTATUS NTAPI xboxkrnl::KeWaitForMultipleObje
 				WaitTimer->NextWaitBlock = WaitBlock;
 				if (KiInsertTreeTimer(Timer, *Timeout) == FALSE) {
 					WaitStatus = (NTSTATUS)STATUS_TIMEOUT;
+					KiTimerUnlock();
 					goto NoWait;
 				}
 
 				DueTime.QuadPart = Timer->DueTime.QuadPart;
+				KiTimerUnlock();
 			}
 			else {
 				WaitBlock->NextWaitBlock = WaitBlock;
@@ -2128,6 +2139,7 @@ XBSYSAPI EXPORTNUM(159) xboxkrnl::NTSTATUS NTAPI xboxkrnl::KeWaitForSingleObject
 				}
 
 				// Setup a timer for the thread
+				KiTimerLock();
 				PKTIMER Timer = &Thread->Timer;
 				PKWAIT_BLOCK WaitTimer = &Thread->TimerWaitBlock;
 				WaitBlock->NextWaitBlock = WaitTimer;
@@ -2136,10 +2148,12 @@ XBSYSAPI EXPORTNUM(159) xboxkrnl::NTSTATUS NTAPI xboxkrnl::KeWaitForSingleObject
 				WaitTimer->NextWaitBlock = WaitBlock;
 				if (KiInsertTreeTimer(Timer, *Timeout) == FALSE) {
 					WaitStatus = (NTSTATUS)STATUS_TIMEOUT;
+					KiTimerUnlock();
 					goto NoWait;
 				}
 
 				DueTime.QuadPart = Timer->DueTime.QuadPart;
+				KiTimerUnlock();
 			}
 			else {
 				WaitBlock->NextWaitBlock = WaitBlock;
