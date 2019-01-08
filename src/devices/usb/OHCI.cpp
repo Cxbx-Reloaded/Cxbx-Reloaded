@@ -234,10 +234,9 @@ OHCI::OHCI(USBDevice* UsbObj)
 	OHCI_StateReset();
 }
 
-unsigned int OHCI::OHCI_FrameBoundaryWrapper(void* pVoid)
+void OHCI::OHCI_FrameBoundaryWrapper(void* pVoid)
 {
 	static_cast<OHCI*>(pVoid)->OHCI_FrameBoundaryWorker();
-	return 0;
 }
 
 void OHCI::OHCI_FrameBoundaryWorker()

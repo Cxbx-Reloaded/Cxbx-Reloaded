@@ -49,7 +49,7 @@
 #define SCALE_US_IN_US 1
 
 /* typedef of the timer object and the callback function */
-typedef unsigned int(*TimerCB)(void*);
+typedef void(*TimerCB)(void*);
 typedef struct _TimerObject
 {
 	int Type;                            // timer type

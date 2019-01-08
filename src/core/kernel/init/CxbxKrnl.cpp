@@ -685,7 +685,7 @@ static unsigned int WINAPI CxbxKrnlInterruptThread(PVOID param)
 	return 0;
 }
 
-static unsigned int CxbxKrnlClockThread(void* pVoid)
+static void CxbxKrnlClockThread(void* pVoid)
 {
 	LARGE_INTEGER CurrentTicks;
 	uint64_t Delta;
@@ -719,8 +719,6 @@ static unsigned int CxbxKrnlClockThread(void* pVoid)
 	UnaccountedMicroseconds -= (IncrementScaling * 1000);
 
 	xboxkrnl::KiClockIsr(IncrementScaling);
-
-	return 0;
 }
 
 std::vector<xbaddr> g_RdtscPatches;
