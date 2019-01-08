@@ -1579,10 +1579,6 @@ __declspec(noreturn) void CxbxKrnlInit
 	// Read Xbox video mode from the SMC, store it in HalBootSMCVideoMode
 	xboxkrnl::HalReadSMBusValue(SMBUS_ADDRESS_SYSTEM_MICRO_CONTROLLER, SMC_COMMAND_AV_PACK, FALSE, &xboxkrnl::HalBootSMCVideoMode);
 
-	// TODO: move much of this stuff to xboxkrnl::init();
-	extern xboxkrnl::LIST_ENTRY KiWaitInListHead;
-	InitializeListHead(&KiWaitInListHead);
-
 	if (bLLE_USB) {
 #if 1 // Reenable this when LLE USB actually works
 		int ret;
@@ -1633,6 +1629,7 @@ __declspec(noreturn) void CxbxKrnlInit
 
 	InitXboxThread(g_CPUXbox);
 	xboxkrnl::ObInitSystem();
+	xboxkrnl::KiInitSystem();
 
 	EmuX86_Init();
 	// Create the interrupt processing thread

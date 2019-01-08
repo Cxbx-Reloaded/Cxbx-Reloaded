@@ -174,12 +174,6 @@ void FASTCALL KiWaitSatisfyAll
         break; \
     }
 
-#define KiInsertWaitList(_WaitMode, _Thread) {                  \
-    PLIST_ENTRY _ListHead;                                      \
-    _ListHead = &KiWaitInListHead;                              \
-    InsertTailList(_ListHead, &(_Thread)->WaitListEntry);       \
-}
-
 
 // ******************************************************************
 // * KeGetPcr()
@@ -1832,8 +1826,6 @@ xboxkrnl::PLARGE_INTEGER FASTCALL KiComputeWaitInterval(
 		return NewTime;
 	}
 }
-
-xboxkrnl::LIST_ENTRY KiWaitInListHead;
 
 // ******************************************************************
 // * 0x009E - KeWaitForMultipleObjects()

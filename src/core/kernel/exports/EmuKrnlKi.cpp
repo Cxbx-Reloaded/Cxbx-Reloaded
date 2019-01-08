@@ -62,6 +62,20 @@ xboxkrnl::KTIMER_TABLE_ENTRY KiTimerTableListHead[TIMER_TABLE_SIZE];
 xboxkrnl::KDPC KiTimerExpireDpc;
 
 
+VOID xboxkrnl::KiInitSystem()
+{
+	unsigned int i;
+
+	InitializeListHead(&KiWaitInListHead);
+
+	KeInitializeDpc(&KiTimerExpireDpc, KiTimerExpiration, NULL);
+	for (i = 0; i < TIMER_TABLE_SIZE; i++) {
+		InitializeListHead(&KiTimerTableListHead[i].Entry);
+		KiTimerTableListHead[i].Time.u.HighPart = 0xFFFFFFFF;
+		KiTimerTableListHead[i].Time.u.LowPart = 0;
+	}
+}
+
 VOID xboxkrnl::KiClockIsr(unsigned int ScalingFactor)
 {
 	KIRQL OldIrql;

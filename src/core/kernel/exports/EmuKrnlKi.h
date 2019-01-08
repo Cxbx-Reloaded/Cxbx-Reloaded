@@ -33,15 +33,6 @@
 // ******************************************************************
 #pragma once
 
-#define KiLockDispatcherDatabase(OldIrql)      \
-	*(OldIrql) = KeRaiseIrqlToDpcLevel()
-
-#define KiLockApcQueue(Thread, OldIrql)        \
-    *(OldIrql) = KeRaiseIrqlToSynchLevel()
-
-#define KiUnlockApcQueue(Thread, OldIrql)      \
-	KfLowerIrql((OldIrql))
-
 namespace xboxkrnl
 {
 	typedef struct _KTIMER_TABLE_ENTRY
@@ -51,6 +42,9 @@ namespace xboxkrnl
 	} KTIMER_TABLE_ENTRY, *PKTIMER_TABLE_ENTRY;
 
 	const ULONG CLOCK_TIME_INCREMENT = 0x2710;
+	LIST_ENTRY KiWaitInListHead;
+
+	VOID KiInitSystem();
 
 	VOID KiClockIsr(
 		IN unsigned int ScalingFactor
@@ -99,3 +93,18 @@ namespace xboxkrnl
 		IN PKTIMER Timer
 	);
 };
+
+#define KiLockDispatcherDatabase(OldIrql)      \
+	*(OldIrql) = KeRaiseIrqlToDpcLevel()
+
+#define KiLockApcQueue(Thread, OldIrql)        \
+    *(OldIrql) = KeRaiseIrqlToSynchLevel()
+
+#define KiUnlockApcQueue(Thread, OldIrql)      \
+	KfLowerIrql((OldIrql))
+
+#define KiInsertWaitList(_WaitMode, _Thread) {                  \
+    PLIST_ENTRY _ListHead;                                      \
+    _ListHead = &KiWaitInListHead;                              \
+    InsertTailList(_ListHead, &(_Thread)->WaitListEntry);       \
+}
