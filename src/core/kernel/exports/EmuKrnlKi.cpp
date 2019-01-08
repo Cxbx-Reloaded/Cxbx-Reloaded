@@ -105,11 +105,16 @@ VOID xboxkrnl::KiClockIsr(unsigned int ScalingFactor)
 	// Update the tick counter
 	KeTickCount += ScalingFactor;
 
-	// Check if a timer has expired
-	Hand = KeTickCount & (TIMER_TABLE_SIZE - 1);
-	if (KiTimerTableListHead[Hand].Entry.Flink != &KiTimerTableListHead[Hand].Entry &&
-		InterruptTime.QuadPart >= KiTimerTableListHead[Hand].Time.QuadPart) {
-		KeInsertQueueDpc(&KiTimerExpireDpc, (PVOID)&KeTickCount, 0);
+	// Because this function must be fast to continuously update the kernel clocks, if somebody else is currently
+	// holding the lock, we won't wait and instead skip the check of the timers for this cycle
+	if (TimerMtx.try_lock()) {
+		// Check if a timer has expired
+		Hand = KeTickCount & (TIMER_TABLE_SIZE - 1);
+		if (KiTimerTableListHead[Hand].Entry.Flink != &KiTimerTableListHead[Hand].Entry &&
+			InterruptTime.QuadPart >= KiTimerTableListHead[Hand].Time.QuadPart) {
+			KeInsertQueueDpc(&KiTimerExpireDpc, (PVOID)&KeTickCount, 0);
+		}
+		TimerMtx.unlock();
 	}
 
 	KfLowerIrql(OldIrql);
@@ -120,12 +125,15 @@ VOID xboxkrnl::KxInsertTimer(
 	IN xboxkrnl::ULONG Hand
 )
 {
+	TimerMtx.lock();
+
 	/* Try to insert the timer */
 	if (KiInsertTimerTable(Timer, Hand))
 	{
 		/* Complete it */
 		KiCompleteTimer(Timer, Hand);
 	}
+	TimerMtx.unlock();
 }
 
 VOID FASTCALL xboxkrnl::KiCompleteTimer(
@@ -135,6 +143,8 @@ VOID FASTCALL xboxkrnl::KiCompleteTimer(
 {
 	LIST_ENTRY ListHead;
 	BOOLEAN RequestInterrupt = FALSE;
+
+	TimerMtx.lock();
 
 	/* Remove it from the timer list */
 	KiRemoveEntryTimer(Timer, Hand);
@@ -154,6 +164,7 @@ VOID FASTCALL xboxkrnl::KiCompleteTimer(
 	if (RequestInterrupt) {
 		HalRequestSoftwareInterrupt(DISPATCH_LEVEL);
 	}
+	TimerMtx.unlock();
 }
 
 VOID xboxkrnl::KiRemoveEntryTimer(
@@ -163,6 +174,8 @@ VOID xboxkrnl::KiRemoveEntryTimer(
 {
 	ULONG Hand;
 	PKTIMER_TABLE_ENTRY TableEntry;
+
+	TimerMtx.lock();
 
 	/* Remove the timer from the timer list and check if it's empty */
 	if (RemoveEntryList(&Timer->TimerListEntry))
@@ -179,6 +192,7 @@ VOID xboxkrnl::KiRemoveEntryTimer(
 	/* Clear the list entries so we can tell the timer is gone */
 	Timer->TimerListEntry.Flink = NULL;
 	Timer->TimerListEntry.Blink = NULL;
+	TimerMtx.unlock();
 }
 
 VOID xboxkrnl::KxRemoveTreeTimer(
@@ -187,6 +201,8 @@ VOID xboxkrnl::KxRemoveTreeTimer(
 {
 	ULONG Hand = KiComputeTimerTableIndex(Timer->DueTime.QuadPart);
 	PKTIMER_TABLE_ENTRY TimerEntry;
+
+	TimerMtx.lock();
 
 	/* Set the timer as non-inserted */
 	Timer->Header.Inserted = FALSE;
@@ -202,6 +218,7 @@ VOID xboxkrnl::KxRemoveTreeTimer(
 			TimerEntry->Time.u.HighPart = 0xFFFFFFFF;
 		}
 	}
+	TimerMtx.unlock();
 }
 
 xboxkrnl::BOOLEAN FASTCALL xboxkrnl::KiInsertTimerTable(
@@ -216,6 +233,8 @@ xboxkrnl::BOOLEAN FASTCALL xboxkrnl::KiInsertTimerTable(
 	PKTIMER CurrentTimer;
 
 	DBG_PRINTF("%s: inserting Timer %p, Hand: %lu\n", __func__, Timer, Hand);
+
+	TimerMtx.lock();
 
 	/* Check if the period is zero */
 	if (!Timer->Period) {
@@ -253,6 +272,7 @@ xboxkrnl::BOOLEAN FASTCALL xboxkrnl::KiInsertTimerTable(
 			Expired = TRUE;
 		}
 	}
+	TimerMtx.unlock();
 
 	/* Return expired state */
 	return Expired;
@@ -265,6 +285,8 @@ xboxkrnl::BOOLEAN FASTCALL xboxkrnl::KiInsertTreeTimer(
 {
 	BOOLEAN Inserted = FALSE;
 	ULONG Hand = 0;
+
+	TimerMtx.lock();
 
 	/* Setup the timer's due time */
 	if (KiComputeDueTime(Timer, Interval, &Hand))
@@ -282,6 +304,7 @@ xboxkrnl::BOOLEAN FASTCALL xboxkrnl::KiInsertTreeTimer(
 			Inserted = TRUE;
 		}
 	}
+	TimerMtx.unlock();
 
 	return Inserted;
 }
@@ -299,6 +322,8 @@ xboxkrnl::BOOLEAN xboxkrnl::KiComputeDueTime(
 	OUT xboxkrnl::PULONG Hand)
 {
 	LARGE_INTEGER InterruptTime, SystemTime, DifferenceTime;
+
+	TimerMtx.lock();
 
 	/* Convert to relative time if needed */
 	Timer->Header.Absolute = FALSE;
@@ -319,6 +344,8 @@ xboxkrnl::BOOLEAN xboxkrnl::KiComputeDueTime(
 			Timer->Header.SignalState = TRUE;
 			Timer->DueTime.QuadPart = 0;
 			*Hand = 0;
+			TimerMtx.unlock();
+
 			return FALSE;
 		}
 
@@ -335,6 +362,8 @@ xboxkrnl::BOOLEAN xboxkrnl::KiComputeDueTime(
 	/* Get the handle */
 	*Hand = KiComputeTimerTableIndex(Timer->DueTime.QuadPart);
 	Timer->Header.Inserted = TRUE;
+	TimerMtx.unlock();
+
 	return TRUE;
 }
 
@@ -346,6 +375,8 @@ xboxkrnl::BOOLEAN FASTCALL xboxkrnl::KiSignalTimer(
 	PKDPC Dpc = Timer->Dpc;
 	ULONG Period = Timer->Period;
 	LARGE_INTEGER Interval, SystemTime;
+
+	TimerMtx.lock();
 
 	/* Set default values */
 	Timer->Header.Inserted = FALSE;
@@ -385,6 +416,8 @@ xboxkrnl::BOOLEAN FASTCALL xboxkrnl::KiSignalTimer(
 			ULongToPtr(SystemTime.u.HighPart));
 		RequestInterrupt = TRUE;
 	}
+
+	TimerMtx.unlock();
 
 	/* Return whether we need to request a DPC interrupt or not */
 	return RequestInterrupt;

@@ -33,6 +33,8 @@
 // ******************************************************************
 #pragma once
 
+#include <mutex>
+
 namespace xboxkrnl
 {
 	typedef struct _KTIMER_TABLE_ENTRY
@@ -43,6 +45,9 @@ namespace xboxkrnl
 
 	const ULONG CLOCK_TIME_INCREMENT = 0x2710;
 	LIST_ENTRY KiWaitInListHead;
+	// Actually, this lock isn't required, but because raising the irql to dpc level doesn't really prevent thread switching at the
+	// moment, we need it for now to prevent concurrent access to the timer table
+	std::recursive_mutex TimerMtx;
 
 	VOID KiInitSystem();
 
