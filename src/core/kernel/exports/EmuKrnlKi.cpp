@@ -57,6 +57,7 @@ namespace xboxkrnl
 
 // ReactOS uses a size of 512, but disassembling the kernel reveals it to be 32 instead
 #define TIMER_TABLE_SIZE 32
+#define MAX_TIMER_DPCS   16
 
 #define ASSERT_TIMER_LOCKED assert(xboxkrnl::KiTimerMtx.Acquired == true)
 
@@ -91,7 +92,9 @@ VOID xboxkrnl::KiTimerUnlock()
 	KiTimerMtx.Acquired = false;
 }
 
-VOID xboxkrnl::KiClockIsr(unsigned int ScalingFactor)
+VOID xboxkrnl::KiClockIsr(
+	unsigned int ScalingFactor
+)
 {
 	KIRQL OldIrql;
 	LARGE_INTEGER InterruptTime;
@@ -134,6 +137,47 @@ VOID xboxkrnl::KiClockIsr(unsigned int ScalingFactor)
 		KiTimerMtx.Acquired = false;
 	}
 
+	KfLowerIrql(OldIrql);
+}
+
+VOID NTAPI xboxkrnl::KiCheckTimerTable(
+	IN xboxkrnl::ULARGE_INTEGER CurrentTime
+)
+{
+	ULONG i = 0;
+	PLIST_ENTRY ListHead, NextEntry;
+	KIRQL OldIrql;
+	PKTIMER Timer;
+
+	ASSERT_TIMER_LOCKED;
+
+	/* Raise IRQL to high and loop timers */
+	OldIrql = KfRaiseIrql(HIGH_LEVEL);
+	do
+	{
+		/* Loop the current list */
+		ListHead = &KiTimerTableListHead[i].Entry;
+		NextEntry = ListHead->Flink;
+		while (NextEntry != ListHead)
+		{
+			/* Get the timer and move to the next one */
+			Timer = CONTAINING_RECORD(NextEntry, KTIMER, TimerListEntry);
+			NextEntry = NextEntry->Flink;
+
+			/* Check if it expired */
+			if (Timer->DueTime.QuadPart <= CurrentTime.QuadPart)
+			{
+				/* This is bad, breakpoint! */
+				EmuLog(LOG_LEVEL::WARNING, "Invalid timer state!");
+				DbgBreakPoint();
+			}
+		}
+
+		/* Move to the next timer */
+		i++;
+	} while (i < TIMER_TABLE_SIZE);
+
+	/* Lower IRQL and return */
 	KfLowerIrql(OldIrql);
 }
 
@@ -427,4 +471,221 @@ xboxkrnl::BOOLEAN FASTCALL xboxkrnl::KiSignalTimer(
 
 	/* Return whether we need to request a DPC interrupt or not */
 	return RequestInterrupt;
+}
+
+VOID NTAPI xboxkrnl::KiTimerExpiration(
+	IN xboxkrnl::PKDPC Dpc,
+	IN xboxkrnl::PVOID DeferredContext,
+	IN xboxkrnl::PVOID SystemArgument1,
+	IN xboxkrnl::PVOID SystemArgument2
+)
+{
+	ULARGE_INTEGER SystemTime, InterruptTime;
+	LARGE_INTEGER Interval;
+	LONG Limit, Index, i;
+	ULONG Timers, ActiveTimers, DpcCalls;
+	PLIST_ENTRY ListHead, NextEntry;
+	KIRQL OldIrql;
+	PKTIMER Timer;
+	PKDPC TimerDpc;
+	ULONG Period;
+	DPC_QUEUE_ENTRY DpcEntry[MAX_TIMER_DPCS];
+
+	/* Query system and interrupt time */
+	KeQuerySystemTime((PLARGE_INTEGER)&SystemTime);
+	InterruptTime.QuadPart = KeQueryInterruptTime();
+	Limit = KeTickCount;
+
+	/* Get the index of the timer and normalize it */
+	Index = PtrToLong(SystemArgument1);
+	if ((Limit - Index) >= TIMER_TABLE_SIZE)
+	{
+		/* Normalize it */
+		Limit = Index + TIMER_TABLE_SIZE - 1;
+	}
+
+	/* Setup index and actual limit */
+	Index--;
+	Limit &= (TIMER_TABLE_SIZE - 1);
+
+	/* Setup accounting data */
+	DpcCalls = 0;
+	Timers = 24;
+	ActiveTimers = 4;
+
+	/* Lock the Database and Raise IRQL */
+	KiTimerLock();
+	KiLockDispatcherDatabase(&OldIrql);
+
+	/* Start expiration loop */
+	do
+	{
+		/* Get the current index */
+		Index = (Index + 1) & (TIMER_TABLE_SIZE - 1);
+
+		/* Get list pointers and loop the list */
+		ListHead = &KiTimerTableListHead[Index].Entry;
+		while (ListHead != ListHead->Flink)
+		{
+			/* Go to the next entry */
+			NextEntry = ListHead->Flink;
+
+			/* Get the current timer and check its due time */
+			Timers--;
+			Timer = CONTAINING_RECORD(NextEntry, KTIMER, TimerListEntry);
+			if ((NextEntry != ListHead) &&
+				(Timer->DueTime.QuadPart <= InterruptTime.QuadPart))
+			{
+				/* It's expired, remove it */
+				ActiveTimers--;
+				KiRemoveEntryTimer(Timer, Index);
+
+				/* Make it non-inserted and signal it */
+				Timer->Header.Inserted = FALSE;
+				Timer->Header.SignalState = 1;
+
+				/* Get the DPC and period */
+				TimerDpc = Timer->Dpc;
+				Period = Timer->Period;
+
+				/* Check if there are any waiters */
+				if (!IsListEmpty(&Timer->Header.WaitListHead))
+				{
+					/* Check the type of event */
+					if (Timer->Header.Type == TimerNotificationObject)
+					{
+						/* Unwait the thread */
+						// KxUnwaitThread(&Timer->Header, IO_NO_INCREMENT);
+					}
+					else
+					{
+						/* Otherwise unwait the thread and signal the timer */
+						// KxUnwaitThreadForEvent((PKEVENT)Timer, IO_NO_INCREMENT);
+					}
+				}
+
+				/* Check if we have a period */
+				if (Period)
+				{
+					/* Calculate the interval and insert the timer */
+					Interval.QuadPart = Int32x32To64(Period, -10000);
+					while (!KiInsertTreeTimer(Timer, Interval));
+				}
+
+				/* Check if we have a DPC */
+				if (TimerDpc)
+				{
+					/* Setup the DPC Entry */
+					DpcEntry[DpcCalls].Dpc = TimerDpc;
+					DpcEntry[DpcCalls].Routine = TimerDpc->DeferredRoutine;
+					DpcEntry[DpcCalls].Context = TimerDpc->DeferredContext;
+					DpcCalls++;
+					assert(DpcCalls < MAX_TIMER_DPCS);
+				}
+
+				/* Check if we're done processing */
+				if (!(ActiveTimers) || !(Timers))
+				{
+					/* Release the dispatcher while doing DPCs */
+					KiUnlockDispatcherDatabase(DISPATCH_LEVEL);
+					KiTimerUnlock();
+
+					/* Start looping all DPC Entries */
+					for (i = 0; DpcCalls; DpcCalls--, i++)
+					{
+						/* Call the DPC */
+						DpcEntry[i].Routine(DpcEntry[i].Dpc,
+							DpcEntry[i].Context,
+							UlongToPtr(SystemTime.u.LowPart),
+							UlongToPtr(SystemTime.u.HighPart));
+					}
+
+					/* Reset accounting */
+					Timers = 24;
+					ActiveTimers = 4;
+
+					/* Lock the dispatcher database */
+					KiTimerLock();
+					KiLockDispatcherDatabaseAtDpcLevel();
+				}
+			}
+			else
+			{
+				/* Check if the timer list is empty */
+				if (NextEntry != ListHead)
+				{
+					/* Sanity check */
+					assert(KiTimerTableListHead[Index].Time.QuadPart <=
+						Timer->DueTime.QuadPart);
+
+					/* Update the time */
+					KiTimerTableListHead[Index].Time.QuadPart =
+						Timer->DueTime.QuadPart;
+				}
+
+				/* Check if we've scanned all the timers we could */
+				if (!Timers)
+				{
+					/* Release the dispatcher while doing DPCs */
+					KiUnlockDispatcherDatabase(DISPATCH_LEVEL);
+					KiTimerUnlock();
+
+					/* Start looping all DPC Entries */
+					for (i = 0; DpcCalls; DpcCalls--, i++)
+					{
+						/* Call the DPC */
+						DpcEntry[i].Routine(DpcEntry[i].Dpc,
+							DpcEntry[i].Context,
+							UlongToPtr(SystemTime.u.LowPart),
+							UlongToPtr(SystemTime.u.HighPart));
+					}
+
+					/* Reset accounting */
+					Timers = 24;
+					ActiveTimers = 4;
+
+					/* Lock the dispatcher database */
+					KiTimerLock();
+					KiLockDispatcherDatabaseAtDpcLevel();
+				}
+
+				/* Done looping */
+				break;
+			}
+		}
+	} while (Index != Limit);
+
+	/* Verify the timer table, on a debug kernel only */
+	if (g_bIsDebugKernel) {
+		KiCheckTimerTable(InterruptTime);
+	}
+
+	/* Check if we still have DPC entries */
+	if (DpcCalls)
+	{
+		/* Release the dispatcher while doing DPCs */
+		KiUnlockDispatcherDatabase(DISPATCH_LEVEL);
+		KiTimerUnlock();
+
+		/* Start looping all DPC Entries */
+		for (i = 0; DpcCalls; DpcCalls--, i++)
+		{
+			/* Call the DPC */
+			DpcEntry[i].Routine(DpcEntry[i].Dpc,
+				DpcEntry[i].Context,
+				UlongToPtr(SystemTime.u.LowPart),
+				UlongToPtr(SystemTime.u.HighPart));
+		}
+
+		/* Lower IRQL if we need to */
+		if (OldIrql != DISPATCH_LEVEL) {
+			KfLowerIrql(OldIrql);
+		}
+	}
+	else
+	{
+		/* Unlock the dispatcher */
+		KiUnlockDispatcherDatabase(OldIrql);
+		KiTimerUnlock();
+	}
 }

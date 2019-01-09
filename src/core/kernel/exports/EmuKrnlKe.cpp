@@ -449,9 +449,8 @@ XBSYSAPI EXPORTNUM(96) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeCancelTimer
 
 	assert(Timer);
 
-	KiTimerLock();
-
 	/* Lock the Database and Raise IRQL */
+	KiTimerLock();
 	KiLockDispatcherDatabase(&OldIrql);
 
 	/* Check if it's inserted, and remove it if it is */
@@ -462,7 +461,6 @@ XBSYSAPI EXPORTNUM(96) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeCancelTimer
 
 	/* Release Dispatcher Lock */
 	KiUnlockDispatcherDatabase(OldIrql);
-
 	KiTimerUnlock();
 
 	/* Return the old state */
@@ -1183,7 +1181,7 @@ XBSYSAPI EXPORTNUM(128) xboxkrnl::VOID NTAPI xboxkrnl::KeQuerySystemTime
 		SystemTime.u.HighPart = KeSystemTime.High1Time;
 		SystemTime.u.LowPart = KeSystemTime.LowPart;
 
-		// Read InterruptTime atomically with a spinloop to avoid errors
+		// Read SystemTime atomically with a spinloop to avoid errors
 		// when High1Time and High2Time differ (during unprocessed overflow in LowPart).
 		if (SystemTime.u.HighPart == KeSystemTime.High2Time)
 			break;
@@ -1691,7 +1689,6 @@ XBSYSAPI EXPORTNUM(150) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeSetTimerEx
 	assert(Timer->Header.Type == TimerNotificationObject || Timer->Header.Type == TimerSynchronizationObject);
 
 	KiTimerLock();
-
 	KiLockDispatcherDatabase(&OldIrql);
 
 	// Same as KeCancelTimer(Timer) :
@@ -1723,7 +1720,6 @@ XBSYSAPI EXPORTNUM(150) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeSetTimerEx
 
 	/* Exit the dispatcher */
 	KiUnlockDispatcherDatabase(OldIrql);
-
 	KiTimerUnlock();
 
 	RETURN(Inserted);

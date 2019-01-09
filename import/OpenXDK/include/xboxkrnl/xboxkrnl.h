@@ -1553,6 +1553,17 @@ typedef struct _KDPC
 KDPC, *PKDPC;
 
 // ******************************************************************
+// * DPC queue entry structure
+// ******************************************************************
+typedef struct _DPC_QUEUE_ENTRY
+{
+	PKDPC Dpc;
+	PKDEFERRED_ROUTINE Routine;
+	PVOID Context;
+}
+DPC_QUEUE_ENTRY, *PDPC_QUEUE_ENTRY;
+
+// ******************************************************************
 // * KFLOATING_SAVE
 // ******************************************************************
 // See NtDll::FLOATING_SAVE_AREA

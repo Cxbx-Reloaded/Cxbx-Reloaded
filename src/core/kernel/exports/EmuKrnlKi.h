@@ -66,6 +66,10 @@ namespace xboxkrnl
 		IN unsigned int ScalingFactor
 	);
 
+	VOID NTAPI KiCheckTimerTable(
+		IN ULARGE_INTEGER CurrentTime
+	);
+
 	VOID KxInsertTimer(
 		IN PKTIMER Timer,
 		IN ULONG Hand
@@ -108,10 +112,20 @@ namespace xboxkrnl
 	BOOLEAN FASTCALL KiSignalTimer(
 		IN PKTIMER Timer
 	);
+
+	VOID NTAPI KiTimerExpiration(
+		IN PKDPC Dpc,
+		IN PVOID DeferredContext,
+		IN PVOID SystemArgument1,
+		IN PVOID SystemArgument2
+	);
 };
 
 #define KiLockDispatcherDatabase(OldIrql)      \
 	*(OldIrql) = KeRaiseIrqlToDpcLevel()
+
+#define KiLockDispatcherDatabaseAtDpcLevel()   \
+	KeRaiseIrqlToDpcLevel()
 
 #define KiLockApcQueue(Thread, OldIrql)        \
     *(OldIrql) = KeRaiseIrqlToSynchLevel()
