@@ -6232,7 +6232,7 @@ VOID XTL::DxbxUpdateActivePixelShader() // NOPATCH
     if ((RecompiledPixelShader.PSDef.PSFinalCombinerInputsABCD > 0)
     || (RecompiledPixelShader.PSDef.PSFinalCombinerInputsEFG > 0))
     {
-      g_pD3DDevice.SetRenderState(D3DRS_FOGENABLE, BOOL_FALSE);
+      g_pD3DDevice->SetRenderState(D3DRS_FOGENABLE, BOOL_FALSE);
     }
 */
     //PS_TEXTUREMODES psTextureModes[XTL::X_D3DTS_STAGECOUNT];
