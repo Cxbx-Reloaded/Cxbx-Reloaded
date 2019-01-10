@@ -5999,11 +5999,9 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderState_EdgeAntiAlias)
 	XB_trampoline(VOID, WINAPI, D3DDevice_SetRenderState_EdgeAntiAlias, (DWORD));
 	XB_D3DDevice_SetRenderState_EdgeAntiAlias(Value);
 
-//  TODO: Analyze performance and compatibility (undefined behavior on PC with triangles or points)
-//  HRESULT hRet = g_pD3DDevice->SetRenderState(D3DRS_EDGEANTIALIAS, Value);
-//	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetRenderState");
-
-    LOG_UNIMPLEMENTED();	
+	//  TODO: Analyze performance and compatibility (undefined behavior on PC with triangles or points)
+	HRESULT hRet = g_pD3DDevice->SetRenderState(D3DRS_ANTIALIASEDLINEENABLE, Value); // Was D3DRS_EDGEANTIALIAS (no longer exists)
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetRenderState");
 }
 
 // ******************************************************************
