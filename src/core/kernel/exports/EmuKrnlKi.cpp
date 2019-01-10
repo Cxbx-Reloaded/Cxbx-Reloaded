@@ -594,10 +594,20 @@ VOID NTAPI xboxkrnl::KiTimerExpiration(
 					for (i = 0; DpcCalls; DpcCalls--, i++)
 					{
 						/* Call the DPC */
-						DpcEntry[i].Routine(DpcEntry[i].Dpc,
-							DpcEntry[i].Context,
-							UlongToPtr(SystemTime.u.LowPart),
-							UlongToPtr(SystemTime.u.HighPart));
+						DBG_PRINTF("%s, calling DPC at 0x%.8X\n", __func__, DpcEntry[i].Routine);
+						__try {
+							// Call the Deferred Procedure  :
+							DpcEntry[i].Routine(
+								DpcEntry[i].Dpc,
+								DpcEntry[i].Context,
+								UlongToPtr(SystemTime.u.LowPart),
+								UlongToPtr(SystemTime.u.HighPart)
+							);
+						}
+						__except (EmuException(GetExceptionInformation()))
+						{
+							EmuLog(LOG_LEVEL::WARNING, "Problem with ExceptionFilter!");
+						}
 					}
 
 					/* Reset accounting */
@@ -634,10 +644,20 @@ VOID NTAPI xboxkrnl::KiTimerExpiration(
 					for (i = 0; DpcCalls; DpcCalls--, i++)
 					{
 						/* Call the DPC */
-						DpcEntry[i].Routine(DpcEntry[i].Dpc,
-							DpcEntry[i].Context,
-							UlongToPtr(SystemTime.u.LowPart),
-							UlongToPtr(SystemTime.u.HighPart));
+						DBG_PRINTF("%s, calling DPC at 0x%.8X\n", __func__, DpcEntry[i].Routine);
+						__try {
+							// Call the Deferred Procedure  :
+							DpcEntry[i].Routine(
+								DpcEntry[i].Dpc,
+								DpcEntry[i].Context,
+								UlongToPtr(SystemTime.u.LowPart),
+								UlongToPtr(SystemTime.u.HighPart)
+							);
+						}
+						__except (EmuException(GetExceptionInformation()))
+						{
+							EmuLog(LOG_LEVEL::WARNING, "Problem with ExceptionFilter!");
+						}
 					}
 
 					/* Reset accounting */
@@ -671,10 +691,20 @@ VOID NTAPI xboxkrnl::KiTimerExpiration(
 		for (i = 0; DpcCalls; DpcCalls--, i++)
 		{
 			/* Call the DPC */
-			DpcEntry[i].Routine(DpcEntry[i].Dpc,
-				DpcEntry[i].Context,
-				UlongToPtr(SystemTime.u.LowPart),
-				UlongToPtr(SystemTime.u.HighPart));
+			DBG_PRINTF("%s, calling DPC at 0x%.8X\n", __func__, DpcEntry[i].Routine);
+			__try {
+				// Call the Deferred Procedure  :
+				DpcEntry[i].Routine(
+					DpcEntry[i].Dpc,
+					DpcEntry[i].Context,
+					UlongToPtr(SystemTime.u.LowPart),
+					UlongToPtr(SystemTime.u.HighPart)
+				);
+			}
+			__except (EmuException(GetExceptionInformation()))
+			{
+				EmuLog(LOG_LEVEL::WARNING, "Problem with ExceptionFilter!");
+			}
 		}
 
 		/* Lower IRQL if we need to */
