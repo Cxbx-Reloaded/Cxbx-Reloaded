@@ -72,7 +72,7 @@ namespace xboxkrnl
 #include "devices\LED.h" // For LED::Sequence
 #include "devices\SMCDevice.h" // For SMC Access
 #include "common\crypto\EmuSha.h" // For the SHA1 functions
-#include "devices\usb\Timer.h" // For Timer_Init
+#include "Timer.h" // For Timer_Init
 #include "..\Common\Input\InputConfig.h" // For the InputDeviceManager
 
 /*! thread local storage */

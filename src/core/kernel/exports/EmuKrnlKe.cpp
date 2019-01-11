@@ -63,7 +63,7 @@ namespace NtDll
 #include "EmuKrnlKi.h" // For KiRemoveTreeTimer(), KiInsertTreeTimer()
 #include "EmuKrnlKe.h"
 #include "core\kernel\support\EmuFile.h" // For IsEmuHandle(), NtStatusToString()
-#include "devices\usb\Timer.h"
+#include "Timer.h"
 
 #include <chrono>
 #include <thread>
