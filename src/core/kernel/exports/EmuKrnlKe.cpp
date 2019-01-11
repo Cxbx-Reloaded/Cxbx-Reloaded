@@ -34,6 +34,10 @@
 // *  All rights reserved
 // *
 // ******************************************************************
+
+// Acknowledgment (timer functions): ReactOS (GPLv2)
+// https://github.com/reactos/reactos
+
 #define _XBOXKRNL_DEFEXTRN_
 
 #define LOG_PREFIX CXBXR_MODULE::KE
@@ -57,6 +61,7 @@ namespace NtDll
 #include "core\kernel\support\Emu.h" // For EmuLog(LOG_LEVEL::WARNING, )
 #include "EmuKrnl.h" // For InitializeListHead(), etc.
 #include "EmuKrnlKi.h" // For KiRemoveTreeTimer(), KiInsertTreeTimer()
+#include "EmuKrnlKe.h"
 #include "core\kernel\support\EmuFile.h" // For IsEmuHandle(), NtStatusToString()
 #include "devices\usb\Timer.h"
 
@@ -203,6 +208,100 @@ xboxkrnl::KPCR* WINAPI KeGetPcr()
 xboxkrnl::KPRCB *KeGetCurrentPrcb()
 {
 	return &(KeGetPcr()->PrcbData);
+}
+
+// ******************************************************************
+// * KeSetSystemTime()
+// ******************************************************************
+xboxkrnl::VOID NTAPI xboxkrnl::KeSetSystemTime(
+	IN  xboxkrnl::PLARGE_INTEGER NewTime,
+	OUT xboxkrnl::PLARGE_INTEGER OldTime
+)
+{
+	TIME_FIELDS TimeFields;
+	KIRQL OldIrql, OldIrql2;
+	LARGE_INTEGER DeltaTime, HostTime;
+	PLIST_ENTRY ListHead, NextEntry;
+	PKTIMER Timer;
+	LIST_ENTRY TempList, TempList2;
+	ULONG Hand, i;
+
+	/* Sanity checks */
+	assert((NewTime->u.HighPart & 0xF0000000) == 0);
+	assert(KeGetCurrentIrql() <= DISPATCH_LEVEL);
+
+	/* Lock the dispatcher, and raise IRQL */
+	KiTimerLock();
+	KiLockDispatcherDatabase(&OldIrql);
+	OldIrql2 = KfRaiseIrql(HIGH_LEVEL);
+
+	/* Query the system time now */
+	KeQuerySystemTime(OldTime);
+
+	/* Surely, we won't set the system time here, but we CAN remember a delta to the host system time */
+	HostTime.QuadPart = OldTime->QuadPart - HostSystemTimeDelta.load();
+	HostSystemTimeDelta = NewTime->QuadPart - HostTime.QuadPart;
+
+	/* Calculate the difference between the new and the old time */
+	DeltaTime.QuadPart = NewTime->QuadPart - OldTime->QuadPart;
+
+	/* Lower IRQL back */
+	KfLowerIrql(OldIrql2);
+
+	/* Setup a temporary list of absolute timers */
+	InitializeListHead(&TempList);
+
+	/* Loop current timers */
+	for (i = 0; i < TIMER_TABLE_SIZE; i++)
+	{
+		/* Loop the entries in this table and lock the timers */
+		ListHead = &KiTimerTableListHead[i].Entry;
+		NextEntry = ListHead->Flink;
+		while (NextEntry != ListHead)
+		{
+			/* Get the timer */
+			Timer = CONTAINING_RECORD(NextEntry, KTIMER, TimerListEntry);
+			NextEntry = NextEntry->Flink;
+
+			/* Is it absolute? */
+			if (Timer->Header.Absolute)
+			{
+				/* Remove it from the timer list */
+				KiRemoveEntryTimer(Timer, i);
+
+				/* Insert it into our temporary list */
+				InsertTailList(&TempList, &Timer->TimerListEntry);
+			}
+		}
+	}
+
+	/* Setup a temporary list of expired timers */
+	InitializeListHead(&TempList2);
+
+	/* Loop absolute timers */
+	while (TempList.Flink != &TempList)
+	{
+		/* Get the timer */
+		Timer = CONTAINING_RECORD(TempList.Flink, KTIMER, TimerListEntry);
+		RemoveEntryList(&Timer->TimerListEntry);
+
+		/* Update the due time and handle */
+		Timer->DueTime.QuadPart -= DeltaTime.QuadPart;
+		Hand = KiComputeTimerTableIndex(Timer->DueTime.QuadPart);
+
+		/* Lock the timer and re-insert it */
+		if (KiInsertTimerTable(Timer, Hand))
+		{
+			/* Remove it from the timer list */
+			KiRemoveEntryTimer(Timer, Hand);
+
+			/* Insert it into our temporary list */
+			InsertTailList(&TempList2, &Timer->TimerListEntry);
+		}
+	}
+
+	/* Process expired timers. This releases the dispatcher and timer locks */
+	KiTimerListExpire(&TempList2, OldIrql);
 }
 
 // Forward KeLowerIrql() to KfLowerIrql()

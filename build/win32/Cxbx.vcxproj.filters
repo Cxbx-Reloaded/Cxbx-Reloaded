@@ -818,5 +818,8 @@
     <ClInclude Include="..\..\src\common\crypto\EmuDes.h">
       <Filter>Emulator</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\core\kernel\exports\EmuKrnlKe.h">
+      <Filter>Kernel</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

@@ -55,17 +55,15 @@ namespace xboxkrnl
 #include "EmuKrnl.h" // for the list support functions
 #include "EmuKrnlKi.h"
 
-// ReactOS uses a size of 512, but disassembling the kernel reveals it to be 32 instead
-#define TIMER_TABLE_SIZE 32
 #define MAX_TIMER_DPCS   16
 
 #define ASSERT_TIMER_LOCKED assert(xboxkrnl::KiTimerMtx.Acquired == true)
 
-xboxkrnl::KTIMER_TABLE_ENTRY KiTimerTableListHead[TIMER_TABLE_SIZE];
+const xboxkrnl::ULONG CLOCK_TIME_INCREMENT = 0x2710;
 xboxkrnl::KDPC KiTimerExpireDpc;
 
 
-VOID xboxkrnl::KiInitSystem()
+xboxkrnl::VOID xboxkrnl::KiInitSystem()
 {
 	unsigned int i;
 
@@ -80,19 +78,19 @@ VOID xboxkrnl::KiInitSystem()
 	}
 }
 
-VOID xboxkrnl::KiTimerLock()
+xboxkrnl::VOID xboxkrnl::KiTimerLock()
 {
 	KiTimerMtx.Mtx.lock();
 	KiTimerMtx.Acquired = true;
 }
 
-VOID xboxkrnl::KiTimerUnlock()
+xboxkrnl::VOID xboxkrnl::KiTimerUnlock()
 {
 	KiTimerMtx.Mtx.unlock();
 	KiTimerMtx.Acquired = false;
 }
 
-VOID xboxkrnl::KiClockIsr(
+xboxkrnl::VOID xboxkrnl::KiClockIsr(
 	unsigned int ScalingFactor
 )
 {
@@ -115,7 +113,7 @@ VOID xboxkrnl::KiClockIsr(
 	// NOTE: I'm not sure if we should round down the host system time to the nearest multiple
 	// of the Xbox clock increment...
 	GetSystemTimeAsFileTime((LPFILETIME)&HostSystemTime);
-	HostSystemTime.QuadPart += HostSystemTimeDelta.QuadPart;
+	HostSystemTime.QuadPart += HostSystemTimeDelta.load();
 	KeSystemTime.High2Time = HostSystemTime.u.HighPart;
 	KeSystemTime.LowPart = HostSystemTime.u.LowPart;
 	KeSystemTime.High1Time = HostSystemTime.u.HighPart;
@@ -140,7 +138,7 @@ VOID xboxkrnl::KiClockIsr(
 	KfLowerIrql(OldIrql);
 }
 
-VOID NTAPI xboxkrnl::KiCheckTimerTable(
+xboxkrnl::VOID NTAPI xboxkrnl::KiCheckTimerTable(
 	IN xboxkrnl::ULARGE_INTEGER CurrentTime
 )
 {
@@ -181,7 +179,7 @@ VOID NTAPI xboxkrnl::KiCheckTimerTable(
 	KfLowerIrql(OldIrql);
 }
 
-VOID xboxkrnl::KxInsertTimer(
+xboxkrnl::VOID xboxkrnl::KxInsertTimer(
 	IN xboxkrnl::PKTIMER Timer,
 	IN xboxkrnl::ULONG Hand
 )
@@ -196,7 +194,7 @@ VOID xboxkrnl::KxInsertTimer(
 	}
 }
 
-VOID FASTCALL xboxkrnl::KiCompleteTimer(
+xboxkrnl::VOID FASTCALL xboxkrnl::KiCompleteTimer(
 	IN xboxkrnl::PKTIMER Timer,
 	IN xboxkrnl::ULONG Hand
 )
@@ -226,7 +224,7 @@ VOID FASTCALL xboxkrnl::KiCompleteTimer(
 	}
 }
 
-VOID xboxkrnl::KiRemoveEntryTimer(
+xboxkrnl::VOID xboxkrnl::KiRemoveEntryTimer(
 	IN xboxkrnl::PKTIMER Timer,
 	IN xboxkrnl::ULONG Hand
 )
@@ -253,7 +251,7 @@ VOID xboxkrnl::KiRemoveEntryTimer(
 	Timer->TimerListEntry.Blink = NULL;
 }
 
-VOID xboxkrnl::KxRemoveTreeTimer(
+xboxkrnl::VOID xboxkrnl::KxRemoveTreeTimer(
 	IN xboxkrnl::PKTIMER Timer
 )
 {
@@ -473,7 +471,7 @@ xboxkrnl::BOOLEAN FASTCALL xboxkrnl::KiSignalTimer(
 	return RequestInterrupt;
 }
 
-VOID NTAPI xboxkrnl::KiTimerExpiration(
+xboxkrnl::VOID NTAPI xboxkrnl::KiTimerExpiration(
 	IN xboxkrnl::PKDPC Dpc,
 	IN xboxkrnl::PVOID DeferredContext,
 	IN xboxkrnl::PVOID SystemArgument1,
@@ -711,6 +709,118 @@ VOID NTAPI xboxkrnl::KiTimerExpiration(
 		if (OldIrql != DISPATCH_LEVEL) {
 			KfLowerIrql(OldIrql);
 		}
+	}
+	else
+	{
+		/* Unlock the dispatcher */
+		KiUnlockDispatcherDatabase(OldIrql);
+		KiTimerUnlock();
+	}
+}
+
+xboxkrnl::VOID FASTCALL xboxkrnl::KiTimerListExpire(
+	IN xboxkrnl::PLIST_ENTRY ExpiredListHead,
+	IN xboxkrnl::KIRQL OldIrql
+)
+{
+	ULARGE_INTEGER SystemTime;
+	LARGE_INTEGER Interval;
+	LONG i;
+	ULONG DpcCalls = 0;
+	PKTIMER Timer;
+	PKDPC TimerDpc;
+	ULONG Period;
+	DPC_QUEUE_ENTRY DpcEntry[MAX_TIMER_DPCS];
+
+	ASSERT_TIMER_LOCKED;
+
+	/* Query system */
+	KeQuerySystemTime((PLARGE_INTEGER)&SystemTime);
+
+	/* Loop expired list */
+	while (ExpiredListHead->Flink != ExpiredListHead)
+	{
+		/* Get the current timer */
+		Timer = CONTAINING_RECORD(ExpiredListHead->Flink, KTIMER, TimerListEntry);
+
+		/* Remove it */
+		RemoveEntryList(&Timer->TimerListEntry);
+
+		/* Not inserted */
+		Timer->Header.Inserted = FALSE;
+
+		/* Signal it */
+		Timer->Header.SignalState = 1;
+
+		/* Get the DPC and period */
+		TimerDpc = Timer->Dpc;
+		Period = Timer->Period;
+
+		/* Check if there's any waiters */
+		if (!IsListEmpty(&Timer->Header.WaitListHead))
+		{
+			/* Check the type of event */
+			if (Timer->Header.Type == TimerNotificationObject)
+			{
+				/* Unwait the thread */
+				// KxUnwaitThread(&Timer->Header, IO_NO_INCREMENT);
+			}
+			else
+			{
+				/* Otherwise unwait the thread and signal the timer */
+				// KxUnwaitThreadForEvent((PKEVENT)Timer, IO_NO_INCREMENT);
+			}
+		}
+
+		/* Check if we have a period */
+		if (Period)
+		{
+			/* Calculate the interval and insert the timer */
+			Interval.QuadPart = Int32x32To64(Period, -10000);
+			while (!KiInsertTreeTimer(Timer, Interval));
+		}
+
+		/* Check if we have a DPC */
+		if (TimerDpc)
+		{
+			/* Setup the DPC Entry */
+			DpcEntry[DpcCalls].Dpc = TimerDpc;
+			DpcEntry[DpcCalls].Routine = TimerDpc->DeferredRoutine;
+			DpcEntry[DpcCalls].Context = TimerDpc->DeferredContext;
+			DpcCalls++;
+			assert(DpcCalls < MAX_TIMER_DPCS);
+		}
+	}
+
+	/* Check if we still have DPC entries */
+	if (DpcCalls)
+	{
+		/* Release the dispatcher while doing DPCs */
+		KiUnlockDispatcherDatabase(DISPATCH_LEVEL);
+		KiTimerUnlock();
+
+		/* Start looping all DPC Entries */
+		for (i = 0; DpcCalls; DpcCalls--, i++)
+		{
+			/* Call the DPC */
+			DBG_PRINTF("%s, calling DPC at 0x%.8X\n", __func__, DpcEntry[i].Routine);
+			__try {
+				// Call the Deferred Procedure  :
+				DpcEntry[i].Routine(
+					DpcEntry[i].Dpc,
+					DpcEntry[i].Context,
+					UlongToPtr(SystemTime.u.LowPart),
+					UlongToPtr(SystemTime.u.HighPart)
+				);
+			}
+			__except (EmuException(GetExceptionInformation()))
+			{
+				EmuLog(LOG_LEVEL::WARNING, "Problem with ExceptionFilter!");
+			}
+		}
+
+		/* Lower IRQL */
+		KfLowerIrql(OldIrql);
 	}
 	else
 	{

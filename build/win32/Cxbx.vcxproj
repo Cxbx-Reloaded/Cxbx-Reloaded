@@ -217,6 +217,7 @@
     <ClInclude Include="..\..\src\common\win32\AlignPrefix1.h" />
     <ClInclude Include="..\..\src\common\xdvdfs-tools\buffered_io.h" />
     <ClInclude Include="..\..\src\common\xdvdfs-tools\xdvdfs.h" />
+    <ClInclude Include="..\..\src\core\kernel\exports\EmuKrnlKe.h" />
     <ClInclude Include="..\..\src\Cxbx.h" />
     <ClInclude Include="..\..\src\core\kernel\init\CxbxKrnl.h" />
     <ClInclude Include="..\..\src\gui\DbgConsole.h" />

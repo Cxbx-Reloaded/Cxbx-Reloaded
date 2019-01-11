@@ -54,6 +54,7 @@ namespace NtDll
 };
 
 #include "core\kernel\init\CxbxKrnl.h" // For CxbxKrnlCleanup
+#include "core\kernel\exports\EmuKrnlKe.h"
 #include "core\kernel\support\Emu.h" // For EmuLog(LOG_LEVEL::WARNING, )
 #include "core\kernel\support\EmuFile.h" // For EmuNtSymbolicLinkObject, NtStatusToString(), etc.
 #include "core\kernel\memory-manager\VMManager.h" // For g_VMManager
@@ -65,9 +66,12 @@ namespace NtDll
 #include <assert.h>
 
 #include <unordered_map>
+#include <mutex>
 
 // Used to keep track of duplicate handles created by NtQueueApcThread()
 std::unordered_map<HANDLE, HANDLE>	g_DuplicateHandles;
+// Prevent setting the system time from multiple threads at the same time
+std::mutex NtSystemTimeMtx;
 
 
 // ******************************************************************
@@ -1900,32 +1904,38 @@ XBSYSAPI EXPORTNUM(228) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtSetSystemTime
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(SystemTime)
 		LOG_FUNC_ARG_OUT(PreviousTime)
-		LOG_FUNC_END;
+	LOG_FUNC_END;
 
-	NTSTATUS ret = STATUS_SUCCESS; // TODO : Does Xbox returns STATUS_PRIVILEGE_NOT_HELD (supports SeSystemtimePrivlege)?
+	NTSTATUS ret = STATUS_SUCCESS;
+	LARGE_INTEGER HostSystemTime, NewSystemTime, OldSystemTime;
+	// LARGE_INTEGER LocalTime;
+	// TIME_FIELDS TimeFields;
 
-	if (PreviousTime == NULL && SystemTime == NULL)
+	if (SystemTime == NULL) {
 		ret = STATUS_ACCESS_VIOLATION;
-	else
-	{
-		// Surely, we won't set the system time here, but we CAN remember a delta to the host system time;
-		LARGE_INTEGER HostSystemTime;
-		GetSystemTimeAsFileTime((LPFILETIME)&HostSystemTime); // Available since Windows 2000 (NOT on XP!)
+	}
+	else {
+		NtSystemTimeMtx.lock();
+		NewSystemTime = *SystemTime;
+		if (NewSystemTime.QuadPart > 0 && NewSystemTime.QuadPart <= 0x20000000) {
+			/* Convert the time and set it in HAL */
+			// NOTE: disabled, as this requires emulating the RTC, which we don't yet
+			// ExSystemTimeToLocalTime(&NewSystemTime, &LocalTime);
+			// RtlTimeToTimeFields(&LocalTime, &TimeFields);
+			// HalSetRealTimeClock(&TimeFields);
 
-		// Is the previous time requested?
-		if (PreviousTime != NULL)
-			// Apply current HostSystemTimeDelta, same as in xboxkrnl::KeQuerySystemTime :
-			PreviousTime->QuadPart = HostSystemTime.QuadPart + HostSystemTimeDelta.QuadPart;
+			/* Now set system time */
+			KeSetSystemTime(&NewSystemTime, &OldSystemTime);
 
-		// Is a new time given?
-		if (SystemTime != NULL)
-		{
-			if (SystemTime->QuadPart > 0)
-				// Calculate new HostSystemTimeDelta, to be used in xboxkrnl::KeQuerySystemTime :
-				HostSystemTimeDelta.QuadPart = HostSystemTime.QuadPart - SystemTime->QuadPart;
-			else
-				ret = STATUS_INVALID_PARAMETER;
+			// Is the previous time requested?
+			if (PreviousTime != NULL) {
+				PreviousTime->QuadPart = OldSystemTime.QuadPart;
+			}
 		}
+		else {
+			ret = STATUS_INVALID_PARAMETER;
+		}
+		NtSystemTimeMtx.unlock();
 	}
 
 	RETURN(ret);

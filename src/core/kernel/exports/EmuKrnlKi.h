@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->src->CxbxKrnl->EmuKrnlKi.h
+// *   Cxbx->src->core->kernel->exports->EmuKrnlKi.h
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -31,9 +31,18 @@
 // *  All rights reserved
 // *
 // ******************************************************************
+
 #pragma once
 
 #include <mutex>
+
+// Workaround to avoid collisions with the VOID provided by Windows and the one of xboxkrnl
+#ifdef VOID
+#undef VOID
+#endif
+
+// ReactOS uses a size of 512, but disassembling the kernel reveals it to be 32 instead
+#define TIMER_TABLE_SIZE 32
 
 namespace xboxkrnl
 {
@@ -51,9 +60,10 @@ namespace xboxkrnl
 		bool Acquired;
 	} KI_TIMER_LOCK;
 
-	const ULONG CLOCK_TIME_INCREMENT = 0x2710;
+	extern const ULONG CLOCK_TIME_INCREMENT;
 	LIST_ENTRY KiWaitInListHead;
 	KI_TIMER_LOCK KiTimerMtx;
+	KTIMER_TABLE_ENTRY KiTimerTableListHead[TIMER_TABLE_SIZE];
 
 
 	VOID KiInitSystem();
@@ -118,6 +128,11 @@ namespace xboxkrnl
 		IN PVOID DeferredContext,
 		IN PVOID SystemArgument1,
 		IN PVOID SystemArgument2
+	);
+
+	VOID FASTCALL KiTimerListExpire(
+		IN PLIST_ENTRY ExpiredListHead,
+		IN KIRQL OldIrql
 	);
 };
 
