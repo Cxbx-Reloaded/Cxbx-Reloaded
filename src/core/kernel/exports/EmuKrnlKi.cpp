@@ -586,7 +586,6 @@ xboxkrnl::VOID NTAPI xboxkrnl::KiTimerExpiration(
 				{
 					/* Release the dispatcher while doing DPCs */
 					KiUnlockDispatcherDatabase(DISPATCH_LEVEL);
-					KiTimerUnlock();
 
 					/* Start looping all DPC Entries */
 					for (i = 0; DpcCalls; DpcCalls--, i++)
@@ -613,7 +612,6 @@ xboxkrnl::VOID NTAPI xboxkrnl::KiTimerExpiration(
 					ActiveTimers = 4;
 
 					/* Lock the dispatcher database */
-					KiTimerLock();
 					KiLockDispatcherDatabaseAtDpcLevel();
 				}
 			}
@@ -636,7 +634,6 @@ xboxkrnl::VOID NTAPI xboxkrnl::KiTimerExpiration(
 				{
 					/* Release the dispatcher while doing DPCs */
 					KiUnlockDispatcherDatabase(DISPATCH_LEVEL);
-					KiTimerUnlock();
 
 					/* Start looping all DPC Entries */
 					for (i = 0; DpcCalls; DpcCalls--, i++)
@@ -663,7 +660,6 @@ xboxkrnl::VOID NTAPI xboxkrnl::KiTimerExpiration(
 					ActiveTimers = 4;
 
 					/* Lock the dispatcher database */
-					KiTimerLock();
 					KiLockDispatcherDatabaseAtDpcLevel();
 				}
 
@@ -683,7 +679,6 @@ xboxkrnl::VOID NTAPI xboxkrnl::KiTimerExpiration(
 	{
 		/* Release the dispatcher while doing DPCs */
 		KiUnlockDispatcherDatabase(DISPATCH_LEVEL);
-		KiTimerUnlock();
 
 		/* Start looping all DPC Entries */
 		for (i = 0; DpcCalls; DpcCalls--, i++)
@@ -709,6 +704,7 @@ xboxkrnl::VOID NTAPI xboxkrnl::KiTimerExpiration(
 		if (OldIrql != DISPATCH_LEVEL) {
 			KfLowerIrql(OldIrql);
 		}
+		KiTimerUnlock();
 	}
 	else
 	{
@@ -797,7 +793,6 @@ xboxkrnl::VOID FASTCALL xboxkrnl::KiTimerListExpire(
 	{
 		/* Release the dispatcher while doing DPCs */
 		KiUnlockDispatcherDatabase(DISPATCH_LEVEL);
-		KiTimerUnlock();
 
 		/* Start looping all DPC Entries */
 		for (i = 0; DpcCalls; DpcCalls--, i++)
@@ -821,6 +816,7 @@ xboxkrnl::VOID FASTCALL xboxkrnl::KiTimerListExpire(
 
 		/* Lower IRQL */
 		KfLowerIrql(OldIrql);
+		KiTimerUnlock();
 	}
 	else
 	{
