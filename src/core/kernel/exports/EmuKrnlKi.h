@@ -134,6 +134,10 @@ namespace xboxkrnl
 		IN PLIST_ENTRY ExpiredListHead,
 		IN KIRQL OldIrql
 	);
+
+	VOID FASTCALL KiWaitSatisfyAll(
+		IN PKWAIT_BLOCK WaitBlock
+	);
 };
 
 #define KiLockDispatcherDatabase(OldIrql)      \
@@ -152,4 +156,50 @@ namespace xboxkrnl
     PLIST_ENTRY _ListHead;                                      \
     _ListHead = &KiWaitInListHead;                              \
     InsertTailList(_ListHead, &(_Thread)->WaitListEntry);       \
+}
+
+#define KiWaitSatisfyMutant(_Object_, _Thread_) {                            \
+    (_Object_)->Header.SignalState -= 1;                                     \
+    if ((_Object_)->Header.SignalState == 0) {                               \
+        (_Object_)->OwnerThread = (_Thread_);                                \
+        if ((_Object_)->Abandoned == TRUE) {                                 \
+            (_Object_)->Abandoned = FALSE;                                   \
+            (_Thread_)->WaitStatus = STATUS_ABANDONED;                       \
+        }                                                                    \
+                                                                             \
+        InsertHeadList((_Thread_)->MutantListHead.Blink,                     \
+                       &(_Object_)->MutantListEntry);                        \
+    }                                                                        \
+}
+
+#define KiWaitSatisfyOther(_Object_) {                                       \
+    if (((_Object_)->Header.Type & DISPATCHER_OBJECT_TYPE_MASK) == EventSynchronizationObject) { \
+        (_Object_)->Header.SignalState = 0;                                  \
+                                                                             \
+    } else if ((_Object_)->Header.Type == SemaphoreObject) {                 \
+        (_Object_)->Header.SignalState -= 1;                                 \
+                                                                             \
+    }                                                                        \
+}
+
+#define KiWaitSatisfyAny(_Object_, _Thread_) {                               \
+    if (((_Object_)->Header.Type & DISPATCHER_OBJECT_TYPE_MASK) == EventSynchronizationObject) { \
+        (_Object_)->Header.SignalState = 0;                                  \
+                                                                             \
+    } else if ((_Object_)->Header.Type == SemaphoreObject) {                 \
+        (_Object_)->Header.SignalState -= 1;                                 \
+                                                                             \
+    } else if ((_Object_)->Header.Type == MutantObject) {                    \
+        (_Object_)->Header.SignalState -= 1;                                 \
+        if ((_Object_)->Header.SignalState == 0) {                           \
+            (_Object_)->OwnerThread = (_Thread_);                            \
+            if ((_Object_)->Abandoned == TRUE) {                             \
+                (_Object_)->Abandoned = FALSE;                               \
+                (_Thread_)->WaitStatus = STATUS_ABANDONED;                   \
+            }                                                                \
+                                                                             \
+            InsertHeadList((_Thread_)->MutantListHead.Blink,                 \
+                           &(_Object_)->MutantListEntry);                    \
+        }                                                                    \
+    }                                                                        \
 }

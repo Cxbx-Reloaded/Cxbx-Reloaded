@@ -829,3 +829,28 @@ xboxkrnl::VOID FASTCALL xboxkrnl::KiTimerListExpire(
 		KiTimerUnlock();
 	}
 }
+
+xboxkrnl::VOID FASTCALL xboxkrnl::KiWaitSatisfyAll
+(
+	IN xboxkrnl::PKWAIT_BLOCK WaitBlock
+)
+{
+	using namespace xboxkrnl;
+
+	PKMUTANT Object;
+	PRKTHREAD Thread;
+	PKWAIT_BLOCK WaitBlock1;
+
+	WaitBlock1 = WaitBlock;
+	Thread = WaitBlock1->Thread;
+	do {
+		if (WaitBlock1->WaitKey != (CSHORT)STATUS_TIMEOUT) {
+			Object = (PKMUTANT)WaitBlock1->Object;
+			KiWaitSatisfyAny(Object, Thread);
+		}
+
+		WaitBlock1 = WaitBlock1->NextWaitBlock;
+	} while (WaitBlock1 != WaitBlock);
+
+	return;
+}
