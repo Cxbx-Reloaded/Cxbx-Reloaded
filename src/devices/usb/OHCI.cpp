@@ -52,9 +52,48 @@ namespace xboxkrnl
 #include "common\util\CxbxUtil.h"
 #include "Logging.h"
 
-/* Define these two if you want to dump usb packets */
+static const char* OHCI_RegNames[] = {
+	"HcRevision",
+	"HcControl",
+	"HcCommandStatus",
+	"HcInterruptStatus",
+	"HcInterruptEnable",
+	"HcInterruptDisable",
+	"HcHCCA",
+	"HcPeriodCurrentED",
+	"HcControlHeadED",
+	"HcControlCurrentED",
+	"HcBulkHeadED",
+	"HcBulkCurrentED",
+	"HcDoneHead",
+	"HcFmInterval",
+	"HcFmRemaining",
+	"HcFmNumber",
+	"HcPeriodicStart",
+	"HcLSThreshold",
+	"HcRhDescriptorA",
+	"HcRhDescriptorB",
+	"HcRhStatus",
+	"HcRhPortStatus[0]",
+	"HcRhPortStatus[1]",
+	"HcRhPortStatus[2]",
+	"HcRhPortStatus[3]"
+};
+
+/* Define these two if you want to dump usb packets and OHCI registers */
 //#define DEBUG_ISOCH
 //#define DEBUG_PACKET
+#define DEBUG_OHCI_REG
+
+#ifdef DEBUG_OHCI_REG
+#define DUMP_REG_R(reg_val) DBG_PRINTF("%s, R, reg_val: 0x%X\n", OHCI_RegNames[Addr >> 2], reg_val)
+#define DUMP_REG_W(reg_val, val) DBG_PRINTF("%s, W, reg_val: 0x%X, val: 0x%X\n", OHCI_RegNames[Addr >> 2], reg_val, val)
+#define DUMP_REG_RO(reg_val, val) DBG_PRINTF("%s, RO, reg_val: 0x%X, val: 0x%X\n", OHCI_RegNames[Addr >> 2], reg_val, val) 
+#else
+#define DUMP_REG_R(reg_val)
+#define DUMP_REG_W(reg_val, val) 
+#define DUMP_REG_RO(reg_val, val)
+#endif
 
 /* These macros are used to access the bits of the various registers */
 // HcControl
@@ -888,7 +927,7 @@ void OHCI::OHCI_StateReset()
 
 	OHCI_StopEndpoints();
 
-	DBG_PRINTF("Reset mode event.\n");
+	DBG_PRINTF("Reset event.\n");
 }
 
 void OHCI::OHCI_BusStart()
@@ -896,7 +935,7 @@ void OHCI::OHCI_BusStart()
 	// Create the EOF timer.
 	m_pEOFtimer = Timer_Create(OHCI_FrameBoundaryWrapper, this, "", nullptr);
 
-	DBG_PRINTF("Operational mode event\n");
+	DBG_PRINTF("Operational event\n");
 
 	// SOF event
 	OHCI_SOF(true);
@@ -943,11 +982,11 @@ void OHCI::OHCI_ChangeState(uint32_t Value)
 
 		case Suspend:
 			OHCI_BusStop();
-			DBG_PRINTF("Suspend mode event\n");
+			DBG_PRINTF("Suspend event\n");
 			break;
 
 		case Resume:
-			DBG_PRINTF("Resume mode event\n");
+			DBG_PRINTF("Resume event\n");
 			break;
 
 		case Reset:
@@ -982,100 +1021,124 @@ uint32_t OHCI::OHCI_ReadRegister(xbaddr Addr)
 		{
 			case 0: // HcRevision
 				ret = m_Registers.HcRevision;
+				DUMP_REG_R(ret);
 				break;
 
 			case 1: // HcControl
 				ret = m_Registers.HcControl;
+				DUMP_REG_R(ret);
 				break;
 
 			case 2: // HcCommandStatus
 				ret = m_Registers.HcCommandStatus;
+				DUMP_REG_R(ret);
 				break;
 
 			case 3: // HcInterruptStatus
 				ret = m_Registers.HcInterruptStatus;
+				DUMP_REG_R(ret);
 				break;
 
 			case 4: // HcInterruptEnable
 			case 5: // HcInterruptDisable
 				ret = m_Registers.HcInterrupt;
+				DUMP_REG_R(ret);
 				break;
 
 			case 6: // HcHCCA
 				ret = m_Registers.HcHCCA;
+				DUMP_REG_R(ret);
 				break;
 
 			case 7: // HcPeriodCurrentED
 				ret = m_Registers.HcPeriodCurrentED;
+				DUMP_REG_R(ret);
 				break;
 
 			case 8: // HcControlHeadED
 				ret = m_Registers.HcControlHeadED;
+				DUMP_REG_R(ret);
 				break;
 
 			case 9: // HcControlCurrentED
 				ret = m_Registers.HcControlCurrentED;
+				DUMP_REG_R(ret);
 				break;
 
 			case 10: // HcBulkHeadED
 				ret = m_Registers.HcBulkHeadED;
+				DUMP_REG_R(ret);
 				break;
 
 			case 11: // HcBulkCurrentED
 				ret = m_Registers.HcBulkCurrentED;
+				DUMP_REG_R(ret);
 				break;
 
 			case 12: // HcDoneHead
 				ret = m_Registers.HcDoneHead;
+				DUMP_REG_R(ret);
 				break;
 
 			case 13: // HcFmInterval
 				ret = m_Registers.HcFmInterval;
+				DUMP_REG_R(ret);
 				break;
 
 			case 14: // HcFmRemaining
 				ret = OHCI_GetFrameRemaining();
+				DUMP_REG_R(ret);
 				break;
 
 			case 15: // HcFmNumber
 				ret = m_Registers.HcFmNumber;
+				DUMP_REG_R(ret);
 				break;
 
 			case 16: // HcPeriodicStart
 				ret = m_Registers.HcPeriodicStart;
+				DUMP_REG_R(ret);
 				break;
 
 			case 17: // HcLSThreshold
 				ret = m_Registers.HcLSThreshold;
+				DUMP_REG_R(ret);
 				break;
 
 			case 18: // HcRhDescriptorA
 				ret = m_Registers.HcRhDescriptorA;
+				DUMP_REG_R(ret);
 				break;
 
 			case 19: // HcRhDescriptorB
 				ret = m_Registers.HcRhDescriptorB;
+				DUMP_REG_R(ret);
 				break;
 
 			case 20: // HcRhStatus
 				ret = m_Registers.HcRhStatus;
+				DUMP_REG_R(ret);
 				break;
 
 			// Always report that the port power is on since the Xbox cannot switch off the electrical current to it
 			case 21: // RhPort 0
 				ret = m_Registers.RhPort[0].HcRhPortStatus | OHCI_PORT_PPS;
+				DUMP_REG_R(ret);
 				break;
 
 			case 22: // RhPort 1
 				ret = m_Registers.RhPort[1].HcRhPortStatus | OHCI_PORT_PPS;
+				DUMP_REG_R(ret);
 				break;
 
-			case 23:
+			case 23: // RhPort 2
 				ret = m_Registers.RhPort[2].HcRhPortStatus | OHCI_PORT_PPS;
+				DUMP_REG_R(ret);
 				break;
 
-			case 24:
+			case 24: // RhPort 3
 				ret = m_Registers.RhPort[3].HcRhPortStatus | OHCI_PORT_PPS;
+				DUMP_REG_R(ret);
 				break;
 
 			default:
@@ -1097,10 +1160,12 @@ void OHCI::OHCI_WriteRegister(xbaddr Addr, uint32_t Value)
 		{
 			case 0: // HcRevision
 				// This register is read-only
+				DUMP_REG_RO(m_Registers.HcRevision, Value);
 				break;
 
 			case 1: // HcControl
 				OHCI_ChangeState(Value);
+				DUMP_REG_W(m_Registers.HcControl, Value);
 				break;
 
 			case 2: // HcCommandStatus
@@ -1116,51 +1181,62 @@ void OHCI::OHCI_WriteRegister(xbaddr Addr, uint32_t Value)
 					// Do a hardware reset
 					OHCI_StateReset();
 				}
+				DUMP_REG_W(m_Registers.HcCommandStatus, Value);
 			}
 			break;
 
 			case 3: // HcInterruptStatus
 				m_Registers.HcInterruptStatus &= ~Value;
 				OHCI_UpdateInterrupt();
+				DUMP_REG_W(m_Registers.HcInterruptStatus, Value);
 				break;
 
 			case 4: // HcInterruptEnable
 				m_Registers.HcInterrupt |= Value;
 				OHCI_UpdateInterrupt();
+				DUMP_REG_W(m_Registers.HcInterrupt, Value);
 				break;
 
 			case 5: // HcInterruptDisable
 				m_Registers.HcInterrupt &= ~Value;
 				OHCI_UpdateInterrupt();
+				DUMP_REG_W(m_Registers.HcInterrupt, Value);
 				break;
 
 			case 6: // HcHCCA
 				// The standard says the minimum alignment is 256 bytes and so bits 0 through 7 are always zero
 				m_Registers.HcHCCA = Value & OHCI_HCCA_MASK;
+				DUMP_REG_W(m_Registers.HcHCCA, Value);
 				break;
 
 			case 7: // HcPeriodCurrentED
 				// This register is read-only
+				DUMP_REG_RO(m_Registers.HcPeriodCurrentED, Value);
 				break;
 
 			case 8: // HcControlHeadED
 				m_Registers.HcControlHeadED = Value & OHCI_DPTR_MASK;
+				DUMP_REG_W(m_Registers.HcControlHeadED, Value);
 				break;
 
 			case 9: // HcControlCurrentED
 				m_Registers.HcControlCurrentED = Value & OHCI_DPTR_MASK;
+				DUMP_REG_W(m_Registers.HcControlCurrentED, Value);
 				break;
 
 			case 10: // HcBulkHeadED
 				m_Registers.HcBulkHeadED = Value & OHCI_DPTR_MASK;
+				DUMP_REG_W(m_Registers.HcBulkHeadED, Value);
 				break;
 
 			case 11: // HcBulkCurrentED
 				m_Registers.HcBulkCurrentED = Value & OHCI_DPTR_MASK;
+				DUMP_REG_W(m_Registers.HcBulkCurrentED, Value);
 				break;
 
 			case 12: // HcDoneHead
 				// This register is read-only
+				DUMP_REG_RO(m_Registers.HcDoneHead, Value);
 				break;
 
 			case 13: // HcFmInterval
@@ -1169,28 +1245,34 @@ void OHCI::OHCI_WriteRegister(xbaddr Addr, uint32_t Value)
 					DBG_PRINTF("Changing frame interval duration. New value is %u\n", Value & OHCI_FMI_FI);
 				}
 				m_Registers.HcFmInterval = Value & ~0xC000;
+				DUMP_REG_W(m_Registers.HcFmInterval, Value);
 			}
 			break;
 
 			case 14: // HcFmRemaining
 				// This register is read-only
+				DUMP_REG_RO(m_Registers.HcFmRemaining, Value);
 				break;
 
 			case 15: // HcFmNumber
 				// This register is read-only
+				DUMP_REG_RO(m_Registers.HcFmNumber, Value);
 				break;
 
 			case 16: // HcPeriodicStart
 				m_Registers.HcPeriodicStart = Value & 0x3FFF;
+				DUMP_REG_W(m_Registers.HcPeriodicStart, Value);
 				break;
 
 			case 17: // HcLSThreshold
 				m_Registers.HcLSThreshold = Value & 0xFFF;
+				DUMP_REG_W(m_Registers.HcLSThreshold, Value);
 				break;
 
 			case 18: // HcRhDescriptorA
 				m_Registers.HcRhDescriptorA &= ~OHCI_RHA_RW_MASK;
 				m_Registers.HcRhDescriptorA |= Value & OHCI_RHA_RW_MASK; // ??
+				DUMP_REG_W(m_Registers.HcRhDescriptorA, Value);
 				break;
 
 			case 19: // HcRhDescriptorB
@@ -1199,22 +1281,27 @@ void OHCI::OHCI_WriteRegister(xbaddr Addr, uint32_t Value)
 
 			case 20: // HcRhStatus
 				OHCI_SetHubStatus(Value);
+				DUMP_REG_W(m_Registers.HcRhStatus, Value);
 				break;
 
 			case 21: // RhPort 0
 				OHCI_PortSetStatus(0, Value);
+				DUMP_REG_W(m_Registers.RhPort[0].HcRhPortStatus, Value);
 				break;
 
 			case 22: // RhPort 1
 				OHCI_PortSetStatus(1, Value);
+				DUMP_REG_W(m_Registers.RhPort[1].HcRhPortStatus, Value);
 				break;
 
 			case 23: // RhPort 2
 				OHCI_PortSetStatus(2, Value);
+				DUMP_REG_W(m_Registers.RhPort[2].HcRhPortStatus, Value);
 				break;
 
 			case 24: // RhPort 3
 				OHCI_PortSetStatus(3, Value);
+				DUMP_REG_W(m_Registers.RhPort[3].HcRhPortStatus, Value);
 				break;
 
 			default:
