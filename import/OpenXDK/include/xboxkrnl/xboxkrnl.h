@@ -656,17 +656,6 @@ XBOX_REFURB_INFO, *PXBOX_REFURB_INFO;
 #define ALIGN_DOWN_POINTER(address, type) ((PVOID)((ULONG_PTR)(address) & ~((ULONG_PTR)sizeof(type) - 1)))
 #define ALIGN_UP_POINTER(address, type) (ALIGN_DOWN_POINTER(((ULONG_PTR)(address) + sizeof(type) - 1), type))
 
-// Exception record flags
-// Source: ReactOS
- #define EXCEPTION_NONCONTINUABLE  0x01
- #define EXCEPTION_UNWINDING       0x02
- #define EXCEPTION_EXIT_UNWIND     0x04
- #define EXCEPTION_STACK_INVALID   0x08
- #define EXCEPTION_NESTED_CALL     0x10
- #define EXCEPTION_TARGET_UNWIND   0x20
- #define EXCEPTION_COLLIDED_UNWIND 0x40
- #define EXCEPTION_UNWIND (EXCEPTION_UNWINDING | EXCEPTION_EXIT_UNWIND | EXCEPTION_TARGET_UNWIND | EXCEPTION_COLLIDED_UNWIND)
-
 // ******************************************************************
 // * EXCEPTION_RECORD
 // ******************************************************************

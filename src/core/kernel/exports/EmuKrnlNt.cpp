@@ -1907,7 +1907,7 @@ XBSYSAPI EXPORTNUM(228) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtSetSystemTime
 	LOG_FUNC_END;
 
 	NTSTATUS ret = STATUS_SUCCESS;
-	LARGE_INTEGER HostSystemTime, NewSystemTime, OldSystemTime;
+	LARGE_INTEGER NewSystemTime, OldSystemTime;
 	// LARGE_INTEGER LocalTime;
 	// TIME_FIELDS TimeFields;
 
