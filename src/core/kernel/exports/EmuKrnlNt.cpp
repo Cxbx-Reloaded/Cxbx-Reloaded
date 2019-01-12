@@ -1917,7 +1917,7 @@ XBSYSAPI EXPORTNUM(228) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtSetSystemTime
 	else {
 		NtSystemTimeMtx.lock();
 		NewSystemTime = *SystemTime;
-		if (NewSystemTime.QuadPart > 0 && NewSystemTime.QuadPart <= 0x20000000) {
+		if (NewSystemTime.u.HighPart > 0 && NewSystemTime.u.HighPart <= 0x20000000) {
 			/* Convert the time and set it in HAL */
 			// NOTE: disabled, as this requires emulating the RTC, which we don't yet
 			// ExSystemTimeToLocalTime(&NewSystemTime, &LocalTime);
