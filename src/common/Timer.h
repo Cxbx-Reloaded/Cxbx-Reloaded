@@ -62,8 +62,7 @@ typedef struct _TimerObject
 }
 TimerObject;
 
-// The frequency of the high resolution clock of the host
-uint64_t HostClockFrequency;
+extern uint64_t HostClockFrequency;
 
 /* Timer exported functions */
 TimerObject* Timer_Create(TimerCB Callback, void* Arg, std::string Name, unsigned long* Affinity);

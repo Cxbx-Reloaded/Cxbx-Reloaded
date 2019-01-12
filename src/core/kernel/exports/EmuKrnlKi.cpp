@@ -57,10 +57,13 @@ namespace xboxkrnl
 
 #define MAX_TIMER_DPCS   16
 
-#define ASSERT_TIMER_LOCKED assert(xboxkrnl::KiTimerMtx.Acquired == true)
+#define ASSERT_TIMER_LOCKED assert(KiTimerMtx.Acquired == true)
 
 const xboxkrnl::ULONG CLOCK_TIME_INCREMENT = 0x2710;
 xboxkrnl::KDPC KiTimerExpireDpc;
+xboxkrnl::KI_TIMER_LOCK KiTimerMtx;
+xboxkrnl::KTIMER_TABLE_ENTRY KiTimerTableListHead[TIMER_TABLE_SIZE];
+xboxkrnl::LIST_ENTRY KiWaitInListHead;
 
 
 xboxkrnl::VOID xboxkrnl::KiInitSystem()
@@ -128,7 +131,7 @@ xboxkrnl::VOID xboxkrnl::KiClockIsr(
 		// Check if a timer has expired
 		Hand = KeTickCount & (TIMER_TABLE_SIZE - 1);
 		if (KiTimerTableListHead[Hand].Entry.Flink != &KiTimerTableListHead[Hand].Entry &&
-			InterruptTime.QuadPart >= KiTimerTableListHead[Hand].Time.QuadPart) {
+			(ULONGLONG)InterruptTime.QuadPart >= KiTimerTableListHead[Hand].Time.QuadPart) {
 			KeInsertQueueDpc(&KiTimerExpireDpc, (PVOID)&KeTickCount, 0);
 		}
 		KiTimerMtx.Mtx.unlock();
@@ -229,7 +232,6 @@ xboxkrnl::VOID xboxkrnl::KiRemoveEntryTimer(
 	IN xboxkrnl::ULONG Hand
 )
 {
-	ULONG Hand;
 	PKTIMER_TABLE_ENTRY TableEntry;
 
 	ASSERT_TIMER_LOCKED;

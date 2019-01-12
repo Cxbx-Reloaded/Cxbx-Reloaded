@@ -713,7 +713,7 @@ static void CxbxKrnlClockThread(void* pVoid)
 	Error -= (Microseconds * HostClockFrequency);
 
 	UnaccountedMicroseconds += Microseconds;
-	IncrementScaling = UnaccountedMicroseconds / 1000; // -> 1 ms = 1000us -> time between two xbox clock interrupts
+	IncrementScaling = (unsigned int)(UnaccountedMicroseconds / 1000); // -> 1 ms = 1000us -> time between two xbox clock interrupts
 	// Here, we should actually check if IncrementScaling is >= 1, but because this thread has a Sleep(1) call,
 	// that will never happen in practice
 	UnaccountedMicroseconds -= (IncrementScaling * 1000);

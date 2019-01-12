@@ -42,6 +42,7 @@
 #include <mutex>
 #include "Timer.h"
 #include "common\util\CxbxUtil.h"
+#include "core\kernel\init\CxbxKrnl.h"
 #ifdef __linux__
 #include <time.h>
 #endif
@@ -55,11 +56,10 @@
 
 // Vector storing all the timers created
 static std::vector<TimerObject*> TimerList;
+// The frequency of the high resolution clock of the host
+uint64_t HostClockFrequency;
 // Lock to acquire when accessing TimerList
 std::mutex TimerMtx;
-
-// Forward declare
-void InitXboxThread(DWORD_PTR cores);
 
 
 // Returns the current time of the timer
@@ -68,7 +68,7 @@ inline uint64_t GetTime_NS(TimerObject* Timer)
 #ifdef _WIN32
 	LARGE_INTEGER li;
 	QueryPerformanceCounter(&li);
-	uint64_t Ret = Muldiv64(li.QuadPart, SCALE_S_IN_NS, HostClockFrequency);
+	uint64_t Ret = Muldiv64(li.QuadPart, SCALE_S_IN_NS, (uint32_t)HostClockFrequency);
 #elif __linux__
 	static struct timespec ts;
 	clock_gettime(CLOCK_MONOTONIC_RAW, &ts);

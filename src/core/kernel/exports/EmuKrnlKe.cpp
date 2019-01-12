@@ -147,7 +147,6 @@ xboxkrnl::VOID NTAPI xboxkrnl::KeSetSystemTime(
 	OUT xboxkrnl::PLARGE_INTEGER OldTime
 )
 {
-	TIME_FIELDS TimeFields;
 	KIRQL OldIrql, OldIrql2;
 	LARGE_INTEGER DeltaTime, HostTime;
 	PLIST_ENTRY ListHead, NextEntry;
@@ -1708,8 +1707,6 @@ XBSYSAPI EXPORTNUM(150) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeSetTimerEx
 
 	BOOLEAN Inserted;
 	BOOLEAN RequestInterrupt = FALSE;
-	LARGE_INTEGER Interval;
-	LARGE_INTEGER SystemTime;
 	KIRQL OldIrql;
 	ULONG Hand;
 
@@ -1812,7 +1809,7 @@ XBSYSAPI EXPORTNUM(153) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeSynchronizeExecution
 // ******************************************************************
 // * 0x009A - KeSystemTime
 // ******************************************************************
-// XBSYSAPI EXPORTNUM(154) xboxkrnl::KSYSTEM_TIME xboxkrnl::KeSystemTime; // Used for KernelThunk[154]
+XBSYSAPI EXPORTNUM(154) xboxkrnl::KSYSTEM_TIME xboxkrnl::KeSystemTime = { 0, 0, 0 };
 
 // ******************************************************************
 // * 0x009B - KeTestAlertThread()

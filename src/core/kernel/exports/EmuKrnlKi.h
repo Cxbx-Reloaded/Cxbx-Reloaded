@@ -60,11 +60,6 @@ namespace xboxkrnl
 		bool Acquired;
 	} KI_TIMER_LOCK;
 
-	extern const ULONG CLOCK_TIME_INCREMENT;
-	LIST_ENTRY KiWaitInListHead;
-	KI_TIMER_LOCK KiTimerMtx;
-	KTIMER_TABLE_ENTRY KiTimerTableListHead[TIMER_TABLE_SIZE];
-
 
 	VOID KiInitSystem();
 
@@ -139,6 +134,11 @@ namespace xboxkrnl
 		IN PKWAIT_BLOCK WaitBlock
 	);
 };
+
+extern const xboxkrnl::ULONG CLOCK_TIME_INCREMENT;
+extern xboxkrnl::LIST_ENTRY KiWaitInListHead;
+extern xboxkrnl::KTIMER_TABLE_ENTRY KiTimerTableListHead[TIMER_TABLE_SIZE];
+extern xboxkrnl::KI_TIMER_LOCK KiTimerMtx;
 
 #define KiLockDispatcherDatabase(OldIrql)      \
 	*(OldIrql) = KeRaiseIrqlToDpcLevel()
