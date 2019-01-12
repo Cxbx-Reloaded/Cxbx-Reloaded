@@ -36,7 +36,7 @@
 
 #ifndef SDL2DEVICE_H_
 #define SDL2DEVICE_H_
-#if 1 // Reenable this when LLE USB actually works
+#if 0 // Reenable this when LLE USB actually works
 #include "InputConfig.h"
 
 

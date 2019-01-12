@@ -36,7 +36,7 @@
 
 #ifndef INPUTCONFIG_H_
 #define INPUTCONFIG_H_
-#if 1 // Reenable this when LLE USB actually works
+#if 0 // Reenable this when LLE USB actually works
 #include <vector>
 #include <atomic>
 #include "SDL.h"

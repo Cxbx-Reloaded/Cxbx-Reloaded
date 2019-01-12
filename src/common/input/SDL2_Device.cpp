@@ -34,7 +34,7 @@
 // *
 // ******************************************************************
 
-#if 1 // Reenable this when LLE USB actually works
+#if 0 // Reenable this when LLE USB actually works
 #include "SDL2_Device.h"
 #include <assert.h>
 
