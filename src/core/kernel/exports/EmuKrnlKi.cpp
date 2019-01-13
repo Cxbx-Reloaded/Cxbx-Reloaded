@@ -89,8 +89,8 @@ xboxkrnl::VOID xboxkrnl::KiTimerLock()
 
 xboxkrnl::VOID xboxkrnl::KiTimerUnlock()
 {
-	KiTimerMtx.Mtx.unlock();
 	KiTimerMtx.Acquired = false;
+	KiTimerMtx.Mtx.unlock();
 }
 
 xboxkrnl::VOID xboxkrnl::KiClockIsr(
