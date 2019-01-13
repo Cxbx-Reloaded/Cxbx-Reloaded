@@ -1911,7 +1911,7 @@ XBSYSAPI EXPORTNUM(228) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtSetSystemTime
 	// LARGE_INTEGER LocalTime;
 	// TIME_FIELDS TimeFields;
 
-	if (SystemTime == NULL) {
+	if (SystemTime == nullptr) {
 		ret = STATUS_ACCESS_VIOLATION;
 	}
 	else {
@@ -1928,7 +1928,7 @@ XBSYSAPI EXPORTNUM(228) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtSetSystemTime
 			KeSetSystemTime(&NewSystemTime, &OldSystemTime);
 
 			// Is the previous time requested?
-			if (PreviousTime != NULL) {
+			if (PreviousTime != nullptr) {
 				PreviousTime->QuadPart = OldSystemTime.QuadPart;
 			}
 		}
