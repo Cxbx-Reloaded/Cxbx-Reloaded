@@ -134,8 +134,8 @@ xboxkrnl::VOID xboxkrnl::KiClockIsr(
 			(ULONGLONG)InterruptTime.QuadPart >= KiTimerTableListHead[Hand].Time.QuadPart) {
 			KeInsertQueueDpc(&KiTimerExpireDpc, (PVOID)&KeTickCount, 0);
 		}
-		KiTimerMtx.Mtx.unlock();
 		KiTimerMtx.Acquired = false;
+		KiTimerMtx.Mtx.unlock();
 	}
 
 	KfLowerIrql(OldIrql);
