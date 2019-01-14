@@ -918,7 +918,7 @@ void OHCI::OHCI_SOF(bool bCreate)
 
 	// make timer expire at SOF + 1 ms from now
 	if (bCreate) {
-		Timer_Start(m_pEOFtimer, m_SOFtime + m_UsbFrameTime);
+		Timer_Start(m_pEOFtimer, m_UsbFrameTime);
 	}
 
 	OHCI_SetInterrupt(OHCI_INTR_SF);
