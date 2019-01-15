@@ -39,22 +39,33 @@
 
 #include <atomic>
 
+#define SCALE_S_IN_NS  1000000000
+#define SCALE_MS_IN_NS 1000000
+#define SCALE_US_IN_NS 1000
+#define SCALE_NS_IN_NS 1
+
+#define SCALE_S_IN_US  1000000
+#define SCALE_MS_IN_US 1000
+#define SCALE_US_IN_US 1
+
 /* typedef of the timer object and the callback function */
-typedef void(*pTimerCB)(void*);
+typedef void(*TimerCB)(void*);
 typedef struct _TimerObject
 {
-	int Type;                            // timer type (virtual or real)
+	int Type;                            // timer type
 	std::atomic_uint64_t ExpireTime_MS;  // when the timer expires (ms)
 	std::atomic_bool Exit;               // indicates that the timer should be destroyed
-	pTimerCB Callback;                   // function to call when the timer expires
+	TimerCB Callback;                    // function to call when the timer expires
 	void* Opaque;                        // opaque argument to pass to the callback
-	unsigned int SlowdownFactor;         // how much the time is slowed down (virtual clocks only)
+	std::string Name;                    // the name of the timer thread (if any)
+	unsigned long* CpuAffinity;          // the cpu affinity of the timer thread (if any)
 }
 TimerObject;
 
+extern uint64_t HostClockFrequency;
 
 /* Timer exported functions */
-TimerObject* Timer_Create(pTimerCB Callback, void* Arg, unsigned int Factor);
+TimerObject* Timer_Create(TimerCB Callback, void* Arg, std::string Name, unsigned long* Affinity);
 void Timer_Start(TimerObject* Timer, uint64_t Expire_MS);
 void Timer_Exit(TimerObject* Timer);
 void Timer_ChangeExpireTime(TimerObject* Timer, uint64_t Expire_ms);

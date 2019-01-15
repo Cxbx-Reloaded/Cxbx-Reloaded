@@ -39,25 +39,27 @@
 #endif
 #include <thread>
 #include <vector>
+#include <mutex>
 #include "Timer.h"
 #include "common\util\CxbxUtil.h"
+#include "core\kernel\init\CxbxKrnl.h"
 #ifdef __linux__
 #include <time.h>
 #endif
 
 
+// Virtual clocks will probably become useful once LLE CPU is implemented, but for now we don't need them.
+// See the QEMUClockType QEMU_CLOCK_VIRTUAL of XQEMU for more info.
 #define CLOCK_REALTIME 0
-#define CLOCK_VIRTUALTIME  1
-#define SCALE_S  1000000000ULL
-#define SCALE_MS 1000000ULL
-#define SCALE_US 1000ULL
-#define SCALE_NS 1ULL
+//#define CLOCK_VIRTUALTIME  1
 
 
 // Vector storing all the timers created
 static std::vector<TimerObject*> TimerList;
 // The frequency of the high resolution clock of the host
-static uint64_t ClockFrequency;
+uint64_t HostClockFrequency;
+// Lock to acquire when accessing TimerList
+std::mutex TimerMtx;
 
 
 // Returns the current time of the timer
@@ -66,15 +68,15 @@ inline uint64_t GetTime_NS(TimerObject* Timer)
 #ifdef _WIN32
 	LARGE_INTEGER li;
 	QueryPerformanceCounter(&li);
-	uint64_t Ret = Muldiv64(li.QuadPart, (uint32_t)SCALE_S, ClockFrequency);
+	uint64_t Ret = Muldiv64(li.QuadPart, SCALE_S_IN_NS, (uint32_t)HostClockFrequency);
 #elif __linux__
 	static struct timespec ts;
 	clock_gettime(CLOCK_MONOTONIC_RAW, &ts);
-	uint64_t Ret = Muldiv64(ts.tv_sec, SCALE_S, 1) + ts.tv_nsec;
+	uint64_t Ret = Muldiv64(ts.tv_sec, SCALE_S_IN_NS, 1) + ts.tv_nsec;
 #else
 #error "Unsupported OS"
 #endif
-	return Timer->Type == CLOCK_REALTIME ? Ret : Ret / Timer->SlowdownFactor;
+	return Ret;
 }
 
 // Calculates the next expire time of the timer
@@ -86,13 +88,17 @@ static inline uint64_t GetNextExpireTime(TimerObject* Timer)
 // Deallocates the memory of the timer
 void Timer_Destroy(TimerObject* Timer)
 {
-	unsigned int index;
-	for (unsigned int i = 0; i < TimerList.size(); i++) {
+	unsigned int index, i;
+	std::lock_guard<std::mutex>lock(TimerMtx);
+	
+	index = TimerList.size();
+	for (i = 0; i < index; i++) {
 		if (Timer == TimerList[i]) {
 			index = i;
 		}
 	}
 
+	assert(index != TimerList.size());
 	delete Timer;
 	TimerList.erase(TimerList.begin() + index);
 }
@@ -100,7 +106,15 @@ void Timer_Destroy(TimerObject* Timer)
 // Thread that runs the timer
 void ClockThread(TimerObject* Timer)
 {
-	uint64_t NewExpireTime = GetNextExpireTime(Timer);
+	uint64_t NewExpireTime;
+
+	if (!Timer->Name.empty()) {
+		CxbxSetThreadName(Timer->Name.c_str());
+	}
+	if (Timer->CpuAffinity != nullptr) {
+		InitXboxThread(*Timer->CpuAffinity);
+	}
+	NewExpireTime = GetNextExpireTime(Timer);
 
 	while (true) {
 		if (GetTime_NS(Timer) > NewExpireTime) {
@@ -109,10 +123,6 @@ void ClockThread(TimerObject* Timer)
 				return;
 			}
 			Timer->Callback(Timer->Opaque);
-			if (Timer->Exit.load()) {
-				Timer_Destroy(Timer);
-				return;
-			}
 			NewExpireTime = GetNextExpireTime(Timer);
 		}
 		Sleep(1); // prevent burning the cpu
@@ -132,15 +142,17 @@ void Timer_Exit(TimerObject* Timer)
 }
 
 // Allocates the memory for the timer object
-TimerObject* Timer_Create(pTimerCB Callback, void* Arg, unsigned int Factor)
+TimerObject* Timer_Create(TimerCB Callback, void* Arg, std::string Name, unsigned long* Affinity)
 {
+	std::lock_guard<std::mutex>lock(TimerMtx);
 	TimerObject* pTimer = new TimerObject;
-	pTimer->Type = Factor <= 1 ? CLOCK_REALTIME : CLOCK_VIRTUALTIME;
+	pTimer->Type = CLOCK_REALTIME;
 	pTimer->Callback = Callback;
 	pTimer->ExpireTime_MS.store(0);
 	pTimer->Exit.store(false);
 	pTimer->Opaque = Arg;
-	pTimer->SlowdownFactor = Factor < 1 ? 1 : Factor;
+	Name.empty() ? pTimer->Name = "Unnamed thread" : pTimer->Name = Name;
+	pTimer->CpuAffinity = Affinity;
 	TimerList.emplace_back(pTimer);
 
 	return pTimer;
@@ -160,7 +172,7 @@ void Timer_Init()
 #ifdef _WIN32
 	LARGE_INTEGER freq;
 	QueryPerformanceFrequency(&freq);
-	ClockFrequency = freq.QuadPart;
+	HostClockFrequency = freq.QuadPart;
 #elif __linux__
 	ClockFrequency = 0;
 #else

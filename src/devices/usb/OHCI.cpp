@@ -893,8 +893,8 @@ void OHCI::OHCI_StateReset()
 
 void OHCI::OHCI_BusStart()
 {
-	// Create the EOF timer. Let's try a factor of 50 (1 virtual ms -> 50 real ms)
-	m_pEOFtimer = Timer_Create(OHCI_FrameBoundaryWrapper, this, 50);
+	// Create the EOF timer.
+	m_pEOFtimer = Timer_Create(OHCI_FrameBoundaryWrapper, this, "", nullptr);
 
 	DBG_PRINTF("Operational mode event\n");
 
@@ -916,7 +916,7 @@ void OHCI::OHCI_SOF(bool bCreate)
 	// set current SOF time
 	m_SOFtime = GetTime_NS(m_pEOFtimer);
 
-	// make timer expire at SOF + 1 virtual ms from now
+	// make timer expire at SOF + 1 ms from now
 	if (bCreate) {
 		Timer_Start(m_pEOFtimer, m_UsbFrameTime);
 	}

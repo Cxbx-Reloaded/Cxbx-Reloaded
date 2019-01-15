@@ -199,6 +199,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\common\crypto\EmuDes.h" />
+    <ClInclude Include="..\..\src\common\Timer.h" />
     <ClInclude Include="..\..\src\common\util\CxbxUtil.h" />
     <ClInclude Include="..\..\src\common\input\InputConfig.h" />
     <ClInclude Include="..\..\src\common\input\SDL2_Device.h" />
@@ -217,6 +218,7 @@
     <ClInclude Include="..\..\src\common\win32\AlignPrefix1.h" />
     <ClInclude Include="..\..\src\common\xdvdfs-tools\buffered_io.h" />
     <ClInclude Include="..\..\src\common\xdvdfs-tools\xdvdfs.h" />
+    <ClInclude Include="..\..\src\core\kernel\exports\EmuKrnlKe.h" />
     <ClInclude Include="..\..\src\Cxbx.h" />
     <ClInclude Include="..\..\src\core\kernel\init\CxbxKrnl.h" />
     <ClInclude Include="..\..\src\gui\DbgConsole.h" />
@@ -255,7 +257,6 @@
     <ClInclude Include="..\..\src\core\kernel\memory-manager\PoolManager.h" />
     <ClInclude Include="..\..\src\common\ReservedMemory.h" />
     <ClInclude Include="..\..\src\core\hle\D3D8\ResourceTracker.h" />
-    <ClInclude Include="..\..\src\devices\usb\Timer.h" />
     <ClInclude Include="..\..\src\core\kernel\memory-manager\VMManager.h" />
     <ClInclude Include="..\..\src\CxbxVersion.h" />
     <ClInclude Include="..\..\src\common\xbdm\CxbxXbdm.h" />
@@ -344,6 +345,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\common\crypto\EmuDes.cpp" />
+    <ClCompile Include="..\..\src\common\Timer.cpp" />
     <ClCompile Include="..\..\src\common\util\CxbxUtil.cpp" />
     <ClCompile Include="..\..\src\common\input\InputConfig.cpp" />
     <ClCompile Include="..\..\src\common\input\SDL2_Device.cpp" />
@@ -464,7 +466,6 @@
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
-    <ClCompile Include="..\..\src\devices\usb\Timer.cpp" />
     <ClCompile Include="..\..\src\core\kernel\memory-manager\VMManager.cpp" />
     <ClCompile Include="..\..\src\common\xbdm\CxbxXbdm.cpp" />
     <ClCompile Include="..\..\src\gui\DlgAbout.cpp" />

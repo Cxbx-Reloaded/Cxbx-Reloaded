@@ -1748,54 +1748,12 @@ static DWORD WINAPI EmuUpdateTickCount(LPVOID)
 
     while(true)
     {
-        xboxkrnl::KeTickCount = timeGetTime();	
 		SwitchToThread();
         //
         // Poll input
         //
         int port;
         for (port = 0; port < 4;port++) {
-/*            int v;
-
-            for(v=0;v<XINPUT_SETSTATE_SLOTS;v++)
-            {
-                HANDLE hDevice = g_pXInputSetStateStatus[v].hDevice;
-
-                if(hDevice == 0)
-                    continue;
-
-                DWORD dwLatency = g_pXInputSetStateStatus[v].dwLatency++;
-
-                if(dwLatency < XINPUT_SETSTATE_LATENCY)
-                    continue;
-
-                g_pXInputSetStateStatus[v].dwLatency = 0;
-
-                XTL::PX_XINPUT_FEEDBACK pFeedback = (XTL::PX_XINPUT_FEEDBACK)g_pXInputSetStateStatus[v].pFeedback;
-
-                if(pFeedback == 0)
-                    continue;
-
-                //
-                // Only update slot if it has not already been updated
-                //
-
-                if(pFeedback->Header.dwStatus != ERROR_SUCCESS)
-                {
-                    pFeedback->Header.dwStatus = ERROR_SUCCESS;
-
-                    if(pFeedback->Header.hEvent != 0)
-                    {
-                        SetEvent(pFeedback->Header.hEvent);
-                    }
-
-                    //Make sure we don't check the pFeedback again, as it could be freed by the game
-                    g_pXInputSetStateStatus[v].pFeedback = 0;
-                }
-            }
-            */
-
-            //code above is not used, could be removed.
             extern XTL::X_CONTROLLER_HOST_BRIDGE g_XboxControllerHostBridge[4];
             if (g_XboxControllerHostBridge[port].hXboxDevice == 0)
                 continue;

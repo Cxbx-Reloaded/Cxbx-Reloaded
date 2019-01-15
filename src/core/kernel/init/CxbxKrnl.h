@@ -266,8 +266,6 @@ void CxbxInitPerformanceCounters(); // Implemented in EmuKrnlKe.cpp
 
 void CxbxInitFilePaths();
 
-void ConnectWindowsTimersToThunkTable();
-
 /*! Generate a standard arg format string */
 void CxbxConvertArgToString(std::string &dest, const char* krnlExe, const char* xbeFile, HWND hwndParent, DebugMode krnlDebug, const char* krnlDebugFile);
 

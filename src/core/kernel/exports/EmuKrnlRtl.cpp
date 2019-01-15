@@ -64,8 +64,28 @@ namespace NtDll
 #undef RtlFillMemory
 #undef RtlMoveMemory
 #undef RtlZeroMemory
+#undef EXCEPTION_NONCONTINUABLE
+#undef EXCEPTION_UNWINDING
+#undef EXCEPTION_EXIT_UNWIND
+#undef EXCEPTION_STACK_INVALID
+#undef EXCEPTION_NESTED_CALL
+#undef EXCEPTION_TARGET_UNWIND
+#undef EXCEPTION_COLLIDED_UNWIND
+#undef EXCEPTION_UNWIND
 
 #endif // _WIN32
+
+// Exception record flags
+// Source: ReactOS
+// NOTE: don't put these in xboxkrnl.h, they will conflict with the macros provided by Windows
+#define EXCEPTION_NONCONTINUABLE  0x01
+#define EXCEPTION_UNWINDING       0x02
+#define EXCEPTION_EXIT_UNWIND     0x04
+#define EXCEPTION_STACK_INVALID   0x08
+#define EXCEPTION_NESTED_CALL     0x10
+#define EXCEPTION_TARGET_UNWIND   0x20
+#define EXCEPTION_COLLIDED_UNWIND 0x40
+#define EXCEPTION_UNWIND (EXCEPTION_UNWINDING | EXCEPTION_EXIT_UNWIND | EXCEPTION_TARGET_UNWIND | EXCEPTION_COLLIDED_UNWIND)
 
 DWORD WINAPI RtlAnsiStringToUnicodeSize(const xboxkrnl::STRING *str)
 {

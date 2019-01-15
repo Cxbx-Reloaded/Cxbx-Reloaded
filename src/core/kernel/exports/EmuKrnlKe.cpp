@@ -34,6 +34,10 @@
 // *  All rights reserved
 // *
 // ******************************************************************
+
+// Acknowledgment (timer functions): ReactOS (GPLv2)
+// https://github.com/reactos/reactos
+
 #define _XBOXKRNL_DEFEXTRN_
 
 #define LOG_PREFIX CXBXR_MODULE::KE
@@ -57,7 +61,9 @@ namespace NtDll
 #include "core\kernel\support\Emu.h" // For EmuLog(LOG_LEVEL::WARNING, )
 #include "EmuKrnl.h" // For InitializeListHead(), etc.
 #include "EmuKrnlKi.h" // For KiRemoveTreeTimer(), KiInsertTreeTimer()
+#include "EmuKrnlKe.h"
 #include "core\kernel\support\EmuFile.h" // For IsEmuHandle(), NtStatusToString()
+#include "Timer.h"
 
 #include <chrono>
 #include <thread>
@@ -70,87 +76,15 @@ typedef struct _DpcData {
 	CRITICAL_SECTION Lock;
 	HANDLE DpcEvent;
 	xboxkrnl::LIST_ENTRY DpcQueue; // TODO : Use KeGetCurrentPrcb()->DpcListHead instead
-	xboxkrnl::LIST_ENTRY TimerQueue;
 } DpcData;
 
-DpcData g_DpcData = { 0 }; // Note : g_DpcData is initialized in InitDpcAndTimerThread()
+DpcData g_DpcData = { 0 }; // Note : g_DpcData is initialized in InitDpcThread()
 
 xboxkrnl::ULONGLONG LARGE_INTEGER2ULONGLONG(xboxkrnl::LARGE_INTEGER value)
 {
 	// Weird construction because there doesn't seem to exist an implicit
 	// conversion of LARGE_INTEGER to ULONGLONG :
 	return *((PULONGLONG)&value);
-}
-
-#define KiWaitSatisfyMutant(_Object_, _Thread_) {                            \
-    (_Object_)->Header.SignalState -= 1;                                     \
-    if ((_Object_)->Header.SignalState == 0) {                               \
-        (_Object_)->OwnerThread = (_Thread_);                                \
-        if ((_Object_)->Abandoned == TRUE) {                                 \
-            (_Object_)->Abandoned = FALSE;                                   \
-            (_Thread_)->WaitStatus = STATUS_ABANDONED;                       \
-        }                                                                    \
-                                                                             \
-        InsertHeadList((_Thread_)->MutantListHead.Blink,                     \
-                       &(_Object_)->MutantListEntry);                        \
-    }                                                                        \
-}
-
-#define KiWaitSatisfyOther(_Object_) {                                       \
-    if (((_Object_)->Header.Type & DISPATCHER_OBJECT_TYPE_MASK) == EventSynchronizationObject) { \
-        (_Object_)->Header.SignalState = 0;                                  \
-                                                                             \
-    } else if ((_Object_)->Header.Type == SemaphoreObject) {                 \
-        (_Object_)->Header.SignalState -= 1;                                 \
-                                                                             \
-    }                                                                        \
-}
-
-#define KiWaitSatisfyAny(_Object_, _Thread_) {                               \
-    if (((_Object_)->Header.Type & DISPATCHER_OBJECT_TYPE_MASK) == EventSynchronizationObject) { \
-        (_Object_)->Header.SignalState = 0;                                  \
-                                                                             \
-    } else if ((_Object_)->Header.Type == SemaphoreObject) {                 \
-        (_Object_)->Header.SignalState -= 1;                                 \
-                                                                             \
-    } else if ((_Object_)->Header.Type == MutantObject) {                    \
-        (_Object_)->Header.SignalState -= 1;                                 \
-        if ((_Object_)->Header.SignalState == 0) {                           \
-            (_Object_)->OwnerThread = (_Thread_);                            \
-            if ((_Object_)->Abandoned == TRUE) {                             \
-                (_Object_)->Abandoned = FALSE;                               \
-                (_Thread_)->WaitStatus = STATUS_ABANDONED;                   \
-            }                                                                \
-                                                                             \
-            InsertHeadList((_Thread_)->MutantListHead.Blink,                 \
-                           &(_Object_)->MutantListEntry);                    \
-        }                                                                    \
-    }                                                                        \
-}
-
-void FASTCALL KiWaitSatisfyAll
-(
-	IN xboxkrnl::PKWAIT_BLOCK WaitBlock
-)
-{
-	using namespace xboxkrnl;
-
-	PKMUTANT Object;
-	PRKTHREAD Thread;
-	PKWAIT_BLOCK WaitBlock1;
-
-	WaitBlock1 = WaitBlock;
-	Thread = WaitBlock1->Thread;
-	do {
-		if (WaitBlock1->WaitKey != (CSHORT)STATUS_TIMEOUT) {
-			Object = (PKMUTANT)WaitBlock1->Object;
-			KiWaitSatisfyAny(Object, Thread);
-		}
-
-		WaitBlock1 = WaitBlock1->NextWaitBlock;
-	} while (WaitBlock1 != WaitBlock);
-
-	return;
 }
 
 #define TestForAlertPending(Alertable) \
@@ -173,12 +107,6 @@ void FASTCALL KiWaitSatisfyAll
         WaitStatus = STATUS_USER_APC; \
         break; \
     }
-
-#define KiInsertWaitList(_WaitMode, _Thread) {                  \
-    PLIST_ENTRY _ListHead;                                      \
-    _ListHead = &KiWaitInListHead;                              \
-    InsertTailList(_ListHead, &(_Thread)->WaitListEntry);       \
-}
 
 
 // ******************************************************************
@@ -211,6 +139,99 @@ xboxkrnl::KPRCB *KeGetCurrentPrcb()
 	return &(KeGetPcr()->PrcbData);
 }
 
+// ******************************************************************
+// * KeSetSystemTime()
+// ******************************************************************
+xboxkrnl::VOID NTAPI xboxkrnl::KeSetSystemTime(
+	IN  xboxkrnl::PLARGE_INTEGER NewTime,
+	OUT xboxkrnl::PLARGE_INTEGER OldTime
+)
+{
+	KIRQL OldIrql, OldIrql2;
+	LARGE_INTEGER DeltaTime, HostTime;
+	PLIST_ENTRY ListHead, NextEntry;
+	PKTIMER Timer;
+	LIST_ENTRY TempList, TempList2;
+	ULONG Hand, i;
+
+	/* Sanity checks */
+	assert((NewTime->u.HighPart & 0xF0000000) == 0);
+	assert(KeGetCurrentIrql() <= DISPATCH_LEVEL);
+
+	/* Lock the dispatcher, and raise IRQL */
+	KiTimerLock();
+	KiLockDispatcherDatabase(&OldIrql);
+	OldIrql2 = KfRaiseIrql(HIGH_LEVEL);
+
+	/* Query the system time now */
+	KeQuerySystemTime(OldTime);
+
+	/* Surely, we won't set the system time here, but we CAN remember a delta to the host system time */
+	HostTime.QuadPart = OldTime->QuadPart - HostSystemTimeDelta.load();
+	HostSystemTimeDelta = NewTime->QuadPart - HostTime.QuadPart;
+
+	/* Calculate the difference between the new and the old time */
+	DeltaTime.QuadPart = NewTime->QuadPart - OldTime->QuadPart;
+
+	/* Lower IRQL back */
+	KfLowerIrql(OldIrql2);
+
+	/* Setup a temporary list of absolute timers */
+	InitializeListHead(&TempList);
+
+	/* Loop current timers */
+	for (i = 0; i < TIMER_TABLE_SIZE; i++)
+	{
+		/* Loop the entries in this table and lock the timers */
+		ListHead = &KiTimerTableListHead[i].Entry;
+		NextEntry = ListHead->Flink;
+		while (NextEntry != ListHead)
+		{
+			/* Get the timer */
+			Timer = CONTAINING_RECORD(NextEntry, KTIMER, TimerListEntry);
+			NextEntry = NextEntry->Flink;
+
+			/* Is it absolute? */
+			if (Timer->Header.Absolute)
+			{
+				/* Remove it from the timer list */
+				KiRemoveEntryTimer(Timer, i);
+
+				/* Insert it into our temporary list */
+				InsertTailList(&TempList, &Timer->TimerListEntry);
+			}
+		}
+	}
+
+	/* Setup a temporary list of expired timers */
+	InitializeListHead(&TempList2);
+
+	/* Loop absolute timers */
+	while (TempList.Flink != &TempList)
+	{
+		/* Get the timer */
+		Timer = CONTAINING_RECORD(TempList.Flink, KTIMER, TimerListEntry);
+		RemoveEntryList(&Timer->TimerListEntry);
+
+		/* Update the due time and handle */
+		Timer->DueTime.QuadPart -= DeltaTime.QuadPart;
+		Hand = KiComputeTimerTableIndex(Timer->DueTime.QuadPart);
+
+		/* Lock the timer and re-insert it */
+		if (KiInsertTimerTable(Timer, Hand))
+		{
+			/* Remove it from the timer list */
+			KiRemoveEntryTimer(Timer, Hand);
+
+			/* Insert it into our temporary list */
+			InsertTailList(&TempList2, &Timer->TimerListEntry);
+		}
+	}
+
+	/* Process expired timers. This releases the dispatcher and timer locks */
+	KiTimerListExpire(&TempList2, OldIrql);
+}
+
 // Forward KeLowerIrql() to KfLowerIrql()
 #define KeLowerIrql(NewIrql) \
 	KfLowerIrql(NewIrql)
@@ -219,23 +240,9 @@ xboxkrnl::KPRCB *KeGetCurrentPrcb()
 #define KeRaiseIrql(NewIrql, OldIrql) \
 	*(OldIrql) = KfRaiseIrql(NewIrql)
 
-ULONGLONG BootTickCount = 0;
-
-// The Xbox GetTickCount is measured in milliseconds, just like the native GetTickCount.
-// The only difference we'll take into account here, is that the Xbox will probably reboot
-// much more often than Windows, so we correct this with a 'BootTickCount' value :
-DWORD CxbxXboxGetTickCount()
-{
-	return (DWORD)(GetTickCount64() - BootTickCount);
-}
-
-DWORD ExecuteDpcQueue()
+void ExecuteDpcQueue()
 {
 	xboxkrnl::PKDPC pkdpc;
-	DWORD dwWait;
-	DWORD dwNow;
-	LONG lWait;
-	xboxkrnl::PKTIMER pktimer;
 
 	// While we're working with the DpcQueue, we need to be thread-safe :
 	EnterCriticalSection(&(g_DpcData.Lock));
@@ -273,64 +280,18 @@ DWORD ExecuteDpcQueue()
 		KeGetCurrentPrcb()->DpcRoutineActive = FALSE; // Experimental
 	}
 
-	dwWait = INFINITE;
-	if (!IsListEmpty(&(g_DpcData.TimerQueue)))
-	{
-		while (true)
-		{
-			dwNow = CxbxXboxGetTickCount();
-			dwWait = INFINITE;
-			pktimer = (xboxkrnl::PKTIMER)g_DpcData.TimerQueue.Flink;
-			pkdpc = nullptr;
-			while (pktimer != (xboxkrnl::PKTIMER)&(g_DpcData.TimerQueue))
-			{
-				lWait = (LONG)pktimer->DueTime.u.LowPart - dwNow;
-				if (lWait <= 0)
-				{
-					pktimer->DueTime.u.LowPart = pktimer->Period + dwNow;
-					pkdpc = pktimer->Dpc;
-					break; // while
-				}
-
-				if (dwWait > (DWORD)lWait)
-					dwWait = (DWORD)lWait;
-
-				pktimer = (xboxkrnl::PKTIMER)pktimer->TimerListEntry.Flink;
-			}
-
-			if (pkdpc == nullptr)
-				break; // while
-
-			DBG_PRINTF("Global TimerQueue, calling DPC at 0x%.8X\n", pkdpc->DeferredRoutine);
-
-			__try {
-				pkdpc->DeferredRoutine(
-					pkdpc,
-					pkdpc->DeferredContext,
-					pkdpc->SystemArgument1,
-					pkdpc->SystemArgument2);
-			} __except (EmuException(GetExceptionInformation()))
-			{
-				EmuLog(LOG_LEVEL::WARNING, "Problem with ExceptionFilter!");
-			}
-		}
-	}
-
 //    Assert(g_DpcData._dwThreadId == GetCurrentThreadId());
 //    Assert(g_DpcData._dwDpcThreadId == g_DpcData._dwThreadId);
 //    g_DpcData._dwDpcThreadId = 0;
 	LeaveCriticalSection(&(g_DpcData.Lock));
-
-	return dwWait;
 }
 
-void InitDpcAndTimerThread()
+void InitDpcThread()
 {
 	DWORD dwThreadId = 0;
 
 	InitializeCriticalSection(&(g_DpcData.Lock));
 	InitializeListHead(&(g_DpcData.DpcQueue));
-	InitializeListHead(&(g_DpcData.TimerQueue));
 
 	DBG_PRINTF_EX(CXBXR_MODULE::INIT, "Creating DPC event\n");
 	g_DpcData.DpcEvent = CreateEvent(/*lpEventAttributes=*/nullptr, /*bManualReset=*/FALSE, /*bInitialState=*/FALSE, /*lpName=*/nullptr);
@@ -340,8 +301,6 @@ void InitDpcAndTimerThread()
 #define XBOX_ACPI_FREQUENCY 3375000  // Xbox ACPI frequency (3.375 mhz)
 ULONGLONG NativeToXbox_FactorForRdtsc;
 ULONGLONG NativeToXbox_FactorForAcpi;
-
-void ConnectKeInterruptTimeToThunkTable(); // forward
 
 ULONGLONG CxbxGetPerformanceCounter(bool acpi) {
 	LARGE_INTEGER tsc;
@@ -363,31 +322,22 @@ ULONGLONG CxbxGetPerformanceCounter(bool acpi) {
 	return (uint64_t)tsc.QuadPart;
 }
 
-uint64_t CxbxCalibrateTsc()
-{
-	LARGE_INTEGER pf;
-	QueryPerformanceFrequency(&pf);
-	return pf.QuadPart;
-}
-
 void CxbxInitPerformanceCounters()
 {
-	LARGE_INTEGER t;
-	t.QuadPart = 1000000000;
-	t.QuadPart *= CxbxCalibrateTsc();
-	t.QuadPart /= XBOX_TSC_FREQUENCY;
-	NativeToXbox_FactorForRdtsc = t.QuadPart;
+	uint64_t t;
+	t = 1000000000;
+	t *= HostClockFrequency;
+	t /= XBOX_TSC_FREQUENCY;
+	NativeToXbox_FactorForRdtsc = t;
 
-	t.QuadPart = 1000000000;
-	t.QuadPart *= CxbxCalibrateTsc();
-	t.QuadPart /= XBOX_ACPI_FREQUENCY;
-	NativeToXbox_FactorForAcpi = t.QuadPart;
+	t = 1000000000;
+	t *= HostClockFrequency;
+	t /= XBOX_ACPI_FREQUENCY;
+	NativeToXbox_FactorForAcpi = t;
 
-	ConnectKeInterruptTimeToThunkTable();
-
-	// Let's initialize the Dpc and timer handling thread too,
+	// Let's initialize the Dpc handling thread too,
 	// here for now (should be called by our caller)
-	InitDpcAndTimerThread();
+	InitDpcThread();
 }
 
 // ******************************************************************
@@ -521,14 +471,26 @@ XBSYSAPI EXPORTNUM(96) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeCancelTimer
 {
 	LOG_FUNC_ONE_ARG(Timer);
 
+	KIRQL OldIrql;
 	BOOLEAN Inserted;
 
+	assert(Timer);
+
+	/* Lock the Database and Raise IRQL */
+	KiTimerLock();
+	KiLockDispatcherDatabase(&OldIrql);
+
+	/* Check if it's inserted, and remove it if it is */
 	Inserted = Timer->Header.Inserted;
-	if (Inserted != FALSE) {
-		// Do some unlinking if already inserted in the linked list
-		KiRemoveTreeTimer(Timer);
+	if (Inserted) {
+		KxRemoveTreeTimer(Timer);
 	}
 
+	/* Release Dispatcher Lock */
+	KiUnlockDispatcherDatabase(OldIrql);
+	KiTimerUnlock();
+
+	/* Return the old state */
 	RETURN(Inserted);
 }
 
@@ -897,7 +859,9 @@ XBSYSAPI EXPORTNUM(113) xboxkrnl::VOID NTAPI xboxkrnl::KeInitializeTimerEx
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(Timer)
 		LOG_FUNC_ARG(Type)
-		LOG_FUNC_END;
+	LOG_FUNC_END;
+
+	assert(Timer);
 
 	// Initialize header :
 	Timer->Header.Type = Type + TimerNotificationObject;
@@ -1101,14 +1065,7 @@ XBSYSAPI EXPORTNUM(121) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeIsExecutingDpc
 // ******************************************************************
 // * 0x0078 - KeInterruptTime
 // ******************************************************************
-// Dxbx note : This was once a value, but instead we now point to
-// the native Windows versions (see ConnectWindowsTimersToThunkTable) :
-XBSYSAPI EXPORTNUM(120) xboxkrnl::PKSYSTEM_TIME xboxkrnl::KeInterruptTime = nullptr; // Set by ConnectKeInterruptTimeToThunkTable
-
-void ConnectKeInterruptTimeToThunkTable()
-{
-	xboxkrnl::KeInterruptTime = (xboxkrnl::PKSYSTEM_TIME)CxbxKrnl_KernelThunkTable[120];
-}
+XBSYSAPI EXPORTNUM(120) xboxkrnl::KSYSTEM_TIME xboxkrnl::KeInterruptTime = { 0, 0, 0 };
 
 // ******************************************************************
 // * 0x007A - KeLeaveCriticalRegion()
@@ -1196,16 +1153,14 @@ XBSYSAPI EXPORTNUM(125) xboxkrnl::ULONGLONG NTAPI xboxkrnl::KeQueryInterruptTime
 
 	while (true)
 	{
-		// Don't use NtDll::QueryInterruptTime, it's too new (Windows 10)
-		// Instead, read KeInterruptTime from our kernel thunk table,
-		// which we coupled to the host InterruptTime in ConnectWindowsTimersToThunkTable:
-		InterruptTime.u.HighPart = KeInterruptTime->High1Time;
-		InterruptTime.u.LowPart = KeInterruptTime->LowPart;
-		// TODO : Should we apply HostSystemTimeDelta to InterruptTime too?
+		// Don't use NtDll::QueryInterruptTime, it's too new (Windows 10).
+		// Instead, read KeInterruptTime from our kernel thunk table.
+		InterruptTime.u.HighPart = KeInterruptTime.High1Time;
+		InterruptTime.u.LowPart = KeInterruptTime.LowPart;
 
 		// Read InterruptTime atomically with a spinloop to avoid errors
 		// when High1Time and High2Time differ (during unprocessed overflow in LowPart).
-		if (InterruptTime.u.HighPart == KeInterruptTime->High2Time)
+		if (InterruptTime.u.HighPart == KeInterruptTime.High2Time)
 			break;
 	}
 
@@ -1246,14 +1201,20 @@ XBSYSAPI EXPORTNUM(128) xboxkrnl::VOID NTAPI xboxkrnl::KeQuerySystemTime
 {
 	LOG_FUNC_ONE_ARG(CurrentTime);
 
-	if (CurrentTime != NULL)
-	{
-		LARGE_INTEGER HostSystemTime;
-		GetSystemTimeAsFileTime((LPFILETIME)&HostSystemTime); // Available since Windows 2000 (NOT on XP!)
+	LARGE_INTEGER SystemTime;
 
-		// Apply the delta set in xboxkrnl::NtSetSystemTime to get the Xbox system time :
-		CurrentTime->QuadPart = HostSystemTime.QuadPart + HostSystemTimeDelta.QuadPart;
+	while (true)
+	{
+		SystemTime.u.HighPart = KeSystemTime.High1Time;
+		SystemTime.u.LowPart = KeSystemTime.LowPart;
+
+		// Read SystemTime atomically with a spinloop to avoid errors
+		// when High1Time and High2Time differ (during unprocessed overflow in LowPart).
+		if (SystemTime.u.HighPart == KeSystemTime.High2Time)
+			break;
 	}
+
+	*CurrentTime = SystemTime;
 }
 
 // ******************************************************************
@@ -1742,58 +1703,49 @@ XBSYSAPI EXPORTNUM(150) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeSetTimerEx
 		LOG_FUNC_ARG(DueTime)
 		LOG_FUNC_ARG(Period)
 		LOG_FUNC_ARG(Dpc)
-		LOG_FUNC_END;
+	LOG_FUNC_END;
 
 	BOOLEAN Inserted;
-	LARGE_INTEGER Interval;
-	LARGE_INTEGER SystemTime;
+	BOOLEAN RequestInterrupt = FALSE;
+	KIRQL OldIrql;
+	ULONG Hand;
 
-	if (Timer->Header.Type != TimerNotificationObject && Timer->Header.Type != TimerSynchronizationObject) {
-		CxbxKrnlCleanup("Assertion: '(Timer)->Header.Type == TimerNotificationObject) || ((Timer)->Header.Type == TimerSynchronizationObject)' in KeSetTimerEx()");
-	}
+	assert(Timer);
+	assert(Timer->Header.Type == TimerNotificationObject || Timer->Header.Type == TimerSynchronizationObject);
+
+	KiTimerLock();
+	KiLockDispatcherDatabase(&OldIrql);
 
 	// Same as KeCancelTimer(Timer) :
 	Inserted = Timer->Header.Inserted;
 	if (Inserted != FALSE) {
 		// Do some unlinking if already inserted in the linked list
-		KiRemoveTreeTimer(Timer);
+		KxRemoveTreeTimer(Timer);
 	}
-
-	Timer->Header.SignalState = FALSE;
+	
+	/* Set Default Timer Data */
 	Timer->Dpc = Dpc;
 	Timer->Period = Period;
-
-	if (!KiInsertTreeTimer(Timer, DueTime)) {
-		if (!IsListEmpty(&(Timer->Header.WaitListHead))) {
-			// KiWaitTest(Timer, 0);
-		}
-
-		if (Dpc != NULL) {
-			// Call the Dpc routine if one is specified
-			KeQuerySystemTime(&SystemTime);
-			KeInsertQueueDpc(Timer->Dpc, (PVOID)SystemTime.u.LowPart, (PVOID)SystemTime.u.HighPart);
-		}
-
-		if (Period != 0) {
-			// Prepare the repetition if Timer is periodic
-			Interval.QuadPart = (LONGLONG)(-10 * 1000) * Timer->Period;
-			while (!KiInsertTreeTimer(Timer, Interval))
-				;
-		}
-	}
-/* Dxbx has this :
-	EnterCriticalSection(&(g_DpcData.Lock));
-	if (Timer->TimerListEntry.Flink == nullptr) 
+	if (!KiComputeDueTime(Timer, DueTime, &Hand))
 	{
-		Timer->DueTime.QuadPart := (DueTime.QuadPart / -10000) + CxbxXboxGetTickCount();
-		Timer->Period = Period;
-		Timer->Dpc = Dpc;
-		InsertTailList(&(g_DpcData.TimerQueue), &(Timer->TimerListEntry));
+		/* Signal the timer */
+		RequestInterrupt = KiSignalTimer(Timer);
+
+		/* Check if we need to do an interrupt */
+		if (RequestInterrupt) {
+			HalRequestSoftwareInterrupt(DISPATCH_LEVEL);
+		}
+	}
+	else
+	{
+		/* Insert the timer */
+		Timer->Header.SignalState = FALSE;
+		KxInsertTimer(Timer, Hand);
 	}
 
-	LeaveCriticalSection(&(g_DpcData.Lock));
-	SetEvent(g_DpcData.DpcEvent);
-*/
+	/* Exit the dispatcher */
+	KiUnlockDispatcherDatabase(OldIrql);
+	KiTimerUnlock();
 
 	RETURN(Inserted);
 }
@@ -1857,9 +1809,7 @@ XBSYSAPI EXPORTNUM(153) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeSynchronizeExecution
 // ******************************************************************
 // * 0x009A - KeSystemTime
 // ******************************************************************
-// Dxbx note : This was once a value, but instead we now point to
-// the native Windows versions (see ConnectWindowsTimersToThunkTable) :
-// XBSYSAPI EXPORTNUM(154) xboxkrnl::PKSYSTEM_TIME xboxkrnl::KeSystemTime; // Used for KernelThunk[154]
+XBSYSAPI EXPORTNUM(154) xboxkrnl::KSYSTEM_TIME xboxkrnl::KeSystemTime = { 0, 0, 0 };
 
 // ******************************************************************
 // * 0x009B - KeTestAlertThread()
@@ -1883,8 +1833,6 @@ XBSYSAPI EXPORTNUM(155) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeTestAlertThread
 // ******************************************************************
 XBSYSAPI EXPORTNUM(156) xboxkrnl::DWORD VOLATILE xboxkrnl::KeTickCount = 0;
 
-const xboxkrnl::ULONG CLOCK_TIME_INCREMENT = 0x2710;
-
 // ******************************************************************
 // * 0x009D - KeTimeIncrement
 // ******************************************************************
@@ -1907,8 +1855,6 @@ xboxkrnl::PLARGE_INTEGER FASTCALL KiComputeWaitInterval(
 		return NewTime;
 	}
 }
-
-xboxkrnl::LIST_ENTRY KiWaitInListHead;
 
 // ******************************************************************
 // * 0x009E - KeWaitForMultipleObjects()
@@ -2029,6 +1975,7 @@ XBSYSAPI EXPORTNUM(158) xboxkrnl::NTSTATUS NTAPI xboxkrnl::KeWaitForMultipleObje
 				}
 
 				// Setup a timer for the thread
+				KiTimerLock();
 				PKTIMER Timer = &Thread->Timer;
 				PKWAIT_BLOCK WaitTimer = &Thread->TimerWaitBlock;
 				WaitBlock->NextWaitBlock = WaitTimer;
@@ -2037,10 +1984,12 @@ XBSYSAPI EXPORTNUM(158) xboxkrnl::NTSTATUS NTAPI xboxkrnl::KeWaitForMultipleObje
 				WaitTimer->NextWaitBlock = WaitBlock;
 				if (KiInsertTreeTimer(Timer, *Timeout) == FALSE) {
 					WaitStatus = (NTSTATUS)STATUS_TIMEOUT;
+					KiTimerUnlock();
 					goto NoWait;
 				}
 
 				DueTime.QuadPart = Timer->DueTime.QuadPart;
+				KiTimerUnlock();
 			}
 			else {
 				WaitBlock->NextWaitBlock = WaitBlock;
@@ -2211,6 +2160,7 @@ XBSYSAPI EXPORTNUM(159) xboxkrnl::NTSTATUS NTAPI xboxkrnl::KeWaitForSingleObject
 				}
 
 				// Setup a timer for the thread
+				KiTimerLock();
 				PKTIMER Timer = &Thread->Timer;
 				PKWAIT_BLOCK WaitTimer = &Thread->TimerWaitBlock;
 				WaitBlock->NextWaitBlock = WaitTimer;
@@ -2219,10 +2169,12 @@ XBSYSAPI EXPORTNUM(159) xboxkrnl::NTSTATUS NTAPI xboxkrnl::KeWaitForSingleObject
 				WaitTimer->NextWaitBlock = WaitBlock;
 				if (KiInsertTreeTimer(Timer, *Timeout) == FALSE) {
 					WaitStatus = (NTSTATUS)STATUS_TIMEOUT;
+					KiTimerUnlock();
 					goto NoWait;
 				}
 
 				DueTime.QuadPart = Timer->DueTime.QuadPart;
+				KiTimerUnlock();
 			}
 			else {
 				WaitBlock->NextWaitBlock = WaitBlock;

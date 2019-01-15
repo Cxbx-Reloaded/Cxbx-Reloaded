@@ -656,17 +656,6 @@ XBOX_REFURB_INFO, *PXBOX_REFURB_INFO;
 #define ALIGN_DOWN_POINTER(address, type) ((PVOID)((ULONG_PTR)(address) & ~((ULONG_PTR)sizeof(type) - 1)))
 #define ALIGN_UP_POINTER(address, type) (ALIGN_DOWN_POINTER(((ULONG_PTR)(address) + sizeof(type) - 1), type))
 
-// Exception record flags
-// Source: ReactOS
- #define EXCEPTION_NONCONTINUABLE  0x01
- #define EXCEPTION_UNWINDING       0x02
- #define EXCEPTION_EXIT_UNWIND     0x04
- #define EXCEPTION_STACK_INVALID   0x08
- #define EXCEPTION_NESTED_CALL     0x10
- #define EXCEPTION_TARGET_UNWIND   0x20
- #define EXCEPTION_COLLIDED_UNWIND 0x40
- #define EXCEPTION_UNWIND (EXCEPTION_UNWINDING | EXCEPTION_EXIT_UNWIND | EXCEPTION_TARGET_UNWIND | EXCEPTION_COLLIDED_UNWIND)
-
 // ******************************************************************
 // * EXCEPTION_RECORD
 // ******************************************************************
@@ -1553,6 +1542,17 @@ typedef struct _KDPC
 KDPC, *PKDPC;
 
 // ******************************************************************
+// * DPC queue entry structure
+// ******************************************************************
+typedef struct _DPC_QUEUE_ENTRY
+{
+	PKDPC Dpc;
+	PKDEFERRED_ROUTINE Routine;
+	PVOID Context;
+}
+DPC_QUEUE_ENTRY, *PDPC_QUEUE_ENTRY;
+
+// ******************************************************************
 // * KFLOATING_SAVE
 // ******************************************************************
 // See NtDll::FLOATING_SAVE_AREA
@@ -1648,12 +1648,17 @@ KINTERRUPT_MODE;
 // ******************************************************************
 // * IRQ (Interrupt ReQuest) Priority Levels
 // ******************************************************************
-#define PASSIVE_LEVEL 0
-#define APC_LEVEL 1
+#define PASSIVE_LEVEL  0
+#define APC_LEVEL      1
 #define DISPATCH_LEVEL 2
-#define PROFILE_LEVEL 26
-#define SYNC_LEVEL 28
-#define HIGH_LEVEL 31
+#define PROFILE_LEVEL  26
+#define CLOCK1_LEVEL   28
+#define CLOCK2_LEVEL   28
+#define SYNC_LEVEL     28
+#define IPI_LEVEL      29
+#define POWER_LEVEL    30
+#define HIGH_LEVEL     31
+#define CLOCK_LEVEL    CLOCK2_LEVEL
 
 #define DISPATCH_SIZE 22
 

@@ -80,8 +80,8 @@ extern DWORD_PTR g_CPUOthers;
 
 extern HANDLE g_CurrentProcessHandle; // Set in CxbxKrnlMain
 
-// Delta added to host SystemTime, used in xboxkrnl::KeQuerySystemTime and xboxkrnl::NtSetSystemTime
-extern LARGE_INTEGER HostSystemTimeDelta;
+// Delta added to host SystemTime, used in KiClockIsr and KeSetSystemTime
+extern std::atomic_int64_t HostSystemTimeDelta;
 
 // NOTE: this is an arbitrary latency
 #define XINPUT_SETSTATE_LATENCY 4

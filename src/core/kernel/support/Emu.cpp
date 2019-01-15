@@ -74,8 +74,10 @@ const char log_warn[]  = "WARN : ";
 const char log_fatal[] = "FATAL: ";
 const char log_unkwn[] = "???? : ";
 
-// Delta added to host SystemTime, used in xboxkrnl::KeQuerySystemTime and xboxkrnl::NtSetSystemTime
-LARGE_INTEGER	HostSystemTimeDelta = {};
+// Delta added to host SystemTime, used in KiClockIsr and KeSetSystemTime
+// This shouldn't need to be atomic, but because raising the IRQL to high lv in KeSetSystemTime doesn't really stop KiClockIsr from running,
+// we need it for now to prevent reading a corrupted value while KeSetSystemTime is in the middle of updating it
+std::atomic_int64_t HostSystemTimeDelta(0);
 
 // Static Function(s)
 static int ExitException(LPEXCEPTION_POINTERS e);

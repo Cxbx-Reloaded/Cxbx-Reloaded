@@ -54,6 +54,7 @@ namespace xboxkrnl
 #include "core\kernel\support\EmuFS.h"
 #include "EmuEEPROM.h" // For CxbxRestoreEEPROM, EEPROM, XboxFactoryGameRegion
 #include "core\kernel\exports\EmuKrnl.h"
+#include "core\kernel\exports\EmuKrnlKi.h"
 #include "EmuShared.h"
 #include "core\kernel\support\EmuXTL.h"
 #include "core\hle\Intercept.hpp"
@@ -71,7 +72,7 @@ namespace xboxkrnl
 #include "devices\LED.h" // For LED::Sequence
 #include "devices\SMCDevice.h" // For SMC Access
 #include "common\crypto\EmuSha.h" // For the SHA1 functions
-#include "devices\usb\Timer.h" // For Timer_Init
+#include "Timer.h" // For Timer_Init
 #include "..\Common\Input\InputConfig.h" // For the InputDeviceManager
 
 /*! thread local storage */
@@ -684,6 +685,40 @@ static unsigned int WINAPI CxbxKrnlInterruptThread(PVOID param)
 	return 0;
 }
 
+static void CxbxKrnlClockThread(void* pVoid)
+{
+	LARGE_INTEGER CurrentTicks;
+	uint64_t Delta;
+	uint64_t Microseconds;
+	unsigned int IncrementScaling;
+	static uint64_t LastTicks = 0;
+	static uint64_t Error = 0;
+	static uint64_t UnaccountedMicroseconds = 0;
+
+	// This keeps track of how many us have elapsed between two cycles, so that the xbox clocks are updated
+	// with the proper increment (instead of blindly adding a single increment at every step)
+
+	if (LastTicks == 0) {
+		QueryPerformanceCounter(&CurrentTicks);
+		LastTicks = CurrentTicks.QuadPart;
+		CurrentTicks.QuadPart = 0;
+	}
+
+	QueryPerformanceCounter(&CurrentTicks);
+	Delta = CurrentTicks.QuadPart - LastTicks;
+	LastTicks = CurrentTicks.QuadPart;
+
+	Error += (Delta * SCALE_S_IN_US);
+	Microseconds = Error / HostClockFrequency;
+	Error -= (Microseconds * HostClockFrequency);
+
+	UnaccountedMicroseconds += Microseconds;
+	IncrementScaling = (unsigned int)(UnaccountedMicroseconds / 1000); // -> 1 ms = 1000us -> time between two xbox clock interrupts
+	UnaccountedMicroseconds -= (IncrementScaling * 1000);
+
+	xboxkrnl::KiClockIsr(IncrementScaling);
+}
+
 std::vector<xbaddr> g_RdtscPatches;
 
 #define OPCODE_PATCH_RDTSC 0x90EF  // OUT DX, EAX; NOP
@@ -1208,9 +1243,6 @@ void CxbxKrnlMain(int argc, char* argv[])
 		// Restore enough of the executable image headers to keep WinAPI's working :
 		RestoreExeImageHeader();
 	}
-		
-	// Before readout, make sure our kernel thunk table references the Windows host timer addresses :
-	ConnectWindowsTimersToThunkTable();
 
 	// Decode kernel thunk table address :
 	uint32_t kt = CxbxKrnl_Xbe->m_Header.dwKernelImageThunkAddr;
@@ -1307,11 +1339,12 @@ __declspec(noreturn) void CxbxKrnlInit
 	CxbxKrnl_XbeHeader->dwCertificateAddr = (uint32)&CxbxKrnl_Xbe->m_Certificate;
 	g_pCertificate = &CxbxKrnl_Xbe->m_Certificate;
 
+	// Initialize timer subsystem
+	Timer_Init();
 	// for unicode conversions
 	setlocale(LC_ALL, "English");
 	// Initialize time-related variables for the kernel and the timers
 	CxbxInitPerformanceCounters();
-	Timer_Init();
 #ifdef _DEBUG
 //	CxbxPopupMessage(LOG_LEVEL::INFO, "Attach a Debugger");
 //  Debug child processes using https://marketplace.visualstudio.com/items?itemName=GreggMiskelly.MicrosoftChildProcessDebuggingPowerTool
@@ -1544,10 +1577,6 @@ __declspec(noreturn) void CxbxKrnlInit
 	// Read Xbox video mode from the SMC, store it in HalBootSMCVideoMode
 	xboxkrnl::HalReadSMBusValue(SMBUS_ADDRESS_SYSTEM_MICRO_CONTROLLER, SMC_COMMAND_AV_PACK, FALSE, &xboxkrnl::HalBootSMCVideoMode);
 
-	// TODO: move much of this stuff to xboxkrnl::init();
-	extern xboxkrnl::LIST_ENTRY KiWaitInListHead;
-	InitializeListHead(&KiWaitInListHead);
-
 	if (bLLE_USB) {
 #if 0 // Reenable this when LLE USB actually works
 		int ret;
@@ -1598,11 +1627,15 @@ __declspec(noreturn) void CxbxKrnlInit
 
 	InitXboxThread(g_CPUXbox);
 	xboxkrnl::ObInitSystem();
+	xboxkrnl::KiInitSystem();
 
 	EmuX86_Init();
 	// Create the interrupt processing thread
 	DWORD dwThreadId;
 	HANDLE hThread = (HANDLE)_beginthreadex(NULL, NULL, CxbxKrnlInterruptThread, NULL, NULL, (uint*)&dwThreadId);
+	// Start the kernel clock thread
+	TimerObject* KernelClockThr = Timer_Create(CxbxKrnlClockThread, nullptr, "Kernel clock thread", &g_CPUOthers);
+	Timer_Start(KernelClockThr, SCALE_MS_IN_NS);
 
 	DBG_PRINTF_EX(LOG_PREFIX_INIT, "Calling XBE entry point...\n");
 	CxbxLaunchXbe(Entry);
