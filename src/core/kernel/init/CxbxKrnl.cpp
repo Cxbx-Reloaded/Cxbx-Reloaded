@@ -1389,7 +1389,7 @@ __declspec(noreturn) void CxbxKrnlInit
 		g_EmuShared->GetFlagsLLE(&CxbxLLE_Flags);
 		bLLE_APU = (CxbxLLE_Flags & LLE_APU) > 0;
 		bLLE_GPU = (CxbxLLE_Flags & LLE_GPU) > 0;
-		//bLLE_USB = (CxbxLLE_Flags & LLE_USB) > 0; // Reenable this when LLE USB actually works
+		bLLE_USB = (CxbxLLE_Flags & LLE_USB) > 0; // Reenable this when LLE USB actually works
 		bLLE_JIT = (CxbxLLE_Flags & LLE_JIT) > 0;
 	}
 
@@ -1569,7 +1569,7 @@ __declspec(noreturn) void CxbxKrnlInit
 	xboxkrnl::HalReadSMBusValue(SMBUS_ADDRESS_SYSTEM_MICRO_CONTROLLER, SMC_COMMAND_AV_PACK, FALSE, &xboxkrnl::HalBootSMCVideoMode);
 
 	if (bLLE_USB) {
-#if 0 // Reenable this when LLE USB actually works
+#if 1 // Reenable this when LLE USB actually works
 		int ret;
 		g_InputDeviceManager = new InputDeviceManager;
 		ret = g_InputDeviceManager->EnumSdl2Devices();

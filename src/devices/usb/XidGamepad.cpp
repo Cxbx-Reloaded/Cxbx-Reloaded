@@ -346,7 +346,7 @@ void XidGamepad::UsbXid_HandleControl(XboxDeviceState* dev, USBPacket* p,
 			// If the buffer has the correct length the full input data is transferred."
 			if (value == 0x0100) {
 				if (length <= m_XidState->in_state.bLength) {
-#if 0 // Reenable this when LLE USB actually works
+#if 1 // Reenable this when LLE USB actually works
 					SDL2Devices* controller = g_InputDeviceManager->FindDeviceFromXboxPort(m_Port);
 					if (controller != nullptr) {
 						controller->ReadButtonState(&m_XidState->in_state.wButtons, m_XidState->in_state.bAnalogButtons,
@@ -475,7 +475,7 @@ void XidGamepad::UsbXid_HandleData(XboxDeviceState* dev, USBPacket* p)
 	switch (p->Pid) {
 	case USB_TOKEN_IN: {
 		if (p->Endpoint->Num == 2) {
-#if 0 // Reenable this when LLE USB actually works
+#if 1 // Reenable this when LLE USB actually works
 			SDL2Devices* controller = g_InputDeviceManager->FindDeviceFromXboxPort(m_Port);
 			if (controller != nullptr) {
 				bool ret;
@@ -489,7 +489,7 @@ void XidGamepad::UsbXid_HandleData(XboxDeviceState* dev, USBPacket* p)
 #endif
 					p->Status = USB_RET_NAK;
 				}
-#if 0 // Reenable this when LLE USB actually works
+#if 1 // Reenable this when LLE USB actually works
 			}
 			else {
 				p->Status = USB_RET_STALL;
