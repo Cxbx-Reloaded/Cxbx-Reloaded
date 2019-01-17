@@ -60,6 +60,7 @@ namespace xboxkrnl
 #include "core\hle\Intercept.hpp" // for bLLE_GPU
 #include "devices\video\nv2a.h" // For GET_MASK, NV_PGRAPH_CONTROL_0
 #include "gui\ResCxbx.h"
+#include "WalkIndexBuffer.h"
 
 #include <assert.h>
 #include <process.h>
@@ -7063,22 +7064,6 @@ void CxbxDrawIndexedClosingLineUP(XTL::INDEX16 LowIndex, XTL::INDEX16 HighIndex,
 	g_dwPrimPerFrame++;
 }
 
-// TODO : Move to own file
-//Walk through index buffer
-void WalkIndexBuffer(XTL::INDEX16 &LowIndex, XTL::INDEX16 &HighIndex, XTL::INDEX16 *pIndexData, DWORD dwIndexCount)
-{
-	// Determine highest and lowest index in use 
-	LowIndex = pIndexData[0];
-	HighIndex = LowIndex;
-	for (uint i = 1; i < dwIndexCount; i++) {
-		XTL::INDEX16 Index = pIndexData[i];
-		if (LowIndex > Index)
-			LowIndex = Index;
-		if (HighIndex < Index)
-			HighIndex = Index;
-	}
-}
-
 // Requires assigned pIndexData
 // Called by D3DDevice_DrawIndexedVertices and EmuExecutePushBufferRaw (twice)
 void XTL::CxbxDrawIndexed(CxbxDrawContext &DrawContext)
@@ -7096,7 +7081,7 @@ void XTL::CxbxDrawIndexed(CxbxDrawContext &DrawContext)
 	//Walk through index buffer
 	// Determine highest and lowest index in use :
 	INDEX16 LowIndex, HighIndex;
-	WalkIndexBuffer(LowIndex, HighIndex, &(DrawContext.pIndexData[DrawContext.dwStartVertex]), DrawContext.dwVertexCount);
+	WalkIndexBuffer_SIMD(LowIndex, HighIndex, &(DrawContext.pIndexData[DrawContext.dwStartVertex]), DrawContext.dwVertexCount);
 	VertexBufferConverter.Apply(&DrawContext, LowIndex);
 
 	if (DrawContext.XboxPrimitiveType == X_D3DPT_QUADLIST) {
@@ -7605,7 +7590,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVerticesUP)
 		else {
 			// Walk through the index buffer
 			INDEX16 LowIndex, HighIndex;
-			WalkIndexBuffer(LowIndex, HighIndex, (INDEX16*)pIndexData, DrawContext.dwVertexCount);
+			WalkIndexBuffer_SIMD(LowIndex, HighIndex, (INDEX16*)pIndexData, DrawContext.dwVertexCount);
 
 			// LOG_TEST_CASE("DrawIndexedPrimitiveUP"); // Test-case : Burnout, Namco Museum 50th Anniversary
 			HRESULT hRet = g_pD3DDevice->DrawIndexedPrimitiveUP(

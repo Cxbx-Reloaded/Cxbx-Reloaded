@@ -629,6 +629,9 @@
     <ClCompile Include="..\..\src\common\crypto\EmuDes.cpp">
       <Filter>Emulator</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\core\HLE\D3D8\Direct3D9\WalkIndexBuffer.cpp">
+      <Filter>core\HLE\D3D8\Direct3D9</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\src\common\Timer.cpp">
       <Filter>Emulator</Filter>
     </ClCompile>
@@ -807,6 +810,14 @@
   <ItemGroup>
     <Image Include="..\..\resource\Cxbx-R.ico" />
     <Image Include="..\..\resource\Logo-License-CC4.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\src\core\HLE\D3D8\Direct3D9\WalkIndexBuffer.h">
+      <Filter>core\HLE\D3D8\Direct3D9</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\common\util\CPUID.h">
+      <Filter>Cross Platform</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\devices\video\nv2a_regs.h">

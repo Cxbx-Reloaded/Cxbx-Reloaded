@@ -200,6 +200,7 @@
   <ItemGroup>
     <ClInclude Include="..\..\src\common\crypto\EmuDes.h" />
     <ClInclude Include="..\..\src\common\Timer.h" />
+    <ClInclude Include="..\..\src\common\util\CPUID.h" />
     <ClInclude Include="..\..\src\common\util\CxbxUtil.h" />
     <ClInclude Include="..\..\src\common\input\InputConfig.h" />
     <ClInclude Include="..\..\src\common\input\SDL2_Device.h" />
@@ -211,6 +212,7 @@
     <ClInclude Include="..\..\src\common\XADPCM.h" />
     <ClInclude Include="..\..\src\common\xbe\XbePrinter.h" />
     <ClInclude Include="..\..\src\common\util\crc32c.h" />
+    <ClInclude Include="..\..\src\core\HLE\D3D8\Direct3D9\WalkIndexBuffer.h" />
     <ClInclude Include="..\..\src\core\HLE\D3D8\XbD3D8Logging.h" />
     <ClInclude Include="..\..\src\common\EmuEEPROM.h" />
     <ClInclude Include="..\..\src\common\Logging.h" />
@@ -356,6 +358,7 @@
     <ClCompile Include="..\..\src\common\CxbxDebugger.cpp" />
     <ClCompile Include="..\..\src\common\win32\XBPortMapping.cpp" />
     <ClCompile Include="..\..\src\common\xbe\XbePrinter.cpp" />
+    <ClCompile Include="..\..\src\core\HLE\D3D8\Direct3D9\WalkIndexBuffer.cpp" />
     <ClCompile Include="..\..\src\common\util\crc32c.cpp" />
     <ClCompile Include="..\..\src\core\hle\D3D8\XbD3D8Logging.cpp" />
     <ClCompile Include="..\..\src\common\EmuEEPROM.cpp" />
