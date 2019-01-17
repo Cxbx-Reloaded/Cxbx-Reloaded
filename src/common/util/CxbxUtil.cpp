@@ -140,34 +140,90 @@ size_t IoVecFromBuffer(const IoVec* iov, unsigned int iov_cnt, size_t offset, vo
 }
 
 // Read an array of DWORDs in memory
-void GetDwords(xbaddr Paddr, uint32_t* Buffer, int Number)
+bool GetDwords(xbaddr Paddr, uint32_t* Buffer, int Number)
 {
 	for (int i = 0; i < Number; i++, Buffer++, Paddr += sizeof(*Buffer)) {
-		std::memcpy(Buffer, reinterpret_cast<void*>(Paddr), 4); // dropped little -> big endian conversion from XQEMU
+		// dropped little -> big endian conversion from XQEMU
+		if (Memory_R(reinterpret_cast<void*>(Paddr), Buffer, 4)) {
+			return true;
+		}
 	}
+	return false;
 }
 
 // Write an array of DWORDs in memory
-void WriteDwords(xbaddr Paddr, uint32_t* Buffer, int Number)
+bool WriteDwords(xbaddr Paddr, uint32_t* Buffer, int Number)
 {
 	for (int i = 0; i < Number; i++, Buffer++, Paddr += sizeof(*Buffer)) {
-		std::memcpy(reinterpret_cast<void*>(Paddr), Buffer, 4); // dropped big -> little endian conversion from XQEMU
+		// dropped big -> little endian conversion from XQEMU
+		if (Memory_W(reinterpret_cast<void*>(Paddr), Buffer, 4)) {
+			return true;
+		}
 	}
+	return false;
 }
 
 // Read an array of WORDs in memory
-void GetWords(xbaddr Paddr, uint16_t* Buffer, int Number)
+bool GetWords(xbaddr Paddr, uint16_t* Buffer, int Number)
 {
 	for (int i = 0; i < Number; i++, Buffer++, Paddr += sizeof(*Buffer)) {
-		std::memcpy(Buffer, reinterpret_cast<void*>(Paddr), 2); // dropped little -> big endian conversion from XQEMU
+		// dropped little -> big endian conversion from XQEMU
+		if (Memory_R(reinterpret_cast<void*>(Paddr), Buffer, 2)) {
+			return true;
+		}
 	}
+	return false;
 }
 
 // Write an array of WORDs in memory
-void WriteWords(xbaddr Paddr, uint16_t* Buffer, int Number)
+bool WriteWords(xbaddr Paddr, uint16_t* Buffer, int Number)
 {
 	for (int i = 0; i < Number; i++, Buffer++, Paddr += sizeof(*Buffer)) {
-		std::memcpy(reinterpret_cast<void*>(Paddr), Buffer, 2); // dropped big -> little endian conversion from XQEMU
+		// dropped big -> little endian conversion from XQEMU
+		if (Memory_W(reinterpret_cast<void*>(Paddr), Buffer, 2)) {
+			return true;
+		}
+	}
+	return false;
+}
+
+bool Memory_R(void* Addr, void* Buf, size_t Num)
+{
+	bool Error = false;
+
+	if (Num != 0) {
+		if (Addr == nullptr) {
+			Error = true;
+		}
+		else {
+			std::memcpy(Buf, Addr, Num);
+		}
+	}
+	return Error;
+}
+
+bool Memory_W(void* Addr, void* Buf, size_t Num)
+{
+	bool Error = false;
+
+	if (Num != 0) {
+		if (Addr == nullptr) {
+			Error = true;
+		}
+		else {
+			std::memcpy(Addr, Buf, Num);
+		}
+	}
+	return Error;
+}
+
+bool Memory_RW(void* Addr, void* Buf, size_t Num, bool bIsWrite)
+{
+	if (bIsWrite) {
+		return Memory_W(Addr, Buf, Num);
+	}
+	else {
+		return Memory_R(Addr, Buf, Num);
 	}
 }
 

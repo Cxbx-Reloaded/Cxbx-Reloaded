@@ -83,7 +83,7 @@ static const char* OHCI_RegNames[] = {
 /* Define these two if you want to dump usb packets and OHCI registers */
 //#define DEBUG_ISOCH
 //#define DEBUG_PACKET
-#define DEBUG_OHCI_REG
+//#define DEBUG_OHCI_REG
 
 #ifdef DEBUG_OHCI_REG
 #define DUMP_REG_R(reg_val) DBG_PRINTF("%s, R, reg_val: 0x%X\n", OHCI_RegNames[Addr >> 2], reg_val)
@@ -386,87 +386,49 @@ bool OHCI::OHCI_ReadHCCA(xbaddr Paddr, OHCI_HCCA* Hcca)
 
 	// NOTE: this shared memory contains the HCCA + EDs and TDs
 
-	if (Paddr != xbnull) {
-		std::memcpy(Hcca, reinterpret_cast<void*>(Paddr), sizeof(OHCI_HCCA));
-		return false;
-	}
-
-	return true; // error
+	return Memory_R(reinterpret_cast<void*>(Paddr), Hcca, sizeof(OHCI_HCCA));
 }
 
 bool OHCI::OHCI_WriteHCCA(xbaddr Paddr, OHCI_HCCA* Hcca)
 {
-	if (Paddr != xbnull) {
-		// We need to calculate the offset of the HccaFrameNumber member to avoid overwriting HccaInterrruptTable
-		size_t OffsetOfFrameNumber = offsetof(OHCI_HCCA, HccaFrameNumber);
-
-		std::memcpy(reinterpret_cast<void*>(Paddr + OffsetOfFrameNumber),
-			reinterpret_cast<uint8_t*>(Hcca) + OffsetOfFrameNumber, 8);
-		return false;
-	}
-
-	return true; // error
+	// We need to calculate the offset of the HccaFrameNumber member to avoid overwriting HccaInterrruptTable
+	size_t OffsetOfFrameNumber = offsetof(OHCI_HCCA, HccaFrameNumber);
+	return Memory_W(reinterpret_cast<void*>(Paddr + OffsetOfFrameNumber), reinterpret_cast<uint8_t*>(Hcca) + OffsetOfFrameNumber, 8);
 }
 
 bool OHCI::OHCI_ReadED(xbaddr Paddr, OHCI_ED* Ed)
 {
-	if (Paddr != xbnull) {
-		GetDwords(Paddr, reinterpret_cast<uint32_t*>(Ed), sizeof(*Ed) >> 2); // ED is 16 bytes large
-		return false;
-	}
-	return true; // error
+	return GetDwords(Paddr, reinterpret_cast<uint32_t*>(Ed), sizeof(*Ed) >> 2); // ED is 16 bytes large
 }
 
 bool OHCI::OHCI_WriteED(xbaddr Paddr, OHCI_ED* Ed)
 {
-	if (Paddr != xbnull) {
-		// According to the standard, only the HeadP field is writable by the HC, so we'll write just that
-		size_t OffsetOfHeadP = offsetof(OHCI_ED, HeadP);
-		WriteDwords(Paddr + OffsetOfHeadP, reinterpret_cast<uint32_t*>(reinterpret_cast<uint8_t*>(Ed) + OffsetOfHeadP), 1);
-		return false;
-	}
-	return true; // error
+	// According to the standard, only the HeadP field is writable by the HC, so we'll write just that
+	size_t OffsetOfHeadP = offsetof(OHCI_ED, HeadP);
+	return WriteDwords(Paddr + OffsetOfHeadP, reinterpret_cast<uint32_t*>(reinterpret_cast<uint8_t*>(Ed) + OffsetOfHeadP), 1);
 }
 
 bool OHCI::OHCI_ReadTD(xbaddr Paddr, OHCI_TD* Td)
 {
-	if (Paddr != xbnull) {
-		GetDwords(Paddr, reinterpret_cast<uint32_t*>(Td), sizeof(*Td) >> 2); // TD is 16 bytes large
-		return false;
-	}
-	return true; // error
+	return GetDwords(Paddr, reinterpret_cast<uint32_t*>(Td), sizeof(*Td) >> 2); // TD is 16 bytes large
 }
 
 bool OHCI::OHCI_WriteTD(xbaddr Paddr, OHCI_TD* Td)
 {
-	if (Paddr != xbnull) {
-		WriteDwords(Paddr, reinterpret_cast<uint32_t*>(Td), sizeof(*Td) >> 2);
-		return false;
-	}
-	return true; // error
+	return WriteDwords(Paddr, reinterpret_cast<uint32_t*>(Td), sizeof(*Td) >> 2);
 }
 
 bool OHCI::OHCI_ReadIsoTD(xbaddr Paddr, OHCI_ISO_TD* td)
 {
-	if (Paddr != xbnull) {
-		GetDwords(Paddr, reinterpret_cast<uint32_t*>(td), 4);
-		GetWords(Paddr + 16, td->Offset, 8);
-		return false;
-	}
-	return true; // error
+	return GetDwords(Paddr, reinterpret_cast<uint32_t*>(td), 4) || GetWords(Paddr + 16, td->Offset, 8);
 }
 
 bool OHCI::OHCI_WriteIsoTD(xbaddr Paddr, OHCI_ISO_TD* td)
 {
-	if (Paddr != xbnull) {
-		WriteDwords(Paddr, reinterpret_cast<uint32_t*>(td), 4);
-		WriteWords(Paddr + 16, td->Offset, 8);
-		return false;
-	}
-	return true; // error
+	return WriteDwords(Paddr, reinterpret_cast<uint32_t*>(td), 4) || WriteWords(Paddr + 16, td->Offset, 8);
 }
 
-bool OHCI::OHCI_CopyTD(OHCI_TD* Td, uint8_t* Buffer, int Length, bool bIsWrite)
+bool OHCI::OHCI_CopyTDBuffer(OHCI_TD* Td, uint8_t* Buffer, int Length, bool bIsWrite)
 {
 	uint32_t ptr, n;
 
@@ -477,7 +439,7 @@ bool OHCI::OHCI_CopyTD(OHCI_TD* Td, uint8_t* Buffer, int Length, bool bIsWrite)
 		n = Length;
 	}
 
-	if (OHCI_FindAndCopyTD(ptr, Buffer, n, bIsWrite)) {
+	if (Memory_RW(reinterpret_cast<void*>(ptr), Buffer, n, bIsWrite)) {
 		return true; // error
 	}
 	if (n == Length) {
@@ -490,13 +452,13 @@ bool OHCI::OHCI_CopyTD(OHCI_TD* Td, uint8_t* Buffer, int Length, bool bIsWrite)
 	// same 4K page that contains the last byte of the buffer."
 	ptr = Td->BufferEnd & ~0xFFFu;
 	Buffer += n;
-	if (OHCI_FindAndCopyTD(ptr, Buffer, Length - n, bIsWrite)) {
+	if (Memory_RW(reinterpret_cast<void*>(ptr), Buffer, Length - n, bIsWrite)) {
 		return true; // error
 	}
 	return false;
 }
 
-bool OHCI::OHCI_CopyIsoTD(uint32_t start_addr, uint32_t end_addr, uint8_t* Buffer, int Length, bool bIsWrite)
+bool OHCI::OHCI_CopyIsoTDBuffer(uint32_t start_addr, uint32_t end_addr, uint8_t* Buffer, int Length, bool bIsWrite)
 {
 	uint32_t ptr, n;
 
@@ -506,7 +468,7 @@ bool OHCI::OHCI_CopyIsoTD(uint32_t start_addr, uint32_t end_addr, uint8_t* Buffe
 		n = Length;
 	}
 
-	if (OHCI_FindAndCopyTD(ptr, Buffer, n, bIsWrite)) {
+	if (Memory_RW(reinterpret_cast<void*>(ptr), Buffer, n, bIsWrite)) {
 		return true; // error
 	}
 	if (n == Length) {
@@ -514,25 +476,9 @@ bool OHCI::OHCI_CopyIsoTD(uint32_t start_addr, uint32_t end_addr, uint8_t* Buffe
 	}
 	ptr = end_addr & ~0xFFFu;
 	Buffer += n;
-	if (OHCI_FindAndCopyTD(ptr, Buffer, Length - n, bIsWrite)) {
+	if (Memory_RW(reinterpret_cast<void*>(ptr), Buffer, Length - n, bIsWrite)) {
 		return true; // error
 	}
-	return false;
-}
-
-bool OHCI::OHCI_FindAndCopyTD(xbaddr Paddr, uint8_t* Buffer, int Length, bool bIsWrite)
-{
-	if (Paddr == xbnull) {
-		return true; // error
-	}
-
-	if (bIsWrite) {
-		std::memcpy(reinterpret_cast<void*>(Paddr), Buffer, Length);
-	}
-	else {
-		std::memcpy(Buffer, reinterpret_cast<void*>(Paddr), Length);
-	}
-
 	return false;
 }
 
@@ -705,7 +651,7 @@ int OHCI::OHCI_ServiceTD(OHCI_ED* Ed)
 				packetlen = length;
 			}
 			if (!completion) {
-				if (OHCI_CopyTD(&td, m_UsbBuffer, packetlen, false)) {
+				if (OHCI_CopyTDBuffer(&td, m_UsbBuffer, packetlen, false)) {
 					OHCI_FatalError();
 				}
 			}
@@ -760,7 +706,7 @@ int OHCI::OHCI_ServiceTD(OHCI_ED* Ed)
 
 	if (ret >= 0) {
 		if (direction == OHCI_TD_DIR_IN) {
-			if (OHCI_CopyTD(&td, m_UsbBuffer, ret, true)) {
+			if (OHCI_CopyTDBuffer(&td, m_UsbBuffer, ret, true)) {
 				OHCI_FatalError();
 			}
 #ifdef DEBUG_PACKET
@@ -1790,7 +1736,7 @@ int OHCI::OHCI_ServiceIsoTD(OHCI_ED* ed, int completion)
 	}
 
 	if (len && dir != OHCI_TD_DIR_IN) {
-		if (OHCI_CopyIsoTD(start_addr, end_addr, m_UsbBuffer, len, false)) {
+		if (OHCI_CopyIsoTDBuffer(start_addr, end_addr, m_UsbBuffer, len, false)) {
 			OHCI_FatalError();
 			return 1;
 		}
@@ -1827,7 +1773,7 @@ int OHCI::OHCI_ServiceIsoTD(OHCI_ED* ed, int completion)
 	// Writeback
 	if (dir == OHCI_TD_DIR_IN && ret >= 0 && ret <= len) {
 		// IN transfer succeeded
-		if (OHCI_CopyIsoTD(start_addr, end_addr, m_UsbBuffer, ret, true)) {
+		if (OHCI_CopyIsoTDBuffer(start_addr, end_addr, m_UsbBuffer, ret, true)) {
 			OHCI_FatalError();
 			return 1;
 		}

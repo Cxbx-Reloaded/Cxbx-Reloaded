@@ -63,10 +63,13 @@ void IoVecAdd(IOVector* qiov, void* base, size_t len);
 size_t IoVecTobuffer(const IoVec* iov, const unsigned int iov_cnt, size_t offset, void *buf, size_t bytes);
 size_t IoVecFromBuffer(const IoVec* iov, unsigned int iov_cnt, size_t offset, void* buf, size_t bytes);
 
-void WriteDwords(xbaddr Paddr, uint32_t* Buffer, int Number);
-void GetDwords(xbaddr Paddr, uint32_t* Buffer, int Number);
-void GetWords(xbaddr Paddr, uint16_t* Buffer, int Number);
-void WriteWords(xbaddr Paddr, uint16_t* Buffer, int Number);
+bool WriteDwords(xbaddr Paddr, uint32_t* Buffer, int Number);
+bool GetDwords(xbaddr Paddr, uint32_t* Buffer, int Number);
+bool GetWords(xbaddr Paddr, uint16_t* Buffer, int Number);
+bool WriteWords(xbaddr Paddr, uint16_t* Buffer, int Number);
+bool Memory_R(void* Addr, void* Buf, size_t Num);
+bool Memory_W(void* Addr, void* Buf, size_t Num);
+bool Memory_RW(void* Addr, void* Buf, size_t Num, bool bIsWrite);
 
 void unix2dos(std::string& string);
 

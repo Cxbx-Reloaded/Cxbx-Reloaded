@@ -234,11 +234,9 @@ class OHCI
 		// write an iso TD in memory
 		bool OHCI_WriteIsoTD(xbaddr Paddr, OHCI_ISO_TD* td);
 		// read/write the user buffer pointed to by a TD from/to main memory
-		bool OHCI_CopyTD(OHCI_TD* Td, uint8_t* Buffer, int Length, bool bIsWrite);
+		bool OHCI_CopyTDBuffer(OHCI_TD* Td, uint8_t* Buffer, int Length, bool bIsWrite);
 		// read/write the user buffer pointed to by a ISO TD from/to main memory
-		bool OHCI_CopyIsoTD(uint32_t start_addr, uint32_t end_addr, uint8_t* Buffer, int Length, bool bIsWrite);
-		// find a TD buffer in memory and copy it
-		bool OHCI_FindAndCopyTD(xbaddr Paddr, uint8_t* Buffer, int Length, bool bIsWrite);
+		bool OHCI_CopyIsoTDBuffer(uint32_t start_addr, uint32_t end_addr, uint8_t* Buffer, int Length, bool bIsWrite);
 		// process an ED list. Returns nonzero if active TD was found
 		int OHCI_ServiceEDlist(xbaddr Head, int Completion);
 		// process a TD. Returns nonzero to terminate processing of this endpoint
