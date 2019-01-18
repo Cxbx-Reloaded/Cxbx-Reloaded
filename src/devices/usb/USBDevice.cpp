@@ -57,7 +57,6 @@ namespace xboxkrnl
 #define SETUP_STATE_SETUP   1
 #define SETUP_STATE_DATA    2
 #define SETUP_STATE_ACK     3
-#define SETUP_STATE_PARAM   4
 
 
 void USBDevice::Init()
@@ -196,18 +195,16 @@ USBEndpoint* USBDevice::USB_GetEP(XboxDeviceState* Dev, int Pid, int Ep)
 	return eps + Ep - 1;
 }
 
-void USBDevice::USB_PacketSetup(USBPacket* p, int Pid, USBEndpoint* Ep, unsigned int Stream,
-	uint64_t Id, bool ShortNotOK, bool IntReq)
+void USBDevice::USB_PacketSetup(USBPacket* p, int Pid, USBEndpoint* Ep, uint64_t Id,
+	bool ShortNotOK, bool IntReq)
 {
 	assert(!USB_IsPacketInflight(p));
 	assert(p->IoVec.IoVecStruct != nullptr);
 	p->Id = Id;
 	p->Pid = Pid;
 	p->Endpoint = Ep;
-	p->Stream = Stream;
 	p->Status = USB_RET_SUCCESS;
 	p->ActualLength = 0;
-	p->Parameter = 0ULL;
 	p->ShortNotOK = ShortNotOK;
 	p->IntReq = IntReq;
 	IoVecReset(&p->IoVec);
@@ -241,7 +238,7 @@ void USBDevice::USB_HandlePacket(XboxDeviceState* dev, USBPacket* p)
 		p->Endpoint->Halted = false;
 	}
 
-	if (QTAILQ_EMPTY(&p->Endpoint->Queue) || p->Endpoint->Pipeline || p->Stream) {
+	if (QTAILQ_EMPTY(&p->Endpoint->Queue)) {
 		USB_ProcessOne(p);
 		if (p->Status == USB_RET_ASYNC) {
 			// hcd drivers cannot handle async for isoc
@@ -257,8 +254,7 @@ void USBDevice::USB_HandlePacket(XboxDeviceState* dev, USBPacket* p)
 		else {
 			// When pipelining is enabled usb-devices must always return async,
 			// otherwise packets can complete out of order!
-			assert(p->Stream || !p->Endpoint->Pipeline ||
-				QTAILQ_EMPTY(&p->Endpoint->Queue));
+			assert(QTAILQ_EMPTY(&p->Endpoint->Queue));
 			if (p->Status != USB_RET_NAK) {
 				p->State = USB_PACKET_COMPLETE;
 			}
@@ -298,10 +294,6 @@ void USBDevice::USB_ProcessOne(USBPacket* p)
 	if (p->Endpoint->Num == 0) {
 		// Info: All devices must support endpoint zero. This is the endpoint which receives all of the devices control 
 		// and status requests during enumeration and throughout the duration while the device is operational on the bus
-		if (p->Parameter) {
-			USB_DoParameter(dev, p);
-			return;
-		}
 		switch (p->Pid) {
 			case USB_TOKEN_SETUP: {
 				USB_DoTokenSetup(dev, p);
@@ -325,46 +317,6 @@ void USBDevice::USB_ProcessOne(USBPacket* p)
 	else {
 		// data pipe
 		USB_DeviceHandleData(dev, p);
-	}
-}
-
-void USBDevice::USB_DoParameter(XboxDeviceState* s, USBPacket* p)
-{
-	int i, request, value, index;
-
-	for (i = 0; i < 8; i++) {
-		s->SetupBuffer[i] = p->Parameter >> (i * 8);
-	}
-
-	s->SetupState = SETUP_STATE_PARAM;
-	s->SetupLength = (s->SetupBuffer[7] << 8) | s->SetupBuffer[6];
-	s->SetupIndex = 0;
-
-	request = (s->SetupBuffer[0] << 8) | s->SetupBuffer[1];
-	value = (s->SetupBuffer[3] << 8) | s->SetupBuffer[2];
-	index = (s->SetupBuffer[5] << 8) | s->SetupBuffer[4];
-
-	if (s->SetupLength > sizeof(s->DataBuffer)) {
-		DBG_PRINTF("ctrl buffer too small (%d > %zu)\n", s->SetupLength, sizeof(s->DataBuffer));
-		p->Status = USB_RET_STALL;
-		return;
-	}
-
-	if (p->Pid == USB_TOKEN_OUT) {
-		USB_PacketCopy(p, s->DataBuffer, s->SetupLength);
-	}
-
-	USB_DeviceHandleControl(s, p, request, value, index, s->SetupLength, s->DataBuffer);
-	if (p->Status == USB_RET_ASYNC) {
-		return;
-	}
-
-	if (p->ActualLength < s->SetupLength) {
-		s->SetupLength = p->ActualLength;
-	}
-	if (p->Pid == USB_TOKEN_IN) {
-		p->ActualLength = 0;
-		USB_PacketCopy(p, s->DataBuffer, s->SetupLength);
 	}
 }
 
@@ -700,12 +652,9 @@ void USBDevice::USB_EpReset(XboxDeviceState* dev)
 	dev->EP_ctl.IfNum = 0;
 	dev->EP_ctl.MaxPacketSize = 64;
 	dev->EP_ctl.Dev = dev;
-	dev->EP_ctl.Pipeline = false;
 	for (int ep = 0; ep < USB_MAX_ENDPOINTS; ep++) {
 		dev->EP_in[ep].Num = ep + 1;
 		dev->EP_out[ep].Num = ep + 1;
-		dev->EP_in[ep].pid = USB_TOKEN_IN;
-		dev->EP_out[ep].pid = USB_TOKEN_OUT;
 		dev->EP_in[ep].Type = USB_ENDPOINT_XFER_INVALID;
 		dev->EP_out[ep].Type = USB_ENDPOINT_XFER_INVALID;
 		dev->EP_in[ep].IfNum = USB_INTERFACE_INVALID;
@@ -714,8 +663,6 @@ void USBDevice::USB_EpReset(XboxDeviceState* dev)
 		dev->EP_out[ep].MaxPacketSize = 0;
 		dev->EP_in[ep].Dev = dev;
 		dev->EP_out[ep].Dev = dev;
-		dev->EP_in[ep].Pipeline = false;
-		dev->EP_out[ep].Pipeline = false;
 	}
 }
 

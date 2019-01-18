@@ -685,7 +685,7 @@ int OHCI::OHCI_ServiceTD(OHCI_ED* Ed)
 		}
 		dev = OHCI_FindDevice(OHCI_BM(Ed->Flags, ED_FA));
 		ep = m_UsbDevice->USB_GetEP(dev, pid, OHCI_BM(Ed->Flags, ED_EN));
-		m_UsbDevice->USB_PacketSetup(&m_UsbPacket, pid, ep, 0, addr, !flag_r, OHCI_BM(td.Flags, TD_DI) == 0);
+		m_UsbDevice->USB_PacketSetup(&m_UsbPacket, pid, ep, addr, !flag_r, OHCI_BM(td.Flags, TD_DI) == 0);
 		m_UsbDevice->USB_PacketAddBuffer(&m_UsbPacket, m_UsbBuffer, packetlen);
 		m_UsbDevice->USB_HandlePacket(dev, &m_UsbPacket);
 #ifdef DEBUG_PACKET
@@ -1746,7 +1746,7 @@ int OHCI::OHCI_ServiceIsoTD(OHCI_ED* ed, int completion)
 		bool int_req = relative_frame_number == frame_count && OHCI_BM(iso_td.Flags, TD_DI) == 0;
 		dev = OHCI_FindDevice(OHCI_BM(ed->Flags, ED_FA));
 		ep = m_UsbDevice->USB_GetEP(dev, pid, OHCI_BM(ed->Flags, ED_EN));
-		m_UsbDevice->USB_PacketSetup(&m_UsbPacket, pid, ep, 0, addr, false, int_req);
+		m_UsbDevice->USB_PacketSetup(&m_UsbPacket, pid, ep, addr, false, int_req);
 		m_UsbDevice->USB_PacketAddBuffer(&m_UsbPacket, m_UsbBuffer, len);
 		m_UsbDevice->USB_HandlePacket(dev, &m_UsbPacket);
 		if (m_UsbPacket.Status == USB_RET_ASYNC) {
