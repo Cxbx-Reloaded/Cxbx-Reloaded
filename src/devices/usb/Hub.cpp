@@ -401,7 +401,7 @@ void Hub::UsbHub_HandleControl(XboxDeviceState* dev, USBPacket* p,
 			XboxDeviceState* dev;
 
 			DBG_PRINTF("%s SetPortFeature -> Address 0x%X, wIndex %d, Feature %s\n",
-				__func__, m_HubState->dev.Addr, index, GetFeatureName(value));
+				__func__, m_HubState->dev.Addr, index, GetFeatureName(value).c_str());
 
 			if (n >= NUM_PORTS) {
 				goto fail;
@@ -439,7 +439,7 @@ void Hub::UsbHub_HandleControl(XboxDeviceState* dev, USBPacket* p,
 			USBHubPort *port;
 
 			DBG_PRINTF("%s ClearPortFeature -> Address 0x%X, wIndex %d, Feature %s\n",
-				__func__, m_HubState->dev.Addr, index, GetFeatureName(value));
+				__func__, m_HubState->dev.Addr, index, GetFeatureName(value).c_str());
 
 			if (n >= NUM_PORTS) {
 				goto fail;
