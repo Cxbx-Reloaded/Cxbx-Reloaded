@@ -51,6 +51,8 @@ static_assert(false, "Please implement support for cross-platform's user profile
 #include <QStandardPaths> // for cross-platform's user profile support
 #endif
 
+std::string g_exec_filepath;
+
 // NOTE: Update settings_version when add/edit/delete setting's structure.
 const uint settings_version = 3;
 
@@ -127,10 +129,9 @@ static struct {
 	const char* DirectHostBackBufferAccess = "DirectHostBackBufferAccess";
 } sect_hack_keys;
 
-std::string GenerateCurrentDirectoryStr()
+std::string GenerateExecDirectoryStr()
 {
-	// NOTE: There is no cross-platform support for getting file's current directory.
-	return std::experimental::filesystem::current_path().generic_string();
+	return g_exec_filepath.substr(0, g_exec_filepath.find_last_of("\\/"));
 }
 
 // NOTE: This function will be only have Qt support, std::experimental::filesystem doesn't have generic support.
@@ -192,13 +193,13 @@ bool Settings::Init()
 		std::string saveFile;
 #ifdef RETRO_API_VERSION // TODO: Change me to #ifndef QT_VERSION
 		// Can only have one option without Qt.
-		saveFile = GenerateCurrentDirectoryStr();
+		saveFile = GenerateExecDirectoryStr();
 
 #else // Only support for Qt compile build.
 		int iRet = MessageBox(nullptr, szSettings_save_user_option_message, "Cxbx-Reloaded", MB_YESNOCANCEL | MB_ICONQUESTION);
 
 		if (iRet == IDYES) {
-			saveFile = GenerateCurrentDirectoryStr();
+			saveFile = GenerateExecDirectoryStr();
 		}
 		else if (iRet == IDNO){
 			saveFile = GenerateUserProfileDirectoryStr();
@@ -238,7 +239,7 @@ bool Settings::Init()
 
 bool Settings::LoadUserConfig()
 {
-	std::string fileSearch = GenerateCurrentDirectoryStr();
+	std::string fileSearch = GenerateExecDirectoryStr();
 
 	fileSearch.append(szSettings_settings_file);
 
@@ -727,7 +728,7 @@ std::string Settings::GetDataLocation()
 		default:
 #ifdef RETRO_API_VERSION // TODO: Change me to #ifndef QT_VERSION
 
-			m_gui.DataStorageToggle = CXBX_DATA_CURDIR;
+			m_gui.DataStorageToggle = CXBX_DATA_EXECDIR;
 
 #else // Only support for Qt compile build.
 
@@ -739,8 +740,8 @@ std::string Settings::GetDataLocation()
 			break;
 #endif
 
-		case CXBX_DATA_CURDIR:
-			m_current_data_location = GenerateCurrentDirectoryStr();
+		case CXBX_DATA_EXECDIR:
+			m_current_data_location = GenerateExecDirectoryStr();
 			break;
 
 		case CXBX_DATA_CUSTOM:
