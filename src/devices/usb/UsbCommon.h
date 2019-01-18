@@ -34,7 +34,7 @@
 // *
 // ******************************************************************
 
-// Acknowledgment: some the functions present are from XQEMU (GPLv2)
+// Acknowledgment: some of the functions present are from XQEMU (GPLv2)
 // https://xqemu.com/
 
 #ifndef USBCOMMON_H_

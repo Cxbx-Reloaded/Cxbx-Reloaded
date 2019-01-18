@@ -312,7 +312,7 @@ int XidGamepad::UsbXid_Initfn(XboxDeviceState* dev)
 void XidGamepad::UsbXid_HandleDestroy()
 {
 	UsbXidReleasePort(&m_XidState->dev);
-	XidCleanUp();
+	XpadCleanUp();
 }
 
 void XidGamepad::UsbXid_Attach(XboxDeviceState* dev)
@@ -328,7 +328,7 @@ void XidGamepad::UsbXid_Attach(XboxDeviceState* dev)
 
 void XidGamepad::UsbXid_HandleReset()
 {
-	DBG_PRINTF("reset event\n");
+	DBG_PRINTF("Reset event\n");
 }
 
 void XidGamepad::UsbXid_HandleControl(XboxDeviceState* dev, USBPacket* p,
@@ -336,7 +336,7 @@ void XidGamepad::UsbXid_HandleControl(XboxDeviceState* dev, USBPacket* p,
 {
 	int ret = m_UsbDev->USBDesc_HandleControl(dev, p, request, value, index, length, data);
 	if (ret >= 0) {
-		DBG_PRINTF("handled by USBDesc_HandleControl, ret is %d\n", ret);
+		DBG_PRINTF("Handled by USBDesc_HandleControl, ret is %d\n", ret);
 		return;
 	}
 
@@ -346,7 +346,7 @@ void XidGamepad::UsbXid_HandleControl(XboxDeviceState* dev, USBPacket* p,
 			// From the HID standard: "The Get_Report request allows the host to receive a report via the Control pipe.
 			// The wValue field specifies the Report Type in the high byte and the Report ID in the low byte. Set Report ID
 			// to 0 (zero) if Report IDs are not used. 01 = input, 02 = output, 03 = feature, 04-FF = reserved"
-			DBG_PRINTF("GET_REPORT 0x%X\n", value);
+			DBG_PRINTF("GET_REPORT xpad request 0x%X\n", value);
 			// JayFoxRox's analysis: "This 0x0100 case is for input.
 			// This is the case where the Xbox wants to read input data from the controller.
 			// Confirmed with a real Duke controller :
@@ -387,7 +387,7 @@ void XidGamepad::UsbXid_HandleControl(XboxDeviceState* dev, USBPacket* p,
 			// setting the state of input, output, or feature controls. The meaning of the request fields for the Set_Report
 			// request is the same as for the Get_Report request, however the data direction is reversed and the Report
 			// Data is sent from host to device."
-			DBG_PRINTF("SET_REPORT 0x%X\n", value);
+			DBG_PRINTF("SET_REPORT xpad request 0x%X\n", value);
 			// JayFoxRox's analysis: "The 0x0200 case below is for output.
 			// This is the case where the Xbox wants to write rumble data to the controller.
 			// To my knowledge :
@@ -417,7 +417,7 @@ void XidGamepad::UsbXid_HandleControl(XboxDeviceState* dev, USBPacket* p,
 
 		// XID-specific requests
 		case VendorInterfaceRequest | USB_REQ_GET_DESCRIPTOR: {
-			DBG_PRINTF("GET_DESCRIPTOR 0x%x\n", value);
+			DBG_PRINTF("GET_DESCRIPTOR xpad request 0x%x\n", value);
 			if (value == 0x4200) {
 				assert(m_XidState->xid_desc->bLength <= length);
 				std::memcpy(data, m_XidState->xid_desc, m_XidState->xid_desc->bLength);
@@ -431,7 +431,7 @@ void XidGamepad::UsbXid_HandleControl(XboxDeviceState* dev, USBPacket* p,
 		}
 
 		case VendorInterfaceRequest | XID_GET_CAPABILITIES: {
-			DBG_PRINTF("XID_GET_CAPABILITIES 0x%x\n", value);
+			DBG_PRINTF("XID_GET_CAPABILITIES xpad request 0x%x\n", value);
 			if (value == 0x0100) {
 				if (length > m_XidState->in_state_capabilities.bLength) {
 					length = m_XidState->in_state_capabilities.bLength;
@@ -455,7 +455,7 @@ void XidGamepad::UsbXid_HandleControl(XboxDeviceState* dev, USBPacket* p,
 
 		case ((USB_DIR_IN | USB_TYPE_CLASS | USB_RECIP_DEVICE) << 8) | USB_REQ_GET_DESCRIPTOR: {
 			/* FIXME: ! */
-			DBG_PRINTF("unknown xpad request 0x%X: value = 0x%X\n", request, value);
+			DBG_PRINTF("Unknown xpad request 0x%X: value = 0x%X\n", request, value);
 			std::memset(data, 0x00, length);
 			//FIXME: Intended for the hub: usbd_get_hub_descriptor, UT_READ_CLASS?!
 			p->Status = USB_RET_STALL;
@@ -465,7 +465,7 @@ void XidGamepad::UsbXid_HandleControl(XboxDeviceState* dev, USBPacket* p,
 
 		case ((USB_DIR_OUT | USB_TYPE_STANDARD | USB_RECIP_ENDPOINT) << 8) | USB_REQ_CLEAR_FEATURE: {
 			/* FIXME: ! */
-			DBG_PRINTF("unknown xpad request 0x%X: value = 0x%X\n", request, value);
+			DBG_PRINTF("Unknown xpad request 0x%X: value = 0x%X\n", request, value);
 			std::memset(data, 0x00, length);
 			p->Status = USB_RET_STALL;
 			break;
@@ -530,7 +530,7 @@ void XidGamepad::UsbXid_HandleData(XboxDeviceState* dev, USBPacket* p)
 	}
 }
 
-void XidGamepad::XidCleanUp()
+void XidGamepad::XpadCleanUp()
 {
 	delete m_pPeripheralFuncStruct;
 	delete m_XidState;

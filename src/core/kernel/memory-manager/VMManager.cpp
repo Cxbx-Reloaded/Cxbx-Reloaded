@@ -2413,8 +2413,11 @@ PAddr VMManager::TranslateVAddrToPAddr(const VAddr addr)
 
 	Lock();
 
-	// ergo720: horrendous hack, this identity maps all allocations done by the VMManager to keep the LLE OHCI working
-	// (see OHCI_ReadHCCA for more details). Once LLE CPU and MMU are implemented, this can be removed
+	// ergo720: horrendous hack, this identity maps all allocations done by the VMManager to keep the LLE USB working.
+	// The problem is that if the user buffer pointed to by the TD is allocated by the VMManager with VirtualAlloc, then
+	// the physical allocation will not reside in memory.bin and if we tried to access the physical address of it, we
+	// would access a random page with undefined contents.
+	// NOTE: Once LLE CPU and MMU are implemented, this can be removed.
 
 	//if (IS_USER_ADDRESS(addr)) { Type = UserRegion; }
 	//else if (IS_PHYSICAL_ADDRESS(addr)) { Type = ContiguousRegion; }

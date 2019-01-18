@@ -49,7 +49,7 @@ class XidGamepad
 		// initialize this peripheral
 		int Init(int port);
 		// destroy gamepad resources
-		void XidCleanUp();
+		void XpadCleanUp();
 
 
 	private:

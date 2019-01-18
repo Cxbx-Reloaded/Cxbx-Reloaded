@@ -157,7 +157,7 @@ class OHCI
 
 
 	private:
-		// pointer to g_USB0 or g_USB1
+		// pointer to g_USB0
 		USBDevice* m_UsbDevice = nullptr;
 		// all the registers available in the OHCI standard
 		OHCI_Registers m_Registers;
