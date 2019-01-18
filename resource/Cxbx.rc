@@ -576,7 +576,7 @@ BEGIN
         POPUP "Config &Data Location...",       65535,MFT_STRING,MFS_ENABLED
         BEGIN
             MENUITEM "Store in AppData",            ID_SETTINGS_CONFIG_DLOCAPPDATA,MFT_STRING,MFS_ENABLED
-            MENUITEM "Store with Executable",       ID_SETTINGS_CONFIG_DLOCCURDIR,MFT_STRING,MFS_ENABLED
+            MENUITEM "Store with Executable",       ID_SETTINGS_CONFIG_DLOCEXECDIR,MFT_STRING,MFS_ENABLED
             MENUITEM "Custom",                      ID_SETTINGS_CONFIG_DLOCCUSTOM,MFT_STRING,MFS_ENABLED
         END
         POPUP "&Symbol Cache",                     65535,MFT_STRING,MFS_ENABLED

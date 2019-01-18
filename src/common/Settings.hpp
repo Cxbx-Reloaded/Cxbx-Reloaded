@@ -39,12 +39,14 @@
 #include "SimpleIni.h"
 #include <string>
 
+extern std::string g_exec_filepath;
+
 #define szSettings_alloc_error "ERROR: Unable to allocate Settings class."
 
 // Cxbx-Reloaded's data storage location.
 typedef enum _CXBX_DATA {
 	CXBX_DATA_APPDATA = 0,
-	CXBX_DATA_CURDIR = 1,
+	CXBX_DATA_EXECDIR = 1,
 	CXBX_DATA_CUSTOM = 2,
 } CXBX_DATA;
 

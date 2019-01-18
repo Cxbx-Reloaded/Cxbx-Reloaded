@@ -1040,9 +1040,9 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 			}
 			break;
 
-			case ID_SETTINGS_CONFIG_DLOCCURDIR:
+			case ID_SETTINGS_CONFIG_DLOCEXECDIR:
 			{
-				g_Settings->m_gui.DataStorageToggle = CXBX_DATA_CURDIR;
+				g_Settings->m_gui.DataStorageToggle = CXBX_DATA_EXECDIR;
 				RefreshMenus();
 			}
 			break;
@@ -1734,19 +1734,19 @@ void WndMain::RefreshMenus()
 			switch (g_Settings->m_gui.DataStorageToggle) {
 				case CXBX_DATA_APPDATA:
 					CheckMenuItem(settings_menu, ID_SETTINGS_CONFIG_DLOCAPPDATA, MF_CHECKED);
-					CheckMenuItem(settings_menu, ID_SETTINGS_CONFIG_DLOCCURDIR, MF_UNCHECKED);
+					CheckMenuItem(settings_menu, ID_SETTINGS_CONFIG_DLOCEXECDIR, MF_UNCHECKED);
 					CheckMenuItem(settings_menu, ID_SETTINGS_CONFIG_DLOCCUSTOM, MF_UNCHECKED);
 					break;
 
-				case CXBX_DATA_CURDIR:
+				case CXBX_DATA_EXECDIR:
 					CheckMenuItem(settings_menu, ID_SETTINGS_CONFIG_DLOCAPPDATA, MF_UNCHECKED);
-					CheckMenuItem(settings_menu, ID_SETTINGS_CONFIG_DLOCCURDIR, MF_CHECKED);
+					CheckMenuItem(settings_menu, ID_SETTINGS_CONFIG_DLOCEXECDIR, MF_CHECKED);
 					CheckMenuItem(settings_menu, ID_SETTINGS_CONFIG_DLOCCUSTOM, MF_UNCHECKED);
 					break;
 
 				case CXBX_DATA_CUSTOM:
 					CheckMenuItem(settings_menu, ID_SETTINGS_CONFIG_DLOCAPPDATA, MF_UNCHECKED);
-					CheckMenuItem(settings_menu, ID_SETTINGS_CONFIG_DLOCCURDIR, MF_UNCHECKED);
+					CheckMenuItem(settings_menu, ID_SETTINGS_CONFIG_DLOCEXECDIR, MF_UNCHECKED);
 					CheckMenuItem(settings_menu, ID_SETTINGS_CONFIG_DLOCCUSTOM, MF_CHECKED);
 					break;
 			}
