@@ -179,7 +179,7 @@ XTL::X_XFileMediaObject::_vtbl XTL::X_XFileMediaObject::vtbl =
  */
 
 // size of DirectSound cache max size
-#define X_DIRECTSOUND_CACHE_MAX 0x800
+#define X_DIRECTSOUND_CACHE_MAX 256 // Maximum size
 
 #define X_DIRECTSOUND_CACHE_COUNT (g_pDSoundBufferCache.size() + g_pDSoundStreamCache.size())
 
@@ -209,8 +209,8 @@ unsigned int                        g_iDSoundSynchPlaybackCounter = 0;
 #define                             X_DS_SGE_PAGE_MAX (4 * ONE_KB)
 #define                             X_DS_SGE_SIZE_MAX (X_DS_SGE_COUNT_MAX * X_DS_SGE_PAGE_MAX)
 DWORD                               g_dwXbMemAllocated = 0;
-DWORD                               g_dwFree2DBuffers = 0;
-DWORD                               g_dwFree3DBuffers = 0;
+DWORD                               g_dwFree2DBuffers = 192; // TODO: Need investigation for spec requirement, since initialization took 4 buffer classes.
+DWORD                               g_dwFree3DBuffers = 64;
 std::thread dsound_thread;
 static void dsound_thread_worker(LPVOID);
 
@@ -234,6 +234,40 @@ void CxbxInitAudio()
 #ifdef __cplusplus
 }
 #endif
+
+bool AllocBufferIsFull(bool is3DClass)
+{
+    if (is3DClass) {
+        if (g_dwFree3DBuffers != 0) {
+            return false;
+        }
+    }
+    else if (g_dwFree2DBuffers != 0) {
+        return false;
+    }
+
+    return true;
+}
+
+void AllocBufferReserve(bool is3DClass)
+{
+    if (is3DClass) {
+        g_dwFree3DBuffers--;
+    }
+    else {
+        g_dwFree2DBuffers--;
+    }
+}
+
+void AllocBufferRelease(bool is3DClass)
+{
+    if (is3DClass) {
+        g_dwFree3DBuffers++;
+    }
+    else {
+        g_dwFree2DBuffers++;
+    }
+}
 
 // ******************************************************************
 // * patch: DirectSoundCreate
@@ -912,10 +946,13 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateBuffer)
 
     HRESULT hRet = DS_OK;
 
-    //If out of space, return out of memory.
+    // If out of space, return out of memory.
     if (X_DIRECTSOUND_CACHE_COUNT == X_DIRECTSOUND_CACHE_MAX || !DSoundSGEMenAllocCheck(pdsbd->dwBufferBytes)) {
 
         hRet = DSERR_OUTOFMEMORY;
+        *ppBuffer = xbnullptr;
+    } else if (AllocBufferIsFull((pdsbd->dwFlags & DSBCAPS_CTRL3D) > 0)) {
+        hRet = DSERR_INVALIDCALL;
         *ppBuffer = xbnullptr;
     } else {
 
@@ -951,11 +988,17 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateBuffer)
 
         DBG_PRINTF("DirectSoundCreateBuffer, *ppBuffer := 0x%08X, bytes := 0x%08X\n", *ppBuffer, (*ppBuffer)->EmuBufferDesc.dwBufferBytes);
 
-        DSoundBufferCreate(&DSBufferDesc, (*ppBuffer)->EmuDirectSoundBuffer8);
+        hRet = DSoundBufferCreate(&DSBufferDesc, (*ppBuffer)->EmuDirectSoundBuffer8);
+        if (hRet != DS_OK) {
+            return hRet;
+        }
+
         if (pdsbd->dwFlags & DSBCAPS_CTRL3D) {
             DSound3DBufferCreate((*ppBuffer)->EmuDirectSoundBuffer8, (*ppBuffer)->EmuDirectSound3DBuffer8);
             (*ppBuffer)->Xb_dwHeadroom = 0; // Default for 3D
         }
+
+        AllocBufferReserve((pdsbd->dwFlags & DSBCAPS_CTRL3D) > 0);
 
         DSoundDebugMuteFlag((*ppBuffer)->X_BufferCacheSize, (*ppBuffer)->EmuFlags);
 
@@ -1336,10 +1379,13 @@ ULONG WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Release)
             if (pThis->EmuBufferDesc.lpwfxFormat != nullptr) {
                 free(pThis->EmuBufferDesc.lpwfxFormat);
             }
+
             if (pThis->X_BufferCache != xbnullptr && (pThis->EmuFlags & DSE_FLAG_BUFFER_EXTERNAL) == 0) {
                 free(pThis->X_BufferCache);
                 DSoundSGEMemDealloc(pThis->X_BufferCacheSize);
             }
+
+            AllocBufferRelease((pThis->EmuBufferDesc.dwFlags & DSBCAPS_CTRL3D) > 0);
 
             delete pThis;
         }
@@ -1703,6 +1749,10 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateStream)
 
         hRet = DSERR_OUTOFMEMORY;
         *ppStream = xbnullptr;
+    // Test available 2D/3D allocate class.
+    } else if (AllocBufferIsFull((pdssd->dwFlags & DSBCAPS_CTRL3D) > 0)) {
+        hRet = DSERR_INVALIDCALL;
+        *ppStream = xbnullptr;
     } else {
         // TODO: Garbage Collection
         *ppStream = new X_CDirectSoundStream();
@@ -1748,11 +1798,16 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateStream)
 
         DBG_PRINTF("DirectSoundCreateStream, *ppStream := 0x%.08X\n", *ppStream);
 
-        DSoundBufferCreate(&DSBufferDesc, (*ppStream)->EmuDirectSoundBuffer8);
+        hRet = DSoundBufferCreate(&DSBufferDesc, (*ppStream)->EmuDirectSoundBuffer8);
+        if (hRet != DS_OK) {
+            return hRet;
+        }
+
         if (DSBufferDesc.dwFlags & DSBCAPS_CTRL3D) {
             DSound3DBufferCreate((*ppStream)->EmuDirectSoundBuffer8, (*ppStream)->EmuDirectSound3DBuffer8);
             (*ppStream)->Xb_dwHeadroom = 0; // Default for 3D
         }
+        AllocBufferReserve((pdssd->dwFlags & DSBCAPS_CTRL3D) > 0);
 
         DSoundDebugMuteFlag((*ppStream)->EmuBufferDesc.dwBufferBytes, (*ppStream)->EmuFlags);
 
@@ -1898,6 +1953,8 @@ ULONG WINAPI XTL::EMUPATCH(CDirectSoundStream_Release)
                 free(pThis->EmuBufferDesc.lpwfxFormat);
             }
             // NOTE: Do not release X_BufferCache! X_BufferCache is using xbox buffer.
+
+            AllocBufferRelease((pThis->EmuBufferDesc.dwFlags & DSBCAPS_CTRL3D) > 0);
 
             delete pThis;
         }
@@ -3193,9 +3250,8 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound_GetCaps)
         // To prevent pass down overflow size.
         pDSCaps->dwMemoryAllocated = (X_DS_SGE_SIZE_MAX < g_dwXbMemAllocated ? X_DS_SGE_SIZE_MAX : g_dwXbMemAllocated);
 
-        // TODO: What are the max values for 2D and 3D Buffers? Once discover, then perform real time update in global variable.
-        pDSCaps->dwFree2DBuffers = (pDSCaps->dwFreeBufferSGEs == 0 ? 0 : 0x200 /* TODO: Replace me to g_dwFree2DBuffers*/ );
-        pDSCaps->dwFree3DBuffers = (pDSCaps->dwFreeBufferSGEs == 0 ? 0 : 0x200 /* TODO: Replace me to g_dwFree3DBuffers*/ );
+        pDSCaps->dwFree2DBuffers = g_dwFree2DBuffers;
+        pDSCaps->dwFree3DBuffers = g_dwFree3DBuffers;
 
         DBG_PRINTF("X_DSCAPS: dwFree2DBuffers = %8X | dwFree3DBuffers = %8X | dwFreeBufferSGEs = %08X | dwMemAlloc = %08X\n", pDSCaps->dwFree2DBuffers, pDSCaps->dwFree3DBuffers, pDSCaps->dwFreeBufferSGEs, pDSCaps->dwMemoryAllocated);
     }
