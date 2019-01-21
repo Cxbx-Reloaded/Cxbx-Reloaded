@@ -533,7 +533,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 
 		XbSymbolSetOutputMessage(EmuOutputMessage);
 
-		XbSymbolScan(pXbeHeader, EmuRegisterSymbol);
+		XbSymbolScan(pXbeHeader, EmuRegisterSymbol, false);
 
 		EmuD3D_Init_DeferredStates();
 	}
