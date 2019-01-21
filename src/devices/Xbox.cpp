@@ -126,7 +126,7 @@ void InitXboxHardware(HardwareModel hardwareModel)
 
 	// Create devices
 	g_MCPX = new MCPXDevice(mcpx_revision);
-	g_SMC = new SMCDevice(smc_revision);
+	g_SMC = new SMCDevice(smc_revision, g_bIsChihiro ? 6 : 1); // 6 = AV_PACK_STANDARD, 1 = AV_PACK_HDTV. Chihiro doesn't support HDTV!
 	g_EEPROM = new EEPROMDevice();
 	g_NVNet = new NVNetDevice();
 	g_NV2A = new NV2ADevice();
