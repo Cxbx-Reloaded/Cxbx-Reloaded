@@ -505,10 +505,15 @@ VOID WINAPI XTL::EMUPATCH(DirectSoundDoWork)()
                             pThis->X_lock.dwLockBytes2);
 
         // TODO: Do we need this in async thread loop?
-        if (pThis->Xb_rtPauseEx != 0 && pThis->Xb_rtPauseEx <= getTime.QuadPart) {
+        if (pThis->Xb_rtPauseEx != 0LL && pThis->Xb_rtPauseEx <= getTime.QuadPart) {
             pThis->Xb_rtPauseEx = 0LL;
             pThis->EmuFlags ^= DSE_FLAG_PAUSE;
             pThis->EmuDirectSoundBuffer8->Play(0, 0, pThis->EmuPlayFlags);
+        }
+
+        if (pThis->Xb_rtStopEx != 0LL && pThis->Xb_rtStopEx <= getTime.QuadPart) {
+            pThis->Xb_rtStopEx = 0LL;
+            pThis->EmuDirectSoundBuffer8->Stop();
         }
     }
 
@@ -936,6 +941,7 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateBuffer)
 
         DSoundBufferSetDefault((*ppBuffer), 0);
         (*ppBuffer)->Host_lock = { 0 };
+        (*ppBuffer)->Xb_rtStopEx = 0LL;
 
         DSoundBufferRegionSetDefault(*ppBuffer);
 
@@ -1565,24 +1571,39 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_StopEx)
 
     // Only flags can be process here.
     } else {
-        // TODO : Test Stop (emulated via Stop + SetCurrentPosition(0)) :
         if (dwFlags == X_DSBSTOPEX_IMMEDIATE) {
             hRet = pThis->EmuDirectSoundBuffer8->Stop();
-            pThis->EmuDirectSoundBuffer8->SetCurrentPosition(0);
-        } else {
+            pThis->Xb_rtStopEx = 0LL;
+        }
+        else {
             bool isLooping;
             if ((pThis->EmuPlayFlags & X_DSBPLAY_LOOPING) > 0) {
                 isLooping = true;
-            } else {
+            }
+            else {
                 isLooping = false;
             }
+
             if ((dwFlags & X_DSBSTOPEX_ENVELOPE) > 0) {
-                // TODO: How to mock up "release phase"?
+                if (rtTimeStamp == 0LL) {
+                    xboxkrnl::LARGE_INTEGER getTime;
+                    xboxkrnl::KeQuerySystemTime(&getTime);
+                    pThis->Xb_rtStopEx = getTime.QuadPart;
+                }
+                else {
+                    pThis->Xb_rtStopEx = rtTimeStamp;
+                }
+                pThis->Xb_rtStopEx += (pThis->Xb_EnvolopeDesc.dwRelease * 512) / 48000;
             }
+            else {
+                pThis->Xb_rtStopEx = rtTimeStamp;
+            }
+
             if ((dwFlags & X_DSBSTOPEX_RELEASEWAVEFORM) > 0) {
                 // Release from loop region.
                 pThis->EmuPlayFlags &= ~X_DSBPLAY_LOOPING;
             }
+
             DWORD dwValue, dwStatus;
             pThis->EmuDirectSoundBuffer8->GetStatus(&dwStatus);
 
@@ -1602,8 +1623,12 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_StopEx)
                 pThis->EmuDirectSoundBuffer8->SetCurrentPosition(dwValue);
             }
 
-            if (dwStatus & DSBSTATUS_PLAYING) {
+            if (dwStatus & DSBSTATUS_PLAYING && rtTimeStamp != 0LL) {
                 pThis->EmuDirectSoundBuffer8->Play(0, 0, pThis->EmuPlayFlags);
+            }
+            else {
+                pThis->EmuDirectSoundBuffer8->Stop();
+                pThis->Xb_rtStopEx = 0LL;
             }
         }
     }
@@ -2127,6 +2152,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSound_SynchPlayback)
 
         if (((*ppDSBuffer)->EmuFlags & DSE_FLAG_SYNCHPLAYBACK_CONTROL) > 0) {
             DSoundBufferSynchPlaybackFlagRemove((*ppDSBuffer)->EmuFlags);
+            EmuLog(LOG_LEVEL::DEBUG, "SynchPlayback - EmuPlayFlags: %08X", (*ppDSBuffer)->EmuPlayFlags);
             (*ppDSBuffer)->EmuDirectSoundBuffer8->Play(0, 0, (*ppDSBuffer)->EmuPlayFlags);
         }
     }
@@ -2141,6 +2167,8 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSound_SynchPlayback)
             DSoundStreamProcess((*ppDSStream));
         }
     }
+
+    //EmuLog(LOG_LEVEL::DEBUG, "Buffer started: %u; Stream started: %u", debugSynchBufferCount, debugSynchStreamCount);
 
     leaveCriticalSection;
 
@@ -2948,7 +2976,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound_GetOutputLevels)
 HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetEG)
 (
     X_CDirectSoundStream*   pThis,
-    LPVOID                  pEnvelopeDesc)
+    X_DSENVOLOPEDESC*       pEnvelopeDesc)
 {
     enterCriticalSection;
 
@@ -2960,6 +2988,8 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetEG)
     // NOTE: DSP relative function
 
     LOG_NOT_SUPPORTED();
+
+    pThis->Xb_EnvolopeDesc = *pEnvelopeDesc;
 
     leaveCriticalSection;
 
@@ -3433,7 +3463,7 @@ HRESULT WINAPI XTL::EMUPATCH(XWaveFileCreateMediaObject)
 HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetEG)
 (
     X_CDirectSoundBuffer*   pThis,
-    LPVOID                  pEnvelopeDesc)
+    X_DSENVOLOPEDESC*       pEnvelopeDesc)
 {
     enterCriticalSection;
 
@@ -3445,6 +3475,8 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetEG)
     // NOTE: DSP relative function
 
     LOG_NOT_SUPPORTED();
+
+    pThis->Xb_EnvolopeDesc = *pEnvelopeDesc;
 
     leaveCriticalSection;
 
@@ -4151,7 +4183,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundStream_SetLFO)
 HRESULT WINAPI XTL::EMUPATCH(IDirectSoundStream_SetEG)
 (
     X_CDirectSoundStream*   pThis,
-    LPVOID                  pEnvelopeDesc)
+    X_DSENVOLOPEDESC*       pEnvelopeDesc)
 {
     LOG_FUNC_BEGIN
         LOG_FUNC_ARG(pThis)
