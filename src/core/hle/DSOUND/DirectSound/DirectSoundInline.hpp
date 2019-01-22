@@ -222,11 +222,22 @@ inline void GeneratePCMFormat(
                 // Only allocate extra value for setting extra values later on. WAVEFORMATEXTENSIBLE is the highest size I had seen.
                 DSBufferDesc.lpwfxFormat = (WAVEFORMATEX*)calloc(1, sizeof(WAVEFORMATEXTENSIBLE));
             }
+
             if (lpwfxFormat->wFormatTag == WAVE_FORMAT_PCM) {
                 // Test case: Hulk crash due to cbSize is not a valid size.
                 memcpy(DSBufferDesc.lpwfxFormat, lpwfxFormat, sizeof(WAVEFORMATEX));
                 DSBufferDesc.lpwfxFormat->cbSize = 0; // Let's enforce this value to prevent any other exception later on.
-            } else {
+            }
+            else if (lpwfxFormat->wFormatTag == 0 && (DSBufferDesc.dwFlags & DSBCAPS_LOCDEFER) > 0) {
+                // NOTE: This is currently a hack for ability to create buffer class with DSBCAPS_LOCDEFER flag.
+                DSBufferDesc.lpwfxFormat->wFormatTag = WAVE_FORMAT_PCM;
+                DSBufferDesc.lpwfxFormat->nChannels = 2;
+                DSBufferDesc.lpwfxFormat->nSamplesPerSec = 44100;
+                DSBufferDesc.lpwfxFormat->wBitsPerSample = 8;
+                DSBufferDesc.lpwfxFormat->nBlockAlign = (DSBufferDesc.lpwfxFormat->wBitsPerSample / 8 * DSBufferDesc.lpwfxFormat->nChannels);
+                DSBufferDesc.lpwfxFormat->nAvgBytesPerSec = DSBufferDesc.lpwfxFormat->nSamplesPerSec * DSBufferDesc.lpwfxFormat->nBlockAlign;
+            }
+            else {
                 memcpy(DSBufferDesc.lpwfxFormat, lpwfxFormat, sizeof(WAVEFORMATEX) + lpwfxFormat->cbSize);
             }
 
