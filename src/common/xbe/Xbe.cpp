@@ -45,6 +45,7 @@ namespace xboxkrnl
 #include "common\util\CxbxUtil.h" // For RoundUp
 #include <experimental/filesystem> // filesystem related functions available on C++ 17
 #include <locale> // For ctime
+#include <array>
 #include "devices\LED.h" // For LED::Sequence
 #include "core\kernel\init\CxbxKrnl.h" // For CxbxKrnlPrintUEM
 #include "common\crypto\EmuSha.h" // For the SHA functions
@@ -794,15 +795,25 @@ bool Xbe::CheckXbeSignature()
 	DWORD HeaderDigestSize = m_Header.dwSizeofHeaders - (sizeof(m_Header.dwMagic) + sizeof(m_Header.pbDigitalSignature));
 	UCHAR SHADigest[A_SHA_DIGEST_LEN];
 	unsigned char crypt_buffer[256];
-	RSA_PUBLIC_KEY key;
-	memcpy(key.Default, (void*)xboxkrnl::XePublicKeyData, 284);
-
 	CalcSHA1Hash(SHADigest, m_SignatureHeader, HeaderDigestSize);
 
-	RSAdecrypt(m_Header.pbDigitalSignature, crypt_buffer, key);
-	if (!Verifyhash(SHADigest, crypt_buffer, key)) {
-		return false; // signature check failed
+	// Hash against all currently known public keys, if these pass, we can guarantee the Xbe is unmodified
+	std::array<RSA_PUBLIC_KEY, 3> keys = { 0 };
+	memcpy(keys[0].Default, (void*)xboxkrnl::XePublicKeyDataRetail, 284);
+	memcpy(keys[1].Default, (void*)xboxkrnl::XePublicKeyDataChihiroGame, 284);
+	memcpy(keys[2].Default, (void*)xboxkrnl::XePublicKeyDataChihiroBoot, 284);
+	// TODO: memcpy(keys[3].Default, (void*)xboxkrnl::XePublicKeyDataDebug, 284);
+
+	for (int i = 0; i < keys.size(); i++) {
+		RSAdecrypt(m_Header.pbDigitalSignature, crypt_buffer, keys[i]);
+		if (Verifyhash(SHADigest, crypt_buffer, keys[i])) {
+			// Load the successful key into XboxKrnl::XePublicKeyData for application use
+			memcpy(xboxkrnl::XePublicKeyData, keys[i].Default, 284);
+			return true; // success
+		}
 	}
 
-	return true; // success
+	// Default to the Retail key if no key matched, just to make sure we don't init in an invalid state
+	memcpy(xboxkrnl::XePublicKeyData, xboxkrnl::XePublicKeyDataRetail, 284);
+	return false;  // signature check failed
 }
