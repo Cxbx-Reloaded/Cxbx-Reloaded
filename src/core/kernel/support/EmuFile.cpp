@@ -203,7 +203,7 @@ void CxbxFormatPartitionByHandle(HANDLE hFile)
 	printf("Formatted EmuDisk Partition%d\n", CxbxGetPartitionNumberFromHandle(hFile));
 }
 
-const std::string MediaBoardRomFile = "fpr21042_m29w160et.bin";
+const std::string MediaBoardRomFile = "Chihiro\\fpr21042_m29w160et.bin";
 const std::string DrivePrefix = "\\??\\";
 const std::string DriveSerial = DrivePrefix + "serial:";
 const std::string DriveCdRom0 = DrivePrefix + "CdRom0:"; // CD-ROM device
