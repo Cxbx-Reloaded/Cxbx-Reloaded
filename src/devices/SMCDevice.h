@@ -111,7 +111,7 @@ typedef enum {
 class SMCDevice : public SMDevice {
 public:
 	// constructor
-	SMCDevice(SCMRevision revision);
+	SMCDevice(SCMRevision revision, uint8_t av_pack);
 
 	// SMDevice functions
 	void Init();

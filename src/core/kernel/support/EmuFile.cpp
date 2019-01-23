@@ -203,13 +203,14 @@ void CxbxFormatPartitionByHandle(HANDLE hFile)
 	printf("Formatted EmuDisk Partition%d\n", CxbxGetPartitionNumberFromHandle(hFile));
 }
 
-const std::string MediaBoardRomFile = "fpr21042_m29w160et.bin";
+const std::string MediaBoardRomFile = "Chihiro\\fpr21042_m29w160et.bin";
 const std::string DrivePrefix = "\\??\\";
 const std::string DriveSerial = DrivePrefix + "serial:";
 const std::string DriveCdRom0 = DrivePrefix + "CdRom0:"; // CD-ROM device
 const std::string DriveMbfs = "mbfs:"; // media board's file system area device
 const std::string DriveMbcom = "mbcom:"; // media board's communication area device
-const std::string DriveMbrom = "mbrom0:"; // media board's boot ROM device
+const std::string DriveMbrom0 = "mbrom0:"; // media board's boot ROM device (first image)
+const std::string DriveMbrom1 = "mbrom1:"; // media board's boot ROM device (second image)
 const std::string DriveA = DrivePrefix + "A:"; // A: could be CDROM
 const std::string DriveC = DrivePrefix + "C:"; // C: is HDD0
 const std::string DriveD = DrivePrefix + "D:"; // D: is DVD Player
@@ -363,7 +364,7 @@ NTSTATUS CxbxConvertFilePath(
 
 	// Check if we where called from a File-handling API :
 	if (!aFileAPIName.empty()) {
-		if (RelativePath.compare(DriveMbrom) == 0) {
+		if (RelativePath.compare(DriveMbrom0) == 0 || RelativePath.compare(DriveMbrom1) == 0) {
 			*RootDirectory = CxbxBasePathHandle;
 			HostPath = CxbxBasePath;
 			RelativePath = MediaBoardRomFile;

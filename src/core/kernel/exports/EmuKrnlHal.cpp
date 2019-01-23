@@ -788,7 +788,7 @@ XBSYSAPI EXPORTNUM(334) xboxkrnl::VOID NTAPI xboxkrnl::WRITE_PORT_BUFFER_ULONG
 // ******************************************************************
 // * 0x0164 - HalBootSMCVideoMode
 // ******************************************************************
-// TODO: Verify this!
+// TODO: This should be set to whichever AV Pack is read from the SMC at boot time
 XBSYSAPI EXPORTNUM(356) xboxkrnl::DWORD xboxkrnl::HalBootSMCVideoMode = 1; // TODO : AV_PACK_STANDARD?
 
 // ******************************************************************
