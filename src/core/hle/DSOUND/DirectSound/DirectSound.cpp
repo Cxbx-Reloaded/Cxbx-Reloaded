@@ -3020,21 +3020,27 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_FlushEx)
 
         hRet = XTL::EMUPATCH(CDirectSoundStream_Flush)(pThis);
 
+    }
     // Remaining flags require X_DSSFLUSHEX_ASYNC to be include.
-    } else if ((dwFlags & X_DSSFLUSHEX_ASYNC) > 0) {
+    else if ((dwFlags & X_DSSFLUSHEX_ASYNC) > 0) {
 
         pThis->EmuFlags |= DSE_FLAG_FLUSH_ASYNC;
         pThis->Xb_rtFlushEx = rtTimeStamp;
 
         // Set or remove flags (This is the only place it will set/remove other than Flush perform remove the flags.)
         if ((dwFlags & X_DSSFLUSHEX_ENVELOPE) > 0) {
-            pThis->EmuFlags |= DSE_FLAG_ENVELOPE;
-        } else {
-            pThis->EmuFlags ^= DSE_FLAG_ENVELOPE;
+            if (rtTimeStamp == 0LL) {
+                xboxkrnl::LARGE_INTEGER getTime;
+                xboxkrnl::KeQuerySystemTime(&getTime);
+                pThis->Xb_rtFlushEx = getTime.QuadPart;
+            }
+            pThis->Xb_rtFlushEx += (pThis->Xb_EnvolopeDesc.dwRelease * 512) / 48000;
         }
+
         if ((dwFlags & X_DSSFLUSHEX_ENVELOPE2) > 0) {
             pThis->EmuFlags |= DSE_FLAG_ENVELOPE2;
-        } else {
+        }
+        else {
             pThis->EmuFlags ^= DSE_FLAG_ENVELOPE2;
         }
     }
