@@ -25,12 +25,11 @@
 // *
 // ******************************************************************
 
-#ifndef INPUTCONFIG_H_
-#define INPUTCONFIG_H_
+#ifndef INPUTMANAGER_H_
+#define INPUTMANAGER_H_
 #if 1 // Reenable this when LLE USB actually works
-#include <vector>
 #include <atomic>
-#include "SDL.h"
+#include "SdlJoystick.h"
 
 #define GAMEPAD_A                 0
 #define GAMEPAD_B                 1
@@ -56,10 +55,9 @@
 #define GAMEPAD_RIGHT_THUMB_Y     19
 
 #define GAMEPAD_INVALID          -1
+#define BUTTON_MASK(button) (1 << ((button) - GAMEPAD_DPAD_UP))
 
 #define HAT_CONSTANT             255
-
-#define BUTTON_MASK(button) (1 << ((button) - GAMEPAD_DPAD_UP))
 
 
 /* enum indicating the device type to attach to the virtual xbox */
@@ -75,7 +73,18 @@ typedef enum {
 }
 XBOX_INPUT_DEVICE;
 
-class SDL2Devices; // forward declare
+/* Button state, same as XIDGamepadReport */
+struct ButtonState {
+	std::atomic_uint16_t wButtons;         // all non-analog buttons
+	std::atomic_uint8_t bAnalogButtons[8]; // X, Y, A, B, white, black, left/right trigger
+	std::atomic_int16_t sThumbLX;          // analog stick, left X
+	std::atomic_int16_t sThumbLY;          // analog stick, left Y
+	std::atomic_int16_t sThumbRX;          // analog stick, right X
+	std::atomic_int16_t sThumbRY;          // analog stick, right Y
+};
+
+// forward declare
+class SdlDevice;
 
 
 class InputDeviceManager
@@ -83,27 +92,35 @@ class InputDeviceManager
 	public:
 		InputDeviceManager();
 		~InputDeviceManager();
-
-		// enumerate all available sdl2 controllers
-		int EnumSdl2Devices();
-		// start input event processing thread
-		void StartInputThread();
 		// connect the enumerated device to the virtual xbox
 		int ConnectDeviceToXbox(int port, int type);
 		// disconnect a device from the emulated xbox
 		void DisconnectDeviceFromXbox(int port);
 		// find the device attached to the supplied xbox port
-		SDL2Devices* FindDeviceFromXboxPort(int port);
+		SdlDevice* FindDeviceFromXboxPort(int port);
 
 
 	private:
 		// all enumerated devices currently detected and supported
-		std::vector<SDL2Devices*> m_Sdl2Devices;
-
+		std::vector<InputDevice*> m_Devices;
+		// sdl custom event to exit the main loop
+		SDL_Event m_ExitLoop;
+		// used to indicate that the device destruction is complete
+		bool m_bExitOK;
+		// used to indicate that the manager was initialized correctly
+		bool m_bInitOK;
+		// all enumerated xinput devices currently detected and supported
+		//std::map<unsigned int, XInputDevice*> m_XInputDevices;
 		// assign the button binding to the devices
 		//void AssignBindings();
-		// input thread
-		static void InputThread(InputDeviceManager* pVoid);
+		// open the sdl joystick with the specified index
+		void OpenSdlDevice(const int Index);
+		// thread which polls input devices
+		void InputMainLoop();
+		// add the device to the list of availble devices
+		void AddDevice(InputDevice* Device);
+		// Update input for all devices if lock can be acquired without waiting
+		void UpdateInput();
 		// updates the button state of a joystick
 		void UpdateButtonState(SDL_JoystickID id, uint8_t button, uint8_t state);
 		// updates the hat state of a joystick

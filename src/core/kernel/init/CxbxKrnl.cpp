@@ -64,7 +64,7 @@ namespace xboxkrnl
 #include "devices\SMCDevice.h" // For SMC Access
 #include "common\crypto\EmuSha.h" // For the SHA1 functions
 #include "Timer.h" // For Timer_Init
-#include "..\Common\Input\InputConfig.h" // For the InputDeviceManager
+#include "..\Common\Input\InputManager.h" // For the InputDeviceManager
 
 /*! thread local storage */
 Xbe::TLS *CxbxKrnl_TLS = NULL;

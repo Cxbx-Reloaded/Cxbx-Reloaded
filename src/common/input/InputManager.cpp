@@ -26,7 +26,7 @@
 // ******************************************************************
 #if 1 // Reenable this when LLE USB actually works
 #define _XBOXKRNL_DEFEXTRN_
-#define LOG_PREFIX CXBXR_MODULE::SDL2
+#define LOG_PREFIX CXBXR_MODULE::SDL
 
 // prevent name collisions
 namespace xboxkrnl
@@ -34,8 +34,8 @@ namespace xboxkrnl
 	#include <xboxkrnl/xboxkrnl.h> // For PKINTERRUPT, etc.
 };
 
-#include "InputConfig.h"
-#include "SDL2_Device.h"
+#include "InputManager.h"
+#include "SdlJoystick.h"
 #include "..\devices\usb\XidGamepad.h"
 #include "core\kernel\exports\EmuKrnl.h" // For EmuLog
 #include <thread>
@@ -45,75 +45,148 @@ InputDeviceManager* g_InputDeviceManager = nullptr;
 
 InputDeviceManager::InputDeviceManager()
 {
-	if (SDL_InitSubSystem(SDL_INIT_JOYSTICK) < 0) {
-		CxbxKrnlCleanup("Failed to initialize SDL2 input subsystem. The error was: %s\n", SDL_GetError());
-		return;
-	}
+	// Delegate the sdl initialization to another thread. This is because, as per SDL documentation, SDL_PollEvent can only be called
+	// from the same thread that initialized the video subsystem
+
+	m_bExitOK = true;
+	m_bInitOK = false;
+	std::thread(&InputDeviceManager::InputMainLoop, this).detach();
 }
 
 InputDeviceManager::~InputDeviceManager()
 {
-	SDL_Quit();
+	if (m_bInitOK) {
+		SDL_PushEvent(&m_ExitLoop);
+	}
+	while (!m_bExitOK) {}
 }
 
-int InputDeviceManager::EnumSdl2Devices()
+void InputDeviceManager::OpenSdlDevice(const int Index)
 {
-	int NumOfJoysticks;
-	int NumInvalidJoysticks;
-	SDL2Devices* pDev;
+	InputDevice* pDev;
 	SDL_Joystick* pJoystick;
-	std::vector<SDL2Devices*>::iterator it;
 
-	NumOfJoysticks = SDL_NumJoysticks();
-	if (NumOfJoysticks < 0) {
-		EmuLog(LOG_LEVEL::WARNING, "Failed to enumerate joysticks. The error was: %s", SDL_GetError());
-		return 0;
-	}
-
-	NumInvalidJoysticks = 0;
-
-	for (int i = 0; i < NumOfJoysticks; i++) {
-		pDev = new SDL2Devices();
-		pDev->m_Index = i;
-		m_Sdl2Devices.push_back(pDev);
-	}
-
-	for (it = m_Sdl2Devices.begin(); it != m_Sdl2Devices.end();) {
-		pJoystick = SDL_JoystickOpen((*it)->m_Index);
-		if (pJoystick == nullptr) {
-			EmuLog(LOG_LEVEL::WARNING, "Failed to open joystick %s. The error was %s\n", SDL_GameControllerNameForIndex((*it)->m_Index), SDL_GetError());
-			delete (*it);
-			it = m_Sdl2Devices.erase(it);
-			NumInvalidJoysticks++;
+	pJoystick = SDL_JoystickOpen(Index);
+	if (pJoystick) {
+		pDev = new SdlJoystick(pJoystick, Index);
+		// only add the device if it has some I/O controls
+		if (!pDev->GetInputs.empty() || !pDev->GetOutputs.empty()) {
+			AddDevice(pDev);
 		}
 		else {
-			printf("Found joystick %s\n", SDL_JoystickName(pJoystick));
-			(*it)->m_Joystick = pJoystick;
-			(*it)->m_jyID = SDL_JoystickInstanceID(pJoystick);
-			(*it)->m_Attached = 1;
-			++it;
+			EmuLog(LOG_LEVEL::INFO, "Rejected joystick %i. No controls detected\n", Index);
+			delete pDev;
 		}
 	}
+	else {
+		EmuLog(LOG_LEVEL::WARNING, "Failed to open joystick %i. The error was %s\n", Index, SDL_GetError());
+	}
+}
 
-	return NumOfJoysticks - NumInvalidJoysticks;
+void InputDeviceManager::InputMainLoop()
+{
+	uint32_t ExitEvent_t;
+	SDL_Event Event;
+
+	if (SDL_Init(SDL_INIT_JOYSTICK | SDL_INIT_HAPTIC) < 0) {
+		CxbxKrnlCleanupEx(CXBXR_MODULE::INIT, "Failed to initialize SDL subsystem. The error was: %s", SDL_GetError());
+		return;
+	}
+	ExitEvent_t = SDL_RegisterEvents(1);
+	if (ExitEvent_t == (uint32_t)-1) {
+		CxbxKrnlCleanupEx(CXBXR_MODULE::INIT, "Failed to create SDL exit event.");
+		return;
+	}
+	SDL_memset(&m_ExitLoop, 0, sizeof(SDL_Event));
+	m_ExitLoop.type = ExitEvent_t;
+	SDL_JoystickEventState(SDL_IGNORE);
+	m_bInitOK = true;
+	m_bExitOK = false;
+
+	SetThreadAffinityMask(GetCurrentThread(), g_CPUOthers);
+	
+	while (true)
+	{
+		if (SDL_PollEvent(&Event))
+		{
+			if (Event.type == SDL_JOYDEVICEADDED) {
+				OpenSdlDevice(Event.jdevice.which);
+			}
+			else if (Event.type == SDL_JOYDEVICEREMOVED) {
+				DisconnectDeviceFromXbox(Event.jdevice.which + 1);
+			}
+			else if (Event.type == ExitEvent_t) {
+				break;
+			}
+		}
+		Sleep(1);
+	}
+
+	SDL_Quit();
+	m_bExitOK = true;
+}
+
+void InputDeviceManager::AddDevice(InputDevice* Device)
+{
+	// If we are shutdown (or in process of shutting down) ignore this request:
+	if (!m_bInitOK) {
+		return;
+	}
+
+	//std::lock_guard<std::mutex> lk(m_devices_mutex);
+	// Try to find an ID for this device
+	int ID = 0;
+	while (true)
+	{
+		const auto it =
+			std::find_if(m_Devices.begin(), m_Devices.end(), [&Device, &ID](const auto& d) {
+			return d->GetAPI() == Device->GetAPI() && d->GetDeviceName() == Device->GetDeviceName() &&
+				d->GetId() == id;
+		});
+		if (it == m_Devices.end()) { // no device with the same name with this ID, so we can use it
+			break;
+		}
+		else {
+			ID++;
+		}
+	}
+	Device->SetId(ID);
+
+	EmuLog(LOG_LEVEL::INFO, "Added device: %s", Device->GetQualifiedName().c_str());
+	m_Devices.emplace_back(std::move(Device));
+
+	//if (!m_is_populating_devices)
+	//	InvokeDevicesChangedCallbacks();
+}
+
+void InputDeviceManager::UpdateInput()
+{
+	// Don't block the UI or CPU thread (to avoid a short but noticeable frame drop)
+	if (m_devices_mutex.try_lock()) // TODO
+	{
+		//std::lock_guard<std::mutex> lk(m_devices_mutex, std::adopt_lock);
+		for (const auto& d : m_Devices) {
+			d->UpdateInput();
+		}
+	}
 }
 
 int InputDeviceManager::ConnectDeviceToXbox(int port, int type)
 {
 	int ret = -1;
-	std::vector<SDL2Devices*>::iterator it;
+	std::vector<SdlDevice*>::iterator it;
 
 	if (port > 4 || port < 1) { return ret; };
 
-	for (it = m_Sdl2Devices.begin(); it != m_Sdl2Devices.end(); ++it) {
+	for (it = m_SdlDevices.begin(); it != m_SdlDevices.end(); ++it) {
 		if ((*it)->m_Index == (port - 1)) {
 			--port;
 			break;
 		}
 	}
 
-	if (it == m_Sdl2Devices.end()) {
-		EmuLog(LOG_LEVEL::WARNING, "Attempted to connect a device not yet enumerated.\n");
+	if (it == m_SdlDevices.end()) {
+		EmuLog(LOG_LEVEL::WARNING, "Attempted to connect a device not yet enumerated.");
 		return ret;
 	}
 
@@ -144,11 +217,11 @@ int InputDeviceManager::ConnectDeviceToXbox(int port, int type)
 					g_HubObjArray[port]->HubDestroy();
 					delete g_HubObjArray[port];
 					g_HubObjArray[port] = nullptr;
-					EmuLog(LOG_LEVEL::WARNING, "Xid controller already present at port %d.2\n", port + 1);
+					EmuLog(LOG_LEVEL::WARNING, "Xid controller already present at port %d.2", port + 1);
 				}
 			}
 			else {
-				EmuLog(LOG_LEVEL::WARNING, "Hub already present at port %d\n", port + 1);
+				EmuLog(LOG_LEVEL::WARNING, "Hub already present at port %d", port + 1);
 			}
 			break;
 		}
@@ -159,12 +232,12 @@ int InputDeviceManager::ConnectDeviceToXbox(int port, int type)
 		case MEMORY_UNIT:
 		case IR_DONGLE:
 		case STEEL_BATTALION_CONTROLLER: {
-			printf("This device type is not yet supported\n");
+			EmuLog(LOG_LEVEL::INFO, "This device type is not yet supported");
 			break;
 		}
 
 		default:
-			EmuLog(LOG_LEVEL::WARNING, "Attempted to attach an unknown device type\n");
+			EmuLog(LOG_LEVEL::WARNING, "Attempted to attach an unknown device type");
 	}
 
 	if (!ret) {
@@ -177,25 +250,25 @@ int InputDeviceManager::ConnectDeviceToXbox(int port, int type)
 
 void InputDeviceManager::DisconnectDeviceFromXbox(int port)
 {
-	std::vector<SDL2Devices*>::iterator it;
+	std::vector<SdlDevice*>::iterator it;
 
 	if (port < 1) { return; }
 
-	for (it = m_Sdl2Devices.begin(); it != m_Sdl2Devices.end(); ++it) {
+	for (it = m_SdlDevices.begin(); it != m_SdlDevices.end(); ++it) {
 		if ((*it)->m_Index == (port - 1)) {
 			--port;
 			break;
 		}
 	}
 
-	if (it == m_Sdl2Devices.end()) {
+	if (it == m_SdlDevices.end()) {
 		// Not necessarily a bug. This could also be triggered by detaching an unsupported joystick
 		return;
 	}
 
 	if (port + 1 > 4) {
 		delete (*it);
-		m_Sdl2Devices.erase(it);
+		m_SdlDevices.erase(it);
 		return;
 	}
 
@@ -209,7 +282,7 @@ void InputDeviceManager::DisconnectDeviceFromXbox(int port)
 				delete g_XidControllerObjArray[port];
 				g_XidControllerObjArray[port] = nullptr;
 				delete (*it);
-				m_Sdl2Devices.erase(it);
+				m_SdlDevices.erase(it);
 				// Here, we could also see if there are detached devices that have a matching type and bound buttons, so that it can immediately
 				// be used instead of remaining inactive (example: 5 controllers and 1st is detached -> 5th can be used if it has bindings)
 			}
@@ -234,87 +307,12 @@ void InputDeviceManager::DisconnectDeviceFromXbox(int port)
 	}
 }
 
-void InputDeviceManager::StartInputThread()
-{
-	std::thread(InputThread, this).detach();
-}
-
-void InputDeviceManager::InputThread(InputDeviceManager* pVoid)
-{
-	SetThreadAffinityMask(GetCurrentThread(), g_CPUOthers);
-	bool bContinue = true;
-	SDL_Event event;
-
-	if (SDL_InitSubSystem(SDL_INIT_VIDEO) < 0) {
-		CxbxKrnlCleanup("Failed to initialize SDL2 video subsystem. The error was: %s\n", SDL_GetError());
-		return;
-	}
-
-	SDL_JoystickEventState(SDL_ENABLE);
-
-	while (bContinue)
-	{
-		if (SDL_WaitEvent(&event))
-		{
-			switch (event.type)
-			{
-				case SDL_JOYBUTTONUP:
-				case SDL_JOYBUTTONDOWN: {
-					pVoid->UpdateButtonState(event.jbutton.which, event.jbutton.button, event.jbutton.state);
-					break;
-				}
-
-				case SDL_JOYHATMOTION: {
-					pVoid->UpdateHatState(event.jhat.which, event.jhat.hat, event.jhat.value);
-					break;
-				}
-
-				case SDL_JOYAXISMOTION: {
-					pVoid->UpdateAxisState(event.jaxis.which, event.jaxis.axis, event.jaxis.value);
-					break;
-				}
-
-				case SDL_JOYDEVICEADDED: {
-					bool found = false;
-					for (auto dev : pVoid->m_Sdl2Devices) {
-						if (dev->m_Index == event.jdevice.which) {
-							// already enumerated, skipping
-							found = true;
-							break;
-						}
-					}
-					if (!found) {
-						// for now we only support a single controller at port 1, more will be added later
-						if (!pVoid->IsValidController(event.jdevice.which) && event.jdevice.which == 0) {
-							pVoid->ConnectDeviceToXbox(1, MS_CONTROLLER_DUKE);
-						}
-					}
-					break;
-				}
-
-				case SDL_JOYDEVICEREMOVED: {
-					pVoid->DisconnectDeviceFromXbox(event.jdevice.which + 1);
-					break;
-				}
-
-				case SDL_QUIT: {
-					bContinue = false;
-					break;
-				}
-
-				default:
-					break;
-			}
-		}
-	}
-}
-
 void InputDeviceManager::UpdateButtonState(SDL_JoystickID id, uint8_t button, uint8_t state)
 {
-	SDL2Devices* ControllerObj = nullptr;
+	SdlDevice* ControllerObj = nullptr;
 	int xbox_button;
 
-	for (auto Obj : m_Sdl2Devices) {
+	for (auto Obj : m_SdlDevices) {
 		if (Obj->m_jyID == id) {
 			ControllerObj = Obj;
 			break;
@@ -364,10 +362,10 @@ void InputDeviceManager::UpdateButtonState(SDL_JoystickID id, uint8_t button, ui
 
 void InputDeviceManager::UpdateHatState(SDL_JoystickID id, uint8_t hat_index, uint8_t state)
 {
-	SDL2Devices* ControllerObj = nullptr;
+	SdlDevice* ControllerObj = nullptr;
 	int xbox_button;
 
-	for (auto Obj : m_Sdl2Devices) {
+	for (auto Obj : m_SdlDevices) {
 		if (Obj->m_jyID == id) {
 			ControllerObj = Obj;
 			break;
@@ -389,10 +387,10 @@ void InputDeviceManager::UpdateHatState(SDL_JoystickID id, uint8_t hat_index, ui
 
 void InputDeviceManager::UpdateAxisState(SDL_JoystickID id, uint8_t axis_index, int16_t state)
 {
-	SDL2Devices* ControllerObj = nullptr;
+	SdlDevice* ControllerObj = nullptr;
 	int xbox_button;
 
-	for (auto Obj : m_Sdl2Devices) {
+	for (auto Obj : m_SdlDevices) {
 		if (Obj->m_jyID == id) {
 			ControllerObj = Obj;
 			break;
@@ -414,13 +412,13 @@ void InputDeviceManager::UpdateAxisState(SDL_JoystickID id, uint8_t axis_index, 
 
 int InputDeviceManager::IsValidController(int index)
 {
-	SDL2Devices* pDev;
+	SdlDevice* pDev;
 	SDL_Joystick* pJoystick;
 
 	if (SDL_IsGameController(index)) {
-		pDev = new SDL2Devices();
+		pDev = new SdlDevice();
 		pDev->m_Index = index;
-		m_Sdl2Devices.push_back(pDev);
+		m_SdlDevices.push_back(pDev);
 	}
 	else {
 		// this joystick is not supported at the moment
@@ -431,7 +429,7 @@ int InputDeviceManager::IsValidController(int index)
 	if (pJoystick == nullptr) {
 		EmuLog(LOG_LEVEL::WARNING, "Failed to open game controller %s. The error was %s\n", SDL_GameControllerNameForIndex(pDev->m_Index), SDL_GetError());
 		delete pDev;
-		m_Sdl2Devices.erase(m_Sdl2Devices.begin() + index);
+		m_SdlDevices.erase(m_SdlDevices.begin() + index);
 		return -1;
 	}
 	else if (pDev->m_Index > 3) {
@@ -447,11 +445,11 @@ int InputDeviceManager::IsValidController(int index)
 	}
 }
 
-SDL2Devices* InputDeviceManager::FindDeviceFromXboxPort(int port)
+SdlDevice* InputDeviceManager::FindDeviceFromXboxPort(int port)
 {
 	if (port > 4 || port < 1) { return nullptr; };
 
-	for (auto it = m_Sdl2Devices.begin(); it != m_Sdl2Devices.end(); ++it) {
+	for (auto it = m_SdlDevices.begin(); it != m_SdlDevices.end(); ++it) {
 		if ((*it)->m_Index == (port - 1)) {
 			return *it;
 		}

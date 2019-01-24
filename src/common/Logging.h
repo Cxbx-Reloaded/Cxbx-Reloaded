@@ -68,7 +68,7 @@ typedef enum class _CXBXR_MODULE: unsigned int {
 	VTXB,
 	DINP,
 	XINP,
-	SDL2,
+	SDL,
 	FILE,
 	X86,
 	HLE,
@@ -79,7 +79,7 @@ typedef enum class _CXBXR_MODULE: unsigned int {
 	OHCI,
 	USB,
 	HUB,
-	XIDCTRL,
+	XPAD,
 	ADM,
 	// kernel
 	KRNL,

@@ -296,12 +296,6 @@
     <ClCompile Include="..\..\src\common\win32\InlineFunc.cpp">
       <Filter>Cross Platform\Win32</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\common\input\InputConfig.cpp">
-      <Filter>Shared\Input</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\common\input\SDL2_Device.cpp">
-      <Filter>Shared\Input</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\common\util\CxbxUtil.cpp">
       <Filter>Cross Platform</Filter>
     </ClCompile>
@@ -599,12 +593,6 @@
     <ClInclude Include="..\..\src\common\win32\XBPortMapping.h">
       <Filter>Emulator</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\common\input\InputConfig.h">
-      <Filter>Shared\Input</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\common\input\SDL2_Device.h">
-      <Filter>Shared\Input</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\common\util\CxbxUtil.h">
       <Filter>Cross Platform</Filter>
     </ClInclude>
@@ -634,6 +622,15 @@
     </ClCompile>
     <ClCompile Include="..\..\src\common\Timer.cpp">
       <Filter>Emulator</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\common\input\SdlJoystick.cpp">
+      <Filter>Shared\Input</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\common\input\InputDevice.cpp">
+      <Filter>Shared\Input</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\common\input\InputManager.cpp">
+      <Filter>Shared\Input</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\core\hle\DSOUND\XbDSoundLogging.cpp">
       <Filter>core\HLE\DSOUND</Filter>
@@ -846,6 +843,15 @@
     </ClInclude>
     <ClInclude Include="..\..\src\common\Timer.h">
       <Filter>Emulator</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\common\input\SdlJoystick.h">
+      <Filter>Shared\Input</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\common\input\InputDevice.h">
+      <Filter>Shared\Input</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\common\input\InputManager.h">
+      <Filter>Shared\Input</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -30,7 +30,7 @@
 
 #define _XBOXKRNL_DEFEXTRN_
 
-#define LOG_PREFIX CXBXR_MODULE::XIDCTRL
+#define LOG_PREFIX CXBXR_MODULE::XPAD
 
 // prevent name collisions
 namespace xboxkrnl
@@ -40,8 +40,8 @@ namespace xboxkrnl
 
 #include "XidGamepad.h"
 #include "USBDevice.h"
-#include "common\Input\InputConfig.h"
-#include "common\Input\SDL2_Device.h"
+#include "common\Input\InputManager.h"
+#include "common\Input\SdlJoystick.h"
 #include "OHCI.h"
 #include "core\kernel\exports\EmuKrnl.h"  // For EmuLog
 #include "Logging.h"
@@ -347,7 +347,7 @@ void XidGamepad::UsbXid_HandleControl(XboxDeviceState* dev, USBPacket* p,
 			if (value == 0x0100) {
 				if (length <= m_XidState->in_state.bLength) {
 #if 1 // Reenable this when LLE USB actually works
-					SDL2Devices* controller = g_InputDeviceManager->FindDeviceFromXboxPort(m_Port);
+					SdlDevice* controller = g_InputDeviceManager->FindDeviceFromXboxPort(m_Port);
 					if (controller != nullptr) {
 						controller->ReadButtonState(&m_XidState->in_state.wButtons, m_XidState->in_state.bAnalogButtons,
 							&m_XidState->in_state.sThumbLX, &m_XidState->in_state.sThumbLY, &m_XidState->in_state.sThumbRX,
@@ -476,7 +476,7 @@ void XidGamepad::UsbXid_HandleData(XboxDeviceState* dev, USBPacket* p)
 	case USB_TOKEN_IN: {
 		if (p->Endpoint->Num == 2) {
 #if 1 // Reenable this when LLE USB actually works
-			SDL2Devices* controller = g_InputDeviceManager->FindDeviceFromXboxPort(m_Port);
+			SdlDevice* controller = g_InputDeviceManager->FindDeviceFromXboxPort(m_Port);
 			if (controller != nullptr) {
 				bool ret;
 				ret = controller->ReadButtonState(&m_XidState->in_state.wButtons, m_XidState->in_state.bAnalogButtons,
