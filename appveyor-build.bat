@@ -10,10 +10,6 @@
 
 @call %VS_ENV%
 
-:: Build managed projects (debugger)
-@call MSBuild.exe %SLN% /p:Platform="Any CPU" /p:Configuration=%1% /m
-@if %errorlevel% neq 0 goto failure
-
 :: Build native projects (emulator, debugger dlls)
 @call MSBuild.exe %SLN% /p:Platform="Win32" /p:Configuration=%1% /m
 @if %errorlevel% neq 0 goto failure
