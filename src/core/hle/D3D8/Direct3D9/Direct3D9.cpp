@@ -3882,21 +3882,12 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexData2s)
 
 	float fa, fb;
 	
-	switch (Register) {
-		// Special case: If the input register is a color, don't transform!
-		// Test case: Halo
-		case X_D3DVSDE_DIFFUSE:
-		case X_D3DVSDE_SPECULAR:
-		case X_D3DVSDE_BACKDIFFUSE:
-		case X_D3DVSDE_BACKSPECULAR:
-			fa = a;
-			fb = b;
-			break;
-		default:
-			fa = a / 32767.0f;
-			fb = b / 32767.0f;
-			break;
-	}
+	// Test case: Halo
+	// Note : XQEMU recently verified that the int16_t arguments
+	// must be mapped to floats in the range [-32768.0, 32767.0]
+	// (See https://github.com/xqemu/xqemu/pull/176)
+	fa = (float)a;
+	fb = (float)b;
 
     EMUPATCH(D3DDevice_SetVertexData4f)(Register, fa, fb, 0.0f, 1.0f);
 }
@@ -4237,25 +4228,12 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexData4s)
 
 	float fa, fb, fc, fd;
 
-	// Special case: If the input register is a color, don't transform!
 	// Test case: Halo
-	switch (Register) {
-		case X_D3DVSDE_DIFFUSE:
-		case X_D3DVSDE_SPECULAR:
-		case X_D3DVSDE_BACKDIFFUSE:
-		case X_D3DVSDE_BACKSPECULAR:
-			fa = a;
-			fb = b;
-			fc = c;
-			fd = d;
-			break;
-		default:
-			fa = a / 32767.0f;
-			fb = b / 32767.0f;
-			fc = c / 32767.0f;
-			fd = d / 32767.0f;
-			break;
-	}
+	// See comment note in D3DDevice_SetVertexData2s
+	fa = (float)a;
+	fb = (float)b;
+	fc = (float)c;
+	fd = (float)d;
 
     EMUPATCH(D3DDevice_SetVertexData4f)(Register, fa, fb, fc, fd);
 }
