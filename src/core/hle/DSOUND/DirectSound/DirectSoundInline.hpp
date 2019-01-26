@@ -433,7 +433,8 @@ inline void DSound3DBufferCreate(LPDIRECTSOUNDBUFFER8 pDSBuffer, LPDIRECTSOUND3D
     pThis->Xb_rtPauseEx = 0LL; \
     pThis->Xb_Volume = 0L; \
     pThis->Xb_VolumeMixbin = 0L; \
-    pThis->Xb_dwHeadroom = 600; // default for 2D voice
+    pThis->Xb_dwHeadroom = 600; /* default for 2D voice */ \
+    pThis->Xb_EnvolopeDesc = { 0 };
     //pThis->EmuBufferDesc = { 0 }; // Enable this when become necessary.
     /*
     pThis->EmuLockPtr1 = xbnullptr; \

@@ -104,6 +104,23 @@ struct X_DSBUFFERDESC
     DWORD           dwInputMixBin;
 };
 
+// ******************************************************************
+// * X_DSENVELOPEDESC
+// ******************************************************************
+struct X_DSENVOLOPEDESC
+{
+    DWORD           dwEnvelopGenerator;
+    DWORD           dwMode;
+    DWORD           dwDelay;
+    DWORD           dwAttack;
+    DWORD           dwHold;
+    DWORD           dwDecay;
+    DWORD           dwRelease;
+    DWORD           dwSustain;
+    LONG            lPitchScale;
+    LONG            lFilterCutOff;
+};
+
 typedef VOID(CALLBACK *LPFNXMOCALLBACK)(LPVOID pStreamContext, LPVOID pPacketContext, DWORD dwStatus);
 
 // ******************************************************************
@@ -387,9 +404,11 @@ struct X_CDirectSoundBuffer
     DSoundBuffer_Lock       Host_lock;
     DSoundBuffer_Lock       X_lock;
     REFERENCE_TIME          Xb_rtPauseEx;
+    REFERENCE_TIME          Xb_rtStopEx;
     LONG                    Xb_Volume;
     LONG                    Xb_VolumeMixbin;
     DWORD                   Xb_dwHeadroom;
+    X_DSENVOLOPEDESC        Xb_EnvolopeDesc;
 };
 
 #define WAVE_FORMAT_XBOX_ADPCM 0x0069
@@ -541,6 +560,7 @@ class X_CDirectSoundStream
         LONG                                    Xb_Volume;
         LONG                                    Xb_VolumeMixbin;
         DWORD                                   Xb_dwHeadroom;
+        X_DSENVOLOPEDESC                        Xb_EnvolopeDesc;
 };
 
 // ******************************************************************
@@ -1493,7 +1513,7 @@ HRESULT WINAPI EMUPATCH(IDirectSound_GetOutputLevels)
 HRESULT WINAPI EMUPATCH(CDirectSoundStream_SetEG)
 (
     X_CDirectSoundStream*   pThis,
-    LPVOID                  pEnvelopeDesc
+    X_DSENVOLOPEDESC*       pEnvelopeDesc
 );
 
 // ******************************************************************
@@ -1659,7 +1679,7 @@ HRESULT WINAPI EMUPATCH(XWaveFileCreateMediaObject)
 HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_SetEG)
 (
     X_CDirectSoundBuffer*   pThis,
-    LPVOID                  pEnvelopeDesc
+    X_DSENVOLOPEDESC*       pEnvelopeDesc
 );
 
 // ******************************************************************
@@ -1907,7 +1927,7 @@ HRESULT WINAPI EMUPATCH(IDirectSoundStream_SetLFO)
 HRESULT WINAPI EMUPATCH(IDirectSoundStream_SetEG)
 (
     X_CDirectSoundStream*   pThis,
-    LPVOID                  pEnvelopeDesc);
+    X_DSENVOLOPEDESC*       pEnvelopeDesc);
 
 // ******************************************************************
 // * patch: IDirectSoundStream_SetFilter
