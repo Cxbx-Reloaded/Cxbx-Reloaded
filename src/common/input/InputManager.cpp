@@ -128,6 +128,9 @@ void InputDeviceManager::InputMainLoop()
 
 void InputDeviceManager::AddDevice(InputDevice* Device)
 {
+	std::vector<InputDevice::Input*> Inputs;
+	int ID;
+
 	// If we are shutdown (or in process of shutting down) ignore this request:
 	if (!m_bInitOK) {
 		return;
@@ -135,13 +138,13 @@ void InputDeviceManager::AddDevice(InputDevice* Device)
 
 	//std::lock_guard<std::mutex> lk(m_devices_mutex);
 	// Try to find an ID for this device
-	int ID = 0;
+	ID = 0;
 	while (true)
 	{
 		const auto it =
 			std::find_if(m_Devices.begin(), m_Devices.end(), [&Device, &ID](const auto& d) {
 			return d->GetAPI() == Device->GetAPI() && d->GetDeviceName() == Device->GetDeviceName() &&
-				d->GetId() == id;
+				d->GetId() == ID;
 		});
 		if (it == m_Devices.end()) { // no device with the same name with this ID, so we can use it
 			break;
@@ -151,6 +154,8 @@ void InputDeviceManager::AddDevice(InputDevice* Device)
 		}
 	}
 	Device->SetId(ID);
+	Device->SetXPort(XBOX_PORT_INVALID);
+	Device->SetXType(to_underlying(XBOX_INPUT_DEVICE::DEVICE_INVALID));
 
 	EmuLog(LOG_LEVEL::INFO, "Added device: %s", Device->GetQualifiedName().c_str());
 	m_Devices.emplace_back(std::move(Device));
@@ -159,16 +164,18 @@ void InputDeviceManager::AddDevice(InputDevice* Device)
 	//	InvokeDevicesChangedCallbacks();
 }
 
-void InputDeviceManager::UpdateInput()
+void InputDeviceManager::RemoveDevice(InputDevice* Device)
 {
-	// Don't block the UI or CPU thread (to avoid a short but noticeable frame drop)
-	if (m_devices_mutex.try_lock()) // TODO
-	{
-		//std::lock_guard<std::mutex> lk(m_devices_mutex, std::adopt_lock);
-		for (const auto& d : m_Devices) {
-			d->UpdateInput();
+	//std::lock_guard<std::mutex> lk(m_devices_mutex);
+	auto it = std::remove_if(m_Devices.begin(), m_Devices.end(), [](const auto& dev) {
+		if (dev == Devices))
+		{
+			EmuLog(LOG_LEVEL::INFO, "Removed device: %s", dev->GetQualifiedName().c_str());
+			return true;
 		}
-	}
+		return false;
+	});
+	m_Devices.erase(it, m_Devices.end());
 }
 
 int InputDeviceManager::ConnectDeviceToXbox(int port, int type)
@@ -307,153 +314,113 @@ void InputDeviceManager::DisconnectDeviceFromXbox(int port)
 	}
 }
 
-void InputDeviceManager::UpdateButtonState(SDL_JoystickID id, uint8_t button, uint8_t state)
+bool InputDeviceManager::UpdateXboxPortInput(int Port, void* Buffer, int Direction)
 {
-	SdlDevice* ControllerObj = nullptr;
-	int xbox_button;
+	InputDevice* pDev;
 
-	for (auto Obj : m_SdlDevices) {
-		if (Obj->m_jyID == id) {
-			ControllerObj = Obj;
+	assert(Direction == DIRECTION_IN || Direction == DIRECTION_OUT);
+	if (Port > XBOX_PORT_4 || Port < XBOX_PORT_1) { return false; };
+
+	pDev = nullptr;
+	for (auto it : m_Devices) {
+		if (it->GetXPort == Port) {
+			pDev = it;
 			break;
 		}
 	}
-
-	if (ControllerObj == nullptr) {
-		return;
+	if (pDev == nullptr) {
+		return false;
 	}
 
-	xbox_button = ControllerObj->GetBoundButton(button);
-
-	if (xbox_button == GAMEPAD_INVALID) {
-		return;
-	}
-
-	switch (xbox_button)
+	switch (pDev->GetXType())
 	{
-		case GAMEPAD_A:
-		case GAMEPAD_B:
-		case GAMEPAD_X:
-		case GAMEPAD_Y:
-		case GAMEPAD_BLACK:
-		case GAMEPAD_WHITE:
-		case GAMEPAD_LEFT_TRIGGER:
-		case GAMEPAD_RIGHT_TRIGGER: {
-			ControllerObj->UpdateAnalogButtonState(xbox_button, state);
-			break;
+		case to_underlying(XBOX_INPUT_DEVICE::MS_CONTROLLER_DUKE): {
+			UpdateInputXpad(pDev, Buffer, Direction);
 		}
+		break;
 
-		case GAMEPAD_BACK:
-		case GAMEPAD_START:
-		case GAMEPAD_LEFT_THUMB:
-		case GAMEPAD_RIGHT_THUMB:
-		case GAMEPAD_DPAD_UP:
-		case GAMEPAD_DPAD_DOWN:
-		case GAMEPAD_DPAD_LEFT:
-		case GAMEPAD_DPAD_RIGHT: {
-			ControllerObj->UpdateDigitalButtonState(xbox_button, state);
-			break;
+		default: {
+			EmuLog(LOG_LEVEL::WARNING, "Port %d has an unsupported xbox device attached! The type was %d", Port, pDev->GetXType());
+			return false;
 		}
-
-		default:
-			break;
 	}
+
+	return true;
 }
 
-void InputDeviceManager::UpdateHatState(SDL_JoystickID id, uint8_t hat_index, uint8_t state)
+void InputDeviceManager::UpdateInputXpad(InputDevice* Device, void* Buffer, int Direction)
 {
-	SdlDevice* ControllerObj = nullptr;
-	int xbox_button;
+	int i;
+	std::map<int, InputDevice::Input*> bindings;
 
-	for (auto Obj : m_SdlDevices) {
-		if (Obj->m_jyID == id) {
-			ControllerObj = Obj;
-			break;
+	if (Direction == DIRECTION_IN) {
+		XpadInput* in_buf = reinterpret_cast<XpadInput*>(static_cast<uint8_t*>(Buffer) + 2);
+		bindings = Device->GetBindings();
+		Device->UpdateInput();
+		for (i = GAMEPAD_A; i < GAMEPAD_DPAD_UP; i++) {
+			const auto it = std::find_if(bindings.begin(), bindings.end(), [&i](const auto& d) {
+				return i == d.first;
+			});
+			if (it != bindings.end()) {
+				if (i == GAMEPAD_LEFT_TRIGGER || i == GAMEPAD_RIGHT_TRIGGER) {
+					in_buf->bAnalogButtons[i] = it->second->GetState(); //>> 7;
+				}
+				else {
+					// At the moment, we don't support intermediate values for the analog buttons, so report them as full pressed or released
+					in_buf->bAnalogButtons[i] = it->second->GetState() ? 0xFF : 0;
+				}
+			}
 		}
-	}
-
-	if (ControllerObj == nullptr) {
-		return;
-	}
-
-	xbox_button = ControllerObj->GetBoundButton(hat_index + HAT_CONSTANT);
-
-	if (xbox_button == GAMEPAD_INVALID) {
-		return;
-	}
-
-	ControllerObj->UpdateHatState(state);
-}
-
-void InputDeviceManager::UpdateAxisState(SDL_JoystickID id, uint8_t axis_index, int16_t state)
-{
-	SdlDevice* ControllerObj = nullptr;
-	int xbox_button;
-
-	for (auto Obj : m_SdlDevices) {
-		if (Obj->m_jyID == id) {
-			ControllerObj = Obj;
-			break;
+		for (i = GAMEPAD_DPAD_UP; i < GAMEPAD_LEFT_THUMB_X; i++) {
+			const auto it = std::find_if(bindings.begin(), bindings.end(), [&i](const auto& d) {
+				return i == d.first;
+			});
+			if (it != bindings.end()) {
+				if (it->second->GetState()) {
+					in_buf->wButtons |= BUTTON_MASK(i);
+				}
+				else {
+					in_buf->wButtons &= ~(BUTTON_MASK(i));
+				}
+			}
 		}
-	}
+		for (i = GAMEPAD_LEFT_THUMB_X; i < GAMEPAD_BUTTON_MAX; i++) {
+			const auto it = std::find_if(bindings.begin(), bindings.end(), [&i](const auto& d) {
+				return i == d.first;
+			});
+			if (it != bindings.end()) {
+				switch (i)
+				{
+					case GAMEPAD_LEFT_THUMB_X: {
+						in_buf->sThumbLX = it->second->GetState();
+					}
+					break;
 
-	if (ControllerObj == nullptr) {
-		return;
-	}
+					case GAMEPAD_LEFT_THUMB_Y: {
+						in_buf->sThumbLY = -it->second->GetState() - 1;
+					}
+					break;
 
-	xbox_button = ControllerObj->GetBoundButton(axis_index);
+					case GAMEPAD_RIGHT_THUMB_X: {
+						in_buf->sThumbRX = it->second->GetState();
+					}
+					break;
 
-	if (xbox_button == GAMEPAD_INVALID) {
-		return;
-	}
+					case GAMEPAD_RIGHT_THUMB_Y: {
+						in_buf->sThumbRY = -it->second->GetState() - 1;
+					}
+					break;
 
-	ControllerObj->UpdateAxisState(xbox_button, state);
-}
-
-int InputDeviceManager::IsValidController(int index)
-{
-	SdlDevice* pDev;
-	SDL_Joystick* pJoystick;
-
-	if (SDL_IsGameController(index)) {
-		pDev = new SdlDevice();
-		pDev->m_Index = index;
-		m_SdlDevices.push_back(pDev);
+					default: {
+						// unreachable
+					}
+				}
+			}
+		}
 	}
 	else {
-		// this joystick is not supported at the moment
-		return -1;
+		// TODO
 	}
 
-	pJoystick = SDL_JoystickOpen(pDev->m_Index);
-	if (pJoystick == nullptr) {
-		EmuLog(LOG_LEVEL::WARNING, "Failed to open game controller %s. The error was %s\n", SDL_GameControllerNameForIndex(pDev->m_Index), SDL_GetError());
-		delete pDev;
-		m_SdlDevices.erase(m_SdlDevices.begin() + index);
-		return -1;
-	}
-	else if (pDev->m_Index > 3) {
-		printf("More than 4 controllers detected. Putting game controller %s in detached state\n", SDL_JoystickName(pJoystick));
-		pDev->m_Attached = 0;
-		return -1;
-	}
-	else {
-		printf("Found game controller %s\n", SDL_JoystickName(pJoystick));
-		pDev->m_Joystick = pJoystick;
-		pDev->m_jyID = SDL_JoystickInstanceID(pJoystick);
-		return 0;
-	}
-}
-
-SdlDevice* InputDeviceManager::FindDeviceFromXboxPort(int port)
-{
-	if (port > 4 || port < 1) { return nullptr; };
-
-	for (auto it = m_SdlDevices.begin(); it != m_SdlDevices.end(); ++it) {
-		if ((*it)->m_Index == (port - 1)) {
-			return *it;
-		}
-	}
-	return nullptr;
 }
 #endif

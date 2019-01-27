@@ -39,9 +39,33 @@
 
 #include <string>
 #include <vector>
+#include <atomic>
+#include <map>
+
+#define XBOX_PORT_INVALID  -1
+#define XBOX_PORT_1         1
+#define XBOX_PORT_2         2
+#define XBOX_PORT_3         3
+#define XBOX_PORT_4         4
+
+#define DIRECTION_IN  0
+#define DIRECTION_OUT 1
 
 
 typedef double ControlState;
+
+/* enum indicating the device type to attach to the virtual xbox */
+typedef enum class _XBOX_INPUT_DEVICE : int {
+	DEVICE_INVALID = -1,
+	MS_CONTROLLER_DUKE,
+	MS_CONTROLLER_S,
+	LIGHT_GUN,
+	STEERING_WHEEL,
+	MEMORY_UNIT,
+	IR_DONGLE,
+	STEEL_BATTALION_CONTROLLER,
+}
+XBOX_INPUT_DEVICE;
 
 /* Abstract class which represents a host device usable for input/output */
 class InputDevice
@@ -65,6 +89,10 @@ class InputDevice
 		const std::vector<Input*>& GetInputs() const { return m_Inputs; }
 		// retrieves the vector of output controls
 		const std::vector<Output*>& GetOutputs() const { return m_Outputs; }
+		// retrieves the map of input bindings
+		const std::map<int, Input*>& GetBindings() const { return m_Bindings; }
+		// sets a pair in the map of the input bindings
+		void SetBindings(int XButton, Input* Control) { m_Bindings.emplace(XButton, Control); }
 		// retrieves the full name of the device (API/ID/API-specific name)
 		std::string GetQualifiedName() const;
 		// retrieves the API-specific name of the device
@@ -75,8 +103,17 @@ class InputDevice
 		virtual void UpdateInput() {}
 		// retrieves the ID of this device
 		int GetId() const { return m_ID; }
-		// set the ID of this device
+		// sets the ID of this device
 		void SetId(int ID) { m_ID = ID; }
+		// retrieves the xbox port this device is attached to
+		int GetXPort() const { return m_XboxPort; }
+		// sets the xbox port this device is attached to
+		void SetXPort(int Port) { m_XboxPort = Port; }
+		// retrieves the xbox device type
+		int GetXType() const { return m_Type; }
+		// sets the xbox device type
+		void SetXType(int Type) { m_Type = Type; }
+
 
 	protected:
 		// adds an input control to the device
@@ -115,6 +152,12 @@ class InputDevice
 		std::vector<Input*> m_Inputs;
 		// all the output controls detected and usable on this device
 		std::vector<Output*> m_Outputs;
+		// xbox port this device is attached to
+		int m_XboxPort;
+		// the emulated xbox device type
+		int m_Type;
+		// button bindings to the xbox device buttons
+		std::map<int, Input*> m_Bindings;
 };
 
 #endif

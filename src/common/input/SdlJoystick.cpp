@@ -175,21 +175,6 @@ std::string SdlJoystick::GetAPI() const
 	return "SDL";
 }
 
-void SdlJoystick::HapticEffect::SetState(ControlState state)
-{
-	memset(&m_Effect, 0, sizeof(m_Effect));
-	if (state)
-	{
-		SetSDLHapticEffect(state);
-	}
-	else
-	{
-		// this module uses type==0 to indicate 'off'
-		m_Effect.type = 0;
-	}
-	Update();
-}
-
 void SdlJoystick::UpdateInput()
 {
 	SDL_JoystickUpdate();
@@ -258,6 +243,21 @@ ControlState SdlJoystick::Hat::GetState() const
 	return (SDL_JoystickGetHat(m_Js, m_Index) & (1 << m_Direction)) > 0;
 }
 
+void SdlJoystick::HapticEffect::SetState(ControlState state)
+{
+	memset(&m_Effect, 0, sizeof(m_Effect));
+	if (state)
+	{
+		SetSDLHapticEffect(state);
+	}
+	else
+	{
+		// this module uses type==0 to indicate 'off'
+		m_Effect.type = 0;
+	}
+	Update();
+}
+
 void SdlJoystick::HapticEffect::Update()
 {
 	if (m_ID == -1 && m_Effect.type > 0)
@@ -324,185 +324,6 @@ void SdlJoystick::LeftRightEffect::SetSDLHapticEffect(ControlState state)
 	// max ranges tuned to 'feel' similar in magnitude to triangle/sine on xbox360 controller
 	m_Effect.leftright.large_magnitude = (Uint16)(state * 0x4000);
 	m_Effect.leftright.small_magnitude = (Uint16)(state * 0xFFFF);
-}
-
-int SdlDevice::GetBoundButton(int sdl_key)
-{
-	int i;
-
-	for (i = 0; i < 8; i++) {
-		if (m_ButtonMap_Analog[i][1] == sdl_key) {
-			return m_ButtonMap_Analog[i][0];
-		}
-	}
-
-	for (i = 0; i < 8; i++) {
-		if (m_ButtonMap_Binary[i][1] == sdl_key) {
-			return m_ButtonMap_Binary[i][0];
-		}
-	}
-
-	if (m_HatIndex == sdl_key) {
-		return m_HatIndex;
-	}
-
-	for (i = 0; i < 4; i++) {
-		if (m_AxisMap[i][1] == sdl_key) {
-			return m_AxisMap[i][0];
-		}
-	}
-
-	return GAMEPAD_INVALID;
-}
-
-void SdlDevice::UpdateAnalogButtonState(uint8_t xbox_button, uint8_t state)
-{
-	for (int i = 0; i < 6; i++) {
-		if (m_ButtonMap_Analog[i][0] == xbox_button) {
-			// At the moment, we don't support intermediate values for the analog buttons, so report them as full pressed or released
-			m_State.bAnalogButtons[m_ButtonMap_Analog[i][0]] = state ? 0xFF : 0;
-			bStateDirty = true;
-			return;
-		}
-	}
-
-	if (xbox_button == GAMEPAD_LEFT_TRIGGER) {
-		m_State.bAnalogButtons[m_ButtonMap_Analog[6][0]] = SDL_JoystickGetAxis(m_Joystick, SDL_CONTROLLER_AXIS_TRIGGERLEFT) >> 8;
-		bStateDirty = true;
-		return;
-	}
-
-	if (xbox_button == GAMEPAD_RIGHT_TRIGGER) {
-		m_State.bAnalogButtons[m_ButtonMap_Analog[7][0]] = SDL_JoystickGetAxis(m_Joystick, SDL_CONTROLLER_AXIS_TRIGGERLEFT) >> 8;
-		bStateDirty = true;
-		return;
-	}
-
-	assert(0);
-}
-
-void SdlDevice::UpdateDigitalButtonState(uint8_t xbox_button, uint8_t state)
-{
-	for (int i = 0; i < 8; i++) {
-		if (m_ButtonMap_Binary[i][0] == xbox_button) {
-			if (state) {
-				m_State.wButtons |= BUTTON_MASK(m_ButtonMap_Binary[i][0]);
-				bStateDirty = true;
-				return;
-			}
-			else {
-				m_State.wButtons &= ~(BUTTON_MASK(m_ButtonMap_Binary[i][0]));
-				bStateDirty = true;
-				return;
-			}
-		}
-	}
-
-	assert(0);
-}
-
-void SdlDevice::UpdateHatState(uint8_t state)
-{
-	m_State.wButtons &= ~0xF;
-
-	switch (state)
-	{
-		case SDL_HAT_LEFTUP: {
-			m_State.wButtons |= (BUTTON_MASK(m_ButtonMap_Binary[4][0]) | BUTTON_MASK(m_ButtonMap_Binary[6][0]));
-			break;
-		}
-
-		case SDL_HAT_UP: {
-			m_State.wButtons |= BUTTON_MASK(m_ButtonMap_Binary[4][0]);
-			break;
-		}
-
-		case SDL_HAT_RIGHTUP: {
-			m_State.wButtons |= (BUTTON_MASK(m_ButtonMap_Binary[4][0]) | BUTTON_MASK(m_ButtonMap_Binary[7][0]));
-			break;
-		}
-
-		case SDL_HAT_RIGHT: {
-			m_State.wButtons |= (BUTTON_MASK(m_ButtonMap_Binary[7][0]));
-			break;
-		}
-
-		case SDL_HAT_RIGHTDOWN: {
-			m_State.wButtons |= (BUTTON_MASK(m_ButtonMap_Binary[7][0]) | BUTTON_MASK(m_ButtonMap_Binary[5][0]));
-			break;
-		}
-
-		case SDL_HAT_DOWN: {
-			m_State.wButtons |= (BUTTON_MASK(m_ButtonMap_Binary[5][0]));
-			break;
-		}
-
-		case SDL_HAT_LEFTDOWN: {
-			m_State.wButtons |= (BUTTON_MASK(m_ButtonMap_Binary[5][0]) | BUTTON_MASK(m_ButtonMap_Binary[6][0]));
-			break;
-		}
-
-		case SDL_HAT_LEFT: {
-			m_State.wButtons |= (BUTTON_MASK(m_ButtonMap_Binary[6][0]));
-			break;
-		}
-
-		case SDL_HAT_CENTERED: {
-			break;
-		}
-
-		default:
-			assert(0);
-	}
-
-	bStateDirty = true;
-}
-
-void SdlDevice::UpdateAxisState(uint8_t xbox_button, int16_t state)
-{
-	switch (xbox_button)
-	{
-		case GAMEPAD_LEFT_THUMB_X: {
-			m_State.sThumbLX = state;
-			break;
-		}
-
-		case GAMEPAD_LEFT_THUMB_Y: {
-			m_State.sThumbLY = -state - 1; // not sure of this yet
-			break;
-		}
-
-		case GAMEPAD_RIGHT_THUMB_X: {
-			m_State.sThumbRX = state;
-			break;
-		}
-
-		case GAMEPAD_RIGHT_THUMB_Y: {
-			m_State.sThumbRY = -state - 1; // not sure of this yet
-			break;
-		}
-
-		default:
-			assert(0);
-	}
-}
-
-bool SdlDevice::ReadButtonState(uint16_t* wButtons, uint8_t* bAnalogButtons, int16_t* sThumbLX,
-	int16_t* sThumbLY, int16_t* sThumbRX, int16_t* sThumbRY)
-{
-	if (bStateDirty) {
-		*wButtons = m_State.wButtons.load();
-		*sThumbLX = m_State.sThumbLX.load();
-		*sThumbLY = m_State.sThumbLY.load();
-		*sThumbRX = m_State.sThumbRX.load();
-		*sThumbRY = m_State.sThumbRY.load();
-		for (int i = 0; i < 8; ++i) {
-			bAnalogButtons[i] = m_State.bAnalogButtons[i].load();
-		}
-		bStateDirty = false;
-		return true;
-	}
-	return false;
 }
 
 #endif

@@ -347,11 +347,9 @@ void XidGamepad::UsbXid_HandleControl(XboxDeviceState* dev, USBPacket* p,
 			if (value == 0x0100) {
 				if (length <= m_XidState->in_state.bLength) {
 #if 1 // Reenable this when LLE USB actually works
-					SdlDevice* controller = g_InputDeviceManager->FindDeviceFromXboxPort(m_Port);
-					if (controller != nullptr) {
-						controller->ReadButtonState(&m_XidState->in_state.wButtons, m_XidState->in_state.bAnalogButtons,
-							&m_XidState->in_state.sThumbLX, &m_XidState->in_state.sThumbLY, &m_XidState->in_state.sThumbRX,
-							&m_XidState->in_state.sThumbRY);
+					if (g_InputDeviceManager->UpdateXboxPortInput(m_Port, &m_XidState->in_state, DIRECTION_IN)) {
+						std::memcpy(data, &m_XidState->in_state, m_XidState->in_state.bLength);
+						p->ActualLength = length;
 					}
 					else {
 						// ergo720: this shouldn't really happen. If it does, it either means that m_Port is wrong or there's a bug
@@ -360,8 +358,6 @@ void XidGamepad::UsbXid_HandleControl(XboxDeviceState* dev, USBPacket* p,
 						assert(0);
 					}
 #endif
-					std::memcpy(data, &m_XidState->in_state, m_XidState->in_state.bLength);
-					p->ActualLength = length;
 				}
 				else {
 					p->Status = USB_RET_STALL;
@@ -475,23 +471,12 @@ void XidGamepad::UsbXid_HandleData(XboxDeviceState* dev, USBPacket* p)
 	switch (p->Pid) {
 	case USB_TOKEN_IN: {
 		if (p->Endpoint->Num == 2) {
-#if 1 // Reenable this when LLE USB actually works
-			SdlDevice* controller = g_InputDeviceManager->FindDeviceFromXboxPort(m_Port);
-			if (controller != nullptr) {
-				bool ret;
-				ret = controller->ReadButtonState(&m_XidState->in_state.wButtons, m_XidState->in_state.bAnalogButtons,
-					&m_XidState->in_state.sThumbLX, &m_XidState->in_state.sThumbLY, &m_XidState->in_state.sThumbRX,
-					&m_XidState->in_state.sThumbRY);
-				if (ret) {
-					m_UsbDev->USB_PacketCopy(p, &m_XidState->in_state, m_XidState->in_state.bLength);
-				}
-				else {
-#endif
-					p->Status = USB_RET_NAK;
-				}
-#if 1 // Reenable this when LLE USB actually works
+			if (g_InputDeviceManager->UpdateXboxPortInput(m_Port, &m_XidState->in_state, DIRECTION_IN)) {
+				m_UsbDev->USB_PacketCopy(p, &m_XidState->in_state, m_XidState->in_state.bLength);
 			}
 			else {
+				// ergo720: this shouldn't really happen. If it does, it either means that m_Port is wrong or there's a bug
+				// in the InputDeviceManager
 				p->Status = USB_RET_STALL;
 				assert(0);
 			}
@@ -499,7 +484,6 @@ void XidGamepad::UsbXid_HandleData(XboxDeviceState* dev, USBPacket* p)
 		else {
 			assert(0);
 		}
-#endif
 		break;
 	}
 

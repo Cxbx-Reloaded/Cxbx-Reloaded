@@ -28,7 +28,6 @@
 #ifndef INPUTMANAGER_H_
 #define INPUTMANAGER_H_
 #if 1 // Reenable this when LLE USB actually works
-#include <atomic>
 #include "SdlJoystick.h"
 
 #define GAMEPAD_A                 0
@@ -54,37 +53,24 @@
 #define GAMEPAD_RIGHT_THUMB_X     18
 #define GAMEPAD_RIGHT_THUMB_Y     19
 
-#define GAMEPAD_INVALID          -1
+#define GAMEPAD_BUTTON_MAX        20
 #define BUTTON_MASK(button) (1 << ((button) - GAMEPAD_DPAD_UP))
 
-#define HAT_CONSTANT             255
 
-
-/* enum indicating the device type to attach to the virtual xbox */
-typedef enum {
-	DEVICE_INVALID = 0,
-	MS_CONTROLLER_DUKE,
-	MS_CONTROLLER_S,
-	LIGHT_GUN,
-	STEERING_WHEEL,
-	MEMORY_UNIT,
-	IR_DONGLE,
-	STEEL_BATTALION_CONTROLLER,
-}
-XBOX_INPUT_DEVICE;
-
-/* Button state, same as XIDGamepadReport */
-struct ButtonState {
-	std::atomic_uint16_t wButtons;         // all non-analog buttons
-	std::atomic_uint8_t bAnalogButtons[8]; // X, Y, A, B, white, black, left/right trigger
-	std::atomic_int16_t sThumbLX;          // analog stick, left X
-	std::atomic_int16_t sThumbLY;          // analog stick, left Y
-	std::atomic_int16_t sThumbRX;          // analog stick, right X
-	std::atomic_int16_t sThumbRY;          // analog stick, right Y
+// xpad in/out buffers stripped of the first two bytes
+struct XpadInput {
+	uint16_t wButtons;
+	uint8_t bAnalogButtons[8];
+	int16_t sThumbLX;         
+	int16_t sThumbLY;
+	int16_t sThumbRX;
+	int16_t sThumbRY;
 };
 
-// forward declare
-class SdlDevice;
+struct XpadOutput {
+	uint16_t left_actuator_strength;
+	uint16_t right_actuator_strength;
+};
 
 
 class InputDeviceManager
@@ -96,8 +82,8 @@ class InputDeviceManager
 		int ConnectDeviceToXbox(int port, int type);
 		// disconnect a device from the emulated xbox
 		void DisconnectDeviceFromXbox(int port);
-		// find the device attached to the supplied xbox port
-		SdlDevice* FindDeviceFromXboxPort(int port);
+		// read/write the input/output from/to the device attached to the supplied xbox port
+		bool UpdateXboxPortInput(int Port, void* Buffer, int Direction);
 
 
 	private:
@@ -109,8 +95,6 @@ class InputDeviceManager
 		bool m_bExitOK;
 		// used to indicate that the manager was initialized correctly
 		bool m_bInitOK;
-		// all enumerated xinput devices currently detected and supported
-		//std::map<unsigned int, XInputDevice*> m_XInputDevices;
 		// assign the button binding to the devices
 		//void AssignBindings();
 		// open the sdl joystick with the specified index
@@ -119,16 +103,10 @@ class InputDeviceManager
 		void InputMainLoop();
 		// add the device to the list of availble devices
 		void AddDevice(InputDevice* Device);
-		// Update input for all devices if lock can be acquired without waiting
-		void UpdateInput();
-		// updates the button state of a joystick
-		void UpdateButtonState(SDL_JoystickID id, uint8_t button, uint8_t state);
-		// updates the hat state of a joystick
-		void UpdateHatState(SDL_JoystickID id, uint8_t hat_index, uint8_t state);
-		// updates the axis state of a joystick
-		void UpdateAxisState(SDL_JoystickID id, uint8_t axis_index, int16_t state);
-		// checks if the controller attached can be used by sdl
-		int IsValidController(int index);
+		// remove the device from the list of availble devices
+		void RemoveDevice(InputDevice* Device);
+		// update input for an xbox controller
+		void UpdateInputXpad(InputDevice* Device, void* Buffer, int Direction);
 };
 
 extern InputDeviceManager* g_InputDeviceManager;
