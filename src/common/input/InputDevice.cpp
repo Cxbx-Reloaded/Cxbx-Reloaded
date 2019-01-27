@@ -37,6 +37,20 @@
 #include "InputDevice.h"
 
 
+// Destructor, delete all inputs/outputs on device destruction
+InputDevice::~InputDevice()
+{
+	// delete inputs
+	for (InputDevice::Input* input : m_Inputs) {
+		delete input;
+	}
+
+	// delete outputs
+	for (InputDevice::Output* output : m_Outputs) {
+		delete output;
+	}
+}
+
 void InputDevice::AddInput(Input* const In)
 {
 	m_Inputs.push_back(In);

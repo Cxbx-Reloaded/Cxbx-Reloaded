@@ -99,12 +99,14 @@ class InputDeviceManager
 		//void AssignBindings();
 		// open the sdl joystick with the specified index
 		void OpenSdlDevice(const int Index);
+		// close the sdl joystick with the specified index
+		void CloseSdlDevice(const int Index);
 		// thread which polls input devices
 		void InputMainLoop();
 		// add the device to the list of availble devices
 		void AddDevice(InputDevice* Device);
 		// remove the device from the list of availble devices
-		void RemoveDevice(InputDevice* Device);
+		void RemoveDevice(std::function<bool(const InputDevice*)> Callback);
 		// update input for an xbox controller
 		void UpdateInputXpad(InputDevice* Device, void* Buffer, int Direction);
 };

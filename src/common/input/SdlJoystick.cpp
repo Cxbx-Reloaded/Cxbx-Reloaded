@@ -235,7 +235,7 @@ ControlState SdlJoystick::Button::GetState() const
 
 ControlState SdlJoystick::Axis::GetState() const
 {
-	return std::max(0.0, ControlState(SDL_JoystickGetAxis(m_Js, m_Index)) / m_Range); // this needs further investigation...
+	return std::max(0.0, ControlState(SDL_JoystickGetAxis(m_Js, m_Index)) / m_Range);
 }
 
 ControlState SdlJoystick::Hat::GetState() const

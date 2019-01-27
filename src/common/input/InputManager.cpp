@@ -42,6 +42,7 @@ namespace xboxkrnl
 
 
 InputDeviceManager* g_InputDeviceManager = nullptr;
+constexpr ControlState INPUT_DETECT_THRESHOLD = 0.55; // arbitrary number, using what Dolphin uses
 
 InputDeviceManager::InputDeviceManager()
 {
@@ -83,6 +84,14 @@ void InputDeviceManager::OpenSdlDevice(const int Index)
 	}
 }
 
+void InputDeviceManager::CloseSdlDevice(const int Index)
+{
+	RemoveDevice([&Index](const auto& d) {
+		const SdlJoystick* joystick = dynamic_cast<const SdlJoystick*>(device);
+		return joystick && SDL_JoystickInstanceID(joystick->GetSDLJoystick()) == Index;
+	});
+}
+
 void InputDeviceManager::InputMainLoop()
 {
 	uint32_t ExitEvent_t;
@@ -99,7 +108,6 @@ void InputDeviceManager::InputMainLoop()
 	}
 	SDL_memset(&m_ExitLoop, 0, sizeof(SDL_Event));
 	m_ExitLoop.type = ExitEvent_t;
-	SDL_JoystickEventState(SDL_IGNORE);
 	m_bInitOK = true;
 	m_bExitOK = false;
 
@@ -107,19 +115,19 @@ void InputDeviceManager::InputMainLoop()
 	
 	while (true)
 	{
-		if (SDL_PollEvent(&Event))
+		while (SDL_PollEvent(&Event))
 		{
 			if (Event.type == SDL_JOYDEVICEADDED) {
 				OpenSdlDevice(Event.jdevice.which);
 			}
 			else if (Event.type == SDL_JOYDEVICEREMOVED) {
-				DisconnectDeviceFromXbox(Event.jdevice.which + 1);
+				CloseSdlDevice(Event.jdevice.which);
 			}
-			else if (Event.type == ExitEvent_t) {
+			else if (Event.type == ExitEvent_t) { // this doesn't work now...
 				break;
 			}
 		}
-		Sleep(1);
+		std::this_thread::sleep_for(std::chrono::milliseconds(10));
 	}
 
 	SDL_Quit();
@@ -164,18 +172,19 @@ void InputDeviceManager::AddDevice(InputDevice* Device)
 	//	InvokeDevicesChangedCallbacks();
 }
 
-void InputDeviceManager::RemoveDevice(InputDevice* Device)
+void InputDeviceManager::RemoveDevice(std::function<bool(const InputDevice*)> Callback)
 {
 	//std::lock_guard<std::mutex> lk(m_devices_mutex);
-	auto it = std::remove_if(m_Devices.begin(), m_Devices.end(), [](const auto& dev) {
-		if (dev == Devices))
+	auto it = std::find_if(m_Devices.begin(), m_Devices.end(), [&Callback](const auto& dev) {
+		if (Callback(dev)))
 		{
 			EmuLog(LOG_LEVEL::INFO, "Removed device: %s", dev->GetQualifiedName().c_str());
 			return true;
 		}
 		return false;
 	});
-	m_Devices.erase(it, m_Devices.end());
+	delete *it;
+	m_Devices.erase(it);
 }
 
 int InputDeviceManager::ConnectDeviceToXbox(int port, int type)
@@ -363,11 +372,11 @@ void InputDeviceManager::UpdateInputXpad(InputDevice* Device, void* Buffer, int 
 			});
 			if (it != bindings.end()) {
 				if (i == GAMEPAD_LEFT_TRIGGER || i == GAMEPAD_RIGHT_TRIGGER) {
-					in_buf->bAnalogButtons[i] = it->second->GetState(); //>> 7;
+					in_buf->bAnalogButtons[i] = it->second->GetState(); //>> 7; likely to fix
 				}
 				else {
 					// At the moment, we don't support intermediate values for the analog buttons, so report them as full pressed or released
-					in_buf->bAnalogButtons[i] = it->second->GetState() ? 0xFF : 0;
+					in_buf->bAnalogButtons[i] = it->second->GetState() ? 0xFF : 0; // likely to fix
 				}
 			}
 		}
@@ -376,7 +385,7 @@ void InputDeviceManager::UpdateInputXpad(InputDevice* Device, void* Buffer, int 
 				return i == d.first;
 			});
 			if (it != bindings.end()) {
-				if (it->second->GetState()) {
+				if (it->second->GetState()) { // likely to fix
 					in_buf->wButtons |= BUTTON_MASK(i);
 				}
 				else {
@@ -392,7 +401,7 @@ void InputDeviceManager::UpdateInputXpad(InputDevice* Device, void* Buffer, int 
 				switch (i)
 				{
 					case GAMEPAD_LEFT_THUMB_X: {
-						in_buf->sThumbLX = it->second->GetState();
+						in_buf->sThumbLX = it->second->GetState(); // likely to fix
 					}
 					break;
 

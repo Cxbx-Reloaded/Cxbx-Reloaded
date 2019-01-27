@@ -71,6 +71,8 @@ XBOX_INPUT_DEVICE;
 class InputDevice
 {
 	public:
+		virtual ~InputDevice();
+
 		class Input
 		{
 			public:
