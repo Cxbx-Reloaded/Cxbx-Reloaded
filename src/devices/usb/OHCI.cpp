@@ -52,9 +52,48 @@ namespace xboxkrnl
 #include "common\util\CxbxUtil.h"
 #include "Logging.h"
 
-/* Define these two if you want to dump usb packets */
+static const char* OHCI_RegNames[] = {
+	"HcRevision",
+	"HcControl",
+	"HcCommandStatus",
+	"HcInterruptStatus",
+	"HcInterruptEnable",
+	"HcInterruptDisable",
+	"HcHCCA",
+	"HcPeriodCurrentED",
+	"HcControlHeadED",
+	"HcControlCurrentED",
+	"HcBulkHeadED",
+	"HcBulkCurrentED",
+	"HcDoneHead",
+	"HcFmInterval",
+	"HcFmRemaining",
+	"HcFmNumber",
+	"HcPeriodicStart",
+	"HcLSThreshold",
+	"HcRhDescriptorA",
+	"HcRhDescriptorB",
+	"HcRhStatus",
+	"HcRhPortStatus[0]",
+	"HcRhPortStatus[1]",
+	"HcRhPortStatus[2]",
+	"HcRhPortStatus[3]"
+};
+
+/* Define these two if you want to dump usb packets and OHCI registers */
 //#define DEBUG_ISOCH
 //#define DEBUG_PACKET
+//#define DEBUG_OHCI_REG
+
+#ifdef DEBUG_OHCI_REG
+#define DUMP_REG_R(reg_val) DBG_PRINTF("%s, R, reg_val: 0x%X\n", OHCI_RegNames[Addr >> 2], reg_val)
+#define DUMP_REG_W(reg_val, val) DBG_PRINTF("%s, W, reg_val: 0x%X, val: 0x%X\n", OHCI_RegNames[Addr >> 2], reg_val, val)
+#define DUMP_REG_RO(reg_val, val) DBG_PRINTF("%s, RO, reg_val: 0x%X, val: 0x%X\n", OHCI_RegNames[Addr >> 2], reg_val, val) 
+#else
+#define DUMP_REG_R(reg_val)
+#define DUMP_REG_W(reg_val, val) 
+#define DUMP_REG_RO(reg_val, val)
+#endif
 
 /* These macros are used to access the bits of the various registers */
 // HcControl
@@ -254,7 +293,7 @@ void OHCI::OHCI_FrameBoundaryWorker()
 
 	// Process all the lists at the end of the frame
 	if (m_Registers.HcControl & OHCI_CTL_PLE) {
-		// From the standard: "The head pointer used for a particular frame is determined by using the last 5 bits of the
+		// From the OHCI standard: "The head pointer used for a particular frame is determined by using the last 5 bits of the
 		// Frame Counter as an offset into the interrupt array within the HCCA."
 		int n = m_Registers.HcFmNumber & 0x1F;
 		OHCI_ServiceEDlist(hcca.HccaInterrruptTable[n], 0); // dropped little -> big endian conversion from XQEMU
@@ -277,7 +316,7 @@ void OHCI::OHCI_FrameBoundaryWorker()
 		return;
 	}
 
-	// From the standard: "This bit is loaded from the FrameIntervalToggle field of
+	// From the OHCI standard: "This bit is loaded from the FrameIntervalToggle field of
 	// HcFmInterval whenever FrameRemaining reaches 0."
 	m_Registers.HcFmRemaining = (m_Registers.HcFmInterval & OHCI_FMI_FIT) == 0 ?
 		m_Registers.HcFmRemaining & ~OHCI_FMR_FRT : m_Registers.HcFmRemaining | OHCI_FMR_FRT;
@@ -288,13 +327,13 @@ void OHCI::OHCI_FrameBoundaryWorker()
 
 	if (m_DoneCount == 0 && !(m_Registers.HcInterruptStatus & OHCI_INTR_WD)) {
 		if (!m_Registers.HcDoneHead) {
-			// From the standard: "This is set to zero whenever HC writes the content of this
+			// From the OHCI standard: "This is set to zero whenever HC writes the content of this
 			// register to HCCA. It also sets the WritebackDoneHead of HcInterruptStatus."
 			CxbxKrnlCleanup("HcDoneHead is zero but WritebackDoneHead interrupt is not set!\n");
 		}
 
 		if (m_Registers.HcInterrupt & m_Registers.HcInterruptStatus) {
-			// From the standard: "The least significant bit of this entry is set to 1 to indicate whether an
+			// From the OHCI standard: "The least significant bit of this entry is set to 1 to indicate whether an
 			// unmasked HcInterruptStatus was set when HccaDoneHead was written." It's tecnically incorrect to
 			// do this to HcDoneHead instead of HccaDoneHead however it doesn't matter since HcDoneHead is
 			// zeroed below
@@ -332,102 +371,54 @@ void OHCI::OHCI_FatalError()
 
 	OHCI_SetInterrupt(OHCI_INTR_UE);
 	OHCI_BusStop();
-	EmuLog(LOG_LEVEL::WARNING, "an unrecoverable error occoured!\n");
+	EmuLog(LOG_LEVEL::WARNING, "An unrecoverable error has occoured!\n");
 }
 
 bool OHCI::OHCI_ReadHCCA(xbaddr Paddr, OHCI_HCCA* Hcca)
 {
-	// ergo720: what's written below is true if we identity map only allocations served by VirtualAlloc.
-	// There could be a peculiar problem if the shared memory between HCD and HC is allocated by the
-	// VMManager with VirtualAlloc: the physical allocation would not reside in memory.bin and if we tried to
-	// access the physical address of it, we would access an empty page. In practice, I disassembled various
-	// xbe's of my games and discovered that this shared memory is allocated with MmAllocateContiguousMemory
-	// which means we can access it from the contiguous region just fine (lucky)
-	// ... provided that XDK revisions didn't alter this
-
-	// NOTE: this shared memory contains the HCCA + EDs and TDs
-
-	if (Paddr != xbnull) {
-		std::memcpy(Hcca, reinterpret_cast<void*>(Paddr), sizeof(OHCI_HCCA));
-		return false;
-	}
-
-	return true; // error
+	return Memory_R(reinterpret_cast<void*>(Paddr), Hcca, sizeof(OHCI_HCCA));
 }
 
 bool OHCI::OHCI_WriteHCCA(xbaddr Paddr, OHCI_HCCA* Hcca)
 {
-	if (Paddr != xbnull) {
-		// We need to calculate the offset of the HccaFrameNumber member to avoid overwriting HccaInterrruptTable
-		size_t OffsetOfFrameNumber = offsetof(OHCI_HCCA, HccaFrameNumber);
-
-		std::memcpy(reinterpret_cast<void*>(Paddr + OffsetOfFrameNumber),
-			reinterpret_cast<uint8_t*>(Hcca) + OffsetOfFrameNumber, 8);
-		return false;
-	}
-
-	return true; // error
+	// We need to calculate the offset of the HccaFrameNumber member to avoid overwriting HccaInterrruptTable
+	size_t OffsetOfFrameNumber = offsetof(OHCI_HCCA, HccaFrameNumber);
+	return Memory_W(reinterpret_cast<void*>(Paddr + OffsetOfFrameNumber), reinterpret_cast<uint8_t*>(Hcca) + OffsetOfFrameNumber, 8);
 }
 
 bool OHCI::OHCI_ReadED(xbaddr Paddr, OHCI_ED* Ed)
 {
-	if (Paddr != xbnull) {
-		GetDwords(Paddr, reinterpret_cast<uint32_t*>(Ed), sizeof(*Ed) >> 2); // ED is 16 bytes large
-		return false;
-	}
-	return true; // error
+	return GetDwords(Paddr, reinterpret_cast<uint32_t*>(Ed), sizeof(*Ed) >> 2); // ED is 16 bytes large
 }
 
 bool OHCI::OHCI_WriteED(xbaddr Paddr, OHCI_ED* Ed)
 {
-	if (Paddr != xbnull) {
-		// According to the standard, only the HeadP field is writable by the HC, so we'll write just that
-		size_t OffsetOfHeadP = offsetof(OHCI_ED, HeadP);
-		WriteDwords(Paddr + OffsetOfHeadP, reinterpret_cast<uint32_t*>(reinterpret_cast<uint8_t*>(Ed) + OffsetOfHeadP), 1);
-		return false;
-	}
-	return true; // error
+	// According to the standard, only the HeadP field is writable by the HC, so we'll write just that
+	size_t OffsetOfHeadP = offsetof(OHCI_ED, HeadP);
+	return WriteDwords(Paddr + OffsetOfHeadP, reinterpret_cast<uint32_t*>(reinterpret_cast<uint8_t*>(Ed) + OffsetOfHeadP), 1);
 }
 
 bool OHCI::OHCI_ReadTD(xbaddr Paddr, OHCI_TD* Td)
 {
-	if (Paddr != xbnull) {
-		GetDwords(Paddr, reinterpret_cast<uint32_t*>(Td), sizeof(*Td) >> 2); // TD is 16 bytes large
-		return false;
-	}
-	return true; // error
+	return GetDwords(Paddr, reinterpret_cast<uint32_t*>(Td), sizeof(*Td) >> 2); // TD is 16 bytes large
 }
 
 bool OHCI::OHCI_WriteTD(xbaddr Paddr, OHCI_TD* Td)
 {
-	if (Paddr != xbnull) {
-		WriteDwords(Paddr, reinterpret_cast<uint32_t*>(Td), sizeof(*Td) >> 2);
-		return false;
-	}
-	return true; // error
+	return WriteDwords(Paddr, reinterpret_cast<uint32_t*>(Td), sizeof(*Td) >> 2);
 }
 
 bool OHCI::OHCI_ReadIsoTD(xbaddr Paddr, OHCI_ISO_TD* td)
 {
-	if (Paddr != xbnull) {
-		GetDwords(Paddr, reinterpret_cast<uint32_t*>(td), 4);
-		GetWords(Paddr + 16, td->Offset, 8);
-		return false;
-	}
-	return true; // error
+	return GetDwords(Paddr, reinterpret_cast<uint32_t*>(td), 4) || GetWords(Paddr + 16, td->Offset, 8);
 }
 
 bool OHCI::OHCI_WriteIsoTD(xbaddr Paddr, OHCI_ISO_TD* td)
 {
-	if (Paddr != xbnull) {
-		WriteDwords(Paddr, reinterpret_cast<uint32_t*>(td), 4);
-		WriteWords(Paddr + 16, td->Offset, 8);
-		return false;
-	}
-	return true; // error
+	return WriteDwords(Paddr, reinterpret_cast<uint32_t*>(td), 4) || WriteWords(Paddr + 16, td->Offset, 8);
 }
 
-bool OHCI::OHCI_CopyTD(OHCI_TD* Td, uint8_t* Buffer, int Length, bool bIsWrite)
+bool OHCI::OHCI_CopyTDBuffer(OHCI_TD* Td, uint8_t* Buffer, int Length, bool bIsWrite)
 {
 	uint32_t ptr, n;
 
@@ -438,26 +429,26 @@ bool OHCI::OHCI_CopyTD(OHCI_TD* Td, uint8_t* Buffer, int Length, bool bIsWrite)
 		n = Length;
 	}
 
-	if (OHCI_FindAndCopyTD(ptr, Buffer, n, bIsWrite)) {
+	if (Memory_RW(reinterpret_cast<void*>(ptr), Buffer, n, bIsWrite)) {
 		return true; // error
 	}
 	if (n == Length) {
 		return false; // no bytes left to copy
 	}
 
-	// From the standard: "If during the data transfer the buffer address contained in the HCfs working copy of
+	// From the OHCI standard: "If during the data transfer the buffer address contained in the HCfs working copy of
 	// CurrentBufferPointer crosses a 4K boundary, the upper 20 bits of BufferEnd are copied to the
 	// working value of CurrentBufferPointer causing the next buffer address to be the 0th byte in the
 	// same 4K page that contains the last byte of the buffer."
 	ptr = Td->BufferEnd & ~0xFFFu;
 	Buffer += n;
-	if (OHCI_FindAndCopyTD(ptr, Buffer, Length - n, bIsWrite)) {
+	if (Memory_RW(reinterpret_cast<void*>(ptr), Buffer, Length - n, bIsWrite)) {
 		return true; // error
 	}
 	return false;
 }
 
-bool OHCI::OHCI_CopyIsoTD(uint32_t start_addr, uint32_t end_addr, uint8_t* Buffer, int Length, bool bIsWrite)
+bool OHCI::OHCI_CopyIsoTDBuffer(uint32_t start_addr, uint32_t end_addr, uint8_t* Buffer, int Length, bool bIsWrite)
 {
 	uint32_t ptr, n;
 
@@ -467,7 +458,7 @@ bool OHCI::OHCI_CopyIsoTD(uint32_t start_addr, uint32_t end_addr, uint8_t* Buffe
 		n = Length;
 	}
 
-	if (OHCI_FindAndCopyTD(ptr, Buffer, n, bIsWrite)) {
+	if (Memory_RW(reinterpret_cast<void*>(ptr), Buffer, n, bIsWrite)) {
 		return true; // error
 	}
 	if (n == Length) {
@@ -475,25 +466,9 @@ bool OHCI::OHCI_CopyIsoTD(uint32_t start_addr, uint32_t end_addr, uint8_t* Buffe
 	}
 	ptr = end_addr & ~0xFFFu;
 	Buffer += n;
-	if (OHCI_FindAndCopyTD(ptr, Buffer, Length - n, bIsWrite)) {
+	if (Memory_RW(reinterpret_cast<void*>(ptr), Buffer, Length - n, bIsWrite)) {
 		return true; // error
 	}
-	return false;
-}
-
-bool OHCI::OHCI_FindAndCopyTD(xbaddr Paddr, uint8_t* Buffer, int Length, bool bIsWrite)
-{
-	if (Paddr == xbnull) {
-		return true; // error
-	}
-
-	if (bIsWrite) {
-		std::memcpy(reinterpret_cast<void*>(Paddr), Buffer, Length);
-	}
-	else {
-		std::memcpy(Buffer, reinterpret_cast<void*>(Paddr), Length);
-	}
-
 	return false;
 }
 
@@ -518,7 +493,7 @@ int OHCI::OHCI_ServiceEDlist(xbaddr Head, int Completion)
 			return 0;
 		}
 
-		// From the standard "An Endpoint Descriptor (ED) is a 16-byte, memory resident structure that must be aligned to a
+		// From the OHCI standard "An Endpoint Descriptor (ED) is a 16-byte, memory resident structure that must be aligned to a
 		// 16-byte boundary."
 		next_ed = ed.NextED & OHCI_DPTR_MASK;
 
@@ -600,7 +575,7 @@ int OHCI::OHCI_ServiceTD(OHCI_ED* Ed)
 		return 0;
 	}
 
-	// From the standard: "This 2-bit field indicates the direction of data flow and the PID
+	// From the OHCI standard: "This 2-bit field indicates the direction of data flow and the PID
 	// to be used for the token. This field is only relevant to the HC if the D field in the ED
 	// was set to 00b or 11b indicating that the PID determination is deferred to the TD."
 	direction = OHCI_BM(Ed->Flags, ED_D);
@@ -666,7 +641,7 @@ int OHCI::OHCI_ServiceTD(OHCI_ED* Ed)
 				packetlen = length;
 			}
 			if (!completion) {
-				if (OHCI_CopyTD(&td, m_UsbBuffer, packetlen, false)) {
+				if (OHCI_CopyTDBuffer(&td, m_UsbBuffer, packetlen, false)) {
 					OHCI_FatalError();
 				}
 			}
@@ -700,7 +675,7 @@ int OHCI::OHCI_ServiceTD(OHCI_ED* Ed)
 		}
 		dev = OHCI_FindDevice(OHCI_BM(Ed->Flags, ED_FA));
 		ep = m_UsbDevice->USB_GetEP(dev, pid, OHCI_BM(Ed->Flags, ED_EN));
-		m_UsbDevice->USB_PacketSetup(&m_UsbPacket, pid, ep, 0, addr, !flag_r, OHCI_BM(td.Flags, TD_DI) == 0);
+		m_UsbDevice->USB_PacketSetup(&m_UsbPacket, pid, ep, addr, !flag_r, OHCI_BM(td.Flags, TD_DI) == 0);
 		m_UsbDevice->USB_PacketAddBuffer(&m_UsbPacket, m_UsbBuffer, packetlen);
 		m_UsbDevice->USB_HandlePacket(dev, &m_UsbPacket);
 #ifdef DEBUG_PACKET
@@ -721,7 +696,7 @@ int OHCI::OHCI_ServiceTD(OHCI_ED* Ed)
 
 	if (ret >= 0) {
 		if (direction == OHCI_TD_DIR_IN) {
-			if (OHCI_CopyTD(&td, m_UsbBuffer, ret, true)) {
+			if (OHCI_CopyTDBuffer(&td, m_UsbBuffer, ret, true)) {
 				OHCI_FatalError();
 			}
 #ifdef DEBUG_PACKET
@@ -888,7 +863,7 @@ void OHCI::OHCI_StateReset()
 
 	OHCI_StopEndpoints();
 
-	DBG_PRINTF("Reset mode event.\n");
+	DBG_PRINTF("Reset event.\n");
 }
 
 void OHCI::OHCI_BusStart()
@@ -896,7 +871,7 @@ void OHCI::OHCI_BusStart()
 	// Create the EOF timer.
 	m_pEOFtimer = Timer_Create(OHCI_FrameBoundaryWrapper, this, "", nullptr);
 
-	DBG_PRINTF("Operational mode event\n");
+	DBG_PRINTF("Operational event\n");
 
 	// SOF event
 	OHCI_SOF(true);
@@ -943,11 +918,11 @@ void OHCI::OHCI_ChangeState(uint32_t Value)
 
 		case Suspend:
 			OHCI_BusStop();
-			DBG_PRINTF("Suspend mode event\n");
+			DBG_PRINTF("Suspend event\n");
 			break;
 
 		case Resume:
-			DBG_PRINTF("Resume mode event\n");
+			DBG_PRINTF("Resume event\n");
 			break;
 
 		case Reset:
@@ -982,100 +957,124 @@ uint32_t OHCI::OHCI_ReadRegister(xbaddr Addr)
 		{
 			case 0: // HcRevision
 				ret = m_Registers.HcRevision;
+				DUMP_REG_R(ret);
 				break;
 
 			case 1: // HcControl
 				ret = m_Registers.HcControl;
+				DUMP_REG_R(ret);
 				break;
 
 			case 2: // HcCommandStatus
 				ret = m_Registers.HcCommandStatus;
+				DUMP_REG_R(ret);
 				break;
 
 			case 3: // HcInterruptStatus
 				ret = m_Registers.HcInterruptStatus;
+				DUMP_REG_R(ret);
 				break;
 
 			case 4: // HcInterruptEnable
 			case 5: // HcInterruptDisable
 				ret = m_Registers.HcInterrupt;
+				DUMP_REG_R(ret);
 				break;
 
 			case 6: // HcHCCA
 				ret = m_Registers.HcHCCA;
+				DUMP_REG_R(ret);
 				break;
 
 			case 7: // HcPeriodCurrentED
 				ret = m_Registers.HcPeriodCurrentED;
+				DUMP_REG_R(ret);
 				break;
 
 			case 8: // HcControlHeadED
 				ret = m_Registers.HcControlHeadED;
+				DUMP_REG_R(ret);
 				break;
 
 			case 9: // HcControlCurrentED
 				ret = m_Registers.HcControlCurrentED;
+				DUMP_REG_R(ret);
 				break;
 
 			case 10: // HcBulkHeadED
 				ret = m_Registers.HcBulkHeadED;
+				DUMP_REG_R(ret);
 				break;
 
 			case 11: // HcBulkCurrentED
 				ret = m_Registers.HcBulkCurrentED;
+				DUMP_REG_R(ret);
 				break;
 
 			case 12: // HcDoneHead
 				ret = m_Registers.HcDoneHead;
+				DUMP_REG_R(ret);
 				break;
 
 			case 13: // HcFmInterval
 				ret = m_Registers.HcFmInterval;
+				DUMP_REG_R(ret);
 				break;
 
 			case 14: // HcFmRemaining
 				ret = OHCI_GetFrameRemaining();
+				DUMP_REG_R(ret);
 				break;
 
 			case 15: // HcFmNumber
 				ret = m_Registers.HcFmNumber;
+				DUMP_REG_R(ret);
 				break;
 
 			case 16: // HcPeriodicStart
 				ret = m_Registers.HcPeriodicStart;
+				DUMP_REG_R(ret);
 				break;
 
 			case 17: // HcLSThreshold
 				ret = m_Registers.HcLSThreshold;
+				DUMP_REG_R(ret);
 				break;
 
 			case 18: // HcRhDescriptorA
 				ret = m_Registers.HcRhDescriptorA;
+				DUMP_REG_R(ret);
 				break;
 
 			case 19: // HcRhDescriptorB
 				ret = m_Registers.HcRhDescriptorB;
+				DUMP_REG_R(ret);
 				break;
 
 			case 20: // HcRhStatus
 				ret = m_Registers.HcRhStatus;
+				DUMP_REG_R(ret);
 				break;
 
 			// Always report that the port power is on since the Xbox cannot switch off the electrical current to it
 			case 21: // RhPort 0
 				ret = m_Registers.RhPort[0].HcRhPortStatus | OHCI_PORT_PPS;
+				DUMP_REG_R(ret);
 				break;
 
 			case 22: // RhPort 1
 				ret = m_Registers.RhPort[1].HcRhPortStatus | OHCI_PORT_PPS;
+				DUMP_REG_R(ret);
 				break;
 
-			case 23:
+			case 23: // RhPort 2
 				ret = m_Registers.RhPort[2].HcRhPortStatus | OHCI_PORT_PPS;
+				DUMP_REG_R(ret);
 				break;
 
-			case 24:
+			case 24: // RhPort 3
 				ret = m_Registers.RhPort[3].HcRhPortStatus | OHCI_PORT_PPS;
+				DUMP_REG_R(ret);
 				break;
 
 			default:
@@ -1097,10 +1096,12 @@ void OHCI::OHCI_WriteRegister(xbaddr Addr, uint32_t Value)
 		{
 			case 0: // HcRevision
 				// This register is read-only
+				DUMP_REG_RO(m_Registers.HcRevision, Value);
 				break;
 
 			case 1: // HcControl
 				OHCI_ChangeState(Value);
+				DUMP_REG_W(m_Registers.HcControl, Value);
 				break;
 
 			case 2: // HcCommandStatus
@@ -1108,7 +1109,7 @@ void OHCI::OHCI_WriteRegister(xbaddr Addr, uint32_t Value)
 				// SOC is read-only
 				Value &= ~OHCI_STATUS_SOC;
 
-				// From the standard: "The Host Controller must ensure that bits written as 1 become set
+				// From the OHCI standard: "The Host Controller must ensure that bits written as 1 become set
 				// in the register while bits written as 0 remain unchanged in the register."
 				m_Registers.HcCommandStatus |= Value;
 
@@ -1116,51 +1117,62 @@ void OHCI::OHCI_WriteRegister(xbaddr Addr, uint32_t Value)
 					// Do a hardware reset
 					OHCI_StateReset();
 				}
+				DUMP_REG_W(m_Registers.HcCommandStatus, Value);
 			}
 			break;
 
 			case 3: // HcInterruptStatus
 				m_Registers.HcInterruptStatus &= ~Value;
 				OHCI_UpdateInterrupt();
+				DUMP_REG_W(m_Registers.HcInterruptStatus, Value);
 				break;
 
 			case 4: // HcInterruptEnable
 				m_Registers.HcInterrupt |= Value;
 				OHCI_UpdateInterrupt();
+				DUMP_REG_W(m_Registers.HcInterrupt, Value);
 				break;
 
 			case 5: // HcInterruptDisable
 				m_Registers.HcInterrupt &= ~Value;
 				OHCI_UpdateInterrupt();
+				DUMP_REG_W(m_Registers.HcInterrupt, Value);
 				break;
 
 			case 6: // HcHCCA
 				// The standard says the minimum alignment is 256 bytes and so bits 0 through 7 are always zero
 				m_Registers.HcHCCA = Value & OHCI_HCCA_MASK;
+				DUMP_REG_W(m_Registers.HcHCCA, Value);
 				break;
 
 			case 7: // HcPeriodCurrentED
 				// This register is read-only
+				DUMP_REG_RO(m_Registers.HcPeriodCurrentED, Value);
 				break;
 
 			case 8: // HcControlHeadED
 				m_Registers.HcControlHeadED = Value & OHCI_DPTR_MASK;
+				DUMP_REG_W(m_Registers.HcControlHeadED, Value);
 				break;
 
 			case 9: // HcControlCurrentED
 				m_Registers.HcControlCurrentED = Value & OHCI_DPTR_MASK;
+				DUMP_REG_W(m_Registers.HcControlCurrentED, Value);
 				break;
 
 			case 10: // HcBulkHeadED
 				m_Registers.HcBulkHeadED = Value & OHCI_DPTR_MASK;
+				DUMP_REG_W(m_Registers.HcBulkHeadED, Value);
 				break;
 
 			case 11: // HcBulkCurrentED
 				m_Registers.HcBulkCurrentED = Value & OHCI_DPTR_MASK;
+				DUMP_REG_W(m_Registers.HcBulkCurrentED, Value);
 				break;
 
 			case 12: // HcDoneHead
 				// This register is read-only
+				DUMP_REG_RO(m_Registers.HcDoneHead, Value);
 				break;
 
 			case 13: // HcFmInterval
@@ -1169,28 +1181,34 @@ void OHCI::OHCI_WriteRegister(xbaddr Addr, uint32_t Value)
 					DBG_PRINTF("Changing frame interval duration. New value is %u\n", Value & OHCI_FMI_FI);
 				}
 				m_Registers.HcFmInterval = Value & ~0xC000;
+				DUMP_REG_W(m_Registers.HcFmInterval, Value);
 			}
 			break;
 
 			case 14: // HcFmRemaining
 				// This register is read-only
+				DUMP_REG_RO(m_Registers.HcFmRemaining, Value);
 				break;
 
 			case 15: // HcFmNumber
 				// This register is read-only
+				DUMP_REG_RO(m_Registers.HcFmNumber, Value);
 				break;
 
 			case 16: // HcPeriodicStart
 				m_Registers.HcPeriodicStart = Value & 0x3FFF;
+				DUMP_REG_W(m_Registers.HcPeriodicStart, Value);
 				break;
 
 			case 17: // HcLSThreshold
 				m_Registers.HcLSThreshold = Value & 0xFFF;
+				DUMP_REG_W(m_Registers.HcLSThreshold, Value);
 				break;
 
 			case 18: // HcRhDescriptorA
 				m_Registers.HcRhDescriptorA &= ~OHCI_RHA_RW_MASK;
 				m_Registers.HcRhDescriptorA |= Value & OHCI_RHA_RW_MASK; // ??
+				DUMP_REG_W(m_Registers.HcRhDescriptorA, Value);
 				break;
 
 			case 19: // HcRhDescriptorB
@@ -1199,22 +1217,27 @@ void OHCI::OHCI_WriteRegister(xbaddr Addr, uint32_t Value)
 
 			case 20: // HcRhStatus
 				OHCI_SetHubStatus(Value);
+				DUMP_REG_W(m_Registers.HcRhStatus, Value);
 				break;
 
 			case 21: // RhPort 0
 				OHCI_PortSetStatus(0, Value);
+				DUMP_REG_W(m_Registers.RhPort[0].HcRhPortStatus, Value);
 				break;
 
 			case 22: // RhPort 1
 				OHCI_PortSetStatus(1, Value);
+				DUMP_REG_W(m_Registers.RhPort[1].HcRhPortStatus, Value);
 				break;
 
 			case 23: // RhPort 2
 				OHCI_PortSetStatus(2, Value);
+				DUMP_REG_W(m_Registers.RhPort[2].HcRhPortStatus, Value);
 				break;
 
 			case 24: // RhPort 3
 				OHCI_PortSetStatus(3, Value);
+				DUMP_REG_W(m_Registers.RhPort[3].HcRhPortStatus, Value);
 				break;
 
 			default:
@@ -1477,7 +1500,7 @@ void OHCI::OHCI_Wakeup(USBPort* port1)
 	// Note that the controller can be suspended even if this port is not
 	if ((m_Registers.HcControl & OHCI_CTL_HCFS) == Suspend) {
 		DBG_PRINTF("remote-wakeup: SUSPEND->RESUME\n");
-		// From the standard: "The only interrupts possible in the USBSUSPEND state are ResumeDetected (the
+		// From the OHCI standard: "The only interrupts possible in the USBSUSPEND state are ResumeDetected (the
 		// Host Controller will have changed the HostControllerFunctionalState to the USBRESUME state)
 		// and OwnershipChange."
 		m_Registers.HcControl &= ~OHCI_CTL_HCFS;
@@ -1558,7 +1581,7 @@ int OHCI::OHCI_ServiceIsoTD(OHCI_ED* ed, int completion)
 
 	starting_frame = OHCI_BM(iso_td.Flags, TD_SF);
 	frame_count = OHCI_BM(iso_td.Flags, TD_FC);
-	// From the standard: "The Host Controller does an unsigned subtraction of StartingFrame from the 16 bits of
+	// From the OHCI standard: "The Host Controller does an unsigned subtraction of StartingFrame from the 16 bits of
 	// HcFmNumber to arrive at a signed value for a relative frame number (frame R)."
 	relative_frame_number = USUB(m_Registers.HcFmNumber & 0xFFFF, starting_frame);
 
@@ -1580,13 +1603,13 @@ int OHCI::OHCI_ServiceIsoTD(OHCI_ED* ed, int completion)
 #endif
 
 	if (relative_frame_number < 0) {
-		// From the standard: "If the relative frame number is negative, then the current frame is earlier than the 0th frame
+		// From the OHCI standard: "If the relative frame number is negative, then the current frame is earlier than the 0th frame
 		// of the Isochronous TD and the Host Controller advances to the next ED."
 		DBG_PRINTF("ISO_TD R=%d < 0\n", relative_frame_number);
 		return 1;
 	}
 	else if (relative_frame_number > frame_count) {
-		// From the standard: "If the relative frame number is greater than
+		// From the OHCI standard: "If the relative frame number is greater than
 		// FrameCount, then the Isochronous TD has expired and a error condition exists."
 		DBG_PRINTF("ISO_TD R=%d > FC=%d\n", relative_frame_number, frame_count);
 		OHCI_SET_BM(iso_td.Flags, TD_CC, OHCI_CC_DATAOVERRUN);
@@ -1605,7 +1628,7 @@ int OHCI::OHCI_ServiceIsoTD(OHCI_ED* ed, int completion)
 		return 0;
 	}
 
-	// From the standard: "If the relative frame number is between 0 and FrameCount, then the Host Controller issues
+	// From the OHCI standard: "If the relative frame number is between 0 and FrameCount, then the Host Controller issues
 	// a token to the endpoint and attempts a data transfer using the buffer described by the Isochronous TD."	
 
 	dir = OHCI_BM(ed->Flags, ED_D);
@@ -1641,7 +1664,7 @@ int OHCI::OHCI_ServiceIsoTD(OHCI_ED* ed, int completion)
 	start_offset = iso_td.Offset[relative_frame_number];
 	next_offset = iso_td.Offset[relative_frame_number + 1];
 
-	// From the standard: "If the Host Controller supports checking of the Offsets, if either Offset[R] or Offset[R+1] does
+	// From the OHCI standard: "If the Host Controller supports checking of the Offsets, if either Offset[R] or Offset[R+1] does
 	// not have a ConditionCode of NOT ACCESSED or if the Offset[R + 1] is not greater than or equal to Offset[R], then
 	// an Unrecoverable Error is indicated."
 	// ergo720: I have a doubt here: according to the standard, the error condition is set if ConditionCode (bits 12-15 of
@@ -1661,7 +1684,7 @@ int OHCI::OHCI_ServiceIsoTD(OHCI_ED* ed, int completion)
 		return 1;
 	}
 
-	// From the standard: "Bit 12 of offset R then selects the upper 20 bits of the physical address
+	// From the OHCI standard: "Bit 12 of offset R then selects the upper 20 bits of the physical address
 	// as either BufferPage0 when bit 12 = 0 or the upper 20 bits of BufferEnd when bit 12 = 1."
 		
 	if ((start_offset & 0x1000) == 0) {
@@ -1673,7 +1696,7 @@ int OHCI::OHCI_ServiceIsoTD(OHCI_ED* ed, int completion)
 			(start_offset & OHCI_OFFSET_MASK);
 	}
 
-	// From the standard: "If the data packet is not the last in an Isochronous TD (R not equal to FrameCount),
+	// From the OHCI standard: "If the data packet is not the last in an Isochronous TD (R not equal to FrameCount),
 	// then the ending address of the buffer is found by using Offset[R + 1] - 1. This value is then used to create a
 	// physical address in the same manner as the Offset[R] was used to create the starting physical address."	
 
@@ -1689,7 +1712,7 @@ int OHCI::OHCI_ServiceIsoTD(OHCI_ED* ed, int completion)
 		}
 	}
 	else {
-		// From the standard: "If, however, the data packet is the last in an Isochronous TD(R = FrameCount),
+		// From the OHCI standard: "If, however, the data packet is the last in an Isochronous TD(R = FrameCount),
 		// then the value of BufferEnd is the address of the last byte in the buffer."	
 		end_addr = iso_td.BufferEnd;
 	}
@@ -1703,7 +1726,7 @@ int OHCI::OHCI_ServiceIsoTD(OHCI_ED* ed, int completion)
 	}
 
 	if (len && dir != OHCI_TD_DIR_IN) {
-		if (OHCI_CopyIsoTD(start_addr, end_addr, m_UsbBuffer, len, false)) {
+		if (OHCI_CopyIsoTDBuffer(start_addr, end_addr, m_UsbBuffer, len, false)) {
 			OHCI_FatalError();
 			return 1;
 		}
@@ -1713,7 +1736,7 @@ int OHCI::OHCI_ServiceIsoTD(OHCI_ED* ed, int completion)
 		bool int_req = relative_frame_number == frame_count && OHCI_BM(iso_td.Flags, TD_DI) == 0;
 		dev = OHCI_FindDevice(OHCI_BM(ed->Flags, ED_FA));
 		ep = m_UsbDevice->USB_GetEP(dev, pid, OHCI_BM(ed->Flags, ED_EN));
-		m_UsbDevice->USB_PacketSetup(&m_UsbPacket, pid, ep, 0, addr, false, int_req);
+		m_UsbDevice->USB_PacketSetup(&m_UsbPacket, pid, ep, addr, false, int_req);
 		m_UsbDevice->USB_PacketAddBuffer(&m_UsbPacket, m_UsbBuffer, len);
 		m_UsbDevice->USB_HandlePacket(dev, &m_UsbPacket);
 		if (m_UsbPacket.Status == USB_RET_ASYNC) {
@@ -1733,14 +1756,14 @@ int OHCI::OHCI_ServiceIsoTD(OHCI_ED* ed, int completion)
 		start_offset, end_offset, start_addr, end_addr, str, len, ret);
 #endif
 
-	// From the standard: "After each data packet transfer, the Rth Offset is replaced with a value that indicates the status of
+	// From the OHCI standard: "After each data packet transfer, the Rth Offset is replaced with a value that indicates the status of
 	// the data packet transfer.The upper 4 bits of the value are the ConditionCode for the transfer and the lower 12 bits
 	// represent the size of the transfer.Together, these two fields constitute the Packet Status Word(PacketStatusWord)."
 
 	// Writeback
 	if (dir == OHCI_TD_DIR_IN && ret >= 0 && ret <= len) {
 		// IN transfer succeeded
-		if (OHCI_CopyIsoTD(start_addr, end_addr, m_UsbBuffer, ret, true)) {
+		if (OHCI_CopyIsoTDBuffer(start_addr, end_addr, m_UsbBuffer, ret, true)) {
 			OHCI_FatalError();
 			return 1;
 		}

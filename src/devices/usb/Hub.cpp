@@ -172,7 +172,7 @@ static const uint8_t HubDescriptor[] =
 	0x0A,			//  u8   bDescLength; 10 bytes
 	0x29,			//  u8   bDescriptorType; Hub-descriptor
 	NUM_PORTS,		//  u8   bNbrPorts; 0x08
-	0x0a,			//  u16  wHubCharacteristics; (individual port over-current protection, no power switching)
+	0x0A,			//  u16  wHubCharacteristics; (individual port over-current protection, no power switching)
 	0x00,
 	0x01,			//  u8   bPwrOn2pwrGood; 2 ms
 	0x00,			//  u8   bHubContrCurrent; 0 mA
@@ -355,8 +355,8 @@ void Hub::UsbHub_HandleControl(XboxDeviceState* dev, USBPacket* p,
 		}
 
 		case GetHubStatus: {
-			// From the standard: "This request returns the current hub status and the states that have changed since the previous acknowledgment.
-			// The first word of data contains wHubStatus. The second word of data contains wHubChange"
+			// From the USB 1.1 standard: "This request returns the current hub status and the states that have changed since the
+			// previous acknowledgment. The first word of data contains wHubStatus. The second word of data contains wHubChange"
 			// We always report that the local power supply is good and that currently there is no over-power condition
 			data[0] = 0;
 			data[1] = 0;
@@ -367,7 +367,7 @@ void Hub::UsbHub_HandleControl(XboxDeviceState* dev, USBPacket* p,
 		}
 
 		case GetPortStatus: {
-			// From the standard: "This request returns the current port status and the current value of the port status change bits.
+			// From the USB 1.1 standard: "This request returns the current port status and the current value of the port status change bits.
 			// The first word of data contains wPortStatus. The second word of data contains wPortChange"
 			unsigned int n = index - 1;
 			USBHubPort* port;
@@ -375,8 +375,8 @@ void Hub::UsbHub_HandleControl(XboxDeviceState* dev, USBPacket* p,
 				goto fail;
 			}
 			port = &m_HubState->ports[n];
-			DBG_PRINTF("%s GetPortStatus -> Address 0x%X, wIndex %d, wPortStatus %d, wPortChange %d\n",
-				__func__, m_HubState->dev.Addr, index, port->wPortStatus, port->wPortChange);
+			DBG_PRINTF("GetPortStatus -> Address 0x%X, wIndex %d, wPortStatus %d, wPortChange %d\n",
+				m_HubState->dev.Addr, index, port->wPortStatus, port->wPortChange);
 			data[0] = port->wPortStatus;
 			data[1] = port->wPortStatus >> 8;
 			data[2] = port->wPortChange;
@@ -394,14 +394,14 @@ void Hub::UsbHub_HandleControl(XboxDeviceState* dev, USBPacket* p,
 		}
 
 		case SetPortFeature: {
-			// From the standard: "This request sets a value reported in the port status. Features that can be set with this request are PORT_RESET,
-			// PORT_SUSPEND and PORT_POWER; others features are not required to be set by this request"
+			// From the USB 1.1 standard: "This request sets a value reported in the port status. Features that can be set with this request are
+			// PORT_RESET, PORT_SUSPEND and PORT_POWER; others features are not required to be set by this request"
 			unsigned int n = index - 1;
 			USBHubPort* port;
 			XboxDeviceState* dev;
 
-			DBG_PRINTF("%s SetPortFeature -> Address 0x%X, wIndex %d, Feature %s\n",
-				__func__, m_HubState->dev.Addr, index, GetFeatureName(value));
+			DBG_PRINTF("SetPortFeature -> Address 0x%X, wIndex %d, Feature %s\n",
+				m_HubState->dev.Addr, index, GetFeatureName(value).c_str());
 
 			if (n >= NUM_PORTS) {
 				goto fail;
@@ -434,12 +434,12 @@ void Hub::UsbHub_HandleControl(XboxDeviceState* dev, USBPacket* p,
 		}
 
 		case ClearPortFeature: {
-			// From the standard: "This request resets a value reported in the port status"
+			// From USB 1.1 the standard: "This request resets a value reported in the port status"
 			unsigned int n = index - 1;
 			USBHubPort *port;
 
-			DBG_PRINTF("%s ClearPortFeature -> Address 0x%X, wIndex %d, Feature %s\n",
-				__func__, m_HubState->dev.Addr, index, GetFeatureName(value));
+			DBG_PRINTF("ClearPortFeature -> Address 0x%X, wIndex %d, Feature %s\n",
+				m_HubState->dev.Addr, index, GetFeatureName(value).c_str());
 
 			if (n >= NUM_PORTS) {
 				goto fail;
@@ -525,7 +525,7 @@ void Hub::UsbHub_HandleData(XboxDeviceState* dev, USBPacket* p)
 						p->Status = USB_RET_BABBLE;
 						return;
 					}
-					DBG_PRINTF("%s Address 0x%X, Status %d\n", __func__, m_HubState->dev.Addr, status);
+					DBG_PRINTF("Address 0x%X, Status %d\n", m_HubState->dev.Addr, status);
 					for (i = 0; i < n; i++) {
 						buf[i] = status >> (8 * i);
 					}
