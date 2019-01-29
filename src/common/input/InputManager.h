@@ -93,16 +93,10 @@ class InputDeviceManager
 	private:
 		// all enumerated devices currently detected and supported
 		std::vector<std::shared_ptr<InputDevice>> m_Devices;
-		// sdl custom event to exit the main loop
-		SDL_Event m_ExitLoop;
-		// used to indicate that the device destruction is complete
-		bool m_bExitOK;
 		// used to indicate that the manager was initialized correctly
 		bool m_bInitOK;
 		// assign the button binding to the devices
 		//void AssignBindings();
-		// thread which polls input devices
-		void InputMainLoop();
 		// update input for an xbox controller
 		void UpdateInputXpad(InputDevice* Device, void* Buffer, int Direction);
 };

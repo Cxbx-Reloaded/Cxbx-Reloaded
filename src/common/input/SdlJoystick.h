@@ -44,6 +44,10 @@
 
 namespace Sdl
 {
+	// initialize SDL
+	void Init();
+	// shutdown SDL
+	void DeInit();
 	// open the sdl joystick with the specified index
 	void OpenSdlDevice(const int Index);
 	// close the sdl joystick with the specified index

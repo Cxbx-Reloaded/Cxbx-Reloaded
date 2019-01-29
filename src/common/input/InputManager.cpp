@@ -46,62 +46,12 @@ constexpr ControlState INPUT_DETECT_THRESHOLD = 0.55; // arbitrary number, using
 
 InputDeviceManager::InputDeviceManager()
 {
-	// Delegate the sdl initialization to another thread. This is because, as per SDL documentation, SDL_PollEvent can only be called
-	// from the same thread that initialized the video subsystem
-
-	m_bExitOK = true;
-	m_bInitOK = false;
-	std::thread(&InputDeviceManager::InputMainLoop, this).detach();
+	Sdl::Init();
 }
 
 InputDeviceManager::~InputDeviceManager()
 {
-	if (m_bInitOK) {
-		SDL_PushEvent(&m_ExitLoop);
-	}
-	while (!m_bExitOK) {}
-}
-
-void InputDeviceManager::InputMainLoop()
-{
-	uint32_t ExitEvent_t;
-	SDL_Event Event;
-
-	if (SDL_Init(SDL_INIT_JOYSTICK | SDL_INIT_HAPTIC) < 0) {
-		CxbxKrnlCleanupEx(CXBXR_MODULE::INIT, "Failed to initialize SDL subsystem. The error was: %s", SDL_GetError());
-		return;
-	}
-	ExitEvent_t = SDL_RegisterEvents(1);
-	if (ExitEvent_t == (uint32_t)-1) {
-		CxbxKrnlCleanupEx(CXBXR_MODULE::INIT, "Failed to create SDL exit event.");
-		return;
-	}
-	SDL_memset(&m_ExitLoop, 0, sizeof(SDL_Event));
-	m_ExitLoop.type = ExitEvent_t;
-	m_bInitOK = true;
-	m_bExitOK = false;
-
-	SetThreadAffinityMask(GetCurrentThread(), g_CPUOthers);
-	
-	while (true)
-	{
-		while (SDL_PollEvent(&Event))
-		{
-			if (Event.type == SDL_JOYDEVICEADDED) {
-				OpenSdlDevice(Event.jdevice.which);
-			}
-			else if (Event.type == SDL_JOYDEVICEREMOVED) {
-				CloseSdlDevice(Event.jdevice.which);
-			}
-			else if (Event.type == ExitEvent_t) { // this doesn't work now...
-				break;
-			}
-		}
-		std::this_thread::sleep_for(std::chrono::milliseconds(10));
-	}
-
-	SDL_Quit();
-	m_bExitOK = true;
+	Sdl::DeInit();
 }
 
 void InputDeviceManager::AddDevice(std::shared_ptr<InputDevice> Device)
@@ -300,9 +250,9 @@ bool InputDeviceManager::UpdateXboxPortInput(int Port, void* Buffer, int Directi
 	if (Port > XBOX_PORT_4 || Port < XBOX_PORT_1) { return false; };
 
 	pDev = nullptr;
-	for (auto it : m_Devices) {
-		if (it->GetXPort == Port) {
-			pDev = it;
+	for (auto dev_ptr : m_Devices) {
+		if (dev_ptr.get()->GetXPort == Port) {
+			pDev = dev_ptr.get();
 			break;
 		}
 	}

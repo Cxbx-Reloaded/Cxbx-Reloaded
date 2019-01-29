@@ -38,7 +38,9 @@
 #define LOG_PREFIX CXBXR_MODULE::SDL
 
 #include <assert.h>
+#include <thread>
 #include "core\kernel\support\Emu.h"
+#include "core\kernel\init\CxbxKrnl.h"
 #include "SdlJoystick.h"
 #include "InputManager.h"
 
@@ -49,6 +51,57 @@ static const uint16_t RUMBLE_LENGTH_MAX = 500;
 
 namespace Sdl
 {
+	static std::thread PollingThread;
+	static uint32_t ExitEvent_t;
+
+	void Init()
+	{
+		PollingThread = std::thread([]() {
+			SDL_Event Event;
+
+			if (SDL_Init(SDL_INIT_JOYSTICK | SDL_INIT_HAPTIC) < 0) {
+				EmuLog(LOG_LEVEL::WARNING, "Failed to initialize SDL subsystem. The error was: %s", SDL_GetError());
+				return;
+			}
+			ExitEvent_t = SDL_RegisterEvents(1);
+			if (ExitEvent_t == (uint32_t)-1) {
+				SDL_Quit();
+				EmuLog(LOG_LEVEL::WARNING, "Failed to create SDL exit event.");
+				return;
+			}
+
+			SetThreadAffinityMask(GetCurrentThread(), g_CPUOthers);
+
+			while (SDL_WaitEvent(&Event))
+			{
+				if (Event.type == SDL_JOYDEVICEADDED) {
+					OpenSdlDevice(Event.jdevice.which);
+				}
+				else if (Event.type == SDL_JOYDEVICEREMOVED) {
+					CloseSdlDevice(Event.jdevice.which);
+				}
+				else if (Event.type == ExitEvent_t) {
+					break;
+				}
+			}
+			SDL_Quit();
+		});
+	}
+
+	void DeInit()
+	{
+		if (!PollingThread.joinable()) {
+			return;
+		}
+
+		SDL_Event ExitEvent;
+		SDL_memset(&ExitEvent, 0, sizeof(SDL_Event));
+		ExitEvent.type = ExitEvent_t;
+		SDL_PushEvent(&ExitEvent);
+
+		PollingThread.join();
+	}
+
 	void OpenSdlDevice(const int Index)
 	{
 		SDL_Joystick* pJoystick = SDL_JoystickOpen(Index);
