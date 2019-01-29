@@ -34,11 +34,11 @@ namespace xboxkrnl
 	#include <xboxkrnl/xboxkrnl.h> // For PKINTERRUPT, etc.
 };
 
-#include "InputManager.h"
+#include <thread>
 #include "SdlJoystick.h"
+#include "InputManager.h"
 #include "..\devices\usb\XidGamepad.h"
 #include "core\kernel\exports\EmuKrnl.h" // For EmuLog
-#include <thread>
 
 
 InputDeviceManager* g_InputDeviceManager = nullptr;
@@ -60,36 +60,6 @@ InputDeviceManager::~InputDeviceManager()
 		SDL_PushEvent(&m_ExitLoop);
 	}
 	while (!m_bExitOK) {}
-}
-
-void InputDeviceManager::OpenSdlDevice(const int Index)
-{
-	InputDevice* pDev;
-	SDL_Joystick* pJoystick;
-
-	pJoystick = SDL_JoystickOpen(Index);
-	if (pJoystick) {
-		pDev = new SdlJoystick(pJoystick, Index);
-		// only add the device if it has some I/O controls
-		if (!pDev->GetInputs.empty() || !pDev->GetOutputs.empty()) {
-			AddDevice(pDev);
-		}
-		else {
-			EmuLog(LOG_LEVEL::INFO, "Rejected joystick %i. No controls detected\n", Index);
-			delete pDev;
-		}
-	}
-	else {
-		EmuLog(LOG_LEVEL::WARNING, "Failed to open joystick %i. The error was %s\n", Index, SDL_GetError());
-	}
-}
-
-void InputDeviceManager::CloseSdlDevice(const int Index)
-{
-	RemoveDevice([&Index](const auto& d) {
-		const SdlJoystick* joystick = dynamic_cast<const SdlJoystick*>(device);
-		return joystick && SDL_JoystickInstanceID(joystick->GetSDLJoystick()) == Index;
-	});
 }
 
 void InputDeviceManager::InputMainLoop()
@@ -134,7 +104,7 @@ void InputDeviceManager::InputMainLoop()
 	m_bExitOK = true;
 }
 
-void InputDeviceManager::AddDevice(InputDevice* Device)
+void InputDeviceManager::AddDevice(std::shared_ptr<InputDevice> Device)
 {
 	std::vector<InputDevice::Input*> Inputs;
 	int ID;
@@ -175,15 +145,14 @@ void InputDeviceManager::AddDevice(InputDevice* Device)
 void InputDeviceManager::RemoveDevice(std::function<bool(const InputDevice*)> Callback)
 {
 	//std::lock_guard<std::mutex> lk(m_devices_mutex);
-	auto it = std::find_if(m_Devices.begin(), m_Devices.end(), [&Callback](const auto& dev) {
-		if (Callback(dev)))
+	auto it = std::remove_if(m_Devices.begin(), m_Devices.end(), [&Callback](const auto& Device) {
+		if (Callback(Device.get()))
 		{
-			EmuLog(LOG_LEVEL::INFO, "Removed device: %s", dev->GetQualifiedName().c_str());
+			EmuLog(LOG_LEVEL::INFO, "Removed device: %s", Device->GetQualifiedName().c_str());
 			return true;
 		}
 		return false;
 	});
-	delete *it;
 	m_Devices.erase(it);
 }
 

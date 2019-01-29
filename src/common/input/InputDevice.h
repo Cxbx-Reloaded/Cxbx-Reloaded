@@ -41,6 +41,7 @@
 #include <vector>
 #include <atomic>
 #include <map>
+#include <functional>
 
 #define XBOX_PORT_INVALID  -1
 #define XBOX_PORT_1         1

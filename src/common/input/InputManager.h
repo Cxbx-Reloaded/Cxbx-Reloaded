@@ -84,11 +84,15 @@ class InputDeviceManager
 		void DisconnectDeviceFromXbox(int port);
 		// read/write the input/output from/to the device attached to the supplied xbox port
 		bool UpdateXboxPortInput(int Port, void* Buffer, int Direction);
+		// add the device to the list of availble devices
+		void AddDevice(std::shared_ptr<InputDevice> Device);
+		// remove the device from the list of availble devices
+		void RemoveDevice(std::function<bool(const InputDevice*)> Callback);
 
 
 	private:
 		// all enumerated devices currently detected and supported
-		std::vector<InputDevice*> m_Devices;
+		std::vector<std::shared_ptr<InputDevice>> m_Devices;
 		// sdl custom event to exit the main loop
 		SDL_Event m_ExitLoop;
 		// used to indicate that the device destruction is complete
@@ -97,20 +101,13 @@ class InputDeviceManager
 		bool m_bInitOK;
 		// assign the button binding to the devices
 		//void AssignBindings();
-		// open the sdl joystick with the specified index
-		void OpenSdlDevice(const int Index);
-		// close the sdl joystick with the specified index
-		void CloseSdlDevice(const int Index);
 		// thread which polls input devices
 		void InputMainLoop();
-		// add the device to the list of availble devices
-		void AddDevice(InputDevice* Device);
-		// remove the device from the list of availble devices
-		void RemoveDevice(std::function<bool(const InputDevice*)> Callback);
 		// update input for an xbox controller
 		void UpdateInputXpad(InputDevice* Device, void* Buffer, int Direction);
 };
 
 extern InputDeviceManager* g_InputDeviceManager;
+
 #endif
 #endif

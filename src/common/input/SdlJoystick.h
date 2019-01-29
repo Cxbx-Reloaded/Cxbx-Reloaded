@@ -34,78 +34,86 @@
 // *
 // ******************************************************************
 
-#ifndef SDL2DEVICE_H_
-#define SDL2DEVICE_H_
+#ifndef SDL_H_
+#define SDL_H_
 #if 1 // Reenable this when LLE USB actually works
-//#include "InputConfig.h"
 #include "InputDevice.h"
 #include "SDL.h"
 #include <SDL_haptic.h>
 
 
-class SdlJoystick : public InputDevice
+namespace Sdl
 {
-	public:
-		SdlJoystick(SDL_Joystick* const Joystick, const int Index);
-		~SdlJoystick();
-		// retrieves the name of the device
-		std::string GetDeviceName() const override;
-		// returns "SDL"
-		std::string GetAPI() const override;
-		// updates the state of this joystick
-		void UpdateInput() override;
+	// open the sdl joystick with the specified index
+	void OpenSdlDevice(const int Index);
+	// close the sdl joystick with the specified index
+	void CloseSdlDevice(const int Index);
+
+	class SdlJoystick : public InputDevice
+	{
+		public:
+			SdlJoystick(SDL_Joystick* const Joystick, const int Index);
+			~SdlJoystick();
+			// retrieves the name of the device
+			std::string GetDeviceName() const override;
+			// returns "SDL"
+			std::string GetAPI() const override;
+			// retrieves the joystick identifier used by SDL
+			SDL_Joystick* GetSDLJoystick() const;
+			// updates the state of this joystick
+			void UpdateInput() override;
 
 
-	private:
-		class Button : public InputDevice::Input
-		{
-			public:
+		private:
+			class Button : public InputDevice::Input
+			{
+				public:
 				Button(uint8_t Index, SDL_Joystick* Js) : m_Index(Index), m_Js(Js) {}
 				std::string GetName() const override;
 				ControlState GetState() const override;
 
-			private:
+				private:
 				// pointer to the device this button belongs to
-				SDL_Joystick* const m_Js;
+				SDL_Joystick * const m_Js;
 				// arbitrary index assigned to this button
 				const uint8_t m_Index;
-		};
+			};
 
-		class Hat : public InputDevice::Input
-		{
-			public:
+			class Hat : public InputDevice::Input
+			{
+				public:
 				Hat(uint8_t Index, SDL_Joystick* Js, uint8_t Direction) : m_Index(Index), m_Js(Js), m_Direction(Direction) {}
 				std::string GetName() const override;
 				ControlState GetState() const override;
 
-			private:
+				private:
 				// pointer to the device this hat button belongs to
-				SDL_Joystick* const m_Js;
+				SDL_Joystick * const m_Js;
 				// identifies the direction of the hat button (arbitrary, assigned by us)
 				const uint8_t m_Direction;
 				// arbitrary index assigned to this hat button
 				const uint8_t m_Index;
-		};
+			};
 
-		class Axis : public InputDevice::Input
-		{
-			public:
+			class Axis : public InputDevice::Input
+			{
+				public:
 				std::string GetName() const override;
 				Axis(uint8_t Index, SDL_Joystick* Js, int16_t Range) : m_Index(Index), m_Js(Js), m_Range(Range) {}
 				ControlState GetState() const override;
 
-			private:
+				private:
 				// pointer to the device this axis belongs to
-				SDL_Joystick* const m_Js;
+				SDL_Joystick * const m_Js;
 				// max value of this axis
 				const int16_t m_Range;
 				// arbitrary index assigned to this axis
 				const uint8_t m_Index;
-		};
+			};
 
-		class HapticEffect : public Output
-		{
-			public:
+			class HapticEffect : public Output
+			{
+				public:
 				HapticEffect(SDL_Haptic* Haptic) : m_Haptic(Haptic), m_ID(-1) {}
 				~HapticEffect()
 				{
@@ -113,7 +121,7 @@ class SdlJoystick : public InputDevice
 					Update();
 				}
 
-			protected:
+				protected:
 				void Update();
 				virtual void SetSDLHapticEffect(ControlState state) = 0;
 
@@ -124,67 +132,68 @@ class SdlJoystick : public InputDevice
 				// id of the effect as returned by SDL
 				int m_ID;
 
-			private:
+				private:
 				virtual void SetState(ControlState state) override final;
-		};
+			};
 
-		class ConstantEffect : public HapticEffect
-		{
-			public:
+			class ConstantEffect : public HapticEffect
+			{
+				public:
 				ConstantEffect(SDL_Haptic* Haptic) : HapticEffect(Haptic) {}
 				std::string GetName() const override;
 
-			private:
+				private:
 				void SetSDLHapticEffect(ControlState state) override;
-		};
+			};
 
-		class RampEffect : public HapticEffect
-		{
-			public:
+			class RampEffect : public HapticEffect
+			{
+				public:
 				RampEffect(SDL_Haptic* Haptic) : HapticEffect(Haptic) {}
 				std::string GetName() const override;
 
-			private:
+				private:
 				void SetSDLHapticEffect(ControlState state) override;
-		};
+			};
 
-		class SineEffect : public HapticEffect
-		{
-			public:
+			class SineEffect : public HapticEffect
+			{
+				public:
 				SineEffect(SDL_Haptic* Haptic) : HapticEffect(Haptic) {}
 				std::string GetName() const override;
 
-			private:
+				private:
 				void SetSDLHapticEffect(ControlState state) override;
-		};
+			};
 
-		class TriangleEffect : public HapticEffect
-		{
-			public:
+			class TriangleEffect : public HapticEffect
+			{
+				public:
 				TriangleEffect(SDL_Haptic* Haptic) : HapticEffect(Haptic) {}
 				std::string GetName() const override;
 
-			private:
+				private:
 				void SetSDLHapticEffect(ControlState state) override;
-		};
+			};
 
-		class LeftRightEffect : public HapticEffect
-		{
-			public:
+			class LeftRightEffect : public HapticEffect
+			{
+				public:
 				LeftRightEffect(SDL_Haptic* Haptic) : HapticEffect(Haptic) {}
 				std::string GetName() const override;
 
-			private:
+				private:
 				void SetSDLHapticEffect(ControlState state) override;
-		};
+			};
 
-		// the friendly name of the device
-		std::string m_DeviceName;
-		// pointer to the device as assigned by SDL
-		SDL_Joystick* m_Joystick;
-		// haptic device identifier as assigned by SDL, if available
-		SDL_Haptic* m_Haptic;
-};
+			// the friendly name of the device
+			std::string m_DeviceName;
+			// pointer to the device as assigned by SDL
+			SDL_Joystick* m_Joystick;
+			// haptic device identifier as assigned by SDL, if available
+			SDL_Haptic* m_Haptic;
+	};
+}
 
 #endif
 #endif
