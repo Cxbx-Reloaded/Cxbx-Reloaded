@@ -93,6 +93,9 @@ class InputDeviceManager
 	private:
 		// all enumerated devices currently detected and supported
 		std::vector<std::shared_ptr<InputDevice>> m_Devices;
+		// locks used to signal error during the initialization
+		std::mutex m_InitMtx;
+		std::condition_variable m_Init_cv;
 		// used to indicate that the manager was initialized correctly
 		bool m_bInitOK;
 		// assign the button binding to the devices

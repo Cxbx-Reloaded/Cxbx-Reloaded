@@ -53,24 +53,33 @@ namespace Sdl
 {
 	static std::thread PollingThread;
 	static uint32_t ExitEvent_t;
+	int SdlInitStatus;
 
-	void Init()
+	void Init(std::mutex& Mtx, std::condition_variable& Cv)
 	{
-		PollingThread = std::thread([]() {
+		SdlInitStatus = SDL_NOT_INIT;
+		PollingThread = std::thread([&Mtx, &Cv]() {
 			SDL_Event Event;
+			std::unique_lock<std::mutex> lck(Mtx);
 
 			if (SDL_Init(SDL_INIT_JOYSTICK | SDL_INIT_HAPTIC) < 0) {
 				EmuLog(LOG_LEVEL::WARNING, "Failed to initialize SDL subsystem. The error was: %s", SDL_GetError());
+				SdlInitStatus = SDL_INIT_ERROR;
+				Cv.notify_one();
 				return;
 			}
 			ExitEvent_t = SDL_RegisterEvents(1);
 			if (ExitEvent_t == (uint32_t)-1) {
 				SDL_Quit();
 				EmuLog(LOG_LEVEL::WARNING, "Failed to create SDL exit event.");
+				SdlInitStatus = SDL_EVENT_CREATE_ERROR;
+				Cv.notify_one();
 				return;
 			}
 
 			SetThreadAffinityMask(GetCurrentThread(), g_CPUOthers);
+			SdlInitStatus = SDL_INIT_SUCCESS;
+			Cv.notify_one();
 
 			while (SDL_WaitEvent(&Event))
 			{

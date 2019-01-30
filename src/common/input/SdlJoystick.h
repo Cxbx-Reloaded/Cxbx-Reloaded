@@ -44,8 +44,19 @@
 
 namespace Sdl
 {
+	typedef enum _SDL_INIT_STATUS : int
+	{
+		SDL_NOT_INIT = -3,
+		SDL_INIT_ERROR,
+		SDL_EVENT_CREATE_ERROR,
+		SDL_INIT_SUCCESS,
+	}
+	SDL_INIT_STATUS;
+
+	extern int SdlInitStatus;
+
 	// initialize SDL
-	void Init();
+	void Init(std::mutex& Mtx, std::condition_variable& Cv);
 	// shutdown SDL
 	void DeInit();
 	// open the sdl joystick with the specified index

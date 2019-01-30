@@ -46,7 +46,15 @@ constexpr ControlState INPUT_DETECT_THRESHOLD = 0.55; // arbitrary number, using
 
 InputDeviceManager::InputDeviceManager()
 {
-	Sdl::Init();
+	std::unique_lock<std::mutex> lck(m_InitMtx);
+	Sdl::Init(m_InitMtx, m_Init_cv);
+	m_Init_cv.wait(lck, []() {
+		return Sdl::SdlInitStatus != Sdl::SDL_NOT_INIT;
+	});
+
+	if (Sdl::SdlInitStatus < 0) {
+		CxbxKrnlCleanupEx(CXBXR_MODULE::INIT, "Failed to initialize input subsystem! Consult debug log for more information");
+	}
 }
 
 InputDeviceManager::~InputDeviceManager()
