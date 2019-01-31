@@ -70,7 +70,7 @@ void VMManager::Initialize(HANDLE memory_view, HANDLE pagetables_view, int BootF
 
 	// Set up the structs tracking the memory regions
 	ConstructMemoryRegion(LOWEST_USER_ADDRESS, USER_MEMORY_SIZE, UserRegion);
-	ConstructMemoryRegion(CONTIGUOUS_MEMORY_BASE, CONTIGUOUS_MEMORY_XBOX_SIZE, ContiguousRegion);
+	ConstructMemoryRegion(CONTIGUOUS_MEMORY_BASE, XBOX_CONTIGUOUS_MEMORY_SIZE, ContiguousRegion);
 	ConstructMemoryRegion(SYSTEM_MEMORY_BASE, SYSTEM_MEMORY_SIZE, SystemRegion);
 	ConstructMemoryRegion(DEVKIT_MEMORY_BASE, DEVKIT_MEMORY_SIZE, DevkitRegion);
 
@@ -104,14 +104,14 @@ void VMManager::Initialize(HANDLE memory_view, HANDLE pagetables_view, int BootF
 		m_PhysicalPagesAvailable = g_SystemMaxMemory >> PAGE_SHIFT;
 		m_HighestPage = CHIHIRO_HIGHEST_PHYSICAL_PAGE;
 		m_NV2AInstancePage = CHIHIRO_INSTANCE_PHYSICAL_PAGE;
-		m_MemoryRegionArray[ContiguousRegion].RegionMap[CONTIGUOUS_MEMORY_BASE].size = CONTIGUOUS_MEMORY_CHIHIRO_SIZE;
+		m_MemoryRegionArray[ContiguousRegion].RegionMap[CONTIGUOUS_MEMORY_BASE].size = CHIHIRO_CONTIGUOUS_MEMORY_SIZE;
 	}
 	else if (m_MmLayoutDebug)
 	{
 		g_SystemMaxMemory = CHIHIRO_MEMORY_SIZE;
 		m_DebuggerPagesAvailable = X64M_PHYSICAL_PAGE;
 		m_HighestPage = CHIHIRO_HIGHEST_PHYSICAL_PAGE;
-		m_MemoryRegionArray[ContiguousRegion].RegionMap[CONTIGUOUS_MEMORY_BASE].size = CONTIGUOUS_MEMORY_CHIHIRO_SIZE;
+		m_MemoryRegionArray[ContiguousRegion].RegionMap[CONTIGUOUS_MEMORY_BASE].size = CHIHIRO_CONTIGUOUS_MEMORY_SIZE;
 
 		// Note that even if this is true, only the heap/Nt functions of the title are affected, the Mm functions
 		// will still use only the lower 64 MiB and the same is true for the debugger pages, meaning they will only
@@ -653,10 +653,10 @@ void VMManager::RestorePersistentMemory()
 	PMMPTE EndingPte;
 
 	if (m_MmLayoutRetail) {
-		EndingPte = GetPteAddress(CONTIGUOUS_MEMORY_BASE + CONTIGUOUS_MEMORY_XBOX_SIZE - 1);
+		EndingPte = GetPteAddress(CONTIGUOUS_MEMORY_BASE + XBOX_CONTIGUOUS_MEMORY_SIZE - 1);
 	}
 	else {
-		EndingPte = GetPteAddress(CONTIGUOUS_MEMORY_BASE + CONTIGUOUS_MEMORY_CHIHIRO_SIZE - 1);
+		EndingPte = GetPteAddress(CONTIGUOUS_MEMORY_BASE + CHIHIRO_CONTIGUOUS_MEMORY_SIZE - 1);
 	}
 
 	while (PointerPte <= EndingPte)

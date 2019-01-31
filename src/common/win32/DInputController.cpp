@@ -674,7 +674,7 @@ void DInputController::DInputInit(HWND hwnd)
     {
         HRESULT hRet = XTL::DirectInput8Create
         (
-            GetModuleHandle(NULL),
+            hActiveModule,
             DIRECTINPUT_VERSION,
             XTL::IID_IDirectInput8,
             (void**)&m_pDirectInput8,
