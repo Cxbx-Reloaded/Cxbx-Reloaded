@@ -41,6 +41,8 @@ processorArchitecture = '*' publicKeyToken = '6595b64144ccf1df' language = '*'\"
 /*! program entry point */
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
+	hActiveModule = hInstance; // == GetModuleHandle(NULL); // Points to GUI (Cxbx.exe) ImageBase
+
 	// First detect if we are running on WoW64, if not, prevent Cxbx-Reloaded from starting
 	// Cxbx-Relaoded needs access to high memory, only exposed to WoW64.
 	typedef BOOL(WINAPI *LPFN_ISWOW64PROCESS) (HANDLE, PBOOL);
@@ -56,6 +58,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		return EXIT_FAILURE;
 	}
 
+#ifndef CXBX_LOADER
 	/*! verify Cxbx.exe is loaded to base address 0x00010000 */
 	if ((UINT_PTR)GetModuleHandle(nullptr) != CXBX_BASE_ADDR)
 	{
@@ -66,6 +69,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			MB_OK | MB_ICONERROR);
 		return EXIT_FAILURE;
 	}
+#endif
 
 	bool bRet, bKernel;
 	HWND hWnd = nullptr;
