@@ -869,7 +869,7 @@ void cxbx_gl_parse_overlay(NV2AState *d, int v)
 	overlay.base = d->pvideo.regs[NV_PVIDEO_BASE(v)];
 	overlay.limit = d->pvideo.regs[NV_PVIDEO_LIMIT(v)];
 	assert(overlay.base == 0);
-	assert(overlay.limit == (128 * ONE_MB) - 1); // = CONTIGUOUS_MEMORY_CHIHIRO_SIZE - 1
+	assert(overlay.limit == (128 * ONE_MB) - 1); // = CHIHIRO_CONTIGUOUS_MEMORY_SIZE - 1
 	assert(GET_MASK(overlay_format, NV_PVIDEO_FORMAT_COLOR) == NV_PVIDEO_FORMAT_COLOR_LE_CR8YB8CB8YA8);
 
 #endif

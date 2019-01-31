@@ -345,13 +345,18 @@ HANDLE CxbxRestoreContiguousMemory(char *szFilePath_memory_bin)
 		return nullptr;
 	}
 
+
+#ifdef CXBX_LOADER
+	// TODO : Use ReserveMemoryRange / UnreserveMemoryRange(Mem??) where appropriate
+#endif
+
 	// Map memory.bin contents into memory :
 	void *memory = (void *)MapViewOfFileEx(
 		hFileMapping,
 		FILE_MAP_READ | FILE_MAP_WRITE | FILE_MAP_EXECUTE,
 		/* dwFileOffsetHigh */0,
 		/* dwFileOffsetLow */0,
-		CONTIGUOUS_MEMORY_CHIHIRO_SIZE,
+		CHIHIRO_CONTIGUOUS_MEMORY_SIZE,
 		(void *)CONTIGUOUS_MEMORY_BASE);
 	if (memory != (void *)CONTIGUOUS_MEMORY_BASE)
 	{
@@ -363,11 +368,11 @@ HANDLE CxbxRestoreContiguousMemory(char *szFilePath_memory_bin)
 	}
 
 	printf("[0x%.4X] INIT: Mapped %d MiB of Xbox contiguous memory at 0x%.8X to 0x%.8X\n",
-		GetCurrentThreadId(), CONTIGUOUS_MEMORY_CHIHIRO_SIZE / ONE_MB, CONTIGUOUS_MEMORY_BASE, CONTIGUOUS_MEMORY_BASE + CONTIGUOUS_MEMORY_CHIHIRO_SIZE - 1);
+		GetCurrentThreadId(), CHIHIRO_CONTIGUOUS_MEMORY_SIZE / ONE_MB, CONTIGUOUS_MEMORY_BASE, CONTIGUOUS_MEMORY_BASE + CHIHIRO_CONTIGUOUS_MEMORY_SIZE - 1);
 
 	if (NeedsInitialization)
 	{
-		memset(memory, 0, CONTIGUOUS_MEMORY_CHIHIRO_SIZE);
+		memset(memory, 0, CHIHIRO_CONTIGUOUS_MEMORY_SIZE);
 		printf("[0x%.4X] INIT: Initialized contiguous memory\n", GetCurrentThreadId());
 	}
 	else
@@ -1067,12 +1072,21 @@ void CxbxKrnlMain(int argc, char* argv[])
 			return; // TODO : Halt(0); 
 		}
 
+#ifndef CXBX_LOADER
 		// verify virtual_memory_placeholder is located at 0x00011000
 		if ((UINT_PTR)(&(virtual_memory_placeholder[0])) != (XBE_IMAGE_BASE + CXBX_BASE_OF_CODE))
 		{
 			CxbxPopupMessage(LOG_LEVEL::FATAL, CxbxMsgDlgIcon_Error, "virtual_memory_placeholder is not loaded to base address 0x00011000 (which is a requirement for Xbox emulation)");
 			return; // TODO : Halt(0); 
 		}
+#endif
+
+#ifdef CXBX_LOADER
+		if (!VerifyAddressRanges()) {
+			CxbxPopupMessage("Cxbx-Reloaded hasn't got access to all required address ranges");
+			return; // TODO : Halt(0); 
+		}
+#endif
 
 		// Create a safe copy of the complete EXE header:
 		DWORD ExeHeaderSize = ExeOptionalHeader->SizeOfHeaders; // Should end up as 0x400
@@ -1093,7 +1107,27 @@ void CxbxKrnlMain(int argc, char* argv[])
 
 		// Mark the virtual memory range completely accessible
 		DWORD OldProtection;
-		VirtualProtect((void*)XBE_IMAGE_BASE, XBE_MAX_VA - XBE_IMAGE_BASE, PAGE_EXECUTE_READWRITE, &OldProtection);
+		if (0 == VirtualProtect((void*)XBE_IMAGE_BASE, XBE_MAX_VA - XBE_IMAGE_BASE, PAGE_EXECUTE_READWRITE, &OldProtection)) {
+			DWORD err = GetLastError();
+
+			// Translate ErrorCode to String.
+			LPTSTR Error = 0;
+			if (::FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
+				NULL,
+				err,
+				0,
+				(LPTSTR)&Error,
+				0,
+				NULL) == 0) {
+				// Failed in translating.
+			}
+
+			// Free the buffer.
+			if (Error) {
+				::LocalFree(Error);
+				Error = 0;
+			}
+		}
 
 		// Clear out the virtual memory range
 		memset((void*)XBE_IMAGE_BASE, 0, XBE_MAX_VA - XBE_IMAGE_BASE);

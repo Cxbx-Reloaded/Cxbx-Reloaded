@@ -97,9 +97,9 @@ enum XBCtrlObject
 // ******************************************************************
 struct XBCtrlObjectCfg
 {
-	int dwDevice;   // offset into m_InputDevice
-	int dwInfo;     // extended information, depending on dwFlags
-	int dwFlags;    // flags explaining the data format
+	int32_t dwDevice;   // offset into m_InputDevice
+	int32_t dwInfo;     // extended information, depending on dwFlags
+	int32_t dwFlags;    // flags explaining the data format
 };
 
 // ******************************************************************
