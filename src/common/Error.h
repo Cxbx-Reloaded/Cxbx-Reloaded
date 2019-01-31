@@ -33,7 +33,7 @@
 class Error
 {
 public:
-    const std::string& GetError();
+    const std::string GetError();
 
     bool HasError() const;
     bool HasFatalError() const;
@@ -42,15 +42,15 @@ public:
 
 protected:
     // protected constructor so this class must be inherited from
-    Error() : m_bFatal(false) { }
+    Error() : m_szError("\0"), m_bFatal(false) { }
 
     // protected so only derived class may set an error
     void SetError(const std::string& strStrError);
     void SetFatalError(const std::string& strError);
 
 private:
-    std::string m_strError;
-    bool m_bFatal;
+    char m_szError[60]; // Cannot be std::string, which sizeof() differs between builds
+    uint32_t m_bFatal; // Cannot be bool, to avoid bit packing altering memory layout
 };
 
 #endif
