@@ -64,11 +64,11 @@ void PhysicalMemory::InitializePageDirectory()
 	TempPte.Hardware.LargePage = 1;
 	TempPte.Hardware.PFN = XBOX_WRITE_COMBINED_BASE >> PAGE_SHIFT;
 	SET_WRITE_COMBINE(TempPte);
-	pPde_end = GetPdeAddress(XBOX_WRITE_COMBINE_END - 1);
+	pPde_end = GetPdeAddress(XBOX_WRITE_COMBINED_END);
 	for (pPde = GetPdeAddress(XBOX_WRITE_COMBINED_BASE); pPde <= pPde_end; ++pPde)
 	{
 		WRITE_PTE(pPde, TempPte);
-		TempPte.Default += PAGE_SIZE_LARGE; // increase PFN
+		TempPte.Default += LARGE_PAGE_SIZE; // increase PFN
 	}
 
 
@@ -79,7 +79,7 @@ void PhysicalMemory::InitializePageDirectory()
 	for (pPde = GetPdeAddress(XBOX_UNCACHED_BASE); pPde <= pPde_end; ++pPde)
 	{
 		WRITE_PTE(pPde, TempPte);
-		TempPte.Default += PAGE_SIZE_LARGE; // increase PFN
+		TempPte.Default += LARGE_PAGE_SIZE; // increase PFN
 	}
 
 
@@ -676,7 +676,7 @@ bool PhysicalMemory::AllocatePT(size_t Size, VAddr addr)
 		{
 			PTtoCommit++;
 		}
-		StartingAddr += PAGE_SIZE_LARGE;
+		StartingAddr += LARGE_PAGE_SIZE;
 	}
 
 	if (!PTtoCommit)
@@ -712,7 +712,7 @@ bool PhysicalMemory::AllocatePT(size_t Size, VAddr addr)
 			WRITE_PTE(pPde, TempPte);
 			WritePfn(pfn, pfn, pPde, BusyType);
 		}
-		StartingAddr += PAGE_SIZE_LARGE;
+		StartingAddr += LARGE_PAGE_SIZE;
 	}
 
 	return true;
@@ -739,7 +739,7 @@ void PhysicalMemory::DeallocatePT(size_t Size, VAddr addr)
 			WritePfn(pPde->Hardware.PFN, pPde->Hardware.PFN, pPde, (PageType)PTpfn->PTPageFrame.BusyType, true);
 			WRITE_ZERO_PTE(pPde);
 		}
-		StartingAddr += PAGE_SIZE_LARGE;
+		StartingAddr += LARGE_PAGE_SIZE;
 	}
 }
 

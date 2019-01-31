@@ -57,7 +57,7 @@ void WalkIndexBuffer_SSE41(XTL::INDEX16 & LowIndex, XTL::INDEX16 & HighIndex, XT
 		return;
 	}
 
-	__m128i *unalignedIndices = (__m128i*) pIndexData;\
+	__m128i *unalignedIndices = (__m128i*) pIndexData;
 	__m128i min = _mm_set1_epi16(USHRT_MAX);
 	__m128i max = _mm_setzero_si128();
 

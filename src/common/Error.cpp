@@ -36,14 +36,14 @@
 
 #include "common\Error.h"
 
-const std::string& Error::GetError()
+const std::string Error::GetError()
 {
-    return m_strError;
+    return std::string(m_szError);
 }
 
 bool Error::HasError() const
 {
-    return HasFatalError() || !m_strError.empty();
+    return HasFatalError() || (m_szError[0] != '\0');
 }
 
 bool Error::HasFatalError() const
@@ -55,7 +55,7 @@ bool Error::ClearError()
 {
     if (m_bFatal) { return false; }
 
-    m_strError.clear();
+	m_szError[0] = '\0';
     m_bFatal = false;
 
     return true;
@@ -63,11 +63,17 @@ bool Error::ClearError()
 
 void Error::SetError(const std::string& strError)
 {
-    m_strError = strError;
+    // assert(strError.length()) < sizeof(m_szError));
+
+    memset(m_szError, '\0', sizeof(m_szError));
+    memcpy(m_szError, strError.c_str(), strError.length());
 }
 
 void Error::SetFatalError(const std::string& strError)
 {
-    m_strError = strError;
+    // assert(strError.length()) < sizeof(m_szError));
+
+    memset(m_szError, '\0', sizeof(m_szError));
+    memcpy(m_szError, strError.c_str(), strError.length());
     m_bFatal = true;
 }
