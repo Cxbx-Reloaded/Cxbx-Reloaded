@@ -1719,7 +1719,7 @@ static DWORD WINAPI EmuRenderWindow(LPVOID lpVoid)
             sizeof(WNDCLASSEX),
             CS_CLASSDC,
             EmuMsgProc,
-            0, 0, GetModuleHandle(nullptr),
+            0, 0, hActiveModule, // Was GetModuleHandle(nullptr),
 			0, // TODO : LoadIcon(hmodule, ?)
             LoadCursor(NULL, IDC_ARROW),
             (HBRUSH)(g_hBgBrush), NULL,
@@ -1766,7 +1766,8 @@ static DWORD WINAPI EmuRenderWindow(LPVOID lpVoid)
 			windowRect.top,
 			windowRect.right - windowRect.left,
 			windowRect.bottom - windowRect.top,
-            hwndParent, NULL, GetModuleHandle(nullptr), nullptr
+            hwndParent, nullptr, hActiveModule, // Was GetModuleHandle(nullptr),
+            nullptr
         );
     }
 
