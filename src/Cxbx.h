@@ -25,6 +25,8 @@
 #ifndef CXBX_H
 #define CXBX_H
 
+//#define FUNC_EXPORTS __pragma(comment(linker, "/EXPORT:" __FUNCTION__ "=" __FUNCDNAME__))
+
 /*! \name primitive typedefs */
 /*! \{ */
 typedef signed int     sint;

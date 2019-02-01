@@ -49,7 +49,7 @@ HMODULE hActiveModule = NULL;
 // ******************************************************************
 // * func: EmuShared::EmuSharedInit
 // ******************************************************************
-void EmuShared::Init(DWORD guiProcessID)
+bool EmuShared::Init(DWORD guiProcessID)
 {
     // ******************************************************************
     // * Ensure initialization only occurs once
@@ -60,7 +60,7 @@ void EmuShared::Init(DWORD guiProcessID)
     // * Prevent multiple initializations
     // ******************************************************************
     if(hMapObject != NULL)
-        return;
+        return true;
 
     // ******************************************************************
     // * Create the shared memory "file"
@@ -79,7 +79,7 @@ void EmuShared::Init(DWORD guiProcessID)
         );
 
         if(hMapObject == NULL)
-            CxbxKrnlCleanupEx(CXBXR_MODULE::INIT, "Could not map shared memory!");
+            return false; // CxbxKrnlCleanupEx(CXBXR_MODULE::INIT, "Could not map shared memory!");
 
         if(GetLastError() == ERROR_ALREADY_EXISTS)
             bRequireConstruction = false;
@@ -99,7 +99,7 @@ void EmuShared::Init(DWORD guiProcessID)
         );
 
         if(g_EmuShared == nullptr)
-            CxbxKrnlCleanupEx(CXBXR_MODULE::INIT, "Could not map view of shared memory!");
+            return false; // CxbxKrnlCleanupEx(CXBXR_MODULE::INIT, "Could not map view of shared memory!");
     }
 
     // ******************************************************************
@@ -110,6 +110,7 @@ void EmuShared::Init(DWORD guiProcessID)
     }
 
     g_EmuShared->m_RefCount++;
+	return true;
 }
 
 // ******************************************************************
@@ -131,6 +132,8 @@ void EmuShared::Cleanup()
 // ******************************************************************
 EmuShared::EmuShared()
 {
+//	m_bMultiXbe = false;
+//	m_LaunchDataPAddress = NULL;
 	m_bDebugging = false;
 	m_bEmulating_status = false;
 	m_bFirstLaunch = false;

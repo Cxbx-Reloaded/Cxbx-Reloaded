@@ -127,7 +127,7 @@ xboxkrnl::XBOX_EEPROM *CxbxRestoreEEPROM(char *szFilePath_EEPROM_bin)
 	}
 
 	// Make sure EEPROM.bin is at least 256 bytes in size
-	SetFilePointer(hFileEEPROM, 256, nullptr, FILE_BEGIN);
+	SetFilePointer(hFileEEPROM, EEPROM_SIZE, nullptr, FILE_BEGIN);
 	SetEndOfFile(hFileEEPROM);
 
 	HANDLE hFileMappingEEPROM = CreateFileMapping(
