@@ -27,6 +27,8 @@
 
 #include <cstdint>
 
+//#define FUNC_EXPORTS __pragma(comment(linker, "/EXPORT:" __FUNCTION__ "=" __FUNCDNAME__))
+
 /*! xbaddr is the type of a physical address */
 typedef uint32_t xbaddr;
 
