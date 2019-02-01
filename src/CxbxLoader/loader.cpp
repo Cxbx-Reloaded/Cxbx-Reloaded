@@ -70,29 +70,28 @@ DWORD CALLBACK rawMain()
 	}
 
 	// Only after the required memory ranges are reserved, load our emulation DLL
-	HMODULE hEmulationDLL = LoadLibraryA("Cxbx-Emulator.dll");
+	HMODULE hEmulationDLL = LoadLibraryA("CxbxEmulator.dll");
 	if (!hEmulationDLL) {
 		// TODO : Move the following towards a tooling function
 		DWORD err = GetLastError();
 
 		// Translate ErrorCode to String.
-		LPTSTR Error = 0;
+		LPTSTR Error = nullptr;
 		if (::FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
 			NULL,
 			err,
 			0,
 			(LPTSTR)&Error,
 			0,
-			NULL) == 0)
-		{
+			NULL) == 0) {
 			// Failed in translating.
 		}
 
 		// Free the buffer.
-		if (Error)
-		{
+		if (Error) {
+			OutputDebugString(Error);
 			::LocalFree(Error);
-			Error = 0;
+			Error = nullptr;
 		}
 
 		return ERROR_RESOURCE_NOT_FOUND;
@@ -101,8 +100,9 @@ DWORD CALLBACK rawMain()
 	// Find the main emulation function in our DLL
 	typedef DWORD (WINAPI * Emulate_t)();
 	Emulate_t pfnEmulate = (Emulate_t)GetProcAddress(hEmulationDLL, "Emulate");
-	if(!pfnEmulate)
+	if (!pfnEmulate) {
 		return ERROR_RESOURCE_NOT_FOUND;
+	}
 
 	// Call the main emulation function in our DLL, passing in the results
 	// of the address range reservations
