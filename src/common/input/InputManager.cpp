@@ -36,6 +36,7 @@ namespace xboxkrnl
 
 #include <thread>
 #include "SdlJoystick.h"
+#include "XInputPad.h"
 #include "InputManager.h"
 #include "..\devices\usb\XidGamepad.h"
 #include "core\kernel\exports\EmuKrnl.h" // For EmuLog
@@ -44,22 +45,30 @@ namespace xboxkrnl
 InputDeviceManager* g_InputDeviceManager = nullptr;
 constexpr ControlState INPUT_DETECT_THRESHOLD = 0.55; // arbitrary number, using what Dolphin uses
 
-InputDeviceManager::InputDeviceManager()
+void InputDeviceManager::Initialize()
 {
+	// Sdl::Init must be called last since it blocks when it succeeds
 	std::unique_lock<std::mutex> lck(m_InitMtx);
-	Sdl::Init(m_InitMtx, m_Init_cv);
-	m_Init_cv.wait(lck, []() {
-		return Sdl::SdlInitStatus != Sdl::SDL_NOT_INIT;
+
+	m_PollingThread = std::thread([this]() {
+		XInput::Init(m_InitMtx);
+		Sdl::Init(m_InitMtx, m_Init_cv);
 	});
 
-	if (Sdl::SdlInitStatus < 0) {
+	m_Init_cv.wait(lck, []() {
+		return (Sdl::SdlInitStatus != Sdl::SDL_NOT_INIT) &&
+			(XInput::XInputInitStatus != XInput::XINPUT_NOT_INIT);
+	});
+
+	if (Sdl::SdlInitStatus < 0 || XInput::XInputInitStatus < 0) {
 		CxbxKrnlCleanupEx(CXBXR_MODULE::INIT, "Failed to initialize input subsystem! Consult debug log for more information");
 	}
 }
 
-InputDeviceManager::~InputDeviceManager()
+void InputDeviceManager::Shutdown()
 {
-	Sdl::DeInit();
+	XInput::DeInit();
+	Sdl::DeInit(m_PollingThread);
 }
 
 void InputDeviceManager::AddDevice(std::shared_ptr<InputDevice> Device)

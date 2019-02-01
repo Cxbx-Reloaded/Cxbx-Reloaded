@@ -28,7 +28,7 @@
 #ifndef INPUTMANAGER_H_
 #define INPUTMANAGER_H_
 #if 1 // Reenable this when LLE USB actually works
-#include "SdlJoystick.h"
+#include "InputDevice.h"
 
 #define GAMEPAD_A                 0
 #define GAMEPAD_B                 1
@@ -76,8 +76,8 @@ struct XpadOutput {
 class InputDeviceManager
 {
 	public:
-		InputDeviceManager();
-		~InputDeviceManager();
+		void Initialize();
+		void Shutdown();
 		// connect the enumerated device to the virtual xbox
 		int ConnectDeviceToXbox(int port, int type);
 		// disconnect a device from the emulated xbox
@@ -93,9 +93,11 @@ class InputDeviceManager
 	private:
 		// all enumerated devices currently detected and supported
 		std::vector<std::shared_ptr<InputDevice>> m_Devices;
-		// locks used to signal error during the initialization
+		// locks used to signal errors during the initialization
 		std::mutex m_InitMtx;
 		std::condition_variable m_Init_cv;
+		// input polling thread
+		std::thread m_PollingThread;
 		// used to indicate that the manager was initialized correctly
 		bool m_bInitOK;
 		// assign the button binding to the devices

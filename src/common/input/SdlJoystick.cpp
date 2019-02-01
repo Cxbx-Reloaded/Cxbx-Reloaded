@@ -51,55 +51,51 @@ static const uint16_t RUMBLE_LENGTH_MAX = 500;
 
 namespace Sdl
 {
-	static std::thread PollingThread;
 	static uint32_t ExitEvent_t;
-	int SdlInitStatus;
+	int SdlInitStatus = SDL_NOT_INIT;
 
 	void Init(std::mutex& Mtx, std::condition_variable& Cv)
 	{
-		SdlInitStatus = SDL_NOT_INIT;
-		PollingThread = std::thread([&Mtx, &Cv]() {
-			SDL_Event Event;
-			std::unique_lock<std::mutex> lck(Mtx);
+		SDL_Event Event;
+		std::unique_lock<std::mutex> lck(Mtx);
 
-			if (SDL_Init(SDL_INIT_JOYSTICK | SDL_INIT_HAPTIC) < 0) {
-				EmuLog(LOG_LEVEL::WARNING, "Failed to initialize SDL subsystem. The error was: %s", SDL_GetError());
-				SdlInitStatus = SDL_INIT_ERROR;
-				Cv.notify_one();
-				return;
-			}
-			ExitEvent_t = SDL_RegisterEvents(1);
-			if (ExitEvent_t == (uint32_t)-1) {
-				SDL_Quit();
-				EmuLog(LOG_LEVEL::WARNING, "Failed to create SDL exit event.");
-				SdlInitStatus = SDL_EVENT_CREATE_ERROR;
-				Cv.notify_one();
-				return;
-			}
-
-			SetThreadAffinityMask(GetCurrentThread(), g_CPUOthers);
-			SdlInitStatus = SDL_INIT_SUCCESS;
+		if (SDL_Init(SDL_INIT_JOYSTICK | SDL_INIT_HAPTIC) < 0) {
+			EmuLog(LOG_LEVEL::WARNING, "Failed to initialize SDL subsystem! The error was: %s", SDL_GetError());
+			SdlInitStatus = SDL_INIT_ERROR;
 			Cv.notify_one();
-
-			while (SDL_WaitEvent(&Event))
-			{
-				if (Event.type == SDL_JOYDEVICEADDED) {
-					OpenSdlDevice(Event.jdevice.which);
-				}
-				else if (Event.type == SDL_JOYDEVICEREMOVED) {
-					CloseSdlDevice(Event.jdevice.which);
-				}
-				else if (Event.type == ExitEvent_t) {
-					break;
-				}
-			}
+			return;
+		}
+		ExitEvent_t = SDL_RegisterEvents(1);
+		if (ExitEvent_t == (uint32_t)-1) {
 			SDL_Quit();
-		});
+			EmuLog(LOG_LEVEL::WARNING, "Failed to create SDL exit event!");
+			SdlInitStatus = SDL_INIT_ERROR;
+			Cv.notify_one();
+			return;
+		}
+
+		SetThreadAffinityMask(GetCurrentThread(), g_CPUOthers);
+		SdlInitStatus = SDL_INIT_SUCCESS;
+		Cv.notify_one();
+
+		while (SDL_WaitEvent(&Event))
+		{
+			if (Event.type == SDL_JOYDEVICEADDED) {
+				OpenSdlDevice(Event.jdevice.which);
+			}
+			else if (Event.type == SDL_JOYDEVICEREMOVED) {
+				CloseSdlDevice(Event.jdevice.which);
+			}
+			else if (Event.type == ExitEvent_t) {
+				break;
+			}
+		}
+		SDL_Quit();
 	}
 
-	void DeInit()
+	void DeInit(std::thread& Thr)
 	{
-		if (!PollingThread.joinable()) {
+		if (!Thr.joinable()) {
 			return;
 		}
 
@@ -108,7 +104,7 @@ namespace Sdl
 		ExitEvent.type = ExitEvent_t;
 		SDL_PushEvent(&ExitEvent);
 
-		PollingThread.join();
+		Thr.join();
 	}
 
 	void OpenSdlDevice(const int Index)
@@ -121,11 +117,11 @@ namespace Sdl
 				g_InputDeviceManager->AddDevice(std::move(Device));
 			}
 			else {
-				EmuLog(LOG_LEVEL::INFO, "Rejected joystick %i. No controls detected\n", Index);
+				EmuLog(LOG_LEVEL::INFO, "Rejected joystick %i. No controls detected", Index);
 			}
 		}
 		else {
-			EmuLog(LOG_LEVEL::WARNING, "Failed to open joystick %i. The error was %s\n", Index, SDL_GetError());
+			EmuLog(LOG_LEVEL::WARNING, "Failed to open joystick %i. The error was %s", Index, SDL_GetError());
 		}
 	}
 
@@ -194,8 +190,7 @@ namespace Sdl
 		}
 
 		// get hats
-		for (i = 0; i != NumHats; ++i)
-		{
+		for (i = 0; i != NumHats; ++i) {
 			// each hat gets 4 input instances associated with it (up down left right)
 			for (uint8_t d = 0; d != 4; ++d) {
 				AddInput(new Hat(i, m_Joystick, d));
@@ -203,8 +198,7 @@ namespace Sdl
 		}
 
 		// get axes
-		for (i = 0; i != NumAxes; ++i)
-		{
+		for (i = 0; i != NumAxes; ++i) {
 			// each axis gets a negative and a positive input instance associated with it
 			AddAnalogInputs(new Axis(i, m_Joystick, -32768), new Axis(i, m_Joystick, 32767));
 		}
@@ -341,12 +335,12 @@ namespace Sdl
 		return (SDL_JoystickGetHat(m_Js, m_Index) & (1 << m_Direction)) > 0;
 	}
 
-	void SdlJoystick::HapticEffect::SetState(ControlState state)
+	void SdlJoystick::HapticEffect::SetState(ControlState State)
 	{
 		memset(&m_Effect, 0, sizeof(m_Effect));
-		if (state)
+		if (State)
 		{
-			SetSDLHapticEffect(state);
+			SetSDLHapticEffect(State);
 		}
 		else
 		{
@@ -377,25 +371,25 @@ namespace Sdl
 		}
 	}
 
-	void SdlJoystick::ConstantEffect::SetSDLHapticEffect(ControlState state)
+	void SdlJoystick::ConstantEffect::SetSDLHapticEffect(ControlState State)
 	{
 		m_Effect.type = SDL_HAPTIC_CONSTANT;
 		m_Effect.constant.length = RUMBLE_LENGTH_MAX;
-		m_Effect.constant.level = (Sint16)(state * 0x7FFF);
+		m_Effect.constant.level = (Sint16)(State * 0x7FFF);
 	}
 
-	void SdlJoystick::RampEffect::SetSDLHapticEffect(ControlState state)
+	void SdlJoystick::RampEffect::SetSDLHapticEffect(ControlState State)
 	{
 		m_Effect.type = SDL_HAPTIC_RAMP;
 		m_Effect.ramp.length = RUMBLE_LENGTH_MAX;
-		m_Effect.ramp.start = (Sint16)(state * 0x7FFF);
+		m_Effect.ramp.start = (Sint16)(State * 0x7FFF);
 	}
 
-	void SdlJoystick::SineEffect::SetSDLHapticEffect(ControlState state)
+	void SdlJoystick::SineEffect::SetSDLHapticEffect(ControlState State)
 	{
 		m_Effect.type = SDL_HAPTIC_SINE;
 		m_Effect.periodic.period = RUMBLE_PERIOD;
-		m_Effect.periodic.magnitude = (Sint16)(state * 0x7FFF);
+		m_Effect.periodic.magnitude = (Sint16)(State * 0x7FFF);
 		m_Effect.periodic.offset = 0;
 		m_Effect.periodic.phase = 18000;
 		m_Effect.periodic.length = RUMBLE_LENGTH_MAX;
@@ -403,11 +397,11 @@ namespace Sdl
 		m_Effect.periodic.attack_length = 0;
 	}
 
-	void SdlJoystick::TriangleEffect::SetSDLHapticEffect(ControlState state)
+	void SdlJoystick::TriangleEffect::SetSDLHapticEffect(ControlState State)
 	{
 		m_Effect.type = SDL_HAPTIC_TRIANGLE;
 		m_Effect.periodic.period = RUMBLE_PERIOD;
-		m_Effect.periodic.magnitude = (Sint16)(state * 0x7FFF);
+		m_Effect.periodic.magnitude = (Sint16)(State * 0x7FFF);
 		m_Effect.periodic.offset = 0;
 		m_Effect.periodic.phase = 18000;
 		m_Effect.periodic.length = RUMBLE_LENGTH_MAX;
@@ -415,13 +409,13 @@ namespace Sdl
 		m_Effect.periodic.attack_length = 0;
 	}
 
-	void SdlJoystick::LeftRightEffect::SetSDLHapticEffect(ControlState state)
+	void SdlJoystick::LeftRightEffect::SetSDLHapticEffect(ControlState State)
 	{
 		m_Effect.type = SDL_HAPTIC_LEFTRIGHT;
 		m_Effect.leftright.length = RUMBLE_LENGTH_MAX;
 		// max ranges tuned to 'feel' similar in magnitude to triangle/sine on xbox360 controller
-		m_Effect.leftright.large_magnitude = (Uint16)(state * 0x4000);
-		m_Effect.leftright.small_magnitude = (Uint16)(state * 0xFFFF);
+		m_Effect.leftright.large_magnitude = (Uint16)(State * 0x4000);
+		m_Effect.leftright.small_magnitude = (Uint16)(State * 0xFFFF);
 	}
 }
 
