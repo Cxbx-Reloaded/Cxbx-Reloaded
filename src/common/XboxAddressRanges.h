@@ -49,6 +49,8 @@ const int BLOCK_SIZE = KB(64);
 typedef enum {
 	MemLowVirtual,
 	MemPhysical,
+	DevKitMemory,
+	SystemMemory,
 	MemPageTable,
 	MemTiled,
 	DeviceNV2A_a,
@@ -70,23 +72,26 @@ typedef struct {
 	XboxAddressRangeType Type;
 	unsigned __int32 Start;
 	int Size;
+	unsigned int Flags;
 } XboxAddressRange;
 
 const XboxAddressRange XboxAddressRanges[] = {
 	// See http://xboxdevwiki.net/Memory
 	// and http://xboxdevwiki.net/Boot_Process#Paging
-	{ MemLowVirtual, 0x00000000, MB(128) }, // .. 0x08000000 (Retail Xbox uses 64 MB)
-	{ MemPhysical,   0x80000000, MB(128) }, // .. 0x88000000 (Retail Xbox uses 64 MB)
-	{ MemPageTable,  0xC0000000, KB(128) }, // .. 0xC0020000
-	{ MemTiled,      0xF0000000, MB( 64) }, // .. 0xF4000000
+	{ MemLowVirtual, 0x00000000, MB(128) }, // .. 0x07FFFFFF (Retail Xbox uses 64 MB)
+	{ MemPhysical,   0x80000000, MB(128) }, // .. 0x87FFFFFF (Retail Xbox uses 64 MB)
+	{ DevKitMemory,  0xB0000000, MB(128) }, // .. 0xBFFFFFFF // Note : Optional
+	{ MemPageTable,  0xC0000000, KB(128) }, // .. 0xC001FFFF // TODO : MB(4)?
+	{ SystemMemory,  0xD0000000, MB(512) }, // .. 0xEFFFFFFF
+	{ MemTiled,      0xF0000000, MB( 64) }, // .. 0xF3FFFFFF
 	{ DeviceNV2A_a,  0xFD000000, MB(  7) }, // .. 0xFD6FFFFF (GPU)
-	{ MemNV2APRAMIN, 0xFD700000, MB(  1) }, // .. 0xFD800000
-	{ DeviceNV2A_b,  0xFD800000, MB(  8) }, // .. 0xFE000000 (GPU)
-	{ DeviceAPU,     0xFE800000, KB(512) }, // .. 0xFE880000
-	{ DeviceAC97,    0xFEC00000, KB(  4) }, // .. 0xFEC01000 (ACI)
-	{ DeviceUSB0,    0xFED00000, KB(  4) }, // .. 0xFED01000
-	{ DeviceUSB1,    0xFED08000, KB(  4) }, // .. 0xFED09000
-	{ DeviceNVNet,   0xFEF00000, KB(  1) }, // .. 0xFEF00400
+	{ MemNV2APRAMIN, 0xFD700000, MB(  1) }, // .. 0xFD7FFFFF
+	{ DeviceNV2A_b,  0xFD800000, MB(  8) }, // .. 0xFDFFFFFF (GPU)
+	{ DeviceAPU,     0xFE800000, KB(512) }, // .. 0xFE87FFFF
+	{ DeviceAC97,    0xFEC00000, KB(  4) }, // .. 0xFEC00FFF (ACI)
+	{ DeviceUSB0,    0xFED00000, KB(  4) }, // .. 0xFED00FFF
+	{ DeviceUSB1,    0xFED08000, KB(  4) }, // .. 0xFED08FFF
+	{ DeviceNVNet,   0xFEF00000, KB(  1) }, // .. 0xFEF003FF
 	{ DeviceFlash_a, 0xFF000000, MB(  4) }, // .. 0xFF3FFFFF (Flash mirror 1)
 	{ DeviceFlash_b, 0xFF400000, MB(  4) }, // .. 0xFF7FFFFF (Flash mirror 2)
 	{ DeviceFlash_c, 0xFF800000, MB(  4) }, // .. 0xFFBFFFFF (Flash mirror 3)
