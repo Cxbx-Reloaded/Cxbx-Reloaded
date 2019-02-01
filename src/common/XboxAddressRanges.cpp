@@ -155,25 +155,32 @@ bool IsOptionalAddressRange(const XboxAddressRangeType xart)
 {
 	// Ranges that fail under Windows 7 Wow64 :
 	//
-	// { MemLowVirtual, 0x00000000, MB(128) }, // .. 0x08000000 (Retail Xbox uses 64 MB)
-	// { MemTiled,      0xF0000000, MB( 64) }, // .. 0xF4000000
-	// { DeviceUSB1,    0xFED08000, KB(  4) }, // .. 0xFED09000
+	// { MemLowVirtual, 0x00000000, MB(128) }, // .. 0x07FFFFFF (Retail Xbox uses 64 MB)
+	// { DevKitMemory,  0xB0000000, MB(128) }, // .. 0xBFFFFFFF // Note : Optional
+	// { SystemMemory,  0xD0000000, MB(512) }, // .. 0xEFFFFFFF
+	// { MemTiled,      0xF0000000, MB( 64) }, // .. 0xF3FFFFFF
+	// { DeviceUSB1,    0xFED08000, KB(  4) }, // .. 0xFED08FFF
 	// { DeviceFlash,   0xFFC00000, MB(  4) }, // .. 0xFFFFFFFF (Flash mirror 4) - Will probably fail reservation
 	// { DeviceMCPX,    0xFFFFFE00,    512  }, // .. 0xFFFFFFFF (not Chihiro, Xbox - if enabled)
 	//
 	// .. none of which are an issue for now.
 	switch (xart) {
-	case MemLowVirtual: // Already reserved via virtual_memory_placeholder
-		return true;
-	case MemTiled: // Even though it can't be reserved, MapViewOfFileEx to this range still works!?
-		return true;
-	case DeviceUSB1: // Won't be emulated for a long while
-		return true;
-	case DeviceMCPX: // Can safely be ignored
-		return true;
-	case DeviceFlash_d: // Losing mirror 4 is acceptable - the 3 others work just fine
-		return true;
+		case MemLowVirtual: // Already reserved via virtual_memory_placeholder
+			return true;
+		case DevKitMemory: // TODO : Debug (might behave like MemTiled)
+			return true;
+		case SystemMemory: // TODO : Debug (might behave like MemTiled)
+			return true;
+		case MemTiled: // Even though it can't be reserved, MapViewOfFileEx to this range still works!?
+			return true;
+		case DeviceUSB1: // Won't be emulated for a long while
+			return true;
+		case DeviceMCPX: // Can safely be ignored
+			return true;
+		case DeviceFlash_d: // Losing mirror 4 is acceptable - the 3 others work just fine
+			return true;
 	}
+
 	return false;
 }
 
