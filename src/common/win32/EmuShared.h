@@ -62,7 +62,7 @@ class EmuShared : public Mutex
 		// ******************************************************************
 		// * Each process needs to call this to initialize shared memory
 		// ******************************************************************
-		static void Init(DWORD guiProcessID);
+		static bool Init(DWORD guiProcessID);
 
 		// ******************************************************************
 		// * Each process needs to call this to cleanup shared memory
