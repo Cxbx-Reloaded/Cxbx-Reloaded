@@ -46,30 +46,19 @@ const int BLOCK_SIZE = KB(64);
   ((sizeof(a) / sizeof(*(a))) /                     \
   static_cast<size_t>(!(sizeof(a) % sizeof(*(a)))))
 
+// Range Flags
 typedef enum {
-	MemLowVirtual,
-	MemPhysical,
-	DevKitMemory,
-	SystemMemory,
-	MemPageTable,
-	MemTiled,
-	DeviceNV2A_a,
-	MemNV2APRAMIN,
-	DeviceNV2A_b,
-	DeviceAPU,
-	DeviceAC97,
-	DeviceUSB0,
-	DeviceUSB1,
-	DeviceNVNet,
-	DeviceFlash_a,
-	DeviceFlash_b,
-	DeviceFlash_c,
-	DeviceFlash_d,
-	DeviceMCPX,
-} XboxAddressRangeType;
+	X = (1 << 0), // Xbox (Retail)
+	C = (1 << 1), // Chihro (Console)
+	D = (1 << 2), // DevKit
+	O = (1 << 3), // Optional (may fail address range reservation)
+	E = (1 << 4), // PAGE_EXECUTE_READWRITE
+	R = (1 << 5), // PAGE_READWRITE
+	N = (1 << 6), // PAGE_NOACCESS
+} RangeFlags;
 
 typedef struct { 
-	XboxAddressRangeType Type;
+	const char *Name;
 	unsigned __int32 Start;
 	int Size;
 	unsigned int Flags;
@@ -78,28 +67,30 @@ typedef struct {
 const XboxAddressRange XboxAddressRanges[] = {
 	// See http://xboxdevwiki.net/Memory
 	// and http://xboxdevwiki.net/Boot_Process#Paging
-	{ MemLowVirtual, 0x00000000, MB(128) }, // .. 0x07FFFFFF (Retail Xbox uses 64 MB)
-	{ MemPhysical,   0x80000000, MB(128) }, // .. 0x87FFFFFF (Retail Xbox uses 64 MB)
-	{ DevKitMemory,  0xB0000000, MB(128) }, // .. 0xBFFFFFFF // Note : Optional
-	{ MemPageTable,  0xC0000000, KB(128) }, // .. 0xC001FFFF // TODO : MB(4)?
-	{ SystemMemory,  0xD0000000, MB(512) }, // .. 0xEFFFFFFF
-	{ MemTiled,      0xF0000000, MB( 64) }, // .. 0xF3FFFFFF
-	{ DeviceNV2A_a,  0xFD000000, MB(  7) }, // .. 0xFD6FFFFF (GPU)
-	{ MemNV2APRAMIN, 0xFD700000, MB(  1) }, // .. 0xFD7FFFFF
-	{ DeviceNV2A_b,  0xFD800000, MB(  8) }, // .. 0xFDFFFFFF (GPU)
-	{ DeviceAPU,     0xFE800000, KB(512) }, // .. 0xFE87FFFF
-	{ DeviceAC97,    0xFEC00000, KB(  4) }, // .. 0xFEC00FFF (ACI)
-	{ DeviceUSB0,    0xFED00000, KB(  4) }, // .. 0xFED00FFF
-	{ DeviceUSB1,    0xFED08000, KB(  4) }, // .. 0xFED08FFF
-	{ DeviceNVNet,   0xFEF00000, KB(  1) }, // .. 0xFEF003FF
-	{ DeviceFlash_a, 0xFF000000, MB(  4) }, // .. 0xFF3FFFFF (Flash mirror 1)
-	{ DeviceFlash_b, 0xFF400000, MB(  4) }, // .. 0xFF7FFFFF (Flash mirror 2)
-	{ DeviceFlash_c, 0xFF800000, MB(  4) }, // .. 0xFFBFFFFF (Flash mirror 3)
-	{ DeviceFlash_d, 0xFFC00000, MB(  4) }, // .. 0xFFFFFFFF (Flash mirror 4) - Will probably fail reservation
-	{ DeviceMCPX,    0xFFFFFE00,    512  }, // .. 0xFFFFFFFF (not Chihiro, Xbox - if enabled)
+	{ "MemLowVirtual", 0x00000000, MB( 64), X         | O | E }, // - 0x07FFFFFF (Retail Xbox) Optional (already reserved via virtual_memory_placeholder)
+	{ "MemLowVirtual", 0x00000000, MB(128),     C | D | O | E }, // - 0x07FFFFFF (Chihiro / DevKit)
+	{ "MemPhysical",   0x80000000, MB( 64), X             | E }, // - 0x87FFFFFF (Retail)
+	{ "MemPhysical",   0x80000000, MB(128),     C | D     | E }, // - 0x87FFFFFF (Chihiro / DevKit)
+	{ "DevKitMemory",  0xB0000000, MB(128),         D     | N }, // - 0xBFFFFFFF Optional (TODO : Check reserved range (might behave like MemTiled) + Flag [O]ptional?
+	{ "MemPageTable",  0xC0000000, KB(128), X | C | D     | R }, // - 0xC001FFFF TODO : MB(4)?
+	{ "SystemMemory",  0xD0000000, MB(512), X | C | D | O | 0 }, // - 0xEFFFFFFF Optional (TODO : Check reserved range (might behave like MemTiled)
+	{ "MemTiled",      0xF0000000, MB( 64), X | C | D | O | 0 }, // - 0xF3FFFFFF Optional (even though it can't be reserved, MapViewOfFileEx to this range still works!?)
+	{ "DeviceNV2A_a",  0xFD000000, MB(  7), X | C | D     | N }, // - 0xFD6FFFFF (GPU)
+	{ "MemNV2APRAMIN", 0xFD700000, MB(  1), X | C | D     | R }, // - 0xFD7FFFFF
+	{ "DeviceNV2A_b",  0xFD800000, MB(  8), X | C | D     | N }, // - 0xFDFFFFFF (GPU)
+	{ "DeviceAPU",     0xFE800000, KB(512), X | C | D     | N }, // - 0xFE87FFFF
+	{ "DeviceAC97",    0xFEC00000, KB(  4), X | C | D     | N }, // - 0xFEC00FFF (ACI)
+	{ "DeviceUSB0",    0xFED00000, KB(  4), X | C | D     | N }, // - 0xFED00FFF
+	{ "DeviceUSB1",    0xFED08000, KB(  4), X | C | D     | N }, // - 0xFED08FFF Optional (won't be emulated for a long while?)
+	{ "DeviceNVNet",   0xFEF00000, KB(  1), X | C | D     | N }, // - 0xFEF003FF
+	{ "DeviceFlash_a", 0xFF000000, MB(  4), X | C | D     | N }, // - 0xFF3FFFFF (Flash mirror 1)
+	{ "DeviceFlash_b", 0xFF400000, MB(  4), X | C | D     | N }, // - 0xFF7FFFFF (Flash mirror 2)
+	{ "DeviceFlash_c", 0xFF800000, MB(  4), X | C | D     | N }, // - 0xFFBFFFFF (Flash mirror 3)
+	{ "DeviceFlash_d", 0xFFC00000, MB(  4), X | C | D | O | N }, // - 0xFFFFFFFF (Flash mirror 4) Optional (will probably fail reservation, which is acceptable - the 3 other mirrors work just fine
+	{ "DeviceMCPX",    0xFFFFFE00,    512 , X     | D | O | N }, // - 0xFFFFFFFF (not Chihiro, Xbox - if enabled) Optional (can safely be ignored)
 };
 
-extern bool ReserveAddressRanges();
+extern bool ReserveAddressRanges(const int flags);
 extern bool VerifyAddressRanges();
-extern void UnreserveMemoryRange(XboxAddressRangeType xart);
-extern bool AllocateMemoryRange(XboxAddressRangeType xart);
+extern void UnreserveMemoryRange(XboxAddressRange& xart);
+extern bool AllocateMemoryRange(XboxAddressRange& xart);
