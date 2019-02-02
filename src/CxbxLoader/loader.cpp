@@ -63,7 +63,13 @@ DWORD CALLBACK rawMain()
 {
 	(void)virtual_memory_placeholder; // prevent optimization removing this data
 
-	if (!ReserveAddressRanges()) {
+	LPWSTR CommandLine = GetCommandLineW();
+
+	// Note : Since we only have kernel32 API's available, use FindStringOrdinal() here instead of strstr():
+	int flags = (FindStringOrdinal(FIND_FROMSTART, CommandLine, -1, L" /devkit", -1, true) >= 0 ? RangeFlags::D : 0)
+			  | (FindStringOrdinal(FIND_FROMSTART, CommandLine, -1, L" /chihiro", -1, true) >= 0 ? RangeFlags::C : 0);
+
+	if (!ReserveAddressRanges(flags)) {
 		// If we get here, emulation lacks important address ranges; Don't launch
 		OutputDebugStringA("Required address range couldn't be reserved!");
 		return ERROR_NOT_ENOUGH_MEMORY;
