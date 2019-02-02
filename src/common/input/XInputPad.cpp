@@ -147,12 +147,14 @@ namespace XInput
 				else {
 					EmuLog(LOG_LEVEL::INFO, "Rejected XInput device %i. No controls detected", i);
 				}
+				DevicesConnected |= mask;
 			}
 			else if ((ERROR_DEVICE_NOT_CONNECTED == ret) && (DevicesConnected & mask)) {
 				g_InputDeviceManager->RemoveDevice([&i](const auto& Device) {
 					const XDevice* dev = dynamic_cast<const XDevice*>(Device);
 					return dev && (dev->GetXInputDevice() == i);
 				});
+				DevicesConnected &= ~mask;
 			}
 		}
 	}

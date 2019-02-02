@@ -271,6 +271,7 @@
     <ClInclude Include="..\..\src\gui\DlgAudioConfig.h" />
     <ClInclude Include="..\..\src\gui\DlgControllerConfig.h" />
     <ClInclude Include="..\..\src\gui\DlgEepromConfig.h" />
+    <ClInclude Include="..\..\src\gui\DlgInputConfig.h" />
     <ClInclude Include="..\..\src\gui\DlgLoggingConfig.h" />
     <ClInclude Include="..\..\src\gui\DlgVideoConfig.h" />
     <ClInclude Include="..\..\src\core\kernel\support\Emu.h" />
@@ -489,6 +490,7 @@
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="..\..\src\gui\DlgEepromConfig.cpp" />
+    <ClCompile Include="..\..\src\gui\DlgInputConfig.cpp" />
     <ClCompile Include="..\..\src\gui\DlgLoggingConfig.cpp" />
     <ClCompile Include="..\..\src\gui\DlgVideoConfig.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>

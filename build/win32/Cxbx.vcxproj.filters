@@ -635,6 +635,9 @@
     <ClCompile Include="..\..\src\common\input\XInputPad.cpp">
       <Filter>Shared\Input</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\gui\DlgInputConfig.cpp">
+      <Filter>GUI</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\src\core\hle\DSOUND\XbDSoundLogging.cpp">
       <Filter>core\HLE\DSOUND</Filter>
     </ClCompile>
@@ -826,6 +829,9 @@
     </ClInclude>
     <ClInclude Include="..\..\src\common\input\XInputPad.h">
       <Filter>Shared\Input</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\gui\DlgInputConfig.h">
+      <Filter>GUI</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\core\hle\DSOUND\XbDSoundTypes.h">
       <Filter>core\HLE\DSOUND</Filter>

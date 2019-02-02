@@ -120,10 +120,12 @@ void InputDeviceManager::RemoveDevice(std::function<bool(const InputDevice*)> Ca
 		}
 		return false;
 	});
-	m_Devices.erase(it);
+	if (it != m_Devices.end()) {
+		m_Devices.erase(it, m_Devices.end());
+	}
 }
 
-int InputDeviceManager::ConnectDeviceToXbox(int port, int type)
+/*int InputDeviceManager::ConnectDeviceToXbox(int port, int type)
 {
 	int ret = -1;
 	std::vector<SdlDevice*>::iterator it;
@@ -257,7 +259,7 @@ void InputDeviceManager::DisconnectDeviceFromXbox(int port)
 		default:
 			EmuLog(LOG_LEVEL::WARNING, "Attempted to detach an unknown device type\n");
 	}
-}
+}*/
 
 bool InputDeviceManager::UpdateXboxPortInput(int Port, void* Buffer, int Direction)
 {
@@ -268,7 +270,7 @@ bool InputDeviceManager::UpdateXboxPortInput(int Port, void* Buffer, int Directi
 
 	pDev = nullptr;
 	for (auto dev_ptr : m_Devices) {
-		if (dev_ptr.get()->GetXPort == Port) {
+		if (dev_ptr.get()->GetXPort() == Port) {
 			pDev = dev_ptr.get();
 			break;
 		}

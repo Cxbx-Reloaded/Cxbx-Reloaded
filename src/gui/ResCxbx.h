@@ -7,6 +7,7 @@
 #define IDR_MAINMENU                    103
 #define IDB_LOGO                        106
 #define IDB_ABOUT                       108
+#define IDD_INPUT_CFG                   110
 #define IDD_CONTROLLER_CFG              111
 #define IDD_LOGGING_CFG                 112
 #define IDD_VIDEO_CFG                   113
@@ -296,6 +297,15 @@
 #define IDC_EVENT_LV                    1273
 #define IDC_CXBXR_EVENTS                1274
 #define IDC_KERNEL_EVENTS               1275
+#define IDC_XID_CONFIG                  1276
+#define IDC_DEVICE_PORT1                1277
+#define IDC_DEVICE_PORT2                1278
+#define IDC_DEVICE_PORT3                1279
+#define IDC_DEVICE_PORT4                1280
+#define IDC_CONFIGURE_PORT1             1281
+#define IDC_CONFIGURE_PORT2             1282
+#define IDC_CONFIGURE_PORT3             1283
+#define IDC_CONFIGURE_PORT4             1284
 #define ID_FILE_EXIT                    40005
 #define ID_HELP_ABOUT                   40008
 #define ID_EMULATION_START              40009
@@ -317,6 +327,7 @@
 #define ID_EMULATION_LLE_GPU            40040
 #define ID_EMULATION_LLE_JIT            40041
 #define ID_EMULATION_LLE_USB            40042
+#define ID_SETTINGS_CONFIG_INPUT        40045
 #define ID_SETTINGS_CONFIG_CONTROLLER   40046
 #define ID_SETTINGS_CONFIG_VIDEO        40047
 #define ID_SETTINGS_CONFIG_AUDIO        40048
