@@ -41,44 +41,34 @@
 #include "XboxAddressRanges.h"
 
 // Maps an XboxAddressRangeType to page protection flags, for use by VirtualAlloc
-DWORD XboxAddressRangeTypeToVirtualAllocPageProtectionFlags(XboxAddressRangeType type)
+DWORD XboxAddressRangeTypeToVirtualAllocPageProtectionFlags(int type)
 {
-	switch (type) {
-	case MemLowVirtual:
-	case MemPhysical: // Note : We'll allow execution in kernel space
+	if (XboxAddressRanges[type].Flags & RangeFlags::E)
 		return PAGE_EXECUTE_READWRITE;
 
-	case MemPageTable:
-	case MemNV2APRAMIN:
+	if (XboxAddressRanges[type].Flags & RangeFlags::R)
 		return PAGE_READWRITE;
 
-	case DeviceNV2A_a:
-	case DeviceNV2A_b:
-	case DeviceAPU:
-	case DeviceAC97:
-	case DeviceUSB0:
-	case DeviceUSB1:
-	case DeviceNVNet:
-	case DeviceFlash_a:
-	case DeviceFlash_b:
-	case DeviceFlash_c:
-	case DeviceFlash_d:
-	case DeviceMCPX:
+	if (XboxAddressRanges[type].Flags & RangeFlags::N)
 		return PAGE_NOACCESS;
 
-	default:
-		return 0; // UNHANDLED
-	}
+	return 0; // UNHANDLED
 }
+
+typedef struct {
+	int Index;
+	unsigned __int32 Start;
+	int Size;
+} ReservedRange;
 
 // This array keeps track of which ranges have successfully been reserved.
 // Having this helps debugging, but isn't strictly necessary, as we could
 // retrieve the same information using VirtualQuery.
-XboxAddressRange ReservedRanges[128];
+ReservedRange ReservedRanges[128];
 int ReservedRangeCount = 0;
 
 // Reserve an address range up to the extend of what the host allows.
-bool ReserveMemoryRange(XboxAddressRangeType xart)
+bool ReserveMemoryRange(int xart)
 {
 	//	assert(XboxAddressRanges[xart].Type == xart);
 	unsigned __int32 Start = XboxAddressRanges[xart].Start;
@@ -96,7 +86,7 @@ bool ReserveMemoryRange(XboxAddressRangeType xart)
 	// Safeguard against bounds overflow
 	if (ReservedRangeCount < ARRAY_SIZE(ReservedRanges)) {
 		// Initialize the reservation of a new range
-		ReservedRanges[ReservedRangeCount].Type = xart;
+		ReservedRanges[ReservedRangeCount].Index = xart;
 		ReservedRanges[ReservedRangeCount].Start = Start;
 		ReservedRanges[ReservedRangeCount].Size = 0;
 	}
@@ -121,7 +111,7 @@ bool ReserveMemoryRange(XboxAddressRangeType xart)
 					if (ReservedRanges[ReservedRangeCount].Size > 0) {
 						// Then start a new range, and copy over the current type
 						ReservedRangeCount++;
-						ReservedRanges[ReservedRangeCount].Type = xart;
+						ReservedRanges[ReservedRangeCount].Index = xart;
 					}
 
 					// Register a new ranges starting address
@@ -151,56 +141,37 @@ bool ReserveMemoryRange(XboxAddressRangeType xart)
 	return !HadAnyFailure;
 }
 
-bool IsOptionalAddressRange(const XboxAddressRangeType xart)
+bool AddressRangeMatchesFlags(const int xart, const int flags)
 {
-	// Ranges that fail under Windows 7 Wow64 :
-	//
-	// { MemLowVirtual, 0x00000000, MB(128) }, // .. 0x07FFFFFF (Retail Xbox uses 64 MB)
-	// { DevKitMemory,  0xB0000000, MB(128) }, // .. 0xBFFFFFFF // Note : Optional
-	// { SystemMemory,  0xD0000000, MB(512) }, // .. 0xEFFFFFFF
-	// { MemTiled,      0xF0000000, MB( 64) }, // .. 0xF3FFFFFF
-	// { DeviceUSB1,    0xFED08000, KB(  4) }, // .. 0xFED08FFF
-	// { DeviceFlash,   0xFFC00000, MB(  4) }, // .. 0xFFFFFFFF (Flash mirror 4) - Will probably fail reservation
-	// { DeviceMCPX,    0xFFFFFE00,    512  }, // .. 0xFFFFFFFF (not Chihiro, Xbox - if enabled)
-	//
-	// .. none of which are an issue for now.
-	switch (xart) {
-		case MemLowVirtual: // Already reserved via virtual_memory_placeholder
-			return true;
-		case DevKitMemory: // TODO : Debug (might behave like MemTiled)
-			return true;
-		case SystemMemory: // TODO : Debug (might behave like MemTiled)
-			return true;
-		case MemTiled: // Even though it can't be reserved, MapViewOfFileEx to this range still works!?
-			return true;
-		case DeviceUSB1: // Won't be emulated for a long while
-			return true;
-		case DeviceMCPX: // Can safely be ignored
-			return true;
-		case DeviceFlash_d: // Losing mirror 4 is acceptable - the 3 others work just fine
-			return true;
-	}
-
-	return false;
+	return XboxAddressRanges[xart].Flags & flags;
 }
 
-bool ReserveAddressRanges() {
+bool IsOptionalAddressRange(const int xart)
+{
+	return AddressRangeMatchesFlags(xart, RangeFlags::O);
+}
+
+bool ReserveAddressRanges(const int flags) {
 	// Loop over all Xbox address ranges
 	for (int i = 0; i < ARRAY_SIZE(XboxAddressRanges); i++) {
-		XboxAddressRangeType xart = (XboxAddressRangeType)i;
+		// Skip address ranges that don't match the given flags
+		if (!AddressRangeMatchesFlags(i, flags))
+			continue;
+
 		// Try to reserve each address range
-		if (!ReserveMemoryRange(xart)) {
-			// Some ranges are allowed to fail reserving
-			if (!IsOptionalAddressRange(xart)) {
-				return false;
-			}
+		if (ReserveMemoryRange(i))
+			continue;
+
+		// Some ranges are allowed to fail reserving
+		if (!IsOptionalAddressRange(i)) {
+			return false;
 		}
 	}
 
 	return true;
 }
 
-bool VerifyAddressRange(XboxAddressRangeType xart)
+bool VerifyAddressRange(int xart)
 {
 	const int PAGE_SIZE = KB(4);
 
@@ -215,7 +186,7 @@ bool VerifyAddressRange(XboxAddressRangeType xart)
 
 	// Verify this range in 64 Kb block increments, as they are supposed
 	// to have been reserved like that too:
-	const DWORD AllocationProtect = (xart == MemLowVirtual) ? PAGE_EXECUTE_WRITECOPY : XboxAddressRangeTypeToVirtualAllocPageProtectionFlags(xart);
+	const DWORD AllocationProtect = (XboxAddressRanges[xart].Start == 0) ? PAGE_EXECUTE_WRITECOPY : XboxAddressRangeTypeToVirtualAllocPageProtectionFlags(xart);
 	MEMORY_BASIC_INFORMATION mbi;
 	while (Size > 0) {
 		// Expected values
@@ -226,31 +197,30 @@ bool VerifyAddressRange(XboxAddressRangeType xart)
 		DWORD Type = MEM_PRIVATE;
 
 		// Allowed deviations
-		switch (xart) {
-		case MemLowVirtual:
+		if (XboxAddressRanges[xart].Start == 0) {
 			AllocationBase = (PVOID)0x10000;
 			switch (BaseAddress) {
-			case 0x10000: // Image Header
-				RegionSize = PAGE_SIZE;
-				Protect = PAGE_READONLY;
-				break;
-			case 0x11000: // section .textbss
-				RegionSize = BLOCK_SIZE;
-				Protect = PAGE_EXECUTE_READWRITE;
-				break;
-			case 0x21000: // section .text
-				RegionSize = 0x2000;
-				Protect = PAGE_EXECUTE_READ;
-				break;
-			case 0x23000: // section .data 
-				RegionSize = PAGE_SIZE;
-				Protect = PAGE_READONLY;
-				break;
-			case 0x24000: // section .idata
-				RegionSize = 0x0999b000; // == ? - ?
-				Protect = PAGE_READWRITE;
-				break;
-			}
+				case 0x10000: // Image Header
+					RegionSize = PAGE_SIZE;
+					Protect = PAGE_READONLY;
+					break;
+				case 0x11000: // section .textbss
+					RegionSize = BLOCK_SIZE;
+					Protect = PAGE_EXECUTE_READWRITE;
+					break;
+				case 0x21000: // section .text
+					RegionSize = 0x2000;
+					Protect = PAGE_EXECUTE_READ;
+					break;
+				case 0x23000: // section .data 
+					RegionSize = PAGE_SIZE;
+					Protect = PAGE_READONLY;
+					break;
+				case 0x24000: // section .idata
+					RegionSize = 0x0999b000; // == ? - ?
+					Protect = PAGE_READWRITE;
+					break;
+				}
 
 			State = MEM_COMMIT;
 			Type = MEM_IMAGE;
@@ -290,9 +260,8 @@ bool VerifyAddressRanges()
 {
 	// Loop over all Xbox address ranges
 	for (int i = 0; i < ARRAY_SIZE(XboxAddressRanges); i++) {
-		XboxAddressRangeType xart = (XboxAddressRangeType)i;
-		if (!VerifyAddressRange(xart)) {
-			if (!IsOptionalAddressRange(xart)) {
+		if (!VerifyAddressRange(i)) {
+			if (!IsOptionalAddressRange(i)) {
 				return false;
 			}
 		}
@@ -301,7 +270,7 @@ bool VerifyAddressRanges()
 	return true;
 }
 
-void UnreserveMemoryRange(XboxAddressRangeType xart)
+void UnreserveMemoryRange(int xart)
 {
 	unsigned __int32 Start = XboxAddressRanges[xart].Start;
 	int Size = XboxAddressRanges[xart].Size;
@@ -314,7 +283,7 @@ void UnreserveMemoryRange(XboxAddressRangeType xart)
 	}
 }
 
-bool AllocateMemoryRange(XboxAddressRangeType xart)
+bool AllocateMemoryRange(int xart)
 {
 	unsigned __int32 Start = XboxAddressRanges[xart].Start;
 	int Size = XboxAddressRanges[xart].Size;
