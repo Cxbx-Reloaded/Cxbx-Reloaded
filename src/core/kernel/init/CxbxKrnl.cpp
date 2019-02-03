@@ -1082,7 +1082,7 @@ void CxbxKrnlMain(int argc, char* argv[])
 #endif
 
 #ifdef CXBX_LOADER
-		if (!VerifyAddressRanges()) {
+		if (!VerifyAddressRanges(SYSTEM_XBOX)) {
 			CxbxPopupMessage("Cxbx-Reloaded hasn't got access to all required address ranges");
 			return; // TODO : Halt(0); 
 		}

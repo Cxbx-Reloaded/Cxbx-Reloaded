@@ -28,7 +28,7 @@
 // *  If not, write to the Free Software Foundation, Inc.,
 // *  59 Temple Place - Suite 330, Bostom, MA 02111-1307, USA.
 // *
-// *  (c) 2017 Patrick van Logchem <pvanlogchem@gmail.com>
+// *  (c) 2017-2019 Patrick van Logchem <pvanlogchem@gmail.com>
 // *
 // *  All rights reserved
 // *
@@ -39,21 +39,6 @@
 #include <windows.h> // For DWORD, CALLBACK, VirtualAlloc, LPVOID, SIZE_T, HMODULE 
 
 #include "XboxAddressRanges.h"
-
-// Maps an XboxAddressRangeType to page protection flags, for use by VirtualAlloc
-DWORD XboxAddressRangeTypeToVirtualAllocPageProtectionFlags(int type)
-{
-	if (XboxAddressRanges[type].Flags & RangeFlags::E)
-		return PAGE_EXECUTE_READWRITE;
-
-	if (XboxAddressRanges[type].Flags & RangeFlags::R)
-		return PAGE_READWRITE;
-
-	if (XboxAddressRanges[type].Flags & RangeFlags::N)
-		return PAGE_NOACCESS;
-
-	return 0; // UNHANDLED
-}
 
 typedef struct {
 	int Index;
@@ -68,13 +53,12 @@ ReservedRange ReservedRanges[128];
 int ReservedRangeCount = 0;
 
 // Reserve an address range up to the extend of what the host allows.
-bool ReserveMemoryRange(int xart)
+bool ReserveMemoryRange(int index)
 {
-	//	assert(XboxAddressRanges[xart].Type == xart);
-	unsigned __int32 Start = XboxAddressRanges[xart].Start;
-	int Size = XboxAddressRanges[xart].Size;
-
+	unsigned __int32 Start = XboxAddressRanges[index].Start;
+	int Size = XboxAddressRanges[index].Size;
 	bool HadAnyFailure = false;
+
 	if (Start == 0) {
 		// The zero page (the entire first 64 KB block) can't be reserved (if we would
 		// try to reserve VirtualAlloc at address zero, it would hand us another address)
@@ -86,7 +70,7 @@ bool ReserveMemoryRange(int xart)
 	// Safeguard against bounds overflow
 	if (ReservedRangeCount < ARRAY_SIZE(ReservedRanges)) {
 		// Initialize the reservation of a new range
-		ReservedRanges[ReservedRangeCount].Index = xart;
+		ReservedRanges[ReservedRangeCount].Index = index;
 		ReservedRanges[ReservedRangeCount].Start = Start;
 		ReservedRanges[ReservedRangeCount].Size = 0;
 	}
@@ -94,7 +78,7 @@ bool ReserveMemoryRange(int xart)
 	// Reserve this range in 64 Kb block increments, so later on our
 	// memory-management code can VirtualFree() each block individually :
 	bool HadFailure = HadAnyFailure;
-	const DWORD Protect = XboxAddressRangeTypeToVirtualAllocPageProtectionFlags(xart);
+	const DWORD Protect = XboxAddressRanges[index].InitialMemoryProtection;
 	while (Size > 0) {
 		SIZE_T BlockSize = (SIZE_T)(Size > BLOCK_SIZE) ? BLOCK_SIZE : Size;
 		LPVOID Result = VirtualAlloc((LPVOID)Start, BlockSize, MEM_RESERVE, Protect);
@@ -111,7 +95,7 @@ bool ReserveMemoryRange(int xart)
 					if (ReservedRanges[ReservedRangeCount].Size > 0) {
 						// Then start a new range, and copy over the current type
 						ReservedRangeCount++;
-						ReservedRanges[ReservedRangeCount].Index = xart;
+						ReservedRanges[ReservedRangeCount].Index = index;
 					}
 
 					// Register a new ranges starting address
@@ -141,21 +125,21 @@ bool ReserveMemoryRange(int xart)
 	return !HadAnyFailure;
 }
 
-bool AddressRangeMatchesFlags(const int xart, const int flags)
+bool AddressRangeMatchesFlags(const int index, const int flags)
 {
-	return XboxAddressRanges[xart].Flags & flags;
+	return XboxAddressRanges[index].RangeFlags & flags;
 }
 
-bool IsOptionalAddressRange(const int xart)
+bool IsOptionalAddressRange(const int index)
 {
-	return AddressRangeMatchesFlags(xart, RangeFlags::O);
+	return AddressRangeMatchesFlags(index, MAY_FAIL);
 }
 
-bool ReserveAddressRanges(const int flags) {
+bool ReserveAddressRanges(const int system) {
 	// Loop over all Xbox address ranges
 	for (int i = 0; i < ARRAY_SIZE(XboxAddressRanges); i++) {
 		// Skip address ranges that don't match the given flags
-		if (!AddressRangeMatchesFlags(i, flags))
+		if (!AddressRangeMatchesFlags(i, system))
 			continue;
 
 		// Try to reserve each address range
@@ -171,12 +155,10 @@ bool ReserveAddressRanges(const int flags) {
 	return true;
 }
 
-bool VerifyAddressRange(int xart)
+bool VerifyAddressRange(int index)
 {
-	const int PAGE_SIZE = KB(4);
-
-	unsigned __int32 BaseAddress = XboxAddressRanges[xart].Start;
-	int Size = XboxAddressRanges[xart].Size;
+	unsigned __int32 BaseAddress = XboxAddressRanges[index].Start;
+	int Size = XboxAddressRanges[index].Size;
 
 	if (BaseAddress == 0) {
 		// The zero page (the entire first 64 KB block) can't be verified
@@ -186,7 +168,7 @@ bool VerifyAddressRange(int xart)
 
 	// Verify this range in 64 Kb block increments, as they are supposed
 	// to have been reserved like that too:
-	const DWORD AllocationProtect = (XboxAddressRanges[xart].Start == 0) ? PAGE_EXECUTE_WRITECOPY : XboxAddressRangeTypeToVirtualAllocPageProtectionFlags(xart);
+	const DWORD AllocationProtect = (XboxAddressRanges[index].Start == 0) ? PAGE_EXECUTE_WRITECOPY : XboxAddressRanges[index].InitialMemoryProtection;
 	MEMORY_BASIC_INFORMATION mbi;
 	while (Size > 0) {
 		// Expected values
@@ -197,7 +179,7 @@ bool VerifyAddressRange(int xart)
 		DWORD Type = MEM_PRIVATE;
 
 		// Allowed deviations
-		if (XboxAddressRanges[xart].Start == 0) {
+		if (XboxAddressRanges[index].Start == 0) {
 			AllocationBase = (PVOID)0x10000;
 			switch (BaseAddress) {
 				case 0x10000: // Image Header
@@ -245,7 +227,7 @@ bool VerifyAddressRange(int xart)
 			Okay = (mbi.Type == Type);
 
 		if (!Okay)
-			if (!IsOptionalAddressRange(xart))
+			if (!IsOptionalAddressRange(index))
 				return false;
 
 		// Handle the next region
@@ -256,10 +238,14 @@ bool VerifyAddressRange(int xart)
 	return true;
 }
 
-bool VerifyAddressRanges()
+bool VerifyAddressRanges(const int system)
 {
 	// Loop over all Xbox address ranges
 	for (int i = 0; i < ARRAY_SIZE(XboxAddressRanges); i++) {
+		// Skip address ranges that don't match the given flags
+		if (!AddressRangeMatchesFlags(i, system))
+			continue;
+
 		if (!VerifyAddressRange(i)) {
 			if (!IsOptionalAddressRange(i)) {
 				return false;
@@ -270,23 +256,22 @@ bool VerifyAddressRanges()
 	return true;
 }
 
-void UnreserveMemoryRange(int xart)
+void UnreserveMemoryRange(const int index)
 {
-	unsigned __int32 Start = XboxAddressRanges[xart].Start;
-	int Size = XboxAddressRanges[xart].Size;
+	unsigned __int32 Start = XboxAddressRanges[index].Start;
+	int Size = XboxAddressRanges[index].Size;
 
 	while (Size > 0) {
-		// To release, dwSize must be zero!
-		VirtualFree((LPVOID)Start, (SIZE_T)0, MEM_RELEASE);
+		VirtualFree((LPVOID)Start, (SIZE_T)0, MEM_RELEASE); // To release, dwSize must be zero!
 		Start += BLOCK_SIZE;
 		Size -= BLOCK_SIZE;
 	}
 }
 
-bool AllocateMemoryRange(int xart)
+bool AllocateMemoryRange(const int index)
 {
-	unsigned __int32 Start = XboxAddressRanges[xart].Start;
-	int Size = XboxAddressRanges[xart].Size;
+	unsigned __int32 Start = XboxAddressRanges[index].Start;
+	int Size = XboxAddressRanges[index].Size;
 
 	while (Size > 0) {
 		int BlockSize = (Size > BLOCK_SIZE) ? BLOCK_SIZE : Size;
@@ -300,3 +285,31 @@ bool AllocateMemoryRange(int xart)
 
 	return true;
 }
+
+LPTSTR GetLastErrorString()
+{
+	DWORD err = GetLastError();
+
+	// Translate ErrorCode to String.
+	LPTSTR Error = nullptr;
+	if (::FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
+		NULL,
+		err,
+		0,
+		(LPTSTR)&Error,
+		0,
+		NULL) == 0) {
+		// Failed in translating.
+	}
+
+	return Error;
+}
+
+void FreeLastErrorString(LPTSTR Error)
+{
+	if (Error) {
+		::LocalFree(Error);
+		Error = nullptr;
+	}
+}
+
