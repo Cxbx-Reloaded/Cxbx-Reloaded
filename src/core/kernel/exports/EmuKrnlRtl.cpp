@@ -251,16 +251,39 @@ XBSYSAPI EXPORTNUM(264) xboxkrnl::VOID NTAPI xboxkrnl::RtlAssert
 // ******************************************************************
 // * 0x0109 - RtlCaptureContext()
 // ******************************************************************
+__declspec(naked) // REQUIRED - No registers can be touched by the compiler or the state will be corrupted.
 XBSYSAPI EXPORTNUM(265) xboxkrnl::VOID NTAPI xboxkrnl::RtlCaptureContext
 (
 	IN PCONTEXT ContextRecord
 )
 {
-	LOG_FUNC_ONE_ARG(ContextRecord);
-
 	// NOTE: this function expects the caller to be __cdecl, or else it fails
+	__asm {
+		push ebx
+		mov ebx, [esp + 8]           // ebx = ContextRecord;
 
-	LOG_UNIMPLEMENTED();
+		mov [ebx + CONTEXT.Eax], eax // ContextRecord->Eax = eax;
+		mov eax, [esp]				 // eax = original value of ebx
+		mov [ebx + CONTEXT.Ebx], eax // ContextRecord->Ebx = original value of ebx
+		mov [ebx + CONTEXT.Ecx], ecx // ContextRecord->Ecx = ecx;
+		mov [ebx + CONTEXT.Edx], edx // ContextRecord->Edx = edx;
+		mov [ebx + CONTEXT.Esi], esi // ContextRecord->Esi = esi;
+		mov [ebx + CONTEXT.Edi], edi // ContextRecord->Edi = edi;
+
+		mov word ptr [ebx + CONTEXT.SegCs], cs // ContextRecord->SegCs = cs;
+		mov word ptr [ebx + CONTEXT.SegSs], ss // ContextRecord->SegSs = ss;
+		pushfd
+		pop [ebx + CONTEXT.EFlags]   // ContextRecord->EFlags = flags;
+
+		mov[ebx + CONTEXT.Ebp], ebp  // ContextRecord->Ebp = ebp;
+		mov eax, [ebp + 4]           // eax = return address;
+		mov [ebx + CONTEXT.Eip], eax // ContextRecord->Eip = return address;
+		lea eax, [ebp + 8]
+		mov [ebx + CONTEXT.Esp], eax // ContextRecord->Esp = original esp value;
+
+		pop ebx
+		ret 4
+	}
 }
 
 // ******************************************************************
