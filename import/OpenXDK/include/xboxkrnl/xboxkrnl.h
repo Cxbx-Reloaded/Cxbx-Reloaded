@@ -2582,46 +2582,43 @@ typedef struct _DISK_GEOMETRY {
 	DWORD BytesPerSector;
 } DISK_GEOMETRY, *PDISK_GEOMETRY;
 
-// This is modeled around the Windows definition
-typedef struct _FLOATING_SAVE_AREA {
-	DWORD   ControlWord;
-	DWORD   StatusWord;
-	DWORD   TagWord;
-	DWORD   ErrorOffset;
-	DWORD   ErrorSelector;
-	DWORD   DataOffset;
-	DWORD   DataSelector;
-	BYTE    RegisterArea[80];
-	DWORD   Cr0NpxState;
-} FLOATING_SAVE_AREA;
+// From nxdk
+#pragma pack(push, 1)
+typedef struct _FLOATING_SAVE_AREA
+{
+    WORD ControlWord;
+    WORD StatusWord;
+    WORD TagWord;
+    WORD ErrorOpcode;
+    DWORD ErrorOffset;
+    DWORD ErrorSelector;
+    DWORD DataOffset;
+    DWORD DataSelector;
+    DWORD MXCsr;
+    DWORD Reserved2;
+    BYTE RegisterArea[128];
+    BYTE XmmRegisterArea[128];
+    BYTE Reserved4[224];
+    DWORD Cr0NpxState;
+} FLOATING_SAVE_AREA, *PFLOATING_SAVE_AREA;
+#pragma pack(pop)
 
-// This is modeled around the Windows definition
-typedef struct _CONTEXT {
-	DWORD ContextFlags;
-	DWORD   Dr0;
-	DWORD   Dr1;
-	DWORD   Dr2;
-	DWORD   Dr3;
-	DWORD   Dr6;
-	DWORD   Dr7;
-	FLOATING_SAVE_AREA FloatSave;
-	DWORD   SegGs;
-	DWORD   SegFs;
-	DWORD   SegEs;
-	DWORD   SegDs;
-	DWORD   Edi;
-	DWORD   Esi;
-	DWORD   Ebx;
-	DWORD   Edx;
-	DWORD   Ecx;
-	DWORD   Eax;
-	DWORD   Ebp;
-	DWORD   Eip;
-	DWORD   SegCs;
-	DWORD   EFlags;
-	DWORD   Esp;
-	DWORD   SegSs;
-	BYTE    ExtendedRegisters[512];
+typedef struct _CONTEXT
+{
+    DWORD ContextFlags; // 0x00
+    FLOATING_SAVE_AREA FloatSave; // 0x04
+    DWORD Edi; // 0x208
+    DWORD Esi; // 0x20C
+    DWORD Ebx; // 0x210
+    DWORD Edx; // 0x214
+    DWORD Ecx; // 0x218
+    DWORD Eax; // 0x21C
+    DWORD Ebp; // 0x220
+    DWORD Eip; // 0x224
+    DWORD SegCs; // 0x228
+    DWORD EFlags; // 0x22C
+    DWORD Esp; // 0x230
+    DWORD SegSs; // 0x234
 } CONTEXT, *PCONTEXT;
 
 // This is modeled around the Windows definition
