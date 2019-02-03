@@ -28,7 +28,7 @@
 // *  If not, write to the Free Software Foundation, Inc.,
 // *  59 Temple Place - Suite 330, Bostom, MA 02111-1307, USA.
 // *
-// *  (c) 2017 Patrick van Logchem <pvanlogchem@gmail.com>
+// *  (c) 2017-2019 Patrick van Logchem <pvanlogchem@gmail.com>
 // *
 // *  All rights reserved
 // *
@@ -46,7 +46,7 @@
 // This variable *MUST* be this large, for it to take up address space
 // so that all other code and data in this module are placed outside of the
 // maximum virtual memory range.
-#define VM_PLACEHOLDER_SIZE 128 * 1024 * 1024
+#define VM_PLACEHOLDER_SIZE MB(128) // Enough to cover MemLowVirtual (Cihiro/Devkit)
 
 // Note : In the old setup, we used #pragma section(".text"); __declspec(allocate(".text"))
 // to put this variable at the exact image base address 0x00010000, but that resulted in
@@ -59,58 +59,119 @@ unsigned char virtual_memory_placeholder[VM_PLACEHOLDER_SIZE] = { 0 }; // = { OP
 // Note : This executable is meant to be as tiny as humanly possible.
 // The C++ runtime library is removed using https://stackoverflow.com/a/39220245/12170
 
+// This Cxbx loader is tailored to bootstrapping an Xbox environment under Windows.
+// This requires :
+// * user-access to the lowest possible virtual memory address (0x00010000),
+// * complete access to as much as possible of the rest 32 bit address space.
+//
+// This implies running it as a 32 bit process under WOW64 (64 bit Windows).
+// This is done by initially relying on no other code than our own and
+// kernel32.DLL (which the Windows kernel loads into all it's processes).
+// Also, the linker options for this loader are specified such, that the
+// executable will be loaded by Windows at the pre-defined address, and
+// won't contain any other code not under our control.
+// 
+// When executed, this loader starts by validating the correct run environment,
+// then reserves all memory ranges that Xbox emulation requires, and only then
+// loads in the actual emulation code by dynamically loading in our library
+// and transfer control to it.
+//
+// Note, that since the emulation code will have to overwrite the memory where
+// this loader resides, no code or data may be used by the emulation code,
+// nor may the emulator ever return to this code!
+
+// Important linker flags :
+// /MACHINE:X86
+// /NODEFAULTLIB
+// /DYNAMICBASE:NO
+// /BASE:"0x00010000"
+// /FIXED
+// /LARGEADDRESSAWARE
+// /SUBSYSTEM:CONSOLE
+// /ENTRY:"rawMain"
+
 DWORD CALLBACK rawMain()
 {
 	(void)virtual_memory_placeholder; // prevent optimization removing this data
 
+	// Verify we're running under WOW64
+	BOOL bIsWow64Process;
+
+	if (!IsWow64Process(GetCurrentProcess(), &bIsWow64Process)) {
+		bIsWow64Process = false;
+	}
+
+	if (!bIsWow64Process) {
+		OutputDebugString("Not running as a WOW64 process!");
+		return ERROR_BAD_ENVIRONMENT;
+	}
+
+	// We have hard-code BLOCK_SIZE to 64 KiB, check this against the system's allocation granularity.
+	SYSTEM_INFO SystemInfo;
+
+	GetSystemInfo(&SystemInfo);
+	if (SystemInfo.dwAllocationGranularity != BLOCK_SIZE) {
+		OutputDebugString("Unsupported system allocation granularity!");
+		return ERROR_BAD_ENVIRONMENT;
+	}
+
+	if (SystemInfo.dwPageSize != PAGE_SIZE) {
+		OutputDebugString("Unsupported system page size!");
+		return ERROR_BAD_ENVIRONMENT;
+	}
+
+	if (SystemInfo.lpMaximumApplicationAddress < (void*)0xFFFEFFFF) {
+		// Note : If this fails, the large-address-aware linker flag must be restored
+		OutputDebugString("Maximum applocation address too low!");
+		return ERROR_BAD_ENVIRONMENT;
+	}
+
+	int system = SYSTEM_XBOX; // By default, we'll emulate a retail Xbox
+
+	// Note : Since we only have kernel32 API's available (not even the standard libary),
+	// we use the (exclusively wide-char) FindStringOrdinal() here instead of strstr():
 	LPWSTR CommandLine = GetCommandLineW();
+	if (FindStringOrdinal(FIND_FROMSTART, CommandLine, -1, L" /chihiro", -1, true) >= 0) {
+		system = SYSTEM_CHIHIRO;
+	} else {
+		if (FindStringOrdinal(FIND_FROMSTART, CommandLine, -1, L" /devkit", -1, true) >= 0) {
+			system = SYSTEM_DEVKIT;
+		}
+	}
 
-	// Note : Since we only have kernel32 API's available, use FindStringOrdinal() here instead of strstr():
-	int flags = (FindStringOrdinal(FIND_FROMSTART, CommandLine, -1, L" /devkit", -1, true) >= 0 ? RangeFlags::D : 0)
-			  | (FindStringOrdinal(FIND_FROMSTART, CommandLine, -1, L" /chihiro", -1, true) >= 0 ? RangeFlags::C : 0);
-
-	if (!ReserveAddressRanges(flags)) {
+	if (!ReserveAddressRanges(system)) {
 		// If we get here, emulation lacks important address ranges; Don't launch
-		OutputDebugStringA("Required address range couldn't be reserved!");
+		OutputDebugString("Required address range couldn't be reserved!");
 		return ERROR_NOT_ENOUGH_MEMORY;
 	}
 
 	// Only after the required memory ranges are reserved, load our emulation DLL
 	HMODULE hEmulationDLL = LoadLibraryA("CxbxEmulator.dll");
 	if (!hEmulationDLL) {
-		// TODO : Move the following towards a tooling function
-		DWORD err = GetLastError();
-
-		// Translate ErrorCode to String.
-		LPTSTR Error = nullptr;
-		if (::FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
-			NULL,
-			err,
-			0,
-			(LPTSTR)&Error,
-			0,
-			NULL) == 0) {
-			// Failed in translating.
-		}
-
-		// Free the buffer.
+		LPTSTR Error = GetLastErrorString();
 		if (Error) {
 			OutputDebugString(Error);
-			::LocalFree(Error);
-			Error = nullptr;
+			FreeLastErrorString(Error);
 		}
 
 		return ERROR_RESOURCE_NOT_FOUND;
 	}
 
 	// Find the main emulation function in our DLL
-	typedef DWORD (WINAPI * Emulate_t)();
+	typedef void (WINAPI *Emulate_t)();
 	Emulate_t pfnEmulate = (Emulate_t)GetProcAddress(hEmulationDLL, "Emulate");
 	if (!pfnEmulate) {
+		OutputDebugString("Entrypoint not found!");
 		return ERROR_RESOURCE_NOT_FOUND;
 	}
 
 	// Call the main emulation function in our DLL, passing in the results
 	// of the address range reservations
-	return pfnEmulate(); // TODO : Pass along the command line
+	pfnEmulate(); // TODO : Pass along all data that we've gathered up until here (or rebuild it over there)
+
+	// Once the Emulate function has control, it may never return here
+	// because all code and data that have been used up until now are
+	// overwritten. From now on, only emulated code is allowed to access
+	// this memory!
+	return ERROR_APP_DATA_CORRUPT;
 }
