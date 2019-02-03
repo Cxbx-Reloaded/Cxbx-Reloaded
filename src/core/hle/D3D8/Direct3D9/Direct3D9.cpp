@@ -4677,7 +4677,10 @@ void CreateHostResource(XTL::X_D3DResource *pResource, DWORD D3DUsage, int iText
 	case XTL::X_D3DRTYPE_SURFACE: {
 		XTL::X_D3DSurface *pXboxSurface = (XTL::X_D3DSurface *)pResource;
 		XTL::X_D3DTexture *pParentXboxTexture = (pXboxSurface) ? (XTL::X_D3DTexture *)pXboxSurface->Parent : xbnullptr;
-		if (pParentXboxTexture) {
+
+		// Don't init the Parent if the Surface and Surface Parent formats differ
+		// Happens in some Outrun 2006 SetRenderTarget calls
+		if (pParentXboxTexture && (pXboxSurface->Format == pParentXboxTexture->Format)) {
 			XTL::IDirect3DBaseTexture *pParentHostBaseTexture = GetHostBaseTexture(pParentXboxTexture, D3DUsage, iTextureStage);
 			switch (pParentHostBaseTexture->GetType()) {
 			case XTL::D3DRTYPE_VOLUMETEXTURE: {
