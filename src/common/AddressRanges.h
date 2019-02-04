@@ -93,7 +93,7 @@ const struct {
 	RANGE_ENTRY(0x80000000, 0x83FFFFFF, MB( 64), PROT_XRW, SYSTEM_XBOX             , "MemPhysical   (Retail)"),
 	RANGE_ENTRY(0x80000000, 0x87FFFFFF, MB(128), PROT_XRW, SYSTEM_128MB            , "MemPhysical   (Chihiro / DevKit)"),
 	RANGE_ENTRY(0xB0000000, 0xB7FFFFFF, MB(128), PROT_NAC, SYSTEM_DEVKIT           , "DevKitMemory"), // TODO : Check reserved range (might behave like MemTiled)
-	RANGE_ENTRY(0xC0000000, 0xC001FFFF, KB(128), PROT_RW,  SYSTEM_ALL              , "MemPageTable"), // TODO : MB(4)?
+	RANGE_ENTRY(0xC0000000, 0xC03FFFFF, MB(  4), PROT_RW,  SYSTEM_ALL              , "MemPageTable"), // See PAGE_TABLES_SIZE, which contains one 4 byte entry per PAGE_SIZE
 	RANGE_ENTRY(0xD0000000, 0xEFFFFFFF, MB(512), PROT_UNH, SYSTEM_ALL    | MAY_FAIL, "SystemMemory  Optional"), // TODO : Check reserved range (might behave like MemTiled)
 	RANGE_ENTRY(0xF0000000, 0xF3FFFFFF, MB( 64), PROT_UNH, SYSTEM_ALL    | MAY_FAIL, "MemTiled      Optional (even though it can't be reserved, MapViewOfFileEx to this range still works!?)"),
 	RANGE_ENTRY(0xFD000000, 0xFD6FFFFF, MB(  7), PROT_NAC, SYSTEM_ALL              , "DeviceNV2A_a  (GPU)"),
