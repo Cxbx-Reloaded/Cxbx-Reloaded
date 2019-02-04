@@ -23,11 +23,13 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
 endif()
 
 file (GLOB HEADERS
- "${CXBXR_ROOT_DIR}/src/common/XboxAddressRanges.h"
+ "${CXBXR_ROOT_DIR}/src/common/AddressRanges.h"
+ "${CXBXR_ROOT_DIR}/src/common/ReserveAddressRanges.h"
 )
 
 file (GLOB SOURCES
- "${CXBXR_ROOT_DIR}/src/common/XboxAddressRanges.cpp"
+ "${CXBXR_ROOT_DIR}/src/common/LoaderTooling.cpp"
+ "${CXBXR_ROOT_DIR}/src/common/ReserveAddressRanges.cpp"
  "${CXBXR_ROOT_DIR}/src/CxbxLoader/loader.cpp"
 )
 

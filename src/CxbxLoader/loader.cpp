@@ -34,11 +34,8 @@
 // *
 // ******************************************************************
 
-#include <SDKDDKVer.h>
-#define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
-#include <windows.h> // For DWORD, CALLBACK, VirtualAlloc, LPVOID, SIZE_T, HMODULE 
-
-#include "..\Common\XboxAddressRanges.h" // For XboxAddressRangeType, XboxAddressRanges
+#include "..\Common\AddressRanges.h"
+#include "..\Common\ReserveAddressRanges.h"
 
 // Reserve the first 128 MB MemLowVirtual address range without inflating the EXE size,
 // by simply declaring an array, first thing, in global scope. It gets placed in the BSS segment,
