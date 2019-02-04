@@ -43,8 +43,10 @@
 
 // Generic function called from the gui to display the input menu
 void ShowInputConfig(HWND hwnd);
-// Windows dialog procedure for the eeprom menu
+// Windows dialog procedure for the input menu
 static INT_PTR CALLBACK DlgInputConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+// Windows dialog procedure for the duke controller menu
+static INT_PTR CALLBACK DlgDukeConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 /////////////////////////////////
 // General input config window //
@@ -77,6 +79,7 @@ INT_PTR CALLBACK DlgInputConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPAR
 				}
 				j = 0;
 				SendMessage(hHandle, CB_SETCURSEL, 0, 0); // TODO: hardcoded for now
+				EnableWindow(GetDlgItem(hWndDlg, IDC_CONFIGURE_PORT1 + i), FALSE);
 			}
 		}
 		break;
@@ -103,7 +106,7 @@ INT_PTR CALLBACK DlgInputConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPAR
 						{
 							case to_underlying(XBOX_INPUT_DEVICE::MS_CONTROLLER_DUKE):
 							{
-								// TODO: open config dialog for the device
+								DialogBoxParam(GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_XID_DUKE_CFG), hWndDlg, DlgDukeConfigProc, LOWORD(wParam) & 7);
 							}
 							break;
 
@@ -132,6 +135,33 @@ INT_PTR CALLBACK DlgInputConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPAR
 				}
 				break;
 			}
+		}
+		break;
+	}
+	return FALSE;
+}
+
+///////////////////////////////////////////
+// Controller (Duke) input config window //
+///////////////////////////////////////////
+
+INT_PTR CALLBACK DlgDukeConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	switch (uMsg)
+	{
+		case WM_INITDIALOG:
+		{
+			// Ensure that LPARAM is a valid xbox port
+			assert(lParam < 5 && lParam > 0);
+
+			// Set window icon
+			SetClassLong(hWndDlg, GCL_HICON, (LONG)LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_CXBX)));
+
+			// Set window title
+			SendMessage(hWndDlg, WM_SETTEXT, 0,
+				reinterpret_cast<LPARAM>((std::string("Xbox Duke Controller at port ") +
+					std::to_string(reinterpret_cast<LONG_PTR>(lParam))).c_str()));
+
 		}
 		break;
 	}

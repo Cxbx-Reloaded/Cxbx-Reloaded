@@ -21,6 +21,7 @@
 #define IDS_UEM                         123
 #define IDD_CONTROLLER_HOST_MAPPING     131
 #define IDD_VIRTUAL_SBC_FEEDBACK        133
+#define IDD_XID_DUKE_CFG                134
 #define IDC_LOG_CANCEL                  892
 #define IDC_LOG_ACCEPT                  893
 #define IDC_LOG_ENABLE_GENERAL          894
@@ -86,6 +87,7 @@
 #define IDC_LOG_RTL                     954
 #define IDC_LOG_XC                      955
 #define IDC_LOG_XE                      956
+#define IDC_SET_MOTOR                   999
 #define IDC_SET_X                       1000
 #define IDC_SET_Y                       1001
 #define IDC_SET_A                       1002
@@ -306,6 +308,22 @@
 #define IDC_CONFIGURE_PORT2             1282
 #define IDC_CONFIGURE_PORT3             1283
 #define IDC_CONFIGURE_PORT4             1284
+#define IDC_DEVICE_LIST                 1285
+#define IDC_REFRESH_DEVICES             1286
+#define IDC_XID_RESET                   1287
+#define IDC_XINP_DEFAULT                1288
+#define IDC_CLEAR_DEVICES               1289
+#define IDC_XID_PROFILE                 1290
+#define IDC_XID_PROFILE_NAME            1291
+#define IDC_XID_PROFILE_LOAD            1292
+#define IDC_XID_PROFILE_SAVE            1293
+#define IDC_XID_PROFILE_DELETE          1294
+#define IDC_XID_BUTTONS                 1295
+#define IDC_XID_LSTICK                  1296
+#define IDC_XID_RSTICK                  1297
+#define IDC_XID_DPAD                    1298
+#define IDC_XID_TRIGGERS                1299
+#define IDC_XID_RUMBLE                  1300
 #define ID_FILE_EXIT                    40005
 #define ID_HELP_ABOUT                   40008
 #define ID_EMULATION_START              40009
@@ -363,7 +381,7 @@
 #define ID_HACKS_SPEEDHACKS             40103
 #define ID_SETTINGS_CONFIG_DLOCCUSTOM   40104
 #define ID_SETTINGS_CONFIG_DLOCAPPDATA  40105
-#define ID_SETTINGS_CONFIG_DLOCEXECDIR   40106
+#define ID_SETTINGS_CONFIG_DLOCEXECDIR  40106
 #define ID_SETTINGS_ALLOWADMINPRIVILEGE 40107
 #define ID_SETTINGS_CONFIG_LOGGING      40108
 #define ID_SYNC_CONFIG_LOGGING          40109
@@ -374,9 +392,9 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        135
+#define _APS_NEXT_RESOURCE_VALUE        137
 #define _APS_NEXT_COMMAND_VALUE         40111
-#define _APS_NEXT_CONTROL_VALUE         1256
+#define _APS_NEXT_CONTROL_VALUE         1257
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif
