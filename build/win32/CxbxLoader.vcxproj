@@ -112,10 +112,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\src\common\XboxAddressRanges.h" />
+    <ClInclude Include="..\..\src\common\AddressRanges.h" />
+    <ClInclude Include="..\..\src\common\ReserveAddressRanges.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\src\common\XboxAddressRanges.cpp" />
+    <ClCompile Include="..\..\src\common\LoaderTooling.cpp" />
+    <ClCompile Include="..\..\src\common\ReserveAddressRanges.cpp" />
     <ClCompile Include="..\..\src\CxbxLoader\loader.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
