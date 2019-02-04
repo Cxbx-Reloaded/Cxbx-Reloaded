@@ -76,7 +76,7 @@ struct XpadOutput {
 class InputDeviceManager
 {
 	public:
-		void Initialize();
+		void Initialize(bool GUImode);
 		void Shutdown();
 		// connect the enumerated device to the virtual xbox
 		int ConnectDeviceToXbox(int port, int type);
@@ -88,6 +88,8 @@ class InputDeviceManager
 		void AddDevice(std::shared_ptr<InputDevice> Device);
 		// remove the device from the list of availble devices
 		void RemoveDevice(std::function<bool(const InputDevice*)> Callback);
+		// update device list (GUI mode only)
+		void RefreshDevices();
 
 
 	private:

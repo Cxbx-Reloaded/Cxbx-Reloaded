@@ -159,6 +159,12 @@ namespace XInput
 		}
 	}
 
+	void PopulateDevices()
+	{
+		DevicesConnected = 0;
+		GetDeviceChanges();
+	}
+
 	XDevice::XDevice(const XINPUT_CAPABILITIES& Capabilities, uint8_t Index) : m_Subtype(Capabilities.SubType), m_Index(Index)
 	{
 		// XInputGetCaps can be broken on some devices, so we'll just ignore it

@@ -42,6 +42,7 @@
 #include "core\kernel\support\Emu.h"
 #include "core\kernel\init\CxbxKrnl.h"
 #include "SdlJoystick.h"
+#include "XInputPad.h"
 #include "InputManager.h"
 
 // These values are those used by Dolphin!
@@ -52,11 +53,13 @@ static const uint16_t RUMBLE_LENGTH_MAX = 500;
 namespace Sdl
 {
 	static uint32_t ExitEvent_t;
+	static uint32_t PopulateEvent_t;
 	int SdlInitStatus = SDL_NOT_INIT;
 
-	void Init(std::mutex& Mtx, std::condition_variable& Cv)
+	void Init(std::mutex& Mtx, std::condition_variable& Cv, bool GUImode)
 	{
 		SDL_Event Event;
+		uint32_t CustomEvent_t;
 		std::unique_lock<std::mutex> lck(Mtx);
 
 		if (SDL_Init(SDL_INIT_JOYSTICK | SDL_INIT_HAPTIC) < 0) {
@@ -65,31 +68,56 @@ namespace Sdl
 			Cv.notify_one();
 			return;
 		}
-		ExitEvent_t = SDL_RegisterEvents(1);
-		if (ExitEvent_t == (uint32_t)-1) {
+		CustomEvent_t = SDL_RegisterEvents(2);
+		if (CustomEvent_t == (uint32_t)-1) {
 			SDL_Quit();
-			EmuLog(LOG_LEVEL::WARNING, "Failed to create SDL exit event!");
+			EmuLog(LOG_LEVEL::WARNING, "Failed to create SDL custom events!");
 			SdlInitStatus = SDL_INIT_ERROR;
 			Cv.notify_one();
 			return;
 		}
+		ExitEvent_t = CustomEvent_t;
+		PopulateEvent_t = CustomEvent_t + 1;
 
 		SetThreadAffinityMask(GetCurrentThread(), g_CPUOthers);
 		SdlInitStatus = SDL_INIT_SUCCESS;
 		Cv.notify_one();
 
-		while (SDL_WaitEvent(&Event))
-		{
-			if (Event.type == SDL_JOYDEVICEADDED) {
-				OpenSdlDevice(Event.jdevice.which);
-			}
-			else if (Event.type == SDL_JOYDEVICEREMOVED) {
-				CloseSdlDevice(Event.jdevice.which);
-			}
-			else if (Event.type == ExitEvent_t) {
-				break;
+		if (GUImode) {
+			while (true) {
+				while (SDL_WaitEvent(&Event))
+				{
+					if (Event.type == PopulateEvent_t) {
+						for (int i = 0; i < SDL_NumJoysticks(); i++) {
+							OpenSdlDevice(i);
+						}
+					}
+					else if (Event.type == ExitEvent_t) {
+						goto Exit;
+					}
+				}
 			}
 		}
+		else {
+			while (true) {
+				while (SDL_PollEvent(&Event))
+				{
+					if (Event.type == SDL_JOYDEVICEADDED) {
+						OpenSdlDevice(Event.jdevice.which);
+					}
+					else if (Event.type == SDL_JOYDEVICEREMOVED) {
+						CloseSdlDevice(Event.jdevice.which);
+					}
+					else if (Event.type == ExitEvent_t) {
+						goto Exit;
+					}
+				}
+				XInput::GetDeviceChanges();
+				std::this_thread::sleep_for(std::chrono::milliseconds(10));
+			}
+		}
+
+		Exit:
 		SDL_Quit();
 	}
 
@@ -131,6 +159,14 @@ namespace Sdl
 			const SdlJoystick* joystick = dynamic_cast<const SdlJoystick*>(Device);
 			return joystick && SDL_JoystickInstanceID(joystick->GetSDLJoystick()) == Index;
 		});
+	}
+
+	void PopulateDevices()
+	{
+		SDL_Event PopulateEvent;
+		SDL_memset(&PopulateEvent, 0, sizeof(SDL_Event));
+		PopulateEvent.type = PopulateEvent_t;
+		SDL_PushEvent(&PopulateEvent);
 	}
 
 	SdlJoystick::SdlJoystick(SDL_Joystick* const Joystick, const int Index)

@@ -55,13 +55,15 @@ namespace Sdl
 	extern int SdlInitStatus;
 
 	// initialize SDL
-	void Init(std::mutex& Mtx, std::condition_variable& Cv);
+	void Init(std::mutex& Mtx, std::condition_variable& Cv, bool GUImode);
 	// shutdown SDL
 	void DeInit(std::thread& Thr);
 	// open the sdl joystick with the specified index
 	void OpenSdlDevice(const int Index);
 	// close the sdl joystick with the specified index
 	void CloseSdlDevice(const int Index);
+	// refresh the device list in response to a refresh command from the input GUI
+	void PopulateDevices();
 
 	class SdlJoystick : public InputDevice
 	{

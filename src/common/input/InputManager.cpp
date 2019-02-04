@@ -45,14 +45,14 @@ namespace xboxkrnl
 InputDeviceManager* g_InputDeviceManager = nullptr;
 constexpr ControlState INPUT_DETECT_THRESHOLD = 0.55; // arbitrary number, using what Dolphin uses
 
-void InputDeviceManager::Initialize()
+void InputDeviceManager::Initialize(bool GUImode)
 {
 	// Sdl::Init must be called last since it blocks when it succeeds
 	std::unique_lock<std::mutex> lck(m_InitMtx);
 
-	m_PollingThread = std::thread([this]() {
+	m_PollingThread = std::thread([this, GUImode]() {
 		XInput::Init(m_InitMtx);
-		Sdl::Init(m_InitMtx, m_Init_cv);
+		Sdl::Init(m_InitMtx, m_Init_cv, GUImode);
 	});
 
 	m_Init_cv.wait(lck, []() {
@@ -123,6 +123,13 @@ void InputDeviceManager::RemoveDevice(std::function<bool(const InputDevice*)> Ca
 	if (it != m_Devices.end()) {
 		m_Devices.erase(it, m_Devices.end());
 	}
+}
+
+void InputDeviceManager::RefreshDevices()
+{
+	m_Devices.clear();
+	XInput::PopulateDevices();
+	Sdl::PopulateDevices();
 }
 
 /*int InputDeviceManager::ConnectDeviceToXbox(int port, int type)

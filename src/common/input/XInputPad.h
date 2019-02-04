@@ -60,6 +60,8 @@ namespace XInput
 	void DeInit();
 	// detect device connect/disconnect
 	void GetDeviceChanges();
+	// refresh the device list in response to a refresh command from the input GUI
+	void PopulateDevices();
 
 	class XDevice : public InputDevice
 	{
