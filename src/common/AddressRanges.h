@@ -72,9 +72,6 @@ const struct {
 	#define SYSTEM_XBOX    (1 << 1)
 	#define SYSTEM_DEVKIT  (1 << 2)
 	#define SYSTEM_CHIHIRO (1 << 3)
-#ifdef INCLUDE_SYSTEM_ALPHA
-	#define SYSTEM_ALPHA   (1 << 4)
-#endif
 	// Short-hand for sets of system configurations
 	#define SYSTEM_ALL     (SYSTEM_XBOX | SYSTEM_DEVKIT | SYSTEM_CHIHIRO)
 	#define SYSTEM_RETAIL  (SYSTEM_XBOX | SYSTEM_DEVKIT                 )
@@ -104,10 +101,7 @@ const struct {
 	RANGE_ENTRY(0xFD800000, 0xFDFFFFFF, MB(  8), PROT_NAC, SYSTEM_ALL              , "DeviceNV2A_b  (GPU)"),
 	RANGE_ENTRY(0xFE800000, 0xFE87FFFF, KB(512), PROT_NAC, SYSTEM_ALL              , "DeviceAPU"),
 	RANGE_ENTRY(0xFEC00000, 0xFEC00FFF, KB(  4), PROT_NAC, SYSTEM_ALL              , "DeviceAC97    (ACI)"),
-	RANGE_ENTRY(0xFED00000, 0xFED00FFF, KB(  4), PROT_NAC, SYSTEM_ALL              , "DeviceUSB0"),
-#ifdef INCLUDE_SYSTEM_ALPHA
-	RANGE_ENTRY(0xFED08000, 0xFED08FFF, KB(  4), PROT_NAC, SYSTEM_ALPHA  | MAY_FAIL, "DeviceUSB1    Optional (won't be emulated for a long while?)"),
-#endif
+	RANGE_ENTRY(0xFED00000, 0xFED00FFF, KB(  4), PROT_NAC, SYSTEM_ALL              , "DeviceUSB"),
 	RANGE_ENTRY(0xFEF00000, 0xFEF003FF, KB(  1), PROT_NAC, SYSTEM_ALL              , "DeviceNVNet"),
 	RANGE_ENTRY(0xFF000000, 0xFF3FFFFF, MB(  4), PROT_NAC, SYSTEM_ALL              , "DeviceFlash_a (Flash mirror 1)"),
 	RANGE_ENTRY(0xFF400000, 0xFF7FFFFF, MB(  4), PROT_NAC, SYSTEM_ALL              , "DeviceFlash_b (Flash mirror 2)"),
