@@ -9,7 +9,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Common->XboxAddressRanges.cpp
+// *   Common->VerifyAddressRanges.cpp
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -34,126 +34,7 @@
 // *
 // ******************************************************************
 
-#include <SDKDDKVer.h>
-#define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
-#include <windows.h> // For DWORD, CALLBACK, VirtualAlloc, LPVOID, SIZE_T, HMODULE 
-
-#include "XboxAddressRanges.h"
-
-typedef struct {
-	int Index;
-	unsigned __int32 Start;
-	int Size;
-} ReservedRange;
-
-// This array keeps track of which ranges have successfully been reserved.
-// Having this helps debugging, but isn't strictly necessary, as we could
-// retrieve the same information using VirtualQuery.
-ReservedRange ReservedRanges[128];
-int ReservedRangeCount = 0;
-
-// Reserve an address range up to the extend of what the host allows.
-bool ReserveMemoryRange(int index)
-{
-	unsigned __int32 Start = XboxAddressRanges[index].Start;
-	int Size = XboxAddressRanges[index].Size;
-	bool HadAnyFailure = false;
-
-	if (Start == 0) {
-		// The zero page (the entire first 64 KB block) can't be reserved (if we would
-		// try to reserve VirtualAlloc at address zero, it would hand us another address)
-		Start += BLOCK_SIZE;
-		Size -= BLOCK_SIZE;
-		HadAnyFailure = true;
-	}
-
-	// Safeguard against bounds overflow
-	if (ReservedRangeCount < ARRAY_SIZE(ReservedRanges)) {
-		// Initialize the reservation of a new range
-		ReservedRanges[ReservedRangeCount].Index = index;
-		ReservedRanges[ReservedRangeCount].Start = Start;
-		ReservedRanges[ReservedRangeCount].Size = 0;
-	}
-
-	// Reserve this range in 64 Kb block increments, so later on our
-	// memory-management code can VirtualFree() each block individually :
-	bool HadFailure = HadAnyFailure;
-	const DWORD Protect = XboxAddressRanges[index].InitialMemoryProtection;
-	while (Size > 0) {
-		SIZE_T BlockSize = (SIZE_T)(Size > BLOCK_SIZE) ? BLOCK_SIZE : Size;
-		LPVOID Result = VirtualAlloc((LPVOID)Start, BlockSize, MEM_RESERVE, Protect);
-		if (Result == NULL) {
-			HadFailure = true;
-			HadAnyFailure = true;
-		}
-		else {
-			// Safeguard against bounds overflow
-			if (ReservedRangeCount < ARRAY_SIZE(ReservedRanges)) {
-				if (HadFailure) {
-					HadFailure = false;
-					// Starting a new range - did the previous one have any size?
-					if (ReservedRanges[ReservedRangeCount].Size > 0) {
-						// Then start a new range, and copy over the current type
-						ReservedRangeCount++;
-						ReservedRanges[ReservedRangeCount].Index = index;
-					}
-
-					// Register a new ranges starting address
-					ReservedRanges[ReservedRangeCount].Start = Start;
-				}
-
-				// Accumulate the size of each successfull reservation
-				ReservedRanges[ReservedRangeCount].Size += BlockSize;
-			}
-		}
-
-		// Handle the next block
-		Start += BLOCK_SIZE;
-		Size -= BLOCK_SIZE;
-	}
-
-	// Safeguard against bounds overflow
-	if (ReservedRangeCount < ARRAY_SIZE(ReservedRanges)) {
-		// Keep the current block only if it contains a successfully reserved range
-		if (ReservedRanges[ReservedRangeCount].Size > 0) {
-			ReservedRangeCount++;
-		}
-	}
-
-	// Only a complete success when the entire request was reserved in a single range
-	// (Otherwise, we have either a complete failure, or reserved it partially over multiple ranges)
-	return !HadAnyFailure;
-}
-
-bool AddressRangeMatchesFlags(const int index, const int flags)
-{
-	return XboxAddressRanges[index].RangeFlags & flags;
-}
-
-bool IsOptionalAddressRange(const int index)
-{
-	return AddressRangeMatchesFlags(index, MAY_FAIL);
-}
-
-bool ReserveAddressRanges(const int system) {
-	// Loop over all Xbox address ranges
-	for (int i = 0; i < ARRAY_SIZE(XboxAddressRanges); i++) {
-		// Skip address ranges that don't match the given flags
-		if (!AddressRangeMatchesFlags(i, system))
-			continue;
-
-		// Try to reserve each address range
-		if (ReserveMemoryRange(i))
-			continue;
-
-		// Some ranges are allowed to fail reserving
-		if (!IsOptionalAddressRange(i)) {
-			return false;
-		}
-	}
-
-	return true;
-}
+#include "AddressRanges.h"
 
 bool VerifyAddressRange(int index)
 {
@@ -285,31 +166,3 @@ bool AllocateMemoryRange(const int index)
 
 	return true;
 }
-
-LPTSTR GetLastErrorString()
-{
-	DWORD err = GetLastError();
-
-	// Translate ErrorCode to String.
-	LPTSTR Error = nullptr;
-	if (::FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
-		NULL,
-		err,
-		0,
-		(LPTSTR)&Error,
-		0,
-		NULL) == 0) {
-		// Failed in translating.
-	}
-
-	return Error;
-}
-
-void FreeLastErrorString(LPTSTR Error)
-{
-	if (Error) {
-		::LocalFree(Error);
-		Error = nullptr;
-	}
-}
-
