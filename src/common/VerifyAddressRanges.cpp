@@ -43,6 +43,7 @@ bool VerifyAddressRange(int index)
 
 	if (BaseAddress == 0) {
 		// The zero page (the entire first 64 KB block) can't be verified
+		// so to avoid verification failures, we just skip it, knowing it'll be alright
 		BaseAddress += BLOCK_SIZE;
 		Size -= BLOCK_SIZE;
 	}
@@ -62,6 +63,9 @@ bool VerifyAddressRange(int index)
 		// Allowed deviations
 		if (XboxAddressRanges[index].Start == 0) {
 			AllocationBase = (PVOID)0x10000;
+			// TODO : Either update below to current section layout, or reduce the number of sections
+			// (by merging them, preferrably into a single section if possible).
+			// (Note, that merging sections would make the loader smaller, so that's preferrable.)
 			switch (BaseAddress) {
 				case 0x10000: // Image Header
 					RegionSize = PAGE_SIZE;
