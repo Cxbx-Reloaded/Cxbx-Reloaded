@@ -15,21 +15,21 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\src\CxbxLoader\loader.cpp">
+    <ClCompile Include="..\..\..\src\loader\loader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\common\ReserveAddressRanges.cpp">
+    <ClCompile Include="..\..\..\src\common\ReserveAddressRanges.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\common\LoaderTooling.cpp">
+    <ClCompile Include="..\..\..\src\common\LoaderTooling.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\src\common\AddressRanges.h">
+    <ClInclude Include="..\..\..\src\common\AddressRanges.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\common\ReserveAddressRanges.h">
+    <ClInclude Include="..\..\..\src\common\ReserveAddressRanges.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
