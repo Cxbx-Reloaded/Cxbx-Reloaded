@@ -87,6 +87,32 @@ unsigned char virtual_memory_placeholder[VM_PLACEHOLDER_SIZE] = { 0 }; // = { OP
 // /SUBSYSTEM:CONSOLE
 // /ENTRY:"rawMain"
 
+
+void OutputMessage(const char *msg)
+{
+	if (!msg) {
+		return;
+	}
+
+	OutputDebugStringA(msg); // Send message to debugger output too
+
+	HANDLE hConsoleOutput = GetStdHandle(STD_OUTPUT_HANDLE);
+	DWORD nNumberOfCharsToWrite = 0;
+	while (msg[nNumberOfCharsToWrite]) nNumberOfCharsToWrite++; // poor-man's strlen()
+
+	// Detect output-redirection to a file
+	DWORD ConsoleMode;
+	if (!GetConsoleMode(hConsoleOutput, &ConsoleMode)) {
+		// Note : assume the output file accepts ANSI encoded characters
+		DWORD NumberOfBytesWritten;
+		WriteFile(hConsoleOutput, (const void *)msg, nNumberOfCharsToWrite, &NumberOfBytesWritten, /*lpOverlapped=*/NULL);
+	} else {
+		// Write message to console output
+		DWORD NumberOfCharsWritten;
+		WriteConsoleA(hConsoleOutput, (const void *)msg, nNumberOfCharsToWrite, &NumberOfCharsWritten, /*lpReserved=*/NULL);
+	}
+}
+
 DWORD CALLBACK rawMain()
 {
 	(void)virtual_memory_placeholder; // prevent optimization removing this data
@@ -99,7 +125,7 @@ DWORD CALLBACK rawMain()
 	}
 
 	if (!bIsWow64Process) {
-		OutputDebugString("Not running as a WOW64 process!");
+		OutputMessage("Not running as a WOW64 process!\n");
 		return ERROR_BAD_ENVIRONMENT;
 	}
 
@@ -108,18 +134,18 @@ DWORD CALLBACK rawMain()
 
 	GetSystemInfo(&SystemInfo);
 	if (SystemInfo.dwAllocationGranularity != BLOCK_SIZE) {
-		OutputDebugString("Unsupported system allocation granularity!");
+		OutputMessage("Unsupported system allocation granularity!\n");
 		return ERROR_BAD_ENVIRONMENT;
 	}
 
 	if (SystemInfo.dwPageSize != PAGE_SIZE) {
-		OutputDebugString("Unsupported system page size!");
+		OutputMessage("Unsupported system page size!\n");
 		return ERROR_BAD_ENVIRONMENT;
 	}
 
 	if (SystemInfo.lpMaximumApplicationAddress < (void*)0xFFFEFFFF) {
 		// Note : If this fails, the large-address-aware linker flag must be restored
-		OutputDebugString("Maximum applocation address too low!");
+		OutputMessage("Maximum application address too low!\n");
 		return ERROR_BAD_ENVIRONMENT;
 	}
 
@@ -138,16 +164,17 @@ DWORD CALLBACK rawMain()
 
 	if (!ReserveAddressRanges(system)) {
 		// If we get here, emulation lacks important address ranges; Don't launch
-		OutputDebugString("Required address range couldn't be reserved!");
+		OutputMessage("Required address range couldn't be reserved!\n");
 		return ERROR_NOT_ENOUGH_MEMORY;
 	}
 
 	// Only after the required memory ranges are reserved, load our emulation DLL
 	HMODULE hEmulationDLL = LoadLibraryA("CxbxEmulator.dll");
 	if (!hEmulationDLL) {
+		OutputMessage("Error loading CxbxEmulator.dll\n");
 		LPTSTR Error = GetLastErrorString();
 		if (Error) {
-			OutputDebugString(Error);
+			OutputMessage(Error);
 			FreeLastErrorString(Error);
 		}
 
@@ -158,7 +185,7 @@ DWORD CALLBACK rawMain()
 	typedef void (WINAPI *Emulate_t)();
 	Emulate_t pfnEmulate = (Emulate_t)GetProcAddress(hEmulationDLL, "Emulate");
 	if (!pfnEmulate) {
-		OutputDebugString("Entrypoint not found!");
+		OutputMessage("Entrypoint not found!\n");
 		return ERROR_RESOURCE_NOT_FOUND;
 	}
 
