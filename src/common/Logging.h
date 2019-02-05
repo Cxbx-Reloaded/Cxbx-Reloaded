@@ -457,8 +457,6 @@ extern thread_local std::string _logThreadPrefix;
 #define ENUM2STR_HEADER(EnumType) extern TYPE2PCHAR_HEADER(EnumType); LOGRENDER_HEADER_BY_REF(EnumType);
 #define ENUM2STR_START(EnumType) TYPE2PCHAR_HEADER(EnumType) { switch (value) {
 #define ENUM2STR_CASE(a) case a: return #a;
-// ENUM2STR_CASE_DEF is needed for #define'd symbols
-#define ENUM2STR_CASE_DEF(a) case a: return #a;
 #define ENUM2STR_END(EnumType) default: return "Unknown_"#EnumType; } }
 #define ENUM2STR_END_and_LOGRENDER(EnumType) ENUM2STR_END(EnumType) LOGRENDER_TYPE(EnumType)
 
