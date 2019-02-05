@@ -21,7 +21,6 @@ Cxbx-Reloaded is not yet ready for general release, but the latest development b
 Grab these if you just want to use the emulator to play games.
 * [Latest Stable Build](https://ci.appveyor.com/api/projects/SoullessSentinel/cxbx-reloaded/artifacts/export/Release.zip?branch=master&job=Configuration:%20Release&pr=false)
 
-
 ### Development Builds
 Grab these builds if you want to test the latest and greatest features. These builds are likely to be more unstable than release builds, and are not recommended for just playing games.
 * [Latest Development Build](https://ci.appveyor.com/api/projects/SoullessSentinel/cxbx-reloaded/artifacts/export/Release.zip?branch=develop&job=Configuration:%20Release&pr=false)
@@ -54,6 +53,8 @@ Chat on [Gitter](https://gitter.im/Cxbx-Reloaded/Lobby), or [Discord](https://di
 We welcome contributions, large and small.
 
 If you want to do some coding, be sure to read the [Developer notes](https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/wiki/Developer-notes).
+
+**IMPORTANT: Pull-Requests containing code derived from XQEMU will _not_ be approved until an agreement is reached to make work mutually beneficial. this includes updates to existing xqemu derived code. We should not/will not become a hostile fork.**
 
 Please contact us before you start working on something, so we can make sure your work is going to be accepted once finished.
 
