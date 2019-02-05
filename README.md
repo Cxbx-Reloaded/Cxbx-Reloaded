@@ -86,4 +86,4 @@ You can support [Luke Usher](https://github.com/LukeUsher), initiator of Cxbx-Re
 ## Special Thanks
 * All contributors to the original Cxbx and Dxbx projects. Without them Cxbx-Reloaded would not exist at all.
 * [XQEMU](https://github.com/xqemu/xqemu) - While the majority of Cxbx-R is our own work (Kernel, HLE, etc), the NV2A LLE implementation is primarily the work of the XQEMU developers.
-* [XboxDev](https://github.com/xboxdev/) - Providing Xbox Hardware Research & Useful Toling
+* [XboxDev](https://github.com/xboxdev/) - Providing Xbox Hardware Research & Useful Tooling
