@@ -118,6 +118,7 @@ file (GLOB CXBXR_HEADER_GUIv1
 
 # Emulator (module)
 file (GLOB CXBXR_HEADER_EMU
+ "${CXBXR_ROOT_DIR}/src/common/AddressRanges.h"
  "${CXBXR_ROOT_DIR}/src/common/util/gloffscreen/glextensions.h"
  "${CXBXR_ROOT_DIR}/src/common/util/gloffscreen/gloffscreen.h"
  "${CXBXR_ROOT_DIR}/src/common/XADPCM.h"
@@ -245,6 +246,7 @@ file (GLOB CXBXR_KRNL_CPP
 file (GLOB CXBXR_SOURCE_EMU
  "${CXBXR_KRNL_CPP}"
  "${CXBXR_ROOT_DIR}/HighPerformanceGraphicsEnabler.c"
+ "${CXBXR_ROOT_DIR}/src/common/LoaderTooling.cpp"
  "${CXBXR_ROOT_DIR}/src/common/util/gloffscreen/glextensions.cpp"
  "${CXBXR_ROOT_DIR}/src/common/util/gloffscreen/gloffscreen_common.cpp"
  "${CXBXR_ROOT_DIR}/src/common/util/gloffscreen/gloffscreen_wgl.cpp"
@@ -346,6 +348,8 @@ add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/projects/cxbx")
 
 add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/projects/CxbxLoader")
 
+add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/projects/CxbxEmulator")
+
 # Issues with compile (the same with develop branch) and
 # for some reason did not put the files into virtual folder?
 # Might need to put the list in the source folder for workaround fix.
@@ -375,6 +379,6 @@ if(${CMAKE_GENERATOR} MATCHES "Visual Studio ([^9]|[9][0-9])")
 endif()
 
 # CxbxR-Debugger project with third-party libraries
-set_target_properties(cxbx CxbxLoader subhook XbSymbolDatabase vsbc libtommath libtomcrypt
+set_target_properties(cxbx CxbxLoader CxbxEmulator subhook XbSymbolDatabase vsbc libtommath libtomcrypt
  PROPERTIES FOLDER Cxbx-Reloaded
 )
