@@ -83,4 +83,6 @@ Please note that Debug builds are significantly slower, but include much more de
 You can support [Luke Usher](https://github.com/LukeUsher), initiator of Cxbx-Reloaded, on [Patreon](https://www.patreon.com/LukeUsher).
 
 ## Special Thanks
-All contributors to the original Cxbx and Dxbx projects. Without them Cxbx-Reloaded would not exist at all.
+* All contributors to the original Cxbx and Dxbx projects. Without them Cxbx-Reloaded would not exist at all.
+* [XQEMU](https://github.com/xqemu/xqemu) - While the majority of Cxbx-R is our own work (Kernel, HLE, etc), the NV2A LLE implementation is primarily the work of the XQEMU developers.
+* [XboxDev](https://github.com/xboxdev/) - Providing Xbox Hardware Research & Useful Toling
