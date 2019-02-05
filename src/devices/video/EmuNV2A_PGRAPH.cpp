@@ -191,7 +191,6 @@ static GLint gl_swizzle_mask_0RG1[4] = { GL_ZERO, GL_RED, GL_GREEN, GL_ONE };
 static GLint gl_swizzle_mask_111R[4] = { GL_ONE, GL_ONE, GL_ONE, GL_RED };
 static GLint gl_swizzle_mask_ARGB[4] = { GL_ALPHA, GL_RED, GL_GREEN, GL_BLUE };
 static GLint gl_swizzle_mask_BGRA[4] = { GL_BLUE, GL_GREEN, GL_RED, GL_ALPHA };
-static GLint gl_swizzle_mask_GGGR[4] = { GL_GREEN, GL_GREEN, GL_GREEN, GL_RED };
 static GLint gl_swizzle_mask_R0G1[4] = { GL_RED, GL_ZERO, GL_GREEN, GL_ONE };
 static GLint gl_swizzle_mask_RRR1[4] = { GL_RED, GL_RED, GL_RED, GL_ONE };
 static GLint gl_swizzle_mask_RRRG[4] = { GL_RED, GL_RED, GL_RED, GL_GREEN };
@@ -265,7 +264,7 @@ static const ColorFormatInfo kelvin_color_format_map[256] = {
          gl_swizzle_mask_111R},
     //0x1A [NV097_SET_TEXTURE_FORMAT_COLOR_SZ_A8Y8] =
         {2, swizzled, GL_RG8, GL_RG, GL_UNSIGNED_BYTE,
-         gl_swizzle_mask_GGGR},
+         gl_swizzle_mask_RRRG},
     //0x1B [NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_AY8] =
         {1, linear, GL_R8, GL_RED, GL_UNSIGNED_BYTE,
          gl_swizzle_mask_RRRR},
@@ -280,7 +279,7 @@ static const ColorFormatInfo kelvin_color_format_map[256] = {
          gl_swizzle_mask_111R},
     //0x20 [NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_A8Y8] =
         {2, linear, GL_RG8, GL_RG, GL_UNSIGNED_BYTE,
-         gl_swizzle_mask_GGGR},
+         gl_swizzle_mask_RRRG},
 	//0x21 [?] =
 		{},
 	//0x22 [?] =
