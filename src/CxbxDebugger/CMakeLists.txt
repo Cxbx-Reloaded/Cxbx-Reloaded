@@ -119,7 +119,7 @@ add_executable(cxbxr-debugger WIN32 ${SOURCES} #Test WIN32 like cxbx does if doe
 set_target_properties(cxbxr-debugger PROPERTIES 
  VS_DOTNET_REFERENCES
  "Microsoft.CSharp;System;System.Core;System.Data;System.Data.DataSetExtensions;System.Deployment;System.Drawing;System.Windows;System.Windows.Forms;System.Xml;System.Xml.Linq;System.Net.Http"
- VS_GLOBAL_ApplicationIcon "${CXBXR_ROOT_DIR}/resource/Cxbx-R.ico"
+ VS_GLOBAL_ApplicationIcon "${CXBXR_ROOT_DIR}/src/gui/resource/Cxbx-R.ico"
  
  VS_GLOBAL_ROOTNAMESPACE "CxbxDebugger"
  
