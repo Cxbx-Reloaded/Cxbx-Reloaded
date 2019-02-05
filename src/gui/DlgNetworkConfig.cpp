@@ -29,7 +29,7 @@
 #include "EmuShared.h"
 
 #include "DlgNetworkConfig.h"
-#include "ResCxbx.h"
+#include "resource/ResCxbx.h"
 
 #include <Iphlpapi.h>
 

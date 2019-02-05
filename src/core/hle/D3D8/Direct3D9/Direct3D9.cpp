@@ -55,7 +55,7 @@ namespace xboxkrnl
 #include "..\XbD3D8Logging.h"
 #include "core\hle\Intercept.hpp" // for bLLE_GPU
 #include "devices\video\nv2a.h" // For GET_MASK, NV_PGRAPH_CONTROL_0, PUSH_METHOD
-#include "gui\ResCxbx.h"
+#include "gui/resource/ResCxbx.h"
 #include "WalkIndexBuffer.h"
 #include "core\kernel\common\strings.hpp" // For uem_str
 #include "common\input\SdlJoystick.h"

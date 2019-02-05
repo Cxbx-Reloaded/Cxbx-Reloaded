@@ -28,7 +28,7 @@
 #include"Button.h"
 #include "InputManager.h"
 #include "layout_xbox_controller.h"
-#include "..\..\gui\ResCxbx.h"
+#include "gui/resource/ResCxbx.h"
 
 
 EmuDevice::EmuDevice(int type, HWND hwnd)
