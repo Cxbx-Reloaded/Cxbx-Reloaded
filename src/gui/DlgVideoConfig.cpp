@@ -31,7 +31,7 @@
 #include "common\Settings.hpp" // for g_Settings
 
 #include "DlgVideoConfig.h"
-#include "ResCxbx.h"
+#include "resource/ResCxbx.h"
 
 #include "core\hle\D3D8\Direct3D9\Direct3D9.h" // For IDirect3D
 
