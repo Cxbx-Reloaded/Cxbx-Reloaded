@@ -237,8 +237,8 @@ constexpr const char* remove_prefix(const char* str, const char *prefix) {
 	return (str_skip_prefix(str, prefix) == str + str_length(prefix)) ? str_skip_prefix(str, prefix) : str;
 }
 
-constexpr char* xtl_prefix = "XTL::";
-constexpr char* emupatch_prefix = "EmuPatch_"; // See #define EMUPATCH
+static const char* xtl_prefix = "XTL::";
+static const char* emupatch_prefix = "EmuPatch_"; // See #define EMUPATCH
 
 constexpr const char* remove_emupatch_prefix(const char* str) {
 	// return an empty string when str isn't given
