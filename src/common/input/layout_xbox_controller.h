@@ -28,7 +28,7 @@
 #pragma once
 
 #ifndef CXBXR_EMU_EXPORTS
-#include "gui/ResCxbx.h"
+#include "gui/resource/ResCxbx.h"
 
 static int button_xbox_ctrl_id[XBOX_CTRL_NUM_BUTTONS] = {
 	IDC_SET_DPAD_UP,

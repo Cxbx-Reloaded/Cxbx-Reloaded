@@ -26,7 +26,7 @@
 // ******************************************************************
 
 #include "InputWindow.h"
-#include "..\..\gui\ResCxbx.h"
+#include "gui/resource/ResCxbx.h"
 #include "common\IPCHybrid.hpp"
 #include "EmuShared.h"
 #include <future>
