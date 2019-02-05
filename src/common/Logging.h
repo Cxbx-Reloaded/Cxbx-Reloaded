@@ -508,7 +508,7 @@ hexstring32(std::basic_ostream<_CharT, _Traits>&os)
 #define LOGRENDER(Type)                                         \
 LOGRENDER_HEADER_BY_PTR(Type)                                   \
 {                                                               \
-	os << hexstring32 << (void*)(value);                        \
+	os << hexstring32 << reinterpret_cast<uint32_t>(value);     \
 	if (value)                                                  \
 		os << " -> "#Type"* {" << *value << "}";                \
                                                                 \
