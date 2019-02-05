@@ -30,7 +30,7 @@ file (GLOB HEADERS
 file (GLOB SOURCES
  "${CXBXR_ROOT_DIR}/src/common/LoaderTooling.cpp"
  "${CXBXR_ROOT_DIR}/src/common/ReserveAddressRanges.cpp"
- "${CXBXR_ROOT_DIR}/src/CxbxLoader/loader.cpp"
+ "${CXBXR_ROOT_DIR}/src/loader/loader.cpp"
 )
 
 source_group(TREE ${CXBXR_ROOT_DIR}/src PREFIX header FILES ${HEADERS})
