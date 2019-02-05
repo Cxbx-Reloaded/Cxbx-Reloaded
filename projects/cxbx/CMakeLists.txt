@@ -72,11 +72,11 @@ file (GLOB RESOURCES
  "${CXBXR_ROOT_DIR}/CONTRIBUTORS"
  "${CXBXR_ROOT_DIR}/COPYING"
  "${CXBXR_ROOT_DIR}/README.md"
- "${CXBXR_ROOT_DIR}/resource/.editorconfig"
- "${CXBXR_ROOT_DIR}/resource/Cxbx.rc"
- "${CXBXR_ROOT_DIR}/resource/Cxbx-R.ico"
- "${CXBXR_ROOT_DIR}/resource/Logo.bmp"
- "${CXBXR_ROOT_DIR}/resource/Logo-License-CC4.bmp"
+ "${CXBXR_ROOT_DIR}/src/gui/resource/.editorconfig"
+ "${CXBXR_ROOT_DIR}/src/gui/resource/Cxbx.rc"
+ "${CXBXR_ROOT_DIR}/src/gui/resource/Cxbx-R.ico"
+ "${CXBXR_ROOT_DIR}/src/gui/resource/Logo.bmp"
+ "${CXBXR_ROOT_DIR}/src/gui/resource/Logo-License-CC4.bmp"
  "${CXBXR_ROOT_DIR}/src/.editorconfig"
 )
 

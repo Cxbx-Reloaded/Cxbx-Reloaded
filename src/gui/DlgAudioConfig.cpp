@@ -28,7 +28,7 @@
 #include "common\Settings.hpp" // for g_Settings
 
 #include "DlgAudioConfig.h"
-#include "ResCxbx.h"
+#include "resource/ResCxbx.h"
 
 #include <dsound.h>
 

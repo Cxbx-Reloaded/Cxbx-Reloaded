@@ -26,7 +26,7 @@
 // ******************************************************************
 
 #include "Windows.h"
-#include "ResCxbx.h"
+#include "resource/ResCxbx.h"
 #include "input\InputWindow.h"
 #include "gui\DlgInputConfig.h"
 
