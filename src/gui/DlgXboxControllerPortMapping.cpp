@@ -33,7 +33,7 @@
 #include "DlgXboxControllerPortMapping.h"
 #include "../Common/Win32/XBPortMapping.h"
 #include "Windowsx.h"
-#include "ResCxbx.h"
+#include "resource/ResCxbx.h"
 #include "core\kernel\support\EmuXTL.h"
 
 

@@ -31,7 +31,7 @@
 #include "common\Settings.hpp" // for g_Settings
 
 #include "DlgControllerConfig.h"
-#include "ResCxbx.h"
+#include "resource/ResCxbx.h"
 #include "common\Win32\DInputController.h"
 
 #define DIRECTINPUT_VERSION 0x0800

@@ -31,7 +31,7 @@
 
 #include "Cxbx.h"
 #include "core\kernel\init\CxbxKrnl.h"
-#include "gui\ResCxbx.h"
+#include "gui/resource/ResCxbx.h"
 
 #include "common\IPCHybrid.hpp"
 #include "EmuShared.h"

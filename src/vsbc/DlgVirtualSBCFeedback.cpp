@@ -32,7 +32,7 @@
 #include "Winuser.h"
 #include "Windowsx.h"
 #include "Commctrl.h"
-#include "../gui/ResCxbx.h"
+#include "../gui/resource/ResCxbx.h"
 
 #include <cstdio>
 

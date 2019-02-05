@@ -31,7 +31,7 @@
 #include "common\Settings.hpp" // for g_Settings
 
 #include "DlgVideoConfig.h"
-#include "ResCxbx.h"
+#include "resource/ResCxbx.h"
 
 #include "core\kernel\support\EmuXTL.h"
 

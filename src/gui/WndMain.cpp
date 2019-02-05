@@ -45,7 +45,7 @@
 #include "common\Settings.hpp"
 
 #include "core\kernel\init\CxbxKrnl.h" // For CxbxConvertArgToString and CxbxExec
-#include "ResCxbx.h"
+#include "resource/ResCxbx.h"
 #include "CxbxVersion.h"
 #include "Shlwapi.h"
 
