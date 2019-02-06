@@ -35,6 +35,7 @@
 // CxbxEmulator.cpp : Defines the exported functions for the DLL application.
 
 #include "Cxbx.h" // For FUNC_EXPORTS
+#include "VerifyAddressRanges.h"
 //#include "CxbxKrnl/CxbxKrnl.h"
 //#include "CxbxKrnl/Emu.h"
 #include "EmuShared.h"
@@ -128,16 +129,23 @@ CommandLineToArgvA(
 
 #define CXBX_BASE_ADDR 0x00010000
 
-DWORD WINAPI Emulate()
+DWORD WINAPI Emulate(int system)
 {
 	FUNC_EXPORTS
 
-	/*! verify Cxbx-Loader.exe is loaded to base address 0x00010000 */
+	/*! Verify our host executable, CxbxLoader.exe, is loaded to base address 0x00010000 */
 	if ((UINT_PTR)GetModuleHandle(nullptr) != CXBX_BASE_ADDR) {
 		/*! CXBX_BASE_ADDR is defined as 0x00010000, which is the base address of
-		the Cxbx-Loader.exe host executable.
-		Set in Cxbx-Loader.exe Project options, Linker, Advanced, Base Address */
-		MessageBox(NULL, "Cxbx-Loader.exe was not loaded to base address 0x00010000 (which is a requirement for Xbox emulation)", "Cxbx-Reloaded", MB_OK);
+		the CxbxLoader.exe host executable.
+		Set in CxbxLoader.exe Project options, Linker, Advanced, Base Address */
+		MessageBox(NULL, "CxbxLoader.exe was not loaded to base address 0x00010000 (which is a requirement for Xbox emulation)", "Cxbx-Reloaded", MB_OK);
+		return 1;
+	}
+
+	// Before doing anything else that might cause memory fragmentation,
+	// verify that we still got control over all ranges the loader reserved
+	if (!VerifyAddressRanges(system)) {
+		MessageBox(NULL, "Failed to claim required address ranges (which is a requirement for Xbox emulation)", "Cxbx-Reloaded", MB_OK);
 		return 1;
 	}
 
