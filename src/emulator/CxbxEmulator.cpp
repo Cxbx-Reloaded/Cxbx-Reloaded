@@ -139,14 +139,14 @@ DWORD WINAPI Emulate(int system)
 		the CxbxLoader.exe host executable.
 		Set in CxbxLoader.exe Project options, Linker, Advanced, Base Address */
 		MessageBox(NULL, "CxbxLoader.exe was not loaded to base address 0x00010000 (which is a requirement for Xbox emulation)", "Cxbx-Reloaded", MB_OK);
-		return 1;
+		return EXIT_FAILURE;
 	}
 
 	// Before doing anything else that might cause memory fragmentation,
 	// verify that we still got control over all ranges the loader reserved
 	if (!VerifyAddressRanges(system)) {
 		MessageBox(NULL, "Failed to claim required address ranges (which is a requirement for Xbox emulation)", "Cxbx-Reloaded", MB_OK);
-		return 1;
+		return EXIT_FAILURE;
 	}
 
 	/* Initialize Cxbx File Paths */
@@ -155,7 +155,7 @@ DWORD WINAPI Emulate(int system)
 	/*! initialize shared memory */
 	if (!EmuShared::Init(0)) {
 		MessageBox(NULL, "Could not map shared memory!", "Cxbx-Reloaded", MB_OK);
-		return 1;
+		return EXIT_FAILURE;
 	}
 
 	LPSTR CommandLine = GetCommandLine();
@@ -173,6 +173,8 @@ DWORD WINAPI Emulate(int system)
 	// because that function resides in a block of memory that's overwritten with
 	// xbox executable contents. Returning there would lead to undefined behaviour.
 	// Since we're done emulating, it's al right to terminate here :
-	TerminateProcess(GetCurrentProcess(), 0); // s/0/EXIT_?
-	return -1; // TODO : ERROR_?
+	TerminateProcess(GetCurrentProcess(), EXIT_SUCCESS);
+
+	// This line will never be reached:
+	return EXIT_FAILURE;
 }
