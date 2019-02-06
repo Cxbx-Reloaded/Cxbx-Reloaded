@@ -635,6 +635,12 @@
     <ClCompile Include="..\..\src\common\Timer.cpp">
       <Filter>Emulator</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\core\hle\DSOUND\XbDSoundLogging.cpp">
+      <Filter>core\HLE\DSOUND</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\core\hle\DSOUND\DirectSound\DirectSoundLogging.cpp">
+      <Filter>core\HLE\DSOUND\DirectSound</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\resource\Splash.jpg">
@@ -820,6 +826,12 @@
     </ClInclude>
     <ClInclude Include="..\..\src\core\hle\DSOUND\XbDSoundTypes.h">
       <Filter>core\HLE\DSOUND</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\hle\DSOUND\XbDSoundLogging.hpp">
+      <Filter>core\HLE\DSOUND</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\core\hle\DSOUND\DirectSound\DirectSoundLogging.hpp">
+      <Filter>core\HLE\DSOUND\DirectSound</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
