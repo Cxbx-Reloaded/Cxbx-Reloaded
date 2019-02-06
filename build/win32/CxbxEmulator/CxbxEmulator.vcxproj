@@ -156,13 +156,16 @@
     <ClInclude Include="..\..\..\src\common\Settings.hpp" />
     <ClInclude Include="..\..\..\src\common\VerifyAddressRanges.h" />
     <ClInclude Include="..\..\..\src\common\win32\EmuShared.h" />
+    <ClInclude Include="..\..\..\src\common\win32\Mutex.h" />
     <ClInclude Include="..\..\..\src\Cxbx.h" />
     <ClInclude Include="..\..\..\src\emulator\targetver.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\src\common\LoaderTooling.cpp" />
     <ClCompile Include="..\..\..\src\common\Settings.cpp" />
     <ClCompile Include="..\..\..\src\common\VerifyAddressRanges.cpp" />
     <ClCompile Include="..\..\..\src\common\win32\EmuShared.cpp" />
+    <ClCompile Include="..\..\..\src\common\win32\Mutex.cpp" />
     <ClCompile Include="..\..\..\src\emulator\CxbxEmulator.cpp" />
     <ClCompile Include="..\..\..\src\emulator\dllmain.cpp" />
   </ItemGroup>
