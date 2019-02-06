@@ -193,9 +193,10 @@ DWORD CALLBACK rawMain()
 	// of the address range reservations
 	pfnEmulate(system); // TODO : Pass along all data that we've gathered up until here (or rebuild it over there)
 
-	// Once the Emulate function has control, it may never return here
+	// Once emulation actually started, execution may never return here
 	// because all code and data that have been used up until now are
-	// overwritten. From now on, only emulated code is allowed to access
-	// this memory!
+	// overwritten. From then on, only emulated code is allowed to access
+	// this memory! If we *did* return here, initialization failed
+	OutputMessage("Initialization failure!\n");
 	return ERROR_APP_DATA_CORRUPT;
 }
