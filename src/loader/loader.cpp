@@ -182,7 +182,7 @@ DWORD CALLBACK rawMain()
 	}
 
 	// Find the main emulation function in our DLL
-	typedef void (WINAPI *Emulate_t)();
+	typedef void (WINAPI *Emulate_t)(int);
 	Emulate_t pfnEmulate = (Emulate_t)GetProcAddress(hEmulationDLL, "Emulate");
 	if (!pfnEmulate) {
 		OutputMessage("Entrypoint not found!\n");
@@ -191,7 +191,7 @@ DWORD CALLBACK rawMain()
 
 	// Call the main emulation function in our DLL, passing in the results
 	// of the address range reservations
-	pfnEmulate(); // TODO : Pass along all data that we've gathered up until here (or rebuild it over there)
+	pfnEmulate(system); // TODO : Pass along all data that we've gathered up until here (or rebuild it over there)
 
 	// Once the Emulate function has control, it may never return here
 	// because all code and data that have been used up until now are
