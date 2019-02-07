@@ -40,7 +40,7 @@ namespace xboxkrnl
 
 #include "XidGamepad.h"
 #include "USBDevice.h"
-#include "common\Input\InputManager.h"
+#include "common\Input\BoundDevice.h"
 #include "common\Input\SdlJoystick.h"
 #include "OHCI.h"
 #include "core\kernel\exports\EmuKrnl.h"  // For EmuLog
@@ -346,7 +346,7 @@ void XidGamepad::UsbXid_HandleControl(XboxDeviceState* dev, USBPacket* p,
 			// If the buffer has the correct length the full input data is transferred."
 			if (value == 0x0100) {
 				if (length <= m_XidState->in_state.bLength) {
-#if 1 // Reenable this when LLE USB actually works
+#if 0 // Reenable this when LLE USB actually works
 					if (g_InputDeviceManager->UpdateXboxPortInput(m_Port, &m_XidState->in_state, DIRECTION_IN)) {
 						std::memcpy(data, &m_XidState->in_state, m_XidState->in_state.bLength);
 						p->ActualLength = length;

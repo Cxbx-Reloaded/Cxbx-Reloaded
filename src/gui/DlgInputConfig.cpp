@@ -36,8 +36,9 @@
 
 #include "windows.h"
 #include "DlgInputConfig.h"
+#include "DlgXidControllerConfig.h"
 #include "ResCxbx.h"
-#include "input\InputDevice.h"
+#include "input\BoundDevice.h"
 #include "Logging.h"
 
 
@@ -45,15 +46,12 @@
 void ShowInputConfig(HWND hwnd);
 // Windows dialog procedure for the input menu
 static INT_PTR CALLBACK DlgInputConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
-// Windows dialog procedure for the duke controller menu
-static INT_PTR CALLBACK DlgDukeConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
-
-/////////////////////////////////
-// General input config window //
-/////////////////////////////////
 
 void ShowInputConfig(HWND hwnd)
 {
+	g_InputDeviceManager = new BoundDevice;
+	g_InputDeviceManager->Initialize(true);
+
 	// Show dialog box
 	DialogBox(GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_INPUT_CFG), hwnd, DlgInputConfigProc);
 }
@@ -86,6 +84,8 @@ INT_PTR CALLBACK DlgInputConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPAR
 
 		case WM_CLOSE:
 		{
+			g_InputDeviceManager->Shutdown();
+			delete g_InputDeviceManager;
 			EndDialog(hWndDlg, wParam);
 		}
 		break;
@@ -101,12 +101,12 @@ INT_PTR CALLBACK DlgInputConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPAR
 				{
 					if (HIWORD(wParam) == BN_CLICKED) {
 						HWND hHandle = GetDlgItem(hWndDlg, LOWORD(wParam) - 4);
-						LRESULT ret = SendMessage(hHandle, CB_GETITEMDATA, SendMessage(hHandle, CB_GETCURSEL, 0, 0), 0);
-						switch (ret)
+						g_ControllerType = SendMessage(hHandle, CB_GETITEMDATA, SendMessage(hHandle, CB_GETCURSEL, 0, 0), 0);
+						switch (g_ControllerType)
 						{
 							case to_underlying(XBOX_INPUT_DEVICE::MS_CONTROLLER_DUKE):
 							{
-								DialogBoxParam(GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_XID_DUKE_CFG), hWndDlg, DlgDukeConfigProc, LOWORD(wParam) & 7);
+								DialogBoxParam(GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_XID_DUKE_CFG), hWndDlg, DlgXidControllerConfigProc, LOWORD(wParam) & 7);
 							}
 							break;
 
@@ -135,33 +135,6 @@ INT_PTR CALLBACK DlgInputConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPAR
 				}
 				break;
 			}
-		}
-		break;
-	}
-	return FALSE;
-}
-
-///////////////////////////////////////////
-// Controller (Duke) input config window //
-///////////////////////////////////////////
-
-INT_PTR CALLBACK DlgDukeConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
-{
-	switch (uMsg)
-	{
-		case WM_INITDIALOG:
-		{
-			// Ensure that LPARAM is a valid xbox port
-			assert(lParam < 5 && lParam > 0);
-
-			// Set window icon
-			SetClassLong(hWndDlg, GCL_HICON, (LONG)LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_CXBX)));
-
-			// Set window title
-			SendMessage(hWndDlg, WM_SETTEXT, 0,
-				reinterpret_cast<LPARAM>((std::string("Xbox Duke Controller at port ") +
-					std::to_string(reinterpret_cast<LONG_PTR>(lParam))).c_str()));
-
 		}
 		break;
 	}

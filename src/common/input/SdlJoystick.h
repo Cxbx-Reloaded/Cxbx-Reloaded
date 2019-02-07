@@ -53,6 +53,7 @@ namespace Sdl
 	SDL_INIT_STATUS;
 
 	extern int SdlInitStatus;
+	extern bool SdlPopulateOK;
 
 	// initialize SDL
 	void Init(std::mutex& Mtx, std::condition_variable& Cv, bool GUImode);

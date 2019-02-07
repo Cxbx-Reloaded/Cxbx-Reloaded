@@ -199,6 +199,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\common\crypto\EmuDes.h" />
+    <ClInclude Include="..\..\src\common\input\BoundDevice.h" />
     <ClInclude Include="..\..\src\common\input\InputDevice.h" />
     <ClInclude Include="..\..\src\common\input\XInputPad.h" />
     <ClInclude Include="..\..\src\common\Timer.h" />
@@ -279,6 +280,7 @@
     <ClInclude Include="..\..\src\common\Error.h" />
     <ClInclude Include="..\..\src\common\win32\Mutex.h" />
     <ClInclude Include="..\..\src\gui\DlgXboxControllerPortMapping.h" />
+    <ClInclude Include="..\..\src\gui\DlgXidControllerConfig.h" />
     <ClInclude Include="..\..\src\gui\ResCxbx.h" />
     <ClInclude Include="..\..\src\gui\Wnd.h" />
     <ClInclude Include="..\..\src\gui\WndMain.h" />
@@ -353,6 +355,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\common\crypto\EmuDes.cpp" />
+    <ClCompile Include="..\..\src\common\input\BoundDevice.cpp" />
     <ClCompile Include="..\..\src\common\input\InputDevice.cpp" />
     <ClCompile Include="..\..\src\common\input\XInputPad.cpp" />
     <ClCompile Include="..\..\src\common\Timer.cpp" />
@@ -511,6 +514,7 @@
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="..\..\src\gui\DlgXboxControllerPortMapping.cpp" />
+    <ClCompile Include="..\..\src\gui\DlgXidControllerConfig.cpp" />
     <ClCompile Include="..\..\src\gui\WinMain.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>

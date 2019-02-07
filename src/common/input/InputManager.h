@@ -88,16 +88,18 @@ class InputDeviceManager
 		void AddDevice(std::shared_ptr<InputDevice> Device);
 		// remove the device from the list of availble devices
 		void RemoveDevice(std::function<bool(const InputDevice*)> Callback);
-		// update device list (GUI mode only)
-		void RefreshDevices();
+
+
+	protected:
+		// all enumerated devices currently detected and supported
+		std::vector<std::shared_ptr<InputDevice>> m_Devices;
+		// These serve double duty. They are used to signal errors during the initialization and
+		// later to signal that sdl has finished to refresh its devices
+		std::mutex m_Mtx;
+		std::condition_variable m_Cv;
 
 
 	private:
-		// all enumerated devices currently detected and supported
-		std::vector<std::shared_ptr<InputDevice>> m_Devices;
-		// locks used to signal errors during the initialization
-		std::mutex m_InitMtx;
-		std::condition_variable m_Init_cv;
 		// input polling thread
 		std::thread m_PollingThread;
 		// used to indicate that the manager was initialized correctly
@@ -107,8 +109,6 @@ class InputDeviceManager
 		// update input for an xbox controller
 		void UpdateInputXpad(InputDevice* Device, void* Buffer, int Direction);
 };
-
-extern InputDeviceManager* g_InputDeviceManager;
 
 #endif
 #endif

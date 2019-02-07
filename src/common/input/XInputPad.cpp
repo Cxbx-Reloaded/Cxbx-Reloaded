@@ -38,7 +38,7 @@
 
 #include "XInputPad.h"
 #include "core\kernel\support\Emu.h"
-#include "InputManager.h"
+#include "BoundDevice.h"
 
 #ifndef XINPUT_GAMEPAD_GUIDE
 #define XINPUT_GAMEPAD_GUIDE 0x0400

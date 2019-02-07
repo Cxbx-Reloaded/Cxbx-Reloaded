@@ -43,7 +43,7 @@
 #include "core\kernel\init\CxbxKrnl.h"
 #include "SdlJoystick.h"
 #include "XInputPad.h"
-#include "InputManager.h"
+#include "BoundDevice.h"
 
 // These values are those used by Dolphin!
 static const uint16_t RUMBLE_PERIOD = 10;
@@ -55,6 +55,7 @@ namespace Sdl
 	static uint32_t ExitEvent_t;
 	static uint32_t PopulateEvent_t;
 	int SdlInitStatus = SDL_NOT_INIT;
+	bool SdlPopulateOK = false;
 
 	void Init(std::mutex& Mtx, std::condition_variable& Cv, bool GUImode)
 	{
@@ -65,6 +66,7 @@ namespace Sdl
 		if (SDL_Init(SDL_INIT_JOYSTICK | SDL_INIT_HAPTIC) < 0) {
 			EmuLog(LOG_LEVEL::WARNING, "Failed to initialize SDL subsystem! The error was: %s", SDL_GetError());
 			SdlInitStatus = SDL_INIT_ERROR;
+			lck.unlock();
 			Cv.notify_one();
 			return;
 		}
@@ -73,6 +75,7 @@ namespace Sdl
 			SDL_Quit();
 			EmuLog(LOG_LEVEL::WARNING, "Failed to create SDL custom events!");
 			SdlInitStatus = SDL_INIT_ERROR;
+			lck.unlock();
 			Cv.notify_one();
 			return;
 		}
@@ -81,20 +84,23 @@ namespace Sdl
 
 		SetThreadAffinityMask(GetCurrentThread(), g_CPUOthers);
 		SdlInitStatus = SDL_INIT_SUCCESS;
+		lck.unlock();
 		Cv.notify_one();
 
 		if (GUImode) {
-			while (true) {
-				while (SDL_WaitEvent(&Event))
-				{
-					if (Event.type == PopulateEvent_t) {
-						for (int i = 0; i < SDL_NumJoysticks(); i++) {
-							OpenSdlDevice(i);
-						}
+			while (SDL_WaitEvent(&Event))
+			{
+				if (Event.type == PopulateEvent_t) {
+					lck.lock();
+					for (int i = 0; i < SDL_NumJoysticks(); i++) {
+						OpenSdlDevice(i);
 					}
-					else if (Event.type == ExitEvent_t) {
-						goto Exit;
-					}
+					lck.unlock();
+					SdlPopulateOK = true;
+					Cv.notify_one();
+				}
+				else if (Event.type == ExitEvent_t) {
+					break;
 				}
 			}
 		}

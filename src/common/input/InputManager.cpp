@@ -42,20 +42,20 @@ namespace xboxkrnl
 #include "core\kernel\exports\EmuKrnl.h" // For EmuLog
 
 
-InputDeviceManager* g_InputDeviceManager = nullptr;
 constexpr ControlState INPUT_DETECT_THRESHOLD = 0.55; // arbitrary number, using what Dolphin uses
 
 void InputDeviceManager::Initialize(bool GUImode)
 {
 	// Sdl::Init must be called last since it blocks when it succeeds
-	std::unique_lock<std::mutex> lck(m_InitMtx);
+	std::unique_lock<std::mutex> lck(m_Mtx);
+	m_bInitOK = true;
 
 	m_PollingThread = std::thread([this, GUImode]() {
-		XInput::Init(m_InitMtx);
-		Sdl::Init(m_InitMtx, m_Init_cv, GUImode);
+		XInput::Init(m_Mtx);
+		Sdl::Init(m_Mtx, m_Cv, GUImode);
 	});
 
-	m_Init_cv.wait(lck, []() {
+	m_Cv.wait(lck, []() {
 		return (Sdl::SdlInitStatus != Sdl::SDL_NOT_INIT) &&
 			(XInput::XInputInitStatus != XInput::XINPUT_NOT_INIT);
 	});
@@ -67,6 +67,18 @@ void InputDeviceManager::Initialize(bool GUImode)
 
 void InputDeviceManager::Shutdown()
 {
+	// Prevent additional devices from being added during shutdown.
+	m_bInitOK = false;
+
+	for (const auto& d : m_Devices)
+	{
+		// Set outputs to ZERO before destroying device
+		for (InputDevice::Output* o : d->GetOutputs()) {
+			o->SetState(0);
+		}
+	}
+	m_Devices.clear();
+
 	XInput::DeInit();
 	Sdl::DeInit(m_PollingThread);
 }
@@ -125,12 +137,7 @@ void InputDeviceManager::RemoveDevice(std::function<bool(const InputDevice*)> Ca
 	}
 }
 
-void InputDeviceManager::RefreshDevices()
-{
-	m_Devices.clear();
-	XInput::PopulateDevices();
-	Sdl::PopulateDevices();
-}
+
 
 /*int InputDeviceManager::ConnectDeviceToXbox(int port, int type)
 {

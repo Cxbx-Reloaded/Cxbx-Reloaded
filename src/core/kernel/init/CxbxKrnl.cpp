@@ -1569,7 +1569,7 @@ __declspec(noreturn) void CxbxKrnlInit
 	xboxkrnl::HalReadSMBusValue(SMBUS_ADDRESS_SYSTEM_MICRO_CONTROLLER, SMC_COMMAND_AV_PACK, FALSE, &xboxkrnl::HalBootSMCVideoMode);
 
 	if (bLLE_USB) {
-#if 1 // Reenable this when LLE USB actually works
+#if 0 // Reenable this when LLE USB actually works
 		int ret;
 		g_InputDeviceManager = new InputDeviceManager;
 		ret = g_InputDeviceManager->EnumSdl2Devices();
