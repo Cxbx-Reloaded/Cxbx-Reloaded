@@ -117,15 +117,10 @@ DWORD CALLBACK rawMain()
 {
 	(void)virtual_memory_placeholder; // prevent optimization removing this data
 
-	// Verify we're running under WOW64
-	BOOL bIsWow64Process;
-
-	if (!IsWow64Process(GetCurrentProcess(), &bIsWow64Process)) {
-		bIsWow64Process = false;
-	}
-
-	if (!bIsWow64Process) {
-		OutputMessage("Not running as a WOW64 process!\n");
+	// First detect if we are running on WoW64, if not, prevent Cxbx-Reloaded from starting
+	// Cxbx-Relaoded needs access to high memory, only exposed to WoW64.
+	if (!VerifyWow64()) {
+		OutputMessage("Cxbx-Reloaded can only run under WoW64\nThis means either a 64-bit version of Windows or Wine with a 64-bit prefix\n");
 		return ERROR_BAD_ENVIRONMENT;
 	}
 
@@ -169,7 +164,7 @@ DWORD CALLBACK rawMain()
 	}
 
 	// Only after the required memory ranges are reserved, load our emulation DLL
-	HMODULE hEmulationDLL = LoadLibraryA("CxbxEmulator.dll");
+	HMODULE hEmulationDLL = LoadLibrary(TEXT("CxbxEmulator.dll"));
 	if (!hEmulationDLL) {
 		OutputMessage("Error loading CxbxEmulator.dll\n");
 		LPTSTR Error = GetLastErrorString();
