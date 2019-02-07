@@ -35,6 +35,8 @@
 // ******************************************************************
 #pragma once
 
+extern bool VerifyBaseAddr();
+
 // TODO : extern ReservedRanges[];
 extern int ReservedRangeCount;
 
