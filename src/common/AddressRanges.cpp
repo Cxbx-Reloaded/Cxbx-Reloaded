@@ -9,7 +9,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Common->LoaderTooling.cpp
+// *   Common->AddressRanges.cpp
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -44,6 +44,20 @@ bool AddressRangeMatchesFlags(const int index, const int flags)
 bool IsOptionalAddressRange(const int index)
 {
 	return AddressRangeMatchesFlags(index, MAY_FAIL);
+}
+
+bool VerifyWow64()
+{
+	typedef BOOL(WINAPI *LPFN_ISWOW64PROCESS) (HANDLE, PBOOL);
+	BOOL bIsWow64 = FALSE;
+	HMODULE hKernel32 = GetModuleHandle(TEXT("kernel32"));
+	LPFN_ISWOW64PROCESS fnIsWow64Process = (LPFN_ISWOW64PROCESS)GetProcAddress(hKernel32, "IsWow64Process");
+	if (fnIsWow64Process != nullptr) {
+		HANDLE hCurrentProcess = GetCurrentProcess();
+		fnIsWow64Process(hCurrentProcess, &bIsWow64);
+	}
+
+	return (bIsWow64 != FALSE);
 }
 
 LPTSTR GetLastErrorString()
