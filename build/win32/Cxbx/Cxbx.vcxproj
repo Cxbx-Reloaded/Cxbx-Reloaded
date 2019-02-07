@@ -207,6 +207,7 @@
     <ClInclude Include="..\..\..\src\common\input\SDL2_Device.h" />
     <ClInclude Include="..\..\..\src\common\IPCHybrid.hpp" />
     <ClInclude Include="..\..\..\src\common\Settings.hpp" />
+    <ClInclude Include="..\..\..\src\common\VerifyAddressRanges.h" />
     <ClInclude Include="..\..\..\src\common\win32\Threads.h" />
     <ClInclude Include="..\..\..\src\common\CxbxDebugger.h" />
     <ClInclude Include="..\..\..\src\common\win32\XBPortMapping.h" />
@@ -354,6 +355,7 @@
     <ClCompile Include="..\..\..\src\common\input\InputConfig.cpp" />
     <ClCompile Include="..\..\..\src\common\input\SDL2_Device.cpp" />
     <ClCompile Include="..\..\..\src\common\Settings.cpp" />
+    <ClCompile Include="..\..\..\src\common\VerifyAddressRanges.cpp" />
     <ClCompile Include="..\..\..\src\common\win32\InlineFunc.cpp" />
     <ClCompile Include="..\..\..\src\common\win32\IPCWindows.cpp" />
     <ClCompile Include="..\..\..\src\common\win32\Threads.cpp" />

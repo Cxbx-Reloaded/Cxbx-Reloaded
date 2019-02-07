@@ -638,6 +638,9 @@
     <ClCompile Include="..\..\..\src\common\AddressRanges.cpp">
       <Filter>Shared</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\src\common\VerifyAddressRanges.cpp">
+      <Filter>Shared</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\resource\Splash.jpg">
@@ -822,6 +825,9 @@
       <Filter>Cross Platform</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\src\common\AddressRanges.h">
+      <Filter>Shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\common\VerifyAddressRanges.h">
       <Filter>Shared</Filter>
     </ClInclude>
   </ItemGroup>
