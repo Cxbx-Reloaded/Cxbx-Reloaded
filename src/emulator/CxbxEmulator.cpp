@@ -36,7 +36,7 @@
 
 #include "Cxbx.h" // For FUNC_EXPORTS
 #include "VerifyAddressRanges.h"
-//#include "CxbxKrnl/CxbxKrnl.h"
+#include "core\kernel\init\CxbxKrnl.h" // For CXBX_BASE_ADDR
 //#include "CxbxKrnl/Emu.h"
 #include "EmuShared.h"
 //#include <commctrl.h>
@@ -126,8 +126,6 @@ CommandLineToArgvA(
 	(*_argc) = argc;
 	return argv;
 }
-
-#define CXBX_BASE_ADDR 0x00010000
 
 DWORD WINAPI Emulate(int system)
 {
