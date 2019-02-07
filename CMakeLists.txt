@@ -256,7 +256,7 @@ file (GLOB CXBXR_KRNL_CPP
 file (GLOB CXBXR_SOURCE_EMU
  "${CXBXR_KRNL_CPP}"
  "${CXBXR_ROOT_DIR}/HighPerformanceGraphicsEnabler.c"
- "${CXBXR_ROOT_DIR}/src/common/LoaderTooling.cpp"
+ "${CXBXR_ROOT_DIR}/src/common/AddressRanges.cpp"
  "${CXBXR_ROOT_DIR}/src/common/util/gloffscreen/glextensions.cpp"
  "${CXBXR_ROOT_DIR}/src/common/util/gloffscreen/gloffscreen_common.cpp"
  "${CXBXR_ROOT_DIR}/src/common/util/gloffscreen/gloffscreen_wgl.cpp"
