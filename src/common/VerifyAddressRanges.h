@@ -35,6 +35,9 @@
 // ******************************************************************
 #pragma once
 
+// TODO : extern ReservedRanges[];
+extern int ReservedRangeCount;
+
 extern bool VerifyAddressRanges(const int system);
 extern void UnreserveMemoryRange(const int index);
 extern bool AllocateMemoryRange(const int index);

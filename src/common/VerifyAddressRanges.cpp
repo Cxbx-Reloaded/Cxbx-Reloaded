@@ -36,10 +36,20 @@
 
 #include "AddressRanges.h"
 
+// This array keeps track of which ranges have successfully been reserved.
+struct {
+	int RangeIndex; // = index into XboxAddressRanges[]
+	uint32_t Start;
+	int Size;
+} ReservedRanges[128];
+
+int ReservedRangeCount = 0;
+
 bool VerifyAddressRange(int index)
 {
-	unsigned __int32 BaseAddress = XboxAddressRanges[index].Start;
+	uint32_t BaseAddress = XboxAddressRanges[index].Start;
 	int Size = XboxAddressRanges[index].Size;
+	bool HadAnyFailure = false;
 
 	if (BaseAddress == 0) {
 		// The zero page (the entire first 64 KB block) can't be verified
@@ -48,8 +58,17 @@ bool VerifyAddressRange(int index)
 		Size -= BLOCK_SIZE;
 	}
 
+	// Safeguard against bounds overflow
+	if (ReservedRangeCount < ARRAY_SIZE(ReservedRanges)) {
+		// Initialize the reservation of a new range
+		ReservedRanges[ReservedRangeCount].RangeIndex = index;
+		ReservedRanges[ReservedRangeCount].Start = BaseAddress;
+		ReservedRanges[ReservedRangeCount].Size = 0;
+	}
+
 	// Verify this range in 64 Kb block increments, as they are supposed
 	// to have been reserved like that too:
+	bool HadFailure = HadAnyFailure;
 	const DWORD AllocationProtect = (XboxAddressRanges[index].Start == 0) ? PAGE_EXECUTE_WRITECOPY : XboxAddressRanges[index].InitialMemoryProtection;
 	MEMORY_BASIC_INFORMATION mbi;
 	while (Size > 0) {
@@ -63,6 +82,8 @@ bool VerifyAddressRange(int index)
 		// Allowed deviations
 		if (XboxAddressRanges[index].Start == 0) {
 			AllocationBase = (PVOID)0x10000;
+			State = MEM_COMMIT;
+			Type = MEM_IMAGE;
 			// TODO : Either update below to current section layout, or reduce the number of sections
 			// (by merging them, preferrably into a single section if possible).
 			// (Note, that merging sections would make the loader smaller, so that's preferrable.)
@@ -84,14 +105,10 @@ bool VerifyAddressRange(int index)
 					Protect = PAGE_READONLY;
 					break;
 				case 0x24000: // section .idata
-					RegionSize = 0x0999b000; // == ? - ?
+					RegionSize = 0x0999a000; // == ? - ?
 					Protect = PAGE_READWRITE;
 					break;
-				}
-
-			State = MEM_COMMIT;
-			Type = MEM_IMAGE;
-			break;
+			}
 		}
 
 		// Verify each block
@@ -111,16 +128,46 @@ bool VerifyAddressRange(int index)
 		if (Okay) 
 			Okay = (mbi.Type == Type);
 
-		if (!Okay)
-			if (!IsOptionalAddressRange(index))
-				return false;
+		if (!Okay) {
+			HadFailure = true;
+			if (!IsOptionalAddressRange(index)) {
+				HadAnyFailure = true;
+			}
+		} else {
+			// Safeguard against bounds overflow
+			if (ReservedRangeCount < ARRAY_SIZE(ReservedRanges)) {
+				if (HadFailure) {
+					HadFailure = false;
+					// Starting a new range - did the previous one have any size?
+					if (ReservedRanges[ReservedRangeCount].Size > 0) {
+						// Then start a new range, and copy over the current type
+						ReservedRangeCount++;
+						ReservedRanges[ReservedRangeCount].RangeIndex = index;
+					}
+
+					// Register a new ranges starting address
+					ReservedRanges[ReservedRangeCount].Start = BaseAddress;
+				}
+
+				// Accumulate the size of each successfull reservation
+				ReservedRanges[ReservedRangeCount].Size += RegionSize;
+			}
+		}
 
 		// Handle the next region
 		BaseAddress += RegionSize;
 		Size -= RegionSize;
 	}
 
-	return true;
+	// Safeguard against bounds overflow
+	if (ReservedRangeCount < ARRAY_SIZE(ReservedRanges)) {
+		// Keep the current block only if it contains a successfully reserved range
+		if (ReservedRanges[ReservedRangeCount].Size > 0) {
+			ReservedRangeCount++;
+		}
+	}
+
+	return !HadAnyFailure;
 }
 
 bool VerifyAddressRanges(const int system)
@@ -143,7 +190,7 @@ bool VerifyAddressRanges(const int system)
 
 void UnreserveMemoryRange(const int index)
 {
-	unsigned __int32 Start = XboxAddressRanges[index].Start;
+	uint32_t Start = XboxAddressRanges[index].Start;
 	int Size = XboxAddressRanges[index].Size;
 
 	while (Size > 0) {
@@ -155,7 +202,7 @@ void UnreserveMemoryRange(const int index)
 
 bool AllocateMemoryRange(const int index)
 {
-	unsigned __int32 Start = XboxAddressRanges[index].Start;
+	uint32_t Start = XboxAddressRanges[index].Start;
 	int Size = XboxAddressRanges[index].Size;
 
 	while (Size > 0) {
