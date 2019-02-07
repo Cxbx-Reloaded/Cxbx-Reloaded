@@ -35,8 +35,12 @@
 // ******************************************************************
 #pragma once
 
+#ifndef CXBXEMULATOR_EXPORTS // Only trim Windows symbols CxbxLoader, not in CxbxEmulator
 #include <SDKDDKVer.h>
 #define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
+#endif // CXBXEMULATOR_EXPORTS
+
+#undef FIELD_OFFSET     // prevent macro redefinition warnings
 #include <windows.h> // For DWORD, CALLBACK, VirtualAlloc, LPVOID, SIZE_T, HMODULE 
 
 #define KB(x) ((x) *    1024 ) // = 0x00000400
