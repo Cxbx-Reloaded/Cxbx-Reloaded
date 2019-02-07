@@ -18,7 +18,7 @@
     <ClCompile Include="..\..\..\src\common\VerifyAddressRanges.cpp">
       <Filter>Bootup</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\src\common\LoaderTooling.cpp">
+    <ClCompile Include="..\..\..\src\common\AddressRanges.cpp">
       <Filter>Bootup</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\src\emulator\CxbxEmulator.cpp">

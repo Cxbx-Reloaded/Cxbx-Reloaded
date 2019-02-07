@@ -27,6 +27,7 @@
 
 #include "WndMain.h"
 
+#include "AddressRanges.h" // For VerifyWow64()
 #include "core\kernel\init\CxbxKrnl.h"
 #include "core\kernel\support\Emu.h"
 #include "EmuShared.h"
@@ -45,14 +46,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 	// First detect if we are running on WoW64, if not, prevent Cxbx-Reloaded from starting
 	// Cxbx-Relaoded needs access to high memory, only exposed to WoW64.
-	typedef BOOL(WINAPI *LPFN_ISWOW64PROCESS) (HANDLE, PBOOL);
-	BOOL bIsWow64 = FALSE;
-	LPFN_ISWOW64PROCESS fnIsWow64Process = (LPFN_ISWOW64PROCESS)GetProcAddress(GetModuleHandle(TEXT("kernel32")), "IsWow64Process");
-	if (fnIsWow64Process != nullptr) {
-		fnIsWow64Process(GetCurrentProcess(), &bIsWow64);
-	}
-	
-	if (bIsWow64 == FALSE) {
+	if (!VerifyWow64()) {
 		MessageBox(NULL, "Cxbx-Reloaded can only run under WoW64\nThis means either a 64-bit version of Windows or Wine with a 64-bit prefix", "Cxbx-Reloaded",
 			MB_OK | MB_ICONERROR);
 		return EXIT_FAILURE;

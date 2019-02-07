@@ -116,7 +116,7 @@
     <ClInclude Include="..\..\..\src\common\ReserveAddressRanges.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\src\common\LoaderTooling.cpp" />
+    <ClCompile Include="..\..\..\src\common\AddressRanges.cpp" />
     <ClCompile Include="..\..\..\src\common\ReserveAddressRanges.cpp" />
     <ClCompile Include="..\..\..\src\loader\loader.cpp" />
   </ItemGroup>

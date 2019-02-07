@@ -316,7 +316,7 @@
   <ItemGroup>
     <ClCompile Include="..\..\..\src\emulator\dllmain.cpp" />
     <ClCompile Include="..\..\..\src\emulator\CxbxEmulator.cpp" />
-    <ClCompile Include="..\..\..\src\common\LoaderTooling.cpp" />
+    <ClCompile Include="..\..\..\src\common\AddressRanges.cpp" />
     <ClCompile Include="..\..\..\src\common\VerifyAddressRanges.cpp" />
     <ClCompile Include="..\..\..\src\common\crypto\EmuDes.cpp" />
     <ClCompile Include="..\..\..\src\common\Timer.cpp" />

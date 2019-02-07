@@ -641,6 +641,9 @@
     <ClCompile Include="..\..\..\src\core\hle\DSOUND\DirectSound\DirectSoundLogging.cpp">
       <Filter>core\HLE\DSOUND\DirectSound</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\src\common\AddressRanges.cpp">
+      <Filter>Shared</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\resource\Splash.jpg">
@@ -832,6 +835,9 @@
     </ClInclude>
     <ClInclude Include="..\..\..\src\core\hle\DSOUND\DirectSound\DirectSoundLogging.hpp">
       <Filter>core\HLE\DSOUND\DirectSound</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\common\AddressRanges.h">
+      <Filter>Shared</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

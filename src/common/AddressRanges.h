@@ -119,5 +119,7 @@ const struct {
 extern bool AddressRangeMatchesFlags(const int index, const int flags);
 extern bool IsOptionalAddressRange(const int index);
 
+extern bool VerifyWow64();
+
 extern LPTSTR GetLastErrorString();
 extern void FreeLastErrorString(LPTSTR Error);
