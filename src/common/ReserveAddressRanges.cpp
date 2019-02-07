@@ -36,19 +36,6 @@
 
 #include "AddressRanges.h"
 
-#ifdef DEBUG
-// This array keeps track of which ranges have successfully been reserved.
-// Having this helps debugging, but isn't strictly necessary, as we could
-// retrieve the same information using VirtualQuery.
-struct {
-	int Index;
-	unsigned __int32 Start;
-	int Size;
-} ReservedRanges[128];
-
-int ReservedRangeCount = 0;
-#endif // DEBUG
-
 // Reserve an address range up to the extend of what the host allows.
 bool ReserveMemoryRange(int index)
 {
@@ -64,16 +51,6 @@ bool ReserveMemoryRange(int index)
 		HadAnyFailure = true;
 	}
 
-#ifdef DEBUG
-	// Safeguard against bounds overflow
-	if (ReservedRangeCount < ARRAY_SIZE(ReservedRanges)) {
-		// Initialize the reservation of a new range
-		ReservedRanges[ReservedRangeCount].Index = index;
-		ReservedRanges[ReservedRangeCount].Start = Start;
-		ReservedRanges[ReservedRangeCount].Size = 0;
-	}
-
-#endif // DEBUG
 	// Reserve this range in 64 Kb block increments, so that during emulation
 	// our memory-management code can VirtualFree() each block individually :
 	bool HadFailure = HadAnyFailure;
@@ -85,44 +62,12 @@ bool ReserveMemoryRange(int index)
 			HadFailure = true;
 			HadAnyFailure = true;
 		}
-#ifdef DEBUG
-		else {
-			// Safeguard against bounds overflow
-			if (ReservedRangeCount < ARRAY_SIZE(ReservedRanges)) {
-				if (HadFailure) {
-					HadFailure = false;
-					// Starting a new range - did the previous one have any size?
-					if (ReservedRanges[ReservedRangeCount].Size > 0) {
-						// Then start a new range, and copy over the current type
-						ReservedRangeCount++;
-						ReservedRanges[ReservedRangeCount].Index = index;
-					}
-
-					// Register a new ranges starting address
-					ReservedRanges[ReservedRangeCount].Start = Start;
-				}
-
-				// Accumulate the size of each successfull reservation
-				ReservedRanges[ReservedRangeCount].Size += BlockSize;
-			}
-		}
-#endif // DEBUG
 
 		// Handle the next block
 		Start += BLOCK_SIZE;
 		Size -= BLOCK_SIZE;
 	}
 
-#ifdef DEBUG
-	// Safeguard against bounds overflow
-	if (ReservedRangeCount < ARRAY_SIZE(ReservedRanges)) {
-		// Keep the current block only if it contains a successfully reserved range
-		if (ReservedRanges[ReservedRangeCount].Size > 0) {
-			ReservedRangeCount++;
-		}
-	}
-
-#endif // DEBUG
 	// Only a complete success when the entire request was reserved in a single range
 	// (Otherwise, we have either a complete failure, or reserved it partially over multiple ranges)
 	return !HadAnyFailure;

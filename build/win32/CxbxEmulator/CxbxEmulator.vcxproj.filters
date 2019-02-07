@@ -13,21 +13,18 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Bootup">
+      <UniqueIdentifier>{64f17230-7f9a-4426-b358-9c3d05cbe02e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Emulator">
+      <UniqueIdentifier>{614ff483-630d-4ac9-8985-5ccea3c47130}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\src\Cxbx.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\src\common\AddressRanges.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\src\common\VerifyAddressRanges.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\src\common\win32\EmuShared.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\src\emulator\targetver.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\src\common\Settings.hpp">
@@ -36,28 +33,37 @@
     <ClInclude Include="..\..\..\src\common\win32\Mutex.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\src\common\VerifyAddressRanges.h">
+      <Filter>Bootup</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\common\AddressRanges.h">
+      <Filter>Bootup</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\emulator\targetver.h">
+      <Filter>Bootup</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\src\common\VerifyAddressRanges.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\src\common\win32\EmuShared.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\src\emulator\CxbxEmulator.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\src\emulator\dllmain.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\src\common\Settings.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\src\common\LoaderTooling.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\src\common\win32\Mutex.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\common\VerifyAddressRanges.cpp">
+      <Filter>Bootup</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\common\LoaderTooling.cpp">
+      <Filter>Bootup</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\emulator\CxbxEmulator.cpp">
+      <Filter>Bootup</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\emulator\dllmain.cpp">
+      <Filter>Bootup</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
