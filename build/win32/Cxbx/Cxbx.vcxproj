@@ -198,6 +198,7 @@
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\..\src\common\AddressRanges.h" />
     <ClInclude Include="..\..\..\src\common\crypto\EmuDes.h" />
     <ClInclude Include="..\..\..\src\common\Timer.h" />
     <ClInclude Include="..\..\..\src\common\util\CPUID.h" />
@@ -346,6 +347,7 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\src\common\AddressRanges.cpp" />
     <ClCompile Include="..\..\..\src\common\crypto\EmuDes.cpp" />
     <ClCompile Include="..\..\..\src\common\Timer.cpp" />
     <ClCompile Include="..\..\..\src\common\util\CxbxUtil.cpp" />

@@ -635,6 +635,9 @@
     <ClCompile Include="..\..\..\src\common\Timer.cpp">
       <Filter>Emulator</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\src\common\AddressRanges.cpp">
+      <Filter>Shared</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\resource\Splash.jpg">
@@ -817,6 +820,9 @@
     </ClInclude>
     <ClInclude Include="..\..\..\src\common\util\CPUID.h">
       <Filter>Cross Platform</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\common\AddressRanges.h">
+      <Filter>Shared</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
