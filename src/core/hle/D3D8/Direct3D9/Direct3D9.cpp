@@ -27,6 +27,11 @@
 #define _XBOXKRNL_DEFEXTRN_
 #define LOG_PREFIX CXBXR_MODULE::D3D8
 
+#ifdef CXBXEMULATOR_EXPORTS // DbgConsole only in Cxbx, not in CxbxEmulator
+	#undef INCLUDE_DBG_CONSOLE
+#else
+	#define INCLUDE_DBG_CONSOLE
+#endif
 #include "common\util\xxhash32.h"
 #include <condition_variable>
 
@@ -42,7 +47,9 @@ namespace xboxkrnl
 #include "core\kernel\support\Emu.h"
 #include "core\kernel\support\EmuFS.h"
 #include "EmuShared.h"
+#ifdef INCLUDE_DBG_CONSOLE
 #include "gui\DbgConsole.h"
+#endif
 #include "core\hle\D3D8\ResourceTracker.h"
 #include "core\kernel\memory-manager\VMManager.h" // for g_VMManager
 #include "core\kernel\support\EmuXTL.h"
@@ -1456,7 +1463,9 @@ static DWORD WINAPI EmuRenderWindow(LPVOID lpVoid)
 
     SetFocus(g_hEmuWindow);
 
-    DbgConsole *dbgConsole = new DbgConsole();
+#ifdef INCLUDE_DBG_CONSOLE
+	DbgConsole *dbgConsole = new DbgConsole();
+#endif
 
     // message processing loop
     {
@@ -1479,21 +1488,27 @@ static DWORD WINAPI EmuRenderWindow(LPVOID lpVoid)
             {
 				Sleep(0);
 
+#ifdef INCLUDE_DBG_CONSOLE
                 // if we've just switched back to display off, clear buffer & display prompt
                 if(!g_bPrintfOn && lPrintfOn)
                 {
-                    dbgConsole->Reset();
+					dbgConsole->Reset();
                 }
+#endif
 
                 lPrintfOn = g_bPrintfOn;
 
-                dbgConsole->Process();
+#ifdef INCLUDE_DBG_CONSOLE
+				dbgConsole->Process();
+#endif
             }
         }
 
         g_bRenderWindowActive = false;
 
-        delete dbgConsole;
+#ifdef INCLUDE_DBG_CONSOLE
+		delete dbgConsole;
+#endif
 
         CxbxKrnlCleanup(NULL);
     }
