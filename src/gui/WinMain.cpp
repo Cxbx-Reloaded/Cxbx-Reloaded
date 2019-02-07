@@ -28,6 +28,7 @@
 #include "WndMain.h"
 
 #include "AddressRanges.h" // For VerifyWow64()
+#include "VerifyAddressRanges.h" // For VerifyBaseAddr()
 #include "core\kernel\init\CxbxKrnl.h"
 #include "core\kernel\support\Emu.h"
 #include "EmuShared.h"
@@ -52,18 +53,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		return EXIT_FAILURE;
 	}
 
-#ifndef CXBX_LOADER
 	/*! verify Cxbx.exe is loaded to base address 0x00010000 */
-	if ((UINT_PTR)GetModuleHandle(nullptr) != CXBX_BASE_ADDR)
-	{
-		/*! CXBX_BASE_ADDR is defined as 0x00010000, which is the base address of
-		    the Cxbx.exe host executable.
-		    Set in Cxbx Project options, Linker, Advanced, Base Address */
+	if (!VerifyBaseAddr()) {
 		MessageBox(NULL, "Cxbx.exe is not loaded to base address 0x00010000 (which is a requirement for Xbox emulation)", "Cxbx-Reloaded",
 			MB_OK | MB_ICONERROR);
 		return EXIT_FAILURE;
 	}
-#endif
 
 	bool bRet, bKernel;
 	HWND hWnd = nullptr;

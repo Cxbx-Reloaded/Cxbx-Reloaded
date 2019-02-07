@@ -35,8 +35,7 @@
 // CxbxEmulator.cpp : Defines the exported functions for the DLL application.
 
 #include "Cxbx.h" // For FUNC_EXPORTS
-#include "VerifyAddressRanges.h"
-#include "core\kernel\init\CxbxKrnl.h" // For CXBX_BASE_ADDR
+#include "VerifyAddressRanges.h" // For VerifyBaseAddr() and VerifyAddressRanges()
 //#include "CxbxKrnl/Emu.h"
 #include "EmuShared.h"
 //#include <commctrl.h>
@@ -132,10 +131,7 @@ DWORD WINAPI Emulate(int system)
 	FUNC_EXPORTS
 
 	/*! Verify our host executable, CxbxLoader.exe, is loaded to base address 0x00010000 */
-	if ((UINT_PTR)GetModuleHandle(nullptr) != CXBX_BASE_ADDR) {
-		/*! CXBX_BASE_ADDR is defined as 0x00010000, which is the base address of
-		the CxbxLoader.exe host executable.
-		Set in CxbxLoader.exe Project options, Linker, Advanced, Base Address */
+	if (!VerifyBaseAddr()) {
 		MessageBox(NULL, "CxbxLoader.exe was not loaded to base address 0x00010000 (which is a requirement for Xbox emulation)", "Cxbx-Reloaded", MB_OK);
 		return EXIT_FAILURE;
 	}
