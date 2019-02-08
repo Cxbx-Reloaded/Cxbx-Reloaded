@@ -143,20 +143,19 @@ DWORD WINAPI Emulate(int system)
 		return EXIT_FAILURE;
 	}
 
-	/* Initialize Cxbx File Paths */
-//	CxbxInitFilePaths();
-
 	/*! initialize shared memory */
 	if (!EmuShared::Init(0)) {
 		MessageBox(NULL, "Could not map shared memory!", "Cxbx-Reloaded", MB_OK);
 		return EXIT_FAILURE;
 	}
 
+	// TODO : Call HandleFirstLaunch();
+
 	LPSTR CommandLine = GetCommandLine();
 	int argc;
 	PCHAR *argv = CommandLineToArgvA(CommandLine, &argc);
 
-//	CxbxKrnlMain(argc, argv);
+	// TODO : Call LaunchEmulation(argc, argv);
 
 	LocalFree(argv);
 
