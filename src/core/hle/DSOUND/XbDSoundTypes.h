@@ -162,7 +162,7 @@ typedef struct _XMEDIAINFO
     DWORD  dwInputSize;
     DWORD  dwOutputSize;
     DWORD  dwMaxLookahead;
-} 
+}
 XMEDIAINFO, *PXEIDIAINFO, *LPXMEDIAINFO;
 
 // XMEDIAINFO Flags

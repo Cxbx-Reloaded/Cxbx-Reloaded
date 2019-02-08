@@ -87,6 +87,15 @@ LOGRENDER(DSBUFFERDESC)
 		;
 }
 
+LOGRENDER(D3DVECTOR)
+{
+	return os
+		LOGRENDER_MEMBER(x)
+		LOGRENDER_MEMBER(y)
+		LOGRENDER_MEMBER(z)
+		;
+}
+
 std::string DirectSoundErrorString(HRESULT hResult)
 {
 	switch (hResult) {
