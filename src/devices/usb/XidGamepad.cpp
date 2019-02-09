@@ -40,7 +40,7 @@ namespace xboxkrnl
 
 #include "XidGamepad.h"
 #include "USBDevice.h"
-#include "common\Input\BoundDevice.h"
+#include "common\Input\InputManager.h"
 #include "common\Input\SdlJoystick.h"
 #include "OHCI.h"
 #include "core\kernel\exports\EmuKrnl.h"  // For EmuLog
@@ -471,7 +471,7 @@ void XidGamepad::UsbXid_HandleData(XboxDeviceState* dev, USBPacket* p)
 	switch (p->Pid) {
 	case USB_TOKEN_IN: {
 		if (p->Endpoint->Num == 2) {
-			if (g_InputDeviceManager->UpdateXboxPortInput(m_Port, &m_XidState->in_state, DIRECTION_IN)) {
+			if (g_InputDeviceManager.UpdateXboxPortInput(m_Port, &m_XidState->in_state, DIRECTION_IN)) {
 				m_UsbDev->USB_PacketCopy(p, &m_XidState->in_state, m_XidState->in_state.bLength);
 			}
 			else {

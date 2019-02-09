@@ -38,7 +38,7 @@
 #include "DlgInputConfig.h"
 #include "DlgXidControllerConfig.h"
 #include "ResCxbx.h"
-#include "input\BoundDevice.h"
+#include "input\InputManager.h"
 #include "Logging.h"
 
 
@@ -49,8 +49,7 @@ static INT_PTR CALLBACK DlgInputConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wPara
 
 void ShowInputConfig(HWND hwnd)
 {
-	g_InputDeviceManager = new BoundDevice;
-	g_InputDeviceManager->Initialize(true);
+	g_InputDeviceManager.Initialize(true);
 
 	// Show dialog box
 	DialogBox(GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_INPUT_CFG), hwnd, DlgInputConfigProc);
@@ -84,8 +83,7 @@ INT_PTR CALLBACK DlgInputConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPAR
 
 		case WM_CLOSE:
 		{
-			g_InputDeviceManager->Shutdown();
-			delete g_InputDeviceManager;
+			g_InputDeviceManager.Shutdown();
 			EndDialog(hWndDlg, wParam);
 		}
 		break;

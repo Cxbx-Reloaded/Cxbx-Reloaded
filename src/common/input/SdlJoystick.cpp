@@ -43,7 +43,7 @@
 #include "core\kernel\init\CxbxKrnl.h"
 #include "SdlJoystick.h"
 #include "XInputPad.h"
-#include "BoundDevice.h"
+#include "InputManager.h"
 
 // These values are those used by Dolphin!
 static const uint16_t RUMBLE_PERIOD = 10;
@@ -148,7 +148,7 @@ namespace Sdl
 			auto Device = std::make_shared<Sdl::SdlJoystick>(pJoystick, Index);
 			// only add the device if it has some I/O controls
 			if (!Device->GetInputs().empty() || !Device->GetOutputs().empty()) {
-				g_InputDeviceManager->AddDevice(std::move(Device));
+				g_InputDeviceManager.AddDevice(std::move(Device));
 			}
 			else {
 				EmuLog(LOG_LEVEL::INFO, "Rejected joystick %i. No controls detected", Index);
@@ -161,7 +161,7 @@ namespace Sdl
 
 	void CloseSdlDevice(const int Index)
 	{
-		g_InputDeviceManager->RemoveDevice([&Index](const auto& Device) {
+		g_InputDeviceManager.RemoveDevice([&Index](const auto& Device) {
 			const SdlJoystick* joystick = dynamic_cast<const SdlJoystick*>(Device);
 			return joystick && SDL_JoystickInstanceID(joystick->GetSDLJoystick()) == Index;
 		});

@@ -96,7 +96,7 @@ class InputDevice
 		// retrieves the map of input bindings
 		const std::map<int, Input*>& GetBindings() const { return m_Bindings; }
 		// sets a pair in the map of the input bindings
-		void SetBindings(int XButton, Input* Control) { m_Bindings.emplace(XButton, Control); }
+		void SetBindings(int XButton, Input* Control) { m_Bindings[XButton] = Control; }
 		// retrieves the full name of the device (API/ID/API-specific name)
 		std::string GetQualifiedName() const;
 		// retrieves the API-specific name of the device

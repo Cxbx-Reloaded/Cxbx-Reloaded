@@ -38,7 +38,7 @@
 #include "DlgXidControllerConfig.h"
 #include "ResCxbx.h"
 #include "common\util\CxbxUtil.h"
-#include "input\BoundDevice.h"
+#include "input\InputManager.h"
 
 
 // Windows dialog procedure for the Duke/S controller menu
@@ -82,12 +82,15 @@ INT_PTR CALLBACK DlgXidControllerConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wPar
 			SendMessage(hWndDlg, WM_SETTEXT, 0,
 				reinterpret_cast<LPARAM>((title + std::to_string(static_cast<long>(lParam))).c_str()));
 
+			// construct emu device
+			g_InputDeviceManager.ConstructEmuDevice(g_ControllerType, hWndDlg);
+
 			// Enumerate devices
-			g_InputDeviceManager->RefreshDevices();
+			g_InputDeviceManager.RefreshDevices();
 
 			// Populate device list
 			HWND hHandle = GetDlgItem(hWndDlg, IDC_DEVICE_LIST);
-			std::vector<std::string> dev_list = g_InputDeviceManager->GetDeviceList();
+			std::vector<std::string> dev_list = g_InputDeviceManager.GetDeviceList();
 			for (const auto& str : dev_list) {
 				SendMessage(hHandle, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(str.c_str()));
 			}

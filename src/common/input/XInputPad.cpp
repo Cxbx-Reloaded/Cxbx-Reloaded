@@ -38,7 +38,7 @@
 
 #include "XInputPad.h"
 #include "core\kernel\support\Emu.h"
-#include "BoundDevice.h"
+#include "InputManager.h"
 
 #ifndef XINPUT_GAMEPAD_GUIDE
 #define XINPUT_GAMEPAD_GUIDE 0x0400
@@ -142,7 +142,7 @@ namespace XInput
 				auto Device = std::make_shared<XDevice>(caps, i);
 				// only add the device if it has some I/O controls
 				if (!Device->GetInputs().empty() || !Device->GetOutputs().empty()) {
-					g_InputDeviceManager->AddDevice(std::move(Device));
+					g_InputDeviceManager.AddDevice(std::move(Device));
 				}
 				else {
 					EmuLog(LOG_LEVEL::INFO, "Rejected XInput device %i. No controls detected", i);
@@ -150,7 +150,7 @@ namespace XInput
 				DevicesConnected |= mask;
 			}
 			else if ((ERROR_DEVICE_NOT_CONNECTED == ret) && (DevicesConnected & mask)) {
-				g_InputDeviceManager->RemoveDevice([&i](const auto& Device) {
+				g_InputDeviceManager.RemoveDevice([&i](const auto& Device) {
 					const XDevice* dev = dynamic_cast<const XDevice*>(Device);
 					return dev && (dev->GetXInputDevice() == i);
 				});

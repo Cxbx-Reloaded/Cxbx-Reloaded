@@ -29,6 +29,7 @@
 #define INPUTMANAGER_H_
 #if 1 // Reenable this when LLE USB actually works
 #include "InputDevice.h"
+#include "EmuDevice.h"
 
 #define GAMEPAD_A                 0
 #define GAMEPAD_B                 1
@@ -88,27 +89,40 @@ class InputDeviceManager
 		void AddDevice(std::shared_ptr<InputDevice> Device);
 		// remove the device from the list of availble devices
 		void RemoveDevice(std::function<bool(const InputDevice*)> Callback);
+		// update device list
+		void RefreshDevices();
+		// get the name of the devices currently detected
+		std::vector<std::string> GetDeviceList() const;
+		// assign the binding to the control
+		void BindButton(int ControlID, std::string DeviceName);
+		// construct emu device to configurate
+		void ConstructEmuDevice(int Type, HWND hwnd);
+		// destroy emu device
+		void DestroyEmuDevice();
 
 
-	protected:
+	private:
 		// all enumerated devices currently detected and supported
 		std::vector<std::shared_ptr<InputDevice>> m_Devices;
 		// These serve double duty. They are used to signal errors during the initialization and
 		// later to signal that sdl has finished to refresh its devices
 		std::mutex m_Mtx;
 		std::condition_variable m_Cv;
-
-
-	private:
 		// input polling thread
 		std::thread m_PollingThread;
+		// xbox device under configuration
+		EmuDevice* m_DeviceConfig;
 		// used to indicate that the manager was initialized correctly
 		bool m_bInitOK;
-		// assign the button binding to the devices
-		//void AssignBindings();
 		// update input for an xbox controller
 		void UpdateInputXpad(InputDevice* Device, void* Buffer, int Direction);
+		// find device from its gui name
+		std::shared_ptr<InputDevice> FindDevice(std::string& QualifiedName) const;
+		// wait for an input from the specified device
+		InputDevice::Input* Detect(InputDevice* Device);
 };
+
+extern InputDeviceManager g_InputDeviceManager;
 
 #endif
 #endif

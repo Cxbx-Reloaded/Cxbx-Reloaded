@@ -27,6 +27,7 @@
 #if 1 // Reenable this when LLE USB actually works
 #define _XBOXKRNL_DEFEXTRN_
 #define LOG_PREFIX CXBXR_MODULE::SDL
+#define INPUT_TIMEOUT 5000
 
 // prevent name collisions
 namespace xboxkrnl
@@ -35,6 +36,7 @@ namespace xboxkrnl
 };
 
 #include <thread>
+#include <future>
 #include "SdlJoystick.h"
 #include "XInputPad.h"
 #include "InputManager.h"
@@ -42,6 +44,7 @@ namespace xboxkrnl
 #include "core\kernel\exports\EmuKrnl.h" // For EmuLog
 
 
+InputDeviceManager g_InputDeviceManager;
 constexpr ControlState INPUT_DETECT_THRESHOLD = 0.55; // arbitrary number, using what Dolphin uses
 
 void InputDeviceManager::Initialize(bool GUImode)
@@ -49,6 +52,7 @@ void InputDeviceManager::Initialize(bool GUImode)
 	// Sdl::Init must be called last since it blocks when it succeeds
 	std::unique_lock<std::mutex> lck(m_Mtx);
 	m_bInitOK = true;
+	m_DeviceConfig = nullptr;
 
 	m_PollingThread = std::thread([this, GUImode]() {
 		XInput::Init(m_Mtx);
@@ -85,7 +89,6 @@ void InputDeviceManager::Shutdown()
 
 void InputDeviceManager::AddDevice(std::shared_ptr<InputDevice> Device)
 {
-	std::vector<InputDevice::Input*> Inputs;
 	int ID;
 
 	// If we are shutdown (or in process of shutting down) ignore this request:
@@ -113,6 +116,9 @@ void InputDeviceManager::AddDevice(std::shared_ptr<InputDevice> Device)
 	Device->SetId(ID);
 	Device->SetXPort(XBOX_PORT_INVALID);
 	Device->SetXType(to_underlying(XBOX_INPUT_DEVICE::DEVICE_INVALID));
+	for (int i = 0; i < 26; i++) {
+		Device->SetBindings(i, nullptr);
+	}
 
 	EmuLog(LOG_LEVEL::INFO, "Added device: %s", Device->GetQualifiedName().c_str());
 	m_Devices.emplace_back(std::move(Device));
@@ -383,5 +389,97 @@ void InputDeviceManager::UpdateInputXpad(InputDevice* Device, void* Buffer, int 
 		// TODO
 	}
 
+}
+
+void InputDeviceManager::RefreshDevices()
+{
+	std::unique_lock<std::mutex> lck(m_Mtx);
+	Sdl::SdlPopulateOK = false;
+	m_Devices.clear();
+	XInput::PopulateDevices();
+	Sdl::PopulateDevices();
+	m_Cv.wait(lck, []() {
+		return Sdl::SdlPopulateOK;
+	});
+}
+
+std::vector<std::string> InputDeviceManager::GetDeviceList() const
+{
+	std::vector<std::string> dev_list;
+
+	std::for_each(m_Devices.begin(), m_Devices.end(), [&dev_list](const auto& Device) {
+		dev_list.push_back(Device.get()->GetQualifiedName());
+	});
+
+	return dev_list;
+}
+
+std::shared_ptr<InputDevice> InputDeviceManager::FindDevice(std::string& QualifiedName) const
+{
+	auto it = std::find_if(m_Devices.begin(), m_Devices.end(), [&QualifiedName](const auto& Device) {
+		return QualifiedName == Device.get()->GetQualifiedName();
+	});
+	if (it != m_Devices.end()) {
+		return *it;
+	}
+	else {
+		return nullptr;
+	}
+}
+
+InputDevice::Input* InputDeviceManager::Detect(InputDevice* const Device)
+{
+	using namespace std::chrono;
+
+	auto now = system_clock::now();
+	auto timeout = now + milliseconds(INPUT_TIMEOUT);
+	std::vector<InputDevice::Input*>::const_iterator i = Device->GetInputs().begin(),
+		e = Device->GetInputs().end();
+
+	while (now <= timeout) {
+		for (; i != e; i++) {
+			if ((*i)->GetState()) {
+				return *i; // user pressed a button
+			}
+		}
+		std::this_thread::sleep_for(milliseconds(10));
+		now += milliseconds(10);
+	}
+
+	return nullptr; // no input
+}
+
+void InputDeviceManager::BindButton(int ControlID, std::string DeviceName)
+{
+	auto dev = FindDevice(DeviceName);
+	if (dev != nullptr) {
+		// Don't block the message processing loop
+		std::thread([this, &dev, ControlID]() {
+			char current_text[50];
+			Button* xbox_button = m_DeviceConfig->FindButton(ControlID);
+			xbox_button->GetText(current_text, sizeof(current_text));
+			xbox_button->UpdateText("...");
+			std::future<InputDevice::Input*> fut = std::async(std::launch::async, &InputDeviceManager::Detect, this, dev.get());
+			InputDevice::Input* dev_button = fut.get();
+			if (dev_button) {
+				dev->SetBindings(xbox_button->GetIndex(), dev_button);
+				xbox_button->UpdateText(dev_button->GetName().c_str());
+			}
+			else {
+				xbox_button->UpdateText(current_text);
+			}
+		});
+	}
+}
+
+void InputDeviceManager::ConstructEmuDevice(int Type, HWND hwnd)
+{
+	m_DeviceConfig =  new EmuDevice(Type, hwnd);
+}
+
+void InputDeviceManager::DestroyEmuDevice()
+{
+	delete m_DeviceConfig;
+	m_DeviceConfig = nullptr;
 }
 #endif
