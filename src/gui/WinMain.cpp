@@ -92,7 +92,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	}
 
 	if (bHasLoadArgument) {
-		LaunchEmulation(__argc, __argv);
+		CxbxKrnlMain(__argc, __argv);
 		EmuShared::Cleanup();
 		return EXIT_SUCCESS;
 	}
