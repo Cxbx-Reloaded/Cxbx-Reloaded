@@ -224,6 +224,8 @@ bool CxbxKrnlVerifyVersion(const char *szVersion);
 
 extern bool g_bIsDebugKernel;
 
+bool CreateSettings();
+
 bool HandleFirstLaunch();
 
 /*! Cxbx Kernel Entry Point */

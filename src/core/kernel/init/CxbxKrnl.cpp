@@ -891,6 +891,22 @@ void ImportLibraries(XbeImportEntry *pImportDirectory)
 	}
 }
 
+bool CreateSettings()
+{
+	g_Settings = new Settings();
+	if (g_Settings == nullptr) {
+		MessageBox(nullptr, szSettings_alloc_error, "Cxbx-Reloaded", MB_OK);
+		return false;
+	}
+
+	if (!g_Settings->Init()) {
+		return false;
+	}
+
+	log_get_settings();
+	return true;
+}
+
 bool HandleFirstLaunch()
 {
 	bool bFirstLaunch;
@@ -898,17 +914,9 @@ bool HandleFirstLaunch()
 
 	/* check if process is launch with elevated access then prompt for continue on or not. */
 	if (!bFirstLaunch) {
-		g_Settings = new Settings();
-		if (g_Settings == nullptr) {
-			MessageBox(nullptr, szSettings_alloc_error, "Cxbx-Reloaded", MB_OK);
+		if (!CreateSettings()) {
 			return false;
 		}
-
-		if (!g_Settings->Init()) {
-			return false;
-		}
-
-		log_get_settings();
 
 		bool bElevated = CxbxIsElevated();
 		if (bElevated && !g_Settings->m_core.allowAdminPrivilege) {
