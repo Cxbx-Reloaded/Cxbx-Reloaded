@@ -99,19 +99,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 	// If 2nd GUI executable is launched, load settings file for GUI for editable support.
 	if (g_Settings == nullptr) {
-		g_Settings = new Settings();
-		if (g_Settings == nullptr) {
-			MessageBox(nullptr, szSettings_alloc_error, "Cxbx-Reloaded", MB_OK);
+		if (!CreateSettings()) {
 			EmuShared::Cleanup();
 			return EXIT_FAILURE;
 		}
-
-		if (!g_Settings->Init()) {
-			EmuShared::Cleanup();
-			return EXIT_FAILURE;
-		}
-
-		log_get_settings();
 	}
 
 	// Possible optional output for GUI
