@@ -40,6 +40,8 @@
 // TODO: Also need to use fixed size to able support cross-platform without extra work.
 //       Such as uint32_t, uint16_t, etc.
 
+#define WAVE_FORMAT_XBOX_ADPCM 0x0069
+
 // EmuIDirectSoundBuffer_Play flags
 #define X_DSBPLAY_LOOPING       0x00000001
 #define X_DSBPLAY_FROMSTART     0x00000002

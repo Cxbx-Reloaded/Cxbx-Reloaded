@@ -116,7 +116,6 @@ struct X_CDirectSoundBuffer
     X_DSENVOLOPEDESC        Xb_EnvolopeDesc;
 };
 
-#define WAVE_FORMAT_XBOX_ADPCM 0x0069
 //Custom flags (4 bytes support up to 31 shifts,starting from 0)
 #define DSE_FLAG_PCM                    (1 << 0)
 #define DSE_FLAG_XADPCM                 (1 << 1)
