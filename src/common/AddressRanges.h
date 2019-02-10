@@ -2,18 +2,9 @@
 // PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 // ******************************************************************
 // *
-// *    .,-:::::    .,::      .::::::::.    .,::      .:
-// *  ,;;;'````'    `;;;,  .,;;  ;;;'';;'   `;;;,  .,;;
-// *  [[[             '[[,,[['   [[[__[[\.    '[[,,[['
-// *  $$$              Y$$$P     $$""""Y$$     Y$$$P
-// *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
-// *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
+// *  This file is part of Cxbx-Reloaded.
 // *
-// *   Common->AddressRanges.h
-// *
-// *  This file is part of the Cxbx project.
-// *
-// *  Cxbx is free software; you can redistribute it
+// *  Cxbx-Reloaded is free software; you can redistribute it
 // *  and/or modify it under the terms of the GNU General Public
 // *  License as published by the Free Software Foundation; either
 // *  version 2 of the license, or (at your option) any later version.
@@ -35,10 +26,10 @@
 // ******************************************************************
 #pragma once
 
-#ifndef CXBXEMULATOR_EXPORTS // Only trim Windows symbols CxbxLoader, not in CxbxEmulator
+#ifndef CXBXR_EMU_EXPORTS // Only trim Windows symbols CxbxLoader, not in cxbxr-emu
 #include <SDKDDKVer.h>
 #define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
-#endif // CXBXEMULATOR_EXPORTS
+#endif // CXBXR_EMU_EXPORTS
 
 #undef FIELD_OFFSET     // prevent macro redefinition warnings
 #include <windows.h> // For DWORD, CALLBACK, VirtualAlloc, LPVOID, SIZE_T, HMODULE 
