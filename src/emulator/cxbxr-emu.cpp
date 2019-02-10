@@ -2,16 +2,9 @@
 // PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 // ******************************************************************
 // *
-// *    .,-:::::    .,::      .::::::::.    .,::      .:
-// *  ,;;;'````'    `;;;,  .,;;  ;;;'';;'   `;;;,  .,;;
-// *  [[[             '[[,,[['   [[[__[[\.    '[[,,[['
-// *  $$$              Y$$$P     $$""""Y$$     Y$$$P
-// *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
-// *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
+// *  This file is part of Cxbx-Reloaded.
 // *
-// *  This file is part of the Cxbx project.
-// *
-// *  Cxbx is free software; you can redistribute it
+// *  Cxbx-Reloaded is free software; you can redistribute it
 // *  and/or modify it under the terms of the GNU General Public
 // *  License as published by the Free Software Foundation; either
 // *  version 2 of the license, or (at your option) any later version.
@@ -32,7 +25,7 @@
 // *
 // ******************************************************************
 
-// CxbxEmulator.cpp : Defines the exported functions for the DLL application.
+// cxbxr-emu.cpp : Defines the exported functions for the DLL application.
 
 #include "Cxbx.h" // For FUNC_EXPORTS
 #include "VerifyAddressRanges.h" // For VerifyBaseAddr() and VerifyAddressRanges()
@@ -182,3 +175,4 @@ DWORD WINAPI Emulate(int system)
 	// This line will never be reached:
 	return EXIT_FAILURE;
 }
+
