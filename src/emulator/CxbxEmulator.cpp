@@ -156,7 +156,7 @@ DWORD WINAPI Emulate(int system)
 	int argc;
 	PCHAR *argv = CommandLineToArgvA(CommandLine, &argc);
 
-	LaunchEmulation(argc, argv);
+	CxbxKrnlMain(argc, argv);
 
 	LocalFree(argv);
 
