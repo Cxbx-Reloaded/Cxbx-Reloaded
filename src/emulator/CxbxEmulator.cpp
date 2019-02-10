@@ -38,6 +38,7 @@
 #include "VerifyAddressRanges.h" // For VerifyBaseAddr() and VerifyAddressRanges()
 //#include "CxbxKrnl/Emu.h"
 #include "EmuShared.h"
+#include "core\kernel\init\CxbxKrnl.h" // For HandleFirstLaunch() and LaunchEmulation()
 //#include <commctrl.h>
 
 PCHAR*
@@ -149,13 +150,13 @@ DWORD WINAPI Emulate(int system)
 		return EXIT_FAILURE;
 	}
 
-	// TODO : Call HandleFirstLaunch();
+	HandleFirstLaunch();
 
 	LPSTR CommandLine = GetCommandLine();
 	int argc;
 	PCHAR *argv = CommandLineToArgvA(CommandLine, &argc);
 
-	// TODO : Call LaunchEmulation(argc, argv);
+	LaunchEmulation(argc, argv);
 
 	LocalFree(argv);
 
