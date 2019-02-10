@@ -1,5 +1,5 @@
 cmake_minimum_required (VERSION 3.12)
-project(CxbxGUI)
+project(cxbxr)
 
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_STANDARD 17)
@@ -56,7 +56,7 @@ file (GLOB RESOURCES
  "${CXBXR_ROOT_DIR}/COPYING"
  "${CXBXR_ROOT_DIR}/README.md"
  "${CXBXR_ROOT_DIR}/src/gui/resource/.editorconfig"
- "${CXBXR_ROOT_DIR}/src/gui/resource/CxbxGUI.rc"
+ "${CXBXR_ROOT_DIR}/src/gui/resource/cxbxr.rc"
  "${CXBXR_ROOT_DIR}/src/gui/resource/Cxbx-R.ico"
  "${CXBXR_ROOT_DIR}/src/gui/resource/resource.h"
  "${CXBXR_ROOT_DIR}/src/gui/resource/stdafx.h"
@@ -69,33 +69,33 @@ file (GLOB RESOURCES
 source_group(TREE ${CXBXR_ROOT_DIR}/src PREFIX header FILES
  ${CXBXR_HEADER_GUIv1}
  ${CXBXR_HEADER_COMMON}
- "${CXBXR_ROOT_DIR}/src/gui/CxbxGUI.h"
+ "${CXBXR_ROOT_DIR}/src/gui/cxbxr.h"
 )
 
 source_group(TREE ${CXBXR_ROOT_DIR}/src PREFIX source FILES 
  ${CXBXR_SOURCE_GUIv1}
  ${CXBXR_SOURCE_COMMON}
- "${CXBXR_ROOT_DIR}/src/gui/CxbxGUI.cpp"
+ "${CXBXR_ROOT_DIR}/src/gui/cxbxr.cpp"
  "${CXBXR_ROOT_DIR}/src/gui/stdafx.cpp"
 )
 
 source_group(TREE ${CXBXR_ROOT_DIR} FILES ${RESOURCES})
 
-add_executable(CxbxGUI WIN32 ${RESOURCES}
+add_executable(cxbxr WIN32 ${RESOURCES}
 # ${CXBXR_HEADER_GUIv1}
 # ${CXBXR_HEADER_COMMON}
 # ${CXBXR_SOURCE_GUIv1}
 # ${CXBXR_SOURCE_COMMON}
  ${CXBXR_GIT_VERSION_H}
- "${CXBXR_ROOT_DIR}/src/gui/CxbxGUI.h"
- "${CXBXR_ROOT_DIR}/src/gui/CxbxGUI.cpp"
+ "${CXBXR_ROOT_DIR}/src/gui/cxbxr.h"
+ "${CXBXR_ROOT_DIR}/src/gui/cxbxr.cpp"
  "${CXBXR_ROOT_DIR}/src/gui/stdafx.cpp"
 )
 
 # Link and compile flags
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
 
- set_target_properties(CxbxGUI PROPERTIES
+ set_target_properties(cxbxr PROPERTIES
   LINK_FLAGS "
   /INCREMENTAL:NO
   /LARGEADDRESSAWARE
@@ -142,11 +142,11 @@ set(WINS_LIB
  XINPUT9_1_0
 )
 
-target_link_libraries(CxbxGUI
+target_link_libraries(cxbxr
  PUBLIC XbSymbolDatabase
  libtomcrypt
 
  ${WINS_LIB}
 )
 
-add_dependencies(CxbxGUI CxbxEmulator cxbxr-debugger)
+add_dependencies(cxbxr cxbxr-emu cxbxr-debugger)

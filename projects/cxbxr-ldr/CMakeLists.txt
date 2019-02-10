@@ -1,5 +1,5 @@
 cmake_minimum_required (VERSION 3.12)
-project(CxbxLoader)
+project(cxbxr-ldr)
 
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_STANDARD 17)
@@ -30,19 +30,19 @@ file (GLOB HEADERS
 file (GLOB SOURCES
  "${CXBXR_ROOT_DIR}/src/common/AddressRanges.cpp"
  "${CXBXR_ROOT_DIR}/src/common/ReserveAddressRanges.cpp"
- "${CXBXR_ROOT_DIR}/src/loader/loader.cpp"
+ "${CXBXR_ROOT_DIR}/src/loader/cxbxr-ldr.cpp"
 )
 
 source_group(TREE ${CXBXR_ROOT_DIR}/src PREFIX header FILES ${HEADERS})
 
 source_group(TREE ${CXBXR_ROOT_DIR}/src PREFIX source FILES ${SOURCES})
 
-add_executable(CxbxLoader ${HEADERS} ${SOURCES})
+add_executable(cxbxr-ldr ${HEADERS} ${SOURCES})
 
 # Link and compile flags
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
 
- set_target_properties(CxbxLoader PROPERTIES
+ set_target_properties(cxbxr-ldr PROPERTIES
   LINK_FLAGS "
   /LARGEADDRESSAWARE
   /FIXED
@@ -61,6 +61,6 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
  )
 endif()
 
-target_link_libraries(CxbxLoader
+target_link_libraries(cxbxr-ldr
  PUBLIC kernel32.lib
 )
