@@ -1,5 +1,5 @@
 cmake_minimum_required (VERSION 3.12)
-project(CxbxEmulator)
+project(cxbxr-emu)
 
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_STANDARD 17)
@@ -61,7 +61,7 @@ endif()
 
 add_compile_definitions(
  NOMINMAX
- CXBXEMULATOR_EXPORTS
+ CXBXR_EMU_EXPORTS
 )
 
 file (GLOB RESOURCES
@@ -81,27 +81,27 @@ source_group(TREE ${CXBXR_ROOT_DIR}/src PREFIX source FILES
  ${CXBXR_SOURCE_GUIv1}
  ${CXBXR_SOURCE_COMMON}
  ${CXBXR_SOURCE_EMU}
- "${CXBXR_ROOT_DIR}/src/emulator/CxbxEmulator.cpp"
+ "${CXBXR_ROOT_DIR}/src/emulator/cxbxr-emu.cpp"
  "${CXBXR_ROOT_DIR}/src/emulator/dllmain.cpp"
 )
 
 source_group(TREE ${CXBXR_ROOT_DIR} FILES ${RESOURCES})
 
-add_library(CxbxEmulator SHARED ${RESOURCES}
+add_library(cxbxr-emu SHARED ${RESOURCES}
  ${CXBXR_HEADER_COMMON}
  ${CXBXR_HEADER_EMU}
  "${CXBXR_ROOT_DIR}/src/emulator/targetver.h"
  ${CXBXR_SOURCE_COMMON}
  ${CXBXR_SOURCE_EMU}
  ${CXBXR_GIT_VERSION_H}
- "${CXBXR_ROOT_DIR}/src/emulator/CxbxEmulator.cpp"
+ "${CXBXR_ROOT_DIR}/src/emulator/cxbxr-emu.cpp"
  "${CXBXR_ROOT_DIR}/src/emulator/dllmain.cpp"
 )
 
 # Link and compile flags
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
 
- set_target_properties(CxbxEmulator PROPERTIES
+ set_target_properties(cxbxr-emu PROPERTIES
   LINK_FLAGS "
   /INCREMENTAL:NO
   /LARGEADDRESSAWARE
@@ -153,7 +153,7 @@ set(WINS_LIB
  wpcap
 )
 
-target_link_libraries(CxbxEmulator
+target_link_libraries(cxbxr-emu
  PUBLIC XbSymbolDatabase
  subhook
  libtomcrypt
@@ -162,11 +162,11 @@ target_link_libraries(CxbxEmulator
  ${WINS_LIB}
 )
 
-add_dependencies(CxbxEmulator CxbxLoader)
+add_dependencies(cxbxr-emu cxbxr-ldr)
 
 set(CXBXR_GLEW_DLL "${CXBXR_ROOT_DIR}/import/glew-2.0.0/bin/Release/Win32/glew32.dll")
 
 # Copy glew32.dll to build type's folder after build.
-add_custom_command(TARGET CxbxEmulator POST_BUILD
- COMMAND ${CMAKE_COMMAND} -E copy ${CXBXR_GLEW_DLL} $<TARGET_FILE_DIR:CxbxEmulator>
+add_custom_command(TARGET cxbxr-emu POST_BUILD
+ COMMAND ${CMAKE_COMMAND} -E copy ${CXBXR_GLEW_DLL} $<TARGET_FILE_DIR:cxbxr-emu>
 )
