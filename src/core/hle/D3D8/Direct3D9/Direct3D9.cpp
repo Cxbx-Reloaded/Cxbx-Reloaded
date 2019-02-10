@@ -26,7 +26,7 @@
 // ******************************************************************
 #define LOG_PREFIX CXBXR_MODULE::D3D8
 
-#ifdef CXBXEMULATOR_EXPORTS // DbgConsole only in Cxbx, not in CxbxEmulator
+#ifdef CXBXR_EMU_EXPORTS // DbgConsole only in Cxbx/cxbxr, not in cxbxr-emu
 	#undef INCLUDE_DBG_CONSOLE
 #else
 	#define INCLUDE_DBG_CONSOLE
