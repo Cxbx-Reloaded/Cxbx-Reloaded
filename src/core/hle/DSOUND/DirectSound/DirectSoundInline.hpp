@@ -242,6 +242,33 @@ inline void GeneratePCMFormat(
                 memcpy(lpwfxFormatHost, lpwfxFormat, sizeof(WAVEFORMATEX) + lpwfxFormat->cbSize);
             }
 
+            if (X_BufferSizeRequest == 0 &&
+                (lpwfxFormatHost->nSamplesPerSec == 0 || lpwfxFormatHost->nAvgBytesPerSec == 0)) {
+                // NOTE: When X_BufferSizeRequest is 0, creation is allow to be performed until allocated size is given from different API.
+                // Set dwBufferBytes is not needed as it is handled later on.
+                // Test case: Hobbit did not input nSamplesPerSec & nAvgBytesPerSec variable, yet isn't a requirement.
+                if (lpwfxFormatHost->nChannels == 0) {
+                    lpwfxFormatHost->nChannels = 2;
+                }
+                if (lpwfxFormatHost->wBitsPerSample == 0) {
+                    lpwfxFormatHost->wBitsPerSample = 8;
+                }
+
+                if (lpwfxFormatHost->nBlockAlign == 0) {
+                    lpwfxFormatHost->nBlockAlign = (lpwfxFormatHost->wBitsPerSample / 8 * lpwfxFormatHost->nChannels);
+                }
+
+                if (lpwfxFormatHost->nSamplesPerSec == 0) {
+                    lpwfxFormatHost->nSamplesPerSec = 44100;
+                    lpwfxFormatHost->nAvgBytesPerSec = lpwfxFormatHost->nSamplesPerSec * lpwfxFormatHost->nBlockAlign;
+                }
+
+                // TODO: I don't think we need WAVEFORMATEXTENSIBLE stub for this fix.
+                if (lpwfxFormat->wFormatTag == WAVE_FORMAT_EXTENSIBLE) {
+                    EmuLog(LOG_LEVEL::WARNING, "Is WAVE_FORMAT_EXTENSIBLE having problem with creation?");
+                }
+            }
+
             dwEmuFlags = dwEmuFlags & ~DSE_FLAG_AUDIO_CODECS;
 
             switch (DSBufferDesc.lpwfxFormat->wFormatTag) {
