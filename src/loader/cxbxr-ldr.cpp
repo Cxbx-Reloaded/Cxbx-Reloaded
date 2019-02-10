@@ -2,18 +2,9 @@
 // PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 // ******************************************************************
 // *
-// *    .,-:::::    .,::      .::::::::.    .,::      .:
-// *  ,;;;'````'    `;;;,  .,;;  ;;;'';;'   `;;;,  .,;;
-// *  [[[             '[[,,[['   [[[__[[\.    '[[,,[['
-// *  $$$              Y$$$P     $$""""Y$$     Y$$$P
-// *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
-// *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
+// *  This file is part of Cxbx-Reloaded.
 // *
-// *   Cxbx-Loader->loader.cpp
-// *
-// *  This file is part of the Cxbx project.
-// *
-// *  Cxbx is free software; you can redistribute it
+// *  Cxbx-Reloaded is free software; you can redistribute it
 // *  and/or modify it under the terms of the GNU General Public
 // *  License as published by the Free Software Foundation; either
 // *  version 2 of the license, or (at your option) any later version.
@@ -113,6 +104,8 @@ void OutputMessage(const char *msg)
 	}
 }
 
+#define EMULATION_DLL "cxbxr-emu.dll"
+
 DWORD CALLBACK rawMain()
 {
 	(void)virtual_memory_placeholder; // prevent optimization removing this data
@@ -164,9 +157,9 @@ DWORD CALLBACK rawMain()
 	}
 
 	// Only after the required memory ranges are reserved, load our emulation DLL
-	HMODULE hEmulationDLL = LoadLibrary(TEXT("CxbxEmulator.dll"));
+	HMODULE hEmulationDLL = LoadLibrary(TEXT(EMULATION_DLL));
 	if (!hEmulationDLL) {
-		OutputMessage("Error loading CxbxEmulator.dll\n");
+		OutputMessage("Error loading " EMULATION_DLL "\n");
 		LPTSTR Error = GetLastErrorString();
 		if (Error) {
 			OutputMessage(Error);
