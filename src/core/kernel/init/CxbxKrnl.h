@@ -227,7 +227,7 @@ extern bool g_bIsDebugKernel;
 bool HandleFirstLaunch();
 
 /*! Cxbx Kernel Entry Point */
-void LaunchEmulation(int argc, char* argv[]);
+void CxbxKrnlMain(int argc, char* argv[]);
 
 /*! initialize emulation */
 __declspec(noreturn) void CxbxKrnlInit(void *pTLSData, Xbe::TLS *pTLS, Xbe::LibraryVersion *LibraryVersion, DebugMode DbgMode, const char *szDebugFilename, Xbe::Header *XbeHeader, uint32_t XbeHeaderSize, void (*Entry)(), int BootFlags);

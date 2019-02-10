@@ -907,7 +907,7 @@ bool HandleFirstLaunch()
 	return true;
 }
 
-void LaunchEmulation(int argc, char* argv[])
+void CxbxKrnlMain(int argc, char* argv[])
 {
 	// NOTE: This is designated for standalone kernel mode launch without GUI
 	if (g_Settings != nullptr) {
@@ -933,11 +933,6 @@ void LaunchEmulation(int argc, char* argv[])
 	/* Initialize Cxbx File Paths */
 	CxbxInitFilePaths();
 
-	CxbxKrnlMain(argc, argv);
-}
-
-void CxbxKrnlMain(int argc, char* argv[])
-{
 	// Skip '/load' switch
 	// Get XBE Name :
 	std::string xbePath = std::filesystem::absolute(std::filesystem::path(argv[2])).string();
