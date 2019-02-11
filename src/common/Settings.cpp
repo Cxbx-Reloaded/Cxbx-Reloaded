@@ -291,11 +291,11 @@ bool Settings::LoadFile(std::string file_path)
 
 bool Settings::LoadConfig()
 {
-	bool bRet, bRet2;
+	bool bRet;
 	const char* si_data;
 	int iStatus;
-	std::list<CSimpleIniA::Entry> si_list, si_list2;
-	std::list<CSimpleIniA::Entry>::iterator si_list_iterator, si_list_iterator2;
+	std::list<CSimpleIniA::Entry> si_list;
+	std::list<CSimpleIniA::Entry>::iterator si_list_iterator;
 	std::string trim_str;
 
 	// ==== GUI Begin ==============
@@ -547,7 +547,7 @@ bool Settings::LoadConfig()
 		index++;
 	}
 
-	// ==== Input Profile End =====
+	// ==== Input Profile End ======
 
 	// Delete legacy configs from previous revisions
 	//RemoveLegacyInputConfigs(m_core.Revision);
@@ -566,7 +566,7 @@ bool Settings::Save(std::string file_path)
 	char si_value[64];
 	std::string quote_str;
 
-	// ==== GUI Begin =============
+	// ==== GUI Begin ==============
 
 	m_si.SetLongValue(section_gui, sect_gui_keys.CxbxDebugMode, m_gui.CxbxDebugMode, nullptr, true, true);
 	m_si.SetValue(section_gui, sect_gui_keys.CxbxDebugLogFile, m_gui.szCxbxDebugFile.c_str(), nullptr, true);
@@ -580,9 +580,9 @@ bool Settings::Save(std::string file_path)
 		m_si.SetValue(section_gui, sect_gui_keys.RecentXbeFiles, m_gui.szRecentXbeFiles[i].c_str(), nullptr, false);
 	}
 
-	// ==== GUI End ===============
+	// ==== GUI End ================
 
-	// ==== Core Begin ============
+	// ==== Core Begin =============
 
 	m_si.SetLongValue(section_core, sect_core_keys.Revision, m_core.Revision, nullptr, true);
 	m_si.SetLongValue(section_core, sect_core_keys.FlagsLLE, m_core.FlagsLLE, nullptr, true, true);
@@ -601,9 +601,9 @@ bool Settings::Save(std::string file_path)
 		m_si.SetValue(section_core, sect_core_keys.LoggedModules, stream.str().c_str(), nullptr, false);
 	}
 
-	// ==== Core End ==============
+	// ==== Core End ===============
 
-	// ==== Video Begin ===========
+	// ==== Video Begin ============
 
 	m_si.SetValue(section_video, sect_video_keys.VideoResolution, m_video.szVideoResolution, nullptr, true);
 
@@ -613,9 +613,9 @@ bool Settings::Save(std::string file_path)
 	m_si.SetBoolValue(section_video, sect_video_keys.FullScreen, m_video.bFullScreen, nullptr, true);
 	m_si.SetBoolValue(section_video, sect_video_keys.HardwareYUV, m_video.bHardwareYUV, nullptr, true);
 
-	// ==== Video End =============
+	// ==== Video End ==============
 
-	// ==== Audio Begin ===========
+	// ==== Audio Begin ============
 
 	// Audio - Adapter config
 	std::sprintf(si_value, sect_audio_keys.adapter_value,
@@ -629,9 +629,9 @@ bool Settings::Save(std::string file_path)
 	m_si.SetBoolValue(section_audio, sect_audio_keys.codec_xadpcm, m_audio.codec_xadpcm, nullptr, true);
 	m_si.SetBoolValue(section_audio, sect_audio_keys.codec_unknown, m_audio.codec_unknown, nullptr, true);
 
-	// ==== Audio End =============
+	// ==== Audio End ==============
 
-	// ==== Controller Begin ======
+	// ==== Controller Begin =======
 
 	int v = 0;
 	char szKeyName[64];
@@ -714,9 +714,9 @@ bool Settings::Save(std::string file_path)
 		}
 	}
 
-	// ==== Input Profile End =====
+	// ==== Input Profile End ======
 
-	// ==== Hack Begin ============
+	// ==== Hack Begin =============
 
 	m_si.SetBoolValue(section_hack, sect_hack_keys.DisablePixelShaders, m_hacks.DisablePixelShaders, nullptr, true);
 	m_si.SetBoolValue(section_hack, sect_hack_keys.UncapFramerate, m_hacks.UncapFramerate, nullptr, true);
@@ -725,7 +725,7 @@ bool Settings::Save(std::string file_path)
 	m_si.SetBoolValue(section_hack, sect_hack_keys.ScaleViewPort, m_hacks.ScaleViewport, nullptr, true);
 	m_si.SetBoolValue(section_hack, sect_hack_keys.DirectHostBackBufferAccess, m_hacks.DirectHostBackBufferAccess, nullptr, true);
 
-	// ==== Hack End ==============
+	// ==== Hack End ===============
 
 	SI_Error siError;
 	if (!file_path.empty()) {
