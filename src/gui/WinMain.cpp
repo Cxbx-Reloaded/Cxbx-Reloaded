@@ -60,28 +60,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		return EXIT_FAILURE;
 	}
 
-	bool bHasLoadArgument;
-	HWND hWnd = nullptr;
 	DWORD guiProcessID = 0;
-
 	// TODO: Convert ALL __argc & __argv to use main(int argc, char** argv) method.
-	if (__argc >= 2 && std::strcmp(__argv[1], "/load") == 0 && std::strlen(__argv[2]) > 0) {
-		bHasLoadArgument = true;
-		// Perform check if command line contain gui's hWnd value.
-		if (__argc > 3) {
-			hWnd = (HWND)std::stoi(__argv[3], nullptr, 10);
-			hWnd = IsWindow(hWnd) ? hWnd : nullptr;
-			if (hWnd != nullptr) {
-				// We don't need thread ID from window handle.
-				GetWindowThreadProcessId(hWnd, &guiProcessID);
-			}
-		}
-	} else {
-		bHasLoadArgument = false;
-		guiProcessID = GetCurrentProcessId();
-	}
-
-	g_exec_filepath = __argv[0]; // NOTE: Workaround solution until simulated "main" function is made.
+	bool bHasLoadArgument = CheckLoadArgument(__argc, __argv, &guiProcessID);
 
 	/*! initialize shared memory */
 	EmuShared::Init(guiProcessID);
