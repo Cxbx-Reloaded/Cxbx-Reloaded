@@ -224,6 +224,8 @@ bool CxbxKrnlVerifyVersion(const char *szVersion);
 
 extern bool g_bIsDebugKernel;
 
+bool CheckLoadArgument(int argc, char* argv[], DWORD *pguiProcessID);
+
 bool CreateSettings();
 
 bool HandleFirstLaunch();

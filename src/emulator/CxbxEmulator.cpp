@@ -133,30 +133,40 @@ DWORD WINAPI Emulate(int system)
 
 	/*! Verify our host executable, CxbxLoader.exe, is loaded to base address 0x00010000 */
 	if (!VerifyBaseAddr()) {
-		MessageBox(NULL, "CxbxLoader.exe was not loaded to base address 0x00010000 (which is a requirement for Xbox emulation)", "Cxbx-Reloaded", MB_OK);
+		MessageBox(NULL, "CxbxLoader.exe was not loaded to base address 0x00010000 (which is a requirement for Xbox emulation)", "Cxbx-Reloaded",
+			MB_OK | MB_ICONERROR);
 		return EXIT_FAILURE;
 	}
 
 	// Before doing anything else that might cause memory fragmentation,
 	// verify that we still got control over all ranges the loader reserved
 	if (!VerifyAddressRanges(system)) {
-		MessageBox(NULL, "Failed to claim required address ranges (which is a requirement for Xbox emulation)", "Cxbx-Reloaded", MB_OK);
+		MessageBox(NULL, "Failed to claim required address ranges (which is a requirement for Xbox emulation)", "Cxbx-Reloaded",
+			MB_OK | MB_ICONERROR);
 		return EXIT_FAILURE;
 	}
-
-	/*! initialize shared memory */
-	if (!EmuShared::Init(0)) {
-		MessageBox(NULL, "Could not map shared memory!", "Cxbx-Reloaded", MB_OK);
-		return EXIT_FAILURE;
-	}
-
-	HandleFirstLaunch();
 
 	LPSTR CommandLine = GetCommandLine();
 	int argc;
 	PCHAR *argv = CommandLineToArgvA(CommandLine, &argc);
 
-	CxbxKrnlMain(argc, argv);
+	DWORD guiProcessID = 0;
+	bool bHasLoadArgument = CheckLoadArgument(argc, argv, &guiProcessID);
+
+	/*! initialize shared memory */
+	if (!EmuShared::Init(guiProcessID)) {
+		MessageBox(NULL, "Could not map shared memory!", "Cxbx-Reloaded", MB_OK | MB_ICONERROR);
+		LocalFree(argv);
+		return EXIT_FAILURE;
+	}
+
+	HandleFirstLaunch();
+
+	if (bHasLoadArgument) {
+		CxbxKrnlMain(argc, argv);
+	} else {
+		// TODO : Enter "2nd GUI" mode here, as done in Cxbx's WinMain() - but how?
+	}
 
 	LocalFree(argv);
 

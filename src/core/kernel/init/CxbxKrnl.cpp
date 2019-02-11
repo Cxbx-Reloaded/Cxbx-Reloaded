@@ -891,11 +891,38 @@ void ImportLibraries(XbeImportEntry *pImportDirectory)
 	}
 }
 
+bool CheckLoadArgument(int argc, char* argv[], DWORD *pguiProcessID)
+{
+	bool bHasLoadArgument;
+
+	if (argc >= 2 && std::strcmp(argv[1], "/load") == 0 && std::strlen(argv[2]) > 0) {
+		HWND hWnd = nullptr;
+		bHasLoadArgument = true;
+		// Perform check if command line contain gui's hWnd value.
+		if (argc > 3) {
+			hWnd = (HWND)std::stoi(argv[3], nullptr, 10);
+			hWnd = IsWindow(hWnd) ? hWnd : nullptr;
+			if (hWnd != nullptr) {
+				// We don't need thread ID from window handle.
+				GetWindowThreadProcessId(hWnd, pguiProcessID);
+			}
+		}
+	}
+	else {
+		bHasLoadArgument = false;
+		*pguiProcessID = GetCurrentProcessId();
+	}
+
+	g_exec_filepath = argv[0]; // NOTE: Workaround solution until simulated "main" function is made.
+
+	return bHasLoadArgument;
+}
+
 bool CreateSettings()
 {
 	g_Settings = new Settings();
 	if (g_Settings == nullptr) {
-		MessageBox(nullptr, szSettings_alloc_error, "Cxbx-Reloaded", MB_OK);
+		MessageBox(nullptr, szSettings_alloc_error, "Cxbx-Reloaded", MB_OK | MB_ICONERROR);
 		return false;
 	}
 
