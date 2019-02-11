@@ -93,12 +93,8 @@ class InputDeviceManager
 		void RefreshDevices();
 		// get the name of the devices currently detected
 		std::vector<std::string> GetDeviceList() const;
-		// assign the binding to the control
-		void BindButton(int ControlID, std::string DeviceName);
-		// construct emu device to configurate
-		void ConstructEmuDevice(int Type, HWND hwnd);
-		// destroy emu device
-		void DestroyEmuDevice();
+		// find device from its gui name
+		std::shared_ptr<InputDevice> FindDevice(std::string& QualifiedName) const;
 
 
 	private:
@@ -110,16 +106,11 @@ class InputDeviceManager
 		std::condition_variable m_Cv;
 		// input polling thread
 		std::thread m_PollingThread;
-		// xbox device under configuration
-		EmuDevice* m_DeviceConfig;
 		// used to indicate that the manager was initialized correctly
 		bool m_bInitOK;
 		// update input for an xbox controller
 		void UpdateInputXpad(InputDevice* Device, void* Buffer, int Direction);
-		// find device from its gui name
-		std::shared_ptr<InputDevice> FindDevice(std::string& QualifiedName) const;
-		// wait for an input from the specified device
-		InputDevice::Input* Detect(InputDevice* Device);
+
 };
 
 extern InputDeviceManager g_InputDeviceManager;

@@ -202,6 +202,7 @@
     <ClInclude Include="..\..\src\common\input\Button.h" />
     <ClInclude Include="..\..\src\common\input\EmuDevice.h" />
     <ClInclude Include="..\..\src\common\input\InputDevice.h" />
+    <ClInclude Include="..\..\src\common\input\InputWindow.h" />
     <ClInclude Include="..\..\src\common\input\XInputPad.h" />
     <ClInclude Include="..\..\src\common\Timer.h" />
     <ClInclude Include="..\..\src\common\util\CPUID.h" />
@@ -359,6 +360,7 @@
     <ClCompile Include="..\..\src\common\input\Button.cpp" />
     <ClCompile Include="..\..\src\common\input\EmuDevice.cpp" />
     <ClCompile Include="..\..\src\common\input\InputDevice.cpp" />
+    <ClCompile Include="..\..\src\common\input\InputWindow.cpp" />
     <ClCompile Include="..\..\src\common\input\XInputPad.cpp" />
     <ClCompile Include="..\..\src\common\Timer.cpp" />
     <ClCompile Include="..\..\src\common\util\CxbxUtil.cpp" />

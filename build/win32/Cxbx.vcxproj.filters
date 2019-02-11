@@ -647,6 +647,9 @@
     <ClCompile Include="..\..\src\common\input\EmuDevice.cpp">
       <Filter>Shared\Input</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\common\input\InputWindow.cpp">
+      <Filter>Shared\Input</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\src\core\hle\DSOUND\XbDSoundLogging.cpp">
       <Filter>core\HLE\DSOUND</Filter>
     </ClCompile>
@@ -849,6 +852,9 @@
       <Filter>Shared\Input</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\common\input\EmuDevice.h">
+      <Filter>Shared\Input</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\common\input\InputWindow.h">
       <Filter>Shared\Input</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\core\hle\DSOUND\XbDSoundTypes.h">
