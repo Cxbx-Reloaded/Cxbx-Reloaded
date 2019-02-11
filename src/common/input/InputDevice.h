@@ -57,8 +57,7 @@
 typedef double ControlState;
 
 /* enum indicating the device type to attach to the virtual xbox */
-typedef enum class _XBOX_INPUT_DEVICE : int {
-	DEVICE_INVALID = -1,
+typedef enum class _XBOX_INPUT_DEVICE : unsigned int {
 	MS_CONTROLLER_DUKE,
 	MS_CONTROLLER_S,
 	LIGHT_GUN,
@@ -66,6 +65,8 @@ typedef enum class _XBOX_INPUT_DEVICE : int {
 	MEMORY_UNIT,
 	IR_DONGLE,
 	STEEL_BATTALION_CONTROLLER,
+	DEVICE_MAX,
+	DEVICE_INVALID = 255,
 }
 XBOX_INPUT_DEVICE;
 

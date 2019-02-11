@@ -28,7 +28,9 @@
 #include "Cxbx.h"
 
 #include "SimpleIni.h"
+#include "input\InputDevice.h"
 #include <string>
+#include <array>
 
 extern std::string g_exec_filepath;
 
@@ -139,17 +141,18 @@ public:
 
 	// Core settings
 	struct s_core {
+		uint Revision;
 		uint FlagsLLE;
 		DebugMode KrnlDebugMode;
 		char szKrnlDebug[MAX_PATH] = "";
 		char szStorageLocation[MAX_PATH] = "";
-		bool allowAdminPrivilege;
 		uint LoggedModules[NUM_INTEGERS_LOG];
 		int LogLevel = 1;
+		bool allowAdminPrivilege;
 		bool Reserved2 = 0;
 		bool Reserved3 = 0;
 		bool Reserved4 = 0;
-		int  Reserved99[10] = { 0 };
+		int  Reserved99[9] = { 0 };
 	} m_core;
 
 	// Video settings
@@ -199,6 +202,21 @@ public:
 		uint XboxPortMapHostPort[XBCTRL_MAX_GAMEPAD_PORTS] = { 0, 1, 2, 3 };
 	} m_controller_port;
 
+	struct s_input {
+		uint Type;
+		std::string DeviceName;
+		std::string ProfileName;
+	};
+	std::array<s_input, 4> m_input;
+
+	struct s_input_profiles {
+		uint Type;
+		std::string ProfileName;
+		std::string DeviceName;
+		std::vector<std::string> ControlList;
+	};
+	std::array<std::vector<s_input_profiles>, to_underlying(XBOX_INPUT_DEVICE::DEVICE_MAX)> m_input_profiles;
+
 	// Hack settings
 	struct s_hack {
 		bool DisablePixelShaders;
@@ -213,6 +231,7 @@ public:
 	} m_hacks;
 
 private:
+	void RemoveLegacyInputConfigs(uint CurrentRevision);
 	std::string m_file_path = "";
 	CSimpleIniA m_si;
 	std::string m_current_data_location;

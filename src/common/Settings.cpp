@@ -45,7 +45,13 @@ static_assert(false, "Please implement support for cross-platform's user profile
 std::string g_exec_filepath;
 
 // NOTE: Update settings_version when add/edit/delete setting's structure.
-const uint settings_version = 3;
+///////////////////////////
+// * History:
+// * 2: (RadWolfie), initial revision
+// * 3: (ergo720),   added logging settings
+// * 4: (ergo720),   added lle input gui settings and revision to core
+///////////////////////////
+const uint settings_version = 4;
 
 Settings* g_Settings = nullptr;
 
@@ -68,6 +74,7 @@ static struct {
 
 static const char* section_core = "core";
 static struct {
+	const char* Revision = "Revision";
 	const char* FlagsLLE = "FlagsLLE";
 	const char* KrnlDebugMode = "KrnlDebugMode";
 	const char* KrnlDebugLogFile = "KrnlDebugLogFile";
@@ -109,6 +116,21 @@ static struct {
 	const char* xbox_port_x_host_type = "XboxPort%dHostType";
 	const char* xbox_port_x_host_port = "XboxPort%dHostPort";
 } sect_controller_port_keys;
+
+static const char* section_input = "input-port-";
+static struct {
+	const char* type = "Type";
+	const char* device = "DeviceName";
+	const char* config = "ProfileName";
+} sect_input;
+
+static const char* section_input_profiles = "input-profile-";
+static struct {
+	const char* type = "Type";
+	const char* config = "ProfileName";
+	const char* device = "DeviceName";
+	const char* control = "%s";
+} sect_input_profiles;
 
 static const char* section_hack = "hack";
 static struct {
@@ -269,14 +291,14 @@ bool Settings::LoadFile(std::string file_path)
 
 bool Settings::LoadConfig()
 {
-	bool bRet;
+	bool bRet, bRet2;
 	const char* si_data;
 	int iStatus;
-	std::list<CSimpleIniA::Entry> si_list;
-	std::list<CSimpleIniA::Entry>::iterator si_list_iterator;
+	std::list<CSimpleIniA::Entry> si_list, si_list2;
+	std::list<CSimpleIniA::Entry>::iterator si_list_iterator, si_list_iterator2;
 	std::string trim_str;
 
-	// ==== GUI Begin ===========
+	// ==== GUI Begin ==============
 
 	m_gui.CxbxDebugMode = (DebugMode)m_si.GetLongValue(section_gui, sect_gui_keys.CxbxDebugMode, /*Default=*/DM_NONE);
 	si_data = m_si.GetValue(section_gui, sect_gui_keys.CxbxDebugLogFile, /*Default=*/nullptr);
@@ -304,7 +326,7 @@ bool Settings::LoadConfig()
 	bRet = m_si.GetAllValues(section_gui, sect_gui_keys.RecentXbeFiles, si_list);/*Default=empty list*/
 	if (bRet) {
 		si_list_iterator = si_list.begin();
-		for (si_list_iterator; si_list_iterator != si_list.end(); si_list_iterator++) {
+		for (; si_list_iterator != si_list.end(); si_list_iterator++) {
 			// Exit loop when the list has reached the limit.
 			if (index == list_max) {
 				break;
@@ -323,10 +345,11 @@ bool Settings::LoadConfig()
 		index++;
 	}
 
-	// ==== GUI End =============
+	// ==== GUI End ================
 
-	// ==== Core Begin ==========
+	// ==== Core Begin =============
 
+	m_core.Revision = m_si.GetLongValue(section_core, sect_core_keys.Revision, 3);
 	m_core.FlagsLLE = m_si.GetLongValue(section_core, sect_core_keys.FlagsLLE, /*Default=*/LLE_NONE);
 	m_core.KrnlDebugMode = (DebugMode)m_si.GetLongValue(section_core, sect_core_keys.KrnlDebugMode, /*Default=*/DM_NONE);
 	si_data = m_si.GetValue(section_core, sect_core_keys.KrnlDebugLogFile, /*Default=*/nullptr);
@@ -347,7 +370,7 @@ bool Settings::LoadConfig()
 	bRet = m_si.GetAllValues(section_core, sect_core_keys.LoggedModules, si_list);
 	if (bRet) {
 		si_list_iterator = si_list.begin();
-		for (si_list_iterator; si_list_iterator != si_list.end(); si_list_iterator++) {
+		for (; si_list_iterator != si_list.end(); si_list_iterator++) {
 			// Exit loop when the list has reached the limit.
 			if (index == list_max) {
 				break;
@@ -364,9 +387,9 @@ bool Settings::LoadConfig()
 		index++;
 	}
 
-	// ==== Core End ============
+	// ==== Core End ===============
 
-	// ==== Hack Begin ==========
+	// ==== Hack Begin =============
 
 	m_hacks.DisablePixelShaders = m_si.GetBoolValue(section_hack, sect_hack_keys.DisablePixelShaders, /*Default=*/false);
 	m_hacks.UncapFramerate = m_si.GetBoolValue(section_hack, sect_hack_keys.UncapFramerate, /*Default=*/false);
@@ -375,9 +398,9 @@ bool Settings::LoadConfig()
 	m_hacks.ScaleViewport = m_si.GetBoolValue(section_hack, sect_hack_keys.ScaleViewPort, /*Default=*/false);
 	m_hacks.DirectHostBackBufferAccess = m_si.GetBoolValue(section_hack, sect_hack_keys.DirectHostBackBufferAccess, /*Default=*/false);
 
-	// ==== Hack End ============
+	// ==== Hack End ===============
 
-	// ==== Video Begin =========
+	// ==== Video Begin ============
 
 	// Video - Resolution config
 	si_data = m_si.GetValue(section_video, sect_video_keys.VideoResolution, /*Default=*/nullptr);
@@ -395,9 +418,9 @@ bool Settings::LoadConfig()
 	m_video.bFullScreen = m_si.GetBoolValue(section_video, sect_video_keys.FullScreen, /*Default=*/false);
 	m_video.bHardwareYUV = m_si.GetBoolValue(section_video, sect_video_keys.HardwareYUV, /*Default=*/false);
 
-	// ==== Video End ===========
+	// ==== Video End ==============
 
-	// ==== Audio Begin =========
+	// ==== Audio Begin ============
 
 	// Audio - Adapter config
 	si_data = m_si.GetValue(section_audio, sect_audio_keys.adapter, /*Default=*/nullptr);
@@ -421,9 +444,9 @@ bool Settings::LoadConfig()
 	m_audio.codec_xadpcm = m_si.GetBoolValue(section_audio, sect_audio_keys.codec_xadpcm, /*Default=*/true, nullptr);
 	m_audio.codec_unknown = m_si.GetBoolValue(section_audio, sect_audio_keys.codec_unknown, /*Default=*/true, nullptr);
 
-	// ==== Audio End ===========
+	// ==== Audio End ==============
 
-	// ==== Controller Begin ====
+	// ==== Controller Begin =======
 
 	int v = 0;
 	char szKeyName[64];
@@ -482,7 +505,53 @@ bool Settings::LoadConfig()
 		m_controller_port.XboxPortMapHostPort[v] = m_si.GetLongValue(section_controller_port, szKeyName, /*Default=*/v, nullptr);
 	}
 
-	// ==== Controller End ======
+	// ==== Controller End =========
+
+	// ==== Input Begin ============
+
+	for (int port_num = 0; port_num < 4; port_num++) {
+		std::string current_section = std::string(section_input) + std::to_string(port_num);
+		uint ret = m_si.GetLongValue(current_section.c_str(), sect_input.type, -1);
+		if (ret == -1) {
+			m_input[port_num].Type = to_underlying(XBOX_INPUT_DEVICE::DEVICE_INVALID);
+			continue;
+		}
+		m_input[port_num].Type = ret;
+		m_input[port_num].DeviceName = m_si.GetValue(current_section.c_str(), sect_input.device);
+		m_input[port_num].ProfileName = m_si.GetValue(current_section.c_str(), sect_input.config);
+	}
+	
+	// ==== Input End ==============
+
+	// ==== Input Profile Begin ====
+
+	index = 0;
+	while (true) {
+		std::string current_section = std::string(section_input_profiles) + std::to_string(index);
+		if (m_si.GetSectionSize(current_section.c_str()) == -1) {
+			break;
+		}
+		s_input_profiles local_profile;
+		local_profile.Type = m_si.GetLongValue(current_section.c_str(), sect_input_profiles.type);
+		local_profile.ProfileName = m_si.GetValue(current_section.c_str(), sect_input_profiles.config);
+		local_profile.DeviceName = m_si.GetValue(current_section.c_str(), sect_input_profiles.device);
+		si_list.clear();
+		bRet = m_si.GetAllValues(current_section.c_str(), sect_input_profiles.config, si_list);
+		if (bRet) {
+			si_list_iterator = si_list.begin();
+			for (; si_list_iterator != si_list.end(); si_list_iterator++) {
+				local_profile.ControlList.push_back(si_list_iterator->pItem);
+			}
+		}
+		m_input_profiles[local_profile.Type].push_back(std::move(local_profile));
+		index++;
+	}
+
+	// ==== Input Profile End =====
+
+	// Delete legacy configs from previous revisions
+	//RemoveLegacyInputConfigs(m_core.Revision);
+	//m_core.Revision = settings_version;
 
 	return true;
 }
@@ -497,7 +566,7 @@ bool Settings::Save(std::string file_path)
 	char si_value[64];
 	std::string quote_str;
 
-	// ==== GUI Begin ===========
+	// ==== GUI Begin =============
 
 	m_si.SetLongValue(section_gui, sect_gui_keys.CxbxDebugMode, m_gui.CxbxDebugMode, nullptr, true, true);
 	m_si.SetValue(section_gui, sect_gui_keys.CxbxDebugLogFile, m_gui.szCxbxDebugFile.c_str(), nullptr, true);
@@ -511,10 +580,11 @@ bool Settings::Save(std::string file_path)
 		m_si.SetValue(section_gui, sect_gui_keys.RecentXbeFiles, m_gui.szRecentXbeFiles[i].c_str(), nullptr, false);
 	}
 
-	// ==== GUI End =============
+	// ==== GUI End ===============
 
-	// ==== Core Begin ==========
+	// ==== Core Begin ============
 
+	m_si.SetLongValue(section_core, sect_core_keys.Revision, m_core.Revision, nullptr, true);
 	m_si.SetLongValue(section_core, sect_core_keys.FlagsLLE, m_core.FlagsLLE, nullptr, true, true);
 	m_si.SetLongValue(section_core, sect_core_keys.KrnlDebugMode, m_core.KrnlDebugMode, nullptr, true, true);
 	m_si.SetValue(section_core, sect_core_keys.KrnlDebugLogFile, m_core.szKrnlDebug, nullptr, true);
@@ -525,14 +595,15 @@ bool Settings::Save(std::string file_path)
 	stream << "0x" << std::hex << m_core.LoggedModules[0];
 	m_si.SetValue(section_core, sect_core_keys.LoggedModules, stream.str().c_str(), nullptr, true);
 	for (int i = 1; i < NUM_INTEGERS_LOG; i++) {
-		stream.str("");
+		stream.str(std::string());
+		stream.clear();
 		stream << "0x" << std::hex << m_core.LoggedModules[i];
 		m_si.SetValue(section_core, sect_core_keys.LoggedModules, stream.str().c_str(), nullptr, false);
 	}
 
-	// ==== Core End ============
+	// ==== Core End ==============
 
-	// ==== Video Begin =========
+	// ==== Video Begin ===========
 
 	m_si.SetValue(section_video, sect_video_keys.VideoResolution, m_video.szVideoResolution, nullptr, true);
 
@@ -542,9 +613,9 @@ bool Settings::Save(std::string file_path)
 	m_si.SetBoolValue(section_video, sect_video_keys.FullScreen, m_video.bFullScreen, nullptr, true);
 	m_si.SetBoolValue(section_video, sect_video_keys.HardwareYUV, m_video.bHardwareYUV, nullptr, true);
 
-	// ==== Video End ===========
+	// ==== Video End =============
 
-	// ==== Audio Begin =========
+	// ==== Audio Begin ===========
 
 	// Audio - Adapter config
 	std::sprintf(si_value, sect_audio_keys.adapter_value,
@@ -558,9 +629,9 @@ bool Settings::Save(std::string file_path)
 	m_si.SetBoolValue(section_audio, sect_audio_keys.codec_xadpcm, m_audio.codec_xadpcm, nullptr, true);
 	m_si.SetBoolValue(section_audio, sect_audio_keys.codec_unknown, m_audio.codec_unknown, nullptr, true);
 
-	// ==== Audio End ===========
+	// ==== Audio End =============
 
-	// ==== Controller Begin ====
+	// ==== Controller Begin ======
 
 	int v = 0;
 	char szKeyName[64];
@@ -606,9 +677,46 @@ bool Settings::Save(std::string file_path)
 		m_si.SetLongValue(section_controller_port, szKeyName, m_controller_port.XboxPortMapHostPort[v], nullptr, true, true);
 	}
 
-	// ==== Controller End ======
+	// ==== Controller End =========
 
-	// ==== Hack Begin ==========
+	// ==== Input Begin ============
+
+	for (int port_num = 0; port_num < 4; port_num++) {
+		std::string current_section = std::string(section_input) + std::to_string(port_num);
+		m_si.SetLongValue(current_section.c_str(), sect_input.type, m_input[port_num].Type, nullptr, true, true);
+		m_si.SetValue(current_section.c_str(), sect_input.device, m_input[port_num].DeviceName.c_str(), nullptr, true);
+		m_si.SetValue(current_section.c_str(), sect_input.config, m_input[port_num].ProfileName.c_str(), nullptr, true);
+	}
+
+	// ==== Input End ==============
+
+	// ==== Input Profile Begin ====
+
+	for (uint i = 0; i < to_underlying(XBOX_INPUT_DEVICE::DEVICE_MAX); i++) {
+		size_t vec_size = m_input_profiles[i].size();
+		if (vec_size == 0) {
+			continue;
+		}
+		static int profile_num = 0;
+		for (uint vec_index = 0; vec_index < vec_size; vec_index++, profile_num++) {
+			std::string current_section = std::string(section_input_profiles) + std::to_string(profile_num);
+			m_si.SetLongValue(current_section.c_str(), sect_input_profiles.type, m_input_profiles[i][vec_index].Type, nullptr, true, true);
+			m_si.SetValue(current_section.c_str(), sect_input_profiles.config, m_input_profiles[i][vec_index].ProfileName.c_str(), nullptr, true);
+			m_si.SetValue(current_section.c_str(), sect_input_profiles.device, m_input_profiles[i][vec_index].DeviceName.c_str(), nullptr, true);
+			size_t vec_control_size = m_input_profiles[i][vec_index].ControlList.size();
+			if (vec_control_size == 0) {
+				continue;
+			}
+			m_si.SetValue(current_section.c_str(), sect_input_profiles.control, m_input_profiles[i][vec_index].ControlList[0].c_str(), nullptr, true);
+			for (uint vec_control_index = 1; vec_control_index < vec_control_size; vec_index++) {
+				m_si.SetValue(current_section.c_str(), sect_input_profiles.control, m_input_profiles[i][vec_index].ControlList[vec_control_index].c_str(), nullptr, false);
+			}
+		}
+	}
+
+	// ==== Input Profile End =====
+
+	// ==== Hack Begin ============
 
 	m_si.SetBoolValue(section_hack, sect_hack_keys.DisablePixelShaders, m_hacks.DisablePixelShaders, nullptr, true);
 	m_si.SetBoolValue(section_hack, sect_hack_keys.UncapFramerate, m_hacks.UncapFramerate, nullptr, true);
@@ -617,7 +725,7 @@ bool Settings::Save(std::string file_path)
 	m_si.SetBoolValue(section_hack, sect_hack_keys.ScaleViewPort, m_hacks.ScaleViewport, nullptr, true);
 	m_si.SetBoolValue(section_hack, sect_hack_keys.DirectHostBackBufferAccess, m_hacks.DirectHostBackBufferAccess, nullptr, true);
 
-	// ==== Hack End ============
+	// ==== Hack End ==============
 
 	SI_Error siError;
 	if (!file_path.empty()) {
@@ -742,6 +850,16 @@ std::string Settings::GetDataLocation()
 	m_current_DataStorageToggle = m_gui.DataStorageToggle;
 
 	return m_current_data_location;
+}
+
+void Settings::RemoveLegacyInputConfigs(uint CurrentRevision)
+{
+	if (CurrentRevision > 3) {
+		return;
+	}
+
+	m_si.Delete(section_controller_dinput, nullptr, true);
+	m_si.Delete(section_controller_port, nullptr, true);
 }
 
 // ******************************************************************
