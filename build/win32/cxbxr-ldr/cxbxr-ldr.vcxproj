@@ -21,9 +21,9 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
     <ProjectGuid>{1A1EAA5A-E14E-4034-8627-6F6B71FCCE06}</ProjectGuid>
-    <RootNamespace>CxbxLoader</RootNamespace>
+    <RootNamespace>cxbxr-ldr</RootNamespace>
     <WindowsTargetPlatformVersion>10.0.16299.0</WindowsTargetPlatformVersion>
-    <ProjectName>CxbxLoader</ProjectName>
+    <ProjectName>cxbxr-ldr</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -118,7 +118,7 @@
   <ItemGroup>
     <ClCompile Include="..\..\..\src\common\AddressRanges.cpp" />
     <ClCompile Include="..\..\..\src\common\ReserveAddressRanges.cpp" />
-    <ClCompile Include="..\..\..\src\loader\loader.cpp" />
+    <ClCompile Include="..\..\..\src\loader\cxbxr-ldr.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

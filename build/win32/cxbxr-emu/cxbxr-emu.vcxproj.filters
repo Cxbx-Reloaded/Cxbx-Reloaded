@@ -21,7 +21,7 @@
     <ClCompile Include="..\..\..\src\common\AddressRanges.cpp">
       <Filter>Bootup</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\src\emulator\CxbxEmulator.cpp">
+    <ClCompile Include="..\..\..\src\emulator\cxbxr-emu.cpp">
       <Filter>Bootup</Filter>
     </ClCompile>
   </ItemGroup>
