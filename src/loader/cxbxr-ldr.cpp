@@ -81,10 +81,6 @@ unsigned char virtual_memory_placeholder[VM_PLACEHOLDER_SIZE] = { 0 }; // = { OP
 
 void OutputMessage(const char *msg)
 {
-	if (!msg) {
-		return;
-	}
-
 	OutputDebugStringA(msg); // Send message to debugger output too
 
 	HANDLE hConsoleOutput = GetStdHandle(STD_OUTPUT_HANDLE);
