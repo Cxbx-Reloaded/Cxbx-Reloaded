@@ -32,7 +32,7 @@
 
 #include <memory.h>
 
-extern HMODULE hActiveModule; // Equals EXE Module handle in (GUI) Cxbx.exe, equals DLL Module handle in Cxbx-Reloaded.dll
+extern HMODULE hActiveModule; // Equals EXE Module handle in (GUI) Cxbx.exe / cxbxr.exe, equals DLL Module handle in cxbxr-emu.dll
 
 typedef enum _XBOX_LED_COLOUR: unsigned char {
 	XBOX_LED_COLOUR_OFF,
