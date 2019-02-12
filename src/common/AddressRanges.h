@@ -26,7 +26,7 @@
 // ******************************************************************
 #pragma once
 
-#ifndef CXBXR_EMU_EXPORTS // Only trim Windows symbols CxbxLoader, not in cxbxr-emu
+#ifndef CXBXR_EMU_EXPORTS // Only trim Windows symbols in cxbxr-ldr.exe, not in cxbxr-emu.dll (TODO : What about cxbxr.exe and cxbx.exe?)
 #include <SDKDDKVer.h>
 #define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
 #endif // CXBXR_EMU_EXPORTS
