@@ -206,6 +206,10 @@ typedef enum _CxbxMsgDlgIcon {
     CxbxMsgDlgIcon_Unknown
 } CxbxMsgDlgIcon;
 
+int CxbxMessageBox(const char* msg, UINT uType = MB_OK, HWND hWnd = NULL);
+
+void CxbxShowError(const char* msg, HWND hWnd = NULL);
+
 void CxbxPopupMessageEx(CXBXR_MODULE cxbxr_module, LOG_LEVEL level, CxbxMsgDlgIcon icon, const char *message, ...);
 
 #define CxbxPopupMessage(level, icon, fmt, ...) CxbxPopupMessageEx(LOG_PREFIX, level, icon, fmt, ##__VA_ARGS__)

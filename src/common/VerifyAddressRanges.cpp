@@ -31,8 +31,8 @@
 bool VerifyBaseAddr()
 {
 	/*! CXBX_BASE_ADDR is defined as 0x00010000, which is the base address of
-	the CxbxLoader.exe host executable.
-	Set in CxbxLoader.exe Project options, Linker, Advanced, Base Address */
+	the cxbxr-ldr.exe host executable.
+	Set in cxbxr-ldr.exe Project options, Linker, Advanced, Base Address */
 	return ((UINT_PTR)GetModuleHandle(nullptr) == CXBX_BASE_ADDR);
 }
 
