@@ -1617,7 +1617,7 @@ DWORD WINAPI XTL::EMUPATCH(XLaunchNewImageA)
 
 			if (PathFileExists(szDashboardPath))
 			{
-				MessageBox(CxbxKrnl_hEmuParent, "The title is rebooting to dashboard", "Cxbx-Reloaded", 0);
+				(void)CxbxMessageBox("The title is rebooting to dashboard", MB_OK, CxbxKrnl_hEmuParent);
 				lpTitlePath = "C:\\xboxdash.xbe";
 				xboxkrnl::LaunchDataPage->Header.dwLaunchDataType = LDT_FROM_DASHBOARD;
 				// Other options include LDT_NONE, LDT_FROM_DEBUGGER_CMDLINE and LDT_FROM_UPDATE

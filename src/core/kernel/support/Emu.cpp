@@ -231,7 +231,7 @@ bool EmuExceptionBreakpointAsk(LPEXCEPTION_POINTERS e)
 		"  Press Ignore to continue emulation.",
 		EIPToString(e->ContextRecord->Eip).c_str());
 
-	int ret = MessageBox(g_hEmuWindow, buffer, "Cxbx-Reloaded", MB_ICONSTOP | MB_ABORTRETRYIGNORE);
+	int ret = CxbxMessageBox(buffer, MB_ICONSTOP | MB_ABORTRETRYIGNORE, g_hEmuWindow);
 	if (ret == IDABORT)
 	{
 		EmuExceptionExitProcess();
@@ -262,7 +262,7 @@ void EmuExceptionNonBreakpointUnhandledShow(LPEXCEPTION_POINTERS e)
 		"  Press \"Cancel\" to debug.",
 		e->ExceptionRecord->ExceptionCode, EIPToString(e->ContextRecord->Eip).c_str());
 
-	if (MessageBox(g_hEmuWindow, buffer, "Cxbx-Reloaded", MB_ICONSTOP | MB_OKCANCEL) == IDOK)
+	if (CxbxMessageBox(buffer, MB_ICONSTOP | MB_OKCANCEL, g_hEmuWindow) == IDOK)
 	{
 		EmuExceptionExitProcess();
 	}
@@ -427,13 +427,13 @@ int ExitException(LPEXCEPTION_POINTERS e)
 
     fflush(stdout);
 
-    MessageBox(g_hEmuWindow, "Warning: Could not safely terminate process!", "Cxbx-Reloaded", MB_OK);
+    (void)CxbxMessageBox("Warning: Could not safely terminate process!", MB_OK, g_hEmuWindow);
 
     count++;
 
     if(count > 1)
     {
-        MessageBox(g_hEmuWindow, "Warning: Multiple Problems!", "Cxbx-Reloaded", MB_OK);
+        (void)CxbxMessageBox("Warning: Multiple Problems!", MB_OK, g_hEmuWindow);
         return EXCEPTION_CONTINUE_SEARCH;
     }
 

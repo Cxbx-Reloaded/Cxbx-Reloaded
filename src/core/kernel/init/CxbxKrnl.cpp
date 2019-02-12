@@ -495,6 +495,18 @@ HANDLE CxbxRestorePageTablesMemory(char* szFilePath_page_tables)
 
 #pragma optimize("", off)
 
+int CxbxMessageBox(const char* msg, UINT uType, HWND hWnd)
+{
+	return MessageBox(hWnd, msg, /*lpCaption=*/TEXT("Cxbx-Reloaded"), uType);
+}
+
+void CxbxShowError(const char* msg, HWND hWnd)
+{
+	const UINT uType = MB_OK | MB_TOPMOST | MB_SETFOREGROUND | MB_ICONERROR; // Note : MB_ICONERROR == MB_ICONSTOP == MB_ICONHAND
+
+	(void)CxbxMessageBox(msg, uType, hWnd);
+}
+
 void CxbxPopupMessageEx(CXBXR_MODULE cxbxr_module, LOG_LEVEL level, CxbxMsgDlgIcon icon, const char *message, ...)
 {
 	char Buffer[1024];
@@ -527,7 +539,7 @@ void CxbxPopupMessageEx(CXBXR_MODULE cxbxr_module, LOG_LEVEL level, CxbxMsgDlgIc
 
 	EmuLogEx(cxbxr_module, level, "Popup : %s\n", Buffer);
 
-	MessageBox(NULL, Buffer, TEXT("Cxbx-Reloaded"), uType);
+	(void)CxbxMessageBox(Buffer, uType);
 }
 
 void PrintCurrentConfigurationLog()
@@ -922,7 +934,7 @@ bool CreateSettings()
 {
 	g_Settings = new Settings();
 	if (g_Settings == nullptr) {
-		MessageBox(nullptr, szSettings_alloc_error, "Cxbx-Reloaded", MB_OK | MB_ICONERROR);
+		CxbxShowError(szSettings_alloc_error);
 		return false;
 	}
 
@@ -947,9 +959,9 @@ bool HandleFirstLaunch()
 
 		bool bElevated = CxbxIsElevated();
 		if (bElevated && !g_Settings->m_core.allowAdminPrivilege) {
-			int ret = MessageBox(NULL, "Cxbx-Reloaded has detected that it has been launched with Administrator rights.\n"
+			int ret = CxbxMessageBox("Cxbx-Reloaded has detected that it has been launched with Administrator rights.\n"
 				"\nThis is dangerous, as a maliciously modified Xbox titles could take control of your system.\n"
-				"\nAre you sure you want to continue?", "Cxbx-Reloaded", MB_YESNO | MB_ICONWARNING);
+				"\nAre you sure you want to continue?", MB_YESNO | MB_ICONWARNING);
 			if (ret != IDYES) {
 				return false;
 			}
@@ -1073,7 +1085,7 @@ void CxbxKrnlMain(int argc, char* argv[])
 			}
 			if (!isReady) {
 				EmuLog(LOG_LEVEL::WARNING, "GUI process is not ready!");
-				int mbRet = MessageBox(NULL, "GUI process is not ready, do you wish to retry?", TEXT("Cxbx-Reloaded"),
+				int mbRet = CxbxMessageBox("GUI process is not ready, do you wish to retry?",
 										MB_ICONWARNING | MB_RETRYCANCEL | MB_TOPMOST | MB_SETFOREGROUND);
 				if (mbRet == IDRETRY) {
 					continue;

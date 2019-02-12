@@ -48,15 +48,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	// First detect if we are running on WoW64, if not, prevent Cxbx-Reloaded from starting
 	// Cxbx-Relaoded needs access to high memory, only exposed to WoW64.
 	if (!VerifyWow64()) {
-		MessageBox(NULL, "Cxbx-Reloaded can only run under WoW64\nThis means either a 64-bit version of Windows or Wine with a 64-bit prefix", "Cxbx-Reloaded",
-			MB_OK | MB_ICONERROR);
+		CxbxShowError("Cxbx-Reloaded can only run under WoW64\nThis means either a 64-bit version of Windows or Wine with a 64-bit prefix");
 		return EXIT_FAILURE;
 	}
 
 	/*! verify Cxbx.exe is loaded to base address 0x00010000 */
 	if (!VerifyBaseAddr()) {
-		MessageBox(NULL, "Cxbx.exe is not loaded to base address 0x00010000 (which is a requirement for Xbox emulation)", "Cxbx-Reloaded",
-			MB_OK | MB_ICONERROR);
+		CxbxShowError("Cxbx.exe is not loaded to base address 0x00010000 (which is a requirement for Xbox emulation)");
 		return EXIT_FAILURE;
 	}
 
@@ -65,7 +63,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	bool bHasLoadArgument = CheckLoadArgument(__argc, __argv, &guiProcessID);
 
 	/*! initialize shared memory */
-	EmuShared::Init(guiProcessID);
+	if (!EmuShared::Init(guiProcessID)) {
+		CxbxShowError("Could not map shared memory!");
+		return EXIT_FAILURE;
+	}
 
 	if (!HandleFirstLaunch()) {
 		EmuShared::Cleanup();
@@ -121,9 +122,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     }
 
     /*! if an error occurred, notify user */
-    if(MainWindow->HasError())
-    {
-        MessageBox(NULL, MainWindow->GetError().c_str(), "Cxbx-Reloaded", MB_ICONSTOP | MB_OK);
+    if(MainWindow->HasError()) {
+		CxbxShowError(MainWindow->GetError().c_str());
     }
 
     delete MainWindow;
