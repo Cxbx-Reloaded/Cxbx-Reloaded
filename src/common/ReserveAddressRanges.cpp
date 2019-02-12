@@ -25,12 +25,14 @@
 // *
 // ******************************************************************
 
+#include <cstdint> // For uint32_t
+
 #include "AddressRanges.h"
 
 // Reserve an address range up to the extend of what the host allows.
 bool ReserveMemoryRange(int index)
 {
-	unsigned __int32 Start = XboxAddressRanges[index].Start;
+	uint32_t Start = XboxAddressRanges[index].Start;
 	int Size = XboxAddressRanges[index].Size;
 	bool HadAnyFailure = false;
 
