@@ -26,11 +26,11 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "XbSymbolDatabase", "..\..\i
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CxbxVSBC", "CxbxVSBC.vcxproj", "{EFA81330-D410-4232-9A0C-1D8B91B6FFFF}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CxbxLoader", "CxbxLoader\CxbxLoader.vcxproj", "{1A1EAA5A-E14E-4034-8627-6F6B71FCCE06}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cxbxr-ldr", "cxbxr-ldr\cxbxr-ldr.vcxproj", "{1A1EAA5A-E14E-4034-8627-6F6B71FCCE06}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CxbxGUI", "CxbxGUI\CxbxGUI.vcxproj", "{BDB334FB-3DF0-48FD-96C0-DE8B69EFDFAA}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cxbxr", "cxbxr\cxbxr.vcxproj", "{BDB334FB-3DF0-48FD-96C0-DE8B69EFDFAA}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CxbxEmulator", "CxbxEmulator\CxbxEmulator.vcxproj", "{D9DE3C1D-E83F-4FAA-9396-D6D0C71595C5}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cxbxr-emu", "cxbxr-emu\cxbxr-emu.vcxproj", "{D9DE3C1D-E83F-4FAA-9396-D6D0C71595C5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

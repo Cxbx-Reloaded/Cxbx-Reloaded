@@ -15,7 +15,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\src\loader\loader.cpp">
+    <ClCompile Include="..\..\..\src\loader\cxbxr-ldr.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\src\common\ReserveAddressRanges.cpp">

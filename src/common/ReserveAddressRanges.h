@@ -2,18 +2,9 @@
 // PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 // ******************************************************************
 // *
-// *    .,-:::::    .,::      .::::::::.    .,::      .:
-// *  ,;;;'````'    `;;;,  .,;;  ;;;'';;'   `;;;,  .,;;
-// *  [[[             '[[,,[['   [[[__[[\.    '[[,,[['
-// *  $$$              Y$$$P     $$""""Y$$     Y$$$P
-// *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
-// *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
+// *  This file is part of Cxbx-Reloaded.
 // *
-// *   Common->ReserveAddressRanges.h
-// *
-// *  This file is part of the Cxbx project.
-// *
-// *  Cxbx is free software; you can redistribute it
+// *  Cxbx-Reloaded is free software; you can redistribute it
 // *  and/or modify it under the terms of the GNU General Public
 // *  License as published by the Free Software Foundation; either
 // *  version 2 of the license, or (at your option) any later version.
