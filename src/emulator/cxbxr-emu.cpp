@@ -124,42 +124,53 @@ DWORD WINAPI Emulate(int system)
 {
 	FUNC_EXPORTS
 
-	/*! Verify our host executable, CxbxLoader.exe, is loaded to base address 0x00010000 */
+	/*! Verify our host executable, cxbxr-ldr.exe, is loaded to base address 0x00010000 */
 	if (!VerifyBaseAddr()) {
-		MessageBox(NULL, "CxbxLoader.exe was not loaded to base address 0x00010000 (which is a requirement for Xbox emulation)", "Cxbx-Reloaded",
-			MB_OK | MB_ICONERROR);
+		CxbxShowError("cxbx-ldr.exe was not loaded to base address 0x00010000 (which is a requirement for Xbox emulation)");
 		return EXIT_FAILURE;
 	}
 
 	// Before doing anything else that might cause memory fragmentation,
 	// verify that we still got control over all ranges the loader reserved
 	if (!VerifyAddressRanges(system)) {
-		MessageBox(NULL, "Failed to claim required address ranges (which is a requirement for Xbox emulation)", "Cxbx-Reloaded",
-			MB_OK | MB_ICONERROR);
+		CxbxShowError("Failed to claim required address ranges (which is a requirement for Xbox emulation)");
 		return EXIT_FAILURE;
 	}
 
 	LPSTR CommandLine = GetCommandLine();
-	int argc;
+	if (!CommandLine) {
+		CxbxShowError("Couldn't retrieve command line!");
+		return EXIT_FAILURE;
+	}
+
+	int argc = 0;
 	PCHAR *argv = CommandLineToArgvA(CommandLine, &argc);
+	if (!argv) {
+		CxbxShowError("Couldn't parse command line!");
+		return EXIT_FAILURE;
+	}
 
 	DWORD guiProcessID = 0;
 	bool bHasLoadArgument = CheckLoadArgument(argc, argv, &guiProcessID);
+	if (!bHasLoadArgument) {
+		CxbxShowError("No /load argument on command line!");
+		return EXIT_FAILURE;
+	}
 
 	/*! initialize shared memory */
 	if (!EmuShared::Init(guiProcessID)) {
-		MessageBox(NULL, "Could not map shared memory!", "Cxbx-Reloaded", MB_OK | MB_ICONERROR);
+		CxbxShowError("Could not map shared memory!");
 		LocalFree(argv);
 		return EXIT_FAILURE;
 	}
 
-	HandleFirstLaunch();
-
-	if (bHasLoadArgument) {
-		CxbxKrnlMain(argc, argv);
-	} else {
-		// TODO : Enter "2nd GUI" mode here, as done in Cxbx's WinMain() - but how?
+	if (!HandleFirstLaunch()) {
+		CxbxShowError("First launch failed!");
+		EmuShared::Cleanup();
+		return EXIT_FAILURE;
 	}
+
+	CxbxKrnlMain(argc, argv);
 
 	LocalFree(argv);
 
@@ -175,4 +186,3 @@ DWORD WINAPI Emulate(int system)
 	// This line will never be reached:
 	return EXIT_FAILURE;
 }
-
