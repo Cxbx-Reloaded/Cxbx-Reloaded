@@ -26,6 +26,8 @@
 // ******************************************************************
 #pragma once
 
+#include <cstdint> // For uint32_t
+
 #ifndef CXBXR_EMU_EXPORTS // Only trim Windows symbols in cxbxr-ldr.exe, not in cxbxr-emu.dll (TODO : What about cxbxr.exe and cxbx.exe?)
 #include <SDKDDKVer.h>
 #define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
@@ -49,9 +51,9 @@ const int PAGE_SIZE = KB(4);
   static_cast<size_t>(!(sizeof(a) % sizeof(*(a)))))
 
 const struct {
-	unsigned __int32 Start;
+	uint32_t Start;
 #ifdef DEBUG
-	unsigned __int32 End; // TODO : Add validation that this End corresponds to specified Size
+	uint32_t End; // TODO : Add validation that this End corresponds to specified Size
 #endif
 	int Size;
 	DWORD InitialMemoryProtection; // Memory page protection, for use by VirtualAlloc
@@ -61,7 +63,7 @@ const struct {
 	#define PROT_XRW PAGE_EXECUTE_READWRITE
 	#define PROT_NAC PAGE_NOACCESS
 
-	unsigned int RangeFlags;
+	int RangeFlags;
 	// Range flags (used for system selection and optional marker)
 	#define MAY_FAIL       (1 << 0) // Optional (may fail address range reservation)
 	#define SYSTEM_XBOX    (1 << 1)
@@ -102,8 +104,11 @@ const struct {
 	RANGE_ENTRY(0xFF400000, 0xFF7FFFFF, MB(  4), PROT_NAC, SYSTEM_ALL              , "DeviceFlash_b (Flash mirror 2)"),
 	RANGE_ENTRY(0xFF800000, 0xFFBFFFFF, MB(  4), PROT_NAC, SYSTEM_ALL              , "DeviceFlash_c (Flash mirror 3)"),
 	RANGE_ENTRY(0xFFC00000, 0xFFFFFFFF, MB(  4), PROT_NAC, SYSTEM_ALL    | MAY_FAIL, "DeviceFlash_d (Flash mirror 4) Optional (will probably fail reservation, which is acceptable - the 3 other mirrors work just fine"),
+	/* This region is only relevant if we were running the original Xbox boot sequence (including MCPX),
+	   so it's completely redundant to use it: By the time the Kernel has started execution, this region is disabled
+	   and cannot be re-enabled. Xbox software (and the kernel) have no access to this region whatsoever once 2BL has completed.
 	RANGE_ENTRY(0xFFFFFE00, 0xFFFFFFFF,    512 , PROT_NAC, SYSTEM_RETAIL | MAY_FAIL, "DeviceMCPX    (not Chihiro, Xbox - if enabled) Optional (can safely be ignored)"),
-
+	*/
 	#undef RANGE_ENTRY
 };
 
