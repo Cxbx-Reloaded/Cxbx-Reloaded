@@ -29,6 +29,7 @@
 
 #include "SimpleIni.h"
 #include "input\InputDevice.h"
+#include "common\util\CxbxUtil.h"
 #include <string>
 #include <array>
 

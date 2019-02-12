@@ -3,7 +3,7 @@
 #include "common\util\CxbxUtil.h"
 #include "..\..\gui\ResCxbx.h"
 
-static int button_ctrl_id[] = {
+static int button_ctrl_id[CTRL_NUM_BUTTONS] = {
 	IDC_SET_DPAD_UP,
 	IDC_SET_DPAD_DOWN,
 	IDC_SET_DPAD_LEFT,
@@ -32,7 +32,7 @@ static int button_ctrl_id[] = {
 	IDC_SET_RMOTOR,
 };
 
-static const char* button_names[] = {
+const char* button_ctrl_names[CTRL_NUM_BUTTONS] = {
 	"D Pad Up",
 	"D Pad Down",
 	"D Pad Left",
@@ -61,11 +61,8 @@ static const char* button_names[] = {
 	"R Motor",
 };
 
-static_assert((ARRAY_SIZE(button_ctrl_id) == ARRAY_SIZE(button_names)),
-	"button_ctrl_id and button_names have different sizes!");
 
-
-EmuDevice::EmuDevice(int type, HWND hwnd)
+EmuDevice::EmuDevice(unsigned int type, HWND hwnd)
 {
 	switch (type)
 	{
@@ -73,7 +70,7 @@ EmuDevice::EmuDevice(int type, HWND hwnd)
 			m_name = "MS Controller Duke";
 			m_hwnd = hwnd;
 			for (int i = 0; i < ARRAY_SIZE(button_ctrl_id); i++) {
-				m_buttons.push_back(new Button(button_names[i], button_ctrl_id[i], i, hwnd));
+				m_buttons.push_back(new Button(button_ctrl_names[i], button_ctrl_id[i], i, hwnd));
 			}
 		}
 		break;
@@ -90,7 +87,7 @@ EmuDevice::~EmuDevice()
 	}
 }
 
-Button* EmuDevice::FindButton(int id)
+Button* EmuDevice::FindButtonById(int id)
 {
 	auto it = std::find_if(m_buttons.begin(), m_buttons.end(), [&id](const auto button) {
 		if (button->GetId() == id) {
@@ -100,4 +97,9 @@ Button* EmuDevice::FindButton(int id)
 	});
 	assert(it != m_buttons.end());
 	return *it;
+}
+
+Button* EmuDevice::FindButtonByIndex(int index)
+{
+	return m_buttons[index];
 }

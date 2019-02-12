@@ -29,7 +29,8 @@
 #include "Settings.hpp"
 #include "core\kernel\support\Emu.h"
 #include "EmuShared.h"
-#include <experimental/filesystem>
+#include <experimental\filesystem>
+#include "common\input\EmuDevice.h"
 
 // TODO: Implement Qt support when real CPU emulation is available.
 #ifndef QT_VERSION // NOTE: Non-Qt will be using current directory for data
@@ -692,6 +693,14 @@ bool Settings::Save(std::string file_path)
 
 	// ==== Input Profile Begin ====
 
+	std::array<std::vector<std::string>, to_underlying(XBOX_INPUT_DEVICE::DEVICE_MAX)> control_names;
+	for (int i = 0; i < CTRL_NUM_BUTTONS; i++) {
+		char control_name[30];
+		std::sprintf(control_name, sect_input_profiles.control, button_ctrl_names[i]);
+		control_names[0].push_back(control_name);
+	}
+	// TODO: add the control names of the other devices
+
 	for (uint i = 0; i < to_underlying(XBOX_INPUT_DEVICE::DEVICE_MAX); i++) {
 		size_t vec_size = m_input_profiles[i].size();
 		if (vec_size == 0) {
@@ -707,9 +716,10 @@ bool Settings::Save(std::string file_path)
 			if (vec_control_size == 0) {
 				continue;
 			}
-			m_si.SetValue(current_section.c_str(), sect_input_profiles.control, m_input_profiles[i][vec_index].ControlList[0].c_str(), nullptr, true);
+			m_si.SetValue(current_section.c_str(), control_names[i][0].c_str(), m_input_profiles[i][vec_index].ControlList[0].c_str(), nullptr, true);
 			for (uint vec_control_index = 1; vec_control_index < vec_control_size; vec_index++) {
-				m_si.SetValue(current_section.c_str(), sect_input_profiles.control, m_input_profiles[i][vec_index].ControlList[vec_control_index].c_str(), nullptr, false);
+				m_si.SetValue(current_section.c_str(), control_names[i][vec_control_index].c_str(),
+					m_input_profiles[i][vec_index].ControlList[vec_control_index].c_str(), nullptr, false);
 			}
 		}
 	}

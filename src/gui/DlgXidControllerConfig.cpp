@@ -35,15 +35,11 @@
 // ******************************************************************
 
 #include "Windows.h"
-#include "DlgXidControllerConfig.h"
 #include "ResCxbx.h"
 #include "common\util\CxbxUtil.h"
-#include "input\InputManager.h"
+#include "input\InputWindow.h"
 
-
-// Windows dialog procedure for the Duke/S controller menu
-INT_PTR CALLBACK DlgXidControllerConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
-int g_ControllerType = to_underlying(XBOX_INPUT_DEVICE::DEVICE_INVALID);
+#define INPUT_TIMEOUT 5000
 
 
 INT_PTR CALLBACK DlgXidControllerConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -52,57 +48,27 @@ INT_PTR CALLBACK DlgXidControllerConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wPar
 	{
 		case WM_INITDIALOG:
 		{
-			// Ensure that LPARAM is a valid xbox port
-			assert(lParam < 5 && lParam > 0);
+			int port_num = lParam & 7;
+			unsigned int dev_type = lParam >> 8;
+
+			// Ensure that port_num is a valid xbox port
+			assert(port_num < 5 && port_num > 0);
 
 			// Ensure that the controller type is valid
-			assert(g_ControllerType == XBOX_INPUT_DEVICE::MS_CONTROLLER_DUKE ||
-				g_ControllerType == XBOX_INPUT_DEVICE::MS_CONTROLLER_S);
+			assert(dev_type == XBOX_INPUT_DEVICE::MS_CONTROLLER_DUKE ||
+				dev_type == XBOX_INPUT_DEVICE::MS_CONTROLLER_S);
 
-			// Set window icon
-			SetClassLong(hWndDlg, GCL_HICON, (LONG)LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_CXBX)));
+			g_InputWindow = new InputWindow;
+			g_InputWindow->Initialize(hWndDlg, port_num, dev_type);
 
-			// Set window title
-			std::string title("Xbox ");
-			switch (g_ControllerType)
-			{
-				case to_underlying(XBOX_INPUT_DEVICE::MS_CONTROLLER_DUKE): {
-					title += "Controller Duke at port ";
-				}
-				break;
 
-				case to_underlying(XBOX_INPUT_DEVICE::MS_CONTROLLER_S): {
-					title += "Controller S at port ";
-				}
-				break;
-
-				default:
-					break;
-			}
-			SendMessage(hWndDlg, WM_SETTEXT, 0,
-				reinterpret_cast<LPARAM>((title + std::to_string(static_cast<long>(lParam))).c_str()));
-
-			// construct emu device
-			g_InputDeviceManager.ConstructEmuDevice(g_ControllerType, hWndDlg);
-
-			// Enumerate devices
-			g_InputDeviceManager.RefreshDevices();
-
-			// Populate device list
-			HWND hHandle = GetDlgItem(hWndDlg, IDC_DEVICE_LIST);
-			std::vector<std::string> dev_list = g_InputDeviceManager.GetDeviceList();
-			for (const auto& str : dev_list) {
-				SendMessage(hHandle, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(str.c_str()));
-			}
-			if (dev_list.empty()) {
-				SendMessage(hHandle, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>("No devices detected"));
-			}
-			SendMessage(hHandle, CB_SETCURSEL, 0, 0);
 		}
 		break;
 
 		case WM_CLOSE:
 		{
+			delete g_InputWindow;
+			g_InputWindow = nullptr;
 			EndDialog(hWndDlg, wParam);
 		}
 		break;

@@ -35,11 +35,11 @@
 // ******************************************************************
 
 #include "windows.h"
-#include "DlgInputConfig.h"
 #include "DlgXidControllerConfig.h"
 #include "ResCxbx.h"
 #include "input\InputManager.h"
 #include "Logging.h"
+#include "Settings.hpp"
 
 
 // Generic function called from the gui to display the input menu
@@ -72,11 +72,15 @@ INT_PTR CALLBACK DlgInputConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPAR
 					LRESULT index = SendMessage(hHandle, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(str));
 					SendMessage(hHandle, CB_SETITEMDATA, index,
 						to_underlying(XBOX_INPUT_DEVICE::DEVICE_INVALID) + j);
+					if (g_Settings->m_input[i].Type == to_underlying(XBOX_INPUT_DEVICE::DEVICE_INVALID) + j) {
+						SendMessage(hHandle, CB_SETCURSEL, index, 0);
+						if (g_Settings->m_input[i].Type == to_underlying(XBOX_INPUT_DEVICE::DEVICE_INVALID)) {
+							EnableWindow(GetDlgItem(hWndDlg, IDC_CONFIGURE_PORT1 + i), FALSE);
+						}
+					}
 					j++;
 				}
 				j = 0;
-				SendMessage(hHandle, CB_SETCURSEL, 0, 0); // TODO: hardcoded for now
-				EnableWindow(GetDlgItem(hWndDlg, IDC_CONFIGURE_PORT1 + i), FALSE);
 			}
 		}
 		break;
@@ -99,12 +103,13 @@ INT_PTR CALLBACK DlgInputConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPAR
 				{
 					if (HIWORD(wParam) == BN_CLICKED) {
 						HWND hHandle = GetDlgItem(hWndDlg, LOWORD(wParam) - 4);
-						g_ControllerType = SendMessage(hHandle, CB_GETITEMDATA, SendMessage(hHandle, CB_GETCURSEL, 0, 0), 0);
-						switch (g_ControllerType)
+						unsigned int DeviceType = SendMessage(hHandle, CB_GETITEMDATA, SendMessage(hHandle, CB_GETCURSEL, 0, 0), 0);
+						switch (DeviceType)
 						{
 							case to_underlying(XBOX_INPUT_DEVICE::MS_CONTROLLER_DUKE):
 							{
-								DialogBoxParam(GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_XID_DUKE_CFG), hWndDlg, DlgXidControllerConfigProc, LOWORD(wParam) & 7);
+								DialogBoxParam(GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_XID_DUKE_CFG), hWndDlg, DlgXidControllerConfigProc,
+									(DeviceType << 8) | (LOWORD(wParam) & 7));
 							}
 							break;
 
@@ -121,14 +126,15 @@ INT_PTR CALLBACK DlgInputConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPAR
 				case IDC_DEVICE_PORT4:
 				{
 					if (HIWORD(wParam) == CBN_SELCHANGE) {
-						if (SendMessage(reinterpret_cast<HWND>(lParam), CB_GETITEMDATA,
-							SendMessage(reinterpret_cast<HWND>(lParam), CB_GETCURSEL, 0, 0), 0)
-							== to_underlying(XBOX_INPUT_DEVICE::DEVICE_INVALID)) {
+						LRESULT dev_type = SendMessage(reinterpret_cast<HWND>(lParam), CB_GETITEMDATA,
+							SendMessage(reinterpret_cast<HWND>(lParam), CB_GETCURSEL, 0, 0), 0);
+						if (dev_type == to_underlying(XBOX_INPUT_DEVICE::DEVICE_INVALID)) {
 							EnableWindow(GetDlgItem(hWndDlg, LOWORD(wParam) + 4), FALSE);
 						}
 						else {
 							EnableWindow(GetDlgItem(hWndDlg, LOWORD(wParam) + 4), TRUE);
 						}
+						g_Settings->m_input[(LOWORD(wParam) + 4) & 7].Type = dev_type;
 					}
 				}
 				break;

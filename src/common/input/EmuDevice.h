@@ -2,15 +2,20 @@
 
 #include "Button.h"
 
+#define CTRL_NUM_BUTTONS 26
+
+extern const char* button_ctrl_names[CTRL_NUM_BUTTONS];
+
 
 /* Represents the xbox device currently being configured in the gui */
 class EmuDevice
 {
 	public:
-		EmuDevice(int type, HWND hwnd);
+		EmuDevice(unsigned int type, HWND hwnd);
 		~EmuDevice();
 		std::string GetName() { return m_name; }
-		Button* FindButton(int id);
+		Button* FindButtonById(int id);
+		Button* FindButtonByIndex(int index);
 
 
 	private:

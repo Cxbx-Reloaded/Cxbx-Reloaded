@@ -37,4 +37,3 @@
 #pragma once
 
 INT_PTR CALLBACK DlgXidControllerConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
-extern int g_ControllerType;

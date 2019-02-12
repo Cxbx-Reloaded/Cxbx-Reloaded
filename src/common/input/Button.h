@@ -10,12 +10,12 @@ class Button
 	public:
 		Button(const char* name, int id, int index, HWND hwnd) : m_name(name), m_id(id),
 			m_index(index), m_button_hwnd(GetDlgItem(hwnd, m_id)) {};
-		void EnableControl(bool enable);
-		void UpdateText(const char* text);
-		void GetText(char* const text, size_t size);
-		std::string GetName() { return m_name; }
-		int GetId() { return m_id; }
-		int GetIndex() { return m_index; }
+		void EnableControl(bool enable) const;
+		void UpdateText(const char* text) const;
+		void GetText(char* const text, size_t size) const;
+		std::string GetName() const { return m_name; }
+		int GetId() const { return m_id; }
+		int GetIndex() const { return m_index; }
 
 
 	private:
