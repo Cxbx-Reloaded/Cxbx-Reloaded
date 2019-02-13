@@ -3906,6 +3906,8 @@ extern uint32_t HLE_read_NV2A_pgraph_register(const int reg); // Declared in Pus
 extern void HLE_write_NV2A_vertex_attribute_slot(unsigned slot, uint32_t parameter); // Declared in PushBuffer.cpp
 extern uint32_t HLE_read_NV2A_vertex_attribute_slot(unsigned VertexSlot); // Declared in PushBuffer.cpp
 
+extern NV2ADevice* g_NV2A;
+
 // ******************************************************************
 // * patch: D3DDevice_SetVertexData4f_16
 // ******************************************************************
@@ -7221,6 +7223,16 @@ void XTL::CxbxUpdateNativeD3DResources()
 	// If Pixel Shaders are not disabled, process them
 	if (!g_DisablePixelShaders) {
 		XTL::DxbxUpdateActivePixelShader();
+	}
+
+	// Some titles set Vertex Shader constants directly via pushbuffers rather than through D3D
+	// We handle that case by updating any constants that have the dirty flag set on the nv2a.
+	auto nv2a = g_NV2A->GetDeviceState();
+	for(int i = 0; i < 192; i++) {
+		if (nv2a->pgraph.vsh_constants_dirty[i]) {
+			g_pD3DDevice->SetVertexShaderConstantF(i, (float*)&nv2a->pgraph.vsh_constants[i][0], 1);
+			nv2a->pgraph.vsh_constants_dirty[i] = false;
+		}
 	}
 
     XTL::EmuUpdateDeferredStates();
