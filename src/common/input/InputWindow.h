@@ -13,6 +13,7 @@ class InputWindow
 		void UpdateDeviceList();
 		void BindButton(int ControlID, std::string DeviceName, int ms);
 		void BindXInput();
+		void ClearBindings();
 		void LoadProfile(std::string& name);
 		void SaveProfile(std::string& name);
 		void DeleteProfile(std::string& name);

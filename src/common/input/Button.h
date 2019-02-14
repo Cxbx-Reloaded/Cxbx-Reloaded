@@ -13,6 +13,7 @@ class Button
 		void EnableButton(bool enable) const;
 		void UpdateText(const char* text) const;
 		void UpdateText() const;
+		void ClearText() const;
 		void GetText(char* const text, size_t size) const;
 		std::string GetName() const { return m_name; }
 		int GetId() const { return m_id; }

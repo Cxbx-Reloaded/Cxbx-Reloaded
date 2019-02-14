@@ -17,6 +17,7 @@ class EmuDevice
 		Button* FindButtonById(int id);
 		Button* FindButtonByIndex(int index);
 		void BindXInput();
+		void ClearButtons();
 
 
 	private:

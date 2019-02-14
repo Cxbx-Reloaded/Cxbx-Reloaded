@@ -144,6 +144,11 @@ void InputWindow::BindXInput()
 	}
 }
 
+void InputWindow::ClearBindings()
+{
+	m_DeviceConfig->ClearButtons();
+}
+
 InputWindow::ProfileIt InputWindow::FindProfile(std::string& name)
 {
 	auto it = std::find_if(g_Settings->m_input_profiles[m_dev_type].begin(),

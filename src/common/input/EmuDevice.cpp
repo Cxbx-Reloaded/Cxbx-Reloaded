@@ -111,3 +111,10 @@ void EmuDevice::BindXInput()
 		button->UpdateText();
 	});
 }
+
+void EmuDevice::ClearButtons()
+{
+	std::for_each(m_buttons.begin(), m_buttons.end(), [](const auto button) {
+		button->ClearText();
+	});
+}
