@@ -1,11 +1,12 @@
 #include "InputWindow.h"
 #include "..\..\gui\ResCxbx.h"
 #include <future>
+#include "CommCtrl.h" // for the tooltip control
 
 
-InputWindow* g_InputWindow;
+InputWindow* g_InputWindow = nullptr;
 static int dev_num_buttons[to_underlying(XBOX_INPUT_DEVICE::DEVICE_MAX)] = {
-	CTRL_NUM_BUTTONS,
+	XBOX_CTRL_NUM_BUTTONS,
 	0,
 	0,
 	0,
@@ -15,29 +16,29 @@ static int dev_num_buttons[to_underlying(XBOX_INPUT_DEVICE::DEVICE_MAX)] = {
 };
 
 
-void InputWindow::Initialize(HWND hwnd, int port_num, unsigned int dev_type)
+void InputWindow::Initialize(HWND hwnd, int port_num, int dev_type)
 {
 	// Save window/device specific variables
 	m_hwnd_window = hwnd;
 	m_hwnd_device_list = GetDlgItem(m_hwnd_window, IDC_DEVICE_LIST);
 	m_dev_type = dev_type;
 	m_max_num_buttons = dev_num_buttons[dev_type];
-	m_port_num = port_num;
+	m_port_num = port_num - 1;
 
 	// Set window icon
 	SetClassLong(m_hwnd_window, GCL_HICON, (LONG)LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_CXBX)));
 
 	// Set window title
-	std::string title("Xbox ");
+	std::string title;
 	switch (m_dev_type)
 	{
 		case to_underlying(XBOX_INPUT_DEVICE::MS_CONTROLLER_DUKE): {
-			title += "Controller Duke at port ";
+			title += "Xbox Controller Duke at port ";
 		}
 		break;
 
 		case to_underlying(XBOX_INPUT_DEVICE::MS_CONTROLLER_S): {
-			title += "Controller S at port ";
+			title += "Xbox Controller S at port ";
 		}
 		break;
 
@@ -47,7 +48,7 @@ void InputWindow::Initialize(HWND hwnd, int port_num, unsigned int dev_type)
 	SendMessage(m_hwnd_window, WM_SETTEXT, 0,
 		reinterpret_cast<LPARAM>((title + std::to_string(port_num)).c_str()));
 
-	SendMessage(m_hwnd_device_list, EM_SETLIMITTEXT, 50, 0);
+	//SendMessage(m_hwnd_device_list, CB_LIMITTEXT, 50, 0); // maybe it's not needed
 
 	// construct emu device
 	m_DeviceConfig = new EmuDevice(m_dev_type, m_hwnd_window);
@@ -57,6 +58,12 @@ void InputWindow::Initialize(HWND hwnd, int port_num, unsigned int dev_type)
 
 	// Load currently saved profile for this port/device type
 	LoadDefaultProfile();
+}
+
+InputWindow::~InputWindow()
+{
+	delete m_DeviceConfig;
+	m_DeviceConfig = nullptr;
 }
 
 void InputWindow::UpdateDeviceList()
@@ -128,6 +135,15 @@ void InputWindow::BindButton(int ControlID, std::string DeviceName, int ms)
 	}
 }
 
+void InputWindow::BindXInput()
+{
+	char device_name[50];
+	SendMessage(m_hwnd_device_list, WM_GETTEXT, sizeof(device_name), reinterpret_cast<LPARAM>(device_name));
+	if (std::strncmp(device_name, "XInput", std::strlen("XInput")) == 0) {
+		m_DeviceConfig->BindXInput();
+	}
+}
+
 InputWindow::ProfileIt InputWindow::FindProfile(std::string& name)
 {
 	auto it = std::find_if(g_Settings->m_input_profiles[m_dev_type].begin(),
@@ -140,13 +156,12 @@ InputWindow::ProfileIt InputWindow::FindProfile(std::string& name)
 void InputWindow::LoadProfile(std::string& name)
 {
 	ProfileIt profile = FindProfile(name);
-	LRESULT dev_str_index;
 	if (profile == g_Settings->m_input_profiles[m_dev_type].end()) {
 		return;
 	}
-	dev_str_index = SendMessage(m_hwnd_device_list, CB_FINDSTRINGEXACT, 1, reinterpret_cast<LPARAM>(profile->DeviceName.c_str));
+	LRESULT dev_str_index = SendMessage(m_hwnd_device_list, CB_FINDSTRINGEXACT, 1, reinterpret_cast<LPARAM>(profile->DeviceName.c_str()));
 	if (dev_str_index == CB_ERR) {
-		SendMessage(m_hwnd_device_list, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(profile->DeviceName.c_str));
+		SendMessage(m_hwnd_device_list, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(profile->DeviceName.c_str()));
 	}
 	else {
 		SendMessage(m_hwnd_device_list, CB_SETCURSEL, dev_str_index, 0);
@@ -163,9 +178,9 @@ void InputWindow::SaveProfile(std::string& name)
 	if (name == std::string()) {
 		return;
 	}
-	std::string device_name = reinterpret_cast<const char*>
-		(SendMessage(m_hwnd_device_list, CB_GETITEMDATA, SendMessage(m_hwnd_device_list, CB_GETCURSEL, 0, 0), 0));
-	if (device_name == "No devices detected") {
+	char device_name[50];
+	SendMessage(m_hwnd_device_list, WM_GETTEXT, sizeof(device_name), reinterpret_cast<LPARAM>(device_name));
+	if (std::strncmp(device_name, "No devices detected", std::strlen("No devices detected")) == 0) {
 		return;
 	}
 	DeleteProfile(name);

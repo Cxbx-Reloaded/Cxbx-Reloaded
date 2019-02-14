@@ -49,19 +49,17 @@ INT_PTR CALLBACK DlgXidControllerConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wPar
 		case WM_INITDIALOG:
 		{
 			int port_num = lParam & 7;
-			unsigned int dev_type = lParam >> 8;
+			int dev_type = lParam >> 8;
 
 			// Ensure that port_num is a valid xbox port
 			assert(port_num < 5 && port_num > 0);
 
 			// Ensure that the controller type is valid
-			assert(dev_type == XBOX_INPUT_DEVICE::MS_CONTROLLER_DUKE ||
-				dev_type == XBOX_INPUT_DEVICE::MS_CONTROLLER_S);
+			assert(dev_type == to_underlying(XBOX_INPUT_DEVICE::MS_CONTROLLER_DUKE) ||
+				dev_type == to_underlying(XBOX_INPUT_DEVICE::MS_CONTROLLER_S));
 
 			g_InputWindow = new InputWindow;
 			g_InputWindow->Initialize(hWndDlg, port_num, dev_type);
-
-
 		}
 		break;
 
@@ -72,6 +70,21 @@ INT_PTR CALLBACK DlgXidControllerConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wPar
 			EndDialog(hWndDlg, wParam);
 		}
 		break;
+
+		case WM_COMMAND:
+		{
+			switch (LOWORD(wParam))
+			{
+				case IDC_XID_PROFILE_SAVE: {
+					char name[50];
+					SendMessage(GetDlgItem(hWndDlg, IDC_XID_PROFILE_NAME), WM_GETTEXT,
+						sizeof(name), reinterpret_cast<LPARAM>(name));
+					g_InputWindow->SaveProfile(std::string(name));
+				}
+			}
+		}
+		break;
+
 	}
 	return FALSE;
 }

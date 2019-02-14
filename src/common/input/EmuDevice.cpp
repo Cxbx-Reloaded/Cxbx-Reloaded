@@ -3,7 +3,7 @@
 #include "common\util\CxbxUtil.h"
 #include "..\..\gui\ResCxbx.h"
 
-static int button_ctrl_id[CTRL_NUM_BUTTONS] = {
+static int button_xbox_ctrl_id[XBOX_CTRL_NUM_BUTTONS] = {
 	IDC_SET_DPAD_UP,
 	IDC_SET_DPAD_DOWN,
 	IDC_SET_DPAD_LEFT,
@@ -32,45 +32,46 @@ static int button_ctrl_id[CTRL_NUM_BUTTONS] = {
 	IDC_SET_RMOTOR,
 };
 
-const char* button_ctrl_names[CTRL_NUM_BUTTONS] = {
-	"D Pad Up",
-	"D Pad Down",
-	"D Pad Left",
-	"D Pad Right",
-	"Start",
-	"Back",
-	"L Thumb",
-	"R Thumb",
-	"A",
-	"B",
-	"X",
-	"Y",
-	"Black",
-	"White",
-	"L Trigger",
-	"R Trigger",
-	"Left Axis X+",
-	"Left Axis X-",
-	"Left Axis Y+",
-	"Left Axis Y-",
-	"Right Axis X+",
-	"Right Axis X-",
-	"Right Axis Y+",
-	"Right Axis Y-",
-	"L Motor",
-	"R Motor",
+const char* button_xbox_ctrl_names[XBOX_CTRL_NUM_BUTTONS][2] = {
+	"D Pad Up",      "Pad N",
+	"D Pad Down",    "Pad S",
+	"D Pad Left",    "Pad W",
+	"D Pad Right",   "Pad E",
+	"Start",         "Start",
+	"Back",          "Back",
+	"L Thumb",       "Thumb L",
+	"R Thumb",       "Thumb R",
+	"A",             "Button A",
+	"B",             "Button B",
+	"X",             "Button X",
+	"Y",             "Button Y",
+	"Black",         "Shoulder R",
+	"White",         "Shoulder L",
+	"L Trigger",     "Trigger L",
+	"R Trigger",     "Trigger R"
+	"Left Axis X+",  "Left X+",
+	"Left Axis X-",  "Left X-",
+	"Left Axis Y+",  "Left Y+",
+	"Left Axis Y-",  "Left Y-",
+	"Right Axis X+", "Right X+",
+	"Right Axis X-", "Right X-",
+	"Right Axis Y+", "Right Y+",
+	"Right Axis Y-", "Right Y-",
+	"L Motor",       "Motor L",
+	"R Motor",       "Motor R",
 };
 
 
-EmuDevice::EmuDevice(unsigned int type, HWND hwnd)
+EmuDevice::EmuDevice(int type, HWND hwnd)
 {
 	switch (type)
 	{
 		case to_underlying(XBOX_INPUT_DEVICE::MS_CONTROLLER_DUKE): {
 			m_name = "MS Controller Duke";
 			m_hwnd = hwnd;
-			for (int i = 0; i < ARRAY_SIZE(button_ctrl_id); i++) {
-				m_buttons.push_back(new Button(button_ctrl_names[i], button_ctrl_id[i], i, hwnd));
+			for (int i = 0; i < ARRAY_SIZE(button_xbox_ctrl_id); i++) {
+				m_buttons.push_back(new Button(button_xbox_ctrl_names[i][0], button_xbox_ctrl_names[i][1],
+					button_xbox_ctrl_id[i], i, hwnd));
 			}
 		}
 		break;
@@ -102,4 +103,11 @@ Button* EmuDevice::FindButtonById(int id)
 Button* EmuDevice::FindButtonByIndex(int index)
 {
 	return m_buttons[index];
+}
+
+void EmuDevice::BindXInput()
+{
+	std::for_each(m_buttons.begin(), m_buttons.end(), [](const auto button) {
+		button->UpdateText();
+	});
 }

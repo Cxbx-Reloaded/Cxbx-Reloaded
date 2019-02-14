@@ -512,7 +512,7 @@ bool Settings::LoadConfig()
 
 	for (int port_num = 0; port_num < 4; port_num++) {
 		std::string current_section = std::string(section_input) + std::to_string(port_num);
-		uint ret = m_si.GetLongValue(current_section.c_str(), sect_input.type, -1);
+		int ret = m_si.GetLongValue(current_section.c_str(), sect_input.type, -1);
 		if (ret == -1) {
 			m_input[port_num].Type = to_underlying(XBOX_INPUT_DEVICE::DEVICE_INVALID);
 			continue;
@@ -585,7 +585,7 @@ bool Settings::Save(std::string file_path)
 
 	// ==== Core Begin =============
 
-	m_si.SetLongValue(section_core, sect_core_keys.Revision, m_core.Revision, nullptr, true);
+	m_si.SetLongValue(section_core, sect_core_keys.Revision, m_core.Revision, nullptr, true, true);
 	m_si.SetLongValue(section_core, sect_core_keys.FlagsLLE, m_core.FlagsLLE, nullptr, true, true);
 	m_si.SetLongValue(section_core, sect_core_keys.KrnlDebugMode, m_core.KrnlDebugMode, nullptr, true, true);
 	m_si.SetValue(section_core, sect_core_keys.KrnlDebugLogFile, m_core.szKrnlDebug, nullptr, true);
@@ -694,14 +694,14 @@ bool Settings::Save(std::string file_path)
 	// ==== Input Profile Begin ====
 
 	std::array<std::vector<std::string>, to_underlying(XBOX_INPUT_DEVICE::DEVICE_MAX)> control_names;
-	for (int i = 0; i < CTRL_NUM_BUTTONS; i++) {
+	for (int i = 0; i < XBOX_CTRL_NUM_BUTTONS; i++) {
 		char control_name[30];
-		std::sprintf(control_name, sect_input_profiles.control, button_ctrl_names[i]);
+		std::sprintf(control_name, sect_input_profiles.control, button_xbox_ctrl_names[i][0]);
 		control_names[0].push_back(control_name);
 	}
 	// TODO: add the control names of the other devices
 
-	for (uint i = 0; i < to_underlying(XBOX_INPUT_DEVICE::DEVICE_MAX); i++) {
+	for (int i = 0; i < to_underlying(XBOX_INPUT_DEVICE::DEVICE_MAX); i++) {
 		size_t vec_size = m_input_profiles[i].size();
 		if (vec_size == 0) {
 			continue;

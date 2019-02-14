@@ -204,14 +204,14 @@ public:
 	} m_controller_port;
 
 	struct s_input {
-		uint Type;
+		int Type;
 		std::string DeviceName;
 		std::string ProfileName;
 	};
 	std::array<s_input, 4> m_input;
 
 	struct s_input_profiles {
-		uint Type;
+		int Type;
 		std::string ProfileName;
 		std::string DeviceName;
 		std::vector<std::string> ControlList;

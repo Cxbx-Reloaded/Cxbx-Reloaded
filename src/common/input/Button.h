@@ -8,10 +8,11 @@
 class Button
 {
 	public:
-		Button(const char* name, int id, int index, HWND hwnd) : m_name(name), m_id(id),
-			m_index(index), m_button_hwnd(GetDlgItem(hwnd, m_id)) {};
-		void EnableControl(bool enable) const;
+		Button(const char* name, const char* xname, int id, int index, HWND hwnd) : m_name(name),
+			m_xinput_button(xname), m_id(id), m_index(index), m_button_hwnd(GetDlgItem(hwnd, m_id)) {};
+		void EnableButton(bool enable) const;
 		void UpdateText(const char* text) const;
+		void UpdateText() const;
 		void GetText(char* const text, size_t size) const;
 		std::string GetName() const { return m_name; }
 		int GetId() const { return m_id; }
@@ -20,6 +21,7 @@ class Button
 
 	private:
 		std::string m_name;
+		std::string m_xinput_button;
 		int m_id;
 		int m_index;
 		HWND m_button_hwnd;
