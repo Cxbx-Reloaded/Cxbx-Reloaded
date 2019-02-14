@@ -3,6 +3,10 @@
 #include "InputManager.h"
 #include "common\Settings.hpp"
 
+#define PROFILE_LOAD   1
+#define PROFILE_SAVE   2
+#define PROFILE_DELETE 3
+
 
 class InputWindow
 {
@@ -14,15 +18,17 @@ class InputWindow
 		void BindButton(int ControlID, std::string DeviceName, int ms);
 		void BindXInput();
 		void ClearBindings();
-		void LoadProfile(std::string& name);
-		void SaveProfile(std::string& name);
-		void DeleteProfile(std::string& name);
+		void UpdateProfile(std::string& name, int command);
 
 
 	private:
 		InputDevice::Input* Detect(InputDevice* const Device, int ms);
 		ProfileIt FindProfile(std::string& name);
+		void LoadProfile(std::string& name);
+		void SaveProfile(std::string& name);
+		void DeleteProfile(std::string& name);
 		void LoadDefaultProfile();
+		void AssignBindingsToDevice();
 
 		// xbox device under configuration
 		EmuDevice* m_DeviceConfig;

@@ -48,8 +48,6 @@ void InputWindow::Initialize(HWND hwnd, int port_num, int dev_type)
 	SendMessage(m_hwnd_window, WM_SETTEXT, 0,
 		reinterpret_cast<LPARAM>((title + std::to_string(port_num)).c_str()));
 
-	//SendMessage(m_hwnd_device_list, CB_LIMITTEXT, 50, 0); // maybe it's not needed
-
 	// construct emu device
 	m_DeviceConfig = new EmuDevice(m_dev_type, m_hwnd_window);
 
@@ -62,6 +60,7 @@ void InputWindow::Initialize(HWND hwnd, int port_num, int dev_type)
 
 InputWindow::~InputWindow()
 {
+	AssignBindingsToDevice();
 	delete m_DeviceConfig;
 	m_DeviceConfig = nullptr;
 }
@@ -124,7 +123,6 @@ void InputWindow::BindButton(int ControlID, std::string DeviceName, int ms)
 			std::future<InputDevice::Input*> fut = std::async(std::launch::async, &InputWindow::Detect, this, dev.get(), ms);
 			InputDevice::Input* dev_button = fut.get();
 			if (dev_button) {
-				dev->SetBindings(xbox_button->GetIndex(), dev_button);
 				xbox_button->UpdateText(dev_button->GetName().c_str());
 			}
 			else {
@@ -156,6 +154,30 @@ InputWindow::ProfileIt InputWindow::FindProfile(std::string& name)
 		return profile.ProfileName == name;
 	});
 	return it;
+}
+
+void InputWindow::UpdateProfile(std::string& name, int command)
+{
+	switch (command)
+	{
+		case PROFILE_LOAD: {
+			LoadProfile(name);
+		}
+		break;
+
+		case PROFILE_SAVE: {
+			SaveProfile(name);
+		}
+		break;
+
+		case PROFILE_DELETE: {
+			DeleteProfile(name);
+		}
+		break;
+
+		default:
+			break;
+	}
 }
 
 void InputWindow::LoadProfile(std::string& name)
@@ -216,4 +238,37 @@ void InputWindow::LoadDefaultProfile()
 		return;
 	}
 	LoadProfile(g_Settings->m_input[m_port_num].ProfileName);
+}
+
+void InputWindow::AssignBindingsToDevice()
+{
+	char device_name[50], profile_name[50];
+	SendMessage(m_hwnd_device_list, WM_GETTEXT, sizeof(device_name), reinterpret_cast<LPARAM>(device_name));
+	SendMessage(GetDlgItem(m_hwnd_window, IDC_XID_PROFILE_NAME), WM_GETTEXT, sizeof(profile_name), reinterpret_cast<LPARAM>(profile_name));
+	if (std::strncmp(device_name, "No devices detected", std::strlen("No devices detected")) == 0) {
+		return;
+	}
+	if (std::string(profile_name).empty()) {
+		return;
+	}
+	auto dev = g_InputDeviceManager.FindDevice(std::string(device_name));
+	if (dev != nullptr) {
+		std::vector<InputDevice::Input*>::const_iterator i = dev->GetInputs().begin(),
+			e = dev->GetInputs().end();
+		for (int index = 0; index < m_max_num_buttons; index++) {
+			char dev_button[30];
+			m_DeviceConfig->FindButtonByIndex(index)->GetText(dev_button, sizeof(dev_button));
+			auto it = std::find_if(i, e, [dev_button](const auto input) {
+				if (input->GetName() == dev_button) {
+					return true;
+				}
+				return false;
+			});
+			assert(it != e);
+			dev->SetBindings(index, *it);
+		}
+		// TODO: outputs
+	}
+	g_Settings->m_input[m_port_num].DeviceName = device_name;
+	g_Settings->m_input[m_port_num].ProfileName = profile_name;
 }
