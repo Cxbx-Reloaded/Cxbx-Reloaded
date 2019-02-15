@@ -242,6 +242,9 @@ inline void GeneratePCMFormat(
                 memcpy(lpwfxFormatHost, lpwfxFormat, sizeof(WAVEFORMATEX) + lpwfxFormat->cbSize);
             }
 
+            // NOTE: Currently a workaround hack fix until custom management for buffer/stream can allow unallocated buffer.
+            // Without this fix, some titles wouldn't progress further. Plus no matter what values are set in Xbox's wfxFormat
+            // are approved. It does need further investigation which require LLE APU stubbed and a HLE verbose plugin.
             if (X_BufferSizeRequest == 0 &&
                 (lpwfxFormatHost->nSamplesPerSec == 0 || lpwfxFormatHost->nAvgBytesPerSec == 0)) {
                 // NOTE: When X_BufferSizeRequest is 0, creation is allow to be performed until allocated size is given from different API.
