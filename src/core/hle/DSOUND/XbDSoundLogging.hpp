@@ -38,6 +38,8 @@
 namespace XTL {
 #include "XbDSoundTypes.h"
 
+// TODO: Everything, only small portions had been implemented.
+
 // DSound flag/enum
 enum DSMIXBIN_SPEAKER;
 enum DSSPEAKER_FLAG;

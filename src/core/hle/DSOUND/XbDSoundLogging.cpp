@@ -327,7 +327,7 @@ LOGRENDER(X_DSBUFFERDESC)
 		LOGRENDER_MEMBER_TYPE(DSBCAPS_FLAG, dwFlags)
 		LOGRENDER_MEMBER(dwBufferBytes)
 		LOGRENDER_MEMBER_TYPE(LPWAVEFORMATEX, lpwfxFormat)
-		LOGRENDER_MEMBER(lpMixBins)
+		LOGRENDER_MEMBER(lpMixBins) // TODO: Need loop support since lpMixBins is dynamic array.
 		LOGRENDER_MEMBER(dwInputMixBin)
 		;
 }
@@ -341,7 +341,7 @@ LOGRENDER(X_DSSTREAMDESC)
 		LOGRENDER_MEMBER_TYPE(LPWAVEFORMATEX, lpwfxFormat)
 		LOGRENDER_MEMBER_TYPE(void*, lpfnCallback)
 		LOGRENDER_MEMBER(lpvContext)
-		LOGRENDER_MEMBER(lpMixBins)
+		LOGRENDER_MEMBER(lpMixBins) // TODO: Need loop support since lpMixBins is dynamic array.
 		;
 }
 
