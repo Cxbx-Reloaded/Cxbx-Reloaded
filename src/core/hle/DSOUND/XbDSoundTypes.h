@@ -82,6 +82,16 @@
 #define X_DSBSTOPEX_RELEASEWAVEFORM   0x00000002
 #define X_DSBSTOPEX_ALL               (X_DSBSTOPEX_ENVELOPE | X_DSBSTOPEX_RELEASEWAVEFORM)
 
+#define XTL_DSBCAPS_CTRL3D               0x00000010
+#define XTL_DSBCAPS_CTRLFREQUENCY        0x00000020
+#define XTL_DSBCAPS_CTRLVOLUME           0x00000080
+#define XTL_DSBCAPS_CTRLPOSITIONNOTIFY   0x00000100
+#define XTL_DSBCAPS_MIXIN                0x00002000
+#define XTL_DSBCAPS_MUTE3DATMAXDISTANCE  0x00020000
+#define XTL_DSBCAPS_LOCDEFER             0x00040000
+#define XTL_DSBCAPS_FXIN                 0x00080000
+#define XTL_DSBCAPS_FXIN2                0x00100000
+
 // ******************************************************************
 // * X_DSBUFFERDESC
 // ******************************************************************
@@ -111,6 +121,14 @@ struct X_DSENVOLOPEDESC
     LONG            lPitchScale;
     LONG            lFilterCutOff;
 };
+
+#define XTL_DSSCAPS_CTRL3D               0x00000010
+#define XTL_DSSCAPS_CTRLFREQUENCY        0x00000020
+#define XTL_DSSCAPS_CTRLVOLUME           0x00000080
+#define XTL_DSSCAPS_MUTE3DATMAXDISTANCE  0x00020000
+#define XTL_DSSCAPS_LOCDEFER             0x00040000
+#define XTL_DSSCAPS_NOMERGE              0x20000000
+#define XTL_DSSCAPS_ACCURATENOTIFY       0x40000000
 
 typedef VOID(CALLBACK *LPFNXMOCALLBACK)(LPVOID pStreamContext, LPVOID pPacketContext, DWORD dwStatus);
 
