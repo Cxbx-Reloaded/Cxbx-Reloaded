@@ -211,7 +211,7 @@ inline void GeneratePCMFormat(
         if (lpwfxFormat != xbnullptr) {
 
             //TODO: RadWolfie - Need implement support for WAVEFORMATEXTENSIBLE as stated in CDirectSoundStream_SetFormat function note below
-            // Do we need to convert it? Or just only do the WAVEFORMATEX only?
+            // Do we need to convert it? Or just do the WAVEFORMATEX only?
 
             // NOTE: pwfxFormat is not always a WAVEFORMATEX structure, it can
             // be WAVEFORMATEXTENSIBLE if that's what the programmer(s) wanted
@@ -222,23 +222,54 @@ inline void GeneratePCMFormat(
                 // Only allocate extra value for setting extra values later on. WAVEFORMATEXTENSIBLE is the highest size I had seen.
                 DSBufferDesc.lpwfxFormat = (WAVEFORMATEX*)calloc(1, sizeof(WAVEFORMATEXTENSIBLE));
             }
+            WAVEFORMATEX* lpwfxFormatHost = DSBufferDesc.lpwfxFormat;
 
             if (lpwfxFormat->wFormatTag == WAVE_FORMAT_PCM) {
                 // Test case: Hulk crash due to cbSize is not a valid size.
-                memcpy(DSBufferDesc.lpwfxFormat, lpwfxFormat, sizeof(WAVEFORMATEX));
-                DSBufferDesc.lpwfxFormat->cbSize = 0; // Let's enforce this value to prevent any other exception later on.
+                memcpy(lpwfxFormatHost, lpwfxFormat, sizeof(WAVEFORMATEX));
+                lpwfxFormatHost->cbSize = 0; // Let's enforce this value to prevent any other exception later on.
             }
             else if (lpwfxFormat->wFormatTag == 0 && (DSBufferDesc.dwFlags & DSBCAPS_LOCDEFER) > 0) {
                 // NOTE: This is currently a hack for ability to create buffer class with DSBCAPS_LOCDEFER flag.
-                DSBufferDesc.lpwfxFormat->wFormatTag = WAVE_FORMAT_PCM;
-                DSBufferDesc.lpwfxFormat->nChannels = 2;
-                DSBufferDesc.lpwfxFormat->nSamplesPerSec = 44100;
-                DSBufferDesc.lpwfxFormat->wBitsPerSample = 8;
-                DSBufferDesc.lpwfxFormat->nBlockAlign = (DSBufferDesc.lpwfxFormat->wBitsPerSample / 8 * DSBufferDesc.lpwfxFormat->nChannels);
-                DSBufferDesc.lpwfxFormat->nAvgBytesPerSec = DSBufferDesc.lpwfxFormat->nSamplesPerSec * DSBufferDesc.lpwfxFormat->nBlockAlign;
+                lpwfxFormatHost->wFormatTag = WAVE_FORMAT_PCM;
+                lpwfxFormatHost->nChannels = 2;
+                lpwfxFormatHost->nSamplesPerSec = 44100;
+                lpwfxFormatHost->wBitsPerSample = 8;
+                lpwfxFormatHost->nBlockAlign = (lpwfxFormatHost->wBitsPerSample / 8 * lpwfxFormatHost->nChannels);
+                lpwfxFormatHost->nAvgBytesPerSec = lpwfxFormatHost->nSamplesPerSec * lpwfxFormatHost->nBlockAlign;
             }
             else {
-                memcpy(DSBufferDesc.lpwfxFormat, lpwfxFormat, sizeof(WAVEFORMATEX) + lpwfxFormat->cbSize);
+                memcpy(lpwfxFormatHost, lpwfxFormat, sizeof(WAVEFORMATEX) + lpwfxFormat->cbSize);
+            }
+
+            // NOTE: Currently a workaround hack fix until custom management for buffer/stream can allow unallocated buffer.
+            // Without this fix, some titles wouldn't progress further. Plus no matter what values are set in Xbox's wfxFormat
+            // are approved. It does need further investigation which require LLE APU stubbed and a HLE verbose plugin.
+            if (X_BufferSizeRequest == 0 &&
+                (lpwfxFormatHost->nSamplesPerSec == 0 || lpwfxFormatHost->nAvgBytesPerSec == 0)) {
+                // NOTE: When X_BufferSizeRequest is 0, creation is allow to be performed until allocated size is given from different API.
+                // Set dwBufferBytes is not needed as it is handled later on.
+                // Test case: Hobbit did not input nSamplesPerSec & nAvgBytesPerSec variable, yet isn't a requirement.
+                if (lpwfxFormatHost->nChannels == 0) {
+                    lpwfxFormatHost->nChannels = 2;
+                }
+                if (lpwfxFormatHost->wBitsPerSample == 0) {
+                    lpwfxFormatHost->wBitsPerSample = 8;
+                }
+
+                if (lpwfxFormatHost->nBlockAlign == 0) {
+                    lpwfxFormatHost->nBlockAlign = (lpwfxFormatHost->wBitsPerSample / 8 * lpwfxFormatHost->nChannels);
+                }
+
+                if (lpwfxFormatHost->nSamplesPerSec == 0) {
+                    lpwfxFormatHost->nSamplesPerSec = 44100;
+                    lpwfxFormatHost->nAvgBytesPerSec = lpwfxFormatHost->nSamplesPerSec * lpwfxFormatHost->nBlockAlign;
+                }
+
+                // TODO: I don't think we need WAVEFORMATEXTENSIBLE stub for this fix.
+                if (lpwfxFormat->wFormatTag == WAVE_FORMAT_EXTENSIBLE) {
+                    EmuLog(LOG_LEVEL::WARNING, "Is WAVE_FORMAT_EXTENSIBLE having problem with creation?");
+                }
             }
 
             dwEmuFlags = dwEmuFlags & ~DSE_FLAG_AUDIO_CODECS;
