@@ -43,7 +43,6 @@ namespace xboxkrnl
 
 
 InputDeviceManager g_InputDeviceManager;
-constexpr ControlState INPUT_DETECT_THRESHOLD = 0.55; // arbitrary number, using what Dolphin uses
 
 void InputDeviceManager::Initialize(bool GUImode)
 {

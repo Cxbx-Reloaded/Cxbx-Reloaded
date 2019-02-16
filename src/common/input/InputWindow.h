@@ -11,7 +11,6 @@
 class InputWindow
 {
 	public:
-		typedef std::vector<Settings::s_input_profiles>::iterator ProfileIt;
 		void Initialize(HWND hwnd, int port_num, int dev_type);
 		~InputWindow();
 		void UpdateDeviceList();
@@ -22,6 +21,7 @@ class InputWindow
 
 
 	private:
+		typedef std::vector<Settings::s_input_profiles>::iterator ProfileIt;
 		InputDevice::Input* Detect(InputDevice* const Device, int ms);
 		ProfileIt FindProfile(std::string& name);
 		void LoadProfile(std::string& name);
@@ -34,8 +34,10 @@ class InputWindow
 		EmuDevice* m_DeviceConfig;
 		// handle of the window
 		HWND m_hwnd_window;
-		// device list control handle
+		// handle to the device list combobox
 		HWND m_hwnd_device_list;
+		// handle to the profile list combobox
+		HWND m_hwnd_profile_list;
 		// type of the device
 		int m_dev_type;
 		// num of buttons of device under configuration

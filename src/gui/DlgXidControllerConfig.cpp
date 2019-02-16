@@ -146,7 +146,6 @@ INT_PTR CALLBACK DlgXidControllerConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wPar
 			}
 		}
 		break;
-
 	}
 	return FALSE;
 }

@@ -3,6 +3,7 @@
 #include <future>
 
 
+constexpr ControlState INPUT_DETECT_THRESHOLD = 0.55; // arbitrary number, using what Dolphin uses
 InputWindow* g_InputWindow = nullptr;
 int dev_num_buttons[to_underlying(XBOX_INPUT_DEVICE::DEVICE_MAX)] = {
 	XBOX_CTRL_NUM_BUTTONS,
@@ -20,6 +21,7 @@ void InputWindow::Initialize(HWND hwnd, int port_num, int dev_type)
 	// Save window/device specific variables
 	m_hwnd_window = hwnd;
 	m_hwnd_device_list = GetDlgItem(m_hwnd_window, IDC_DEVICE_LIST);
+	m_hwnd_profile_list = GetDlgItem(m_hwnd_window, IDC_XID_PROFILE_NAME);
 	m_dev_type = dev_type;
 	m_max_num_buttons = dev_num_buttons[dev_type];
 	m_port_num = port_num - 1;
@@ -93,16 +95,18 @@ InputDevice::Input* InputWindow::Detect(InputDevice* const Device, int ms)
 	auto now = system_clock::now();
 	auto timeout = now + milliseconds(ms);
 	std::vector<InputDevice::Input*>::const_iterator i = Device->GetInputs().begin(),
-		e = Device->GetInputs().end();
+		e = Device->GetInputs().end(), b = i;
 
 	while (now <= timeout) {
+		Device->UpdateInput();
 		for (; i != e; i++) {
-			if ((*i)->GetState()) {
+			if ((*i)->GetState() > (1 - INPUT_DETECT_THRESHOLD)) {
 				return *i; // user pressed a button
 			}
 		}
 		std::this_thread::sleep_for(milliseconds(10));
 		now += milliseconds(10);
+		i = b;
 	}
 
 	return nullptr; // no input
@@ -113,7 +117,7 @@ void InputWindow::BindButton(int ControlID, std::string DeviceName, int ms)
 	auto dev = g_InputDeviceManager.FindDevice(DeviceName);
 	if (dev != nullptr) {
 		// Don't block the message processing loop
-		std::thread([this, &dev, ControlID, ms]() {
+		std::thread([this, dev, ControlID, ms]() {
 			char current_text[50];
 			Button* xbox_button = m_DeviceConfig->FindButtonById(ControlID);
 			xbox_button->GetText(current_text, sizeof(current_text));
@@ -217,6 +221,8 @@ bool InputWindow::SaveProfile(std::string& name)
 		m_DeviceConfig->FindButtonByIndex(index)->GetText(dev_button, sizeof(dev_button));
 		profile.ControlList.push_back(dev_button);
 	}
+	SendMessage(m_hwnd_profile_list, CB_SETCURSEL, SendMessage(m_hwnd_profile_list, CB_ADDSTRING, 0,
+		reinterpret_cast<LPARAM>(profile.ProfileName.c_str())), 0);
 	g_Settings->m_input_profiles[m_dev_type].push_back(std::move(profile));
 	return true;
 }
@@ -227,17 +233,16 @@ void InputWindow::DeleteProfile(std::string& name)
 	if (profile == g_Settings->m_input_profiles[m_dev_type].end()) {
 		return;
 	}
-	HWND hProfile = GetDlgItem(m_hwnd_window, IDC_XID_PROFILE_NAME);
-	SendMessage(hProfile, CB_DELETESTRING, SendMessage(hProfile, CB_FINDSTRINGEXACT, 1,
+	SendMessage(m_hwnd_profile_list, CB_DELETESTRING, SendMessage(m_hwnd_profile_list, CB_FINDSTRINGEXACT, 1,
 		reinterpret_cast<LPARAM>(profile->ProfileName.c_str())), 0);
-	SendMessage(hProfile, CB_SETCURSEL, 1, 0);
+	SendMessage(m_hwnd_profile_list, CB_SETCURSEL, 1, 0);
 	g_Settings->m_input_profiles[m_dev_type].erase(profile);
 }
 
 void InputWindow::LoadDefaultProfile()
 {
 	for (uint index = 0; index < g_Settings->m_input_profiles[m_dev_type].size(); index++) {
-		SendMessage(GetDlgItem(m_hwnd_window, IDC_XID_PROFILE_NAME), CB_ADDSTRING, 0,
+		SendMessage(m_hwnd_profile_list, CB_ADDSTRING, 0,
 			reinterpret_cast<LPARAM>(g_Settings->m_input_profiles[m_dev_type][index].ProfileName.c_str()));
 	}
 	LoadProfile(g_Settings->m_input[m_port_num].ProfileName);
@@ -246,8 +251,8 @@ void InputWindow::LoadDefaultProfile()
 void InputWindow::AssignBindingsToDevice()
 {
 	char device_name[50], profile_name[50];
-	SendMessage(GetDlgItem(m_hwnd_window, IDC_XID_PROFILE_NAME), WM_GETTEXT, sizeof(profile_name), reinterpret_cast<LPARAM>(profile_name));
-	if(!SaveProfile(std::string(profile_name))) {
+	SendMessage(m_hwnd_profile_list, WM_GETTEXT, sizeof(profile_name), reinterpret_cast<LPARAM>(profile_name));
+	if (!SaveProfile(std::string(profile_name))) {
 		return;
 	}
 	SendMessage(m_hwnd_device_list, WM_GETTEXT, sizeof(device_name), reinterpret_cast<LPARAM>(device_name));
