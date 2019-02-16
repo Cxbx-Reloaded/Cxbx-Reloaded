@@ -35,6 +35,7 @@
 // ******************************************************************
 
 #include "InputDevice.h"
+#include <algorithm>
 
 
 // Destructor, delete all inputs/outputs on device destruction
@@ -64,4 +65,16 @@ void InputDevice::AddOutput(Output* const Out)
 std::string InputDevice::GetQualifiedName() const
 {
 	return this->GetAPI() + "/" + std::to_string(GetId()) + "/" + this->GetDeviceName();
+}
+
+const std::vector<InputDevice::IoControl*> InputDevice::GetIoControls()
+{
+	std::vector<IoControl*> vec;
+	std::for_each(m_Inputs.begin(), m_Inputs.end(), [&vec](const auto input) {
+		vec.push_back(dynamic_cast<IoControl*>(input));
+	});
+	std::for_each(m_Outputs.begin(), m_Outputs.end(), [&vec](const auto output) {
+		vec.push_back(dynamic_cast<IoControl*>(output));
+	});
+	return vec;
 }

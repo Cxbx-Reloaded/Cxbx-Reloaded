@@ -36,7 +36,6 @@
 
 #include "Windows.h"
 #include "ResCxbx.h"
-#include "common\util\CxbxUtil.h"
 #include "input\InputWindow.h"
 
 #define INPUT_TIMEOUT 5000

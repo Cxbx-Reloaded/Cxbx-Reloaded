@@ -76,17 +76,21 @@ class InputDevice
 	public:
 		virtual ~InputDevice();
 
-		class Input
+		class IoControl
 		{
 			public:
 				virtual std::string GetName() const = 0;
+		};
+
+		class Input : public IoControl
+		{
+			public:
 				virtual ControlState GetState() const = 0;
 		};
 
-		class Output
+		class Output : public IoControl
 		{
 			public:
-				virtual std::string GetName() const = 0;
 				virtual void SetState(ControlState state) = 0;
 		};
 
@@ -94,10 +98,12 @@ class InputDevice
 		const std::vector<Input*>& GetInputs() const { return m_Inputs; }
 		// retrieves the vector of output controls
 		const std::vector<Output*>& GetOutputs() const { return m_Outputs; }
+		// retrieves all the i/o controls of this device
+		const std::vector<IoControl*> GetIoControls();
 		// retrieves the map of input bindings
-		const std::map<int, Input*>& GetBindings() const { return m_Bindings; }
+		const std::map<int, IoControl*>& GetBindings() const { return m_Bindings; }
 		// sets a pair in the map of the input bindings
-		void SetBindings(int XButton, Input* Control) { m_Bindings[XButton] = Control; }
+		void SetBindings(int XButton, IoControl* Control) { m_Bindings[XButton] = Control; }
 		// retrieves the full name of the device (API/ID/API-specific name)
 		std::string GetQualifiedName() const;
 		// retrieves the API-specific name of the device
@@ -162,7 +168,7 @@ class InputDevice
 		// the emulated xbox device type
 		int m_Type;
 		// button bindings to the xbox device buttons
-		std::map<int, Input*> m_Bindings;
+		std::map<int, IoControl*> m_Bindings;
 };
 
 #endif

@@ -25,7 +25,7 @@ class InputWindow
 		InputDevice::Input* Detect(InputDevice* const Device, int ms);
 		ProfileIt FindProfile(std::string& name);
 		void LoadProfile(std::string& name);
-		void SaveProfile(std::string& name);
+		bool SaveProfile(std::string& name);
 		void DeleteProfile(std::string& name);
 		void LoadDefaultProfile();
 		void AssignBindingsToDevice();

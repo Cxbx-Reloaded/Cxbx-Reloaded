@@ -1,11 +1,10 @@
 #include "InputWindow.h"
 #include "..\..\gui\ResCxbx.h"
 #include <future>
-#include "CommCtrl.h" // for the tooltip control
 
 
 InputWindow* g_InputWindow = nullptr;
-static int dev_num_buttons[to_underlying(XBOX_INPUT_DEVICE::DEVICE_MAX)] = {
+int dev_num_buttons[to_underlying(XBOX_INPUT_DEVICE::DEVICE_MAX)] = {
 	XBOX_CTRL_NUM_BUTTONS,
 	0,
 	0,
@@ -129,7 +128,7 @@ void InputWindow::BindButton(int ControlID, std::string DeviceName, int ms)
 				xbox_button->UpdateText(current_text);
 			}
 			EnableWindow(m_hwnd_window, TRUE);
-		});
+		}).detach();
 	}
 }
 
@@ -193,22 +192,20 @@ void InputWindow::LoadProfile(std::string& name)
 	else {
 		SendMessage(m_hwnd_device_list, CB_SETCURSEL, dev_str_index, 0);
 	}
-	std::for_each(profile->ControlList.begin(), profile->ControlList.end(), [this](const auto& dev_button_str) {
-		static int index = 0;
-		m_DeviceConfig->FindButtonByIndex(index)->UpdateText(dev_button_str.c_str());
-		index++;
-	});
+	for (int index = 0; index < m_max_num_buttons; index++) {
+		m_DeviceConfig->FindButtonByIndex(index)->UpdateText(profile->ControlList[index].c_str());
+	}
 }
 
-void InputWindow::SaveProfile(std::string& name)
+bool InputWindow::SaveProfile(std::string& name)
 {
 	if (name == std::string()) {
-		return;
+		return false;
 	}
 	char device_name[50];
 	SendMessage(m_hwnd_device_list, WM_GETTEXT, sizeof(device_name), reinterpret_cast<LPARAM>(device_name));
 	if (std::strncmp(device_name, "No devices detected", std::strlen("No devices detected")) == 0) {
-		return;
+		return false;
 	}
 	DeleteProfile(name);
 	Settings::s_input_profiles profile;
@@ -221,6 +218,7 @@ void InputWindow::SaveProfile(std::string& name)
 		profile.ControlList.push_back(dev_button);
 	}
 	g_Settings->m_input_profiles[m_dev_type].push_back(std::move(profile));
+	return true;
 }
 
 void InputWindow::DeleteProfile(std::string& name)
@@ -229,13 +227,18 @@ void InputWindow::DeleteProfile(std::string& name)
 	if (profile == g_Settings->m_input_profiles[m_dev_type].end()) {
 		return;
 	}
+	HWND hProfile = GetDlgItem(m_hwnd_window, IDC_XID_PROFILE_NAME);
+	SendMessage(hProfile, CB_DELETESTRING, SendMessage(hProfile, CB_FINDSTRINGEXACT, 1,
+		reinterpret_cast<LPARAM>(profile->ProfileName.c_str())), 0);
+	SendMessage(hProfile, CB_SETCURSEL, 1, 0);
 	g_Settings->m_input_profiles[m_dev_type].erase(profile);
 }
 
 void InputWindow::LoadDefaultProfile()
 {
-	if (g_Settings->m_input[m_port_num].Type == to_underlying(XBOX_INPUT_DEVICE::DEVICE_INVALID)) {
-		return;
+	for (uint index = 0; index < g_Settings->m_input_profiles[m_dev_type].size(); index++) {
+		SendMessage(GetDlgItem(m_hwnd_window, IDC_XID_PROFILE_NAME), CB_ADDSTRING, 0,
+			reinterpret_cast<LPARAM>(g_Settings->m_input_profiles[m_dev_type][index].ProfileName.c_str()));
 	}
 	LoadProfile(g_Settings->m_input[m_port_num].ProfileName);
 }
@@ -243,31 +246,25 @@ void InputWindow::LoadDefaultProfile()
 void InputWindow::AssignBindingsToDevice()
 {
 	char device_name[50], profile_name[50];
-	SendMessage(m_hwnd_device_list, WM_GETTEXT, sizeof(device_name), reinterpret_cast<LPARAM>(device_name));
 	SendMessage(GetDlgItem(m_hwnd_window, IDC_XID_PROFILE_NAME), WM_GETTEXT, sizeof(profile_name), reinterpret_cast<LPARAM>(profile_name));
-	if (std::strncmp(device_name, "No devices detected", std::strlen("No devices detected")) == 0) {
+	if(!SaveProfile(std::string(profile_name))) {
 		return;
 	}
-	if (std::string(profile_name).empty()) {
-		return;
-	}
+	SendMessage(m_hwnd_device_list, WM_GETTEXT, sizeof(device_name), reinterpret_cast<LPARAM>(device_name));
 	auto dev = g_InputDeviceManager.FindDevice(std::string(device_name));
 	if (dev != nullptr) {
-		std::vector<InputDevice::Input*>::const_iterator i = dev->GetInputs().begin(),
-			e = dev->GetInputs().end();
+		std::vector<InputDevice::IoControl*> controls = dev->GetIoControls();
 		for (int index = 0; index < m_max_num_buttons; index++) {
 			char dev_button[30];
 			m_DeviceConfig->FindButtonByIndex(index)->GetText(dev_button, sizeof(dev_button));
-			auto it = std::find_if(i, e, [dev_button](const auto input) {
-				if (input->GetName() == dev_button) {
+			auto it = std::find_if(controls.begin(), controls.end(), [&dev_button](const auto control) {
+				if (control->GetName() == dev_button) {
 					return true;
 				}
 				return false;
 			});
-			assert(it != e);
-			dev->SetBindings(index, *it);
+			dev->SetBindings(index, (it != controls.end()) ? *it : nullptr);
 		}
-		// TODO: outputs
 	}
 	g_Settings->m_input[m_port_num].DeviceName = device_name;
 	g_Settings->m_input[m_port_num].ProfileName = profile_name;

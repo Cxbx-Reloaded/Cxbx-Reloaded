@@ -1,10 +1,12 @@
 #pragma once
 
 #include "Button.h"
+#include "common\util\CxbxUtil.h"
 
 #define XBOX_CTRL_NUM_BUTTONS 26
 
 extern const char* button_xbox_ctrl_names[XBOX_CTRL_NUM_BUTTONS][2];
+extern int dev_num_buttons[to_underlying(XBOX_INPUT_DEVICE::DEVICE_MAX)];
 
 
 /* Represents the xbox device currently being configured in the gui */

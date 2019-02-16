@@ -315,7 +315,7 @@ bool InputDeviceManager::UpdateXboxPortInput(int Port, void* Buffer, int Directi
 void InputDeviceManager::UpdateInputXpad(InputDevice* Device, void* Buffer, int Direction)
 {
 	int i;
-	std::map<int, InputDevice::Input*> bindings;
+	std::map<int, InputDevice::IoControl*> bindings;
 
 	if (Direction == DIRECTION_IN) {
 		XpadInput* in_buf = reinterpret_cast<XpadInput*>(static_cast<uint8_t*>(Buffer) + 2);
@@ -327,11 +327,11 @@ void InputDeviceManager::UpdateInputXpad(InputDevice* Device, void* Buffer, int 
 			});
 			if (it != bindings.end()) {
 				if (i == GAMEPAD_LEFT_TRIGGER || i == GAMEPAD_RIGHT_TRIGGER) {
-					in_buf->bAnalogButtons[i] = it->second->GetState(); //>> 7; likely to fix
+					//in_buf->bAnalogButtons[i] = it->second->GetState(); //>> 7; likely to fix
 				}
 				else {
 					// At the moment, we don't support intermediate values for the analog buttons, so report them as full pressed or released
-					in_buf->bAnalogButtons[i] = it->second->GetState() ? 0xFF : 0; // likely to fix
+					//in_buf->bAnalogButtons[i] = it->second->GetState() ? 0xFF : 0; // likely to fix
 				}
 			}
 		}
@@ -340,12 +340,12 @@ void InputDeviceManager::UpdateInputXpad(InputDevice* Device, void* Buffer, int 
 				return i == d.first;
 			});
 			if (it != bindings.end()) {
-				if (it->second->GetState()) { // likely to fix
-					in_buf->wButtons |= BUTTON_MASK(i);
-				}
-				else {
-					in_buf->wButtons &= ~(BUTTON_MASK(i));
-				}
+				//if (it->second->GetState()) { // likely to fix
+				//	in_buf->wButtons |= BUTTON_MASK(i);
+				//}
+				//else {
+				//	in_buf->wButtons &= ~(BUTTON_MASK(i));
+				//}
 			}
 		}
 		for (i = GAMEPAD_LEFT_THUMB_X; i < GAMEPAD_BUTTON_MAX; i++) {
@@ -356,22 +356,22 @@ void InputDeviceManager::UpdateInputXpad(InputDevice* Device, void* Buffer, int 
 				switch (i)
 				{
 					case GAMEPAD_LEFT_THUMB_X: {
-						in_buf->sThumbLX = it->second->GetState(); // likely to fix
+						//in_buf->sThumbLX = it->second->GetState(); // likely to fix
 					}
 					break;
 
 					case GAMEPAD_LEFT_THUMB_Y: {
-						in_buf->sThumbLY = -it->second->GetState() - 1;
+						//in_buf->sThumbLY = -it->second->GetState() - 1;
 					}
 					break;
 
 					case GAMEPAD_RIGHT_THUMB_X: {
-						in_buf->sThumbRX = it->second->GetState();
+						//in_buf->sThumbRX = it->second->GetState();
 					}
 					break;
 
 					case GAMEPAD_RIGHT_THUMB_Y: {
-						in_buf->sThumbRY = -it->second->GetState() - 1;
+						//in_buf->sThumbRY = -it->second->GetState() - 1;
 					}
 					break;
 

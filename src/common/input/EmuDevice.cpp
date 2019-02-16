@@ -1,6 +1,5 @@
 #include"Button.h"
 #include "InputManager.h"
-#include "common\util\CxbxUtil.h"
 #include "..\..\gui\ResCxbx.h"
 
 static int button_xbox_ctrl_id[XBOX_CTRL_NUM_BUTTONS] = {
@@ -48,7 +47,7 @@ const char* button_xbox_ctrl_names[XBOX_CTRL_NUM_BUTTONS][2] = {
 	"Black",         "Shoulder R",
 	"White",         "Shoulder L",
 	"L Trigger",     "Trigger L",
-	"R Trigger",     "Trigger R"
+	"R Trigger",     "Trigger R",
 	"Left Axis X+",  "Left X+",
 	"Left Axis X-",  "Left X-",
 	"Left Axis Y+",  "Left Y+",

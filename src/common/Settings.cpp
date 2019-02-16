@@ -525,6 +525,13 @@ bool Settings::LoadConfig()
 	// ==== Input End ==============
 
 	// ==== Input Profile Begin ====
+	std::array<std::vector<std::string>, to_underlying(XBOX_INPUT_DEVICE::DEVICE_MAX)> control_names;
+	for (int i = 0; i < dev_num_buttons[0]; i++) {
+		char control_name[30];
+		std::sprintf(control_name, sect_input_profiles.control, button_xbox_ctrl_names[i][0]);
+		control_names[0].push_back(control_name);
+	}
+	// TODO: add the control names of the other devices
 
 	index = 0;
 	while (true) {
@@ -536,13 +543,9 @@ bool Settings::LoadConfig()
 		local_profile.Type = m_si.GetLongValue(current_section.c_str(), sect_input_profiles.type);
 		local_profile.ProfileName = m_si.GetValue(current_section.c_str(), sect_input_profiles.config);
 		local_profile.DeviceName = m_si.GetValue(current_section.c_str(), sect_input_profiles.device);
-		si_list.clear();
-		bRet = m_si.GetAllValues(current_section.c_str(), sect_input_profiles.config, si_list);
-		if (bRet) {
-			si_list_iterator = si_list.begin();
-			for (; si_list_iterator != si_list.end(); si_list_iterator++) {
-				local_profile.ControlList.push_back(si_list_iterator->pItem);
-			}
+		for (int vec_control_index = 0; vec_control_index < dev_num_buttons[local_profile.Type]; vec_control_index++) {
+			local_profile.ControlList.push_back(m_si.GetValue(current_section.c_str(),
+				control_names[local_profile.Type][vec_control_index].c_str()));
 		}
 		m_input_profiles[local_profile.Type].push_back(std::move(local_profile));
 		index++;
@@ -585,7 +588,7 @@ bool Settings::Save(std::string file_path)
 
 	// ==== Core Begin =============
 
-	m_si.SetLongValue(section_core, sect_core_keys.Revision, m_core.Revision, nullptr, true, true);
+	m_si.SetLongValue(section_core, sect_core_keys.Revision, m_core.Revision, nullptr, false, true);
 	m_si.SetLongValue(section_core, sect_core_keys.FlagsLLE, m_core.FlagsLLE, nullptr, true, true);
 	m_si.SetLongValue(section_core, sect_core_keys.KrnlDebugMode, m_core.KrnlDebugMode, nullptr, true, true);
 	m_si.SetValue(section_core, sect_core_keys.KrnlDebugLogFile, m_core.szKrnlDebug, nullptr, true);
@@ -684,7 +687,7 @@ bool Settings::Save(std::string file_path)
 
 	for (int port_num = 0; port_num < 4; port_num++) {
 		std::string current_section = std::string(section_input) + std::to_string(port_num);
-		m_si.SetLongValue(current_section.c_str(), sect_input.type, m_input[port_num].Type, nullptr, true, true);
+		m_si.SetLongValue(current_section.c_str(), sect_input.type, m_input[port_num].Type, nullptr, false, true);
 		m_si.SetValue(current_section.c_str(), sect_input.device, m_input[port_num].DeviceName.c_str(), nullptr, true);
 		m_si.SetValue(current_section.c_str(), sect_input.config, m_input[port_num].ProfileName.c_str(), nullptr, true);
 	}
@@ -694,22 +697,22 @@ bool Settings::Save(std::string file_path)
 	// ==== Input Profile Begin ====
 
 	std::array<std::vector<std::string>, to_underlying(XBOX_INPUT_DEVICE::DEVICE_MAX)> control_names;
-	for (int i = 0; i < XBOX_CTRL_NUM_BUTTONS; i++) {
+	for (int i = 0; i < dev_num_buttons[0]; i++) {
 		char control_name[30];
 		std::sprintf(control_name, sect_input_profiles.control, button_xbox_ctrl_names[i][0]);
 		control_names[0].push_back(control_name);
 	}
 	// TODO: add the control names of the other devices
 
+	int profile_num = 0;
 	for (int i = 0; i < to_underlying(XBOX_INPUT_DEVICE::DEVICE_MAX); i++) {
 		size_t vec_size = m_input_profiles[i].size();
 		if (vec_size == 0) {
 			continue;
 		}
-		static int profile_num = 0;
 		for (uint vec_index = 0; vec_index < vec_size; vec_index++, profile_num++) {
 			std::string current_section = std::string(section_input_profiles) + std::to_string(profile_num);
-			m_si.SetLongValue(current_section.c_str(), sect_input_profiles.type, m_input_profiles[i][vec_index].Type, nullptr, true, true);
+			m_si.SetLongValue(current_section.c_str(), sect_input_profiles.type, m_input_profiles[i][vec_index].Type, nullptr, false, true);
 			m_si.SetValue(current_section.c_str(), sect_input_profiles.config, m_input_profiles[i][vec_index].ProfileName.c_str(), nullptr, true);
 			m_si.SetValue(current_section.c_str(), sect_input_profiles.device, m_input_profiles[i][vec_index].DeviceName.c_str(), nullptr, true);
 			size_t vec_control_size = m_input_profiles[i][vec_index].ControlList.size();
@@ -717,11 +720,19 @@ bool Settings::Save(std::string file_path)
 				continue;
 			}
 			m_si.SetValue(current_section.c_str(), control_names[i][0].c_str(), m_input_profiles[i][vec_index].ControlList[0].c_str(), nullptr, true);
-			for (uint vec_control_index = 1; vec_control_index < vec_control_size; vec_index++) {
+			for (uint vec_control_index = 1; vec_control_index < vec_control_size; vec_control_index++) {
 				m_si.SetValue(current_section.c_str(), control_names[i][vec_control_index].c_str(),
-					m_input_profiles[i][vec_index].ControlList[vec_control_index].c_str(), nullptr, false);
+					m_input_profiles[i][vec_index].ControlList[vec_control_index].c_str(), nullptr, true);
 			}
 		}
+	}
+	while (true) {
+		std::string current_section = std::string(section_input_profiles) + std::to_string(profile_num);
+		if (m_si.GetSectionSize(current_section.c_str()) == -1) {
+			break;
+		}
+		m_si.Delete(current_section.c_str(), nullptr, true);
+		profile_num++;
 	}
 
 	// ==== Input Profile End ======
