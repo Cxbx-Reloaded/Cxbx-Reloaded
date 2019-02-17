@@ -28,7 +28,7 @@ class InputWindow
 		bool SaveProfile(std::string& name);
 		void DeleteProfile(std::string& name);
 		void LoadDefaultProfile();
-		void AssignBindingsToDevice();
+		void SaveBindingsToDevice();
 
 		// xbox device under configuration
 		EmuDevice* m_DeviceConfig;

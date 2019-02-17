@@ -41,6 +41,7 @@ namespace xboxkrnl
 #include "OHCI.h"
 #include "Hub.h"
 #include "core\kernel\exports\EmuKrnl.h"  // For EmuLog
+#include "common\input\InputDevice.h"
 #include "Logging.h"
 
 #define NUM_PORTS 8
@@ -172,13 +173,47 @@ static const uint8_t HubDescriptor[] =
 	0xFF,           //  u8  PortPwrCtrlMask; all 1's for compatibility reasons
 };
 
+bool ConstructHub(int port)
+{
+	if (port > PORT_4 || port < PORT_1) {
+		EmuLog(LOG_LEVEL::WARNING, "Invalid port number. The port was %d", port);
+		return false;
+	};
+
+	int port_index = port - 1;
+	if (g_HubObjArray[port_index] == nullptr) {
+		g_HubObjArray[port_index] = new Hub;
+		int ret = g_HubObjArray[port_index]->Init(port);
+		if (ret) {
+			delete g_HubObjArray[port_index];
+			g_HubObjArray[port_index] = nullptr;
+			return false;
+		}
+	}
+	else {
+		EmuLog(LOG_LEVEL::WARNING, "Hub already present at port %d", port);
+		return false;
+	}
+	return true;
+}
+
+void DestructHub(int port)
+{
+	assert(port > PORT_4 || port < PORT_1);
+
+	int port_index = port - 1;
+	g_HubObjArray[port_index]->HubDestroy();
+	delete g_HubObjArray[port_index];
+	g_HubObjArray[port_index] = nullptr;
+}
+
 int Hub::Init(int port)
 {
-	if (port > 4 || port < 1) { return -1; };
-
 	XboxDeviceState* dev = ClassInitFn();
     int rc = UsbHubClaimPort(dev, port);
     if (rc != 0) {
+		delete m_pPeripheralFuncStruct;
+		delete m_HubState;
 		m_UsbDev->m_HostController->m_FrameTimeMutex.unlock();
         return rc;
     }

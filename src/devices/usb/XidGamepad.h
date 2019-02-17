@@ -32,6 +32,8 @@
 
 
 struct USBXIDState; // forward declare
+bool ConstructXpadDuke(int port);
+void DestructXpadDuke(int port);
 
 /* Class which implements an xbox gamepad */
 class XidGamepad

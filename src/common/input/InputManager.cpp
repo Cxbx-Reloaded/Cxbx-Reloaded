@@ -40,6 +40,7 @@ namespace xboxkrnl
 #include "InputManager.h"
 #include "..\devices\usb\XidGamepad.h"
 #include "core\kernel\exports\EmuKrnl.h" // For EmuLog
+#include "EmuShared.h"
 
 
 InputDeviceManager g_InputDeviceManager;
@@ -85,8 +86,6 @@ void InputDeviceManager::Shutdown()
 
 void InputDeviceManager::AddDevice(std::shared_ptr<InputDevice> Device)
 {
-	int ID;
-
 	// If we are shutdown (or in process of shutting down) ignore this request:
 	if (!m_bInitOK) {
 		return;
@@ -94,7 +93,7 @@ void InputDeviceManager::AddDevice(std::shared_ptr<InputDevice> Device)
 
 	//std::lock_guard<std::mutex> lk(m_devices_mutex);
 	// Try to find an ID for this device
-	ID = 0;
+	int ID = 0;
 	while (true)
 	{
 		const auto it =
@@ -110,17 +109,11 @@ void InputDeviceManager::AddDevice(std::shared_ptr<InputDevice> Device)
 		}
 	}
 	Device->SetId(ID);
-	Device->SetXPort(XBOX_PORT_INVALID);
-	Device->SetXType(to_underlying(XBOX_INPUT_DEVICE::DEVICE_INVALID));
-	for (int i = 0; i < 26; i++) {
-		Device->SetBindings(i, nullptr);
-	}
+	Device->SetPort(PORT_INVALID);
+	Device->SetType(to_underlying(XBOX_INPUT_DEVICE::DEVICE_INVALID));
 
 	EmuLog(LOG_LEVEL::INFO, "Added device: %s", Device->GetQualifiedName().c_str());
 	m_Devices.emplace_back(std::move(Device));
-
-	//if (!m_is_populating_devices)
-	//	InvokeDevicesChangedCallbacks();
 }
 
 void InputDeviceManager::RemoveDevice(std::function<bool(const InputDevice*)> Callback)
@@ -141,152 +134,125 @@ void InputDeviceManager::RemoveDevice(std::function<bool(const InputDevice*)> Ca
 
 
 
-/*int InputDeviceManager::ConnectDeviceToXbox(int port, int type)
+void InputDeviceManager::ConnectDevice(int port, int type)
 {
-	int ret = -1;
-	std::vector<SdlDevice*>::iterator it;
-
-	if (port > 4 || port < 1) { return ret; };
-
-	for (it = m_SdlDevices.begin(); it != m_SdlDevices.end(); ++it) {
-		if ((*it)->m_Index == (port - 1)) {
-			--port;
-			break;
-		}
-	}
-
-	if (it == m_SdlDevices.end()) {
-		EmuLog(LOG_LEVEL::WARNING, "Attempted to connect a device not yet enumerated.");
-		return ret;
-	}
-
 	switch (type)
 	{
-		case MS_CONTROLLER_DUKE: {
-			if (g_HubObjArray[port] == nullptr) {
-				g_HubObjArray[port] = new Hub;
-				ret = g_HubObjArray[port]->Init(port + 1);
-				if (ret) {
-					delete g_HubObjArray[port];
-					g_HubObjArray[port] = nullptr;
-					break;
+		case to_underlying(XBOX_INPUT_DEVICE::MS_CONTROLLER_DUKE): {
+			if (ConstructHub(port)) {
+				if (!ConstructXpadDuke(port)) {
+					DestructHub(port);
 				}
-				if (g_XidControllerObjArray[port] == nullptr) {
-					g_XidControllerObjArray[port] = new XidGamepad;
-					ret = g_XidControllerObjArray[port]->Init(port + 1);
-					if (ret) {
-						g_HubObjArray[port]->HubDestroy();
-						delete g_HubObjArray[port];
-						g_HubObjArray[port] = nullptr;
-						delete g_XidControllerObjArray[port];
-						g_XidControllerObjArray[port] = nullptr;
-					}
-				}
-				else {
-					ret = -1;
-					g_HubObjArray[port]->HubDestroy();
-					delete g_HubObjArray[port];
-					g_HubObjArray[port] = nullptr;
-					EmuLog(LOG_LEVEL::WARNING, "Xid controller already present at port %d.2", port + 1);
-				}
-			}
-			else {
-				EmuLog(LOG_LEVEL::WARNING, "Hub already present at port %d", port + 1);
-			}
-			break;
+			}	
 		}
+		break;
 
-		case MS_CONTROLLER_S:
-		case LIGHT_GUN:
-		case STEERING_WHEEL:
-		case MEMORY_UNIT:
-		case IR_DONGLE:
-		case STEEL_BATTALION_CONTROLLER: {
-			EmuLog(LOG_LEVEL::INFO, "This device type is not yet supported");
-			break;
+		case to_underlying(XBOX_INPUT_DEVICE::MS_CONTROLLER_S):
+		case to_underlying(XBOX_INPUT_DEVICE::LIGHT_GUN):
+		case to_underlying(XBOX_INPUT_DEVICE::STEERING_WHEEL):
+		case to_underlying(XBOX_INPUT_DEVICE::MEMORY_UNIT):
+		case to_underlying(XBOX_INPUT_DEVICE::IR_DONGLE):
+		case to_underlying(XBOX_INPUT_DEVICE::STEEL_BATTALION_CONTROLLER): {
+			EmuLog(LOG_LEVEL::INFO, "Device type %d is not yet supported", type);
+			return;
 		}
 
 		default:
-			EmuLog(LOG_LEVEL::WARNING, "Attempted to attach an unknown device type");
+			EmuLog(LOG_LEVEL::WARNING, "Attempted to attach an unknown device type (type was %d)", type);
+			return;
 	}
 
-	if (!ret) {
-		(*it)->m_Type = type;
-		(*it)->m_Attached = 1;
-	}
-
-	return ret;
+	BindHostDevice(port, type);
 }
 
-void InputDeviceManager::DisconnectDeviceFromXbox(int port)
+void InputDeviceManager::DisconnectDevice(int port)
 {
-	std::vector<SdlDevice*>::iterator it;
-
-	if (port < 1) { return; }
-
-	for (it = m_SdlDevices.begin(); it != m_SdlDevices.end(); ++it) {
-		if ((*it)->m_Index == (port - 1)) {
-			--port;
-			break;
-		}
-	}
-
-	if (it == m_SdlDevices.end()) {
-		// Not necessarily a bug. This could also be triggered by detaching an unsupported joystick
+	if (port > PORT_4 || port < PORT_1) {
+		EmuLog(LOG_LEVEL::WARNING, "Invalid port number. The port was %d", port);
 		return;
 	}
 
-	if (port + 1 > 4) {
-		delete (*it);
-		m_SdlDevices.erase(it);
-		return;
-	}
+	if (g_XidControllerObjArray[port - 1] != nullptr) {
+		assert(g_HubObjArray[port - 1] != nullptr);
+		int type = to_underlying(XBOX_INPUT_DEVICE::MS_CONTROLLER_DUKE); // hardcoded for now
 
-	switch ((*it)->m_Type)
-	{
-		case MS_CONTROLLER_DUKE: {
-			if (g_HubObjArray[port] != nullptr && g_XidControllerObjArray[port] != nullptr) {
-				g_HubObjArray[port]->HubDestroy();
-				delete g_HubObjArray[port];
-				g_HubObjArray[port] = nullptr;
-				delete g_XidControllerObjArray[port];
-				g_XidControllerObjArray[port] = nullptr;
-				delete (*it);
-				m_SdlDevices.erase(it);
-				// Here, we could also see if there are detached devices that have a matching type and bound buttons, so that it can immediately
-				// be used instead of remaining inactive (example: 5 controllers and 1st is detached -> 5th can be used if it has bindings)
-			}
-			else {
-				EmuLog(LOG_LEVEL::WARNING, "Attempted to disconnect a device not attached to the Xbox.\n");
+		switch (type)
+		{
+			case to_underlying(XBOX_INPUT_DEVICE::MS_CONTROLLER_DUKE): {
+				DestructHub(port);
+				DestructXpadDuke(port);
 			}
 			break;
-		}
 
-		case MS_CONTROLLER_S:
-		case LIGHT_GUN:
-		case STEERING_WHEEL:
-		case MEMORY_UNIT:
-		case IR_DONGLE:
-		case STEEL_BATTALION_CONTROLLER: {
-			printf("This device type is not yet supported\n");
+			case to_underlying(XBOX_INPUT_DEVICE::MS_CONTROLLER_S):
+			case to_underlying(XBOX_INPUT_DEVICE::LIGHT_GUN):
+			case to_underlying(XBOX_INPUT_DEVICE::STEERING_WHEEL):
+			case to_underlying(XBOX_INPUT_DEVICE::MEMORY_UNIT):
+			case to_underlying(XBOX_INPUT_DEVICE::IR_DONGLE):
+			case to_underlying(XBOX_INPUT_DEVICE::STEEL_BATTALION_CONTROLLER): {
+				EmuLog(LOG_LEVEL::INFO, "Device type %d is not yet supported", type);
+			}
 			break;
-		}
 
-		default:
-			EmuLog(LOG_LEVEL::WARNING, "Attempted to detach an unknown device type\n");
+			default:
+				EmuLog(LOG_LEVEL::WARNING, "Attempted to detach an unknown device type (type was %d)", type);
+		}
 	}
-}*/
+	else {
+		EmuLog(LOG_LEVEL::WARNING, "Attempted to detach a device not attached to the emulated machine.");
+	}
+}
+
+void InputDeviceManager::BindHostDevice(int port, int type)
+{
+	std::array<Settings::s_input, 4> input;
+	std::array<std::vector<Settings::s_input_profiles>, to_underlying(XBOX_INPUT_DEVICE::DEVICE_MAX)> profile;
+	int port_index = port - 1;
+
+	g_EmuShared->GetInputSettings(&input);
+	g_EmuShared->GetInputProfileSettings(&profile);
+
+	std::string device_name(input[port_index].DeviceName);
+	std::string profile_name(input[port_index].ProfileName);
+
+	auto dev = FindDevice(std::string(device_name));
+	if (dev != nullptr) {
+		auto it_profile = std::find_if(profile[type].begin(), profile[type].end(), [&profile_name](const auto& profile) {
+			if (profile.ProfileName == profile_name) {
+				return true;
+			}
+			return false;
+		});
+		if (it_profile != profile[type].end()) {
+			std::vector<InputDevice::IoControl*> controls = dev->GetIoControls();
+			for (int index = 0; index < dev_num_buttons[type]; index++) {
+				std::string dev_button(it_profile->ControlList[index]);
+				auto it_control = std::find_if(controls.begin(), controls.end(), [&dev_button](const auto control) {
+					if (control->GetName() == dev_button) {
+						return true;
+					}
+					return false;
+				});
+				dev->SetBindings(index, (it_control != controls.end()) ? *it_control : nullptr);
+			}
+		}
+		else {
+			for (int index = 0; index < dev_num_buttons[type]; index++) {
+				dev->SetBindings(index, nullptr);
+			}
+		}
+		dev->SetPort(port);
+		dev->SetType(type);
+	}
+}
 
 bool InputDeviceManager::UpdateXboxPortInput(int Port, void* Buffer, int Direction)
 {
-	InputDevice* pDev;
-
 	assert(Direction == DIRECTION_IN || Direction == DIRECTION_OUT);
-	if (Port > XBOX_PORT_4 || Port < XBOX_PORT_1) { return false; };
 
-	pDev = nullptr;
+	InputDevice* pDev = nullptr;
 	for (auto dev_ptr : m_Devices) {
-		if (dev_ptr.get()->GetXPort() == Port) {
+		if (dev_ptr.get()->GetPort() == Port) {
 			pDev = dev_ptr.get();
 			break;
 		}
@@ -295,7 +261,7 @@ bool InputDeviceManager::UpdateXboxPortInput(int Port, void* Buffer, int Directi
 		return false;
 	}
 
-	switch (pDev->GetXType())
+	switch (pDev->GetType())
 	{
 		case to_underlying(XBOX_INPUT_DEVICE::MS_CONTROLLER_DUKE): {
 			UpdateInputXpad(pDev, Buffer, Direction);
@@ -303,7 +269,7 @@ bool InputDeviceManager::UpdateXboxPortInput(int Port, void* Buffer, int Directi
 		break;
 
 		default: {
-			EmuLog(LOG_LEVEL::WARNING, "Port %d has an unsupported xbox device attached! The type was %d", Port, pDev->GetXType());
+			EmuLog(LOG_LEVEL::WARNING, "Port %d has an unsupported device attached! The type was %d", Port, pDev->GetType());
 			return false;
 		}
 	}

@@ -32,7 +32,8 @@
 
 
 struct USBHubState; // forward declare
-
+bool ConstructHub(int port);
+void DestructHub(int port);
 
 /* Class which implements a usb hub */
 class Hub

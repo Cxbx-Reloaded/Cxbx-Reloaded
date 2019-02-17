@@ -186,13 +186,52 @@ static const XIDDesc desc_xid_xbox_gamepad = {
 	{ 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF }  // wAlternateProductIds
 };
 
+bool ConstructXpadDuke(int port)
+{
+	if (port > PORT_4 || port < PORT_1) {
+		EmuLog(LOG_LEVEL::WARNING, "Invalid port number. The port was %d", port);
+		return false;
+	}
+
+	int port_index = port - 1;
+	if (g_HubObjArray[port_index] == nullptr) {
+		EmuLog(LOG_LEVEL::WARNING, "Cannot create xpad at port %d, hub not created yet", port);
+		return false;
+	}
+
+	if (g_XidControllerObjArray[port_index] == nullptr) {
+		g_XidControllerObjArray[port_index] = new XidGamepad;
+		int ret = g_XidControllerObjArray[port_index]->Init(port);
+		if (ret) {
+			delete g_XidControllerObjArray[port_index];
+			g_XidControllerObjArray[port_index] = nullptr;
+			return false;
+		}
+	}
+	else {
+		EmuLog(LOG_LEVEL::WARNING, "Xpad already present at port %d", port);
+		return false;
+	}
+	return true;
+}
+
+void DestructXpadDuke(int port)
+{
+	assert(port > PORT_4 || port < PORT_1);
+
+	int port_index = port - 1;
+	assert(g_HubObjArray[port_index] == nullptr);
+	delete g_XidControllerObjArray[port_index];
+	g_XidControllerObjArray[port_index] = nullptr;
+}
+
 int XidGamepad::Init(int port)
 {
-	if (port > 4 || port < 1) { return -1; }
-
 	XboxDeviceState* dev = ClassInitFn();
 	int rc = UsbXidClaimPort(dev, port);
 	if (rc != 0) {
+		delete m_pPeripheralFuncStruct;
+		delete m_XidState;
 		m_UsbDev->m_HostController->m_FrameTimeMutex.unlock();
 		return rc;
 	}

@@ -141,7 +141,7 @@ INT_PTR CALLBACK DlgInputConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPAR
 						if (g_ChildWnd) {
 							// Sync updated input to kernel process to use run-time settings.
 							g_EmuShared->SetInputSettings(&g_Settings->m_input);
-							ipc_send_kernel_update(IPC_UPDATE_KERNEL::CONFIG_INPUT_SYNC, ((LOWORD(wParam) + 4) & 7) - 1,
+							ipc_send_kernel_update(IPC_UPDATE_KERNEL::CONFIG_INPUT_SYNC, (LOWORD(wParam) + 4) & 7,
 								reinterpret_cast<std::uintptr_t>(g_ChildWnd));
 						}
 					}

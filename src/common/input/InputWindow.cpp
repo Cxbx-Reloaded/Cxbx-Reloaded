@@ -64,7 +64,7 @@ void InputWindow::Initialize(HWND hwnd, HWND hwnd_krnl, int port_num, int dev_ty
 
 InputWindow::~InputWindow()
 {
-	AssignBindingsToDevice();
+	SaveBindingsToDevice();
 	delete m_DeviceConfig;
 	m_DeviceConfig = nullptr;
 }
@@ -251,7 +251,7 @@ void InputWindow::LoadDefaultProfile()
 	LoadProfile(g_Settings->m_input[m_port_num].ProfileName);
 }
 
-void InputWindow::AssignBindingsToDevice()
+void InputWindow::SaveBindingsToDevice()
 {
 	char device_name[50], profile_name[50];
 	SendMessage(m_hwnd_profile_list, WM_GETTEXT, sizeof(profile_name), reinterpret_cast<LPARAM>(profile_name));
@@ -259,21 +259,7 @@ void InputWindow::AssignBindingsToDevice()
 		return;
 	}
 	SendMessage(m_hwnd_device_list, WM_GETTEXT, sizeof(device_name), reinterpret_cast<LPARAM>(device_name));
-	auto dev = g_InputDeviceManager.FindDevice(std::string(device_name));
-	if (dev != nullptr) {
-		std::vector<InputDevice::IoControl*> controls = dev->GetIoControls();
-		for (int index = 0; index < m_max_num_buttons; index++) {
-			char dev_button[30];
-			m_DeviceConfig->FindButtonByIndex(index)->GetText(dev_button, sizeof(dev_button));
-			auto it = std::find_if(controls.begin(), controls.end(), [&dev_button](const auto control) {
-				if (control->GetName() == dev_button) {
-					return true;
-				}
-				return false;
-			});
-			dev->SetBindings(index, (it != controls.end()) ? *it : nullptr);
-		}
-	}
+
 	g_Settings->m_input[m_port_num].DeviceName = device_name;
 	g_Settings->m_input[m_port_num].ProfileName = profile_name;
 
@@ -282,7 +268,7 @@ void InputWindow::AssignBindingsToDevice()
 		// Sync updated input to kernel process to use run-time settings.
 		g_EmuShared->SetInputSettings(&g_Settings->m_input);
 		g_EmuShared->SetInputProfileSettings(&g_Settings->m_input_profiles);
-		ipc_send_kernel_update(IPC_UPDATE_KERNEL::CONFIG_INPUT_SYNC, m_port_num,
+		ipc_send_kernel_update(IPC_UPDATE_KERNEL::CONFIG_INPUT_SYNC, m_port_num + 1,
 			reinterpret_cast<std::uintptr_t>(m_hwnd_krnl));
 	}
 }

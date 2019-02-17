@@ -57,6 +57,11 @@
 #define GAMEPAD_BUTTON_MAX        20
 #define BUTTON_MASK(button) (1 << ((button) - GAMEPAD_DPAD_UP))
 
+// Prevent collision with the SetPort provided by Windows
+#ifdef WIN32
+#undef SetPort
+#endif
+
 
 // xpad in/out buffers stripped of the first two bytes
 struct XpadInput {
@@ -80,9 +85,9 @@ class InputDeviceManager
 		void Initialize(bool GUImode);
 		void Shutdown();
 		// connect the enumerated device to the virtual xbox
-		int ConnectDeviceToXbox(int port, int type);
+		void ConnectDevice(int port, int type);
 		// disconnect a device from the emulated xbox
-		void DisconnectDeviceFromXbox(int port);
+		void DisconnectDevice(int port);
 		// read/write the input/output from/to the device attached to the supplied xbox port
 		bool UpdateXboxPortInput(int Port, void* Buffer, int Direction);
 		// add the device to the list of availble devices
@@ -98,6 +103,10 @@ class InputDeviceManager
 
 
 	private:
+		// update input for an xbox controller
+		void UpdateInputXpad(InputDevice* Device, void* Buffer, int Direction);
+		void BindHostDevice(int port, int type);
+
 		// all enumerated devices currently detected and supported
 		std::vector<std::shared_ptr<InputDevice>> m_Devices;
 		// These serve double duty. They are used to signal errors during the initialization and
@@ -108,9 +117,6 @@ class InputDeviceManager
 		std::thread m_PollingThread;
 		// used to indicate that the manager was initialized correctly
 		bool m_bInitOK;
-		// update input for an xbox controller
-		void UpdateInputXpad(InputDevice* Device, void* Buffer, int Direction);
-
 };
 
 extern InputDeviceManager g_InputDeviceManager;

@@ -44,11 +44,11 @@
 #include <functional>
 #include <condition_variable>
 
-#define XBOX_PORT_INVALID  -1
-#define XBOX_PORT_1         1
-#define XBOX_PORT_2         2
-#define XBOX_PORT_3         3
-#define XBOX_PORT_4         4
+#define PORT_INVALID  -1
+#define PORT_1         1
+#define PORT_2         2
+#define PORT_3         3
+#define PORT_4         4
 
 #define DIRECTION_IN  0
 #define DIRECTION_OUT 1
@@ -116,14 +116,14 @@ class InputDevice
 		int GetId() const { return m_ID; }
 		// sets the ID of this device
 		void SetId(int ID) { m_ID = ID; }
-		// retrieves the xbox port this device is attached to
-		int GetXPort() const { return m_XboxPort; }
-		// sets the xbox port this device is attached to
-		void SetXPort(int Port) { m_XboxPort = Port; }
-		// retrieves the xbox device type
-		int GetXType() const { return m_Type; }
-		// sets the xbox device type
-		void SetXType(int Type) { m_Type = Type; }
+		// retrieves the port this device is attached to
+		int GetPort() const { return m_XboxPort; }
+		// sets the port this device is attached to
+		void SetPort(int Port) { m_XboxPort = Port; }
+		// retrieves the device type
+		int GetType() const { return m_Type; }
+		// sets the device type
+		void SetType(int Type) { m_Type = Type; }
 
 
 	protected:
