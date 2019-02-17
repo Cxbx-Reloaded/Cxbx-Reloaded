@@ -52,6 +52,9 @@ namespace Sdl
 	}
 	SDL_INIT_STATUS;
 
+	extern uint32_t ExitEvent_t;
+	extern uint32_t PopulateEvent_t;
+	extern uint32_t UpdateInputEvent_t;
 	extern int SdlInitStatus;
 	extern bool SdlPopulateOK;
 

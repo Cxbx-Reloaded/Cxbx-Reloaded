@@ -785,6 +785,10 @@ void Settings::SyncToEmulator()
 	g_EmuShared->SetControllerDInputSettings(&m_controller_dinput);
 	g_EmuShared->SetControllerPortSettings(&m_controller_port);
 
+	// register input settings
+	g_EmuShared->SetInputSettings(&m_input);
+	g_EmuShared->SetInputProfileSettings(&m_input_profiles);
+
 	// register Hacks settings
 	g_EmuShared->SetHackSettings(&m_hacks);
 

@@ -118,6 +118,16 @@ class EmuShared : public Mutex
 		void SetControllerPortSettings(const Settings::s_controller_port *ctrl) { Lock(); m_controller_port = *ctrl; Unlock(); }
 
 		// ******************************************************************
+		// * Input config Accessors
+		// ******************************************************************
+		void GetInputSettings(std::array<Settings::s_input, 4> *input) { Lock(); *input = m_input; Unlock(); }
+		void SetInputSettings(const std::array<Settings::s_input, 4> *input) { Lock(); m_input = *input; Unlock(); }
+		void GetInputProfileSettings(std::array<std::vector<Settings::s_input_profiles>, to_underlying(XBOX_INPUT_DEVICE::DEVICE_MAX)> *profile)
+		{ Lock(); *profile = m_input_profiles; Unlock(); }
+		void SetInputProfileSettings(const std::array<std::vector<Settings::s_input_profiles>, to_underlying(XBOX_INPUT_DEVICE::DEVICE_MAX)> *profile)
+		{ Lock(); m_input_profiles = *profile; Unlock(); }
+
+		// ******************************************************************
 		// * LLE Flags Accessors
 		// ******************************************************************
 		void GetFlagsLLE(      uint *flags) { Lock(); *flags = m_core.FlagsLLE; Unlock(); }
@@ -253,6 +263,8 @@ class EmuShared : public Mutex
 		// Third-party program should only be allow to edit settings.ini file.
 		Settings::s_controller_dinput m_controller_dinput;
 		Settings::s_controller_port m_controller_port;
+		std::array<Settings::s_input, 4> m_input;
+		std::array<std::vector<Settings::s_input_profiles>, to_underlying(XBOX_INPUT_DEVICE::DEVICE_MAX)> m_input_profiles;
 		Settings::s_core m_core;
 		Settings::s_video m_video;
 		Settings::s_audio m_audio;

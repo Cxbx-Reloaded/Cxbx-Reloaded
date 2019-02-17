@@ -37,6 +37,7 @@
 #include "Windows.h"
 #include "ResCxbx.h"
 #include "input\InputWindow.h"
+#include "gui\DlgInputConfig.h"
 
 #define INPUT_TIMEOUT 5000
 
@@ -58,7 +59,7 @@ INT_PTR CALLBACK DlgXidControllerConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wPar
 				dev_type == to_underlying(XBOX_INPUT_DEVICE::MS_CONTROLLER_S));
 
 			g_InputWindow = new InputWindow;
-			g_InputWindow->Initialize(hWndDlg, port_num, dev_type);
+			g_InputWindow->Initialize(hWndDlg, g_ChildWnd, port_num, dev_type);
 		}
 		break;
 

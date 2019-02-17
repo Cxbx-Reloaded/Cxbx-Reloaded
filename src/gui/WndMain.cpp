@@ -954,7 +954,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
 			case ID_SETTINGS_CONFIG_INPUT:
 			{
-				ShowInputConfig(hwnd);
+				ShowInputConfig(hwnd, m_hwndChild);
 			}
 			break;
 

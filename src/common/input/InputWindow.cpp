@@ -1,5 +1,7 @@
 #include "InputWindow.h"
 #include "..\..\gui\ResCxbx.h"
+#include "common\IPCHybrid.hpp"
+#include "EmuShared.h"
 #include <future>
 
 
@@ -16,12 +18,13 @@ int dev_num_buttons[to_underlying(XBOX_INPUT_DEVICE::DEVICE_MAX)] = {
 };
 
 
-void InputWindow::Initialize(HWND hwnd, int port_num, int dev_type)
+void InputWindow::Initialize(HWND hwnd, HWND hwnd_krnl, int port_num, int dev_type)
 {
 	// Save window/device specific variables
 	m_hwnd_window = hwnd;
 	m_hwnd_device_list = GetDlgItem(m_hwnd_window, IDC_DEVICE_LIST);
 	m_hwnd_profile_list = GetDlgItem(m_hwnd_window, IDC_XID_PROFILE_NAME);
+	m_hwnd_krnl = hwnd_krnl;
 	m_dev_type = dev_type;
 	m_max_num_buttons = dev_num_buttons[dev_type];
 	m_port_num = port_num - 1;
@@ -273,4 +276,13 @@ void InputWindow::AssignBindingsToDevice()
 	}
 	g_Settings->m_input[m_port_num].DeviceName = device_name;
 	g_Settings->m_input[m_port_num].ProfileName = profile_name;
+
+	// Also inform the kernel process if it exists
+	if (m_hwnd_krnl) {
+		// Sync updated input to kernel process to use run-time settings.
+		g_EmuShared->SetInputSettings(&g_Settings->m_input);
+		g_EmuShared->SetInputProfileSettings(&g_Settings->m_input_profiles);
+		ipc_send_kernel_update(IPC_UPDATE_KERNEL::CONFIG_INPUT_SYNC, m_port_num,
+			reinterpret_cast<std::uintptr_t>(m_hwnd_krnl));
+	}
 }

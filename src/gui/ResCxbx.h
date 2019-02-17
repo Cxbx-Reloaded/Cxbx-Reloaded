@@ -387,6 +387,7 @@
 #define ID_SETTINGS_CONFIG_LOGGING      40108
 #define ID_SYNC_CONFIG_LOGGING          40109
 #define ID_LOG                          40110
+#define ID_SYNC_CONFIG_INPUT            40111
 #define IDC_STATIC                      -1
 
 // Next default values for new objects

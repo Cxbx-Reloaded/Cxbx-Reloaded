@@ -11,7 +11,7 @@
 class InputWindow
 {
 	public:
-		void Initialize(HWND hwnd, int port_num, int dev_type);
+		void Initialize(HWND hwnd, HWND hwnd_krnl, int port_num, int dev_type);
 		~InputWindow();
 		void UpdateDeviceList();
 		void BindButton(int ControlID, std::string DeviceName, int ms);
@@ -34,10 +34,12 @@ class InputWindow
 		EmuDevice* m_DeviceConfig;
 		// handle of the window
 		HWND m_hwnd_window;
-		// handle to the device list combobox
+		// handle of the device list combobox
 		HWND m_hwnd_device_list;
-		// handle to the profile list combobox
+		// handle of the profile list combobox
 		HWND m_hwnd_profile_list;
+		// handle of the kernel window
+		HWND m_hwnd_krnl;
 		// type of the device
 		int m_dev_type;
 		// num of buttons of device under configuration

@@ -40,16 +40,18 @@
 #include "input\InputManager.h"
 #include "Logging.h"
 #include "Settings.hpp"
+#include "common\IPCHybrid.hpp"
+#include "EmuShared.h"
 
 
-// Generic function called from the gui to display the input menu
-void ShowInputConfig(HWND hwnd);
 // Windows dialog procedure for the input menu
 static INT_PTR CALLBACK DlgInputConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+HWND g_ChildWnd = NULL;
 
-void ShowInputConfig(HWND hwnd)
+void ShowInputConfig(HWND hwnd, HWND ChildWnd)
 {
 	g_InputDeviceManager.Initialize(true);
+	g_ChildWnd = ChildWnd;
 
 	// Show dialog box
 	DialogBox(GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_INPUT_CFG), hwnd, DlgInputConfigProc);
@@ -88,6 +90,7 @@ INT_PTR CALLBACK DlgInputConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPAR
 		case WM_CLOSE:
 		{
 			g_InputDeviceManager.Shutdown();
+			g_ChildWnd = NULL;
 			EndDialog(hWndDlg, wParam);
 		}
 		break;
@@ -133,6 +136,14 @@ INT_PTR CALLBACK DlgInputConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPAR
 							EnableWindow(GetDlgItem(hWndDlg, LOWORD(wParam) + 4), TRUE);
 						}
 						g_Settings->m_input[((LOWORD(wParam) + 4) & 7) - 1].Type = dev_type;
+
+						// Also inform the kernel process if it exists
+						if (g_ChildWnd) {
+							// Sync updated input to kernel process to use run-time settings.
+							g_EmuShared->SetInputSettings(&g_Settings->m_input);
+							ipc_send_kernel_update(IPC_UPDATE_KERNEL::CONFIG_INPUT_SYNC, ((LOWORD(wParam) + 4) & 7) - 1,
+								reinterpret_cast<std::uintptr_t>(g_ChildWnd));
+						}
 					}
 				}
 				break;

@@ -52,6 +52,7 @@ namespace xboxkrnl
 #include "devices\video\nv2a.h" // For GET_MASK, NV_PGRAPH_CONTROL_0
 #include "gui\ResCxbx.h"
 #include "WalkIndexBuffer.h"
+#include "common\input\SdlJoystick.h"
 
 #include <assert.h>
 #include <process.h>
@@ -1582,6 +1583,16 @@ static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 					// Sync run-time config log settings from GUI process.
 					log_sync_config();
 					log_generate_active_filter_output(CXBXR_MODULE::CXBXR);
+				}
+				break;
+
+				case ID_SYNC_CONFIG_INPUT:
+				{
+					SDL_Event UpdateInputEvent;
+					SDL_memset(&UpdateInputEvent, 0, sizeof(SDL_Event));
+					UpdateInputEvent.type = Sdl::UpdateInputEvent_t;
+					UpdateInputEvent.user.data1 = new int(lParam);
+					SDL_PushEvent(&UpdateInputEvent);
 				}
 				break;
 

@@ -52,8 +52,9 @@ static const uint16_t RUMBLE_LENGTH_MAX = 500;
 
 namespace Sdl
 {
-	static uint32_t ExitEvent_t;
-	static uint32_t PopulateEvent_t;
+	uint32_t ExitEvent_t;
+	uint32_t PopulateEvent_t;
+	uint32_t UpdateInputEvent_t;
 	int SdlInitStatus = SDL_NOT_INIT;
 	bool SdlPopulateOK = false;
 
@@ -70,7 +71,7 @@ namespace Sdl
 			Cv.notify_one();
 			return;
 		}
-		CustomEvent_t = SDL_RegisterEvents(2);
+		CustomEvent_t = SDL_RegisterEvents(3);
 		if (CustomEvent_t == (uint32_t)-1) {
 			SDL_Quit();
 			EmuLog(LOG_LEVEL::WARNING, "Failed to create SDL custom events!");
@@ -81,6 +82,7 @@ namespace Sdl
 		}
 		ExitEvent_t = CustomEvent_t;
 		PopulateEvent_t = CustomEvent_t + 1;
+		UpdateInputEvent_t = CustomEvent_t + 2;
 
 		SetThreadAffinityMask(GetCurrentThread(), g_CPUOthers);
 		SdlInitStatus = SDL_INIT_SUCCESS;
@@ -101,6 +103,9 @@ namespace Sdl
 				}
 				else if (Event.type == ExitEvent_t) {
 					break;
+				}
+				else if (Event.type == UpdateInputEvent_t) {
+
 				}
 			}
 		}

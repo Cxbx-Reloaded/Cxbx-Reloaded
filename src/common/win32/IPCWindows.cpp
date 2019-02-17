@@ -90,6 +90,10 @@ void ipc_send_kernel_update(IPC_UPDATE_KERNEL command, const unsigned int value,
 			cmdParam = ID_SYNC_CONFIG_LOGGING;
 			break;
 
+		case IPC_UPDATE_KERNEL::CONFIG_INPUT_SYNC:
+			cmdParam = ID_SYNC_CONFIG_INPUT;
+			break;
+
 		default:
 			cmdParam = 0;
 			break;
