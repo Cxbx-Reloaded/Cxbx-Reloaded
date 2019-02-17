@@ -31,32 +31,6 @@
 #include "InputDevice.h"
 #include "EmuDevice.h"
 
-#define GAMEPAD_A                 0
-#define GAMEPAD_B                 1
-#define GAMEPAD_X                 2
-#define GAMEPAD_Y                 3
-#define GAMEPAD_BLACK             4
-#define GAMEPAD_WHITE             5
-#define GAMEPAD_LEFT_TRIGGER      6
-#define GAMEPAD_RIGHT_TRIGGER     7
-
-#define GAMEPAD_DPAD_UP           8
-#define GAMEPAD_DPAD_DOWN         9
-#define GAMEPAD_DPAD_LEFT         10
-#define GAMEPAD_DPAD_RIGHT        11
-#define GAMEPAD_START             12
-#define GAMEPAD_BACK              13
-#define GAMEPAD_LEFT_THUMB        14
-#define GAMEPAD_RIGHT_THUMB       15
-
-#define GAMEPAD_LEFT_THUMB_X      16
-#define GAMEPAD_LEFT_THUMB_Y      17
-#define GAMEPAD_RIGHT_THUMB_X     18
-#define GAMEPAD_RIGHT_THUMB_Y     19
-
-#define GAMEPAD_BUTTON_MAX        20
-#define BUTTON_MASK(button) (1 << ((button) - GAMEPAD_DPAD_UP))
-
 // Prevent collision with the SetPort provided by Windows
 #ifdef WIN32
 #undef SetPort
@@ -104,7 +78,8 @@ class InputDeviceManager
 
 	private:
 		// update input for an xbox controller
-		void UpdateInputXpad(InputDevice* Device, void* Buffer, int Direction);
+		void UpdateInputXpad(std::shared_ptr<InputDevice>& Device, void* Buffer, int Direction);
+		// bind a host device to an emulated device
 		void BindHostDevice(int port, int type);
 
 		// all enumerated devices currently detected and supported

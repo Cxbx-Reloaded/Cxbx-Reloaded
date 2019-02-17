@@ -94,7 +94,7 @@ namespace Sdl
 
 				private:
 					// pointer to the device this button belongs to
-					SDL_Joystick * const m_Js;
+					SDL_Joystick* const m_Js;
 					// arbitrary index assigned to this button
 					const uint8_t m_Index;
 			};
@@ -108,7 +108,7 @@ namespace Sdl
 
 				private:
 					// pointer to the device this hat button belongs to
-					SDL_Joystick * const m_Js;
+					SDL_Joystick* const m_Js;
 					// identifies the direction of the hat button (arbitrary, assigned by us)
 					const uint8_t m_Direction;
 					// arbitrary index assigned to this hat button
@@ -124,7 +124,7 @@ namespace Sdl
 
 				private:
 					// pointer to the device this axis belongs to
-					SDL_Joystick * const m_Js;
+					SDL_Joystick* const m_Js;
 					// max value of this axis
 					const int16_t m_Range;
 					// arbitrary index assigned to this axis

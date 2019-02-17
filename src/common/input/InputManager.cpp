@@ -132,8 +132,6 @@ void InputDeviceManager::RemoveDevice(std::function<bool(const InputDevice*)> Ca
 	}
 }
 
-
-
 void InputDeviceManager::ConnectDevice(int port, int type)
 {
 	switch (type)
@@ -241,8 +239,8 @@ void InputDeviceManager::BindHostDevice(int port, int type)
 				dev->SetBindings(index, nullptr);
 			}
 		}
-		dev->SetPort(port);
 		dev->SetType(type);
+		dev->SetPort(port);
 	}
 }
 
@@ -250,99 +248,78 @@ bool InputDeviceManager::UpdateXboxPortInput(int Port, void* Buffer, int Directi
 {
 	assert(Direction == DIRECTION_IN || Direction == DIRECTION_OUT);
 
-	InputDevice* pDev = nullptr;
 	for (auto dev_ptr : m_Devices) {
-		if (dev_ptr.get()->GetPort() == Port) {
-			pDev = dev_ptr.get();
-			break;
+		if (dev_ptr->GetPort() == Port) {
+			switch (dev_ptr->GetType())
+			{
+				case to_underlying(XBOX_INPUT_DEVICE::MS_CONTROLLER_DUKE): {
+					UpdateInputXpad(dev_ptr, Buffer, Direction);
+				}
+				break;
+
+				default: {
+					EmuLog(LOG_LEVEL::WARNING, "Port %d has an unsupported device attached! The type was %d", Port, dev_ptr->GetType());
+					return false;
+				}
+			}
+			return true;
 		}
 	}
-	if (pDev == nullptr) {
-		return false;
-	}
-
-	switch (pDev->GetType())
-	{
-		case to_underlying(XBOX_INPUT_DEVICE::MS_CONTROLLER_DUKE): {
-			UpdateInputXpad(pDev, Buffer, Direction);
-		}
-		break;
-
-		default: {
-			EmuLog(LOG_LEVEL::WARNING, "Port %d has an unsupported device attached! The type was %d", Port, pDev->GetType());
-			return false;
-		}
-	}
-
-	return true;
+	return false;
 }
 
-void InputDeviceManager::UpdateInputXpad(InputDevice* Device, void* Buffer, int Direction)
+void InputDeviceManager::UpdateInputXpad(std::shared_ptr<InputDevice>& Device, void* Buffer, int Direction)
 {
-	int i;
-	std::map<int, InputDevice::IoControl*> bindings;
+	std::map<int, InputDevice::IoControl*> bindings = Device->GetBindings();
+	assert(bindings.size() == static_cast<size_t>(dev_num_buttons[to_underlying(XBOX_INPUT_DEVICE::MS_CONTROLLER_DUKE)]));
 
 	if (Direction == DIRECTION_IN) {
 		XpadInput* in_buf = reinterpret_cast<XpadInput*>(static_cast<uint8_t*>(Buffer) + 2);
-		bindings = Device->GetBindings();
 		Device->UpdateInput();
-		for (i = GAMEPAD_A; i < GAMEPAD_DPAD_UP; i++) {
-			const auto it = std::find_if(bindings.begin(), bindings.end(), [&i](const auto& d) {
-				return i == d.first;
-			});
-			if (it != bindings.end()) {
-				if (i == GAMEPAD_LEFT_TRIGGER || i == GAMEPAD_RIGHT_TRIGGER) {
-					//in_buf->bAnalogButtons[i] = it->second->GetState(); //>> 7; likely to fix
-				}
-				else {
-					// At the moment, we don't support intermediate values for the analog buttons, so report them as full pressed or released
-					//in_buf->bAnalogButtons[i] = it->second->GetState() ? 0xFF : 0; // likely to fix
-				}
+
+		for (int i = 0; i < 8; i++) {
+			ControlState state = (bindings[i] != nullptr) ? dynamic_cast<InputDevice::Input*>(bindings[i])->GetState() : 0.0;
+			if (state) {
+				in_buf->wButtons |= (1 << i);
+			}
+			else {
+				in_buf->wButtons &= ~(1 << i);
 			}
 		}
-		for (i = GAMEPAD_DPAD_UP; i < GAMEPAD_LEFT_THUMB_X; i++) {
-			const auto it = std::find_if(bindings.begin(), bindings.end(), [&i](const auto& d) {
-				return i == d.first;
-			});
-			if (it != bindings.end()) {
-				//if (it->second->GetState()) { // likely to fix
-				//	in_buf->wButtons |= BUTTON_MASK(i);
-				//}
-				//else {
-				//	in_buf->wButtons &= ~(BUTTON_MASK(i));
-				//}
-			}
+		for (int i = 8, j = 0; i < 16; i++, j++) {
+			ControlState state = (bindings[i] != nullptr) ? dynamic_cast<InputDevice::Input*>(bindings[i])->GetState() : 0.0;
+			in_buf->bAnalogButtons[j] = static_cast<uint8_t>(state * 0xFF);
 		}
-		for (i = GAMEPAD_LEFT_THUMB_X; i < GAMEPAD_BUTTON_MAX; i++) {
-			const auto it = std::find_if(bindings.begin(), bindings.end(), [&i](const auto& d) {
-				return i == d.first;
-			});
-			if (it != bindings.end()) {
-				switch (i)
-				{
-					case GAMEPAD_LEFT_THUMB_X: {
-						//in_buf->sThumbLX = it->second->GetState(); // likely to fix
-					}
-					break;
 
-					case GAMEPAD_LEFT_THUMB_Y: {
-						//in_buf->sThumbLY = -it->second->GetState() - 1;
-					}
-					break;
+		/* FIXME: is this correct? */
+		for (int i = 16, j = 0; i < 24; i += 2, j++) {
+			ControlState state_plus = (bindings[i] != nullptr) ? dynamic_cast<InputDevice::Input*>(bindings[i])->GetState() : 0.0;
+			ControlState state_minus = (bindings[i+1] != nullptr) ? dynamic_cast<InputDevice::Input*>(bindings[i+1])->GetState() : 0.0;
+			ControlState state = state_plus ? state_plus * 0x7FFF : state_minus ? state_minus * 0x8000 : 0.0;
+			switch (j)
+			{
+				case 0: {
+					in_buf->sThumbLX = static_cast<int16_t>(state);
+				}
+				break;
 
-					case GAMEPAD_RIGHT_THUMB_X: {
-						//in_buf->sThumbRX = it->second->GetState();
-					}
-					break;
+				case 1: {
+					in_buf->sThumbLY = static_cast<int16_t>(state);
+				}
+				break;
 
-					case GAMEPAD_RIGHT_THUMB_Y: {
-						//in_buf->sThumbRY = -it->second->GetState() - 1;
-					}
-					break;
+				case 2: {
+					in_buf->sThumbRX = static_cast<int16_t>(state);
+				}
+				break;
 
-					default: {
-						// unreachable
-					}
+				case 3: {
+					in_buf->sThumbRY = static_cast<int16_t>(state);
+				}
+				break;
+
+				default: {
+					// unreachable
 				}
 			}
 		}
