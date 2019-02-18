@@ -6,18 +6,24 @@
 #define PROFILE_LOAD   1
 #define PROFILE_SAVE   2
 #define PROFILE_DELETE 3
+#define RUMBLE_SET     4
+#define RUMBLE_UPDATE  5
+#define RUMBLE_TEST    6
 
 
 class InputWindow
 {
 	public:
 		void Initialize(HWND hwnd, HWND hwnd_krnl, int port_num, int dev_type);
+		void InitRumble(HWND hwnd);
 		~InputWindow();
 		void UpdateDeviceList();
 		void BindButton(int ControlID, std::string DeviceName, int ms);
 		void BindXInput();
 		void ClearBindings();
 		void UpdateProfile(std::string& name, int command);
+		void UpdateRumble(int command);
+		void UpdateCurrentDevice();
 
 
 	private:
@@ -30,7 +36,7 @@ class InputWindow
 		void LoadDefaultProfile();
 		void SaveBindingsToDevice();
 
-		// xbox device under configuration
+		// guest device under configuration
 		EmuDevice* m_DeviceConfig;
 		// handle of the window
 		HWND m_hwnd_window;
@@ -40,12 +46,18 @@ class InputWindow
 		HWND m_hwnd_profile_list;
 		// handle of the kernel window
 		HWND m_hwnd_krnl;
+		// handle of the rumble list
+		HWND m_hwnd_rumble_list;
 		// type of the device
 		int m_dev_type;
 		// num of buttons of device under configuration
 		int m_max_num_buttons;
 		// xbox port number the host device attaches to (0 - 3)
 		int m_port_num;
+		// host device under configuration
+		std::string m_host_dev;
+		// currently selected rumble control
+		std::string m_rumble;
 };
 
 extern InputWindow* g_InputWindow;

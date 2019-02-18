@@ -143,7 +143,7 @@ namespace Sdl
 
 				protected:
 					void Update();
-					virtual void SetSDLHapticEffect(ControlState State) = 0;
+					virtual void SetSDLHapticEffect(ControlState StateLeft, ControlState StateRight) = 0;
 
 					// the type of haptic effect
 					SDL_HapticEffect m_Effect;
@@ -153,7 +153,7 @@ namespace Sdl
 					int m_ID;
 
 				private:
-					virtual void SetState(ControlState State) override final;
+					virtual void SetState(ControlState StateLeft, ControlState StateRight) override final;
 			};
 
 			class ConstantEffect : public HapticEffect
@@ -163,7 +163,7 @@ namespace Sdl
 					std::string GetName() const override;
 
 				private:
-					void SetSDLHapticEffect(ControlState State) override;
+					void SetSDLHapticEffect(ControlState StateLeft, ControlState StateRight) override;
 			};
 
 			class RampEffect : public HapticEffect
@@ -173,7 +173,7 @@ namespace Sdl
 					std::string GetName() const override;
 
 				private:
-					void SetSDLHapticEffect(ControlState State) override;
+					void SetSDLHapticEffect(ControlState StateLeft, ControlState StateRight) override;
 			};
 
 			class SineEffect : public HapticEffect
@@ -183,7 +183,7 @@ namespace Sdl
 					std::string GetName() const override;
 
 				private:
-					void SetSDLHapticEffect(ControlState State) override;
+					void SetSDLHapticEffect(ControlState StateLeft, ControlState StateRight) override;
 			};
 
 			class TriangleEffect : public HapticEffect
@@ -193,7 +193,7 @@ namespace Sdl
 					std::string GetName() const override;
 
 				private:
-					void SetSDLHapticEffect(ControlState State) override;
+					void SetSDLHapticEffect(ControlState StateLeft, ControlState StateRight) override;
 			};
 
 			class LeftRightEffect : public HapticEffect
@@ -203,7 +203,7 @@ namespace Sdl
 					std::string GetName() const override;
 
 				private:
-					void SetSDLHapticEffect(ControlState State) override;
+					void SetSDLHapticEffect(ControlState StateLeft, ControlState StateRight) override;
 			};
 
 			// the friendly name of the device

@@ -60,6 +60,14 @@ void InputWindow::Initialize(HWND hwnd, HWND hwnd_krnl, int port_num, int dev_ty
 
 	// Load currently saved profile for this port/device type
 	LoadDefaultProfile();
+
+	// Load currently selected host device
+	UpdateCurrentDevice();
+
+	// Load rumble binding
+	char rumble[30];
+	m_DeviceConfig->FindButtonByIndex(m_max_num_buttons - 1)->GetText(rumble, sizeof(rumble));
+	m_rumble = rumble;
 }
 
 InputWindow::~InputWindow()
@@ -141,9 +149,7 @@ void InputWindow::BindButton(int ControlID, std::string DeviceName, int ms)
 
 void InputWindow::BindXInput()
 {
-	char device_name[50];
-	SendMessage(m_hwnd_device_list, WM_GETTEXT, sizeof(device_name), reinterpret_cast<LPARAM>(device_name));
-	if (std::strncmp(device_name, "XInput", std::strlen("XInput")) == 0) {
+	if (std::strncmp(m_host_dev.c_str(), "XInput", std::strlen("XInput")) == 0) {
 		m_DeviceConfig->BindXInput();
 	}
 }
@@ -209,16 +215,14 @@ bool InputWindow::SaveProfile(std::string& name)
 	if (name == std::string()) {
 		return false;
 	}
-	char device_name[50];
-	SendMessage(m_hwnd_device_list, WM_GETTEXT, sizeof(device_name), reinterpret_cast<LPARAM>(device_name));
-	if (std::strncmp(device_name, "No devices detected", std::strlen("No devices detected")) == 0) {
+	if (m_host_dev == "No devices detected") {
 		return false;
 	}
 	DeleteProfile(name);
 	Settings::s_input_profiles profile;
 	profile.Type = m_dev_type;
 	profile.ProfileName = name;
-	profile.DeviceName = device_name;
+	profile.DeviceName = m_host_dev;
 	for (int index = 0; index < m_max_num_buttons; index++) {
 		char dev_button[30];
 		m_DeviceConfig->FindButtonByIndex(index)->GetText(dev_button, sizeof(dev_button));
@@ -253,14 +257,13 @@ void InputWindow::LoadDefaultProfile()
 
 void InputWindow::SaveBindingsToDevice()
 {
-	char device_name[50], profile_name[50];
+	char profile_name[50];
 	SendMessage(m_hwnd_profile_list, WM_GETTEXT, sizeof(profile_name), reinterpret_cast<LPARAM>(profile_name));
 	if (!SaveProfile(std::string(profile_name))) {
 		return;
 	}
-	SendMessage(m_hwnd_device_list, WM_GETTEXT, sizeof(device_name), reinterpret_cast<LPARAM>(device_name));
 
-	g_Settings->m_input[m_port_num].DeviceName = device_name;
+	g_Settings->m_input[m_port_num].DeviceName = m_host_dev;
 	g_Settings->m_input[m_port_num].ProfileName = profile_name;
 
 	// Also inform the kernel process if it exists
@@ -271,4 +274,60 @@ void InputWindow::SaveBindingsToDevice()
 		ipc_send_kernel_update(IPC_UPDATE_KERNEL::CONFIG_INPUT_SYNC, m_port_num + 1,
 			reinterpret_cast<std::uintptr_t>(m_hwnd_krnl));
 	}
+}
+
+void InputWindow::UpdateCurrentDevice()
+{
+	char device_name[50];
+	SendMessage(m_hwnd_device_list, WM_GETTEXT, sizeof(device_name), reinterpret_cast<LPARAM>(device_name));
+	m_host_dev = device_name;
+}
+
+void InputWindow::InitRumble(HWND hwnd)
+{
+	m_hwnd_rumble_list = GetDlgItem(hwnd, IDC_RUMBLE_LIST);
+	SendMessage(m_hwnd_rumble_list, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(""));
+	auto dev = g_InputDeviceManager.FindDevice(m_host_dev);
+	if (dev != nullptr) {
+		auto outputs = dev->GetOutputs();
+		for (const auto out : outputs) {
+			SendMessage(m_hwnd_rumble_list, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(out->GetName().c_str()));
+		}
+	}
+	SendMessage(m_hwnd_rumble_list, CB_SETCURSEL, 0, 0);
+}
+
+void InputWindow::UpdateRumble(int command)
+{
+	switch (command)
+	{
+		case RUMBLE_SET: {
+			char rumble[30];
+			SendMessage(m_hwnd_rumble_list, WM_GETTEXT, sizeof(rumble), reinterpret_cast<LPARAM>(rumble));
+			m_rumble = rumble;
+		}
+		break;
+
+		case RUMBLE_UPDATE: {
+			m_DeviceConfig->FindButtonByIndex(m_max_num_buttons - 1)->UpdateText(m_rumble.c_str());
+		}
+		break;
+
+		case RUMBLE_TEST: {
+			auto dev = g_InputDeviceManager.FindDevice(m_host_dev);
+			if (dev != nullptr) {
+				auto outputs = dev->GetOutputs();
+				for (const auto out : outputs) {
+					if (out->GetName() == m_rumble) {
+						out->SetState(1.0, 1.0);
+					}
+				}
+			}
+		}
+		break;
+
+		default:
+			break;
+	}
+
 }

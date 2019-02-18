@@ -91,7 +91,7 @@ class InputDevice
 		class Output : public IoControl
 		{
 			public:
-				virtual void SetState(ControlState state) = 0;
+				virtual void SetState(ControlState StateLeft, ControlState StateRight) = 0;
 		};
 
 		// retrieves the vector of input controls

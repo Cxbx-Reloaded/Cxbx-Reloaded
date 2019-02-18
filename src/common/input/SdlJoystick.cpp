@@ -382,12 +382,12 @@ namespace Sdl
 		return (SDL_JoystickGetHat(m_Js, m_Index) & (1 << m_Direction)) > 0;
 	}
 
-	void SdlJoystick::HapticEffect::SetState(ControlState State)
+	void SdlJoystick::HapticEffect::SetState(ControlState StateLeft, ControlState StateRight)
 	{
 		memset(&m_Effect, 0, sizeof(m_Effect));
-		if (State)
+		if (StateLeft || StateRight)
 		{
-			SetSDLHapticEffect(State);
+			SetSDLHapticEffect(StateLeft, StateRight);
 		}
 		else
 		{
@@ -418,25 +418,27 @@ namespace Sdl
 		}
 	}
 
-	void SdlJoystick::ConstantEffect::SetSDLHapticEffect(ControlState State)
+	// I'm not really sure if a simple arithmetic mean is enough here, if someone has a better idea they are welcome
+	// to change the code below
+	void SdlJoystick::ConstantEffect::SetSDLHapticEffect(ControlState StateLeft, ControlState StateRight)
 	{
 		m_Effect.type = SDL_HAPTIC_CONSTANT;
 		m_Effect.constant.length = RUMBLE_LENGTH_MAX;
-		m_Effect.constant.level = (Sint16)(State * 0x7FFF);
+		m_Effect.constant.level = (Sint16)(((StateLeft + StateRight) / 2 ) * 0x7FFF);
 	}
 
-	void SdlJoystick::RampEffect::SetSDLHapticEffect(ControlState State)
+	void SdlJoystick::RampEffect::SetSDLHapticEffect(ControlState StateLeft, ControlState StateRight)
 	{
 		m_Effect.type = SDL_HAPTIC_RAMP;
 		m_Effect.ramp.length = RUMBLE_LENGTH_MAX;
-		m_Effect.ramp.start = (Sint16)(State * 0x7FFF);
+		m_Effect.ramp.start = (Sint16)(((StateLeft + StateRight) / 2) * 0x7FFF);
 	}
 
-	void SdlJoystick::SineEffect::SetSDLHapticEffect(ControlState State)
+	void SdlJoystick::SineEffect::SetSDLHapticEffect(ControlState StateLeft, ControlState StateRight)
 	{
 		m_Effect.type = SDL_HAPTIC_SINE;
 		m_Effect.periodic.period = RUMBLE_PERIOD;
-		m_Effect.periodic.magnitude = (Sint16)(State * 0x7FFF);
+		m_Effect.periodic.magnitude = (Sint16)(((StateLeft + StateRight) / 2) * 0x7FFF);
 		m_Effect.periodic.offset = 0;
 		m_Effect.periodic.phase = 18000;
 		m_Effect.periodic.length = RUMBLE_LENGTH_MAX;
@@ -444,11 +446,11 @@ namespace Sdl
 		m_Effect.periodic.attack_length = 0;
 	}
 
-	void SdlJoystick::TriangleEffect::SetSDLHapticEffect(ControlState State)
+	void SdlJoystick::TriangleEffect::SetSDLHapticEffect(ControlState StateLeft, ControlState StateRight)
 	{
 		m_Effect.type = SDL_HAPTIC_TRIANGLE;
 		m_Effect.periodic.period = RUMBLE_PERIOD;
-		m_Effect.periodic.magnitude = (Sint16)(State * 0x7FFF);
+		m_Effect.periodic.magnitude = (Sint16)(((StateLeft + StateRight) / 2) * 0x7FFF);
 		m_Effect.periodic.offset = 0;
 		m_Effect.periodic.phase = 18000;
 		m_Effect.periodic.length = RUMBLE_LENGTH_MAX;
@@ -456,13 +458,13 @@ namespace Sdl
 		m_Effect.periodic.attack_length = 0;
 	}
 
-	void SdlJoystick::LeftRightEffect::SetSDLHapticEffect(ControlState State)
+	void SdlJoystick::LeftRightEffect::SetSDLHapticEffect(ControlState StateLeft, ControlState StateRight)
 	{
 		m_Effect.type = SDL_HAPTIC_LEFTRIGHT;
 		m_Effect.leftright.length = RUMBLE_LENGTH_MAX;
 		// max ranges tuned to 'feel' similar in magnitude to triangle/sine on xbox360 controller
-		m_Effect.leftright.large_magnitude = (Uint16)(State * 0x4000);
-		m_Effect.leftright.small_magnitude = (Uint16)(State * 0xFFFF);
+		m_Effect.leftright.large_magnitude = (Uint16)(StateRight * 0x4000);
+		m_Effect.leftright.small_magnitude = (Uint16)(StateLeft * 0xFFFF);
 	}
 }
 

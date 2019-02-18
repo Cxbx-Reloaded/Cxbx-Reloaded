@@ -27,8 +27,7 @@ static int button_xbox_ctrl_id[XBOX_CTRL_NUM_BUTTONS] = {
 	IDC_SET_RIGHT_NEGX,
 	IDC_SET_RIGHT_POSY,
 	IDC_SET_RIGHT_NEGY,
-	IDC_SET_LMOTOR,
-	IDC_SET_RMOTOR,
+	IDC_SET_MOTOR,
 };
 
 const char* button_xbox_ctrl_names[XBOX_CTRL_NUM_BUTTONS][2] = {
@@ -56,8 +55,7 @@ const char* button_xbox_ctrl_names[XBOX_CTRL_NUM_BUTTONS][2] = {
 	"Right Axis X-", "Right X-",
 	"Right Axis Y+", "Right Y+",
 	"Right Axis Y-", "Right Y-",
-	"L Motor",       "Motor L",
-	"R Motor",       "Motor R",
+	"Motor",         "LeftRight",
 };
 
 
@@ -66,7 +64,6 @@ EmuDevice::EmuDevice(int type, HWND hwnd)
 	switch (type)
 	{
 		case to_underlying(XBOX_INPUT_DEVICE::MS_CONTROLLER_DUKE): {
-			m_name = "MS Controller Duke";
 			m_hwnd = hwnd;
 			for (int i = 0; i < ARRAY_SIZE(button_xbox_ctrl_id); i++) {
 				m_buttons.push_back(new Button(button_xbox_ctrl_names[i][0], button_xbox_ctrl_names[i][1],

@@ -22,6 +22,7 @@
 #define IDD_CONTROLLER_HOST_MAPPING     131
 #define IDD_VIRTUAL_SBC_FEEDBACK        133
 #define IDD_XID_DUKE_CFG                134
+#define IDD_RUMBLE_CFG                  135
 #define IDC_LOG_CANCEL                  892
 #define IDC_LOG_ACCEPT                  893
 #define IDC_LOG_ENABLE_GENERAL          894
@@ -87,8 +88,7 @@
 #define IDC_LOG_RTL                     954
 #define IDC_LOG_XC                      955
 #define IDC_LOG_XE                      956
-#define IDC_SET_LMOTOR                  998
-#define IDC_SET_RMOTOR                  999
+#define IDC_SET_MOTOR                   999
 #define IDC_SET_X                       1000
 #define IDC_SET_Y                       1001
 #define IDC_SET_A                       1002
@@ -325,6 +325,8 @@
 #define IDC_XID_RUMBLE                  1298
 #define IDC_XID_OPTIONS                 1299
 #define IDC_XID_CLEAR                   1300
+#define IDC_RUMBLE_LIST                 1301
+#define IDC_RUMBLE_TEST                 1302
 #define ID_FILE_EXIT                    40005
 #define ID_HELP_ABOUT                   40008
 #define ID_EMULATION_START              40009

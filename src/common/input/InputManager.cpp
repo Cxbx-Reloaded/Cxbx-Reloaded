@@ -75,7 +75,7 @@ void InputDeviceManager::Shutdown()
 	{
 		// Set outputs to ZERO before destroying device
 		for (InputDevice::Output* o : d->GetOutputs()) {
-			o->SetState(0);
+			o->SetState(0.0, 0.0);
 		}
 	}
 	m_Devices.clear();
@@ -197,7 +197,7 @@ void InputDeviceManager::DisconnectDevice(int port)
 		}
 	}
 	else {
-		EmuLog(LOG_LEVEL::WARNING, "Attempted to detach a device not attached to the emulated machine.");
+		EmuLog(LOG_LEVEL::WARNING, "Attempted to detach a device not attached to the emulated machine");
 	}
 }
 
@@ -257,8 +257,18 @@ bool InputDeviceManager::UpdateXboxPortInput(int Port, void* Buffer, int Directi
 				}
 				break;
 
-				default: {
+				case to_underlying(XBOX_INPUT_DEVICE::MS_CONTROLLER_S):
+				case to_underlying(XBOX_INPUT_DEVICE::LIGHT_GUN):
+				case to_underlying(XBOX_INPUT_DEVICE::STEERING_WHEEL):
+				case to_underlying(XBOX_INPUT_DEVICE::MEMORY_UNIT):
+				case to_underlying(XBOX_INPUT_DEVICE::IR_DONGLE):
+				case to_underlying(XBOX_INPUT_DEVICE::STEEL_BATTALION_CONTROLLER): {
 					EmuLog(LOG_LEVEL::WARNING, "Port %d has an unsupported device attached! The type was %d", Port, dev_ptr->GetType());
+					return false;
+				}
+
+				default: {
+					EmuLog(LOG_LEVEL::WARNING, "Port %d has an unknown device attached! The type was %d", Port, dev_ptr->GetType());
 					return false;
 				}
 			}
@@ -325,9 +335,12 @@ void InputDeviceManager::UpdateInputXpad(std::shared_ptr<InputDevice>& Device, v
 		}
 	}
 	else {
-		// TODO
+		if (bindings[24] != nullptr) {
+			XpadOutput* out_buf = reinterpret_cast<XpadOutput*>(static_cast<uint8_t*>(Buffer) + 2);
+			dynamic_cast<InputDevice::Output*>(bindings[24])->SetState(out_buf->left_actuator_strength / 0xFFFF,
+				out_buf->right_actuator_strength / 0xFFFF);
+		}
 	}
-
 }
 
 void InputDeviceManager::RefreshDevices()

@@ -42,6 +42,8 @@
 #define INPUT_TIMEOUT 5000
 
 
+static INT_PTR CALLBACK DlgRumbleConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+
 INT_PTR CALLBACK DlgXidControllerConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMsg)
@@ -75,6 +77,13 @@ INT_PTR CALLBACK DlgXidControllerConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wPar
 		{
 			switch (LOWORD(wParam))
 			{
+				case IDC_DEVICE_LIST: {
+					if (HIWORD(wParam) == CBN_SELCHANGE) {
+						g_InputWindow->UpdateCurrentDevice();
+					}
+				}
+				break;
+
 				case IDC_XID_PROFILE_LOAD:
 				case IDC_XID_PROFILE_SAVE:
 				case IDC_XID_PROFILE_DELETE: {
@@ -110,8 +119,6 @@ INT_PTR CALLBACK DlgXidControllerConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wPar
 				}
 				break;
 
-				case IDC_SET_LMOTOR:
-				case IDC_SET_RMOTOR:
 				case IDC_SET_X:
 				case IDC_SET_Y:
 				case IDC_SET_A:
@@ -144,7 +151,53 @@ INT_PTR CALLBACK DlgXidControllerConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wPar
 					}
 				}
 				break;
+
+				case IDC_SET_MOTOR: {
+					if (HIWORD(wParam) == BN_CLICKED) {
+						// Show rumble dialog box
+						DialogBox(GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_RUMBLE_CFG), hWndDlg, DlgRumbleConfigProc);
+						g_InputWindow->UpdateRumble(RUMBLE_UPDATE);
+					}
+				}
+				break;
 			}
+		}
+		break;
+	}
+	return FALSE;
+}
+
+INT_PTR CALLBACK DlgRumbleConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	switch (uMsg)
+	{
+		case WM_INITDIALOG:
+		{
+			g_InputWindow->InitRumble(hWndDlg);
+		}
+		break;
+
+		case WM_COMMAND:
+		{
+			switch (LOWORD(wParam))
+			{
+				case IDC_RUMBLE_LIST: {
+					g_InputWindow->UpdateRumble(RUMBLE_SET);
+				}
+				break;
+
+				case IDC_RUMBLE_TEST: {
+					g_InputWindow->UpdateRumble(RUMBLE_TEST);
+				}
+				break;
+			}
+		}
+		break;
+
+		case WM_CLOSE:
+		{
+			g_InputWindow->UpdateRumble(RUMBLE_SET);
+			EndDialog(hWndDlg, wParam);
 		}
 		break;
 	}

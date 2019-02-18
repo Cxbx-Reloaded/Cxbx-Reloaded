@@ -116,18 +116,18 @@ namespace XInput
 			class Motor : public InputDevice::Output
 			{
 				public:
-					Motor(uint8_t Index, XDevice* Parent, WORD& Motor, WORD Range)
-						: m_Motor(Motor), m_Range(Range), m_Index(Index), m_Parent(Parent) {}
+					Motor(XDevice* Parent, WORD& MotorLeft, WORD& MotorRight, WORD Range)
+						: m_MotorLeft(MotorLeft), m_MotorRight(MotorRight), m_Range(Range), m_Parent(Parent) {}
 					std::string GetName() const override;
-					void SetState(ControlState State) override;
+					void SetState(ControlState StateLeft, ControlState StateRight) override;
 
 				private:
-					// motor state
-					WORD & m_Motor;
+					// left motor state
+					WORD& m_MotorLeft;
+					// right motor state
+					WORD& m_MotorRight;
 					// max value of the motor strength
 					const WORD m_Range;
-					// motor index
-					const uint8_t m_Index;
 					// parent object of the motor
 					XDevice* m_Parent;
 			};

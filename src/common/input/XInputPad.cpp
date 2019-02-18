@@ -84,8 +84,6 @@ namespace XInput
 
 	static const char* const named_axes[] = { "Left X", "Left Y", "Right X", "Right Y" };
 
-	static const char* const named_motors[] = { "Motor L", "Motor R" };
-
 	void Init(std::mutex& Mtx)
 	{
 		std::unique_lock<std::mutex> lck(Mtx);
@@ -193,9 +191,7 @@ namespace XInput
 		}
 
 		// get supported motors
-		for (int i = 0; i != sizeof(named_motors) / sizeof(*named_motors); ++i) {
-			AddOutput(new Motor(i, this, (&m_state_out.wLeftMotorSpeed)[i], 65535));
-		}
+		AddOutput(new Motor(this, m_state_out.wLeftMotorSpeed, m_state_out.wRightMotorSpeed, 65535));
 
 		ZeroMemory(&m_state_in, sizeof(m_state_in));
 	}
@@ -243,7 +239,7 @@ namespace XInput
 
 	void XDevice::UpdateMotors()
 	{
-		// only calls XInputSetState if the state changed
+		// only call XInputSetState if the state changed
 		if (memcmp(&m_state_out, &m_current_state_out, sizeof(m_state_out)))
 		{
 			m_current_state_out = m_state_out;
@@ -270,7 +266,7 @@ namespace XInput
 
 	std::string XDevice::Motor::GetName() const
 	{
-		return named_motors[m_Index];
+		return "LeftRight";
 	}
 
 	// GET / SET STATES
@@ -290,9 +286,10 @@ namespace XInput
 		return std::max(0.0, ControlState(m_Axis) / m_Range);
 	}
 
-	void XDevice::Motor::SetState(ControlState state)
+	void XDevice::Motor::SetState(ControlState StateLeft, ControlState StateRight)
 	{
-		m_Motor = (WORD)(state * m_Range);
+		m_MotorLeft = (WORD)(StateLeft * m_Range);
+		m_MotorRight = (WORD)(StateRight * m_Range);
 		m_Parent->UpdateMotors();
 	}
 }
