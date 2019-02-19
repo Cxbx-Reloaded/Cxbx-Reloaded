@@ -34,7 +34,6 @@
 // *
 // ******************************************************************
 
-#if 1 // Reenable this when LLE USB actually works
 #define LOG_PREFIX CXBXR_MODULE::SDL
 
 #include <assert.h>
@@ -58,7 +57,7 @@ namespace Sdl
 	int SdlInitStatus = SDL_NOT_INIT;
 	bool SdlPopulateOK = false;
 
-	void Init(std::mutex& Mtx, std::condition_variable& Cv, bool GUImode)
+	void Init(std::mutex& Mtx, std::condition_variable& Cv)
 	{
 		SDL_Event Event;
 		uint32_t CustomEvent_t;
@@ -85,50 +84,83 @@ namespace Sdl
 		UpdateInputEvent_t = CustomEvent_t + 2;
 
 		SetThreadAffinityMask(GetCurrentThread(), g_CPUOthers);
+
+		// Drain all joystick add/remove events to avoid creating duplicated
+		// devices when we call PopulateDevices
+		while (SDL_PollEvent(&Event))
+		{
+			switch (Event.type)
+			{
+				case SDL_JOYDEVICEADDED: { break; }
+				case SDL_JOYDEVICEREMOVED: { break; }
+				default:
+					break;
+			}
+		}
 		SdlInitStatus = SDL_INIT_SUCCESS;
 		lck.unlock();
 		Cv.notify_one();
 
-		if (GUImode) {
-			while (SDL_WaitEvent(&Event))
-			{
-				if (Event.type == PopulateEvent_t) {
-					lck.lock();
-					for (int i = 0; i < SDL_NumJoysticks(); i++) {
-						OpenSdlDevice(i);
-					}
-					lck.unlock();
-					SdlPopulateOK = true;
-					Cv.notify_one();
-				}
-				else if (Event.type == ExitEvent_t) {
-					break;
-				}
-				else if (Event.type == UpdateInputEvent_t) {
-
-				}
+		while (SDL_WaitEvent(&Event))
+		{
+			if (Event.type == SDL_JOYDEVICEADDED) {
+				OpenSdlDevice(Event.jdevice.which);
 			}
-		}
-		else {
-			while (true) {
-				while (SDL_PollEvent(&Event))
+			else if (Event.type == SDL_JOYDEVICEREMOVED) {
+				CloseSdlDevice(Event.jdevice.which);
+			}
+			else if (Event.type == SDL_JOYAXISMOTION ||
+					 Event.type == SDL_JOYHATMOTION  ||
+					 Event.type == SDL_JOYBALLMOTION ||
+					 Event.type == SDL_JOYBUTTONDOWN ||
+					 Event.type == SDL_JOYBUTTONUP) {
+				SDL_JoystickID id;
+				switch (Event.type)
 				{
-					if (Event.type == SDL_JOYDEVICEADDED) {
-						OpenSdlDevice(Event.jdevice.which);
-					}
-					else if (Event.type == SDL_JOYDEVICEREMOVED) {
-						CloseSdlDevice(Event.jdevice.which);
-					}
-					else if (Event.type == ExitEvent_t) {
-						goto Exit;
-					}
+					case SDL_JOYAXISMOTION:
+						id = Event.jaxis.which;
+						break;
+
+					case SDL_JOYHATMOTION:
+						id = Event.jhat.which;
+						break;
+
+					case SDL_JOYBALLMOTION:
+						id = Event.jball.which;
+						break;
+
+					case SDL_JOYBUTTONDOWN:
+					case SDL_JOYBUTTONUP:
+						id = Event.jbutton.which;
+						break;
+
+					default:
+						break;
+						// unreachable
 				}
-				XInput::GetDeviceChanges();
-				std::this_thread::sleep_for(std::chrono::milliseconds(10));
+				auto dev = g_InputDeviceManager.FindDevice(id);
+				if (dev != nullptr) {
+					dynamic_cast<SdlJoystick*>(dev.get())->SetDirty();
+				}
+			}
+			else if (Event.type == PopulateEvent_t) {
+				for (int i = 0; i < SDL_NumJoysticks(); i++) {
+					OpenSdlDevice(i);
+				}
+				SdlPopulateOK = true;
+				Cv.notify_one();
+			}
+			else if (Event.type == ExitEvent_t) {
+				break;
+			}
+			else if (Event.type == UpdateInputEvent_t) {
+				XInput::PopulateDevices();
+				g_InputDeviceManager.UpdateDevices(*static_cast<int*>(Event.user.data1));
+				delete Event.user.data1;
+				Event.user.data1 = nullptr;
 			}
 		}
 
-		Exit:
 		SDL_Quit();
 	}
 
@@ -181,7 +213,8 @@ namespace Sdl
 	}
 
 	SdlJoystick::SdlJoystick(SDL_Joystick* const Joystick, const int Index)
-		: m_Joystick(Joystick), m_DeviceName(StripSpaces(SDL_JoystickNameForIndex(Index)))
+		: m_Joystick(Joystick), m_Sdl_ID(SDL_JoystickInstanceID(Joystick)),
+		m_DeviceName(StripSpaces(SDL_JoystickNameForIndex(Index)))
 	{
 		uint8_t i;
 		int NumButtons, NumAxes, NumHats, NumBalls;
@@ -281,6 +314,12 @@ namespace Sdl
 				AddOutput(new LeftRightEffect(m_Haptic));
 			}
 		}
+		else {
+			EmuLog(LOG_LEVEL::INFO, "Joystick %i doesn't support any haptic effects", Index);
+		}
+
+		// init dirty flag
+		m_bDirty = false;
 	}
 
 	SdlJoystick::~SdlJoystick()
@@ -297,8 +336,6 @@ namespace Sdl
 		SDL_JoystickClose(m_Joystick);
 	}
 
-
-
 	std::string SdlJoystick::GetDeviceName() const
 	{
 		return m_DeviceName;
@@ -314,9 +351,20 @@ namespace Sdl
 		return m_Joystick;
 	}
 
-	void SdlJoystick::UpdateInput()
+	SDL_JoystickID SdlJoystick::GetId(SDL_JoystickID id) const
+	{
+		// ignore id argument
+		return m_Sdl_ID;
+	}
+
+	bool SdlJoystick::UpdateInput()
 	{
 		SDL_JoystickUpdate();
+		if (m_bDirty) {
+			m_bDirty = false;
+			return true;
+		}
+		return m_bDirty;
 	}
 
 	std::string SdlJoystick::ConstantEffect::GetName() const
@@ -467,6 +515,3 @@ namespace Sdl
 		m_Effect.leftright.small_magnitude = (Uint16)(StateLeft * 0xFFFF);
 	}
 }
-
-
-#endif

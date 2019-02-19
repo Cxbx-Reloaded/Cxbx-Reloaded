@@ -274,7 +274,7 @@ void InputWindow::SaveBindingsToDevice()
 		// Sync updated input to kernel process to use run-time settings.
 		g_EmuShared->SetInputSettings(&g_Settings->m_input);
 		g_EmuShared->SetInputProfileSettings(&g_Settings->m_input_profiles);
-		ipc_send_kernel_update(IPC_UPDATE_KERNEL::CONFIG_INPUT_SYNC, m_port_num + 1,
+		ipc_send_kernel_update(IPC_UPDATE_KERNEL::CONFIG_INPUT_SYNC, m_port_num,
 			reinterpret_cast<std::uintptr_t>(m_hwnd_krnl));
 	}
 }

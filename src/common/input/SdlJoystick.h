@@ -36,9 +36,8 @@
 
 #ifndef SDL_H_
 #define SDL_H_
-#if 1 // Reenable this when LLE USB actually works
+
 #include "InputDevice.h"
-#include "SDL.h"
 #include <SDL_haptic.h>
 
 
@@ -59,7 +58,7 @@ namespace Sdl
 	extern bool SdlPopulateOK;
 
 	// initialize SDL
-	void Init(std::mutex& Mtx, std::condition_variable& Cv, bool GUImode);
+	void Init(std::mutex& Mtx, std::condition_variable& Cv);
 	// shutdown SDL
 	void DeInit(std::thread& Thr);
 	// open the sdl joystick with the specified index
@@ -81,8 +80,11 @@ namespace Sdl
 			// retrieves the joystick identifier used by SDL
 			SDL_Joystick* GetSDLJoystick() const;
 			// updates the state of this joystick
-			void UpdateInput() override;
-
+			bool UpdateInput() override;
+			// retrieves the sdl id of this device
+			SDL_JoystickID GetId(SDL_JoystickID id) const override;
+			// sets dirty flag
+			void SetDirty() { m_bDirty = true; }
 
 		private:
 			class Button : public InputDevice::Input
@@ -210,10 +212,11 @@ namespace Sdl
 			std::string m_DeviceName;
 			// pointer to the device as assigned by SDL
 			SDL_Joystick* m_Joystick;
+			// sdl-assigned id to this device
+			SDL_JoystickID m_Sdl_ID;
 			// haptic device identifier as assigned by SDL, if available
 			SDL_Haptic* m_Haptic;
 	};
 }
 
-#endif
 #endif

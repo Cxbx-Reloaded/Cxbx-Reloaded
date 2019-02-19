@@ -1389,7 +1389,7 @@ __declspec(noreturn) void CxbxKrnlInit
 		g_EmuShared->GetFlagsLLE(&CxbxLLE_Flags);
 		bLLE_APU = (CxbxLLE_Flags & LLE_APU) > 0;
 		bLLE_GPU = (CxbxLLE_Flags & LLE_GPU) > 0;
-		bLLE_USB = (CxbxLLE_Flags & LLE_USB) > 0; // Reenable this when LLE USB actually works
+		bLLE_USB = (CxbxLLE_Flags & LLE_USB) > 0;
 		bLLE_JIT = (CxbxLLE_Flags & LLE_JIT) > 0;
 	}
 
@@ -1569,16 +1569,7 @@ __declspec(noreturn) void CxbxKrnlInit
 	xboxkrnl::HalReadSMBusValue(SMBUS_ADDRESS_SYSTEM_MICRO_CONTROLLER, SMC_COMMAND_AV_PACK, FALSE, &xboxkrnl::HalBootSMCVideoMode);
 
 	if (bLLE_USB) {
-#if 0 // Reenable this when LLE USB actually works
-		int ret;
-		g_InputDeviceManager = new InputDeviceManager;
-		ret = g_InputDeviceManager->EnumSdl2Devices();
-		g_InputDeviceManager->StartInputThread();
-		if (ret > 0) {
-			// Temporary: the device type and bindings should be read from emushared, for now always assume one xbox controller
-			g_InputDeviceManager->ConnectDeviceToXbox(1, MS_CONTROLLER_DUKE);
-		}
-#endif
+		g_InputDeviceManager.Initialize(false);
 	}
 
 	// Now the hardware devices exist, couple the EEPROM buffer to it's device
@@ -1806,6 +1797,9 @@ void CxbxKrnlShutDown()
 	// NOTE: This causes a hang when exiting while NV2A is processing
 	// This is okay for now: It won't leak memory or resources since TerminateProcess will free everything
 	// delete g_NV2A; // TODO : g_pXbox
+
+	// shutdown the input device manager
+	g_InputDeviceManager.Shutdown();
 
 	if (CxbxKrnl_hEmuParent != NULL)
 		SendMessage(CxbxKrnl_hEmuParent, WM_PARENTNOTIFY, WM_DESTROY, 0);

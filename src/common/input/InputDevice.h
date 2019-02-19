@@ -43,12 +43,13 @@
 #include <map>
 #include <functional>
 #include <condition_variable>
+#include "SDL.h"
 
 #define PORT_INVALID  -1
-#define PORT_1         1
-#define PORT_2         2
-#define PORT_3         3
-#define PORT_4         4
+#define PORT_1         0
+#define PORT_2         1
+#define PORT_3         2
+#define PORT_4         3
 
 #define DIRECTION_IN  0
 #define DIRECTION_OUT 1
@@ -100,20 +101,18 @@ class InputDevice
 		const std::vector<Output*>& GetOutputs() const { return m_Outputs; }
 		// retrieves all the i/o controls of this device
 		const std::vector<IoControl*> GetIoControls();
-		// retrieves the map of input bindings
-		const std::map<int, IoControl*>& GetBindings() const { return m_Bindings; }
-		// sets a pair in the map of the input bindings
-		void SetBindings(int XButton, IoControl* Control) { m_Bindings[XButton] = Control; }
 		// retrieves the full name of the device (API/ID/API-specific name)
 		std::string GetQualifiedName() const;
 		// retrieves the API-specific name of the device
 		virtual std::string GetDeviceName() const = 0;
 		// retrieves the API used to control this device
 		virtual std::string GetAPI() const = 0;
-		// updates the state of the device
-		virtual void UpdateInput() {}
+		// updates the state of the device and checks if its state has changed
+		virtual bool UpdateInput() = 0;
 		// retrieves the ID of this device
 		int GetId() const { return m_ID; }
+		// retrieves the sdl id or -1 for non-sdl devices
+		virtual SDL_JoystickID GetId(SDL_JoystickID id) const { return -1; }
 		// sets the ID of this device
 		void SetId(int ID) { m_ID = ID; }
 		// retrieves the port this device is attached to
@@ -131,7 +130,24 @@ class InputDevice
 		void AddInput(Input* const In);
 		// adds an output control to the device
 		void AddOutput(Output* const Out);
+		// indicates that the device has new input data available
+		bool m_bDirty;
+		// lock for the bindings map
+		mutable std::mutex m_BindingsMtx;
 
+	public:
+		// retrieves the map of input bindings
+		const std::map<int, IoControl*> GetBindings() const {
+			std::lock_guard<std::mutex> lck(m_BindingsMtx);
+			return m_Bindings;
+		}
+		// sets a pair in the map of the input bindings
+		void SetBindings(int XButton, IoControl* Control) {
+			std::lock_guard<std::mutex> lck(m_BindingsMtx);
+			m_Bindings[XButton] = Control;
+		}
+
+	protected:
 		class FullAnalogSurface : public Input
 		{
 			public:

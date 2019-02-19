@@ -335,14 +335,12 @@ void EmuUpdateLLEStatus(uint32_t XbLibScan)
         FlagsLLE ^= LLE_APU;
         EmuOutputMessage(XB_OUTPUT_MESSAGE_INFO, "Fallback to LLE APU.");
     }
-#if 1 // Reenable this when LLE USB actually works
 	if ((FlagsLLE & LLE_USB) == false
 		&& (XbLibScan & XbSymbolLib_XAPILIB) == 0) {
 		bLLE_USB = true;
 		FlagsLLE ^= LLE_USB;
 		EmuOutputMessage(XB_OUTPUT_MESSAGE_INFO, "Fallback to LLE USB.");
 	}
-#endif
     ipc_send_gui_update(IPC_UPDATE_GUI::LLE_FLAGS, FlagsLLE);
     //return FlagsLLE;
 }

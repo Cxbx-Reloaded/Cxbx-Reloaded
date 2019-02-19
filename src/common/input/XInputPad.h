@@ -58,8 +58,6 @@ namespace XInput
 	void Init(std::mutex& Mtx);
 	// shutdown XInput
 	void DeInit();
-	// detect device connect/disconnect
-	void GetDeviceChanges();
 	// refresh the device list in response to a refresh command from the input GUI
 	void PopulateDevices();
 
@@ -133,7 +131,7 @@ namespace XInput
 			};
 
 		public:
-			void UpdateInput() override;
+			bool UpdateInput() override;
 
 			XDevice(const XINPUT_CAPABILITIES& Capabilities, uint8_t Index);
 
@@ -148,5 +146,6 @@ namespace XInput
 			XINPUT_VIBRATION m_state_out{};
 			const BYTE m_Subtype;
 			const uint8_t m_Index;
+			DWORD m_dwPacketNumber;
 	};
 }

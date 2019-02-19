@@ -24,7 +24,7 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#if 1 // Reenable this when LLE USB actually works
+
 #define _XBOXKRNL_DEFEXTRN_
 #define LOG_PREFIX CXBXR_MODULE::SDL
 
@@ -45,32 +45,44 @@ namespace xboxkrnl
 
 InputDeviceManager g_InputDeviceManager;
 
-void InputDeviceManager::Initialize(bool GUImode)
+void InputDeviceManager::Initialize(bool is_gui)
 {
 	// Sdl::Init must be called last since it blocks when it succeeds
 	std::unique_lock<std::mutex> lck(m_Mtx);
-	m_bInitOK = true;
-
-	m_PollingThread = std::thread([this, GUImode]() {
+	m_bPendingShutdown = false;
+	
+	m_PollingThread = std::thread([this]() {
 		XInput::Init(m_Mtx);
-		Sdl::Init(m_Mtx, m_Cv, GUImode);
+		Sdl::Init(m_Mtx, m_Cv);
 	});
 
 	m_Cv.wait(lck, []() {
 		return (Sdl::SdlInitStatus != Sdl::SDL_NOT_INIT) &&
 			(XInput::XInputInitStatus != XInput::XINPUT_NOT_INIT);
 	});
+	lck.unlock();
 
 	if (Sdl::SdlInitStatus < 0 || XInput::XInputInitStatus < 0) {
 		CxbxKrnlCleanupEx(CXBXR_MODULE::INIT, "Failed to initialize input subsystem! Consult debug log for more information");
+	}
+
+	XInput::PopulateDevices();
+	Sdl::PopulateDevices();
+
+	if (!is_gui) {
+		UpdateDevices(PORT_1);
+		UpdateDevices(PORT_2);
+		UpdateDevices(PORT_3);
+		UpdateDevices(PORT_4);
 	}
 }
 
 void InputDeviceManager::Shutdown()
 {
 	// Prevent additional devices from being added during shutdown.
-	m_bInitOK = false;
+	m_bPendingShutdown = true;
 
+	std::lock_guard<std::mutex> lk(m_Mtx);
 	for (const auto& d : m_Devices)
 	{
 		// Set outputs to ZERO before destroying device
@@ -86,12 +98,12 @@ void InputDeviceManager::Shutdown()
 
 void InputDeviceManager::AddDevice(std::shared_ptr<InputDevice> Device)
 {
-	// If we are shutdown (or in process of shutting down) ignore this request:
-	if (!m_bInitOK) {
+	// If we are shutting down, ignore this request
+	if (m_bPendingShutdown) {
 		return;
 	}
 
-	//std::lock_guard<std::mutex> lk(m_devices_mutex);
+	std::lock_guard<std::mutex> lk(m_Mtx);
 	// Try to find an ID for this device
 	int ID = 0;
 	while (true)
@@ -118,7 +130,12 @@ void InputDeviceManager::AddDevice(std::shared_ptr<InputDevice> Device)
 
 void InputDeviceManager::RemoveDevice(std::function<bool(const InputDevice*)> Callback)
 {
-	//std::lock_guard<std::mutex> lk(m_devices_mutex);
+	// If we are shutting down, ignore this request
+	if (m_bPendingShutdown) {
+		return;
+	}
+
+	std::lock_guard<std::mutex> lk(m_Mtx);
 	auto it = std::remove_if(m_Devices.begin(), m_Devices.end(), [&Callback](const auto& Device) {
 		if (Callback(Device.get()))
 		{
@@ -129,6 +146,21 @@ void InputDeviceManager::RemoveDevice(std::function<bool(const InputDevice*)> Ca
 	});
 	if (it != m_Devices.end()) {
 		m_Devices.erase(it, m_Devices.end());
+	}
+}
+
+void InputDeviceManager::UpdateDevices(int port)
+{
+	std::array<Settings::s_input, 4> input;
+	g_EmuShared->GetInputSettings(&input);
+
+	if (input[port].Type != to_underlying(XBOX_INPUT_DEVICE::DEVICE_INVALID) &&
+		g_HubObjArray[port] == nullptr) {
+		ConnectDevice(port, input[port].Type);
+	}
+	else if (input[port].Type == to_underlying(XBOX_INPUT_DEVICE::DEVICE_INVALID) &&
+		g_HubObjArray[port] != nullptr) {
+		DisconnectDevice(port);
 	}
 }
 
@@ -170,8 +202,8 @@ void InputDeviceManager::DisconnectDevice(int port)
 		return;
 	}
 
-	if (g_XidControllerObjArray[port - 1] != nullptr) {
-		assert(g_HubObjArray[port - 1] != nullptr);
+	if (g_XidControllerObjArray[port] != nullptr) {
+		assert(g_HubObjArray[port] != nullptr);
 		int type = to_underlying(XBOX_INPUT_DEVICE::MS_CONTROLLER_DUKE); // hardcoded for now
 
 		switch (type)
@@ -205,13 +237,12 @@ void InputDeviceManager::BindHostDevice(int port, int type)
 {
 	std::array<Settings::s_input, 4> input;
 	std::array<std::vector<Settings::s_input_profiles>, to_underlying(XBOX_INPUT_DEVICE::DEVICE_MAX)> profile;
-	int port_index = port - 1;
 
 	g_EmuShared->GetInputSettings(&input);
 	g_EmuShared->GetInputProfileSettings(&profile);
 
-	std::string device_name(input[port_index].DeviceName);
-	std::string profile_name(input[port_index].ProfileName);
+	std::string device_name(input[port].DeviceName);
+	std::string profile_name(input[port].ProfileName);
 
 	auto dev = FindDevice(std::string(device_name));
 	if (dev != nullptr) {
@@ -247,45 +278,50 @@ void InputDeviceManager::BindHostDevice(int port, int type)
 bool InputDeviceManager::UpdateXboxPortInput(int Port, void* Buffer, int Direction)
 {
 	assert(Direction == DIRECTION_IN || Direction == DIRECTION_OUT);
+	bool has_changed = false;
 
-	for (auto dev_ptr : m_Devices) {
-		if (dev_ptr->GetPort() == Port) {
-			switch (dev_ptr->GetType())
-			{
-				case to_underlying(XBOX_INPUT_DEVICE::MS_CONTROLLER_DUKE): {
-					UpdateInputXpad(dev_ptr, Buffer, Direction);
-				}
-				break;
+	// If somebody else is currently holding the lock, we won't wait and instead report no input changes
+	if (m_Mtx.try_lock()) {
+		for (auto dev_ptr : m_Devices) {
+			if (dev_ptr->GetPort() == Port) {
+				switch (dev_ptr->GetType())
+				{
+					case to_underlying(XBOX_INPUT_DEVICE::MS_CONTROLLER_DUKE): {
+						has_changed = UpdateInputXpad(dev_ptr, Buffer, Direction);
+					}
+					break;
 
-				case to_underlying(XBOX_INPUT_DEVICE::MS_CONTROLLER_S):
-				case to_underlying(XBOX_INPUT_DEVICE::LIGHT_GUN):
-				case to_underlying(XBOX_INPUT_DEVICE::STEERING_WHEEL):
-				case to_underlying(XBOX_INPUT_DEVICE::MEMORY_UNIT):
-				case to_underlying(XBOX_INPUT_DEVICE::IR_DONGLE):
-				case to_underlying(XBOX_INPUT_DEVICE::STEEL_BATTALION_CONTROLLER): {
-					EmuLog(LOG_LEVEL::WARNING, "Port %d has an unsupported device attached! The type was %d", Port, dev_ptr->GetType());
-					return false;
-				}
+					case to_underlying(XBOX_INPUT_DEVICE::MS_CONTROLLER_S):
+					case to_underlying(XBOX_INPUT_DEVICE::LIGHT_GUN):
+					case to_underlying(XBOX_INPUT_DEVICE::STEERING_WHEEL):
+					case to_underlying(XBOX_INPUT_DEVICE::MEMORY_UNIT):
+					case to_underlying(XBOX_INPUT_DEVICE::IR_DONGLE):
+					case to_underlying(XBOX_INPUT_DEVICE::STEEL_BATTALION_CONTROLLER): {
+						EmuLog(LOG_LEVEL::WARNING, "Port %d has an unsupported device attached! The type was %d", Port, dev_ptr->GetType());
+					}
+					break;
 
-				default: {
-					EmuLog(LOG_LEVEL::WARNING, "Port %d has an unknown device attached! The type was %d", Port, dev_ptr->GetType());
-					return false;
+					default: {
+						EmuLog(LOG_LEVEL::WARNING, "Port %d has an unknown device attached! The type was %d", Port, dev_ptr->GetType());
+					}
 				}
 			}
-			return true;
 		}
+		m_Mtx.unlock();
 	}
-	return false;
+	return has_changed;
 }
 
-void InputDeviceManager::UpdateInputXpad(std::shared_ptr<InputDevice>& Device, void* Buffer, int Direction)
+bool InputDeviceManager::UpdateInputXpad(std::shared_ptr<InputDevice>& Device, void* Buffer, int Direction)
 {
 	std::map<int, InputDevice::IoControl*> bindings = Device->GetBindings();
 	assert(bindings.size() == static_cast<size_t>(dev_num_buttons[to_underlying(XBOX_INPUT_DEVICE::MS_CONTROLLER_DUKE)]));
 
 	if (Direction == DIRECTION_IN) {
 		XpadInput* in_buf = reinterpret_cast<XpadInput*>(static_cast<uint8_t*>(Buffer) + 2);
-		Device->UpdateInput();
+		if (!Device->UpdateInput()) {
+			return false;
+		}
 
 		for (int i = 0; i < 8; i++) {
 			ControlState state = (bindings[i] != nullptr) ? dynamic_cast<InputDevice::Input*>(bindings[i])->GetState() : 0.0;
@@ -341,6 +377,7 @@ void InputDeviceManager::UpdateInputXpad(std::shared_ptr<InputDevice>& Device, v
 				out_buf->right_actuator_strength / 0xFFFF);
 		}
 	}
+	return true;
 }
 
 void InputDeviceManager::RefreshDevices()
@@ -348,8 +385,10 @@ void InputDeviceManager::RefreshDevices()
 	std::unique_lock<std::mutex> lck(m_Mtx);
 	Sdl::SdlPopulateOK = false;
 	m_Devices.clear();
+	lck.unlock();
 	XInput::PopulateDevices();
 	Sdl::PopulateDevices();
+	lck.lock();
 	m_Cv.wait(lck, []() {
 		return Sdl::SdlPopulateOK;
 	});
@@ -358,9 +397,10 @@ void InputDeviceManager::RefreshDevices()
 std::vector<std::string> InputDeviceManager::GetDeviceList() const
 {
 	std::vector<std::string> dev_list;
+	std::lock_guard<std::mutex> lck(m_Mtx);
 
 	std::for_each(m_Devices.begin(), m_Devices.end(), [&dev_list](const auto& Device) {
-		dev_list.push_back(Device.get()->GetQualifiedName());
+		dev_list.push_back(Device->GetQualifiedName());
 	});
 
 	return dev_list;
@@ -368,8 +408,10 @@ std::vector<std::string> InputDeviceManager::GetDeviceList() const
 
 std::shared_ptr<InputDevice> InputDeviceManager::FindDevice(std::string& QualifiedName) const
 {
+	std::lock_guard<std::mutex> lck(m_Mtx);
+
 	auto it = std::find_if(m_Devices.begin(), m_Devices.end(), [&QualifiedName](const auto& Device) {
-		return QualifiedName == Device.get()->GetQualifiedName();
+		return QualifiedName == Device->GetQualifiedName();
 	});
 	if (it != m_Devices.end()) {
 		return *it;
@@ -379,4 +421,17 @@ std::shared_ptr<InputDevice> InputDeviceManager::FindDevice(std::string& Qualifi
 	}
 }
 
-#endif
+std::shared_ptr<InputDevice> InputDeviceManager::FindDevice(SDL_JoystickID id) const
+{
+	std::lock_guard<std::mutex> lck(m_Mtx);
+
+	auto it = std::find_if(m_Devices.begin(), m_Devices.end(), [id](const auto& Device) {
+		return id == Device->GetId(id);
+	});
+	if (it != m_Devices.end()) {
+		return *it;
+	}
+	else {
+		return nullptr;
+	}
+}

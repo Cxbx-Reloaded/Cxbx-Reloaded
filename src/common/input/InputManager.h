@@ -27,11 +27,11 @@
 
 #ifndef INPUTMANAGER_H_
 #define INPUTMANAGER_H_
-#if 1 // Reenable this when LLE USB actually works
+
 #include "InputDevice.h"
 #include "EmuDevice.h"
 
-// Prevent collision with the SetPort provided by Windows
+// Prevent a collision with the SetPort provided by Windows
 #ifdef WIN32
 #undef SetPort
 #endif
@@ -56,12 +56,8 @@ struct XpadOutput {
 class InputDeviceManager
 {
 	public:
-		void Initialize(bool GUImode);
+		void Initialize(bool is_gui);
 		void Shutdown();
-		// connect the enumerated device to the emulated machine
-		void ConnectDevice(int port, int type);
-		// disconnect a device from the emulated machine
-		void DisconnectDevice(int port);
 		// read/write the input/output from/to the device attached to the supplied xbox port
 		bool UpdateXboxPortInput(int Port, void* Buffer, int Direction);
 		// add the device to the list of availble devices
@@ -74,27 +70,34 @@ class InputDeviceManager
 		std::vector<std::string> GetDeviceList() const;
 		// find device from its gui name
 		std::shared_ptr<InputDevice> FindDevice(std::string& QualifiedName) const;
+		// find device from its sdl id
+		std::shared_ptr<InputDevice> FindDevice(SDL_JoystickID id) const;
+		// attach/detach guest devices to the emulated machine
+		void UpdateDevices(int port);
 
 
 	private:
 		// update input for an xbox controller
-		void UpdateInputXpad(std::shared_ptr<InputDevice>& Device, void* Buffer, int Direction);
+		bool UpdateInputXpad(std::shared_ptr<InputDevice>& Device, void* Buffer, int Direction);
 		// bind a host device to an emulated device
 		void BindHostDevice(int port, int type);
+		// connect the enumerated device to the emulated machine
+		void ConnectDevice(int port, int type);
+		// disconnect a device from the emulated machine
+		void DisconnectDevice(int port);
 
 		// all enumerated devices currently detected and supported
 		std::vector<std::shared_ptr<InputDevice>> m_Devices;
 		// These serve double duty. They are used to signal errors during the initialization and
 		// later to signal that sdl has finished to refresh its devices
-		std::mutex m_Mtx;
+		mutable std::mutex m_Mtx;
 		std::condition_variable m_Cv;
 		// input polling thread
 		std::thread m_PollingThread;
-		// used to indicate that the manager was initialized correctly
-		bool m_bInitOK;
+		// used to indicate that the manager is shutting down
+		bool m_bPendingShutdown;
 };
 
 extern InputDeviceManager g_InputDeviceManager;
 
-#endif
 #endif

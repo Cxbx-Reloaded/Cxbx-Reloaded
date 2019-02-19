@@ -193,18 +193,17 @@ bool ConstructXpadDuke(int port)
 		return false;
 	}
 
-	int port_index = port - 1;
-	if (g_HubObjArray[port_index] == nullptr) {
+	if (g_HubObjArray[port] == nullptr) {
 		EmuLog(LOG_LEVEL::WARNING, "Cannot create xpad at port %d, hub not created yet", port);
 		return false;
 	}
 
-	if (g_XidControllerObjArray[port_index] == nullptr) {
-		g_XidControllerObjArray[port_index] = new XidGamepad;
-		int ret = g_XidControllerObjArray[port_index]->Init(port);
+	if (g_XidControllerObjArray[port] == nullptr) {
+		g_XidControllerObjArray[port] = new XidGamepad;
+		int ret = g_XidControllerObjArray[port]->Init(port + 1);
 		if (ret) {
-			delete g_XidControllerObjArray[port_index];
-			g_XidControllerObjArray[port_index] = nullptr;
+			delete g_XidControllerObjArray[port];
+			g_XidControllerObjArray[port] = nullptr;
 			return false;
 		}
 	}
@@ -219,10 +218,9 @@ void DestructXpadDuke(int port)
 {
 	assert(port > PORT_4 || port < PORT_1);
 
-	int port_index = port - 1;
-	assert(g_HubObjArray[port_index] == nullptr);
-	delete g_XidControllerObjArray[port_index];
-	g_XidControllerObjArray[port_index] = nullptr;
+	assert(g_HubObjArray[port] == nullptr);
+	delete g_XidControllerObjArray[port];
+	g_XidControllerObjArray[port] = nullptr;
 }
 
 int XidGamepad::Init(int port)
@@ -295,7 +293,7 @@ int XidGamepad::UsbXidClaimPort(XboxDeviceState* dev, int port)
 		return -1;
 	}
 
-	m_Port = port;
+	m_Port = port - 1;
 	dev->Port = *it;
 	(*it)->Dev = dev;
 	m_UsbDev->m_FreePorts.erase(it);
@@ -385,18 +383,13 @@ void XidGamepad::UsbXid_HandleControl(XboxDeviceState* dev, USBPacket* p,
 			// If the buffer has the correct length the full input data is transferred."
 			if (value == 0x0100) {
 				if (length <= m_XidState->in_state.bLength) {
-#if 0 // Reenable this when LLE USB actually works
-					if (g_InputDeviceManager->UpdateXboxPortInput(m_Port, &m_XidState->in_state, DIRECTION_IN)) {
+					if (g_InputDeviceManager.UpdateXboxPortInput(m_Port, &m_XidState->in_state, DIRECTION_IN)) {
 						std::memcpy(data, &m_XidState->in_state, m_XidState->in_state.bLength);
 						p->ActualLength = length;
 					}
 					else {
-						// ergo720: this shouldn't really happen. If it does, it either means that m_Port is wrong or there's a bug
-						// in the InputDeviceManager
-						p->Status = USB_RET_STALL;
-						assert(0);
+						p->Status = USB_RET_NAK;
 					}
-#endif
 				}
 				else {
 					p->Status = USB_RET_STALL;
@@ -428,11 +421,11 @@ void XidGamepad::UsbXid_HandleControl(XboxDeviceState* dev, USBPacket* p,
 					assert(m_XidState->out_state.length == sizeof(m_XidState->out_state));
 
 					p->ActualLength = length;
+					g_InputDeviceManager.UpdateXboxPortInput(m_Port, &m_XidState->out_state, DIRECTION_OUT);
 				}
 				else {
 					p->Status = USB_RET_STALL;
 				}
-				UpdateForceFeedback();
 			}
 			else {
 				p->Status = USB_RET_STALL;
@@ -514,10 +507,7 @@ void XidGamepad::UsbXid_HandleData(XboxDeviceState* dev, USBPacket* p)
 				m_UsbDev->USB_PacketCopy(p, &m_XidState->in_state, m_XidState->in_state.bLength);
 			}
 			else {
-				// ergo720: this shouldn't really happen. If it does, it either means that m_Port is wrong or there's a bug
-				// in the InputDeviceManager
-				p->Status = USB_RET_STALL;
-				assert(0);
+				p->Status = USB_RET_NAK;
 			}
 		}
 		else {
@@ -529,7 +519,7 @@ void XidGamepad::UsbXid_HandleData(XboxDeviceState* dev, USBPacket* p)
 	case USB_TOKEN_OUT: {
 		if (p->Endpoint->Num == 2) {
 			m_UsbDev->USB_PacketCopy(p, &m_XidState->out_state, m_XidState->out_state.length);
-			UpdateForceFeedback();
+			g_InputDeviceManager.UpdateXboxPortInput(m_Port, &m_XidState->out_state, DIRECTION_OUT);
 		}
 		else {
 			assert(0);
@@ -550,17 +540,4 @@ void XidGamepad::XpadCleanUp()
 	delete m_XidState;
 	m_pPeripheralFuncStruct = nullptr;
 	m_XidState = nullptr;
-}
-
-void XidGamepad::UpdateForceFeedback()
-{
-	// JayFoxRox's remarks: "Xbox -> XID packets were not tested
-	// The handling of output packets / force feedback was not checked."
-	// For the above reason we don't implement vibration support for now since the current
-	// implementation is untested and could potentially contain errors
-
-	/* FIXME: Check actuator endianess */
-	DBG_PRINTF("Set rumble power to left: 0x%X and right: 0x%X\n",
-		m_XidState->out_state.left_actuator_strength,
-		m_XidState->out_state.right_actuator_strength);
 }

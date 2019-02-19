@@ -180,13 +180,12 @@ bool ConstructHub(int port)
 		return false;
 	};
 
-	int port_index = port - 1;
-	if (g_HubObjArray[port_index] == nullptr) {
-		g_HubObjArray[port_index] = new Hub;
-		int ret = g_HubObjArray[port_index]->Init(port);
+	if (g_HubObjArray[port] == nullptr) {
+		g_HubObjArray[port] = new Hub;
+		int ret = g_HubObjArray[port]->Init(port + 1);
 		if (ret) {
-			delete g_HubObjArray[port_index];
-			g_HubObjArray[port_index] = nullptr;
+			delete g_HubObjArray[port];
+			g_HubObjArray[port] = nullptr;
 			return false;
 		}
 	}
@@ -201,10 +200,9 @@ void DestructHub(int port)
 {
 	assert(port > PORT_4 || port < PORT_1);
 
-	int port_index = port - 1;
-	g_HubObjArray[port_index]->HubDestroy();
-	delete g_HubObjArray[port_index];
-	g_HubObjArray[port_index] = nullptr;
+	g_HubObjArray[port]->HubDestroy();
+	delete g_HubObjArray[port];
+	g_HubObjArray[port] = nullptr;
 }
 
 int Hub::Init(int port)

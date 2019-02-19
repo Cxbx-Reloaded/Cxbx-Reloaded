@@ -129,8 +129,8 @@ namespace XInput
 			hXInput = nullptr;
 		}
 	}
-	
-	void GetDeviceChanges()
+
+	void PopulateDevices()
 	{
 		XINPUT_CAPABILITIES caps;
 		DWORD ret;
@@ -157,13 +157,8 @@ namespace XInput
 		}
 	}
 
-	void PopulateDevices()
-	{
-		DevicesConnected = 0;
-		GetDeviceChanges();
-	}
-
-	XDevice::XDevice(const XINPUT_CAPABILITIES& Capabilities, uint8_t Index) : m_Subtype(Capabilities.SubType), m_Index(Index)
+	XDevice::XDevice(const XINPUT_CAPABILITIES& Capabilities, uint8_t Index) : m_Subtype(Capabilities.SubType), m_Index(Index),
+		m_dwPacketNumber(0)
 	{
 		// XInputGetCaps can be broken on some devices, so we'll just ignore it
 		// and assume all gamepad + vibration capabilities are supported
@@ -232,9 +227,17 @@ namespace XInput
 
 	// Update I/O
 
-	void XDevice::UpdateInput()
+	bool XDevice::UpdateInput()
 	{
-		PXInputGetState(m_Index, &m_state_in);
+		if (PXInputGetState(m_Index, &m_state_in) != ERROR_SUCCESS) {
+			return false;
+		}
+		DWORD packet_number = m_state_in.dwPacketNumber;
+		if (packet_number != m_dwPacketNumber) {
+			m_dwPacketNumber = packet_number;
+			return true;
+		}
+		return false;
 	}
 
 	void XDevice::UpdateMotors()
