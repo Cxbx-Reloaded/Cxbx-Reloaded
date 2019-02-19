@@ -299,6 +299,7 @@ void InputWindow::InitRumble(HWND hwnd)
 		}
 	}
 	SendMessage(hwnd_rumble_list, CB_SETCURSEL, 0, 0);
+	m_rumble = std::string();
 }
 
 void InputWindow::UpdateRumble(int command)
@@ -329,6 +330,9 @@ void InputWindow::UpdateRumble(int command)
 
 void InputWindow::DetectOutput(int ms)
 {
+	if (m_rumble == std::string()) {
+		return;
+	}
 	auto dev = g_InputDeviceManager.FindDevice(m_host_dev);
 	if (dev != nullptr) {
 		// Don't block the message processing loop

@@ -191,7 +191,6 @@ INT_PTR CALLBACK DlgRumbleConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPA
 
 		case WM_CLOSE:
 		{
-			g_InputWindow->UpdateRumble(RUMBLE_SET);
 			EndDialog(hWndDlg, wParam);
 		}
 		break;
