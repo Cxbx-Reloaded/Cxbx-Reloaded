@@ -39,8 +39,6 @@
 #include "input\InputWindow.h"
 #include "gui\DlgInputConfig.h"
 
-#define INPUT_TIMEOUT 5000
-
 
 static INT_PTR CALLBACK DlgRumbleConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
@@ -144,10 +142,7 @@ INT_PTR CALLBACK DlgXidControllerConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wPar
 				case IDC_SET_RIGHT_NEGX:
 				case IDC_SET_RIGHT_POSX: {
 					if (HIWORD(wParam) == BN_CLICKED) {
-						char name[50];
-						SendMessage(GetDlgItem(hWndDlg, IDC_DEVICE_LIST), WM_GETTEXT,
-							sizeof(name), reinterpret_cast<LPARAM>(name));
-						g_InputWindow->BindButton(LOWORD(wParam), name, INPUT_TIMEOUT);
+						g_InputWindow->BindButton(LOWORD(wParam));
 					}
 				}
 				break;

@@ -58,9 +58,9 @@ class InputDeviceManager
 	public:
 		void Initialize(bool GUImode);
 		void Shutdown();
-		// connect the enumerated device to the virtual xbox
+		// connect the enumerated device to the emulated machine
 		void ConnectDevice(int port, int type);
-		// disconnect a device from the emulated xbox
+		// disconnect a device from the emulated machine
 		void DisconnectDevice(int port);
 		// read/write the input/output from/to the device attached to the supplied xbox port
 		bool UpdateXboxPortInput(int Port, void* Buffer, int Direction);

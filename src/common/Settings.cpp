@@ -512,8 +512,8 @@ bool Settings::LoadConfig()
 
 	for (int port_num = 0; port_num < 4; port_num++) {
 		std::string current_section = std::string(section_input) + std::to_string(port_num);
-		int ret = m_si.GetLongValue(current_section.c_str(), sect_input.type, -1);
-		if (ret == -1) {
+		int ret = m_si.GetLongValue(current_section.c_str(), sect_input.type, -2);
+		if (ret == -2) {
 			m_input[port_num].Type = to_underlying(XBOX_INPUT_DEVICE::DEVICE_INVALID);
 			continue;
 		}

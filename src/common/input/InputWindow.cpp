@@ -4,6 +4,9 @@
 #include "EmuShared.h"
 #include <future>
 
+#define INPUT_TIMEOUT  5000
+#define OUTPUT_TIMEOUT 3000
+
 
 constexpr ControlState INPUT_DETECT_THRESHOLD = 0.55; // arbitrary number, using what Dolphin uses
 InputWindow* g_InputWindow = nullptr;
@@ -99,7 +102,7 @@ void InputWindow::UpdateDeviceList()
 	SendMessage(m_hwnd_device_list, CB_SETCURSEL, 0, 0);
 }
 
-InputDevice::Input* InputWindow::Detect(InputDevice* const Device, int ms)
+InputDevice::Input* InputWindow::DetectInput(InputDevice* const Device, int ms)
 {
 	using namespace std::chrono;
 
@@ -123,18 +126,18 @@ InputDevice::Input* InputWindow::Detect(InputDevice* const Device, int ms)
 	return nullptr; // no input
 }
 
-void InputWindow::BindButton(int ControlID, std::string DeviceName, int ms)
+void InputWindow::BindButton(int ControlID)
 {
-	auto dev = g_InputDeviceManager.FindDevice(DeviceName);
+	auto dev = g_InputDeviceManager.FindDevice(m_host_dev);
 	if (dev != nullptr) {
 		// Don't block the message processing loop
-		std::thread([this, dev, ControlID, ms]() {
+		std::thread([this, dev, ControlID]() {
 			char current_text[50];
 			Button* xbox_button = m_DeviceConfig->FindButtonById(ControlID);
 			xbox_button->GetText(current_text, sizeof(current_text));
 			xbox_button->UpdateText("...");
 			EnableWindow(m_hwnd_window, FALSE);
-			std::future<InputDevice::Input*> fut = std::async(std::launch::async, &InputWindow::Detect, this, dev.get(), ms);
+			std::future<InputDevice::Input*> fut = std::async(std::launch::async, &InputWindow::DetectInput, this, dev.get(), INPUT_TIMEOUT);
 			InputDevice::Input* dev_button = fut.get();
 			if (dev_button) {
 				xbox_button->UpdateText(dev_button->GetName().c_str());
@@ -285,16 +288,17 @@ void InputWindow::UpdateCurrentDevice()
 
 void InputWindow::InitRumble(HWND hwnd)
 {
-	m_hwnd_rumble_list = GetDlgItem(hwnd, IDC_RUMBLE_LIST);
-	SendMessage(m_hwnd_rumble_list, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(""));
+	m_hwnd_rumble = hwnd;
+	HWND hwnd_rumble_list = GetDlgItem(m_hwnd_rumble, IDC_RUMBLE_LIST);
+	SendMessage(hwnd_rumble_list, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(""));
 	auto dev = g_InputDeviceManager.FindDevice(m_host_dev);
 	if (dev != nullptr) {
 		auto outputs = dev->GetOutputs();
 		for (const auto out : outputs) {
-			SendMessage(m_hwnd_rumble_list, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(out->GetName().c_str()));
+			SendMessage(hwnd_rumble_list, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(out->GetName().c_str()));
 		}
 	}
-	SendMessage(m_hwnd_rumble_list, CB_SETCURSEL, 0, 0);
+	SendMessage(hwnd_rumble_list, CB_SETCURSEL, 0, 0);
 }
 
 void InputWindow::UpdateRumble(int command)
@@ -303,7 +307,7 @@ void InputWindow::UpdateRumble(int command)
 	{
 		case RUMBLE_SET: {
 			char rumble[30];
-			SendMessage(m_hwnd_rumble_list, WM_GETTEXT, sizeof(rumble), reinterpret_cast<LPARAM>(rumble));
+			SendMessage(GetDlgItem(m_hwnd_rumble, IDC_RUMBLE_LIST), WM_GETTEXT, sizeof(rumble), reinterpret_cast<LPARAM>(rumble));
 			m_rumble = rumble;
 		}
 		break;
@@ -314,20 +318,33 @@ void InputWindow::UpdateRumble(int command)
 		break;
 
 		case RUMBLE_TEST: {
-			auto dev = g_InputDeviceManager.FindDevice(m_host_dev);
-			if (dev != nullptr) {
-				auto outputs = dev->GetOutputs();
-				for (const auto out : outputs) {
-					if (out->GetName() == m_rumble) {
-						out->SetState(1.0, 1.0);
-					}
-				}
-			}
+			DetectOutput(OUTPUT_TIMEOUT);
 		}
 		break;
 
 		default:
 			break;
 	}
+}
 
+void InputWindow::DetectOutput(int ms)
+{
+	auto dev = g_InputDeviceManager.FindDevice(m_host_dev);
+	if (dev != nullptr) {
+		// Don't block the message processing loop
+		std::thread([this, dev, ms]() {
+			HWND hwnd_rumble_test = GetDlgItem(m_hwnd_rumble, IDC_RUMBLE_TEST);
+			SendMessage(hwnd_rumble_test, WM_SETTEXT, 0, reinterpret_cast<LPARAM>("..."));
+			EnableWindow(m_hwnd_rumble, FALSE);
+			auto outputs = dev->GetOutputs();
+			for (const auto out : outputs) {
+				if (out->GetName() == m_rumble) {
+					out->SetState(1.0, 1.0);
+				}
+			}
+			std::this_thread::sleep_for(std::chrono::milliseconds(ms));
+			SendMessage(hwnd_rumble_test, WM_SETTEXT, 0, reinterpret_cast<LPARAM>("Test"));
+			EnableWindow(m_hwnd_rumble, TRUE);
+		}).detach();
+	}
 }

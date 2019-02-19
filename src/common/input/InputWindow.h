@@ -18,7 +18,7 @@ class InputWindow
 		void InitRumble(HWND hwnd);
 		~InputWindow();
 		void UpdateDeviceList();
-		void BindButton(int ControlID, std::string DeviceName, int ms);
+		void BindButton(int ControlID);
 		void BindXInput();
 		void ClearBindings();
 		void UpdateProfile(std::string& name, int command);
@@ -28,7 +28,8 @@ class InputWindow
 
 	private:
 		typedef std::vector<Settings::s_input_profiles>::iterator ProfileIt;
-		InputDevice::Input* Detect(InputDevice* const Device, int ms);
+		InputDevice::Input* DetectInput(InputDevice* const Device, int ms);
+		void DetectOutput(int ms);
 		ProfileIt FindProfile(std::string& name);
 		void LoadProfile(std::string& name);
 		bool SaveProfile(std::string& name);
@@ -46,8 +47,8 @@ class InputWindow
 		HWND m_hwnd_profile_list;
 		// handle of the kernel window
 		HWND m_hwnd_krnl;
-		// handle of the rumble list
-		HWND m_hwnd_rumble_list;
+		// handle of the rumble window
+		HWND m_hwnd_rumble;
 		// type of the device
 		int m_dev_type;
 		// num of buttons of device under configuration

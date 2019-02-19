@@ -239,12 +239,7 @@ namespace XInput
 
 	void XDevice::UpdateMotors()
 	{
-		// only call XInputSetState if the state changed
-		if (memcmp(&m_state_out, &m_current_state_out, sizeof(m_state_out)))
-		{
-			m_current_state_out = m_state_out;
-			PXInputSetState(m_Index, &m_state_out);
-		}
+		PXInputSetState(m_Index, &m_state_out);
 	}
 
 	// GET name/source/id
