@@ -39,7 +39,7 @@ bool VerifyBaseAddr()
 // This array keeps track of which ranges have successfully been reserved.
 struct {
 	int RangeIndex; // = index into XboxAddressRanges[]
-	unsigned __int32 Start;
+	uint32_t Start;
 	int Size;
 } ReservedRanges[128];
 
@@ -47,7 +47,7 @@ int ReservedRangeCount = 0;
 
 bool VerifyAddressRange(int index)
 {
-	unsigned __int32 BaseAddress = XboxAddressRanges[index].Start;
+	uint32_t BaseAddress = XboxAddressRanges[index].Start;
 	int Size = XboxAddressRanges[index].Size;
 	bool HadAnyFailure = false;
 
@@ -190,7 +190,7 @@ bool VerifyAddressRanges(const int system)
 
 void UnreserveMemoryRange(const int index)
 {
-	unsigned __int32 Start = XboxAddressRanges[index].Start;
+	uint32_t Start = XboxAddressRanges[index].Start;
 	int Size = XboxAddressRanges[index].Size;
 
 	while (Size > 0) {
@@ -202,7 +202,7 @@ void UnreserveMemoryRange(const int index)
 
 bool AllocateMemoryRange(const int index)
 {
-	unsigned __int32 Start = XboxAddressRanges[index].Start;
+	uint32_t Start = XboxAddressRanges[index].Start;
 	int Size = XboxAddressRanges[index].Size;
 
 	while (Size > 0) {
