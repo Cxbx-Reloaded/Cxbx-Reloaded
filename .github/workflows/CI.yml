@@ -55,7 +55,7 @@ jobs:
         run: |
           robocopy . artifacts COPYING README.md /r:0 /w:0
           robocopy build\bin\${{ matrix.configuration }} artifacts `
-            Cxbx.exe glew32.dll subhook.dll SDL2.dll `
+            cxbxr.exe cxbxr-ldr.exe cxbxr-emu.dll glew32.dll subhook.dll SDL2.dll `
             cxbxr-debugger.exe capstone.dll cs_x86.dll /r:0 /w:0
           If ($LastExitCode -le 7) { $LastExitCode = 0 }
       - uses: actions/upload-artifact@v1
