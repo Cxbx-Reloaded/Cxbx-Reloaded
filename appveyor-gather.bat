@@ -13,8 +13,20 @@
 @if not exist %BUILD_PATH% goto missing_build
 @pushd %BUILD_PATH%
 
-:: Add Cxbx binaries
-@call %ZIP_APP% u %ARTIFACT_PATH% Cxbx.exe glew32.dll subhook.dll d3d8.dll CxbxVSBC.dll
+:: Add (old-style) Cxbx binary
+@call %ZIP_APP% u %ARTIFACT_PATH% Cxbx.exe
+
+:: Add (new-style) Cxbx-Reloaded binaries
+@call %ZIP_APP% u %ARTIFACT_PATH% cxbxr.exe cxbx-ldr.exe cxbx-emu.dll 
+
+:: Add Cxbx's Virtual SteelBatallion Controller library
+@call %ZIP_APP% u %ARTIFACT_PATH% CxbxVSBC.dll
+
+:: Add required 3rd party DLL's
+@call %ZIP_APP% u %ARTIFACT_PATH% glew32.dll subhook.dll
+
+:: TODO : Remove d3d8 DLL if truely unneeded
+:: @call %ZIP_APP% u %ARTIFACT_PATH% d3d8.dll
 
 :: Add debugger binaries
 @call %ZIP_APP% u %ARTIFACT_PATH% CxbxDebugger.exe capstone.dll cs_x86.dll
