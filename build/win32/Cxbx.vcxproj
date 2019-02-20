@@ -220,6 +220,9 @@
     <ClInclude Include="..\..\src\common\win32\AlignPrefix1.h" />
     <ClInclude Include="..\..\src\common\xdvdfs-tools\buffered_io.h" />
     <ClInclude Include="..\..\src\common\xdvdfs-tools\xdvdfs.h" />
+    <ClInclude Include="..\..\src\core\hle\DSOUND\DirectSound\DirectSoundLogging.hpp" />
+    <ClInclude Include="..\..\src\core\hle\DSOUND\XbDSoundLogging.hpp" />
+    <ClInclude Include="..\..\src\core\hle\DSOUND\XbDSoundTypes.h" />
     <ClInclude Include="..\..\src\core\kernel\exports\EmuKrnlKe.h" />
     <ClInclude Include="..\..\src\Cxbx.h" />
     <ClInclude Include="..\..\src\core\kernel\init\CxbxKrnl.h" />
@@ -371,6 +374,8 @@
     </ClCompile>
     <ClCompile Include="..\..\src\common\xdvdfs-tools\buffered_io.cpp" />
     <ClCompile Include="..\..\src\common\xdvdfs-tools\xdvdfs.cpp" />
+    <ClCompile Include="..\..\src\core\hle\DSOUND\DirectSound\DirectSoundLogging.cpp" />
+    <ClCompile Include="..\..\src\core\hle\DSOUND\XbDSoundLogging.cpp" />
     <ClCompile Include="..\..\src\core\kernel\init\CxbxKrnl.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>

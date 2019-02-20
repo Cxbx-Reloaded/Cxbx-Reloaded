@@ -52,14 +52,9 @@ namespace xboxkrnl {
 #include "core\kernel\support\EmuXTL.h"
 #include "common\Settings.hpp"
 
-
-#ifndef _DEBUG_TRACE
-//#define _DEBUG_TRACE
 #include "Logging.h"
-#undef _DEBUG_TRACE
-#else
-#include "Logging.h"
-#endif
+#include "DirectSoundLogging.hpp"
+#include "..\XbDSoundLogging.hpp"
 
 #include <mmreg.h>
 #include <msacm.h>
@@ -951,19 +946,30 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateBuffer)
 
         DBG_PRINTF("DirectSoundCreateBuffer, *ppBuffer := 0x%08X, bytes := 0x%08X\n", *ppBuffer, (*ppBuffer)->EmuBufferDesc.dwBufferBytes);
 
-        DSoundBufferCreate(&DSBufferDesc, (*ppBuffer)->EmuDirectSoundBuffer8);
-        if (pdsbd->dwFlags & DSBCAPS_CTRL3D) {
-            DSound3DBufferCreate((*ppBuffer)->EmuDirectSoundBuffer8, (*ppBuffer)->EmuDirectSound3DBuffer8);
-            (*ppBuffer)->Xb_dwHeadroom = 0; // Default for 3D
+        hRet = DSoundBufferCreate(&DSBufferDesc, (*ppBuffer)->EmuDirectSoundBuffer8);
+        if (FAILED(hRet)) {
+            std::stringstream output;
+            output << "Xbox:\n" << pdsbd;
+            output << "\nHost converison:\n" << DSBufferDesc;
+            EmuLog(LOG_LEVEL::WARNING, output.str().c_str());
+            output.str("");
+            output << static_cast<DS_RESULT>(hRet);
+            CxbxKrnlCleanup("DSB: DSoundBufferCreate error: %s", output.str().c_str());
         }
+        else {
+            if (pdsbd->dwFlags & DSBCAPS_CTRL3D) {
+                DSound3DBufferCreate((*ppBuffer)->EmuDirectSoundBuffer8, (*ppBuffer)->EmuDirectSound3DBuffer8);
+                (*ppBuffer)->Xb_dwHeadroom = 0; // Default for 3D
+            }
 
-        DSoundDebugMuteFlag((*ppBuffer)->X_BufferCacheSize, (*ppBuffer)->EmuFlags);
+            DSoundDebugMuteFlag((*ppBuffer)->X_BufferCacheSize, (*ppBuffer)->EmuFlags);
 
-        // Pre-set volume to enforce silence if one of audio codec is disabled.
-        HybridDirectSoundBuffer_SetVolume((*ppBuffer)->EmuDirectSoundBuffer8, 0L, (*ppBuffer)->EmuFlags, nullptr, 
-                                          (*ppBuffer)->Xb_VolumeMixbin, (*ppBuffer)->Xb_dwHeadroom);
+            // Pre-set volume to enforce silence if one of audio codec is disabled.
+            HybridDirectSoundBuffer_SetVolume((*ppBuffer)->EmuDirectSoundBuffer8, 0L, (*ppBuffer)->EmuFlags, nullptr,
+                (*ppBuffer)->Xb_VolumeMixbin, (*ppBuffer)->Xb_dwHeadroom);
 
-        g_pDSoundBufferCache.push_back(*ppBuffer);
+            g_pDSoundBufferCache.push_back(*ppBuffer);
+        }
     }
 
     leaveCriticalSection;
@@ -1748,19 +1754,30 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateStream)
 
         DBG_PRINTF("DirectSoundCreateStream, *ppStream := 0x%.08X\n", *ppStream);
 
-        DSoundBufferCreate(&DSBufferDesc, (*ppStream)->EmuDirectSoundBuffer8);
-        if (DSBufferDesc.dwFlags & DSBCAPS_CTRL3D) {
-            DSound3DBufferCreate((*ppStream)->EmuDirectSoundBuffer8, (*ppStream)->EmuDirectSound3DBuffer8);
-            (*ppStream)->Xb_dwHeadroom = 0; // Default for 3D
+        hRet = DSoundBufferCreate(&DSBufferDesc, (*ppStream)->EmuDirectSoundBuffer8);
+        if (FAILED(hRet)) {
+            std::stringstream output;
+            output << "Xbox:\n" << pdssd;
+            output << "\nHost converison:\n" << DSBufferDesc;
+            EmuLog(LOG_LEVEL::WARNING, output.str().c_str());
+            output.str("");
+            output << static_cast<DS_RESULT>(hRet);
+            CxbxKrnlCleanup("DSS: DSoundBufferCreate error: %s", output.str().c_str());
         }
+        else {
+            if (DSBufferDesc.dwFlags & DSBCAPS_CTRL3D) {
+                DSound3DBufferCreate((*ppStream)->EmuDirectSoundBuffer8, (*ppStream)->EmuDirectSound3DBuffer8);
+                (*ppStream)->Xb_dwHeadroom = 0; // Default for 3D
+            }
 
-        DSoundDebugMuteFlag((*ppStream)->EmuBufferDesc.dwBufferBytes, (*ppStream)->EmuFlags);
+            DSoundDebugMuteFlag((*ppStream)->EmuBufferDesc.dwBufferBytes, (*ppStream)->EmuFlags);
 
-        // Pre-set volume to enforce silence if one of audio codec is disabled.
-        HybridDirectSoundBuffer_SetVolume((*ppStream)->EmuDirectSoundBuffer8, 0L, (*ppStream)->EmuFlags, nullptr,
-            (*ppStream)->Xb_VolumeMixbin, (*ppStream)->Xb_dwHeadroom);
+            // Pre-set volume to enforce silence if one of audio codec is disabled.
+            HybridDirectSoundBuffer_SetVolume((*ppStream)->EmuDirectSoundBuffer8, 0L, (*ppStream)->EmuFlags, nullptr,
+                (*ppStream)->Xb_VolumeMixbin, (*ppStream)->Xb_dwHeadroom);
 
-        g_pDSoundStreamCache.push_back(*ppStream);
+            g_pDSoundStreamCache.push_back(*ppStream);
+        }
     }
 
     leaveCriticalSection;

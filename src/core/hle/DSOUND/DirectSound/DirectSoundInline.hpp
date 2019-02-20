@@ -431,21 +431,18 @@ inline void DSoundGenericUnlock(
 }
 
 // Temporary creation since we need IDIRECTSOUNDBUFFER8, not IDIRECTSOUNDBUFFER class.
-inline void DSoundBufferCreate(LPDSBUFFERDESC pDSBufferDesc, LPDIRECTSOUNDBUFFER8 &pDSBuffer)
+inline HRESULT DSoundBufferCreate(LPDSBUFFERDESC pDSBufferDesc, LPDIRECTSOUNDBUFFER8 &pDSBuffer)
 {
     LPDIRECTSOUNDBUFFER pTempBuffer;
     HRESULT hRetDS = g_pDSound8->CreateSoundBuffer(pDSBufferDesc, &pTempBuffer, NULL);
 
-    if (hRetDS != DS_OK) {
-        CxbxKrnlCleanup("CreateSoundBuffer error: 0x%08X", hRetDS);
-    } else {
+    if (hRetDS == DS_OK) {
         hRetDS = pTempBuffer->QueryInterface(IID_IDirectSoundBuffer8, (LPVOID*)&(pDSBuffer));
         pTempBuffer->Release();
-        if (hRetDS != DS_OK) {
-            CxbxKrnlCleanup("Create IDirectSoundBuffer8 error: 0x%08X", hRetDS);
-        }
     }
+    return hRetDS;
 }
+
 inline void DSound3DBufferCreate(LPDIRECTSOUNDBUFFER8 pDSBuffer, LPDIRECTSOUND3DBUFFER8 &pDS3DBuffer) {
     HRESULT hRetDS3D = pDSBuffer->QueryInterface(IID_IDirectSound3DBuffer, (LPVOID*)&(pDS3DBuffer));
     if (hRetDS3D != DS_OK) {
