@@ -26,7 +26,7 @@ after_build:
   - ps: |-
       cd "bin\${env:CONFIGURATION}"
       7z u "${env:CONFIGURATION}.zip" ..\..\..\COPYING ..\..\..\README.md
-      7z u "${env:CONFIGURATION}.zip" Cxbx.exe glew32.dll subhook.dll CxbxVSBC.dll
+      7z u "${env:CONFIGURATION}.zip" cxbxr.exe cxbxr-ldr.exe cxbxr-emu.dll glew32.dll subhook.dll CxbxVSBC.dll
       7z u "${env:CONFIGURATION}.zip" cxbxr-debugger.exe capstone.dll cs_x86.dll
       If ($env:CONFIGURATION -eq 'Release') { 
         Get-ChildItem .\*.zip | % { Push-AppveyorArtifact $_.FullName -FileName $_.Name } 

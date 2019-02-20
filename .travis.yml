@@ -31,7 +31,7 @@ script:
 #  - mkdir export
 #  - 7z u export/${configuration} COPYING README.md
 #  - cd build/win32/${configuration}
-#  - 7z u ../../../export/${configuration} Cxbx.exe glew32.dll subhook.dll CxbxVSBC.dll
+#  - 7z u ../../../export/${configuration} cxbxr.exe cxbxr-ldr.exe cxbxr-emu.dll glew32.dll subhook.dll CxbxVSBC.dll
 #  - 7z u ../../../export/${configuration} CxbxDebugger.exe capstone.dll cs_x86.dll
 #  - cd ../../../
 
