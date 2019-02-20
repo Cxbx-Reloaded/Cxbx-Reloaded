@@ -42,6 +42,8 @@ namespace xboxkrnl
 #include "core\kernel\exports\EmuKrnl.h"  // For HalSystemInterrupt
 #include "common\util\CxbxUtil.h"
 #include "Logging.h"
+#include "common\input\SdlJoystick.h"
+#include "SDL.h"
 
 static const char* OHCI_RegNames[] = {
 	"HcRevision",
@@ -71,7 +73,7 @@ static const char* OHCI_RegNames[] = {
 	"HcRhPortStatus[3]"
 };
 
-/* Define these two if you want to dump usb packets and OHCI registers */
+/* Define these three if you want to dump usb packets and the OHCI registers */
 //#define DEBUG_ISOCH
 //#define DEBUG_PACKET
 //#define DEBUG_OHCI_REG
@@ -234,10 +236,11 @@ static const char* OHCI_RegNames[] = {
 #define OHCI_PAGE_MASK    0xFFFFF000
 #define OHCI_OFFSET_MASK  0xFFF
 
+OHCI* g_HostController;
+
 
 OHCI::OHCI(USBDevice* UsbObj)
 {
-	int offset = 0;
 	USBPortOps* ops;
 
 	m_UsbDevice = UsbObj;
@@ -254,6 +257,7 @@ OHCI::OHCI(USBDevice* UsbObj)
 
 	for (int i = 0; i < 4; i++) {
 		m_UsbDevice->USB_RegisterPort(&m_Registers.RhPort[i].UsbPort, i, USB_SPEED_MASK_LOW | USB_SPEED_MASK_FULL, ops);
+		m_Registers.RhPort[i].bPendingRemoval = false;
 	}
 	OHCI_PacketInit(&m_UsbPacket);
 
@@ -273,12 +277,9 @@ void OHCI::OHCI_FrameBoundaryWorker()
 {
 	OHCI_HCCA hcca;
 
-	m_FrameTimeMutex.lock();
-
 	if (OHCI_ReadHCCA(m_Registers.HcHCCA, &hcca)) {
 		EmuLog(LOG_LEVEL::WARNING, "HCCA read error at physical address 0x%X", m_Registers.HcHCCA);
 		OHCI_FatalError();
-		m_FrameTimeMutex.unlock();
 		return;
 	}
 
@@ -303,7 +304,6 @@ void OHCI::OHCI_FrameBoundaryWorker()
 
 	// Stop if UnrecoverableError happened or OHCI_SOF will crash
 	if (m_Registers.HcInterruptStatus & OHCI_INTR_UE) {
-		m_FrameTimeMutex.unlock();
 		return;
 	}
 
@@ -320,7 +320,7 @@ void OHCI::OHCI_FrameBoundaryWorker()
 		if (!m_Registers.HcDoneHead) {
 			// From the OHCI standard: "This is set to zero whenever HC writes the content of this
 			// register to HCCA. It also sets the WritebackDoneHead of HcInterruptStatus."
-			CxbxKrnlCleanup("HcDoneHead is zero but WritebackDoneHead interrupt is not set!\n");
+			CxbxKrnlCleanup("HcDoneHead is zero but WritebackDoneHead interrupt is not set!");
 		}
 
 		if (m_Registers.HcInterrupt & m_Registers.HcInterruptStatus) {
@@ -351,7 +351,15 @@ void OHCI::OHCI_FrameBoundaryWorker()
 		OHCI_FatalError();
 	}
 
-	m_FrameTimeMutex.unlock();
+	// Now acknowledge device removal (if any)
+	for (int i = 0; i < 4; i++) {
+		if (m_Registers.RhPort[i].bPendingRemoval) {
+			SDL_Event DeviceRemoveEvent;
+			DeviceRemoveEvent.type = Sdl::DeviceRemoveAck_t;
+			DeviceRemoveEvent.user.data1 = new int(i);
+			SDL_PushEvent(&DeviceRemoveEvent);
+		}
+	}
 }
 
 void OHCI::OHCI_FatalError()
@@ -362,7 +370,7 @@ void OHCI::OHCI_FatalError()
 
 	OHCI_SetInterrupt(OHCI_INTR_UE);
 	OHCI_BusStop();
-	EmuLog(LOG_LEVEL::WARNING, "An unrecoverable error has occoured!\n");
+	EmuLog(LOG_LEVEL::WARNING, "An unrecoverable error has occoured!");
 }
 
 bool OHCI::OHCI_ReadHCCA(xbaddr Paddr, OHCI_HCCA* Hcca)
@@ -794,6 +802,10 @@ XboxDeviceState* OHCI::OHCI_FindDevice(uint8_t Addr)
 	for (i = 0; i < 4; i++) {
 		if ((m_Registers.RhPort[i].HcRhPortStatus & OHCI_PORT_PES) == 0) {
 			continue; // port is disabled
+		}
+		if (m_Registers.RhPort[i].bPendingRemoval) {
+			// device is scheduled for removal, ignore it
+			continue;
 		}
 		dev = m_UsbDevice->USB_FindDevice(&m_Registers.RhPort[i].UsbPort, Addr);
 		if (dev != nullptr) {
@@ -1814,4 +1826,9 @@ int OHCI::OHCI_ServiceIsoTD(OHCI_ED* ed, int completion)
 		OHCI_FatalError();
 	}
 	return 1;
+}
+
+void OHCI::SetRemovalFlag(int port, bool flag)
+{
+	m_Registers.RhPort[port].bPendingRemoval = flag;
 }

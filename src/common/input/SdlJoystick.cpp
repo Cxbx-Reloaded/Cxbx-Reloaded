@@ -54,6 +54,7 @@ namespace Sdl
 	uint32_t ExitEvent_t;
 	uint32_t PopulateEvent_t;
 	uint32_t UpdateInputEvent_t;
+	uint32_t DeviceRemoveAck_t;
 	int SdlInitStatus = SDL_NOT_INIT;
 	bool SdlPopulateOK = false;
 
@@ -70,7 +71,7 @@ namespace Sdl
 			Cv.notify_one();
 			return;
 		}
-		CustomEvent_t = SDL_RegisterEvents(3);
+		CustomEvent_t = SDL_RegisterEvents(4);
 		if (CustomEvent_t == (uint32_t)-1) {
 			SDL_Quit();
 			EmuLog(LOG_LEVEL::WARNING, "Failed to create SDL custom events!");
@@ -82,6 +83,7 @@ namespace Sdl
 		ExitEvent_t = CustomEvent_t;
 		PopulateEvent_t = CustomEvent_t + 1;
 		UpdateInputEvent_t = CustomEvent_t + 2;
+		DeviceRemoveAck_t = CustomEvent_t + 3;
 
 		SetThreadAffinityMask(GetCurrentThread(), g_CPUOthers);
 
@@ -155,7 +157,12 @@ namespace Sdl
 			}
 			else if (Event.type == UpdateInputEvent_t) {
 				XInput::PopulateDevices();
-				g_InputDeviceManager.UpdateDevices(*static_cast<int*>(Event.user.data1));
+				g_InputDeviceManager.UpdateDevices(*static_cast<int*>(Event.user.data1), false);
+				delete Event.user.data1;
+				Event.user.data1 = nullptr;
+			}
+			else if (Event.type == DeviceRemoveAck_t) {
+				g_InputDeviceManager.UpdateDevices(*static_cast<int*>(Event.user.data1), true);
 				delete Event.user.data1;
 				Event.user.data1 = nullptr;
 			}

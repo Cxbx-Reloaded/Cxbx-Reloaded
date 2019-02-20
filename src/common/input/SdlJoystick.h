@@ -54,6 +54,7 @@ namespace Sdl
 	extern uint32_t ExitEvent_t;
 	extern uint32_t PopulateEvent_t;
 	extern uint32_t UpdateInputEvent_t;
+	extern uint32_t DeviceRemoveAck_t;
 	extern int SdlInitStatus;
 	extern bool SdlPopulateOK;
 

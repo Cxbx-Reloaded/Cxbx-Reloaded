@@ -63,7 +63,7 @@ void USBDevice::Init()
 	m_DeviceId = 0x01C2;
 	m_VendorId = PCI_VENDOR_ID_NVIDIA;
 
-	m_HostController = new OHCI(this);
+	g_HostController = new OHCI(this);
 	m_PciPath = "pci.0:02.0";
 }
 
@@ -73,7 +73,7 @@ uint32_t USBDevice::MMIORead(int barIndex, uint32_t addr, unsigned size)
 	assert(barIndex == 0);
 
 	// read the register of the HC
-	return m_HostController->OHCI_ReadRegister(addr);
+	return g_HostController->OHCI_ReadRegister(addr);
 }
 
 void USBDevice::MMIOWrite(int barIndex, uint32_t addr, uint32_t value, unsigned size)
@@ -82,7 +82,7 @@ void USBDevice::MMIOWrite(int barIndex, uint32_t addr, uint32_t value, unsigned 
 	assert(barIndex == 0);
 
 	// write the register of the HC
-	m_HostController->OHCI_WriteRegister(addr, value);
+	g_HostController->OHCI_WriteRegister(addr, value);
 }
 
 void USBDevice::USB_RegisterPort(USBPort* Port, int Index, int SpeedMask, USBPortOps* Ops)

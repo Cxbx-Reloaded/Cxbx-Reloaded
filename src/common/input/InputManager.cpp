@@ -41,6 +41,7 @@ namespace xboxkrnl
 #include "..\devices\usb\XidGamepad.h"
 #include "core\kernel\exports\EmuKrnl.h" // For EmuLog
 #include "EmuShared.h"
+#include "devices\usb\OHCI.h"
 
 
 InputDeviceManager g_InputDeviceManager;
@@ -70,10 +71,10 @@ void InputDeviceManager::Initialize(bool is_gui)
 	Sdl::PopulateDevices();
 
 	if (!is_gui) {
-		UpdateDevices(PORT_1);
-		UpdateDevices(PORT_2);
-		UpdateDevices(PORT_3);
-		UpdateDevices(PORT_4);
+		UpdateDevices(PORT_1, false);
+		UpdateDevices(PORT_2, false);
+		UpdateDevices(PORT_3, false);
+		UpdateDevices(PORT_4, false);
 	}
 }
 
@@ -149,7 +150,7 @@ void InputDeviceManager::RemoveDevice(std::function<bool(const InputDevice*)> Ca
 	}
 }
 
-void InputDeviceManager::UpdateDevices(int port)
+void InputDeviceManager::UpdateDevices(int port, bool ack)
 {
 	std::array<Settings::s_input, 4> input;
 	g_EmuShared->GetInputSettings(&input);
@@ -160,7 +161,7 @@ void InputDeviceManager::UpdateDevices(int port)
 	}
 	else if (input[port].Type == to_underlying(XBOX_INPUT_DEVICE::DEVICE_INVALID) &&
 		g_HubObjArray[port] != nullptr) {
-		DisconnectDevice(port);
+		DisconnectDevice(port, ack);
 	}
 }
 
@@ -195,7 +196,7 @@ void InputDeviceManager::ConnectDevice(int port, int type)
 	BindHostDevice(port, type);
 }
 
-void InputDeviceManager::DisconnectDevice(int port)
+void InputDeviceManager::DisconnectDevice(int port, bool ack)
 {
 	if (port > PORT_4 || port < PORT_1) {
 		EmuLog(LOG_LEVEL::WARNING, "Invalid port number. The port was %d", port);
@@ -209,8 +210,14 @@ void InputDeviceManager::DisconnectDevice(int port)
 		switch (type)
 		{
 			case to_underlying(XBOX_INPUT_DEVICE::MS_CONTROLLER_DUKE): {
-				DestructHub(port);
-				DestructXpadDuke(port);
+				if (ack) {
+					DestructHub(port);
+					DestructXpadDuke(port);
+					g_HostController->SetRemovalFlag(port, false);
+				}
+				else {
+					g_HostController->SetRemovalFlag(port, true);
+				}
 			}
 			break;
 
@@ -226,6 +233,11 @@ void InputDeviceManager::DisconnectDevice(int port)
 
 			default:
 				EmuLog(LOG_LEVEL::WARNING, "Attempted to detach an unknown device type (type was %d)", type);
+		}
+		auto dev = g_InputDeviceManager.FindDeviceByPort(port);
+		if (dev != nullptr) {
+			dev->SetType(to_underlying(XBOX_INPUT_DEVICE::DEVICE_INVALID));
+			dev->SetPort(PORT_INVALID);
 		}
 	}
 	else {
@@ -427,6 +439,21 @@ std::shared_ptr<InputDevice> InputDeviceManager::FindDevice(SDL_JoystickID id) c
 
 	auto it = std::find_if(m_Devices.begin(), m_Devices.end(), [id](const auto& Device) {
 		return id == Device->GetId(id);
+	});
+	if (it != m_Devices.end()) {
+		return *it;
+	}
+	else {
+		return nullptr;
+	}
+}
+
+std::shared_ptr<InputDevice> InputDeviceManager::FindDeviceByPort(int port) const
+{
+	std::lock_guard<std::mutex> lck(m_Mtx);
+
+	auto it = std::find_if(m_Devices.begin(), m_Devices.end(), [port](const auto& Device) {
+		return port == Device->GetPort();
 	});
 	if (it != m_Devices.end()) {
 		return *it;

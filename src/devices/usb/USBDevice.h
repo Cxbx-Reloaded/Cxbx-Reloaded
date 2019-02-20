@@ -33,9 +33,6 @@
 #include <vector>
 
 
-// Forward declare OHCI class for m_HostController pointer
-class OHCI;
-
 /* Helper class which provides various functionality to both OHCI and usb device classes */
 class USBDevice : public PCIDevice {
 	public:
@@ -55,8 +52,6 @@ class USBDevice : public PCIDevice {
 
 
 		// USBDevice-specific functions/variables
-		// pointer to the host controller this device refers to
-		OHCI* m_HostController;
 		// PCI path of this usb device
 		const char* m_PciPath;
 		// free usb ports on this device (hubs included)

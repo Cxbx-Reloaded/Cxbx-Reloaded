@@ -212,14 +212,11 @@ int Hub::Init(int port)
     if (rc != 0) {
 		delete m_pPeripheralFuncStruct;
 		delete m_HubState;
-		m_UsbDev->m_HostController->m_FrameTimeMutex.unlock();
         return rc;
     }
 	m_UsbDev->USB_EpInit(dev);
     m_UsbDev->USB_DeviceInit(dev);
     m_UsbDev->USB_DeviceAttach(dev);
-
-	m_UsbDev->m_HostController->m_FrameTimeMutex.unlock();
 
 	return 0;
 }
@@ -260,8 +257,6 @@ int Hub::UsbHubClaimPort(XboxDeviceState* dev, int port)
 	m_UsbDev = g_USB0;
 	it = m_UsbDev->m_FreePorts.end();
 	i = 0;
-
-	m_UsbDev->m_HostController->m_FrameTimeMutex.lock();
 
 	for (auto usb_port : m_UsbDev->m_FreePorts) {
 		if (usb_port->Path == std::to_string(port)) {
@@ -731,7 +726,5 @@ void Hub::HubCleanUp()
 
 void Hub::HubDestroy()
 {
-	m_UsbDev->m_HostController->m_FrameTimeMutex.lock();
 	m_pPeripheralFuncStruct->handle_destroy();
-	m_UsbDev->m_HostController->m_FrameTimeMutex.unlock();
 }

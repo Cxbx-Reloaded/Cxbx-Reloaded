@@ -87,11 +87,12 @@ struct OHCI_HCCA
 	uint32_t HccaDoneHead;
 };
 
-/* Small struct used to hold the HcRhPortStatus register and the usb port status */
+/* Small struct used to hold the HcRhPortStatus register, the usb port status and the PendingRemoval flag */
 struct OHCIPort
 {
 	USBPort UsbPort;
 	uint32_t HcRhPortStatus;
+	bool bPendingRemoval;
 };
 
 /* All these registers are well documented in the OHCI standard */
@@ -133,10 +134,6 @@ struct OHCI_Registers
 class OHCI
 {
 	public:
-		// Indicates that the timer thread is accessing the OHCI object. Necessary because the input thread from the
-		// InputDeviceManager will access us when it needs to create or destroy a device
-		std::mutex m_FrameTimeMutex;
-
 		// constructor
 		OHCI(USBDevice* UsbObj);
 		// destructor
@@ -145,6 +142,8 @@ class OHCI
 		uint32_t OHCI_ReadRegister(xbaddr Addr);
 		// write a register
 		void OHCI_WriteRegister(xbaddr Addr, uint32_t Value);
+		// inform ohci that the host wishes to remove a device from a port
+		void SetRemovalFlag(int port, bool flag);
 
 
 	private:
@@ -247,5 +246,7 @@ class OHCI
 		void OHCI_Wakeup(USBPort* port1);
 		void OHCI_AsyncCompletePacket(USBPort* port, USBPacket* packet);
 };
+
+extern OHCI* g_HostController;
 
 #endif

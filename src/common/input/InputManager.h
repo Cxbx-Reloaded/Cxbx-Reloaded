@@ -72,8 +72,10 @@ class InputDeviceManager
 		std::shared_ptr<InputDevice> FindDevice(std::string& QualifiedName) const;
 		// find device from its sdl id
 		std::shared_ptr<InputDevice> FindDevice(SDL_JoystickID id) const;
+		// find device from its xbox port
+		std::shared_ptr<InputDevice> FindDeviceByPort(int port) const;
 		// attach/detach guest devices to the emulated machine
-		void UpdateDevices(int port);
+		void UpdateDevices(int port, bool ack);
 
 
 	private:
@@ -84,7 +86,7 @@ class InputDeviceManager
 		// connect the enumerated device to the emulated machine
 		void ConnectDevice(int port, int type);
 		// disconnect a device from the emulated machine
-		void DisconnectDevice(int port);
+		void DisconnectDevice(int port, bool ack);
 
 		// all enumerated devices currently detected and supported
 		std::vector<std::shared_ptr<InputDevice>> m_Devices;
