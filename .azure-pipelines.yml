@@ -66,7 +66,9 @@ jobs:
       Contents: |
           COPYING
           README.md
-          build\bin\$(configuration)\Cxbx.exe
+          build\bin\$(configuration)\cxbxr.exe
+          build\bin\$(configuration)\cxbxr-ldr.exe
+          build\bin\$(configuration)\cxbxr-emu.dll
           build\bin\$(configuration)\glew32.dll
           build\bin\$(configuration)\subhook.dll
           build\bin\$(configuration)\SDL2.dll
