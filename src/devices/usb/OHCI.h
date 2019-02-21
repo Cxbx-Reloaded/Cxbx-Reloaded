@@ -143,7 +143,7 @@ class OHCI
 		// write a register
 		void OHCI_WriteRegister(xbaddr Addr, uint32_t Value);
 		// inform ohci that the host wishes to remove a device from a port
-		void SetRemovalFlag(int port, bool flag);
+		void OHCI_SetRemovalFlag(int port, bool flag);
 
 
 	private:

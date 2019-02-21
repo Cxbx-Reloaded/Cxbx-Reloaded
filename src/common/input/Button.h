@@ -3,6 +3,8 @@
 #include "windows.h"
 #include <string>
 
+#define XBOX_CTRL_NUM_BUTTONS 25
+
 
 /* Represents the gui buttons of the xbox device currently being configured */
 class Button

@@ -70,6 +70,11 @@ void InputDeviceManager::Initialize(bool is_gui)
 	XInput::PopulateDevices();
 	Sdl::PopulateDevices();
 
+	lck.lock();
+	m_Cv.wait(lck, []() {
+		return Sdl::SdlPopulateOK;
+	});
+
 	if (!is_gui) {
 		UpdateDevices(PORT_1, false);
 		UpdateDevices(PORT_2, false);
@@ -152,14 +157,14 @@ void InputDeviceManager::RemoveDevice(std::function<bool(const InputDevice*)> Ca
 
 void InputDeviceManager::UpdateDevices(int port, bool ack)
 {
-	std::array<Settings::s_input, 4> input;
-	g_EmuShared->GetInputSettings(&input);
+	int type;
+	g_EmuShared->GetInputDevTypeSettings(&type, port);
 
-	if (input[port].Type != to_underlying(XBOX_INPUT_DEVICE::DEVICE_INVALID) &&
+	if (type != to_underlying(XBOX_INPUT_DEVICE::DEVICE_INVALID) &&
 		g_HubObjArray[port] == nullptr) {
-		ConnectDevice(port, input[port].Type);
+		ConnectDevice(port, type);
 	}
-	else if (input[port].Type == to_underlying(XBOX_INPUT_DEVICE::DEVICE_INVALID) &&
+	else if (type == to_underlying(XBOX_INPUT_DEVICE::DEVICE_INVALID) &&
 		g_HubObjArray[port] != nullptr) {
 		DisconnectDevice(port, ack);
 	}
@@ -213,10 +218,10 @@ void InputDeviceManager::DisconnectDevice(int port, bool ack)
 				if (ack) {
 					DestructHub(port);
 					DestructXpadDuke(port);
-					g_HostController->SetRemovalFlag(port, false);
+					g_HostController->OHCI_SetRemovalFlag(port, false);
 				}
 				else {
-					g_HostController->SetRemovalFlag(port, true);
+					g_HostController->OHCI_SetRemovalFlag(port, true);
 				}
 			}
 			break;
@@ -247,40 +252,24 @@ void InputDeviceManager::DisconnectDevice(int port, bool ack)
 
 void InputDeviceManager::BindHostDevice(int port, int type)
 {
-	std::array<Settings::s_input, 4> input;
-	std::array<std::vector<Settings::s_input_profiles>, to_underlying(XBOX_INPUT_DEVICE::DEVICE_MAX)> profile;
+	char dev_name[50];
+	char dev_control_names[XBOX_CTRL_NUM_BUTTONS][30];
 
-	g_EmuShared->GetInputSettings(&input);
-	g_EmuShared->GetInputProfileSettings(&profile);
+	g_EmuShared->GetInputDevNameSettings(dev_name, port);
+	g_EmuShared->GetInputBindingsSettings(dev_control_names[0], XBOX_CTRL_NUM_BUTTONS, port);
 
-	std::string device_name(input[port].DeviceName);
-	std::string profile_name(input[port].ProfileName);
-
-	auto dev = FindDevice(std::string(device_name));
+	auto dev = FindDevice(std::string(dev_name));
 	if (dev != nullptr) {
-		auto it_profile = std::find_if(profile[type].begin(), profile[type].end(), [&profile_name](const auto& profile) {
-			if (profile.ProfileName == profile_name) {
-				return true;
-			}
-			return false;
-		});
-		if (it_profile != profile[type].end()) {
 			std::vector<InputDevice::IoControl*> controls = dev->GetIoControls();
 			for (int index = 0; index < dev_num_buttons[type]; index++) {
-				std::string dev_button(it_profile->ControlList[index]);
-				auto it_control = std::find_if(controls.begin(), controls.end(), [&dev_button](const auto control) {
+				std::string dev_button(dev_control_names[index]);
+				auto it = std::find_if(controls.begin(), controls.end(), [&dev_button](const auto control) {
 					if (control->GetName() == dev_button) {
 						return true;
 					}
 					return false;
 				});
-				dev->SetBindings(index, (it_control != controls.end()) ? *it_control : nullptr);
-			}
-		}
-		else {
-			for (int index = 0; index < dev_num_buttons[type]; index++) {
-				dev->SetBindings(index, nullptr);
-			}
+				dev->SetBindings(index, (it != controls.end()) ? *it : nullptr);
 		}
 		dev->SetType(type);
 		dev->SetPort(port);

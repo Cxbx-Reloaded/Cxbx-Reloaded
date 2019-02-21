@@ -43,7 +43,6 @@ namespace xboxkrnl
 #include "common\util\CxbxUtil.h"
 #include "Logging.h"
 #include "common\input\SdlJoystick.h"
-#include "SDL.h"
 
 static const char* OHCI_RegNames[] = {
 	"HcRevision",
@@ -1828,7 +1827,7 @@ int OHCI::OHCI_ServiceIsoTD(OHCI_ED* ed, int completion)
 	return 1;
 }
 
-void OHCI::SetRemovalFlag(int port, bool flag)
+void OHCI::OHCI_SetRemovalFlag(int port, bool flag)
 {
 	m_Registers.RhPort[port].bPendingRemoval = flag;
 }

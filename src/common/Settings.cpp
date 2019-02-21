@@ -786,8 +786,25 @@ void Settings::SyncToEmulator()
 	g_EmuShared->SetControllerPortSettings(&m_controller_port);
 
 	// register input settings
-	g_EmuShared->SetInputSettings(&m_input);
-	g_EmuShared->SetInputProfileSettings(&m_input_profiles);
+	for (int i = 0; i < 4; i++) {
+		g_EmuShared->SetInputDevTypeSettings(&m_input[i].Type, i);
+		g_EmuShared->SetInputDevNameSettings(m_input[i].DeviceName.c_str(), i);
+
+		auto it = std::find_if(m_input_profiles[m_input[i].Type].begin(),
+			m_input_profiles[m_input[i].Type].end(), [this, i](const auto& profile) {
+			if (profile.ProfileName == m_input[i].ProfileName) {
+				return true;
+			}
+			return false;
+		});
+		if (it != m_input_profiles[m_input[i].Type].end()) {
+			char controls_name[XBOX_CTRL_NUM_BUTTONS][30];
+			for (int index = 0; index < dev_num_buttons[m_input[i].Type]; index++) {
+				strncpy(controls_name[index], it->ControlList[index].c_str(), 30);
+			}
+			g_EmuShared->SetInputBindingsSettings(&controls_name[0][0], XBOX_CTRL_NUM_BUTTONS, i);
+		}
+	}
 
 	// register Hacks settings
 	g_EmuShared->SetHackSettings(&m_hacks);

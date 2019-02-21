@@ -29,6 +29,7 @@
 #include "common\Settings.hpp"
 #include "Mutex.h"
 #include "common\IPCHybrid.hpp"
+#include "common\input\Button.h"
 
 #include <memory.h>
 
@@ -120,12 +121,28 @@ class EmuShared : public Mutex
 		// ******************************************************************
 		// * Input config Accessors
 		// ******************************************************************
-		void GetInputSettings(std::array<Settings::s_input, 4> *input) { Lock(); *input = m_input; Unlock(); }
-		void SetInputSettings(const std::array<Settings::s_input, 4> *input) { Lock(); m_input = *input; Unlock(); }
-		void GetInputProfileSettings(std::array<std::vector<Settings::s_input_profiles>, to_underlying(XBOX_INPUT_DEVICE::DEVICE_MAX)> *profile)
-		{ Lock(); *profile = m_input_profiles; Unlock(); }
-		void SetInputProfileSettings(const std::array<std::vector<Settings::s_input_profiles>, to_underlying(XBOX_INPUT_DEVICE::DEVICE_MAX)> *profile)
-		{ Lock(); m_input_profiles = *profile; Unlock(); }
+		void GetInputDevTypeSettings(int *type, int port) { Lock(); *type = m_DeviceType[port]; Unlock(); }
+		void SetInputDevTypeSettings(const int *type, int port) { Lock(); m_DeviceType[port] = *type; Unlock(); }
+		void GetInputDevNameSettings(char *name, int port) { Lock(); strncpy(name, m_DeviceName[port], 50); Unlock(); }
+		void SetInputDevNameSettings(const char *name, int port) { Lock(); strncpy(m_DeviceName[port], name, 50); Unlock(); }
+		void GetInputBindingsSettings(char *button_str, int max_num_buttons, int port)
+		{
+			assert(max_num_buttons <= XBOX_CTRL_NUM_BUTTONS);
+			Lock();
+			for (int i = 0; i < max_num_buttons; i++) {
+				strncpy(&button_str[i], m_DeviceControlNames[port][i], 30);
+			}
+			Unlock();
+		}
+		void SetInputBindingsSettings(const char *button_str, int max_num_buttons, int port)
+		{
+			assert(max_num_buttons <= XBOX_CTRL_NUM_BUTTONS);
+			Lock();
+			for (int i = 0; i < max_num_buttons; i++) {
+				strncpy(m_DeviceControlNames[port][i], &button_str[i], 30);
+			}
+			Unlock();
+		}
 
 		// ******************************************************************
 		// * LLE Flags Accessors
@@ -251,20 +268,21 @@ class EmuShared : public Mutex
 		bool         m_bDebugging;
 		bool         m_bReady_status;
 		bool         m_bEmulating_status;
-		int          m_Reserved7[4];
+		int          m_Reserved7[3];
 		bool         m_bFirstLaunch;
 		bool         m_bReserved2;
 		bool         m_bReserved3;
 		bool         m_bReserved4;
 		unsigned int m_dwKrnlProcID; // Only used for kernel mode level.
+		int          m_DeviceType[4];
+		char         m_DeviceControlNames[4][XBOX_CTRL_NUM_BUTTONS][30]; // macro should be num of buttons of dev with highest num buttons
+		char         m_DeviceName[4][50];
 		int          m_Reserved99[32]; // Reserve space
 
 		// Settings class in memory should not be tampered by third-party.
 		// Third-party program should only be allow to edit settings.ini file.
 		Settings::s_controller_dinput m_controller_dinput;
 		Settings::s_controller_port m_controller_port;
-		std::array<Settings::s_input, 4> m_input;
-		std::array<std::vector<Settings::s_input_profiles>, to_underlying(XBOX_INPUT_DEVICE::DEVICE_MAX)> m_input_profiles;
 		Settings::s_core m_core;
 		Settings::s_video m_video;
 		Settings::s_audio m_audio;
