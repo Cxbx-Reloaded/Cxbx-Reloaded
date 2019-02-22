@@ -34,7 +34,6 @@ namespace xboxkrnl
 	#include <xboxkrnl/xboxkrnl.h> // For PKINTERRUPT, etc.
 };
 
-#include <thread>
 #include "SdlJoystick.h"
 #include "XInputPad.h"
 #include "InputManager.h"
@@ -180,6 +179,7 @@ void InputDeviceManager::ConnectDevice(int port, int type)
 				if (!ConstructXpadDuke(port)) {
 					DestructHub(port);
 				}
+				g_XidDeviceObjArray[port].xid_type = type;
 			}	
 		}
 		break;
@@ -209,9 +209,9 @@ void InputDeviceManager::DisconnectDevice(int port, bool ack)
 		return;
 	}
 
-	if (g_XidControllerObjArray[port] != nullptr) {
+	if (g_XidDeviceObjArray[port].xid_dev != nullptr) {
 		assert(g_HubObjArray[port] != nullptr);
-		int type = to_underlying(XBOX_INPUT_DEVICE::MS_CONTROLLER_DUKE); // hardcoded for now
+		int type = g_XidDeviceObjArray[port].xid_type;
 
 		switch (type)
 		{

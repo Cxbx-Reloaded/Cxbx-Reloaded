@@ -57,7 +57,12 @@ namespace xboxkrnl
 // To avoid including Xbox.h
 extern USBDevice* g_USB0;
 
-XidGamepad* g_XidControllerObjArray[4];
+XidObj g_XidDeviceObjArray[4] = {
+	{ nullptr, to_underlying(XBOX_INPUT_DEVICE::DEVICE_INVALID) },
+	{ nullptr, to_underlying(XBOX_INPUT_DEVICE::DEVICE_INVALID) },
+	{ nullptr, to_underlying(XBOX_INPUT_DEVICE::DEVICE_INVALID) },
+	{ nullptr, to_underlying(XBOX_INPUT_DEVICE::DEVICE_INVALID) },
+};
 
 #pragma pack(1)
 
@@ -198,12 +203,12 @@ bool ConstructXpadDuke(int port)
 		return false;
 	}
 
-	if (g_XidControllerObjArray[port] == nullptr) {
-		g_XidControllerObjArray[port] = new XidGamepad;
-		int ret = g_XidControllerObjArray[port]->Init(port + 1);
+	if (g_XidDeviceObjArray[port].xid_dev == nullptr) {
+		g_XidDeviceObjArray[port].xid_dev = new XidGamepad;
+		int ret = static_cast<XidGamepad*>(g_XidDeviceObjArray[port].xid_dev)->Init(port + 1);
 		if (ret) {
-			delete g_XidControllerObjArray[port];
-			g_XidControllerObjArray[port] = nullptr;
+			delete g_XidDeviceObjArray[port].xid_dev;
+			g_XidDeviceObjArray[port].xid_dev = nullptr;
 			return false;
 		}
 	}
@@ -219,8 +224,8 @@ void DestructXpadDuke(int port)
 	assert(port > PORT_4 || port < PORT_1);
 
 	assert(g_HubObjArray[port] == nullptr);
-	delete g_XidControllerObjArray[port];
-	g_XidControllerObjArray[port] = nullptr;
+	delete g_XidDeviceObjArray[port].xid_dev;
+	g_XidDeviceObjArray[port].xid_dev = nullptr;
 }
 
 int XidGamepad::Init(int port)

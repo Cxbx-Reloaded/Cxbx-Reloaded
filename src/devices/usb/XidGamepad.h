@@ -71,6 +71,11 @@ class XidGamepad
 		void UsbXid_HandleData(XboxDeviceState* dev, USBPacket* p);
 };
 
-extern XidGamepad* g_XidControllerObjArray[4];
+struct XidObj {
+	void* xid_dev;
+	int xid_type;
+};
+
+extern XidObj g_XidDeviceObjArray[4];
 
 #endif
