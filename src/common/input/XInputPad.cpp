@@ -130,7 +130,7 @@ namespace XInput
 		}
 	}
 
-	void PopulateDevices()
+	void GetDeviceChanges()
 	{
 		XINPUT_CAPABILITIES caps;
 		DWORD ret;
@@ -155,6 +155,12 @@ namespace XInput
 				DevicesConnected &= ~mask;
 			}
 		}
+	}
+
+	void PopulateDevices()
+	{
+		DevicesConnected = 0;
+		GetDeviceChanges();
 	}
 
 	XDevice::XDevice(const XINPUT_CAPABILITIES& Capabilities, uint8_t Index) : m_Subtype(Capabilities.SubType), m_Index(Index),

@@ -96,10 +96,9 @@ void InputWindow::UpdateDeviceList()
 	for (const auto& str : dev_list) {
 		SendMessage(m_hwnd_device_list, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(str.c_str()));
 	}
-	if (dev_list.empty()) {
-		SendMessage(m_hwnd_device_list, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>("No devices detected"));
+	if (!dev_list.empty()) {
+		SendMessage(m_hwnd_device_list, CB_SETCURSEL, 0, 0);
 	}
-	SendMessage(m_hwnd_device_list, CB_SETCURSEL, 0, 0);
 }
 
 InputDevice::Input* InputWindow::DetectInput(InputDevice* const Device, int ms)
@@ -218,7 +217,7 @@ bool InputWindow::SaveProfile(std::string& name)
 	if (name == std::string()) {
 		return false;
 	}
-	if (m_host_dev == "No devices detected") {
+	if (m_host_dev == std::string()) {
 		return false;
 	}
 	DeleteProfile(name);
@@ -286,7 +285,7 @@ void InputWindow::SaveBindingsToDevice()
 		for (int index = 0; index < m_max_num_buttons; index++) {
 			strncpy(controls_name[index], it->ControlList[index].c_str(), 30);
 		}
-		g_EmuShared->SetInputBindingsSettings(&controls_name[0][0], XBOX_CTRL_NUM_BUTTONS, m_port_num);
+		g_EmuShared->SetInputBindingsSettings(controls_name, XBOX_CTRL_NUM_BUTTONS, m_port_num);
 		
 		ipc_send_kernel_update(IPC_UPDATE_KERNEL::CONFIG_INPUT_SYNC, m_port_num,
 			reinterpret_cast<std::uintptr_t>(m_hwnd_krnl));

@@ -125,21 +125,21 @@ class EmuShared : public Mutex
 		void SetInputDevTypeSettings(const int *type, int port) { Lock(); m_DeviceType[port] = *type; Unlock(); }
 		void GetInputDevNameSettings(char *name, int port) { Lock(); strncpy(name, m_DeviceName[port], 50); Unlock(); }
 		void SetInputDevNameSettings(const char *name, int port) { Lock(); strncpy(m_DeviceName[port], name, 50); Unlock(); }
-		void GetInputBindingsSettings(char *button_str, int max_num_buttons, int port)
+		void GetInputBindingsSettings(char button_str[][30], int max_num_buttons, int port)
 		{
 			assert(max_num_buttons <= XBOX_CTRL_NUM_BUTTONS);
 			Lock();
 			for (int i = 0; i < max_num_buttons; i++) {
-				strncpy(&button_str[i], m_DeviceControlNames[port][i], 30);
+				strncpy(button_str[i], m_DeviceControlNames[port][i], 30);
 			}
 			Unlock();
 		}
-		void SetInputBindingsSettings(const char *button_str, int max_num_buttons, int port)
+		void SetInputBindingsSettings(const char button_str[][30], int max_num_buttons, int port)
 		{
 			assert(max_num_buttons <= XBOX_CTRL_NUM_BUTTONS);
 			Lock();
 			for (int i = 0; i < max_num_buttons; i++) {
-				strncpy(m_DeviceControlNames[port][i], &button_str[i], 30);
+				strncpy(m_DeviceControlNames[port][i], button_str[i], 30);
 			}
 			Unlock();
 		}
@@ -268,7 +268,6 @@ class EmuShared : public Mutex
 		bool         m_bDebugging;
 		bool         m_bReady_status;
 		bool         m_bEmulating_status;
-		int          m_Reserved7[3];
 		bool         m_bFirstLaunch;
 		bool         m_bReserved2;
 		bool         m_bReserved3;

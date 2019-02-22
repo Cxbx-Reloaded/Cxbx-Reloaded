@@ -74,6 +74,7 @@ void InputDeviceManager::Initialize(bool is_gui)
 	m_Cv.wait(lck, []() {
 		return Sdl::SdlPopulateOK;
 	});
+	lck.unlock();
 
 	if (!is_gui) {
 		UpdateDevices(PORT_1, false);
@@ -256,7 +257,7 @@ void InputDeviceManager::BindHostDevice(int port, int type)
 	char dev_control_names[XBOX_CTRL_NUM_BUTTONS][30];
 
 	g_EmuShared->GetInputDevNameSettings(dev_name, port);
-	g_EmuShared->GetInputBindingsSettings(dev_control_names[0], XBOX_CTRL_NUM_BUTTONS, port);
+	g_EmuShared->GetInputBindingsSettings(dev_control_names, XBOX_CTRL_NUM_BUTTONS, port);
 
 	auto dev = FindDevice(std::string(dev_name));
 	if (dev != nullptr) {
@@ -387,6 +388,7 @@ void InputDeviceManager::RefreshDevices()
 	Sdl::SdlPopulateOK = false;
 	m_Devices.clear();
 	lck.unlock();
+	XInput::DevicesConnected = 0;
 	XInput::PopulateDevices();
 	Sdl::PopulateDevices();
 	lck.lock();

@@ -156,7 +156,7 @@ namespace Sdl
 				break;
 			}
 			else if (Event.type == UpdateInputEvent_t) {
-				XInput::PopulateDevices();
+				XInput::GetDeviceChanges();
 				g_InputDeviceManager.UpdateDevices(*static_cast<int*>(Event.user.data1), false);
 				delete Event.user.data1;
 				Event.user.data1 = nullptr;
