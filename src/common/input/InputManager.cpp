@@ -19,7 +19,7 @@
 // *  If not, write to the Free Software Foundation, Inc.,
 // *  59 Temple Place - Suite 330, Bostom, MA 02111-1307, USA.
 // *
-// *  (c) 2018 ergo720
+// *  (c) 2019 ergo720
 // *
 // *  All rights reserved
 // *
