@@ -1559,18 +1559,12 @@ __declspec(noreturn) void CxbxKrnlInit
 
 	EmuHLEIntercept(pXbeHeader);
 
-	if (!bLLE_USB) {
-		SetupXboxDeviceTypes();
-	}
-
 	InitXboxHardware(HardwareModel::Revision1_5); // TODO : Make configurable
 
 	// Read Xbox video mode from the SMC, store it in HalBootSMCVideoMode
 	xboxkrnl::HalReadSMBusValue(SMBUS_ADDRESS_SYSTEM_MICRO_CONTROLLER, SMC_COMMAND_AV_PACK, FALSE, &xboxkrnl::HalBootSMCVideoMode);
 
-	if (bLLE_USB) {
-		g_InputDeviceManager.Initialize(false);
-	}
+	g_InputDeviceManager.Initialize(false);
 
 	// Now the hardware devices exist, couple the EEPROM buffer to it's device
 	g_EEPROM->SetEEPROM((uint8_t*)EEPROM);

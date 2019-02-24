@@ -1,9 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="..\..\src\gui\DlgControllerConfig.cpp">
-      <Filter>GUI</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\gui\DlgVideoConfig.cpp">
       <Filter>GUI</Filter>
     </ClCompile>
@@ -109,9 +106,6 @@
     <ClCompile Include="..\..\src\core\hle\D3D8\Direct3D9\Direct3D9.cpp">
       <Filter>core\HLE\D3D8\Direct3D9</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\core\hle\XAPI\OHCI\XInput\DInput.cpp">
-      <Filter>core\HLE\XAPI\OHCI\XInput</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\core\hle\DSOUND\DirectSound\DirectSound.cpp">
       <Filter>core\HLE\DSOUND\DirectSound</Filter>
     </ClCompile>
@@ -138,9 +132,6 @@
     </ClCompile>
     <ClCompile Include="..\..\src\core\hle\XGRAPHIC\XGraphic.cpp">
       <Filter>core\HLE\XGRAPHIC</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\core\hle\XAPI\OHCI\XInput\XInput.cpp">
-      <Filter>core\HLE\XAPI\OHCI\XInput</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\core\hle\XONLINE\XOnline.cpp">
       <Filter>core\HLE\XONLINE</Filter>
@@ -284,12 +275,6 @@
     <ClCompile Include="..\..\src\devices\usb\XidGamepad.cpp">
       <Filter>Hardware\Usb</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\gui\DlgXboxControllerPortMapping.cpp">
-      <Filter>GUI</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\common\win32\XBPortMapping.cpp">
-      <Filter>Emulator</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\common\xbdm\CxbxXbdm.cpp">
       <Filter>Kernel</Filter>
     </ClCompile>
@@ -302,18 +287,12 @@
     <ClCompile Include="..\..\src\common\Settings.cpp">
       <Filter>Cross Platform</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\common\win32\DInputController.cpp">
-      <Filter>Shared</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\gui\DlgLoggingConfig.cpp">
       <Filter>GUI</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\common\win32\IPCWindows.cpp">
       <Filter>Cross Platform\Win32</Filter>
     </ClCompile>
-    <ClInclude Include="..\..\src\gui\DlgControllerConfig.h">
-      <Filter>GUI</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\gui\DlgVideoConfig.h">
       <Filter>GUI</Filter>
     </ClInclude>
@@ -377,9 +356,6 @@
     <ClInclude Include="..\..\src\core\hle\D3D8\XbD3D8Types.h">
       <Filter>core\HLE\D3D8</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\core\hle\XAPI\OHCI\XInput\DInput.h">
-      <Filter>core\HLE\XAPI\OHCI\XInput</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\core\hle\DSOUND\DirectSound\DirectSound.hpp">
       <Filter>core\HLE\DSOUND\DirectSound</Filter>
     </ClInclude>
@@ -403,9 +379,6 @@
     </ClInclude>
     <ClInclude Include="..\..\src\core\hle\XGRAPHIC\XGraphic.h">
       <Filter>core\HLE\XGRAPHIC</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\core\hle\XAPI\OHCI\XInput\XInput.h">
-      <Filter>core\HLE\XAPI\OHCI\XInput</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\core\hle\XONLINE\XOnline.h">
       <Filter>core\HLE\XONLINE</Filter>
@@ -587,20 +560,11 @@
     <ClInclude Include="..\..\src\devices\usb\XidGamepad.h">
       <Filter>Hardware\Usb</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\gui\DlgXboxControllerPortMapping.h">
-      <Filter>GUI</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\common\win32\XBPortMapping.h">
-      <Filter>Emulator</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\common\util\CxbxUtil.h">
       <Filter>Cross Platform</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\common\Settings.hpp">
       <Filter>Cross Platform</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\common\win32\DInputController.h">
-      <Filter>Shared</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\gui\DlgLoggingConfig.h">
       <Filter>GUI</Filter>
@@ -652,6 +616,9 @@
     </ClCompile>
     <ClCompile Include="..\..\src\common\input\DInputKeyboardMouse.cpp">
       <Filter>Shared\Input</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\vsbc\DlgVirtualSBCFeedback.cpp">
+      <Filter>GUI</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\core\hle\DSOUND\XbDSoundLogging.cpp">
       <Filter>core\HLE\DSOUND</Filter>
@@ -804,12 +771,6 @@
     <Filter Include="core\HLE\XAPI">
       <UniqueIdentifier>{6f4e7159-1112-4a80-9e76-11963812811e}</UniqueIdentifier>
     </Filter>
-    <Filter Include="core\HLE\XAPI\OHCI">
-      <UniqueIdentifier>{f9c6738c-bb93-4de5-b3ae-490f2d80fa74}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="core\HLE\XAPI\OHCI\XInput">
-      <UniqueIdentifier>{69e32fa9-3fcd-400a-8d45-66b7ec3d555c}</UniqueIdentifier>
-    </Filter>
     <Filter Include="core\HLE\XACTENG">
       <UniqueIdentifier>{dd1295ad-f875-47dc-a6bb-d5679452f236}</UniqueIdentifier>
     </Filter>
@@ -865,6 +826,9 @@
     </ClInclude>
     <ClInclude Include="..\..\src\common\input\DInputKeyboardCodes.h">
       <Filter>Shared\Input</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\vsbc\DlgVirtualSBCFeedback.h">
+      <Filter>GUI</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\core\hle\DSOUND\XbDSoundTypes.h">
       <Filter>core\HLE\DSOUND</Filter>

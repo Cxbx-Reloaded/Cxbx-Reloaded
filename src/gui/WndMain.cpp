@@ -32,13 +32,11 @@
 #include "Logging.h"
 #include "WndMain.h"
 #include "DlgAbout.h"
-#include "DlgControllerConfig.h"
 #include "DlgInputConfig.h"
 #include "DlgVideoConfig.h"
 #include "DlgAudioConfig.h"
 #include "DlgEepromConfig.h"
 #include "DlgLoggingConfig.h"
-#include "DlgXboxControllerPortMapping.h"
 #include "common\xbe\XbePrinter.h" // For DumpInformation
 #include "EmuShared.h"
 #include "core\kernel\support\EmuXTL.h"
@@ -940,18 +938,6 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 			}
 			break;
 
-			case ID_SETTINGS_CONFIG_XBOX_CONTROLLER_MAPPING:
-			{
-				ShowXboxControllerPortMappingConfig(hwnd);
-			}
-			break;
-
-			case ID_SETTINGS_CONFIG_CONTROLLER:
-			{
-				ShowControllerConfig(hwnd);
-			}
-			break;
-
 			case ID_SETTINGS_CONFIG_INPUT:
 			{
 				ShowInputConfig(hwnd, m_hwndChild);
@@ -1224,13 +1210,6 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 			case ID_EMULATION_LLE_GPU:
 			{
 				g_Settings->m_core.FlagsLLE = g_Settings->m_core.FlagsLLE ^ LLE_GPU;
-				RefreshMenus();
-			}
-			break;
-
-			case ID_EMULATION_LLE_USB:
-			{
-				g_Settings->m_core.FlagsLLE = g_Settings->m_core.FlagsLLE ^ LLE_USB;
 				RefreshMenus();
 			}
 			break;
@@ -1715,9 +1694,6 @@ void WndMain::RefreshMenus()
 
 			chk_flag = (g_Settings->m_core.FlagsLLE & LLE_GPU) ? MF_CHECKED : MF_UNCHECKED;
 			CheckMenuItem(settings_menu, ID_EMULATION_LLE_GPU, chk_flag);
-
-			chk_flag = (g_Settings->m_core.FlagsLLE & LLE_USB) ? MF_CHECKED : MF_UNCHECKED;
-			CheckMenuItem(settings_menu, ID_EMULATION_LLE_USB, chk_flag);
 
 			chk_flag = (g_Settings->m_hacks.DisablePixelShaders) ? MF_CHECKED : MF_UNCHECKED;
 			CheckMenuItem(settings_menu, ID_HACKS_DISABLEPIXELSHADERS, chk_flag);

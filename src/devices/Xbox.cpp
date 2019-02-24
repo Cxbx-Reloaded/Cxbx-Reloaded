@@ -26,8 +26,6 @@
 // ******************************************************************
 
 #include "Xbox.h" // For HardwareModel
-#include "common\xbe\Xbe.h"  // Without this HLEIntercept complains about some undefined xbe variables
-#include "core\hle\Intercept.hpp"
 
 PCIBus* g_PCIBus;
 SMBus* g_SMBus;
@@ -125,9 +123,7 @@ void InitXboxHardware(HardwareModel hardwareModel)
 	g_NVNet = new NVNetDevice();
 	g_NV2A = new NV2ADevice();
 	g_ADM1032 = new ADM1032Device();
-	if (bLLE_USB) {
-		g_USB0 = new USBDevice();
-	}
+	g_USB0 = new USBDevice();
 
 	// Connect devices to SM bus
 	g_SMBus->ConnectDevice(SMBUS_ADDRESS_SYSTEM_MICRO_CONTROLLER, g_SMC); // W 0x20 R 0x21
@@ -156,14 +152,11 @@ void InitXboxHardware(HardwareModel hardwareModel)
 	//g_PCIBus->ConnectDevice(PCI_DEVID(0, PCI_DEVFN(5, 0)), g_NVAPU);
 	//g_PCIBus->ConnectDevice(PCI_DEVID(0, PCI_DEVFN(6, 0)), g_AC97);
 	g_PCIBus->ConnectDevice(PCI_DEVID(1, PCI_DEVFN(0, 0)), g_NV2A);
-	if (bLLE_USB) {
-		// ergo720: according to some research done by LukeUsher, only Xbox Alpha Kits have a two HCs configuration. This seems to also be confirmed by the xboxdevwiki,
-		// which states that it has a xircom PGPCI2(OPTI 82C861) 2 USB port PCI card -> 2 ports, not 4. Finally, I disassembled various xbe's and discovered that the number
-		// of ports per HC is hardcoded as 4 in the driver instead of being detected at runtime by reading the HcRhDescriptorA register and so a game would have to be
-		// recompiled to support 2 HCs, which further confirms the point. Because we are not going to emulate an Alpha Kit, we can simply ignore the USB1 device.
-
-		g_PCIBus->ConnectDevice(PCI_DEVID(0, PCI_DEVFN(2, 0)), g_USB0);
-	}
+	// ergo720: according to some research done by LukeUsher, only Xbox Alpha Kits have a two HCs configuration. This seems to also be confirmed by the xboxdevwiki,
+	// which states that it has a xircom PGPCI2(OPTI 82C861) 2 USB port PCI card -> 2 ports, not 4. Finally, I disassembled various xbe's and discovered that the number
+	// of ports per HC is hardcoded as 4 in the driver instead of being detected at runtime by reading the HcRhDescriptorA register and so a game would have to be
+	// recompiled to support 2 HCs, which further confirms the point. Because we are not going to emulate an Alpha Kit, we can simply ignore the USB1 device.
+	g_PCIBus->ConnectDevice(PCI_DEVID(0, PCI_DEVFN(2, 0)), g_USB0);
 
 	// TODO : Handle other SMBUS Addresses, like PIC_ADDRESS, XCALIBUR_ADDRESS
 	// Resources : http://pablot.com/misc/fancontroller.cpp

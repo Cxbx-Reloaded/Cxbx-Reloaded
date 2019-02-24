@@ -18,9 +18,6 @@
     <ClCompile Include="..\..\src\vsbc\CxbxVSBC.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\vsbc\DlgVirtualSBCFeedback.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\vsbc\dllmain.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -30,9 +27,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\vsbc\CxbxVSBC.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\vsbc\DlgVirtualSBCFeedback.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\vsbc\stdafx.h">

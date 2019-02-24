@@ -37,12 +37,10 @@ namespace XTL
     #include "core\hle\D3D8\XbVertexShader.h"
 	#include "core\hle\D3D8\XbPixelShader.h"
     #include "core\hle\D3D8\XbState.h"
-    #include "core\hle\XAPI\OHCI\XInput\DInput.h"
     #include "core\hle\DSOUND\DirectSound\DirectSound.hpp"
     #include "core\hle\XONLINE\XOnline.h"
     #include "core\hle\XGRAPHIC\XGraphic.h"
 	#include "core\hle\XACTENG\XactEng.h"
-	#include "core\hle\XAPI\OHCI\XInput\XInput.h"
 }
 
 extern XTL::IDirect3DDevice    *g_pD3DDevice;

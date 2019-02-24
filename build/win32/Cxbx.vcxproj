@@ -215,7 +215,6 @@
     <ClInclude Include="..\..\src\common\Settings.hpp" />
     <ClInclude Include="..\..\src\common\win32\Threads.h" />
     <ClInclude Include="..\..\src\common\CxbxDebugger.h" />
-    <ClInclude Include="..\..\src\common\win32\XBPortMapping.h" />
     <ClInclude Include="..\..\src\common\XADPCM.h" />
     <ClInclude Include="..\..\src\common\xbe\XbePrinter.h" />
     <ClInclude Include="..\..\src\common\util\crc32c.h" />
@@ -242,7 +241,6 @@
     <ClInclude Include="..\..\src\core\hle\D3D8\XbState.h" />
     <ClInclude Include="..\..\src\core\hle\D3D8\XbVertexBuffer.h" />
     <ClInclude Include="..\..\src\core\hle\D3D8\XbVertexShader.h" />
-    <ClInclude Include="..\..\src\core\hle\XAPI\OHCI\XInput\DInput.h" />
     <ClInclude Include="..\..\src\core\hle\DSOUND\DirectSound\DirectSound.hpp" />
     <ClInclude Include="..\..\src\core\hle\DSOUND\DirectSound\DirectSoundInline.hpp" />
     <ClInclude Include="..\..\src\core\kernel\support\EmuFile.h" />
@@ -257,7 +255,6 @@
     <ClInclude Include="..\..\src\core\hle\XACTENG\XactEng.h" />
     <ClInclude Include="..\..\src\core\hle\XAPI\Xapi.h" />
     <ClInclude Include="..\..\src\core\hle\XGRAPHIC\XGraphic.h" />
-    <ClInclude Include="..\..\src\core\hle\XAPI\OHCI\XInput\XInput.h" />
     <ClInclude Include="..\..\src\core\hle\XONLINE\XOnline.h" />
     <ClInclude Include="..\..\src\core\kernel\support\EmuXTL.h" />
     <ClInclude Include="..\..\src\common\util\gloffscreen\glextensions.h" />
@@ -274,7 +271,6 @@
     <ClInclude Include="..\..\src\common\xbdm\CxbxXbdm.h" />
     <ClInclude Include="..\..\src\gui\DlgAbout.h" />
     <ClInclude Include="..\..\src\gui\DlgAudioConfig.h" />
-    <ClInclude Include="..\..\src\gui\DlgControllerConfig.h" />
     <ClInclude Include="..\..\src\gui\DlgEepromConfig.h" />
     <ClInclude Include="..\..\src\gui\DlgInputConfig.h" />
     <ClInclude Include="..\..\src\gui\DlgLoggingConfig.h" />
@@ -283,12 +279,10 @@
     <ClInclude Include="..\..\src\common\win32\EmuShared.h" />
     <ClInclude Include="..\..\src\common\Error.h" />
     <ClInclude Include="..\..\src\common\win32\Mutex.h" />
-    <ClInclude Include="..\..\src\gui\DlgXboxControllerPortMapping.h" />
     <ClInclude Include="..\..\src\gui\DlgXidControllerConfig.h" />
     <ClInclude Include="..\..\src\gui\ResCxbx.h" />
     <ClInclude Include="..\..\src\gui\Wnd.h" />
     <ClInclude Include="..\..\src\gui\WndMain.h" />
-    <ClInclude Include="..\..\src\common\win32\DInputController.h" />
     <ClInclude Include="..\..\src\common\xbe\Xbe.h" />
     <ClInclude Include="..\..\src\devices\ADM1032Device.h" />
     <ClInclude Include="..\..\src\devices\EEPROMDevice.h" />
@@ -318,6 +312,7 @@
     <ClInclude Include="..\..\src\devices\video\swizzle.h" />
     <ClInclude Include="..\..\src\devices\video\vga.h" />
     <ClInclude Include="..\..\src\devices\Xbox.h" />
+    <ClInclude Include="..\..\src\vsbc\DlgVirtualSBCFeedback.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\CONTRIBUTORS" />
@@ -374,7 +369,6 @@
     <ClCompile Include="..\..\src\common\win32\IPCWindows.cpp" />
     <ClCompile Include="..\..\src\common\win32\Threads.cpp" />
     <ClCompile Include="..\..\src\common\CxbxDebugger.cpp" />
-    <ClCompile Include="..\..\src\common\win32\XBPortMapping.cpp" />
     <ClCompile Include="..\..\src\common\xbe\XbePrinter.cpp" />
     <ClCompile Include="..\..\src\core\HLE\D3D8\Direct3D9\WalkIndexBuffer.cpp" />
     <ClCompile Include="..\..\src\common\util\crc32c.cpp" />
@@ -417,7 +411,6 @@
     <ClCompile Include="..\..\src\core\hle\D3D8\XbState.cpp" />
     <ClCompile Include="..\..\src\core\hle\D3D8\XbVertexBuffer.cpp" />
     <ClCompile Include="..\..\src\core\hle\D3D8\XbVertexShader.cpp" />
-    <ClCompile Include="..\..\src\core\hle\XAPI\OHCI\XInput\DInput.cpp" />
     <ClCompile Include="..\..\src\core\hle\DSOUND\DirectSound\DirectSound.cpp" />
     <ClCompile Include="..\..\src\core\kernel\support\EmuFile.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -467,7 +460,6 @@
     <ClCompile Include="..\..\src\core\hle\XACTENG\XactEng.cpp" />
     <ClCompile Include="..\..\src\core\hle\XAPI\Xapi.cpp" />
     <ClCompile Include="..\..\src\core\hle\XGRAPHIC\XGraphic.cpp" />
-    <ClCompile Include="..\..\src\core\hle\XAPI\OHCI\XInput\XInput.cpp" />
     <ClCompile Include="..\..\src\core\hle\XONLINE\XOnline.cpp" />
     <ClCompile Include="..\..\src\common\util\gloffscreen\glextensions.cpp" />
     <ClCompile Include="..\..\src\common\util\gloffscreen\gloffscreen_common.cpp" />
@@ -493,12 +485,6 @@
     <ClCompile Include="..\..\src\common\xbdm\CxbxXbdm.cpp" />
     <ClCompile Include="..\..\src\gui\DlgAbout.cpp" />
     <ClCompile Include="..\..\src\gui\DlgAudioConfig.cpp" />
-    <ClCompile Include="..\..\src\gui\DlgControllerConfig.cpp">
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
-    </ClCompile>
     <ClCompile Include="..\..\src\gui\DlgEepromConfig.cpp" />
     <ClCompile Include="..\..\src\gui\DlgInputConfig.cpp" />
     <ClCompile Include="..\..\src\gui\DlgLoggingConfig.cpp" />
@@ -520,7 +506,6 @@
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
-    <ClCompile Include="..\..\src\gui\DlgXboxControllerPortMapping.cpp" />
     <ClCompile Include="..\..\src\gui\DlgXidControllerConfig.cpp" />
     <ClCompile Include="..\..\src\gui\WinMain.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -535,12 +520,6 @@
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="..\..\src\gui\WndMain.cpp">
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
-    </ClCompile>
-    <ClCompile Include="..\..\src\common\win32\DInputController.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -574,6 +553,7 @@
     <ClCompile Include="..\..\src\devices\video\swizzle.cpp" />
     <ClCompile Include="..\..\src\devices\Xbox.cpp" />
     <ClCompile Include="..\..\src\HighPerformanceGraphicsEnabler.c" />
+    <ClCompile Include="..\..\src\vsbc\DlgVirtualSBCFeedback.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\import\XbSymbolDatabase\xbSymbolDatabase.vcxproj">

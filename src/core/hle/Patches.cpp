@@ -44,7 +44,6 @@ typedef struct {
 const uint32_t PATCH_ALWAYS = 1 << 0;
 const uint32_t PATCH_HLE_D3D = 1 << 1;
 const uint32_t PATCH_HLE_DSOUND = 1 << 2;
-const uint32_t PATCH_HLE_OHCI = 1 << 3;
 
 #define PATCH_ENTRY(Name, Func, Flags) \
     { Name, { &Func, Flags} }
@@ -355,19 +354,6 @@ std::map<const std::string, const xbox_patch_t> g_PatchTable = {
 	PATCH_ENTRY("XAudioDownloadEffectsImage", XTL::EMUPATCH(XAudioDownloadEffectsImage), PATCH_HLE_DSOUND),
 	PATCH_ENTRY("XAudioSetEffectData", XTL::EMUPATCH(XAudioSetEffectData), PATCH_HLE_DSOUND),
 
-	// OHCI
-	PATCH_ENTRY("XGetDeviceChanges", XTL::EMUPATCH(XGetDeviceChanges), PATCH_HLE_OHCI),
-	PATCH_ENTRY("XGetDeviceEnumerationStatus", XTL::EMUPATCH(XGetDeviceEnumerationStatus), PATCH_HLE_OHCI),
-	PATCH_ENTRY("XGetDevices", XTL::EMUPATCH(XGetDevices), PATCH_HLE_OHCI),
-	PATCH_ENTRY("XInitDevices", XTL::EMUPATCH(XInitDevices), PATCH_HLE_OHCI),
-	PATCH_ENTRY("XInputClose", XTL::EMUPATCH(XInputClose), PATCH_HLE_OHCI),
-	PATCH_ENTRY("XInputGetCapabilities", XTL::EMUPATCH(XInputGetCapabilities), PATCH_HLE_OHCI),
-	PATCH_ENTRY("XInputGetDeviceDescription", XTL::EMUPATCH(XInputGetDeviceDescription), PATCH_HLE_OHCI),
-	PATCH_ENTRY("XInputGetState", XTL::EMUPATCH(XInputGetState), PATCH_HLE_OHCI),
-	PATCH_ENTRY("XInputOpen", XTL::EMUPATCH(XInputOpen), PATCH_HLE_OHCI),
-	PATCH_ENTRY("XInputPoll", XTL::EMUPATCH(XInputPoll), PATCH_HLE_OHCI),
-	PATCH_ENTRY("XInputSetState", XTL::EMUPATCH(XInputSetState), PATCH_HLE_OHCI),
-
 	// XAPI
 	PATCH_ENTRY("ConvertThreadToFiber", XTL::EMUPATCH(ConvertThreadToFiber), PATCH_ALWAYS),
 	PATCH_ENTRY("CreateFiber", XTL::EMUPATCH(CreateFiber), PATCH_ALWAYS),
@@ -407,11 +393,6 @@ inline void EmuInstallPatch(std::string FunctionName, xbaddr FunctionAddr)
 
 	if ((patch.flags & PATCH_HLE_DSOUND) && bLLE_APU) {
 		printf("HLE: %s: Skipped (LLE APU Enabled)\n", FunctionName.c_str());
-		return;
-	}
-
-	if ((patch.flags & PATCH_HLE_OHCI) && bLLE_USB) {
-		printf("HLE: %s: Skipped (LLE OHCI Enabled)\n", FunctionName.c_str());
 		return;
 	}
 

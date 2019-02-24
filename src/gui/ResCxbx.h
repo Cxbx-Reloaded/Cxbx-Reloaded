@@ -8,7 +8,6 @@
 #define IDB_LOGO                        106
 #define IDB_ABOUT                       108
 #define IDD_INPUT_CFG                   110
-#define IDD_CONTROLLER_CFG              111
 #define IDD_LOGGING_CFG                 112
 #define IDD_VIDEO_CFG                   113
 #define IDD_AUDIO_CFG                   114
@@ -19,7 +18,6 @@
 #define IDR_CONTRIBUTORS                121
 #define IDR_COPYING                     122
 #define IDS_UEM                         123
-#define IDD_CONTROLLER_HOST_MAPPING     131
 #define IDD_VIRTUAL_SBC_FEEDBACK        133
 #define IDD_XID_DUKE_CFG                134
 #define IDD_RUMBLE_CFG                  135
@@ -347,7 +345,6 @@
 #define ID_EMULATION_LLE_APU            40039
 #define ID_EMULATION_LLE_GPU            40040
 #define ID_EMULATION_LLE_JIT            40041
-#define ID_EMULATION_LLE_USB            40042
 #define ID_SETTINGS_CONFIG_INPUT        40045
 #define ID_SETTINGS_CONFIG_CONTROLLER   40046
 #define ID_SETTINGS_CONFIG_VIDEO        40047

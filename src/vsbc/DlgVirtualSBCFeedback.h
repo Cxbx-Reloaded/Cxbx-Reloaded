@@ -25,6 +25,7 @@
 #ifndef DLGVIRTUALSBCFEEDBAC_H
 #define DLGVIRTUALSBCFEEDBAC_H
 
+#if 0
 #include <windows.h>
 namespace DlgVSBCFeedback
 {
@@ -33,4 +34,5 @@ extern int ShowVirtualSBCFeedback(HWND hwnd);
 extern void UpdateVirtualSBCFeedbackDlg(UCHAR * pXboxSBCFeedback);
 extern HWND GetDlgVirtualSBCFeedbackHandle(void);
 }
+#endif
 #endif

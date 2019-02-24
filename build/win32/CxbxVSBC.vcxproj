@@ -153,13 +153,11 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\vsbc\CxbxVSBC.cpp" />
-    <ClCompile Include="..\..\src\vsbc\DlgVirtualSBCFeedback.cpp" />
     <ClCompile Include="..\..\src\vsbc\dllmain.cpp" />
     <ClCompile Include="..\..\src\vsbc\stdafx.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\vsbc\CxbxVSBC.h" />
-    <ClInclude Include="..\..\src\vsbc\DlgVirtualSBCFeedback.h" />
     <ClInclude Include="..\..\src\vsbc\stdafx.h" />
     <ClInclude Include="..\..\src\vsbc\targetver.h" />
   </ItemGroup>

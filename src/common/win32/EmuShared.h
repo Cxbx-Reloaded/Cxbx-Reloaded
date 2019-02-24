@@ -111,14 +111,6 @@ class EmuShared : public Mutex
 		void SetAudioSettings(const Settings::s_audio *audio) { Lock(); m_audio = *audio; Unlock(); }
 
 		// ******************************************************************
-		// * Xbox Controller Accessors
-		// ******************************************************************
-		void GetControllerDInputSettings(      Settings::s_controller_dinput *ctrl) { Lock(); *ctrl = m_controller_dinput; Unlock(); }
-		void SetControllerDInputSettings(const Settings::s_controller_dinput *ctrl) { Lock(); m_controller_dinput = *ctrl; Unlock(); }
-		void GetControllerPortSettings(      Settings::s_controller_port *ctrl) { Lock(); *ctrl = m_controller_port; Unlock(); }
-		void SetControllerPortSettings(const Settings::s_controller_port *ctrl) { Lock(); m_controller_port = *ctrl; Unlock(); }
-
-		// ******************************************************************
 		// * Input config Accessors
 		// ******************************************************************
 		void GetInputDevTypeSettings(int *type, int port) { Lock(); *type = m_DeviceType[port]; Unlock(); }
@@ -280,8 +272,6 @@ class EmuShared : public Mutex
 
 		// Settings class in memory should not be tampered by third-party.
 		// Third-party program should only be allow to edit settings.ini file.
-		Settings::s_controller_dinput m_controller_dinput;
-		Settings::s_controller_port m_controller_port;
 		Settings::s_core m_core;
 		Settings::s_video m_video;
 		Settings::s_audio m_audio;

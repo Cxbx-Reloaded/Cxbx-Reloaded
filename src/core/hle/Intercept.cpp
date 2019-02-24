@@ -81,7 +81,7 @@ uint32 g_BuildVersion = 0;
 
 bool bLLE_APU = false; // Set this to true for experimental APU (sound) LLE
 bool bLLE_GPU = false; // Set this to true for experimental GPU (graphics) LLE
-bool bLLE_USB = false; // Set this to true for experimental USB (input) LLE
+bool bLLE_USB = true; // Set this to true for USB (input) LLE
 bool bLLE_JIT = false; // Set this to true for experimental JIT
 
 void* GetXboxFunctionPointer(std::string functionName)
@@ -335,12 +335,6 @@ void EmuUpdateLLEStatus(uint32_t XbLibScan)
         FlagsLLE ^= LLE_APU;
         EmuOutputMessage(XB_OUTPUT_MESSAGE_INFO, "Fallback to LLE APU.");
     }
-	if ((FlagsLLE & LLE_USB) == false
-		&& (XbLibScan & XbSymbolLib_XAPILIB) == 0) {
-		bLLE_USB = true;
-		FlagsLLE ^= LLE_USB;
-		EmuOutputMessage(XB_OUTPUT_MESSAGE_INFO, "Fallback to LLE USB.");
-	}
     ipc_send_gui_update(IPC_UPDATE_GUI::LLE_FLAGS, FlagsLLE);
     //return FlagsLLE;
 }

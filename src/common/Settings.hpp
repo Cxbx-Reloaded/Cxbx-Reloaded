@@ -45,67 +45,6 @@ typedef enum _CXBX_DATA {
 } CXBX_DATA;
 
 // ******************************************************************
-// * Xbox Controller Object IDs
-// ******************************************************************
-enum XBCtrlObject
-{
-	// ******************************************************************
-	// * Analog Axis
-	// ******************************************************************
-	XBCTRL_OBJECT_LTHUMBPOSX = 0,
-	XBCTRL_OBJECT_LTHUMBNEGX,
-	XBCTRL_OBJECT_LTHUMBPOSY,
-	XBCTRL_OBJECT_LTHUMBNEGY,
-	XBCTRL_OBJECT_RTHUMBPOSX,
-	XBCTRL_OBJECT_RTHUMBNEGX,
-	XBCTRL_OBJECT_RTHUMBPOSY,
-	XBCTRL_OBJECT_RTHUMBNEGY,
-	// ******************************************************************
-	// * Analog Buttons
-	// ******************************************************************
-	XBCTRL_OBJECT_A,
-	XBCTRL_OBJECT_B,
-	XBCTRL_OBJECT_X,
-	XBCTRL_OBJECT_Y,
-	XBCTRL_OBJECT_BLACK,
-	XBCTRL_OBJECT_WHITE,
-	XBCTRL_OBJECT_LTRIGGER,
-	XBCTRL_OBJECT_RTRIGGER,
-	// ******************************************************************
-	// * Digital Buttons
-	// ******************************************************************
-	XBCTRL_OBJECT_DPADUP,
-	XBCTRL_OBJECT_DPADDOWN,
-	XBCTRL_OBJECT_DPADLEFT,
-	XBCTRL_OBJECT_DPADRIGHT,
-	XBCTRL_OBJECT_BACK,
-	XBCTRL_OBJECT_START,
-	XBCTRL_OBJECT_LTHUMB,
-	XBCTRL_OBJECT_RTHUMB,
-	// ******************************************************************
-	// * Total number of components
-	// ******************************************************************
-	XBCTRL_OBJECT_COUNT
-};
-
-// ******************************************************************
-// * Maximum number of devices allowed
-// ******************************************************************
-#define XBCTRL_MAX_DEVICES XBCTRL_OBJECT_COUNT
-
-#define XBCTRL_MAX_GAMEPAD_PORTS 4
-
-// ******************************************************************
-// * Xbox Controller Object Config
-// ******************************************************************
-struct XBCtrlObjectCfg
-{
-	int dwDevice;   // offset into m_InputDevice
-	int dwInfo;     // extended information, depending on dwFlags
-	int dwFlags;    // flags explaining the data format
-};
-
-// ******************************************************************
 // * Define number of integers required to store logging settings
 // ******************************************************************
 #define NUM_INTEGERS_LOG 2
@@ -177,31 +116,6 @@ public:
 		bool Reserved4 = 0;
 		int  Reserved99[14] = { 0 };
 	} m_audio;
-
-	// Controller settings
-	struct s_controller_dinput {
-
-		// ******************************************************************
-		// * Input Device Name Lookup Table
-		// ******************************************************************
-		static const char *XboxControllerObjectNameLookup[XBCTRL_OBJECT_COUNT];
-
-		// ******************************************************************
-		// * Device Names
-		// ******************************************************************
-		char DeviceName[XBCTRL_MAX_DEVICES][MAX_PATH];
-
-		// ******************************************************************
-		// * Object Configuration
-		// ******************************************************************
-		XBCtrlObjectCfg ObjectConfig[XBCTRL_OBJECT_COUNT];
-
-	} m_controller_dinput;
-
-	struct s_controller_port {
-		uint XboxPortMapHostType[XBCTRL_MAX_GAMEPAD_PORTS] = { 1, 1, 1, 1 };
-		uint XboxPortMapHostPort[XBCTRL_MAX_GAMEPAD_PORTS] = { 0, 1, 2, 3 };
-	} m_controller_port;
 
 	struct s_input {
 		int Type;

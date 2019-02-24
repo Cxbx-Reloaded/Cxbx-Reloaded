@@ -44,12 +44,11 @@ namespace xboxkrnl
 #include "core\kernel\support\EmuFS.h"
 #include "core\kernel\support\EmuXTL.h"
 #include "EmuShared.h"
-#include "..\common\win32\XBPortMapping.h"
 #include "core\hle\Intercept.hpp"
-#include "vsbc\CxbxVSBC.h"
 #include "Windef.h"
 #include <vector>
 
+#if HLE_XINPUT
 // XInputSetState status waiters
 extern XInputSetStateStatus g_pXInputSetStateStatus[XINPUT_SETSTATE_SLOTS] = {0};
 
@@ -252,7 +251,9 @@ void SetupXboxDeviceTypes()
 		printf("XAPI: XDEVICE_TYPE_GAMEPAD Found at 0x%08X\n", gDeviceType_Gamepad);
 	}
 }
+#endif
 
+#if 0 // patch disabled
 // ******************************************************************
 // * patch: XInitDevices
 // ******************************************************************
@@ -269,22 +270,11 @@ VOID WINAPI XTL::EMUPATCH(XInitDevices)
 		LOG_FUNC_ARG((DWORD)PreallocTypes)
 		LOG_FUNC_END;
 
-/*    for(int v=0;v<XINPUT_SETSTATE_SLOTS;v++)
-    {
-        g_pXInputSetStateStatus[v].hDevice = 0;
-        g_pXInputSetStateStatus[v].dwLatency = 0;
-        g_pXInputSetStateStatus[v].pFeedback = 0;
-    }
-
-    for(int v=0;v<XINPUT_HANDLE_SLOTS;v++)
-    {
-        g_hInputHandle[v] = 0;
-    }
-*/
-
 	InitXboxControllerHostBridge();
 }
+#endif
 
+#if HLE_XINPUT
 bool TitleRequiresInputHack()
 {
 	static bool detected = false;
@@ -357,7 +347,9 @@ bool TitleIsLegoSW()
 	detected = true;
 	return result;
 }
+#endif
 
+#if 0 // patch disabled
 // ******************************************************************
 // * patch: XGetDevices
 // * Note: This could be unpatched however,
@@ -404,7 +396,9 @@ DWORD WINAPI XTL::EMUPATCH(XGetDevices)
 
 	RETURN(ret);
 }
+#endif
 
+#if 0 // patch disabled
 // ******************************************************************
 // * patch: XGetDeviceChanges
 // * Note: This could be unpatched however,
@@ -481,7 +475,9 @@ BOOL WINAPI XTL::EMUPATCH(XGetDeviceChanges)
 
 	RETURN(ret);
 }
+#endif
 
+#if 0 // patch disabled
 // ******************************************************************
 // * patch: XInputOpen
 // ******************************************************************
@@ -503,58 +499,8 @@ HANDLE WINAPI XTL::EMUPATCH(XInputOpen)
 		LOG_FUNC_END;
 
     X_POLLING_PARAMETERS_HANDLE *pph = 0;
-    //OLD_XINPUT
-    //rever back to return handle  for port 0~3, this is for multi controller support.
-/*    if(dwPort >= 0 && (dwPort <= total_xinput_gamepad))
-    {
-        if(g_hInputHandle[dwPort] == 0)
-        {
-            pph = (X_POLLING_PARAMETERS_HANDLE*) &g_pph[dwPort];	// new XB_POLLING_PARAMETERS_HANDLE();
-
-            if(pPollingParameters != NULL)
-            {
-                pph->pPollingParameters = (X_XINPUT_POLLING_PARAMETERS*) &g_pp[dwPort]; // new XINPUT_POLLING_PARAMETERS();
-
-                memcpy(pph->pPollingParameters, pPollingParameters, sizeof(X_XINPUT_POLLING_PARAMETERS));
-            }
-            else
-            {
-                pph->pPollingParameters = NULL;
-            }
-
-            g_hInputHandle[dwPort] = pph;
-        }
-        else
-        {
-            pph = (X_POLLING_PARAMETERS_HANDLE*)g_hInputHandle[dwPort];
-
-            if(pPollingParameters != 0)
-            {
-                if(pph->pPollingParameters == 0)
-                {
-                    pph->pPollingParameters = (X_XINPUT_POLLING_PARAMETERS*) &g_pp[dwPort]; // new XINPUT_POLLING_PARAMETERS();
-                }
-
-                memcpy(pph->pPollingParameters, pPollingParameters, sizeof(X_XINPUT_POLLING_PARAMETERS));
-            }
-            else
-            {
-                if(pph->pPollingParameters != 0)
-                {
-                    //delete pph->pPollingParameters;
-
-                    pph->pPollingParameters = 0;
-                }
-            }
-        }
-
-        pph->dwPort = dwPort;
-    }
-*/
 	g_bXInputOpenCalled = true;
 
-	//RETURN((HANDLE)pph);
-    //code above are not used at all, in future we might remove them.
     if (dwPort >= 0 && dwPort < 4) {
         //check if the bridged xbox controller at this port matches the DeviceType, if matches, setup the device handle and return it.
         if (g_XboxControllerHostBridge[dwPort].XboxDeviceInfo.DeviceType == DeviceType && g_XboxControllerHostBridge[dwPort].dwHostType!=0) {
@@ -591,7 +537,9 @@ HANDLE WINAPI XTL::EMUPATCH(XInputOpen)
     
     return 0;
 }
+#endif
 
+#if 0 // patch disabled
 // ******************************************************************
 // * patch: XInputClose
 // ******************************************************************
@@ -623,18 +571,8 @@ VOID WINAPI XTL::EMUPATCH(XInputClose)
                 g_pXInputSetStateStatus[v].dwLatency = 0;
             }
         }
-        //OLD_XINPUT
-        /*
-        if(pph->pPollingParameters != NULL)
-        {
-            delete pph->pPollingParameters;
-        }
-		
-        delete pph;
-		*/
     }
 
-    //above code is not used at all, in future we might remove them.
     //reset hXboxDevice handle if it matches the hDevice
     int port;
     for(port=0;port<4;port++){
@@ -644,7 +582,9 @@ VOID WINAPI XTL::EMUPATCH(XInputClose)
         }
     }
 }
+#endif
 
+#if 0 // patch disabled
 // ******************************************************************
 // * patch: XInputPoll
 // ******************************************************************
@@ -657,44 +597,6 @@ DWORD WINAPI XTL::EMUPATCH(XInputPoll)
 
 	LOG_FUNC_ONE_ARG(hDevice);
 
-    //OLD_XINPUT
-/*    X_POLLING_PARAMETERS_HANDLE *pph = (X_POLLING_PARAMETERS_HANDLE*)hDevice;
-
-    //
-    // Poll input
-    //
-
-    {
-        int v;
-
-        for(v=0;v<XINPUT_SETSTATE_SLOTS;v++)
-        {
-            if ((HANDLE)g_pXInputSetStateStatus[v].hDevice == 0)
-                continue;
-
-            g_pXInputSetStateStatus[v].dwLatency = 0;
-
-            XTL::PX_XINPUT_FEEDBACK pFeedback = (XTL::PX_XINPUT_FEEDBACK)g_pXInputSetStateStatus[v].pFeedback;
-
-            if(pFeedback == 0)
-                continue;
-
-            //
-            // Only update slot if it has not already been updated
-            //
-
-            if(pFeedback->Header.dwStatus != ERROR_SUCCESS)
-            {
-                if(pFeedback->Header.hEvent != 0)
-                {
-                    SetEvent(pFeedback->Header.hEvent);
-                }
-
-                pFeedback->Header.dwStatus = ERROR_SUCCESS;
-            }
-        }
-    }
-*/
     int port;
     for (port = 0; port<4; port++) {
         if (g_XboxControllerHostBridge[port].hXboxDevice == hDevice) {
@@ -718,7 +620,9 @@ DWORD WINAPI XTL::EMUPATCH(XInputPoll)
 
 	RETURN(ERROR_SUCCESS);
 }
+#endif
 
+#if 0 // patch disabled
 // ******************************************************************
 // * patch: XInputGetCapabilities
 // ******************************************************************
@@ -738,22 +642,7 @@ DWORD WINAPI XTL::EMUPATCH(XInputGetCapabilities)
     DWORD ret = ERROR_DEVICE_NOT_CONNECTED;
 
     X_POLLING_PARAMETERS_HANDLE *pph = (X_POLLING_PARAMETERS_HANDLE*)hDevice;
-    //OLD_XINPUT
-/*    if(pph != NULL)
-    {
-        DWORD dwPort = pph->dwPort;
-		//return gamepad capabilities for port 0~3.
-        if(dwPort >= 0 && dwPort<=total_xinput_gamepad)
-        {
-            pCapabilities->SubType = X_XINPUT_DEVSUBTYPE_GC_GAMEPAD;
-			pCapabilities->In.Gamepad = {};
-			pCapabilities->Out.Rumble = {};
 
-            ret = ERROR_SUCCESS;
-        }
-    }
-*/
-    //above code is not used any more, could be removed.
     //find XboxControllerHostBridge per hDevice, and fill the Capabilities Structure per Device Info
     int port;
     for (port = 0; port < 4; port++) {
@@ -773,7 +662,9 @@ DWORD WINAPI XTL::EMUPATCH(XInputGetCapabilities)
     
 	RETURN(ret);
 }
+#endif
 
+#if HLE_XINPUT
 //variable names correlated to X_SBC_FEEDBACK, mapped to each nibble accordingly.
 char * XboxSBCFeedbackNames[] = {
     "EmergencyEject",
@@ -893,31 +784,12 @@ void EmuSBCGetState(XTL::PX_SBC_GAMEPAD pSBCGamepad, XTL::PX_XINPUT_GAMEPAD pXIG
             pSBCGamepad->ucGearLever ++;
         }
     }
-    //OLD_XINPUT
-    /* //not used, don't duplicate the handling for same setting of pXIGamepad's members, later one will over write privous one.
-    if (pXIGamepad->wButtons & X_XINPUT_GAMEPAD_START) {
-        pSBCGamepad->wButtons[0] |= X_SBC_GAMEPAD_W0_START;
-    }
-    else {
-        pSBCGamepad->wButtons[0] &= ~X_SBC_GAMEPAD_W0_START;
-    }
-    */
     if (pXIGamepad->wButtons & X_XINPUT_GAMEPAD_LEFT_THUMB) {//Center Sight Change
         pSBCGamepad->wButtons[2] |= X_SBC_GAMEPAD_W2_LEFTJOYSIGHTCHANGE;
     }
     else {
         pSBCGamepad->wButtons[2] &= ~X_SBC_GAMEPAD_W2_LEFTJOYSIGHTCHANGE;
     }
-    //OLD_XINPUT
-    /* //not used
-    if (pXIGamepad->wButtons & X_XINPUT_GAMEPAD_RIGHT_THUMB) {
-        pSBCGamepad->wButtons |= X_XINPUT_GAMEPAD_RIGHT_THUMB;
-    }
-    else {
-        pSBCGamepad->wButtons &= ~X_XINPUT_GAMEPAD_RIGHT_THUMB;
-    }
-    */
-
 
     //additional input from 2nd input, default using directinput
     if (pDIGamepad->bAnalogButtons[X_XINPUT_GAMEPAD_A]>0) {
@@ -999,6 +871,9 @@ void EmuSBCGetState(XTL::PX_SBC_GAMEPAD pSBCGamepad, XTL::PX_XINPUT_GAMEPAD pXIG
     //reserve the SBCGamepad to keep the status of GearLever and Toggole Switches.
     XboxSBCGamepad = *pSBCGamepad;
 }
+#endif
+
+#if 0 // patch disabled
 // ******************************************************************
 // * patch: XInputGetState
 // ******************************************************************
@@ -1016,44 +891,7 @@ DWORD WINAPI XTL::EMUPATCH(XInputGetState)
 		LOG_FUNC_END;
 
     DWORD ret = ERROR_INVALID_HANDLE;
-    //OLD_XINPUT
-    /*
-    X_POLLING_PARAMETERS_HANDLE *pph = (X_POLLING_PARAMETERS_HANDLE*)hDevice;
 
-    if(pph != NULL)
-    {
-        if(pph->pPollingParameters != NULL)
-        {
-            if(pph->pPollingParameters->fAutoPoll == FALSE)
-            {
-                //
-                // TODO: uh..
-                //
-
-                EmuLog(LOG_LEVEL::WARNING, "EmuXInputGetState : fAutoPoll == FALSE");
-            }
-        }
-
-        DWORD dwPort = pph->dwPort;
-
-        if((dwPort >= 0) && (dwPort <= total_xinput_gamepad))
-        {
-			DBG_PRINTF("EmuXInputGetState(): dwPort = %d\n", dwPort );
-
-            //for xinput, we query the state corresponds to port.
-				if (g_XInputEnabled) {
-					EmuXInputPCPoll(dwPort,pState);
-				} else {
-					EmuDInputPoll(pState);
-				}
-				
-                ret = ERROR_SUCCESS;
-        }
-    }
-	else
-		EmuLog(LOG_LEVEL::WARNING, "EmuXInputGetState(): pph == NULL!");
-    */
-    //above code is not used at all, in future we might remove them.
     //get input state if hXboxDevice matches hDevice
     int port;
     for (port = 0; port<4; port++) {
@@ -1089,7 +927,9 @@ DWORD WINAPI XTL::EMUPATCH(XInputGetState)
     
 	RETURN(ret);
 }
+#endif
 
+#if 0 // patch disabled
 // ******************************************************************
 // * patch: XInputSetState
 // ******************************************************************
@@ -1107,73 +947,7 @@ DWORD WINAPI XTL::EMUPATCH(XInputSetState)
 		LOG_FUNC_END;
 
     DWORD ret = ERROR_IO_PENDING;
-    //OLD_XINPUT
-/*
-    X_POLLING_PARAMETERS_HANDLE *pph = (X_POLLING_PARAMETERS_HANDLE*)hDevice;
 
-    if(pph != NULL)
-    {
-        int v;
-
-        //
-        // Check if this device is already being polled
-        //
-
-        bool found = false;
-		
-        for(v=0;v<XINPUT_SETSTATE_SLOTS;v++)
-        {
-            if(g_pXInputSetStateStatus[v].hDevice == hDevice)
-            {
-                found = true;
-
-                if(pFeedback->Header.dwStatus == ERROR_SUCCESS)
-                {
-                    //If the device was succesfully added to polling before, recycle the request
-                    g_pXInputSetStateStatus[v].pFeedback = pFeedback;
-                    pFeedback->Header.dwStatus = ERROR_IO_PENDING;
-                }
-                else {
-                    //Ignore this request as another one is already pending
-                    ret = ERROR_SUCCESS;
-                }
-            }
-        }
-
-        //
-        // If device was not already slotted, queue it
-        //
-
-        if(!found)
-        {
-            for(v=0;v<XINPUT_SETSTATE_SLOTS;v++)
-            {
-                if(g_pXInputSetStateStatus[v].hDevice == 0)
-                {
-                    g_pXInputSetStateStatus[v].hDevice = hDevice;
-                    g_pXInputSetStateStatus[v].dwLatency = 0;
-                    g_pXInputSetStateStatus[v].pFeedback = pFeedback;
-
-                    pFeedback->Header.dwStatus = ERROR_IO_PENDING;
-
-                    break;
-                }
-            }
-
-            if(v == XINPUT_SETSTATE_SLOTS)
-            {
-                CxbxKrnlCleanup("Ran out of XInputSetStateStatus slots!");
-            }
-        }
-
-		if (g_XInputEnabled)
-		{
-			XTL::EmuXInputSetState(pph->dwPort, pFeedback);
-		}
-    }
-    */
-
-    //above code is not used at all, in future we might remove them.
     //reset hXboxDevice handle if it matches the hDevice
     int port;
     for (port = 0; port<4; port++) {
@@ -1220,7 +994,7 @@ DWORD WINAPI XTL::EMUPATCH(XInputSetState)
 
 	RETURN(ret);
 }
-
+#endif
 
 // ******************************************************************
 // * patch: SetThreadPriorityBoost
@@ -1824,6 +1598,7 @@ DWORD WINAPI XTL::EMUPATCH(XMountMUA)
 	RETURN(E_FAIL);
 }
 
+#if 0 // patch disabled
 // ******************************************************************
 // * patch: XGetDeviceEnumerationStatus
 // ******************************************************************
@@ -1837,7 +1612,9 @@ DWORD WINAPI XTL::EMUPATCH(XGetDeviceEnumerationStatus)()
 
 	RETURN(XDEVICE_ENUMERATION_IDLE);
 }
+#endif
 
+#if 0 // patch disabled
 // ******************************************************************
 // * patch: XInputGetDeviceDescription
 // ******************************************************************
@@ -1859,6 +1636,7 @@ DWORD WINAPI XTL::EMUPATCH(XInputGetDeviceDescription)
 
 	RETURN(ERROR_NOT_SUPPORTED); // ERROR_DEVICE_NOT_CONNECTED;
 }
+#endif
 
 // ******************************************************************
 // * patch: XMountMURootA

@@ -74,6 +74,7 @@ extern HANDLE g_CurrentProcessHandle; // Set in CxbxKrnlMain
 // Delta added to host SystemTime, used in KiClockIsr and KeSetSystemTime
 extern std::atomic_int64_t HostSystemTimeDelta;
 
+#if HLE_XINPUT
 // NOTE: this is an arbitrary latency
 #define XINPUT_SETSTATE_LATENCY 4
 #define XINPUT_SETSTATE_SLOTS 16
@@ -91,6 +92,7 @@ g_pXInputSetStateStatus[XINPUT_SETSTATE_SLOTS];
 #define XINPUT_HANDLE_SLOTS 4
 
 extern HANDLE g_hInputHandle[XINPUT_HANDLE_SLOTS];
+#endif
 
 typedef struct DUMMY_KERNEL
 {
