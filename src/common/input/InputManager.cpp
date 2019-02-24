@@ -26,7 +26,7 @@
 // ******************************************************************
 
 #define _XBOXKRNL_DEFEXTRN_
-#define LOG_PREFIX CXBXR_MODULE::SDL
+#define LOG_PREFIX CXBXR_MODULE::INPSYS
 
 // prevent name collisions
 namespace xboxkrnl
@@ -64,7 +64,7 @@ void InputDeviceManager::Initialize(bool is_gui)
 	lck.unlock();
 
 	if (Sdl::SdlInitStatus < 0 || XInput::XInputInitStatus < 0) {
-		CxbxKrnlCleanupEx(CXBXR_MODULE::INIT, "Failed to initialize input subsystem! Consult debug log for more information");
+		CxbxKrnlCleanup("Failed to initialize input subsystem! Consult debug log for more information");
 	}
 
 	RefreshDevices();

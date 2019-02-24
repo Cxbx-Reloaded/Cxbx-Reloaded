@@ -74,6 +74,7 @@ const char* g_EnumModules2String[to_underlying(CXBXR_MODULE::MAX)] = {
 	"HUB     ",
 	"XPAD    ",
 	"ADM     ",
+	"INPSYS  ",
 	"KRNL    ",
 	"LOG     ",
 	"XBOX    ",

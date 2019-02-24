@@ -1,4 +1,4 @@
-#define LOG_PREFIX CXBXR_MODULE::CXBXR // temp
+#define LOG_PREFIX CXBXR_MODULE::DINP
 
 #include "DInputKeyboardMouse.h"
 #include "InputManager.h"

@@ -81,6 +81,7 @@ typedef enum class _CXBXR_MODULE: unsigned int {
 	HUB,
 	XPAD,
 	ADM,
+	INPSYS,
 	// kernel
 	KRNL,
 	LOG,

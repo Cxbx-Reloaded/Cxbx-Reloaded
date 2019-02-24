@@ -86,6 +86,7 @@
 #define IDC_LOG_RTL                     954
 #define IDC_LOG_XC                      955
 #define IDC_LOG_XE                      956
+#define IDC_LOG_INPSYS                  957
 #define IDC_SET_MOTOR                   999
 #define IDC_SET_X                       1000
 #define IDC_SET_Y                       1001
