@@ -105,16 +105,30 @@ InputDevice::Input* InputWindow::DetectInput(InputDevice* const Device, int ms)
 {
 	using namespace std::chrono;
 
-	auto now = system_clock::now();
-	auto timeout = now + milliseconds(ms);
+	// The intent of the initial_states vector is to detect inputs that were pressed already when this function was called.
+	// Without it, the initial mouse click used to select a gui button is very likely to be registered as valid input and bound
 	std::vector<InputDevice::Input*>::const_iterator i = Device->GetInputs().begin(),
 		e = Device->GetInputs().end(), b = i;
+	std::vector<bool> initial_states(Device->GetInputs().size());
+	for (std::vector<bool>::iterator state = initial_states.begin(); i != e; i++) {
+		*state++ = ((*i)->GetState() > (1 - INPUT_DETECT_THRESHOLD));
+	}
+
+	auto now = system_clock::now();
+	auto timeout = now + milliseconds(ms);
 
 	while (now <= timeout) {
 		Device->UpdateInput();
-		for (; i != e; i++) {
-			if ((*i)->GetState() > (1 - INPUT_DETECT_THRESHOLD)) {
-				return *i; // user pressed a button
+		std::vector<bool>::iterator state = initial_states.begin();
+		for (; i != e; i++, state++) {
+			if ((*i)->IsDetectable() && (*i)->GetState() > INPUT_DETECT_THRESHOLD) {
+				if (*state == false) {
+					// input was not initially pressed or it was but released afterwards
+					return *i;
+				}
+			}
+			else if ((*i)->GetState() < (1 - INPUT_DETECT_THRESHOLD)) {
+				*state = false;
 			}
 		}
 		std::this_thread::sleep_for(milliseconds(10));
@@ -131,11 +145,11 @@ void InputWindow::BindButton(int ControlID)
 	if (dev != nullptr) {
 		// Don't block the message processing loop
 		std::thread([this, dev, ControlID]() {
+			EnableWindow(m_hwnd_window, FALSE);
 			char current_text[30];
 			Button* xbox_button = m_DeviceConfig->FindButtonById(ControlID);
 			xbox_button->GetText(current_text, sizeof(current_text));
 			xbox_button->UpdateText("...");
-			EnableWindow(m_hwnd_window, FALSE);
 			std::future<InputDevice::Input*> fut = std::async(std::launch::async, &InputWindow::DetectInput, this, dev.get(), INPUT_TIMEOUT);
 			InputDevice::Input* dev_button = fut.get();
 			if (dev_button) {

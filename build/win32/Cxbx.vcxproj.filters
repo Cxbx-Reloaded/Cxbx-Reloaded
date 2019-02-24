@@ -650,6 +650,9 @@
     <ClCompile Include="..\..\src\common\input\InputWindow.cpp">
       <Filter>Shared\Input</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\common\input\DInputKeyboardMouse.cpp">
+      <Filter>Shared\Input</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\src\core\hle\DSOUND\XbDSoundLogging.cpp">
       <Filter>core\HLE\DSOUND</Filter>
     </ClCompile>
@@ -855,6 +858,12 @@
       <Filter>Shared\Input</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\common\input\InputWindow.h">
+      <Filter>Shared\Input</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\common\input\DInputKeyboardMouse.h">
+      <Filter>Shared\Input</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\common\input\DInputKeyboardCodes.h">
       <Filter>Shared\Input</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\core\hle\DSOUND\XbDSoundTypes.h">

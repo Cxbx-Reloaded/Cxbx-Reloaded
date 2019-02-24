@@ -194,7 +194,7 @@ namespace XInput
 		// get supported motors
 		AddOutput(new Motor(this, m_state_out.wLeftMotorSpeed, m_state_out.wRightMotorSpeed, 65535));
 
-		ZeroMemory(&m_state_in, sizeof(m_state_in));
+		memset(&m_state_in, 0, sizeof(m_state_in));
 	}
 
 	std::string XDevice::GetDeviceName() const

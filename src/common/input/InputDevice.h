@@ -87,6 +87,7 @@ class InputDevice
 		{
 			public:
 				virtual ControlState GetState() const = 0;
+				virtual bool IsDetectable() { return true; }
 		};
 
 		class Output : public IoControl

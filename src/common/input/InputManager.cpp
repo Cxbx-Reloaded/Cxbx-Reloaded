@@ -36,6 +36,7 @@ namespace xboxkrnl
 
 #include "SdlJoystick.h"
 #include "XInputPad.h"
+#include "DInputKeyboardMouse.h"
 #include "InputManager.h"
 #include "..\devices\usb\XidGamepad.h"
 #include "core\kernel\exports\EmuKrnl.h" // For EmuLog
@@ -66,14 +67,7 @@ void InputDeviceManager::Initialize(bool is_gui)
 		CxbxKrnlCleanupEx(CXBXR_MODULE::INIT, "Failed to initialize input subsystem! Consult debug log for more information");
 	}
 
-	XInput::PopulateDevices();
-	Sdl::PopulateDevices();
-
-	lck.lock();
-	m_Cv.wait(lck, []() {
-		return Sdl::SdlPopulateOK;
-	});
-	lck.unlock();
+	RefreshDevices();
 
 	if (!is_gui) {
 		UpdateDevices(PORT_1, false);
@@ -388,8 +382,8 @@ void InputDeviceManager::RefreshDevices()
 	Sdl::SdlPopulateOK = false;
 	m_Devices.clear();
 	lck.unlock();
-	XInput::DevicesConnected = 0;
 	XInput::PopulateDevices();
+	DInput::PopulateDevices();
 	Sdl::PopulateDevices();
 	lck.lock();
 	m_Cv.wait(lck, []() {

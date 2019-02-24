@@ -42,6 +42,7 @@
 #include "core\kernel\init\CxbxKrnl.h"
 #include "SdlJoystick.h"
 #include "XInputPad.h"
+#include "DInputKeyboardMouse.h"
 #include "InputManager.h"
 
 // These values are those used by Dolphin!
@@ -136,9 +137,9 @@ namespace Sdl
 						id = Event.jbutton.which;
 						break;
 
-					default:
-						break;
+					default: {
 						// unreachable
+					}
 				}
 				auto dev = g_InputDeviceManager.FindDevice(id);
 				if (dev != nullptr) {
@@ -157,6 +158,7 @@ namespace Sdl
 			}
 			else if (Event.type == UpdateInputEvent_t) {
 				XInput::GetDeviceChanges();
+				DInput::GetDeviceChanges();
 				g_InputDeviceManager.UpdateDevices(*static_cast<int*>(Event.user.data1), false);
 				delete Event.user.data1;
 				Event.user.data1 = nullptr;
