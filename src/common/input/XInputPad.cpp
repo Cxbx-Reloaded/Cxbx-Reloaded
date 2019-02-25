@@ -80,11 +80,19 @@ namespace XInput
 		std::unique_lock<std::mutex> lck(Mtx);
 
 		// Because we use _WIN32_WINNT=0x0601, this will load the XInput 9.1.0 library
-		hXInput = ::LoadLibrary(XINPUT_DLL);
+		// The 9.1.0 (Win7) doesn't provide support for the guide button, but the legacy 1.3 does. Unfortunately, it requires
+		// that the user has installed the June 2010 release of the DirectX SDK to be available. If they didn't, we will default
+		// to the 9.1.0 instead of failing the initialization
+		if (std::string(XINPUT_DLL).compare(TEXT("xinput9_1_0.dll")) == 0) {
+			hXInput = ::LoadLibrary(TEXT("xinput1_3.dll"));
+		}
 		if (!hXInput) {
-			EmuLog(LOG_LEVEL::WARNING, "Failed to initialize XInput subsystem!");
-			XInputInitStatus = XINPUT_INIT_ERROR;
-			return;
+			hXInput = ::LoadLibrary(XINPUT_DLL);
+			if (!hXInput) {
+				EmuLog(LOG_LEVEL::WARNING, "Failed to initialize XInput subsystem!");
+				XInputInitStatus = XINPUT_INIT_ERROR;
+				return;
+			}
 		}
 
 		PXInputGetCapabilities =
