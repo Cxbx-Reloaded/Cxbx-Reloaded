@@ -221,7 +221,7 @@ bool ConstructXpadDuke(int port)
 
 void DestructXpadDuke(int port)
 {
-	assert(port > PORT_4 || port < PORT_1);
+	assert(port >= PORT_1 && port <= PORT_4);
 
 	assert(g_HubObjArray[port] == nullptr);
 	delete g_XidDeviceObjArray[port].xid_dev;

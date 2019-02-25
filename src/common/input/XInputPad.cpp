@@ -114,6 +114,7 @@ namespace XInput
 
 	void DeInit()
 	{
+		XInputInitStatus = XINPUT_NOT_INIT;
 		if (hXInput)
 		{
 			::FreeLibrary(hXInput);

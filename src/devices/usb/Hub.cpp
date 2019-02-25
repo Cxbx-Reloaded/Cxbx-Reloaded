@@ -198,7 +198,7 @@ bool ConstructHub(int port)
 
 void DestructHub(int port)
 {
-	assert(port > PORT_4 || port < PORT_1);
+	assert(port >= PORT_1 && port <= PORT_4);
 
 	g_HubObjArray[port]->HubDestroy();
 	delete g_HubObjArray[port];

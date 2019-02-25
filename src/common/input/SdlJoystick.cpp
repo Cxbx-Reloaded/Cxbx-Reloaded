@@ -166,6 +166,7 @@ namespace Sdl
 
 	void DeInit(std::thread& Thr)
 	{
+		SdlInitStatus = SDL_NOT_INIT;
 		if (!Thr.joinable()) {
 			return;
 		}
