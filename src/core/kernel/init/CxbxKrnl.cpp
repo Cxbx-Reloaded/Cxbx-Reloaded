@@ -678,36 +678,9 @@ static unsigned int WINAPI CxbxKrnlInterruptThread(PVOID param)
 
 static void CxbxKrnlClockThread(void* pVoid)
 {
-	LARGE_INTEGER CurrentTicks;
-	uint64_t Delta;
-	uint64_t Microseconds;
-	unsigned int IncrementScaling;
-	static uint64_t LastTicks = 0;
-	static uint64_t Error = 0;
-	static uint64_t UnaccountedMicroseconds = 0;
+	// Just forward to KiClockIsr
 
-	// This keeps track of how many us have elapsed between two cycles, so that the xbox clocks are updated
-	// with the proper increment (instead of blindly adding a single increment at every step)
-
-	if (LastTicks == 0) {
-		QueryPerformanceCounter(&CurrentTicks);
-		LastTicks = CurrentTicks.QuadPart;
-		CurrentTicks.QuadPart = 0;
-	}
-
-	QueryPerformanceCounter(&CurrentTicks);
-	Delta = CurrentTicks.QuadPart - LastTicks;
-	LastTicks = CurrentTicks.QuadPart;
-
-	Error += (Delta * SCALE_S_IN_US);
-	Microseconds = Error / HostClockFrequency;
-	Error -= (Microseconds * HostClockFrequency);
-
-	UnaccountedMicroseconds += Microseconds;
-	IncrementScaling = (unsigned int)(UnaccountedMicroseconds / 1000); // -> 1 ms = 1000us -> time between two xbox clock interrupts
-	UnaccountedMicroseconds -= (IncrementScaling * 1000);
-
-	xboxkrnl::KiClockIsr(IncrementScaling);
+	xboxkrnl::KiClockIsr();
 }
 
 std::vector<xbaddr> g_RdtscPatches;

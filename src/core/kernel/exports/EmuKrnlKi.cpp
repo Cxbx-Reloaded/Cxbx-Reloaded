@@ -84,9 +84,7 @@ xboxkrnl::VOID xboxkrnl::KiTimerUnlock()
 	KiTimerMtx.Mtx.unlock();
 }
 
-xboxkrnl::VOID xboxkrnl::KiClockIsr(
-	unsigned int ScalingFactor
-)
+xboxkrnl::VOID xboxkrnl::KiClockIsr()
 {
 	KIRQL OldIrql;
 	LARGE_INTEGER InterruptTime;
@@ -98,7 +96,7 @@ xboxkrnl::VOID xboxkrnl::KiClockIsr(
 	// Update the interrupt time
 	InterruptTime.u.LowPart = KeInterruptTime.LowPart;
 	InterruptTime.u.HighPart = KeInterruptTime.High1Time;
-	InterruptTime.QuadPart += (CLOCK_TIME_INCREMENT * ScalingFactor);
+	InterruptTime.QuadPart += CLOCK_TIME_INCREMENT;
 	KeInterruptTime.High2Time = InterruptTime.u.HighPart;
 	KeInterruptTime.LowPart = InterruptTime.u.LowPart;
 	KeInterruptTime.High1Time = InterruptTime.u.HighPart;
@@ -113,7 +111,7 @@ xboxkrnl::VOID xboxkrnl::KiClockIsr(
 	KeSystemTime.High1Time = HostSystemTime.u.HighPart;
 
 	// Update the tick counter
-	KeTickCount += ScalingFactor;
+	KeTickCount += 1;
 
 	// Because this function must be fast to continuously update the kernel clocks, if somebody else is currently
 	// holding the lock, we won't wait and instead skip the check of the timers for this cycle

@@ -58,9 +58,7 @@ namespace xboxkrnl
 
 	VOID KiTimerUnlock();
 
-	VOID KiClockIsr(
-		IN unsigned int ScalingFactor
-	);
+	VOID KiClockIsr();
 
 	VOID NTAPI KiCheckTimerTable(
 		IN ULARGE_INTEGER CurrentTime
