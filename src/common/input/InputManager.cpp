@@ -333,11 +333,10 @@ bool InputDeviceManager::UpdateInputXpad(std::shared_ptr<InputDevice>& Device, v
 			in_buf->bAnalogButtons[j] = static_cast<uint8_t>(state * 0xFF);
 		}
 
-		/* FIXME: is this correct? */
 		for (int i = 16, j = 0; i < 24; i += 2, j++) {
 			ControlState state_plus = (bindings[i] != nullptr) ? dynamic_cast<InputDevice::Input*>(bindings[i])->GetState() : 0.0;
 			ControlState state_minus = (bindings[i+1] != nullptr) ? dynamic_cast<InputDevice::Input*>(bindings[i+1])->GetState() : 0.0;
-			ControlState state = state_plus ? state_plus * 0x7FFF : state_minus ? state_minus * 0x8000 : 0.0;
+			ControlState state = state_plus ? state_plus * 0x7FFF : state_minus ? -state_minus * 0x8000 : 0.0;
 			switch (j)
 			{
 				case 0: {
