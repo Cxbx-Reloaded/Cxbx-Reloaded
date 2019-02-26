@@ -29,6 +29,7 @@
 
 #include "InputManager.h"
 #include "common\Settings.hpp"
+#include <Commctrl.h>
 
 #define PROFILE_LOAD   1
 #define PROFILE_SAVE   2
@@ -36,6 +37,9 @@
 #define RUMBLE_SET     4
 #define RUMBLE_UPDATE  5
 #define RUMBLE_TEST    6
+
+
+LRESULT CALLBACK ProfileNameSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
 
 
 class InputWindow

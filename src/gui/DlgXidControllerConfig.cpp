@@ -197,3 +197,46 @@ INT_PTR CALLBACK DlgRumbleConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPA
 	}
 	return FALSE;
 }
+
+LRESULT CALLBACK ProfileNameSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData)
+{
+	switch (uMsg)
+	{
+		// Remove the window subclass when this window is destroyed
+		case WM_NCDESTROY: {
+			RemoveWindowSubclass(hWnd, ProfileNameSubclassProc, uIdSubclass);
+		}
+		break;
+
+		// Override the default system behaviour and process WM_CHAR messages ourselves
+		case WM_GETDLGCODE: {
+			if (lParam) {
+				LPMSG lpmsg = reinterpret_cast<LPMSG>(lParam);
+				if (lpmsg->message == WM_CHAR) {
+					return DLGC_WANTCHARS;
+				}
+			}
+		}
+		break;
+
+		case WM_CHAR:
+		{
+			// Make sure that we only allow printable ascii characters and some special keys to delete characters
+			if (!((wParam >= ' ' && wParam <= '~')
+				|| wParam == VK_CANCEL
+				|| wParam == VK_CLEAR
+				|| wParam == VK_DELETE
+				|| wParam == VK_BACK))
+			{
+				return FALSE;
+			}
+		}
+		break;
+
+		// Don't allow pasting operations, they can be used to bypass the filtering done in WM_CHAR
+		case WM_PASTE:
+			return FALSE;
+	}
+
+	return DefSubclassProc(hWnd, uMsg, wParam, lParam);
+}

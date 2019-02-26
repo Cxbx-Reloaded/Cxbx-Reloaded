@@ -98,6 +98,9 @@ void InputWindow::Initialize(HWND hwnd, HWND hwnd_krnl, int port_num, int dev_ty
 	char rumble[30];
 	m_DeviceConfig->FindButtonByIndex(m_max_num_buttons - 1)->GetText(rumble, sizeof(rumble));
 	m_rumble = rumble;
+
+	// Install the subclass for the profile combobox
+	SetWindowSubclass(GetWindow(m_hwnd_profile_list, GW_CHILD), ProfileNameSubclassProc, 0, 0);
 }
 
 InputWindow::~InputWindow()
