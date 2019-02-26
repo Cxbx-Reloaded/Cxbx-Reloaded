@@ -446,7 +446,7 @@ bool Settings::LoadConfig()
 		}
 		m_input[port_num].Type = ret;
 		m_input[port_num].DeviceName = m_si.GetValue(current_section.c_str(), sect_input.device);
-		m_input[port_num].ProfileName = m_si.GetValue(current_section.c_str(), sect_input.config);
+		m_input[port_num].ProfileName = TrimQuoteFromString(m_si.GetValue(current_section.c_str(), sect_input.config));
 	}
 	
 	// ==== Input End ==============
@@ -468,7 +468,7 @@ bool Settings::LoadConfig()
 		}
 		s_input_profiles local_profile;
 		local_profile.Type = m_si.GetLongValue(current_section.c_str(), sect_input_profiles.type);
-		local_profile.ProfileName = m_si.GetValue(current_section.c_str(), sect_input_profiles.config);
+		local_profile.ProfileName = TrimQuoteFromString(m_si.GetValue(current_section.c_str(), sect_input_profiles.config));
 		local_profile.DeviceName = m_si.GetValue(current_section.c_str(), sect_input_profiles.device);
 		for (int vec_control_index = 0; vec_control_index < dev_num_buttons[local_profile.Type]; vec_control_index++) {
 			local_profile.ControlList.push_back(m_si.GetValue(current_section.c_str(),
@@ -566,9 +566,11 @@ bool Settings::Save(std::string file_path)
 
 	for (int port_num = 0; port_num < 4; port_num++) {
 		std::string current_section = std::string(section_input) + std::to_string(port_num);
+		std::string quoted_prf_str = m_input[port_num].ProfileName.insert(0, "\"");
+		quoted_prf_str += "\"";
 		m_si.SetLongValue(current_section.c_str(), sect_input.type, m_input[port_num].Type, nullptr, false, true);
 		m_si.SetValue(current_section.c_str(), sect_input.device, m_input[port_num].DeviceName.c_str(), nullptr, true);
-		m_si.SetValue(current_section.c_str(), sect_input.config, m_input[port_num].ProfileName.c_str(), nullptr, true);
+		m_si.SetValue(current_section.c_str(), sect_input.config, quoted_prf_str.c_str(), nullptr, true);
 	}
 
 	// ==== Input End ==============
@@ -591,8 +593,10 @@ bool Settings::Save(std::string file_path)
 		}
 		for (uint vec_index = 0; vec_index < vec_size; vec_index++, profile_num++) {
 			std::string current_section = std::string(section_input_profiles) + std::to_string(profile_num);
+			std::string quoted_prf_str = m_input_profiles[i][vec_index].ProfileName.insert(0, "\"");
+			quoted_prf_str += "\"";
 			m_si.SetLongValue(current_section.c_str(), sect_input_profiles.type, m_input_profiles[i][vec_index].Type, nullptr, false, true);
-			m_si.SetValue(current_section.c_str(), sect_input_profiles.config, m_input_profiles[i][vec_index].ProfileName.c_str(), nullptr, true);
+			m_si.SetValue(current_section.c_str(), sect_input_profiles.config, quoted_prf_str.c_str(), nullptr, true);
 			m_si.SetValue(current_section.c_str(), sect_input_profiles.device, m_input_profiles[i][vec_index].DeviceName.c_str(), nullptr, true);
 			size_t vec_control_size = m_input_profiles[i][vec_index].ControlList.size();
 			if (vec_control_size == 0) {
