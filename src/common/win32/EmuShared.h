@@ -110,6 +110,12 @@ class EmuShared : public Mutex
 		void SetAudioSettings(const Settings::s_audio *audio) { Lock(); m_audio = *audio; Unlock(); }
 
 		// ******************************************************************
+		// * Xbox Network Accessors
+		// ******************************************************************
+		void GetNetworkSettings(Settings::s_network *network) { Lock(); *network = m_network; Unlock(); }
+		void SetNetworkSettings(const Settings::s_network *network) { Lock(); m_network = *network; Unlock(); }
+
+		// ******************************************************************
 		// * Xbox Controller Accessors
 		// ******************************************************************
 		void GetControllerDInputSettings(      Settings::s_controller_dinput *ctrl) { Lock(); *ctrl = m_controller_dinput; Unlock(); }
@@ -256,6 +262,7 @@ class EmuShared : public Mutex
 		Settings::s_core m_core;
 		Settings::s_video m_video;
 		Settings::s_audio m_audio;
+		Settings::s_network m_network;
 		Settings::s_hack m_hacks;
 };
 

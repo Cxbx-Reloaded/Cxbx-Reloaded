@@ -25,14 +25,6 @@
 #ifndef XONLINE_H
 #define XONLINE_H
 
-
-// Flags returned by XNetGetEthernetLinkStatus()
-#define XNET_ETHERNET_LINK_ACTIVE           0x01
-#define XNET_ETHERNET_LINK_100MBPS          0x02
-#define XNET_ETHERNET_LINK_10MBPS           0x04
-#define XNET_ETHERNET_LINK_FULL_DUPLEX      0x08
-#define XNET_ETHERNET_LINK_HALF_DUPLEX      0x10
-
 // ******************************************************************
 // * patch: WSAStartup
 // ******************************************************************

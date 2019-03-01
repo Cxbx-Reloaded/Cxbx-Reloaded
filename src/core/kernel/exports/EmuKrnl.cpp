@@ -459,40 +459,6 @@ XBSYSAPI EXPORTNUM(163) xboxkrnl::VOID FASTCALL xboxkrnl::KiUnlockDispatcherData
 }
 
 // ******************************************************************
-// * 0x00FC - PhyGetLinkState()
-// ******************************************************************
-XBSYSAPI EXPORTNUM(252) xboxkrnl::DWORD NTAPI xboxkrnl::PhyGetLinkState
-(
-	IN ULONG	Mode
-)
-{
-	LOG_FUNC_ONE_ARG(Mode);
-	
-	LOG_UNIMPLEMENTED();
-	
-	return 0; // Was XNET_ETHERNET_LINK_ACTIVE | XNET_ETHERNET_LINK_100MBPS | XNET_ETHERNET_LINK_FULL_DUPLEX;
-}
-
-// ******************************************************************
-// * 0x00FD - PhyInitialize()
-// ******************************************************************
-XBSYSAPI EXPORTNUM(253) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PhyInitialize
-(
-	IN ULONG	forceReset,
-	IN PVOID	Parameter2
-)
-{
-	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(forceReset)
-		LOG_FUNC_ARG(Parameter2)
-		LOG_FUNC_END;
-
-	LOG_UNIMPLEMENTED();
-
-	RETURN(S_OK);
-}
-
-// ******************************************************************
 // * 0x0165 - IdexChannelObject
 // ******************************************************************
 // TODO : Determine size, structure & filling behind IdexChannelObject

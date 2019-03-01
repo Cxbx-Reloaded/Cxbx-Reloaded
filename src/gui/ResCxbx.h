@@ -356,6 +356,9 @@
 #define ID_SETTINGS_CONFIG_LOGGING      40108
 #define ID_SYNC_CONFIG_LOGGING          40109
 #define ID_LOG                          40110
+#define ID_SETTINGS_CONFIG_NETWORK		40111
+#define IDC_NETWORK_ADAPTER				1276
+#define IDD_NETWORK_CFG					40112
 #define IDC_STATIC                      -1
 
 // Next default values for new objects
@@ -363,8 +366,8 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        135
-#define _APS_NEXT_COMMAND_VALUE         40111
-#define _APS_NEXT_CONTROL_VALUE         1256
+#define _APS_NEXT_COMMAND_VALUE         40113
+#define _APS_NEXT_CONTROL_VALUE         1257
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif
