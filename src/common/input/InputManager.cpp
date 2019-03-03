@@ -384,8 +384,8 @@ bool InputDeviceManager::UpdateInputXpad(std::shared_ptr<InputDevice>& Device, v
 	else {
 		if (bindings[24] != nullptr) {
 			XpadOutput* out_buf = reinterpret_cast<XpadOutput*>(static_cast<uint8_t*>(Buffer) + 2);
-			dynamic_cast<InputDevice::Output*>(bindings[24])->SetState(out_buf->left_actuator_strength / 0xFFFF,
-				out_buf->right_actuator_strength / 0xFFFF);
+			dynamic_cast<InputDevice::Output*>(bindings[24])->SetState(out_buf->left_actuator_strength / static_cast<ControlState>(0xFFFF),
+				out_buf->right_actuator_strength / static_cast<ControlState>(0xFFFF));
 		}
 	}
 	return true;
