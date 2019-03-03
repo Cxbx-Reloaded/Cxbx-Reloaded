@@ -31,7 +31,7 @@
 #include "core\kernel\support\Emu.h"
 #include "InputManager.h"
 
-// Acknowledgment: Inspired by the Dolphin emulator XInput input subsystem (GPLv2)
+// Acknowledgment: Inspired by the Dolphin emulator XInput subsystem (GPLv2)
 // https://github.com/dolphin-emu/dolphin
 
 #ifndef XINPUT_GAMEPAD_GUIDE

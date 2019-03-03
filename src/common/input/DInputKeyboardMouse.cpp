@@ -31,7 +31,7 @@
 #include "InputManager.h"
 #include "core\kernel\support\Emu.h"
 
-// Acknowledgment: Dolphin emulator DInput input subsystem (GPLv2)
+// Acknowledgment: Dolphin emulator DInput subsystem (GPLv2)
 // https://github.com/dolphin-emu/dolphin
 
 // From Dolphin: "(lower would be more sensitive) user can lower sensitivity by setting range

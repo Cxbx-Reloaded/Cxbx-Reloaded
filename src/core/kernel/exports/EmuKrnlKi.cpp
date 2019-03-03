@@ -84,19 +84,22 @@ xboxkrnl::VOID xboxkrnl::KiTimerUnlock()
 	KiTimerMtx.Mtx.unlock();
 }
 
-xboxkrnl::VOID xboxkrnl::KiClockIsr()
+xboxkrnl::VOID xboxkrnl::KiClockIsr(
+	IN unsigned int ScalingFactor
+)
 {
 	KIRQL OldIrql;
 	LARGE_INTEGER InterruptTime;
 	LARGE_INTEGER HostSystemTime;
 	ULONG Hand;
+	DWORD OldKeTickCount;
 
 	OldIrql = KfRaiseIrql(CLOCK_LEVEL);
 
 	// Update the interrupt time
 	InterruptTime.u.LowPart = KeInterruptTime.LowPart;
 	InterruptTime.u.HighPart = KeInterruptTime.High1Time;
-	InterruptTime.QuadPart += CLOCK_TIME_INCREMENT;
+	InterruptTime.QuadPart += (CLOCK_TIME_INCREMENT * ScalingFactor);
 	KeInterruptTime.High2Time = InterruptTime.u.HighPart;
 	KeInterruptTime.LowPart = InterruptTime.u.LowPart;
 	KeInterruptTime.High1Time = InterruptTime.u.HighPart;
@@ -111,7 +114,8 @@ xboxkrnl::VOID xboxkrnl::KiClockIsr()
 	KeSystemTime.High1Time = HostSystemTime.u.HighPart;
 
 	// Update the tick counter
-	KeTickCount += 1;
+	OldKeTickCount = KeTickCount;
+	KeTickCount += ScalingFactor;
 
 	// Because this function must be fast to continuously update the kernel clocks, if somebody else is currently
 	// holding the lock, we won't wait and instead skip the check of the timers for this cycle
@@ -121,7 +125,7 @@ xboxkrnl::VOID xboxkrnl::KiClockIsr()
 		Hand = KeTickCount & (TIMER_TABLE_SIZE - 1);
 		if (KiTimerTableListHead[Hand].Entry.Flink != &KiTimerTableListHead[Hand].Entry &&
 			(ULONGLONG)InterruptTime.QuadPart >= KiTimerTableListHead[Hand].Time.QuadPart) {
-			KeInsertQueueDpc(&KiTimerExpireDpc, (PVOID)&KeTickCount, 0);
+			KeInsertQueueDpc(&KiTimerExpireDpc, (PVOID)OldKeTickCount, 0);
 		}
 		KiTimerMtx.Acquired = false;
 		KiTimerMtx.Mtx.unlock();
