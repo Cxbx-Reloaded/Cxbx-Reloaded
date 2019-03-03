@@ -116,10 +116,8 @@ void InputWindow::UpdateDeviceList()
 
 	// Populate device list
 	LRESULT num_devices = SendMessage(m_hwnd_device_list, CB_GETCOUNT, 0, 0);
-	if (num_devices > 0) {
-		for (int i = 0; i < num_devices; i++) {
-			SendMessage(m_hwnd_device_list, CB_DELETESTRING, i, 0);
-		}
+	for (int i = 0; i < num_devices; i++) {
+		SendMessage(m_hwnd_device_list, CB_DELETESTRING, 0, 0);
 	}
 
 	std::vector<std::string> dev_list = g_InputDeviceManager.GetDeviceList();
