@@ -73,9 +73,9 @@ static const char* OHCI_RegNames[] = {
 };
 
 /* Define these three if you want to dump usb packets and the OHCI registers */
-//#define DEBUG_ISOCH
-//#define DEBUG_PACKET
-//#define DEBUG_OHCI_REG
+#define DEBUG_ISOCH
+#define DEBUG_PACKET
+#define DEBUG_OHCI_REG
 
 #ifdef DEBUG_OHCI_REG
 #define DUMP_REG_R(reg_val) DBG_PRINTF("%s, R, reg_val: 0x%X\n", OHCI_RegNames[Addr >> 2], reg_val)
@@ -126,12 +126,14 @@ static const char* OHCI_RegNames[] = {
 // LSThreshold
 #define OHCI_LS_THRESH                      0x628            // LSThreshold
 // HcRhDescriptorA
-#define OHCI_RHA_RW_MASK                    0x00000000       // Mask of supported features
 #define OHCI_RHA_PSM                        (1<<8)           // PowerSwitchingMode
 #define OHCI_RHA_NPS                        (1<<9)           // NoPowerSwitching
 #define OHCI_RHA_DT                         (1<<10)          // DeviceType
 #define OHCI_RHA_OCPM                       (1<<11)          // OverCurrentProtectionMode
 #define OHCI_RHA_NOCP                       (1<<12)          // NoOverCurrentProtection
+#define OHCI_RHA_POTPGT                     0xFF000000       // PowerOnToPowerGoodTime
+#define OHCI_RHA_RW_MASK                    (OHCI_RHA_PSM|OHCI_RHA_NPS \
+                                            |OHCI_RHA_OCPM| OHCI_RHA_NOCP|OHCI_RHA_POTPGT)
 // HcRhStatus
 #define OHCI_RHS_LPS                        (1<<0)           // LocalPowerStatus
 #define OHCI_RHS_OCI                        (1<<1)           // OverCurrentIndicator
@@ -1208,8 +1210,10 @@ void OHCI::OHCI_WriteRegister(xbaddr Addr, uint32_t Value)
 				break;
 
 			case 18: // HcRhDescriptorA
+				// Changed from XQEMU: actually allow writes to this register in the R/W bits instead of disregarding
+				// all writes. Test case: all my games want to write 0x1200 to this register during HCD initializaion
 				m_Registers.HcRhDescriptorA &= ~OHCI_RHA_RW_MASK;
-				m_Registers.HcRhDescriptorA |= Value & OHCI_RHA_RW_MASK; // ??
+				m_Registers.HcRhDescriptorA |= Value & OHCI_RHA_RW_MASK;
 				DUMP_REG_W(m_Registers.HcRhDescriptorA, Value);
 				break;
 
@@ -1251,8 +1255,11 @@ void OHCI::OHCI_WriteRegister(xbaddr Addr, uint32_t Value)
 void OHCI::OHCI_UpdateInterrupt()
 {
 	if ((m_Registers.HcInterrupt & OHCI_INTR_MIE) && (m_Registers.HcInterruptStatus & m_Registers.HcInterrupt)) {
-		HalSystemInterrupts[1].Assert(false);
+		DBG_PRINTF("Asserting IRQ\n");
 		HalSystemInterrupts[1].Assert(true);
+	}
+	else {
+		HalSystemInterrupts[1].Assert(false);
 	}
 }
 
@@ -1669,10 +1676,6 @@ int OHCI::OHCI_ServiceIsoTD(OHCI_ED* ed, int completion)
 	// From the OHCI standard: "If the Host Controller supports checking of the Offsets, if either Offset[R] or Offset[R+1] does
 	// not have a ConditionCode of NOT ACCESSED or if the Offset[R + 1] is not greater than or equal to Offset[R], then
 	// an Unrecoverable Error is indicated."
-	// ergo720: I have a doubt here: according to the standard, the error condition is set if ConditionCode (bits 12-15 of
-	// Offset[R(+1)] is not 111x (= NOT ACCESSED), however the check below is only triggered if the bits are all zeros
-	// (= NO ERROR). So, if, for example, these bits are 1100 (= BUFFER OVERRUN), the check won't be triggered when actually
-	// it should be
 
 	if (!(OHCI_BM(start_offset, TD_PSW_CC) & 0xE) ||
 		((relative_frame_number < frame_count) &&
