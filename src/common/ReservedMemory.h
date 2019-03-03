@@ -1,14 +1,5 @@
 // ******************************************************************
 // *
-// *    .,-:::::    .,::      .::::::::.    .,::      .:
-// *  ,;;;'````'    `;;;,  .,;;  ;;;'';;'   `;;;,  .,;;
-// *  [[[             '[[,,[['   [[[__[[\.    '[[,,[['
-// *  $$$              Y$$$P     $$""""Y$$     Y$$$P
-// *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
-// *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
-// *
-// *   Common->ReservedMemory.h
-// *
 // *  This file is part of the Cxbx project.
 // *
 // *  Cxbx is free software; you can redistribute it

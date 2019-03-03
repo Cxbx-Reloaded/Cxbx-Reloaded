@@ -2,15 +2,6 @@
 // PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 // ******************************************************************
 // *
-// *    .,-:::::    .,::      .::::::::.    .,::      .:
-// *  ,;;;'````'    `;;;,  .,;;  ;;;'';;'   `;;;,  .,;;
-// *  [[[             '[[,,[['   [[[__[[\.    '[[,,[['
-// *  $$$              Y$$$P     $$""""Y$$     Y$$$P
-// *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
-// *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
-// *
-// *   Cxbx->src->CxbxKrnl->EmuKrnlKi.cpp
-// *
 // *  This file is part of the Cxbx project.
 // *
 // *  Cxbx and Cxbe are free software; you can redistribute them
