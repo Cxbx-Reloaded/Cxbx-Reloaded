@@ -47,6 +47,7 @@ typedef struct _RSA_PUBLIC_KEY
 
 #pragma pack()
 
+void ModExp(unsigned char* a_number, const unsigned char* b_number, unsigned int b_len, const unsigned char* c_number, unsigned int c_len, const unsigned char* d_number, unsigned int d_len);
 void RSAdecrypt(const unsigned char* c_number, unsigned char* cryptbuffer, RSA_PUBLIC_KEY key);
 bool Verifyhash(const unsigned char* hash, const unsigned char* decryptBuffer, RSA_PUBLIC_KEY key);
 

@@ -152,24 +152,24 @@ void iaddg(int i, giant g); /* g += i, with i non-negative and < 2^16. */
 int gsign(giant g); /* Returns the sign of g: -1, 0, 1. */
 void absg(giant g); /* g := |g|. */
 
+void ModExp(unsigned char* a_number, const unsigned char* b_number, unsigned int b_len, const unsigned char* c_number, unsigned int c_len, const unsigned char* d_number, unsigned int d_len)
+{
+	giant b = newgiant(GIANT_INFINITY);
+	giant c = newgiant(GIANT_INFINITY);
+	giant d = newgiant(GIANT_INFINITY);
+	gigimport(b, b_number, b_len);
+	gigimport(c, c_number, c_len);
+	gigimport(d, d_number, d_len);
+
+	/* a = b := b^c (mod d). */
+	powermodg(b, c, d);
+
+	memcpy(a_number, b->n, d_len);
+}
 
 void RSAdecrypt(const unsigned char* c_number, unsigned char* cryptbuffer, RSA_PUBLIC_KEY key)
 {
-	giant n = newgiant(GIANT_INFINITY);
-	giant e = newgiant(GIANT_INFINITY);
-	giant sig = newgiant(GIANT_INFINITY);
-
-	gigimport(sig, c_number, 256);
-
-	gigimport(n, key.KeyData.Modulus, 256);
-
-	gigimport(e, key.KeyData.Exponent, 4);
-
-	/* x := x^n (mod z). */
-	powermodg(sig, e, n);
-
-	memset(cryptbuffer, 0x00, 256);
-	memcpy(cryptbuffer, sig->n, 256);
+	ModExp(cryptbuffer, c_number, 256, key.KeyData.Exponent, 4, key.KeyData.Modulus, 256);
 }
 
 bool Verifyhash(const unsigned char* hash, const unsigned char* decryptBuffer, RSA_PUBLIC_KEY key)

@@ -21,6 +21,7 @@
 // *
 // *  (c) 2002-2003 Aaron Robinson <caustik@caustik.com>
 // *  (c) 2016 Patrick van Logchem <pvanlogchem@gmail.com>
+// *  (c) 2019 Jannik Vogel
 // *
 // *  All rights reserved
 // *
@@ -40,6 +41,7 @@ namespace xboxkrnl
 #include "common\crypto\EmuSha.h" // For A_SHAInit, etc.
 #include "common\crypto\LibRc4.h" // For RC4 Functions
 #include "common\crypto\EmuDes.h" // For DES Functions
+#include "common\crypto\EmuRSA.h" // For RSA Functions
 
 // prevent name collisions
 namespace NtDll
@@ -212,9 +214,10 @@ xboxkrnl::ULONG NTAPI JumpedModExp
 	xboxkrnl::ULONG dwN
 )
 {
-	ULONG ret = 0;
+	ULONG ret = 1;
 
-	LOG_UNIMPLEMENTED();
+	unsigned int len = dwN * 4;
+	ModExp((unsigned char*)pA, (const unsigned char*)pB, len, (const unsigned char*)pC, len, (const unsigned char*)pD, len);
 
 	return ret;
 }
