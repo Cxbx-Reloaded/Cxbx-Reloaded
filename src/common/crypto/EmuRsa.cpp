@@ -102,7 +102,7 @@ double*			sinCos = NULL;
 
 /* Global function declarations */
 giant newgiant(int numshorts);
-void gigimport(giant g, unsigned char* buff, int len);
+void gigimport(giant g, const unsigned char* buff, int len);
 void auxmulg(giant a, giant b);
 void normal_subg(giant a, giant b);
 void reverse_subg(giant a, giant b);
@@ -152,7 +152,7 @@ int gsign(giant g); /* Returns the sign of g: -1, 0, 1. */
 void absg(giant g); /* g := |g|. */
 
 
-void RSAdecrypt(unsigned char* c_number, unsigned char* cryptbuffer, RSA_PUBLIC_KEY key)
+void RSAdecrypt(const unsigned char* c_number, unsigned char* cryptbuffer, RSA_PUBLIC_KEY key)
 {
 	giant n = newgiant(GIANT_INFINITY);
 	giant e = newgiant(GIANT_INFINITY);
@@ -171,7 +171,7 @@ void RSAdecrypt(unsigned char* c_number, unsigned char* cryptbuffer, RSA_PUBLIC_
 	memcpy(cryptbuffer, sig->n, 256);
 }
 
-bool Verifyhash(unsigned char* hash, unsigned char* decryptBuffer, RSA_PUBLIC_KEY key)
+bool Verifyhash(const unsigned char* hash, const unsigned char* decryptBuffer, RSA_PUBLIC_KEY key)
 {
 	unsigned char cmphash[20];
 	int a;
@@ -241,7 +241,7 @@ giant newgiant(int numshorts)
 // http://xbox-linux-devel.narkive.com/Qw6o31DP/xbedump-fix-for-array-out-of-bounds-access#post1
 // and it has been improved based on JayFoxRox suggestions. See the link below for the details
 // https://github.com/xqemu/xbedump/pull/5
-void gigimport(giant g, unsigned char *buff, int len) {
+void gigimport(giant g, const unsigned char *buff, int len) {
 
 	// copy buffered 'number' into giant's number buffer
 	memcpy(g->n, buff, len);
