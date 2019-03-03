@@ -29,7 +29,6 @@
 
 extern bool bLLE_APU; // Set this to true for experimental APU (sound) LLE
 extern bool bLLE_GPU; // Set this to true for experimental GPU (graphics) LLE
-extern bool bLLE_USB; // Set this to true for experimental USB (input) LLE
 extern bool bLLE_JIT; // Set this to true for experimental JIT
 
 extern std::map<std::string, xbaddr> g_SymbolAddresses;

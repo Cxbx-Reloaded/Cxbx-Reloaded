@@ -81,7 +81,6 @@ uint32 g_BuildVersion = 0;
 
 bool bLLE_APU = false; // Set this to true for experimental APU (sound) LLE
 bool bLLE_GPU = false; // Set this to true for experimental GPU (graphics) LLE
-bool bLLE_USB = true; // Set this to true for USB (input) LLE
 bool bLLE_JIT = false; // Set this to true for experimental JIT
 
 void* GetXboxFunctionPointer(std::string functionName)

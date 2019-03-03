@@ -2408,20 +2408,16 @@ void WndMain::DrawLedBitmap(HWND hwnd, bool bdefault)
 		++LedSequenceOffset;
 
 		// Set LLE flags string based on selected LLE flags
+		// LLE USB is always on
+		strcat(flagString, "U");
 		if (m_FlagsLLE_status & LLE_APU) {
 			strcat(flagString, "A");
 		}
 		if (m_FlagsLLE_status & LLE_GPU) {
 			strcat(flagString, "G");
 		}
-		if (m_FlagsLLE_status & LLE_USB) {
-			strcat(flagString, "U");
-		}
 		if (m_FlagsLLE_status & LLE_JIT) {
 			strcat(flagString, "J");
-		}
-		if (m_FlagsLLE_status == 0) {
-			sprintf(flagString, "HLE");
 		}
 	}
 
