@@ -36,6 +36,9 @@
 #include "DInputKeyboardMouse.h"
 #include "InputManager.h"
 
+// Acknowledgment: Inspired by the Dolphin emulator SDL input subsystem (GPLv2)
+// https://github.com/dolphin-emu/dolphin
+
 // These values are those used by Dolphin!
 static const uint16_t RUMBLE_PERIOD = 10;
 static const uint16_t RUMBLE_LENGTH_MAX = 500; 
@@ -184,6 +187,10 @@ namespace Sdl
 		SDL_Joystick* pJoystick = SDL_JoystickOpen(Index);
 		if (pJoystick) {
 			auto Device = std::make_shared<Sdl::SdlJoystick>(pJoystick, Index);
+			if (Device->IsXInput()) {
+				EmuLog(LOG_LEVEL::INFO, "Rejected joystick %i. It will be handled by XInput", Index);
+				return;
+			}
 			// only add the device if it has some I/O controls
 			if (!Device->GetInputs().empty() || !Device->GetOutputs().empty()) {
 				g_InputDeviceManager.AddDevice(std::move(Device));
@@ -215,7 +222,7 @@ namespace Sdl
 
 	SdlJoystick::SdlJoystick(SDL_Joystick* const Joystick, const int Index)
 		: m_Joystick(Joystick), m_Sdl_ID(SDL_JoystickInstanceID(Joystick)),
-		m_DeviceName(StripSpaces(SDL_JoystickNameForIndex(Index)))
+		m_DeviceName(StripSpaces(SDL_JoystickNameForIndex(Index))), m_bIsXInput(false)
 	{
 		uint8_t i;
 		int NumButtons, NumAxes, NumHats, NumBalls;
@@ -240,6 +247,7 @@ namespace Sdl
 			(1 == NumHats) && (0 == NumBalls))
 		{
 			// this device won't be used
+			m_bIsXInput = true;
 			return;
 		}
 		/* FIXME: is this correct? */
@@ -248,11 +256,13 @@ namespace Sdl
 			(1 == NumHats) && (0 == NumBalls))
 		{
 			// this device won't be used
+			m_bIsXInput = true;
 			return;
 		}
 		else if (std::string::npos != lcasename.find("xinput"))
 		{
 			// this device won't be used
+			m_bIsXInput = true;
 			return;
 		}
 		else if (NumButtons > 255 || NumAxes > 255 ||

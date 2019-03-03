@@ -43,6 +43,9 @@ namespace xboxkrnl
 #include "EmuShared.h"
 #include "devices\usb\OHCI.h"
 
+// Acknowledgment: Inspired by the Dolphin emulator input subsystem (GPLv2)
+// https://github.com/dolphin-emu/dolphin
+
 
 InputDeviceManager g_InputDeviceManager;
 
@@ -154,13 +157,26 @@ void InputDeviceManager::UpdateDevices(int port, bool ack)
 	int type;
 	g_EmuShared->GetInputDevTypeSettings(&type, port);
 
+	// connect
 	if (type != to_underlying(XBOX_INPUT_DEVICE::DEVICE_INVALID) &&
 		g_HubObjArray[port] == nullptr) {
 		ConnectDevice(port, type);
 	}
+	// disconnect
 	else if (type == to_underlying(XBOX_INPUT_DEVICE::DEVICE_INVALID) &&
 		g_HubObjArray[port] != nullptr) {
 		DisconnectDevice(port, ack);
+	}
+	// update bindings
+	else {
+		auto dev = g_InputDeviceManager.FindDevice(port, 0);
+		if (dev != nullptr) {
+			dev->SetType(to_underlying(XBOX_INPUT_DEVICE::DEVICE_INVALID));
+			dev->SetPort(PORT_INVALID);
+		}
+		if (type != to_underlying(XBOX_INPUT_DEVICE::DEVICE_INVALID)) {
+			BindHostDevice(port, type);
+		}
 	}
 }
 
@@ -234,7 +250,7 @@ void InputDeviceManager::DisconnectDevice(int port, bool ack)
 			default:
 				EmuLog(LOG_LEVEL::WARNING, "Attempted to detach an unknown device type (type was %d)", type);
 		}
-		auto dev = g_InputDeviceManager.FindDeviceByPort(port);
+		auto dev = g_InputDeviceManager.FindDevice(port, 0);
 		if (dev != nullptr) {
 			dev->SetType(to_underlying(XBOX_INPUT_DEVICE::DEVICE_INVALID));
 			dev->SetPort(PORT_INVALID);
@@ -432,8 +448,10 @@ std::shared_ptr<InputDevice> InputDeviceManager::FindDevice(SDL_JoystickID id) c
 	}
 }
 
-std::shared_ptr<InputDevice> InputDeviceManager::FindDeviceByPort(int port) const
+std::shared_ptr<InputDevice> InputDeviceManager::FindDevice(int port, int dummy) const
 {
+	// Ignore dummy, it's just used to allow overloading the function
+
 	std::lock_guard<std::mutex> lck(m_Mtx);
 
 	auto it = std::find_if(m_Devices.begin(), m_Devices.end(), [port](const auto& Device) {

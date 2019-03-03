@@ -77,6 +77,8 @@ namespace Sdl
 			SDL_JoystickID GetId(SDL_JoystickID id) const override;
 			// sets dirty flag
 			void SetDirty() { m_bDirty = true; }
+			// checks if the device supports xinput
+			bool IsXInput() const { return m_bIsXInput; }
 
 		private:
 			class Button : public InputDevice::Input
@@ -208,6 +210,8 @@ namespace Sdl
 			SDL_JoystickID m_Sdl_ID;
 			// haptic device identifier as assigned by SDL, if available
 			SDL_Haptic* m_Haptic;
+			// indicates if the device supports xinput
+			bool m_bIsXInput;
 	};
 }
 

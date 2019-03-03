@@ -73,9 +73,9 @@ static const char* OHCI_RegNames[] = {
 };
 
 /* Define these three if you want to dump usb packets and the OHCI registers */
-#define DEBUG_ISOCH
-#define DEBUG_PACKET
-#define DEBUG_OHCI_REG
+//#define DEBUG_ISOCH
+//#define DEBUG_PACKET
+//#define DEBUG_OHCI_REG
 
 #ifdef DEBUG_OHCI_REG
 #define DUMP_REG_R(reg_val) DBG_PRINTF("%s, R, reg_val: 0x%X\n", OHCI_RegNames[Addr >> 2], reg_val)
@@ -259,6 +259,7 @@ OHCI::OHCI(USBDevice* UsbObj)
 	for (int i = 0; i < 4; i++) {
 		m_UsbDevice->USB_RegisterPort(&m_Registers.RhPort[i].UsbPort, i, USB_SPEED_MASK_LOW | USB_SPEED_MASK_FULL, ops);
 		m_Registers.RhPort[i].bPendingRemoval = false;
+		m_Registers.RhPort[i].bSignaled = false;
 	}
 	OHCI_PacketInit(&m_UsbPacket);
 
@@ -354,7 +355,10 @@ void OHCI::OHCI_FrameBoundaryWorker()
 
 	// Now acknowledge device removal (if any)
 	for (int i = 0; i < 4; i++) {
-		if (m_Registers.RhPort[i].bPendingRemoval) {
+		if (m_Registers.RhPort[i].bPendingRemoval && !m_Registers.RhPort[i].bSignaled) {
+
+			m_Registers.RhPort[i].bSignaled = true;
+
 			SDL_Event DeviceRemoveEvent;
 			DeviceRemoveEvent.type = Sdl::DeviceRemoveAck_t;
 			DeviceRemoveEvent.user.data1 = new int(i);
@@ -1833,4 +1837,7 @@ int OHCI::OHCI_ServiceIsoTD(OHCI_ED* ed, int completion)
 void OHCI::OHCI_SetRemovalFlag(int port, bool flag)
 {
 	m_Registers.RhPort[port].bPendingRemoval = flag;
+	if (!flag) {
+		m_Registers.RhPort[port].bSignaled = false;
+	}
 }

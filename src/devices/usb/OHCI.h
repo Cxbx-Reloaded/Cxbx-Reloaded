@@ -87,12 +87,13 @@ struct OHCI_HCCA
 	uint32_t HccaDoneHead;
 };
 
-/* Small struct used to hold the HcRhPortStatus register, the usb port status and the PendingRemoval flag */
+/* Small struct used to hold the HcRhPortStatus register, the usb port status and the device removal flags */
 struct OHCIPort
 {
 	USBPort UsbPort;
 	uint32_t HcRhPortStatus;
 	bool bPendingRemoval;
+	bool bSignaled;
 };
 
 /* All these registers are well documented in the OHCI standard */

@@ -31,8 +31,26 @@
 #include "core\kernel\support\Emu.h"
 #include "InputManager.h"
 
+// Acknowledgment: Inspired by the Dolphin emulator XInput input subsystem (GPLv2)
+// https://github.com/dolphin-emu/dolphin
+
 #ifndef XINPUT_GAMEPAD_GUIDE
 #define XINPUT_GAMEPAD_GUIDE 0x0400
+#endif
+
+// These are defined in the Xinput.h header supplied by Windows, but because we use _WIN32_WINNT=0x0601, they are greyed out.
+// If the init function loads succesfully the 1.3 library version, then XInputGetCapabilities can return these subtypes too.
+#ifndef XINPUT_DEVSUBTYPE_FLIGHT_STICK
+#define XINPUT_DEVSUBTYPE_UNKNOWN           0x00
+#define XINPUT_DEVSUBTYPE_WHEEL             0x02
+#define XINPUT_DEVSUBTYPE_ARCADE_STICK      0x03
+#define XINPUT_DEVSUBTYPE_FLIGHT_STICK      0x04
+#define XINPUT_DEVSUBTYPE_DANCE_PAD         0x05
+#define XINPUT_DEVSUBTYPE_GUITAR            0x06
+#define XINPUT_DEVSUBTYPE_GUITAR_ALTERNATE  0x07
+#define XINPUT_DEVSUBTYPE_DRUM_KIT          0x08
+#define XINPUT_DEVSUBTYPE_GUITAR_BASS       0x0B
+#define XINPUT_DEVSUBTYPE_ARCADE_PAD        0x13
 #endif
 
 
@@ -203,19 +221,18 @@ namespace XInput
 		{
 			case XINPUT_DEVSUBTYPE_GAMEPAD:
 				return "Gamepad";
-			// disabled, as the XInput 9.1.0 library will always report XINPUT_DEVSUBTYPE_GAMEPAD
-			//case XINPUT_DEVSUBTYPE_WHEEL:
-			//	return "Wheel";
-			//case XINPUT_DEVSUBTYPE_ARCADE_STICK:
-			//	return "Arcade Stick";
-			//case XINPUT_DEVSUBTYPE_FLIGHT_STICK:
-			//	return "Flight Stick";
-			//case XINPUT_DEVSUBTYPE_DANCE_PAD:
-			//	return "Dance Pad";
-			//case XINPUT_DEVSUBTYPE_GUITAR:
-			//	return "Guitar";
-			//case XINPUT_DEVSUBTYPE_DRUM_KIT:
-			//	return "Drum Kit";
+			case XINPUT_DEVSUBTYPE_WHEEL:
+				return "Wheel";
+			case XINPUT_DEVSUBTYPE_ARCADE_STICK:
+				return "Arcade Stick";
+			case XINPUT_DEVSUBTYPE_FLIGHT_STICK:
+				return "Flight Stick";
+			case XINPUT_DEVSUBTYPE_DANCE_PAD:
+				return "Dance Pad";
+			case XINPUT_DEVSUBTYPE_GUITAR:
+				return "Guitar";
+			case XINPUT_DEVSUBTYPE_DRUM_KIT:
+				return "Drum Kit";
 			default:
 				return "Device";
 		}

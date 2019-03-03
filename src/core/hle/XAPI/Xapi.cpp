@@ -1574,6 +1574,7 @@ VOID WINAPI XTL::EMUPATCH(RaiseException)
 	LOG_UNIMPLEMENTED();
 }
 
+#if 0 // patch disabled
 // ******************************************************************
 // patch: XMountMUA
 // ******************************************************************
@@ -1597,6 +1598,7 @@ DWORD WINAPI XTL::EMUPATCH(XMountMUA)
 
 	RETURN(E_FAIL);
 }
+#endif
 
 #if 0 // patch disabled
 // ******************************************************************
@@ -1638,6 +1640,7 @@ DWORD WINAPI XTL::EMUPATCH(XInputGetDeviceDescription)
 }
 #endif
 
+#if 0 // patch disabled
 // ******************************************************************
 // * patch: XMountMURootA
 // ******************************************************************
@@ -1661,6 +1664,7 @@ DWORD WINAPI XTL::EMUPATCH(XMountMURootA)
 
 	RETURN(ERROR_SUCCESS);
 }
+#endif
 
 // ******************************************************************
 // * patch: OutputDebugStringA

@@ -311,29 +311,6 @@ void InputWindow::SaveBindingsToDevice()
 
 	g_Settings->m_input[m_port_num].DeviceName = m_host_dev;
 	g_Settings->m_input[m_port_num].ProfileName = profile_name;
-
-	auto it = std::find_if(g_Settings->m_input_profiles[m_dev_type].begin(),
-		g_Settings->m_input_profiles[m_dev_type].end(), [&profile_name](const auto& profile) {
-		if (profile.ProfileName == profile_name) {
-			return true;
-		}
-		return false;
-	});
-	assert(it != g_Settings->m_input_profiles[m_dev_type].end());
-
-	// Also inform the kernel process if it exists
-	if (m_hwnd_krnl) {
-		// Sync updated input to kernel process to use run-time settings.
-		g_EmuShared->SetInputDevNameSettings(m_host_dev.c_str(), m_port_num);
-		char controls_name[XBOX_CTRL_NUM_BUTTONS][30];
-		for (int index = 0; index < m_max_num_buttons; index++) {
-			strncpy(controls_name[index], it->ControlList[index].c_str(), 30);
-		}
-		g_EmuShared->SetInputBindingsSettings(controls_name, XBOX_CTRL_NUM_BUTTONS, m_port_num);
-		
-		ipc_send_kernel_update(IPC_UPDATE_KERNEL::CONFIG_INPUT_SYNC, m_port_num,
-			reinterpret_cast<std::uintptr_t>(m_hwnd_krnl));
-	}
 }
 
 void InputWindow::UpdateCurrentDevice()

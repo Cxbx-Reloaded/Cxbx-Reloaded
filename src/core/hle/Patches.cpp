@@ -367,8 +367,6 @@ std::map<const std::string, const xbox_patch_t> g_PatchTable = {
 	PATCH_ENTRY("SetThreadPriorityBoost", XTL::EMUPATCH(SetThreadPriorityBoost), PATCH_ALWAYS),
 	PATCH_ENTRY("SignalObjectAndWait", XTL::EMUPATCH(SignalObjectAndWait), PATCH_ALWAYS),
 	PATCH_ENTRY("SwitchToFiber", XTL::EMUPATCH(SwitchToFiber), PATCH_ALWAYS),
-	PATCH_ENTRY("XMountMUA", XTL::EMUPATCH(XMountMUA), PATCH_ALWAYS),
-	PATCH_ENTRY("XMountMURootA", XTL::EMUPATCH(XMountMURootA), PATCH_ALWAYS),
 	PATCH_ENTRY("XSetProcessQuantumLength", XTL::EMUPATCH(XSetProcessQuantumLength), PATCH_ALWAYS),
 	PATCH_ENTRY("timeKillEvent", XTL::EMUPATCH(timeKillEvent), PATCH_ALWAYS),
 	PATCH_ENTRY("timeSetEvent", XTL::EMUPATCH(timeSetEvent), PATCH_ALWAYS),

@@ -48,6 +48,37 @@
 static INT_PTR CALLBACK DlgInputConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 HWND g_ChildWnd = NULL;
 
+void SyncInputSettings(int port_num, int dev_type)
+{
+	if (g_ChildWnd) {
+		// Sync updated input to kernel process to use run-time settings.
+		g_EmuShared->SetInputDevTypeSettings(&g_Settings->m_input[port_num].Type, port_num);
+
+		if (dev_type != to_underlying(XBOX_INPUT_DEVICE::DEVICE_INVALID)) {
+			std::string dev_name = g_Settings->m_input[port_num].DeviceName;
+			std::string profile_name = g_Settings->m_input[port_num].ProfileName;
+
+			g_EmuShared->SetInputDevNameSettings(dev_name.c_str(), port_num);
+			auto it = std::find_if(g_Settings->m_input_profiles[dev_type].begin(),
+				g_Settings->m_input_profiles[dev_type].end(), [&profile_name](const auto& profile) {
+				if (profile.ProfileName == profile_name) {
+					return true;
+				}
+				return false;
+			});
+			if (it != g_Settings->m_input_profiles[dev_type].end()) {
+				char controls_name[XBOX_CTRL_NUM_BUTTONS][30];
+				for (int index = 0; index < dev_num_buttons[dev_type]; index++) {
+					strncpy(controls_name[index], it->ControlList[index].c_str(), 30);
+				}
+				g_EmuShared->SetInputBindingsSettings(controls_name, XBOX_CTRL_NUM_BUTTONS, port_num);
+			}
+		}
+		ipc_send_kernel_update(IPC_UPDATE_KERNEL::CONFIG_INPUT_SYNC, port_num,
+			reinterpret_cast<std::uintptr_t>(g_ChildWnd));
+	}
+}
+
 void ShowInputConfig(HWND hwnd, HWND ChildWnd)
 {
 	g_InputDeviceManager.Initialize(true);
@@ -117,6 +148,11 @@ INT_PTR CALLBACK DlgInputConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPAR
 							default:
 								break;
 						}
+						assert(DeviceType > to_underlying(XBOX_INPUT_DEVICE::DEVICE_INVALID) &&
+							DeviceType < to_underlying(XBOX_INPUT_DEVICE::DEVICE_MAX));
+
+						// Also inform the kernel process if it exists
+						SyncInputSettings((LOWORD(wParam) & 7) - 1, DeviceType);
 					}
 				}
 				break;
@@ -139,12 +175,7 @@ INT_PTR CALLBACK DlgInputConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPAR
 						g_Settings->m_input[port_num].Type = dev_type;
 
 						// Also inform the kernel process if it exists
-						if (g_ChildWnd) {
-							// Sync updated input to kernel process to use run-time settings.
-							g_EmuShared->SetInputDevTypeSettings(&g_Settings->m_input[port_num].Type, port_num);
-							ipc_send_kernel_update(IPC_UPDATE_KERNEL::CONFIG_INPUT_SYNC, port_num,
-								reinterpret_cast<std::uintptr_t>(g_ChildWnd));
-						}
+						SyncInputSettings(port_num, dev_type);
 					}
 				}
 				break;

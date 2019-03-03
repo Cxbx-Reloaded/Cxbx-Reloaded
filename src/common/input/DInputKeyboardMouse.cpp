@@ -31,6 +31,9 @@
 #include "InputManager.h"
 #include "core\kernel\support\Emu.h"
 
+// Acknowledgment: Dolphin emulator DInput input subsystem (GPLv2)
+// https://github.com/dolphin-emu/dolphin
+
 // From Dolphin: "(lower would be more sensitive) user can lower sensitivity by setting range
 // seems decent here (at 8), I don't think anyone would need more sensitive than this"
 #define MOUSE_AXIS_SENSITIVITY 8
