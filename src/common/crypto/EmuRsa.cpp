@@ -18,6 +18,7 @@
 // *  59 Temple Place - Suite 330, Bostom, MA 02111-1307, USA.
 // *
 // *  (c) 2018 ergo720
+// *  (c) 2019 Jannik Vogel
 // *
 // *  All rights reserved
 // *
@@ -236,11 +237,6 @@ giant newgiant(int numshorts)
 	return(thegiant);
 }
 
-// ergo720: there's a bug in the original implementation of gigimport that prevents the rsa algorithm from working correctly on Windows (but
-// for some reason it works on Ubuntu). This replacement implementation is taken from
-// http://xbox-linux-devel.narkive.com/Qw6o31DP/xbedump-fix-for-array-out-of-bounds-access#post1
-// and it has been improved based on JayFoxRox suggestions. See the link below for the details
-// https://github.com/xqemu/xbedump/pull/5
 void gigimport(giant g, const unsigned char *buff, int len) {
 
 	// copy buffered 'number' into giant's number buffer
@@ -248,7 +244,13 @@ void gigimport(giant g, const unsigned char *buff, int len) {
 
 	assert((len % 2) == 0);
 
+	// Get number of shorts
 	g->sign = len / 2;
+
+	// Only count used shorts
+	while((g->sign >= 1) && (g->n[g->sign - 1] == 0)) {
+		g->sign -= 1;
+	}
 
 	assert(g->sign != 0);
 }
