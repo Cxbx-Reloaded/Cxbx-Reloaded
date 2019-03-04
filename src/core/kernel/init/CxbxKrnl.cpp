@@ -1154,14 +1154,6 @@ void CxbxKrnlMain(int argc, char* argv[])
 			return;
 		}
 
-		// Check the signature of the xbe
-		if (CxbxKrnl_Xbe->CheckXbeSignature()) {
-			printf("[0x%X] INIT: Valid xbe signature. Xbe is legit\n", GetCurrentThreadId());
-		}
-		else {
-			printf("[0x%X] INIT: Invalid xbe signature. Homebrew, tampered or pirated xbe?\n", GetCurrentThreadId());
-		}
-
 		// Check the integrity of the xbe sections
 		for (uint32 sectionIndex = 0; sectionIndex < CxbxKrnl_Xbe->m_Header.dwSections; sectionIndex++) {
 			uint32 RawSize = CxbxKrnl_Xbe->m_SectionHeader[sectionIndex].dwSizeofRaw;
@@ -1186,6 +1178,17 @@ void CxbxKrnlMain(int argc, char* argv[])
 		g_bIsChihiro = (g_XbeType == xtChihiro);
 		g_bIsDebug = (g_XbeType == xtDebug);
 		g_bIsRetail = (g_XbeType == xtRetail);
+
+		if (g_bIsChihiro) {
+			memcpy(xboxkrnl::XePublicKeyData, xboxkrnl::XePublicKeyDataChihiroGame, 284);
+		}
+		else if (g_bIsDebug) {
+			// TODO, missing key
+		}
+		else {
+			// Assume retail xbox
+			memcpy(xboxkrnl::XePublicKeyData, xboxkrnl::XePublicKeyDataRetail, 284);
+		}
 
 		// Disabled: The media board rom fails to run because it REQUIRES LLE USB, which is not yet enabled.
 		// Chihiro games can be ran directly for now. 

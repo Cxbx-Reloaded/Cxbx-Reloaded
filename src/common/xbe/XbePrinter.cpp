@@ -74,7 +74,6 @@ std::string XbePrinter::GenXbeInfo()
     info.append(GenDumpHeader());
     info.append(GenXbeHeaderInfo());
     info.append(GenXbeCertificateInfo());
-	info.append(ValidateXbeSignature());
     info.append(GenSectionInfo());
     info.append(GenLibraryVersions());
     info.append(GenTLS());
@@ -277,15 +276,6 @@ std::string XbePrinter::GenGeneralHeaderInfo2()
     text << "Logo Bitmap Address              : 0x" << std::setw(8) << Xbe_header->dwLogoBitmapAddr << "\n";
     text << "Logo Bitmap Size                 : 0x" << std::setw(8) << Xbe_header->dwSizeofLogoBitmap << "\n\n";
     return text.str();
-}
-
-std::string XbePrinter::ValidateXbeSignature()
-{
-	std::string text("\nInvalid xbe signature. Homebrew, tampered or pirated xbe?\n");
-	if (Xbe_to_print->CheckXbeSignature()) {
-		text = "\nValid xbe signature. Xbe is legit\n";
-	}
-	return text;
 }
 
 std::string XbePrinter::GenXbeCertificateInfo()

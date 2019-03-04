@@ -61,9 +61,6 @@ class Xbe : public Error
         // export to Xbe file
         void Export(const char *x_szXbeFilename);
 
-		// verify the integrity of the loaded xbe
-		bool CheckXbeSignature();
-
         // import logo bitmap from raw monochrome data
         void ImportLogoBitmap(const uint08 x_Gray[100*17]);
 

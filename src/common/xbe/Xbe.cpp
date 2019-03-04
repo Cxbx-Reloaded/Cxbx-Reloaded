@@ -40,7 +40,6 @@ namespace xboxkrnl
 #include "devices\LED.h" // For LED::Sequence
 #include "core\kernel\init\CxbxKrnl.h" // For CxbxKrnlPrintUEM
 #include "common\crypto\EmuSha.h" // For the SHA functions
-#include "common\crypto\EmuRsa.h" // For the RSA functions
 #include "core\kernel\support\EmuXTL.h" // For LDT_FROM_DASHBOARD and CxbxInitWindow
 
 namespace fs = std::experimental::filesystem;
@@ -774,41 +773,4 @@ const char *Xbe::GameRegionToString()
 const wchar_t *Xbe::GetUnicodeFilenameAddr()
 {
     return (const wchar_t *)GetAddr(m_Header.dwDebugUnicodeFilenameAddr);
-}
-
-bool Xbe::CheckXbeSignature()
-{
-	// Workaround for nxdk (and possibly oxdk?): xbe's built with nxdk have the digital signature set to all zeros, which will lead
-	// to a crash during its decryption in RSAdecrypt. Detect this condition and skip the check if true
-	{
-		UCHAR Dummy[256] = { 0 };
-		if (memcmp(m_Header.pbDigitalSignature, Dummy, 256) == 0) {
-			return false;
-		}
-	}
-
-	DWORD HeaderDigestSize = m_Header.dwSizeofHeaders - (sizeof(m_Header.dwMagic) + sizeof(m_Header.pbDigitalSignature));
-	UCHAR SHADigest[A_SHA_DIGEST_LEN];
-	unsigned char crypt_buffer[256];
-	CalcSHA1Hash(SHADigest, m_SignatureHeader, HeaderDigestSize);
-
-	// Hash against all currently known public keys, if these pass, we can guarantee the Xbe is unmodified
-	std::array<RSA_PUBLIC_KEY, 3> keys = { 0 };
-	memcpy(keys[0].Default, (void*)xboxkrnl::XePublicKeyDataRetail, 284);
-	memcpy(keys[1].Default, (void*)xboxkrnl::XePublicKeyDataChihiroGame, 284);
-	memcpy(keys[2].Default, (void*)xboxkrnl::XePublicKeyDataChihiroBoot, 284);
-	// TODO: memcpy(keys[3].Default, (void*)xboxkrnl::XePublicKeyDataDebug, 284);
-
-	for (int i = 0; i < keys.size(); i++) {
-		RSAdecrypt(m_Header.pbDigitalSignature, crypt_buffer, keys[i]);
-		if (Verifyhash(SHADigest, crypt_buffer, keys[i])) {
-			// Load the successful key into XboxKrnl::XePublicKeyData for application use
-			memcpy(xboxkrnl::XePublicKeyData, keys[i].Default, 284);
-			return true; // success
-		}
-	}
-
-	// Default to the Retail key if no key matched, just to make sure we don't init in an invalid state
-	memcpy(xboxkrnl::XePublicKeyData, xboxkrnl::XePublicKeyDataRetail, 284);
-	return false;  // signature check failed
 }

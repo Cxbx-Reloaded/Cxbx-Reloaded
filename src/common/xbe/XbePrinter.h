@@ -56,8 +56,6 @@ class XbePrinter
         std::string GenInitFlags();
         std::string GenGeneralHeaderInfo2();
 
-		std::string ValidateXbeSignature();
-
         std::string GenXbeCertificateInfo();
         std::string GenCertificateHeader();
         std::string GenAlternateTitleIDs();

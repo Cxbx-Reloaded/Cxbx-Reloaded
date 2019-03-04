@@ -244,7 +244,6 @@
     <ClInclude Include="..\..\src\core\kernel\exports\EmuKrnlKi.h" />
     <ClInclude Include="..\..\src\core\kernel\exports\EmuKrnlLogging.h" />
     <ClInclude Include="..\..\src\core\kernel\support\EmuNtDll.h" />
-    <ClInclude Include="..\..\src\common\crypto\EmuRsa.h" />
     <ClInclude Include="..\..\src\common\crypto\EmuSha.h" />
     <ClInclude Include="..\..\src\devices\x86\EmuX86.h" />
     <ClInclude Include="..\..\src\core\hle\XACTENG\XactEng.h" />
@@ -446,7 +445,6 @@
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
-    <ClCompile Include="..\..\src\common\crypto\EmuRsa.cpp" />
     <ClCompile Include="..\..\src\common\crypto\EmuSha.cpp" />
     <ClCompile Include="..\..\src\devices\x86\EmuX86.cpp" />
     <ClCompile Include="..\..\src\core\hle\XACTENG\XactEng.cpp" />
