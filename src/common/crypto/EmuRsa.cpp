@@ -18,6 +18,7 @@
 // *  59 Temple Place - Suite 330, Bostom, MA 02111-1307, USA.
 // *
 // *  (c) 2018 ergo720
+// *  (c) 2019 Jannik Vogel
 // *
 // *  All rights reserved
 // *
@@ -102,7 +103,7 @@ double*			sinCos = NULL;
 
 /* Global function declarations */
 giant newgiant(int numshorts);
-void gigimport(giant g, unsigned char* buff, int len);
+void gigimport(giant g, const unsigned char* buff, int len);
 void auxmulg(giant a, giant b);
 void normal_subg(giant a, giant b);
 void reverse_subg(giant a, giant b);
@@ -151,27 +152,27 @@ void iaddg(int i, giant g); /* g += i, with i non-negative and < 2^16. */
 int gsign(giant g); /* Returns the sign of g: -1, 0, 1. */
 void absg(giant g); /* g := |g|. */
 
-
-void RSAdecrypt(unsigned char* c_number, unsigned char* cryptbuffer, RSA_PUBLIC_KEY key)
+void ModExp(unsigned char* a_number, const unsigned char* b_number, unsigned int b_len, const unsigned char* c_number, unsigned int c_len, const unsigned char* d_number, unsigned int d_len)
 {
-	giant n = newgiant(GIANT_INFINITY);
-	giant e = newgiant(GIANT_INFINITY);
-	giant sig = newgiant(GIANT_INFINITY);
+	giant b = newgiant(GIANT_INFINITY);
+	giant c = newgiant(GIANT_INFINITY);
+	giant d = newgiant(GIANT_INFINITY);
+	gigimport(b, b_number, b_len);
+	gigimport(c, c_number, c_len);
+	gigimport(d, d_number, d_len);
 
-	gigimport(sig, c_number, 256);
+	/* a = b := b^c (mod d). */
+	powermodg(b, c, d);
 
-	gigimport(n, key.KeyData.Modulus, 256);
-
-	gigimport(e, key.KeyData.Exponent, 4);
-
-	/* x := x^n (mod z). */
-	powermodg(sig, e, n);
-
-	memset(cryptbuffer, 0x00, 256);
-	memcpy(cryptbuffer, sig->n, 256);
+	memcpy(a_number, b->n, d_len);
 }
 
-bool Verifyhash(unsigned char* hash, unsigned char* decryptBuffer, RSA_PUBLIC_KEY key)
+void RSAdecrypt(const unsigned char* c_number, unsigned char* cryptbuffer, RSA_PUBLIC_KEY key)
+{
+	ModExp(cryptbuffer, c_number, 256, key.KeyData.Exponent, 4, key.KeyData.Modulus, 256);
+}
+
+bool Verifyhash(const unsigned char* hash, const unsigned char* decryptBuffer, RSA_PUBLIC_KEY key)
 {
 	unsigned char cmphash[20];
 	int a;
@@ -236,19 +237,20 @@ giant newgiant(int numshorts)
 	return(thegiant);
 }
 
-// ergo720: there's a bug in the original implementation of gigimport that prevents the rsa algorithm from working correctly on Windows (but
-// for some reason it works on Ubuntu). This replacement implementation is taken from
-// http://xbox-linux-devel.narkive.com/Qw6o31DP/xbedump-fix-for-array-out-of-bounds-access#post1
-// and it has been improved based on JayFoxRox suggestions. See the link below for the details
-// https://github.com/xqemu/xbedump/pull/5
-void gigimport(giant g, unsigned char *buff, int len) {
+void gigimport(giant g, const unsigned char *buff, int len) {
 
 	// copy buffered 'number' into giant's number buffer
 	memcpy(g->n, buff, len);
 
 	assert((len % 2) == 0);
 
+	// Get number of shorts
 	g->sign = len / 2;
+
+	// Only count used shorts
+	while((g->sign >= 1) && (g->n[g->sign - 1] == 0)) {
+		g->sign -= 1;
+	}
 
 	assert(g->sign != 0);
 }
