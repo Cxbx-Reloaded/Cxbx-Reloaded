@@ -25,8 +25,27 @@
 // *
 // ******************************************************************
 
-// Acknowledgment: some of the functions present are from XQEMU (GPLv2)
+// Acknowledgment: Muldiv64 is from qemu-common.h which doesn't have a license header, iovector functions are from iov.c file.
+// Both files were originally taken from XQEMU (GPLv2)
 // https://xqemu.com/
+
+/*
+* Helpers for getting linearized buffers from iov / filling buffers into iovs
+*
+* Copyright IBM, Corp. 2007, 2008
+* Copyright (C) 2010 Red Hat, Inc.
+*
+* Author(s):
+*  Anthony Liguori <aliguori@us.ibm.com>
+*  Amit Shah <amit.shah@redhat.com>
+*  Michael Tokarev <mjt@tls.msk.ru>
+*
+* This work is licensed under the terms of the GNU GPL, version 2.  See
+* the COPYING file in the top-level directory.
+*
+* Contributions after 2012-01-13 are licensed under the terms of the
+* GNU GPL, version 2 or (at your option) any later version.
+*/
 
 
 // The intent of this file is to add general functions which are not kernel specific (for those CxbxKrnl.h should be used instead)
@@ -40,7 +59,7 @@
 
 
 // Disable a compiler warning relative to uint64_t -> uint32_t conversions in Muldiv64. This function is taken from
-// XQEMU so it should be safe regardless
+// QEMU so it should be safe regardless
 #pragma warning(push)
 #pragma warning(disable: 4244)
 

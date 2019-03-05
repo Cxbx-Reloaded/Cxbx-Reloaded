@@ -29,6 +29,38 @@
 // Acknowledgment (timer functions): ReactOS (GPLv2)
 // https://github.com/reactos/reactos
 
+// KeSetSystemTime
+/*
+* PROJECT:         ReactOS Kernel
+* LICENSE:         GPL - See COPYING in the top level directory
+* FILE:            ntoskrnl/ke/clock.c
+* PURPOSE:         System Clock Support
+* PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
+*/
+
+// KeInitializeTimerEx, KeSetTimer, KeSetTimerEx, KeCancelTimer
+/*
+* PROJECT:         ReactOS Kernel
+* LICENSE:         GPL - See COPYING in the top level directory
+* FILE:            ntoskrnl/ke/timerobj.c
+* PURPOSE:         Handle Kernel Timers (Kernel-part of Executive Timers)
+* PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
+*/
+
+// COPYING file:
+/*
+GNU GENERAL PUBLIC LICENSE
+Version 2, June 1991
+
+ReactOS may be used, runtime linked, and distributed with non-free software
+(meaning that such software has no obligations to open-source, or render
+free, their non-free code) such as commercial device drivers and commercial
+applications. This exception does not alter any other responsibilities of
+the licensee under the GPL (meaning that such software must still obey
+the GPL for the free ("open-sourced") code that has been integrated into
+the said software).
+*/
+
 #define _XBOXKRNL_DEFEXTRN_
 
 #define LOG_PREFIX CXBXR_MODULE::KE

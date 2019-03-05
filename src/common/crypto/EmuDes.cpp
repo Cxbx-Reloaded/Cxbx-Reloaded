@@ -28,6 +28,35 @@
 // Acknowledgment: ReactOS (GPLv2)
 // https://github.com/reactos/reactos
 
+/*
+*  FIPS-46-3 compliant Triple-DES implementation
+*
+*  Copyright (C) 2006-2015, ARM Limited, All Rights Reserved
+*  SPDX-License-Identifier: GPL-2.0
+*
+*  This program is free software; you can redistribute it and/or modify
+*  it under the terms of the GNU General Public License as published by
+*  the Free Software Foundation; either version 2 of the License, or
+*  (at your option) any later version.
+*
+*  This program is distributed in the hope that it will be useful,
+*  but WITHOUT ANY WARRANTY; without even the implied warranty of
+*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+*  GNU General Public License for more details.
+*
+*  You should have received a copy of the GNU General Public License along
+*  with this program; if not, write to the Free Software Foundation, Inc.,
+*  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+*
+*  This file is part of mbed TLS (https://tls.mbed.org)
+*/
+/*
+*  DES, on which TDES is based, was originally designed by Horst Feistel
+*  at IBM in 1974, and was adopted as a standard by NIST (formerly NBS).
+*
+*  http://csrc.nist.gov/publications/fips/fips46-3/fips46-3.pdf
+*/
+
 // Changed from ReactOS: we never swap the subkeys in order to generate a decryption key schedule. Instead, we opt to simply read the subkeys
 // in reverse order during a decryption operation. This is necessary because XcKeyTable doesn't provide an "operation" argument, that is, it
 // always generates an encryption key schedule.
