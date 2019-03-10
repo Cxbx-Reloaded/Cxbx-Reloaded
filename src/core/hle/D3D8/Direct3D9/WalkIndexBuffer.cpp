@@ -5,33 +5,13 @@
 #include <smmintrin.h> // SSE4.1
 //#include <nmmintrin.h> // SSE4.2
 //#include <immintrin.h> // AVX
-
-#include "core\kernel\support\Emu.h"
-#include "core\kernel\support\EmuXTL.h"
-
 #include "common\util\CPUID.h"
 #include "WalkIndexBuffer.h"
 
-void WalkIndexBuffer_SSE41(XTL::INDEX16 & LowIndex, XTL::INDEX16 & HighIndex, XTL::INDEX16 * pIndexData, DWORD dwIndexCount);
+// Walk an index buffer to find the minimum and maximum indices
 
-void Init_SIMD
-(
-	XTL::INDEX16 &LowIndex,
-	XTL::INDEX16 &HighIndex,
-	XTL::INDEX16 *pIndexData,
-	DWORD dwIndexCount
-)
-{
-	SimdCaps supports;
-	if (supports.SSE41())
-		WalkIndexBuffer_SIMD = WalkIndexBuffer_SSE41;
-	else
-		WalkIndexBuffer_SIMD = WalkIndexBuffer;
-
-	WalkIndexBuffer_SIMD(LowIndex, HighIndex, pIndexData, dwIndexCount);
-}
-
-void WalkIndexBuffer(XTL::INDEX16 & LowIndex, XTL::INDEX16 & HighIndex, XTL::INDEX16 * pIndexData, DWORD dwIndexCount)
+// Default implementation
+void WalkIndexBuffer_NoSIMD(XTL::INDEX16 & LowIndex, XTL::INDEX16 & HighIndex, XTL::INDEX16 * pIndexData, DWORD dwIndexCount)
 {
 	// Determine highest and lowest index in use 
 	LowIndex = pIndexData[0];
@@ -45,6 +25,7 @@ void WalkIndexBuffer(XTL::INDEX16 & LowIndex, XTL::INDEX16 & HighIndex, XTL::IND
 	}
 }
 
+//SSE 4.1 implementation
 void WalkIndexBuffer_SSE41(XTL::INDEX16 & LowIndex, XTL::INDEX16 & HighIndex, XTL::INDEX16 * pIndexData, DWORD dwIndexCount)
 {
 	// We can fit 8 ushorts into 128 bit SIMD registers
@@ -53,12 +34,13 @@ void WalkIndexBuffer_SSE41(XTL::INDEX16 & LowIndex, XTL::INDEX16 & HighIndex, XT
 
 	// Fallback to basic function if we can't even min / max 2 registers together
 	if (iterations < 2) {
-		WalkIndexBuffer(LowIndex, HighIndex, pIndexData, dwIndexCount);
+		WalkIndexBuffer_NoSIMD(LowIndex, HighIndex, pIndexData, dwIndexCount);
 		return;
 	}
 
-	__m128i *unalignedIndices = (__m128i*) pIndexData;\
-	__m128i min = _mm_set1_epi16(USHRT_MAX);
+	// Initialize mins and maxes
+	__m128i *unalignedIndices = (__m128i*) pIndexData;
+	__m128i min = _mm_set1_epi16(static_cast<short>(USHRT_MAX)); // cast as set1 only takes signed shorts
 	__m128i max = _mm_setzero_si128();
 
 	// Min / max over index data
@@ -71,13 +53,13 @@ void WalkIndexBuffer_SSE41(XTL::INDEX16 & LowIndex, XTL::INDEX16 & HighIndex, XT
 	// horizontal min
 	min = _mm_minpos_epu16(min);
 
-	// horizontal max (using minpos)
-	max = _mm_subs_epu16(_mm_set1_epi16(USHRT_MAX), max); //invert
+	// horizontal max (no maxpos, we invert and use minpos)
+	max = _mm_subs_epu16(_mm_set1_epi16(static_cast<short>(USHRT_MAX)), max); //invert
 	max = _mm_minpos_epu16(max);
 
 	// Get the min and max out
 	LowIndex = (XTL::INDEX16) _mm_cvtsi128_si32(min);
-	HighIndex = (XTL::INDEX16) USHRT_MAX - _mm_cvtsi128_si32(max);
+	HighIndex = (XTL::INDEX16) USHRT_MAX - _mm_cvtsi128_si32(max); // invert back
 
 	// Compare with the remaining values that didn't fit neatly into the SIMD registers
 	for (DWORD i = dwIndexCount - remainder; i < dwIndexCount; i++) {
@@ -89,4 +71,17 @@ void WalkIndexBuffer_SSE41(XTL::INDEX16 & LowIndex, XTL::INDEX16 & HighIndex, XT
 	}
 }
 
-// TODO AVX2, AVX512
+// TODO AVX2, AVX512 implementations
+
+// Detect SSE support to select real implementation on first call
+void(*WalkIndexBuffer)(XTL::INDEX16 &, XTL::INDEX16 &, XTL::INDEX16 *, DWORD) =
+[](XTL::INDEX16 &LowIndex, XTL::INDEX16 &HighIndex, XTL::INDEX16 *pIndexData, DWORD dwIndexCount)
+{
+	SimdCaps supports;
+	if (supports.SSE41())
+		WalkIndexBuffer = WalkIndexBuffer_SSE41;
+	else
+		WalkIndexBuffer = WalkIndexBuffer_NoSIMD;
+
+	WalkIndexBuffer(LowIndex, HighIndex, pIndexData, dwIndexCount);
+};

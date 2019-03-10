@@ -7053,7 +7053,7 @@ void XTL::CxbxDrawIndexed(CxbxDrawContext &DrawContext)
 	//Walk through index buffer
 	// Determine highest and lowest index in use :
 	INDEX16 LowIndex, HighIndex;
-	WalkIndexBuffer_SIMD(LowIndex, HighIndex, &(DrawContext.pIndexData[DrawContext.dwStartVertex]), DrawContext.dwVertexCount);
+	WalkIndexBuffer(LowIndex, HighIndex, &(DrawContext.pIndexData[DrawContext.dwStartVertex]), DrawContext.dwVertexCount);
 	VertexBufferConverter.Apply(&DrawContext, LowIndex);
 
 	if (DrawContext.XboxPrimitiveType == X_D3DPT_QUADLIST) {
@@ -7572,7 +7572,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVerticesUP)
 		else {
 			// Walk through the index buffer
 			INDEX16 LowIndex, HighIndex;
-			WalkIndexBuffer_SIMD(LowIndex, HighIndex, (INDEX16*)pIndexData, DrawContext.dwVertexCount);
+			WalkIndexBuffer(LowIndex, HighIndex, (INDEX16*)pIndexData, DrawContext.dwVertexCount);
 
 			// LOG_TEST_CASE("DrawIndexedPrimitiveUP"); // Test-case : Burnout, Namco Museum 50th Anniversary
 			HRESULT hRet = g_pD3DDevice->DrawIndexedPrimitiveUP(
