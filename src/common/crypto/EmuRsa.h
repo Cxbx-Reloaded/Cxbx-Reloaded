@@ -17,7 +17,7 @@
 // *  If not, write to the Free Software Foundation, Inc.,
 // *  59 Temple Place - Suite 330, Bostom, MA 02111-1307, USA.
 // *
-// *  (c) 2018 ergo720
+// *  (c) 2018-2019 ergo720
 // *
 // *  All rights reserved
 // *
@@ -28,27 +28,26 @@
 
 #pragma pack(4)
 
-typedef struct _RSA_PUBLIC_KEY
+typedef union _RSA_PUBLIC_KEY
 {
-	union
-	{
-		unsigned char Default[284];
-		struct {
-			char Magic[4];  		     // "RSA1"
-			unsigned int Bloblen; 		 // 264 (Modulus + Exponent + Modulussize)
-			unsigned char Bitlen[4];  	 // 2048
-			unsigned int ModulusSize;	 // 255 (bytes in the Modulus)
-			unsigned char Exponent[4];
-			unsigned char Modulus[256];  // Bit endian style
-			unsigned char Unknown[8];    // ?
-		}KeyData;
-	};
+	unsigned char Default[284];
+	struct {
+		char Magic[4];               // "RSA1"
+		unsigned int Bloblen;        // 264 (Modulus + Exponent + Modulussize)
+		unsigned char Bitlen[4];     // 2048
+		unsigned int ModulusSize;    // 255 (bytes in the Modulus)
+		unsigned char Exponent[4];   // Public exponent
+		unsigned char Modulus[256];  // Bit endian style
+		unsigned char Unknown[8];    // ?
+	}KeyData;
 } RSA_PUBLIC_KEY;
 
 #pragma pack()
 
-void ModExp(unsigned char* a_number, const unsigned char* b_number, unsigned int b_len, const unsigned char* c_number, unsigned int c_len, const unsigned char* d_number, unsigned int d_len);
-void RSAdecrypt(const unsigned char* c_number, unsigned char* cryptbuffer, RSA_PUBLIC_KEY key);
-bool Verifyhash(const unsigned char* hash, const unsigned char* decryptBuffer, RSA_PUBLIC_KEY key);
+void init_tom_lib();
+bool xbox_exp_mod(unsigned char* pA, const unsigned char* pB, const unsigned char* pC, const unsigned char* pD,
+	size_t b_size, size_t c_size, size_t d_size);
+bool xbox_rsa_public(const unsigned char* in_buf, unsigned char* out_buf, RSA_PUBLIC_KEY key);
+bool verify_hash(const unsigned char* hash, const unsigned char* decryptBuffer, RSA_PUBLIC_KEY key);
 
 #endif

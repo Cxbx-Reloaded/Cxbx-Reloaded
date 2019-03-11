@@ -780,12 +780,14 @@ bool Xbe::CheckXbeSignature()
 {
 	// Workaround for nxdk (and possibly oxdk?): xbe's built with nxdk have the digital signature set to all zeros, which will lead
 	// to a crash during its decryption in RSAdecrypt. Detect this condition and skip the check if true
-	{
-		UCHAR Dummy[256] = { 0 };
-		if (memcmp(m_Header.pbDigitalSignature, Dummy, 256) == 0) {
-			return false;
-		}
-	}
+	//{
+	//	UCHAR Dummy[256] = { 0 };
+	//	if (memcmp(m_Header.pbDigitalSignature, Dummy, 256) == 0) {
+	//		return false;
+	//	}
+	//}
+
+	init_tom_lib();
 
 	DWORD HeaderDigestSize = m_Header.dwSizeofHeaders - (sizeof(m_Header.dwMagic) + sizeof(m_Header.pbDigitalSignature));
 	UCHAR SHADigest[A_SHA_DIGEST_LEN];
@@ -800,11 +802,12 @@ bool Xbe::CheckXbeSignature()
 	// TODO: memcpy(keys[3].Default, (void*)xboxkrnl::XePublicKeyDataDebug, 284);
 
 	for (int i = 0; i < keys.size(); i++) {
-		RSAdecrypt(m_Header.pbDigitalSignature, crypt_buffer, keys[i]);
-		if (Verifyhash(SHADigest, crypt_buffer, keys[i])) {
-			// Load the successful key into XboxKrnl::XePublicKeyData for application use
-			memcpy(xboxkrnl::XePublicKeyData, keys[i].Default, 284);
-			return true; // success
+		if (xbox_rsa_public(m_Header.pbDigitalSignature, crypt_buffer, keys[i])) {
+			if (verify_hash(SHADigest, crypt_buffer, keys[i])) {
+				// Load the successful key into XboxKrnl::XePublicKeyData for application use
+				memcpy(xboxkrnl::XePublicKeyData, keys[i].Default, 284);
+				return true; // success
+			}
 		}
 	}
 

@@ -22,6 +22,7 @@
 // *  (c) 2002-2003 Aaron Robinson <caustik@caustik.com>
 // *  (c) 2016 Patrick van Logchem <pvanlogchem@gmail.com>
 // *  (c) 2019 Jannik Vogel
+// *  (c) 2018-2019 ergo720
 // *
 // *  All rights reserved
 // *
@@ -214,12 +215,12 @@ xboxkrnl::ULONG NTAPI JumpedModExp
 	xboxkrnl::ULONG dwN
 )
 {
-	ULONG ret = 1;
-
 	unsigned int len = dwN * 4;
-	ModExp((unsigned char*)pA, (const unsigned char*)pB, len, (const unsigned char*)pC, len, (const unsigned char*)pD, len);
+	if (xbox_exp_mod((unsigned char*)pA, (const unsigned char*)pB, (const unsigned char*)pC, (const unsigned char*)pD, len, len, len)) {
+		return 1;
+	}
 
-	return ret;
+	return 0;
 }
 
 xboxkrnl::VOID NTAPI JumpedDESKeyParity

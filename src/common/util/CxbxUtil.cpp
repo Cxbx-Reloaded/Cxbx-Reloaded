@@ -28,6 +28,33 @@
 // Acknowledgment: some of the functions present are from XQEMU (GPLv2)
 // https://xqemu.com/
 
+// swap_endianess is extracted from mbedtls_mpi_read_binary used in the file bignum.h of ReactOS
+
+/**
+* \file bignum.h
+*
+* \brief  Multi-precision integer library
+*
+*  Copyright (C) 2006-2015, ARM Limited, All Rights Reserved
+*  SPDX-License-Identifier: GPL-2.0
+*
+*  This program is free software; you can redistribute it and/or modify
+*  it under the terms of the GNU General Public License as published by
+*  the Free Software Foundation; either version 2 of the License, or
+*  (at your option) any later version.
+*
+*  This program is distributed in the hope that it will be useful,
+*  but WITHOUT ANY WARRANTY; without even the implied warranty of
+*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+*  GNU General Public License for more details.
+*
+*  You should have received a copy of the GNU General Public License along
+*  with this program; if not, write to the Free Software Foundation, Inc.,
+*  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+*
+*  This file is part of mbed TLS (https://tls.mbed.org)
+*/
+
 // The intent of this file is to add general functions which are not kernel specific (for those CxbxKrnl.h should be used instead)
 
 #include "common\util\CxbxUtil.h"
@@ -233,5 +260,21 @@ void unix2dos(std::string& string)
 		}
 		string.insert(position, 1, '\r');
 		position += 2;
+	}
+}
+
+void swap_endianess(const unsigned char* in_buf, unsigned char* out_buf, size_t size)
+{
+	size_t i, j, n;
+	uint32_t* out_buf_uint = (uint32_t*)out_buf;
+
+	memset(out_buf_uint, 0, size);
+
+	for (n = 0; n < size; n++)
+		if (in_buf[n] != 0)
+			break;
+
+	for (i = size, j = 0; i > n; i--, j++) {
+		out_buf_uint[j / 4] |= ((uint32_t)in_buf[i - 1]) << ((j % 4) << 3);
 	}
 }

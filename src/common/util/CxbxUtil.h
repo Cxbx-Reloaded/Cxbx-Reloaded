@@ -86,4 +86,6 @@ static uint32 RoundUp(uint32 dwValue, uint32 dwMult)
 	return dwValue + dwMult - remainder;
 }
 
+void swap_endianess(const unsigned char* in_buf, unsigned char* out_buf, size_t size);
+
 #endif
