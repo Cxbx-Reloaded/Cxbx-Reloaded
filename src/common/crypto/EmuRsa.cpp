@@ -28,7 +28,7 @@
 // verify_hash, RSApkcs1paddingtable and RSA_PUBLIC_KEY are from the
 // file xboxlib.c of the xbedump tool (and that file only, GPLv2).
 // https://github.com/XboxDev/xbedump/blob/master/xboxlib.c
-// swap_endianess is extracted from mbedtls_mpi_read_binary used in the file bignum.h of ReactOS
+// mbedtls_swap_endianness is extracted from mbedtls_mpi_read_binary used in the file bignum.h of ReactOS
 // https://github.com/reactos/reactos
 
 // xboxlib.c license
@@ -83,7 +83,7 @@ const unsigned char RSApkcs1paddingtable[3][16] = {
 };
 
 // Move this to CxbxUtil.h if it's ever needed in other places of the emu as well
-void swap_endianess(const unsigned char* in_buf, unsigned char* out_buf, size_t size)
+void mbedtls_swap_endianness(const unsigned char* in_buf, unsigned char* out_buf, size_t size)
 {
 	size_t i, j, n;
 	uint32_t* out_buf_uint = (uint32_t*)out_buf;
@@ -139,9 +139,9 @@ bool xbox_rsa_public(const unsigned char* in_buf, unsigned char* out_buf, RSA_PU
 	unsigned char exp_be[4] = { 0 };
 
 	// We must swap the data since libtom expects the data to be in big endian
-	swap_endianess(key.KeyData.Modulus, modulus_be, 256);
-	swap_endianess(key.KeyData.Exponent, exp_be, 4);
-	swap_endianess(in_buf, in_buf_be, 256);
+	mbedtls_swap_endianness (key.KeyData.Modulus, modulus_be, 256);
+	mbedtls_swap_endianness (key.KeyData.Exponent, exp_be, 4);
+	mbedtls_swap_endianness (in_buf, in_buf_be, 256);
 	if (rsa_set_key(modulus_be, 256, exp_be, 4, NULL, 0, &tom_key) != CRYPT_OK) {
 		EmuLog(LOG_LEVEL::WARNING, "Failed to load rsa key");
 		return false;
@@ -150,7 +150,7 @@ bool xbox_rsa_public(const unsigned char* in_buf, unsigned char* out_buf, RSA_PU
 		EmuLog(LOG_LEVEL::WARNING, "rsa_exptmod failed");
 		return false;
 	}
-	swap_endianess(out_buf_be, out_buf, 256);
+	mbedtls_swap_endianness(out_buf_be, out_buf, 256);
 	return true;
 }
 
