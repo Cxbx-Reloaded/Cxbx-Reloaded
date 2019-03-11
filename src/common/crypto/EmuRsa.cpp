@@ -28,6 +28,8 @@
 // verify_hash, RSApkcs1paddingtable and RSA_PUBLIC_KEY are from the
 // file xboxlib.c of the xbedump tool (and that file only, GPLv2).
 // https://github.com/XboxDev/xbedump/blob/master/xboxlib.c
+// swap_endianess is extracted from mbedtls_mpi_read_binary used in the file bignum.h of ReactOS
+// https://github.com/reactos/reactos
 
 // xboxlib.c license
 /***************************************************************************
@@ -38,6 +40,31 @@
 *   (at your option) any later version.                                   *
 *                                                                         *
 ***************************************************************************/
+
+/**
+* \file bignum.h
+*
+* \brief  Multi-precision integer library
+*
+*  Copyright (C) 2006-2015, ARM Limited, All Rights Reserved
+*  SPDX-License-Identifier: GPL-2.0
+*
+*  This program is free software; you can redistribute it and/or modify
+*  it under the terms of the GNU General Public License as published by
+*  the Free Software Foundation; either version 2 of the License, or
+*  (at your option) any later version.
+*
+*  This program is distributed in the hope that it will be useful,
+*  but WITHOUT ANY WARRANTY; without even the implied warranty of
+*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+*  GNU General Public License for more details.
+*
+*  You should have received a copy of the GNU General Public License along
+*  with this program; if not, write to the Free Software Foundation, Inc.,
+*  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+*
+*  This file is part of mbed TLS (https://tls.mbed.org)
+*/
 
 #define LOG_PREFIX CXBXR_MODULE::RSA
 
@@ -54,6 +81,23 @@ const unsigned char RSApkcs1paddingtable[3][16] = {
 	{ 0x0D, 0x14,0x04,0x1A,0x02,0x03,0x0E,0x2B,0x05,0x06,0x07,0x30,0x1F,0x30,0x00,0x00 },
 	{ 0x00, 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00 }
 };
+
+// Move this to CxbxUtil.h if it's ever needed in other places of the emu as well
+void swap_endianess(const unsigned char* in_buf, unsigned char* out_buf, size_t size)
+{
+	size_t i, j, n;
+	uint32_t* out_buf_uint = (uint32_t*)out_buf;
+
+	memset(out_buf_uint, 0, size);
+
+	for (n = 0; n < size; n++)
+		if (in_buf[n] != 0)
+			break;
+
+	for (i = size, j = 0; i > n; i--, j++) {
+		out_buf_uint[j / 4] |= ((uint32_t)in_buf[i - 1]) << ((j % 4) << 3);
+	}
+}
 
 void init_tom_lib()
 {
