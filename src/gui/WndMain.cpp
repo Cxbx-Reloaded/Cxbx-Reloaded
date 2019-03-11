@@ -2233,7 +2233,7 @@ void WndMain::StartEmulation(HWND hwndParent, DebuggerState LocalDebuggerState /
             DebuggerMonitorClose();
 
             // TODO: Set a configuration variable for this. For now it will be within the same folder as Cxbx.exe
-            std::string szProcDbgArgsBuffer = "CxbxDebugger.exe " + szProcArgsBuffer;
+            std::string szProcDbgArgsBuffer = "cxbxr-debugger.exe " + szProcArgsBuffer;
 
             if (!XTL::CxbxExec(szProcDbgArgsBuffer, &m_hDebuggerProc, true)) {
                 MessageBox(m_hwnd, "Failed to start emulation with the debugger.\n\nYou will need to build CxbxDebugger manually.", "Cxbx-Reloaded", MB_ICONSTOP | MB_OK);
