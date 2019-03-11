@@ -13,3 +13,11 @@
 [submodule "import/simpleini"]
 	path = import/simpleini
 	url = https://github.com/brofield/simpleini
+[submodule "import/libtommath"]
+	path = import/libtommath
+	url = https://github.com/libtom/libtommath
+	branch = master
+[submodule "import/libtomcrypt"]
+	path = import/libtomcrypt
+	url = https://github.com/libtom/libtomcrypt
+	branch = master
