@@ -67,7 +67,7 @@ void init_tom_lib()
 }
 
 bool xbox_exp_mod(unsigned char* pA, const unsigned char* pB, const unsigned char* pC, const unsigned char* pD,
-	size_t b_size, size_t c_size, size_t d_size)
+	size_t a_size, size_t b_size, size_t c_size, size_t d_size)
 {
 	mp_int a, b, c, d;
 	CHK_MP_RET(mp_init(&a));
@@ -80,7 +80,7 @@ bool xbox_exp_mod(unsigned char* pA, const unsigned char* pB, const unsigned cha
 
 	CHK_MP_RET(mp_exptmod(&b, &c, &d, &a));
 
-	CHK_MP_RET(mp_export(pA, NULL, -1, 4, -1, 0, &a));
+	CHK_MP_RET(mp_export(pA, NULL, -1, a_size, 0, 0, &a));
 
 	return true;
 }

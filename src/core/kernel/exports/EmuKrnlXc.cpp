@@ -216,7 +216,7 @@ xboxkrnl::ULONG NTAPI JumpedModExp
 )
 {
 	unsigned int len = dwN * 4;
-	if (xbox_exp_mod((unsigned char*)pA, (const unsigned char*)pB, (const unsigned char*)pC, (const unsigned char*)pD, len, len, len)) {
+	if (xbox_exp_mod((unsigned char*)pA, (const unsigned char*)pB, (const unsigned char*)pC, (const unsigned char*)pD, len, len, len, len)) {
 		return 1;
 	}
 

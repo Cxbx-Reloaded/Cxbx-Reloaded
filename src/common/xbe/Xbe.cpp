@@ -792,7 +792,7 @@ bool Xbe::CheckXbeSignature()
 	memcpy(keys[2].Default, (void*)xboxkrnl::XePublicKeyDataChihiroBoot, 284);
 	// TODO: memcpy(keys[3].Default, (void*)xboxkrnl::XePublicKeyDataDebug, 284);
 
-	for (int i = 0; i < keys.size(); i++) {
+	for (unsigned int i = 0; i < keys.size(); i++) {
 		if (xbox_rsa_public(m_Header.pbDigitalSignature, crypt_buffer, keys[i])) {
 			if (verify_hash(SHADigest, crypt_buffer, keys[i])) {
 				// Load the successful key into XboxKrnl::XePublicKeyData for application use

@@ -46,7 +46,7 @@ typedef union _RSA_PUBLIC_KEY
 
 void init_tom_lib();
 bool xbox_exp_mod(unsigned char* pA, const unsigned char* pB, const unsigned char* pC, const unsigned char* pD,
-	size_t b_size, size_t c_size, size_t d_size);
+	size_t a_size, size_t b_size, size_t c_size, size_t d_size);
 bool xbox_rsa_public(const unsigned char* in_buf, unsigned char* out_buf, RSA_PUBLIC_KEY key);
 bool verify_hash(const unsigned char* hash, const unsigned char* decryptBuffer, RSA_PUBLIC_KEY key);
 
