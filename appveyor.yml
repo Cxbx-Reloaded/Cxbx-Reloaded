@@ -12,15 +12,25 @@ configuration:
   - Release
   - Debug
 
+clone_depth: 1
+
+before_build:
+  - cmd: |-
+      git submodule update --init --recursive
+      mkdir build
+      cd build
+      cmake .. -G "Visual Studio 15 2017" -A Win32
+
 build_script:
-  - cmd: appveyor-build.bat %CONFIGURATION%
+  - cmd: cmake --build . --config %CONFIGURATION%
 
 after_build:
-  - cmd: appveyor-gather.bat %CONFIGURATION%
+  - cmd: |-
+      cd bin\%CONFIGURATION%
+      7z u %APPVEYOR_BUILD_FOLDER%\export\%CONFIGURATION%.zip ..\..\..\COPYING ..\..\..\README.md
+      7z u %APPVEYOR_BUILD_FOLDER%\export\%CONFIGURATION%.zip Cxbx.exe glew32.dll subhook.dll CxbxVSBC.dll
+      7z u %APPVEYOR_BUILD_FOLDER%\export\%CONFIGURATION%.zip cxbxr-debugger.exe capstone.dll cs_x86.dll
 
 artifacts:
   - path: export/*.zip
 
-install:
-  # Git clone happens between init and install
-  - cmd: git submodule update --init --recursive
