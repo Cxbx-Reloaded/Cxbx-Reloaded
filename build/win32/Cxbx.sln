@@ -4,7 +4,6 @@ VisualStudioVersion = 15.0.27130.2020
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Cxbx", "Cxbx.vcxproj", "{E7A72D3D-5810-4078-A243-348B59726365}"
 	ProjectSection(ProjectDependencies) = postProject
-		{81CE8DAF-EBB2-4761-8E45-B71ABCCA8C68} = {81CE8DAF-EBB2-4761-8E45-B71ABCCA8C68}
 		{B8D9AFC2-B38F-4714-846D-8A2754F076C9} = {B8D9AFC2-B38F-4714-846D-8A2754F076C9}
 		{2171C0E8-4915-49B9-AC23-A484FA08C126} = {2171C0E8-4915-49B9-AC23-A484FA08C126}
 	EndProjectSection
@@ -23,8 +22,6 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Debugger", "Debugger", "{174CB14E-34E3-422F-9A99-DBE88FF0EFBB}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "XbSymbolDatabase", "..\..\import\XbSymbolDatabase\xbSymbolDatabase.vcxproj", "{B8D9AFC2-B38F-4714-846D-8A2754F076C9}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SDL2", "..\..\import\SDL2\VisualC\SDL\SDL.vcxproj", "{81CE8DAF-EBB2-4761-8E45-B71ABCCA8C68}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -56,10 +53,6 @@ Global
 		{B8D9AFC2-B38F-4714-846D-8A2754F076C9}.Debug|Win32.Build.0 = Debug|Win32
 		{B8D9AFC2-B38F-4714-846D-8A2754F076C9}.Release|Win32.ActiveCfg = Release|Win32
 		{B8D9AFC2-B38F-4714-846D-8A2754F076C9}.Release|Win32.Build.0 = Release|Win32
-		{81CE8DAF-EBB2-4761-8E45-B71ABCCA8C68}.Debug|Win32.ActiveCfg = Debug|Win32
-		{81CE8DAF-EBB2-4761-8E45-B71ABCCA8C68}.Debug|Win32.Build.0 = Debug|Win32
-		{81CE8DAF-EBB2-4761-8E45-B71ABCCA8C68}.Release|Win32.ActiveCfg = Release|Win32
-		{81CE8DAF-EBB2-4761-8E45-B71ABCCA8C68}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
