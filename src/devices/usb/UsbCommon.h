@@ -25,8 +25,32 @@
 // *
 // ******************************************************************
 
-// Acknowledgment: some of the functions present are from XQEMU (GPLv2)
+// Acknowledgment: some these functions are from the QEMU usb api used in XQEMU (GPLv2)
 // https://xqemu.com/
+
+/*
+* QEMU USB API
+*
+* Copyright (c) 2005 Fabrice Bellard
+*
+* Permission is hereby granted, free of charge, to any person obtaining a copy
+* of this software and associated documentation files (the "Software"), to deal
+* in the Software without restriction, including without limitation the rights
+* to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+* copies of the Software, and to permit persons to whom the Software is
+* furnished to do so, subject to the following conditions:
+*
+* The above copyright notice and this permission notice shall be included in
+* all copies or substantial portions of the Software.
+*
+* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+* THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+* LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+* OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+* THE SOFTWARE.
+*/
 
 #ifndef USBCOMMON_H_
 #define USBCOMMON_H_
@@ -183,7 +207,7 @@ struct USBDescEndpoint {
     uint8_t                   is_audio;         // has bRefresh + bSynchAddress
     uint8_t*                  extra;            // class-specific descriptors (if any) associated with this endpoint
 
-	// Dropped from XQEMU the parameters bMaxBurst, bmAttributes_super and wBytesPerInterval because those are only defined for
+	// Dropped from QEMU the parameters bMaxBurst, bmAttributes_super and wBytesPerInterval because those are only defined for
 	// superspeed (usb 3.0) devices in the superspeed endpoint companion
 };
 
@@ -249,7 +273,7 @@ struct USBDesc {
 #pragma pack(1)
 
 // Binary representation of the descriptors
-// Dropped from XQEMU usb 2.0 and 3.0 only descriptors
+// Dropped from QEMU usb 2.0 and 3.0 only descriptors
 struct USBDescriptor {
 	uint8_t                   bLength;
 	uint8_t                   bDescriptorType;

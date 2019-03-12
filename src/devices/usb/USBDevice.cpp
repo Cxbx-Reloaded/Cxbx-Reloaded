@@ -25,8 +25,34 @@
 // *
 // ******************************************************************
 
-// Acknowledgment: XQEMU (GPLv2)
+// Acknowledgment: QEMU usb subsystem as used in XQEMU (GPLv2)
 // https://xqemu.com/
+
+/*
+* QEMU USB emulation
+*
+* Copyright (c) 2005 Fabrice Bellard
+*
+* 2008 Generic packet handler rewrite by Max Krasnyansky
+*
+* Permission is hereby granted, free of charge, to any person obtaining a copy
+* of this software and associated documentation files (the "Software"), to deal
+* in the Software without restriction, including without limitation the rights
+* to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+* copies of the Software, and to permit persons to whom the Software is
+* furnished to do so, subject to the following conditions:
+*
+* The above copyright notice and this permission notice shall be included in
+* all copies or substantial portions of the Software.
+*
+* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+* THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+* LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+* OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+* THE SOFTWARE.
+*/
 
 #define _XBOXKRNL_DEFEXTRN_
 
@@ -588,7 +614,7 @@ void USBDevice::USB_EPsetMaxPacketSize(XboxDeviceState* dev, int pid, int ep, ui
 {
 	USBEndpoint* uep = USB_GetEP(dev, pid, ep);
 
-	// Dropped from XQEMU the calculation max_packet_size = size * microframes since that's only true
+	// Dropped from QEMU the calculation max_packet_size = size * microframes since that's only true
 	// for high speed (usb 2.0) devices
 
 	uep->MaxPacketSize = raw & 0x7FF;
@@ -658,7 +684,7 @@ void USBDevice::USB_EpReset(XboxDeviceState* dev)
 }
 
 /*
-* From XQEMU:
+* From QEMU:
 * This function creates a serial number for a usb device.
 * The serial number should:
 *   (a) Be unique within the emulator.
@@ -870,7 +896,7 @@ int USBDevice::USBDesc_HandleControl(XboxDeviceState* dev, USBPacket *p,
 		case DeviceRequest | USB_REQ_GET_STATUS: {
 			// From the USB 1.1 standard: "This request returns the status for the specified recipient. The Recipient bits of the bmRequestType field
 			// specify the desired recipient. The data returned is the current status of the specified recipient."
-			// From XQEMU:
+			// From QEMU:
 			/* Default state: Device behavior when this request is received while
 			*                the device is in the Default state is not specified.
 			* We return the same value that a configured device would return if
@@ -950,7 +976,7 @@ int USBDevice::USBDesc_HandleStandardGetDescriptor(XboxDeviceState* dev, USBPack
 	int ret = -1;
 	int flags = 0;
 
-	// Dropped from XQEMU bcdUSB check for usb 3.0 devices
+	// Dropped from QEMU bcdUSB check for usb 3.0 devices
 
 	// From the USB 1.1 standard: "The standard request to a device supports three types of descriptors: DEVICE, CONFIGURATION, and STRING."
 
@@ -975,7 +1001,7 @@ int USBDevice::USBDesc_HandleStandardGetDescriptor(XboxDeviceState* dev, USBPack
 			break;
 		}
 
-		// Dropped from XQEMU descriptor types USB_DT_DEVICE_QUALIFIER (6), USB_DT_OTHER_SPEED_CONFIG (7) -> usb 2.0 only and reserved in usb 3.0,
+		// Dropped from QEMU descriptor types USB_DT_DEVICE_QUALIFIER (6), USB_DT_OTHER_SPEED_CONFIG (7) -> usb 2.0 only and reserved in usb 3.0,
 		// USB_DT_BOS (15) and USB_DT_DEBUG (10) -> usb 3.0 only
 
 		default:
@@ -1147,7 +1173,7 @@ int USBDevice::USB_ReadEndpointDesc(const USBDescEndpoint* ep, int flags, uint8_
 		d->u.endpoint.bSynchAddress = ep->bSynchAddress;
 	}
 
-	// Dropped from XQEMU the reading of the SuperSpeed Endpoint Companion descriptors since those are usb 3.0 specific
+	// Dropped from QEMU the reading of the SuperSpeed Endpoint Companion descriptors since those are usb 3.0 specific
 
 	if (ep->extra) {
 		std::memcpy(dest + bLength, ep->extra, extralen);

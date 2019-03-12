@@ -30,6 +30,49 @@
 // Acknowledgment (timer functions): ReactOS (GPLv2)
 // https://github.com/reactos/reactos
 
+// KiCheckTimerTable, KiTimerExpiration, KiTimerListExpire
+/*
+* PROJECT:         ReactOS Kernel
+* LICENSE:         GPL - See COPYING in the top level directory
+* FILE:            ntoskrnl/ke/dpc.c
+* PURPOSE:         Deferred Procedure Call (DPC) Support
+* PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
+*                  Philip Susi (phreak@iag.net)
+*                  Eric Kohl
+*/
+
+// KiInsertTreeTimer, KiInsertTimerTable, KiSignalTimer, KiCompleteTimer
+/*
+* PROJECT:         ReactOS Kernel
+* LICENSE:         GPL - See COPYING in the top level directory
+* FILE:            ntoskrnl/ke/timerobj.c
+* PURPOSE:         Handle Kernel Timers (Kernel-part of Executive Timers)
+* PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
+*/
+
+// KiComputeDueTime, KiComputeTimerTableIndex, KxInsertTimer, KxRemoveTreeTimer, KiRemoveEntryTimer
+/*
+* PROJECT:         ReactOS Kernel
+* LICENSE:         GPL - See COPYING in the top level directory
+* FILE:            ntoskrnl/include/internal/ke_x.h
+* PURPOSE:         Internal Inlined Functions for the Kernel
+* PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
+*/
+
+// COPYING file:
+/*
+GNU GENERAL PUBLIC LICENSE
+Version 2, June 1991
+
+ReactOS may be used, runtime linked, and distributed with non-free software
+(meaning that such software has no obligations to open-source, or render
+free, their non-free code) such as commercial device drivers and commercial
+applications. This exception does not alter any other responsibilities of
+the licensee under the GPL (meaning that such software must still obey
+the GPL for the free ("open-sourced") code that has been integrated into
+the said software).
+*/
+
 // Changed from ReactOS: slight changes to the Hand parameter usage
 
 #define _XBOXKRNL_DEFEXTRN_

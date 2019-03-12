@@ -28,7 +28,11 @@
 // Acknowledgment:
 // The core logic of the VMManager class is based on the virtual page management code of the citra emulator (GPLv2 license),
 // with heavy changes and the addition of real page tables to better suit Cxbx-Reloaded and Xbox emulation.
-// Citra website: https://citra-emu.org/
+// https://github.com/citra-emu/citra
+
+// Copyright 2015 Citra Emulator Project
+// Licensed under GPLv2 or any later version
+// Refer to the license.txt file included.
 
 
 #define LOG_PREFIX CXBXR_MODULE::VMEM

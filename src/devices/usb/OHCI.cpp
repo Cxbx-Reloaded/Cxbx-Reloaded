@@ -25,8 +25,28 @@
 // *
 // ******************************************************************
 
-// Acknowledgment: XQEMU (GPLv2)
+// Acknowledgment: QEMU ohci subsystem as used in XQEMU (GPLv2)
 // https://xqemu.com/
+
+/*
+* QEMU USB OHCI Emulation
+* Copyright (c) 2004 Gianni Tedesco
+* Copyright (c) 2006 CodeSourcery
+* Copyright (c) 2006 Openedhand Ltd.
+*
+* This library is free software; you can redistribute it and/or
+* modify it under the terms of the GNU Lesser General Public
+* License as published by the Free Software Foundation; either
+* version 2 of the License, or (at your option) any later version.
+*
+* This library is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+* Lesser General Public License for more details.
+*
+* You should have received a copy of the GNU Lesser General Public
+* License along with this library; if not, see <http://www.gnu.org/licenses/>.
+*/
 
 #define _XBOXKRNL_DEFEXTRN_
 
@@ -287,7 +307,7 @@ void OHCI::OHCI_FrameBoundaryWorker()
 		// From the OHCI standard: "The head pointer used for a particular frame is determined by using the last 5 bits of the
 		// Frame Counter as an offset into the interrupt array within the HCCA."
 		int n = m_Registers.HcFmNumber & 0x1F;
-		OHCI_ServiceEDlist(hcca.HccaInterrruptTable[n], 0); // dropped little -> big endian conversion from XQEMU
+		OHCI_ServiceEDlist(hcca.HccaInterrruptTable[n], 0); // dropped little -> big endian conversion from QEMU
 	}
 
 	// Cancel all pending packets if either of the lists has been disabled
@@ -314,7 +334,7 @@ void OHCI::OHCI_FrameBoundaryWorker()
 
 	// Increment frame number
 	m_Registers.HcFmNumber = (m_Registers.HcFmNumber + 1) & 0xFFFF; // prevent overflow
-	hcca.HccaFrameNumber = m_Registers.HcFmNumber; // dropped big -> little endian conversion from XQEMU
+	hcca.HccaFrameNumber = m_Registers.HcFmNumber; // dropped big -> little endian conversion from QEMU
 
 	if (m_DoneCount == 0 && !(m_Registers.HcInterruptStatus & OHCI_INTR_WD)) {
 		if (!m_Registers.HcDoneHead) {
@@ -331,7 +351,7 @@ void OHCI::OHCI_FrameBoundaryWorker()
 			m_Registers.HcDoneHead |= 1;
 		}
 
-		hcca.HccaDoneHead = m_Registers.HcDoneHead; // dropped big -> little endian conversion from XQEMU
+		hcca.HccaDoneHead = m_Registers.HcDoneHead; // dropped big -> little endian conversion from QEMU
 		m_Registers.HcDoneHead = 0;
 		m_DoneCount = 7;
 		OHCI_SetInterrupt(OHCI_INTR_WD);
@@ -658,7 +678,7 @@ int OHCI::OHCI_ServiceTD(OHCI_ED* Ed)
 	}
 	else {
 		if (m_AsyncTD) {
-			// From XQEMU: "??? The hardware should allow one active packet per endpoint.
+			// From QEMU: "??? The hardware should allow one active packet per endpoint.
 			// We only allow one active packet per controller. This should be sufficient
 			// as long as devices respond in a timely manner."
 			DBG_PRINTF("too many pending packets\n");
@@ -826,7 +846,7 @@ void OHCI::OHCI_StateReset()
 	m_Registers.HcDoneHead = 0;
 
 	m_Registers.HcFmInterval = 0;
-	m_Registers.HcFmInterval |= (0x2778 << 16); // TBD according to the standard, using what XQEMU sets (FSLargestDataPacket)
+	m_Registers.HcFmInterval |= (0x2778 << 16); // TBD according to the standard, using what QEMU sets (FSLargestDataPacket)
 	m_Registers.HcFmInterval |= 0x2EDF; // bit-time of a frame. 1 frame = 1 ms (FrameInterval)
 	m_Registers.HcFmRemaining = 0;
 	m_Registers.HcFmNumber = 0;
@@ -1404,7 +1424,7 @@ int OHCI::OHCI_PortSetIfConnected(int i, uint32_t Value)
 	if (!(m_Registers.RhPort[i].HcRhPortStatus & OHCI_PORT_CCS)) {
 		m_Registers.RhPort[i].HcRhPortStatus |= OHCI_PORT_CSC;
 		if (m_Registers.HcRhStatus & OHCI_RHS_DRWE) {
-			// from XQEMU: TODO, CSC is a wakeup event
+			// from QEMU: TODO, CSC is a wakeup event
 		}
 		return 0;
 	}
