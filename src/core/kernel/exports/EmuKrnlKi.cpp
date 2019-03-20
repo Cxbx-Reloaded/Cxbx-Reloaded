@@ -135,6 +135,7 @@ xboxkrnl::VOID xboxkrnl::KiClockIsr(
 	LARGE_INTEGER InterruptTime;
 	LARGE_INTEGER HostSystemTime;
 	ULONG Hand;
+	DWORD OldKeTickCount;
 
 	OldIrql = KfRaiseIrql(CLOCK_LEVEL);
 
@@ -156,6 +157,7 @@ xboxkrnl::VOID xboxkrnl::KiClockIsr(
 	KeSystemTime.High1Time = HostSystemTime.u.HighPart;
 
 	// Update the tick counter
+	OldKeTickCount = KeTickCount;
 	KeTickCount += ScalingFactor;
 
 	// Because this function must be fast to continuously update the kernel clocks, if somebody else is currently
@@ -166,7 +168,7 @@ xboxkrnl::VOID xboxkrnl::KiClockIsr(
 		Hand = KeTickCount & (TIMER_TABLE_SIZE - 1);
 		if (KiTimerTableListHead[Hand].Entry.Flink != &KiTimerTableListHead[Hand].Entry &&
 			(ULONGLONG)InterruptTime.QuadPart >= KiTimerTableListHead[Hand].Time.QuadPart) {
-			KeInsertQueueDpc(&KiTimerExpireDpc, (PVOID)&KeTickCount, 0);
+			KeInsertQueueDpc(&KiTimerExpireDpc, (PVOID)OldKeTickCount, 0);
 		}
 		KiTimerMtx.Acquired = false;
 		KiTimerMtx.Mtx.unlock();
