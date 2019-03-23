@@ -40,7 +40,7 @@ void WalkIndexBuffer_SSE41(XTL::INDEX16 & LowIndex, XTL::INDEX16 & HighIndex, XT
 
 	// Initialize mins and maxes
 	__m128i *unalignedIndices = (__m128i*) pIndexData;
-	__m128i min = _mm_set1_epi16(static_cast<short>(USHRT_MAX)); // cast as set1 only takes signed shorts
+	__m128i min = _mm_set1_epi16((short)(USHRT_MAX)); // cast as set1 only takes signed shorts
 	__m128i max = _mm_setzero_si128();
 
 	// Min / max over index data
@@ -54,7 +54,7 @@ void WalkIndexBuffer_SSE41(XTL::INDEX16 & LowIndex, XTL::INDEX16 & HighIndex, XT
 	min = _mm_minpos_epu16(min);
 
 	// horizontal max (no maxpos, we invert and use minpos)
-	max = _mm_subs_epu16(_mm_set1_epi16(static_cast<short>(USHRT_MAX)), max); //invert
+	max = _mm_subs_epu16(_mm_set1_epi16((short)(USHRT_MAX)), max); //invert
 	max = _mm_minpos_epu16(max);
 
 	// Get the min and max out
