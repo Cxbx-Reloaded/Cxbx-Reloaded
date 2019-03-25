@@ -233,201 +233,206 @@ void ShowEepromConfig(HWND hwnd)
 	DialogBox(GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_EEPROM_CFG), hwnd, DlgEepromConfigProc);
 }
 
+static void RefreshEepromDialog(HWND hWndDlg)
+{
+	int offset;
+	int starting_offset;
+	HWND hHandle;
+	uint32_t value;
+
+	// Set window icon
+	SetClassLong(hWndDlg, GCL_HICON, (LONG)LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_CXBX)));
+
+	// Initialize the values of the drop-down lists
+	offset = 0;
+	hHandle = GetDlgItem(hWndDlg, IDC_EE_XBOX_REGION);
+	for (auto i : { "North America" , "Japan" ,"Rest of the world", "Manufacturing" }) {
+		LRESULT index = SendMessage(hHandle, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(i));
+		SendMessage(hHandle, CB_SETITEMDATA, index, ComboboxArray[offset]);
+		offset++;
+	}
+	value = pEEPROM_GUI->EncryptedSettings.GameRegion;
+	starting_offset = offset - 4;
+	for (int i = starting_offset; i < offset; i++) {
+		if (value == ComboboxArray[i]) {
+			SendMessage(hHandle, CB_SETCURSEL, i - starting_offset, 0);
+			break;
+		}
+	}
+
+	hHandle = GetDlgItem(hWndDlg, IDC_EE_AVREGION);
+	for (auto i : { "NTSC-M, 60Hz" , "NTSC-J, 60Hz", "PAL, 50Hz" }) {
+		LRESULT index = SendMessage(hHandle, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(i));
+		SendMessage(hHandle, CB_SETITEMDATA, index, ComboboxArray[offset]);
+		offset++;
+	}
+	value = pEEPROM_GUI->FactorySettings.AVRegion;
+	starting_offset = offset - 3;
+	for (int i = starting_offset; i < offset; i++) {
+		if (value == ComboboxArray[i]) {
+			SendMessage(hHandle, CB_SETCURSEL, i - starting_offset, 0);
+			break;
+		}
+	}
+
+	hHandle = GetDlgItem(hWndDlg, IDC_EE_LANGUAGE);
+	for (auto i : { "English", "Japanese", "German", "French", "Spanish", "Italian", "Korean", "Chinese", "Portuguese" }) {
+		LRESULT index = SendMessage(hHandle, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(i));
+		SendMessage(hHandle, CB_SETITEMDATA, index, ComboboxArray[offset]);
+		offset++;
+	}
+	value = pEEPROM_GUI->UserSettings.Language;
+	starting_offset = offset - 9;
+	for (int i = starting_offset; i < offset; i++) {
+		if (value == ComboboxArray[i]) {
+			SendMessage(hHandle, CB_SETCURSEL, i - starting_offset, 0);
+			break;
+		}
+	}
+
+	// The available AV settings depend on the current AV region so we must read those beforehand
+	hHandle = GetDlgItem(hWndDlg, IDC_EE_AVSETTINGS);
+	for (auto i : { "Normal", "Widescreen", "Letterbox" }) {
+		LRESULT index = SendMessage(hHandle, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(i));
+		SendMessage(hHandle, CB_SETITEMDATA, index, ComboboxArray[offset]);
+		offset++;
+	}
+	value = pEEPROM_GUI->UserSettings.VideoFlags;
+	value &= ~(AV_FLAGS_60Hz | AV_FLAGS_HDTV_480p | AV_FLAGS_HDTV_720p | AV_FLAGS_HDTV_1080i);
+	starting_offset = offset - 3;
+	for (int i = starting_offset; i < offset; i++) {
+		if (value == ComboboxArray[i]) {
+			SendMessage(hHandle, CB_SETCURSEL, i - starting_offset, 0);
+			break;
+		}
+	}
+	if (pEEPROM_GUI->FactorySettings.AVRegion == (AV_FLAGS_50Hz | AV_STANDARD_PAL_I)) {
+		// Enable PAL 60Hz since the console is set to the PAL region
+		EnableWindow(GetDlgItem(hWndDlg, IDC_EE_PAL60HZ), TRUE);
+		EnableWindow(GetDlgItem(hWndDlg, IDC_EE_480P), FALSE);
+		EnableWindow(GetDlgItem(hWndDlg, IDC_EE_720P), FALSE);
+		EnableWindow(GetDlgItem(hWndDlg, IDC_EE_1080I), FALSE);
+		if (pEEPROM_GUI->UserSettings.VideoFlags & AV_FLAGS_60Hz) {
+			SendMessage(GetDlgItem(hWndDlg, IDC_EE_PAL60HZ), BM_SETCHECK, BST_CHECKED, 0);
+		}
+	}
+	else {
+		// Enable 480p, 720p and 1080i since the console is set to the NTSC region
+		uint32_t value = pEEPROM_GUI->UserSettings.VideoFlags;
+		if (value & AV_FLAGS_HDTV_480p) {
+			SendMessage(GetDlgItem(hWndDlg, IDC_EE_480P), BM_SETCHECK, BST_CHECKED, 0);
+		}
+		if (value & AV_FLAGS_HDTV_720p) {
+			SendMessage(GetDlgItem(hWndDlg, IDC_EE_720P), BM_SETCHECK, BST_CHECKED, 0);
+		}
+		if (value & AV_FLAGS_HDTV_1080i) {
+			SendMessage(GetDlgItem(hWndDlg, IDC_EE_1080I), BM_SETCHECK, BST_CHECKED, 0);
+		}
+	}
+
+	hHandle = GetDlgItem(hWndDlg, IDC_EE_AUDIOSETTINGS);
+	for (auto i : { "Stereo", "Stereo, Dolby AC3", "Stereo, DTS", "Stereo, Dolby AC3, DTS", "Mono", "Mono, Dolby AC3", "Mono, DTS",
+		 "Mono, Dolby AC3, DTS", "Dolby Surround", "Dolby Surround, Dolby AC3", "Dolby Surround, DTS", "Dolby Surround, Dolby AC3, DTS" }) {
+		LRESULT index = SendMessage(hHandle, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(i));
+		SendMessage(hHandle, CB_SETITEMDATA, index, ComboboxArray[offset]);
+		offset++;
+	}
+	value = pEEPROM_GUI->UserSettings.AudioFlags;
+	starting_offset = offset - 12;
+	for (int i = starting_offset; i < offset; i++) {
+		if (value == ComboboxArray[i]) {
+			SendMessage(hHandle, CB_SETCURSEL, i - starting_offset, 0);
+			break;
+		}
+	}
+
+	hHandle = GetDlgItem(hWndDlg, IDC_EE_GAME_PRTL_CRTL);
+	for (auto i : { "Rating pending", "Adults only", "Mature", "Teen", "Everyone", "Kids to adults", "Early childhood" }) {
+		LRESULT index = SendMessage(hHandle, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(i));
+		SendMessage(hHandle, CB_SETITEMDATA, index, ComboboxArray[offset]);
+		offset++;
+	}
+	value = pEEPROM_GUI->UserSettings.ParentalControlGames;
+	starting_offset = offset - 7;
+	for (int i = starting_offset; i < offset; i++) {
+		if (value == ComboboxArray[i]) {
+			SendMessage(hHandle, CB_SETCURSEL, i - starting_offset, 0);
+			break;
+		}
+	}
+
+	hHandle = GetDlgItem(hWndDlg, IDC_EE_MOVIE_PRTL_CRTL);
+	for (auto i : { "Max", "NC-17", "A", "5", "PG-13", "PG", "2", "G" }) {
+		LRESULT index = SendMessage(hHandle, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(i));
+		SendMessage(hHandle, CB_SETITEMDATA, index, ComboboxArray[offset]);
+		offset++;
+	}
+	value = pEEPROM_GUI->UserSettings.ParentalControlMovies;
+	starting_offset = offset - 8;
+	for (int i = starting_offset; i < offset; i++) {
+		if (value == ComboboxArray[i]) {
+			SendMessage(hHandle, CB_SETCURSEL, i - starting_offset, 0);
+			break;
+		}
+	}
+
+	hHandle = GetDlgItem(hWndDlg, IDC_EE_DVDREGION);
+	for (auto i : { "Free", "USA, Canada", "Japan, Europe, Middle East, ...", "Southeast Asia, S. Korea, ...", "Latin America, Oceania",
+		"Africa, Russia, N. Korea, ...", "China", "Reserved for future use", "International venues" }) {
+		LRESULT index = SendMessage(hHandle, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(i));
+		SendMessage(hHandle, CB_SETITEMDATA, index, ComboboxArray[offset]);
+		offset++;
+	}
+	value = pEEPROM_GUI->UserSettings.DvdRegion;
+	starting_offset = offset - 9;
+	for (int i = starting_offset; i < offset; i++) {
+		if (value == ComboboxArray[i]) {
+			SendMessage(hHandle, CB_SETCURSEL, i - starting_offset, 0);
+			break;
+		}
+	}
+
+	// Install the subclass procedure and display the current values of the parameters in the edit controls
+	{
+		int ByteLimit[] = { 8, 16, 12, 6, 16, 4 };
+		uint8_t* Buffer[6];
+		HWND hEditControlArray[6];
+		int j = 0;
+		for (auto i : { IDC_EE_CONFOUNDER, IDC_EE_HDDKEY, IDC_EE_SERIAL_NUMBER, IDC_EE_MAC_ADDRESS, IDC_EE_ONLINE_KEY, IDC_EE_PRTL_PASS }) {
+			hEditControlArray[j] = GetDlgItem(hWndDlg, i);
+			Buffer[j] = new uint8_t[ByteLimit[j]];
+			SetWindowSubclass(hEditControlArray[j], ControlSubclassProc, 0, 0);
+			SendMessage(hEditControlArray[j], EM_SETLIMITTEXT, ByteLimit[j] * 2, 0);
+			j++;
+		}
+		j = 0;
+		std::memcpy(Buffer[0], &pEEPROM_GUI->EncryptedSettings.Confounder, ByteLimit[0]);
+		std::memcpy(Buffer[1], &pEEPROM_GUI->EncryptedSettings.HDKey, ByteLimit[1]);
+		std::memcpy(Buffer[2], &pEEPROM_GUI->FactorySettings.SerialNumber, ByteLimit[2]);
+		std::memcpy(Buffer[3], &pEEPROM_GUI->FactorySettings.EthernetAddr, ByteLimit[3]);
+		std::memcpy(Buffer[4], &pEEPROM_GUI->FactorySettings.OnlineKey, ByteLimit[4]);
+		std::memcpy(Buffer[5], &pEEPROM_GUI->UserSettings.ParentalControlPassword, ByteLimit[5]);
+		for (auto i : Buffer) {
+			char* CharBuffer = new char[ByteLimit[j] * 2 + 1];
+			for (int z = 0, y = 0; z < ByteLimit[j]; z++) {
+				std::sprintf(&CharBuffer[y], "%02X", i[z]);
+				y += 2;
+			}
+			SendMessage(hEditControlArray[j], WM_SETTEXT, 0, reinterpret_cast<LPARAM>(CharBuffer));
+			delete[] CharBuffer; CharBuffer = nullptr;
+			delete[] Buffer[j]; Buffer[j] = nullptr;
+			j++;
+		}
+	}
+}
+
 INT_PTR CALLBACK DlgEepromConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMsg)
 	{
 		case WM_INITDIALOG:
 		{
-			int offset;
-			int starting_offset;
-			HWND hHandle;
-			uint32_t value;
-
-			// Set window icon
-			SetClassLong(hWndDlg, GCL_HICON, (LONG)LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_CXBX)));
-
-			// Initialize the values of the drop-down lists
-			offset = 0;
-			hHandle = GetDlgItem(hWndDlg, IDC_EE_XBOX_REGION);
-			for (auto i : { "North America" , "Japan" ,"Rest of the world", "Manufacturing" }) {
-				LRESULT index = SendMessage(hHandle, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(i));
-				SendMessage(hHandle, CB_SETITEMDATA, index, ComboboxArray[offset]);
-				offset++;
-			}
-			value = pEEPROM_GUI->EncryptedSettings.GameRegion;
-			starting_offset = offset - 4;
-			for (int i = starting_offset; i < offset; i++) {
-				if (value == ComboboxArray[i]) {
-					SendMessage(hHandle, CB_SETCURSEL, i - starting_offset, 0);
-					break;
-				}
-			}
-
-			hHandle = GetDlgItem(hWndDlg, IDC_EE_AVREGION);
-			for (auto i : { "NTSC-M, 60Hz" , "NTSC-J, 60Hz", "PAL, 50Hz" }) {
-				LRESULT index = SendMessage(hHandle, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(i));
-				SendMessage(hHandle, CB_SETITEMDATA, index, ComboboxArray[offset]);
-				offset++;
-			}
-			value = pEEPROM_GUI->FactorySettings.AVRegion;
-			starting_offset = offset - 3;
-			for (int i = starting_offset; i < offset; i++) {
-				if (value == ComboboxArray[i]) {
-					SendMessage(hHandle, CB_SETCURSEL, i - starting_offset, 0);
-					break;
-				}
-			}
-
-			hHandle = GetDlgItem(hWndDlg, IDC_EE_LANGUAGE);
-			for (auto i : { "English", "Japanese", "German", "French", "Spanish", "Italian", "Korean", "Chinese", "Portuguese" }) {
-				LRESULT index = SendMessage(hHandle, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(i));
-				SendMessage(hHandle, CB_SETITEMDATA, index, ComboboxArray[offset]);
-				offset++;
-			}
-			value = pEEPROM_GUI->UserSettings.Language;
-			starting_offset = offset - 9;
-			for (int i = starting_offset; i < offset; i++) {
-				if (value == ComboboxArray[i]) {
-					SendMessage(hHandle, CB_SETCURSEL, i - starting_offset, 0);
-					break;
-				}
-			}
-
-			// The available AV settings depend on the current AV region so we must read those beforehand
-			hHandle = GetDlgItem(hWndDlg, IDC_EE_AVSETTINGS);
-			for (auto i : { "Normal", "Widescreen", "Letterbox" }) {
-				LRESULT index = SendMessage(hHandle, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(i));
-				SendMessage(hHandle, CB_SETITEMDATA, index, ComboboxArray[offset]);
-				offset++;
-			}
-			value = pEEPROM_GUI->UserSettings.VideoFlags;
-			value &= ~(AV_FLAGS_60Hz | AV_FLAGS_HDTV_480p | AV_FLAGS_HDTV_720p | AV_FLAGS_HDTV_1080i);
-			starting_offset = offset - 3;
-			for (int i = starting_offset; i < offset; i++) {
-				if (value == ComboboxArray[i]) {
-					SendMessage(hHandle, CB_SETCURSEL, i - starting_offset, 0);
-					break;
-				}
-			}
-			if (pEEPROM_GUI->FactorySettings.AVRegion == (AV_FLAGS_50Hz | AV_STANDARD_PAL_I)) {
-				// Enable PAL 60Hz since the console is set to the PAL region
-				EnableWindow(GetDlgItem(hWndDlg, IDC_EE_PAL60HZ), TRUE);
-				EnableWindow(GetDlgItem(hWndDlg, IDC_EE_480P), FALSE);
-				EnableWindow(GetDlgItem(hWndDlg, IDC_EE_720P), FALSE);
-				EnableWindow(GetDlgItem(hWndDlg, IDC_EE_1080I), FALSE);
-				if (pEEPROM_GUI->UserSettings.VideoFlags & AV_FLAGS_60Hz) {
-					SendMessage(GetDlgItem(hWndDlg, IDC_EE_PAL60HZ), BM_SETCHECK, BST_CHECKED, 0);
-				}	
-			}
-			else {
-				// Enable 480p, 720p and 1080i since the console is set to the NTSC region
-				uint32_t value = pEEPROM_GUI->UserSettings.VideoFlags;
-				if (value & AV_FLAGS_HDTV_480p) {
-					SendMessage(GetDlgItem(hWndDlg, IDC_EE_480P), BM_SETCHECK, BST_CHECKED, 0);
-				}
-				if (value & AV_FLAGS_HDTV_720p) {
-					SendMessage(GetDlgItem(hWndDlg, IDC_EE_720P), BM_SETCHECK, BST_CHECKED, 0);
-				}
-				if (value & AV_FLAGS_HDTV_1080i) {
-					SendMessage(GetDlgItem(hWndDlg, IDC_EE_1080I), BM_SETCHECK, BST_CHECKED, 0);
-				}
-			}
-
-			hHandle = GetDlgItem(hWndDlg, IDC_EE_AUDIOSETTINGS);
-			for (auto i : {"Stereo", "Stereo, Dolby AC3", "Stereo, DTS", "Stereo, Dolby AC3, DTS", "Mono", "Mono, Dolby AC3", "Mono, DTS",
-				 "Mono, Dolby AC3, DTS", "Dolby Surround", "Dolby Surround, Dolby AC3", "Dolby Surround, DTS", "Dolby Surround, Dolby AC3, DTS"}) {
-				LRESULT index = SendMessage(hHandle, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(i));
-				SendMessage(hHandle, CB_SETITEMDATA, index, ComboboxArray[offset]);
-				offset++;
-			}
-			value = pEEPROM_GUI->UserSettings.AudioFlags;
-			starting_offset = offset - 12;
-			for (int i = starting_offset; i < offset; i++) {
-				if (value == ComboboxArray[i]) {
-					SendMessage(hHandle, CB_SETCURSEL, i - starting_offset, 0);
-					break;
-				}
-			}
-			
-			hHandle = GetDlgItem(hWndDlg, IDC_EE_GAME_PRTL_CRTL);
-			for (auto i : {"Rating pending", "Adults only", "Mature", "Teen", "Everyone", "Kids to adults", "Early childhood"}) {
-				LRESULT index = SendMessage(hHandle, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(i));
-				SendMessage(hHandle, CB_SETITEMDATA, index, ComboboxArray[offset]);
-				offset++;
-			}
-			value = pEEPROM_GUI->UserSettings.ParentalControlGames;
-			starting_offset = offset - 7;
-			for (int i = starting_offset; i < offset; i++) {
-				if (value == ComboboxArray[i]) {
-					SendMessage(hHandle, CB_SETCURSEL, i - starting_offset, 0);
-					break;
-				}
-			}
-
-			hHandle = GetDlgItem(hWndDlg, IDC_EE_MOVIE_PRTL_CRTL);
-			for (auto i : {"Max", "NC-17", "A", "5", "PG-13", "PG", "2", "G"}) {
-				LRESULT index = SendMessage(hHandle, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(i));
-				SendMessage(hHandle, CB_SETITEMDATA, index, ComboboxArray[offset]);
-				offset++;
-			}
-			value = pEEPROM_GUI->UserSettings.ParentalControlMovies;
-			starting_offset = offset - 8;
-			for (int i = starting_offset; i < offset; i++) {
-				if (value == ComboboxArray[i]) {
-					SendMessage(hHandle, CB_SETCURSEL, i - starting_offset, 0);
-					break;
-				}
-			}
-
-			hHandle = GetDlgItem(hWndDlg, IDC_EE_DVDREGION);
-			for (auto i : {"Free", "USA, Canada", "Japan, Europe, Middle East, ...", "Southeast Asia, S. Korea, ...", "Latin America, Oceania",
-				"Africa, Russia, N. Korea, ...", "China", "Reserved for future use", "International venues"}) {
-				LRESULT index = SendMessage(hHandle, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(i));
-				SendMessage(hHandle, CB_SETITEMDATA, index, ComboboxArray[offset]);
-				offset++;
-			}
-			value = pEEPROM_GUI->UserSettings.DvdRegion;
-			starting_offset = offset - 9;
-			for (int i = starting_offset; i < offset; i++) {
-				if (value == ComboboxArray[i]) {
-					SendMessage(hHandle, CB_SETCURSEL, i - starting_offset, 0);
-					break;
-				}
-			}
-
-			// Install the subclass procedure and display the current values of the parameters in the edit controls
-			{
-				int ByteLimit[] = { 8, 16, 12, 6, 16, 4 };
-				uint8_t* Buffer[6];
-				HWND hEditControlArray[6];
-				int j = 0;
-				for (auto i : { IDC_EE_CONFOUNDER, IDC_EE_HDDKEY, IDC_EE_SERIAL_NUMBER, IDC_EE_MAC_ADDRESS, IDC_EE_ONLINE_KEY, IDC_EE_PRTL_PASS }) {
-					hEditControlArray[j] = GetDlgItem(hWndDlg, i);
-					Buffer[j] = new uint8_t[ByteLimit[j]];
-					SetWindowSubclass(hEditControlArray[j], ControlSubclassProc, 0, 0);
-					SendMessage(hEditControlArray[j], EM_SETLIMITTEXT, ByteLimit[j] * 2, 0);
-					j++;
-				}
-				j = 0;
-				std::memcpy(Buffer[0], &pEEPROM_GUI->EncryptedSettings.Confounder, ByteLimit[0]);
-				std::memcpy(Buffer[1], &pEEPROM_GUI->EncryptedSettings.HDKey, ByteLimit[1]);
-				std::memcpy(Buffer[2], &pEEPROM_GUI->FactorySettings.SerialNumber, ByteLimit[2]);
-				std::memcpy(Buffer[3], &pEEPROM_GUI->FactorySettings.EthernetAddr, ByteLimit[3]);
-				std::memcpy(Buffer[4], &pEEPROM_GUI->FactorySettings.OnlineKey, ByteLimit[4]);
-				std::memcpy(Buffer[5], &pEEPROM_GUI->UserSettings.ParentalControlPassword, ByteLimit[5]);
-				for (auto i : Buffer) {
-					char* CharBuffer = new char[ByteLimit[j] * 2 + 1];
-					for (int z = 0, y = 0; z < ByteLimit[j]; z++) {
-						std::sprintf(&CharBuffer[y], "%02X", i[z]);
-						y += 2;
-					}
-					SendMessage(hEditControlArray[j], WM_SETTEXT, 0, reinterpret_cast<LPARAM>(CharBuffer));
-					delete[] CharBuffer; CharBuffer = nullptr;
-					delete[] Buffer[j]; Buffer[j] = nullptr;
-					j++;
-				}
-			}
+			RefreshEepromDialog(hWndDlg);
 			// Reset changes flag
 			g_bHasChanges = false;
 		}
@@ -474,25 +479,7 @@ INT_PTR CALLBACK DlgEepromConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPA
 					std::memset(pEEPROM_GUI, 0, EEPROM_SIZE);
 					EmuEEPROMReset(pEEPROM_GUI);
 
-					char* DefaultStringsArray[] = { "0000000000000000", "00000000000000000000000000000000", "000000000000000000000000",
-					"000000000000", "00000000000000000000000000000000", "00000000" };
-					int j = 0;
-					for (auto i : { IDC_EE_CONFOUNDER, IDC_EE_HDDKEY, IDC_EE_SERIAL_NUMBER, IDC_EE_MAC_ADDRESS, IDC_EE_ONLINE_KEY, IDC_EE_PRTL_PASS }) {
-						SendMessage(GetDlgItem(hWndDlg, i), WM_SETTEXT, 0, reinterpret_cast<LPARAM>(DefaultStringsArray[j]));
-						j++;
-					}
-					for (auto i : { IDC_EE_XBOX_REGION, IDC_EE_AVREGION, IDC_EE_LANGUAGE, IDC_EE_AVSETTINGS, IDC_EE_AUDIOSETTINGS, IDC_EE_GAME_PRTL_CRTL,
-						IDC_EE_MOVIE_PRTL_CRTL, IDC_EE_DVDREGION }) {
-						SendMessage(GetDlgItem(hWndDlg, i), CB_SETCURSEL, 0, 0);
-					}
-					EnableWindow(GetDlgItem(hWndDlg, IDC_EE_PAL60HZ), FALSE);
-					EnableWindow(GetDlgItem(hWndDlg, IDC_EE_480P), TRUE);
-					EnableWindow(GetDlgItem(hWndDlg, IDC_EE_720P), TRUE);
-					EnableWindow(GetDlgItem(hWndDlg, IDC_EE_1080I), TRUE);
-					SendMessage(GetDlgItem(hWndDlg, IDC_EE_PAL60HZ), BM_SETCHECK, BST_UNCHECKED, 0);
-					SendMessage(GetDlgItem(hWndDlg, IDC_EE_480P), BM_SETCHECK, BST_UNCHECKED, 0);
-					SendMessage(GetDlgItem(hWndDlg, IDC_EE_720P), BM_SETCHECK, BST_UNCHECKED, 0);
-					SendMessage(GetDlgItem(hWndDlg, IDC_EE_1080I), BM_SETCHECK, BST_UNCHECKED, 0);
+					RefreshEepromDialog(hWndDlg);
 				}
 				break;
 
