@@ -45,7 +45,7 @@ static_assert(false, "Please implement support for cross-platform's user profile
 std::string g_exec_filepath;
 
 // NOTE: Update settings_version when add/edit/delete setting's structure.
-const uint settings_version = 3;
+const uint settings_version = 4;
 
 Settings* g_Settings = nullptr;
 
