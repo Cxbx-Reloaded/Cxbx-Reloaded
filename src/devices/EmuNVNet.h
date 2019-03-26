@@ -179,11 +179,11 @@ typedef struct _ethernet_header
 
 typedef struct _arp_packet
 {
-	uint16_t	hw_type;
-	uint16_t	protocol;
-	uint8_t		h_addr_len;
-	uint8_t		p_addr_len;
-	uint16_t	operation;
+	uint16_t    hw_type;
+	uint16_t    protocol;
+	uint8_t     h_addr_len;
+	uint8_t     p_addr_len;
+	uint16_t    operation;
 	mac_address h_src;
 	ip_address  p_src;
 	mac_address h_dst;
@@ -191,16 +191,16 @@ typedef struct _arp_packet
 } arp_packet;
 
 typedef struct _ip_header {
-	uint8_t		ver_hlen;	/* version << 4 | header length >> 2 */
-	uint8_t		type;		/* type of service */
-	uint16_t	len;			/* total length */
-	uint16_t	id;			/* identification */
-	uint16_t	offset;		/* fragment offset field */
-	uint8_t		ttl;			/* time to live */
-	uint8_t		proto;		/* protocol */
-	uint16_t	hdr_csum;	/* checksum */
-	ip_address	src;      /* source and dest address */
-	ip_address	dst;
+	uint8_t     ver_hlen;    /* version << 4 | header length >> 2 */
+	uint8_t     type;        /* type of service */
+	uint16_t    len;         /* total length */
+	uint16_t    id;          /* identification */
+	uint16_t    offset;      /* fragment offset field */
+	uint8_t     ttl;         /* time to live */
+	uint8_t     proto;       /* protocol */
+	uint16_t    hdr_csum;    /* checksum */
+	ip_address  src;         /* source and dest address */
+	ip_address  dst;
 } ip_header;
 
 class NVNetDevice : public PCIDevice {

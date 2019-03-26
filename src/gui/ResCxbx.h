@@ -356,9 +356,9 @@
 #define ID_SETTINGS_CONFIG_LOGGING      40108
 #define ID_SYNC_CONFIG_LOGGING          40109
 #define ID_LOG                          40110
-#define ID_SETTINGS_CONFIG_NETWORK		40111
-#define IDC_NETWORK_ADAPTER				1276
-#define IDD_NETWORK_CFG					40112
+#define ID_SETTINGS_CONFIG_NETWORK      40111
+#define IDC_NETWORK_ADAPTER             1276
+#define IDD_NETWORK_CFG                 40112
 #define IDC_STATIC                      -1
 
 // Next default values for new objects
