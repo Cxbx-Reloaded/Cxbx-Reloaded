@@ -45,7 +45,7 @@ static_assert(false, "Please implement support for cross-platform's user profile
 std::string g_exec_filepath;
 
 // NOTE: Update settings_version when add/edit/delete setting's structure.
-const uint settings_version = 3;
+const uint settings_version = 4;
 
 Settings* g_Settings = nullptr;
 
@@ -94,6 +94,11 @@ static struct {
 	const char* codec_xadpcm = "XADPCM";
 	const char* codec_unknown = "UnknownCodec";
 } sect_audio_keys;
+
+static const char* section_network = "network";
+static struct {
+	const char* adapter_name = "adapter_name";
+} sect_network_keys;
 
 static const char* section_controller_dinput = "controller-dinput";
 // All keys so far are dynamic
@@ -423,6 +428,18 @@ bool Settings::LoadConfig()
 
 	// ==== Audio End ===========
 
+	// ==== Network Begin =======
+
+	si_data = m_si.GetValue(section_network, sect_network_keys.adapter_name, /*Default=*/nullptr);
+	// Fallback to null string if value is empty or contains a bigger string.
+	if (si_data == nullptr || std::strlen(si_data) >= std::size(m_network.adapter_name)) {
+		m_network.adapter_name[0] = '\0';
+	} else {
+		std::strncpy(m_network.adapter_name, si_data, std::size(m_network.adapter_name));
+	}
+
+	// ==== Network End =========
+
 	// ==== Controller Begin ====
 
 	int v = 0;
@@ -560,6 +577,12 @@ bool Settings::Save(std::string file_path)
 
 	// ==== Audio End ===========
 
+	// ==== Network Begin =======
+
+	m_si.SetValue(section_network, sect_network_keys.adapter_name, m_network.adapter_name, nullptr, true);
+	
+	// ==== Network End =========
+
 	// ==== Controller Begin ====
 
 	int v = 0;
@@ -651,6 +674,9 @@ void Settings::SyncToEmulator()
 
 	// register Audio settings
 	g_EmuShared->SetAudioSettings(&m_audio);
+
+	// register Network settings
+	g_EmuShared->SetNetworkSettings(&m_network);
 
 	// register Controller settings
 	g_EmuShared->SetControllerDInputSettings(&m_controller_dinput);

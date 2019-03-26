@@ -36,6 +36,7 @@ namespace xboxkrnl
 
 #include <stdio.h> // For printf
 #include <shlobj.h> // For HANDLE, CreateFile, CreateFileMapping, MapViewOfFile
+#include <random>
 
 #include "Cxbx.h" // For DBG_PRINTF_EX
 #include "EmuEEPROM.h" // For EEPROMInfo, EEPROMInfos
@@ -223,6 +224,34 @@ void EmuEEPROMReset(xboxkrnl::XBOX_EEPROM* eeprom)
 	eeprom->UserSettings.ParentalControlMovies = XC_PC_MAX; // = XC_PRTL_CRTL_MAX
 	eeprom->UserSettings.MiscFlags = 0;  // No automatic power down
 
-	// TODO: Online Settings
+	// Online Settings
+
+	// Setup the Serial and Mac Generators
+	std::random_device rd;
+	std::mt19937 gen(rd());
+	std::uniform_int_distribution<> serialDis (0, 9);
+	std::uniform_int_distribution<> macOnlineDis(0, 255);
+
+	// Generate a random serial number
+	std::string serial = "";
+	for (int i = 0; i < 12; i++) {
+		serial += std::to_string(serialDis(gen));
+	}
+	memset(eeprom->FactorySettings.SerialNumber, 0, 12);
+	strncpy((char*)eeprom->FactorySettings.SerialNumber, serial.c_str(), 12);
+
+	// Generate a random mac address
+	eeprom->FactorySettings.EthernetAddr[0] = 0x00;
+	eeprom->FactorySettings.EthernetAddr[1] = 0x50;
+	eeprom->FactorySettings.EthernetAddr[2] = 0xF2;
+	for (int i = 3; i < 6; i++) {
+		eeprom->FactorySettings.EthernetAddr[i] = macOnlineDis(gen);
+	}
+
+	// Generate a random Online Key
+	for (int i = 0; i < 16; i++) {
+		eeprom->FactorySettings.OnlineKey[i] = macOnlineDis(gen);
+	}
+
 	// TODO: TimeZone Settings
 }

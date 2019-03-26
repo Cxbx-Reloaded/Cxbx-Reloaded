@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -77,7 +77,7 @@
     </Midl>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>..\..\src\Common;..\..\src;..\..\src\Common\Win32;%(AdditionalIncludeDirectories);..\..\import\OpenXDK\include;..\..\import\distorm\include;..\..\import\glew-2.0.0\include;..\..\import\subhook\;..\..\import\DirectX9\include;..\..\import\simpleini;..\..\import\libtommath;..\..\import\libtomcrypt;..\..\import\libtomcrypt\src\headers</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\src\Common;..\..\src;..\..\src\Common\Win32;%(AdditionalIncludeDirectories);..\..\import\OpenXDK\include;..\..\import\distorm\include;..\..\import\glew-2.0.0\include;..\..\import\subhook\;..\..\import\DirectX9\include;..\..\import\simpleini;..\..\import\libtommath;..\..\import\libtomcrypt;..\..\import\libtomcrypt\src\headers;..\..\import\winpcap\Include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>NOMINMAX;_WIN32_WINNT=0x0601;WIN32;CXBX_USE_D3D9;LTM_DESC;USE_LTM;LTC_NO_TEST;LTC_NO_CIPHERS;LTC_NO_HASHES;LTC_NO_MACS;LTC_NO_PRNGS;LTC_NO_MISC;LTC_NO_PROTOTYPES;_DEBUG;_WINDOWS;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -95,9 +95,9 @@
       <AdditionalIncludeDirectories>Include\Win32\Cxbx;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>legacy_stdio_definitions.lib;d3d9.lib;dinput8.lib;dxguid.lib;odbc32.lib;odbccp32.lib;Shlwapi.lib;dxerr9.lib;ws2_32.lib;dsound.lib;winmm.lib;ddraw.lib;d3dx9.lib;dbghelp.lib;comctl32.lib;XINPUT9_1_0.LIB;tomcryptd.lib;tommath.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>legacy_stdio_definitions.lib;d3d9.lib;dinput8.lib;dxguid.lib;odbc32.lib;odbccp32.lib;Shlwapi.lib;dxerr9.lib;ws2_32.lib;dsound.lib;winmm.lib;ddraw.lib;d3dx9.lib;dbghelp.lib;comctl32.lib;XINPUT9_1_0.LIB;tomcryptd.lib;tommath.lib;wpcap.lib;Iphlpapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <AdditionalLibraryDirectories>$(Configuration)\;..\..\import\distorm\lib\Win32\;..\..\import\glew-2.0.0\lib\Release\Win32\;..\..\import\DirectX9\lib\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(Configuration)\;..\..\import\distorm\lib\Win32\;..\..\import\glew-2.0.0\lib\Release\Win32\;..\..\import\DirectX9\lib\;..\..\import\winpcap\Lib\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <IgnoreSpecificDefaultLibraries>libcmt;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <GenerateMapFile>true</GenerateMapFile>
@@ -110,6 +110,7 @@
       <BaseAddress>0x10000</BaseAddress>
       <FixedBaseAddress>true</FixedBaseAddress>
       <LargeAddressAware>true</LargeAddressAware>
+      <DelayLoadDLLs>wpcap.dll</DelayLoadDLLs>
     </Link>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
@@ -139,7 +140,7 @@
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
-      <AdditionalIncludeDirectories>..\..\src;..\..\src\Common;..\..\src\Common\Win32\;%(AdditionalIncludeDirectories);..\..\import\OpenXDK\include;..\..\import\distorm\include;..\..\import\glew-2.0.0\include;..\..\src\Common\Win32;..\..\import\subhook\;..\..\import\DirectX9\include;..\..\import\simpleini;..\..\import\libtommath;..\..\import\libtomcrypt;..\..\import\libtomcrypt\src\headers</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\src;..\..\src\Common;..\..\src\Common\Win32\;%(AdditionalIncludeDirectories);..\..\import\OpenXDK\include;..\..\import\distorm\include;..\..\import\glew-2.0.0\include;..\..\src\Common\Win32;..\..\import\subhook\;..\..\import\DirectX9\include;..\..\import\simpleini;..\..\import\libtommath;..\..\import\libtomcrypt;..\..\import\libtomcrypt\src\headers;..\..\import\winpcap\Include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>NOMINMAX;_WIN32_WINNT=0x0601;WIN32;CXBX_USE_D3D9;LTM_DESC;USE_LTM;LTC_NO_TEST;LTC_NO_CIPHERS;LTC_NO_HASHES;LTC_NO_MACS;LTC_NO_PRNGS;LTC_NO_MISC;LTC_NO_PROTOTYPES;NDEBUG;_WINDOWS;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
@@ -165,9 +166,9 @@
       <AdditionalIncludeDirectories>Include\Win32\Cxbx;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>legacy_stdio_definitions.lib;d3d9.lib;dinput8.lib;dxguid.lib;odbc32.lib;odbccp32.lib;Shlwapi.lib;dxerr9.lib;ws2_32.lib;dsound.lib;winmm.lib;ddraw.lib;d3dx9.lib;dbghelp.lib;comctl32.lib;XINPUT9_1_0.LIB;tomcrypt.lib;tommath.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>legacy_stdio_definitions.lib;d3d9.lib;dinput8.lib;dxguid.lib;odbc32.lib;odbccp32.lib;Shlwapi.lib;dxerr9.lib;ws2_32.lib;dsound.lib;winmm.lib;ddraw.lib;d3dx9.lib;dbghelp.lib;comctl32.lib;XINPUT9_1_0.LIB;tomcrypt.lib;tommath.lib;wpcap.lib;Iphlpapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <AdditionalLibraryDirectories>$(Configuration)\;..\..\import\distorm\lib\Win32\;..\..\import\glew-2.0.0\lib\Release\Win32\;..\..\import\DirectX9\lib\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(Configuration)\;..\..\import\distorm\lib\Win32\;..\..\import\glew-2.0.0\lib\Release\Win32\;..\..\import\DirectX9\lib\;..\..\import\winpcap\Lib\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <IgnoreSpecificDefaultLibraries>libcmt;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <SubSystem>Windows</SubSystem>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
@@ -181,6 +182,7 @@
       <StackReserveSize>65536</StackReserveSize>
       <StackCommitSize>65536</StackCommitSize>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
+      <DelayLoadDLLs>wpcap.dll</DelayLoadDLLs>
     </Link>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
@@ -270,6 +272,7 @@
     <ClInclude Include="..\..\src\gui\DlgControllerConfig.h" />
     <ClInclude Include="..\..\src\gui\DlgEepromConfig.h" />
     <ClInclude Include="..\..\src\gui\DlgLoggingConfig.h" />
+    <ClInclude Include="..\..\src\gui\DlgNetworkConfig.h" />
     <ClInclude Include="..\..\src\gui\DlgVideoConfig.h" />
     <ClInclude Include="..\..\src\core\kernel\support\Emu.h" />
     <ClInclude Include="..\..\src\common\win32\EmuShared.h" />
@@ -376,6 +379,7 @@
     <ClCompile Include="..\..\src\common\xdvdfs-tools\xdvdfs.cpp" />
     <ClCompile Include="..\..\src\core\hle\DSOUND\DirectSound\DirectSoundLogging.cpp" />
     <ClCompile Include="..\..\src\core\hle\DSOUND\XbDSoundLogging.cpp" />
+    <ClCompile Include="..\..\src\core\kernel\exports\EmuKrnlPhy.cpp" />
     <ClCompile Include="..\..\src\core\kernel\init\CxbxKrnl.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -486,6 +490,7 @@
     </ClCompile>
     <ClCompile Include="..\..\src\gui\DlgEepromConfig.cpp" />
     <ClCompile Include="..\..\src\gui\DlgLoggingConfig.cpp" />
+    <ClCompile Include="..\..\src\gui\DlgNetworkConfig.cpp" />
     <ClCompile Include="..\..\src\gui\DlgVideoConfig.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>

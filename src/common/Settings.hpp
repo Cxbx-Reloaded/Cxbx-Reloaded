@@ -174,6 +174,11 @@ public:
 		int  Reserved99[14] = { 0 };
 	} m_audio;
 
+	// Network settings
+	struct s_network {
+		char adapter_name[MAX_PATH] = "";
+	} m_network;
+
 	// Controller settings
 	struct s_controller_dinput {
 

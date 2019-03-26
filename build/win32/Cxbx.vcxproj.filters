@@ -641,6 +641,12 @@
     <ClCompile Include="..\..\src\core\hle\DSOUND\DirectSound\DirectSoundLogging.cpp">
       <Filter>core\HLE\DSOUND\DirectSound</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\core\kernel\exports\EmuKrnlPhy.cpp">
+      <Filter>Kernel</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\gui\DlgNetworkConfig.cpp">
+      <Filter>GUI</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\resource\Splash.jpg">
@@ -832,6 +838,9 @@
     </ClInclude>
     <ClInclude Include="..\..\src\core\hle\DSOUND\DirectSound\DirectSoundLogging.hpp">
       <Filter>core\HLE\DSOUND\DirectSound</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\gui\DlgNetworkConfig.h">
+      <Filter>GUI</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

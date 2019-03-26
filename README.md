@@ -13,6 +13,7 @@ Cxbx-Reloaded is an emulator for running Microsoft Xbox (and eventually, Chihiro
 
 ### Prerequisites
   * Visual C++ 2017 redistributable is required. Most people should already have this, but if not, Download it [here](https://support.microsoft.com/en-gb/help/2977003/the-latest-supported-visual-c-downloads). Make sure to install the 32-bit (x86) version even if you are on a 64-bit machine, as the 64-bit build does not include both!
+  * Npcap (Used for Network emulation): Download the Installer [here](https://nmap.org/npcap/#download). Make sure to enable winpcap compatibility mode!
   
 ## Automated Builds
 Cxbx-Reloaded is not yet ready for general release, but the latest development builds can be downloaded using the links below:
@@ -85,5 +86,5 @@ You can support [Luke Usher](https://github.com/LukeUsher), initiator of Cxbx-Re
 
 ## Special Thanks
 * All contributors to the original Cxbx and Dxbx projects. Without them Cxbx-Reloaded would not exist at all.
-* [XQEMU](https://github.com/xqemu/xqemu) - While the majority of Cxbx-R is our own work (Kernel, HLE, etc), the NV2A LLE implementation is primarily the work of the XQEMU developers.
+* [XQEMU](https://github.com/xqemu/xqemu) - While the majority of Cxbx-R is our own work (Kernel, HLE, etc), the NV2A LLE implementation and NVNet implementation are primarily the work of the XQEMU developers.
 * [XboxDev](https://github.com/xboxdev/) - Providing Xbox Hardware Research & Useful Tooling
