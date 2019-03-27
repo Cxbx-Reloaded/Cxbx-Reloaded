@@ -1931,14 +1931,11 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_GetInfo)
 		LOG_FUNC_ARG_OUT(pInfo)
 		LOG_FUNC_END;
 
-    // TODO: A (real) implementation?
-    EmuLog(LOG_LEVEL::WARNING, "EmuDirectSound_CDirectSoundStream_GetInfo is not yet supported!");
-
     if (pInfo) {
-        pInfo->dwFlags = XMO_STREAMF_FIXED_SAMPLE_SIZE;
-        pInfo->dwInputSize = 0x40000;
-        pInfo->dwOutputSize = 0x40000;
-        pInfo->dwMaxLookahead = 0x4000;
+        pInfo->dwFlags = XMO_STREAMF_FIXED_SAMPLE_SIZE | XMO_STREAMF_INPUT_ASYNC;
+        pInfo->dwInputSize = pThis->EmuBufferDesc.lpwfxFormat->nBlockAlign;
+        pInfo->dwOutputSize = 0;
+        pInfo->dwMaxLookahead = std::max(static_cast<uint32_t>(pThis->EmuBufferDesc.lpwfxFormat->nChannels * pThis->EmuBufferDesc.lpwfxFormat->wBitsPerSample / 8) * 32, static_cast<uint32_t>(pThis->EmuBufferDesc.lpwfxFormat->nBlockAlign) * 2);
     }
 
     leaveCriticalSection;
