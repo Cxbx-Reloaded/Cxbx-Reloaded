@@ -46,7 +46,7 @@ class DbgConsole
     private:
         // keyboard buffer
         char m_szInput[1024];
-        uint m_cur;
+        unsigned int m_cur;
 };
 
 #endif

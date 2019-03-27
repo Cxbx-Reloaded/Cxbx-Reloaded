@@ -299,7 +299,7 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
 
 		// Check for active linear textures.
 		//X_D3DBaseTexture *pLinearBaseTexture[X_D3DTS_STAGECOUNT];
-		for (uint i = 0; i < X_D3DTS_STAGECOUNT; i++) {
+		for (unsigned int i = 0; i < X_D3DTS_STAGECOUNT; i++) {
 			// Only normalize coordinates used by the FVF shader :
 			if (i + 1 <= dwTexN) {
 				pActivePixelContainer[i].NrTexCoords = DxbxFVF_GetNumberOfTextureCoordinates(XboxFVF, i);
@@ -337,12 +337,12 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
 	bool bNeedRHWReset = bVshHandleIsFVF && ((XboxFVF & D3DFVF_POSITION_MASK) == D3DFVF_XYZRHW);
 	bool bNeedStreamCopy = bNeedTextureNormalization || bNeedVertexPatching || bNeedRHWReset;
 
-	uint08 *pXboxVertexData;
+	uint8_t *pXboxVertexData;
 	UINT uiXboxVertexStride;
 	UINT uiVertexCount;
 	UINT uiHostVertexStride;
 	DWORD dwHostVertexDataSize;
-	uint08 *pHostVertexData;
+	uint8_t *pHostVertexData;
 	IDirect3DVertexBuffer *pNewHostVertexBuffer = nullptr;
 
     if (pDrawContext->pXboxVertexStreamZeroData != xbnullptr) {
@@ -351,13 +351,13 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
 			CxbxKrnlCleanup("Trying to patch a Draw..UP with more than stream zero!");
 		}
 
-		pXboxVertexData = (uint08 *)pDrawContext->pXboxVertexStreamZeroData;
+		pXboxVertexData = (uint8_t *)pDrawContext->pXboxVertexStreamZeroData;
 		uiXboxVertexStride = pDrawContext->uiXboxVertexStreamZeroStride;
 		uiVertexCount = pDrawContext->VerticesInBuffer; 
 		uiHostVertexStride = (bNeedVertexPatching) ? pVertexShaderStreamInfo->HostVertexStride : uiXboxVertexStride;
 		dwHostVertexDataSize = uiVertexCount * uiHostVertexStride;
 		if (bNeedStreamCopy) {
-			pHostVertexData = (uint08*)malloc(dwHostVertexDataSize);
+			pHostVertexData = (uint8_t*)malloc(dwHostVertexDataSize);
 			if (pHostVertexData == nullptr) {
 				CxbxKrnlCleanup("Couldn't allocate the new stream zero buffer");
 			}
@@ -368,7 +368,7 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
 	}
 	else {
 		XTL::X_D3DVertexBuffer *pXboxVertexBuffer = g_D3DStreams[uiStream];
-        pXboxVertexData = (uint08*)GetDataFromXboxResource(pXboxVertexBuffer);
+        pXboxVertexData = (uint8_t*)GetDataFromXboxResource(pXboxVertexBuffer);
 		if (pXboxVertexData == NULL) {
 			HRESULT hRet = g_pD3DDevice->SetStreamSource(
 				uiStream, 
@@ -404,9 +404,9 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
 	
 	if (bNeedVertexPatching) {
 	    // assert(bNeedStreamCopy || "bNeedVertexPatching implies bNeedStreamCopy (but copies via conversions");
-		for (uint32 uiVertex = StartIndex; uiVertex < uiVertexCount; uiVertex++) {
-			uint08 *pXboxVertexAsByte = &pXboxVertexData[uiVertex * uiXboxVertexStride];
-			uint08 *pHostVertexAsByte = &pHostVertexData[uiVertex * uiHostVertexStride];
+		for (uint32_t uiVertex = StartIndex; uiVertex < uiVertexCount; uiVertex++) {
+			uint8_t *pXboxVertexAsByte = &pXboxVertexData[uiVertex * uiXboxVertexStride];
+			uint8_t *pHostVertexAsByte = &pHostVertexData[uiVertex * uiHostVertexStride];
 			for (UINT uiElement = 0; uiElement < pVertexShaderStreamInfo->NumberOfVertexElements; uiElement++) {
 				FLOAT *pXboxVertexAsFloat = (FLOAT*)pXboxVertexAsByte;
 				SHORT *pXboxVertexAsShort = (SHORT*)pXboxVertexAsByte;
@@ -497,10 +497,10 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
 				}
 				case X_D3DVSDT_NORMPACKED3: { // 0x16:
 					// Test-cases : Dashboard
-					XboxElementByteSize = 1 * sizeof(int32);
+					XboxElementByteSize = 1 * sizeof(int32_t);
 					// Make it FLOAT3
 					union {
-						int32 value;
+                        int32_t value;
 						struct {
 							int x : 11;
 							int y : 11;
@@ -508,7 +508,7 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
 						};
 					} NormPacked3;
 
-					NormPacked3.value = ((int32 *)pXboxVertexAsByte)[0];
+					NormPacked3.value = ((int32_t*)pXboxVertexAsByte)[0];
 
 					pHostVertexAsFloat[0] = PackedIntToFloat(NormPacked3.x, 1023.0f, 1024.f);
 					pHostVertexAsFloat[1] = PackedIntToFloat(NormPacked3.y, 1023.0f, 1024.f);
@@ -659,7 +659,7 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
 			// the uiTextureCoordinatesByteOffsetInVertex on host will match Xbox 
 		}
 
-		for (uint32 uiVertex = StartIndex; uiVertex < uiVertexCount; uiVertex++) {
+		for (uint32_t uiVertex = StartIndex; uiVertex < uiVertexCount; uiVertex++) {
 			FLOAT *pVertexDataAsFloat = (FLOAT*)(&pHostVertexData[uiVertex * uiHostVertexStride]);
 
 			// Handle pre-transformed vertices (which bypass the vertex shader pipeline)
@@ -683,7 +683,7 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
 			// Normalize texture coordinates in FVF stream if needed
 			if (uiTextureCoordinatesByteOffsetInVertex > 0) { // implies bNeedTextureNormalization (using one is more efficient than both)
 				FLOAT *pVertexUVData = (FLOAT*)((uintptr_t)pVertexDataAsFloat + uiTextureCoordinatesByteOffsetInVertex);
-				for (uint i = 0; i < X_D3DTS_STAGECOUNT; i++) {
+				for (unsigned int i = 0; i < X_D3DTS_STAGECOUNT; i++) {
 					if (pActivePixelContainer[i].bTexIsLinear) {
 						switch (pActivePixelContainer[i].NrTexCoords) {
 						case 0:
@@ -833,7 +833,7 @@ VOID XTL::EmuFlushIVB()
 	DWORD dwTexN = (dwCurFVF & D3DFVF_TEXCOUNT_MASK) >> D3DFVF_TEXCOUNT_SHIFT;
 	size_t TexSize[X_D3DTS_STAGECOUNT]; // Xbox supports up to 4 textures (TEXTURE_STAGES)
 
-	for (uint i = 0; i < dwTexN; i++) {
+	for (unsigned int i = 0; i < dwTexN; i++) {
 		TexSize[i] = DxbxFVF_GetNumberOfTextureCoordinates(dwCurFVF, i);
 	}
 
@@ -851,7 +851,7 @@ VOID XTL::EmuFlushIVB()
 	}
 
 	FLOAT *pVertexBufferData = g_InlineVertexBuffer_pData;
-	for(uint v=0;v<g_InlineVertexBuffer_TableOffset;v++) {
+	for(unsigned int v=0;v<g_InlineVertexBuffer_TableOffset;v++) {
         *pVertexBufferData++ = g_InlineVertexBuffer_Table[v].Position.x;
         *pVertexBufferData++ = g_InlineVertexBuffer_Table[v].Position.y;
         *pVertexBufferData++ = g_InlineVertexBuffer_Table[v].Position.z;
@@ -916,7 +916,7 @@ VOID XTL::EmuFlushIVB()
 			DBG_PRINTF("IVB Specular := 0x%.08X\n", g_InlineVertexBuffer_Table[v].Specular);
 		}
 
-		for (uint i = 0; i < dwTexN; i++) {
+		for (unsigned int i = 0; i < dwTexN; i++) {
             *pVertexBufferData++ = g_InlineVertexBuffer_Table[v].TexCoord[i].x;
 			if (TexSize[i] >= 2) {
 				*pVertexBufferData++ = g_InlineVertexBuffer_Table[v].TexCoord[i].y;
@@ -939,7 +939,7 @@ VOID XTL::EmuFlushIVB()
         }
 
 		if (v == 0) {
-			uint VertexBufferUsage = (uintptr_t)pVertexBufferData - (uintptr_t)g_InlineVertexBuffer_pData;
+			unsigned int VertexBufferUsage = (uintptr_t)pVertexBufferData - (uintptr_t)g_InlineVertexBuffer_pData;
 			if (VertexBufferUsage != uiStride) {
 				CxbxKrnlCleanup("EmuFlushIVB uses wrong stride!");
 			}

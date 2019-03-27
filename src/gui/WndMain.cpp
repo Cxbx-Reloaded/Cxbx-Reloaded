@@ -632,7 +632,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
 					// export logo bitmap
 					{
-						uint08 i_gray[100 * 17];
+						uint8_t i_gray[100 * 17];
 
 						m_Xbe->ExportLogoBitmap(i_gray);
 
@@ -644,7 +644,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 							{
 								BITMAPFILEHEADER    bmfh;
 
-								bmfh.bfType = *(uint16*)"BM";
+								bmfh.bfType = *(uint16_t*)"BM";
 								bmfh.bfSize = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFO) - sizeof(RGBQUAD) + (100 * 17) * sizeof(RGBTRIPLE) + 2;
 								bmfh.bfReserved1 = 0;
 								bmfh.bfReserved2 = 0;
@@ -676,7 +676,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 							{
 								RGBTRIPLE bmp_data[100 * 17];
 
-								for (uint32 v = 0; v < 100 * 17; v++)
+								for (uint32_t v = 0; v < 100 * 17; v++)
 								{
 									bmp_data[v].rgbtRed = i_gray[v];
 									bmp_data[v].rgbtGreen = i_gray[v];
@@ -688,7 +688,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
 							// write bitmap padding
 							{
-								uint16 pad = 0;
+								uint16_t pad = 0;
 
 								fwrite(&pad, 2, 1, LogoBitmap);
 							}
@@ -736,7 +736,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 				{
 					// import logo bitmap
 					{
-						uint08 i_gray[100 * 17];
+						uint8_t i_gray[100 * 17];
 
 						// read bitmap file
 						{
@@ -751,7 +751,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
 								fread(&bmfh, sizeof(bmfh), 1, logo);
 
-								if (bmfh.bfType != *(uint16*)"BM")
+								if (bmfh.bfType != *(uint16_t*)"BM")
 									bmp_err = "Invalid bitmap file...\n\nonly allows 24 bit bitmaps (100 by 17 pixels) with row order swapped";
 								else if (bmfh.bfSize != sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFO) - sizeof(RGBQUAD) + (100 * 17) * sizeof(RGBTRIPLE) + 2)
 									bmp_err = "Invalid bitmap file...\n\nonly allows 24 bit bitmaps (100 by 17 pixels) with row order swapped";
@@ -775,7 +775,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
 								fread(bmp_data, 100 * 17 * sizeof(RGBTRIPLE), 1, logo);
 
-								for (uint32 c = 0; c < 100 * 17; c++)
+								for (uint32_t c = 0; c < 100 * 17; c++)
 									i_gray[c] = (char)(((float)bmp_data[c].rgbtRed + (float)bmp_data[c].rgbtGreen + (float)bmp_data[c].rgbtBlue) / 3.0);
 							}
 
@@ -846,8 +846,8 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 				if ((m_Xbe->m_Header.dwEntryAddr ^ XOR_EP_RETAIL) > 0x01000000)
 				{
 					// we're in debug mode, so switch over to retail
-					uint32 ep = m_Xbe->m_Header.dwEntryAddr ^ XOR_EP_RETAIL;            // decode from debug mode
-					uint32 kt = m_Xbe->m_Header.dwKernelImageThunkAddr ^ XOR_KT_DEBUG;  // decode from debug mode
+					uint32_t ep = m_Xbe->m_Header.dwEntryAddr ^ XOR_EP_RETAIL;            // decode from debug mode
+					uint32_t kt = m_Xbe->m_Header.dwKernelImageThunkAddr ^ XOR_KT_DEBUG;  // decode from debug mode
 
 					m_Xbe->m_Header.dwEntryAddr = ep ^ XOR_EP_DEBUG;                    // encode to retail mode
 					m_Xbe->m_Header.dwKernelImageThunkAddr = kt ^ XOR_KT_RETAIL;        // encode to retail mode
@@ -855,8 +855,8 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 				else
 				{
 					// we're in retail mode, so switch to debug
-					uint32 ep = m_Xbe->m_Header.dwEntryAddr ^ XOR_EP_DEBUG;             // decode from retail mode
-					uint32 kt = m_Xbe->m_Header.dwKernelImageThunkAddr ^ XOR_KT_RETAIL; // decode from retail mode
+					uint32_t ep = m_Xbe->m_Header.dwEntryAddr ^ XOR_EP_DEBUG;             // decode from retail mode
+					uint32_t kt = m_Xbe->m_Header.dwKernelImageThunkAddr ^ XOR_KT_RETAIL; // decode from retail mode
 
 					m_Xbe->m_Header.dwEntryAddr = ep ^ XOR_EP_RETAIL;                   // encode to debug mode
 					m_Xbe->m_Header.dwKernelImageThunkAddr = kt ^ XOR_KT_DEBUG;         // encode to debug mode
@@ -1406,7 +1406,7 @@ void WndMain::XbeLoaded()
 // load logo bitmap
 void WndMain::LoadLogo()
 {
-    uint08 i_gray[100*17];
+    uint8_t i_gray[100*17];
 
     m_Xbe->ExportLogoBitmap(i_gray);
 
@@ -1422,10 +1422,10 @@ void WndMain::LoadLogo()
         return;
     }
 
-    uint32 v=0;
-    for(uint32 y=0;y<17;y++)
+    uint32_t v=0;
+    for(uint32_t y=0;y<17;y++)
     {
-        for(uint32 x=0;x<100;x++)
+        for(uint32_t x=0;x<100;x++)
         {
             SetPixel(m_LogoDC, x, y, RGB(i_gray[v], i_gray[v], i_gray[v]));
             v++;
@@ -1470,9 +1470,9 @@ typedef struct {
 void WndMain::LoadGameLogo()
 {
 	// Export Game Logo bitmap (XTIMAG or XSIMAG)
-	uint8 *pSection = (uint8 *)m_Xbe->FindSection("$$XTIMAGE"); // Check for XTIMAGE
+	uint8_t *pSection = (uint8_t *)m_Xbe->FindSection("$$XTIMAGE"); // Check for XTIMAGE
 	if (!pSection) {
-		pSection = (uint8 *)m_Xbe->FindSection("$$XSIMAGE"); // if XTIMAGE isn't present, check for XSIMAGE (smaller)
+		pSection = (uint8_t *)m_Xbe->FindSection("$$XSIMAGE"); // if XTIMAGE isn't present, check for XSIMAGE (smaller)
 		if (!pSection) {
 			return;
 		}
@@ -1481,7 +1481,7 @@ void WndMain::LoadGameLogo()
 	gameLogoWidth = 0;
 	gameLogoHeight = 0;
 
-	uint8 *ImageData = NULL;
+    uint8_t *ImageData = NULL;
 	XTL::X_D3DPixelContainer XboxPixelContainer = {};
 	XTL::X_D3DPixelContainer *pXboxPixelContainer = &XboxPixelContainer;
 
@@ -1503,7 +1503,7 @@ void WndMain::LoadGameLogo()
 		if (Format == XTL::D3DFMT_UNKNOWN)
 			return;
 
-		ImageData = (uint8 *)(pSection + sizeof(DWORD) + pDDSHeader->dwSize);
+		ImageData = (uint8_t *)(pSection + sizeof(DWORD) + pDDSHeader->dwSize);
 		//gameLogoHeight = pDDSHeader->dwHeight;
 		//gameLogoWidth = pDDSHeader->dwWidth;
 
@@ -1522,11 +1522,11 @@ void WndMain::LoadGameLogo()
 	case MAKEFOURCC('X', 'P', 'R', '1'): {
 		struct Xbe::XprHeader *pXprHeader = (struct Xbe::XprHeader*)pSection;
 
-		uint SizeOfResourceHeaders = pXprHeader->dwXprHeaderSize - sizeof(Xbe::XprHeader);
-		uint SizeOfResourceData = pXprHeader->dwXprTotalSize - pXprHeader->dwXprHeaderSize;
+		unsigned int SizeOfResourceHeaders = pXprHeader->dwXprHeaderSize - sizeof(Xbe::XprHeader);
+		unsigned int SizeOfResourceData = pXprHeader->dwXprTotalSize - pXprHeader->dwXprHeaderSize;
 
-		uint8 *ResourceHeaders = pSection + sizeof(Xbe::XprHeader);
-		uint8 *ResourceData = ResourceHeaders + SizeOfResourceHeaders;
+		uint8_t *ResourceHeaders = pSection + sizeof(Xbe::XprHeader);
+		uint8_t *ResourceData = ResourceHeaders + SizeOfResourceHeaders;
 
 		pXboxPixelContainer = (XTL::X_D3DPixelContainer*)ResourceHeaders;
 		ImageData = ResourceData;
@@ -2082,10 +2082,10 @@ void WndMain::CloseXbe()
 
     // clear logo bitmap
     {
-        uint32 v=0;
-        for(uint32 y=0;y<17;y++)
+        uint32_t v=0;
+        for(uint32_t y=0;y<17;y++)
         {
-            for(uint32 x=0;x<100;x++)
+            for(uint32_t x=0;x<100;x++)
             {
                 SetPixel(m_LogoDC, x, y, RGB(0, 0, 0));
                 v++;
@@ -2111,7 +2111,7 @@ void WndMain::OpenMRU(int mru)
 
 	GetMenuString(rxbe_menu, ID_FILE_RXBE_0 + mru, szBuffer, 269, MF_BYCOMMAND);
 
-	char *szFilename = (char*)((uint32)szBuffer + 5); // +5 skips over "&%d : " prefix (see UpdateRecentFiles)
+	char *szFilename = (char*)((uint32_t)szBuffer + 5); // +5 skips over "&%d : " prefix (see UpdateRecentFiles)
 
 	OpenXbe(szFilename);
 }
@@ -2415,7 +2415,7 @@ void WndMain::DrawLedBitmap(HWND hwnd, bool bdefault)
 	}
 	else { // draw colored bitmap
 		static int LedSequenceOffset = 0;
-		uint FlagsLLE = 0;
+		unsigned int FlagsLLE = 0;
 
 		// Select active color and cycle through all 4 phases in the sequence
 		ActiveLEDColor = m_LedSeq_status[LedSequenceOffset & 3];

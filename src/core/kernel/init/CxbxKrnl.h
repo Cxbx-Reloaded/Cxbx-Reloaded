@@ -219,7 +219,7 @@ extern bool g_bIsDebugKernel;
 void CxbxKrnlMain(int argc, char* argv[]);
 
 /*! initialize emulation */
-__declspec(noreturn) void CxbxKrnlInit(void *pTLSData, Xbe::TLS *pTLS, Xbe::LibraryVersion *LibraryVersion, DebugMode DbgMode, const char *szDebugFilename, Xbe::Header *XbeHeader, uint32 XbeHeaderSize, void (*Entry)(), int BootFlags);
+__declspec(noreturn) void CxbxKrnlInit(void *pTLSData, Xbe::TLS *pTLS, Xbe::LibraryVersion *LibraryVersion, DebugMode DbgMode, const char *szDebugFilename, Xbe::Header *XbeHeader, uint32_t XbeHeaderSize, void (*Entry)(), int BootFlags);
 
 /*! cleanup emulation */
 __declspec(noreturn) void CxbxKrnlCleanupEx(CXBXR_MODULE cxbxr_module, const char *szErrorMessage, ...);
@@ -265,7 +265,7 @@ bool CxbxExec(std::string &execCommand, HANDLE* hProcess, bool requestHandleProc
 bool CxbxIsElevated();
 
 /*! kernel thunk table */
-extern uint32 CxbxKrnl_KernelThunkTable[379];
+extern uint32_t CxbxKrnl_KernelThunkTable[379];
 
 extern bool g_bIsWine;
 

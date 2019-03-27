@@ -16,7 +16,7 @@ void WalkIndexBuffer_NoSIMD(XTL::INDEX16 & LowIndex, XTL::INDEX16 & HighIndex, X
 	// Determine highest and lowest index in use 
 	LowIndex = pIndexData[0];
 	HighIndex = LowIndex;
-	for (uint i = 1; i < dwIndexCount; i++) {
+	for (unsigned int i = 1; i < dwIndexCount; i++) {
 		XTL::INDEX16 Index = pIndexData[i];
 		if (LowIndex > Index)
 			LowIndex = Index;

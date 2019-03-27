@@ -426,8 +426,8 @@ __declspec(naked) void EmuFS_MovFs00Esp()
 
 __declspec(naked) void EmuFS_PushDwordPtrFs00()
 {
-	static uint32 returnAddr;
-	static uint32 temp;
+	static uint32_t returnAddr;
+	static uint32_t temp;
 
 	__asm
 	{
@@ -446,8 +446,8 @@ __declspec(naked) void EmuFS_PushDwordPtrFs00()
 
 __declspec(naked) void EmuFS_PopDwordPtrFs00()
 {
-	static uint32 returnAddr;
-	static uint32 temp;
+	static uint32_t returnAddr;
+	static uint32_t temp;
 
 	__asm
 	{
@@ -496,7 +496,7 @@ void EmuInitFS()
 	long numberOfInstructions = fsInstructions.size();
 
 	// Iterate through each CODE section
-	for (uint32 sectionIndex = 0; sectionIndex < CxbxKrnl_Xbe->m_Header.dwSections; sectionIndex++) {
+	for (uint32_t sectionIndex = 0; sectionIndex < CxbxKrnl_Xbe->m_Header.dwSections; sectionIndex++) {
 		if (!CxbxKrnl_Xbe->m_SectionHeader[sectionIndex].dwFlags.bExecutable) {
 			continue;
 		}
@@ -521,8 +521,8 @@ void EmuInitFS()
 					DBG_PRINTF_EX(CXBXR_MODULE::INIT, "Patching FS Instruction at 0x%.8X\n", addr);
 
 					// Write Call opcode
-					*(uint08*)addr = OPCODE_CALL_E8;
-					*(uint32*)(addr + 1) = (uint32)fsInstructions[i].functionPtr - addr - 5;
+					*(uint8_t*)addr = OPCODE_CALL_E8;
+					*(uint32_t*)(addr + 1) = (uint32_t)fsInstructions[i].functionPtr - addr - 5;
 
 					// Fill the remaining bytes with nop instructions
 					int remaining_bytes = fsInstructions[i].data.size() - 5;
@@ -546,8 +546,8 @@ void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData)
 	if (pTLS != nullptr) {
 		// copy global TLS to the current thread
 		{
-			uint32 dwCopySize = 0;
-			uint32 dwZeroSize = pTLS->dwSizeofZeroFill;
+            uint32_t dwCopySize = 0;
+            uint32_t dwZeroSize = pTLS->dwSizeofZeroFill;
 
 			if (pTLSData != NULL) {
 				// Make sure the TLS Start and End addresses are within Xbox virtual memory
@@ -574,9 +574,9 @@ void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData)
             } else {
                 DBG_PRINTF("TLS Data Dump...\n");
                 if (g_bPrintfOn) {
-                    for (uint32 v = 0; v < dwCopySize; v++) {// Note : Don't dump dwZeroSize
+                    for (uint32_t v = 0; v < dwCopySize; v++) {// Note : Don't dump dwZeroSize
 
-                        uint08 *bByte = (uint08*)pNewTLS + v;
+                        uint8_t *bByte = (uint8_t*)pNewTLS + v;
 
                         if (v % 0x10 == 0) {
                             DBG_PRINTF("0x%.8X:", (xbaddr)bByte);

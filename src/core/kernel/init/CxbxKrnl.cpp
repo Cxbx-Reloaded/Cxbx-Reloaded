@@ -786,7 +786,7 @@ void PatchRdtscInstructions()
 	DWORD sizeOfImage = CxbxKrnl_XbeHeader->dwSizeofImage;
 
 	// Iterate through each CODE section
-	for (uint32 sectionIndex = 0; sectionIndex < CxbxKrnl_Xbe->m_Header.dwSections; sectionIndex++) {
+	for (uint32_t sectionIndex = 0; sectionIndex < CxbxKrnl_Xbe->m_Header.dwSections; sectionIndex++) {
 		if (!CxbxKrnl_Xbe->m_SectionHeader[sectionIndex].dwFlags.bExecutable) {
 			continue;
 		}
@@ -854,7 +854,7 @@ void PatchRdtscInstructions()
 	printf("INIT: Done patching rdtsc, total %d rdtsc instructions patched\n", g_RdtscPatches.size());
 }
 
-void MapThunkTable(uint32_t* kt, uint32* pThunkTable)
+void MapThunkTable(uint32_t* kt, uint32_t* pThunkTable)
 {
     const bool SendDebugReports = (pThunkTable == CxbxKrnl_KernelThunkTable) && CxbxDebugger::CanReport();
 
@@ -1172,8 +1172,8 @@ void CxbxKrnlMain(int argc, char* argv[])
 		}
 
 		// Check the integrity of the xbe sections
-		for (uint32 sectionIndex = 0; sectionIndex < CxbxKrnl_Xbe->m_Header.dwSections; sectionIndex++) {
-			uint32 RawSize = CxbxKrnl_Xbe->m_SectionHeader[sectionIndex].dwSizeofRaw;
+		for (uint32_t sectionIndex = 0; sectionIndex < CxbxKrnl_Xbe->m_Header.dwSections; sectionIndex++) {
+			uint32_t RawSize = CxbxKrnl_Xbe->m_SectionHeader[sectionIndex].dwSizeofRaw;
 			if (RawSize == 0) {
 				continue;
 			}
@@ -1228,7 +1228,7 @@ void CxbxKrnlMain(int argc, char* argv[])
 
 		// Load all sections marked as preload using the in-memory copy of the xbe header
 		xboxkrnl::PXBEIMAGE_SECTION sectionHeaders = (xboxkrnl::PXBEIMAGE_SECTION)CxbxKrnl_Xbe->m_Header.dwSectionHeadersAddr;
-		for (uint32 i = 0; i < CxbxKrnl_Xbe->m_Header.dwSections; i++) {
+		for (uint32_t i = 0; i < CxbxKrnl_Xbe->m_Header.dwSections; i++) {
 			if ((sectionHeaders[i].Flags & XBEIMAGE_SECTION_PRELOAD) != 0) {
 				NTSTATUS result = xboxkrnl::XeLoadSection(&sectionHeaders[i]);
 				if (FAILED(result)) {
@@ -1323,7 +1323,7 @@ __declspec(noreturn) void CxbxKrnlInit
 	DebugMode               DbgMode,
 	const char             *szDebugFilename,
 	Xbe::Header            *pXbeHeader,
-	uint32                  dwXbeHeaderSize,
+	uint32_t                dwXbeHeaderSize,
 	void(*Entry)(),
 	int BootFlags)
 {
@@ -1336,7 +1336,7 @@ __declspec(noreturn) void CxbxKrnlInit
 
 	// A patch to dwCertificateAddr is a requirement due to Windows TLS is overwriting dwGameRegion data address.
 	// By using unalternated certificate data, it should no longer cause any problem with titles running and Cxbx's log as well.
-	CxbxKrnl_XbeHeader->dwCertificateAddr = (uint32)&CxbxKrnl_Xbe->m_Certificate;
+	CxbxKrnl_XbeHeader->dwCertificateAddr = (uint32_t)&CxbxKrnl_Xbe->m_Certificate;
 	g_pCertificate = &CxbxKrnl_Xbe->m_Certificate;
 
 	// Initialize timer subsystem
@@ -1394,7 +1394,7 @@ __declspec(noreturn) void CxbxKrnlInit
 
 	// Read which components need to be LLE'ed per user request
 	{
-		uint CxbxLLE_Flags;
+		unsigned int CxbxLLE_Flags;
 		g_EmuShared->GetFlagsLLE(&CxbxLLE_Flags);
 		bLLE_APU = (CxbxLLE_Flags & LLE_APU) > 0;
 		bLLE_GPU = (CxbxLLE_Flags & LLE_GPU) > 0;
@@ -1518,7 +1518,7 @@ __declspec(noreturn) void CxbxKrnlInit
 		// Dump Xbe library build numbers
 		Xbe::LibraryVersion* libVersionInfo = pLibraryVersion;// (LibraryVersion *)(CxbxKrnl_XbeHeader->dwLibraryVersionsAddr);
 		if (libVersionInfo != NULL) {
-			for (uint32 v = 0; v < CxbxKrnl_XbeHeader->dwLibraryVersions; v++) {
+			for (uint32_t v = 0; v < CxbxKrnl_XbeHeader->dwLibraryVersions; v++) {
 				printf("[0x%.4X] INIT: XBE Library %u : %.8s (version %d)\n", GetCurrentThreadId(), v, libVersionInfo->szName, libVersionInfo->wBuildVersion);
 				libVersionInfo++;
 			}
@@ -1632,7 +1632,7 @@ __declspec(noreturn) void CxbxKrnlInit
 	EmuX86_Init();
 	// Create the interrupt processing thread
 	DWORD dwThreadId;
-	HANDLE hThread = (HANDLE)_beginthreadex(NULL, NULL, CxbxKrnlInterruptThread, NULL, NULL, (uint*)&dwThreadId);
+	HANDLE hThread = (HANDLE)_beginthreadex(NULL, NULL, CxbxKrnlInterruptThread, NULL, NULL, (unsigned int*)&dwThreadId);
 	// Start the kernel clock thread
 	TimerObject* KernelClockThr = Timer_Create(CxbxKrnlClockThread, nullptr, "Kernel clock thread", &g_CPUOthers);
 	Timer_Start(KernelClockThr, SCALE_MS_IN_NS);

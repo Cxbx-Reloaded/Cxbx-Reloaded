@@ -41,8 +41,8 @@ namespace CxbxDebugger
 	void ReportKernelPatch(const char* ImportName, DWORD Address);
 
 	void ReportFileOpened(HANDLE hFile, const wchar_t* Filename, bool Success);
-	void ReportFileRead(HANDLE hFile, uint Size, u64 Offset);
-	void ReportFileWrite(HANDLE hFile, uint Size, u64 Offset);
+	void ReportFileRead(HANDLE hFile, unsigned int Size, uint64_t Offset);
+	void ReportFileWrite(HANDLE hFile, unsigned int Size, uint64_t Offset);
 	void ReportFileClosed(HANDLE hFile);
 
 	// Exception helpers:

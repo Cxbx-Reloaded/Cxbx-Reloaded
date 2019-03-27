@@ -106,7 +106,7 @@ INT_PTR CALLBACK DlgVideoConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPAR
             {
                 SendMessage(g_hDisplayAdapter, CB_RESETCONTENT, 0, 0);
 
-                for(uint32 v=0;v<g_dwAdapterCount;v++)
+                for(uint32_t v=0;v<g_dwAdapterCount;v++)
                 {
                     XTL::D3DADAPTER_IDENTIFIER adapterIdentifier;
 
@@ -259,7 +259,7 @@ VOID RefreshDisplayAdapter()
         SendMessage(g_hDirect3DDevice, CB_RESETCONTENT, 0, 0);
 
         /*! step through devices types */
-        for(uint32 d=0;d<2;d++)
+        for(uint32_t d=0;d<2;d++)
         {
             XTL::D3DCAPS Caps;
 
@@ -306,7 +306,7 @@ VOID RefreshDirect3DDevice()
 
         /*! enumerate display modes */
         {
-            uint32 dwAdapterModeCount = g_pDirect3D->GetAdapterModeCount(
+            uint32_t dwAdapterModeCount = g_pDirect3D->GetAdapterModeCount(
                 g_XBVideo.adapter
 				, XTL::D3DFMT_X8R8G8B8
 			);
@@ -314,7 +314,7 @@ VOID RefreshDirect3DDevice()
             SendMessage(g_hVideoResolution, CB_ADDSTRING, 0, (LPARAM)"Automatic (Default)");
 
             /*! enumerate through available adapter modes */
-            for(uint32 v=0;v<dwAdapterModeCount;v++)
+            for(uint32_t v=0;v<dwAdapterModeCount;v++)
             {
                 const char *szFormat = "<unknown>";
 

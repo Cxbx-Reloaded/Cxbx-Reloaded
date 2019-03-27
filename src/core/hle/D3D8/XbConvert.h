@@ -37,7 +37,7 @@
 #define X_D3DRSSE_UNK 0x7fffffff
 extern CONST DWORD EmuD3DRenderStateSimpleEncoded[174];
 
-typedef void(*FormatToARGBRow)(const uint8* src, uint8* dst_argb, int width);
+typedef void(*FormatToARGBRow)(const uint8_t* src, uint8_t* dst_argb, int width);
 
 extern const FormatToARGBRow EmuXBFormatComponentConverter(X_D3DFORMAT Format);
 
@@ -93,13 +93,13 @@ else
 // convert from xbox to pc texture transform state types
 inline D3DTRANSFORMSTATETYPE EmuXB2PC_D3DTS(D3DTRANSFORMSTATETYPE State)
 {
-    if((uint32)State < 2)
+    if((uint32_t)State < 2)
         return (D3DTRANSFORMSTATETYPE)(State + 2);
-    else if((uint32)State < 6)
+    else if((uint32_t)State < 6)
         return (D3DTRANSFORMSTATETYPE)(State + 14);
-    else if((uint32)State < 10)
+    else if((uint32_t)State < 10)
         return D3DTS_WORLDMATRIX(State-6);
-    else if((uint32)State == 10) // Max
+    else if((uint32_t)State == 10) // Max
         return (D3DTRANSFORMSTATETYPE)(D3DTS_TEXTURE7 + 1);
 
     CxbxKrnlCleanupEx(LOG_PREFIX_D3DCVT, "Unknown Transform State Type (%d)", State);

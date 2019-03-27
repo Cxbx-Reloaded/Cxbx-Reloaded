@@ -90,8 +90,8 @@ VOID WINAPI XTL::EMUPATCH(XGSwizzleRect)
         DWORD dwMaxY = Height;
         DWORD dwChunkSize = Width;
 
-        uint08 *pSrc = (uint08*)pSource;
-        uint08 *pDst = (uint08*)pDest;
+        uint8_t *pSrc = (uint8_t*)pSource;
+        uint8_t *pDst = (uint8_t*)pDest;
 
         if(pRect != 0)
         {
@@ -157,8 +157,8 @@ VOID WINAPI XTL::EMUPATCH(XGSwizzleBox)
 			DWORD dwMaxZ = Depth;
 			DWORD dwChunkSize = Width;
 
-			uint08 *pSrc = (uint08*)pSource;
-			uint08 *pDst = (uint08*)pDest;
+			uint8_t *pSrc = (uint8_t*)pSource;
+			uint8_t *pDst = (uint8_t*)pDest;
 
 			if(pBox != 0)
 			{

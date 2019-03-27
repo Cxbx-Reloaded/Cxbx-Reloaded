@@ -63,10 +63,10 @@ void ResourceTracker::clear()
 
 void ResourceTracker::insert(void *pResource)
 {
-    insert((uint32)pResource, pResource);
+    insert((uint32_t)pResource, pResource);
 }
 
-void ResourceTracker::insert(uint32 uiKey, void *pResource)
+void ResourceTracker::insert(uint32_t uiKey, void *pResource)
 {
     this->Lock();
 
@@ -101,10 +101,10 @@ void ResourceTracker::insert(uint32 uiKey, void *pResource)
 
 void ResourceTracker::remove(void *pResource)
 {
-    remove((uint32)pResource);
+    remove((uint32_t)pResource);
 }
 
-void ResourceTracker::remove(uint32 uiKey)
+void ResourceTracker::remove(uint32_t uiKey)
 {
     this->Lock();
 
@@ -150,10 +150,10 @@ void ResourceTracker::remove(uint32 uiKey)
 
 bool ResourceTracker::exists(void *pResource)
 {
-    return exists((uint32)pResource);
+    return exists((uint32_t)pResource);
 }
 
-bool ResourceTracker::exists(uint32 uiKey)
+bool ResourceTracker::exists(uint32_t uiKey)
 {
     this->Lock();
 
@@ -177,10 +177,10 @@ bool ResourceTracker::exists(uint32 uiKey)
 
 void *ResourceTracker::get(void *pResource)
 {
-    return get((uint32)pResource);
+    return get((uint32_t)pResource);
 }
 
-void *ResourceTracker::get(uint32 uiKey)
+void *ResourceTracker::get(uint32_t uiKey)
 {
     RTNode *cur = m_head;
 
@@ -197,9 +197,9 @@ void *ResourceTracker::get(uint32 uiKey)
     return 0;
 }
 
-uint32 ResourceTracker::get_count(void)
+uint32_t ResourceTracker::get_count(void)
 {
-    uint32 uiCount = 0;
+    uint32_t uiCount = 0;
 
     this->Lock();
 

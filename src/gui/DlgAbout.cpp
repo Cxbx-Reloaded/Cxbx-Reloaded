@@ -39,7 +39,7 @@
 // Array of tab pane handles
 std::vector<HWND> aboutTabPanes;
 // Current (active) tab pane index
-uint aboutCurrentTab = 0;
+unsigned int aboutCurrentTab = 0;
 
 /*! windows dialog procedure */
 static INT_PTR CALLBACK DlgAboutProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -175,7 +175,7 @@ INT_PTR CALLBACK DlgAboutProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 
 		case WM_NOTIFY:
 		{
-			uint index = SendMessage(GetDlgItem(hWndDlg, IDC_TAB1), TCM_GETCURSEL, 0, 0);
+			unsigned int index = SendMessage(GetDlgItem(hWndDlg, IDC_TAB1), TCM_GETCURSEL, 0, 0);
 
 			// Do nothing if the tab hasnt been changed, or if we try to load a non existant tab
 			if (index == aboutCurrentTab || index >= aboutTabPanes.size()) {

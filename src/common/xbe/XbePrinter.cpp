@@ -36,7 +36,7 @@
 extern std::string FormatTitleId(uint32_t title_id); // Exposed in Emu.cpp
 
 // better time
-static char *BetterTime(uint32 x_timeDate)
+static char *BetterTime(uint32_t x_timeDate)
 {
     time_t x_time = x_timeDate;
     char *x_ctime = ctime(&x_time);
@@ -82,13 +82,13 @@ std::string XbePrinter::GenXbeInfo()
 }
 
 std::string XbePrinter::GenHexRow(
-    uint08 *signature, const uint08 row, const uint08 row_size
+    uint8_t *signature, const uint8_t row, const uint8_t row_size
 )
 {
-    const uint16 offset = row * row_size;
+    const uint16_t offset = row * row_size;
     std::stringstream text;
     SSTREAM_SET_HEX(text);
-    for(uint08 x = 0; x < row_size; x++) {
+    for(uint8_t x = 0; x < row_size; x++) {
         text << std::setw(2) << static_cast<unsigned>(signature[offset + x]);
     }
     return text.str();
@@ -104,7 +104,7 @@ std::string XbePrinter::utf8_to_ascii(const wchar_t* utf8_string)
 
 std::string XbePrinter::AllowedMediaToString()
 {
-    const uint32 dwAllowedMedia = Xbe_certificate->dwAllowedMedia;
+    const uint32_t dwAllowedMedia = Xbe_certificate->dwAllowedMedia;
     std::string text = "Media Types:";
 
     if(dwAllowedMedia & XBEIMAGE_MEDIA_TYPE_MEDIA_MASK) {
@@ -199,7 +199,7 @@ std::string XbePrinter::GenXbeHeaderInfo()
 
 std::string XbePrinter::GenDigitalSignature()
 {
-    const uint08 row_size = 16;
+    const uint8_t row_size = 16;
     std::string text;
     text.append("Digital Signature               : <Hex Dump>");
     for(int row = 0; row < 16; row++) {
@@ -249,10 +249,10 @@ std::string XbePrinter::GenInitFlags()
 
 std::string XbePrinter::GenGeneralHeaderInfo2()
 {
-    const uint32 retail_entry_point = Xbe_header->dwEntryAddr ^ XOR_EP_RETAIL;
-    const uint32 debug_entry_point = Xbe_header->dwEntryAddr ^ XOR_EP_DEBUG;
-    const uint32 retail_thunk_addr = Xbe_header->dwKernelImageThunkAddr ^ XOR_KT_RETAIL;
-    const uint32 debug_thunk_addr = Xbe_header->dwKernelImageThunkAddr ^ XOR_KT_DEBUG;
+    const uint32_t retail_entry_point = Xbe_header->dwEntryAddr ^ XOR_EP_RETAIL;
+    const uint32_t debug_entry_point = Xbe_header->dwEntryAddr ^ XOR_EP_DEBUG;
+    const uint32_t retail_thunk_addr = Xbe_header->dwKernelImageThunkAddr ^ XOR_KT_RETAIL;
+    const uint32_t debug_thunk_addr = Xbe_header->dwKernelImageThunkAddr ^ XOR_KT_DEBUG;
     const std::string AsciiFilename = utf8_to_ascii(Xbe_to_print->GetUnicodeFilenameAddr());
     std::stringstream text;
     SSTREAM_SET_HEX(text);
@@ -347,8 +347,8 @@ std::string XbePrinter::GenMediaInfo()
 
 std::string XbePrinter::GenLANKey()
 {
-    const uint08 row = 0;
-    const uint08 row_size = 16;
+    const uint8_t row = 0;
+    const uint8_t row_size = 16;
     std::string text;
     text.append("LAN Key                          : ");
     text.append(GenHexRow(&(Xbe_certificate->bzLanKey[0]), row, row_size));
@@ -358,8 +358,8 @@ std::string XbePrinter::GenLANKey()
 
 std::string XbePrinter::GenSignatureKey()
 {
-    const uint08 row = 0;
-    const uint08 row_size = 16;
+    const uint8_t row = 0;
+    const uint8_t row_size = 16;
     std::string text;
     text.append("Signature Key                    : ");
     text.append(GenHexRow(&(Xbe_certificate->bzSignatureKey[0]), row, row_size));
@@ -369,8 +369,8 @@ std::string XbePrinter::GenSignatureKey()
 
 std::string XbePrinter::GenAlternateSignatureKeys()
 {
-    const uint08 row = 0;
-    const uint08 row_size = 16;
+    const uint8_t row = 0;
+    const uint8_t row_size = 16;
     std::string text;
 
     text.append("Title Alternate Signature Keys : <Hex Dump>");
@@ -411,7 +411,7 @@ std::string XbePrinter::GenSectionHeaders()
 {
     std::stringstream text;
     SSTREAM_SET_HEX(text);
-    for(uint32 v=0; v < Xbe_header->dwSections; v++) {
+    for(uint32_t v=0; v < Xbe_header->dwSections; v++) {
         text << "Section Name                     : 0x" << std::setw(8) << Xbe_to_print->m_SectionHeader[v].dwSectionNameAddr << " (\"" << Xbe_to_print->m_szSectionName[v] << "\")\n";
         text << GenSectionFlags(Xbe_to_print->m_SectionHeader[v]);
         text << "Virtual Address                  : 0x" << std::setw(8) << Xbe_to_print->m_SectionHeader[v].dwVirtualAddr << "\n";
@@ -473,9 +473,9 @@ std::string XbePrinter::GenLibraryVersions()
         text << "(This XBE contains no Library Versions)\n\n";
     }
     else {
-        for(uint32 v = 0; v < Xbe_header->dwLibraryVersions; v++) {
+        for(uint32_t v = 0; v < Xbe_header->dwLibraryVersions; v++) {
             char libname[9];
-            for(uint32 c=0;c<8;c++) {
+            for(uint32_t c=0;c<8;c++) {
                 libname[c] = Xbe_to_print->m_LibraryVersion[v].szName[c];
             }
             libname[8] = '\0';

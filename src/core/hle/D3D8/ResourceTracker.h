@@ -41,28 +41,28 @@ extern class ResourceTracker : public Mutex
         void insert(void *pResource);
 
         // insert a ptr using an explicit key
-        void insert(uint32 uiKey, void *pResource);
+        void insert(uint32_t uiKey, void *pResource);
 
         // remove a ptr using the pResource pointer as key
         void remove(void *pResource);
 
         // remove a ptr using an explicit key
-        void remove(uint32 uiKey);
+        void remove(uint32_t uiKey);
 
         // check for existance of ptr using the pResource pointer as key
         bool exists(void *pResource);
 
         // check for existance of an explicit key
-        bool exists(uint32 uiKey);
+        bool exists(uint32_t uiKey);
 
         // retrieves aresource using the resource ointer as key, explicit locking needed
         void *get(void *pResource);
 
         // retrieves a resource using an explicit key, explicit locking needed
-        void *get(uint32 uiKey);
+        void *get(uint32_t uiKey);
 
         // retrieves the number of entries in the tracker
-        uint32 get_count(void);
+        uint32_t get_count(void);
 
         // for traversal
         struct RTNode *getHead() { return m_head; }
@@ -77,7 +77,7 @@ g_PatchedStreamsCache, g_DataToTexture, g_AlignCache;
 
 struct RTNode
 {
-    uint32   uiKey;
+    uint32_t   uiKey;
     void    *pResource;
     RTNode  *pNext;
 };

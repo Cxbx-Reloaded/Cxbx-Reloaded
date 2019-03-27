@@ -419,7 +419,7 @@ void DInputController::ListenPoll(XTL::X_XINPUT_STATE *Controller)
         {
             if(dwFlags & DEVICE_FLAG_AXIS)
             {
-                LONG *pdwAxis = (LONG*)((uint32)&JoyState + dwInfo);
+                LONG *pdwAxis = (LONG*)((uint32_t)&JoyState + dwInfo);
                 wValue = (SHORT)(*pdwAxis);
 
                 if(dwFlags & DEVICE_FLAG_NEGATIVE)
@@ -437,7 +437,7 @@ void DInputController::ListenPoll(XTL::X_XINPUT_STATE *Controller)
             }
             else if(dwFlags & DEVICE_FLAG_BUTTON)
             {
-                BYTE *pbButton = (BYTE*)((uint32)&JoyState + dwInfo);
+                BYTE *pbButton = (BYTE*)((uint32_t)&JoyState + dwInfo);
 
                 if(*pbButton & 0x80)
                     wValue = 32767;

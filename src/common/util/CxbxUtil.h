@@ -75,7 +75,7 @@ constexpr typename std::underlying_type<E>::type to_underlying(E e) noexcept
 #define GET_WORD_HIGH(value) (uint8_t)(((value) >> 8) & 0xFF)
 
 /*! round dwValue to the nearest multiple of dwMult */
-static uint32 RoundUp(uint32 dwValue, uint32 dwMult)
+static uint32_t RoundUp(uint32_t dwValue, uint32_t dwMult)
 {
     if(dwMult == 0) { return dwValue; }
 

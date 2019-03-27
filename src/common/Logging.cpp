@@ -106,13 +106,13 @@ inline void log_get_settings()
 inline void log_sync_config()
 {
 	int LogLevel;
-	uint LoggedModules[NUM_INTEGERS_LOG];
+	unsigned int LoggedModules[NUM_INTEGERS_LOG];
 	g_EmuShared->GetLogLv(&LogLevel);
 	g_EmuShared->GetLogModules(LoggedModules);
 	log_set_config(LogLevel, LoggedModules);
 }
 
-void log_set_config(int LogLevel, uint* LoggedModules)
+void log_set_config(int LogLevel, unsigned int* LoggedModules)
 {
 	g_CurrentLogLevel = LogLevel;
 	for (unsigned int index = to_underlying(CXBXR_MODULE::CXBXR); index < to_underlying(CXBXR_MODULE::MAX); index++) {

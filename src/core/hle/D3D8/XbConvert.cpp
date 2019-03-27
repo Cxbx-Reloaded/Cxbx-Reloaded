@@ -72,12 +72,12 @@ enum _ComponentEncoding {
 
 // Conversion functions copied from libyuv
 // See https://chromium.googlesource.com/libyuv/libyuv/+/master/source/row_common.cc
-void RGB565ToARGBRow_C(const uint8* src_rgb565, uint8* dst_argb, int width) {
+void RGB565ToARGBRow_C(const uint8_t* src_rgb565, uint8_t* dst_argb, int width) {
 	int x;
 	for (x = 0; x < width; ++x) {
-		uint8 b = src_rgb565[0] & 0x1f;
-		uint8 g = (src_rgb565[0] >> 5) | ((src_rgb565[1] & 0x07) << 3);
-		uint8 r = src_rgb565[1] >> 3;
+        uint8_t b = src_rgb565[0] & 0x1f;
+        uint8_t g = (src_rgb565[0] >> 5) | ((src_rgb565[1] & 0x07) << 3);
+        uint8_t r = src_rgb565[1] >> 3;
 		dst_argb[0] = (b << 3) | (b >> 2);
 		dst_argb[1] = (g << 2) | (g >> 4);
 		dst_argb[2] = (r << 3) | (r >> 2);
@@ -86,15 +86,15 @@ void RGB565ToARGBRow_C(const uint8* src_rgb565, uint8* dst_argb, int width) {
 		src_rgb565 += 2;
 	}
 }
-void ARGB1555ToARGBRow_C(const uint8* src_argb1555,
-	uint8* dst_argb,
+void ARGB1555ToARGBRow_C(const uint8_t* src_argb1555,
+    uint8_t* dst_argb,
 	int width) {
 	int x;
 	for (x = 0; x < width; ++x) {
-		uint8 b = src_argb1555[0] & 0x1f;
-		uint8 g = (src_argb1555[0] >> 5) | ((src_argb1555[1] & 0x03) << 3);
-		uint8 r = (src_argb1555[1] & 0x7c) >> 2;
-		uint8 a = src_argb1555[1] >> 7;
+        uint8_t b = src_argb1555[0] & 0x1f;
+        uint8_t g = (src_argb1555[0] >> 5) | ((src_argb1555[1] & 0x03) << 3);
+        uint8_t r = (src_argb1555[1] & 0x7c) >> 2;
+        uint8_t a = src_argb1555[1] >> 7;
 		dst_argb[0] = (b << 3) | (b >> 2);
 		dst_argb[1] = (g << 3) | (g >> 2);
 		dst_argb[2] = (r << 3) | (r >> 2);
@@ -103,15 +103,15 @@ void ARGB1555ToARGBRow_C(const uint8* src_argb1555,
 		src_argb1555 += 2;
 	}
 }
-void ARGB4444ToARGBRow_C(const uint8* src_argb4444,
-	uint8* dst_argb,
+void ARGB4444ToARGBRow_C(const uint8_t* src_argb4444,
+    uint8_t* dst_argb,
 	int width) {
 	int x;
 	for (x = 0; x < width; ++x) {
-		uint8 b = src_argb4444[0] & 0x0f;
-		uint8 g = src_argb4444[0] >> 4;
-		uint8 r = src_argb4444[1] & 0x0f;
-		uint8 a = src_argb4444[1] >> 4;
+        uint8_t b = src_argb4444[0] & 0x0f;
+        uint8_t g = src_argb4444[0] >> 4;
+        uint8_t r = src_argb4444[1] & 0x0f;
+        uint8_t a = src_argb4444[1] >> 4;
 		dst_argb[0] = (b << 4) | b;
 		dst_argb[1] = (g << 4) | g;
 		dst_argb[2] = (r << 4) | r;
@@ -122,13 +122,13 @@ void ARGB4444ToARGBRow_C(const uint8* src_argb4444,
 }
 
 // Cxbx color component conversion functions 
-void X1R5G5B5ToARGBRow_C(const uint8* src_x1r5g5b5, uint8* dst_argb,
+void X1R5G5B5ToARGBRow_C(const uint8_t* src_x1r5g5b5, uint8_t* dst_argb,
 	int width) {
 	int x;
 	for (x = 0; x < width; ++x) {
-		uint8 b = src_x1r5g5b5[0] & 0x1f;
-		uint8 g = (src_x1r5g5b5[0] >> 5) | ((src_x1r5g5b5[1] & 0x03) << 3);
-		uint8 r = (src_x1r5g5b5[1] & 0x7c) >> 2;
+        uint8_t b = src_x1r5g5b5[0] & 0x1f;
+        uint8_t g = (src_x1r5g5b5[0] >> 5) | ((src_x1r5g5b5[1] & 0x03) << 3);
+        uint8_t r = (src_x1r5g5b5[1] & 0x7c) >> 2;
 		dst_argb[0] = (b << 3) | (b >> 2);
 		dst_argb[1] = (g << 3) | (g >> 2);
 		dst_argb[2] = (r << 3) | (r >> 2);
@@ -138,16 +138,16 @@ void X1R5G5B5ToARGBRow_C(const uint8* src_x1r5g5b5, uint8* dst_argb,
 	}
 }
 
-void A8R8G8B8ToARGBRow_C(const uint8* src_a8r8g8b8, uint8* dst_argb, int width) {
+void A8R8G8B8ToARGBRow_C(const uint8_t* src_a8r8g8b8, uint8_t* dst_argb, int width) {
 	memcpy(dst_argb, src_a8r8g8b8, width * sizeof(XTL::D3DCOLOR)); // Cxbx pass-through
 }
 
-void X8R8G8B8ToARGBRow_C(const uint8* src_x8r8g8b8, uint8* dst_argb, int width) {
+void X8R8G8B8ToARGBRow_C(const uint8_t* src_x8r8g8b8, uint8_t* dst_argb, int width) {
 	int x;
 	for (x = 0; x < width; ++x) {
-		uint8 b = src_x8r8g8b8[0];
-		uint8 g = src_x8r8g8b8[1];
-		uint8 r = src_x8r8g8b8[2];
+		uint8_t b = src_x8r8g8b8[0];
+		uint8_t g = src_x8r8g8b8[1];
+		uint8_t r = src_x8r8g8b8[2];
 		dst_argb[0] = b;
 		dst_argb[1] = g;
 		dst_argb[2] = r;
@@ -157,11 +157,11 @@ void X8R8G8B8ToARGBRow_C(const uint8* src_x8r8g8b8, uint8* dst_argb, int width) 
 	}
 }
 
-void ____R8B8ToARGBRow_C(const uint8* src_r8b8, uint8* dst_argb, int width) {
+void ____R8B8ToARGBRow_C(const uint8_t* src_r8b8, uint8_t* dst_argb, int width) {
 	int x;
 	for (x = 0; x < width; ++x) {
-		uint8 b = src_r8b8[0];
-		uint8 r = src_r8b8[1];
+        uint8_t b = src_r8b8[0];
+        uint8_t r = src_r8b8[1];
 		dst_argb[0] = b;
 		dst_argb[1] = b;
 		dst_argb[2] = r;
@@ -171,11 +171,11 @@ void ____R8B8ToARGBRow_C(const uint8* src_r8b8, uint8* dst_argb, int width) {
 	}
 }
 
-void ____G8B8ToARGBRow_C(const uint8* src_g8b8, uint8* dst_argb, int width) {
+void ____G8B8ToARGBRow_C(const uint8_t* src_g8b8, uint8_t* dst_argb, int width) {
 	int x;
 	for (x = 0; x < width; ++x) {
-		uint8 b = src_g8b8[0];
-		uint8 g = src_g8b8[1];
+        uint8_t b = src_g8b8[0];
+        uint8_t g = src_g8b8[1];
 		dst_argb[0] = b;
 		dst_argb[1] = g;
 		dst_argb[2] = b;
@@ -185,10 +185,10 @@ void ____G8B8ToARGBRow_C(const uint8* src_g8b8, uint8* dst_argb, int width) {
 	}
 }
 
-void ______A8ToARGBRow_C(const uint8* src_a8, uint8* dst_argb, int width) {
+void ______A8ToARGBRow_C(const uint8_t* src_a8, uint8_t* dst_argb, int width) {
 	int x;
 	for (x = 0; x < width; ++x) {
-		uint8 a = src_a8[0];
+        uint8_t a = src_a8[0];
 		dst_argb[0] = 255u;
 		dst_argb[1] = 255u;
 		dst_argb[2] = 255u;
@@ -198,12 +198,12 @@ void ______A8ToARGBRow_C(const uint8* src_a8, uint8* dst_argb, int width) {
 	}
 }
 
-void __R6G5B5ToARGBRow_C(const uint8* src_r6g5b5, uint8* dst_argb, int width) {
+void __R6G5B5ToARGBRow_C(const uint8_t* src_r6g5b5, uint8_t* dst_argb, int width) {
 	int x;
 	for (x = 0; x < width; ++x) {
-		uint8 b = src_r6g5b5[0] & 0x1f;
-		uint8 g = (src_r6g5b5[0] >> 5) | ((src_r6g5b5[1] & 0x03) << 3);
-		uint8 r = src_r6g5b5[1] >> 2;
+        uint8_t b = src_r6g5b5[0] & 0x1f;
+        uint8_t g = (src_r6g5b5[0] >> 5) | ((src_r6g5b5[1] & 0x03) << 3);
+        uint8_t r = src_r6g5b5[1] >> 2;
 		dst_argb[0] = (b << 3) | (b >> 2);
 		dst_argb[1] = (g << 3) | (g >> 2);
 		dst_argb[2] = (r << 2) | (r >> 4);
@@ -213,13 +213,13 @@ void __R6G5B5ToARGBRow_C(const uint8* src_r6g5b5, uint8* dst_argb, int width) {
 	}
 }
 
-void R5G5B5A1ToARGBRow_C(const uint8* src_r5g5b5a1, uint8* dst_argb, int width) {
+void R5G5B5A1ToARGBRow_C(const uint8_t* src_r5g5b5a1, uint8_t* dst_argb, int width) {
 	int x;
 	for (x = 0; x < width; ++x) {
-		uint8 a = src_r5g5b5a1[0] & 1;
-		uint8 b = (src_r5g5b5a1[0] & 0x3e) >> 1;
-		uint8 g = (src_r5g5b5a1[0] >> 6) | ((src_r5g5b5a1[1] & 0x07) << 2);
-		uint8 r = (src_r5g5b5a1[1] & 0xf8) >> 3;
+        uint8_t a = src_r5g5b5a1[0] & 1;
+        uint8_t b = (src_r5g5b5a1[0] & 0x3e) >> 1;
+        uint8_t g = (src_r5g5b5a1[0] >> 6) | ((src_r5g5b5a1[1] & 0x07) << 2);
+        uint8_t r = (src_r5g5b5a1[1] & 0xf8) >> 3;
 		dst_argb[0] = (b << 3) | (b >> 2);
 		dst_argb[1] = (g << 3) | (g >> 2);
 		dst_argb[2] = (r << 3) | (r >> 2);
@@ -229,13 +229,13 @@ void R5G5B5A1ToARGBRow_C(const uint8* src_r5g5b5a1, uint8* dst_argb, int width) 
 	}
 }
 
-void R4G4B4A4ToARGBRow_C(const uint8* src_r4g4b4a4, uint8* dst_argb, int width) {
+void R4G4B4A4ToARGBRow_C(const uint8_t* src_r4g4b4a4, uint8_t* dst_argb, int width) {
 	int x;
 	for (x = 0; x < width; ++x) {
-		uint8 a = src_r4g4b4a4[0] & 0x0f;
-		uint8 b = src_r4g4b4a4[0] >> 4;
-		uint8 g = src_r4g4b4a4[1] & 0x0f;
-		uint8 r = src_r4g4b4a4[1] >> 4;
+        uint8_t a = src_r4g4b4a4[0] & 0x0f;
+        uint8_t b = src_r4g4b4a4[0] >> 4;
+        uint8_t g = src_r4g4b4a4[1] & 0x0f;
+        uint8_t r = src_r4g4b4a4[1] >> 4;
 		dst_argb[0] = (b << 4) | b;
 		dst_argb[1] = (g << 4) | g;
 		dst_argb[2] = (r << 4) | r;
@@ -245,13 +245,13 @@ void R4G4B4A4ToARGBRow_C(const uint8* src_r4g4b4a4, uint8* dst_argb, int width) 
 	}
 }
 
-void A8B8G8R8ToARGBRow_C(const uint8* src_a8b8g8r8, uint8* dst_argb, int width) {
+void A8B8G8R8ToARGBRow_C(const uint8_t* src_a8b8g8r8, uint8_t* dst_argb, int width) {
 	int x;
 	for (x = 0; x < width; ++x) {
-		uint8 r = src_a8b8g8r8[0];
-		uint8 g = src_a8b8g8r8[1];
-		uint8 b = src_a8b8g8r8[3];
-		uint8 a = src_a8b8g8r8[4];
+        uint8_t r = src_a8b8g8r8[0];
+        uint8_t g = src_a8b8g8r8[1];
+        uint8_t b = src_a8b8g8r8[3];
+        uint8_t a = src_a8b8g8r8[4];
 		dst_argb[0] = b;
 		dst_argb[1] = g;
 		dst_argb[2] = r;
@@ -261,13 +261,13 @@ void A8B8G8R8ToARGBRow_C(const uint8* src_a8b8g8r8, uint8* dst_argb, int width) 
 	}
 }
 
-void B8G8R8A8ToARGBRow_C(const uint8* src_b8g8r8a8, uint8* dst_argb, int width) {
+void B8G8R8A8ToARGBRow_C(const uint8_t* src_b8g8r8a8, uint8_t* dst_argb, int width) {
 	int x;
 	for (x = 0; x < width; ++x) {
-		uint8 a = src_b8g8r8a8[0];
-		uint8 r = src_b8g8r8a8[1];
-		uint8 g = src_b8g8r8a8[3];
-		uint8 b = src_b8g8r8a8[4];
+        uint8_t a = src_b8g8r8a8[0];
+        uint8_t r = src_b8g8r8a8[1];
+        uint8_t g = src_b8g8r8a8[3];
+        uint8_t b = src_b8g8r8a8[4];
 		dst_argb[0] = b;
 		dst_argb[1] = g;
 		dst_argb[2] = r;
@@ -277,13 +277,13 @@ void B8G8R8A8ToARGBRow_C(const uint8* src_b8g8r8a8, uint8* dst_argb, int width) 
 	}
 }
 
-void R8G8B8A8ToARGBRow_C(const uint8* src_r8g8b8a8, uint8* dst_argb, int width) {
+void R8G8B8A8ToARGBRow_C(const uint8_t* src_r8g8b8a8, uint8_t* dst_argb, int width) {
 	int x;
 	for (x = 0; x < width; ++x) {
-		uint8 a = src_r8g8b8a8[0];
-		uint8 b = src_r8g8b8a8[1];
-		uint8 g = src_r8g8b8a8[3];
-		uint8 r = src_r8g8b8a8[4];
+        uint8_t a = src_r8g8b8a8[0];
+        uint8_t b = src_r8g8b8a8[1];
+        uint8_t g = src_r8g8b8a8[3];
+        uint8_t r = src_r8g8b8a8[4];
 		dst_argb[0] = b;
 		dst_argb[1] = g;
 		dst_argb[2] = r;
@@ -293,10 +293,10 @@ void R8G8B8A8ToARGBRow_C(const uint8* src_r8g8b8a8, uint8* dst_argb, int width) 
 	}
 }
 
-void ______L8ToARGBRow_C(const uint8* src_l8, uint8* dst_argb, int width) {
+void ______L8ToARGBRow_C(const uint8_t* src_l8, uint8_t* dst_argb, int width) {
 	int x;
 	for (x = 0; x < width; ++x) {
-		uint8 l = src_l8[0];
+        uint8_t l = src_l8[0];
 		dst_argb[0] = l;
 		dst_argb[1] = l;
 		dst_argb[2] = l;
@@ -306,10 +306,10 @@ void ______L8ToARGBRow_C(const uint8* src_l8, uint8* dst_argb, int width) {
 	}
 }
 
-void _____AL8ToARGBRow_C(const uint8* src_al8, uint8* dst_argb, int width) {
+void _____AL8ToARGBRow_C(const uint8_t* src_al8, uint8_t* dst_argb, int width) {
 	int x;
 	for (x = 0; x < width; ++x) {
-		uint8 l = src_al8[0];
+        uint8_t l = src_al8[0];
 		dst_argb[0] = l;
 		dst_argb[1] = l;
 		dst_argb[2] = l;
@@ -319,11 +319,11 @@ void _____AL8ToARGBRow_C(const uint8* src_al8, uint8* dst_argb, int width) {
 	}
 }
 
-void _____L16ToARGBRow_C(const uint8* src_l16, uint8* dst_argb, int width) {
+void _____L16ToARGBRow_C(const uint8_t* src_l16, uint8_t* dst_argb, int width) {
 	int x;
 	for (x = 0; x < width; ++x) {
-		uint8 b = src_l16[0];
-		uint8 g = src_l16[1];
+        uint8_t b = src_l16[0];
+        uint8_t g = src_l16[1];
 		dst_argb[0] = b;
 		dst_argb[1] = g;
 		dst_argb[2] = 255u;
@@ -333,11 +333,11 @@ void _____L16ToARGBRow_C(const uint8* src_l16, uint8* dst_argb, int width) {
 	}
 }
 
-void ____A8L8ToARGBRow_C(const uint8* src_a8l8, uint8* dst_argb, int width) {
+void ____A8L8ToARGBRow_C(const uint8_t* src_a8l8, uint8_t* dst_argb, int width) {
 	int x;
 	for (x = 0; x < width; ++x) {
-		uint8 l = src_a8l8[0];
-		uint8 a = src_a8l8[1];
+        uint8_t l = src_a8l8[0];
+        uint8_t a = src_a8l8[1];
 		dst_argb[0] = l;
 		dst_argb[1] = l;
 		dst_argb[2] = l;
@@ -357,22 +357,22 @@ typedef struct TRGB32
 
 // DXT1 info (MSDN Block Compression) : https://msdn.microsoft.com/en-us/library/bb694531.aspx
 // https://msdn.microsoft.com/en-us/library/windows/desktop/bb147243(v=vs.85).aspx
-void ____DXT1ToARGBRow_C(const uint8* data, uint8* dst_argb, int width) {
+void ____DXT1ToARGBRow_C(const uint8_t* data, uint8_t* dst_argb, int width) {
 	int dst_pitch = *(int*)dst_argb; // dirty hack to avoid another argument
 	int x;
 	for (x = 0; x < width; x+=4) {
 		// Read two 16-bit pixels
-		uint16 color_0 = data[0] | (data[1] << 8);
-		uint16 color_1 = data[2] | (data[3] << 8);
+		uint16_t color_0 = data[0] | (data[1] << 8);
+		uint16_t color_1 = data[2] | (data[3] << 8);
 
 		// Read 5+6+5 bit color channels
-		uint8 b0 = color_0 & 0x1f;
-		uint8 g0 = (color_0 >> 5) & 0x3f;
-		uint8 r0 = color_0 >> 11;
+        uint8_t b0 = color_0 & 0x1f;
+        uint8_t g0 = (color_0 >> 5) & 0x3f;
+        uint8_t r0 = color_0 >> 11;
 
-		uint8 b1 = color_1 & 0x1f;
-		uint8 g1 = (color_1 >> 5) & 0x3f;
-		uint8 r1 = color_1 >> 11;
+        uint8_t b1 = color_1 & 0x1f;
+        uint8_t g1 = (color_1 >> 5) & 0x3f;
+        uint8_t r1 = color_1 >> 11;
 
 		// Build first half of RGB32 color map (converting 5+6+5 to 8+8+8):
 		TRGB32 colormap[4];
@@ -390,22 +390,22 @@ void ____DXT1ToARGBRow_C(const uint8* data, uint8* dst_argb, int width) {
 		if (color_0 > color_1)
 		{
 			// Make up new color : 2/3 A + 1/3 B :
-			colormap[2].B = (uint8)((2 * colormap[0].B + 1 * colormap[1].B + 2) / 3);
-			colormap[2].G = (uint8)((2 * colormap[0].G + 1 * colormap[1].G + 2) / 3);
-			colormap[2].R = (uint8)((2 * colormap[0].R + 1 * colormap[1].R + 2) / 3);
+			colormap[2].B = (uint8_t)((2 * colormap[0].B + 1 * colormap[1].B + 2) / 3);
+			colormap[2].G = (uint8_t)((2 * colormap[0].G + 1 * colormap[1].G + 2) / 3);
+			colormap[2].R = (uint8_t)((2 * colormap[0].R + 1 * colormap[1].R + 2) / 3);
 			colormap[2].A = 255u;
 			// Make up new color : 1/3 A + 2/3 B :
-			colormap[3].B = (uint8)((1 * colormap[0].B + 2 * colormap[1].B + 2) / 3);
-			colormap[3].G = (uint8)((1 * colormap[0].G + 2 * colormap[1].G + 2) / 3);
-			colormap[3].R = (uint8)((1 * colormap[0].R + 2 * colormap[1].R + 2) / 3);
+			colormap[3].B = (uint8_t)((1 * colormap[0].B + 2 * colormap[1].B + 2) / 3);
+			colormap[3].G = (uint8_t)((1 * colormap[0].G + 2 * colormap[1].G + 2) / 3);
+			colormap[3].R = (uint8_t)((1 * colormap[0].R + 2 * colormap[1].R + 2) / 3);
 			colormap[3].A = 255u;
 		}
 		else
 		{
 			// Make up one new color : 1/2 A + 1/2 B :
-			colormap[2].B = (uint8)((colormap[0].B + colormap[1].B + 1) / 2);
-			colormap[2].G = (uint8)((colormap[0].G + colormap[1].G + 1) / 2);
-			colormap[2].R = (uint8)((colormap[0].R + colormap[1].R + 1) / 2);
+			colormap[2].B = (uint8_t)((colormap[0].B + colormap[1].B + 1) / 2);
+			colormap[2].G = (uint8_t)((colormap[0].G + colormap[1].G + 1) / 2);
+			colormap[2].R = (uint8_t)((colormap[0].R + colormap[1].R + 1) / 2);
 			colormap[2].A = 255u;
 
 			colormap[3].B = 0u;
@@ -414,10 +414,10 @@ void ____DXT1ToARGBRow_C(const uint8* data, uint8* dst_argb, int width) {
 			colormap[3].A = 0u;
 		}
 
-		uint8 indices0 = data[4];
-		uint8 indices1 = data[5];
-		uint8 indices2 = data[6];
-		uint8 indices3 = data[7];
+        uint8_t indices0 = data[4];
+        uint8_t indices1 = data[5];
+		uint8_t indices2 = data[6];
+		uint8_t indices3 = data[7];
 
 		TRGB32 *dst_line0 = (TRGB32*)(dst_argb);
 		TRGB32 *dst_line1 = (TRGB32*)(dst_argb + dst_pitch);
@@ -451,32 +451,32 @@ void ____DXT1ToARGBRow_C(const uint8* data, uint8* dst_argb, int width) {
 }
 
 // DXT3 info : https://en.wikipedia.org/wiki/S3_Texture_Compression#DXT2_and_DXT3
-void ____DXT3ToARGBRow_C(const uint8* data, uint8* dst_argb, int width) {
+void ____DXT3ToARGBRow_C(const uint8_t* data, uint8_t* dst_argb, int width) {
 	int dst_pitch = *(int*)dst_argb; // dirty hack to avoid another argument
 	int x;
 	for (x = 0; x < width; x += 4) {
 		// Read 16 pixels of 4-bit alpha channel data
-		uint8 alpha0 = data[0];
-		uint8 alpha1 = data[1];
-		uint8 alpha2 = data[2];
-		uint8 alpha3 = data[3];
-		uint8 alpha4 = data[4];
-		uint8 alpha5 = data[5];
-		uint8 alpha6 = data[6];
-		uint8 alpha7 = data[7];
+		uint8_t alpha0 = data[0];
+		uint8_t alpha1 = data[1];
+		uint8_t alpha2 = data[2];
+		uint8_t alpha3 = data[3];
+		uint8_t alpha4 = data[4];
+		uint8_t alpha5 = data[5];
+		uint8_t alpha6 = data[6];
+		uint8_t alpha7 = data[7];
 
 		// Read two 16-bit pixels
-		uint16 color_0 = data[8] | (data[9] << 8);
-		uint16 color_1 = data[10] | (data[11] << 8);
+        uint16_t color_0 = data[8] | (data[9] << 8);
+        uint16_t color_1 = data[10] | (data[11] << 8);
 
 		// Read 5+6+5 bit color channels
-		uint8 b0 = color_0 & 0x1f;
-		uint8 g0 = (color_0 >> 5) & 0x3f;
-		uint8 r0 = color_0 >> 11;
+		uint8_t b0 = color_0 & 0x1f;
+		uint8_t g0 = (color_0 >> 5) & 0x3f;
+		uint8_t r0 = color_0 >> 11;
 
-		uint8 b1 = color_1 & 0x1f;
-		uint8 g1 = (color_1 >> 5) & 0x3f;
-		uint8 r1 = color_1 >> 11;
+		uint8_t b1 = color_1 & 0x1f;
+		uint8_t g1 = (color_1 >> 5) & 0x3f;
+		uint8_t r1 = color_1 >> 11;
 
 		// Build first half of RGB32 color map (converting 5+6+5 to 8+8+8):
 		TRGB32 colormap[4];
@@ -490,19 +490,19 @@ void ____DXT3ToARGBRow_C(const uint8* data, uint8* dst_argb, int width) {
 
 		// Build second half of RGB32 color map :
 		// Make up new color : 2/3 A + 1/3 B :
-		colormap[2].B = (uint8)((2 * colormap[0].B + 1 * colormap[1].B + 2) / 3);
-		colormap[2].G = (uint8)((2 * colormap[0].G + 1 * colormap[1].G + 2) / 3);
-		colormap[2].R = (uint8)((2 * colormap[0].R + 1 * colormap[1].R + 2) / 3);
+		colormap[2].B = (uint8_t)((2 * colormap[0].B + 1 * colormap[1].B + 2) / 3);
+		colormap[2].G = (uint8_t)((2 * colormap[0].G + 1 * colormap[1].G + 2) / 3);
+		colormap[2].R = (uint8_t)((2 * colormap[0].R + 1 * colormap[1].R + 2) / 3);
 		// Make up new color : 1/3 A + 2/3 B :
-		colormap[3].B = (uint8)((1 * colormap[0].B + 2 * colormap[1].B + 2) / 3);
-		colormap[3].G = (uint8)((1 * colormap[0].G + 2 * colormap[1].G + 2) / 3);
-		colormap[3].R = (uint8)((1 * colormap[0].R + 2 * colormap[1].R + 2) / 3);
+		colormap[3].B = (uint8_t)((1 * colormap[0].B + 2 * colormap[1].B + 2) / 3);
+		colormap[3].G = (uint8_t)((1 * colormap[0].G + 2 * colormap[1].G + 2) / 3);
+		colormap[3].R = (uint8_t)((1 * colormap[0].R + 2 * colormap[1].R + 2) / 3);
 
 		// Read 4 bytes worth of 2-bit color indices for 16 pixels
-		uint8 colori0 = data[12];
-		uint8 colori1 = data[13];
-		uint8 colori2 = data[14];
-		uint8 colori3 = data[15];
+		uint8_t colori0 = data[12];
+		uint8_t colori1 = data[13];
+		uint8_t colori2 = data[14];
+		uint8_t colori3 = data[15];
 
 		TRGB32 *dst_line0 = (TRGB32*)(dst_argb);
 		TRGB32 *dst_line1 = (TRGB32*)(dst_argb + dst_pitch);
@@ -551,12 +551,12 @@ void ____DXT3ToARGBRow_C(const uint8* data, uint8* dst_argb, int width) {
 }
 
 // DXT5 info : http://www.matejtomcik.com/Public/KnowHow/DXTDecompression/
-void ____DXT5ToARGBRow_C(const uint8* data, uint8* dst_argb, int width) {
+void ____DXT5ToARGBRow_C(const uint8_t* data, uint8_t* dst_argb, int width) {
 	int dst_pitch = *(int*)dst_argb; // dirty hack to avoid another argument
 	int x;
 	for (x = 0; x < width; x += 4) {
 		// Read two 8-bit alphas
-		uint8 alphamap[8];
+		uint8_t alphamap[8];
 		alphamap[0] = data[0];
 		alphamap[1] = data[1];
 
@@ -579,25 +579,25 @@ void ____DXT5ToARGBRow_C(const uint8* data, uint8* dst_argb, int width) {
 		}
 
 		// Read 6 bytes worth of 3-bit alpha channal indices for 16 pixels
-		uint8 alphai0 = data[2];
-		uint8 alphai1 = data[3];
-		uint8 alphai2 = data[4];
-		uint8 alphai3 = data[5];
-		uint8 alphai4 = data[6];
-		uint8 alphai5 = data[7];
+		uint8_t alphai0 = data[2];
+		uint8_t alphai1 = data[3];
+		uint8_t alphai2 = data[4];
+		uint8_t alphai3 = data[5];
+		uint8_t alphai4 = data[6];
+		uint8_t alphai5 = data[7];
 
 		// Read two 16-bit colors
-		uint16 color_0 = data[8] | (data[9] << 8);
-		uint16 color_1 = data[10] | (data[11] << 8);
+		uint16_t color_0 = data[8] | (data[9] << 8);
+        uint16_t color_1 = data[10] | (data[11] << 8);
 
 		// Read 5+6+5 bit color channels
-		uint8 b0 = color_0 & 0x1f;
-		uint8 g0 = (color_0 >> 5) & 0x3f;
-		uint8 r0 = color_0 >> 11;
+		uint8_t b0 = color_0 & 0x1f;
+		uint8_t g0 = (color_0 >> 5) & 0x3f;
+		uint8_t r0 = color_0 >> 11;
 
-		uint8 b1 = color_1 & 0x1f;
-		uint8 g1 = (color_1 >> 5) & 0x3f;
-		uint8 r1 = color_1 >> 11;
+		uint8_t b1 = color_1 & 0x1f;
+		uint8_t g1 = (color_1 >> 5) & 0x3f;
+		uint8_t r1 = color_1 >> 11;
 
 		// Build first half of RGB32 color map (converting 5+6+5 to 8+8+8):
 		TRGB32 colormap[4];
@@ -611,19 +611,19 @@ void ____DXT5ToARGBRow_C(const uint8* data, uint8* dst_argb, int width) {
 
 		// Build second half of RGB32 color map :
 		// Make up new color : 2/3 A + 1/3 B :
-		colormap[2].B = (uint8)((2 * colormap[0].B + 1 * colormap[1].B + 2) / 3);
-		colormap[2].G = (uint8)((2 * colormap[0].G + 1 * colormap[1].G + 2) / 3);
-		colormap[2].R = (uint8)((2 * colormap[0].R + 1 * colormap[1].R + 2) / 3);
+		colormap[2].B = (uint8_t)((2 * colormap[0].B + 1 * colormap[1].B + 2) / 3);
+		colormap[2].G = (uint8_t)((2 * colormap[0].G + 1 * colormap[1].G + 2) / 3);
+		colormap[2].R = (uint8_t)((2 * colormap[0].R + 1 * colormap[1].R + 2) / 3);
 		// Make up new color : 1/3 A + 2/3 B :
-		colormap[3].B = (uint8)((1 * colormap[0].B + 2 * colormap[1].B + 2) / 3);
-		colormap[3].G = (uint8)((1 * colormap[0].G + 2 * colormap[1].G + 2) / 3);
-		colormap[3].R = (uint8)((1 * colormap[0].R + 2 * colormap[1].R + 2) / 3);
+		colormap[3].B = (uint8_t)((1 * colormap[0].B + 2 * colormap[1].B + 2) / 3);
+		colormap[3].G = (uint8_t)((1 * colormap[0].G + 2 * colormap[1].G + 2) / 3);
+		colormap[3].R = (uint8_t)((1 * colormap[0].R + 2 * colormap[1].R + 2) / 3);
 
 		// Read 4 bytes worth of 2-bit color indices for 16 pixels
-		uint8 colori0 = data[12];
-		uint8 colori1 = data[13];
-		uint8 colori2 = data[14];
-		uint8 colori3 = data[15];
+		uint8_t colori0 = data[12];
+		uint8_t colori1 = data[13];
+		uint8_t colori2 = data[14];
+		uint8_t colori3 = data[15];
 
 		TRGB32 *dst_line0 = (TRGB32*)(dst_argb);
 		TRGB32 *dst_line1 = (TRGB32*)(dst_argb + dst_pitch);
@@ -671,34 +671,34 @@ void ____DXT5ToARGBRow_C(const uint8* data, uint8* dst_argb, int width) {
 	}
 }
 
-void ______P8ToARGBRow_C(const uint8* src_p8, uint8* dst_argb, int width) {
+void ______P8ToARGBRow_C(const uint8_t* src_p8, uint8_t* dst_argb, int width) {
 	TRGB32 *pTexturePalette = *(TRGB32 **)dst_argb; // dirty hack to avoid another argument
 	int x;
 	for (x = 0; x < width; ++x) {
-		uint8 p = src_p8[x];
+		uint8_t p = src_p8[x];
 		TRGB32 color = pTexturePalette[p];
 		((TRGB32 *)dst_argb)[x] = color;
 	}
 }
 
-static __inline int32 clamp0(int32 v) {
+static __inline int32_t clamp0(int32_t v) {
 	return ((-(v) >> 31) & (v));
 }
 
-static __inline int32 clamp255(int32 v) {
+static __inline int32_t clamp255(int32_t v) {
 	return (((255 - (v)) >> 31) | (v)) & 255;
 }
 
-static __inline uint32 Clamp(int32 val) {
+static __inline uint32_t Clamp(int32_t val) {
 	int v = clamp0(val);
-	return (uint32)(clamp255(v));
+	return (uint32_t)(clamp255(v));
 }
 
 #if defined(_MSC_VER) && !defined(__CLR_VER)
 #define SIMD_ALIGNED(var) __declspec(align(16)) var
 #define SIMD_ALIGNED32(var) __declspec(align(64)) var
-typedef __declspec(align(32)) int16 lvec16[16];
-typedef __declspec(align(32)) int8 lvec8[32];
+typedef __declspec(align(32)) int16_t lvec16[16];
+typedef __declspec(align(32)) int8_t lvec8[32];
 #endif
 
 struct YuvConstants {
@@ -746,8 +746,8 @@ const YuvConstants SIMD_ALIGNED(kYuvIConstants) = {
 };
 
 // C reference code that mimics the YUV assembly.
-static __inline void YuvPixel(uint8 y, uint8 u, uint8 v,
-	uint8* b, uint8* g, uint8* r,
+static __inline void YuvPixel(uint8_t y, uint8_t u, uint8_t v,
+	uint8_t* b, uint8_t* g, uint8_t* r,
 	const struct YuvConstants* yuvconstants) {
 	int ub = yuvconstants->kUVToB[0];
 	int ug = yuvconstants->kUVToG[0];
@@ -758,14 +758,14 @@ static __inline void YuvPixel(uint8 y, uint8 u, uint8 v,
 	int br = yuvconstants->kUVBiasR[0];
 	int yg = yuvconstants->kYToRgb[0];
 
-	uint32 y1 = (uint32)(y * 0x0101 * yg) >> 16;
-	*b = (uint8)Clamp((int32)(-(u * ub) + y1 + bb) >> 6);
-	*g = (uint8)Clamp((int32)(-(u * ug + v * vg) + y1 + bg) >> 6);
-	*r = (uint8)Clamp((int32)(-(v * vr) + y1 + br) >> 6);
+	uint32_t y1 = (uint32_t)(y * 0x0101 * yg) >> 16;
+	*b = (uint8_t)Clamp((int32_t)(-(u * ub) + y1 + bb) >> 6);
+	*g = (uint8_t)Clamp((int32_t)(-(u * ug + v * vg) + y1 + bg) >> 6);
+	*r = (uint8_t)Clamp((int32_t)(-(v * vr) + y1 + br) >> 6);
 }
 
-void ____YUY2ToARGBRow_C(const uint8* src_yuy2,
-	uint8* rgb_buf,
+void ____YUY2ToARGBRow_C(const uint8_t* src_yuy2,
+	uint8_t* rgb_buf,
 	int width) {
 	const struct YuvConstants* yuvconstants = &kYuvIConstants; // hack to avoid another argument
 	int x;
@@ -786,8 +786,8 @@ void ____YUY2ToARGBRow_C(const uint8* src_yuy2,
 	}
 }
 
-void ____UYVYToARGBRow_C(const uint8* src_uyvy,
-	uint8* rgb_buf,
+void ____UYVYToARGBRow_C(const uint8_t* src_uyvy,
+    uint8_t* rgb_buf,
 	int width) {
 	const struct YuvConstants* yuvconstants = &kYuvIConstants; // hack to avoid another argument
 	int x;
@@ -1323,7 +1323,7 @@ void XTL::EmuUnswizzleBox
 ) // Source : Dxbx
 {
 	DWORD dwMaskX = 0, dwMaskY = 0, dwMaskZ = 0;
-	for (uint i=1, j=1; (i < dwWidth) || (i < dwHeight) || (i < dwDepth); i <<= 1) {
+	for (unsigned int i=1, j=1; (i < dwWidth) || (i < dwHeight) || (i < dwDepth); i <<= 1) {
 		if (i < dwWidth) {
 			dwMaskX |= j;
 			j <<= 1;
@@ -1350,14 +1350,14 @@ void XTL::EmuUnswizzleBox
 		const uint8_t *pSrc = (uint8_t *)pSrcBuff;
 		uint8_t *pDestSlice = (uint8_t *)pDstBuff;
 
-		for (uint z = 0; z < dwDepth; z++) {
+		for (unsigned int z = 0; z < dwDepth; z++) {
 			uint8_t *pDestRow = pDestSlice;
 			DWORD dwY = dwStartY;
-			for (uint y = 0; y < dwHeight; y++) {
+			for (unsigned int y = 0; y < dwHeight; y++) {
 				DWORD dwYZ = dwY | dwZ;
 				DWORD dwX = dwStartX;
-				for (uint x = 0; x < dwWidth; x++) {
-					uint delta = dwX | dwYZ;
+				for (unsigned int x = 0; x < dwWidth; x++) {
+					unsigned int delta = dwX | dwYZ;
 					pDestRow[x] = pSrc[delta]; // copy one pixel
 					dwX = (dwX - dwMaskX) & dwMaskX; // step to next pixel in source
 				}
@@ -1375,14 +1375,14 @@ void XTL::EmuUnswizzleBox
 		const uint16_t *pSrc = (uint16_t *)pSrcBuff;
 		uint16_t *pDestSlice = (uint16_t *)pDstBuff;
 
-		for (uint z = 0; z < dwDepth; z++) {
+		for (unsigned int z = 0; z < dwDepth; z++) {
 			uint16_t *pDestRow = pDestSlice;
 			DWORD dwY = dwStartY;
-			for (uint y = 0; y < dwHeight; y++) {
+			for (unsigned int y = 0; y < dwHeight; y++) {
 				DWORD dwYZ = dwY | dwZ;
 				DWORD dwX = dwStartX;
-				for (uint x = 0; x < dwWidth; x++) {
-					uint delta = dwX | dwYZ;
+				for (unsigned int x = 0; x < dwWidth; x++) {
+					unsigned int delta = dwX | dwYZ;
 					pDestRow[x] = pSrc[delta]; // copy one pixel
 					dwX = (dwX - dwMaskX) & dwMaskX; // step to next pixel in source
 				}
@@ -1400,14 +1400,14 @@ void XTL::EmuUnswizzleBox
 		const uint32_t *pSrc = (uint32_t *)pSrcBuff;
 		uint32_t *pDestSlice = (uint32_t *)pDstBuff;
 
-		for (uint z = 0; z < dwDepth; z++) {
+		for (unsigned int z = 0; z < dwDepth; z++) {
 			uint32_t *pDestRow = pDestSlice;
 			DWORD dwY = dwStartY;
-			for (uint y = 0; y < dwHeight; y++) {
+			for (unsigned int y = 0; y < dwHeight; y++) {
 				DWORD dwYZ = dwY | dwZ;
 				DWORD dwX = dwStartX;
-				for (uint x = 0; x < dwWidth; x++) {
-					uint delta = dwX | dwYZ;
+				for (unsigned int x = 0; x < dwWidth; x++) {
+					unsigned int delta = dwX | dwYZ;
 					pDestRow[x] = pSrc[delta]; // copy one pixel
 					dwX = (dwX - dwMaskX) & dwMaskX; // step to next pixel in source
 				}
