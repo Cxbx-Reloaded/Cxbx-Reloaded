@@ -45,7 +45,7 @@ static_assert(false, "Please implement support for cross-platform's user profile
 std::string g_exec_filepath;
 
 // NOTE: Update settings_version when add/edit/delete setting's structure.
-const uint settings_version = 4;
+const unsigned int settings_version = 4;
 
 Settings* g_Settings = nullptr;
 
@@ -304,8 +304,8 @@ bool Settings::LoadConfig()
 	}
 
 	// GUI - Recent xbe file paths
-	uint index = 0;
-	uint list_max = std::size(m_gui.szRecentXbeFiles);
+	unsigned int index = 0;
+    unsigned int list_max = std::size(m_gui.szRecentXbeFiles);
 	bRet = m_si.GetAllValues(section_gui, sect_gui_keys.RecentXbeFiles, si_list);/*Default=empty list*/
 	if (bRet) {
 		si_list_iterator = si_list.begin();
@@ -524,7 +524,7 @@ bool Settings::Save(std::string file_path)
 	// First force overwrite existing value
 	m_si.SetValue(section_gui, sect_gui_keys.RecentXbeFiles, m_gui.szRecentXbeFiles[0].c_str(), nullptr, true);
 	// Then append recent xbe file strings
-	for (uint i = 1; i < 10; i++) {
+	for (unsigned int i = 1; i < 10; i++) {
 		m_si.SetValue(section_gui, sect_gui_keys.RecentXbeFiles, m_gui.szRecentXbeFiles[i].c_str(), nullptr, false);
 	}
 

@@ -30,10 +30,10 @@
 // nv2a microcode header
 typedef struct
 {
-    uint08 Type;
-    uint08 Version;
-    uint08 NumInst;
-    uint08 Unknown0;
+    uint8_t Type;
+    uint8_t Version;
+    uint8_t NumInst;
+    uint8_t Unknown0;
 }
 VSH_SHADER_HEADER;
 

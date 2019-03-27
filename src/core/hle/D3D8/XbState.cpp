@@ -34,7 +34,7 @@
 DWORD *XTL::EmuD3DDeferredRenderState = nullptr;
 DWORD *XTL::EmuD3DDeferredTextureState = nullptr;
 
-extern uint32 g_BuildVersion;
+extern uint32_t g_BuildVersion;
 
 #include "core\hle\Intercept.hpp" // For g_SymbolAddresses
 
@@ -79,7 +79,7 @@ void XTL::EmuUpdateDeferredStates()
     if(EmuD3DDeferredRenderState != 0)
     {
 		// Loop through all deferred render states
-		for (uint RenderState = X_D3DRS_FOGENABLE; RenderState <= X_D3DRS_PATCHSEGMENTS; RenderState++) {
+		for (unsigned int RenderState = X_D3DRS_FOGENABLE; RenderState <= X_D3DRS_PATCHSEGMENTS; RenderState++) {
 			// If this render state does not have a PC counterpart, skip it
 			if (DxbxRenderStateInfo[RenderState].PC == 0) {
 				continue;

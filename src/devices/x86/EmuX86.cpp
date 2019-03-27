@@ -610,7 +610,7 @@ inline void EmuX86_SetFlags(LPEXCEPTION_POINTERS e, DWORD mask, DWORD value)
 	e->ContextRecord->EFlags ^= ((e->ContextRecord->EFlags ^ value) & mask);
 }
 
-#define BIT(flag, bit) ((static_cast<uint32>((bool)bit)) << (flag))
+#define BIT(flag, bit) ((static_cast<uint32_t>((bool)bit)) << (flag))
 #define BITMASK(flag) BIT(flag, 1)
 
 // TODO : Verify callers compile bool arguments into bit-operations;

@@ -48,9 +48,9 @@ extern VOID CxbxSetPixelContainerHeader
 	UINT				Pitch
 );
 
-extern uint8 *ConvertD3DTextureToARGB(
+extern uint8_t *ConvertD3DTextureToARGB(
 	XTL::X_D3DPixelContainer *pXboxPixelContainer,
-	uint8 *pSrc,
+	uint8_t *pSrc,
 	int *pWidth, int *pHeight,
 	int TextureStage = 0
 );

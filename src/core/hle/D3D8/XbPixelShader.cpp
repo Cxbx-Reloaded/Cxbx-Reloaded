@@ -72,8 +72,6 @@
 
 #include "core\kernel\init\CxbxKrnl.h" // For CxbxKrnlCleanup()
 
-typedef uint8_t uint8; // TODO : Remove
-
 #include <assert.h> // assert()
 
 #include <process.h>
@@ -730,7 +728,7 @@ struct RPSRegisterObject {
 	bool IsAlpha;
 	PS_REGISTER Reg;
 
-	void Decode(uint8 Value, bool aIsAlpha);
+	void Decode(uint8_t Value, bool aIsAlpha);
 	std::string DecodedToString();
 };
 
@@ -738,7 +736,7 @@ struct RPSInputRegister : RPSRegisterObject {
 	PS_CHANNEL Channel;
 	PS_INPUTMAPPING InputMapping;
 
-	void Decode(uint8 Value, bool aIsAlpha);
+	void Decode(uint8_t Value, bool aIsAlpha);
 	std::string DecodedToString();
 };
 
@@ -748,7 +746,7 @@ struct RPSCombinerOutput : RPSRegisterObject {
 	bool DotProduct; // False=Multiply, True=DotProduct
 	bool BlueToAlpha; // False=Alpha-to-Alpha, True=Blue-to-Alpha
 
-	void Decode(uint8 Value, DWORD PSInputs, bool aIsAlpha);
+	void Decode(uint8_t Value, DWORD PSInputs, bool aIsAlpha);
 };
 
 struct RPSCombinerOutputMuxSum : RPSRegisterObject {
@@ -780,8 +778,8 @@ struct RPSFinalCombiner {
 
 	PS_FINALCOMBINERSETTING FinalCombinerFlags;
 
-	uint8 FinalCombinerC0Mapping;
-	uint8 FinalCombinerC1Mapping;
+    uint8_t FinalCombinerC0Mapping;
+    uint8_t FinalCombinerC1Mapping;
 
 	DWORD dwPS_GLOBALFLAGS;
 
@@ -812,7 +810,7 @@ typedef struct _PSH_RECOMPILED_SHADER {
 
 typedef struct _PSH_IMD_ARGUMENT {
 	PSH_ARGUMENT_TYPE Type; // For parameters: R, T, V or C  For output : Discard, R, T or V
-	int16 Address;           // Register address
+	int16_t Address;           // Register address
 	DWORD Mask;
 	PSH_ARG_MODIFIERs Modifiers;
 	float Multiplier;
@@ -820,9 +818,9 @@ typedef struct _PSH_IMD_ARGUMENT {
 	void SetConstValue(float Value);
 	float GetConstValue();
 	bool UsesRegister();
-	bool IsRegister(PSH_ARGUMENT_TYPE aRegType, int16 aAddress); // overload;
-	bool IsRegister(PSH_ARGUMENT_TYPE aRegType, int16 aAddress, DWORD aMask); // overload;
-	void SetRegister(PSH_ARGUMENT_TYPE aRegType, int16 aAddress, DWORD aMask);
+	bool IsRegister(PSH_ARGUMENT_TYPE aRegType, int16_t aAddress); // overload;
+	bool IsRegister(PSH_ARGUMENT_TYPE aRegType, int16_t aAddress, DWORD aMask); // overload;
+	void SetRegister(PSH_ARGUMENT_TYPE aRegType, int16_t aAddress, DWORD aMask);
     bool HasModifier(PSH_ARG_MODIFIER modifier);
     bool SetScaleConstRegister(float factor, const PSH_RECOMPILED_SHADER& pRecompiled);
     bool SetScaleBemLumRegister(XTL::D3DTEXTURESTAGESTATETYPE factor, int stage, const PSH_RECOMPILED_SHADER& pRecompiled);
@@ -865,7 +863,7 @@ typedef struct _PSH_INTERMEDIATE_FORMAT {
 *PPSH_INTERMEDIATE_FORMAT;
 
 struct PSH_XBOX_SHADER {
-	uint32 m_PSVersion; // see D3DPS_VERSION - https://msdn.microsoft.com/en-us/library/windows/desktop/bb172592(v=vs.85).aspx
+	uint32_t m_PSVersion; // see D3DPS_VERSION - https://msdn.microsoft.com/en-us/library/windows/desktop/bb172592(v=vs.85).aspx
 	int MaxConstantFloatRegisters;
 	int MaxTemporaryRegisters;
 	int MaxSamplerRegisters; // Sampler (Direct3D 9 asm-ps)
@@ -898,7 +896,7 @@ struct PSH_XBOX_SHADER {
 
     PSH_RECOMPILED_SHADER Recompiled = {};
 
-	void SetPSVersion(const uint32 PSVersion);
+	void SetPSVersion(const uint32_t PSVersion);
 
 	std::string ToString();
 	void Log(const char *PhaseStr);
@@ -925,19 +923,19 @@ struct PSH_XBOX_SHADER {
 	bool RemoveUselessWrites();
     int MaxRegisterCount(PSH_ARGUMENT_TYPE aRegType);
     bool IsValidNativeOutputRegister(PSH_ARGUMENT_TYPE aRegType, int index = -1);
-    int RegisterIsFreeFromIndexUntil(int aIndex, PSH_ARGUMENT_TYPE aRegType, int16 aAddress);
-    int RegisterIsUsedFromIndexUntil(int aIndex, PSH_ARGUMENT_TYPE aRegType, int16 aAddress);
+    int RegisterIsFreeFromIndexUntil(int aIndex, PSH_ARGUMENT_TYPE aRegType, int16_t aAddress);
+    int RegisterIsUsedFromIndexUntil(int aIndex, PSH_ARGUMENT_TYPE aRegType, int16_t aAddress);
     int NextFreeRegisterFromIndexUntil(int aIndex, PSH_ARGUMENT_TYPE aRegType, int bIndex = -1, int startAddress = 0, int excludeAddress = -1);
-    bool IsRegisterFreeFromIndexOnwards(int aIndex, PSH_ARGUMENT_TYPE aRegType, int16 aAddress);
+    bool IsRegisterFreeFromIndexOnwards(int aIndex, PSH_ARGUMENT_TYPE aRegType, int16_t aAddress);
     void ReplaceInputRegisterFromIndexOnwards(int aIndex,
-        PSH_ARGUMENT_TYPE aSrcRegType, int16 aSrcAddress,
-        PSH_ARGUMENT_TYPE aDstRegType, int16 aDstAddress, int endIndex = -1);
+        PSH_ARGUMENT_TYPE aSrcRegType, int16_t aSrcAddress,
+        PSH_ARGUMENT_TYPE aDstRegType, int16_t aDstAddress, int endIndex = -1);
     void ReplaceOutputRegisterFromIndexOnwards(int aIndex,
-        PSH_ARGUMENT_TYPE aSrcRegType, int16 aSrcAddress,
-        PSH_ARGUMENT_TYPE aDstRegType, int16 aDstAddress, int endIndex = -1);
+        PSH_ARGUMENT_TYPE aSrcRegType, int16_t aSrcAddress,
+        PSH_ARGUMENT_TYPE aDstRegType, int16_t aDstAddress, int endIndex = -1);
     void ReplaceRegisterFromIndexOnwards(int aIndex,
-		PSH_ARGUMENT_TYPE aSrcRegType, int16 aSrcAddress,
-		PSH_ARGUMENT_TYPE aDstRegType, int16 aDstAddress, int endIndex = -1, bool replaceInput = true, bool replaceOutput = true);
+		PSH_ARGUMENT_TYPE aSrcRegType, int16_t aSrcAddress,
+		PSH_ARGUMENT_TYPE aDstRegType, int16_t aDstAddress, int endIndex = -1, bool replaceInput = true, bool replaceOutput = true);
 	bool ConvertXMMToNative_Except3RdOutput(int i);
 	void ConvertXPSToNative(int i);
 	void ConvertXMMAToNative(int i);
@@ -1245,20 +1243,20 @@ bool PSH_IMD_ARGUMENT::UsesRegister()
 	return (Type > PARAM_DISCARD);
 }
 
-bool PSH_IMD_ARGUMENT::IsRegister(PSH_ARGUMENT_TYPE aRegType, int16 aAddress)
+bool PSH_IMD_ARGUMENT::IsRegister(PSH_ARGUMENT_TYPE aRegType, int16_t aAddress)
 {
 	return (Type == aRegType)
 		&& (Address == aAddress || aAddress == -1);
 }
 
-bool PSH_IMD_ARGUMENT::IsRegister(PSH_ARGUMENT_TYPE aRegType, int16 aAddress, DWORD aMask)
+bool PSH_IMD_ARGUMENT::IsRegister(PSH_ARGUMENT_TYPE aRegType, int16_t aAddress, DWORD aMask)
 {
 	return IsRegister(aRegType, aAddress)
         // Check the mask itself, but also 'mask-less' :
         && (((Mask & aMask) == aMask) || (Mask == 0));
 }
 
-void PSH_IMD_ARGUMENT::SetRegister(PSH_ARGUMENT_TYPE aRegType, int16 aAddress, DWORD aMask)
+void PSH_IMD_ARGUMENT::SetRegister(PSH_ARGUMENT_TYPE aRegType, int16_t aAddress, DWORD aMask)
 {
 	Type = aRegType;
 	Address = aAddress;
@@ -2162,7 +2160,7 @@ bool PSH_INTERMEDIATE_FORMAT::DecodeFinalCombiner(DWORD aPSFinalCombinerInputsAB
 
 /* PSH_XBOX_SHADER */
 
-void PSH_XBOX_SHADER::SetPSVersion(const uint32 PSVersion)
+void PSH_XBOX_SHADER::SetPSVersion(const uint32_t PSVersion)
 {
 	m_PSVersion = PSVersion;
 
@@ -3498,7 +3496,7 @@ bool PSH_XBOX_SHADER::ConvertConstantsToNative(XTL::X_D3DPIXELSHADERDEF *pPSDef,
   PPSH_INTERMEDIATE_FORMAT Cur;
   PPSH_IMD_ARGUMENT CurArg;
   bool NativeConstInUse[224]; // Note : 224 = highest possible MaxConstantFloatRegisters
-  int16 OriginalConstantNr;
+  int16_t OriginalConstantNr;
   bool EmittedNewConstant = false;
   PSH_INTERMEDIATE_FORMAT NewIns = {};
 
@@ -4094,7 +4092,7 @@ bool PSH_XBOX_SHADER::IsValidNativeOutputRegister(PSH_ARGUMENT_TYPE aRegType, in
     return valid;
 }
 
-int PSH_XBOX_SHADER::RegisterIsFreeFromIndexUntil(int aIndex, PSH_ARGUMENT_TYPE aRegType, int16 aAddress)
+int PSH_XBOX_SHADER::RegisterIsFreeFromIndexUntil(int aIndex, PSH_ARGUMENT_TYPE aRegType, int16_t aAddress)
 {
     int i;
     PPSH_INTERMEDIATE_FORMAT Cur;
@@ -4117,7 +4115,7 @@ int PSH_XBOX_SHADER::RegisterIsFreeFromIndexUntil(int aIndex, PSH_ARGUMENT_TYPE 
     return i;
 }
 
-int PSH_XBOX_SHADER::RegisterIsUsedFromIndexUntil(int aIndex, PSH_ARGUMENT_TYPE aRegType, int16 aAddress)
+int PSH_XBOX_SHADER::RegisterIsUsedFromIndexUntil(int aIndex, PSH_ARGUMENT_TYPE aRegType, int16_t aAddress)
 {
     int result = -1;
     int i;
@@ -4167,7 +4165,7 @@ int PSH_XBOX_SHADER::NextFreeRegisterFromIndexUntil(int aIndex, PSH_ARGUMENT_TYP
     return -1;
 }
 
-bool PSH_XBOX_SHADER::IsRegisterFreeFromIndexOnwards(int aIndex, PSH_ARGUMENT_TYPE aRegType, int16 aAddress)
+bool PSH_XBOX_SHADER::IsRegisterFreeFromIndexOnwards(int aIndex, PSH_ARGUMENT_TYPE aRegType, int16_t aAddress)
 {
   int i;
   PPSH_INTERMEDIATE_FORMAT Cur;
@@ -4187,22 +4185,22 @@ bool PSH_XBOX_SHADER::IsRegisterFreeFromIndexOnwards(int aIndex, PSH_ARGUMENT_TY
 }
 
 void PSH_XBOX_SHADER::ReplaceInputRegisterFromIndexOnwards(int aIndex,
-    PSH_ARGUMENT_TYPE aSrcRegType, int16 aSrcAddress,
-    PSH_ARGUMENT_TYPE aDstRegType, int16 aDstAddress, int endIndex /*= -1*/)
+    PSH_ARGUMENT_TYPE aSrcRegType, int16_t aSrcAddress,
+    PSH_ARGUMENT_TYPE aDstRegType, int16_t aDstAddress, int endIndex /*= -1*/)
 {
     ReplaceRegisterFromIndexOnwards(aIndex, aSrcRegType, aSrcAddress, aDstRegType, aDstAddress, endIndex, true, false);
 }
 
 void PSH_XBOX_SHADER::ReplaceOutputRegisterFromIndexOnwards(int aIndex,
-    PSH_ARGUMENT_TYPE aSrcRegType, int16 aSrcAddress,
-    PSH_ARGUMENT_TYPE aDstRegType, int16 aDstAddress, int endIndex /*= -1*/)
+    PSH_ARGUMENT_TYPE aSrcRegType, int16_t aSrcAddress,
+    PSH_ARGUMENT_TYPE aDstRegType, int16_t aDstAddress, int endIndex /*= -1*/)
 {
     ReplaceRegisterFromIndexOnwards(aIndex, aSrcRegType, aSrcAddress, aDstRegType, aDstAddress, endIndex, false, true);
 }
 
 void PSH_XBOX_SHADER::ReplaceRegisterFromIndexOnwards(int aIndex,
-	PSH_ARGUMENT_TYPE aSrcRegType, int16 aSrcAddress,
-	PSH_ARGUMENT_TYPE aDstRegType, int16 aDstAddress, int endIndex /*= -1*/, bool replaceInput /*= true*/, bool replaceOutput /*= true*/)
+	PSH_ARGUMENT_TYPE aSrcRegType, int16_t aSrcAddress,
+	PSH_ARGUMENT_TYPE aDstRegType, int16_t aDstAddress, int endIndex /*= -1*/, bool replaceInput /*= true*/, bool replaceOutput /*= true*/)
 {
   int i;
   int j;
@@ -5864,7 +5862,7 @@ bool PSH_XBOX_SHADER::FixOverusedRegisters()
 
 /* RPSRegisterObject */
 
-void RPSRegisterObject::Decode(uint8 Value, bool aIsAlpha)
+void RPSRegisterObject::Decode(uint8_t Value, bool aIsAlpha)
 {
   IsAlpha = aIsAlpha;
   Reg = (PS_REGISTER)(Value);
@@ -5879,7 +5877,7 @@ std::string RPSRegisterObject::DecodedToString()
 
 /* RPSInputRegister */
 
-void RPSInputRegister::Decode(uint8 Value, bool aIsAlpha)
+void RPSInputRegister::Decode(uint8_t Value, bool aIsAlpha)
 {
   RPSRegisterObject::Decode(Value & PS_NoChannelMask, aIsAlpha);
 
@@ -5940,7 +5938,7 @@ std::string RPSInputRegister::DecodedToString()
 
 /* RPSCombinerOutput */
 
-void RPSCombinerOutput::Decode(uint8 Value, DWORD PSInputs, bool aIsAlpha)
+void RPSCombinerOutput::Decode(uint8_t Value, DWORD PSInputs, bool aIsAlpha)
 {
   RPSRegisterObject::Decode(Value, aIsAlpha);
 
@@ -6045,7 +6043,7 @@ void XTL_DumpPixelShaderToFile(XTL::X_D3DPIXELSHADERDEF *pPSDef)
 
 PSH_RECOMPILED_SHADER XTL_EmuRecompilePshDef(XTL::X_D3DPIXELSHADERDEF *pPSDef)
 {
-	uint32 PSVersion = D3DPS_VERSION(2, 0); // Use pixel shader model 1.3 by default
+	uint32_t PSVersion = D3DPS_VERSION(2, 0); // Use pixel shader model 1.3 by default
 
 #if 0 // Once PS.1.4 can be generated, enable this :
 	extern XTL::D3DCAPS g_D3DCaps;

@@ -38,7 +38,7 @@ extern void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData);
 
 typedef struct
 {
-	std::vector<uint08> data;
+	std::vector<uint8_t> data;
 	void* functionPtr;
 }fs_instruction_t;
 

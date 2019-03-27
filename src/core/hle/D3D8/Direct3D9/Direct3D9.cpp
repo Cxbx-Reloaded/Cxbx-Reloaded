@@ -108,8 +108,8 @@ static bool                         g_bHasStencil = false;  // Does device have 
 static DWORD						g_dwPrimPerFrame = 0;	// Number of primitives within one frame
 
 // primary push buffer
-static uint32  g_dwPrimaryPBCount = 0;
-static uint32 *g_pPrimaryPB = nullptr;
+static uint32_t  g_dwPrimaryPBCount = 0;
+static uint32_t *g_pPrimaryPB = nullptr;
 
 
 struct {
@@ -129,7 +129,7 @@ XTL::D3DCAPS					    g_D3DCaps = {};         // Direct3D Caps
 static int                          g_iWireframe    = 0;
 
 // build version
-extern uint32						g_BuildVersion;
+extern uint32_t                     g_BuildVersion;
 
 typedef uint64_t resource_key_t;
 
@@ -706,7 +706,7 @@ void *GetDataFromXboxResource(XTL::X_D3DResource *pXboxResource)
 	if (IsResourceTypeGPUReadable(dwCommonType))
 		pData |= PHYSICAL_MAP_BASE;
 
-	return (uint08*)pData;
+	return (uint8_t*)pData;
 }
 
 typedef struct {
@@ -817,7 +817,7 @@ size_t GetXboxResourceSize(XTL::X_D3DResource* pXboxResource)
 	switch (GetXboxCommonResourceType(pXboxResource)) {
 	case X_D3DCOMMON_TYPE_SURFACE:
 	case X_D3DCOMMON_TYPE_TEXTURE:
-		uint Width, Height, Depth, RowPitch, SlicePitch;
+		unsigned int Width, Height, Depth, RowPitch, SlicePitch;
 		// TODO : Accumulate all mipmap levels!!!
 		CxbxGetPixelContainerMeasures(
 			(XTL::X_D3DPixelContainer*)pXboxResource,
@@ -1095,7 +1095,7 @@ VOID XTL::CxbxSetPixelContainerHeader
 		;
 }
 
-uint CxbxGetPixelContainerDepth
+unsigned int CxbxGetPixelContainerDepth
 (
 	XTL::X_D3DPixelContainer *pPixelContainer
 )
@@ -1108,7 +1108,7 @@ uint CxbxGetPixelContainerDepth
 	return 1;
 }
 
-uint CxbxGetPixelContainerMipMapLevels
+unsigned int CxbxGetPixelContainerMipMapLevels
 (
 	XTL::X_D3DPixelContainer *pPixelContainer
 )
@@ -1201,7 +1201,7 @@ bool ConvertD3DTextureToARGBBuffer(
 	uint8_t *pSrc,
 	int SrcWidth, int SrcHeight, int SrcRowPitch, int SrcSlicePitch,
 	uint8_t *pDst, int DstRowPitch, int DstSlicePitch,
-	uint uiDepth = 1,
+	unsigned int uiDepth = 1,
 	int iTextureStage = 0
 )
 {
@@ -1237,7 +1237,7 @@ bool ConvertD3DTextureToARGBBuffer(
 
 	uint8_t *pSrcSlice = pSrc;
 	uint8_t *pDstSlice = pDst;
-	for (uint z = 0; z < uiDepth; z++) {
+	for (unsigned int z = 0; z < uiDepth; z++) {
 		uint8_t *pSrcRow = pSrcSlice;
 		uint8_t *pDstRow = pDstSlice;
 		for (int y = 0; y < SrcHeight; y++) {
@@ -1258,9 +1258,9 @@ bool ConvertD3DTextureToARGBBuffer(
 }
 
 // Called by WndMain::LoadGameLogo() to load game logo bitmap
-uint8 *XTL::ConvertD3DTextureToARGB(
+uint8_t *XTL::ConvertD3DTextureToARGB(
 	XTL::X_D3DPixelContainer *pXboxPixelContainer,
-	uint8 *pSrc,
+    uint8_t *pSrc,
 	int *pWidth, int *pHeight,
 	int TextureStage // default = 0
 )
@@ -1271,7 +1271,7 @@ uint8 *XTL::ConvertD3DTextureToARGB(
 	if (ConvertRowToARGB == nullptr)
 		return nullptr; // Unhandled conversion
 
-	uint SrcDepth, SrcRowPitch, SrcSlicePitch;
+	unsigned int SrcDepth, SrcRowPitch, SrcSlicePitch;
 	CxbxGetPixelContainerMeasures(
 		pXboxPixelContainer,
 		0, // dwMipMapLevel
@@ -1287,7 +1287,7 @@ uint8 *XTL::ConvertD3DTextureToARGB(
 	int DstRowPitch = (*pWidth) * sizeof(DWORD); // = sizeof ARGB pixel. TODO : Is this correct?
 	int DstSlicePitch = DstRowPitch * (*pHeight); // TODO : Is this correct?
 	int DstSize = DstSlicePitch * DstDepth;
-	uint8 *pDst = (uint8 *)malloc(DstSize);
+	uint8_t *pDst = (uint8_t *)malloc(DstSize);
 
 	// And convert the source towards that buffer
 	/*ignore result*/ConvertD3DTextureToARGBBuffer(
@@ -2608,7 +2608,7 @@ PDWORD WINAPI XTL::EMUPATCH(D3DDevice_BeginPush)(DWORD Count)
     DWORD *pRet = new DWORD[Count];
 
     g_dwPrimaryPBCount = Count;
-    g_pPrimaryPB = pRet;
+    g_pPrimaryPB = (uint32_t*)pRet;
 
     return pRet;
 }
@@ -2634,7 +2634,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_BeginPush2)(DWORD Count, DWORD** ppPush)
 	DWORD *pRet = new DWORD[Count];
 
 	g_dwPrimaryPBCount = Count;
-	g_pPrimaryPB = pRet;
+	g_pPrimaryPB = (uint32_t*)pRet;
 
 	*ppPush=pRet;
 }
@@ -3563,7 +3563,7 @@ VOID __stdcall XTL::EMUPATCH(D3DDevice_SetVertexShaderConstant_8)
 (
 )
 {
-	static uint32 returnAddr;
+	static uint32_t returnAddr;
 
 #ifdef _DEBUG_TRACE
 		__asm add esp, 4
@@ -3999,7 +3999,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexData4f)
 	}
 
 	int o = g_InlineVertexBuffer_TableOffset;
-	uint FVFPosType = g_InlineVertexBuffer_FVF & D3DFVF_POSITION_MASK;
+	unsigned int FVFPosType = g_InlineVertexBuffer_FVF & D3DFVF_POSITION_MASK;
 
 	switch(Register)
 	{
@@ -4483,7 +4483,7 @@ DWORD WINAPI XTL::EMUPATCH(D3DDevice_Swap)
 			}
 
 			// Blit Xbox overlay to host backbuffer
-			uint08 *pOverlayData = (uint08*)GetDataFromXboxResource(&g_OverlayProxy.Surface);
+			uint8_t *pOverlayData = (uint8_t*)GetDataFromXboxResource(&g_OverlayProxy.Surface);
 			UINT OverlayWidth, OverlayHeight, OverlayDepth, OverlayRowPitch, OverlaySlicePitch;
 			CxbxGetPixelContainerMeasures(
 				&g_OverlayProxy.Surface,
@@ -5106,7 +5106,7 @@ void CreateHostResource(XTL::X_D3DResource *pResource, DWORD D3DUsage, int iText
             DWORD dwMipRowPitch = dwRowPitch;
 			DWORD dwSrcSlicePitch = dwMipRowPitch * dwMipHeight; // TODO
 
-			for (uint mipmap_level = 0; mipmap_level < dwMipMapLevels; mipmap_level++) {
+			for (unsigned int mipmap_level = 0; mipmap_level < dwMipMapLevels; mipmap_level++) {
 
 				// Calculate size of this mipmap level
 				DWORD dwMipSize = dwMipRowPitch * dwMipHeight;
@@ -5298,7 +5298,7 @@ void CreateHostResource(XTL::X_D3DResource *pResource, DWORD D3DUsage, int iText
 			}
 			case XTL::X_D3DRTYPE_CUBETEXTURE: {
 				static int dwDumpCubeTexture = 0;
-				for (uint face = XTL::D3DCUBEMAP_FACE_POSITIVE_X; face <= XTL::D3DCUBEMAP_FACE_NEGATIVE_Z; face++) {
+				for (unsigned int face = XTL::D3DCUBEMAP_FACE_POSITIVE_X; face <= XTL::D3DCUBEMAP_FACE_NEGATIVE_Z; face++) {
 					XTL::IDirect3DSurface8 *pSurface;
 					if (D3D_OK == pNewHostCubeTexture->GetCubeMapSurface((XTL::D3DCUBEMAP_FACES)face, 0, &pSurface)) {
 						sprintf(szFilePath, _DEBUG_DUMP_TEXTURE_REGISTER "%.03d-CubeTexure%.03d-%d.dds", X_Format, dwDumpCubeTexture, face);
@@ -6855,8 +6855,8 @@ constexpr UINT QuadToTriangleVertexCount(UINT NrOfQuadVertices)
 
 // TODO : Move to own file
 bool WindingClockwise = true;
-constexpr uint IndicesPerPage = PAGE_SIZE / sizeof(XTL::INDEX16);
-constexpr uint InputQuadsPerPage = ((IndicesPerPage * VERTICES_PER_QUAD) / VERTICES_PER_TRIANGLE) / TRIANGLES_PER_QUAD;
+constexpr unsigned int IndicesPerPage = PAGE_SIZE / sizeof(XTL::INDEX16);
+constexpr unsigned int InputQuadsPerPage = ((IndicesPerPage * VERTICES_PER_QUAD) / VERTICES_PER_TRIANGLE) / TRIANGLES_PER_QUAD;
 
 // TODO : Move to own file
 XTL::INDEX16 *CxbxAssureQuadListIndexBuffer(UINT NrOfQuadVertices)
@@ -7859,7 +7859,7 @@ VOID __stdcall XTL::EMUPATCH(D3DDevice_SetPalette_4)
 (
 )
 {
-	static uint32 returnAddr;
+	static uint32_t returnAddr;
 
 #ifdef _DEBUG_TRACE
 		__asm add esp, 4

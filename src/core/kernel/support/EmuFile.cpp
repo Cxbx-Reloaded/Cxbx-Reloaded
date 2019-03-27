@@ -290,7 +290,7 @@ EmuNtObject* EmuNtObject::NtDuplicateObject(DWORD Options)
 
 bool IsEmuHandle(HANDLE Handle)
 {
-	return ((uint32)Handle > 0x80000000) && ((uint32)Handle < 0xFFFFFFFE);
+	return ((uint32_t)Handle > 0x80000000) && ((uint32_t)Handle < 0xFFFFFFFE);
 }
 
 EmuHandle* HandleToEmuHandle(HANDLE Handle)

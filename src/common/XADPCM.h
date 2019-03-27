@@ -67,14 +67,14 @@
 
 
 typedef struct {
-    int08  Index;
-    int16 StepSize;
-    int16 Predictor;
+    int8_t  Index;
+    int16_t StepSize;
+    int16_t Predictor;
 } TAdpcmState;
 
 
 
-const static int16 StepTable[89] = {
+const static int16_t StepTable[89] = {
     7, 8, 9, 10, 11, 12, 13, 14, 16, 17,
     19, 21, 23, 25, 28, 31, 34, 37, 41, 45,
     50, 55, 60, 66, 73, 80, 88, 97, 107, 118,
@@ -88,7 +88,7 @@ const static int16 StepTable[89] = {
 
 
 
-const static int08 IndexTable[16] = {
+const static int8_t IndexTable[16] = {
     -1, -1, -1, -1, 2, 4, 6, 8,
     -1, -1, -1, -1, 2, 4, 6, 8
 };
@@ -111,10 +111,10 @@ int TXboxAdpcmDecoder_DecodeSample(int Code, TAdpcmState *State) {
     return(Result);
 }
 
-int TXboxAdpcmDecoder_Decode_Memory(uint08 *in, int inlen, uint08 *out, const int FChannels) {
+int TXboxAdpcmDecoder_Decode_Memory(uint8_t *in, int inlen, uint8_t *out, const int FChannels) {
     TAdpcmState FAdpcmState[2];
-    int16     Buffers[2][8];
-    uint32    CodeBuf;
+    int16_t     Buffers[2][8];
+    uint32_t    CodeBuf;
     int         i,
         j,
         c,

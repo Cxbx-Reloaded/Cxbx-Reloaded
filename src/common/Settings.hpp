@@ -133,18 +133,18 @@ public:
 		DebugMode CxbxDebugMode;
 		std::string szCxbxDebugFile;
 		std::string szRecentXbeFiles[10];
-		uint DataStorageToggle;
+		unsigned int DataStorageToggle;
 		std::string szCustomLocation = "";
 	} m_gui;
 
 	// Core settings
 	struct s_core {
-		uint FlagsLLE;
+        unsigned int FlagsLLE;
 		DebugMode KrnlDebugMode;
 		char szKrnlDebug[MAX_PATH] = "";
 		char szStorageLocation[MAX_PATH] = "";
 		bool allowAdminPrivilege;
-		uint LoggedModules[NUM_INTEGERS_LOG];
+        unsigned int LoggedModules[NUM_INTEGERS_LOG];
 		int LogLevel = 1;
 		bool Reserved2 = 0;
 		bool Reserved3 = 0;
@@ -155,8 +155,8 @@ public:
 	// Video settings
 	struct s_video {
 		char szVideoResolution[100] = "";
-		uint adapter;
-		uint direct3DDevice;
+        unsigned int adapter;
+        unsigned int direct3DDevice;
 		bool bVSync;
 		bool bFullScreen;
 		bool bHardwareYUV;
@@ -200,8 +200,8 @@ public:
 	} m_controller_dinput;
 
 	struct s_controller_port {
-		uint XboxPortMapHostType[XBCTRL_MAX_GAMEPAD_PORTS] = { 1, 1, 1, 1 };
-		uint XboxPortMapHostPort[XBCTRL_MAX_GAMEPAD_PORTS] = { 0, 1, 2, 3 };
+        unsigned int XboxPortMapHostType[XBCTRL_MAX_GAMEPAD_PORTS] = { 1, 1, 1, 1 };
+        unsigned int XboxPortMapHostPort[XBCTRL_MAX_GAMEPAD_PORTS] = { 0, 1, 2, 3 };
 	} m_controller_port;
 
 	// Hack settings
@@ -221,11 +221,11 @@ private:
 	std::string m_file_path = "";
 	CSimpleIniA m_si;
 	std::string m_current_data_location;
-	uint m_current_DataStorageToggle = -1;
+    unsigned int m_current_DataStorageToggle = -1;
 };
 
 // Settings manager
 extern Settings* g_Settings;
-extern const uint settings_version;
+extern const unsigned int settings_version;
 
 #endif

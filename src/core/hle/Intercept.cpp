@@ -77,7 +77,7 @@ std::map<std::string, xbaddr> g_SymbolAddresses;
 bool g_SymbolCacheUsed = false;
 
 // D3D build version
-uint32 g_BuildVersion = 0;
+uint32_t g_BuildVersion = 0;
 
 bool bLLE_APU = false; // Set this to true for experimental APU (sound) LLE
 bool bLLE_GPU = false; // Set this to true for experimental GPU (graphics) LLE
@@ -318,7 +318,7 @@ void EmuD3D_Init_DeferredStates()
 // Update shared structure with GUI process
 void EmuUpdateLLEStatus(uint32_t XbLibScan)
 {
-    uint FlagsLLE;
+    unsigned int FlagsLLE;
     g_EmuShared->GetFlagsLLE(&FlagsLLE);
 
     if ((FlagsLLE & LLE_GPU) == false
@@ -352,19 +352,19 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 {
 	Xbe::LibraryVersion *pLibraryVersion = (Xbe::LibraryVersion*)pXbeHeader->dwLibraryVersionsAddr;
 
-	uint16 xdkVersion = 0;
+	uint16_t xdkVersion = 0;
 	uint32_t XbLibScan = 0;
 
 	// NOTE: We need to check if title has library header to optimize verification process.
 	if (pLibraryVersion != nullptr) {
-		uint32 dwLibraryVersions = pXbeHeader->dwLibraryVersions;
+		uint32_t dwLibraryVersions = pXbeHeader->dwLibraryVersions;
 		const char* SectionName = nullptr;
 		Xbe::SectionHeader* pSectionHeaders = (Xbe::SectionHeader*)pXbeHeader->dwSectionHeadersAddr;
 
 		// Get the highest revision build and prefix library to scan.
-		for (uint32 v = 0; v < dwLibraryVersions; v++) {
-			uint16 BuildVersion = pLibraryVersion[v].wBuildVersion;
-			uint16 QFEVersion = pLibraryVersion[v].wFlags.QFEVersion;
+		for (uint32_t v = 0; v < dwLibraryVersions; v++) {
+			uint16_t BuildVersion = pLibraryVersion[v].wBuildVersion;
+            uint16_t QFEVersion = pLibraryVersion[v].wFlags.QFEVersion;
 
 			if (xdkVersion < BuildVersion) {
 				xdkVersion = BuildVersion;
@@ -420,7 +420,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 		g_BuildVersion = symbolCacheData.GetLongValue(section_libs, sect_libs_keys.BuildVersion, /*Default=*/0);
 
 		// Verify the version of the cache file against the Symbol Database version hash
-		const uint32 SymbolDatabaseVersionHash = symbolCacheData.GetLongValue(section_info, sect_info_keys.SymbolDatabaseVersionHash, /*Default=*/0);
+		const uint32_t SymbolDatabaseVersionHash = symbolCacheData.GetLongValue(section_info, sect_info_keys.SymbolDatabaseVersionHash, /*Default=*/0);
 
 		if (SymbolDatabaseVersionHash == XbSymbolLibraryVersion()) {
 			g_SymbolCacheUsed = true;
@@ -508,7 +508,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
             Xbe::SectionHeader* pSectionHeaders = reinterpret_cast<Xbe::SectionHeader*>(pXbeHeader->dwSectionHeadersAddr);
             Xbe::SectionHeader* pSectionScan = nullptr;
 
-            for (uint32 v = 0; v < pXbeHeader->dwSections; v++) {
+            for (uint32_t v = 0; v < pXbeHeader->dwSections; v++) {
 
                 pSectionScan = pSectionHeaders + v;
 
@@ -544,7 +544,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 	symbolCacheData.SetLongValue(section_certificate, sect_certificate_keys.Region, g_pCertificate->dwGameRegion, nullptr, /*UseHex =*/true);
 
 	// Store Library Details
-	for (uint i = 0; i < pXbeHeader->dwLibraryVersions; i++) {
+	for (unsigned int i = 0; i < pXbeHeader->dwLibraryVersions; i++) {
 		std::string LibraryName(pLibraryVersion[i].szName, pLibraryVersion[i].szName + 8);
 		symbolCacheData.SetLongValue(section_libs, LibraryName.c_str(), pLibraryVersion[i].wBuildVersion, nullptr, /*UseHex =*/false);
 	}
@@ -570,10 +570,10 @@ struct HLEVerifyContext {
     const HLEData *main_data;
     OOVPA *oovpa, *against;
     const HLEData *against_data;
-    uint32 main_index, against_index;
+    uint32_t main_index, against_index;
 };
 
-std::string HLEErrorString(const HLEData *data, uint16_t buildVersion, uint32 index)
+std::string HLEErrorString(const HLEData *data, uint16_t buildVersion, uint32_t index)
 {
     std::string result =
         "OOVPATable " + (std::string)(data->LibSec.library) + "_" + std::to_string(buildVersion)
@@ -613,11 +613,11 @@ void VerifyHLEOOVPA(HLEVerifyContext *context, uint16_t buildVersion, OOVPA *oov
         // TODO : verify XRefSaveIndex and XRef's (how?)
 
         // verify offsets are in increasing order
-        uint32 prev_offset;
-        uint08 dummy_value;
+        uint32_t prev_offset;
+        uint8_t dummy_value;
         GetOovpaEntry(oovpa, oovpa->XRefCount, prev_offset, dummy_value);
         for (int p = oovpa->XRefCount + 1; p < oovpa->Count; p++) {
-            uint32 curr_offset;
+            uint32_t curr_offset;
             GetOovpaEntry(oovpa, p, curr_offset, dummy_value);
             if (!(curr_offset > prev_offset)) {
                 HLEError(context, buildVersion, "Lovp[%d] : Offset (0x%x) must be larger then previous offset (0x%x)",
@@ -641,8 +641,8 @@ void VerifyHLEOOVPA(HLEVerifyContext *context, uint16_t buildVersion, OOVPA *oov
     // compare {Offset, Value}-pairs between two OOVPA's
     OOVPA *left = context->against, *right = oovpa;
     int l = 0, r = 0;
-    uint32 left_offset, right_offset;
-    uint08 left_value, right_value;
+    uint32_t left_offset, right_offset;
+    uint8_t left_value, right_value;
     GetOovpaEntry(left, l, left_offset, left_value);
     GetOovpaEntry(right, r, right_offset, right_value);
     int unique_offset_left = 0;
@@ -714,7 +714,7 @@ void VerifyHLEOOVPA(HLEVerifyContext *context, uint16_t buildVersion, OOVPA *oov
     }
 }
 
-void VerifyHLEDataEntry(HLEVerifyContext *context, const OOVPATable *table, uint32 index)
+void VerifyHLEDataEntry(HLEVerifyContext *context, const OOVPATable *table, uint32_t index)
 {
     if (context->against == nullptr) {
         context->main_index = index;
@@ -761,7 +761,7 @@ void VerifyHLEData(HLEVerifyContext *context, const HLEData *data)
     }
 
     // verify each entry in this HLEData
-    for (uint32 e = 0; e < data->OovpaTableCount; e++) {
+    for (uint32_t e = 0; e < data->OovpaTableCount; e++) {
         VerifyHLEDataEntry(context, data->OovpaTable, e);
     }
 }
@@ -769,7 +769,7 @@ void VerifyHLEData(HLEVerifyContext *context, const HLEData *data)
 void VerifyHLEDataBaseAgainst(HLEVerifyContext *context)
 {
     // verify all HLEData's
-    for (uint32 d = 0; d < HLEDataBaseCount; d++) {
+    for (uint32_t d = 0; d < HLEDataBaseCount; d++) {
         VerifyHLEData(context, &HLEDataBase[d]);
     }
 }

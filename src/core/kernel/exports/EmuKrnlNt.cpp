@@ -1646,7 +1646,7 @@ XBSYSAPI EXPORTNUM(219) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtReadFile
 
 	if (CxbxDebugger::CanReport())
 	{
-		u64 Offset = ~0;
+		uint64_t Offset = ~0;
 		if (ByteOffset)
 			Offset = ByteOffset->QuadPart;
 
@@ -2166,7 +2166,7 @@ XBSYSAPI EXPORTNUM(236) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtWriteFile
 
 	if (CxbxDebugger::CanReport())
 	{
-		u64 Offset = ~0;
+		uint64_t Offset = ~0;
 		if (ByteOffset)
 			Offset = ByteOffset->QuadPart;
 		

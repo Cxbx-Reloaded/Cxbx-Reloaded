@@ -184,24 +184,24 @@ namespace CxbxDebugger
 		Report.Send();
 	}
 
-	void ReportFileRead(HANDLE hFile, uint Size, u64 Offset)
+	void ReportFileRead(HANDLE hFile, unsigned int Size, uint64_t Offset)
 	{
 		Internal::ReportHelper Report(Internal::FILE_READ);
 
 		Report.Add(hFile);
 		Report.Add(Size);
-		Report.Add(static_cast<uint>(Offset));
+		Report.Add(static_cast<unsigned int>(Offset));
 
 		Report.Send();
 	}
 
-	void ReportFileWrite(HANDLE hFile, uint Size, u64 Offset)
+	void ReportFileWrite(HANDLE hFile, unsigned int Size, uint64_t Offset)
 	{
 		Internal::ReportHelper Report(Internal::FILE_WRITE);
 
 		Report.Add(hFile);
 		Report.Add(Size);
-		Report.Add(static_cast<uint>(Offset));
+		Report.Add(static_cast<unsigned int>(Offset));
 
 		Report.Send();
 	}

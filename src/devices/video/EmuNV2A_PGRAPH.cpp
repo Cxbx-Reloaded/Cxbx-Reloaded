@@ -4365,9 +4365,9 @@ static float convert_f24_to_float(uint32_t f24) {
     return *(float*)&i;
 }
 
-extern void __R6G5B5ToARGBRow_C(const uint8* src_r6g5b5, uint8* dst_argb, int width);
-extern void ____YUY2ToARGBRow_C(const uint8* src_yuy2, uint8* rgb_buf, int width);
-extern void ____UYVYToARGBRow_C(const uint8* src_uyvy, uint8* rgb_buf, int width);
+extern void __R6G5B5ToARGBRow_C(const uint8_t* src_r6g5b5, uint8_t* dst_argb, int width);
+extern void ____YUY2ToARGBRow_C(const uint8_t* src_yuy2, uint8_t* rgb_buf, int width);
+extern void ____UYVYToARGBRow_C(const uint8_t* src_uyvy, uint8_t* rgb_buf, int width);
 
 /* 'converted_format' indicates the format that results when convert_texture_data() returns non-NULL converted_data. */
 static const int converted_format = NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_A8R8G8B8;
@@ -4442,7 +4442,7 @@ static uint8_t* convert_texture_data(const unsigned int color_format,
 		for (y = 0; y < height; y++) {
 			uint16_t rgb655 = *(uint16_t*)(data + y * row_pitch);
 			int8_t *pixel = (int8_t*)&converted_data[(y * width) * 4];
-			__R6G5B5ToARGBRow_C((const uint8*)rgb655, (uint8*)pixel, width);
+			__R6G5B5ToARGBRow_C((const uint8_t*)rgb655, (uint8_t*)pixel, width);
 		}
 		return converted_data;
 	}

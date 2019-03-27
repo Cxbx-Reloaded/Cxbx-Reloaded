@@ -113,7 +113,7 @@ INT_PTR CALLBACK DlgLogConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM
 			HWND hHandle;
 			int counter;
 			int TempLevel;
-			uint LoggedModules[NUM_INTEGERS_LOG];
+			unsigned int LoggedModules[NUM_INTEGERS_LOG];
 			int LogLevel;
 
 			// Set window icon
@@ -217,7 +217,7 @@ INT_PTR CALLBACK DlgLogConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM
 				case IDC_LOG_ACCEPT:
 				{
 					if (g_bHasChanges) {
-						uint LoggedModules[NUM_INTEGERS_LOG] = { 0 };
+						unsigned int LoggedModules[NUM_INTEGERS_LOG] = { 0 };
 						HWND hControl = GetDlgItem(hWndDlg, IDC_EVENT_LV);
 						int LogLevel = SendMessage(hControl, CB_GETITEMDATA, SendMessage(hControl, CB_GETCURSEL, 0, 0), 0);
 

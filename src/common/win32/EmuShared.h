@@ -126,8 +126,8 @@ class EmuShared : public Mutex
 		// ******************************************************************
 		// * LLE Flags Accessors
 		// ******************************************************************
-		void GetFlagsLLE(      uint *flags) { Lock(); *flags = m_core.FlagsLLE; Unlock(); }
-		void SetFlagsLLE(const uint *flags) { Lock(); m_core.FlagsLLE = *flags; Unlock(); }
+		void GetFlagsLLE(unsigned int *flags) { Lock(); *flags = m_core.FlagsLLE; Unlock(); }
+		void SetFlagsLLE(const unsigned int *flags) { Lock(); m_core.FlagsLLE = *flags; Unlock(); }
 
 		// ******************************************************************
 		// * Boot flag Accessors
@@ -181,7 +181,7 @@ class EmuShared : public Mutex
 		// ******************************************************************
 		// * Log modules value Accessors
 		// ******************************************************************
-		void GetLogModules(uint *value)
+		void GetLogModules(unsigned int *value)
 		{
 			Lock();
 			for (int i = 0; i < NUM_INTEGERS_LOG; ++i)
@@ -190,7 +190,7 @@ class EmuShared : public Mutex
 			}
 			Unlock();
 		}
-		void SetLogModules(uint *value)
+		void SetLogModules(unsigned int *value)
 		{
 			Lock();
 			for (int i = 0; i < NUM_INTEGERS_LOG; ++i)

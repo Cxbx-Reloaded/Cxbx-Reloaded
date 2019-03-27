@@ -120,7 +120,7 @@ Xbe::Xbe(const char *x_szFilename, bool bFromGUI)
             goto cleanup;
         }
 
-        if(m_Header.dwMagic != *(uint32 *)"XBEH")
+        if(m_Header.dwMagic != *(uint32_t *)"XBEH")
         {
             SetFatalError("Invalid magic number in Xbe file");
             goto cleanup;
@@ -200,7 +200,7 @@ Xbe::Xbe(const char *x_szFilename, bool bFromGUI)
 
         m_SectionHeader = new SectionHeader[m_Header.dwSections];
 
-        for(uint32 v=0;v<m_Header.dwSections;v++)
+        for(uint32_t v=0;v<m_Header.dwSections;v++)
         {
             printf("Xbe::Xbe: Reading Section Header 0x%.04X...", v);
 
@@ -220,11 +220,11 @@ Xbe::Xbe(const char *x_szFilename, bool bFromGUI)
         printf("Xbe::Xbe: Reading Section Names...\n");
 
         m_szSectionName = new char[m_Header.dwSections][10];
-        for(uint32 v=0;v<m_Header.dwSections;v++)
+        for(uint32_t v=0;v<m_Header.dwSections;v++)
         {
             printf("Xbe::Xbe: Reading Section Name 0x%.04X...", v);
 
-            uint08 *sn = GetAddr(m_SectionHeader[v].dwSectionNameAddr);
+            uint8_t *sn = GetAddr(m_SectionHeader[v].dwSectionNameAddr);
 
             memset(m_szSectionName[v], 0, 10);
 
@@ -252,7 +252,7 @@ Xbe::Xbe(const char *x_szFilename, bool bFromGUI)
 
 		m_LibraryVersion = new LibraryVersion[m_Header.dwLibraryVersions];
 
-		for (uint32 v = 0; v < m_Header.dwLibraryVersions; v++)
+		for (uint32_t v = 0; v < m_Header.dwLibraryVersions; v++)
 		{
 			printf("Xbe::Xbe: Reading Library Version 0x%.04X...", v);
 
@@ -271,18 +271,18 @@ Xbe::Xbe(const char *x_szFilename, bool bFromGUI)
     {
         printf("Xbe::Xbe: Reading Sections...\n");
 
-        m_bzSection = new uint08*[m_Header.dwSections];
+        m_bzSection = new uint8_t*[m_Header.dwSections];
 
         memset(m_bzSection, 0, m_Header.dwSections);
 
-        for(uint32 v=0;v<m_Header.dwSections;v++)
+        for(uint32_t v=0;v<m_Header.dwSections;v++)
         {
             printf("Xbe::Xbe: Reading Section 0x%.04X...", v);
 
-            uint32 RawSize = m_SectionHeader[v].dwSizeofRaw;
-            uint32 RawAddr = m_SectionHeader[v].dwRawAddr;
+            uint32_t RawSize = m_SectionHeader[v].dwSizeofRaw;
+            uint32_t RawAddr = m_SectionHeader[v].dwRawAddr;
 
-            m_bzSection[v] = new uint08[RawSize];
+            m_bzSection[v] = new uint8_t[RawSize];
 
             fseek(XbeFile, RawAddr, SEEK_SET);
 
@@ -328,7 +328,7 @@ Xbe::Xbe(const char *x_szFilename, bool bFromGUI)
 		printf("Xbe::Xbe: Reading Signature Header...");
 
 		fseek(XbeFile, sizeof(m_Header.dwMagic) + sizeof(m_Header.pbDigitalSignature), SEEK_SET);
-		m_SignatureHeader = new uint08[m_Header.dwSizeofHeaders - (sizeof(m_Header.dwMagic) + sizeof(m_Header.pbDigitalSignature))];
+		m_SignatureHeader = new uint8_t[m_Header.dwSizeofHeaders - (sizeof(m_Header.dwMagic) + sizeof(m_Header.pbDigitalSignature))];
 		fread(m_SignatureHeader, m_Header.dwSizeofHeaders - (sizeof(m_Header.dwMagic) + sizeof(m_Header.pbDigitalSignature)), 1, XbeFile);
 
 		printf("OK\n");
@@ -352,7 +352,7 @@ Xbe::~Xbe()
 {
     if(m_bzSection != 0)
     {
-        for(uint32 v=0;v<m_Header.dwSections;v++)
+        for(uint32_t v=0;v<m_Header.dwSections;v++)
             delete[] m_bzSection[v];
 
         delete[] m_bzSection;
@@ -431,7 +431,7 @@ void Xbe::Export(const char *x_szXbeFilename)
 
         fseek(XbeFile, m_Header.dwSectionHeadersAddr - m_Header.dwBaseAddr, SEEK_SET);
 
-        for(uint32 v=0;v<m_Header.dwSections;v++)
+        for(uint32_t v=0;v<m_Header.dwSections;v++)
         {
             printf("Xbe::Export: Writing Section Header 0x%.04X...", v);
 
@@ -450,12 +450,12 @@ void Xbe::Export(const char *x_szXbeFilename)
     {
         printf("Xbe::Export: Writing Sections...\n");
 
-        for(uint32 v=0;v<m_Header.dwSections;v++)
+        for(uint32_t v=0;v<m_Header.dwSections;v++)
         {
             printf("Xbe::Export: Writing Section 0x%.04X (%s)...", v, m_szSectionName[v]);
 
-            uint32 RawSize = m_SectionHeader[v].dwSizeofRaw;
-            uint32 RawAddr = m_SectionHeader[v].dwRawAddr;
+            uint32_t RawSize = m_SectionHeader[v].dwSizeofRaw;
+            uint32_t RawAddr = m_SectionHeader[v].dwRawAddr;
 
             fseek(XbeFile, RawAddr, SEEK_SET);
 
@@ -482,17 +482,17 @@ void Xbe::Export(const char *x_szXbeFilename)
 
         fpos_t pos;
 
-        uint32 remaining = 0;
+        uint32_t remaining = 0;
 
         fgetpos(XbeFile, &pos);
 
-        remaining = (uint32)(PAGE_SIZE - ftell(XbeFile) % PAGE_SIZE);
+        remaining = (uint32_t)(PAGE_SIZE - ftell(XbeFile) % PAGE_SIZE);
 
         // write remaining bytes
         {
             char *szBuffer = new char[remaining];
 
-            for(uint32 v=0;v<remaining;v++)
+            for(uint32_t v=0;v<remaining;v++)
                 szBuffer[v] = 0;
 
             fwrite(szBuffer, remaining, 1, XbeFile);
@@ -529,7 +529,7 @@ void Xbe::ConstructorInit()
 }
 
 // better time
-static char *BetterTime(uint32 x_timeDate)
+static char *BetterTime(uint32_t x_timeDate)
 {
     time_t x_time = x_timeDate;
     char *x_ctime = ctime(&x_time);
@@ -544,18 +544,18 @@ static char *BetterTime(uint32 x_timeDate)
 }
 
 // import logo bitmap from raw monochrome data
-void Xbe::ImportLogoBitmap(const uint08 x_Gray[100*17])
+void Xbe::ImportLogoBitmap(const uint8_t x_Gray[100*17])
 {
     char  *LogoBuffer = new char[4*1024];
-    uint32 LogoSize = 0;
+    uint32_t LogoSize = 0;
 
     // encode logo bitmap
     {
-        for(uint32 v=1;v<100*17;LogoSize++)
+        for(uint32_t v=1;v<100*17;LogoSize++)
         {
             char color = x_Gray[v] >> 4;
 
-            uint32 len = 1;
+            uint32_t len = 1;
 
             while(++v<100*17-1 && len < 1024 && color == x_Gray[v] >> 4)
                 len++;
@@ -581,7 +581,7 @@ void Xbe::ImportLogoBitmap(const uint08 x_Gray[100*17])
 
     // check if there is room to save this, if not then throw an error
     {
-        uint08 *RLE = GetLogoBitmap(LogoSize);
+        uint8_t *RLE = GetLogoBitmap(LogoSize);
 
         if(RLE == 0)
         {
@@ -614,22 +614,22 @@ void Xbe::ImportLogoBitmap(const uint08 x_Gray[100*17])
 // * a toss up, but i've choosen a simple bit shift left.
 // *
 // ******************************************************************
-void Xbe::ExportLogoBitmap(uint08 x_Gray[100*17])
+void Xbe::ExportLogoBitmap(uint8_t x_Gray[100*17])
 {
     memset(x_Gray, 0, 100*17);
 
-    uint32 dwLength = m_Header.dwSizeofLogoBitmap;
+    uint32_t dwLength = m_Header.dwSizeofLogoBitmap;
 
-    uint08 *RLE = GetAddr(m_Header.dwLogoBitmapAddr);
+    uint8_t *RLE = GetAddr(m_Header.dwLogoBitmapAddr);
 
     if(RLE == nullptr || HasError())
         return;
 
-    uint32 o = 0;
+    uint32_t o = 0;
 
-    for(uint32 v=0;v<dwLength;v++)
+    for(uint32_t v=0;v<dwLength;v++)
     {
-        uint32 len = 0, data = 0;
+        uint32_t len = 0, data = 0;
 
         LogoRLE *cur = (LogoRLE *)&RLE[v];
 
@@ -648,7 +648,7 @@ void Xbe::ExportLogoBitmap(uint08 x_Gray[100*17])
             }
         }
 
-        for(uint32 j=0;j<len;j++)
+        for(uint32_t j=0;j<len;j++)
         {
             o++;
 
@@ -659,24 +659,24 @@ void Xbe::ExportLogoBitmap(uint08 x_Gray[100*17])
 }
 
 // return a modifiable pointer inside this structure that corresponds to a virtual address
-uint08 *Xbe::GetAddr(uint32 x_dwVirtualAddress)
+uint8_t *Xbe::GetAddr(uint32_t x_dwVirtualAddress)
 {
-    uint32 dwOffs = x_dwVirtualAddress - m_Header.dwBaseAddr;
+    uint32_t dwOffs = x_dwVirtualAddress - m_Header.dwBaseAddr;
 
     // offset into image header
     if(dwOffs < sizeof(m_Header))
-        return &((uint08*)&m_Header)[dwOffs];
+        return &((uint8_t*)&m_Header)[dwOffs];
 
     // offset into image header extra bytes
     if(dwOffs < m_Header.dwSizeofHeaders)
-        return (uint08*)&m_HeaderEx[dwOffs - sizeof(m_Header)];
+        return (uint8_t*)&m_HeaderEx[dwOffs - sizeof(m_Header)];
 
     // offset into some random section
     {
-        for(uint32 v=0;v<m_Header.dwSections;v++)
+        for(uint32_t v=0;v<m_Header.dwSections;v++)
         {
-            uint32 VirtAddr = m_SectionHeader[v].dwVirtualAddr;
-            uint32 VirtSize = m_SectionHeader[v].dwVirtualSize;
+            uint32_t VirtAddr = m_SectionHeader[v].dwVirtualAddr;
+            uint32_t VirtSize = m_SectionHeader[v].dwVirtualSize;
 
             if( (x_dwVirtualAddress >= VirtAddr) && (x_dwVirtualAddress < (VirtAddr + VirtSize)) )
                 return &m_bzSection[v][x_dwVirtualAddress - VirtAddr];
@@ -687,10 +687,10 @@ uint08 *Xbe::GetAddr(uint32 x_dwVirtualAddress)
 }
 
 // return a modifiable pointer to logo bitmap data
-uint08 *Xbe::GetLogoBitmap(uint32 x_dwSize)
+uint8_t *Xbe::GetLogoBitmap(uint32_t x_dwSize)
 {
-    uint32 dwOffs = m_Header.dwLogoBitmapAddr - m_Header.dwBaseAddr;
-    uint32 dwLength = m_Header.dwSizeofLogoBitmap;
+    uint32_t dwOffs = m_Header.dwLogoBitmapAddr - m_Header.dwBaseAddr;
+    uint32_t dwLength = m_Header.dwSizeofLogoBitmap;
 
     if(dwOffs == 0 || dwLength == 0)
         return 0;
@@ -714,7 +714,7 @@ uint08 *Xbe::GetLogoBitmap(uint32 x_dwSize)
 
 void *Xbe::FindSection(char *zsSectionName)
 {
-	for (uint32 v = 0; v < m_Header.dwSections; v++) {
+	for (uint32_t v = 0; v < m_Header.dwSections; v++) {
 		if (strcmp(m_szSectionName[v], zsSectionName) == 0) {
 			if (m_SectionHeader[v].dwVirtualAddr > 0 && m_SectionHeader[v].dwVirtualSize > 0) {
 				return m_bzSection[v];
@@ -727,9 +727,9 @@ void *Xbe::FindSection(char *zsSectionName)
 
 void* Xbe::FindSection(xboxkrnl::PXBEIMAGE_SECTION section)
 {
-	for (uint32 v = 0; v < m_Header.dwSections; v++) {
+	for (uint32_t v = 0; v < m_Header.dwSections; v++) {
 		if (m_SectionHeader[v].dwVirtualAddr > 0 && m_SectionHeader[v].dwVirtualSize > 0) {
-			if (m_SectionHeader[v].dwRawAddr == section->FileAddress && m_SectionHeader[v].dwVirtualAddr == (uint32)(section->VirtualAddress)
+			if (m_SectionHeader[v].dwRawAddr == section->FileAddress && m_SectionHeader[v].dwVirtualAddr == (uint32_t)(section->VirtualAddress)
 				&& m_SectionHeader[v].dwVirtualSize == section->VirtualSize) {
 				return m_bzSection[v];
 			}
@@ -757,7 +757,7 @@ const char *Xbe::GameRegionToString()
         "DEBUG", "NTSC (DEBUG)", "JAP (DEBUG)", "NTSC+JAP (DEBUG)",
         "PAL (DEBUG)", "PAL+NTSC (DEBUG)", "PAL+JAP (DEBUG)", "Region Free (DEBUG)"
     };
-    const uint32 all_regions = XBEIMAGE_GAME_REGION_NA |
+    const uint32_t all_regions = XBEIMAGE_GAME_REGION_NA |
                                XBEIMAGE_GAME_REGION_JAPAN |
                                XBEIMAGE_GAME_REGION_RESTOFWORLD |
                                XBEIMAGE_GAME_REGION_MANUFACTURING;
@@ -766,7 +766,7 @@ const char *Xbe::GameRegionToString()
         return "REGION ERROR";
     }
 
-    uint8 index = (m_Certificate.dwGameRegion & XBEIMAGE_GAME_REGION_MANUFACTURING) ? 0x8 : 0;
+    uint8_t index = (m_Certificate.dwGameRegion & XBEIMAGE_GAME_REGION_MANUFACTURING) ? 0x8 : 0;
     index |= (m_Certificate.dwGameRegion & 0x7);
     return Region_text[index];
 }

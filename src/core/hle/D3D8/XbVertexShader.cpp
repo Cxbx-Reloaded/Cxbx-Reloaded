@@ -257,7 +257,7 @@ typedef struct _VSH_PARAMETER
     VSH_PARAMETER_TYPE  ParameterType;   // Parameter type, R, V or C
     boolean             Neg;             // TRUE if negated, FALSE if not
     VSH_SWIZZLE         Swizzle[4];      // The four swizzles
-    int16               Address;         // Register address
+    int16_t             Address;         // Register address
 }
 VSH_PARAMETER;
 
@@ -267,7 +267,7 @@ typedef struct _VSH_OUTPUT
     VSH_OUTPUT_MUX      OutputMux;       // MAC or ILU used as output
 	VSH_OUTPUT_TYPE     OutputType;      // C or O
     boolean             OutputMask[4];
-    int16               OutputAddress;
+    int16_t             OutputAddress;
     // MAC output R register
     boolean             MACRMask[4];
     boolean             MACRAddress;
@@ -301,7 +301,7 @@ typedef struct _VSH_IMD_OUTPUT
 {
     VSH_IMD_OUTPUT_TYPE Type;
     boolean             Mask[4];
-    int16               Address;
+    int16_t             Address;
 }
 VSH_IMD_OUTPUT;
 
@@ -333,16 +333,16 @@ VSH_INTERMEDIATE_FORMAT;
 typedef struct _VSH_FIELDMAPPING
 {
     VSH_FIELD_NAME  FieldName;
-    uint08          SubToken;
-    uint08          StartBit;
-    uint08          BitLength;
+    uint8_t          SubToken;
+    uint8_t          StartBit;
+    uint8_t          BitLength;
 }
 VSH_FIELDMAPPING;
 
 typedef struct _VSH_XBOX_SHADER
 {
     XTL::VSH_SHADER_HEADER       ShaderHeader;
-    uint16                  IntermediateCount;
+    uint16_t                IntermediateCount;
     VSH_INTERMEDIATE_FORMAT Intermediate[VSH_MAX_INTERMEDIATE_COUNT];
 }
 VSH_XBOX_SHADER;
@@ -552,24 +552,24 @@ static inline boolean HasILUO(VSH_SHADER_INSTRUCTION *pInstruction)
 }
 
 // Retrieves a number of bits in the instruction token
-static inline int VshGetFromToken(uint32 *pShaderToken,
-                                  uint08 SubToken,
-                                  uint08 StartBit,
-                                  uint08 BitLength)
+static inline int VshGetFromToken(uint32_t *pShaderToken,
+                                  uint8_t SubToken,
+                                  uint8_t StartBit,
+                                  uint8_t BitLength)
 {
     return (pShaderToken[SubToken] >> StartBit) & ~(0xFFFFFFFF << BitLength);
 }
 
 // Converts the C register address to disassembly format
-static inline int16 ConvertCRegister(const int16 CReg)
+static inline int16_t ConvertCRegister(const int16_t CReg)
 {
     return ((((CReg >> 5) & 7) - 3) * 32) + (CReg & 31);
 }
 
-uint08 VshGetField(uint32         *pShaderToken,
+uint8_t VshGetField(uint32_t         *pShaderToken,
                    VSH_FIELD_NAME FieldName)
 {
-    return (uint08)(VshGetFromToken(pShaderToken,
+    return (uint8_t)(VshGetFromToken(pShaderToken,
                                    g_FieldMapping[FieldName].SubToken,
                                    g_FieldMapping[FieldName].StartBit,
                                    g_FieldMapping[FieldName].BitLength));
@@ -587,7 +587,7 @@ static VSH_OPCODE_PARAMS* VshGetOpCodeParams(VSH_ILU ILU,
 		    return NULL;
 }
 
-static void VshParseInstruction(uint32                 *pShaderToken,
+static void VshParseInstruction(uint32_t               *pShaderToken,
                                 VSH_SHADER_INSTRUCTION *pInstruction)
 {
     // First get the instruction(s).
@@ -714,7 +714,7 @@ static char *VshGetRegisterName(VSH_PARAMETER_TYPE ParameterType)
 
 static void VshWriteOutputMask(boolean *OutputMask,
                                char    *pDisassembly,
-                               uint32  *pDisassemblyPos)
+                               uint32_t *pDisassemblyPos)
 {
     if(OutputMask[0] && OutputMask[1] && OutputMask[2] && OutputMask[3])
     {
@@ -730,7 +730,7 @@ static void VshWriteOutputMask(boolean *OutputMask,
 
 static void VshWriteParameter(VSH_IMD_PARAMETER *pParameter,
                               char              *pDisassembly,
-                              uint32            *pDisassemblyPos)
+                              uint32_t          *pDisassemblyPos)
 {
     *pDisassemblyPos += sprintf(pDisassembly + *pDisassemblyPos, ", %s%s",
                                 pParameter->Parameter.Neg ? "-" : "",
@@ -824,7 +824,7 @@ static void VshWriteShader(VSH_XBOX_SHADER *pShader,
 						   XTL::D3DVERTEXELEMENT *pRecompiled,
                            boolean Truncate)
 {
-    uint32 DisassemblyPos = 0;
+    uint32_t DisassemblyPos = 0;
     switch(pShader->ShaderHeader.Version)
     {
         case VERSION_VS:
@@ -988,7 +988,7 @@ static void VshAddParameters(VSH_SHADER_INSTRUCTION  *pInstruction,
                              VSH_MAC                 MAC,
                              VSH_IMD_PARAMETER       *pParameters)
 {
-    uint08 ParamCount = 0;
+    uint8_t ParamCount = 0;
     VSH_OPCODE_PARAMS* pParams = VshGetOpCodeParams(ILU, MAC);
 
     // param A
@@ -1032,7 +1032,7 @@ static VSH_INTERMEDIATE_FORMAT *VshNewIntermediate(VSH_XBOX_SHADER *pShader)
 
 static void VshInsertIntermediate(VSH_XBOX_SHADER         *pShader,
                                   VSH_INTERMEDIATE_FORMAT *pIntermediate,
-                                  uint16                  Pos)
+                                  uint16_t                 Pos)
 {
     VshVerifyBufferBounds(pShader);
 
@@ -1045,7 +1045,7 @@ static void VshInsertIntermediate(VSH_XBOX_SHADER         *pShader,
 }
 
 static void VshDeleteIntermediate(VSH_XBOX_SHADER *pShader,
-                                  uint16          Pos)
+                                  uint16_t         Pos)
 {
     for (int i = Pos; i < (pShader->IntermediateCount - 1); i++)
     {
@@ -1333,7 +1333,7 @@ static boolean DxbxFixupScalarParameter(VSH_SHADER_INSTRUCTION *pInstruction,
 */
 static void VshRemoveScreenSpaceInstructions(VSH_XBOX_SHADER *pShader)
 {
-    int16 PosC38    = -1;
+    int16_t PosC38    = -1;
     int deleted     = 0;
 
     for (int i = 0; i < pShader->IntermediateCount; i++)
@@ -1687,7 +1687,7 @@ static boolean VshConvertShader(VSH_XBOX_SHADER *pShader,
             i++;
         }
     }
-    int16 R12Replacement = -1;
+    int16_t R12Replacement = -1;
     if(temporaryCount <= 12 && RUsage[12])
     {
         // Sigh, they absolutely had to use r12, didn't they?
@@ -2397,7 +2397,7 @@ DWORD XTL::EmuRecompileVshDeclaration
 
     while (*pDeclaration != DEF_VSH_END)
     {
-		if ((uint8*)pRecompiled >= pRecompiledBufferOverflow) {
+		if ((uint8_t*)pRecompiled >= pRecompiledBufferOverflow) {
 			DbgVshPrintf("Detected buffer-overflow, breaking out...\n");
 			break;
 		}
@@ -2495,13 +2495,13 @@ extern HRESULT XTL::EmuRecompileVshFunction
     {
 		RegVUsage.fill(false);
 
-        for (pToken = (DWORD*)((uint08*)pFunction + sizeof(VSH_SHADER_HEADER)); !EOI; pToken += VSH_INSTRUCTION_SIZE)
+        for (pToken = (DWORD*)((uint8_t*)pFunction + sizeof(VSH_SHADER_HEADER)); !EOI; pToken += VSH_INSTRUCTION_SIZE)
         {
             VSH_SHADER_INSTRUCTION Inst;
 
-            VshParseInstruction(pToken, &Inst);
+            VshParseInstruction((uint32_t*)pToken, &Inst);
             VshConvertToIntermediate(&Inst, pShader);
-            EOI = (boolean)VshGetField(pToken, FLD_FINAL);
+            EOI = (boolean)VshGetField((uint32_t*)pToken, FLD_FINAL);
         }
 
         // The size of the shader is
@@ -2620,7 +2620,7 @@ XTL::CxbxVertexShaderInfo *GetCxbxVertexShaderInfo(DWORD Handle)
 {
     XTL::CxbxVertexShader *pVertexShader = XTL::GetCxbxVertexShader(Handle);
 
-    for (uint32 i = 0; i < pVertexShader->VertexShaderInfo.NumberOfVertexStreams; i++)
+    for (uint32_t i = 0; i < pVertexShader->VertexShaderInfo.NumberOfVertexStreams; i++)
     {
         if (pVertexShader->VertexShaderInfo.VertexStreams[i].NeedPatch)
         {
