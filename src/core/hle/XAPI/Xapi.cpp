@@ -302,7 +302,8 @@ bool TitleRequiresInputHack()
 		0x49470018, // JSRF NTSC-U
 		0x5345000A, // JSRF PAL, NTSC-J
 		0x53450016, // JSRF NTSC - J(Demo)
-		0x5345000b, // GunValkyre NTSC-U
+		0x5345000b, // GunValkyre NTSC-U, NTSC-J
+		0x49470017, // GunValkyre PAL
 		0
 	};
 
