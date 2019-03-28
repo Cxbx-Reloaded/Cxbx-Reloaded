@@ -226,7 +226,7 @@ inline void GeneratePCMFormat(
                 lpwfxFormatHost->nChannels = 2;
                 lpwfxFormatHost->nSamplesPerSec = 44100;
                 lpwfxFormatHost->wBitsPerSample = 8;
-                lpwfxFormatHost->nBlockAlign = lpwfxFormatHost->nChannels * lpwfxFormatHost->wBitsPerSample / 8;
+                lpwfxFormatHost->nBlockAlign = lpwfxFormatHost->nChannels * static_cast<uint32_t>(lpwfxFormatHost->wBitsPerSample) / 8;
                 lpwfxFormatHost->nAvgBytesPerSec = lpwfxFormatHost->nSamplesPerSec * lpwfxFormatHost->nBlockAlign;
             }
             else {
@@ -249,7 +249,7 @@ inline void GeneratePCMFormat(
                 }
 
                 if (lpwfxFormatHost->nBlockAlign == 0) {
-                    lpwfxFormatHost->nBlockAlign = lpwfxFormatHost->nChannels * lpwfxFormatHost->wBitsPerSample / 8;
+                    lpwfxFormatHost->nBlockAlign = lpwfxFormatHost->nChannels * static_cast<uint32_t>(lpwfxFormatHost->wBitsPerSample) / 8;
                 }
 
                 if (lpwfxFormatHost->nSamplesPerSec == 0) {
@@ -335,7 +335,7 @@ inline void GeneratePCMFormat(
     // TODO: Still a requirement? Need to retest it again. Can't remember which title cause problem or had been resolved.
     // sanity check
     if (!bIsSpecial) {
-        if (DSBufferDesc.lpwfxFormat->nBlockAlign != (DSBufferDesc.lpwfxFormat->nChannels*DSBufferDesc.lpwfxFormat->wBitsPerSample) / 8) {
+        if (DSBufferDesc.lpwfxFormat->nBlockAlign != DSBufferDesc.lpwfxFormat->nChannels* static_cast<uint32_t>(DSBufferDesc.lpwfxFormat->wBitsPerSample) / 8) {
             DSBufferDesc.lpwfxFormat->nBlockAlign = (2 * DSBufferDesc.lpwfxFormat->wBitsPerSample) / 8;
             DSBufferDesc.lpwfxFormat->nAvgBytesPerSec = DSBufferDesc.lpwfxFormat->nSamplesPerSec * DSBufferDesc.lpwfxFormat->nBlockAlign;
         }
