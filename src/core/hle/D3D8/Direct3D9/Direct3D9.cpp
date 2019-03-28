@@ -8572,7 +8572,8 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetScreenSpaceOffset)
 		LOG_FUNC_ARG(y)
 		LOG_FUNC_END;
 
-    EmuLog(LOG_LEVEL::WARNING, "EmuD3DDevice_SetScreenSpaceOffset ignored");
+    // No need to log this, it's safe to ignore.
+    //EmuLog(LOG_LEVEL::WARNING, "EmuD3DDevice_SetScreenSpaceOffset ignored");
 }
 
 // ******************************************************************

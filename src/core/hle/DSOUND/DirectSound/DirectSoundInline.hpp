@@ -226,7 +226,7 @@ inline void GeneratePCMFormat(
                 lpwfxFormatHost->nChannels = 2;
                 lpwfxFormatHost->nSamplesPerSec = 44100;
                 lpwfxFormatHost->wBitsPerSample = 8;
-                lpwfxFormatHost->nBlockAlign = (lpwfxFormatHost->wBitsPerSample / 8 * lpwfxFormatHost->nChannels);
+                lpwfxFormatHost->nBlockAlign = lpwfxFormatHost->nChannels * lpwfxFormatHost->wBitsPerSample / 8;
                 lpwfxFormatHost->nAvgBytesPerSec = lpwfxFormatHost->nSamplesPerSec * lpwfxFormatHost->nBlockAlign;
             }
             else {
@@ -249,7 +249,7 @@ inline void GeneratePCMFormat(
                 }
 
                 if (lpwfxFormatHost->nBlockAlign == 0) {
-                    lpwfxFormatHost->nBlockAlign = (lpwfxFormatHost->wBitsPerSample / 8 * lpwfxFormatHost->nChannels);
+                    lpwfxFormatHost->nBlockAlign = lpwfxFormatHost->nChannels * lpwfxFormatHost->wBitsPerSample / 8;
                 }
 
                 if (lpwfxFormatHost->nSamplesPerSec == 0) {
