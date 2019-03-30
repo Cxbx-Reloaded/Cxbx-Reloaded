@@ -18,6 +18,7 @@
 // *  59 Temple Place - Suite 330, Bostom, MA 02111-1307, USA.
 // *
 // *  (c) 2018 Patrick van Logchem <pvanlogchem@gmail.com>
+// *  (c) 2019 ergo720
 // *
 // *  All rights reserved
 // *
@@ -48,7 +49,7 @@ namespace xboxkrnl
 	typedef struct _KI_TIMER_LOCK
 	{
 		std::recursive_mutex Mtx;
-		bool Acquired;
+		int Acquired;
 	} KI_TIMER_LOCK;
 
 
@@ -58,70 +59,84 @@ namespace xboxkrnl
 
 	VOID KiTimerUnlock();
 
-	VOID KiClockIsr(
+	VOID KiClockIsr
+	(
 		IN unsigned int ScalingFactor
 	);
 
-	VOID NTAPI KiCheckTimerTable(
+	VOID NTAPI KiCheckTimerTable
+	(
 		IN ULARGE_INTEGER CurrentTime
 	);
 
-	VOID KxInsertTimer(
+	VOID KxInsertTimer
+	(
 		IN PKTIMER Timer,
 		IN ULONG Hand
 	);
 
-	VOID FASTCALL KiCompleteTimer(
-		IN PKTIMER Timer,
-		IN ULONG Hand
-		);
-
-	VOID KiRemoveEntryTimer(
+	VOID FASTCALL KiCompleteTimer
+	(
 		IN PKTIMER Timer,
 		IN ULONG Hand
 	);
 
-	VOID KxRemoveTreeTimer(
+	VOID KiRemoveEntryTimer
+	(
+		IN PKTIMER Timer,
+		IN ULONG Hand
+	);
+
+	VOID KxRemoveTreeTimer
+	(
 		IN PKTIMER Timer
 	);
 
-	BOOLEAN FASTCALL KiInsertTimerTable(
+	BOOLEAN FASTCALL KiInsertTimerTable
+	(
 		IN PKTIMER Timer,
 		IN ULONG Hand
 	);
 
-	BOOLEAN FASTCALL KiInsertTreeTimer(
+	BOOLEAN FASTCALL KiInsertTreeTimer
+	(
 		IN PKTIMER Timer,
 		IN LARGE_INTEGER Interval
 	);
 
-	ULONG KiComputeTimerTableIndex(
+	ULONG KiComputeTimerTableIndex
+	(
 		IN ULONGLONG Interval
 	);
 
-	BOOLEAN KiComputeDueTime(
+	BOOLEAN KiComputeDueTime
+	(
 		IN PKTIMER Timer,
 		IN LARGE_INTEGER DueTime,
 		OUT PULONG Hand
 	);
 
-	BOOLEAN FASTCALL KiSignalTimer(
+	BOOLEAN FASTCALL KiSignalTimer
+	(
 		IN PKTIMER Timer
 	);
 
-	VOID NTAPI KiTimerExpiration(
+	VOID NTAPI KiTimerExpiration
+	(
 		IN PKDPC Dpc,
 		IN PVOID DeferredContext,
 		IN PVOID SystemArgument1,
 		IN PVOID SystemArgument2
 	);
 
-	VOID FASTCALL KiTimerListExpire(
+	VOID FASTCALL KiTimerListExpire
+	(
 		IN PLIST_ENTRY ExpiredListHead,
 		IN KIRQL OldIrql
 	);
 
-	VOID FASTCALL KiWaitSatisfyAll(
+	VOID FASTCALL KiWaitSatisfyAll
+	(
 		IN PKWAIT_BLOCK WaitBlock
 	);
 };

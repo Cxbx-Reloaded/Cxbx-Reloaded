@@ -27,8 +27,14 @@
 
 namespace xboxkrnl
 {
-	VOID NTAPI KeSetSystemTime(
+	VOID NTAPI KeSetSystemTime
+	(
 		IN  PLARGE_INTEGER NewTime,
 		OUT PLARGE_INTEGER OldTime
+	);
+
+	VOID NTAPI KeInitializeTimer
+	(
+		IN PKTIMER Timer
 	);
 }

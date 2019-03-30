@@ -91,7 +91,7 @@ namespace xboxkrnl
 
 #define MAX_TIMER_DPCS   16
 
-#define ASSERT_TIMER_LOCKED assert(KiTimerMtx.Acquired == true)
+#define ASSERT_TIMER_LOCKED assert(KiTimerMtx.Acquired > 0)
 
 const xboxkrnl::ULONG CLOCK_TIME_INCREMENT = 0x2710;
 xboxkrnl::KDPC KiTimerExpireDpc;
@@ -118,16 +118,17 @@ xboxkrnl::VOID xboxkrnl::KiInitSystem()
 xboxkrnl::VOID xboxkrnl::KiTimerLock()
 {
 	KiTimerMtx.Mtx.lock();
-	KiTimerMtx.Acquired = true;
+	KiTimerMtx.Acquired++;
 }
 
 xboxkrnl::VOID xboxkrnl::KiTimerUnlock()
 {
-	KiTimerMtx.Acquired = false;
+	KiTimerMtx.Acquired--;
 	KiTimerMtx.Mtx.unlock();
 }
 
-xboxkrnl::VOID xboxkrnl::KiClockIsr(
+xboxkrnl::VOID xboxkrnl::KiClockIsr
+(
 	unsigned int ScalingFactor
 )
 {
@@ -165,10 +166,10 @@ xboxkrnl::VOID xboxkrnl::KiClockIsr(
 	if (KiTimerMtx.Mtx.try_lock()) {
 		KiTimerMtx.Acquired = true;
 		// Check if a timer has expired
-		Hand = KeTickCount & (TIMER_TABLE_SIZE - 1);
+		Hand = OldKeTickCount & (TIMER_TABLE_SIZE - 1);
 		if (KiTimerTableListHead[Hand].Entry.Flink != &KiTimerTableListHead[Hand].Entry &&
 			(ULONGLONG)InterruptTime.QuadPart >= KiTimerTableListHead[Hand].Time.QuadPart) {
-			KeInsertQueueDpc(&KiTimerExpireDpc, (PVOID)OldKeTickCount, 0);
+			KeInsertQueueDpc(&KiTimerExpireDpc, (PVOID)Hand, 0);
 		}
 		KiTimerMtx.Acquired = false;
 		KiTimerMtx.Mtx.unlock();
@@ -177,7 +178,8 @@ xboxkrnl::VOID xboxkrnl::KiClockIsr(
 	KfLowerIrql(OldIrql);
 }
 
-xboxkrnl::VOID NTAPI xboxkrnl::KiCheckTimerTable(
+xboxkrnl::VOID NTAPI xboxkrnl::KiCheckTimerTable
+(
 	IN xboxkrnl::ULARGE_INTEGER CurrentTime
 )
 {
@@ -218,7 +220,8 @@ xboxkrnl::VOID NTAPI xboxkrnl::KiCheckTimerTable(
 	KfLowerIrql(OldIrql);
 }
 
-xboxkrnl::VOID xboxkrnl::KxInsertTimer(
+xboxkrnl::VOID xboxkrnl::KxInsertTimer
+(
 	IN xboxkrnl::PKTIMER Timer,
 	IN xboxkrnl::ULONG Hand
 )
@@ -233,7 +236,8 @@ xboxkrnl::VOID xboxkrnl::KxInsertTimer(
 	}
 }
 
-xboxkrnl::VOID FASTCALL xboxkrnl::KiCompleteTimer(
+xboxkrnl::VOID FASTCALL xboxkrnl::KiCompleteTimer
+(
 	IN xboxkrnl::PKTIMER Timer,
 	IN xboxkrnl::ULONG Hand
 )
@@ -263,7 +267,8 @@ xboxkrnl::VOID FASTCALL xboxkrnl::KiCompleteTimer(
 	}
 }
 
-xboxkrnl::VOID xboxkrnl::KiRemoveEntryTimer(
+xboxkrnl::VOID xboxkrnl::KiRemoveEntryTimer
+(
 	IN xboxkrnl::PKTIMER Timer,
 	IN xboxkrnl::ULONG Hand
 )
@@ -289,7 +294,8 @@ xboxkrnl::VOID xboxkrnl::KiRemoveEntryTimer(
 	Timer->TimerListEntry.Blink = NULL;
 }
 
-xboxkrnl::VOID xboxkrnl::KxRemoveTreeTimer(
+xboxkrnl::VOID xboxkrnl::KxRemoveTreeTimer
+(
 	IN xboxkrnl::PKTIMER Timer
 )
 {
@@ -314,7 +320,8 @@ xboxkrnl::VOID xboxkrnl::KxRemoveTreeTimer(
 	}
 }
 
-xboxkrnl::BOOLEAN FASTCALL xboxkrnl::KiInsertTimerTable(
+xboxkrnl::BOOLEAN FASTCALL xboxkrnl::KiInsertTimerTable
+(
 	IN xboxkrnl::PKTIMER Timer,
 	IN xboxkrnl::ULONG Hand
 )
@@ -370,7 +377,8 @@ xboxkrnl::BOOLEAN FASTCALL xboxkrnl::KiInsertTimerTable(
 	return Expired;
 }
 
-xboxkrnl::BOOLEAN FASTCALL xboxkrnl::KiInsertTreeTimer(
+xboxkrnl::BOOLEAN FASTCALL xboxkrnl::KiInsertTreeTimer
+(
 	IN xboxkrnl::PKTIMER Timer,
 	IN xboxkrnl::LARGE_INTEGER Interval
 )
@@ -400,14 +408,16 @@ xboxkrnl::BOOLEAN FASTCALL xboxkrnl::KiInsertTreeTimer(
 	return Inserted;
 }
 
-xboxkrnl::ULONG xboxkrnl::KiComputeTimerTableIndex(
+xboxkrnl::ULONG xboxkrnl::KiComputeTimerTableIndex
+(
 	IN xboxkrnl::ULONGLONG Interval
 )
 {
 	return (Interval / CLOCK_TIME_INCREMENT) & (TIMER_TABLE_SIZE - 1);
 }
 
-xboxkrnl::BOOLEAN xboxkrnl::KiComputeDueTime(
+xboxkrnl::BOOLEAN xboxkrnl::KiComputeDueTime
+(
 	IN  xboxkrnl::PKTIMER Timer,
 	IN  xboxkrnl::LARGE_INTEGER DueTime,
 	OUT xboxkrnl::PULONG Hand)
@@ -455,7 +465,8 @@ xboxkrnl::BOOLEAN xboxkrnl::KiComputeDueTime(
 	return TRUE;
 }
 
-xboxkrnl::BOOLEAN FASTCALL xboxkrnl::KiSignalTimer(
+xboxkrnl::BOOLEAN FASTCALL xboxkrnl::KiSignalTimer
+(
 	IN xboxkrnl::PKTIMER Timer
 )
 {
@@ -509,7 +520,8 @@ xboxkrnl::BOOLEAN FASTCALL xboxkrnl::KiSignalTimer(
 	return RequestInterrupt;
 }
 
-xboxkrnl::VOID NTAPI xboxkrnl::KiTimerExpiration(
+xboxkrnl::VOID NTAPI xboxkrnl::KiTimerExpiration
+(
 	IN xboxkrnl::PKDPC Dpc,
 	IN xboxkrnl::PVOID DeferredContext,
 	IN xboxkrnl::PVOID SystemArgument1,
@@ -752,7 +764,8 @@ xboxkrnl::VOID NTAPI xboxkrnl::KiTimerExpiration(
 	}
 }
 
-xboxkrnl::VOID FASTCALL xboxkrnl::KiTimerListExpire(
+xboxkrnl::VOID FASTCALL xboxkrnl::KiTimerListExpire
+(
 	IN xboxkrnl::PLIST_ENTRY ExpiredListHead,
 	IN xboxkrnl::KIRQL OldIrql
 )
@@ -869,8 +882,6 @@ xboxkrnl::VOID FASTCALL xboxkrnl::KiWaitSatisfyAll
 	IN xboxkrnl::PKWAIT_BLOCK WaitBlock
 )
 {
-	using namespace xboxkrnl;
-
 	PKMUTANT Object;
 	PRKTHREAD Thread;
 	PKWAIT_BLOCK WaitBlock1;

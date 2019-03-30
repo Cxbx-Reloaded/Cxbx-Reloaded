@@ -1580,6 +1580,7 @@ typedef enum _KOBJECTS
 	MutantObject = 2,
 	QueueObject = 4,
 	SemaphoreObject = 5,
+	ThreadObject = 6,
 	TimerNotificationObject = 8,
 	TimerSynchronizationObject = 9,
 	ApcObject = 0x12,
@@ -1961,7 +1962,7 @@ typedef struct _KTHREAD
 	/* 0x55/85 */ CHAR WaitMode;
 	/* 0x56/86 */ CHAR WaitNext;
 	/* 0x57/87 */ CHAR WaitReason;
-	/* 0x58/88 */ PVOID WaitBlockList;
+	/* 0x58/88 */ PKWAIT_BLOCK WaitBlockList;
 	/* 0x5C/92 */ LIST_ENTRY WaitListEntry;
 	/* 0x64/100 */ ULONG WaitTime;
 	/* 0x68/104 */ ULONG KernelApcDisable;

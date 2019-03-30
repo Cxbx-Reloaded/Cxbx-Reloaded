@@ -35,6 +35,7 @@ namespace xboxkrnl
 };
 
 #include "core\kernel\exports\EmuKrnl.h" // For InitializeListHead(), etc.
+#include "core\kernel\exports\EmuKrnlKe.h"
 #include "EmuFS.h"
 #include "core\kernel\init\CxbxKrnl.h"
 #include "core\kernel\memory-manager\VMManager.h"
@@ -652,6 +653,19 @@ void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData)
 		EThread->UniqueThread = GetCurrentThreadId();
 		// Set PrcbData.CurrentThread
 		Prcb->CurrentThread = (xboxkrnl::KTHREAD*)EThread;
+		// Initialize the thread header and its wait list
+		Prcb->CurrentThread->Header.Type = xboxkrnl::ThreadObject;
+		Prcb->CurrentThread->Header.Size = sizeof(xboxkrnl::KTHREAD) / sizeof(xboxkrnl::LONG);
+		InitializeListHead(&Prcb->CurrentThread->Header.WaitListHead);
+		// Also initialize the timer associated with the thread
+		xboxkrnl::KeInitializeTimer(&Prcb->CurrentThread->Timer);
+		xboxkrnl::PKWAIT_BLOCK WaitBlock = &Prcb->CurrentThread->TimerWaitBlock;
+		WaitBlock->Object = &Prcb->CurrentThread->Timer;
+		WaitBlock->WaitKey = (xboxkrnl::CSHORT)STATUS_TIMEOUT;
+		WaitBlock->WaitType = xboxkrnl::WaitAny;
+		WaitBlock->Thread = Prcb->CurrentThread;
+		WaitBlock->WaitListEntry.Flink = &Prcb->CurrentThread->Timer.Header.WaitListHead;
+		WaitBlock->WaitListEntry.Blink = &Prcb->CurrentThread->Timer.Header.WaitListHead;
 	}
 
 	// Make the KPCR struct available to KeGetPcr()
