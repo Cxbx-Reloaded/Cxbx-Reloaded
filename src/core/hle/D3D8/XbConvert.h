@@ -93,18 +93,27 @@ else
 // convert from xbox to pc texture transform state types
 inline D3DTRANSFORMSTATETYPE EmuXB2PC_D3DTS(D3DTRANSFORMSTATETYPE State)
 {
-    if((uint32_t)State < 2)
-        return (D3DTRANSFORMSTATETYPE)(State + 2);
-    else if((uint32_t)State < 6)
-        return (D3DTRANSFORMSTATETYPE)(State + 14);
-    else if((uint32_t)State < 10)
-        return D3DTS_WORLDMATRIX(State-6);
-    else if((uint32_t)State == 10) // Max
-        return (D3DTRANSFORMSTATETYPE)(D3DTS_TEXTURE7 + 1);
+    // Handle Xbox -> D3D State mapping
+    switch (State) {
+        case 0: return (D3DTRANSFORMSTATETYPE)D3DTS_VIEW;
+        case 1: return (D3DTRANSFORMSTATETYPE)D3DTS_PROJECTION;
+        case 2: return (D3DTRANSFORMSTATETYPE)D3DTS_TEXTURE0;
+        case 3: return (D3DTRANSFORMSTATETYPE)D3DTS_TEXTURE1;
+        case 4: return (D3DTRANSFORMSTATETYPE)D3DTS_TEXTURE2;
+        case 5: return (D3DTRANSFORMSTATETYPE)D3DTS_TEXTURE3;
+        case 6: return (D3DTRANSFORMSTATETYPE)D3DTS_WORLD;
+        case 7: return (D3DTRANSFORMSTATETYPE)D3DTS_WORLD1;
+        case 8: return (D3DTRANSFORMSTATETYPE)D3DTS_WORLD2;
+        case 9: return (D3DTRANSFORMSTATETYPE)D3DTS_WORLD3;
+    }
+
+    // Handle World Matrix offsets
+    if (State >= 256 && State <= 511) {
+        return D3DTS_WORLDMATRIX(State - 256);
+    }
 
     CxbxKrnlCleanupEx(LOG_PREFIX_D3DCVT, "Unknown Transform State Type (%d)", State);
-
-    return State;
+    return (D3DTRANSFORMSTATETYPE)0;
 }
 
 // convert from xbox to pc blend ops
@@ -112,26 +121,19 @@ inline D3DBLENDOP EmuXB2PC_D3DBLENDOP(X_D3DBLENDOP Value)
 {
     switch(Value)
     {
-        case 0x8006:
+        case 0x8006: return D3DBLENDOP_ADD;
+        case 0x800a: return D3DBLENDOP_SUBTRACT;
+        case 0x800b: return D3DBLENDOP_REVSUBTRACT;
+        case 0x8007: return D3DBLENDOP_MIN;
+        case 0x8008: return D3DBLENDOP_MAX;
+        case 0xF006: {
+            EmuLogEx(LOG_PREFIX_D3DCVT, LOG_LEVEL::WARNING, "D3DBLENDOP_ADDSIGNED is not supported!");
             return D3DBLENDOP_ADD;
-		case 0x800a:
-			return D3DBLENDOP_SUBTRACT;
-		case 0x800b:
-			return D3DBLENDOP_REVSUBTRACT;
-		case 0x8007:
-			return D3DBLENDOP_MIN;
-		case 0x8008:
-			return D3DBLENDOP_MAX;
-		case 0xF006:
-			{
-				EmuLogEx(LOG_PREFIX_D3DCVT, LOG_LEVEL::WARNING, "D3DBLENDOP_ADDSIGNED is not supported!");
-				return D3DBLENDOP_ADD;
-			};
-		case 0xF005:
-			{
-				EmuLogEx(LOG_PREFIX_D3DCVT, LOG_LEVEL::WARNING, "D3DBLENDOP_REVSUBTRACTSIGNED is not supported!");
-				return D3DBLENDOP_REVSUBTRACT;
-			}
+        };
+        case 0xF005: {
+            EmuLogEx(LOG_PREFIX_D3DCVT, LOG_LEVEL::WARNING, "D3DBLENDOP_REVSUBTRACTSIGNED is not supported!");
+            return D3DBLENDOP_REVSUBTRACT;
+        }
     }
 
     EmuLogEx(LOG_PREFIX_D3DCVT, LOG_LEVEL::WARNING, "Unknown D3DBLENDOP (0x%.08X)", Value);
@@ -142,10 +144,25 @@ inline D3DBLENDOP EmuXB2PC_D3DBLENDOP(X_D3DBLENDOP Value)
 // convert from xbox to pc blend types 
 inline D3DBLEND EmuXB2PC_D3DBLEND(X_D3DBLEND Value)
 {
-    if(Value < 2)
-        return (D3DBLEND)(Value + 1);
-    else if(Value < 0x309)
-        return (D3DBLEND)((Value & 0xF) + 3);
+    switch (Value) {
+        case 0x000: return D3DBLEND_ZERO;
+        case 0x001: return D3DBLEND_ONE;
+        case 0x300: return D3DBLEND_SRCCOLOR;
+        case 0x301: return D3DBLEND_INVSRCCOLOR;
+        case 0x302: return D3DBLEND_SRCALPHA;
+        case 0x303: return D3DBLEND_INVSRCALPHA;
+        case 0x304: return D3DBLEND_DESTALPHA;
+        case 0x305: return D3DBLEND_INVDESTALPHA;
+        case 0x306: return D3DBLEND_DESTCOLOR;
+        case 0x307: return D3DBLEND_INVDESTCOLOR;
+        case 0x308: return D3DBLEND_SRCALPHASAT;
+        // Unsupported (on host) Xbox Extensions
+        // TODO: Find a way to implement these: Xbox sets a constant blend colour using D3DRS_BLENDCOLOR
+        case 0x8001: EmuLogEx(LOG_PREFIX_D3DCVT, LOG_LEVEL::WARNING, "Unsupported Xbox D3DBlend Extension: D3DBLEND_CONSTANTCOLOR"); return D3DBLEND_ONE;
+        case 0x8002: EmuLogEx(LOG_PREFIX_D3DCVT, LOG_LEVEL::WARNING, "Unsupported Xbox D3DBlend Extension: D3DBLEND_INVCONSTANTCOLOR "); return D3DBLEND_ONE;
+        case 0x8003: EmuLogEx(LOG_PREFIX_D3DCVT, LOG_LEVEL::WARNING, "Unsupported Xbox D3DBlend Extension: D3DBLEND_CONSTANTALPHA"); return D3DBLEND_ONE;
+        case 0x8004: EmuLogEx(LOG_PREFIX_D3DCVT, LOG_LEVEL::WARNING, "Unsupported Xbox D3DBlend Extension: D3DBLEND_INVCONSTANTALPHA"); return D3DBLEND_ONE;
+    }
 
     EmuLogEx(LOG_PREFIX_D3DCVT, LOG_LEVEL::WARNING, "Unknown Xbox D3DBLEND Extension (0x%.08X)", Value);
 	return D3DBLEND_ONE;
@@ -154,48 +171,64 @@ inline D3DBLEND EmuXB2PC_D3DBLEND(X_D3DBLEND Value)
 // convert from xbox to pc comparison functions
 inline D3DCMPFUNC EmuXB2PC_D3DCMPFUNC(X_D3DCMPFUNC Value)
 {
-    return (D3DCMPFUNC)((Value & 0xF) + 1);
+    switch (Value) {
+        case 0x200: return D3DCMP_NEVER;
+        case 0x201: return D3DCMP_LESS;
+        case 0x202: return D3DCMP_EQUAL;
+        case 0x203: return D3DCMP_LESSEQUAL;
+        case 0x204: return D3DCMP_GREATER;
+        case 0x205: return D3DCMP_NOTEQUAL;
+        case 0x206: return D3DCMP_GREATEREQUAL;
+        case 0x207: return D3DCMP_ALWAYS;
+    }
+
+    EmuLogEx(LOG_PREFIX_D3DCVT, LOG_LEVEL::WARNING, "Unknown Xbox D3DCMPFUNC Extension (0x%.08X)", Value);
+    return D3DCMP_NEVER;
 }
 
 // convert from xbox to pc fill modes
 inline D3DFILLMODE EmuXB2PC_D3DFILLMODE(X_D3DFILLMODE Value)
 {
-    return (D3DFILLMODE)((Value & 0xF) + 1);
+    switch (Value) {
+        case 0x1B00: return D3DFILL_POINT;
+        case 0x1B01: return D3DFILL_WIREFRAME;
+        case 0x1B02: return D3DFILL_SOLID;
+    }
+
+    EmuLogEx(LOG_PREFIX_D3DCVT, LOG_LEVEL::WARNING, "Unknown Xbox D3DFILLMODE Extension (0x%.08X)", Value);
+    return D3DFILL_SOLID;
 }
 
 // convert from xbox to pc shade modes
 inline D3DSHADEMODE EmuXB2PC_D3DSHADEMODE(X_D3DSHADEMODE Value)
 {
-    return (D3DSHADEMODE)((Value & 0x3) + 1);
+    switch (Value) {
+        case 0x1D00: return D3DSHADE_FLAT;
+        case 0x1D01: return D3DSHADE_GOURAUD;
+    }
+
+    EmuLogEx(LOG_PREFIX_D3DCVT, LOG_LEVEL::WARNING, "Unknown Xbox D3DSHADEMODE Extension (0x%.08X)", Value);
+    return D3DSHADE_GOURAUD;
 }
 
 // convert from xbox to pc stencilop modes
 inline D3DSTENCILOP EmuXB2PC_D3DSTENCILOP(X_D3DSTENCILOP Value)
 {
-	switch(Value)
-	{
-	case 0x1e00:
-		return D3DSTENCILOP_KEEP;
-	case 0:
-		return D3DSTENCILOP_ZERO;
-	case 0x1e01:
-		return D3DSTENCILOP_REPLACE;
-	case 0x1e02:
-		return D3DSTENCILOP_INCRSAT;
-	case 0x1e03:
-		return D3DSTENCILOP_DECRSAT;
-	case 0x150a:
-		return D3DSTENCILOP_INVERT;
-	case 0x8507:
-		return D3DSTENCILOP_INCR;
-	case 0x8508:
-		return D3DSTENCILOP_DECR;
+    switch(Value)
+    {
+        case 0x1e00: return D3DSTENCILOP_KEEP;
+        case 0x0000: return D3DSTENCILOP_ZERO;
+        case 0x1e01: return D3DSTENCILOP_REPLACE;
+        case 0x1e02: return D3DSTENCILOP_INCRSAT;
+        case 0x1e03: return D3DSTENCILOP_DECRSAT;
+        case 0x150a: return D3DSTENCILOP_INVERT;
+        case 0x8507: return D3DSTENCILOP_INCR;
+        case 0x8508: return D3DSTENCILOP_DECR;
+        default:
+            EmuLogEx(LOG_PREFIX_D3DCVT, LOG_LEVEL::WARNING, "Unknown D3DSTENCILOP (0x%.08X)", Value);
+    }
 
-	default:
-		EmuLogEx(LOG_PREFIX_D3DCVT, LOG_LEVEL::WARNING, "Unknown D3DSTENCILOP (0x%.08X)", Value);
-	}
-
-	return (D3DSTENCILOP) Value;
+    return (D3DSTENCILOP) Value;
 }
 
 // table used for vertex->primitive count conversion
