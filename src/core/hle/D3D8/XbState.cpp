@@ -136,14 +136,31 @@ DWORD GetDeferredTextureStateFromIndex(DWORD State)
 void UpdateDeferredTextureStates()
 {
     // Iterate through all deferred texture states/stages
-    for (int Stage = 0; Stage < XTL::X_D3DTS_STAGECOUNT; Stage++) {
+
+    // Track if we need to overwrite state 0 with 3 because of Point Sprites
+    bool pointSpriteOverride = false;
+    if (XTL::EmuD3DDeferredRenderState[XTL::X_D3DRS_POINTSPRITEENABLE - XTL::X_D3DRS_FOGENABLE] == TRUE) {
+        pointSpriteOverride = true;
+    }
+
+    for (int StageIndex = 0; StageIndex < XTL::X_D3DTS_STAGECOUNT; StageIndex++) {
         for (int StateIndex = XTL::X_D3DTSS_DEFERRED_FIRST; StateIndex <= XTL::X_D3DTSS_DEFERRED_LAST; StateIndex++) {
             // Read the value of the current stage/state from the Xbox data structure
-            DWORD Value = XTL::EmuD3DDeferredTextureState[(Stage * XTL::X_D3DTS_STAGESIZE) + StateIndex];
-
+            DWORD Value = XTL::EmuD3DDeferredTextureState[(StageIndex * XTL::X_D3DTS_STAGESIZE) + StateIndex];
+            
             // Convert the index of the current state to an index that we can use
             // This handles the case when XDKs have different state values
             DWORD State = GetDeferredTextureStateFromIndex(StateIndex);
+            DWORD Stage = StageIndex;
+
+            // If point sprites are enabled, we need to overwrite our existing state 0 with State 3 also
+            if (pointSpriteOverride && Stage == 3) {
+                Stage = 0;
+
+                // Make sure we only do this once
+                pointSpriteOverride = false;
+                StageIndex--; // Force Stage 3 to repeat, without this hack next time
+            }
 
             switch (State) {
                 case XTL::X_D3DTSS_ADDRESSU: case XTL::X_D3DTSS_ADDRESSV: case XTL::X_D3DTSS_ADDRESSW:
@@ -322,12 +339,7 @@ void UpdateDeferredTextureStates()
         }
     }
 
-    // if point sprites are enabled, copy stage 3 over to 0
-    // TODO: Verify/Fix this, it doesn't seem right (It calls host functions using Xbox indexes)
     if (XTL::EmuD3DDeferredRenderState[XTL::X_D3DRS_POINTSPRITEENABLE - XTL::X_D3DRS_FOGENABLE] == TRUE) {
-        // Get a pointer to Stage 3
-        DWORD *pCur = &XTL::EmuD3DDeferredTextureState[2 * XTL::X_D3DTS_STAGESIZE];
-
         XTL::IDirect3DBaseTexture *pTexture;
 
         // set the point sprites texture
@@ -338,20 +350,7 @@ void UpdateDeferredTextureStates()
         g_pD3DDevice->SetTextureStageState(1, XTL::D3DTSS_COLOROP, XTL::D3DTOP_DISABLE);
         g_pD3DDevice->SetTextureStageState(1, XTL::D3DTSS_ALPHAOP, XTL::D3DTOP_DISABLE);
 
-        for (int v = 0; v < 30; v++) {
-            if (pCur[v] != X_D3DTSS_UNK) {
-                DWORD dwValue = 0;
-
-                // For Direct3D9, everything below X_D3DSAMP_MAXANISOTROPY needs to call GetSamplerState / SetSamplerState  :
-                if (v <= XTL::X_D3DTSS_MAXANISOTROPY) {
-                    g_pD3DDevice->GetSamplerState(3, (XTL::D3DSAMPLERSTATETYPE)v, &dwValue);
-                    g_pD3DDevice->SetSamplerState(0, (XTL::D3DSAMPLERSTATETYPE)v, dwValue);
-                } else {
-                    g_pD3DDevice->GetTextureStageState(3, (XTL::D3DTEXTURESTAGESTATETYPE)v, &dwValue);
-                    g_pD3DDevice->SetTextureStageState(0, (XTL::D3DTEXTURESTAGESTATETYPE)v, dwValue);
-                }
-            }
-        }
+        // no need to actually copy here, since it was handled in the loop above
     }
 }
 
