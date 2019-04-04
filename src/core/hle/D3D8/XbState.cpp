@@ -300,21 +300,89 @@ void UpdateDeferredTextureStates()
                 case XTL::X_D3DTSS_ALPHAOP:
                     // TODO: Use a lookup table, this is not always a 1:1 map (same as D3DTSS_COLOROP)
                     if (Value != X_D3DTSS_UNK) {
-                        if (Value > XTL::X_D3DTOP_BLENDDIFFUSEALPHA && Value != XTL::X_D3DTOP_BLENDTEXTUREALPHA && Value != XTL::X_D3DTOP_BLENDCURRENTALPHA) {
-                            EmuLog(LOG_LEVEL::WARNING, "Unsupported D3DTSS_ALPHAOP Value (%d)", Value);
-                        } else if (Value == XTL::X_D3DTOP_BLENDTEXTUREALPHA) {
-                            g_pD3DDevice->SetTextureStageState(Stage, XTL::D3DTSS_ALPHAOP, XTL::D3DTOP_BLENDTEXTUREALPHA);
-                        }
-
-                        if (Value == XTL::X_D3DTOP_BLENDFACTORALPHA) {
-                            g_pD3DDevice->SetTextureStageState(Stage, XTL::D3DTSS_ALPHAOP, XTL::D3DTOP_BLENDFACTORALPHA);
-                        }
-
-                        if (Value == XTL::X_D3DTOP_BLENDCURRENTALPHA) {
-                            g_pD3DDevice->SetTextureStageState(Stage, XTL::D3DTSS_ALPHAOP, XTL::D3DTOP_BLENDCURRENTALPHA);
-                        } else {
-                            g_pD3DDevice->SetTextureStageState(Stage, XTL::D3DTSS_ALPHAOP, Value);
-                        }
+                        switch (Value) {
+                            case XTL::X_D3DTOP_DISABLE:
+                                g_pD3DDevice->SetTextureStageState(Stage, XTL::D3DTSS_ALPHAOP, XTL::D3DTOP_DISABLE);
+                                break;
+                            case XTL::X_D3DTOP_SELECTARG1:
+                                g_pD3DDevice->SetTextureStageState(Stage, XTL::D3DTSS_ALPHAOP, XTL::D3DTOP_SELECTARG1);
+                                break;
+                            case XTL::X_D3DTOP_SELECTARG2:
+                                g_pD3DDevice->SetTextureStageState(Stage, XTL::D3DTSS_ALPHAOP, XTL::D3DTOP_SELECTARG2);
+                                break;
+                            case XTL::X_D3DTOP_MODULATE:
+                                g_pD3DDevice->SetTextureStageState(Stage, XTL::D3DTSS_ALPHAOP, XTL::D3DTOP_MODULATE);
+                                break;
+                            case XTL::X_D3DTOP_MODULATE2X:
+                                g_pD3DDevice->SetTextureStageState(Stage, XTL::D3DTSS_ALPHAOP, XTL::D3DTOP_MODULATE2X);
+                                break;
+                            case XTL::X_D3DTOP_MODULATE4X:
+                                g_pD3DDevice->SetTextureStageState(Stage, XTL::D3DTSS_ALPHAOP, XTL::D3DTOP_MODULATE4X);
+                                break;
+                            case XTL::X_D3DTOP_ADD:
+                                g_pD3DDevice->SetTextureStageState(Stage, XTL::D3DTSS_ALPHAOP, XTL::D3DTOP_ADD);
+                                break;
+                            case XTL::X_D3DTOP_ADDSIGNED:
+                                g_pD3DDevice->SetTextureStageState(Stage, XTL::D3DTSS_ALPHAOP, XTL::D3DTOP_ADDSIGNED);
+                                break;
+                            case XTL::X_D3DTOP_ADDSIGNED2X:
+                                g_pD3DDevice->SetTextureStageState(Stage, XTL::D3DTSS_ALPHAOP, XTL::D3DTOP_ADDSIGNED2X);
+                                break;
+                            case XTL::X_D3DTOP_SUBTRACT:
+                                g_pD3DDevice->SetTextureStageState(Stage, XTL::D3DTSS_ALPHAOP, XTL::D3DTOP_SUBTRACT);
+                                break;
+                            case XTL::X_D3DTOP_ADDSMOOTH:
+                                g_pD3DDevice->SetTextureStageState(Stage, XTL::D3DTSS_ALPHAOP, XTL::D3DTOP_ADDSMOOTH);
+                                break;
+                            case XTL::X_D3DTOP_BLENDDIFFUSEALPHA:
+                                g_pD3DDevice->SetTextureStageState(Stage, XTL::D3DTSS_ALPHAOP, XTL::D3DTOP_BLENDDIFFUSEALPHA);
+                                break;
+                            case XTL::X_D3DTOP_BLENDTEXTUREALPHA:
+                                g_pD3DDevice->SetTextureStageState(Stage, XTL::D3DTSS_ALPHAOP, XTL::D3DTOP_BLENDTEXTUREALPHA);
+                                break;
+                            case XTL::X_D3DTOP_BLENDFACTORALPHA:
+                                g_pD3DDevice->SetTextureStageState(Stage, XTL::D3DTSS_ALPHAOP, XTL::D3DTOP_BLENDFACTORALPHA);
+                                break;
+                            case XTL::X_D3DTOP_BLENDTEXTUREALPHAPM:
+                                g_pD3DDevice->SetTextureStageState(Stage, XTL::D3DTSS_ALPHAOP, XTL::D3DTOP_BLENDTEXTUREALPHAPM);
+                                break;
+                            case XTL::X_D3DTOP_BLENDCURRENTALPHA:
+                                g_pD3DDevice->SetTextureStageState(Stage, XTL::D3DTSS_ALPHAOP, XTL::D3DTOP_BLENDCURRENTALPHA);
+                                break;
+                            case XTL::X_D3DTOP_PREMODULATE:
+                                g_pD3DDevice->SetTextureStageState(Stage, XTL::D3DTSS_ALPHAOP, XTL::D3DTOP_PREMODULATE);
+                                break;
+                            case XTL::X_D3DTOP_MODULATEALPHA_ADDCOLOR:
+                                g_pD3DDevice->SetTextureStageState(Stage, XTL::D3DTSS_ALPHAOP, XTL::D3DTOP_MODULATEALPHA_ADDCOLOR);
+                                break;
+                            case XTL::X_D3DTOP_MODULATECOLOR_ADDALPHA:
+                                g_pD3DDevice->SetTextureStageState(Stage, XTL::D3DTSS_ALPHAOP, XTL::D3DTOP_MODULATECOLOR_ADDALPHA);
+                                break;
+                            case XTL::X_D3DTOP_MODULATEINVALPHA_ADDCOLOR:
+                                g_pD3DDevice->SetTextureStageState(Stage, XTL::D3DTSS_ALPHAOP, XTL::D3DTOP_MODULATEINVALPHA_ADDCOLOR);
+                                break;
+                            case XTL::X_D3DTOP_MODULATEINVCOLOR_ADDALPHA:
+                                g_pD3DDevice->SetTextureStageState(Stage, XTL::D3DTSS_ALPHAOP, XTL::D3DTOP_MODULATEINVCOLOR_ADDALPHA);
+                                break;
+                            case XTL::X_D3DTOP_DOTPRODUCT3:
+                                g_pD3DDevice->SetTextureStageState(Stage, XTL::D3DTSS_ALPHAOP, XTL::D3DTOP_DOTPRODUCT3);
+                                break;
+                            case XTL::X_D3DTOP_MULTIPLYADD:
+                                g_pD3DDevice->SetTextureStageState(Stage, XTL::D3DTSS_ALPHAOP, XTL::D3DTOP_MULTIPLYADD);
+                                break;
+                            case XTL::X_D3DTOP_LERP:
+                                g_pD3DDevice->SetTextureStageState(Stage, XTL::D3DTSS_ALPHAOP, XTL::D3DTOP_LERP);
+                                break;
+                            case XTL::X_D3DTOP_BUMPENVMAP:
+                                g_pD3DDevice->SetTextureStageState(Stage, XTL::D3DTSS_ALPHAOP, XTL::D3DTOP_BUMPENVMAP);
+                                break;
+                            case XTL::X_D3DTOP_BUMPENVMAPLUMINANCE:
+                                g_pD3DDevice->SetTextureStageState(Stage, XTL::D3DTSS_ALPHAOP, XTL::D3DTOP_BUMPENVMAPLUMINANCE);
+                                break;
+                            default:
+                                EmuLog(LOG_LEVEL::WARNING, "Unsupported D3DTSS_ALPHAOP Value (%d)", Value);
+                                break;
+                      }
                     }
                     break;
                 case XTL::X_D3DTSS_ALPHAARG0:
