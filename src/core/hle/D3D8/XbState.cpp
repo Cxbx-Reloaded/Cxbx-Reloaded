@@ -80,6 +80,11 @@ void UpdateDeferredRenderStates()
     if (XTL::EmuD3DDeferredRenderState != 0) {
         // Loop through all deferred render states
         for (unsigned int RenderState = XTL::X_D3DRS_FOGENABLE; RenderState <= XTL::X_D3DRS_PRESENTATIONINTERVAL; RenderState++) {
+            // If the current state is not present within our desired XDK, skip it
+            if (XTL::DxbxRenderStateInfo[RenderState].V >= g_BuildVersion) {
+                continue;
+            }
+
             uint8_t index = RenderState - XTL::X_D3DRS_FOGENABLE;
             DWORD Value = XTL::EmuD3DDeferredRenderState[index];
 
@@ -118,9 +123,15 @@ void UpdateDeferredRenderStates()
                 case XTL::X_D3DRS_BACKEMISSIVEMATERIALSOURCE:
                 case XTL::X_D3DRS_BACKAMBIENT:
                 case XTL::X_D3DRS_SWAPFILTER:
-                case XTL::X_D3DRS_PRESENTATIONINTERVAL:
-                    // These render states are unsupported by the host, so we skip them entirely
+                    // These states are unsupported by the host and are ignored (for now)
                     continue;
+                case XTL::X_D3DRS_PRESENTATIONINTERVAL: {
+                    // Store this as an override for our frame limiter
+                    // Games can use this to limit certain scenes to a desired target framerate for a specific scene
+                    // If this value is not set, or is set to 0, the default interval passed to CreateDevice is used
+                    extern DWORD g_PresentationIntervalOverride;
+                    g_PresentationIntervalOverride = Value;
+                } continue;
                 case XTL::X_D3DRS_WRAP0:
                 case XTL::X_D3DRS_WRAP1:
                 case XTL::X_D3DRS_WRAP2:

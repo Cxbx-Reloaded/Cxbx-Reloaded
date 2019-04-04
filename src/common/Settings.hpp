@@ -207,7 +207,6 @@ public:
 	// Hack settings
 	struct s_hack {
 		bool DisablePixelShaders;
-		bool UncapFramerate;
 		bool UseAllCores;
 		bool SkipRdtscPatching;
 		bool ScaleViewport;

@@ -53,7 +53,6 @@ volatile thread_local  bool    g_bEmuException = false;
 volatile bool    g_bEmuSuspended = false;
 volatile bool    g_bPrintfOn = true;
 bool g_DisablePixelShaders = false;
-bool g_UncapFramerate = false;
 bool g_UseAllCores = false;
 bool g_SkipRdtscPatching = false;
 bool g_ScaleViewport = false;
