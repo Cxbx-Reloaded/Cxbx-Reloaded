@@ -6006,213 +6006,157 @@ VOID __fastcall XTL::EMUPATCH(D3DDevice_SetRenderState_Simple)
 (
     DWORD Method,
     DWORD Value
-)
+    )
 {
-	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(Method)
-		LOG_FUNC_ARG(Value)
-		LOG_FUNC_END;
+    LOG_FUNC_BEGIN
+        LOG_FUNC_ARG(Method)
+        LOG_FUNC_ARG(Value)
+        LOG_FUNC_END;
 
-	XB_trampoline(VOID, __fastcall, D3DDevice_SetRenderState_Simple, (DWORD, DWORD));
-	XB_D3DDevice_SetRenderState_Simple(Method, Value);
+    XB_trampoline(VOID, __fastcall, D3DDevice_SetRenderState_Simple, (DWORD, DWORD));
+    XB_D3DDevice_SetRenderState_Simple(Method, Value);
 
-	// Special Case: Handle PixelShader related Render States
-	// TODO: Port over EmuMappedD3DRenderState and related code from Dxbx or Wip_LessVertexPatching
-	// After this, we don't need to do this part anymore
-	switch (Method & 0x00001FFC) {
-		case NV2A_RC_IN_ALPHA(0): TemporaryPixelShaderRenderStates[X_D3DRS_PSALPHAINPUTS0] = Value; return;
-		case NV2A_RC_IN_ALPHA(1): TemporaryPixelShaderRenderStates[X_D3DRS_PSALPHAINPUTS1] = Value; return;
-		case NV2A_RC_IN_ALPHA(2): TemporaryPixelShaderRenderStates[X_D3DRS_PSALPHAINPUTS2] = Value; return;
-		case NV2A_RC_IN_ALPHA(3): TemporaryPixelShaderRenderStates[X_D3DRS_PSALPHAINPUTS3] = Value; return;
-		case NV2A_RC_IN_ALPHA(4): TemporaryPixelShaderRenderStates[X_D3DRS_PSALPHAINPUTS4] = Value; return;
-		case NV2A_RC_IN_ALPHA(5): TemporaryPixelShaderRenderStates[X_D3DRS_PSALPHAINPUTS5] = Value; return;
-		case NV2A_RC_IN_ALPHA(6): TemporaryPixelShaderRenderStates[X_D3DRS_PSALPHAINPUTS6] = Value; return;
-		case NV2A_RC_IN_ALPHA(7): TemporaryPixelShaderRenderStates[X_D3DRS_PSALPHAINPUTS7] = Value; return;
-		case NV2A_RC_FINAL0: TemporaryPixelShaderRenderStates[X_D3DRS_PSFINALCOMBINERINPUTSABCD] = Value; return;
-		case NV2A_RC_FINAL1: TemporaryPixelShaderRenderStates[X_D3DRS_PSFINALCOMBINERINPUTSEFG] = Value; return;
-		case NV2A_RC_CONSTANT_COLOR0(0): TemporaryPixelShaderRenderStates[X_D3DRS_PSCONSTANT0_0] = Value; return;
-		case NV2A_RC_CONSTANT_COLOR0(1): TemporaryPixelShaderRenderStates[X_D3DRS_PSCONSTANT0_1] = Value; return;
-		case NV2A_RC_CONSTANT_COLOR0(2): TemporaryPixelShaderRenderStates[X_D3DRS_PSCONSTANT0_2] = Value; return;
-		case NV2A_RC_CONSTANT_COLOR0(3): TemporaryPixelShaderRenderStates[X_D3DRS_PSCONSTANT0_3] = Value; return;
-		case NV2A_RC_CONSTANT_COLOR0(4): TemporaryPixelShaderRenderStates[X_D3DRS_PSCONSTANT0_4] = Value; return;
-		case NV2A_RC_CONSTANT_COLOR0(5): TemporaryPixelShaderRenderStates[X_D3DRS_PSCONSTANT0_5] = Value; return;
-		case NV2A_RC_CONSTANT_COLOR0(6): TemporaryPixelShaderRenderStates[X_D3DRS_PSCONSTANT0_6] = Value; return;
-		case NV2A_RC_CONSTANT_COLOR0(7): TemporaryPixelShaderRenderStates[X_D3DRS_PSCONSTANT0_7] = Value; return;
-		case NV2A_RC_CONSTANT_COLOR1(0): TemporaryPixelShaderRenderStates[X_D3DRS_PSCONSTANT1_0] = Value; return;
-		case NV2A_RC_CONSTANT_COLOR1(1): TemporaryPixelShaderRenderStates[X_D3DRS_PSCONSTANT1_1] = Value; return;
-		case NV2A_RC_CONSTANT_COLOR1(2): TemporaryPixelShaderRenderStates[X_D3DRS_PSCONSTANT1_2] = Value; return;
-		case NV2A_RC_CONSTANT_COLOR1(3): TemporaryPixelShaderRenderStates[X_D3DRS_PSCONSTANT1_3] = Value; return;
-		case NV2A_RC_CONSTANT_COLOR1(4): TemporaryPixelShaderRenderStates[X_D3DRS_PSCONSTANT1_4] = Value; return;
-		case NV2A_RC_CONSTANT_COLOR1(5): TemporaryPixelShaderRenderStates[X_D3DRS_PSCONSTANT1_5] = Value; return;
-		case NV2A_RC_CONSTANT_COLOR1(6): TemporaryPixelShaderRenderStates[X_D3DRS_PSCONSTANT1_6] = Value; return;
-		case NV2A_RC_CONSTANT_COLOR1(7): TemporaryPixelShaderRenderStates[X_D3DRS_PSCONSTANT1_7] = Value; return;
-		case NV2A_RC_OUT_ALPHA(0): TemporaryPixelShaderRenderStates[X_D3DRS_PSALPHAOUTPUTS0] = Value; return;
-		case NV2A_RC_OUT_ALPHA(1): TemporaryPixelShaderRenderStates[X_D3DRS_PSALPHAOUTPUTS1] = Value; return;
-		case NV2A_RC_OUT_ALPHA(2): TemporaryPixelShaderRenderStates[X_D3DRS_PSALPHAOUTPUTS2] = Value; return;
-		case NV2A_RC_OUT_ALPHA(3): TemporaryPixelShaderRenderStates[X_D3DRS_PSALPHAOUTPUTS3] = Value; return;
-		case NV2A_RC_OUT_ALPHA(4): TemporaryPixelShaderRenderStates[X_D3DRS_PSALPHAOUTPUTS4] = Value; return;
-		case NV2A_RC_OUT_ALPHA(5): TemporaryPixelShaderRenderStates[X_D3DRS_PSALPHAOUTPUTS5] = Value; return;
-		case NV2A_RC_OUT_ALPHA(6): TemporaryPixelShaderRenderStates[X_D3DRS_PSALPHAOUTPUTS6] = Value; return;
-		case NV2A_RC_OUT_ALPHA(7): TemporaryPixelShaderRenderStates[X_D3DRS_PSALPHAOUTPUTS7] = Value; return;
-		case NV2A_RC_IN_RGB(0): TemporaryPixelShaderRenderStates[X_D3DRS_PSRGBINPUTS0] = Value; return;
-		case NV2A_RC_IN_RGB(1): TemporaryPixelShaderRenderStates[X_D3DRS_PSRGBINPUTS1] = Value; return;
-		case NV2A_RC_IN_RGB(2): TemporaryPixelShaderRenderStates[X_D3DRS_PSRGBINPUTS2] = Value; return;
-		case NV2A_RC_IN_RGB(3): TemporaryPixelShaderRenderStates[X_D3DRS_PSRGBINPUTS3] = Value; return;
-		case NV2A_RC_IN_RGB(4): TemporaryPixelShaderRenderStates[X_D3DRS_PSRGBINPUTS4] = Value; return;
-		case NV2A_RC_IN_RGB(5): TemporaryPixelShaderRenderStates[X_D3DRS_PSRGBINPUTS5] = Value; return;
-		case NV2A_RC_IN_RGB(6): TemporaryPixelShaderRenderStates[X_D3DRS_PSRGBINPUTS6] = Value; return;
-		case NV2A_RC_IN_RGB(7): TemporaryPixelShaderRenderStates[X_D3DRS_PSRGBINPUTS7] = Value; return;
-		case NV2A_TX_SHADER_CULL_MODE: TemporaryPixelShaderRenderStates[X_D3DRS_PSCOMPAREMODE] = Value; return;
-		case NV2A_RC_COLOR0: TemporaryPixelShaderRenderStates[X_D3DRS_PSFINALCOMBINERCONSTANT0] = Value; return;
-		case NV2A_RC_COLOR1: TemporaryPixelShaderRenderStates[X_D3DRS_PSFINALCOMBINERCONSTANT1] = Value; return;
-		case NV2A_RC_OUT_RGB(0): TemporaryPixelShaderRenderStates[X_D3DRS_PSRGBOUTPUTS0] = Value; return;
-		case NV2A_RC_OUT_RGB(1): TemporaryPixelShaderRenderStates[X_D3DRS_PSRGBOUTPUTS1] = Value; return;
-		case NV2A_RC_OUT_RGB(2): TemporaryPixelShaderRenderStates[X_D3DRS_PSRGBOUTPUTS2] = Value; return;
-		case NV2A_RC_OUT_RGB(3): TemporaryPixelShaderRenderStates[X_D3DRS_PSRGBOUTPUTS3] = Value; return;
-		case NV2A_RC_OUT_RGB(4): TemporaryPixelShaderRenderStates[X_D3DRS_PSRGBOUTPUTS4] = Value; return;
-		case NV2A_RC_OUT_RGB(5): TemporaryPixelShaderRenderStates[X_D3DRS_PSRGBOUTPUTS5] = Value; return;
-		case NV2A_RC_OUT_RGB(6): TemporaryPixelShaderRenderStates[X_D3DRS_PSRGBOUTPUTS6] = Value; return;
-		case NV2A_RC_OUT_RGB(7): TemporaryPixelShaderRenderStates[X_D3DRS_PSRGBOUTPUTS7] = Value; return;
-		case NV2A_RC_ENABLE: TemporaryPixelShaderRenderStates[X_D3DRS_PSCOMBINERCOUNT] = Value; return;
-		case NV2A_NOP: TemporaryPixelShaderRenderStates[X_D3DRS_PS_RESERVED] = Value; return; // Dxbx note : This takes the slot of X_D3DPIXELSHADERDEF.PSTextureModes, set by D3DDevice_SetRenderState_LogicOp?
-		case NV2A_TX_SHADER_DOTMAPPING: TemporaryPixelShaderRenderStates[X_D3DRS_PSDOTMAPPING] = Value; return;
-		case NV2A_TX_SHADER_PREVIOUS: TemporaryPixelShaderRenderStates[X_D3DRS_PSINPUTTEXTURE] = Value; return;	
-	}
+    // Special Case: Handle PixelShader related Render States
+    // TODO: Port over EmuMappedD3DRenderState and related code from Dxbx or Wip_LessVertexPatching
+    // After this, we don't need to do this part anymore
+    switch (Method & 0x00001FFC) {
+        case NV2A_RC_IN_ALPHA(0): TemporaryPixelShaderRenderStates[X_D3DRS_PSALPHAINPUTS0] = Value; return;
+        case NV2A_RC_IN_ALPHA(1): TemporaryPixelShaderRenderStates[X_D3DRS_PSALPHAINPUTS1] = Value; return;
+        case NV2A_RC_IN_ALPHA(2): TemporaryPixelShaderRenderStates[X_D3DRS_PSALPHAINPUTS2] = Value; return;
+        case NV2A_RC_IN_ALPHA(3): TemporaryPixelShaderRenderStates[X_D3DRS_PSALPHAINPUTS3] = Value; return;
+        case NV2A_RC_IN_ALPHA(4): TemporaryPixelShaderRenderStates[X_D3DRS_PSALPHAINPUTS4] = Value; return;
+        case NV2A_RC_IN_ALPHA(5): TemporaryPixelShaderRenderStates[X_D3DRS_PSALPHAINPUTS5] = Value; return;
+        case NV2A_RC_IN_ALPHA(6): TemporaryPixelShaderRenderStates[X_D3DRS_PSALPHAINPUTS6] = Value; return;
+        case NV2A_RC_IN_ALPHA(7): TemporaryPixelShaderRenderStates[X_D3DRS_PSALPHAINPUTS7] = Value; return;
+        case NV2A_RC_FINAL0: TemporaryPixelShaderRenderStates[X_D3DRS_PSFINALCOMBINERINPUTSABCD] = Value; return;
+        case NV2A_RC_FINAL1: TemporaryPixelShaderRenderStates[X_D3DRS_PSFINALCOMBINERINPUTSEFG] = Value; return;
+        case NV2A_RC_CONSTANT_COLOR0(0): TemporaryPixelShaderRenderStates[X_D3DRS_PSCONSTANT0_0] = Value; return;
+        case NV2A_RC_CONSTANT_COLOR0(1): TemporaryPixelShaderRenderStates[X_D3DRS_PSCONSTANT0_1] = Value; return;
+        case NV2A_RC_CONSTANT_COLOR0(2): TemporaryPixelShaderRenderStates[X_D3DRS_PSCONSTANT0_2] = Value; return;
+        case NV2A_RC_CONSTANT_COLOR0(3): TemporaryPixelShaderRenderStates[X_D3DRS_PSCONSTANT0_3] = Value; return;
+        case NV2A_RC_CONSTANT_COLOR0(4): TemporaryPixelShaderRenderStates[X_D3DRS_PSCONSTANT0_4] = Value; return;
+        case NV2A_RC_CONSTANT_COLOR0(5): TemporaryPixelShaderRenderStates[X_D3DRS_PSCONSTANT0_5] = Value; return;
+        case NV2A_RC_CONSTANT_COLOR0(6): TemporaryPixelShaderRenderStates[X_D3DRS_PSCONSTANT0_6] = Value; return;
+        case NV2A_RC_CONSTANT_COLOR0(7): TemporaryPixelShaderRenderStates[X_D3DRS_PSCONSTANT0_7] = Value; return;
+        case NV2A_RC_CONSTANT_COLOR1(0): TemporaryPixelShaderRenderStates[X_D3DRS_PSCONSTANT1_0] = Value; return;
+        case NV2A_RC_CONSTANT_COLOR1(1): TemporaryPixelShaderRenderStates[X_D3DRS_PSCONSTANT1_1] = Value; return;
+        case NV2A_RC_CONSTANT_COLOR1(2): TemporaryPixelShaderRenderStates[X_D3DRS_PSCONSTANT1_2] = Value; return;
+        case NV2A_RC_CONSTANT_COLOR1(3): TemporaryPixelShaderRenderStates[X_D3DRS_PSCONSTANT1_3] = Value; return;
+        case NV2A_RC_CONSTANT_COLOR1(4): TemporaryPixelShaderRenderStates[X_D3DRS_PSCONSTANT1_4] = Value; return;
+        case NV2A_RC_CONSTANT_COLOR1(5): TemporaryPixelShaderRenderStates[X_D3DRS_PSCONSTANT1_5] = Value; return;
+        case NV2A_RC_CONSTANT_COLOR1(6): TemporaryPixelShaderRenderStates[X_D3DRS_PSCONSTANT1_6] = Value; return;
+        case NV2A_RC_CONSTANT_COLOR1(7): TemporaryPixelShaderRenderStates[X_D3DRS_PSCONSTANT1_7] = Value; return;
+        case NV2A_RC_OUT_ALPHA(0): TemporaryPixelShaderRenderStates[X_D3DRS_PSALPHAOUTPUTS0] = Value; return;
+        case NV2A_RC_OUT_ALPHA(1): TemporaryPixelShaderRenderStates[X_D3DRS_PSALPHAOUTPUTS1] = Value; return;
+        case NV2A_RC_OUT_ALPHA(2): TemporaryPixelShaderRenderStates[X_D3DRS_PSALPHAOUTPUTS2] = Value; return;
+        case NV2A_RC_OUT_ALPHA(3): TemporaryPixelShaderRenderStates[X_D3DRS_PSALPHAOUTPUTS3] = Value; return;
+        case NV2A_RC_OUT_ALPHA(4): TemporaryPixelShaderRenderStates[X_D3DRS_PSALPHAOUTPUTS4] = Value; return;
+        case NV2A_RC_OUT_ALPHA(5): TemporaryPixelShaderRenderStates[X_D3DRS_PSALPHAOUTPUTS5] = Value; return;
+        case NV2A_RC_OUT_ALPHA(6): TemporaryPixelShaderRenderStates[X_D3DRS_PSALPHAOUTPUTS6] = Value; return;
+        case NV2A_RC_OUT_ALPHA(7): TemporaryPixelShaderRenderStates[X_D3DRS_PSALPHAOUTPUTS7] = Value; return;
+        case NV2A_RC_IN_RGB(0): TemporaryPixelShaderRenderStates[X_D3DRS_PSRGBINPUTS0] = Value; return;
+        case NV2A_RC_IN_RGB(1): TemporaryPixelShaderRenderStates[X_D3DRS_PSRGBINPUTS1] = Value; return;
+        case NV2A_RC_IN_RGB(2): TemporaryPixelShaderRenderStates[X_D3DRS_PSRGBINPUTS2] = Value; return;
+        case NV2A_RC_IN_RGB(3): TemporaryPixelShaderRenderStates[X_D3DRS_PSRGBINPUTS3] = Value; return;
+        case NV2A_RC_IN_RGB(4): TemporaryPixelShaderRenderStates[X_D3DRS_PSRGBINPUTS4] = Value; return;
+        case NV2A_RC_IN_RGB(5): TemporaryPixelShaderRenderStates[X_D3DRS_PSRGBINPUTS5] = Value; return;
+        case NV2A_RC_IN_RGB(6): TemporaryPixelShaderRenderStates[X_D3DRS_PSRGBINPUTS6] = Value; return;
+        case NV2A_RC_IN_RGB(7): TemporaryPixelShaderRenderStates[X_D3DRS_PSRGBINPUTS7] = Value; return;
+        case NV2A_TX_SHADER_CULL_MODE: TemporaryPixelShaderRenderStates[X_D3DRS_PSCOMPAREMODE] = Value; return;
+        case NV2A_RC_COLOR0: TemporaryPixelShaderRenderStates[X_D3DRS_PSFINALCOMBINERCONSTANT0] = Value; return;
+        case NV2A_RC_COLOR1: TemporaryPixelShaderRenderStates[X_D3DRS_PSFINALCOMBINERCONSTANT1] = Value; return;
+        case NV2A_RC_OUT_RGB(0): TemporaryPixelShaderRenderStates[X_D3DRS_PSRGBOUTPUTS0] = Value; return;
+        case NV2A_RC_OUT_RGB(1): TemporaryPixelShaderRenderStates[X_D3DRS_PSRGBOUTPUTS1] = Value; return;
+        case NV2A_RC_OUT_RGB(2): TemporaryPixelShaderRenderStates[X_D3DRS_PSRGBOUTPUTS2] = Value; return;
+        case NV2A_RC_OUT_RGB(3): TemporaryPixelShaderRenderStates[X_D3DRS_PSRGBOUTPUTS3] = Value; return;
+        case NV2A_RC_OUT_RGB(4): TemporaryPixelShaderRenderStates[X_D3DRS_PSRGBOUTPUTS4] = Value; return;
+        case NV2A_RC_OUT_RGB(5): TemporaryPixelShaderRenderStates[X_D3DRS_PSRGBOUTPUTS5] = Value; return;
+        case NV2A_RC_OUT_RGB(6): TemporaryPixelShaderRenderStates[X_D3DRS_PSRGBOUTPUTS6] = Value; return;
+        case NV2A_RC_OUT_RGB(7): TemporaryPixelShaderRenderStates[X_D3DRS_PSRGBOUTPUTS7] = Value; return;
+        case NV2A_RC_ENABLE: TemporaryPixelShaderRenderStates[X_D3DRS_PSCOMBINERCOUNT] = Value; return;
+        case NV2A_NOP: TemporaryPixelShaderRenderStates[X_D3DRS_PS_RESERVED] = Value; return; // Dxbx note : This takes the slot of X_D3DPIXELSHADERDEF.PSTextureModes, set by D3DDevice_SetRenderState_LogicOp?
+        case NV2A_TX_SHADER_DOTMAPPING: TemporaryPixelShaderRenderStates[X_D3DRS_PSDOTMAPPING] = Value; return;
+        case NV2A_TX_SHADER_PREVIOUS: TemporaryPixelShaderRenderStates[X_D3DRS_PSINPUTTEXTURE] = Value; return;
+    }
 
-	// Fallback to non-shader render state handling
-	int State = -1;
+    // Fetch the RenderState conversion info for the given input
+    int XboxRenderStateIndex = -1;
+    for (int i = 0; i <= X_D3DRS_DONOTCULLUNCOMPRESSED; i++) {
+        if (DxbxRenderStateInfo[i].M == (Method & 0x00001FFC)) {
+            XboxRenderStateIndex = i;
+        }
+    }
 
-	// Todo: make this faster and more elegant
-	for (int v = 0; v<174; v++)
-	{
-		if (EmuD3DRenderStateSimpleEncoded[v] == Method)
-		{
-			State = v;
-			break;
-		}
-	}
+    // If we could not map it, log and return
+    if (XboxRenderStateIndex == -1) {
+        EmuLog(LOG_LEVEL::WARNING, "RenderState_Simple(0x%.08X (%s), 0x%.08X) could not be found in RenderState table", Method, DxbxRenderStateInfo[XboxRenderStateIndex].S, Value);
+        return;
+    }
 
-	if (State == -1) {
-		// Attempt to determine renderstate name for unsupported types
-		std::string name = "Unknown";
-		for (int i = 0; i <= X_D3DRS_DONOTCULLUNCOMPRESSED; i++) {
-			if (DxbxRenderStateInfo[i].M == (Method & 0x00001FFC)) {
-				name = DxbxRenderStateInfo[i].S;
-				break;
-			}
-		}
+    DBG_PRINTF("RenderState_Simple: %s = 0x%08X", DxbxRenderStateInfo[XboxRenderStateIndex].S, Value);
 
-		EmuLog(LOG_LEVEL::WARNING, "RenderState_Simple(0x%.08X (%s), 0x%.08X) is unsupported!", Method, name.c_str(), Value);
-	}
-    else
-    {
-        switch(State)
-        {
-            case D3DRS_COLORWRITEENABLE:
-            {
-                DWORD OrigValue = Value;
+    // Perform Conversion
+    switch (XboxRenderStateIndex) {
+        case X_D3DRS_COLORWRITEENABLE: {
+            DWORD OrigValue = Value;
+            Value = 0;
 
-                Value = 0;
-
-                if(OrigValue & (1L<<16))
-                    Value |= D3DCOLORWRITEENABLE_RED;
-                if(OrigValue & (1L<<8))
-                    Value |= D3DCOLORWRITEENABLE_GREEN;
-                if(OrigValue & (1L<<0))
-                    Value |= D3DCOLORWRITEENABLE_BLUE;
-                if(OrigValue & (1L<<24))
-                    Value |= D3DCOLORWRITEENABLE_ALPHA;
-
-                DBG_PRINTF("D3DRS_COLORWRITEENABLE := 0x%.08X\n", Value);
+            if (OrigValue & (1L << 16)) {
+                Value |= D3DCOLORWRITEENABLE_RED;
             }
+
+            if (OrigValue & (1L << 8)) {
+                Value |= D3DCOLORWRITEENABLE_GREEN;
+            }
+
+            if (OrigValue & (1L << 0)) {
+                Value |= D3DCOLORWRITEENABLE_BLUE;
+            }
+
+            if (OrigValue & (1L << 24)) {
+                Value |= D3DCOLORWRITEENABLE_ALPHA;
+            }
+        } break;
+        case X_D3DRS_SHADEMODE:
+            Value = EmuXB2PC_D3DSHADEMODE(Value);
             break;
+        case X_D3DRS_BLENDOP:
+            Value = EmuXB2PC_D3DBLENDOP(Value);
+            break;
+        case X_D3DRS_SRCBLEND:
+        case X_D3DRS_DESTBLEND:
+            Value = EmuXB2PC_D3DBLEND(Value);
+            break;
+        case X_D3DRS_ZFUNC:
+        case X_D3DRS_ALPHAFUNC:
+        case X_D3DRS_STENCILFUNC:
+            Value = EmuXB2PC_D3DCMPFUNC(Value);
+            break;
+        case X_D3DRS_STENCILZFAIL:
+        case X_D3DRS_STENCILPASS:
+            Value = EmuXB2PC_D3DSTENCILOP(Value);
+            break;
+        case X_D3DRS_SWATHWIDTH:
+            // X_D3DRS_SWATHWIDTH safely ignored as it has no visible behavior:
+            // It simply changes the fill-rate for performance tweaking
+            // Just log and return
+            EmuLog(LOG_LEVEL::DEBUG, "RenderState_Simple(0x%.08X (%s), 0x%.08X) was ignored!", Method, DxbxRenderStateInfo[XboxRenderStateIndex].S, Value);
+            return;
+        case X_D3DRS_ALPHATESTENABLE: case X_D3DRS_ALPHABLENDENABLE:
+        case X_D3DRS_ALPHAREF: case X_D3DRS_ZWRITEENABLE:
+        case X_D3DRS_DITHERENABLE: case X_D3DRS_STENCILREF:
+        case X_D3DRS_STENCILMASK: case X_D3DRS_STENCILWRITEMASK:
+            // These render states require no conversion, so we simply
+            // allow SetRenderState to be called with no changes
+            break;
+        default:
+            // RenderState is unsupported/unimplemented, report and return
+            EmuLog(LOG_LEVEL::WARNING, "RenderState_Simple(0x%.08X (%s), 0x%.08X) is unsupported!", Method, DxbxRenderStateInfo[XboxRenderStateIndex].S, Value);
+            return;
+    }
 
-            case D3DRS_SHADEMODE:
-                Value = EmuXB2PC_D3DSHADEMODE(Value);
-                DBG_PRINTF("D3DRS_SHADEMODE := 0x%.08X\n", Value);
-                break;
-
-            case D3DRS_BLENDOP:
-                Value = EmuXB2PC_D3DBLENDOP(Value);
-                DBG_PRINTF("D3DRS_BLENDOP := 0x%.08X\n", Value);
-                break;
-
-            case D3DRS_SRCBLEND:
-                Value = EmuXB2PC_D3DBLEND(Value);
-                DBG_PRINTF("D3DRS_SRCBLEND := 0x%.08X\n", Value);
-                break;
-
-            case D3DRS_DESTBLEND:
-                Value = EmuXB2PC_D3DBLEND(Value);
-                DBG_PRINTF("D3DRS_DESTBLEND := 0x%.08X\n", Value);
-                break;
-
-            case D3DRS_ZFUNC:
-                Value = EmuXB2PC_D3DCMPFUNC(Value);
-                DBG_PRINTF("D3DRS_ZFUNC := 0x%.08X\n", Value);
-                break;
-
-            case D3DRS_ALPHAFUNC:
-                Value = EmuXB2PC_D3DCMPFUNC(Value);
-                DBG_PRINTF("D3DRS_ALPHAFUNC := 0x%.08X\n", Value);
-                break;
-
-            case D3DRS_ALPHATESTENABLE:
-                DBG_PRINTF("D3DRS_ALPHATESTENABLE := 0x%.08X\n", Value);
-                break;
-
-            case D3DRS_ALPHABLENDENABLE:
-                DBG_PRINTF("D3DRS_ALPHABLENDENABLE := 0x%.08X\n", Value);
-                break;
-
-            case D3DRS_ALPHAREF:
-                DBG_PRINTF("D3DRS_ALPHAREF := %lf\n", DWtoF(Value));
-                break;
-
-            case D3DRS_ZWRITEENABLE:
-                DBG_PRINTF("D3DRS_ZWRITEENABLE := 0x%.08X\n", Value);
-                break;
-
-            case D3DRS_DITHERENABLE:
-                DBG_PRINTF("D3DRS_DITHERENABLE := 0x%.08X\n", Value);
-                break;
-
-			case D3DRS_STENCILZFAIL:
-				Value = EmuXB2PC_D3DSTENCILOP(Value);
-				DBG_PRINTF("D3DRS_STENCILZFAIL := 0x%.08X\n", Value);
-				break;
-
-			case D3DRS_STENCILPASS:
-				Value = EmuXB2PC_D3DSTENCILOP(Value);
-				DBG_PRINTF("D3DRS_STENCILPASS := 0x%.08X\n", Value);
-				break;
-
-			case D3DRS_STENCILFUNC:
-				Value = EmuXB2PC_D3DCMPFUNC(Value);
-				DBG_PRINTF("D3DRS_STENCILFUNC := 0x%.08X\n", Value);
-				break;
-
-			case D3DRS_STENCILREF:
-				DBG_PRINTF("D3DRS_STENCILREF := 0x%.08X\n", Value);
-				break;
-
-			case D3DRS_STENCILMASK:
-				DBG_PRINTF("D3DRS_STENCILMASK := 0x%.08X\n", Value);
-				break;
-
-			case D3DRS_STENCILWRITEMASK:
-				DBG_PRINTF("D3DRS_STENCILWRITEMASK := 0x%.08X\n", Value);
-				break;
-
-            default:
-                CxbxKrnlCleanup("Unsupported RenderState (0x%.08X)", State);
-                break;
-        };
-
-        // TODO: verify these params as you add support for them!
-        HRESULT hRet = g_pD3DDevice->SetRenderState((D3DRENDERSTATETYPE)State, Value);
-		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetRenderState");
-	}
+    HRESULT hRet = g_pD3DDevice->SetRenderState((D3DRENDERSTATETYPE)(DxbxRenderStateInfo[XboxRenderStateIndex].PC), Value);
+    DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetRenderState");
 }
 
 // ******************************************************************

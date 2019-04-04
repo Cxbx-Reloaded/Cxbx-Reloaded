@@ -35,7 +35,6 @@
 
 // simple render state encoding lookup table
 #define X_D3DRSSE_UNK 0x7fffffff
-extern CONST DWORD EmuD3DRenderStateSimpleEncoded[174];
 
 typedef void(*FormatToARGBRow)(const uint8_t* src, uint8_t* dst_argb, int width);
 
