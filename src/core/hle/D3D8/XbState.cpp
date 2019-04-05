@@ -79,38 +79,70 @@ void UpdateDeferredRenderStates()
     // Certain D3DRS values need to be checked on each Draw[Indexed]Vertices
     if (XTL::EmuD3DDeferredRenderState != 0) {
         // Loop through all deferred render states
-        for (unsigned int RenderState = XTL::X_D3DRS_FOGENABLE; RenderState <= XTL::X_D3DRS_PATCHSEGMENTS; RenderState++) {
-            // If this render state does not have a PC counterpart, skip it
+        for (unsigned int RenderState = XTL::X_D3DRS_FOGENABLE; RenderState <= XTL::X_D3DRS_PRESENTATIONINTERVAL; RenderState++) {
+            uint8_t index = RenderState - XTL::X_D3DRS_FOGENABLE;
+            DWORD Value = XTL::EmuD3DDeferredRenderState[index];
+
+            // Convert from Xbox Data Formats to PC
+            switch (RenderState) {
+                case XTL::X_D3DRS_FOGENABLE:
+                case XTL::X_D3DRS_FOGTABLEMODE:
+                case XTL::X_D3DRS_FOGSTART:
+                case XTL::X_D3DRS_FOGEND:
+                case XTL::X_D3DRS_FOGDENSITY:
+                case XTL::X_D3DRS_RANGEFOGENABLE:
+                case XTL::X_D3DRS_LIGHTING:
+                case XTL::X_D3DRS_SPECULARENABLE:
+                case XTL::X_D3DRS_LOCALVIEWER:
+                case XTL::X_D3DRS_COLORVERTEX:
+                case XTL::X_D3DRS_SPECULARMATERIALSOURCE:
+                case XTL::X_D3DRS_DIFFUSEMATERIALSOURCE:
+                case XTL::X_D3DRS_AMBIENTMATERIALSOURCE:
+                case XTL::X_D3DRS_EMISSIVEMATERIALSOURCE:
+                case XTL::X_D3DRS_AMBIENT:
+                case XTL::X_D3DRS_POINTSIZE:
+                case XTL::X_D3DRS_POINTSIZE_MIN:
+                case XTL::X_D3DRS_POINTSPRITEENABLE:
+                case XTL::X_D3DRS_POINTSCALEENABLE:
+                case XTL::X_D3DRS_POINTSCALE_A:
+                case XTL::X_D3DRS_POINTSCALE_B:
+                case XTL::X_D3DRS_POINTSCALE_C:
+                case XTL::X_D3DRS_POINTSIZE_MAX:
+                case XTL::X_D3DRS_PATCHEDGESTYLE:
+                case XTL::X_D3DRS_PATCHSEGMENTS:
+                    // These render states require no conversion, so we can use them as-is
+                    break;
+                case XTL::X_D3DRS_BACKSPECULARMATERIALSOURCE:
+                case XTL::X_D3DRS_BACKDIFFUSEMATERIALSOURCE:
+                case XTL::X_D3DRS_BACKAMBIENTMATERIALSOURCE:
+                case XTL::X_D3DRS_BACKEMISSIVEMATERIALSOURCE:
+                case XTL::X_D3DRS_BACKAMBIENT:
+                case XTL::X_D3DRS_SWAPFILTER:
+                case XTL::X_D3DRS_PRESENTATIONINTERVAL:
+                    // These render states are unsupported by the host, so we skip them entirely
+                    continue;
+                case XTL::X_D3DRS_WRAP0:
+                case XTL::X_D3DRS_WRAP1:
+                case XTL::X_D3DRS_WRAP2:
+                case XTL::X_D3DRS_WRAP3: {
+                    DWORD OldValue = Value;
+                    Value = 0;
+
+                    Value |= (OldValue & 0x00000010) ? D3DWRAPCOORD_0 : 0;
+                    Value |= (OldValue & 0x00001000) ? D3DWRAPCOORD_1 : 0;
+                    Value |= (OldValue & 0x00100000) ? D3DWRAPCOORD_2 : 0;
+                    Value |= (OldValue & 0x01000000) ? D3DWRAPCOORD_3 : 0;
+                } break;
+                default:
+                    EmuLog(LOG_LEVEL::WARNING, "Unimplemented Deferred Render State: %s", XTL::DxbxRenderStateInfo[RenderState].S);
+                    continue;
+            }
+
             if (XTL::DxbxRenderStateInfo[RenderState].PC == 0) {
                 continue;
             }
 
-            uint8_t index = RenderState - XTL::X_D3DRS_FOGENABLE;
-            // Some render states require special handling to convert to host, but most can be mapped 1:1
-            // We use a switch/case to handle the special states
-            switch (RenderState) {
-                case XTL::X_D3DRS_WRAP0: {
-                    ::DWORD dwConv = 0;
-
-                    dwConv |= (XTL::EmuD3DDeferredRenderState[index] & 0x00000010) ? D3DWRAP_U : 0;
-                    dwConv |= (XTL::EmuD3DDeferredRenderState[index] & 0x00001000) ? D3DWRAP_V : 0;
-                    dwConv |= (XTL::EmuD3DDeferredRenderState[index] & 0x00100000) ? D3DWRAP_W : 0;
-
-                    g_pD3DDevice->SetRenderState(XTL::D3DRS_WRAP0, dwConv);
-                } break;
-                case XTL::X_D3DRS_WRAP1: {
-                    ::DWORD dwConv = 0;
-
-                    dwConv |= (XTL::EmuD3DDeferredRenderState[index] & 0x00000010) ? D3DWRAP_U : 0;
-                    dwConv |= (XTL::EmuD3DDeferredRenderState[index] & 0x00001000) ? D3DWRAP_V : 0;
-                    dwConv |= (XTL::EmuD3DDeferredRenderState[index] & 0x00100000) ? D3DWRAP_W : 0;
-
-                    g_pD3DDevice->SetRenderState(XTL::D3DRS_WRAP1, dwConv);
-                } break;
-                default:
-                    g_pD3DDevice->SetRenderState(XTL::DxbxRenderStateInfo[RenderState].PC, XTL::EmuD3DDeferredRenderState[index]);
-                    break;
-            }
+            g_pD3DDevice->SetRenderState(XTL::DxbxRenderStateInfo[RenderState].PC, Value);
         }
     }
 }
