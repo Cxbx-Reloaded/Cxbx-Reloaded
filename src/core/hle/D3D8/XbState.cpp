@@ -170,7 +170,7 @@ void UpdateDeferredTextureStates()
                     }
 
                     //  These states match the PC counterpart IDs
-                    g_pD3DDevice->SetSamplerState(Stage, (XTL::D3DSAMPLERSTATETYPE)State, Value);
+                    g_pD3DDevice->SetSamplerState(Stage, (XTL::D3DSAMPLERSTATETYPE)(State + 1), Value);
                     break;
                 case XTL::X_D3DTSS_MAGFILTER: case XTL::X_D3DTSS_MINFILTER: case XTL::X_D3DTSS_MIPFILTER:
                     if (Value == XTL::X_D3DTEXF_QUINCUNX) {
