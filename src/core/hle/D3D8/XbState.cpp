@@ -234,7 +234,6 @@ void UpdateDeferredTextureStates()
             // This handles the case when XDKs have different state values
             DWORD State = GetDeferredTextureStateFromIndex(StateIndex);
 
-
             switch (State) {
                 case XTL::X_D3DTSS_ADDRESSU: case XTL::X_D3DTSS_ADDRESSV: case XTL::X_D3DTSS_ADDRESSW:
                     if (Value == XTL::X_D3DTADDRESS_CLAMPTOEDGE) {
@@ -481,6 +480,7 @@ void UpdateDeferredTextureStates()
         // Make sure we only do this once
         if (pointSpriteOverride && StageIndex == 3) {
             pointSpriteOverride = false;
+            StageIndex--;
         }
     }
 
