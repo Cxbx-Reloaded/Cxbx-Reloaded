@@ -165,6 +165,53 @@ DWORD GetDeferredTextureStateFromIndex(DWORD State)
     return State;
 }
 
+DWORD Map3911ToCxbxD3DTOP(DWORD Value)
+{
+    switch (Value) {
+        case 1: return XTL::X_D3DTOP_DISABLE;
+        case 2: return XTL::X_D3DTOP_SELECTARG1;
+        case 3: return XTL::X_D3DTOP_SELECTARG2;
+        case 4: return XTL::X_D3DTOP_MODULATE;
+        case 5: return XTL::X_D3DTOP_MODULATE2X;
+        case 6: return XTL::X_D3DTOP_MODULATE4X;
+        case 7: return XTL::X_D3DTOP_ADD;
+        case 8: return XTL::X_D3DTOP_ADDSIGNED;
+        case 9: return XTL::X_D3DTOP_ADDSIGNED2X;
+        case 10: return XTL::X_D3DTOP_SUBTRACT;
+        case 11: return XTL::X_D3DTOP_ADDSMOOTH;
+        case 12: return XTL::X_D3DTOP_BLENDDIFFUSEALPHA;
+        case 13: return XTL::X_D3DTOP_BLENDTEXTUREALPHA;
+        case 14: return XTL::X_D3DTOP_BLENDFACTORALPHA;
+        case 15: return XTL::X_D3DTOP_BLENDTEXTUREALPHAPM;
+        case 16: return XTL::X_D3DTOP_BLENDCURRENTALPHA;
+        case 17: return XTL::X_D3DTOP_PREMODULATE;
+        case 18: return XTL::X_D3DTOP_MODULATEALPHA_ADDCOLOR;
+        case 19: return XTL::X_D3DTOP_MODULATECOLOR_ADDALPHA;
+        case 20: return XTL::X_D3DTOP_MODULATEINVALPHA_ADDCOLOR;
+        case 21: return XTL::X_D3DTOP_MODULATEINVCOLOR_ADDALPHA;
+        case 22: return XTL::X_D3DTOP_BUMPENVMAP;
+        case 23: return XTL::X_D3DTOP_BUMPENVMAPLUMINANCE;
+        case 24: return XTL::X_D3DTOP_DOTPRODUCT3;
+        case 25: return XTL::X_D3DTOP_MULTIPLYADD;
+        case 26: return XTL::X_D3DTOP_LERP;
+    }
+
+    EmuLog(LOG_LEVEL::WARNING, "Unknown X_D3DTOP Value");
+    return Value;
+}
+
+DWORD TranslateXDKSpecificD3DTOP(DWORD Value)
+{
+    if (g_BuildVersion >= 4361) {
+        // For these XDKs, the mapping has been confirmed to match our internal mapping
+        return Value;
+    }
+
+    // TODO: Did these values change after 3911 but before 4361?
+    // For now, assume they didn't and use the 3911 mappings
+    return Map3911ToCxbxD3DTOP(Value);
+}
+
 void UpdateDeferredTextureStates()
 {
     // Iterate through all deferred texture states/stages
@@ -176,6 +223,13 @@ void UpdateDeferredTextureStates()
     }
 
     for (int StageIndex = 0; StageIndex < XTL::X_D3DTS_STAGECOUNT; StageIndex++) {
+        DWORD Stage = StageIndex;
+
+        // If point sprites are enabled, we need to overwrite our existing state 0 with State 3 also
+        if (pointSpriteOverride && Stage == 3) {
+            Stage = 0;
+        }
+
         for (int StateIndex = XTL::X_D3DTSS_DEFERRED_FIRST; StateIndex <= XTL::X_D3DTSS_DEFERRED_LAST; StateIndex++) {
             // Read the value of the current stage/state from the Xbox data structure
             DWORD Value = XTL::EmuD3DDeferredTextureState[(StageIndex * XTL::X_D3DTS_STAGESIZE) + StateIndex];
@@ -183,16 +237,7 @@ void UpdateDeferredTextureStates()
             // Convert the index of the current state to an index that we can use
             // This handles the case when XDKs have different state values
             DWORD State = GetDeferredTextureStateFromIndex(StateIndex);
-            DWORD Stage = StageIndex;
 
-            // If point sprites are enabled, we need to overwrite our existing state 0 with State 3 also
-            if (pointSpriteOverride && Stage == 3) {
-                Stage = 0;
-
-                // Make sure we only do this once
-                pointSpriteOverride = false;
-                StageIndex--; // Force Stage 3 to repeat, without this hack next time
-            }
 
             switch (State) {
                 case XTL::X_D3DTSS_ADDRESSU: case XTL::X_D3DTSS_ADDRESSV: case XTL::X_D3DTSS_ADDRESSW:
@@ -235,8 +280,7 @@ void UpdateDeferredTextureStates()
                     //EmuLog(LOG_LEVEL::WARNING, "D3DTSS_ALPHAKILL is unsupported");
                     break;
                 case XTL::X_D3DTSS_COLOROP:
-                    // TODO: This would be better split into it's own function, or a lookup array
-                    switch (Value) {
+                    switch (TranslateXDKSpecificD3DTOP(Value)) {
                         case XTL::X_D3DTOP_DISABLE:
                             g_pD3DDevice->SetTextureStageState(Stage, XTL::D3DTSS_COLOROP, XTL::D3DTOP_DISABLE);
                             break;
@@ -332,7 +376,7 @@ void UpdateDeferredTextureStates()
                 case XTL::X_D3DTSS_ALPHAOP:
                     // TODO: Use a lookup table, this is not always a 1:1 map (same as D3DTSS_COLOROP)
                     if (Value != X_D3DTSS_UNK) {
-                        switch (Value) {
+                        switch (TranslateXDKSpecificD3DTOP(Value)) {
                             case XTL::X_D3DTOP_DISABLE:
                                 g_pD3DDevice->SetTextureStageState(Stage, XTL::D3DTSS_ALPHAOP, XTL::D3DTOP_DISABLE);
                                 break;
@@ -436,6 +480,12 @@ void UpdateDeferredTextureStates()
                     EmuLog(LOG_LEVEL::WARNING, "Unkown Xbox D3DTSS Value: %d", State);
                     break;
             }
+        }
+
+        // Make sure we only do this once
+        if (pointSpriteOverride && Stage == 3) {
+            pointSpriteOverride = false;
+            StageIndex--; // Force Stage 3 to repeat, without this hack next time
         }
     }
 
