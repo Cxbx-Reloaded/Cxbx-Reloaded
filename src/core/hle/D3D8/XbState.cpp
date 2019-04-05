@@ -223,12 +223,8 @@ void UpdateDeferredTextureStates()
     }
 
     for (int StageIndex = 0; StageIndex < XTL::X_D3DTS_STAGECOUNT; StageIndex++) {
-        DWORD Stage = StageIndex;
-
         // If point sprites are enabled, we need to overwrite our existing state 0 with State 3 also
-        if (pointSpriteOverride && Stage == 3) {
-            Stage = 0;
-        }
+        DWORD Stage = (pointSpriteOverride && StageIndex == 3) ? 0 : StageIndex;
 
         for (int StateIndex = XTL::X_D3DTSS_DEFERRED_FIRST; StateIndex <= XTL::X_D3DTSS_DEFERRED_LAST; StateIndex++) {
             // Read the value of the current stage/state from the Xbox data structure
@@ -483,9 +479,8 @@ void UpdateDeferredTextureStates()
         }
 
         // Make sure we only do this once
-        if (pointSpriteOverride && Stage == 3) {
+        if (pointSpriteOverride && StageIndex == 3) {
             pointSpriteOverride = false;
-            StageIndex--; // Force Stage 3 to repeat, without this hack next time
         }
     }
 
