@@ -196,9 +196,11 @@ bool Settings::Init()
 
 		if (iRet == IDYES) {
 			saveFile = GenerateExecDirectoryStr();
+			m_gui.DataStorageToggle = CXBX_DATA_EXECDIR;
 		}
 		else if (iRet == IDNO){
 			saveFile = GenerateUserProfileDirectoryStr();
+			m_gui.DataStorageToggle = CXBX_DATA_APPDATA;
 			if (saveFile.size() == 0) {
 				return false;
 			}
@@ -293,7 +295,7 @@ bool Settings::LoadConfig()
 		m_gui.szCxbxDebugFile = si_data;
 	}
 
-	m_gui.DataStorageToggle = m_si.GetLongValue(section_gui, sect_gui_keys.DataStorageToggle, /*Default=*/CXBX_DATA_APPDATA);
+	m_gui.DataStorageToggle = m_si.GetLongValue(section_gui, sect_gui_keys.DataStorageToggle, /*Default=*/m_gui.DataStorageToggle);
 	si_data = m_si.GetValue(section_gui, sect_gui_keys.DataCustomLocation, /*Default=*/nullptr);
 	// Fallback to null string if value is empty or contains a bigger string.
 	if (si_data == nullptr || std::strlen(si_data) >= MAX_PATH) {
