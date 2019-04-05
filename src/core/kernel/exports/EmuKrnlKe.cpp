@@ -165,7 +165,8 @@ xboxkrnl::KPRCB *KeGetCurrentPrcb()
 // ******************************************************************
 // * KeSetSystemTime()
 // ******************************************************************
-xboxkrnl::VOID NTAPI xboxkrnl::KeSetSystemTime(
+xboxkrnl::VOID NTAPI xboxkrnl::KeSetSystemTime
+(
 	IN  xboxkrnl::PLARGE_INTEGER NewTime,
 	OUT xboxkrnl::PLARGE_INTEGER OldTime
 )
@@ -253,6 +254,19 @@ xboxkrnl::VOID NTAPI xboxkrnl::KeSetSystemTime(
 
 	/* Process expired timers. This releases the dispatcher and timer locks */
 	KiTimerListExpire(&TempList2, OldIrql);
+}
+
+// ******************************************************************
+// * KeInitializeTimer()
+// ******************************************************************
+xboxkrnl::VOID NTAPI xboxkrnl::KeInitializeTimer
+(
+	IN PKTIMER Timer
+)
+{
+	LOG_FORWARD("KeInitializeTimerEx");
+
+	KeInitializeTimerEx(Timer, NotificationTimer);
 }
 
 // Forward KeLowerIrql() to KfLowerIrql()
@@ -1923,6 +1937,8 @@ XBSYSAPI EXPORTNUM(158) xboxkrnl::NTSTATUS NTAPI xboxkrnl::KeWaitForMultipleObje
 	BOOLEAN WaitSatisfied;
 	NTSTATUS WaitStatus;
 	PKMUTANT ObjectMutant;
+	// Hack variable (remove this when the thread scheduler is here)
+	bool timeout_set = false;
 	do {
 		// Check if we need to let an APC run. This should immediately trigger APC interrupt via a call to UnlockDispatcherDatabase
 		if (Thread->ApcState.KernelApcPending && (Thread->WaitIrql < APC_LEVEL)) {
@@ -1958,7 +1974,7 @@ XBSYSAPI EXPORTNUM(158) xboxkrnl::NTSTATUS NTAPI xboxkrnl::KeWaitForMultipleObje
 					}
 				} else {
 					if (ObjectMutant->Header.Type == MutantObject) {
-						if ((Thread == ObjectMutant->OwnerThread) &&	(ObjectMutant->Header.SignalState == MINLONG)) {
+						if ((Thread == ObjectMutant->OwnerThread) && (ObjectMutant->Header.SignalState == MINLONG)) {
 							KiUnlockDispatcherDatabase(Thread->WaitIrql);
 							ExRaiseStatus(STATUS_MUTANT_LIMIT_EXCEEDED);
 						} else if ((ObjectMutant->Header.SignalState <= 0) && (Thread != ObjectMutant->OwnerThread)) {
@@ -1997,22 +2013,36 @@ XBSYSAPI EXPORTNUM(158) xboxkrnl::NTSTATUS NTAPI xboxkrnl::KeWaitForMultipleObje
 					goto NoWait;
 				}
 
-				// Setup a timer for the thread
-				KiTimerLock();
-				PKTIMER Timer = &Thread->Timer;
-				PKWAIT_BLOCK WaitTimer = &Thread->TimerWaitBlock;
-				WaitBlock->NextWaitBlock = WaitTimer;
-				Timer->Header.WaitListHead.Flink = &WaitTimer->WaitListEntry;
-				Timer->Header.WaitListHead.Blink = &WaitTimer->WaitListEntry;
-				WaitTimer->NextWaitBlock = WaitBlock;
-				if (KiInsertTreeTimer(Timer, *Timeout) == FALSE) {
-					WaitStatus = (NTSTATUS)STATUS_TIMEOUT;
+				// Setup a timer for the thread but only once (for now)
+				if (!timeout_set) {
+					KiTimerLock();
+					PKTIMER Timer = &Thread->Timer;
+					PKWAIT_BLOCK WaitTimer = &Thread->TimerWaitBlock;
+					WaitBlock->NextWaitBlock = WaitTimer;
+					Timer->Header.WaitListHead.Flink = &WaitTimer->WaitListEntry;
+					Timer->Header.WaitListHead.Blink = &WaitTimer->WaitListEntry;
+					WaitTimer->NextWaitBlock = WaitBlock;
+					if (KiInsertTreeTimer(Timer, *Timeout) == FALSE) {
+						WaitStatus = (NTSTATUS)STATUS_TIMEOUT;
+						KiTimerUnlock();
+						goto NoWait;
+					}
+
+					// Boring, ensure that we only set the thread timer once. Otherwise, this will cause to insert the same
+					// thread timer over and over in the timer list, which will prevent KiTimerExpiration from removing these
+					// duplicated timers and thus it will attempt to endlessly remove the same unremoved timers, causing a deadlock.
+					// This can be removed once KiSwapThread and the kernel/user APCs are implemented
+					timeout_set = true;
+					DueTime.QuadPart = Timer->DueTime.QuadPart;
 					KiTimerUnlock();
-					goto NoWait;
 				}
 
-				DueTime.QuadPart = Timer->DueTime.QuadPart;
-				KiTimerUnlock();
+				// KiTimerExpiration has removed the timer but the objects were not signaled, so we have a timeout
+				// (remove this when the thread scheduler is here)
+				if (Thread->Timer.Header.Inserted == FALSE) {
+					WaitStatus = (NTSTATUS)(STATUS_TIMEOUT);
+					goto NoWait;
+				}
 			}
 			else {
 				WaitBlock->NextWaitBlock = WaitBlock;
@@ -2028,9 +2058,9 @@ XBSYSAPI EXPORTNUM(158) xboxkrnl::NTSTATUS NTAPI xboxkrnl::KeWaitForMultipleObje
 
 
 			/*
-			TODO: We can't implement this and the return values until we have our own thread schedular
-			For now, we'll have to implement waiting here instead of the schedular.
-			This code can all be enabled once we have CPU emulation and our own schedular in v1.0
+			TODO: We can't implement this and the return values until we have our own thread scheduler
+			For now, we'll have to implement waiting here instead of the scheduler.
+			This code can all be enabled once we have CPU emulation and our own scheduler in v1.0
 			*/
 
 			// Insert the WaitBlock
@@ -2061,7 +2091,7 @@ XBSYSAPI EXPORTNUM(158) xboxkrnl::NTSTATUS NTAPI xboxkrnl::KeWaitForMultipleObje
 			//	return WaitStatus;
 			//}
 
-			// TODO: Remove this after we have our own schedular and the above is implemented
+			// TODO: Remove this after we have our own scheduler and the above is implemented
 			Sleep(0);
 
 			// Reduce the timout if necessary
@@ -2076,6 +2106,10 @@ XBSYSAPI EXPORTNUM(158) xboxkrnl::NTSTATUS NTAPI xboxkrnl::KeWaitForMultipleObje
 		}
 	} while (TRUE);
 
+	// NOTE: we don't need to remove the wait blocks for the object and/or the timer because InsertTailList is disabled at
+	// the moment, which means they are never attached to the object wait list. TimerWaitBlock can also stay attached to the timer wait
+	// list since KiTimerExpiration disregards it for now.
+
 	// The waiting thead has been alerted, or an APC needs to be delivered
 	// So unlock the dispatcher database, lower the IRQ and return the status
 	KiUnlockDispatcherDatabase(Thread->WaitIrql);
@@ -2089,6 +2123,14 @@ NoWait:
 	// The wait was satisfied without actually waiting
 	// Unlock the database and return the status
 	//TODO: KiAdjustQuantumThread(Thread);
+
+	// Don't forget to remove the thread timer if the objects were signaled before the timer expired
+	// (remove this when the thread scheduler is here)
+	if (timeout_set && Thread->Timer.Header.Inserted == TRUE) {
+		KiTimerLock();
+		KxRemoveTreeTimer(&Thread->Timer);
+		KiTimerUnlock();
+	}
 
 	KiUnlockDispatcherDatabase(Thread->WaitIrql);
 
@@ -2135,6 +2177,8 @@ XBSYSAPI EXPORTNUM(159) xboxkrnl::NTSTATUS NTAPI xboxkrnl::KeWaitForSingleObject
 	KWAIT_BLOCK StackWaitBlock;
 	PKWAIT_BLOCK WaitBlock = &StackWaitBlock;
 	NTSTATUS WaitStatus;
+	// Hack variable (remove this when the thread scheduler is here)
+	bool timeout_set = false;
 	do {
 		// Check if we need to let an APC run. This should immediately trigger APC interrupt via a call to UnlockDispatcherDatabase
 		if (Thread->ApcState.KernelApcPending && (Thread->WaitIrql < APC_LEVEL)) {
@@ -2182,31 +2226,46 @@ XBSYSAPI EXPORTNUM(159) xboxkrnl::NTSTATUS NTAPI xboxkrnl::KeWaitForSingleObject
 					goto NoWait;
 				}
 
-				// Setup a timer for the thread
-				KiTimerLock();
-				PKTIMER Timer = &Thread->Timer;
-				PKWAIT_BLOCK WaitTimer = &Thread->TimerWaitBlock;
-				WaitBlock->NextWaitBlock = WaitTimer;
-				Timer->Header.WaitListHead.Flink = &WaitTimer->WaitListEntry;
-				Timer->Header.WaitListHead.Blink = &WaitTimer->WaitListEntry;
-				WaitTimer->NextWaitBlock = WaitBlock;
-				if (KiInsertTreeTimer(Timer, *Timeout) == FALSE) {
-					WaitStatus = (NTSTATUS)STATUS_TIMEOUT;
+				// Setup a timer for the thread but only once (for now)
+				if (!timeout_set) {
+					KiTimerLock();
+					PKTIMER Timer = &Thread->Timer;
+					PKWAIT_BLOCK WaitTimer = &Thread->TimerWaitBlock;
+					WaitBlock->NextWaitBlock = WaitTimer;
+					Timer->Header.WaitListHead.Flink = &WaitTimer->WaitListEntry;
+					Timer->Header.WaitListHead.Blink = &WaitTimer->WaitListEntry;
+					WaitTimer->NextWaitBlock = WaitBlock;
+					if (KiInsertTreeTimer(Timer, *Timeout) == FALSE) {
+						DBG_PRINTF("%s: KiInsertTreeTimer(Timer, *Timeout) == FALSE\n", __func__);
+						WaitStatus = (NTSTATUS)STATUS_TIMEOUT;
+						KiTimerUnlock();
+						goto NoWait;
+					}
+
+					// Boring, ensure that we only set the thread timer once. Otherwise, this will cause to insert the same
+					// thread timer over and over in the timer list, which will prevent KiTimerExpiration from removing these
+					// duplicated timers and thus it will attempt to endlessly remove the same unremoved timers, causing a deadlock.
+					// This can be removed once KiSwapThread and the kernel/user APCs are implemented
+					timeout_set = true;
+					DueTime.QuadPart = Timer->DueTime.QuadPart;
 					KiTimerUnlock();
-					goto NoWait;
 				}
 
-				DueTime.QuadPart = Timer->DueTime.QuadPart;
-				KiTimerUnlock();
+				// KiTimerExpiration has removed the timer but the object was not signaled, so we have a timeout
+				// (remove this when the thread scheduler is here)
+				if (Thread->Timer.Header.Inserted == FALSE) {
+					WaitStatus = (NTSTATUS)(STATUS_TIMEOUT);
+					goto NoWait;
+				}
 			}
 			else {
 				WaitBlock->NextWaitBlock = WaitBlock;
 			}
 
 			/*
-				TODO: We can't implement this and the return values until we have our own thread schedular
-				For now, we'll have to implement waiting here instead of the schedular.
-				This code can all be enabled once we have CPU emulation and our own schedular in v1.0
+				TODO: We can't implement this and the return values until we have our own thread scheduler
+				For now, we'll have to implement waiting here instead of the scheduler.
+				This code can all be enabled once we have CPU emulation and our own scheduler in v1.0
 			*/
 
 			// Insert the WaitBlock
@@ -2238,7 +2297,7 @@ XBSYSAPI EXPORTNUM(159) xboxkrnl::NTSTATUS NTAPI xboxkrnl::KeWaitForSingleObject
 				return WaitStatus;
 			} */
 
-			// TODO: Remove this after we have our own schedular and the above is implemented
+			// TODO: Remove this after we have our own scheduler and the above is implemented
 			Sleep(0);
 
 			// Reduce the timout if necessary
@@ -2253,6 +2312,10 @@ XBSYSAPI EXPORTNUM(159) xboxkrnl::NTSTATUS NTAPI xboxkrnl::KeWaitForSingleObject
 		}
 	} while (TRUE);
 
+	// NOTE: we don't need to remove the wait blocks for the object and/or the timer because InsertTailList is disabled at
+	// the moment, which means they are never attached to the object wait list. TimerWaitBlock can also stay attached to the timer wait
+	// list since KiTimerExpiration disregards it for now.
+
 	// The waiting thead has been alerted, or an APC needs to be delivered
 	// So unlock the dispatcher database, lower the IRQ and return the status
 	KiUnlockDispatcherDatabase(Thread->WaitIrql);
@@ -2266,6 +2329,14 @@ NoWait:
 	// The wait was satisfied without actually waiting
 	// Unlock the database and return the status
 	//TODO: KiAdjustQuantumThread(Thread);
+
+	// Don't forget to remove the thread timer if the object was signaled before the timer expired
+	// (remove this when the thread scheduler is here)
+	if (timeout_set && Thread->Timer.Header.Inserted == TRUE) {
+		KiTimerLock();
+		KxRemoveTreeTimer(&Thread->Timer);
+		KiTimerUnlock();
+	}
 
 	KiUnlockDispatcherDatabase(Thread->WaitIrql);
 

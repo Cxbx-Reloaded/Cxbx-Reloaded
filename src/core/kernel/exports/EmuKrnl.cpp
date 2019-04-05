@@ -102,7 +102,12 @@ xboxkrnl::BOOLEAN RemoveEntryList(xboxkrnl::PLIST_ENTRY pEntry)
 		_EX_Flink->Blink = _EX_Blink;
 	}
 
-	return (_EX_Flink == _EX_Blink);
+	if (_EX_Blink != nullptr && _EX_Flink != nullptr) {
+		return (_EX_Flink == _EX_Blink);
+	}
+	// If we reach here then it means we have erroneously been called on a detached element. In this case,
+	// always report FALSE to avoid possible side effects
+	return FALSE;
 }
 
 xboxkrnl::PLIST_ENTRY RemoveHeadList(xboxkrnl::PLIST_ENTRY pListHead)
