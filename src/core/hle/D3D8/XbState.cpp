@@ -202,13 +202,14 @@ DWORD Map3911ToCxbxD3DTOP(DWORD Value)
 
 DWORD TranslateXDKSpecificD3DTOP(DWORD Value)
 {
-    if (g_BuildVersion >= 4361) {
+    // TODO: Determine when exactly these values changed
+    // So far, 4134 is the earliest version we've seen using these mappings
+    // But this may change
+    if (g_BuildVersion >= 4134) {
         // For these XDKs, the mapping has been confirmed to match our internal mapping
         return Value;
     }
 
-    // TODO: Did these values change after 3911 but before 4361?
-    // For now, assume they didn't and use the 3911 mappings
     return Map3911ToCxbxD3DTOP(Value);
 }
 
