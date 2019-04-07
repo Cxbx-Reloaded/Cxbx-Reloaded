@@ -35,7 +35,6 @@
 
 // simple render state encoding lookup table
 #define X_D3DRSSE_UNK 0x7fffffff
-extern CONST DWORD EmuD3DRenderStateSimpleEncoded[174];
 
 typedef void(*FormatToARGBRow)(const uint8_t* src, uint8_t* dst_argb, int width);
 
@@ -156,10 +155,8 @@ inline D3DBLEND EmuXB2PC_D3DBLEND(X_D3DBLEND Value)
         case 0x306: return D3DBLEND_DESTCOLOR;
         case 0x307: return D3DBLEND_INVDESTCOLOR;
         case 0x308: return D3DBLEND_SRCALPHASAT;
-        // Unsupported (on host) Xbox Extensions
-        // TODO: Find a way to implement these: Xbox sets a constant blend colour using D3DRS_BLENDCOLOR
-        case 0x8001: EmuLogEx(LOG_PREFIX_D3DCVT, LOG_LEVEL::WARNING, "Unsupported Xbox D3DBlend Extension: D3DBLEND_CONSTANTCOLOR"); return D3DBLEND_ONE;
-        case 0x8002: EmuLogEx(LOG_PREFIX_D3DCVT, LOG_LEVEL::WARNING, "Unsupported Xbox D3DBlend Extension: D3DBLEND_INVCONSTANTCOLOR "); return D3DBLEND_ONE;
+        case 0x8001:return D3DBLEND_BLENDFACTOR; // Maps Xbox D3DBLEND_CONSTANTCOLOR
+        case 0x8002:return D3DBLEND_INVBLENDFACTOR; // Maps Xbox D3DBLEND_INVCONSTANTCOLOR
         case 0x8003: EmuLogEx(LOG_PREFIX_D3DCVT, LOG_LEVEL::WARNING, "Unsupported Xbox D3DBlend Extension: D3DBLEND_CONSTANTALPHA"); return D3DBLEND_ONE;
         case 0x8004: EmuLogEx(LOG_PREFIX_D3DCVT, LOG_LEVEL::WARNING, "Unsupported Xbox D3DBlend Extension: D3DBLEND_INVCONSTANTALPHA"); return D3DBLEND_ONE;
     }
