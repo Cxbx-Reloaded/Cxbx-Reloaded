@@ -6084,6 +6084,7 @@ VOID __fastcall XTL::EMUPATCH(D3DDevice_SetRenderState_Simple)
     for (int i = 0; i <= X_D3DRS_DONOTCULLUNCOMPRESSED; i++) {
         if (DxbxRenderStateInfo[i].M == (Method & 0x00001FFC)) {
             XboxRenderStateIndex = i;
+            break;
         }
     }
 
