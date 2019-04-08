@@ -57,6 +57,7 @@ namespace xboxkrnl
 #include <process.h>
 #include <clocale>
 #include <unordered_map>
+#include <thread>
 
 // Allow use of time duration literals (making 16ms, etc possible)
 using namespace std::literals::chrono_literals;
@@ -1916,6 +1917,9 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
 				// make adjustments to parameters to make sense with windows Direct3D
                 {
                     g_EmuCDPD.HostPresentationParameters.Windowed = !g_XBVideo.bFullScreen;
+
+                    // TODO: Investigate the best option for this
+                    g_EmuCDPD.HostPresentationParameters.SwapEffect = XTL::D3DSWAPEFFECT_COPY;
 
                     g_EmuCDPD.HostPresentationParameters.BackBufferFormat       = XTL::EmuXB2PC_D3DFormat(g_EmuCDPD.XboxPresentationParameters.BackBufferFormat);
 					g_EmuCDPD.HostPresentationParameters.AutoDepthStencilFormat = XTL::EmuXB2PC_D3DFormat(g_EmuCDPD.XboxPresentationParameters.AutoDepthStencilFormat);
@@ -4574,13 +4578,21 @@ DWORD WINAPI XTL::EMUPATCH(D3DDevice_Swap)
                 break;
         }
 
-        auto targetDuration = std::chrono::duration<double, std::milli>(((1.0f / targetRefreshRate) * multiplier) * 1000.0f);
-        while (std::chrono::high_resolution_clock::now() - frameStartTime < targetDuration) {
-            // We use an empty while loop because actually sleeping is too unstable
-            // Sleeping causes the frame duration to jitter...
-            ;
+        auto targetDuration = std::chrono::duration<double, std::milli>(((1000.0f / targetRefreshRate) * multiplier));
+        auto targetTimestamp = frameStartTime + targetDuration;
+
+        // If we need to wait for a larger amount of time (>= 1 frame at 60FPS), we can just sleep
+        if (std::chrono::duration_cast<std::chrono::milliseconds>(targetTimestamp - std::chrono::high_resolution_clock::now()).count() > 16) {
+            std::this_thread::sleep_until(targetTimestamp);
+        } else {
+            // Otherwise, we fall-through and just keep polling
+            // This prevents large waits from hogging CPU power, but allows small waits/ to remain precice.
+            while (std::chrono::high_resolution_clock::now() < targetTimestamp) {
+                ;
+            }
         }
     }
+
     frameStartTime = std::chrono::high_resolution_clock::now();
 
 	UpdateFPSCounter();
