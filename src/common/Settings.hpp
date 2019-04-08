@@ -205,8 +205,12 @@ public:
 	} m_controller_port;
 
 	// Hack settings
+	// NOTE: When removing fields, replace them with place-holders
+	// The size and order of this structure should *not* be allowed to change
+	// TODO: Fix IPC/Shared Memory so this isn't necessary
 	struct s_hack {
 		bool DisablePixelShaders;
+		bool Reserved2;
 		bool UseAllCores;
 		bool SkipRdtscPatching;
 		bool ScaleViewport;
