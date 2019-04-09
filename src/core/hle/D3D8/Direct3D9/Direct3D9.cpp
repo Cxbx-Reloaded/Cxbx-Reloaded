@@ -8264,6 +8264,10 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_LoadVertexShaderProgram)
 
 	DWORD hCurrentShader = g_CurrentXboxVertexShaderHandle;
 
+    if (!VshHandleIsVertexShader(hCurrentShader)) {
+        LOG_TEST_CASE("D3DDevice_LoadVertexShaderProgram called with FVF Shader");
+    }
+
 	// D3DDevice_LoadVertexShaderProgram splits the given function buffer into batch-wise pushes to the NV2A
 
 	load_shader_program_key_t shaderCacheKey = ((load_shader_program_key_t)hCurrentShader << 32) | (DWORD)pFunction;
