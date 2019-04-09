@@ -8309,34 +8309,34 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_LoadVertexShaderProgram)
 
         // Write Position
         DWORD position = (g_CurrentXboxVertexShaderHandle & X_D3DFVF_POSITION_MASK);
-        if (position == D3DFVF_XYZRHW) {
+        if (position == X_D3DFVF_XYZRHW) {
             pDeclaration[index++] = X_D3DVSD_REG(X_D3DVSDE_POSITION, X_D3DVSDT_FLOAT4);
         } else {
             pDeclaration[index++] = X_D3DVSD_REG(X_D3DVSDE_POSITION, X_D3DVSDT_FLOAT3);
         }
 
         // Write Blend Weights
-        if (position == D3DFVF_XYZB1) {
+        if (position == X_D3DFVF_XYZB1) {
             pDeclaration[index++] = X_D3DVSD_REG(X_D3DVSDE_BLENDWEIGHT, X_D3DVSDT_FLOAT1);
         }
-        if (position == D3DFVF_XYZB2) {
+        if (position == X_D3DFVF_XYZB2) {
             pDeclaration[index++] = X_D3DVSD_REG(X_D3DVSDE_BLENDWEIGHT, X_D3DVSDT_FLOAT2);
         }
-        if (position == D3DFVF_XYZB3) {
+        if (position == X_D3DFVF_XYZB3) {
             pDeclaration[index++] = X_D3DVSD_REG(X_D3DVSDE_BLENDWEIGHT, X_D3DVSDT_FLOAT3);
         }
-        if (position == D3DFVF_XYZB4) {
+        if (position == X_D3DFVF_XYZB4) {
             pDeclaration[index++] = X_D3DVSD_REG(X_D3DVSDE_BLENDWEIGHT, X_D3DVSDT_FLOAT4);
         }
 
         // Write Normal, Diffuse, and Specular
-        if (g_CurrentXboxVertexShaderHandle & D3DFVF_NORMAL) {
+        if (g_CurrentXboxVertexShaderHandle & X_D3DFVF_NORMAL) {
             pDeclaration[index++] = X_D3DVSD_REG(X_D3DVSDE_NORMAL, X_D3DVSDT_FLOAT3);
         }
-        if (g_CurrentXboxVertexShaderHandle & D3DFVF_DIFFUSE) {
+        if (g_CurrentXboxVertexShaderHandle & X_D3DFVF_DIFFUSE) {
             pDeclaration[index++] = X_D3DVSD_REG(X_D3DVSDE_DIFFUSE, X_D3DVSDT_D3DCOLOR);
         }
-        if (g_CurrentXboxVertexShaderHandle & D3DFVF_SPECULAR) {
+        if (g_CurrentXboxVertexShaderHandle & X_D3DFVF_SPECULAR) {
             pDeclaration[index++] = X_D3DVSD_REG(X_D3DVSDE_SPECULAR, X_D3DVSDT_D3DCOLOR);
         }
 
