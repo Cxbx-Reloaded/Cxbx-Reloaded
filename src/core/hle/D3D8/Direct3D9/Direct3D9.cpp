@@ -4908,9 +4908,9 @@ void CreateHostResource(XTL::X_D3DResource *pResource, DWORD D3DUsage, int iText
 		// Because of this, we need to cap dwMipMapLevels when required
 		if (dwMipMapLevels > 0) {
 			// Calculate how many mip-map levels it takes to get to a texture of 1 pixels in either dimension
-			UINT highestMipMapLevel = 0;
+			UINT highestMipMapLevel = 1;
 			UINT width = dwWidth; UINT height = dwHeight;
-			while (width > 1 && height > 1) {
+			while (width > 1 || height > 1) {
 				width /= 2;
 				height /= 2;
 				highestMipMapLevel++;
@@ -4918,9 +4918,9 @@ void CreateHostResource(XTL::X_D3DResource *pResource, DWORD D3DUsage, int iText
 
 			// If the desired mip-map level was higher than the maximum possible, cap it
 			// Test case: Shin Megami Tensei: Nine
-			if (dwMipMapLevels > highestMipMapLevel + 1) {
+			if (dwMipMapLevels > highestMipMapLevel) {
 				LOG_TEST_CASE("Too many mip-map levels");
-				dwMipMapLevels = highestMipMapLevel + 1;
+				dwMipMapLevels = highestMipMapLevel;
 			}
 		}
 
