@@ -1215,7 +1215,47 @@ typedef enum _X_D3DVSD_TOKENTYPE
 #define X_D3DVSD_EXTINFOSHIFT 0
 #define X_D3DVSD_EXTINFOMASK (0xFFFFFF << X_D3DVSD_EXTINFOSHIFT)
 
+#define X_D3DVSD_MAKETOKENTYPE(Type) ((Type << X_D3DVSD_TOKENTYPESHIFT) & X_D3DVSD_TOKENTYPEMASK)
+
+#define X_D3DVSD_STREAM(Stream) (X_D3DVSD_MAKETOKENTYPE(X_D3DVSD_TOKEN_STREAM) | (Stream))
+#define X_D3DVSD_REG(Reg, Type) (X_D3DVSD_MAKETOKENTYPE(X_D3DVSD_TOKEN_STREAMDATA) | ((Type) << X_D3DVSD_DATATYPESHIFT) | (Reg))
+
+#define X_D3DVSD_NOP() 0x00000000
 #define X_D3DVSD_END() 0xFFFFFFFF
+
+// FVF Definitions
+#define X_D3DFVF_POSITION_MASK    0x00E
+#define X_D3DFVF_XYZ              0x002
+#define X_D3DFVF_XYZRHW           0x004
+#define X_D3DFVF_XYZB1            0x006
+#define X_D3DFVF_XYZB2            0x008
+#define X_D3DFVF_XYZB3            0x00a
+#define X_D3DFVF_XYZB4            0x00c
+#define X_D3DFVF_NORMAL           0x010
+#define X_D3DFVF_RESERVED1        0x020
+#define X_D3DFVF_DIFFUSE          0x040
+#define X_D3DFVF_SPECULAR         0x080
+#define X_D3DFVF_TEXCOUNT_MASK    0xf00
+#define X_D3DFVF_TEXCOUNT_SHIFT   8
+#define X_D3DFVF_TEX0             0x000
+#define X_D3DFVF_TEX1             0x100
+#define X_D3DFVF_TEX2             0x200
+#define X_D3DFVF_TEX3             0x300
+#define X_D3DFVF_TEX4             0x400
+#define X_D3DFVF_TEX5             0x500
+#define X_D3DFVF_TEX6             0x600
+#define X_D3DFVF_TEX7             0x700
+#define X_D3DFVF_TEX8             0x800
+#define X_D3DFVF_TEXTUREFORMAT1   0x003
+#define X_D3DFVF_TEXTUREFORMAT2   0x000
+#define X_D3DFVF_TEXTUREFORMAT3   0x001
+#define X_D3DFVF_TEXTUREFORMAT4   0x002
+
+#define X_D3DFVF_TEXCOORDSIZE1(Index) (X_D3DFVF_TEXTUREFORMAT1 << (Index * 2 + 16))
+#define X_D3DFVF_TEXCOORDSIZE2(Index) (X_D3DFVF_TEXTUREFORMAT2)
+#define X_D3DFVF_TEXCOORDSIZE3(Index) (X_D3DFVF_TEXTUREFORMAT3 << (Index * 2 + 16))
+#define X_D3DFVF_TEXCOORDSIZE4(Index) (X_D3DFVF_TEXTUREFORMAT4 << (Index * 2 + 16))
+
 
 typedef DWORD NV2AMETHOD;
 

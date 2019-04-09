@@ -8264,14 +8264,10 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_LoadVertexShaderProgram)
 
 	DWORD hCurrentShader = g_CurrentXboxVertexShaderHandle;
 
-    if (!VshHandleIsVertexShader(hCurrentShader)) {
-        LOG_TEST_CASE("D3DDevice_LoadVertexShaderProgram called with FVF Shader");
-    }
-
 	// D3DDevice_LoadVertexShaderProgram splits the given function buffer into batch-wise pushes to the NV2A
 
 	load_shader_program_key_t shaderCacheKey = ((load_shader_program_key_t)hCurrentShader << 32) | (DWORD)pFunction;
-
+    
 	// If the shader key was located in the cache, use the cached shader
 	// TODO: When do we clear the cache? In this approach, shaders are
 	// never freed...
@@ -8282,28 +8278,107 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_LoadVertexShaderProgram)
 		return;
 	}
 
-	CxbxVertexShader *pVertexShader = GetCxbxVertexShader(hCurrentShader);
-	if (pVertexShader != nullptr)
-    {
-		DWORD hNewShader = 0;
+    DWORD hNewShader = 0;
+    DWORD* pDeclaration = nullptr;
 
-		// Save the contents of the existing vertex shader program
-		DWORD* pDeclaration = (DWORD*) malloc( pVertexShader->OriginalDeclarationCount * sizeof(DWORD) );
-		memmove( pDeclaration, pVertexShader->pDeclaration, pVertexShader->OriginalDeclarationCount * sizeof(DWORD));
+    if (VshHandleIsVertexShader(hCurrentShader)) {
+        CxbxVertexShader *pVertexShader = GetCxbxVertexShader(hCurrentShader);
 
-		// Create a vertex shader with the new vertex program data
-		HRESULT hr = EMUPATCH(D3DDevice_CreateVertexShader)( pDeclaration, pFunction, &hNewShader, 0 );
-		free(pDeclaration);
-		if( FAILED( hr ) )
-			CxbxKrnlCleanup("Error creating new vertex shader!" );
+        // If we failed to fetch an active pixel shader, log and do nothing
+        if (pVertexShader == nullptr) {
+            LOG_TEST_CASE("D3DDevice_LoadVertexShaderProgram: Failed to locate original shader");
+            return;
+        }
 
-		EMUPATCH(D3DDevice_LoadVertexShader)(hNewShader, Address);
-		EMUPATCH(D3DDevice_SelectVertexShader)(hNewShader, Address);
+        // Simply retrieve the contents of the existing vertex shader program
+        pDeclaration = (DWORD*)malloc(pVertexShader->OriginalDeclarationCount * sizeof(DWORD));
+        memcpy(pDeclaration, pVertexShader->pDeclaration, pVertexShader->OriginalDeclarationCount * sizeof(DWORD));
+    } else {
+        // This is an unusual scenario in which an FVF shader is being replaced with an actual shader
+        // But without calling CreateVertexShader: This means we need to parse the current FVF and generate
+        // a declaration to use when converting/setting this new shader
 
-		g_LoadVertexShaderProgramCache[shaderCacheKey] = hNewShader;
+        // Allocate a large enough definition to contain all possible FVF types
+        // 20 is maximum possible size
+        pDeclaration = (DWORD*)malloc(20 * sizeof(DWORD));
+        memset(pDeclaration, 0, 20 * sizeof(DWORD));
+        int index = 0;
 
-		EmuLog(LOG_LEVEL::WARNING, "Vertex Shader Cache Size: %d", g_LoadVertexShaderProgramCache.size());
+        // Write the Stream Number (always 0 for FVF)
+        pDeclaration[index++] = X_D3DVSD_STREAM(0);
+
+        // Write Position
+        DWORD position = (g_CurrentXboxVertexShaderHandle & X_D3DFVF_POSITION_MASK);
+        if (position == D3DFVF_XYZRHW) {
+            pDeclaration[index++] = X_D3DVSD_REG(X_D3DVSDE_POSITION, X_D3DVSDT_FLOAT4);
+        } else {
+            pDeclaration[index++] = X_D3DVSD_REG(X_D3DVSDE_POSITION, X_D3DVSDT_FLOAT3);
+        }
+
+        // Write Blend Weights
+        if (position == D3DFVF_XYZB1) {
+            pDeclaration[index++] = X_D3DVSD_REG(X_D3DVSDE_BLENDWEIGHT, X_D3DVSDT_FLOAT1);
+        }
+        if (position == D3DFVF_XYZB2) {
+            pDeclaration[index++] = X_D3DVSD_REG(X_D3DVSDE_BLENDWEIGHT, X_D3DVSDT_FLOAT2);
+        }
+        if (position == D3DFVF_XYZB3) {
+            pDeclaration[index++] = X_D3DVSD_REG(X_D3DVSDE_BLENDWEIGHT, X_D3DVSDT_FLOAT3);
+        }
+        if (position == D3DFVF_XYZB4) {
+            pDeclaration[index++] = X_D3DVSD_REG(X_D3DVSDE_BLENDWEIGHT, X_D3DVSDT_FLOAT4);
+        }
+
+        // Write Normal, Diffuse, and Specular
+        if (g_CurrentXboxVertexShaderHandle & D3DFVF_NORMAL) {
+            pDeclaration[index++] = X_D3DVSD_REG(X_D3DVSDE_NORMAL, X_D3DVSDT_FLOAT3);
+        }
+        if (g_CurrentXboxVertexShaderHandle & D3DFVF_DIFFUSE) {
+            pDeclaration[index++] = X_D3DVSD_REG(X_D3DVSDE_DIFFUSE, X_D3DVSDT_D3DCOLOR);
+        }
+        if (g_CurrentXboxVertexShaderHandle & D3DFVF_SPECULAR) {
+            pDeclaration[index++] = X_D3DVSD_REG(X_D3DVSDE_SPECULAR, X_D3DVSDT_D3DCOLOR);
+        }
+
+        // Write Texture Coordinates
+        int textureCount = (g_CurrentXboxVertexShaderHandle & X_D3DFVF_TEXCOUNT_MASK) >> X_D3DFVF_TEXCOUNT_SHIFT;
+        for (int i = 0; i < textureCount; i++) {
+            int numberOfCoordinates = 0;
+
+            if ((g_CurrentXboxVertexShaderHandle & X_D3DFVF_TEXCOORDSIZE1(i)) == (DWORD)X_D3DFVF_TEXCOORDSIZE1(i)) {
+                numberOfCoordinates = X_D3DVSDT_FLOAT1;
+            }
+            if ((g_CurrentXboxVertexShaderHandle & X_D3DFVF_TEXCOORDSIZE2(i)) == (DWORD)X_D3DFVF_TEXCOORDSIZE2(i)) {
+                numberOfCoordinates = X_D3DVSDT_FLOAT2;
+            }
+            if ((g_CurrentXboxVertexShaderHandle & X_D3DFVF_TEXCOORDSIZE3(i)) == (DWORD)X_D3DFVF_TEXCOORDSIZE3(i)) {
+                numberOfCoordinates = X_D3DVSDT_FLOAT3;
+            }
+            if ((g_CurrentXboxVertexShaderHandle & X_D3DFVF_TEXCOORDSIZE4(i)) == (DWORD)X_D3DFVF_TEXCOORDSIZE4(i)) {
+                numberOfCoordinates = X_D3DVSDT_FLOAT4;
+            }
+
+            pDeclaration[index++] = X_D3DVSD_REG(X_D3DVSDE_TEXCOORD0 + i, numberOfCoordinates);
+        }
+
+        // Write Declaration End
+        pDeclaration[index++] = X_D3DVSD_END();
+
+        // Now we can fall through and create a new vertex shader
     }
+
+	// Create a vertex shader with the new vertex program data
+	HRESULT hr = EMUPATCH(D3DDevice_CreateVertexShader)( pDeclaration, pFunction, &hNewShader, 0 );
+	free(pDeclaration);
+	if( FAILED( hr ) )
+		CxbxKrnlCleanup("Error creating new vertex shader!" );
+
+	EMUPATCH(D3DDevice_LoadVertexShader)(hNewShader, Address);
+	EMUPATCH(D3DDevice_SelectVertexShader)(hNewShader, Address);
+
+	g_LoadVertexShaderProgramCache[shaderCacheKey] = hNewShader;
+
+	EmuLog(LOG_LEVEL::WARNING, "Vertex Shader Cache Size: %d", g_LoadVertexShaderProgramCache.size());
 }
 
 // ******************************************************************
