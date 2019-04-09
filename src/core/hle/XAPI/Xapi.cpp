@@ -1485,21 +1485,6 @@ LPVOID WINAPI XTL::EMUPATCH(ConvertThreadToFiber)
 }
 
 // ******************************************************************
-// * patch: QueryPerformanceCounter
-// ******************************************************************
-ULONGLONG CxbxGetPerformanceCounter(bool acpi); // implemented in EmuKrnlKe.cpp
-BOOL WINAPI XTL::EMUPATCH(QueryPerformanceCounter)
-(
-	LARGE_INTEGER * lpPerformanceCount
-)
-{
-	// NOTE: QueryPerformanceCounter runs from the tsc via RdTsc (733mhz)
-	// However, KeQueryPerformanceCounter runs at 3.375Mhz, so we can't use that here
-	lpPerformanceCount->QuadPart = CxbxGetPerformanceCounter(false);
-	return TRUE;
-}
-
-// ******************************************************************
 // * patch: QueueUserAPC
 // ******************************************************************
 DWORD WINAPI XTL::EMUPATCH(QueueUserAPC)

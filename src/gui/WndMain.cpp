@@ -1248,11 +1248,6 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 				RefreshMenus();
 				break;
 
-			case ID_HACKS_UNCAPFRAMERATE:
-				g_Settings->m_hacks.UncapFramerate = !g_Settings->m_hacks.UncapFramerate;
-				RefreshMenus();
-				break;
-
 			case ID_HACKS_RUNXBOXTHREADSONALLCORES:
 				g_Settings->m_hacks.UseAllCores = !g_Settings->m_hacks.UseAllCores;
 				RefreshMenus();
@@ -1711,9 +1706,6 @@ void WndMain::RefreshMenus()
 
 			chk_flag = (g_Settings->m_hacks.DisablePixelShaders) ? MF_CHECKED : MF_UNCHECKED;
 			CheckMenuItem(settings_menu, ID_HACKS_DISABLEPIXELSHADERS, chk_flag);
-
-			chk_flag = (g_Settings->m_hacks.UncapFramerate) ? MF_CHECKED : MF_UNCHECKED;
-			CheckMenuItem(settings_menu, ID_HACKS_UNCAPFRAMERATE, chk_flag);
 
 			chk_flag = (g_Settings->m_hacks.UseAllCores) ? MF_CHECKED : MF_UNCHECKED;
 			CheckMenuItem(settings_menu, ID_HACKS_RUNXBOXTHREADSONALLCORES, chk_flag);

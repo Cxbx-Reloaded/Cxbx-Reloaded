@@ -143,8 +143,6 @@ class EmuShared : public Mutex
 
 		void GetDisablePixelShaders(int* value) { Lock(); *value = m_hacks.DisablePixelShaders; Unlock(); }
 		void SetDisablePixelShaders(const int* value) { Lock(); m_hacks.DisablePixelShaders = *value; Unlock(); }
-		void GetUncapFramerate(int* value) { Lock(); *value = m_hacks.UncapFramerate; Unlock(); }
-		void SetUncapFramerate(const int* value) { Lock(); m_hacks.UncapFramerate = *value; Unlock(); }
 		void GetUseAllCores(int* value) { Lock(); *value = m_hacks.UseAllCores; Unlock(); }
 		void SetUseAllCores(const int* value) { Lock(); m_hacks.UseAllCores = *value; Unlock(); }
 		void GetSkipRdtscPatching(int* value) { Lock(); *value = m_hacks.SkipRdtscPatching; Unlock(); }

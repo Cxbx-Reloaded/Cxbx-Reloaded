@@ -57,6 +57,7 @@ namespace xboxkrnl
 #include <process.h>
 #include <clocale>
 #include <unordered_map>
+#include <thread>
 
 // Allow use of time duration literals (making 16ms, etc possible)
 using namespace std::literals::chrono_literals;
@@ -168,7 +169,8 @@ static DWORD                        g_dwVertexShaderUsage = 0;
 static DWORD                        g_VertexShaderSlots[136];
 
 DWORD g_XboxBaseVertexIndex = 0;
-
+DWORD g_DefaultPresentationInterval = D3DPRESENT_INTERVAL_IMMEDIATE;
+DWORD g_PresentationIntervalOverride = 0;
 
 // Active D3D Vertex Streams (and strides)
 XTL::X_D3DVertexBuffer*g_D3DStreams[16];
@@ -1916,21 +1918,14 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
                 {
                     g_EmuCDPD.HostPresentationParameters.Windowed = !g_XBVideo.bFullScreen;
 
-                    if(g_XBVideo.bVSync)
-                        g_EmuCDPD.HostPresentationParameters.SwapEffect = XTL::D3DSWAPEFFECT_COPY; // Was D3DSWAPEFFECT_COPY_VSYNC;
+                    // TODO: Investigate the best option for this
+                    g_EmuCDPD.HostPresentationParameters.SwapEffect = XTL::D3DSWAPEFFECT_COPY;
 
                     g_EmuCDPD.HostPresentationParameters.BackBufferFormat       = XTL::EmuXB2PC_D3DFormat(g_EmuCDPD.XboxPresentationParameters.BackBufferFormat);
 					g_EmuCDPD.HostPresentationParameters.AutoDepthStencilFormat = XTL::EmuXB2PC_D3DFormat(g_EmuCDPD.XboxPresentationParameters.AutoDepthStencilFormat);
 
-                    if(!g_XBVideo.bVSync && (g_D3DCaps.PresentationIntervals & D3DPRESENT_INTERVAL_IMMEDIATE) && g_XBVideo.bFullScreen)
-                        g_EmuCDPD.HostPresentationParameters.FullScreen_PresentationInterval = D3DPRESENT_INTERVAL_IMMEDIATE;
-                    else
-                    {
-                        if(g_D3DCaps.PresentationIntervals & D3DPRESENT_INTERVAL_ONE && g_XBVideo.bFullScreen)
-                            g_EmuCDPD.HostPresentationParameters.FullScreen_PresentationInterval = D3DPRESENT_INTERVAL_ONE;
-                        else
-                            g_EmuCDPD.HostPresentationParameters.FullScreen_PresentationInterval = D3DPRESENT_INTERVAL_DEFAULT;
-                    }
+					g_EmuCDPD.HostPresentationParameters.PresentationInterval = g_XBVideo.bVSync ? D3DPRESENT_INTERVAL_ONE : D3DPRESENT_INTERVAL_IMMEDIATE;
+					g_DefaultPresentationInterval = g_EmuCDPD.XboxPresentationParameters.PresentationInterval;
 
 					// HACK: Disable Tripple Buffering for now...
 					// TODO: Enumerate maximum BackBufferCount if possible.
@@ -4555,19 +4550,50 @@ DWORD WINAPI XTL::EMUPATCH(D3DDevice_Swap)
 
 	hRet = g_pD3DDevice->BeginScene();
 
-	if (!g_UncapFramerate) {
-		// If the last frame completed faster than the Xbox VBlank period, wait for it
-		// TODO: Read the frame rate target from the Xbox display mode
-		// See comments in GetNextVblankTime();
-		auto targetDuration = 16.6666666667ms;
-		while (std::chrono::high_resolution_clock::now() - frameStartTime < targetDuration) {
-			// We use an empty while loop because actually sleeping is too unstable
-			// Sleeping causes the frame duration to jitter...
-			;
-		}
+    // Check if we need to enable our frame-limiter
+    DWORD presentationInverval = g_PresentationIntervalOverride > 0 ? g_PresentationIntervalOverride : g_DefaultPresentationInterval;
+    if (presentationInverval != D3DPRESENT_INTERVAL_IMMEDIATE) {
+        // If the last frame completed faster than the Xbox target swap rate, wait for it
 
-		frameStartTime = std::chrono::high_resolution_clock::now();
-	}
+        auto targetRefreshRate = 60.0f; // TODO: Read from Xbox Display Mode
+
+        // Determine how many 'frames' worth of time we need to wait for
+        // This allows games that require a locked framerate (eg JSRF) to function correctly
+        // While allowing titles with an unlocked frame-rate to not be limited
+        auto multiplier = 1.0f;
+        switch (presentationInverval) {
+            case D3DPRESENT_INTERVAL_ONE:
+            case 0x80000001: // D3DPRESENT_INTERVAL_ONE_OR_IMMEDIATE:
+                multiplier = 1.0f;
+                break;
+            case D3DPRESENT_INTERVAL_TWO:
+            case 0x80000002: // D3DPRESENT_INTERVAL_TWO_OR_IMMEDIATE:
+                multiplier = 2.0f;
+                break;
+            case D3DPRESENT_INTERVAL_THREE:
+                multiplier = 3.0f;
+                break;
+            case D3DPRESENT_INTERVAL_FOUR:
+                multiplier = 4.0f;
+                break;
+        }
+
+        auto targetDuration = std::chrono::duration<double, std::milli>(((1000.0f / targetRefreshRate) * multiplier));
+        auto targetTimestamp = frameStartTime + targetDuration;
+
+        // If we need to wait for a larger amount of time (>= 1 frame at 60FPS), we can just sleep
+        if (std::chrono::duration_cast<std::chrono::milliseconds>(targetTimestamp - std::chrono::high_resolution_clock::now()).count() > 16) {
+            std::this_thread::sleep_until(targetTimestamp);
+        } else {
+            // Otherwise, we fall-through and just keep polling
+            // This prevents large waits from hogging CPU power, but allows small waits/ to remain precice.
+            while (std::chrono::high_resolution_clock::now() < targetTimestamp) {
+                ;
+            }
+        }
+    }
+
+    frameStartTime = std::chrono::high_resolution_clock::now();
 
 	UpdateFPSCounter();
 

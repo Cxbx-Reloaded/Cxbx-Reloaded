@@ -118,7 +118,6 @@ static struct {
 static const char* section_hack = "hack";
 static struct {
 	const char* DisablePixelShaders = "DisablePixelShaders";
-	const char* UncapFramerate = "UncapFramerate";
 	const char* UseAllCores = "UseAllCores";
 	const char* SkipRdtscPatching = "SkipRdtscPatching";
 	const char* ScaleViewPort = "ScaleViewPort";
@@ -376,7 +375,6 @@ bool Settings::LoadConfig()
 	// ==== Hack Begin ==========
 
 	m_hacks.DisablePixelShaders = m_si.GetBoolValue(section_hack, sect_hack_keys.DisablePixelShaders, /*Default=*/false);
-	m_hacks.UncapFramerate = m_si.GetBoolValue(section_hack, sect_hack_keys.UncapFramerate, /*Default=*/false);
 	m_hacks.UseAllCores = m_si.GetBoolValue(section_hack, sect_hack_keys.UseAllCores, /*Default=*/false);
 	m_hacks.SkipRdtscPatching = m_si.GetBoolValue(section_hack, sect_hack_keys.SkipRdtscPatching, /*Default=*/false);
 	m_hacks.ScaleViewport = m_si.GetBoolValue(section_hack, sect_hack_keys.ScaleViewPort, /*Default=*/false);
@@ -636,7 +634,6 @@ bool Settings::Save(std::string file_path)
 	// ==== Hack Begin ==========
 
 	m_si.SetBoolValue(section_hack, sect_hack_keys.DisablePixelShaders, m_hacks.DisablePixelShaders, nullptr, true);
-	m_si.SetBoolValue(section_hack, sect_hack_keys.UncapFramerate, m_hacks.UncapFramerate, nullptr, true);
 	m_si.SetBoolValue(section_hack, sect_hack_keys.UseAllCores, m_hacks.UseAllCores, nullptr, true);
 	m_si.SetBoolValue(section_hack, sect_hack_keys.SkipRdtscPatching, m_hacks.SkipRdtscPatching, nullptr, true);
 	m_si.SetBoolValue(section_hack, sect_hack_keys.ScaleViewPort, m_hacks.ScaleViewport, nullptr, true);
