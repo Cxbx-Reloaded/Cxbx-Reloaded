@@ -5414,6 +5414,11 @@ ULONG WINAPI XTL::EMUPATCH(D3DResource_Release)
 			g_XboxBackBufferSurface = nullptr;
 		}
 
+		for (int i = 0; i < TEXTURE_STAGES; i++) {
+			if (pThis == EmuD3DActiveTexture[i])
+				EmuD3DActiveTexture[i] = nullptr;
+		}
+
 		// Also release the host copy (if it exists!)
 		FreeHostResource(key); 
 	}
