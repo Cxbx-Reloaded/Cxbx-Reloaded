@@ -2509,8 +2509,9 @@ extern HRESULT XTL::EmuRecompileVshFunction
 
 		// Do not attempt to compile empty shaders
 		if (pShader->IntermediateCount == 0) {
-			EmuLog(LOG_LEVEL::WARNING, "Skipped empty Vertex Shader");
-			return STATUS_INVALID_PARAMETER;
+            // This is a declaration only shader, so there is no function to recompile
+            *pbUseDeclarationOnly = 1;
+			return D3D_OK;
 		}
 
         char* pShaderDisassembly = (char*)malloc(pShader->IntermediateCount * 100); // Should be plenty
