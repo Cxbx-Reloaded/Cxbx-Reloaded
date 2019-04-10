@@ -301,18 +301,6 @@ void EmuD3D_Init_DeferredStates()
     if (g_SymbolAddresses.find("D3DDeferredTextureState") != g_SymbolAddresses.end()) {
         XTL::EmuD3DDeferredTextureState = (DWORD*)g_SymbolAddresses["D3DDeferredTextureState"];
     }
-
-    if (XTL::EmuD3DDeferredRenderState != nullptr) {
-        for (int v = 0; v < 44; v++) {
-            XTL::EmuD3DDeferredRenderState[v] = XTL::X_D3DRS_UNK;
-        }
-    }
-    if (XTL::EmuD3DDeferredTextureState != nullptr) {
-        for (int s = 0; s < 4; s++) {
-            for (int v = 0; v < 32; v++)
-                XTL::EmuD3DDeferredTextureState[v + s * 32] = X_D3DTSS_UNK;
-        }
-    }
 }
 
 // Update shared structure with GUI process
