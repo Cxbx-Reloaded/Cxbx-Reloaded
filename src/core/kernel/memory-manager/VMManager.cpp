@@ -1746,6 +1746,7 @@ xboxkrnl::NTSTATUS VMManager::XbAllocateVirtualMemory(VAddr* addr, ULONG ZeroBit
 
 	// Attempt to commit the requested range with VirtualAlloc *before* setting up and reserving the PT
 	// This allows an early-out in a failure scenario (Test Case: Star Wars Battlefront DVD Demo: LA-018 v1.02)
+    // We don't commit the requested range if it's within our placeholder, since that was already allocated earlier
 	if (AlignedCapturedBase >= XBE_MAX_VA)
 	{
 		if (!VirtualAlloc((void*)AlignedCapturedBase, AlignedCapturedSize, MEM_COMMIT,
