@@ -1231,7 +1231,7 @@ void CxbxKrnlMain(int argc, char* argv[])
 			if ((sectionHeaders[i].Flags & XBEIMAGE_SECTION_PRELOAD) != 0) {
 				NTSTATUS result = xboxkrnl::XeLoadSection(&sectionHeaders[i]);
 				if (FAILED(result)) {
-					CxbxKrnlCleanupEx(LOG_PREFIX_INIT, "Failed to preload XBE section: %s", CxbxKrnl_Xbe->m_szSectionName[i]);
+					EmuLogEx(LOG_PREFIX_INIT, LOG_LEVEL::WARNING, "Failed to preload XBE section: %s", CxbxKrnl_Xbe->m_szSectionName[i]);
 				}
 			}
 		}

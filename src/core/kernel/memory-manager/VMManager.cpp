@@ -1744,6 +1744,19 @@ xboxkrnl::NTSTATUS VMManager::XbAllocateVirtualMemory(VAddr* addr, ULONG ZeroBit
 		goto Exit;
 	}
 
+	// Attempt to commit the requested range with VirtualAlloc *before* setting up and reserving the PT
+	// This allows an early-out in a failure scenario (Test Case: Star Wars Battlefront DVD Demo: LA-018 v1.02)
+	if (AlignedCapturedBase >= XBE_MAX_VA)
+	{
+		if (!VirtualAlloc((void*)AlignedCapturedBase, AlignedCapturedSize, MEM_COMMIT,
+			(ConvertXboxToWinProtection(PatchXboxPermissions(Protect))) & ~(PAGE_WRITECOMBINE | PAGE_NOCACHE)))
+		{
+			DBG_PRINTF("%s: VirtualAlloc failed to commit the memory! The error was %d\n", __func__, GetLastError());
+			status = STATUS_NO_MEMORY;
+			goto Exit;
+		}
+	}
+
 	// Check if we have to construct the PT's for this allocation
 
 	if (!AllocatePT(AlignedCapturedSize, AlignedCapturedBase))
@@ -1767,18 +1780,6 @@ xboxkrnl::NTSTATUS VMManager::XbAllocateVirtualMemory(VAddr* addr, ULONG ZeroBit
 		}
 
 		PointerPte++;
-	}
-
-	// Actually commit the requested range but don't if it's inside the placeholder or we are committing an xbe section so that
-	// XeLoadSection works as expected
-
-	if (AlignedCapturedBase >= XBE_MAX_VA)
-	{
-		if (!VirtualAlloc((void*)AlignedCapturedBase, AlignedCapturedSize, MEM_COMMIT,
-			(ConvertXboxToWinProtection(PatchXboxPermissions(Protect))) & ~(PAGE_WRITECOMBINE | PAGE_NOCACHE)))
-		{
-			DBG_PRINTF("%s: VirtualAlloc failed to commit the memory! The error was %d\n", __func__, GetLastError());
-		}
 	}
 
 	// Because VirtualAlloc always zeros the memory for us, XBOX_MEM_NOZERO is still unsupported
