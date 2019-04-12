@@ -170,7 +170,7 @@ public:
 		bool codec_pcm ;
 		bool codec_xadpcm;
 		bool codec_unknown;
-		bool Reserved4 = 0;
+		bool mute_on_unfocus;
 		int  Reserved99[14] = { 0 };
 	} m_audio;
 

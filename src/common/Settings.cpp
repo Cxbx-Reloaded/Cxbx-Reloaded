@@ -93,6 +93,7 @@ static struct {
 	const char* codec_pcm = "PCM";
 	const char* codec_xadpcm = "XADPCM";
 	const char* codec_unknown = "UnknownCodec";
+	const char* mute_on_unfocus = "MuteOnUnfocus";
 } sect_audio_keys;
 
 static const char* section_network = "network";
@@ -426,6 +427,8 @@ bool Settings::LoadConfig()
 	m_audio.codec_xadpcm = m_si.GetBoolValue(section_audio, sect_audio_keys.codec_xadpcm, /*Default=*/true, nullptr);
 	m_audio.codec_unknown = m_si.GetBoolValue(section_audio, sect_audio_keys.codec_unknown, /*Default=*/true, nullptr);
 
+	m_audio.mute_on_unfocus = m_si.GetBoolValue(section_audio, sect_audio_keys.mute_on_unfocus, /*Default=*/true, nullptr);
+
 	// ==== Audio End ===========
 
 	// ==== Network Begin =======
@@ -574,6 +577,7 @@ bool Settings::Save(std::string file_path)
 	m_si.SetBoolValue(section_audio, sect_audio_keys.codec_pcm, m_audio.codec_pcm, nullptr, true);
 	m_si.SetBoolValue(section_audio, sect_audio_keys.codec_xadpcm, m_audio.codec_xadpcm, nullptr, true);
 	m_si.SetBoolValue(section_audio, sect_audio_keys.codec_unknown, m_audio.codec_unknown, nullptr, true);
+	m_si.SetBoolValue(section_audio, sect_audio_keys.mute_on_unfocus, m_audio.mute_on_unfocus, nullptr, true);
 
 	// ==== Audio End ===========
 
