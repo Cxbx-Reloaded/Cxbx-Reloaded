@@ -20,6 +20,7 @@
 #define IDS_UEM                         123
 #define IDD_CONTROLLER_HOST_MAPPING     131
 #define IDD_VIRTUAL_SBC_FEEDBACK        133
+#define IDD_NETWORK_CFG                 134
 #define IDC_LOG_CANCEL                  892
 #define IDC_LOG_ACCEPT                  893
 #define IDC_LOG_ENABLE_GENERAL          894
@@ -296,6 +297,7 @@
 #define IDC_EVENT_LV                    1273
 #define IDC_CXBXR_EVENTS                1274
 #define IDC_KERNEL_EVENTS               1275
+#define IDC_NETWORK_ADAPTER             1276
 #define ID_FILE_EXIT                    40005
 #define ID_HELP_ABOUT                   40008
 #define ID_EMULATION_START              40009
@@ -350,14 +352,12 @@
 #define ID_HACKS_SPEEDHACKS             40103
 #define ID_SETTINGS_CONFIG_DLOCCUSTOM   40104
 #define ID_SETTINGS_CONFIG_DLOCAPPDATA  40105
-#define ID_SETTINGS_CONFIG_DLOCEXECDIR   40106
+#define ID_SETTINGS_CONFIG_DLOCEXECDIR  40106
 #define ID_SETTINGS_ALLOWADMINPRIVILEGE 40107
 #define ID_SETTINGS_CONFIG_LOGGING      40108
 #define ID_SYNC_CONFIG_LOGGING          40109
 #define ID_LOG                          40110
 #define ID_SETTINGS_CONFIG_NETWORK      40111
-#define IDC_NETWORK_ADAPTER             1276
-#define IDD_NETWORK_CFG                 40112
 #define IDC_STATIC                      -1
 
 // Next default values for new objects
@@ -366,7 +366,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        135
 #define _APS_NEXT_COMMAND_VALUE         40113
-#define _APS_NEXT_CONTROL_VALUE         1257
-#define _APS_NEXT_SYMED_VALUE           104
+#define _APS_NEXT_CONTROL_VALUE         1277
+#define _APS_NEXT_SYMED_VALUE           109
 #endif
 #endif
