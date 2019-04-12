@@ -495,7 +495,7 @@ IDI_CXBX                ICON                    "Cxbx-R.ico"
 
 1 TEXTINCLUDE 
 BEGIN
-    "..\\src\\Cxbx\\ResCxbx.h\0"
+    "..\\src\\gui\\ResCxbx.h\0"
 END
 
 2 TEXTINCLUDE 
