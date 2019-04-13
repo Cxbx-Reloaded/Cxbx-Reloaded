@@ -920,7 +920,8 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateBuffer)
         }
 
         DSBufferDesc.dwSize = sizeof(DSBUFFERDESC);
-        DSBufferDesc.dwFlags = (pdsbd->dwFlags & dwAcceptableMask) | DSBCAPS_CTRLVOLUME | DSBCAPS_GETCURRENTPOSITION2 | DSBCAPS_CTRLFREQUENCY;
+        DSBufferDesc.dwFlags = (pdsbd->dwFlags & dwAcceptableMask) | DSBCAPS_CTRLVOLUME | DSBCAPS_GETCURRENTPOSITION2 | DSBCAPS_CTRLFREQUENCY |
+            (g_XBAudio.mute_on_unfocus ? 0 : DSBCAPS_GLOBALFOCUS);
 
         // TODO: Garbage Collection
         *ppBuffer = new X_CDirectSoundBuffer();
@@ -1714,7 +1715,8 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateStream)
         }
         DSBufferDesc.dwSize = sizeof(DSBUFFERDESC);
         //DSBufferDesc->dwFlags = (pdssd->dwFlags & dwAcceptableMask) | DSBCAPS_CTRLVOLUME | DSBCAPS_GETCURRENTPOSITION2;
-        DSBufferDesc.dwFlags = DSBCAPS_CTRLVOLUME | DSBCAPS_CTRLFREQUENCY | DSBCAPS_GETCURRENTPOSITION2; //aka DSBCAPS_DEFAULT + control position
+        DSBufferDesc.dwFlags = DSBCAPS_CTRLVOLUME | DSBCAPS_CTRLFREQUENCY | DSBCAPS_GETCURRENTPOSITION2 | //aka DSBCAPS_DEFAULT + control position
+            (g_XBAudio.mute_on_unfocus ? 0 : DSBCAPS_GLOBALFOCUS);
 
         if ((pdssd->dwFlags & DSBCAPS_CTRL3D) > 0) {
             DSBufferDesc.dwFlags |= DSBCAPS_CTRL3D;
