@@ -369,9 +369,6 @@ std::map<const std::string, const xbox_patch_t> g_PatchTable = {
 	PATCH_ENTRY("XInputSetState", XTL::EMUPATCH(XInputSetState), PATCH_HLE_OHCI),
 
 	// XAPI
-	PATCH_ENTRY("ConvertThreadToFiber", XTL::EMUPATCH(ConvertThreadToFiber), PATCH_ALWAYS),
-	PATCH_ENTRY("CreateFiber", XTL::EMUPATCH(CreateFiber), PATCH_ALWAYS),
-	PATCH_ENTRY("DeleteFiber", XTL::EMUPATCH(DeleteFiber), PATCH_ALWAYS),
 	PATCH_ENTRY("GetExitCodeThread", XTL::EMUPATCH(GetExitCodeThread), PATCH_ALWAYS),
 	PATCH_ENTRY("GetThreadPriority", XTL::EMUPATCH(GetThreadPriority), PATCH_ALWAYS),
 	PATCH_ENTRY("OutputDebugStringA", XTL::EMUPATCH(OutputDebugStringA), PATCH_ALWAYS),
@@ -379,7 +376,6 @@ std::map<const std::string, const xbox_patch_t> g_PatchTable = {
 	PATCH_ENTRY("SetThreadPriority", XTL::EMUPATCH(SetThreadPriority), PATCH_ALWAYS),
 	PATCH_ENTRY("SetThreadPriorityBoost", XTL::EMUPATCH(SetThreadPriorityBoost), PATCH_ALWAYS),
 	PATCH_ENTRY("SignalObjectAndWait", XTL::EMUPATCH(SignalObjectAndWait), PATCH_ALWAYS),
-	PATCH_ENTRY("SwitchToFiber", XTL::EMUPATCH(SwitchToFiber), PATCH_ALWAYS),
 	PATCH_ENTRY("XMountMUA", XTL::EMUPATCH(XMountMUA), PATCH_ALWAYS),
 	PATCH_ENTRY("XMountMURootA", XTL::EMUPATCH(XMountMURootA), PATCH_ALWAYS),
 	PATCH_ENTRY("XSetProcessQuantumLength", XTL::EMUPATCH(XSetProcessQuantumLength), PATCH_ALWAYS),

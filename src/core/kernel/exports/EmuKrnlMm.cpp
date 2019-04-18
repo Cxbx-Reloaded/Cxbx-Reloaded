@@ -164,8 +164,13 @@ XBSYSAPI EXPORTNUM(169) xboxkrnl::PVOID NTAPI xboxkrnl::MmCreateKernelStack
 		LOG_FUNC_ARG(DebuggerThread)
 	LOG_FUNC_END;
 
+    // We add PAGE_SIZE to the allocation because this serves as a guard page
 	PVOID addr = (PVOID)g_VMManager.AllocateSystemMemory(DebuggerThread ? DebuggerType : StackType,
 		XBOX_PAGE_READWRITE, NumberOfBytes, true);
+
+	// Since this is creating a stack (which counts DOWN) we must return the *end* of the address range, not the start
+	// Test cases: DOA3, Futurama
+	addr = (PVOID)((uint32_t)addr + NumberOfBytes + PAGE_SIZE);
 
 	RETURN(addr);
 }
@@ -184,8 +189,10 @@ XBSYSAPI EXPORTNUM(170) xboxkrnl::VOID NTAPI xboxkrnl::MmDeleteKernelStack
 		LOG_FUNC_ARG(StackLimit)
 	LOG_FUNC_END;
 
+    ULONG actualStackSize = ((VAddr)StackBase - (VAddr)StackLimit) + PAGE_SIZE;
+
 	g_VMManager.DeallocateSystemMemory(IS_SYSTEM_ADDRESS(StackBase) ? StackType : DebuggerType,
-		(VAddr)StackBase, (VAddr)StackBase - (VAddr)StackLimit + PAGE_SIZE);
+		(VAddr)StackBase - (VAddr)actualStackSize, actualStackSize);
 }
 
 // ******************************************************************
