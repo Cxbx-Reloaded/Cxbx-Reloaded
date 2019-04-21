@@ -58,12 +58,6 @@ bool g_SkipRdtscPatching = false;
 bool g_ScaleViewport = false;
 bool g_DirectHostBackBufferAccess = false;
 
-const char log_debug[] = "DEBUG: ";
-const char log_info[]  = "INFO : ";
-const char log_warn[]  = "WARN : ";
-const char log_fatal[] = "FATAL: ";
-const char log_unkwn[] = "???? : ";
-
 // Delta added to host SystemTime, used in KiClockIsr and KeSetSystemTime
 // This shouldn't need to be atomic, but because raising the IRQL to high lv in KeSetSystemTime doesn't really stop KiClockIsr from running,
 // we need it for now to prevent reading a corrupted value while KeSetSystemTime is in the middle of updating it
@@ -97,56 +91,6 @@ std::string FormatTitleId(uint32_t title_id)
 	ss << std::setfill('0') << std::setw(3) << std::dec << (title_id & 0x0000FFFF);
 
 	return ss.str();
-}
-
-// print out a warning message to the kernel debug log file
-void NTAPI EmuLogEx(CXBXR_MODULE cxbxr_module, LOG_LEVEL level, const char *szWarningMessage, ...)
-{
-	if (szWarningMessage == NULL) {
-		return;
-	}
-
-	LOG_CHECK_ENABLED_EX(cxbxr_module, level) {
-		if (g_bPrintfOn) {
-
-			va_list argp;
-			const char* level_str;
-
-			LOG_THREAD_INIT;
-
-			switch (level) {
-				default:
-					level_str = log_unkwn;
-					break;
-				case LOG_LEVEL::DEBUG:
-					level_str = log_debug;
-					break;
-				case LOG_LEVEL::INFO:
-					level_str = log_info;
-					break;
-				case LOG_LEVEL::WARNING:
-					level_str = log_warn;
-					break;
-				case LOG_LEVEL::FATAL:
-					level_str = log_fatal;
-					break;
-			}
-
-			std::cout << _logThreadPrefix << level_str
-				<< g_EnumModules2String[to_underlying(cxbxr_module)];
-
-			va_start(argp, szWarningMessage);
-
-			vfprintf(stdout, szWarningMessage, argp);
-
-			va_end(argp);
-
-			fprintf(stdout, "\n");
-
-			fflush(stdout);
-
-		}
-	}
 }
 
 std::string EIPToString(xbaddr EIP)

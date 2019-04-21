@@ -110,6 +110,11 @@ extern std::atomic_bool g_EnabledModules[to_underlying(CXBXR_MODULE::MAX)];
 extern const char* g_EnumModules2String[to_underlying(CXBXR_MODULE::MAX)];
 extern std::atomic_int g_CurrentLogLevel;
 
+// print out a log message to the kernel debug log file if level is high enough
+void NTAPI EmuLogEx(CXBXR_MODULE cxbxr_module, LOG_LEVEL level, const char *szWarningMessage, ...);
+
+#define EmuLog(level, fmt, ...) EmuLogEx(LOG_PREFIX, level, fmt, ##__VA_ARGS__)
+
 extern inline void log_get_settings();
 
 extern inline void log_sync_config();
