@@ -32,11 +32,6 @@
 #include <windows.h>
 #include <multimon.h>
 
-// print out a log message to the kernel debug log file if level is high enough
-void NTAPI EmuLogEx(CXBXR_MODULE cxbxr_module, LOG_LEVEL level, const char *szWarningMessage, ...);
-
-#define EmuLog(level, fmt, ...) EmuLogEx(LOG_PREFIX, level, fmt, ##__VA_ARGS__)
-
 std::string FormatTitleId(uint32_t title_id);
 
 // exception handler

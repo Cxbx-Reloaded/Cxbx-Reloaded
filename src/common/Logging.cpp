@@ -97,6 +97,62 @@ const char* g_EnumModules2String[to_underlying(CXBXR_MODULE::MAX)] = {
 };
 std::atomic_int g_CurrentLogLevel = to_underlying(LOG_LEVEL::INFO);
 
+const char log_debug[] = "DEBUG: ";
+const char log_info[]  = "INFO : ";
+const char log_warn[]  = "WARN : ";
+const char log_fatal[] = "FATAL: ";
+const char log_unkwn[] = "???? : ";
+
+// print out a warning message to the kernel debug log file
+void NTAPI EmuLogEx(CXBXR_MODULE cxbxr_module, LOG_LEVEL level, const char *szWarningMessage, ...)
+{
+	if (szWarningMessage == NULL) {
+		return;
+	}
+
+	LOG_CHECK_ENABLED_EX(cxbxr_module, level) {
+		if (g_bPrintfOn) {
+
+			va_list argp;
+			const char* level_str;
+
+			LOG_THREAD_INIT;
+
+			switch (level) {
+				default:
+					level_str = log_unkwn;
+					break;
+				case LOG_LEVEL::DEBUG:
+					level_str = log_debug;
+					break;
+				case LOG_LEVEL::INFO:
+					level_str = log_info;
+					break;
+				case LOG_LEVEL::WARNING:
+					level_str = log_warn;
+					break;
+				case LOG_LEVEL::FATAL:
+					level_str = log_fatal;
+					break;
+			}
+
+			std::cout << _logThreadPrefix << level_str
+				<< g_EnumModules2String[to_underlying(cxbxr_module)];
+
+			va_start(argp, szWarningMessage);
+
+			vfprintf(stdout, szWarningMessage, argp);
+
+			va_end(argp);
+
+			fprintf(stdout, "\n");
+
+			fflush(stdout);
+
+		}
+	}
+}
+
 // Set up the logging variables for the GUI process
 inline void log_get_settings()
 {
