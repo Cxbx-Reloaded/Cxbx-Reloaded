@@ -2961,12 +2961,14 @@ bool PSH_XBOX_SHADER::InsertTextureModeInstruction(XTL::X_D3DPIXELSHADERDEF *pPS
             Ins.Output[0].SetRegister(PARAM_R, 1, MASK_R);
             Ins.Parameters[0].SetScaleBemLumRegister(XTL::D3DTSS_BUMPENVMAT00, Stage, Recompiled);
             Ins.Parameters[1].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + inputStage, MASK_R);
+            Ins.Parameters[1].Modifiers = (1 << ARGMOD_BIAS);
             Ins.Parameters[2].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + Stage, MASK_R);
             InsertIns.emplace_back(Ins);
             Ins.Initialize(PO_MAD);
             Ins.Output[0].SetRegister(PARAM_R, 1, MASK_R);
             Ins.Parameters[0].SetScaleBemLumRegister(XTL::D3DTSS_BUMPENVMAT10, Stage, Recompiled);
             Ins.Parameters[1].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + inputStage, MASK_G);
+            Ins.Parameters[1].Modifiers = (1 << ARGMOD_BIAS);
             Ins.Parameters[2].SetRegister(PARAM_R, 1, MASK_R);
             InsertIns.emplace_back(Ins);
             //
@@ -2974,12 +2976,14 @@ bool PSH_XBOX_SHADER::InsertTextureModeInstruction(XTL::X_D3DPIXELSHADERDEF *pPS
             Ins.Output[0].SetRegister(PARAM_R, 1, MASK_G);
             Ins.Parameters[0].SetScaleBemLumRegister(XTL::D3DTSS_BUMPENVMAT01, Stage, Recompiled);
             Ins.Parameters[1].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + inputStage, MASK_R);
+            Ins.Parameters[1].Modifiers = (1 << ARGMOD_BIAS);
             Ins.Parameters[2].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + Stage, MASK_G);
             InsertIns.emplace_back(Ins);
             Ins.Initialize(PO_MAD);
             Ins.Output[0].SetRegister(PARAM_R, 1, MASK_G);
             Ins.Parameters[0].SetScaleBemLumRegister(XTL::D3DTSS_BUMPENVMAT11, Stage, Recompiled);
             Ins.Parameters[1].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + inputStage, MASK_G);
+            Ins.Parameters[1].Modifiers = (1 << ARGMOD_BIAS);
             Ins.Parameters[2].SetRegister(PARAM_R, 1, MASK_G);
             InsertIns.emplace_back(Ins);
 
