@@ -2957,18 +2957,38 @@ bool PSH_XBOX_SHADER::InsertTextureModeInstruction(XTL::X_D3DPIXELSHADERDEF *pPS
 
         if (m_PSVersion >= D3DPS_VERSION(1, 4))
         {
+
+            // If the bump-map input texture is not a standard Xbox bump-map texture format, apply a bias
+            // Fixes an issue where JSRF that uses unsigned texture as an input to texbem
+            // NOTE: This assumes that this shader will only ever be used for the input bumpmap texture
+            // If this causes regressions in other titles, we'll need to be smarter about this
+            // and include the texture formats in the shader hash, somehow.
+            extern XTL::X_D3DBaseTexture* XTL::EmuD3DActiveTexture[TEXTURE_STAGES];
+            extern XTL::X_D3DFORMAT GetXboxPixelContainerFormat(const XTL::X_D3DPixelContainer *pXboxPixelContainer);
+            auto format = GetXboxPixelContainerFormat(XTL::EmuD3DActiveTexture[0]);
+            bool bias = false;
+            if (format != XTL::X_D3DFMT_V8U8 && format != XTL::X_D3DFMT_V16U16) {
+                bias = true;
+            }
+
             Ins.Initialize(PO_MAD);
             Ins.Output[0].SetRegister(PARAM_R, 1, MASK_R);
             Ins.Parameters[0].SetScaleBemLumRegister(XTL::D3DTSS_BUMPENVMAT00, Stage, Recompiled);
             Ins.Parameters[1].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + inputStage, MASK_R);
-            Ins.Parameters[1].Modifiers = (1 << ARGMOD_BIAS);
+
+            if (bias) {
+                Ins.Parameters[1].Modifiers = (1 << ARGMOD_BIAS);
+            }
+
             Ins.Parameters[2].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + Stage, MASK_R);
             InsertIns.emplace_back(Ins);
             Ins.Initialize(PO_MAD);
             Ins.Output[0].SetRegister(PARAM_R, 1, MASK_R);
             Ins.Parameters[0].SetScaleBemLumRegister(XTL::D3DTSS_BUMPENVMAT10, Stage, Recompiled);
             Ins.Parameters[1].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + inputStage, MASK_G);
-            Ins.Parameters[1].Modifiers = (1 << ARGMOD_BIAS);
+            if (bias) {
+                Ins.Parameters[1].Modifiers = (1 << ARGMOD_BIAS);
+            }
             Ins.Parameters[2].SetRegister(PARAM_R, 1, MASK_R);
             InsertIns.emplace_back(Ins);
             //
@@ -2976,14 +2996,18 @@ bool PSH_XBOX_SHADER::InsertTextureModeInstruction(XTL::X_D3DPIXELSHADERDEF *pPS
             Ins.Output[0].SetRegister(PARAM_R, 1, MASK_G);
             Ins.Parameters[0].SetScaleBemLumRegister(XTL::D3DTSS_BUMPENVMAT01, Stage, Recompiled);
             Ins.Parameters[1].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + inputStage, MASK_R);
-            Ins.Parameters[1].Modifiers = (1 << ARGMOD_BIAS);
+            if (bias) {
+                Ins.Parameters[1].Modifiers = (1 << ARGMOD_BIAS);
+            }
             Ins.Parameters[2].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + Stage, MASK_G);
             InsertIns.emplace_back(Ins);
             Ins.Initialize(PO_MAD);
             Ins.Output[0].SetRegister(PARAM_R, 1, MASK_G);
             Ins.Parameters[0].SetScaleBemLumRegister(XTL::D3DTSS_BUMPENVMAT11, Stage, Recompiled);
             Ins.Parameters[1].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + inputStage, MASK_G);
-            Ins.Parameters[1].Modifiers = (1 << ARGMOD_BIAS);
+            if (bias) {
+                Ins.Parameters[1].Modifiers = (1 << ARGMOD_BIAS);
+            }
             Ins.Parameters[2].SetRegister(PARAM_R, 1, MASK_G);
             InsertIns.emplace_back(Ins);
 
