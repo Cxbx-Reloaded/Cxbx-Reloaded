@@ -2958,8 +2958,9 @@ bool PSH_XBOX_SHADER::InsertTextureModeInstruction(XTL::X_D3DPIXELSHADERDEF *pPS
         if (m_PSVersion >= D3DPS_VERSION(1, 4))
         {
 
-            // If the bump-map input texture is not a standard Xbox bump-map texture format, apply a bias
-            // Fixes an issue where JSRF that uses unsigned texture as an input to texbem
+            // If the bump-map texture format is X_D3DFMT_X8L8V8U8 or  X_D3DFMT_L6V5U5 we need to apply a bias
+            // This happens because these formats are an alias of unsigned texture formats.
+            // Fixes an issue with the JSRF boost-dash effect
             // NOTE: This assumes that this shader will only ever be used for the input bumpmap texture
             // If this causes regressions in other titles, we'll need to be smarter about this
             // and include the texture formats in the shader hash, somehow.
@@ -2967,7 +2968,7 @@ bool PSH_XBOX_SHADER::InsertTextureModeInstruction(XTL::X_D3DPIXELSHADERDEF *pPS
             extern XTL::X_D3DFORMAT GetXboxPixelContainerFormat(const XTL::X_D3DPixelContainer *pXboxPixelContainer);
             auto format = GetXboxPixelContainerFormat(XTL::EmuD3DActiveTexture[0]);
             bool bias = false;
-            if (format != XTL::X_D3DFMT_V8U8 && format != XTL::X_D3DFMT_V16U16) {
+            if (format == XTL::X_D3DFMT_X8L8V8U8 || format == XTL::X_D3DFMT_L6V5U5) {
                 bias = true;
             }
 
