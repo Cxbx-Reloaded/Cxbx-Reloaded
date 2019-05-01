@@ -3197,6 +3197,9 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetViewport)
 		XboxViewPort.MinZ = pViewport->MinZ;
 		XboxViewPort.MaxZ = pViewport->MaxZ;
 
+		// Write the scaled viewport data back to the host viewport structure
+		HostViewPort = XboxViewPort;
+
 		if (g_ScaleViewport) {
 			// Get current host render target dimensions
 			DWORD HostRenderTarget_Width;
