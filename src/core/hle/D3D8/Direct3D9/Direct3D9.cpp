@@ -1946,10 +1946,10 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
 						g_EmuCDPD.HostPresentationParameters.BackBufferCount = 1;
 					}
 
-                    // We ignore multisampling completely for now
+					// We disable multisampling on the host backbuffer completely for now
 					// It causes issues with backbuffer locking.
-					// NOTE: It is possible to fix multisampling by having the host backbuffer normal size, the Xbox backbuffer being multisamples
-					// and scaling that way, but that can be done as a future PR
+					// NOTE: multisampling is still implemented by having the host backbuffer normal size
+ 					// the Xbox backbuffer being multisampled and scaled during blit
 					g_EmuCDPD.HostPresentationParameters.MultiSampleType = XTL::D3DMULTISAMPLE_NONE;
 					g_EmuCDPD.HostPresentationParameters.MultiSampleQuality = 0;
 
@@ -2414,9 +2414,6 @@ void Direct3D_CreateDevice_Start
 	XTL::X_D3DPRESENT_PARAMETERS     *pPresentationParameters
 )
 {
-	// HACK: Disable multisampling... See comment in CreateDevice proxy for more info
-	pPresentationParameters->MultiSampleType = XTL::X_D3DMULTISAMPLE_NONE;
-
 	// create default device *before* calling Xbox Direct3D_CreateDevice trampline
 	// to avoid hitting EMUPATCH'es that need a valid g_pD3DDevice
 	{
