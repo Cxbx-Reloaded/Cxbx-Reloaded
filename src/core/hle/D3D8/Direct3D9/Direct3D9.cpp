@@ -4432,8 +4432,10 @@ DWORD WINAPI XTL::EMUPATCH(D3DDevice_Swap)
 		// Get backbuffer dimenions; TODO : remember this once, at creation/resize time
 		D3DSURFACE_DESC BackBufferDesc;
 		pCurrentHostBackBuffer->GetDesc(&BackBufferDesc);
-		
-		const DWORD LoadSurfaceFilter = D3DX_DEFAULT; // == D3DX_FILTER_TRIANGLE | D3DX_FILTER_DITHER
+
+        // TODO: Implement a hot-key to change the filter?
+        // Note: Must be NONE, POINT or LINEAR
+        const D3DTEXTUREFILTERTYPE LoadSurfaceFilter = D3DTEXF_NONE;
 		// Previously we used D3DX_FILTER_POINT here, but that gave jagged edges in Dashboard.
 		// Dxbx note : D3DX_FILTER_LINEAR gives a smoother image, but 'bleeds' across borders
 
@@ -4443,17 +4445,14 @@ DWORD WINAPI XTL::EMUPATCH(D3DDevice_Swap)
 				// Blit Xbox BackBuffer to host BackBuffer
 				// TODO: This could be much faster if we used the XboxBackBufferSurface as a texture and blitted with a fullscreen quad
 				// This way, the scaling/format conversion would be handled by the GPU instead
-				// If we were using native D3D9, we could just use StretchRects instead, but D3D8 doesn't have that feature!
-				hRet = D3DXLoadSurfaceFromSurface(
-					/* pDestSurface = */ pCurrentHostBackBuffer,
-					/* pDestPalette = */ nullptr,
-					/* pDestRect = */ nullptr,
-					/* pSrcSurface = */ pXboxBackBufferHostSurface,
-					/* pSrcPalette = */ nullptr,
-					/* pSrcRect = */ nullptr,
-					/* Filter = */ LoadSurfaceFilter,
-					/* ColorKey = */ 0);
-
+                hRet = g_pD3DDevice->StretchRect(
+                    pXboxBackBufferHostSurface,
+                    nullptr,
+                    pCurrentHostBackBuffer,
+                    nullptr,
+                    LoadSurfaceFilter
+                );
+		
 				if (hRet != D3D_OK) {
 					EmuLog(LOG_LEVEL::WARNING, "Couldn't blit Xbox BackBuffer to host BackBuffer : %X", hRet);
 				}
