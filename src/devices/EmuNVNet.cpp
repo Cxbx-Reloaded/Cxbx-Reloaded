@@ -486,7 +486,8 @@ static void NVNetRecvThreadProc(NvNetState_t *s)
 		int size = g_NVNet->PCAPReceive(packet, 65536);
 		if (size > 0) {
 			EmuNVNet_DMAPacketToGuest(packet, size);
-		}	
+		}
+		Sleep(1);
 	}
 }
 
