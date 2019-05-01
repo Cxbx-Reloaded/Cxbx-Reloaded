@@ -4446,11 +4446,11 @@ DWORD WINAPI XTL::EMUPATCH(D3DDevice_Swap)
 				// TODO: This could be much faster if we used the XboxBackBufferSurface as a texture and blitted with a fullscreen quad
 				// This way, the scaling/format conversion would be handled by the GPU instead
                 hRet = g_pD3DDevice->StretchRect(
-                    pXboxBackBufferHostSurface,
-                    nullptr,
-                    pCurrentHostBackBuffer,
-                    nullptr,
-                    LoadSurfaceFilter
+                    /* pSourceSurface = */ pXboxBackBufferHostSurface,
+                    /* pSourceRect = */ nullptr,
+                    /* pDestSurface = */ pCurrentHostBackBuffer,
+                    /* pDestRect = */ nullptr,
+                    /* Filter = */ LoadSurfaceFilter
                 );
 		
 				if (hRet != D3D_OK) {
