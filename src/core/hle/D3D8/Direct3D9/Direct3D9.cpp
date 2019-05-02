@@ -168,6 +168,10 @@ static XTL::X_D3DSurface           *g_pXboxDepthStencil = NULL;
 static DWORD                        g_dwVertexShaderUsage = 0;
 static DWORD                        g_VertexShaderSlots[136];
 
+// Original Backbuffer display width/height, set during CreateDevice
+static UINT g_XboxBackBufferDisplayWidth = 0;
+static UINT g_XboxBackBufferDisplayHeight = 0;
+
 DWORD g_XboxBaseVertexIndex = 0;
 DWORD g_DefaultPresentationInterval = D3DPRESENT_INTERVAL_IMMEDIATE;
 DWORD g_PresentationIntervalOverride = 0;
@@ -2414,6 +2418,9 @@ void Direct3D_CreateDevice_Start
 	XTL::X_D3DPRESENT_PARAMETERS     *pPresentationParameters
 )
 {
+    g_XboxBackBufferDisplayWidth = pPresentationParameters->BackBufferWidth;
+    g_XboxBackBufferDisplayHeight = pPresentationParameters->BackBufferHeight;
+
 	// create default device *before* calling Xbox Direct3D_CreateDevice trampline
 	// to avoid hitting EMUPATCH'es that need a valid g_pD3DDevice
 	{
@@ -3176,52 +3183,55 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetViewport)
 		return;
 	}
 
-	D3DVIEWPORT XboxViewPort = *pViewport;
-	D3DVIEWPORT HostViewPort = *pViewport;
+    // If no rendertarget is set, this call came from CreateDevice and is part of Xbox init
+    // So it should not be passed on to the host
+    if (g_pXboxRenderTarget == nullptr) {
+        return;
+    }
 
-	if (g_pXboxRenderTarget) {
-		// Clip the Xbox Viewport to the render target dimensions
-		// This is required because during SetRenderTarget, Xbox calls SetViewPort with impossibly large values
-		DWORD XboxRenderTarget_Width = GetPixelContainerWidth(g_pXboxRenderTarget);
-		DWORD XboxRenderTarget_Height = GetPixelContainerHeigth(g_pXboxRenderTarget);
+	D3DVIEWPORT ViewPortCopy = *pViewport;
 
-		DWORD left = std::max((int)pViewport->X, 0);
-		DWORD top = std::max((int)pViewport->Y, 0);
-		DWORD right = std::min((int)pViewport->X + (int)pViewport->Width, (int)XboxRenderTarget_Width);
-		DWORD bottom = std::min((int)pViewport->Y + (int)pViewport->Height, (int)XboxRenderTarget_Height);
+    // Clip the Xbox Viewport to the render target dimensions
+    // This is required because during SetRenderTarget, Xbox calls SetViewPort with impossibly large values
+    DWORD XboxRenderTarget_Width = GetPixelContainerWidth(g_pXboxRenderTarget);
+    DWORD XboxRenderTarget_Height = GetPixelContainerHeigth(g_pXboxRenderTarget);
 
-		XboxViewPort.X = left;
-		XboxViewPort.Y = top;
-		XboxViewPort.Width = right - left;
-		XboxViewPort.Height = bottom - top;
-		XboxViewPort.MinZ = pViewport->MinZ;
-		XboxViewPort.MaxZ = pViewport->MaxZ;
+    // If the current render target is the Xbox Backbuffer, it might be a multisampled backbuffer
+    // Because of this, we need to use data from the Xbox display mode to make sure we scale & clip the viewport correctly
+    // This mimics the behavior of the Xbox SetViewPort call
+    if (g_pXboxRenderTarget == g_XboxBackBufferSurface) {
+        XboxRenderTarget_Width = g_XboxBackBufferDisplayWidth;
+        XboxRenderTarget_Height = g_XboxBackBufferDisplayHeight;
+    }
 
-		// Write the scaled viewport data back to the host viewport structure
-		HostViewPort = XboxViewPort;
+	DWORD left = std::max((int)pViewport->X, 0);
+	DWORD top = std::max((int)pViewport->Y, 0);
+	DWORD right = std::min((int)pViewport->X + (int)pViewport->Width, (int)XboxRenderTarget_Width);
+	DWORD bottom = std::min((int)pViewport->Y + (int)pViewport->Height, (int)XboxRenderTarget_Height);
 
-		if (g_ScaleViewport) {
-			// Get current host render target dimensions
-			DWORD HostRenderTarget_Width;
-			DWORD HostRenderTarget_Height;
+    ViewPortCopy.X = left;
+    ViewPortCopy.Y = top;
+    ViewPortCopy.Width = right - left;
+    ViewPortCopy.Height = bottom - top;
 
-			if (GetHostRenderTargetDimensions(&HostRenderTarget_Width, &HostRenderTarget_Height)) {
-				// Scale Xbox to host dimensions (avoiding hard-coding 640 x 480)
-				HostViewPort.X = ScaleDWORD(XboxViewPort.X, XboxRenderTarget_Width, HostRenderTarget_Width);
-				HostViewPort.Y = ScaleDWORD(XboxViewPort.Y, XboxRenderTarget_Height, HostRenderTarget_Height);
-				HostViewPort.Width = ScaleDWORD(XboxViewPort.Width, XboxRenderTarget_Width, HostRenderTarget_Width);
-				HostViewPort.Height = ScaleDWORD(XboxViewPort.Height, XboxRenderTarget_Height, HostRenderTarget_Height);
-				// TODO : Fix test-case Shenmue 2 (which halves height, leaving the bottom half unused)
-				HostViewPort.MinZ = XboxViewPort.MinZ; // No need scale Z for now
-				HostViewPort.MaxZ = XboxViewPort.MaxZ;
-			}
-			else {
-				EmuLog(LOG_LEVEL::WARNING, "GetHostRenderTargetDimensions failed - SetViewport sets Xbox viewport instead!");
-			}
+	if (g_ScaleViewport) {
+		// Get current host render target dimensions
+		DWORD HostRenderTarget_Width;
+		DWORD HostRenderTarget_Height;
+
+		if (GetHostRenderTargetDimensions(&HostRenderTarget_Width, &HostRenderTarget_Height)) {
+			// Scale Xbox to host dimensions (avoiding hard-coding 640 x 480)
+            ViewPortCopy.X = ScaleDWORD(ViewPortCopy.X, XboxRenderTarget_Width, HostRenderTarget_Width);
+            ViewPortCopy.Y = ScaleDWORD(ViewPortCopy.Y, XboxRenderTarget_Height, HostRenderTarget_Height);
+            ViewPortCopy.Width = ScaleDWORD(ViewPortCopy.Width, XboxRenderTarget_Width, HostRenderTarget_Width);
+            ViewPortCopy.Height = ScaleDWORD(ViewPortCopy.Height, XboxRenderTarget_Height, HostRenderTarget_Height);
+		}
+		else {
+			EmuLog(LOG_LEVEL::WARNING, "GetHostRenderTargetDimensions failed - SetViewport sets Xbox viewport instead!");
 		}
 	}
 
-	HRESULT hRet = g_pD3DDevice->SetViewport(&HostViewPort);
+	HRESULT hRet = g_pD3DDevice->SetViewport(&ViewPortCopy);
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetViewport");
 }
 
