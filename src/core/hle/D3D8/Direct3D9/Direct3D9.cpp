@@ -109,9 +109,7 @@ static bool                         g_bHasStencil = false;  // Does device have 
 static DWORD						g_dwPrimPerFrame = 0;	// Number of primitives within one frame
 
 // primary push buffer
-static uint32_t  g_dwPrimaryPBCount = 0;
 static uint32_t *g_pPrimaryPB = nullptr;
-
 
 struct {
 	XTL::X_D3DSurface Surface;
@@ -2615,7 +2613,6 @@ PDWORD WINAPI XTL::EMUPATCH(D3DDevice_BeginPush)(DWORD Count)
 
     DWORD *pRet = new DWORD[Count];
 
-    g_dwPrimaryPBCount = Count;
     g_pPrimaryPB = (uint32_t*)pRet;
 
     return pRet;
@@ -2641,7 +2638,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_BeginPush2)(DWORD Count, DWORD** ppPush)
 
 	DWORD *pRet = new DWORD[Count];
 
-	g_dwPrimaryPBCount = Count;
 	g_pPrimaryPB = (uint32_t*)pRet;
 
 	*ppPush=pRet;
