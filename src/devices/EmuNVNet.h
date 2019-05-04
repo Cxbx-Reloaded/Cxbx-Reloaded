@@ -24,6 +24,8 @@
 // ******************************************************************
 #pragma once
 
+#include <string>
+
 #include "PCIDevice.h" // For PCIDevice
 
 // NVNET Register Definitions
