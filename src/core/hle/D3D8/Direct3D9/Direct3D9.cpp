@@ -1948,7 +1948,7 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
 
 					// We disable multisampling on the host backbuffer completely for now
 					// It causes issues with backbuffer locking.
-					// NOTE: multisampling is still implemented by having the host backbuffer normal size
+					// NOTE: multisampling is could potentially be implemented by having the host backbuffer normal size
  					// the Xbox backbuffer being multisampled and scaled during blit
 					g_EmuCDPD.HostPresentationParameters.MultiSampleType = XTL::D3DMULTISAMPLE_NONE;
 					g_EmuCDPD.HostPresentationParameters.MultiSampleQuality = 0;
@@ -2414,6 +2414,11 @@ void Direct3D_CreateDevice_Start
 	XTL::X_D3DPRESENT_PARAMETERS     *pPresentationParameters
 )
 {
+    // Disable multisampling for now, this fixes an issue where GTA3 only renders to half-screen
+    // TODO: Find a better way of fixing this, we cannot just create larger backbuffers as it breaks
+    // many games, despite working in the dashboard
+    pPresentationParameters->MultiSampleType = XTL::X_D3DMULTISAMPLE_NONE;
+
 	// create default device *before* calling Xbox Direct3D_CreateDevice trampline
 	// to avoid hitting EMUPATCH'es that need a valid g_pD3DDevice
 	{
