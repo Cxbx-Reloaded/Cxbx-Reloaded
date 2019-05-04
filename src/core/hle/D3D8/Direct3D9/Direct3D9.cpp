@@ -2658,7 +2658,9 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_EndPush)(DWORD *pPush)
 		EmuLog(LOG_LEVEL::WARNING, "D3DDevice_EndPush called without preceding D3DDevice_BeginPush?!");
 	else
 	{
-		EmuExecutePushBufferRaw(g_pPrimaryPB, g_dwPrimaryPBCount * sizeof(DWORD));
+        // Note: We don't use the count from BeginPush because that specifies the *maximum* count
+        // rather than the count actually in the pushbuffer. 
+		EmuExecutePushBufferRaw(g_pPrimaryPB, (uintptr_t)pPush - (uintptr_t)g_pPrimaryPB);
 
 		delete[] g_pPrimaryPB;
 		g_pPrimaryPB = nullptr;
