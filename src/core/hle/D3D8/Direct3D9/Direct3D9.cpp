@@ -942,9 +942,62 @@ XTL::IDirect3DTexture *GetHostTexture(XTL::X_D3DResource *pXboxResource, int iTe
 
 	if (GetXboxCommonResourceType(pXboxResource) != X_D3DCOMMON_TYPE_TEXTURE) {
 		// Burnout and Outrun 2006 hit this case (retrieving a surface instead of a texture)
-		// TODO : Surfaces can be set in the texture stages, instead of textures
-		// We'll need to wrap the surface somehow before using it as a texture
+		// Surfaces can be set in the texture stages, instead of textures
 		LOG_TEST_CASE("GetHostBaseTexture called on a non-texture object");
+
+        // If this is a surface, we can rescue the situation by copying it to a temporary texture
+        // Although this is a massive hack, it'l work for our purposes
+        // Warning: This may be slow
+        if (GetXboxCommonResourceType(pXboxResource) == X_D3DCOMMON_TYPE_SURFACE) {
+            // First, fetch the host surface for this Xbox Resource
+            XTL::IDirect3DSurface9* pHostSurface = GetHostSurface(pXboxResource, 0);
+
+            // HACK: Overwrite the type field of pXboxResource to set it's type to texture
+            // This will trigger GetHostBaseTexture to create a compatible texture to hold the surface
+            DWORD OriginalCommon = pXboxResource->Common;
+            pXboxResource->Common &= ~X_D3DCOMMON_TYPE_MASK;
+            pXboxResource->Common |= X_D3DCOMMON_TYPE_TEXTURE;
+
+            // As this texture copy uses GetHostResource, it'l be automatically re-used if possible
+            // Note: This will probably never be freed, but since we only create one host texture for each *unque* xbox surface
+            // it shouldn't cause much of a problem. If it does, we need to store these in another data structure somewhere
+            // and release them when the source surface is released
+            XTL::IDirect3DTexture* pHostTexture = (XTL::IDirect3DTexture *)GetHostBaseTexture(pXboxResource, 0, iTextureStage);
+
+            if (pHostTexture == nullptr) {
+                // Failed to create a wrapping texture, so cancel the rescue attempt
+                pXboxResource->Common = OriginalCommon;
+                return nullptr;
+            }
+
+            // Copy the host surface to the new host texture
+            XTL::IDirect3DSurface* pHostTextureSurface;
+            pHostTexture->GetSurfaceLevel(0, &pHostTextureSurface);
+
+            if (pHostTextureSurface == nullptr) {
+                // Failed to lock the wrapping texture, so cancel the rescue attempt
+                FreeHostResource(GetHostResourceKey(pXboxResource));
+                pXboxResource->Common = OriginalCommon;
+                return nullptr;
+            }
+
+            g_pD3DDevice->StretchRect(
+                pHostSurface,
+                nullptr,
+                pHostTextureSurface,
+                nullptr,
+                XTL::D3DTEXF_NONE
+            );
+
+            pHostTexture->Release();
+
+            // HACK: Restore original type field
+            pXboxResource->Common = OriginalCommon;
+
+            // Return the handle to the new texture
+            return pHostTexture;
+        }
+
 		return nullptr;
 	}
 
