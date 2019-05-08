@@ -4434,10 +4434,12 @@ DWORD WINAPI XTL::EMUPATCH(D3DDevice_Swap)
 		pCurrentHostBackBuffer->GetDesc(&BackBufferDesc);
 
         // TODO: Implement a hot-key to change the filter?
-        // Note: Must be NONE, POINT or LINEAR
+        // Note: LoadSurfaceFilter Must be D3DTEXF_NONE, D3DTEXF_POINT or D3DTEXF_LINEAR
+        // Before StretchRects we used D3DX_FILTER_POINT here, but that gave jagged edges in Dashboard.
+        // Dxbx note : D3DX_FILTER_LINEAR gives a smoother image, but 'bleeds' across borders
+        // LoadOverlayFilter must be a D3DX filter DWORD value
         const D3DTEXTUREFILTERTYPE LoadSurfaceFilter = D3DTEXF_NONE;
-		// Previously we used D3DX_FILTER_POINT here, but that gave jagged edges in Dashboard.
-		// Dxbx note : D3DX_FILTER_LINEAR gives a smoother image, but 'bleeds' across borders
+        const DWORD LoadOverlayFilter = D3DX_DEFAULT;
 
 		if (!g_DirectHostBackBufferAccess) {
 			auto pXboxBackBufferHostSurface = GetHostSurface(g_XboxBackBufferSurface);
@@ -4541,7 +4543,7 @@ DWORD WINAPI XTL::EMUPATCH(D3DDevice_Swap)
 				/* SrcPitch = */ OverlayRowPitch,
 				/* pSrcPalette = */ nullptr,
 				/* pSrcRect = */ &EmuSourRect, // This parameter cannot be NULL
-				/* Filter = */ LoadSurfaceFilter,
+				/* Filter = */ LoadOverlayFilter,
 				/* ColorKey = */ g_OverlayProxy.EnableColorKey ? g_OverlayProxy.ColorKey : 0);
 
 			DEBUG_D3DRESULT(hRet, "D3DXLoadSurfaceFromMemory - UpdateOverlay could not convert buffer!\n");
