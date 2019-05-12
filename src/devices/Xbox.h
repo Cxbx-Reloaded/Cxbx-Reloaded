@@ -57,7 +57,7 @@ typedef enum {
 } HardwareModel;
 
 typedef enum { // TODO : Move to it's own file
-	// http://xboxdevwiki.net/Hardware_Revisions#Video_encoder
+	// https://xboxdevwiki.net/Hardware_Revisions#Video_encoder
 	Conexant,
 	Focus,
 	XCalibur

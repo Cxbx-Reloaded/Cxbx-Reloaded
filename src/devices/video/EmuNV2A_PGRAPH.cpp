@@ -2177,7 +2177,7 @@ void pgraph_handle_method(NV2AState *d,
 				vertex_attribute->gl_normalize = GL_TRUE;
 				vertex_attribute->size = 1;
 				assert(vertex_attribute->count == 4);
-				// http://www.opengl.org/registry/specs/ARB/vertex_array_bgra.txt
+				// https://www.opengl.org/registry/specs/ARB/vertex_array_bgra.txt
 				vertex_attribute->gl_count = GL_BGRA;
 				vertex_attribute->needs_conversion = false;
 				break;

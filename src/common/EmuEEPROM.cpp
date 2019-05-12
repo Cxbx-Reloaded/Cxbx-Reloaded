@@ -58,7 +58,7 @@ const EEPROMInfo* EmuFindEEPROMInfo(xboxkrnl::XC_VALUE_INDEX index)
 	return nullptr;
 }
 
-// From http://xboxdevwiki.net/EEPROM
+// From https://xboxdevwiki.net/EEPROM
 static void EepromCRC(unsigned char *crc, unsigned char *data, long dataLen) {
     unsigned char* CRC_Data = (unsigned char *)malloc(dataLen+4);
     int pos=0;

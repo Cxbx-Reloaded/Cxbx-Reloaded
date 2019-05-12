@@ -54,7 +54,7 @@
 *  DES, on which TDES is based, was originally designed by Horst Feistel
 *  at IBM in 1974, and was adopted as a standard by NIST (formerly NBS).
 *
-*  http://csrc.nist.gov/publications/fips/fips46-3/fips46-3.pdf
+*  https://csrc.nist.gov/publications/fips/fips46-3/fips46-3.pdf
 */
 
 // Changed from ReactOS: we never swap the subkeys in order to generate a decryption key schedule. Instead, we opt to simply read the subkeys

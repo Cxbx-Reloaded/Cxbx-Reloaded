@@ -28,7 +28,7 @@
 
 namespace LED {
 
-	// See http://xboxdevwiki.net/PIC#The_LED
+	// See https://xboxdevwiki.net/PIC#The_LED
 	namespace Phase0 { enum { Off = 0, Red = 1 << 7, Green = 1 << 3, Orange = Red | Green }; };
 	namespace Phase1 { enum { Off = 0, Red = 1 << 6, Green = 1 << 2, Orange = Red | Green }; };
 	namespace Phase2 { enum { Off = 0, Red = 1 << 5, Green = 1 << 1, Orange = Red | Green }; };

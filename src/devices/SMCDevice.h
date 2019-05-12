@@ -32,8 +32,8 @@
 // PIC16LC63A-04/SO
 // (M) 0123857
 //
-// Producer : http://www.microchip.com/wwwproducts/en/en010145
-// Datasheet : http://ww1.microchip.com/downloads/en/DeviceDoc/30605D.pdf
+// Producer : https://www.microchip.com/wwwproducts/en/en010145
+// Datasheet : https://ww1.microchip.com/downloads/en/DeviceDoc/30605D.pdf
 
 // NOTE : Instead of calling this device by it's real name ("PIC16LC63A-04/SO"),
 // we've decided to call this device "SMC", since we don't implement
@@ -42,7 +42,7 @@
 
 // Reading:
 
-// From https://web.archive.org/web/20100617022549/http://www.xbox-linux.org/wiki/PIC :
+// From https://web.archive.org/web/20100617022549/https://www.xbox-linux.org/wiki/PIC :
 // Command	Description
 #define SMC_COMMAND_VERSION 0x01	// PIC version string
 //0x03	tray state
@@ -92,7 +92,7 @@
 #define SMC_SCRATCH_DASHBOARD_BOOT		0x08
 
 typedef enum {
-	// http://xboxdevwiki.net/System_Management_Controller
+	// https://xboxdevwiki.net/System_Management_Controller
 	P01,
 	P2L,
 	D01, // Seen in a debug kit 

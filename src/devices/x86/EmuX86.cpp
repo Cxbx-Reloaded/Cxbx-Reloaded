@@ -606,7 +606,7 @@ bool EmuX86_Operand_Write(LPEXCEPTION_POINTERS e, _DInst& info, int operand, uin
 
 inline void EmuX86_SetFlags(LPEXCEPTION_POINTERS e, DWORD mask, DWORD value)
 {
-	// By Ron Jeffery, see http://graphics.stanford.edu/~seander/bithacks.html#MaskedMerge
+	// By Ron Jeffery, see https://graphics.stanford.edu/~seander/bithacks.html#MaskedMerge
 	e->ContextRecord->EFlags ^= ((e->ContextRecord->EFlags ^ value) & mask);
 }
 
@@ -717,11 +717,11 @@ inline bool EmuX86_HasFlag_DF(LPEXCEPTION_POINTERS e)
 #define SFCalc(result) (result >> (BitSize-1)) & 1
 #define ZFCalc(result) (result == 0)
 #define AFCalc(r,s,d) ((r ^ s ^ d) >> 3) & 1 // Result, Src, Dest
-#define PFCalc(result) (0x6996 >> ((result ^ (result >> 4)) & 0xF)) & 1 // See http://graphics.stanford.edu/~seander/bithacks.html#ParityParallel
+#define PFCalc(result) (0x6996 >> ((result ^ (result >> 4)) & 0xF)) & 1 // See https://graphics.stanford.edu/~seander/bithacks.html#ParityParallel
 #define CFCalc(result) (result >> BitSize) & 1 // TODO : Instead of looking at an actual overflow bit, use high bit of (result XOR dest XOR src)
 // Flags calculated : Overflow (for addition or subtraction), Sign, Zero, Adjust, Parity and Carry
 
-// See http://x86.renejeschke.de/ for affected CPU flags per instruction
+// See https://x86.renejeschke.de/ for affected CPU flags per instruction
 
 void SignExtend32(uint32_t& dest, size_t from)
 {

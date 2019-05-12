@@ -145,7 +145,7 @@ std::string XbePrinter::AllowedMediaToString()
 std::string XbePrinter::GameRatingToString()
 {
     std::string text;
-    // Info from: http://xboxdevwiki.net/EEPROM
+    // Info from: https://xboxdevwiki.net/EEPROM
     switch(Xbe_certificate->dwGameRatings) {
         case 0x0:
             text.append("(RP) Rating Pending");

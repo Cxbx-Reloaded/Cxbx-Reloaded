@@ -809,7 +809,7 @@ typedef struct _KUSER_SHARED_DATA
 }
 KUSER_SHARED_DATA, *PKUSER_SHARED_DATA;
 // This is only the top of the actual definition. For the complete version,
-// see http://processhacker.sourceforge.net/doc/ntexapi_8h_source.html
+// see https://processhacker.sourceforge.io/doc/ntexapi_8h_source.html
 
 // ******************************************************************
 // * GENERIC_MAPPING

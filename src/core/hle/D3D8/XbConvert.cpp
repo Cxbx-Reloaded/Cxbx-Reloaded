@@ -1577,7 +1577,7 @@ uint32 Swizzle(uint32 value, uint32 max, uint32 shift)
 	else
 		result = value % max;
 
-	// The following is based on http://graphics.stanford.edu/~seander/bithacks.html#InterleaveBMN :
+	// The following is based on https://graphics.stanford.edu/~seander/bithacks.html#InterleaveBMN :
 	// --------------------------------11111111111111111111111111111111
 	result = (result | (result << 8)) & 0x00FF00FF; // 0000000000000000111111111111111100000000000000001111111111111111
 	result = (result | (result << 4)) & 0x0F0F0F0F; // 0000111100001111000011110000111100001111000011110000111100001111

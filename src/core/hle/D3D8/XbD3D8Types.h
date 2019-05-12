@@ -142,7 +142,7 @@ typedef enum _X_D3DFORMAT
 */
 
 	// Xbox D3DFORMAT types :
-	// See http://wiki.beyondunreal.com/Legacy:Texture_Format
+	// See https://wiki.beyondunreal.com/Legacy:Texture_Format
 
 	// Swizzled Formats
 
