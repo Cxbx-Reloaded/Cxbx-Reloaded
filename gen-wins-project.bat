@@ -6,7 +6,7 @@
 SETLOCAL
 
 IF "%1"=="" (
-GOTO :helpInfo
+SET x86=1
 )
 IF /I "%1"=="-h" (
 GOTO :helpInfo
