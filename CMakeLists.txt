@@ -9,7 +9,7 @@ project(Cxbx-Reloaded)
 
 # Allow devs to disable regeneration option.
 # Suppress extra stuff from generated solution
-set(CMAKE_SUPPRESS_REGENERATION true)
+#set(CMAKE_SUPPRESS_REGENERATION true)
 
 # Output all binary files into one folder
 if(NOT DEFINED CMAKE_RUNTIME_OUTPUT_DIRECTORY)
