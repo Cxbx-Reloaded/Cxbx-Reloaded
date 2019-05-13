@@ -5,7 +5,7 @@ init:
 
 image:
   # If this is modified, please also update the build script
-  - Visual Studio 2017
+  - Visual Studio 2019 Preview
 
 configuration:
   # The builds will be run in this order
