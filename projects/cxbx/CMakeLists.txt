@@ -46,10 +46,17 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
   LTC_NO_MISC
   LTC_NO_PROTOTYPES
  )
+ 
+ # Reference: https://docs.microsoft.com/en-us/cpp/build/reference/compiler-options-listed-alphabetically
  add_compile_options(
+  # Catch synchronous (C++) exceptions only
+  # plus assume extern "C" may throw exception
   /EHs
+  # Compile multiple source files by using multiple processes.
   /MP
+  # Enable string pooling (reduce duplicate strings)
   /GF
+  # Enable SSE2 code generation
   /arch:SSE2
  )
 endif()
@@ -97,6 +104,7 @@ add_executable(cxbx WIN32 ${RESOURCES}
 # Link and compile flags
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
 
+ # Reference: https://docs.microsoft.com/en-us/cpp/build/reference/linker-options
  set_target_properties(cxbx PROPERTIES
   LINK_FLAGS "
   /INCREMENTAL:NO
@@ -113,6 +121,16 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
   /LTCG
   "
  )
+
+ # Reference: https://docs.microsoft.com/en-us/cpp/build/reference/compiler-options-listed-alphabetically
+ # /Zi   = create a PDB file without affecting optimization
+ # /Ob2  = Controls inline expansion of functions.
+ # /Oi   = Generate intrinsic functions
+ # /Ot   = In favor of using fast code than small code
+ # /GL   = Whole program optimization
+ # /GS-  = Remove buffer security check
+ # /Gy   = Enable function-level linking
+ # /Qpar = Enable automatic parallelize loops in the code
 
  # Set optimization options for release build
  set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}
