@@ -1,12 +1,12 @@
 // //////////////////////////////////////////////////////////
 // xxhash32.h
 // Copyright (c) 2016 Stephan Brumme. All rights reserved.
-// see http://create.stephan-brumme.com/disclaimer.html
+// see https://create.stephan-brumme.com/disclaimer.html
 //
 #pragma once
 #include <stdint.h> // for uint32_t and uint64_t
 #include "crc32c.h"
-/// XXHash (32 bit), based on Yann Collet's descriptions, see http://cyan4973.github.io/xxHash/
+/// XXHash (32 bit), based on Yann Collet's descriptions, see https://cyan4973.github.io/xxHash/
 /** How to use:
 uint32_t myseed = 0;
 XXHash32 myhash(myseed);

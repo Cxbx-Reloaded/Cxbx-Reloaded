@@ -127,7 +127,7 @@ void log_generate_active_filter_output(const CXBXR_MODULE cxbxr_module);
 // __FILENAME__
 //
 
-// From http://stackoverflow.com/questions/31050113/how-to-extract-the-source-filename-without-path-and-suffix-at-compile-time
+// From https://stackoverflow.com/questions/31050113/how-to-extract-the-source-filename-without-path-and-suffix-at-compile-time
 constexpr const char* str_end(const char *str) {
 	return *str ? str_end(str + 1) : str;
 }
@@ -202,7 +202,7 @@ extern LOG_SANITIZE_HEADER(C, T)            \
 
 
 // Hex output (type safe)
-// http://stackoverflow.com/questions/673240/how-do-i-print-an-unsigned-char-as-hex-in-c-using-ostream
+// https://stackoverflow.com/questions/673240/how-do-i-print-an-unsigned-char-as-hex-in-c-using-ostream
 LOG_SANITIZE(hex1, uint8_t);
 LOG_SANITIZE(hex2, uint16_t);
 LOG_SANITIZE(hex4, uint32_t);
@@ -247,8 +247,8 @@ constexpr const char* remove_emupatch_prefix(const char* str) {
 #define LOG_PREFIX __FILENAME__
 #endif // LOG_PREFIX
 
-// For thread_local, see : http://en.cppreference.com/w/cpp/language/storage_duration
-// TODO : Use Boost.Format http://www.boost.org/doc/libs/1_53_0/libs/format/index.html
+// For thread_local, see : https://en.cppreference.com/w/cpp/language/storage_duration
+// TODO : Use Boost.Format https://www.boost.org/doc/libs/1_53_0/libs/format/index.html
 extern thread_local std::string _logThreadPrefix;
 
 // Checks if this log should be printed or not

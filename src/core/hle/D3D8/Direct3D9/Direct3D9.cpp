@@ -220,9 +220,9 @@ DWORD* g_XboxD3DDevice;
 const char *CxbxGetErrorDescription(HRESULT hResult)
 {
 	// TODO : For D3D9, Use DXGetErrorDescription9(hResult) (requires another DLL though)
-	// See : http://www.fairyengine.com/articles/dxmultiviews.htm
-	// and : http://www.gamedev.net/community/forums/showfaq.asp?forum_id=10
-	// and : http://www.gamedev.net/community/forums/topic.asp?topic_id=16157
+	// See : https://www.fairyengine.com/articles/dxmultiviews.htm
+	// and : https://web.archive.org/web/20101231193248/https://www.gamedev.net/community/forums/showfaq.asp?forum_id=10
+	// and : https://www.gamedev.net/community/forums/topic.asp?topic_id=16157
 	// But https://blogs.msdn.microsoft.com/chuckw/2012/04/24/wheres-dxerr-lib/
 	// suggests to use FormatMessage with FORMAT_MESSAGE_FROM_SYSTEM for DirectX errors
 	switch (hResult)
@@ -520,7 +520,7 @@ VOID XTL::CxbxInitWindow(bool bFullInit)
 void DrawUEM(HWND hWnd)
 {
 	// Draw the universal error message (UEM)
-	// See http://xboxdevwiki.net/Fatal_Error
+	// See https://xboxdevwiki.net/Fatal_Error
 	// Only call this from WM_PAINT message!
 
 	PAINTSTRUCT ps;

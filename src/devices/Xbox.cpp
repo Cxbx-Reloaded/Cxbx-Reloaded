@@ -120,7 +120,7 @@ void InitXboxHardware(HardwareModel hardwareModel)
 															
 	g_SMC = new SMCDevice(smc_revision, g_bIsChihiro ? 6 : 1); // 6 = AV_PACK_STANDARD, 1 = AV_PACK_HDTV. Chihiro doesn't support HDTV!
 															   // SMC uses different AV_PACK values than the Kernel
-															   // See http://xboxdevwiki.net/PIC#The_AV_Pack
+															   // See https://xboxdevwiki.net/PIC#The_AV_Pack
 	g_EEPROM = new EEPROMDevice();
 	g_NVNet = new NVNetDevice();
 	g_NV2A = new NV2ADevice();
@@ -169,5 +169,5 @@ void InitXboxHardware(HardwareModel hardwareModel)
 	// Resources : http://pablot.com/misc/fancontroller.cpp
 	// https://github.com/JayFoxRox/Chihiro-Launcher/blob/master/hook.h
 	// https://github.com/docbrown/vxb/wiki/Xbox-Hardware-Information
-	// https://web.archive.org/web/20100617022549/http://www.xbox-linux.org/wiki/PIC
+	// https://web.archive.org/web/20100617022549/https://www.xbox-linux.org/wiki/PIC
 }
