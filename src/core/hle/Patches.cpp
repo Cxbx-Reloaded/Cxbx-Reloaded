@@ -447,6 +447,9 @@ inline void EmuInstallPatch(std::string FunctionName, xbaddr FunctionAddr)
 		return;
 	}
 
+    // HACK: Some titles require unpatched Fibers, otherwise they enter an infinte loop
+    // while others require patched Fibers, otherwise they outright crash
+    // This is caused by limitations of Direct Code Execution and Cxbx-R's threading model
     if ((patch.flags & PATCH_IS_FIBER) && TitleRequiresUnpatchedFibers()) {
         printf("HLE: %s: Skipped (Game requires unpatched Fibers)\n", FunctionName.c_str());
         return;
