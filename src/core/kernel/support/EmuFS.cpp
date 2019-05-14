@@ -628,6 +628,11 @@ void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData)
 		NewPcr->NtTib.Self = XbTib;
 		// Set the stack base - TODO : Verify this, doesn't look right?
 		NewPcr->NtTib.StackBase = pNewTLS;
+
+		// Write the Xbox stack base to the Host, allows ConvertThreadToFiber to work correctly
+		// Test case: DOA3
+		__writefsdword(TIB_StackBase, (DWORD)NewPcr->NtTib.StackBase);
+		__writefsdword(TIB_StackLimit, (DWORD)NewPcr->NtTib.StackLimit);
 	}
 
 	// Set flat address of this PCR

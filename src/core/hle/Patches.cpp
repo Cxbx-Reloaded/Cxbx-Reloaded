@@ -45,6 +45,7 @@ const uint32_t PATCH_ALWAYS = 1 << 0;
 const uint32_t PATCH_HLE_D3D = 1 << 1;
 const uint32_t PATCH_HLE_DSOUND = 1 << 2;
 const uint32_t PATCH_HLE_OHCI = 1 << 3;
+const uint32_t PATCH_IS_FIBER = 1 << 4;
 
 #define PATCH_ENTRY(Name, Func, Flags) \
     { Name, { &Func, Flags} }
@@ -369,9 +370,9 @@ std::map<const std::string, const xbox_patch_t> g_PatchTable = {
 	PATCH_ENTRY("XInputSetState", XTL::EMUPATCH(XInputSetState), PATCH_HLE_OHCI),
 
 	// XAPI
-	PATCH_ENTRY("ConvertThreadToFiber", XTL::EMUPATCH(ConvertThreadToFiber), PATCH_ALWAYS),
-	PATCH_ENTRY("CreateFiber", XTL::EMUPATCH(CreateFiber), PATCH_ALWAYS),
-	PATCH_ENTRY("DeleteFiber", XTL::EMUPATCH(DeleteFiber), PATCH_ALWAYS),
+	PATCH_ENTRY("ConvertThreadToFiber", XTL::EMUPATCH(ConvertThreadToFiber), PATCH_IS_FIBER),
+	PATCH_ENTRY("CreateFiber", XTL::EMUPATCH(CreateFiber), PATCH_IS_FIBER),
+	PATCH_ENTRY("DeleteFiber", XTL::EMUPATCH(DeleteFiber), PATCH_IS_FIBER),
 	PATCH_ENTRY("GetExitCodeThread", XTL::EMUPATCH(GetExitCodeThread), PATCH_ALWAYS),
 	PATCH_ENTRY("GetThreadPriority", XTL::EMUPATCH(GetThreadPriority), PATCH_ALWAYS),
 	PATCH_ENTRY("OutputDebugStringA", XTL::EMUPATCH(OutputDebugStringA), PATCH_ALWAYS),
@@ -379,7 +380,7 @@ std::map<const std::string, const xbox_patch_t> g_PatchTable = {
 	PATCH_ENTRY("SetThreadPriority", XTL::EMUPATCH(SetThreadPriority), PATCH_ALWAYS),
 	PATCH_ENTRY("SetThreadPriorityBoost", XTL::EMUPATCH(SetThreadPriorityBoost), PATCH_ALWAYS),
 	PATCH_ENTRY("SignalObjectAndWait", XTL::EMUPATCH(SignalObjectAndWait), PATCH_ALWAYS),
-	PATCH_ENTRY("SwitchToFiber", XTL::EMUPATCH(SwitchToFiber), PATCH_ALWAYS),
+	PATCH_ENTRY("SwitchToFiber", XTL::EMUPATCH(SwitchToFiber), PATCH_IS_FIBER),
 	PATCH_ENTRY("XMountMUA", XTL::EMUPATCH(XMountMUA), PATCH_ALWAYS),
 	PATCH_ENTRY("XMountMURootA", XTL::EMUPATCH(XMountMURootA), PATCH_ALWAYS),
 	PATCH_ENTRY("XSetProcessQuantumLength", XTL::EMUPATCH(XSetProcessQuantumLength), PATCH_ALWAYS),
@@ -388,6 +389,38 @@ std::map<const std::string, const xbox_patch_t> g_PatchTable = {
 };
 
 std::unordered_map<std::string, subhook::Hook> g_FunctionHooks;
+
+inline bool TitleRequiresUnpatchedFibers()
+{
+    static bool detected = false;
+    static bool result = false;
+
+    // Prevent running the check every time this function is called
+    if (detected) {
+        return result;
+    }
+
+    // Array of known games that require the fiber unpatch hack
+    DWORD titleIds[] = {
+        0x46490002, // Futurama PAL
+        0x56550008, // Futurama NTSC
+        0
+    };
+
+    DWORD* pTitleId = &titleIds[0];
+    while (*pTitleId != 0) {
+        if (g_pCertificate->dwTitleId == *pTitleId) {
+            result = true;
+            break;
+        }
+
+        pTitleId++;
+    }
+
+    detected = true;
+    return result;
+}
+
 
 // NOTE: EmuInstallPatch do not get to be in XbSymbolDatabase, do the patches in Cxbx project only.
 inline void EmuInstallPatch(std::string FunctionName, xbaddr FunctionAddr)
@@ -413,6 +446,14 @@ inline void EmuInstallPatch(std::string FunctionName, xbaddr FunctionAddr)
 		printf("HLE: %s: Skipped (LLE OHCI Enabled)\n", FunctionName.c_str());
 		return;
 	}
+
+    // HACK: Some titles require unpatched Fibers, otherwise they enter an infinte loop
+    // while others require patched Fibers, otherwise they outright crash
+    // This is caused by limitations of Direct Code Execution and Cxbx-R's threading model
+    if ((patch.flags & PATCH_IS_FIBER) && TitleRequiresUnpatchedFibers()) {
+        printf("HLE: %s: Skipped (Game requires unpatched Fibers)\n", FunctionName.c_str());
+        return;
+    }
 
 	g_FunctionHooks[FunctionName].Install((void*)(FunctionAddr), (void*)patch.patchFunc);
 	printf("HLE: %s Patched\n", FunctionName.c_str());
