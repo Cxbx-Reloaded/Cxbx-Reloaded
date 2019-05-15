@@ -14,7 +14,7 @@ Cxbx-Reloaded is an emulator for running Microsoft Xbox (and eventually, Chihiro
 ### Prerequisites
   * Visual C++ 2017 redistributable is required. Most people should already have this, but if not, Download it [here](https://support.microsoft.com/en-gb/help/2977003/the-latest-supported-visual-c-downloads). Make sure to install the 32-bit (x86) version even if you are on a 64-bit machine, as the 64-bit build does not include both!
   * Npcap (Used for Network emulation): Download the Installer [here](https://nmap.org/npcap/#download). Make sure to enable winpcap compatibility mode!
-  
+
 ## Automated Builds
 Cxbx-Reloaded is not yet ready for general release, but the latest development builds can be downloaded using the links below:
 
@@ -54,11 +54,10 @@ If you want to do some coding, be sure to read the [Developer notes](https://git
 
 Please contact us before you start working on something, so we can make sure your work is going to be accepted once finished.
 
-### Prerequisites 
+### Main Prerequisites
 1. [Git for Windows](https://git-scm.com/)
-2. [Visual Studio 2017](https://www.visualstudio.com/downloads/) (2015 might work, but is not officially supported)
-3. Windows 8.1 SDK (Should be included with Visual Studio)
-4. [Microsoft Child Process Debugging Power Tool](https://marketplace.visualstudio.com/items?itemName=GreggMiskelly.MicrosoftChildProcessDebuggingPowerTool)
+2. [CMake](https://cmake.org/)
+   * **REMARK:** Some IDEs are already has CMake support, it is optional.
 
 ### Fetching the code
 Run the following command on the command line:
@@ -72,9 +71,33 @@ If Cxbx-Reloaded was previously checked out without the submodules, they can be 
 `git submodule update --recurse-submodules`
 
 ### Compiling
-Simply open `build/Win32/Cxbx.sln` within Visual Studio, select your configuration (Release or Debug) and hit Build.
+Please note that Debug builds are significantly slower, but may help diagnose a problematic title.
 
-Please note that Debug builds are significantly slower, but include much more detailed kernel logging, and may help diagnose a problematic title.
+## Windows
+**NOTE:** We do not recommend to open CMakeLists.txt from Visual Studio as the generated files are not generating in build directory.
+
+### Prerequisites
+1. [Visual Studio 2017](https://www.visualstudio.com/downloads/) (2019 might work, but is not officially supported yet)
+   * Both C++ and C# desktop development
+   * Windows Universal CRT SDK
+   * C++ CMake tools for Windows **(optional if CMake is installed on system)**
+2. [Microsoft Child Process Debugging Power Tool](https://marketplace.visualstudio.com/items?itemName=GreggMiskelly.MicrosoftChildProcessDebuggingPowerTool)
+
+### Create Visual Studio generator files
+1. Open "___ Native Tools Command Prompt for VS 20__" from Start Menu.
+   * Ignore this step if you have CMake installed on your system.
+2. Navigate to downloaded Cxbx-Reloaded repo's directory as current working directory.
+3. Then run these commands.
+   1. `mkdir build & cd build` - Requirement to create and go in the build directory.
+      * **REMARK:** You can use `build-x86` as your preferred directory as well.
+   2. `cmake .. -G "Visual Studio 15 2017" -A Win32` - Create generated files for Visual Studio 2017.
+      * Or use "Visual Studio 16 2019" for Visual Studio 2019.
+        * **REMARK:** CMake 1.14 or later is the requirement to support Visual Studio 2019 generator.
+          * Last check: Visual Studio 2019, 16.0.3, currently has CMake 1.13.
+4. Open `Cxbx-Reloaded.sln` from build-x86 directory, select your configuration (Release or Debug), then hit Build.
+
+## Linux / macOS
+Currently not supported yet.
 
 ## Support
 You can support [Luke Usher](https://github.com/LukeUsher), initiator of Cxbx-Reloaded, on [Patreon](https://www.patreon.com/LukeUsher).

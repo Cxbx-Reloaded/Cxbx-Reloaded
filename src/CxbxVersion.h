@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Version.h"
+#include "version.h"
 
 /*! version string dependent on trace flag */
 #ifndef _DEBUG_TRACE

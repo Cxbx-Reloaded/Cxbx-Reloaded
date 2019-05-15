@@ -1,0 +1,193 @@
+cmake_minimum_required (VERSION 3.12)
+project(cxbx)
+
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_STANDARD 17)
+
+# Suppress extra stuff from generated solution
+set(CMAKE_SUPPRESS_REGENERATION true)
+
+include_directories(
+ "${CXBXR_ROOT_DIR}/src"
+ "${CXBXR_ROOT_DIR}/src/common"
+ "${CXBXR_ROOT_DIR}/src/common/Win32"
+ "${CXBXR_ROOT_DIR}/import/OpenXDK/include"
+ "${CXBXR_ROOT_DIR}/import/distorm/include"
+ "${CXBXR_ROOT_DIR}/import/glew-2.0.0/include"
+ "${CXBXR_ROOT_DIR}/import/subhook"
+ "${CXBXR_ROOT_DIR}/import/DirectX9/include"
+ "${CXBXR_ROOT_DIR}/import/XbSymbolDatabase"
+ "${CXBXR_ROOT_DIR}/import/simpleini"
+ "${CXBXR_ROOT_DIR}/import/libtommath"
+ "${CXBXR_ROOT_DIR}/import/libtomcrypt/src/headers"
+ "${CXBXR_ROOT_DIR}/import/winpcap/Include"
+)
+
+link_directories(
+ "${CXBXR_ROOT_DIR}/import/distorm/lib/Win32"
+ "${CXBXR_ROOT_DIR}/import/glew-2.0.0/lib/Release/Win32"
+ "${CXBXR_ROOT_DIR}/import/DirectX9/lib"
+ "${CXBXR_ROOT_DIR}/import/winpcap/Lib"
+)
+
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
+ add_compile_definitions(
+ _CRT_SECURE_NO_WARNINGS
+  # Windows 7 minimum requirement
+  _WIN32_WINNT=0x0601
+
+  LTM_DESC
+  USE_LTM
+  LTC_NO_TEST
+  LTC_NO_CIPHERS
+  LTC_NO_HASHES
+  LTC_NO_MACS
+  LTC_NO_PRNGS
+  LTC_NO_MISC
+  LTC_NO_PROTOTYPES
+ )
+ 
+ # Reference: https://docs.microsoft.com/en-us/cpp/build/reference/compiler-options-listed-alphabetically
+ add_compile_options(
+  # Catch synchronous (C++) exceptions only
+  # plus assume extern "C" may throw exception
+  /EHs
+  # Compile multiple source files by using multiple processes.
+  /MP
+  # Enable string pooling (reduce duplicate strings)
+  /GF
+  # Enable SSE2 code generation
+  /arch:SSE2
+ )
+endif()
+
+add_compile_definitions(NOMINMAX
+)
+
+file (GLOB RESOURCES
+ 
+ "${CXBXR_ROOT_DIR}/CONTRIBUTORS"
+ "${CXBXR_ROOT_DIR}/COPYING"
+ "${CXBXR_ROOT_DIR}/README.md"
+ "${CXBXR_ROOT_DIR}/resource/.editorconfig"
+ "${CXBXR_ROOT_DIR}/resource/Cxbx.rc"
+ "${CXBXR_ROOT_DIR}/resource/Cxbx-R.ico"
+ "${CXBXR_ROOT_DIR}/resource/Logo.bmp"
+ "${CXBXR_ROOT_DIR}/resource/Logo-License-CC4.bmp"
+ "${CXBXR_ROOT_DIR}/src/.editorconfig"
+)
+
+source_group(TREE ${CXBXR_ROOT_DIR}/src PREFIX header FILES
+ ${CXBXR_HEADER_GUIv1}
+ ${CXBXR_HEADER_COMMON}
+ ${CXBXR_HEADER_EMU}
+)
+
+source_group(TREE ${CXBXR_ROOT_DIR}/src PREFIX source FILES 
+ ${CXBXR_SOURCE_GUIv1}
+ ${CXBXR_SOURCE_COMMON}
+ ${CXBXR_SOURCE_EMU}
+)
+
+source_group(TREE ${CXBXR_ROOT_DIR} FILES ${RESOURCES})
+
+add_executable(cxbx WIN32 ${RESOURCES}
+ ${CXBXR_HEADER_GUIv1}
+ ${CXBXR_HEADER_COMMON}
+ ${CXBXR_HEADER_EMU}
+ ${CXBXR_SOURCE_GUIv1}
+ ${CXBXR_SOURCE_COMMON}
+ ${CXBXR_SOURCE_EMU}
+ ${CXBXR_GIT_VERSION_H}
+)
+
+# Link and compile flags
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
+
+ # Reference: https://docs.microsoft.com/en-us/cpp/build/reference/linker-options
+ set_target_properties(cxbx PROPERTIES
+  LINK_FLAGS "
+  /INCREMENTAL:NO
+  /LARGEADDRESSAWARE
+  /FIXED
+  /SAFESEH:NO
+  /DYNAMICBASE:NO
+  /BASE:0x10000
+  /STACK:65536,65536
+  /NODEFAULTLIB:libcmt
+  /DELAYLOAD:wpcap.dll
+  "
+  LINK_FLAGS_RELEASE "
+  /LTCG
+  "
+ )
+
+ # Reference: https://docs.microsoft.com/en-us/cpp/build/reference/compiler-options-listed-alphabetically
+ # /Zi   = create a PDB file without affecting optimization
+ # /Ob2  = Controls inline expansion of functions.
+ # /Oi   = Generate intrinsic functions
+ # /Ot   = In favor of using fast code than small code
+ # /GL   = Whole program optimization
+ # /GS-  = Remove buffer security check
+ # /Gy   = Enable function-level linking
+ # /Qpar = Enable automatic parallelize loops in the code
+
+ # Set optimization options for release build
+ set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}
+  /Zi
+  /Ob2
+  /Oi
+  /Ot
+  /GL
+
+  /GS-
+  /Gy
+  /Qpar
+  "
+ )
+ 
+ # disable optimization for CxbxKrnl.cpp file
+ set_source_files_properties(
+  ${CXBXR_KRNL_CPP} PROPERTIES COMPILE_FLAGS "/Od /GL-"
+ )
+endif()
+
+# Windows libraries
+set(WINS_LIB 
+ legacy_stdio_definitions
+ d3d9
+ dinput8
+ dxguid
+ odbc32
+ odbccp32
+ Shlwapi
+ dxerr9
+ ws2_32
+ dsound
+ winmm
+ ddraw
+ d3dx9
+ dbghelp
+ comctl32
+ XINPUT9_1_0
+ Iphlpapi
+ wpcap
+)
+
+target_link_libraries(cxbx
+ PUBLIC XbSymbolDatabase
+ subhook
+ vsbc
+ libtomcrypt
+
+ ${WINS_LIB}
+)
+
+add_dependencies(cxbx cxbxr-debugger)
+
+set(CXBXR_GLEW_DLL "${CXBXR_ROOT_DIR}/import/glew-2.0.0/bin/Release/Win32/glew32.dll")
+
+# Copy glew32.dll to build type's folder after build.
+add_custom_command(TARGET cxbx POST_BUILD
+ COMMAND ${CMAKE_COMMAND} -E copy ${CXBXR_GLEW_DLL} $<TARGET_FILE_DIR:cxbx>
+)
