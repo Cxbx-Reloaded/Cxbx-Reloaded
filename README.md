@@ -57,7 +57,7 @@ Please contact us before you start working on something, so we can make sure you
 ### Main Prerequisites
 1. [Git for Windows](https://git-scm.com/)
 2. [CMake](https://cmake.org/)
-   * **REMARK:** Some IDEs are already has CMake support, it is optional.
+   * **REMARK:** Some IDEs  already have CMake support, it is optional.
 
 ### Fetching the code
 Run the following command on the command line:
@@ -74,7 +74,7 @@ If Cxbx-Reloaded was previously checked out without the submodules, they can be 
 Please note that Debug builds are significantly slower, but may help diagnose a problematic title.
 
 ## Windows
-**NOTE:** We do not recommend to open CMakeLists.txt from Visual Studio as the generated files are not generating in build directory.
+**NOTE:** It's not recommended to open CMakeLists.txt from Visual Studio, as it won't generate files in the build directory.
 
 ### Prerequisites
 1. [Visual Studio 2017](https://www.visualstudio.com/downloads/) (2019 might work, but is not officially supported yet)
