@@ -183,7 +183,9 @@ target_link_libraries(cxbx
  ${WINS_LIB}
 )
 
-add_dependencies(cxbx cxbxr-debugger)
+if ("${CMAKE_CSharp_COMPILER}")
+  add_dependencies(cxbx cxbxr-debugger)
+endif()
 
 set(CXBXR_GLEW_DLL "${CXBXR_ROOT_DIR}/import/glew-2.0.0/bin/Release/Win32/glew32.dll")
 
@@ -191,3 +193,4 @@ set(CXBXR_GLEW_DLL "${CXBXR_ROOT_DIR}/import/glew-2.0.0/bin/Release/Win32/glew32
 add_custom_command(TARGET cxbx POST_BUILD
  COMMAND ${CMAKE_COMMAND} -E copy ${CXBXR_GLEW_DLL} $<TARGET_FILE_DIR:cxbx>
 )
+
