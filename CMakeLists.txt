@@ -1,10 +1,5 @@
 cmake_minimum_required (VERSION 3.8)
 
-# Enforce to use Windows 8.1 SDK
-if(${CMAKE_HOST_SYSTEM_NAME} STREQUAL "Windows")
- set(CMAKE_SYSTEM_VERSION 8.1 CACHE TYPE INTERNAL FORCE)
-endif()
-
 project(Cxbx-Reloaded)
 
 # Allow devs to disable regeneration option.
@@ -27,8 +22,8 @@ add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/import/XbSymbolDatabase")
 
 #add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/import/SDL2")
 
-if ("${CMAKE_CSharp_COMPILER}")
-  add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/import/cs_x86")
+if(${CMAKE_GENERATOR} MATCHES "Visual Studio ([^9]|[9][0-9])")
+	add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/import/cs_x86")
 endif()
 
 # Cxbx-Reloaded projects
@@ -351,7 +346,7 @@ add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/projects/cxbx")
 # Issues with compile (the same with develop branch) and
 # for some reason did not put the files into virtual folder?
 # Might need to put the list in the source folder for workaround fix.
-if ("${CMAKE_CSharp_COMPILER}")
+if(${CMAKE_GENERATOR} MATCHES "Visual Studio ([^9]|[9][0-9])")
   #add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/projects/debugger")
   add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/src/CxbxDebugger")
 endif()
@@ -361,7 +356,7 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
  set_property(DIRECTORY "${CMAKE_CURRENT_LIST_DIR}" PROPERTY VS_STARTUP_PROJECT cxbx)
 endif()
 
-if ("${CMAKE_CSharp_COMPILER}")
+if(${CMAKE_GENERATOR} MATCHES "Visual Studio ([^9]|[9][0-9])")
   # Refuse to exclude due to install is not set to optional
   #set_target_properties(cstool
   # PROPERTIES EXCLUDE_FROM_ALL TRUE

@@ -183,7 +183,7 @@ target_link_libraries(cxbx
  ${WINS_LIB}
 )
 
-if ("${CMAKE_CSharp_COMPILER}")
+if(${CMAKE_GENERATOR} MATCHES "Visual Studio ([^9]|[9][0-9])")
   add_dependencies(cxbx cxbxr-debugger)
 endif()
 
