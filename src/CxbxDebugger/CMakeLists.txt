@@ -126,6 +126,8 @@ set_target_properties(cxbxr-debugger PROPERTIES
  "Microsoft.CSharp;System;System.Core;System.Data;System.Data.DataSetExtensions;System.Deployment;System.Drawing;System.Windows;System.Windows.Forms;System.Xml;System.Xml.Linq;System.Net.Http"
  VS_GLOBAL_ApplicationIcon "${CXBXR_ROOT_DIR}/resource/Cxbx-R.ico"
  
+ VS_GLOBAL_ROOTNAMESPACE "CxbxDebugger"
+ 
 )
 
 set_property(TARGET cxbxr-debugger PROPERTY DOTNET_TARGET_FRAMEWORK_VERSION "v4.5")
