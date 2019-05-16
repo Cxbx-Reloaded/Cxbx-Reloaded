@@ -1,10 +1,5 @@
 cmake_minimum_required (VERSION 3.8)
 
-# Enforce to use Windows 8.1 SDK
-if(${CMAKE_HOST_SYSTEM_NAME} STREQUAL "Windows")
- set(CMAKE_SYSTEM_VERSION 8.1 CACHE TYPE INTERNAL FORCE)
-endif()
-
 project(Cxbx-Reloaded)
 
 # Allow devs to disable regeneration option.
@@ -27,7 +22,9 @@ add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/import/XbSymbolDatabase")
 
 #add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/import/SDL2")
 
-add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/import/cs_x86")
+if(${CMAKE_GENERATOR} MATCHES "Visual Studio ([^9]|[9][0-9])")
+	add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/import/cs_x86")
+endif()
 
 # Cxbx-Reloaded projects
 set(CXBXR_ROOT_DIR ${CMAKE_CURRENT_LIST_DIR})
@@ -349,29 +346,32 @@ add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/projects/cxbx")
 # Issues with compile (the same with develop branch) and
 # for some reason did not put the files into virtual folder?
 # Might need to put the list in the source folder for workaround fix.
-#add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/projects/debugger")
-add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/src/CxbxDebugger")
+if(${CMAKE_GENERATOR} MATCHES "Visual Studio ([^9]|[9][0-9])")
+  #add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/projects/debugger")
+  add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/src/CxbxDebugger")
+endif()
 
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
  # Configure startup project
  set_property(DIRECTORY "${CMAKE_CURRENT_LIST_DIR}" PROPERTY VS_STARTUP_PROJECT cxbx)
 endif()
 
-# Refuse to exclude due to install is not set to optional
-#set_target_properties(cstool
-# PROPERTIES EXCLUDE_FROM_ALL TRUE
-#)
-set_target_properties(Tests_cs_x86
- PROPERTIES EXCLUDE_FROM_ALL TRUE
-)
+if(${CMAKE_GENERATOR} MATCHES "Visual Studio ([^9]|[9][0-9])")
+  # Refuse to exclude due to install is not set to optional
+  #set_target_properties(cstool
+  # PROPERTIES EXCLUDE_FROM_ALL TRUE
+  #)
+  set_target_properties(Tests_cs_x86
+   PROPERTIES EXCLUDE_FROM_ALL TRUE
+  )
+
+  # Cxbx-Debugger project with third-party libraries
+  set_target_properties(cxbxr-debugger cs_x86 Tests_cs_x86 capstone-shared cstool
+   PROPERTIES FOLDER Cxbx-Reloaded/debugger
+  )
+endif()
 
 # Cxbx-Reloaded project with third-party libraries
-set_target_properties(cxbxr-debugger cs_x86 Tests_cs_x86 capstone-shared cstool
- PROPERTIES FOLDER Cxbx-Reloaded/debugger
-)
-
-# CxbxR-Debugger project with third-party libraries
 set_target_properties(cxbx subhook XbSymbolDatabase vsbc libtommath libtomcrypt
  PROPERTIES FOLDER Cxbx-Reloaded
 )
-
