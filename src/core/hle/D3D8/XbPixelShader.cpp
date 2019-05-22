@@ -2964,15 +2964,30 @@ bool PSH_XBOX_SHADER::InsertTextureModeInstruction(XTL::X_D3DPIXELSHADERDEF *pPS
             // NOTE: This assumes that this shader will only ever be used for the input bumpmap texture
             // If this causes regressions in other titles, we'll need to be smarter about this
             // and include the texture formats in the shader hash, somehow.
-            extern XTL::X_D3DBaseTexture* XTL::EmuD3DActiveTexture[TEXTURE_STAGES];
-            extern XTL::X_D3DFORMAT GetXboxPixelContainerFormat(const XTL::X_D3DPixelContainer *pXboxPixelContainer);
-            auto format = GetXboxPixelContainerFormat(XTL::EmuD3DActiveTexture[inputStage]);
             bool bias = false;
 			auto biasModifier = (1 << ARGMOD_SCALE_BX2);
-			// TODO L6V5U5 format is converted incorrectly if not supported by the device
-            if (format == XTL::X_D3DFMT_X8L8V8U8 /*|| format == XTL::X_D3DFMT_L6V5U5*/) {
-                bias = true;
-            }
+			auto pXboxTexture = XTL::EmuD3DActiveTexture[inputStage];
+			if (pXboxTexture != nullptr) {
+				extern XTL::X_D3DFORMAT GetXboxPixelContainerFormat(const XTL::X_D3DPixelContainer *pXboxPixelContainer); // TODO : Move to XTL-independent header file
+
+				switch (GetXboxPixelContainerFormat(pXboxTexture)) {
+					case XTL::X_D3DFMT_L6V5U5: {
+						extern XTL::X_D3DRESOURCETYPE GetXboxD3DResourceType(const XTL::X_D3DResource *pXboxResource); // TODO : Move to XTL-independent header file
+						extern bool IsSupportedFormat(XTL::X_D3DFORMAT X_Format, XTL::X_D3DRESOURCETYPE XboxResourceType, DWORD D3DUsage); // TODO : Move to XTL-independent header file
+
+						// L6V5U5 format is converted incorrectly if not supported by the device
+						XTL::X_D3DRESOURCETYPE XboxResourceType = GetXboxD3DResourceType(pXboxTexture);
+						DWORD D3DUsage = 0; // TODO : Since it's not yet know how to determine D3DUsage in this case, 'hack' it by using no specific D3DUSAGE_* flags.
+
+						bias = !IsSupportedFormat(/*XboxFormat=*/XTL::X_D3DFMT_L6V5U5, XboxResourceType, D3DUsage);
+						break;
+					}
+					case XTL::X_D3DFMT_X8L8V8U8: {
+						bias = true;
+						break;
+					}
+				}
+			}
 
             Ins.Initialize(PO_MAD);
             Ins.Output[0].SetRegister(PARAM_R, 1, MASK_R);
