@@ -93,7 +93,7 @@ Please note that Debug builds are significantly slower, but may help diagnose a 
    2. `cmake .. -G "Visual Studio 15 2017" -A Win32` - Create generated files for Visual Studio 2017.
       * Or use "Visual Studio 16 2019" for Visual Studio 2019.
         * **REMARK:** CMake 1.14 or later is the requirement to support Visual Studio 2019 generator.
-          * Last check: Visual Studio 2019, 16.0.3, currently has CMake 1.13.
+          * Visual Studio **16.1** 2019 or later has CMake 1.14 bundled.
 4. Open `Cxbx-Reloaded.sln` from build-x86 directory, select your configuration (Release or Debug), then hit Build.
 
 ## Linux / macOS
