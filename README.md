@@ -68,7 +68,7 @@ Please note the `--recurse-submodules` parameter. This is required to fetch sub-
 Without this, Cxbx-Reloaded will fail to build.
 
 If Cxbx-Reloaded was previously checked out without the submodules, they can be updated/fetched with the following command:
-`git submodule update --recurse-submodules`
+`git submodule update --init --recursive`
 
 ### Compiling
 Please note that Debug builds are significantly slower, but may help diagnose a problematic title.
