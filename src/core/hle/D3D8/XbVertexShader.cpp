@@ -712,44 +712,39 @@ static char *VshGetRegisterName(VSH_PARAMETER_TYPE ParameterType)
     }
 }
 
-static void VshWriteOutputMask(boolean *OutputMask,
-                               char    *pDisassembly,
-                               uint32_t *pDisassemblyPos)
+static void VshWriteOutputMask(boolean     *OutputMask,
+                               std::stringstream *pDisassembly)
 {
     if(OutputMask[0] && OutputMask[1] && OutputMask[2] && OutputMask[3])
     {
         // All components are there, no need to print the mask
         return;
     }
-    *pDisassemblyPos += sprintf(pDisassembly + *pDisassemblyPos, ".%s%s%s%s",
-                                OutputMask[0] ? "x" : "",
-                                OutputMask[1] ? "y" : "",
-                                OutputMask[2] ? "z" : "",
-                                OutputMask[3] ? "w" : "");
+	*pDisassembly << "." << (OutputMask[0] ? "x" : "")
+						 << (OutputMask[1] ? "y" : "")
+						 << (OutputMask[2] ? "z" : "")
+						 << (OutputMask[3] ? "w" : "");
 }
 
 static void VshWriteParameter(VSH_IMD_PARAMETER *pParameter,
-                              char              *pDisassembly,
-                              uint32_t          *pDisassemblyPos)
+                              std::stringstream       *pDisassembly)
 {
-    *pDisassemblyPos += sprintf(pDisassembly + *pDisassemblyPos, ", %s%s",
-                                pParameter->Parameter.Neg ? "-" : "",
-                                VshGetRegisterName(pParameter->Parameter.ParameterType));
+    *pDisassembly << ", " << (pParameter->Parameter.Neg ? "-" : "") << VshGetRegisterName(pParameter->Parameter.ParameterType);
     if(pParameter->Parameter.ParameterType == PARAM_C && pParameter->IndexesWithA0_X)
     {
         // Only display the offset if it's not 0.
         if(pParameter->Parameter.Address)
         {
-            *pDisassemblyPos += sprintf(pDisassembly + *pDisassemblyPos, "[a0.x+%d]", pParameter->Parameter.Address);
+			*pDisassembly << "[a0.x+" << std::to_string(pParameter->Parameter.Address) << "]";
         }
         else
         {
-            *pDisassemblyPos += sprintf(pDisassembly + *pDisassemblyPos, "[a0.x]");
+			*pDisassembly << "[a0.x]";
         }
     }
     else
     {
-        *pDisassemblyPos += sprintf(pDisassembly + *pDisassemblyPos, "%d", pParameter->Parameter.Address);
+		*pDisassembly << pParameter->Parameter.Address;
     }
     // Only bother printing the swizzle if it is not .xyzw
     if(!(pParameter->Parameter.Swizzle[0] == SWIZZLE_X &&
@@ -759,7 +754,7 @@ static void VshWriteParameter(VSH_IMD_PARAMETER *pParameter,
     {
         int i;
 
-        *pDisassemblyPos += sprintf(pDisassembly + *pDisassemblyPos, ".");
+		*pDisassembly << ".";
         for (i = 0; i < 4; i++)
         {
             int j;
@@ -779,7 +774,7 @@ static void VshWriteParameter(VSH_IMD_PARAMETER *pParameter,
                 Swizzle = 'w';
                 break;
             }
-            *pDisassemblyPos += sprintf(pDisassembly + *pDisassemblyPos, "%c", Swizzle);
+			*pDisassembly << Swizzle;
             for (j = i; j < 4; j++)
             {
                 if(pParameter->Parameter.Swizzle[i] != pParameter->Parameter.Swizzle[j])
@@ -820,35 +815,34 @@ static const BYTE DeclAddressUsages[][2] =
 
 
 static void VshWriteShader(VSH_XBOX_SHADER *pShader,
-                           char* pDisassembly,
+                           std::stringstream *pDisassembly,
 						   XTL::D3DVERTEXELEMENT *pRecompiled,
                            boolean Truncate)
 {
-    uint32_t DisassemblyPos = 0;
     switch(pShader->ShaderHeader.Version)
     {
         case VERSION_VS:
 #ifdef CXBX_USE_VS30
-            DisassemblyPos += sprintf(pDisassembly + DisassemblyPos, "vs.3.0\n");
+			*pDisassembly << "vs.3.0\n";
 #else
-            DisassemblyPos += sprintf(pDisassembly + DisassemblyPos, "vs.2.x\n");
+			*pDisassembly << "vs.2.x\n";
 #endif
             break;
         case VERSION_XVS:
-            DisassemblyPos += sprintf(pDisassembly + DisassemblyPos, "xvs.1.1\n");
+			*pDisassembly << "xvs.1.1\n";
             break;
         case VERSION_XVSS:
-            DisassemblyPos += sprintf(pDisassembly + DisassemblyPos, "xvss.1.1\n");
+			*pDisassembly << "xvss.1.1\n";
             break;
         case VERSION_XVSW:
-            DisassemblyPos += sprintf(pDisassembly + DisassemblyPos, "xvsw.1.1\n");
+			*pDisassembly << "xvsw.1.1\n";
             break;
         default:
             break;
     }
 
 	if (Truncate) {
-		DisassemblyPos += sprintf(pDisassembly + DisassemblyPos, "; Input usage declarations --\n");
+		*pDisassembly << "; Input usage declarations --\n";
 		unsigned i = 0;
 		do {
 			if (RegVUsage[i]) {
@@ -892,7 +886,7 @@ static void VshWriteShader(VSH_XBOX_SHADER *pShader,
 					break;
 				}
 
-				DisassemblyPos += sprintf(pDisassembly + DisassemblyPos, "%s v%d\n", dclStream.str().c_str(), i);
+				*pDisassembly << dclStream.str() << " v" << i << "\n";
 			}
 
 			i++;
@@ -905,13 +899,13 @@ static void VshWriteShader(VSH_XBOX_SHADER *pShader,
 
         if(i == VSH_MAX_INSTRUCTION_COUNT)
         {
-            DisassemblyPos += sprintf(pDisassembly + DisassemblyPos, "; -- Passing the truncation limit --\n");
+			*pDisassembly << "; -- Passing the truncation limit --\n";
         }
 
         // Writing combining sign if neccessary
         if(pIntermediate->IsCombined)
         {
-            DisassemblyPos += sprintf(pDisassembly + DisassemblyPos, "+");
+			*pDisassembly << "+";
         }
 
         // Print the op code
@@ -919,46 +913,46 @@ static void VshWriteShader(VSH_XBOX_SHADER *pShader,
         {
 			// Dxbx addition : Safeguard against incorrect MAC opcodes :
 			if (pIntermediate->MAC > MAC_ARL)
-				DisassemblyPos += sprintf(pDisassembly + DisassemblyPos, "??? ");
+				*pDisassembly << "??? ";
 			else
-				DisassemblyPos += sprintf(pDisassembly + DisassemblyPos, "%s ", MAC_OpCode[pIntermediate->MAC]);
+				*pDisassembly << MAC_OpCode[pIntermediate->MAC] << " ";
         }
         else // IMD_ILU
         {
 			// Dxbx addition : Safeguard against incorrect ILU opcodes :
 			if (pIntermediate->ILU > ILU_LIT)
-				DisassemblyPos += sprintf(pDisassembly + DisassemblyPos, "??? ");
+				*pDisassembly << "??? ";
 			else
-				DisassemblyPos += sprintf(pDisassembly + DisassemblyPos, "%s ", ILU_OpCode[pIntermediate->ILU]);
+				*pDisassembly << ILU_OpCode[pIntermediate->ILU] << " ";
         }
 
         // Print the output parameter
         if(pIntermediate->Output.Type == IMD_OUTPUT_A0X)
         {
-            DisassemblyPos += sprintf(pDisassembly + DisassemblyPos, "a0.x");
+			*pDisassembly << "a0.x";
         }
         else
         {
             switch(pIntermediate->Output.Type)
             {
             case IMD_OUTPUT_C:
-                DisassemblyPos += sprintf(pDisassembly + DisassemblyPos, "c%d", pIntermediate->Output.Address);
+				*pDisassembly << "c" << pIntermediate->Output.Address;
                 break;
             case IMD_OUTPUT_R:
-                DisassemblyPos += sprintf(pDisassembly + DisassemblyPos, "r%d", pIntermediate->Output.Address);
+				*pDisassembly << "r" << pIntermediate->Output.Address;
                 break;
             case IMD_OUTPUT_O:
 				// Dxbx addition : Safeguard against incorrect VSH_OREG_NAME values :
 				if ((int)pIntermediate->Output.Address > OREG_A0X)
 					; // don't add anything
 				else
-					DisassemblyPos += sprintf(pDisassembly + DisassemblyPos, "%s", OReg_Name[pIntermediate->Output.Address]);
+					*pDisassembly << OReg_Name[pIntermediate->Output.Address];
                 break;
             default:
                 CxbxKrnlCleanup("Invalid output register in vertex shader!");
                 break;
             }
-            VshWriteOutputMask(pIntermediate->Output.Mask, pDisassembly, &DisassemblyPos);
+            VshWriteOutputMask(pIntermediate->Output.Mask, pDisassembly);
         }
         // Print the parameters
         for (int p = 0; p < 3; p++)
@@ -966,12 +960,11 @@ static void VshWriteShader(VSH_XBOX_SHADER *pShader,
             VSH_IMD_PARAMETER *pParameter = &pIntermediate->Parameters[p];
             if(pParameter->Active)
             {
-                VshWriteParameter(pParameter, pDisassembly, &DisassemblyPos);
+                VshWriteParameter(pParameter, pDisassembly);
             }
         }
-        DisassemblyPos += sprintf(pDisassembly + DisassemblyPos, "\n");
+		*pDisassembly << "\n";
     }
-    *(pDisassembly + DisassemblyPos) = 0;
 }
 
 static void VshAddParameter(VSH_PARAMETER     *pParameter,
@@ -2514,21 +2507,23 @@ extern HRESULT XTL::EmuRecompileVshFunction
 			return D3D_OK;
 		}
 
-        char* pShaderDisassembly = (char*)malloc(pShader->IntermediateCount * 100); // Should be plenty
+		std::stringstream pXboxShaderDisassembly;
+		std::stringstream pHostShaderDisassembly;
+
 		DbgVshPrintf("-- Before conversion --\n");
-        VshWriteShader(pShader, pShaderDisassembly, (XTL::D3DVERTEXELEMENT9*)pRecompiledDeclaration, FALSE);
-		DbgVshPrintf("%s", pShaderDisassembly);
+        VshWriteShader(pShader, &pXboxShaderDisassembly, (XTL::D3DVERTEXELEMENT9*)pRecompiledDeclaration, FALSE);
+		DbgVshPrintf("%s", pXboxShaderDisassembly.str().c_str());
 		DbgVshPrintf("-----------------------\n");
 
         VshConvertShader(pShader, bNoReservedConstants, declaredRegisters);
-        VshWriteShader(pShader, pShaderDisassembly, (XTL::D3DVERTEXELEMENT9*)pRecompiledDeclaration, TRUE);
+        VshWriteShader(pShader, &pHostShaderDisassembly, (XTL::D3DVERTEXELEMENT9*)pRecompiledDeclaration, TRUE);
 
 		DbgVshPrintf("-- After conversion ---\n");
-		DbgVshPrintf("%s", pShaderDisassembly);
+		DbgVshPrintf("%s", pHostShaderDisassembly.str().c_str());
 		DbgVshPrintf("-----------------------\n");
 
         // HACK: Azurik. Prevent Direct3D from trying to assemble this.
-		if(!strcmp(pShaderDisassembly, "vs.2.x\n"))
+		if(pHostShaderDisassembly.str() == "vs.2.x\n")
 		{
 			EmuLog(LOG_LEVEL::WARNING, "Replacing empty vertex shader with fallback");
 
@@ -2551,8 +2546,8 @@ extern HRESULT XTL::EmuRecompileVshFunction
 		else
 		{
 			hRet = D3DXAssembleShader(
-				pShaderDisassembly,
-				strlen(pShaderDisassembly),
+				pHostShaderDisassembly.str().c_str(),
+				pHostShaderDisassembly.str().length(),
 				/*pDefines=*/nullptr,
 				/*pInclude=*/nullptr,
 				/*Flags=*/0, // Was D3DXASM_SKIPVALIDATION,
@@ -2568,8 +2563,6 @@ extern HRESULT XTL::EmuRecompileVshFunction
 
 		if( pErrors )
 			pErrors->Release();
-
-        free(pShaderDisassembly);
     }
 
     free(pShader);
