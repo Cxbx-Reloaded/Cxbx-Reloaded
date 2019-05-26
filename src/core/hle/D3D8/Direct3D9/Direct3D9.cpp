@@ -6779,6 +6779,10 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetStreamSource)
 	XB_trampoline(VOID, WINAPI, D3DDevice_SetStreamSource, (UINT, X_D3DVertexBuffer*, UINT));
 	XB_D3DDevice_SetStreamSource(StreamNumber, pStreamData, Stride);
 
+	if(pStreamData != xbnullptr && Stride == 0){
+		LOG_TEST_CASE("Stream stride set to 0");
+	}
+
 	if (StreamNumber < 16) {
 		g_D3DStreams[StreamNumber] = pStreamData;
 		g_D3DStreamStrides[StreamNumber] = Stride;
