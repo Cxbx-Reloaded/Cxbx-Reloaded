@@ -735,7 +735,7 @@ static void VshWriteParameter(VSH_IMD_PARAMETER *pParameter,
         // Only display the offset if it's not 0.
         if(pParameter->Parameter.Address)
         {
-			*pDisassembly << "[a0.x+" << std::to_string(pParameter->Parameter.Address) << "]";
+			*pDisassembly << "[a0.x+" << pParameter->Parameter.Address << "]";
         }
         else
         {
