@@ -1509,9 +1509,12 @@ static boolean VshConvertShader(VSH_XBOX_SHADER *pShader,
 
 			// Fix when mad or mov to a scaler input does not use a replicate swizzle
 			// MAD Test case: Panzer Dragoon Orta
-			// MOV Test case: DOA3
-			if ((pIntermediate->InstructionType == IMD_MAC && pIntermediate->MAC == MAC_MAD) ||
-				(pIntermediate->InstructionType == IMD_MAC && pIntermediate->MAC == MAC_MOV)) {
+			// MOV Test case: DOA3, Mechassault (Const)
+			// MUL Test case: Amped
+			// TODO Previously we applied this fix for specified instructions
+			// When should we not apply the correction?
+			if (true)
+			{
 				// Clear all but the first swizzle for each parameter
 				// TODO: Is this sufficient? Perhaps we need to be smart about which swizzle to select
 				for (int param = 0; param < 3; param++) {
