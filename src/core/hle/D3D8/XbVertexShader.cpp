@@ -712,49 +712,49 @@ static char *VshGetRegisterName(VSH_PARAMETER_TYPE ParameterType)
     }
 }
 
-static void VshWriteOutputMask(boolean     *OutputMask,
-                               std::stringstream *pDisassembly)
+static void VshWriteOutputMask(boolean *OutputMask,
+                               std::stringstream& pDisassembly)
 {
     if(OutputMask[0] && OutputMask[1] && OutputMask[2] && OutputMask[3])
     {
         // All components are there, no need to print the mask
         return;
     }
-	*pDisassembly << "." << (OutputMask[0] ? "x" : "")
-						 << (OutputMask[1] ? "y" : "")
-						 << (OutputMask[2] ? "z" : "")
-						 << (OutputMask[3] ? "w" : "");
+	pDisassembly << "." << (OutputMask[0] ? "x" : "")
+						<< (OutputMask[1] ? "y" : "")
+						<< (OutputMask[2] ? "z" : "")
+						<< (OutputMask[3] ? "w" : "");
 }
 
 static void VshWriteParameter(VSH_IMD_PARAMETER *pParameter,
-                              std::stringstream       *pDisassembly)
+                              std::stringstream& pDisassembly)
 {
-    *pDisassembly << ", " << (pParameter->Parameter.Neg ? "-" : "") << VshGetRegisterName(pParameter->Parameter.ParameterType);
+    pDisassembly << ", " << (pParameter->Parameter.Neg ? "-" : "") << VshGetRegisterName(pParameter->Parameter.ParameterType);
     if(pParameter->Parameter.ParameterType == PARAM_C && pParameter->IndexesWithA0_X)
     {
         // Only display the offset if it's not 0.
         if(pParameter->Parameter.Address)
         {
-			*pDisassembly << "[a0.x+" << pParameter->Parameter.Address << "]";
+			pDisassembly << "[a0.x+" << pParameter->Parameter.Address << "]";
         }
         else
         {
-			*pDisassembly << "[a0.x]";
+			pDisassembly << "[a0.x]";
         }
     }
     else
     {
-		*pDisassembly << pParameter->Parameter.Address;
+		pDisassembly << pParameter->Parameter.Address;
     }
     // Only bother printing the swizzle if it is not .xyzw
     if(!(pParameter->Parameter.Swizzle[0] == SWIZZLE_X &&
-          pParameter->Parameter.Swizzle[1] == SWIZZLE_Y &&
-          pParameter->Parameter.Swizzle[2] == SWIZZLE_Z &&
-          pParameter->Parameter.Swizzle[3] == SWIZZLE_W))
+         pParameter->Parameter.Swizzle[1] == SWIZZLE_Y &&
+         pParameter->Parameter.Swizzle[2] == SWIZZLE_Z &&
+         pParameter->Parameter.Swizzle[3] == SWIZZLE_W))
     {
         int i;
 
-		*pDisassembly << ".";
+		pDisassembly << ".";
         for (i = 0; i < 4; i++)
         {
             int j;
@@ -774,7 +774,7 @@ static void VshWriteParameter(VSH_IMD_PARAMETER *pParameter,
                 Swizzle = 'w';
                 break;
             }
-			*pDisassembly << Swizzle;
+			pDisassembly << Swizzle;
             for (j = i; j < 4; j++)
             {
                 if(pParameter->Parameter.Swizzle[i] != pParameter->Parameter.Swizzle[j])
@@ -815,7 +815,7 @@ static const BYTE DeclAddressUsages[][2] =
 
 
 static void VshWriteShader(VSH_XBOX_SHADER *pShader,
-                           std::stringstream *pDisassembly,
+                           std::stringstream& pDisassembly,
 						   XTL::D3DVERTEXELEMENT *pRecompiled,
                            boolean Truncate)
 {
@@ -823,26 +823,26 @@ static void VshWriteShader(VSH_XBOX_SHADER *pShader,
     {
         case VERSION_VS:
 #ifdef CXBX_USE_VS30
-			*pDisassembly << "vs.3.0\n";
+			pDisassembly << "vs.3.0\n";
 #else
-			*pDisassembly << "vs.2.x\n";
+			pDisassembly << "vs.2.x\n";
 #endif
             break;
         case VERSION_XVS:
-			*pDisassembly << "xvs.1.1\n";
+			pDisassembly << "xvs.1.1\n";
             break;
         case VERSION_XVSS:
-			*pDisassembly << "xvss.1.1\n";
+			pDisassembly << "xvss.1.1\n";
             break;
         case VERSION_XVSW:
-			*pDisassembly << "xvsw.1.1\n";
+			pDisassembly << "xvsw.1.1\n";
             break;
         default:
             break;
     }
 
 	if (Truncate) {
-		*pDisassembly << "; Input usage declarations --\n";
+		pDisassembly << "; Input usage declarations --\n";
 		unsigned i = 0;
 		do {
 			if (RegVUsage[i]) {
@@ -886,7 +886,7 @@ static void VshWriteShader(VSH_XBOX_SHADER *pShader,
 					break;
 				}
 
-				*pDisassembly << dclStream.str() << " v" << i << "\n";
+				pDisassembly << dclStream.str() << " v" << i << "\n";
 			}
 
 			i++;
@@ -899,13 +899,13 @@ static void VshWriteShader(VSH_XBOX_SHADER *pShader,
 
         if(i == VSH_MAX_INSTRUCTION_COUNT)
         {
-			*pDisassembly << "; -- Passing the truncation limit --\n";
+			pDisassembly << "; -- Passing the truncation limit --\n";
         }
 
         // Writing combining sign if neccessary
         if(pIntermediate->IsCombined)
         {
-			*pDisassembly << "+";
+			pDisassembly << "+";
         }
 
         // Print the op code
@@ -913,40 +913,40 @@ static void VshWriteShader(VSH_XBOX_SHADER *pShader,
         {
 			// Dxbx addition : Safeguard against incorrect MAC opcodes :
 			if (pIntermediate->MAC > MAC_ARL)
-				*pDisassembly << "??? ";
+				pDisassembly << "??? ";
 			else
-				*pDisassembly << MAC_OpCode[pIntermediate->MAC] << " ";
+				pDisassembly << MAC_OpCode[pIntermediate->MAC] << " ";
         }
         else // IMD_ILU
         {
 			// Dxbx addition : Safeguard against incorrect ILU opcodes :
 			if (pIntermediate->ILU > ILU_LIT)
-				*pDisassembly << "??? ";
+				pDisassembly << "??? ";
 			else
-				*pDisassembly << ILU_OpCode[pIntermediate->ILU] << " ";
+				pDisassembly << ILU_OpCode[pIntermediate->ILU] << " ";
         }
 
         // Print the output parameter
         if(pIntermediate->Output.Type == IMD_OUTPUT_A0X)
         {
-			*pDisassembly << "a0.x";
+			pDisassembly << "a0.x";
         }
         else
         {
             switch(pIntermediate->Output.Type)
             {
             case IMD_OUTPUT_C:
-				*pDisassembly << "c" << pIntermediate->Output.Address;
+				pDisassembly << "c" << pIntermediate->Output.Address;
                 break;
             case IMD_OUTPUT_R:
-				*pDisassembly << "r" << pIntermediate->Output.Address;
+				pDisassembly << "r" << pIntermediate->Output.Address;
                 break;
             case IMD_OUTPUT_O:
 				// Dxbx addition : Safeguard against incorrect VSH_OREG_NAME values :
 				if ((int)pIntermediate->Output.Address > OREG_A0X)
 					; // don't add anything
 				else
-					*pDisassembly << OReg_Name[pIntermediate->Output.Address];
+					pDisassembly << OReg_Name[pIntermediate->Output.Address];
                 break;
             default:
                 CxbxKrnlCleanup("Invalid output register in vertex shader!");
@@ -963,7 +963,7 @@ static void VshWriteShader(VSH_XBOX_SHADER *pShader,
                 VshWriteParameter(pParameter, pDisassembly);
             }
         }
-		*pDisassembly << "\n";
+		pDisassembly << "\n";
     }
 }
 
@@ -2507,16 +2507,16 @@ extern HRESULT XTL::EmuRecompileVshFunction
 			return D3D_OK;
 		}
 
-		std::stringstream pXboxShaderDisassembly;
-		std::stringstream pHostShaderDisassembly;
+		std::stringstream& pXboxShaderDisassembly = std::stringstream();
+		std::stringstream& pHostShaderDisassembly = std::stringstream();
 
 		DbgVshPrintf("-- Before conversion --\n");
-        VshWriteShader(pShader, &pXboxShaderDisassembly, (XTL::D3DVERTEXELEMENT9*)pRecompiledDeclaration, FALSE);
+        VshWriteShader(pShader, pXboxShaderDisassembly, (XTL::D3DVERTEXELEMENT9*)pRecompiledDeclaration, FALSE);
 		DbgVshPrintf("%s", pXboxShaderDisassembly.str().c_str());
 		DbgVshPrintf("-----------------------\n");
 
         VshConvertShader(pShader, bNoReservedConstants, declaredRegisters);
-        VshWriteShader(pShader, &pHostShaderDisassembly, (XTL::D3DVERTEXELEMENT9*)pRecompiledDeclaration, TRUE);
+        VshWriteShader(pShader, pHostShaderDisassembly, (XTL::D3DVERTEXELEMENT9*)pRecompiledDeclaration, TRUE);
 
 		DbgVshPrintf("-- After conversion ---\n");
 		DbgVshPrintf("%s", pHostShaderDisassembly.str().c_str());
