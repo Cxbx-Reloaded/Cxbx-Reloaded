@@ -159,8 +159,9 @@ static UINT                         QuadToTriangleD3DIndexBuffer_Size = 0; // = 
 static XTL::INDEX16                *pQuadToTriangleIndexBuffer = nullptr;
 static UINT                         QuadToTriangleIndexBuffer_Size = 0; // = NrOfQuadVertices
 
-static XTL::IDirect3DSurface	   *g_DefaultHostDepthBufferSuface = NULL;
-static XTL::X_D3DSurface		   *g_XboxBackBufferSurface = NULL;
+static XTL::IDirect3DSurface       *g_DefaultHostDepthBufferSuface = NULL;
+static XTL::X_D3DSurface           *g_XboxBackBufferSurface = NULL;
+static XTL::X_D3DSurface           *g_XboxDefaultDepthStencilSurface = NULL;
 static XTL::X_D3DSurface           *g_pXboxRenderTarget = NULL;
 static XTL::X_D3DSurface           *g_pXboxDepthStencil = NULL;
 static DWORD                        g_dwVertexShaderUsage = 0;
@@ -5426,6 +5427,10 @@ ULONG WINAPI XTL::EMUPATCH(D3DResource_Release)
 			g_XboxBackBufferSurface = nullptr;
 		}
 
+        if (pThis == g_XboxDefaultDepthStencilSurface) {
+            g_XboxDefaultDepthStencilSurface = nullptr;
+        }
+
 		for (int i = 0; i < TEXTURE_STAGES; i++) {
 			if (pThis == EmuD3DActiveTexture[i])
 				EmuD3DActiveTexture[i] = nullptr;
@@ -7787,6 +7792,10 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderTarget)
 		// if that happens, we might need to skip the first one or two calls?
 	}
 
+    if (g_XboxDefaultDepthStencilSurface == xbnullptr) {
+        g_XboxDefaultDepthStencilSurface = pNewZStencil;
+    }
+
 	// The current render target is only replaced if it's passed in here non-null
 	if (pRenderTarget != xbnullptr) {
 		g_pXboxRenderTarget = pRenderTarget;
@@ -7807,16 +7816,22 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderTarget)
 	g_pXboxDepthStencil = pNewZStencil;
     pHostDepthStencil = GetHostSurface(g_pXboxDepthStencil, D3DUSAGE_DEPTHSTENCIL);
 
-	if (g_DirectHostBackBufferAccess && pRenderTarget == g_XboxBackBufferSurface) {
-		HRESULT hRet = g_pD3DDevice->GetBackBuffer(
-			0, // iSwapChain
-			0, D3DBACKBUFFER_TYPE_MONO, &pHostRenderTarget);
-		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->GetBackBuffer");
+	if (g_DirectHostBackBufferAccess) {
+        if (pRenderTarget == g_XboxBackBufferSurface) {
+            HRESULT hRet = g_pD3DDevice->GetBackBuffer(
+                0, // iSwapChain
+                0, D3DBACKBUFFER_TYPE_MONO, &pHostRenderTarget);
+            DEBUG_D3DRESULT(hRet, "g_pD3DDevice->GetBackBuffer");
 
-		if (FAILED(hRet)) {
-			CxbxKrnlCleanup("Could not get host backbuffer");
-		}
-	}
+            if (FAILED(hRet)) {
+                CxbxKrnlCleanup("Could not get host backbuffer");
+            }
+        }
+
+        if (pNewZStencil == g_XboxDefaultDepthStencilSurface) {
+            pHostDepthStencil = g_DefaultHostDepthBufferSuface;
+        }
+    }
 
 	HRESULT hRet;
 	// Mimick Direct3D 8 SetRenderTarget by only setting render target if non-null
@@ -7827,8 +7842,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderTarget)
 			// If Direct3D 9 SetRenderTarget failed, skip setting depth stencil
 			return;
 		}
-
-		pHostDepthStencil = g_DefaultHostDepthBufferSuface;
 	}
 
 	hRet = g_pD3DDevice->SetDepthStencilSurface(pHostDepthStencil);
