@@ -561,11 +561,12 @@ void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData)
 			}
 
 			/* + HACK: extra safety padding 0x100 */
-			pNewTLS = (void*)g_VMManager.AllocateZeroed(dwCopySize + dwZeroSize + 0x100);
-
+			pNewTLS = (void*)g_VMManager.AllocateZeroed(dwCopySize + dwZeroSize + 0x100 + 0xC);
+			/* Skip the first 12 bytes so that TLSData will be 16 byte aligned (addr returned by AllocateZeroed is 4K aligned) */
+			pNewTLS = (uint8_t*)pNewTLS + 12;
 
 			if (dwCopySize > 0) {
-				memcpy(pNewTLS, pTLSData, dwCopySize);
+				memcpy((uint8_t*)pNewTLS + 4, pTLSData, dwCopySize);
 			}
 
 #ifdef _DEBUG_TRACE
@@ -575,7 +576,7 @@ void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData)
             } else {
                 DBG_PRINTF("TLS Data Dump...\n");
                 if (g_bPrintfOn) {
-                    for (uint32_t v = 0; v < dwCopySize; v++) {// Note : Don't dump dwZeroSize
+                    for (uint32_t v = 4; v < dwCopySize + 4; v++) {// Note : Don't dump dwZeroSize
 
                         uint8_t *bByte = (uint8_t*)pNewTLS + v;
 
