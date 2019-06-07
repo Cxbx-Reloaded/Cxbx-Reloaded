@@ -256,7 +256,7 @@ void EmuNVNet_UpdateIRQ()
 {
 	if (EmuNVNet_GetRegister(NvRegIrqMask, 4) &&
 		EmuNVNet_GetRegister(NvRegIrqStatus, 4)) {
-		DBG_PRINTF("Asserting IRQ\n");
+		EmuLog(LOG_LEVEL::DEBUG, "Asserting IRQ");
 		HalSystemInterrupts[4].Assert(true);
 	} else {
 		HalSystemInterrupts[4].Assert(false);
@@ -275,7 +275,7 @@ int EmuNVNet_MiiReadWrite(uint64_t val)
 	reg = mii_ctl & ((1 << NVREG_MIICTL_ADDRSHIFT) - 1);
 	write = mii_ctl & NVREG_MIICTL_WRITE;
 
-	DBG_PRINTF("nvnet mii %s: phy 0x%x %s [0x%x]\n", write ? "write" : "read", phy_addr, EmuNVNet_GetMiiRegisterName(reg), reg);
+	EmuLog(LOG_LEVEL::DEBUG, "nvnet mii %s: phy 0x%x %s [0x%x]", write ? "write" : "read", phy_addr, EmuNVNet_GetMiiRegisterName(reg), reg);
 
 	if (phy_addr != 1) {
 		return -1;
@@ -306,7 +306,7 @@ int EmuNVNet_MiiReadWrite(uint64_t val)
 
 uint32_t EmuNVNet_Read(xbaddr addr, int size)
 {
-	DBG_PRINTF("Read%d: %s (0x%.8X)\n", size * 8, EmuNVNet_GetRegisterName(addr), addr);
+	EmuLog(LOG_LEVEL::DEBUG, "Read%d: %s (0x%.8X)", size * 8, EmuNVNet_GetRegisterName(addr), addr);
 
 	switch (addr) {
 		case NvRegMIIData:
@@ -339,7 +339,7 @@ void EmuNVNet_DMAPacketFromGuest()
 		DBG_PRINTF("Looking at ring desc %d (%llx): ", s->tx_ring_index, tx_ring_addr);
 		DBG_PRINTF("Buffer: 0x%x, ", desc.packet_buffer);
 		DBG_PRINTF("Length: 0x%x, ", desc.length);
-		DBG_PRINTF("Flags: 0x%x\n", desc.flags);
+		EmuLog(LOG_LEVEL::DEBUG, "Flags: 0x%x", desc.flags);
 
 		s->tx_ring_index += 1;
 
@@ -348,7 +348,7 @@ void EmuNVNet_DMAPacketFromGuest()
 		}
 
 		/* Transfer packet from guest memory */
-		DBG_PRINTF("Sending packet...\n");
+		EmuLog(LOG_LEVEL::DEBUG, "Sending packet...");
 
 		memcpy(s->txrx_dma_buf, (void*)(desc.packet_buffer | CONTIGUOUS_MEMORY_BASE), desc.length + 1);
 		g_NVNet->PCAPSend(s->txrx_dma_buf, desc.length + 1);
@@ -363,14 +363,14 @@ void EmuNVNet_DMAPacketFromGuest()
 		memcpy((void*)(tx_ring_addr | CONTIGUOUS_MEMORY_BASE), &desc, sizeof(desc));
 
 		if (is_last_packet) {
-			DBG_PRINTF("  -- Last packet\n");
+			EmuLog(LOG_LEVEL::DEBUG, "  -- Last packet");
 			break;
 		}
 	}
 
 	if (packet_sent) {
 		/* Trigger interrupt */
-		DBG_PRINTF("Triggering interrupt\n");
+		EmuLog(LOG_LEVEL::DEBUG, "Triggering interrupt");
 		EmuNVNet_SetRegister(NvRegIrqStatus, NVREG_IRQSTAT_BIT4, 4);
 		EmuNVNet_UpdateIRQ();
 	}
@@ -393,7 +393,7 @@ bool EmuNVNet_DMAPacketToGuest(void* packet, size_t size)
 		DBG_PRINTF("Looking at ring descriptor %d (0x%llx): ", s->rx_ring_index, rx_ring_addr);
 		DBG_PRINTF("Buffer: 0x%x, ", desc.packet_buffer);
 		DBG_PRINTF("Length: 0x%x, ", desc.length);
-		DBG_PRINTF("Flags: 0x%x\n", desc.flags);
+		EmuLog(LOG_LEVEL::DEBUG, "Flags: 0x%x", desc.flags);
 
 		s->rx_ring_index += 1;
 
@@ -402,7 +402,7 @@ bool EmuNVNet_DMAPacketToGuest(void* packet, size_t size)
 		}
 
 		/* Transfer packet from device to memory */
-		DBG_PRINTF("Transferring packet, size 0x%zx, to memory at 0x%x\n", size, desc.packet_buffer);
+		EmuLog(LOG_LEVEL::DEBUG, "Transferring packet, size 0x%zx, to memory at 0x%x", size, desc.packet_buffer);
 		memcpy((void*)(desc.packet_buffer | CONTIGUOUS_MEMORY_BASE), packet, size);
 
 		/* Update descriptor indicating the packet is waiting */
@@ -411,17 +411,17 @@ bool EmuNVNet_DMAPacketToGuest(void* packet, size_t size)
 		memcpy((void*)(rx_ring_addr | CONTIGUOUS_MEMORY_BASE), &desc, sizeof(desc));
 		DBG_PRINTF("Updated ring descriptor: ");
 		DBG_PRINTF("Length: 0x%x, ", desc.length);
-		DBG_PRINTF("Flags: 0x%x\n", desc.flags);
+		EmuLog(LOG_LEVEL::DEBUG, "Flags: 0x%x", desc.flags);
 
 		/* Trigger interrupt */
-		DBG_PRINTF("Triggering interrupt\n");
+		EmuLog(LOG_LEVEL::DEBUG, "Triggering interrupt");
 		EmuNVNet_SetRegister(NvRegIrqStatus, NVREG_IRQSTAT_BIT1, 4);
 		EmuNVNet_UpdateIRQ();
 		return true;
 	}
 
 	/* Could not find free buffer, or packet too large. */
-	DBG_PRINTF("Could not find free buffer!\n");
+	EmuLog(LOG_LEVEL::DEBUG, "Could not find free buffer!");
 	return false;
 }
 
@@ -438,7 +438,7 @@ void EmuNVNet_Write(xbaddr addr, uint32_t value, int size)
 		break;
 	case NvRegTxRxControl:
 		if (value == NVREG_TXRXCTL_KICK) {
-			DBG_PRINTF("NvRegTxRxControl = NVREG_TXRXCTL_KICK!\n");
+			EmuLog(LOG_LEVEL::DEBUG, "NvRegTxRxControl = NVREG_TXRXCTL_KICK!");
 			EmuNVNet_DMAPacketFromGuest();
 		}
 
@@ -474,7 +474,7 @@ void EmuNVNet_Write(xbaddr addr, uint32_t value, int size)
 		break;
 	}
 
-	DBG_PRINTF("Write%d: %s (0x%.8X) = 0x%.8X\n", size * 8, EmuNVNet_GetRegisterName(addr), addr, value);
+	EmuLog(LOG_LEVEL::DEBUG, "Write%d: %s (0x%.8X) = 0x%.8X", size * 8, EmuNVNet_GetRegisterName(addr), addr, value);
 }
 
 std::thread NVNetRecvThread;

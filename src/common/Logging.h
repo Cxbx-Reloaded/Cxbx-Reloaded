@@ -431,7 +431,7 @@ extern thread_local std::string _logThreadPrefix;
 
 #define LOG_ONCE(msg, ...) { static bool bFirstTime = true; if(bFirstTime) { bFirstTime = false; DBG_PRINTF("TRAC: " ## msg, __VA_ARGS__); } }
 
-#define LOG_XBOX_CALL(func) DBG_PRINTF("TRAC: Xbox " ## func ## "() call\n");
+#define LOG_XBOX_CALL(func) EmuLog(LOG_LEVEL::DEBUG, "TRAC: Xbox " ## func ## "() call");
 #define LOG_FIRST_XBOX_CALL(func) LOG_ONCE("First Xbox " ## func ## "() call\n");
 
 //

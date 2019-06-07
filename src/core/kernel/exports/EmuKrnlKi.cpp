@@ -332,7 +332,7 @@ xboxkrnl::BOOLEAN FASTCALL xboxkrnl::KiInsertTimerTable
 	PLIST_ENTRY ListHead, NextEntry;
 	PKTIMER CurrentTimer;
 
-	DBG_PRINTF("%s: inserting Timer %p, Hand: %lu\n", __func__, Timer, Hand);
+	EmuLog(LOG_LEVEL::DEBUG, "%s: inserting Timer %p, Hand: %lu", __func__, Timer, Hand);
 
 	ASSERT_TIMER_LOCKED;
 
@@ -368,7 +368,7 @@ xboxkrnl::BOOLEAN FASTCALL xboxkrnl::KiInsertTimerTable
 		/* Make sure it hasn't expired already */
 		InterruptTime.QuadPart = KeQueryInterruptTime();
 		if (DueTime <= InterruptTime.QuadPart) {
-			DBG_PRINTF("Timer %p already expired\n", Timer);
+			EmuLog(LOG_LEVEL::DEBUG, "Timer %p already expired", Timer);
 			Expired = TRUE;
 		}
 	}
@@ -441,7 +441,7 @@ xboxkrnl::BOOLEAN xboxkrnl::KiComputeDueTime
 		if (DifferenceTime.u.HighPart >= 0)
 		{
 			/* Cancel everything */
-			DBG_PRINTF("Timer %p already expired\n", Timer);
+			EmuLog(LOG_LEVEL::DEBUG, "Timer %p already expired", Timer);
 			Timer->Header.SignalState = TRUE;
 			Timer->DueTime.QuadPart = 0;
 			*Hand = 0;
@@ -641,7 +641,7 @@ xboxkrnl::VOID NTAPI xboxkrnl::KiTimerExpiration
 					for (i = 0; DpcCalls; DpcCalls--, i++)
 					{
 						/* Call the DPC */
-						DBG_PRINTF("%s, calling DPC at 0x%.8X\n", __func__, DpcEntry[i].Routine);
+						EmuLog(LOG_LEVEL::DEBUG, "%s, calling DPC at 0x%.8X", __func__, DpcEntry[i].Routine);
 						__try {
 							// Call the Deferred Procedure  :
 							DpcEntry[i].Routine(
@@ -689,7 +689,7 @@ xboxkrnl::VOID NTAPI xboxkrnl::KiTimerExpiration
 					for (i = 0; DpcCalls; DpcCalls--, i++)
 					{
 						/* Call the DPC */
-						DBG_PRINTF("%s, calling DPC at 0x%.8X\n", __func__, DpcEntry[i].Routine);
+						EmuLog(LOG_LEVEL::DEBUG, "%s, calling DPC at 0x%.8X", __func__, DpcEntry[i].Routine);
 						__try {
 							// Call the Deferred Procedure  :
 							DpcEntry[i].Routine(
@@ -734,7 +734,7 @@ xboxkrnl::VOID NTAPI xboxkrnl::KiTimerExpiration
 		for (i = 0; DpcCalls; DpcCalls--, i++)
 		{
 			/* Call the DPC */
-			DBG_PRINTF("%s, calling DPC at 0x%.8X\n", __func__, DpcEntry[i].Routine);
+			EmuLog(LOG_LEVEL::DEBUG, "%s, calling DPC at 0x%.8X", __func__, DpcEntry[i].Routine);
 			__try {
 				// Call the Deferred Procedure  :
 				DpcEntry[i].Routine(
@@ -849,7 +849,7 @@ xboxkrnl::VOID FASTCALL xboxkrnl::KiTimerListExpire
 		for (i = 0; DpcCalls; DpcCalls--, i++)
 		{
 			/* Call the DPC */
-			DBG_PRINTF("%s, calling DPC at 0x%.8X\n", __func__, DpcEntry[i].Routine);
+			EmuLog(LOG_LEVEL::DEBUG, "%s, calling DPC at 0x%.8X", __func__, DpcEntry[i].Routine);
 			__try {
 				// Call the Deferred Procedure  :
 				DpcEntry[i].Routine(

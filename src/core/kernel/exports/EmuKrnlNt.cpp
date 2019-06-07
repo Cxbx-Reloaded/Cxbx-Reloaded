@@ -170,7 +170,7 @@ XBSYSAPI EXPORTNUM(187) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtClose
 			// Delete duplicate threads created by our implementation of NtQueueApcThread()
 			if( GetHandleInformation( g_DuplicateHandles[Handle], &flags ) != 0 )
 			{
-				DBG_PRINTF("Closing duplicate handle...\n" );
+				EmuLog(LOG_LEVEL::DEBUG, "Closing duplicate handle..." );
 
 				CloseHandle( g_DuplicateHandles[Handle] );
 				g_DuplicateHandles.erase(Handle);
@@ -215,7 +215,7 @@ XBSYSAPI EXPORTNUM(188) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateDirectoryObje
 	if (FAILED(ret))
 		EmuLog(LOG_LEVEL::WARNING, "NtCreateDirectoryObject Failed!");
 	else
-		DBG_PRINTF("NtCreateDirectoryObject DirectoryHandle = 0x%.8X\n", *DirectoryHandle);
+		EmuLog(LOG_LEVEL::DEBUG, "NtCreateDirectoryObject DirectoryHandle = 0x%.8X", *DirectoryHandle);
 
 	RETURN(ret);
 }
@@ -292,10 +292,10 @@ XBSYSAPI EXPORTNUM(189) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateEvent
 		if(FAILED(ret))
 			EmuLog(LOG_LEVEL::WARNING, "NtCreateEvent Failed!");
 		else
-			DBG_PRINTF("NtCreateEvent EventHandle = 0x%.8X\n", *EventHandle);
+			EmuLog(LOG_LEVEL::DEBUG, "NtCreateEvent EventHandle = 0x%.8X", *EventHandle);
 	}
 	else
-		DBG_PRINTF("NtCreateEvent EventHandle = 0x%.8X\n", *EventHandle);
+		EmuLog(LOG_LEVEL::DEBUG, "NtCreateEvent EventHandle = 0x%.8X", *EventHandle);
 
 	RETURN(ret);
 }
@@ -420,10 +420,10 @@ XBSYSAPI EXPORTNUM(192) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateMutant
 		if(FAILED(ret))
 			EmuLog(LOG_LEVEL::WARNING, "NtCreateMutant Failed!");
 		else
-			DBG_PRINTF("NtCreateMutant MutantHandle = 0x%.8X\n", *MutantHandle);
+			EmuLog(LOG_LEVEL::DEBUG, "NtCreateMutant MutantHandle = 0x%.8X", *MutantHandle);
 	}
 	else
-		DBG_PRINTF("NtCreateMutant MutantHandle = 0x%.8X\n", *MutantHandle);
+		EmuLog(LOG_LEVEL::DEBUG, "NtCreateMutant MutantHandle = 0x%.8X", *MutantHandle);
 
 	RETURN(ret);
 }
@@ -495,10 +495,10 @@ XBSYSAPI EXPORTNUM(193) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateSemaphore
 		if(FAILED(ret))
 			EmuLog(LOG_LEVEL::WARNING, "NtCreateSemaphore failed!");
 		else
-			DBG_PRINTF("NtCreateSemaphore SemaphoreHandle = 0x%.8X\n", *SemaphoreHandle);
+			EmuLog(LOG_LEVEL::DEBUG, "NtCreateSemaphore SemaphoreHandle = 0x%.8X", *SemaphoreHandle);
 	}
 	else
-		DBG_PRINTF("NtCreateSemaphore SemaphoreHandle = 0x%.8X\n", *SemaphoreHandle);
+		EmuLog(LOG_LEVEL::DEBUG, "NtCreateSemaphore SemaphoreHandle = 0x%.8X", *SemaphoreHandle);
 
 	RETURN(ret);
 }
@@ -558,7 +558,7 @@ XBSYSAPI EXPORTNUM(194) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateTimer
 	if (FAILED(ret))
 		EmuLog(LOG_LEVEL::WARNING, "NtCreateTimer failed!");
 	else
-		DBG_PRINTF("NtCreateTimer TimerHandle = 0x%.8X\n", *TimerHandle);
+		EmuLog(LOG_LEVEL::DEBUG, "NtCreateTimer TimerHandle = 0x%.8X", *TimerHandle);
 
 	RETURN(ret);
 }
@@ -901,7 +901,7 @@ XBSYSAPI EXPORTNUM(203) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtOpenSymbolicLinkObj
 	if (ret != STATUS_SUCCESS)
 		EmuLog(LOG_LEVEL::WARNING, "NtOpenSymbolicLinkObject failed! (%s)", NtStatusToString(ret));
 	else
-		DBG_PRINTF("NtOpenSymbolicLinkObject LinkHandle^ = 0x%.8X\n", *LinkHandle);
+		EmuLog(LOG_LEVEL::DEBUG, "NtOpenSymbolicLinkObject LinkHandle^ = 0x%.8X", *LinkHandle);
 
 	RETURN(ret);
 }
@@ -1007,7 +1007,7 @@ XBSYSAPI EXPORTNUM(206) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueueApcThread
 		else
 		{
 			g_DuplicateHandles[ThreadHandle] = hApcThread;	// Save this thread because we'll need to de-reference it later
-			DBG_PRINTF("DuplicateHandle returned 0x%X (ThreadId 0x%.4X)\n", hApcThread, GetThreadId( hApcThread ) );
+			EmuLog(LOG_LEVEL::DEBUG, "DuplicateHandle returned 0x%X (ThreadId 0x%.4X)", hApcThread, GetThreadId( hApcThread ) );
 		}
 
 
@@ -1463,13 +1463,13 @@ XBSYSAPI EXPORTNUM(217) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryVirtualMemory
 
 	if (ret == STATUS_SUCCESS)
 	{
-		DBG_PRINTF("   Buffer->AllocationBase    = 0x%.08X\n", Buffer->AllocationBase);
-		DBG_PRINTF("   Buffer->AllocationProtect = 0x%.08X\n", Buffer->AllocationProtect);
-		DBG_PRINTF("   Buffer->BaseAddress       = 0x%.08X\n", Buffer->BaseAddress);
-		DBG_PRINTF("   Buffer->RegionSize        = 0x%.08X\n", Buffer->RegionSize);
-		DBG_PRINTF("   Buffer->State             = 0x%.08X\n", Buffer->State);
-		DBG_PRINTF("   Buffer->Protect           = 0x%.08X\n", Buffer->Protect);
-		DBG_PRINTF("   Buffer->Type              = 0x%.08X\n", Buffer->Type);
+		EmuLog(LOG_LEVEL::DEBUG, "   Buffer->AllocationBase    = 0x%.08X", Buffer->AllocationBase);
+		EmuLog(LOG_LEVEL::DEBUG, "   Buffer->AllocationProtect = 0x%.08X", Buffer->AllocationProtect);
+		EmuLog(LOG_LEVEL::DEBUG, "   Buffer->BaseAddress       = 0x%.08X", Buffer->BaseAddress);
+		EmuLog(LOG_LEVEL::DEBUG, "   Buffer->RegionSize        = 0x%.08X", Buffer->RegionSize);
+		EmuLog(LOG_LEVEL::DEBUG, "   Buffer->State             = 0x%.08X", Buffer->State);
+		EmuLog(LOG_LEVEL::DEBUG, "   Buffer->Protect           = 0x%.08X", Buffer->Protect);
+		EmuLog(LOG_LEVEL::DEBUG, "   Buffer->Type              = 0x%.08X", Buffer->Type);
 	}
 
 	#if 0
@@ -1493,7 +1493,7 @@ XBSYSAPI EXPORTNUM(217) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryVirtualMemory
 
 			ret = STATUS_SUCCESS;
 
-			DBG_PRINTF("NtQueryVirtualMemory: Applied fix for Forza Motorsport!\n");
+			EmuLog(LOG_LEVEL::DEBUG, "NtQueryVirtualMemory: Applied fix for Forza Motorsport!");
 		}
 	}
 	#endif
@@ -2053,7 +2053,7 @@ XBSYSAPI EXPORTNUM(232) xboxkrnl::VOID NTAPI xboxkrnl::NtUserIoApcDispatcher
 
 	(CompletionRoutine)(dwErrorCode, dwTransferred, lpOverlapped);
 
-	DBG_PRINTF("NtUserIoApcDispatcher Completed\n");
+	EmuLog(LOG_LEVEL::DEBUG, "NtUserIoApcDispatcher Completed");
 }
 
 // ******************************************************************

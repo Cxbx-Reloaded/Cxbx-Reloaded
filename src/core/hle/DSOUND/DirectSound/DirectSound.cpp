@@ -936,7 +936,7 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateBuffer)
         GeneratePCMFormat(DSBufferDesc, pdsbd->lpwfxFormat, (*ppBuffer)->EmuFlags, pdsbd->dwBufferBytes, &(*ppBuffer)->X_BufferCache, (*ppBuffer)->X_BufferCacheSize);
         (*ppBuffer)->EmuBufferDesc = DSBufferDesc;
 
-        DBG_PRINTF("DirectSoundCreateBuffer, *ppBuffer := 0x%08X, bytes := 0x%08X\n", *ppBuffer, (*ppBuffer)->EmuBufferDesc.dwBufferBytes);
+        EmuLog(LOG_LEVEL::DEBUG, "DirectSoundCreateBuffer, *ppBuffer := 0x%08X, bytes := 0x%08X", *ppBuffer, (*ppBuffer)->EmuBufferDesc.dwBufferBytes);
 
         hRet = DSoundBufferCreate(&DSBufferDesc, (*ppBuffer)->EmuDirectSoundBuffer8);
         if (FAILED(hRet)) {
@@ -1745,7 +1745,7 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateStream)
         (*ppStream)->Xb_lpvContext = pdssd->lpvContext;
         //TODO: Implement mixbin variable support. Or just merge pdssd struct into DS Stream class.
 
-        DBG_PRINTF("DirectSoundCreateStream, *ppStream := 0x%.08X\n", *ppStream);
+        EmuLog(LOG_LEVEL::DEBUG, "DirectSoundCreateStream, *ppStream := 0x%.08X", *ppStream);
 
         hRet = DSoundBufferCreate(&DSBufferDesc, (*ppStream)->EmuDirectSoundBuffer8);
         if (FAILED(hRet)) {
@@ -3204,7 +3204,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound_GetCaps)
         pDSCaps->dwFree2DBuffers = (pDSCaps->dwFreeBufferSGEs == 0 ? 0 : 0x200 /* TODO: Replace me to g_dwFree2DBuffers*/ );
         pDSCaps->dwFree3DBuffers = (pDSCaps->dwFreeBufferSGEs == 0 ? 0 : 0x200 /* TODO: Replace me to g_dwFree3DBuffers*/ );
 
-        DBG_PRINTF("X_DSCAPS: dwFree2DBuffers = %8X | dwFree3DBuffers = %8X | dwFreeBufferSGEs = %08X | dwMemAlloc = %08X\n", pDSCaps->dwFree2DBuffers, pDSCaps->dwFree3DBuffers, pDSCaps->dwFreeBufferSGEs, pDSCaps->dwMemoryAllocated);
+        EmuLog(LOG_LEVEL::DEBUG, "X_DSCAPS: dwFree2DBuffers = %8X | dwFree3DBuffers = %8X | dwFreeBufferSGEs = %08X | dwMemAlloc = %08X", pDSCaps->dwFree2DBuffers, pDSCaps->dwFree3DBuffers, pDSCaps->dwFreeBufferSGEs, pDSCaps->dwMemoryAllocated);
     }
 
     leaveCriticalSection;

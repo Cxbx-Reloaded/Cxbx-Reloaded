@@ -122,7 +122,7 @@ namespace xbdm {
 	void DmSendNotificationString(LPCSTR sz)
 	{ 
 		// Just send this string to Cxbx's debug output :
-		DBG_PRINTF("%s\n", sz);
+		EmuLog(LOG_LEVEL::DEBUG, "%s", sz);
 	}
 
 	// 0x0025 (37)

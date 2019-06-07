@@ -301,7 +301,7 @@ void ExecuteDpcQueue()
 		pkdpc->Inserted = FALSE;
 		// Set DpcRoutineActive to support KeIsExecutingDpc:
 		KeGetCurrentPrcb()->DpcRoutineActive = TRUE; // Experimental
-		DBG_PRINTF("Global DpcQueue, calling DPC at 0x%.8X\n", pkdpc->DeferredRoutine);
+		EmuLog(LOG_LEVEL::DEBUG, "Global DpcQueue, calling DPC at 0x%.8X", pkdpc->DeferredRoutine);
 		__try {
 			// Call the Deferred Procedure  :
 			pkdpc->DeferredRoutine(
@@ -2236,7 +2236,7 @@ XBSYSAPI EXPORTNUM(159) xboxkrnl::NTSTATUS NTAPI xboxkrnl::KeWaitForSingleObject
 					Timer->Header.WaitListHead.Blink = &WaitTimer->WaitListEntry;
 					WaitTimer->NextWaitBlock = WaitBlock;
 					if (KiInsertTreeTimer(Timer, *Timeout) == FALSE) {
-						DBG_PRINTF("%s: KiInsertTreeTimer(Timer, *Timeout) == FALSE\n", __func__);
+						EmuLog(LOG_LEVEL::DEBUG, "%s: KiInsertTreeTimer(Timer, *Timeout) == FALSE", __func__);
 						WaitStatus = (NTSTATUS)STATUS_TIMEOUT;
 						KiTimerUnlock();
 						goto NoWait;

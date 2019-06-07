@@ -390,7 +390,7 @@ void Hub::UsbHub_HandleControl(XboxDeviceState* dev, USBPacket* p,
 				goto fail;
 			}
 			port = &m_HubState->ports[n];
-			DBG_PRINTF("GetPortStatus -> Address 0x%X, wIndex %d, wPortStatus %d, wPortChange %d\n",
+			EmuLog(LOG_LEVEL::DEBUG, "GetPortStatus -> Address 0x%X, wIndex %d, wPortStatus %d, wPortChange %d",
 				m_HubState->dev.Addr, index, port->wPortStatus, port->wPortChange);
 			data[0] = port->wPortStatus;
 			data[1] = port->wPortStatus >> 8;
@@ -415,7 +415,7 @@ void Hub::UsbHub_HandleControl(XboxDeviceState* dev, USBPacket* p,
 			USBHubPort* port;
 			XboxDeviceState* dev;
 
-			DBG_PRINTF("SetPortFeature -> Address 0x%X, wIndex %d, Feature %s\n",
+			EmuLog(LOG_LEVEL::DEBUG, "SetPortFeature -> Address 0x%X, wIndex %d, Feature %s",
 				m_HubState->dev.Addr, index, GetFeatureName(value).c_str());
 
 			if (n >= NUM_PORTS) {
@@ -453,7 +453,7 @@ void Hub::UsbHub_HandleControl(XboxDeviceState* dev, USBPacket* p,
 			unsigned int n = index - 1;
 			USBHubPort *port;
 
-			DBG_PRINTF("ClearPortFeature -> Address 0x%X, wIndex %d, Feature %s\n",
+			EmuLog(LOG_LEVEL::DEBUG, "ClearPortFeature -> Address 0x%X, wIndex %d, Feature %s",
 				m_HubState->dev.Addr, index, GetFeatureName(value).c_str());
 
 			if (n >= NUM_PORTS) {
@@ -540,7 +540,7 @@ void Hub::UsbHub_HandleData(XboxDeviceState* dev, USBPacket* p)
 						p->Status = USB_RET_BABBLE;
 						return;
 					}
-					DBG_PRINTF("Address 0x%X, Status %d\n", m_HubState->dev.Addr, status);
+					EmuLog(LOG_LEVEL::DEBUG, "Address 0x%X, Status %d", m_HubState->dev.Addr, status);
 					for (i = 0; i < n; i++) {
 						buf[i] = status >> (8 * i);
 					}

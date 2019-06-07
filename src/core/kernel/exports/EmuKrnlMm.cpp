@@ -413,15 +413,15 @@ XBSYSAPI EXPORTNUM(181) xboxkrnl::NTSTATUS NTAPI xboxkrnl::MmQueryStatistics
 	{
 		g_VMManager.MemoryStatistics(MemoryStatistics);
 
-		DBG_PRINTF("   MemoryStatistics->Length                      = 0x%.08X\n", MemoryStatistics->Length);
-		DBG_PRINTF("   MemoryStatistics->TotalPhysicalPages          = 0x%.08X\n", MemoryStatistics->TotalPhysicalPages);
-		DBG_PRINTF("   MemoryStatistics->AvailablePages              = 0x%.08X\n", MemoryStatistics->AvailablePages);
-		DBG_PRINTF("   MemoryStatistics->VirtualMemoryBytesCommitted = 0x%.08X\n", MemoryStatistics->VirtualMemoryBytesCommitted);
-		DBG_PRINTF("   MemoryStatistics->VirtualMemoryBytesReserved  = 0x%.08X\n", MemoryStatistics->VirtualMemoryBytesReserved);
-		DBG_PRINTF("   MemoryStatistics->CachePagesCommitted         = 0x%.08X\n", MemoryStatistics->CachePagesCommitted);
-		DBG_PRINTF("   MemoryStatistics->PoolPagesCommitted          = 0x%.08X\n", MemoryStatistics->PoolPagesCommitted);
-		DBG_PRINTF("   MemoryStatistics->StackPagesCommitted         = 0x%.08X\n", MemoryStatistics->StackPagesCommitted);
-		DBG_PRINTF("   MemoryStatistics->ImagePagesCommitted         = 0x%.08X\n", MemoryStatistics->ImagePagesCommitted);
+		EmuLog(LOG_LEVEL::DEBUG, "   MemoryStatistics->Length                      = 0x%.08X", MemoryStatistics->Length);
+		EmuLog(LOG_LEVEL::DEBUG, "   MemoryStatistics->TotalPhysicalPages          = 0x%.08X", MemoryStatistics->TotalPhysicalPages);
+		EmuLog(LOG_LEVEL::DEBUG, "   MemoryStatistics->AvailablePages              = 0x%.08X", MemoryStatistics->AvailablePages);
+		EmuLog(LOG_LEVEL::DEBUG, "   MemoryStatistics->VirtualMemoryBytesCommitted = 0x%.08X", MemoryStatistics->VirtualMemoryBytesCommitted);
+		EmuLog(LOG_LEVEL::DEBUG, "   MemoryStatistics->VirtualMemoryBytesReserved  = 0x%.08X", MemoryStatistics->VirtualMemoryBytesReserved);
+		EmuLog(LOG_LEVEL::DEBUG, "   MemoryStatistics->CachePagesCommitted         = 0x%.08X", MemoryStatistics->CachePagesCommitted);
+		EmuLog(LOG_LEVEL::DEBUG, "   MemoryStatistics->PoolPagesCommitted          = 0x%.08X", MemoryStatistics->PoolPagesCommitted);
+		EmuLog(LOG_LEVEL::DEBUG, "   MemoryStatistics->StackPagesCommitted         = 0x%.08X", MemoryStatistics->StackPagesCommitted);
+		EmuLog(LOG_LEVEL::DEBUG, "   MemoryStatistics->ImagePagesCommitted         = 0x%.08X", MemoryStatistics->ImagePagesCommitted);
 
 		ret = STATUS_SUCCESS;
 	}

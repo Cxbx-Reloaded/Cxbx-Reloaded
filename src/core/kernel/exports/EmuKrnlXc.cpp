@@ -285,7 +285,7 @@ xboxkrnl::VOID NTAPI JumpedBlockCryptCBC
 	}
 
 	if (ret == MBEDTLS_ERR_DES_INVALID_INPUT_LENGTH) {
-		DBG_PRINTF("%s: dwInputLength was not a multiple of 8 (it was %lu)\n", __func__, dwInputLength);
+		EmuLog(LOG_LEVEL::DEBUG, "%s: dwInputLength was not a multiple of 8 (it was %lu)", __func__, dwInputLength);
 	}
 }
 
