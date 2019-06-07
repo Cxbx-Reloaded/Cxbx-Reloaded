@@ -6142,7 +6142,7 @@ VOID __fastcall XTL::EMUPATCH(D3DDevice_SetRenderState_Simple)
         return;
     }
 
-    DBG_PRINTF("RenderState_Simple: %s = 0x%08X", DxbxRenderStateInfo[XboxRenderStateIndex].S, Value);
+	EmuLog(LOG_LEVEL::DEBUG, "RenderState_Simple: %s = 0x%08X", DxbxRenderStateInfo[XboxRenderStateIndex].S, Value);
 
     // Perform Conversion
     switch (XboxRenderStateIndex) {
