@@ -905,7 +905,8 @@ struct PSH_XBOX_SHADER {
 	void DeleteIntermediate(int Index);
 	void DeleteLastIntermediate();
 	std::string static OriginalToString(XTL::X_D3DPIXELSHADERDEF *pPSDef);
-	PSH_RECOMPILED_SHADER Decode(XTL::X_D3DPIXELSHADERDEF *pPSDef);
+	void Decode(XTL::X_D3DPIXELSHADERDEF *pPSDef);
+	PSH_RECOMPILED_SHADER Convert(XTL::X_D3DPIXELSHADERDEF *pPSDef);
 	std::string DecodedToString(XTL::X_D3DPIXELSHADERDEF *pPSDef);
 	bool _NextIs2D(int Stage);
 	bool DecodeTextureModes(XTL::X_D3DPIXELSHADERDEF *pPSDef);
@@ -2371,39 +2372,43 @@ void PSH_XBOX_SHADER::GetPSInputTexture(XTL::X_D3DPIXELSHADERDEF* pPSDef, int ps
     psInputTexture[3] = (pPSDef->PSInputTexture >> 20) & 0x3; // Stage 3 can only use stage 0, 1 or 2
 }
 
-PSH_RECOMPILED_SHADER PSH_XBOX_SHADER::Decode(XTL::X_D3DPIXELSHADERDEF *pPSDef)
+void PSH_XBOX_SHADER::Decode(XTL::X_D3DPIXELSHADERDEF *pPSDef)
+{
+	int i;
+
+	/* Azurik likes to create and destroy the same shader every frame! O_o
+	LogFlags = lfUnit;
+	if (IsRunning(TITLEID_AZURIK))
+	  LogFlags = LogFlags | lfExtreme;*/
+
+	GetPSTextureModes(pPSDef, PSTextureModes);
+	GetPSCompareModes(pPSDef, PSCompareMode);
+	GetPSDotMapping(pPSDef, PSDotMapping);
+	GetPSInputTexture(pPSDef, PSInputTexture);
+
+	NumberOfCombiners = (pPSDef->PSCombinerCount >> 0) & 0xF;
+	CombinerCountFlags = (pPSDef->PSCombinerCount >> 8);
+
+	CombinerMuxesOnMsb = (CombinerCountFlags & PS_COMBINERCOUNT_MUX_MSB) > 0;
+	CombinerHasUniqueC0 = (CombinerCountFlags & PS_COMBINERCOUNT_UNIQUE_C0) > 0;
+	CombinerHasUniqueC1 = (CombinerCountFlags & PS_COMBINERCOUNT_UNIQUE_C1) > 0;
+
+	// Backwards compatible decoding (purely for logging) :
+	{
+		for (i = 0; i < XTL::X_PSH_COMBINECOUNT; i++) {
+			Combiners[i].RGB.Decode(pPSDef->PSRGBInputs[i], pPSDef->PSRGBOutputs[i]);
+			Combiners[i].Alpha.Decode(pPSDef->PSAlphaInputs[i], pPSDef->PSAlphaOutputs[i], /*aIsAlpha=*/true);
+		}
+
+		FinalCombiner.Decode(pPSDef->PSFinalCombinerInputsABCD, pPSDef->PSFinalCombinerInputsEFG, pPSDef->PSFinalCombinerConstants);
+	}
+}
+
+PSH_RECOMPILED_SHADER PSH_XBOX_SHADER::Convert(XTL::X_D3DPIXELSHADERDEF *pPSDef)
 {
   int i;
   Recompiled = {};
   Recompiled.PSDef = *pPSDef;
-
-  /* Azurik likes to create and destroy the same shader every frame! O_o
-  LogFlags = lfUnit;
-  if (IsRunning(TITLEID_AZURIK))
-    LogFlags = LogFlags | lfExtreme;*/
-
-  GetPSTextureModes(pPSDef, PSTextureModes);
-  GetPSCompareModes(pPSDef, PSCompareMode);
-  GetPSDotMapping(pPSDef, PSDotMapping);
-  GetPSInputTexture(pPSDef, PSInputTexture);
-
-  NumberOfCombiners = (pPSDef->PSCombinerCount >> 0) & 0xF;
-  CombinerCountFlags = (pPSDef->PSCombinerCount >> 8);
-
-  CombinerMuxesOnMsb = (CombinerCountFlags & PS_COMBINERCOUNT_MUX_MSB) > 0;
-  CombinerHasUniqueC0 = (CombinerCountFlags & PS_COMBINERCOUNT_UNIQUE_C0) > 0;
-  CombinerHasUniqueC1 = (CombinerCountFlags & PS_COMBINERCOUNT_UNIQUE_C1) > 0;
-
-  // Backwards compatible decoding (purely for logging) :
-  {
-    for (i = 0; i < XTL::X_PSH_COMBINECOUNT; i++)
-    {
-      Combiners[i].RGB.Decode(pPSDef->PSRGBInputs[i], pPSDef->PSRGBOutputs[i]);
-      Combiners[i].Alpha.Decode(pPSDef->PSAlphaInputs[i], pPSDef->PSAlphaOutputs[i], /*aIsAlpha=*/true);
-    }
-
-    FinalCombiner.Decode(pPSDef->PSFinalCombinerInputsABCD, pPSDef->PSFinalCombinerInputsEFG, pPSDef->PSFinalCombinerConstants);
-  }
 
   // Use a fluent interface to start with a pixel shader version opcode that knowns the host version
   NewIntermediate()->Initialize(PO_XPS)->Parameters[6].Mask = m_PSVersion;
@@ -5933,7 +5938,8 @@ PSH_RECOMPILED_SHADER XTL_EmuRecompilePshDef(XTL::X_D3DPIXELSHADERDEF *pPSDef)
 
 	PSH_XBOX_SHADER PSH = {};
 	PSH.SetPSVersion(PSVersion);
-	return PSH.Decode(pPSDef);
+	PSH.Decode(pPSDef);
+	return PSH.Convert(pPSDef);
 }
 
 // From Dxbx uState.pas :
