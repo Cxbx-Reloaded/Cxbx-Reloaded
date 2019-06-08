@@ -426,11 +426,6 @@ extern thread_local std::string _logThreadPrefix;
 // RETURN_TYPE logs the given typed result and then returns it (so this should appear last in functions)
 #define RETURN_TYPE(type, r) do { if (g_bPrintfOn) LOG_CHECK_ENABLED(LOG_LEVEL::DEBUG) { LOG_FUNC_RESULT_TYPE(type, r) } return r; } while (0)
 
-#define LOG_ONCE(msg, ...) { static bool bFirstTime = true; if(bFirstTime) { bFirstTime = false; EmuLog(LOG_LEVEL::DEBUG, "TRAC: " ## msg, __VA_ARGS__); } }
-
-#define LOG_XBOX_CALL(func) EmuLog(LOG_LEVEL::DEBUG, "TRAC: Xbox " ## func ## "() call");
-#define LOG_FIRST_XBOX_CALL(func) LOG_ONCE("First Xbox " ## func ## "() call");
-
 //
 // Headers for rendering enums, flags and (pointer-to-)types :
 //
