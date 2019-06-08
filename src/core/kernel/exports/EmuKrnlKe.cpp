@@ -2236,7 +2236,6 @@ XBSYSAPI EXPORTNUM(159) xboxkrnl::NTSTATUS NTAPI xboxkrnl::KeWaitForSingleObject
 					Timer->Header.WaitListHead.Blink = &WaitTimer->WaitListEntry;
 					WaitTimer->NextWaitBlock = WaitBlock;
 					if (KiInsertTreeTimer(Timer, *Timeout) == FALSE) {
-						EmuLog(LOG_LEVEL::DEBUG, "%s: KiInsertTreeTimer(Timer, *Timeout) == FALSE", __func__);
 						WaitStatus = (NTSTATUS)STATUS_TIMEOUT;
 						KiTimerUnlock();
 						goto NoWait;
