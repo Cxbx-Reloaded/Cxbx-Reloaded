@@ -955,8 +955,7 @@ int USBDevice::USBDesc_HandleControl(XboxDeviceState* dev, USBPacket *p,
 			// From the USB 1.1 standard: "This request allows the host to select an alternate setting for the specified interface"
 			// wValue = Alternative Setting; wIndex = Interface
 			ret = USBDesc_SetInterface(dev, index, value);
-			DBG_PRINTF("Received standard SetInterface() request for device at address 0x%X. Interface selected is %d, Alternative Setting \
-is %d and returned %d\n", dev->Addr, index, value, ret);
+			EmuLog(LOG_LEVEL::DEBUG, "Received standard SetInterface() request for device at address 0x%X. Interface selected is %d, Alternative Setting is %d and returned %d", dev->Addr, index, value, ret);
 			break;
 		}
 

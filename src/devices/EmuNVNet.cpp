@@ -336,10 +336,11 @@ void EmuNVNet_DMAPacketFromGuest()
 
 		memcpy(&desc, (void*)(tx_ring_addr | CONTIGUOUS_MEMORY_BASE), sizeof(desc));
 
-		DBG_PRINTF("Looking at ring desc %d (%llx): ", s->tx_ring_index, tx_ring_addr);
-		DBG_PRINTF("Buffer: 0x%x, ", desc.packet_buffer);
-		DBG_PRINTF("Length: 0x%x, ", desc.length);
-		EmuLog(LOG_LEVEL::DEBUG, "Flags: 0x%x", desc.flags);
+		EmuLog(LOG_LEVEL::DEBUG, "Looking at ring desc %d (%llx): "
+		                         "\n   Buffer: 0x%x "
+		                         "\n   Length: 0x%x "
+		                         "\n   Flags:  0x%x ",
+		                         s->tx_ring_index, tx_ring_addr, desc.packet_buffer, desc.length, desc.flags);
 
 		s->tx_ring_index += 1;
 
@@ -390,10 +391,11 @@ bool EmuNVNet_DMAPacketToGuest(void* packet, size_t size)
 		
 		memcpy(&desc, (void*)(rx_ring_addr | CONTIGUOUS_MEMORY_BASE), sizeof(desc));
 
-		DBG_PRINTF("Looking at ring descriptor %d (0x%llx): ", s->rx_ring_index, rx_ring_addr);
-		DBG_PRINTF("Buffer: 0x%x, ", desc.packet_buffer);
-		DBG_PRINTF("Length: 0x%x, ", desc.length);
-		EmuLog(LOG_LEVEL::DEBUG, "Flags: 0x%x", desc.flags);
+        EmuLog(LOG_LEVEL::DEBUG, "Looking at ring descriptor %d (0x%llx): "
+                                 "\n   Buffer: 0x%x "
+                                 "\n   Length: 0x%x "
+                                 "\n   Flags:  0x%x ",
+                                 s->rx_ring_index, rx_ring_addr, desc.packet_buffer, desc.length, desc.flags);
 
 		s->rx_ring_index += 1;
 
@@ -409,9 +411,10 @@ bool EmuNVNet_DMAPacketToGuest(void* packet, size_t size)
 		desc.length = (uint16_t)size;
 		desc.flags = NV_RX_BIT4 | NV_RX_DESCRIPTORVALID;
 		memcpy((void*)(rx_ring_addr | CONTIGUOUS_MEMORY_BASE), &desc, sizeof(desc));
-		DBG_PRINTF("Updated ring descriptor: ");
-		DBG_PRINTF("Length: 0x%x, ", desc.length);
-		EmuLog(LOG_LEVEL::DEBUG, "Flags: 0x%x", desc.flags);
+        EmuLog(LOG_LEVEL::DEBUG, "Updated ring descriptor: "
+                                 "\n   Length: 0x%x "
+                                 "\n   Flags:  0x%x ",
+                                 desc.flags, desc.length);
 
 		/* Trigger interrupt */
 		EmuLog(LOG_LEVEL::DEBUG, "Triggering interrupt");

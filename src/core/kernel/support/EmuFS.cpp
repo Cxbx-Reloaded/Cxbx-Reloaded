@@ -581,7 +581,7 @@ void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData)
                         uint8_t *bByte = (uint8_t*)pNewTLS + v;
 
                         if (v % 0x10 == 0) {
-                            DBG_PRINTF("0x%.8X:", (xbaddr)bByte);
+							EmuLog(LOG_LEVEL::DEBUG, "0x%.8X:", (xbaddr)bByte);
                         }
 
                         // Note : Use printf instead of DBG_PRINTF here, which prefixes with GetCurrentThreadId() :
