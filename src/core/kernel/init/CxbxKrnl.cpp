@@ -1462,7 +1462,7 @@ __declspec(noreturn) void CxbxKrnlInit
 	CxbxRegisterDeviceHostPath(DeviceHarddisk0Partition7, CxbxBasePath + "Partition7");
 
 	// Create default symbolic links :
-	DBG_PRINTF_EX(LOG_PREFIX_INIT, "Creating default symbolic links.\n");
+	EmuLogEx(LOG_PREFIX_INIT, LOG_LEVEL::DEBUG, "Creating default symbolic links.\n");
 	{
 		// TODO: DriveD should always point to the Xbe Path
 		// This is the only symbolic link the Xbox Kernel sets, the rest are set by the application, usually via XAPI.
@@ -1526,7 +1526,7 @@ __declspec(noreturn) void CxbxKrnlInit
 
 	// Make sure the Xbox1 code runs on one core (as the box itself has only 1 CPU,
 	// this will better aproximate the environment with regard to multi-threading) :
-	DBG_PRINTF_EX(LOG_PREFIX_INIT, "Determining CPU affinity.\n");
+	EmuLogEx(LOG_PREFIX_INIT, LOG_LEVEL::DEBUG, "Determining CPU affinity.\n");
 	{
 		if (!GetProcessAffinityMask(g_CurrentProcessHandle, &g_CPUXbox, &g_CPUOthers))
 			CxbxKrnlCleanupEx(LOG_PREFIX_INIT, "GetProcessAffinityMask failed.");
@@ -1545,7 +1545,7 @@ __declspec(noreturn) void CxbxKrnlInit
 	}
 
 	// initialize graphics
-	DBG_PRINTF_EX(LOG_PREFIX_INIT, "Initializing render window.\n");
+	EmuLogEx(LOG_PREFIX_INIT, LOG_LEVEL::DEBUG, "Initializing render window.\n");
 	XTL::CxbxInitWindow(true);
 
 	// Now process the boot flags to see if there are any special conditions to handle
@@ -1592,7 +1592,7 @@ __declspec(noreturn) void CxbxKrnlInit
 
 	if (!bLLE_GPU)
 	{
-		DBG_PRINTF_EX(LOG_PREFIX_INIT, "Initializing Direct3D.\n");
+		EmuLogEx(LOG_PREFIX_INIT, LOG_LEVEL::DEBUG, "Initializing Direct3D.\n");
 		XTL::EmuD3DInit();
 	}
 	
@@ -1634,13 +1634,13 @@ __declspec(noreturn) void CxbxKrnlInit
 	TimerObject* KernelClockThr = Timer_Create(CxbxKrnlClockThread, nullptr, "Kernel clock thread", &g_CPUOthers);
 	Timer_Start(KernelClockThr, SCALE_MS_IN_NS);
 
-	DBG_PRINTF_EX(LOG_PREFIX_INIT, "Calling XBE entry point...\n");
+	EmuLogEx(LOG_PREFIX_INIT, LOG_LEVEL::DEBUG, "Calling XBE entry point...\n");
 	CxbxLaunchXbe(Entry);
 
 	// FIXME: Wait for Cxbx to exit or error fatally
 	Sleep(INFINITE);
 
-	DBG_PRINTF_EX(LOG_PREFIX_INIT, "XBE entry point returned\n");
+	EmuLogEx(LOG_PREFIX_INIT, LOG_LEVEL::DEBUG, "XBE entry point returned\n");
 	fflush(stdout);
 
 	//	EmuShared::Cleanup();   FIXME: commenting this line is a bad workaround for issue #617 (https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/issues/617)
@@ -1698,7 +1698,7 @@ __declspec(noreturn) void CxbxKrnlCleanupEx(CXBXR_MODULE cxbxr_module, const cha
         vsprintf(szBuffer2, szErrorMessage, argp);
         va_end(argp);
 
-		CxbxPopupMessageEx(cxbxr_module, LOG_LEVEL::FATAL, CxbxMsgDlgIcon_Error, "Received Fatal Message:\n\n* %s\n", szBuffer2); // Will also DBG_PRINTF
+		CxbxPopupMessageEx(cxbxr_module, LOG_LEVEL::FATAL, CxbxMsgDlgIcon_Error, "Received Fatal Message:\n\n* %s\n", szBuffer2); // Will also EmuLogEx
     }
 
     printf("[0x%.4X] MAIN: Terminating Process\n", GetCurrentThreadId());

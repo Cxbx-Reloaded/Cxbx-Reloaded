@@ -393,13 +393,6 @@ extern thread_local std::string _logThreadPrefix;
 #pragma warning(disable : 4477)
 #endif
 
-#define DBG_PRINTF_EX(cxbxr_module, fmt, ...) { \
-		LOG_CHECK_ENABLED_EX(cxbxr_module, LOG_LEVEL::DEBUG) { \
-			CXBX_CHECK_INTEGRITY(); \
-			if(g_bPrintfOn) printf("[0x%.4X] %s"##fmt, GetCurrentThreadId(), g_EnumModules2String[to_underlying(cxbxr_module)], ##__VA_ARGS__); \
-		} \
-     }
-
 #ifdef _MSC_VER
 #pragma warning(pop)
 #endif
