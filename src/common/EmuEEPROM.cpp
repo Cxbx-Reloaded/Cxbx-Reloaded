@@ -38,7 +38,6 @@ namespace xboxkrnl
 #include <shlobj.h> // For HANDLE, CreateFile, CreateFileMapping, MapViewOfFile
 #include <random>
 
-#include "Cxbx.h" // For DBG_PRINTF_EX
 #include "EmuEEPROM.h" // For EEPROMInfo, EEPROMInfos
 #include "core\kernel\support\Emu.h" // For EmuWarning
 #include "..\..\src\devices\LED.h" // For SetLEDSequence
@@ -122,7 +121,7 @@ xboxkrnl::XBOX_EEPROM *CxbxRestoreEEPROM(char *szFilePath_EEPROM_bin)
 			/* hTemplateFile */nullptr);
 		if (hFileEEPROM == INVALID_HANDLE_VALUE)
 		{
-			DBG_PRINTF_EX(LOG_PREFIX_INIT, "Couldn't create EEPROM.bin file!\n");
+			EmuLogEx(LOG_PREFIX_INIT, LOG_LEVEL::DEBUG, "Couldn't create EEPROM.bin file!\n");
 			return nullptr;
 		}
 	}
@@ -140,7 +139,7 @@ xboxkrnl::XBOX_EEPROM *CxbxRestoreEEPROM(char *szFilePath_EEPROM_bin)
 		/**/nullptr);
 	if (hFileMappingEEPROM == NULL)
 	{
-		DBG_PRINTF_EX(LOG_PREFIX_INIT, "Couldn't create EEPROM.bin file mapping!\n");
+		EmuLogEx(LOG_PREFIX_INIT, LOG_LEVEL::DEBUG, "Couldn't create EEPROM.bin file mapping!\n");
 		return nullptr;
 	}
 
@@ -161,7 +160,7 @@ xboxkrnl::XBOX_EEPROM *CxbxRestoreEEPROM(char *szFilePath_EEPROM_bin)
 		/* dwFileOffsetLow */0,
 		EEPROM_SIZE);
 	if (pEEPROM == nullptr) {
-		DBG_PRINTF_EX(LOG_PREFIX_INIT, "Couldn't map EEPROM.bin into memory!\n");
+		EmuLogEx(LOG_PREFIX_INIT, LOG_LEVEL::DEBUG, "Couldn't map EEPROM.bin into memory!\n");
 		return nullptr;
 	}
 
@@ -177,12 +176,12 @@ xboxkrnl::XBOX_EEPROM *CxbxRestoreEEPROM(char *szFilePath_EEPROM_bin)
         // This must be done last to include all initialized data in the CRC
         gen_section_CRCs(pEEPROM);
 
-		DBG_PRINTF_EX(LOG_PREFIX_INIT, "Initialized default EEPROM\n");
+		EmuLogEx(LOG_PREFIX_INIT, LOG_LEVEL::DEBUG, "Initialized default EEPROM\n");
 	}
 	else
 	{
 		XboxFactoryGameRegion = pEEPROM->EncryptedSettings.GameRegion;
-		DBG_PRINTF_EX(LOG_PREFIX_INIT, "Loaded EEPROM.bin\n");
+		EmuLogEx(LOG_PREFIX_INIT, LOG_LEVEL::DEBUG, "Loaded EEPROM.bin\n");
 	}
 
 	// Read the HDD (and eventually also the online) keys stored in the eeprom file. Users can input them in the eeprom menu

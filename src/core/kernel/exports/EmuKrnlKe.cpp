@@ -329,8 +329,7 @@ void InitDpcThread()
 
 	InitializeCriticalSection(&(g_DpcData.Lock));
 	InitializeListHead(&(g_DpcData.DpcQueue));
-
-	DBG_PRINTF_EX(CXBXR_MODULE::INIT, "Creating DPC event\n");
+	EmuLogEx(CXBXR_MODULE::INIT, LOG_LEVEL::DEBUG, "Creating DPC event\n");
 	g_DpcData.DpcEvent = CreateEvent(/*lpEventAttributes=*/nullptr, /*bManualReset=*/FALSE, /*bInitialState=*/FALSE, /*lpName=*/nullptr);
 }
 

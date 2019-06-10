@@ -85,7 +85,7 @@ extern bool g_bIsRetail;
 /*! indicates ability to save on exit (needed for settings reset) */
 extern bool g_SaveOnExit;
 
-/*! runtime DBG_PRINTF toggle boolean */
+/*! runtime logging toggle boolean */
 extern volatile bool g_bPrintfOn;
 
 #ifdef _MSC_VER

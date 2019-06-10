@@ -492,7 +492,7 @@ void EmuInitFS()
 	fsInstructions.push_back({ { 0x64, 0xA1, 0x58, 0x00, 0x00, 0x00 }, &EmuFS_MovEaxFs58 });					// mov eax, large fs:58
 	fsInstructions.push_back({ { 0x64, 0xA3, 0x00, 0x00, 0x00, 0x00 }, &EmuFS_MovFs00Eax });					// mov large fs:0, eax
 
-	DBG_PRINTF_EX(CXBXR_MODULE::INIT, "Patching FS Register Accesses\n");
+	EmuLogEx(CXBXR_MODULE::INIT, LOG_LEVEL::DEBUG, "Patching FS Register Accesses\n");
 	DWORD sizeOfImage = CxbxKrnl_XbeHeader->dwSizeofImage;
 	long numberOfInstructions = fsInstructions.size();
 
@@ -502,7 +502,7 @@ void EmuInitFS()
 			continue;
 		}
 
-		DBG_PRINTF_EX(CXBXR_MODULE::INIT, "Searching for FS Instruction in section %s\n", CxbxKrnl_Xbe->m_szSectionName[sectionIndex]);
+		EmuLogEx(CXBXR_MODULE::INIT, LOG_LEVEL::DEBUG, "Searching for FS Instruction in section %s\n", CxbxKrnl_Xbe->m_szSectionName[sectionIndex]);
 		xbaddr startAddr = CxbxKrnl_Xbe->m_SectionHeader[sectionIndex].dwVirtualAddr;
 		xbaddr endAddr = startAddr + CxbxKrnl_Xbe->m_SectionHeader[sectionIndex].dwSizeofRaw;
 		for (xbaddr addr = startAddr; addr < endAddr; addr++)
@@ -519,7 +519,7 @@ void EmuInitFS()
 
 				if (memcmp((void*)addr, &fsInstructions[i].data[0], sizeOfData) == 0)
 				{
-					DBG_PRINTF_EX(CXBXR_MODULE::INIT, "Patching FS Instruction at 0x%.8X\n", addr);
+					EmuLogEx(CXBXR_MODULE::INIT, LOG_LEVEL::DEBUG, "Patching FS Instruction at 0x%.8X\n", addr);
 
 					// Write Call opcode
 					*(uint8_t*)addr = OPCODE_CALL_E8;
@@ -535,7 +535,7 @@ void EmuInitFS()
 		}
 	}
 	
-	DBG_PRINTF_EX(CXBXR_MODULE::INIT, "Done patching FS Register Accesses\n");
+	EmuLogEx(CXBXR_MODULE::INIT, LOG_LEVEL::DEBUG, "Done patching FS Register Accesses\n");
 }
 
 // generate fs segment selector
@@ -584,7 +584,7 @@ void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData)
 							EmuLog(LOG_LEVEL::DEBUG, "0x%.8X:", (xbaddr)bByte);
                         }
 
-                        // Note : Use printf instead of DBG_PRINTF here, which prefixes with GetCurrentThreadId() :
+                        // Note : Use printf instead of EmuLog here, which prefixes with GetCurrentThreadId() :
                         printf(" %.2X", *bByte);
                     }
 
