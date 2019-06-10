@@ -169,7 +169,7 @@ uint32_t EmuFlash_Read32(xbaddr addr) // TODO : Move to EmuFlash.cpp
 		return -1;
 	}
 
-	DBG_PRINTF("Read32 FLASH_ROM (0x%.8X) = 0x%.8X [HANDLED]\n", addr, r);
+	EmuLog(LOG_LEVEL::DEBUG, "Read32 FLASH_ROM (0x%.8X) = 0x%.8X [HANDLED]", addr, r);
 	return r;
 }
 
@@ -201,7 +201,7 @@ uint32_t EmuX86_Read(xbaddr addr, int size)
 		//pass the memory-access through to normal memory :
 		value = EmuX86_Mem_Read(addr, size);
 
-		DBG_PRINTF("Read(0x%08X, %d) = 0x%08X\n", addr, size, value);
+		EmuLog(LOG_LEVEL::DEBUG, "Read(0x%08X, %d) = 0x%08X", addr, size, value);
 	}
 
 	return value;
@@ -226,7 +226,7 @@ void EmuX86_Write(xbaddr addr, uint32_t value, int size)
 	}
 
 	// Pass the memory-access through to normal memory :
-	DBG_PRINTF("Write(0x%.8X, 0x%.8X, %d)\n", addr, value, size);
+	EmuLog(LOG_LEVEL::DEBUG, "Write(0x%.8X, 0x%.8X, %d)", addr, value, size);
 	EmuX86_Mem_Write(addr, value, size);
 }
 
@@ -3309,7 +3309,7 @@ opcode_error:
 
 void EmuX86_Init()
 {
-	DBG_PRINTF("Initializing distorm version %d\n", distorm_version());
+	EmuLog(LOG_LEVEL::DEBUG, "Initializing distorm version %d", distorm_version());
 
 	AddVectoredExceptionHandler(/*FirstHandler=*/ULONG(true), lleException);
 

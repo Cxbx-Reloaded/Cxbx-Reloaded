@@ -379,7 +379,7 @@ void USBDevice::USB_DoTokenSetup(XboxDeviceState* s, USBPacket* p)
 	}
 	else {
 		if (s->SetupLength > sizeof(s->DataBuffer)) {
-			DBG_PRINTF("CTRL buffer too small (%d > %zu)\n", s->SetupLength, sizeof(s->DataBuffer));
+			EmuLog(LOG_LEVEL::DEBUG, "CTRL buffer too small (%d > %zu)", s->SetupLength, sizeof(s->DataBuffer));
 			p->Status = USB_RET_STALL;
 			return;
 		}
@@ -862,7 +862,7 @@ int USBDevice::USBDesc_HandleControl(XboxDeviceState* dev, USBPacket *p,
 			// From the USB 1.1 standard: "This request sets the device address for all future device accesses.
 			// The wValue field specifies the device address to use for all subsequent accesses"
 			dev->Addr = value;
-			DBG_PRINTF("Address 0x%X set for device %s\n", dev->Addr, dev->ProductDesc.c_str());
+			EmuLog(LOG_LEVEL::DEBUG, "Address 0x%X set for device %s", dev->Addr, dev->ProductDesc.c_str());
 			ret = 0;
 			break;
 		}
@@ -888,7 +888,7 @@ int USBDevice::USBDesc_HandleControl(XboxDeviceState* dev, USBPacket *p,
 			// From the USB 1.1 standard: "This request sets the device configuration. The lower byte of the wValue field specifies the desired configuration.
 			// This configuration value must be zero or match a configuration value from a configuration descriptor"
 			ret = USBDesc_SetConfig(dev, value);
-			DBG_PRINTF("Received standard SetConfiguration() request for device at address 0x%X. Configuration selected is %d and returned %d\n",
+			EmuLog(LOG_LEVEL::DEBUG, "Received standard SetConfiguration() request for device at address 0x%X. Configuration selected is %d and returned %d",
 				dev->Addr, value, ret);
 			break;
 		}
@@ -922,7 +922,7 @@ int USBDevice::USBDesc_HandleControl(XboxDeviceState* dev, USBPacket *p,
 				dev->RemoteWakeup = 0;
 				ret = 0;
 			}
-			DBG_PRINTF("Received standard ClearFeature() request for device at address 0x%X. Feature selected is %d and returned %d\n",
+			EmuLog(LOG_LEVEL::DEBUG, "Received standard ClearFeature() request for device at address 0x%X. Feature selected is %d and returned %d",
 				dev->Addr, value, ret);
 			break;
 		}
@@ -934,7 +934,7 @@ int USBDevice::USBDesc_HandleControl(XboxDeviceState* dev, USBPacket *p,
 				dev->RemoteWakeup = 1;
 				ret = 0;
 			}
-			DBG_PRINTF("Received standard SetFeature() request for device at address 0x%X. Feature selected is %d and returned %d\n",
+			EmuLog(LOG_LEVEL::DEBUG, "Received standard SetFeature() request for device at address 0x%X. Feature selected is %d and returned %d",
 				dev->Addr, value, ret);
 			break;
 		}
@@ -955,8 +955,7 @@ int USBDevice::USBDesc_HandleControl(XboxDeviceState* dev, USBPacket *p,
 			// From the USB 1.1 standard: "This request allows the host to select an alternate setting for the specified interface"
 			// wValue = Alternative Setting; wIndex = Interface
 			ret = USBDesc_SetInterface(dev, index, value);
-			DBG_PRINTF("Received standard SetInterface() request for device at address 0x%X. Interface selected is %d, Alternative Setting \
-is %d and returned %d\n", dev->Addr, index, value, ret);
+			EmuLog(LOG_LEVEL::DEBUG, "Received standard SetInterface() request for device at address 0x%X. Interface selected is %d, Alternative Setting is %d and returned %d", dev->Addr, index, value, ret);
 			break;
 		}
 
@@ -983,7 +982,7 @@ int USBDevice::USBDesc_HandleStandardGetDescriptor(XboxDeviceState* dev, USBPack
 	switch (type) {
 		case USB_DT_DEVICE: {
 			ret = USB_ReadDeviceDesc(&desc->id, dev->Device, buf, sizeof(buf));
-			DBG_PRINTF("Read operation of device descriptor of device 0x%X returns %d\n", dev->Addr, ret);
+			EmuLog(LOG_LEVEL::DEBUG, "Read operation of device descriptor of device 0x%X returns %d", dev->Addr, ret);
 			break;
 		}
 
@@ -991,13 +990,13 @@ int USBDevice::USBDesc_HandleStandardGetDescriptor(XboxDeviceState* dev, USBPack
 			if (index < dev->Device->bNumConfigurations) {
 				ret = USB_ReadConfigurationDesc(dev->Device->confs + index, flags, buf, sizeof(buf));
 			}
-			DBG_PRINTF("Read operation of configuration descriptor %d of device 0x%X returns %d\n", index, dev->Addr, ret);
+			EmuLog(LOG_LEVEL::DEBUG, "Read operation of configuration descriptor %d of device 0x%X returns %d", index, dev->Addr, ret);
 			break;
 		}
 
 		case USB_DT_STRING: {
 			ret = USB_ReadStringDesc(dev, index, buf, sizeof(buf));
-			DBG_PRINTF("Read operation of string descriptor %d of device 0x%X returns %d\n", index, dev->Addr, ret);
+			EmuLog(LOG_LEVEL::DEBUG, "Read operation of string descriptor %d of device 0x%X returns %d", index, dev->Addr, ret);
 			break;
 		}
 

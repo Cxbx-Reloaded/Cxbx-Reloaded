@@ -554,7 +554,7 @@ DWORD PhysicalMemory::PatchXboxPermissions(DWORD Perms)
 		{
 			// One of XBOX_PAGE_READONLY or XBOX_PAGE_READWRITE must be specified
 
-			DBG_PRINTF("%s: Memory permissions bug detected\n", __func__);
+			EmuLog(LOG_LEVEL::DEBUG, "%s: Memory permissions bug detected", __func__);
 			return XBOX_PAGE_EXECUTE_READWRITE;
 		}
 
@@ -575,7 +575,7 @@ DWORD PhysicalMemory::PatchXboxPermissions(DWORD Perms)
 			// If we reach here it means that both XBOX_PAGE_READONLY and XBOX_PAGE_READWRITE were specified, and so the
 			// input is probably invalid
 
-			DBG_PRINTF("%s: Memory permissions bug detected\n", __func__);
+			EmuLog(LOG_LEVEL::DEBUG, "%s: Memory permissions bug detected", __func__);
 			return XBOX_PAGE_EXECUTE_READWRITE;
 		}
 	}
@@ -641,7 +641,7 @@ DWORD PhysicalMemory::ConvertXboxToWinProtection(DWORD Perms)
 			// If we reach here it means that more than one permission modifier was specified, and so the input is
 			// probably invalid
 
-			DBG_PRINTF("%s: Memory permissions bug detected\n", __func__);
+			EmuLog(LOG_LEVEL::DEBUG, "%s: Memory permissions bug detected", __func__);
 			return PAGE_EXECUTE_READWRITE;
 		}
 	}

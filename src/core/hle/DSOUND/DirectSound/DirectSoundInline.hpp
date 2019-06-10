@@ -90,23 +90,24 @@ inline void XADPCM2PCMFormat(LPWAVEFORMATEX lpwfxFormat)
 {
 
 #if 0 //For testing purpose if XADPCM to PCM is not accurate.
-    DBG_PRINTF("EmuDSound: XADPCM WAVEFORMATEX\n"
-              "{\n"
-              "   wFormatTag              : 0x%.04hX\n"
-              "   nChannels               : 0x%.02hd\n"
-              "   nSamplesPerSec          : 0x%.08X\n"
-              "   nAvgBytesPerSec         : 0x%.08X\n"
-              "   nBlockAlign             : 0x%.02hd\n"
-              "   wBitsPerSample          : 0x%.04hX\n"
-              "   cbSize                  : 0x%.04hX\n"
-              "}\n",
-              lpwfxFormat->wFormatTag,
-              lpwfxFormat->nChannels,
-              lpwfxFormat->nSamplesPerSec,
-              lpwfxFormat->nAvgBytesPerSec,
-              lpwfxFormat->nBlockAlign,
-              lpwfxFormat->wBitsPerSample,
-              lpwfxFormat->cbSize);
+	EmuLog(LOG_LEVEL::DEBUG,
+          "EmuDSound: XADPCM WAVEFORMATEX\n"
+          "{\n"
+          "   wFormatTag              : 0x%.04hX\n"
+          "   nChannels               : 0x%.02hd\n"
+          "   nSamplesPerSec          : 0x%.08X\n"
+          "   nAvgBytesPerSec         : 0x%.08X\n"
+          "   nBlockAlign             : 0x%.02hd\n"
+          "   wBitsPerSample          : 0x%.04hX\n"
+          "   cbSize                  : 0x%.04hX\n"
+          "}\n",
+          lpwfxFormat->wFormatTag,
+          lpwfxFormat->nChannels,
+          lpwfxFormat->nSamplesPerSec,
+          lpwfxFormat->nAvgBytesPerSec,
+          lpwfxFormat->nBlockAlign,
+          lpwfxFormat->wBitsPerSample,
+          lpwfxFormat->cbSize);
 #endif
 
     lpwfxFormat->wFormatTag = WAVE_FORMAT_PCM;
@@ -132,23 +133,24 @@ inline void XADPCM2PCMFormat(LPWAVEFORMATEX lpwfxFormat)
 #endif
 
 #if 0 //For testing purpose if XADPCM to PCM is not accurate.
-    DBG_PRINTF("EmuDSound: Converted to PCM WAVEFORMATEX\n"
-              "{\n"
-              "   wFormatTag              : 0x%.04hX\n"
-              "   nChannels               : 0x%.02hd\n"
-              "   nSamplesPerSec          : 0x%.08X\n"
-              "   nAvgBytesPerSec         : 0x%.08X\n"
-              "   nBlockAlign             : 0x%.02hd\n"
-              "   wBitsPerSample          : 0x%.04hX\n"
-              "   cbSize                  : 0x%.04hX\n"
-              "}\n",
-              lpwfxFormat->wFormatTag,
-              lpwfxFormat->nChannels,
-              lpwfxFormat->nSamplesPerSec,
-              lpwfxFormat->nAvgBytesPerSec,
-              lpwfxFormat->nBlockAlign,
-              lpwfxFormat->wBitsPerSample,
-              lpwfxFormat->cbSize);
+    EmuLog(LOG_LEVEL::DEBUG,
+		  "EmuDSound: Converted to PCM WAVEFORMATEX\n"
+          "{\n"
+          "   wFormatTag              : 0x%.04hX\n"
+          "   nChannels               : 0x%.02hd\n"
+          "   nSamplesPerSec          : 0x%.08X\n"
+          "   nAvgBytesPerSec         : 0x%.08X\n"
+          "   nBlockAlign             : 0x%.02hd\n"
+          "   wBitsPerSample          : 0x%.04hX\n"
+          "   cbSize                  : 0x%.04hX\n"
+          "}\n",
+          lpwfxFormat->wFormatTag,
+          lpwfxFormat->nChannels,
+          lpwfxFormat->nSamplesPerSec,
+          lpwfxFormat->nAvgBytesPerSec,
+          lpwfxFormat->nBlockAlign,
+          lpwfxFormat->wBitsPerSample,
+          lpwfxFormat->cbSize);
 #endif
 }
 

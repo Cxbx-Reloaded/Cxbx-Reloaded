@@ -296,7 +296,7 @@ XBSYSAPI EXPORTNUM(255) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PsCreateSystemThreadE
 				if (pfnNotificationRoutine == NULL)
 					continue;
 
-				DBG_PRINTF("Calling pfnNotificationRoutine[%d] (0x%.8X)\n", g_iThreadNotificationCount, pfnNotificationRoutine);
+				EmuLog(LOG_LEVEL::DEBUG, "Calling pfnNotificationRoutine[%d] (0x%.8X)", g_iThreadNotificationCount, pfnNotificationRoutine);
 
 				pfnNotificationRoutine(TRUE);
 			}
@@ -305,7 +305,7 @@ XBSYSAPI EXPORTNUM(255) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PsCreateSystemThreadE
         *ThreadHandle = (HANDLE)_beginthreadex(NULL, KernelStackSize, PCSTProxy, iPCSTProxyParam, NULL, (unsigned int*)&dwThreadId);
 		// Note : DO NOT use iPCSTProxyParam anymore, since ownership is transferred to the proxy (which frees it too)
 
-		DBG_PRINTF("Waiting for Xbox proxy thread to start...\n");
+		EmuLog(LOG_LEVEL::DEBUG, "Waiting for Xbox proxy thread to start...");
 
         while (bWait) {
             dwThreadWait = WaitForSingleObject(hStartedEvent, INFINITE);
@@ -316,7 +316,7 @@ XBSYSAPI EXPORTNUM(255) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PsCreateSystemThreadE
                     break;
                 }
                 case WAIT_OBJECT_0: { // The state of the specified object is signaled.
-					DBG_PRINTF("Xbox proxy thread is started.\n");
+					EmuLog(LOG_LEVEL::DEBUG, "Xbox proxy thread is started.");
                     bWait = false;
                     break;
                 }
@@ -337,7 +337,7 @@ XBSYSAPI EXPORTNUM(255) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PsCreateSystemThreadE
 		hStartedEvent = NULL;
 
 		// Log ThreadID identical to how GetCurrentThreadID() is rendered :
-		DBG_PRINTF("Created Xbox proxy thread. Handle : 0x%X, ThreadId : [0x%.4X]\n", *ThreadHandle, dwThreadId);
+		EmuLog(LOG_LEVEL::DEBUG, "Created Xbox proxy thread. Handle : 0x%X, ThreadId : [0x%.4X]", *ThreadHandle, dwThreadId);
 
 		CxbxKrnlRegisterThread(*ThreadHandle);
 
@@ -434,7 +434,7 @@ XBSYSAPI EXPORTNUM(258) xboxkrnl::VOID NTAPI xboxkrnl::PsTerminateSystemThread
 			if (pfnNotificationRoutine == NULL)
 				continue;
 
-			DBG_PRINTF("Calling pfnNotificationRoutine[%d] (0x%.8X)\n", g_iThreadNotificationCount, pfnNotificationRoutine);
+			EmuLog(LOG_LEVEL::DEBUG, "Calling pfnNotificationRoutine[%d] (0x%.8X)", g_iThreadNotificationCount, pfnNotificationRoutine);
 
 			pfnNotificationRoutine(FALSE);
 		}

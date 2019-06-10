@@ -298,7 +298,7 @@ XBSYSAPI EXPORTNUM(66) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoCreateFile
 	}
 	else
 	{
-		DBG_PRINTF("IoCreateFile = 0x%.8X\n", *FileHandle);
+		EmuLog(LOG_LEVEL::DEBUG, "IoCreateFile = 0x%.8X", *FileHandle);
 	}
 
 	RETURN(ret);

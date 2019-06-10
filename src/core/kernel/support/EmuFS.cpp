@@ -572,16 +572,16 @@ void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData)
 #ifdef _DEBUG_TRACE
             // dump raw TLS data
             if (pNewTLS == nullptr) {
-                DBG_PRINTF("TLS Non-Existant (OK)\n");
+                EmuLog(LOG_LEVEL::DEBUG, "TLS Non-Existant (OK)");
             } else {
-                DBG_PRINTF("TLS Data Dump...\n");
+                EmuLog(LOG_LEVEL::DEBUG, "TLS Data Dump...");
                 if (g_bPrintfOn) {
                     for (uint32_t v = 4; v < dwCopySize + 4; v++) {// Note : Don't dump dwZeroSize
 
                         uint8_t *bByte = (uint8_t*)pNewTLS + v;
 
                         if (v % 0x10 == 0) {
-                            DBG_PRINTF("0x%.8X:", (xbaddr)bByte);
+							EmuLog(LOG_LEVEL::DEBUG, "0x%.8X:", (xbaddr)bByte);
                         }
 
                         // Note : Use printf instead of DBG_PRINTF here, which prefixes with GetCurrentThreadId() :
@@ -677,5 +677,5 @@ void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData)
 	// Make the KPCR struct available to KeGetPcr()
 	EmuKeSetPcr(NewPcr);
 
-	DBG_PRINTF("Installed KPCR in TIB_ArbitraryDataSlot (with pTLS = 0x%.8X)\n", pTLS);
+	EmuLog(LOG_LEVEL::DEBUG, "Installed KPCR in TIB_ArbitraryDataSlot (with pTLS = 0x%.8X)", pTLS);
 }
