@@ -205,6 +205,7 @@ file (GLOB CXBXR_SOURCE_COMMON
  "${CXBXR_ROOT_DIR}/src/common/Timer.cpp"
  "${CXBXR_ROOT_DIR}/src/common/util/crc32c.cpp"
  "${CXBXR_ROOT_DIR}/src/common/util/CxbxUtil.cpp"
+ "${CXBXR_ROOT_DIR}/src/common/util/hasher.cpp"
  "${CXBXR_ROOT_DIR}/src/common/win32/DInputController.cpp"
  "${CXBXR_ROOT_DIR}/src/common/win32/EmuShared.cpp"
  "${CXBXR_ROOT_DIR}/src/common/win32/InlineFunc.cpp"

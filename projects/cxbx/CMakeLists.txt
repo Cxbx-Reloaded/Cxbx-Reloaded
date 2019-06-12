@@ -32,10 +32,9 @@ link_directories(
 
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
  add_compile_definitions(
- _CRT_SECURE_NO_WARNINGS
+  _CRT_SECURE_NO_WARNINGS
   # Windows 7 minimum requirement
   _WIN32_WINNT=0x0601
-
   LTM_DESC
   USE_LTM
   LTC_NO_TEST
@@ -45,6 +44,9 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
   LTC_NO_PRNGS
   LTC_NO_MISC
   LTC_NO_PROTOTYPES
+
+  # Use inline XXHash version
+  XXH_INLINE_ALL
  )
  
  # Reference: https://docs.microsoft.com/en-us/cpp/build/reference/compiler-options-listed-alphabetically

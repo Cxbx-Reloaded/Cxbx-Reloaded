@@ -59,7 +59,7 @@
 #include <fstream>
 #include <iostream>
 #include <fcntl.h> // for _O_TEXT
-#include "common\util\xxhash32.h" // for XXHash32::hash
+#include "common\util\hasher.h"
 
 #define XBOX_LED_FLASH_PERIOD 176 // if you know a more accurate value, put it here
 
@@ -1063,7 +1063,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 				std::string cacheDir = g_Settings->GetDataLocation() + "\\SymbolCache\\";
 
 				// Hash the loaded XBE's header, use it as a filename
-				uint32_t uiHash = XXHash32::hash((void*)&m_Xbe->m_Header, sizeof(Xbe::Header), 0);
+				uint64_t uiHash = ComputeHash((void*)&m_Xbe->m_Header, sizeof(Xbe::Header));
 				std::stringstream sstream;
 				std::string szTitleName(m_Xbe->m_szAsciiTitle);
 				m_Xbe->PurgeBadChar(szTitleName);
