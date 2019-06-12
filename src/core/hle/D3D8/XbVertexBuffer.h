@@ -26,6 +26,7 @@
 #define XBVERTEXBUFFER_H
 
 #include "Cxbx.h"
+
 //#include <ctime> // Conflict with io.h
 
 #define MAX_NBR_STREAMS 16
@@ -50,31 +51,44 @@ typedef struct _CxbxDrawContext
 }
 CxbxDrawContext;
 
-typedef struct _CxbxPatchedStream
+class CxbxPatchedStream
 {
-    UINT                    uiCachedXboxVertexStride;
-    UINT                    uiCachedHostVertexStride;
-    bool                    bCacheIsStreamZeroDrawUP;
-    void                   *pCachedHostVertexStreamZeroData;
-    bool                    bCachedHostVertexStreamZeroDataIsAllocated;
-    XTL::IDirect3DVertexBuffer *pCachedHostVertexBuffer;
-} CxbxPatchedStream;
+public:
+    CxbxPatchedStream();
+    ~CxbxPatchedStream();
+    void Activate(XTL::CxbxDrawContext *pDrawContext, UINT uiStream) const;
+    bool                    isValid = false;
+    XTL::X_D3DPRIMITIVETYPE XboxPrimitiveType = XTL::X_D3DPT_NONE;
+    PVOID                   pCachedXboxVertexData = xbnullptr;
+    UINT                    uiCachedXboxVertexDataSize = 0;
+    uint64_t                uiVertexDataHash = 0;
+    uint64_t                uiVertexStreamInformationHash = 0;
+    UINT                    uiCachedXboxVertexStride = 0;
+    UINT                    uiCachedHostVertexStride = 0;
+    bool                    bCacheIsStreamZeroDrawUP = false;
+    void                   *pCachedHostVertexStreamZeroData = nullptr;
+    bool                    bCachedHostVertexStreamZeroDataIsAllocated = false;
+    XTL::IDirect3DVertexBuffer *pCachedHostVertexBuffer = nullptr;
+};
 
 class CxbxVertexBufferConverter
 {
     public:
         CxbxVertexBufferConverter();
-       ~CxbxVertexBufferConverter();
-
-	   void Apply(CxbxDrawContext *pPatchDesc, DWORD StartIndex = 0);
+        void Apply(CxbxDrawContext *pPatchDesc);
+        void PrintStats();
     private:
-
         UINT m_uiNbrStreams;
-        CxbxPatchedStream m_PatchedStreams[MAX_NBR_STREAMS];
 
-        PVOID m_pNewVertexStreamZeroData;
+        // Stack tracking
+        ULONG m_TotalCacheHits = 0;
+        ULONG m_TotalCacheMisses = 0;
 
-        bool m_bAllocatedStreamZeroData;
+        UINT m_MaxCacheSize = 2000;                                        // Maximum number of entries in the cache
+        UINT m_CacheElasticity = 200;                                      // Cache is allowed to grow this much more than maximum before being purged to maximum
+        std::unordered_map<uint64_t, std::list<CxbxPatchedStream>::iterator> m_PatchedStreams;  // Stores references to patched streams for fast lookup
+        std::list<CxbxPatchedStream> m_PatchedStreamUsageList;             // Linked list of vertex streams, least recently used is last in the list
+        CxbxPatchedStream& GetPatchedStream(uint64_t);                     // Fetches (or inserts) a patched stream associated with the given key
 
         XTL::CxbxVertexShaderInfo *m_pVertexShaderInfo;
 
@@ -82,7 +96,7 @@ class CxbxVertexBufferConverter
         UINT GetNbrStreams(CxbxDrawContext *pPatchDesc);
 
         // Patches the types of the stream
-        void ConvertStream(CxbxDrawContext *pPatchDesc, UINT uiStream, DWORD StartIndex);
+        void ConvertStream(CxbxDrawContext *pPatchDesc, UINT uiStream);
 };
 
 // inline vertex buffer emulation

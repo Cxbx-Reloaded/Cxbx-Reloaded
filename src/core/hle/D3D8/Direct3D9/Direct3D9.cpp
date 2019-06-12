@@ -27,7 +27,7 @@
 #define _XBOXKRNL_DEFEXTRN_
 #define LOG_PREFIX CXBXR_MODULE::D3D8
 
-#include "common\util\xxhash32.h"
+#include "common\util\hasher.h"
 #include <condition_variable>
 
 // prevent name collisions
@@ -149,6 +149,8 @@ static DWORD                        g_VBLastSwap = 0;
 // current swap information
 static XTL::D3DSWAPDATA				g_SwapData = {0};
 static DWORD						g_SwapLast = 0;
+
+static XTL::CxbxVertexBufferConverter VertexBufferConverter = {};
 
 // cached Direct3D state variable(s)
 static XTL::IDirect3DIndexBuffer   *pClosingLineLoopIndexBuffer = nullptr;
@@ -716,7 +718,7 @@ typedef struct {
 	DWORD dwXboxResourceType = 0;
 	void* pXboxData = nullptr;
 	size_t szXboxDataSize = 0;
-	uint32_t hash = 0;
+	uint64_t hash = 0;
 	bool forceRehash = false;
 	std::chrono::time_point<std::chrono::high_resolution_clock> nextHashTime;
 	std::chrono::milliseconds hashLifeTime = 1ms;
@@ -866,8 +868,8 @@ bool HostResourceRequiresUpdate(resource_key_t key, DWORD dwSize)
 
 	auto now = std::chrono::high_resolution_clock::now();
 	if (now > it->second.nextHashTime || it->second.forceRehash) {
-		uint32_t oldHash = it->second.hash;
-		it->second.hash = XXHash32::hash(it->second.pXboxData, it->second.szXboxDataSize, 0);
+		uint64_t oldHash = it->second.hash;
+		it->second.hash = ComputeHash(it->second.pXboxData, it->second.szXboxDataSize);
 
 		if (it->second.hash != oldHash) {
 			// The data changed, so reset the hash lifetime
@@ -905,7 +907,7 @@ void SetHostResource(XTL::X_D3DResource* pXboxResource, XTL::IDirect3DResource* 
 	resourceInfo.dwXboxResourceType = GetXboxCommonResourceType(pXboxResource);
 	resourceInfo.pXboxData = GetDataFromXboxResource(pXboxResource);
 	resourceInfo.szXboxDataSize = dwSize > 0 ? dwSize : GetXboxResourceSize(pXboxResource);
-	resourceInfo.hash = XXHash32::hash(resourceInfo.pXboxData, resourceInfo.szXboxDataSize, 0);
+	resourceInfo.hash = ComputeHash(resourceInfo.pXboxData, resourceInfo.szXboxDataSize);
 	resourceInfo.hashLifeTime = 1ms;
 	resourceInfo.lastUpdate = std::chrono::high_resolution_clock::now();
 	resourceInfo.nextHashTime = resourceInfo.lastUpdate + resourceInfo.hashLifeTime;
@@ -1640,6 +1642,10 @@ static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
                     ToggleFauxFullscreen(hWnd);
                 }
             }
+            else if (wParam == VK_F1)
+            {
+                VertexBufferConverter.PrintStats();
+            }
             else if (wParam == VK_F6)
             {
                 // For some unknown reason, F6 isn't handled in WndMain::WndProc
@@ -2332,7 +2338,7 @@ static void EmuVerifyResourceIsRegistered(XTL::X_D3DResource *pResource, DWORD D
 }
 
 typedef struct {
-	DWORD Hash = 0;
+	uint64_t Hash = 0;
 	DWORD IndexCount = 0;
 	XTL::IDirect3DIndexBuffer* pHostIndexBuffer = nullptr;
 } ConvertedIndexBuffer;
@@ -2388,7 +2394,7 @@ void CxbxUpdateActiveIndexBuffer
 	}
 
 	// If the data needs updating, do so
-	uint32_t uiHash = XXHash32::hash(pIndexData, IndexCount * 2, 0);
+	uint64_t uiHash = ComputeHash(pIndexData, IndexCount * 2);
 	if (uiHash != indexBuffer.Hash)	{
 		// Update the Index Count and the hash
 		indexBuffer.IndexCount = IndexCount;
@@ -7053,13 +7059,11 @@ void XTL::CxbxDrawIndexed(CxbxDrawContext &DrawContext)
 
 	CxbxUpdateActiveIndexBuffer(DrawContext.pIndexData, DrawContext.dwVertexCount);
 
-	CxbxVertexBufferConverter VertexBufferConverter = {};
-
 	//Walk through index buffer
 	// Determine highest and lowest index in use :
 	INDEX16 LowIndex, HighIndex;
 	WalkIndexBuffer(LowIndex, HighIndex, &(DrawContext.pIndexData[DrawContext.dwStartVertex]), DrawContext.dwVertexCount);
-	VertexBufferConverter.Apply(&DrawContext, LowIndex);
+	VertexBufferConverter.Apply(&DrawContext);
 
 	if (DrawContext.XboxPrimitiveType == X_D3DPT_QUADLIST) {
 		UINT uiStartIndex = 0;
@@ -7135,7 +7139,6 @@ void XTL::CxbxDrawPrimitiveUP(CxbxDrawContext &DrawContext)
 	assert(DrawContext.uiXboxVertexStreamZeroStride > 0);
 	assert(DrawContext.dwIndexBase == 0); // No IndexBase under Draw*UP
 
-	CxbxVertexBufferConverter VertexBufferConverter = {};
 	VertexBufferConverter.Apply(&DrawContext);
 	if (DrawContext.XboxPrimitiveType == X_D3DPT_QUADLIST) {
 		// LOG_TEST_CASE("X_D3DPT_QUADLIST"); // X-Marbles and XDK Sample PlayField hits this case
@@ -7329,7 +7332,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawVertices)
 		DrawContext.dwVertexCount = VertexCount;
 		DrawContext.dwStartVertex = StartVertex;
 		DrawContext.hVertexShader = g_CurrentXboxVertexShaderHandle;
-		CxbxVertexBufferConverter VertexBufferConverter = {};
+
 		VertexBufferConverter.Apply(&DrawContext);
 		if (DrawContext.XboxPrimitiveType == X_D3DPT_QUADLIST) {
 			// LOG_TEST_CASE("X_D3DPT_QUADLIST"); // ?X-Marbles and XDK Sample (Cartoon, ?maybe PlayField?) hits this case
@@ -7538,7 +7541,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVerticesUP)
 		DrawContext.hVertexShader = g_CurrentXboxVertexShaderHandle;
 		// Don't set DrawContext.pIndexData = (INDEX16*)pIndexData; // Used by GetVerticesInBuffer
 
-		CxbxVertexBufferConverter VertexBufferConverter = {};
 		VertexBufferConverter.Apply(&DrawContext);
 		if (DrawContext.XboxPrimitiveType == X_D3DPT_QUADLIST) {
 			// Indexed quadlist can be drawn using unpatched indexes via multiple draws of 2 'strip' triangles :

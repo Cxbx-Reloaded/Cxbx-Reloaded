@@ -45,7 +45,7 @@
 #include "..\..\import\XbSymbolDatabase\XbSymbolDatabase.h"
 #include "Intercept.hpp"
 #include "Patches.hpp"
-#include "common\util\xxhash32.h"
+#include "common\util\hasher.h"
 #include <Shlwapi.h>
 #include <shlobj.h>
 #include <unordered_map>
@@ -385,7 +385,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 	}
 
 	// Hash the loaded XBE's header, use it as a filename
-	uint32_t uiHash = XXHash32::hash((void*)&CxbxKrnl_Xbe->m_Header, sizeof(Xbe::Header), 0);
+	uint64_t uiHash = ComputeHash((void*)&CxbxKrnl_Xbe->m_Header, sizeof(Xbe::Header));
 	std::stringstream sstream;
 	char tAsciiTitle[40] = "Unknown";
 	std::setlocale(LC_ALL, "English");

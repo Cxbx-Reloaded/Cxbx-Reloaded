@@ -26,6 +26,7 @@
 #define EMUXTL_H
 
 #include <vector>  // Needed for EmuDSound.h file, must be outside of XTL namespace.
+#include <unordered_map>
 
 namespace XTL
 {
