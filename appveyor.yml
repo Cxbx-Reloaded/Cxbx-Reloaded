@@ -12,8 +12,6 @@ configuration:
   - Release
   - Debug
 
-clone_depth: 1
-
 before_build:
   - cmd: |-
       git submodule update --init --recursive
