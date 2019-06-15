@@ -162,44 +162,44 @@ extern inline void output_wchar(std::ostream& os, wchar_t c);
 // By default, sanitization functions simply return the given argument
 // (type and value) which results in calls to standard output writers.
 template<class T>
-inline T _log_sanitize(T value)
+inline T _log_sanitize(T value, int ignored_length = 0)
 {
 	return value;
 }
 
 #if 0 // TODO FIXME : Disabled for now, as this is incorrectly called for INT types too
 // Convert booleans to strings properly
-inline const char * _log_sanitize(BOOL value)
+inline const char * _log_sanitize(BOOL value, int ignored_length = 0)
 {
 	return value ? "TRUE" : "FALSE";
 }
 #endif
 
 // Macro to ease declaring a _log_sanitize overload (invokeable via C) for type T
-#define LOG_SANITIZE_HEADER(C, T)           \
-std::ostream& operator<<(                   \
-    std::ostream& os,                       \
-	const Sane##C& container)               \
+#define LOG_SANITIZE_HEADER(C, T)                     \
+std::ostream& operator<<(                             \
+    std::ostream& os,                                 \
+    const Sane##C& container)                         \
 
-#define LOG_SANITIZE(C, T)                  \
-struct Sane##C                              \
-{                                           \
-  T value;                                  \
-  Sane##C(T _value) : value(_value) { }     \
-};                                          \
-                                            \
-inline Sane##C C(T value)                   \
-{                                           \
-    return Sane##C(value);                  \
-}                                           \
-                                            \
-inline Sane##C _log_sanitize(T value)       \
-{                                           \
-    return C(value);                        \
-}                                           \
-                                            \
-extern LOG_SANITIZE_HEADER(C, T)            \
-
+#define LOG_SANITIZE(C, T)                            \
+struct Sane##C                                        \
+{                                                     \
+  T value;                                            \
+  int max;                                            \
+  Sane##C(T _v, int _m = 80) : value(_v), max(_m) { } \
+};                                                    \
+                                                      \
+inline Sane##C C(T value, int max = 80)               \
+{                                                     \
+    return Sane##C(value, max);                       \
+}                                                     \
+                                                      \
+inline Sane##C _log_sanitize(T value, int max = 80)   \
+{                                                     \
+    return C(value, max);                             \
+}                                                     \
+                                                      \
+extern LOG_SANITIZE_HEADER(C, T)                      \
 
 // Hex output (type safe)
 // https://stackoverflow.com/questions/673240/how-do-i-print-an-unsigned-char-as-hex-in-c-using-ostream
@@ -455,7 +455,7 @@ extern thread_local std::string _logThreadPrefix;
 #define LOGRENDER_MEMBER_NAME(Member) << LOG_ARG_START << "."#Member << "  : "
 #define LOGRENDER_MEMBER(Member) LOGRENDER_MEMBER_NAME_VALUE("."#Member, value.Member)
 #define LOGRENDER_MEMBER_TYPE(Type, Member) LOGRENDER_MEMBER_NAME(Member) << (Type)value.Member
-#define LOGRENDER_MEMBER_SANITIZED(Member, MemberType) LOGRENDER_MEMBER_NAME(Member) << _log_sanitize((MemberType)value.Member)
+#define LOGRENDER_MEMBER_SANITIZED(Member, MemberType, Length) LOGRENDER_MEMBER_NAME(Member) << _log_sanitize((MemberType)value.Member, Length)
 
 // Macro to ease declaration of two render functions, for type and pointer-to-type :
 #define LOGRENDER_HEADER(Type) LOGRENDER_HEADER_BY_PTR(Type); LOGRENDER_HEADER_BY_REF(Type);

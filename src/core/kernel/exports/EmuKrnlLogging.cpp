@@ -391,7 +391,7 @@ LOGRENDER(LAUNCH_DATA_HEADER)
 	return os
 		LOGRENDER_MEMBER(dwLaunchDataType)
 		LOGRENDER_MEMBER(dwTitleId)
-		LOGRENDER_MEMBER_SANITIZED(szLaunchPath, char *)
+		LOGRENDER_MEMBER_SANITIZED(szLaunchPath, char *, /*Length=*/sizeof(value.szLaunchPath) / sizeof(value.szLaunchPath[0]))
 		LOGRENDER_MEMBER(dwFlags);
 }
 
@@ -399,8 +399,8 @@ LOGRENDER(LAUNCH_DATA_PAGE)
 {
 	return os
 		LOGRENDER_MEMBER_NAME(Header) << &value.Header
-		LOGRENDER_MEMBER_SANITIZED(Pad, char *)
-		LOGRENDER_MEMBER_SANITIZED(LaunchData, char *);
+		LOGRENDER_MEMBER_SANITIZED(Pad, char *, /*Length=*/sizeof(value.Pad) / sizeof(value.Pad[0]))
+		LOGRENDER_MEMBER_SANITIZED(LaunchData, char *, /*Length=*/sizeof(value.LaunchData) / sizeof(value.LaunchData[0]));
 }
 
 LOGRENDER(MM_STATISTICS)
@@ -431,7 +431,7 @@ LOGRENDER(STRING)
 	return os
 		LOGRENDER_MEMBER(Length)
 		LOGRENDER_MEMBER(MaximumLength)
-		LOGRENDER_MEMBER_SANITIZED(Buffer, char *);
+		LOGRENDER_MEMBER_SANITIZED(Buffer, char *, value.Length);
 }
 
 LOGRENDER(UNICODE_STRING)
@@ -439,7 +439,7 @@ LOGRENDER(UNICODE_STRING)
 	return os
 		LOGRENDER_MEMBER(Length)
 		LOGRENDER_MEMBER(MaximumLength)
-		LOGRENDER_MEMBER_SANITIZED(Buffer, wchar_t *);
+		LOGRENDER_MEMBER_SANITIZED(Buffer, wchar_t *, value.Length);
 }
 
 }; // end of namespace xboxkrnl;
