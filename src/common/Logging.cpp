@@ -291,8 +291,8 @@ LOG_SANITIZE_HEADER(sanitized_char_pointer, char *)
 		return os << "NULL";
 
 	bool needsEscaping = false;
-
-	while (*v)
+	int max_length = container.max;
+	while (*v && max_length--)
 		if (needs_escape(*v++))
 		{
 			needsEscaping = true;
@@ -301,13 +301,17 @@ LOG_SANITIZE_HEADER(sanitized_char_pointer, char *)
 
 	v = container.value;
 	os << hexstring32 << (uint32_t)v << " = \"";
+	max_length = container.max;
 	if (needsEscaping)
 	{
-		while (*v)
+		while (*v && max_length--)
 			output_char(os, *v++);
 	}
-	else
-		os << v;
+	else {
+		while (*v && max_length--) {
+			os << *v++;
+		}
+	}
 
 	return os << "\"";
 }
@@ -321,8 +325,8 @@ LOG_SANITIZE_HEADER(sanitized_wchar_pointer, wchar_t *)
 		return os << "NULL";
 
 	bool needsEscaping = false;
-
-	while (*v)
+	int max_length = container.max;
+	while (*v && max_length--)
 		if (needs_escape(*v++))
 		{
 			needsEscaping = true;
@@ -331,9 +335,10 @@ LOG_SANITIZE_HEADER(sanitized_wchar_pointer, wchar_t *)
 
 	v = container.value;
 	os << hexstring32 << (uint32_t)v << " = \"";
+	max_length = container.max;
 	if (needsEscaping)
 	{
-		while (*v)
+		while (*v && max_length--)
 			output_wchar(os, *v++);
 	}
 	else
@@ -341,7 +346,7 @@ LOG_SANITIZE_HEADER(sanitized_wchar_pointer, wchar_t *)
 		os << v; // TODO : FIXME - VS2015 doesn''t render this string (instead, it shows a hexadecimal memory address)
 #else // For now, render unicode as ANSI (replacing non-printables with '?')
 	{
-		while (*v) {
+		while (*v && max_length--) {
 			output_char(os, *v <= 0xFF ? (char)*v : '?');
 			v++;
 		}
