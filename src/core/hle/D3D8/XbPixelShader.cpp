@@ -7241,6 +7241,8 @@ inline void GetOutputFlags
 	}
 	case PS_COMBINEROUTPUT_SHIFTLEFT_1_BIAS: // 0x18L
 	{
+		using namespace XTL;
+		LOG_TEST_CASE("PS_COMBINEROUTPUT_SHIFTLEFT_1_BIAS");
 		printf("PS_COMBINEROUTPUT_SHIFTLEFT_1_BIAS"); // y = (x - 0.5)*2
 
 		//strcpy(szInstMod, "_x2");
@@ -7255,6 +7257,8 @@ inline void GetOutputFlags
 	}
 	case PS_COMBINEROUTPUT_SHIFTLEFT_2: // 0x20L
 	{
+		using namespace XTL;
+		LOG_TEST_CASE("PS_COMBINEROUTPUT_SHIFTLEFT_2");
 		printf("PS_COMBINEROUTPUT_SHIFTLEFT_2");  // y = x*4
 		strcpy(szInstMod, "_x4");
 		break;
@@ -7262,6 +7266,8 @@ inline void GetOutputFlags
 	// case PS_COMBINEROUTPUT_SHIFTLEFT_2_BIAS: // 0x28L, // y = (x - 0.5)*4
 	case PS_COMBINEROUTPUT_SHIFTRIGHT_1: // 0x30L
 	{
+		using namespace XTL;
+		LOG_TEST_CASE("PS_COMBINEROUTPUT_SHIFTRIGHT_1");
 		printf("PS_COMBINEROUTPUT_SHIFTRIGHT_1"); // y = x/2
 		strcpy(szInstMod, "_d2");
 		break;
