@@ -4229,7 +4229,7 @@ bool PSH_XBOX_SHADER::FixArgumentModifiers()
         int InsertPos = i;
         // Detect modifiers on constant and arguments
 		for (int p = 0; p < 7 && p < PSH_OPCODE_DEFS[Cur->Opcode]._In; p++) {
-			if ((Cur->Parameters[p].Type == PARAM_C || (Cur->Parameters[p].UsesRegister()))
+			if ((Cur->Parameters[p].Type == PARAM_C || Cur->Parameters[p].UsesRegister())
 				&& ((Cur->Parameters[p].Modifiers & ~(1 << ARGMOD_NEGATE)) != 0)) {
 
                 PSH_INTERMEDIATE_FORMAT Ins = {};
