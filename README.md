@@ -12,7 +12,8 @@ Cxbx-Reloaded is an emulator for running Microsoft Xbox (and eventually, Chihiro
   * GPU: Anything that supports Direct3D 9 (HLE) and OpenGL 3.3 (LLE).
 
 ### Prerequisites
-  * Visual C++ 2017 redistributable is required. Most people should already have this, but if not, Download it [here](https://support.microsoft.com/en-gb/help/2977003/the-latest-supported-visual-c-downloads). Make sure to install the 32-bit (x86) version even if you are on a 64-bit machine, as the 64-bit build does not include both!
+  * 32-bit (x86) Visual C++ 2019 redistributable is required. Download it [here](https://support.microsoft.com/en-gb/help/2977003/the-latest-supported-visual-c-downloads).
+    * Make sure to install the 32-bit (x86) version even if you're on a 64-bit machine, as the 64-bit build does not include both!
   * Npcap (Used for Network emulation): Download the Installer [here](https://nmap.org/npcap/#download). Make sure to enable winpcap compatibility mode!
 
 ## Automated Builds
@@ -57,7 +58,7 @@ Please contact us before you start working on something, so we can make sure you
 ### Main Prerequisites
 1. [Git for Windows](https://git-scm.com/)
 2. [CMake](https://cmake.org/)
-   * **REMARK:** Some IDEs  already have CMake support, it is optional.
+   * **REMARK:** Some IDEs already have CMake support, so this is optional.
 
 ### Fetching the code
 Run the following command on the command line:
@@ -77,7 +78,7 @@ Please note that Debug builds are significantly slower, but may help diagnose a 
 **NOTE:** It's not recommended to open CMakeLists.txt from Visual Studio, as it won't generate files in the build directory.
 
 ### Prerequisites
-1. [Visual Studio 2017](https://www.visualstudio.com/downloads/) (2019 might work, but is not officially supported yet)
+1. [Visual Studio 2019](https://www.visualstudio.com/downloads/) or 2017
    * Both C++ and C# desktop development
    * Windows Universal CRT SDK
    * C++ CMake tools for Windows **(optional if CMake is installed on system)**
@@ -90,8 +91,8 @@ Please note that Debug builds are significantly slower, but may help diagnose a 
 3. Then run these commands.
    1. `mkdir build & cd build` - Requirement to create and go in the build directory.
       * **REMARK:** You can use `build-x86` as your preferred directory as well.
-   2. `cmake .. -G "Visual Studio 15 2017" -A Win32` - Create generated files for Visual Studio 2017.
-      * Or use "Visual Studio 16 2019" for Visual Studio 2019.
+   2. `cmake .. -G "Visual Studio 16 2019" -A Win32` - Create generated files for Visual Studio 2019.
+      * Or use `"Visual Studio 15 2017"` for Visual Studio 2017.
         * **REMARK:** CMake 1.14 or later is the requirement to support Visual Studio 2019 generator.
           * Visual Studio **16.1** 2019 or later has CMake 1.14 bundled.
 4. Open `Cxbx-Reloaded.sln` from build-x86 directory, select your configuration (Release or Debug), then hit Build.
@@ -103,6 +104,6 @@ Currently not supported yet.
 You can support [Luke Usher](https://github.com/LukeUsher), initiator of Cxbx-Reloaded, on [Patreon](https://www.patreon.com/LukeUsher).
 
 ## Special Thanks
-* All contributors to the original Cxbx and Dxbx projects. Without them Cxbx-Reloaded would not exist at all.
+* All contributors to the original Cxbx and [Dxbx](https://github.com/PatrickvL/Dxbx) projects. Without them Cxbx-Reloaded would not exist at all.
 * [XQEMU](https://github.com/xqemu/xqemu) - While the majority of Cxbx-R is our own work (Kernel, HLE, etc), the NV2A LLE implementation and NVNet implementation are primarily the work of the XQEMU developers.
 * [XboxDev](https://github.com/xboxdev/) - Providing Xbox Hardware Research & Useful Tooling
