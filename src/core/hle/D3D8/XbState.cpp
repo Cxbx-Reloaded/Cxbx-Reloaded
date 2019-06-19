@@ -27,6 +27,7 @@
 #define _XBOXKRNL_DEFEXTRN_
 #define LOG_PREFIX CXBXR_MODULE::D3DST
 
+#include "core\kernel\init\CxbxKrnl.h"
 #include "core\kernel\support\Emu.h"
 #include "core\kernel\support\EmuXTL.h"
 
@@ -90,10 +91,22 @@ void UpdateDeferredRenderStates()
 
             // Convert from Xbox Data Formats to PC
             switch (RenderState) {
+                case XTL::X_D3DRS_FOGSTART:
+                case XTL::X_D3DRS_FOGEND: {
+                    // HACK: If the fog start/fog-end are negative, make them positive
+                    // This fixes Smashing Drive on non-nvidia hardware
+                    // Cause appears to be non-nvidia drivers clamping values < 0 to 0
+                    // Resulting in the fog formula becoming (0 - d) / 0, which breaks rendering
+                    // This prevents that scenario for screen-space fog, *hopefully* without breaking eye-based fog also
+                    float fogValue = *(float*)&Value;
+                    if (fogValue < 0.0f) {
+                        LOG_TEST_CASE("FOGSTART/FOGEND below 0");
+                        fogValue = std::abs(fogValue);
+                        Value = *(DWORD*)&Value;
+                    }
+                } break;
                 case XTL::X_D3DRS_FOGENABLE:
                 case XTL::X_D3DRS_FOGTABLEMODE:
-                case XTL::X_D3DRS_FOGSTART:
-                case XTL::X_D3DRS_FOGEND:
                 case XTL::X_D3DRS_FOGDENSITY:
                 case XTL::X_D3DRS_RANGEFOGENABLE:
                 case XTL::X_D3DRS_LIGHTING:
