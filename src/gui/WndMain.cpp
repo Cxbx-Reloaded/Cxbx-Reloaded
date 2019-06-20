@@ -381,8 +381,12 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
             {
                 SendMessage(m_hwndChild, uMsg, wParam, lParam);
             }
+            else
+            {
+				return DefWindowProc(hwnd, uMsg, wParam, lParam);
+            }
         };
-		break; // added per PVS suggestion.
+        break; // added per PVS suggestion.
 
         case WM_PAINT:
         {
@@ -513,6 +517,10 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                     if(m_hwndChild != NULL)
                     {
                         SendMessage(m_hwndChild, uMsg, wParam, lParam);
+                    }
+                    else
+                    {
+                        DefWindowProc(hwnd, uMsg, wParam, lParam);
                     }
                 }
             }
