@@ -1619,6 +1619,10 @@ static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
             {
                 ToggleFauxFullscreen(hWnd);
             }
+            else
+            {
+                return DefWindowProc(hWnd, msg, wParam, lParam);
+            }
         }
         break;
 
@@ -1654,6 +1658,10 @@ static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
             {
                 if(g_iWireframe++ == 2)
                     g_iWireframe = 0;
+            }
+            else
+            {
+                return DefWindowProc(hWnd, msg, wParam, lParam);
             }
         }
         break;
