@@ -2247,12 +2247,19 @@ static void VshConvertToken_STREAMDATA_REG(
 		break;
 	case X_D3DVSDT_NONE: // 0x02:
 		DbgVshPrintf("D3DVSDT_NONE /* xbox ext. */");
-		HostVertexElementDataType = D3DDECLTYPE_UNUSED;
-		// NeedPatching = TRUE; // TODO : This seems to cause regressions?
+		// Ignore token
 		break;
 	default:
 		DbgVshPrintf("Unknown data type for D3DVSD_REG: 0x%02X\n", XboxVertexElementDataType);
 		break;
+	}
+
+	DbgVshPrintf("),\n");
+
+	// On X_D3DVSDT_NONE skip this token
+	if (XboxVertexElementDataType == X_D3DVSDT_NONE)
+	{
+		return;
 	}
 
 	// save patching information
@@ -2278,12 +2285,6 @@ static void VshConvertToken_STREAMDATA_REG(
 
     pPatchData->pCurrentVertexShaderStreamInfo->HostVertexStride += HostVertexElementByteSize;
 
-    DbgVshPrintf("),\n");
-
-    if(HostVertexElementDataType == D3DDECLTYPE_UNUSED)
-    {
-        EmuLog(LOG_LEVEL::WARNING, "/* WARNING: Fatal type mismatch, no fitting type! */");
-    }
 }
 
 static void VshConvertToken_STREAMDATA(
