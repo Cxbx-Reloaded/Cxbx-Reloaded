@@ -102,7 +102,7 @@ void UpdateDeferredRenderStates()
                     if (fogValue < 0.0f) {
                         LOG_TEST_CASE("FOGSTART/FOGEND below 0");
                         fogValue = std::abs(fogValue);
-                        Value = *(DWORD*)&Value;
+                        Value = *(DWORD*)&fogValue;
                     }
                 } break;
                 case XTL::X_D3DRS_FOGENABLE:
