@@ -226,6 +226,8 @@ std::map<const std::string, const xbox_patch_t> g_PatchTable = {
 	PATCH_ENTRY("Lock3DSurface", XTL::EMUPATCH(Lock3DSurface), PATCH_HLE_D3D),
 
 	// DSOUND
+	PATCH_ENTRY("CDirectSound3DCalculator_Calculate3D", XTL::EMUPATCH(CDirectSound3DCalculator_Calculate3D), PATCH_HLE_DSOUND),
+	PATCH_ENTRY("CDirectSound3DCalculator_GetVoiceData", XTL::EMUPATCH(CDirectSound3DCalculator_GetVoiceData), PATCH_HLE_DSOUND),
 	PATCH_ENTRY("CDirectSoundStream_AddRef", XTL::EMUPATCH(CDirectSoundStream_AddRef), PATCH_HLE_DSOUND),
 	PATCH_ENTRY("CDirectSoundStream_Discontinuity", XTL::EMUPATCH(CDirectSoundStream_Discontinuity), PATCH_HLE_DSOUND),
 	PATCH_ENTRY("CDirectSoundStream_Flush", XTL::EMUPATCH(CDirectSoundStream_Flush), PATCH_HLE_DSOUND),
@@ -286,6 +288,7 @@ std::map<const std::string, const xbox_patch_t> g_PatchTable = {
 	PATCH_ENTRY("IDirectSoundBuffer_Play", XTL::EMUPATCH(IDirectSoundBuffer_Play), PATCH_HLE_DSOUND),
 	PATCH_ENTRY("IDirectSoundBuffer_PlayEx", XTL::EMUPATCH(IDirectSoundBuffer_PlayEx), PATCH_HLE_DSOUND),
 	PATCH_ENTRY("IDirectSoundBuffer_Release", XTL::EMUPATCH(IDirectSoundBuffer_Release), PATCH_HLE_DSOUND),
+	PATCH_ENTRY("IDirectSoundBuffer_Set3DVoiceData ", XTL::EMUPATCH(IDirectSoundBuffer_Set3DVoiceData), PATCH_HLE_DSOUND),
 	PATCH_ENTRY("IDirectSoundBuffer_SetAllParameters", XTL::EMUPATCH(IDirectSoundBuffer_SetAllParameters), PATCH_HLE_DSOUND),
 	PATCH_ENTRY("IDirectSoundBuffer_SetBufferData", XTL::EMUPATCH(IDirectSoundBuffer_SetBufferData), PATCH_HLE_DSOUND),
 	PATCH_ENTRY("IDirectSoundBuffer_SetConeAngles", XTL::EMUPATCH(IDirectSoundBuffer_SetConeAngles), PATCH_HLE_DSOUND),
@@ -321,6 +324,7 @@ std::map<const std::string, const xbox_patch_t> g_PatchTable = {
 	PATCH_ENTRY("IDirectSoundBuffer_StopEx", XTL::EMUPATCH(IDirectSoundBuffer_StopEx), PATCH_HLE_DSOUND),
 	PATCH_ENTRY("IDirectSoundBuffer_Unlock", XTL::EMUPATCH(IDirectSoundBuffer_Unlock), PATCH_HLE_DSOUND),
 	PATCH_ENTRY("IDirectSoundBuffer_Use3DVoiceData", XTL::EMUPATCH(IDirectSoundBuffer_Use3DVoiceData), PATCH_HLE_DSOUND),
+	PATCH_ENTRY("IDirectSoundStream_Set3DVoiceData ", XTL::EMUPATCH(IDirectSoundStream_Set3DVoiceData), PATCH_HLE_DSOUND),
 	PATCH_ENTRY("IDirectSoundStream_SetEG", XTL::EMUPATCH(IDirectSoundStream_SetEG), PATCH_HLE_DSOUND),
 	PATCH_ENTRY("IDirectSoundStream_SetFilter", XTL::EMUPATCH(IDirectSoundStream_SetFilter), PATCH_HLE_DSOUND),
 	PATCH_ENTRY("IDirectSoundStream_SetFrequency", XTL::EMUPATCH(IDirectSoundStream_SetFrequency), PATCH_HLE_DSOUND),
@@ -329,6 +333,7 @@ std::map<const std::string, const xbox_patch_t> g_PatchTable = {
 	PATCH_ENTRY("IDirectSoundStream_SetMixBins", XTL::EMUPATCH(IDirectSoundStream_SetMixBins), PATCH_HLE_DSOUND),
 	PATCH_ENTRY("IDirectSoundStream_SetPitch", XTL::EMUPATCH(IDirectSoundStream_SetPitch), PATCH_HLE_DSOUND),
 	PATCH_ENTRY("IDirectSoundStream_SetVolume", XTL::EMUPATCH(IDirectSoundStream_SetVolume), PATCH_HLE_DSOUND),
+	PATCH_ENTRY("IDirectSoundStream_Use3DVoiceData ", XTL::EMUPATCH(IDirectSoundStream_Use3DVoiceData), PATCH_HLE_DSOUND),
 	PATCH_ENTRY("IDirectSound_AddRef", XTL::EMUPATCH(IDirectSound_AddRef), PATCH_HLE_DSOUND),
 	PATCH_ENTRY("IDirectSound_CommitDeferredSettings", XTL::EMUPATCH(IDirectSound_CommitDeferredSettings), PATCH_HLE_DSOUND),
 	PATCH_ENTRY("IDirectSound_CommitEffectData", XTL::EMUPATCH(IDirectSound_CommitEffectData), PATCH_HLE_DSOUND),
