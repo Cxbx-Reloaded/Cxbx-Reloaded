@@ -4104,7 +4104,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetDopplerFactor)
 HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_GetVoiceProperties)
 (
     X_CDirectSoundBuffer*   pThis,
-    OUT void*               pVoiceProps)
+    OUT X_DSVOICEPROPS*     pVoiceProps)
 {
     enterCriticalSection;
 
@@ -4113,7 +4113,30 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_GetVoiceProperties)
         LOG_FUNC_ARG_OUT(pVoiceProps)
         LOG_FUNC_END;
 
-    LOG_UNIMPLEMENTED();
+    if (pVoiceProps == xbnullptr) {
+        LOG_TEST_CASE("pVoiceProps == xbnullptr");
+        RETURN(DS_OK);
+    }
+
+    // HACK: Set values that are known to prevent crashes/hangs
+    // TODO: Investigate and implement proper mixbin functionality
+    pVoiceProps->dwMixBinCount = 2;
+    pVoiceProps->l3DConeVolume = 0;
+    pVoiceProps->l3DDistanceVolume = 0;
+    pVoiceProps->l3DDopplerPitch = 0;
+    pVoiceProps->lI3DL2DirectVolume = 0;
+    pVoiceProps->lI3DL2RoomVolume = 0;
+    pVoiceProps->lPitch = -4597;
+
+    for (int i = 0; i < 8; i++) {
+        if (i < pVoiceProps->dwMixBinCount) {
+            pVoiceProps->MixBinVolumePairs[i].dwMixBin = i;
+            pVoiceProps->MixBinVolumePairs[i].lVolume = 0;
+        } else {
+            pVoiceProps->MixBinVolumePairs[i].dwMixBin = 0xFFFFFFFF;
+            pVoiceProps->MixBinVolumePairs[i].lVolume = -10000;
+        }
+    }
 
     leaveCriticalSection;
 
@@ -4126,7 +4149,8 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_GetVoiceProperties)
 HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_GetVoiceProperties)
 (
     X_CDirectSoundStream*   pThis,
-    OUT void*               pVoiceProps)
+    OUT X_DSVOICEPROPS*     pVoiceProps
+)
 {
     enterCriticalSection;
 
@@ -4135,7 +4159,30 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_GetVoiceProperties)
         LOG_FUNC_ARG_OUT(pVoiceProps)
         LOG_FUNC_END;
 
-    LOG_UNIMPLEMENTED();
+    if (pVoiceProps == xbnullptr) {
+        LOG_TEST_CASE("pVoiceProps == xbnullptr");
+        RETURN(DS_OK);
+    }
+
+    // HACK: Set values that are known to prevent crashes/hangs
+    // TODO: Investigate and implement proper mixbin functionality
+    pVoiceProps->dwMixBinCount = 2;
+    pVoiceProps->l3DConeVolume = 0;
+    pVoiceProps->l3DDistanceVolume = 0;
+    pVoiceProps->l3DDopplerPitch = 0;
+    pVoiceProps->lI3DL2DirectVolume = 0;
+    pVoiceProps->lI3DL2RoomVolume = 0;
+    pVoiceProps->lPitch = -4597;
+
+    for (int i = 0; i < 8; i++) {
+        if (i < pVoiceProps->dwMixBinCount) {
+            pVoiceProps->MixBinVolumePairs[i].dwMixBin = i;
+            pVoiceProps->MixBinVolumePairs[i].lVolume = 0;
+        } else {
+            pVoiceProps->MixBinVolumePairs[i].dwMixBin = 0xFFFFFFFF;
+            pVoiceProps->MixBinVolumePairs[i].lVolume = -10000;
+        }
+    }
 
     leaveCriticalSection;
 
@@ -4148,7 +4195,8 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_GetVoiceProperties)
 HRESULT WINAPI XTL::EMUPATCH(IDirectSoundStream_SetVolume)
 (
     X_CDirectSoundStream*   pThis,
-    LONG                    lVolume)
+    LONG                    lVolume
+)
 {
     LOG_FUNC_BEGIN
         LOG_FUNC_ARG(pThis)
@@ -4268,4 +4316,101 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundStream_SetMixBins)
         LOG_FUNC_END;
 
     return XTL::EMUPATCH(CDirectSoundStream_SetMixBins)(pThis, pMixBins);
+}
+
+// ******************************************************************
+// * patch:  CDirectSound3DCalculator_Calculate3D
+// ******************************************************************
+VOID WINAPI XTL::EMUPATCH(CDirectSound3DCalculator_Calculate3D)
+(
+    DWORD a1,
+    DWORD a2
+)
+{
+    LOG_FUNC_BEGIN
+        LOG_FUNC_ARG(a1)
+        LOG_FUNC_ARG(a2)
+        LOG_FUNC_END;
+
+    LOG_UNIMPLEMENTED();
+}
+
+// ******************************************************************
+// * patch:  CDirectSound3DCalculator_GetVoiceData
+// ******************************************************************
+VOID WINAPI XTL::EMUPATCH(CDirectSound3DCalculator_GetVoiceData)
+(
+    DWORD a1,
+    DWORD a2,
+    DWORD a3,
+    DWORD a4,
+    DWORD a5
+)
+{
+    LOG_FUNC_BEGIN
+        LOG_FUNC_ARG(a1)
+        LOG_FUNC_ARG(a2)
+        LOG_FUNC_ARG(a3)
+        LOG_FUNC_ARG(a4)
+        LOG_FUNC_ARG(a5)
+        LOG_FUNC_END;
+
+    LOG_UNIMPLEMENTED();
+}
+
+// ******************************************************************
+// * patch:  IDirectSoundBuffer_Set3DVoiceData
+// ******************************************************************
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Set3DVoiceData)
+(
+    X_CDirectSoundBuffer*   pThis,
+    DWORD a2
+)
+{
+    LOG_FUNC_BEGIN
+        LOG_FUNC_ARG(pThis)
+        LOG_FUNC_ARG(a2)
+        LOG_FUNC_END;
+
+    LOG_UNIMPLEMENTED();
+
+    RETURN(STATUS_SUCCESS);
+}
+
+// ******************************************************************
+// * patch:  IDirectSoundStream_Set3DVoiceData
+// ******************************************************************
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundStream_Set3DVoiceData)
+(
+    X_CDirectSoundStream*   pThis,
+    DWORD a2
+)
+{
+    LOG_FUNC_BEGIN
+        LOG_FUNC_ARG(pThis)
+        LOG_FUNC_ARG(a2)
+        LOG_FUNC_END;
+
+    LOG_UNIMPLEMENTED();
+
+    RETURN(STATUS_SUCCESS);
+}
+
+// ******************************************************************
+// * patch:  IDirectSoundBuffer_Use3DVoiceData
+// ******************************************************************
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundStream_Use3DVoiceData)
+(
+    X_CDirectSoundStream*   pThis,
+    DWORD a2
+)
+{
+    LOG_FUNC_BEGIN
+        LOG_FUNC_ARG(pThis)
+        LOG_FUNC_ARG(a2)
+        LOG_FUNC_END;
+
+    LOG_UNIMPLEMENTED();
+
+    RETURN(STATUS_SUCCESS);
 }

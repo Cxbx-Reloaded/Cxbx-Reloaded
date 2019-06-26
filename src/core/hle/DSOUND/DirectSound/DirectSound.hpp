@@ -1582,7 +1582,7 @@ HRESULT WINAPI EMUPATCH(CDirectSoundStream_SetDopplerFactor)
 HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_GetVoiceProperties)
 (
     X_CDirectSoundBuffer*   pThis,
-    OUT void*               pVoiceProps);
+    OUT X_DSVOICEPROPS*     pVoiceProps);
 
 // ******************************************************************
 // * patch: CDirectSoundStream_GetVoiceProperties
@@ -1590,7 +1590,7 @@ HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_GetVoiceProperties)
 HRESULT WINAPI EMUPATCH(CDirectSoundStream_GetVoiceProperties)
 (
     X_CDirectSoundStream*   pThis,
-    OUT void*               pVoiceProps);
+    OUT X_DSVOICEPROPS*     pVoiceProps);
 
 // ******************************************************************
 // * patch: IDirectSoundStream_SetVolume
@@ -1655,5 +1655,50 @@ HRESULT WINAPI EMUPATCH(IDirectSoundStream_SetMixBins)
 (
     X_CDirectSoundStream*   pThis,
     PVOID                   pMixBins);
+
+// ******************************************************************
+// * patch:  CDirectSound3DCalculator_Calculate3D
+// ******************************************************************
+VOID WINAPI EMUPATCH(CDirectSound3DCalculator_Calculate3D)
+(
+    DWORD a1,
+    DWORD a2);
+
+// ******************************************************************
+// * patch:  CDirectSound3DCalculator_GetVoiceData
+// ******************************************************************
+VOID WINAPI EMUPATCH(CDirectSound3DCalculator_GetVoiceData)
+(
+    DWORD a1,
+    DWORD a2,
+    DWORD a3,
+    DWORD a4,
+    DWORD a5);
+
+// ******************************************************************
+// * patch:  IDirectSoundBuffer_Set3DVoiceData
+// ******************************************************************
+HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_Set3DVoiceData)
+(
+    X_CDirectSoundBuffer*   pThis,
+    DWORD a2);
+
+// ******************************************************************
+// * patch:  IDirectSoundStream_Set3DVoiceData
+// ******************************************************************
+HRESULT WINAPI EMUPATCH(IDirectSoundStream_Set3DVoiceData)
+(
+    X_CDirectSoundStream*   pThis,
+    DWORD a2
+);
+
+// ******************************************************************
+// * patch:  IDirectSoundStrea,_Use3DVoiceData
+// ******************************************************************
+HRESULT WINAPI EMUPATCH(IDirectSoundStream_Use3DVoiceData)
+(
+    X_CDirectSoundStream*   pThis,
+    DWORD a2
+);
 #endif
 }

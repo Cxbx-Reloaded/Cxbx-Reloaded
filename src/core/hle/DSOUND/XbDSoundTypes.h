@@ -346,4 +346,14 @@ struct X_DSI3DL2BUFFER {
 typedef struct IDirectSoundStream IDirectSoundStream;
 typedef IDirectSoundStream *LPDIRECTSOUNDSTREAM;
 
+struct X_DSVOICEPROPS {
+    DWORD dwMixBinCount;
+    X_DSMIXBINSVOLUMEPAIR MixBinVolumePairs[8];
+    LONG lPitch;
+    LONG l3DDistanceVolume;
+    LONG l3DConeVolume;
+    LONG l3DDopplerPitch;
+    LONG lI3DL2DirectVolume;
+    LONG lI3DL2RoomVolume;
+};
 #endif
