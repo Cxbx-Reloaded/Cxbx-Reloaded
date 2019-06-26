@@ -1209,12 +1209,12 @@ void NV2ADevice::Init()
 	// Setup the conditions/mutexes
 	pgraph_init(d);
 
-	// Only spawn VBlank thread when LLE is enabled
+	// Only init PVIDEO when LLE is enabled
 	if (d->pgraph.opengl_enabled) {
 		pvideo_init(d);
-
-		vblank_thread = std::thread(nv2a_vblank_thread, d);
 	}
+
+    vblank_thread = std::thread(nv2a_vblank_thread, d);
 
     qemu_mutex_init(&d->pfifo.pfifo_lock);
     qemu_cond_init(&d->pfifo.puller_cond);
