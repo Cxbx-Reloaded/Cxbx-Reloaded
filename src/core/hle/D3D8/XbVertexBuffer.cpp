@@ -255,9 +255,10 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
 				// TODO : Use GetXboxBaseTexture()
 				X_D3DBaseTexture *pXboxBaseTexture = EmuD3DActiveTexture[i];
 				if (pXboxBaseTexture != xbnullptr) {
-					// TODO : Use GetXboxPixelContainerFormat
-					XTL::X_D3DFORMAT XBFormat = (XTL::X_D3DFORMAT)((pXboxBaseTexture->Format & X_D3DFORMAT_FORMAT_MASK) >> X_D3DFORMAT_FORMAT_SHIFT);
-					if (EmuXBFormatIsLinear(XBFormat)) {
+					extern XTL::X_D3DFORMAT GetXboxPixelContainerFormat(const XTL::X_D3DPixelContainer *pXboxPixelContainer); // TODO : Move to XTL-independent header file
+
+					XTL::X_D3DFORMAT XboxFormat = GetXboxPixelContainerFormat(pXboxBaseTexture);
+					if (EmuXBFormatIsLinear(XboxFormat)) {
 						// This is often hit by the help screen in XDK samples.
 						bNeedTextureNormalization = true;
 						// Remember linearity, width and height :

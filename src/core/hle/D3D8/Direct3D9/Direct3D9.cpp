@@ -593,7 +593,7 @@ inline DWORD GetXboxCommonResourceType(const XTL::X_D3DResource *pXboxResource)
 	return dwCommonType;
 }
 
-inline XTL::X_D3DFORMAT GetXboxPixelContainerFormat(const XTL::X_D3DPixelContainer *pXboxPixelContainer)
+XTL::X_D3DFORMAT GetXboxPixelContainerFormat(const XTL::X_D3DPixelContainer *pXboxPixelContainer)
 {
 	// Don't pass in unassigned Xbox pixel container
 	assert(pXboxPixelContainer != NULL);
@@ -4671,6 +4671,51 @@ DWORD WINAPI XTL::EMUPATCH(D3DDevice_Swap)
     return result;
 }
 
+bool IsSupportedFormat(XTL::X_D3DFORMAT X_Format, XTL::X_D3DRESOURCETYPE XboxResourceType, DWORD D3DUsage) {
+	// TODO : Nuance the following, because the Direct3D 8 docs states
+	// CheckDeviceFormat is needed when D3DUSAGE_RENDERTARGET or
+	// D3DUSAGE_DYNAMNIC is specified.
+	// Otherwise, lookup resource type and accompanying 'SupportedFormat' array
+	bool *pbSupportedFormats = g_bSupportsFormatTexture;
+
+	switch (XboxResourceType) {
+		case XTL::X_D3DRTYPE_SURFACE: {
+			if (D3DUsage & D3DUSAGE_RENDERTARGET) {
+				pbSupportedFormats = g_bSupportsFormatSurfaceRenderTarget;
+			} else if (D3DUsage & D3DUSAGE_DEPTHSTENCIL) {
+				pbSupportedFormats = g_bSupportsFormatSurfaceDepthStencil;
+			} else {
+				pbSupportedFormats = g_bSupportsFormatSurface;
+			}
+			break;
+		}
+		case XTL::X_D3DRTYPE_VOLUME: {
+			pbSupportedFormats = g_bSupportsFormatTexture; // TODO : Complete
+			break;
+		}
+		case XTL::X_D3DRTYPE_TEXTURE: {
+			if (D3DUsage & D3DUSAGE_RENDERTARGET) {
+				pbSupportedFormats = g_bSupportsFormatTextureRenderTarget;
+			} else if (D3DUsage & D3DUSAGE_DEPTHSTENCIL) {
+				pbSupportedFormats = g_bSupportsFormatTextureDepthStencil;
+			} else {
+				pbSupportedFormats = g_bSupportsFormatTexture;
+			}
+			break;
+		}
+		case XTL::X_D3DRTYPE_VOLUMETEXTURE: {
+			pbSupportedFormats = g_bSupportsFormatVolumeTexture; // TODO : Complete
+			break;
+		}
+		case XTL::X_D3DRTYPE_CUBETEXTURE: {
+			pbSupportedFormats = g_bSupportsFormatCubeTexture; // TODO : Complete
+			break;
+		}
+	} // switch XboxResourceType
+
+	return pbSupportedFormats[X_Format];
+}
+
 // Was patch: IDirect3DResource8_Register
 void CreateHostResource(XTL::X_D3DResource *pResource, DWORD D3DUsage, int iTextureStage, DWORD dwSize)
 {
@@ -4822,54 +4867,8 @@ void CreateHostResource(XTL::X_D3DResource *pResource, DWORD D3DUsage, int iText
 			D3DUsage &= ~D3DUSAGE_DEPTHSTENCIL;
 		}
 		else {
-			// TODO : Nuance the following, because the Direct3D 8 docs states
-			// CheckDeviceFormat is needed when D3DUSAGE_RENDERTARGET or
-			// D3DUSAGE_DYNAMNIC is specified.
-
-			// Otherwise, lookup resource type and accompanying 'SupportedFormat' array
-			bool *pbSupportedFormats = g_bSupportsFormatTexture;
-
-			switch (XboxResourceType) {
-			case XTL::X_D3DRTYPE_SURFACE: {
-				if (D3DUsage & D3DUSAGE_RENDERTARGET) {
-					pbSupportedFormats = g_bSupportsFormatSurfaceRenderTarget;
-				}
-				else if (D3DUsage & D3DUSAGE_DEPTHSTENCIL) {
-					pbSupportedFormats = g_bSupportsFormatSurfaceDepthStencil;
-				}
-				else {
-					pbSupportedFormats = g_bSupportsFormatSurface;
-				}
-				break;
-			}
-			case XTL::X_D3DRTYPE_VOLUME: {
-				pbSupportedFormats = g_bSupportsFormatTexture; // TODO : Complete
-				break;
-			}
-			case XTL::X_D3DRTYPE_TEXTURE: {
-				if (D3DUsage & D3DUSAGE_RENDERTARGET) {
-					pbSupportedFormats = g_bSupportsFormatTextureRenderTarget;
-				}
-				else if (D3DUsage & D3DUSAGE_DEPTHSTENCIL) {
-					pbSupportedFormats = g_bSupportsFormatTextureDepthStencil;
-				}
-				else {
-					pbSupportedFormats = g_bSupportsFormatTexture;
-				}
-				break;
-			}
-			case XTL::X_D3DRTYPE_VOLUMETEXTURE: {
-				pbSupportedFormats = g_bSupportsFormatVolumeTexture; // TODO : Complete
-				break;
-			}
-			case XTL::X_D3DRTYPE_CUBETEXTURE: {
-				pbSupportedFormats = g_bSupportsFormatCubeTexture; // TODO : Complete
-				break;
-			}
-			} // switch XboxResourceType
-
 			// Does host CheckDeviceFormat() succeed on this format?
-			if (pbSupportedFormats[X_Format]) {
+			if (IsSupportedFormat(X_Format, XboxResourceType, D3DUsage)) {
 				// Then use matching host format
 				PCFormat = EmuXB2PC_D3DFormat(X_Format);
 
