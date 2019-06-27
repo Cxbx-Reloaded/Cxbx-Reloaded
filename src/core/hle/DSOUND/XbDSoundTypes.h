@@ -197,17 +197,17 @@ XMEDIAINFO, *PXEIDIAINFO, *LPXMEDIAINFO;
 // ******************************************************************
 // * X_DSMIXBINVOLUMEPAIR
 // ******************************************************************
-typedef struct _XDSMIXBINSVOLUMEPAIR {
+typedef struct _XDSMIXBINVOLUMEPAIR {
     DWORD       dwMixBin;
     LONG        lVolume;
-} X_DSMIXBINSVOLUMEPAIR, *X_LPDSMIXBINSVOLUMEPAIR;
+} X_DSMIXBINVOLUMEPAIR, *X_LPDSMIXBINVOLUMEPAIR;
 
 // ******************************************************************
 // * X_DSMB
 // ******************************************************************
 typedef struct _XDSMIXBINS {
     DWORD                       dwCount;
-    X_LPDSMIXBINSVOLUMEPAIR     lpMixBinVolumePairs;
+    X_LPDSMIXBINVOLUMEPAIR     lpMixBinVolumePairs;
 } X_DSMIXBINS, *X_LPDSMIXBINS;
 
 // ******************************************************************
@@ -348,7 +348,7 @@ typedef IDirectSoundStream *LPDIRECTSOUNDSTREAM;
 
 struct X_DSVOICEPROPS {
     DWORD dwMixBinCount;
-    X_DSMIXBINSVOLUMEPAIR MixBinVolumePairs[8];
+    X_DSMIXBINVOLUMEPAIR MixBinVolumePairs[8];
     LONG lPitch;
     LONG l3DDistanceVolume;
     LONG l3DConeVolume;
