@@ -579,7 +579,8 @@ inline void DSound3DBufferCreate(LPDIRECTSOUNDBUFFER8 pDSBuffer, LPDIRECTSOUND3D
     pThis->Xb_Volume = 0L; \
     pThis->Xb_VolumeMixbin = 0L; \
     pThis->Xb_dwHeadroom = 600; /* default for 2D voice */ \
-    pThis->Xb_EnvolopeDesc = { 0 };
+    pThis->Xb_EnvolopeDesc = { 0 }; \
+    InitVoiceProperties(pThis->Xb_VoiceProperties); /* The rest will initialize in GeneratePCMFormat to GenerateMixBinDefault. */
     //pThis->EmuBufferDesc = { 0 }; // Enable this when become necessary.
     /*
     pThis->EmuLockPtr1 = xbnullptr; \
