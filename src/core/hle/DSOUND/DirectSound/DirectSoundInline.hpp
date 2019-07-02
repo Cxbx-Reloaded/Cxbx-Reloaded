@@ -186,6 +186,130 @@ inline void GenerateXboxBufferCache(
     }
 }
 
+inline void InitVoiceProperties(XTL::X_DSVOICEPROPS& Xb_VoiceProperties)
+{
+    Xb_VoiceProperties.l3DConeVolume = 0;
+    Xb_VoiceProperties.l3DDistanceVolume = 0;
+    Xb_VoiceProperties.l3DDopplerPitch = 0;
+    Xb_VoiceProperties.lI3DL2DirectVolume = 0;
+    Xb_VoiceProperties.lI3DL2RoomVolume = 0;
+    Xb_VoiceProperties.lPitch = -4597;
+}
+
+inline void GenerateMixBinDefault(
+    XTL::X_DSVOICEPROPS    &Xb_VoiceProperties,
+    LPCWAVEFORMATEX         lpwfxFormat,
+    XTL::X_DSMIXBINS*       mixbins_output,
+    bool                    is3D)
+{
+    if (g_LibVersion_DSOUND < 4039) {
+        // Do not apply any update since below 4039 doesn't provide access to get properties.
+        return;
+    }
+
+    auto& xb_mixbinArray = Xb_VoiceProperties.MixBinVolumePairs;
+    unsigned int i;
+
+    // Use custom mixbin if provided.
+    if (mixbins_output != xbnullptr) {
+
+        Xb_VoiceProperties.dwMixBinCount = mixbins_output->dwCount;
+        auto& mixbinArray_output = mixbins_output->lpMixBinVolumePairs;
+
+        for (i = 0; i < Xb_VoiceProperties.dwMixBinCount; i++) {
+            xb_mixbinArray[i].dwMixBin = mixbinArray_output[i].dwMixBin;
+            xb_mixbinArray[i].lVolume = 0;
+        }
+    }
+    // Otherwise use default setup as instructed by internally.
+    else {
+        unsigned int counter = 0;
+
+
+        if (is3D) {
+
+            xb_mixbinArray[counter].dwMixBin = 6;
+            xb_mixbinArray[counter].lVolume = 0;
+            counter++;
+
+            xb_mixbinArray[counter].dwMixBin = 8;
+            xb_mixbinArray[counter].lVolume = 0;
+            counter++;
+
+            xb_mixbinArray[counter].dwMixBin = 7;
+            xb_mixbinArray[counter].lVolume = 0;
+            counter++;
+
+            xb_mixbinArray[counter].dwMixBin = 9;
+            xb_mixbinArray[counter].lVolume = 0;
+            counter++;
+
+            xb_mixbinArray[counter].dwMixBin = 10;
+            xb_mixbinArray[counter].lVolume = 0;
+            counter++;
+        }
+        else {
+            // If format is PCM/XADPCM, then use stereo mixbin as default.
+            if (lpwfxFormat->wFormatTag != WAVE_FORMAT_EXTENSIBLE) {
+                counter = 2;
+                for (int i = 0; i < counter; i++) {
+                    xb_mixbinArray[i].dwMixBin = i;
+                    xb_mixbinArray[i].lVolume = 0;
+                }
+            }
+            // Otherwise, the format is extensible and using channel mask as default.
+            else {
+                const WAVEFORMATEXTENSIBLE* wfxFormatExtensible = reinterpret_cast<const WAVEFORMATEXTENSIBLE*>(lpwfxFormat);
+                auto& channelMask = wfxFormatExtensible->dwChannelMask;
+
+                if ((channelMask & SPEAKER_FRONT_LEFT) > 0) {
+                    xb_mixbinArray[counter].dwMixBin = 0;
+                    xb_mixbinArray[counter].lVolume = 0;
+                    counter++;
+                }
+
+                if ((channelMask & SPEAKER_FRONT_LEFT) > 0) {
+                    xb_mixbinArray[counter].dwMixBin = 1;
+                    xb_mixbinArray[counter].lVolume = 0;
+                    counter++;
+                }
+
+                if ((channelMask & SPEAKER_FRONT_CENTER) > 0) {
+                    xb_mixbinArray[counter].dwMixBin = 2;
+                    xb_mixbinArray[counter].lVolume = 0;
+                    counter++;
+                }
+
+                if ((channelMask & SPEAKER_LOW_FREQUENCY) > 0) {
+                    xb_mixbinArray[counter].dwMixBin = 3;
+                    xb_mixbinArray[counter].lVolume = 0;
+                    counter++;
+                }
+
+                if ((channelMask & SPEAKER_BACK_LEFT) > 0) {
+                    xb_mixbinArray[counter].dwMixBin = 4;
+                    xb_mixbinArray[counter].lVolume = 0;
+                    counter++;
+                }
+
+                if ((channelMask & SPEAKER_BACK_RIGHT) > 0) {
+                    xb_mixbinArray[counter].dwMixBin = 5;
+                    xb_mixbinArray[counter].lVolume = 0;
+                    counter++;
+                }
+            }
+        }
+
+        Xb_VoiceProperties.dwMixBinCount = counter;
+    }
+
+    // Finally, set the rest as invalid/silent.
+    for (int i = Xb_VoiceProperties.dwMixBinCount; i < 8; i++) {
+        xb_mixbinArray[i].dwMixBin = 0xFFFFFFFF;
+        xb_mixbinArray[i].lVolume = -10000;
+    }
+}
+
 inline void GeneratePCMFormat(
     DSBUFFERDESC   &DSBufferDesc,
     LPCWAVEFORMATEX lpwfxFormat,
