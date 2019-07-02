@@ -105,6 +105,7 @@ struct X_CDirectSoundBuffer
     LONG                    Xb_VolumeMixbin;
     DWORD                   Xb_dwHeadroom;
     X_DSENVOLOPEDESC        Xb_EnvolopeDesc;
+    X_DSVOICEPROPS          Xb_VoiceProperties;
 };
 
 //Custom flags (4 bytes support up to 31 shifts,starting from 0)
@@ -256,6 +257,7 @@ class X_CDirectSoundStream
         LONG                                    Xb_VolumeMixbin;
         DWORD                                   Xb_dwHeadroom;
         X_DSENVOLOPEDESC                        Xb_EnvolopeDesc;
+        X_DSVOICEPROPS                          Xb_VoiceProperties;
 };
 
 // ******************************************************************

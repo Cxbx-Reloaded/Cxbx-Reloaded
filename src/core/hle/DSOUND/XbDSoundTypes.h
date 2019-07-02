@@ -33,6 +33,32 @@
 
 #define WAVE_FORMAT_XBOX_ADPCM 0x0069
 
+// XDSMIXBIN Flags
+#define XDSMIXBIN_FRONT_LEFT        0
+#define XDSMIXBIN_FRONT_RIGHT       1
+#define XDSMIXBIN_FRONT_CENTER      2
+#define XDSMIXBIN_LOW_FREQUENCY     3
+#define XDSMIXBIN_BACK_LEFT         4
+#define XDSMIXBIN_BACK_RIGHT        5
+#define XDSMIXBIN_SPEAKERS_MAX      6 // Max count for speakers
+// Other flags are used 
+
+// ******************************************************************
+// * X_DSMIXBINVOLUMEPAIR
+// ******************************************************************
+typedef struct _XDSMIXBINVOLUMEPAIR {
+    DWORD       dwMixBin;
+    LONG        lVolume;
+} X_DSMIXBINVOLUMEPAIR, *X_LPDSMIXBINVOLUMEPAIR;
+
+// ******************************************************************
+// * X_DSMIXBINS
+// ******************************************************************
+typedef struct _XDSMIXBINS {
+    DWORD                       dwCount;
+    X_LPDSMIXBINVOLUMEPAIR     lpMixBinVolumePairs;
+} X_DSMIXBINS, *X_LPDSMIXBINS;
+
 // EmuIDirectSoundBuffer_Play flags
 #define X_DSBPLAY_LOOPING       0x00000001
 #define X_DSBPLAY_FROMSTART     0x00000002
@@ -92,7 +118,7 @@ struct X_DSBUFFERDESC
     DWORD           dwFlags;
     DWORD           dwBufferBytes;
     LPWAVEFORMATEX  lpwfxFormat;
-    LPVOID          lpMixBins;      // TODO: Implement
+    X_LPDSMIXBINS   lpMixBinsOutput;
     DWORD           dwInputMixBin;
 };
 
@@ -133,7 +159,7 @@ struct X_DSSTREAMDESC
     LPWAVEFORMATEX              lpwfxFormat;
     LPFNXMOCALLBACK             lpfnCallback;
     LPVOID                      lpvContext;
-    PVOID                       lpMixBins;      // TODO: Implement
+    X_LPDSMIXBINS               lpMixBinsOutput;
 };
 
 // ******************************************************************
@@ -183,32 +209,6 @@ XMEDIAINFO, *PXEIDIAINFO, *LPXMEDIAINFO;
 #define XMO_STREAMF_OUTPUT_ASYNC                0x00000008      // The object supports providing output data asynchronously
 #define XMO_STREAMF_IN_PLACE                    0x00000010      // The object supports in-place modification of data
 #define XMO_STREAMF_MASK                        0x0000001F
-
-// XDSMIXBIN Flags
-#define XDSMIXBIN_FRONT_LEFT        0
-#define XDSMIXBIN_FRONT_RIGHT       1
-#define XDSMIXBIN_FRONT_CENTER      2
-#define XDSMIXBIN_LOW_FREQUENCY     3
-#define XDSMIXBIN_BACK_LEFT         4
-#define XDSMIXBIN_BACK_RIGHT        5
-#define XDSMIXBIN_SPEAKERS_MAX      6 // Max count for speakers
-// Other flags are used 
-
-// ******************************************************************
-// * X_DSMIXBINVOLUMEPAIR
-// ******************************************************************
-typedef struct _XDSMIXBINVOLUMEPAIR {
-    DWORD       dwMixBin;
-    LONG        lVolume;
-} X_DSMIXBINVOLUMEPAIR, *X_LPDSMIXBINVOLUMEPAIR;
-
-// ******************************************************************
-// * X_DSMB
-// ******************************************************************
-typedef struct _XDSMIXBINS {
-    DWORD                       dwCount;
-    X_LPDSMIXBINVOLUMEPAIR     lpMixBinVolumePairs;
-} X_DSMIXBINS, *X_LPDSMIXBINS;
 
 // ******************************************************************
 // * X_DSFILTERDESC
