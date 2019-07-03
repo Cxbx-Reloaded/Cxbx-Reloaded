@@ -719,11 +719,11 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetMixBins)
 		LOG_FUNC_ARG(pMixBins)
 		LOG_FUNC_END;
 
-    LOG_UNIMPLEMENTED();
+    HRESULT hRet = HybridDirectSoundBuffer_SetMixBins(pThis->Xb_VoiceProperties, pMixBins, pThis->EmuBufferDesc.lpwfxFormat, pThis->EmuBufferDesc);
 
     leaveCriticalSection;
 
-    return DS_OK;
+    return hRet;
 }
 
 // ******************************************************************
@@ -768,7 +768,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetMixBinVolumes_8)
 		LOG_FUNC_ARG(pMixBins)
 		LOG_FUNC_END;
 
-    return HybridDirectSoundBuffer_SetMixBinVolumes_8(pThis->EmuDirectSoundBuffer8, pMixBins, pThis->EmuFlags, pThis->Xb_Volume, pThis->Xb_VolumeMixbin, pThis->Xb_dwHeadroom);
+    return HybridDirectSoundBuffer_SetMixBinVolumes_8(pThis->EmuDirectSoundBuffer8, pMixBins, pThis->Xb_VoiceProperties, pThis->EmuFlags, pThis->Xb_Volume, pThis->Xb_VolumeMixbin, pThis->Xb_dwHeadroom);
 }
 
 // ******************************************************************
@@ -932,7 +932,8 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateBuffer)
         DSoundBufferRegionSetDefault(*ppBuffer);
 
         // We have to set DSBufferDesc last due to EmuFlags must be either 0 or previously written value to preserve other flags.
-        GeneratePCMFormat(DSBufferDesc, pdsbd->lpwfxFormat, (*ppBuffer)->EmuFlags, pdsbd->dwBufferBytes, &(*ppBuffer)->X_BufferCache, (*ppBuffer)->X_BufferCacheSize);
+        GeneratePCMFormat(DSBufferDesc, pdsbd->lpwfxFormat, (*ppBuffer)->EmuFlags, pdsbd->dwBufferBytes,
+                          &(*ppBuffer)->X_BufferCache, (*ppBuffer)->X_BufferCacheSize, (*ppBuffer)->Xb_VoiceProperties, pdsbd->lpMixBinsOutput);
         (*ppBuffer)->EmuBufferDesc = DSBufferDesc;
 
         EmuLog(LOG_LEVEL::DEBUG, "DirectSoundCreateBuffer, *ppBuffer := 0x%08X, bytes := 0x%08X", *ppBuffer, (*ppBuffer)->EmuBufferDesc.dwBufferBytes);
@@ -1727,7 +1728,8 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateStream)
         (*ppStream)->Xb_rtFlushEx = 0LL;
 
         // We have to set DSBufferDesc last due to EmuFlags must be either 0 or previously written value to preserve other flags.
-        GeneratePCMFormat(DSBufferDesc, pdssd->lpwfxFormat, (*ppStream)->EmuFlags, 0, xbnullptr, (*ppStream)->X_BufferCacheSize);
+        GeneratePCMFormat(DSBufferDesc, pdssd->lpwfxFormat, (*ppStream)->EmuFlags, 0,
+                          xbnullptr, (*ppStream)->X_BufferCacheSize, (*ppStream)->Xb_VoiceProperties, pdssd->lpMixBinsOutput);
 
         // Test case: Star Wars: KotOR has one packet greater than 5 seconds worth. Increasing to 10 seconds works out fine, can increase more if need to.
         // Allocate at least 10 second worth of bytes in PCM format.
@@ -2409,11 +2411,11 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetMixBins)
 		LOG_FUNC_ARG(pMixBins)
 		LOG_FUNC_END;
 
-    LOG_UNIMPLEMENTED();
+    HRESULT hRet = HybridDirectSoundBuffer_SetMixBins(pThis->Xb_VoiceProperties, pMixBins, pThis->EmuBufferDesc.lpwfxFormat, pThis->EmuBufferDesc);
 
     leaveCriticalSection;
 
-    return S_OK;
+    return hRet;
 }
 
 // s+
@@ -2688,7 +2690,8 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetFormat)
     HRESULT hRet = HybridDirectSoundBuffer_SetFormat(pThis->EmuDirectSoundBuffer8, pwfxFormat, 
                                                      pThis->EmuBufferDesc, pThis->EmuFlags, 
                                                      pThis->EmuPlayFlags, pThis->EmuDirectSound3DBuffer8,
-                                                     0, pThis->X_BufferCache, pThis->X_BufferCacheSize);
+                                                     0, pThis->X_BufferCache, pThis->X_BufferCacheSize,
+                                                     pThis->Xb_VoiceProperties, xbnullptr);
 
     leaveCriticalSection;
 
@@ -3285,7 +3288,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetMixBinVolumes_8)
 		LOG_FUNC_ARG(pMixBins)
 		LOG_FUNC_END;
 
-    return HybridDirectSoundBuffer_SetMixBinVolumes_8(pThis->EmuDirectSoundBuffer8, pMixBins, pThis->EmuFlags, pThis->Xb_Volume, pThis->Xb_VolumeMixbin, pThis->Xb_dwHeadroom);
+    return HybridDirectSoundBuffer_SetMixBinVolumes_8(pThis->EmuDirectSoundBuffer8, pMixBins, pThis->Xb_VoiceProperties, pThis->EmuFlags, pThis->Xb_Volume, pThis->Xb_VolumeMixbin, pThis->Xb_dwHeadroom);
 }
 
 // ******************************************************************
@@ -3359,7 +3362,8 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetFormat)
 
     HRESULT hRet = HybridDirectSoundBuffer_SetFormat(pThis->EmuDirectSoundBuffer8, pwfxFormat, pThis->EmuBufferDesc,
                                              pThis->EmuFlags, pThis->EmuPlayFlags, pThis->EmuDirectSound3DBuffer8,
-                                             0, pThis->X_BufferCache, pThis->X_BufferCacheSize);
+                                             0, pThis->X_BufferCache, pThis->X_BufferCacheSize,
+                                             pThis->Xb_VoiceProperties, xbnullptr);
 
     leaveCriticalSection;
 
@@ -4105,8 +4109,6 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_GetVoiceProperties)
     X_CDirectSoundBuffer*   pThis,
     OUT X_DSVOICEPROPS*     pVoiceProps)
 {
-    enterCriticalSection;
-
     LOG_FUNC_BEGIN
         LOG_FUNC_ARG(pThis)
         LOG_FUNC_ARG_OUT(pVoiceProps)
@@ -4117,29 +4119,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_GetVoiceProperties)
         RETURN(DS_OK);
     }
 
-    // HACK: Set values that are known to prevent crashes/hangs
-    // TODO: Investigate and implement proper mixbin functionality
-    pVoiceProps->dwMixBinCount = 2;
-    pVoiceProps->l3DConeVolume = 0;
-    pVoiceProps->l3DDistanceVolume = 0;
-    pVoiceProps->l3DDopplerPitch = 0;
-    pVoiceProps->lI3DL2DirectVolume = 0;
-    pVoiceProps->lI3DL2RoomVolume = 0;
-    pVoiceProps->lPitch = -4597;
-
-    for (int i = 0; i < 8; i++) {
-        if (i < pVoiceProps->dwMixBinCount) {
-            pVoiceProps->MixBinVolumePairs[i].dwMixBin = i;
-            pVoiceProps->MixBinVolumePairs[i].lVolume = 0;
-        } else {
-            pVoiceProps->MixBinVolumePairs[i].dwMixBin = 0xFFFFFFFF;
-            pVoiceProps->MixBinVolumePairs[i].lVolume = -10000;
-        }
-    }
-
-    leaveCriticalSection;
-
-    return DS_OK;
+    return HybridDirectSoundBuffer_GetVoiceProperties(pThis->Xb_VoiceProperties, pVoiceProps);
 }
 
 // ******************************************************************
@@ -4151,9 +4131,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_GetVoiceProperties)
     OUT X_DSVOICEPROPS*     pVoiceProps
 )
 {
-    enterCriticalSection;
-
-    LOG_FUNC_BEGIN
+     LOG_FUNC_BEGIN
         LOG_FUNC_ARG(pThis)
         LOG_FUNC_ARG_OUT(pVoiceProps)
         LOG_FUNC_END;
@@ -4163,29 +4141,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_GetVoiceProperties)
         RETURN(DS_OK);
     }
 
-    // HACK: Set values that are known to prevent crashes/hangs
-    // TODO: Investigate and implement proper mixbin functionality
-    pVoiceProps->dwMixBinCount = 2;
-    pVoiceProps->l3DConeVolume = 0;
-    pVoiceProps->l3DDistanceVolume = 0;
-    pVoiceProps->l3DDopplerPitch = 0;
-    pVoiceProps->lI3DL2DirectVolume = 0;
-    pVoiceProps->lI3DL2RoomVolume = 0;
-    pVoiceProps->lPitch = -4597;
-
-    for (int i = 0; i < 8; i++) {
-        if (i < pVoiceProps->dwMixBinCount) {
-            pVoiceProps->MixBinVolumePairs[i].dwMixBin = i;
-            pVoiceProps->MixBinVolumePairs[i].lVolume = 0;
-        } else {
-            pVoiceProps->MixBinVolumePairs[i].dwMixBin = 0xFFFFFFFF;
-            pVoiceProps->MixBinVolumePairs[i].lVolume = -10000;
-        }
-    }
-
-    leaveCriticalSection;
-
-    return DS_OK;
+    return HybridDirectSoundBuffer_GetVoiceProperties(pThis->Xb_VoiceProperties, pVoiceProps);
 }
 
 // ******************************************************************
