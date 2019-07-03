@@ -1932,4 +1932,39 @@ inline HRESULT HybridDirectSoundBuffer_Unlock(
     return DS_OK;
 }//*/
 
+inline HRESULT HybridDirectSoundBuffer_GetVoiceProperties(
+    XTL::X_DSVOICEPROPS& Xb_VoiceProperties,
+    XTL::X_DSVOICEPROPS* out_VoiceProperties
+)
+{
+    enterCriticalSection;
+
+    HRESULT ret = DS_OK;
+
+    if (out_VoiceProperties != xbnullptr) {
+        // Simply copy the data from Xb_VoiceProperties.
+        *out_VoiceProperties = Xb_VoiceProperties;
+    }
+    else {
+        ret = DSERR_INVALIDPARAM;
+    }
+
+    leaveCriticalSection;
+
+    return ret;
+}
+
+inline HRESULT HybridDirectSoundBuffer_SetMixBins(
+    XTL::X_DSVOICEPROPS& Xb_VoiceProperties,
+    XTL::X_LPDSMIXBINS   in_MixBins,
+    LPCWAVEFORMATEX      pwfxFormat,
+    DSBUFFERDESC&        BufferDesc
+)
+{
+    HRESULT ret = DS_OK;
+
+    GenerateMixBinDefault(Xb_VoiceProperties, pwfxFormat, in_MixBins, ((BufferDesc.dwFlags & DSBCAPS_CTRL3D) > 0));
+
+    return ret;
+}
 #endif
