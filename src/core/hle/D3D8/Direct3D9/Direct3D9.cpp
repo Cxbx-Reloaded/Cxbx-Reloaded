@@ -3226,12 +3226,20 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetViewport)
 		GetHostRenderTargetDimensions(&HostRenderTarget_Width, &HostRenderTarget_Height);
 		if (HostRenderTarget_Width != XboxRenderTarget_Width || HostRenderTarget_Height != XboxRenderTarget_Height) {
 			LOG_TEST_CASE("RenderTarget width/height changed without calling SetRenderTarget");
-			FreeHostResource(GetHostResourceKey(g_pXboxRenderTarget)); g_pD3DDevice->SetRenderTarget(0, GetHostSurface(g_pXboxRenderTarget, D3DUSAGE_RENDERTARGET));
-			FreeHostResource(GetHostResourceKey(g_pXboxDepthStencil)); g_pD3DDevice->SetDepthStencilSurface(GetHostSurface(g_pXboxRenderTarget, D3DUSAGE_DEPTHSTENCIL));
+
+			// NOTE: If the host backbuffer hack is enabled, we must skip this operation for the back buffer, otherwise everything will break
+			// In that situation, there's nothing we can do without causing damage. 
+			if (!g_DirectHostBackBufferAccess && g_pXboxRenderTarget != g_XboxBackBufferSurface) {
+				FreeHostResource(GetHostResourceKey(g_pXboxRenderTarget)); g_pD3DDevice->SetRenderTarget(0, GetHostSurface(g_pXboxRenderTarget, D3DUSAGE_RENDERTARGET));
+				FreeHostResource(GetHostResourceKey(g_pXboxDepthStencil)); g_pD3DDevice->SetDepthStencilSurface(GetHostSurface(g_pXboxRenderTarget, D3DUSAGE_DEPTHSTENCIL));
+			}
 		}
 						
 		// Store the updated viewport data ready to pass to host SetViewPort
-		HostViewPort = XboxViewPort;
+		// Again, we can only do this when the host backbuffer hack is disabled, otherwise, we break
+		if (!g_DirectHostBackBufferAccess && g_pXboxRenderTarget != g_XboxBackBufferSurface) {
+			HostViewPort = XboxViewPort;
+		}
 
 		if (g_ScaleViewport) {
 			// Get current host render target dimensions
