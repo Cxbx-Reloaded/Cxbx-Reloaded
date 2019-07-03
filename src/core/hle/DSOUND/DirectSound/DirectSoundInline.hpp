@@ -316,10 +316,14 @@ inline void GeneratePCMFormat(
     DWORD          &dwEmuFlags,
     DWORD           X_BufferSizeRequest,
     LPVOID*         X_BufferCache,
-    DWORD          &X_BufferCacheSize)
+    DWORD          &X_BufferCacheSize,
+    XTL::X_DSVOICEPROPS& Xb_VoiceProperties,
+    XTL::X_LPDSMIXBINS mixbins_output)
 {
     bool bIsSpecial = false;
     DWORD checkAvgBps;
+
+    GenerateMixBinDefault(Xb_VoiceProperties, lpwfxFormat, mixbins_output, ((DSBufferDesc.dwFlags & DSBCAPS_CTRL3D) > 0));
 
     // convert from Xbox to PC DSound
     {
@@ -1475,7 +1479,9 @@ inline HRESULT HybridDirectSoundBuffer_SetFormat(
     LPDIRECTSOUND3DBUFFER8 &pDS3DBuffer,
     bool                    X_BufferAllocate,
     LPVOID                 &X_BufferCache,
-    DWORD                  &X_BufferCacheSize)
+    DWORD                  &X_BufferCacheSize,
+    XTL::X_DSVOICEPROPS    &Xb_VoiceProperties,
+    XTL::X_LPDSMIXBINS      mixbins_output)
 {
 
     enterCriticalSection;
@@ -1483,10 +1489,10 @@ inline HRESULT HybridDirectSoundBuffer_SetFormat(
     pDSBuffer->Stop();
 
     if (X_BufferAllocate) {
-        GeneratePCMFormat(BufferDesc, pwfxFormat, dwEmuFlags, X_BufferCacheSize, xbnullptr, X_BufferCacheSize);
+        GeneratePCMFormat(BufferDesc, pwfxFormat, dwEmuFlags, X_BufferCacheSize, xbnullptr, X_BufferCacheSize, Xb_VoiceProperties, mixbins_output);
     // Don't allocate for DS Stream class, it is using straight from the source.
     } else {
-        GeneratePCMFormat(BufferDesc, pwfxFormat, dwEmuFlags, 0, xbnullptr, X_BufferCacheSize);
+        GeneratePCMFormat(BufferDesc, pwfxFormat, dwEmuFlags, 0, xbnullptr, X_BufferCacheSize, Xb_VoiceProperties, mixbins_output);
     }
     HRESULT hRet = DS_OK;
     if (g_pDSoundPrimaryBuffer == pDSBuffer) {
@@ -1645,6 +1651,7 @@ inline HRESULT HybridDirectSoundBuffer_SetMixBins(
 inline HRESULT HybridDirectSoundBuffer_SetMixBinVolumes_8(
     LPDIRECTSOUNDBUFFER8 pDSBuffer,
     XTL::X_LPDSMIXBINS   pMixBins,
+    XTL::X_DSVOICEPROPS& Xb_VoiceProperties,
     DWORD                EmuFlags,
     LONG                 Xb_volume,
     LONG                &Xb_volumeMixBin,
@@ -1660,6 +1667,21 @@ inline HRESULT HybridDirectSoundBuffer_SetMixBinVolumes_8(
         if (pMixBins->lpMixBinVolumePairs != xbnullptr) {
             // Let's normalize audio level except for low frequency (subwoofer)
             for (DWORD i = 0; i < count; i++) {
+                // Update the mixbin volume only, do not reassign volume pair array.
+                for (DWORD i = 0; i < count; i++) {
+                    auto& it_in = pMixBins->lpMixBinVolumePairs[i];
+                    for (DWORD ii = 0; ii < Xb_VoiceProperties.dwMixBinCount; ii++) {
+                        auto& it_internal = Xb_VoiceProperties.MixBinVolumePairs[ii];
+
+                        // Once found a match, set the volume.
+                        // NOTE If titles input duplicate with different volume,
+                        //      it will override previous value.
+                        if (it_in.dwMixBin == it_internal.dwMixBin) {
+                            it_internal.lVolume = it_in.lVolume;
+                        }
+                    }
+                }
+
 #if 0 // This code isn't ideal for DirectSound, since it's not possible to set volume for each speakers.
                 if (pMixBins->lpMixBinVolumePairs[i].dwMixBin != XDSMIXBIN_LOW_FREQUENCY
                     // We only want to focus on speaker volumes, nothing else.
