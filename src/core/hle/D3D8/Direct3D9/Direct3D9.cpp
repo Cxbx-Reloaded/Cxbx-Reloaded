@@ -3236,12 +3236,10 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetViewport)
 		}
 						
 		// Store the updated viewport data ready to pass to host SetViewPort
-		// Again, we can only do this when the host backbuffer hack is disabled, otherwise, we break
-		if (!g_DirectHostBackBufferAccess && g_pXboxRenderTarget != g_XboxBackBufferSurface) {
-			HostViewPort = XboxViewPort;
-		}
+		HostViewPort = XboxViewPort;
 
-		if (g_ScaleViewport) {
+		// We *must* scale the viewport when using the DirectHostBackBuffert hack for the backbuffer render target
+		if (g_ScaleViewport || (g_DirectHostBackBufferAccess && g_pXboxRenderTarget == g_XboxBackBufferSurface)) {
 			// Get current host render target dimensions
 			DWORD HostRenderTarget_Width;
 			DWORD HostRenderTarget_Height;
