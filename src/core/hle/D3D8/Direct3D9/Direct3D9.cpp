@@ -3238,7 +3238,8 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetViewport)
 		// Store the updated viewport data ready to pass to host SetViewPort
 		HostViewPort = XboxViewPort;
 
-		// We *must* scale the viewport when using the DirectHostBackBuffert hack for the backbuffer render target
+		// We *must* scale the viewport when using the DirectHostBackBuffer hack for the backbuffer render target
+		// Otherwise, we only get partial screen updates
 		if (g_ScaleViewport || (g_DirectHostBackBufferAccess && g_pXboxRenderTarget == g_XboxBackBufferSurface)) {
 			// Get current host render target dimensions
 			DWORD HostRenderTarget_Width;
@@ -3253,8 +3254,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetViewport)
 				// TODO : Fix test-case Shenmue 2 (which halves height, leaving the bottom half unused)
 				HostViewPort.MinZ = XboxViewPort.MinZ; // No need scale Z for now
 				HostViewPort.MaxZ = XboxViewPort.MaxZ;
-			}
-			else {
+			} else {
 				EmuLog(LOG_LEVEL::WARNING, "GetHostRenderTargetDimensions failed - SetViewport sets Xbox viewport instead!");
 			}
 		}
