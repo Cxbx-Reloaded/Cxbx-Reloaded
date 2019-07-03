@@ -709,8 +709,8 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound_SetMixBinHeadroom)
 // ******************************************************************
 HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetMixBins)
 (
-    LPDIRECTSOUND8          pThis,
-    PVOID                   pMixBins)
+    X_CDirectSoundBuffer*   pThis,
+    X_LPDSMIXBINS           pMixBins)
 {
     enterCriticalSection;
 
@@ -2400,7 +2400,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetFrequency)
 HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetMixBins)
 (
     X_CDirectSoundStream*   pThis,
-    PVOID                   pMixBins)
+    X_LPDSMIXBINS           pMixBins)
 {
     enterCriticalSection;
 
@@ -4307,7 +4307,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundStream_SetFrequency)
 HRESULT WINAPI XTL::EMUPATCH(IDirectSoundStream_SetMixBins)
 (
     X_CDirectSoundStream*   pThis,
-    PVOID                   pMixBins)
+    X_LPDSMIXBINS           pMixBins)
 {
     LOG_FUNC_BEGIN
         LOG_FUNC_ARG(pThis)
