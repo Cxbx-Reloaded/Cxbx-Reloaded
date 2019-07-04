@@ -127,9 +127,6 @@ XTL::D3DCAPS					    g_D3DCaps = {};         // Direct3D Caps
 // wireframe toggle
 static int                          g_iWireframe    = 0;
 
-// build version
-extern uint32_t                     g_BuildVersion;
-
 typedef uint64_t resource_key_t;
 
 extern void UpdateFPSCounter();
@@ -3632,7 +3629,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexShaderConstant)
 	// some shaders need to add 96 to use ranges 0 to 192.  This fixes 3911 - 4361 games and XDK
 	// samples, but breaks Turok.
 	// See D3DDevice_GetVertexShaderConstant
-	if(g_BuildVersion <= 4361)
+	if(g_LibVersion_D3D8 <= 4361)
 		Register += 96;
 
     HRESULT hRet;
@@ -8171,7 +8168,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_GetVertexShaderConstant)
 	// some shaders need to add 96 to use ranges 0 to 192.  This fixes 3911 - 4361 games and XDK
 	// samples, but breaks Turok.
 	// See D3DDevice_SetVertexShaderConstant
-	if (g_BuildVersion <= 4361)
+	if (g_LibVersion_D3D8 <= 4361)
 		Register += 96;
 
 	HRESULT hRet = g_pD3DDevice->GetVertexShaderConstantF
@@ -9095,7 +9092,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetPixelShaderConstant_4)
 
     // TODO: This hack is necessary for Vertex Shaders on XDKs prior to 4361, but if this
     // causes problems with pixel shaders, feel free to comment out the hack below.
-    if(g_BuildVersion <= 4361)
+    if(g_LibVersion_D3D8 <= 4361)
         Register += 96;
 
 	HRESULT hRet = g_pD3DDevice->SetPixelShaderConstantF

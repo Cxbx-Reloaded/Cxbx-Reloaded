@@ -35,9 +35,8 @@
 DWORD *XTL::EmuD3DDeferredRenderState = nullptr;
 DWORD *XTL::EmuD3DDeferredTextureState = nullptr;
 
-extern uint32_t g_BuildVersion;
-
 #include "core\hle\Intercept.hpp" // For g_SymbolAddresses
+#include "common/Settings.hpp"    // For g_LibVersion_D3D8
 
 void VerifyAndFixEmuDeferredRenderStateOffset()
 {
@@ -62,7 +61,7 @@ void VerifyAndFixEmuDeferredRenderStateOffset()
     // Calculate index of D3DRS_CULLMODE for this XDK. We start counting from the first deferred state (D3DRS_FOGENABLE)
     DWORD CullModeIndex = 0;
     for (int i = XTL::X_D3DRS_FOGENABLE; i < XTL::X_D3DRS_CULLMODE; i++) {
-        if (XTL::DxbxRenderStateInfo[i].V <= g_BuildVersion) {
+        if (XTL::DxbxRenderStateInfo[i].V <= g_LibVersion_D3D8) {
             CullModeIndex++;
         }
     }
@@ -82,7 +81,7 @@ void UpdateDeferredRenderStates()
         // Loop through all deferred render states
         for (unsigned int RenderState = XTL::X_D3DRS_FOGENABLE; RenderState <= XTL::X_D3DRS_PRESENTATIONINTERVAL; RenderState++) {
             // If the current state is not present within our desired XDK, skip it
-            if (XTL::DxbxRenderStateInfo[RenderState].V >= g_BuildVersion) {
+            if (XTL::DxbxRenderStateInfo[RenderState].V >= g_LibVersion_D3D8) {
                 continue;
             }
 
@@ -175,7 +174,7 @@ DWORD GetDeferredTextureStateFromIndex(DWORD State)
 {
     // On early XDKs, we need to shuffle the values around a little
     // TODO: Verify which XDK version this change occurred at
-    if (g_BuildVersion <= 3948) {
+    if (g_LibVersion_D3D8 <= 3948) {
         // Values range 0-9 (D3DTSS_COLOROP to D3DTSS_TEXTURETRANSFORMFLAGS) become 12-21
         if (State <= 9) {
             return State + 12;
@@ -229,7 +228,7 @@ DWORD TranslateXDKSpecificD3DTOP(DWORD Value)
     // TODO: Determine when exactly these values changed
     // So far, 4134 is the earliest version we've seen using these mappings
     // But this may change
-    if (g_BuildVersion >= 4134) {
+    if (g_LibVersion_D3D8 >= 4134) {
         // For these XDKs, the mapping has been confirmed to match our internal mapping
         return Value;
     }
