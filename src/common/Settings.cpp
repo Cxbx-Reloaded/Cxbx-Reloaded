@@ -44,6 +44,10 @@ static_assert(false, "Please implement support for cross-platform's user profile
 
 std::string g_exec_filepath;
 
+// Individual library version
+uint16_t g_LibVersion_D3D8 = 0;
+uint16_t g_LibVersion_DSOUND = 0;
+
 // NOTE: Update settings_version when add/edit/delete setting's structure.
 const unsigned int settings_version = 4;
 

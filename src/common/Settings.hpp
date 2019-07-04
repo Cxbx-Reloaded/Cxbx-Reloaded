@@ -32,6 +32,10 @@
 
 extern std::string g_exec_filepath;
 
+// Individual library version
+extern uint16_t g_LibVersion_D3D8;
+extern uint16_t g_LibVersion_DSOUND;
+
 #define szSettings_alloc_error "ERROR: Unable to allocate Settings class."
 
 // Cxbx-Reloaded's data storage location.

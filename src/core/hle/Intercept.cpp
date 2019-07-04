@@ -76,9 +76,6 @@ static const char* section_symbols = "Symbols";
 std::map<std::string, xbaddr> g_SymbolAddresses;
 bool g_SymbolCacheUsed = false;
 
-// D3D build version
-uint32_t g_BuildVersion = 0;
-
 bool bLLE_APU = false; // Set this to true for experimental APU (sound) LLE
 bool bLLE_GPU = false; // Set this to true for experimental GPU (graphics) LLE
 bool bLLE_USB = false; // Set this to true for experimental USB (input) LLE
@@ -348,16 +345,29 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 		uint32_t dwLibraryVersions = pXbeHeader->dwLibraryVersions;
 		const char* SectionName = nullptr;
 		Xbe::SectionHeader* pSectionHeaders = (Xbe::SectionHeader*)pXbeHeader->dwSectionHeadersAddr;
+		uint32_t XbLibFlag;
 
 		// Get the highest revision build and prefix library to scan.
 		for (uint32_t v = 0; v < dwLibraryVersions; v++) {
-			uint16_t BuildVersion = pLibraryVersion[v].wBuildVersion;
-            uint16_t QFEVersion = pLibraryVersion[v].wFlags.QFEVersion;
+			uint16_t BuildVersion, QFEVersion;
+			BuildVersion = pLibraryVersion[v].wBuildVersion;
+			QFEVersion = pLibraryVersion[v].wFlags.QFEVersion;
 
 			if (xdkVersion < BuildVersion) {
 				xdkVersion = BuildVersion;
 			}
-			XbLibScan |= XbSymbolLibrayToFlag(std::string(pLibraryVersion[v].szName, pLibraryVersion[v].szName + 8).c_str());
+			XbLibFlag = XbSymbolLibrayToFlag(std::string(pLibraryVersion[v].szName, pLibraryVersion[v].szName + 8).c_str());
+			XbLibScan |= XbLibFlag;
+
+			// Keep certain library versions for plugin usage.
+			if ((XbLibFlag & (XbSymbolLib_D3D8 | XbSymbolLib_D3D8LTCG)) > 0) {
+				if (g_LibVersion_D3D8 < BuildVersion) {
+					g_LibVersion_D3D8 = BuildVersion;
+				}
+			}
+			else if ((XbLibFlag & XbSymbolLib_DSOUND) > 0) {
+				g_LibVersion_DSOUND = BuildVersion;
+			}
 		}
 
 		// Since XDK 4039 title does not have library version for DSOUND, let's check section header if it exists or not.
@@ -365,6 +375,11 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 			SectionName = (const char*)pSectionHeaders[v].dwSectionNameAddr;
 			if (strncmp(SectionName, Lib_DSOUND, 8) == 0) {
 				XbLibScan |= XbSymbolLib_DSOUND;
+
+				// If DSOUND version is not set, we need to force set it.
+				if (g_LibVersion_DSOUND == 0) {
+					g_LibVersion_DSOUND = xdkVersion;
+				}
 				break;
 			}
 		}
@@ -405,7 +420,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 
 		symbolCacheData.LoadFile(filename.c_str());
 
-		g_BuildVersion = symbolCacheData.GetLongValue(section_libs, sect_libs_keys.BuildVersion, /*Default=*/0);
+		xdkVersion = symbolCacheData.GetLongValue(section_libs, sect_libs_keys.BuildVersion, /*Default=*/0);
 
 		// Verify the version of the cache file against the Symbol Database version hash
 		const uint32_t SymbolDatabaseVersionHash = symbolCacheData.GetLongValue(section_info, sect_info_keys.SymbolDatabaseVersionHash, /*Default=*/0);
@@ -474,17 +489,6 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 
 		std::printf("Symbol: Detected Microsoft XDK application...\n");
 
-		// TODO: Is this enough for alias? We need to verify it.
-		if ((XbLibScan & XbSymbolLib_D3D8) > 0 || (XbLibScan & XbSymbolLib_D3D8LTCG) > 0) {
-			g_BuildVersion = xdkVersion;
-		}
-#if 0 // NOTE: This is a note for what we should do for above.
-        if (BuildVersion >= 5558 && BuildVersion <= 5659 && QFEVersion > 1) {
-            EmuLog(LOG_LEVEL::WARNING, "D3D8 version 1.0.%d.%d Title Detected: This game uses an alias version 1.0.5788", BuildVersion, QFEVersion);
-            BuildVersion = 5788;
-        }
-#endif
-
 #if 0 // NOTE: This code is currently disabled due to not optimized and require more work to do.
 
         XbSymbolRegisterLibrary(XbLibScan);
@@ -537,7 +541,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 		symbolCacheData.SetLongValue(section_libs, LibraryName.c_str(), pLibraryVersion[i].wBuildVersion, nullptr, /*UseHex =*/false);
 	}
 
-	symbolCacheData.SetLongValue(section_libs, sect_libs_keys.BuildVersion, g_BuildVersion, nullptr, /*UseHex =*/false);
+	symbolCacheData.SetLongValue(section_libs, sect_libs_keys.BuildVersion, xdkVersion, nullptr, /*UseHex =*/false);
 
 	// Store detected symbol addresses
 	for(auto it = g_SymbolAddresses.begin(); it != g_SymbolAddresses.end(); ++it) {
