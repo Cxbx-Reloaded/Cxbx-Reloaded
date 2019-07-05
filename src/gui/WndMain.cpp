@@ -1266,11 +1266,6 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 				RefreshMenus();
 				break;
 
-			case ID_HACKS_SCALEVIEWPORT:
-				g_Settings->m_hacks.ScaleViewport = !g_Settings->m_hacks.ScaleViewport;
-				RefreshMenus();
-				break;
-
 			case ID_HACKS_RENDERDIRECTLYTOHOSTBACKBUFFER:
 				g_Settings->m_hacks.DirectHostBackBufferAccess = !g_Settings->m_hacks.DirectHostBackBufferAccess;
 				RefreshMenus();
@@ -1720,9 +1715,6 @@ void WndMain::RefreshMenus()
 
 			chk_flag = (g_Settings->m_hacks.SkipRdtscPatching) ? MF_CHECKED : MF_UNCHECKED;
 			CheckMenuItem(settings_menu, ID_HACKS_SKIPRDTSCPATCHING, chk_flag);
-
-			chk_flag = (g_Settings->m_hacks.ScaleViewport) ? MF_CHECKED : MF_UNCHECKED;
-			CheckMenuItem(settings_menu, ID_HACKS_SCALEVIEWPORT, chk_flag);
 
 			chk_flag = (g_Settings->m_hacks.DirectHostBackBufferAccess) ? MF_CHECKED : MF_UNCHECKED;
 			CheckMenuItem(settings_menu, ID_HACKS_RENDERDIRECTLYTOHOSTBACKBUFFER, chk_flag);
@@ -2212,16 +2204,13 @@ void WndMain::StartEmulation(HWND hwndParent, DebuggerState LocalDebuggerState /
 	m_prevWindowLoc.x = curWindowPos.left - m_prevWindowLoc.x;
 	m_prevWindowLoc.y = curWindowPos.top - m_prevWindowLoc.y;
 
-	if (g_Settings->m_hacks.ScaleViewport) {
-		// Set the window size to emulation dimensions
-		// Note : Doing this here assures the emulation process will use
-		// the configured dimensions (because if done inside the emulation
-		// process, that doesn't resize correctly sometimes)
-		// TODO : Instead of doing the resize before launch, move it
-		// towards CreateDevice emulation, using Xbox-requested dimensions
-		// (and fix the issue of incorrect resizing)
-		ResizeWindow(m_hwnd, /*bForGUI*/false);
-	}
+	// Set the window size to emulation dimensions (The configured 'display' resolution)
+	// Note : Doing this here assures the emulation process will use
+	// the configured dimensions (because if done inside the emulation
+	// process, that doesn't resize correctly sometimes)
+	// We always resize, as we no longer tie host resolution to Xbox resolution
+	// 'Higher Resolution' rendering is handled as a scale factor.
+	ResizeWindow(m_hwnd, /*bForGUI*/false);
 
 	// shell exe
     {
@@ -2284,12 +2273,8 @@ void WndMain::StopEmulation()
 	UpdateCaption();
 	RefreshMenus();
 
-	int iScaleView = FALSE;
-	g_EmuShared->GetScaleViewport(&iScaleView);
-	if (iScaleView != 0) {
-		// Set the window size back to it's GUI dimensions
-		ResizeWindow(m_hwnd, /*bForGUI=*/true);
-	}
+	// Set the window size back to it's GUI dimensions
+	ResizeWindow(m_hwnd, /*bForGUI=*/true);
 
 	g_EmuShared->SetIsEmulating(false);
 }

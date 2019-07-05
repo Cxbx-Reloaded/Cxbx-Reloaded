@@ -88,6 +88,7 @@ static struct {
 	const char* VSync = "VSync";
 	const char* FullScreen = "FullScreen";
 	const char* HardwareYUV = "HardwareYUV";
+	const char* RenderResolution = "RenderResolution";
 } sect_video_keys;
 
 static const char* section_audio = "audio";
@@ -125,7 +126,6 @@ static struct {
 	const char* DisablePixelShaders = "DisablePixelShaders";
 	const char* UseAllCores = "UseAllCores";
 	const char* SkipRdtscPatching = "SkipRdtscPatching";
-	const char* ScaleViewPort = "ScaleViewPort";
 	const char* DirectHostBackBufferAccess = "DirectHostBackBufferAccess";
 } sect_hack_keys;
 
@@ -382,7 +382,6 @@ bool Settings::LoadConfig()
 	m_hacks.DisablePixelShaders = m_si.GetBoolValue(section_hack, sect_hack_keys.DisablePixelShaders, /*Default=*/false);
 	m_hacks.UseAllCores = m_si.GetBoolValue(section_hack, sect_hack_keys.UseAllCores, /*Default=*/false);
 	m_hacks.SkipRdtscPatching = m_si.GetBoolValue(section_hack, sect_hack_keys.SkipRdtscPatching, /*Default=*/false);
-	m_hacks.ScaleViewport = m_si.GetBoolValue(section_hack, sect_hack_keys.ScaleViewPort, /*Default=*/false);
 	m_hacks.DirectHostBackBufferAccess = m_si.GetBoolValue(section_hack, sect_hack_keys.DirectHostBackBufferAccess, /*Default=*/false);
 
 	// ==== Hack End ============
@@ -404,6 +403,7 @@ bool Settings::LoadConfig()
 	m_video.bVSync = m_si.GetBoolValue(section_video, sect_video_keys.VSync, /*Default=*/false);
 	m_video.bFullScreen = m_si.GetBoolValue(section_video, sect_video_keys.FullScreen, /*Default=*/false);
 	m_video.bHardwareYUV = m_si.GetBoolValue(section_video, sect_video_keys.HardwareYUV, /*Default=*/false);
+	m_video.renderScaleFactor = m_si.GetLongValue(section_video, sect_video_keys.RenderResolution, /*Default=*/1);
 
 	// ==== Video End ===========
 
@@ -565,7 +565,7 @@ bool Settings::Save(std::string file_path)
 	m_si.SetBoolValue(section_video, sect_video_keys.VSync, m_video.bVSync, nullptr, true);
 	m_si.SetBoolValue(section_video, sect_video_keys.FullScreen, m_video.bFullScreen, nullptr, true);
 	m_si.SetBoolValue(section_video, sect_video_keys.HardwareYUV, m_video.bHardwareYUV, nullptr, true);
-
+	m_si.SetLongValue(section_video, sect_video_keys.RenderResolution, m_video.renderScaleFactor, nullptr, false, true);
 	// ==== Video End ===========
 
 	// ==== Audio Begin =========
@@ -644,7 +644,6 @@ bool Settings::Save(std::string file_path)
 	m_si.SetBoolValue(section_hack, sect_hack_keys.DisablePixelShaders, m_hacks.DisablePixelShaders, nullptr, true);
 	m_si.SetBoolValue(section_hack, sect_hack_keys.UseAllCores, m_hacks.UseAllCores, nullptr, true);
 	m_si.SetBoolValue(section_hack, sect_hack_keys.SkipRdtscPatching, m_hacks.SkipRdtscPatching, nullptr, true);
-	m_si.SetBoolValue(section_hack, sect_hack_keys.ScaleViewPort, m_hacks.ScaleViewport, nullptr, true);
 	m_si.SetBoolValue(section_hack, sect_hack_keys.DirectHostBackBufferAccess, m_hacks.DirectHostBackBufferAccess, nullptr, true);
 
 	// ==== Hack End ============

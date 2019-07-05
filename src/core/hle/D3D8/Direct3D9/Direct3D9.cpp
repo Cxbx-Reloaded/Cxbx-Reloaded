@@ -160,7 +160,7 @@ static UINT                         QuadToTriangleIndexBuffer_Size = 0; // = NrO
 static XTL::IDirect3DSurface       *g_DefaultHostDepthBufferSuface = NULL;
 static XTL::X_D3DSurface           *g_XboxBackBufferSurface = NULL;
 static XTL::X_D3DSurface           *g_XboxDefaultDepthStencilSurface = NULL;
-static XTL::X_D3DSurface           *g_pXboxRenderTarget = NULL;
+XTL::X_D3DSurface                  *g_pXboxRenderTarget = NULL;
 static XTL::X_D3DSurface           *g_pXboxDepthStencil = NULL;
 static DWORD                        g_dwVertexShaderUsage = 0;
 static DWORD                        g_VertexShaderSlots[136];
@@ -1147,7 +1147,7 @@ uint32_t GetPixelContainerWidth(XTL::X_D3DPixelContainer *pPixelContainer)
 	return Result;
 }
 
-uint32_t GetPixelContainerHeigth(XTL::X_D3DPixelContainer *pPixelContainer)
+uint32_t GetPixelContainerHeight(XTL::X_D3DPixelContainer *pPixelContainer)
 {
 	DWORD Size = pPixelContainer->Size;
 	uint32_t Result;
@@ -1925,6 +1925,10 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
 			}
 
             if (g_EmuCDPD.bCreate) {
+                // HACK: Disable higher resolution when the host backbuffer hack is enabled
+                // This is to preserve existing hack behavior
+				g_RenderScaleFactor = g_DirectHostBackBufferAccess ? 1 : g_XBVideo.renderScaleFactor;
+
                 if(g_EmuCDPD.XboxPresentationParameters.BufferSurfaces[0] != NULL)
                     EmuLog(LOG_LEVEL::WARNING, "BufferSurfaces[0] : 0x%.08X", g_EmuCDPD.XboxPresentationParameters.BufferSurfaces[0]);
 
@@ -2567,6 +2571,37 @@ HRESULT WINAPI XTL::EMUPATCH(Direct3D_CreateDevice)
 }
 
 // ******************************************************************
+// * patch: D3DDevice_Reset
+// ******************************************************************
+HRESULT WINAPI XTL::EMUPATCH(D3DDevice_Reset)
+(
+	X_D3DPRESENT_PARAMETERS* pPresentationParameters
+)
+{
+	LOG_FUNC_ONE_ARG(pPresentationParameters)
+
+	// Unlike the host version of Reset, The Xbox version does not actually reset the entire device
+	// Instead, it simply re-creates the backbuffer with a new configuration
+	// Just like CreateDevice, we need to unset the MultiSample flag for now
+	// This fixes the 'Render to half-screen' issue in some titles (Test Case: Max Payne, Gameplay)
+	// See Direct3D_CreateDevice_Start for more info
+	// We should leave the rest of the params as is, and let the Xbox code/surface cache take care of it for us
+	pPresentationParameters->MultiSampleType = XTL::X_D3DMULTISAMPLE_NONE;
+
+	// Since Reset will call SetRenderTarget internally with a new backbuffer surface, we can clear our current association
+	// NOTE: We don't actually free the data, the Xbox side will do this for us when we call the trampoline below.
+	g_XboxBackBufferSurface = nullptr;
+	g_XboxDefaultDepthStencilSurface = nullptr;
+	
+	// Call the Xbox Reset function to do the rest of the work for us
+	XB_trampoline(HRESULT, WINAPI, D3DDevice_Reset, (X_D3DPRESENT_PARAMETERS*));
+	HRESULT hRet = XB_D3DDevice_Reset(pPresentationParameters);
+
+	return hRet;
+}
+
+
+// ******************************************************************
 // * patch: D3DDevice_GetDisplayFieldStatus
 // ******************************************************************
 VOID WINAPI XTL::EMUPATCH(D3DDevice_GetDisplayFieldStatus)(X_D3DFIELD_STATUS *pFieldStatus)
@@ -3085,31 +3120,42 @@ XTL::X_D3DSurface* WINAPI XTL::EMUPATCH(D3DDevice_GetBackBuffer2)
 		CxbxKrnlCleanup("D3DDevice_GetBackBuffer2: Could not get Xbox backbuffer");
 	}
 
-	auto pCopySrcSurface = GetHostSurface(pXboxBackBuffer, D3DUSAGE_RENDERTARGET);
-	if (pCopySrcSurface == nullptr) {
-		EmuLog(LOG_LEVEL::WARNING, "Failed to get Host Resource for Xbox Back Buffer");
-		return pXboxBackBuffer;
+
+    // HACK: Disabled: Enabling this breaks DOA3 at native res/without hacks+
+    // Also likely to effect Other games, but it has no known benefit at this point in time
+    // There are currently no known games that depend on backbuffer readback on the CPU!
+#if 0
+	// TODO: Downscale the host surface to the same size as the Xbox surface during copy
+	// Otherwise, we will overflow memory and crash
+	// HACK: For now, when using a non-zero scale factor, we can just skip the copy to prevent a crash
+	if (g_RenderScaleFactor == 1) {
+		auto pCopySrcSurface = GetHostSurface(pXboxBackBuffer, D3DUSAGE_RENDERTARGET);
+		if (pCopySrcSurface == nullptr) {
+			EmuLog(LOG_LEVEL::WARNING, "Failed to get Host Resource for Xbox Back Buffer");
+			return pXboxBackBuffer;
+		}
+
+		D3DLOCKED_RECT copyLockedRect;
+		HRESULT hRet = pCopySrcSurface->LockRect(&copyLockedRect, NULL, D3DLOCK_READONLY);
+		if (hRet != D3D_OK) {
+			EmuLog(LOG_LEVEL::WARNING, "Could not lock Host Resource for Xbox Back Buffer");
+			return pXboxBackBuffer;
+		}
+
+		D3DSURFACE_DESC copySurfaceDesc;
+		hRet = pCopySrcSurface->GetDesc(&copySurfaceDesc);
+		if (hRet != D3D_OK) {
+			EmuLog(LOG_LEVEL::WARNING, "Could not get Xbox Back Buffer Host Surface Desc");
+		}
+		else {
+			DWORD Size = copyLockedRect.Pitch * copySurfaceDesc.Height; // TODO : What about mipmap levels? (Backbuffer does not support mipmap)
+			// Finally, do the copy from the converted host resource to the xbox resource
+			memcpy((void*)GetDataFromXboxResource(pXboxBackBuffer), copyLockedRect.pBits, Size);
+		}
+
+		pCopySrcSurface->UnlockRect();
 	}
-
-	D3DLOCKED_RECT copyLockedRect;
-	HRESULT hRet = pCopySrcSurface->LockRect(&copyLockedRect, NULL, D3DLOCK_READONLY);
-	if (hRet != D3D_OK) {
-		EmuLog(LOG_LEVEL::WARNING, "Could not lock Host Resource for Xbox Back Buffer");
-		return pXboxBackBuffer;
-	}
-
-	D3DSURFACE_DESC copySurfaceDesc;
-
-	hRet = pCopySrcSurface->GetDesc(&copySurfaceDesc);
-	if (hRet != D3D_OK) {
-		EmuLog(LOG_LEVEL::WARNING, "Could not get Xbox Back Buffer Host Surface Desc");
-	} else {
-		DWORD Size = copyLockedRect.Pitch * copySurfaceDesc.Height; // TODO : What about mipmap levels?
-		// Finally, do the copy from the converted host resource to the xbox resource
-		memcpy((void*)GetDataFromXboxResource(pXboxBackBuffer), copyLockedRect.pBits, Size);
-	}
-
-	pCopySrcSurface->UnlockRect();
+#endif
 
 	return pXboxBackBuffer;
 #endif // COPY_BACKBUFFER_TO_XBOX_SURFACE
@@ -3130,30 +3176,28 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_GetBackBuffer)
     *ppBackBuffer = EMUPATCH(D3DDevice_GetBackBuffer2)(BackBuffer);
 }
 
-bool GetHostRenderTargetDimensions(DWORD *pHostWidth, DWORD *pHostHeight)
+bool GetHostRenderTargetDimensions(DWORD *pHostWidth, DWORD *pHostHeight, XTL::IDirect3DSurface* pHostRenderTarget = nullptr)
 {
-	XTL::IDirect3DSurface* pHostRenderTarget = nullptr;
+	bool shouldRelease = false;
+	if (pHostRenderTarget == nullptr) {
+		g_pD3DDevice->GetRenderTarget(
+			0, // RenderTargetIndex
+			&pHostRenderTarget);
 
-	g_pD3DDevice->GetRenderTarget(
-		0, // RenderTargetIndex
-		&pHostRenderTarget);
+		shouldRelease = true;
+	}
 
 	// The following can only work if we could retrieve a host render target
-	if (!pHostRenderTarget)
+	if (!pHostRenderTarget) {
 		return false;
+	}
 
 	// Get current host render target dimensions
 	XTL::D3DSURFACE_DESC HostRenderTarget_Desc;
 	pHostRenderTarget->GetDesc(&HostRenderTarget_Desc);
-	pHostRenderTarget->Release();
 
-	// Emulate field-rendering not by halving the host backbuffer, but by faking
-	// the host backbuffer to half-height, which results in a correct viewport scale :
-	if (g_pXboxRenderTarget == g_XboxBackBufferSurface) {
-		if (g_EmuCDPD.XboxPresentationParameters.Flags & X_D3DPRESENTFLAG_FIELD) {
-			// Test case : XDK Sample FieldRender
-			HostRenderTarget_Desc.Height /= 2;
-		}
+	if (shouldRelease) {
+		pHostRenderTarget->Release();
 	}
 
 	*pHostWidth = HostRenderTarget_Desc.Width;
@@ -3168,6 +3212,44 @@ DWORD ScaleDWORD(DWORD Value, DWORD FromMax, DWORD ToMax)
 	tmp *= ToMax;
 	tmp /= FromMax;
 	return (DWORD)tmp;
+}
+
+void ValidateRenderTargetDimensions(DWORD HostRenderTarget_Width, DWORD HostRenderTarget_Height, DWORD XboxRenderTarget_Width, DWORD XboxRenderTarget_Height)
+{
+    // This operation is often used to change the display resolution without calling SetRenderTarget!
+    // This works by updating the underlying Width & Height of the Xbox surface, without reallocating the data
+    // Because of this, we need to validate that the associated host resource still matches the dimensions of the Xbox Render Target
+    // If not, we must force them to be re-created
+    // TEST CASE: Chihiro Factory Test Program
+    DWORD HostRenderTarget_Width_Unscaled = HostRenderTarget_Width / g_RenderScaleFactor;
+    DWORD HostRenderTarget_Height_Unscaled = HostRenderTarget_Height / g_RenderScaleFactor;
+    if (HostRenderTarget_Width_Unscaled != XboxRenderTarget_Width || HostRenderTarget_Height_Unscaled != XboxRenderTarget_Height) {
+        LOG_TEST_CASE("Existing RenderTarget width/height changed");
+
+        // NOTE: If the host backbuffer hack is enabled, we must skip this operation, otherwise everything will break
+        // In that situation, there's nothing we can do without causing damage. 
+        if (!g_DirectHostBackBufferAccess && g_pXboxRenderTarget == g_XboxBackBufferSurface) {
+            FreeHostResource(GetHostResourceKey(g_pXboxRenderTarget)); g_pD3DDevice->SetRenderTarget(0, GetHostSurface(g_pXboxRenderTarget, D3DUSAGE_RENDERTARGET));
+            FreeHostResource(GetHostResourceKey(g_pXboxDepthStencil)); g_pD3DDevice->SetDepthStencilSurface(GetHostSurface(g_pXboxDepthStencil, D3DUSAGE_DEPTHSTENCIL));
+        }
+    }
+}
+
+void UpdateViewPortOffsetAndScaleConstants()
+{
+	// Store viewport offset and scale in constant registers 58 (c-38) and
+	// 59 (c-37) used for screen space transformation.
+	if (g_VertexShaderConstantMode != X_D3DSCM_NORESERVEDCONSTANTS)
+	{
+		XTL::D3DVIEWPORT ViewPort;
+		g_pD3DDevice->GetViewport(&ViewPort);
+
+		float vScale[] = { (2.0f / ViewPort.Width) * g_RenderScaleFactor, (-2.0f / ViewPort.Height) * g_RenderScaleFactor, 0.0f, 0.0f };
+		static float vOffset[] = { -1.0f, 1.0f, 0.0f, 1.0f };
+
+		g_pD3DDevice->SetVertexShaderConstantF(58, vScale, 1);
+		g_pD3DDevice->SetVertexShaderConstantF(59, vOffset, 1);
+	}
 }
 
 // ******************************************************************
@@ -3197,7 +3279,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetViewport)
 		// Clip the Xbox Viewport to the render target dimensions
 		// This is required because during SetRenderTarget, Xbox calls SetViewPort with impossibly large values
 		DWORD XboxRenderTarget_Width = GetPixelContainerWidth(g_pXboxRenderTarget);
-		DWORD XboxRenderTarget_Height = GetPixelContainerHeigth(g_pXboxRenderTarget);
+		DWORD XboxRenderTarget_Height = GetPixelContainerHeight(g_pXboxRenderTarget);
 
 		DWORD left = std::max((int)pViewport->X, 0);
 		DWORD top = std::max((int)pViewport->Y, 0);
@@ -3213,51 +3295,33 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetViewport)
 		XboxViewPort.MinZ = pViewport->MinZ;
 		XboxViewPort.MaxZ = pViewport->MaxZ;
 
-		// This operation is often used to change the display resolution without calling SetRenderTarget!
-		// This works by updating the underlying Width & Height of the Xbox surface, without reallocating the data
-		// Because of this, we need to validate that the associated host resource still matches the dimensions of the Xbox Render Target
-		// If not, we must force them to be re-created
-		// TEST CASE: Chihiro Factory Test Program
-		DWORD HostRenderTarget_Width = 0, HostRenderTarget_Height = 0;
-		GetHostRenderTargetDimensions(&HostRenderTarget_Width, &HostRenderTarget_Height);
-		if (HostRenderTarget_Width != XboxRenderTarget_Width || HostRenderTarget_Height != XboxRenderTarget_Height) {
-			LOG_TEST_CASE("RenderTarget width/height changed without calling SetRenderTarget");
 
-			// NOTE: If the host backbuffer hack is enabled, we must skip this operation for the back buffer, otherwise everything will break
-			// In that situation, there's nothing we can do without causing damage. 
-			if (!g_DirectHostBackBufferAccess && g_pXboxRenderTarget != g_XboxBackBufferSurface) {
-				FreeHostResource(GetHostResourceKey(g_pXboxRenderTarget)); g_pD3DDevice->SetRenderTarget(0, GetHostSurface(g_pXboxRenderTarget, D3DUSAGE_RENDERTARGET));
-				FreeHostResource(GetHostResourceKey(g_pXboxDepthStencil)); g_pD3DDevice->SetDepthStencilSurface(GetHostSurface(g_pXboxRenderTarget, D3DUSAGE_DEPTHSTENCIL));
-			}
-		}
-						
 		// Store the updated viewport data ready to pass to host SetViewPort
 		HostViewPort = XboxViewPort;
 
-		// We *must* scale the viewport when using the DirectHostBackBuffer hack for the backbuffer render target
-		// Otherwise, we only get partial screen updates
-		if (g_ScaleViewport || (g_DirectHostBackBufferAccess && g_pXboxRenderTarget == g_XboxBackBufferSurface)) {
-			// Get current host render target dimensions
-			DWORD HostRenderTarget_Width;
-			DWORD HostRenderTarget_Height;
+		DWORD HostRenderTarget_Width = 0, HostRenderTarget_Height = 0;
+		if (GetHostRenderTargetDimensions(&HostRenderTarget_Width, &HostRenderTarget_Height)) {
+            ValidateRenderTargetDimensions(HostRenderTarget_Width, HostRenderTarget_Height, XboxRenderTarget_Width, XboxRenderTarget_Height);
 
-			if (GetHostRenderTargetDimensions(&HostRenderTarget_Width, &HostRenderTarget_Height)) {
-				// Scale Xbox to host dimensions (avoiding hard-coding 640 x 480)
-				HostViewPort.X = ScaleDWORD(XboxViewPort.X, XboxRenderTarget_Width, HostRenderTarget_Width);
-				HostViewPort.Y = ScaleDWORD(XboxViewPort.Y, XboxRenderTarget_Height, HostRenderTarget_Height);
-				HostViewPort.Width = ScaleDWORD(XboxViewPort.Width, XboxRenderTarget_Width, HostRenderTarget_Width);
-				HostViewPort.Height = ScaleDWORD(XboxViewPort.Height, XboxRenderTarget_Height, HostRenderTarget_Height);
-				// TODO : Fix test-case Shenmue 2 (which halves height, leaving the bottom half unused)
-				HostViewPort.MinZ = XboxViewPort.MinZ; // No need scale Z for now
-				HostViewPort.MaxZ = XboxViewPort.MaxZ;
-			} else {
-				EmuLog(LOG_LEVEL::WARNING, "GetHostRenderTargetDimensions failed - SetViewport sets Xbox viewport instead!");
-			}
+			// We *must* always scale the viewport to the associated host surface
+			// Otherwise, we only get partial screen updates, or broken upscaling
+			// Scale Xbox to host dimensions (avoiding hard-coding 640 x 480)
+			HostViewPort.X = ScaleDWORD(XboxViewPort.X, XboxRenderTarget_Width, HostRenderTarget_Width);
+			HostViewPort.Y = ScaleDWORD(XboxViewPort.Y, XboxRenderTarget_Height, HostRenderTarget_Height);
+			HostViewPort.Width = ScaleDWORD(XboxViewPort.Width, XboxRenderTarget_Width, HostRenderTarget_Width);
+			HostViewPort.Height = ScaleDWORD(XboxViewPort.Height, XboxRenderTarget_Height, HostRenderTarget_Height);
+			// TODO : Fix test-case Shenmue 2 (which halves height, leaving the bottom half unused)
+			HostViewPort.MinZ = XboxViewPort.MinZ; // No need scale Z for now
+			HostViewPort.MaxZ = XboxViewPort.MaxZ;
+		} else {
+			LOG_TEST_CASE("SetViewPort: Unable to fetch host render target dimensions");
 		}
 	}
 
 	HRESULT hRet = g_pD3DDevice->SetViewport(&HostViewPort);
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetViewport");
+
+	UpdateViewPortOffsetAndScaleConstants();
 }
 
 // LTCG specific D3DDevice_GetViewportOffsetAndScale function...
@@ -4394,7 +4458,18 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_Clear)
     hRet = g_pD3DDevice->SetRenderState(D3DRS_FILLMODE, dwFillMode);
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetRenderState");
 
-    hRet = g_pD3DDevice->Clear(Count, pRects, HostFlags, Color, Z, Stencil);
+    if (pRects != nullptr) {
+        // Scale the fill based on our scale factor
+        D3DRECT rect = *pRects;
+        rect.x1 *= g_RenderScaleFactor;
+        rect.x2 *= g_RenderScaleFactor;
+        rect.y1 *= g_RenderScaleFactor;
+        rect.y2 *= g_RenderScaleFactor;
+        hRet = g_pD3DDevice->Clear(Count, &rect, HostFlags, Color, Z, Stencil);
+    } else {
+        hRet = g_pD3DDevice->Clear(Count, pRects, HostFlags, Color, Z, Stencil);
+    }
+
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->Clear");
 }
 
@@ -4473,15 +4548,14 @@ DWORD WINAPI XTL::EMUPATCH(D3DDevice_Swap)
         // Before StretchRects we used D3DX_FILTER_POINT here, but that gave jagged edges in Dashboard.
         // Dxbx note : D3DX_FILTER_LINEAR gives a smoother image, but 'bleeds' across borders
         // LoadOverlayFilter must be a D3DX filter DWORD value
-        const D3DTEXTUREFILTERTYPE LoadSurfaceFilter = D3DTEXF_NONE;
+        const D3DTEXTUREFILTERTYPE LoadSurfaceFilter = D3DTEXF_LINEAR;
         const DWORD LoadOverlayFilter = D3DX_DEFAULT;
 
 		if (!g_DirectHostBackBufferAccess) {
-			auto pXboxBackBufferHostSurface = GetHostSurface(g_XboxBackBufferSurface);
+			auto pXboxBackBufferHostSurface = GetHostSurface(g_XboxBackBufferSurface, D3DUSAGE_RENDERTARGET);
 			if (pXboxBackBufferHostSurface) {
 				// Blit Xbox BackBuffer to host BackBuffer
-				// TODO: This could be much faster if we used the XboxBackBufferSurface as a texture and blitted with a fullscreen quad
-				// This way, the scaling/format conversion would be handled by the GPU instead
+				// TODO: Respect aspect ratio
                 hRet = g_pD3DDevice->StretchRect(
                     /* pSourceSurface = */ pXboxBackBufferHostSurface,
                     /* pSourceRect = */ nullptr,
@@ -4545,9 +4619,16 @@ DWORD WINAPI XTL::EMUPATCH(D3DDevice_Swap)
 			if (g_OverlayProxy.DstRect.right > 0) {
 				// If there's a destination rectangle given, copy that into our local variable :
 				EmuDestRect = g_OverlayProxy.DstRect;
+
+                // Make sure to scale it based on the configured scale factor
+                EmuDestRect.top *= g_RenderScaleFactor;
+                EmuDestRect.left *= g_RenderScaleFactor;
+                EmuDestRect.bottom *= g_RenderScaleFactor;
+                EmuDestRect.right *= g_RenderScaleFactor;
 			} else {
-				// Should this be our backbuffer size rather than the actual window size?
-				GetClientRect(g_hEmuWindow, &EmuDestRect);
+				// Use backbuffer width/height since that may differ from the Window size
+                EmuDestRect.right = BackBufferDesc.Width;
+                EmuDestRect.bottom = BackBufferDesc.Height;
 			}
 
 			// load the YUY2 into the backbuffer
@@ -4566,25 +4647,59 @@ DWORD WINAPI XTL::EMUPATCH(D3DDevice_Swap)
 				}
 			}
 
-			// Use D3DXLoadSurfaceFromMemory() to do conversion, stretching and filtering
-			// avoiding the need for YUY2toARGB() (might become relevant when porting to D3D9 or OpenGL)
-			// see https://msdn.microsoft.com/en-us/library/windows/desktop/bb172902(v=vs.85).aspx
-			hRet = D3DXLoadSurfaceFromMemory(
-				/* pDestSurface = */ pCurrentHostBackBuffer,
-				/* pDestPalette = */ nullptr,
-				/* pDestRect = */ &EmuDestRect,
-				/* pSrcMemory = */ pOverlayData, // Source buffer
-				/* SrcFormat = */ PCFormat,
-				/* SrcPitch = */ OverlayRowPitch,
-				/* pSrcPalette = */ nullptr,
-				/* pSrcRect = */ &EmuSourRect, // This parameter cannot be NULL
-				/* Filter = */ LoadOverlayFilter,
-				/* ColorKey = */ g_OverlayProxy.EnableColorKey ? g_OverlayProxy.ColorKey : 0);
+            // Create a temporary surface to hold the overlay
+            // This is faster than loading directly into the backbuffer because it offloads scaling to the GPU
+            // Without this, upscaling tanks the frame-rate!
+            IDirect3DSurface* pTemporaryOverlaySurface;
+            HRESULT hRet = g_pD3DDevice->CreateOffscreenPlainSurface(
+                OverlayWidth,
+                OverlayHeight,
+                D3DFMT_A8R8G8B8,
+                D3DPOOL_DEFAULT,
+                &pTemporaryOverlaySurface,
+                nullptr
+            );
 
-			DEBUG_D3DRESULT(hRet, "D3DXLoadSurfaceFromMemory - UpdateOverlay could not convert buffer!\n");
-			if (hRet != D3D_OK) {
-				EmuLog(LOG_LEVEL::WARNING, "Couldn't blit Xbox overlay to host BackBuffer : %X", hRet);
-			}
+            if (FAILED(hRet)) {
+                EmuLog(LOG_LEVEL::WARNING, "Couldn't create temporary overlay surface : %X", hRet);
+            } else {
+                RECT doNotScaleRect = { 0, 0, (LONG)OverlayWidth, (LONG)OverlayHeight };
+
+                // Use D3DXLoadSurfaceFromMemory() to do conversion, we don't stretch at this moment in time
+                // avoiding the need for YUY2toARGB() (might become relevant when porting to D3D9 or OpenGL)
+                // see https://msdn.microsoft.com/en-us/library/windows/desktop/bb172902(v=vs.85).aspx
+                hRet = D3DXLoadSurfaceFromMemory(
+                    /* pDestSurface = */ pTemporaryOverlaySurface,
+                    /* pDestPalette = */ nullptr,
+                    /* pDestRect = */ &doNotScaleRect,
+                    /* pSrcMemory = */ pOverlayData, // Source buffer
+                    /* SrcFormat = */ PCFormat,
+                    /* SrcPitch = */ OverlayRowPitch,
+                    /* pSrcPalette = */ nullptr,
+                    /* pSrcRect = */ &doNotScaleRect, // This parameter cannot be NULL
+                    /* Filter = */ LoadOverlayFilter,
+                    /* ColorKey = */ g_OverlayProxy.EnableColorKey ? g_OverlayProxy.ColorKey : 0);
+
+                DEBUG_D3DRESULT(hRet, "D3DXLoadSurfaceFromMemory - UpdateOverlay could not convert buffer!\n");
+                if (hRet != D3D_OK) {
+                    EmuLog(LOG_LEVEL::WARNING, "Couldn't load Xbox overlay to host surface : %X", hRet);
+                } else {
+                    // TODO: Respect aspect ratio
+                    hRet = g_pD3DDevice->StretchRect(
+                        /* pSourceSurface = */ pTemporaryOverlaySurface,
+                        /* pSourceRect = */ &EmuSourRect,
+                        /* pDestSurface = */ pCurrentHostBackBuffer,
+                        /* pDestRect = */ &EmuDestRect,
+                        /* Filter = */ LoadSurfaceFilter
+                    );
+
+                    if (hRet != D3D_OK) {
+                        EmuLog(LOG_LEVEL::WARNING, "Couldn't load Xbox overlay to host back buffer : %X", hRet);
+                    }
+                }
+
+                pTemporaryOverlaySurface->Release();
+            }
 		}
 
 		pCurrentHostBackBuffer->Release();
@@ -4991,7 +5106,7 @@ void CreateHostResource(XTL::X_D3DResource *pResource, DWORD D3DUsage, int iText
 		switch (XboxResourceType) {
 		case XTL::X_D3DRTYPE_SURFACE: {
 			if (D3DUsage & D3DUSAGE_RENDERTARGET) {
-				hRet = g_pD3DDevice->CreateRenderTarget(dwWidth, dwHeight, PCFormat,
+				hRet = g_pD3DDevice->CreateRenderTarget(dwWidth * g_RenderScaleFactor, dwHeight * g_RenderScaleFactor, PCFormat,
 					g_EmuCDPD.HostPresentationParameters.MultiSampleType,
 					0, // MultisampleQuality
 					true, // Lockable
@@ -5001,7 +5116,7 @@ void CreateHostResource(XTL::X_D3DResource *pResource, DWORD D3DUsage, int iText
 				DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateRenderTarget");
 			} else
 			if (D3DUsage & D3DUSAGE_DEPTHSTENCIL) {
-				hRet = g_pD3DDevice->CreateDepthStencilSurface(dwWidth, dwHeight, PCFormat,
+				hRet = g_pD3DDevice->CreateDepthStencilSurface(dwWidth * g_RenderScaleFactor, dwHeight * g_RenderScaleFactor, PCFormat,
 					g_EmuCDPD.HostPresentationParameters.MultiSampleType,
 					0, // MultisampleQuality
 					false, // Discard
@@ -5446,7 +5561,6 @@ ULONG WINAPI XTL::EMUPATCH(D3DResource_Release)
 
 	// Was the Xbox resource freed?
 	if (uRet == 0) {
-
 		// If this was a cached render target or depth surface, clear the cache variable too!
 		if (pThis == g_pXboxRenderTarget) {
 			g_pXboxRenderTarget = nullptr;
@@ -6849,19 +6963,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexShader)
     HRESULT hRet = D3D_OK;
 
     g_CurrentXboxVertexShaderHandle = Handle;
-    // Store viewport offset and scale in constant registers 58 (c-38) and
-    // 59 (c-37) used for screen space transformation.
-    if(g_VertexShaderConstantMode != X_D3DSCM_NORESERVEDCONSTANTS)
-    {
-		D3DVIEWPORT ViewPort;
-		g_pD3DDevice->GetViewport(&ViewPort);
-
-        float vScale[] = { (2.0f / ViewPort.Width), (-2.0f / ViewPort.Height), 0.0f, 0.0f };
-        static float vOffset[] = { -1.0f, 1.0f, 0.0f, 1.0f };
-
-        g_pD3DDevice->SetVertexShaderConstantF(58, vScale, 1);
-        g_pD3DDevice->SetVertexShaderConstantF(59, vOffset, 1);
-    }
 
 	if (VshHandleIsVertexShader(Handle)) {
  		CxbxVertexShader *pVertexShader = GetCxbxVertexShader(Handle);
@@ -6875,6 +6976,8 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexShader)
 		hRet = g_pD3DDevice->SetFVF(Handle);
 		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetFVF");
 	}
+
+	UpdateViewPortOffsetAndScaleConstants();
 }
 
 // TODO : Move to own file
@@ -7885,6 +7988,14 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderTarget)
 		// Once we're sure the host depth-stencil is activated...
 		UpdateDepthStencilFlags(pHostDepthStencil);
 	}
+
+    // Validate that our host render target is still the correct size
+    DWORD HostRenderTarget_Width, HostRenderTarget_Height;
+    if (GetHostRenderTargetDimensions(&HostRenderTarget_Width, &HostRenderTarget_Height)) {
+        DWORD XboxRenderTarget_Width = GetPixelContainerWidth(g_pXboxRenderTarget);
+        DWORD XboxRenderTarget_Height = GetPixelContainerHeight(g_pXboxRenderTarget);
+        ValidateRenderTargetDimensions(HostRenderTarget_Width, HostRenderTarget_Height, XboxRenderTarget_Width, XboxRenderTarget_Height);
+    }
 }
 
 // LTCG specific D3DDevice_SetPalette function...

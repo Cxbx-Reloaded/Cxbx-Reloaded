@@ -41,6 +41,8 @@ static INT_PTR CALLBACK DlgVideoConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wPara
 static VOID RefreshDisplayAdapter();
 /*! refresh UI based on selected device */
 static VOID RefreshDirect3DDevice();
+/*! refrehs UI based on selected Render Resolution */
+static VOID RefreshRenderResolution();
 
 /*! direct3d instance */
 static XTL::IDirect3D *g_pDirect3D = 0;
@@ -56,6 +58,10 @@ static HWND g_hDisplayAdapter = NULL;
 static HWND g_hDirect3DDevice = NULL;
 /*! handle to video resolution list window */
 static HWND g_hVideoResolution = NULL;
+/*! handle to scale factor window*/
+static HWND g_hRenderResolution = NULL;
+
+#pragma optimize("", off);
 
 VOID ShowVideoConfig(HWND hwnd)
 {
@@ -98,6 +104,7 @@ INT_PTR CALLBACK DlgVideoConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPAR
             g_hDisplayAdapter  = GetDlgItem(hWndDlg, IDC_VC_DISPLAY_ADAPTER);
             g_hDirect3DDevice  = GetDlgItem(hWndDlg, IDC_VC_D3D_DEVICE);
             g_hVideoResolution = GetDlgItem(hWndDlg, IDC_VC_VIDEO_RESOLUTION);
+			g_hRenderResolution = GetDlgItem(hWndDlg, IDC_VC_RENDER_RESOLUTION);
 
             /*! set window icon */
             SetClassLong(hWndDlg, GCL_HICON, (LONG)LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_CXBX)));
@@ -120,6 +127,21 @@ INT_PTR CALLBACK DlgVideoConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPAR
 
             /*! refresh UI based on currently selected display adapter */
             RefreshDisplayAdapter();
+
+
+			/*! generate list of render scale factors */
+			{
+				DWORD dwRenderResolution = g_XBVideo.renderScaleFactor;
+				SendMessage(g_hRenderResolution, CB_ADDSTRING, 0, (LPARAM)"1x (Native)");
+				SendMessage(g_hRenderResolution, CB_ADDSTRING, 0, (LPARAM)"2x (1280x960)");
+				SendMessage(g_hRenderResolution, CB_ADDSTRING, 0, (LPARAM)"3x (1920x1440)");
+				SendMessage(g_hRenderResolution, CB_ADDSTRING, 0, (LPARAM)"4x (2560x1920)");
+				SendMessage(g_hRenderResolution, CB_ADDSTRING, 0, (LPARAM)"5x (3200x2400)");
+				SendMessage(g_hRenderResolution, CB_ADDSTRING, 0, (LPARAM)"6x (3840x2880)");
+				SendMessage(g_hRenderResolution, CB_ADDSTRING, 0, (LPARAM)"7x (4480x3360)");
+				SendMessage(g_hRenderResolution, CB_ADDSTRING, 0, (LPARAM)"8x (5120x3840)");
+				SendMessage(g_hRenderResolution, CB_SETCURSEL, dwRenderResolution - 1, 0);
+			}
 
             /*! check appropriate options */
             {
@@ -183,6 +205,13 @@ INT_PTR CALLBACK DlgVideoConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPAR
                         g_XBVideo.szVideoResolution[std::size(g_XBVideo.szVideoResolution)-1] = '\0';
                     }
 
+					/*! save render resolution configuration */
+					{
+						HWND hRenderResolution = GetDlgItem(hWndDlg, IDC_VC_RENDER_RESOLUTION);
+						LRESULT lRet = SendMessage(hRenderResolution, CB_GETCURSEL, 0, 0) + 1;
+						g_XBVideo.renderScaleFactor = lRet;
+					}
+
                     /*! save fullscreen/vsync/YUV options */
                     {
                         LRESULT lRet = SendMessage(GetDlgItem(hWndDlg, IDC_CV_FULLSCREEN), BM_GETCHECK, 0, 0);
@@ -224,6 +253,15 @@ INT_PTR CALLBACK DlgVideoConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPAR
                     }
                 }
                 break;
+
+				case IDC_VC_RENDER_RESOLUTION:
+				{
+					if (HIWORD(wParam) == CBN_SELCHANGE)
+					{
+						RefreshRenderResolution();
+						break;
+					}
+				}
             }
         }
         break;
@@ -369,10 +407,25 @@ VOID RefreshDirect3DDevice()
                 }
             }
         }
+
+
+		SendMessage(g_hVideoResolution, CB_SETCURSEL, dwVideoResolution, 0);
     }
 
-    /*! activate configured display mode */
-    SendMessage(g_hVideoResolution, CB_SETCURSEL, dwVideoResolution, 0);
-
     return;
+}
+
+VOID RefreshRenderResolution()
+{
+	/*! save configured render resolution */
+	{
+		DWORD dwOld = g_XBVideo.renderScaleFactor;
+		DWORD dwRenderScaleFactor = (DWORD)(SendMessage(g_hRenderResolution, CB_GETCURSEL, 0, 0) + 1);
+
+		if (dwRenderScaleFactor != dwOld)
+		{
+			g_bHasChanges = TRUE;
+			g_XBVideo.renderScaleFactor = dwRenderScaleFactor;
+		}
+	}
 }

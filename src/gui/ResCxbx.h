@@ -139,6 +139,7 @@
 #define IDC_BTN_COM1                    1050
 #define IDC_VC_VIDEO_RESOLUTION         1051
 #define IDC_BTN_COM2                    1052
+#define IDC_VC_RENDER_RESOLUTION        1052
 #define IDC_BTN_COM3                    1053
 #define IDC_BTN_COM4                    1054
 #define IDC_CV_HARDWAREYUV              1055
@@ -347,7 +348,6 @@
 #define ID_FPS                          40096
 #define ID_HACKS_RUNXBOXTHREADSONALLCORES 40098
 #define ID_HACKS_SKIPRDTSCPATCHING      40099
-#define ID_HACKS_SCALEVIEWPORT          40100
 #define ID_SETTINGS_CONFIG_XBOX_CONTROLLER_MAPPING 40101
 #define ID_HACKS_RENDERDIRECTLYTOHOSTBACKBUFFER 40102
 #define ID_HACKS_SPEEDHACKS             40103
@@ -365,7 +365,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        135
+#define _APS_NEXT_RESOURCE_VALUE        136
 #define _APS_NEXT_COMMAND_VALUE         40113
 #define _APS_NEXT_CONTROL_VALUE         1277
 #define _APS_NEXT_SYMED_VALUE           109
