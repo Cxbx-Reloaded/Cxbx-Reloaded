@@ -29,17 +29,10 @@ extern "C"
 // ******************************************************************
 #define XBSYSAPI DECLSPEC_IMPORT
 
-#ifdef _XBOXKRNL_INTERNAL_
-#undef  XBSYSAPI
-#define XBSYSAPI DECLSPEC_EXPORT
-#define KRNL(API) API
-#endif
-#ifdef _XBOXKRNL_DEFEXTRN_
 #undef  XBSYSAPI
 #define XBSYSAPI DECLSPEC_EXTERN
 // The KRNL macro prevents naming collisions
 #define KRNL(API) KRNL##API
-#endif
 #define RESTRICTED_POINTER
 //TODO : When #define RESTRICTED_POINTER __restrict
 

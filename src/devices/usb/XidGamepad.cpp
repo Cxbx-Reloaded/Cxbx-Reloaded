@@ -49,7 +49,6 @@
 * License along with this library; if not, see <https://www.gnu.org/licenses/>.
 */
 
-#define _XBOXKRNL_DEFEXTRN_
 
 #define LOG_PREFIX CXBXR_MODULE::XIDCTRL
 

@@ -25,7 +25,6 @@
 // *
 // ******************************************************************
 #if 0 // Reenable this when LLE USB actually works
-#define _XBOXKRNL_DEFEXTRN_
 #define LOG_PREFIX CXBXR_MODULE::SDL2
 
 // prevent name collisions
