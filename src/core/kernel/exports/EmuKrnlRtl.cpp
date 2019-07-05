@@ -25,7 +25,7 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#define _XBOXKRNL_DEFEXTRN_
+
 
 #define LOG_PREFIX CXBXR_MODULE::RTL
 #define CHECK_ALIGNMENT(size, alignment) (((size) % (alignment)) == 0) // For RtlFillMemoryUlong

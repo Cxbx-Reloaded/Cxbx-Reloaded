@@ -24,7 +24,7 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#define _XBOXKRNL_DEFEXTRN_
+
 
 #include <windows.h>
 

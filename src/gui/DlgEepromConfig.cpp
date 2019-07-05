@@ -25,7 +25,7 @@
 // *
 // ******************************************************************
 
-#define _XBOXKRNL_DEFEXTRN_
+
 
 // prevent name collisions
 namespace xboxkrnl

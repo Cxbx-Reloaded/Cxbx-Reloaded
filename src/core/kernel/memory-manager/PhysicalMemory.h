@@ -28,7 +28,7 @@
 #ifndef PHYSICAL_MEMORY_H
 #define PHYSICAL_MEMORY_H
 
-#define _XBOXKRNL_DEFEXTRN_
+
 
 namespace xboxkrnl
 {

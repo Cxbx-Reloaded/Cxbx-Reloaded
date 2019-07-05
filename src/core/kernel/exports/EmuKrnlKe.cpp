@@ -61,7 +61,7 @@ the GPL for the free ("open-sourced") code that has been integrated into
 the said software).
 */
 
-#define _XBOXKRNL_DEFEXTRN_
+
 
 #define LOG_PREFIX CXBXR_MODULE::KE
 

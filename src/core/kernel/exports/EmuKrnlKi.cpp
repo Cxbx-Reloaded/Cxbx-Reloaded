@@ -75,7 +75,7 @@ the said software).
 
 // Changed from ReactOS: slight changes to the Hand parameter usage
 
-#define _XBOXKRNL_DEFEXTRN_
+
 
 #define LOG_PREFIX CXBXR_MODULE::KI
 
