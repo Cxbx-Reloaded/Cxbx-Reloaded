@@ -425,9 +425,9 @@ enum PS_COMBINEROUTPUT
     PS_COMBINEROUTPUT_SHIFTLEFT_1=         0x10L, // y = x*2
     PS_COMBINEROUTPUT_SHIFTLEFT_1_BIAS=    0x18L, // y = (x - 0.5)*2
     PS_COMBINEROUTPUT_SHIFTLEFT_2=         0x20L, // y = x*4
-    // 0x28 ?
+    // PS_COMBINEROUTPUT_SHIFTLEFT_2_BIAS=    0x28L, // y = (x - 0.5)*4
     PS_COMBINEROUTPUT_SHIFTRIGHT_1=        0x30L, // y = x/2
-    // 0x38 ?
+    // PS_COMBINEROUTPUT_SHIFTRIGHT_1_BIAS=   0x38L, // y = (x - 0.5)/2
 
     PS_COMBINEROUTPUT_AB_BLUE_TO_ALPHA=    0x80L, // RGB only
 
@@ -2338,6 +2338,7 @@ std::string PSH_XBOX_SHADER::OriginalToString(XTL::X_D3DPIXELSHADERDEF *pPSDef) 
                   pPSDef->PSC1Mapping,
                   pPSDef->PSFinalCombinerConstants));
 }
+
 void PSH_XBOX_SHADER::GetPSTextureModes(XTL::X_D3DPIXELSHADERDEF* pPSDef, PS_TEXTUREMODES psTextureModes[XTL::X_D3DTS_STAGECOUNT])
 {
     for (int i = 0; i < XTL::X_D3DTS_STAGECOUNT; i++)
@@ -2345,6 +2346,7 @@ void PSH_XBOX_SHADER::GetPSTextureModes(XTL::X_D3DPIXELSHADERDEF* pPSDef, PS_TEX
         psTextureModes[i] = (PS_TEXTUREMODES)((XTL::TemporaryPixelShaderRenderStates[XTL::X_D3DRS_PSTEXTUREMODES] >> (i * 5)) & 0x1F);
     }
 }
+
 void PSH_XBOX_SHADER::GetPSDotMapping(XTL::X_D3DPIXELSHADERDEF* pPSDef, PS_DOTMAPPING psDotMapping[XTL::X_D3DTS_STAGECOUNT])
 {
     psDotMapping[0] = (PS_DOTMAPPING)(0);
@@ -7213,8 +7215,9 @@ inline void GetOutputFlags
 	BOOL *bBias
 )
 {
-	// Output mapping 
-	if(wOutputFlags & 0x08)
+	// Output mapping
+	switch (wOutputFlags & 0x38) {
+	case PS_COMBINEROUTPUT_BIAS:
 	{
 		printf("PS_COMBINEROUTPUT_BIAS"); // y = x - 0.5
 		//strcpy(szInstMod, "_bias");
@@ -7222,13 +7225,15 @@ inline void GetOutputFlags
 		// Only over this:
 		// mov y, y_bias
 		(*bBias)=TRUE;
+		break;
 	}
-	else if(wOutputFlags & 0x10) 
+	case PS_COMBINEROUTPUT_SHIFTLEFT_1: // 0x10L
 	{
 		printf("PS_COMBINEROUTPUT_SHIFTLEFT_1");  // y = x*2
 		strcpy(szInstMod, "_x2");
+		break;
 	}
-	else if(wOutputFlags & 0x18) 
+	case PS_COMBINEROUTPUT_SHIFTLEFT_1_BIAS: // 0x18L
 	{
 		printf("PS_COMBINEROUTPUT_SHIFTLEFT_1_BIAS"); // y = (x - 0.5)*2
 
@@ -7240,19 +7245,25 @@ inline void GetOutputFlags
 		// to subtract 1
 		// Let's do this: mov_x2 y, y_bias
 		(*bShl1Bias)=TRUE;
+		break;
 	}
-	else if(wOutputFlags & 0x20)
+	case PS_COMBINEROUTPUT_SHIFTLEFT_2: // 0x20L
 	{
 		printf("PS_COMBINEROUTPUT_SHIFTLEFT_2");  // y = x*4
 		strcpy(szInstMod, "_x4");
+		break;
 	}
-	else if(wOutputFlags & 0x30)
+	// case PS_COMBINEROUTPUT_SHIFTLEFT_2_BIAS: // 0x28L, // y = (x - 0.5)*4
+	case PS_COMBINEROUTPUT_SHIFTRIGHT_1: // 0x30L
 	{
 		printf("PS_COMBINEROUTPUT_SHIFTRIGHT_1"); // y = x/2
 		strcpy(szInstMod, "_d2");
+		break;
 	}
-	else
+	// case PS_COMBINEROUTPUT_SHIFTRIGHT_1_BIAS: // 0x38L, // y = (x - 0.5)/2
+	default:
 		printf("PS_COMBINEROUTPUT_IDENTITY");
+	}
 
 	printf(" | ");
 
