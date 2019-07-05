@@ -1735,11 +1735,8 @@ std::string PSH_INTERMEDIATE_FORMAT::ToString()
 	// Use supplied pixel shader version (if any is given)
 	DWORD PSVersion = Parameters[6].Mask;
 
-	// From 2.0 onward, use underscore separators (is this correct?)
-	SeparatorChar = (PSVersion >= D3DPS_VERSION(2, 0)) ? '_' : '.';
-	Result = "ps";
-	Result = Result + SeparatorChar + std::to_string(D3DSHADER_VERSION_MAJOR(PSVersion));
-	Result = Result + SeparatorChar + std::to_string(D3DSHADER_VERSION_MINOR(PSVersion));
+	Result = "ps_" + std::to_string(D3DSHADER_VERSION_MAJOR(PSVersion))
+			 + "_" + std::to_string(D3DSHADER_VERSION_MINOR(PSVersion));
 	return Result;
   }
   case PO_XPS: {
@@ -2195,6 +2192,9 @@ void PSH_XBOX_SHADER::SetPSVersion(const uint32_t PSVersion)
 
 		PSH_PC_MAX_REGISTER_COUNT = 32;
 	}
+	else
+		assert(false); // We no longer support less than Direct3D 9
+	/* For documentation purposes, keep the below information around :
 	else if (m_PSVersion >= D3DPS_VERSION(1, 4)) {
 		// Source https://msdn.microsoft.com/en-us/library/windows/desktop/bb172917(v=vs.85).aspx
 		MaxConstantFloatRegisters = 8;
@@ -2232,7 +2232,7 @@ void PSH_XBOX_SHADER::SetPSVersion(const uint32_t PSVersion)
 		MaxSamplerRegisters = 0; // Not yet in shader model 1
 
 		PSH_PC_MAX_REGISTER_COUNT = 8;
-	}
+	} */
 }
 
 std::string PSH_XBOX_SHADER::ToString()
@@ -2700,8 +2700,6 @@ bool PSH_XBOX_SHADER::DecodeTextureModes(XTL::X_D3DPIXELSHADERDEF *pPSDef)
 	  ++InsertPos;
   } while (_OpcodeMustStayBeforeTextureMode(Intermediate[InsertPos].Opcode, InsertPos));
 
-  if (m_PSVersion >= D3DPS_VERSION(2, 0))
-  {
       Ins.Initialize(PO_DCL);
 	  for (Stage = 0; Stage < XTL::X_D3DTS_STAGECOUNT; Stage++)
 	  {
@@ -2765,22 +2763,10 @@ bool PSH_XBOX_SHADER::DecodeTextureModes(XTL::X_D3DPIXELSHADERDEF *pPSDef)
           ++InsertPos;
           Result = true;
       }
-  }
 
   PSH_OPCODE Opcode;
 
-  if (m_PSVersion < D3DPS_VERSION(1, 4))
-  {
-      Opcode = PO_TEX;
-  }
-  else if (m_PSVersion < D3DPS_VERSION(2, 0))
-  {
-      Opcode = PO_TEXLD;
-  }
-  else
-  {
       Opcode = PO_TEXLD2;
-  }
 
   for (Stage = 0; Stage < XTL::X_D3DTS_STAGECOUNT; Stage++)
   {
@@ -2791,18 +2777,7 @@ bool PSH_XBOX_SHADER::DecodeTextureModes(XTL::X_D3DPIXELSHADERDEF *pPSDef)
       case PS_TEXTUREMODES_PROJECT2D: // argb = texture(r/q, s/q)      TODO : Apply the division via D3DTOP_BUMPENVMAP ?
 	  case PS_TEXTUREMODES_PROJECT3D: // argb = texture(r/q, s/q, t/q) Note : 3d textures are sampled using PS_TEXTUREMODES_CUBEMAP
 	  case PS_TEXTUREMODES_CUBEMAP: { // argb = cubemap(r/q, s/q, t/q)
-          if (m_PSVersion < D3DPS_VERSION(1, 4))
-          {
-              Opcode = PO_TEX;
-          }
-          else if (m_PSVersion < D3DPS_VERSION(2, 0))
-          {
-              Opcode = PO_TEXLD;
-          }
-          else
-          {
               Opcode = PO_TEXLD2;
-          }
 
           if (m_PSVersion >= D3DPS_VERSION(3, 0))
 			  continue;
@@ -2810,17 +2785,6 @@ bool PSH_XBOX_SHADER::DecodeTextureModes(XTL::X_D3DPIXELSHADERDEF *pPSDef)
 	  }
       case PS_TEXTUREMODES_NONE:
       case PS_TEXTUREMODES_PASSTHRU:
-          if (m_PSVersion < D3DPS_VERSION(1, 4))
-          {
-              Opcode = PO_TEXCOORD;
-              break;
-          }
-          else if (m_PSVersion < D3DPS_VERSION(2, 0))
-          {
-              Opcode = PO_TEXCRD;
-              break;
-          }
-
           Opcode = PO_MOV;
           break;
 	  case PS_TEXTUREMODES_CLIPPLANE: Opcode = PO_TEXKILL; break;
@@ -2955,9 +2919,6 @@ bool PSH_XBOX_SHADER::InsertTextureModeInstruction(XTL::X_D3DPIXELSHADERDEF *pPS
     {
         inputStage = PSInputTexture[Stage];
 
-        if (m_PSVersion >= D3DPS_VERSION(1, 4))
-        {
-
             // If the bump-map texture format is X_D3DFMT_X8L8V8U8 or X_D3DFMT_L6V5U5 we need to apply a bias
             // This happens because these formats are an alias of unsigned texture formats.
             // Fixes an issue with the JSRF boost-dash effect
@@ -3057,7 +3018,7 @@ bool PSH_XBOX_SHADER::InsertTextureModeInstruction(XTL::X_D3DPIXELSHADERDEF *pPS
             opcode = PO_MOV;
             inputStage = Stage;
             needsInitialization = true;
-        }
+
         break;
     }
     case PO_TEXBRDF:
@@ -3067,8 +3028,6 @@ bool PSH_XBOX_SHADER::InsertTextureModeInstruction(XTL::X_D3DPIXELSHADERDEF *pPS
     {
         inputStage = PSInputTexture[Stage];
 
-        if (m_PSVersion >= D3DPS_VERSION(1, 4))
-        {
             InsertTex3x2Instructions(Stage, inputStage, InsertIns);
 
             Ins.CommentString = "";
@@ -3081,15 +3040,12 @@ bool PSH_XBOX_SHADER::InsertTextureModeInstruction(XTL::X_D3DPIXELSHADERDEF *pPS
             opcode = PO_MOV;
             inputStage = Stage;
             needsInitialization = true;
-        }
         break;
     }
     case PO_TEXM3X3TEX:
     {
         inputStage = PSInputTexture[Stage];
 
-        if (m_PSVersion >= D3DPS_VERSION(1, 4))
-        {
             InsertTex3x3Instructions(Stage, inputStage, InsertIns);
 
             Ins.CommentString = "";
@@ -3102,15 +3058,12 @@ bool PSH_XBOX_SHADER::InsertTextureModeInstruction(XTL::X_D3DPIXELSHADERDEF *pPS
             opcode = PO_MOV;
             inputStage = Stage;
             needsInitialization = true;
-        }
         break;
     }
     case PO_TEXM3X2DEPTH:
     {
         inputStage = PSInputTexture[Stage];
 
-        if (m_PSVersion >= D3DPS_VERSION(1, 4))
-        {
             InsertTex3x2Instructions(Stage, inputStage, InsertIns);
 
             Ins.CommentString = "";
@@ -3142,15 +3095,12 @@ bool PSH_XBOX_SHADER::InsertTextureModeInstruction(XTL::X_D3DPIXELSHADERDEF *pPS
             opcode = PO_MOV;
             inputStage = Stage;
             needsInitialization = true;
-        }
         break;
     }
     case PO_TEXM3X3DIFF:
     {
         inputStage = PSInputTexture[Stage];
 
-        if (m_PSVersion >= D3DPS_VERSION(1, 4))
-        {
             InsertTex3x3Instructions(Stage, inputStage, InsertIns);
 
             Ins.Initialize(PO_TEXLD2);
@@ -3162,7 +3112,6 @@ bool PSH_XBOX_SHADER::InsertTextureModeInstruction(XTL::X_D3DPIXELSHADERDEF *pPS
             opcode = PO_MOV;
             inputStage = Stage;
             needsInitialization = true;
-        }
         break;
     }
     case PO_TEXM3X3VSPEC:
@@ -3170,8 +3119,6 @@ bool PSH_XBOX_SHADER::InsertTextureModeInstruction(XTL::X_D3DPIXELSHADERDEF *pPS
     {
         inputStage = PSInputTexture[Stage];
 
-        if (m_PSVersion >= D3DPS_VERSION(1, 4))
-        {
             InsertTex3x3Instructions(Stage, inputStage, InsertIns);
 
             int baseRegister = PSH_XBOX_MAX_R_REGISTER_COUNT + PSH_XBOX_MAX_T_REGISTER_COUNT;
@@ -3264,15 +3211,12 @@ bool PSH_XBOX_SHADER::InsertTextureModeInstruction(XTL::X_D3DPIXELSHADERDEF *pPS
             opcode = PO_MOV;
             inputStage = Stage;
             needsInitialization = true;
-        }
         break;
     }
     case PO_TEXREG2AR:
     {
         inputStage = PSInputTexture[Stage];
 
-        if (m_PSVersion >= D3DPS_VERSION(1, 4))
-        {
             // E.x
             Ins.Initialize(PO_MOV);
             Ins.Output[0].SetRegister(PARAM_R, 1, MASK_R);
@@ -3293,15 +3237,12 @@ bool PSH_XBOX_SHADER::InsertTextureModeInstruction(XTL::X_D3DPIXELSHADERDEF *pPS
             opcode = PO_MOV;
             inputStage = Stage;
             needsInitialization = true;
-        }
         break;
     }
     case PO_TEXREG2GB:
     {
         inputStage = PSInputTexture[Stage];
 
-        if (m_PSVersion >= D3DPS_VERSION(1, 4))
-        {
             // E.x
             Ins.Initialize(PO_MOV);
             Ins.Output[0].SetRegister(PARAM_R, 1, MASK_R);
@@ -3322,7 +3263,6 @@ bool PSH_XBOX_SHADER::InsertTextureModeInstruction(XTL::X_D3DPIXELSHADERDEF *pPS
             opcode = PO_MOV;
             inputStage = Stage;
             needsInitialization = true;
-        }
         break;
     }
     case PO_TEXM3X2PAD:
@@ -3330,12 +3270,9 @@ bool PSH_XBOX_SHADER::InsertTextureModeInstruction(XTL::X_D3DPIXELSHADERDEF *pPS
     {
         inputStage = PSInputTexture[Stage];
 
-        if (m_PSVersion >= D3DPS_VERSION(1, 4))
-        {
             opcode = PO_MOV;
             inputStage = Stage;
             needsInitialization = true;
-        }
         break;
     }
 
@@ -3392,7 +3329,7 @@ bool PSH_XBOX_SHADER::InsertTextureModeInstruction(XTL::X_D3DPIXELSHADERDEF *pPS
 
     if (PSH_OPCODE_DEFS[Ins.Opcode]._In >= 2)
     {
-        if (m_PSVersion >= D3DPS_VERSION(2, 0) && Ins.Opcode == PO_TEXLD2)
+        if (Ins.Opcode == PO_TEXLD2)
         {
             Ins.Parameters[1].SetRegister(PARAM_S, Stage, 0);
         }
@@ -3567,14 +3504,11 @@ bool PSH_XBOX_SHADER::ConvertConstantsToNative(XTL::X_D3DPIXELSHADERDEF *pPSDef,
     _SetColor(NewIns, {1.0, 2.0, 4.0, 8.0});
     InsertIntermediate(&NewIns, 1);
 
-    if (m_PSVersion >= D3DPS_VERSION(1, 4))
-    {
         for (i = 0; i < XTL::X_D3DTS_STAGECOUNT; i++)
         {
             _HandleConst(PSH_XBOX_CONSTANT_BEM + i, Recompiled, &NativeConstInUse[0], &EmittedNewConstant);
             _HandleConst(PSH_XBOX_CONSTANT_LUM + i, Recompiled, &NativeConstInUse[0], &EmittedNewConstant);
         }
-    }
 
   // Loop over all opcodes to update the constant-indexes (Xbox uses C0 and C1 in each combiner) :
   for (i = 0; i < IntermediateCount; i++)
@@ -4132,9 +4066,6 @@ bool PSH_XBOX_SHADER::IsValidNativeOutputRegister(PSH_ARGUMENT_TYPE aRegType, in
 {
     bool valid = (PARAM_R == aRegType) && (MaxRegisterCount(PARAM_R) > index);
 
-    if (m_PSVersion <= D3DPS_VERSION(1, 3))
-        valid = valid || ((PARAM_T == aRegType) && (MaxRegisterCount(PARAM_T) > index));
-
     return valid;
 }
 
@@ -4285,24 +4216,18 @@ bool PSH_XBOX_SHADER::FixArgumentModifiers()
 	{
 		--i;
 		Cur = &(Intermediate[i]);
-		if ((m_PSVersion < D3DPS_VERSION(2, 0) && !Cur->IsArithmetic())
-            || (m_PSVersion >= D3DPS_VERSION(2, 0) && Cur->Opcode < PO_TEX))
+		if (Cur->Opcode < PO_TEX)
 			continue;
 		
-        if (m_PSVersion < D3DPS_VERSION(2, 0) && Cur->Opcode == PO_MOV)
-            continue;
-
         int InsertPos = i;
         // Detect modifiers on constant and arguments
 		for (int p = 0; p < 7 && p < PSH_OPCODE_DEFS[Cur->Opcode]._In; p++) {
-			if ((Cur->Parameters[p].Type == PARAM_C || (m_PSVersion >= D3DPS_VERSION(2, 0) && Cur->Parameters[p].UsesRegister()))
+			if ((Cur->Parameters[p].Type == PARAM_C || (Cur->Parameters[p].UsesRegister()))
 				&& ((Cur->Parameters[p].Modifiers & ~(1 << ARGMOD_NEGATE)) != 0)) {
 
                 PSH_INTERMEDIATE_FORMAT Ins = {};
                 PSH_IMD_ARGUMENT Arg = {};
 
-                if (m_PSVersion >= D3DPS_VERSION(2, 0))
-                {
                     Arg = Cur->Parameters[p];
 
                     int excludeAddress = Cur->Output[0].Type == PARAM_R ? Cur->Output[0].Address : -1;
@@ -4480,27 +4405,6 @@ bool PSH_XBOX_SHADER::FixArgumentModifiers()
                             Result = true;
                         }
                     }
-                }
-                else
-                {
-                    // Insert a MOV to the destination register,
-                    // so the modifier can be applied on that,
-                    // instead of on this constant argument.
-                    Ins.Initialize(PO_MOV);
-                    // No need to check if output is a constant - those cannot be assigned to anyway
-                    Ins.Output[0] = Cur->Output[0];
-                    // Move constant into register
-                    Ins.Parameters[0] = Cur->Parameters[p];
-                    Cur->Parameters[p] = Ins.Output[0];
-                    // Apply modifier to register instead of constant
-                    Cur->Parameters[p].Modifiers = Ins.Parameters[0].Modifiers;
-                    Ins.Parameters[0].Modifiers = 0;
-                    Ins.CommentString = "Inserted to avoid constant modifier (applied below on register)";
-                    InsertIntermediate(&Ins, InsertPos);
-                    ++InsertPos;
-                    EmuLog(LOG_LEVEL::DEBUG, "; Used intermediate move to avoid constant modifier");
-                    Result = true;
-                }
 			}
 		}
 	}
@@ -4513,9 +4417,6 @@ bool PSH_XBOX_SHADER::FixConstantParameters()
     PPSH_INTERMEDIATE_FORMAT Cur;
 
     bool Result = false;
-
-    if (m_PSVersion < D3DPS_VERSION(1, 4))
-        return false;
 
     // Do a bottom-to-top pass, preventing constant-modifiers via additional MOV's:
     i = IntermediateCount;
@@ -4551,9 +4452,6 @@ bool PSH_XBOX_SHADER::FixInstructionModifiers()
 
     bool Result = false;
 
-    if (m_PSVersion < D3DPS_VERSION(2, 0))
-        return false;
-
     // Do a bottom-to-top pass, preventing constant-modifiers via additional MOV's:
     i = IntermediateCount;
     while (i > StartPos)
@@ -4579,11 +4477,6 @@ bool PSH_XBOX_SHADER::FixInstructionModifiers()
         }
         case INSMOD_X2:   // y =  x        *   2
         {
-            if (m_PSVersion < D3DPS_VERSION(2, 0))
-            {
-                insert = false;
-                break;
-            }
             Ins.Initialize(PO_MUL);
             Ins.Output[0] = Ins.Parameters[0] = Cur->Output[0];
             Ins.Parameters[1].SetScaleConstRegister(2.0f, Recompiled);
@@ -4603,11 +4496,6 @@ bool PSH_XBOX_SHADER::FixInstructionModifiers()
         }
         case INSMOD_X4:   // y =  x        *   4
         {
-            if (m_PSVersion < D3DPS_VERSION(2, 0))
-            {
-                insert = false;
-                break;
-            }
             Ins.Initialize(PO_MUL);
             Ins.Output[0] = Ins.Parameters[0] = Cur->Output[0];
             Ins.Parameters[1].SetScaleConstRegister(4.0f, Recompiled);
@@ -4617,11 +4505,6 @@ bool PSH_XBOX_SHADER::FixInstructionModifiers()
         }
         case INSMOD_D2:   // y =  x        * 0.5
         {
-            if (m_PSVersion < D3DPS_VERSION(2, 0))
-            {
-                insert = false;
-                break;
-            }
             Ins.Initialize(PO_MUL);
             Ins.Output[0] = Ins.Parameters[0] = Cur->Output[0];
             Ins.Parameters[1].SetScaleConstRegister(0.5f, Recompiled);
@@ -4631,11 +4514,6 @@ bool PSH_XBOX_SHADER::FixInstructionModifiers()
         }
         case INSMOD_X8:   // y =  x        *   8   // ps 1.4 only
         {
-            if (m_PSVersion == D3DPS_VERSION(1, 4))
-            {
-                insert = false;
-                break;
-            }
             Ins.Initialize(PO_MUL);
             Ins.Output[0] = Ins.Parameters[0] = Cur->Output[0];
             Ins.Parameters[1].SetScaleConstRegister(8.0f, Recompiled);
@@ -4645,11 +4523,6 @@ bool PSH_XBOX_SHADER::FixInstructionModifiers()
         }
         case INSMOD_D4:   // y =  x        * 0.25  // ps 1.4 only
         {
-            if (m_PSVersion == D3DPS_VERSION(1, 4))
-            {
-                insert = false;
-                break;
-            }
             Ins.Initialize(PO_MUL);
             Ins.Output[0] = Ins.Parameters[0] = Cur->Output[0];
             Ins.Parameters[1].SetScaleConstRegister(0.25f, Recompiled);
@@ -4659,11 +4532,6 @@ bool PSH_XBOX_SHADER::FixInstructionModifiers()
         }
         case INSMOD_D8:   // y =  x        * 0.125 // ps 1.4 only
         {
-            if (m_PSVersion == D3DPS_VERSION(1, 4))
-            {
-                insert = false;
-                break;
-            }
             Ins.Initialize(PO_MUL);
             Ins.Output[0] = Ins.Parameters[0] = Cur->Output[0];
             Ins.Parameters[1].SetScaleConstRegister(0.125f, Recompiled);
@@ -4692,19 +4560,12 @@ bool PSH_XBOX_SHADER::FinalizeShader()
 {
     PSH_INTERMEDIATE_FORMAT Ins = {};
 
-    bool Result = false;
+    Ins.Initialize(PO_MOV);
+    Ins.Output[0].SetRegister(PARAM_oC, 0, MASK_RGBA);
+    Ins.Parameters[0].SetRegister(PARAM_R, 0, MASK_RGBA);
+    InsertIntermediate(&Ins, IntermediateCount);
 
-    if (m_PSVersion >= D3DPS_VERSION(2, 0))
-    {
-        Result = true;
-
-        Ins.Initialize(PO_MOV);
-        Ins.Output[0].SetRegister(PARAM_oC, 0, MASK_RGBA);
-        Ins.Parameters[0].SetRegister(PARAM_R, 0, MASK_RGBA);
-        InsertIntermediate(&Ins, IntermediateCount);
-    }
-
-    return Result;
+    return true;
 } // FinalizeShader
 
 //bool PSH_XBOX_SHADER::CombineInstructions()
@@ -5041,7 +4902,7 @@ bool PSH_XBOX_SHADER::SimplifyMOV(PPSH_INTERMEDIATE_FORMAT Cur)
   if (Cur->Parameters[0].GetConstValue() == 0.0)
   {
     // Attempt to find a constant with the value 0, and use that if present.
-      if (m_PSVersion < D3DPS_VERSION(1, 4) || !Cur->Parameters[0].SetScaleConstRegister(0.0f, Recompiled))
+      if (!Cur->Parameters[0].SetScaleConstRegister(0.0f, Recompiled))
       {
           // Simulate 0 by subtracting a (guaranteed) register from itself :
           // Fixup via "sub d0=v0,v0" :
@@ -5066,7 +4927,7 @@ bool PSH_XBOX_SHADER::SimplifyMOV(PPSH_INTERMEDIATE_FORMAT Cur)
     // TODO : If there's a constant equal to GetConstValue(), use that.
     Factor = Cur->Parameters[0].GetConstValue();
 
-    if (m_PSVersion < D3DPS_VERSION(1,4) || !Cur->Parameters[0].SetScaleConstRegister(Factor, Recompiled))
+    if (!Cur->Parameters[0].SetScaleConstRegister(Factor, Recompiled))
     {
         // Fixup via a SUB (which can calculate a constant value) :
         Cur->Opcode = PO_SUB;
@@ -5167,7 +5028,7 @@ bool PSH_XBOX_SHADER::SimplifyMAD(PPSH_INTERMEDIATE_FORMAT Cur, int index)
   // Is this 0.5*s1+s2 ?
   if (Cur->Parameters[0].GetConstValue() == 0.5f && Cur->Parameters[1].UsesRegister())
   {
-      if (m_PSVersion < D3DPS_VERSION(1, 4) || !Cur->Parameters[0].SetScaleConstRegister(0.5f, Recompiled))
+      if (!Cur->Parameters[0].SetScaleConstRegister(0.5f, Recompiled))
       {
           // Change it into s2 :
           Cur->Opcode = PO_ADD;
@@ -5191,7 +5052,7 @@ bool PSH_XBOX_SHADER::SimplifyMAD(PPSH_INTERMEDIATE_FORMAT Cur, int index)
   // Is this s0*0.5+s2 ?
   if (Cur->Parameters[1].GetConstValue() == 0.5f && Cur->Parameters[0].UsesRegister())
   {
-      if (m_PSVersion < D3DPS_VERSION(1, 4) || !Cur->Parameters[1].SetScaleConstRegister(0.5f, Recompiled))
+      if (!Cur->Parameters[1].SetScaleConstRegister(0.5f, Recompiled))
       {
           // Change it into s2 :
           Cur->Opcode = PO_ADD;
@@ -5330,9 +5191,6 @@ bool  PSH_XBOX_SHADER::SimplifyLRP(PPSH_INTERMEDIATE_FORMAT Cur, int index)
 
 bool PSH_XBOX_SHADER::FixupCND(PPSH_INTERMEDIATE_FORMAT Cur, int index)
 {
-    if (m_PSVersion < D3DPS_VERSION(2, 0))
-        return false;
-
     PSH_INTERMEDIATE_FORMAT Ins = {};
 
     // TODO: Look into using predicate register
@@ -5496,15 +5354,7 @@ bool PSH_XBOX_SHADER::FixMissingR0a()
     NewIns.Initialize(PO_MOV);
     NewIns.Output[0].SetRegister(PARAM_R, 0, MASK_A);
     NewIns.Parameters[0] = NewIns.Output[0];
-    if (m_PSVersion != D3DPS_VERSION(1, 4))
-    {
-        NewIns.Parameters[0].Type = PARAM_T;
-    }
-    else
-    {
-        NewIns.Parameters[0].Type = PARAM_R;
-        NewIns.Parameters[0].Address += PSH_XBOX_MAX_R_REGISTER_COUNT;
-    }
+    NewIns.Parameters[0].Type = PARAM_T;
     NewIns.CommentString = "Inserted r0.a default";
     InsertIntermediate(&NewIns, R0aDefaultInsertPos);
     return true;
@@ -5551,15 +5401,7 @@ bool PSH_XBOX_SHADER::FixMissingR1a()
 		NewIns.Initialize(PO_MOV);
 		NewIns.Output[0].SetRegister(PARAM_R, 1, MASK_A);
 		NewIns.Parameters[0] = NewIns.Output[0];
-        if (m_PSVersion != D3DPS_VERSION(1, 4))
-        {
-            NewIns.Parameters[0].Type = PARAM_T;
-        }
-        else
-        {
-            NewIns.Parameters[0].Type = PARAM_R;
-            NewIns.Parameters[0].Address += PSH_XBOX_MAX_R_REGISTER_COUNT;
-        }
+		NewIns.Parameters[0].Type = PARAM_T;
 		NewIns.CommentString = "Inserted r1.a default";
 		InsertIntermediate(&NewIns, R1aDefaultInsertPos);
 		return true;
@@ -5577,9 +5419,6 @@ bool PSH_XBOX_SHADER::FixUninitializedReads()
     PPSH_INTERMEDIATE_FORMAT Cur;
     PSH_INTERMEDIATE_FORMAT NewIns = {};
     bool Result = false;
-
-    if (m_PSVersion < D3DPS_VERSION(1, 4))
-        return false;
 
     int readPositions[32][4] = {};
     int writePositions[32][4] = {};
@@ -5659,18 +5498,10 @@ bool PSH_XBOX_SHADER::FixUninitializedReads()
             // Insert a new opcode : MOV r#.???, c0.???
             NewIns.Output[0].SetRegister(PARAM_R, j, mask);
             NewIns.Parameters[0].SetScaleConstRegister(0.0f, Recompiled);
-            // r0 and r1 take their alpha from the repsective texture coordinate
+            // r0 and r1 take their alpha from the respective texture coordinate
             if (j < PSH_XBOX_MAX_R_REGISTER_COUNT)
             {
-                if (m_PSVersion == D3DPS_VERSION(1, 4))
-                {
-                    mask = MASK_A;
-                    NewIns.Parameters[0].SetScaleConstRegister(1.0f, Recompiled);
-                }
-                else
-                {
                     mask &= MASK_RGB;
-                }
             }
 
             InsertIntermediate(&NewIns, std::min(StartPos, initPositions[j]));
@@ -6089,14 +5920,14 @@ void XTL_DumpPixelShaderToFile(XTL::X_D3DPIXELSHADERDEF *pPSDef)
 
 PSH_RECOMPILED_SHADER XTL_EmuRecompilePshDef(XTL::X_D3DPIXELSHADERDEF *pPSDef)
 {
-	uint32_t PSVersion = D3DPS_VERSION(2, 0); // Use pixel shader model 1.3 by default
+	uint32_t PSVersion = D3DPS_VERSION(2, 0); // Use pixel shader model 2.0 by default
 
-#if 0 // Once PS.1.4 can be generated, enable this :
 	extern XTL::D3DCAPS g_D3DCaps;
 
-    PSVersion = g_D3DCaps.PixelShaderVersion;
-#endif
-	// TODO : Make the pixel shader version configurable
+	if (g_D3DCaps.PixelShaderVersion > D3DPS_VERSION(3, 0)) {
+		// TODO : Test PSVersion = D3DPS_VERSION(3, 0); // g_D3DCaps.PixelShaderVersion;
+		// TODO : Make the pixel shader version configurable
+	}
 
 	PSH_XBOX_SHADER PSH = {};
 	PSH.SetPSVersion(PSVersion);
@@ -7026,7 +6857,7 @@ inline void HandleInputOutput
 	} // end of !bFinalCombiner
 	else 
 	{
-		//* only ~~~%!?&&$3ง~~~ support yet !!!
+		//* only ~~~%!?&&$3ยง~~~ support yet !!!
 
 		WriteCode("\n; Final Combiner\n");
 		printf("pPSD.PSFinalCombinerInputsEFG = PS_COMBINERINPUTS(\n");
