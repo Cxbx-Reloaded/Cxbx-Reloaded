@@ -27,9 +27,6 @@ extern "C"
 // ******************************************************************
 // * kernel exports, others either import or link locally
 // ******************************************************************
-#define XBSYSAPI DECLSPEC_IMPORT
-
-#undef  XBSYSAPI
 #define XBSYSAPI DECLSPEC_EXTERN
 // The KRNL macro prevents naming collisions
 #define KRNL(API) KRNL##API
