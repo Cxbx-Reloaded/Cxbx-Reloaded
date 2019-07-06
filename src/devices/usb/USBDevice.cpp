@@ -54,7 +54,6 @@
 * THE SOFTWARE.
 */
 
-#define _XBOXKRNL_DEFEXTRN_
 
 #define LOG_PREFIX CXBXR_MODULE::USB
 

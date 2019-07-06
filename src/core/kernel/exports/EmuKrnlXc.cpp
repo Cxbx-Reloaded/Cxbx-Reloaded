@@ -27,7 +27,6 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#define _XBOXKRNL_DEFEXTRN_
 
 #define LOG_PREFIX CXBXR_MODULE::XC
 
