@@ -158,7 +158,7 @@ static XTL::INDEX16                *pQuadToTriangleIndexBuffer = nullptr;
 static UINT                         QuadToTriangleIndexBuffer_Size = 0; // = NrOfQuadVertices
 
 static XTL::IDirect3DSurface       *g_DefaultHostDepthBufferSuface = NULL;
-static XTL::X_D3DSurface           *g_XboxBackBufferSurface = NULL;
+XTL::X_D3DSurface                  *g_XboxBackBufferSurface = NULL;
 static XTL::X_D3DSurface           *g_XboxDefaultDepthStencilSurface = NULL;
 XTL::X_D3DSurface                  *g_pXboxRenderTarget = NULL;
 static XTL::X_D3DSurface           *g_pXboxDepthStencil = NULL;

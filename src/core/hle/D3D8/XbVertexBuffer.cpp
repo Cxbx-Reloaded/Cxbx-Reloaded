@@ -56,6 +56,7 @@ extern DWORD				XTL::g_dwPrimPerFrame = 0;
 extern XTL::X_D3DVertexBuffer*g_D3DStreams[16];
 extern UINT g_D3DStreamStrides[16];
 extern XTL::X_D3DSurface* g_pXboxRenderTarget;
+extern XTL::X_D3DSurface* g_XboxBackBufferSurface;
 void *GetDataFromXboxResource(XTL::X_D3DResource *pXboxResource);
 bool GetHostRenderTargetDimensions(DWORD* pHostWidth, DWORD* pHostHeight, XTL::IDirect3DSurface* pHostRenderTarget = nullptr);
 uint32_t GetPixelContainerWidth(XTL::X_D3DPixelContainer* pPixelContainer);
@@ -681,6 +682,12 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
 			// As long as vertices aren't resized / patched up until the texture coordinates,
 			// the uiTextureCoordinatesByteOffsetInVertex on host will match Xbox 
 		}
+
+        // If for some reason the Xbox Render Target is not set, fallback to the backbuffer
+        if (g_pXboxRenderTarget == xbnullptr) {
+            LOG_TEST_CASE("SetRenderTarget fallback to backbuffer");
+            g_pXboxRenderTarget = g_XboxBackBufferSurface;
+        }
 
 		DWORD HostRenderTarget_Width, HostRenderTarget_Height;
 		DWORD XboxRenderTarget_Width = GetPixelContainerWidth(g_pXboxRenderTarget);
