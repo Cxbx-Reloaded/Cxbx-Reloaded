@@ -27,11 +27,12 @@
 #ifndef EMUDSOUNDINLINE_H
 #define EMUDSOUNDINLINE_H
 
+#include <mutex>
+
 #include "XADPCM.h"
 
-CRITICAL_SECTION                    g_DSoundCriticalSection;
-#define enterCriticalSection        EnterCriticalSection(&g_DSoundCriticalSection)
-#define leaveCriticalSection        LeaveCriticalSection(&g_DSoundCriticalSection)
+static std::recursive_mutex         g_DSoundMutex;
+#define DSoundMutexGuardLock        std::lock_guard<std::recursive_mutex> guard(g_DSoundMutex)
 
 #define DSoundBufferGetPCMBufferSize(EmuFlags, size) (EmuFlags & DSE_FLAG_XADPCM) > 0 ? DWORD((size / float(XBOX_ADPCM_SRCSIZE)) * XBOX_ADPCM_DSTSIZE) : size
 #define DSoundBufferGetXboxBufferSize(EmuFlags, size) (EmuFlags & DSE_FLAG_XADPCM) > 0 ? DWORD((size / float(XBOX_ADPCM_DSTSIZE)) * XBOX_ADPCM_SRCSIZE) : size
@@ -252,7 +253,7 @@ inline void GenerateMixBinDefault(
             // If format is PCM/XADPCM, then use stereo mixbin as default.
             if (lpwfxFormat->wFormatTag != WAVE_FORMAT_EXTENSIBLE) {
                 counter = 2;
-                for (int i = 0; i < counter; i++) {
+                for (i = 0; i < counter; i++) {
                     xb_mixbinArray[i].dwMixBin = i;
                     xb_mixbinArray[i].lVolume = 0;
                 }
@@ -1037,12 +1038,7 @@ inline bool DSoundStreamProcess(XTL::X_CDirectSoundStream* pThis) {
 inline ULONG HybridDirectSoundBuffer_AddRef(
     LPDIRECTSOUNDBUFFER8    pDSBuffer)
 {
-
-    enterCriticalSection;
-
     ULONG uRet = pDSBuffer->AddRef();
-
-    leaveCriticalSection;
 
     return uRet;
 }
@@ -1050,12 +1046,7 @@ inline ULONG HybridDirectSoundBuffer_AddRef(
 inline ULONG HybridDirectSoundBuffer_Release(
     LPDIRECTSOUNDBUFFER8    pDSBuffer)
 {
-
-    enterCriticalSection;
-
     ULONG uRet = pDSBuffer->Release();
-
-    leaveCriticalSection;
 
     return uRet;
 }
@@ -1097,9 +1088,6 @@ inline HRESULT HybridDirectSoundBuffer_GetCurrentPosition(
     PDWORD                  pdwCurrentWriteCursor,
     DWORD                   EmuFlags)
 {
-
-    enterCriticalSection;
-
     DWORD dwCurrentPlayCursor, dwCurrentWriteCursor;
     HRESULT hRet = pDSBuffer->GetCurrentPosition(&dwCurrentPlayCursor, &dwCurrentWriteCursor);
 
@@ -1114,8 +1102,6 @@ inline HRESULT HybridDirectSoundBuffer_GetCurrentPosition(
         *pdwCurrentWriteCursor = DSoundBufferGetXboxBufferSize(EmuFlags, dwCurrentWriteCursor);
     }
 
-    leaveCriticalSection;
-
     RETURN_RESULT_CHECK(hRet);
 }
 
@@ -1127,12 +1113,7 @@ inline HRESULT HybridDirectSoundBuffer_GetStatus(
     LPDIRECTSOUNDBUFFER8    pDSBuffer,
     PDWORD                  pdwStatus)
 {
-
-    enterCriticalSection;
-
     HRESULT hRet = pDSBuffer->GetStatus(pdwStatus);
-
-    leaveCriticalSection;
 
     RETURN_RESULT_CHECK(hRet);
 }*/
@@ -1164,9 +1145,6 @@ inline HRESULT HybridDirectSoundBuffer_Pause(
     REFERENCE_TIME          rtTimeStamp,
     REFERENCE_TIME         &Xb_rtTimeStamp)
 {
-
-    enterCriticalSection;
-
     HRESULT hRet = DS_OK;
     switch (dwPause) {
         case X_DSSPAUSE_RESUME:
@@ -1196,8 +1174,6 @@ inline HRESULT HybridDirectSoundBuffer_Pause(
         case X_DSSPAUSE_PAUSENOACTIVATE:
             break;
     }
-
-    leaveCriticalSection;
 
     RETURN_RESULT_CHECK(hRet);
 }
@@ -1279,8 +1255,6 @@ inline HRESULT HybridDirectSound3DBuffer_SetAllParameters(
     XTL::X_DS3DBUFFER*      pDS3DBufferParams,
     DWORD                   dwApply)
 {
-    enterCriticalSection;
-
     HRESULT hRet = DS_OK;
     if (pDS3DBuffer != nullptr) {
 
@@ -1298,26 +1272,21 @@ inline HRESULT HybridDirectSound3DBuffer_SetAllParameters(
 
         hRet = pDS3DBuffer->SetAllParameters(&pDS3DBufferParamsTemp, dwApply);
         if (hRet != DS_OK) {
-			leaveCriticalSection;
             RETURN_RESULT_CHECK(hRet);
         }
 
         hRet = g_pDSoundPrimary3DListener8->SetDistanceFactor(pDS3DBufferParams->flDistanceFactor, dwApply);
         if (hRet != DS_OK) {
-			leaveCriticalSection;
             RETURN_RESULT_CHECK(hRet);
         }
 
         hRet = g_pDSoundPrimary3DListener8->SetRolloffFactor(pDS3DBufferParams->flRolloffFactor, dwApply);
         if (hRet != DS_OK) {
-			leaveCriticalSection;
             RETURN_RESULT_CHECK(hRet);
         }
 
         hRet = g_pDSoundPrimary3DListener8->SetDopplerFactor(pDS3DBufferParams->flDopplerFactor, dwApply);
     }
-
-    leaveCriticalSection;
 
     RETURN_RESULT_CHECK(hRet);
 }
@@ -1339,15 +1308,10 @@ inline HRESULT HybridDirectSound3DBuffer_SetConeAngles(
     DWORD                   dwOutsideConeAngle,
     DWORD                   dwApply)
 {
-
-    enterCriticalSection;
-
     HRESULT hRet = DS_OK;
     if (pDS3DBuffer != nullptr) {
         hRet = pDS3DBuffer->SetConeAngles(dwInsideConeAngle, dwOutsideConeAngle, dwApply);
     }
-
-    leaveCriticalSection;
 
     RETURN_RESULT_CHECK(hRet);
 }
@@ -1361,9 +1325,6 @@ inline HRESULT HybridDirectSound3DBuffer_SetConeOrientation(
     D3DVALUE                z,
     DWORD                   dwApply)
 {
-
-    enterCriticalSection;
-
     HRESULT hRet = DS_OK;
     if (pDS3DBuffer != nullptr) {
         // TODO: (DSound) Should we do restrictive or passive to return actual result back to titles?
@@ -1375,8 +1336,6 @@ inline HRESULT HybridDirectSound3DBuffer_SetConeOrientation(
         }
     }
 
-    leaveCriticalSection;
-
     RETURN_RESULT_CHECK(hRet);
 }
 
@@ -1387,15 +1346,10 @@ inline HRESULT HybridDirectSound3DBuffer_SetConeOutsideVolume(
     LONG                    lConeOutsideVolume,
     DWORD                   dwApply)
 {
-
-    enterCriticalSection;
-
     HRESULT hRet = DS_OK;
     if (pDS3DBuffer != nullptr) {
         hRet = pDS3DBuffer->SetConeOutsideVolume(lConeOutsideVolume, dwApply);
     }
-
-    leaveCriticalSection;
 
     RETURN_RESULT_CHECK(hRet);
 }
@@ -1418,12 +1372,7 @@ inline HRESULT HybridDirectSound3DListener_SetDistanceFactor(
     FLOAT                       flDistanceFactor,
     DWORD                       dwApply)
 {
-
-    enterCriticalSection;
-
     HRESULT hRet = pDS3DListener->SetDistanceFactor(flDistanceFactor, dwApply);
-
-    leaveCriticalSection;
 
     RETURN_RESULT_CHECK(hRet);
 }
@@ -1436,12 +1385,7 @@ inline HRESULT HybridDirectSound3DListener_SetDopplerFactor(
     FLOAT                       flDopplerFactor,
     DWORD                       dwApply)
 {
-
-    enterCriticalSection;
-
     HRESULT hRet = pDS3DListener->SetDopplerFactor(flDopplerFactor, dwApply);
-
-    leaveCriticalSection;
 
     RETURN_RESULT_CHECK(hRet);
 }
@@ -1483,9 +1427,6 @@ inline HRESULT HybridDirectSoundBuffer_SetFormat(
     XTL::X_DSVOICEPROPS    &Xb_VoiceProperties,
     XTL::X_LPDSMIXBINS      mixbins_output)
 {
-
-    enterCriticalSection;
-
     pDSBuffer->Stop();
 
     if (X_BufferAllocate) {
@@ -1506,8 +1447,6 @@ inline HRESULT HybridDirectSoundBuffer_SetFormat(
         DSoundBufferReplace(pDSBuffer, BufferDesc, dwPlayFlags, pDS3DBuffer);
     }
 
-    leaveCriticalSection;
-
     RETURN_RESULT_CHECK(hRet);
 }
 
@@ -1517,14 +1456,9 @@ inline HRESULT HybridDirectSoundBuffer_SetFrequency(
     LPDIRECTSOUNDBUFFER8 pDSBuffer,
     DWORD               dwFrequency)
 {
-
-    enterCriticalSection;
-
     HRESULT hRet = S_OK;
 
     hRet = pDSBuffer->SetFrequency(dwFrequency);
-
-    leaveCriticalSection;
 
     RETURN_RESULT_CHECK(hRet);
 }
@@ -1542,9 +1476,6 @@ inline HRESULT HybridDirectSoundBuffer_SetHeadroom(
     LONG                Xb_volumeMixbin,
     DWORD               dwEmuFlags)
 {
-
-    enterCriticalSection;
-
     HRESULT hRet;
     if (dwHeadroom > 10000) {
         hRet = DSERR_INVALIDPARAM;
@@ -1553,8 +1484,6 @@ inline HRESULT HybridDirectSoundBuffer_SetHeadroom(
         hRet = DS_OK;
         HybridDirectSoundBuffer_SetVolume(pDSBuffer, Xb_volume, dwEmuFlags, xbnullptr, Xb_volumeMixbin, dwHeadroom);
     }
-
-    leaveCriticalSection;
 
     return DS_OK;
 }
@@ -1602,15 +1531,10 @@ inline HRESULT HybridDirectSound3DBuffer_SetMaxDistance(
     D3DVALUE                flMaxDistance,
     DWORD                   dwApply)
 {
-
-    enterCriticalSection;
-
     HRESULT hRet = DS_OK;
     if (pDS3DBuffer != nullptr) {
         hRet = pDS3DBuffer->SetMaxDistance(flMaxDistance, dwApply);
     }
-
-    leaveCriticalSection;
 
     RETURN_RESULT_CHECK(hRet);
 }
@@ -1622,15 +1546,10 @@ inline HRESULT HybridDirectSound3DBuffer_SetMinDistance(
     D3DVALUE                flMinDistance,
     DWORD                   dwApply)
 {
-
-    enterCriticalSection;
-
     HRESULT hRet = DS_OK;
     if (pDS3DBuffer != nullptr) {
         hRet = pDS3DBuffer->SetMinDistance(flMinDistance, dwApply);
     }
-
-    leaveCriticalSection;
 
     RETURN_RESULT_CHECK(hRet);
 }
@@ -1657,8 +1576,6 @@ inline HRESULT HybridDirectSoundBuffer_SetMixBinVolumes_8(
     LONG                &Xb_volumeMixBin,
     DWORD                Xb_dwHeadroom)
 {
-    enterCriticalSection;
-
     HRESULT hRet = DSERR_INVALIDPARAM;
 
     if (pMixBins != xbnullptr) {
@@ -1705,8 +1622,6 @@ inline HRESULT HybridDirectSoundBuffer_SetMixBinVolumes_8(
         }
     }
 
-    leaveCriticalSection;
-
     return hRet;
 }
 
@@ -1717,15 +1632,10 @@ inline HRESULT HybridDirectSound3DBuffer_SetMode(
     DWORD                   dwMode,
     DWORD                   dwApply)
 {
-
-    enterCriticalSection;
-
     HRESULT hRet = DS_OK;
     if (pDS3DBuffer != nullptr) {
         hRet = pDS3DBuffer->SetMode(dwMode, dwApply);
     }
-
-    leaveCriticalSection;
 
     RETURN_RESULT_CHECK(hRet);
 }
@@ -1802,15 +1712,10 @@ inline HRESULT HybridDirectSound3DBuffer_SetPosition(
     D3DVALUE                z,
     DWORD                   dwApply)
 {
-
-    enterCriticalSection;
-
     HRESULT hRet = DS_OK;
     if (pDS3DBuffer != nullptr) {
         hRet = pDS3DBuffer->SetPosition(x, y, z, dwApply);
     }
-
-    leaveCriticalSection;
 
     RETURN_RESULT_CHECK(hRet);
 }
@@ -1836,12 +1741,7 @@ inline HRESULT HybridDirectSound3DListener_SetRolloffFactor(
     FLOAT                       fRolloffFactor,
     DWORD                       dwApply)
 {
-
-    enterCriticalSection;
-
     HRESULT hRet = pDSBuffer->SetRolloffFactor(fRolloffFactor, dwApply);
-
-    leaveCriticalSection;
 
     RETURN_RESULT_CHECK(hRet);
 }
@@ -1856,15 +1756,10 @@ inline HRESULT HybridDirectSound3DBuffer_SetVelocity(
     FLOAT                   z,
     DWORD                   dwApply)
 {
-
-    enterCriticalSection;
-
     HRESULT hRet = DS_OK;
     if (pDS3DBuffer != nullptr) {
         hRet = pDS3DBuffer->SetVelocity(x, y, z, dwApply);
     }
-
-    leaveCriticalSection;
 
     RETURN_RESULT_CHECK(hRet);
 }
@@ -1881,9 +1776,6 @@ inline HRESULT HybridDirectSoundBuffer_SetVolume(
     LONG                    Xb_volumeMixbin,
     DWORD                   Xb_dwHeadroom)
 {
-
-    enterCriticalSection;
-
     // Preserve original volume
     if (Xb_lpVolume != xbnullptr) {
         *Xb_lpVolume = lVolume;
@@ -1921,8 +1813,6 @@ inline HRESULT HybridDirectSoundBuffer_SetVolume(
 
     HRESULT hRet = pDSBuffer->SetVolume(lVolume);
 
-    leaveCriticalSection;
-
     RETURN_RESULT_CHECK(hRet);
 }
 /*/
@@ -1959,8 +1849,6 @@ inline HRESULT HybridDirectSoundBuffer_GetVoiceProperties(
     XTL::X_DSVOICEPROPS* out_VoiceProperties
 )
 {
-    enterCriticalSection;
-
     HRESULT ret = DS_OK;
 
     if (out_VoiceProperties != xbnullptr) {
@@ -1970,8 +1858,6 @@ inline HRESULT HybridDirectSoundBuffer_GetVoiceProperties(
     else {
         ret = DSERR_INVALIDPARAM;
     }
-
-    leaveCriticalSection;
 
     return ret;
 }
