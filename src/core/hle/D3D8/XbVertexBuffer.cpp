@@ -682,6 +682,16 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
 			// the uiTextureCoordinatesByteOffsetInVertex on host will match Xbox 
 		}
 
+		DWORD HostRenderTarget_Width, HostRenderTarget_Height;
+		DWORD XboxRenderTarget_Width = GetPixelContainerWidth(g_pXboxRenderTarget);
+		DWORD XboxRenderTarget_Height = GetPixelContainerHeight(g_pXboxRenderTarget);
+		if (!GetHostRenderTargetDimensions(&HostRenderTarget_Width, &HostRenderTarget_Height)) {
+			HostRenderTarget_Width = XboxRenderTarget_Width;
+			HostRenderTarget_Height = XboxRenderTarget_Height;
+		}
+
+		bool bNeedRHWTransform = XboxRenderTarget_Width < HostRenderTarget_Width && XboxRenderTarget_Height < HostRenderTarget_Height;
+
 		for (uint32_t uiVertex = 0; uiVertex < uiVertexCount; uiVertex++) {
 			FLOAT *pVertexDataAsFloat = (FLOAT*)(&pHostVertexData[uiVertex * uiHostVertexStride]);
 
@@ -689,15 +699,7 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
 			if (bNeedRHWReset) {
                 // We need to transform these vertices only if the host render target was upscaled from the Xbox render target
                 // Transforming always breaks render to non-upscaled textures: Only surfaces are upscaled, intentionally so
-				DWORD HostRenderTarget_Width, HostRenderTarget_Height;
-				DWORD XboxRenderTarget_Width = GetPixelContainerWidth(g_pXboxRenderTarget);
-				DWORD XboxRenderTarget_Height = GetPixelContainerHeight(g_pXboxRenderTarget);
-				if (!GetHostRenderTargetDimensions(&HostRenderTarget_Width, &HostRenderTarget_Height)) {
-					HostRenderTarget_Width = XboxRenderTarget_Width;
-					HostRenderTarget_Height = XboxRenderTarget_Height;
-				}
-
-				if (XboxRenderTarget_Width < HostRenderTarget_Width && XboxRenderTarget_Height < HostRenderTarget_Height) {
+				if (bNeedRHWTransform) {
 					pVertexDataAsFloat[0] *= g_RenderScaleFactor;
 					pVertexDataAsFloat[1] *= g_RenderScaleFactor;
 				}
