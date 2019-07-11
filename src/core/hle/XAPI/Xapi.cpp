@@ -72,6 +72,8 @@ PFARPROC1 fnCxbxVSBCOpen;
 //typedef DWORD(*fnCxbxVSBCGetState)(UCHAR *);
 XTL::PXPP_DEVICE_TYPE gDeviceType_Gamepad = nullptr;
 
+// Flag is set after gamepad state has been queried by the title. Supports defer gamepad connection hack
+bool g_gamepadStateQueriedHackFlag = false;
 
 XTL::X_POLLING_PARAMETERS_HANDLE g_pph[4];
 XTL::X_XINPUT_POLLING_PARAMETERS g_pp[4];
@@ -284,78 +286,29 @@ VOID WINAPI XTL::EMUPATCH(XInitDevices)
 	InitXboxControllerHostBridge();
 }
 
-bool TitleRequiresInputHack()
-{
-	static bool detected = false;
-	static bool result = false;
+// This is called by both XGetDevices and XGetDeviceChanges
+void UpdateConnectedDeviceState(XTL::PXPP_DEVICE_TYPE DeviceType) {
 
-	// Prevent running the check every time this function is called
-	if (detected) {
-		return result;
+	// HACK: Defer connecting the device once. Some titles don't seem to work correctly
+	// if a controller is connected the very first time the device state is queried.
+	// Test cases: JSRF (IG-024 NTSC-U; SE-010 PAL, NTSC-J), JSRF Demo (SE-022 NTSC-J),
+	// GunValkyrie (SE-012 NTSC-U, NTSC-J; IG-023 PAL), Lego Star Wars (ES-029), Otogi (FS-002)
+	// (Note these games broke in different ways, so each should be tested if this hack is removed)
+	if (!g_gamepadStateQueriedHackFlag && (DeviceType == gDeviceType_Gamepad)){
+		g_gamepadStateQueriedHackFlag = true;
+		return;
 	}
 
-	// Array of known games that require the gamepad hack
-	// TODO: Figure out WHY this is needed and fix the root cause
-	// Perhaps LLE USB/OHCI is required?
-	DWORD titleIds[] = {
-		0x49470018, // JSRF NTSC-U
-		0x5345000A, // JSRF PAL, NTSC-J
-		0x53450016, // JSRF NTSC - J(Demo)
-		0x5345000b, // GunValkyre NTSC-U, NTSC-J
-		0x49470017, // GunValkyre PAL
-		0
-	};
-
-	DWORD* pTitleId = &titleIds[0];
-	while (*pTitleId != 0) {
-		if (g_pCertificate->dwTitleId == *pTitleId) {
-			result = true;
-			break;
+	// Connect the device if not already connected
+	if (DeviceType->CurrentConnected == 0) {
+		for (int port = 0; port < 4; port++) {
+			// If the host controller is connected and the Xbox DeviceType matches, set the CurrentConnected flag.
+			if (g_XboxControllerHostBridge[port].XboxDeviceInfo.DeviceType == DeviceType && g_XboxControllerHostBridge[port].dwHostType > 0) {
+				DeviceType->CurrentConnected |= 1 << port;
+			}
 		}
-
-		pTitleId++;
+		DeviceType->ChangeConnected = DeviceType->CurrentConnected;
 	}
-
-	if (result) {
-		EmuLog(LOG_LEVEL::WARNING, "Applying Smilebit Input Hack");
-	}
-
-	detected = true;
-	return result;
-}
-
-bool TitleIsLegoSW()
-{
-	static bool detected = false;
-	static bool result = false;
-
-	// Prevent running the check every time this function is called
-	if (detected) {
-		return result;
-	}
-
-	// Array of known Lego Star Wars title IDs, must be 0 terminated
-	DWORD titleIds[] = {
-		0x4553001D, // v1.01 - PAL; v1.02 - NTSC
-		0
-	};
-
-	DWORD* pTitleId = &titleIds[0];
-	while (*pTitleId != 0) {
-		if (g_pCertificate->dwTitleId == *pTitleId) {
-			result = true;
-			break;
-		}
-
-		pTitleId++;
-	}
-		
-	if (result) {
-		EmuLog(LOG_LEVEL::WARNING, "Applying Lego Star Wars Hack");
-	}
-
-	detected = true;
-	return result;
 }
 
 // ******************************************************************
@@ -374,31 +327,14 @@ DWORD WINAPI XTL::EMUPATCH(XGetDevices)
 
 	LOG_FUNC_ONE_ARG(DeviceType);
 
+	UpdateConnectedDeviceState(DeviceType);
+
 	UCHAR oldIrql = xboxkrnl::KeRaiseIrqlToDpcLevel();
 
 	DWORD ret = DeviceType->CurrentConnected;
+
 	DeviceType->ChangeConnected = 0;
 	DeviceType->PreviousConnected = DeviceType->CurrentConnected;
-
-    int index = FindDeviceInfoIndexByDeviceType(DeviceType);
-    int port;
-    if (DeviceType->CurrentConnected == 0) {
-        for (port = 0; port < 4; port++) {
-            //if the host controller is connected and the xbox DeviceType matches. set the CurrentConnected flag.
-            if (g_XboxControllerHostBridge[port].XboxDeviceInfo.DeviceType == DeviceType && g_XboxControllerHostBridge[port].dwHostType>0) {
-                DeviceType->CurrentConnected |= 1 << port;
-            }
-        }
-    }
-    //the ChangeConnected flag must be set here together with the CurrentConnected flag.
-    DeviceType->ChangeConnected = DeviceType->CurrentConnected;
-
-    // JSRF Hack: Don't set the ChangeConnected flag. Without this, JSRF hard crashes 
-	// TODO: Why is this still needed? 
-	if (DeviceType == gDeviceType_Gamepad && TitleRequiresInputHack()) {
-		DeviceType->ChangeConnected = 0;
-	}
-    ret = DeviceType->CurrentConnected;
 
 	xboxkrnl::KfLowerIrql(oldIrql);
 
@@ -427,26 +363,10 @@ BOOL WINAPI XTL::EMUPATCH(XGetDeviceChanges)
 		LOG_FUNC_ARG(pdwRemovals)
 	LOG_FUNC_END;
 
-	BOOL ret = FALSE;
-    
-    // If this device type was not previously detected, connect one (or more)
-    // some titles call XGetDevices first, and the CurrentConnected and ChangeConnected flags are set there.
-    // note that certain titles such as Otogi need the ChangeConnected to be set to 1 always to enable the input. 
-    int port;
-    if (DeviceType->CurrentConnected == 0) {
-        for (port = 0; port < 4; port++) {
-            //if the host controller is connected and the xbox DeviceType matches. set the CurrentConnected flag.
-            if (g_XboxControllerHostBridge[port].XboxDeviceInfo.DeviceType == DeviceType && g_XboxControllerHostBridge[port].dwHostType>0) {
-                DeviceType->CurrentConnected |= 1 << port;
-            }
-        }
-        DeviceType->ChangeConnected = DeviceType->CurrentConnected;
-    }
+	UpdateConnectedDeviceState(DeviceType);
 
-    // JSRF Hack: Don't set the ChangeConnected flag. Without this, JSRF hard crashes
-	if (TitleRequiresInputHack()) {
-		DeviceType->ChangeConnected = 0;
-	}
+	BOOL ret = FALSE;
+
 
     if(!DeviceType->ChangeConnected)
     {
@@ -457,27 +377,23 @@ BOOL WINAPI XTL::EMUPATCH(XGetDeviceChanges)
     {
         UCHAR oldIrql = xboxkrnl::KeRaiseIrqlToDpcLevel();
 
+		// Insertions and removals
         *pdwInsertions = (DeviceType->CurrentConnected & ~DeviceType->PreviousConnected);
         *pdwRemovals = (DeviceType->PreviousConnected & ~DeviceType->CurrentConnected);
+
+		// Detect devices that were removed and then immediately inserted again
         ULONG RemoveInsert = DeviceType->ChangeConnected &
             DeviceType->CurrentConnected &
             DeviceType->PreviousConnected;
         *pdwRemovals |= RemoveInsert;
         *pdwInsertions |= RemoveInsert;
+
         DeviceType->ChangeConnected = 0;
         DeviceType->PreviousConnected = DeviceType->CurrentConnected;
         ret = (*pdwInsertions | *pdwRemovals) ? TRUE : FALSE;
 
 		xboxkrnl::KfLowerIrql(oldIrql);
     }
-
-    // Lego SW Hack: Require XGetDeviceChanges to return changes all the time, but no removal, only insertions.
-    // Without this, Lego SW will not response to controller's input.
-	if (TitleIsLegoSW()) {
-		*pdwRemovals = 0;
-		*pdwInsertions = DeviceType->CurrentConnected;
-		ret = TRUE;
-	}
 
 	RETURN(ret);
 }
