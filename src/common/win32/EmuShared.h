@@ -199,8 +199,7 @@ class EmuShared : public Mutex
 		void GetLogModules(unsigned int *value)
 		{
 			Lock();
-			for (int i = 0; i < NUM_INTEGERS_LOG; ++i)
-			{
+			for (int i = 0; i < NUM_INTEGERS_LOG; ++i) {
 				value[i] = m_core.LoggedModules[i];
 			}
 			Unlock();
@@ -208,8 +207,7 @@ class EmuShared : public Mutex
 		void SetLogModules(unsigned int *value)
 		{
 			Lock();
-			for (int i = 0; i < NUM_INTEGERS_LOG; ++i)
-			{
+			for (int i = 0; i < NUM_INTEGERS_LOG; ++i) {
 				m_core.LoggedModules[i] = value[i];
 			}
 			Unlock();

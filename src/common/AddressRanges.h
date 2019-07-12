@@ -20,6 +20,7 @@
 // *  59 Temple Place - Suite 330, Bostom, MA 02111-1307, USA.
 // *
 // *  (c) 2017-2019 Patrick van Logchem <pvanlogchem@gmail.com>
+// *  (c) 2019 ergo720
 // *
 // *  All rights reserved
 // *
@@ -71,7 +72,6 @@ const struct {
 	#define SYSTEM_CHIHIRO (1 << 3)
 	// Short-hand for sets of system configurations
 	#define SYSTEM_ALL     (SYSTEM_XBOX | SYSTEM_DEVKIT | SYSTEM_CHIHIRO)
-	#define SYSTEM_RETAIL  (SYSTEM_XBOX | SYSTEM_DEVKIT                 )
 	#define SYSTEM_128MB   (              SYSTEM_DEVKIT | SYSTEM_CHIHIRO)
 #ifdef DEBUG
 	const char *Comment;
@@ -84,31 +84,26 @@ const struct {
 #endif
 	// See http://xboxdevwiki.net/Memory
 	// and http://xboxdevwiki.net/Boot_Process#Paging
-	// Entry :  Start     , End       , Size   , Protect , RangeFlags              , Comment
-	RANGE_ENTRY(0x00000000, 0x03FFFFFF, MB( 64), PROT_XRW, SYSTEM_XBOX   | MAY_FAIL, "MemLowVirtual (Retail Xbox) Optional (already reserved via virtual_memory_placeholder)"),
-	RANGE_ENTRY(0x00000000, 0x07FFFFFF, MB(128), PROT_XRW, SYSTEM_128MB  | MAY_FAIL, "MemLowVirtual (Chihiro / DevKit)"),
-	RANGE_ENTRY(0x80000000, 0x83FFFFFF, MB( 64), PROT_XRW, SYSTEM_XBOX             , "MemPhysical   (Retail)"),
-	RANGE_ENTRY(0x80000000, 0x87FFFFFF, MB(128), PROT_XRW, SYSTEM_128MB            , "MemPhysical   (Chihiro / DevKit)"),
-	RANGE_ENTRY(0xB0000000, 0xB7FFFFFF, MB(128), PROT_NAC, SYSTEM_DEVKIT           , "DevKitMemory"), // TODO : Check reserved range (might behave like MemTiled)
-	RANGE_ENTRY(0xC0000000, 0xC03FFFFF, MB(  4), PROT_RW,  SYSTEM_ALL              , "MemPageTable"), // See PAGE_TABLES_SIZE, which contains one 4 byte entry per PAGE_SIZE
-	RANGE_ENTRY(0xD0000000, 0xEFFFFFFF, MB(512), PROT_UNH, SYSTEM_ALL    | MAY_FAIL, "SystemMemory  Optional"), // TODO : Check reserved range (might behave like MemTiled)
-	RANGE_ENTRY(0xF0000000, 0xF3FFFFFF, MB( 64), PROT_UNH, SYSTEM_ALL    | MAY_FAIL, "MemTiled      Optional (even though it can't be reserved, MapViewOfFileEx to this range still works!?)"),
-	RANGE_ENTRY(0xFD000000, 0xFD6FFFFF, MB(  7), PROT_NAC, SYSTEM_ALL              , "DeviceNV2A_a  (GPU)"),
-	RANGE_ENTRY(0xFD700000, 0xFD7FFFFF, MB(  1), PROT_RW,  SYSTEM_ALL              , "MemNV2APRAMIN"),
-	RANGE_ENTRY(0xFD800000, 0xFDFFFFFF, MB(  8), PROT_NAC, SYSTEM_ALL              , "DeviceNV2A_b  (GPU)"),
-	RANGE_ENTRY(0xFE800000, 0xFE87FFFF, KB(512), PROT_NAC, SYSTEM_ALL              , "DeviceAPU"),
-	RANGE_ENTRY(0xFEC00000, 0xFEC00FFF, KB(  4), PROT_NAC, SYSTEM_ALL              , "DeviceAC97    (ACI)"),
-	RANGE_ENTRY(0xFED00000, 0xFED00FFF, KB(  4), PROT_NAC, SYSTEM_ALL              , "DeviceUSB"),
-	RANGE_ENTRY(0xFEF00000, 0xFEF003FF, KB(  1), PROT_NAC, SYSTEM_ALL              , "DeviceNVNet"),
-	RANGE_ENTRY(0xFF000000, 0xFF3FFFFF, MB(  4), PROT_NAC, SYSTEM_ALL              , "DeviceFlash_a (Flash mirror 1)"),
-	RANGE_ENTRY(0xFF400000, 0xFF7FFFFF, MB(  4), PROT_NAC, SYSTEM_ALL              , "DeviceFlash_b (Flash mirror 2)"),
-	RANGE_ENTRY(0xFF800000, 0xFFBFFFFF, MB(  4), PROT_NAC, SYSTEM_ALL              , "DeviceFlash_c (Flash mirror 3)"),
-	RANGE_ENTRY(0xFFC00000, 0xFFFFFFFF, MB(  4), PROT_NAC, SYSTEM_ALL    | MAY_FAIL, "DeviceFlash_d (Flash mirror 4) Optional (will probably fail reservation, which is acceptable - the 3 other mirrors work just fine"),
-	/* This region is only relevant if we were running the original Xbox boot sequence (including MCPX),
-	   so it's completely redundant to use it: By the time the Kernel has started execution, this region is disabled
-	   and cannot be re-enabled. Xbox software (and the kernel) have no access to this region whatsoever once 2BL has completed.
-	RANGE_ENTRY(0xFFFFFE00, 0xFFFFFFFF,    512 , PROT_NAC, SYSTEM_RETAIL | MAY_FAIL, "DeviceMCPX    (not Chihiro, Xbox - if enabled) Optional (can safely be ignored)"),
-	*/
+	// Entry :  Start     , End       , Size            , Protect , RangeFlags              , Comment
+	RANGE_ENTRY(0x00010000, 0x03FFFFFF, MB( 64) - KB(64), PROT_XRW, SYSTEM_XBOX   | MAY_FAIL, "MemLowVirtual (Retail Xbox) Optional (already reserved via virtual_memory_placeholder)"),
+	RANGE_ENTRY(0x00010000, 0x07FFFFFF, MB(128) - KB(64), PROT_XRW, SYSTEM_128MB  | MAY_FAIL, "MemLowVirtual (Chihiro / DevKit)"),
+	RANGE_ENTRY(0x80000000, 0x83FFFFFF, MB( 64)         , PROT_UNH, SYSTEM_XBOX             , "MemPhysical   (Retail)"),
+	RANGE_ENTRY(0x80000000, 0x87FFFFFF, MB(128)         , PROT_UNH, SYSTEM_128MB            , "MemPhysical   (Chihiro / DevKit)"),
+	RANGE_ENTRY(0xB0000000, 0xBFFFFFFF, MB(256)         , PROT_NAC, SYSTEM_DEVKIT           , "DevKitMemory"), // TODO : Check reserved range (might behave like MemTiled)
+	RANGE_ENTRY(0xC0000000, 0xC03FFFFF, MB(  4)         , PROT_RW,  SYSTEM_ALL              , "MemPageTable"), // See PAGE_TABLES_SIZE, which contains one 4 byte entry per PAGE_SIZE
+	RANGE_ENTRY(0xD0000000, 0xEFFFFFFF, MB(512)         , PROT_RW,  SYSTEM_ALL    | MAY_FAIL, "SystemMemory  Optional"), // TODO : Check reserved range (might behave like MemTiled)
+	RANGE_ENTRY(0xF0000000, 0xF3FFFFFF, MB( 64)         , PROT_UNH, SYSTEM_ALL              , "MemTiled      Optional (even though it can't be reserved, MapViewOfFileEx to this range still works!?)"),
+	RANGE_ENTRY(0xFD000000, 0xFD6FFFFF, MB(  7)         , PROT_NAC, SYSTEM_ALL              , "DeviceNV2A_a  (GPU)"),
+	RANGE_ENTRY(0xFD700000, 0xFD7FFFFF, MB(  1)         , PROT_RW,  SYSTEM_ALL              , "MemNV2APRAMIN"),
+	RANGE_ENTRY(0xFD800000, 0xFDFFFFFF, MB(  8)         , PROT_NAC, SYSTEM_ALL              , "DeviceNV2A_b  (GPU)"),
+	RANGE_ENTRY(0xFE800000, 0xFE87FFFF, KB(512)         , PROT_NAC, SYSTEM_ALL              , "DeviceAPU"),
+	RANGE_ENTRY(0xFEC00000, 0xFEC00FFF, KB(  4)         , PROT_NAC, SYSTEM_ALL              , "DeviceAC97    (ACI)"),
+	RANGE_ENTRY(0xFED00000, 0xFED00FFF, KB(  4)         , PROT_NAC, SYSTEM_ALL              , "DeviceUSB"),
+	RANGE_ENTRY(0xFEF00000, 0xFEF003FF, KB(  1)         , PROT_NAC, SYSTEM_ALL              , "DeviceNVNet"),
+	RANGE_ENTRY(0xFF000000, 0xFF3FFFFF, MB(  4)         , PROT_NAC, SYSTEM_ALL              , "DeviceFlash_a (Flash mirror 1)"),
+	RANGE_ENTRY(0xFF400000, 0xFF7FFFFF, MB(  4)         , PROT_NAC, SYSTEM_ALL              , "DeviceFlash_b (Flash mirror 2)"),
+	RANGE_ENTRY(0xFF800000, 0xFFBFFFFF, MB(  4)         , PROT_NAC, SYSTEM_ALL              , "DeviceFlash_c (Flash mirror 3)"),
+	RANGE_ENTRY(0xFFC00000, 0xFFFFFFFF, MB(  4)         , PROT_NAC, SYSTEM_ALL    | MAY_FAIL, "DeviceFlash_d (Flash mirror 4) Optional (will probably fail reservation, which is acceptable - the 3 other mirrors work just fine"),
 	#undef RANGE_ENTRY
 };
 
@@ -119,3 +114,4 @@ extern bool VerifyWow64();
 
 extern LPTSTR GetLastErrorString();
 extern void FreeLastErrorString(LPTSTR Error);
+extern void OutputMessage(const char* msg);

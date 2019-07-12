@@ -52,11 +52,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		return EXIT_FAILURE;
 	}
 
+#ifndef CXBX_LOADER
 	/*! verify Cxbx.exe is loaded to base address 0x00010000 */
 	if (!VerifyBaseAddr()) {
 		CxbxShowError("Cxbx.exe is not loaded to base address 0x00010000 (which is a requirement for Xbox emulation)");
 		return EXIT_FAILURE;
 	}
+#endif
 
 	DWORD guiProcessID = 0;
 	// TODO: Convert ALL __argc & __argv to use main(int argc, char** argv) method.
@@ -74,9 +76,22 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	}
 
 	if (bHasLoadArgument) {
+#ifndef CXBX_LOADER
 		CxbxKrnlMain(__argc, __argv);
 		EmuShared::Cleanup();
 		return EXIT_SUCCESS;
+#else
+		std::string szProcArgsBuffer;
+		for (int i = 0; i < __argc; i++) {
+			szProcArgsBuffer.append(__argv[i]);
+		}
+
+		if (!CxbxExec(szProcArgsBuffer, nullptr, false)) {
+			CxbxShowError("Could not launch Cxbx-R loader!");
+			EmuShared::Cleanup();
+			return EXIT_FAILURE;
+		}
+#endif
 	}
 
 	// If 2nd GUI executable is launched, load settings file for GUI for editable support.
