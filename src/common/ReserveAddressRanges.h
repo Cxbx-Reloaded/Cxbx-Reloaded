@@ -26,4 +26,4 @@
 // ******************************************************************
 #pragma once
 
-extern bool ReserveAddressRanges(const int system);
+extern bool ReserveAddressRanges(const int system, uint32_t blocks_reserved[384]);

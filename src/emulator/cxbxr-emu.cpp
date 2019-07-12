@@ -120,7 +120,7 @@ CommandLineToArgvA(
 	return argv;
 }
 
-DWORD WINAPI Emulate(int system)
+DWORD WINAPI Emulate(int system, uint32_t blocks_reserved[384])
 {
 	FUNC_EXPORTS
 
@@ -170,7 +170,7 @@ DWORD WINAPI Emulate(int system)
 		return EXIT_FAILURE;
 	}
 
-	CxbxKrnlMain(argc, argv);
+	CxbxKrnlMain(argc, argv, blocks_reserved);
 
 	LocalFree(argv);
 

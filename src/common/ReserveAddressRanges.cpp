@@ -20,6 +20,7 @@
 // *  59 Temple Place - Suite 330, Bostom, MA 02111-1307, USA.
 // *
 // *  (c) 2017-2019 Patrick van Logchem <pvanlogchem@gmail.com>
+// *  (c) 2019 ergo720
 // *
 // *  All rights reserved
 // *
@@ -30,35 +31,75 @@
 #include "AddressRanges.h"
 
 // Reserve an address range up to the extend of what the host allows.
-bool ReserveMemoryRange(int index)
+bool ReserveMemoryRange(int index, uint32_t blocks_reserved[384])
 {
 	uint32_t Start = XboxAddressRanges[index].Start;
 	int Size = XboxAddressRanges[index].Size;
 	bool HadAnyFailure = false;
 
-	if (Start == 0) {
-		// The zero page (the entire first 64 KB block) can't be reserved (if we would
-		// try to reserve VirtualAlloc at address zero, it would hand us another address)
-		Start += BLOCK_SIZE;
-		Size -= BLOCK_SIZE;
-		HadAnyFailure = true;
-	}
-
 	// Reserve this range in 64 Kb block increments, so that during emulation
 	// our memory-management code can VirtualFree() each block individually :
-	bool HadFailure = HadAnyFailure;
-	const DWORD Protect = XboxAddressRanges[index].InitialMemoryProtection;
-	while (Size > 0) {
-		SIZE_T BlockSize = (SIZE_T)(Size > BLOCK_SIZE) ? BLOCK_SIZE : Size;
-		LPVOID Result = VirtualAlloc((LPVOID)Start, BlockSize, MEM_RESERVE, Protect);
-		if (Result == NULL) {
-			HadFailure = true;
-			HadAnyFailure = true;
-		}
 
-		// Handle the next block
-		Start += BLOCK_SIZE;
-		Size -= BLOCK_SIZE;
+	const DWORD Protect = XboxAddressRanges[index].InitialMemoryProtection;
+	bool NeedsReservationTracking = false;
+	switch (Start) {
+		case 0x80000000:
+		case 0xF0000000: {
+			static bool NeedsInitialization = true;
+			static	HANDLE hFileMapping;
+			if (NeedsInitialization) {
+				hFileMapping = CreateFileMapping(
+					INVALID_HANDLE_VALUE,
+					nullptr,
+					PAGE_EXECUTE_READWRITE,
+					0,
+					Size,
+					nullptr);
+				if (hFileMapping == nullptr) {
+					HadAnyFailure = true;
+					break;
+				}
+				NeedsInitialization = false;
+			}
+			LPVOID Result = MapViewOfFileEx(
+				hFileMapping,
+				Start == 0x80000000 ?
+				(FILE_MAP_READ | FILE_MAP_WRITE | FILE_MAP_EXECUTE) : (FILE_MAP_READ | FILE_MAP_WRITE),
+				0,
+				0,
+				Size,
+				(LPVOID)Start);
+			if (Result == nullptr) {
+				HadAnyFailure = true;
+			}
+		}
+		break;
+
+		case 0xB0000000:
+		case 0xD0000000: {
+			NeedsReservationTracking = true;
+		}
+		[[fallthrough]];
+
+		default: {
+			while (Size > 0) {
+				static int arr_index = 0;
+				SIZE_T BlockSize = (SIZE_T)(Size > BLOCK_SIZE) ? BLOCK_SIZE : Size;
+				LPVOID Result = VirtualAlloc((LPVOID)Start, BlockSize, MEM_RESERVE, Protect);
+				if (Result == nullptr) {
+					HadAnyFailure = true;
+				}
+				// Handle the next block
+				Start += BLOCK_SIZE;
+				Size -= BLOCK_SIZE;
+				if (NeedsReservationTracking) {
+					if (Result != nullptr) {
+						blocks_reserved[arr_index / 32] |= (1 << (arr_index % 32));
+					}
+					arr_index++;
+				}
+			}
+		}
 	}
 
 	// Only a complete success when the entire request was reserved in a single range
@@ -66,7 +107,7 @@ bool ReserveMemoryRange(int index)
 	return !HadAnyFailure;
 }
 
-bool ReserveAddressRanges(const int system) {
+bool ReserveAddressRanges(const int system, uint32_t blocks_reserved[384]) {
 	// Loop over all Xbox address ranges
 	for (int i = 0; i < ARRAY_SIZE(XboxAddressRanges); i++) {
 		// Skip address ranges that don't match the given flags
@@ -74,7 +115,7 @@ bool ReserveAddressRanges(const int system) {
 			continue;
 
 		// Try to reserve each address range
-		if (ReserveMemoryRange(i))
+		if (ReserveMemoryRange(i, blocks_reserved))
 			continue;
 
 		// Some ranges are allowed to fail reserving
