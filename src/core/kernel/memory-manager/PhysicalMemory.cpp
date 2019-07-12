@@ -73,13 +73,7 @@ void PhysicalMemory::InitializePageDirectory()
 		TempPte.Default += LARGE_PAGE_SIZE; // increase PFN
 	}
 
-
-	// NOTE: we don't need to unmap the rest of the system physical region because that mapping is done by the 2BL
-	// on the Xbox, which is not present here on Cxbx-Reloaded
-
-	// Here we should also reserve some system pte's for the file system cache. However, the implementation of the kernel
-	// file cache functions is basically non-existent at the moment and relies on ExAllocatePoolWithTag, which is not
-	// correctly implemented. So, for now, we keep on ignoring this allocation
+	// TODO: map memory for the file system cache?
 }
 
 void PhysicalMemory::WritePfn(PFN pfn_start, PFN pfn_end, PMMPTE pPte, PageType BusyType, bool bZero)
@@ -380,7 +374,7 @@ void PhysicalMemory::InsertFree(PFN start, PFN end)
 	}
 }
 
-bool PhysicalMemory::ConvertXboxToSystemPteProtection(DWORD perms, PMMPTE pPte)
+bool PhysicalMemory::ConvertXboxToSystemPtePermissions(DWORD perms, PMMPTE pPte)
 {
 	ULONG Mask = 0;
 
@@ -437,7 +431,7 @@ bool PhysicalMemory::ConvertXboxToSystemPteProtection(DWORD perms, PMMPTE pPte)
 	return false;
 }
 
-bool PhysicalMemory::ConvertXboxToPteProtection(DWORD perms, PMMPTE pPte)
+bool PhysicalMemory::ConvertXboxToPtePermissions(DWORD perms, PMMPTE pPte)
 {
 	ULONG Mask = 0;
 	ULONG LowNibble;
@@ -504,7 +498,7 @@ bool PhysicalMemory::ConvertXboxToPteProtection(DWORD perms, PMMPTE pPte)
 	return false;
 }
 
-DWORD PhysicalMemory::ConvertPteToXboxProtection(ULONG PteMask)
+DWORD PhysicalMemory::ConvertPteToXboxPermissions(ULONG PteMask)
 {
 	// This routine assumes that the pte has valid protection bits. If it doesn't, it can produce invalid
 	// access permissions
@@ -528,7 +522,7 @@ DWORD PhysicalMemory::ConvertPteToXboxProtection(ULONG PteMask)
 
 DWORD PhysicalMemory::PatchXboxPermissions(DWORD Perms)
 {
-	// Usage notes: this routine expects the permissions to be already sanitized by ConvertXboxToSystemPteProtection or
+	// Usage notes: this routine expects the permissions to be already sanitized by ConvertXboxToSystemPtePermissions or
 	// similar. If not, it can produce incorrect results
 
 	// ergo720: this checks if the specified Xbox permission mask has the execute flag enabled. If not, it adds it. This is
@@ -581,7 +575,7 @@ DWORD PhysicalMemory::PatchXboxPermissions(DWORD Perms)
 	}
 }
 
-DWORD PhysicalMemory::ConvertXboxToWinProtection(DWORD Perms)
+DWORD PhysicalMemory::ConvertXboxToWinPermissions(DWORD Perms)
 {
 	// This function assumes that the supplied permissions have been sanitized already
 
