@@ -8851,9 +8851,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_PersistDisplay)()
 {
 	LOG_FUNC();
 
-	HRESULT hRet = D3D_OK;
-
-	LOG_UNIMPLEMENTED();
+	LOG_INCOMPLETE();
 
 	// TODO: This function simply saves a copy of the display to a surface and persists it in contiguous memory
 	// This function, if ever required, can be implemented as the following
@@ -8865,8 +8863,9 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_PersistDisplay)()
 	// 5. Use MmPersistContigousMemory to persist the surface data across reboot
 	// 6. Call AvSetSavedDataAddress, passing the xbox surface data pointer
 
-
-	return hRet;
+	// Call the native Xbox function so that AvSetSavedDataAddress is called and the VMManager can know its correct address
+	XB_trampoline(HRESULT, WINAPI, D3DDevice_PersistDisplay, (VOID));
+	return XB_D3DDevice_PersistDisplay();
 }
 
 // ******************************************************************
