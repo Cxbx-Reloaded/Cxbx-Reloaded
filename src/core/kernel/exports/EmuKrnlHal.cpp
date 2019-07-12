@@ -47,6 +47,7 @@ namespace xboxkrnl
 #include "common\EmuEEPROM.h" // For EEPROM
 #include "devices\Xbox.h" // For g_SMBus, SMBUS_ADDRESS_SYSTEM_MICRO_CONTROLLER
 #include "devices\SMCDevice.h" // For SMC_COMMAND_SCRATCH
+#include "core\kernel\memory-manager\VMManager.h"
 
 #include <algorithm> // for std::replace
 #include <locale>
@@ -566,6 +567,8 @@ XBSYSAPI EXPORTNUM(49) xboxkrnl::VOID DECLSPEC_NORETURN NTAPI xboxkrnl::HalRetur
 				QuickReboot |= BOOT_QUICK_REBOOT;
 				g_EmuShared->SetBootFlags(&QuickReboot);
 
+				g_VMManager.SavePersistentMemory();
+
 				// Some titles (Xbox Dashboard and retail/demo discs) use ";" as a current directory path seperator
 				// This process is handled during initialization. No speical handling here required.
 
@@ -586,10 +589,9 @@ XBSYSAPI EXPORTNUM(49) xboxkrnl::VOID DECLSPEC_NORETURN NTAPI xboxkrnl::HalRetur
 
 	case ReturnFirmwareFatal:
 	{
-		// NOTE: the error code is displayed by ExDisplayFatalError by other code paths so we need to change our corresponding
-		// paths if we want to emulate all the possible fatal errors
-
 		xboxkrnl::HalWriteSMBusValue(SMBUS_ADDRESS_SYSTEM_MICRO_CONTROLLER, SMC_COMMAND_SCRATCH, 0, SMC_SCRATCH_DISPLAY_FATAL_ERROR);
+
+		g_VMManager.SavePersistentMemory();
 
 		std::string szProcArgsBuffer;
 		CxbxConvertArgToString(szProcArgsBuffer, szFilePath_CxbxReloaded_Exe, szFilePath_Xbe, CxbxKrnl_hEmuParent, CxbxKrnl_DebugMode, CxbxKrnl_DebugFileName.c_str());
@@ -609,7 +611,7 @@ XBSYSAPI EXPORTNUM(49) xboxkrnl::VOID DECLSPEC_NORETURN NTAPI xboxkrnl::HalRetur
 	}
 
 	EmuShared::Cleanup();
-	ExitProcess(EXIT_SUCCESS);
+	TerminateProcess(GetCurrentProcess(), EXIT_SUCCESS);
 }
 
 // ******************************************************************

@@ -65,6 +65,8 @@
 
 static int gameLogoWidth, gameLogoHeight;
 static int splashLogoWidth, splashLogoHeight;
+static HANDLE hPersistedMemory = NULL;
+static LPVOID PersistedMemoryAddr = nullptr;
 
 bool g_SaveOnExit = true;
 
@@ -345,10 +347,27 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 							pCMD->dwChildProcID = lParam; // lParam is process ID.
 							std::thread(CrashMonitorWrapper, pCMD).detach();
 
+
 							g_EmuShared->SetIsEmulating(true); // NOTE: Putting in here raise to low or medium risk due to debugger will launch itself. (Current workaround)
 							g_EmuShared->SetIsReady(true);
-							break;
 						}
+						break;
+
+						case ID_GUI_VM_PERSIST_MEM: {
+							if (lParam) {
+								hPersistedMemory = OpenFileMapping(FILE_MAP_READ, FALSE, "PersistentMemory");
+								assert(hPersistedMemory != NULL);
+								PersistedMemoryAddr = MapViewOfFile(hPersistedMemory, FILE_MAP_READ, 0, 0, 0);
+								assert(PersistedMemoryAddr != nullptr);
+							}
+							else {
+								UnmapViewOfFile(PersistedMemoryAddr);
+								CloseHandle(hPersistedMemory);
+								PersistedMemoryAddr = nullptr;
+								hPersistedMemory = NULL;
+							}
+						}
+						break;
 					}
 				}
 				break;
@@ -2217,6 +2236,8 @@ void WndMain::StartEmulation(HWND hwndParent, DebuggerState LocalDebuggerState /
 
 		char szExeFileName[MAX_PATH];
 		GetModuleFileName(GetModuleHandle(NULL), szExeFileName, MAX_PATH);
+		PathRemoveFileSpec(szExeFileName);
+		PathAppend(szExeFileName, "\\cxbxr-ldr.exe");
 
 		bool AttachLocalDebugger = (LocalDebuggerState == debuggerOn);
 		g_EmuShared->SetDebuggingFlag(&AttachLocalDebugger);
@@ -2313,6 +2334,12 @@ void WndMain::CrashMonitor(DWORD dwChildProcID)
 	 		g_EmuShared->GetBootFlags(&iBootFlags);
 
 	 		if (!iBootFlags) {
+				if (hPersistedMemory != NULL) {
+					UnmapViewOfFile(PersistedMemoryAddr);
+					CloseHandle(hPersistedMemory);
+					PersistedMemoryAddr = nullptr;
+					hPersistedMemory = NULL;
+				}
 	 			if (dwExitCode == EXIT_SUCCESS) {// StopEmulation
 	 				return;
 	 			}
