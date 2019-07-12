@@ -1118,6 +1118,8 @@ static void nv2a_vblank_thread(NV2AState *d)
 			// But it causes crashes on AMD hardware for reasons currently unknown...
 			//NV2ADevice::UpdateHostDisplay(d);
 		}
+
+        Sleep(1);
 	}
 }
 

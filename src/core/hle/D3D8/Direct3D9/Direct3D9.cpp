@@ -4742,15 +4742,20 @@ DWORD WINAPI XTL::EMUPATCH(D3DDevice_Swap)
 
         auto targetDuration = std::chrono::duration<double, std::milli>(((1000.0f / targetRefreshRate) * multiplier));
         auto targetTimestamp = frameStartTime + targetDuration;
+        auto actualDuration = std::chrono::duration<double, std::milli>(std::chrono::high_resolution_clock::now() - frameStartTime);
+        auto startTimeAjustment = actualDuration - targetDuration;
 
-        // If we need to wait for a larger amount of time (>= 1 frame at 60FPS), we can just sleep
-        if (std::chrono::duration_cast<std::chrono::milliseconds>(targetTimestamp - std::chrono::high_resolution_clock::now()).count() > 16) {
-            std::this_thread::sleep_until(targetTimestamp);
-        } else {
-            // Otherwise, we fall-through and just keep polling
-            // This prevents large waits from hogging CPU power, but allows small waits/ to remain precice.
-            while (std::chrono::high_resolution_clock::now() < targetTimestamp) {
-                ;
+        // Only enter the wait loop if the frame took too long
+        if (actualDuration < targetDuration) {
+            // If we need to wait for a larger amount of time (>= 1 frame at 60FPS), we can just sleep
+            if (std::chrono::duration_cast<std::chrono::milliseconds>(targetTimestamp - std::chrono::high_resolution_clock::now()).count() > 16) {
+                std::this_thread::sleep_until(targetTimestamp);
+            } else {
+                // Otherwise, we fall-through and just keep polling
+                // This prevents large waits from hogging CPU power, but allows small waits/ to remain precice.
+                while (std::chrono::high_resolution_clock::now() < targetTimestamp) {
+                    ;
+                }
             }
         }
     }

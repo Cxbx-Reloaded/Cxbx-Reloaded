@@ -1324,6 +1324,11 @@ __declspec(noreturn) void CxbxKrnlInit
 	void(*Entry)(),
 	int BootFlags)
 {
+    // Set windows timer period to 1ms
+    // Windows will automatically restore this value back to original on program exit
+    // But with this, we can replace some busy loops with sleeps.
+    timeBeginPeriod(1);
+
 	// update caches
 	CxbxKrnl_TLS = pTLS;
 	CxbxKrnl_TLSData = pTLSData;
