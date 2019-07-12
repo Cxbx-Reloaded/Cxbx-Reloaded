@@ -20,6 +20,7 @@
 // *  59 Temple Place - Suite 330, Bostom, MA 02111-1307, USA.
 // *
 // *  (c) 2017-2019 Patrick van Logchem <pvanlogchem@gmail.com>
+// *  (c) 2019 ego720
 // *
 // *  All rights reserved
 // *
@@ -79,24 +80,27 @@ unsigned char virtual_memory_placeholder[VM_PLACEHOLDER_SIZE] = { 0 }; // = { OP
 // /ENTRY:"rawMain"
 
 
-void OutputMessage(const char *msg)
+void OutputMessage(const char* msg)
 {
-	OutputDebugStringA(msg); // Send message to debugger output too
+	if (msg != nullptr) {
+		OutputDebugStringA(msg); // Send message to debugger output too
 
-	HANDLE hConsoleOutput = GetStdHandle(STD_OUTPUT_HANDLE);
-	DWORD nNumberOfCharsToWrite = 0;
-	while (msg[nNumberOfCharsToWrite]) nNumberOfCharsToWrite++; // poor-man's strlen()
+		HANDLE hConsoleOutput = GetStdHandle(STD_OUTPUT_HANDLE);
+		DWORD nNumberOfCharsToWrite = 0;
+		while (msg[nNumberOfCharsToWrite]) nNumberOfCharsToWrite++; // poor-man's strlen()
 
-	// Detect output-redirection to a file
-	DWORD ConsoleMode;
-	if (!GetConsoleMode(hConsoleOutput, &ConsoleMode)) {
-		// Note : assume the output file accepts ANSI encoded characters
-		DWORD NumberOfBytesWritten;
-		WriteFile(hConsoleOutput, (const void *)msg, nNumberOfCharsToWrite, &NumberOfBytesWritten, /*lpOverlapped=*/NULL);
-	} else {
-		// Write message to console output
-		DWORD NumberOfCharsWritten;
-		WriteConsoleA(hConsoleOutput, (const void *)msg, nNumberOfCharsToWrite, &NumberOfCharsWritten, /*lpReserved=*/NULL);
+		// Detect output-redirection to a file
+		DWORD ConsoleMode;
+		if (!GetConsoleMode(hConsoleOutput, &ConsoleMode)) {
+			// Note : assume the output file accepts ANSI encoded characters
+			DWORD NumberOfBytesWritten;
+			WriteFile(hConsoleOutput, (const void*)msg, nNumberOfCharsToWrite, &NumberOfBytesWritten, /*lpOverlapped=*/NULL);
+		}
+		else {
+			// Write message to console output
+			DWORD NumberOfCharsWritten;
+			WriteConsoleA(hConsoleOutput, (const void*)msg, nNumberOfCharsToWrite, &NumberOfCharsWritten, /*lpReserved=*/NULL);
+		}
 	}
 }
 
@@ -146,7 +150,10 @@ DWORD CALLBACK rawMain()
 		}
 	}
 
-	if (!ReserveAddressRanges(system)) {
+	// Marking this as static to avoid an implicit call to memset, which is not availble in the loader
+	static uint32_t SystemDevBlocksReserved[384];
+
+	if (!ReserveAddressRanges(system, SystemDevBlocksReserved)) {
 		// If we get here, emulation lacks important address ranges; Don't launch
 		OutputMessage("Required address range couldn't be reserved!\n");
 		return ERROR_NOT_ENOUGH_MEMORY;
@@ -166,7 +173,7 @@ DWORD CALLBACK rawMain()
 	}
 
 	// Find the main emulation function in our DLL
-	typedef void (WINAPI *Emulate_t)(int);
+	typedef void (WINAPI *Emulate_t)(int, uint32_t[384]);
 	Emulate_t pfnEmulate = (Emulate_t)GetProcAddress(hEmulationDLL, "Emulate");
 	if (!pfnEmulate) {
 		OutputMessage("Entrypoint not found!\n");
@@ -175,7 +182,7 @@ DWORD CALLBACK rawMain()
 
 	// Call the main emulation function in our DLL, passing in the results
 	// of the address range reservations
-	pfnEmulate(system); // TODO : Pass along all data that we've gathered up until here (or rebuild it over there)
+	pfnEmulate(system, SystemDevBlocksReserved); // TODO : Pass along all data that we've gathered up until here (or rebuild it over there)
 
 	// Once emulation actually started, execution may never return here
 	// because all code and data that have been used up until now are
