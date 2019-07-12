@@ -65,8 +65,35 @@
 
 static int gameLogoWidth, gameLogoHeight;
 static int splashLogoWidth, splashLogoHeight;
+
 static HANDLE hPersistedMemory = NULL;
 static LPVOID PersistedMemoryAddr = nullptr;
+
+void MapPersistedMemory()
+{
+	assert(((hPersistedMemory == NULL) == (PersistedMemoryAddr == nullptr)) && "Persistent memory handle and address must both be unset (or already set)!");
+
+	if (hPersistedMemory == NULL) {
+		hPersistedMemory = OpenFileMapping(FILE_MAP_READ, FALSE, "PersistentMemory");
+		assert(hPersistedMemory != NULL);
+
+		PersistedMemoryAddr = MapViewOfFile(hPersistedMemory, FILE_MAP_READ, 0, 0, 0);
+		assert(PersistedMemoryAddr != nullptr);
+	}
+}
+
+void UnmapPersistedMemory()
+{
+	assert(((hPersistedMemory != NULL) == (PersistedMemoryAddr != nullptr)) && "Persistent memory handle and address must both be set (or already unset)!");
+
+	if (hPersistedMemory != NULL) {
+		UnmapViewOfFile(PersistedMemoryAddr);
+		PersistedMemoryAddr = nullptr;
+
+		CloseHandle(hPersistedMemory);
+		hPersistedMemory = NULL;
+	}
+}
 
 bool g_SaveOnExit = true;
 
@@ -355,16 +382,9 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
 						case ID_GUI_VM_PERSIST_MEM: {
 							if (lParam) {
-								hPersistedMemory = OpenFileMapping(FILE_MAP_READ, FALSE, "PersistentMemory");
-								assert(hPersistedMemory != NULL);
-								PersistedMemoryAddr = MapViewOfFile(hPersistedMemory, FILE_MAP_READ, 0, 0, 0);
-								assert(PersistedMemoryAddr != nullptr);
-							}
-							else {
-								UnmapViewOfFile(PersistedMemoryAddr);
-								CloseHandle(hPersistedMemory);
-								PersistedMemoryAddr = nullptr;
-								hPersistedMemory = NULL;
+								MapPersistedMemory();
+							} else {
+								UnmapPersistedMemory();
 							}
 						}
 						break;
@@ -2343,12 +2363,7 @@ void WndMain::CrashMonitor(DWORD dwChildProcID)
 	 		g_EmuShared->GetBootFlags(&iBootFlags);
 
 	 		if (!iBootFlags) {
-				if (hPersistedMemory != NULL) {
-					UnmapViewOfFile(PersistedMemoryAddr);
-					CloseHandle(hPersistedMemory);
-					PersistedMemoryAddr = nullptr;
-					hPersistedMemory = NULL;
-				}
+				UnmapPersistedMemory();
 	 			if (dwExitCode == EXIT_SUCCESS) {// StopEmulation
 	 				return;
 	 			}
