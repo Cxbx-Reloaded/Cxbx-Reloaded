@@ -70,7 +70,7 @@ PFARPROC1 fnCxbxVSBCOpen;
 //typedef DWORD(*fnCxbxVSBCOpen)(HWND);
 //typedef DWORD(*fnCxbxVSBCSetState)(UCHAR *);
 //typedef DWORD(*fnCxbxVSBCGetState)(UCHAR *);
-XTL::PXPP_DEVICE_TYPE gDeviceType_Gamepad = nullptr;
+XTL::PXPP_DEVICE_TYPE g_DeviceType_Gamepad = nullptr;
 
 // Flag is set after gamepad state has been queried by the title. Supports defer gamepad connection hack
 bool g_gamepadStateQueriedHackFlag = false;
@@ -163,7 +163,7 @@ void InitXboxControllerHostBridge(void)
 void SetupXboxDeviceTypes()
 {
 	// If we don't yet have the offset to gDeviceType_Gamepad, work it out!
-	if (gDeviceType_Gamepad == nullptr) {
+	if (g_DeviceType_Gamepad == nullptr) {
 		// First, attempt to find GetTypeInformation
 		auto typeInformation = g_SymbolAddresses.find("GetTypeInformation");
 		if (typeInformation != g_SymbolAddresses.end() && typeInformation->second != xbnull) {
@@ -208,7 +208,7 @@ void SetupXboxDeviceTypes()
 
                 switch (deviceTable[i]->ucType) {
 				case X_XINPUT_DEVTYPE_GAMEPAD:
-					gDeviceType_Gamepad = deviceTable[i]->XppType;
+					g_DeviceType_Gamepad = deviceTable[i]->XppType;
 					CurrentInfo.ucSubType = X_XINPUT_DEVSUBTYPE_GC_GAMEPAD;
 					printf("XDEVICE_TYPE_GAMEPAD)\n");
 					break;
@@ -231,13 +231,13 @@ void SetupXboxDeviceTypes()
 			void* XInputOpenAddr = (void*)g_SymbolAddresses["XInputOpen"];
 			if (XInputOpenAddr != nullptr) {
 				printf("XAPI: Deriving XDEVICE_TYPE_GAMEPAD from XInputOpen (0x%08X)\n", XInputOpenAddr);
-				gDeviceType_Gamepad = *(XTL::PXPP_DEVICE_TYPE*)((uint32_t)XInputOpenAddr + 0x0B);
+				g_DeviceType_Gamepad = *(XTL::PXPP_DEVICE_TYPE*)((uint32_t)XInputOpenAddr + 0x0B);
 
                 //only have one GAMEPAD device type. setup global DeviceInfo vector accordingly.
                 XTL::X_XINPUT_DEVICE_INFO CurrentInfo = {};
                 CurrentInfo.ucType = X_XINPUT_DEVTYPE_GAMEPAD;
                 CurrentInfo.ucSubType = X_XINPUT_DEVSUBTYPE_GC_GAMEPAD;
-                CurrentInfo.DeviceType = gDeviceType_Gamepad;
+                CurrentInfo.DeviceType = g_DeviceType_Gamepad;
                 CurrentInfo.ucInputStateSize = sizeof(XTL::X_XINPUT_GAMEPAD);
                 CurrentInfo.ucFeedbackSize = sizeof(XTL::X_XINPUT_RUMBLE);
                 //store the DeviceInfo in global vector.
@@ -245,12 +245,12 @@ void SetupXboxDeviceTypes()
 			}
 		}
 
-		if (gDeviceType_Gamepad == nullptr) {
+		if (g_DeviceType_Gamepad == nullptr) {
 			EmuLog(LOG_LEVEL::WARNING, "XDEVICE_TYPE_GAMEPAD was not found");
 			return;
 		}
 
-		printf("XAPI: XDEVICE_TYPE_GAMEPAD Found at 0x%08X\n", gDeviceType_Gamepad);
+		printf("XAPI: XDEVICE_TYPE_GAMEPAD Found at 0x%08X\n", g_DeviceType_Gamepad);
 	}
 }
 
@@ -294,7 +294,7 @@ void UpdateConnectedDeviceState(XTL::PXPP_DEVICE_TYPE DeviceType) {
 	// Test cases: JSRF (IG-024 NTSC-U; SE-010 PAL, NTSC-J), JSRF Demo (SE-022 NTSC-J),
 	// GunValkyrie (SE-012 NTSC-U, NTSC-J; IG-023 PAL), Lego Star Wars (ES-029), Otogi (FS-002)
 	// (Note these games broke in different ways, so each should be tested if this hack is removed)
-	if (!g_gamepadStateQueriedHackFlag && (DeviceType == gDeviceType_Gamepad)){
+	if (!g_gamepadStateQueriedHackFlag && (DeviceType == g_DeviceType_Gamepad)){
 		g_gamepadStateQueriedHackFlag = true;
 		return;
 	}
