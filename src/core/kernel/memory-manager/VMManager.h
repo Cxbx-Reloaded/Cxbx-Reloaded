@@ -19,7 +19,7 @@
 // *  If not, write to the Free Software Foundation, Inc.,
 // *  59 Temple Place - Suite 330, Bostom, MA 02111-1307, USA.
 // *
-// *  (c) 2017-2018      ergo720
+// *  (c) 2017-2018-2019      ergo720
 // *
 // *  All rights reserved
 // *
@@ -28,6 +28,9 @@
 #ifndef VMMANAGER_H
 #define VMMANAGER_H
 
+#define SYSTEM_XBOX    (1 << 1)
+#define SYSTEM_DEVKIT  (1 << 2)
+#define SYSTEM_CHIHIRO (1 << 3)
 
 #include "PhysicalMemory.h"
 
@@ -55,8 +58,6 @@ struct VirtualMemoryArea
 	VMAType type = FreeVma;
 	// initial vma permissions of the allocation, only used by XbVirtualMemoryStatistics
 	DWORD permissions = XBOX_PAGE_NOACCESS;
-	// this allocation was served by VirtualAlloc
-	bool bFragmented = false;
 	// tests if this area can be merged to the right with 'next'
 	bool CanBeMergedWith(const VirtualMemoryArea& next) const;
 };
@@ -84,6 +85,15 @@ typedef enum _MemoryRegionType
 }MemoryRegionType;
 
 
+/* struct used to save the persistent memory between reboots */
+typedef struct _PersistedMemory
+{
+	size_t NumOfPtes;
+	VAddr LaunchFrameAddresses[2];
+	uint32_t Data[];
+}PersistedMemory;
+
+
 /* VMManager class */
 class VMManager : public PhysicalMemory
 {
@@ -97,19 +107,9 @@ class VMManager : public PhysicalMemory
 			// process is killed with TerminateProcess and so it doesn't have a chance to perform a cleanup...
 			//DestroyMemoryRegions();
 			DeleteCriticalSection(&m_CriticalSection);
-			FlushViewOfFile((void*)CONTIGUOUS_MEMORY_BASE, CHIHIRO_MEMORY_SIZE);
-			FlushViewOfFile((void*)PAGE_TABLES_BASE, PAGE_TABLES_SIZE);
-			FlushFileBuffers(m_hContiguousFile);
-			FlushFileBuffers(m_hPTFile);
-			UnmapViewOfFile((void *)CONTIGUOUS_MEMORY_BASE);
-			UnmapViewOfFile((void *)PAGE_TABLES_BASE);
-			UnmapViewOfFile((void*)XBOX_WRITE_COMBINED_BASE);
-			VirtualFree((void*)PAGE_TABLES_BASE, 0, MEM_RELEASE);
-			CloseHandle(m_hContiguousFile);
-			CloseHandle(m_hPTFile);
 		}
 		// initializes the memory manager to the default configuration
-		void Initialize(HANDLE memory_view, HANDLE pagetables_view, int BootFlags);
+		void Initialize(int SystemType, int BootFlags, uint32_t blocks_reserved[384]);
 		// retrieves memory statistics
 		void MemoryStatistics(xboxkrnl::PMM_STATISTICS memory_statistics);
 		// allocates memory in the user region
@@ -119,13 +119,13 @@ class VMManager : public PhysicalMemory
 		// allocates memory in the system region
 		VAddr AllocateSystemMemory(PageType BusyType, DWORD Perms, size_t Size, bool bAddGuardPage);
 		// allocates memory in the contiguous region
-		VAddr AllocateContiguous(size_t Size, PAddr LowestAddress, PAddr HighestAddress, ULONG Alignment, DWORD Perms);
+		VAddr AllocateContiguousMemory(size_t Size, PAddr LowestAddress, PAddr HighestAddress, ULONG Alignment, DWORD Perms);
 		// maps device memory in the system region
 		VAddr MapDeviceMemory(PAddr Paddr, size_t Size, DWORD Perms);
 		// deallocates memory in the system region
 		PFN_COUNT DeallocateSystemMemory(PageType BusyType, VAddr addr, size_t Size);
 		// deallocates memory in the contiguous region
-		void DeallocateContiguous(VAddr addr);
+		void DeallocateContiguousMemory(VAddr addr);
 		// unmaps device memory in the system region
 		void UnmapDeviceMemory(VAddr addr, size_t Size);
 		// deallocates memory in the user region
@@ -158,43 +158,36 @@ class VMManager : public PhysicalMemory
 		xboxkrnl::NTSTATUS XbVirtualProtect(VAddr* addr, size_t* Size, DWORD* Protect);
 		// xbox implementation of NtQueryVirtualMemory
 		xboxkrnl::NTSTATUS XbVirtualMemoryStatistics(VAddr addr, xboxkrnl::PMEMORY_BASIC_INFORMATION memory_statistics);
+		// saves all persisted memory just before a quick reboot
+		void SavePersistentMemory();
 
 	
 	private:
-		// typedef of pointer to a member function mapping a memory block
-		typedef VAddr (VMManager::*MappingFn) (VAddr, size_t, size_t, DWORD, PFN);
 		// an array of structs used to track the free/allocated vma's in the various memory regions
 		MemoryRegion m_MemoryRegionArray[COUNTRegion];
-		// handle of the contiguous file mapping
-		HANDLE m_hContiguousFile = NULL;
-		// handle of the PT file mapping
-		HANDLE m_hPTFile = NULL;
 		// critical section lock to synchronize accesses
 		CRITICAL_SECTION m_CriticalSection;
-		// the allocation granularity of the host. Needed by MapViewOfFileEx and VirtualAlloc
+		// the allocation granularity of the host
 		DWORD m_AllocationGranularity = 0;
 		// number of bytes reserved with XBOX_MEM_RESERVE by XbAllocateVirtualMemory
 		size_t m_VirtualMemoryBytesReserved = 0;
+		// number of persisted ptes between quick reboots
+		size_t m_NumPersistentPtes = 0;
 
-	
-		// set up the pfn database
-		void InitializePfnDatabase();
-		// set up the pfn database after a quick reboot
-		void ReinitializePfnDatabase();
+		// same as AllocateContiguousMemory, but it allows to allocate beyond m_MaxContiguousPfn
+		VAddr AllocateContiguousMemoryInternal(PFN_COUNT NumberOfPages, PFN LowestPfn, PFN HighestPfn, PFN PfnAlignment, DWORD Perms);
+		// set up the system allocations
+		void InitializeSystemAllocations();
 		// initializes a memory region struct
 		void ConstructMemoryRegion(VAddr Start, size_t Size, MemoryRegionType Type);
 		// clears all memory region structs
 		void DestroyMemoryRegions();
 		// map a memory block with the supplied allocation routine
-		VAddr MapMemoryBlock(MappingFn MappingRoutine, MemoryRegionType Type, PFN_COUNT PteNumber, PFN pfn, VAddr HighestAddress = 0);
-		// helper function which maps a block with VirtualAlloc
-		VAddr MapBlockWithVirtualAlloc(VAddr StartingAddr, size_t Size, size_t VmaEnd, DWORD Unused, PFN Unused2);
-		// helper function which reserves a block of virtual memory with VirtualAlloc
-		VAddr ReserveBlockWithVirtualAlloc(VAddr StartingAddr, size_t Size, size_t VmaEnd, DWORD Unused, PFN Unused2);
-		// helper function which maps a block with MapViewOfFileEx
-		VAddr MapBlockWithMapViewOfFileEx(VAddr StartingAddr, size_t ViewSize, size_t VmaEnd, DWORD OffsetLow, PFN pfn);
+		VAddr MapMemoryBlock(MemoryRegionType Type, PFN_COUNT PteNumber, DWORD Permissions, bool b64Blocks, VAddr HighestAddress = 0);
+		// helper function which allocates user memory with VirtualAlloc
+		VAddr MapHostMemory(VAddr StartingAddr, size_t Size, size_t VmaEnd, DWORD Permissions);
 		// constructs a vma
-		void ConstructVMA(VAddr Start, size_t Size, MemoryRegionType Type, VMAType VmaType, bool bFragFlag, DWORD Perms = XBOX_PAGE_NOACCESS);
+		void ConstructVMA(VAddr Start, size_t Size, MemoryRegionType Type, VMAType VmaType, DWORD Perms = XBOX_PAGE_NOACCESS);
 		// destructs a vma
 		void DestructVMA(VAddr addr, MemoryRegionType Type, size_t Size);
 		// removes a vma block from the mapped memory
@@ -215,8 +208,6 @@ class VMManager : public PhysicalMemory
 		void UpdateMemoryPermissions(VAddr addr, size_t Size, DWORD Perms);
 		// restores persistent memory
 		void RestorePersistentMemory();
-		// restores a persistent allocation
-		void RestorePersistentAllocation(VAddr addr, PFN StartingPfn, PFN EndingPfn, PageType Type);
 		// acquires the critical section
 		void Lock();
 		// releases the critical section

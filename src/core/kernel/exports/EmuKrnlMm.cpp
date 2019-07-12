@@ -53,8 +53,6 @@ namespace NtDll
 // ******************************************************************
 // * 0x0066 - MmGlobalData
 // ******************************************************************
-// ergo720: a couple of these could be implemented, but most cannot. However, I wouldn't bother with these variables
-// since they are just exported but never used by the kernel
 XBSYSAPI EXPORTNUM(102) xboxkrnl::PVOID xboxkrnl::MmGlobalData[8] = { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
 
 // ******************************************************************
@@ -104,7 +102,7 @@ XBSYSAPI EXPORTNUM(166) xboxkrnl::PVOID NTAPI xboxkrnl::MmAllocateContiguousMemo
 		LOG_FUNC_ARG_TYPE(PROTECTION_TYPE, ProtectionType)
 	LOG_FUNC_END;
 
-	PVOID pRet = (PVOID)g_VMManager.AllocateContiguous(NumberOfBytes, LowestAcceptableAddress, HighestAcceptableAddress, Alignment, ProtectionType);
+	PVOID pRet = (PVOID)g_VMManager.AllocateContiguousMemory(NumberOfBytes, LowestAcceptableAddress, HighestAcceptableAddress, Alignment, ProtectionType);
 
 	RETURN(pRet);
 }
@@ -206,7 +204,7 @@ XBSYSAPI EXPORTNUM(171) xboxkrnl::VOID NTAPI xboxkrnl::MmFreeContiguousMemory
 {
 	LOG_FUNC_ONE_ARG(BaseAddress);
 
-	g_VMManager.DeallocateContiguous((VAddr)BaseAddress);
+	g_VMManager.DeallocateContiguousMemory((VAddr)BaseAddress);
 
 	// TODO -oDxbx: Sokoban crashes after this, at reset time (press Black + White to hit this).
 	// Tracing in assembly shows the crash takes place quite a while further, so it's probably
@@ -486,9 +484,6 @@ XBSYSAPI EXPORTNUM(374) xboxkrnl::PVOID NTAPI xboxkrnl::MmDbgAllocateMemory
 		LOG_FUNC_ARG_TYPE(PROTECTION_TYPE, Protect)
 	LOG_FUNC_END;
 
-	// This should only be called by debug xbe's
-	assert(g_bIsDebug);
-
 	PVOID addr = (PVOID)g_VMManager.AllocateSystemMemory(DebuggerType, Protect, NumberOfBytes, false);
 	if (addr) { RtlFillMemoryUlong((void*)addr, ROUND_UP_4K(NumberOfBytes), 0); } // debugger pages are zeroed
 
@@ -509,9 +504,6 @@ XBSYSAPI EXPORTNUM(375) xboxkrnl::ULONG NTAPI xboxkrnl::MmDbgFreeMemory
 		LOG_FUNC_ARG(NumberOfBytes)
 	LOG_FUNC_END;
 
-	// This should only be called by debug xbe's
-	assert(g_bIsDebug);
-
 	ULONG FreedPagesNumber = g_VMManager.DeallocateSystemMemory(DebuggerType, (VAddr)BaseAddress, NumberOfBytes);
 
 	RETURN(FreedPagesNumber);
@@ -523,9 +515,6 @@ XBSYSAPI EXPORTNUM(375) xboxkrnl::ULONG NTAPI xboxkrnl::MmDbgFreeMemory
 XBSYSAPI EXPORTNUM(376) xboxkrnl::ULONG NTAPI xboxkrnl::MmDbgQueryAvailablePages(void)
 {
 	LOG_FUNC();
-
-	// This should only be called by debug xbe's
-	assert(g_bIsDebug);
 
 	ULONG FreeDebuggerPageNumber = g_VMManager.QueryNumberOfFreeDebuggerPages();
 
@@ -546,9 +535,6 @@ XBSYSAPI EXPORTNUM(377) xboxkrnl::VOID NTAPI xboxkrnl::MmDbgReleaseAddress
 		LOG_FUNC_ARG(Opaque)
 	LOG_FUNC_END;
 
-	// This should only be called by debug xbe's
-	assert(g_bIsDebug);
-
 	g_VMManager.DbgTestPte((VAddr)VirtualAddress, (PMMPTE)Opaque, false);
 }
 
@@ -565,9 +551,6 @@ XBSYSAPI EXPORTNUM(378) xboxkrnl::PVOID NTAPI xboxkrnl::MmDbgWriteCheck
 		LOG_FUNC_ARG(VirtualAddress)
 		LOG_FUNC_ARG(Opaque)
 	LOG_FUNC_END;
-
-	// This should only be called by debug xbe's
-	assert(g_bIsDebug);
 
 	PVOID addr = (PVOID)g_VMManager.DbgTestPte((VAddr)VirtualAddress, (PMMPTE)Opaque, true);
 

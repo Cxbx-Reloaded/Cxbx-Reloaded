@@ -20,6 +20,7 @@
 // *  59 Temple Place - Suite 330, Bostom, MA 02111-1307, USA.
 // *
 // *  (c) 2017-2019 Patrick van Logchem <pvanlogchem@gmail.com>
+// *  (c) 2019 ego720
 // *
 // *  All rights reserved
 // *
@@ -51,13 +52,6 @@ bool VerifyAddressRange(int index)
 	int Size = XboxAddressRanges[index].Size;
 	bool HadAnyFailure = false;
 
-	if (BaseAddress == 0) {
-		// The zero page (the entire first 64 KB block) can't be verified
-		// so to avoid verification failures, we just skip it, knowing it'll be alright
-		BaseAddress += BLOCK_SIZE;
-		Size -= BLOCK_SIZE;
-	}
-
 	// Safeguard against bounds overflow
 	if (ReservedRangeCount < ARRAY_SIZE(ReservedRanges)) {
 		// Initialize the reservation of a new range
@@ -69,8 +63,9 @@ bool VerifyAddressRange(int index)
 	// Verify this range in 64 Kb block increments, as they are supposed
 	// to have been reserved like that too:
 	bool HadFailure = HadAnyFailure;
-	const DWORD AllocationProtect = (XboxAddressRanges[index].Start == 0) ? PAGE_EXECUTE_WRITECOPY : XboxAddressRanges[index].InitialMemoryProtection;
+	const DWORD AllocationProtect = (XboxAddressRanges[index].Start == 0x10000) ? PAGE_EXECUTE_WRITECOPY : XboxAddressRanges[index].InitialMemoryProtection;
 	MEMORY_BASIC_INFORMATION mbi;
+	bool Okay;
 	while (Size > 0) {
 		// Expected values
 		PVOID AllocationBase = (PVOID)BaseAddress;
@@ -78,9 +73,9 @@ bool VerifyAddressRange(int index)
 		DWORD State = MEM_RESERVE;
 		DWORD Protect = 0;
 		DWORD Type = MEM_PRIVATE;
-
+#if 0
 		// Allowed deviations
-		if (XboxAddressRanges[index].Start == 0) {
+		if (XboxAddressRanges[index].Start == 0x10000) {
 			AllocationBase = (PVOID)0x10000;
 			State = MEM_COMMIT;
 			Type = MEM_IMAGE;
@@ -110,23 +105,58 @@ bool VerifyAddressRange(int index)
 					break;
 			}
 		}
-
-		// Verify each block
-		bool Okay = (VirtualQuery((LPVOID)BaseAddress, &mbi, sizeof(mbi)) != 0);
-		if (Okay) 
-			Okay = (mbi.BaseAddress == (LPVOID)BaseAddress);
-		if (Okay) 
-			Okay = (mbi.AllocationBase == AllocationBase);
-		if (Okay) 
-			Okay = (mbi.AllocationProtect == AllocationProtect);
-		if (Okay) 
-			Okay = (mbi.RegionSize == RegionSize);
-		if (Okay) 
-			Okay = (mbi.State == State);
-		if (Okay) 
-			Okay = (mbi.Protect == Protect);
-		if (Okay) 
-			Okay = (mbi.Type == Type);
+#endif
+		if (BaseAddress == 0x80000000 || BaseAddress == 0xF0000000) {
+			RegionSize = Size;
+			Okay = (VirtualQuery((LPVOID)BaseAddress, &mbi, sizeof(mbi)) != 0);
+			if (Okay)
+				Okay = (mbi.BaseAddress == (LPVOID)BaseAddress);
+			if (Okay)
+				Okay = (mbi.AllocationBase == AllocationBase);
+			if (Okay)
+				Okay = (mbi.AllocationProtect == (BaseAddress == 0x80000000 ? PAGE_EXECUTE_READWRITE : PAGE_READWRITE));
+			if (Okay)
+				Okay = (mbi.RegionSize == Size);
+			if (Okay)
+				Okay = (mbi.State == MEM_COMMIT);
+			if (Okay)
+				Okay = (mbi.Protect == mbi.AllocationProtect);
+			if (Okay)
+				Okay = (mbi.Type == MEM_MAPPED);
+		}
+		else if (BaseAddress == 0x10000) {
+			RegionSize = 0;
+			while (BaseAddress <= 0x07FFFFFF) {
+				Okay = (VirtualQuery((LPVOID)BaseAddress, &mbi, sizeof(mbi)) != 0);
+				if (!Okay || mbi.State != MEM_COMMIT || mbi.Type != MEM_IMAGE) {
+					Okay = false;
+					break;
+				}
+				BaseAddress += mbi.RegionSize;
+				RegionSize += mbi.RegionSize;
+			}
+			if (Okay) {
+				RegionSize = Size;
+			}
+		}
+		else {
+			// Verify each block
+			Okay = (VirtualQuery((LPVOID)BaseAddress, &mbi, sizeof(mbi)) != 0);
+			if (Okay)
+				Okay = (mbi.BaseAddress == (LPVOID)BaseAddress);
+			if (Okay)
+				Okay = (mbi.AllocationBase == AllocationBase);
+			if (Okay)
+				Okay = (mbi.AllocationProtect == AllocationProtect);
+			if (Okay)
+				Okay = (mbi.RegionSize == RegionSize);
+			if (Okay)
+				Okay = (mbi.State == State);
+			if (Okay)
+				Okay = (mbi.Protect == Protect);
+			if (Okay)
+				Okay = (mbi.Type == Type);
+		}
 
 		if (!Okay) {
 			HadFailure = true;
@@ -154,9 +184,14 @@ bool VerifyAddressRange(int index)
 			}
 		}
 
-		// Handle the next region
-		BaseAddress += RegionSize;
-		Size -= RegionSize;
+		if (BaseAddress == 0x80000000 || BaseAddress == 0xF0000000 || XboxAddressRanges[index].Start == 0x10000) {
+			Size = 0;
+		}
+		else {
+			// Handle the next region
+			BaseAddress += RegionSize;
+			Size -= RegionSize;
+		}
 	}
 
 	// Safeguard against bounds overflow
