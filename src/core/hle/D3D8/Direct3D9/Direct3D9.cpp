@@ -4539,7 +4539,7 @@ DWORD WINAPI XTL::EMUPATCH(D3DDevice_Swap)
 
 		pCurrentHostBackBuffer->UnlockRect(); // remove any old lock
 
-		// Get backbuffer dimenions; TODO : remember this once, at creation/resize time
+		// Get backbuffer dimensions; TODO : remember this once, at creation/resize time
 		D3DSURFACE_DESC BackBufferDesc;
 		pCurrentHostBackBuffer->GetDesc(&BackBufferDesc);
 
@@ -4606,8 +4606,8 @@ DWORD WINAPI XTL::EMUPATCH(D3DDevice_Swap)
 				0, // dwMipMapLevel
 				&OverlayWidth, &OverlayHeight, &OverlayDepth, &OverlayRowPitch, &OverlaySlicePitch);
 
-			RECT EmuSourRect;
-			RECT EmuDestRect;
+            RECT EmuSourRect = { 0 };
+            RECT EmuDestRect = { 0 };
 
 			if (g_OverlayProxy.SrcRect.right > 0) {
 				EmuSourRect = g_OverlayProxy.SrcRect;
@@ -4620,11 +4620,19 @@ DWORD WINAPI XTL::EMUPATCH(D3DDevice_Swap)
 				// If there's a destination rectangle given, copy that into our local variable :
 				EmuDestRect = g_OverlayProxy.DstRect;
 
-                // Make sure to scale it based on the configured scale factor
-                EmuDestRect.top *= g_RenderScaleFactor;
-                EmuDestRect.left *= g_RenderScaleFactor;
-                EmuDestRect.bottom *= g_RenderScaleFactor;
-                EmuDestRect.right *= g_RenderScaleFactor;
+                // Make sure to scale the values based on the difference between the Xbox and Host backbuffer
+                // We can't use the scale factor here because we are blitting directly to the host backbuffer
+                // NOT an Xbox surface!
+                DWORD XboxBackBufferWidth = GetPixelContainerWidth(g_XboxBackBufferSurface);
+                DWORD XboxBackBufferHeight = GetPixelContainerHeight(g_XboxBackBufferSurface);
+
+                float xScale = (float)BackBufferDesc.Width / (float)XboxBackBufferWidth;
+                float yScale = (float)BackBufferDesc.Height / (float)XboxBackBufferHeight;
+
+                EmuDestRect.top = (LONG)(EmuDestRect.top * yScale);
+                EmuDestRect.left = (LONG)(EmuDestRect.left * xScale);
+                EmuDestRect.bottom = (LONG)(EmuDestRect.bottom * yScale);
+                EmuDestRect.right = (LONG)(EmuDestRect.right * xScale);
 			} else {
 				// Use backbuffer width/height since that may differ from the Window size
                 EmuDestRect.right = BackBufferDesc.Width;
