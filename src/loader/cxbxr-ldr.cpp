@@ -137,11 +137,15 @@ DWORD CALLBACK rawMain()
 		return ERROR_BAD_ENVIRONMENT;
 	}
 
+	// TODO: NOTE - Must reserve all memory by default. This is a requirement for standalone emulation support.
+	// It is still possible to release upper 64 MB space after determine the first xbe file.
+	// However, it is not recommended since modded xbox hardware can have 128MB yet still only able to use lower 64MB if xbe is not patched.
 	int system = SYSTEM_XBOX; // By default, we'll emulate a retail Xbox
 
 	// Note : Since we only have kernel32 API's available (not even the standard libary),
 	// we use the (exclusively wide-char) FindStringOrdinal() here instead of strstr():
 	LPWSTR CommandLine = GetCommandLineW();
+	// TODO: Below options must go, see "NOTE -" comment above for the reasons.
 	if (FindStringOrdinal(FIND_FROMSTART, CommandLine, -1, L" /chihiro", -1, true) >= 0) {
 		system = SYSTEM_CHIHIRO;
 	} else {
