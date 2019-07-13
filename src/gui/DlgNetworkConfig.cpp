@@ -60,8 +60,12 @@ VOID FetchNetworkInterfaces(HWND hwnd)
 
 	pAdapterInfo = AdapterInfo;
 
+	LRESULT counter = SendMessage(g_hNetworkAdapters, CB_ADDSTRING, 0, (LPARAM)"Disabled");
+	SendMessage(g_hNetworkAdapters, CB_SETITEMDATA, counter, (LPARAM)"");
+	SendMessage(g_hNetworkAdapters, CB_SETCURSEL, counter, 0);
+
 	do {
-		LRESULT counter = SendMessage(g_hNetworkAdapters, CB_ADDSTRING, 0, (LPARAM)pAdapterInfo->Description);
+		counter = SendMessage(g_hNetworkAdapters, CB_ADDSTRING, 0, (LPARAM)pAdapterInfo->Description);
 		SendMessage(g_hNetworkAdapters, CB_SETITEMDATA, counter, (LPARAM)pAdapterInfo->AdapterName);
 
 		if (strcmp(g_XBNetwork.adapter_name, pAdapterInfo->AdapterName) == 0) {
