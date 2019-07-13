@@ -250,6 +250,8 @@ file (GLOB CXBXR_SOURCE_GUIv1
  "${CXBXR_ROOT_DIR}/src/gui/WinMain.cpp"
  "${CXBXR_ROOT_DIR}/src/gui/Wnd.cpp"
  "${CXBXR_ROOT_DIR}/src/gui/WndMain.cpp"
+# Temporary usage for need ReserveAddressRanges func with cxbx.exe's emulation.
+ "${CXBXR_ROOT_DIR}/src/common/ReserveAddressRanges.cpp"
 )
 
 # Emulator (module)
