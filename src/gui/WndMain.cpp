@@ -2236,8 +2236,10 @@ void WndMain::StartEmulation(HWND hwndParent, DebuggerState LocalDebuggerState /
 
 		char szExeFileName[MAX_PATH];
 		GetModuleFileName(GetModuleHandle(NULL), szExeFileName, MAX_PATH);
+#ifdef CXBX_LOADER
 		PathRemoveFileSpec(szExeFileName);
 		PathAppend(szExeFileName, "\\cxbxr-ldr.exe");
+#endif
 
 		bool AttachLocalDebugger = (LocalDebuggerState == debuggerOn);
 		g_EmuShared->SetDebuggingFlag(&AttachLocalDebugger);

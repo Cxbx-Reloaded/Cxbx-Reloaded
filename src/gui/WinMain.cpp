@@ -35,6 +35,11 @@
 #include "common\Settings.hpp"
 #include <commctrl.h>
 
+// Temporary usage for need ReserveAddressRanges func with cxbx.exe's emulation.
+#ifndef CXBX_LOADER
+#include "common/ReserveAddressRanges.h"
+#endif
+
 // Enable Visual Styles
 #pragma comment(linker,"\"/manifestdependency:type='win32' \
 name = 'Microsoft.Windows.Common-Controls' version = '6.0.0.0' \
@@ -77,7 +82,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 	if (bHasLoadArgument) {
 #ifndef CXBX_LOADER
-		CxbxKrnlMain(__argc, __argv);
+		uint32_t SystemDevBlocksReserved[384] = {};
+		int system = SYSTEM_XBOX; // TODO: Temporary placeholder until loader is functional.
+		ReserveAddressRanges(system, SystemDevBlocksReserved);
+		CxbxKrnlMain(__argc, __argv, SystemDevBlocksReserved);
 		EmuShared::Cleanup();
 		return EXIT_SUCCESS;
 #else
