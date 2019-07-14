@@ -4223,7 +4223,7 @@ bool PSH_XBOX_SHADER::FixArgumentModifiers()
 	{
 		--i;
 		Cur = &(Intermediate[i]);
-		if (Cur->Opcode < PO_TEX)
+		if (Cur->Opcode < PO_TEX) // TODO : Check explicitly which instruction types are handled below
 			continue;
 		
         int InsertPos = i;
@@ -5302,8 +5302,7 @@ bool PSH_XBOX_SHADER::FixInvalidSrcSwizzle()
   for (i = StartPos; i < IntermediateCount; i++)
   {
     Cur = &(Intermediate[i]);
-    // Is this an arithmetic opcode?
-    if (Cur->Opcode > PO_TEX) // TODO : Use IsArithmetic(), which checks >= PO_ADD?
+    if (Cur->IsArithmetic())
     {
       // Loop over the input arguments :
       for (j = 0; j < PSH_OPCODE_DEFS[Cur->Opcode]._In; j++)
@@ -5336,7 +5335,7 @@ bool PSH_XBOX_SHADER::FixMissingR0a()
   for (i = 0; i < IntermediateCount; i++)
   {
     Cur = &(Intermediate[i]);
-    if (Cur->Opcode < PO_TEX)
+	if (Cur->Opcode < PO_TEX) // TODO : Check explicitly which instruction types are handled below
         continue;
 
     // Make sure if we insert at all, it'll be after the DEF's :
@@ -5383,7 +5382,7 @@ bool PSH_XBOX_SHADER::FixMissingR1a()
 	for (i = 0; i < IntermediateCount; i++)
 	{
 		Cur = &(Intermediate[i]);
-        if (Cur->Opcode < PO_TEX)
+		if (Cur->Opcode < PO_TEX) // TODO : Check explicitly which instruction types are handled below
             continue;
 
 		// First, check if r1.a is read by this opcode :
@@ -5522,71 +5521,20 @@ bool PSH_XBOX_SHADER::FixUninitializedReads()
 
 bool PSH_XBOX_SHADER::FixCoIssuedOpcodes()
 {
-  DWORD PrevMask;
-  PSH_OPCODE PrevOpcode;
   int i;
   PPSH_INTERMEDIATE_FORMAT Cur;
-//  int j;
-  bool NewIsCombined;
-
   bool Result = false;
-
-/*
-  // TODO : Shift independent .a instructions up or down so the alpha write combiner can be used more often :
-  for (i = 0; i < IntermediateCount; i++)
-  {
-    Cur = &(Intermediate[i]);
-    // Is this an arithmetic opcode?
-    if (Cur->Opcode > PO_TEX) // TODO : Use IsArithmetic(), which checks >= PO_ADD?
-    {
-      // Does this instruction write solely to Alpha?
-      if (Cur->Output[0].Mask == MASK_A) 
-      {
-        // Look at prior instructions :
-        for (j = i - 1; j > 0; j--)
-        {
-          // Because "dp3" needs the color/vector pipeline, no color component outputing opcode can be co-issued with it :
-          if (Intermediate[j].Opcode == PO_DP3) 
-            break;
-
-          // TODO : Test that none of the inputs of 'Cur' are written to (break otherwise)
-
-          // Does a prior instruction skip alpha?
-          if ((Intermediate[j].Output[0].Mask & MASK_A) == 0)
-          {
-            // TODO : Move instruction up to right below j
-            // Result = true;
-            // break;
-          }
-        }
-      }
-    }
-  }
-*/
-
-  // Update IsCombined flags :
-  // Start with Alpha, so the first opcode doesn't become a write-combined opcode (which isn't possible) :
-  PrevMask = MASK_A;
-  PrevOpcode = PO_COMMENT;
+  // Since we're targetting m_PSVersion >= D3DPS_VERSION(2, 0), co-issued instructions are no longer supported, thus reset all IsCombined flags :
   for (i = StartPos; i < IntermediateCount; i++)
   {
     Cur = &(Intermediate[i]);
-    // Is this an arithmetic opcode?
-    if (Cur->Opcode > PO_TEX) // TODO : Use IsArithmetic(), which checks >= PO_ADD?
+	if (Cur->IsArithmetic())
     {
-      // Set IsCombined only when previous opcode doesn't write to Alpha, while this opcode writes only to Alpha :
-      NewIsCombined = (PrevOpcode != PO_DP3)
-                   && ((PrevMask & MASK_A) == 0)
-                   && (Cur->Output[0].Mask == MASK_A) && m_PSVersion < D3DPS_VERSION(2, 0);
-
-      if (Cur->IsCombined != NewIsCombined)
+      if (Cur->IsCombined)
       {
-        Cur->IsCombined = NewIsCombined;
+        Cur->IsCombined = false;
         Result = true;
       }
-
-      PrevMask = Cur->Output[0].Mask;
-      PrevOpcode = Cur->Opcode;
     }
   }
   return Result;
@@ -5602,7 +5550,7 @@ bool PSH_XBOX_SHADER::FixInvalidDstRegister()
     for (i = IntermediateCount - 1; i >= StartPos; --i)
     {
         Cur = &(Intermediate[i]);
-        // Is this an arithmetic opcode?
+        // Skip non-arithmetic opcodes
         if (!Cur->IsArithmetic())
             continue;
 
@@ -5660,7 +5608,6 @@ bool PSH_XBOX_SHADER::FixInvalidDstRegister()
 }
 
 // TODO: Refactor and optimize
-// TODO: Adjust constants for ps vesion < 2.0
 bool PSH_XBOX_SHADER::FixOverusedRegisters()
 {
     int i;
