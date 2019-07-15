@@ -1128,36 +1128,24 @@ static void nv2a_vblank_thread(NV2AState *d)
 
 void CxbxReserveNV2AMemory(NV2AState *d)
 {
-	// Reserve NV2A memory :
-	void *memory = (void *)VirtualAllocEx(
-		GetCurrentProcess(),
-		(void *)NV2A_ADDR,
-		NV2A_SIZE,
-		MEM_RESERVE, // Don't allocate actual physical storage in memory
-		PAGE_NOACCESS); // Any access must result in an access violation exception (handled in EmuException/EmuX86_DecodeException)
-	if (memory == NULL) {
-		EmuLog(LOG_LEVEL::WARNING, "Couldn't reserve NV2A memory, continuing assuming we'll receive (and handle) access violation exceptions anyway...");
-		return;
-	}
+	// The NV2A memory was reserved already by the loader!
 
 	printf("[0x%.4X] INIT: Reserved %d MiB of Xbox NV2A memory at 0x%.8X to 0x%.8X\n",
 		GetCurrentThreadId(), NV2A_SIZE / ONE_MB, NV2A_ADDR, NV2A_ADDR + NV2A_SIZE - 1);
 
-	// Allocate PRAMIN Region
+	// Allocate PRAMIN Region (the loader only reserved this region, it still needs to be committed!)
+	// We are looping here because memory-reservation happens in 64 KiB increments
 	d->pramin.ramin_size = NV_PRAMIN_SIZE;
-	d->pramin.ramin_ptr = (uint8_t*)VirtualAllocEx(
-		GetCurrentProcess(),
-		(void*)(NV2A_ADDR + NV_PRAMIN_ADDR),
-		d->pramin.ramin_size,
-		MEM_COMMIT, // No MEM_RESERVE |
-		PAGE_READWRITE);
-	if (d->pramin.ramin_ptr == NULL) {
-		EmuLog(LOG_LEVEL::WARNING, "Couldn't allocate NV2A PRAMIN memory");
-		return;
+	d->pramin.ramin_ptr = (uint8_t*)(NV2A_ADDR + NV_PRAMIN_ADDR);
+	for (int i = 0; i < 16; i++) {
+		LPVOID ret = VirtualAlloc((LPVOID)(NV2A_ADDR + NV_PRAMIN_ADDR + i * 64 * ONE_KB), 64 * ONE_KB, MEM_COMMIT, PAGE_READWRITE);
+		if (ret != (LPVOID)(NV2A_ADDR + NV_PRAMIN_ADDR + i * 64 * ONE_KB)) {
+			CxbxKrnlCleanup("VirtualAlloc failed to commit the memory for the nv2a pramin. The error was 0x%08X", GetLastError());
+		}
 	}
 
 	printf("[0x%.4X] INIT: Allocated %d MiB of Xbox NV2A PRAMIN memory at 0x%.8p to 0x%.8p\n",
-		GetCurrentThreadId(), d->pramin.ramin_size / ONE_MB, d->pramin.ramin_ptr, d->pramin.ramin_ptr + d->pramin.ramin_size - 1);
+		GetCurrentThreadId(), d->pramin.ramin_size / ONE_MB, (uintptr_t)d->pramin.ramin_ptr, (uintptr_t)d->pramin.ramin_ptr + d->pramin.ramin_size - 1);
 }
 
 /* NV2ADevice */
