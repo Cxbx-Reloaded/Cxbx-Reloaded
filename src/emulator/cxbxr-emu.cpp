@@ -28,7 +28,7 @@
 // cxbxr-emu.cpp : Defines the exported functions for the DLL application.
 
 #include "Cxbx.h" // For FUNC_EXPORTS
-#include "VerifyAddressRanges.h" // For VerifyBaseAddr() and VerifyAddressRanges()
+#include "VerifyAddressRanges.h" // For VerifyBaseAddr()
 //#include "CxbxKrnl/Emu.h"
 #include "EmuShared.h"
 #include "core\kernel\init\CxbxKrnl.h" // For HandleFirstLaunch() and LaunchEmulation()
@@ -127,13 +127,6 @@ DWORD WINAPI Emulate(int system, uint32_t blocks_reserved[384])
 	/*! Verify our host executable, cxbxr-ldr.exe, is loaded to base address 0x00010000 */
 	if (!VerifyBaseAddr()) {
 		CxbxShowError("cxbx-ldr.exe was not loaded to base address 0x00010000 (which is a requirement for Xbox emulation)");
-		return EXIT_FAILURE;
-	}
-
-	// Before doing anything else that might cause memory fragmentation,
-	// verify that we still got control over all ranges the loader reserved
-	if (!VerifyAddressRanges(system)) {
-		CxbxShowError("Failed to claim required address ranges (which is a requirement for Xbox emulation)");
 		return EXIT_FAILURE;
 	}
 

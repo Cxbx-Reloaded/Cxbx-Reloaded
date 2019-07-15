@@ -1109,8 +1109,16 @@ void CxbxKrnlMain(int argc, char* argv[], uint32_t blocks_reserved[384])
 			CxbxKrnl_Xbe = new Xbe(chihiroMediaBoardRom.c_str(), false);
 		}
 #endif
-		// Initialize the virtual manager
+
+#ifndef CXBX_LOADER
+		// Initialize the memory manager
+		uint32_t SystemDevBlocksReserved[384] = { 0 };
+		g_VMManager.Initialize(0, BootFlags, SystemDevBlocksReserved);
+#else
+		// TODO: Retrieve the system type from the loader and be sure that it doesn't change between quick reboots
+		// Initialize the memory manager
 		g_VMManager.Initialize(SYSTEM_XBOX, BootFlags, blocks_reserved);
+#endif
 
 		// Commit the memory used by the xbe header
 		size_t HeaderSize = CxbxKrnl_Xbe->m_Header.dwSizeofHeaders;

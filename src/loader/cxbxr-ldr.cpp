@@ -154,7 +154,7 @@ DWORD CALLBACK rawMain()
 		}
 	}
 
-	// Marking this as static to avoid an implicit call to memset, which is not availble in the loader
+	// Marking this as static to avoid an implicit call to memset, which is not available in the loader
 	static uint32_t SystemDevBlocksReserved[384];
 
 	if (!ReserveAddressRanges(system, SystemDevBlocksReserved)) {
