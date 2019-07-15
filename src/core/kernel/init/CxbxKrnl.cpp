@@ -609,7 +609,6 @@ void PrintCurrentConfigurationLog()
 		printf("Disable Pixel Shaders: %s\n", g_DisablePixelShaders == 1 ? "On" : "Off (Default)");
 		printf("Run Xbox threads on all cores: %s\n", g_UseAllCores == 1 ? "On" : "Off (Default)");
 		printf("Skip RDTSC Patching: %s\n", g_SkipRdtscPatching == 1 ? "On" : "Off (Default)");
-		printf("Scale Xbox to host viewport (and back): %s\n", g_ScaleViewport == 1 ? "On" : "Off (Default)");
 		printf("Render directly to Host BackBuffer: %s\n", g_DirectHostBackBufferAccess == 1 ? "On" : "Off (Default)");
 	}
 
@@ -1325,6 +1324,11 @@ __declspec(noreturn) void CxbxKrnlInit
 	void(*Entry)(),
 	int BootFlags)
 {
+    // Set windows timer period to 1ms
+    // Windows will automatically restore this value back to original on program exit
+    // But with this, we can replace some busy loops with sleeps.
+    timeBeginPeriod(1);
+
 	// update caches
 	CxbxKrnl_TLS = pTLS;
 	CxbxKrnl_TLSData = pTLSData;
@@ -1409,8 +1413,6 @@ __declspec(noreturn) void CxbxKrnlInit
 		g_UseAllCores = !!HackEnabled;
 		g_EmuShared->GetSkipRdtscPatching(&HackEnabled);
 		g_SkipRdtscPatching = !!HackEnabled;
-		g_EmuShared->GetScaleViewport(&HackEnabled);
-		g_ScaleViewport = !!HackEnabled;
 		g_EmuShared->GetDirectHostBackBufferAccess(&HackEnabled);
 		g_DirectHostBackBufferAccess = !!HackEnabled;
 	}

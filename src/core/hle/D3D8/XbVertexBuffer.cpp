@@ -55,7 +55,12 @@ extern XTL::X_D3DVertexBuffer      *g_pVertexBuffer = NULL;
 extern DWORD				XTL::g_dwPrimPerFrame = 0;
 extern XTL::X_D3DVertexBuffer*g_D3DStreams[16];
 extern UINT g_D3DStreamStrides[16];
+extern XTL::X_D3DSurface* g_pXboxRenderTarget;
+extern XTL::X_D3DSurface* g_XboxBackBufferSurface;
 void *GetDataFromXboxResource(XTL::X_D3DResource *pXboxResource);
+bool GetHostRenderTargetDimensions(DWORD* pHostWidth, DWORD* pHostHeight, XTL::IDirect3DSurface* pHostRenderTarget = nullptr);
+uint32_t GetPixelContainerWidth(XTL::X_D3DPixelContainer* pPixelContainer);
+uint32_t GetPixelContainerHeight(XTL::X_D3DPixelContainer* pPixelContainer);
 
 void XTL::CxbxPatchedStream::Activate(XTL::CxbxDrawContext *pDrawContext, UINT uiStream) const
 {
@@ -678,11 +683,34 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
 			// the uiTextureCoordinatesByteOffsetInVertex on host will match Xbox 
 		}
 
+        // If for some reason the Xbox Render Target is not set, fallback to the backbuffer
+        if (g_pXboxRenderTarget == xbnullptr) {
+            LOG_TEST_CASE("SetRenderTarget fallback to backbuffer");
+            g_pXboxRenderTarget = g_XboxBackBufferSurface;
+        }
+
+		DWORD HostRenderTarget_Width, HostRenderTarget_Height;
+		DWORD XboxRenderTarget_Width = GetPixelContainerWidth(g_pXboxRenderTarget);
+		DWORD XboxRenderTarget_Height = GetPixelContainerHeight(g_pXboxRenderTarget);
+		if (!GetHostRenderTargetDimensions(&HostRenderTarget_Width, &HostRenderTarget_Height)) {
+			HostRenderTarget_Width = XboxRenderTarget_Width;
+			HostRenderTarget_Height = XboxRenderTarget_Height;
+		}
+
+		bool bNeedRHWTransform = XboxRenderTarget_Width < HostRenderTarget_Width && XboxRenderTarget_Height < HostRenderTarget_Height;
+
 		for (uint32_t uiVertex = 0; uiVertex < uiVertexCount; uiVertex++) {
 			FLOAT *pVertexDataAsFloat = (FLOAT*)(&pHostVertexData[uiVertex * uiHostVertexStride]);
 
 			// Handle pre-transformed vertices (which bypass the vertex shader pipeline)
 			if (bNeedRHWReset) {
+                // We need to transform these vertices only if the host render target was upscaled from the Xbox render target
+                // Transforming always breaks render to non-upscaled textures: Only surfaces are upscaled, intentionally so
+				if (bNeedRHWTransform) {
+					pVertexDataAsFloat[0] *= g_RenderScaleFactor;
+					pVertexDataAsFloat[1] *= g_RenderScaleFactor;
+				}
+
 #if 0
 				// Check Z. TODO : Why reset Z from 0.0 to 1.0 ? (Maybe fog-related?)
 				if (pVertexDataAsFloat[2] == 0.0f) {

@@ -29,6 +29,6 @@
 
 #include <stdint.h>
 
-extern __forceinline uint64_t ComputeHash(void* data, size_t len);
+uint64_t ComputeHash(void* data, size_t len);
 
 #endif

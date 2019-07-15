@@ -164,8 +164,9 @@ public:
 		bool bVSync;
 		bool bFullScreen;
 		bool bHardwareYUV;
-		bool Reserved4 = 0;
-		int  Reserved99[10] = { 0 };
+        bool Reserved3;
+		int  renderScaleFactor = 1;
+		int  Reserved99[9] = { 0 };
 	} m_video;
 
 	// Audio settings
@@ -217,7 +218,7 @@ public:
 		bool Reserved2;
 		bool UseAllCores;
 		bool SkipRdtscPatching;
-		bool ScaleViewport;
+		bool Reserved3;
 		bool DirectHostBackBufferAccess;
 		bool Reserved7 = 0;
 		bool Reserved8 = 0;

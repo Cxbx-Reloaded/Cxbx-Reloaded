@@ -111,6 +111,7 @@ std::map<const std::string, const xbox_patch_t> g_PatchTable = {
 	PATCH_ENTRY("D3DDevice_PersistDisplay", XTL::EMUPATCH(D3DDevice_PersistDisplay), PATCH_HLE_D3D),
 	PATCH_ENTRY("D3DDevice_Present", XTL::EMUPATCH(D3DDevice_Present), PATCH_HLE_D3D),
 	PATCH_ENTRY("D3DDevice_PrimeVertexCache", XTL::EMUPATCH(D3DDevice_PrimeVertexCache), PATCH_HLE_D3D),
+	PATCH_ENTRY("D3DDevice_Reset", XTL::EMUPATCH(D3DDevice_Reset), PATCH_HLE_D3D),
 	PATCH_ENTRY("D3DDevice_RunPushBuffer", XTL::EMUPATCH(D3DDevice_RunPushBuffer), PATCH_HLE_D3D),
 	PATCH_ENTRY("D3DDevice_RunVertexStateShader", XTL::EMUPATCH(D3DDevice_RunVertexStateShader), PATCH_HLE_D3D),
 	PATCH_ENTRY("D3DDevice_SelectVertexShader", XTL::EMUPATCH(D3DDevice_SelectVertexShader), PATCH_HLE_D3D),
