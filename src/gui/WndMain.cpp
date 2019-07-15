@@ -84,8 +84,6 @@ void MapPersistedMemory()
 
 void UnmapPersistedMemory()
 {
-	assert(((hPersistedMemory != NULL) == (PersistedMemoryAddr != nullptr)) && "Persistent memory handle and address must both be set (or already unset)!");
-
 	if (hPersistedMemory != NULL) {
 		UnmapViewOfFile(PersistedMemoryAddr);
 		PersistedMemoryAddr = nullptr;
@@ -373,7 +371,6 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 							pCMD->pWndMain = this;
 							pCMD->dwChildProcID = lParam; // lParam is process ID.
 							std::thread(CrashMonitorWrapper, pCMD).detach();
-
 
 							g_EmuShared->SetIsEmulating(true); // NOTE: Putting in here raise to low or medium risk due to debugger will launch itself. (Current workaround)
 							g_EmuShared->SetIsReady(true);
@@ -2267,6 +2264,8 @@ void WndMain::StartEmulation(HWND hwndParent, DebuggerState LocalDebuggerState /
         std::string szProcArgsBuffer;
         XTL::CxbxConvertArgToString(szProcArgsBuffer, szExeFileName, m_XbeFilename, hwndParent, g_Settings->m_core.KrnlDebugMode, g_Settings->m_core.szKrnlDebug);
 
+        UnmapPersistedMemory();
+
         if (AttachLocalDebugger) {
 
             // Check then close existing debugger monitor.
@@ -2356,7 +2355,6 @@ void WndMain::CrashMonitor(DWORD dwChildProcID)
 	 		g_EmuShared->GetBootFlags(&iBootFlags);
 
 	 		if (!iBootFlags) {
-				UnmapPersistedMemory();
 	 			if (dwExitCode == EXIT_SUCCESS) {// StopEmulation
 	 				return;
 	 			}

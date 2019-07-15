@@ -561,7 +561,6 @@ XBSYSAPI EXPORTNUM(49) xboxkrnl::VOID DECLSPEC_NORETURN NTAPI xboxkrnl::HalRetur
 
 			// Relaunch Cxbx, to load another Xbe
 			{
-				bool bMultiXbe = true;
 				int QuickReboot;
 				g_EmuShared->GetBootFlags(&QuickReboot);
 				QuickReboot |= BOOT_QUICK_REBOOT;
