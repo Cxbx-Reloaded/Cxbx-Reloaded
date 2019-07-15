@@ -40,6 +40,10 @@
 #include "EmuShared.h"
 #include "core\kernel\exports\EmuKrnl.h" // For InitializeListHead(), etc.
 #include <assert.h>
+// Temporary usage for need ReserveAddressRanges func with cxbx.exe's emulation.
+#ifndef CXBX_LOADER
+#include "common/ReserveAddressRanges.h"
+#endif
 
 
 VMManager g_VMManager;
@@ -56,6 +60,23 @@ bool VirtualMemoryArea::CanBeMergedWith(const VirtualMemoryArea& next) const
 
 void VMManager::Initialize(int SystemType, int BootFlags, uint32_t blocks_reserved[384])
 {
+#ifndef CXBX_LOADER
+	if ((BootFlags & BOOT_QUICK_REBOOT) == 0) {
+		SystemType = g_bIsRetail ? SYSTEM_XBOX : g_bIsChihiro ? SYSTEM_CHIHIRO : SYSTEM_DEVKIT; // TODO: Temporary placeholder until loader is functional.
+		g_EmuShared->SetMmLayout(&SystemType);
+	}
+	else {
+		g_EmuShared->GetMmLayout(&SystemType);
+	}
+
+	if (!ReserveAddressRanges(SystemType, blocks_reserved)) {
+		CxbxKrnlCleanup("Failed to reserve required memory ranges!", GetLastError());
+	}
+#endif
+	m_MmLayoutChihiro = (SystemType == SYSTEM_CHIHIRO);
+	m_MmLayoutDebug = (SystemType == SYSTEM_DEVKIT);
+	m_MmLayoutRetail = (SystemType == SYSTEM_XBOX);
+
 	// Set up the critical section to synchronize accesses
 	InitializeCriticalSectionAndSpinCount(&m_CriticalSection, 0x400);
 
@@ -69,10 +90,11 @@ void VMManager::Initialize(int SystemType, int BootFlags, uint32_t blocks_reserv
 	ConstructMemoryRegion(DEVKIT_MEMORY_BASE, DEVKIT_MEMORY_SIZE, DevkitRegion);
 
 	// Commit all the memory reserved by the loader for the PTs
+	// We are looping here because memory-reservation happens in 64 KiB increments
 	for (int i = 0; i < 64; i++) {
-		LPVOID ret = VirtualAlloc((LPVOID)(PAGE_TABLES_BASE + i * (64 * ONE_KB)), 64 * ONE_KB, MEM_COMMIT, PAGE_READWRITE);
+		LPVOID ret = VirtualAlloc((LPVOID)(PAGE_TABLES_BASE + i * m_AllocationGranularity), m_AllocationGranularity, MEM_COMMIT, PAGE_READWRITE);
 		if (ret != (LPVOID)(PAGE_TABLES_BASE + i * (64 * ONE_KB))) {
-			CxbxKrnlCleanup("The error was 0x%08X\n", GetLastError());
+			CxbxKrnlCleanup("VirtualAlloc failed to commit the memory for the page tables. The error was 0x%08X", GetLastError());
 		}
 	}
 
@@ -98,11 +120,6 @@ void VMManager::Initialize(int SystemType, int BootFlags, uint32_t blocks_reserv
 			}
 		}
 	}
-
-	// Ensure that SystemType doesn't change between quick reboots, for example, by ignoring/forbidding changes to it while a title is being emulated
-	m_MmLayoutChihiro = (SystemType == SYSTEM_CHIHIRO);
-	m_MmLayoutDebug = (SystemType == SYSTEM_DEVKIT);
-	m_MmLayoutRetail = (SystemType == SYSTEM_XBOX);
 
 	// Set up general memory variables according to the xbe type
 	if (m_MmLayoutChihiro)
@@ -188,10 +205,8 @@ void VMManager::InitializeSystemAllocations()
 {
 	PFN pfn;
 	PFN pfn_end;
-	PFN result;
 	PMMPTE PointerPte;
 	PMMPTE EndingPte;
-	MMPTE TempPte;
 	VAddr addr;
 
 
@@ -275,24 +290,24 @@ void VMManager::RestorePersistentMemory()
 {
 	HANDLE handle = OpenFileMapping(FILE_MAP_READ, FALSE, "PersistentMemory");
 	if (handle == NULL) {
-		CxbxKrnlCleanup("Couldn't restore persistent memory! OpenFileMapping failed");
+		CxbxKrnlCleanup("Couldn't restore persistent memory! OpenFileMapping failed with error 0x%08X", GetLastError());
 		return;
 	}
 
 	PersistedMemory* persisted_mem = (PersistedMemory*)MapViewOfFile(handle, FILE_MAP_READ, 0, 0, 0);
 	if (persisted_mem == nullptr) {
-		CxbxKrnlCleanup("Couldn't restore persistent memory! MapViewOfFile failed with error %08X", GetLastError());
+		CxbxKrnlCleanup("Couldn't restore persistent memory! MapViewOfFile failed with error 0x%08X", GetLastError());
 		return;
 	}
 
 	if (persisted_mem->LaunchFrameAddresses[0] != 0 && IS_PHYSICAL_ADDRESS(persisted_mem->LaunchFrameAddresses[0])) {
 		xboxkrnl::LaunchDataPage = (xboxkrnl::PLAUNCH_DATA_PAGE)persisted_mem->LaunchFrameAddresses[0];
-		DBG_PRINTF("Restored LaunchDataPage\n");
+		EmuLog(LOG_LEVEL::INFO, "Restored LaunchDataPage\n");
 	}
 
 	if (persisted_mem->LaunchFrameAddresses[1] != 0 && IS_PHYSICAL_ADDRESS(persisted_mem->LaunchFrameAddresses[1])) {
 		xboxkrnl::AvSavedDataAddress = (xboxkrnl::PVOID)persisted_mem->LaunchFrameAddresses[1];
-		DBG_PRINTF("Restored Framebuffer\n");
+		EmuLog(LOG_LEVEL::INFO, "Restored Framebuffer\n");
 	}
 
 	MMPTE pte;
@@ -338,7 +353,6 @@ void VMManager::RestorePersistentMemory()
 	if (m_MmLayoutDebug) { m_PhysicalPagesAvailable += 16; m_DebuggerPagesAvailable -= 16; }
 
 	PFN pfn_end;
-	PFN result;
 	if (m_MmLayoutRetail || m_MmLayoutDebug) {
 		pfn = XBOX_INSTANCE_PHYSICAL_PAGE;
 		pfn_end = XBOX_INSTANCE_PHYSICAL_PAGE + NV2A_INSTANCE_PAGE_COUNT - 1;
@@ -393,12 +407,12 @@ void VMManager::SavePersistentMemory()
 
 	handle = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, m_NumPersistentPtes * PAGE_SIZE + m_NumPersistentPtes * 4 * 2 + sizeof(PersistedMemory), "PersistentMemory");
 	if (handle == NULL) {
-		CxbxKrnlCleanup("Couldn't persist memory! CreateFileMapping failed");
+		CxbxKrnlCleanup("Couldn't persist memory! CreateFileMapping failed with error 0x%08X", GetLastError());
 		return;
 	}
 	addr = MapViewOfFile(handle, FILE_MAP_READ | FILE_MAP_WRITE, 0, 0, 0);
 	if (addr == nullptr) {
-		CxbxKrnlCleanup("Couldn't persist memory! MapViewOfFile failed with error %08X", GetLastError());
+		CxbxKrnlCleanup("Couldn't persist memory! MapViewOfFile failed with error 0x%08X", GetLastError());
 		return;
 	}
 
@@ -407,12 +421,12 @@ void VMManager::SavePersistentMemory()
 
 	if (xboxkrnl::LaunchDataPage != xbnullptr) {
 		persisted_mem->LaunchFrameAddresses[0] = (VAddr)xboxkrnl::LaunchDataPage;
-		DBG_PRINTF("Persisted LaunchDataPage\n");
+		EmuLog(LOG_LEVEL::INFO, "Persisted LaunchDataPage\n");
 	}
 
 	if (xboxkrnl::AvSavedDataAddress != xbnullptr) {
 		persisted_mem->LaunchFrameAddresses[1] = (VAddr)xboxkrnl::AvSavedDataAddress;
-		DBG_PRINTF("Persisted Framebuffer\n");
+		EmuLog(LOG_LEVEL::INFO, "Persisted Framebuffer\n");
 	}
 
 	i = 0;
@@ -604,14 +618,16 @@ void VMManager::PersistMemory(VAddr addr, size_t Size, bool bPersist)
 		{
 			PointerPte->Hardware.Persist = 1;
 			m_NumPersistentPtes++;
-			PointerPte++;		}
+			PointerPte++;
+		}
 	}
 	else {
 		while (PointerPte <= EndingPte)
 		{
 			PointerPte->Hardware.Persist = 0;
 			m_NumPersistentPtes--;
-			PointerPte++;		}
+			PointerPte++;
+		}
 	}
 
 	Unlock();
@@ -1531,7 +1547,7 @@ xboxkrnl::NTSTATUS VMManager::XbAllocateVirtualMemory(VAddr* addr, ULONG ZeroBit
 		if (!VirtualAlloc((void*)AlignedCapturedBase, AlignedCapturedSize, MEM_COMMIT,
 			(ConvertXboxToWinPermissions(PatchXboxPermissions(Protect))) & ~(PAGE_WRITECOMBINE | PAGE_NOCACHE)))
 		{
-			EmuLog(LOG_LEVEL::DEBUG, "%s: VirtualAlloc failed to commit the memory! The error was %d", __func__, GetLastError());
+			EmuLog(LOG_LEVEL::DEBUG, "%s: VirtualAlloc failed to commit the memory! The error was 0x%08X", __func__, GetLastError());
 			status = STATUS_NO_MEMORY;
 			goto Exit;
 		}
@@ -1737,7 +1753,7 @@ xboxkrnl::NTSTATUS VMManager::XbFreeVirtualMemory(VAddr* addr, size_t* Size, DWO
 		{
 			if (!VirtualFree((void*)AlignedCapturedBase, AlignedCapturedSize, MEM_DECOMMIT))
 			{
-				EmuLog(LOG_LEVEL::DEBUG, "%s: VirtualFree failed to decommit the memory! The error was %d", __func__, GetLastError());
+				EmuLog(LOG_LEVEL::DEBUG, "%s: VirtualFree failed to decommit the memory! The error was 0x%08X", __func__, GetLastError());
 			}
 		}
 	}
@@ -2379,7 +2395,7 @@ void VMManager::UpdateMemoryPermissions(VAddr addr, size_t Size, DWORD Perms)
 	DWORD dummy;
 	if (!VirtualProtect((void*)addr, Size, WindowsPerms & ~(PAGE_WRITECOMBINE | PAGE_NOCACHE), &dummy))
 	{
-		EmuLog(LOG_LEVEL::DEBUG, "VirtualProtect failed. The error code was %d", GetLastError());
+		EmuLog(LOG_LEVEL::DEBUG, "VirtualProtect failed. The error code was 0x%08X", GetLastError());
 	}
 }
 
@@ -2491,7 +2507,7 @@ void VMManager::DestructVMA(VAddr addr, MemoryRegionType Type, size_t Size)
 
 		if (!ret)
 		{
-			DBG_PRINTF("Deallocation routine failed with error %d\n", GetLastError());
+			EmuLog(LOG_LEVEL::DEBUG, "Deallocation routine failed with error 0x%08X", GetLastError());
 		}
 	}
 
