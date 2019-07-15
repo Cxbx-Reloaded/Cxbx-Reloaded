@@ -150,7 +150,11 @@ extern "C" {
 // fit in 51 MB. If we ever encounter an even larger XBE, this
 // value will have to be increased likewise (maybe up to 64 MB
 // for XBOX_MEMORY_SIZE or even 128 MB for CHIHIRO_MEMORY_SIZE).
+#ifdef CXBX_LOADER
 #define XBE_MAX_VA  (128 * ONE_MB)
+#else
+#define XBE_MAX_VA  (64 * ONE_MB)
+#endif
 
 /*! base address of Cxbx host executable, see Cxbx project options, Linker, Advanced, Base Address */
 #define CXBX_BASE_ADDR     XBE_IMAGE_BASE

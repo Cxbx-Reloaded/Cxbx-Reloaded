@@ -246,8 +246,6 @@ file (GLOB CXBXR_SOURCE_GUIv1
  "${CXBXR_ROOT_DIR}/src/gui/WinMain.cpp"
  "${CXBXR_ROOT_DIR}/src/gui/Wnd.cpp"
  "${CXBXR_ROOT_DIR}/src/gui/WndMain.cpp"
-# Temporary usage for need ReserveAddressRanges func with cxbx.exe's emulation.
- "${CXBXR_ROOT_DIR}/src/common/ReserveAddressRanges.cpp"
 )
 
 # Emulator (module)
@@ -352,6 +350,8 @@ file (GLOB CXBXR_SOURCE_EMU
  "${CXBXR_ROOT_DIR}/src/devices/video/swizzle.cpp"
  "${CXBXR_ROOT_DIR}/src/devices/x86/EmuX86.cpp"
  "${CXBXR_ROOT_DIR}/src/devices/Xbox.cpp"
+ # Temporary usage for need ReserveAddressRanges func with cxbx.exe's emulation.
+ "${CXBXR_ROOT_DIR}/src/common/ReserveAddressRanges.cpp"
 )
 
 add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/projects/cxbx")
