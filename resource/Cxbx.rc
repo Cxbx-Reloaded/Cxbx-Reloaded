@@ -628,7 +628,6 @@ BEGIN
             POPUP "Speed Hacks",                    65535,MFT_STRING,MFS_ENABLED
             BEGIN
                 MENUITEM "Run Xbox threads on all cores", ID_HACKS_RUNXBOXTHREADSONALLCORES,MFT_STRING,MFS_ENABLED
-                MENUITEM "Render directly to Host Backbuffer", ID_HACKS_RENDERDIRECTLYTOHOSTBACKBUFFER,MFT_STRING,MFS_ENABLED
             END
             MENUITEM "Disable Pixel Shaders",       ID_HACKS_DISABLEPIXELSHADERS,MFT_STRING,MFS_ENABLED
             MENUITEM "Skip rdtsc patching",         ID_HACKS_SKIPRDTSCPATCHING,MFT_STRING,MFS_ENABLED

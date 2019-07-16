@@ -1925,9 +1925,8 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
 			}
 
             if (g_EmuCDPD.bCreate) {
-                // HACK: Disable higher resolution when the host backbuffer hack is enabled
-                // This is to preserve existing hack behavior
-				g_RenderScaleFactor = g_DirectHostBackBufferAccess ? 1 : g_XBVideo.renderScaleFactor;
+				// Apply render scale factor for high-resolution rendering
+				g_RenderScaleFactor = g_XBVideo.renderScaleFactor;
 
                 if(g_EmuCDPD.XboxPresentationParameters.BufferSurfaces[0] != NULL)
                     EmuLog(LOG_LEVEL::WARNING, "BufferSurfaces[0] : 0x%.08X", g_EmuCDPD.XboxPresentationParameters.BufferSurfaces[0]);
@@ -3226,9 +3225,7 @@ void ValidateRenderTargetDimensions(DWORD HostRenderTarget_Width, DWORD HostRend
     if (HostRenderTarget_Width_Unscaled != XboxRenderTarget_Width || HostRenderTarget_Height_Unscaled != XboxRenderTarget_Height) {
         LOG_TEST_CASE("Existing RenderTarget width/height changed");
 
-        // NOTE: If the host backbuffer hack is enabled, we must skip this operation, otherwise everything will break
-        // In that situation, there's nothing we can do without causing damage. 
-        if (!g_DirectHostBackBufferAccess && g_pXboxRenderTarget == g_XboxBackBufferSurface) {
+        if (g_pXboxRenderTarget == g_XboxBackBufferSurface) {
             FreeHostResource(GetHostResourceKey(g_pXboxRenderTarget)); g_pD3DDevice->SetRenderTarget(0, GetHostSurface(g_pXboxRenderTarget, D3DUSAGE_RENDERTARGET));
             FreeHostResource(GetHostResourceKey(g_pXboxDepthStencil)); g_pD3DDevice->SetDepthStencilSurface(GetHostSurface(g_pXboxDepthStencil, D3DUSAGE_DEPTHSTENCIL));
         }
@@ -4551,22 +4548,20 @@ DWORD WINAPI XTL::EMUPATCH(D3DDevice_Swap)
         const D3DTEXTUREFILTERTYPE LoadSurfaceFilter = D3DTEXF_LINEAR;
         const DWORD LoadOverlayFilter = D3DX_DEFAULT;
 
-		if (!g_DirectHostBackBufferAccess) {
-			auto pXboxBackBufferHostSurface = GetHostSurface(g_XboxBackBufferSurface, D3DUSAGE_RENDERTARGET);
-			if (pXboxBackBufferHostSurface) {
-				// Blit Xbox BackBuffer to host BackBuffer
-				// TODO: Respect aspect ratio
-                hRet = g_pD3DDevice->StretchRect(
-                    /* pSourceSurface = */ pXboxBackBufferHostSurface,
-                    /* pSourceRect = */ nullptr,
-                    /* pDestSurface = */ pCurrentHostBackBuffer,
-                    /* pDestRect = */ nullptr,
-                    /* Filter = */ LoadSurfaceFilter
-                );
+		auto pXboxBackBufferHostSurface = GetHostSurface(g_XboxBackBufferSurface, D3DUSAGE_RENDERTARGET);
+		if (pXboxBackBufferHostSurface) {
+			// Blit Xbox BackBuffer to host BackBuffer
+			// TODO: Respect aspect ratio
+            hRet = g_pD3DDevice->StretchRect(
+                /* pSourceSurface = */ pXboxBackBufferHostSurface,
+                /* pSourceRect = */ nullptr,
+                /* pDestSurface = */ pCurrentHostBackBuffer,
+                /* pDestRect = */ nullptr,
+                /* Filter = */ LoadSurfaceFilter
+            );
 		
-				if (hRet != D3D_OK) {
-					EmuLog(LOG_LEVEL::WARNING, "Couldn't blit Xbox BackBuffer to host BackBuffer : %X", hRet);
-				}
+			if (hRet != D3D_OK) {
+				EmuLog(LOG_LEVEL::WARNING, "Couldn't blit Xbox BackBuffer to host BackBuffer : %X", hRet);
 			}
 		}
 
@@ -7962,23 +7957,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderTarget)
 	g_pXboxDepthStencil = pNewZStencil;
     pHostDepthStencil = GetHostSurface(g_pXboxDepthStencil, D3DUSAGE_DEPTHSTENCIL);
 
-	if (g_DirectHostBackBufferAccess) {
-        if (pRenderTarget == g_XboxBackBufferSurface) {
-            HRESULT hRet = g_pD3DDevice->GetBackBuffer(
-                0, // iSwapChain
-                0, D3DBACKBUFFER_TYPE_MONO, &pHostRenderTarget);
-            DEBUG_D3DRESULT(hRet, "g_pD3DDevice->GetBackBuffer");
-
-            if (FAILED(hRet)) {
-                CxbxKrnlCleanup("Could not get host backbuffer");
-            }
-        }
-
-        if (pNewZStencil == g_XboxDefaultDepthStencilSurface) {
-            pHostDepthStencil = g_DefaultHostDepthBufferSuface;
-        }
-    }
-
 	HRESULT hRet;
 	// Mimick Direct3D 8 SetRenderTarget by only setting render target if non-null
 	if (pHostRenderTarget) {
@@ -7992,10 +7970,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderTarget)
 
 	hRet = g_pD3DDevice->SetDepthStencilSurface(pHostDepthStencil);
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetDepthStencilSurface");
-
-	if (g_DirectHostBackBufferAccess && pRenderTarget == g_XboxBackBufferSurface) {
-		pHostRenderTarget->Release();
-	}
 
 	if (SUCCEEDED(hRet)) {
 		// Once we're sure the host depth-stencil is activated...

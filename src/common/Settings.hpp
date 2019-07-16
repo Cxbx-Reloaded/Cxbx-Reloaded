@@ -219,7 +219,7 @@ public:
 		bool UseAllCores;
 		bool SkipRdtscPatching;
 		bool Reserved3;
-		bool DirectHostBackBufferAccess;
+		bool Reserved4;
 		bool Reserved7 = 0;
 		bool Reserved8 = 0;
 		int  Reserved99[8] = { 0 };

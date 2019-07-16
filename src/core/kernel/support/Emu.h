@@ -99,6 +99,5 @@ typedef struct DUMMY_KERNEL
 extern bool g_DisablePixelShaders;
 extern bool g_UseAllCores;
 extern bool g_SkipRdtscPatching;
-extern bool g_DirectHostBackBufferAccess;
 extern int g_RenderScaleFactor;
 #endif
