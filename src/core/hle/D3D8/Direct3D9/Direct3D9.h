@@ -591,6 +591,14 @@ VOID WINAPI EMUPATCH(D3DDevice_SetIndices)
 );
 
 // ******************************************************************
+// * patch: D3DDevice_SetIndices_4
+// ******************************************************************
+VOID WINAPI EMUPATCH(D3DDevice_SetIndices_4)
+(
+    UINT                BaseVertexIndex
+);
+
+// ******************************************************************
 // * patch: D3DDevice_SetTexture
 // ******************************************************************
 VOID WINAPI EMUPATCH(D3DDevice_SetTexture)
@@ -1368,6 +1376,14 @@ VOID WINAPI EMUPATCH(D3DDevice_DrawVertices)
     X_D3DPRIMITIVETYPE  PrimitiveType,
     UINT                StartVertex,
     UINT                VertexCount
+);
+
+// ******************************************************************
+// * patch: D3DDevice_DrawVertices_4
+// ******************************************************************
+VOID WINAPI EMUPATCH(D3DDevice_DrawVertices_4)
+(
+    X_D3DPRIMITIVETYPE  PrimitiveType
 );
 
 // ******************************************************************

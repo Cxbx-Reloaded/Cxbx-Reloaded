@@ -2456,10 +2456,7 @@ void Direct3D_CreateDevice_End()
 	// Set g_XboxD3DDevice to point to the Xbox D3D Device
 	auto it = g_SymbolAddresses.find("D3DDEVICE");
 	if (it != g_SymbolAddresses.end()) {
-		xbaddr dwD3DDevice = it->second;
-		if (dwD3DDevice != xbnull) {
-			g_XboxD3DDevice = *((DWORD**)dwD3DDevice);
-		}
+        g_XboxD3DDevice = (DWORD*)it->second;
     }
 }
 
@@ -2514,6 +2511,35 @@ HRESULT WINAPI XTL::EMUPATCH(Direct3D_CreateDevice_16)
 
 	return hRet;
 }
+
+// ******************************************************************
+// * patch: D3DDevice_SetIndices_4
+// LTCG specific D3DDevice_SetIndices function...
+// This uses a custom calling convention where parameter is passed in EBX and Stack
+// Test Case: Conker
+// ******************************************************************
+VOID WINAPI XTL::EMUPATCH(D3DDevice_SetIndices_4)
+(
+    UINT                BaseVertexIndex
+)
+{
+    X_D3DIndexBuffer   *pIndexData;
+
+    __asm {
+        mov pIndexData, ebx
+    }
+    // Cache the base vertex index
+    g_XboxBaseVertexIndex = BaseVertexIndex;
+
+    // Call LTCG-specific trampoline
+    XB_trampoline(VOID, WINAPI, D3DDevice_SetIndices_4, (UINT));
+    __asm {
+        mov ebx, pIndexData
+        push BaseVertexIndex
+        call XB_D3DDevice_SetIndices_4;
+    }
+}
+
 
 // ******************************************************************
 // * patch: D3DDevice_SetIndices
@@ -7436,6 +7462,27 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetPixelShader)
 	D3DDevice_SetPixelShaderCommon(Handle);
 }
 
+// ******************************************************************
+// * patch: D3DDevice_DrawVertices_4
+// LTCG specific D3DDevice_DrawVertices function...
+// This uses a custom calling convention where parameter is passed in ECX, EAX and Stack
+// Test Case: Conker
+// ******************************************************************
+VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawVertices_4)
+(
+    X_D3DPRIMITIVETYPE  PrimitiveType
+)
+{
+    UINT VertexCount;
+    UINT StartVertex;
+    
+    _asm {
+        mov VertexCount, eax
+        mov StartVertex, ecx
+    }
+
+    EMUPATCH(D3DDevice_DrawVertices)(PrimitiveType, StartVertex, VertexCount);
+}
 
 // ******************************************************************
 // * patch: D3DDevice_DrawVertices
