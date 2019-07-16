@@ -54,7 +54,6 @@ volatile bool    g_bPrintfOn = true;
 bool g_DisablePixelShaders = false;
 bool g_UseAllCores = false;
 bool g_SkipRdtscPatching = false;
-bool g_DirectHostBackBufferAccess = false;
 int g_RenderScaleFactor = 1.0f;
 
 // Delta added to host SystemTime, used in KiClockIsr and KeSetSystemTime

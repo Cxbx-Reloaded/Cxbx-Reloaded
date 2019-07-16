@@ -609,7 +609,6 @@ void PrintCurrentConfigurationLog()
 		printf("Disable Pixel Shaders: %s\n", g_DisablePixelShaders == 1 ? "On" : "Off (Default)");
 		printf("Run Xbox threads on all cores: %s\n", g_UseAllCores == 1 ? "On" : "Off (Default)");
 		printf("Skip RDTSC Patching: %s\n", g_SkipRdtscPatching == 1 ? "On" : "Off (Default)");
-		printf("Render directly to Host BackBuffer: %s\n", g_DirectHostBackBufferAccess == 1 ? "On" : "Off (Default)");
 	}
 
 	printf("------------------------- END OF CONFIG LOG ------------------------\n");
@@ -1413,8 +1412,6 @@ __declspec(noreturn) void CxbxKrnlInit
 		g_UseAllCores = !!HackEnabled;
 		g_EmuShared->GetSkipRdtscPatching(&HackEnabled);
 		g_SkipRdtscPatching = !!HackEnabled;
-		g_EmuShared->GetDirectHostBackBufferAccess(&HackEnabled);
-		g_DirectHostBackBufferAccess = !!HackEnabled;
 	}
 
 #ifdef _DEBUG_PRINT_CURRENT_CONF

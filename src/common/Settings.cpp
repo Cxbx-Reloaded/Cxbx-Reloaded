@@ -126,7 +126,6 @@ static struct {
 	const char* DisablePixelShaders = "DisablePixelShaders";
 	const char* UseAllCores = "UseAllCores";
 	const char* SkipRdtscPatching = "SkipRdtscPatching";
-	const char* DirectHostBackBufferAccess = "DirectHostBackBufferAccess";
 } sect_hack_keys;
 
 std::string GenerateExecDirectoryStr()
@@ -382,7 +381,6 @@ bool Settings::LoadConfig()
 	m_hacks.DisablePixelShaders = m_si.GetBoolValue(section_hack, sect_hack_keys.DisablePixelShaders, /*Default=*/false);
 	m_hacks.UseAllCores = m_si.GetBoolValue(section_hack, sect_hack_keys.UseAllCores, /*Default=*/false);
 	m_hacks.SkipRdtscPatching = m_si.GetBoolValue(section_hack, sect_hack_keys.SkipRdtscPatching, /*Default=*/false);
-	m_hacks.DirectHostBackBufferAccess = m_si.GetBoolValue(section_hack, sect_hack_keys.DirectHostBackBufferAccess, /*Default=*/false);
 
 	// ==== Hack End ============
 
@@ -644,7 +642,6 @@ bool Settings::Save(std::string file_path)
 	m_si.SetBoolValue(section_hack, sect_hack_keys.DisablePixelShaders, m_hacks.DisablePixelShaders, nullptr, true);
 	m_si.SetBoolValue(section_hack, sect_hack_keys.UseAllCores, m_hacks.UseAllCores, nullptr, true);
 	m_si.SetBoolValue(section_hack, sect_hack_keys.SkipRdtscPatching, m_hacks.SkipRdtscPatching, nullptr, true);
-	m_si.SetBoolValue(section_hack, sect_hack_keys.DirectHostBackBufferAccess, m_hacks.DirectHostBackBufferAccess, nullptr, true);
 
 	// ==== Hack End ============
 

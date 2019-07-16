@@ -147,8 +147,6 @@ class EmuShared : public Mutex
 		void SetUseAllCores(const int* value) { Lock(); m_hacks.UseAllCores = *value; Unlock(); }
 		void GetSkipRdtscPatching(int* value) { Lock(); *value = m_hacks.SkipRdtscPatching; Unlock(); }
 		void SetSkipRdtscPatching(const int* value) { Lock(); m_hacks.SkipRdtscPatching = *value; Unlock(); }
-		void GetDirectHostBackBufferAccess(int* value) { Lock(); *value = m_hacks.DirectHostBackBufferAccess; Unlock(); }
-		void SetDirectHostBackBufferAccess(const int* value) { Lock(); m_hacks.DirectHostBackBufferAccess = *value; Unlock(); }
 
 		// ******************************************************************
 		// * FPS/Benchmark values Accessors
