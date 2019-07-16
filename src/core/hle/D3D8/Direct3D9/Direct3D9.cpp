@@ -5576,33 +5576,48 @@ ULONG WINAPI XTL::EMUPATCH(D3DResource_Release)
 
 	// Was the Xbox resource freed?
 	if (uRet == 0) {
-		// If this was a cached render target or depth surface, clear the cache variable too!
+		// We should free any variables storing the resource when freed
+        // HACK: For now, we skip the release and issue a LOG_TEST_CASE
+        // This is a (small) memory leak, but prevents incorrectly freeing an in-use resource
+        // This is a *temporary* work around until solving
+        // https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/issues/1665
 		if (pThis == g_pXboxRenderTarget) {
-			g_pXboxRenderTarget = nullptr;
+            LOG_TEST_CASE("Skipping release of active Xbox Render Target");
+            RETURN(uRet);
+            //g_pXboxRenderTarget = nullptr;
 		}
 
 		if (pThis == g_pXboxDepthStencil) {
-			g_pXboxDepthStencil = nullptr;
+            LOG_TEST_CASE("Skipping release of active Xbox Depth Stencil");
+            RETURN(uRet);
+            //g_pXboxDepthStencil = nullptr;
 		}
 
 		if (pThis == g_XboxBackBufferSurface) {
-			g_XboxBackBufferSurface = nullptr;
+            LOG_TEST_CASE("Skipping release of active Xbox Render Target");
+            RETURN(uRet);
+            //g_XboxBackBufferSurface = nullptr;
 		}
 
         if (pThis == g_XboxDefaultDepthStencilSurface) {
-            g_XboxDefaultDepthStencilSurface = nullptr;
+            LOG_TEST_CASE("Skipping release of default Xbox Depth Stencil");
+            RETURN(uRet);
+            //g_XboxDefaultDepthStencilSurface = nullptr;
         }
 
 		for (int i = 0; i < TEXTURE_STAGES; i++) {
-			if (pThis == EmuD3DActiveTexture[i])
-				EmuD3DActiveTexture[i] = nullptr;
+            if (pThis == EmuD3DActiveTexture[i]) {
+                LOG_TEST_CASE("Skipping release of active Xbox Texture");
+                RETURN(uRet);
+                //EmuD3DActiveTexture[i] = nullptr;
+            }
 		}
 
 		// Also release the host copy (if it exists!)
 		FreeHostResource(key); 
 	}
 
-    return uRet;
+    RETURN(uRet);
 }
 
 // ******************************************************************
