@@ -2587,14 +2587,21 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_Reset)
 	// We should leave the rest of the params as is, and let the Xbox code/surface cache take care of it for us
 	pPresentationParameters->MultiSampleType = XTL::X_D3DMULTISAMPLE_NONE;
 
-	// Since Reset will call SetRenderTarget internally with a new backbuffer surface, we can clear our current association
-	// NOTE: We don't actually free the data, the Xbox side will do this for us when we call the trampoline below.
-	g_XboxBackBufferSurface = nullptr;
-	g_XboxDefaultDepthStencilSurface = nullptr;
+	// Since Reset will call create a new backbuffer surface, we can clear our current association
+	// NOTE: We don't actually free the Xbox data, the Xbox side will do this for us when we call the trampoline below.
+	// We must not reset the values to nullptr, since the XDK will re-use the same addresses for the data headers
+	// (they are members of the Direct3DDevice object). if we overwrite then, the reference to the xbox backbuffer will be lost
+    // and we'll get a black screen.
+	FreeHostResource(GetHostResourceKey(g_XboxBackBufferSurface));
+	FreeHostResource(GetHostResourceKey(g_XboxDefaultDepthStencilSurface));
 	
 	// Call the Xbox Reset function to do the rest of the work for us
 	XB_trampoline(HRESULT, WINAPI, D3DDevice_Reset, (X_D3DPRESENT_PARAMETERS*));
 	HRESULT hRet = XB_D3DDevice_Reset(pPresentationParameters);
+
+	// Refresh the current render target and depth stencil, to apply changes made within D3DDevice_Reset
+	// Some XDKs do this for us, but not all do!
+	EMUPATCH(D3DDevice_SetRenderTarget)(g_pXboxRenderTarget, g_pXboxDepthStencil);
 
 	return hRet;
 }
