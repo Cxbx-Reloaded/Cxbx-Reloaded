@@ -251,7 +251,7 @@ inline void GenerateMixBinDefault(
         }
         else {
             // If format is PCM/XADPCM, then use stereo mixbin as default.
-            if (lpwfxFormat->wFormatTag != WAVE_FORMAT_EXTENSIBLE) {
+            if (lpwfxFormat == xbnullptr || lpwfxFormat->wFormatTag != WAVE_FORMAT_EXTENSIBLE) {
                 counter = 2;
                 for (i = 0; i < counter; i++) {
                     xb_mixbinArray[i].dwMixBin = i;
