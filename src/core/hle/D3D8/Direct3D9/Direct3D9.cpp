@@ -2461,22 +2461,38 @@ void Direct3D_CreateDevice_End()
 }
 
 // LTCG specific Direct3D_CreateDevice function...
-// This uses a custom calling convention passed unknown parameters
-// Test-case: Ninja Gaiden
+// This uses a custom calling with parameters passed in eax, ecx and the stack
+// Test-case: Ninja Gaiden, Halo 2
 HRESULT WINAPI XTL::EMUPATCH(Direct3D_CreateDevice_4)
 (
     X_D3DPRESENT_PARAMETERS     *pPresentationParameters
 )
 {
+    DWORD BehaviorFlags;
+    IDirect3DDevice **ppReturnedDeviceInterface;
+
+    __asm {
+        mov BehaviorFlags, eax
+        mov ppReturnedDeviceInterface, ecx
+    }
+
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pPresentationParameters)
 		LOG_FUNC_END;
 
 	Direct3D_CreateDevice_Start(pPresentationParameters);
 
+    HRESULT hRet = 0;
+
 	// Only then call Xbox CreateDevice function
 	XB_trampoline(HRESULT, WINAPI, Direct3D_CreateDevice_4, (X_D3DPRESENT_PARAMETERS*));
-	HRESULT hRet = XB_Direct3D_CreateDevice_4(pPresentationParameters);
+    __asm {
+        mov eax, BehaviorFlags
+        mov ecx, ppReturnedDeviceInterface
+        push pPresentationParameters
+        call XB_Direct3D_CreateDevice_4
+        mov hRet, eax
+    }
 
 	Direct3D_CreateDevice_End();
 
