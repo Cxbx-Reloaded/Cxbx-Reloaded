@@ -5577,10 +5577,15 @@ ULONG WINAPI XTL::EMUPATCH(D3DResource_Release)
 	// Was the Xbox resource freed?
 	if (uRet == 0) {
 		// We should free any variables storing the resource when freed
-        // HACK: For now, we skip the release and issue a LOG_TEST_CASE
+        // HACK: For now, we skip the release when the resource has a non-zero internal ref count
+		// We also skip the release if we still have a cached variable containing this value
         // This is a (small) memory leak, but prevents incorrectly freeing an in-use resource
-        // This is a *temporary* work around until solving
-        // https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/issues/1665
+        // This is a *temporary* work around until solving https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/issues/1665
+		if ((pThis->Common & X_D3DCOMMON_INTREFCOUNT_MASK) != 0) {
+			LOG_TEST_CASE("Skipping Release of resource with a non-zero internal reference count");
+			RETURN(uRet);
+		}
+
 		if (pThis == g_pXboxRenderTarget) {
             LOG_TEST_CASE("Skipping release of active Xbox Render Target");
             RETURN(uRet);
