@@ -5618,33 +5618,45 @@ ULONG WINAPI XTL::EMUPATCH(D3DResource_Release)
 
 	// Was the Xbox resource freed?
 	if (uRet == 0) {
-		// If this was a cached render target or depth surface, clear the cache variable too!
+	
+        // Generate some test cases so we know what to investigate/re-test after
+		// solving https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/issues/1665
+		if ((pThis->Common & X_D3DCOMMON_INTREFCOUNT_MASK) != 0) {
+			LOG_TEST_CASE("Release of resource with a non-zero internal reference count");
+		}
+
 		if (pThis == g_pXboxRenderTarget) {
-			g_pXboxRenderTarget = nullptr;
+            LOG_TEST_CASE("Release of active Xbox Render Target");
+            g_pXboxRenderTarget = nullptr;
 		}
 
 		if (pThis == g_pXboxDepthStencil) {
-			g_pXboxDepthStencil = nullptr;
+            LOG_TEST_CASE("Release of active Xbox Depth Stencil");
+            g_pXboxDepthStencil = nullptr;
 		}
 
 		if (pThis == g_XboxBackBufferSurface) {
-			g_XboxBackBufferSurface = nullptr;
+            LOG_TEST_CASE("Release of active Xbox Render Target");
+            g_XboxBackBufferSurface = nullptr;
 		}
 
         if (pThis == g_XboxDefaultDepthStencilSurface) {
+            LOG_TEST_CASE("Release of default Xbox Depth Stencil");
             g_XboxDefaultDepthStencilSurface = nullptr;
         }
 
 		for (int i = 0; i < TEXTURE_STAGES; i++) {
-			if (pThis == EmuD3DActiveTexture[i])
-				EmuD3DActiveTexture[i] = nullptr;
+            if (pThis == EmuD3DActiveTexture[i]) {
+                LOG_TEST_CASE("Release of active Xbox Texture");
+                EmuD3DActiveTexture[i] = nullptr;
+            }
 		}
 
 		// Also release the host copy (if it exists!)
 		FreeHostResource(key); 
 	}
 
-    return uRet;
+    RETURN(uRet);
 }
 
 // ******************************************************************
