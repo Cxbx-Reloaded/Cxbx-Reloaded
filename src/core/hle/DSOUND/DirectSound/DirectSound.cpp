@@ -526,7 +526,8 @@ static void dsound_thread_worker(LPVOID nullPtr)
 	SetThreadAffinityMask(GetCurrentThread(), g_CPUOthers);
 
     while (true) {
-		Sleep(0);
+		Sleep(1);
+
         DSoundMutexGuardLock;
 
         vector_ds_stream::iterator ppDSStream = g_pDSoundStreamCache.begin();
