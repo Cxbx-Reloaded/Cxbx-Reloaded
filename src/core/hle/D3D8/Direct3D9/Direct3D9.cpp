@@ -2456,30 +2456,43 @@ void Direct3D_CreateDevice_End()
 	// Set g_XboxD3DDevice to point to the Xbox D3D Device
 	auto it = g_SymbolAddresses.find("D3DDEVICE");
 	if (it != g_SymbolAddresses.end()) {
-		xbaddr dwD3DDevice = it->second;
-		if (dwD3DDevice != xbnull) {
-			g_XboxD3DDevice = *((DWORD**)dwD3DDevice);
-		}
+        g_XboxD3DDevice = (DWORD*)it->second;
     }
 }
 
 // LTCG specific Direct3D_CreateDevice function...
-// This uses a custom calling convention passed unknown parameters
-// Test-case: Ninja Gaiden
+// This uses a custom calling with parameters passed in eax, ecx and the stack
+// Test-case: Ninja Gaiden, Halo 2
 HRESULT WINAPI XTL::EMUPATCH(Direct3D_CreateDevice_4)
 (
     X_D3DPRESENT_PARAMETERS     *pPresentationParameters
 )
 {
+    DWORD BehaviorFlags;
+    IDirect3DDevice **ppReturnedDeviceInterface;
+
+    __asm {
+        mov BehaviorFlags, eax
+        mov ppReturnedDeviceInterface, ecx
+    }
+
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pPresentationParameters)
 		LOG_FUNC_END;
 
 	Direct3D_CreateDevice_Start(pPresentationParameters);
 
+    HRESULT hRet = 0;
+
 	// Only then call Xbox CreateDevice function
 	XB_trampoline(HRESULT, WINAPI, Direct3D_CreateDevice_4, (X_D3DPRESENT_PARAMETERS*));
-	HRESULT hRet = XB_Direct3D_CreateDevice_4(pPresentationParameters);
+    __asm {
+        mov eax, BehaviorFlags
+        mov ecx, ppReturnedDeviceInterface
+        push pPresentationParameters
+        call XB_Direct3D_CreateDevice_4
+        mov hRet, eax
+    }
 
 	Direct3D_CreateDevice_End();
 
@@ -2514,6 +2527,35 @@ HRESULT WINAPI XTL::EMUPATCH(Direct3D_CreateDevice_16)
 
 	return hRet;
 }
+
+// ******************************************************************
+// * patch: D3DDevice_SetIndices_4
+// LTCG specific D3DDevice_SetIndices function...
+// This uses a custom calling convention where parameter is passed in EBX and Stack
+// Test Case: Conker
+// ******************************************************************
+VOID WINAPI XTL::EMUPATCH(D3DDevice_SetIndices_4)
+(
+    UINT                BaseVertexIndex
+)
+{
+    X_D3DIndexBuffer   *pIndexData;
+
+    __asm {
+        mov pIndexData, ebx
+    }
+    // Cache the base vertex index
+    g_XboxBaseVertexIndex = BaseVertexIndex;
+
+    // Call LTCG-specific trampoline
+    XB_trampoline(VOID, WINAPI, D3DDevice_SetIndices_4, (UINT));
+    __asm {
+        mov ebx, pIndexData
+        push BaseVertexIndex
+        call XB_D3DDevice_SetIndices_4;
+    }
+}
+
 
 // ******************************************************************
 // * patch: D3DDevice_SetIndices
@@ -7436,6 +7478,27 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetPixelShader)
 	D3DDevice_SetPixelShaderCommon(Handle);
 }
 
+// ******************************************************************
+// * patch: D3DDevice_DrawVertices_4
+// LTCG specific D3DDevice_DrawVertices function...
+// This uses a custom calling convention where parameter is passed in ECX, EAX and Stack
+// Test Case: Conker
+// ******************************************************************
+VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawVertices_4)
+(
+    X_D3DPRIMITIVETYPE  PrimitiveType
+)
+{
+    UINT VertexCount;
+    UINT StartVertex;
+    
+    _asm {
+        mov VertexCount, eax
+        mov StartVertex, ecx
+    }
+
+    EMUPATCH(D3DDevice_DrawVertices)(PrimitiveType, StartVertex, VertexCount);
+}
 
 // ******************************************************************
 // * patch: D3DDevice_DrawVertices
