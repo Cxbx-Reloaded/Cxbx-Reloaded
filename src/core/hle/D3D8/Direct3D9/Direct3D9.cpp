@@ -5619,6 +5619,10 @@ ULONG WINAPI XTL::EMUPATCH(D3DResource_Release)
 	// Backup the key now, as the Xbox resource may be wiped out by the following release call!
 	auto key = GetHostResourceKey(pThis);
 
+	// Store a copy of Common and pThis to avoid dereferencing pThis later, which can become invalidated by D3DResource_Release (test case: JSRF)
+	DWORD Common = pThis->Common;
+	X_D3DResource *pThisCopy = pThis;
+
 	// Call the Xbox version of D3DResource_Release and store the result
 	XB_trampoline(ULONG, WINAPI, D3DResource_Release, (X_D3DResource*));
 
@@ -5629,32 +5633,32 @@ ULONG WINAPI XTL::EMUPATCH(D3DResource_Release)
 	
         // Generate some test cases so we know what to investigate/re-test after
 		// solving https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/issues/1665
-		if ((pThis->Common & X_D3DCOMMON_INTREFCOUNT_MASK) != 0) {
+		if (((Common & X_D3DCOMMON_INTREFCOUNT_MASK) >> X_D3DCOMMON_INTREFCOUNT_SHIFT) != 1) {
 			LOG_TEST_CASE("Release of resource with a non-zero internal reference count");
 		}
 
-		if (pThis == g_pXboxRenderTarget) {
+		if (pThisCopy == g_pXboxRenderTarget) {
             LOG_TEST_CASE("Release of active Xbox Render Target");
             g_pXboxRenderTarget = nullptr;
 		}
 
-		if (pThis == g_pXboxDepthStencil) {
+		if (pThisCopy == g_pXboxDepthStencil) {
             LOG_TEST_CASE("Release of active Xbox Depth Stencil");
             g_pXboxDepthStencil = nullptr;
 		}
 
-		if (pThis == g_XboxBackBufferSurface) {
+		if (pThisCopy == g_XboxBackBufferSurface) {
             LOG_TEST_CASE("Release of active Xbox Render Target");
             g_XboxBackBufferSurface = nullptr;
 		}
 
-        if (pThis == g_XboxDefaultDepthStencilSurface) {
+        if (pThisCopy == g_XboxDefaultDepthStencilSurface) {
             LOG_TEST_CASE("Release of default Xbox Depth Stencil");
             g_XboxDefaultDepthStencilSurface = nullptr;
         }
 
 		for (int i = 0; i < TEXTURE_STAGES; i++) {
-            if (pThis == EmuD3DActiveTexture[i]) {
+            if (pThisCopy == EmuD3DActiveTexture[i]) {
                 LOG_TEST_CASE("Release of active Xbox Texture");
                 EmuD3DActiveTexture[i] = nullptr;
             }
