@@ -105,7 +105,7 @@ xboxkrnl::VOID xboxkrnl::KiInitSystem()
 
 	InitializeListHead(&KiWaitInListHead);
 
-	KiTimerMtx.Acquired = false;
+	KiTimerMtx.Acquired = 0;
 	KeInitializeDpc(&KiTimerExpireDpc, KiTimerExpiration, NULL);
 	for (i = 0; i < TIMER_TABLE_SIZE; i++) {
 		InitializeListHead(&KiTimerTableListHead[i].Entry);
@@ -163,14 +163,14 @@ xboxkrnl::VOID xboxkrnl::KiClockIsr
 	// Because this function must be fast to continuously update the kernel clocks, if somebody else is currently
 	// holding the lock, we won't wait and instead skip the check of the timers for this cycle
 	if (KiTimerMtx.Mtx.try_lock()) {
-		KiTimerMtx.Acquired = true;
+		KiTimerMtx.Acquired++;
 		// Check if a timer has expired
 		Hand = OldKeTickCount & (TIMER_TABLE_SIZE - 1);
 		if (KiTimerTableListHead[Hand].Entry.Flink != &KiTimerTableListHead[Hand].Entry &&
 			(ULONGLONG)InterruptTime.QuadPart >= KiTimerTableListHead[Hand].Time.QuadPart) {
 			KeInsertQueueDpc(&KiTimerExpireDpc, (PVOID)Hand, 0);
 		}
-		KiTimerMtx.Acquired = false;
+		KiTimerMtx.Acquired--;
 		KiTimerMtx.Mtx.unlock();
 	}
 
