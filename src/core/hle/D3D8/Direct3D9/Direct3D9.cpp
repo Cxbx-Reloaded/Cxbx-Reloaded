@@ -3747,10 +3747,10 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexShaderConstant)
 		LOG_FUNC_END;
 
 /*#ifdef _DEBUG_TRACK_VS_CONST
-    for (uint32 i = 0; i < ConstantCount; i++)
+    for (uint32_t i = 0; i < ConstantCount; i++)
     {
-        printf("SetVertexShaderConstant, c%d (c%d) = { %f, %f, %f, %f }\n",
-               Register - 96 + i, Register + i,
+        printf("SetVertexShaderConstant, c%d  = { %f, %f, %f, %f }\n",
+               Register + i,
                *((float*)pConstantData + 4 * i),
                *((float*)pConstantData + 4 * i + 1),
                *((float*)pConstantData + 4 * i + 2),
@@ -3758,12 +3758,9 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexShaderConstant)
     }
 #endif*/ // _DEBUG_TRACK_VS_CONST
 
-	// TODO: HACK: Since Xbox vertex shader constants range from -96 to 96, during conversion
-	// some shaders need to add 96 to use ranges 0 to 192.  This fixes 3911 - 4361 games and XDK
-	// samples, but breaks Turok.
-	// See D3DDevice_GetVertexShaderConstant
-	if(g_LibVersion_D3D8 <= 4361)
-		Register += 96;
+    // Xbox vertex shader constants range from -96 to 96
+    // The host does not support negative, so we adjust to 0-192
+	Register += 96;
 
     HRESULT hRet;
 	hRet = g_pD3DDevice->SetVertexShaderConstantF(
@@ -3791,7 +3788,10 @@ VOID __fastcall XTL::EMUPATCH(D3DDevice_SetVertexShaderConstant1)
 {
 	LOG_FORWARD("D3DDevice_SetVertexShaderConstant");
 
-    EMUPATCH(D3DDevice_SetVertexShaderConstant)(Register, pConstantData, 1);
+    // The XDK uses a macro to automatically adjust to 0-192 range
+    // but D3DDevice_SetVertexShaderConstant expects -96-96 range
+    // so we adjust before forwarding
+    EMUPATCH(D3DDevice_SetVertexShaderConstant)(Register - 96, pConstantData, 1);
 }
 
 // ******************************************************************
@@ -3805,9 +3805,10 @@ VOID __fastcall XTL::EMUPATCH(D3DDevice_SetVertexShaderConstant1Fast)
 {
 	LOG_FORWARD("D3DDevice_SetVertexShaderConstant");
 
-	// Redirect to the standard version.
-
-    EMUPATCH(D3DDevice_SetVertexShaderConstant)(Register, pConstantData, 1);
+    // The XDK uses a macro to automatically adjust to 0-192 range
+    // but D3DDevice_SetVertexShaderConstant expects -96-96 range
+    // so we adjust before forwarding
+    EMUPATCH(D3DDevice_SetVertexShaderConstant)(Register - 96, pConstantData, 1);
 }
 
 // ******************************************************************
@@ -3821,7 +3822,10 @@ VOID __fastcall XTL::EMUPATCH(D3DDevice_SetVertexShaderConstant4)
 {
 	LOG_FORWARD("D3DDevice_SetVertexShaderConstant");
 
-	EMUPATCH(D3DDevice_SetVertexShaderConstant)(Register, pConstantData, 4);
+    // The XDK uses a macro to automatically adjust to 0-192 range
+    // but D3DDevice_SetVertexShaderConstant expects -96-96 range
+    // so we adjust before forwarding
+	EMUPATCH(D3DDevice_SetVertexShaderConstant)(Register - 96, pConstantData, 4);
 }
 
 // ******************************************************************
@@ -3836,7 +3840,10 @@ VOID __fastcall XTL::EMUPATCH(D3DDevice_SetVertexShaderConstantNotInline)
 {
 	LOG_FORWARD("D3DDevice_SetVertexShaderConstant");
 
-	EMUPATCH(D3DDevice_SetVertexShaderConstant)(Register, pConstantData, ConstantCount / 4);
+    // The XDK uses a macro to automatically adjust to 0-192 range
+    // but D3DDevice_SetVertexShaderConstant expects -96-96 range
+    // so we adjust before forwarding
+	EMUPATCH(D3DDevice_SetVertexShaderConstant)(Register - 96, pConstantData, ConstantCount / 4);
 }
 
 // ******************************************************************
@@ -3851,9 +3858,10 @@ VOID __fastcall XTL::EMUPATCH(D3DDevice_SetVertexShaderConstantNotInlineFast)
 {
 	LOG_FORWARD("D3DDevice_SetVertexShaderConstant");
 
-	// Redirect to the standard version.
-
-	EMUPATCH(D3DDevice_SetVertexShaderConstant)(Register, pConstantData, ConstantCount / 4);
+    // The XDK uses a macro to automatically adjust to 0-192 range
+    // but D3DDevice_SetVertexShaderConstant expects -96-96 range
+    // so we adjust before forwarding
+	EMUPATCH(D3DDevice_SetVertexShaderConstant)(Register - 96, pConstantData, ConstantCount / 4);
 }
 
 // LTCG specific D3DDevice_SetTexture function...
@@ -8367,12 +8375,9 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_GetVertexShaderConstant)
 		LOG_FUNC_ARG(ConstantCount)
 		LOG_FUNC_END;
 
-	// TODO: HACK: Since Xbox vertex shader constants range from -96 to 96, during conversion
-	// some shaders need to add 96 to use ranges 0 to 192.  This fixes 3911 - 4361 games and XDK
-	// samples, but breaks Turok.
-	// See D3DDevice_SetVertexShaderConstant
-	if (g_LibVersion_D3D8 <= 4361)
-		Register += 96;
+	// Xbox vertex shader constants range from -96 to 96
+    // The host does not support negative, so we adjust to 0-192
+	Register += 96;
 
 	HRESULT hRet = g_pD3DDevice->GetVertexShaderConstantF
     (
@@ -9292,11 +9297,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetPixelShaderConstant_4)
     //    LOG_FUNC_ARG(ConstantCount)
     //    LOG_FUNC_END;
     EmuLog(LOG_LEVEL::DEBUG, "D3DDevice_SetPixelShaderConstant_4(Register : %d pConstantData : %08X ConstantCount : %d);", Register, pConstantData, ConstantCount);
-
-    // TODO: This hack is necessary for Vertex Shaders on XDKs prior to 4361, but if this
-    // causes problems with pixel shaders, feel free to comment out the hack below.
-    if(g_LibVersion_D3D8 <= 4361)
-        Register += 96;
 
 	HRESULT hRet = g_pD3DDevice->SetPixelShaderConstantF
     (
