@@ -125,13 +125,21 @@ uint32_t fs_lock = 0;
 __declspec(naked) void LockFS()
 {
 	__asm {
+		// Backup Registers
 		pushfd
 		pushad
+
+		// Spin until we can aquire the lock
 		spinlock :
+		call SwitchToThread // Give other threads chance to run, prevents hogging entire timeslice waiting for spinlock
+							// We do this here loop because SwitchToThread will overwrite eax, so it cannot go below
+							// It's not worth wasting the extra cycles of pushing/popping eax to the stack around this call
 		mov eax, 1
 		xchg eax, fs_lock
 		test eax, eax
 		jnz spinlock
+
+		// Restore registers and return
 		popad
 		popfd
 		ret
