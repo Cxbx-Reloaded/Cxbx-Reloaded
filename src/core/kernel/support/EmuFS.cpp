@@ -421,13 +421,16 @@ __declspec(naked) void EmuFS_MovFs00Esp()
 	// Note : eax must be preserved here, hence the push/pop
 	__asm
 	{
+		pushfd
 		call LockFS
 		call EmuFS_RefreshKPCR
 		push eax
 		mov eax, fs : [TIB_ArbitraryDataSlot]
 		mov [eax], esp
+		add [eax], 12 // account for esp changes from pushed registers and return address
 		pop eax
 		call UnlockFS
+		popfd
 		ret
 	}
 }
