@@ -51,6 +51,7 @@ namespace xboxkrnl
 #include "devices\video\nv2a.h" // For GET_MASK, NV_PGRAPH_CONTROL_0
 #include "gui\ResCxbx.h"
 #include "WalkIndexBuffer.h"
+#include "core/kernel/common/strings.hpp" // For uem_str
 
 #include <assert.h>
 #include <process.h>
@@ -542,18 +543,17 @@ void DrawUEM(HWND hWnd)
 
 	SetTextColor(hMemDC, RGB(0, 204, 0));
 
-	wchar_t buff[500];
-	LoadStringW(GetModuleHandle(NULL), IDS_UEM, buff, sizeof(buff) / sizeof(wchar_t));
-	std::wstring wstr(buff);
+	std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> UTF8toUTF16;
+	std::wstring utf16str = UTF8toUTF16.from_bytes(uem_str);
 
 	// Unfortunately, DrawTextW doesn't support vertical alignemnt, so we have to do the calculation
 	// ourselves. See here: https://social.msdn.microsoft.com/Forums/vstudio/en-US/abd89aae-16a0-41c6-8db6-b119ea90b42a/win32-drawtext-how-center-in-vertical-with-new-lines-and-tabs?forum=vclanguage
 
 	RECT rect = { 0, 0, 640, 480 };
 	RECT textrect = { 0, 0, 640, 480 };
-	DrawTextW(hMemDC, wstr.c_str(), wstr.length(), &textrect, DT_CALCRECT);
+	DrawTextW(hMemDC, utf16str.c_str(), utf16str.length(), &textrect, DT_CALCRECT);
 	rect.top = (rect.bottom - textrect.bottom) / 2;
-	DrawTextW(hMemDC, wstr.c_str(), wstr.length(), &rect, DT_CENTER);
+	DrawTextW(hMemDC, utf16str.c_str(), utf16str.length(), &rect, DT_CENTER);
 
 
 	// Draw the Xbox error code
