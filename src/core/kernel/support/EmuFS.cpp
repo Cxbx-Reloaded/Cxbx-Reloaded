@@ -426,6 +426,7 @@ __declspec(naked) void EmuFS_MovFs00Esp()
 		push eax
 		mov eax, fs : [TIB_ArbitraryDataSlot]
 		mov [eax], esp
+		add [eax], 8 // account esp changes from pushed registers and return address
 		pop eax
 		call UnlockFS
 		ret
