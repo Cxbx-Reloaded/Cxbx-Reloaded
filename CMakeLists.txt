@@ -145,6 +145,7 @@ file (GLOB CXBXR_HEADER_EMU
  "${CXBXR_ROOT_DIR}/src/core/hle/XAPI/Xapi.h"
  "${CXBXR_ROOT_DIR}/src/core/hle/XGRAPHIC/XGraphic.h"
  "${CXBXR_ROOT_DIR}/src/core/hle/XONLINE/XOnline.h"
+ "${CXBXR_ROOT_DIR}/src/core/kernel/common/strings.hpp"
  "${CXBXR_ROOT_DIR}/src/core/kernel/exports/EmuKrnlAvModes.h"
  "${CXBXR_ROOT_DIR}/src/core/kernel/exports/EmuKrnlKe.h"
  "${CXBXR_ROOT_DIR}/src/core/kernel/exports/EmuKrnlKi.h"

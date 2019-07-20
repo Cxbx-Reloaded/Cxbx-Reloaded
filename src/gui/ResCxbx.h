@@ -17,7 +17,6 @@
 #define IDD_ABOUT                       119
 #define IDR_CONTRIBUTORS                121
 #define IDR_COPYING                     122
-#define IDS_UEM                         123
 #define IDD_CONTROLLER_HOST_MAPPING     131
 #define IDD_VIRTUAL_SBC_FEEDBACK        133
 #define IDD_NETWORK_CFG                 134
