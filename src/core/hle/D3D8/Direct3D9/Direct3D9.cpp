@@ -3518,11 +3518,23 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateVertexShader)
 	// Sets other fields
 	// pHandle recieves the addres of the new shader, or-ed with 1 (D3DFVF_RESERVED0)
 	XB_trampoline(HRESULT, WINAPI, D3DDevice_CreateVertexShader, (CONST DWORD*, CONST DWORD*, DWORD*, DWORD));
-	HRESULT hRet = XB_D3DDevice_CreateVertexShader(pDeclaration, pFunction, pHandle, Usage);
-	if (FAILED(hRet)) {
-		LOG_TEST_CASE("XB_D3DDevice_CreateVertexShader failed");
-		RETURN(hRet);
-	}
+
+    HRESULT hRet = D3D_OK;
+
+    if (XB_D3DDevice_CreateVertexShader) {
+        HRESULT hRet = XB_D3DDevice_CreateVertexShader(pDeclaration, pFunction, pHandle, Usage);
+        if (FAILED(hRet)) {
+            LOG_TEST_CASE("XB_D3DDevice_CreateVertexShader failed");
+            RETURN(hRet);
+        }
+    } else {
+        // Due to how our LoadVertexShader patch is implemented, it may call this function without the Xbox version existing
+        // As a result, we have to build our own vertex shader handle if the trampoline was not found
+        // We don't do the full steps listed above intentionally so: If this situation is reached, the game
+        // does not have a CreateVertexShader function, so those actions should not happen anyway!
+        LOG_TEST_CASE("CreateVertexShader with no trampoline");
+        *pHandle = ((DWORD)malloc(sizeof(X_D3DVertexShader)) & D3DFVF_RESERVED0);
+    }
 
 	if (g_pD3DDevice == nullptr) {
 		LOG_TEST_CASE("D3DDevice_CreateVertexShader called before Direct3D_CreateDevice");
