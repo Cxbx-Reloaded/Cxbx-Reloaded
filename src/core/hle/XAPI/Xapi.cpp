@@ -130,7 +130,7 @@ void InitXboxControllerHostBridge(void)
             //disconnect to host if the host port of xinput exceeds the total xinput controller connected to host.
             if (g_XboxControllerHostBridge[port].dwHostPort >= total_xinput_gamepad) {
                 g_XboxControllerHostBridge[port].dwHostType = X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_NOTCONNECT;
-                printf("InitXboxControllerHostBridge: Host XInput port greater then total xinput controller connected. disconnect xbox port from host!\n");
+                EmuLog(LOG_LEVEL::DEBUG, "InitXboxControllerHostBridge: Host XInput port greater then total xinput controller connected. disconnect xbox port from host!");
             }
             break;
         case X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_DINPUT:
@@ -148,7 +148,7 @@ void InitXboxControllerHostBridge(void)
         //find corresponding XboxDeviceInfo
         index=FindDeviceInfoIndexByXboxType(g_XboxControllerHostBridge[port].XboxDeviceInfo.ucType);
         if (index == -1) {
-            printf("XboxControllerHostBridge XboxDeviceInfo.ucType: %d not found in global XboxInputDeviceInfo vector!\n", g_XboxControllerHostBridge[port].XboxDeviceInfo.ucType);
+            EmuLog(LOG_LEVEL::DEBUG, "XboxControllerHostBridge XboxDeviceInfo.ucType: %d not found in global XboxInputDeviceInfo vector!", g_XboxControllerHostBridge[port].XboxDeviceInfo.ucType);
         }
         //copy XboxDeviceInfo from the global vector.
         g_XboxControllerHostBridge[port].XboxDeviceInfo.ucSubType = g_XboxInputDeviceInfo[index].ucSubType;

@@ -100,6 +100,7 @@ std::atomic_int g_CurrentLogLevel = to_underlying(LOG_LEVEL::INFO);
 const char log_debug[] = "DEBUG: ";
 const char log_info[]  = "INFO : ";
 const char log_warn[]  = "WARN : ";
+const char log_error[] = "ERROR: ";
 const char log_fatal[] = "FATAL: ";
 const char log_unkwn[] = "???? : ";
 
@@ -130,6 +131,9 @@ void NTAPI EmuLogEx(CXBXR_MODULE cxbxr_module, LOG_LEVEL level, const char *szWa
 					break;
 				case LOG_LEVEL::WARNING:
 					level_str = log_warn;
+					break;
+				case LOG_LEVEL::ERROR2:
+					level_str = log_error;
 					break;
 				case LOG_LEVEL::FATAL:
 					level_str = log_fatal;

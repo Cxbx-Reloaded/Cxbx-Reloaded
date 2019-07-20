@@ -17,7 +17,7 @@
 // *  If not, write to the Free Software Foundation, Inc.,
 // *  59 Temple Place - Suite 330, Bostom, MA 02111-1307, USA.
 // *
-// *  (c) 2018 ergo720
+// *  (c) 2018-2019 ergo720
 // *
 // *  All rights reserved
 // *
@@ -125,7 +125,7 @@ INT_PTR CALLBACK DlgLogConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM
 
 			hHandle = GetDlgItem(hWndDlg, IDC_EVENT_LV);
 			TempLevel = to_underlying(LOG_LEVEL::DEBUG);
-			for (auto i : { "Debug" , "Info" ,"Warning", "Fatal" }) {
+			for (auto i : { "Debug" , "Info" ,"Warning", "Error", "Fatal" }) {
 				LRESULT index = SendMessage(hHandle, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(i));
 				SendMessage(hHandle, CB_SETITEMDATA, index, TempLevel);
 				TempLevel++;
