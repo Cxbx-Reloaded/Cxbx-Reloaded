@@ -18,6 +18,7 @@
 // *  59 Temple Place - Suite 330, Bostom, MA 02111-1307, USA.
 // *
 // *  (c) 2016 Patrick van Logchem <pvanlogchem@gmail.com>
+// *  (c) 2019 ergo720
 // *
 // *  All rights reserved
 // *
@@ -34,10 +35,12 @@
 #include <atomic> // For atomic_bool and atomic_uint
 #include "common\util\CxbxUtil.h" // For g_bPrintfOn and to_underlying
 
+// NOTE: using ERROR2 since windows.h imports an ERROR macro which would conflict otherwise
 typedef enum class _LOG_LEVEL {
 	DEBUG = 0,
 	INFO,
 	WARNING,
+	ERROR2,
 	FATAL,
 	MAX,
 }LOG_LEVEL;

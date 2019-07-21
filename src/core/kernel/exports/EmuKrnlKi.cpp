@@ -206,7 +206,7 @@ xboxkrnl::VOID NTAPI xboxkrnl::KiCheckTimerTable
 			if (Timer->DueTime.QuadPart <= CurrentTime.QuadPart)
 			{
 				/* This is bad, breakpoint! */
-				EmuLog(LOG_LEVEL::WARNING, "Invalid timer state!");
+				EmuLog(LOG_LEVEL::ERROR2, "Invalid timer state!");
 				DbgBreakPoint();
 			}
 		}

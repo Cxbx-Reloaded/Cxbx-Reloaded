@@ -366,7 +366,7 @@ void OHCI::OHCI_FrameBoundaryWorker()
 
 	// Writeback HCCA
 	if (OHCI_WriteHCCA(m_Registers.HcHCCA, &hcca)) {
-		EmuLog(LOG_LEVEL::WARNING, "HCCA write error at physical address 0x%X", m_Registers.HcHCCA);
+		EmuLog(LOG_LEVEL::ERROR2, "HCCA write error at physical address 0x%X", m_Registers.HcHCCA);
 		OHCI_FatalError();
 	}
 
@@ -381,7 +381,7 @@ void OHCI::OHCI_FatalError()
 
 	OHCI_SetInterrupt(OHCI_INTR_UE);
 	OHCI_BusStop();
-	EmuLog(LOG_LEVEL::WARNING, "An unrecoverable error has occoured!\n");
+	EmuLog(LOG_LEVEL::ERROR2, "An unrecoverable error has occoured!\n");
 }
 
 bool OHCI::OHCI_ReadHCCA(xbaddr Paddr, OHCI_HCCA* Hcca)
@@ -498,7 +498,7 @@ int OHCI::OHCI_ServiceEDlist(xbaddr Head, int Completion)
 
 	for (current = Head; current; current = next_ed) {
 		if (OHCI_ReadED(current, &ed)) {
-			EmuLog(LOG_LEVEL::WARNING, "ED read error at physical address 0x%X", current);
+			EmuLog(LOG_LEVEL::ERROR2, "ED read error at physical address 0x%X", current);
 			OHCI_FatalError();
 			return 0;
 		}
@@ -580,7 +580,7 @@ int OHCI::OHCI_ServiceTD(OHCI_ED* Ed)
 		return 1;
 	}
 	if (OHCI_ReadTD(addr, &td)) {
-		EmuLog(LOG_LEVEL::WARNING, "TD read error at physical address 0x%X", addr);
+		EmuLog(LOG_LEVEL::ERROR2, "TD read error at physical address 0x%X", addr);
 		OHCI_FatalError();
 		return 0;
 	}
@@ -1584,7 +1584,7 @@ int OHCI::OHCI_ServiceIsoTD(OHCI_ED* ed, int completion)
 	addr = ed->HeadP & OHCI_DPTR_MASK;
 
 	if (OHCI_ReadIsoTD(addr, &iso_td)) {
-		EmuLog(LOG_LEVEL::DEBUG, "ISO_TD read error at physical address 0x%X", addr);
+		EmuLog(LOG_LEVEL::ERROR2, "ISO_TD read error at physical address 0x%X", addr);
 		OHCI_FatalError();
 		return 0;
 	}
