@@ -1,7 +1,6 @@
 # Cxbx-Reloaded - Original Xbox Emulator 
 [![License: GPL v2](https://img.shields.io/badge/License-GPL%20v2-blue.svg)](https://img.shields.io/badge/License-GPL%20v2-blue.svg)
 [![AppVeyor](https://ci.appveyor.com/api/projects/status/iao43irxl3umbp33?svg=true)](https://ci.appveyor.com/project/SoullessSentinel/cxbx-reloaded)
-[![Gitter](https://badges.gitter.im/gitterHQ/gitter.svg)](https://gitter.im/Cxbx-Reloaded/Lobby)
 [![Discord](https://img.shields.io/badge/chat-on%20discord-7289da.svg?logo=discord)](https://discord.gg/26Xjx23)
 
 Cxbx-Reloaded is an emulator for running Microsoft Xbox (and eventually, Chihiro) games on Microsoft Windows.
@@ -44,7 +43,7 @@ Make sure bug reports contain:
 
 ## Additional information
 Cxbx-Reloaded has a [wiki](https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/wiki) containing various subjects and background information.
-Chat on [Gitter](https://gitter.im/Cxbx-Reloaded/Lobby), or [Discord](https://discord.gg/26Xjx23).
+Chat on [Discord](https://discord.gg/26Xjx23).
 
 ## Contributing
 We welcome contributions, large and small.
