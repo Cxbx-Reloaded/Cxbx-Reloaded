@@ -4320,6 +4320,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexData4f)
 		{
 			g_InlineVertexBuffer_Table[o].Diffuse = D3DCOLOR_COLORVALUE(a, b, c, d);
 			g_InlineVertexBuffer_FVF |= D3DFVF_DIFFUSE;
+            HLE_write_NV2A_vertex_attribute_slot(X_D3DVSDE_DIFFUSE, g_InlineVertexBuffer_Table[o].Diffuse);
 			break;
 		}
 
@@ -4327,6 +4328,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexData4f)
 		{
 			g_InlineVertexBuffer_Table[o].Specular = D3DCOLOR_COLORVALUE(a, b, c, d);
 			g_InlineVertexBuffer_FVF |= D3DFVF_SPECULAR;
+            HLE_write_NV2A_vertex_attribute_slot(X_D3DVSDE_SPECULAR, g_InlineVertexBuffer_Table[o].Specular);
 			break;
 		}
 
@@ -4343,6 +4345,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexData4f)
 		{
 			g_InlineVertexBuffer_Table[o].BackDiffuse = D3DCOLOR_COLORVALUE(a, b, c, d);
 			EmuLog(LOG_LEVEL::WARNING, "Host Direct3D8 doesn''t support FVF BACKDIFFUSE");
+            HLE_write_NV2A_vertex_attribute_slot(X_D3DVSDE_BACKDIFFUSE, g_InlineVertexBuffer_Table[o].BackDiffuse);
 			break;
 		}
 
@@ -4350,6 +4353,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexData4f)
 		{
 			g_InlineVertexBuffer_Table[o].BackSpecular = D3DCOLOR_COLORVALUE(a, b, c, d);
 			EmuLog(LOG_LEVEL::WARNING, "Host Direct3D8 doesn''t support FVF BACKSPECULAR");
+            HLE_write_NV2A_vertex_attribute_slot(X_D3DVSDE_BACKSPECULAR, g_InlineVertexBuffer_Table[o].BackSpecular);
 			break;
 		}
 
