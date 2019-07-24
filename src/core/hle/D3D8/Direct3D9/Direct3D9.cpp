@@ -7126,6 +7126,15 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexShader)
 		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetVertexDeclaration");
 		hRet = g_pD3DDevice->SetVertexShader((XTL::IDirect3DVertexShader9*)pVertexShader->Handle);
 		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetVertexShader(VshHandleIsVertexShader)");
+
+		// Set default constant values for specular, diffuse, etc
+		static const float ColorBlack[4] = { 0,0,0,0 };
+		static const float ColorWhite[4] = { 1,1,1,1 };
+
+		g_pD3DDevice->SetVertexShaderConstantF(193 + X_D3DVSDE_DIFFUSE, ColorWhite, 1);
+		g_pD3DDevice->SetVertexShaderConstantF(193 + X_D3DVSDE_BACKDIFFUSE, ColorWhite, 1);
+		g_pD3DDevice->SetVertexShaderConstantF(193 + X_D3DVSDE_SPECULAR, ColorBlack, 1);
+		g_pD3DDevice->SetVertexShaderConstantF(193 + X_D3DVSDE_BACKSPECULAR, ColorBlack, 1);
 	} else {
 		hRet = g_pD3DDevice->SetVertexShader(nullptr);
 		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetVertexShader");
