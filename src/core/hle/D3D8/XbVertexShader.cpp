@@ -486,8 +486,8 @@ static const char* OReg_Name[] =
     "a0.x"
 };
 
-std::array<bool, 16> RegVDeclIsUsed;
-std::array<int, 16> RegVDeclUsageOverride;
+std::array<bool, 16> RegVIsPresentInDeclaration;
+std::array<bool, 16> RegVIsUsedByShader;
 
 /* TODO : map non-FVF Xbox vertex shader handle to CxbxVertexShader (a struct containing a host Xbox vertex shader handle and the original members)
 std::unordered_map<DWORD, CxbxVertexShader> g_CxbxVertexShaders;
@@ -870,6 +870,8 @@ XTL::D3DDECLUSAGE Xb2PCRegisterType
 	return PCRegisterType;
 }
 
+extern XTL::D3DCAPS g_D3DCaps;
+
 static void VshWriteShader(VSH_XBOX_SHADER *pShader,
                            std::stringstream& pDisassembly,
 						   XTL::D3DVERTEXELEMENT *pRecompiled,
@@ -898,17 +900,27 @@ static void VshWriteShader(VSH_XBOX_SHADER *pShader,
     }
 
 	if (Truncate) {
+		std::stringstream moveConstantsToTemporaries;
+
 		pDisassembly << "; Input usage declarations --\n";
 		unsigned i = 0;
 		do {
-			if (RegVDeclIsUsed[i]) {
+			if (RegVIsUsedByShader[i]) {
+				if (!RegVIsPresentInDeclaration[i]) {
+					// Log test case and skip
+					// Any registers hitting this critera were already replaced with constant/temporary reads
+					// To correctly use the values given in SetVertexData4f.
+					// We need to move these constant values to temporaries so they can be used as input alongside other constants!
+					// We count down from the highest available on the host because Xbox titles don't use values that high, and we read from c192 because Xbox uses 192 constants
+					static int temporaryRegisterBase = g_D3DCaps.VS20Caps.NumTemps - 13;
+					moveConstantsToTemporaries << "mov r" << (temporaryRegisterBase + i) << ", c" << (193 + i) << "\n";
+					LOG_TEST_CASE("Shader uses undeclared Vertex Input Registers");
+					i++;
+					continue;
+				}
+
 				BYTE PCUsageIndex = 0;
 				DWORD usage = Xb2PCRegisterType(i, PCUsageIndex);
-
-				// If an override exists, use it
-				if (RegVDeclUsageOverride[i] >= 0) {
-					usage = RegVDeclUsageOverride[i];
-				}
 
 				std::stringstream dclStream;
 				switch (usage) {
@@ -946,7 +958,9 @@ static void VshWriteShader(VSH_XBOX_SHADER *pShader,
 			}
 
 			i++;
-		} while (i < RegVDeclIsUsed.size());
+		} while (i < RegVIsUsedByShader.size());
+
+		pDisassembly << moveConstantsToTemporaries.str();
 	}
 
     for (int i = 0; i < pShader->IntermediateCount && (i < VSH_MAX_INSTRUCTION_COUNT || !Truncate); i++)
@@ -1525,8 +1539,6 @@ static boolean VshConvertShader(VSH_XBOX_SHADER *pShader,
 {
     using namespace XTL;
 
-    extern XTL::D3DCAPS g_D3DCaps;
-
     const DWORD temporaryCount = g_D3DCaps.VS20Caps.NumTemps;
 
     boolean RUsage[VSH_MAX_TEMPORARY_REGISTERS] = { FALSE };
@@ -1626,7 +1638,16 @@ static boolean VshConvertShader(VSH_XBOX_SHADER *pShader,
 				}
 
 				if (pIntermediate->Parameters[j].Parameter.ParameterType == PARAM_V) {
-					RegVDeclIsUsed[pIntermediate->Parameters[j].Parameter.Address] = TRUE;
+					RegVIsUsedByShader[pIntermediate->Parameters[j].Parameter.Address] = TRUE;
+
+					if (!RegVIsPresentInDeclaration[pIntermediate->Parameters[j].Parameter.Address]) {
+						// This vertex register was not declared and therefore is not present within the Vertex Data object
+						// We read from tempories instead, that are set based on constants, in-turn, set by SetVertexData4f
+						// We count down from the highest available on the host because Xbox titles don't use values that high, and we read from c192 because Xbox uses 192 constants
+						static int temporaryRegisterBase = g_D3DCaps.VS20Caps.NumTemps - 13;
+						pIntermediate->Parameters[j].Parameter.ParameterType = PARAM_R;
+						pIntermediate->Parameters[j].Parameter.Address += temporaryRegisterBase;
+					} 
 				}
 			}
 		}
@@ -2014,17 +2035,16 @@ static void VshConvertToken_STREAMDATA_REG(
 {
 	using namespace XTL;
 
-	extern XTL::D3DCAPS g_D3DCaps;
-
 	XTL::DWORD VertexRegister = VshGetVertexRegister(*pToken);
-	XTL::BYTE HostVertexRegister;
 	XTL::BOOL NeedPatching = FALSE;
 	XTL::BYTE Index;
 
 	DbgVshPrintf("\t\tD3DVSD_REG(");
-	BYTE XboxVertexRegister = Xb2PCRegisterType(VertexRegister, Index);
-	HostVertexRegister = XboxVertexRegister;
+	BYTE HostVertexRegisterType = Xb2PCRegisterType(VertexRegister, Index);
 	DbgVshPrintf(", ");
+
+	// Add this regiseter to the list of declared registers
+	RegVIsPresentInDeclaration[VertexRegister] = true;
 
 	XTL::DWORD XboxVertexElementDataType = (*pToken & X_D3DVSD_DATATYPEMASK) >> X_D3DVSD_DATATYPESHIFT;
 	XTL::BYTE HostVertexElementDataType = 0;
@@ -2041,32 +2061,21 @@ static void VshConvertToken_STREAMDATA_REG(
 		DbgVshPrintf("D3DVSDT_FLOAT2");
 		HostVertexElementDataType = D3DDECLTYPE_FLOAT2;
 		HostVertexElementByteSize = 2 * sizeof(FLOAT);
-		//HostVertexRegister = D3DDECLUSAGE_TEXCOORD;	
 		break;
 	case X_D3DVSDT_FLOAT3: // 0x32:
 		DbgVshPrintf("D3DVSDT_FLOAT3");
 		HostVertexElementDataType = D3DDECLTYPE_FLOAT3;
 		HostVertexElementByteSize = 3 * sizeof(FLOAT);
-
-		/*
-		if (pPatchData->pCurrentVertexShaderStreamInfo->DeclPosition) {
-			pPatchData->pCurrentVertexShaderStreamInfo->DeclPosition = true;
-			HostVertexRegister = D3DDECLUSAGE_POSITION;
-		} else {
-			HostVertexRegister = D3DDECLUSAGE_NORMAL;
-		} */
 		break;
 	case X_D3DVSDT_FLOAT4: // 0x42:
 		DbgVshPrintf("D3DVSDT_FLOAT4");
 		HostVertexElementDataType = D3DDECLTYPE_FLOAT4;
 		HostVertexElementByteSize = 4 * sizeof(FLOAT);
-		//HostVertexRegister = D3DDECLUSAGE_COLOR;
 		break;
 	case X_D3DVSDT_D3DCOLOR: // 0x40:
 		DbgVshPrintf("D3DVSDT_D3DCOLOR");
 		HostVertexElementDataType = D3DDECLTYPE_D3DCOLOR;
 		HostVertexElementByteSize = 1 * sizeof(D3DCOLOR);
-		//HostVertexRegister = D3DDECLUSAGE_COLOR;
 		break;
 	case X_D3DVSDT_SHORT2: // 0x25:
 		DbgVshPrintf("D3DVSDT_SHORT2");
@@ -2241,13 +2250,8 @@ static void VshConvertToken_STREAMDATA_REG(
 	pRecompiled->Offset = pPatchData->pCurrentVertexShaderStreamInfo->HostVertexStride;
 	pRecompiled->Type = HostVertexElementDataType;
 	pRecompiled->Method = D3DDECLMETHOD_DEFAULT;
-	pRecompiled->Usage = HostVertexRegister;
+	pRecompiled->Usage = HostVertexRegisterType;
 	pRecompiled->UsageIndex = Index;
-
-	// If the xbox and host register number and usage differ, store an override!
-	if (XboxVertexRegister != HostVertexRegister) {
-		RegVDeclUsageOverride[XboxVertexRegister] = HostVertexRegister;
-	}
 
 	pRecompiled++;
 
@@ -2332,7 +2336,7 @@ DWORD XTL::EmuRecompileVshDeclaration
     CxbxVertexShaderInfo *pVertexShaderInfo
 )
 {
-	RegVDeclUsageOverride.fill(-1);
+	RegVIsPresentInDeclaration.fill(false);
 
     // First of all some info:
     // We have to figure out which flags are set and then
@@ -2382,8 +2386,6 @@ DWORD XTL::EmuRecompileVshDeclaration
     return D3D_OK;
 }
 
-extern XTL::D3DCAPS g_D3DCaps;
-
 // recompile xbox vertex shader function
 extern HRESULT XTL::EmuRecompileVshFunction
 (
@@ -2413,9 +2415,9 @@ extern HRESULT XTL::EmuRecompileVshFunction
     DWORD* pDeclEnd = (DWORD*)((BYTE*)pDeclToken + DeclarationSize);
 	do {
 		DWORD regNum = *pDeclToken & X_D3DVSD_VERTEXREGMASK;
-		if (regNum >= temporaryCount /*12*/) {
+		if (regNum >= temporaryCount /*12 for D3D8, D3D9 value depends on host GPU */) {
 			// Lego Star Wars hits this
-			LOG_TEST_CASE("RegNum > 12");
+			LOG_TEST_CASE("RegNum > NumTemps");
 			pDeclToken++;
 			continue;
 		}
@@ -2458,7 +2460,7 @@ extern HRESULT XTL::EmuRecompileVshFunction
 
     if(SUCCEEDED(hRet))
     {
-		RegVDeclIsUsed.fill(false);
+		RegVIsUsedByShader.fill(false);
 
         for (pToken = (DWORD*)((uint8_t*)pFunction + sizeof(VSH_SHADER_HEADER)); !EOI; pToken += VSH_INSTRUCTION_SIZE)
         {
