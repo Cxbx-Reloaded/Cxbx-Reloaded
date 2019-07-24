@@ -486,8 +486,8 @@ static const char* OReg_Name[] =
     "a0.x"
 };
 
-std::array<bool, 16> RegVUsage;
-std::array<int, 16> RegVDeclUsage;
+std::array<bool, 16> RegVDeclIsUsed;
+std::array<int, 16> RegVDeclUsageOverride;
 
 /* TODO : map non-FVF Xbox vertex shader handle to CxbxVertexShader (a struct containing a host Xbox vertex shader handle and the original members)
 std::unordered_map<DWORD, CxbxVertexShader> g_CxbxVertexShaders;
@@ -790,28 +790,85 @@ static void VshWriteParameter(VSH_IMD_PARAMETER *pParameter,
 }
 
 
-// From D3D8to9
-static const BYTE DeclAddressUsages[][2] =
-{
-	{ XTL::D3DDECLUSAGE_POSITION, 0 },
-	{ XTL::D3DDECLUSAGE_BLENDWEIGHT, 0 },
-	{ XTL::D3DDECLUSAGE_BLENDINDICES, 0 },
-	{ XTL::D3DDECLUSAGE_NORMAL, 0 },
-	{ XTL::D3DDECLUSAGE_PSIZE, 0 },
-	{ XTL::D3DDECLUSAGE_COLOR, 0 },
-	{ XTL::D3DDECLUSAGE_COLOR, 1 },
-	{ XTL::D3DDECLUSAGE_TEXCOORD, 0 },
-	{ XTL::D3DDECLUSAGE_TEXCOORD, 1 },
-	{ XTL::D3DDECLUSAGE_TEXCOORD, 2 },
-	{ XTL::D3DDECLUSAGE_TEXCOORD, 3 },
-	{ XTL::D3DDECLUSAGE_TEXCOORD, 4 },
-	{ XTL::D3DDECLUSAGE_TEXCOORD, 5 },
-	{ XTL::D3DDECLUSAGE_TEXCOORD, 6 },
-	{ XTL::D3DDECLUSAGE_TEXCOORD, 7 },
-	{ XTL::D3DDECLUSAGE_POSITION, 1 },
-	{ XTL::D3DDECLUSAGE_NORMAL, 1 }
-};
+#define D3DDECLUSAGE_UNSUPPORTED ((D3DDECLUSAGE)-1)
 
+XTL::D3DDECLUSAGE Xb2PCRegisterType
+(
+	DWORD VertexRegister,
+	BYTE& PCUsageIndex
+)
+{
+	using namespace XTL;
+
+	D3DDECLUSAGE PCRegisterType;
+	PCUsageIndex = 0;
+
+	switch (VertexRegister)
+	{
+	case X_D3DVSDE_VERTEX: // -1
+		DbgVshPrintf("D3DVSDE_VERTEX /* xbox ext. */");
+		PCRegisterType = D3DDECLUSAGE_UNSUPPORTED;
+		break;
+	case X_D3DVSDE_POSITION: // 0
+		DbgVshPrintf("D3DVSDE_POSITION");
+		PCRegisterType = D3DDECLUSAGE_POSITION;
+		break;
+	case X_D3DVSDE_BLENDWEIGHT: // 1
+		DbgVshPrintf("D3DVSDE_BLENDWEIGHT");
+		PCRegisterType = D3DDECLUSAGE_BLENDWEIGHT;
+		break;
+	case X_D3DVSDE_NORMAL: // 2
+		DbgVshPrintf("D3DVSDE_NORMAL");
+		PCRegisterType = D3DDECLUSAGE_NORMAL;
+		break;
+	case X_D3DVSDE_DIFFUSE: // 3
+		DbgVshPrintf("D3DVSDE_DIFFUSE");
+		PCRegisterType = D3DDECLUSAGE_COLOR; PCUsageIndex = 0;
+		break;
+	case X_D3DVSDE_SPECULAR: // 4
+		DbgVshPrintf("D3DVSDE_SPECULAR");
+		PCRegisterType = D3DDECLUSAGE_COLOR; PCUsageIndex = 1;
+		break;
+	case X_D3DVSDE_FOG: // 5
+		DbgVshPrintf("D3DVSDE_FOG");
+		PCRegisterType = D3DDECLUSAGE_FOG;
+		break;
+	case X_D3DVSDE_POINTSIZE: // 6
+		DbgVshPrintf("D3DVDSE_POINTSIZE");
+		PCRegisterType = D3DDECLUSAGE_PSIZE;
+		break;
+	case X_D3DVSDE_BACKDIFFUSE: // 7
+		DbgVshPrintf("D3DVSDE_BACKDIFFUSE /* xbox ext. */");
+		PCRegisterType = D3DDECLUSAGE_COLOR; PCUsageIndex = 2;
+		break;
+	case X_D3DVSDE_BACKSPECULAR: // 8
+		DbgVshPrintf("D3DVSDE_BACKSPECULAR /* xbox ext. */");
+		PCRegisterType = D3DDECLUSAGE_COLOR; PCUsageIndex = 3;
+		break;
+	case X_D3DVSDE_TEXCOORD0: // 9
+		DbgVshPrintf("D3DVSDE_TEXCOORD0");
+		PCRegisterType = D3DDECLUSAGE_TEXCOORD; PCUsageIndex = 0;
+		break;
+	case X_D3DVSDE_TEXCOORD1: // 10
+		DbgVshPrintf("D3DVSDE_TEXCOORD1");
+		PCRegisterType = D3DDECLUSAGE_TEXCOORD; PCUsageIndex = 1;
+		break;
+	case X_D3DVSDE_TEXCOORD2: // 11
+		DbgVshPrintf("D3DVSDE_TEXCOORD2");
+		PCRegisterType = D3DDECLUSAGE_TEXCOORD; PCUsageIndex = 2;
+		break;
+	case X_D3DVSDE_TEXCOORD3: // 12
+		DbgVshPrintf("D3DVSDE_TEXCOORD3");
+		PCRegisterType = D3DDECLUSAGE_TEXCOORD; PCUsageIndex = 3;
+		break;
+	default:
+		DbgVshPrintf("%d /* unknown register */", VertexRegister);
+		PCRegisterType = D3DDECLUSAGE_UNSUPPORTED;
+		break;
+	}
+
+	return PCRegisterType;
+}
 
 static void VshWriteShader(VSH_XBOX_SHADER *pShader,
                            std::stringstream& pDisassembly,
@@ -844,13 +901,13 @@ static void VshWriteShader(VSH_XBOX_SHADER *pShader,
 		pDisassembly << "; Input usage declarations --\n";
 		unsigned i = 0;
 		do {
-			if (RegVUsage[i]) {
-				DWORD PCUsageIndex = DeclAddressUsages[i][1];
-				DWORD usage = DeclAddressUsages[i][0];
+			if (RegVDeclIsUsed[i]) {
+				BYTE PCUsageIndex = 0;
+				DWORD usage = Xb2PCRegisterType(i, PCUsageIndex);
 
 				// If an override exists, use it
-				if (RegVDeclUsage[i] >= 0) {
-					usage = RegVDeclUsage[i];
+				if (RegVDeclUsageOverride[i] >= 0) {
+					usage = RegVDeclUsageOverride[i];
 				}
 
 				std::stringstream dclStream;
@@ -889,7 +946,7 @@ static void VshWriteShader(VSH_XBOX_SHADER *pShader,
 			}
 
 			i++;
-		} while (i < RegVUsage.size());
+		} while (i < RegVDeclIsUsed.size());
 	}
 
     for (int i = 0; i < pShader->IntermediateCount && (i < VSH_MAX_INSTRUCTION_COUNT || !Truncate); i++)
@@ -1569,7 +1626,7 @@ static boolean VshConvertShader(VSH_XBOX_SHADER *pShader,
 				}
 
 				if (pIntermediate->Parameters[j].Parameter.ParameterType == PARAM_V) {
-					RegVUsage[pIntermediate->Parameters[j].Parameter.Address] = TRUE;
+					RegVDeclIsUsed[pIntermediate->Parameters[j].Parameter.Address] = TRUE;
 				}
 			}
 		}
@@ -1773,93 +1830,6 @@ static DWORD VshGetDeclarationCount(DWORD *pDeclaration)
     return Pos + 1;
 }
 
-#define D3DDECLUSAGE_UNSUPPORTED ((D3DDECLUSAGE)-1)
-
-XTL::D3DDECLUSAGE Xb2PCRegisterType
-(
-	DWORD VertexRegister,
-	boolean IsFixedFunction,
-	BYTE& PCUsageIndex
-)
-{
-	using namespace XTL;
-
-	D3DDECLUSAGE PCRegisterType;
-	PCUsageIndex = 0;
-
-	if (!IsFixedFunction) {
-		DbgVshPrintf("%d", VertexRegister);
-		PCUsageIndex = DeclAddressUsages[VertexRegister][1];
-		return (D3DDECLUSAGE)DeclAddressUsages[VertexRegister][0];
-	}
-
-	switch (VertexRegister)
-	{
-	case X_D3DVSDE_VERTEX: // -1
-		DbgVshPrintf("D3DVSDE_VERTEX /* xbox ext. */");
-		PCRegisterType = D3DDECLUSAGE_UNSUPPORTED;
-		break;
-	case X_D3DVSDE_POSITION: // 0
-		DbgVshPrintf("D3DVSDE_POSITION");
-		PCRegisterType = D3DDECLUSAGE_POSITION;
-		break;
-	case X_D3DVSDE_BLENDWEIGHT: // 1
-		DbgVshPrintf("D3DVSDE_BLENDWEIGHT");
-		PCRegisterType = D3DDECLUSAGE_BLENDWEIGHT;
-		break;
-	case X_D3DVSDE_NORMAL: // 2
-		DbgVshPrintf("D3DVSDE_NORMAL");
-		PCRegisterType = D3DDECLUSAGE_NORMAL;
-		break;
-	case X_D3DVSDE_DIFFUSE: // 3
-		DbgVshPrintf("D3DVSDE_DIFFUSE");
-		PCRegisterType = D3DDECLUSAGE_COLOR; PCUsageIndex = 0;
-		break;
-	case X_D3DVSDE_SPECULAR: // 4
-		DbgVshPrintf("D3DVSDE_SPECULAR");
-		PCRegisterType = D3DDECLUSAGE_COLOR; PCUsageIndex = 1;
-		break;
-	case X_D3DVSDE_FOG: // 5
-		DbgVshPrintf("D3DVSDE_FOG");
-		PCRegisterType = D3DDECLUSAGE_FOG;
-		break;
-	case X_D3DVSDE_POINTSIZE: // 6
-		DbgVshPrintf("D3DVDSE_POINTSIZE");
-		PCRegisterType = D3DDECLUSAGE_PSIZE;
-		break;
-	case X_D3DVSDE_BACKDIFFUSE: // 7
-		DbgVshPrintf("D3DVSDE_BACKDIFFUSE /* xbox ext. */");
-		PCRegisterType = D3DDECLUSAGE_COLOR; PCUsageIndex = 2;
-		break;
-	case X_D3DVSDE_BACKSPECULAR: // 8
-		DbgVshPrintf("D3DVSDE_BACKSPECULAR /* xbox ext. */");
-		PCRegisterType = D3DDECLUSAGE_COLOR; PCUsageIndex = 3;
-		break;
-	case X_D3DVSDE_TEXCOORD0: // 9
-		DbgVshPrintf("D3DVSDE_TEXCOORD0");
-		PCRegisterType = D3DDECLUSAGE_TEXCOORD; PCUsageIndex = 0;
-		break;
-	case X_D3DVSDE_TEXCOORD1: // 10
-		DbgVshPrintf("D3DVSDE_TEXCOORD1");
-		PCRegisterType = D3DDECLUSAGE_TEXCOORD; PCUsageIndex = 1;
-		break;
-	case X_D3DVSDE_TEXCOORD2: // 11
-		DbgVshPrintf("D3DVSDE_TEXCOORD2");
-		PCRegisterType = D3DDECLUSAGE_TEXCOORD; PCUsageIndex = 2;
-		break;
-	case X_D3DVSDE_TEXCOORD3: // 12
-		DbgVshPrintf("D3DVSDE_TEXCOORD3");
-		PCRegisterType = D3DDECLUSAGE_TEXCOORD; PCUsageIndex = 3;
-		break;
-	default:
-		DbgVshPrintf("%d /* unknown register */", VertexRegister);
-		PCRegisterType = D3DDECLUSAGE_UNSUPPORTED;
-		break;
-	}
-
-    return PCRegisterType;
-}
-
 static inline DWORD VshGetTokenType(DWORD Token)
 {
     return (Token & X_D3DVSD_TOKENTYPEMASK) >> X_D3DVSD_TOKENTYPESHIFT;
@@ -1921,19 +1891,18 @@ static void VshConvertToken_TESSELATOR(
     using namespace XTL;
 	BYTE Index;
 
-    // TODO: Investigate why Xb2PCRegisterType is only used for fixed function vertex shaders
     if(*pToken & X_D3DVSD_MASK_TESSUV)
     {
         XTL::DWORD VertexRegister    = VshGetVertexRegister(*pToken);
         XTL::DWORD NewVertexRegister = VertexRegister;
 
         DbgVshPrintf("\tD3DVSD_TESSUV(");
-		NewVertexRegister = Xb2PCRegisterType(VertexRegister, IsFixedFunction, Index);
+		NewVertexRegister = Xb2PCRegisterType(VertexRegister, Index);
         DbgVshPrintf("),\n");
 
 		// TODO : Expand on the setting of this TESSUV register element :
 		pRecompiled->Usage = D3DDECLUSAGE(NewVertexRegister);
-		pRecompiled->UsageIndex = Xb2PCRegisterType(NewVertexRegister, IsFixedFunction, Index); // TODO : Get Index from Xb2PCRegisterType
+		pRecompiled->UsageIndex =Index;
 	}
     // D3DVSD_TESSNORMAL
     else
@@ -1945,18 +1914,18 @@ static void VshConvertToken_TESSELATOR(
         XTL::DWORD NewVertexRegisterOut = VertexRegisterOut;
 
         DbgVshPrintf("\tD3DVSD_TESSNORMAL(");
-        NewVertexRegisterIn = Xb2PCRegisterType(VertexRegisterIn, IsFixedFunction, Index);
+        NewVertexRegisterIn = Xb2PCRegisterType(VertexRegisterIn, Index);
         DbgVshPrintf(", ");
 		// TODO : Expand on the setting of this TESSNORMAL input register element :
 		pRecompiled->Usage = D3DDECLUSAGE(NewVertexRegisterIn);
 		pRecompiled->UsageIndex = 0; // TODO : Get Index from Xb2PCRegisterType
-        NewVertexRegisterOut = Xb2PCRegisterType(VertexRegisterOut, IsFixedFunction, Index);
+        NewVertexRegisterOut = Xb2PCRegisterType(VertexRegisterOut, Index);
         DbgVshPrintf("),\n");
 
 		// TODO : Expand on the setting of this TESSNORMAL output register element :
 		pRecompiled++;
 		pRecompiled->Usage = D3DDECLUSAGE(NewVertexRegisterOut);
-		pRecompiled->UsageIndex = 0; // TODO : Get Index from Xb2PCRegisterType
+		pRecompiled->UsageIndex = Index; // TODO : Get Index from Xb2PCRegisterType
 	}
 }
 
@@ -2053,7 +2022,7 @@ static void VshConvertToken_STREAMDATA_REG(
 	XTL::BYTE Index;
 
 	DbgVshPrintf("\t\tD3DVSD_REG(");
-	BYTE XboxVertexRegister = Xb2PCRegisterType(VertexRegister, IsFixedFunction, Index);
+	BYTE XboxVertexRegister = Xb2PCRegisterType(VertexRegister, Index);
 	HostVertexRegister = XboxVertexRegister;
 	DbgVshPrintf(", ");
 
@@ -2277,7 +2246,7 @@ static void VshConvertToken_STREAMDATA_REG(
 
 	// If the xbox and host register number and usage differ, store an override!
 	if (XboxVertexRegister != HostVertexRegister) {
-		RegVDeclUsage[XboxVertexRegister] = HostVertexRegister;
+		RegVDeclUsageOverride[XboxVertexRegister] = HostVertexRegister;
 	}
 
 	pRecompiled++;
@@ -2363,7 +2332,7 @@ DWORD XTL::EmuRecompileVshDeclaration
     CxbxVertexShaderInfo *pVertexShaderInfo
 )
 {
-	RegVDeclUsage.fill(-1);
+	RegVDeclUsageOverride.fill(-1);
 
     // First of all some info:
     // We have to figure out which flags are set and then
@@ -2489,7 +2458,7 @@ extern HRESULT XTL::EmuRecompileVshFunction
 
     if(SUCCEEDED(hRet))
     {
-		RegVUsage.fill(false);
+		RegVDeclIsUsed.fill(false);
 
         for (pToken = (DWORD*)((uint8_t*)pFunction + sizeof(VSH_SHADER_HEADER)); !EOI; pToken += VSH_INSTRUCTION_SIZE)
         {
