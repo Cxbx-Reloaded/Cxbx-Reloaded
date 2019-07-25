@@ -1766,69 +1766,7 @@ static boolean VshConvertShader(VSH_XBOX_SHADER *pShader,
             i++;
         }
     }
-    int16_t R12Replacement = -1;
-    if(temporaryCount <= 12 && RUsage[12])
-    {
-        // Sigh, they absolutely had to use r12, didn't they?
-        for (int i = temporaryCount - 1; i >= 0; i--)
-        {
-            if(!RUsage[i])
-            {
-                R12Replacement = i;
-                break;
-            }
-        }
-        if(R12Replacement == -1)
-        {
-            EmuLog(LOG_LEVEL::WARNING, "Vertex shader uses all r registers, including r12; impossible to convert!");
-            return FALSE;
-        }
-        for (int j = 0; j < pShader->IntermediateCount; j++)
-        {
-            VSH_INTERMEDIATE_FORMAT* pIntermediate = &pShader->Intermediate[j];
-            if(pIntermediate->Output.Type == IMD_OUTPUT_O &&
-                pIntermediate->Output.Address == OREG_OPOS)
-            {
-                // Found instruction writing to oPos
-                pIntermediate->Output.Type = IMD_OUTPUT_R;
-                pIntermediate->Output.Address = R12Replacement;
-            }
 
-            for (int k = 0; k < 3; k++)
-            {
-                if(pIntermediate->Parameters[k].Active)
-                {
-                    if(pIntermediate->Parameters[k].Parameter.ParameterType == PARAM_R &&
-                        pIntermediate->Parameters[k].Parameter.Address == 12)
-                    {
-                        // Found a r12 used as a parameter; replace
-                        pIntermediate->Parameters[k].Parameter.Address = R12Replacement;
-                    }
-                    else if(pIntermediate->Parameters[k].Parameter.ParameterType == PARAM_C &&
-                             pIntermediate->Parameters[k].Parameter.Address == 58 &&
-                             !pIntermediate->Parameters[k].IndexesWithA0_X)
-                    {
-                        // Found c-38, replace it with r12.w
-                        pIntermediate->Parameters[k].Parameter.ParameterType = PARAM_R;
-                        pIntermediate->Parameters[k].Parameter.Address = R12Replacement;
-                        VshSetSwizzle(&pIntermediate->Parameters[k], SWIZZLE_W, SWIZZLE_W, SWIZZLE_W, SWIZZLE_W);
-                    }
-                }
-            }
-        }
-        // Insert mov oPos, r## in the end
-        VSH_INTERMEDIATE_FORMAT *pOPosWriteBack = VshNewIntermediate(pShader);
-        pOPosWriteBack->InstructionType = IMD_ILU;
-        pOPosWriteBack->ILU = ILU_MOV;
-        pOPosWriteBack->MAC = MAC_NOP;
-        pOPosWriteBack->Output.Type = IMD_OUTPUT_O;
-        pOPosWriteBack->Output.Address = OREG_OPOS;
-        VshSetOutputMask(&pOPosWriteBack->Output, TRUE, TRUE, TRUE, TRUE);
-        pOPosWriteBack->Parameters[0].Active = TRUE;
-        pOPosWriteBack->Parameters[0].Parameter.ParameterType = PARAM_R;
-        pOPosWriteBack->Parameters[0].Parameter.Address = R12Replacement;
-        VshSetSwizzle(&pOPosWriteBack->Parameters[0], SWIZZLE_X, SWIZZLE_Y, SWIZZLE_Z, SWIZZLE_W);
-    }
     return TRUE;
 }
 
