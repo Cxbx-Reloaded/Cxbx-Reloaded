@@ -365,7 +365,6 @@ __declspec(naked) void EmuFS_MovzxEaxBytePtrFs24()
 		call UnlockFS
 		ret
 	}
-	UnlockFS();
 }
 
 __declspec(naked) void EmuFS_MovFs00Eax()
