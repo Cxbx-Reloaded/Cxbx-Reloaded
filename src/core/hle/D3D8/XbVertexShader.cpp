@@ -1459,7 +1459,7 @@ static void VshRemoveScreenSpaceInstructions(VSH_XBOX_SHADER *pShader)
     // If we couldn't find the generic screen space transformation we're
     // assuming that the shader writes direct screen coordinates that must be
     // normalized. This hack will fail if (a) the shader uses custom screen
-    // space transformation, (b) reads r10 or r11 after we have written to
+    // space transformation, (b) reads r13 or r12 after we have written to
     // them, or (c) doesn't reserve c-38 and c-37 for scale and offset.
     if(deleted != 3)
     {
@@ -1472,17 +1472,17 @@ static void VshRemoveScreenSpaceInstructions(VSH_XBOX_SHADER *pShader)
             if( pIntermediate->Output.Type    == IMD_OUTPUT_O &&
                 pIntermediate->Output.Address == OREG_OPOS)
             {
-                // Redirect output to r11.
+                // Redirect output to r12.
                 pIntermediate->Output.Type    = IMD_OUTPUT_R;
-                pIntermediate->Output.Address = 11;
+                pIntermediate->Output.Address = 12;
 
-                // Scale r11 to r10. (mul r10.[mask], r11, c58)
+                // Scale r12 to r13. (mul r13.[mask], r12, c58)
                 VSH_INTERMEDIATE_FORMAT MulIntermediate;
                 MulIntermediate.IsCombined        = FALSE;
                 MulIntermediate.InstructionType   = IMD_MAC;
                 MulIntermediate.MAC               = MAC_MUL;
                 MulIntermediate.Output.Type       = IMD_OUTPUT_R;
-                MulIntermediate.Output.Address    = 10;
+                MulIntermediate.Output.Address    = 13;
                 MulIntermediate.Output.Mask[0]    = pIntermediate->Output.Mask[0];
                 MulIntermediate.Output.Mask[1]    = pIntermediate->Output.Mask[1];
                 MulIntermediate.Output.Mask[2]    = pIntermediate->Output.Mask[2];
@@ -1490,7 +1490,7 @@ static void VshRemoveScreenSpaceInstructions(VSH_XBOX_SHADER *pShader)
                 MulIntermediate.Parameters[0].Active                  = TRUE;
                 MulIntermediate.Parameters[0].IndexesWithA0_X                   = FALSE;
                 MulIntermediate.Parameters[0].Parameter.ParameterType = PARAM_R;
-                MulIntermediate.Parameters[0].Parameter.Address       = 11;
+                MulIntermediate.Parameters[0].Parameter.Address       = 12;
                 MulIntermediate.Parameters[0].Parameter.Neg           = FALSE;
                 VshSetSwizzle(&MulIntermediate.Parameters[0], SWIZZLE_X, SWIZZLE_Y, SWIZZLE_Z, SWIZZLE_W);
                 MulIntermediate.Parameters[1].Active                  = TRUE;
@@ -1502,13 +1502,13 @@ static void VshRemoveScreenSpaceInstructions(VSH_XBOX_SHADER *pShader)
                 MulIntermediate.Parameters[2].Active                  = FALSE;
                 VshInsertIntermediate(pShader, &MulIntermediate, ++i);
 
-                // Add offset with r10 to oPos (add oPos.[mask], r10, c59)
+                // Add offset with r13 to oPos (add oPos.[mask], r13, c59)
                 VSH_INTERMEDIATE_FORMAT AddIntermediate = MulIntermediate;
                 AddIntermediate.MAC               = MAC_ADD;
                 AddIntermediate.Output.Type       = IMD_OUTPUT_O;
                 AddIntermediate.Output.Address    = OREG_OPOS;
                 AddIntermediate.Parameters[0].Parameter.ParameterType = PARAM_R;
-                AddIntermediate.Parameters[0].Parameter.Address       = 10;
+                AddIntermediate.Parameters[0].Parameter.Address       = 13;
                 AddIntermediate.Parameters[1].Parameter.Address       = ConvertCRegister(59);
                 VshInsertIntermediate(pShader, &AddIntermediate, ++i);
             }
@@ -1766,6 +1766,34 @@ static boolean VshConvertShader(VSH_XBOX_SHADER *pShader,
             i++;
         }
     }
+
+    // Finally, iterate through the shader, replace all writes to oPos with writes to r12
+    // This fixes shaders that read from r12 expecting to see oPos
+    for (int i = 0; i < pShader->IntermediateCount; i++) {
+        VSH_INTERMEDIATE_FORMAT* pIntermediate = &pShader->Intermediate[i];
+        if (pIntermediate->Output.Type == IMD_OUTPUT_O && pIntermediate->Output.Address == OREG_OPOS) {
+            pIntermediate->Output.Type = IMD_OUTPUT_R;
+            pIntermediate->Output.Address = 12;
+        }
+    }
+
+    // We append one additional instruction to mov oPos, r12
+    VSH_INTERMEDIATE_FORMAT MovIntermediate = {0};
+    MovIntermediate.MAC = MAC_MOV;
+    MovIntermediate.Output.Type = IMD_OUTPUT_O;
+    MovIntermediate.Output.Address = OREG_OPOS;
+    MovIntermediate.Output.Mask[0] = true;
+    MovIntermediate.Output.Mask[1] = true;
+    MovIntermediate.Output.Mask[2] = true;
+    MovIntermediate.Output.Mask[3] = true;
+    MovIntermediate.Parameters[0].Active = true;
+    MovIntermediate.Parameters[0].Parameter.ParameterType = PARAM_R;
+    MovIntermediate.Parameters[0].Parameter.Address = 12;
+    MovIntermediate.Parameters[0].Parameter.Swizzle[0] = SWIZZLE_X;
+    MovIntermediate.Parameters[0].Parameter.Swizzle[1] = SWIZZLE_Y;
+    MovIntermediate.Parameters[0].Parameter.Swizzle[2] = SWIZZLE_Z;
+    MovIntermediate.Parameters[0].Parameter.Swizzle[3] = SWIZZLE_W;
+    VshInsertIntermediate(pShader, &MovIntermediate, pShader->IntermediateCount);
 
     return TRUE;
 }
