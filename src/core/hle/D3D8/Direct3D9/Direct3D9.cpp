@@ -4335,7 +4335,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexData4f)
 		case X_D3DVSDE_FOG: // Xbox extension
 		{
 			g_InlineVertexBuffer_Table[o].Fog = a; // TODO : What about the other (b, c and d) arguments?
-			EmuLog(LOG_LEVEL::WARNING, "Host Direct3D8 doesn''t support FVF FOG");
+			//EmuLog(LOG_LEVEL::WARNING, "Host Direct3D8 doesn''t support FVF FOG");
 			break;
 		}
 
@@ -4344,7 +4344,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexData4f)
 		case X_D3DVSDE_BACKDIFFUSE: // Xbox extension
 		{
 			g_InlineVertexBuffer_Table[o].BackDiffuse = D3DCOLOR_COLORVALUE(a, b, c, d);
-			EmuLog(LOG_LEVEL::WARNING, "Host Direct3D8 doesn''t support FVF BACKDIFFUSE");
+			//EmuLog(LOG_LEVEL::WARNING, "Host Direct3D8 doesn''t support FVF BACKDIFFUSE");
             HLE_write_NV2A_vertex_attribute_slot(X_D3DVSDE_BACKDIFFUSE, g_InlineVertexBuffer_Table[o].BackDiffuse);
 			break;
 		}
@@ -4352,7 +4352,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexData4f)
 		case X_D3DVSDE_BACKSPECULAR: // Xbox extension
 		{
 			g_InlineVertexBuffer_Table[o].BackSpecular = D3DCOLOR_COLORVALUE(a, b, c, d);
-			EmuLog(LOG_LEVEL::WARNING, "Host Direct3D8 doesn''t support FVF BACKSPECULAR");
+			//EmuLog(LOG_LEVEL::WARNING, "Host Direct3D8 doesn''t support FVF BACKSPECULAR");
             HLE_write_NV2A_vertex_attribute_slot(X_D3DVSDE_BACKSPECULAR, g_InlineVertexBuffer_Table[o].BackSpecular);
 			break;
 		}
