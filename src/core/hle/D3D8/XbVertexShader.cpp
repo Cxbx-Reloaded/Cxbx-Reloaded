@@ -919,42 +919,11 @@ static void VshWriteShader(VSH_XBOX_SHADER *pShader,
 					continue;
 				}
 
-				BYTE PCUsageIndex = 0;
-				DWORD usage = Xb2PCRegisterType(i, PCUsageIndex);
-
-				std::stringstream dclStream;
-				switch (usage) {
-				case XTL::D3DDECLUSAGE_POSITION:
-                    dclStream << "dcl_position" << (int)PCUsageIndex;
-					break;
-				case XTL::D3DDECLUSAGE_BLENDWEIGHT:
-					dclStream << "dcl_blendweight";
-					break;
-				case XTL::D3DDECLUSAGE_BLENDINDICES:
-					dclStream << "dcl_blendindices";
-					break;
-				case XTL::D3DDECLUSAGE_NORMAL:
-					dclStream << "dcl_normal";
-					break;
-				case XTL::D3DDECLUSAGE_COLOR:
-					dclStream << "dcl_color" << (int)PCUsageIndex;
-					break;
-				case XTL::D3DDECLUSAGE_FOG:
-					dclStream << "dcl_fog";
-					break;
-				case XTL::D3DDECLUSAGE_TEXCOORD:
-					dclStream << "dcl_texcoord" << (int)PCUsageIndex;
-					break;
-				case XTL::D3DDECLUSAGE_PSIZE:
-					dclStream << "dcl_psize";
-					break;
-				default:
-					dclStream << "dcl_unknown ("<< (int)PCUsageIndex << ")";
-					LOG_TEST_CASE("Encountered unknown declaration");
-					break;
-				}
-
-				pDisassembly << dclStream.str() << " v" << i << "\n";
+				// dcl_texcoord can be useds for any user-defined data
+				// We need this because there is no reliable way to detect the real usage
+				// Xbox has no concept of 'usage types', it only requires a list of attribute register numbers.
+				// So we treat them all as 'user-defined'
+				pDisassembly << "dcl_texcoord" << i << " v" << i << "\n";
 			}
 
 			i++;
@@ -2011,8 +1980,21 @@ static void VshConvertToken_STREAMDATA_REG(
 	XTL::BOOL NeedPatching = FALSE;
 	XTL::BYTE Index;
 
+	BYTE HostVertexRegisterType;
+	// If this is a fixed-function shader, use Xb2PCRegisterType
 	DbgVshPrintf("\t\tD3DVSD_REG(");
-	BYTE HostVertexRegisterType = Xb2PCRegisterType(VertexRegister, Index);
+	if (IsFixedFunction) {
+		HostVertexRegisterType = Xb2PCRegisterType(VertexRegister, Index);
+	} else {
+		// D3DDECLUSAGE_TEXCOORD can be useds for any user-defined data
+		// We need this because there is no reliable way to detect the real usage
+		// Xbox has no concept of 'usage types', it only requires a list of attribute register numbers.
+		// So we treat them all as 'user-defined' with an Index of the Vertex Register Index
+		// this prevents information loss in shaders due to non-matching dcl types!
+		HostVertexRegisterType = D3DDECLUSAGE_TEXCOORD;
+		Index = VertexRegister;
+		DbgVshPrintf("%d", Index);
+	}
 	DbgVshPrintf(", ");
 
 	// Add this regiseter to the list of declared registers
