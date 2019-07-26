@@ -128,12 +128,12 @@ __declspec(naked) void LockFS()
 		// Backup Registers
 		pushfd
 		pushad
+		jmp entry
 
 		// Spin until we can aquire the lock
 		spinlock :
-		call SwitchToThread // Give other threads chance to run, prevents hogging entire timeslice waiting for spinlock
-							// We do this here loop because SwitchToThread will overwrite eax, so it cannot go below
-							// It's not worth wasting the extra cycles of pushing/popping eax to the stack around this call
+		call SwitchToThread // Give other threads a chance to run if we couldn't get the lock
+		entry:
 		mov eax, 1
 		xchg eax, fs_lock
 		test eax, eax
