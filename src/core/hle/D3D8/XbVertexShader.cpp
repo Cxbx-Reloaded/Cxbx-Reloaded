@@ -1474,7 +1474,7 @@ static void VshRemoveScreenSpaceInstructions(VSH_XBOX_SHADER *pShader)
                 MulIntermediate.Parameters[1].Active                  = TRUE;
                 MulIntermediate.Parameters[1].IndexesWithA0_X                   = FALSE;
                 MulIntermediate.Parameters[1].Parameter.ParameterType = PARAM_C;
-                MulIntermediate.Parameters[1].Parameter.Address       = ConvertCRegister(X_D3DVS_RESERVED_CONSTANT1_CORRECTED);
+                MulIntermediate.Parameters[1].Parameter.Address       = ConvertCRegister(X_D3DSCM_RESERVED_CONSTANT_SCALE);
                 MulIntermediate.Parameters[1].Parameter.Neg           = FALSE;
                 VshSetSwizzle(&MulIntermediate.Parameters[1], SWIZZLE_X, SWIZZLE_Y, SWIZZLE_Z, SWIZZLE_W);
                 MulIntermediate.Parameters[2].Active                  = FALSE;
@@ -1487,7 +1487,7 @@ static void VshRemoveScreenSpaceInstructions(VSH_XBOX_SHADER *pShader)
                 AddIntermediate.Output.Address    = OREG_OPOS;
                 AddIntermediate.Parameters[0].Parameter.ParameterType = PARAM_R;
                 AddIntermediate.Parameters[0].Parameter.Address       = X_VSH_TEMP_SCRATCH;
-                AddIntermediate.Parameters[1].Parameter.Address       = ConvertCRegister(X_D3DVS_RESERVED_CONSTANT2_CORRECTED);
+                AddIntermediate.Parameters[1].Parameter.Address       = ConvertCRegister(X_D3DSCM_RESERVED_CONSTANT_OFFSET);
                 VshInsertIntermediate(pShader, &AddIntermediate, ++i);
             }
         }
@@ -1603,7 +1603,7 @@ static boolean VshConvertShader(VSH_XBOX_SHADER *pShader,
 				if (pIntermediate->Parameters[j].Parameter.ParameterType == PARAM_C)
 				{
 					//if(pIntermediate->Parameters[j].Parameter.Address < 0)
-					pIntermediate->Parameters[j].Parameter.Address += X_D3DVS_CONSTREG_BIAS;
+					pIntermediate->Parameters[j].Parameter.Address += X_D3DSCM_CORRECTION;
 				}
 
 				if (pIntermediate->Parameters[j].Parameter.ParameterType == PARAM_V) {
@@ -1624,7 +1624,7 @@ static boolean VshConvertShader(VSH_XBOX_SHADER *pShader,
         if(pIntermediate->Output.Type == IMD_OUTPUT_C)
         {
 			//if(pIntermediate->Output.Address < 0)
-				pIntermediate->Output.Address += X_D3DVS_CONSTREG_BIAS;
+				pIntermediate->Output.Address += X_D3DSCM_CORRECTION;
         }
 
 

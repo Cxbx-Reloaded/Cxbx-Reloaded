@@ -3742,20 +3742,88 @@ void ValidateRenderTargetDimensions(DWORD HostRenderTarget_Width, DWORD HostRend
     }
 }
 
+float GetZScaleForSurface(XTL::X_D3DSurface* pSurface)
+{
+    // If no surface was present, fallback to 1
+    if (pSurface == xbnullptr) {
+        return 1;
+    }
+
+    auto format = GetXboxPixelContainerFormat(pSurface);
+    switch (format) {
+        case XTL::X_D3DFMT_D16:
+        case XTL::X_D3DFMT_LIN_D16:
+            return 65535.0f;
+
+        case XTL::X_D3DFMT_D24S8:
+        case XTL::X_D3DFMT_LIN_D24S8:
+            return 16777215.0f;
+
+        case XTL::X_D3DFMT_F16:
+        case XTL::X_D3DFMT_LIN_F16:
+            return 511.9375f;
+
+        case XTL::X_D3DFMT_F24S8:
+        case XTL::X_D3DFMT_LIN_F24S8:
+            // 24bit floating point is close to precision maximum, so a lower value is used
+            // We can't use a double here since the vertex shader is only at float precision
+            return 1.0e30f; 
+    }
+
+    // Default to 1 if unknown depth format
+    LOG_TEST_CASE("GetZScaleForSurface: Unknown Xbox Depth Format");
+    return 1;
+}
+
+void GetViewPortOffsetAndScale(float (&vOffset)[4], float(&vScale)[4])
+{
+    // Store viewport offset and scale in constant registers
+    // used in shaders to transform back from screen space (Xbox Shader Output) to Clip space (Host Shader Output)
+    D3DVIEWPORT ViewPort;
+    g_pD3DDevice->GetViewport(&ViewPort);
+
+    // Calculate Width/Height scale & offset
+    float scaleWidth = (2.0f / ViewPort.Width) * g_RenderScaleFactor;
+    float scaleHeight = (2.0f / ViewPort.Height) * g_RenderScaleFactor;
+    float offsetWidth = scaleWidth;
+    float offsetHeight = scaleHeight;
+
+    // Calculate Z scale & offset
+    float zScale = GetZScaleForSurface(g_pXbox_DepthStencil);
+    float scaleZ = zScale * (ViewPort.MaxZ - ViewPort.MinZ);
+    float offsetZ = zScale * ViewPort.MinZ;
+
+    vOffset[0] = offsetWidth + ViewPort.X;
+    vOffset[1] = offsetHeight + ViewPort.Y;
+    vOffset[2] = offsetZ;
+    vOffset[3] = 0.0f;
+
+    vScale[0] = scaleWidth;
+    vScale[1] = scaleHeight;
+    vScale[2] = scaleZ;
+    vScale[3] = 0.0f;
+}
+
 void UpdateViewPortOffsetAndScaleConstants()
 {
+    float vOffset[4], vScale[4];
+    GetViewPortOffsetAndScale(vOffset, vScale);
+    float vScaleReversed[4] = { 1.0f / (double)vScale[0], 1.0f / (double)vScale[1], 1.0f / (double)vScale[2], 0 };
+
+	g_pD3DDevice->SetVertexShaderConstantF(X_D3DVS_VIEWPORT_SCALE_MIRROR_INVERTED, vScaleReversed, 1);
+    g_pD3DDevice->SetVertexShaderConstantF(X_D3DVS_VIEWPORT_OFFSET_MIRROR, vOffset, 1);
+
+    // Set 0 and 1 constant, used to compare and transform W when required
+    float ZeroOne[] = { 0, 1, 0, 0 };
+    g_pD3DDevice->SetVertexShaderConstantF(X_D3DVS_VIEWPORT_SCALE_ZERO_ONE, ZeroOne, 1);
+
 	// Store viewport offset and scale in constant registers 58 (c-38) and
 	// 59 (c-37) used for screen space transformation.
+	// We only do this if X_D3DSCM_NORESERVEDCONSTANTS is not set, since enabling this flag frees up these registers for shader used
 	if (g_Xbox_VertexShaderConstantMode != X_D3DSCM_NORESERVEDCONSTANTS)
 	{
-		D3DVIEWPORT ViewPort;
-		g_pD3DDevice->GetViewport(&ViewPort);
-
-		float vScale[] = { (2.0f / ViewPort.Width) * g_RenderScaleFactor, (-2.0f / ViewPort.Height) * g_RenderScaleFactor, 0.0f, 0.0f };
-		static float vOffset[] = { -1.0f, 1.0f, 0.0f, 1.0f };
-
-		g_pD3DDevice->SetVertexShaderConstantF(X_D3DVS_RESERVED_CONSTANT1_CORRECTED, vScale, 1);
-		g_pD3DDevice->SetVertexShaderConstantF(X_D3DVS_RESERVED_CONSTANT2_CORRECTED, vOffset, 1);
+		g_pD3DDevice->SetVertexShaderConstantF(X_D3DSCM_RESERVED_CONSTANT_SCALE + X_D3DSCM_CORRECTION, vScale, 1);
+		g_pD3DDevice->SetVertexShaderConstantF(X_D3DSCM_RESERVED_CONSTANT_OFFSET + X_D3DSCM_CORRECTION, vOffset, 1);
 	}
 }
 
@@ -3892,37 +3960,20 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_GetViewportOffsetAndScale)
 	// Test case : TMNT(R)2
 	// Test case : TMNT(R)3
 
-#if 0
-    float fScaleX = 1.0f;
-    float fScaleY = 1.0f;
-    float fScaleZ = 1.0f;
-    float fOffsetX = 0.5 + 1.0/32;
-    float fOffsetY = 0.5 + 1.0/32;
-	X_D3DVIEWPORT8 Viewport;
+    float vOffset[4], vScale[4];
+    GetViewPortOffsetAndScale(vOffset, vScale);
 
-	EMUPATCH(D3DDevice_GetViewport)(&Viewport);
+    pOffset->x = vOffset[0];
+    pOffset->y = vOffset[1];
+    pOffset->z = vOffset[2];
+    pOffset->w = vOffset[3];
 
-    pScale->x = (float)Viewport.Width * 0.5f * fScaleX;
-    pScale->y = (float)Viewport.Height * -0.5f * fScaleY;
-    pScale->z = (Viewport.MaxZ - Viewport.MinZ) * fScaleZ;
-    pScale->w = 0;
-
-    pOffset->x = (float)Viewport.Width * fScaleX * 0.5f + (float)Viewport.X * fScaleX + fOffsetX;
-    pOffset->y = (float)Viewport.Height * fScaleY * 0.5f + (float)Viewport.Y * fScaleY + fOffsetY;
-    pOffset->z = Viewport.MinZ * fScaleZ;
-    pOffset->w = 0;
-#else
-    pScale->x = 1.0f;
-    pScale->y = 1.0f;
-    pScale->z = 1.0f;
-    pScale->w = 1.0f;
-
-    pOffset->x = 0.0f;
-    pOffset->y = 0.0f;
-    pOffset->z = 0.0f;
-    pOffset->w = 0.0f;
-#endif
+    pScale->x = vScale[0];
+    pScale->y = vScale[1];
+    pScale->z = vScale[2];
+    pScale->w = vScale[3];
 }
+
 // LTCG specific D3DDevice_SetShaderConstantMode function...
 // This uses a custom calling convention where parameter is passed in EAX
 VOID __stdcall XTL::EMUPATCH(D3DDevice_SetShaderConstantMode_0)
@@ -4223,7 +4274,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexShaderConstant)
 
     // Xbox vertex shader constants range from -96 to 95
     // The host does not support negative, so we adjust to 0..191
-    Register += X_D3DVS_CONSTREG_BIAS;
+	Register += X_D3DSCM_CORRECTION;
 
     HRESULT hRet;
 	hRet = g_pD3DDevice->SetVertexShaderConstantF(
@@ -4254,7 +4305,7 @@ VOID __fastcall XTL::EMUPATCH(D3DDevice_SetVertexShaderConstant1)
     // The XDK uses a macro to automatically adjust to 0..191 range
     // but D3DDevice_SetVertexShaderConstant expects -96..95 range
     // so we adjust before forwarding
-    EMUPATCH(D3DDevice_SetVertexShaderConstant)(Register - X_D3DVS_CONSTREG_BIAS, pConstantData, 1);
+    EMUPATCH(D3DDevice_SetVertexShaderConstant)(Register - X_D3DSCM_CORRECTION, pConstantData, 1);
 }
 
 // ******************************************************************
@@ -4271,7 +4322,7 @@ VOID __fastcall XTL::EMUPATCH(D3DDevice_SetVertexShaderConstant1Fast)
     // The XDK uses a macro to automatically adjust to 0..191 range
     // but D3DDevice_SetVertexShaderConstant expects -96..95 range
     // so we adjust before forwarding
-    EMUPATCH(D3DDevice_SetVertexShaderConstant)(Register - X_D3DVS_CONSTREG_BIAS, pConstantData, 1);
+    EMUPATCH(D3DDevice_SetVertexShaderConstant)(Register - X_D3DSCM_CORRECTION, pConstantData, 1);
 }
 
 // ******************************************************************
@@ -4288,7 +4339,7 @@ VOID __fastcall XTL::EMUPATCH(D3DDevice_SetVertexShaderConstant4)
     // The XDK uses a macro to automatically adjust to 0..191 range
     // but D3DDevice_SetVertexShaderConstant expects -96..95 range
     // so we adjust before forwarding
-	EMUPATCH(D3DDevice_SetVertexShaderConstant)(Register - X_D3DVS_CONSTREG_BIAS, pConstantData, 4);
+	EMUPATCH(D3DDevice_SetVertexShaderConstant)(Register - X_D3DSCM_CORRECTION, pConstantData, 4);
 }
 
 // ******************************************************************
@@ -4306,7 +4357,7 @@ VOID __fastcall XTL::EMUPATCH(D3DDevice_SetVertexShaderConstantNotInline)
     // The XDK uses a macro to automatically adjust to 0..191 range
     // but D3DDevice_SetVertexShaderConstant expects -96..95 range
     // so we adjust before forwarding
-    EMUPATCH(D3DDevice_SetVertexShaderConstant)(Register - X_D3DVS_CONSTREG_BIAS, pConstantData, ConstantCount / 4);
+	EMUPATCH(D3DDevice_SetVertexShaderConstant)(Register - X_D3DSCM_CORRECTION, pConstantData, ConstantCount / 4);
 }
 
 // ******************************************************************
@@ -4324,7 +4375,7 @@ VOID __fastcall XTL::EMUPATCH(D3DDevice_SetVertexShaderConstantNotInlineFast)
     // The XDK uses a macro to automatically adjust to 0..191 range
     // but D3DDevice_SetVertexShaderConstant expects -96..95 range
     // so we adjust before forwarding
-    EMUPATCH(D3DDevice_SetVertexShaderConstant)(Register - X_D3DVS_CONSTREG_BIAS, pConstantData, ConstantCount / 4);
+	EMUPATCH(D3DDevice_SetVertexShaderConstant)(Register - X_D3DSCM_CORRECTION, pConstantData, ConstantCount / 4);
 }
 
 // LTCG specific D3DDevice_SetTexture function...
@@ -7028,7 +7079,7 @@ void CxbxUpdateNativeD3DResources()
 	auto nv2a = g_NV2A->GetDeviceState();
 	for(int i = 0; i < X_D3DVS_CONSTREG_COUNT; i++) {
         // Skip vOffset and vScale constants, we don't want our values to be overwritten by accident
-        if (i == X_D3DVS_RESERVED_CONSTANT1_CORRECTED || i == X_D3DVS_RESERVED_CONSTANT2_CORRECTED) {
+        if (i == X_D3DSCM_RESERVED_CONSTANT_OFFSET_CORRECTED || i == X_D3DSCM_RESERVED_CONSTANT_SCALE_CORRECTED) {
             continue;
         }
 
@@ -7721,6 +7772,8 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderTarget)
         DWORD XboxRenderTarget_Height = GetPixelContainerHeight(g_pXbox_RenderTarget);
         ValidateRenderTargetDimensions(HostRenderTarget_Width, HostRenderTarget_Height, XboxRenderTarget_Width, XboxRenderTarget_Height);
     }
+
+    UpdateViewPortOffsetAndScaleConstants();
 }
 
 // LTCG specific D3DDevice_SetPalette function...
@@ -7967,7 +8020,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_GetVertexShaderConstant)
 
 	// Xbox vertex shader constants range from -96 to 95
 	// The host does not support negative, so we adjust to 0..191
-	Register += X_D3DVS_CONSTREG_BIAS;
+	Register += X_D3DSCM_CORRECTION;
 
 	HRESULT hRet = g_pD3DDevice->GetVertexShaderConstantF
     (
