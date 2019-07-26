@@ -7520,6 +7520,11 @@ void XTL::CxbxUpdateNativeD3DResources()
 	// We handle that case by updating any constants that have the dirty flag set on the nv2a.
 	auto nv2a = g_NV2A->GetDeviceState();
 	for(int i = 0; i < 192; i++) {
+        // Skip vOffset and vScale constants, we don't want our values to be overwritten by accident
+        if (i == 58 || i == 59) {
+            continue;
+        }
+
 		if (nv2a->pgraph.vsh_constants_dirty[i]) {
 			g_pD3DDevice->SetVertexShaderConstantF(i, (float*)&nv2a->pgraph.vsh_constants[i][0], 1);
 			nv2a->pgraph.vsh_constants_dirty[i] = false;
