@@ -6498,7 +6498,16 @@ VOID __fastcall XTL::EMUPATCH(D3DDevice_SetRenderState_Simple)
             // Just log and return
             EmuLog(LOG_LEVEL::DEBUG, "RenderState_Simple(0x%.08X (%s), 0x%.08X) was ignored!", Method, DxbxRenderStateInfo[XboxRenderStateIndex].S, Value);
             return;
-        case X_D3DRS_ALPHATESTENABLE: case X_D3DRS_ALPHABLENDENABLE:
+        case X_D3DRS_ALPHATESTENABLE:
+            if (g_LibVersion_D3D8 == 3925) {
+                // HACK: Many 3925 have missing polygons when this is ture
+                // Until  we find out the true underlying cause, and carry on
+                // Test Cases: Halo, Silent Hill 2.
+                LOG_TEST_CASE("Applying 3925 alpha test disable hack");
+                Value = false;
+            }
+            break;
+        case X_D3DRS_ALPHABLENDENABLE:
         case X_D3DRS_ALPHAREF: case X_D3DRS_ZWRITEENABLE:
         case X_D3DRS_DITHERENABLE: case X_D3DRS_STENCILREF:
         case X_D3DRS_STENCILMASK: case X_D3DRS_STENCILWRITEMASK:
