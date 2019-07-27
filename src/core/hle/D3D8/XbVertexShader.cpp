@@ -1512,7 +1512,7 @@ static boolean VshConvertShader(VSH_XBOX_SHADER *pShader,
 
     boolean RUsage[VSH_MAX_TEMPORARY_REGISTERS] = { FALSE };
 	// Set the last 13 register to used (they are used for SetVertexData4f Constants)
-	for (int i = 0; i <= 13;  i++) {
+	for (int i = 1; i <= 13;  i++) {
 		RUsage[VSH_MAX_TEMPORARY_REGISTERS - i] = true;
 	}
 
