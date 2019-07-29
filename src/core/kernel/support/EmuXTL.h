@@ -37,7 +37,6 @@ namespace XTL
     #include "core\hle\D3D8\XbPushBuffer.h"
     #include "core\hle\D3D8\XbVertexShader.h"
 	#include "core\hle\D3D8\XbPixelShader.h"
-    #include "core\hle\D3D8\XbState.h"
     #include "core\hle\XAPI\OHCI\XInput\DInput.h"
     #include "core\hle\DSOUND\DirectSound\DirectSound.hpp"
     #include "core\hle\XONLINE\XOnline.h"

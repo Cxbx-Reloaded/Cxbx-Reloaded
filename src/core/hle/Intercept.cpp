@@ -288,18 +288,6 @@ void CDECL EmuRegisterSymbol(const char* library_str,
     printf(output.str().c_str());
 }
 
-// TODO: Move this into a function rather than duplicating from Symbol scanning code
-void EmuD3D_Init_DeferredStates()
-{
-    if (g_SymbolAddresses.find("D3DDeferredRenderState") != g_SymbolAddresses.end()) {
-        XTL::EmuD3DDeferredRenderState = (DWORD*)g_SymbolAddresses["D3DDeferredRenderState"];
-    }
-
-    if (g_SymbolAddresses.find("D3DDeferredTextureState") != g_SymbolAddresses.end()) {
-        XTL::EmuD3DDeferredTextureState = (DWORD*)g_SymbolAddresses["D3DDeferredTextureState"];
-    }
-}
-
 // Update shared structure with GUI process
 void EmuUpdateLLEStatus(uint32_t XbLibScan)
 {
@@ -464,8 +452,6 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 				    || g_SymbolAddresses["D3DDEVICE"] == 0) {
 					EmuLog(LOG_LEVEL::WARNING, "D3DDEVICE was not found!");
 				}
-
-				EmuD3D_Init_DeferredStates();
 			}
 		}
 
@@ -517,8 +503,6 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 		XbSymbolSetOutputMessage(EmuOutputMessage);
 
 		XbSymbolScan(pXbeHeader, EmuRegisterSymbol, false);
-
-		EmuD3D_Init_DeferredStates();
 	}
 
 	std::printf("\n");

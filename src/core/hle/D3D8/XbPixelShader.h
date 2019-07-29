@@ -37,7 +37,4 @@ void PrintPixelShaderDefContents( X_D3DPIXELSHADERDEF* pDSDef );
 // PatrickvL's Dxbx pixel shader translation
 VOID DxbxUpdateActivePixelShader(); // NOPATCH
 
-// TODO: Remove this once the Render State code has been fully ported from Dxbx/Wip_LessVertexPatching
-extern DWORD TemporaryPixelShaderRenderStates[X_D3DRS_PSTEXTUREMODES + 1];
-
 #endif // PIXELSHADER_H
