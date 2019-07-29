@@ -15,10 +15,11 @@ configuration:
 before_build:
   - cmd: |-
       git submodule update --init --recursive
-      $env:COMM_VER = $(git describe --tags $(git rev-list --tags --max-count=1))
-      $env:COMM_HASH = $(git rev-parse --short=8 HEAD)
       mkdir build
       cd build
+      $env:COMM_VER = $(git describe --tags $(git rev-list --tags --max-count=1))
+      $env:COMM_HASH = $(git rev-parse --short=8 HEAD)
+     
       cmake .. -G "Visual Studio 16 2019" -A Win32
 
 build_script:
