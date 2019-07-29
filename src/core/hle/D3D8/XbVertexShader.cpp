@@ -913,7 +913,7 @@ static void VshWriteShader(VSH_XBOX_SHADER *pShader,
 					// We need to move these constant values to temporaries so they can be used as input alongside other constants!
 					// We count down from the highest available on the host because Xbox titles don't use values that high, and we read from c192 because Xbox uses 192 constants
 					static int temporaryRegisterBase = g_D3DCaps.VS20Caps.NumTemps - 13;
-					moveConstantsToTemporaries << "mov r" << (temporaryRegisterBase + i) << ", c" << (193 + i) << "\n";
+					moveConstantsToTemporaries << "mov r" << (temporaryRegisterBase + i) << ", c" << (X_D3DVS_CONSTREG_VERTEXDATA4F_BASE + i) << "\n";
 					LOG_TEST_CASE("Shader uses undeclared Vertex Input Registers");
 					i++;
 					continue;
@@ -1617,7 +1617,7 @@ static boolean VshConvertShader(VSH_XBOX_SHADER *pShader,
 
 					if (!RegVIsPresentInDeclaration[pIntermediate->Parameters[j].Parameter.Address]) {
 						// This vertex register was not declared and therefore is not present within the Vertex Data object
-						// We read from tempories instead, that are set based on constants, in-turn, set by SetVertexData4f
+						// We read from temporary registers instead, that are set based on constants, in-turn, set by SetVertexData4f
 						// We count down from the highest available on the host because Xbox titles don't use values that high, and we read from c192 because Xbox uses 192 constants
 						static int temporaryRegisterBase = g_D3DCaps.VS20Caps.NumTemps - 13;
 						pIntermediate->Parameters[j].Parameter.ParameterType = PARAM_R;
@@ -1997,7 +1997,7 @@ static void VshConvertToken_STREAMDATA_REG(
 	}
 	DbgVshPrintf(", ");
 
-	// Add this regiseter to the list of declared registers
+	// Add this register to the list of declared registers
 	RegVIsPresentInDeclaration[VertexRegister] = true;
 
 	XTL::DWORD XboxVertexElementDataType = (*pToken & X_D3DVSD_DATATYPEMASK) >> X_D3DVSD_DATATYPESHIFT;

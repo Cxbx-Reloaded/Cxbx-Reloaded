@@ -4182,7 +4182,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexData4f)
 		// not present in the vertex declaration.
 		// We use range 193 and up to store these values, as Xbox shaders stop at c192!
 		FLOAT values[] = {a,b,c,d};
-		g_pD3DDevice->SetVertexShaderConstantF(193 + Register, values, 1);
+		g_pD3DDevice->SetVertexShaderConstantF(X_D3DVS_CONSTREG_VERTEXDATA4F_BASE + Register, values, 1);
 	}
 
 	// Grow g_InlineVertexBuffer_Table to contain at least current, and a potentially next vertex
@@ -6500,7 +6500,7 @@ VOID __fastcall XTL::EMUPATCH(D3DDevice_SetRenderState_Simple)
             return;
         case X_D3DRS_ALPHATESTENABLE:
             if (g_LibVersion_D3D8 == 3925) {
-                // HACK: Many 3925 have missing polygons when this is ture
+                // HACK: Many 3925 have missing polygons when this is true
                 // Until  we find out the true underlying cause, and carry on
                 // Test Cases: Halo, Silent Hill 2.
                 LOG_TEST_CASE("Applying 3925 alpha test disable hack");
@@ -7144,10 +7144,10 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexShader)
 		static const float ColorBlack[4] = { 0,0,0,0 };
 		static const float ColorWhite[4] = { 1,1,1,1 };
 
-		g_pD3DDevice->SetVertexShaderConstantF(193 + X_D3DVSDE_DIFFUSE, ColorWhite, 1);
-		g_pD3DDevice->SetVertexShaderConstantF(193 + X_D3DVSDE_BACKDIFFUSE, ColorWhite, 1);
-		g_pD3DDevice->SetVertexShaderConstantF(193 + X_D3DVSDE_SPECULAR, ColorBlack, 1);
-		g_pD3DDevice->SetVertexShaderConstantF(193 + X_D3DVSDE_BACKSPECULAR, ColorBlack, 1);
+		g_pD3DDevice->SetVertexShaderConstantF(X_D3DVS_CONSTREG_VERTEXDATA4F_BASE + X_D3DVSDE_DIFFUSE, ColorWhite, 1);
+		g_pD3DDevice->SetVertexShaderConstantF(X_D3DVS_CONSTREG_VERTEXDATA4F_BASE + X_D3DVSDE_BACKDIFFUSE, ColorWhite, 1);
+		g_pD3DDevice->SetVertexShaderConstantF(X_D3DVS_CONSTREG_VERTEXDATA4F_BASE + X_D3DVSDE_SPECULAR, ColorBlack, 1);
+		g_pD3DDevice->SetVertexShaderConstantF(X_D3DVS_CONSTREG_VERTEXDATA4F_BASE + X_D3DVSDE_BACKSPECULAR, ColorBlack, 1);
 	} else {
 		hRet = g_pD3DDevice->SetVertexShader(nullptr);
 		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetVertexShader");
@@ -7528,9 +7528,9 @@ void XTL::CxbxUpdateNativeD3DResources()
 	// Some titles set Vertex Shader constants directly via pushbuffers rather than through D3D
 	// We handle that case by updating any constants that have the dirty flag set on the nv2a.
 	auto nv2a = g_NV2A->GetDeviceState();
-	for(int i = 0; i < 192; i++) {
+	for(int i = 0; i < X_D3DVS_CONSTREG_COUNT; i++) {
         // Skip vOffset and vScale constants, we don't want our values to be overwritten by accident
-        if (i == 58 || i == 59) {
+        if (i == X_D3DSCM_RESERVED_CONSTANT1_CORRECTED || i == X_D3DSCM_RESERVED_CONSTANT2_CORRECTED) {
             continue;
         }
 
