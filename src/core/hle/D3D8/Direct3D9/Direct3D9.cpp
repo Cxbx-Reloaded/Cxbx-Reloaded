@@ -4168,6 +4168,23 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexData4f)
 
 	HRESULT hRet = D3D_OK;
 
+	// Get the vertex shader flags (if any is active) :
+	uint32_t ActiveVertexAttributeFlags = 0;
+	if (VshHandleIsVertexShader(g_CurrentXboxVertexShaderHandle)) {
+		LOG_TEST_CASE("D3DDevice_SetVertexData4f with active VertexShader");
+		X_D3DVertexShader* pXboxVertexShader = VshHandleToXboxVertexShader(g_CurrentXboxVertexShaderHandle);
+		if (!(pXboxVertexShader->Flags & 0x10/*=X_VERTEXSHADER_PROGRAM*/)) {
+			ActiveVertexAttributeFlags = pXboxVertexShader->Flags;
+		}
+
+		// If we have an active vertex shader, we also write the input to a vertex shader constant
+		// This allows us to implement Xbox functionality where SetVertexData4f can be used to specify attributes
+		// not present in the vertex declaration.
+		// We use range 193 and up to store these values, as Xbox shaders stop at c192!
+		FLOAT values[] = {a,b,c,d};
+		g_pD3DDevice->SetVertexShaderConstantF(X_D3DVS_CONSTREG_VERTEXDATA4F_BASE + Register, values, 1);
+	}
+
 	// Grow g_InlineVertexBuffer_Table to contain at least current, and a potentially next vertex
 	if (g_InlineVertexBuffer_TableLength <= g_InlineVertexBuffer_TableOffset + 1) {
 		if (g_InlineVertexBuffer_TableLength == 0) {
@@ -4184,16 +4201,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexData4f)
 	if (g_InlineVertexBuffer_FVF == 0) {
 		// Set first vertex to zero (preventing leaks from prior Begin/End calls)
 		g_InlineVertexBuffer_Table[0] = {};
-
-		// Get the vertex shader flags (if any is active) :
-		uint32_t ActiveVertexAttributeFlags = 0;
-		if (VshHandleIsVertexShader(g_CurrentXboxVertexShaderHandle)) {
-			LOG_TEST_CASE("D3DDevice_SetVertexData4f with active VertexShader");
-			X_D3DVertexShader *pXboxVertexShader = VshHandleToXboxVertexShader(g_CurrentXboxVertexShaderHandle);
-			if (!(pXboxVertexShader->Flags & 0x10/*=X_VERTEXSHADER_PROGRAM*/)) {
-				ActiveVertexAttributeFlags = pXboxVertexShader->Flags;
-			}
-		}
 
 		// Handle persistent vertex attribute flags, by resetting non-persistent colors
 		// to their default value (and leaving the persistent colors alone - see the
@@ -4313,6 +4320,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexData4f)
 		{
 			g_InlineVertexBuffer_Table[o].Diffuse = D3DCOLOR_COLORVALUE(a, b, c, d);
 			g_InlineVertexBuffer_FVF |= D3DFVF_DIFFUSE;
+            HLE_write_NV2A_vertex_attribute_slot(X_D3DVSDE_DIFFUSE, g_InlineVertexBuffer_Table[o].Diffuse);
 			break;
 		}
 
@@ -4320,13 +4328,14 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexData4f)
 		{
 			g_InlineVertexBuffer_Table[o].Specular = D3DCOLOR_COLORVALUE(a, b, c, d);
 			g_InlineVertexBuffer_FVF |= D3DFVF_SPECULAR;
+            HLE_write_NV2A_vertex_attribute_slot(X_D3DVSDE_SPECULAR, g_InlineVertexBuffer_Table[o].Specular);
 			break;
 		}
 
 		case X_D3DVSDE_FOG: // Xbox extension
 		{
 			g_InlineVertexBuffer_Table[o].Fog = a; // TODO : What about the other (b, c and d) arguments?
-			EmuLog(LOG_LEVEL::WARNING, "Host Direct3D8 doesn''t support FVF FOG");
+			//EmuLog(LOG_LEVEL::WARNING, "Host Direct3D8 doesn''t support FVF FOG");
 			break;
 		}
 
@@ -4335,14 +4344,16 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexData4f)
 		case X_D3DVSDE_BACKDIFFUSE: // Xbox extension
 		{
 			g_InlineVertexBuffer_Table[o].BackDiffuse = D3DCOLOR_COLORVALUE(a, b, c, d);
-			EmuLog(LOG_LEVEL::WARNING, "Host Direct3D8 doesn''t support FVF BACKDIFFUSE");
+			//EmuLog(LOG_LEVEL::WARNING, "Host Direct3D8 doesn''t support FVF BACKDIFFUSE");
+            HLE_write_NV2A_vertex_attribute_slot(X_D3DVSDE_BACKDIFFUSE, g_InlineVertexBuffer_Table[o].BackDiffuse);
 			break;
 		}
 
 		case X_D3DVSDE_BACKSPECULAR: // Xbox extension
 		{
 			g_InlineVertexBuffer_Table[o].BackSpecular = D3DCOLOR_COLORVALUE(a, b, c, d);
-			EmuLog(LOG_LEVEL::WARNING, "Host Direct3D8 doesn''t support FVF BACKSPECULAR");
+			//EmuLog(LOG_LEVEL::WARNING, "Host Direct3D8 doesn''t support FVF BACKSPECULAR");
+            HLE_write_NV2A_vertex_attribute_slot(X_D3DVSDE_BACKSPECULAR, g_InlineVertexBuffer_Table[o].BackSpecular);
 			break;
 		}
 
@@ -6487,7 +6498,16 @@ VOID __fastcall XTL::EMUPATCH(D3DDevice_SetRenderState_Simple)
             // Just log and return
             EmuLog(LOG_LEVEL::DEBUG, "RenderState_Simple(0x%.08X (%s), 0x%.08X) was ignored!", Method, DxbxRenderStateInfo[XboxRenderStateIndex].S, Value);
             return;
-        case X_D3DRS_ALPHATESTENABLE: case X_D3DRS_ALPHABLENDENABLE:
+        case X_D3DRS_ALPHATESTENABLE:
+            if (g_LibVersion_D3D8 == 3925) {
+                // HACK: Many 3925 have missing polygons when this is true
+                // Until  we find out the true underlying cause, and carry on
+                // Test Cases: Halo, Silent Hill 2.
+                LOG_TEST_CASE("Applying 3925 alpha test disable hack");
+                Value = false;
+            }
+            break;
+        case X_D3DRS_ALPHABLENDENABLE:
         case X_D3DRS_ALPHAREF: case X_D3DRS_ZWRITEENABLE:
         case X_D3DRS_DITHERENABLE: case X_D3DRS_STENCILREF:
         case X_D3DRS_STENCILMASK: case X_D3DRS_STENCILWRITEMASK:
@@ -7119,6 +7139,15 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexShader)
 		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetVertexDeclaration");
 		hRet = g_pD3DDevice->SetVertexShader((XTL::IDirect3DVertexShader9*)pVertexShader->Handle);
 		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetVertexShader(VshHandleIsVertexShader)");
+
+		// Set default constant values for specular, diffuse, etc
+		static const float ColorBlack[4] = { 0,0,0,0 };
+		static const float ColorWhite[4] = { 1,1,1,1 };
+
+		g_pD3DDevice->SetVertexShaderConstantF(X_D3DVS_CONSTREG_VERTEXDATA4F_BASE + X_D3DVSDE_DIFFUSE, ColorWhite, 1);
+		g_pD3DDevice->SetVertexShaderConstantF(X_D3DVS_CONSTREG_VERTEXDATA4F_BASE + X_D3DVSDE_BACKDIFFUSE, ColorWhite, 1);
+		g_pD3DDevice->SetVertexShaderConstantF(X_D3DVS_CONSTREG_VERTEXDATA4F_BASE + X_D3DVSDE_SPECULAR, ColorBlack, 1);
+		g_pD3DDevice->SetVertexShaderConstantF(X_D3DVS_CONSTREG_VERTEXDATA4F_BASE + X_D3DVSDE_BACKSPECULAR, ColorBlack, 1);
 	} else {
 		hRet = g_pD3DDevice->SetVertexShader(nullptr);
 		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetVertexShader");
@@ -7499,7 +7528,12 @@ void XTL::CxbxUpdateNativeD3DResources()
 	// Some titles set Vertex Shader constants directly via pushbuffers rather than through D3D
 	// We handle that case by updating any constants that have the dirty flag set on the nv2a.
 	auto nv2a = g_NV2A->GetDeviceState();
-	for(int i = 0; i < 192; i++) {
+	for(int i = 0; i < X_D3DVS_CONSTREG_COUNT; i++) {
+        // Skip vOffset and vScale constants, we don't want our values to be overwritten by accident
+        if (i == X_D3DSCM_RESERVED_CONSTANT1_CORRECTED || i == X_D3DSCM_RESERVED_CONSTANT2_CORRECTED) {
+            continue;
+        }
+
 		if (nv2a->pgraph.vsh_constants_dirty[i]) {
 			g_pD3DDevice->SetVertexShaderConstantF(i, (float*)&nv2a->pgraph.vsh_constants[i][0], 1);
 			nv2a->pgraph.vsh_constants_dirty[i] = false;

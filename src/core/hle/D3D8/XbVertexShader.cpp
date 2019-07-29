@@ -486,8 +486,8 @@ static const char* OReg_Name[] =
     "a0.x"
 };
 
-std::array<bool, 16> RegVUsage;
-std::array<int, 16> RegVDeclUsage;
+std::array<bool, 16> RegVIsPresentInDeclaration;
+std::array<bool, 16> RegVIsUsedByShader;
 
 /* TODO : map non-FVF Xbox vertex shader handle to CxbxVertexShader (a struct containing a host Xbox vertex shader handle and the original members)
 std::unordered_map<DWORD, CxbxVertexShader> g_CxbxVertexShaders;
@@ -790,28 +790,87 @@ static void VshWriteParameter(VSH_IMD_PARAMETER *pParameter,
 }
 
 
-// From D3D8to9
-static const BYTE DeclAddressUsages[][2] =
-{
-	{ XTL::D3DDECLUSAGE_POSITION, 0 },
-	{ XTL::D3DDECLUSAGE_BLENDWEIGHT, 0 },
-	{ XTL::D3DDECLUSAGE_BLENDINDICES, 0 },
-	{ XTL::D3DDECLUSAGE_NORMAL, 0 },
-	{ XTL::D3DDECLUSAGE_PSIZE, 0 },
-	{ XTL::D3DDECLUSAGE_COLOR, 0 },
-	{ XTL::D3DDECLUSAGE_COLOR, 1 },
-	{ XTL::D3DDECLUSAGE_TEXCOORD, 0 },
-	{ XTL::D3DDECLUSAGE_TEXCOORD, 1 },
-	{ XTL::D3DDECLUSAGE_TEXCOORD, 2 },
-	{ XTL::D3DDECLUSAGE_TEXCOORD, 3 },
-	{ XTL::D3DDECLUSAGE_TEXCOORD, 4 },
-	{ XTL::D3DDECLUSAGE_TEXCOORD, 5 },
-	{ XTL::D3DDECLUSAGE_TEXCOORD, 6 },
-	{ XTL::D3DDECLUSAGE_TEXCOORD, 7 },
-	{ XTL::D3DDECLUSAGE_POSITION, 1 },
-	{ XTL::D3DDECLUSAGE_NORMAL, 1 }
-};
+#define D3DDECLUSAGE_UNSUPPORTED ((D3DDECLUSAGE)-1)
 
+XTL::D3DDECLUSAGE Xb2PCRegisterType
+(
+	DWORD VertexRegister,
+	BYTE& PCUsageIndex
+)
+{
+	using namespace XTL;
+
+	D3DDECLUSAGE PCRegisterType;
+	PCUsageIndex = 0;
+
+	switch (VertexRegister)
+	{
+	case X_D3DVSDE_VERTEX: // -1
+		DbgVshPrintf("D3DVSDE_VERTEX /* xbox ext. */");
+		PCRegisterType = D3DDECLUSAGE_UNSUPPORTED;
+		break;
+	case X_D3DVSDE_POSITION: // 0
+		DbgVshPrintf("D3DVSDE_POSITION");
+		PCRegisterType = D3DDECLUSAGE_POSITION;
+		break;
+	case X_D3DVSDE_BLENDWEIGHT: // 1
+		DbgVshPrintf("D3DVSDE_BLENDWEIGHT");
+		PCRegisterType = D3DDECLUSAGE_BLENDWEIGHT;
+		break;
+	case X_D3DVSDE_NORMAL: // 2
+		DbgVshPrintf("D3DVSDE_NORMAL");
+		PCRegisterType = D3DDECLUSAGE_NORMAL;
+		break;
+	case X_D3DVSDE_DIFFUSE: // 3
+		DbgVshPrintf("D3DVSDE_DIFFUSE");
+		PCRegisterType = D3DDECLUSAGE_COLOR; PCUsageIndex = 0;
+		break;
+	case X_D3DVSDE_SPECULAR: // 4
+		DbgVshPrintf("D3DVSDE_SPECULAR");
+		PCRegisterType = D3DDECLUSAGE_COLOR; PCUsageIndex = 1;
+		break;
+	case X_D3DVSDE_FOG: // 5
+		DbgVshPrintf("D3DVSDE_FOG");
+		PCRegisterType = D3DDECLUSAGE_FOG;
+		break;
+	case X_D3DVSDE_POINTSIZE: // 6
+		DbgVshPrintf("D3DVDSE_POINTSIZE");
+		PCRegisterType = D3DDECLUSAGE_PSIZE;
+		break;
+	case X_D3DVSDE_BACKDIFFUSE: // 7
+		DbgVshPrintf("D3DVSDE_BACKDIFFUSE /* xbox ext. */");
+		PCRegisterType = D3DDECLUSAGE_COLOR; PCUsageIndex = 2;
+		break;
+	case X_D3DVSDE_BACKSPECULAR: // 8
+		DbgVshPrintf("D3DVSDE_BACKSPECULAR /* xbox ext. */");
+		PCRegisterType = D3DDECLUSAGE_COLOR; PCUsageIndex = 3;
+		break;
+	case X_D3DVSDE_TEXCOORD0: // 9
+		DbgVshPrintf("D3DVSDE_TEXCOORD0");
+		PCRegisterType = D3DDECLUSAGE_TEXCOORD; PCUsageIndex = 0;
+		break;
+	case X_D3DVSDE_TEXCOORD1: // 10
+		DbgVshPrintf("D3DVSDE_TEXCOORD1");
+		PCRegisterType = D3DDECLUSAGE_TEXCOORD; PCUsageIndex = 1;
+		break;
+	case X_D3DVSDE_TEXCOORD2: // 11
+		DbgVshPrintf("D3DVSDE_TEXCOORD2");
+		PCRegisterType = D3DDECLUSAGE_TEXCOORD; PCUsageIndex = 2;
+		break;
+	case X_D3DVSDE_TEXCOORD3: // 12
+		DbgVshPrintf("D3DVSDE_TEXCOORD3");
+		PCRegisterType = D3DDECLUSAGE_TEXCOORD; PCUsageIndex = 3;
+		break;
+	default:
+		DbgVshPrintf("%d /* unknown register */", VertexRegister);
+		PCRegisterType = D3DDECLUSAGE_UNSUPPORTED;
+		break;
+	}
+
+	return PCRegisterType;
+}
+
+extern XTL::D3DCAPS g_D3DCaps;
 
 static void VshWriteShader(VSH_XBOX_SHADER *pShader,
                            std::stringstream& pDisassembly,
@@ -841,55 +900,36 @@ static void VshWriteShader(VSH_XBOX_SHADER *pShader,
     }
 
 	if (Truncate) {
+		std::stringstream moveConstantsToTemporaries;
+
 		pDisassembly << "; Input usage declarations --\n";
 		unsigned i = 0;
 		do {
-			if (RegVUsage[i]) {
-				DWORD PCUsageIndex = DeclAddressUsages[i][1];
-				DWORD usage = DeclAddressUsages[i][0];
-
-				// If an override exists, use it
-				if (RegVDeclUsage[i] >= 0) {
-					usage = RegVDeclUsage[i];
+			if (RegVIsUsedByShader[i]) {
+				if (!RegVIsPresentInDeclaration[i]) {
+					// Log test case and skip
+					// Any registers hitting this critera were already replaced with constant/temporary reads
+					// To correctly use the values given in SetVertexData4f.
+					// We need to move these constant values to temporaries so they can be used as input alongside other constants!
+					// We count down from the highest available on the host because Xbox titles don't use values that high, and we read from c192 because Xbox uses 192 constants
+					static int temporaryRegisterBase = g_D3DCaps.VS20Caps.NumTemps - 13;
+					moveConstantsToTemporaries << "mov r" << (temporaryRegisterBase + i) << ", c" << (X_D3DVS_CONSTREG_VERTEXDATA4F_BASE + i) << "\n";
+					LOG_TEST_CASE("Shader uses undeclared Vertex Input Registers");
+					i++;
+					continue;
 				}
 
-				std::stringstream dclStream;
-				switch (usage) {
-				case XTL::D3DDECLUSAGE_POSITION:
-                    dclStream << "dcl_position" << (int)PCUsageIndex;
-					break;
-				case XTL::D3DDECLUSAGE_BLENDWEIGHT:
-					dclStream << "dcl_blendweight";
-					break;
-				case XTL::D3DDECLUSAGE_BLENDINDICES:
-					dclStream << "dcl_blendindices";
-					break;
-				case XTL::D3DDECLUSAGE_NORMAL:
-					dclStream << "dcl_normal";
-					break;
-				case XTL::D3DDECLUSAGE_COLOR:
-					dclStream << "dcl_color" << (int)PCUsageIndex;
-					break;
-				case XTL::D3DDECLUSAGE_FOG:
-					dclStream << "dcl_fog";
-					break;
-				case XTL::D3DDECLUSAGE_TEXCOORD:
-					dclStream << "dcl_texcoord" << (int)PCUsageIndex;
-					break;
-				case XTL::D3DDECLUSAGE_PSIZE:
-					dclStream << "dcl_psize";
-					break;
-				default:
-					dclStream << "dcl_unknown ("<< (int)PCUsageIndex << ")";
-					LOG_TEST_CASE("Encountered unknown declaration");
-					break;
-				}
-
-				pDisassembly << dclStream.str() << " v" << i << "\n";
+				// dcl_texcoord can be useds for any user-defined data
+				// We need this because there is no reliable way to detect the real usage
+				// Xbox has no concept of 'usage types', it only requires a list of attribute register numbers.
+				// So we treat them all as 'user-defined'
+				pDisassembly << "dcl_texcoord" << i << " v" << i << "\n";
 			}
 
 			i++;
-		} while (i < RegVUsage.size());
+		} while (i < RegVIsUsedByShader.size());
+
+		pDisassembly << moveConstantsToTemporaries.str();
 	}
 
     for (int i = 0; i < pShader->IntermediateCount && (i < VSH_MAX_INSTRUCTION_COUNT || !Truncate); i++)
@@ -1388,7 +1428,7 @@ static void VshRemoveScreenSpaceInstructions(VSH_XBOX_SHADER *pShader)
     // If we couldn't find the generic screen space transformation we're
     // assuming that the shader writes direct screen coordinates that must be
     // normalized. This hack will fail if (a) the shader uses custom screen
-    // space transformation, (b) reads r10 or r11 after we have written to
+    // space transformation, (b) reads r13 or r12 after we have written to
     // them, or (c) doesn't reserve c-38 and c-37 for scale and offset.
     if(deleted != 3)
     {
@@ -1401,17 +1441,17 @@ static void VshRemoveScreenSpaceInstructions(VSH_XBOX_SHADER *pShader)
             if( pIntermediate->Output.Type    == IMD_OUTPUT_O &&
                 pIntermediate->Output.Address == OREG_OPOS)
             {
-                // Redirect output to r11.
+                // Redirect output to r12.
                 pIntermediate->Output.Type    = IMD_OUTPUT_R;
-                pIntermediate->Output.Address = 11;
+                pIntermediate->Output.Address = 12;
 
-                // Scale r11 to r10. (mul r10.[mask], r11, c58)
+                // Scale r12 to r13. (mul r13.[mask], r12, c58)
                 VSH_INTERMEDIATE_FORMAT MulIntermediate;
                 MulIntermediate.IsCombined        = FALSE;
                 MulIntermediate.InstructionType   = IMD_MAC;
                 MulIntermediate.MAC               = MAC_MUL;
                 MulIntermediate.Output.Type       = IMD_OUTPUT_R;
-                MulIntermediate.Output.Address    = 10;
+                MulIntermediate.Output.Address    = 13;
                 MulIntermediate.Output.Mask[0]    = pIntermediate->Output.Mask[0];
                 MulIntermediate.Output.Mask[1]    = pIntermediate->Output.Mask[1];
                 MulIntermediate.Output.Mask[2]    = pIntermediate->Output.Mask[2];
@@ -1419,7 +1459,7 @@ static void VshRemoveScreenSpaceInstructions(VSH_XBOX_SHADER *pShader)
                 MulIntermediate.Parameters[0].Active                  = TRUE;
                 MulIntermediate.Parameters[0].IndexesWithA0_X                   = FALSE;
                 MulIntermediate.Parameters[0].Parameter.ParameterType = PARAM_R;
-                MulIntermediate.Parameters[0].Parameter.Address       = 11;
+                MulIntermediate.Parameters[0].Parameter.Address       = 12;
                 MulIntermediate.Parameters[0].Parameter.Neg           = FALSE;
                 VshSetSwizzle(&MulIntermediate.Parameters[0], SWIZZLE_X, SWIZZLE_Y, SWIZZLE_Z, SWIZZLE_W);
                 MulIntermediate.Parameters[1].Active                  = TRUE;
@@ -1431,13 +1471,13 @@ static void VshRemoveScreenSpaceInstructions(VSH_XBOX_SHADER *pShader)
                 MulIntermediate.Parameters[2].Active                  = FALSE;
                 VshInsertIntermediate(pShader, &MulIntermediate, ++i);
 
-                // Add offset with r10 to oPos (add oPos.[mask], r10, c59)
+                // Add offset with r13 to oPos (add oPos.[mask], r13, c59)
                 VSH_INTERMEDIATE_FORMAT AddIntermediate = MulIntermediate;
                 AddIntermediate.MAC               = MAC_ADD;
                 AddIntermediate.Output.Type       = IMD_OUTPUT_O;
                 AddIntermediate.Output.Address    = OREG_OPOS;
                 AddIntermediate.Parameters[0].Parameter.ParameterType = PARAM_R;
-                AddIntermediate.Parameters[0].Parameter.Address       = 10;
+                AddIntermediate.Parameters[0].Parameter.Address       = 13;
                 AddIntermediate.Parameters[1].Parameter.Address       = ConvertCRegister(59);
                 VshInsertIntermediate(pShader, &AddIntermediate, ++i);
             }
@@ -1468,11 +1508,15 @@ static boolean VshConvertShader(VSH_XBOX_SHADER *pShader,
 {
     using namespace XTL;
 
-    extern XTL::D3DCAPS g_D3DCaps;
-
     const DWORD temporaryCount = g_D3DCaps.VS20Caps.NumTemps;
 
     boolean RUsage[VSH_MAX_TEMPORARY_REGISTERS] = { FALSE };
+	// Set the last 13 register to used (they are used for SetVertexData4f Constants)
+	for (int i = 1; i <= 13;  i++) {
+		RUsage[VSH_MAX_TEMPORARY_REGISTERS - i] = true;
+	}
+
+
     // TODO: What about state shaders and such?
     pShader->ShaderHeader.Version = VERSION_VS;
 
@@ -1569,7 +1613,16 @@ static boolean VshConvertShader(VSH_XBOX_SHADER *pShader,
 				}
 
 				if (pIntermediate->Parameters[j].Parameter.ParameterType == PARAM_V) {
-					RegVUsage[pIntermediate->Parameters[j].Parameter.Address] = TRUE;
+					RegVIsUsedByShader[pIntermediate->Parameters[j].Parameter.Address] = TRUE;
+
+					if (!RegVIsPresentInDeclaration[pIntermediate->Parameters[j].Parameter.Address]) {
+						// This vertex register was not declared and therefore is not present within the Vertex Data object
+						// We read from temporary registers instead, that are set based on constants, in-turn, set by SetVertexData4f
+						// We count down from the highest available on the host because Xbox titles don't use values that high, and we read from c192 because Xbox uses 192 constants
+						static int temporaryRegisterBase = g_D3DCaps.VS20Caps.NumTemps - 13;
+						pIntermediate->Parameters[j].Parameter.ParameterType = PARAM_R;
+						pIntermediate->Parameters[j].Parameter.Address += temporaryRegisterBase;
+					} 
 				}
 			}
 		}
@@ -1682,69 +1735,35 @@ static boolean VshConvertShader(VSH_XBOX_SHADER *pShader,
             i++;
         }
     }
-    int16_t R12Replacement = -1;
-    if(temporaryCount <= 12 && RUsage[12])
-    {
-        // Sigh, they absolutely had to use r12, didn't they?
-        for (int i = temporaryCount - 1; i >= 0; i--)
-        {
-            if(!RUsage[i])
-            {
-                R12Replacement = i;
-                break;
-            }
-        }
-        if(R12Replacement == -1)
-        {
-            EmuLog(LOG_LEVEL::WARNING, "Vertex shader uses all r registers, including r12; impossible to convert!");
-            return FALSE;
-        }
-        for (int j = 0; j < pShader->IntermediateCount; j++)
-        {
-            VSH_INTERMEDIATE_FORMAT* pIntermediate = &pShader->Intermediate[j];
-            if(pIntermediate->Output.Type == IMD_OUTPUT_O &&
-                pIntermediate->Output.Address == OREG_OPOS)
-            {
-                // Found instruction writing to oPos
-                pIntermediate->Output.Type = IMD_OUTPUT_R;
-                pIntermediate->Output.Address = R12Replacement;
-            }
 
-            for (int k = 0; k < 3; k++)
-            {
-                if(pIntermediate->Parameters[k].Active)
-                {
-                    if(pIntermediate->Parameters[k].Parameter.ParameterType == PARAM_R &&
-                        pIntermediate->Parameters[k].Parameter.Address == 12)
-                    {
-                        // Found a r12 used as a parameter; replace
-                        pIntermediate->Parameters[k].Parameter.Address = R12Replacement;
-                    }
-                    else if(pIntermediate->Parameters[k].Parameter.ParameterType == PARAM_C &&
-                             pIntermediate->Parameters[k].Parameter.Address == 58 &&
-                             !pIntermediate->Parameters[k].IndexesWithA0_X)
-                    {
-                        // Found c-38, replace it with r12.w
-                        pIntermediate->Parameters[k].Parameter.ParameterType = PARAM_R;
-                        pIntermediate->Parameters[k].Parameter.Address = R12Replacement;
-                        VshSetSwizzle(&pIntermediate->Parameters[k], SWIZZLE_W, SWIZZLE_W, SWIZZLE_W, SWIZZLE_W);
-                    }
-                }
-            }
+    // Finally, iterate through the shader, replace all writes to oPos with writes to r12
+    // This fixes shaders that read from r12 expecting to see oPos
+    for (int i = 0; i < pShader->IntermediateCount; i++) {
+        VSH_INTERMEDIATE_FORMAT* pIntermediate = &pShader->Intermediate[i];
+        if (pIntermediate->Output.Type == IMD_OUTPUT_O && pIntermediate->Output.Address == OREG_OPOS) {
+            pIntermediate->Output.Type = IMD_OUTPUT_R;
+            pIntermediate->Output.Address = 12;
         }
-        // Insert mov oPos, r## in the end
-        VSH_INTERMEDIATE_FORMAT *pOPosWriteBack = VshNewIntermediate(pShader);
-        pOPosWriteBack->InstructionType = IMD_ILU;
-        pOPosWriteBack->ILU = ILU_MOV;
-        pOPosWriteBack->MAC = MAC_NOP;
-        pOPosWriteBack->Output.Type = IMD_OUTPUT_O;
-        pOPosWriteBack->Output.Address = OREG_OPOS;
-        VshSetOutputMask(&pOPosWriteBack->Output, TRUE, TRUE, TRUE, TRUE);
-        pOPosWriteBack->Parameters[0].Active = TRUE;
-        pOPosWriteBack->Parameters[0].Parameter.ParameterType = PARAM_R;
-        pOPosWriteBack->Parameters[0].Parameter.Address = R12Replacement;
-        VshSetSwizzle(&pOPosWriteBack->Parameters[0], SWIZZLE_X, SWIZZLE_Y, SWIZZLE_Z, SWIZZLE_W);
     }
+
+    // We append one additional instruction to mov oPos, r12
+    VSH_INTERMEDIATE_FORMAT MovIntermediate = {0};
+    MovIntermediate.MAC = MAC_MOV;
+    MovIntermediate.Output.Type = IMD_OUTPUT_O;
+    MovIntermediate.Output.Address = OREG_OPOS;
+    MovIntermediate.Output.Mask[0] = true;
+    MovIntermediate.Output.Mask[1] = true;
+    MovIntermediate.Output.Mask[2] = true;
+    MovIntermediate.Output.Mask[3] = true;
+    MovIntermediate.Parameters[0].Active = true;
+    MovIntermediate.Parameters[0].Parameter.ParameterType = PARAM_R;
+    MovIntermediate.Parameters[0].Parameter.Address = 12;
+    MovIntermediate.Parameters[0].Parameter.Swizzle[0] = SWIZZLE_X;
+    MovIntermediate.Parameters[0].Parameter.Swizzle[1] = SWIZZLE_Y;
+    MovIntermediate.Parameters[0].Parameter.Swizzle[2] = SWIZZLE_Z;
+    MovIntermediate.Parameters[0].Parameter.Swizzle[3] = SWIZZLE_W;
+    VshInsertIntermediate(pShader, &MovIntermediate, pShader->IntermediateCount);
+
     return TRUE;
 }
 
@@ -1771,93 +1790,6 @@ static DWORD VshGetDeclarationCount(DWORD *pDeclaration)
         Pos++;
     }
     return Pos + 1;
-}
-
-#define D3DDECLUSAGE_UNSUPPORTED ((D3DDECLUSAGE)-1)
-
-XTL::D3DDECLUSAGE Xb2PCRegisterType
-(
-	DWORD VertexRegister,
-	boolean IsFixedFunction,
-	BYTE& PCUsageIndex
-)
-{
-	using namespace XTL;
-
-	D3DDECLUSAGE PCRegisterType;
-	PCUsageIndex = 0;
-
-	if (!IsFixedFunction) {
-		DbgVshPrintf("%d", VertexRegister);
-		PCUsageIndex = DeclAddressUsages[VertexRegister][1];
-		return (D3DDECLUSAGE)DeclAddressUsages[VertexRegister][0];
-	}
-
-	switch (VertexRegister)
-	{
-	case X_D3DVSDE_VERTEX: // -1
-		DbgVshPrintf("D3DVSDE_VERTEX /* xbox ext. */");
-		PCRegisterType = D3DDECLUSAGE_UNSUPPORTED;
-		break;
-	case X_D3DVSDE_POSITION: // 0
-		DbgVshPrintf("D3DVSDE_POSITION");
-		PCRegisterType = D3DDECLUSAGE_POSITION;
-		break;
-	case X_D3DVSDE_BLENDWEIGHT: // 1
-		DbgVshPrintf("D3DVSDE_BLENDWEIGHT");
-		PCRegisterType = D3DDECLUSAGE_BLENDWEIGHT;
-		break;
-	case X_D3DVSDE_NORMAL: // 2
-		DbgVshPrintf("D3DVSDE_NORMAL");
-		PCRegisterType = D3DDECLUSAGE_NORMAL;
-		break;
-	case X_D3DVSDE_DIFFUSE: // 3
-		DbgVshPrintf("D3DVSDE_DIFFUSE");
-		PCRegisterType = D3DDECLUSAGE_COLOR; PCUsageIndex = 0;
-		break;
-	case X_D3DVSDE_SPECULAR: // 4
-		DbgVshPrintf("D3DVSDE_SPECULAR");
-		PCRegisterType = D3DDECLUSAGE_COLOR; PCUsageIndex = 1;
-		break;
-	case X_D3DVSDE_FOG: // 5
-		DbgVshPrintf("D3DVSDE_FOG");
-		PCRegisterType = D3DDECLUSAGE_FOG;
-		break;
-	case X_D3DVSDE_POINTSIZE: // 6
-		DbgVshPrintf("D3DVDSE_POINTSIZE");
-		PCRegisterType = D3DDECLUSAGE_PSIZE;
-		break;
-	case X_D3DVSDE_BACKDIFFUSE: // 7
-		DbgVshPrintf("D3DVSDE_BACKDIFFUSE /* xbox ext. */");
-		PCRegisterType = D3DDECLUSAGE_COLOR; PCUsageIndex = 2;
-		break;
-	case X_D3DVSDE_BACKSPECULAR: // 8
-		DbgVshPrintf("D3DVSDE_BACKSPECULAR /* xbox ext. */");
-		PCRegisterType = D3DDECLUSAGE_COLOR; PCUsageIndex = 3;
-		break;
-	case X_D3DVSDE_TEXCOORD0: // 9
-		DbgVshPrintf("D3DVSDE_TEXCOORD0");
-		PCRegisterType = D3DDECLUSAGE_TEXCOORD; PCUsageIndex = 0;
-		break;
-	case X_D3DVSDE_TEXCOORD1: // 10
-		DbgVshPrintf("D3DVSDE_TEXCOORD1");
-		PCRegisterType = D3DDECLUSAGE_TEXCOORD; PCUsageIndex = 1;
-		break;
-	case X_D3DVSDE_TEXCOORD2: // 11
-		DbgVshPrintf("D3DVSDE_TEXCOORD2");
-		PCRegisterType = D3DDECLUSAGE_TEXCOORD; PCUsageIndex = 2;
-		break;
-	case X_D3DVSDE_TEXCOORD3: // 12
-		DbgVshPrintf("D3DVSDE_TEXCOORD3");
-		PCRegisterType = D3DDECLUSAGE_TEXCOORD; PCUsageIndex = 3;
-		break;
-	default:
-		DbgVshPrintf("%d /* unknown register */", VertexRegister);
-		PCRegisterType = D3DDECLUSAGE_UNSUPPORTED;
-		break;
-	}
-
-    return PCRegisterType;
 }
 
 static inline DWORD VshGetTokenType(DWORD Token)
@@ -1921,19 +1853,18 @@ static void VshConvertToken_TESSELATOR(
     using namespace XTL;
 	BYTE Index;
 
-    // TODO: Investigate why Xb2PCRegisterType is only used for fixed function vertex shaders
     if(*pToken & X_D3DVSD_MASK_TESSUV)
     {
         XTL::DWORD VertexRegister    = VshGetVertexRegister(*pToken);
         XTL::DWORD NewVertexRegister = VertexRegister;
 
         DbgVshPrintf("\tD3DVSD_TESSUV(");
-		NewVertexRegister = Xb2PCRegisterType(VertexRegister, IsFixedFunction, Index);
+		NewVertexRegister = Xb2PCRegisterType(VertexRegister, Index);
         DbgVshPrintf("),\n");
 
 		// TODO : Expand on the setting of this TESSUV register element :
 		pRecompiled->Usage = D3DDECLUSAGE(NewVertexRegister);
-		pRecompiled->UsageIndex = Xb2PCRegisterType(NewVertexRegister, IsFixedFunction, Index); // TODO : Get Index from Xb2PCRegisterType
+		pRecompiled->UsageIndex =Index;
 	}
     // D3DVSD_TESSNORMAL
     else
@@ -1945,18 +1876,18 @@ static void VshConvertToken_TESSELATOR(
         XTL::DWORD NewVertexRegisterOut = VertexRegisterOut;
 
         DbgVshPrintf("\tD3DVSD_TESSNORMAL(");
-        NewVertexRegisterIn = Xb2PCRegisterType(VertexRegisterIn, IsFixedFunction, Index);
+        NewVertexRegisterIn = Xb2PCRegisterType(VertexRegisterIn, Index);
         DbgVshPrintf(", ");
 		// TODO : Expand on the setting of this TESSNORMAL input register element :
 		pRecompiled->Usage = D3DDECLUSAGE(NewVertexRegisterIn);
 		pRecompiled->UsageIndex = 0; // TODO : Get Index from Xb2PCRegisterType
-        NewVertexRegisterOut = Xb2PCRegisterType(VertexRegisterOut, IsFixedFunction, Index);
+        NewVertexRegisterOut = Xb2PCRegisterType(VertexRegisterOut, Index);
         DbgVshPrintf("),\n");
 
 		// TODO : Expand on the setting of this TESSNORMAL output register element :
 		pRecompiled++;
 		pRecompiled->Usage = D3DDECLUSAGE(NewVertexRegisterOut);
-		pRecompiled->UsageIndex = 0; // TODO : Get Index from Xb2PCRegisterType
+		pRecompiled->UsageIndex = Index; // TODO : Get Index from Xb2PCRegisterType
 	}
 }
 
@@ -2045,17 +1976,29 @@ static void VshConvertToken_STREAMDATA_REG(
 {
 	using namespace XTL;
 
-	extern XTL::D3DCAPS g_D3DCaps;
-
 	XTL::DWORD VertexRegister = VshGetVertexRegister(*pToken);
-	XTL::BYTE HostVertexRegister;
 	XTL::BOOL NeedPatching = FALSE;
 	XTL::BYTE Index;
 
+	BYTE HostVertexRegisterType;
+	// If this is a fixed-function shader, use Xb2PCRegisterType
 	DbgVshPrintf("\t\tD3DVSD_REG(");
-	BYTE XboxVertexRegister = Xb2PCRegisterType(VertexRegister, IsFixedFunction, Index);
-	HostVertexRegister = XboxVertexRegister;
+	if (IsFixedFunction) {
+		HostVertexRegisterType = Xb2PCRegisterType(VertexRegister, Index);
+	} else {
+		// D3DDECLUSAGE_TEXCOORD can be useds for any user-defined data
+		// We need this because there is no reliable way to detect the real usage
+		// Xbox has no concept of 'usage types', it only requires a list of attribute register numbers.
+		// So we treat them all as 'user-defined' with an Index of the Vertex Register Index
+		// this prevents information loss in shaders due to non-matching dcl types!
+		HostVertexRegisterType = D3DDECLUSAGE_TEXCOORD;
+		Index = VertexRegister;
+		DbgVshPrintf("%d", Index);
+	}
 	DbgVshPrintf(", ");
+
+	// Add this register to the list of declared registers
+	RegVIsPresentInDeclaration[VertexRegister] = true;
 
 	XTL::DWORD XboxVertexElementDataType = (*pToken & X_D3DVSD_DATATYPEMASK) >> X_D3DVSD_DATATYPESHIFT;
 	XTL::BYTE HostVertexElementDataType = 0;
@@ -2072,32 +2015,21 @@ static void VshConvertToken_STREAMDATA_REG(
 		DbgVshPrintf("D3DVSDT_FLOAT2");
 		HostVertexElementDataType = D3DDECLTYPE_FLOAT2;
 		HostVertexElementByteSize = 2 * sizeof(FLOAT);
-		//HostVertexRegister = D3DDECLUSAGE_TEXCOORD;	
 		break;
 	case X_D3DVSDT_FLOAT3: // 0x32:
 		DbgVshPrintf("D3DVSDT_FLOAT3");
 		HostVertexElementDataType = D3DDECLTYPE_FLOAT3;
 		HostVertexElementByteSize = 3 * sizeof(FLOAT);
-
-		/*
-		if (pPatchData->pCurrentVertexShaderStreamInfo->DeclPosition) {
-			pPatchData->pCurrentVertexShaderStreamInfo->DeclPosition = true;
-			HostVertexRegister = D3DDECLUSAGE_POSITION;
-		} else {
-			HostVertexRegister = D3DDECLUSAGE_NORMAL;
-		} */
 		break;
 	case X_D3DVSDT_FLOAT4: // 0x42:
 		DbgVshPrintf("D3DVSDT_FLOAT4");
 		HostVertexElementDataType = D3DDECLTYPE_FLOAT4;
 		HostVertexElementByteSize = 4 * sizeof(FLOAT);
-		//HostVertexRegister = D3DDECLUSAGE_COLOR;
 		break;
 	case X_D3DVSDT_D3DCOLOR: // 0x40:
 		DbgVshPrintf("D3DVSDT_D3DCOLOR");
 		HostVertexElementDataType = D3DDECLTYPE_D3DCOLOR;
 		HostVertexElementByteSize = 1 * sizeof(D3DCOLOR);
-		//HostVertexRegister = D3DDECLUSAGE_COLOR;
 		break;
 	case X_D3DVSDT_SHORT2: // 0x25:
 		DbgVshPrintf("D3DVSDT_SHORT2");
@@ -2272,13 +2204,8 @@ static void VshConvertToken_STREAMDATA_REG(
 	pRecompiled->Offset = pPatchData->pCurrentVertexShaderStreamInfo->HostVertexStride;
 	pRecompiled->Type = HostVertexElementDataType;
 	pRecompiled->Method = D3DDECLMETHOD_DEFAULT;
-	pRecompiled->Usage = HostVertexRegister;
+	pRecompiled->Usage = HostVertexRegisterType;
 	pRecompiled->UsageIndex = Index;
-
-	// If the xbox and host register number and usage differ, store an override!
-	if (XboxVertexRegister != HostVertexRegister) {
-		RegVDeclUsage[XboxVertexRegister] = HostVertexRegister;
-	}
 
 	pRecompiled++;
 
@@ -2363,7 +2290,7 @@ DWORD XTL::EmuRecompileVshDeclaration
     CxbxVertexShaderInfo *pVertexShaderInfo
 )
 {
-	RegVDeclUsage.fill(-1);
+	RegVIsPresentInDeclaration.fill(false);
 
     // First of all some info:
     // We have to figure out which flags are set and then
@@ -2413,8 +2340,6 @@ DWORD XTL::EmuRecompileVshDeclaration
     return D3D_OK;
 }
 
-extern XTL::D3DCAPS g_D3DCaps;
-
 // recompile xbox vertex shader function
 extern HRESULT XTL::EmuRecompileVshFunction
 (
@@ -2444,9 +2369,9 @@ extern HRESULT XTL::EmuRecompileVshFunction
     DWORD* pDeclEnd = (DWORD*)((BYTE*)pDeclToken + DeclarationSize);
 	do {
 		DWORD regNum = *pDeclToken & X_D3DVSD_VERTEXREGMASK;
-		if (regNum >= temporaryCount /*12*/) {
+		if (regNum >= temporaryCount /*12 for D3D8, D3D9 value depends on host GPU */) {
 			// Lego Star Wars hits this
-			LOG_TEST_CASE("RegNum > 12");
+			LOG_TEST_CASE("RegNum > NumTemps");
 			pDeclToken++;
 			continue;
 		}
@@ -2489,7 +2414,7 @@ extern HRESULT XTL::EmuRecompileVshFunction
 
     if(SUCCEEDED(hRet))
     {
-		RegVUsage.fill(false);
+		RegVIsUsedByShader.fill(false);
 
         for (pToken = (DWORD*)((uint8_t*)pFunction + sizeof(VSH_SHADER_HEADER)); !EOI; pToken += VSH_INSTRUCTION_SIZE)
         {
