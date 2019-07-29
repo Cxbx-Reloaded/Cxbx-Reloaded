@@ -34,7 +34,6 @@
 #include "core\hle\D3D8\ResourceTracker.h"
 #include "core\hle\D3D8\Direct3D9\Direct3D9.h" // For g_Xbox_VertexShader_Handle
 #include "core\hle\D3D8\XbPushBuffer.h"
-#include "core\hle\D3D8\XbState.h" // For CxbxUpdateNativeD3DResources, etc
 #include "core\hle\D3D8\XbConvert.h"
 #include "devices/video/nv2a.h" // For g_NV2A, PGRAPHState
 #include "devices/video/nv2a_int.h" // For NV** defines
