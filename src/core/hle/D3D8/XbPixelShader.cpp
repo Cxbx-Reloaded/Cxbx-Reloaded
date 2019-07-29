@@ -6043,15 +6043,13 @@ VOID XTL::DxbxUpdateActivePixelShader() // NOPATCH
     // constants in the shader declaration can be overwritten (this will be
     // needed for the final combiner constants at least)!
 
-/* This must be done once we somehow forward the vertex-shader oFog output to the pixel shader FOG input register :
-   We could use the unused oT4.x to output fog from the vertex shader, and read it with 'texcoord t4' in pixel shader!
-    // Disable native fog if pixel shader is said to handle it :
-    if ((RecompiledPixelShader.PSDef.PSFinalCombinerInputsABCD > 0)
-    || (RecompiledPixelShader.PSDef.PSFinalCombinerInputsEFG > 0))
-    {
-      g_pD3DDevice->SetRenderState(D3DRS_FOGENABLE, BOOL_FALSE);
+    // TODO: Figure out a method to foward the vertex-shader oFog output to the pixel shader FOG input register :
+    // We could use the unused oT4.x to output fog from the vertex shader, and read it with 'texcoord t4' in pixel shader! 
+    // For now, we still disable native fog if pixel shader is said to handle it, this prevents black screen issues in titles using pixel shader fog.
+    if ((RecompiledPixelShader->PSDef.PSFinalCombinerInputsABCD > 0) || (RecompiledPixelShader->PSDef.PSFinalCombinerInputsEFG > 0)) {
+      g_pD3DDevice->SetRenderState(D3DRS_FOGENABLE, FALSE);
     }
-*/
+
     //PS_TEXTUREMODES psTextureModes[XTL::X_D3DTS_STAGECOUNT];
     //PSH_XBOX_SHADER::GetPSTextureModes(pPSDef, psTextureModes);
     //
