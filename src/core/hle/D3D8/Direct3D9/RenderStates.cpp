@@ -121,6 +121,11 @@ void XboxRenderStateConverter::BuildRenderStateMappingTable()
     }
 }
 
+void XboxRenderStateConverter::SetDirty()
+{
+    PreviousRenderStateValues.fill(-1);
+}
+
 void* XboxRenderStateConverter::GetPixelShaderRenderStatePointer()
 {
     return &D3D__RenderState[XTL::X_D3DRS_PS_FIRST];

@@ -44,6 +44,7 @@ public:
     bool XboxRenderStateExists(uint32_t state);
     void SetXboxRenderState(uint32_t State, uint32_t Value);
     void SetWireFrameMode(int mode);
+    void SetDirty();
     uint32_t GetXboxRenderState(uint32_t State);
 private:
     void VerifyAndFixDeferredRenderStateOffset();

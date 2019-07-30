@@ -4854,6 +4854,10 @@ DWORD WINAPI XTL::EMUPATCH(D3DDevice_Swap)
 
 	hRet = g_pD3DDevice->BeginScene();
 
+    // RenderStates need reapplying each frame, but can be re-used between draw calls
+    // This forces them to be reset
+    XboxRenderStates.SetDirty();
+
     // Check if we need to enable our frame-limiter
     DWORD presentationInverval = g_PresentationIntervalOverride > 0 ? g_PresentationIntervalOverride : g_DefaultPresentationInterval;
     if (presentationInverval != D3DPRESENT_INTERVAL_IMMEDIATE) {
