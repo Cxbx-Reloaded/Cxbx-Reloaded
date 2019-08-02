@@ -169,6 +169,7 @@ static DWORD                        g_VertexShaderSlots[136];
 DWORD g_XboxBaseVertexIndex = 0;
 DWORD g_DefaultPresentationInterval = D3DPRESENT_INTERVAL_IMMEDIATE;
 DWORD g_PresentationIntervalOverride = 0;
+bool g_UnlockFramerateHack = false; // ignore the xbox presentation interval
 
 // Active D3D Vertex Streams (and strides)
 XTL::X_D3DVertexBuffer*g_D3DStreams[16];
@@ -1656,6 +1657,11 @@ static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
                 std::cout << _logThreadPrefix << g_EnumModules2String[to_underlying(CXBXR_MODULE::CXBXR)] << "Enable log is " << g_bPrintfOn << std::endl;
                 ipc_send_gui_update(IPC_UPDATE_GUI::LOG_ENABLED, static_cast<UINT>(g_bPrintfOn));
             }
+			else if (wParam == VK_F9)
+			{
+				// Toggle frame-limiting
+				g_UnlockFramerateHack = !g_UnlockFramerateHack;
+			}
             else if(wParam == VK_F11)
             {
                 if(g_iWireframe++ == 2)
@@ -4853,7 +4859,7 @@ DWORD WINAPI XTL::EMUPATCH(D3DDevice_Swap)
 
     // Check if we need to enable our frame-limiter
     DWORD presentationInverval = g_PresentationIntervalOverride > 0 ? g_PresentationIntervalOverride : g_DefaultPresentationInterval;
-    if (presentationInverval != D3DPRESENT_INTERVAL_IMMEDIATE) {
+    if ((presentationInverval != D3DPRESENT_INTERVAL_IMMEDIATE) && !g_UnlockFramerateHack) {
         // If the last frame completed faster than the Xbox target swap rate, wait for it
 
         auto targetRefreshRate = 60.0f; // TODO: Read from Xbox Display Mode
