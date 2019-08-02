@@ -470,47 +470,59 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
             {
                 case VK_F5:
                 {
-					// Try to open the most recent Xbe if none is opened yet :
-					if (m_Xbe == nullptr)
-						OpenMRU(0);
+					// Start emulation normally
+					if (!m_bIsStarted) {
+						// Try to open the most recent Xbe if none is opened yet :
+						if (m_Xbe == nullptr)
+							OpenMRU(0);
 
-					if (m_Xbe != nullptr)
-						if (!m_bIsStarted)
+						if (m_Xbe != nullptr)
 							StartEmulation(hwnd);
+
+						break;
+					}
+					// fall through
                 }
-                break;
 
                 case VK_F6:
                 {
-					if(m_bIsStarted)
-                        StopEmulation();
+					// Stop emulation
+					if (m_bIsStarted)
+					{
+						StopEmulation();
+						break;
+					}
+					// fall through
                 }
-                break;
 
 				case VK_F7:
 				{
-					// Try to open the dashboard xbe if none is opened yet :
+					// Open the dashboard xbe
 					if (!m_bIsStarted)
 					{
 						if (m_Xbe != nullptr) { CloseXbe(); }
 
 						OpenDashboard();
+						break;
 					}
+					// fall through
 				}
-				break;
 
 				case VK_F9:
 				{
-					// Try to open the most recent Xbe if none is opened yet :
+					// Start emulation with the debugger
 					if (!m_bIsStarted) {
+						// Try to open the most recent Xbe if none is opened yet
 						if (m_Xbe == nullptr)
 							OpenMRU(0);
 
 						if (m_Xbe != nullptr)
 							StartEmulation(hwnd, debuggerOn);
+
+						break;
 					}
+					// fall through
 				}
-				break;
 
                 default:
                 {
