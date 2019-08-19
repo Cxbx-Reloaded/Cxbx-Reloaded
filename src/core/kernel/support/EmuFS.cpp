@@ -212,13 +212,11 @@ __declspec(naked) void EmuFS_CmpEsiFs00()
 	// Note : eax must be preserved here, hence the push/pop
 	__asm
 	{
-		call LockFS
 		call EmuFS_RefreshKPCR
 		push eax
 		mov eax, fs : [TIB_ArbitraryDataSlot]
 		cmp esi, [eax]
 		pop eax
-		call UnlockFS
 		ret
 	}
 }
@@ -227,11 +225,9 @@ __declspec(naked) void EmuFS_MovEaxFs00()
 {
 	__asm
 	{
-		call LockFS
 		call EmuFS_RefreshKPCR
 		mov eax, fs : [TIB_ArbitraryDataSlot]
 		mov eax, [eax]
-		call UnlockFS
 		ret
 	}
 }
@@ -240,11 +236,9 @@ __declspec(naked) void EmuFS_MovEaxFs20()
 {
 	__asm
 	{
-		call LockFS
 		call EmuFS_RefreshKPCR
 		mov eax, fs : [TIB_ArbitraryDataSlot]
 		mov eax, [eax + 20h]
-		call UnlockFS
 		ret
 	}
 }
@@ -253,11 +247,9 @@ __declspec(naked) void EmuFS_MovEaxFs28()
 {
 	__asm
 	{
-		call LockFS
 		call EmuFS_RefreshKPCR
 		mov eax, fs : [TIB_ArbitraryDataSlot]
 		mov eax, [eax + 28h]
-		call UnlockFS
 		ret
 	}
 }
@@ -266,11 +258,9 @@ __declspec(naked) void EmuFS_MovEaxFs58()
 {
 	__asm
 	{
-		call LockFS;
 		call EmuFS_RefreshKPCR
 		mov eax, fs : [TIB_ArbitraryDataSlot]
 		mov eax, [eax + 58h]
-		call UnlockFS
 		ret
 	}
 }
@@ -279,11 +269,9 @@ __declspec(naked) void EmuFS_MovEbxFs00()
 {
 	__asm
 	{
-		call LockFS
 		call EmuFS_RefreshKPCR
 		mov ebx, fs : [TIB_ArbitraryDataSlot]
 		mov ebx, [ebx]
-		call UnlockFS
 		ret
 	}
 }
@@ -292,11 +280,9 @@ __declspec(naked) void EmuFS_MovEcxFs00()
 {
 	__asm
 	{
-		call LockFS
 		call EmuFS_RefreshKPCR
 		mov ecx, fs : [TIB_ArbitraryDataSlot]
 		mov ecx, [ecx]
-		call UnlockFS
 		ret
 	}
 }
@@ -305,11 +291,9 @@ __declspec(naked) void EmuFS_MovEcxFs04()
 {
 	__asm
 	{
-		call LockFS
 		call EmuFS_RefreshKPCR
 		mov ecx, fs : [TIB_ArbitraryDataSlot]
 		mov ecx, [ecx + 04h]
-		call UnlockFS
 		ret
 	}
 }
@@ -318,11 +302,9 @@ __declspec(naked) void EmuFS_MovEdiFs00()
 {
 	__asm
 	{
-		call LockFS
 		call EmuFS_RefreshKPCR
 		mov edi, fs : [TIB_ArbitraryDataSlot]
 		mov edi, [edi]
-		call UnlockFS
 		ret
 	}
 }
@@ -331,11 +313,9 @@ __declspec(naked) void EmuFS_MovEdiFs04()
 {
 	__asm
 	{
-		call LockFS
 		call EmuFS_RefreshKPCR
 		mov edi, fs : [TIB_ArbitraryDataSlot]
 		mov edi, [edi + 04h]
-		call UnlockFS
 		ret
 	}
 }
@@ -344,11 +324,9 @@ __declspec(naked) void EmuFS_MovEsiFs00()
 {
 	__asm
 	{
-		call LockFS
 		call EmuFS_RefreshKPCR
 		mov esi, fs : [TIB_ArbitraryDataSlot]
 		mov esi, [esi]
-		call UnlockFS
 		ret
 	}
 }
@@ -358,11 +336,9 @@ __declspec(naked) void EmuFS_MovzxEaxBytePtrFs24()
 	// Note : Inlined KeGetCurrentIrql()
 	__asm
 	{
-		call LockFS
 		call EmuFS_RefreshKPCR
 		mov eax, fs : [TIB_ArbitraryDataSlot]
 		movzx eax, byte ptr[eax + 24h]
-		call UnlockFS
 		ret
 	}
 }
@@ -372,13 +348,11 @@ __declspec(naked) void EmuFS_MovFs00Eax()
 	// Note : ebx must be preserved here, hence the push/pop
 	__asm
 	{
-		call LockFS
 		call EmuFS_RefreshKPCR
 		push ebx
 		mov ebx, fs : [TIB_ArbitraryDataSlot]
 		mov [ebx], eax
 		pop ebx
-		call UnlockFS
 		ret
 	}
 }
@@ -388,13 +362,11 @@ __declspec(naked) void EmuFS_MovFs00Ebx()
 	// Note : eax must be preserved here, hence the push/pop
 	__asm
 	{
-		call LockFS
 		call EmuFS_RefreshKPCR
 		push eax
 		mov eax, fs : [TIB_ArbitraryDataSlot]
 		mov [eax], ebx
 		pop eax
-		call UnlockFS
 		ret
 	}
 }
@@ -404,13 +376,11 @@ __declspec(naked) void EmuFS_MovFs00Ecx()
 	// Note : eax must be preserved here, hence the push/pop
 	__asm
 	{
-		call LockFS
 		call EmuFS_RefreshKPCR
 		push eax
 		mov eax, fs : [TIB_ArbitraryDataSlot]
 		mov [eax], ecx
 		pop eax
-		call UnlockFS
 		ret
 	}
 }
@@ -421,14 +391,12 @@ __declspec(naked) void EmuFS_MovFs00Esp()
 	__asm
 	{
 		pushfd
-		call LockFS
 		call EmuFS_RefreshKPCR
 		push eax
 		mov eax, fs : [TIB_ArbitraryDataSlot]
 		mov [eax], esp
 		add [eax], 12 // account for esp changes from pushed registers and return address
 		pop eax
-		call UnlockFS
 		popfd
 		ret
 	}
