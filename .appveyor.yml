@@ -1,5 +1,9 @@
 # Documentation is here: https://www.appveyor.com/docs/appveyor-yml/
 
+skip_commits:
+  files:
+    - .travis.yml
+
 init:
   - ps: Update-AppveyorBuild -Version "$env:appveyor_repo_commit"
 
@@ -13,22 +17,19 @@ configuration:
   - Debug
 
 before_build:
-  - cmd: |-
+  - cmd: |
       git submodule update --init --recursive
       mkdir build
       cd build
       cmake .. -G "Visual Studio 16 2019" -A Win32
 
 build_script:
-  - cmd: cmake --build . --config %CONFIGURATION%
+  - cmd: cmake --build . --config %configuration%
 
-after_build:
-  - ps: |-
-      cd "bin\${env:CONFIGURATION}"
-      7z u "${env:CONFIGURATION}.zip" ..\..\..\COPYING ..\..\..\README.md
-      7z u "${env:CONFIGURATION}.zip" Cxbx.exe glew32.dll subhook.dll CxbxVSBC.dll
-      7z u "${env:CONFIGURATION}.zip" cxbxr-debugger.exe capstone.dll cs_x86.dll
-      If ($env:CONFIGURATION -eq 'Release') { 
-        Get-ChildItem .\*.zip | % { Push-AppveyorArtifact $_.FullName -FileName $_.Name } 
+on_success:
+  - ps: |
+      If ($env:configuration -eq 'Release') {
+        cd "bin\${env:configuration}"
+        7z a "${env:configuration}.zip" ..\..\..\COPYING ..\..\..\README.md Cxbx.exe glew32.dll subhook.dll CxbxVSBC.dll cxbxr-debugger.exe capstone.dll cs_x86.dll
+        Get-ChildItem .\*.zip | % { Push-AppveyorArtifact $_.FullName -FileName $_.Name }
       }
-
