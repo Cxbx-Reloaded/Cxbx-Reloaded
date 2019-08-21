@@ -2398,11 +2398,66 @@ static void EmuVerifyResourceIsRegistered(XTL::X_D3DResource *pResource, DWORD D
 	auto key = GetHostResourceKey(pResource);
 	auto it = g_XboxDirect3DResources.find(key);
 	if (it != g_XboxDirect3DResources.end()) {
-		// Don't trash RenderTargets
-		// this fixes an issue where CubeMaps were broken because the surface Set in GetCubeMapSurface
-		// would be overwritten by the surface created in SetRenderTarget
-		if (D3DUsage == D3DUSAGE_RENDERTARGET) {
-			return;
+		if (D3DUsage == D3DUSAGE_RENDERTARGET && IsResourceAPixelContainer(pResource) && XTL::EmuXBFormatIsRenderTarget(GetXboxPixelContainerFormat((XTL::X_D3DPixelContainer*)pResource))) {
+            // Render targets have special behavior: We can't trash them on guest modification
+            // this fixes an issue where CubeMaps were broken because the surface Set in GetCubeMapSurface
+            // would be overwritten by the surface created in SetRenderTarget
+            // However, if a non-rendertarget surface is used here, we'll need to recreate it as a render target!
+            auto hostResource = it->second.pHostResource;
+            auto xboxSurface = (XTL::X_D3DSurface*)pResource;
+            auto xboxTexture = (XTL::X_D3DTexture*)pResource;
+            auto xboxResourceType = GetXboxD3DResourceType(pResource);
+
+            // Determine if the associated host resource is a render target already, if so, do nothing
+            HRESULT hRet = STATUS_INVALID_PARAMETER; // Default to an error condition, so we can use D3D_OK to check for success
+            XTL::D3DSURFACE_DESC surfaceDesc;
+            if (xboxResourceType == XTL::X_D3DRTYPE_SURFACE) {
+                hRet = ((XTL::IDirect3DSurface*)hostResource)->GetDesc(&surfaceDesc);
+            } else if (xboxResourceType == XTL::X_D3DRTYPE_TEXTURE) {
+                hRet = ((XTL::IDirect3DTexture*)hostResource)->GetLevelDesc(0, &surfaceDesc);
+            }
+
+            // Only continue checking if we were able to get the surface desc, if it failed, we fall-through
+            // to previous resource management behavior
+            if (SUCCEEDED(hRet)) {
+                // If this resource is already created as a render target on the host, simply return
+                if (surfaceDesc.Usage & D3DUSAGE_RENDERTARGET) {
+                    return;
+                }
+
+                // The host resource is not a render target, but the Xbox surface is
+                // We need to re-create it as a render target
+                switch (xboxResourceType) {
+                    case XTL::X_D3DRTYPE_SURFACE: {
+                        // Free the host surface
+                        FreeHostResource(key);
+
+                        // Free the parent texture, if present
+                        XTL::X_D3DTexture* pParentXboxTexture = (pResource) ? (XTL::X_D3DTexture*)xboxSurface->Parent : xbnullptr;
+
+                        if (pParentXboxTexture) {
+                            // Re-create the texture with D3DUSAGE_RENDERTARGET, this will automatically create any child-surfaces
+                            FreeHostResource(GetHostResourceKey(pParentXboxTexture));
+                            CreateHostResource(pParentXboxTexture, D3DUsage, iTextureStage, dwSize);
+                            return;
+                        }
+
+                        // Re-create the surface with D3DUSAGE_RENDERTARGET
+                        CreateHostResource(pResource, D3DUsage, iTextureStage, dwSize);
+                    } break;
+                    case XTL::X_D3DRTYPE_TEXTURE: {
+                        auto xboxTexture = (XTL::X_D3DTexture*)pResource;
+
+                        // Free the host texture
+                        FreeHostResource(key);
+
+                        // And re-create the texture with D3DUSAGE_RENDERTARGET
+                        CreateHostResource(pResource, D3DUsage, iTextureStage, dwSize);
+                    } break;
+                }
+
+                return;
+            }
 		}
 
         //check if the same key existed in the HostResource map already. if there is a old pXboxResource in the map with the same key but different resource address, it must be freed first.
@@ -4823,8 +4878,6 @@ DWORD WINAPI XTL::EMUPATCH(D3DDevice_Swap)
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->GetBackBuffer - Unable to get backbuffer surface!");
 	if (hRet == D3D_OK) {
 		assert(pCurrentHostBackBuffer != nullptr);
-
-		pCurrentHostBackBuffer->UnlockRect(); // remove any old lock
 
 		// Get backbuffer dimensions; TODO : remember this once, at creation/resize time
 		D3DSURFACE_DESC BackBufferDesc;
