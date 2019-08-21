@@ -5690,72 +5690,6 @@ void CreateHostResource(XTL::X_D3DResource *pResource, DWORD D3DUsage, int iText
     } // switch XboxResourceType
 }
 
-
-// ******************************************************************
-// * patch: IDirect3DResource8_Release
-// ******************************************************************
-ULONG WINAPI XTL::EMUPATCH(D3DResource_Release)
-(
-	X_D3DResource      *pThis
-)
-{
-	LOG_FUNC_ONE_ARG(pThis);
-
-	// Backup the key now, as the Xbox resource may be wiped out by the following release call!
-	auto key = GetHostResourceKey(pThis);
-
-	// Store a copy of Common and pThis to avoid dereferencing pThis later, which can become invalidated by D3DResource_Release (test case: JSRF)
-	DWORD Common = pThis->Common;
-	X_D3DResource *pThisCopy = pThis;
-
-	// Call the Xbox version of D3DResource_Release and store the result
-	XB_trampoline(ULONG, WINAPI, D3DResource_Release, (X_D3DResource*));
-
-	ULONG uRet = XB_D3DResource_Release(pThis);
-
-	// Was the Xbox resource freed?
-	if (uRet == 0) {
-	
-        // Generate some test cases so we know what to investigate/re-test after
-		// solving https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/issues/1665
-		if (((Common & X_D3DCOMMON_INTREFCOUNT_MASK) >> X_D3DCOMMON_INTREFCOUNT_SHIFT) != 1) {
-			LOG_TEST_CASE("Release of resource with a non-zero internal reference count");
-		}
-
-		if (pThisCopy == g_pXboxRenderTarget) {
-            LOG_TEST_CASE("Release of active Xbox Render Target");
-            g_pXboxRenderTarget = nullptr;
-		}
-
-		if (pThisCopy == g_pXboxDepthStencil) {
-            LOG_TEST_CASE("Release of active Xbox Depth Stencil");
-            g_pXboxDepthStencil = nullptr;
-		}
-
-		if (pThisCopy == g_XboxBackBufferSurface) {
-            LOG_TEST_CASE("Release of active Xbox Render Target");
-            g_XboxBackBufferSurface = nullptr;
-		}
-
-        if (pThisCopy == g_XboxDefaultDepthStencilSurface) {
-            LOG_TEST_CASE("Release of default Xbox Depth Stencil");
-            g_XboxDefaultDepthStencilSurface = nullptr;
-        }
-
-		for (int i = 0; i < TEXTURE_STAGES; i++) {
-            if (pThisCopy == EmuD3DActiveTexture[i]) {
-                LOG_TEST_CASE("Release of active Xbox Texture");
-                EmuD3DActiveTexture[i] = nullptr;
-            }
-		}
-
-		// Also release the host copy (if it exists!)
-		FreeHostResource(key); 
-	}
-
-    RETURN(uRet);
-}
-
 // ******************************************************************
 // * patch: D3DDevice_EnableOverlay
 // ******************************************************************
@@ -9330,6 +9264,79 @@ void WINAPI XTL::EMUPATCH(D3D_BlockOnTime)( DWORD Unknown1, int Unknown2 )
 
 	LOG_UNIMPLEMENTED();
 }
+
+bool DestroyResource_Common(XTL::X_D3DResource* pResource)
+{
+
+    auto key = GetHostResourceKey(pResource);
+
+    if (pResource == g_pXboxRenderTarget) {
+        LOG_TEST_CASE("Skipping Release of active Xbox Render Target");
+        return false;
+    }
+
+    if (pResource == g_pXboxDepthStencil) {
+        LOG_TEST_CASE("Skipping Release of active Xbox Depth Stencil");
+        return false;
+    }
+
+    if (pResource == g_XboxBackBufferSurface) {
+        LOG_TEST_CASE("Skipping Release of active Xbox BackBuffer");
+        return false;
+    }
+
+    if (pResource == g_XboxDefaultDepthStencilSurface) {
+        LOG_TEST_CASE("Skipping Release of default Xbox Depth Stencil");
+        return false;
+    }
+
+    for (int i = 0; i < TEXTURE_STAGES; i++) {
+        if (pResource == XTL::EmuD3DActiveTexture[i]) {
+            LOG_TEST_CASE("Skipping Release of active Xbox Texture");
+            return false;
+        }
+    }
+
+    // Release the host copy (if it exists!)
+    FreeHostResource(key);
+
+    return true;
+}
+
+// ******************************************************************
+// * patch: D3D_DestroyResource
+// ******************************************************************
+void WINAPI XTL::EMUPATCH(D3D_DestroyResource)(X_D3DResource* pResource)
+{
+    LOG_FUNC_ONE_ARG(pResource);
+
+    if (DestroyResource_Common(pResource)) {
+        // Call the Xbox version of DestroyResource
+        XB_trampoline(void, WINAPI, D3D_DestroyResource, (X_D3DResource*));
+        XB_D3D_DestroyResource(pResource);
+    }
+}
+
+// ******************************************************************
+// * patch: D3D_DestroyResource_LTCG
+// ******************************************************************
+void WINAPI XTL::EMUPATCH(D3D_DestroyResource__LTCG)()
+{
+    X_D3DResource* pResource;
+    __asm {
+        mov pResource, edi
+    }
+
+    if (DestroyResource_Common(pResource)) {
+        // Call the Xbox version of DestroyResource
+        XB_trampoline(void, WINAPI, D3D_DestroyResource__LTCG, (VOID));
+        __asm {
+            mov edi, pResource
+            call XB_D3D_DestroyResource__LTCG
+        }
+    }
+}
+
 
 // ******************************************************************
 // * patch: D3DDevice_SetRenderTargetFast
