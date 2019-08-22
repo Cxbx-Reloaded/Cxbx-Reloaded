@@ -18,7 +18,7 @@ configuration:
   - Debug
 
 before_build:
-  - cmd: |
+  - cmd: |-
       git submodule update --init --recursive
       mkdir build
       cd build
@@ -28,9 +28,11 @@ build_script:
   - cmd: cmake --build . --config %configuration%
 
 on_success:
-  - ps: |
+  - ps: |-
       If ($env:configuration -eq 'Release') {
         cd "bin\${env:configuration}"
-        7z a "${env:configuration}.zip" ..\..\..\COPYING ..\..\..\README.md Cxbx.exe glew32.dll subhook.dll CxbxVSBC.dll cxbxr-debugger.exe capstone.dll cs_x86.dll
+        7z u "${env:configuration}.zip" ..\..\..\COPYING ..\..\..\README.md
+        7z u "${env:configuration}.zip" Cxbx.exe glew32.dll subhook.dll CxbxVSBC.dll
+        7z u "${env:configuration}.zip" cxbxr-debugger.exe capstone.dll cs_x86.dll
         Get-ChildItem .\*.zip | % { Push-AppveyorArtifact $_.FullName -FileName $_.Name }
       }
