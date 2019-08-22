@@ -2,6 +2,7 @@
 
 skip_commits:
   files:
+    - .azure-pipelines.yml
     - .travis.yml
 
 init:
