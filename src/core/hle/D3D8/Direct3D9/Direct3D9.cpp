@@ -928,8 +928,11 @@ XTL::IDirect3DBaseTexture *GetHostBaseTexture(XTL::X_D3DResource *pXboxResource,
 		return nullptr;
 
 	if (GetXboxCommonResourceType(pXboxResource) != X_D3DCOMMON_TYPE_TEXTURE) { // Allows breakpoint below
-		; // TODO : Log instead of assert(GetXboxCommonResourceType(pXboxResource) == X_D3DCOMMON_TYPE_TEXTURE);
-		// Burnout hits this case (retreiving a surface instead of a texture)
+        // Burnout and Outrun 2006 hit this case (retrieving a surface instead of a texture)
+        // TODO : Surfaces can be set in the texture stages, instead of textures
+        // We'll need to wrap the surface somehow before using it as a texture
+        LOG_TEST_CASE("GetHostBaseTexture called on a non-texture object");
+        return nullptr;
 	}
 
 	return (XTL::IDirect3DBaseTexture*)GetHostResource(pXboxResource, D3DUsage, iTextureStage);
@@ -939,14 +942,6 @@ XTL::IDirect3DTexture *GetHostTexture(XTL::X_D3DResource *pXboxResource, int iTe
 {
 	if (pXboxResource == NULL)
 		return nullptr;
-
-	if (GetXboxCommonResourceType(pXboxResource) != X_D3DCOMMON_TYPE_TEXTURE) {
-		// Burnout and Outrun 2006 hit this case (retrieving a surface instead of a texture)
-		// TODO : Surfaces can be set in the texture stages, instead of textures
-		// We'll need to wrap the surface somehow before using it as a texture
-		LOG_TEST_CASE("GetHostBaseTexture called on a non-texture object");
-		return nullptr;
-	}
 
 	return (XTL::IDirect3DTexture *)GetHostBaseTexture(pXboxResource, 0, iTextureStage);
 
