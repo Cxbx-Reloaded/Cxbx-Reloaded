@@ -4607,6 +4607,71 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_Clear)
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->Clear");
 }
 
+
+// ******************************************************************
+// * patch: D3DDevice_CopyRects
+// ******************************************************************
+VOID WINAPI XTL::EMUPATCH(D3DDevice_CopyRects)
+(
+    X_D3DSurface* pSourceSurface,
+    CONST RECT* pSourceRectsArray,
+    UINT                cRects,
+    X_D3DSurface* pDestinationSurface,
+    CONST POINT* pDestPointsArray
+)
+{
+    LOG_FUNC_BEGIN
+        LOG_FUNC_ARG(pSourceSurface);
+        LOG_FUNC_ARG(pSourceRectsArray);
+        LOG_FUNC_ARG(cRects);
+        LOG_FUNC_ARG(pDestinationSurface);
+        LOG_FUNC_ARG(pDestPointsArray);
+    LOG_FUNC_END;
+
+    // We skip the trampoline to prevent unnecessary work
+    // As our surfaces remain on the GPU, calling the trampoline would just
+    // result in a memcpy from an empty Xbox surface to another empty Xbox Surface
+
+    auto pHostSourceSurface = GetHostSurface(pSourceSurface);
+    auto pHostDestSurface = GetHostSurface(pDestinationSurface);
+
+    D3DSURFACE_DESC SourceDesc, DestinationDesc;
+    pHostSourceSurface->GetDesc(&SourceDesc);
+    pHostDestSurface->GetDesc(&DestinationDesc);
+
+    // If no rectangles were given, default to 1 (entire surface)
+    if (cRects = 0) {
+        cRects = 1;
+    }
+
+    for (UINT i = 0; i < cRects; i++) {
+        RECT SourceRect, DestRect;
+
+        if (pSourceRectsArray != nullptr) {
+            SourceRect = pSourceRectsArray[i];
+        } else {
+            SourceRect.left = 0;
+            SourceRect.right = SourceDesc.Width;
+            SourceRect.top = 0;
+            SourceRect.bottom = SourceDesc.Height;
+        }
+
+        if (pDestPointsArray != nullptr) {
+            DestRect.left = pDestPointsArray[i].x;
+            DestRect.right = DestRect.left + (SourceRect.right - SourceRect.left);
+            DestRect.top = pDestPointsArray[i].y;
+            DestRect.bottom = DestRect.top + (SourceRect.bottom - SourceRect.top);
+        } else {
+            DestRect = SourceRect;
+        }
+
+        HRESULT hRet = g_pD3DDevice->StretchRect(pHostSourceSurface, &SourceRect, pHostDestSurface, &DestRect, D3DTEXF_NONE);
+        if (FAILED(hRet)) {
+            LOG_TEST_CASE("D3DDevice_CopyRects: Failed to copy surface");
+        }
+    }
+}
+
 #define CXBX_SWAP_PRESENT_FORWARD (256 + 4 + 1) // = CxbxPresentForwardMarker + D3DSWAP_FINISH + D3DSWAP_COPY
 
 // ******************************************************************
