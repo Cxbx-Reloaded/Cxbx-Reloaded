@@ -40,13 +40,24 @@ jobs:
       cmake --build . --config %configuration%
     displayName: 'Build'
 
-  - script: |
-      cd "build\bin\%configuration%"
-      7z a "..\..\..\%configuration%.zip" ..\..\..\COPYING ..\..\..\README.md Cxbx.exe glew32.dll subhook.dll CxbxVSBC.dll cxbxr-debugger.exe capstone.dll cs_x86.dll
+  - task: CopyFiles@2
+    displayName: 'Copy files to $(Build.ArtifactStagingDirectory)'
     condition: and(succeeded(), eq(variables['Agent.JobName'], 'Release'))
-    displayName: 'After build'
+    inputs:
+      Contents: |
+          COPYING
+          README.md
+          build\bin\$(configuration)\Cxbx.exe
+          build\bin\$(configuration)\glew32.dll
+          build\bin\$(configuration)\subhook.dll
+          build\bin\$(configuration)\CxbxVSBC.dll
+          build\bin\$(configuration)\cxbxr-debugger.exe
+          build\bin\$(configuration)\capstone.dll
+          build\bin\$(configuration)\cx_x86.dll
+      TargetFolder: '$(Build.ArtifactStagingDirectory)'
+      flattenFolders: true
 
-  - publish: $(configuration).zip
+  - publish: $(Build.ArtifactStagingDirectory)
     artifact: $(configuration)
     condition: and(succeeded(), eq(variables['Agent.JobName'], 'Release'))
     displayName: Publish artifact(s)
