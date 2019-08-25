@@ -2032,6 +2032,17 @@ void WINAPI EMUPATCH(D3D_BlockOnTime)( DWORD Unknown1, int Unknown2 );
 void WINAPI EMUPATCH(D3D_BlockOnResource)( X_D3DResource* pResource );
 
 // ******************************************************************
+// * patch: D3D_DestroyResource
+// ******************************************************************
+void WINAPI EMUPATCH(D3D_DestroyResource)( X_D3DResource* pResource );
+
+// ******************************************************************
+// * patch: D3D_DestroyResource__LTCG
+// ******************************************************************
+void WINAPI EMUPATCH(D3D_DestroyResource__LTCG)();
+
+
+// ******************************************************************
 // * patch: D3DDevice_GetPushBufferOffset
 // ******************************************************************
 VOID WINAPI EMUPATCH(D3DDevice_GetPushBufferOffset)
