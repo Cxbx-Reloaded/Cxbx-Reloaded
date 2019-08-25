@@ -1202,6 +1202,94 @@ VOID CxbxGetPixelContainerMeasures
 	}
 }
 
+void GetSurfaceFaceAndLevelWithinTexture(XTL::X_D3DSurface* pSurface, XTL::X_D3DBaseTexture* pTexture, UINT& Level, XTL::D3DCUBEMAP_FACES& Face)
+{
+    auto pSurfaceData = (uintptr_t)GetDataFromXboxResource(pSurface);
+    auto pTextureData = (uintptr_t)GetDataFromXboxResource(pTexture);
+
+    // Fast path: If the data pointers match, this must be the first surface within the texture
+    if ((pSurfaceData == pTextureData)) {
+        Level = 0;
+        Face = XTL::D3DCUBEMAP_FACE_POSITIVE_X;
+        return;
+    }
+    
+    int numLevels = CxbxGetPixelContainerMipMapLevels(pTexture);
+    int numFaces = pTexture->Format & X_D3DFORMAT_CUBEMAP ? 6 : 1;
+
+    CxbxGetPixelContainerMipMapLevels(pTexture);
+
+    // First, we need to fetch the dimensions of both the surface and the texture, for use within our calculations
+    UINT textureWidth, textureHeight, textureDepth, textureRowPitch, textureSlicePitch;
+    CxbxGetPixelContainerMeasures(pTexture, 0, &textureWidth, &textureHeight, &textureDepth, &textureRowPitch, &textureSlicePitch);
+
+    UINT surfaceWidth, surfaceHeight, surfaceDepth, surfaceRowPitch, surfaceSlicePitch;
+    CxbxGetPixelContainerMeasures(pSurface, 0, &surfaceWidth, &surfaceHeight, &surfaceDepth, &surfaceRowPitch, &surfaceSlicePitch);  
+
+    // Iterate through all faces and levels, until we find a matching pointer
+    bool isCompressed = XTL::EmuXBFormatIsCompressed(GetXboxPixelContainerFormat(pTexture));
+    int minSize = (isCompressed) ? 4 : 1;
+    int cubeFaceOffset = 0; int cubeFaceSize = 0;
+    auto pData = pTextureData;
+
+    for (int face = XTL::D3DCUBEMAP_FACE_POSITIVE_X; face <= numFaces; face++) {
+        int mipWidth = textureWidth;
+        int mipHeight = textureHeight;
+        int mipDepth = textureDepth;
+        int mipRowPitch = textureRowPitch;
+        int mipDataOffset = 0;
+
+        for (int level = 0; level < numLevels; level++) {
+            if (pData == pSurfaceData) {
+                Level = level;
+                Face = (XTL::D3DCUBEMAP_FACES)face;
+                return;
+            }
+
+            // Calculate size of this mipmap level
+            UINT dwMipSize = mipRowPitch * mipHeight;
+            if (isCompressed) {
+                dwMipSize /= 4;
+            }
+
+            // If this is the first face, set the cube face size
+            if (face == XTL::D3DCUBEMAP_FACE_POSITIVE_X) {
+                cubeFaceSize = ROUND_UP(textureDepth * dwMipSize, X_D3DTEXTURE_CUBEFACE_ALIGNMENT);
+            }
+
+            // Move to the next mip-map and calculate dimensions for the next iteration
+            mipDataOffset += dwMipSize;
+
+            if (mipWidth > minSize) {
+                mipWidth /= 2;
+                mipRowPitch /= 2;
+            }
+
+            if (mipHeight > minSize) {
+                mipHeight /= 2;
+            }
+
+            if (mipDepth > 1) {
+                mipDepth /= 2;
+            }
+        }
+
+        // Move to the next face
+        pData += cubeFaceSize;
+    }
+
+    LOG_TEST_CASE("Could not find Surface within Texture, falling back to Level = 0, Face = D3DCUBEMAP_FACE_POSITIVE_X");
+    Level = 0;
+    Face = XTL::D3DCUBEMAP_FACE_POSITIVE_X;
+}
+
+// Wrapper function to allow calling without passing a face
+void GetSurfaceFaceAndLevelWithinTexture(XTL::X_D3DSurface* pSurface, XTL::X_D3DBaseTexture* pBaseTexture, UINT& Level)
+{
+    XTL::D3DCUBEMAP_FACES face;
+    GetSurfaceFaceAndLevelWithinTexture(pSurface, pBaseTexture, Level, face);
+}
+
 bool ConvertD3DTextureToARGBBuffer(
 	XTL::X_D3DFORMAT X_Format,
 	uint8_t *pSrc,
@@ -5052,27 +5140,46 @@ void CreateHostResource(XTL::X_D3DResource *pResource, DWORD D3DUsage, int iText
 		// Don't init the Parent if the Surface and Surface Parent formats differ
 		// Happens in some Outrun 2006 SetRenderTarget calls
 		if (pParentXboxTexture && (pXboxSurface->Format == pParentXboxTexture->Format)) {
+            // For surfaces with a parent texture, map these to a host texture first
 			XTL::IDirect3DBaseTexture *pParentHostBaseTexture = GetHostBaseTexture(pParentXboxTexture, D3DUsage, iTextureStage);
+            XTL::IDirect3DSurface* pNewHostSurface;
 			switch (pParentHostBaseTexture->GetType()) {
 			case XTL::D3DRTYPE_VOLUMETEXTURE: {
+                LOG_TEST_CASE("Using child surface of VolumeTexture");
 				// TODO
 				break;
 			}
 			case XTL::D3DRTYPE_CUBETEXTURE: {
-				// TODO
-				// test-case : Burnout
+                // test-case : Burnout
+                auto pParentHostTexture = (XTL::IDirect3DCubeTexture*)pParentHostBaseTexture;
+                
+                XTL::D3DCUBEMAP_FACES CubeMapFace = XTL::D3DCUBEMAP_FACE_POSITIVE_X;
+                UINT SurfaceLevel = 0;
+                GetSurfaceFaceAndLevelWithinTexture(pXboxSurface, pParentXboxTexture, SurfaceLevel, CubeMapFace);
+
+                HRESULT hRet = pParentHostTexture->GetCubeMapSurface(CubeMapFace, SurfaceLevel, &pNewHostSurface);
+
+                DEBUG_D3DRESULT(hRet, "pHostParentTexture->GetSurfaceLevel");
+                if (hRet == D3D_OK) {
+                    SetHostSurface(pXboxSurface, pNewHostSurface);
+                    EmuLog(LOG_LEVEL::DEBUG, "CreateHostResource : Successfully created CubeTexture surface level (Face: %u, Level: %u, pResource: 0x%.08X, pNewHostSurface: 0x%.08X)",
+                        CubeMapFace, SurfaceLevel, pResource, pNewHostSurface);
+                    return;
+                }
+
 				break;
 			}
 			case XTL::D3DRTYPE_TEXTURE: {
-				// For surfaces with a parent texture, map these to a host texture first
-				XTL::IDirect3DTexture *pParentHostTexture = (XTL::IDirect3DTexture *)pParentHostBaseTexture;
-				UINT SurfaceLevel = 0; // TODO : Derive actual level based on pXboxSurface->Data delta to pParentXboxTexture->Data
-				XTL::IDirect3DSurface *pNewHostSurface;
+                XTL::IDirect3DTexture* pParentHostTexture = (XTL::IDirect3DTexture*)pParentHostBaseTexture;
+
+                UINT SurfaceLevel = 0;
+                GetSurfaceFaceAndLevelWithinTexture(pXboxSurface, pParentXboxTexture, SurfaceLevel);
 				HRESULT hRet = pParentHostTexture->GetSurfaceLevel(SurfaceLevel, &pNewHostSurface);
+
 				DEBUG_D3DRESULT(hRet, "pHostParentTexture->GetSurfaceLevel");
 				if (hRet == D3D_OK) {
 					SetHostSurface(pXboxSurface, pNewHostSurface);
-					EmuLog(LOG_LEVEL::DEBUG, "CreateHostResource : Successfully created surface level (%u, 0x%.08X, 0x%.08X)",
+                    EmuLog(LOG_LEVEL::DEBUG, "CreateHostResource : Successfully created Texture surface level (Level: %u, pResource: 0x%.08X, pNewHostSurface: 0x%.08X)",
 						SurfaceLevel, pResource, pNewHostSurface);
 					return;
 				}
@@ -5309,7 +5416,7 @@ void CreateHostResource(XTL::X_D3DResource *pResource, DWORD D3DUsage, int iText
 
 		case XTL::X_D3DRTYPE_VOLUME: {
 			LOG_UNIMPLEMENTED();
-			// Note : Host D3D can only(?) retrieve a volue like this : 
+			// Note : Host D3D can only(?) retrieve a volume like this : 
 			// hRet = pNewHostVolumeTexture->GetVolumeLevel(level, &pNewHostVolume);
 			// So, we need to do this differently - we need to step up to the containing VolumeTexture,
 			// and retrieve and convert all of it's GetVolumeLevel() slices.
@@ -5408,9 +5515,11 @@ void CreateHostResource(XTL::X_D3DResource *pResource, DWORD D3DUsage, int iText
 			}
 
 			SetHostCubeTexture(pResource, pNewHostCubeTexture);
-			// TODO : Because cube face surfaces can be used as a render-target,
-			// we should call SetHostSurface() on all 6 faces, so that when Xbox
-			// code accesses a face, the host counterpart is already registered!
+			// TODO : Cube face surfaces can be used as a render-target,
+			// so we need to associate host surfaces to each surface of this cube texture
+            // However, we can't do it here: On Xbox, a new Surface is created on every call to
+            // GetCubeMapSurface, so it needs to be done at surface conversion time by looking up
+            // the parent CubeTexture
 			EmuLog(LOG_LEVEL::DEBUG, "CreateHostResource : Successfully created %s (0x%.08X, 0x%.08X)",
 				ResourceTypeName, pResource, pNewHostCubeTexture);
 			break;
@@ -7948,92 +8057,6 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_LightEnable)
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->LightEnable");    
 
     return hRet;
-}
-
-// NOTE: NOT A PATCH
-// This is the code common to both GetCubeMapSurface/GetCubeMapSurface2
-HRESULT D3DCubeTexture_GetCubeMapSurfaceCommon
-(
-	XTL::X_D3DCubeTexture*	pThis,
-	XTL::D3DCUBEMAP_FACES	FaceType,
-	XTL::UINT				Level,
-	XTL::X_D3DSurface**		ppCubeMapSurface
-)
-{
-	// Now ppCubeMapSurface correctly points to an Xbox surface, while pThis points to an Xbox Cube Texture
-	// We can use this to tie the host resources for both together, allowing Cube Mapping actually work!
-	auto pHostCubeTexture = (XTL::IDirect3DCubeTexture*)GetHostResource(pThis, XTL::EmuXBFormatIsRenderTarget(GetXboxPixelContainerFormat(pThis)) ? D3DUSAGE_RENDERTARGET : 0);
-	XTL::IDirect3DSurface* pHostCubeMapSurface;
-	XTL::HRESULT hRet = pHostCubeTexture->GetCubeMapSurface(FaceType, Level, &pHostCubeMapSurface);
-	if (FAILED(hRet)) {
-		return hRet;
-	}
-
-	// Tie the Xbox CubeMapSurface and the host CubeMapSurface together
-	SetHostSurface(*ppCubeMapSurface, pHostCubeMapSurface);
-
-	return hRet;
-}
-
-// ******************************************************************
-// * patch: IDirect3DCubeTexture8_GetCubeMapSurface
-// ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(D3DCubeTexture_GetCubeMapSurface)
-(
-	X_D3DCubeTexture*	pThis,
-	D3DCUBEMAP_FACES	FaceType,
-	UINT				Level,
-	X_D3DSurface**		ppCubeMapSurface
-)
-{
-	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(pThis)
-		LOG_FUNC_ARG(FaceType)
-		LOG_FUNC_ARG(Level)
-		LOG_FUNC_ARG(ppCubeMapSurface)
-		LOG_FUNC_END;
-
-	// First, we need to fetch the Xbox cubemap surface via a trampoline
-	HRESULT hRet;
-	XB_trampoline(HRESULT, WINAPI, D3DCubeTexture_GetCubeMapSurface, (X_D3DCubeTexture*, D3DCUBEMAP_FACES, UINT, X_D3DSurface**));
-	hRet = XB_D3DCubeTexture_GetCubeMapSurface(pThis, FaceType, Level, ppCubeMapSurface);
-
-	// If the Xbox call failed, we must fail too
-	if (FAILED(hRet)) {
-		RETURN(hRet);
-	}
-
-	hRet = D3DCubeTexture_GetCubeMapSurfaceCommon(pThis, FaceType, Level, ppCubeMapSurface);
-	RETURN(hRet);
-}
-
-// ******************************************************************
-// * patch: IDirect3DCubeTexture8_GetCubeMapSurface2
-// ******************************************************************
-XTL::X_D3DSurface* WINAPI XTL::EMUPATCH(D3DCubeTexture_GetCubeMapSurface2)
-(
-	X_D3DCubeTexture*	pThis,
-	D3DCUBEMAP_FACES	FaceType,
-	UINT				Level
-)
-{
-	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(pThis)
-		LOG_FUNC_ARG(FaceType)
-		LOG_FUNC_ARG(Level)
-		LOG_FUNC_END;
-
-	// First, we need to fetch the Xbox cubemap surface via a trampoline
-	XB_trampoline(X_D3DSurface*, WINAPI, D3DCubeTexture_GetCubeMapSurface2, (X_D3DCubeTexture*, D3DCUBEMAP_FACES, UINT));
-	X_D3DSurface* pCubeMapSurface = XB_D3DCubeTexture_GetCubeMapSurface2(pThis, FaceType, Level);
-
-	// If the Xbox call failed, we must fail too
-	if (pCubeMapSurface == nullptr) {
-		RETURN(NULL);
-	}
-
-	D3DCubeTexture_GetCubeMapSurfaceCommon(pThis, FaceType, Level, &pCubeMapSurface);
-	return pCubeMapSurface;
 }
 
 // ******************************************************************

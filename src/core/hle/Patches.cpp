@@ -55,8 +55,6 @@ const uint32_t PATCH_IS_FIBER = 1 << 4;
 // This allows for the eventual importing of Dxbx symbol files and even IDA signatures too!
 std::map<const std::string, const xbox_patch_t> g_PatchTable = {
 	// Direct3D
-	PATCH_ENTRY("D3DCubeTexture_GetCubeMapSurface", XTL::EMUPATCH(D3DCubeTexture_GetCubeMapSurface), PATCH_HLE_D3D),
-	PATCH_ENTRY("D3DCubeTexture_GetCubeMapSurface2", XTL::EMUPATCH(D3DCubeTexture_GetCubeMapSurface2), PATCH_HLE_D3D),
 	PATCH_ENTRY("D3DDevice_Begin", XTL::EMUPATCH(D3DDevice_Begin), PATCH_HLE_D3D),
 	PATCH_ENTRY("D3DDevice_BeginPush", XTL::EMUPATCH(D3DDevice_BeginPush), PATCH_HLE_D3D),
 	PATCH_ENTRY("D3DDevice_BeginPush2", XTL::EMUPATCH(D3DDevice_BeginPush2), PATCH_HLE_D3D),
