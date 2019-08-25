@@ -356,7 +356,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 			if (xdkVersion < BuildVersion) {
 				xdkVersion = BuildVersion;
 			}
-			XbLibFlag = XbSymbolLibrayToFlag(std::string(pLibraryVersion[v].szName, pLibraryVersion[v].szName + 8).c_str());
+			XbLibFlag = XbSymbolLibraryToFlag(std::string(pLibraryVersion[v].szName, pLibraryVersion[v].szName + 8).c_str());
 			XbLibScan |= XbLibFlag;
 
 			// Keep certain library versions for plugin usage.
