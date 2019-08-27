@@ -19,6 +19,7 @@
 // *
 // *  (c) 2002-2003 Aaron Robinson <caustik@caustik.com>
 // *  (c) 2017-2018 RadWolfie
+// *  (c) 2019 ergo720
 // *
 // *  All rights reserved
 // *
@@ -28,7 +29,10 @@
 #include "Cxbx.h"
 
 #include "SimpleIni.h"
+#include "input\InputDevice.h"
+#include "common\util\CxbxUtil.h"
 #include <string>
+#include <array>
 
 extern std::string g_exec_filepath;
 
@@ -44,67 +48,6 @@ typedef enum _CXBX_DATA {
 	CXBX_DATA_EXECDIR = 1,
 	CXBX_DATA_CUSTOM = 2,
 } CXBX_DATA;
-
-// ******************************************************************
-// * Xbox Controller Object IDs
-// ******************************************************************
-enum XBCtrlObject
-{
-	// ******************************************************************
-	// * Analog Axis
-	// ******************************************************************
-	XBCTRL_OBJECT_LTHUMBPOSX = 0,
-	XBCTRL_OBJECT_LTHUMBNEGX,
-	XBCTRL_OBJECT_LTHUMBPOSY,
-	XBCTRL_OBJECT_LTHUMBNEGY,
-	XBCTRL_OBJECT_RTHUMBPOSX,
-	XBCTRL_OBJECT_RTHUMBNEGX,
-	XBCTRL_OBJECT_RTHUMBPOSY,
-	XBCTRL_OBJECT_RTHUMBNEGY,
-	// ******************************************************************
-	// * Analog Buttons
-	// ******************************************************************
-	XBCTRL_OBJECT_A,
-	XBCTRL_OBJECT_B,
-	XBCTRL_OBJECT_X,
-	XBCTRL_OBJECT_Y,
-	XBCTRL_OBJECT_BLACK,
-	XBCTRL_OBJECT_WHITE,
-	XBCTRL_OBJECT_LTRIGGER,
-	XBCTRL_OBJECT_RTRIGGER,
-	// ******************************************************************
-	// * Digital Buttons
-	// ******************************************************************
-	XBCTRL_OBJECT_DPADUP,
-	XBCTRL_OBJECT_DPADDOWN,
-	XBCTRL_OBJECT_DPADLEFT,
-	XBCTRL_OBJECT_DPADRIGHT,
-	XBCTRL_OBJECT_BACK,
-	XBCTRL_OBJECT_START,
-	XBCTRL_OBJECT_LTHUMB,
-	XBCTRL_OBJECT_RTHUMB,
-	// ******************************************************************
-	// * Total number of components
-	// ******************************************************************
-	XBCTRL_OBJECT_COUNT
-};
-
-// ******************************************************************
-// * Maximum number of devices allowed
-// ******************************************************************
-#define XBCTRL_MAX_DEVICES XBCTRL_OBJECT_COUNT
-
-#define XBCTRL_MAX_GAMEPAD_PORTS 4
-
-// ******************************************************************
-// * Xbox Controller Object Config
-// ******************************************************************
-struct XBCtrlObjectCfg
-{
-	int dwDevice;   // offset into m_InputDevice
-	int dwInfo;     // extended information, depending on dwFlags
-	int dwFlags;    // flags explaining the data format
-};
 
 // ******************************************************************
 // * Define number of integers required to store logging settings
@@ -143,6 +86,7 @@ public:
 
 	// Core settings
 	struct s_core {
+		unsigned int Revision;
         unsigned int FlagsLLE;
 		DebugMode KrnlDebugMode;
 		char szKrnlDebug[MAX_PATH] = "";
@@ -179,35 +123,25 @@ public:
 		int  Reserved99[14] = { 0 };
 	} m_audio;
 
+	struct s_input {
+		int Type;
+		std::string DeviceName;
+		std::string ProfileName;
+	};
+	std::array<s_input, 4> m_input;
+
+	struct s_input_profiles {
+		int Type;
+		std::string ProfileName;
+		std::string DeviceName;
+		std::vector<std::string> ControlList;
+	};
+	std::array<std::vector<s_input_profiles>, to_underlying(XBOX_INPUT_DEVICE::DEVICE_MAX)> m_input_profiles;
+
 	// Network settings
 	struct s_network {
 		char adapter_name[MAX_PATH] = "";
 	} m_network;
-
-	// Controller settings
-	struct s_controller_dinput {
-
-		// ******************************************************************
-		// * Input Device Name Lookup Table
-		// ******************************************************************
-		static const char *XboxControllerObjectNameLookup[XBCTRL_OBJECT_COUNT];
-
-		// ******************************************************************
-		// * Device Names
-		// ******************************************************************
-		char DeviceName[XBCTRL_MAX_DEVICES][MAX_PATH];
-
-		// ******************************************************************
-		// * Object Configuration
-		// ******************************************************************
-		XBCtrlObjectCfg ObjectConfig[XBCTRL_OBJECT_COUNT];
-
-	} m_controller_dinput;
-
-	struct s_controller_port {
-        unsigned int XboxPortMapHostType[XBCTRL_MAX_GAMEPAD_PORTS] = { 1, 1, 1, 1 };
-        unsigned int XboxPortMapHostPort[XBCTRL_MAX_GAMEPAD_PORTS] = { 0, 1, 2, 3 };
-	} m_controller_port;
 
 	// Hack settings
 	// NOTE: When removing fields, replace them with place-holders
@@ -226,6 +160,7 @@ public:
 	} m_hacks;
 
 private:
+	void RemoveLegacyConfigs(unsigned int CurrentRevision);
 	std::string m_file_path = "";
 	CSimpleIniA m_si;
 	std::string m_current_data_location;

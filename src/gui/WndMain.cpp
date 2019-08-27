@@ -32,13 +32,12 @@
 #include "Logging.h"
 #include "WndMain.h"
 #include "DlgAbout.h"
-#include "DlgControllerConfig.h"
+#include "DlgInputConfig.h"
 #include "DlgVideoConfig.h"
 #include "DlgAudioConfig.h"
 #include "DlgNetworkConfig.h"
 #include "DlgEepromConfig.h"
 #include "DlgLoggingConfig.h"
-#include "DlgXboxControllerPortMapping.h"
 #include "common\xbe\XbePrinter.h" // For DumpInformation
 #include "EmuShared.h"
 #include "core\kernel\support\EmuXTL.h"
@@ -960,12 +959,8 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 			}
 			break;
 
-			case ID_SETTINGS_CONFIG_XBOX_CONTROLLER_MAPPING:
-				ShowXboxControllerPortMappingConfig(hwnd);
-				break;
-
-			case ID_SETTINGS_CONFIG_CONTROLLER:
-				ShowControllerConfig(hwnd);
+			case ID_SETTINGS_CONFIG_INPUT:
+				ShowInputConfig(hwnd, m_hwndChild);
 				break;
 
 			case ID_SETTINGS_CONFIG_VIDEO:

@@ -1,3 +1,5 @@
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 // ******************************************************************
 // *
 // *  This file is part of the Cxbx project.
@@ -17,17 +19,34 @@
 // *  If not, write to the Free Software Foundation, Inc.,
 // *  59 Temple Place - Suite 330, Bostom, MA 02111-1307, USA.
 // *
-// *  (c) 2002-2003 Aaron Robinson <caustik@caustik.com>
+// *  (c) 2019 ergo720
 // *
 // *  All rights reserved
 // *
 // ******************************************************************
-#ifndef DLGCONTROLLERCONFIG_H
-#define DLGCONTROLLERCONFIG_H
 
-#include <windows.h>
+#pragma once
 
-/*! show controller configuration dialog */
-extern VOID ShowControllerConfig(HWND hwnd);
+#include "Button.h"
+#include "common\util\CxbxUtil.h"
 
-#endif
+extern const char* button_xbox_ctrl_names[XBOX_CTRL_NUM_BUTTONS][2];
+extern int dev_num_buttons[to_underlying(XBOX_INPUT_DEVICE::DEVICE_MAX)];
+
+
+/* Represents the guest device currently being configured in the gui */
+class EmuDevice
+{
+public:
+	EmuDevice(int type, HWND hwnd);
+	~EmuDevice();
+	Button* FindButtonById(int id);
+	Button* FindButtonByIndex(int index);
+	void BindXInput();
+	void ClearButtons();
+
+
+private:
+	std::vector<Button*> m_buttons;
+	HWND m_hwnd;
+};

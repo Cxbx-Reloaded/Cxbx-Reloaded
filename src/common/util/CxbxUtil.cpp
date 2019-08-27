@@ -255,3 +255,17 @@ void unix2dos(std::string& string)
 		position += 2;
 	}
 }
+
+// Source: Dolphin emulator (GPLv2)
+/* Turns "  hello " into "hello". Also handles tabs */
+std::string StripSpaces(const std::string& str)
+{
+	const size_t s = str.find_first_not_of(" \t\r\n");
+
+	if (str.npos != s) {
+		return str.substr(s, str.find_last_not_of(" \t\r\n") - s + 1);
+	}
+	else {
+		return "";
+	}
+}

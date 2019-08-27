@@ -26,7 +26,7 @@
 #define WNDMAIN_H
 
 #include "Wnd.h"
-#include "common\xbe\/Xbe.h"
+#include "common\xbe\Xbe.h"
 
 #include <thread>
 
