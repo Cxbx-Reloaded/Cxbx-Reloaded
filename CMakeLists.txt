@@ -20,7 +20,7 @@ add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/import/XbSymbolDatabase")
 # Not require since only include a header file
 #add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/import/simpleini")
 
-#add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/import/SDL2")
+add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/import/SDL2")
 
 if(${CMAKE_GENERATOR} MATCHES "Visual Studio ([^9]|[9][0-9])")
  add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/import/cs_x86")
