@@ -320,6 +320,7 @@ X_XINPUT_RUMBLE, *PX_XINPUT_RUMBLE;
 // ******************************************************************
 // * XINPUT_CAPABILITIES
 // ******************************************************************
+#include "AlignPrefix1.h"
 typedef struct _X_XINPUT_CAPABILITIES
 {
     BYTE SubType;
@@ -337,6 +338,7 @@ typedef struct _X_XINPUT_CAPABILITIES
     }
     Out;
 }
+#include "AlignPosfix1.h"
 X_XINPUT_CAPABILITIES, *PX_XINPUT_CAPABILITIES;
 
 // ******************************************************************
