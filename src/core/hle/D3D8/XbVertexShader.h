@@ -35,32 +35,30 @@ typedef struct
     uint8_t NumInst;
     uint8_t Unknown0;
 }
-VSH_SHADER_HEADER;
+X_VSH_SHADER_HEADER;
 
-#define VSH_INSTRUCTION_SIZE       4
-#define VSH_INSTRUCTION_SIZE_BYTES (VSH_INSTRUCTION_SIZE * sizeof(DWORD))
+#define X_VSH_INSTRUCTION_SIZE       4
+#define X_VSH_INSTRUCTION_SIZE_BYTES (X_VSH_INSTRUCTION_SIZE * sizeof(DWORD))
 
 // recompile xbox vertex shader declaration
-extern DWORD EmuRecompileVshDeclaration
+extern D3DVERTEXELEMENT *EmuRecompileVshDeclaration
 (
-    DWORD                *pDeclaration,
-    D3DVERTEXELEMENT    **ppRecompiledDeclaration,
-	DWORD                *pOriginalDeclarationSize,
+    DWORD                *pXboxDeclaration,
+    bool                  bIsFixedFunction,
+	DWORD                *pXboxDeclarationCount,
 	DWORD                *pHostDeclarationSize,
-    boolean               IsFixedFunction,
-    XTL::CxbxVertexShaderInfo *pVertexShaderInfo
+    XTL::CxbxVertexShaderInfo *pCxbxVertexShaderInfo
 );
 
 // recompile xbox vertex shader function
 extern HRESULT EmuRecompileVshFunction
 (
-    DWORD        *pFunction,
-    LPD3DXBUFFER *ppRecompiled,
-    DWORD        *pOriginalSize,
-    boolean      bNoReservedConstants,
-	boolean		 *pbUseDeclarationOnly,
-	DWORD		 *pRecompiledDeclaration,
-    DWORD        DeclarationSize
+    DWORD        *pXboxFunction,
+    bool          bNoReservedConstants,
+	D3DVERTEXELEMENT *pRecompiledDeclaration,
+	bool   		 *pbUseDeclarationOnly,
+    DWORD        *pXboxFunctionSize,
+    LPD3DXBUFFER *ppRecompiledShader
 );
 
 extern void FreeVertexDynamicPatch(CxbxVertexShader *pVertexShader);
@@ -72,7 +70,7 @@ inline boolean VshHandleIsVertexShader(DWORD Handle) { return (Handle & D3DFVF_R
 inline boolean VshHandleIsFVF(DWORD Handle) { return !VshHandleIsVertexShader(Handle); }
 inline X_D3DVertexShader *VshHandleToXboxVertexShader(DWORD Handle) { return (X_D3DVertexShader *)(Handle & ~D3DFVF_RESERVED0);}
 
-extern CxbxVertexShader* GetCxbxVertexShader(DWORD Handle);
-extern void SetCxbxVertexShader(DWORD Handle, CxbxVertexShader* shader);
+extern CxbxVertexShader* GetCxbxVertexShader(DWORD XboxVertexShaderHandle);
+extern void SetCxbxVertexShader(DWORD XboxVertexShaderHandle, CxbxVertexShader* shader);
 
 #endif

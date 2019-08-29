@@ -5954,7 +5954,7 @@ static const
       hRet = g_pD3DDevice->CreatePixelShader
       (
         pFunction,
-        (XTL::IDirect3DPixelShader9**)(&(Result.ConvertedHandle)) //fixme
+        (XTL::IDirect3DPixelShader**)(&(Result.ConvertedHandle)) //fixme
       );
 
 	  if (hRet != D3D_OK) {
@@ -6038,9 +6038,9 @@ VOID XTL::DxbxUpdateActivePixelShader() // NOPATCH
     // pixel shader, to avoid many unnecessary state changes on the local side).
     ConvertedPixelShaderHandle = RecompiledPixelShader->ConvertedHandle;
 
-    g_pD3DDevice->GetPixelShader(/*out*/(IDirect3DPixelShader9**)(&CurrentPixelShader));
+    g_pD3DDevice->GetPixelShader(/*out*/(IDirect3DPixelShader**)(&CurrentPixelShader));
     if (CurrentPixelShader != ConvertedPixelShaderHandle)
-		g_pD3DDevice->SetPixelShader((IDirect3DPixelShader9*)ConvertedPixelShaderHandle);
+		g_pD3DDevice->SetPixelShader((IDirect3DPixelShader*)ConvertedPixelShaderHandle);
 
     // Note : We set the constants /after/ setting the shader, so that any
     // constants in the shader declaration can be overwritten (this will be
@@ -6154,7 +6154,7 @@ VOID XTL::DxbxUpdateActivePixelShader() // NOPATCH
   else
   {
     ConvertedPixelShaderHandle = 0;
-	g_pD3DDevice->SetPixelShader((IDirect3DPixelShader9*)ConvertedPixelShaderHandle);
+	g_pD3DDevice->SetPixelShader((IDirect3DPixelShader*)ConvertedPixelShaderHandle);
   }
 }
 

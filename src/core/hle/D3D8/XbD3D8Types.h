@@ -69,9 +69,9 @@
 #define IDirect3D                IDirect3D9
 #define IDirect3DDevice          IDirect3DDevice9
 //#define IDirect3DStateBlock      IDirect3DStateBlock9
-//#define IDirect3DVertexDeclaration IDirect3DVertexDeclaration9
-//#define IDirect3DVertexShader    IDirect3DVertexShader9
-//#define IDirect3DPixelShader     IDirect3DPixelShader9
+#define IDirect3DVertexDeclaration IDirect3DVertexDeclaration9
+#define IDirect3DVertexShader    IDirect3DVertexShader9
+#define IDirect3DPixelShader     IDirect3DPixelShader9
 #define IDirect3DResource        IDirect3DResource9
 #define IDirect3DBaseTexture     IDirect3DBaseTexture9
 #define IDirect3DTexture         IDirect3DTexture9
@@ -440,7 +440,7 @@ typedef struct _X_PixelShader
 // These structures are used by Cxbx, not by the Xbox!!!
 typedef struct _CxbxPixelShader 
 {
-	//IDirect3DPixelShader9* pShader;
+	//IDirect3DPixelShader* pShader;
 	//ID3DXConstantTable *pConstantTable;
 	DWORD Handle;
 
@@ -465,8 +465,8 @@ CxbxPixelShader;
 
 typedef struct _CxbxVertexShaderStreamElement
 {
-	UINT XboxType; // The stream data types (xbox)
-	UINT HostByteSize; // The stream data sizes (pc)
+	UINT XboxType; // The stream element data types (xbox)
+	UINT HostByteSize; // The stream element data sizes (pc)
 }
 CxbxVertexShaderStreamElement;
 
@@ -501,19 +501,21 @@ CxbxVertexShaderInfo;
 
 typedef struct _CxbxVertexShader
 {
-    DWORD Handle;
-
     // These are the parameters given by the XBE,
     // we save them to be able to return them when necessary.
-    UINT                  Size;
-    DWORD                *pDeclaration;
-	DWORD                 OriginalDeclarationCount;
-	XTL::LPDIRECT3DVERTEXDECLARATION9 pHostDeclaration;
+    DWORD                *pXboxDeclarationCopy;
+	DWORD                 XboxDeclarationCount; // Xbox's number of DWORD-sized X_D3DVSD* tokens
+    DWORD                 XboxFunctionSize;
+    DWORD                *pXboxFunctionCopy;
+    UINT                  XboxNrAddressSlots;
+    DWORD                 XboxVertexShaderType;
+    // DWORD              XboxStatus; // Used by VshHandleIsValidShader()
+
+	// The resulting host variables
+    DWORD HostFVF; // Flexible Vertex Format (used when there's no host vertex shader)
+	XTL::IDirect3DVertexShader *pHostVertexShader; // if nullptr, use SetFVF(HostFVF);
+	XTL::IDirect3DVertexDeclaration *pHostVertexDeclaration;
 	DWORD                 HostDeclarationSize;
-    DWORD                *pFunction;
-    DWORD                 FunctionSize;
-    DWORD                 Type;
-    DWORD                 Status;
 
     // Needed for dynamic stream patching
     CxbxVertexShaderInfo  VertexShaderInfo;
