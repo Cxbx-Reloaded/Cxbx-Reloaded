@@ -43,6 +43,15 @@ namespace xboxkrnl
 #include "EmuShared.h"
 #include "devices\usb\OHCI.h"
 
+// hle input specific
+namespace XTL
+{
+#include "core\hle\XAPI\Xapi.h"
+}
+#include "core\hle\XAPI\XapiCxbxr.h"
+
+extern X_CONTROLLER_HOST_BRIDGE g_XboxControllerHostBridge[4]; // hle xinput
+
 // Acknowledgment: Inspired by the Dolphin emulator input subsystem (GPLv2)
 // https://github.com/dolphin-emu/dolphin
 
@@ -157,17 +166,23 @@ void InputDeviceManager::UpdateDevices(int port, bool ack)
 		return;
 	}
 	int type;
+#if 0 // lle usb
 	int usb_port = PORT_DEC(Gui2XboxPortArray[port]);
+#else
+	int usb_port = port;
+#endif
 	g_EmuShared->GetInputDevTypeSettings(&type, port);
 
 	// connect
 	if (type != to_underlying(XBOX_INPUT_DEVICE::DEVICE_INVALID) &&
-		g_XidDeviceObjArray[usb_port].xid_dev == nullptr) {
+		//g_XidDeviceObjArray[usb_port].xid_dev == nullptr) { lle usb
+		g_XboxControllerHostBridge[usb_port].XboxType == XBOX_INPUT_DEVICE::DEVICE_INVALID) {
 		ConnectDevice(port, usb_port, type);
 	}
 	// disconnect
 	else if (type == to_underlying(XBOX_INPUT_DEVICE::DEVICE_INVALID) &&
-		g_XidDeviceObjArray[usb_port].xid_dev != nullptr) {
+		//g_XidDeviceObjArray[usb_port].xid_dev != nullptr) { lle usb
+		g_XboxControllerHostBridge[usb_port].XboxType != XBOX_INPUT_DEVICE::DEVICE_INVALID) {
 		DisconnectDevice(port, usb_port, ack);
 	}
 	// update bindings
@@ -184,6 +199,7 @@ void InputDeviceManager::UpdateDevices(int port, bool ack)
 
 void InputDeviceManager::ConnectDevice(int port, int usb_port, int type)
 {
+#if 0 // lle usb
 	switch (type)
 	{
 	case to_underlying(XBOX_INPUT_DEVICE::MS_CONTROLLER_DUKE): {
@@ -212,12 +228,18 @@ void InputDeviceManager::ConnectDevice(int port, int usb_port, int type)
 		EmuLog(LOG_LEVEL::WARNING, "Attempted to attach an unknown device type (type was %d)", type);
 		return;
 	}
-
+#else
+	if (!ConstructHleInputDevice(type, port)) {
+		return;
+	}
+	EmuLog(LOG_LEVEL::INFO, "Attached device %s to port %d", GetInputDeviceName(type).c_str(), PORT_INC(port));
+#endif
 	BindHostDevice(port, usb_port, type);
 }
 
 void InputDeviceManager::DisconnectDevice(int port, int usb_port, bool ack)
 {
+#if 0 // lle usb
 	if (g_XidDeviceObjArray[usb_port].xid_dev != nullptr) {
 		int type = g_XidDeviceObjArray[usb_port].xid_type;
 
@@ -250,6 +272,16 @@ void InputDeviceManager::DisconnectDevice(int port, int usb_port, bool ack)
 		default:
 			EmuLog(LOG_LEVEL::WARNING, "Attempted to detach an unknown device type (type was %d)", type);
 			return;
+		}
+#endif
+	if (g_XboxControllerHostBridge[port].XboxType != XBOX_INPUT_DEVICE::DEVICE_INVALID) {
+		if (ack) {
+			int type = to_underlying(g_XboxControllerHostBridge[port].XboxType);
+			DestructHleInputDevice(port);
+			EmuLog(LOG_LEVEL::INFO, "Detached device %s from port %d", GetInputDeviceName(type).c_str(), PORT_INC(port));
+		}
+		else {
+			g_XboxControllerHostBridge[port].bPendingRemoval = true;
 		}
 		auto dev = g_InputDeviceManager.FindDevice(usb_port, 0);
 		if (dev != nullptr) {

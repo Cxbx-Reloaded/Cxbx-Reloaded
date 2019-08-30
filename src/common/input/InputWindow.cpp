@@ -294,7 +294,7 @@ void InputWindow::DeleteProfile(std::string& name)
 
 void InputWindow::LoadDefaultProfile()
 {
-	for (uint index = 0; index < g_Settings->m_input_profiles[m_dev_type].size(); index++) {
+	for (unsigned int index = 0; index < g_Settings->m_input_profiles[m_dev_type].size(); index++) {
 		SendMessage(m_hwnd_profile_list, CB_ADDSTRING, 0,
 			reinterpret_cast<LPARAM>(g_Settings->m_input_profiles[m_dev_type][index].ProfileName.c_str()));
 	}

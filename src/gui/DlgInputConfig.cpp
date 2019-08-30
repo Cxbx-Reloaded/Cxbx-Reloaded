@@ -73,8 +73,12 @@ void SyncInputSettings(int port_num, int dev_type)
 				g_EmuShared->SetInputBindingsSettings(controls_name, XBOX_CTRL_NUM_BUTTONS, port_num);
 			}
 		}
+#if 0 // lle usb
 		ipc_send_kernel_update(IPC_UPDATE_KERNEL::CONFIG_INPUT_SYNC, PORT_DEC(Gui2XboxPortArray[port_num]),
 			reinterpret_cast<std::uintptr_t>(g_ChildWnd));
+#else
+		ipc_send_kernel_update(IPC_UPDATE_KERNEL::CONFIG_INPUT_SYNC, port_num, reinterpret_cast<std::uintptr_t>(g_ChildWnd));
+#endif
 	}
 }
 

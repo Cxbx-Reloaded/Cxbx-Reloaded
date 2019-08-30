@@ -105,5 +105,9 @@ private:
 
 extern InputDeviceManager g_InputDeviceManager;
 
+// hle input functions
+bool ConstructHleInputDevice(int Type, int Port);
+void DestructHleInputDevice(int Port);
+
 #endif
 #pragma once

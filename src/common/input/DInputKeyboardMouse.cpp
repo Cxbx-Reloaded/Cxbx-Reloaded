@@ -130,7 +130,7 @@ namespace DInput
 		mouse_caps.dwSize = sizeof(mouse_caps);
 		m_mo_device->GetCapabilities(&mouse_caps);
 		// mouse buttons
-		for (u8 i = 0; i < mouse_caps.dwButtons; ++i) {
+		for (unsigned char i = 0; i < mouse_caps.dwButtons; ++i) {
 			AddInput(new Button(i, m_state_in.mouse.rgbButtons[i]));
 		}
 

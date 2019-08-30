@@ -1434,10 +1434,7 @@ VOID XTL::EmuD3DInit()
 }
 
 // cleanup Direct3D
-VOID XTL::EmuD3DCleanup()
-{
-    XTL::EmuDInputCleanup();
-}
+VOID XTL::EmuD3DCleanup() {}
 
 // enumeration procedure for locating display device GUIDs
 static BOOL WINAPI EmuEnumDisplayDevices(GUID FAR *lpGUID, LPSTR lpDriverDescription, LPSTR lpDriverName, LPVOID lpContext, HMONITOR hm)
@@ -1538,13 +1535,6 @@ static DWORD WINAPI EmuRenderWindow(LPVOID lpVoid)
     {
         SetFocus(CxbxKrnl_hEmuParent);
     }
-
-    // initialize direct input only if LLE USB is off
-	if (!bLLE_USB) {
-		if (!XTL::EmuDInputInit()) {
-			CxbxKrnlCleanup("Could not initialize DirectInput!");
-		}
-	}
 
     EmuLog(LOG_LEVEL::DEBUG, "Message-Pump thread is running.");
 
@@ -1863,34 +1853,6 @@ static DWORD WINAPI EmuUpdateTickCount(LPVOID)
     while(true)
     {
 		SwitchToThread();
-        //
-        // Poll input
-        //
-        int port;
-        for (port = 0; port < 4;port++) {
-            extern XTL::X_CONTROLLER_HOST_BRIDGE g_XboxControllerHostBridge[4];
-            if (g_XboxControllerHostBridge[port].hXboxDevice == 0)
-                continue;
-            if (g_XboxControllerHostBridge[port].pXboxFeedbackHeader == 0)
-                continue;
-            DWORD dwLatency = g_XboxControllerHostBridge[port].dwLatency++;
-
-            if (dwLatency < XINPUT_SETSTATE_LATENCY)
-                continue;
-
-            g_XboxControllerHostBridge[port].dwLatency = 0;
-
-            if (g_XboxControllerHostBridge[port].pXboxFeedbackHeader->dwStatus != ERROR_SUCCESS)
-            {
-                if (g_XboxControllerHostBridge[port].pXboxFeedbackHeader->hEvent != 0)
-                {
-                    SetEvent(g_XboxControllerHostBridge[port].pXboxFeedbackHeader->hEvent);
-                }
-
-                g_XboxControllerHostBridge[port].pXboxFeedbackHeader->dwStatus = ERROR_SUCCESS;
-            }
-
-        }
 
 		// If VBlank Interval has passed, trigger VBlank callback
         // Note: This whole code block can be removed once NV2A interrupts are implemented

@@ -60,10 +60,10 @@ namespace xboxkrnl
 
 #include "XidGamepad.h"
 #include "USBDevice.h"
-#include "common\Input\InputConfig.h"
-#include "common\Input\SDL2_Device.h"
+#include "common\input\InputManager.h"
+#include "common\input\SdlJoystick.h"
 #include "OHCI.h"
-#include "core\kernel\exports\EmuKrnl.h"  // For EmuLog
+#include "core\kernel\exports\EmuKrnl.h"
 #include "Logging.h"
 
 #define USB_CLASS_XID  0x58
