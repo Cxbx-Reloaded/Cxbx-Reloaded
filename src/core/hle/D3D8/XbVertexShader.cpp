@@ -50,26 +50,6 @@
 // * Vertex shader function recompiler
 // ****************************************************************************
 
-// Local macros
-#define VERSION_VS                     0xF0 // vs.1.1, not an official value
-#define VERSION_XVS                    0x20 // Xbox vertex shader
-#define VERSION_XVSS                   0x73 // Xbox vertex state shader
-#define VERSION_XVSW                   0x77 // Xbox vertex read/write shader
-#define VSH_XBOX_MAX_INSTRUCTION_COUNT 136  // The maximum Xbox shader instruction count
-#define VSH_MAX_INTERMEDIATE_COUNT     1024 // The maximum number of intermediate format slots
-
-#define VSH_MAX_TEMPORARY_REGISTERS 32
-#define VSH_VS11_MAX_INSTRUCTION_COUNT 128
-#define VSH_VS2X_MAX_INSTRUCTION_COUNT 256
-#define VSH_VS30_MAX_INSTRUCTION_COUNT 512
-
-#define VSH_MAX_INSTRUCTION_COUNT VSH_VS2X_MAX_INSTRUCTION_COUNT
-
-#define X_D3DVSD_MASK_TESSUV 0x10000000
-#define X_D3DVSD_MASK_SKIP 0x10000000 // Skips (normally) dwords
-#define X_D3DVSD_MASK_SKIPBYTES 0x08000000 // Skips bytes (no, really?!)
-#define X_D3DVSD_STREAMTESSMASK (1 << 28)
-
 typedef enum _VSH_SWIZZLE
 {
 	SWIZZLE_X = 0,
@@ -894,7 +874,7 @@ static void VshWriteShader(VSH_XBOX_SHADER *pShader,
 					// Any registers hitting this critera were already replaced with constant/temporary reads
 					// To correctly use the values given in SetVertexData4f.
 					// We need to move these constant values to temporaries so they can be used as input alongside other constants!
-					// We count down from the highest available on the host because Xbox titles don't use values that high, and we read from c192 because Xbox uses 192 constants
+					// We count down from the highest available on the host because Xbox titles don't use values that high, and we read from c192 (one above maximum Xbox c191 constant) and up
 					static int temporaryRegisterBase = g_D3DCaps.VS20Caps.NumTemps - 13;
 					moveConstantsToTemporaries << "mov r" << (temporaryRegisterBase + i) << ", c" << (X_D3DVS_CONSTREG_VERTEXDATA4F_BASE + i) << "\n";
 					LOG_TEST_CASE("Shader uses undeclared Vertex Input Registers");
@@ -1587,11 +1567,11 @@ static boolean VshConvertShader(VSH_XBOX_SHADER *pShader,
 				{
 					RUsage[pIntermediate->Parameters[j].Parameter.Address] = TRUE;
 				}
-				// Make constant registers range from 0 to 192 instead of -96 to 96
+				// Make constant registers range from 0 to 191 instead of -96 to 95
 				if (pIntermediate->Parameters[j].Parameter.ParameterType == PARAM_C)
 				{
 					//if(pIntermediate->Parameters[j].Parameter.Address < 0)
-					pIntermediate->Parameters[j].Parameter.Address += 96;
+					pIntermediate->Parameters[j].Parameter.Address += X_D3DVS_CONSTREG_BIAS;
 				}
 
 				if (pIntermediate->Parameters[j].Parameter.ParameterType == PARAM_V) {
@@ -1600,7 +1580,7 @@ static boolean VshConvertShader(VSH_XBOX_SHADER *pShader,
 					if (!RegVIsPresentInDeclaration[pIntermediate->Parameters[j].Parameter.Address]) {
 						// This vertex register was not declared and therefore is not present within the Vertex Data object
 						// We read from temporary registers instead, that are set based on constants, in-turn, set by SetVertexData4f
-						// We count down from the highest available on the host because Xbox titles don't use values that high, and we read from c192 because Xbox uses 192 constants
+						// We count down from the highest available on the host because Xbox titles don't use values that high, and we read from c192 (one above maximum Xbox c191 constant) and up
 						static int temporaryRegisterBase = g_D3DCaps.VS20Caps.NumTemps - 13;
 						pIntermediate->Parameters[j].Parameter.ParameterType = PARAM_R;
 						pIntermediate->Parameters[j].Parameter.Address += temporaryRegisterBase;
@@ -1613,11 +1593,11 @@ static boolean VshConvertShader(VSH_XBOX_SHADER *pShader,
         {
             RUsage[pIntermediate->Output.Address] = TRUE;
         }
-        // Make constant registers range from 0 to 192 instead of -96 to 96
+        // Make constant registers range from 0 to 191 instead of -96 to 95
         if(pIntermediate->Output.Type == IMD_OUTPUT_C)
         {
 			//if(pIntermediate->Output.Address < 0)
-				pIntermediate->Output.Address += 96;
+				pIntermediate->Output.Address += X_D3DVS_CONSTREG_BIAS;
         }
 
 
@@ -2304,7 +2284,7 @@ XTL::D3DVERTEXELEMENT *XTL::EmuRecompileVshDeclaration
     CxbxVertexShaderInfo *pCxbxVertexShaderInfo
 )
 {
-	class XboxVertexDeclarationConverter Converter;
+	XboxVertexDeclarationConverter Converter;
 
 	XTL::D3DVERTEXELEMENT* pHostVertexElements = Converter.Convert(pXboxDeclaration, bIsFixedFunction, pCxbxVertexShaderInfo);
 

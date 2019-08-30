@@ -164,7 +164,7 @@ static XTL::X_D3DSurface           *g_XboxDefaultDepthStencilSurface = NULL;
 XTL::X_D3DSurface                  *g_pXboxRenderTarget = NULL;
 static XTL::X_D3DSurface           *g_pXboxDepthStencil = NULL;
 static DWORD                        g_dwVertexShaderUsage = 0;
-static DWORD                        g_VertexShaderSlots[136];
+static DWORD                        g_VertexShaderSlots[VSH_XBOX_MAX_INSTRUCTION_COUNT];
 
 DWORD g_XboxBaseVertexIndex = 0;
 DWORD g_DefaultPresentationInterval = D3DPRESENT_INTERVAL_IMMEDIATE;
@@ -3065,25 +3065,8 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_LoadVertexShader_4)
 	DWORD           Handle;
 	__asm mov Handle, eax;
 
-	//LOG_FUNC_BEGIN
-	//	LOG_FUNC_ARG(Handle)
-	//	LOG_FUNC_ARG(Address)
-	//	LOG_FUNC_END;
-	EmuLog(LOG_LEVEL::DEBUG, "D3DDevice_LoadVertexShader_4(Handle : %d Address : %08x);", Handle, Address);
-
-	// Handle is always address of an Xbox VertexShader struct, or-ed with 1 (X_D3DFVF_RESERVED0)
-	// An Xbox VertexShader contains : a 'Vshd' signature, flags, a size, a program (and constants)
-	// Address is the slot (offset) from which the program must be written onwards (as whole DWORDS)
-	// D3DDevice_LoadVertexShader pushes the program contained in the Xbox VertexShader struct to the NV2A
-    if(Address < 136 && VshHandleIsVertexShader(Handle))
-    {
-		CxbxVertexShader *pCxbxVertexShader = GetCxbxVertexShader(Handle);
-        for (DWORD i = Address; i < pCxbxVertexShader->XboxNrAddressSlots; i++)
-        {
-            // TODO: This seems very fishy
-            g_VertexShaderSlots[i] = Handle;
-        }
-	}
+	LOG_FORWARD("D3DDevice_LoadVertexShader");
+	return EMUPATCH(D3DDevice_LoadVertexShader)(Handle, Address);
 }
 
 // ******************************************************************
@@ -3098,10 +3081,9 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_LoadVertexShader)
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(Handle)
 		LOG_FUNC_ARG(Address)
-		LOG_FUNC_END;
+	LOG_FUNC_END;
 
-	// Handle is always address of an Xbox VertexShader struct, or-ed with 1 (X_D3DFVF_RESERVED0)
-	// An Xbox VertexShader contains : a 'Vshd' signature, flags, a size, a program (and constants)
+	// Handle is always address of an X_D3DVertexShader struct, thus always or-ed with 1 (X_D3DFVF_RESERVED0)
 	// Address is the slot (offset) from which the program must be written onwards (as whole DWORDS)
 	// D3DDevice_LoadVertexShader pushes the program contained in the Xbox VertexShader struct to the NV2A
     if(Address < 136) {
@@ -3188,7 +3170,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SelectVertexShader)
 
         if(pXboxVertexShader != nullptr)
         {
-			pCxbxVertexShader = (CxbxVertexShader *)(pXboxVertexShader->Handle);
+			pCxbxVertexShader = (CxbxVertexShader *)(pXboxVertexShader->CxbxVertexShaderHandle);
 		}
         else
         {
@@ -3974,9 +3956,9 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexShaderConstant)
     }
 #endif*/ // _DEBUG_TRACK_VS_CONST
 
-    // Xbox vertex shader constants range from -96 to 96
-    // The host does not support negative, so we adjust to 0-192
-	Register += 96;
+    // Xbox vertex shader constants range from -96 to 95
+    // The host does not support negative, so we adjust to 0..191
+	Register += X_D3DVS_CONSTREG_BIAS;
 
     HRESULT hRet;
 	hRet = g_pD3DDevice->SetVertexShaderConstantF(
@@ -4004,10 +3986,10 @@ VOID __fastcall XTL::EMUPATCH(D3DDevice_SetVertexShaderConstant1)
 {
 	LOG_FORWARD("D3DDevice_SetVertexShaderConstant");
 
-    // The XDK uses a macro to automatically adjust to 0-192 range
-    // but D3DDevice_SetVertexShaderConstant expects -96-96 range
+    // The XDK uses a macro to automatically adjust to 0..191 range
+    // but D3DDevice_SetVertexShaderConstant expects -96..95 range
     // so we adjust before forwarding
-    EMUPATCH(D3DDevice_SetVertexShaderConstant)(Register - 96, pConstantData, 1);
+    EMUPATCH(D3DDevice_SetVertexShaderConstant)(Register - X_D3DVS_CONSTREG_BIAS, pConstantData, 1);
 }
 
 // ******************************************************************
@@ -4021,10 +4003,10 @@ VOID __fastcall XTL::EMUPATCH(D3DDevice_SetVertexShaderConstant1Fast)
 {
 	LOG_FORWARD("D3DDevice_SetVertexShaderConstant");
 
-    // The XDK uses a macro to automatically adjust to 0-192 range
-    // but D3DDevice_SetVertexShaderConstant expects -96-96 range
+    // The XDK uses a macro to automatically adjust to 0..191 range
+    // but D3DDevice_SetVertexShaderConstant expects -96..95 range
     // so we adjust before forwarding
-    EMUPATCH(D3DDevice_SetVertexShaderConstant)(Register - 96, pConstantData, 1);
+    EMUPATCH(D3DDevice_SetVertexShaderConstant)(Register - X_D3DVS_CONSTREG_BIAS, pConstantData, 1);
 }
 
 // ******************************************************************
@@ -4038,10 +4020,10 @@ VOID __fastcall XTL::EMUPATCH(D3DDevice_SetVertexShaderConstant4)
 {
 	LOG_FORWARD("D3DDevice_SetVertexShaderConstant");
 
-    // The XDK uses a macro to automatically adjust to 0-192 range
-    // but D3DDevice_SetVertexShaderConstant expects -96-96 range
+    // The XDK uses a macro to automatically adjust to 0..191 range
+    // but D3DDevice_SetVertexShaderConstant expects -96..95 range
     // so we adjust before forwarding
-	EMUPATCH(D3DDevice_SetVertexShaderConstant)(Register - 96, pConstantData, 4);
+	EMUPATCH(D3DDevice_SetVertexShaderConstant)(Register - X_D3DVS_CONSTREG_BIAS, pConstantData, 4);
 }
 
 // ******************************************************************
@@ -4056,10 +4038,10 @@ VOID __fastcall XTL::EMUPATCH(D3DDevice_SetVertexShaderConstantNotInline)
 {
 	LOG_FORWARD("D3DDevice_SetVertexShaderConstant");
 
-    // The XDK uses a macro to automatically adjust to 0-192 range
-    // but D3DDevice_SetVertexShaderConstant expects -96-96 range
+    // The XDK uses a macro to automatically adjust to 0..191 range
+    // but D3DDevice_SetVertexShaderConstant expects -96..95 range
     // so we adjust before forwarding
-	EMUPATCH(D3DDevice_SetVertexShaderConstant)(Register - 96, pConstantData, ConstantCount / 4);
+	EMUPATCH(D3DDevice_SetVertexShaderConstant)(Register - X_D3DVS_CONSTREG_BIAS, pConstantData, ConstantCount / 4);
 }
 
 // ******************************************************************
@@ -4074,10 +4056,10 @@ VOID __fastcall XTL::EMUPATCH(D3DDevice_SetVertexShaderConstantNotInlineFast)
 {
 	LOG_FORWARD("D3DDevice_SetVertexShaderConstant");
 
-    // The XDK uses a macro to automatically adjust to 0-192 range
-    // but D3DDevice_SetVertexShaderConstant expects -96-96 range
+    // The XDK uses a macro to automatically adjust to 0..191 range
+    // but D3DDevice_SetVertexShaderConstant expects -96..95 range
     // so we adjust before forwarding
-	EMUPATCH(D3DDevice_SetVertexShaderConstant)(Register - 96, pConstantData, ConstantCount / 4);
+	EMUPATCH(D3DDevice_SetVertexShaderConstant)(Register - X_D3DVS_CONSTREG_BIAS, pConstantData, ConstantCount / 4);
 }
 
 // LTCG specific D3DDevice_SetTexture function...
@@ -4320,7 +4302,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexData4f)
 	uint32_t ActiveVertexAttributeFlags = 0;
 	if (VshHandleIsVertexShader(g_CurrentXboxVertexShaderHandle)) {
 		LOG_TEST_CASE("D3DDevice_SetVertexData4f with active VertexShader");
-		X_D3DVertexShader* pXboxVertexShader = VshHandleToXboxVertexShader(g_CurrentXboxVertexShaderHandle);
+		X_D3DVertexShader *pXboxVertexShader = VshHandleToXboxVertexShader(g_CurrentXboxVertexShaderHandle);
 		if (!(pXboxVertexShader->Flags & 0x10/*=X_VERTEXSHADER_PROGRAM*/)) {
 			ActiveVertexAttributeFlags = pXboxVertexShader->Flags;
 		}
@@ -7300,7 +7282,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexShader)
     g_CurrentXboxVertexShaderHandle = Handle;
 
 	if (VshHandleIsVertexShader(Handle)) {
- 		CxbxVertexShader * pCxbxVertexShader = GetCxbxVertexShader(Handle);
+ 		CxbxVertexShader *pCxbxVertexShader = GetCxbxVertexShader(Handle);
 		hRet = g_pD3DDevice->SetVertexDeclaration(pCxbxVertexShader->pHostVertexDeclaration);
 		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetVertexDeclaration");
 		if (pCxbxVertexShader->HostFVF)
@@ -7704,7 +7686,7 @@ void XTL::CxbxUpdateNativeD3DResources()
 	auto nv2a = g_NV2A->GetDeviceState();
 	for(int i = 0; i < X_D3DVS_CONSTREG_COUNT; i++) {
         // Skip vOffset and vScale constants, we don't want our values to be overwritten by accident
-        if (i == X_D3DSCM_RESERVED_CONSTANT1_CORRECTED || i == X_D3DSCM_RESERVED_CONSTANT2_CORRECTED) {
+        if (i == X_D3DVS_RESERVED_CONSTANT1_CORRECTED || i == X_D3DVS_RESERVED_CONSTANT2_CORRECTED) {
             continue;
         }
 
@@ -8568,9 +8550,9 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_GetVertexShaderConstant)
 		LOG_FUNC_ARG(ConstantCount)
 		LOG_FUNC_END;
 
-	// Xbox vertex shader constants range from -96 to 96
-    // The host does not support negative, so we adjust to 0-192
-	Register += 96;
+	// Xbox vertex shader constants range from -96 to 95
+    // The host does not support negative, so we adjust to 0..1912
+	Register += X_D3DVS_CONSTREG_BIAS;
 
 	HRESULT hRet = g_pD3DDevice->GetVertexShaderConstantF
     (

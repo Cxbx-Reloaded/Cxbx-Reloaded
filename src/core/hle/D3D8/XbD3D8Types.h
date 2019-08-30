@@ -390,19 +390,6 @@ typedef struct _X_D3DGAMMARAMP
 }
 X_D3DGAMMARAMP;
 
-struct X_D3DVertexShader
-{
-    union
-    {
-        DWORD   UnknownA;
-        DWORD   Handle;
-    };
-
-    DWORD UnknownB;
-    DWORD Flags;
-    DWORD UnknownC[0x59];
-};
-
 typedef struct _X_D3DPIXELSHADERDEF	// <- blueshogun 10/1/07
 {
    DWORD    PSAlphaInputs[8];          // X_D3DRS_PSALPHAINPUTS0..X_D3DRS_PSALPHAINPUTS7 : Alpha inputs for each stage
@@ -492,10 +479,12 @@ typedef struct _CxbxVertexShaderStreamInfo
 }
 CxbxVertexShaderStreamInfo;
 
+const int MAX_NBR_STREAMS = 16;
+
 typedef struct _CxbxVertexShaderInfo
 {
     UINT                       NumberOfVertexStreams; // The number of streams the vertex shader uses
-    CxbxVertexShaderStreamInfo VertexStreams[16];
+    CxbxVertexShaderStreamInfo VertexStreams[MAX_NBR_STREAMS];
 }
 CxbxVertexShaderInfo;
 
@@ -1077,20 +1066,40 @@ typedef DWORD X_VERTEXSHADERCONSTANTMODE;
 #define X_D3DSCM_192CONSTANTSANDFIXEDPIPELINE 0x02 // Unsupported?
 #define X_D3DSCM_NORESERVEDCONSTANTS          0x10  // Do not reserve constant -38 and -37
 
-#define X_D3DSCM_RESERVED_CONSTANT1 -38 // Becomes 58 after correction, contains Scale v
-#define X_D3DSCM_RESERVED_CONSTANT2 -37 // Becomes 59 after correction, contains Offset
+#define X_D3DVS_RESERVED_CONSTANT1 -38 // Becomes 58 after correction, contains Scale v
+#define X_D3DVS_RESERVED_CONSTANT2 -37 // Becomes 59 after correction, contains Offset
 
-#define X_D3DSCM_CORRECTION 96 // Add 96 to arrive at the range 0..191 (instead of 96..95)
+#define X_D3DVS_CONSTREG_BIAS 96 // Add 96 to arrive at the range 0..191 (instead of -96..95)
 #define X_D3DVS_CONSTREG_COUNT 192
 
-#define X_D3DSCM_RESERVED_CONSTANT1_CORRECTED (X_D3DSCM_RESERVED_CONSTANT1 + X_D3DSCM_CORRECTION)
-#define X_D3DSCM_RESERVED_CONSTANT2_CORRECTED (X_D3DSCM_RESERVED_CONSTANT2 + X_D3DSCM_CORRECTION)
+#define X_D3DVS_RESERVED_CONSTANT1_CORRECTED (X_D3DVS_RESERVED_CONSTANT1 + X_D3DVS_CONSTREG_BIAS)
+#define X_D3DVS_RESERVED_CONSTANT2_CORRECTED (X_D3DVS_RESERVED_CONSTANT2 + X_D3DVS_CONSTREG_BIAS)
 #define X_D3DVS_CONSTREG_VERTEXDATA4F_BASE      (X_D3DVS_CONSTREG_COUNT + 1)
 
 // Vertex shader types
 #define X_VST_NORMAL                  1
 #define X_VST_READWRITE               2
 #define X_VST_STATE                   3
+
+#define VERSION_VS                     0xF0 // vs.1.1, not an official value
+#define VERSION_XVS                    0x20 // Xbox vertex shader
+#define VERSION_XVSS                   0x73 // Xbox vertex state shader
+#define VERSION_XVSW                   0x77 // Xbox vertex read/write shader
+
+#define VSH_XBOX_MAX_INSTRUCTION_COUNT 136  // The maximum Xbox shader instruction count
+#define VSH_MAX_INTERMEDIATE_COUNT     1024 // The maximum number of intermediate format slots
+
+#define VSH_MAX_TEMPORARY_REGISTERS 32
+#define VSH_VS11_MAX_INSTRUCTION_COUNT 128
+#define VSH_VS2X_MAX_INSTRUCTION_COUNT 256
+#define VSH_VS30_MAX_INSTRUCTION_COUNT 512
+
+#define VSH_MAX_INSTRUCTION_COUNT VSH_VS2X_MAX_INSTRUCTION_COUNT
+
+#define X_D3DVSD_MASK_TESSUV 0x10000000
+#define X_D3DVSD_MASK_SKIP 0x10000000 // Skips (normally) dwords
+#define X_D3DVSD_MASK_SKIPBYTES 0x08000000 // Skips bytes (no, really?!)
+#define X_D3DVSD_STREAMTESSMASK (1 << 28)
 
 // ******************************************************************
 // * X_VERTEXSHADERINPUT
@@ -1110,7 +1119,8 @@ X_VERTEXSHADERINPUT;
 // ******************************************************************
 typedef struct _X_VERTEXATTRIBUTEFORMAT
 {
-    X_VERTEXSHADERINPUT pVertexShaderInput[16];
+	// TODO : Does this need #pragma pack(1) / #include "AlignPrefix1.h" (and it's closure)?
+    X_VERTEXSHADERINPUT pVertexShaderInput[MAX_NBR_STREAMS];
 }
 X_VERTEXATTRIBUTEFORMAT;
 
@@ -1123,6 +1133,21 @@ typedef struct _X_STREAMINPUT
     UINT                Stride;
     UINT                Offset;
 } X_STREAMINPUT;
+
+struct X_D3DVertexShader
+{
+	// Note : Debug XBE's have a 'Vshd' DWORD signature prefixing this!
+	DWORD RefCount; // Based on the observation this member is set to 1 in D3DDevice_CreateVertexShader and decreased in D3DDevice_DeleteVertexShader
+	DWORD Flags;
+	DWORD FunctionSize; // ?Also known as ProgramSize?
+	DWORD TotalSize; // seems to include both the function and ?constants?
+	DWORD NumberOfDimensionsPerTexture; // Guesswork, since all 4 bytes (for all 4 textures) are most often set to 2 (or 0 when a texture isn't used) and 1, 3 and 4 also occur (and nothing else)
+	X_VERTEXATTRIBUTEFORMAT VertexAttributes;
+	union {
+		DWORD CxbxVertexShaderHandle; // This is probably the least damaging part to overwrite : We put a pointer to our CbxVertexShader here
+		DWORD FunctionData[VSH_XBOX_MAX_INSTRUCTION_COUNT]; // probably the binary function data and ?constants? (data continues futher outside this struct, up to TotalSize DWORD's)
+	};
+};
 
 // vertex shader input registers for fixed function vertex shader
 
@@ -1168,8 +1193,6 @@ const int X_D3DVSDT_PBYTE3      = 0x34; // xbox ext. 3D packed byte expanded to 
 const int X_D3DVSDT_PBYTE4      = 0x44; // xbox ext. 4D packed byte expanded to (value, value, value, value). Packed bytes map to the range [0, 1].
 const int X_D3DVSDT_FLOAT2H     = 0x72; // xbox ext. 3D float that expands to (value, value, 0.0, value). Useful for projective texture coordinates.
 const int X_D3DVSDT_NONE        = 0x02; // xbox ext. nsp
-
-const int MAX_NBR_STREAMS = 16;
 
 typedef WORD INDEX16;
 
