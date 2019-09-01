@@ -739,9 +739,6 @@ DWORD WINAPI XTL::EMUPATCH(XInputGetState)
             g_XboxControllerHostBridge[Port].bIoInProgress = false;
             ret = ERROR_SUCCESS;
         }
-        else {
-
-        }
     }
     
 	RETURN(ret);

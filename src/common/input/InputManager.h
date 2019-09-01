@@ -110,4 +110,3 @@ bool ConstructHleInputDevice(int Type, int Port);
 void DestructHleInputDevice(int Port);
 
 #endif
-#pragma once
