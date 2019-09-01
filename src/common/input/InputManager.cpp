@@ -25,6 +25,13 @@
 // *
 // ******************************************************************
 
+// Copyright 2010 Dolphin Emulator Project
+// Licensed under GPLv2+
+// Refer to the license.txt file included.
+
+// Partially derived from ControllerInterface.cpp of Dolphin emulator
+// https://github.com/dolphin-emu/dolphin
+
 #define _XBOXKRNL_DEFEXTRN_
 #define LOG_PREFIX CXBXR_MODULE::INPSYS
 
@@ -51,9 +58,6 @@ namespace XTL
 #include "core\hle\XAPI\XapiCxbxr.h"
 
 extern X_CONTROLLER_HOST_BRIDGE g_XboxControllerHostBridge[4]; // hle xinput
-
-// Acknowledgment: Inspired by the Dolphin emulator input subsystem (GPLv2)
-// https://github.com/dolphin-emu/dolphin
 
 
 InputDeviceManager g_InputDeviceManager;

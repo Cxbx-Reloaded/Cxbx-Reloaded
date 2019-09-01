@@ -25,6 +25,13 @@
 // *
 // ******************************************************************
 
+// Copyright 2013 Dolphin Emulator Project
+// Licensed under GPLv2+
+// Refer to the license.txt file included.
+
+// Partially derived from Device.cpp of Dolphin emulator
+// https://github.com/dolphin-emu/dolphin
+
 #include "InputDevice.h"
 #include "common\util\CxbxUtil.h"
 #include <algorithm>

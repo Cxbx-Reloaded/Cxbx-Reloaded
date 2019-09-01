@@ -25,14 +25,18 @@
 // *
 // ******************************************************************
 
+// Copyright 2010 Dolphin Emulator Project
+// Licensed under GPLv2+
+// Refer to the license.txt file included.
+
+// Derived from DInputKeyboardMouse.cpp of Dolphin emulator
+// https://github.com/dolphin-emu/dolphin
+
 #define LOG_PREFIX CXBXR_MODULE::DINP
 
 #include "DInputKeyboardMouse.h"
 #include "InputManager.h"
 #include "core\kernel\support\Emu.h"
-
-// Acknowledgment: Dolphin emulator DInput subsystem (GPLv2)
-// https://github.com/dolphin-emu/dolphin
 
 // Unfortunately, sdl doesn't seem to be able to capture keyboard/mouse input from windows it didn't create (we currently use
 // win32 for that). So unless we create sdl windows, we will have to keep dinput around to handle keyboard/mouse input.

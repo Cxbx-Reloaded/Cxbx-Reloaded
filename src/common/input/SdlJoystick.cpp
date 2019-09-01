@@ -25,6 +25,13 @@
 // *
 // ******************************************************************
 
+// Copyright 2010 Dolphin Emulator Project
+// Licensed under GPLv2+
+// Refer to the license.txt file included.
+
+// Derived from SDL.cpp of Dolphin emulator
+// https://github.com/dolphin-emu/dolphin
+
 #define LOG_PREFIX CXBXR_MODULE::SDL
 
 #include <assert.h>
@@ -35,9 +42,6 @@
 #include "XInputPad.h"
 #include "DInputKeyboardMouse.h"
 #include "InputManager.h"
-
-// Acknowledgment: Inspired by the Dolphin emulator SDL input subsystem (GPLv2)
-// https://github.com/dolphin-emu/dolphin
 
 // These values are those used by Dolphin!
 static const uint16_t RUMBLE_PERIOD = 10;
@@ -228,7 +232,7 @@ namespace Sdl
 		int NumButtons, NumAxes, NumHats, NumBalls;
 		std::string lcasename;
 
-		// From Dolphin emu:
+		// From Dolphin:
 		// "really bad HACKS: do not use SDL for an XInput device,
 		// too many people on the forums pick the SDL device and ask:
 		// "why don't my 360 gamepad triggers/rumble work correctly?".

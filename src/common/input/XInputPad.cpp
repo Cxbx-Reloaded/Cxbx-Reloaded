@@ -25,14 +25,18 @@
 // *
 // ******************************************************************
 
+// Copyright 2010 Dolphin Emulator Project
+// Licensed under GPLv2+
+// Refer to the license.txt file included.
+
+// Derived from XInput.cpp of Dolphin emulator
+// https://github.com/dolphin-emu/dolphin
+
 #define LOG_PREFIX CXBXR_MODULE::XINP
 
 #include "XInputPad.h"
 #include "core\kernel\support\Emu.h"
 #include "InputManager.h"
-
-// Acknowledgment: Inspired by the Dolphin emulator XInput subsystem (GPLv2)
-// https://github.com/dolphin-emu/dolphin
 
 #ifndef XINPUT_GAMEPAD_GUIDE
 #define XINPUT_GAMEPAD_GUIDE 0x0400

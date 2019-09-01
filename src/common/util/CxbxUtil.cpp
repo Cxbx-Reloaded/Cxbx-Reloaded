@@ -256,7 +256,11 @@ void unix2dos(std::string& string)
 	}
 }
 
-// Source: Dolphin emulator (GPLv2)
+// Copyright 2008 Dolphin Emulator Project
+// Licensed under GPLv2+
+// Refer to the license.txt file included.
+
+// Source: StringUtil.cpp of Dolphin emulator
 /* Turns "  hello " into "hello". Also handles tabs */
 std::string StripSpaces(const std::string& str)
 {

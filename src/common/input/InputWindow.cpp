@@ -131,6 +131,13 @@ void InputWindow::UpdateDeviceList()
 	UpdateCurrentDevice();
 }
 
+// Copyright 2016 Dolphin Emulator Project
+// Licensed under GPLv2+
+// Refer to the license.txt file included.
+
+// DetectInput is derived from InputReference::Detect() in ControlReference.cpp of Dolphin emulator
+// https://github.com/dolphin-emu/dolphin
+
 InputDevice::Input* InputWindow::DetectInput(InputDevice* const Device, int ms)
 {
 	using namespace std::chrono;
