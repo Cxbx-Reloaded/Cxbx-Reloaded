@@ -52,3 +52,23 @@ void Button::GetText(char* const text, size_t size) const
 {
 	SendMessage(m_button_hwnd, WM_GETTEXT, size, reinterpret_cast<LPARAM>(text));
 }
+
+LRESULT CALLBACK ButtonSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData)
+{
+	switch (uMsg)
+	{
+	// Remove the window subclass when this window is destroyed
+	case WM_NCDESTROY: {
+		RemoveWindowSubclass(hWnd, ButtonSubclassProc, uIdSubclass);
+	}
+	break;
+
+	case WM_RBUTTONDOWN: {
+		reinterpret_cast<Button*>(dwRefData)->ClearText();
+	}
+	break;
+
+	}
+
+	return DefSubclassProc(hWnd, uMsg, wParam, lParam);
+}

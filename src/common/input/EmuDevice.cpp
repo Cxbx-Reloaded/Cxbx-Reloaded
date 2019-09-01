@@ -95,6 +95,9 @@ EmuDevice::EmuDevice(int type, HWND hwnd)
 		for (int i = 0; i < ARRAY_SIZE(button_xbox_ctrl_id); i++) {
 			m_buttons.push_back(new Button(button_xbox_ctrl_names[i][0], button_xbox_ctrl_names[i][1],
 				button_xbox_ctrl_id[i], i, hwnd));
+
+			// Install the subclass for the button control
+			SetWindowSubclass(GetDlgItem(hwnd, button_xbox_ctrl_id[i]), ButtonSubclassProc, 0, reinterpret_cast<DWORD_PTR>(m_buttons[i]));
 		}
 	}
 	break;

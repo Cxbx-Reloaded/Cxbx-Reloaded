@@ -176,7 +176,7 @@ typedef struct _XDEVICE_PREALLOC_TYPE
 XDEVICE_PREALLOC_TYPE, *PXDEVICE_PREALLOC_TYPE;
 
 // ******************************************************************
-// * XINPUT_GAMEPAD for xbox, xbox's GAMEPAD struc differs from PC's
+// * XINPUT_GAMEPAD for xbox, xbox's GAMEPAD struct differs from PC's
 // ******************************************************************
 typedef struct _XINPUT_GAMEPAD
 {
@@ -245,26 +245,26 @@ XINPUT_CAPABILITIES, *PXINPUT_CAPABILITIES;
 // * Device XBOX Input Device Types 
 // ******************************************************************
 // all game controller use 0x01 GAMEPAD device type. then specify the subtype in returned Capabilities when XInputGetCapabilities called.
-#define X_XINPUT_DEVTYPE_GAMEPAD              0x01
+#define XINPUT_DEVTYPE_GAMEPAD              0x01
 // SteelBatalion controller is the only one with special device type other than 1.
-#define X_XINPUT_DEVTYPE_STEELBATALION        0x80
+#define XINPUT_DEVTYPE_STEELBATALION        0x80
 
 // ******************************************************************
 // * Device XBOX Input Device SubTypes, for use in XINPUT_CAPABILITIES
 // ******************************************************************
 //general GAMEPAD uses subtype 0x01.
-#define X_XINPUT_DEVSUBTYPE_GC_GAMEPAD              0x01 
+#define XINPUT_DEVSUBTYPE_GC_GAMEPAD              0x01
 //SteelBatallion controller uses subtype 0x02
-#define X_XINPUT_DEVSUBTYPE_GC_GAMEPAD_ALT          0x02
-#define X_XINPUT_DEVSUBTYPE_GC_WHEEL                0x10
-#define X_XINPUT_DEVSUBTYPE_GC_ARCADE_STICK         0x20
-#define X_XINPUT_DEVSUBTYPE_GC_DIGITAL_ARCADE_STICK 0x21
-#define X_XINPUT_DEVSUBTYPE_GC_FLIGHT_STICK         0x30
-#define X_XINPUT_DEVSUBTYPE_GC_SNOWBOARD            0x40
-#define X_XINPUT_DEVSUBTYPE_GC_LIGHTGUN             0x50
-#define X_XINPUT_DEVSUBTYPE_GC_RADIO_FLIGHT_CONTROL 0x60
-#define X_XINPUT_DEVSUBTYPE_GC_FISHING_ROD          0x70
-#define X_XINPUT_DEVSUBTYPE_GC_DANCEPAD             0x80
+#define XINPUT_DEVSUBTYPE_GC_GAMEPAD_ALT          0x02
+#define XINPUT_DEVSUBTYPE_GC_WHEEL                0x10
+#define XINPUT_DEVSUBTYPE_GC_ARCADE_STICK         0x20
+#define XINPUT_DEVSUBTYPE_GC_DIGITAL_ARCADE_STICK 0x21
+#define XINPUT_DEVSUBTYPE_GC_FLIGHT_STICK         0x30
+#define XINPUT_DEVSUBTYPE_GC_SNOWBOARD            0x40
+#define XINPUT_DEVSUBTYPE_GC_LIGHTGUN             0x50
+#define XINPUT_DEVSUBTYPE_GC_RADIO_FLIGHT_CONTROL 0x60
+#define XINPUT_DEVSUBTYPE_GC_FISHING_ROD          0x70
+#define XINPUT_DEVSUBTYPE_GC_DANCEPAD             0x80
 
 // ******************************************************************
 // * XINPUT_STATE for xbox, xbox uses different Gamepad struce.

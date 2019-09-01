@@ -72,10 +72,10 @@ bool g_gamepadStateQueriedHackFlag = false;
 
 //global bridge for xbox controller to host, 4 elements for 4 ports.
 X_CONTROLLER_HOST_BRIDGE g_XboxControllerHostBridge[4] = {
-	{ NULL, -1, XBOX_INPUT_DEVICE::DEVICE_INVALID, nullptr, false, false, false, { 0, 0, 0, 0, 0 } },
-	{ NULL, -1, XBOX_INPUT_DEVICE::DEVICE_INVALID, nullptr, false, false, false, { 0, 0, 0, 0, 0 } },
-	{ NULL, -1, XBOX_INPUT_DEVICE::DEVICE_INVALID, nullptr, false, false, false, { 0, 0, 0, 0, 0 } },
-	{ NULL, -1, XBOX_INPUT_DEVICE::DEVICE_INVALID, nullptr, false, false, false, { 0, 0, 0, 0, 0 } },
+	{ NULL, PORT_INVALID, XBOX_INPUT_DEVICE::DEVICE_INVALID, nullptr, false, false, false, { 0, 0, 0, 0, 0 } },
+	{ NULL, PORT_INVALID, XBOX_INPUT_DEVICE::DEVICE_INVALID, nullptr, false, false, false, { 0, 0, 0, 0, 0 } },
+	{ NULL, PORT_INVALID, XBOX_INPUT_DEVICE::DEVICE_INVALID, nullptr, false, false, false, { 0, 0, 0, 0, 0 } },
+	{ NULL, PORT_INVALID, XBOX_INPUT_DEVICE::DEVICE_INVALID, nullptr, false, false, false, { 0, 0, 0, 0, 0 } },
 };
 
 
@@ -118,8 +118,8 @@ bool ConstructHleInputDevice(int Type, int Port)
 		g_XboxControllerHostBridge[Port].bPendingRemoval = false;
 		g_XboxControllerHostBridge[Port].bSignaled = false;
 		g_XboxControllerHostBridge[Port].bIoInProgress = false;
-		g_XboxControllerHostBridge[Port].XboxDeviceInfo.ucType = X_XINPUT_DEVTYPE_GAMEPAD;
-		g_XboxControllerHostBridge[Port].XboxDeviceInfo.ucSubType = X_XINPUT_DEVSUBTYPE_GC_GAMEPAD;
+		g_XboxControllerHostBridge[Port].XboxDeviceInfo.ucType = XINPUT_DEVTYPE_GAMEPAD;
+		g_XboxControllerHostBridge[Port].XboxDeviceInfo.ucSubType = XINPUT_DEVSUBTYPE_GC_GAMEPAD;
 		g_XboxControllerHostBridge[Port].XboxDeviceInfo.ucInputStateSize = sizeof(XpadInput);
 		g_XboxControllerHostBridge[Port].XboxDeviceInfo.ucFeedbackSize = sizeof(XpadOutput);
 		g_XboxControllerHostBridge[Port].XboxDeviceInfo.dwPacketNumber = 0;
@@ -151,7 +151,6 @@ bool ConstructHleInputDevice(int Type, int Port)
 void DestructHleInputDevice(int Port)
 {
 	g_XboxControllerHostBridge[Port].XboxType = XBOX_INPUT_DEVICE::DEVICE_INVALID;
-	g_XboxControllerHostBridge[Port].XboxPort = -1;
 	while (g_XboxControllerHostBridge[Port].bIoInProgress) {}
 	delete g_XboxControllerHostBridge[Port].InState;
 	g_XboxControllerHostBridge[Port].bPendingRemoval = false;
@@ -201,11 +200,11 @@ void SetupXboxDeviceTypes()
 				printf("DeviceTable[%u]->XppType = 0x%08X (", i, (uintptr_t)deviceTable[i]->XppType);
 
                 switch (deviceTable[i]->ucType) {
-				case X_XINPUT_DEVTYPE_GAMEPAD:
-					g_DeviceType_Gamepad = deviceTable[i]->XppType;
-					printf("XDEVICE_TYPE_GAMEPAD)\n");
-					break;
-                case X_XINPUT_DEVTYPE_STEELBATALION:
+                case XINPUT_DEVTYPE_GAMEPAD:
+                    g_DeviceType_Gamepad = deviceTable[i]->XppType;
+                    printf("XDEVICE_TYPE_GAMEPAD)\n");
+                    break;
+                case XINPUT_DEVTYPE_STEELBATALION:
                     printf("XDEVICE_TYPE_STEELBATALION)\n");
                     break;
 				default:
@@ -439,8 +438,8 @@ VOID WINAPI XTL::EMUPATCH(XInputClose)
 	PX_CONTROLLER_HOST_BRIDGE Device = (PX_CONTROLLER_HOST_BRIDGE)hDevice;
 	int Port = Device->XboxPort;
 	if (g_XboxControllerHostBridge[Port].hXboxDevice == hDevice) {
+		Device->XboxPort = PORT_INVALID;
 		Device->hXboxDevice = NULL;
-		delete g_XboxControllerHostBridge[Port].InState;
 	}
 }
 

@@ -34,14 +34,6 @@
 // Acknowledgment: Dolphin emulator DInput subsystem (GPLv2)
 // https://github.com/dolphin-emu/dolphin
 
-// From Dolphin: "(lower would be more sensitive) user can lower sensitivity by setting range
-// seems decent here (at 8), I don't think anyone would need more sensitive than this"
-#define MOUSE_AXIS_SENSITIVITY 8
-
-// From Dolphin: "if input hasn't been received for this many ms, mouse input will be skipped
-// otherwise it is just some crazy value"
-#define DROP_INPUT_TIME 250
-
 // Unfortunately, sdl doesn't seem to be able to capture keyboard/mouse input from windows it didn't create (we currently use
 // win32 for that). So unless we create sdl windows, we will have to keep dinput around to handle keyboard/mouse input.
 
@@ -64,24 +56,26 @@ namespace DInput
 		// other devices so there can be a separated Keyboard and mouse, as well as combined KeyboardMouse"
 
 		LPDIRECTINPUTDEVICE8 kb_device = nullptr;
-		LPDIRECTINPUTDEVICE8 mo_device = nullptr;
+		//LPDIRECTINPUTDEVICE8 mo_device = nullptr;
 
 		if (SUCCEEDED(idi8->CreateDevice(GUID_SysKeyboard, &kb_device, nullptr)) &&
 			SUCCEEDED(kb_device->SetDataFormat(&c_dfDIKeyboard)) &&
-			SUCCEEDED(kb_device->SetCooperativeLevel(nullptr, DISCL_BACKGROUND | DISCL_NONEXCLUSIVE)) &&
-			SUCCEEDED(idi8->CreateDevice(GUID_SysMouse, &mo_device, nullptr)) &&
-			SUCCEEDED(mo_device->SetDataFormat(&c_dfDIMouse2)) &&
-			SUCCEEDED(mo_device->SetCooperativeLevel(nullptr, DISCL_BACKGROUND | DISCL_NONEXCLUSIVE)))
+			SUCCEEDED(kb_device->SetCooperativeLevel(nullptr, DISCL_BACKGROUND | DISCL_NONEXCLUSIVE))) //&&
+			//SUCCEEDED(idi8->CreateDevice(GUID_SysMouse, &mo_device, nullptr)) &&
+			//SUCCEEDED(mo_device->SetDataFormat(&c_dfDIMouse2)) &&
+			//SUCCEEDED(mo_device->SetCooperativeLevel(nullptr, DISCL_BACKGROUND | DISCL_NONEXCLUSIVE)))
 		{
-			g_InputDeviceManager.AddDevice(std::make_shared<KeyboardMouse>(kb_device, mo_device));
+			g_InputDeviceManager.AddDevice(std::make_shared<KeyboardMouse>(kb_device));
 			bKbMoEnumerated = true;
 			return;
 		}
 
 		if (kb_device)
 			kb_device->Release();
+#if 0
 		if (mo_device)
 			mo_device->Release();
+#endif
 	}
 
 	void PopulateDevices()
@@ -106,14 +100,11 @@ namespace DInput
 		PopulateDevices();
 	}
 
-	KeyboardMouse::KeyboardMouse(const LPDIRECTINPUTDEVICE8 kb_device,
-		const LPDIRECTINPUTDEVICE8 mo_device)
-		: m_kb_device(kb_device), m_mo_device(mo_device)
+	KeyboardMouse::KeyboardMouse(const LPDIRECTINPUTDEVICE8 kb_device)
+		: m_kb_device(kb_device)//, m_mo_device(mo_device)
 	{
 		m_kb_device->Acquire();
-		m_mo_device->Acquire();
-
-		m_last_update = GetTickCount();
+		//m_mo_device->Acquire();
 
 		memset(&m_state_in, 0, sizeof(m_state_in));
 
@@ -122,7 +113,7 @@ namespace DInput
 		for (uint8_t i = 0; i < sizeof(named_keys) / sizeof(*named_keys); ++i) {
 			AddInput(new Key(i, m_state_in.keyboard[named_keys[i].code]));
 		}
-
+#if 0
 		// MOUSE
 		// get caps
 		DIDEVCAPS mouse_caps;
@@ -134,22 +125,11 @@ namespace DInput
 			AddInput(new Button(i, m_state_in.mouse.rgbButtons[i]));
 		}
 
-		// mouse axes
-		for (unsigned int i = 0; i < mouse_caps.dwAxes; ++i)
-		{
-			const LONG& ax = (&m_state_in.mouse.lX)[i];
-
-			// each axis gets a negative and a positive input instance associated with it
-			AddInput(new Axis(i, ax, (2 == i) ? -1 : -MOUSE_AXIS_SENSITIVITY));
-			AddInput(new Axis(i, ax, -(2 == i) ? 1 : MOUSE_AXIS_SENSITIVITY));
-		}
-
-		// On Dolphin, this seems to be used to display the mouse cursor position on the screen in the input gui,
-		// but it's not a control itself and it's ignored during input binding
 		// cursor, with a hax for-loop
 		for (unsigned int i = 0; i < 4; ++i) {
 			AddInput(new Cursor(!!(i & 2), (&m_state_in.cursor.x)[i / 2], !!(i & 1)));
 		}
+#endif
 	}
 
 	KeyboardMouse::~KeyboardMouse()
@@ -157,9 +137,11 @@ namespace DInput
 		// kb
 		m_kb_device->Unacquire();
 		m_kb_device->Release();
+#if 0
 		// mouse
 		m_mo_device->Unacquire();
 		m_mo_device->Release();
+#endif
 	}
 
 	void GetMousePos(ControlState* const x, ControlState* const y)
@@ -174,7 +156,7 @@ namespace DInput
 		{
 			ScreenToClient(hwnd, &point);
 
-			// Get the size of the current window. (In my case Rect.top and Rect.left was zero.)
+			// Get the size of the current window.
 			RECT rect;
 			GetClientRect(hwnd, &rect);
 			// Width and height is the size of the rendering window
@@ -187,50 +169,45 @@ namespace DInput
 		}
 		else
 		{
-			*x = (ControlState)1;
-			*y = (ControlState)1;
+			*x = (ControlState)0;
+			*y = (ControlState)0;
 		}
 	}
 
 	bool KeyboardMouse::UpdateInput()
 	{
-		DIMOUSESTATE2 tmp_mouse;
-
-		// if mouse position hasn't been updated in a short while, skip a dev state
-		DWORD cur_time = GetTickCount();
-		if (cur_time - m_last_update > DROP_INPUT_TIME)
-		{
-			// set axes to zero
-			memset(&m_state_in.mouse, 0, sizeof(m_state_in.mouse));
-			// skip this input state
-			m_mo_device->GetDeviceState(sizeof(tmp_mouse), &tmp_mouse);
-		}
-
-		m_last_update = cur_time;
-
+		// Update keyboard and mouse button states
 		HRESULT kb_hr = m_kb_device->GetDeviceState(sizeof(m_state_in.keyboard), &m_state_in.keyboard);
-		HRESULT mo_hr = m_mo_device->GetDeviceState(sizeof(tmp_mouse), &tmp_mouse);
+		//HRESULT mo_hr = m_mo_device->GetDeviceState(sizeof(m_state_in.mouse), &m_state_in.mouse);
 
 		if (DIERR_INPUTLOST == kb_hr || DIERR_NOTACQUIRED == kb_hr) {
 			m_kb_device->Acquire();
 		}
-
+#if 0
 		if (DIERR_INPUTLOST == mo_hr || DIERR_NOTACQUIRED == mo_hr) {
 			m_mo_device->Acquire();
 		}
-
-		if (SUCCEEDED(kb_hr) && SUCCEEDED(mo_hr))
+#endif
+		if (SUCCEEDED(kb_hr)) //&& SUCCEEDED(mo_hr))
 		{
-			// need to smooth out the axes, otherwise it doesn't work for shit
-			for (unsigned int i = 0; i < 3; ++i) {
-				((&m_state_in.mouse.lX)[i] += (&tmp_mouse.lX)[i]) /= 2;
-			}
+#if 0
+			ControlState temp_x, temp_y;
 
-			// copy over the buttons
-			memcpy(m_state_in.mouse.rgbButtons, tmp_mouse.rgbButtons, sizeof(m_state_in.mouse.rgbButtons));
-
-			// update mouse cursor
+			// Update absolute mouse position
 			GetMousePos(&m_state_in.cursor.x, &m_state_in.cursor.y);
+
+			// Save current absolute mouse position
+			temp_x = m_state_in.cursor.x;
+			temp_y = m_state_in.cursor.y;
+
+			// Update relative mouse motion
+			m_state_in.cursor.x -= m_state_in.cursor.last_x;
+			m_state_in.cursor.y -= m_state_in.cursor.last_y;
+
+			// Update previous absolute mouse position
+			m_state_in.cursor.last_x = temp_x;
+			m_state_in.cursor.last_y = temp_y;
+#endif
 			return true;
 		}
 		return false;
@@ -238,7 +215,7 @@ namespace DInput
 
 	std::string KeyboardMouse::GetDeviceName() const
 	{
-		return "Keyboard Mouse";
+		return "Keyboard";
 	}
 
 	std::string KeyboardMouse::GetAPI() const
@@ -254,14 +231,6 @@ namespace DInput
 	std::string KeyboardMouse::Button::GetName() const
 	{
 		return std::string("Click ") + char('0' + m_index);
-	}
-
-	std::string KeyboardMouse::Axis::GetName() const
-	{
-		static char tmpstr[] = "Axis ..";
-		tmpstr[5] = (char)('X' + m_index);
-		tmpstr[6] = (m_range < 0 ? '-' : '+');
-		return tmpstr;
 	}
 
 	std::string KeyboardMouse::Cursor::GetName() const
@@ -280,11 +249,6 @@ namespace DInput
 	ControlState KeyboardMouse::Button::GetState() const
 	{
 		return (m_button != 0);
-	}
-
-	ControlState KeyboardMouse::Axis::GetState() const
-	{
-		return std::max(0.0, ControlState(m_axis) / m_range);
 	}
 
 	ControlState KeyboardMouse::Cursor::GetState() const

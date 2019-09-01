@@ -193,13 +193,13 @@ LRESULT CALLBACK ProfileNameSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LP
 {
 	switch (uMsg)
 	{
-		// Remove the window subclass when this window is destroyed
+	// Remove the window subclass when this window is destroyed
 	case WM_NCDESTROY: {
 		RemoveWindowSubclass(hWnd, ProfileNameSubclassProc, uIdSubclass);
 	}
 	break;
 
-					   // Override the default system behaviour and process WM_CHAR messages ourselves
+	// Override the default system behaviour and process WM_CHAR messages ourselves
 	case WM_GETDLGCODE: {
 		if (lParam) {
 			LPMSG lpmsg = reinterpret_cast<LPMSG>(lParam);

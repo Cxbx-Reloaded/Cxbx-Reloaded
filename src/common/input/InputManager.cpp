@@ -365,7 +365,8 @@ bool InputDeviceManager::UpdateInputXpad(std::shared_ptr<InputDevice>& Device, v
 	assert(bindings.size() == static_cast<size_t>(dev_num_buttons[to_underlying(XBOX_INPUT_DEVICE::MS_CONTROLLER_DUKE)]));
 
 	if (Direction == DIRECTION_IN) {
-		XpadInput* in_buf = reinterpret_cast<XpadInput*>(static_cast<uint8_t*>(Buffer) + 2);
+		//XpadInput* in_buf = reinterpret_cast<XpadInput*>(static_cast<uint8_t*>(Buffer) + 2); lle usb
+		XpadInput* in_buf = reinterpret_cast<XpadInput*>(Buffer);
 		if (!Device->UpdateInput()) {
 			return false;
 		}
@@ -418,7 +419,8 @@ bool InputDeviceManager::UpdateInputXpad(std::shared_ptr<InputDevice>& Device, v
 	}
 	else {
 		if (bindings[24] != nullptr) {
-			XpadOutput* out_buf = reinterpret_cast<XpadOutput*>(static_cast<uint8_t*>(Buffer) + 2);
+			//XpadOutput* out_buf = reinterpret_cast<XpadOutput*>(static_cast<uint8_t*>(Buffer) + 2); lle usb
+			XpadOutput* out_buf = reinterpret_cast<XpadOutput*>(Buffer);
 			dynamic_cast<InputDevice::Output*>(bindings[24])->SetState(out_buf->left_actuator_strength / static_cast<ControlState>(0xFFFF),
 				out_buf->right_actuator_strength / static_cast<ControlState>(0xFFFF));
 		}

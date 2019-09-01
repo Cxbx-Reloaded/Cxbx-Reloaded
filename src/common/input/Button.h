@@ -28,6 +28,7 @@
 #pragma once
 
 #include "windows.h"
+#include <Commctrl.h>
 #include <string>
 
 #define XBOX_CTRL_NUM_BUTTONS 25
@@ -56,3 +57,5 @@ private:
 	int m_index;
 	HWND m_button_hwnd;
 };
+
+LRESULT CALLBACK ButtonSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
