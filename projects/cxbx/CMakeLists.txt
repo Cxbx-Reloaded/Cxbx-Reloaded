@@ -182,7 +182,6 @@ set(WINS_LIB
 target_link_libraries(cxbx
  PUBLIC XbSymbolDatabase
  subhook
- vsbc
  libtomcrypt
 
  ${WINS_LIB}

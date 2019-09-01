@@ -54,7 +54,7 @@ configure_file(
  NEWLINE_STYLE LF
 )
 
-add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/projects/vsbc")
+#add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/projects/vsbc")
 
 # Split the files into group for which project is likely
 # going to be used for both header and source files.
@@ -380,6 +380,6 @@ if(${CMAKE_GENERATOR} MATCHES "Visual Studio ([^9]|[9][0-9])")
 endif()
 
 # Cxbx-Reloaded project with third-party libraries
-set_target_properties(cxbx subhook XbSymbolDatabase vsbc libtommath libtomcrypt
+set_target_properties(cxbx subhook XbSymbolDatabase libtommath libtomcrypt
  PROPERTIES FOLDER Cxbx-Reloaded
 )
