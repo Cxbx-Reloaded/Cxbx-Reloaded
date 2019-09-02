@@ -151,6 +151,7 @@ bool ConstructHleInputDevice(int Type, int Port)
 void DestructHleInputDevice(int Port)
 {
 	g_XboxControllerHostBridge[Port].XboxType = XBOX_INPUT_DEVICE::DEVICE_INVALID;
+	g_XboxControllerHostBridge[Port].XboxPort = PORT_INVALID;
 	while (g_XboxControllerHostBridge[Port].bIoInProgress) {}
 	delete g_XboxControllerHostBridge[Port].InState;
 	g_XboxControllerHostBridge[Port].bPendingRemoval = false;
@@ -417,12 +418,12 @@ HANDLE WINAPI XTL::EMUPATCH(XInputOpen)
             }
 #endif
 			g_XboxControllerHostBridge[dwPort].hXboxDevice = &g_XboxControllerHostBridge[dwPort];
-            return g_XboxControllerHostBridge[dwPort].hXboxDevice;
+			RETURN(g_XboxControllerHostBridge[dwPort].hXboxDevice);
         }
         
     }
     
-    return NULL;
+	RETURN(NULL);
 }
 
 // ******************************************************************
@@ -438,7 +439,6 @@ VOID WINAPI XTL::EMUPATCH(XInputClose)
 	PX_CONTROLLER_HOST_BRIDGE Device = (PX_CONTROLLER_HOST_BRIDGE)hDevice;
 	int Port = Device->XboxPort;
 	if (g_XboxControllerHostBridge[Port].hXboxDevice == hDevice) {
-		Device->XboxPort = PORT_INVALID;
 		Device->hXboxDevice = NULL;
 	}
 }
