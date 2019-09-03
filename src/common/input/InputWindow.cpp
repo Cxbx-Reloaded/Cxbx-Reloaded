@@ -133,7 +133,7 @@ void InputWindow::UpdateDeviceList()
 
 // Copyright 2016 Dolphin Emulator Project
 // Licensed under GPLv2+
-// Refer to the license.txt file included.
+// Refer to the license.txt file of Dolphin at https://github.com/dolphin-emu/dolphin/blob/master/license.txt.
 
 // DetectInput is derived from InputReference::Detect() in ControlReference.cpp of Dolphin emulator
 // https://github.com/dolphin-emu/dolphin

@@ -258,7 +258,7 @@ void unix2dos(std::string& string)
 
 // Copyright 2008 Dolphin Emulator Project
 // Licensed under GPLv2+
-// Refer to the license.txt file included.
+// Refer to the license.txt file of Dolphin at https://github.com/dolphin-emu/dolphin/blob/master/license.txt.
 
 // Source: StringUtil.cpp of Dolphin emulator
 /* Turns "  hello " into "hello". Also handles tabs */

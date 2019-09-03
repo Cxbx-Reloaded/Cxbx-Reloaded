@@ -27,7 +27,7 @@
 
 // Copyright 2010 Dolphin Emulator Project
 // Licensed under GPLv2+
-// Refer to the license.txt file included.
+// Refer to the license.txt file of Dolphin at https://github.com/dolphin-emu/dolphin/blob/master/license.txt.
 
 // Derived from XInput.cpp of Dolphin emulator
 // https://github.com/dolphin-emu/dolphin
