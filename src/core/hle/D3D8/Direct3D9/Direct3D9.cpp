@@ -4783,7 +4783,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_CopyRects)
     pHostDestSurface->GetDesc(&DestinationDesc);
 
     // If no rectangles were given, default to 1 (entire surface)
-    if (cRects = 0) {
+    if (cRects == 0) {
         cRects = 1;
     }
 
