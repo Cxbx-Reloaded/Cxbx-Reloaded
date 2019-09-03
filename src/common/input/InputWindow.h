@@ -65,6 +65,7 @@ private:
 	void LoadProfile(std::string& name);
 	bool SaveProfile(std::string& name);
 	void DeleteProfile(std::string& name);
+	void OverwriteProfile(std::string& name);
 	void LoadDefaultProfile();
 	void SaveBindingsToDevice();
 

@@ -251,13 +251,16 @@ void InputWindow::LoadProfile(std::string& name)
 	if (profile == g_Settings->m_input_profiles[m_dev_type].end()) {
 		return;
 	}
-	LRESULT dev_str_index = SendMessage(m_hwnd_device_list, CB_FINDSTRINGEXACT, 1, reinterpret_cast<LPARAM>(profile->DeviceName.c_str()));
+	m_host_dev = profile->DeviceName;
+	LRESULT dev_str_index = SendMessage(m_hwnd_device_list, CB_FINDSTRINGEXACT, 1, reinterpret_cast<LPARAM>(m_host_dev.c_str()));
 	if (dev_str_index == CB_ERR) {
-		SendMessage(m_hwnd_device_list, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(profile->DeviceName.c_str()));
+		SendMessage(m_hwnd_device_list, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(m_host_dev.c_str()));
 	}
 	else {
 		SendMessage(m_hwnd_device_list, CB_SETCURSEL, dev_str_index, 0);
 	}
+	SendMessage(m_hwnd_profile_list, CB_SETCURSEL, SendMessage(m_hwnd_profile_list, CB_FINDSTRINGEXACT, 1,
+		reinterpret_cast<LPARAM>(profile->ProfileName.c_str())), 0);
 	for (int index = 0; index < m_max_num_buttons; index++) {
 		m_DeviceConfig->FindButtonByIndex(index)->UpdateText(profile->ControlList[index].c_str());
 	}
@@ -271,7 +274,7 @@ bool InputWindow::SaveProfile(std::string& name)
 	if (m_host_dev == std::string()) {
 		return false;
 	}
-	DeleteProfile(name);
+	OverwriteProfile(name);
 	Settings::s_input_profiles profile;
 	profile.Type = m_dev_type;
 	profile.ProfileName = name;
@@ -295,7 +298,28 @@ void InputWindow::DeleteProfile(std::string& name)
 	}
 	SendMessage(m_hwnd_profile_list, CB_DELETESTRING, SendMessage(m_hwnd_profile_list, CB_FINDSTRINGEXACT, 1,
 		reinterpret_cast<LPARAM>(profile->ProfileName.c_str())), 0);
-	SendMessage(m_hwnd_profile_list, CB_SETCURSEL, 1, 0);
+	if (profile->ProfileName == g_Settings->m_input[m_port_num].ProfileName) {
+		SendMessage(m_hwnd_profile_list, CB_SETCURSEL, -1, 0);
+		UpdateCurrentDevice();
+		ClearBindings();
+		g_Settings->m_input[m_port_num].DeviceName = "";
+		g_Settings->m_input[m_port_num].ProfileName = "";
+	}
+	else {
+		LoadProfile(g_Settings->m_input[m_port_num].ProfileName);
+	}
+	g_Settings->m_input_profiles[m_dev_type].erase(profile);
+}
+
+void InputWindow::OverwriteProfile(std::string& name)
+{
+	ProfileIt profile = FindProfile(name);
+	if (profile == g_Settings->m_input_profiles[m_dev_type].end()) {
+		return;
+	}
+	SendMessage(m_hwnd_profile_list, CB_DELETESTRING, SendMessage(m_hwnd_profile_list, CB_FINDSTRINGEXACT, 1,
+		reinterpret_cast<LPARAM>(profile->ProfileName.c_str())), 0);
+	SendMessage(m_hwnd_profile_list, CB_SETCURSEL, -1, 0);
 	g_Settings->m_input_profiles[m_dev_type].erase(profile);
 }
 
