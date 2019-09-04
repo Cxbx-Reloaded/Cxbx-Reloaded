@@ -5569,8 +5569,8 @@ void CreateHostResource(XTL::X_D3DResource *pResource, DWORD D3DUsage, int iText
 				}
 			}
 
-            // Now create our intermediate texture for UpdateTexture, but not for render targets
-            if (hRet == D3D_OK && (D3DUsage & D3DUSAGE_RENDERTARGET) == 0) {
+            // Now create our intermediate texture for UpdateTexture, but not for render targets or depth stencils
+            if (hRet == D3D_OK && (D3DUsage & D3DUSAGE_RENDERTARGET) == 0 && (D3DUsage & D3DUSAGE_DEPTHSTENCIL) == 0) {
                 hRet = g_pD3DDevice->CreateTexture(dwWidth, dwHeight, dwMipMapLevels,
                     0, PCFormat, XTL::D3DPOOL_SYSTEMMEM, &pIntermediateHostTexture,
                     nullptr
@@ -5607,8 +5607,8 @@ void CreateHostResource(XTL::X_D3DResource *pResource, DWORD D3DUsage, int iText
 			);
 			DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateVolumeTexture");
 
-            // Now create our intermediate texture for UpdateTexture, but not for render targets
-            if (hRet == D3D_OK && (D3DUsage & D3DUSAGE_RENDERTARGET) == 0) {
+            // Now create our intermediate texture for UpdateTexture, but not for render targets or depth stencils
+            if (hRet == D3D_OK && (D3DUsage & D3DUSAGE_RENDERTARGET) == 0 && (D3DUsage & D3DUSAGE_DEPTHSTENCIL) == 0) {
                 hRet = g_pD3DDevice->CreateVolumeTexture(dwWidth, dwHeight, dwDepth,
                     dwMipMapLevels, 0, PCFormat, XTL::D3DPOOL_SYSTEMMEM, &pIntermediateHostVolumeTexture,
                     nullptr
@@ -5636,8 +5636,8 @@ void CreateHostResource(XTL::X_D3DResource *pResource, DWORD D3DUsage, int iText
 			);
 			DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateCubeTexture");
 
-            // Now create our intermediate texture for UpdateTexture, but not for render targets
-            if (hRet == D3D_OK && (D3DUsage & D3DUSAGE_RENDERTARGET) == 0) {
+            // Now create our intermediate texture for UpdateTexture, but not for render targets or depth stencils
+            if (hRet == D3D_OK && (D3DUsage & D3DUSAGE_RENDERTARGET) == 0 && (D3DUsage & D3DUSAGE_DEPTHSTENCIL) == 0) {
                 hRet = g_pD3DDevice->CreateCubeTexture(dwWidth, dwMipMapLevels, 0,
                     PCFormat, XTL::D3DPOOL_SYSTEMMEM, &pIntermediateHostCubeTexture,
                     nullptr
@@ -5660,6 +5660,12 @@ void CreateHostResource(XTL::X_D3DResource *pResource, DWORD D3DUsage, int iText
 			break;
 		}
 		} // switch XboxResourceType
+
+        // If this resource is a render target or depth stencil, don't attempt to lock/copy it as it won't work anyway
+        // In this case, we simply return
+        if (D3DUsage & D3DUSAGE_RENDERTARGET || D3DUsage & D3DUSAGE_DEPTHSTENCIL) {
+            return;
+        }
 
 		DWORD D3DLockFlags = D3DLOCK_NOSYSLOCK;
 
