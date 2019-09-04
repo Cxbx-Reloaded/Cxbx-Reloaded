@@ -212,6 +212,7 @@ void InputWindow::BindXInput()
 void InputWindow::ClearBindings()
 {
 	m_DeviceConfig->ClearButtons();
+	m_rumble = std::string();
 }
 
 InputWindow::ProfileIt InputWindow::FindProfile(std::string& name)
@@ -344,17 +345,17 @@ void InputWindow::UpdateCurrentDevice()
 void InputWindow::InitRumble(HWND hwnd)
 {
 	m_hwnd_rumble = hwnd;
-	HWND hwnd_rumble_list = GetDlgItem(m_hwnd_rumble, IDC_RUMBLE_LIST);
-	SendMessage(hwnd_rumble_list, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(""));
+	m_hwnd_rumble_list = GetDlgItem(m_hwnd_rumble, IDC_RUMBLE_LIST);
+	SendMessage(m_hwnd_rumble_list, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(""));
 	auto dev = g_InputDeviceManager.FindDevice(m_host_dev);
 	if (dev != nullptr) {
 		auto outputs = dev->GetOutputs();
 		for (const auto out : outputs) {
-			SendMessage(hwnd_rumble_list, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(out->GetName().c_str()));
+			SendMessage(m_hwnd_rumble_list, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(out->GetName().c_str()));
 		}
 	}
-	SendMessage(hwnd_rumble_list, CB_SETCURSEL, 0, 0);
-	m_rumble = std::string();
+	SendMessage(m_hwnd_rumble_list, CB_SETCURSEL, SendMessage(m_hwnd_rumble_list, CB_FINDSTRINGEXACT, 1,
+		reinterpret_cast<LPARAM>(m_rumble.c_str())), 0);
 }
 
 void InputWindow::UpdateRumble(int command)
@@ -363,7 +364,7 @@ void InputWindow::UpdateRumble(int command)
 	{
 	case RUMBLE_SET: {
 		char rumble[30];
-		SendMessage(GetDlgItem(m_hwnd_rumble, IDC_RUMBLE_LIST), WM_GETTEXT, sizeof(rumble), reinterpret_cast<LPARAM>(rumble));
+		SendMessage(m_hwnd_rumble_list, WM_GETTEXT, sizeof(rumble), reinterpret_cast<LPARAM>(rumble));
 		m_rumble = rumble;
 	}
 	break;
@@ -393,8 +394,7 @@ void InputWindow::DetectOutput(int ms)
 		// Don't block the message processing loop
 		std::thread([this, dev, ms]() {
 			EnableWindow(m_hwnd_rumble, FALSE);
-			HWND hwnd_rumble_test = GetDlgItem(m_hwnd_rumble, IDC_RUMBLE_TEST);
-			SendMessage(hwnd_rumble_test, WM_SETTEXT, 0, reinterpret_cast<LPARAM>("..."));
+			SendMessage(m_hwnd_rumble_list, WM_SETTEXT, 0, reinterpret_cast<LPARAM>("..."));
 			auto outputs = dev->GetOutputs();
 			for (const auto out : outputs) {
 				if (out->GetName() == m_rumble) {
@@ -402,7 +402,7 @@ void InputWindow::DetectOutput(int ms)
 				}
 			}
 			std::this_thread::sleep_for(std::chrono::milliseconds(ms));
-			SendMessage(hwnd_rumble_test, WM_SETTEXT, 0, reinterpret_cast<LPARAM>("Test"));
+			SendMessage(m_hwnd_rumble_list, WM_SETTEXT, 0, reinterpret_cast<LPARAM>("Test"));
 			EnableWindow(m_hwnd_rumble, TRUE);
 			}).detach();
 	}

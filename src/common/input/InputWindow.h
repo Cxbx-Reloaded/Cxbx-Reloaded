@@ -68,7 +68,7 @@ private:
 	void OverwriteProfile(std::string& name);
 	void LoadDefaultProfile();
 
-	// guest device under configuration
+	// xbox device under configuration
 	EmuDevice* m_DeviceConfig;
 	// handle of the window
 	HWND m_hwnd_window;
@@ -80,6 +80,8 @@ private:
 	HWND m_hwnd_krnl;
 	// handle of the rumble window
 	HWND m_hwnd_rumble;
+	// handle of the rumble combobox
+	HWND m_hwnd_rumble_list;
 	// type of the device
 	int m_dev_type;
 	// num of buttons of device under configuration
