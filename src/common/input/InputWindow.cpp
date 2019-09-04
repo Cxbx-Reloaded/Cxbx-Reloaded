@@ -82,6 +82,9 @@ void InputWindow::Initialize(HWND hwnd, HWND hwnd_krnl, int port_num, int dev_ty
 	SendMessage(m_hwnd_window, WM_SETTEXT, 0,
 		reinterpret_cast<LPARAM>((title + std::to_string(PORT_INC(m_port_num))).c_str()));
 
+	// Set the maximum profile name lenght the user can enter in the profile combobox
+	SendMessage(m_hwnd_profile_list, CB_LIMITTEXT, 49, 0);
+
 	// construct emu device
 	m_DeviceConfig = new EmuDevice(m_dev_type, m_hwnd_window);
 
