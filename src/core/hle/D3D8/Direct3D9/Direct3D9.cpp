@@ -2454,6 +2454,8 @@ static void EmuVerifyResourceIsRegistered(XTL::X_D3DResource *pResource, DWORD D
                         // And re-create the texture with D3DUSAGE_RENDERTARGET
                         CreateHostResource(pResource, D3DUsage, iTextureStage, dwSize);
                     } break;
+                    default:
+                        LOG_TEST_CASE("Unimplemented rendertarget type");
                 }
 
                 return;
@@ -4774,13 +4776,20 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_CopyRects)
     // We skip the trampoline to prevent unnecessary work
     // As our surfaces remain on the GPU, calling the trampoline would just
     // result in a memcpy from an empty Xbox surface to another empty Xbox Surface
-
+    D3DSURFACE_DESC SourceDesc, DestinationDesc;
     auto pHostSourceSurface = GetHostSurface(pSourceSurface);
     auto pHostDestSurface = GetHostSurface(pDestinationSurface);
-
-    D3DSURFACE_DESC SourceDesc, DestinationDesc;
     pHostSourceSurface->GetDesc(&SourceDesc);
     pHostDestSurface->GetDesc(&DestinationDesc);
+
+    // If the source is a render-target and the destination is not, we need force it to be re-created as one
+    // This is because StrechRects cannot copy from a Render-Target to a Non-Render Target
+    // Test Case: Crash Bandicoot: Wrath of Cortex attemps to copy the render-target to a texture
+    // This fixes an issue on the pause screen where the screenshot of the current scene was not displayed correctly
+    if ((SourceDesc.Usage & D3DUSAGE_RENDERTARGET) != 0 && (DestinationDesc.Usage & D3DUSAGE_RENDERTARGET) == 0) {
+        pHostDestSurface = GetHostSurface(pDestinationSurface, D3DUSAGE_RENDERTARGET);
+        pHostDestSurface->GetDesc(&DestinationDesc);
+    }
 
     // If no rectangles were given, default to 1 (entire surface)
     if (cRects == 0) {
@@ -5336,18 +5345,7 @@ void CreateHostResource(XTL::X_D3DResource *pResource, DWORD D3DUsage, int iText
 	case XTL::X_D3DRTYPE_CUBETEXTURE: {
 		XTL::X_D3DPixelContainer *pPixelContainer = (XTL::X_D3DPixelContainer*)pResource;
 		XTL::X_D3DFORMAT X_Format = GetXboxPixelContainerFormat(pPixelContainer);
-		XTL::D3DPOOL D3DPool = XTL::D3DPOOL_MANAGED; // TODO : Nuance D3DPOOL where/when needed
-
-#if 0 // jackchen : this must be marked out to fix a fading black regression.
-		// PatrickvL : The following tries to switch over to using dynamic textures,
-		// since these can always be locked (which is quite helpfull for doing updates).
-		// Addendum : Alas, this prevents locking anything else but the first mipmap level,
-		// turning all others black. (Spotted by Cakelancelot and disabled by jackchen)
-		if (g_D3DCaps.Caps2 & D3DCAPS2_DYNAMICTEXTURES) {
-			// jackchen : leave either one single line of code will introduce further regresson.
-			D3DUsage |= D3DUSAGE_DYNAMIC;
-		}
-#endif
+		XTL::D3DPOOL D3DPool = XTL::D3DPOOL_DEFAULT; // Was: D3DPOOL_MANAGED  TODO : Nuance D3DPOOL where/when needed
 
 		if (EmuXBFormatIsDepthBuffer(X_Format)) {
 			D3DUsage |= D3DUSAGE_DEPTHSTENCIL;
@@ -5464,12 +5462,17 @@ void CreateHostResource(XTL::X_D3DResource *pResource, DWORD D3DUsage, int iText
 			}
 		}
 
-		// One of these will be created :
+		// One of these will be created : each also has an intermediate copy to allow UpdateTexture to work
+        // This means we don't need to lock the GPU resource anymore, so we can use D3DPOOL_DEFAULT to allow Stretch/CopyRects to work!
 		XTL::IDirect3DSurface *pNewHostSurface = nullptr; // for X_D3DRTYPE_SURFACE
 		XTL::IDirect3DVolume *pNewHostVolume = nullptr; // for X_D3DRTYPE_VOLUME
 		XTL::IDirect3DTexture *pNewHostTexture = nullptr; // for X_D3DRTYPE_TEXTURE
+        XTL::IDirect3DTexture *pIntermediateHostTexture = nullptr;
 		XTL::IDirect3DVolumeTexture *pNewHostVolumeTexture = nullptr; // for X_D3DRTYPE_VOLUMETEXTURE
+        XTL::IDirect3DVolumeTexture *pIntermediateHostVolumeTexture = nullptr;
 		XTL::IDirect3DCubeTexture *pNewHostCubeTexture = nullptr; // for X_D3DRTYPE_CUBETEXTURE
+        XTL::IDirect3DCubeTexture *pIntermediateHostCubeTexture = nullptr;
+
 		HRESULT hRet;
 
 		// Create the surface/volume/(volume/cube/)texture
@@ -5546,15 +5549,6 @@ void CreateHostResource(XTL::X_D3DResource *pResource, DWORD D3DUsage, int iText
 		}
 
 		case XTL::X_D3DRTYPE_TEXTURE: {
-/* TODO : Enabled this if D3DPool is ever anything else but D3DPOOL_MANAGED :
-			if (D3DPool == D3DPOOL_DEFAULT) {
-				if ((D3DUsage & D3DUSAGE_DYNAMIC) == 0) {
-					if ((D3DUsage & D3DUSAGE_RENDERTARGET) == 0) {
-						D3DUsage |= D3DUSAGE_DYNAMIC;
-					}
-				}
-			}
-*/
 			hRet = g_pD3DDevice->CreateTexture(dwWidth, dwHeight, dwMipMapLevels,
 				D3DUsage, PCFormat, D3DPool, &pNewHostTexture,
 				nullptr
@@ -5575,6 +5569,14 @@ void CreateHostResource(XTL::X_D3DResource *pResource, DWORD D3DUsage, int iText
 					PCFormat = XTL::D3DFMT_A8R8G8B8;
 				}
 			}
+
+            // Now create our intermediate texture for UpdateTexture, but not for render targets
+            if (hRet == D3D_OK && (D3DUsage & D3DUSAGE_RENDERTARGET) == 0) {
+                hRet = g_pD3DDevice->CreateTexture(dwWidth, dwHeight, dwMipMapLevels,
+                    0, PCFormat, XTL::D3DPOOL_SYSTEMMEM, &pIntermediateHostTexture,
+                    nullptr
+                );
+            }
 
 			/*if(FAILED(hRet))
 			{
@@ -5606,6 +5608,14 @@ void CreateHostResource(XTL::X_D3DResource *pResource, DWORD D3DUsage, int iText
 			);
 			DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateVolumeTexture");
 
+            // Now create our intermediate texture for UpdateTexture, but not for render targets
+            if (hRet == D3D_OK && (D3DUsage & D3DUSAGE_RENDERTARGET) == 0) {
+                hRet = g_pD3DDevice->CreateVolumeTexture(dwWidth, dwHeight, dwDepth,
+                    dwMipMapLevels, 0, PCFormat, XTL::D3DPOOL_SYSTEMMEM, &pIntermediateHostVolumeTexture,
+                    nullptr
+                );
+            }
+
 			if (hRet != D3D_OK) {
 				CxbxKrnlCleanup("CreateVolumeTexture Failed!\n\nError: %s\nDesc: %s",
 					XTL::DXGetErrorString(hRet), XTL::DXGetErrorDescription(hRet));
@@ -5627,6 +5637,14 @@ void CreateHostResource(XTL::X_D3DResource *pResource, DWORD D3DUsage, int iText
 			);
 			DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateCubeTexture");
 
+            // Now create our intermediate texture for UpdateTexture, but not for render targets
+            if (hRet == D3D_OK && (D3DUsage & D3DUSAGE_RENDERTARGET) == 0) {
+                hRet = g_pD3DDevice->CreateCubeTexture(dwWidth, dwMipMapLevels, 0,
+                    PCFormat, XTL::D3DPOOL_SYSTEMMEM, &pIntermediateHostCubeTexture,
+                    nullptr
+                );
+            }
+
 			if (hRet != D3D_OK) {
 				CxbxKrnlCleanup("CreateCubeTexture Failed!\n\nError: \nDesc: "/*,
 					DXGetErrorString(hRet), DXGetErrorDescription(hRet)*/);
@@ -5645,13 +5663,6 @@ void CreateHostResource(XTL::X_D3DResource *pResource, DWORD D3DUsage, int iText
 		} // switch XboxResourceType
 
 		DWORD D3DLockFlags = D3DLOCK_NOSYSLOCK;
-
-		// D3DLOCK_DISCARD is only valid for D3DUSAGE_DYNAMIC
-		if (g_D3DCaps.Caps2 & D3DCAPS2_DYNAMICTEXTURES) {
-			if (D3DUsage & D3DUSAGE_DYNAMIC) {
-				D3DLockFlags |= D3DLOCK_DISCARD;
-			}
-		}
 
 		DWORD dwCubeFaceOffset = 0;
 		DWORD dwCubeFaceSize = 0;
@@ -5685,13 +5696,13 @@ void CreateHostResource(XTL::X_D3DResource *pResource, DWORD D3DUsage, int iText
 					hRet = pNewHostVolume->LockBox(&LockedBox, nullptr, D3DLockFlags);
 					break;
 				case XTL::X_D3DRTYPE_TEXTURE:
-					hRet = pNewHostTexture->LockRect(mipmap_level, &LockedRect, nullptr, D3DLockFlags);
+					hRet = pIntermediateHostTexture->LockRect(mipmap_level, &LockedRect, nullptr, D3DLockFlags);
 					break;
 				case XTL::X_D3DRTYPE_VOLUMETEXTURE:
-					hRet = pNewHostVolumeTexture->LockBox(mipmap_level, &LockedBox, nullptr, D3DLockFlags);
+					hRet = pIntermediateHostVolumeTexture->LockBox(mipmap_level, &LockedBox, nullptr, D3DLockFlags);
 					break;
 				case XTL::X_D3DRTYPE_CUBETEXTURE:
-					hRet = pNewHostCubeTexture->LockRect((XTL::D3DCUBEMAP_FACES)face, mipmap_level, &LockedRect, nullptr, D3DLockFlags);
+					hRet = pIntermediateHostCubeTexture->LockRect((XTL::D3DCUBEMAP_FACES)face, mipmap_level, &LockedRect, nullptr, D3DLockFlags);
 					break;
 				default:
 					assert(false);
@@ -5784,13 +5795,13 @@ void CreateHostResource(XTL::X_D3DResource *pResource, DWORD D3DUsage, int iText
 					hRet = pNewHostVolume->UnlockBox();
 					break;
 				case XTL::X_D3DRTYPE_TEXTURE:
-					hRet = pNewHostTexture->UnlockRect(mipmap_level);
+					hRet = pIntermediateHostTexture->UnlockRect(mipmap_level);
 					break;
 				case XTL::X_D3DRTYPE_VOLUMETEXTURE:
-					hRet = pNewHostVolumeTexture->UnlockBox(mipmap_level);
+					hRet = pIntermediateHostVolumeTexture->UnlockBox(mipmap_level);
 					break;
 				case XTL::X_D3DRTYPE_CUBETEXTURE:
-					hRet = pNewHostCubeTexture->UnlockRect((XTL::D3DCUBEMAP_FACES)face, mipmap_level);
+					hRet = pIntermediateHostCubeTexture->UnlockRect((XTL::D3DCUBEMAP_FACES)face, mipmap_level);
 					break;
 				default:
 					assert(false);
@@ -5826,6 +5837,35 @@ void CreateHostResource(XTL::X_D3DResource *pResource, DWORD D3DUsage, int iText
 
 			dwCubeFaceOffset += dwCubeFaceSize;
 		} // for cube faces
+
+
+        // Copy from the intermediate resource to the final host resource
+        // This is necessary because CopyRects/StretchRects only works on resources in the DEFAULT pool
+        // But resources in this pool are not lockable: We must use UpdateSurface/UpdateTexture instead!
+        switch (XboxResourceType) {
+        case XTL::X_D3DRTYPE_SURFACE:
+        case XTL::X_D3DRTYPE_VOLUME:
+            // We didn't use a copy for Surfaces or Volumes
+            break;
+        case XTL::X_D3DRTYPE_TEXTURE:
+            g_pD3DDevice->UpdateTexture(pIntermediateHostTexture, pNewHostTexture);
+            pIntermediateHostTexture->Release();
+            break;
+        case XTL::X_D3DRTYPE_VOLUMETEXTURE:
+            g_pD3DDevice->UpdateTexture(pIntermediateHostVolumeTexture, pNewHostVolumeTexture);
+            pIntermediateHostVolumeTexture->Release();
+            break;
+        case XTL::X_D3DRTYPE_CUBETEXTURE:
+            g_pD3DDevice->UpdateTexture(pIntermediateHostCubeTexture, pNewHostCubeTexture);
+            pIntermediateHostCubeTexture->Release();
+            break;
+        default:
+            assert(false);
+        }
+
+        if (hRet != D3D_OK) {
+            EmuLog(LOG_LEVEL::WARNING, "Updating host %s failed!", ResourceTypeName);
+        }
 
 		// Debug resource dumping
 //#define _DEBUG_DUMP_TEXTURE_REGISTER "D:\\"
