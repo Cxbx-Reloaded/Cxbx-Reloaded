@@ -73,16 +73,26 @@ INT_PTR CALLBACK DlgXidControllerConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wPar
 		}
 		break;
 
-		case IDC_XID_PROFILE_LOAD:
+		case IDC_XID_PROFILE_NAME: {
+			if (HIWORD(wParam) == CBN_SELCHANGE) {
+				char name[50];
+				HWND hwnd = GetDlgItem(hWndDlg, IDC_XID_PROFILE_NAME);
+				LRESULT str_idx = SendMessage(hwnd, CB_GETCURSEL, 0, 0);
+				if (str_idx != CB_ERR) {
+					SendMessage(hwnd, CB_GETLBTEXT, str_idx, reinterpret_cast<LPARAM>(name));
+					g_InputWindow->UpdateProfile(std::string(name), PROFILE_LOAD);
+				}
+			}
+		}
+		break;
+
 		case IDC_XID_PROFILE_SAVE:
 		case IDC_XID_PROFILE_DELETE: {
 			if (HIWORD(wParam) == BN_CLICKED) {
 				char name[50];
 				SendMessage(GetDlgItem(hWndDlg, IDC_XID_PROFILE_NAME), WM_GETTEXT,
 					sizeof(name), reinterpret_cast<LPARAM>(name));
-				int command = (LOWORD(wParam) == IDC_XID_PROFILE_LOAD) ? PROFILE_LOAD :
-					(LOWORD(wParam) == IDC_XID_PROFILE_SAVE) ? PROFILE_SAVE : PROFILE_DELETE;
-				g_InputWindow->UpdateProfile(std::string(name), command);
+				g_InputWindow->UpdateProfile(std::string(name), (LOWORD(wParam) == IDC_XID_PROFILE_SAVE) ? PROFILE_SAVE : PROFILE_DELETE);
 			}
 		}
 		break;

@@ -285,7 +285,6 @@
 #define IDC_XINP_DEFAULT                1287
 #define IDC_XID_PROFILE                 1288
 #define IDC_XID_PROFILE_NAME            1289
-#define IDC_XID_PROFILE_LOAD            1290
 #define IDC_XID_PROFILE_SAVE            1291
 #define IDC_XID_PROFILE_DELETE          1292
 #define IDC_XID_BUTTONS                 1293

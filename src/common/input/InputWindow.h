@@ -63,11 +63,10 @@ private:
 	void DetectOutput(int ms);
 	ProfileIt FindProfile(std::string& name);
 	void LoadProfile(std::string& name);
-	bool SaveProfile(std::string& name);
+	void SaveProfile(std::string& name);
 	void DeleteProfile(std::string& name);
 	void OverwriteProfile(std::string& name);
 	void LoadDefaultProfile();
-	void SaveBindingsToDevice();
 
 	// guest device under configuration
 	EmuDevice* m_DeviceConfig;

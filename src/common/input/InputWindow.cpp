@@ -105,7 +105,6 @@ void InputWindow::Initialize(HWND hwnd, HWND hwnd_krnl, int port_num, int dev_ty
 
 InputWindow::~InputWindow()
 {
-	SaveBindingsToDevice();
 	delete m_DeviceConfig;
 	m_DeviceConfig = nullptr;
 }
@@ -264,15 +263,14 @@ void InputWindow::LoadProfile(std::string& name)
 	for (int index = 0; index < m_max_num_buttons; index++) {
 		m_DeviceConfig->FindButtonByIndex(index)->UpdateText(profile->ControlList[index].c_str());
 	}
+	g_Settings->m_input[m_port_num].DeviceName = profile->DeviceName;
+	g_Settings->m_input[m_port_num].ProfileName = profile->ProfileName;
 }
 
-bool InputWindow::SaveProfile(std::string& name)
+void InputWindow::SaveProfile(std::string& name)
 {
-	if (name == std::string()) {
-		return false;
-	}
-	if (m_host_dev == std::string()) {
-		return false;
+	if (name == std::string() || m_host_dev == std::string()) {
+		return;
 	}
 	OverwriteProfile(name);
 	Settings::s_input_profiles profile;
@@ -287,7 +285,8 @@ bool InputWindow::SaveProfile(std::string& name)
 	SendMessage(m_hwnd_profile_list, CB_SETCURSEL, SendMessage(m_hwnd_profile_list, CB_ADDSTRING, 0,
 		reinterpret_cast<LPARAM>(profile.ProfileName.c_str())), 0);
 	g_Settings->m_input_profiles[m_dev_type].push_back(std::move(profile));
-	return true;
+	g_Settings->m_input[m_port_num].DeviceName = profile.DeviceName;
+	g_Settings->m_input[m_port_num].ProfileName = profile.ProfileName;
 }
 
 void InputWindow::DeleteProfile(std::string& name)
@@ -330,18 +329,6 @@ void InputWindow::LoadDefaultProfile()
 			reinterpret_cast<LPARAM>(g_Settings->m_input_profiles[m_dev_type][index].ProfileName.c_str()));
 	}
 	LoadProfile(g_Settings->m_input[m_port_num].ProfileName);
-}
-
-void InputWindow::SaveBindingsToDevice()
-{
-	char profile_name[50];
-	SendMessage(m_hwnd_profile_list, WM_GETTEXT, sizeof(profile_name), reinterpret_cast<LPARAM>(profile_name));
-	if (!SaveProfile(std::string(profile_name))) {
-		return;
-	}
-
-	g_Settings->m_input[m_port_num].DeviceName = m_host_dev;
-	g_Settings->m_input[m_port_num].ProfileName = profile_name;
 }
 
 void InputWindow::UpdateCurrentDevice()
