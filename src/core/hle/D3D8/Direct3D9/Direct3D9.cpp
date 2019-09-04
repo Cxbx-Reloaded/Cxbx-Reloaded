@@ -2439,7 +2439,6 @@ static void EmuVerifyResourceIsRegistered(XTL::X_D3DResource *pResource, DWORD D
                             // Re-create the texture with D3DUSAGE_RENDERTARGET, this will automatically create any child-surfaces
                             FreeHostResource(GetHostResourceKey(pParentXboxTexture));
                             CreateHostResource(pParentXboxTexture, D3DUsage, iTextureStage, dwSize);
-                            return;
                         }
 
                         // Re-create the surface with D3DUSAGE_RENDERTARGET
