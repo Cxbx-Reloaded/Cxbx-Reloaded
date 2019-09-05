@@ -97,9 +97,7 @@ EmuDevice::EmuDevice(int type, HWND hwnd)
 				button_xbox_ctrl_id[i], i, hwnd));
 
 			// Install the subclass for the button control
-			if (button_xbox_ctrl_id[i] != IDC_SET_MOTOR) {
-				SetWindowSubclass(GetDlgItem(hwnd, button_xbox_ctrl_id[i]), ButtonSubclassProc, 0, reinterpret_cast<DWORD_PTR>(m_buttons[i]));
-			}
+			SetWindowSubclass(GetDlgItem(hwnd, button_xbox_ctrl_id[i]), ButtonSubclassProc, 0, reinterpret_cast<DWORD_PTR>(m_buttons[i]));
 		}
 	}
 	break;

@@ -37,6 +37,8 @@
 #define RUMBLE_SET     4
 #define RUMBLE_UPDATE  5
 #define RUMBLE_TEST    6
+#define RUMBLE_CLEAR   7
+#define BUTTON_CLEAR   8
 
 
 LRESULT CALLBACK ProfileNameSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
@@ -45,7 +47,7 @@ LRESULT CALLBACK ProfileNameSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LP
 class InputWindow
 {
 public:
-	void Initialize(HWND hwnd, HWND hwnd_krnl, int port_num, int dev_type);
+	void Initialize(HWND hwnd, int port_num, int dev_type);
 	void InitRumble(HWND hwnd);
 	~InputWindow();
 	void UpdateDeviceList();
@@ -55,6 +57,7 @@ public:
 	void UpdateProfile(std::string& name, int command);
 	void UpdateRumble(int command);
 	void UpdateCurrentDevice();
+	bool IsProfileSaved();
 
 
 private:
@@ -63,7 +66,7 @@ private:
 	void DetectOutput(int ms);
 	ProfileIt FindProfile(std::string& name);
 	void LoadProfile(std::string& name);
-	void SaveProfile(std::string& name);
+	bool SaveProfile(std::string& name);
 	void DeleteProfile(std::string& name);
 	void OverwriteProfile(std::string& name);
 	void LoadDefaultProfile();
@@ -76,8 +79,6 @@ private:
 	HWND m_hwnd_device_list;
 	// handle of the profile list combobox
 	HWND m_hwnd_profile_list;
-	// handle of the kernel window
-	HWND m_hwnd_krnl;
 	// handle of the rumble window
 	HWND m_hwnd_rumble;
 	// handle of the rumble combobox
@@ -92,6 +93,8 @@ private:
 	std::string m_host_dev;
 	// currently selected rumble control
 	std::string m_rumble;
+	// indicates if the current profile has unsaved changes
+	bool m_bHasChanges;
 };
 
 extern InputWindow* g_InputWindow;

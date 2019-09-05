@@ -48,16 +48,16 @@ int dev_num_buttons[to_underlying(XBOX_INPUT_DEVICE::DEVICE_MAX)] = {
 };
 
 
-void InputWindow::Initialize(HWND hwnd, HWND hwnd_krnl, int port_num, int dev_type)
+void InputWindow::Initialize(HWND hwnd, int port_num, int dev_type)
 {
 	// Save window/device specific variables
 	m_hwnd_window = hwnd;
 	m_hwnd_device_list = GetDlgItem(m_hwnd_window, IDC_DEVICE_LIST);
 	m_hwnd_profile_list = GetDlgItem(m_hwnd_window, IDC_XID_PROFILE_NAME);
-	m_hwnd_krnl = hwnd_krnl;
 	m_dev_type = dev_type;
 	m_max_num_buttons = dev_num_buttons[dev_type];
 	m_port_num = port_num;
+	m_bHasChanges = false;
 
 	// Set window icon
 	SetClassLong(m_hwnd_window, GCL_HICON, (LONG)LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_CXBX)));
@@ -110,6 +110,35 @@ InputWindow::~InputWindow()
 {
 	delete m_DeviceConfig;
 	m_DeviceConfig = nullptr;
+}
+
+bool InputWindow::IsProfileSaved()
+{
+	if (m_bHasChanges) {
+		int ret = MessageBox(m_hwnd_window, "Current configuration is not saved. Save before closing?", "Cxbx-Reloaded", MB_YESNOCANCEL | MB_ICONWARNING | MB_APPLMODAL);
+		switch (ret)
+		{
+		case IDYES: {
+			char name[50];
+			SendMessage(m_hwnd_profile_list, WM_GETTEXT, sizeof(name), reinterpret_cast<LPARAM>(name));
+			if (SaveProfile(std::string(name))) {
+				return true;
+			}
+			return false;
+		}
+
+		case IDNO: {
+			return true;
+		}
+
+		case IDCANCEL:
+		default: {
+			return false;
+		}
+
+		}
+	}
+	return true;
 }
 
 void InputWindow::UpdateDeviceList()
@@ -193,6 +222,7 @@ void InputWindow::BindButton(int ControlID)
 			InputDevice::Input* dev_button = fut.get();
 			if (dev_button) {
 				xbox_button->UpdateText(dev_button->GetName().c_str());
+				m_bHasChanges = true;
 			}
 			else {
 				xbox_button->UpdateText(current_text);
@@ -206,6 +236,7 @@ void InputWindow::BindXInput()
 {
 	if (std::strncmp(m_host_dev.c_str(), "XInput", std::strlen("XInput")) == 0) {
 		m_DeviceConfig->BindXInput();
+		m_bHasChanges = true;
 	}
 }
 
@@ -213,6 +244,7 @@ void InputWindow::ClearBindings()
 {
 	m_DeviceConfig->ClearButtons();
 	m_rumble = std::string();
+	m_bHasChanges = true;
 }
 
 InputWindow::ProfileIt InputWindow::FindProfile(std::string& name)
@@ -243,6 +275,16 @@ void InputWindow::UpdateProfile(std::string& name, int command)
 	}
 	break;
 
+	case RUMBLE_CLEAR: {
+		m_rumble = std::string();
+	}
+	break;
+
+	case BUTTON_CLEAR: {
+		m_bHasChanges = true;
+	}
+	break;
+
 	default:
 		break;
 	}
@@ -269,12 +311,18 @@ void InputWindow::LoadProfile(std::string& name)
 	}
 	g_Settings->m_input[m_port_num].DeviceName = profile->DeviceName;
 	g_Settings->m_input[m_port_num].ProfileName = profile->ProfileName;
+	m_bHasChanges = false;
 }
 
-void InputWindow::SaveProfile(std::string& name)
+bool InputWindow::SaveProfile(std::string& name)
 {
-	if (name == std::string() || m_host_dev == std::string()) {
-		return;
+	if (name == std::string()) {
+		MessageBox(m_hwnd_window, "Cannot save. Profile name must not be empty", "Cxbx-Reloaded", MB_OK | MB_ICONSTOP | MB_APPLMODAL);
+		return false;
+	}
+	if (m_host_dev == std::string()) {
+		MessageBox(m_hwnd_window, "Cannot save. No input devices detected", "Cxbx-Reloaded", MB_OK | MB_ICONSTOP | MB_APPLMODAL);
+		return false;
 	}
 	OverwriteProfile(name);
 	Settings::s_input_profiles profile;
@@ -288,9 +336,11 @@ void InputWindow::SaveProfile(std::string& name)
 	}
 	SendMessage(m_hwnd_profile_list, CB_SETCURSEL, SendMessage(m_hwnd_profile_list, CB_ADDSTRING, 0,
 		reinterpret_cast<LPARAM>(profile.ProfileName.c_str())), 0);
-	g_Settings->m_input_profiles[m_dev_type].push_back(std::move(profile));
 	g_Settings->m_input[m_port_num].DeviceName = profile.DeviceName;
 	g_Settings->m_input[m_port_num].ProfileName = profile.ProfileName;
+	g_Settings->m_input_profiles[m_dev_type].push_back(std::move(profile));
+	m_bHasChanges = false;
+	return true;
 }
 
 void InputWindow::DeleteProfile(std::string& name)
@@ -307,6 +357,7 @@ void InputWindow::DeleteProfile(std::string& name)
 		ClearBindings();
 		g_Settings->m_input[m_port_num].DeviceName = "";
 		g_Settings->m_input[m_port_num].ProfileName = "";
+		m_bHasChanges = false;
 	}
 	else {
 		LoadProfile(g_Settings->m_input[m_port_num].ProfileName);

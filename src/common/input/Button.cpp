@@ -26,6 +26,8 @@
 // ******************************************************************
 
 #include "Button.h"
+#include "InputWindow.h"
+#include "..\..\gui\ResCxbx.h"
 
 
 void Button::EnableButton(bool enable) const
@@ -65,6 +67,10 @@ LRESULT CALLBACK ButtonSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM 
 
 	case WM_RBUTTONDOWN: {
 		reinterpret_cast<Button*>(dwRefData)->ClearText();
+		g_InputWindow->UpdateProfile(std::string(), BUTTON_CLEAR);
+		if (reinterpret_cast<Button*>(dwRefData)->GetId() == IDC_SET_MOTOR) {
+			g_InputWindow->UpdateProfile(std::string(), RUMBLE_CLEAR);
+		}
 	}
 	break;
 

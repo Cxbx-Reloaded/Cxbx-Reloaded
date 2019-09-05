@@ -50,15 +50,17 @@ INT_PTR CALLBACK DlgXidControllerConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wPar
 			dev_type == to_underlying(XBOX_INPUT_DEVICE::MS_CONTROLLER_S));
 
 		g_InputWindow = new InputWindow;
-		g_InputWindow->Initialize(hWndDlg, g_ChildWnd, port_num, dev_type);
+		g_InputWindow->Initialize(hWndDlg, port_num, dev_type);
 	}
 	break;
 
 	case WM_CLOSE:
 	{
-		delete g_InputWindow;
-		g_InputWindow = nullptr;
-		EndDialog(hWndDlg, wParam);
+		if (g_InputWindow->IsProfileSaved()) {
+			delete g_InputWindow;
+			g_InputWindow = nullptr;
+			EndDialog(hWndDlg, wParam);
+		}
 	}
 	break;
 
