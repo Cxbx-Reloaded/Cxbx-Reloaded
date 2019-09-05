@@ -20,5 +20,4 @@
 	branch = master
 [submodule "import/SDL2"]
 	path = import/SDL2
-	url = https://github.com/spurious/SDL-mirror
-	branch = release-2.0.10
+	url = https://github.com/SDL-mirror/SDL
