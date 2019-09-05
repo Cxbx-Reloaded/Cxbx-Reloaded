@@ -32,7 +32,7 @@
 
 // Copyright 2015 Citra Emulator Project
 // Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+// Refer to the license.txt file of Citra at https://github.com/citra-emu/citra/blob/master/license.txt.
 
 
 #define LOG_PREFIX CXBXR_MODULE::VMEM

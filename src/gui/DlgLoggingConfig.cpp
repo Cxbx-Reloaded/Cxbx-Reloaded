@@ -60,7 +60,7 @@ static int g_DlgIndexes[] = {
 	IDC_LOG_VTXB,
 	IDC_LOG_DINP,
 	IDC_LOG_XINP,
-	IDC_LOG_SDL2,
+	IDC_LOG_SDL,
 	IDC_LOG_FILE,
 	IDC_LOG_X86,
 	IDC_LOG_HLE,
@@ -73,6 +73,7 @@ static int g_DlgIndexes[] = {
 	IDC_LOG_HUB,
 	IDC_LOG_XIDCTRL,
 	IDC_LOG_ADM,
+	IDC_LOG_INPSYS,
 	// Kernel
 	IDC_LOG_KRNL,
 	IDC_LOG_LOG,
@@ -347,7 +348,7 @@ INT_PTR CALLBACK DlgLogConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM
 				case IDC_LOG_VTXB:       
 				case IDC_LOG_DINP:       
 				case IDC_LOG_XINP:
-				case IDC_LOG_SDL2:       
+				case IDC_LOG_SDL:
 				case IDC_LOG_FILE:       
 				case IDC_LOG_X86:        
 				case IDC_LOG_HLE:        
@@ -359,7 +360,8 @@ INT_PTR CALLBACK DlgLogConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM
 				case IDC_LOG_USB:        
 				case IDC_LOG_HUB:        
 				case IDC_LOG_XIDCTRL:    
-				case IDC_LOG_ADM:        
+				case IDC_LOG_ADM:
+				case IDC_LOG_INPSYS:
 				case IDC_LOG_KRNL:       
 				case IDC_LOG_LOG:        
 				case IDC_LOG_XBOX:       

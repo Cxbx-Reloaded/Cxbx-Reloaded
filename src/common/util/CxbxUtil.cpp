@@ -255,3 +255,21 @@ void unix2dos(std::string& string)
 		position += 2;
 	}
 }
+
+// Copyright 2008 Dolphin Emulator Project
+// Licensed under GPLv2+
+// Refer to the license.txt file of Dolphin at https://github.com/dolphin-emu/dolphin/blob/master/license.txt.
+
+// Source: StringUtil.cpp of Dolphin emulator
+/* Turns "  hello " into "hello". Also handles tabs */
+std::string StripSpaces(const std::string& str)
+{
+	const size_t s = str.find_first_not_of(" \t\r\n");
+
+	if (str.npos != s) {
+		return str.substr(s, str.find_last_not_of(" \t\r\n") - s + 1);
+	}
+	else {
+		return "";
+	}
+}

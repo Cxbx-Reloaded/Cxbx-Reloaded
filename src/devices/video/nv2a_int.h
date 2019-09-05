@@ -48,22 +48,6 @@
 typedef xbaddr hwaddr; // Compatibility; Cxbx uses xbaddr, xqemu and OpenXbox use hwaddr 
 typedef uint32_t value_t; // Compatibility; Cxbx values are uint32_t (xqemu and OpenXbox use uint64_t)
 
-#ifdef __cplusplus
-template <size_t N> struct ArraySizeHelper { char _[N]; };
-template <typename T, size_t N>
-ArraySizeHelper<N> makeArraySizeHelper(T(&)[N]);
-#  define ARRAY_SIZE(a)  sizeof(makeArraySizeHelper(a))
-#else
-// The expression ARRAY_SIZE(a) is a compile-time constant of type
-// size_t which represents the number of elements of the given
-// array. You should only use ARRAY_SIZE on statically allocated
-// arrays.
-
-#define ARRAY_SIZE(a)                               \
-  ((sizeof(a) / sizeof(*(a))) /                     \
-  static_cast<size_t>(!(sizeof(a) % sizeof(*(a)))))
-#endif
-
 #define NV_PMC_SIZE                 0x001000
 #define _NV_PFIFO_SIZE              0x002000 // Underscore prefix to prevent clash with NV_PFIFO_SIZE
 #define NV_PVIDEO_SIZE              0x001000

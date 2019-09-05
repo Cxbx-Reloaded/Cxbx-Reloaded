@@ -1,3 +1,5 @@
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 // ******************************************************************
 // *
 // *  This file is part of the Cxbx project.
@@ -17,17 +19,16 @@
 // *  If not, write to the Free Software Foundation, Inc.,
 // *  59 Temple Place - Suite 330, Bostom, MA 02111-1307, USA.
 // *
-// *  (c) 2002-2003 Aaron Robinson <caustik@caustik.com>
+// *  (c) 2019 ergo720
 // *
 // *  All rights reserved
 // *
 // ******************************************************************
-#ifndef DLGCONTROLLERCONFIG_H
-#define DLGCONTROLLERCONFIG_H
 
-#include <windows.h>
+#ifndef DLGINPUTCONFIG_H
+#define DLGINPUTCONFIG_H
 
-/*! show controller configuration dialog */
-extern VOID ShowControllerConfig(HWND hwnd);
+VOID ShowInputConfig(HWND hwnd, HWND ChildWnd);
+extern HWND g_ChildWnd;
 
 #endif

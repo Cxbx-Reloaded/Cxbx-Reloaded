@@ -63,6 +63,7 @@ bool Memory_W(void* Addr, void* Buf, size_t Num);
 bool Memory_RW(void* Addr, void* Buf, size_t Num, bool bIsWrite);
 
 void unix2dos(std::string& string);
+std::string StripSpaces(const std::string& str);
 
 // Retrieves the underlying integer value of a scoped enumerator. It allows to avoid using static_cast every time
 template <typename E>
@@ -73,6 +74,22 @@ constexpr typename std::underlying_type<E>::type to_underlying(E e) noexcept
 
 #define GET_WORD_LOW(value) (uint8_t)((value) & 0xFF)
 #define GET_WORD_HIGH(value) (uint8_t)(((value) >> 8) & 0xFF)
+
+#ifdef __cplusplus
+template <size_t N> struct ArraySizeHelper { char _[N]; };
+template <typename T, size_t N>
+ArraySizeHelper<N> makeArraySizeHelper(T(&)[N]);
+#  define ARRAY_SIZE(a)  sizeof(makeArraySizeHelper(a))
+#else
+// The expression ARRAY_SIZE(a) is a compile-time constant of type
+// size_t which represents the number of elements of the given
+// array. You should only use ARRAY_SIZE on statically allocated
+// arrays.
+
+#define ARRAY_SIZE(a)                               \
+  ((sizeof(a) / sizeof(*(a))) /                     \
+  static_cast<size_t>(!(sizeof(a) % sizeof(*(a)))))
+#endif
 
 /*! round dwValue to the nearest multiple of dwMult */
 static uint32_t RoundUp(uint32_t dwValue, uint32_t dwMult)

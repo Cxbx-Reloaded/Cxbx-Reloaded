@@ -21,6 +21,7 @@ include_directories(
  "${CXBXR_ROOT_DIR}/import/libtommath"
  "${CXBXR_ROOT_DIR}/import/libtomcrypt/src/headers"
  "${CXBXR_ROOT_DIR}/import/winpcap/Include"
+ "${CXBXR_ROOT_DIR}/import/SDL2/include"
 )
 
 link_directories(
@@ -175,12 +176,12 @@ set(WINS_LIB
  XINPUT9_1_0
  Iphlpapi
  wpcap
+ SDL2
 )
 
 target_link_libraries(cxbx
  PUBLIC XbSymbolDatabase
  subhook
- vsbc
  libtomcrypt
 
  ${WINS_LIB}

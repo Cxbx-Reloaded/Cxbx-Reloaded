@@ -21,6 +21,7 @@
 // *
 // *  (c) 2018 wutno (#/g/punk - Rizon)
 // *  (c) 2018 RadWolfie
+// *  (c) 2019 ergo720
 // *
 // *  All rights reserved
 // *
@@ -30,6 +31,7 @@
 #include "core\kernel\support\Emu.h"
 #include "EmuShared.h"
 #include <experimental/filesystem>
+#include "common\input\EmuDevice.h"
 
 // TODO: Implement Qt support when real CPU emulation is available.
 #ifndef QT_VERSION // NOTE: Non-Qt will be using current directory for data
@@ -49,7 +51,14 @@ uint16_t g_LibVersion_D3D8 = 0;
 uint16_t g_LibVersion_DSOUND = 0;
 
 // NOTE: Update settings_version when add/edit/delete setting's structure.
-const unsigned int settings_version = 4;
+///////////////////////////
+// * History:
+// * 2: (RadWolfie), initial version
+// * 3: (ergo720),   added logging settings
+// * 4: (LukeUsher), added network settings
+// * 5: (ergo720),   added new input gui settings and revision to core
+///////////////////////////
+const unsigned int settings_version = 5;
 
 Settings* g_Settings = nullptr;
 
@@ -72,6 +81,7 @@ static struct {
 
 static const char* section_core = "core";
 static struct {
+	const char* Revision = "Revision";
 	const char* FlagsLLE = "FlagsLLE";
 	const char* KrnlDebugMode = "KrnlDebugMode";
 	const char* KrnlDebugLogFile = "KrnlDebugLogFile";
@@ -107,19 +117,22 @@ static struct {
 } sect_network_keys;
 
 static const char* section_controller_dinput = "controller-dinput";
-// All keys so far are dynamic
-static struct {
-	const char* device_name = "DeviceName 0x%.02X";
-	const char* object_name = "Object : \"%s\"";
-	const char* object_name_value = "%08X %08X %08X";
-} sect_controller_dinput_keys;
-
 static const char* section_controller_port = "controller-port";
-// All keys so far are dynamic
+
+static const char* section_input = "input-port-";
 static struct {
-	const char* xbox_port_x_host_type = "XboxPort%dHostType";
-	const char* xbox_port_x_host_port = "XboxPort%dHostPort";
-} sect_controller_port_keys;
+	const char* type = "Type";
+	const char* device = "DeviceName";
+	const char* config = "ProfileName";
+} sect_input;
+
+static const char* section_input_profiles = "input-profile-";
+static struct {
+	const char* type = "Type";
+	const char* config = "ProfileName";
+	const char* device = "DeviceName";
+	const char* control = "%s";
+} sect_input_profiles;
 
 static const char* section_hack = "hack";
 static struct {
@@ -337,6 +350,7 @@ bool Settings::LoadConfig()
 
 	// ==== Core Begin ==========
 
+	m_core.Revision = m_si.GetLongValue(section_core, sect_core_keys.Revision, 4);
 	m_core.FlagsLLE = m_si.GetLongValue(section_core, sect_core_keys.FlagsLLE, /*Default=*/LLE_NONE);
 	m_core.KrnlDebugMode = (DebugMode)m_si.GetLongValue(section_core, sect_core_keys.KrnlDebugMode, /*Default=*/DM_NONE);
 	si_data = m_si.GetValue(section_core, sect_core_keys.KrnlDebugLogFile, /*Default=*/nullptr);
@@ -445,66 +459,54 @@ bool Settings::LoadConfig()
 
 	// ==== Network End =========
 
-	// ==== Controller Begin ====
+	// ==== Input Begin ====
 
-	int v = 0;
-	char szKeyName[64];
-
-	// ******************************************************************
-	// * Load Device Names
-	// ******************************************************************
-	for (v = 0; v < XBCTRL_MAX_DEVICES; v++) {
-		std::sprintf(szKeyName, sect_controller_dinput_keys.device_name, v);
-		si_data = m_si.GetValue(section_controller_dinput, szKeyName, /*Default=*/nullptr);
-
-		// Fallback to null string if value is empty or contain bigger string.
-		if (si_data == nullptr || std::strlen(si_data) >= MAX_PATH) {
-			// default is a null string
-			m_controller_dinput.DeviceName[v][0] = '\0';
+	for (int port_num = 0; port_num < 4; port_num++) {
+		std::string current_section = std::string(section_input) + std::to_string(port_num);
+		int ret = m_si.GetLongValue(current_section.c_str(), sect_input.type, -2);
+		if (ret == -2) {
+			m_input[port_num].Type = to_underlying(XBOX_INPUT_DEVICE::DEVICE_INVALID);
+			continue;
 		}
-		else {
-			trim_str = TrimQuoteFromString(si_data);
-			std::strncpy(m_controller_dinput.DeviceName[v], trim_str.c_str(), MAX_PATH);
-		}
+		m_input[port_num].Type = ret;
+		m_input[port_num].DeviceName = m_si.GetValue(current_section.c_str(), sect_input.device);
+		m_input[port_num].ProfileName = TrimQuoteFromString(m_si.GetValue(current_section.c_str(), sect_input.config));
 	}
 
-	// ******************************************************************
-	// * Load Object Configuration
-	// ******************************************************************
-	for (v = 0; v<XBCTRL_OBJECT_COUNT; v++) {
-		std::sprintf(szKeyName, sect_controller_dinput_keys.object_name, m_controller_dinput.XboxControllerObjectNameLookup[v]);
-		si_data = m_si.GetValue(section_controller_dinput, szKeyName, /*Default=*/nullptr);
+	// ==== Input End ==============
 
-		if (si_data == nullptr) {
-			// default object configuration
-			m_controller_dinput.ObjectConfig[v].dwDevice = -1;
-			m_controller_dinput.ObjectConfig[v].dwInfo = -1;
-			m_controller_dinput.ObjectConfig[v].dwFlags = 0;
+	// ==== Input Profile Begin ====
+	std::array<std::vector<std::string>, to_underlying(XBOX_INPUT_DEVICE::DEVICE_MAX)> control_names;
+	for (int i = 0; i < dev_num_buttons[0]; i++) {
+		char control_name[30];
+		std::sprintf(control_name, sect_input_profiles.control, button_xbox_ctrl_names[i][0]);
+		control_names[0].push_back(control_name);
+	}
+	// TODO: add the control names of the other devices
+
+	index = 0;
+	while (true) {
+		std::string current_section = std::string(section_input_profiles) + std::to_string(index);
+		if (m_si.GetSectionSize(current_section.c_str()) == -1) {
+			break;
 		}
-		else {
-			iStatus = std::sscanf(si_data, sect_controller_dinput_keys.object_name_value, &m_controller_dinput.ObjectConfig[v].dwDevice,
-			            &m_controller_dinput.ObjectConfig[v].dwInfo, &m_controller_dinput.ObjectConfig[v].dwFlags);
-
-			// Fallback to default object configuration if file contain invalid value.
-			if (iStatus != 3 /*= total arguments*/) {
-				m_controller_dinput.ObjectConfig[v].dwDevice = -1;
-				m_controller_dinput.ObjectConfig[v].dwInfo = -1;
-				m_controller_dinput.ObjectConfig[v].dwFlags = 0;
-			}
+		s_input_profiles local_profile;
+		local_profile.Type = m_si.GetLongValue(current_section.c_str(), sect_input_profiles.type);
+		local_profile.ProfileName = TrimQuoteFromString(m_si.GetValue(current_section.c_str(), sect_input_profiles.config));
+		local_profile.DeviceName = m_si.GetValue(current_section.c_str(), sect_input_profiles.device);
+		for (int vec_control_index = 0; vec_control_index < dev_num_buttons[local_profile.Type]; vec_control_index++) {
+			local_profile.ControlList.push_back(m_si.GetValue(current_section.c_str(),
+				control_names[local_profile.Type][vec_control_index].c_str()));
 		}
+		m_input_profiles[local_profile.Type].push_back(std::move(local_profile));
+		index++;
 	}
 
-	for (v = 0; v < XBCTRL_MAX_GAMEPAD_PORTS; v++) {
-		std::sprintf(szKeyName, sect_controller_port_keys.xbox_port_x_host_type, v);
-		m_controller_port.XboxPortMapHostType[v] = m_si.GetLongValue(section_controller_port, szKeyName, /*Default=*/1, nullptr);
-	}
+	// ==== Input Profile End ======
 
-	for (v = 0; v < XBCTRL_MAX_GAMEPAD_PORTS; v++) {
-		std::sprintf(szKeyName, sect_controller_port_keys.xbox_port_x_host_port, v);
-		m_controller_port.XboxPortMapHostPort[v] = m_si.GetLongValue(section_controller_port, szKeyName, /*Default=*/v, nullptr);
-	}
-
-	// ==== Controller End ======
+	// Delete legacy configs from previous revisions
+	RemoveLegacyConfigs(m_core.Revision);
+	m_core.Revision = settings_version;
 
 	return true;
 }
@@ -537,6 +539,7 @@ bool Settings::Save(std::string file_path)
 
 	// ==== Core Begin ==========
 
+	m_si.SetLongValue(section_core, sect_core_keys.Revision, m_core.Revision, nullptr, false, true);
 	m_si.SetLongValue(section_core, sect_core_keys.FlagsLLE, m_core.FlagsLLE, nullptr, true, true);
 	m_si.SetLongValue(section_core, sect_core_keys.KrnlDebugMode, m_core.KrnlDebugMode, nullptr, true, true);
 	m_si.SetValue(section_core, sect_core_keys.KrnlDebugLogFile, m_core.szKrnlDebug, nullptr, true);
@@ -589,53 +592,63 @@ bool Settings::Save(std::string file_path)
 	
 	// ==== Network End =========
 
-	// ==== Controller Begin ====
+	// ==== Input Begin ====
 
-	int v = 0;
-	char szKeyName[64];
-
-	// ******************************************************************
-	// * Save Device Names
-	// ******************************************************************
-	for (v = 0; v < XBCTRL_MAX_DEVICES; v++) {
-		std::sprintf(szKeyName, sect_controller_dinput_keys.device_name, v);
-
-		if (m_controller_dinput.DeviceName[v][0] == 0) {
-			m_si.Delete(section_controller_dinput, szKeyName, true);
-		}
-		else {
-			quote_str = AppendQuoteToString(m_controller_dinput.DeviceName[v]);
-			m_si.SetValue(section_controller_dinput, szKeyName, quote_str.c_str(), nullptr, true);
-		}
+	for (int port_num = 0; port_num < 4; port_num++) {
+		std::string current_section = std::string(section_input) + std::to_string(port_num);
+		std::string quoted_prf_str = m_input[port_num].ProfileName.insert(0, "\"");
+		quoted_prf_str += "\"";
+		m_si.SetLongValue(current_section.c_str(), sect_input.type, m_input[port_num].Type, nullptr, false, true);
+		m_si.SetValue(current_section.c_str(), sect_input.device, m_input[port_num].DeviceName.c_str(), nullptr, true);
+		m_si.SetValue(current_section.c_str(), sect_input.config, quoted_prf_str.c_str(), nullptr, true);
 	}
 
-	// ******************************************************************
-	// * Save Object Configuration
-	// ******************************************************************
-	for (v = 0; v<XBCTRL_OBJECT_COUNT; v++) {
-		std::sprintf(szKeyName, sect_controller_dinput_keys.object_name, m_controller_dinput.XboxControllerObjectNameLookup[v]);
+	// ==== Input End ==============
 
-		if (m_controller_dinput.ObjectConfig[v].dwDevice == -1) {
-			m_si.Delete(section_controller_dinput, szKeyName, true);
+	// ==== Input Profile Begin ====
+
+	std::array<std::vector<std::string>, to_underlying(XBOX_INPUT_DEVICE::DEVICE_MAX)> control_names;
+	for (int i = 0; i < dev_num_buttons[0]; i++) {
+		char control_name[30];
+		std::sprintf(control_name, sect_input_profiles.control, button_xbox_ctrl_names[i][0]);
+		control_names[0].push_back(control_name);
+	}
+	// TODO: add the control names of the other devices
+
+	int profile_num = 0;
+	for (int i = 0; i < to_underlying(XBOX_INPUT_DEVICE::DEVICE_MAX); i++) {
+		size_t vec_size = m_input_profiles[i].size();
+		if (vec_size == 0) {
+			continue;
 		}
-		else {
-			std::sprintf(si_value, sect_controller_dinput_keys.object_name_value, m_controller_dinput.ObjectConfig[v].dwDevice,
-				m_controller_dinput.ObjectConfig[v].dwInfo, m_controller_dinput.ObjectConfig[v].dwFlags);
-			m_si.SetValue(section_controller_dinput, szKeyName, si_value, nullptr, true);
+		for (unsigned int vec_index = 0; vec_index < vec_size; vec_index++, profile_num++) {
+			std::string current_section = std::string(section_input_profiles) + std::to_string(profile_num);
+			std::string quoted_prf_str = m_input_profiles[i][vec_index].ProfileName.insert(0, "\"");
+			quoted_prf_str += "\"";
+			m_si.SetLongValue(current_section.c_str(), sect_input_profiles.type, m_input_profiles[i][vec_index].Type, nullptr, false, true);
+			m_si.SetValue(current_section.c_str(), sect_input_profiles.config, quoted_prf_str.c_str(), nullptr, true);
+			m_si.SetValue(current_section.c_str(), sect_input_profiles.device, m_input_profiles[i][vec_index].DeviceName.c_str(), nullptr, true);
+			size_t vec_control_size = m_input_profiles[i][vec_index].ControlList.size();
+			if (vec_control_size == 0) {
+				continue;
+			}
+			m_si.SetValue(current_section.c_str(), control_names[i][0].c_str(), m_input_profiles[i][vec_index].ControlList[0].c_str(), nullptr, true);
+			for (unsigned int vec_control_index = 1; vec_control_index < vec_control_size; vec_control_index++) {
+				m_si.SetValue(current_section.c_str(), control_names[i][vec_control_index].c_str(),
+					m_input_profiles[i][vec_index].ControlList[vec_control_index].c_str(), nullptr, true);
+			}
 		}
 	}
-
-	for (v = 0; v < XBCTRL_MAX_GAMEPAD_PORTS; v++) {
-		std::sprintf(szKeyName, sect_controller_port_keys.xbox_port_x_host_type, v);
-		m_si.SetLongValue(section_controller_port, szKeyName, m_controller_port.XboxPortMapHostType[v], nullptr, true, true);
+	while (true) {
+		std::string current_section = std::string(section_input_profiles) + std::to_string(profile_num);
+		if (m_si.GetSectionSize(current_section.c_str()) == -1) {
+			break;
+		}
+		m_si.Delete(current_section.c_str(), nullptr, true);
+		profile_num++;
 	}
 
-	for (v = 0; v < XBCTRL_MAX_GAMEPAD_PORTS; v++) {
-		std::sprintf(szKeyName, sect_controller_port_keys.xbox_port_x_host_port, v);
-		m_si.SetLongValue(section_controller_port, szKeyName, m_controller_port.XboxPortMapHostPort[v], nullptr, true, true);
-	}
-
-	// ==== Controller End ======
+	// ==== Input Profile End ======
 
 	// ==== Hack Begin ==========
 
@@ -681,9 +694,27 @@ void Settings::SyncToEmulator()
 	// register Network settings
 	g_EmuShared->SetNetworkSettings(&m_network);
 
-	// register Controller settings
-	g_EmuShared->SetControllerDInputSettings(&m_controller_dinput);
-	g_EmuShared->SetControllerPortSettings(&m_controller_port);
+	// register input settings
+	for (int i = 0; i < 4; i++) {
+		g_EmuShared->SetInputDevTypeSettings(&m_input[i].Type, i);
+		if (m_input[i].Type != to_underlying(XBOX_INPUT_DEVICE::DEVICE_INVALID)) {
+			g_EmuShared->SetInputDevNameSettings(m_input[i].DeviceName.c_str(), i);
+			auto it = std::find_if(m_input_profiles[m_input[i].Type].begin(),
+				m_input_profiles[m_input[i].Type].end(), [this, i](const auto& profile) {
+					if (profile.ProfileName == m_input[i].ProfileName) {
+						return true;
+					}
+					return false;
+				});
+			if (it != m_input_profiles[m_input[i].Type].end()) {
+				char controls_name[XBOX_CTRL_NUM_BUTTONS][30];
+				for (int index = 0; index < dev_num_buttons[m_input[i].Type]; index++) {
+					strncpy(controls_name[index], it->ControlList[index].c_str(), 30);
+				}
+				g_EmuShared->SetInputBindingsSettings(controls_name, XBOX_CTRL_NUM_BUTTONS, i);
+			}
+		}
+	}
 
 	// register Hacks settings
 	g_EmuShared->SetHackSettings(&m_hacks);
@@ -773,25 +804,17 @@ std::string Settings::GetDataLocation()
 	return m_current_data_location;
 }
 
-// ******************************************************************
-// * Input Device Name Lookup Table
-// ******************************************************************
-const char *Settings::s_controller_dinput::XboxControllerObjectNameLookup[XBCTRL_OBJECT_COUNT] =
+void Settings::RemoveLegacyConfigs(unsigned int CurrentRevision)
 {
-	// ******************************************************************
-	// * Analog Axis
-	// ******************************************************************
-	"LThumbPosX", "LThumbNegX", "LThumbPosY", "LThumbNegY",
-	"RThumbPosX", "RThumbNegX", "RThumbPosY", "RThumbNegY",
-
-	// ******************************************************************
-	// * Analog Buttons
-	// ******************************************************************
-	"A", "B", "X", "Y", "Black", "White", "LTrigger", "RTrigger",
-
-	// ******************************************************************
-	// * Digital Buttons
-	// ******************************************************************
-	"DPadUp", "DPadDown", "DPadLeft", "DPadRight",
-	"Back", "Start", "LThumb", "RThumb"
-};
+	switch (CurrentRevision) {
+	case 2:
+	case 3:
+	case 4:
+		m_si.Delete(section_controller_dinput, nullptr, true);
+		m_si.Delete(section_controller_port, nullptr, true);
+		break;
+	case 5:
+	default:
+		break;
+	}
+}

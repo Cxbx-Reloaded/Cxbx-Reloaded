@@ -20,7 +20,7 @@ add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/import/XbSymbolDatabase")
 # Not require since only include a header file
 #add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/import/simpleini")
 
-#add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/import/SDL2")
+add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/import/SDL2")
 
 if(${CMAKE_GENERATOR} MATCHES "Visual Studio ([^9]|[9][0-9])")
  add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/import/cs_x86")
@@ -54,7 +54,7 @@ configure_file(
  NEWLINE_STYLE LF
 )
 
-add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/projects/vsbc")
+#add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/projects/vsbc")
 
 # Split the files into group for which project is likely
 # going to be used for both header and source files.
@@ -73,8 +73,15 @@ file (GLOB CXBXR_HEADER_COMMON
  "${CXBXR_ROOT_DIR}/src/common/CxbxDebugger.h"
  "${CXBXR_ROOT_DIR}/src/common/EmuEEPROM.h"
  "${CXBXR_ROOT_DIR}/src/common/Error.h"
- "${CXBXR_ROOT_DIR}/src/common/input/InputConfig.h"
- "${CXBXR_ROOT_DIR}/src/common/input/SDL2_Device.h"
+ "${CXBXR_ROOT_DIR}/src/common/input/Button.h"
+ "${CXBXR_ROOT_DIR}/src/common/input/DInputKeyboardCodes.h"
+ "${CXBXR_ROOT_DIR}/src/common/input/DInputKeyboardMouse.h"
+ "${CXBXR_ROOT_DIR}/src/common/input/EmuDevice.h"
+ "${CXBXR_ROOT_DIR}/src/common/input/InputDevice.h"
+ "${CXBXR_ROOT_DIR}/src/common/input/InputManager.h"
+ "${CXBXR_ROOT_DIR}/src/common/input/InputWindow.h"
+ "${CXBXR_ROOT_DIR}/src/common/input/SdlJoystick.h"
+ "${CXBXR_ROOT_DIR}/src/common/input/XInputPad.h"
  "${CXBXR_ROOT_DIR}/src/common/IPCHybrid.hpp"
  "${CXBXR_ROOT_DIR}/src/common/Logging.h"
  "${CXBXR_ROOT_DIR}/src/common/ReservedMemory.h"
@@ -85,11 +92,9 @@ file (GLOB CXBXR_HEADER_COMMON
  "${CXBXR_ROOT_DIR}/src/common/util/CxbxUtil.h"
  "${CXBXR_ROOT_DIR}/src/common/win32/AlignPosfix1.h"
  "${CXBXR_ROOT_DIR}/src/common/win32/AlignPrefix1.h"
- "${CXBXR_ROOT_DIR}/src/common/win32/DInputController.h"
  "${CXBXR_ROOT_DIR}/src/common/win32/EmuShared.h"
  "${CXBXR_ROOT_DIR}/src/common/win32/Mutex.h"
  "${CXBXR_ROOT_DIR}/src/common/win32/Threads.h"
- "${CXBXR_ROOT_DIR}/src/common/win32/XBPortMapping.h"
  "${CXBXR_ROOT_DIR}/src/common/xbdm/CxbxXbdm.h"
  "${CXBXR_ROOT_DIR}/src/common/xbe/Xbe.h"
  "${CXBXR_ROOT_DIR}/src/common/xbe/XbePrinter.h"
@@ -105,12 +110,12 @@ file (GLOB CXBXR_HEADER_GUIv1
  "${CXBXR_ROOT_DIR}/src/gui/DbgConsole.h"
  "${CXBXR_ROOT_DIR}/src/gui/DlgAbout.h"
  "${CXBXR_ROOT_DIR}/src/gui/DlgAudioConfig.h"
- "${CXBXR_ROOT_DIR}/src/gui/DlgControllerConfig.h"
+ "${CXBXR_ROOT_DIR}/src/gui/DlgInputConfig.h"
+ "${CXBXR_ROOT_DIR}/src/gui/DlgDukeControllerConfig.h"
  "${CXBXR_ROOT_DIR}/src/gui/DlgEepromConfig.h"
  "${CXBXR_ROOT_DIR}/src/gui/DlgLoggingConfig.h"
  "${CXBXR_ROOT_DIR}/src/gui/DlgNetworkConfig.h"
  "${CXBXR_ROOT_DIR}/src/gui/DlgVideoConfig.h"
- "${CXBXR_ROOT_DIR}/src/gui/DlgXboxControllerPortMapping.h"
  "${CXBXR_ROOT_DIR}/src/gui/ResCxbx.h"
  "${CXBXR_ROOT_DIR}/src/gui/Wnd.h"
  "${CXBXR_ROOT_DIR}/src/gui/WndMain.h"
@@ -140,9 +145,8 @@ file (GLOB CXBXR_HEADER_EMU
  "${CXBXR_ROOT_DIR}/src/core/hle/Intercept.hpp"
  "${CXBXR_ROOT_DIR}/src/core/hle/Patches.hpp"
  "${CXBXR_ROOT_DIR}/src/core/hle/XACTENG/XactEng.h"
- "${CXBXR_ROOT_DIR}/src/core/hle/XAPI/OHCI/XInput/DInput.h"
- "${CXBXR_ROOT_DIR}/src/core/hle/XAPI/OHCI/XInput/XInput.h"
  "${CXBXR_ROOT_DIR}/src/core/hle/XAPI/Xapi.h"
+ "${CXBXR_ROOT_DIR}/src/core/hle/XAPI/XapiCxbxr.h"
  "${CXBXR_ROOT_DIR}/src/core/hle/XGRAPHIC/XGraphic.h"
  "${CXBXR_ROOT_DIR}/src/core/hle/XONLINE/XOnline.h"
  "${CXBXR_ROOT_DIR}/src/core/kernel/common/strings.hpp"
@@ -199,21 +203,25 @@ file (GLOB CXBXR_SOURCE_COMMON
  "${CXBXR_ROOT_DIR}/src/common/CxbxDebugger.cpp"
  "${CXBXR_ROOT_DIR}/src/common/EmuEEPROM.cpp"
  "${CXBXR_ROOT_DIR}/src/common/Error.cpp"
- "${CXBXR_ROOT_DIR}/src/common/input/InputConfig.cpp"
- "${CXBXR_ROOT_DIR}/src/common/input/SDL2_Device.cpp"
+ "${CXBXR_ROOT_DIR}/src/common/input/Button.cpp"
+ "${CXBXR_ROOT_DIR}/src/common/input/DInputKeyboardMouse.cpp"
+ "${CXBXR_ROOT_DIR}/src/common/input/EmuDevice.cpp"
+ "${CXBXR_ROOT_DIR}/src/common/input/InputDevice.cpp"
+ "${CXBXR_ROOT_DIR}/src/common/input/InputManager.cpp"
+ "${CXBXR_ROOT_DIR}/src/common/input/InputWindow.cpp"
+ "${CXBXR_ROOT_DIR}/src/common/input/SdlJoystick.cpp"
+ "${CXBXR_ROOT_DIR}/src/common/input/XInputPad.cpp"
  "${CXBXR_ROOT_DIR}/src/common/Logging.cpp"
  "${CXBXR_ROOT_DIR}/src/common/Settings.cpp"
  "${CXBXR_ROOT_DIR}/src/common/Timer.cpp"
  "${CXBXR_ROOT_DIR}/src/common/util/crc32c.cpp"
  "${CXBXR_ROOT_DIR}/src/common/util/CxbxUtil.cpp"
  "${CXBXR_ROOT_DIR}/src/common/util/hasher.cpp"
- "${CXBXR_ROOT_DIR}/src/common/win32/DInputController.cpp"
  "${CXBXR_ROOT_DIR}/src/common/win32/EmuShared.cpp"
  "${CXBXR_ROOT_DIR}/src/common/win32/InlineFunc.cpp"
  "${CXBXR_ROOT_DIR}/src/common/win32/IPCWindows.cpp"
  "${CXBXR_ROOT_DIR}/src/common/win32/Mutex.cpp"
  "${CXBXR_ROOT_DIR}/src/common/win32/Threads.cpp"
- "${CXBXR_ROOT_DIR}/src/common/win32/XBPortMapping.cpp"
  "${CXBXR_ROOT_DIR}/src/common/xbdm/CxbxXbdm.cpp"
  "${CXBXR_ROOT_DIR}/src/common/xbe/Xbe.cpp"
  "${CXBXR_ROOT_DIR}/src/common/xbe/XbePrinter.cpp"
@@ -227,12 +235,12 @@ file (GLOB CXBXR_SOURCE_COMMON
 file (GLOB CXBXR_SOURCE_GUIv1
  "${CXBXR_ROOT_DIR}/src/gui/DlgAbout.cpp"
  "${CXBXR_ROOT_DIR}/src/gui/DlgAudioConfig.cpp"
- "${CXBXR_ROOT_DIR}/src/gui/DlgControllerConfig.cpp"
+ "${CXBXR_ROOT_DIR}/src/gui/DlgInputConfig.cpp"
+ "${CXBXR_ROOT_DIR}/src/gui/DlgDukeControllerConfig.cpp"
  "${CXBXR_ROOT_DIR}/src/gui/DlgEepromConfig.cpp"
  "${CXBXR_ROOT_DIR}/src/gui/DlgLoggingConfig.cpp"
  "${CXBXR_ROOT_DIR}/src/gui/DlgNetworkConfig.cpp"
  "${CXBXR_ROOT_DIR}/src/gui/DlgVideoConfig.cpp"
- "${CXBXR_ROOT_DIR}/src/gui/DlgXboxControllerPortMapping.cpp"
  "${CXBXR_ROOT_DIR}/src/gui/WinMain.cpp"
  "${CXBXR_ROOT_DIR}/src/gui/Wnd.cpp"
  "${CXBXR_ROOT_DIR}/src/gui/WndMain.cpp"
@@ -265,8 +273,6 @@ file (GLOB CXBXR_SOURCE_EMU
  "${CXBXR_ROOT_DIR}/src/core/hle/Intercept.cpp"
  "${CXBXR_ROOT_DIR}/src/core/hle/Patches.cpp"
  "${CXBXR_ROOT_DIR}/src/core/hle/XACTENG/XactEng.cpp"
- "${CXBXR_ROOT_DIR}/src/core/hle/XAPI/OHCI/XInput/DInput.cpp"
- "${CXBXR_ROOT_DIR}/src/core/hle/XAPI/OHCI/XInput/XInput.cpp"
  "${CXBXR_ROOT_DIR}/src/core/hle/XAPI/Xapi.cpp"
  "${CXBXR_ROOT_DIR}/src/core/hle/XGRAPHIC/XGraphic.cpp"
  "${CXBXR_ROOT_DIR}/src/core/hle/XONLINE/XOnline.cpp"
@@ -374,6 +380,6 @@ if(${CMAKE_GENERATOR} MATCHES "Visual Studio ([^9]|[9][0-9])")
 endif()
 
 # Cxbx-Reloaded project with third-party libraries
-set_target_properties(cxbx subhook XbSymbolDatabase vsbc libtommath libtomcrypt
+set_target_properties(cxbx subhook XbSymbolDatabase libtommath libtomcrypt
  PROPERTIES FOLDER Cxbx-Reloaded
 )

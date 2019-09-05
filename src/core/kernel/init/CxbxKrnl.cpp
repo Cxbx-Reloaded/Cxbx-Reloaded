@@ -63,7 +63,7 @@ namespace xboxkrnl
 #include "devices\SMCDevice.h" // For SMC Access
 #include "common\crypto\EmuSha.h" // For the SHA1 functions
 #include "Timer.h" // For Timer_Init
-#include "..\Common\Input\InputConfig.h" // For the InputDeviceManager
+#include "common\input\InputManager.h" // For the InputDeviceManager
 
 /*! thread local storage */
 Xbe::TLS *CxbxKrnl_TLS = NULL;
@@ -1573,18 +1573,7 @@ __declspec(noreturn) void CxbxKrnlInit
 	// Read Xbox video mode from the SMC, store it in HalBootSMCVideoMode
 	xboxkrnl::HalReadSMBusValue(SMBUS_ADDRESS_SYSTEM_MICRO_CONTROLLER, SMC_COMMAND_AV_PACK, FALSE, &xboxkrnl::HalBootSMCVideoMode);
 
-	if (bLLE_USB) {
-#if 0 // Reenable this when LLE USB actually works
-		int ret;
-		g_InputDeviceManager = new InputDeviceManager;
-		ret = g_InputDeviceManager->EnumSdl2Devices();
-		g_InputDeviceManager->StartInputThread();
-		if (ret > 0) {
-			// Temporary: the device type and bindings should be read from emushared, for now always assume one xbox controller
-			g_InputDeviceManager->ConnectDeviceToXbox(1, MS_CONTROLLER_DUKE);
-		}
-#endif
-	}
+	g_InputDeviceManager.Initialize(false);
 
 	// Now the hardware devices exist, couple the EEPROM buffer to it's device
 	g_EEPROM->SetEEPROM((uint8_t*)EEPROM);
@@ -1811,6 +1800,9 @@ void CxbxKrnlShutDown()
 	// NOTE: This causes a hang when exiting while NV2A is processing
 	// This is okay for now: It won't leak memory or resources since TerminateProcess will free everything
 	// delete g_NV2A; // TODO : g_pXbox
+
+	// Shutdown the input device manager
+	g_InputDeviceManager.Shutdown();
 
 	if (CxbxKrnl_hEmuParent != NULL)
 		SendMessage(CxbxKrnl_hEmuParent, WM_PARENTNOTIFY, WM_DESTROY, 0);
