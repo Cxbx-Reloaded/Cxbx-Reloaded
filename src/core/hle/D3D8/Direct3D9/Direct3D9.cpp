@@ -8551,7 +8551,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_GetVertexShaderConstant)
 		LOG_FUNC_END;
 
 	// Xbox vertex shader constants range from -96 to 95
-    // The host does not support negative, so we adjust to 0..1912
+    // The host does not support negative, so we adjust to 0..191
 	Register += X_D3DVS_CONSTREG_BIAS;
 
 	HRESULT hRet = g_pD3DDevice->GetVertexShaderConstantF
