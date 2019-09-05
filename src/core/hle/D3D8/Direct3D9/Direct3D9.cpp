@@ -4812,8 +4812,13 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_CopyRects)
             DestRect.right = DestRect.left + (SourceRect.right - SourceRect.left);
             DestRect.top = pDestPointsArray[i].y;
             DestRect.bottom = DestRect.top + (SourceRect.bottom - SourceRect.top);
-        } else {
+        } else if (pSourceRectsArray) {
             DestRect = SourceRect;
+        } else {
+            DestRect.left = 0;
+            DestRect.right = DestinationDesc.Width;
+            DestRect.top = 0;
+            DestRect.bottom = DestinationDesc.Height;
         }
 
         HRESULT hRet = g_pD3DDevice->StretchRect(pHostSourceSurface, &SourceRect, pHostDestSurface, &DestRect, D3DTEXF_NONE);
