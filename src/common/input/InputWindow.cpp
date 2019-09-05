@@ -453,6 +453,11 @@ void InputWindow::DetectOutput(int ms)
 				}
 			}
 			std::this_thread::sleep_for(std::chrono::milliseconds(ms));
+			for (const auto out : outputs) {
+				if (out->GetName() == m_rumble) {
+					out->SetState(0.0, 0.0);
+				}
+			}
 			SendMessage(m_hwnd_rumble_list, WM_SETTEXT, 0, reinterpret_cast<LPARAM>("Test"));
 			EnableWindow(m_hwnd_rumble, TRUE);
 			}).detach();
