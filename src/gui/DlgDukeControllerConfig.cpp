@@ -103,12 +103,14 @@ INT_PTR CALLBACK DlgXidControllerConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wPar
 			if (HIWORD(wParam) == BN_CLICKED) {
 				g_InputWindow->BindXInput();
 			}
-			break;
 		}
+		break;
 
 		case IDC_XID_CLEAR: {
 			if (HIWORD(wParam) == BN_CLICKED) {
-				g_InputWindow->ClearBindings();
+				if (MessageBox(hWndDlg, "Remove all button bindings. Ok?", "Cxbx-Reloaded", MB_OKCANCEL | MB_ICONINFORMATION | MB_APPLMODAL) == IDOK) {
+					g_InputWindow->ClearBindings();
+				}
 			}
 		}
 		break;
