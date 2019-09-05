@@ -45,8 +45,8 @@ extern D3DVERTEXELEMENT *EmuRecompileVshDeclaration
 (
     DWORD                *pXboxDeclaration,
     bool                  bIsFixedFunction,
-	DWORD                *pXboxDeclarationCount,
-	DWORD                *pHostDeclarationSize,
+    DWORD                *pXboxDeclarationCount,
+    DWORD                *pHostDeclarationSize,
     XTL::CxbxVertexShaderInfo *pCxbxVertexShaderInfo
 );
 
@@ -55,8 +55,8 @@ extern HRESULT EmuRecompileVshFunction
 (
     DWORD        *pXboxFunction,
     bool          bNoReservedConstants,
-	D3DVERTEXELEMENT *pRecompiledDeclaration,
-	bool   		 *pbUseDeclarationOnly,
+    D3DVERTEXELEMENT *pRecompiledDeclaration,
+    bool   		 *pbUseDeclarationOnly,
     DWORD        *pXboxFunctionSize,
     LPD3DXBUFFER *ppRecompiledShader
 );

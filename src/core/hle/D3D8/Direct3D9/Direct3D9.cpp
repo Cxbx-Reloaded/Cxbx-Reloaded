@@ -3153,7 +3153,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SelectVertexShader)
 	// Either way, the given address slot is selected as the start of the current vertex shader program
 	g_CurrentXboxVertexShaderHandle = Handle;
 
-    CxbxVertexShader *pCxbxVertexShader = nullptr;
+	CxbxVertexShader *pCxbxVertexShader = nullptr;
 	DWORD HostFVF = 0;
 
     if(VshHandleIsVertexShader(Handle))
@@ -3746,13 +3746,13 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateVertexShader)
 
 	// Now, we can create the host vertex shader
 	DWORD             XboxDeclarationCount = 0;
-    DWORD             HostDeclarationSize = 0;
+	DWORD             HostDeclarationSize = 0;
 	CxbxVertexShader* pCxbxVertexShader = (CxbxVertexShader*)calloc(1, sizeof(CxbxVertexShader));
 	D3DVERTEXELEMENT *pRecompiledDeclaration = nullptr;
 
 	pRecompiledDeclaration = XTL::EmuRecompileVshDeclaration((DWORD*)pDeclaration,
                                                    /*bIsFixedFunction=*/pFunction == NULL,
-												   &XboxDeclarationCount,
+                                                   &XboxDeclarationCount,
                                                    &HostDeclarationSize,
                                                    &pCxbxVertexShader->VertexShaderInfo);
 
@@ -3767,9 +3767,9 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateVertexShader)
 	g_pD3DDevice->SetVertexDeclaration(pCxbxVertexShader->pHostVertexDeclaration);
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetVertexDeclaration");
 
-    LPD3DXBUFFER  pRecompiledBuffer = NULL;
-    DWORD         XboxFunctionSize = 0;
-    DWORD        *pRecompiledFunction = NULL;
+	LPD3DXBUFFER  pRecompiledBuffer = NULL;
+	DWORD         XboxFunctionSize = 0;
+	DWORD        *pRecompiledFunction = NULL;
 	if (SUCCEEDED(hRet) && pFunction)
 	{
 		bool bUseDeclarationOnly = false;
@@ -3848,7 +3848,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateVertexShader)
     free(pRecompiledDeclaration);
 
 	pCxbxVertexShader->pXboxDeclarationCopy = (DWORD*)malloc(XboxDeclarationCount * sizeof(DWORD));
-    memcpy(pCxbxVertexShader->pXboxDeclarationCopy, pDeclaration, XboxDeclarationCount * sizeof(DWORD));
+	memcpy(pCxbxVertexShader->pXboxDeclarationCopy, pDeclaration, XboxDeclarationCount * sizeof(DWORD));
 	pCxbxVertexShader->XboxFunctionSize = 0;
 	pCxbxVertexShader->pXboxFunctionCopy = NULL;
 	pCxbxVertexShader->XboxVertexShaderType = X_VST_NORMAL; // TODO : This can vary
@@ -3856,16 +3856,16 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateVertexShader)
 	pCxbxVertexShader->HostFVF = 0;
 	pCxbxVertexShader->pHostVertexShader = nullptr;
 	pCxbxVertexShader->XboxDeclarationCount = XboxDeclarationCount; 
-    pCxbxVertexShader->HostDeclarationSize = HostDeclarationSize;
-    // Save the status, to remove things later
+	pCxbxVertexShader->HostDeclarationSize = HostDeclarationSize;
+	// Save the status, to remove things later
 	// pCxbxVertexShader->XboxStatus = hRet; // Not even used by VshHandleIsValidShader()
 
     if(SUCCEEDED(hRet))
     {
         if(pFunction != NULL)
         {
-			pCxbxVertexShader->XboxFunctionSize = XboxFunctionSize;
-			pCxbxVertexShader->pXboxFunctionCopy = (DWORD*)malloc(XboxFunctionSize);
+            pCxbxVertexShader->XboxFunctionSize = XboxFunctionSize;
+            pCxbxVertexShader->pXboxFunctionCopy = (DWORD*)malloc(XboxFunctionSize);
             memcpy(pCxbxVertexShader->pXboxFunctionCopy, pFunction, XboxFunctionSize);
         }
 
@@ -3874,7 +3874,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateVertexShader)
     else
     {
 		LOG_TEST_CASE("Falling back to FVF shader");
-        pCxbxVertexShader->HostFVF = D3DFVF_XYZ | D3DFVF_TEX0;
+		pCxbxVertexShader->HostFVF = D3DFVF_XYZ | D3DFVF_TEX0;
     }
 
 	// Register the host Vertex Shader
@@ -3887,7 +3887,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateVertexShader)
         {
             char pFileName[30];
             static int FailedShaderCount = 0;
-			X_VSH_SHADER_HEADER *pHeader = (X_VSH_SHADER_HEADER*)pFunction;
+            X_VSH_SHADER_HEADER *pHeader = (X_VSH_SHADER_HEADER*)pFunction;
             EmuLog(LOG_LEVEL::WARNING, "Couldn't create vertex shader!");
             sprintf(pFileName, "failed%05d.xvu", FailedShaderCount);
             FILE *f = fopen(pFileName, "wb");
@@ -3958,7 +3958,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexShaderConstant)
 
     // Xbox vertex shader constants range from -96 to 95
     // The host does not support negative, so we adjust to 0..191
-	Register += X_D3DVS_CONSTREG_BIAS;
+    Register += X_D3DVS_CONSTREG_BIAS;
 
     HRESULT hRet;
 	hRet = g_pD3DDevice->SetVertexShaderConstantF(
@@ -4041,7 +4041,7 @@ VOID __fastcall XTL::EMUPATCH(D3DDevice_SetVertexShaderConstantNotInline)
     // The XDK uses a macro to automatically adjust to 0..191 range
     // but D3DDevice_SetVertexShaderConstant expects -96..95 range
     // so we adjust before forwarding
-	EMUPATCH(D3DDevice_SetVertexShaderConstant)(Register - X_D3DVS_CONSTREG_BIAS, pConstantData, ConstantCount / 4);
+    EMUPATCH(D3DDevice_SetVertexShaderConstant)(Register - X_D3DVS_CONSTREG_BIAS, pConstantData, ConstantCount / 4);
 }
 
 // ******************************************************************
@@ -4059,7 +4059,7 @@ VOID __fastcall XTL::EMUPATCH(D3DDevice_SetVertexShaderConstantNotInlineFast)
     // The XDK uses a macro to automatically adjust to 0..191 range
     // but D3DDevice_SetVertexShaderConstant expects -96..95 range
     // so we adjust before forwarding
-	EMUPATCH(D3DDevice_SetVertexShaderConstant)(Register - X_D3DVS_CONSTREG_BIAS, pConstantData, ConstantCount / 4);
+    EMUPATCH(D3DDevice_SetVertexShaderConstant)(Register - X_D3DVS_CONSTREG_BIAS, pConstantData, ConstantCount / 4);
 }
 
 // LTCG specific D3DDevice_SetTexture function...
@@ -8551,7 +8551,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_GetVertexShaderConstant)
 		LOG_FUNC_END;
 
 	// Xbox vertex shader constants range from -96 to 95
-    // The host does not support negative, so we adjust to 0..191
+	// The host does not support negative, so we adjust to 0..191
 	Register += X_D3DVS_CONSTREG_BIAS;
 
 	HRESULT hRet = g_pD3DDevice->GetVertexShaderConstantF
@@ -8708,44 +8708,44 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_LoadVertexShaderProgram)
         int index = 0;
 
         // Write the Stream Number (always 0 for FVF)
-		CxbxXboxVertexDeclaration[index++] = X_D3DVSD_STREAM(0);
+        CxbxXboxVertexDeclaration[index++] = X_D3DVSD_STREAM(0);
 
         // Write Position
         DWORD position = (g_CurrentXboxVertexShaderHandle & X_D3DFVF_POSITION_MASK);
         if (position == X_D3DFVF_XYZRHW) {
-			CxbxXboxVertexDeclaration[index++] = X_D3DVSD_REG(X_D3DVSDE_POSITION, X_D3DVSDT_FLOAT4);
+            CxbxXboxVertexDeclaration[index++] = X_D3DVSD_REG(X_D3DVSDE_POSITION, X_D3DVSDT_FLOAT4);
         } else {
-			CxbxXboxVertexDeclaration[index++] = X_D3DVSD_REG(X_D3DVSDE_POSITION, X_D3DVSDT_FLOAT3);
+            CxbxXboxVertexDeclaration[index++] = X_D3DVSD_REG(X_D3DVSDE_POSITION, X_D3DVSDT_FLOAT3);
         }
 
         // Write Blend Weights
         if (position == X_D3DFVF_XYZB1) {
-			CxbxXboxVertexDeclaration[index++] = X_D3DVSD_REG(X_D3DVSDE_BLENDWEIGHT, X_D3DVSDT_FLOAT1);
+            CxbxXboxVertexDeclaration[index++] = X_D3DVSD_REG(X_D3DVSDE_BLENDWEIGHT, X_D3DVSDT_FLOAT1);
         }
         if (position == X_D3DFVF_XYZB2) {
-			CxbxXboxVertexDeclaration[index++] = X_D3DVSD_REG(X_D3DVSDE_BLENDWEIGHT, X_D3DVSDT_FLOAT2);
+            CxbxXboxVertexDeclaration[index++] = X_D3DVSD_REG(X_D3DVSDE_BLENDWEIGHT, X_D3DVSDT_FLOAT2);
         }
         if (position == X_D3DFVF_XYZB3) {
-			CxbxXboxVertexDeclaration[index++] = X_D3DVSD_REG(X_D3DVSDE_BLENDWEIGHT, X_D3DVSDT_FLOAT3);
+            CxbxXboxVertexDeclaration[index++] = X_D3DVSD_REG(X_D3DVSDE_BLENDWEIGHT, X_D3DVSDT_FLOAT3);
         }
         if (position == X_D3DFVF_XYZB4) {
-			CxbxXboxVertexDeclaration[index++] = X_D3DVSD_REG(X_D3DVSDE_BLENDWEIGHT, X_D3DVSDT_FLOAT4);
+            CxbxXboxVertexDeclaration[index++] = X_D3DVSD_REG(X_D3DVSDE_BLENDWEIGHT, X_D3DVSDT_FLOAT4);
         }
 
         // Write Normal, Diffuse, and Specular
         if (g_CurrentXboxVertexShaderHandle & X_D3DFVF_NORMAL) {
-			CxbxXboxVertexDeclaration[index++] = X_D3DVSD_REG(X_D3DVSDE_NORMAL, X_D3DVSDT_FLOAT3);
+            CxbxXboxVertexDeclaration[index++] = X_D3DVSD_REG(X_D3DVSDE_NORMAL, X_D3DVSDT_FLOAT3);
         }
         if (g_CurrentXboxVertexShaderHandle & X_D3DFVF_DIFFUSE) {
-			CxbxXboxVertexDeclaration[index++] = X_D3DVSD_REG(X_D3DVSDE_DIFFUSE, X_D3DVSDT_D3DCOLOR);
+            CxbxXboxVertexDeclaration[index++] = X_D3DVSD_REG(X_D3DVSDE_DIFFUSE, X_D3DVSDT_D3DCOLOR);
         }
         if (g_CurrentXboxVertexShaderHandle & X_D3DFVF_SPECULAR) {
-			CxbxXboxVertexDeclaration[index++] = X_D3DVSD_REG(X_D3DVSDE_SPECULAR, X_D3DVSDT_D3DCOLOR);
+            CxbxXboxVertexDeclaration[index++] = X_D3DVSD_REG(X_D3DVSDE_SPECULAR, X_D3DVSDT_D3DCOLOR);
         }
 
         // Write Texture Coordinates
         int textureCount = (g_CurrentXboxVertexShaderHandle & X_D3DFVF_TEXCOUNT_MASK) >> X_D3DFVF_TEXCOUNT_SHIFT;
-		assert(textureCount <= 4); // Safeguard, since the X_D3DFVF_TEXCOUNT bitfield could contain invalid values (5 up to 15)
+        assert(textureCount <= 4); // Safeguard, since the X_D3DFVF_TEXCOUNT bitfield could contain invalid values (5 up to 15)
         for (int i = 0; i < textureCount; i++) {
             int numberOfCoordinates = 0;
 
@@ -8762,13 +8762,13 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_LoadVertexShaderProgram)
                 numberOfCoordinates = X_D3DVSDT_FLOAT4;
             }
 
-			CxbxXboxVertexDeclaration[index++] = X_D3DVSD_REG(X_D3DVSDE_TEXCOORD0 + i, numberOfCoordinates);
+            CxbxXboxVertexDeclaration[index++] = X_D3DVSD_REG(X_D3DVSDE_TEXCOORD0 + i, numberOfCoordinates);
         }
 
         // Write Declaration End
-		CxbxXboxVertexDeclaration[index++] = X_D3DVSD_END();
+        CxbxXboxVertexDeclaration[index++] = X_D3DVSD_END();
 
-		pXboxVertexDeclaration = CxbxXboxVertexDeclaration;
+        pXboxVertexDeclaration = CxbxXboxVertexDeclaration;
         // Now we can fall through and create a new vertex shader
     }
 

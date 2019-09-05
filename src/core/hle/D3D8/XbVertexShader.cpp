@@ -2280,7 +2280,7 @@ XTL::D3DVERTEXELEMENT *XTL::EmuRecompileVshDeclaration
     DWORD                *pXboxDeclaration,
     bool                  bIsFixedFunction,
     DWORD                *pXboxDeclarationCount,
-	DWORD                *pHostDeclarationSize,
+    DWORD                *pHostDeclarationSize,
     CxbxVertexShaderInfo *pCxbxVertexShaderInfo
 )
 {
@@ -2299,8 +2299,8 @@ extern HRESULT XTL::EmuRecompileVshFunction
 (
     DWORD        *pXboxFunction,
     bool          bNoReservedConstants,
-	D3DVERTEXELEMENT *pRecompiledDeclaration,
-	bool   		 *pbUseDeclarationOnly,
+    D3DVERTEXELEMENT *pRecompiledDeclaration,
+    bool   		 *pbUseDeclarationOnly,
     DWORD        *pXboxFunctionSize,
     LPD3DXBUFFER *ppRecompiledShader
 )
@@ -2372,12 +2372,12 @@ extern HRESULT XTL::EmuRecompileVshFunction
 		std::stringstream& pHostShaderDisassembly = std::stringstream();
 
 		DbgVshPrintf("-- Before conversion --\n");
-        VshWriteShader(pShader, pXboxShaderDisassembly, pRecompiledDeclaration, FALSE);
+		VshWriteShader(pShader, pXboxShaderDisassembly, pRecompiledDeclaration, FALSE);
 		DbgVshPrintf("%s", pXboxShaderDisassembly.str().c_str());
 		DbgVshPrintf("-----------------------\n");
 
-        VshConvertShader(pShader, bNoReservedConstants);
-        VshWriteShader(pShader, pHostShaderDisassembly, pRecompiledDeclaration, TRUE);
+		VshConvertShader(pShader, bNoReservedConstants);
+		VshWriteShader(pShader, pHostShaderDisassembly, pRecompiledDeclaration, TRUE);
 
 		DbgVshPrintf("-- After conversion ---\n");
 		DbgVshPrintf("%s", pHostShaderDisassembly.str().c_str());
