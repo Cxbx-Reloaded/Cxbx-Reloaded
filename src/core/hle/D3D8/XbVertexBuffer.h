@@ -37,7 +37,7 @@ typedef struct _CxbxDrawContext
     IN     DWORD                 dwVertexCount;
     IN     DWORD                 dwStartVertex; // Only D3DDevice_DrawVertices sets this (potentially higher than default 0)
     // The current vertex shader, used to identify the streams
-    IN     DWORD                 hVertexShader;
+    IN     DWORD                 XboxVertexShaderHandle;
 	IN	   PWORD				 pIndexData;
 	IN	   DWORD				 dwIndexBase;
 	IN	   size_t				 VerticesInBuffer;

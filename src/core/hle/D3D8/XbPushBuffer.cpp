@@ -179,11 +179,11 @@ DWORD CxbxGetStrideFromVertexShaderHandle(DWORD dwVertexShader)
 		// Test-case : SpyHunter 2 [4D57001B]
 		//LOG_TEST_CASE("Non-FVF Vertex Shaders not yet (completely) supported for PushBuffer emulation!");
 
-		CxbxVertexShader *pVertexShader = GetCxbxVertexShader(dwVertexShader);
-		if (pVertexShader) {
-			if (pVertexShader->VertexShaderInfo.NumberOfVertexStreams == 1) {
+		CxbxVertexShader *pCxbxVertexShader = GetCxbxVertexShader(dwVertexShader);
+		if (pCxbxVertexShader) {
+			if (pCxbxVertexShader->VertexShaderInfo.NumberOfVertexStreams == 1) {
 				// Note : This assumes that the only stream in use will be stream zero :
-				Stride = pVertexShader->VertexShaderInfo.VertexStreams[0].HostVertexStride;
+				Stride = pCxbxVertexShader->VertexShaderInfo.VertexStreams[0].HostVertexStride;
 			}
 			else {
 				LOG_TEST_CASE("Non-FVF Vertex Shaders with multiple streams not supported for PushBuffer emulation!");
@@ -252,7 +252,7 @@ void HLE_draw_inline_array(NV2AState *d)
 			DrawContext.dwVertexCount = VertexCount;
 			DrawContext.pXboxVertexStreamZeroData = pg->inline_array;
 			DrawContext.uiXboxVertexStreamZeroStride = dwVertexStride;
-			DrawContext.hVertexShader = dwVertexShader;
+			DrawContext.XboxVertexShaderHandle = dwVertexShader;
 
 			CxbxDrawPrimitiveUP(DrawContext);
 		}
@@ -271,7 +271,7 @@ void HLE_draw_inline_elements(NV2AState *d)
 
 		DrawContext.XboxPrimitiveType = (X_D3DPRIMITIVETYPE)pg->primitive_mode;
 		DrawContext.dwVertexCount = EmuD3DIndexCountToVertexCount(DrawContext.XboxPrimitiveType, uiIndexCount);
-		DrawContext.hVertexShader = g_CurrentXboxVertexShaderHandle;
+		DrawContext.XboxVertexShaderHandle = g_CurrentXboxVertexShaderHandle;
 		DrawContext.pIndexData = d->pgraph.inline_elements; // Used by GetVerticesInBuffer
 
 		CxbxDrawIndexed(DrawContext);
