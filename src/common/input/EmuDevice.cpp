@@ -57,32 +57,32 @@ static int button_xbox_ctrl_id[XBOX_CTRL_NUM_BUTTONS] = {
 	IDC_SET_MOTOR,
 };
 
-const char* button_xbox_ctrl_names[XBOX_CTRL_NUM_BUTTONS][2] = {
-	"D Pad Up",      "Pad N",
-	"D Pad Down",    "Pad S",
-	"D Pad Left",    "Pad W",
-	"D Pad Right",   "Pad E",
-	"Start",         "Start",
-	"Back",          "Back",
-	"L Thumb",       "Thumb L",
-	"R Thumb",       "Thumb R",
-	"A",             "Button A",
-	"B",             "Button B",
-	"X",             "Button X",
-	"Y",             "Button Y",
-	"Black",         "Shoulder R",
-	"White",         "Shoulder L",
-	"L Trigger",     "Trigger L",
-	"R Trigger",     "Trigger R",
-	"Left Axis X+",  "Left X+",
-	"Left Axis X-",  "Left X-",
-	"Left Axis Y+",  "Left Y+",
-	"Left Axis Y-",  "Left Y-",
-	"Right Axis X+", "Right X+",
-	"Right Axis X-", "Right X-",
-	"Right Axis Y+", "Right Y+",
-	"Right Axis Y-", "Right Y-",
-	"Motor",         "LeftRight",
+const char* button_xbox_ctrl_names[XBOX_CTRL_NUM_BUTTONS][3] = {
+	"D Pad Up",      "Pad N",      "UP",
+	"D Pad Down",    "Pad S",      "DOWN",
+	"D Pad Left",    "Pad W",      "LEFT",
+	"D Pad Right",   "Pad E",      "RIGHT",
+	"Start",         "Start",      "RETURN",
+	"Back",          "Back",       "SPACE",
+	"L Thumb",       "Thumb L",    "B",
+	"R Thumb",       "Thumb R",    "M",
+	"A",             "Button A",   "S",
+	"B",             "Button B",   "D",
+	"X",             "Button X",   "W",
+	"Y",             "Button Y",   "E",
+	"Black",         "Shoulder R", "C",
+	"White",         "Shoulder L", "X",
+	"L Trigger",     "Trigger L",  "Q",
+	"R Trigger",     "Trigger R",  "R",
+	"Left Axis X+",  "Left X+",    "H",
+	"Left Axis X-",  "Left X-",    "F",
+	"Left Axis Y+",  "Left Y+",    "T",
+	"Left Axis Y-",  "Left Y-",    "G",
+	"Right Axis X+", "Right X+",   "L",
+	"Right Axis X-", "Right X-",   "J",
+	"Right Axis Y+", "Right Y+",   "I",
+	"Right Axis Y-", "Right Y-",   "K",
+	"Motor",         "LeftRight",  "",
 };
 
 
@@ -93,8 +93,7 @@ EmuDevice::EmuDevice(int type, HWND hwnd)
 	case to_underlying(XBOX_INPUT_DEVICE::MS_CONTROLLER_DUKE): {
 		m_hwnd = hwnd;
 		for (int i = 0; i < ARRAY_SIZE(button_xbox_ctrl_id); i++) {
-			m_buttons.push_back(new Button(button_xbox_ctrl_names[i][0], button_xbox_ctrl_names[i][1],
-				button_xbox_ctrl_id[i], i, hwnd));
+			m_buttons.push_back(new Button(button_xbox_ctrl_id[i], i, hwnd));
 
 			// Install the subclass for the button control
 			SetWindowSubclass(GetDlgItem(hwnd, button_xbox_ctrl_id[i]), ButtonSubclassProc, 0, reinterpret_cast<DWORD_PTR>(m_buttons[i]));
@@ -131,10 +130,10 @@ Button* EmuDevice::FindButtonByIndex(int index)
 	return m_buttons[index];
 }
 
-void EmuDevice::BindXInput()
+void EmuDevice::BindDefault(int api)
 {
-	std::for_each(m_buttons.begin(), m_buttons.end(), [](const auto button) {
-		button->UpdateText();
+	std::for_each(m_buttons.begin(), m_buttons.end(), [&api](const auto button) {
+		button->UpdateText(button->GetName(api, button->GetIndex()).c_str());
 		});
 }
 

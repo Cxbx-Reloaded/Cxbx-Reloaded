@@ -99,9 +99,9 @@ INT_PTR CALLBACK DlgXidControllerConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wPar
 		}
 		break;
 
-		case IDC_XINP_DEFAULT: {
+		case IDC_XID_DEFAULT: {
 			if (HIWORD(wParam) == BN_CLICKED) {
-				g_InputWindow->BindXInput();
+				g_InputWindow->BindDefault();
 			}
 		}
 		break;

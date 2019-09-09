@@ -30,7 +30,7 @@
 #include "Button.h"
 #include "common\util\CxbxUtil.h"
 
-extern const char* button_xbox_ctrl_names[XBOX_CTRL_NUM_BUTTONS][2];
+extern const char* button_xbox_ctrl_names[XBOX_CTRL_NUM_BUTTONS][3];
 extern int dev_num_buttons[to_underlying(XBOX_INPUT_DEVICE::DEVICE_MAX)];
 
 
@@ -42,7 +42,7 @@ public:
 	~EmuDevice();
 	Button* FindButtonById(int id);
 	Button* FindButtonByIndex(int index);
-	void BindXInput();
+	void BindDefault(int api);
 	void ClearButtons();
 
 
