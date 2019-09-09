@@ -54,6 +54,7 @@ void InputWindow::Initialize(HWND hwnd, int port_num, int dev_type)
 	m_hwnd_window = hwnd;
 	m_hwnd_device_list = GetDlgItem(m_hwnd_window, IDC_DEVICE_LIST);
 	m_hwnd_profile_list = GetDlgItem(m_hwnd_window, IDC_XID_PROFILE_NAME);
+	m_hwnd_default = GetDlgItem(m_hwnd_window, IDC_XID_DEFAULT);
 	m_dev_type = dev_type;
 	m_max_num_buttons = dev_num_buttons[dev_type];
 	m_port_num = port_num;
@@ -232,10 +233,11 @@ void InputWindow::BindButton(int ControlID)
 	}
 }
 
-void InputWindow::BindXInput()
+void InputWindow::BindDefault()
 {
-	if (std::strncmp(m_host_dev.c_str(), "XInput", std::strlen("XInput")) == 0) {
-		m_DeviceConfig->BindXInput();
+	int api = EnableDefaultButton();
+	if (api != -1) {
+		m_DeviceConfig->BindDefault(api);
 		m_bHasChanges = true;
 	}
 }
@@ -245,6 +247,22 @@ void InputWindow::ClearBindings()
 	m_DeviceConfig->ClearButtons();
 	m_rumble = std::string();
 	m_bHasChanges = true;
+}
+
+int InputWindow::EnableDefaultButton()
+{
+	if (std::strncmp(m_host_dev.c_str(), "XInput", std::strlen("XInput")) == 0) {
+		EnableWindow(m_hwnd_default, TRUE);
+		return XINPUT_DEFAULT;
+	}
+	else if (std::strncmp(m_host_dev.c_str(), "DInput", std::strlen("DInput")) == 0) {
+		EnableWindow(m_hwnd_default, TRUE);
+		return DINPUT_DEFAULT;
+	}
+	else {
+		EnableWindow(m_hwnd_default, FALSE);
+		return -1;
+	}
 }
 
 InputWindow::ProfileIt InputWindow::FindProfile(std::string& name)
@@ -297,6 +315,7 @@ void InputWindow::LoadProfile(std::string& name)
 		return;
 	}
 	m_host_dev = profile->DeviceName;
+	EnableDefaultButton();
 	LRESULT dev_str_index = SendMessage(m_hwnd_device_list, CB_FINDSTRINGEXACT, 1, reinterpret_cast<LPARAM>(m_host_dev.c_str()));
 	if (dev_str_index == CB_ERR) {
 		SendMessage(m_hwnd_device_list, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(m_host_dev.c_str()));
@@ -391,6 +410,7 @@ void InputWindow::UpdateCurrentDevice()
 	char device_name[50];
 	SendMessage(m_hwnd_device_list, WM_GETTEXT, sizeof(device_name), reinterpret_cast<LPARAM>(device_name));
 	m_host_dev = device_name;
+	EnableDefaultButton();
 }
 
 void InputWindow::InitRumble(HWND hwnd)

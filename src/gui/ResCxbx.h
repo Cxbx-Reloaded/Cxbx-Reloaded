@@ -282,7 +282,7 @@
 #define IDC_CONFIGURE_PORT4             1284
 #define IDC_DEVICE_LIST                 1285
 #define IDC_REFRESH_DEVICES             1286
-#define IDC_XINP_DEFAULT                1287
+#define IDC_XID_DEFAULT                 1287
 #define IDC_XID_PROFILE                 1288
 #define IDC_XID_PROFILE_NAME            1289
 #define IDC_XID_PROFILE_SAVE            1291

@@ -40,6 +40,8 @@
 #define RUMBLE_CLEAR   7
 #define BUTTON_CLEAR   8
 
+#define XINPUT_DEFAULT 1
+#define DINPUT_DEFAULT 2
 
 LRESULT CALLBACK ProfileNameSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
 
@@ -52,7 +54,7 @@ public:
 	~InputWindow();
 	void UpdateDeviceList();
 	void BindButton(int ControlID);
-	void BindXInput();
+	void BindDefault();
 	void ClearBindings();
 	void UpdateProfile(std::string& name, int command);
 	void UpdateRumble(int command);
@@ -70,6 +72,7 @@ private:
 	void DeleteProfile(std::string& name);
 	void OverwriteProfile(std::string& name);
 	void LoadDefaultProfile();
+	int EnableDefaultButton();
 
 	// xbox device under configuration
 	EmuDevice* m_DeviceConfig;
@@ -83,6 +86,8 @@ private:
 	HWND m_hwnd_rumble;
 	// handle of the rumble combobox
 	HWND m_hwnd_rumble_list;
+	// handle of the default bindings button
+	HWND m_hwnd_default;
 	// type of the device
 	int m_dev_type;
 	// num of buttons of device under configuration
