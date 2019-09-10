@@ -64,7 +64,7 @@ public:
 
 private:
 	typedef std::vector<Settings::s_input_profiles>::iterator ProfileIt;
-	InputDevice::Input* DetectInput(InputDevice* const Device, int ms);
+	InputDevice::Input* DetectInput(InputDevice* const Device, Button* const xbox_button, int ms);
 	void DetectOutput(int ms);
 	ProfileIt FindProfile(std::string& name);
 	void LoadProfile(std::string& name);
@@ -100,6 +100,8 @@ private:
 	std::string m_rumble;
 	// indicates if the current profile has unsaved changes
 	bool m_bHasChanges;
+	// prevent current input attempt to set the previous input at same time
+	std::atomic<bool> m_bIsBinding;
 };
 
 extern InputWindow* g_InputWindow;
