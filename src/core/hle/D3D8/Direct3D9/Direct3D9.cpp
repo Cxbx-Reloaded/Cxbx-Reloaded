@@ -4737,6 +4737,14 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_CopyRects)
     D3DSURFACE_DESC SourceDesc, DestinationDesc;
     auto pHostSourceSurface = GetHostSurface(pSourceSurface);
     auto pHostDestSurface = GetHostSurface(pDestinationSurface);
+
+    if (pHostSourceSurface == nullptr || pHostDestSurface == nullptr) {
+        // Test Case: DOA2 attempts to copy from an index buffer resource type
+        // TODO: What should we do here?
+        LOG_TEST_CASE("D3DDevice-CopyRects: Failed to fetch host surfaces");
+        return;
+    }
+
     pHostSourceSurface->GetDesc(&SourceDesc);
     pHostDestSurface->GetDesc(&DestinationDesc);
 
