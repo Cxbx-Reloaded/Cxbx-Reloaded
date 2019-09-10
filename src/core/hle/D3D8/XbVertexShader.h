@@ -27,19 +27,6 @@
 
 #include "Cxbx.h"
 
-// nv2a microcode header
-typedef struct
-{
-    uint8_t Type;
-    uint8_t Version;
-    uint8_t NumInst;
-    uint8_t Unknown0;
-}
-X_VSH_SHADER_HEADER;
-
-#define X_VSH_INSTRUCTION_SIZE       4
-#define X_VSH_INSTRUCTION_SIZE_BYTES (X_VSH_INSTRUCTION_SIZE * sizeof(DWORD))
-
 // recompile xbox vertex shader declaration
 extern D3DVERTEXELEMENT *EmuRecompileVshDeclaration
 (
@@ -66,9 +53,9 @@ extern void FreeVertexDynamicPatch(CxbxVertexShader *pVertexShader);
 // Checks for failed vertex shaders, and shaders that would need patching
 extern boolean IsValidCurrentShader(void);
 
-inline boolean VshHandleIsVertexShader(DWORD Handle) { return (Handle & D3DFVF_RESERVED0) ? TRUE : FALSE; }
+inline boolean VshHandleIsVertexShader(DWORD Handle) { return (Handle & X_D3DFVF_RESERVED0) ? TRUE : FALSE; }
 inline boolean VshHandleIsFVF(DWORD Handle) { return !VshHandleIsVertexShader(Handle); }
-inline X_D3DVertexShader *VshHandleToXboxVertexShader(DWORD Handle) { return (X_D3DVertexShader *)(Handle & ~D3DFVF_RESERVED0);}
+inline X_D3DVertexShader *VshHandleToXboxVertexShader(DWORD Handle) { return (X_D3DVertexShader *)(Handle & ~X_D3DFVF_RESERVED0);}
 
 extern CxbxVertexShader* GetCxbxVertexShader(DWORD XboxVertexShaderHandle);
 extern void SetCxbxVertexShader(DWORD XboxVertexShaderHandle, CxbxVertexShader* shader);

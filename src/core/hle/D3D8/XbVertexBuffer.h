@@ -29,8 +29,6 @@
 
 //#include <ctime> // Conflict with io.h
 
-#define MAX_NBR_STREAMS 16
-
 typedef struct _CxbxDrawContext
 {
     IN     X_D3DPRIMITIVETYPE    XboxPrimitiveType;

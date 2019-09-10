@@ -53,8 +53,8 @@ UINT   g_InlineVertexBuffer_DataSize = 0;
 extern XTL::X_D3DVertexBuffer      *g_pVertexBuffer = NULL;
 
 extern DWORD				XTL::g_dwPrimPerFrame = 0;
-extern XTL::X_D3DVertexBuffer*g_D3DStreams[16];
-extern UINT g_D3DStreamStrides[16];
+extern XTL::X_D3DVertexBuffer*g_D3DStreams[X_VSH_MAX_STREAMS];
+extern UINT g_D3DStreamStrides[X_VSH_MAX_STREAMS];
 extern XTL::X_D3DSurface* g_pXboxRenderTarget;
 extern XTL::X_D3DSurface* g_XboxBackBufferSurface;
 void *GetDataFromXboxResource(XTL::X_D3DResource *pXboxResource);
@@ -136,7 +136,7 @@ size_t GetVerticesInBuffer(DWORD dwOffset, DWORD dwVertexCount, PWORD pIndexData
 int CountActiveD3DStreams()
 {
 	int lastStreamIndex = 0;
-	for (int i = 0; i < 16; i++) {
+	for (int i = 0; i < X_VSH_MAX_STREAMS; i++) {
 		if (g_D3DStreams[i] != xbnullptr) {
 			lastStreamIndex = i + 1;
 		}
@@ -157,7 +157,7 @@ UINT XTL::CxbxVertexBufferConverter::GetNbrStreams(CxbxDrawContext *pDrawContext
     if(VshHandleIsVertexShader(pDrawContext->XboxVertexShaderHandle)) {
         CxbxVertexShaderInfo *pVertexShaderInfo = GetCxbxVertexShaderInfo(pDrawContext->XboxVertexShaderHandle);
 		if (pVertexShaderInfo) {
-			if (pVertexShaderInfo->NumberOfVertexStreams <= 16) {
+			if (pVertexShaderInfo->NumberOfVertexStreams <= X_VSH_MAX_STREAMS) {
 				return pVertexShaderInfo->NumberOfVertexStreams;
 			}
 
@@ -242,17 +242,17 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
 	DWORD XboxFVF = bVshHandleIsFVF ? pDrawContext->XboxVertexShaderHandle : 0;
 	// Texture normalization can only be set for FVF shaders
 	bool bNeedTextureNormalization = false;
-	struct { int NrTexCoords; bool bTexIsLinear; int Width; int Height; int Depth; } pActivePixelContainer[X_D3DTS_STAGECOUNT] = { 0 };
+	struct { int NrTexCoords; bool bTexIsLinear; int Width; int Height; int Depth; } pActivePixelContainer[XTL::X_D3DTS_STAGECOUNT] = { 0 };
 
 	if (bVshHandleIsFVF) {
 		DWORD dwTexN = (XboxFVF & D3DFVF_TEXCOUNT_MASK) >> D3DFVF_TEXCOUNT_SHIFT;
-		if (dwTexN > X_D3DTS_STAGECOUNT) {
+		if (dwTexN > XTL::X_D3DTS_STAGECOUNT) {
 			LOG_TEST_CASE("FVF,dwTexN > X_D3DTS_STAGECOUNT");
 		}
 
 		// Check for active linear textures.
-		//X_D3DBaseTexture *pLinearBaseTexture[X_D3DTS_STAGECOUNT];
-		for (unsigned int i = 0; i < X_D3DTS_STAGECOUNT; i++) {
+		//X_D3DBaseTexture *pLinearBaseTexture[XTL::X_D3DTS_STAGECOUNT];
+		for (unsigned int i = 0; i < XTL::X_D3DTS_STAGECOUNT; i++) {
 			// Only normalize coordinates used by the FVF shader :
 			if (i + 1 <= dwTexN) {
 				pActivePixelContainer[i].NrTexCoords = DxbxFVF_GetNumberOfTextureCoordinates(XboxFVF, i);
@@ -730,7 +730,7 @@ void XTL::CxbxVertexBufferConverter::ConvertStream
 			// Normalize texture coordinates in FVF stream if needed
 			if (uiTextureCoordinatesByteOffsetInVertex > 0) { // implies bNeedTextureNormalization (using one is more efficient than both)
 				FLOAT *pVertexUVData = (FLOAT*)((uintptr_t)pVertexDataAsFloat + uiTextureCoordinatesByteOffsetInVertex);
-				for (unsigned int i = 0; i < X_D3DTS_STAGECOUNT; i++) {
+				for (unsigned int i = 0; i < XTL::X_D3DTS_STAGECOUNT; i++) {
 					if (pActivePixelContainer[i].bTexIsLinear) {
 						switch (pActivePixelContainer[i].NrTexCoords) {
 						case 0:
@@ -803,9 +803,9 @@ void XTL::CxbxVertexBufferConverter::Apply(CxbxDrawContext *pDrawContext)
 
     // Get the number of streams
     m_uiNbrStreams = GetNbrStreams(pDrawContext);
-	if (m_uiNbrStreams > 16) {
+	if (m_uiNbrStreams > X_VSH_MAX_STREAMS) {
 		LOG_TEST_CASE("m_uiNbrStreams count > max number of streams");
-		m_uiNbrStreams = 16;
+		m_uiNbrStreams = X_VSH_MAX_STREAMS;
 	}
 
     for(UINT uiStream = 0; uiStream < m_uiNbrStreams; uiStream++) {
@@ -870,7 +870,7 @@ VOID XTL::EmuFlushIVB()
 
 	DWORD dwPos = dwCurFVF & D3DFVF_POSITION_MASK;
 	DWORD dwTexN = (dwCurFVF & D3DFVF_TEXCOUNT_MASK) >> D3DFVF_TEXCOUNT_SHIFT;
-	size_t TexSize[X_D3DTS_STAGECOUNT]; // Xbox supports up to 4 textures (TEXTURE_STAGES)
+	size_t TexSize[XTL::X_D3DTS_STAGECOUNT]; // Xbox supports up to 4 textures
 
 	for (unsigned int i = 0; i < dwTexN; i++) {
 		TexSize[i] = DxbxFVF_GetNumberOfTextureCoordinates(dwCurFVF, i);

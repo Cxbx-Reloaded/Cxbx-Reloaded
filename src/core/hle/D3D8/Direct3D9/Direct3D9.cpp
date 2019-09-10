@@ -48,7 +48,7 @@ namespace xboxkrnl
 #include "Logging.h"
 #include "..\XbD3D8Logging.h"
 #include "core\hle\Intercept.hpp" // for bLLE_GPU
-#include "devices\video\nv2a.h" // For GET_MASK, NV_PGRAPH_CONTROL_0
+#include "devices\video\nv2a.h" // For GET_MASK, NV_PGRAPH_CONTROL_0, PUSH_METHOD
 #include "gui\ResCxbx.h"
 #include "WalkIndexBuffer.h"
 #include "core\kernel\common\strings.hpp" // For uem_str
@@ -164,8 +164,8 @@ XTL::X_D3DSurface                  *g_XboxBackBufferSurface = NULL;
 static XTL::X_D3DSurface           *g_XboxDefaultDepthStencilSurface = NULL;
 XTL::X_D3DSurface                  *g_pXboxRenderTarget = NULL;
 static XTL::X_D3DSurface           *g_pXboxDepthStencil = NULL;
-static DWORD                        g_dwVertexShaderUsage = 0;
-static DWORD                        g_VertexShaderSlots[VSH_XBOX_MAX_INSTRUCTION_COUNT];
+static DWORD                        g_dwVertexShaderUsage = 0; // TODO : Move to XbVertexShader.cpp
+static DWORD                        g_VertexShaderSlots[X_VSH_MAX_INSTRUCTION_COUNT];
 
 DWORD g_XboxBaseVertexIndex = 0;
 DWORD g_DefaultPresentationInterval = D3DPRESENT_INTERVAL_IMMEDIATE;
@@ -177,16 +177,16 @@ XTL::X_D3DVertexBuffer*g_D3DStreams[16];
 UINT g_D3DStreamStrides[16];
 
 // cached palette pointer
-static PVOID g_pCurrentPalette[TEXTURE_STAGES] = { nullptr, nullptr, nullptr, nullptr };
+static PVOID g_pCurrentPalette[XTL::X_D3DTS_STAGECOUNT] = { nullptr, nullptr, nullptr, nullptr };
 
-static XTL::X_VERTEXSHADERCONSTANTMODE g_VertexShaderConstantMode = X_D3DSCM_192CONSTANTS;
+static XTL::X_VERTEXSHADERCONSTANTMODE g_VertexShaderConstantMode = X_D3DSCM_192CONSTANTS; // TODO : Move to XbVertexShader.cpp
 
 // cached Direct3D tiles
 XTL::X_D3DTILE XTL::EmuD3DTileCache[0x08] = {0};
 
 // cached active texture
-XTL::X_D3DBaseTexture *XTL::EmuD3DActiveTexture[TEXTURE_STAGES] = {0,0,0,0};
-XTL::X_D3DBaseTexture CxbxActiveTextureCopies[TEXTURE_STAGES] = {};
+XTL::X_D3DBaseTexture *XTL::EmuD3DActiveTexture[XTL::X_D3DTS_STAGECOUNT] = {0,0,0,0};
+XTL::X_D3DBaseTexture CxbxActiveTextureCopies[XTL::X_D3DTS_STAGECOUNT] = {};
 
 // information passed to the create device proxy thread
 struct EmuD3D8CreateDeviceProxyData
@@ -3011,6 +3011,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_GetVisibilityTestResult)
 
     return D3D_OK;
 }
+
 // LTCG specific D3DDevice_LoadVertexShader function...
 // This uses a custom calling convention where parameter is passed in EAX, ECX
 // Test-case: Aggressive Inline
@@ -4098,11 +4099,11 @@ VOID __fastcall XTL::EMUPATCH(D3DDevice_SwitchTexture)
 		LOG_FUNC_ARG(Format)
 		LOG_FUNC_END;
 
-    DWORD StageLookup[TEXTURE_STAGES] = { 0x00081b00, 0x00081b40, 0x00081b80, 0x00081bc0 };
+    DWORD StageLookup[XTL::X_D3DTS_STAGECOUNT] = { 0x00081b00, 0x00081b40, 0x00081b80, 0x00081bc0 };
 	// This array contains D3DPUSH_ENCODE(NV2A_TX_OFFSET(v), 2) = 2 DWORD's, shifted left PUSH_COUNT_SHIFT (18) left
     DWORD Stage = -1;
 
-    for (int v = 0; v < TEXTURE_STAGES; v++) {
+    for (int v = 0; v < XTL::X_D3DTS_STAGECOUNT; v++) {
         if (StageLookup[v] == Method) {
             Stage = v;
 			break;
@@ -4286,7 +4287,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexData4f)
 		// not present in the vertex declaration.
 		// We use range 193 and up to store these values, as Xbox shaders stop at c192!
 		FLOAT values[] = {a,b,c,d};
-		g_pD3DDevice->SetVertexShaderConstantF(X_D3DVS_CONSTREG_VERTEXDATA4F_BASE + Register, values, 1);
+		g_pD3DDevice->SetVertexShaderConstantF(CXBX_D3DVS_CONSTREG_VERTEXDATA4F_BASE + Register, values, 1);
 	}
 
 	// Grow g_InlineVertexBuffer_Table to contain at least current, and a potentially next vertex
@@ -6553,7 +6554,7 @@ VOID __fastcall XTL::EMUPATCH(D3DDevice_SetRenderState_Simple)
     // Special Case: Handle PixelShader related Render States
     // TODO: Port over EmuMappedD3DRenderState and related code from Dxbx or Wip_LessVertexPatching
     // After this, we don't need to do this part anymore
-    switch (Method & 0x00001FFC) {
+    switch (PUSH_METHOD(Method)) {
         case NV2A_RC_IN_ALPHA(0): TemporaryPixelShaderRenderStates[X_D3DRS_PSALPHAINPUTS0] = Value; return;
         case NV2A_RC_IN_ALPHA(1): TemporaryPixelShaderRenderStates[X_D3DRS_PSALPHAINPUTS1] = Value; return;
         case NV2A_RC_IN_ALPHA(2): TemporaryPixelShaderRenderStates[X_D3DRS_PSALPHAINPUTS2] = Value; return;
@@ -6616,7 +6617,7 @@ VOID __fastcall XTL::EMUPATCH(D3DDevice_SetRenderState_Simple)
     // Fetch the RenderState conversion info for the given input
     int XboxRenderStateIndex = -1;
     for (int i = 0; i <= X_D3DRS_DONOTCULLUNCOMPRESSED; i++) {
-        if (DxbxRenderStateInfo[i].M == (Method & 0x00001FFC)) {
+        if (DxbxRenderStateInfo[i].M == PUSH_METHOD(Method)) {
             XboxRenderStateIndex = i;
             break;
         }
@@ -7331,10 +7332,10 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexShader)
 		static const float ColorBlack[4] = { 0,0,0,0 };
 		static const float ColorWhite[4] = { 1,1,1,1 };
 
-		g_pD3DDevice->SetVertexShaderConstantF(X_D3DVS_CONSTREG_VERTEXDATA4F_BASE + X_D3DVSDE_DIFFUSE, ColorWhite, 1);
-		g_pD3DDevice->SetVertexShaderConstantF(X_D3DVS_CONSTREG_VERTEXDATA4F_BASE + X_D3DVSDE_BACKDIFFUSE, ColorWhite, 1);
-		g_pD3DDevice->SetVertexShaderConstantF(X_D3DVS_CONSTREG_VERTEXDATA4F_BASE + X_D3DVSDE_SPECULAR, ColorBlack, 1);
-		g_pD3DDevice->SetVertexShaderConstantF(X_D3DVS_CONSTREG_VERTEXDATA4F_BASE + X_D3DVSDE_BACKSPECULAR, ColorBlack, 1);
+		g_pD3DDevice->SetVertexShaderConstantF(CXBX_D3DVS_CONSTREG_VERTEXDATA4F_BASE + XTL::X_D3DVSDE_DIFFUSE, ColorWhite, 1);
+		g_pD3DDevice->SetVertexShaderConstantF(CXBX_D3DVS_CONSTREG_VERTEXDATA4F_BASE + XTL::X_D3DVSDE_BACKDIFFUSE, ColorWhite, 1);
+		g_pD3DDevice->SetVertexShaderConstantF(CXBX_D3DVS_CONSTREG_VERTEXDATA4F_BASE + XTL::X_D3DVSDE_SPECULAR, ColorBlack, 1);
+		g_pD3DDevice->SetVertexShaderConstantF(CXBX_D3DVS_CONSTREG_VERTEXDATA4F_BASE + XTL::X_D3DVSDE_BACKSPECULAR, ColorBlack, 1);
 	} else {
 		hRet = g_pD3DDevice->SetVertexShader(nullptr);
 		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetVertexShader");
@@ -7685,7 +7686,7 @@ void EmuUpdateActiveTextureStages()
 {
 	LOG_INIT;
 
-	for (int i = 0; i < TEXTURE_STAGES; i++)
+	for (int i = 0; i < XTL::X_D3DTS_STAGECOUNT; i++)
 	{
 		XTL::X_D3DBaseTexture *pBaseTexture = XTL::EmuD3DActiveTexture[i];
 		if (pBaseTexture == nullptr) {
@@ -8322,7 +8323,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetPalette)
 	//    g_pD3DDevice9->SetPaletteEntries(Stage?, (PALETTEENTRY*)pPalette->Data);
 	//    g_pD3DDevice9->SetCurrentTexturePalette(Stage, Stage);
 
-	if (Stage < TEXTURE_STAGES) {
+	if (Stage < XTL::X_D3DTS_STAGECOUNT) {
 		if (g_pCurrentPalette[Stage] != GetDataFromXboxResource(pPalette) && XTL::EmuD3DActiveTexture[Stage] != nullptr) {
 			// If the palette for a texture has changed, we need to re-convert the texture
 			FreeHostResource(GetHostResourceKey(XTL::EmuD3DActiveTexture[Stage]));
@@ -8354,7 +8355,7 @@ VOID WINAPI XTL::EMUPATCH(D3DPalette_Lock)
 	XB_D3DPalette_Lock(pThis, ppColors, Flags);
 
 	// Check if this palette is in use by a texture stage, and force it to be re-converted if yes
-	for (int i = 0; i < TEXTURE_STAGES; i++) {
+	for (int i = 0; i < XTL::X_D3DTS_STAGECOUNT; i++) {
 		if (EmuD3DActiveTexture[i] != nullptr && g_pCurrentPalette[i] == GetDataFromXboxResource(pThis)) {
 			FreeHostResource(GetHostResourceKey(EmuD3DActiveTexture[i]));
 		}
@@ -8379,7 +8380,7 @@ XTL::D3DCOLOR * WINAPI XTL::EMUPATCH(D3DPalette_Lock2)
 	XTL::D3DCOLOR* pData = XB_D3DPalette_Lock2(pThis, Flags);
 
 	// Check if this palette is in use by a texture stage, and force it to be re-converted if yes
-	for (int i = 0; i < TEXTURE_STAGES; i++) {
+	for (int i = 0; i < XTL::X_D3DTS_STAGECOUNT; i++) {
 		if (EmuD3DActiveTexture[i] != nullptr && g_pCurrentPalette[i] == GetDataFromXboxResource(pThis)) {
 			FreeHostResource(GetHostResourceKey(EmuD3DActiveTexture[i]));
 		}
@@ -9448,7 +9449,7 @@ bool DestroyResource_Common(XTL::X_D3DResource* pResource)
         return false;
     }
 
-    for (int i = 0; i < TEXTURE_STAGES; i++) {
+    for (int i = 0; i < XTL::X_D3DTS_STAGECOUNT; i++) {
         if (pResource == XTL::EmuD3DActiveTexture[i]) {
             LOG_TEST_CASE("Skipping Release of active Xbox Texture");
             return false;
