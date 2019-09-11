@@ -1738,7 +1738,7 @@ class XboxVertexDeclarationConverter
 protected:
 	// Internal variables
 	XTL::CxbxVertexShaderInfo* pVertexShaderInfoToSet;
-	XTL::CxbxVertexShaderStreamInfo* pCurrentVertexShaderStreamInfo;
+	XTL::CxbxVertexShaderStreamInfo* pCurrentVertexShaderStreamInfo = nullptr;
 	DWORD temporaryCount;
 	bool IsFixedFunction;
 	XTL::D3DVERTEXELEMENT* pRecompiled;
