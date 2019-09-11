@@ -31,8 +31,11 @@
 
 #include "core\kernel\support\Emu.h"
 #include "core\kernel\support\EmuXTL.h"
-#include "XbD3D8Types.h" // For X_D3DFORMAT
+namespace XTL {
+	#include "core\hle\D3D8\XbD3D8Types.h" // For X_D3DFORMAT
+}
 #include "core\hle\D3D8\ResourceTracker.h"
+#include "core\hle\D3D8\XbPushBuffer.h"
 #include "devices/video/nv2a.h" // For g_NV2A, PGRAPHState
 #include "devices/video/nv2a_int.h" // For NV** defines
 #include "Logging.h"
@@ -47,7 +50,7 @@ static void DbgDumpMesh(WORD *pIndexData, DWORD dwCount);
 
 // Determine the size (in number of floating point texture coordinates) of the texture format (indexed 0 .. 3).
 // This is the reverse of the D3DFVF_TEXCOORDSIZE[0..3] macros.
-int XTL::DxbxFVF_GetNumberOfTextureCoordinates(DWORD dwFVF, int aTextureIndex)
+int DxbxFVF_GetNumberOfTextureCoordinates(DWORD dwFVF, int aTextureIndex)
 {
 	// See D3DFVF_TEXCOORDSIZE1()
 	switch ((dwFVF >> ((aTextureIndex * 2) + 16)) & 3) {
@@ -63,7 +66,7 @@ int XTL::DxbxFVF_GetNumberOfTextureCoordinates(DWORD dwFVF, int aTextureIndex)
 
 // Dxbx Note: This code appeared in EmuExecutePushBufferRaw and occured
 // in EmuFlushIVB too, so it's generalize in this single implementation.
-UINT XTL::DxbxFVFToVertexSizeInBytes(DWORD dwFVF, BOOL bIncludeTextures)
+UINT DxbxFVFToVertexSizeInBytes(DWORD dwFVF, BOOL bIncludeTextures)
 {
 /*
 	X_D3DFVF_POSITION_MASK    = $00E; // Dec  /2  #fl
@@ -115,12 +118,14 @@ UINT XTL::DxbxFVFToVertexSizeInBytes(DWORD dwFVF, BOOL bIncludeTextures)
 	return Result;
 }
 
-void XTL::EmuExecutePushBuffer
+void EmuExecutePushBuffer
 (
-    X_D3DPushBuffer       *pPushBuffer,
-    X_D3DFixup            *pFixup
+	XTL::X_D3DPushBuffer       *pPushBuffer,
+	XTL::X_D3DFixup            *pFixup
 )
 {
+	using namespace XTL;
+
 	//Check whether Fixup exists or not. 
 	if (pFixup != NULL) {
 		LOG_TEST_CASE("PushBuffer has fixups");
@@ -451,12 +456,14 @@ typedef union {
 	#define COMMAND_WORD_MASK_JUMP_LONG 0xFFFFFFFC /*  2 .. 28 */
 } nv_fifo_command;
 
-extern void XTL::EmuExecutePushBufferRaw
+extern void EmuExecutePushBufferRaw
 (
 	void *pPushData,
 	uint32_t uSizeInBytes
 )
 {
+	using namespace XTL; // for logging
+
 	HLE_init_pgraph_plugins(); // TODO : Move to more approriate spot
 
 	// Test-case : Azurik (see https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/issues/360)
@@ -492,7 +499,7 @@ extern void XTL::EmuExecutePushBufferRaw
 	uint32_t *dma_put; // pushbuffer current end address
 	uint32_t *dma_get; //pushbuffer current read address
 	struct {
-		NV2AMETHOD mthd; // Current method
+		XTL::NV2AMETHOD mthd; // Current method
 		uint32_t subc; // :3 = Current subchannel
 		uint32_t mcnt; // :24 = Current method count
 		bool ni; // Current command's NI (non-increasing) flag

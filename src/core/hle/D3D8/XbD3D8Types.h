@@ -1111,8 +1111,6 @@ const int X_D3DVSDT_PBYTE4      = 0x44; // xbox ext. 4D packed byte expanded to 
 const int X_D3DVSDT_FLOAT2H     = 0x72; // xbox ext. 3D float that expands to (value, value, 0.0, value). Useful for projective texture coordinates.
 const int X_D3DVSDT_NONE        = 0x02; // xbox ext. nsp
 
-typedef WORD INDEX16;
-
 typedef enum _X_D3DVSD_TOKENTYPE
 {
 	X_D3DVSD_TOKEN_NOP = 0,           // NOP or extension
@@ -1210,96 +1208,6 @@ typedef DWORD NV2AMETHOD;
 //
 
 // Host vertex shader counts
-#define VSH_MAX_TEMPORARY_REGISTERS 32
-#define VSH_MAX_INTERMEDIATE_COUNT     1024 // The maximum number of intermediate format slots
-#define VSH_VS11_MAX_INSTRUCTION_COUNT 128
-#define VSH_VS2X_MAX_INSTRUCTION_COUNT 256
-#define VSH_VS30_MAX_INSTRUCTION_COUNT 512
-
 #define CXBX_D3DVS_CONSTREG_VERTEXDATA4F_BASE   (X_D3DVS_CONSTREG_COUNT + 1)
-
-typedef struct _CxbxPixelShader
-{
-	//IDirect3DPixelShader* pShader;
-	//ID3DXConstantTable *pConstantTable;
-	DWORD Handle;
-
-	BOOL bBumpEnvMap;
-
-	// constants
-	DWORD PSRealC0[8];
-	DWORD PSRealC1[8];
-	DWORD PSRealFC0;
-	DWORD PSRealFC1;
-
-	BOOL bConstantsInitialized;
-	BOOL bConstantsChanged;
-
-	DWORD dwStatus;
-	X_D3DPIXELSHADERDEF	PSDef;
-
-	DWORD dwStageMap[X_D3DTS_STAGECOUNT];
-
-}
-CxbxPixelShader;
-
-typedef struct _CxbxVertexShaderStreamElement
-{
-	UINT XboxType; // The stream element data types (xbox)
-	UINT HostByteSize; // The stream element data sizes (pc)
-}
-CxbxVertexShaderStreamElement;
-
-/* See host typedef struct _D3DVERTEXELEMENT9
-{
-	WORD    Stream;     // Stream index
-	WORD    Offset;     // Offset in the stream in bytes
-	BYTE    Type;       // Data type
-	BYTE    Method;     // Processing method
-	BYTE    Usage;      // Semantics
-	BYTE    UsageIndex; // Semantic index
-} D3DVERTEXELEMENT9, *LPD3DVERTEXELEMENT9;
-*/
-
-typedef struct _CxbxVertexShaderStreamInfo
-{
-	BOOL  NeedPatch;       // This is to know whether it's data which must be patched
-	BOOL DeclPosition;
-	WORD HostVertexStride;
-	DWORD NumberOfVertexElements;        // Number of the stream data types
-	WORD CurrentStreamNumber;
-	CxbxVertexShaderStreamElement VertexElements[X_VSH_MAX_ATTRIBUTES + 16]; // TODO : Why 16 extrahost additions?)
-}
-CxbxVertexShaderStreamInfo;
-
-typedef struct _CxbxVertexShaderInfo
-{
-	UINT                       NumberOfVertexStreams; // The number of streams the vertex shader uses
-	CxbxVertexShaderStreamInfo VertexStreams[X_VSH_MAX_STREAMS];
-}
-CxbxVertexShaderInfo;
-
-typedef struct _CxbxVertexShader
-{
-	// These are the parameters given by the XBE,
-	// we save them to be able to return them when necessary.
-	DWORD* pXboxDeclarationCopy;
-	DWORD                 XboxDeclarationCount; // Xbox's number of DWORD-sized X_D3DVSD* tokens
-	DWORD                 XboxFunctionSize;
-	DWORD* pXboxFunctionCopy;
-	UINT                  XboxNrAddressSlots;
-	DWORD                 XboxVertexShaderType;
-	// DWORD              XboxStatus; // Used by VshHandleIsValidShader()
-
-	// The resulting host variables
-	DWORD HostFVF; // Flexible Vertex Format (used when there's no host vertex shader)
-	XTL::IDirect3DVertexShader* pHostVertexShader; // if nullptr, use SetFVF(HostFVF);
-	XTL::IDirect3DVertexDeclaration* pHostVertexDeclaration;
-	DWORD                 HostDeclarationSize;
-
-	// Needed for dynamic stream patching
-	CxbxVertexShaderInfo  VertexShaderInfo;
-}
-CxbxVertexShader;
 
 #endif

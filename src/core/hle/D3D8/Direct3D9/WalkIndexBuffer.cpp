@@ -11,13 +11,13 @@
 // Walk an index buffer to find the minimum and maximum indices
 
 // Default implementation
-void WalkIndexBuffer_NoSIMD(XTL::INDEX16 & LowIndex, XTL::INDEX16 & HighIndex, XTL::INDEX16 * pIndexData, DWORD dwIndexCount)
+void WalkIndexBuffer_NoSIMD(INDEX16 & LowIndex, INDEX16 & HighIndex, INDEX16 * pIndexData, DWORD dwIndexCount)
 {
 	// Determine highest and lowest index in use 
 	LowIndex = pIndexData[0];
 	HighIndex = LowIndex;
 	for (unsigned int i = 1; i < dwIndexCount; i++) {
-		XTL::INDEX16 Index = pIndexData[i];
+		INDEX16 Index = pIndexData[i];
 		if (LowIndex > Index)
 			LowIndex = Index;
 		if (HighIndex < Index)
@@ -26,7 +26,7 @@ void WalkIndexBuffer_NoSIMD(XTL::INDEX16 & LowIndex, XTL::INDEX16 & HighIndex, X
 }
 
 //SSE 4.1 implementation
-void WalkIndexBuffer_SSE41(XTL::INDEX16 & LowIndex, XTL::INDEX16 & HighIndex, XTL::INDEX16 * pIndexData, DWORD dwIndexCount)
+void WalkIndexBuffer_SSE41(INDEX16 & LowIndex, INDEX16 & HighIndex, INDEX16 * pIndexData, DWORD dwIndexCount)
 {
 	// We can fit 8 ushorts into 128 bit SIMD registers
 	int iterations = dwIndexCount / 8;
@@ -58,8 +58,8 @@ void WalkIndexBuffer_SSE41(XTL::INDEX16 & LowIndex, XTL::INDEX16 & HighIndex, XT
 	max = _mm_minpos_epu16(max);
 
 	// Get the min and max out
-	LowIndex = (XTL::INDEX16) _mm_cvtsi128_si32(min);
-	HighIndex = (XTL::INDEX16) USHRT_MAX - _mm_cvtsi128_si32(max); // invert back
+	LowIndex = (INDEX16) _mm_cvtsi128_si32(min);
+	HighIndex = (INDEX16) USHRT_MAX - _mm_cvtsi128_si32(max); // invert back
 
 	// Compare with the remaining values that didn't fit neatly into the SIMD registers
 	for (DWORD i = dwIndexCount - remainder; i < dwIndexCount; i++) {
@@ -74,8 +74,8 @@ void WalkIndexBuffer_SSE41(XTL::INDEX16 & LowIndex, XTL::INDEX16 & HighIndex, XT
 // TODO AVX2, AVX512 implementations
 
 // Detect SSE support to select real implementation on first call
-void(*WalkIndexBuffer)(XTL::INDEX16 &, XTL::INDEX16 &, XTL::INDEX16 *, DWORD) =
-[](XTL::INDEX16 &LowIndex, XTL::INDEX16 &HighIndex, XTL::INDEX16 *pIndexData, DWORD dwIndexCount)
+void(*WalkIndexBuffer)(INDEX16 &, INDEX16 &, INDEX16 *, DWORD) =
+[](INDEX16 &LowIndex, INDEX16 &HighIndex, INDEX16 *pIndexData, DWORD dwIndexCount)
 {
 	SimdCaps supports;
 	if (supports.SSE41())

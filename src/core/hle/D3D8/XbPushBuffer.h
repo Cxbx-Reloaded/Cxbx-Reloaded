@@ -25,6 +25,8 @@
 #ifndef XBPUSHBUFFER_H
 #define XBPUSHBUFFER_H
 
+#include "core/hle/D3D8/XbVertexBuffer.h" // for CxbxDrawContext
+
 extern int DxbxFVF_GetNumberOfTextureCoordinates(DWORD dwFVF, int aTextureIndex);
 extern UINT DxbxFVFToVertexSizeInBytes(DWORD dwFVF, BOOL bIncludeTextures);
 
@@ -33,8 +35,8 @@ extern void CxbxDrawPrimitiveUP(CxbxDrawContext &DrawContext);
 
 extern void EmuExecutePushBuffer
 (
-    X_D3DPushBuffer       *pPushBuffer,
-    X_D3DFixup            *pFixup
+	XTL::X_D3DPushBuffer       *pPushBuffer,
+	XTL::X_D3DFixup            *pFixup
 );
 
 extern void EmuExecutePushBufferRaw
