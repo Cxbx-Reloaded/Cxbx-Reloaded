@@ -2223,10 +2223,59 @@ private:
 		return Step;
 	}
 
+	DWORD* RemoveXboxDeclarationRedefinition(DWORD* pXboxDeclaration)
+	{
+		// Detect and remove register redefinitions by preprocessing the Xbox Vertex Declaration
+		// Test Case: King Kong
+
+		// Find the last token
+		DWORD* pXboxToken = pXboxDeclaration;
+		while (*pXboxToken != X_D3DVSD_END()){
+			pXboxToken++;
+		}
+
+		// Operate on a copy of the Xbox declaration, rather than messing with the Xbox's memory
+		auto declarationBytes = sizeof(DWORD) * (pXboxToken - pXboxDeclaration + 1);
+		auto pXboxDeclarationCopy = (DWORD*)malloc(declarationBytes);
+		memcpy(pXboxDeclarationCopy, pXboxDeclaration, declarationBytes);
+		pXboxToken = pXboxDeclarationCopy + (pXboxToken - pXboxDeclaration); // Move to end of the copy
+
+		// Remember if we've seen a given output register
+		std::array<bool, 16> seen{};
+
+		// We want to keep later definitions, and remove earlier ones
+		// Scan back from the end of the declaration, and replace redefinitions with nops
+		while (pXboxToken > pXboxDeclarationCopy) {
+			auto type = VshGetTokenType(*pXboxToken);
+			if (type == XTL::X_D3DVSD_TOKEN_STREAMDATA && !(*pXboxToken & X_D3DVSD_MASK_SKIP) ||
+				type == XTL::X_D3DVSD_TOKEN_TESSELLATOR)
+			{
+				auto outputRegister = VshGetVertexRegister(*pXboxToken);
+				if (seen[outputRegister])
+				{
+					// Blank out tokens for mapped registers
+					*pXboxToken = X_D3DVSD_NOP();
+					EmuLog(LOG_LEVEL::DEBUG, "Replacing duplicate definition of register %d with D3DVSD_NOP", outputRegister);
+				}
+				else
+				{
+					// Mark register as seen
+					seen[outputRegister] = true;
+				}
+			}
+
+			pXboxToken--;
+		}
+
+		return pXboxDeclarationCopy;
+	}
+
 public:
 	XTL::D3DVERTEXELEMENT *Convert(DWORD* pXboxDeclaration, bool bIsFixedFunction, XTL::CxbxVertexShaderInfo* pCxbxVertexShaderInfo)
 	{
 		using namespace XTL;
+
+		pXboxDeclaration = RemoveXboxDeclarationRedefinition(pXboxDeclaration);
 
 		pVertexShaderInfoToSet = pCxbxVertexShaderInfo;
 		temporaryCount = g_D3DCaps.VS20Caps.NumTemps;
@@ -2265,6 +2314,12 @@ public:
 		}
 
 		*pRecompiled = D3DDECL_END();
+
+		// Ensure valid ordering of the vertex declaration (http://doc.51windows.net/Directx9_SDK/graphics/programmingguide/gettingstarted/vertexdeclaration/vertexdeclaration.htm)
+		// In particular "All vertex elements for a stream must be consecutive and sorted by offset"
+		// Test case: King Kong (due to register redefinition)
+		std::sort(Result, pRecompiled, [] (const auto& x, const auto& y)
+			{ return std::tie(x.Stream, x.Offset) < std::tie(y.Stream, y.Offset); });
 
 		VshEndPreviousStreamPatch();
 		DbgVshPrintf("\tD3DVSD_END()\n};\n");
