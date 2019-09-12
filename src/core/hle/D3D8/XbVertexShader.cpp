@@ -38,9 +38,15 @@
 #include <unordered_map>
 #include <array>
 
-#ifdef CXBX_USE_VS30
 //#define CXBX_USE_VS30 // Separate the port to Vertex Shader model 3.0 from the port to Direct3D9
+#ifdef CXBX_USE_VS30
+	#define VSH_MAX_INSTRUCTION_COUNT VSH_VS30_MAX_INSTRUCTION_COUNT // == 512
+#else 
+	#define VSH_MAX_INSTRUCTION_COUNT VSH_VS2X_MAX_INSTRUCTION_COUNT // == 256
 #endif
+
+// Host Vertex Shader version (mustn't conflict with any VERSION_XVS*)
+#define VERSION_CXBX 0x7863 // 'cx' Cxbx vertex shader, not an official value, used in VshConvertShader() and VshWriteShader()
 
 #define DbgVshPrintf \
 	LOG_CHECK_ENABLED(LOG_LEVEL::DEBUG) \
@@ -842,7 +848,7 @@ static void VshWriteShader(VSH_XBOX_SHADER *pShader,
 {
     switch(pShader->ShaderHeader.Version)
     {
-        case VERSION_VS:
+        case VERSION_CXBX:
 #ifdef CXBX_USE_VS30
 			pDisassembly << "vs.3.0\n";
 #else
@@ -876,7 +882,7 @@ static void VshWriteShader(VSH_XBOX_SHADER *pShader,
 					// We need to move these constant values to temporaries so they can be used as input alongside other constants!
 					// We count down from the highest available on the host because Xbox titles don't use values that high, and we read from c192 (one above maximum Xbox c191 constant) and up
 					static int temporaryRegisterBase = g_D3DCaps.VS20Caps.NumTemps - 13;
-					moveConstantsToTemporaries << "mov r" << (temporaryRegisterBase + i) << ", c" << (X_D3DVS_CONSTREG_VERTEXDATA4F_BASE + i) << "\n";
+					moveConstantsToTemporaries << "mov r" << (temporaryRegisterBase + i) << ", c" << (CXBX_D3DVS_CONSTREG_VERTEXDATA4F_BASE + i) << "\n";
 					LOG_TEST_CASE("Shader uses undeclared Vertex Input Registers");
 					i++;
 					continue;
@@ -1010,7 +1016,7 @@ static void VshAddParameters(VSH_SHADER_INSTRUCTION  *pInstruction,
 
 static void VshVerifyBufferBounds(VSH_XBOX_SHADER *pShader)
 {
-    if(pShader->IntermediateCount == VSH_MAX_INTERMEDIATE_COUNT)
+    if(pShader->IntermediateCount >= VSH_MAX_INTERMEDIATE_COUNT)
     {
         CxbxKrnlCleanup("Shader exceeds conversion buffer!");
     }
@@ -1463,7 +1469,7 @@ static void VshRemoveUnsupportedObRegisters(VSH_XBOX_SHADER *pShader)
 	}
 }
 
-// Converts the intermediate format vertex shader to DirectX 8 format
+// Converts the intermediate format vertex shader to DirectX 8/9 format
 static boolean VshConvertShader(VSH_XBOX_SHADER *pShader,
                                 boolean         bNoReservedConstants
 )
@@ -1478,9 +1484,9 @@ static boolean VshConvertShader(VSH_XBOX_SHADER *pShader,
 		RUsage[VSH_MAX_TEMPORARY_REGISTERS - i] = true;
 	}
 
-
     // TODO: What about state shaders and such?
-    pShader->ShaderHeader.Version = VERSION_VS;
+
+    pShader->ShaderHeader.Version = VERSION_CXBX;
 
     // Search for the screen space instructions, and remove them
     if(!bNoReservedConstants)
