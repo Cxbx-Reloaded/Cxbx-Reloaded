@@ -35,6 +35,7 @@
 #include "core\hle\D3D8\ResourceTracker.h"
 #include "core\hle\D3D8\XbPushBuffer.h" // for DxbxFVF_GetNumberOfTextureCoordinates
 #include "core\hle\D3D8\XbVertexBuffer.h"
+#include "core\hle\D3D8\XbConvert.h"
 
 #include <ctime>
 #include <chrono>

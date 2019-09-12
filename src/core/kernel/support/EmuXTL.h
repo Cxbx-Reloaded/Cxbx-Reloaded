@@ -32,7 +32,6 @@ namespace XTL
 {
     #include "core\hle\XAPI\Xapi.h"
     #include "core\hle\D3D8\Direct3D9/Direct3D9.h"
-    #include "core\hle\D3D8\XbConvert.h"
 	#include "core\hle\D3D8\XbPixelShader.h"
     #include "core\hle\D3D8\XbState.h"
     #include "core\hle\DSOUND\DirectSound\DirectSound.hpp"

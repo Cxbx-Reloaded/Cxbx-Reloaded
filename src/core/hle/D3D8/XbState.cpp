@@ -29,6 +29,7 @@
 #include "core\kernel\init\CxbxKrnl.h"
 #include "core\kernel\support\Emu.h"
 #include "core\kernel\support\EmuXTL.h"
+#include "core\hle\D3D8\XbConvert.h" // For DxbxRenderStateInfo
 
 // deferred state lookup tables
 DWORD *XTL::EmuD3DDeferredRenderState = nullptr;
@@ -60,7 +61,7 @@ void VerifyAndFixEmuDeferredRenderStateOffset()
     // Calculate index of D3DRS_CULLMODE for this XDK. We start counting from the first deferred state (D3DRS_FOGENABLE)
     DWORD CullModeIndex = 0;
     for (int i = XTL::X_D3DRS_FOGENABLE; i < XTL::X_D3DRS_CULLMODE; i++) {
-        if (XTL::DxbxRenderStateInfo[i].V <= g_LibVersion_D3D8) {
+        if (DxbxRenderStateInfo[i].V <= g_LibVersion_D3D8) {
             CullModeIndex++;
         }
     }
@@ -80,7 +81,7 @@ void UpdateDeferredRenderStates()
         // Loop through all deferred render states
         for (unsigned int RenderState = XTL::X_D3DRS_FOGENABLE; RenderState <= XTL::X_D3DRS_PRESENTATIONINTERVAL; RenderState++) {
             // If the current state is not present within our desired XDK, skip it
-            if (XTL::DxbxRenderStateInfo[RenderState].V >= g_LibVersion_D3D8) {
+            if (DxbxRenderStateInfo[RenderState].V >= g_LibVersion_D3D8) {
                 continue;
             }
 
@@ -165,15 +166,15 @@ void UpdateDeferredRenderStates()
                     Value |= (OldValue & 0x01000000) ? D3DWRAPCOORD_3 : 0;
                 } break;
                 default:
-                    EmuLog(LOG_LEVEL::WARNING, "Unimplemented Deferred Render State: %s", XTL::DxbxRenderStateInfo[RenderState].S);
+                    EmuLog(LOG_LEVEL::WARNING, "Unimplemented Deferred Render State: %s", DxbxRenderStateInfo[RenderState].S);
                     continue;
             }
 
-            if (XTL::DxbxRenderStateInfo[RenderState].PC == 0) {
+            if (DxbxRenderStateInfo[RenderState].PC == 0) {
                 continue;
             }
 
-            g_pD3DDevice->SetRenderState(XTL::DxbxRenderStateInfo[RenderState].PC, Value);
+            g_pD3DDevice->SetRenderState(DxbxRenderStateInfo[RenderState].PC, Value);
         }
     }
 }

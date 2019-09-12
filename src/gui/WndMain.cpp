@@ -41,6 +41,7 @@
 #include "common\xbe\XbePrinter.h" // For DumpInformation
 #include "EmuShared.h"
 #include "core\kernel\support\EmuXTL.h"
+#include "core\hle\D3D8\XbConvert.h" // For EmuPC2XB_D3DFormat
 #include "common\Settings.hpp"
 
 #include "core\kernel\init\CxbxKrnl.h" // For CxbxConvertArgToString and CxbxExec
@@ -1513,7 +1514,7 @@ void WndMain::LoadGameLogo()
 			(XTL::UINT)pDDSHeader->dwWidth,
 			(XTL::UINT)pDDSHeader->dwHeight,
 			1,
-			XTL::EmuPC2XB_D3DFormat(Format),
+			EmuPC2XB_D3DFormat(Format),
 			2,
 			(XTL::UINT)pDDSHeader->dwPitchOrLinearSize);
 		break;

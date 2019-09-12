@@ -48,6 +48,7 @@ namespace xboxkrnl
 #include "core\hle\D3D8\XbPushBuffer.h"
 #include "core\kernel\memory-manager\VMManager.h" // for g_VMManager
 #include "core\kernel\support\EmuXTL.h"
+#include "core\hle\D3D8\XbConvert.h"
 #include "Logging.h"
 #include "..\XbD3D8Logging.h"
 #include "core\hle\Intercept.hpp" // for bLLE_GPU
@@ -1231,7 +1232,7 @@ void GetSurfaceFaceAndLevelWithinTexture(XTL::X_D3DSurface* pSurface, XTL::X_D3D
     CxbxGetPixelContainerMeasures(pSurface, 0, &surfaceWidth, &surfaceHeight, &surfaceDepth, &surfaceRowPitch, &surfaceSlicePitch);  
 
     // Iterate through all faces and levels, until we find a matching pointer
-    bool isCompressed = XTL::EmuXBFormatIsCompressed(GetXboxPixelContainerFormat(pTexture));
+    bool isCompressed = EmuXBFormatIsCompressed(GetXboxPixelContainerFormat(pTexture));
     int minSize = (isCompressed) ? 4 : 1;
     int cubeFaceOffset = 0; int cubeFaceSize = 0;
     auto pData = pTextureData;
@@ -1303,15 +1304,15 @@ bool ConvertD3DTextureToARGBBuffer(
 	int iTextureStage = 0
 )
 {
-	const XTL::FormatToARGBRow ConvertRowToARGB = EmuXBFormatComponentConverter(X_Format);
+	const FormatToARGBRow ConvertRowToARGB = EmuXBFormatComponentConverter(X_Format);
 	if (ConvertRowToARGB == nullptr)
 		return false; // Unhandled conversion
 
 	uint8_t *unswizleBuffer = nullptr;
-	if (XTL::EmuXBFormatIsSwizzled(X_Format)) {
+	if (EmuXBFormatIsSwizzled(X_Format)) {
 		unswizleBuffer = (uint8_t*)malloc(SrcSlicePitch * uiDepth); // TODO : Reuse buffer when performance is important
 		// First we need to unswizzle the texture data
-		XTL::EmuUnswizzleBox(
+		EmuUnswizzleBox(
 			pSrc, SrcWidth, SrcHeight, uiDepth, 
 			EmuXBFormatBytesPerPixel(X_Format),
 			// Note : use src pitch on dest, because this is an intermediate step :
@@ -1365,7 +1366,7 @@ uint8_t *XTL::ConvertD3DTextureToARGB(
 {
 	// Avoid allocating pDest when ConvertD3DTextureToARGBBuffer will fail anyway
 	XTL::X_D3DFORMAT X_Format = GetXboxPixelContainerFormat(pXboxPixelContainer);
-	const XTL::FormatToARGBRow ConvertRowToARGB = EmuXBFormatComponentConverter(X_Format);
+	const FormatToARGBRow ConvertRowToARGB = EmuXBFormatComponentConverter(X_Format);
 	if (ConvertRowToARGB == nullptr)
 		return nullptr; // Unhandled conversion
 
@@ -2009,8 +2010,8 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
                     // TODO: Investigate the best option for this
                     g_EmuCDPD.HostPresentationParameters.SwapEffect = XTL::D3DSWAPEFFECT_COPY;
 
-                    g_EmuCDPD.HostPresentationParameters.BackBufferFormat       = XTL::EmuXB2PC_D3DFormat(g_EmuCDPD.XboxPresentationParameters.BackBufferFormat);
-					g_EmuCDPD.HostPresentationParameters.AutoDepthStencilFormat = XTL::EmuXB2PC_D3DFormat(g_EmuCDPD.XboxPresentationParameters.AutoDepthStencilFormat);
+                    g_EmuCDPD.HostPresentationParameters.BackBufferFormat       = EmuXB2PC_D3DFormat(g_EmuCDPD.XboxPresentationParameters.BackBufferFormat);
+					g_EmuCDPD.HostPresentationParameters.AutoDepthStencilFormat = EmuXB2PC_D3DFormat(g_EmuCDPD.XboxPresentationParameters.AutoDepthStencilFormat);
 
 					g_EmuCDPD.HostPresentationParameters.PresentationInterval = g_XBVideo.bVSync ? D3DPRESENT_INTERVAL_ONE : D3DPRESENT_INTERVAL_IMMEDIATE;
 					g_DefaultPresentationInterval = g_EmuCDPD.XboxPresentationParameters.PresentationInterval;
@@ -2169,9 +2170,9 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
 				memset(g_bSupportsFormatCubeTexture, false, sizeof(g_bSupportsFormatCubeTexture));
 				for (int X_Format = XTL::X_D3DFMT_L8; X_Format <= XTL::X_D3DFMT_LIN_R8G8B8A8; X_Format++) {
 					// Only process Xbox formats that are directly mappable to host
-					if (!XTL::EmuXBFormatRequiresConversionToARGB((XTL::X_D3DFORMAT)X_Format)) {
+					if (!EmuXBFormatRequiresConversionToARGB((XTL::X_D3DFORMAT)X_Format)) {
 						// Convert the Xbox format into host format (without warning, thanks to the above restriction)
-						XTL::D3DFORMAT PCFormat = XTL::EmuXB2PC_D3DFormat((XTL::X_D3DFORMAT)X_Format);
+						XTL::D3DFORMAT PCFormat = EmuXB2PC_D3DFormat((XTL::X_D3DFORMAT)X_Format);
 						if (PCFormat != XTL::D3DFMT_UNKNOWN) {
 							// Index with Xbox D3DFormat, because host FourCC codes are too big to be used as indices
 							if (D3D_OK == g_pDirect3D->CheckDeviceFormat(
@@ -2374,7 +2375,7 @@ static void EmuVerifyResourceIsRegistered(XTL::X_D3DResource *pResource, DWORD D
 	auto key = GetHostResourceKey(pResource);
 	auto it = g_XboxDirect3DResources.find(key);
 	if (it != g_XboxDirect3DResources.end()) {
-		if (D3DUsage == D3DUSAGE_RENDERTARGET && IsResourceAPixelContainer(pResource) && XTL::EmuXBFormatIsRenderTarget(GetXboxPixelContainerFormat((XTL::X_D3DPixelContainer*)pResource))) {
+		if (D3DUsage == D3DUSAGE_RENDERTARGET && IsResourceAPixelContainer(pResource) && EmuXBFormatIsRenderTarget(GetXboxPixelContainerFormat((XTL::X_D3DPixelContainer*)pResource))) {
             // Render targets have special behavior: We can't trash them on guest modification
             // this fixes an issue where CubeMaps were broken because the surface Set in GetCubeMapSurface
             // would be overwritten by the surface created in SetRenderTarget
@@ -5730,7 +5731,7 @@ void CreateHostResource(XTL::X_D3DResource *pResource, DWORD D3DUsage, int iText
 				}
 				else if (bSwizzled) {
 					// First we need to unswizzle the texture data
-					XTL::EmuUnswizzleBox(
+					EmuUnswizzleBox(
 						pSrc, dwMipWidth, dwMipHeight, dwMipDepth,
 						dwBPP, 
 						pDst, dwDstRowPitch, dwDstSlicePitch
