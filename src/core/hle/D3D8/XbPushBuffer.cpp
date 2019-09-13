@@ -500,7 +500,7 @@ extern void EmuExecutePushBufferRaw
 	uint32_t *dma_put; // pushbuffer current end address
 	uint32_t *dma_get; //pushbuffer current read address
 	struct {
-		XTL::NV2AMETHOD mthd; // Current method
+		NV2AMETHOD mthd; // Current method
 		uint32_t subc; // :3 = Current subchannel
 		uint32_t mcnt; // :24 = Current method count
 		bool ni; // Current command's NI (non-increasing) flag
