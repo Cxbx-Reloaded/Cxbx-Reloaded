@@ -45,6 +45,7 @@ namespace xboxkrnl
 #include "core\hle\D3D8\ResourceTracker.h"
 #include "core\hle\D3D8\XbVertexBuffer.h"
 #include "core\hle\D3D8\XbVertexShader.h"
+#include "core\hle\D3D8\XbPixelShader.h" // For DxbxUpdateActivePixelShader
 #include "core\hle\D3D8\XbPushBuffer.h"
 #include "core\kernel\memory-manager\VMManager.h" // for g_VMManager
 #include "core\kernel\support\EmuXTL.h"
@@ -6750,7 +6751,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderState_PSTextureModes)
 	XB_trampoline(VOID, WINAPI, D3DDevice_SetRenderState_PSTextureModes, (DWORD));
 	XB_D3DDevice_SetRenderState_PSTextureModes(Value);
 
-	XTL::TemporaryPixelShaderRenderStates[XTL::X_D3DRS_PSTEXTUREMODES] = Value;
+	TemporaryPixelShaderRenderStates[XTL::X_D3DRS_PSTEXTUREMODES] = Value;
 }
 
 // ******************************************************************
@@ -7714,7 +7715,7 @@ void XTL::CxbxUpdateNativeD3DResources()
 
 	// If Pixel Shaders are not disabled, process them
 	if (!g_DisablePixelShaders) {
-		XTL::DxbxUpdateActivePixelShader();
+		DxbxUpdateActivePixelShader();
 	}
 
 	// Some titles set Vertex Shader constants directly via pushbuffers rather than through D3D
@@ -7752,8 +7753,8 @@ VOID __declspec(noinline) D3DDevice_SetPixelShaderCommon(DWORD Handle)
 	// Copy the Pixel Shader data to the TemporaryPixelShaderRenderStates array
 	// This mirrors the fact that unpathed SetPixelShader does the same thing!
 	if (g_D3DActivePixelShader != nullptr) {
-		memcpy(&(XTL::TemporaryPixelShaderRenderStates[XTL::X_D3DRS_PSALPHAINPUTS0]), g_D3DActivePixelShader->pPSDef, sizeof(XTL::X_D3DPIXELSHADERDEF) - 3 * sizeof(DWORD));
-		XTL::TemporaryPixelShaderRenderStates[XTL::X_D3DRS_PSTEXTUREMODES] = g_D3DActivePixelShader->pPSDef->PSTextureModes;
+		memcpy(&(TemporaryPixelShaderRenderStates[XTL::X_D3DRS_PSALPHAINPUTS0]), g_D3DActivePixelShader->pPSDef, sizeof(XTL::X_D3DPIXELSHADERDEF) - 3 * sizeof(DWORD));
+		TemporaryPixelShaderRenderStates[XTL::X_D3DRS_PSTEXTUREMODES] = g_D3DActivePixelShader->pPSDef->PSTextureModes;
 	}
 }
 

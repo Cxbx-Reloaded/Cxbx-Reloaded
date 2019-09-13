@@ -650,10 +650,10 @@ typedef enum _X_D3DRENDERSTATETYPE {
 	// Older versions are slightly different (some members are missing), so we use a mapping table to
 	// cater for the differences (see DxbxBuildRenderStateMappingTable). This enables to ignore these
 	// version-differences in the rest of our code (unless it matters somehow); We write via indirection :
-	//   *XTL::EmuMappedD3DRenderState[X_D3DRENDERSTATETYPE] = Value;
+	//   *EmuMappedD3DRenderState[X_D3DRENDERSTATETYPE] = Value;
 	//
 	// And we read via the same mapping (do note, that missing elements all point to the same dummy) :
-	//   Result = *XTL::EmuMappedD3DRenderState[X_D3DRENDERSTATETYPE];
+	//   Result = *EmuMappedD3DRenderState[X_D3DRENDERSTATETYPE];
 
 	// Dxbx note : The PS* render states map 1-on-1 to the X_D3DPIXELSHADERDEF record,
 	// SetPixelShader actually pushes the definition into these render state slots.
