@@ -66,9 +66,9 @@
 #include "core\kernel\support\Emu.h"
 #include "core\kernel\support\EmuFS.h"
 #include "core\kernel\support\EmuXTL.h" // X_PSH_COMBINECOUNT
-//#include <CxbxKrnl/EmuD3D8Types.h>
 
 #include "core\hle\D3D8\XbPixelShader.h"
+#include "core\hle\D3D8\XbState.h" // For CXBX_D3DRS_UNSUPPORTED
 
 #include "core\kernel\init\CxbxKrnl.h" // For CxbxKrnlCleanup()
 
@@ -5980,7 +5980,7 @@ static const
 } // DxbxRecompilePixelShader
 
 // TODO : Initialize this :
-DWORD *XTL::EmuMappedD3DRenderState[X_D3DRS_UNSUPPORTED]; // 1 extra for the unsupported value
+DWORD *EmuMappedD3DRenderState[CXBX_D3DRS_UNSUPPORTED]; // 1 extra for the unsupported value
 
 std::vector<PSH_RECOMPILED_SHADER> g_RecompiledPixelShaders;
 
@@ -6005,7 +6005,7 @@ VOID DxbxUpdateActivePixelShader() // NOPATCH
   // TODO: Is this even right? The first RenderState is PSAlpha,
   // The pixel shader is stored in pDevice->m_pPixelShader
   // For now, we still patch SetPixelShader and read from there...
-  //DWORD *XTL_D3D__RenderState = XTL::EmuMappedD3DRenderState[0];
+  //DWORD *XTL_D3D__RenderState = EmuMappedD3DRenderState[0];
   //pPSDef = (XTL::X_D3DPIXELSHADERDEF*)(XTL_D3D__RenderState);
 
   // Use the pixel shader stored in TemporaryPixelShaderRenderStates rather than the set handle
@@ -6088,18 +6088,18 @@ VOID DxbxUpdateActivePixelShader() // NOPATCH
 		// The required code needs o be ported from Wip_LessVertexPatching or Dxbx
         switch (i) {
           case PSH_XBOX_CONSTANT_FOG:
-            //dwColor = *XTL::EmuMappedD3DRenderState[XTL::X_D3DRS_FOGCOLOR] | 0xFF000000;
+            //dwColor = *EmuMappedD3DRenderState[XTL::X_D3DRS_FOGCOLOR] | 0xFF000000;
             // Note : FOG.RGB is correct like this, but FOG.a should be coming
             // from the vertex shader (oFog) - however, D3D8 does not forward this...
 			g_pD3DDevice->GetRenderState(D3DRS_FOGCOLOR, &dwColor);
             fColor = dwColor;
 			break;
 		  case PSH_XBOX_CONSTANT_FC0:
-            //dwColor = *XTL::EmuMappedD3DRenderState[XTL::X_D3DRS_PSFINALCOMBINERCONSTANT0];
+            //dwColor = *EmuMappedD3DRenderState[XTL::X_D3DRS_PSFINALCOMBINERCONSTANT0];
               fColor = dwColor = TemporaryPixelShaderRenderStates[XTL::X_D3DRS_PSFINALCOMBINERCONSTANT0];
 			break;
 		  case PSH_XBOX_CONSTANT_FC1:
-            //dwColor = *XTL::EmuMappedD3DRenderState[XTL::X_D3DRS_PSFINALCOMBINERCONSTANT1];
+            //dwColor = *EmuMappedD3DRenderState[XTL::X_D3DRS_PSFINALCOMBINERCONSTANT1];
               fColor = dwColor = TemporaryPixelShaderRenderStates[XTL::X_D3DRS_PSFINALCOMBINERCONSTANT1];
 			break;
           case PSH_XBOX_CONSTANT_MUL0:
@@ -6134,7 +6134,7 @@ VOID DxbxUpdateActivePixelShader() // NOPATCH
               break;
           }
           default:
-            //dwColor = *XTL::EmuMappedD3DRenderState[XTL::X_D3DRS_PSCONSTANT0_0 + i];
+            //dwColor = *EmuMappedD3DRenderState[XTL::X_D3DRS_PSCONSTANT0_0 + i];
               fColor = dwColor = TemporaryPixelShaderRenderStates[XTL::X_D3DRS_PSCONSTANT0_0 + i];
 			break;
         }

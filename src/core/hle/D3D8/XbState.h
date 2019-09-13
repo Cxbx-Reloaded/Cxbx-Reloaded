@@ -25,10 +25,10 @@
 #ifndef XBSTATE_H
 #define XBSTATE_H
 
-#define X_D3DRS_UNSUPPORTED (X_D3DRS_LAST + 1)
+#define CXBX_D3DRS_UNSUPPORTED (XTL::X_D3DRS_LAST + 1)
 
 // XDK version independent renderstate table, containing pointers to the original locations.
-extern DWORD *EmuMappedD3DRenderState[X_D3DRS_UNSUPPORTED]; // 1 extra for the unsupported value
+extern DWORD *EmuMappedD3DRenderState[CXBX_D3DRS_UNSUPPORTED]; // 1 extra for the unsupported value
 
 struct X_Stream {
     DWORD Stride;

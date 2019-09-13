@@ -47,6 +47,7 @@ namespace xboxkrnl
 #include "core\hle\D3D8\XbVertexShader.h"
 #include "core\hle\D3D8\XbPixelShader.h" // For DxbxUpdateActivePixelShader
 #include "core\hle\D3D8\XbPushBuffer.h"
+#include "core\hle\D3D8\XbState.h" // For EmuUpdateDeferredStates
 #include "core\kernel\memory-manager\VMManager.h" // for g_VMManager
 #include "core\kernel\support\EmuXTL.h"
 #include "core\hle\D3D8\XbConvert.h"
@@ -7709,7 +7710,7 @@ void EmuUpdateActiveTextureStages()
 	}
 }
 
-void XTL::CxbxUpdateNativeD3DResources()
+void CxbxUpdateNativeD3DResources()
 {
     EmuUpdateActiveTextureStages();
 
@@ -7733,7 +7734,7 @@ void XTL::CxbxUpdateNativeD3DResources()
 		}
 	}
 
-    XTL::EmuUpdateDeferredStates();
+    EmuUpdateDeferredStates();
 /* TODO : Port these :
 	DxbxUpdateActiveVertexShader();
 	DxbxUpdateActiveTextures();

@@ -34,6 +34,7 @@
 #include "core\kernel\support\EmuXTL.h"
 #include "core\hle\D3D8\ResourceTracker.h"
 #include "core\hle\D3D8\XbPushBuffer.h" // for DxbxFVF_GetNumberOfTextureCoordinates
+#include "core\hle\D3D8\XbState.h" // For CxbxUpdateNativeD3DResources, etc
 #include "core\hle\D3D8\XbVertexBuffer.h"
 #include "core\hle\D3D8\XbConvert.h"
 
@@ -841,7 +842,7 @@ void CxbxVertexBufferConverter::Apply(CxbxDrawContext *pDrawContext)
 
 VOID EmuFlushIVB()
 {
-	XTL::CxbxUpdateNativeD3DResources();
+	CxbxUpdateNativeD3DResources();
 
     // Parse IVB table with current FVF shader if possible.
     bool bFVF = VshHandleIsFVF(g_CurrentXboxVertexShaderHandle);
