@@ -37,6 +37,7 @@
 #include <sstream>
 #include <unordered_map>
 #include <array>
+#include <bitset>
 
 #ifdef CXBX_USE_VS30
 //#define CXBX_USE_VS30 // Separate the port to Vertex Shader model 3.0 from the port to Direct3D9
@@ -2241,7 +2242,7 @@ private:
 		pXboxToken = pXboxDeclarationCopy + (pXboxToken - pXboxDeclaration); // Move to end of the copy
 
 		// Remember if we've seen a given output register
-		std::array<bool, 16> seen{};
+		std::bitset<16> seen;
 
 		// We want to keep later definitions, and remove earlier ones
 		// Scan back from the end of the declaration, and replace redefinitions with nops
@@ -2275,7 +2276,8 @@ public:
 	{
 		using namespace XTL;
 
-		pXboxDeclaration = RemoveXboxDeclarationRedefinition(pXboxDeclaration);
+		// Get a preprocessed copy of the original Xbox Vertex Declaration
+		auto pXboxVertexDeclarationCopy = RemoveXboxDeclarationRedefinition(pXboxDeclaration);
 
 		pVertexShaderInfoToSet = pCxbxVertexShaderInfo;
 		temporaryCount = g_D3DCaps.VS20Caps.NumTemps;
@@ -2292,7 +2294,7 @@ public:
 		// 0x00000000 - nop (means that this value is ignored)
 
 		// Calculate size of declaration
-		XboxDeclarationCount = VshGetDeclarationCount(pXboxDeclaration);
+		XboxDeclarationCount = VshGetDeclarationCount(pXboxVertexDeclarationCopy);
 		// For Direct3D9, we need to reserve at least twice the number of elements, as one token can generate two registers (in and out) :
 		HostDeclarationSize = XboxDeclarationCount * sizeof(D3DVERTEXELEMENT) * 2;
 	
@@ -2302,15 +2304,16 @@ public:
 
 		DbgVshPrintf("DWORD dwVSHDecl[] =\n{\n");
 
-		while (*pXboxDeclaration != DEF_VSH_END)
+		auto pXboxToken = pXboxVertexDeclarationCopy;
+		while (*pXboxToken != DEF_VSH_END)
 		{
 			if ((uint8_t*)pRecompiled >= pRecompiledBufferOverflow) {
 				DbgVshPrintf("Detected buffer-overflow, breaking out...\n");
 				break;
 			}
 
-			DWORD Step = VshRecompileToken(pXboxDeclaration);
-			pXboxDeclaration += Step;
+			DWORD Step = VshRecompileToken(pXboxToken);
+			pXboxToken += Step;
 		}
 
 		*pRecompiled = D3DDECL_END();
@@ -2319,12 +2322,15 @@ public:
 		// In particular "All vertex elements for a stream must be consecutive and sorted by offset"
 		// Test case: King Kong (due to register redefinition)
 		std::sort(Result, pRecompiled, [] (const auto& x, const auto& y)
-			{ return std::tie(x.Stream, x.Offset) < std::tie(y.Stream, y.Offset); });
+			{ return std::tie(x.Stream, x.Method, x.Offset) < std::tie(y.Stream, y.Method, y.Offset); });
 
 		VshEndPreviousStreamPatch();
 		DbgVshPrintf("\tD3DVSD_END()\n};\n");
 
 		DbgVshPrintf("// NbrStreams: %d\n", pVertexShaderInfoToSet->NumberOfVertexStreams);
+
+		// Free the preprocessed declaration copy
+		free(pXboxVertexDeclarationCopy);
 
 		return Result;
 	}
