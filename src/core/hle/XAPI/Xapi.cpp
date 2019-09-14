@@ -258,7 +258,10 @@ void UpdateConnectedDeviceState(XTL::PXPP_DEVICE_TYPE DeviceType) {
 	// Test cases: JSRF (IG-024 NTSC-U; SE-010 PAL, NTSC-J), JSRF Demo (SE-022 NTSC-J),
 	// GunValkyrie (SE-012 NTSC-U, NTSC-J; IG-023 PAL), Lego Star Wars (ES-029), Otogi (FS-002)
 	// (Note these games broke in different ways, so each should be tested if this hack is removed)
-	if (!g_gamepadStateQueriedHackFlag && (DeviceType == g_DeviceType_Gamepad)){
+    // TODO: Why is this needed? Something must still be wrong somewhere...
+    // For now, we make an exception for PDO to keep that game working
+    bool isPanzerDragoonOrta = g_pCertificate->dwTitleId == 0x4947002B || g_pCertificate->dwTitleId == 0x53450007; // EU (IG-043) / NTSC J/U (SE-007)
+	if (!isPanzerDragoonOrta && !g_gamepadStateQueriedHackFlag && (DeviceType == g_DeviceType_Gamepad)){
 		g_gamepadStateQueriedHackFlag = true;
 		return;
 	}
