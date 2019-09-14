@@ -29,10 +29,11 @@
 #include "core\kernel\init\CxbxKrnl.h"
 #include "core\kernel\support\Emu.h"
 #include "core\kernel\support\EmuXTL.h"
+#include "core\hle\D3D8\XbConvert.h" // For DxbxRenderStateInfo
 
 // deferred state lookup tables
-DWORD *XTL::EmuD3DDeferredRenderState = nullptr;
-DWORD *XTL::EmuD3DDeferredTextureState = nullptr;
+DWORD *EmuD3DDeferredRenderState = nullptr;
+DWORD *EmuD3DDeferredTextureState = nullptr;
 
 #include "core\hle\Intercept.hpp" // For g_SymbolAddresses
 #include "common/Settings.hpp"    // For g_LibVersion_D3D8
@@ -60,32 +61,32 @@ void VerifyAndFixEmuDeferredRenderStateOffset()
     // Calculate index of D3DRS_CULLMODE for this XDK. We start counting from the first deferred state (D3DRS_FOGENABLE)
     DWORD CullModeIndex = 0;
     for (int i = XTL::X_D3DRS_FOGENABLE; i < XTL::X_D3DRS_CULLMODE; i++) {
-        if (XTL::DxbxRenderStateInfo[i].V <= g_LibVersion_D3D8) {
+        if (DxbxRenderStateInfo[i].V <= g_LibVersion_D3D8) {
             CullModeIndex++;
         }
     }
 
     // If the offset was incorrect, calculate the correct offset, log it, and fix it
-    if ((DWORD)(&XTL::EmuD3DDeferredRenderState[CullModeIndex]) != CullModeOffset) {
+    if ((DWORD)(&EmuD3DDeferredRenderState[CullModeIndex]) != CullModeOffset) {
         DWORD CorrectOffset = CullModeOffset - (CullModeIndex * sizeof(DWORD));
-        EmuLog(LOG_LEVEL::WARNING, "EmuD3DDeferredRenderState returned by XboxSymbolDatabase (0x%08X) was incorrect. Correcting to be 0x%08X.\nPlease file an issue with the XbSymbolDatabase project", XTL::EmuD3DDeferredRenderState, CorrectOffset);
-        XTL::EmuD3DDeferredRenderState = (DWORD*)CorrectOffset;
+        EmuLog(LOG_LEVEL::WARNING, "EmuD3DDeferredRenderState returned by XboxSymbolDatabase (0x%08X) was incorrect. Correcting to be 0x%08X.\nPlease file an issue with the XbSymbolDatabase project", EmuD3DDeferredRenderState, CorrectOffset);
+        EmuD3DDeferredRenderState = (DWORD*)CorrectOffset;
     }
 }
 
 void UpdateDeferredRenderStates()
 {
     // Certain D3DRS values need to be checked on each Draw[Indexed]Vertices
-    if (XTL::EmuD3DDeferredRenderState != 0) {
+    if (EmuD3DDeferredRenderState != 0) {
         // Loop through all deferred render states
         for (unsigned int RenderState = XTL::X_D3DRS_FOGENABLE; RenderState <= XTL::X_D3DRS_PRESENTATIONINTERVAL; RenderState++) {
             // If the current state is not present within our desired XDK, skip it
-            if (XTL::DxbxRenderStateInfo[RenderState].V >= g_LibVersion_D3D8) {
+            if (DxbxRenderStateInfo[RenderState].V >= g_LibVersion_D3D8) {
                 continue;
             }
 
             uint8_t index = RenderState - XTL::X_D3DRS_FOGENABLE;
-            DWORD Value = XTL::EmuD3DDeferredRenderState[index];
+            DWORD Value = EmuD3DDeferredRenderState[index];
 
             // Convert from Xbox Data Formats to PC
             switch (RenderState) {
@@ -165,15 +166,15 @@ void UpdateDeferredRenderStates()
                     Value |= (OldValue & 0x01000000) ? D3DWRAPCOORD_3 : 0;
                 } break;
                 default:
-                    EmuLog(LOG_LEVEL::WARNING, "Unimplemented Deferred Render State: %s", XTL::DxbxRenderStateInfo[RenderState].S);
+                    EmuLog(LOG_LEVEL::WARNING, "Unimplemented Deferred Render State: %s", DxbxRenderStateInfo[RenderState].S);
                     continue;
             }
 
-            if (XTL::DxbxRenderStateInfo[RenderState].PC == 0) {
+            if (DxbxRenderStateInfo[RenderState].PC == 0) {
                 continue;
             }
 
-            g_pD3DDevice->SetRenderState(XTL::DxbxRenderStateInfo[RenderState].PC, Value);
+            g_pD3DDevice->SetRenderState(DxbxRenderStateInfo[RenderState].PC, Value);
         }
     }
 }
@@ -252,7 +253,7 @@ void UpdateDeferredTextureStates()
     // The Xbox NV2A uses only Stage 3 for point-sprites, so we emulate this
     // by mapping Stage 3 to Stage 0, and disabling all stages > 0
     bool pointSpriteOverride = false;
-    if (XTL::EmuD3DDeferredRenderState[XTL::X_D3DRS_POINTSPRITEENABLE - XTL::X_D3DRS_FOGENABLE] == TRUE) {
+    if (EmuD3DDeferredRenderState[XTL::X_D3DRS_POINTSPRITEENABLE - XTL::X_D3DRS_FOGENABLE] == TRUE) {
         pointSpriteOverride = true;
     }
 
@@ -262,7 +263,7 @@ void UpdateDeferredTextureStates()
 
         for (int StateIndex = XTL::X_D3DTSS_DEFERRED_FIRST; StateIndex <= XTL::X_D3DTSS_DEFERRED_LAST; StateIndex++) {
             // Read the value of the current stage/state from the Xbox data structure
-            DWORD Value = XTL::EmuD3DDeferredTextureState[(XboxStage * XTL::X_D3DTS_STAGESIZE) + StateIndex];
+            DWORD Value = EmuD3DDeferredTextureState[(XboxStage * XTL::X_D3DTS_STAGESIZE) + StateIndex];
             
             // Convert the index of the current state to an index that we can use
             // This handles the case when XDKs have different state values
@@ -518,7 +519,7 @@ void UpdateDeferredTextureStates()
         }
     }
 
-    if (XTL::EmuD3DDeferredRenderState[XTL::X_D3DRS_POINTSPRITEENABLE - XTL::X_D3DRS_FOGENABLE] == TRUE) {
+    if (EmuD3DDeferredRenderState[XTL::X_D3DRS_POINTSPRITEENABLE - XTL::X_D3DRS_FOGENABLE] == TRUE) {
         XTL::IDirect3DBaseTexture *pTexture;
 
         // set the point sprites texture
@@ -536,7 +537,7 @@ void UpdateDeferredTextureStates()
 // ******************************************************************
 // * patch: UpdateDeferredStates
 // ******************************************************************
-void XTL::EmuUpdateDeferredStates()
+void EmuUpdateDeferredStates()
 {
     VerifyAndFixEmuDeferredRenderStateOffset();
     UpdateDeferredRenderStates();

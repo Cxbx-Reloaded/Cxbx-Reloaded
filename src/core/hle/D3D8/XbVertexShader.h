@@ -25,16 +25,86 @@
 #ifndef XBVERTEXSHADER_H
 #define XBVERTEXSHADER_H
 
-#include "Cxbx.h"
+//#include "Cxbx.h"
+//#include "core\hle\D3D8\XbVertexBuffer.h" // for CxbxVertexShaderStreamInfo
+namespace XTL {
+	#include "core\hle\D3D8\XbD3D8Types.h" // for X_VSH_MAX_ATTRIBUTES
+}
+
+// Host vertex shader counts
+#define VSH_MAX_TEMPORARY_REGISTERS 32
+#define VSH_MAX_INTERMEDIATE_COUNT     1024 // The maximum number of intermediate format slots
+#define VSH_VS11_MAX_INSTRUCTION_COUNT 128
+#define VSH_VS2X_MAX_INSTRUCTION_COUNT 256
+#define VSH_VS30_MAX_INSTRUCTION_COUNT 512
+
+typedef struct _CxbxVertexShaderStreamElement
+{
+	UINT XboxType; // The stream element data types (xbox)
+	UINT HostByteSize; // The stream element data sizes (pc)
+}
+CxbxVertexShaderStreamElement;
+
+/* See host typedef struct _D3DVERTEXELEMENT9
+{
+	WORD    Stream;     // Stream index
+	WORD    Offset;     // Offset in the stream in bytes
+	BYTE    Type;       // Data type
+	BYTE    Method;     // Processing method
+	BYTE    Usage;      // Semantics
+	BYTE    UsageIndex; // Semantic index
+} D3DVERTEXELEMENT9, *LPD3DVERTEXELEMENT9;
+*/
+
+typedef struct _CxbxVertexShaderStreamInfo
+{
+	BOOL  NeedPatch;       // This is to know whether it's data which must be patched
+	BOOL DeclPosition;
+	WORD HostVertexStride;
+	DWORD NumberOfVertexElements;        // Number of the stream data types
+	WORD CurrentStreamNumber;
+	CxbxVertexShaderStreamElement VertexElements[X_VSH_MAX_ATTRIBUTES + 16]; // TODO : Why 16 extrahost additions?)
+}
+CxbxVertexShaderStreamInfo;
+
+typedef struct _CxbxVertexShaderInfo
+{
+	UINT                       NumberOfVertexStreams; // The number of streams the vertex shader uses
+	CxbxVertexShaderStreamInfo VertexStreams[X_VSH_MAX_STREAMS];
+}
+CxbxVertexShaderInfo;
+
+typedef struct _CxbxVertexShader
+{
+	// These are the parameters given by the XBE,
+	// we save them to be able to return them when necessary.
+	DWORD* pXboxDeclarationCopy;
+	DWORD                 XboxDeclarationCount; // Xbox's number of DWORD-sized X_D3DVSD* tokens
+	DWORD                 XboxFunctionSize;
+	DWORD* pXboxFunctionCopy;
+	UINT                  XboxNrAddressSlots;
+	DWORD                 XboxVertexShaderType;
+	// DWORD              XboxStatus; // Used by VshHandleIsValidShader()
+
+	// The resulting host variables
+	DWORD HostFVF; // Flexible Vertex Format (used when there's no host vertex shader)
+	XTL::IDirect3DVertexShader* pHostVertexShader; // if nullptr, use SetFVF(HostFVF);
+	XTL::IDirect3DVertexDeclaration* pHostVertexDeclaration;
+	DWORD                 HostDeclarationSize;
+
+	// Needed for dynamic stream patching
+	CxbxVertexShaderInfo  VertexShaderInfo;
+}
+CxbxVertexShader;
 
 // recompile xbox vertex shader declaration
-extern D3DVERTEXELEMENT *EmuRecompileVshDeclaration
+extern XTL::D3DVERTEXELEMENT *EmuRecompileVshDeclaration
 (
     DWORD                *pXboxDeclaration,
     bool                  bIsFixedFunction,
     DWORD                *pXboxDeclarationCount,
     DWORD                *pHostDeclarationSize,
-    XTL::CxbxVertexShaderInfo *pCxbxVertexShaderInfo
+    CxbxVertexShaderInfo *pCxbxVertexShaderInfo
 );
 
 // recompile xbox vertex shader function
@@ -42,10 +112,10 @@ extern HRESULT EmuRecompileVshFunction
 (
     DWORD        *pXboxFunction,
     bool          bNoReservedConstants,
-    D3DVERTEXELEMENT *pRecompiledDeclaration,
+    XTL::D3DVERTEXELEMENT *pRecompiledDeclaration,
     bool   		 *pbUseDeclarationOnly,
     DWORD        *pXboxFunctionSize,
-    LPD3DXBUFFER *ppRecompiledShader
+	XTL::LPD3DXBUFFER *ppRecompiledShader
 );
 
 extern void FreeVertexDynamicPatch(CxbxVertexShader *pVertexShader);
@@ -55,7 +125,7 @@ extern boolean IsValidCurrentShader(void);
 
 inline boolean VshHandleIsVertexShader(DWORD Handle) { return (Handle & X_D3DFVF_RESERVED0) ? TRUE : FALSE; }
 inline boolean VshHandleIsFVF(DWORD Handle) { return !VshHandleIsVertexShader(Handle); }
-inline X_D3DVertexShader *VshHandleToXboxVertexShader(DWORD Handle) { return (X_D3DVertexShader *)(Handle & ~X_D3DFVF_RESERVED0);}
+inline XTL::X_D3DVertexShader *VshHandleToXboxVertexShader(DWORD Handle) { return (XTL::X_D3DVertexShader *)(Handle & ~X_D3DFVF_RESERVED0);}
 
 extern CxbxVertexShader* GetCxbxVertexShader(DWORD XboxVertexShaderHandle);
 extern void SetCxbxVertexShader(DWORD XboxVertexShaderHandle, CxbxVertexShader* shader);

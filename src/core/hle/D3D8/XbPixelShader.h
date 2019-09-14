@@ -30,14 +30,14 @@
 #include "Cxbx.h"
 
 // dump pixel shader definition to file
-void DumpPixelShaderDefToFile( X_D3DPIXELSHADERDEF* pPSDef, const char* pszCode );
+void DumpPixelShaderDefToFile( XTL::X_D3DPIXELSHADERDEF* pPSDef, const char* pszCode );
 // print relevant contents to the debug console
-void PrintPixelShaderDefContents( X_D3DPIXELSHADERDEF* pDSDef );
+void PrintPixelShaderDefContents(XTL::X_D3DPIXELSHADERDEF* pDSDef );
 
 // PatrickvL's Dxbx pixel shader translation
 VOID DxbxUpdateActivePixelShader(); // NOPATCH
 
 // TODO: Remove this once the Render State code has been fully ported from Dxbx/Wip_LessVertexPatching
-extern DWORD TemporaryPixelShaderRenderStates[X_D3DRS_PSTEXTUREMODES + 1];
+extern DWORD TemporaryPixelShaderRenderStates[XTL::X_D3DRS_PSTEXTUREMODES + 1];
 
 #endif // PIXELSHADER_H

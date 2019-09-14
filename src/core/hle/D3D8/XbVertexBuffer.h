@@ -29,9 +29,12 @@
 
 //#include <ctime> // Conflict with io.h
 
+//#include "core\kernel\support\EmuXTL.h"
+#include "core\hle\D3D8\XbVertexShader.h" // for CxbxVertexShaderInfo
+
 typedef struct _CxbxDrawContext
 {
-    IN     X_D3DPRIMITIVETYPE    XboxPrimitiveType;
+    IN     XTL::X_D3DPRIMITIVETYPE    XboxPrimitiveType;
     IN     DWORD                 dwVertexCount;
     IN     DWORD                 dwStartVertex; // Only D3DDevice_DrawVertices sets this (potentially higher than default 0)
     // The current vertex shader, used to identify the streams
@@ -54,7 +57,7 @@ class CxbxPatchedStream
 public:
     CxbxPatchedStream();
     ~CxbxPatchedStream();
-    void Activate(XTL::CxbxDrawContext *pDrawContext, UINT uiStream) const;
+    void Activate(CxbxDrawContext *pDrawContext, UINT uiStream) const;
     bool                    isValid = false;
     XTL::X_D3DPRIMITIVETYPE XboxPrimitiveType = XTL::X_D3DPT_NONE;
     PVOID                   pCachedXboxVertexData = xbnullptr;
@@ -88,7 +91,7 @@ class CxbxVertexBufferConverter
         std::list<CxbxPatchedStream> m_PatchedStreamUsageList;             // Linked list of vertex streams, least recently used is last in the list
         CxbxPatchedStream& GetPatchedStream(uint64_t);                     // Fetches (or inserts) a patched stream associated with the given key
 
-        XTL::CxbxVertexShaderInfo *m_pVertexShaderInfo;
+        CxbxVertexShaderInfo *m_pVertexShaderInfo;
 
         // Returns the number of streams of a patch
         UINT GetNbrStreams(CxbxDrawContext *pPatchDesc);
@@ -98,7 +101,7 @@ class CxbxVertexBufferConverter
 };
 
 // inline vertex buffer emulation
-extern X_D3DPRIMITIVETYPE      g_InlineVertexBuffer_PrimitiveType;
+extern XTL::X_D3DPRIMITIVETYPE      g_InlineVertexBuffer_PrimitiveType;
 extern DWORD                   g_InlineVertexBuffer_FVF;
 
 extern struct _D3DIVB
@@ -107,11 +110,11 @@ extern struct _D3DIVB
     FLOAT            Rhw;          // X_D3DVSDE_VERTEX (*)   > D3DFVF_XYZ / D3DFVF_XYZRHW
 	FLOAT			 Blend[4];	   // X_D3DVSDE_BLENDWEIGHT  > D3DFVF_XYZB1 (and 3 more up to D3DFVF_XYZB4)
     XTL::D3DXVECTOR3 Normal;       // X_D3DVSDE_NORMAL       > D3DFVF_NORMAL
-	D3DCOLOR         Diffuse;      // X_D3DVSDE_DIFFUSE      > D3DFVF_DIFFUSE
-	D3DCOLOR         Specular;     // X_D3DVSDE_SPECULAR     > D3DFVF_SPECULAR
+	XTL::D3DCOLOR         Diffuse;      // X_D3DVSDE_DIFFUSE      > D3DFVF_DIFFUSE
+	XTL::D3DCOLOR         Specular;     // X_D3DVSDE_SPECULAR     > D3DFVF_SPECULAR
 	FLOAT            Fog;          // X_D3DVSDE_FOG          > D3DFVF_FOG unavailable; TODO : How to handle?
-	D3DCOLOR         BackDiffuse;  // X_D3DVSDE_BACKDIFFUSE  > D3DFVF_BACKDIFFUSE unavailable; TODO : How to handle?
-	D3DCOLOR         BackSpecular; // X_D3DVSDE_BACKSPECULAR > D3DFVF_BACKSPECULAR unavailable; TODO : How to handle?
+	XTL::D3DCOLOR         BackDiffuse;  // X_D3DVSDE_BACKDIFFUSE  > D3DFVF_BACKDIFFUSE unavailable; TODO : How to handle?
+	XTL::D3DCOLOR         BackSpecular; // X_D3DVSDE_BACKSPECULAR > D3DFVF_BACKSPECULAR unavailable; TODO : How to handle?
     XTL::D3DXVECTOR4 TexCoord[4];  // X_D3DVSDE_TEXCOORD0    > D3DFVF_TEX1 (and 4 more up to D3DFVF_TEX4)
 
 	// (*) X_D3DVSDE_POSITION and X_D3DVSDE_VERTEX both set Position, but Rhw seems optional,

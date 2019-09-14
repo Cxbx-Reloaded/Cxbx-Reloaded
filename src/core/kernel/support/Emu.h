@@ -77,6 +77,7 @@ typedef struct DUMMY_KERNEL
 	IMAGE_SECTION_HEADER SectionHeader;
 } *PDUMMY_KERNEL;
 
+typedef WORD INDEX16;
 
 extern bool g_DisablePixelShaders;
 extern bool g_UseAllCores;

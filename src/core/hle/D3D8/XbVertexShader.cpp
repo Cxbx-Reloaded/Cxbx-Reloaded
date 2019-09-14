@@ -33,6 +33,8 @@
 #include "core\kernel\support\Emu.h"
 #include "core\kernel\support\EmuFS.h"
 #include "core\kernel\support\EmuXTL.h"
+#include "core\hle\D3D8\XbVertexShader.h"
+
 #include "XbD3D8Types.h" // For X_D3DVSDE_*
 #include <sstream>
 #include <unordered_map>
@@ -46,7 +48,7 @@
 	#define VSH_MAX_INSTRUCTION_COUNT VSH_VS2X_MAX_INSTRUCTION_COUNT // == 256
 #endif
 
-// Host Vertex Shader version (mustn't conflict with any VERSION_XVS*)
+// Internal Vertex Shader version (mustn't conflict with any VERSION_XVS*)
 #define VERSION_CXBX 0x7863 // 'cx' Cxbx vertex shader, not an official value, used in VshConvertShader() and VshWriteShader()
 
 #define DbgVshPrintf \
@@ -1744,8 +1746,8 @@ class XboxVertexDeclarationConverter
 {
 protected:
 	// Internal variables
-	XTL::CxbxVertexShaderInfo* pVertexShaderInfoToSet;
-	XTL::CxbxVertexShaderStreamInfo* pCurrentVertexShaderStreamInfo = nullptr;
+	CxbxVertexShaderInfo* pVertexShaderInfoToSet;
+	CxbxVertexShaderStreamInfo* pCurrentVertexShaderStreamInfo = nullptr;
 	DWORD temporaryCount;
 	bool IsFixedFunction;
 	XTL::D3DVERTEXELEMENT* pRecompiled;
@@ -2154,7 +2156,7 @@ private:
 		}
 
 		// save patching information
-		XTL::CxbxVertexShaderStreamElement *pCurrentElement = &(pCurrentVertexShaderStreamInfo->VertexElements[pCurrentVertexShaderStreamInfo->NumberOfVertexElements]);
+		CxbxVertexShaderStreamElement *pCurrentElement = &(pCurrentVertexShaderStreamInfo->VertexElements[pCurrentVertexShaderStreamInfo->NumberOfVertexElements]);
 		pCurrentElement->XboxType = XboxVertexElementDataType;
 		pCurrentElement->HostByteSize = HostVertexElementByteSize;
 		pCurrentVertexShaderStreamInfo->NumberOfVertexElements++;
@@ -2278,7 +2280,7 @@ private:
 	}
 
 public:
-	XTL::D3DVERTEXELEMENT *Convert(DWORD* pXboxDeclaration, bool bIsFixedFunction, XTL::CxbxVertexShaderInfo* pCxbxVertexShaderInfo)
+	XTL::D3DVERTEXELEMENT *Convert(DWORD* pXboxDeclaration, bool bIsFixedFunction, CxbxVertexShaderInfo* pCxbxVertexShaderInfo)
 	{
 		using namespace XTL;
 
@@ -2342,7 +2344,7 @@ public:
 	}
 };
 
-XTL::D3DVERTEXELEMENT *XTL::EmuRecompileVshDeclaration
+XTL::D3DVERTEXELEMENT *EmuRecompileVshDeclaration
 (
     DWORD                *pXboxDeclaration,
     bool                  bIsFixedFunction,
@@ -2362,16 +2364,18 @@ XTL::D3DVERTEXELEMENT *XTL::EmuRecompileVshDeclaration
 }
 
 // recompile xbox vertex shader function
-extern HRESULT XTL::EmuRecompileVshFunction
+extern HRESULT EmuRecompileVshFunction
 (
     DWORD        *pXboxFunction,
     bool          bNoReservedConstants,
-    D3DVERTEXELEMENT *pRecompiledDeclaration,
+	XTL::D3DVERTEXELEMENT *pRecompiledDeclaration,
     bool   		 *pbUseDeclarationOnly,
     DWORD        *pXboxFunctionSize,
-    LPD3DXBUFFER *ppRecompiledShader
+	XTL::LPD3DXBUFFER *ppRecompiledShader
 )
 {
+	using namespace XTL;
+
 	X_VSH_SHADER_HEADER   *pXboxVertexShaderHeader = (X_VSH_SHADER_HEADER*)pXboxFunction;
     DWORD               *pToken;
     boolean             EOI = false;
@@ -2498,7 +2502,7 @@ extern HRESULT XTL::EmuRecompileVshFunction
     return hRet;
 }
 
-extern void XTL::FreeVertexDynamicPatch(CxbxVertexShader *pVertexShader)
+extern void FreeVertexDynamicPatch(CxbxVertexShader *pVertexShader)
 {
     pVertexShader->VertexShaderInfo.NumberOfVertexStreams = 0;
 }
@@ -2509,7 +2513,7 @@ boolean VshHandleIsValidShader(DWORD XboxVertexShaderHandle)
 #if 0
 	//printf( "VS = 0x%.08X\n", XboxVertexShaderHandle );
 
-    XTL::CxbxVertexShader *pCxbxVertexShader = XTL::GetCxbxVertexShader(XboxVertexShaderHandle);
+    CxbxVertexShader *pCxbxVertexShader = GetCxbxVertexShader(XboxVertexShaderHandle);
     if (pCxbxVertexShader) {
         if (pCxbxVertexShader->XboxStatus != 0)
         {
@@ -2531,16 +2535,16 @@ boolean VshHandleIsValidShader(DWORD XboxVertexShaderHandle)
     return TRUE;
 }
 
-extern boolean XTL::IsValidCurrentShader(void)
+extern boolean IsValidCurrentShader(void)
 {
 	// Dxbx addition : There's no need to call
 	// XTL_EmuIDirect3DDevice_GetVertexShader, just check g_CurrentXboxVertexShaderHandle :
 	return VshHandleIsValidShader(g_CurrentXboxVertexShaderHandle);
 }
 
-XTL::CxbxVertexShaderInfo *GetCxbxVertexShaderInfo(DWORD XboxVertexShaderHandle)
+CxbxVertexShaderInfo *GetCxbxVertexShaderInfo(DWORD XboxVertexShaderHandle)
 {
-    XTL::CxbxVertexShader *pCxbxVertexShader = XTL::GetCxbxVertexShader(XboxVertexShaderHandle);
+    CxbxVertexShader *pCxbxVertexShader = GetCxbxVertexShader(XboxVertexShaderHandle);
 
     for (uint32_t i = 0; i < pCxbxVertexShader->VertexShaderInfo.NumberOfVertexStreams; i++)
     {
@@ -2552,9 +2556,9 @@ XTL::CxbxVertexShaderInfo *GetCxbxVertexShaderInfo(DWORD XboxVertexShaderHandle)
     return NULL;
 }
 
-std::unordered_map<DWORD, XTL::CxbxVertexShader*> g_CxbxVertexShaders;
+std::unordered_map<DWORD, CxbxVertexShader*> g_CxbxVertexShaders;
 
-XTL::CxbxVertexShader* XTL::GetCxbxVertexShader(DWORD XboxVertexShaderHandle)
+CxbxVertexShader* GetCxbxVertexShader(DWORD XboxVertexShaderHandle)
 {
 	if (VshHandleIsVertexShader(XboxVertexShaderHandle)) {
 		auto it = g_CxbxVertexShaders.find(XboxVertexShaderHandle);
@@ -2566,7 +2570,7 @@ XTL::CxbxVertexShader* XTL::GetCxbxVertexShader(DWORD XboxVertexShaderHandle)
 	return nullptr;
 }
 
-void XTL::SetCxbxVertexShader(DWORD XboxVertexShaderHandle, XTL::CxbxVertexShader* shader)
+void SetCxbxVertexShader(DWORD XboxVertexShaderHandle, CxbxVertexShader* shader)
 {
 	auto it = g_CxbxVertexShaders.find(XboxVertexShaderHandle);
 	if (it != g_CxbxVertexShaders.end() && it->second != nullptr && shader != nullptr) {

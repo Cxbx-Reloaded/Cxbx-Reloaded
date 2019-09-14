@@ -34,10 +34,12 @@
 
 #include <cmath>
 #include <iomanip> // For std::setfill and std::setw
+
 #include "core\kernel\init\CxbxKrnl.h"
 #include "core\kernel\support\Emu.h"
 #include "core\kernel\support\EmuFS.h"
 #include "core\kernel\support\EmuXTL.h"
+#include "core\hle\D3D8\XbState.h" // For EmuD3DDeferredTextureState
 #include "EmuShared.h"
 #include "common\CxbxDebugger.h"
 #include "Logging.h"
@@ -46,6 +48,7 @@
 #include "Intercept.hpp"
 #include "Patches.hpp"
 #include "common\util\hasher.h"
+
 #include <Shlwapi.h>
 #include <shlobj.h>
 #include <unordered_map>
@@ -292,11 +295,11 @@ void CDECL EmuRegisterSymbol(const char* library_str,
 void EmuD3D_Init_DeferredStates()
 {
     if (g_SymbolAddresses.find("D3DDeferredRenderState") != g_SymbolAddresses.end()) {
-        XTL::EmuD3DDeferredRenderState = (DWORD*)g_SymbolAddresses["D3DDeferredRenderState"];
+        EmuD3DDeferredRenderState = (DWORD*)g_SymbolAddresses["D3DDeferredRenderState"];
     }
 
     if (g_SymbolAddresses.find("D3DDeferredTextureState") != g_SymbolAddresses.end()) {
-        XTL::EmuD3DDeferredTextureState = (DWORD*)g_SymbolAddresses["D3DDeferredTextureState"];
+        EmuD3DDeferredTextureState = (DWORD*)g_SymbolAddresses["D3DDeferredTextureState"];
     }
 }
 

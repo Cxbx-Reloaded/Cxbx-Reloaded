@@ -6,9 +6,9 @@
 
 extern void(*WalkIndexBuffer)
 (
-	XTL::INDEX16 &LowIndex,
-	XTL::INDEX16 &HighIndex,
-	XTL::INDEX16 *pIndexData,
+	INDEX16 &LowIndex,
+	INDEX16 &HighIndex,
+	INDEX16 *pIndexData,
 	DWORD dwIndexCount
 );
 
