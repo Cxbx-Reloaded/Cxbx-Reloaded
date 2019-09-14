@@ -37,6 +37,7 @@
 #include <sstream>
 #include <unordered_map>
 #include <array>
+#include <bitset>
 
 //#define CXBX_USE_VS30 // Separate the port to Vertex Shader model 3.0 from the port to Direct3D9
 #ifdef CXBX_USE_VS30
@@ -2229,10 +2230,60 @@ private:
 		return Step;
 	}
 
+	DWORD* RemoveXboxDeclarationRedefinition(DWORD* pXboxDeclaration)
+	{
+		// Detect and remove register redefinitions by preprocessing the Xbox Vertex Declaration
+		// Test Case: King Kong
+
+		// Find the last token
+		DWORD* pXboxToken = pXboxDeclaration;
+		while (*pXboxToken != X_D3DVSD_END()){
+			pXboxToken++;
+		}
+
+		// Operate on a copy of the Xbox declaration, rather than messing with the Xbox's memory
+		auto declarationBytes = sizeof(DWORD) * (pXboxToken - pXboxDeclaration + 1);
+		auto pXboxDeclarationCopy = (DWORD*)malloc(declarationBytes);
+		memcpy(pXboxDeclarationCopy, pXboxDeclaration, declarationBytes);
+		pXboxToken = pXboxDeclarationCopy + (pXboxToken - pXboxDeclaration); // Move to end of the copy
+
+		// Remember if we've seen a given output register
+		std::bitset<16> seen;
+
+		// We want to keep later definitions, and remove earlier ones
+		// Scan back from the end of the declaration, and replace redefinitions with nops
+		while (pXboxToken > pXboxDeclarationCopy) {
+			auto type = VshGetTokenType(*pXboxToken);
+			if (type == XTL::X_D3DVSD_TOKEN_STREAMDATA && !(*pXboxToken & X_D3DVSD_MASK_SKIP) ||
+				type == XTL::X_D3DVSD_TOKEN_TESSELLATOR)
+			{
+				auto outputRegister = VshGetVertexRegister(*pXboxToken);
+				if (seen[outputRegister])
+				{
+					// Blank out tokens for mapped registers
+					*pXboxToken = X_D3DVSD_NOP();
+					EmuLog(LOG_LEVEL::DEBUG, "Replacing duplicate definition of register %d with D3DVSD_NOP", outputRegister);
+				}
+				else
+				{
+					// Mark register as seen
+					seen[outputRegister] = true;
+				}
+			}
+
+			pXboxToken--;
+		}
+
+		return pXboxDeclarationCopy;
+	}
+
 public:
 	XTL::D3DVERTEXELEMENT *Convert(DWORD* pXboxDeclaration, bool bIsFixedFunction, XTL::CxbxVertexShaderInfo* pCxbxVertexShaderInfo)
 	{
 		using namespace XTL;
+
+		// Get a preprocessed copy of the original Xbox Vertex Declaration
+		auto pXboxVertexDeclarationCopy = RemoveXboxDeclarationRedefinition(pXboxDeclaration);
 
 		pVertexShaderInfoToSet = pCxbxVertexShaderInfo;
 		temporaryCount = g_D3DCaps.VS20Caps.NumTemps;
@@ -2249,7 +2300,7 @@ public:
 		// 0x00000000 - nop (means that this value is ignored)
 
 		// Calculate size of declaration
-		XboxDeclarationCount = VshGetDeclarationCount(pXboxDeclaration);
+		XboxDeclarationCount = VshGetDeclarationCount(pXboxVertexDeclarationCopy);
 		// For Direct3D9, we need to reserve at least twice the number of elements, as one token can generate two registers (in and out) :
 		HostDeclarationSize = XboxDeclarationCount * sizeof(D3DVERTEXELEMENT) * 2;
 	
@@ -2259,23 +2310,33 @@ public:
 
 		DbgVshPrintf("DWORD dwVSHDecl[] =\n{\n");
 
-		while (*pXboxDeclaration != DEF_VSH_END)
+		auto pXboxToken = pXboxVertexDeclarationCopy;
+		while (*pXboxToken != DEF_VSH_END)
 		{
 			if ((uint8_t*)pRecompiled >= pRecompiledBufferOverflow) {
 				DbgVshPrintf("Detected buffer-overflow, breaking out...\n");
 				break;
 			}
 
-			DWORD Step = VshRecompileToken(pXboxDeclaration);
-			pXboxDeclaration += Step;
+			DWORD Step = VshRecompileToken(pXboxToken);
+			pXboxToken += Step;
 		}
 
 		*pRecompiled = D3DDECL_END();
+
+		// Ensure valid ordering of the vertex declaration (http://doc.51windows.net/Directx9_SDK/graphics/programmingguide/gettingstarted/vertexdeclaration/vertexdeclaration.htm)
+		// In particular "All vertex elements for a stream must be consecutive and sorted by offset"
+		// Test case: King Kong (due to register redefinition)
+		std::sort(Result, pRecompiled, [] (const auto& x, const auto& y)
+			{ return std::tie(x.Stream, x.Method, x.Offset) < std::tie(y.Stream, y.Method, y.Offset); });
 
 		VshEndPreviousStreamPatch();
 		DbgVshPrintf("\tD3DVSD_END()\n};\n");
 
 		DbgVshPrintf("// NbrStreams: %d\n", pVertexShaderInfoToSet->NumberOfVertexStreams);
+
+		// Free the preprocessed declaration copy
+		free(pXboxVertexDeclarationCopy);
 
 		return Result;
 	}
