@@ -68,7 +68,7 @@ PFARPROC1 fnCxbxVSBCOpen;
 XTL::PXPP_DEVICE_TYPE g_DeviceType_Gamepad = nullptr;
 
 // Flag is set after gamepad state has been queried by the title. Supports defer gamepad connection hack
-bool g_gamepadStateQueriedHackFlag = false;
+unsigned int g_gamepadStateQueriedHackDelay = 0;
 
 //global bridge for xbox controller to host, 4 elements for 4 ports.
 X_CONTROLLER_HOST_BRIDGE g_XboxControllerHostBridge[4] = {
@@ -247,7 +247,8 @@ VOID WINAPI XTL::EMUPATCH(XInitDevices)
 		LOG_FUNC_ARG((DWORD)PreallocTypes)
 		LOG_FUNC_END;
 
-	// Nothing to do
+	// Reset delay hack for every reboot
+	g_gamepadStateQueriedHackDelay = 0;
 }
 
 // This is called by both XGetDevices and XGetDeviceChanges
@@ -258,8 +259,10 @@ void UpdateConnectedDeviceState(XTL::PXPP_DEVICE_TYPE DeviceType) {
 	// Test cases: JSRF (IG-024 NTSC-U; SE-010 PAL, NTSC-J), JSRF Demo (SE-022 NTSC-J),
 	// GunValkyrie (SE-012 NTSC-U, NTSC-J; IG-023 PAL), Lego Star Wars (ES-029), Otogi (FS-002)
 	// (Note these games broke in different ways, so each should be tested if this hack is removed)
-	if (!g_gamepadStateQueriedHackFlag && (DeviceType == g_DeviceType_Gamepad)){
-		g_gamepadStateQueriedHackFlag = true;
+	// HACK: Defer connecting the device twice. It doesn't break above titles.
+	// Test case: Panzer Dragoon OORTA will reboot to dashboard if try connect 2nd time.
+	if (g_gamepadStateQueriedHackDelay < 2 && (DeviceType == g_DeviceType_Gamepad)){
+		g_gamepadStateQueriedHackDelay++;
 		return;
 	}
 
