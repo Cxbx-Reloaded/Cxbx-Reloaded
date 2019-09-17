@@ -242,7 +242,7 @@ void HLE_draw_inline_array(NV2AState *d)
 	// All attributes in the vertex format must be padded DWORD multiples, and the vertex attributes must be specified in the canonical FVF ordering
 	// (position followed by weight, normal, diffuse, and so on).
 	// retrieve vertex shader
-	XTL::DWORD dwVertexShader = g_CurrentXboxVertexShaderHandle;
+	XTL::DWORD dwVertexShader = g_Xbox_VertexShader_Handle;
 	if (dwVertexShader == 0) {
 		LOG_TEST_CASE("FVF Vertex Shader is null");
 		dwVertexShader = -1;
@@ -278,7 +278,7 @@ void HLE_draw_inline_elements(NV2AState *d)
 
 		DrawContext.XboxPrimitiveType = (X_D3DPRIMITIVETYPE)pg->primitive_mode;
 		DrawContext.dwVertexCount = EmuD3DIndexCountToVertexCount(DrawContext.XboxPrimitiveType, uiIndexCount);
-		DrawContext.XboxVertexShaderHandle = g_CurrentXboxVertexShaderHandle;
+		DrawContext.XboxVertexShaderHandle = g_Xbox_VertexShader_Handle;
 		DrawContext.pIndexData = d->pgraph.inline_elements; // Used by GetVerticesInBuffer
 
 		CxbxDrawIndexed(DrawContext);

@@ -845,8 +845,8 @@ VOID EmuFlushIVB()
 	CxbxUpdateNativeD3DResources();
 
     // Parse IVB table with current FVF shader if possible.
-    bool bFVF = VshHandleIsFVF(g_CurrentXboxVertexShaderHandle);
-    DWORD dwCurFVF = (bFVF) ? g_CurrentXboxVertexShaderHandle : g_InlineVertexBuffer_FVF;
+    bool bFVF = VshHandleIsFVF(g_Xbox_VertexShader_Handle);
+    DWORD dwCurFVF = (bFVF) ? g_Xbox_VertexShader_Handle : g_InlineVertexBuffer_FVF;
 
     EmuLog(LOG_LEVEL::DEBUG, "g_InlineVertexBuffer_TableOffset := %d", g_InlineVertexBuffer_TableOffset);
 
@@ -854,7 +854,7 @@ VOID EmuFlushIVB()
 	switch (dwCurFVF & D3DFVF_POSITION_MASK) {
 	case 0: // No position ?
 		if (bFVF) {
-			EmuLog(LOG_LEVEL::WARNING, "EmuFlushIVB(): g_CurrentXboxVertexShaderHandle isn't a valid FVF - using D3DFVF_XYZRHW instead!");
+			EmuLog(LOG_LEVEL::WARNING, "EmuFlushIVB(): g_Xbox_VertexShader_Handle isn't a valid FVF - using D3DFVF_XYZRHW instead!");
 			dwCurFVF |= D3DFVF_XYZRHW;
 		}
 		else {
@@ -995,7 +995,7 @@ VOID EmuFlushIVB()
 	DrawContext.dwVertexCount = g_InlineVertexBuffer_TableOffset;
 	DrawContext.pXboxVertexStreamZeroData = g_InlineVertexBuffer_pData;
 	DrawContext.uiXboxVertexStreamZeroStride = uiStride;
-	DrawContext.XboxVertexShaderHandle = g_CurrentXboxVertexShaderHandle;
+	DrawContext.XboxVertexShaderHandle = g_Xbox_VertexShader_Handle;
 
 	HRESULT hRet;
 
@@ -1007,7 +1007,7 @@ VOID EmuFlushIVB()
 
 	CxbxDrawPrimitiveUP(DrawContext);
 	if (bFVF) {
-		hRet = g_pD3DDevice->SetFVF(g_CurrentXboxVertexShaderHandle);
+		hRet = g_pD3DDevice->SetFVF(g_Xbox_VertexShader_Handle);
 		//DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetVertexShader");
 	}
     g_InlineVertexBuffer_TableOffset = 0; // Might not be needed (also cleared in D3DDevice_Begin)

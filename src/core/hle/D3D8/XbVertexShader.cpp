@@ -2538,8 +2538,8 @@ boolean VshHandleIsValidShader(DWORD XboxVertexShaderHandle)
 extern boolean IsValidCurrentShader(void)
 {
 	// Dxbx addition : There's no need to call
-	// XTL_EmuIDirect3DDevice_GetVertexShader, just check g_CurrentXboxVertexShaderHandle :
-	return VshHandleIsValidShader(g_CurrentXboxVertexShaderHandle);
+	// XTL_EmuIDirect3DDevice_GetVertexShader, just check g_Xbox_VertexShader_Handle :
+	return VshHandleIsValidShader(g_Xbox_VertexShader_Handle);
 }
 
 CxbxVertexShaderInfo *GetCxbxVertexShaderInfo(DWORD XboxVertexShaderHandle)
