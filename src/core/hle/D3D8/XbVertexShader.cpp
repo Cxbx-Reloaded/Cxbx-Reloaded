@@ -1759,13 +1759,11 @@ public:
 
 private:
 	// VERTEX SHADER
-	#define DEF_VSH_END 0xFFFFFFFF
-	#define DEF_VSH_NOP 0x00000000
 
 	static DWORD VshGetDeclarationCount(DWORD *pXboxDeclaration)
 	{
 		DWORD Pos = 0;
-		while (pXboxDeclaration[Pos] != DEF_VSH_END)
+		while (pXboxDeclaration[Pos] != X_D3DVSD_END())
 		{
 			Pos++;
 		}
@@ -1806,7 +1804,7 @@ private:
 	void VshConvertToken_NOP(DWORD *pXboxToken)
 	{
 		// D3DVSD_NOP
-		if(*pXboxToken != DEF_VSH_NOP)
+		if(*pXboxToken != X_D3DVSD_NOP())
 		{
 			EmuLog(LOG_LEVEL::WARNING, "Token NOP found, but extra parameters are given!");
 		}
@@ -2313,7 +2311,7 @@ public:
 		DbgVshPrintf("DWORD dwVSHDecl[] =\n{\n");
 
 		auto pXboxToken = pXboxVertexDeclarationCopy;
-		while (*pXboxToken != DEF_VSH_END)
+		while (*pXboxToken != X_D3DVSD_END())
 		{
 			if ((uint8_t*)pRecompiled >= pRecompiledBufferOverflow) {
 				DbgVshPrintf("Detected buffer-overflow, breaking out...\n");
