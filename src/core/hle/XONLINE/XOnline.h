@@ -22,8 +22,10 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#ifndef XONLINE_H
-#define XONLINE_H
+#if 0 // XOnline.h isn't used, but below is still usefull documentation.
+
+#include "core\kernel\support\Emu.h"
+#include "core\hle\XAPI\Xapi.h" // For EMUPATCH
 
 namespace XTL {
 
