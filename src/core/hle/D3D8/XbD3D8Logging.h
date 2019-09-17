@@ -27,8 +27,6 @@
 
 #pragma once
 
-//#include <sstream> // for std::ostream
-//#include "EmuXTL.h"
 #include "Logging.h"
 
 namespace XTL

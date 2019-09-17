@@ -83,8 +83,6 @@
 		if(g_bPrintfOn) printf
 
 
-//#include "EmuD3DPixelShader.h"
-
 /*---------------------------------------------------------------------------*/
 /*  Texture configuration - The following members of the D3DPixelShaderDef   */
 /*  structure define the addressing modes of each of the four texture stages:*/

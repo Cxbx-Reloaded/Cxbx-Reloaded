@@ -27,9 +27,6 @@
 
 #include "Cxbx.h"
 
-//#include <ctime> // Conflict with io.h
-
-//#include "core\kernel\support\EmuXTL.h"
 #include "core\hle\D3D8\XbVertexShader.h" // for CxbxVertexShaderInfo
 
 typedef struct _CxbxDrawContext

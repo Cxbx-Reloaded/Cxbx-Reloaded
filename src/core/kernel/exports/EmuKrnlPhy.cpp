@@ -36,7 +36,6 @@ namespace xboxkrnl
 #include <cstdio>
 #include <cctype>
 #include <clocale>
-//#include <process.h>
 
 #include "Logging.h"
 #include "EmuKrnlLogging.h"

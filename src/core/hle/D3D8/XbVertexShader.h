@@ -25,8 +25,6 @@
 #ifndef XBVERTEXSHADER_H
 #define XBVERTEXSHADER_H
 
-//#include "Cxbx.h"
-//#include "core\hle\D3D8\XbVertexBuffer.h" // for CxbxVertexShaderStreamInfo
 namespace XTL {
 	#include "core\hle\D3D8\XbD3D8Types.h" // for X_VSH_MAX_ATTRIBUTES
 }

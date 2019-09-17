@@ -34,15 +34,6 @@ namespace xboxkrnl
 };
 
 
-//#include <cstdio>
-//#include <cctype>
-//#include <clocale>
-//
-//#include <windows.h> // for DWORD
-//#include <sstream> // for std::stringstream
-//#include <iostream> // For std::cout
-//#include <iomanip> // For std::setw
-
 #include "Logging.h"
 #include "EmuKrnlLogging.h"
 #include "core\kernel\init\CxbxKrnl.h"
