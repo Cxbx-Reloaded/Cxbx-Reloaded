@@ -30,8 +30,6 @@
 #include "Logging.h"
 #include "XbD3D8Types.h"
 
-namespace XTL {
-
 // Additional types, exclusively for logging (not really enums) :
 enum D3DVS20CAPS;
 enum D3DPS20CAPS;
@@ -57,11 +55,15 @@ enum D3DVTXPCAPS;
 enum D3DDEVCAPS2;
 enum D3DDTCAPS;
 
+namespace XTL {
+
 enum X_D3DUSAGE;
 enum X_D3DCOMMON_TYPE;
 enum X_D3DRESOURCE_COMMON;
 enum X_D3DRESOURCE_FORMAT;
 enum X_D3DRESOURCE_SIZE;
+
+} // end of namespace XTL
 
 //
 // Headers for rendering host D3D enum types :
@@ -106,6 +108,8 @@ LOGRENDER_HEADER(D3DPSHADERCAPS2_0)
 LOGRENDER_HEADER(D3DCAPS)
 LOGRENDER_HEADER(D3DLOCKED_RECT)
 LOGRENDER_HEADER(RECT)
+
+namespace XTL {
 
 //
 // Headers for rendering Xbox D3D enum types :

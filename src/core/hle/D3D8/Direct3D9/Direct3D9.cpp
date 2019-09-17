@@ -1432,7 +1432,6 @@ VOID EmuD3DInit()
 
 		// Dump Host D3DCaps to log unconditionally
 		std::cout << "----------------------------------------\n";
-		using namespace XTL; // To resolve logging of g_D3DCaps. TODO : Fix this
 		std::cout << "Host D3DCaps : " << g_D3DCaps << "\n";
 		std::cout << "----------------------------------------\n";
 	}
