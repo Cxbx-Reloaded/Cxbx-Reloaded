@@ -25,8 +25,6 @@
 #ifndef _EMU_KERNEL_LOGGING_H
 #define _EMU_KERNEL_LOGGING_H
 
-#pragma once
-
 // prevent name collisions
 namespace xboxkrnl
 {

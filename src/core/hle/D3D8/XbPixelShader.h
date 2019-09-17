@@ -25,8 +25,6 @@
 #ifndef XBPIXELSHADER_H
 #define XBPIXELSHADER_H
 
-#pragma once
-
 #include "Cxbx.h"
 
 #include "core\hle\D3D8\XbD3D8Types.h"

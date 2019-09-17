@@ -53,14 +53,6 @@
   - Alternatively, translate to HLSL and let D3DXCompileShader/D3DCompile figure it out
 */
 
-// ******************************************************************
-// * prevent name collisions
-// ******************************************************************
-//namespace xboxkrnl
-//{
-//    #include <xboxkrnl/xboxkrnl.h>
-//};
-
 #define LOG_PREFIX CXBXR_MODULE::PXSH
 
 #include "core\kernel\support\Emu.h"

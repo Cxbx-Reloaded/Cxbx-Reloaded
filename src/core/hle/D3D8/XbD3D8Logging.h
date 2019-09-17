@@ -25,8 +25,6 @@
 #ifndef _EMU_D3D8_LOGGING_H
 #define _EMU_D3D8_LOGGING_H
 
-#pragma once
-
 #include "Logging.h"
 #include "XbD3D8Types.h"
 

@@ -26,8 +26,6 @@
 #ifndef _LOGGING_H
 #define _LOGGING_H
 
-#pragma once
-
 #include <windows.h> // For DWORD
 #include <sstream> // For std::stringstream
 #include <iostream> // For std::cout

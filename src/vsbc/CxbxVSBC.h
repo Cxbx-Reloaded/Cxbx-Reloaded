@@ -2,7 +2,12 @@
 #define CXBXVSBC_API __declspec(dllexport) 
 #else
 #define CXBXVSBC_API __declspec(dllimport) 
-#endif#pragma once
+#endif
+
+#ifdef _MSC_VER
+#pragma once
+#endif
+
 #ifndef X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_VIRTUAL_SBC
 #define X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_VIRTUAL_SBC 0x80
 #endif

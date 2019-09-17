@@ -26,7 +26,6 @@
 #define RESERVEDMEMORY_H
 
 #if defined(__cplusplus)
-#pragma once
 extern "C"
 {
 #endif
