@@ -985,7 +985,7 @@ VOID WINAPI EMUPATCH(D3DDevice_BlockUntilVerticalBlank)();
 // ******************************************************************
 VOID WINAPI EMUPATCH(D3DDevice_SetVerticalBlankCallback)
 (
-    D3DVBLANKCALLBACK pCallback
+    X_D3DVBLANKCALLBACK pCallback
 );
 
 // ******************************************************************
@@ -1893,7 +1893,7 @@ void WINAPI EMUPATCH(D3DDevice_SetStipple)( DWORD* pPattern );
 // ******************************************************************
 void WINAPI EMUPATCH(D3DDevice_SetSwapCallback)
 (
-	D3DSWAPCALLBACK		pCallback
+	X_D3DSWAPCALLBACK		pCallback
 );
 
 // ******************************************************************

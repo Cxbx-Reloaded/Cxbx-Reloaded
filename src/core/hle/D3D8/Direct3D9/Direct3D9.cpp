@@ -104,11 +104,11 @@ static DDCAPS                       g_DriverCaps          = { 0 };
 static HBRUSH                       g_hBgBrush      = NULL; // Background Brush
 static volatile bool                g_bRenderWindowActive = false;
 static Settings::s_video            g_XBVideo;
-static XTL::D3DVBLANKCALLBACK       g_pVBCallback   = NULL; // Vertical-Blank callback routine
+static XTL::X_D3DVBLANKCALLBACK     g_pVBCallback   = NULL; // Vertical-Blank callback routine
 static std::condition_variable		g_VBConditionVariable;	// Used in BlockUntilVerticalBlank
 static std::mutex					g_VBConditionMutex;		// Used in BlockUntilVerticalBlank
-static XTL::D3DSWAPCALLBACK			g_pSwapCallback = NULL;	// Swap/Present callback routine
-static XTL::D3DCALLBACK				g_pCallback		= NULL;	// D3DDevice::InsertCallback routine
+static XTL::X_D3DSWAPCALLBACK		g_pSwapCallback = NULL;	// Swap/Present callback routine
+static XTL::X_D3DCALLBACK			g_pCallback		= NULL;	// D3DDevice::InsertCallback routine
 static XTL::X_D3DCALLBACKTYPE		g_CallbackType;			// Callback type
 static DWORD						g_CallbackParam;		// Callback param
 static bool                         g_bHasDepth = false;    // Does device have a Depth Buffer?
@@ -147,11 +147,11 @@ static IDirect3DVertexBuffer       *g_pDummyBuffer = NULL;  // Dummy buffer, use
 static DWORD						g_dwLastSetStream = 0;	// The last stream set by D3DDevice::SetStreamSource
 
 // current vertical blank information
-static XTL::D3DVBLANKDATA			g_VBData = {0};
+static XTL::X_D3DVBLANKDATA			g_VBData = {0};
 static DWORD                        g_VBLastSwap = 0;
 
 // current swap information
-static XTL::D3DSWAPDATA				g_SwapData = {0};
+static XTL::X_D3DSWAPDATA			g_SwapData = {0};
 static DWORD						g_SwapLast = 0;
 
 static CxbxVertexBufferConverter VertexBufferConverter = {};
@@ -6022,7 +6022,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_BlockUntilVerticalBlank)()
 // ******************************************************************
 VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVerticalBlankCallback)
 (
-    D3DVBLANKCALLBACK pCallback
+    X_D3DVBLANKCALLBACK pCallback
 )
 {
 	LOG_FUNC_ONE_ARG(pCallback);
@@ -9096,7 +9096,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_InsertCallback)
 		LOG_FUNC_END;
 
 	// TODO: Implement
-	g_pCallback = (D3DCALLBACK) pCallback;
+	g_pCallback = pCallback;
 	g_CallbackType = Type;
 	g_CallbackParam = Context;
 
@@ -9253,7 +9253,7 @@ void WINAPI XTL::EMUPATCH(D3DDevice_SetStipple)( DWORD* pPattern )
 // ******************************************************************
 void WINAPI XTL::EMUPATCH(D3DDevice_SetSwapCallback)
 (
-	D3DSWAPCALLBACK		pCallback
+	X_D3DSWAPCALLBACK		pCallback
 )
 {
 	LOG_FUNC_ONE_ARG(pCallback);
