@@ -62,7 +62,7 @@ extern UINT g_D3DStreamStrides[X_VSH_MAX_STREAMS];
 extern XTL::X_D3DSurface* g_pXboxRenderTarget;
 extern XTL::X_D3DSurface* g_XboxBackBufferSurface;
 void *GetDataFromXboxResource(XTL::X_D3DResource *pXboxResource);
-bool GetHostRenderTargetDimensions(DWORD* pHostWidth, DWORD* pHostHeight, XTL::IDirect3DSurface* pHostRenderTarget = nullptr);
+bool GetHostRenderTargetDimensions(DWORD* pHostWidth, DWORD* pHostHeight, IDirect3DSurface* pHostRenderTarget = nullptr);
 uint32_t GetPixelContainerWidth(XTL::X_D3DPixelContainer* pPixelContainer);
 uint32_t GetPixelContainerHeight(XTL::X_D3DPixelContainer* pPixelContainer);
 
@@ -240,7 +240,7 @@ void CxbxVertexBufferConverter::ConvertStream
     UINT             uiStream
 )
 {
-	extern XTL::D3DCAPS g_D3DCaps;
+	extern D3DCAPS g_D3DCaps;
 
 	bool bVshHandleIsFVF = VshHandleIsFVF(g_Xbox_VertexShader_Handle);
 	DWORD XboxFVF = bVshHandleIsFVF ? g_Xbox_VertexShader_Handle : 0;
@@ -301,7 +301,7 @@ void CxbxVertexBufferConverter::ConvertStream
 	UINT uiHostVertexStride = 0;
 	DWORD dwHostVertexDataSize = 0;
 	uint8_t *pHostVertexData = nullptr;
-	XTL::IDirect3DVertexBuffer *pNewHostVertexBuffer = nullptr;
+	IDirect3DVertexBuffer *pNewHostVertexBuffer = nullptr;
 
     if (pDrawContext->pXboxVertexStreamZeroData != xbnullptr) {
 		// There should only be one stream (stream zero) in this case
@@ -413,7 +413,7 @@ void CxbxVertexBufferConverter::ConvertStream
             dwHostVertexDataSize,
             D3DUSAGE_WRITEONLY | D3DUSAGE_DYNAMIC,
             0,
-            XTL::D3DPOOL_DEFAULT,
+            D3DPOOL_DEFAULT,
             &pNewHostVertexBuffer,
             nullptr
         );

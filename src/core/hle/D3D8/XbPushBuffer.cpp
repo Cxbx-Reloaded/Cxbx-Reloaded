@@ -100,11 +100,11 @@ UINT DxbxFVFToVertexSizeInBytes(DWORD dwFVF, BOOL bIncludeTextures)
 	}
 
 	if (dwFVF & D3DFVF_DIFFUSE) {
-		Result += sizeof(XTL::D3DCOLOR);
+		Result += sizeof(D3DCOLOR);
 	}
 
 	if (dwFVF & D3DFVF_SPECULAR) {
-		Result += sizeof(XTL::D3DCOLOR);
+		Result += sizeof(D3DCOLOR);
 	}
 
 	if (bIncludeTextures) {

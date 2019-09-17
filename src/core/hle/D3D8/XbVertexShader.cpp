@@ -764,7 +764,7 @@ static void VshWriteParameter(VSH_IMD_PARAMETER *pParameter,
 
 #define D3DDECLUSAGE_UNSUPPORTED ((D3DDECLUSAGE)-1)
 
-XTL::D3DDECLUSAGE Xb2PCRegisterType
+D3DDECLUSAGE Xb2PCRegisterType
 (
 	DWORD VertexRegister,
 	BYTE& PCUsageIndex
@@ -842,11 +842,11 @@ XTL::D3DDECLUSAGE Xb2PCRegisterType
 	return PCRegisterType;
 }
 
-extern XTL::D3DCAPS g_D3DCaps;
+extern D3DCAPS g_D3DCaps;
 
 static void VshWriteShader(VSH_XBOX_SHADER *pShader,
                            std::stringstream& pDisassembly,
-						   XTL::D3DVERTEXELEMENT *pRecompiled,
+						   D3DVERTEXELEMENT *pRecompiled,
                            boolean Truncate)
 {
     switch(pShader->ShaderHeader.Version)
@@ -1750,7 +1750,7 @@ protected:
 	CxbxVertexShaderStreamInfo* pCurrentVertexShaderStreamInfo = nullptr;
 	DWORD temporaryCount;
 	bool IsFixedFunction;
-	XTL::D3DVERTEXELEMENT* pRecompiled;
+	D3DVERTEXELEMENT* pRecompiled;
 
 public:
 	// Output
@@ -2278,7 +2278,7 @@ private:
 	}
 
 public:
-	XTL::D3DVERTEXELEMENT *Convert(DWORD* pXboxDeclaration, bool bIsFixedFunction, CxbxVertexShaderInfo* pCxbxVertexShaderInfo)
+	D3DVERTEXELEMENT *Convert(DWORD* pXboxDeclaration, bool bIsFixedFunction, CxbxVertexShaderInfo* pCxbxVertexShaderInfo)
 	{
 		using namespace XTL;
 
@@ -2342,7 +2342,7 @@ public:
 	}
 };
 
-XTL::D3DVERTEXELEMENT *EmuRecompileVshDeclaration
+D3DVERTEXELEMENT *EmuRecompileVshDeclaration
 (
     DWORD                *pXboxDeclaration,
     bool                  bIsFixedFunction,
@@ -2353,7 +2353,7 @@ XTL::D3DVERTEXELEMENT *EmuRecompileVshDeclaration
 {
 	XboxVertexDeclarationConverter Converter;
 
-	XTL::D3DVERTEXELEMENT* pHostVertexElements = Converter.Convert(pXboxDeclaration, bIsFixedFunction, pCxbxVertexShaderInfo);
+	D3DVERTEXELEMENT* pHostVertexElements = Converter.Convert(pXboxDeclaration, bIsFixedFunction, pCxbxVertexShaderInfo);
 
 	*pXboxDeclarationCount = Converter.XboxDeclarationCount;
 	*pHostDeclarationSize = Converter.HostDeclarationSize;
@@ -2366,15 +2366,13 @@ extern HRESULT EmuRecompileVshFunction
 (
     DWORD        *pXboxFunction,
     bool          bNoReservedConstants,
-	XTL::D3DVERTEXELEMENT *pRecompiledDeclaration,
+	D3DVERTEXELEMENT *pRecompiledDeclaration,
     bool   		 *pbUseDeclarationOnly,
     DWORD        *pXboxFunctionSize,
-	XTL::LPD3DXBUFFER *ppRecompiledShader
+	LPD3DXBUFFER *ppRecompiledShader
 )
 {
-	using namespace XTL;
-
-	X_VSH_SHADER_HEADER   *pXboxVertexShaderHeader = (X_VSH_SHADER_HEADER*)pXboxFunction;
+	XTL::X_VSH_SHADER_HEADER   *pXboxVertexShaderHeader = (XTL::X_VSH_SHADER_HEADER*)pXboxFunction;
     DWORD               *pToken;
     boolean             EOI = false;
     VSH_XBOX_SHADER     *pShader = (VSH_XBOX_SHADER*)calloc(1, sizeof(VSH_XBOX_SHADER));
@@ -2418,7 +2416,7 @@ extern HRESULT EmuRecompileVshFunction
     {
 		RegVIsUsedByShader.fill(false);
 
-        for (pToken = (DWORD*)((uint8_t*)pXboxFunction + sizeof(X_VSH_SHADER_HEADER)); !EOI; pToken += X_VSH_INSTRUCTION_SIZE)
+        for (pToken = (DWORD*)((uint8_t*)pXboxFunction + sizeof(XTL::X_VSH_SHADER_HEADER)); !EOI; pToken += X_VSH_INSTRUCTION_SIZE)
         {
             VSH_SHADER_INSTRUCTION Inst;
 

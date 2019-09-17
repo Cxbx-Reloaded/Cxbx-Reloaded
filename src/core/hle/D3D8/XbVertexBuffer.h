@@ -64,7 +64,7 @@ public:
     bool                    bCacheIsStreamZeroDrawUP = false;
     void                   *pCachedHostVertexStreamZeroData = nullptr;
     bool                    bCachedHostVertexStreamZeroDataIsAllocated = false;
-    XTL::IDirect3DVertexBuffer *pCachedHostVertexBuffer = nullptr;
+    IDirect3DVertexBuffer  *pCachedHostVertexBuffer = nullptr;
 };
 
 class CxbxVertexBufferConverter
@@ -101,16 +101,16 @@ extern DWORD                   g_InlineVertexBuffer_FVF;
 
 extern struct _D3DIVB
 {
-    XTL::D3DXVECTOR3 Position;     // X_D3DVSDE_POSITION (*) > D3DFVF_XYZ / D3DFVF_XYZRHW
+    D3DXVECTOR3 Position;     // X_D3DVSDE_POSITION (*) > D3DFVF_XYZ / D3DFVF_XYZRHW
     FLOAT            Rhw;          // X_D3DVSDE_VERTEX (*)   > D3DFVF_XYZ / D3DFVF_XYZRHW
 	FLOAT			 Blend[4];	   // X_D3DVSDE_BLENDWEIGHT  > D3DFVF_XYZB1 (and 3 more up to D3DFVF_XYZB4)
-    XTL::D3DXVECTOR3 Normal;       // X_D3DVSDE_NORMAL       > D3DFVF_NORMAL
-	XTL::D3DCOLOR         Diffuse;      // X_D3DVSDE_DIFFUSE      > D3DFVF_DIFFUSE
-	XTL::D3DCOLOR         Specular;     // X_D3DVSDE_SPECULAR     > D3DFVF_SPECULAR
+    D3DXVECTOR3 Normal;       // X_D3DVSDE_NORMAL       > D3DFVF_NORMAL
+	D3DCOLOR         Diffuse;      // X_D3DVSDE_DIFFUSE      > D3DFVF_DIFFUSE
+	D3DCOLOR         Specular;     // X_D3DVSDE_SPECULAR     > D3DFVF_SPECULAR
 	FLOAT            Fog;          // X_D3DVSDE_FOG          > D3DFVF_FOG unavailable; TODO : How to handle?
-	XTL::D3DCOLOR         BackDiffuse;  // X_D3DVSDE_BACKDIFFUSE  > D3DFVF_BACKDIFFUSE unavailable; TODO : How to handle?
-	XTL::D3DCOLOR         BackSpecular; // X_D3DVSDE_BACKSPECULAR > D3DFVF_BACKSPECULAR unavailable; TODO : How to handle?
-    XTL::D3DXVECTOR4 TexCoord[4];  // X_D3DVSDE_TEXCOORD0    > D3DFVF_TEX1 (and 4 more up to D3DFVF_TEX4)
+	D3DCOLOR         BackDiffuse;  // X_D3DVSDE_BACKDIFFUSE  > D3DFVF_BACKDIFFUSE unavailable; TODO : How to handle?
+	D3DCOLOR         BackSpecular; // X_D3DVSDE_BACKSPECULAR > D3DFVF_BACKSPECULAR unavailable; TODO : How to handle?
+    D3DXVECTOR4 TexCoord[4];  // X_D3DVSDE_TEXCOORD0    > D3DFVF_TEX1 (and 4 more up to D3DFVF_TEX4)
 
 	// (*) X_D3DVSDE_POSITION and X_D3DVSDE_VERTEX both set Position, but Rhw seems optional,
 	// hence, selection for D3DFVF_XYZ or D3DFVF_XYZRHW is rather fuzzy. We DO know that once

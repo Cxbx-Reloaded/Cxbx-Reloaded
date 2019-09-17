@@ -27,8 +27,6 @@
 
 #undef UNICODE // make sure dxerr.h DXGetErrorString is aliassed to *A, not *W
 
-namespace XTL {
-
 // include direct3d 9x headers
 #define DIRECT3D_VERSION 0x0900
 #include <d3d9.h>
@@ -85,6 +83,8 @@ namespace XTL {
 #define IDirect3DVolume          IDirect3DVolume9
 #define IDirect3DSwapChain       IDirect3DSwapChain9
 //#define IDirect3DQuery           IDirect3DQuery9
+
+namespace XTL {
 
 // TODO : Declare these aliasses as Xbox type
 typedef D3DLIGHT9 X_D3DLIGHT8;
