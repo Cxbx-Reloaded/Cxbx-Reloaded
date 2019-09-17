@@ -1,11 +1,9 @@
+#pragma once
+
 #ifdef CXBXVSBC_EXPORTS
 #define CXBXVSBC_API __declspec(dllexport) 
 #else
 #define CXBXVSBC_API __declspec(dllimport) 
-#endif
-
-#ifdef _MSC_VER
-#pragma once
 #endif
 
 #ifndef X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_VIRTUAL_SBC

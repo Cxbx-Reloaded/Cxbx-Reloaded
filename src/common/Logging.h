@@ -390,15 +390,6 @@ extern thread_local std::string _logThreadPrefix;
 			} \
 		} while(0)
 
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable : 4477)
-#endif
-
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif
-
 //
 // Short hand function logging defines :
 //
