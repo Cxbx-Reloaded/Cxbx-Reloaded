@@ -49,7 +49,7 @@ DEVICE_READ32(PRMCIO)
 		break;
 	default:
 		DEBUG_READ32_UNHANDLED(PRMCIO);
-		printf("vga: UNHANDLED ADDR %s\n", addr);
+		printf("vga: UNHANDLED ADDR %x\n", addr);
 		break;
 	}
 

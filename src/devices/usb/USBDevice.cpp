@@ -417,7 +417,7 @@ void USBDevice::DoTokenIn(XboxDeviceState* s, USBPacket* p)
 
 		case SETUP_STATE_DATA:
 			if (s->SetupBuffer[0] & USB_DIR_IN) {
-				int len = s->SetupLength - s->SetupIndex;
+				size_t len = s->SetupLength - s->SetupIndex;
 				if (len > p->IoVec.Size) {
 					len = p->IoVec.Size;
 				}
@@ -454,7 +454,7 @@ void USBDevice::DoTokenOut(XboxDeviceState* s, USBPacket* p)
 
 		case SETUP_STATE_DATA:
 			if (!(s->SetupBuffer[0] & USB_DIR_IN)) {
-				int len = s->SetupLength - s->SetupIndex;
+				size_t len = s->SetupLength - s->SetupIndex;
 				if (len > p->IoVec.Size) {
 					len = p->IoVec.Size;
 				}
@@ -1008,7 +1008,7 @@ int USBDevice::USBDesc_HandleStandardGetDescriptor(XboxDeviceState* dev, USBPack
 	}
 
 	if (ret > 0) {
-		if (ret > len) {
+		if ((size_t)ret > len) {
 			ret = len;
 		}
 		std::memcpy(dest, buf, ret);
@@ -1211,7 +1211,7 @@ int USBDevice::USB_ReadStringDesc(XboxDeviceState* dev, int index, uint8_t* dest
 	// computed by subtracting two from the value of the first byte of the descriptor"
 
 	bLength = std::strlen(str) * 2 + 2;
-	dest[0] = bLength;
+	dest[0] = bLength & 0xFF;
 	dest[1] = USB_DT_STRING;
 	i = 0; pos = 2;
 	while (pos + 1 < bLength && pos + 1 < len) {

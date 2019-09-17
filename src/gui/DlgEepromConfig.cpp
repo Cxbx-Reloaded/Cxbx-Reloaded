@@ -25,13 +25,6 @@
 // *
 // ******************************************************************
 
-
-// prevent name collisions
-namespace xboxkrnl
-{
-	#include <xboxkrnl/xboxkrnl.h> // For XC_VALUE_INDEX and XBOX_EEPROM
-};
-
 #include <fstream>
 #include "EmuEEPROM.h" // For EEPROMInfo, EEPROMInfos
 #include "core\kernel\init\CxbxKrnl.h"

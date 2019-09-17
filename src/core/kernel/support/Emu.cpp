@@ -52,7 +52,7 @@ volatile bool    g_bPrintfOn = true;
 bool g_DisablePixelShaders = false;
 bool g_UseAllCores = false;
 bool g_SkipRdtscPatching = false;
-int g_RenderScaleFactor = 1.0f;
+int g_RenderScaleFactor = 1;
 
 // Delta added to host SystemTime, used in KiClockIsr and KeSetSystemTime
 // This shouldn't need to be atomic, but because raising the IRQL to high lv in KeSetSystemTime doesn't really stop KiClockIsr from running,
@@ -422,9 +422,9 @@ void EmuPrintStackTrace(PCONTEXT ContextRecord)
 
         SymGetModuleInfo64(g_CurrentProcessHandle, frame.AddrPC.Offset, &module);
         if(module.ModuleName)
-            printf(" %2d: %-8s 0x%.08X", i, module.ModuleName, frame.AddrPC.Offset);
+            printf(" %2d: %-8s 0x%.08llX", i, module.ModuleName, frame.AddrPC.Offset);
         else
-            printf(" %2d: %8c 0x%.08X", i, ' ', frame.AddrPC.Offset);
+            printf(" %2d: %8c 0x%.08llX", i, ' ', frame.AddrPC.Offset);
 
 		BYTE symbol[sizeof(SYMBOL_INFO) + SYMBOL_MAXLEN] = { 0 };
 		std::string symbolName = "";
@@ -451,7 +451,7 @@ void EmuPrintStackTrace(PCONTEXT ContextRecord)
         }
 
 		if (!symbolName.empty())
-			printf(" %s+0x%.04X\n", symbolName.c_str(), dwDisplacement);
+			printf(" %s+0x%.04llX\n", symbolName.c_str(), dwDisplacement);
         else
             printf("\n");
     }

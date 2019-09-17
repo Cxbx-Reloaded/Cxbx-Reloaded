@@ -32,6 +32,14 @@ extern "C"
 {
 #endif
 
+// prevent name collisions
+namespace xboxkrnl
+{
+#undef _WIN32 // Compile-in REG_DWORD and friends, since we lack a <windows> include here
+#include <xboxkrnl/xboxkrnl.h> // For XC_VALUE_INDEX and XBOX_EEPROM
+#define _WIN32
+};
+
 #define EEPROM_SIZE sizeof(xboxkrnl::XBOX_EEPROM)
 
 typedef struct EEPROMInfo {

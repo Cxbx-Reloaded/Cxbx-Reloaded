@@ -430,7 +430,8 @@ bool OHCI::OHCI_WriteIsoTD(xbaddr Paddr, OHCI_ISO_TD* td)
 
 bool OHCI::OHCI_CopyTDBuffer(OHCI_TD* Td, uint8_t* Buffer, int Length, bool bIsWrite)
 {
-	uint32_t ptr, n;
+	uint32_t ptr;
+	int n;
 
 	// Figure out if we are crossing a 4K page boundary
 	ptr = Td->CurrentBufferPointer;
@@ -460,7 +461,8 @@ bool OHCI::OHCI_CopyTDBuffer(OHCI_TD* Td, uint8_t* Buffer, int Length, bool bIsW
 
 bool OHCI::OHCI_CopyIsoTDBuffer(uint32_t start_addr, uint32_t end_addr, uint8_t* Buffer, int Length, bool bIsWrite)
 {
-	uint32_t ptr, n;
+	uint32_t ptr;
+	int n;
 
 	ptr = start_addr;
 	n = 0x1000 - (ptr & 0xFFF);
@@ -1287,7 +1289,7 @@ uint32_t OHCI::OHCI_GetFrameRemaining()
 		return m_Registers.HcFmRemaining & OHCI_FMR_FRT;
 	}
 
-	ticks = Muldiv64(1, ticks, m_TicksPerUsbTick);
+	ticks = Muldiv64(1, (uint32_t)ticks, (uint32_t)m_TicksPerUsbTick);
 	frame = static_cast<uint16_t>((m_Registers.HcFmInterval & OHCI_FMI_FI) - ticks);
 
 	return (m_Registers.HcFmRemaining & OHCI_FMR_FRT) | frame;
@@ -1564,7 +1566,7 @@ void OHCI::OHCI_ProcessLists(int completion)
 int OHCI::OHCI_ServiceIsoTD(OHCI_ED* ed, int completion)
 {
 	int dir;
-	size_t len = 0;
+	int len = 0;
 #ifdef DEBUG_ISOCH
 	const char* str = nullptr;
 #endif

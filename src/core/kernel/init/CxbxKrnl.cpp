@@ -539,6 +539,7 @@ void PrintCurrentConfigurationLog()
 		// The correct solution is to use GetProductInfo but that function
 		// requires more logic to parse the response, and I didn't feel
 		// like building it just yet :P
+#pragma warning(suppress: 4996) // GetVersion is deprecated, but there's no simple alternative
 		dwVersion = GetVersion();
 
 		dwMajorVersion = (DWORD)(LOBYTE(LOWORD(dwVersion)));
@@ -886,7 +887,7 @@ void ImportLibraries(XbeImportEntry *pImportDirectory)
 			MapThunkTable((uint32_t *)pImportDirectory->ThunkAddr, Cxbx_LibXbdmThunkTable);
 		}
 		else {
-			printf("LOAD : Skipping unrecognized import library : %s\n", LibName.c_str());
+			wprintf(L"LOAD : Skipping unrecognized import library : %s\n", LibName.c_str());
 		}
 
 		pImportDirectory++;
@@ -1359,15 +1360,15 @@ __declspec(noreturn) void CxbxKrnlInit
 		printf("[0x%X] INIT: Debug Trace Enabled.\n", GetCurrentThreadId());
 		printf("[0x%X] INIT: CxbxKrnlInit\n"
 			"(\n"
-			"   hwndParent          : 0x%.08X\n"
-			"   pTLSData            : 0x%.08X\n"
-			"   pTLS                : 0x%.08X\n"
-			"   pLibraryVersion     : 0x%.08X\n"
+			"   hwndParent          : 0x%.08p\n"
+			"   pTLSData            : 0x%.08p\n"
+			"   pTLS                : 0x%.08p\n"
+			"   pLibraryVersion     : 0x%.08p\n"
 			"   DebugConsole        : 0x%.08X\n"
 			"   DebugFilename       : \"%s\"\n"
-			"   pXBEHeader          : 0x%.08X\n"
+			"   pXBEHeader          : 0x%.08p\n"
 			"   pXBEHeaderSize      : 0x%.08X\n"
-			"   Entry               : 0x%.08X\n"
+			"   Entry               : 0x%.08p\n"
 			");\n",
 			GetCurrentThreadId(), CxbxKrnl_hEmuParent, pTLSData, pTLS, pLibraryVersion, DbgMode, szDebugFilename, pXbeHeader, dwXbeHeaderSize, Entry);
 #else

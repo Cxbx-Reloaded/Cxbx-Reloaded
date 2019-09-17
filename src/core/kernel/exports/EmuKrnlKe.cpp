@@ -2080,9 +2080,9 @@ XBSYSAPI EXPORTNUM(158) xboxkrnl::NTSTATUS NTAPI xboxkrnl::KeWaitForMultipleObje
 
 			//WaitStatus = (NTSTATUS)KiSwapThread();
 
-			if (WaitStatus == STATUS_USER_APC) {
+			//if (WaitStatus == STATUS_USER_APC) {
 				// TODO: KiDeliverUserApc();
-			}
+			//}
 
 			// If the thread was not awakened for an APC, return the Wait Status
 			//if (WaitStatus != STATUS_KERNEL_APC) {

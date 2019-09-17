@@ -175,7 +175,7 @@ typedef long                            NTSTATUS;
 // * Registry value types
 // ******************************************************************
 // Used in ExQueryNonVolatileSetting and ExSaveNonVolatileSetting
-#ifndef REG_NONE // Avoid "warning C4005:  'REG_NONE': macro redefinition" (conflicting with winnt.h)
+#ifndef _WIN32 // Avoid "warning C4005:  'REG_NONE': macro redefinition" (conflicting with winnt.h)
 #define REG_NONE                    ( 0 )   // No defined value type.
 #define REG_SZ                      ( 1 )   // A null - terminated string. This will be either a Unicode or an ANSI string, depending on whether you use the Unicode or ANSI functions.
 #define REG_EXPAND_SZ               ( 2 )   // A null - terminated string that contains unexpanded references to environment variables (for example, "%PATH%"). It will be a Unicode or ANSI string depending on whether you use the Unicode or ANSI functions. To expand the environment variable references, use the ExpandEnvironmentStrings function.
@@ -188,7 +188,7 @@ typedef long                            NTSTATUS;
 #define REG_RESOURCE_LIST           ( 8 )   // Resource list in the resource map
 #define REG_FULL_RESOURCE_DESCRIPTOR ( 9 )  // Resource list in the hardware description
 #define REG_RESOURCE_REQUIREMENTS_LIST ( 10 )
-#endif // ! REG_NONE
+#endif
 
 // ******************************************************************
 // * calling conventions

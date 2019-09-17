@@ -29,10 +29,10 @@ public:
 #endif
 	}
 
-	const std::bitset<32> &EAX() const { return regs[0]; }
-	const std::bitset<32> &EBX() const { return regs[1]; }
-	const std::bitset<32> &ECX() const { return regs[2]; }
-	const std::bitset<32> &EDX() const { return regs[3]; }
+	const std::bitset<32> &EAX() const { return (std::bitset<32> &)regs[0]; }
+	const std::bitset<32> &EBX() const { return (std::bitset<32> &)regs[1]; }
+	const std::bitset<32> &ECX() const { return (std::bitset<32> &)regs[2]; }
+	const std::bitset<32> &EDX() const { return (std::bitset<32> &)regs[3]; }
 };
 
 class SimdCaps {

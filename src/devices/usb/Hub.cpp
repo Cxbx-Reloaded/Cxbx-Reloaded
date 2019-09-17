@@ -391,9 +391,9 @@ void Hub::UsbHub_HandleControl(XboxDeviceState* dev, USBPacket* p,
 			port = &m_HubState->ports[n];
 			EmuLog(LOG_LEVEL::DEBUG, "GetPortStatus -> Address 0x%X, wIndex %d, wPortStatus %d, wPortChange %d",
 				m_HubState->dev.Addr, index, port->wPortStatus, port->wPortChange);
-			data[0] = port->wPortStatus;
+			data[0] = port->wPortStatus & 0xFF;
 			data[1] = port->wPortStatus >> 8;
-			data[2] = port->wPortChange;
+			data[2] = port->wPortChange & 0xFF;
 			data[3] = port->wPortChange >> 8;
 			p->ActualLength = 4;
 			break;
@@ -522,7 +522,7 @@ void Hub::UsbHub_HandleData(XboxDeviceState* dev, USBPacket* p)
 				USBHubPort* port;
 				unsigned int status;
 				uint8_t buf[4];
-				int i, n;
+				size_t i, n;
 				status = 0;
 				for (i = 0; i < NUM_PORTS; i++) {
 					port = &m_HubState->ports[i];

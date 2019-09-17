@@ -417,11 +417,11 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 	CSimpleIniA symbolCacheData;
 
 	if (std::experimental::filesystem::exists(filename.c_str())) {
-		std::printf("Found Symbol Cache File: %08X.ini\n", uiHash);
+		std::printf("Found Symbol Cache File: %08llX.ini\n", uiHash);
 
 		symbolCacheData.LoadFile(filename.c_str());
 
-		xdkVersion = symbolCacheData.GetLongValue(section_libs, sect_libs_keys.BuildVersion, /*Default=*/0);
+		xdkVersion = (uint16_t)symbolCacheData.GetLongValue(section_libs, sect_libs_keys.BuildVersion, /*Default=*/0);
 
 		// Verify the version of the cache file against the Symbol Database version hash
 		const uint32_t SymbolDatabaseVersionHash = symbolCacheData.GetLongValue(section_info, sect_info_keys.SymbolDatabaseVersionHash, /*Default=*/0);
