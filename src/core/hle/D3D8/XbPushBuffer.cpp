@@ -242,15 +242,12 @@ void HLE_draw_inline_array(NV2AState *d)
 	// All attributes in the vertex format must be padded DWORD multiples, and the vertex attributes must be specified in the canonical FVF ordering
 	// (position followed by weight, normal, diffuse, and so on).
 	// retrieve vertex shader
-	XTL::DWORD dwVertexShader = g_Xbox_VertexShader_Handle;
-	if (dwVertexShader == 0) {
+	if (g_Xbox_VertexShader_Handle == 0) {
 		LOG_TEST_CASE("FVF Vertex Shader is null");
-		dwVertexShader = -1;
 	}
-
 	// render vertices
-	if (dwVertexShader != -1) {
-		XTL::DWORD dwVertexStride = CxbxGetStrideFromVertexShaderHandle(dwVertexShader);
+	else {
+		XTL::DWORD dwVertexStride = CxbxGetStrideFromVertexShaderHandle(g_Xbox_VertexShader_Handle);
 		if (dwVertexStride > 0) {
 			XTL::UINT VertexCount = (pg->inline_array_length * sizeof(XTL::DWORD)) / dwVertexStride;
 			CxbxDrawContext DrawContext = {};
@@ -259,7 +256,6 @@ void HLE_draw_inline_array(NV2AState *d)
 			DrawContext.dwVertexCount = VertexCount;
 			DrawContext.pXboxVertexStreamZeroData = pg->inline_array;
 			DrawContext.uiXboxVertexStreamZeroStride = dwVertexStride;
-			DrawContext.XboxVertexShaderHandle = dwVertexShader;
 
 			CxbxDrawPrimitiveUP(DrawContext);
 		}
@@ -278,7 +274,6 @@ void HLE_draw_inline_elements(NV2AState *d)
 
 		DrawContext.XboxPrimitiveType = (X_D3DPRIMITIVETYPE)pg->primitive_mode;
 		DrawContext.dwVertexCount = EmuD3DIndexCountToVertexCount(DrawContext.XboxPrimitiveType, uiIndexCount);
-		DrawContext.XboxVertexShaderHandle = g_Xbox_VertexShader_Handle;
 		DrawContext.pIndexData = d->pgraph.inline_elements; // Used by GetVerticesInBuffer
 
 		CxbxDrawIndexed(DrawContext);

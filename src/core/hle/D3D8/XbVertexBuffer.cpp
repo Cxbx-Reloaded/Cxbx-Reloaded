@@ -158,8 +158,8 @@ UINT CxbxVertexBufferConverter::GetNbrStreams(CxbxDrawContext *pDrawContext)
 		return 1;
 	}
 
-    if(VshHandleIsVertexShader(pDrawContext->XboxVertexShaderHandle)) {
-        CxbxVertexShaderInfo *pVertexShaderInfo = GetCxbxVertexShaderInfo(pDrawContext->XboxVertexShaderHandle);
+    if(VshHandleIsVertexShader(g_Xbox_VertexShader_Handle)) {
+        CxbxVertexShaderInfo *pVertexShaderInfo = GetCxbxVertexShaderInfo(g_Xbox_VertexShader_Handle);
 		if (pVertexShaderInfo) {
 			if (pVertexShaderInfo->NumberOfVertexStreams <= X_VSH_MAX_STREAMS) {
 				return pVertexShaderInfo->NumberOfVertexStreams;
@@ -172,7 +172,7 @@ UINT CxbxVertexBufferConverter::GetNbrStreams(CxbxDrawContext *pDrawContext)
 		return CountActiveD3DStreams();
     } 
 	
-	if (pDrawContext->XboxVertexShaderHandle) {
+	if (g_Xbox_VertexShader_Handle) {
 		return CountActiveD3DStreams();
     }
 
@@ -242,8 +242,8 @@ void CxbxVertexBufferConverter::ConvertStream
 {
 	extern XTL::D3DCAPS g_D3DCaps;
 
-	bool bVshHandleIsFVF = VshHandleIsFVF(pDrawContext->XboxVertexShaderHandle);
-	DWORD XboxFVF = bVshHandleIsFVF ? pDrawContext->XboxVertexShaderHandle : 0;
+	bool bVshHandleIsFVF = VshHandleIsFVF(g_Xbox_VertexShader_Handle);
+	DWORD XboxFVF = bVshHandleIsFVF ? g_Xbox_VertexShader_Handle : 0;
 	// Texture normalization can only be set for FVF shaders
 	bool bNeedTextureNormalization = false;
 	struct { int NrTexCoords; bool bTexIsLinear; int Width; int Height; int Depth; } pActivePixelContainer[XTL::X_D3DTS_STAGECOUNT] = { 0 };
@@ -794,8 +794,8 @@ void CxbxVertexBufferConverter::Apply(CxbxDrawContext *pDrawContext)
 		CxbxKrnlCleanup("Unknown primitive type: 0x%.02X\n", pDrawContext->XboxPrimitiveType);
 
     m_pVertexShaderInfo = nullptr;
-    if (VshHandleIsVertexShader(pDrawContext->XboxVertexShaderHandle)) {
-        m_pVertexShaderInfo = &(GetCxbxVertexShader(pDrawContext->XboxVertexShaderHandle)->VertexShaderInfo);
+    if (VshHandleIsVertexShader(g_Xbox_VertexShader_Handle)) {
+        m_pVertexShaderInfo = &(GetCxbxVertexShader(g_Xbox_VertexShader_Handle)->VertexShaderInfo);
     }
 
 	pDrawContext->VerticesInBuffer = GetVerticesInBuffer(
@@ -995,7 +995,6 @@ VOID EmuFlushIVB()
 	DrawContext.dwVertexCount = g_InlineVertexBuffer_TableOffset;
 	DrawContext.pXboxVertexStreamZeroData = g_InlineVertexBuffer_pData;
 	DrawContext.uiXboxVertexStreamZeroStride = uiStride;
-	DrawContext.XboxVertexShaderHandle = g_Xbox_VertexShader_Handle;
 
 	HRESULT hRet;
 

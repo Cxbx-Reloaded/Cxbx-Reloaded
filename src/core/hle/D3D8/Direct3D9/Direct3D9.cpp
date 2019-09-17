@@ -7853,7 +7853,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawVertices)
 		DrawContext.XboxPrimitiveType = PrimitiveType;
 		DrawContext.dwVertexCount = VertexCount;
 		DrawContext.dwStartVertex = StartVertex;
-		DrawContext.XboxVertexShaderHandle = g_Xbox_VertexShader_Handle;
 
 		VertexBufferConverter.Apply(&DrawContext);
 		if (DrawContext.XboxPrimitiveType == X_D3DPT_QUADLIST) {
@@ -7954,7 +7953,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawVerticesUP)
 		DrawContext.dwVertexCount = VertexCount;
 		DrawContext.pXboxVertexStreamZeroData = pVertexStreamZeroData;
 		DrawContext.uiXboxVertexStreamZeroStride = VertexStreamZeroStride;
-		DrawContext.XboxVertexShaderHandle = g_Xbox_VertexShader_Handle;
 
 		CxbxDrawPrimitiveUP(DrawContext);
     }
@@ -8004,7 +8002,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVertices)
 
 		DrawContext.XboxPrimitiveType = PrimitiveType;
 		DrawContext.dwVertexCount = VertexCount;
-		DrawContext.XboxVertexShaderHandle = g_Xbox_VertexShader_Handle;
 		DrawContext.dwIndexBase = g_XboxBaseVertexIndex; // Used by GetVerticesInBuffer
 		DrawContext.pIndexData = pIndexData; // Used by GetVerticesInBuffer
 
@@ -8060,7 +8057,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVerticesUP)
 		DrawContext.dwVertexCount = VertexCount; 
 		DrawContext.pXboxVertexStreamZeroData = pVertexStreamZeroData;
 		DrawContext.uiXboxVertexStreamZeroStride = VertexStreamZeroStride;
-		DrawContext.XboxVertexShaderHandle = g_Xbox_VertexShader_Handle;
 		// Don't set DrawContext.pIndexData = (INDEX16*)pIndexData; // Used by GetVerticesInBuffer
 
 		VertexBufferConverter.Apply(&DrawContext);
