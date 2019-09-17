@@ -3151,7 +3151,9 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SelectVertexShader)
 
         if(pXboxVertexShader != nullptr)
         {
-			pCxbxVertexShader = (CxbxVertexShader *)(pXboxVertexShader->CxbxVertexShaderHandle);
+			LOG_TEST_CASE("Assigned g_VertexShaderSlots");
+			// Was : pCxbxVertexShader = (CxbxVertexShader *)(pXboxVertexShader->CxbxVertexShaderHandle);
+			// However, the CxbxVertexShaderHandle union is never set, so could lead to using undefined data!
 		}
         else
         {

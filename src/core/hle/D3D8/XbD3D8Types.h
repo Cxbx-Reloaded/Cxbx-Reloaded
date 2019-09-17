@@ -1060,10 +1060,7 @@ struct X_D3DVertexShader
 	DWORD TotalSize; // seems to include both the function and ?constants?
 	DWORD NumberOfDimensionsPerTexture; // Guesswork, since all 4 bytes (for all 4 textures) are most often set to 0 (or 2 when a texture isn't used) and 1, 3 and 4 also occur (and nothing else)
 	X_VERTEXATTRIBUTEFORMAT VertexAttribute;
-	union {
-		DWORD CxbxVertexShaderHandle; // This is probably the least damaging part to overwrite : We put a pointer to our CbxVertexShader here
-		DWORD FunctionData[X_VSH_MAX_INSTRUCTION_COUNT]; // probably the binary function data and ?constants? (data continues futher outside this struct, up to TotalSize DWORD's)
-	};
+	DWORD FunctionData[X_VSH_MAX_INSTRUCTION_COUNT]; // probably the binary function data and ?constants? (data continues futher outside this struct, up to TotalSize DWORD's)
 };
 
 // vertex shader input registers for fixed function vertex shader
