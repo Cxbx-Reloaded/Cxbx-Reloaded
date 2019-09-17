@@ -90,7 +90,6 @@ typedef struct _CxbxVertexShader
 	DWORD HostFVF; // Flexible Vertex Format (used when there's no host vertex shader)
 	XTL::IDirect3DVertexShader* pHostVertexShader; // if nullptr, use SetFVF(HostFVF);
 	XTL::IDirect3DVertexDeclaration* pHostVertexDeclaration;
-	DWORD                 HostDeclarationSize;
 
 	// Needed for dynamic stream patching
 	CxbxVertexShaderInfo  VertexShaderInfo;

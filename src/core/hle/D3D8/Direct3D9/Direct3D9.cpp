@@ -3837,7 +3837,6 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateVertexShader)
 	pCxbxVertexShader->HostFVF = 0;
 	pCxbxVertexShader->pHostVertexShader = nullptr;
 	pCxbxVertexShader->XboxDeclarationCount = XboxDeclarationCount; 
-	pCxbxVertexShader->HostDeclarationSize = HostDeclarationSize;
 	// Save the status, to remove things later
 	// pCxbxVertexShader->XboxStatus = hRet; // Not even used by VshHandleIsValidShader()
 
