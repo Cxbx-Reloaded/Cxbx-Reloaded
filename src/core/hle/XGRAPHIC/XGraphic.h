@@ -25,6 +25,8 @@
 #ifndef XGRAPHIC_H
 #define XGRAPHIC_H
 
+#include "core\hle\D3D8\XbD3D8Types.h"
+
 namespace XTL {
 
 typedef struct _XGPOINT3D

@@ -40,7 +40,7 @@
 #include "DlgLoggingConfig.h"
 #include "common\xbe\XbePrinter.h" // For DumpInformation
 #include "EmuShared.h"
-#include "core\kernel\support\EmuXTL.h"
+#include "core\hle\D3D8\Direct3D9\Direct3D9.h" // For CxbxSetPixelContainerHeader
 #include "core\hle\D3D8\XbConvert.h" // For EmuPC2XB_D3DFormat
 #include "common\Settings.hpp"
 

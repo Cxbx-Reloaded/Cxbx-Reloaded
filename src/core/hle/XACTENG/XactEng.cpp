@@ -33,12 +33,12 @@ namespace xboxkrnl
     #include <xboxkrnl/xboxkrnl.h>
 };
 
-#include "core\kernel\init\/CxbxKrnl.h"
+#include "core\kernel\init\CxbxKrnl.h"
 #include "common\Logging.h"
 #include "core\kernel\support\Emu.h"
 #include "core\kernel\support\EmuFS.h"
 #include "EmuShared.h"
-#include "core\kernel\support\EmuXTL.h"
+#include "core\hle\XACTENG\XactEng.h"
 #include "core\kernel\memory-manager\VMManager.h"
 
 #include <mmreg.h>

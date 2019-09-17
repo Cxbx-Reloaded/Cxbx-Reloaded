@@ -30,7 +30,7 @@
 #include "core\kernel\support\Emu.h"
 #include "common\Logging.h"
 #include "core\kernel\support\EmuFS.h"
-#include "core\kernel\support\EmuXTL.h"
+//#include "core\hle\XAPI\Xapi.h" // For EMUPATCH (TODO : Use for XOnlineLaunchNewImage?)
 
 /*
 // ******************************************************************
@@ -248,7 +248,7 @@ int WINAPI XTL::EMUPATCH(ioctlsocket)
 // ******************************************************************
 // * patch: XOnlineLaunchNewImage
 // ******************************************************************
-HRESULT WINAPI XOnlineLaunchNewImage
+HRESULT WINAPI XOnlineLaunchNewImage // TODO : EMUPATCH(XOnlineLaunchNewImage) ?
 (
     LPCSTR	lpImagePath,
     LPVOID	pLaunchData

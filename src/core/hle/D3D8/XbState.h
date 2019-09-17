@@ -25,6 +25,8 @@
 #ifndef XBSTATE_H
 #define XBSTATE_H
 
+#include "core\hle\D3D8\XbD3D8Types.h"
+
 #define CXBX_D3DRS_UNSUPPORTED (XTL::X_D3DRS_LAST + 1)
 
 // XDK version independent renderstate table, containing pointers to the original locations.

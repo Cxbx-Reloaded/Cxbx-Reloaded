@@ -43,13 +43,14 @@ namespace xboxkrnl
 #include "EmuShared.h"
 #include "gui\DbgConsole.h"
 #include "core\hle\D3D8\ResourceTracker.h"
+#include "core\hle\D3D8\Direct3D9\Direct3D9.h" // For LPDIRECTDRAWSURFACE7
 #include "core\hle\D3D8\XbVertexBuffer.h"
 #include "core\hle\D3D8\XbVertexShader.h"
 #include "core\hle\D3D8\XbPixelShader.h" // For DxbxUpdateActivePixelShader
 #include "core\hle\D3D8\XbPushBuffer.h"
 #include "core\hle\D3D8\XbState.h" // For EmuUpdateDeferredStates
 #include "core\kernel\memory-manager\VMManager.h" // for g_VMManager
-#include "core\kernel\support\EmuXTL.h"
+#include "core\hle\XAPI\Xapi.h" // For EMUPATCH
 #include "core\hle\D3D8\XbConvert.h"
 #include "Logging.h"
 #include "..\XbD3D8Logging.h"

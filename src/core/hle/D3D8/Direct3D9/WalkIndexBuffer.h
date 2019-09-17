@@ -2,7 +2,6 @@
 #define WALKINDEXBUFFER_H
 
 #include "core\kernel\support\Emu.h"
-#include "core\kernel\support\EmuXTL.h"
 
 extern void(*WalkIndexBuffer)
 (

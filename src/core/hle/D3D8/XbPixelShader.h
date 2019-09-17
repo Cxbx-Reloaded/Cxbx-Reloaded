@@ -29,6 +29,8 @@
 
 #include "Cxbx.h"
 
+#include "core\hle\D3D8\XbD3D8Types.h"
+
 // dump pixel shader definition to file
 void DumpPixelShaderDefToFile( XTL::X_D3DPIXELSHADERDEF* pPSDef, const char* pszCode );
 // print relevant contents to the debug console

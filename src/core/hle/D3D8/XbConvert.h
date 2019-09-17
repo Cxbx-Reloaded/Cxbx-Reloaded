@@ -27,6 +27,8 @@
 
 #include "core\kernel\init\CxbxKrnl.h"
 
+#include "core\hle\D3D8\XbD3D8Types.h"
+
 #define VERTICES_PER_TRIANGLE 3
 #define VERTICES_PER_QUAD 4
 #define TRIANGLES_PER_QUAD 2

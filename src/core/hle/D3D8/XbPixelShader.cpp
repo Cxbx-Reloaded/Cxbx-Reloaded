@@ -65,8 +65,7 @@
 
 #include "core\kernel\support\Emu.h"
 #include "core\kernel\support\EmuFS.h"
-#include "core\kernel\support\EmuXTL.h" // X_PSH_COMBINECOUNT
-
+#include "core\hle\D3D8\Direct3D9\Direct3D9.h" // For g_pD3DDevice, g_D3DActivePixelShader
 #include "core\hle\D3D8\XbPixelShader.h"
 #include "core\hle\D3D8\XbState.h" // For CXBX_D3DRS_UNSUPPORTED
 

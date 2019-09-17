@@ -35,7 +35,6 @@ namespace xboxkrnl
 #include "Emu.h"
 #include "devices\x86\EmuX86.h"
 #include "EmuFS.h"
-#include "EmuXTL.h"
 #include "EmuShared.h"
 #include "core\hle\Intercept.hpp"
 #include "CxbxDebugger.h"

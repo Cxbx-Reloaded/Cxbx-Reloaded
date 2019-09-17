@@ -43,12 +43,12 @@ namespace xboxkrnl
 #include "core\kernel\exports\EmuKrnl.h" // For DefaultLaunchDataPage
 #include "core\kernel\support\EmuFile.h"
 #include "core\kernel\support\EmuFS.h"
-#include "core\kernel\support\EmuXTL.h"
 #include "EmuShared.h"
 #include "core\hle\Intercept.hpp"
 #include "vsbc\CxbxVSBC.h"
 #include "Windef.h"
 #include <vector>
+#include "core\hle\XAPI\Xapi.h"
 #include "core\hle\XAPI\XapiCxbxr.h"
 
 bool g_bCxbxVSBCLoaded = false;

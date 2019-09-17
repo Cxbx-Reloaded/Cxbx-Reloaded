@@ -25,6 +25,8 @@
 #ifndef XBVERTEXBUFFER_H
 #define XBVERTEXBUFFER_H
 
+#include <unordered_map>
+
 #include "Cxbx.h"
 
 #include "core\hle\D3D8\XbVertexShader.h" // for CxbxVertexShaderInfo

@@ -30,9 +30,9 @@
 #include <assert.h> // For assert()
 
 #include "core\kernel\support\Emu.h"
-#include "core\kernel\support\EmuXTL.h"
 #include "core\hle\D3D8\XbD3D8Types.h" // For X_D3DFORMAT
 #include "core\hle\D3D8\ResourceTracker.h"
+#include "core\hle\D3D8\Direct3D9\Direct3D9.h" // For g_Xbox_VertexShader_Handle
 #include "core\hle\D3D8\XbPushBuffer.h"
 #include "core\hle\D3D8\XbState.h" // For CxbxUpdateNativeD3DResources, etc
 #include "core\hle\D3D8\XbConvert.h"

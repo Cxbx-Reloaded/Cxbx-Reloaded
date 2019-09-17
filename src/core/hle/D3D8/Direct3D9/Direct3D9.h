@@ -25,10 +25,11 @@
 #ifndef DIRECT3D9_H
 #define DIRECT3D9_H
 
-#include "core\hle\D3D8\XbD3D8Types.h"
-#include "core\kernel\init\CxbxKrnl.h"
 #include "common\xbe\Xbe.h"
 #include "core\kernel\support\Emu.h"
+#include "core\kernel\init\CxbxKrnl.h"
+#include "core\hle\XAPI\Xapi.h"
+#include "core\hle\D3D8\XbD3D8Types.h"
 
 #define DIRECTDRAW_VERSION 0x0700
 #include <ddraw.h>
@@ -60,6 +61,12 @@ extern VOID EmuD3DInit();
 
 // cleanup direct3d
 extern VOID EmuD3DCleanup();
+
+extern IDirect3DDevice *g_pD3DDevice;
+
+extern DWORD g_Xbox_VertexShader_Handle;
+
+extern XTL::X_PixelShader *g_D3DActivePixelShader;
 
 // EmuD3DTileCache (8 tiles maximum)
 extern XTL::X_D3DTILE EmuD3DTileCache[0x08];

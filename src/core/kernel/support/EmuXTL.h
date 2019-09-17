@@ -25,19 +25,6 @@
 #ifndef EMUXTL_H
 #define EMUXTL_H
 
-#include <vector>  // Needed for EmuDSound.h file, must be outside of XTL namespace.
-#include <unordered_map>
-
-#include "core\hle\XAPI\Xapi.h"
-#include "core\hle\D3D8\Direct3D9/Direct3D9.h"
-#include "core\hle\DSOUND\DirectSound\DirectSound.hpp"
-#include "core\hle\XONLINE\XOnline.h"
-#include "core\hle\XGRAPHIC\XGraphic.h"
-#include "core\hle\XACTENG\XactEng.h"
-
-extern IDirect3DDevice         *g_pD3DDevice;
-extern DWORD                    g_Xbox_VertexShader_Handle;
-extern XTL::X_PixelShader*		g_D3DActivePixelShader;
-extern BOOL                     g_bIsFauxFullscreen;
+// TODO : Delete this file, EmuXTL.h !
 
 #endif
