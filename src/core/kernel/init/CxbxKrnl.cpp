@@ -1560,7 +1560,7 @@ __declspec(noreturn) void CxbxKrnlInit
 	if (BootFlags & BOOT_SKIP_ANIMATION) {} // TODO
 	if (BootFlags & BOOT_RUN_DASHBOARD) {} // TODO
 
-    XTL::CxbxInitAudio();
+    CxbxInitAudio();
 
 	EmuHLEIntercept(pXbeHeader);
 

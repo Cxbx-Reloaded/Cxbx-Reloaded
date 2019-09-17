@@ -29,11 +29,6 @@
 #include "core\kernel\init\CxbxKrnl.h"
 #include "core\hle\DSOUND\XbDSoundTypes.h"
 
-namespace XTL {
-
-#undef FIELD_OFFSET     // prevent macro redefinition warnings
-#include <dsound.h> // TODO: FIXME after global namespace XTL issue is resolved.
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -43,6 +38,11 @@ void CxbxInitAudio();
 #ifdef __cplusplus
 }
 #endif
+
+namespace XTL {
+
+#undef FIELD_OFFSET     // prevent macro redefinition warnings
+#include <dsound.h> // TODO: FIXME after global namespace XTL issue is resolved.
 
 // ******************************************************************
 // * X_CDirectSound
