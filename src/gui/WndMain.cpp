@@ -1511,12 +1511,12 @@ void WndMain::LoadGameLogo()
 		// TODO : Use PixelCopy code here to decode. For now, fake it :
 		CxbxSetPixelContainerHeader(&XboxPixelContainer,
 			0, // Common - could be X_D3DCOMMON_TYPE_TEXTURE
-			(XTL::UINT)pDDSHeader->dwWidth,
-			(XTL::UINT)pDDSHeader->dwHeight,
+			(UINT)pDDSHeader->dwWidth,
+			(UINT)pDDSHeader->dwHeight,
 			1,
 			EmuPC2XB_D3DFormat(Format),
 			2,
-			(XTL::UINT)pDDSHeader->dwPitchOrLinearSize);
+			(UINT)pDDSHeader->dwPitchOrLinearSize);
 		break;
 	}
 	case MAKEFOURCC('X', 'P', 'R', '0'):

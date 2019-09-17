@@ -92,8 +92,6 @@ else
 // convert from xbox to pc texture transform state types
 inline D3DTRANSFORMSTATETYPE EmuXB2PC_D3DTS(D3DTRANSFORMSTATETYPE State)
 {
-	using namespace XTL;
-
     // Handle Xbox -> D3D State mapping
     switch (State) {
         case 0: return (D3DTRANSFORMSTATETYPE)D3DTS_VIEW;
@@ -120,8 +118,6 @@ inline D3DTRANSFORMSTATETYPE EmuXB2PC_D3DTS(D3DTRANSFORMSTATETYPE State)
 // convert from xbox to pc blend ops
 inline D3DBLENDOP EmuXB2PC_D3DBLENDOP(XTL::X_D3DBLENDOP Value)
 {
-	using namespace XTL;
-
 	switch(Value)
     {
         case 0x8006: return D3DBLENDOP_ADD;
@@ -147,8 +143,6 @@ inline D3DBLENDOP EmuXB2PC_D3DBLENDOP(XTL::X_D3DBLENDOP Value)
 // convert from xbox to pc blend types 
 inline D3DBLEND EmuXB2PC_D3DBLEND(XTL::X_D3DBLEND Value)
 {
-	using namespace XTL;
-
 	switch (Value) {
         case 0x000: return D3DBLEND_ZERO;
         case 0x001: return D3DBLEND_ONE;
@@ -174,8 +168,6 @@ inline D3DBLEND EmuXB2PC_D3DBLEND(XTL::X_D3DBLEND Value)
 // convert from xbox to pc comparison functions
 inline D3DCMPFUNC EmuXB2PC_D3DCMPFUNC(XTL::X_D3DCMPFUNC Value)
 {
-	using namespace XTL;
-
 	switch (Value) {
         case 0x200: return D3DCMP_NEVER;
         case 0x201: return D3DCMP_LESS;
@@ -194,8 +186,6 @@ inline D3DCMPFUNC EmuXB2PC_D3DCMPFUNC(XTL::X_D3DCMPFUNC Value)
 // convert from xbox to pc fill modes
 inline D3DFILLMODE EmuXB2PC_D3DFILLMODE(XTL::X_D3DFILLMODE Value)
 {
-	using namespace XTL;
-
 	switch (Value) {
         case 0x1B00: return D3DFILL_POINT;
         case 0x1B01: return D3DFILL_WIREFRAME;
@@ -209,8 +199,6 @@ inline D3DFILLMODE EmuXB2PC_D3DFILLMODE(XTL::X_D3DFILLMODE Value)
 // convert from xbox to pc shade modes
 inline D3DSHADEMODE EmuXB2PC_D3DSHADEMODE(XTL::X_D3DSHADEMODE Value)
 {
-	using namespace XTL;
-
 	switch (Value) {
         case 0x1D00: return D3DSHADE_FLAT;
         case 0x1D01: return D3DSHADE_GOURAUD;
@@ -223,8 +211,6 @@ inline D3DSHADEMODE EmuXB2PC_D3DSHADEMODE(XTL::X_D3DSHADEMODE Value)
 // convert from xbox to pc stencilop modes
 inline D3DSTENCILOP EmuXB2PC_D3DSTENCILOP(XTL::X_D3DSTENCILOP Value)
 {
-	using namespace XTL;
-
     switch(Value)
     {
         case 0x1e00: return D3DSTENCILOP_KEEP;

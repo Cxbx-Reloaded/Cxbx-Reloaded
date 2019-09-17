@@ -5987,8 +5987,6 @@ DWORD TemporaryPixelShaderRenderStates[XTL::X_D3DRS_PSTEXTUREMODES + 1];
 
 VOID DxbxUpdateActivePixelShader() // NOPATCH
 {
-  using namespace XTL; // Temporary, not for actual XTL symbols, but for those that are erroneously contained herein (like everything from ddraw.h)
-
   XTL::X_D3DPIXELSHADERDEF *pPSDef;
   PPSH_RECOMPILED_SHADER RecompiledPixelShader;
   DWORD ConvertedPixelShaderHandle;
@@ -7188,7 +7186,6 @@ inline void GetOutputFlags
 	}
 	case PS_COMBINEROUTPUT_SHIFTLEFT_1_BIAS: // 0x18L
 	{
-		using namespace XTL;
 		LOG_TEST_CASE("PS_COMBINEROUTPUT_SHIFTLEFT_1_BIAS");
 		printf("PS_COMBINEROUTPUT_SHIFTLEFT_1_BIAS"); // y = (x - 0.5)*2
 
@@ -7204,7 +7201,6 @@ inline void GetOutputFlags
 	}
 	case PS_COMBINEROUTPUT_SHIFTLEFT_2: // 0x20L
 	{
-		using namespace XTL;
 		LOG_TEST_CASE("PS_COMBINEROUTPUT_SHIFTLEFT_2");
 		printf("PS_COMBINEROUTPUT_SHIFTLEFT_2");  // y = x*4
 		strcpy(szInstMod, "_x4");
@@ -7213,7 +7209,6 @@ inline void GetOutputFlags
 	// case PS_COMBINEROUTPUT_SHIFTLEFT_2_BIAS: // 0x28L, // y = (x - 0.5)*4
 	case PS_COMBINEROUTPUT_SHIFTRIGHT_1: // 0x30L
 	{
-		using namespace XTL;
 		LOG_TEST_CASE("PS_COMBINEROUTPUT_SHIFTRIGHT_1");
 		printf("PS_COMBINEROUTPUT_SHIFTRIGHT_1"); // y = x/2
 		strcpy(szInstMod, "_d2");

@@ -1025,9 +1025,7 @@ BOOL EmuXBFormatIsDepthBuffer(XTL::X_D3DFORMAT Format)
 
 D3DFORMAT EmuXB2PC_D3DFormat(XTL::X_D3DFORMAT Format)
 {
-	using namespace XTL;
-
-	if (Format <= X_D3DFMT_LIN_R8G8B8A8 && Format != -1 /*X_D3DFMT_UNKNOWN*/) // The last bit prevents crashing (Metal Slug 3)
+	if (Format <= XTL::X_D3DFMT_LIN_R8G8B8A8 && Format != -1 /*XTL::X_D3DFMT_UNKNOWN*/) // The last bit prevents crashing (Metal Slug 3)
 	{
 		const FormatInfo *info = &FormatInfos[Format];
 		if (info->warning != nullptr) {
@@ -1038,9 +1036,9 @@ D3DFORMAT EmuXB2PC_D3DFormat(XTL::X_D3DFORMAT Format)
 	}
 
 	switch (Format) {
-	case X_D3DFMT_VERTEXDATA:
+	case XTL::X_D3DFMT_VERTEXDATA:
 		return D3DFMT_VERTEXDATA;
-	case ((X_D3DFORMAT)0xffffffff):
+	case ((XTL::X_D3DFORMAT)0xffffffff):
 		return D3DFMT_UNKNOWN; // TODO -oCXBX: Not sure if this counts as swizzled or not...
 	default:
 		CxbxKrnlCleanup("EmuXB2PC_D3DFormat: Unknown Format (0x%.08X)", Format);
@@ -1051,80 +1049,78 @@ D3DFORMAT EmuXB2PC_D3DFormat(XTL::X_D3DFORMAT Format)
 
 XTL::X_D3DFORMAT EmuPC2XB_D3DFormat(D3DFORMAT Format, bool bPreferLinear)
 {
-	using namespace XTL;
-
-	X_D3DFORMAT result;
+	XTL::X_D3DFORMAT result;
     switch(Format)
     {
 	case D3DFMT_YUY2:
-		result = X_D3DFMT_YUY2;
+		result = XTL::X_D3DFMT_YUY2;
 		break;
 	case D3DFMT_UYVY:
-		result = X_D3DFMT_UYVY;
+		result = XTL::X_D3DFMT_UYVY;
 		break;
 	case D3DFMT_R5G6B5:
-		result = bPreferLinear ? X_D3DFMT_LIN_R5G6B5 : X_D3DFMT_R5G6B5;
+		result = bPreferLinear ? XTL::X_D3DFMT_LIN_R5G6B5 : XTL::X_D3DFMT_R5G6B5;
 		break;
 	case D3DFMT_D24S8:
-		result = bPreferLinear ? X_D3DFMT_LIN_D24S8 : X_D3DFMT_D24S8;
+		result = bPreferLinear ? XTL::X_D3DFMT_LIN_D24S8 : XTL::X_D3DFMT_D24S8;
 		break;
 	case D3DFMT_DXT5:
-		result = X_D3DFMT_DXT5; // Compressed
+		result = XTL::X_D3DFMT_DXT5; // Compressed
 		break;
 	case D3DFMT_DXT4:
-		result = X_D3DFMT_DXT4;  // Compressed // Same as X_D3DFMT_DXT5
+		result = XTL::X_D3DFMT_DXT4;  // Compressed // Same as XTL::X_D3DFMT_DXT5
 		break;
 	case D3DFMT_DXT3:
-		result = X_D3DFMT_DXT3; // Compressed
+		result = XTL::X_D3DFMT_DXT3; // Compressed
 		break;
 	case D3DFMT_DXT2:
-		result = X_D3DFMT_DXT2; // Compressed // Same as X_D3DFMT_DXT3
+		result = XTL::X_D3DFMT_DXT2; // Compressed // Same as XTL::X_D3DFMT_DXT3
 		break;
 	case D3DFMT_DXT1:
-		result = X_D3DFMT_DXT1; // Compressed
+		result = XTL::X_D3DFMT_DXT1; // Compressed
 		break;
 	case D3DFMT_A1R5G5B5:
-		result = bPreferLinear ? X_D3DFMT_LIN_A1R5G5B5 : X_D3DFMT_A1R5G5B5;
+		result = bPreferLinear ? XTL::X_D3DFMT_LIN_A1R5G5B5 : XTL::X_D3DFMT_A1R5G5B5;
 		break;
 	case D3DFMT_X8R8G8B8:
-		result = bPreferLinear ? X_D3DFMT_LIN_X8R8G8B8 : X_D3DFMT_X8R8G8B8;
+		result = bPreferLinear ? XTL::X_D3DFMT_LIN_X8R8G8B8 : XTL::X_D3DFMT_X8R8G8B8;
 		break;
 	case D3DFMT_A8R8G8B8:
-		result = bPreferLinear ? X_D3DFMT_LIN_A8R8G8B8 : X_D3DFMT_A8R8G8B8;
+		result = bPreferLinear ? XTL::X_D3DFMT_LIN_A8R8G8B8 : XTL::X_D3DFMT_A8R8G8B8;
 		break;
 	case D3DFMT_A4R4G4B4:
-		result = bPreferLinear ? X_D3DFMT_LIN_A4R4G4B4 : X_D3DFMT_A4R4G4B4;
+		result = bPreferLinear ? XTL::X_D3DFMT_LIN_A4R4G4B4 : XTL::X_D3DFMT_A4R4G4B4;
 		break;
 	case D3DFMT_X1R5G5B5:
-		result = bPreferLinear ? X_D3DFMT_LIN_X1R5G5B5 : X_D3DFMT_X1R5G5B5;
+		result = bPreferLinear ? XTL::X_D3DFMT_LIN_X1R5G5B5 : XTL::X_D3DFMT_X1R5G5B5;
 		break;
 	case D3DFMT_A8:
-		result = bPreferLinear ? X_D3DFMT_LIN_A8 : X_D3DFMT_A8;
+		result = bPreferLinear ? XTL::X_D3DFMT_LIN_A8 : XTL::X_D3DFMT_A8;
 		break;
 	case D3DFMT_L8:
-		result = bPreferLinear ? X_D3DFMT_LIN_L8 : X_D3DFMT_L8;
+		result = bPreferLinear ? XTL::X_D3DFMT_LIN_L8 : XTL::X_D3DFMT_L8;
 		break;
 	case D3DFMT_D16:
-		result = bPreferLinear ? X_D3DFMT_LIN_D16 : X_D3DFMT_D16;
+		result = bPreferLinear ? XTL::X_D3DFMT_LIN_D16 : XTL::X_D3DFMT_D16;
 		break;
 	case D3DFMT_D16_LOCKABLE:
-		result = X_D3DFMT_D16_LOCKABLE;
+		result = XTL::X_D3DFMT_D16_LOCKABLE;
 		break; 
 	case D3DFMT_UNKNOWN:
-		result = ((X_D3DFORMAT)0xffffffff); // TODO : return X_D3DFMT_UNKNOWN ?
+		result = ((XTL::X_D3DFORMAT)0xffffffff); // TODO : return XTL::X_D3DFMT_UNKNOWN ?
 		break;
 	// Dxbx additions :
 	case D3DFMT_L6V5U5:
-		result = bPreferLinear ? X_D3DFMT_LIN_L6V5U5 : X_D3DFMT_L6V5U5;
+		result = bPreferLinear ? XTL::X_D3DFMT_LIN_L6V5U5 : XTL::X_D3DFMT_L6V5U5;
 		break;
 	case D3DFMT_V8U8:
-		result = bPreferLinear ? X_D3DFMT_LIN_V8U8 : X_D3DFMT_V8U8;
+		result = bPreferLinear ? XTL::X_D3DFMT_LIN_V8U8 : XTL::X_D3DFMT_V8U8;
 		break;
 	case D3DFMT_V16U16:
-		result = bPreferLinear ? X_D3DFMT_LIN_V16U16 : X_D3DFMT_V16U16;
+		result = bPreferLinear ? XTL::X_D3DFMT_LIN_V16U16 : XTL::X_D3DFMT_V16U16;
 		break;
 	case D3DFMT_VERTEXDATA:
-		result = X_D3DFMT_VERTEXDATA;
+		result = XTL::X_D3DFMT_VERTEXDATA;
 		break;
 	default:
 		CxbxKrnlCleanup("EmuPC2XB_D3DFormat: Unknown Format (%d)", Format);
@@ -1135,8 +1131,6 @@ XTL::X_D3DFORMAT EmuPC2XB_D3DFormat(D3DFORMAT Format, bool bPreferLinear)
 
 DWORD EmuXB2PC_D3DLock(DWORD Flags)
 {
-	using namespace XTL;
-
     DWORD NewFlags = 0;
 
     // Need to convert the flags, TODO: fix the xbox extensions
@@ -1158,28 +1152,26 @@ DWORD EmuXB2PC_D3DLock(DWORD Flags)
 // convert from xbox to pc multisample formats
 D3DMULTISAMPLE_TYPE EmuXB2PC_D3DMultiSampleFormat(DWORD Type)
 {
-	using namespace XTL;
-
 	D3DMULTISAMPLE_TYPE result;
 	switch (Type & 0xFFFF)
 	{
-	case X_D3DMULTISAMPLE_NONE:
+	case XTL::X_D3DMULTISAMPLE_NONE:
 		result = D3DMULTISAMPLE_NONE;
 		break;
-	case X_D3DMULTISAMPLE_2_SAMPLES_MULTISAMPLE_LINEAR: 
-	case X_D3DMULTISAMPLE_2_SAMPLES_MULTISAMPLE_QUINCUNX: 
-	case X_D3DMULTISAMPLE_2_SAMPLES_SUPERSAMPLE_HORIZONTAL_LINEAR: 
-	case X_D3DMULTISAMPLE_2_SAMPLES_SUPERSAMPLE_VERTICAL_LINEAR:
+	case XTL::X_D3DMULTISAMPLE_2_SAMPLES_MULTISAMPLE_LINEAR: 
+	case XTL::X_D3DMULTISAMPLE_2_SAMPLES_MULTISAMPLE_QUINCUNX: 
+	case XTL::X_D3DMULTISAMPLE_2_SAMPLES_SUPERSAMPLE_HORIZONTAL_LINEAR: 
+	case XTL::X_D3DMULTISAMPLE_2_SAMPLES_SUPERSAMPLE_VERTICAL_LINEAR:
 		result = D3DMULTISAMPLE_2_SAMPLES;
 		break;
-	case X_D3DMULTISAMPLE_4_SAMPLES_MULTISAMPLE_LINEAR: 
-	case X_D3DMULTISAMPLE_4_SAMPLES_MULTISAMPLE_GAUSSIAN: 
-	case X_D3DMULTISAMPLE_4_SAMPLES_SUPERSAMPLE_LINEAR: 
-	case X_D3DMULTISAMPLE_4_SAMPLES_SUPERSAMPLE_GAUSSIAN:
+	case XTL::X_D3DMULTISAMPLE_4_SAMPLES_MULTISAMPLE_LINEAR: 
+	case XTL::X_D3DMULTISAMPLE_4_SAMPLES_MULTISAMPLE_GAUSSIAN: 
+	case XTL::X_D3DMULTISAMPLE_4_SAMPLES_SUPERSAMPLE_LINEAR: 
+	case XTL::X_D3DMULTISAMPLE_4_SAMPLES_SUPERSAMPLE_GAUSSIAN:
 		result = D3DMULTISAMPLE_4_SAMPLES;
 		break;
-	case X_D3DMULTISAMPLE_9_SAMPLES_MULTISAMPLE_GAUSSIAN: 
-	case X_D3DMULTISAMPLE_9_SAMPLES_SUPERSAMPLE_GAUSSIAN:
+	case XTL::X_D3DMULTISAMPLE_9_SAMPLES_MULTISAMPLE_GAUSSIAN: 
+	case XTL::X_D3DMULTISAMPLE_9_SAMPLES_SUPERSAMPLE_GAUSSIAN:
 		result = D3DMULTISAMPLE_9_SAMPLES;
 		break;
 	default:
@@ -1597,8 +1589,6 @@ uint32 Swizzle(uint32 value, uint32 max, uint32 shift)
 
 typedef uint16 TRGB16;
 
-using namespace XTL; // for X_D3DFMT_*
-
 // test-case: Frogger, Turok, Crazy Taxi 3 and many more
 bool WndMain::ReadS3TCFormatIntoBitmap(uint32 format, unsigned char *data, uint32 dataSize, int width, int height, int pitch, void*& bitmap)
 {
@@ -1611,14 +1601,14 @@ bool WndMain::ReadS3TCFormatIntoBitmap(uint32 format, unsigned char *data, uint3
 	j = k = p = x = y = 0;
 
 	// sanity checks
-	if (format != X_D3DFMT_DXT1 && format != X_D3DFMT_DXT3 && format != X_D3DFMT_DXT5)
+	if (format != XTL::X_D3DFMT_DXT1 && format != XTL::X_D3DFMT_DXT3 && format != XTL::X_D3DFMT_DXT5)
 		return false;
 	if (!(width > 0) || !(height > 0))
 		return false;
 
 	while (j < dataSize) {
 
-		if (format != X_D3DFMT_DXT1) // Skip X_D3DFMT_DXT3 and X_D3DFMT_DXT5 alpha data (ported from Dxbx)
+		if (format != XTL::X_D3DFMT_DXT1) // Skip XTL::X_D3DFMT_DXT3 and XTL::X_D3DFMT_DXT5 alpha data (ported from Dxbx)
 			j += 8;
 
 		// Read two 16-bit pixels
@@ -1701,7 +1691,7 @@ bool WndMain::ReadSwizzledFormatIntoBitmap(uint32 format, unsigned char *data, u
 	TRGB32* yscanline;
 
 	// sanity checks
-	if (format != X_D3DFMT_A8R8G8B8 && format != X_D3DFMT_X8R8G8B8)
+	if (format != XTL::X_D3DFMT_A8R8G8B8 && format != XTL::X_D3DFMT_X8R8G8B8)
 		return false;
 	if (!(width > 0) || !(height > 0))
 		return false;
@@ -1739,7 +1729,7 @@ bool WndMain::ReadSwizzled16bitFormatIntoBitmap(uint32 format, unsigned char *da
 	TRGB16* yscanline;
 
 	// sanity checks
-	if (format != X_D3DFMT_R5G6B5)
+	if (format != XTL::X_D3DFMT_R5G6B5)
 		return false;
 	if (!(width > 0) || !(height > 0))
 		return false;

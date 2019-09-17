@@ -453,8 +453,6 @@ const char *CxbxGetErrorDescription(HRESULT hResult)
 
 const char *D3DErrorString(HRESULT hResult)
 {
-	using namespace XTL;
-
 	static char buffer[1024];
 	buffer[0] = 0; // Reset static buffer!
 
@@ -1405,8 +1403,6 @@ uint8_t *ConvertD3DTextureToARGB(
 // Direct3D initialization (called before emulation begins)
 VOID EmuD3DInit()
 {
-	using namespace XTL; // Temporary, while XbD3D8Types.h still #include's d3d9.h within namespace XTL
-
 	// create the create device proxy thread
 	{
 		DWORD dwThreadId;
@@ -1436,6 +1432,7 @@ VOID EmuD3DInit()
 
 		// Dump Host D3DCaps to log unconditionally
 		std::cout << "----------------------------------------\n";
+		using namespace XTL; // To resolve logging of g_D3DCaps. TODO : Fix this
 		std::cout << "Host D3DCaps : " << g_D3DCaps << "\n";
 		std::cout << "----------------------------------------\n";
 	}
@@ -1904,8 +1901,6 @@ void UpdateDepthStencilFlags(IDirect3DSurface *pDepthStencilSurface)
 	g_bHasDepth = false;
 	g_bHasStencil = false;
 	if (pDepthStencilSurface != nullptr) {
-		using namespace XTL; // Shouldn't be nescessary
-
 		D3DSURFACE_DESC Desc;
 		pDepthStencilSurface->GetDesc(&Desc);
 
@@ -2236,10 +2231,10 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
                 {
                     if(FAILED(hRet)) {
                         hRet = DirectDrawCreateEx(NULL, (void**)&g_pDD7, IID_IDirectDraw7, NULL);
-						DEBUG_D3DRESULT(hRet, "XTL::DirectDrawCreateEx(NULL)");
+						DEBUG_D3DRESULT(hRet, "DirectDrawCreateEx(NULL)");
 					} else {
 						hRet = DirectDrawCreateEx(&g_ddguid, (void**)&g_pDD7, IID_IDirectDraw7, NULL);
-						DEBUG_D3DRESULT(hRet, "XTL::DirectDrawCreateEx(&g_ddguid)");
+						DEBUG_D3DRESULT(hRet, "DirectDrawCreateEx(&g_ddguid)");
 					}
 
 					if(FAILED(hRet))
@@ -8741,7 +8736,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_LoadVertexShaderProgram)
 
         // Define a large enough definition to contain all possible FVF types
         // 20 is maximum possible size
-		XTL::DWORD CxbxXboxVertexDeclaration[20] = { 0 };
+		DWORD CxbxXboxVertexDeclaration[20] = { 0 };
         int index = 0;
 
         // Write the Stream Number (always 0 for FVF)
