@@ -1545,7 +1545,7 @@ __declspec(noreturn) void CxbxKrnlInit
 
 	// initialize graphics
 	EmuLogEx(LOG_PREFIX_INIT, LOG_LEVEL::DEBUG, "Initializing render window.\n");
-	XTL::CxbxInitWindow(true);
+	CxbxInitWindow(true);
 
 	// Now process the boot flags to see if there are any special conditions to handle
 	if (BootFlags & BOOT_EJECT_PENDING) {} // TODO
@@ -1581,7 +1581,7 @@ __declspec(noreturn) void CxbxKrnlInit
 	if (!bLLE_GPU)
 	{
 		EmuLogEx(LOG_PREFIX_INIT, LOG_LEVEL::DEBUG, "Initializing Direct3D.\n");
-		XTL::EmuD3DInit();
+		EmuD3DInit();
 	}
 	
 	if (CxbxDebugger::CanReport())

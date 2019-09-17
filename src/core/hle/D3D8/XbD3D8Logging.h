@@ -28,10 +28,9 @@
 #pragma once
 
 #include "Logging.h"
-
-namespace XTL
-{
 #include "XbD3D8Types.h"
+
+namespace XTL {
 
 // Additional types, exclusively for logging (not really enums) :
 enum D3DVS20CAPS;
@@ -146,6 +145,6 @@ LOGRENDER_HEADER(X_D3DDISPLAYMODE)
 LOGRENDER_HEADER(X_D3DResource)
 LOGRENDER_HEADER(X_D3DPixelContainer)
 
-}; // end of namespace XTL
+} // end of namespace XTL
 
 #endif _EMU_D3D8_LOGGING_H

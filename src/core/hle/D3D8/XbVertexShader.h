@@ -25,9 +25,7 @@
 #ifndef XBVERTEXSHADER_H
 #define XBVERTEXSHADER_H
 
-namespace XTL {
-	#include "core\hle\D3D8\XbD3D8Types.h" // for X_VSH_MAX_ATTRIBUTES
-}
+#include "core\hle\D3D8\XbD3D8Types.h" // for X_VSH_MAX_ATTRIBUTES
 
 // Host vertex shader counts
 #define VSH_MAX_TEMPORARY_REGISTERS 32

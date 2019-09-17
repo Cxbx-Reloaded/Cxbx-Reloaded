@@ -2932,7 +2932,7 @@ bool PSH_XBOX_SHADER::InsertTextureModeInstruction(XTL::X_D3DPIXELSHADERDEF *pPS
             // and include the texture formats in the shader hash, somehow.
             bool bias = false;
 			auto biasModifier = (1 << ARGMOD_SCALE_BX2);
-			auto pXboxTexture = XTL::EmuD3DActiveTexture[inputStage];
+			auto pXboxTexture = EmuD3DActiveTexture[inputStage];
 			if (pXboxTexture != nullptr) {
 				extern XTL::X_D3DFORMAT GetXboxPixelContainerFormat(const XTL::X_D3DPixelContainer *pXboxPixelContainer); // TODO : Move to XTL-independent header file
 
@@ -5939,7 +5939,7 @@ static const
 	if (hRet != D3D_OK) {
 		EmuLog(LOG_LEVEL::WARNING, "Could not create pixel shader");
 		EmuLog(LOG_LEVEL::WARNING, std::string((char*)pErrors->GetBufferPointer(), pErrors->GetBufferSize()).c_str());
-		XTL::CxbxKrnlCleanup("Cannot fall back to the most simple pixel shader!");
+		CxbxKrnlCleanup("Cannot fall back to the most simple pixel shader!");
 	}
 
     EmuLog(LOG_LEVEL::WARNING, "We're lying about the creation of a pixel shader!");

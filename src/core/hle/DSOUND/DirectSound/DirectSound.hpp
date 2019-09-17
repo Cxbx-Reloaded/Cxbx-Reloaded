@@ -26,11 +26,13 @@
 #ifndef EMUDSOUND_H
 #define EMUDSOUND_H
 
-#undef FIELD_OFFSET     // prevent macro redefinition warnings
-
-#include <dsound.h>
 #include "core\kernel\init\CxbxKrnl.h"
-#include "..\XbDSoundTypes.h"
+#include "core\hle\DSOUND\XbDSoundTypes.h"
+
+namespace XTL {
+
+#undef FIELD_OFFSET     // prevent macro redefinition warnings
+#include <dsound.h> // TODO: FIXME after global namespace XTL issue is resolved.
 
 #ifdef __cplusplus
 extern "C" {
@@ -1702,5 +1704,9 @@ HRESULT WINAPI EMUPATCH(IDirectSoundStream_Use3DVoiceData)
     X_CDirectSoundStream*   pThis,
     DWORD a2
 );
+
+} // end of extern "C"
+
+} // end of namespace XTL
+
 #endif
-}

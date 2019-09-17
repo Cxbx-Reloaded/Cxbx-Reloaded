@@ -25,6 +25,8 @@
 #ifndef XGRAPHIC_H
 #define XGRAPHIC_H
 
+namespace XTL {
+
 typedef struct _XGPOINT3D
 {
     DWORD u;
@@ -110,5 +112,7 @@ HRESULT WINAPI EMUPATCH(XFONT_OpenBitmapFontFromMemory)
 	unsigned		uFontDataSize,
 	void			**ppFont
 );
+
+} // end of namespace XTL
 
 #endif

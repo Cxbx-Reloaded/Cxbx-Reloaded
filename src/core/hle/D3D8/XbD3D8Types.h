@@ -27,6 +27,8 @@
 
 #undef UNICODE // make sure dxerr.h DXGetErrorString is aliassed to *A, not *W
 
+namespace XTL {
+
 // include direct3d 9x headers
 #define DIRECT3D_VERSION 0x0900
 #include <d3d9.h>
@@ -1206,5 +1208,7 @@ typedef DWORD NV2AMETHOD;
 
 // Host vertex shader counts
 #define CXBX_D3DVS_CONSTREG_VERTEXDATA4F_BASE   (X_D3DVS_CONSTREG_COUNT + 1)
+
+} // end of namespace XTL
 
 #endif

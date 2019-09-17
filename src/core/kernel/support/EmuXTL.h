@@ -28,15 +28,12 @@
 #include <vector>  // Needed for EmuDSound.h file, must be outside of XTL namespace.
 #include <unordered_map>
 
-namespace XTL
-{
-    #include "core\hle\XAPI\Xapi.h"
-    #include "core\hle\D3D8\Direct3D9/Direct3D9.h"
-    #include "core\hle\DSOUND\DirectSound\DirectSound.hpp"
-    #include "core\hle\XONLINE\XOnline.h"
-    #include "core\hle\XGRAPHIC\XGraphic.h"
-	#include "core\hle\XACTENG\XactEng.h"
-}
+#include "core\hle\XAPI\Xapi.h"
+#include "core\hle\D3D8\Direct3D9/Direct3D9.h"
+#include "core\hle\DSOUND\DirectSound\DirectSound.hpp"
+#include "core\hle\XONLINE\XOnline.h"
+#include "core\hle\XGRAPHIC\XGraphic.h"
+#include "core\hle\XACTENG\XactEng.h"
 
 extern XTL::IDirect3DDevice    *g_pD3DDevice;
 extern DWORD                    g_Xbox_VertexShader_Handle;

@@ -31,9 +31,7 @@
 
 #include "core\kernel\support\Emu.h"
 #include "core\kernel\support\EmuXTL.h"
-namespace XTL {
-	#include "core\hle\D3D8\XbD3D8Types.h" // For X_D3DFORMAT
-}
+#include "core\hle\D3D8\XbD3D8Types.h" // For X_D3DFORMAT
 #include "core\hle\D3D8\ResourceTracker.h"
 #include "core\hle\D3D8\XbPushBuffer.h"
 #include "core\hle\D3D8\XbState.h" // For CxbxUpdateNativeD3DResources, etc

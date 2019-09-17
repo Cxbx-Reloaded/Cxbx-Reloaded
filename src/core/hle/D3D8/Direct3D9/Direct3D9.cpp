@@ -72,8 +72,8 @@ using namespace std::literals::chrono_literals;
 // Global(s)
 HWND                                g_hEmuWindow   = NULL; // rendering window
 XTL::IDirect3DDevice               *g_pD3DDevice   = nullptr; // Direct3D Device
-XTL::LPDIRECTDRAWSURFACE7           g_pDDSPrimary  = NULL; // DirectDraw7 Primary Surface
-XTL::LPDIRECTDRAWCLIPPER            g_pDDClipper   = nullptr; // DirectDraw7 Clipper
+LPDIRECTDRAWSURFACE7                g_pDDSPrimary  = NULL; // DirectDraw7 Primary Surface
+LPDIRECTDRAWCLIPPER                 g_pDDClipper   = nullptr; // DirectDraw7 Clipper
 DWORD                               g_Xbox_VertexShader_Handle = 0;
 XTL::X_PixelShader*					g_D3DActivePixelShader = nullptr;
 BOOL                                g_bIsFauxFullscreen = FALSE;
@@ -99,8 +99,8 @@ static bool                         g_bSupportsFormatTextureRenderTarget[XTL::X_
 static bool                         g_bSupportsFormatTextureDepthStencil[XTL::X_D3DFMT_LIN_R8G8B8A8 + 1] = { false };// Does device support texture format?
 static bool                         g_bSupportsFormatVolumeTexture[XTL::X_D3DFMT_LIN_R8G8B8A8 + 1] = { false }; // Does device support surface format?
 static bool                         g_bSupportsFormatCubeTexture[XTL::X_D3DFMT_LIN_R8G8B8A8 + 1] = { false }; // Does device support surface format?
-static XTL::LPDIRECTDRAW7           g_pDD7          = NULL; // DirectDraw7
-static XTL::DDCAPS                  g_DriverCaps          = { 0 };
+static LPDIRECTDRAW7                g_pDD7          = NULL; // DirectDraw7
+static DDCAPS                       g_DriverCaps          = { 0 };
 static HBRUSH                       g_hBgBrush      = NULL; // Background Brush
 static volatile bool                g_bRenderWindowActive = false;
 static Settings::s_video            g_XBVideo;
@@ -188,10 +188,10 @@ static PVOID g_pCurrentPalette[XTL::X_D3DTS_STAGECOUNT] = { nullptr, nullptr, nu
 static XTL::X_VERTEXSHADERCONSTANTMODE g_VertexShaderConstantMode = X_D3DSCM_192CONSTANTS; // TODO : Move to XbVertexShader.cpp
 
 // cached Direct3D tiles
-XTL::X_D3DTILE XTL::EmuD3DTileCache[0x08] = {0};
+XTL::X_D3DTILE EmuD3DTileCache[0x08] = {0};
 
 // cached active texture
-XTL::X_D3DBaseTexture *XTL::EmuD3DActiveTexture[XTL::X_D3DTS_STAGECOUNT] = {0,0,0,0};
+XTL::X_D3DBaseTexture *EmuD3DActiveTexture[XTL::X_D3DTS_STAGECOUNT] = {0,0,0,0};
 XTL::X_D3DBaseTexture CxbxActiveTextureCopies[XTL::X_D3DTS_STAGECOUNT] = {};
 
 // information passed to the create device proxy thread
@@ -474,7 +474,7 @@ const char *D3DErrorString(HRESULT hResult)
 	return buffer;
 }
 
-VOID XTL::CxbxInitWindow(bool bFullInit)
+VOID CxbxInitWindow(bool bFullInit)
 {
     g_EmuShared->GetVideoSettings(&g_XBVideo);
 
@@ -1064,7 +1064,7 @@ XTL::X_D3DSurface *EmuNewD3DSurface()
 }
 */
 
-VOID XTL::CxbxSetPixelContainerHeader
+VOID CxbxSetPixelContainerHeader
 (
 	XTL::X_D3DPixelContainer* pPixelContainer,
 	DWORD				Common,
@@ -1359,7 +1359,7 @@ bool ConvertD3DTextureToARGBBuffer(
 }
 
 // Called by WndMain::LoadGameLogo() to load game logo bitmap
-uint8_t *XTL::ConvertD3DTextureToARGB(
+uint8_t *ConvertD3DTextureToARGB(
 	XTL::X_D3DPixelContainer *pXboxPixelContainer,
     uint8_t *pSrc,
 	int *pWidth, int *pHeight,
@@ -1403,8 +1403,10 @@ uint8_t *XTL::ConvertD3DTextureToARGB(
 }
 
 // Direct3D initialization (called before emulation begins)
-VOID XTL::EmuD3DInit()
+VOID EmuD3DInit()
 {
+	using namespace XTL; // Temporary, while XbD3D8Types.h still #include's d3d9.h within namespace XTL
+
 	// create the create device proxy thread
 	{
 		DWORD dwThreadId;
@@ -1440,7 +1442,7 @@ VOID XTL::EmuD3DInit()
 }
 
 // cleanup Direct3D
-VOID XTL::EmuD3DCleanup() {}
+VOID EmuD3DCleanup() {}
 
 // enumeration procedure for locating display device GUIDs
 static BOOL WINAPI EmuEnumDisplayDevices(GUID FAR *lpGUID, LPSTR lpDriverDescription, LPSTR lpDriverName, LPVOID lpContext, HMONITOR hm)
@@ -2227,16 +2229,16 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
 				HRESULT hRet;
 
                 // enumerate device guid for this monitor, for directdraw
-				hRet = XTL::DirectDrawEnumerateExA(EmuEnumDisplayDevices, NULL, DDENUM_ATTACHEDSECONDARYDEVICES);
+				hRet = DirectDrawEnumerateExA(EmuEnumDisplayDevices, NULL, DDENUM_ATTACHEDSECONDARYDEVICES);
 				DEBUG_D3DRESULT(hRet, "DirectDrawEnumerateExA");
 
                 // create DirectDraw7
                 {
                     if(FAILED(hRet)) {
-                        hRet = XTL::DirectDrawCreateEx(NULL, (void**)&g_pDD7, XTL::IID_IDirectDraw7, NULL);
+                        hRet = DirectDrawCreateEx(NULL, (void**)&g_pDD7, IID_IDirectDraw7, NULL);
 						DEBUG_D3DRESULT(hRet, "XTL::DirectDrawCreateEx(NULL)");
 					} else {
-						hRet = XTL::DirectDrawCreateEx(&g_ddguid, (void**)&g_pDD7, XTL::IID_IDirectDraw7, NULL);
+						hRet = DirectDrawCreateEx(&g_ddguid, (void**)&g_pDD7, IID_IDirectDraw7, NULL);
 						DEBUG_D3DRESULT(hRet, "XTL::DirectDrawCreateEx(&g_ddguid)");
 					}
 
@@ -7695,7 +7697,7 @@ void EmuUpdateActiveTextureStages()
 
 	for (int i = 0; i < XTL::X_D3DTS_STAGECOUNT; i++)
 	{
-		XTL::X_D3DBaseTexture *pBaseTexture = XTL::EmuD3DActiveTexture[i];
+		XTL::X_D3DBaseTexture *pBaseTexture = EmuD3DActiveTexture[i];
 		if (pBaseTexture == nullptr) {
 			HRESULT hRet = g_pD3DDevice->SetTexture(i, NULL);
 			DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetTexture");
@@ -9453,7 +9455,7 @@ bool DestroyResource_Common(XTL::X_D3DResource* pResource)
     }
 
     for (int i = 0; i < XTL::X_D3DTS_STAGECOUNT; i++) {
-        if (pResource == XTL::EmuD3DActiveTexture[i]) {
+        if (pResource == EmuD3DActiveTexture[i]) {
             LOG_TEST_CASE("Skipping Release of active Xbox Texture");
             return false;
         }

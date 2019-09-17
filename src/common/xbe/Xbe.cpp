@@ -72,7 +72,7 @@ Xbe::Xbe(const char *x_szFilename, bool bFromGUI)
 			// The dashboard could not be found on partition2. This is a fatal error on the Xbox so we display the UEM. The
 			// error code is different if we have a launch data page
 
-			XTL::CxbxInitWindow(false);
+			CxbxInitWindow(false);
 
 			ULONG FatalErrorCode = FATAL_ERROR_XBE_DASH_GENERIC;
 

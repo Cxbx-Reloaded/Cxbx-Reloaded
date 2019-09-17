@@ -25,6 +25,8 @@
 #ifndef XONLINE_H
 #define XONLINE_H
 
+namespace XTL {
+
 // ******************************************************************
 // * patch: WSAStartup
 // ******************************************************************
@@ -118,5 +120,7 @@ int WINAPI EMUPATCH(ioctlsocket)
     long cmd, 
     u_long FAR *argp
 );
+
+} // end of namespace XTL
 
 #endif
