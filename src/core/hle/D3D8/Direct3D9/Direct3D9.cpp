@@ -39,7 +39,6 @@ namespace xboxkrnl
 #include "CxbxVersion.h"
 #include "core\kernel\init\CxbxKrnl.h"
 #include "core\kernel\support\Emu.h"
-#include "core\kernel\support\EmuFS.h"
 #include "EmuShared.h"
 #include "gui\DbgConsole.h"
 #include "core\hle\D3D8\ResourceTracker.h"

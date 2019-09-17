@@ -31,7 +31,6 @@
 #include <windows.h>
 
 #include "core\kernel\support\Emu.h"
-#include "core\kernel\support\EmuFS.h"
 #include "common\Logging.h"
 #include "core\kernel\init\CxbxKrnl.h" // For CxbxKrnlCleanup()
 #include "core\hle\XAPI\Xapi.h" // For EMUPATCH

@@ -29,7 +29,6 @@
 
 #include "core\kernel\support\Emu.h"
 #include "common\Logging.h"
-#include "core\kernel\support\EmuFS.h"
 //#include "core\hle\XAPI\Xapi.h" // For EMUPATCH (TODO : Use for XOnlineLaunchNewImage?)
 
 /*

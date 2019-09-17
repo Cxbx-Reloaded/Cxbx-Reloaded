@@ -41,7 +41,7 @@ namespace xboxkrnl
 #include "core\kernel\support\Emu.h"
 #include "devices\x86\EmuX86.h"
 #include "core\kernel\support\EmuFile.h"
-#include "core\kernel\support\EmuFS.h"
+#include "core\kernel\support\EmuFS.h" // EmuInitFS
 #include "EmuEEPROM.h" // For CxbxRestoreEEPROM, EEPROM, XboxFactoryGameRegion
 #include "core\kernel\exports\EmuKrnl.h"
 #include "core\kernel\exports\EmuKrnlKi.h"

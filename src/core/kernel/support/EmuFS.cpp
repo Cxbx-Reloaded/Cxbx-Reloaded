@@ -35,7 +35,6 @@ namespace xboxkrnl
 
 #include "core\kernel\exports\EmuKrnl.h" // For InitializeListHead(), etc.
 #include "core\kernel\exports\EmuKrnlKe.h"
-#include "EmuFS.h"
 #include "core\kernel\init\CxbxKrnl.h"
 #include "core\kernel\memory-manager\VMManager.h"
 #include "Logging.h"

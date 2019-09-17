@@ -37,7 +37,6 @@ namespace xboxkrnl {
 #include <thread>
 #include "core\kernel\init\CxbxKrnl.h"
 #include "core\kernel\support\Emu.h"
-#include "core\kernel\support\EmuFS.h"
 #include "EmuShared.h"
 #include "core\hle\D3D8\Direct3D9\Direct3D9.h" // For D3D_OK
 #include "core\hle\DSOUND\DirectSound\DirectSound.hpp"

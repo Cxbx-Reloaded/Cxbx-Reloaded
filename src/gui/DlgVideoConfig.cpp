@@ -61,7 +61,7 @@ static HWND g_hVideoResolution = NULL;
 /*! handle to scale factor window*/
 static HWND g_hRenderResolution = NULL;
 
-#pragma optimize("", off);
+#pragma optimize("", off)
 
 VOID ShowVideoConfig(HWND hwnd)
 {

@@ -25,10 +25,7 @@
 #ifndef DIRECT3D9_H
 #define DIRECT3D9_H
 
-#include "common\xbe\Xbe.h"
-#include "core\kernel\support\Emu.h"
-#include "core\kernel\init\CxbxKrnl.h"
-#include "core\hle\XAPI\Xapi.h"
+#include "core\hle\XAPI\Xapi.h" // For EMUPATCH
 #include "core\hle\D3D8\XbD3D8Types.h"
 
 #define DIRECTDRAW_VERSION 0x0700

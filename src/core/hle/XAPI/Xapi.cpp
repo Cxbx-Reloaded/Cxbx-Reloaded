@@ -42,7 +42,6 @@ namespace xboxkrnl
 #include "core\kernel\support\Emu.h"
 #include "core\kernel\exports\EmuKrnl.h" // For DefaultLaunchDataPage
 #include "core\kernel\support\EmuFile.h"
-#include "core\kernel\support\EmuFS.h"
 #include "EmuShared.h"
 #include "core\hle\Intercept.hpp"
 #include "vsbc\CxbxVSBC.h"

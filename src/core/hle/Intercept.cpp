@@ -37,7 +37,6 @@
 
 #include "core\kernel\init\CxbxKrnl.h"
 #include "core\kernel\support\Emu.h"
-#include "core\kernel\support\EmuFS.h"
 #include "core\hle\D3D8\XbState.h" // For EmuD3DDeferredTextureState
 #include "EmuShared.h"
 #include "common\CxbxDebugger.h"
