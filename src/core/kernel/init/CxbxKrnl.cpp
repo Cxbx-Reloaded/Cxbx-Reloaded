@@ -1367,7 +1367,7 @@ __declspec(noreturn) void CxbxKrnlInit
 			"   DebugConsole        : 0x%.08X\n"
 			"   DebugFilename       : \"%s\"\n"
 			"   pXBEHeader          : 0x%.08p\n"
-			"   pXBEHeaderSize      : 0x%.08X\n"
+			"   dwXBEHeaderSize     : 0x%.08X\n"
 			"   Entry               : 0x%.08p\n"
 			");\n",
 			GetCurrentThreadId(), CxbxKrnl_hEmuParent, pTLSData, pTLS, pLibraryVersion, DbgMode, szDebugFilename, pXbeHeader, dwXbeHeaderSize, Entry);
