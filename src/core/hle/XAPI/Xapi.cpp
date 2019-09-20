@@ -67,8 +67,9 @@ PFARPROC1 fnCxbxVSBCOpen;
 //typedef DWORD(*fnCxbxVSBCGetState)(UCHAR *);
 XTL::PXPP_DEVICE_TYPE g_DeviceType_Gamepad = nullptr;
 
-// Flag is set after gamepad state has been queried by the title. Supports defer gamepad connection hack
-bool g_gamepadStateQueriedHackFlag = false;
+// Flag is unset after initialize devices is done by simulate LLE USB thread.
+std::atomic<bool> g_bIsDevicesInitializing = true;
+std::atomic<bool> g_bIsDevicesEmulating = false;
 
 //global bridge for xbox controller to host, 4 elements for 4 ports.
 X_CONTROLLER_HOST_BRIDGE g_XboxControllerHostBridge[4] = {
@@ -99,6 +100,7 @@ bool operator==(XTL::PXPP_DEVICE_TYPE XppType, XBOX_INPUT_DEVICE XidType)
 	default:
 		break;
 	}
+
 	return false;
 }
 
@@ -109,6 +111,9 @@ bool operator!=(XTL::PXPP_DEVICE_TYPE XppType, XBOX_INPUT_DEVICE XidType)
 
 bool ConstructHleInputDevice(int Type, int Port)
 {
+	g_bIsDevicesEmulating = true;
+	bool ret = true;
+
 	switch (Type)
 	{
 	case to_underlying(XBOX_INPUT_DEVICE::MS_CONTROLLER_DUKE): {
@@ -137,19 +142,24 @@ bool ConstructHleInputDevice(int Type, int Port)
 	case to_underlying(XBOX_INPUT_DEVICE::MEMORY_UNIT):
 	case to_underlying(XBOX_INPUT_DEVICE::IR_DONGLE): {
 		EmuLog(LOG_LEVEL::INFO, "%s: device %s is not yet supported", __func__, GetInputDeviceName(Type).c_str());
-		return false;
+		ret = false;
 	}
+	break;
 
 	default:
 		EmuLog(LOG_LEVEL::WARNING, "Attempted to attach an unknown device type (type was %d)", Type);
-		return false;
+		ret = false;
+		break;
 	}
 
-	return true;
+	g_bIsDevicesEmulating = false;
+	return ret;
 }
 
 void DestructHleInputDevice(int Port)
 {
+	g_bIsDevicesEmulating = true;
+
 	g_XboxControllerHostBridge[Port].XboxType = XBOX_INPUT_DEVICE::DEVICE_INVALID;
 	g_XboxControllerHostBridge[Port].XboxPort = PORT_INVALID;
 	while (g_XboxControllerHostBridge[Port].bIoInProgress) {}
@@ -162,6 +172,8 @@ void DestructHleInputDevice(int Port)
 	g_XboxControllerHostBridge[Port].XboxDeviceInfo.ucInputStateSize = 0;
 	g_XboxControllerHostBridge[Port].XboxDeviceInfo.ucFeedbackSize = 0;
 	g_XboxControllerHostBridge[Port].XboxDeviceInfo.dwPacketNumber = 0;
+
+	g_bIsDevicesEmulating = false;
 }
 
 void SetupXboxDeviceTypes()
@@ -247,19 +259,25 @@ VOID WINAPI XTL::EMUPATCH(XInitDevices)
 		LOG_FUNC_ARG((DWORD)PreallocTypes)
 		LOG_FUNC_END;
 
-	// Nothing to do
+	// TODO: May need to apply this delay update to LLE USB if modern hardware initialization is faster than og xbox hardware.
+	// Start initialize delay timer base on og xbox hardware's external thread process to finish initialize devices.
+	// Test cases: Lego Star Wars - Without delay timer will cause not to call the input polling even after devices are open.
+	//             Panzer Dragoon ORTA - After called and within 500 milliseconds will cause unstable crash for the emulator.
+	std::thread([]() {
+		// Set initialize state.
+		g_bIsDevicesInitializing = true;
+		// Initialize devices take about less than half a second usually.
+		std::this_thread::sleep_for(std::chrono::milliseconds(500));
+		// Clear initialize state for allow application to see device changes.
+		g_bIsDevicesInitializing = false;
+	}).detach();
 }
 
-// This is called by both XGetDevices and XGetDeviceChanges
+// This is called to emulate async for both XGetDevices and XGetDeviceChanges
 void UpdateConnectedDeviceState(XTL::PXPP_DEVICE_TYPE DeviceType) {
 
-	// HACK: Defer connecting the device once. Some titles don't seem to work correctly
-	// if a controller is connected the very first time the device state is queried.
-	// Test cases: JSRF (IG-024 NTSC-U; SE-010 PAL, NTSC-J), JSRF Demo (SE-022 NTSC-J),
-	// GunValkyrie (SE-012 NTSC-U, NTSC-J; IG-023 PAL), Lego Star Wars (ES-029), Otogi (FS-002)
-	// (Note these games broke in different ways, so each should be tested if this hack is removed)
-	if (!g_gamepadStateQueriedHackFlag && (DeviceType == g_DeviceType_Gamepad)){
-		g_gamepadStateQueriedHackFlag = true;
+	// Do not process the queries until initialize delay and device emulating are complete.
+	if (g_bIsDevicesInitializing || g_bIsDevicesEmulating){
 		return;
 	}
 
@@ -1375,9 +1393,9 @@ DWORD WINAPI XTL::EMUPATCH(XGetDeviceEnumerationStatus)()
 
 	LOG_FUNC();
 
-	LOG_UNIMPLEMENTED();
+	DWORD ret = (g_bIsDevicesInitializing || g_bIsDevicesEmulating) ? XDEVICE_ENUMERATION_BUSY : XDEVICE_ENUMERATION_IDLE;
 
-	RETURN(XDEVICE_ENUMERATION_IDLE);
+	RETURN(ret);
 }
 
 // ******************************************************************
