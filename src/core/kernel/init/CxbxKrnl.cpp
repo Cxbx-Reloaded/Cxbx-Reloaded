@@ -528,35 +528,8 @@ void CxbxPopupMessageEx(CXBXR_MODULE cxbxr_module, LOG_LEVEL level, CxbxMsgDlgIc
 void PrintCurrentConfigurationLog()
 {
 	// Print environment information
-	{
-		// Get Windows Version
-		DWORD dwVersion = 0;
-		DWORD dwMajorVersion = 0;
-		DWORD dwMinorVersion = 0;
-		DWORD dwBuild = 0;
-
-		// TODO: GetVersion is deprecated but we use it anyway (for now)
-		// The correct solution is to use GetProductInfo but that function
-		// requires more logic to parse the response, and I didn't feel
-		// like building it just yet :P
-#pragma warning(suppress: 4996) // GetVersion is deprecated, but there's no simple alternative
-		dwVersion = GetVersion();
-
-		dwMajorVersion = (DWORD)(LOBYTE(LOWORD(dwVersion)));
-		dwMinorVersion = (DWORD)(HIBYTE(LOWORD(dwVersion)));
-
-		// Get the build number.
-		if (dwVersion < 0x80000000) {
-			dwBuild = (DWORD)(HIWORD(dwVersion));
-		}
-
-		printf("------------------------ENVIRONMENT DETAILS-------------------------\n");
-		if (g_bIsWine) {
-			printf("Wine %s\n", wine_get_version());
-			printf("Presenting as Windows %d.%d (%d)\n", dwMajorVersion, dwMinorVersion, dwBuild);
-		} else {
-			printf("Windows %d.%d (%d)\n", dwMajorVersion, dwMinorVersion, dwBuild);
-		}
+	if (g_bIsWine) {
+		printf("Running under Wine Version %s \n", wine_get_version());
 	}
 
 	// HACK: For API TRace..
