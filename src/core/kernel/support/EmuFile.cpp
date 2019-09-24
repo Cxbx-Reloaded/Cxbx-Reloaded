@@ -43,8 +43,6 @@
 
 #include <experimental/filesystem>
 
-//#include "Logging.h" // For hex4()
-
 // Default Xbox Partition Table
 #define PE_PARTFLAGS_IN_USE	0x80000000
 #define XBOX_SWAPPART1_LBA_START		0x400

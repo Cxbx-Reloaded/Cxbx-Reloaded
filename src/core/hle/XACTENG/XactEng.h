@@ -26,12 +26,14 @@
 #define EMUXACTENG_H
 
 #include "common\xbe\Xbe.h"
+#include "core\hle\XAPI\Xapi.h" // For EMUPATCH
 
 #undef FIELD_OFFSET     // prevent macro redefinition warnings
 #include <windows.h>
 
 #include <dsound.h>
 
+namespace XTL {
 
 // ******************************************************************
 // * XACT Interfaces
@@ -342,5 +344,7 @@ HRESULT WINAPI EMUPATCH(IXACTEngine_UnRegisterWaveBank)
 	X_XACTEngine*	pThis,
     X_XACTWaveBank*	pWaveBank
 );
+
+} // end of namespace XTL
 
 #endif

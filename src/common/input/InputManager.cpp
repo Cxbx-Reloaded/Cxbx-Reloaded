@@ -51,13 +51,10 @@ namespace xboxkrnl
 #include "devices\usb\OHCI.h"
 
 // hle input specific
-namespace XTL
-{
 #include "core\hle\XAPI\Xapi.h"
-}
 #include "core\hle\XAPI\XapiCxbxr.h"
 
-extern X_CONTROLLER_HOST_BRIDGE g_XboxControllerHostBridge[4]; // hle xinput
+extern CXBX_CONTROLLER_HOST_BRIDGE g_XboxControllerHostBridge[4]; // hle xinput
 
 
 InputDeviceManager g_InputDeviceManager;

@@ -36,14 +36,12 @@ namespace xboxkrnl
 #include <cstdio>
 #include <cctype>
 #include <clocale>
-//#include <process.h>
 
 #include "Logging.h"
 #include "EmuKrnlLogging.h"
 #include "EmuKrnl.h" // for HalSystemInterrupts
 #include "EmuKrnlKi.h" // for KiLockDispatcherDatabase
 #include "core/kernel/init/CxbxKrnl.h"
-#include "core/kernel/support/EmuXTL.h"
 #include "devices/Xbox.h"
 
 // prevent name collisions

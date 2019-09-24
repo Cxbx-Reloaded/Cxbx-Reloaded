@@ -4,8 +4,6 @@
 #define __XDVDFS_H__
 
 #ifdef __cplusplus
-#pragma once
-
 extern "C" {
 #endif
 

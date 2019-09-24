@@ -30,11 +30,9 @@
 #include <assert.h> // For assert()
 
 #include "core\kernel\support\Emu.h"
-#include "core\kernel\support\EmuXTL.h"
-namespace XTL {
-	#include "core\hle\D3D8\XbD3D8Types.h" // For X_D3DFORMAT
-}
+#include "core\hle\D3D8\XbD3D8Types.h" // For X_D3DFORMAT
 #include "core\hle\D3D8\ResourceTracker.h"
+#include "core\hle\D3D8\Direct3D9\Direct3D9.h" // For g_Xbox_VertexShader_Handle
 #include "core\hle\D3D8\XbPushBuffer.h"
 #include "core\hle\D3D8\XbState.h" // For CxbxUpdateNativeD3DResources, etc
 #include "core\hle\D3D8\XbConvert.h"
@@ -102,11 +100,11 @@ UINT DxbxFVFToVertexSizeInBytes(DWORD dwFVF, BOOL bIncludeTextures)
 	}
 
 	if (dwFVF & D3DFVF_DIFFUSE) {
-		Result += sizeof(XTL::D3DCOLOR);
+		Result += sizeof(D3DCOLOR);
 	}
 
 	if (dwFVF & D3DFVF_SPECULAR) {
-		Result += sizeof(XTL::D3DCOLOR);
+		Result += sizeof(D3DCOLOR);
 	}
 
 	if (bIncludeTextures) {
@@ -126,8 +124,6 @@ void EmuExecutePushBuffer
 	XTL::X_D3DFixup            *pFixup
 )
 {
-	using namespace XTL;
-
 	//Check whether Fixup exists or not. 
 	if (pFixup != NULL) {
 		LOG_TEST_CASE("PushBuffer has fixups");
@@ -170,9 +166,7 @@ void EmuExecutePushBuffer
 
 DWORD CxbxGetStrideFromVertexShaderHandle(DWORD dwVertexShader)
 {
-	using namespace XTL;
-
-	XTL::DWORD Stride = 0;
+	DWORD Stride = 0;
 
 	if (VshHandleIsVertexShader(dwVertexShader)) {
 		// Test-case : Crash 'n' Burn [45530014]
@@ -213,8 +207,6 @@ void HLE_draw_arrays(NV2AState *d)
 {
 	// PGRAPHState *pg = &d->pgraph;
 
-	using namespace XTL;
-
 	LOG_TEST_CASE("HLE_draw_arrays");
 
 	LOG_UNIMPLEMENTED(); // TODO : Implement HLE_draw_arrays
@@ -223,8 +215,6 @@ void HLE_draw_arrays(NV2AState *d)
 void HLE_draw_inline_buffer(NV2AState *d)
 {
 	// PGRAPHState *pg = &d->pgraph;
-
-	using namespace XTL;
 
 	LOG_TEST_CASE("HLE_draw_inline_buffer");
 
@@ -235,31 +225,25 @@ void HLE_draw_inline_array(NV2AState *d)
 {
 	PGRAPHState *pg = &d->pgraph;
 
-	using namespace XTL;
-
 	//DWORD vertex data array, 
 	// To be used as a replacement for DrawVerticesUP, the caller needs to set the vertex format using IDirect3DDevice8::SetVertexShader before calling BeginPush.
 	// All attributes in the vertex format must be padded DWORD multiples, and the vertex attributes must be specified in the canonical FVF ordering
 	// (position followed by weight, normal, diffuse, and so on).
 	// retrieve vertex shader
-	XTL::DWORD dwVertexShader = g_CurrentXboxVertexShaderHandle;
-	if (dwVertexShader == 0) {
+	if (g_Xbox_VertexShader_Handle == 0) {
 		LOG_TEST_CASE("FVF Vertex Shader is null");
-		dwVertexShader = -1;
 	}
-
 	// render vertices
-	if (dwVertexShader != -1) {
-		XTL::DWORD dwVertexStride = CxbxGetStrideFromVertexShaderHandle(dwVertexShader);
+	else {
+		DWORD dwVertexStride = CxbxGetStrideFromVertexShaderHandle(g_Xbox_VertexShader_Handle);
 		if (dwVertexStride > 0) {
-			XTL::UINT VertexCount = (pg->inline_array_length * sizeof(XTL::DWORD)) / dwVertexStride;
+			UINT VertexCount = (pg->inline_array_length * sizeof(DWORD)) / dwVertexStride;
 			CxbxDrawContext DrawContext = {};
 
-			DrawContext.XboxPrimitiveType = (X_D3DPRIMITIVETYPE)pg->primitive_mode;
+			DrawContext.XboxPrimitiveType = (XTL::X_D3DPRIMITIVETYPE)pg->primitive_mode;
 			DrawContext.dwVertexCount = VertexCount;
 			DrawContext.pXboxVertexStreamZeroData = pg->inline_array;
 			DrawContext.uiXboxVertexStreamZeroStride = dwVertexStride;
-			DrawContext.XboxVertexShaderHandle = dwVertexShader;
 
 			CxbxDrawPrimitiveUP(DrawContext);
 		}
@@ -270,15 +254,12 @@ void HLE_draw_inline_elements(NV2AState *d)
 {
 	PGRAPHState *pg = &d->pgraph;
 
-	using namespace XTL;
-
 	if (IsValidCurrentShader()) {
 		unsigned int uiIndexCount = pg->inline_elements_length;
 		CxbxDrawContext DrawContext = {};
 
-		DrawContext.XboxPrimitiveType = (X_D3DPRIMITIVETYPE)pg->primitive_mode;
+		DrawContext.XboxPrimitiveType = (XTL::X_D3DPRIMITIVETYPE)pg->primitive_mode;
 		DrawContext.dwVertexCount = EmuD3DIndexCountToVertexCount(DrawContext.XboxPrimitiveType, uiIndexCount);
-		DrawContext.XboxVertexShaderHandle = g_CurrentXboxVertexShaderHandle;
 		DrawContext.pIndexData = d->pgraph.inline_elements; // Used by GetVerticesInBuffer
 
 		CxbxDrawIndexed(DrawContext);
@@ -293,8 +274,6 @@ DWORD ABGR_to_ARGB(const uint32_t color)
 void HLE_draw_state_update(NV2AState *d)
 {
 	PGRAPHState *pg = &d->pgraph;
-
-	using namespace XTL;
 
 	CxbxUpdateNativeD3DResources();
 
@@ -339,8 +318,6 @@ void HLE_draw_state_update(NV2AState *d)
 void HLE_draw_clear(NV2AState *d)
 {
 	// PGRAPHState *pg = &d->pgraph;
-
-	using namespace XTL;
 
 	CxbxUpdateNativeD3DResources();
 
@@ -464,8 +441,6 @@ extern void EmuExecutePushBufferRaw
 	uint32_t uSizeInBytes
 )
 {
-	using namespace XTL; // for logging
-
 	HLE_init_pgraph_plugins(); // TODO : Move to more approriate spot
 
 	// Test-case : Azurik (see https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/issues/360)
@@ -501,7 +476,7 @@ extern void EmuExecutePushBufferRaw
 	uint32_t *dma_put; // pushbuffer current end address
 	uint32_t *dma_get; //pushbuffer current read address
 	struct {
-		NV2AMETHOD mthd; // Current method
+		XTL::NV2AMETHOD mthd; // Current method
 		uint32_t subc; // :3 = Current subchannel
 		uint32_t mcnt; // :24 = Current method count
 		bool ni; // Current command's NI (non-increasing) flag
@@ -660,8 +635,6 @@ extern void EmuExecutePushBufferRaw
 
 const char *NV2AMethodToString(DWORD dwMethod)
 {
-	using namespace XTL; // for NV2A symbols
-
 	switch (dwMethod) {
 
 #define ENUM_RANGED_ToString_N(Name, Method, Pitch, N) \

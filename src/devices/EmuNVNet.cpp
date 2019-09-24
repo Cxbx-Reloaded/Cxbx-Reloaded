@@ -671,8 +671,9 @@ void PrintPacket(void* buffer, size_t length)
 	size_t payloadLength = length - sizeof(ethernet_header);
 
 	// TODO: If we support the EtherType, decode it, otherwise, just dump the raw payload
-	switch (ntohs(header->protocol)) {
-		default:
+	//switch (ntohs(header->protocol))
+	{
+	//	default:
 			PrintRawPayload(payloadPtr, payloadLength);
 	}
 }	

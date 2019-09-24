@@ -40,7 +40,7 @@
 #include "DlgLoggingConfig.h"
 #include "common\xbe\XbePrinter.h" // For DumpInformation
 #include "EmuShared.h"
-#include "core\kernel\support\EmuXTL.h"
+#include "core\hle\D3D8\Direct3D9\Direct3D9.h" // For CxbxSetPixelContainerHeader
 #include "core\hle\D3D8\XbConvert.h" // For EmuPC2XB_D3DFormat
 #include "common\Settings.hpp"
 
@@ -1489,19 +1489,19 @@ void WndMain::LoadGameLogo()
 	switch (*(DWORD*)pSection) {
 	case MAKEFOURCC('D', 'D', 'S', ' '): {
 		DDS_HEADER *pDDSHeader = (DDS_HEADER *)(pSection + sizeof(DWORD));
-		XTL::D3DFORMAT Format = XTL::D3DFMT_UNKNOWN;
+		D3DFORMAT Format = D3DFMT_UNKNOWN;
 		if (pDDSHeader->ddspf.dwFlags & DDPF_FOURCC) {
 			switch (pDDSHeader->ddspf.dwFourCC) {
-			case MAKEFOURCC('D', 'X', 'T', '1'): Format = XTL::D3DFMT_DXT1; break;
-			case MAKEFOURCC('D', 'X', 'T', '3'): Format = XTL::D3DFMT_DXT3; break;
-			case MAKEFOURCC('D', 'X', 'T', '5'): Format = XTL::D3DFMT_DXT5; break;
+			case MAKEFOURCC('D', 'X', 'T', '1'): Format = D3DFMT_DXT1; break;
+			case MAKEFOURCC('D', 'X', 'T', '3'): Format = D3DFMT_DXT3; break;
+			case MAKEFOURCC('D', 'X', 'T', '5'): Format = D3DFMT_DXT5; break;
 			}
 		}
 		else {
 			// TODO : Determine D3D format based on pDDSHeader->ddspf.dwABitMask, .dwRBitMask, .dwGBitMask and .dwBBitMask
 		}
 
-		if (Format == XTL::D3DFMT_UNKNOWN)
+		if (Format == D3DFMT_UNKNOWN)
 			return;
 
 		ImageData = (uint8_t *)(pSection + sizeof(DWORD) + pDDSHeader->dwSize);
@@ -1509,14 +1509,14 @@ void WndMain::LoadGameLogo()
 		//gameLogoWidth = pDDSHeader->dwWidth;
 
 		// TODO : Use PixelCopy code here to decode. For now, fake it :
-		XTL::CxbxSetPixelContainerHeader(&XboxPixelContainer,
+		CxbxSetPixelContainerHeader(&XboxPixelContainer,
 			0, // Common - could be X_D3DCOMMON_TYPE_TEXTURE
-			(XTL::UINT)pDDSHeader->dwWidth,
-			(XTL::UINT)pDDSHeader->dwHeight,
+			(UINT)pDDSHeader->dwWidth,
+			(UINT)pDDSHeader->dwHeight,
 			1,
 			EmuPC2XB_D3DFormat(Format),
 			2,
-			(XTL::UINT)pDDSHeader->dwPitchOrLinearSize);
+			(UINT)pDDSHeader->dwPitchOrLinearSize);
 		break;
 	}
 	case MAKEFOURCC('X', 'P', 'R', '0'):
@@ -1539,7 +1539,7 @@ void WndMain::LoadGameLogo()
 	}
 	}
 
-	void *bitmapData = XTL::ConvertD3DTextureToARGB(pXboxPixelContainer, ImageData, &gameLogoWidth, &gameLogoHeight);
+	void *bitmapData = ConvertD3DTextureToARGB(pXboxPixelContainer, ImageData, &gameLogoWidth, &gameLogoHeight);
 	if (!bitmapData)
 		return;
 
@@ -2222,7 +2222,7 @@ void WndMain::StartEmulation(HWND hwndParent, DebuggerState LocalDebuggerState /
 		g_EmuShared->SetDebuggingFlag(&AttachLocalDebugger);
 
         std::string szProcArgsBuffer;
-        XTL::CxbxConvertArgToString(szProcArgsBuffer, szExeFileName, m_XbeFilename, hwndParent, g_Settings->m_core.KrnlDebugMode, g_Settings->m_core.szKrnlDebug);
+        CxbxConvertArgToString(szProcArgsBuffer, szExeFileName, m_XbeFilename, hwndParent, g_Settings->m_core.KrnlDebugMode, g_Settings->m_core.szKrnlDebug);
 
         if (AttachLocalDebugger) {
 
@@ -2232,7 +2232,7 @@ void WndMain::StartEmulation(HWND hwndParent, DebuggerState LocalDebuggerState /
             // TODO: Set a configuration variable for this. For now it will be within the same folder as Cxbx.exe
             std::string szProcDbgArgsBuffer = "cxbxr-debugger.exe " + szProcArgsBuffer;
 
-            if (!XTL::CxbxExec(szProcDbgArgsBuffer, &m_hDebuggerProc, true)) {
+            if (!CxbxExec(szProcDbgArgsBuffer, &m_hDebuggerProc, true)) {
                 MessageBox(m_hwnd, "Failed to start emulation with the debugger.\n\nYou will need to build CxbxDebugger manually.", "Cxbx-Reloaded", MB_ICONSTOP | MB_OK);
 
                 printf("WndMain: %s debugger shell failed.\n", m_Xbe->m_szAsciiTitle);
@@ -2245,7 +2245,7 @@ void WndMain::StartEmulation(HWND hwndParent, DebuggerState LocalDebuggerState /
         }
         else {
 
-            if (!XTL::CxbxExec(szProcArgsBuffer, nullptr, false)) {
+            if (!CxbxExec(szProcArgsBuffer, nullptr, false)) {
                 MessageBox(m_hwnd, "Emulation failed.\n\n If this message repeats, the Xbe is not supported.", "Cxbx-Reloaded", MB_ICONSTOP | MB_OK);
 
                 printf("WndMain: %s shell failed.\n", m_Xbe->m_szAsciiTitle);

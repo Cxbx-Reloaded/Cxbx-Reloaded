@@ -53,36 +53,38 @@
 #define D3DENUM_NO_WHQL_LEVEL 0 // default in Direct3D 9
 
 // Alias all host Direct3D 9 symbols to generic symbols
-#define DXGetErrorString         DXGetErrorString9A
-#define DXGetErrorDescription    DXGetErrorDescription9A
-#define Direct3DCreate			 Direct3DCreate9
-#define D3DXAssembleShader		 D3DXAssembleShader
+#define DXGetErrorString                DXGetErrorString9A
+#define DXGetErrorDescription           DXGetErrorDescription9A
+#define Direct3DCreate			        Direct3DCreate9
+#define D3DXAssembleShader		        D3DXAssembleShader
 #define FullScreen_PresentationInterval PresentationInterval // a field in D3DPRESENT_PARAMETERS
-#define D3DLockData              void
-#define PixelShaderConstantType  float
+#define D3DLockData                     void
+#define PixelShaderConstantType         float
 
-#define D3DADAPTER_IDENTIFIER    D3DADAPTER_IDENTIFIER9
-#define D3DCAPS                  D3DCAPS9
-#define D3DVERTEXELEMENT         D3DVERTEXELEMENT9
-#define D3DVIEWPORT              D3DVIEWPORT9
+#define D3DADAPTER_IDENTIFIER           D3DADAPTER_IDENTIFIER9
+#define D3DCAPS                         D3DCAPS9
+#define D3DVERTEXELEMENT                D3DVERTEXELEMENT9
+#define D3DVIEWPORT                     D3DVIEWPORT9
 
-#define IDirect3D                IDirect3D9
-#define IDirect3DDevice          IDirect3DDevice9
-//#define IDirect3DStateBlock      IDirect3DStateBlock9
-#define IDirect3DVertexDeclaration IDirect3DVertexDeclaration9
-#define IDirect3DVertexShader    IDirect3DVertexShader9
-#define IDirect3DPixelShader     IDirect3DPixelShader9
-#define IDirect3DResource        IDirect3DResource9
-#define IDirect3DBaseTexture     IDirect3DBaseTexture9
-#define IDirect3DTexture         IDirect3DTexture9
-#define IDirect3DVolumeTexture   IDirect3DVolumeTexture9
-#define IDirect3DCubeTexture     IDirect3DCubeTexture9
-#define IDirect3DVertexBuffer    IDirect3DVertexBuffer9
-#define IDirect3DIndexBuffer     IDirect3DIndexBuffer9
-#define IDirect3DSurface         IDirect3DSurface9
-#define IDirect3DVolume          IDirect3DVolume9
-#define IDirect3DSwapChain       IDirect3DSwapChain9
-//#define IDirect3DQuery           IDirect3DQuery9
+#define IDirect3D                       IDirect3D9
+#define IDirect3DDevice                 IDirect3DDevice9
+#define IDirect3DStateBlock             IDirect3DStateBlock9 // unused
+#define IDirect3DVertexDeclaration      IDirect3DVertexDeclaration9
+#define IDirect3DVertexShader           IDirect3DVertexShader9
+#define IDirect3DPixelShader            IDirect3DPixelShader9
+#define IDirect3DResource               IDirect3DResource9
+#define IDirect3DBaseTexture            IDirect3DBaseTexture9
+#define IDirect3DTexture                IDirect3DTexture9
+#define IDirect3DVolumeTexture          IDirect3DVolumeTexture9
+#define IDirect3DCubeTexture            IDirect3DCubeTexture9
+#define IDirect3DVertexBuffer           IDirect3DVertexBuffer9
+#define IDirect3DIndexBuffer            IDirect3DIndexBuffer9
+#define IDirect3DSurface                IDirect3DSurface9
+#define IDirect3DVolume                 IDirect3DVolume9
+#define IDirect3DSwapChain              IDirect3DSwapChain9
+#define IDirect3DQuery                  IDirect3DQuery9 // unused
+
+namespace XTL {
 
 // TODO : Declare these aliasses as Xbox type
 typedef D3DLIGHT9 X_D3DLIGHT8;
@@ -100,7 +102,6 @@ typedef DWORD X_D3DMULTISAMPLE_TYPE;
 typedef DWORD X_D3DSHADEMODE;
 typedef DWORD X_D3DSTENCILOP;
 typedef DWORD X_D3DTEXTURESTAGESTATETYPE;
-typedef PVOID X_D3DCALLBACK;
 
 typedef enum _X_D3DCULL
 {
@@ -622,7 +623,7 @@ typedef struct _D3DVBLANKDATA
     DWORD           Swap;
     DWORD           Flags;
 }
-D3DVBLANKDATA;
+X_D3DVBLANKDATA;
 
 typedef struct _D3DSWAPDATA 
 {
@@ -632,16 +633,16 @@ typedef struct _D3DSWAPDATA
     DWORD           TimeUntilSwapVBlank;
     DWORD           TimeBetweenSwapVBlanks;
 } 
-D3DSWAPDATA;
+X_D3DSWAPDATA;
 
 // D3DVBLANKCALLBACK
-typedef void (__cdecl * D3DVBLANKCALLBACK)(D3DVBLANKDATA *pData);
+typedef void (__cdecl * X_D3DVBLANKCALLBACK)(X_D3DVBLANKDATA *pData);
 
 // D3DSWAPCALLBACK
-typedef void (__cdecl * D3DSWAPCALLBACK)(D3DSWAPDATA *pData);
+typedef void (__cdecl * X_D3DSWAPCALLBACK)(X_D3DSWAPDATA *pData);
 
 // D3DCALLBACK
-typedef void (__cdecl * D3DCALLBACK)(DWORD Context);
+typedef void (__cdecl * X_D3DCALLBACK)(DWORD Context);
 
 // X_D3DRENDERSTATETYPE values
 typedef enum _X_D3DRENDERSTATETYPE {
@@ -1206,5 +1207,7 @@ typedef DWORD NV2AMETHOD;
 
 // Host vertex shader counts
 #define CXBX_D3DVS_CONSTREG_VERTEXDATA4F_BASE   (X_D3DVS_CONSTREG_COUNT + 1)
+
+} // end of namespace XTL
 
 #endif

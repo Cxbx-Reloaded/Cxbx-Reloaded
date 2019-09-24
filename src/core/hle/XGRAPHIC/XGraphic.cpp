@@ -31,10 +31,11 @@
 #include <windows.h>
 
 #include "core\kernel\support\Emu.h"
-#include "core\kernel\support\EmuFS.h"
 #include "common\Logging.h"
-#include "core\kernel\support\EmuXTL.h"
+#include "core\kernel\init\CxbxKrnl.h" // For CxbxKrnlCleanup()
+#include "core\hle\XAPI\Xapi.h" // For EMUPATCH
 #include "core\hle\D3D8\XbD3D8Logging.h" // for log rendering of X_D3DFORMAT, etc.
+#include "core\hle\XGRAPHIC\XGraphic.h"
 
 // ******************************************************************
 // * patch: XGIsSwizzledFormat

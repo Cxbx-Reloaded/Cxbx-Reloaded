@@ -26,10 +26,7 @@
 #include "Logging.h"
 #include "DirectSoundLogging.hpp"
 #include <mmreg.h>
-
-namespace XTL {
 #include "..\XbDSoundTypes.h"
-}
 
 FLAGS2STR_START(DS_BCAPS)
 	FLAG2STR(DSBCAPS_PRIMARYBUFFER)

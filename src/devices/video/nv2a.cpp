@@ -55,7 +55,6 @@ namespace xboxkrnl
 
 #include "core\kernel\init\CxbxKrnl.h" // For XBOX_MEMORY_SIZE, DWORD, etc
 #include "core\kernel\support\Emu.h"
-#include "core\kernel\support\EmuFS.h"
 #include "core\kernel\exports\EmuKrnl.h"
 #include "core\hle\Intercept.hpp"
 #include "Logging.h"
@@ -1157,7 +1156,7 @@ void CxbxReserveNV2AMemory(NV2AState *d)
 		return;
 	}
 
-	printf("[0x%.4X] INIT: Allocated %d MiB of Xbox NV2A PRAMIN memory at 0x%.8X to 0x%.8X\n",
+	printf("[0x%.4X] INIT: Allocated %d MiB of Xbox NV2A PRAMIN memory at 0x%.8p to 0x%.8p\n",
 		GetCurrentThreadId(), d->pramin.ramin_size / ONE_MB, d->pramin.ramin_ptr, d->pramin.ramin_ptr + d->pramin.ramin_size - 1);
 }
 

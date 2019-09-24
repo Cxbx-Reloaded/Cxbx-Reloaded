@@ -33,7 +33,7 @@
 #include "DlgVideoConfig.h"
 #include "ResCxbx.h"
 
-#include "core\kernel\support\EmuXTL.h"
+#include "core\hle\D3D8\Direct3D9\Direct3D9.h" // For IDirect3D
 
 /*! windows dialog procedure */
 static INT_PTR CALLBACK DlgVideoConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -45,7 +45,7 @@ static VOID RefreshDirect3DDevice();
 static VOID RefreshRenderResolution();
 
 /*! direct3d instance */
-static XTL::IDirect3D *g_pDirect3D = 0;
+static IDirect3D *g_pDirect3D = nullptr;
 /*! video configuration */
 static Settings::s_video g_XBVideo;
 /*! changes flag */
@@ -61,7 +61,7 @@ static HWND g_hVideoResolution = NULL;
 /*! handle to scale factor window*/
 static HWND g_hRenderResolution = NULL;
 
-#pragma optimize("", off);
+#pragma optimize("", off)
 
 VOID ShowVideoConfig(HWND hwnd)
 {
@@ -73,7 +73,7 @@ VOID ShowVideoConfig(HWND hwnd)
 
     /*! initialize direct3d */
     {
-        g_pDirect3D = XTL::Direct3DCreate(D3D_SDK_VERSION);
+        g_pDirect3D = Direct3DCreate(D3D_SDK_VERSION);
 
         if(g_pDirect3D == 0) { goto cleanup; }
 
@@ -115,7 +115,7 @@ INT_PTR CALLBACK DlgVideoConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPAR
 
                 for(uint32_t v=0;v<g_dwAdapterCount;v++)
                 {
-                    XTL::D3DADAPTER_IDENTIFIER adapterIdentifier;
+                    D3DADAPTER_IDENTIFIER adapterIdentifier;
 
                     g_pDirect3D->GetAdapterIdentifier(v, D3DENUM_NO_WHQL_LEVEL, &adapterIdentifier);
 					SendMessage(g_hDisplayAdapter, CB_ADDSTRING, 0, (LPARAM)adapterIdentifier.Description);
@@ -288,7 +288,7 @@ VOID RefreshDisplayAdapter()
     /*! generate list of device types */
     {
         /*! device types */
-        static const XTL::D3DDEVTYPE devType[2] = { XTL::D3DDEVTYPE_HAL, XTL::D3DDEVTYPE_REF };
+        static const D3DDEVTYPE devType[2] = { D3DDEVTYPE_HAL, D3DDEVTYPE_REF };
 
         /*! human readable device types */
         static const char *szDevType[2] = { "Direct3D HAL (Hardware Accelerated)", "Direct3D REF (Software)" };
@@ -299,7 +299,7 @@ VOID RefreshDisplayAdapter()
         /*! step through devices types */
         for(uint32_t d=0;d<2;d++)
         {
-            XTL::D3DCAPS Caps;
+            D3DCAPS Caps;
 
             /*! verify device is available */
             if(g_pDirect3D->GetDeviceCaps(g_XBVideo.adapter, devType[d], &Caps) == D3D_OK)
@@ -346,7 +346,7 @@ VOID RefreshDirect3DDevice()
         {
             uint32_t dwAdapterModeCount = g_pDirect3D->GetAdapterModeCount(
                 g_XBVideo.adapter
-				, XTL::D3DFMT_X8R8G8B8
+				, D3DFMT_X8R8G8B8
 			);
 
             SendMessage(g_hVideoResolution, CB_ADDSTRING, 0, (LPARAM)"Automatic (Default)");
@@ -356,27 +356,27 @@ VOID RefreshDirect3DDevice()
             {
                 const char *szFormat = "<unknown>";
 
-                XTL::D3DDISPLAYMODE displayMode;
+                D3DDISPLAYMODE displayMode;
 
                 g_pDirect3D->EnumAdapterModes(
 					g_XBVideo.adapter,
-					XTL::D3DFMT_X8R8G8B8,
+					D3DFMT_X8R8G8B8,
 					v,
 					&displayMode
 				);
 
                 switch(displayMode.Format)
                 {
-                    case XTL::D3DFMT_X1R5G5B5:
+                    case D3DFMT_X1R5G5B5:
                         szFormat = "16bit x1r5g5b5";
                         break;
-                    case XTL::D3DFMT_R5G6B5:
+                    case D3DFMT_R5G6B5:
                         szFormat = "16bit r5g6r5";
                         break;
-                    case XTL::D3DFMT_X8R8G8B8:
+                    case D3DFMT_X8R8G8B8:
                         szFormat = "32bit x8r8g8b8";
                         break;
-                    case XTL::D3DFMT_A8R8G8B8:
+                    case D3DFMT_A8R8G8B8:
                         szFormat = "32bit a8r8g8b8";
                         break;
                     default:

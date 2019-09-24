@@ -75,9 +75,9 @@ typedef uint32_t value_t; // Compatibility; Cxbx values are uint32_t (xqemu and 
 #endif
 
 // GCC implementation of FFS
-static int ffs(register int valu)
+static int ffs(int valu)
 {
-	register int bit;
+	int bit;
 
 	if (valu == 0)
 		return 0;

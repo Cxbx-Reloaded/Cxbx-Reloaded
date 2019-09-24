@@ -25,11 +25,7 @@
 #ifndef XBVERTEXSHADER_H
 #define XBVERTEXSHADER_H
 
-//#include "Cxbx.h"
-//#include "core\hle\D3D8\XbVertexBuffer.h" // for CxbxVertexShaderStreamInfo
-namespace XTL {
-	#include "core\hle\D3D8\XbD3D8Types.h" // for X_VSH_MAX_ATTRIBUTES
-}
+#include "core\hle\D3D8\XbD3D8Types.h" // for X_VSH_MAX_ATTRIBUTES
 
 // Host vertex shader counts
 #define VSH_MAX_TEMPORARY_REGISTERS 32
@@ -88,8 +84,8 @@ typedef struct _CxbxVertexShader
 
 	// The resulting host variables
 	DWORD HostFVF; // Flexible Vertex Format (used when there's no host vertex shader)
-	XTL::IDirect3DVertexShader* pHostVertexShader; // if nullptr, use SetFVF(HostFVF);
-	XTL::IDirect3DVertexDeclaration* pHostVertexDeclaration;
+	IDirect3DVertexShader* pHostVertexShader; // if nullptr, use SetFVF(HostFVF);
+	IDirect3DVertexDeclaration* pHostVertexDeclaration;
 
 	// Needed for dynamic stream patching
 	CxbxVertexShaderInfo  VertexShaderInfo;
@@ -97,7 +93,7 @@ typedef struct _CxbxVertexShader
 CxbxVertexShader;
 
 // recompile xbox vertex shader declaration
-extern XTL::D3DVERTEXELEMENT *EmuRecompileVshDeclaration
+extern D3DVERTEXELEMENT *EmuRecompileVshDeclaration
 (
     DWORD                *pXboxDeclaration,
     bool                  bIsFixedFunction,
@@ -111,10 +107,10 @@ extern HRESULT EmuRecompileVshFunction
 (
     DWORD        *pXboxFunction,
     bool          bNoReservedConstants,
-    XTL::D3DVERTEXELEMENT *pRecompiledDeclaration,
+    D3DVERTEXELEMENT *pRecompiledDeclaration,
     bool   		 *pbUseDeclarationOnly,
     DWORD        *pXboxFunctionSize,
-	XTL::LPD3DXBUFFER *ppRecompiledShader
+	LPD3DXBUFFER *ppRecompiledShader
 );
 
 extern void FreeVertexDynamicPatch(CxbxVertexShader *pVertexShader);

@@ -26,6 +26,7 @@
 #include <dsound.h> // Temporary placeholder until XbDSoundTypes.h is cross-platform + filled in the blanks
 #include "Logging.h"
 #include "XbDSoundLogging.hpp"
+
 // For XTL::DSBUFFERDESC and XTL::DSSTREAMDESC temporary usage
 extern LOGRENDER_HEADER(WAVEFORMATEX)
 extern LOGRENDER_HEADER(D3DVECTOR)

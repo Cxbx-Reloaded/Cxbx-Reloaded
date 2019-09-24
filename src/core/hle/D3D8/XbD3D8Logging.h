@@ -25,14 +25,7 @@
 #ifndef _EMU_D3D8_LOGGING_H
 #define _EMU_D3D8_LOGGING_H
 
-#pragma once
-
-//#include <sstream> // for std::ostream
-//#include "EmuXTL.h"
 #include "Logging.h"
-
-namespace XTL
-{
 #include "XbD3D8Types.h"
 
 // Additional types, exclusively for logging (not really enums) :
@@ -60,11 +53,15 @@ enum D3DVTXPCAPS;
 enum D3DDEVCAPS2;
 enum D3DDTCAPS;
 
+namespace XTL {
+
 enum X_D3DUSAGE;
 enum X_D3DCOMMON_TYPE;
 enum X_D3DRESOURCE_COMMON;
 enum X_D3DRESOURCE_FORMAT;
 enum X_D3DRESOURCE_SIZE;
+
+} // end of namespace XTL
 
 //
 // Headers for rendering host D3D enum types :
@@ -110,6 +107,8 @@ LOGRENDER_HEADER(D3DCAPS)
 LOGRENDER_HEADER(D3DLOCKED_RECT)
 LOGRENDER_HEADER(RECT)
 
+namespace XTL {
+
 //
 // Headers for rendering Xbox D3D enum types :
 //
@@ -148,6 +147,6 @@ LOGRENDER_HEADER(X_D3DDISPLAYMODE)
 LOGRENDER_HEADER(X_D3DResource)
 LOGRENDER_HEADER(X_D3DPixelContainer)
 
-}; // end of namespace XTL
+} // end of namespace XTL
 
 #endif _EMU_D3D8_LOGGING_H

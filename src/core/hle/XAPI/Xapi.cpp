@@ -42,13 +42,12 @@ namespace xboxkrnl
 #include "core\kernel\support\Emu.h"
 #include "core\kernel\exports\EmuKrnl.h" // For DefaultLaunchDataPage
 #include "core\kernel\support\EmuFile.h"
-#include "core\kernel\support\EmuFS.h"
-#include "core\kernel\support\EmuXTL.h"
 #include "EmuShared.h"
 #include "core\hle\Intercept.hpp"
 #include "vsbc\CxbxVSBC.h"
 #include "Windef.h"
 #include <vector>
+#include "core\hle\XAPI\Xapi.h"
 #include "core\hle\XAPI\XapiCxbxr.h"
 
 bool g_bCxbxVSBCLoaded = false;
@@ -72,7 +71,7 @@ std::atomic<bool> g_bIsDevicesInitializing = true;
 std::atomic<bool> g_bIsDevicesEmulating = false;
 
 //global bridge for xbox controller to host, 4 elements for 4 ports.
-X_CONTROLLER_HOST_BRIDGE g_XboxControllerHostBridge[4] = {
+CXBX_CONTROLLER_HOST_BRIDGE g_XboxControllerHostBridge[4] = {
 	{ NULL, PORT_INVALID, XBOX_INPUT_DEVICE::DEVICE_INVALID, nullptr, false, false, false, { 0, 0, 0, 0, 0 } },
 	{ NULL, PORT_INVALID, XBOX_INPUT_DEVICE::DEVICE_INVALID, nullptr, false, false, false, { 0, 0, 0, 0, 0 } },
 	{ NULL, PORT_INVALID, XBOX_INPUT_DEVICE::DEVICE_INVALID, nullptr, false, false, false, { 0, 0, 0, 0, 0 } },
@@ -454,7 +453,7 @@ VOID WINAPI XTL::EMUPATCH(XInputClose)
 {
 	LOG_FUNC_ONE_ARG(hDevice);
 
-	PX_CONTROLLER_HOST_BRIDGE Device = (PX_CONTROLLER_HOST_BRIDGE)hDevice;
+	PCXBX_CONTROLLER_HOST_BRIDGE Device = (PCXBX_CONTROLLER_HOST_BRIDGE)hDevice;
 	int Port = Device->XboxPort;
 	if (g_XboxControllerHostBridge[Port].hXboxDevice == hDevice) {
 		Device->hXboxDevice = NULL;
@@ -491,7 +490,7 @@ DWORD WINAPI XTL::EMUPATCH(XInputGetCapabilities)
 		LOG_FUNC_END;
 
     DWORD ret = ERROR_DEVICE_NOT_CONNECTED;
-	PX_CONTROLLER_HOST_BRIDGE Device = (PX_CONTROLLER_HOST_BRIDGE)hDevice;
+	PCXBX_CONTROLLER_HOST_BRIDGE Device = (PCXBX_CONTROLLER_HOST_BRIDGE)hDevice;
 	int Port = Device->XboxPort;
     if (g_XboxControllerHostBridge[Port].hXboxDevice == hDevice && !g_XboxControllerHostBridge[Port].bPendingRemoval) {
         pCapabilities->SubType = g_XboxControllerHostBridge[Port].XboxDeviceInfo.ucSubType;
@@ -563,13 +562,13 @@ void EmuSBCGetState(XTL::PX_SBC_GAMEPAD pSBCGamepad, XTL::PXINPUT_GAMEPAD pXIGam
     }
 
     //restore Toggle Switches.
-    pSBCGamepad->wButtons[0] |= (XboxSBCGamepad.wButtons[0] & (X_SBC_GAMEPAD_W0_COCKPITHATCH | X_SBC_GAMEPAD_W0_IGNITION));
+    pSBCGamepad->wButtons[0] |= (XboxSBCGamepad.wButtons[0] & (CXBX_SBC_GAMEPAD_W0_COCKPITHATCH | CXBX_SBC_GAMEPAD_W0_IGNITION));
 
-    pSBCGamepad->wButtons[2] |= (XboxSBCGamepad.wButtons[2]&( X_SBC_GAMEPAD_W2_TOGGLEFILTERCONTROL
-                                                            | X_SBC_GAMEPAD_W2_TOGGLEOXYGENSUPPLY
-                                                            | X_SBC_GAMEPAD_W2_TOGGLEFUELFLOWRATE
-                                                            | X_SBC_GAMEPAD_W2_TOGGLEBUFFREMATERIAL
-                                                            | X_SBC_GAMEPAD_W2_TOGGLEVTLOCATION));
+    pSBCGamepad->wButtons[2] |= (XboxSBCGamepad.wButtons[2]&( CXBX_SBC_GAMEPAD_W2_TOGGLEFILTERCONTROL
+                                                            | CXBX_SBC_GAMEPAD_W2_TOGGLEOXYGENSUPPLY
+                                                            | CXBX_SBC_GAMEPAD_W2_TOGGLEFUELFLOWRATE
+                                                            | CXBX_SBC_GAMEPAD_W2_TOGGLEBUFFREMATERIAL
+                                                            | CXBX_SBC_GAMEPAD_W2_TOGGLEVTLOCATION));
 
 
     // Analog Sticks
@@ -578,151 +577,151 @@ void EmuSBCGetState(XTL::PX_SBC_GAMEPAD pSBCGamepad, XTL::PXINPUT_GAMEPAD pXIGam
     pSBCGamepad->sRotationLever = 0;//(pXIGamepad->wButtons & XINPUT_GAMEPAD_LEFT_SHOULDER) ? 255 : 0;
     pSBCGamepad->sSightChangeX = pXIGamepad->sThumbLX;
     pSBCGamepad->sSightChangeY = pXIGamepad->sThumbLY;
-    pSBCGamepad->wLeftPedal = ((SHORT)(pXIGamepad->bAnalogButtons[X_XINPUT_GAMEPAD_LEFT_TRIGGER]))<<8;
+    pSBCGamepad->wLeftPedal = ((SHORT)(pXIGamepad->bAnalogButtons[CXBX_XINPUT_GAMEPAD_LEFT_TRIGGER]))<<8;
     pSBCGamepad->wMiddlePedal=0;// = (pXIGamepad->wButtons & XINPUT_GAMEPAD_RIGHT_SHOULDER) ? 255 : 0;
-    pSBCGamepad->wRightPedal = (SHORT)(pXIGamepad->bAnalogButtons[X_XINPUT_GAMEPAD_RIGHT_TRIGGER])<<8;
+    pSBCGamepad->wRightPedal = (SHORT)(pXIGamepad->bAnalogButtons[CXBX_XINPUT_GAMEPAD_RIGHT_TRIGGER])<<8;
     pSBCGamepad->ucTunerDial=0;//low nibble
 
     
     // Digital Buttons
-    if (pXIGamepad->bAnalogButtons [X_XINPUT_GAMEPAD_A]>0) {
-        pSBCGamepad->wButtons[0] |= X_SBC_GAMEPAD_W0_RIGHTJOYMAINWEAPON;
+    if (pXIGamepad->bAnalogButtons [CXBX_XINPUT_GAMEPAD_A]>0) {
+        pSBCGamepad->wButtons[0] |= CXBX_SBC_GAMEPAD_W0_RIGHTJOYMAINWEAPON;
     }
     else {
-        pSBCGamepad->wButtons[0] &= ~X_SBC_GAMEPAD_W0_RIGHTJOYMAINWEAPON;
+        pSBCGamepad->wButtons[0] &= ~CXBX_SBC_GAMEPAD_W0_RIGHTJOYMAINWEAPON;
     }
-    if (pXIGamepad->bAnalogButtons[X_XINPUT_GAMEPAD_B]>0) {
-        pSBCGamepad->wButtons[0] |= X_SBC_GAMEPAD_W0_RIGHTJOYFIRE;
-    }
-    else {
-        pSBCGamepad->wButtons[0] &= ~X_SBC_GAMEPAD_W0_RIGHTJOYFIRE;
-    }
-    if (pXIGamepad->bAnalogButtons[X_XINPUT_GAMEPAD_X]>0) {
-        pSBCGamepad->wButtons[0] |= X_SBC_GAMEPAD_W0_RIGHTJOYLOCKON;
+    if (pXIGamepad->bAnalogButtons[CXBX_XINPUT_GAMEPAD_B]>0) {
+        pSBCGamepad->wButtons[0] |= CXBX_SBC_GAMEPAD_W0_RIGHTJOYFIRE;
     }
     else {
-        pSBCGamepad->wButtons[0] &= ~X_SBC_GAMEPAD_W0_RIGHTJOYLOCKON;
+        pSBCGamepad->wButtons[0] &= ~CXBX_SBC_GAMEPAD_W0_RIGHTJOYFIRE;
     }
-    if (pXIGamepad->bAnalogButtons[X_XINPUT_GAMEPAD_Y]>0) {
-        pSBCGamepad->wButtons[1] |= X_SBC_GAMEPAD_W1_WEAPONCONMAGAZINE;
+    if (pXIGamepad->bAnalogButtons[CXBX_XINPUT_GAMEPAD_X]>0) {
+        pSBCGamepad->wButtons[0] |= CXBX_SBC_GAMEPAD_W0_RIGHTJOYLOCKON;
     }
     else {
-        pSBCGamepad->wButtons[1] &= ~X_SBC_GAMEPAD_W1_WEAPONCONMAGAZINE;
+        pSBCGamepad->wButtons[0] &= ~CXBX_SBC_GAMEPAD_W0_RIGHTJOYLOCKON;
+    }
+    if (pXIGamepad->bAnalogButtons[CXBX_XINPUT_GAMEPAD_Y]>0) {
+        pSBCGamepad->wButtons[1] |= CXBX_SBC_GAMEPAD_W1_WEAPONCONMAGAZINE;
+    }
+    else {
+        pSBCGamepad->wButtons[1] &= ~CXBX_SBC_GAMEPAD_W1_WEAPONCONMAGAZINE;
     }
 
     //GearLever 1~5 for gear 1~5, 7~13 for gear R,N,1~5, 15 for gear R. we use the continues range from 7~13
-    if (pXIGamepad->bAnalogButtons[X_XINPUT_GAMEPAD_WHITE]>0) {//Left Shouder, Gear Down
+    if (pXIGamepad->bAnalogButtons[CXBX_XINPUT_GAMEPAD_WHITE]>0) {//Left Shouder, Gear Down
         if (pSBCGamepad->ucGearLever >7) {
             pSBCGamepad->ucGearLever-- ;
         }
     }
 
-    if (pXIGamepad->bAnalogButtons[X_XINPUT_GAMEPAD_BLACK]>0) {//Right Shouder, Gear Up
+    if (pXIGamepad->bAnalogButtons[CXBX_XINPUT_GAMEPAD_BLACK]>0) {//Right Shouder, Gear Up
         if (pSBCGamepad->ucGearLever < 13) {
             pSBCGamepad->ucGearLever ++;
         }
     }
     //OLD_XINPUT
     /* //not used, don't duplicate the handling for same setting of pXIGamepad's members, later one will over write privous one.
-    if (pXIGamepad->wButtons & X_XINPUT_GAMEPAD_START) {
-        pSBCGamepad->wButtons[0] |= X_SBC_GAMEPAD_W0_START;
+    if (pXIGamepad->wButtons & CXBX_XINPUT_GAMEPAD_START) {
+        pSBCGamepad->wButtons[0] |= CXBX_SBC_GAMEPAD_W0_START;
     }
     else {
-        pSBCGamepad->wButtons[0] &= ~X_SBC_GAMEPAD_W0_START;
+        pSBCGamepad->wButtons[0] &= ~CXBX_SBC_GAMEPAD_W0_START;
     }
     */
-    if (pXIGamepad->wButtons & X_XINPUT_GAMEPAD_LEFT_THUMB) {//Center Sight Change
-        pSBCGamepad->wButtons[2] |= X_SBC_GAMEPAD_W2_LEFTJOYSIGHTCHANGE;
+    if (pXIGamepad->wButtons & CXBX_XINPUT_GAMEPAD_LEFT_THUMB) {//Center Sight Change
+        pSBCGamepad->wButtons[2] |= CXBX_SBC_GAMEPAD_W2_LEFTJOYSIGHTCHANGE;
     }
     else {
-        pSBCGamepad->wButtons[2] &= ~X_SBC_GAMEPAD_W2_LEFTJOYSIGHTCHANGE;
+        pSBCGamepad->wButtons[2] &= ~CXBX_SBC_GAMEPAD_W2_LEFTJOYSIGHTCHANGE;
     }
     //OLD_XINPUT
     /* //not used
-    if (pXIGamepad->wButtons & X_XINPUT_GAMEPAD_RIGHT_THUMB) {
-        pSBCGamepad->wButtons |= X_XINPUT_GAMEPAD_RIGHT_THUMB;
+    if (pXIGamepad->wButtons & CXBX_XINPUT_GAMEPAD_RIGHT_THUMB) {
+        pSBCGamepad->wButtons |= CXBX_XINPUT_GAMEPAD_RIGHT_THUMB;
     }
     else {
-        pSBCGamepad->wButtons &= ~X_XINPUT_GAMEPAD_RIGHT_THUMB;
+        pSBCGamepad->wButtons &= ~CXBX_XINPUT_GAMEPAD_RIGHT_THUMB;
     }
     */
 
 
     //additional input from 2nd input, default using directinput
-    if (pDIGamepad->bAnalogButtons[X_XINPUT_GAMEPAD_A]>0) {
-        pSBCGamepad->wButtons[0] |= X_SBC_GAMEPAD_W0_START;
+    if (pDIGamepad->bAnalogButtons[CXBX_XINPUT_GAMEPAD_A]>0) {
+        pSBCGamepad->wButtons[0] |= CXBX_SBC_GAMEPAD_W0_START;
     }
     else {
-        pSBCGamepad->wButtons[0] &= ~X_SBC_GAMEPAD_W0_START;
+        pSBCGamepad->wButtons[0] &= ~CXBX_SBC_GAMEPAD_W0_START;
     }
     // Iginition is Toggle Switch
-    if (pDIGamepad->bAnalogButtons[X_XINPUT_GAMEPAD_B]>0) {
-        if (pSBCGamepad->wButtons[0] & X_SBC_GAMEPAD_W0_IGNITION) {
-            pSBCGamepad->wButtons[0] &= ~X_SBC_GAMEPAD_W0_IGNITION;
+    if (pDIGamepad->bAnalogButtons[CXBX_XINPUT_GAMEPAD_B]>0) {
+        if (pSBCGamepad->wButtons[0] & CXBX_SBC_GAMEPAD_W0_IGNITION) {
+            pSBCGamepad->wButtons[0] &= ~CXBX_SBC_GAMEPAD_W0_IGNITION;
         }
         else {
-            pSBCGamepad->wButtons[0] |= X_SBC_GAMEPAD_W0_IGNITION;
+            pSBCGamepad->wButtons[0] |= CXBX_SBC_GAMEPAD_W0_IGNITION;
         }
     }
 
-    if (pDIGamepad->bAnalogButtons[X_XINPUT_GAMEPAD_X]>0) {
-        pSBCGamepad->wButtons[0] |= X_SBC_GAMEPAD_W0_EJECT;
+    if (pDIGamepad->bAnalogButtons[CXBX_XINPUT_GAMEPAD_X]>0) {
+        pSBCGamepad->wButtons[0] |= CXBX_SBC_GAMEPAD_W0_EJECT;
     }
     else {
-        pSBCGamepad->wButtons[0] &= ~X_SBC_GAMEPAD_W0_EJECT;
+        pSBCGamepad->wButtons[0] &= ~CXBX_SBC_GAMEPAD_W0_EJECT;
     }
     // CockpitHatch is Toggle Switch
-    if (pDIGamepad->bAnalogButtons[X_XINPUT_GAMEPAD_Y]>0) {
-        if (pSBCGamepad->wButtons[0] & X_SBC_GAMEPAD_W0_COCKPITHATCH) {
-            pSBCGamepad->wButtons[0] &= ~X_SBC_GAMEPAD_W0_COCKPITHATCH;
+    if (pDIGamepad->bAnalogButtons[CXBX_XINPUT_GAMEPAD_Y]>0) {
+        if (pSBCGamepad->wButtons[0] & CXBX_SBC_GAMEPAD_W0_COCKPITHATCH) {
+            pSBCGamepad->wButtons[0] &= ~CXBX_SBC_GAMEPAD_W0_COCKPITHATCH;
         }
         else {
-            pSBCGamepad->wButtons[0] |= X_SBC_GAMEPAD_W0_COCKPITHATCH;
+            pSBCGamepad->wButtons[0] |= CXBX_SBC_GAMEPAD_W0_COCKPITHATCH;
         }
     }
 
-    if (pDIGamepad->wButtons & X_XINPUT_GAMEPAD_BACK) {//Toggle Switch ToggleFilterControl
-        if (pSBCGamepad->wButtons[2] & X_SBC_GAMEPAD_W2_TOGGLEFILTERCONTROL) {
-            pSBCGamepad->wButtons[2] &= ~X_SBC_GAMEPAD_W2_TOGGLEFILTERCONTROL;
+    if (pDIGamepad->wButtons & CXBX_XINPUT_GAMEPAD_BACK) {//Toggle Switch ToggleFilterControl
+        if (pSBCGamepad->wButtons[2] & CXBX_SBC_GAMEPAD_W2_TOGGLEFILTERCONTROL) {
+            pSBCGamepad->wButtons[2] &= ~CXBX_SBC_GAMEPAD_W2_TOGGLEFILTERCONTROL;
         }
         else {
-            pSBCGamepad->wButtons[2] |= X_SBC_GAMEPAD_W2_TOGGLEFILTERCONTROL;
+            pSBCGamepad->wButtons[2] |= CXBX_SBC_GAMEPAD_W2_TOGGLEFILTERCONTROL;
         }
     }
 
-    if (pDIGamepad->wButtons & X_XINPUT_GAMEPAD_DPAD_UP) {//Toggle Switch ToggleOxygenSupply
-        if (pSBCGamepad->wButtons[2] & X_SBC_GAMEPAD_W2_TOGGLEOXYGENSUPPLY) {
-            pSBCGamepad->wButtons[2] &= ~X_SBC_GAMEPAD_W2_TOGGLEOXYGENSUPPLY;
+    if (pDIGamepad->wButtons & CXBX_XINPUT_GAMEPAD_DPAD_UP) {//Toggle Switch ToggleOxygenSupply
+        if (pSBCGamepad->wButtons[2] & CXBX_SBC_GAMEPAD_W2_TOGGLEOXYGENSUPPLY) {
+            pSBCGamepad->wButtons[2] &= ~CXBX_SBC_GAMEPAD_W2_TOGGLEOXYGENSUPPLY;
         }
         else {
-            pSBCGamepad->wButtons[2] |= X_SBC_GAMEPAD_W2_TOGGLEOXYGENSUPPLY;
+            pSBCGamepad->wButtons[2] |= CXBX_SBC_GAMEPAD_W2_TOGGLEOXYGENSUPPLY;
         }
     }
 
-    if (pDIGamepad->wButtons & X_XINPUT_GAMEPAD_DPAD_DOWN) {//Toggle Switch ToggleBuffreMaterial
-        if (pSBCGamepad->wButtons[2] & X_SBC_GAMEPAD_W2_TOGGLEBUFFREMATERIAL) {
-            pSBCGamepad->wButtons[2] &= ~X_SBC_GAMEPAD_W2_TOGGLEBUFFREMATERIAL;
+    if (pDIGamepad->wButtons & CXBX_XINPUT_GAMEPAD_DPAD_DOWN) {//Toggle Switch ToggleBuffreMaterial
+        if (pSBCGamepad->wButtons[2] & CXBX_SBC_GAMEPAD_W2_TOGGLEBUFFREMATERIAL) {
+            pSBCGamepad->wButtons[2] &= ~CXBX_SBC_GAMEPAD_W2_TOGGLEBUFFREMATERIAL;
         }
         else {
-            pSBCGamepad->wButtons[2] |= X_SBC_GAMEPAD_W2_TOGGLEBUFFREMATERIAL;
+            pSBCGamepad->wButtons[2] |= CXBX_SBC_GAMEPAD_W2_TOGGLEBUFFREMATERIAL;
         }
     }
 
-    if (pDIGamepad->wButtons & X_XINPUT_GAMEPAD_DPAD_LEFT) {//Toggle Switch ToggleVTLocation
-        if (pSBCGamepad->wButtons[2] & X_SBC_GAMEPAD_W2_TOGGLEVTLOCATION) {
-            pSBCGamepad->wButtons[2] &= ~X_SBC_GAMEPAD_W2_TOGGLEVTLOCATION;
+    if (pDIGamepad->wButtons & CXBX_XINPUT_GAMEPAD_DPAD_LEFT) {//Toggle Switch ToggleVTLocation
+        if (pSBCGamepad->wButtons[2] & CXBX_SBC_GAMEPAD_W2_TOGGLEVTLOCATION) {
+            pSBCGamepad->wButtons[2] &= ~CXBX_SBC_GAMEPAD_W2_TOGGLEVTLOCATION;
         }
         else {
-            pSBCGamepad->wButtons[2] |= X_SBC_GAMEPAD_W2_TOGGLEVTLOCATION;
+            pSBCGamepad->wButtons[2] |= CXBX_SBC_GAMEPAD_W2_TOGGLEVTLOCATION;
         }
     }
 
-    if (pDIGamepad->wButtons & X_XINPUT_GAMEPAD_DPAD_RIGHT) {//Toggle Switch ToggleFuelFlowRate
-        if (pSBCGamepad->wButtons[2] & X_SBC_GAMEPAD_W2_TOGGLEFUELFLOWRATE) {
-            pSBCGamepad->wButtons[2] &= ~X_SBC_GAMEPAD_W2_TOGGLEFUELFLOWRATE;
+    if (pDIGamepad->wButtons & CXBX_XINPUT_GAMEPAD_DPAD_RIGHT) {//Toggle Switch ToggleFuelFlowRate
+        if (pSBCGamepad->wButtons[2] & CXBX_SBC_GAMEPAD_W2_TOGGLEFUELFLOWRATE) {
+            pSBCGamepad->wButtons[2] &= ~CXBX_SBC_GAMEPAD_W2_TOGGLEFUELFLOWRATE;
         }
         else {
-            pSBCGamepad->wButtons[2] |= X_SBC_GAMEPAD_W2_TOGGLEFUELFLOWRATE;
+            pSBCGamepad->wButtons[2] |= CXBX_SBC_GAMEPAD_W2_TOGGLEFUELFLOWRATE;
         }
     }
     //reserve the SBCGamepad to keep the status of GearLever and Toggole Switches.
@@ -745,7 +744,7 @@ DWORD WINAPI XTL::EMUPATCH(XInputGetState)
 		LOG_FUNC_END;
 
     DWORD ret = ERROR_DEVICE_NOT_CONNECTED;
-    PX_CONTROLLER_HOST_BRIDGE Device = (PX_CONTROLLER_HOST_BRIDGE)hDevice;
+    PCXBX_CONTROLLER_HOST_BRIDGE Device = (PCXBX_CONTROLLER_HOST_BRIDGE)hDevice;
     int Port = Device->XboxPort;
     if (g_XboxControllerHostBridge[Port].hXboxDevice == hDevice) {
         if (!g_XboxControllerHostBridge[Port].bPendingRemoval) {
@@ -778,7 +777,7 @@ DWORD WINAPI XTL::EMUPATCH(XInputSetState)
 		LOG_FUNC_ARG(pFeedback)
 		LOG_FUNC_END;
 
-    PX_CONTROLLER_HOST_BRIDGE Device = (PX_CONTROLLER_HOST_BRIDGE)hDevice;
+    PCXBX_CONTROLLER_HOST_BRIDGE Device = (PCXBX_CONTROLLER_HOST_BRIDGE)hDevice;
     int Port = Device->XboxPort;
     if (g_XboxControllerHostBridge[Port].hXboxDevice == hDevice && !g_XboxControllerHostBridge[Port].bPendingRemoval) {
         pFeedback->Header.dwStatus = ERROR_IO_PENDING;

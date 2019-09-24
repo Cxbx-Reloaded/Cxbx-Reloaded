@@ -25,10 +25,8 @@
 #ifndef DIRECT3D9_H
 #define DIRECT3D9_H
 
-#include "../XbD3D8Types.h"
-#include "core\kernel\init\CxbxKrnl.h"
-#include "common\xbe\Xbe.h"
-#include "core\kernel\support\Emu.h"
+#include "core\hle\XAPI\Xapi.h" // For EMUPATCH
+#include "core\hle\D3D8\XbD3D8Types.h"
 
 #define DIRECTDRAW_VERSION 0x0700
 #include <ddraw.h>
@@ -61,11 +59,19 @@ extern VOID EmuD3DInit();
 // cleanup direct3d
 extern VOID EmuD3DCleanup();
 
+extern IDirect3DDevice *g_pD3DDevice;
+
+extern DWORD g_Xbox_VertexShader_Handle;
+
+extern XTL::X_PixelShader *g_D3DActivePixelShader;
+
 // EmuD3DTileCache (8 tiles maximum)
-extern X_D3DTILE EmuD3DTileCache[0x08];
+extern XTL::X_D3DTILE EmuD3DTileCache[0x08];
 
 // EmuD3DActiveTexture
-extern X_D3DBaseTexture *EmuD3DActiveTexture[XTL::X_D3DTS_STAGECOUNT];
+extern XTL::X_D3DBaseTexture *EmuD3DActiveTexture[XTL::X_D3DTS_STAGECOUNT];
+
+namespace XTL {
 
 // ******************************************************************
 // * patch: Direct3D_CreateDevice
@@ -983,7 +989,7 @@ VOID WINAPI EMUPATCH(D3DDevice_BlockUntilVerticalBlank)();
 // ******************************************************************
 VOID WINAPI EMUPATCH(D3DDevice_SetVerticalBlankCallback)
 (
-    D3DVBLANKCALLBACK pCallback
+    X_D3DVBLANKCALLBACK pCallback
 );
 
 // ******************************************************************
@@ -1891,7 +1897,7 @@ void WINAPI EMUPATCH(D3DDevice_SetStipple)( DWORD* pPattern );
 // ******************************************************************
 void WINAPI EMUPATCH(D3DDevice_SetSwapCallback)
 (
-	D3DSWAPCALLBACK		pCallback
+	X_D3DSWAPCALLBACK		pCallback
 );
 
 // ******************************************************************
@@ -2119,5 +2125,7 @@ VOID WINAPI EMUPATCH(D3DDevice_GetMaterial)
 (
 	X_D3DMATERIAL8* pMaterial
 );
+
+} // end of namespace XTL
 
 #endif

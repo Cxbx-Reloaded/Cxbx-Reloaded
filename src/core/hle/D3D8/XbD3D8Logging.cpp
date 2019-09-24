@@ -28,10 +28,6 @@
 #include "Logging.h"
 #include "XbD3D8Logging.h"
 
-// prevent name collisions
-namespace XTL
-{
-
 //
 // Host D3D LOGRENDER(Type) implementations
 //
@@ -560,6 +556,9 @@ LOGRENDER(RECT)
 }
 
 
+// prevent name collisions
+namespace XTL {
+
 //
 // Cxbx D3D LOGRENDER(Type) implementations
 //
@@ -770,4 +769,4 @@ LOGRENDER(X_D3DPixelContainer)
 		LOGRENDER_MEMBER_TYPE(X_D3DRESOURCE_SIZE, Size);
 }
 
-}; // end of namespace XTL
+} // end of namespace XTL

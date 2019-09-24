@@ -53,37 +53,23 @@
   - Alternatively, translate to HLSL and let D3DXCompileShader/D3DCompile figure it out
 */
 
-// ******************************************************************
-// * prevent name collisions
-// ******************************************************************
-//namespace xboxkrnl
-//{
-//    #include <xboxkrnl/xboxkrnl.h>
-//};
-
 #define LOG_PREFIX CXBXR_MODULE::PXSH
 
 #include "core\kernel\support\Emu.h"
-#include "core\kernel\support\EmuFS.h"
-#include "core\kernel\support\EmuXTL.h" // X_PSH_COMBINECOUNT
-
+#include "core\hle\D3D8\Direct3D9\Direct3D9.h" // For g_pD3DDevice, g_D3DActivePixelShader
 #include "core\hle\D3D8\XbPixelShader.h"
 #include "core\hle\D3D8\XbState.h" // For CXBX_D3DRS_UNSUPPORTED
 
 #include "core\kernel\init\CxbxKrnl.h" // For CxbxKrnlCleanup()
 
 #include <assert.h> // assert()
-
 #include <process.h>
 #include <locale.h>
-
 
 #define DbgPshPrintf \
 	LOG_CHECK_ENABLED(LOG_LEVEL::DEBUG) \
 		if(g_bPrintfOn) printf
 
-
-//#include "EmuD3DPixelShader.h"
 
 /*---------------------------------------------------------------------------*/
 /*  Texture configuration - The following members of the D3DPixelShaderDef   */
@@ -823,7 +809,7 @@ typedef struct _PSH_IMD_ARGUMENT {
 	void SetRegister(PSH_ARGUMENT_TYPE aRegType, int16_t aAddress, DWORD aMask);
     bool HasModifier(PSH_ARG_MODIFIER modifier);
     bool SetScaleConstRegister(float factor, const PSH_RECOMPILED_SHADER& pRecompiled);
-    bool SetScaleBemLumRegister(XTL::D3DTEXTURESTAGESTATETYPE factor, int stage, const PSH_RECOMPILED_SHADER& pRecompiled);
+    bool SetScaleBemLumRegister(D3DTEXTURESTAGESTATETYPE factor, int stage, const PSH_RECOMPILED_SHADER& pRecompiled);
     std::string ToString();
 	bool Decode(const DWORD Value, DWORD aMask, TArgumentType ArgumentType);
 	void Invert();
@@ -916,8 +902,8 @@ struct PSH_XBOX_SHADER {
     bool InsertTextureModeInstruction(XTL::X_D3DPIXELSHADERDEF *pPSDef, int Stage, PSH_OPCODE opcode, std::vector<PSH_INTERMEDIATE_FORMAT>& InsertIns, int& InsertPos);
 	bool MoveRemovableParametersRight();
 	void ConvertXboxOpcodesToNative(XTL::X_D3DPIXELSHADERDEF *pPSDef);
-	void _SetColor(/*var OUT*/PSH_INTERMEDIATE_FORMAT &NewIns, XTL::D3DCOLOR ConstColor);
-    void _SetColor(/*var OUT*/PSH_INTERMEDIATE_FORMAT &NewIns, XTL::D3DCOLORVALUE ConstColor);
+	void _SetColor(/*var OUT*/PSH_INTERMEDIATE_FORMAT &NewIns, D3DCOLOR ConstColor);
+    void _SetColor(/*var OUT*/PSH_INTERMEDIATE_FORMAT &NewIns, D3DCOLORVALUE ConstColor);
     int _MapConstant(int ConstNr, bool *NativeConstInUse);
 	int _HandleConst(int XboxConst, /*var OUT*/PSH_RECOMPILED_SHADER *Recompiled, bool *NativeConstInUse, bool *EmittedNewConstant);
 	bool ConvertConstantsToNative(XTL::X_D3DPIXELSHADERDEF *pPSDef, /*var OUT*/PSH_RECOMPILED_SHADER *Recompiled);
@@ -1354,7 +1340,7 @@ bool PSH_IMD_ARGUMENT::SetScaleConstRegister(float factor, const PSH_RECOMPILED_
     return result;
 }
 
-bool PSH_IMD_ARGUMENT::SetScaleBemLumRegister(XTL::D3DTEXTURESTAGESTATETYPE factor, int stage, const PSH_RECOMPILED_SHADER& pRecompiled)
+bool PSH_IMD_ARGUMENT::SetScaleBemLumRegister(D3DTEXTURESTAGESTATETYPE factor, int stage, const PSH_RECOMPILED_SHADER& pRecompiled)
 {
     bool result = false;
 
@@ -1367,42 +1353,42 @@ bool PSH_IMD_ARGUMENT::SetScaleBemLumRegister(XTL::D3DTEXTURESTAGESTATETYPE fact
 
     switch (factor)
     {
-    case XTL::D3DTSS_BUMPENVMAT00:
+    case D3DTSS_BUMPENVMAT00:
     {
         address = mappedConstant0;
         mask = MASK_R;
         result = true;
         break;
     }
-    case XTL::D3DTSS_BUMPENVMAT01:
+    case D3DTSS_BUMPENVMAT01:
     {
         address = mappedConstant0;
         mask = MASK_G;
         result = true;
         break;
     }
-    case XTL::D3DTSS_BUMPENVMAT11:
+    case D3DTSS_BUMPENVMAT11:
     {
         address = mappedConstant0;
         mask = MASK_B;
         result = true;
         break;
     }
-    case XTL::D3DTSS_BUMPENVMAT10:
+    case D3DTSS_BUMPENVMAT10:
     {
         address = mappedConstant0;
         mask = MASK_A;
         result = true;
         break;
     }
-    case XTL::D3DTSS_BUMPENVLSCALE:
+    case D3DTSS_BUMPENVLSCALE:
     {
         address = mappedConstant1;
         mask = MASK_R;
         result = true;
         break;
     }
-    case XTL::D3DTSS_BUMPENVLOFFSET:
+    case D3DTSS_BUMPENVLOFFSET:
     {
         address = mappedConstant1;
         mask = MASK_G;
@@ -2934,7 +2920,7 @@ bool PSH_XBOX_SHADER::InsertTextureModeInstruction(XTL::X_D3DPIXELSHADERDEF *pPS
             // and include the texture formats in the shader hash, somehow.
             bool bias = false;
 			auto biasModifier = (1 << ARGMOD_SCALE_BX2);
-			auto pXboxTexture = XTL::EmuD3DActiveTexture[inputStage];
+			auto pXboxTexture = EmuD3DActiveTexture[inputStage];
 			if (pXboxTexture != nullptr) {
 				extern XTL::X_D3DFORMAT GetXboxPixelContainerFormat(const XTL::X_D3DPixelContainer *pXboxPixelContainer); // TODO : Move to XTL-independent header file
 
@@ -2959,7 +2945,7 @@ bool PSH_XBOX_SHADER::InsertTextureModeInstruction(XTL::X_D3DPIXELSHADERDEF *pPS
 
             Ins.Initialize(PO_MAD);
             Ins.Output[0].SetRegister(PARAM_R, 1, MASK_R);
-            Ins.Parameters[0].SetScaleBemLumRegister(XTL::D3DTSS_BUMPENVMAT00, Stage, Recompiled);
+            Ins.Parameters[0].SetScaleBemLumRegister(D3DTSS_BUMPENVMAT00, Stage, Recompiled);
             Ins.Parameters[1].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + inputStage, MASK_R);
 
             if (bias) {
@@ -2970,7 +2956,7 @@ bool PSH_XBOX_SHADER::InsertTextureModeInstruction(XTL::X_D3DPIXELSHADERDEF *pPS
             InsertIns.emplace_back(Ins);
             Ins.Initialize(PO_MAD);
             Ins.Output[0].SetRegister(PARAM_R, 1, MASK_R);
-            Ins.Parameters[0].SetScaleBemLumRegister(XTL::D3DTSS_BUMPENVMAT10, Stage, Recompiled);
+            Ins.Parameters[0].SetScaleBemLumRegister(D3DTSS_BUMPENVMAT10, Stage, Recompiled);
             Ins.Parameters[1].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + inputStage, MASK_G);
             if (bias) {
                 Ins.Parameters[1].Modifiers = biasModifier;
@@ -2980,7 +2966,7 @@ bool PSH_XBOX_SHADER::InsertTextureModeInstruction(XTL::X_D3DPIXELSHADERDEF *pPS
             //
             Ins.Initialize(PO_MAD);
             Ins.Output[0].SetRegister(PARAM_R, 1, MASK_G);
-            Ins.Parameters[0].SetScaleBemLumRegister(XTL::D3DTSS_BUMPENVMAT01, Stage, Recompiled);
+            Ins.Parameters[0].SetScaleBemLumRegister(D3DTSS_BUMPENVMAT01, Stage, Recompiled);
             Ins.Parameters[1].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + inputStage, MASK_R);
             if (bias) {
                 Ins.Parameters[1].Modifiers = biasModifier;
@@ -2989,7 +2975,7 @@ bool PSH_XBOX_SHADER::InsertTextureModeInstruction(XTL::X_D3DPIXELSHADERDEF *pPS
             InsertIns.emplace_back(Ins);
             Ins.Initialize(PO_MAD);
             Ins.Output[0].SetRegister(PARAM_R, 1, MASK_G);
-            Ins.Parameters[0].SetScaleBemLumRegister(XTL::D3DTSS_BUMPENVMAT11, Stage, Recompiled);
+            Ins.Parameters[0].SetScaleBemLumRegister(D3DTSS_BUMPENVMAT11, Stage, Recompiled);
             Ins.Parameters[1].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + inputStage, MASK_G);
             if (bias) {
                 Ins.Parameters[1].Modifiers = biasModifier;
@@ -3010,9 +2996,9 @@ bool PSH_XBOX_SHADER::InsertTextureModeInstruction(XTL::X_D3DPIXELSHADERDEF *pPS
                 //
                 Ins.Initialize(PO_MAD);
                 Ins.Output[0].SetRegister(PARAM_R, 1, MASK_B);
-                Ins.Parameters[0].SetScaleBemLumRegister(XTL::D3DTSS_BUMPENVLSCALE, Stage, Recompiled);
+                Ins.Parameters[0].SetScaleBemLumRegister(D3DTSS_BUMPENVLSCALE, Stage, Recompiled);
                 Ins.Parameters[1].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + inputStage, MASK_B);
-                Ins.Parameters[2].SetScaleBemLumRegister(XTL::D3DTSS_BUMPENVLOFFSET, Stage, Recompiled);
+                Ins.Parameters[2].SetScaleBemLumRegister(D3DTSS_BUMPENVLOFFSET, Stage, Recompiled);
                 InsertIns.emplace_back(Ins);
                 //
                 Ins.Initialize(PO_MUL);
@@ -3411,9 +3397,9 @@ bool PSH_XBOX_SHADER::MoveRemovableParametersRight()
 
 //bool PSH_XBOX_SHADER::ConvertConstantsToNative(XTL::X_D3DPIXELSHADERDEF *pPSDef, /*var OUT*/PSH_RECOMPILED_SHADER *Recompiled)
 
-  void PSH_XBOX_SHADER::_SetColor(/*var OUT*/PSH_INTERMEDIATE_FORMAT &NewIns, XTL::D3DCOLOR ConstColor)
+  void PSH_XBOX_SHADER::_SetColor(/*var OUT*/PSH_INTERMEDIATE_FORMAT &NewIns, D3DCOLOR ConstColor)
   {
-    XTL::D3DXCOLOR XColor;
+    D3DXCOLOR XColor;
 
     // Colors are defined in RGBA format, and range 0.0 - 1.0 (negative values
     // can be obtained by supplying PS_INPUTMAPPING_SIGNED_NEGATE to the combiner
@@ -3425,7 +3411,7 @@ bool PSH_XBOX_SHADER::MoveRemovableParametersRight()
     NewIns.Parameters[3].SetConstValue(XColor.a);
   }
 
-  void PSH_XBOX_SHADER::_SetColor(/*var OUT*/PSH_INTERMEDIATE_FORMAT &NewIns, XTL::D3DCOLORVALUE ConstColor)
+  void PSH_XBOX_SHADER::_SetColor(/*var OUT*/PSH_INTERMEDIATE_FORMAT &NewIns, D3DCOLORVALUE ConstColor)
   {
       NewIns.Parameters[0].SetConstValue(ConstColor.r);
       NewIns.Parameters[1].SetConstValue(ConstColor.g);
@@ -5876,7 +5862,7 @@ PSH_RECOMPILED_SHADER XTL_EmuRecompilePshDef(XTL::X_D3DPIXELSHADERDEF *pPSDef)
 {
 	uint32_t PSVersion = D3DPS_VERSION(2, 0); // Use pixel shader model 2.0 by default
 
-	extern XTL::D3DCAPS g_D3DCaps;
+	extern D3DCAPS g_D3DCaps;
 
 	if (g_D3DCaps.PixelShaderVersion > D3DPS_VERSION(3, 0)) {
 		// TODO : Test PSVersion = D3DPS_VERSION(3, 0); // g_D3DCaps.PixelShaderVersion;
@@ -5902,8 +5888,8 @@ static const
 	"mov oC0, r0\n";
   std::string ConvertedPixelShaderStr;
   DWORD hRet;
-  XTL::LPD3DXBUFFER pShader;
-  XTL::LPD3DXBUFFER pErrors;
+  LPD3DXBUFFER pShader;
+  LPD3DXBUFFER pErrors;
   DWORD *pFunction;
 
   // Attempt to recompile PixelShader
@@ -5941,7 +5927,7 @@ static const
 	if (hRet != D3D_OK) {
 		EmuLog(LOG_LEVEL::WARNING, "Could not create pixel shader");
 		EmuLog(LOG_LEVEL::WARNING, std::string((char*)pErrors->GetBufferPointer(), pErrors->GetBufferSize()).c_str());
-		XTL::CxbxKrnlCleanup("Cannot fall back to the most simple pixel shader!");
+		CxbxKrnlCleanup("Cannot fall back to the most simple pixel shader!");
 	}
 
     EmuLog(LOG_LEVEL::WARNING, "We're lying about the creation of a pixel shader!");
@@ -5955,7 +5941,7 @@ static const
       hRet = g_pD3DDevice->CreatePixelShader
       (
         pFunction,
-        (XTL::IDirect3DPixelShader**)(&(Result.ConvertedHandle)) //fixme
+        (IDirect3DPixelShader**)(&(Result.ConvertedHandle)) //fixme
       );
 
 	  if (hRet != D3D_OK) {
@@ -5989,16 +5975,14 @@ DWORD TemporaryPixelShaderRenderStates[XTL::X_D3DRS_PSTEXTUREMODES + 1];
 
 VOID DxbxUpdateActivePixelShader() // NOPATCH
 {
-  using namespace XTL; // Temporary, not for actual XTL symbols, but for those that are erroneously contained herein (like everything from ddraw.h)
-
   XTL::X_D3DPIXELSHADERDEF *pPSDef;
   PPSH_RECOMPILED_SHADER RecompiledPixelShader;
   DWORD ConvertedPixelShaderHandle;
   DWORD CurrentPixelShader;
   int i;
   DWORD Register_;
-  XTL::D3DCOLOR dwColor;
-  XTL::D3DXCOLOR fColor;
+  D3DCOLOR dwColor;
+  D3DXCOLOR fColor;
 
   HRESULT Result = D3D_OK;
 
@@ -6066,10 +6050,10 @@ VOID DxbxUpdateActivePixelShader() // NOPATCH
     //    switch (psTextureModes[i])
     //    {
     //    case PS_TEXTUREMODES_BUMPENVMAP:
-    //        g_pD3DDevice->SetTextureStageState(i, XTL::D3DTSS_COLOROP, XTL::D3DTOP_BUMPENVMAP);
+    //        g_pD3DDevice->SetTextureStageState(i, D3DTSS_COLOROP, D3DTOP_BUMPENVMAP);
     //        break;
     //    case PS_TEXTUREMODES_BUMPENVMAP_LUM:
-    //        g_pD3DDevice->SetTextureStageState(i, XTL::D3DTSS_COLOROP, XTL::D3DTOP_BUMPENVMAPLUMINANCE);
+    //        g_pD3DDevice->SetTextureStageState(i, D3DTSS_COLOROP, D3DTOP_BUMPENVMAPLUMINANCE);
     //        break;
     //    default:
     //        break;
@@ -7190,7 +7174,6 @@ inline void GetOutputFlags
 	}
 	case PS_COMBINEROUTPUT_SHIFTLEFT_1_BIAS: // 0x18L
 	{
-		using namespace XTL;
 		LOG_TEST_CASE("PS_COMBINEROUTPUT_SHIFTLEFT_1_BIAS");
 		printf("PS_COMBINEROUTPUT_SHIFTLEFT_1_BIAS"); // y = (x - 0.5)*2
 
@@ -7206,7 +7189,6 @@ inline void GetOutputFlags
 	}
 	case PS_COMBINEROUTPUT_SHIFTLEFT_2: // 0x20L
 	{
-		using namespace XTL;
 		LOG_TEST_CASE("PS_COMBINEROUTPUT_SHIFTLEFT_2");
 		printf("PS_COMBINEROUTPUT_SHIFTLEFT_2");  // y = x*4
 		strcpy(szInstMod, "_x4");
@@ -7215,7 +7197,6 @@ inline void GetOutputFlags
 	// case PS_COMBINEROUTPUT_SHIFTLEFT_2_BIAS: // 0x28L, // y = (x - 0.5)*4
 	case PS_COMBINEROUTPUT_SHIFTRIGHT_1: // 0x30L
 	{
-		using namespace XTL;
 		LOG_TEST_CASE("PS_COMBINEROUTPUT_SHIFTRIGHT_1");
 		printf("PS_COMBINEROUTPUT_SHIFTRIGHT_1"); // y = x/2
 		strcpy(szInstMod, "_d2");

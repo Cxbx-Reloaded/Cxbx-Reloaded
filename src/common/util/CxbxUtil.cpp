@@ -60,9 +60,7 @@
 
 // Disable a compiler warning relative to uint64_t -> uint32_t conversions in Muldiv64. This function is taken from
 // QEMU so it should be safe regardless
-#pragma warning(push)
-#pragma warning(disable: 4244)
-
+#pragma warning(suppress: 4244)
 // Compute (a*b)/c with a 96 bit intermediate result
 uint64_t Muldiv64(uint64_t a, uint32_t b, uint32_t c)
 {
@@ -82,8 +80,6 @@ uint64_t Muldiv64(uint64_t a, uint32_t b, uint32_t c)
 	res.l.low = (((rh % c) << 32) + (rl & 0xffffffff)) / c;
 	return res.ll;
 }
-
-#pragma warning(pop)
 
 void IoVecReset(IOVector* qiov)
 {

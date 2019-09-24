@@ -42,7 +42,6 @@ namespace xboxkrnl
 #include "core\kernel\init\CxbxKrnl.h" // For CxbxKrnl_TLS
 #include "core\kernel\support\Emu.h" // For EmuLog(LOG_LEVEL::WARNING, )
 #include "core\kernel\support\EmuFS.h" // For EmuGenerateFS
-#include "core\kernel\support\EmuXTL.h"
 
 // prevent name collisions
 namespace NtDll
@@ -101,8 +100,6 @@ void InitXboxThread(DWORD_PTR cores)
 }
 
 // PsCreateSystemThread proxy procedure
-#pragma warning(push)
-#pragma warning(disable: 4731)  // disable ebp modification warning
 // Dxbx Note : The signature of PCSTProxy should conform to System.TThreadFunc !
 static unsigned int WINAPI PCSTProxy
 (
@@ -159,7 +156,6 @@ static unsigned int WINAPI PCSTProxy
 
 	return 0; // will never be reached
 }
-#pragma warning(pop)
 
 // Placeholder system function, instead of XapiThreadStartup
 void PspSystemThreadStartup

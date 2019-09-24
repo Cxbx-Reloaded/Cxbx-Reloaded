@@ -25,6 +25,8 @@
 #ifndef XAPI_H
 #define XAPI_H
 
+namespace XTL {
+
 // ******************************************************************
 // * calling conventions
 // ******************************************************************
@@ -840,5 +842,7 @@ DWORD WINAPI EMUPATCH(XCalculateSignatureEnd)
 );
 //*/
 // +s
+
+} // end of namespace XTL
 
 #endif

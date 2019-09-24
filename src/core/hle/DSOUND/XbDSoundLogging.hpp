@@ -26,8 +26,9 @@
 #define XBDSOUNDLOGGING_H
 
 #include "Logging.h"
-namespace XTL {
 #include "XbDSoundTypes.h"
+
+namespace XTL {
 
 // TODO: Everything, only small portions had been implemented.
 

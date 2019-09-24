@@ -26,8 +26,6 @@
 #ifndef _LOGGING_H
 #define _LOGGING_H
 
-#pragma once
-
 #include <windows.h> // For DWORD
 #include <sstream> // For std::stringstream
 #include <iostream> // For std::cout
@@ -391,15 +389,6 @@ extern thread_local std::string _logThreadPrefix;
 				} \
 			} \
 		} while(0)
-
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable : 4477)
-#endif
-
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif
 
 //
 // Short hand function logging defines :

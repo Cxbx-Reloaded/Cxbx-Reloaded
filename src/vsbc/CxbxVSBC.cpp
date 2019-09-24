@@ -8,7 +8,6 @@
 //
 
 #include "CxbxVSBC.h"
-//#include "../CxbxKrnl/EmuXapi.h"
 #include <stdexcept>
 #include "DlgVirtualSBCFeedback.h"
 

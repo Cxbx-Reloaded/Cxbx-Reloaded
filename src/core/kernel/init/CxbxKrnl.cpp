@@ -41,12 +41,13 @@ namespace xboxkrnl
 #include "core\kernel\support\Emu.h"
 #include "devices\x86\EmuX86.h"
 #include "core\kernel\support\EmuFile.h"
-#include "core\kernel\support\EmuFS.h"
+#include "core\kernel\support\EmuFS.h" // EmuInitFS
 #include "EmuEEPROM.h" // For CxbxRestoreEEPROM, EEPROM, XboxFactoryGameRegion
 #include "core\kernel\exports\EmuKrnl.h"
 #include "core\kernel\exports\EmuKrnlKi.h"
 #include "EmuShared.h"
-#include "core\kernel\support\EmuXTL.h"
+#include "core\hle\D3D8\Direct3D9\Direct3D9.h" // For CxbxInitWindow, EmuD3DInit
+#include "core\hle\DSOUND\DirectSound\DirectSound.hpp" // For CxbxInitAudio
 #include "core\hle\Intercept.hpp"
 #include "ReservedMemory.h" // For virtual_memory_placeholder
 #include "core\kernel\memory-manager\VMManager.h"
@@ -526,35 +527,8 @@ void CxbxPopupMessageEx(CXBXR_MODULE cxbxr_module, LOG_LEVEL level, CxbxMsgDlgIc
 
 void PrintCurrentConfigurationLog()
 {
-	// Print environment information
-	{
-		// Get Windows Version
-		DWORD dwVersion = 0;
-		DWORD dwMajorVersion = 0;
-		DWORD dwMinorVersion = 0;
-		DWORD dwBuild = 0;
-
-		// TODO: GetVersion is deprecated but we use it anyway (for now)
-		// The correct solution is to use GetProductInfo but that function
-		// requires more logic to parse the response, and I didn't feel
-		// like building it just yet :P
-		dwVersion = GetVersion();
-
-		dwMajorVersion = (DWORD)(LOBYTE(LOWORD(dwVersion)));
-		dwMinorVersion = (DWORD)(HIBYTE(LOWORD(dwVersion)));
-
-		// Get the build number.
-		if (dwVersion < 0x80000000) {
-			dwBuild = (DWORD)(HIWORD(dwVersion));
-		}
-
-		printf("------------------------ENVIRONMENT DETAILS-------------------------\n");
-		if (g_bIsWine) {
-			printf("Wine %s\n", wine_get_version());
-			printf("Presenting as Windows %d.%d (%d)\n", dwMajorVersion, dwMinorVersion, dwBuild);
-		} else {
-			printf("Windows %d.%d (%d)\n", dwMajorVersion, dwMinorVersion, dwBuild);
-		}
+	if (g_bIsWine) {
+		printf("Running under Wine Version %s \n", wine_get_version());
 	}
 
 	// HACK: For API TRace..
@@ -885,7 +859,7 @@ void ImportLibraries(XbeImportEntry *pImportDirectory)
 			MapThunkTable((uint32_t *)pImportDirectory->ThunkAddr, Cxbx_LibXbdmThunkTable);
 		}
 		else {
-			printf("LOAD : Skipping unrecognized import library : %s\n", LibName.c_str());
+			wprintf(L"LOAD : Skipping unrecognized import library : %s\n", LibName.c_str());
 		}
 
 		pImportDirectory++;
@@ -1358,15 +1332,15 @@ __declspec(noreturn) void CxbxKrnlInit
 		printf("[0x%X] INIT: Debug Trace Enabled.\n", GetCurrentThreadId());
 		printf("[0x%X] INIT: CxbxKrnlInit\n"
 			"(\n"
-			"   hwndParent          : 0x%.08X\n"
-			"   pTLSData            : 0x%.08X\n"
-			"   pTLS                : 0x%.08X\n"
-			"   pLibraryVersion     : 0x%.08X\n"
+			"   hwndParent          : 0x%.08p\n"
+			"   pTLSData            : 0x%.08p\n"
+			"   pTLS                : 0x%.08p\n"
+			"   pLibraryVersion     : 0x%.08p\n"
 			"   DebugConsole        : 0x%.08X\n"
 			"   DebugFilename       : \"%s\"\n"
-			"   pXBEHeader          : 0x%.08X\n"
-			"   pXBEHeaderSize      : 0x%.08X\n"
-			"   Entry               : 0x%.08X\n"
+			"   pXBEHeader          : 0x%.08p\n"
+			"   dwXBEHeaderSize     : 0x%.08X\n"
+			"   Entry               : 0x%.08p\n"
 			");\n",
 			GetCurrentThreadId(), CxbxKrnl_hEmuParent, pTLSData, pTLS, pLibraryVersion, DbgMode, szDebugFilename, pXbeHeader, dwXbeHeaderSize, Entry);
 #else
@@ -1545,7 +1519,7 @@ __declspec(noreturn) void CxbxKrnlInit
 
 	// initialize graphics
 	EmuLogEx(LOG_PREFIX_INIT, LOG_LEVEL::DEBUG, "Initializing render window.\n");
-	XTL::CxbxInitWindow(true);
+	CxbxInitWindow(true);
 
 	// Now process the boot flags to see if there are any special conditions to handle
 	if (BootFlags & BOOT_EJECT_PENDING) {} // TODO
@@ -1560,7 +1534,7 @@ __declspec(noreturn) void CxbxKrnlInit
 	if (BootFlags & BOOT_SKIP_ANIMATION) {} // TODO
 	if (BootFlags & BOOT_RUN_DASHBOARD) {} // TODO
 
-    XTL::CxbxInitAudio();
+    CxbxInitAudio();
 
 	EmuHLEIntercept(pXbeHeader);
 
@@ -1581,7 +1555,7 @@ __declspec(noreturn) void CxbxKrnlInit
 	if (!bLLE_GPU)
 	{
 		EmuLogEx(LOG_PREFIX_INIT, LOG_LEVEL::DEBUG, "Initializing Direct3D.\n");
-		XTL::EmuD3DInit();
+		EmuD3DInit();
 	}
 	
 	if (CxbxDebugger::CanReport())

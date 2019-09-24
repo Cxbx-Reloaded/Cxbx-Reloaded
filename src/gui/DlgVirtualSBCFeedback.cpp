@@ -26,7 +26,6 @@
 // ******************************************************************
 #include "stdafx.h"
 
-//#include "CxbxKrnl/EmuShared.h"
 #include "DlgVirtualSBCFeedback.h"
 #include "CxbxKrnl/EmuXapi.h"
 #include "Winuser.h"
