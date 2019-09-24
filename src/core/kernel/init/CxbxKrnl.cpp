@@ -527,7 +527,6 @@ void CxbxPopupMessageEx(CXBXR_MODULE cxbxr_module, LOG_LEVEL level, CxbxMsgDlgIc
 
 void PrintCurrentConfigurationLog()
 {
-	// Print environment information
 	if (g_bIsWine) {
 		printf("Running under Wine Version %s \n", wine_get_version());
 	}
