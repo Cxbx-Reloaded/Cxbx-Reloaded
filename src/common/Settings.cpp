@@ -30,7 +30,7 @@
 #include "Settings.hpp"
 #include "core\kernel\support\Emu.h"
 #include "EmuShared.h"
-#include <experimental/filesystem>
+#include <filesystem>
 #include "common\input\EmuDevice.h"
 
 // TODO: Implement Qt support when real CPU emulation is available.
@@ -146,7 +146,7 @@ std::string GenerateExecDirectoryStr()
 	return g_exec_filepath.substr(0, g_exec_filepath.find_last_of("\\/"));
 }
 
-// NOTE: This function will be only have Qt support, std::experimental::filesystem doesn't have generic support.
+// NOTE: This function will be only have Qt support, std::filesystem doesn't have generic support.
 // Plus appending support for each OSes are not worthy to work on.
 std::string GenerateUserProfileDirectoryStr()
 {
@@ -222,10 +222,10 @@ bool Settings::Init()
 			}
 
 			// Check if data directory exists.
-			bRet = std::experimental::filesystem::exists(saveFile);
+			bRet = std::filesystem::exists(saveFile);
 			if (!bRet) {
 				// Then try create data directory.
-				bRet = std::experimental::filesystem::create_directory(saveFile);
+				bRet = std::filesystem::create_directory(saveFile);
 				if (!bRet) {
 					// Unable to create a data directory
 					return false;
@@ -258,7 +258,7 @@ bool Settings::LoadUserConfig()
 	fileSearch.append(szSettings_settings_file);
 
 	// Check and see if file exists from portable, current, directory.
-	if (std::experimental::filesystem::exists(fileSearch) == false) {
+	if (std::filesystem::exists(fileSearch) == false) {
 
 		fileSearch = GenerateUserProfileDirectoryStr();
 		if (fileSearch.size() == 0) {
@@ -267,7 +267,7 @@ bool Settings::LoadUserConfig()
 		fileSearch.append(szSettings_settings_file);
 
 		// Check if the user profile directory settings file exists.
-		if (std::experimental::filesystem::exists(fileSearch) == false) {
+		if (std::filesystem::exists(fileSearch) == false) {
 			return false;
 		}
 	}
@@ -675,7 +675,7 @@ bool Settings::Save(std::string file_path)
 
 void Settings::Delete()
 {
-    std::experimental::filesystem::remove(m_file_path);
+    std::filesystem::remove(m_file_path);
 }
 
 // Universal update to EmuShared from both standalone kernel, and GUI process.
@@ -744,7 +744,7 @@ void verifyDebugFilePath(DebugMode& debug_mode, std::string& file_path)
 			else {
 				szDebugPath = file_path.substr(0, file_path.size() - szDebugName.size());
 
-				if(std::experimental::filesystem::exists(szDebugPath) == false) {
+				if(std::filesystem::exists(szDebugPath) == false) {
 					file_path = "";
 					debug_mode = DM_NONE;
 				}

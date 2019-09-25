@@ -95,7 +95,6 @@ extern volatile bool g_bPrintfOn;
 #define CxbxSetThreadName(Name)
 #endif
 
-// NOTE: #include <filesystem> didn't work plus C++ 17 is still using experimental filesystem.
-#include <experimental/filesystem>
+#include <filesystem>
 
 #endif
