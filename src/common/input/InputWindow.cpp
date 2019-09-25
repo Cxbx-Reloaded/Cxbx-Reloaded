@@ -37,15 +37,6 @@
 
 constexpr ControlState INPUT_DETECT_THRESHOLD = 0.55; // arbitrary number, using what Dolphin uses
 InputWindow* g_InputWindow = nullptr;
-int dev_num_buttons[to_underlying(XBOX_INPUT_DEVICE::DEVICE_MAX)] = {
-	XBOX_CTRL_NUM_BUTTONS,
-	0,
-	0,
-	0,
-	0,
-	0,
-	0,
-};
 
 
 void InputWindow::Initialize(HWND hwnd, int port_num, int dev_type)

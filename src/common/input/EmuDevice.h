@@ -30,9 +30,6 @@
 #include "Button.h"
 #include "common\util\CxbxUtil.h"
 
-extern const char* button_xbox_ctrl_names[XBOX_CTRL_NUM_BUTTONS][3];
-extern int dev_num_buttons[to_underlying(XBOX_INPUT_DEVICE::DEVICE_MAX)];
-
 
 /* Represents the guest device currently being configured in the gui */
 class EmuDevice

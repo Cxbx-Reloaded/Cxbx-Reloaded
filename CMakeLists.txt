@@ -73,13 +73,11 @@ file (GLOB CXBXR_HEADER_COMMON
  "${CXBXR_ROOT_DIR}/src/common/CxbxDebugger.h"
  "${CXBXR_ROOT_DIR}/src/common/EmuEEPROM.h"
  "${CXBXR_ROOT_DIR}/src/common/Error.h"
- "${CXBXR_ROOT_DIR}/src/common/input/Button.h"
  "${CXBXR_ROOT_DIR}/src/common/input/DInputKeyboardCodes.h"
  "${CXBXR_ROOT_DIR}/src/common/input/DInputKeyboardMouse.h"
- "${CXBXR_ROOT_DIR}/src/common/input/EmuDevice.h"
+ "${CXBXR_ROOT_DIR}/src/common/input/layout_xbox_controller.h"
  "${CXBXR_ROOT_DIR}/src/common/input/InputDevice.h"
  "${CXBXR_ROOT_DIR}/src/common/input/InputManager.h"
- "${CXBXR_ROOT_DIR}/src/common/input/InputWindow.h"
  "${CXBXR_ROOT_DIR}/src/common/input/SdlJoystick.h"
  "${CXBXR_ROOT_DIR}/src/common/input/XInputPad.h"
  "${CXBXR_ROOT_DIR}/src/common/IPCHybrid.hpp"
@@ -108,6 +106,9 @@ file (GLOB CXBXR_HEADER_COMMON
 
 # GUI v1
 file (GLOB CXBXR_HEADER_GUIv1
+ "${CXBXR_ROOT_DIR}/src/common/input/Button.h"
+ "${CXBXR_ROOT_DIR}/src/common/input/EmuDevice.h"
+ "${CXBXR_ROOT_DIR}/src/common/input/InputWindow.h"
  "${CXBXR_ROOT_DIR}/src/gui/DbgConsole.h"
  "${CXBXR_ROOT_DIR}/src/gui/DlgAbout.h"
  "${CXBXR_ROOT_DIR}/src/gui/DlgAudioConfig.h"
@@ -203,12 +204,9 @@ file (GLOB CXBXR_SOURCE_COMMON
  "${CXBXR_ROOT_DIR}/src/common/CxbxDebugger.cpp"
  "${CXBXR_ROOT_DIR}/src/common/EmuEEPROM.cpp"
  "${CXBXR_ROOT_DIR}/src/common/Error.cpp"
- "${CXBXR_ROOT_DIR}/src/common/input/Button.cpp"
  "${CXBXR_ROOT_DIR}/src/common/input/DInputKeyboardMouse.cpp"
- "${CXBXR_ROOT_DIR}/src/common/input/EmuDevice.cpp"
  "${CXBXR_ROOT_DIR}/src/common/input/InputDevice.cpp"
  "${CXBXR_ROOT_DIR}/src/common/input/InputManager.cpp"
- "${CXBXR_ROOT_DIR}/src/common/input/InputWindow.cpp"
  "${CXBXR_ROOT_DIR}/src/common/input/SdlJoystick.cpp"
  "${CXBXR_ROOT_DIR}/src/common/input/XInputPad.cpp"
  "${CXBXR_ROOT_DIR}/src/common/Logging.cpp"
@@ -233,6 +231,9 @@ file (GLOB CXBXR_SOURCE_COMMON
 
 # GUI v1
 file (GLOB CXBXR_SOURCE_GUIv1
+ "${CXBXR_ROOT_DIR}/src/common/input/Button.cpp"
+ "${CXBXR_ROOT_DIR}/src/common/input/EmuDevice.cpp"
+ "${CXBXR_ROOT_DIR}/src/common/input/InputWindow.cpp"
  "${CXBXR_ROOT_DIR}/src/gui/DlgAbout.cpp"
  "${CXBXR_ROOT_DIR}/src/gui/DlgAudioConfig.cpp"
  "${CXBXR_ROOT_DIR}/src/gui/DlgInputConfig.cpp"

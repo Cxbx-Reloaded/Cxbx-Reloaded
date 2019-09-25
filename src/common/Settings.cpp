@@ -31,7 +31,8 @@
 #include "core\kernel\support\Emu.h"
 #include "EmuShared.h"
 #include <filesystem>
-#include "common\input\EmuDevice.h"
+#include "common\input\InputManager.h"
+#include "common\input\layout_xbox_controller.h"
 
 // TODO: Implement Qt support when real CPU emulation is available.
 #ifndef QT_VERSION // NOTE: Non-Qt will be using current directory for data
