@@ -59,6 +59,7 @@ namespace xboxkrnl
 #include "WalkIndexBuffer.h"
 #include "core\kernel\common\strings.hpp" // For uem_str
 #include "common\input\SdlJoystick.h"
+#include "common/util/strConverter.hpp" // for utf8_to_utf16
 
 #include <assert.h>
 #include <process.h>
@@ -549,8 +550,7 @@ void DrawUEM(HWND hWnd)
 
 	SetTextColor(hMemDC, RGB(0, 204, 0));
 
-	std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> UTF8toUTF16;
-	std::wstring utf16str = UTF8toUTF16.from_bytes(uem_str);
+	std::wstring utf16str = utf8_to_utf16(uem_str.c_str());
 
 	// Unfortunately, DrawTextW doesn't support vertical alignemnt, so we have to do the calculation
 	// ourselves. See here: https://social.msdn.microsoft.com/Forums/vstudio/en-US/abd89aae-16a0-41c6-8db6-b119ea90b42a/win32-drawtext-how-center-in-vertical-with-new-lines-and-tabs?forum=vclanguage

@@ -44,7 +44,6 @@ class XbePrinter
         Xbe::Certificate *Xbe_certificate;
 
         std::string GenHexRow(uint8_t*, const uint8_t, const uint8_t);
-        std::string utf8_to_ascii(const wchar_t*);
         std::string AllowedMediaToString();
         std::string GameRatingToString();
 

@@ -29,9 +29,9 @@
 #include "CxbxVersion.h" // For _CXBX_VERSION
 
 #include <locale> // For ctime
-#include <codecvt> // For std::codecvt_utf8<>
 #include <sstream> // For std::stringstream
 #include <iomanip> // For std::setfill, std::uppercase, std::hex
+#include "common/util/strConverter.hpp" // for utf16le_to_ascii
 
 extern std::string FormatTitleId(uint32_t title_id); // Exposed in Emu.cpp
 
@@ -92,14 +92,6 @@ std::string XbePrinter::GenHexRow(
         text << std::setw(2) << static_cast<unsigned>(signature[offset + x]);
     }
     return text.str();
-}
-
-// https://stackoverflow.com/questions/4786292/converting-unicode-strings-and-vice-versa
-std::string XbePrinter::utf8_to_ascii(const wchar_t* utf8_string)
-{
-    std::wstring_convert<std::codecvt_utf8<wchar_t>> utf8_to_ascii;
-    const std::wstring utf8_filename(utf8_string);
-    return utf8_to_ascii.to_bytes(utf8_filename);
 }
 
 std::string XbePrinter::AllowedMediaToString()
@@ -253,7 +245,7 @@ std::string XbePrinter::GenGeneralHeaderInfo2()
     const uint32_t debug_entry_point = Xbe_header->dwEntryAddr ^ XOR_EP_DEBUG;
     const uint32_t retail_thunk_addr = Xbe_header->dwKernelImageThunkAddr ^ XOR_KT_RETAIL;
     const uint32_t debug_thunk_addr = Xbe_header->dwKernelImageThunkAddr ^ XOR_KT_DEBUG;
-    const std::string AsciiFilename = utf8_to_ascii(Xbe_to_print->GetUnicodeFilenameAddr());
+    const std::string AsciiFilename = utf16le_to_ascii(Xbe_to_print->GetUnicodeFilenameAddr());
     std::stringstream text;
     SSTREAM_SET_HEX(text);
     text << "Entry Point                      : 0x" << std::setw(8) << Xbe_header->dwEntryAddr << " (Retail: 0x" << std::setw(8) << retail_entry_point << ", Debug: 0x" <<  std::setw(8) << debug_entry_point << ")\n";
