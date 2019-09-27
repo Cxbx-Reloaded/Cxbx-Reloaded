@@ -47,6 +47,7 @@ namespace xboxkrnl
 #include "common\EmuEEPROM.h" // For EEPROM
 #include "devices\Xbox.h" // For g_SMBus, SMBUS_ADDRESS_SYSTEM_MICRO_CONTROLLER
 #include "devices\SMCDevice.h" // For SMC_COMMAND_SCRATCH
+#include "common/util/strConverter.hpp" // for utf16_to_ascii
 
 #include <algorithm> // for std::replace
 #include <locale>
@@ -536,7 +537,7 @@ XBSYSAPI EXPORTNUM(49) xboxkrnl::VOID DECLSPEC_NORETURN NTAPI xboxkrnl::HalRetur
 				CxbxConvertFilePath(TitlePath, wXbePath, &rootDirectoryHandle, "NtCreateFile");
 
 				// Convert Wide String as returned by above to a string, for XbePath
-				XbePath = std::wstring_convert<std::codecvt_utf8<wchar_t>>().to_bytes(wXbePath);
+				XbePath = utf16_to_ascii(wXbePath.c_str());
 
 				// If the rootDirectoryHandle is not null, we have a relative path
 				// We need to prepend the path of the root directory to get a full DOS path

@@ -1176,7 +1176,7 @@ void CxbxKrnlMain(int argc, char* argv[])
 		// TODO: How to we detect who launched us, to prevent a reboot-loop
 		if (g_bIsChihiro) {
 			std::string chihiroMediaBoardRom = std::string(szFolder_CxbxReloadedData) + std::string("/EmuDisk/") + MediaBoardRomFile;
-			if (!std::experimental::filesystem::exists(chihiroMediaBoardRom)) {
+			if (!std::filesystem::exists(chihiroMediaBoardRom)) {
 				CxbxKrnlCleanup("Chihiro Media Board ROM (fpr21042_m29w160et.bin) could not be found");
 			}
 
@@ -1614,15 +1614,15 @@ void CxbxInitFilePaths()
 	g_EmuShared->GetStorageLocation(szFolder_CxbxReloadedData);
 
 	// Make sure our data folder exists :
-	bool result = std::experimental::filesystem::exists(szFolder_CxbxReloadedData);
-	if (!result && !std::experimental::filesystem::create_directory(szFolder_CxbxReloadedData)) {
+	bool result = std::filesystem::exists(szFolder_CxbxReloadedData);
+	if (!result && !std::filesystem::create_directory(szFolder_CxbxReloadedData)) {
 		CxbxKrnlCleanup("%s : Couldn't create Cxbx-Reloaded's data folder!", __func__);
 	}
 
 	// Make sure the EmuDisk folder exists
 	std::string emuDisk = std::string(szFolder_CxbxReloadedData) + std::string("\\EmuDisk");
-	result = std::experimental::filesystem::exists(emuDisk);
-	if (!result && !std::experimental::filesystem::create_directory(emuDisk)) {
+	result = std::filesystem::exists(emuDisk);
+	if (!result && !std::filesystem::create_directory(emuDisk)) {
 		CxbxKrnlCleanup("%s : Couldn't create Cxbx-Reloaded EmuDisk folder!", __func__);
 	}
 

@@ -33,7 +33,7 @@ namespace xboxkrnl
 
 #include "common\xbe\Xbe.h"
 #include "common\util\CxbxUtil.h" // For RoundUp
-#include <experimental/filesystem> // filesystem related functions available on C++ 17
+#include <filesystem> // filesystem related functions available on C++ 17
 #include <locale> // For ctime
 #include <array>
 #include "devices\LED.h" // For LED::Sequence
@@ -43,7 +43,7 @@ namespace xboxkrnl
 #include "core\hle\XAPI\Xapi.h" // For LDT_FROM_DASHBOARD
 #include "core\hle\D3D8\Direct3D9\Direct3D9.h" // For CxbxInitWindow
 
-namespace fs = std::experimental::filesystem;
+namespace fs = std::filesystem;
 
 
 

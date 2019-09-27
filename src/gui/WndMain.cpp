@@ -82,7 +82,7 @@ void ClearSymbolCache(const char sStorageLocation[MAX_PATH])
 			if ((data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) == 0) {
 				fullpath = cacheDir + data.cFileName;
 
-				if (!std::experimental::filesystem::remove(fullpath)) {
+				if (!std::filesystem::remove(fullpath)) {
 					break;
 				}
 			}
@@ -1078,7 +1078,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 				sstream << cacheDir << szTitleName << "-" << std::hex << uiHash << ".ini";
 				std::string fullpath = sstream.str();
 
-				if (std::experimental::filesystem::remove(fullpath)) {
+				if (std::filesystem::remove(fullpath)) {
 					MessageBox(m_hwnd, "This title's Symbol Cache entry has been cleared.", "Cxbx-Reloaded", MB_OK);
 				}
 			}
