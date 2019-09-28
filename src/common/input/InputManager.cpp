@@ -62,8 +62,8 @@ int Gui2XboxPortArray[4] = {
 };
 
 int dev_num_buttons[to_underlying(XBOX_INPUT_DEVICE::DEVICE_MAX)] = {
-	XBOX_CTRL_NUM_BUTTONS,
-	0,
+	XBOX_CTRL_NUM_BUTTONS, // MS_CONTROLLER_DUKE
+	XBOX_CTRL_NUM_BUTTONS, // MS_CONTROLLER_S
 	0,
 	0,
 	0,
@@ -349,12 +349,12 @@ bool InputDeviceManager::UpdateXboxPortInput(int usb_port, void* Buffer, int Dir
 			if (dev_ptr->GetPort(usb_port)) {
 				switch (xid_type)
 				{
-				case to_underlying(XBOX_INPUT_DEVICE::MS_CONTROLLER_DUKE): {
+				case to_underlying(XBOX_INPUT_DEVICE::MS_CONTROLLER_DUKE):
+                case to_underlying(XBOX_INPUT_DEVICE::MS_CONTROLLER_S): {
 					has_changed = UpdateInputXpad(dev_ptr, Buffer, Direction);
 				}
 				break;
 
-				case to_underlying(XBOX_INPUT_DEVICE::MS_CONTROLLER_S):
 				case to_underlying(XBOX_INPUT_DEVICE::LIGHT_GUN):
 				case to_underlying(XBOX_INPUT_DEVICE::STEERING_WHEEL):
 				case to_underlying(XBOX_INPUT_DEVICE::MEMORY_UNIT):

@@ -97,7 +97,7 @@ INT_PTR CALLBACK DlgInputConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPAR
 
 		for (int i = 0, j = 0; i != 4; i++) {
 			hHandle = GetDlgItem(hWndDlg, IDC_DEVICE_PORT1 + i);
-			for (auto str : { "None", "MS Controller Duke" }) {
+			for (auto str : { "None", "MS Controller Duke", "MS Controller S" }) {
 				LRESULT index = SendMessage(hHandle, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(str));
 				SendMessage(hHandle, CB_SETITEMDATA, index,
 					to_underlying(XBOX_INPUT_DEVICE::DEVICE_INVALID) + j);
@@ -142,7 +142,8 @@ INT_PTR CALLBACK DlgInputConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPAR
 				int DeviceType = SendMessage(hHandle, CB_GETITEMDATA, SendMessage(hHandle, CB_GETCURSEL, 0, 0), 0);
 				switch (DeviceType)
 				{
-				case to_underlying(XBOX_INPUT_DEVICE::MS_CONTROLLER_DUKE): {
+				case to_underlying(XBOX_INPUT_DEVICE::MS_CONTROLLER_DUKE): 
+				case to_underlying(XBOX_INPUT_DEVICE::MS_CONTROLLER_S): {
 					DialogBoxParam(GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_XID_DUKE_CFG), hWndDlg, DlgXidControllerConfigProc,
 						(DeviceType << 8) | port);
 				}

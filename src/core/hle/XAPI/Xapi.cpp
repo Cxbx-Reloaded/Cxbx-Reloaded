@@ -83,14 +83,14 @@ bool operator==(XTL::PXPP_DEVICE_TYPE XppType, XBOX_INPUT_DEVICE XidType)
 {
 	switch (XidType)
 	{
-	case XBOX_INPUT_DEVICE::MS_CONTROLLER_DUKE: {
+	case XBOX_INPUT_DEVICE::MS_CONTROLLER_DUKE:
+    case XBOX_INPUT_DEVICE::MS_CONTROLLER_S: {
 		if (XppType == g_DeviceType_Gamepad) {
 			return true;
 		}
 	}
 	break;
 
-	case XBOX_INPUT_DEVICE::MS_CONTROLLER_S:
 	case XBOX_INPUT_DEVICE::LIGHT_GUN:
 	case XBOX_INPUT_DEVICE::STEERING_WHEEL:
 	case XBOX_INPUT_DEVICE::MEMORY_UNIT:
@@ -129,13 +129,25 @@ bool ConstructHleInputDevice(int Type, int Port)
 		g_XboxControllerHostBridge[Port].XboxDeviceInfo.dwPacketNumber = 0;
 	}
 	break;
-
+    case to_underlying(XBOX_INPUT_DEVICE::MS_CONTROLLER_S): {
+        g_XboxControllerHostBridge[Port].XboxPort = Port;
+        g_XboxControllerHostBridge[Port].XboxType = XBOX_INPUT_DEVICE::MS_CONTROLLER_S;
+        g_XboxControllerHostBridge[Port].InState = new XpadInput();
+        g_XboxControllerHostBridge[Port].bPendingRemoval = false;
+        g_XboxControllerHostBridge[Port].bSignaled = false;
+        g_XboxControllerHostBridge[Port].bIoInProgress = false;
+        g_XboxControllerHostBridge[Port].XboxDeviceInfo.ucType = XINPUT_DEVTYPE_GAMEPAD;
+        g_XboxControllerHostBridge[Port].XboxDeviceInfo.ucSubType = XINPUT_DEVSUBTYPE_GC_GAMEPAD_ALT;
+        g_XboxControllerHostBridge[Port].XboxDeviceInfo.ucInputStateSize = sizeof(XpadInput);
+        g_XboxControllerHostBridge[Port].XboxDeviceInfo.ucFeedbackSize = sizeof(XpadOutput);
+        g_XboxControllerHostBridge[Port].XboxDeviceInfo.dwPacketNumber = 0;
+    }
+	break;
 	case to_underlying(XBOX_INPUT_DEVICE::STEEL_BATTALION_CONTROLLER): {
 		// TODO
 	}
 	break;
 
-	case to_underlying(XBOX_INPUT_DEVICE::MS_CONTROLLER_S):
 	case to_underlying(XBOX_INPUT_DEVICE::LIGHT_GUN):
 	case to_underlying(XBOX_INPUT_DEVICE::STEERING_WHEEL):
 	case to_underlying(XBOX_INPUT_DEVICE::MEMORY_UNIT):
