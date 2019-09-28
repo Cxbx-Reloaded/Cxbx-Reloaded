@@ -27,6 +27,7 @@
 
 #include "Button.h"
 #include "InputWindow.h"
+#include "layout_xbox_controller.h" // TODO: Needs a better fix for custom input device support.
 #include "..\..\gui\ResCxbx.h"
 
 

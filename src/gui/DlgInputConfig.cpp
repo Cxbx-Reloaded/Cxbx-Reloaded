@@ -39,13 +39,6 @@
 static INT_PTR CALLBACK DlgInputConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 HWND g_ChildWnd = NULL;
 
-int Gui2XboxPortArray[4] = {
-	 3,
-	 4,
-	 1,
-	 2
-};
-
 
 void SyncInputSettings(int port_num, int dev_type)
 {

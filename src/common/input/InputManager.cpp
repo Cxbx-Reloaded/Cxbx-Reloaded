@@ -54,6 +54,23 @@ namespace xboxkrnl
 #include "core\hle\XAPI\Xapi.h"
 #include "core\hle\XAPI\XapiCxbxr.h"
 
+int Gui2XboxPortArray[4] = {
+	3,
+	4,
+	1,
+	2
+};
+
+int dev_num_buttons[to_underlying(XBOX_INPUT_DEVICE::DEVICE_MAX)] = {
+	XBOX_CTRL_NUM_BUTTONS,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+};
+
 extern CXBX_CONTROLLER_HOST_BRIDGE g_XboxControllerHostBridge[4]; // hle xinput
 
 

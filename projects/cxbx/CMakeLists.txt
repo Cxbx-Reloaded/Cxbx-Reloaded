@@ -176,13 +176,13 @@ set(WINS_LIB
  XINPUT9_1_0
  Iphlpapi
  wpcap
- SDL2
 )
 
 target_link_libraries(cxbx
  PUBLIC XbSymbolDatabase
  subhook
  libtomcrypt
+ SDL2
 
  ${WINS_LIB}
 )
