@@ -478,11 +478,19 @@ bool Settings::LoadConfig()
 
 	// ==== Input Profile Begin ====
 	std::array<std::vector<std::string>, to_underlying(XBOX_INPUT_DEVICE::DEVICE_MAX)> control_names;
-	for (int i = 0; i < dev_num_buttons[0]; i++) {
-		char control_name[30];
-		std::sprintf(control_name, sect_input_profiles.control, button_xbox_ctrl_names[i][0]);
-		control_names[0].push_back(control_name);
+
+	for (int device = 0; device < to_underlying(XBOX_INPUT_DEVICE::DEVICE_MAX); device++) {
+		if (dev_num_buttons[device] == 0) {
+			continue;
+		}
+
+		for (int i = 0; i < dev_num_buttons[device]; i++) {
+			char control_name[30];
+			std::sprintf(control_name, sect_input_profiles.control, button_xbox_ctrl_names[i][0]);
+			control_names[device].push_back(control_name);
+		}
 	}
+
 	// TODO: add the control names of the other devices
 
 	index = 0;
@@ -609,11 +617,18 @@ bool Settings::Save(std::string file_path)
 	// ==== Input Profile Begin ====
 
 	std::array<std::vector<std::string>, to_underlying(XBOX_INPUT_DEVICE::DEVICE_MAX)> control_names;
-	for (int i = 0; i < dev_num_buttons[0]; i++) {
-		char control_name[30];
-		std::sprintf(control_name, sect_input_profiles.control, button_xbox_ctrl_names[i][0]);
-		control_names[0].push_back(control_name);
+	for (int device = 0; device < to_underlying(XBOX_INPUT_DEVICE::DEVICE_MAX); device++) {
+		if (dev_num_buttons[device] == 0) {
+			continue;
+		}
+
+		for (int i = 0; i < dev_num_buttons[device]; i++) {
+			char control_name[30];
+			std::sprintf(control_name, sect_input_profiles.control, button_xbox_ctrl_names[i][0]);
+			control_names[device].push_back(control_name);
+		}
 	}
+
 	// TODO: add the control names of the other devices
 
 	int profile_num = 0;

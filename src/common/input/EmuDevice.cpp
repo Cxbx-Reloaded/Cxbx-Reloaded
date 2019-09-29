@@ -35,7 +35,8 @@ EmuDevice::EmuDevice(int type, HWND hwnd)
 {
 	switch (type)
 	{
-	case to_underlying(XBOX_INPUT_DEVICE::MS_CONTROLLER_DUKE): {
+	case to_underlying(XBOX_INPUT_DEVICE::MS_CONTROLLER_DUKE):
+	case to_underlying(XBOX_INPUT_DEVICE::MS_CONTROLLER_S): {
 		m_hwnd = hwnd;
 		for (int i = 0; i < ARRAY_SIZE(button_xbox_ctrl_id); i++) {
 			m_buttons.push_back(new Button(button_xbox_ctrl_id[i], i, hwnd));
