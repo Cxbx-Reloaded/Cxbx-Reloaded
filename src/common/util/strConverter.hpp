@@ -41,7 +41,7 @@ static std::wstring utf8_to_utf16(const char* utf8_string)
 // Depending on what type of UTF-16 string is input, otherwise will use native by default.
 static std::string utf16_to_ascii(const wchar_t* utf16_string)
 {
-	char* tempASCII = SDL_iconv_string(/*to:*/"ASCII", /*from:*/"UTF-16", reinterpret_cast<const char*>(utf16_string), wcslen(utf16_string)*2 + 1);
+	char* tempASCII = SDL_iconv_string(/*to:*/"ASCII", /*from:*/"UTF-16", reinterpret_cast<const char*>(utf16_string), wcslen(utf16_string)*2 + 2);
 	const std::string strASCII = tempASCII;
 	// Don't forget to free allocated string from SDL library.
 	SDL_free(tempASCII);
@@ -52,7 +52,7 @@ static std::string utf16_to_ascii(const wchar_t* utf16_string)
 // Enforce to expect little endian UTF-16 string is input.
 static std::string utf16le_to_ascii(const wchar_t* utf16le_string)
 {
-	char* tempASCII = SDL_iconv_string(/*to:*/"ASCII", /*from:*/"UTF-16LE", reinterpret_cast<const char*>(utf16le_string), wcslen(utf16le_string)*2 + 1);
+	char* tempASCII = SDL_iconv_string(/*to:*/"ASCII", /*from:*/"UTF-16LE", reinterpret_cast<const char*>(utf16le_string), wcslen(utf16le_string)*2 + 2);
 	const std::string strASCII = tempASCII;
 	// Don't forget to free allocated string from SDL library.
 	SDL_free(tempASCII);
