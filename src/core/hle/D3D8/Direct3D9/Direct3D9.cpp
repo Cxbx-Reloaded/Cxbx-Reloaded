@@ -6794,7 +6794,7 @@ VOID __declspec(noinline) D3DDevice_SetPixelShaderCommon(DWORD Handle)
     g_D3DActivePixelShader = (XTL::X_PixelShader*)Handle;
 
     // Copy the Pixel Shader data to our RenderState handler
-    // This mirrors the fact that unpathed SetPixelShader does the same thing!
+    // This mirrors the fact that unpatched SetPixelShader does the same thing!
     // This shouldn't be necessary anymore, but shaders still break if we don't do this
     if (g_D3DActivePixelShader != nullptr) {
         memcpy(XboxRenderStates.GetPixelShaderRenderStatePointer(), g_D3DActivePixelShader->pPSDef, sizeof(XTL::X_D3DPIXELSHADERDEF) - 3 * sizeof(DWORD));
