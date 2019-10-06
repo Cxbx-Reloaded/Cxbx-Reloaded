@@ -6791,7 +6791,15 @@ void CxbxUpdateNativeD3DResources()
 VOID __declspec(noinline) D3DDevice_SetPixelShaderCommon(DWORD Handle)
 {
     // Cache the active shader handle
-	g_D3DActivePixelShader = (XTL::X_PixelShader*)Handle;
+    g_D3DActivePixelShader = (XTL::X_PixelShader*)Handle;
+
+    // Copy the Pixel Shader data to our RenderState handler
+    // This mirrors the fact that unpathed SetPixelShader does the same thing!
+    // This shouldn't be necessary anymore, but shaders still break if we don't do this
+    if (g_D3DActivePixelShader != nullptr) {
+        memcpy(XboxRenderStates.GetPixelShaderRenderStatePointer(), g_D3DActivePixelShader->pPSDef, sizeof(XTL::X_D3DPIXELSHADERDEF) - 3 * sizeof(DWORD));
+        XboxRenderStates.SetXboxRenderState(XTL::X_D3DRS_PSTEXTUREMODES, g_D3DActivePixelShader->pPSDef->PSTextureModes);
+    }
 }
 
 // LTCG specific D3DDevice_SetPixelShader function...
