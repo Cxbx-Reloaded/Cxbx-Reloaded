@@ -2742,6 +2742,840 @@ XTL::X_D3DSurface * WINAPI XTL::EMUPATCH(D3DDevice_GetDepthStencilSurface2)()
 	RETURN(result);
 }
 
+
+// LTCG specific D3DDevice_SetTextureState_TexCoordIndex function...
+// This uses a custom calling convention where parameter is passed in EDI, EAX
+// Test-case: Ski Racing 2006
+VOID __stdcall XTL::EMUPATCH(D3DDevice_SetTextureState_TexCoordIndex_0)
+(
+)
+{
+	DWORD Stage;
+	DWORD Value;
+
+	__asm {
+		mov Stage, edi
+		mov Value, eax
+	}
+
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Stage)
+		LOG_FUNC_ARG(Value)
+		LOG_FUNC_END;
+
+	if (Value >= 0x00040000) {
+		EmuLog(LOG_LEVEL::WARNING, "EmuD3DDevice_SetTextureState_TexCoordIndex: Unknown TexCoordIndex Value (0x%.08X)", Value);
+		return;
+	}
+
+	HRESULT hRet = g_pD3DDevice->SetTextureStageState(Stage, D3DTSS_TEXCOORDINDEX, Value);
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetTextureStageState");
+}
+
+// This uses a custom calling convention where parameter is passed in ESI
+// Test-case: Metal Wolf Chaos
+VOID WINAPI XTL::EMUPATCH(D3DDevice_SetTextureState_TexCoordIndex_4)
+(
+    DWORD Value
+)
+{
+	DWORD           Stage;
+	__asm mov Stage, esi;
+
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Stage)
+		LOG_FUNC_ARG(Value)
+		LOG_FUNC_END;
+
+	// TODO: Xbox Direct3D supports sphere mapping OpenGL style.
+
+	// BUG FIX: The lower 16 bits were causing false Unknown TexCoordIndex errors.
+	// Check for 0x00040000 instead.
+
+	if (Value >= 0x00040000) {
+		EmuLog(LOG_LEVEL::WARNING, "EmuD3DDevice_SetTextureState_TexCoordIndex: Unknown TexCoordIndex Value (0x%.08X)", Value);
+		return;
+	}
+
+    HRESULT hRet = g_pD3DDevice->SetTextureStageState(Stage, D3DTSS_TEXCOORDINDEX, Value);
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetTextureStageState");
+}
+
+// ******************************************************************
+// * patch: D3DDevice_SetTextureState_TexCoordIndex
+// ******************************************************************
+VOID WINAPI XTL::EMUPATCH(D3DDevice_SetTextureState_TexCoordIndex)
+(
+    DWORD Stage,
+    DWORD Value
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Stage)
+		LOG_FUNC_ARG(Value)
+		LOG_FUNC_END;
+
+	XB_trampoline(VOID, WINAPI, D3DDevice_SetTextureState_TexCoordIndex, (DWORD, DWORD));
+	XB_D3DDevice_SetTextureState_TexCoordIndex(Stage, Value);
+
+	// TODO: Xbox Direct3D supports sphere mapping OpenGL style.
+
+	// BUG FIX: The lower 16 bits were causing false Unknown TexCoordIndex errors.
+	// Check for 0x00040000 instead.
+
+	if (Value >= 0x00040000) {
+		EmuLog(LOG_LEVEL::WARNING, "EmuD3DDevice_SetTextureState_TexCoordIndex: Unknown TexCoordIndex Value (0x%.08X)", Value);
+		return;
+	}
+
+    HRESULT hRet = g_pD3DDevice->SetTextureStageState(Stage, D3DTSS_TEXCOORDINDEX, Value);
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetTextureStageState");
+}
+
+// ******************************************************************
+// * patch: D3DDevice_SetRenderState_TwoSidedLighting
+// ******************************************************************
+VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderState_TwoSidedLighting)
+(
+    DWORD Value
+)
+{
+	LOG_FUNC_ONE_ARG(Value);
+
+	XB_trampoline(VOID, WINAPI, D3DDevice_SetRenderState_TwoSidedLighting, (DWORD));
+	XB_D3DDevice_SetRenderState_TwoSidedLighting(Value);
+
+	LOG_NOT_SUPPORTED();
+}
+
+// ******************************************************************
+// * patch: D3DDevice_SetRenderState_BackFillMode
+// ******************************************************************
+VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderState_BackFillMode)
+(
+    DWORD Value
+)
+{
+	LOG_FUNC_ONE_ARG(Value);
+
+	// blueshogun96 12/4/07
+	// I haven't had access to Cxbx sources in a few months, great to be back :)
+	//
+	// Anyway, since standard Direct3D doesn't support the back fill mode
+	// operation, this function will be ignored.  Things like this make me
+	// think even more that an OpenGL port wouldn't hurt since OpenGL supports
+	// nearly all of the missing features that Direct3D lacks.  The Xbox's version
+	// of Direct3D was specifically created to take advantage of certain NVIDIA
+	// GPU registers and provide more OpenGL-like features IHMO.
+	LOG_NOT_SUPPORTED();
+
+	XB_trampoline(VOID, WINAPI, D3DDevice_SetRenderState_BackFillMode, (DWORD));
+	XB_D3DDevice_SetRenderState_BackFillMode(Value);
+}
+
+// LTCG specific D3DDevice_SetTextureState_BorderColor function...
+// This uses a custom calling convention where parameter is passed in EAX, EBX
+// Test-case: Metal Wolf Chaos
+VOID XTL::EMUPATCH(D3DDevice_SetTextureState_BorderColor_0)
+(
+)
+{
+	DWORD Stage;
+	DWORD Value;
+
+	__asm {
+		mov Stage, eax
+		mov Value, ebx
+	}
+
+
+	HRESULT hRet;
+	hRet = g_pD3DDevice->SetSamplerState(Stage, D3DSAMP_BORDERCOLOR, Value);
+	//DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetTextureStageState");
+}
+
+// This uses a custom calling convention where parameter is passed in EAX
+// TODO: Log function is not working due lost parameter in EAX.
+// Test-case: Murakumo
+VOID WINAPI XTL::EMUPATCH(D3DDevice_SetTextureState_BorderColor_4)
+(
+    DWORD Value
+)
+{
+    DWORD Stage;
+	__asm mov Stage, eax;
+
+	//LOG_FUNC_BEGIN
+	//	LOG_FUNC_ARG(Stage)
+	//	LOG_FUNC_ARG(Value)
+	//	LOG_FUNC_END;
+	EmuLog(LOG_LEVEL::DEBUG, "D3DDevice_SetTextureState_BorderColor_4(Stage : %d Value : %d);", Stage, Value);
+
+    HRESULT hRet;
+	hRet = g_pD3DDevice->SetSamplerState(Stage, D3DSAMP_BORDERCOLOR, Value);
+	//DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetTextureStageState");
+}
+
+// ******************************************************************
+// * patch: D3DDevice_SetTextureState_BorderColor
+// ******************************************************************
+VOID WINAPI XTL::EMUPATCH(D3DDevice_SetTextureState_BorderColor)
+(
+    DWORD Stage,
+    DWORD Value
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Stage)
+		LOG_FUNC_ARG(Value)
+		LOG_FUNC_END;
+
+	XB_trampoline(VOID, WINAPI, D3DDevice_SetTextureState_BorderColor, (DWORD, DWORD));
+	XB_D3DDevice_SetTextureState_BorderColor(Stage, Value);
+
+    HRESULT hRet;
+	hRet = g_pD3DDevice->SetSamplerState(Stage, D3DSAMP_BORDERCOLOR, Value);
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetTextureStageState");
+}
+
+// LTCG specific D3DDevice_SetTextureState_ColorKeyColor function...
+// This uses a custom calling convention where parameter is passed in ESI, EBX
+// Test-case: Metal Wolf Chaos
+VOID XTL::EMUPATCH(D3DDevice_SetTextureState_ColorKeyColor_0)
+(
+)
+{
+	DWORD Stage;
+	DWORD Value;
+
+	__asm {
+		mov Stage, esi
+		mov Value, ebx
+	}
+
+	LOG_NOT_SUPPORTED();
+}
+
+// This uses a custom calling convention where parameter is passed in EAX
+// Test-case: Murakumo
+VOID WINAPI XTL::EMUPATCH(D3DDevice_SetTextureState_ColorKeyColor_4)
+(
+    DWORD Value
+)
+{
+    DWORD Stage;
+	__asm mov Stage, eax;
+
+	LOG_NOT_SUPPORTED();
+}
+
+// ******************************************************************
+// * patch: D3DDevice_SetTextureState_ColorKeyColor
+// ******************************************************************
+VOID WINAPI XTL::EMUPATCH(D3DDevice_SetTextureState_ColorKeyColor)
+(
+    DWORD Stage,
+    DWORD Value
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Stage)
+		LOG_FUNC_ARG(Value)
+		LOG_FUNC_END;
+
+	XB_trampoline(VOID, WINAPI, D3DDevice_SetTextureState_ColorKeyColor, (DWORD, DWORD));
+	XB_D3DDevice_SetTextureState_ColorKeyColor(Stage, Value);
+
+	LOG_NOT_SUPPORTED();
+}
+
+// LTCG specific D3DDevice_SetTextureState_BumpEnv function...
+// This uses a custom calling convention where parameter is passed in EAX
+// TODO: Log function is not working due lost parameter in EAX.
+// Test-case: Metal Wolf Chaos
+VOID WINAPI XTL::EMUPATCH(D3DDevice_SetTextureState_BumpEnv_8)
+(
+    X_D3DTEXTURESTAGESTATETYPE Type,
+    DWORD                      Value
+)
+{
+	DWORD           Stage;
+	__asm mov Stage, eax;
+
+	//LOG_FUNC_BEGIN
+	//	LOG_FUNC_ARG(Stage)
+	//	LOG_FUNC_ARG(Type)
+	//	LOG_FUNC_ARG(Value)
+	//	LOG_FUNC_END;
+	EmuLog(LOG_LEVEL::DEBUG, "D3DDevice_SetTextureState_BumpEnv_8(Stage : %d Type : %d Value : %d);", Stage, Type, Value);
+
+	HRESULT hRet = D3D_OK;
+
+    switch(Type)
+    {
+        case 22:    // X_D3DTSS_BUMPENVMAT00
+            hRet = g_pD3DDevice->SetTextureStageState(Stage, D3DTSS_BUMPENVMAT00, Value);
+            break;
+        case 23:    // X_D3DTSS_BUMPENVMAT01
+			hRet = g_pD3DDevice->SetTextureStageState(Stage, D3DTSS_BUMPENVMAT01, Value);
+			break;
+        case 24:    // X_D3DTSS_BUMPENVMAT11
+			hRet = g_pD3DDevice->SetTextureStageState(Stage, D3DTSS_BUMPENVMAT11, Value);
+            break;
+        case 25:    // X_D3DTSS_BUMPENVMAT10
+			hRet = g_pD3DDevice->SetTextureStageState(Stage, D3DTSS_BUMPENVMAT10, Value);
+            break;
+        case 26:    // X_D3DTSS_BUMPENVLSCALE
+			hRet = g_pD3DDevice->SetTextureStageState(Stage, D3DTSS_BUMPENVLSCALE, Value);
+            break;
+        case 27:    // X_D3DTSS_BUMPENVLOFFSET
+            hRet = g_pD3DDevice->SetTextureStageState(Stage, D3DTSS_BUMPENVLOFFSET, Value);
+            break;
+    }
+
+	//DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetTextureStageState");
+}
+
+// ******************************************************************
+// * patch: D3DDevice_SetTextureState_BumpEnv
+// ******************************************************************
+VOID WINAPI XTL::EMUPATCH(D3DDevice_SetTextureState_BumpEnv)
+(
+    DWORD                      Stage,
+    X_D3DTEXTURESTAGESTATETYPE Type,
+    DWORD                      Value
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Stage)
+		LOG_FUNC_ARG(Type)
+		LOG_FUNC_ARG(Value)
+		LOG_FUNC_END;
+
+	XB_trampoline(VOID, WINAPI, D3DDevice_SetTextureState_BumpEnv, (DWORD, X_D3DTEXTURESTAGESTATETYPE, DWORD));
+	XB_D3DDevice_SetTextureState_BumpEnv(Stage, Type, Value);
+
+	HRESULT hRet = D3D_OK;
+
+    switch(Type)
+    {
+        case 22:    // X_D3DTSS_BUMPENVMAT00
+            hRet = g_pD3DDevice->SetTextureStageState(Stage, D3DTSS_BUMPENVMAT00, Value);
+            break;
+        case 23:    // X_D3DTSS_BUMPENVMAT01
+			hRet = g_pD3DDevice->SetTextureStageState(Stage, D3DTSS_BUMPENVMAT01, Value);
+			break;
+        case 24:    // X_D3DTSS_BUMPENVMAT11
+			hRet = g_pD3DDevice->SetTextureStageState(Stage, D3DTSS_BUMPENVMAT11, Value);
+            break;
+        case 25:    // X_D3DTSS_BUMPENVMAT10
+			hRet = g_pD3DDevice->SetTextureStageState(Stage, D3DTSS_BUMPENVMAT10, Value);
+            break;
+        case 26:    // X_D3DTSS_BUMPENVLSCALE
+			hRet = g_pD3DDevice->SetTextureStageState(Stage, D3DTSS_BUMPENVLSCALE, Value);
+            break;
+        case 27:    // X_D3DTSS_BUMPENVLOFFSET
+			hRet = g_pD3DDevice->SetTextureStageState(Stage, D3DTSS_BUMPENVLOFFSET, Value);
+            break;
+    }
+
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetTextureStageState");
+}
+
+// ******************************************************************
+// * patch: D3DDevice_SetRenderState_FrontFace
+// ******************************************************************
+VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderState_FrontFace)
+(
+    DWORD Value
+)
+{
+	LOG_FUNC_ONE_ARG(Value);
+
+	XB_trampoline(VOID, WINAPI, D3DDevice_SetRenderState_FrontFace, (DWORD));
+	XB_D3DDevice_SetRenderState_FrontFace(Value);
+
+	LOG_NOT_SUPPORTED();
+}
+
+// ******************************************************************
+// * patch: D3DDevice_SetRenderState_LogicOp
+// ******************************************************************
+VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderState_LogicOp)
+(
+    DWORD Value
+)
+{
+	LOG_FUNC_ONE_ARG(Value);
+
+	XB_trampoline(VOID, WINAPI, D3DDevice_SetRenderState_LogicOp, (DWORD));
+	XB_D3DDevice_SetRenderState_LogicOp(Value);
+
+	LOG_NOT_SUPPORTED();
+}
+
+// ******************************************************************
+// * patch: D3DDevice_SetRenderState_NormalizeNormals
+// ******************************************************************
+VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderState_NormalizeNormals)
+(
+    DWORD Value
+)
+{
+	LOG_FUNC_ONE_ARG(Value);
+
+	XB_trampoline(VOID, WINAPI, D3DDevice_SetRenderState_NormalizeNormals, (DWORD));
+	XB_D3DDevice_SetRenderState_NormalizeNormals(Value);
+
+    HRESULT hRet = g_pD3DDevice->SetRenderState(D3DRS_NORMALIZENORMALS, Value);
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetRenderState");
+}
+
+// ******************************************************************
+// * patch: D3DDevice_SetRenderState_TextureFactor
+// ******************************************************************
+VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderState_TextureFactor)
+(
+    DWORD Value
+)
+{
+	LOG_FUNC_ONE_ARG(Value);
+
+	XB_trampoline(VOID, WINAPI, D3DDevice_SetRenderState_TextureFactor, (DWORD));
+	XB_D3DDevice_SetRenderState_TextureFactor(Value);
+
+	HRESULT hRet = g_pD3DDevice->SetRenderState(D3DRS_TEXTUREFACTOR, Value);
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetRenderState");
+}
+
+// ******************************************************************
+// * patch: D3DDevice_SetRenderState_ZBias
+// ******************************************************************
+VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderState_ZBias)
+(
+    DWORD Value
+)
+{
+	LOG_FUNC_ONE_ARG(Value);
+
+	HRESULT hRet;
+
+	XB_trampoline(VOID, WINAPI, D3DDevice_SetRenderState_ZBias, (DWORD));
+	XB_D3DDevice_SetRenderState_ZBias(Value);
+
+	FLOAT Biased = static_cast<FLOAT>(Value) * -0.000005f;
+	Value = *reinterpret_cast<const DWORD *>(&Biased);
+
+	hRet = g_pD3DDevice->SetRenderState(D3DRS_DEPTHBIAS, Value);
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetRenderState");
+}
+
+// ******************************************************************
+// * patch: D3DDevice_SetRenderState_EdgeAntiAlias
+// ******************************************************************
+VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderState_EdgeAntiAlias)
+(
+    DWORD Value
+)
+{
+	LOG_FUNC_ONE_ARG(Value);
+
+	XB_trampoline(VOID, WINAPI, D3DDevice_SetRenderState_EdgeAntiAlias, (DWORD));
+	XB_D3DDevice_SetRenderState_EdgeAntiAlias(Value);
+
+	//  TODO: Analyze performance and compatibility (undefined behavior on PC with triangles or points)
+	HRESULT hRet = g_pD3DDevice->SetRenderState(D3DRS_ANTIALIASEDLINEENABLE, Value); // Was D3DRS_EDGEANTIALIAS (no longer exists)
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetRenderState");
+}
+
+// ******************************************************************
+// * patch: D3DDevice_SetRenderState_FillMode
+// ******************************************************************
+VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderState_FillMode)
+(
+    DWORD Value
+)
+{
+	LOG_FUNC_ONE_ARG(Value);
+
+	XB_trampoline(VOID, WINAPI, D3DDevice_SetRenderState_FillMode, (DWORD));
+	XB_D3DDevice_SetRenderState_FillMode(Value);
+
+    DWORD dwFillMode;
+
+	if(Value != 0)
+		g_CurrentFillMode = EmuXB2PC_D3DFILLMODE(Value);
+
+    if(g_iWireframe == 0)
+        dwFillMode = g_CurrentFillMode;
+    else if(g_iWireframe == 1)
+        dwFillMode = D3DFILL_WIREFRAME;
+    else
+        dwFillMode = D3DFILL_POINT;
+
+	HRESULT hRet = g_pD3DDevice->SetRenderState(D3DRS_FILLMODE, dwFillMode);
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetRenderState");
+}
+
+// ******************************************************************
+// * patch: D3DDevice_SetRenderState_FogColor
+// ******************************************************************
+VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderState_FogColor)
+(
+    DWORD Value
+)
+{
+	LOG_FUNC_ONE_ARG(Value);
+
+	XB_trampoline(VOID, WINAPI, D3DDevice_SetRenderState_FogColor, (DWORD));
+	XB_D3DDevice_SetRenderState_FogColor(Value);
+
+	HRESULT hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGCOLOR, Value);
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetRenderState");
+}
+
+// ******************************************************************
+// * patch: D3DDevice_SetRenderState_Dxt1NoiseEnable
+// ******************************************************************
+VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderState_Dxt1NoiseEnable)
+(
+    DWORD Value
+)
+{
+	LOG_FUNC_ONE_ARG(Value);
+
+	XB_trampoline(VOID, WINAPI, D3DDevice_SetRenderState_Dxt1NoiseEnable, (DWORD));
+	XB_D3DDevice_SetRenderState_Dxt1NoiseEnable(Value);
+
+	LOG_UNIMPLEMENTED();
+}
+
+
+// ******************************************************************
+// * patch: D3DDevice_SetRenderState_VertexBlend
+// ******************************************************************
+VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderState_VertexBlend)
+(
+    DWORD Value
+)
+{
+    LOG_FUNC_ONE_ARG(Value);
+
+	XB_trampoline(VOID, WINAPI, D3DDevice_SetRenderState_VertexBlend, (DWORD));
+	XB_D3DDevice_SetRenderState_VertexBlend(Value);
+
+    // convert from Xbox direct3d to PC direct3d enumeration
+    if(Value <= 1) {
+        Value = Value;
+    } else if(Value == 3) {
+        Value = 2;
+    } else if(Value == 5) {
+        Value = 3;
+    } else {
+        LOG_TEST_CASE("Unsupported D3DVERTEXBLENDFLAGS (%d)");
+        return;
+	}
+
+    HRESULT hRet = g_pD3DDevice->SetRenderState(D3DRS_VERTEXBLEND, Value);
+    DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetRenderState");
+}
+
+// ******************************************************************
+// * patch: D3DDevice_SetRenderState_PSTextureModes
+// ******************************************************************
+VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderState_PSTextureModes)
+(
+    DWORD Value
+)
+{
+	LOG_FUNC_ONE_ARG(Value);
+
+	XB_trampoline(VOID, WINAPI, D3DDevice_SetRenderState_PSTextureModes, (DWORD));
+	XB_D3DDevice_SetRenderState_PSTextureModes(Value);
+
+	TemporaryPixelShaderRenderStates[XTL::X_D3DRS_PSTEXTUREMODES] = Value;
+}
+
+// ******************************************************************
+// * patch: D3DDevice_SetRenderState_CullMode
+// ******************************************************************
+VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderState_CullMode)
+(
+    DWORD Value
+)
+{
+	LOG_FUNC_ONE_ARG(Value);
+
+	XB_trampoline(VOID, WINAPI, D3DDevice_SetRenderState_CullMode, (DWORD));
+	XB_D3DDevice_SetRenderState_CullMode(Value);
+
+    // convert from Xbox D3D to PC D3D enumeration
+    // TODO: XDK-Specific Tables? So far they are the same
+    switch(Value)
+    {
+        case X_D3DCULL_NONE:
+            Value = D3DCULL_NONE;
+            break;
+        case X_D3DCULL_CW:
+            Value = D3DCULL_CW;
+            break;
+        case X_D3DCULL_CCW:
+            Value = D3DCULL_CCW;
+            break;
+        default:
+            CxbxKrnlCleanup("EmuD3DDevice_SetRenderState_CullMode: Unknown Cullmode (%d)", Value);
+    }
+
+	HRESULT hRet = g_pD3DDevice->SetRenderState(D3DRS_CULLMODE, Value);
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetRenderState");
+}
+
+// ******************************************************************
+// * patch: D3DDevice_SetRenderState_LineWidth
+// ******************************************************************
+VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderState_LineWidth)
+(
+    DWORD Value
+)
+{
+	LOG_FUNC_ONE_ARG(Value);
+
+	XB_trampoline(VOID, WINAPI, D3DDevice_SetRenderState_LineWidth, (DWORD));
+	XB_D3DDevice_SetRenderState_LineWidth(Value);
+
+    // TODO: Convert to PC format??
+//    g_pD3DDevice->SetRenderState(D3DRS_LINEPATTERN, Value);
+	LOG_NOT_SUPPORTED();
+}
+
+// ******************************************************************
+// * patch: D3DDevice_SetRenderState_StencilFail
+// ******************************************************************
+VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderState_StencilFail)
+(
+    DWORD Value
+)
+{
+	LOG_FUNC_ONE_ARG(Value);
+
+	XB_trampoline(VOID, WINAPI, D3DDevice_SetRenderState_StencilFail, (DWORD));
+	XB_D3DDevice_SetRenderState_StencilFail(Value);
+
+	HRESULT hRet = g_pD3DDevice->SetRenderState(D3DRS_STENCILFAIL, Value);
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetRenderState");
+}
+
+// ******************************************************************
+// * patch: D3DDevice_SetRenderState_OcclusionCullEnable
+// ******************************************************************
+VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderState_OcclusionCullEnable)
+(
+    DWORD Value
+)
+{
+	LOG_FUNC_ONE_ARG(Value);
+
+	XB_trampoline(VOID, WINAPI, D3DDevice_SetRenderState_OcclusionCullEnable, (DWORD));
+	XB_D3DDevice_SetRenderState_OcclusionCullEnable(Value);
+
+	LOG_NOT_SUPPORTED();
+}
+
+// ******************************************************************
+// * patch: D3DDevice_SetRenderState_StencilCullEnable
+// ******************************************************************
+VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderState_StencilCullEnable)
+(
+    DWORD Value
+)
+{
+	LOG_FUNC_ONE_ARG(Value);
+
+	XB_trampoline(VOID, WINAPI, D3DDevice_SetRenderState_StencilCullEnable, (DWORD));
+	XB_D3DDevice_SetRenderState_StencilCullEnable(Value);
+
+	LOG_NOT_SUPPORTED();
+}
+
+// ******************************************************************
+// * patch: D3DDevice_SetRenderState_RopZCmpAlwaysRead
+// ******************************************************************
+VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderState_RopZCmpAlwaysRead)
+(
+    DWORD Value
+)
+{
+	LOG_FUNC_ONE_ARG(Value);
+
+	XB_trampoline(VOID, WINAPI, D3DDevice_SetRenderState_RopZCmpAlwaysRead, (DWORD));
+	XB_D3DDevice_SetRenderState_RopZCmpAlwaysRead(Value);
+
+	LOG_NOT_SUPPORTED();
+}
+
+// ******************************************************************
+// * patch: D3DDevice_SetRenderState_RopZRead
+// ******************************************************************
+VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderState_RopZRead)
+(
+    DWORD Value
+)
+{
+	LOG_FUNC_ONE_ARG(Value);
+
+	XB_trampoline(VOID, WINAPI, D3DDevice_SetRenderState_RopZRead, (DWORD));
+	XB_D3DDevice_SetRenderState_RopZRead(Value);
+
+	LOG_NOT_SUPPORTED();
+}
+
+// ******************************************************************
+// * patch: D3DDevice_SetRenderState_DoNotCullUncompressed
+// ******************************************************************
+VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderState_DoNotCullUncompressed)
+(
+    DWORD Value
+)
+{
+	LOG_FUNC_ONE_ARG(Value);
+
+	XB_trampoline(VOID, WINAPI, D3DDevice_SetRenderState_DoNotCullUncompressed, (DWORD));
+	XB_D3DDevice_SetRenderState_DoNotCullUncompressed(Value);
+
+	LOG_NOT_SUPPORTED();
+}
+
+// ******************************************************************
+// * patch: D3DDevice_SetRenderState_ZEnable
+// ******************************************************************
+VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderState_ZEnable)
+(
+    DWORD Value
+)
+{
+	LOG_FUNC_ONE_ARG(Value);
+
+	XB_trampoline(VOID, WINAPI, D3DDevice_SetRenderState_ZEnable, (DWORD));
+	XB_D3DDevice_SetRenderState_ZEnable(Value);
+
+	HRESULT hRet = g_pD3DDevice->SetRenderState(D3DRS_ZENABLE, Value);
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetRenderState");
+}
+
+// ******************************************************************
+// * patch: D3DDevice_SetRenderState_StencilEnable
+// ******************************************************************
+VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderState_StencilEnable)
+(
+    DWORD Value
+)
+{
+	LOG_FUNC_ONE_ARG(Value);
+
+	XB_trampoline(VOID, WINAPI, D3DDevice_SetRenderState_StencilEnable, (DWORD));
+	XB_D3DDevice_SetRenderState_StencilEnable(Value);
+
+	HRESULT hRet = g_pD3DDevice->SetRenderState(D3DRS_STENCILENABLE, Value);
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetRenderState");
+}
+
+// ******************************************************************
+// * patch: D3DDevice_SetRenderState_MultiSampleAntiAlias
+// ******************************************************************
+VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderState_MultiSampleAntiAlias)
+(
+    DWORD Value
+)
+{
+	LOG_FUNC_ONE_ARG(Value);
+
+	XB_trampoline(VOID, WINAPI, D3DDevice_SetRenderState_MultiSampleAntiAlias, (DWORD));
+	XB_D3DDevice_SetRenderState_MultiSampleAntiAlias(Value);
+
+	HRESULT hRet = g_pD3DDevice->SetRenderState(D3DRS_MULTISAMPLEANTIALIAS, Value);
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetRenderState");
+}
+
+// ******************************************************************
+// * patch: D3DDevice_SetRenderState_MultiSampleMask
+// ******************************************************************
+VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderState_MultiSampleMask)
+(
+    DWORD Value
+)
+{
+	LOG_FUNC_ONE_ARG(Value);
+
+	XB_trampoline(VOID, WINAPI, D3DDevice_SetRenderState_MultiSampleMask, (DWORD));
+	XB_D3DDevice_SetRenderState_MultiSampleMask(Value);
+
+	HRESULT hRet = g_pD3DDevice->SetRenderState(D3DRS_MULTISAMPLEMASK, Value);
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetRenderState");
+}
+
+// ******************************************************************
+// * patch: D3DDevice_SetRenderState_MultiSampleMode
+// ******************************************************************
+VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderState_MultiSampleMode)
+(
+    DWORD Value
+)
+{
+	LOG_FUNC_ONE_ARG(Value);
+
+	XB_trampoline(VOID, WINAPI, D3DDevice_SetRenderState_MultiSampleMode, (DWORD));
+	XB_D3DDevice_SetRenderState_MultiSampleMode(Value);
+
+	LOG_NOT_SUPPORTED();
+}
+
+// ******************************************************************
+// * patch: D3DDevice_SetRenderState_MultiSampleRenderTargetMode
+// ******************************************************************
+VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderState_MultiSampleRenderTargetMode)
+(
+    DWORD Value
+)
+{
+	LOG_FUNC_ONE_ARG(Value);
+
+	XB_trampoline(VOID, WINAPI, D3DDevice_SetRenderState_MultiSampleRenderTargetMode, (DWORD));
+	XB_D3DDevice_SetRenderState_MultiSampleRenderTargetMode(Value);
+
+	LOG_NOT_SUPPORTED();
+}
+
+// ******************************************************************
+// * patch: D3DDevice_SetRenderState_ShadowFunc
+// ******************************************************************
+VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderState_ShadowFunc)
+(
+    DWORD Value
+)
+{
+	LOG_FUNC_ONE_ARG(Value);
+
+	XB_trampoline(VOID, WINAPI, D3DDevice_SetRenderState_ShadowFunc, (DWORD));
+	XB_D3DDevice_SetRenderState_ShadowFunc(Value);
+
+    // ShadowFunc reflects the following Xbox-only extension
+    //
+    // typedef enum _D3DRENDERSTATETYPE {
+    //   ...
+    //   D3DRS_SHADOWFUNC = 156, // D3DCMPFUNC
+    //   ...
+    // } D3DRENDERSTATETYPE;
+    //
+    // Value is a member of the D3DCMPFUNC enumeration that
+    // specifies what function to use with a shadow buffer.
+    // The default value is D3DCMP_NEVER.
+
+    // EmuXB2PC_D3DCMPFUNC(Value);
+
+    // this warning just gets annoying
+    // LOG_UNIMPLEMENTED();
+}
+
 // ******************************************************************
 // * patch: D3DDevice_SetRenderState_Deferred
 // ******************************************************************
