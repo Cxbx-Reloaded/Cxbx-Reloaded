@@ -6805,6 +6805,7 @@ VOID __declspec(noinline) D3DDevice_SetPixelShaderCommon(DWORD Handle)
 // LTCG specific D3DDevice_SetPixelShader function...
 // This uses a custom calling convention where parameter is passed in EAX
 // Test-case: Metal Wolf Chaos
+// Test-case: Lord of the Rings: The Third Age
 VOID WINAPI XTL::EMUPATCH(D3DDevice_SetPixelShader_0)
 (
 )
@@ -6819,7 +6820,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetPixelShader_0)
 	// Call the Xbox function to make sure D3D structures get set
 	XB_trampoline(VOID, WINAPI, D3DDevice_SetPixelShader_0, ());
     __asm {
-        push eax
+        mov eax, Handle
         call XB_D3DDevice_SetPixelShader_0
     }
 
