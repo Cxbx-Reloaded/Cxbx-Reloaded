@@ -397,6 +397,8 @@ void VMManager::RestorePersistentMemory()
 void VMManager::SavePersistentMemory()
 {
 	PersistedMemory* persisted_mem;
+	size_t num_persisted_ptes;
+	std::vector<PMMPTE> cached_persisted_ptes;
 	HANDLE handle;
 	LPVOID addr;
 	PMMPTE PointerPte;
@@ -405,31 +407,7 @@ void VMManager::SavePersistentMemory()
 
 	Lock();
 
-	handle = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, m_NumPersistentPtes * PAGE_SIZE + m_NumPersistentPtes * 4 * 2 + sizeof(PersistedMemory), "PersistentMemory");
-	if (handle == NULL) {
-		CxbxKrnlCleanup("Couldn't persist memory! CreateFileMapping failed with error 0x%08X", GetLastError());
-		return;
-	}
-	addr = MapViewOfFile(handle, FILE_MAP_READ | FILE_MAP_WRITE, 0, 0, 0);
-	if (addr == nullptr) {
-		CxbxKrnlCleanup("Couldn't persist memory! MapViewOfFile failed with error 0x%08X", GetLastError());
-		return;
-	}
-
-	persisted_mem = (PersistedMemory*)addr;
-	persisted_mem->NumOfPtes = m_NumPersistentPtes;
-
-	if (xboxkrnl::LaunchDataPage != xbnullptr) {
-		persisted_mem->LaunchFrameAddresses[0] = (VAddr)xboxkrnl::LaunchDataPage;
-		EmuLog(LOG_LEVEL::INFO, "Persisted LaunchDataPage\n");
-	}
-
-	if (xboxkrnl::AvSavedDataAddress != xbnullptr) {
-		persisted_mem->LaunchFrameAddresses[1] = (VAddr)xboxkrnl::AvSavedDataAddress;
-		EmuLog(LOG_LEVEL::INFO, "Persisted Framebuffer\n");
-	}
-
-	i = 0;
+	num_persisted_ptes = 0;
 	PointerPte = GetPteAddress(CONTIGUOUS_MEMORY_BASE);
 
 	if (m_MmLayoutRetail) {
@@ -442,15 +420,46 @@ void VMManager::SavePersistentMemory()
 	while (PointerPte <= EndingPte)
 	{
 		if (PointerPte->Hardware.Valid != 0 && PointerPte->Hardware.Persist != 0) {
-			persisted_mem->Data[i] = GetVAddrMappedByPte(PointerPte);
-			persisted_mem->Data[m_NumPersistentPtes + i] = PointerPte->Default;
-			memcpy(&persisted_mem->Data[m_NumPersistentPtes * 2 + i * ONE_KB], (void*)(persisted_mem->Data[i]), PAGE_SIZE);
-			i++;
+			cached_persisted_ptes.push_back(PointerPte);
+			num_persisted_ptes++;
 		}
 		PointerPte++;
 	}
 
-	assert(i == m_NumPersistentPtes);
+	handle = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, num_persisted_ptes * PAGE_SIZE + num_persisted_ptes * 4 * 2 + sizeof(PersistedMemory), "PersistentMemory");
+	if (handle == NULL) {
+		CxbxKrnlCleanup("Couldn't persist memory! CreateFileMapping failed with error 0x%08X", GetLastError());
+		return;
+	}
+	addr = MapViewOfFile(handle, FILE_MAP_READ | FILE_MAP_WRITE, 0, 0, 0);
+	if (addr == nullptr) {
+		CxbxKrnlCleanup("Couldn't persist memory! MapViewOfFile failed with error 0x%08X", GetLastError());
+		return;
+	}
+
+	persisted_mem = (PersistedMemory*)addr;
+	persisted_mem->NumOfPtes = num_persisted_ptes;
+
+	if (xboxkrnl::LaunchDataPage != xbnullptr) {
+		persisted_mem->LaunchFrameAddresses[0] = (VAddr)xboxkrnl::LaunchDataPage;
+		EmuLog(LOG_LEVEL::INFO, "Persisted LaunchDataPage\n");
+	}
+
+	if (xboxkrnl::AvSavedDataAddress != xbnullptr) {
+		persisted_mem->LaunchFrameAddresses[1] = (VAddr)xboxkrnl::AvSavedDataAddress;
+		EmuLog(LOG_LEVEL::INFO, "Persisted Framebuffer\n");
+	}
+
+	i = 0;
+
+	for (const auto &pte : cached_persisted_ptes) {
+		persisted_mem->Data[i] = GetVAddrMappedByPte(pte);
+		persisted_mem->Data[num_persisted_ptes + i] = pte->Default;
+		memcpy(&persisted_mem->Data[num_persisted_ptes * 2 + i * ONE_KB], (void *)(persisted_mem->Data[i]), PAGE_SIZE);
+		i++;
+	}
+
+	assert(i == num_persisted_ptes);
 
 	ipc_send_gui_update(IPC_UPDATE_GUI::VM_PERSIST_MEM, 1);
 
@@ -617,7 +626,6 @@ void VMManager::PersistMemory(VAddr addr, size_t Size, bool bPersist)
 		while (PointerPte <= EndingPte)
 		{
 			PointerPte->Hardware.Persist = 1;
-			m_NumPersistentPtes++;
 			PointerPte++;
 		}
 	}
@@ -625,7 +633,6 @@ void VMManager::PersistMemory(VAddr addr, size_t Size, bool bPersist)
 		while (PointerPte <= EndingPte)
 		{
 			PointerPte->Hardware.Persist = 0;
-			m_NumPersistentPtes--;
 			PointerPte++;
 		}
 	}
