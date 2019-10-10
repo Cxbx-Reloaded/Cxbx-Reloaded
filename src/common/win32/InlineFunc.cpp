@@ -28,6 +28,7 @@
 #if defined(_WIN32) || defined(WIN32)
 
 #include "core\kernel\init\CxbxKrnl.h"
+#include "common/util/cliConfig.hpp"
 
 // Source: https://stackoverflow.com/questions/8046097/how-to-check-if-a-process-has-the-administrative-rights
 bool CxbxIsElevated() {
@@ -46,15 +47,19 @@ bool CxbxIsElevated() {
 	return fRet;
 }
 
-bool CxbxExec(std::string &execCommand, HANDLE* hProcess, bool requestHandleProcess) {
+bool CxbxExec(bool useDebugger, HANDLE* hProcess, bool requestHandleProcess) {
 
 	STARTUPINFO startupInfo = { 0 };
 	PROCESS_INFORMATION processInfo = { 0 };
-	size_t szSize = execCommand.size();
-	char* szArgsBufferOutput = new char[szSize + 1];
+	std::string szProcArgsBuffer;
+	if (!cli_config::GenCMD(szProcArgsBuffer)) {
+		return false;
+	}
 
-	strncpy(szArgsBufferOutput, execCommand.c_str(), szSize);
-	szArgsBufferOutput[szSize] = '\0';
+	// TODO: Set a configuration variable for this. For now it will be within the same folder as Cxbx.exe
+	if (useDebugger) {
+		szProcArgsBuffer = "cxbxr-debugger.exe " + szProcArgsBuffer;
+	}
 
 	/* NOTE: CreateProcess's 2nd parameter (lpCommandLine) is char*, not const char*. Plus it has ability to change the input buffer data.
 		Source: https://msdn.microsoft.com/en-us/library/ms682425.aspx
@@ -63,11 +68,9 @@ bool CxbxExec(std::string &execCommand, HANDLE* hProcess, bool requestHandleProc
 		Plus ShellExecute is high level whilst CreateProcess is low level. We want to use official low level functions as possible to reduce
 		cpu load cycles to get the task done.
 	*/
-	if (CreateProcess(nullptr, szArgsBufferOutput, nullptr, nullptr, false, 0, nullptr, nullptr, &startupInfo, &processInfo) == 0) {
-		delete[] szArgsBufferOutput;
+	if (CreateProcess(nullptr, const_cast<LPSTR>(szProcArgsBuffer.c_str()), nullptr, nullptr, false, 0, nullptr, nullptr, &startupInfo, &processInfo) == 0) {
 		return 0;
 	}
-	delete[] szArgsBufferOutput;
 	CloseHandle(processInfo.hThread);
 
 	if (requestHandleProcess) {
