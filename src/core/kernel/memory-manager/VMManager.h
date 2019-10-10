@@ -84,16 +84,14 @@ typedef enum _MemoryRegionType
 	COUNTRegion,
 }MemoryRegionType;
 
-#pragma warning(push)
-#pragma warning(disable: 4200)
 /* struct used to save the persistent memory between reboots */
 typedef struct _PersistedMemory
 {
 	size_t NumOfPtes;
 	VAddr LaunchFrameAddresses[2];
+#pragma warning(suppress: 4200)
 	uint32_t Data[];
 }PersistedMemory;
-#pragma warning(pop)
 
 
 /* VMManager class */
