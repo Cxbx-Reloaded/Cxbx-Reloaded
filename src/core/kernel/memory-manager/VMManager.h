@@ -84,12 +84,12 @@ typedef enum _MemoryRegionType
 	COUNTRegion,
 }MemoryRegionType;
 
-
 /* struct used to save the persistent memory between reboots */
 typedef struct _PersistedMemory
 {
 	size_t NumOfPtes;
 	VAddr LaunchFrameAddresses[2];
+#pragma warning(suppress: 4200)
 	uint32_t Data[];
 }PersistedMemory;
 
@@ -171,8 +171,6 @@ class VMManager : public PhysicalMemory
 		DWORD m_AllocationGranularity = 0;
 		// number of bytes reserved with XBOX_MEM_RESERVE by XbAllocateVirtualMemory
 		size_t m_VirtualMemoryBytesReserved = 0;
-		// number of persisted ptes between quick reboots
-		size_t m_NumPersistentPtes = 0;
 
 		// same as AllocateContiguousMemory, but it allows to allocate beyond m_MaxContiguousPfn
 		VAddr AllocateContiguousMemoryInternal(PFN_COUNT NumberOfPages, PFN LowestPfn, PFN HighestPfn, PFN PfnAlignment, DWORD Perms);
