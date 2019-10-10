@@ -34,6 +34,8 @@
 #include "EmuShared.h"
 #include "common\Settings.hpp"
 #include <commctrl.h>
+#include "common/util/cliConverter.hpp"
+#include "common/util/cliConfig.hpp"
 
 
 // Enable Visual Styles
@@ -45,6 +47,7 @@ processorArchitecture = '*' publicKeyToken = '6595b64144ccf1df' language = '*'\"
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
 	hActiveModule = hInstance; // == GetModuleHandle(NULL); // Points to GUI (Cxbx.exe) ImageBase
+	std::string tempStr;
 
 	// First detect if we are running on WoW64, if not, prevent Cxbx-Reloaded from starting
 	// Cxbx-Reloaded needs access to high memory, only exposed to WoW64.
@@ -61,12 +64,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	}
 #endif
 
-	DWORD guiProcessID = 0;
-	// TODO: Convert ALL __argc & __argv to use main(int argc, char** argv) method.
-	bool bHasLoadArgument = CheckLoadArgument(__argc, __argv, &guiProcessID);
+	if (!cli_config::GenConfig(__argv, __argc)) {
+		CxbxShowError("Couldn't convert parsed command line!");
+		return EXIT_FAILURE;
+	}
 
 	/*! initialize shared memory */
-	if (!EmuShared::Init(guiProcessID)) {
+	if (!EmuShared::Init(cli_config::GetSessionID())) {
 		CxbxShowError("Could not map shared memory!");
 		return EXIT_FAILURE;
 	}
@@ -76,18 +80,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		return EXIT_FAILURE;
 	}
 
-	if (bHasLoadArgument) {
+	if (cli_config::hasKey("load")) {
 #ifndef CXBX_LOADER
-		CxbxKrnlMain(__argc, __argv, nullptr);
+		CxbxKrnlEmulate(nullptr);
 		EmuShared::Cleanup();
 		return EXIT_SUCCESS;
 #else
-		std::string szProcArgsBuffer;
-		for (int i = 0; i < __argc; i++) {
-			szProcArgsBuffer.append(__argv[i]);
-		}
-
-		if (!CxbxExec(szProcArgsBuffer, nullptr, false)) {
+		if (!CxbxExec(false, nullptr, false)) {
 			CxbxShowError("Could not launch Cxbx-R loader!");
 			EmuShared::Cleanup();
 			return EXIT_FAILURE;
@@ -124,9 +123,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     }
 
     /*! optionally open xbe and start emulation, if command line parameter was specified */
-    if(__argc > 1 && false == MainWindow->HasError())
+    if(cli_config::ConfigSize() > 1 && false == MainWindow->HasError() && cli_config::GetValue(cli_config::arg1, &tempStr))
     {
-		MainWindow->OpenXbe(std::filesystem::absolute(std::filesystem::path(__argv[1])).string().c_str());
+        tempStr = std::filesystem::absolute(std::filesystem::path(tempStr)).string();
+        MainWindow->OpenXbe(tempStr.c_str());
 
         MainWindow->StartEmulation(MainWindow->GetHwnd());
     }

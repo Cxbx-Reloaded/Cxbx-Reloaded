@@ -43,8 +43,9 @@
 #include "core\hle\D3D8\Direct3D9\Direct3D9.h" // For CxbxSetPixelContainerHeader
 #include "core\hle\D3D8\XbConvert.h" // For EmuPC2XB_D3DFormat
 #include "common\Settings.hpp"
+#include "common/util/cliConfig.hpp"
 
-#include "core\kernel\init\CxbxKrnl.h" // For CxbxConvertArgToString and CxbxExec
+#include "core\kernel\init\CxbxKrnl.h" // For CxbxExec
 #include "resource/ResCxbx.h"
 #include "CxbxVersion.h"
 #include "Shlwapi.h"
@@ -2214,6 +2215,13 @@ void WndMain::SaveXbeAs()
         SaveXbe(ofn.lpstrFile);
 }
 
+// Only grant access to GUI end.
+namespace cli_config {
+extern void SetValue(const std::string key, const std::string value);
+extern void SetValue(const std::string key, const char* value);
+extern void SetValue(const std::string key, const void* value);
+extern void SetValue(const std::string key, int value);
+}
 // start emulation
 void WndMain::StartEmulation(HWND hwndParent, DebuggerState LocalDebuggerState /*= debuggerOff*/)
 {
@@ -2268,8 +2276,19 @@ void WndMain::StartEmulation(HWND hwndParent, DebuggerState LocalDebuggerState /
 		bool AttachLocalDebugger = (LocalDebuggerState == debuggerOn);
 		g_EmuShared->SetDebuggingFlag(&AttachLocalDebugger);
 
-        std::string szProcArgsBuffer;
-        CxbxConvertArgToString(szProcArgsBuffer, szExeFileName, m_XbeFilename, hwndParent, g_Settings->m_core.KrnlDebugMode, g_Settings->m_core.szKrnlDebug);
+        /* Main process to generate emulation command line begin. */
+        // If we are adding more arguments, this is the place to do so.
+        cli_config::SetValue(cli_config::exec, szExeFileName);
+        cli_config::SetLoad(m_XbeFilename);
+        cli_config::SetValue(cli_config::hwnd, hwndParent);
+        cli_config::SetValue(cli_config::debug_mode, g_Settings->m_core.KrnlDebugMode);
+        if (g_Settings->m_core.KrnlDebugMode == DM_FILE) {
+            cli_config::SetValue(cli_config::debug_file, g_Settings->m_core.szKrnlDebug);
+        }
+        else {
+            cli_config::SetValue(cli_config::debug_file, "");
+        }
+        /* Main process to generate emulation command line end. */
 
         UnmapPersistedMemory();
 
@@ -2278,10 +2297,7 @@ void WndMain::StartEmulation(HWND hwndParent, DebuggerState LocalDebuggerState /
             // Check then close existing debugger monitor.
             DebuggerMonitorClose();
 
-            // TODO: Set a configuration variable for this. For now it will be within the same folder as Cxbx.exe
-            std::string szProcDbgArgsBuffer = "cxbxr-debugger.exe " + szProcArgsBuffer;
-
-            if (!CxbxExec(szProcDbgArgsBuffer, &m_hDebuggerProc, true)) {
+            if (!CxbxExec(true, &m_hDebuggerProc, true)) {
                 MessageBox(m_hwnd, "Failed to start emulation with the debugger.\n\nYou will need to build CxbxDebugger manually.", "Cxbx-Reloaded", MB_ICONSTOP | MB_OK);
 
                 printf("WndMain: %s debugger shell failed.\n", m_Xbe->m_szAsciiTitle);
@@ -2294,7 +2310,7 @@ void WndMain::StartEmulation(HWND hwndParent, DebuggerState LocalDebuggerState /
         }
         else {
 
-            if (!CxbxExec(szProcArgsBuffer, nullptr, false)) {
+            if (!CxbxExec(false, nullptr, false)) {
                 MessageBox(m_hwnd, "Emulation failed.\n\n If this message repeats, the Xbe is not supported.", "Cxbx-Reloaded", MB_ICONSTOP | MB_OK);
 
                 printf("WndMain: %s shell failed.\n", m_Xbe->m_szAsciiTitle);
