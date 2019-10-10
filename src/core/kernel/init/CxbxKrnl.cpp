@@ -52,6 +52,8 @@ namespace xboxkrnl
 #include "ReservedMemory.h" // For virtual_memory_placeholder
 #include "core\kernel\memory-manager\VMManager.h"
 #include "CxbxDebugger.h"
+#include "common/util/cliConfig.hpp"
+#include "common/util/xxhash.h"
 
 #include <clocale>
 #include <process.h>
@@ -678,33 +680,6 @@ void ImportLibraries(XbeImportEntry *pImportDirectory)
 	}
 }
 
-bool CheckLoadArgument(int argc, char* argv[], DWORD *pguiProcessID)
-{
-	bool bHasLoadArgument;
-
-	if (argc >= 2 && std::strcmp(argv[1], "/load") == 0 && std::strlen(argv[2]) > 0) {
-		HWND hWnd = nullptr;
-		bHasLoadArgument = true;
-		// Perform check if command line contain gui's hWnd value.
-		if (argc > 3) {
-			hWnd = (HWND)std::stoi(argv[3], nullptr, 10);
-			hWnd = IsWindow(hWnd) ? hWnd : nullptr;
-			if (hWnd != nullptr) {
-				// We don't need thread ID from window handle.
-				GetWindowThreadProcessId(hWnd, pguiProcessID);
-			}
-		}
-	}
-	else {
-		bHasLoadArgument = false;
-		*pguiProcessID = GetCurrentProcessId();
-	}
-
-	g_exec_filepath = argv[0]; // NOTE: Workaround solution until simulated "main" function is made.
-
-	return bHasLoadArgument;
-}
-
 bool CreateSettings()
 {
 	g_Settings = new Settings();
@@ -748,8 +723,10 @@ bool HandleFirstLaunch()
 	return true;
 }
 
-void CxbxKrnlMain(int argc, char* argv[], uint32_t blocks_reserved[384])
+void CxbxKrnlEmulate(uint32_t blocks_reserved[384])
 {
+	std::string tempStr;
+
 	// NOTE: This is designated for standalone kernel mode launch without GUI
 	if (g_Settings != nullptr) {
 
@@ -774,29 +751,39 @@ void CxbxKrnlMain(int argc, char* argv[], uint32_t blocks_reserved[384])
 	/* Initialize Cxbx File Paths */
 	CxbxInitFilePaths();
 
+	/* Must be called after CxbxInitFilePaths */
+	if (!CxbxLockFilePath()) {
+		return;
+	}
+
 	// Skip '/load' switch
 	// Get XBE Name :
-	std::string xbePath = std::filesystem::absolute(std::filesystem::path(argv[2])).string();
+	std::string xbePath;
+	cli_config::GetValue(cli_config::load, &xbePath);
+	xbePath = std::filesystem::absolute(std::filesystem::path(xbePath)).string();
 
 	// Get DCHandle :
-	HWND hWnd = 0;
-	if (argc > 3) {
-		hWnd = (HWND)std::atoi(argv[3]);
+	// We must save this handle now to keep the child window working in the case we need to display the UEM
+	HWND hWnd = nullptr;
+	if (cli_config::GetValue(cli_config::hwnd, &tempStr)) {
+		hWnd = (HWND)std::atoi(tempStr.c_str());
 	}
+	CxbxKrnl_hEmuParent = IsWindow(hWnd) ? hWnd : nullptr;
 
 	// Get KernelDebugMode :
 	DebugMode DbgMode = DebugMode::DM_NONE;
-	if (argc > 4) {
-		DbgMode = (DebugMode)std::atoi(argv[4]);
+	if (cli_config::GetValue(cli_config::debug_mode, &tempStr)) {
+		DbgMode = (DebugMode)std::atoi(tempStr.c_str());
 	}
 
 	// Get KernelDebugFileName :
 	std::string DebugFileName = "";
-	if (argc > 5) {
-		DebugFileName = argv[5];
+	if (cli_config::GetValue(cli_config::debug_file, &tempStr)) {
+		DebugFileName = tempStr;
 	}
 
 	int BootFlags;
+	FILE* krnlLog = nullptr;
 	g_EmuShared->GetBootFlags(&BootFlags);
 
 	// debug console allocation (if configured)
@@ -810,8 +797,8 @@ void CxbxKrnlMain(int argc, char* argv[], uint32_t blocks_reserved[384])
 			GetConsoleScreenBufferInfo(StdHandle, &coninfo);
 			coninfo.dwSize.Y = SHRT_MAX - 1; // = 32767-1 = 32766 = maximum value that works
 			SetConsoleScreenBufferSize(StdHandle, coninfo.dwSize);
-			freopen("CONOUT$", "wt", stdout);
-			freopen("CONIN$", "rt", stdin);
+			(void)freopen("CONOUT$", "wt", stdout);
+			(void)freopen("CONIN$", "rt", stdin);
 			SetConsoleTitle("Cxbx-Reloaded : Kernel Debug Console");
 			SetConsoleTextAttribute(StdHandle, FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_RED);
 		}
@@ -821,7 +808,7 @@ void CxbxKrnlMain(int argc, char* argv[], uint32_t blocks_reserved[384])
 		FreeConsole();
 		if (DbgMode == DM_FILE) {
 			// Peform clean write to kernel log for first boot. Unless multi-xbe boot occur then perform append to existing log.
-			freopen(DebugFileName.c_str(), ((BootFlags == DebugMode::DM_NONE) ? "wt" : "at"), stdout);
+			krnlLog = freopen(DebugFileName.c_str(), ((BootFlags == DebugMode::DM_NONE) ? "wt" : "at"), stdout);
 			// Append separator for better readability after reboot.
 			if (BootFlags != DebugMode::DM_NONE) {
 				std::cout << "\n------REBOOT------REBOOT------REBOOT------REBOOT------REBOOT------\n" << std::endl;
@@ -830,12 +817,9 @@ void CxbxKrnlMain(int argc, char* argv[], uint32_t blocks_reserved[384])
 		else {
 			char buffer[16];
 			if (GetConsoleTitle(buffer, 16) != NULL)
-				freopen("nul", "w", stdout);
+				(void)freopen("nul", "w", stdout);
 		}
 	}
-
-	// We must save this handle now to keep the child window working in the case we need to display the UEM
-	CxbxKrnl_hEmuParent = IsWindow(hWnd) ? hWnd : NULL;
 
 	g_CurrentProcessHandle = GetCurrentProcess(); // OpenProcess(PROCESS_ALL_ACCESS, FALSE, GetCurrentProcessId());
 
@@ -890,7 +874,7 @@ void CxbxKrnlMain(int argc, char* argv[], uint32_t blocks_reserved[384])
 		}
 	}
 
-	if (dwExitCode != EXIT_SUCCESS) {// StopEmulation
+	if (dwExitCode != EXIT_SUCCESS) {// Stop emulation
 		CxbxKrnlShutDown();
 	}
 
@@ -1200,6 +1184,10 @@ void CxbxKrnlMain(int argc, char* argv[], uint32_t blocks_reserved[384])
 			(void(*)())EntryPoint,
  			BootFlags
 		);
+	}
+
+	if (!krnlLog) {
+		(void)fclose(krnlLog);
 	}
 }
 #pragma optimize("", on)
@@ -1558,13 +1546,21 @@ __declspec(noreturn) void CxbxKrnlInit
 	EmuLogEx(LOG_PREFIX_INIT, LOG_LEVEL::DEBUG, "XBE entry point returned\n");
 	fflush(stdout);
 
+	CxbxUnlockFilePath();
+
 	//	EmuShared::Cleanup();   FIXME: commenting this line is a bad workaround for issue #617 (https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/issues/617)
     CxbxKrnlTerminateThread();
 }
 
 void CxbxInitFilePaths()
 {
-	g_EmuShared->GetStorageLocation(szFolder_CxbxReloadedData);
+	if (g_Settings) {
+		std::string dataLoc = g_Settings->GetDataLocation();
+		std::strncpy(szFolder_CxbxReloadedData, dataLoc.c_str(), dataLoc.length() + 1);
+	}
+	else {
+		g_EmuShared->GetStorageLocation(szFolder_CxbxReloadedData);
+	}
 
 	// Make sure our data folder exists :
 	bool result = std::filesystem::exists(szFolder_CxbxReloadedData);
@@ -1582,6 +1578,50 @@ void CxbxInitFilePaths()
 	snprintf(szFilePath_EEPROM_bin, MAX_PATH, "%s\\EEPROM.bin", szFolder_CxbxReloadedData);
 
 	GetModuleFileName(GetModuleHandle(nullptr), szFilePath_CxbxReloaded_Exe, MAX_PATH);
+}
+
+HANDLE hMapDataHash = nullptr;
+
+bool CxbxLockFilePath()
+{
+    std::stringstream filePathHash("Local\\");
+    uint64_t hashValue = XXH3_64bits(szFolder_CxbxReloadedData, strlen(szFolder_CxbxReloadedData) + 1);
+    if (!hashValue) {
+        CxbxKrnlCleanup("%s : Couldn't generate Cxbx-Reloaded's data folder hash!", __func__);
+    }
+
+    filePathHash << std::hex << hashValue;
+
+    hMapDataHash = CreateFileMapping
+    (
+        INVALID_HANDLE_VALUE,       // Paging file
+        nullptr,                    // default security attributes
+        PAGE_READONLY,              // readonly access
+        0,                          // size: high 32 bits
+        /*Dummy size*/4,            // size: low 32 bits
+        filePathHash.str().c_str()  // name of map object
+    );
+
+    if (hMapDataHash == nullptr) {
+        return false;
+    }
+
+    if (GetLastError() == ERROR_ALREADY_EXISTS) {
+        CxbxShowError("Data path directory is currently in used.\nUse different data path directory or stop emulation from another process.");
+        CloseHandle(hMapDataHash);
+        return false;
+    }
+
+    return true;
+}
+
+void CxbxUnlockFilePath()
+{
+    // Close opened file path lockdown shared memory.
+    if (hMapDataHash) {
+        CloseHandle(hMapDataHash);
+        hMapDataHash = nullptr;
+    }
 }
 
 // REMARK: the following is useless, but PatrickvL has asked to keep it for documentation purposes
@@ -1729,8 +1769,11 @@ void CxbxKrnlShutDown()
 	// Shutdown the input device manager
 	g_InputDeviceManager.Shutdown();
 
-	if (CxbxKrnl_hEmuParent != NULL)
+	CxbxUnlockFilePath();
+
+	if (CxbxKrnl_hEmuParent != NULL) {
 		SendMessage(CxbxKrnl_hEmuParent, WM_PARENTNOTIFY, WM_DESTROY, 0);
+	}
 
 	EmuShared::Cleanup();
 	TerminateProcess(g_CurrentProcessHandle, 0);
@@ -1825,21 +1868,6 @@ __declspec(noreturn) void CxbxKrnlTerminateThread()
 void CxbxKrnlPanic()
 {
     CxbxKrnlCleanup("Kernel Panic!");
-}
-
-void CxbxConvertArgToString(std::string &dest, const char* krnlExe, const char* xbeFile, HWND hwndParent, DebugMode krnlDebug, const char* krnlDebugFile) {
-
-    std::stringstream szArgsStream;
-
-    // The format is: "krnlExe" /load "xbeFile" hwndParent krnlDebug "krnlDebugFile"
-    szArgsStream <<
-        "\"" << krnlExe << "\""
-        " /load \"" << xbeFile << "\""
-        " " << std::dec << (int)hwndParent <<
-        " " << std::dec << (int)krnlDebug <<
-        " \"" << krnlDebugFile << "\"";
-
-    dest = szArgsStream.str();
 }
 
 static clock_t						g_DeltaTime = 0;			 // Used for benchmarking/fps count

@@ -38,7 +38,7 @@ namespace xboxkrnl
 #include "Logging.h" // For LOG_FUNC()
 #include "EmuKrnl.h" // For InitializeListHead(), etc.
 #include "EmuKrnlLogging.h"
-#include "core\kernel\init\CxbxKrnl.h" // For CxbxKrnlCleanup, CxbxConvertArgToString, and CxbxExec
+#include "core\kernel\init\CxbxKrnl.h" // For CxbxKrnlCleanup, and CxbxExec
 #include "core\kernel\support\Emu.h" // For EmuLog(LOG_LEVEL::WARNING, )
 #include "EmuKrnl.h"
 #include "devices\x86\EmuX86.h" // HalReadWritePciSpace needs this
@@ -49,6 +49,7 @@ namespace xboxkrnl
 #include "devices\SMCDevice.h" // For SMC_COMMAND_SCRATCH
 #include "common/util/strConverter.hpp" // for utf16_to_ascii
 #include "core\kernel\memory-manager\VMManager.h"
+#include "common/util/cliConfig.hpp"
 
 #include <algorithm> // for std::replace
 #include <locale>
@@ -572,10 +573,8 @@ XBSYSAPI EXPORTNUM(49) xboxkrnl::VOID DECLSPEC_NORETURN NTAPI xboxkrnl::HalRetur
 				// Some titles (Xbox Dashboard and retail/demo discs) use ";" as a current directory path seperator
 				// This process is handled during initialization. No speical handling here required.
 
-				std::string szProcArgsBuffer;
-				CxbxConvertArgToString(szProcArgsBuffer, szFilePath_CxbxReloaded_Exe, XbePath.c_str(), CxbxKrnl_hEmuParent, CxbxKrnl_DebugMode, CxbxKrnl_DebugFileName.c_str());
-
-				if (!CxbxExec(szProcArgsBuffer, nullptr, false)) {
+				cli_config::SetLoad(XbePath);
+				if (!CxbxExec(false, nullptr, false)) {
 					CxbxKrnlCleanup("Could not launch %s", XbePath.c_str());
 				}
 			}
@@ -593,10 +592,8 @@ XBSYSAPI EXPORTNUM(49) xboxkrnl::VOID DECLSPEC_NORETURN NTAPI xboxkrnl::HalRetur
 
 		g_VMManager.SavePersistentMemory();
 
-		std::string szProcArgsBuffer;
-		CxbxConvertArgToString(szProcArgsBuffer, szFilePath_CxbxReloaded_Exe, szFilePath_Xbe, CxbxKrnl_hEmuParent, CxbxKrnl_DebugMode, CxbxKrnl_DebugFileName.c_str());
-
-		if (!CxbxExec(szProcArgsBuffer, nullptr, false)) {
+		cli_config::SetLoad(szFilePath_Xbe);
+		if (!CxbxExec(false, nullptr, false)) {
 			CxbxKrnlCleanup("Could not launch %s", szFilePath_Xbe);
 		}
 		break;
