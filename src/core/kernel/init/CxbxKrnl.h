@@ -232,14 +232,12 @@ bool CxbxKrnlVerifyVersion(const char *szVersion);
 
 extern bool g_bIsDebugKernel;
 
-bool CheckLoadArgument(int argc, char* argv[], DWORD *pguiProcessID);
-
 bool CreateSettings();
 
 bool HandleFirstLaunch();
 
 /*! Cxbx Kernel Entry Point */
-void CxbxKrnlMain(int argc, char* argv[], uint32_t blocks_reserved[384]);
+void CxbxKrnlEmulate(uint32_t blocks_reserved[384]);
 
 /*! initialize emulation */
 __declspec(noreturn) void CxbxKrnlInit(void *pTLSData, Xbe::TLS *pTLS, Xbe::LibraryVersion *LibraryVersion, DebugMode DbgMode, const char *szDebugFilename, Xbe::Header *XbeHeader, uint32_t XbeHeaderSize, void (*Entry)(), int BootFlags);
@@ -280,10 +278,11 @@ void CxbxInitPerformanceCounters(); // Implemented in EmuKrnlKe.cpp
 
 void CxbxInitFilePaths();
 
-/*! Generate a standard arg format string */
-void CxbxConvertArgToString(std::string &dest, const char* krnlExe, const char* xbeFile, HWND hwndParent, DebugMode krnlDebug, const char* krnlDebugFile);
+// For emulation usage only
+bool CxbxLockFilePath();
+void CxbxUnlockFilePath();
 
-bool CxbxExec(std::string &execCommand, HANDLE* hProcess, bool requestHandleProcess);
+bool CxbxExec(bool useDebugger, HANDLE* hProcess, bool requestHandleProcess);
 
 bool CxbxIsElevated();
 
