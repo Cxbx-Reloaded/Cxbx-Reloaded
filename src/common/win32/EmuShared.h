@@ -61,9 +61,14 @@ class EmuShared : public Mutex
 		int m_RefCount;
 
 		// ******************************************************************
+		// * Fixed memory allocation size
+		// ******************************************************************
+		unsigned int m_size;
+
+		// ******************************************************************
 		// * Each process needs to call this to initialize shared memory
 		// ******************************************************************
-		static bool Init(DWORD guiProcessID);
+		static bool Init(long long sessionID);
 
 		// ******************************************************************
 		// * Each process needs to call this to cleanup shared memory
