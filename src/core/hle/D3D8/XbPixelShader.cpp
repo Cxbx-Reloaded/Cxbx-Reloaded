@@ -6074,7 +6074,10 @@ VOID DxbxUpdateActivePixelShader() // NOPATCH
             // Note : FOG.RGB is correct like this, but FOG.a should be coming
             // from the vertex shader (oFog) - however, D3D8 does not forward this...
 			g_pD3DDevice->GetRenderState(D3DRS_FOGCOLOR, &dwColor);
-            fColor = dwColor;
+			fColor.a = ((dwColor >> 24) & 0xFF) / 255.0f;
+			fColor.r = ((dwColor >> 16) & 0xFF) / 255.0f;
+			fColor.g = ((dwColor >> 8) & 0xFF) / 255.0f;
+			fColor.b = (dwColor & 0xFF) / 255.0f;
 			break;
 		  case PSH_XBOX_CONSTANT_FC0:
             //dwColor = *EmuMappedD3DRenderState[XTL::X_D3DRS_PSFINALCOMBINERCONSTANT0];
