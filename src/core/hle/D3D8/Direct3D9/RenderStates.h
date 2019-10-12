@@ -60,6 +60,7 @@ private:
 
     uint32_t* D3D__RenderState = nullptr;
     int WireFrameMode = 0;
-    std::array<uint32_t, XTL::X_D3DRS_LAST + 1> PreviousRenderStateValues;
+    // NOTE: RenderStates are 32bit values, but using a 64bit value allows the upper bits to be used as a 'force dirty' flag
+    std::array<uint64_t, XTL::X_D3DRS_LAST + 1> PreviousRenderStateValues;
     std::array<int, XTL::X_D3DRS_LAST + 1>  XboxRenderStateOffsets;
 };
