@@ -58,13 +58,15 @@
 #include "core\kernel\support\Emu.h"
 #include "core\hle\D3D8\Direct3D9\Direct3D9.h" // For g_pD3DDevice, g_D3DActivePixelShader
 #include "core\hle\D3D8\XbPixelShader.h"
-#include "core\hle\D3D8\XbState.h" // For CXBX_D3DRS_UNSUPPORTED
 
 #include "core\kernel\init\CxbxKrnl.h" // For CxbxKrnlCleanup()
 
 #include <assert.h> // assert()
 #include <process.h>
 #include <locale.h>
+
+#include "Direct3D9\RenderStates.h"
+extern XboxRenderStateConverter XboxRenderStates;
 
 #define DbgPshPrintf \
 	LOG_CHECK_ENABLED(LOG_LEVEL::DEBUG) \
@@ -2318,7 +2320,7 @@ std::string PSH_XBOX_SHADER::OriginalToString(XTL::X_D3DPIXELSHADERDEF *pPSDef) 
                   pPSDef->PSRGBOutputs[0], pPSDef->PSRGBOutputs[1], pPSDef->PSRGBOutputs[2], pPSDef->PSRGBOutputs[3],
                   pPSDef->PSRGBOutputs[4], pPSDef->PSRGBOutputs[5], pPSDef->PSRGBOutputs[6], pPSDef->PSRGBOutputs[7],
                   pPSDef->PSCombinerCount,
-				  TemporaryPixelShaderRenderStates[XTL::X_D3DRS_PSTEXTUREMODES], /* pPSDef->PSTextureModes is stored in a different place than pPSDef*/
+                  XboxRenderStates.GetXboxRenderState(XTL::X_D3DRS_PSTEXTUREMODES), /* pPSDef->PSTextureModes is stored in a different place than pPSDef*/
                   pPSDef->PSDotMapping,
                   pPSDef->PSInputTexture,
                   pPSDef->PSC0Mapping,
@@ -2330,7 +2332,7 @@ void PSH_XBOX_SHADER::GetPSTextureModes(XTL::X_D3DPIXELSHADERDEF* pPSDef, PS_TEX
 {
     for (int i = 0; i < XTL::X_D3DTS_STAGECOUNT; i++)
     {
-        psTextureModes[i] = (PS_TEXTUREMODES)((TemporaryPixelShaderRenderStates[XTL::X_D3DRS_PSTEXTUREMODES] >> (i * 5)) & 0x1F);
+        psTextureModes[i] = (PS_TEXTUREMODES)((XboxRenderStates.GetXboxRenderState(XTL::X_D3DRS_PSTEXTUREMODES) >> (i * 5)) & 0x1F);
     }
 }
 
@@ -2542,7 +2544,7 @@ std::string PSH_XBOX_SHADER::DecodedToString(XTL::X_D3DPIXELSHADERDEF *pPSDef)
   _AddStr1("\n-----PixelShader Definition Contents-----");
   _AddStr1(OriginalToString(pPSDef));
 
-  if (TemporaryPixelShaderRenderStates[XTL::X_D3DRS_PSTEXTUREMODES] > 0)
+  if (XboxRenderStates.GetXboxRenderState(XTL::X_D3DRS_PSTEXTUREMODES) > 0)
   {
     _AddStr1("\nPSTextureModes ->"); // Texture addressing modes
     _AddStr("Stage 0: %s", PS_TextureModesStr[PSTextureModes[0]]);
@@ -5965,13 +5967,7 @@ static const
   return Result;
 } // DxbxRecompilePixelShader
 
-// TODO : Initialize this :
-DWORD *EmuMappedD3DRenderState[CXBX_D3DRS_UNSUPPORTED]; // 1 extra for the unsupported value
-
 std::vector<PSH_RECOMPILED_SHADER> g_RecompiledPixelShaders;
-
-// Temporary...
-DWORD TemporaryPixelShaderRenderStates[XTL::X_D3DRS_PSTEXTUREMODES + 1];
 
 VOID DxbxUpdateActivePixelShader() // NOPATCH
 {
@@ -5992,13 +5988,14 @@ VOID DxbxUpdateActivePixelShader() // NOPATCH
   //DWORD *XTL_D3D__RenderState = EmuMappedD3DRenderState[0];
   //pPSDef = (XTL::X_D3DPIXELSHADERDEF*)(XTL_D3D__RenderState);
 
-  // Use the pixel shader stored in TemporaryPixelShaderRenderStates rather than the set handle
+  // Use the pixel shader stored in D3D__RenderState rather than the set handle
   // This allows changes made via SetRenderState to actually take effect!
-  // TODO: Remove this and read directly from XTL_D3D__RenderState when all RenderState and Pixel Shader functions are unpatched
   // NOTE: PSTextureModes is in a different location in the X_D3DPIXELSHADERFEF than in Render State mappings
-  // All other fields are the same. We cast TemporaryPixelShaderRenderStates to a pPSDef for these fields, but
-  // manually read from TemporaryPixelShaderRenderStates[X_D3DRS_PSTEXTUREMODES) for that one field.
-  pPSDef = g_D3DActivePixelShader != nullptr ? (XTL::X_D3DPIXELSHADERDEF*)(&TemporaryPixelShaderRenderStates[0]) : nullptr;
+  // All other fields are the same.
+  // We cast D3D__RenderState to a pPSDef for these fields, but
+  // manually read from D3D__RenderState[X_D3DRS_PSTEXTUREMODES) for that one field.
+
+  pPSDef = g_D3DActivePixelShader != nullptr ? (XTL::X_D3DPIXELSHADERDEF*)(XboxRenderStates.GetPixelShaderRenderStatePointer()) : nullptr;
  
   if (pPSDef != nullptr)
   {
@@ -6033,15 +6030,16 @@ VOID DxbxUpdateActivePixelShader() // NOPATCH
     // constants in the shader declaration can be overwritten (this will be
     // needed for the final combiner constants at least)!
 
-/* This must be done once we somehow forward the vertex-shader oFog output to the pixel shader FOG input register :
-   We could use the unused oT4.x to output fog from the vertex shader, and read it with 'texcoord t4' in pixel shader!
-    // Disable native fog if pixel shader is said to handle it :
-    if ((RecompiledPixelShader.PSDef.PSFinalCombinerInputsABCD > 0)
-    || (RecompiledPixelShader.PSDef.PSFinalCombinerInputsEFG > 0))
-    {
-      g_pD3DDevice->SetRenderState(D3DRS_FOGENABLE, BOOL_FALSE);
+    // TODO: Figure out a method to forward the vertex-shader oFog output to the pixel shader FOG input register :
+    // We could use the unused oT4.x to output fog from the vertex shader, and read it with 'texcoord t4' in pixel shader!
+    // For now, we still disable native fog if pixel shader is said to handle it, this prevents black screen issues in titles using pixel shader fog.
+    // NOTE: Disabled: This breaks fog in XDK samples such as DolphinClassic.
+#if-0
+    if ((RecompiledPixelShader->PSDef.PSFinalCombinerInputsABCD > 0) || (RecompiledPixelShader->PSDef.PSFinalCombinerInputsEFG > 0)) {
+      g_pD3DDevice->SetRenderState(D3DRS_FOGENABLE, FALSE);
     }
-*/
+#endif
+
     //PS_TEXTUREMODES psTextureModes[XTL::X_D3DTS_STAGECOUNT];
     //PSH_XBOX_SHADER::GetPSTextureModes(pPSDef, psTextureModes);
     //
@@ -6080,11 +6078,11 @@ VOID DxbxUpdateActivePixelShader() // NOPATCH
 			break;
 		  case PSH_XBOX_CONSTANT_FC0:
             //dwColor = *EmuMappedD3DRenderState[XTL::X_D3DRS_PSFINALCOMBINERCONSTANT0];
-              fColor = dwColor = TemporaryPixelShaderRenderStates[XTL::X_D3DRS_PSFINALCOMBINERCONSTANT0];
+              fColor = dwColor = XboxRenderStates.GetXboxRenderState(XTL::X_D3DRS_PSFINALCOMBINERCONSTANT0);
 			break;
 		  case PSH_XBOX_CONSTANT_FC1:
             //dwColor = *EmuMappedD3DRenderState[XTL::X_D3DRS_PSFINALCOMBINERCONSTANT1];
-              fColor = dwColor = TemporaryPixelShaderRenderStates[XTL::X_D3DRS_PSFINALCOMBINERCONSTANT1];
+              fColor = dwColor = XboxRenderStates.GetXboxRenderState(XTL::X_D3DRS_PSFINALCOMBINERCONSTANT1);
 			break;
           case PSH_XBOX_CONSTANT_MUL0:
           case PSH_XBOX_CONSTANT_MUL1:
@@ -6119,7 +6117,7 @@ VOID DxbxUpdateActivePixelShader() // NOPATCH
           }
           default:
             //dwColor = *EmuMappedD3DRenderState[XTL::X_D3DRS_PSCONSTANT0_0 + i];
-              fColor = dwColor = TemporaryPixelShaderRenderStates[XTL::X_D3DRS_PSCONSTANT0_0 + i];
+              fColor = dwColor = XboxRenderStates.GetXboxRenderState(XTL::X_D3DRS_PSCONSTANT0_0 + i);
 			break;
         }
 
@@ -8141,7 +8139,7 @@ void DumpPixelShaderDefToFile(XTL::X_D3DPIXELSHADERDEF* pPSDef, const char* pszC
 					  pPSDef->PSRGBOutputs[0], pPSDef->PSRGBOutputs[1], pPSDef->PSRGBOutputs[2], pPSDef->PSRGBOutputs[3], 
 					  pPSDef->PSRGBOutputs[4], pPSDef->PSRGBOutputs[5], pPSDef->PSRGBOutputs[6], pPSDef->PSRGBOutputs[7], 
 					  pPSDef->PSCombinerCount,
-					  TemporaryPixelShaderRenderStates[XTL::X_D3DRS_PSTEXTUREMODES], /* pPSDef->PSTextureModes is stored in a different place than pPSDef*/
+                      XboxRenderStates.GetXboxRenderState(XTL::X_D3DRS_PSTEXTUREMODES), /* pPSDef->PSTextureModes is stored in a different place than pPSDef*/
 					  pPSDef->PSDotMapping,
 					  pPSDef->PSInputTexture,
 					  pPSDef->PSC0Mapping,
@@ -8164,12 +8162,12 @@ void PrintPixelShaderDefContents(XTL::X_D3DPIXELSHADERDEF* pPSDef )
 	{
 		DbgPshPrintf( "\n-----PixelShader Def Contents-----\n" );
 
-		if(TemporaryPixelShaderRenderStates[XTL::X_D3DRS_PSTEXTUREMODES])
+		if(XboxRenderStates.GetXboxRenderState(XTL::X_D3DRS_PSTEXTUREMODES))
 		{
-			DWORD dwPSTexMode0 = ( TemporaryPixelShaderRenderStates[XTL::X_D3DRS_PSTEXTUREMODES] >> 0 ) & 0x1F;
-			DWORD dwPSTexMode1 = ( TemporaryPixelShaderRenderStates[XTL::X_D3DRS_PSTEXTUREMODES] >> 5 ) & 0x1F;
-			DWORD dwPSTexMode2 = ( TemporaryPixelShaderRenderStates[XTL::X_D3DRS_PSTEXTUREMODES] >> 10 ) & 0x1F;
-			DWORD dwPSTexMode3 = ( TemporaryPixelShaderRenderStates[XTL::X_D3DRS_PSTEXTUREMODES] >> 15 ) & 0x1F;
+			DWORD dwPSTexMode0 = (XboxRenderStates.GetXboxRenderState(XTL::X_D3DRS_PSTEXTUREMODES) >> 0 ) & 0x1F;
+			DWORD dwPSTexMode1 = (XboxRenderStates.GetXboxRenderState(XTL::X_D3DRS_PSTEXTUREMODES) >> 5 ) & 0x1F;
+			DWORD dwPSTexMode2 = (XboxRenderStates.GetXboxRenderState(XTL::X_D3DRS_PSTEXTUREMODES) >> 10 ) & 0x1F;
+			DWORD dwPSTexMode3 = (XboxRenderStates.GetXboxRenderState(XTL::X_D3DRS_PSTEXTUREMODES) >> 15 ) & 0x1F;
 
 			DbgPshPrintf( "PSTextureModes ->\n" );
 			DbgPshPrintf( "Stage 0: %s\n", PS_TextureModesStr[dwPSTexMode0] );

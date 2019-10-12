@@ -1,3 +1,5 @@
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 // ******************************************************************
 // *
 // *  This file is part of the Cxbx project.
@@ -17,24 +19,31 @@
 // *  If not, write to the Free Software Foundation, Inc.,
 // *  59 Temple Place - Suite 330, Bostom, MA 02111-1307, USA.
 // *
-// *  (c) 2002-2003 Aaron Robinson <caustik@caustik.com>
+// *  (c) 2019 Luke Usher
 // *
 // *  All rights reserved
 // *
 // ******************************************************************
-#ifndef XBPIXELSHADER_H
-#define XBPIXELSHADER_H
 
-#include "Cxbx.h"
-
+#include <cstdint>
+#include <array>
 #include "core\hle\D3D8\XbD3D8Types.h"
 
-// dump pixel shader definition to file
-void DumpPixelShaderDefToFile( XTL::X_D3DPIXELSHADERDEF* pPSDef, const char* pszCode );
-// print relevant contents to the debug console
-void PrintPixelShaderDefContents(XTL::X_D3DPIXELSHADERDEF* pDSDef );
+#define CXBX_D3DRS_UNSUPPORTED (XTL::X_D3DRS_LAST + 1)
 
-// PatrickvL's Dxbx pixel shader translation
-VOID DxbxUpdateActivePixelShader(); // NOPATCH
+class XboxRenderStateConverter;
 
-#endif // PIXELSHADER_H
+class XboxTextureStateConverter
+{
+public:
+    bool Init(XboxRenderStateConverter* state);
+    void Apply();
+
+private:
+    void BuildTextureStateMappingTable();
+    DWORD GetHostTextureOpValue(DWORD XboxTextureOp);
+
+    uint32_t* D3D__TextureState = nullptr;
+    std::array<int, XTL::X_D3DTSS_LAST + 1> XboxTextureStateOffsets;
+    XboxRenderStateConverter* pXboxRenderStates;
+};

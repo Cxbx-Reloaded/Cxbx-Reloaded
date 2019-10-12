@@ -53,6 +53,8 @@ extern uint8_t *ConvertD3DTextureToARGB(
 	int TextureStage = 0
 );
 
+void CxbxUpdateNativeD3DResources();
+
 // initialize direct3d
 extern VOID EmuD3DInit();
 
