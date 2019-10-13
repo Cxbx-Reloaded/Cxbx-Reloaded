@@ -937,7 +937,7 @@ void CxbxKrnlEmulate(uint32_t blocks_reserved[384])
 			return; // TODO : Halt(0); 
 		}
 
-#ifndef CXBX_LOADER
+#ifndef CXBXR_EMU
 		// verify virtual_memory_placeholder is located at 0x00011000
 		if ((UINT_PTR)(&(virtual_memory_placeholder[0])) != (XBE_IMAGE_BASE + CXBX_BASE_OF_CODE))
 		{
@@ -1094,7 +1094,7 @@ void CxbxKrnlEmulate(uint32_t blocks_reserved[384])
 		}
 #endif
 
-#ifndef CXBX_LOADER
+#ifndef CXBXR_EMU
 		// Initialize the memory manager
 		uint32_t SystemDevBlocksReserved[384] = { 0 };
 		g_VMManager.Initialize(0, BootFlags, SystemDevBlocksReserved);

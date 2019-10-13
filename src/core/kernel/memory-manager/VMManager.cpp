@@ -41,7 +41,7 @@
 #include "core\kernel\exports\EmuKrnl.h" // For InitializeListHead(), etc.
 #include <assert.h>
 // Temporary usage for need ReserveAddressRanges func with cxbx.exe's emulation.
-#ifndef CXBX_LOADER
+#ifndef CXBXR_EMU
 #include "common/ReserveAddressRanges.h"
 #endif
 
@@ -60,7 +60,7 @@ bool VirtualMemoryArea::CanBeMergedWith(const VirtualMemoryArea& next) const
 
 void VMManager::Initialize(int SystemType, int BootFlags, uint32_t blocks_reserved[384])
 {
-#ifndef CXBX_LOADER
+#ifndef CXBXR_EMU
 	if ((BootFlags & BOOT_QUICK_REBOOT) == 0) {
 		SystemType = g_bIsRetail ? SYSTEM_XBOX : g_bIsChihiro ? SYSTEM_CHIHIRO : SYSTEM_DEVKIT; // TODO: Temporary placeholder until loader is functional.
 		g_EmuShared->SetMmLayout(&SystemType);
