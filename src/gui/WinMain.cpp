@@ -56,7 +56,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		return EXIT_FAILURE;
 	}
 
-#ifndef CXBX_LOADER
+#ifndef CXBXR_EMU
 	/*! verify Cxbx.exe is loaded to base address 0x00010000 */
 	if (!VerifyBaseAddr()) {
 		CxbxShowError("Cxbx.exe is not loaded to base address 0x00010000 (which is a requirement for Xbox emulation)");
@@ -81,16 +81,14 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	}
 
 	if (cli_config::hasKey("load")) {
-#ifndef CXBX_LOADER
+#ifndef CXBXR_EMU
 		CxbxKrnlEmulate(nullptr);
 		EmuShared::Cleanup();
 		return EXIT_SUCCESS;
 #else
-		if (!CxbxExec(false, nullptr, false)) {
-			CxbxShowError("Could not launch Cxbx-R loader!");
-			EmuShared::Cleanup();
-			return EXIT_FAILURE;
-		}
+		CxbxShowError("Emulation must be launched from cxbxr-ldr.exe!");
+		EmuShared::Cleanup();
+		return EXIT_FAILURE;
 #endif
 	}
 
