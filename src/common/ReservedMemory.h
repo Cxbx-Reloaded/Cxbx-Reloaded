@@ -25,6 +25,7 @@
 #ifndef RESERVEDMEMORY_H
 #define RESERVEDMEMORY_H
 
+#ifndef CXBXR_EMU
 #if defined(__cplusplus)
 extern "C"
 {
@@ -48,6 +49,7 @@ unsigned char virtual_memory_placeholder[VM_PLACEHOLDER_SIZE]; // = { OPCODE_NOP
 
 #if defined(__cplusplus)
 }
+#endif
 #endif
 
 #endif // RESERVEDMEMORY_H

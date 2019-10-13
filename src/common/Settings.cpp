@@ -89,6 +89,7 @@ static struct {
 	const char* AllowAdminPrivilege = "AllowAdminPrivilege";
 	const char* LoggedModules = "LoggedModules";
 	const char* LogLevel = "LogLevel";
+	const char* LoaderExperiment = "LoaderExperiment";
 } sect_core_keys;
 
 static const char* section_video = "video";
@@ -350,6 +351,8 @@ bool Settings::LoadConfig()
 		index++;
 	}
 
+	m_core.loaderExperiment = m_si.GetBoolValue(section_core, sect_core_keys.LoaderExperiment, /*Default=*/false);
+
 	// ==== Core End ============
 
 	// ==== Hack Begin ==========
@@ -524,6 +527,8 @@ bool Settings::Save(std::string file_path)
 		stream << "0x" << std::hex << m_core.LoggedModules[i];
 		m_si.SetValue(section_core, sect_core_keys.LoggedModules, stream.str().c_str(), nullptr, false);
 	}
+
+	m_si.SetBoolValue(section_core, sect_core_keys.LoaderExperiment, m_core.loaderExperiment, nullptr, true);
 
 	// ==== Core End ============
 
