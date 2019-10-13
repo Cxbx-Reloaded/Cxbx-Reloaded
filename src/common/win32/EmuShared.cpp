@@ -48,7 +48,7 @@ HMODULE hActiveModule = NULL;
 // ******************************************************************
 // * func: EmuShared::EmuSharedInit
 // ******************************************************************
-bool EmuShared::Init(DWORD guiProcessID)
+bool EmuShared::Init(long long sessionID)
 {
     // ******************************************************************
     // * Ensure initialization only occurs once
@@ -58,15 +58,22 @@ bool EmuShared::Init(DWORD guiProcessID)
     // ******************************************************************
     // * Prevent multiple initializations
     // ******************************************************************
-    if(hMapObject != NULL)
+    if (hMapObject != NULL) {
         return true;
+    }
+
+    // ******************************************************************
+    // * Prevent invalid session process id
+    // ******************************************************************
+    if (sessionID == 0) {
+        return false;
+    }
 
     // ******************************************************************
     // * Create the shared memory "file"
     // ******************************************************************
     {
-        // NOTE: guiProcessID support is not available due to 2+ emulation is causing problem with graphic screen.
-        std::string emuSharedStr = "Local\\EmuShared-s" + std::to_string(settings_version);// +"-p" + std::to_string(guiProcessID);
+        std::string emuSharedStr = "Local\\EmuShared-s" + std::to_string(sessionID);
         hMapObject = CreateFileMapping
         (
             INVALID_HANDLE_VALUE,   // Paging file
@@ -97,8 +104,10 @@ bool EmuShared::Init(DWORD guiProcessID)
             0               // default: map entire file
         );
 
-        if(g_EmuShared == nullptr)
+        if (g_EmuShared == nullptr) {
+            CloseHandle(hMapObject);
             return false; // CxbxKrnlCleanupEx(CXBXR_MODULE::INIT, "Could not map view of shared memory!");
+        }
     }
 
     // ******************************************************************
@@ -109,6 +118,12 @@ bool EmuShared::Init(DWORD guiProcessID)
     }
 
     g_EmuShared->m_RefCount++;
+
+    if (g_EmuShared->m_size != sizeof(EmuShared)) {
+        EmuShared::Cleanup();
+        return false;
+    }
+
 	return true;
 }
 
@@ -131,6 +146,7 @@ void EmuShared::Cleanup()
 // ******************************************************************
 EmuShared::EmuShared()
 {
+	m_size = sizeof(EmuShared);
 //	m_bMultiXbe = false;
 //	m_LaunchDataPAddress = NULL;
 	m_bDebugging = false;

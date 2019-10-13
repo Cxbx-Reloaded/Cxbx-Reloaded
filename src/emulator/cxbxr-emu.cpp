@@ -33,6 +33,8 @@
 #include "EmuShared.h"
 #include "core\kernel\init\CxbxKrnl.h" // For HandleFirstLaunch() and LaunchEmulation()
 //#include <commctrl.h>
+#include "common/util/cliConverter.hpp"
+#include "common/util/cliConfig.hpp"
 
 PCHAR*
 CommandLineToArgvA(
@@ -143,17 +145,22 @@ DWORD WINAPI Emulate(int system, uint32_t blocks_reserved[384])
 		return EXIT_FAILURE;
 	}
 
-	DWORD guiProcessID = 0;
-	bool bHasLoadArgument = CheckLoadArgument(argc, argv, &guiProcessID);
-	if (!bHasLoadArgument) {
-		CxbxShowError("No /load argument on command line!");
+	if (!cli_config::GenConfig(argv, argc)) {
+		CxbxShowError("Couldn't convert parsed command line!");
+		LocalFree(argv);
+		return EXIT_FAILURE;
+	}
+	LocalFree(argv);
+
+	/*! verify load argument is included */
+	if (!cli_config::hasKey("load")) {
+		CxbxShowError("No /load argument in command line!");
 		return EXIT_FAILURE;
 	}
 
 	/*! initialize shared memory */
-	if (!EmuShared::Init(guiProcessID)) {
+	if (!EmuShared::Init(cli_config::GetSessionID())) {
 		CxbxShowError("Could not map shared memory!");
-		LocalFree(argv);
 		return EXIT_FAILURE;
 	}
 
@@ -163,9 +170,7 @@ DWORD WINAPI Emulate(int system, uint32_t blocks_reserved[384])
 		return EXIT_FAILURE;
 	}
 
-	CxbxKrnlMain(argc, argv, blocks_reserved);
-
-	LocalFree(argv);
+	CxbxKrnlEmulate(blocks_reserved);
 
 	/*! cleanup shared memory */
 	EmuShared::Cleanup();

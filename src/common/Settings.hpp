@@ -44,6 +44,7 @@ extern uint16_t g_LibVersion_DSOUND;
 
 // Cxbx-Reloaded's data storage location.
 typedef enum _CXBX_DATA {
+	CXBX_DATA_INVALID = -1,
 	CXBX_DATA_APPDATA = 0,
 	CXBX_DATA_EXECDIR = 1,
 	CXBX_DATA_CUSTOM = 2,
@@ -74,6 +75,8 @@ public:
 	void SyncToEmulator();
 	void Verify();
 	std::string GetDataLocation();
+	static CXBX_DATA FindSettingsLocation(std::string& file_path_out);
+	static CXBX_DATA SetupFile(std::string& file_path_out);
 
 	// GUI settings
 	struct s_gui {
