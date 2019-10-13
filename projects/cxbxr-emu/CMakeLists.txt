@@ -61,6 +61,7 @@ endif()
 
 add_compile_definitions(
  NOMINMAX
+ CXBXR_EMU
  CXBXR_EMU_EXPORTS
 )
 

@@ -191,7 +191,7 @@ class EmuShared : public Mutex
 		// ******************************************************************
 		void GetDebuggingFlag(bool *value) { Lock(); *value = m_bDebugging; Unlock(); }
 		void SetDebuggingFlag(const bool *value) { Lock(); m_bDebugging = *value; Unlock(); }
-#ifndef CXBX_LOADER
+#ifndef CXBX_LOADER // Temporary usage for cxbx.exe's emu
 		// ******************************************************************
 		// * Previous Memory Layout value Accessors
 		// ******************************************************************
@@ -271,7 +271,7 @@ class EmuShared : public Mutex
 		bool         m_bDebugging;
 		bool         m_bReady_status;
 		bool         m_bEmulating_status;
-#ifndef CXBX_LOADER
+#ifndef CXBX_LOADER // Temporary usage for cxbx.exe's emu
 		int          m_PreviousMmLayout;
 		int          m_Reserved7[3];
 #else
