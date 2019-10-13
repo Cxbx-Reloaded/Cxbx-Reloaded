@@ -1,6 +1,6 @@
 ﻿//{{NO_DEPENDENCIES}}
 // Microsoft Visual C++ generated include file.
-// Used by C:\Users\anonymous\Documents\xbox\Cxbx-Reloaded\resource\Cxbx.rc
+// Used by Cxbx.rc
 //
 #define IDI_CXBX                        101
 #define IDB_SPLASH                      102
