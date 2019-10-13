@@ -626,9 +626,13 @@ BEGIN
             MENUITEM "&Rescan title Symbol Cache",  ID_CACHE_CLEARHLECACHE_CURRENT,MFT_STRING,MFS_ENABLED
         END
         MENUITEM MFT_SEPARATOR
-        POPUP "&LLE (Experimental)",            65535,MFT_STRING,MFS_ENABLED
+        POPUP "Experimental",                   65535,MFT_STRING,MFS_ENABLED
         BEGIN
-            MENUITEM "LLE &GPU",                    ID_EMULATION_LLE_GPU,MFT_STRING,MFS_ENABLED
+            POPUP "&LLE",                           65535,MFT_STRING,MFS_ENABLED
+            BEGIN
+                MENUITEM "LLE &GPU",                    ID_EMULATION_LLE_GPU,MFT_STRING,MFS_ENABLED
+            END
+            MENUITEM "Loader Project",              ID_EXPERIMENTAL_LOADERPROJECT,MFT_STRING,MFS_DISABLED
         END
         POPUP "Hacks",                          65535,MFT_STRING,MFS_ENABLED
         BEGIN
