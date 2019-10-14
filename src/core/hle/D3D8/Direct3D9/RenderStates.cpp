@@ -311,6 +311,15 @@ void XboxRenderStateConverter::ApplyDeferredRenderState(uint32_t State, uint32_t
             }
         } break;
         case XTL::X_D3DRS_FOGENABLE:
+            if (g_LibVersion_D3D8 == 3925) {
+                // HACK: Many 3925 games only show a black screen if fog is enabled
+                // Initially, this was thought to be bad offsets, but it has been verified to be correct
+                // Unitl we find out the true underlying cause, disable fog and carry on
+                // Test Cases: Halo, Silent Hill 2.
+                LOG_TEST_CASE("Applying 3925 fog disable hack");
+                Value = false;
+            }
+            break;
         case XTL::X_D3DRS_FOGTABLEMODE:
         case XTL::X_D3DRS_FOGDENSITY:
         case XTL::X_D3DRS_RANGEFOGENABLE:
