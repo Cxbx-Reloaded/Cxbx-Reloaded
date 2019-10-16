@@ -97,7 +97,7 @@ public:
 		bool allowAdminPrivilege;
         unsigned int LoggedModules[NUM_INTEGERS_LOG];
 		int LogLevel = 1;
-		bool Reserved2 = 0;
+		bool loaderExperiment;
 		bool Reserved3 = 0;
 		bool Reserved4 = 0;
 		int  Reserved99[10] = { 0 };
