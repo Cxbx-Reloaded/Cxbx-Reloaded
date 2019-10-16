@@ -378,8 +378,6 @@ add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/projects/cxbxr-ldr")
 
 add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/projects/cxbxr-emu")
 
-add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/projects/cxbxr")
-
 # Issues with compile (the same with develop branch) and
 # for some reason did not put the files into virtual folder?
 # Might need to put the list in the source folder for workaround fix.
@@ -409,6 +407,6 @@ if(${CMAKE_GENERATOR} MATCHES "Visual Studio ([^9]|[9][0-9])")
 endif()
 
 # Cxbx-Reloaded project with third-party libraries
-set_target_properties(cxbx cxbxr cxbxr-ldr cxbxr-emu subhook XbSymbolDatabase libtommath libtomcrypt
+set_target_properties(cxbx cxbxr-ldr cxbxr-emu subhook XbSymbolDatabase libtommath libtomcrypt
  PROPERTIES FOLDER Cxbx-Reloaded
 )
