@@ -1899,11 +1899,48 @@ private:
 		}
 	}
 
+	void VshConvert_RegisterVertexElement(
+		UINT XboxVertexElementDataType,
+		UINT XboxVertexElementByteSize,
+		UINT HostVertexElementByteSize,
+		BOOL NeedPatching)
+	{
+		CxbxVertexShaderStreamElement* pCurrentElement = &(pCurrentVertexShaderStreamInfo->VertexElements[pCurrentVertexShaderStreamInfo->NumberOfVertexElements]);
+		pCurrentElement->XboxType = XboxVertexElementDataType;
+		pCurrentElement->XboxByteSize = XboxVertexElementByteSize;
+		pCurrentElement->HostByteSize = HostVertexElementByteSize;
+		pCurrentVertexShaderStreamInfo->NumberOfVertexElements++;
+		pCurrentVertexShaderStreamInfo->NeedPatch |= NeedPatching;
+	}
+
+	void VshConvert_SkipBytes(int SkipBytesCount)
+	{
+		if (SkipBytesCount % sizeof(DWORD)) {
+			LOG_TEST_CASE("D3DVSD_SKIPBYTES not divisble by 4!");
+		}
+#if 0 // Potential optimization, for now disabled for simplicity :
+		else {
+			// Skip size is a whole multiple of 4 bytes;
+			// Is stream patching not needed up until this element?
+			if (!pCurrentVertexShaderStreamInfo->NeedPatch) {
+				// Then we can get away with increasing the host stride,
+				// which avoids otherwise needless vertex buffer patching :
+				pCurrentVertexShaderStreamInfo->HostVertexStride += SkipBytesCount;
+				return;
+			}
+		}
+#endif
+
+		// Register a 'skip' element, so that Xbox data will be skipped
+		// without increasing host stride - this does require patching :
+		VshConvert_RegisterVertexElement(XTL::X_D3DVSDT_NONE, SkipBytesCount, /*HostSize=*/0, /*NeedPatching=*/TRUE);
+	}
+
 	void VshConvertToken_STREAMDATA_SKIP(DWORD *pXboxToken)
 	{
 		WORD SkipCount = (*pXboxToken & X_D3DVSD_SKIPCOUNTMASK) >> X_D3DVSD_SKIPCOUNTSHIFT;
 		DbgVshPrintf("\tD3DVSD_SKIP(%d),\n", SkipCount);
-		pCurrentVertexShaderStreamInfo->HostVertexStride += (SkipCount * sizeof(DWORD));
+		VshConvert_SkipBytes(SkipCount * sizeof(DWORD));
 	}
 
 	void VshConvertToken_STREAMDATA_SKIPBYTES(DWORD* pXboxToken)
@@ -1911,11 +1948,7 @@ private:
 		WORD SkipBytesCount = (*pXboxToken & X_D3DVSD_SKIPCOUNTMASK) >> X_D3DVSD_SKIPCOUNTSHIFT;
 
 		DbgVshPrintf("\tD3DVSD_SKIPBYTES(%d), /* xbox ext. */\n", SkipBytesCount);
-		if (SkipBytesCount % sizeof(DWORD)) {
-			EmuLog(LOG_LEVEL::WARNING, "D3DVSD_SKIPBYTES can't be converted to D3DVSD_SKIP, not divisble by 4.");
-		}
-
-		pCurrentVertexShaderStreamInfo->HostVertexStride += SkipBytesCount;
+		VshConvert_SkipBytes(SkipBytesCount);
 	}
 
 	void VshConvertToken_STREAMDATA_REG(DWORD *pXboxToken)
@@ -1945,6 +1978,7 @@ private:
 		RegVIsPresentInDeclaration[VertexRegister] = true;
 
 		DWORD XboxVertexElementDataType = (*pXboxToken & X_D3DVSD_DATATYPEMASK) >> X_D3DVSD_DATATYPESHIFT;
+		WORD XboxVertexElementByteSize = 0;
 		BYTE HostVertexElementDataType = 0;
 		WORD HostVertexElementByteSize = 0;
 
@@ -1996,6 +2030,7 @@ private:
 				HostVertexElementDataType = D3DDECLTYPE_FLOAT1;
 				HostVertexElementByteSize = 1 * sizeof(FLOAT);
 			}
+			XboxVertexElementByteSize = 1 * sizeof(XTL::SHORT);
 			NeedPatching = TRUE;
 			break;
 		case XTL::X_D3DVSDT_NORMSHORT2: // 0x21:
@@ -2010,6 +2045,7 @@ private:
 				DbgVshPrintf("D3DVSDT_NORMSHORT2 /* xbox ext. */");
 				HostVertexElementDataType = D3DDECLTYPE_FLOAT2;
 				HostVertexElementByteSize = 2 * sizeof(FLOAT);
+				XboxVertexElementByteSize = 2 * sizeof(XTL::SHORT);
 				NeedPatching = TRUE;
 			}
 			break;
@@ -2024,6 +2060,7 @@ private:
 				HostVertexElementDataType = D3DDECLTYPE_FLOAT3;
 				HostVertexElementByteSize = 3 * sizeof(FLOAT);
 			}
+			XboxVertexElementByteSize = 3 * sizeof(XTL::SHORT);
 			NeedPatching = TRUE;
 			break;
 		case XTL::X_D3DVSDT_NORMSHORT4: // 0x41:
@@ -2038,6 +2075,7 @@ private:
 				DbgVshPrintf("D3DVSDT_NORMSHORT4 /* xbox ext. */");
 				HostVertexElementDataType = D3DDECLTYPE_FLOAT4;
 				HostVertexElementByteSize = 4 * sizeof(FLOAT);
+				XboxVertexElementByteSize = 4 * sizeof(XTL::SHORT);
 				NeedPatching = TRUE;
 			}
 			break;
@@ -2045,18 +2083,21 @@ private:
 			DbgVshPrintf("D3DVSDT_NORMPACKED3 /* xbox ext. */");
 			HostVertexElementDataType = D3DDECLTYPE_FLOAT3;
 			HostVertexElementByteSize = 3 * sizeof(FLOAT);
+			XboxVertexElementByteSize = 1 * sizeof(XTL::DWORD);
 			NeedPatching = TRUE;
 			break;
 		case XTL::X_D3DVSDT_SHORT1: // 0x15:
 			DbgVshPrintf("D3DVSDT_SHORT1 /* xbox ext. */");
 			HostVertexElementDataType = D3DDECLTYPE_SHORT2;
 			HostVertexElementByteSize = 2 * sizeof(SHORT);
+			XboxVertexElementByteSize = 1 * sizeof(XTL::SHORT);
 			NeedPatching = TRUE;
 			break;
 		case XTL::X_D3DVSDT_SHORT3: // 0x35:
 			DbgVshPrintf("D3DVSDT_SHORT3 /* xbox ext. */");
 			HostVertexElementDataType = D3DDECLTYPE_SHORT4;
 			HostVertexElementByteSize = 4 * sizeof(SHORT);
+			XboxVertexElementByteSize = 3 * sizeof(XTL::SHORT);
 			NeedPatching = TRUE;
 			break;
 		case XTL::X_D3DVSDT_PBYTE1: // 0x14:
@@ -2070,6 +2111,7 @@ private:
 				HostVertexElementDataType = D3DDECLTYPE_FLOAT1;
 				HostVertexElementByteSize = 1 * sizeof(FLOAT);
 			}
+			XboxVertexElementByteSize = 1 * sizeof(XTL::BYTE);
 			NeedPatching = TRUE;
 			break;
 		case XTL::X_D3DVSDT_PBYTE2: // 0x24:
@@ -2083,6 +2125,7 @@ private:
 				HostVertexElementDataType = D3DDECLTYPE_FLOAT2;
 				HostVertexElementByteSize = 2 * sizeof(FLOAT);
 			}
+			XboxVertexElementByteSize = 2 * sizeof(XTL::BYTE);
 			NeedPatching = TRUE;
 			break;
 		case XTL::X_D3DVSDT_PBYTE3: // 0x34:
@@ -2096,6 +2139,7 @@ private:
 				HostVertexElementDataType = D3DDECLTYPE_FLOAT3;
 				HostVertexElementByteSize = 3 * sizeof(FLOAT);
 			}
+			XboxVertexElementByteSize = 3 * sizeof(XTL::BYTE);
 			NeedPatching = TRUE;
 			break;
 		case XTL::X_D3DVSDT_PBYTE4: // 0x44:
@@ -2111,6 +2155,7 @@ private:
 				DbgVshPrintf("D3DVSDT_PBYTE4 /* xbox ext. */");
 				HostVertexElementDataType = D3DDECLTYPE_FLOAT4;
 				HostVertexElementByteSize = 4 * sizeof(FLOAT);
+				XboxVertexElementByteSize = 4 * sizeof(XTL::BYTE);
 				NeedPatching = TRUE;
 			}
 			break;
@@ -2118,11 +2163,12 @@ private:
 			DbgVshPrintf("D3DVSDT_FLOAT2H /* xbox ext. */");
 			HostVertexElementDataType = D3DDECLTYPE_FLOAT4;
 			HostVertexElementByteSize = 4 * sizeof(FLOAT);
+			XboxVertexElementByteSize = 3 * sizeof(FLOAT);
 			NeedPatching = TRUE;
 			break;
 		case XTL::X_D3DVSDT_NONE: // 0x02:
 			DbgVshPrintf("D3DVSDT_NONE /* xbox ext. */");
-			// Ignore token
+			// No host element data, so no patching
 			break;
 		default:
 			DbgVshPrintf("Unknown data type for D3DVSD_REG: 0x%02X\n", XboxVertexElementDataType);
@@ -2134,15 +2180,17 @@ private:
 		// On X_D3DVSDT_NONE skip this token
 		if (XboxVertexElementDataType == XTL::X_D3DVSDT_NONE)
 		{
+			// Xbox elements with X_D3DVSDT_NONE have size zero, so there's no need to register those.
+			// Note, that for skip tokens, we DO call VshConvert_RegisterVertexElement with a X_D3DVSDT_NONE!
 			return;
 		}
 
 		// save patching information
-		CxbxVertexShaderStreamElement *pCurrentElement = &(pCurrentVertexShaderStreamInfo->VertexElements[pCurrentVertexShaderStreamInfo->NumberOfVertexElements]);
-		pCurrentElement->XboxType = XboxVertexElementDataType;
-		pCurrentElement->HostByteSize = HostVertexElementByteSize;
-		pCurrentVertexShaderStreamInfo->NumberOfVertexElements++;
-		pCurrentVertexShaderStreamInfo->NeedPatch |= NeedPatching;
+		VshConvert_RegisterVertexElement(
+			XboxVertexElementDataType,
+			NeedPatching ? XboxVertexElementByteSize : HostVertexElementByteSize,
+			HostVertexElementByteSize,
+			NeedPatching);
 
 		pRecompiled->Stream = pCurrentVertexShaderStreamInfo->CurrentStreamNumber;
 		pRecompiled->Offset = pCurrentVertexShaderStreamInfo->HostVertexStride;
@@ -2154,7 +2202,6 @@ private:
 		pRecompiled++;
 
 		pCurrentVertexShaderStreamInfo->HostVertexStride += HostVertexElementByteSize;
-
 	}
 
 	void VshConvertToken_STREAMDATA(DWORD *pXboxToken)

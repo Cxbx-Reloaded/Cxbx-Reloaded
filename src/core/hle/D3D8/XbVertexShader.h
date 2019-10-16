@@ -37,6 +37,7 @@
 typedef struct _CxbxVertexShaderStreamElement
 {
 	UINT XboxType; // The stream element data types (xbox)
+	UINT XboxByteSize; // The stream element data sizes (xbox)
 	UINT HostByteSize; // The stream element data sizes (pc)
 }
 CxbxVertexShaderStreamElement;
@@ -59,7 +60,7 @@ typedef struct _CxbxVertexShaderStreamInfo
 	WORD HostVertexStride;
 	DWORD NumberOfVertexElements;        // Number of the stream data types
 	WORD CurrentStreamNumber;
-	CxbxVertexShaderStreamElement VertexElements[X_VSH_MAX_ATTRIBUTES + 16]; // TODO : Why 16 extrahost additions?)
+	CxbxVertexShaderStreamElement VertexElements[X_VSH_MAX_ATTRIBUTES + 16]; // TODO : Why 16 extra host additions?)
 }
 CxbxVertexShaderStreamInfo;
 
