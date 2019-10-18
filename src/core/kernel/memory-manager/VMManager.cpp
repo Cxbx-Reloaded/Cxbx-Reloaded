@@ -39,6 +39,7 @@
 #include "Logging.h"
 #include "EmuShared.h"
 #include "core\kernel\exports\EmuKrnl.h" // For InitializeListHead(), etc.
+#include "common/util/cliConfig.hpp" // For GetSessionID
 #include <assert.h>
 // Temporary usage for need ReserveAddressRanges func with cxbx.exe's emulation.
 #ifndef CXBXR_EMU
@@ -46,8 +47,22 @@
 #endif
 
 
+constexpr char str_persistent_memory_s[] = "PersistentMemory-s";
 VMManager g_VMManager;
 
+
+void VMManager::Shutdown()
+{
+	// Can't enable this yet. After the memory is deleted, other parts of cxbxr still run before process termination, and attempt to
+	// access the now deleted memory, causing a crash at shutdown
+	//DestroyMemoryRegions();
+	DeleteCriticalSection(&m_CriticalSection);
+
+	if (m_PersistentMemoryHandle != nullptr) {
+		CloseHandle(m_PersistentMemoryHandle);
+		m_PersistentMemoryHandle = nullptr;
+	}
+}
 
 bool VirtualMemoryArea::CanBeMergedWith(const VirtualMemoryArea& next) const
 {
@@ -286,15 +301,29 @@ void VMManager::InitializeSystemAllocations()
 	}
 }
 
-void VMManager::RestorePersistentMemory()
+void VMManager::GetPersistentMemory()
 {
-	HANDLE handle = OpenFileMapping(FILE_MAP_READ, FALSE, "PersistentMemory");
-	if (handle == NULL) {
-		CxbxKrnlCleanup("Couldn't restore persistent memory! OpenFileMapping failed with error 0x%08X", GetLastError());
+	if (m_PersistentMemoryHandle != nullptr) {
+		CxbxKrnlCleanup("Persistent memory is already opened!");
 		return;
 	}
 
-	PersistedMemory* persisted_mem = (PersistedMemory*)MapViewOfFile(handle, FILE_MAP_READ, 0, 0, 0);
+	std::string persisted_mem_sid = str_persistent_memory_s + std::to_string(cli_config::GetSessionID());
+	m_PersistentMemoryHandle = OpenFileMapping(FILE_MAP_READ, FALSE, persisted_mem_sid.c_str());
+	if (m_PersistentMemoryHandle == nullptr) {
+		CxbxKrnlCleanup("Couldn't open persistent memory! OpenFileMapping failed with error 0x%08X", GetLastError());
+		return;
+	}
+}
+
+void VMManager::RestorePersistentMemory()
+{
+	if (m_PersistentMemoryHandle == nullptr) {
+		CxbxKrnlCleanup("Persistent memory is not open!");
+		return;
+	}
+
+	PersistedMemory* persisted_mem = (PersistedMemory*)MapViewOfFile(m_PersistentMemoryHandle, FILE_MAP_READ, 0, 0, 0);
 	if (persisted_mem == nullptr) {
 		CxbxKrnlCleanup("Couldn't restore persistent memory! MapViewOfFile failed with error 0x%08X", GetLastError());
 		return;
@@ -389,9 +418,8 @@ void VMManager::RestorePersistentMemory()
 	}
 
 	UnmapViewOfFile(persisted_mem);
-	CloseHandle(handle);
-
-	ipc_send_gui_update(IPC_UPDATE_GUI::VM_PERSIST_MEM, 0);
+	CloseHandle(m_PersistentMemoryHandle);
+	m_PersistentMemoryHandle = nullptr;
 }
 
 void VMManager::SavePersistentMemory()
@@ -399,7 +427,6 @@ void VMManager::SavePersistentMemory()
 	PersistedMemory* persisted_mem;
 	size_t num_persisted_ptes;
 	std::vector<PMMPTE> cached_persisted_ptes;
-	HANDLE handle;
 	LPVOID addr;
 	PMMPTE PointerPte;
 	PMMPTE EndingPte;
@@ -426,12 +453,13 @@ void VMManager::SavePersistentMemory()
 		PointerPte++;
 	}
 
-	handle = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, num_persisted_ptes * PAGE_SIZE + num_persisted_ptes * 4 * 2 + sizeof(PersistedMemory), "PersistentMemory");
-	if (handle == NULL) {
+	std::string persistent_mem_sid = str_persistent_memory_s + std::to_string(cli_config::GetSessionID());
+	m_PersistentMemoryHandle = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, num_persisted_ptes * PAGE_SIZE + num_persisted_ptes * 4 * 2 + sizeof(PersistedMemory), persistent_mem_sid.c_str());
+	if (m_PersistentMemoryHandle == NULL) {
 		CxbxKrnlCleanup("Couldn't persist memory! CreateFileMapping failed with error 0x%08X", GetLastError());
 		return;
 	}
-	addr = MapViewOfFile(handle, FILE_MAP_READ | FILE_MAP_WRITE, 0, 0, 0);
+	addr = MapViewOfFile(m_PersistentMemoryHandle, FILE_MAP_READ | FILE_MAP_WRITE, 0, 0, 0);
 	if (addr == nullptr) {
 		CxbxKrnlCleanup("Couldn't persist memory! MapViewOfFile failed with error 0x%08X", GetLastError());
 		return;
@@ -460,8 +488,6 @@ void VMManager::SavePersistentMemory()
 	}
 
 	assert(i == num_persisted_ptes);
-
-	ipc_send_gui_update(IPC_UPDATE_GUI::VM_PERSIST_MEM, 1);
 
 	Unlock();
 }

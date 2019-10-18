@@ -194,7 +194,6 @@
 #define ID_GUI_STATUS_LLE_FLAGS         1097
 #define ID_GUI_STATUS_XBOX_LED_COLOUR   1098
 #define ID_GUI_STATUS_LOG_ENABLED       1099
-#define ID_GUI_VM_PERSIST_MEM           1100
 #define IDC_AC_MUTE_ON_UNFOCUS_DISABLE  1101
 #define IDC_XBOX_PORT_0                 1158
 #define IDC_XBOX_PORT_1                 1166

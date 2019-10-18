@@ -100,14 +100,8 @@ class VMManager : public PhysicalMemory
 	public:
 		// constructor
 		VMManager() {};
-		// destructor
-		~VMManager()
-		{
-			// DestroyMemoryRegions is not called when emulation ends, but only when the GUI process ends. This is probably because the emu
-			// process is killed with TerminateProcess and so it doesn't have a chance to perform a cleanup...
-			//DestroyMemoryRegions();
-			DeleteCriticalSection(&m_CriticalSection);
-		}
+		// shutdown routine
+		void Shutdown();
 		// initializes the memory manager to the default configuration
 		void Initialize(int SystemType, int BootFlags, uint32_t blocks_reserved[384]);
 		// retrieves memory statistics
@@ -158,6 +152,8 @@ class VMManager : public PhysicalMemory
 		xboxkrnl::NTSTATUS XbVirtualProtect(VAddr* addr, size_t* Size, DWORD* Protect);
 		// xbox implementation of NtQueryVirtualMemory
 		xboxkrnl::NTSTATUS XbVirtualMemoryStatistics(VAddr addr, xboxkrnl::PMEMORY_BASIC_INFORMATION memory_statistics);
+		// get persistent memory from previous process until RestorePersistentMemory is called
+		void GetPersistentMemory();
 		// saves all persisted memory just before a quick reboot
 		void SavePersistentMemory();
 
@@ -171,6 +167,8 @@ class VMManager : public PhysicalMemory
 		DWORD m_AllocationGranularity = 0;
 		// number of bytes reserved with XBOX_MEM_RESERVE by XbAllocateVirtualMemory
 		size_t m_VirtualMemoryBytesReserved = 0;
+		// handle "shared" persistent memory open for reboot process
+		void* m_PersistentMemoryHandle = nullptr;
 
 		// same as AllocateContiguousMemory, but it allows to allocate beyond m_MaxContiguousPfn
 		VAddr AllocateContiguousMemoryInternal(PFN_COUNT NumberOfPages, PFN LowestPfn, PFN HighestPfn, PFN PfnAlignment, DWORD Perms);
