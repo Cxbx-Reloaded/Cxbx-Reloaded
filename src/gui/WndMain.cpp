@@ -67,33 +67,6 @@
 static int gameLogoWidth, gameLogoHeight;
 static int splashLogoWidth, splashLogoHeight;
 
-static HANDLE hPersistedMemory = NULL;
-static LPVOID PersistedMemoryAddr = nullptr;
-
-void MapPersistedMemory()
-{
-	assert(((hPersistedMemory == NULL) == (PersistedMemoryAddr == nullptr)) && "Persistent memory handle and address must both be unset (or already set)!");
-
-	if (hPersistedMemory == NULL) {
-		hPersistedMemory = OpenFileMapping(FILE_MAP_READ, FALSE, "PersistentMemory");
-		assert(hPersistedMemory != NULL);
-
-		PersistedMemoryAddr = MapViewOfFile(hPersistedMemory, FILE_MAP_READ, 0, 0, 0);
-		assert(PersistedMemoryAddr != nullptr);
-	}
-}
-
-void UnmapPersistedMemory()
-{
-	if (hPersistedMemory != NULL) {
-		UnmapViewOfFile(PersistedMemoryAddr);
-		PersistedMemoryAddr = nullptr;
-
-		CloseHandle(hPersistedMemory);
-		hPersistedMemory = NULL;
-	}
-}
-
 bool g_SaveOnExit = true;
 
 void ClearSymbolCache(const char sStorageLocation[MAX_PATH])
@@ -375,15 +348,6 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
 							g_EmuShared->SetIsEmulating(true); // NOTE: Putting in here raise to low or medium risk due to debugger will launch itself. (Current workaround)
 							g_EmuShared->SetIsReady(true);
-						}
-						break;
-
-						case ID_GUI_VM_PERSIST_MEM: {
-							if (lParam) {
-								MapPersistedMemory();
-							} else {
-								UnmapPersistedMemory();
-							}
 						}
 						break;
 					}
@@ -2285,8 +2249,6 @@ void WndMain::StartEmulation(HWND hwndParent, DebuggerState LocalDebuggerState /
             cli_config::SetValue(cli_config::debug_file, "");
         }
         /* Main process to generate emulation command line end. */
-
-        UnmapPersistedMemory();
 
         if (AttachLocalDebugger) {
 
