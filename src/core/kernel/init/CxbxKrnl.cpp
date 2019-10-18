@@ -784,6 +784,11 @@ void CxbxKrnlEmulate(uint32_t blocks_reserved[384])
 	// Set up the logging variables for the kernel process during initialization.
 	log_sync_config();
 
+	// When a reboot occur, we need to keep persistent memory buffer open before emulation process shutdown.
+	if ((BootFlags & BOOT_QUICK_REBOOT) != 0) {
+		g_VMManager.GetPersistentMemory();
+	}
+
 	if (CxbxKrnl_hEmuParent != NULL) {
 		ipc_send_gui_update(IPC_UPDATE_GUI::KRNL_IS_READY, static_cast<UINT>(GetCurrentProcessId()));
 
@@ -1748,6 +1753,9 @@ void CxbxKrnlShutDown()
 
 	// Shutdown the input device manager
 	g_InputDeviceManager.Shutdown();
+
+	// Shutdown the memory manager
+	g_VMManager.Shutdown();
 
 	CxbxUnlockFilePath();
 
