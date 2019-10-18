@@ -65,10 +65,6 @@ void ipc_send_gui_update(IPC_UPDATE_GUI command, const unsigned int value)
 			cmdParam = ID_GUI_STATUS_KRNL_IS_READY;
 			break;
 
-		case IPC_UPDATE_GUI::VM_PERSIST_MEM:
-			cmdParam = ID_GUI_VM_PERSIST_MEM;
-			break;
-
 		default:
 			cmdParam = 0;
 			break;
