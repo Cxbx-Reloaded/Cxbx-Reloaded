@@ -577,6 +577,26 @@ XBSYSAPI EXPORTNUM(49) xboxkrnl::VOID DECLSPEC_NORETURN NTAPI xboxkrnl::HalRetur
 				if (!CxbxExec(false, nullptr, false)) {
 					CxbxKrnlCleanup("Could not launch %s", XbePath.c_str());
 				}
+
+				// This is a requirement to have shared memory buffers remain alive and transfer to new emulation process.
+				unsigned int retryAttempt = 0;
+				unsigned int curProcID = 0;
+				unsigned int oldProcID = GetCurrentProcessId();
+				while(true) {
+					std::this_thread::sleep_for(std::chrono::milliseconds(100));
+					g_EmuShared->GetKrnlProcID(&curProcID);
+					// Break when new emulation process has take over.
+					if (curProcID != oldProcID) {
+						break;
+					}
+					retryAttempt++;
+					// Terminate after 5 seconds of failure.
+					if (retryAttempt >= (5 * (1000 / 100))) {
+						CxbxShowError("Could not reboot, new emulation process did not take over.");
+						break;
+					}
+				}
+
 			}
 		}
 		break;
