@@ -1648,6 +1648,8 @@ static boolean VshConvertShader(VSH_XBOX_SHADER *pShader,
 				int outRegister = -1;
 				for (int j = hostTemporaryRegisterCount - 1; j >= 0; --j)
 				{
+					// Skip r12, which host uses as a replacement for all Xbox oPos reads & writes (except final write).
+					// (Xbox can read from the write-only oPos register through the special thirteenth r12 register as well.)
                     if (j == 12) continue;
 
 					if(!RUsage[j])
@@ -1740,6 +1742,9 @@ static boolean VshConvertShader(VSH_XBOX_SHADER *pShader,
         }
     }
 
+	// TODO : *IF* r12 is not read after the final write to oPos,
+	// it'd be more efficient to not-replace this oPos write by r12,
+	// so that we don't have to do the following :
     // We append one additional instruction to mov oPos, r12
     VSH_INTERMEDIATE_FORMAT MovIntermediate = {0};
     MovIntermediate.MAC = MAC_MOV;
@@ -1827,7 +1832,7 @@ private:
 	void VshDumpXboxDeclaration(DWORD* pXboxDeclaration)
 	{
 		DbgVshPrintf("DWORD dwVSHDecl[] =\n{\n");
-		bool bHadPreviousStream = false;
+		unsigned iNumberOfVertexStreams = 0;
 		bool bStreamNeedsPatching = false;
 		auto pXboxToken = pXboxDeclaration;
 		while (*pXboxToken != X_D3DVSD_END()) // X_D3DVSD_TOKEN_END 
@@ -1843,12 +1848,12 @@ private:
 				if (*pXboxToken & X_D3DVSD_STREAMTESSMASK) {
 					DbgVshPrintf("\tD3DVSD_STREAM_TESS(),\n");
 				} else {
-					if (bHadPreviousStream) {
+					if (iNumberOfVertexStreams > 0) {
 						DbgVshPrintf("\t// NeedPatching: %d\n", bStreamNeedsPatching);
 					}
 					DWORD StreamNumber = VshGetVertexStream(*pXboxToken);
 					DbgVshPrintf("\tD3DVSD_STREAM(%u),\n", StreamNumber);
-					bHadPreviousStream = true;
+					iNumberOfVertexStreams++;
 					bStreamNeedsPatching = false;
 				}
 				break;
@@ -2001,11 +2006,13 @@ private:
 			pXboxToken += Step;
 		}
 
-		if (bHadPreviousStream) {
+		if (iNumberOfVertexStreams > 0) {
 			DbgVshPrintf("\t// NeedPatching: %d\n", bStreamNeedsPatching);
 		}
 
 		DbgVshPrintf("\tD3DVSD_END()\n};\n");
+
+		DbgVshPrintf("// NbrStreams: %d\n", iNumberOfVertexStreams);
 	}
 
 	void VshConvertToken_NOP(DWORD *pXboxToken)
@@ -2328,7 +2335,7 @@ private:
 			// No host element data, so no patching
 			break;
 		default:
-			//DbgVshPrintf("Unknown data type for D3DVSD_REG: 0x%02X\n", XboxVertexElementDataType);
+			//LOG_TEST_CASE("Unknown data type for D3DVSD_REG: 0x%02X\n", XboxVertexElementDataType);
 			break;
 		}
 
@@ -2406,7 +2413,7 @@ private:
 			break;
 		}
 		default:
-			//DbgVshPrintf("Unknown token type: %d\n", VshGetTokenType(*pXboxToken));
+			//LOG_TEST_CASE("Unknown token type: %d\n", VshGetTokenType(*pXboxToken));
 			break;
 		}
 
@@ -2469,11 +2476,16 @@ public:
 		pVertexShaderInfoToSet = pCxbxVertexShaderInfo;
 		hostTemporaryRegisterCount = g_D3DCaps.VS20Caps.NumTemps;
 		if (hostTemporaryRegisterCount < VSH_MIN_TEMPORARY_REGISTERS) {
-			LOG_TEST_CASE("g_D3DCaps.VS20Caps.NumTemps < 12 (Host minial vertex shader temporary count)");
+			LOG_TEST_CASE("g_D3DCaps.VS20Caps.NumTemps < 12 (Host minimal vertex shader temporary register count)");
 		}
-		if (hostTemporaryRegisterCount < 12) { // TODO : Use a constant (see X_D3DVSD_REG)
-			LOG_TEST_CASE("g_D3DCaps.VS20Caps.NumTemps < 12 (Xbox vertex shader temporary count)");
+		if (hostTemporaryRegisterCount < 12+1) { // TODO : Use a constant (see X_D3DVSD_REG)
+			LOG_TEST_CASE("g_D3DCaps.VS20Caps.NumTemps < 12+1 (Xbox vertex shader temporary register count + r12, reading oPos)");
 		}
+
+		// Note, that some Direct3D 9 drivers return only the required minimum temporary register count of 12,
+		// but regardless, shaders that use temporary register numbers above r12 still seem to work correctly.
+		// So it seems we can't rely on VS20Caps.NumTemps indicating accurately what host hardware supports.
+		// (Although it could be that the driver switches to software vertex processing when a shader exceeds hardware limits.)
 
 		IsFixedFunction = bIsFixedFunction;
 
@@ -2517,8 +2529,6 @@ public:
 		// Test case: King Kong (due to register redefinition)
 		std::sort(Result, pRecompiled, [] (const auto& x, const auto& y)
 			{ return std::tie(x.Stream, x.Method, x.Offset) < std::tie(y.Stream, y.Method, y.Offset); });
-
-		DbgVshPrintf("// NbrStreams: %d\n", pVertexShaderInfoToSet->NumberOfVertexStreams);
 
 		// Free the preprocessed declaration copy
 		free(pXboxVertexDeclarationCopy);
