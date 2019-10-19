@@ -40,6 +40,7 @@
 #include "EmuShared.h"
 #include "core\kernel\exports\EmuKrnl.h" // For InitializeListHead(), etc.
 #include <assert.h>
+#include <fstream>
 // Temporary usage for need ReserveAddressRanges func with cxbx.exe's emulation.
 #ifndef CXBXR_EMU
 #include "common/ReserveAddressRanges.h"
@@ -288,17 +289,37 @@ void VMManager::InitializeSystemAllocations()
 
 void VMManager::RestorePersistentMemory()
 {
-	HANDLE handle = OpenFileMapping(FILE_MAP_READ, FALSE, "PersistentMemory");
-	if (handle == NULL) {
-		CxbxKrnlCleanup("Couldn't restore persistent memory! OpenFileMapping failed with error 0x%08X", GetLastError());
-		return;
+	PersistedMemory* persisted_mem;
+	long long size;
+	MMPTE pte;
+	PFN pfn;
+	PFN_COUNT pages_num;
+	PFN pfn_end;
+	VAddr addr;
+	PMMPTE PointerPte, EndingPte;
+
+	std::ifstream ifs("memory.bin", std::ios_base::in | std::ios_base::binary);
+	if (!ifs.is_open()) {
+		CxbxKrnlCleanup("Couldn't restore persistent memory!");
 	}
 
-	PersistedMemory* persisted_mem = (PersistedMemory*)MapViewOfFile(handle, FILE_MAP_READ, 0, 0, 0);
-	if (persisted_mem == nullptr) {
-		CxbxKrnlCleanup("Couldn't restore persistent memory! MapViewOfFile failed with error 0x%08X", GetLastError());
-		return;
+	ifs.seekg(0, ifs.end);
+	size = ifs.tellg();
+	ifs.seekg(0, ifs.beg);
+	if (!ifs.good() || size <= 0) {
+		ifs.clear();
+		ifs.close();
+		CxbxKrnlCleanup("Failed to determine the size of memory.bin file!");
 	}
+	persisted_mem = (PersistedMemory*)new uint8_t[(size_t)size];
+	ifs.read((char*)persisted_mem, size);
+	if (!ifs.good()) {
+		ifs.clear();
+		ifs.close();
+		delete[] persisted_mem;
+		CxbxKrnlCleanup("Failed to read persistent memory contents from disk!");
+	}
+	ifs.close();
 
 	if (persisted_mem->LaunchFrameAddresses[0] != 0 && IS_PHYSICAL_ADDRESS(persisted_mem->LaunchFrameAddresses[0])) {
 		xboxkrnl::LaunchDataPage = (xboxkrnl::PLAUNCH_DATA_PAGE)persisted_mem->LaunchFrameAddresses[0];
@@ -310,8 +331,6 @@ void VMManager::RestorePersistentMemory()
 		EmuLog(LOG_LEVEL::INFO, "Restored Framebuffer\n");
 	}
 
-	MMPTE pte;
-	PFN pfn;
 	for (unsigned int i = 0; i < persisted_mem->NumOfPtes; i++) {
 		pte.Default = persisted_mem->Data[persisted_mem->NumOfPtes + i];
 		assert(pte.Hardware.Valid != 0 && pte.Hardware.Persist != 0);
@@ -335,7 +354,7 @@ void VMManager::RestorePersistentMemory()
 		}
 	}
 
-	PFN_COUNT pages_num = 1;
+	pages_num = 1;
 	for (unsigned int i = 0; i < persisted_mem->NumOfPtes; i++) {
 		pte.Default = persisted_mem->Data[persisted_mem->NumOfPtes + i];
 		if (pte.Hardware.GuardOrEnd == 0) {
@@ -352,7 +371,6 @@ void VMManager::RestorePersistentMemory()
 
 	if (m_MmLayoutDebug) { m_PhysicalPagesAvailable += 16; m_DebuggerPagesAvailable -= 16; }
 
-	PFN pfn_end;
 	if (m_MmLayoutRetail || m_MmLayoutDebug) {
 		pfn = XBOX_INSTANCE_PHYSICAL_PAGE;
 		pfn_end = XBOX_INSTANCE_PHYSICAL_PAGE + NV2A_INSTANCE_PAGE_COUNT - 1;
@@ -361,9 +379,9 @@ void VMManager::RestorePersistentMemory()
 		pfn = CHIHIRO_INSTANCE_PHYSICAL_PAGE;
 		pfn_end = CHIHIRO_INSTANCE_PHYSICAL_PAGE + NV2A_INSTANCE_PAGE_COUNT - 1;
 	}
-	VAddr addr = (VAddr)CONVERT_PFN_TO_CONTIGUOUS_PHYSICAL(pfn);
-	PMMPTE PointerPte = GetPteAddress(addr);
-	PMMPTE EndingPte = GetPteAddress(CONVERT_PFN_TO_CONTIGUOUS_PHYSICAL(pfn_end));
+	addr = (VAddr)CONVERT_PFN_TO_CONTIGUOUS_PHYSICAL(pfn);
+	PointerPte = GetPteAddress(addr);
+	EndingPte = GetPteAddress(CONVERT_PFN_TO_CONTIGUOUS_PHYSICAL(pfn_end));
 
 	AllocateContiguousMemoryInternal(pfn_end - pfn + 1, pfn, pfn_end, 1, XBOX_PAGE_READWRITE);
 	while (PointerPte <= EndingPte) {
@@ -388,10 +406,7 @@ void VMManager::RestorePersistentMemory()
 		}
 	}
 
-	UnmapViewOfFile(persisted_mem);
-	CloseHandle(handle);
-
-	ipc_send_gui_update(IPC_UPDATE_GUI::VM_PERSIST_MEM, 0);
+	delete[] persisted_mem;
 }
 
 void VMManager::SavePersistentMemory()
@@ -399,8 +414,6 @@ void VMManager::SavePersistentMemory()
 	PersistedMemory* persisted_mem;
 	size_t num_persisted_ptes;
 	std::vector<PMMPTE> cached_persisted_ptes;
-	HANDLE handle;
-	LPVOID addr;
 	PMMPTE PointerPte;
 	PMMPTE EndingPte;
 	int i;
@@ -426,18 +439,12 @@ void VMManager::SavePersistentMemory()
 		PointerPte++;
 	}
 
-	handle = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, num_persisted_ptes * PAGE_SIZE + num_persisted_ptes * 4 * 2 + sizeof(PersistedMemory), "PersistentMemory");
-	if (handle == NULL) {
-		CxbxKrnlCleanup("Couldn't persist memory! CreateFileMapping failed with error 0x%08X", GetLastError());
-		return;
-	}
-	addr = MapViewOfFile(handle, FILE_MAP_READ | FILE_MAP_WRITE, 0, 0, 0);
-	if (addr == nullptr) {
-		CxbxKrnlCleanup("Couldn't persist memory! MapViewOfFile failed with error 0x%08X", GetLastError());
-		return;
+	std::ofstream ofs("memory.bin", std::ios_base::out | std::ios_base::binary | std::ios_base::trunc);
+	if (!ofs.is_open()) {
+		CxbxKrnlCleanup("Couldn't persist memory!");
 	}
 
-	persisted_mem = (PersistedMemory*)addr;
+	persisted_mem = (PersistedMemory*)new uint8_t[num_persisted_ptes * PAGE_SIZE + num_persisted_ptes * 4 * 2 + sizeof(PersistedMemory)]();
 	persisted_mem->NumOfPtes = num_persisted_ptes;
 
 	if (xboxkrnl::LaunchDataPage != xbnullptr) {
@@ -455,13 +462,22 @@ void VMManager::SavePersistentMemory()
 	for (const auto &pte : cached_persisted_ptes) {
 		persisted_mem->Data[i] = GetVAddrMappedByPte(pte);
 		persisted_mem->Data[num_persisted_ptes + i] = pte->Default;
-		memcpy(&persisted_mem->Data[num_persisted_ptes * 2 + i * ONE_KB], (void *)(persisted_mem->Data[i]), PAGE_SIZE);
+		memcpy(&persisted_mem->Data[num_persisted_ptes * 2 + i * ONE_KB], (void*)(persisted_mem->Data[i]), PAGE_SIZE);
 		i++;
 	}
 
 	assert(i == num_persisted_ptes);
 
-	ipc_send_gui_update(IPC_UPDATE_GUI::VM_PERSIST_MEM, 1);
+	ofs.write((const char*)persisted_mem, (std::streamsize)num_persisted_ptes * PAGE_SIZE + (std::streamsize)num_persisted_ptes * 4 * 2 + sizeof(PersistedMemory));
+	if (!ofs.good()) {
+		ofs.clear();
+		ofs.close();
+		delete[] persisted_mem;
+		CxbxKrnlCleanup("Failed to write persistent memory contents to disk!");
+	}
+
+	ofs.close();
+	delete[] persisted_mem;
 
 	Unlock();
 }

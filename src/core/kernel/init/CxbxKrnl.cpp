@@ -1748,6 +1748,9 @@ void CxbxKrnlShutDown()
 	// Shutdown the input device manager
 	g_InputDeviceManager.Shutdown();
 
+	// Shutdown the memory manager
+	g_VMManager.Shutdown();
+
 	CxbxUnlockFilePath();
 
 	if (CxbxKrnl_hEmuParent != NULL) {

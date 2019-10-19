@@ -84,6 +84,7 @@ typedef enum _MemoryRegionType
 	COUNTRegion,
 }MemoryRegionType;
 
+
 /* struct used to save the persistent memory between reboots */
 typedef struct _PersistedMemory
 {
@@ -100,13 +101,13 @@ class VMManager : public PhysicalMemory
 	public:
 		// constructor
 		VMManager() {};
-		// destructor
-		~VMManager()
+		// shutdown routine
+		void Shutdown()
 		{
-			// DestroyMemoryRegions is not called when emulation ends, but only when the GUI process ends. This is probably because the emu
-			// process is killed with TerminateProcess and so it doesn't have a chance to perform a cleanup...
+			// Can't enable this yet. After the memory is deleted, other parts of cxbxr still run before process termination, and attempt to
+			// access the now deleted memory, causing a crash at shutdown
 			//DestroyMemoryRegions();
-			DeleteCriticalSection(&m_CriticalSection);
+			//DeleteCriticalSection(&m_CriticalSection);
 		}
 		// initializes the memory manager to the default configuration
 		void Initialize(int SystemType, int BootFlags, uint32_t blocks_reserved[384]);
