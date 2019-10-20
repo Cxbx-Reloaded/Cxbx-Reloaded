@@ -1813,7 +1813,8 @@ private:
 	{
 		DWORD regNum = (XboxToken & X_D3DVSD_VERTEXREGMASK) >> X_D3DVSD_VERTEXREGSHIFT;
 		if (regNum >= hostTemporaryRegisterCount /*12 for D3D8, D3D9 value depends on host GPU */) {
-			// Lego Star Wars hits this
+			// test-case : BLiNX: the time sweeper
+			// test-case : Lego Star Wars
 			LOG_TEST_CASE("RegNum > NumTemps");
 		}
 		return regNum;

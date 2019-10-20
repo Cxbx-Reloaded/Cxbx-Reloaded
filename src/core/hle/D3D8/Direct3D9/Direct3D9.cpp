@@ -6949,8 +6949,10 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawVertices)
 			if (StartVertex > 0) {
 				LOG_TEST_CASE("X_D3DPT_QUADLIST StartVertex > 0");
 				// test-case : BLiNX: the time sweeper
+				// test-case : Call of Duty: Finest Hour
 				// test-case : Halo - Combat Evolved
 				// test-case : Worms 3D Special Edition
+				// test-case : Tony Hawk's Pro Skater 2X
 				// test-case : XDK sample Lensflare 
 				DrawContext.dwStartVertex = StartVertex; // Breakpoint location for testing. 
 			}
