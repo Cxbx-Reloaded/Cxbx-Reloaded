@@ -126,6 +126,7 @@ size_t GetVerticesInBuffer(DWORD dwOffset, DWORD dwVertexCount, PWORD pIndexData
 
 	// We are an indexed draw, so we have to parse the index buffer
 	// The highest index we see can be used to determine the vertex buffer size
+	// TODO : Should we use WalkIndexBuffer() instead?
 	DWORD highestVertexIndex = 0;
 	for (DWORD i = 0; i < dwVertexCount; i++) {
 		if (highestVertexIndex < pIndexData[i]) {
