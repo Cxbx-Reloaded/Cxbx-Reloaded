@@ -416,6 +416,7 @@ void VMManager::SavePersistentMemory()
 	std::vector<PMMPTE> cached_persisted_ptes;
 	PMMPTE PointerPte;
 	PMMPTE EndingPte;
+	size_t size;
 	int i;
 
 	Lock();
@@ -444,7 +445,8 @@ void VMManager::SavePersistentMemory()
 		CxbxKrnlCleanup("Couldn't persist memory!");
 	}
 
-	persisted_mem = (PersistedMemory*)new uint8_t[num_persisted_ptes * PAGE_SIZE + num_persisted_ptes * 4 * 2 + sizeof(PersistedMemory)]();
+	size = num_persisted_ptes * PAGE_SIZE + num_persisted_ptes * 4 * 2 + sizeof(PersistedMemory);
+	persisted_mem = (PersistedMemory*)new uint8_t[size]();
 	persisted_mem->NumOfPtes = num_persisted_ptes;
 
 	if (xboxkrnl::LaunchDataPage != xbnullptr) {
@@ -468,7 +470,7 @@ void VMManager::SavePersistentMemory()
 
 	assert(i == num_persisted_ptes);
 
-	ofs.write((const char*)persisted_mem, (std::streamsize)num_persisted_ptes * PAGE_SIZE + (std::streamsize)num_persisted_ptes * 4 * 2 + sizeof(PersistedMemory));
+	ofs.write((const char*)persisted_mem, (std::streamsize)size);
 	if (!ofs.good()) {
 		ofs.clear();
 		ofs.close();
