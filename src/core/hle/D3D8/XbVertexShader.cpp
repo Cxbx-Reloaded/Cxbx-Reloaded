@@ -911,6 +911,11 @@ static void VshWriteShader(VSH_XBOX_SHADER *pShader,
 					// We count down from the highest available on the host because Xbox titles don't use values that high, and we read from c192 (one above maximum Xbox c191 constant) and up
 					static int temporaryRegisterBase = g_D3DCaps.VS20Caps.NumTemps - 13;
 					moveConstantsToTemporaries << "mov r" << (temporaryRegisterBase + i) << ", c" << (CXBX_D3DVS_CONSTREG_VERTEXDATA4F_BASE + i) << "\n";
+					// test-case : Blade II (before menu's)
+					// test-case : Namco Museum 50th Anniversary (at boot)
+					// test-case : Pac-Man World 2 (at boot)
+					// test-case : The Simpsons Road Rage (leaving menu's, before entering in-game)
+					// test-case : The SpongeBob SquarePants Movie (before menu's)
 					LOG_TEST_CASE("Shader uses undeclared Vertex Input Registers");
 					i++;
 					continue;
@@ -1824,7 +1829,7 @@ private:
 	{
 		DWORD regNum = (XboxToken & X_D3DVSD_VERTEXREGINMASK) >> X_D3DVSD_VERTEXREGINSHIFT;
 		if (regNum >= hostTemporaryRegisterCount /*12 for D3D8, D3D9 value depends on host GPU */) {
-			// Lego Star Wars hits this
+			// test-case : Lego Star Wars
 			LOG_TEST_CASE("RegNum > NumTemps");
 		}
 		return regNum;

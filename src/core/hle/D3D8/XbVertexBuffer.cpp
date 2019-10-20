@@ -84,7 +84,7 @@ void CxbxPatchedStream::Activate(CxbxDrawContext *pDrawContext, UINT uiStream) c
 		//DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetStreamSource");
 		if (FAILED(hRet)) {
 			CxbxKrnlCleanup("Failed to set the type patched buffer as the new stream source!\n");
-			// TODO : Cartoon hits the above case when the vertex cache size is 0.
+			// TODO : test-case : XDK Cartoon hits the above case when the vertex cache size is 0.
 		}
 	}
 }
@@ -632,6 +632,7 @@ void CxbxVertexBufferConverter::ConvertStream
 				}
 				case XTL::X_D3DVSDT_NONE: { // 0x02:
 					// Test-case : WWE RAW2
+					// Test-case : PetitCopter 
 					LOG_TEST_CASE("X_D3DVSDT_NONE");
 					// No host element data (but Xbox size can be above zero, when used for X_D3DVSD_MASK_SKIP*
 					break;

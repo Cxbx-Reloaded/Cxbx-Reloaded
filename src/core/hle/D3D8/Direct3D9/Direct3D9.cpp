@@ -6714,7 +6714,7 @@ void CxbxDrawPrimitiveUP(CxbxDrawContext &DrawContext)
 
 	VertexBufferConverter.Apply(&DrawContext);
 	if (DrawContext.XboxPrimitiveType == XTL::X_D3DPT_QUADLIST) {
-		// LOG_TEST_CASE("X_D3DPT_QUADLIST"); // X-Marbles and XDK Sample PlayField hits this case
+		// LOG_TEST_CASE("X_D3DPT_QUADLIST"); // test-case : X-Marbles and XDK Sample PlayField
 		// Draw quadlists using a single 'quad-to-triangle mapping' index buffer :
 		INDEX16 *pIndexData = CxbxAssureQuadListIndexBuffer(DrawContext.dwVertexCount);
 		// Convert quad vertex-count to triangle vertex count :
@@ -6945,7 +6945,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawVertices)
 
 		VertexBufferConverter.Apply(&DrawContext);
 		if (DrawContext.XboxPrimitiveType == X_D3DPT_QUADLIST) {
-			// LOG_TEST_CASE("X_D3DPT_QUADLIST"); // ?X-Marbles and XDK Sample (Cartoon, ?maybe PlayField?) hits this case
+			// LOG_TEST_CASE("X_D3DPT_QUADLIST"); // test-case : ?X-Marbles and XDK Sample (Cartoon, ?maybe PlayField?)
 			if (StartVertex > 0) {
 				LOG_TEST_CASE("X_D3DPT_QUADLIST StartVertex > 0");
 				// test-case : BLiNX: the time sweeper

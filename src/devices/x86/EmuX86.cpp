@@ -3282,7 +3282,7 @@ bool EmuX86_DecodeException(LPEXCEPTION_POINTERS e)
 				// We do not emulate processor specific registers just yet
 				// Some titles attempt to manually set the TSC via this instruction
 				// This needs fixing eventually, but should be acceptible to ignore for now!
-				// Chase: Hollywood Stunt Driver hits this
+				// test-case : Chase: Hollywood Stunt Driver
 				EmuLog(LOG_LEVEL::WARNING, "WRMSR instruction ignored");
 				break;
 			case I_XOR:
