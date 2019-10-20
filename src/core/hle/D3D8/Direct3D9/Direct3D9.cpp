@@ -6668,10 +6668,9 @@ void CxbxDrawIndexed(CxbxDrawContext &DrawContext)
 	INDEX16 LowIndex, HighIndex;
 	WalkIndexBuffer(LowIndex, HighIndex, &(DrawContext.pIndexData[/*DrawContext.dwStartVertex=*/0]), DrawContext.dwVertexCount);
 
-	D3DPRIMITIVETYPE PrimitiveType = bQuadListAsTriangleList ? D3DPT_TRIANGLELIST : EmuXB2PC_D3DPrimitiveType(DrawContext.XboxPrimitiveType);
 	UINT primCount = (bQuadListAsTriangleList ? TRIANGLES_PER_QUAD : 1) * DrawContext.dwHostPrimitiveCount;
 	HRESULT hRet = g_pD3DDevice->DrawIndexedPrimitive(
-		PrimitiveType,
+		/* PrimitiveType = */EmuXB2PC_D3DPrimitiveType(DrawContext.XboxPrimitiveType),
 		/* BaseVertexIndex = */DrawContext.dwIndexBase,
 		/* MinVertexIndex = */LowIndex,
 		/* NumVertices = */(HighIndex - LowIndex) + 1,//using index vertex span here.  // TODO : g_EmuD3DActiveStreamSizes[0], // Note : ATI drivers are especially picky about this -
@@ -7166,10 +7165,9 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVerticesUP)
 			pHostIndexData = (INDEX16 *)pIndexData;
 		}
 
-		D3DPRIMITIVETYPE PrimitiveType = bQuadListAsTriangleList ? D3DPT_TRIANGLELIST : EmuXB2PC_D3DPrimitiveType(DrawContext.XboxPrimitiveType);
 		UINT PrimitiveCount = (bQuadListAsTriangleList ? TRIANGLES_PER_QUAD : 1) * DrawContext.dwHostPrimitiveCount;
 		HRESULT hRet = g_pD3DDevice->DrawIndexedPrimitiveUP(
-			PrimitiveType,
+			/*PrimitiveType=*/EmuXB2PC_D3DPrimitiveType(DrawContext.XboxPrimitiveType),
 			/*MinVertexIndex=*/LowIndex,
 			/*NumVertexIndices=*/(HighIndex - LowIndex) + 1, //this shall be Vertex Spans DrawContext.dwVertexCount,
 			PrimitiveCount,
@@ -7184,7 +7182,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVerticesUP)
 			CxbxReleaseQuadListIndexBuffer(pHostIndexData);
 		}
 
-		g_dwPrimPerFrame += DrawContext.dwHostPrimitiveCount;
+		g_dwPrimPerFrame += PrimitiveCount;
 		if (DrawContext.XboxPrimitiveType == X_D3DPT_LINELOOP) {
 			// Close line-loops using a final single line, drawn from the end to the start vertex
 			LOG_TEST_CASE("X_D3DPT_LINELOOP"); // TODO : Which titles reach this case?
