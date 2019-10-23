@@ -6678,6 +6678,11 @@ void CxbxDrawIndexed(CxbxDrawContext &DrawContext)
 
 	bool bConvertQuadListToTriangleList = (DrawContext.XboxPrimitiveType == XTL::X_D3DPT_QUADLIST);
 	ConvertedIndexBuffer& CacheEntry = CxbxUpdateActiveIndexBuffer(DrawContext.pXboxIndexData, DrawContext.dwVertexCount, bConvertQuadListToTriangleList);
+
+	// Set LowIndex and HighIndex *before* VerticesInBuffer gets derived
+	DrawContext.LowIndex = CacheEntry.LowIndex;
+	DrawContext.HighIndex = CacheEntry.HighIndex;
+
 	VertexBufferConverter.Apply(&DrawContext); // Sets dwHostPrimitiveCount
 
 	INT BaseVertexIndex = DrawContext.dwBaseVertexIndex;
@@ -7119,8 +7124,8 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVertices)
 
 		DrawContext.XboxPrimitiveType = PrimitiveType;
 		DrawContext.dwVertexCount = VertexCount;
-		DrawContext.dwBaseVertexIndex = g_XboxBaseVertexIndex; // Used by GetVerticesInBuffer
-		DrawContext.pXboxIndexData = pIndexData; // Used by GetVerticesInBuffer
+		DrawContext.dwBaseVertexIndex = g_XboxBaseVertexIndex; // Used to derive VerticesInBuffer
+		DrawContext.pXboxIndexData = pIndexData; // Used to derive VerticesInBuffer
 
 		// Test case JSRF draws all geometry through this function (only sparks are drawn via another method)
 		// using X_D3DPT_TRIANGLELIST and X_D3DPT_TRIANGLESTRIP PrimitiveType
@@ -7175,14 +7180,13 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVerticesUP)
 		DrawContext.dwVertexCount = VertexCount;
 		DrawContext.pXboxVertexStreamZeroData = pVertexStreamZeroData;
 		DrawContext.uiXboxVertexStreamZeroStride = VertexStreamZeroStride;
-		DrawContext.pXboxIndexData = pXboxIndexData; // Used by GetVerticesInBuffer
+		DrawContext.pXboxIndexData = pXboxIndexData; // Used to derive VerticesInBuffer
 		// TODO : Is g_XboxBaseVertexIndex ignored by this call? // DrawContext.dwBaseVertexIndex = 0;
 
-		VertexBufferConverter.Apply(&DrawContext);
+		// Determine LowIndex and HighIndex *before* VerticesInBuffer gets derived
+		WalkIndexBuffer(DrawContext.LowIndex, DrawContext.HighIndex, pXboxIndexData, VertexCount);
 
-		// Walk through the index buffer
-		INDEX16 LowIndex, HighIndex;
-		WalkIndexBuffer(LowIndex, HighIndex, pXboxIndexData, DrawContext.dwVertexCount);
+		VertexBufferConverter.Apply(&DrawContext);
 
 		INDEX16* pHostIndexData;
 		UINT PrimitiveCount = DrawContext.dwHostPrimitiveCount;
@@ -7204,8 +7208,8 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVerticesUP)
 
 		HRESULT hRet = g_pD3DDevice->DrawIndexedPrimitiveUP(
 			/*PrimitiveType=*/EmuXB2PC_D3DPrimitiveType(DrawContext.XboxPrimitiveType),
-			/*MinVertexIndex=*/LowIndex,
-			/*NumVertexIndices=*/(HighIndex - LowIndex) + 1,
+			/*MinVertexIndex=*/DrawContext.LowIndex,
+			/*NumVertexIndices=*/(DrawContext.HighIndex - DrawContext.LowIndex) + 1,
 			PrimitiveCount,
 			pHostIndexData,
 			/*IndexDataFormat=*/D3DFMT_INDEX16,
@@ -7223,8 +7227,8 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVerticesUP)
 			// Close line-loops using a final single line, drawn from the end to the start vertex
 			LOG_TEST_CASE("X_D3DPT_LINELOOP"); // TODO : Which titles reach this case?
 			// Read the end and start index from the supplied index data
-			LowIndex = pXboxIndexData[0];
-			HighIndex = pXboxIndexData[DrawContext.dwHostPrimitiveCount];
+			INDEX16 LowIndex = pXboxIndexData[0];
+			INDEX16 HighIndex = pXboxIndexData[DrawContext.dwHostPrimitiveCount];
 			// If needed, swap so highest index is higher than lowest (duh)
 			if (HighIndex < LowIndex) {
 				std::swap(HighIndex, LowIndex);

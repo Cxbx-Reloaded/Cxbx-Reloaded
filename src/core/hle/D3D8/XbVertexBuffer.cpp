@@ -32,6 +32,7 @@
 #include "common\util\hasher.h"
 #include "core\kernel\support\Emu.h"
 #include "core\hle\D3D8\Direct3D9\Direct3D9.h" // For g_pD3DDevice
+#include "core\hle\D3D8\Direct3D9\WalkIndexBuffer.h" // for WalkIndexBuffer
 #include "core\hle\D3D8\ResourceTracker.h"
 #include "core\hle\D3D8\XbPushBuffer.h" // for DxbxFVF_GetNumberOfTextureCoordinates
 #include "core\hle\D3D8\XbVertexBuffer.h"
@@ -113,33 +114,6 @@ CxbxVertexBufferConverter::CxbxVertexBufferConverter()
 {
     m_uiNbrStreams = 0;
     m_pVertexShaderInfo = nullptr;
-}
-
-size_t GetVerticesInBuffer(DWORD dwOffset, DWORD dwVertexCount, PWORD pIndexData, DWORD dwBaseVertexIndex)
-{	
-	// If we are drawing from an offset, we know that the vertex count must have offset vertices
-	// before the first drawn vertices
-	dwVertexCount += dwOffset;
-	// When index data isn't given, there's nothing more to do
-	if (pIndexData == xbnullptr) {
-		// just return the vertex count we've arrived upon thus far
-		return dwVertexCount;
-	}
-
-	// We are an indexed draw, so we have to parse the index buffer
-	// The highest index we see can be used to determine the vertex buffer size
-	// TODO : Instead of this, use WalkIndexBuffer() output, which should be available for indexed draws...
-	unsigned HighIndex = 0;
-	for (unsigned i = dwOffset; i < dwVertexCount; i++) {
-		if (HighIndex < pIndexData[i]) {
-			HighIndex = pIndexData[i];
-		}
-	}
-
-	// Convert highest index (including the base offset) into a count
-	DWORD dwHighestVertexCount = dwBaseVertexIndex + HighIndex + 1;
-	// Return the biggest vertex count that can be reached
-	return std::max(dwVertexCount, dwHighestVertexCount);
 }
 
 int CountActiveD3DStreams()
@@ -790,12 +764,23 @@ void CxbxVertexBufferConverter::Apply(CxbxDrawContext *pDrawContext)
         m_pVertexShaderInfo = &(GetCxbxVertexShader(g_Xbox_VertexShader_Handle)->VertexShaderInfo);
     }
 
-	pDrawContext->VerticesInBuffer = GetVerticesInBuffer(
-		pDrawContext->dwStartVertex,
-		pDrawContext->dwVertexCount,
-		pDrawContext->pXboxIndexData, 
-		pDrawContext->dwBaseVertexIndex
-	);
+	// If we are drawing from an offset, we know that the vertex count must have
+	// 'offset' vertices before the first drawn vertices
+	pDrawContext->VerticesInBuffer = pDrawContext->dwStartVertex + pDrawContext->dwVertexCount;
+	// Whhen this is an indexed draw, take the index buffer into account
+	if (pDrawContext->pXboxIndexData) {
+		if (pDrawContext->HighIndex == 0) {
+			// TODO : Instead of calling WalkIndexBuffer here, set LowIndex and HighIndex
+			// in all callers that end up here (since they might be able to avoid the call)
+			LOG_TEST_CASE("HighIndex == 0"); // TODO : If this is never hit, replace entire block by assert(pDrawContext->HighIndex > 0);
+			WalkIndexBuffer(pDrawContext->LowIndex, pDrawContext->HighIndex, pDrawContext->pXboxIndexData, pDrawContext->dwVertexCount);
+		}
+		// Convert highest index (including the base offset) into a count
+		DWORD dwHighestVertexCount = pDrawContext->dwBaseVertexIndex + pDrawContext->HighIndex + 1;
+		// Use the biggest vertex count that can be reached
+		if (pDrawContext->VerticesInBuffer < dwHighestVertexCount)
+			pDrawContext->VerticesInBuffer = dwHighestVertexCount;
+	}
 
     // Get the number of streams
     m_uiNbrStreams = GetNbrStreams(pDrawContext);

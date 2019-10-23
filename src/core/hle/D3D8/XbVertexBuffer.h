@@ -38,7 +38,8 @@ typedef struct _CxbxDrawContext
     IN     DWORD                 dwStartVertex; // Only D3DDevice_DrawVertices sets this (potentially higher than default 0)
 	IN	   PWORD				 pXboxIndexData;
 	IN	   DWORD				 dwBaseVertexIndex;
-	IN	   size_t				 VerticesInBuffer;
+	IN	   INDEX16				 LowIndex, HighIndex; // Set when pXboxIndexData is set
+	IN	   size_t				 VerticesInBuffer; // Set by CxbxVertexBufferConverter::Apply
     // Data if Draw...UP call
     IN PVOID                     pXboxVertexStreamZeroData;
     IN UINT                      uiXboxVertexStreamZeroStride;
