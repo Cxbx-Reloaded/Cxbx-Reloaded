@@ -36,8 +36,8 @@ typedef struct _CxbxDrawContext
     IN     XTL::X_D3DPRIMITIVETYPE    XboxPrimitiveType;
     IN     DWORD                 dwVertexCount;
     IN     DWORD                 dwStartVertex; // Only D3DDevice_DrawVertices sets this (potentially higher than default 0)
-	IN	   PWORD				 pIndexData;
-	IN	   DWORD				 dwIndexBase;
+	IN	   PWORD				 pXboxIndexData;
+	IN	   DWORD				 dwBaseVertexIndex;
 	IN	   size_t				 VerticesInBuffer;
     // Data if Draw...UP call
     IN PVOID                     pXboxVertexStreamZeroData;
