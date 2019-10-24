@@ -62,6 +62,8 @@ namespace xboxkrnl
 #include "common\input\SdlJoystick.h"
 #include "common/util/strConverter.hpp" // for utf8_to_utf16
 
+#include "common/EmuEEPROM.h" // For Video Settings
+
 #include <assert.h>
 #include <process.h>
 #include <clocale>
@@ -4869,7 +4871,7 @@ DWORD WINAPI XTL::EMUPATCH(D3DDevice_Swap)
 		D3DSURFACE_DESC BackBufferDesc;
 		pCurrentHostBackBuffer->GetDesc(&BackBufferDesc);
 
-        // TODO: Implement a hot-key to change the filter?
+		// TODO: Implement a hot-key to change the filter?
         // Note: LoadSurfaceFilter Must be D3DTEXF_NONE, D3DTEXF_POINT or D3DTEXF_LINEAR
         // Before StretchRects we used D3DX_FILTER_POINT here, but that gave jagged edges in Dashboard.
         // Dxbx note : D3DX_FILTER_LINEAR gives a smoother image, but 'bleeds' across borders
@@ -4880,12 +4882,61 @@ DWORD WINAPI XTL::EMUPATCH(D3DDevice_Swap)
 		auto pXboxBackBufferHostSurface = GetHostSurface(g_XboxBackBufferSurface, D3DUSAGE_RENDERTARGET);
 		if (pXboxBackBufferHostSurface) {
 			// Blit Xbox BackBuffer to host BackBuffer
-			// TODO: Respect aspect ratio
+			
+			D3DSURFACE_DESC XboxBackBufferDesc;
+			pXboxBackBufferHostSurface->GetDesc(&XboxBackBufferDesc);
+
+			RECT destRect = { 0 };
+			RECT sourRect = { 0 };
+
+			SetRect(&sourRect, 0, 0, XboxBackBufferDesc.Width, XboxBackBufferDesc.Height);
+			SetRect(&destRect, 0, 0, BackBufferDesc.Width, BackBufferDesc.Height);
+
+			// Respect aspect ratio
+			auto srcAr = (float)sourRect.right / sourRect.bottom;
+			auto dstAr = (float)destRect.right / destRect.bottom;
+
+			auto videoFlags = EEPROM->UserSettings.VideoFlags;
+
+			bool changeAr = false;
+
+			switch (videoFlags & (XC_VIDEO_FLAGS_LETTERBOX | XC_VIDEO_FLAGS_WIDESCREEN))
+			{
+			case XC_VIDEO_FLAGS_WIDESCREEN:
+				// 16:9 aspect ratio
+				srcAr = 16.0f / 9;
+				break;
+			case XC_VIDEO_FLAGS_LETTERBOX:
+				// 16:9 aspect ratio video in a 4:3 framebuffer
+			default: // Normal
+				// 4:3 aspect ratio
+				srcAr = 4.0f / 3;
+				break;
+			}
+
+			if (srcAr != dstAr) {
+				if (srcAr > dstAr) {
+					// Source is widescreen and destination is not
+					// Keep width, recalc height
+					int dstH = (destRect.right - destRect.left) / srcAr;
+					int top = ((destRect.bottom - destRect.top) - dstH) / 2;
+					SetRect(&destRect, destRect.left, top, destRect.right, top + dstH);
+				} else {
+					// Destination is widescreen and source is not
+					// Keep height, recalc width
+					int dstW = (destRect.bottom - destRect.top) * srcAr;
+					int left = ((destRect.right - destRect.left) - dstW) / 2;
+					SetRect(&destRect, left, destRect.top, left + dstW, destRect.bottom);
+				}
+			}
+
+			g_pD3DDevice->ColorFill(pCurrentHostBackBuffer, nullptr, D3DCOLOR_COLORVALUE(0, 0, 0, 1));
+
             hRet = g_pD3DDevice->StretchRect(
                 /* pSourceSurface = */ pXboxBackBufferHostSurface,
-                /* pSourceRect = */ nullptr,
+                /* pSourceRect = */ &sourRect,
                 /* pDestSurface = */ pCurrentHostBackBuffer,
-                /* pDestRect = */ nullptr,
+                /* pDestRect = */ &destRect,
                 /* Filter = */ LoadSurfaceFilter
             );
 		
@@ -5016,7 +5067,7 @@ DWORD WINAPI XTL::EMUPATCH(D3DDevice_Swap)
                 if (hRet != D3D_OK) {
                     EmuLog(LOG_LEVEL::WARNING, "Couldn't load Xbox overlay to host surface : %X", hRet);
                 } else {
-                    // TODO: Respect aspect ratio
+					// TODO: Respect Aspect Ratio
                     hRet = g_pD3DDevice->StretchRect(
                         /* pSourceSurface = */ pTemporaryOverlaySurface,
                         /* pSourceRect = */ &EmuSourRect,
