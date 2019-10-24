@@ -767,8 +767,9 @@ void CxbxVertexBufferConverter::Apply(CxbxDrawContext *pDrawContext)
 	// If we are drawing from an offset, we know that the vertex count must have
 	// 'offset' vertices before the first drawn vertices
 	pDrawContext->VerticesInBuffer = pDrawContext->dwStartVertex + pDrawContext->dwVertexCount;
-	// Whhen this is an indexed draw, take the index buffer into account
+	// When this is an indexed draw, take the index buffer into account
 	if (pDrawContext->pXboxIndexData) {
+		// Is the highest index in this buffer not set yet?
 		if (pDrawContext->HighIndex == 0) {
 			// TODO : Instead of calling WalkIndexBuffer here, set LowIndex and HighIndex
 			// in all callers that end up here (since they might be able to avoid the call)

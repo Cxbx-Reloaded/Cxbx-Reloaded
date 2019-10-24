@@ -161,10 +161,10 @@ static CxbxVertexBufferConverter VertexBufferConverter = {};
 static IDirect3DIndexBuffer        *g_pClosingLineLoopHostIndexBuffer = nullptr;
 
 static IDirect3DIndexBuffer        *g_pQuadToTriangleHostIndexBuffer = nullptr;
-static UINT                         g_QuadToTriangleHostIndexBuffer_Size = 0; // = NrOfQuadVertices
+static UINT                         g_QuadToTriangleHostIndexBuffer_Size = 0; // = NrOfQuadIndices
 
 static INDEX16                     *g_pQuadToTriangleIndexData = nullptr;
-static UINT                         g_QuadToTriangleIndexData_Size = 0; // = NrOfQuadVertices
+static UINT                         g_QuadToTriangleIndexData_Size = 0; // = NrOfQuadIndices
 
 static IDirect3DSurface            *g_DefaultHostDepthBufferSuface = NULL;
 XTL::X_D3DSurface                  *g_XboxBackBufferSurface = NULL;
@@ -2469,8 +2469,18 @@ constexpr UINT QuadToTriangleVertexCount(UINT NrOfQuadVertices)
 bool bUseClockWiseWindingOrder = true; // TODO : Should this be fetched from X_D3DRS_FRONTFACE (or X_D3DRS_CULLMODE)?
 
 // TODO : Move to own file
+// This function convertes quad to triangle indices.
+// When pXboxQuadIndexData is set, original quad indices are read from this buffer
+// (this use-case is for when an indexed quad draw is to be emulated).
+// When pXboxQuadIndexData is null, quad-emulating indices are generated
+// (this use-case is for when a non-indexed quad draw is to be emulated).
+// The number of indices to generate is specified through uNrOfTriangleIndices.
+// Resulting triangle indices are written to pTriangleIndexData, which must
+// be pre-allocated to fit the output data.
+// (Note, this function is marked 'constexpr' to allow the compiler to optimize
+// the case when pXboxQuadIndexData is null)
 constexpr void CxbxConvertQuadListToTriangleListIndices(
-	INDEX16* pQuadIndexData,
+	INDEX16* pXboxQuadIndexData,
 	unsigned uNrOfTriangleIndices,
 	INDEX16* pTriangleIndexData)
 {
@@ -2482,25 +2492,25 @@ constexpr void CxbxConvertQuadListToTriangleListIndices(
 	while (i + (VERTICES_PER_TRIANGLE * TRIANGLES_PER_QUAD) <= uNrOfTriangleIndices) {
 		if (bUseClockWiseWindingOrder) {
 			// ABCD becomes ABC+CDA, so this is triangle 1 :
-			pTriangleIndexData[i + 0] = pQuadIndexData ? pQuadIndexData[j + 0] : j + 0; // A
-			pTriangleIndexData[i + 1] = pQuadIndexData ? pQuadIndexData[j + 1] : j + 1; // B
-			pTriangleIndexData[i + 2] = pQuadIndexData ? pQuadIndexData[j + 2] : j + 2; // C
+			pTriangleIndexData[i + 0] = pXboxQuadIndexData ? pXboxQuadIndexData[j + 0] : j + 0; // A
+			pTriangleIndexData[i + 1] = pXboxQuadIndexData ? pXboxQuadIndexData[j + 1] : j + 1; // B
+			pTriangleIndexData[i + 2] = pXboxQuadIndexData ? pXboxQuadIndexData[j + 2] : j + 2; // C
 			i += VERTICES_PER_TRIANGLE;
 			// And this is triangle 2 :
-			pTriangleIndexData[i + 0] = pQuadIndexData ? pQuadIndexData[j + 2] : j + 2; // C
-			pTriangleIndexData[i + 1] = pQuadIndexData ? pQuadIndexData[j + 3] : j + 3; // D
-			pTriangleIndexData[i + 2] = pQuadIndexData ? pQuadIndexData[j + 0] : j + 0; // A
+			pTriangleIndexData[i + 0] = pXboxQuadIndexData ? pXboxQuadIndexData[j + 2] : j + 2; // C
+			pTriangleIndexData[i + 1] = pXboxQuadIndexData ? pXboxQuadIndexData[j + 3] : j + 3; // D
+			pTriangleIndexData[i + 2] = pXboxQuadIndexData ? pXboxQuadIndexData[j + 0] : j + 0; // A
 			i += VERTICES_PER_TRIANGLE;
 		} else {
 			// ABCD becomes ADC+CBA, so this is triangle 1 :
-			pTriangleIndexData[i + 0] = pQuadIndexData ? pQuadIndexData[j + 0] : j + 0; // A
-			pTriangleIndexData[i + 1] = pQuadIndexData ? pQuadIndexData[j + 3] : j + 3; // D
-			pTriangleIndexData[i + 2] = pQuadIndexData ? pQuadIndexData[j + 2] : j + 2; // C
+			pTriangleIndexData[i + 0] = pXboxQuadIndexData ? pXboxQuadIndexData[j + 0] : j + 0; // A
+			pTriangleIndexData[i + 1] = pXboxQuadIndexData ? pXboxQuadIndexData[j + 3] : j + 3; // D
+			pTriangleIndexData[i + 2] = pXboxQuadIndexData ? pXboxQuadIndexData[j + 2] : j + 2; // C
 			i += VERTICES_PER_TRIANGLE;
 			// And this is triangle 2 :
-			pTriangleIndexData[i + 0] = pQuadIndexData ? pQuadIndexData[j + 2] : j + 2; // C
-			pTriangleIndexData[i + 1] = pQuadIndexData ? pQuadIndexData[j + 1] : j + 1; // B
-			pTriangleIndexData[i + 2] = pQuadIndexData ? pQuadIndexData[j + 0] : j + 0; // A
+			pTriangleIndexData[i + 0] = pXboxQuadIndexData ? pXboxQuadIndexData[j + 2] : j + 2; // C
+			pTriangleIndexData[i + 1] = pXboxQuadIndexData ? pXboxQuadIndexData[j + 1] : j + 1; // B
+			pTriangleIndexData[i + 2] = pXboxQuadIndexData ? pXboxQuadIndexData[j + 0] : j + 0; // A
 			i += VERTICES_PER_TRIANGLE;
 		}
 
@@ -2510,11 +2520,20 @@ constexpr void CxbxConvertQuadListToTriangleListIndices(
 }
 
 // TODO : Move to own file
-INDEX16* CxbxCreateQuadListToTriangleListIndexData(INDEX16* pQuadIndexData, unsigned QuadVertexCount)
+// Called from EMUPATCH(D3DDevice_DrawIndexedVerticesUP) when PrimitiveType == X_D3DPT_QUADLIST.
+// This API receives the number of vertices to draw (VertexCount), the index data that references
+// vertices and a single stream of vertex data. The number of vertices to draw indicates the number
+// of indices that are going to be fetched. The vertex data is referenced up to the highest index
+// number present in the index data.
+// To emulate drawing indexed quads, g_pD3DDevice->DrawIndexedPrimitiveUP is called on host,
+// whereby the quad indices are converted to triangle indices. This implies for every four
+// quad indices, we have to generate (two times three is) six triangle indices. (Note, that
+// vertex data undergoes it's own Xbox-to-host conversion, independent from these indices.)
+INDEX16* CxbxCreateQuadListToTriangleListIndexData(INDEX16* pXboxQuadIndexData, unsigned QuadVertexCount)
 {
-	UINT NrOfTriangleVertices = QuadToTriangleVertexCount(QuadVertexCount);
-	INDEX16* pQuadToTriangleIndexBuffer = (INDEX16*)malloc(NrOfTriangleVertices * sizeof(INDEX16));
-	CxbxConvertQuadListToTriangleListIndices(pQuadIndexData, NrOfTriangleVertices, pQuadToTriangleIndexBuffer);
+	UINT NrOfTriangleIndices = QuadToTriangleVertexCount(QuadVertexCount);
+	INDEX16* pQuadToTriangleIndexBuffer = (INDEX16*)malloc(NrOfTriangleIndices * sizeof(INDEX16));
+	CxbxConvertQuadListToTriangleListIndices(pXboxQuadIndexData, NrOfTriangleIndices, pQuadToTriangleIndexBuffer);
 	return pQuadToTriangleIndexBuffer;
 }
 
@@ -6518,35 +6537,46 @@ constexpr unsigned int IndicesPerPage = PAGE_SIZE / sizeof(INDEX16);
 constexpr unsigned int InputQuadsPerPage = ((IndicesPerPage * VERTICES_PER_QUAD) / VERTICES_PER_TRIANGLE) / TRIANGLES_PER_QUAD;
 
 // TODO : Move to own file
-INDEX16 *CxbxAssureQuadListIndexData(UINT NrOfQuadVertices)
+// Called by CxbxDrawPrimitiveUP (indirectly by D3DDevice_DrawVerticesUP,
+// EmuExecutePushBufferRaw and EmuFlushIVB) when PrimitiveType == X_D3DPT_QUADLIST.
+// Emulated by calling g_pD3DDevice->DrawIndexedPrimitiveUP with index data that maps
+// quads to triangles. This function creates the index buffer that is needed for this;
+// For every quad that must be drawn, we generate indices for two triangles.
+// Note, that the resulting index data can be re-used for later comparable draw calls
+// and only needs to grow when  current length doesn't suffices for a larger draw.
+INDEX16 *CxbxAssureQuadListIndexData(UINT NrOfQuadIndices)
 {
-	if (g_QuadToTriangleIndexData_Size < NrOfQuadVertices)
+	if (g_QuadToTriangleIndexData_Size < NrOfQuadIndices)
 	{
-		g_QuadToTriangleIndexData_Size = RoundUp(NrOfQuadVertices, InputQuadsPerPage);
-		UINT NrOfTriangleVertices = QuadToTriangleVertexCount(g_QuadToTriangleIndexData_Size);
+		g_QuadToTriangleIndexData_Size = RoundUp(NrOfQuadIndices, InputQuadsPerPage);
+		UINT NrOfTriangleIndices = QuadToTriangleVertexCount(g_QuadToTriangleIndexData_Size);
 		if (g_pQuadToTriangleIndexData != nullptr) {
 			free(g_pQuadToTriangleIndexData);
 		}
 
-		g_pQuadToTriangleIndexData = (INDEX16 *)malloc(NrOfTriangleVertices * sizeof(INDEX16));
-		CxbxConvertQuadListToTriangleListIndices(nullptr, NrOfTriangleVertices, g_pQuadToTriangleIndexData);
+		g_pQuadToTriangleIndexData = (INDEX16 *)malloc(NrOfTriangleIndices * sizeof(INDEX16));
+		CxbxConvertQuadListToTriangleListIndices(nullptr, NrOfTriangleIndices, g_pQuadToTriangleIndexData);
 	}
 
 	return g_pQuadToTriangleIndexData;
 }
 
 // TODO : Move to own file
-void CxbxAssureQuadListD3DIndexBuffer(UINT NrOfQuadVertices)
+// Makes a D3D IndexBuffer active that contains quadlist-to-trianglelist indices.
+// Uses CxbxAssureQuadListIndexData to populate the index buffer with.
+// Note, that the resulting index buffer can be re-used for later comparable draw calls
+// and only needs to grow when current length doesn't sufficesw for a larger draw.
+void CxbxAssureQuadListD3DIndexBuffer(UINT NrOfQuadIndices)
 {
 	LOG_INIT // Allows use of DEBUG_D3DRESULT
 
 	HRESULT hRet;
 
-	if (g_QuadToTriangleHostIndexBuffer_Size < NrOfQuadVertices)
+	if (g_QuadToTriangleHostIndexBuffer_Size < NrOfQuadIndices)
 	{
 		// Round the number of indices up so we'll allocate whole pages
-		g_QuadToTriangleHostIndexBuffer_Size = RoundUp(NrOfQuadVertices, InputQuadsPerPage);
-		UINT NrOfTriangleVertices = QuadToTriangleVertexCount(g_QuadToTriangleHostIndexBuffer_Size); // 4 > 6
+		g_QuadToTriangleHostIndexBuffer_Size = RoundUp(NrOfQuadIndices, InputQuadsPerPage);
+		UINT NrOfTriangleIndices = QuadToTriangleVertexCount(g_QuadToTriangleHostIndexBuffer_Size); // 4 > 6
 
 		// Create a new native index buffer of the above determined size :
 		if (g_pQuadToTriangleHostIndexBuffer != nullptr) {
@@ -6555,7 +6585,7 @@ void CxbxAssureQuadListD3DIndexBuffer(UINT NrOfQuadVertices)
 		}
 
 		// Create a new native index buffer of the above determined size :
-		g_pQuadToTriangleHostIndexBuffer = CxbxCreateIndexBuffer(NrOfTriangleVertices);
+		g_pQuadToTriangleHostIndexBuffer = CxbxCreateIndexBuffer(NrOfTriangleIndices);
 		if (g_pQuadToTriangleHostIndexBuffer == nullptr)
 			CxbxKrnlCleanup("CxbxAssureQuadListD3DIndexBuffer : IndexBuffer Create Failed!");
 
@@ -6566,7 +6596,7 @@ void CxbxAssureQuadListD3DIndexBuffer(UINT NrOfQuadVertices)
 		if (pHostIndexBufferData == nullptr)
 			CxbxKrnlCleanup("CxbxAssureQuadListD3DIndexBuffer : Could not lock index buffer!");
 
-		CxbxConvertQuadListToTriangleListIndices(nullptr, NrOfTriangleVertices, pHostIndexBufferData);
+		memcpy(pHostIndexBufferData, CxbxAssureQuadListIndexData(NrOfTriangleIndices), NrOfTriangleIndices * sizeof(INDEX16));
 
 		g_pQuadToTriangleHostIndexBuffer->Unlock();
 	}
@@ -6610,7 +6640,7 @@ void CxbxDrawIndexedClosingLine(INDEX16 LowIndex, INDEX16 HighIndex)
 	hRet = g_pD3DDevice->DrawIndexedPrimitive(
 		/*PrimitiveType=*/D3DPT_LINELIST,
 		/*BaseVertexIndex=*/0, // Note : Callers must apply BaseVertexIndex to the LowIndex and HighIndex argument values
-		/*MinVertrexIndex=*/LowIndex,
+		/*MinVertexIndex=*/LowIndex,
 		/*NumVertices=*/VERTICES_PER_LINE,
 		/*startIndex=*/0,
 		/*primCount=*/1
@@ -6990,7 +7020,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawVertices)
 
 			// Draw quadlists using a single 'quad-to-triangle mapping' index buffer :
 			// Assure & activate that special index buffer :
-			CxbxAssureQuadListD3DIndexBuffer(/*NrOfQuadVertices=*/DrawContext.dwVertexCount);
+			CxbxAssureQuadListD3DIndexBuffer(/*NrOfQuadIndices=*/DrawContext.dwVertexCount);
 			// Convert quad vertex-count & start to triangle vertex count & start :
 			UINT startIndex = QuadToTriangleVertexCount(DrawContext.dwStartVertex);
 			UINT primCount = DrawContext.dwHostPrimitiveCount * TRIANGLES_PER_QUAD;
