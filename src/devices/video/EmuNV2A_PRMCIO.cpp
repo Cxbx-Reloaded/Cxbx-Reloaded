@@ -2,15 +2,6 @@
 // PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 // ******************************************************************
 // *
-// *    .,-:::::    .,::      .::::::::.    .,::      .:
-// *  ,;;;'````'    `;;;,  .,;;  ;;;'';;'   `;;;,  .,;;
-// *  [[[             '[[,,[['   [[[__[[\.    '[[,,[['
-// *  $$$              Y$$$P     $$""""Y$$     Y$$$P
-// *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
-// *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
-// *
-// *   src->devices->video->EmuNV2A_PRMCIO.cpp
-// *
 // *  This file is part of the Cxbx project.
 // *
 // *  Cxbx and Cxbe are free software; you can redistribute them
@@ -28,12 +19,15 @@
 // *  If not, write to the Free Software Foundation, Inc.,
 // *  59 Temple Place - Suite 330, Bostom, MA 02111-1307, USA.
 // *
-// *  nv2a.cpp is heavily based on code from XQEMU
-// *  Copyright(c) 2012 espes
-// *  Copyright(c) 2015 Jannik Vogel
-// *  https://github.com/espes/xqemu/blob/xbox/hw/xbox/nv2a.c
-// *  (c) 2017-2018 Luke Usher <luke.usher@outlook.com>
-// *  (c) 2018 Patrick van Logchem <pvanlogchem@gmail.com>
+// *  This file is heavily based on code from XQEMU
+// *  https://github.com/xqemu/xqemu/blob/master/hw/xbox/nv2a/nv2a_prmcio.c
+// *  Copyright (c) 2012 espes
+// *  Copyright (c) 2015 Jannik Vogel
+// *  Copyright (c) 2018 Matt Borgerson
+// *
+// *  Contributions for Cxbx-Reloaded
+// *  Copyright (c) 2017-2018 Luke Usher <luke.usher@outlook.com>
+// *  Copyright (c) 2018 Patrick van Logchem <pvanlogchem@gmail.com>
 // *
 // *  All rights reserved
 // *
@@ -55,7 +49,7 @@ DEVICE_READ32(PRMCIO)
 		break;
 	default:
 		DEBUG_READ32_UNHANDLED(PRMCIO);
-		printf("vga: UNHANDLED ADDR %s\n", addr);
+		printf("vga: UNHANDLED ADDR %x\n", addr);
 		break;
 	}
 
@@ -93,14 +87,14 @@ DEVICE_WRITE32(PRMCIO)
 			if (d->prmcio.cr_index == VGA_CRTC_OVERFLOW) {
 				d->prmcio.cr[VGA_CRTC_OVERFLOW] = (d->prmcio.cr[VGA_CRTC_OVERFLOW] & ~0x10) |
 					(value & 0x10);
-				EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "TODO: vbe_update_vgaregs");
+				EmuLog(LOG_LEVEL::WARNING, "TODO: vbe_update_vgaregs");
 				//vbe_update_vgaregs();
 			}
 			return;
 		}
 
 		d->prmcio.cr[d->prmcio.cr_index] = value;
-		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "TODO: vbe_update_vgaregs");
+		EmuLog(LOG_LEVEL::WARNING, "TODO: vbe_update_vgaregs");
 		//vbe_update_vgaregs();
 
 		switch (d->prmcio.cr_index) {
@@ -112,7 +106,7 @@ DEVICE_WRITE32(PRMCIO)
 			case VGA_CRTC_V_SYNC_END:
 			case VGA_CRTC_MODE:
 				// TODO: s->update_retrace_info(s);
-				EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "TODO: update_retrace_info");
+				EmuLog(LOG_LEVEL::WARNING, "TODO: update_retrace_info");
 				break;
 			}
 		break;

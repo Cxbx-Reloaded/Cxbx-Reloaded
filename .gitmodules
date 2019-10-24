@@ -4,12 +4,20 @@
 [submodule "import/cs_x86"]
 	path = import/cs_x86
 	url = https://github.com/x1nixmzeng/cs_x86
-[submodule "import/d3d8to9"]
-	path = import/d3d8to9
-	url = https://github.com/Cxbx-Reloaded/d3d8to9
 [submodule "import/XbSymbolDatabase"]
 	path = import/XbSymbolDatabase
-	url = https://github.com/Cxbx-Reloaded/XbSymbolDatabase.git
+	url = https://github.com/Cxbx-Reloaded/XbSymbolDatabase
 [submodule "import/simpleini"]
 	path = import/simpleini
 	url = https://github.com/brofield/simpleini
+[submodule "import/libtommath"]
+	path = import/libtommath
+	url = https://github.com/libtom/libtommath
+	branch = master
+[submodule "import/libtomcrypt"]
+	path = import/libtomcrypt
+	url = https://github.com/libtom/libtomcrypt
+	branch = master
+[submodule "import/SDL2"]
+	path = import/SDL2
+	url = https://github.com/SDL-mirror/SDL

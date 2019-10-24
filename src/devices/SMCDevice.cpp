@@ -2,15 +2,6 @@
 // PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 // ******************************************************************
 // *
-// *    .,-:::::    .,::      .::::::::.    .,::      .:
-// *  ,;;;'````'    `;;;,  .,;;  ;;;'';;'   `;;;,  .,;;
-// *  [[[             '[[,,[['   [[[__[[\.    '[[,,[['
-// *  $$$              Y$$$P     $$""""Y$$     Y$$$P
-// *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
-// *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
-// *
-// *   src->CxbxKrnl->SMCDevice.cpp
-// *
 // *  This file is part of the Cxbx project.
 // *
 // *  Cxbx and Cxbe are free software; you can redistribute them
@@ -33,7 +24,6 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#define _XBOXKRNL_DEFEXTRN_
 
 #define LOG_PREFIX CXBXR_MODULE::SMC
 
@@ -43,8 +33,8 @@ namespace xboxkrnl
 #include <xboxkrnl/xboxkrnl.h> // For xbox.h:AV_PACK_HDTV
 };
 
-#include "CxbxKrnl\CxbxKrnl.h"
-#include "CxbxKrnl\EmuShared.h"
+#include "core\kernel\init\CxbxKrnl.h"
+#include "EmuShared.h"
 
 #include "SMCDevice.h" // For SMCDevice
 #include "ADM1032Device.h" // For ADM1032Device
@@ -52,8 +42,8 @@ namespace xboxkrnl
 
 void SetLEDSequence(LED::Sequence aLEDSequence)
 {
-	// See http://xboxdevwiki.net/PIC#The_LED
-	DbgPrintf(LOG_PREFIX, "SetLEDSequence : %u\n", (byte)aLEDSequence);
+	// See https://xboxdevwiki.net/PIC#The_LED
+	EmuLog(LOG_LEVEL::DEBUG, "SetLEDSequence : %u", (byte)aLEDSequence);
 
     union {
         UINT  LedSequenceBlock;
@@ -70,19 +60,17 @@ void SetLEDSequence(LED::Sequence aLEDSequence)
 
 /* SMCDevice */
 
-SMCDevice::SMCDevice(SCMRevision revision)
+SMCDevice::SMCDevice(SCMRevision revision, uint8_t av_pack)
 {
 	m_revision = revision;
+	buffer[SMC_COMMAND_AV_PACK] = av_pack;
 }
 
 void SMCDevice::Init()
 {
 	m_PICVersionStringIndex = 0;
-	buffer[SMC_COMMAND_AV_PACK] = 1; // AV_PACK_HDTV: see http://xboxdevwiki.net/PIC#The_AV_Pack
-	                                 // We can't use the existing constant because SMC flags and kernel flags
-	                                 // different values!
 	buffer[SMC_COMMAND_LED_SEQUENCE] = LED::GREEN;
-	buffer[SMC_COMMAND_SCRATCH] = 0; // http://xboxdevwiki.net/PIC#Scratch_register_values
+	buffer[SMC_COMMAND_SCRATCH] = 0; // https://xboxdevwiki.net/PIC#Scratch_register_values
 }
 
 void SMCDevice::Reset()
@@ -104,7 +92,7 @@ uint8_t SMCDevice::ReadByte(uint8_t command)
 {
 	switch (command) {
 	case SMC_COMMAND_VERSION: // 0x01 PIC version string
-		// See http://xboxdevwiki.net/PIC#PIC_version_string
+		// See https://xboxdevwiki.net/PIC#PIC_version_string
 		switch (m_revision) {
 		case SCMRevision::P01: buffer[1] = "P01"[m_PICVersionStringIndex]; break;
 		case SCMRevision::P2L: buffer[1] = "P05"[m_PICVersionStringIndex]; break; // ??
@@ -132,7 +120,7 @@ uint8_t SMCDevice::ReadByte(uint8_t command)
 	case SMC_COMMAND_CHALLENGE_1E: // random number for boot challenge
 	case SMC_COMMAND_CHALLENGE_1F: // random number for boot challenge
 		if (m_revision == SCMRevision::D01)
-			// See http://xboxdevwiki.net/PIC#PIC_Challenge_.28regs_0x1C.7E0x21.29
+			// See https://xboxdevwiki.net/PIC#PIC_Challenge_.28regs_0x1C.7E0x21.29
 			return 0;
 
 		break;
@@ -165,7 +153,7 @@ void SMCDevice::WriteByte(uint8_t command, uint8_t value)
 			m_PICVersionStringIndex = 0;
 		return;
 	case SMC_COMMAND_RESET: //0x02	reset and power off control
-		// See http://xboxdevwiki.net/PIC#Reset_and_Power_Off
+		// See https://xboxdevwiki.net/PIC#Reset_and_Power_Off
 		switch (value) {
 		case SMC_RESET_ASSERT_RESET: return; // TODO
 		case SMC_RESET_ASSERT_POWERCYCLE: return; // TODO
@@ -196,7 +184,7 @@ void SMCDevice::WriteByte(uint8_t command, uint8_t value)
 	//case 0x19: // reset on eject(0 = enable; 1 = disable)
 	//case 0x1A: // interrupt enable(write 0x01 to enable; can't disable once enabled)
 	case SMC_COMMAND_SCRATCH: //0x1B	scratch register for the original kernel
-		// See http://xboxdevwiki.net/PIC#Scratch_register_values
+		// See https://xboxdevwiki.net/PIC#Scratch_register_values
 		switch (value) {
 		case SMC_SCRATCH_TRAY_EJECT_PENDING: return; // TODO
 		case SMC_SCRATCH_DISPLAY_FATAL_ERROR:

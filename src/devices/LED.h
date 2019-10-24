@@ -2,15 +2,6 @@
 // PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 // ******************************************************************
 // *
-// *    .,-:::::    .,::      .::::::::.    .,::      .:
-// *  ,;;;'````'    `;;;,  .,;;  ;;;'';;'   `;;;,  .,;;
-// *  [[[             '[[,,[['   [[[__[[\.    '[[,,[['
-// *  $$$              Y$$$P     $$""""Y$$     Y$$$P
-// *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
-// *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
-// *
-// *   src->CxbxKrnl->LED.h
-// *
 // *  This file is part of the Cxbx project.
 // *
 // *  Cxbx and Cxbe are free software; you can redistribute them
@@ -37,7 +28,7 @@
 
 namespace LED {
 
-	// See http://xboxdevwiki.net/PIC#The_LED
+	// See https://xboxdevwiki.net/PIC#The_LED
 	namespace Phase0 { enum { Off = 0, Red = 1 << 7, Green = 1 << 3, Orange = Red | Green }; };
 	namespace Phase1 { enum { Off = 0, Red = 1 << 6, Green = 1 << 2, Orange = Red | Green }; };
 	namespace Phase2 { enum { Off = 0, Red = 1 << 5, Green = 1 << 1, Orange = Red | Green }; };

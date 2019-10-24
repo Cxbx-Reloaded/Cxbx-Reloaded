@@ -2,15 +2,6 @@
 // PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 // ******************************************************************
 // *
-// *    .,-:::::    .,::      .::::::::.    .,::      .:
-// *  ,;;;'````'    `;;;,  .,;;  ;;;'';;'   `;;;,  .,;;
-// *  [[[             '[[,,[['   [[[__[[\.    '[[,,[['
-// *  $$$              Y$$$P     $$""""Y$$     Y$$$P
-// *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
-// *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
-// *
-// *   src->devices->Xbox.cpp
-// *
 // *  This file is part of the Cxbx project.
 // *
 // *  Cxbx and Cxbe are free software; you can redistribute them
@@ -35,8 +26,8 @@
 // ******************************************************************
 
 #include "Xbox.h" // For HardwareModel
-#include "Xbe.h"  // Without this HLEIntercept complains about some undefined xbe variables
-#include "core/HLE/Intercept.hpp"
+#include "common\xbe\Xbe.h"  // Without this HLEIntercept complains about some undefined xbe variables
+#include "core\hle\Intercept.hpp"
 
 PCIBus* g_PCIBus;
 SMBus* g_SMBus;
@@ -60,7 +51,7 @@ MCPXRevision MCPXRevisionFromHardwareModel(HardwareModel hardwareModel)
 	case Revision1_6:
 		return MCPXRevision::MCPX_X3;
 	case DebugKit:
-		// EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Guessing MCPXVersion");
+		// EmuLog(LOG_LEVEL::WARNING, "Guessing MCPXVersion");
 		return MCPXRevision::MCPX_X2;
 	default:
 		// UNREACHABLE(hardwareModel);
@@ -79,7 +70,7 @@ SCMRevision SCMRevisionFromHardwareModel(HardwareModel hardwareModel)
 	case Revision1_4:
 	case Revision1_5:
 	case Revision1_6:
-		// EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Guessing SCMRevision");
+		// EmuLog(LOG_LEVEL::WARNING, "Guessing SCMRevision");
 		return SCMRevision::P2L; // Assumption; Our SCM returns PIC version string "P05"
 	case DebugKit:
 		return SCMRevision::D01; // Our SCM returns PIC version string "DXB"
@@ -126,7 +117,10 @@ void InitXboxHardware(HardwareModel hardwareModel)
 
 	// Create devices
 	g_MCPX = new MCPXDevice(mcpx_revision);
-	g_SMC = new SMCDevice(smc_revision);
+															
+	g_SMC = new SMCDevice(smc_revision, g_bIsChihiro ? 6 : 1); // 6 = AV_PACK_STANDARD, 1 = AV_PACK_HDTV. Chihiro doesn't support HDTV!
+															   // SMC uses different AV_PACK values than the Kernel
+															   // See https://xboxdevwiki.net/PIC#The_AV_Pack
 	g_EEPROM = new EEPROMDevice();
 	g_NVNet = new NVNetDevice();
 	g_NV2A = new NV2ADevice();
@@ -175,5 +169,5 @@ void InitXboxHardware(HardwareModel hardwareModel)
 	// Resources : http://pablot.com/misc/fancontroller.cpp
 	// https://github.com/JayFoxRox/Chihiro-Launcher/blob/master/hook.h
 	// https://github.com/docbrown/vxb/wiki/Xbox-Hardware-Information
-	// https://web.archive.org/web/20100617022549/http://www.xbox-linux.org/wiki/PIC
+	// https://web.archive.org/web/20100617022549/https://www.xbox-linux.org/wiki/PIC
 }

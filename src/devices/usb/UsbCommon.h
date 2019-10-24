@@ -2,15 +2,6 @@
 // PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 // ******************************************************************
 // *
-// *    .,-:::::    .,::      .::::::::.    .,::      .:
-// *  ,;;;'````'    `;;;,  .,;;  ;;;'';;'   `;;;,  .,;;
-// *  [[[             '[[,,[['   [[[__[[\.    '[[,,[['
-// *  $$$              Y$$$P     $$""""Y$$     Y$$$P
-// *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
-// *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
-// *
-// *   Cxbx->devices->usb->UsbCommon.h
-// *
 // *  This file is part of the Cxbx project.
 // *
 // *  Cxbx and Cxbe are free software; you can redistribute them
@@ -34,10 +25,37 @@
 // *
 // ******************************************************************
 
+// Acknowledgment: some these functions are from the QEMU usb api used in XQEMU (GPLv2)
+// https://xqemu.com/
+
+/*
+* QEMU USB API
+*
+* Copyright (c) 2005 Fabrice Bellard
+*
+* Permission is hereby granted, free of charge, to any person obtaining a copy
+* of this software and associated documentation files (the "Software"), to deal
+* in the Software without restriction, including without limitation the rights
+* to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+* copies of the Software, and to permit persons to whom the Software is
+* furnished to do so, subject to the following conditions:
+*
+* The above copyright notice and this permission notice shall be included in
+* all copies or substantial portions of the Software.
+*
+* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+* THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+* LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+* OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+* THE SOFTWARE.
+*/
+
 #ifndef USBCOMMON_H_
 #define USBCOMMON_H_
 
-#include "CxbxCommon.h"
+#include "common\util\CxbxUtil.h"
 #include "..\devices\video\queue.h"
 #include <functional>
 
@@ -189,7 +207,7 @@ struct USBDescEndpoint {
     uint8_t                   is_audio;         // has bRefresh + bSynchAddress
     uint8_t*                  extra;            // class-specific descriptors (if any) associated with this endpoint
 
-	// Dropped from XQEMU the parameters bMaxBurst, bmAttributes_super and wBytesPerInterval because those are only defined for
+	// Dropped from QEMU the parameters bMaxBurst, bmAttributes_super and wBytesPerInterval because those are only defined for
 	// superspeed (usb 3.0) devices in the superspeed endpoint companion
 };
 
@@ -255,7 +273,7 @@ struct USBDesc {
 #pragma pack(1)
 
 // Binary representation of the descriptors
-// Dropped from XQEMU usb 2.0 and 3.0 only descriptors
+// Dropped from QEMU usb 2.0 and 3.0 only descriptors
 struct USBDescriptor {
 	uint8_t                   bLength;
 	uint8_t                   bDescriptorType;
@@ -313,11 +331,9 @@ struct USBDescriptor {
 /* USB endpoint */
 struct USBEndpoint {
 	uint8_t Num;                      // endpoint number
-	uint8_t pid;
 	uint8_t Type;                     // the type of this endpoint
 	uint8_t IfNum;                    // interface number this endpoint belongs to
 	int MaxPacketSize;                // maximum packet size supported by this endpoint
-	bool Pipeline;
 	bool Halted;                      // indicates that the endpoint is halted
 	XboxDeviceState* Dev;             // device this endpoint belongs to
 	QTAILQ_HEAD(, USBPacket) Queue;   // queue of packets to this endpoint
@@ -400,9 +416,9 @@ struct XboxDeviceState {
 	int32_t SetupLength;                   // this field specifies the length of the data transferred during the second phase of the control transfer
 	int32_t SetupIndex;                    // index of the parameter in a setup token?
 
-	USBEndpoint EP_ctl;                    // endpoints for SETUP tokens
-	USBEndpoint EP_in[USB_MAX_ENDPOINTS];  // endpoints for OUT tokens
-	USBEndpoint EP_out[USB_MAX_ENDPOINTS]; // endpoints for IN tokens
+	USBEndpoint EP_ctl;                    // control endpoint
+	USBEndpoint EP_in[USB_MAX_ENDPOINTS];  // device endpoint (input direction)
+	USBEndpoint EP_out[USB_MAX_ENDPOINTS]; // device endpoint (output direction)
 
 	QLIST_HEAD(, USBDescString) Strings;   // strings of the string descriptors
 	const USBDesc* UsbDesc;                // Overrides class usb_desc if not nullptr
@@ -417,12 +433,10 @@ struct XboxDeviceState {
 
 /* Structure used to hold information about an active USB packet */
 struct USBPacket {
-	int Pid;                             // Packet ID (used to identify the type of packet that is being sent)
+	int Pid;                             // Packet ID (used to identify the type of packet that is being processed)
 	uint32_t Id;                         // Paddr of the TD for this packet 
 	USBEndpoint* Endpoint;               // endpoint this packet is transferred to
-	unsigned int Stream;		         
 	IOVector IoVec;                      // used to perform vectored I/O
-	uint64_t Parameter;                  // this seems to be used only in xhci and it's 0 otherwise. If so, this can be removed
 	bool ShortNotOK;                     // the bufferRounding mode of the TD for this packet
 	bool IntReq;                         // whether or not to generate an interrupt for this packet (DelayInterrupt of the TD is zero)
 	int Status;                          // USB_RET_* status code

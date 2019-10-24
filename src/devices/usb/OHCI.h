@@ -2,15 +2,6 @@
 // PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 // ******************************************************************
 // *
-// *    .,-:::::    .,::      .::::::::.    .,::      .:
-// *  ,;;;'````'    `;;;,  .,;;  ;;;'';;'   `;;;,  .,;;
-// *  [[[             '[[,,[['   [[[__[[\.    '[[,,[['
-// *  $$$              Y$$$P     $$""""Y$$     Y$$$P
-// *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
-// *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
-// *
-// *   Cxbx->devices->usb->OHCI.h
-// *
 // *  This file is part of the Cxbx project.
 // *
 // *  Cxbx and Cxbe are free software; you can redistribute them
@@ -37,8 +28,9 @@
 #ifndef OHCI_H_
 #define OHCI_H_
 
+#include <mutex>
 #include "USBDevice.h"
-#include "..\CxbxKrnl\Timer.h"
+#include "Timer.h"
 
 
 // Abbreviations used:
@@ -143,7 +135,7 @@ class OHCI
 	public:
 		// Indicates that the timer thread is accessing the OHCI object. Necessary because the input thread from the
 		// InputDeviceManager will access us when it needs to create or destroy a device
-		std::atomic_bool m_bFrameTime;
+		std::mutex m_FrameTimeMutex;
 
 		// constructor
 		OHCI(USBDevice* UsbObj);
@@ -156,7 +148,7 @@ class OHCI
 
 
 	private:
-		// pointer to g_USB0 or g_USB1
+		// pointer to g_USB0
 		USBDevice* m_UsbDevice = nullptr;
 		// all the registers available in the OHCI standard
 		OHCI_Registers m_Registers;
@@ -233,11 +225,9 @@ class OHCI
 		// write an iso TD in memory
 		bool OHCI_WriteIsoTD(xbaddr Paddr, OHCI_ISO_TD* td);
 		// read/write the user buffer pointed to by a TD from/to main memory
-		bool OHCI_CopyTD(OHCI_TD* Td, uint8_t* Buffer, int Length, bool bIsWrite);
+		bool OHCI_CopyTDBuffer(OHCI_TD* Td, uint8_t* Buffer, int Length, bool bIsWrite);
 		// read/write the user buffer pointed to by a ISO TD from/to main memory
-		bool OHCI_CopyIsoTD(uint32_t start_addr, uint32_t end_addr, uint8_t* Buffer, int Length, bool bIsWrite);
-		// find a TD buffer in memory and copy it
-		bool OHCI_FindAndCopyTD(xbaddr Paddr, uint8_t* Buffer, int Length, bool bIsWrite);
+		bool OHCI_CopyIsoTDBuffer(uint32_t start_addr, uint32_t end_addr, uint8_t* Buffer, int Length, bool bIsWrite);
 		// process an ED list. Returns nonzero if active TD was found
 		int OHCI_ServiceEDlist(xbaddr Head, int Completion);
 		// process a TD. Returns nonzero to terminate processing of this endpoint

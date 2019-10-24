@@ -2,15 +2,6 @@
 // PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 // ******************************************************************
 // *
-// *    .,-:::::    .,::      .::::::::.    .,::      .:
-// *  ,;;;'````'    `;;;,  .,;;  ;;;'';;'   `;;;,  .,;;
-// *  [[[             '[[,,[['   [[[__[[\.    '[[,,[['
-// *  $$$              Y$$$P     $$""""Y$$     Y$$$P
-// *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
-// *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
-// *
-// *   Cxbx->devices->usb->USBDevice.h
-// *
 // *  This file is part of the Cxbx project.
 // *
 // *  Cxbx and Cxbe are free software; you can redistribute them
@@ -94,8 +85,8 @@ class USBDevice : public PCIDevice {
 		// find the requested endpoint in the supplied device
 		USBEndpoint* USB_GetEP(XboxDeviceState* Dev, int Pid, int Ep);
 		// setup a packet for transfer
-		void USB_PacketSetup(USBPacket* p, int Pid, USBEndpoint* Ep, unsigned int Stream,
-			uint64_t Id, bool ShortNotOK, bool IntReq);
+		void USB_PacketSetup(USBPacket* p, int Pid, USBEndpoint* Ep, uint64_t Id,
+			bool ShortNotOK, bool IntReq);
 		// check if the state of the packet is queued or async
 		bool USB_IsPacketInflight(USBPacket* p);
 		// append the user buffer to the packet
@@ -106,8 +97,6 @@ class USBDevice : public PCIDevice {
 		void USB_PacketCheckState(USBPacket* p, USBPacketState expected);
 		// process the packet
 		void USB_ProcessOne(USBPacket* p);
-		// xhci only?
-		void USB_DoParameter(XboxDeviceState* s, USBPacket* p);
 		// process a setup token
 		void USB_DoTokenSetup(XboxDeviceState* s, USBPacket* p);
 		// process an input token

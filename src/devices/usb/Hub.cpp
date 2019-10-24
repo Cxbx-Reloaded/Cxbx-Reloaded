@@ -2,15 +2,6 @@
 // PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 // ******************************************************************
 // *
-// *    .,-:::::    .,::      .::::::::.    .,::      .:
-// *  ,;;;'````'    `;;;,  .,;;  ;;;'';;'   `;;;,  .,;;
-// *  [[[             '[[,,[['   [[[__[[\.    '[[,,[['
-// *  $$$              Y$$$P     $$""""Y$$     Y$$$P
-// *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
-// *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
-// *
-// *   Cxbx->devices->usb->Hub.cpp
-// *
 // *  This file is part of the Cxbx project.
 // *
 // *  Cxbx and Cxbe are free software; you can redistribute them
@@ -34,7 +25,33 @@
 // *
 // ******************************************************************
 
-#define _XBOXKRNL_DEFEXTRN_
+// Acknowledgment: QEMU hub device emulation as used in XQEMU (GPLv2)
+// https://xqemu.com/
+
+/*
+* QEMU USB HUB emulation
+*
+* Copyright (c) 2005 Fabrice Bellard
+*
+* Permission is hereby granted, free of charge, to any person obtaining a copy
+* of this software and associated documentation files (the "Software"), to deal
+* in the Software without restriction, including without limitation the rights
+* to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+* copies of the Software, and to permit persons to whom the Software is
+* furnished to do so, subject to the following conditions:
+*
+* The above copyright notice and this permission notice shall be included in
+* all copies or substantial portions of the Software.
+*
+* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+* THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+* LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+* OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+* THE SOFTWARE.
+*/
+
 
 #define LOG_PREFIX CXBXR_MODULE::HUB
 
@@ -46,7 +63,7 @@ namespace xboxkrnl
 
 #include "OHCI.h"
 #include "Hub.h"
-#include "CxbxKrnl\EmuKrnl.h"  // For EmuLog
+#include "core\kernel\exports\EmuKrnl.h"  // For EmuLog
 #include "Logging.h"
 
 #define NUM_PORTS 8
@@ -85,10 +102,6 @@ namespace xboxkrnl
 #define PORT_C_SUSPEND      18
 #define PORT_C_OVERCURRENT	19
 #define PORT_C_RESET		20
-
-
-// Acknowledgment: XQEMU (GPLv2)
-// https://xqemu.com/
 
 
 // To avoid including Xbox.h
@@ -173,7 +186,7 @@ static const uint8_t HubDescriptor[] =
 	0x0A,			//  u8   bDescLength; 10 bytes
 	0x29,			//  u8   bDescriptorType; Hub-descriptor
 	NUM_PORTS,		//  u8   bNbrPorts; 0x08
-	0x0a,			//  u16  wHubCharacteristics; (individual port over-current protection, no power switching)
+	0x0A,			//  u16  wHubCharacteristics; (individual port over-current protection, no power switching)
 	0x00,
 	0x01,			//  u8   bPwrOn2pwrGood; 2 ms
 	0x00,			//  u8   bHubContrCurrent; 0 mA
@@ -189,14 +202,14 @@ int Hub::Init(int port)
 	XboxDeviceState* dev = ClassInitFn();
     int rc = UsbHubClaimPort(dev, port);
     if (rc != 0) {
-		m_UsbDev->m_HostController->m_bFrameTime = false;
+		m_UsbDev->m_HostController->m_FrameTimeMutex.unlock();
         return rc;
     }
 	m_UsbDev->USB_EpInit(dev);
     m_UsbDev->USB_DeviceInit(dev);
     m_UsbDev->USB_DeviceAttach(dev);
 
-	m_UsbDev->m_HostController->m_bFrameTime = false;
+	m_UsbDev->m_HostController->m_FrameTimeMutex.unlock();
 
 	return 0;
 }
@@ -238,8 +251,7 @@ int Hub::UsbHubClaimPort(XboxDeviceState* dev, int port)
 	it = m_UsbDev->m_FreePorts.end();
 	i = 0;
 
-	while (m_UsbDev->m_HostController->m_bFrameTime) { Sleep(1); }
-	m_UsbDev->m_HostController->m_bFrameTime = true;
+	m_UsbDev->m_HostController->m_FrameTimeMutex.lock();
 
 	for (auto usb_port : m_UsbDev->m_FreePorts) {
 		if (usb_port->Path == std::to_string(port)) {
@@ -249,7 +261,7 @@ int Hub::UsbHubClaimPort(XboxDeviceState* dev, int port)
 		i++;
 	}
 	if (it == m_UsbDev->m_FreePorts.end()) {
-		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Port requested %d not found (in use?)", port);
+		EmuLog(LOG_LEVEL::WARNING, "Port requested %d not found (in use?)", port);
 		return -1;
 	}
 	dev->Port = *it;
@@ -357,8 +369,8 @@ void Hub::UsbHub_HandleControl(XboxDeviceState* dev, USBPacket* p,
 		}
 
 		case GetHubStatus: {
-			// From the standard: "This request returns the current hub status and the states that have changed since the previous acknowledgment.
-			// The first word of data contains wHubStatus. The second word of data contains wHubChange"
+			// From the USB 1.1 standard: "This request returns the current hub status and the states that have changed since the
+			// previous acknowledgment. The first word of data contains wHubStatus. The second word of data contains wHubChange"
 			// We always report that the local power supply is good and that currently there is no over-power condition
 			data[0] = 0;
 			data[1] = 0;
@@ -369,7 +381,7 @@ void Hub::UsbHub_HandleControl(XboxDeviceState* dev, USBPacket* p,
 		}
 
 		case GetPortStatus: {
-			// From the standard: "This request returns the current port status and the current value of the port status change bits.
+			// From the USB 1.1 standard: "This request returns the current port status and the current value of the port status change bits.
 			// The first word of data contains wPortStatus. The second word of data contains wPortChange"
 			unsigned int n = index - 1;
 			USBHubPort* port;
@@ -377,11 +389,11 @@ void Hub::UsbHub_HandleControl(XboxDeviceState* dev, USBPacket* p,
 				goto fail;
 			}
 			port = &m_HubState->ports[n];
-			DbgPrintf(LOG_PREFIX, "%s GetPortStatus -> Address 0x%X, wIndex %d, wPortStatus %d, wPortChange %d\n",
-				__func__, m_HubState->dev.Addr, index, port->wPortStatus, port->wPortChange);
-			data[0] = port->wPortStatus;
+			EmuLog(LOG_LEVEL::DEBUG, "GetPortStatus -> Address 0x%X, wIndex %d, wPortStatus %d, wPortChange %d",
+				m_HubState->dev.Addr, index, port->wPortStatus, port->wPortChange);
+			data[0] = port->wPortStatus & 0xFF;
 			data[1] = port->wPortStatus >> 8;
-			data[2] = port->wPortChange;
+			data[2] = port->wPortChange & 0xFF;
 			data[3] = port->wPortChange >> 8;
 			p->ActualLength = 4;
 			break;
@@ -396,14 +408,14 @@ void Hub::UsbHub_HandleControl(XboxDeviceState* dev, USBPacket* p,
 		}
 
 		case SetPortFeature: {
-			// From the standard: "This request sets a value reported in the port status. Features that can be set with this request are PORT_RESET,
-			// PORT_SUSPEND and PORT_POWER; others features are not required to be set by this request"
+			// From the USB 1.1 standard: "This request sets a value reported in the port status. Features that can be set with this request are
+			// PORT_RESET, PORT_SUSPEND and PORT_POWER; others features are not required to be set by this request"
 			unsigned int n = index - 1;
 			USBHubPort* port;
 			XboxDeviceState* dev;
 
-			DbgPrintf(LOG_PREFIX, "%s SetPortFeature -> Address 0x%X, wIndex %d, Feature %s\n",
-				__func__, m_HubState->dev.Addr, index, GetFeatureName(value));
+			EmuLog(LOG_LEVEL::DEBUG, "SetPortFeature -> Address 0x%X, wIndex %d, Feature %s",
+				m_HubState->dev.Addr, index, GetFeatureName(value).c_str());
 
 			if (n >= NUM_PORTS) {
 				goto fail;
@@ -436,12 +448,12 @@ void Hub::UsbHub_HandleControl(XboxDeviceState* dev, USBPacket* p,
 		}
 
 		case ClearPortFeature: {
-			// From the standard: "This request resets a value reported in the port status"
+			// From USB 1.1 the standard: "This request resets a value reported in the port status"
 			unsigned int n = index - 1;
 			USBHubPort *port;
 
-			DbgPrintf(LOG_PREFIX, "%s ClearPortFeature -> Address 0x%X, wIndex %d, Feature %s\n",
-				__func__, m_HubState->dev.Addr, index, GetFeatureName(value));
+			EmuLog(LOG_LEVEL::DEBUG, "ClearPortFeature -> Address 0x%X, wIndex %d, Feature %s",
+				m_HubState->dev.Addr, index, GetFeatureName(value).c_str());
 
 			if (n >= NUM_PORTS) {
 				goto fail;
@@ -510,7 +522,7 @@ void Hub::UsbHub_HandleData(XboxDeviceState* dev, USBPacket* p)
 				USBHubPort* port;
 				unsigned int status;
 				uint8_t buf[4];
-				int i, n;
+				size_t i, n;
 				status = 0;
 				for (i = 0; i < NUM_PORTS; i++) {
 					port = &m_HubState->ports[i];
@@ -527,7 +539,7 @@ void Hub::UsbHub_HandleData(XboxDeviceState* dev, USBPacket* p)
 						p->Status = USB_RET_BABBLE;
 						return;
 					}
-					DbgPrintf(LOG_PREFIX, "%s Address 0x%X, Status %d\n", __func__, m_HubState->dev.Addr, status);
+					EmuLog(LOG_LEVEL::DEBUG, "Address 0x%X, Status %d", m_HubState->dev.Addr, status);
 					for (i = 0; i < n; i++) {
 						buf[i] = status >> (8 * i);
 					}
@@ -709,8 +721,7 @@ void Hub::HubCleanUp()
 
 void Hub::HubDestroy()
 {
-	while (m_UsbDev->m_HostController->m_bFrameTime) { Sleep(1); }
-	m_UsbDev->m_HostController->m_bFrameTime = true;
+	m_UsbDev->m_HostController->m_FrameTimeMutex.lock();
 	m_pPeripheralFuncStruct->handle_destroy();
-	m_UsbDev->m_HostController->m_bFrameTime = false;
+	m_UsbDev->m_HostController->m_FrameTimeMutex.unlock();
 }

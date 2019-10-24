@@ -1,0 +1,47 @@
+language: cpp
+
+git:
+  submodules: true
+  depth: 1
+
+matrix:
+  include:
+  - os: windows
+    env: configuration=Debug
+  - os: windows
+    env: configuration=Release
+    
+before_script:
+  - if [ $TRAVIS_OS_NAME == 'windows' ]; then
+    export PATH="c:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\MSBuild\15.0\Bin":$PATH;
+    mkdir build;
+    cd build;
+    cmake .. -G "Visual Studio 15 2017" -A Win32;
+    fi
+
+script:
+  - if [ $TRAVIS_OS_NAME == 'windows' ]; then
+    cmake --build . --config ${configuration};
+    fi
+
+# Bug with the Windows builder requires us to not filter secrets
+#filter_secrets: false
+
+#before_deploy:
+#  - mkdir export
+#  - 7z u export/${configuration} COPYING README.md
+#  - cd build/win32/${configuration}
+#  - 7z u ../../../export/${configuration} Cxbx.exe glew32.dll subhook.dll SDL2.dll
+#  - 7z u ../../../export/${configuration} CxbxDebugger.exe capstone.dll cs_x86.dll
+#  - cd ../../../
+
+#deploy:
+#  provider: releases
+#  api_key: $GH_TOKEN
+#  file: "export/${configuration}.7z"
+#  skip_cleanup: true
+#  on:
+#    # Can disable this to deploy all builds appears as "untagged-buildhash" on GH
+#    tags: true
+#    branch: develop
+#    condition: $configuration = Release

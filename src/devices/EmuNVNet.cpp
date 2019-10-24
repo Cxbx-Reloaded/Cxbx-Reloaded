@@ -2,15 +2,6 @@
 // PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 // ******************************************************************
 // *
-// *    .,-:::::    .,::      .::::::::.    .,::      .:
-// *  ,;;;'````'    `;;;,  .,;;  ;;;'';;'   `;;;,  .,;;
-// *  [[[             '[[,,[['   [[[__[[\.    '[[,,[['
-// *  $$$              Y$$$P     $$""""Y$$     Y$$$P
-// *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
-// *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
-// *
-// *   Cxbx->Win32->CxbxKrnl->EmuNVNet.cpp
-// *
 // *  This file is part of the Cxbx project.
 // *
 // *  Cxbx and Cxbe are free software; you can redistribute them
@@ -38,157 +29,25 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#define _XBOXKRNL_DEFEXTRN_
 
 #define LOG_PREFIX CXBXR_MODULE::NET
 
 // prevent name collisions
-
 namespace xboxkrnl
 {
 	#include <xboxkrnl/xboxkrnl.h> // For PKINTERRUPT, etc.
 };
 
-#include "CxbxKrnl\CxbxKrnl.h"
-#include "CxbxKrnl\Emu.h"
-#include "CxbxKrnl\EmuKrnl.h"
-
+#include <WinSock2.h> 
+#include "core\kernel\init\CxbxKrnl.h"
+#include "core\kernel\support\Emu.h"
+#include "core\kernel\exports\EmuKrnl.h"
+#include "EmuShared.h"
+#include "devices\Xbox.h"
 #include "EmuNVNet.h"
-#include "Logging.h"
-
-// NVNET Register Definitions
-// Taken from XQEMU
-enum {
-	NvRegIrqStatus = 0x000,
-#       define NVREG_IRQSTAT_BIT1     0x002
-#       define NVREG_IRQSTAT_BIT4     0x010
-#       define NVREG_IRQSTAT_MIIEVENT 0x040
-#       define NVREG_IRQSTAT_MASK     0x1ff
-	NvRegIrqMask = 0x004,
-#       define NVREG_IRQ_RX           0x0002
-#       define NVREG_IRQ_RX_NOBUF     0x0004
-#       define NVREG_IRQ_TX_ERR       0x0008
-#       define NVREG_IRQ_TX2          0x0010
-#       define NVREG_IRQ_TIMER        0x0020
-#       define NVREG_IRQ_LINK         0x0040
-#       define NVREG_IRQ_TX1          0x0100
-#       define NVREG_IRQMASK_WANTED_1 0x005f
-#       define NVREG_IRQMASK_WANTED_2 0x0147
-#       define NVREG_IRQ_UNKNOWN      (~(NVREG_IRQ_RX|NVREG_IRQ_RX_NOBUF|\
-    NVREG_IRQ_TX_ERR|NVREG_IRQ_TX2|NVREG_IRQ_TIMER|NVREG_IRQ_LINK|\
-    NVREG_IRQ_TX1))
-	NvRegUnknownSetupReg6 = 0x008,
-#       define NVREG_UNKSETUP6_VAL 3
-	/*
-	* NVREG_POLL_DEFAULT is the interval length of the timer source on the nic
-	* NVREG_POLL_DEFAULT=97 would result in an interval length of 1 ms
-	*/
-	NvRegPollingInterval = 0x00c,
-#       define NVREG_POLL_DEFAULT 970
-	NvRegMisc1 = 0x080,
-#       define NVREG_MISC1_HD    0x02
-#       define NVREG_MISC1_FORCE 0x3b0f3c
-	NvRegTransmitterControl = 0x084,
-#       define NVREG_XMITCTL_START 0x01
-	NvRegTransmitterStatus = 0x088,
-#       define NVREG_XMITSTAT_BUSY 0x01
-	NvRegPacketFilterFlags = 0x8c,
-#       define NVREG_PFF_ALWAYS  0x7F0008
-#       define NVREG_PFF_PROMISC 0x80
-#       define NVREG_PFF_MYADDR  0x20
-	NvRegOffloadConfig = 0x90,
-#       define NVREG_OFFLOAD_HOMEPHY 0x601
-#       define NVREG_OFFLOAD_NORMAL  0x5ee
-	NvRegReceiverControl = 0x094,
-#       define NVREG_RCVCTL_START 0x01
-	NvRegReceiverStatus = 0x98,
-#       define NVREG_RCVSTAT_BUSY  0x01
-	NvRegRandomSeed = 0x9c,
-#       define NVREG_RNDSEED_MASK  0x00ff
-#       define NVREG_RNDSEED_FORCE 0x7f00
-	NvRegUnknownSetupReg1 = 0xA0,
-#       define NVREG_UNKSETUP1_VAL 0x16070f
-	NvRegUnknownSetupReg2 = 0xA4,
-#       define NVREG_UNKSETUP2_VAL 0x16
-	NvRegMacAddrA = 0xA8,
-	NvRegMacAddrB = 0xAC,
-	NvRegMulticastAddrA = 0xB0,
-#       define NVREG_MCASTADDRA_FORCE  0x01
-	NvRegMulticastAddrB = 0xB4,
-	NvRegMulticastMaskA = 0xB8,
-	NvRegMulticastMaskB = 0xBC,
-	NvRegTxRingPhysAddr = 0x100,
-	NvRegRxRingPhysAddr = 0x104,
-	NvRegRingSizes = 0x108,
-#       define NVREG_RINGSZ_TXSHIFT 0
-#       define NVREG_RINGSZ_RXSHIFT 16
-	NvRegUnknownTransmitterReg = 0x10c,
-	NvRegLinkSpeed = 0x110,
-#       define NVREG_LINKSPEED_FORCE 0x10000
-#       define NVREG_LINKSPEED_10    10
-#       define NVREG_LINKSPEED_100   100
-#       define NVREG_LINKSPEED_1000  1000
-	NvRegUnknownSetupReg5 = 0x130,
-#       define NVREG_UNKSETUP5_BIT31 (1<<31)
-	NvRegUnknownSetupReg3 = 0x134,
-#       define NVREG_UNKSETUP3_VAL1 0x200010
-	NvRegUnknownSetupReg8 = 0x13C,
-#       define NVREG_UNKSETUP8_VAL1 0x300010
-	NvRegUnknownSetupReg7 = 0x140,
-#       define NVREG_UNKSETUP7_VAL 0x300010
-	NvRegTxRxControl = 0x144,
-#       define NVREG_TXRXCTL_KICK  0x0001
-#       define NVREG_TXRXCTL_BIT1  0x0002
-#       define NVREG_TXRXCTL_BIT2  0x0004
-#       define NVREG_TXRXCTL_IDLE  0x0008
-#       define NVREG_TXRXCTL_RESET 0x0010
-	NvRegMIIStatus = 0x180,
-#       define NVREG_MIISTAT_ERROR      0x0001
-#       define NVREG_MIISTAT_LINKCHANGE 0x0008
-#       define NVREG_MIISTAT_MASK       0x000f
-#       define NVREG_MIISTAT_MASK2      0x000f
-	NvRegUnknownSetupReg4 = 0x184,
-#       define NVREG_UNKSETUP4_VAL 8
-	NvRegAdapterControl = 0x188,
-#       define NVREG_ADAPTCTL_START    0x02
-#       define NVREG_ADAPTCTL_LINKUP   0x04
-#       define NVREG_ADAPTCTL_PHYVALID 0x4000
-#       define NVREG_ADAPTCTL_RUNNING  0x100000
-#       define NVREG_ADAPTCTL_PHYSHIFT 24
-	NvRegMIISpeed = 0x18c,
-#       define NVREG_MIISPEED_BIT8 (1<<8)
-#       define NVREG_MIIDELAY  5
-	NvRegMIIControl = 0x190,
-#       define NVREG_MIICTL_INUSE 0x10000
-#       define NVREG_MIICTL_WRITE 0x08000
-#       define NVREG_MIICTL_ADDRSHIFT  5
-	NvRegMIIData = 0x194,
-	NvRegWakeUpFlags = 0x200,
-#       define NVREG_WAKEUPFLAGS_VAL               0x7770
-#       define NVREG_WAKEUPFLAGS_BUSYSHIFT         24
-#       define NVREG_WAKEUPFLAGS_ENABLESHIFT       16
-#       define NVREG_WAKEUPFLAGS_D3SHIFT           12
-#       define NVREG_WAKEUPFLAGS_D2SHIFT           8
-#       define NVREG_WAKEUPFLAGS_D1SHIFT           4
-#       define NVREG_WAKEUPFLAGS_D0SHIFT           0
-#       define NVREG_WAKEUPFLAGS_ACCEPT_MAGPAT     0x01
-#       define NVREG_WAKEUPFLAGS_ACCEPT_WAKEUPPAT  0x02
-#       define NVREG_WAKEUPFLAGS_ACCEPT_LINKCHANGE 0x04
-	NvRegPatternCRC = 0x204,
-	NvRegPatternMask = 0x208,
-	NvRegPowerCap = 0x268,
-#       define NVREG_POWERCAP_D3SUPP (1<<30)
-#       define NVREG_POWERCAP_D2SUPP (1<<26)
-#       define NVREG_POWERCAP_D1SUPP (1<<25)
-	NvRegPowerState = 0x26c,
-#       define NVREG_POWERSTATE_POWEREDUP 0x8000
-#       define NVREG_POWERSTATE_VALID     0x0100
-#       define NVREG_POWERSTATE_MASK      0x0003
-#       define NVREG_POWERSTATE_D0        0x0000
-#       define NVREG_POWERSTATE_D1        0x0001
-#       define NVREG_POWERSTATE_D2        0x0002
-#       define NVREG_POWERSTATE_D3        0x0003
-};
+#include <Iphlpapi.h>
+#include <pcap.h>
+#include <exception>
 
 #define IOPORT_SIZE 0x8
 #define MMIO_SIZE   0x400
@@ -282,7 +141,7 @@ enum {
 * Primary State Structure
 ******************************************************************************/
 
-struct NvNetState {
+typedef struct NvNetState {
 	uint8_t      regs[MMIO_SIZE / 4];
 	uint32_t     phy_regs[6];
 	uint8_t      tx_ring_index;
@@ -292,7 +151,9 @@ struct NvNetState {
 	uint8_t      txrx_dma_buf[RX_ALLOC_BUFSIZE];
 	FILE         *packet_dump_file;
 	char         *packet_dump_path;
-} NvNetState;
+} NvNetState_t;
+
+NvNetState_t NvNetState;
 
 struct RingDesc {
 	uint32_t packet_buffer;
@@ -394,7 +255,7 @@ void EmuNVNet_UpdateIRQ()
 {
 	if (EmuNVNet_GetRegister(NvRegIrqMask, 4) &&
 		EmuNVNet_GetRegister(NvRegIrqStatus, 4)) {
-		DbgPrintf(LOG_PREFIX, "Asserting IRQ\n");
+		EmuLog(LOG_LEVEL::DEBUG, "Asserting IRQ");
 		HalSystemInterrupts[4].Assert(true);
 	} else {
 		HalSystemInterrupts[4].Assert(false);
@@ -413,7 +274,7 @@ int EmuNVNet_MiiReadWrite(uint64_t val)
 	reg = mii_ctl & ((1 << NVREG_MIICTL_ADDRSHIFT) - 1);
 	write = mii_ctl & NVREG_MIICTL_WRITE;
 
-	DbgPrintf(LOG_PREFIX, "nvnet mii %s: phy 0x%x %s [0x%x]\n", write ? "write" : "read", phy_addr, EmuNVNet_GetMiiRegisterName(reg), reg);
+	EmuLog(LOG_LEVEL::DEBUG, "nvnet mii %s: phy 0x%x %s [0x%x]", write ? "write" : "read", phy_addr, EmuNVNet_GetMiiRegisterName(reg), reg);
 
 	if (phy_addr != 1) {
 		return -1;
@@ -444,7 +305,7 @@ int EmuNVNet_MiiReadWrite(uint64_t val)
 
 uint32_t EmuNVNet_Read(xbaddr addr, int size)
 {
-	DbgPrintf(LOG_PREFIX, "Read%d: %s (0x%.8X)\n", size, EmuNVNet_GetRegisterName(addr), addr);
+	EmuLog(LOG_LEVEL::DEBUG, "Read%d: %s (0x%.8X)", size * 8, EmuNVNet_GetRegisterName(addr), addr);
 
 	switch (addr) {
 		case NvRegMIIData:
@@ -456,6 +317,114 @@ uint32_t EmuNVNet_Read(xbaddr addr, int size)
 	}
 
 	return EmuNVNet_GetRegister(addr,size);
+}
+
+void EmuNVNet_DMAPacketFromGuest()
+{
+	struct RingDesc desc;
+	bool is_last_packet;
+	bool packet_sent = false;
+
+	NvNetState_t* s = &NvNetState;
+
+	for (int i = 0; i < s->tx_ring_size; i++) {
+		/* Read ring descriptor */
+		s->tx_ring_index %= s->tx_ring_size;
+		xbaddr tx_ring_addr = EmuNVNet_GetRegister(NvRegTxRingPhysAddr, 4);
+		tx_ring_addr += s->tx_ring_index * sizeof(desc);
+
+		memcpy(&desc, (void*)(tx_ring_addr | CONTIGUOUS_MEMORY_BASE), sizeof(desc));
+
+		EmuLog(LOG_LEVEL::DEBUG, "Looking at ring desc %d (%llx): "
+		                         "\n   Buffer: 0x%x "
+		                         "\n   Length: 0x%x "
+		                         "\n   Flags:  0x%x ",
+		                         s->tx_ring_index, tx_ring_addr, desc.packet_buffer, desc.length, desc.flags);
+
+		s->tx_ring_index += 1;
+
+		if (!(desc.flags & NV_TX_VALID)) {
+			continue;
+		}
+
+		/* Transfer packet from guest memory */
+		EmuLog(LOG_LEVEL::DEBUG, "Sending packet...");
+
+		memcpy(s->txrx_dma_buf, (void*)(desc.packet_buffer | CONTIGUOUS_MEMORY_BASE), desc.length + 1);
+		g_NVNet->PCAPSend(s->txrx_dma_buf, desc.length + 1);
+
+		packet_sent = true;
+
+		/* Update descriptor */
+		is_last_packet = desc.flags & NV_TX_LASTPACKET;
+		desc.flags &= ~(NV_TX_VALID | NV_TX_RETRYERROR | NV_TX_DEFERRED | NV_TX_CARRIERLOST | NV_TX_LATECOLLISION | NV_TX_UNDERFLOW | NV_TX_ERROR);
+		desc.length = desc.length + 5;
+
+		memcpy((void*)(tx_ring_addr | CONTIGUOUS_MEMORY_BASE), &desc, sizeof(desc));
+
+		if (is_last_packet) {
+			EmuLog(LOG_LEVEL::DEBUG, "  -- Last packet");
+			break;
+		}
+	}
+
+	if (packet_sent) {
+		/* Trigger interrupt */
+		EmuLog(LOG_LEVEL::DEBUG, "Triggering interrupt");
+		EmuNVNet_SetRegister(NvRegIrqStatus, NVREG_IRQSTAT_BIT4, 4);
+		EmuNVNet_UpdateIRQ();
+	}
+}
+
+bool EmuNVNet_DMAPacketToGuest(void* packet, size_t size)
+{
+	struct RingDesc desc;
+
+	NvNetState_t* s = &NvNetState;
+
+	for (int i = 0; i < s->rx_ring_size; i++) {
+		/* Read current ring descriptor */
+		s->rx_ring_index %= s->rx_ring_size;
+		xbaddr rx_ring_addr = EmuNVNet_GetRegister(NvRegRxRingPhysAddr, 4);
+		rx_ring_addr += s->rx_ring_index * sizeof(desc);
+		
+		memcpy(&desc, (void*)(rx_ring_addr | CONTIGUOUS_MEMORY_BASE), sizeof(desc));
+
+        EmuLog(LOG_LEVEL::DEBUG, "Looking at ring descriptor %d (0x%llx): "
+                                 "\n   Buffer: 0x%x "
+                                 "\n   Length: 0x%x "
+                                 "\n   Flags:  0x%x ",
+                                 s->rx_ring_index, rx_ring_addr, desc.packet_buffer, desc.length, desc.flags);
+
+		s->rx_ring_index += 1;
+
+		if (!(desc.flags & NV_RX_AVAIL) || !(desc.length >= size)) {
+			continue;
+		}
+
+		/* Transfer packet from device to memory */
+		EmuLog(LOG_LEVEL::DEBUG, "Transferring packet, size 0x%zx, to memory at 0x%x", size, desc.packet_buffer);
+		memcpy((void*)(desc.packet_buffer | CONTIGUOUS_MEMORY_BASE), packet, size);
+
+		/* Update descriptor indicating the packet is waiting */
+		desc.length = (uint16_t)size;
+		desc.flags = NV_RX_BIT4 | NV_RX_DESCRIPTORVALID;
+		memcpy((void*)(rx_ring_addr | CONTIGUOUS_MEMORY_BASE), &desc, sizeof(desc));
+        EmuLog(LOG_LEVEL::DEBUG, "Updated ring descriptor: "
+                                 "\n   Length: 0x%x "
+                                 "\n   Flags:  0x%x ",
+                                 desc.flags, desc.length);
+
+		/* Trigger interrupt */
+		EmuLog(LOG_LEVEL::DEBUG, "Triggering interrupt");
+		EmuNVNet_SetRegister(NvRegIrqStatus, NVREG_IRQSTAT_BIT1, 4);
+		EmuNVNet_UpdateIRQ();
+		return true;
+	}
+
+	/* Could not find free buffer, or packet too large. */
+	EmuLog(LOG_LEVEL::DEBUG, "Could not find free buffer!");
+	return false;
 }
 
 void EmuNVNet_Write(xbaddr addr, uint32_t value, int size)
@@ -471,9 +440,8 @@ void EmuNVNet_Write(xbaddr addr, uint32_t value, int size)
 		break;
 	case NvRegTxRxControl:
 		if (value == NVREG_TXRXCTL_KICK) {
-			DbgPrintf(LOG_PREFIX, "NvRegTxRxControl = NVREG_TXRXCTL_KICK!\n");
-			EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "TODO: nvnet_dma_packet_from_guest");
-			// nvnet_dma_packet_from_guest(s);
+			EmuLog(LOG_LEVEL::DEBUG, "NvRegTxRxControl = NVREG_TXRXCTL_KICK!");
+			EmuNVNet_DMAPacketFromGuest();
 		}
 
 		if (value & NVREG_TXRXCTL_BIT2) {
@@ -508,7 +476,20 @@ void EmuNVNet_Write(xbaddr addr, uint32_t value, int size)
 		break;
 	}
 
-	DbgPrintf(LOG_PREFIX, "Write%d: %s (0x%.8X) = 0x%.8X\n", size, EmuNVNet_GetRegisterName(addr), addr, value);
+	EmuLog(LOG_LEVEL::DEBUG, "Write%d: %s (0x%.8X) = 0x%.8X", size * 8, EmuNVNet_GetRegisterName(addr), addr, value);
+}
+
+std::thread NVNetRecvThread;
+static void NVNetRecvThreadProc(NvNetState_t *s)
+{
+	SetThreadAffinityMask(GetCurrentThread(), g_CPUOthers);
+	uint8_t packet[65536];
+	while (true) {
+		int size = g_NVNet->PCAPReceive(packet, 65536);
+		if (size > 0) {
+			EmuNVNet_DMAPacketToGuest(packet, size);
+		}	
+	}
 }
 
 /* NVNetDevice */
@@ -531,10 +512,57 @@ void NVNetDevice::Init()
 
 	m_DeviceId = 0x01C3;
 	m_VendorId = PCI_VENDOR_ID_NVIDIA;
+
+	memset(NvNetState.regs, 0, sizeof(NvNetState.regs));
+	NvNetState.rx_ring_index = 0;
+	NvNetState.rx_ring_size = 0;
+	NvNetState.tx_ring_index = 0;
+	NvNetState.tx_ring_size = 0;
+
+	// Fetch Host Network Device
+	Settings::s_network networkSettings;
+	g_EmuShared->GetNetworkSettings(&networkSettings);
+	m_HostAdapterName = networkSettings.adapter_name;
+
+	// Get Mac Address
+	if (!GetMacAddress(m_HostAdapterName, m_HostMacAddress.bytes)) {
+		EmuLog(LOG_LEVEL::WARNING, "Failed to initialize network adapter.");
+		return;
+	};
+
+	PCAPInit();
+	NVNetRecvThread = std::thread(NVNetRecvThreadProc, &NvNetState);
 }
 
 void NVNetDevice::Reset()
 {
+}
+
+bool NVNetDevice::GetMacAddress(std::string adapterName, void* pMAC)
+{
+	IP_ADAPTER_INFO AdapterInfo[128];
+	PIP_ADAPTER_INFO pAdapterInfo;
+	ULONG dwBufferLength = sizeof(AdapterInfo);
+
+	DWORD dwStatus = GetAdaptersInfo(AdapterInfo, &dwBufferLength);
+	if (dwStatus != ERROR_SUCCESS) {
+		return false;
+	}
+
+	pAdapterInfo = AdapterInfo;
+
+	// Find the specified adapter
+	do {
+		if (strcmp(pAdapterInfo->AdapterName, adapterName.c_str()) == 0) {
+			memcpy(pMAC, pAdapterInfo->Address, 6);
+			return true;
+		}
+
+		pAdapterInfo = pAdapterInfo->Next;
+
+	} while (pAdapterInfo);
+
+	return false;
 }
 
 uint32_t NVNetDevice::IORead(int barIndex, uint32_t port, unsigned size)
@@ -555,12 +583,12 @@ void NVNetDevice::IOWrite(int barIndex, uint32_t port, uint32_t value, unsigned 
 }
 
 uint32_t NVNetDevice::MMIORead(int barIndex, uint32_t addr, unsigned size)
-{ 
+{
 	if (barIndex != 0) {
 		return 0;
 	}
 
-	return EmuNVNet_Read(addr, size * 8); // For now, forward
+	return EmuNVNet_Read(addr, size); // For now, forward
 }
 
 void NVNetDevice::MMIOWrite(int barIndex, uint32_t addr, uint32_t value, unsigned size)
@@ -569,5 +597,127 @@ void NVNetDevice::MMIOWrite(int barIndex, uint32_t addr, uint32_t value, unsigne
 		return;
 	}
 
-	EmuNVNet_Write(addr, value, size * 8); // For now, forward
+	EmuNVNet_Write(addr, value, size); // For now, forward
+
+	// Cache guest MAC address for packet filter
+	if (addr == NvRegMacAddrA) {
+		m_GuestMacAddress.bytes[0] = NvNetState.regs[NvRegMacAddrA + 0];
+		m_GuestMacAddress.bytes[1] = NvNetState.regs[NvRegMacAddrA + 1];
+		m_GuestMacAddress.bytes[2] = NvNetState.regs[NvRegMacAddrA + 2];
+		m_GuestMacAddress.bytes[3] = NvNetState.regs[NvRegMacAddrA + 3];
+	}
+	else if (addr == NvRegMacAddrB) {
+		m_GuestMacAddress.bytes[4] = NvNetState.regs[NvRegMacAddrB + 0];
+		m_GuestMacAddress.bytes[5] = NvNetState.regs[NvRegMacAddrB + 1];
+	}
+}
+
+bool NVNetDevice::PCAPInit()
+{
+	char errorBuffer[PCAP_ERRBUF_SIZE];
+
+	// Open the desired network adapter
+	__try {
+		char buffer[MAX_PATH];
+		snprintf(buffer, MAX_PATH, "\\Device\\NPF_%s", m_HostAdapterName.c_str());
+		m_AdapterHandle = pcap_open_live(buffer,
+			65536,	// Capture entire packet
+			1,		// Use promiscuous mode
+			1,		// Read Timeout
+			errorBuffer
+		);
+	} __except(EXCEPTION_EXECUTE_HANDLER) {
+		m_AdapterHandle = nullptr;
+		snprintf(errorBuffer, PCAP_ERRBUF_SIZE, "Could not initialize pcap");
+	}
+
+	if (m_AdapterHandle == nullptr) {
+		EmuLog(LOG_LEVEL::WARNING, "Unable to open Network Adapter:\n%s\nNetworking will be disabled", errorBuffer);
+		return false;
+	}
+
+	if (pcap_setnonblock((pcap_t*)m_AdapterHandle, 1, errorBuffer) == -1) {
+		EmuLog(LOG_LEVEL::WARNING, "PCAP: Failed to set non-blocking mode");
+	}
+
+	m_PCAPRunning = true;
+	return true;
+}
+
+void PrintRawPayload(void* buffer, size_t length)
+{
+	uint8_t* startAddr = (uint8_t*)buffer;
+
+	printf("----Payload----\n");
+	for (uint8_t* addr = startAddr; addr < (startAddr + length); addr += 16) {
+		printf("%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X\t|\t%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c\n",
+			addr[0x0], addr[0x1], addr[0x2], addr[0x3], addr[0x4], addr[0x5], addr[0x6], addr[0x7], 
+			addr[0x8], addr[0x9], addr[0xA], addr[0xB], addr[0xC], addr[0xD3], addr[0xE], addr[0xF],
+			addr[0x0], addr[0x1], addr[0x2], addr[0x3], addr[0x4], addr[0x5], addr[0x6], addr[0x7],
+			addr[0x8], addr[0x9], addr[0xA], addr[0xB], addr[0xC], addr[0xD3], addr[0xE], addr[0xF]
+		);
+	}
+}
+
+void PrintPacket(void* buffer, size_t length)
+{
+	ethernet_header* header = (ethernet_header*)buffer;
+	printf("----Ethernet Frame----\n");
+	printf("Src: %02X:%02X:%02X:%02X:%02X:%02X\n", header->src.bytes[0], header->src.bytes[1], header->src.bytes[2], header->src.bytes[3], header->src.bytes[4], header->src.bytes[5]);
+	printf("Dst: %02X:%02X:%02X:%02X:%02X:%02X\n", header->dst.bytes[0], header->dst.bytes[1], header->dst.bytes[2], header->dst.bytes[3], header->dst.bytes[4], header->dst.bytes[5]);
+	printf("EtherType: %04X\n", ntohs(header->protocol));
+
+	void* payloadPtr = (void*)((uint8_t*)buffer + sizeof(ethernet_header));
+	size_t payloadLength = length - sizeof(ethernet_header);
+
+	// TODO: If we support the EtherType, decode it, otherwise, just dump the raw payload
+	//switch (ntohs(header->protocol))
+	{
+	//	default:
+			PrintRawPayload(payloadPtr, payloadLength);
+	}
+}	
+
+bool NVNetDevice::PCAPSend(void* packet, size_t length)
+{
+	if (!m_PCAPRunning) {
+		return false;
+	}
+
+	ethernet_header* header = (ethernet_header*)packet;
+
+	// TODO: Optional
+	// PrintPacket(packet, length);
+	
+	if (memcmp(header->dst.bytes, m_BroadcastMacAddress.bytes, 6) == 0) {
+		static char pack[65536];
+		memcpy(pack, packet, length);
+		header->dst = m_HostMacAddress;
+		pcap_sendpacket((pcap_t*)m_AdapterHandle, (uint8_t*)pack, length);
+	}
+
+	return pcap_sendpacket((pcap_t*)m_AdapterHandle, (uint8_t*)packet, length);
+}
+
+size_t NVNetDevice::PCAPReceive(void* packet, size_t max_length)
+{
+	if (!m_PCAPRunning) {
+		return -1;
+	}
+
+	struct pcap_pkthdr *header;
+	const uint8_t *pkt_data;
+
+	if (int res = pcap_next_ex((pcap_t*)m_AdapterHandle, &header, &pkt_data) > 0) {
+		// Only forward packets that are multicast or specifically for Cxbx-R's MAC
+		ethernet_header* e_header = (ethernet_header*)pkt_data;
+		if (memcmp(e_header->dst.bytes, m_GuestMacAddress.bytes, 6) != 0 && memcmp(e_header->dst.bytes, m_BroadcastMacAddress.bytes, 6) != 0) {
+			return -1;
+		}
+
+		memcpy(packet, pkt_data, header->len);
+		return header->len;
+	}
+
+	return -1;
 }

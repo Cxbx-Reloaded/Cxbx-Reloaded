@@ -37,7 +37,7 @@ static QString* qstring_from_fmt(std::string fmt, ...) {
 #define qstring_append_fmt(gs, fmt, ...) gs->append(*(std::string*)(qstring_from_fmt(fmt, ##__VA_ARGS__)))
 #define qstring_get_length(gs) gs->size()
 
-#define QDECREF(X) // FIXME: Mostly free, but needs to be reviewed case-by-case
-#define QINCREF(X) // FIXME: Tricky!
+#define qobject_unref(X) // FIXME: Mostly free, but needs to be reviewed case-by-case
+#define qobject_ref(X) // FIXME: Tricky!
 
 #endif

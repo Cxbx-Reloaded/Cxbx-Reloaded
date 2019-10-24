@@ -2,15 +2,6 @@
 // PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 // ******************************************************************
 // *
-// *    .,-:::::    .,::      .::::::::.    .,::      .:
-// *  ,;;;'````'    `;;;,  .,;;  ;;;'';;'   `;;;,  .,;;
-// *  [[[             '[[,,[['   [[[__[[\.    '[[,,[['
-// *  $$$              Y$$$P     $$""""Y$$     Y$$$P
-// *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
-// *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
-// *
-// *   src->devices->video->EmuNV2A_PFB.cpp
-// *
 // *  This file is part of the Cxbx project.
 // *
 // *  Cxbx and Cxbe are free software; you can redistribute them
@@ -28,12 +19,15 @@
 // *  If not, write to the Free Software Foundation, Inc.,
 // *  59 Temple Place - Suite 330, Bostom, MA 02111-1307, USA.
 // *
-// *  nv2a.cpp is heavily based on code from XQEMU
-// *  Copyright(c) 2012 espes
-// *  Copyright(c) 2015 Jannik Vogel
-// *  https://github.com/espes/xqemu/blob/xbox/hw/xbox/nv2a.c
-// *  (c) 2017-2018 Luke Usher <luke.usher@outlook.com>
-// *  (c) 2018 Patrick van Logchem <pvanlogchem@gmail.com>
+// *  This file is heavily based on code from XQEMU
+// *  https://github.com/xqemu/xqemu/blob/master/hw/xbox/nv2a/nv2a_pfb.c
+// *  Copyright (c) 2012 espes
+// *  Copyright (c) 2015 Jannik Vogel
+// *  Copyright (c) 2018 Matt Borgerson
+// *
+// *  Contributions for Cxbx-Reloaded
+// *  Copyright (c) 2017-2018 Luke Usher <luke.usher@outlook.com>
+// *  Copyright (c) 2018 Patrick van Logchem <pvanlogchem@gmail.com>
 // *
 // *  All rights reserved
 // *

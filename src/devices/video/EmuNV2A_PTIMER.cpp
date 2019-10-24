@@ -2,15 +2,6 @@
 // PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 // ******************************************************************
 // *
-// *    .,-:::::    .,::      .::::::::.    .,::      .:
-// *  ,;;;'````'    `;;;,  .,;;  ;;;'';;'   `;;;,  .,;;
-// *  [[[             '[[,,[['   [[[__[[\.    '[[,,[['
-// *  $$$              Y$$$P     $$""""Y$$     Y$$$P
-// *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
-// *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
-// *
-// *   src->devices->video->EmuNV2A_PTIMER.cpp
-// *
 // *  This file is part of the Cxbx project.
 // *
 // *  Cxbx and Cxbe are free software; you can redistribute them
@@ -28,18 +19,23 @@
 // *  If not, write to the Free Software Foundation, Inc.,
 // *  59 Temple Place - Suite 330, Bostom, MA 02111-1307, USA.
 // *
-// *  nv2a.cpp is heavily based on code from XQEMU
-// *  Copyright(c) 2012 espes
-// *  Copyright(c) 2015 Jannik Vogel
-// *  https://github.com/espes/xqemu/blob/xbox/hw/xbox/nv2a.c
-// *  (c) 2017-2018 Luke Usher <luke.usher@outlook.com>
-// *  (c) 2018 Patrick van Logchem <pvanlogchem@gmail.com>
+// *  This file is heavily based on code from XQEMU
+// *  https://github.com/xqemu/xqemu/blob/master/hw/xbox/nv2a/nv2a_ptimer.c
+// *  Copyright (c) 2012 espes
+// *  Copyright (c) 2015 Jannik Vogel
+// *  Copyright (c) 2018 Matt Borgerson
+// *
+// *  Contributions for Cxbx-Reloaded
+// *  Copyright (c) 2017-2018 Luke Usher <luke.usher@outlook.com>
+// *  Copyright (c) 2018 Patrick van Logchem <pvanlogchem@gmail.com>
 // *
 // *  All rights reserved
 // *
 // ******************************************************************
 
-#include "CxbxCommon.h"
+#include "common\util\CxbxUtil.h"
+
+#define NANOSECONDS_PER_SECOND 1000000000
 
 /* PTIMER - time measurement and time-based alarms */
 static uint64_t ptimer_get_clock(NV2AState * d)
@@ -47,9 +43,11 @@ static uint64_t ptimer_get_clock(NV2AState * d)
 	// Get time in nanoseconds
     uint64_t time = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
 	
-	return Muldiv64(time,
-					uint32_t(d->pramdac.core_clock_freq * d->ptimer.numerator),
-					CLOCKS_PER_SEC * d->ptimer.denominator);
+	return Muldiv64(Muldiv64(time,
+					(uint32_t)d->pramdac.core_clock_freq, // TODO : Research how this can be updated to accept uint64_t
+					NANOSECONDS_PER_SECOND), // Was CLOCKS_PER_SEC
+				d->ptimer.denominator,
+				d->ptimer.numerator);
 }
 
 DEVICE_READ32(PTIMER)

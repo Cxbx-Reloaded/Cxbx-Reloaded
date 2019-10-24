@@ -2,15 +2,6 @@
 // PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 // ******************************************************************
 // *
-// *    .,-:::::    .,::      .::::::::.    .,::      .:
-// *  ,;;;'````'    `;;;,  .,;;  ;;;'';;'   `;;;,  .,;;
-// *  [[[             '[[,,[['   [[[__[[\.    '[[,,[['
-// *  $$$              Y$$$P     $$""""Y$$     Y$$$P
-// *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
-// *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
-// *
-// *   src->devices->video->nv2a.cpp
-// *
 // *  This file is part of the Cxbx project.
 // *
 // *  Cxbx and Cxbe are free software; you can redistribute them
@@ -30,25 +21,26 @@
 // *
 // *  (c) 2002-2003 Aaron Robinson <caustik@caustik.com>
 // * 
-// *  nv2a.cpp is heavily based on code from XQEMU
-// *  Copyright(c) 2012 espes
-// *  Copyright(c) 2015 Jannik Vogel
-// *  https://github.com/espes/xqemu/blob/xbox/hw/xbox/nv2a.c
+// *  This file is heavily based on code from XQEMU
+// *  https://github.com/xqemu/xqemu/blob/master/hw/xbox/nv2a/nv2a.c
+// *  Copyright (c) 2012 espes
+// *  Copyright (c) 2015 Jannik Vogel
+// *  Copyright (c) 2018 Matt Borgerson
 // *
-// *  (c) 2016-2018 Luke Usher <luke.usher@outlook.com>
-// *  (c) 2017-2018 Patrick van Logchem <pvanlogchem@gmail.com>
+// *  Contributions for Cxbx-Reloaded
+// *  Copyright (c) 2017-2018 Luke Usher <luke.usher@outlook.com>
+// *  Copyright (c) 2018 Patrick van Logchem <pvanlogchem@gmail.com>
 // *
 // *  All rights reserved
 // *
 // ******************************************************************
-#define _XBOXKRNL_DEFEXTRN_
 
 #define LOG_PREFIX CXBXR_MODULE::NV2A
 
 // prevent name collisions
 namespace xboxkrnl
 {
-#include <xboxkrnl/xboxkrnl.h> // For PKINTERRUPT, etc.
+#include <xboxkrnl\xboxkrnl.h> // For PKINTERRUPT, etc.
 };
 
 #ifdef _MSC_VER                         // Check if MS Visual C compiler
@@ -61,11 +53,10 @@ namespace xboxkrnl
 #include <distorm.h> // For uint32_t
 #include <process.h> // For __beginthreadex(), etc.
 
-#include "CxbxKrnl\CxbxKrnl.h" // For XBOX_MEMORY_SIZE, DWORD, etc
-#include "CxbxKrnl\Emu.h"
-#include "CxbxKrnl\EmuFS.h"
-#include "CxbxKrnl\EmuKrnl.h"
-#include "core/HLE/Intercept.hpp"
+#include "core\kernel\init\CxbxKrnl.h" // For XBOX_MEMORY_SIZE, DWORD, etc
+#include "core\kernel\support\Emu.h"
+#include "core\kernel\exports\EmuKrnl.h"
+#include "core\hle\Intercept.hpp"
 #include "Logging.h"
 
 #include "vga.h"
@@ -97,8 +88,11 @@ struct _GError
 	gchar       *message;
 };
 
-#include "CxbxKrnl/gloffscreen/glextensions.h" // for glextensions_init
+#include "common\util\gloffscreen\glextensions.h" // for glextensions_init
 
+GLuint create_gl_shader(GLenum gl_shader_type,
+	const char *code,
+	const char *name); // forward to nv2a_shaders.cpp
 
 static void update_irq(NV2AState *d)
 {
@@ -164,11 +158,11 @@ static void update_irq(NV2AState *d)
 #include "EmuNV2A_DEBUG.cpp"
 
 
-#define DEBUG_READ32(DEV)              DbgPrintf(CXBXR_MODULE::X86, "Rd32 NV2A " #DEV "(0x%08X) = 0x%08X [Handled %s]\n", addr, result, DebugNV_##DEV##(addr))
-#define DEBUG_READ32_UNHANDLED(DEV)  { DbgPrintf(CXBXR_MODULE::X86, "Rd32 NV2A " #DEV "(0x%08X) = 0x%08X [Unhandled %s]\n", addr, result, DebugNV_##DEV##(addr)); return result; }
+#define DEBUG_READ32(DEV)              EmuLog(LOG_LEVEL::DEBUG, "Rd32 NV2A " #DEV "(0x%08X) = 0x%08X [Handled %s]", addr, result, DebugNV_##DEV##(addr))
+#define DEBUG_READ32_UNHANDLED(DEV)  { EmuLog(LOG_LEVEL::DEBUG, "Rd32 NV2A " #DEV "(0x%08X) = 0x%08X [Unhandled %s]", addr, result, DebugNV_##DEV##(addr)); return result; }
 
-#define DEBUG_WRITE32(DEV)             DbgPrintf(CXBXR_MODULE::X86, "Wr32 NV2A " #DEV "(0x%08X, 0x%08X) [Handled %s]\n", addr, value, DebugNV_##DEV##(addr))
-#define DEBUG_WRITE32_UNHANDLED(DEV) { DbgPrintf(CXBXR_MODULE::X86, "Wr32 NV2A " #DEV "(0x%08X, 0x%08X) [Unhandled %s]\n", addr, value, DebugNV_##DEV##(addr)); return; }
+#define DEBUG_WRITE32(DEV)             EmuLog(LOG_LEVEL::DEBUG, "Wr32 NV2A " #DEV "(0x%08X, 0x%08X) [Handled %s]", addr, value, DebugNV_##DEV##(addr))
+#define DEBUG_WRITE32_UNHANDLED(DEV) { EmuLog(LOG_LEVEL::DEBUG, "Wr32 NV2A " #DEV "(0x%08X, 0x%08X) [Unhandled %s]", addr, value, DebugNV_##DEV##(addr)); return; }
 
 #define DEVICE_READ32(DEV) uint32_t EmuNV2A_##DEV##_Read32(NV2AState *d, xbaddr addr)
 #define DEVICE_READ32_SWITCH() uint32_t result = 0; switch (addr) 
@@ -671,22 +665,8 @@ void cxbx_gl_update_displaymode(NV2AState *d) {
 	frame_gl_format = kelvin_color_format_map[display_mode_format].gl_format;
 	frame_gl_type = kelvin_color_format_map[display_mode_format].gl_type;
 
-	// Test case : Arctic Thunder, sets a 16 bit framebuffer (R5G6B5) not via
-	// AvSetDisplayMode(), but via VGA control register writes, which implies
-	// that it's format argument cannot be used to determine the framebuffer
-	// width. Instead, read the framebuffer width from the VGA control registers :
-	frame_width = ((int)d->prmcio.cr[NV_CIO_CR_OFFSET_INDEX])
-		| (0x700 & ((int)d->prmcio.cr[NV_CIO_CRE_RPC0_INDEX] << 3))
-		| (0x800 & ((int)d->prmcio.cr[NV_CIO_CRE_LSR_INDEX] << 6));
-	frame_width *= 8;
-	frame_width /= frame_pixel_bytes;
-
-	// Derive frame_height from hardware registers
-	frame_height = ((int)d->prmcio.cr[NV_CIO_CR_VDE_INDEX])
-		| (((int)d->prmcio.cr[NV_CIO_CR_OVL_INDEX] & 0x02) >> 1 << 8)
-		| (((int)d->prmcio.cr[NV_CIO_CR_OVL_INDEX] & 0x40) >> 6 << 9)
-		| (((int)d->prmcio.cr[NV_CIO_CRE_LSR_INDEX] & 0x02) >> 1 << 10);
-	frame_height++;
+	frame_width = NV2ADevice::GetFrameWidth(d);
+	frame_height = NV2ADevice::GetFrameHeight(d);
 
 	// Detect changes in framebuffer dimensions
 	if (old_frame_gl_internal_format != frame_gl_internal_format
@@ -1068,9 +1048,9 @@ void NV2ADevice::UpdateHostDisplay(NV2AState *d)
 		return;
 	}
 
-	lockGL(pg);
-
 	NV2A_GL_DGROUP_BEGIN("VGA Frame");
+
+	glo_set_current(pg->gl_context);
 
 	cxbx_gl_update_displaymode(d);
 
@@ -1114,7 +1094,7 @@ void NV2ADevice::UpdateHostDisplay(NV2AState *d)
 
 	NV2A_GL_DGROUP_END();
 
-	unlockGL(pg);
+//	glo_set_current(NULL);
 
 	UpdateFPSCounter();
 }
@@ -1122,6 +1102,7 @@ void NV2ADevice::UpdateHostDisplay(NV2AState *d)
 // TODO: Fix this properly
 static void nv2a_vblank_thread(NV2AState *d)
 {
+	SetThreadAffinityMask(GetCurrentThread(), g_CPUOthers);
 	CxbxSetThreadName("Cxbx NV2A VBLANK");
 	auto nextVBlankTime = GetNextVBlankTime();
 
@@ -1136,6 +1117,8 @@ static void nv2a_vblank_thread(NV2AState *d)
 			// But it causes crashes on AMD hardware for reasons currently unknown...
 			//NV2ADevice::UpdateHostDisplay(d);
 		}
+
+        Sleep(1);
 	}
 }
 
@@ -1153,7 +1136,7 @@ void CxbxReserveNV2AMemory(NV2AState *d)
 		MEM_RESERVE, // Don't allocate actual physical storage in memory
 		PAGE_NOACCESS); // Any access must result in an access violation exception (handled in EmuException/EmuX86_DecodeException)
 	if (memory == NULL) {
-		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Couldn't reserve NV2A memory, continuing assuming we'll receive (and handle) access violation exceptions anyway...");
+		EmuLog(LOG_LEVEL::WARNING, "Couldn't reserve NV2A memory, continuing assuming we'll receive (and handle) access violation exceptions anyway...");
 		return;
 	}
 
@@ -1169,11 +1152,11 @@ void CxbxReserveNV2AMemory(NV2AState *d)
 		MEM_COMMIT, // No MEM_RESERVE |
 		PAGE_READWRITE);
 	if (d->pramin.ramin_ptr == NULL) {
-		EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "Couldn't allocate NV2A PRAMIN memory");
+		EmuLog(LOG_LEVEL::WARNING, "Couldn't allocate NV2A PRAMIN memory");
 		return;
 	}
 
-	printf("[0x%.4X] INIT: Allocated %d MiB of Xbox NV2A PRAMIN memory at 0x%.8X to 0x%.8X\n",
+	printf("[0x%.4X] INIT: Allocated %d MiB of Xbox NV2A PRAMIN memory at 0x%.8p to 0x%.8p\n",
 		GetCurrentThreadId(), d->pramin.ramin_size / ONE_MB, d->pramin.ramin_ptr, d->pramin.ramin_ptr + d->pramin.ramin_size - 1);
 }
 
@@ -1224,18 +1207,25 @@ void NV2ADevice::Init()
 	d->pramdac.video_clock_coeff = 0x0003C20D; /* 25182Khz...? */
 
 	// Setup the conditions/mutexes
-	qemu_mutex_init(&d->pfifo.cache1.cache_lock);
-	qemu_cond_init(&d->pfifo.cache1.cache_cond);
 	pgraph_init(d);
 
-	// Only spawn VBlank thread when LLE is enabled
+	// Only init PVIDEO when LLE is enabled
 	if (d->pgraph.opengl_enabled) {
 		pvideo_init(d);
-
-		vblank_thread = std::thread(nv2a_vblank_thread, d);
 	}
 
+    vblank_thread = std::thread(nv2a_vblank_thread, d);
+
+    qemu_mutex_init(&d->pfifo.pfifo_lock);
+    qemu_cond_init(&d->pfifo.puller_cond);
+    qemu_cond_init(&d->pfifo.pusher_cond);
+
+    d->pfifo.regs[NV_PFIFO_CACHE1_STATUS] |= NV_PFIFO_CACHE1_STATUS_LOW_MARK;
+
+    /* fire up puller */
 	d->pfifo.puller_thread = std::thread(pfifo_puller_thread, d);
+    /* fire up pusher */
+	d->pfifo.pusher_thread = std::thread(pfifo_pusher_thread, d);
 }
 
 void NV2ADevice::Reset()
@@ -1244,17 +1234,18 @@ void NV2ADevice::Reset()
 	if (!d) return;
 
 	d->exiting = true;
-	qemu_cond_signal(&d->pfifo.cache1.cache_cond);
-	d->pfifo.puller_thread.join(); // was qemu_thread_join(&d->pfifo.puller_thread);
 
+	qemu_cond_broadcast(&d->pfifo.puller_cond);
+	qemu_cond_broadcast(&d->pfifo.pusher_cond);
+	d->pfifo.puller_thread.join();
+	d->pfifo.pusher_thread.join();
+	qemu_mutex_destroy(&d->pfifo.pfifo_lock); // Cbxbx addition
 	if (d->pgraph.opengl_enabled) {
 		vblank_thread.join();
 		pvideo_destroy(d);
 	}
 
 	pgraph_destroy(&d->pgraph);
-	qemu_mutex_destroy(&d->pfifo.cache1.cache_lock);
-	qemu_cond_destroy(&d->pfifo.cache1.cache_cond);
 }
 
 uint32_t NV2ADevice::IORead(int barIndex, uint32_t port, unsigned size)
@@ -1303,7 +1294,7 @@ uint32_t NV2ADevice::MMIORead(int barIndex, uint32_t addr, unsigned size)
 	}
 	}
 
-	EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "NV2ADevice::MMIORead: Unhandled barIndex %d, addr %08X, size %d", barIndex, addr, size);
+	EmuLog(LOG_LEVEL::WARNING, "NV2ADevice::MMIORead: Unhandled barIndex %d, addr %08X, size %d", barIndex, addr, size);
 	return 0;
 }
 
@@ -1370,5 +1361,31 @@ void NV2ADevice::MMIOWrite(int barIndex, uint32_t addr, uint32_t value, unsigned
 	}
 	}
 
-	EmuLog(LOG_PREFIX, LOG_LEVEL::WARNING, "NV2ADevice::MMIOWrite: Unhandled barIndex %d, addr %08X, value %08X, size %d", barIndex, addr, value, size);
+	EmuLog(LOG_LEVEL::WARNING, "NV2ADevice::MMIOWrite: Unhandled barIndex %d, addr %08X, value %08X, size %d", barIndex, addr, value, size);
+}
+
+int NV2ADevice::GetFrameHeight(NV2AState* d)
+{
+	// Derive frame_height from hardware registers
+	int height = ((int)d->prmcio.cr[NV_CIO_CR_VDE_INDEX])
+		| (((int)d->prmcio.cr[NV_CIO_CR_OVL_INDEX] & 0x02) >> 1 << 8)
+		| (((int)d->prmcio.cr[NV_CIO_CR_OVL_INDEX] & 0x40) >> 6 << 9)
+		| (((int)d->prmcio.cr[NV_CIO_CRE_LSR_INDEX] & 0x02) >> 1 << 10);
+
+	return height++;
+}
+
+int NV2ADevice::GetFrameWidth(NV2AState* d)
+{
+	// Test case : Arctic Thunder, sets a 16 bit framebuffer (R5G6B5) not via
+	// AvSetDisplayMode(), but via VGA control register writes, which implies
+	// that it's format argument cannot be used to determine the framebuffer
+	// width. Instead, read the framebuffer width from the VGA control registers :
+	int width = ((int)d->prmcio.cr[NV_CIO_CR_OFFSET_INDEX])
+		| (0x700 & ((int)d->prmcio.cr[NV_CIO_CRE_RPC0_INDEX] << 3))
+		| (0x800 & ((int)d->prmcio.cr[NV_CIO_CRE_LSR_INDEX] << 6));
+	width *= 8;
+	width /= frame_pixel_bytes;
+
+	return width;
 }

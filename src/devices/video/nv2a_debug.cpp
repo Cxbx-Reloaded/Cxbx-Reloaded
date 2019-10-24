@@ -15,7 +15,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program; if not, see <http://www.gnu.org/licenses/>.
+ * along with this program; if not, see <https://www.gnu.org/licenses/>.
  */
 
 #include "nv2a_debug.h"
@@ -23,6 +23,7 @@
 #ifdef DEBUG_NV2A_GL
 
 #include <stdio.h>
+#include <stdbool.h>
 #include <stdarg.h>
 #include <assert.h>
 
