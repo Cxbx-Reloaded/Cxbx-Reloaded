@@ -262,12 +262,14 @@ inline int EmuD3DPrimitive2VertexCount(XTL::X_D3DPRIMITIVETYPE PrimitiveType, in
 extern D3DPRIMITIVETYPE EmuPrimitiveTypeLookup[];
 
 // convert xbox->pc primitive type
-inline D3DPRIMITIVETYPE EmuXB2PC_D3DPrimitiveType(XTL::X_D3DPRIMITIVETYPE PrimitiveType)
+inline D3DPRIMITIVETYPE EmuXB2PC_D3DPrimitiveType(XTL::X_D3DPRIMITIVETYPE XboxPrimitiveType)
 {
-    if((DWORD)PrimitiveType == 0x7FFFFFFF)
-        return D3DPT_FORCE_DWORD;
+	if (XboxPrimitiveType >= XTL::X_D3DPT_MAX) {
+		LOG_TEST_CASE("XboxPrimitiveType too large");
+		return D3DPT_FORCE_DWORD;
+	}
 
-    return EmuPrimitiveTypeLookup[PrimitiveType];
+    return EmuPrimitiveTypeLookup[XboxPrimitiveType];
 }
 
 inline int EmuD3DIndexCountToVertexCount(XTL::X_D3DPRIMITIVETYPE XboxPrimitiveType, int IndexCount)

@@ -1203,18 +1203,18 @@ UINT EmuD3DVertexToPrimitive[11][2] =
 // conversion table for xbox->pc primitive types
 D3DPRIMITIVETYPE EmuPrimitiveTypeLookup[] =
 {
-    /* NULL                 = 0         */ (D3DPRIMITIVETYPE)0,
-    /* D3DPT_POINTLIST      = 1,        */ D3DPT_POINTLIST,
-    /* D3DPT_LINELIST       = 2,        */ D3DPT_LINELIST,
-    /* D3DPT_LINELOOP       = 3,  Xbox  */ D3DPT_LINESTRIP,
-    /* D3DPT_LINESTRIP      = 4,        */ D3DPT_LINESTRIP,
-    /* D3DPT_TRIANGLELIST   = 5,        */ D3DPT_TRIANGLELIST,
-    /* D3DPT_TRIANGLESTRIP  = 6,        */ D3DPT_TRIANGLESTRIP,
-    /* D3DPT_TRIANGLEFAN    = 7,        */ D3DPT_TRIANGLEFAN,
-    /* D3DPT_QUADLIST       = 8,  Xbox  */ D3DPT_TRIANGLELIST,
-    /* D3DPT_QUADSTRIP      = 9,  Xbox  */ D3DPT_TRIANGLESTRIP,
-    /* D3DPT_POLYGON        = 10, Xbox  */ D3DPT_TRIANGLEFAN,
-    /* D3DPT_MAX            = 11,       */ (D3DPRIMITIVETYPE)11
+    /* NULL                   = 0         */ (D3DPRIMITIVETYPE)0,
+    /* X_D3DPT_POINTLIST      = 1,        */ D3DPT_POINTLIST,
+    /* X_D3DPT_LINELIST       = 2,        */ D3DPT_LINELIST,
+    /* X_D3DPT_LINELOOP       = 3,  Xbox  */ D3DPT_LINESTRIP,
+    /* X_D3DPT_LINESTRIP      = 4,        */ D3DPT_LINESTRIP,
+    /* X_D3DPT_TRIANGLELIST   = 5,        */ D3DPT_TRIANGLELIST,
+    /* X_D3DPT_TRIANGLESTRIP  = 6,        */ D3DPT_TRIANGLESTRIP,
+    /* X_D3DPT_TRIANGLEFAN    = 7,        */ D3DPT_TRIANGLEFAN,
+    /* X_D3DPT_QUADLIST       = 8,  Xbox  */ D3DPT_TRIANGLELIST,
+    /* X_D3DPT_QUADSTRIP      = 9,  Xbox  */ D3DPT_TRIANGLESTRIP,
+    /* X_D3DPT_POLYGON        = 10, Xbox  */ D3DPT_TRIANGLEFAN,
+    /* X_D3DPT_MAX            = 11,       */ (D3DPRIMITIVETYPE)11
 };
 
 void EmuUnswizzleBox

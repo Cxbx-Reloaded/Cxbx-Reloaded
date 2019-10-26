@@ -174,7 +174,7 @@ static XTL::X_D3DSurface           *g_pXboxDepthStencil = NULL;
 static DWORD                        g_dwVertexShaderUsage = 0; // TODO : Move to XbVertexShader.cpp
 static DWORD                        g_VertexShaderSlots[X_VSH_MAX_INSTRUCTION_COUNT];
 
-DWORD g_XboxBaseVertexIndex = 0; // a value that's effectively added to every VB Index stored in the index buffer
+DWORD g_XboxBaseVertexIndex = 0; // Set by D3DDevice_SetIndices : a value that's effectively added to every VB Index stored in the index buffer
 DWORD g_DefaultPresentationInterval = D3DPRESENT_INTERVAL_IMMEDIATE;
 DWORD g_PresentationIntervalOverride = 0;
 bool g_UnlockFramerateHack = false; // ignore the xbox presentation interval
@@ -2668,7 +2668,7 @@ ConvertedIndexBuffer& CxbxUpdateActiveIndexBuffer
 			// Note, that LowIndex and HighIndex won't change due to any quad-to-triangle conversion,
 			// so it's less work to WalkIndexBuffer over the input instead of the converted index buffer.
 			EmuLog(LOG_LEVEL::DEBUG, "CxbxUpdateActiveIndexBuffer: Converting quads to %d triangle indices (D3DFMT_INDEX16)", RequiredIndexCount);
-			CxbxConvertQuadListToTriangleListIndices((INDEX16*)pXboxIndexData, RequiredIndexCount, pHostIndexBufferData);
+			CxbxConvertQuadListToTriangleListIndices(pXboxIndexData, RequiredIndexCount, pHostIndexBufferData);
 		} else {
 			EmuLog(LOG_LEVEL::DEBUG, "CxbxUpdateActiveIndexBuffer: Copying %d indices (D3DFMT_INDEX16)", XboxIndexCount);
 			memcpy(pHostIndexBufferData, pXboxIndexData, XboxIndexCount * sizeof(INDEX16));
@@ -6718,7 +6718,10 @@ void CxbxDrawIndexed(CxbxDrawContext &DrawContext)
 	INT BaseVertexIndex = DrawContext.dwBaseVertexIndex;
 	UINT primCount = DrawContext.dwHostPrimitiveCount;
 	if (bConvertQuadListToTriangleList) {
-		LOG_TEST_CASE("X_D3DPT_QUADLIST");
+		if (DrawContext.dwVertexCount == 4)
+			LOG_TEST_CASE("X_D3DPT_QUADLIST (single quad)"); // breakpoint location
+		else
+			LOG_TEST_CASE("X_D3DPT_QUADLIST");
 		// Convert draw arguments from quads to triangles :
 		BaseVertexIndex = QuadToTriangleVertexCount(BaseVertexIndex);
 		primCount *= TRIANGLES_PER_QUAD;
@@ -7154,7 +7157,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVertices)
 
 		DrawContext.XboxPrimitiveType = PrimitiveType;
 		DrawContext.dwVertexCount = VertexCount;
-		DrawContext.dwBaseVertexIndex = g_XboxBaseVertexIndex; // Used to derive VerticesInBuffer
+		DrawContext.dwBaseVertexIndex = 0; // DO NOT set to g_XboxBaseVertexIndex (since pIndexData is given, we should ignore D3DDevice_SetIndices)
 		DrawContext.pXboxIndexData = pIndexData; // Used to derive VerticesInBuffer
 
 		// Test case JSRF draws all geometry through this function (only sparks are drawn via another method)
