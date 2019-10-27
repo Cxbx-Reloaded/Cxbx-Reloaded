@@ -2174,7 +2174,7 @@ void PSH_XBOX_SHADER::SetPSVersion(const uint32_t PSVersion)
 	else if (m_PSVersion >= D3DPS_VERSION(2, 0)) {
 		// Source https://msdn.microsoft.com/en-us/library/windows/desktop/bb172918(v=vs.85).aspx
 		MaxInputColorRegisters = 2;
-		MaxTemporaryRegisters = 12; // 12 min/32 max: The number of r# registers is determined by D3DPSHADERCAPS2_0.NumTemps (which ranges from 12 to 32).
+		MaxTemporaryRegisters = 12; // 12 min/32 max: The number of r# registers is determined by D3DCAPS9.D3DPSHADERCAPS2_0.NumTemps (which ranges from 12 to 32).
 		MaxConstantFloatRegisters = 32;
 		MaxSamplerRegisters = 16;
 		MaxTextureCoordinateRegisters = 8;
