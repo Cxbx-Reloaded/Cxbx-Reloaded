@@ -805,9 +805,9 @@ void CxbxVertexBufferConverter::Apply(CxbxDrawContext *pDrawContext)
 		// handled by d3d :
 		// Test-case : XDK Samples (FocusBlur, MotionBlur, Trees, PaintEffect, PlayField)
 		// No need to set : pDrawContext->XboxPrimitiveType = X_D3DPT_TRIANGLESTRIP;
-		pDrawContext->dwHostPrimitiveCount = EmuD3DVertex2PrimitiveCount(XTL::X_D3DPT_TRIANGLESTRIP, pDrawContext->dwVertexCount);
+		pDrawContext->dwHostPrimitiveCount = ConvertXboxVertexCountToPrimitiveCount(XTL::X_D3DPT_TRIANGLESTRIP, pDrawContext->dwVertexCount);
 	} else {
-		pDrawContext->dwHostPrimitiveCount = EmuD3DVertex2PrimitiveCount(pDrawContext->XboxPrimitiveType, pDrawContext->dwVertexCount);
+		pDrawContext->dwHostPrimitiveCount = ConvertXboxVertexCountToPrimitiveCount(pDrawContext->XboxPrimitiveType, pDrawContext->dwVertexCount);
 	}
 
 	if (pDrawContext->XboxPrimitiveType == XTL::X_D3DPT_POLYGON) {

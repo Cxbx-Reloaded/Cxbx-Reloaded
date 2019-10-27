@@ -258,7 +258,7 @@ void HLE_draw_inline_elements(NV2AState *d)
 		CxbxDrawContext DrawContext = {};
 
 		DrawContext.XboxPrimitiveType = (XTL::X_D3DPRIMITIVETYPE)pg->primitive_mode;
-		DrawContext.dwVertexCount = EmuD3DIndexCountToVertexCount(DrawContext.XboxPrimitiveType, uiIndexCount);
+		DrawContext.dwVertexCount = uiIndexCount;
 		DrawContext.pXboxIndexData = d->pgraph.inline_elements;
 
 		CxbxDrawIndexed(DrawContext);

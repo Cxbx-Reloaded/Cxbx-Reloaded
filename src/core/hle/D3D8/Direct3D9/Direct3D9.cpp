@@ -6708,6 +6708,7 @@ void CxbxDrawIndexed(CxbxDrawContext &DrawContext)
 
 	bool bConvertQuadListToTriangleList = (DrawContext.XboxPrimitiveType == XTL::X_D3DPT_QUADLIST);
 	ConvertedIndexBuffer& CacheEntry = CxbxUpdateActiveIndexBuffer(DrawContext.pXboxIndexData, DrawContext.dwVertexCount, bConvertQuadListToTriangleList);
+	// Note : CxbxUpdateActiveIndexBuffer calls SetIndices
 
 	// Set LowIndex and HighIndex *before* VerticesInBuffer gets derived
 	DrawContext.LowIndex = CacheEntry.LowIndex;
@@ -6723,8 +6724,11 @@ void CxbxDrawIndexed(CxbxDrawContext &DrawContext)
 		else
 			LOG_TEST_CASE("X_D3DPT_QUADLIST");
 
+		if (BaseVertexIndex > 0)
+			LOG_TEST_CASE("X_D3DPT_QUADLIST (BaseVertexIndex > 0)");
+
 		// Convert draw arguments from quads to triangles :
-		BaseVertexIndex = QuadToTriangleVertexCount(BaseVertexIndex);
+		// Note : BaseVertexIndex doesn't need mapping through QuadToTriangleVertexCount(BaseVertexIndex);
 		primCount *= TRIANGLES_PER_QUAD;
 	}
 
@@ -6734,8 +6738,7 @@ void CxbxDrawIndexed(CxbxDrawContext &DrawContext)
 		/* PrimitiveType = */EmuXB2PC_D3DPrimitiveType(DrawContext.XboxPrimitiveType),
 		BaseVertexIndex,
 		/* MinVertexIndex = */CacheEntry.LowIndex,
-		/* NumVertices = */(CacheEntry.HighIndex - CacheEntry.LowIndex) + 1,//using index vertex span here.  // TODO : g_EmuD3DActiveStreamSizes[0], // Note : ATI drivers are especially picky about this -
-		// NumVertices should be the span of covered vertices in the active vertex buffer (TODO : Is stream 0 correct?)
+		/* NumVertices = */(CacheEntry.HighIndex - CacheEntry.LowIndex) + 1,
 		/* startIndex = DrawContext.dwStartVertex = */0,
 		primCount);
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->DrawIndexedPrimitive");
@@ -6989,7 +6992,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawVertices)
 
 	// Dxbx Note : In DrawVertices and DrawIndexedVertices, PrimitiveType may not be D3DPT_POLYGON
 
-	if (!EmuD3DValidVertexCount(PrimitiveType, VertexCount)) {
+	if (!IsValidXboxVertexCount(PrimitiveType, VertexCount)) {
 		LOG_TEST_CASE("Invalid VertexCount");
 		return;
 	}
@@ -7017,7 +7020,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawVertices)
 				// test-case : Halo - Combat Evolved
 				// test-case : Worms 3D Special Edition
 				// test-case : Tony Hawk's Pro Skater 2X (main menu entries)
-				// test-case : XDK sample Lensflare (4, for 10 flare-out quads that use a lineair texture; rendered incorrectly: https://youtu.be/idwlxHl9nAA?t=439)
+				// test-case : XDK sample Lensflare (4, for 10 flare-out quads that use a linear texture; rendered incorrectly: https://youtu.be/idwlxHl9nAA?t=439)
 				DrawContext.dwStartVertex = StartVertex; // Breakpoint location for testing.
 			}
 
@@ -7097,7 +7100,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawVerticesUP)
 		LOG_FUNC_ARG(VertexStreamZeroStride)
 		LOG_FUNC_END;
 
-	if (!EmuD3DValidVertexCount(PrimitiveType, VertexCount)) {
+	if (!IsValidXboxVertexCount(PrimitiveType, VertexCount)) {
 		LOG_TEST_CASE("Invalid VertexCount");
 		return;
 	}
@@ -7146,7 +7149,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVertices)
 		LOG_FUNC_ARG(pIndexData)
 		LOG_FUNC_END;
 
-	if (!EmuD3DValidVertexCount(PrimitiveType, VertexCount)) {
+	if (!IsValidXboxVertexCount(PrimitiveType, VertexCount)) {
 		LOG_TEST_CASE("Invalid VertexCount");
 		return;
 	}
@@ -7199,7 +7202,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVerticesUP)
 		LOG_FUNC_ARG(VertexStreamZeroStride)
 		LOG_FUNC_END;
 
-	if (!EmuD3DValidVertexCount(PrimitiveType, VertexCount)) {
+	if (!IsValidXboxVertexCount(PrimitiveType, VertexCount)) {
 		LOG_TEST_CASE("Invalid VertexCount");
 		return;
 	}
@@ -7215,7 +7218,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVerticesUP)
 		DrawContext.XboxPrimitiveType = PrimitiveType;
 		DrawContext.dwVertexCount = VertexCount;
 		DrawContext.pXboxIndexData = pXboxIndexData; // Used to derive VerticesInBuffer
-		DrawContext.dwBaseVertexIndex = g_XboxBaseVertexIndex; // Multiplied by vertex stride and added to the vertex buffer start
+		// Note : D3DDevice_DrawIndexedVerticesUP does NOT use g_XboxBaseVertexIndex, so keep DrawContext.dwBaseVertexIndex at 0!
 		DrawContext.pXboxVertexStreamZeroData = pVertexStreamZeroData;
 		DrawContext.uiXboxVertexStreamZeroStride = VertexStreamZeroStride;
 

@@ -37,7 +37,7 @@ typedef struct _CxbxDrawContext
     IN     DWORD                 dwVertexCount;
     IN     DWORD                 dwStartVertex; // Only D3DDevice_DrawVertices sets this (potentially higher than default 0)
 	IN	   PWORD				 pXboxIndexData; // Set by D3DDevice_DrawIndexedVertices, D3DDevice_DrawIndexedVerticesUP and HLE_draw_inline_elements
-	IN	   DWORD				 dwBaseVertexIndex;
+	IN	   DWORD				 dwBaseVertexIndex; // Set to g_XboxBaseVertexIndex in D3DDevice_DrawIndexedVertices
 	IN	   INDEX16				 LowIndex, HighIndex; // Set when pXboxIndexData is set
 	IN	   size_t				 VerticesInBuffer; // Set by CxbxVertexBufferConverter::Apply
     // Data if Draw...UP call
@@ -46,7 +46,7 @@ typedef struct _CxbxDrawContext
 	// Values to be used on host
 	OUT PVOID                    pHostVertexStreamZeroData;
 	OUT UINT                     uiHostVertexStreamZeroStride;
-    OUT DWORD                    dwHostPrimitiveCount;
+    OUT DWORD                    dwHostPrimitiveCount; // Set by CxbxVertexBufferConverter::Apply
 }
 CxbxDrawContext;
 
