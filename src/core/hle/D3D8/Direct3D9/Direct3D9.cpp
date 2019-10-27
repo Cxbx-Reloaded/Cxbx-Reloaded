@@ -6596,7 +6596,7 @@ void CxbxAssureQuadListD3DIndexBuffer(UINT NrOfQuadIndices)
 		if (pHostIndexBufferData == nullptr)
 			CxbxKrnlCleanup("CxbxAssureQuadListD3DIndexBuffer : Could not lock index buffer!");
 
-		memcpy(pHostIndexBufferData, CxbxAssureQuadListIndexData(NrOfTriangleIndices), NrOfTriangleIndices * sizeof(INDEX16));
+		memcpy(pHostIndexBufferData, CxbxAssureQuadListIndexData(NrOfQuadIndices), NrOfTriangleIndices * sizeof(INDEX16));
 
 		g_pQuadToTriangleHostIndexBuffer->Unlock();
 	}
@@ -6722,14 +6722,14 @@ void CxbxDrawIndexed(CxbxDrawContext &DrawContext)
 			LOG_TEST_CASE("X_D3DPT_QUADLIST (single quad)"); // breakpoint location
 		else
 			LOG_TEST_CASE("X_D3DPT_QUADLIST");
+
 		// Convert draw arguments from quads to triangles :
 		BaseVertexIndex = QuadToTriangleVertexCount(BaseVertexIndex);
 		primCount *= TRIANGLES_PER_QUAD;
 	}
 
 	// See https://docs.microsoft.com/en-us/windows/win32/direct3d9/rendering-from-vertex-and-index-buffers
-	// for an explanation on the function of the BaseVertexIndex, MinVertexIndex,
-	// NumVertices, StartIndex and StartIndex arguments.
+	// for an explanation on the function of the BaseVertexIndex, MinVertexIndex, NumVertices and StartIndex arguments.
 	HRESULT hRet = g_pD3DDevice->DrawIndexedPrimitive(
 		/* PrimitiveType = */EmuXB2PC_D3DPrimitiveType(DrawContext.XboxPrimitiveType),
 		BaseVertexIndex,
@@ -7016,27 +7016,30 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawVertices)
 				// test-case : Call of Duty: Finest Hour
 				// test-case : Halo - Combat Evolved
 				// test-case : Worms 3D Special Edition
-				// test-case : Tony Hawk's Pro Skater 2X
-				// test-case : XDK sample Lensflare 
-				DrawContext.dwStartVertex = StartVertex; // Breakpoint location for testing. 
+				// test-case : Tony Hawk's Pro Skater 2X (main menu entries)
+				// test-case : XDK sample Lensflare (4, for 10 flare-out quads that use a lineair texture; rendered incorrectly: https://youtu.be/idwlxHl9nAA?t=439)
+				DrawContext.dwStartVertex = StartVertex; // Breakpoint location for testing.
 			}
 
 			// Draw quadlists using a single 'quad-to-triangle mapping' index buffer :
 			// Assure & activate that special index buffer :
 			CxbxAssureQuadListD3DIndexBuffer(/*NrOfQuadIndices=*/DrawContext.dwVertexCount);
-			// Convert quad vertex-count & start to triangle vertex count & start :
-			UINT startIndex = QuadToTriangleVertexCount(DrawContext.dwStartVertex);
+			// This API's StartVertex argument is multiplied by vertex stride and added to the start of the vertex buffer;
+			// BaseVertexIndex offers the same functionality on host :
+			UINT BaseVertexIndex = DrawContext.dwStartVertex;
+			// Convert quad vertex count to triangle vertex count :
+			UINT NumVertices = QuadToTriangleVertexCount(DrawContext.dwVertexCount);
+			// Convert quad primitive count to triangle primitive count :
 			UINT primCount = DrawContext.dwHostPrimitiveCount * TRIANGLES_PER_QUAD;
-			// Determine highest and lowest index in use :
-			INDEX16 LowIndex = startIndex;
-			INDEX16 HighIndex = LowIndex + (INDEX16)DrawContext.dwVertexCount - 1;
+			// See https://docs.microsoft.com/en-us/windows/win32/direct3d9/rendering-from-vertex-and-index-buffers
+			// for an explanation on the function of the BaseVertexIndex, MinVertexIndex, NumVertices and StartIndex arguments.
 			// Emulate drawing quads by drawing each quad with two indexed triangles :
 			HRESULT hRet = g_pD3DDevice->DrawIndexedPrimitive(
 				/*PrimitiveType=*/D3DPT_TRIANGLELIST,
-				/*BaseVertexIndex=*/0,
-				/*MinVertexIndex=*/LowIndex,
-				/*NumVertices=*/(HighIndex - LowIndex) + 1,
-				startIndex,
+				BaseVertexIndex,
+				/*MinVertexIndex=*/0,
+				NumVertices,
+				/*startIndex=*/0,
 				primCount
 			);
 			DEBUG_D3DRESULT(hRet, "g_pD3DDevice->DrawIndexedPrimitive(X_D3DPT_QUADLIST)");
@@ -7148,7 +7151,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVertices)
 		return;
 	}
 
-	// TODO : Call unpatched D3DDevice_SetStateVB(0);
+	// TODO : Call unpatched D3DDevice_SetStateVB(g_XboxBaseVertexIndex);
 
 	CxbxUpdateNativeD3DResources();
 
@@ -7157,7 +7160,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVertices)
 
 		DrawContext.XboxPrimitiveType = PrimitiveType;
 		DrawContext.dwVertexCount = VertexCount;
-		DrawContext.dwBaseVertexIndex = 0; // DO NOT set to g_XboxBaseVertexIndex (since pIndexData is given, we should ignore D3DDevice_SetIndices)
+		DrawContext.dwBaseVertexIndex = g_XboxBaseVertexIndex; // Multiplied by vertex stride and added to the vertex buffer start
 		DrawContext.pXboxIndexData = pIndexData; // Used to derive VerticesInBuffer
 
 		// Test case JSRF draws all geometry through this function (only sparks are drawn via another method)
@@ -7211,10 +7214,10 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVerticesUP)
 
 		DrawContext.XboxPrimitiveType = PrimitiveType;
 		DrawContext.dwVertexCount = VertexCount;
+		DrawContext.pXboxIndexData = pXboxIndexData; // Used to derive VerticesInBuffer
+		DrawContext.dwBaseVertexIndex = g_XboxBaseVertexIndex; // Multiplied by vertex stride and added to the vertex buffer start
 		DrawContext.pXboxVertexStreamZeroData = pVertexStreamZeroData;
 		DrawContext.uiXboxVertexStreamZeroStride = VertexStreamZeroStride;
-		DrawContext.pXboxIndexData = pXboxIndexData; // Used to derive VerticesInBuffer
-		// TODO : Is g_XboxBaseVertexIndex ignored by this call? // DrawContext.dwBaseVertexIndex = 0;
 
 		// Determine LowIndex and HighIndex *before* VerticesInBuffer gets derived
 		WalkIndexBuffer(DrawContext.LowIndex, DrawContext.HighIndex, pXboxIndexData, VertexCount);
