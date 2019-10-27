@@ -751,11 +751,6 @@ void CxbxKrnlEmulate(uint32_t blocks_reserved[384])
 	/* Initialize Cxbx File Paths */
 	CxbxInitFilePaths();
 
-	/* Must be called after CxbxInitFilePaths */
-	if (!CxbxLockFilePath()) {
-		return;
-	}
-
 	// Skip '/load' switch
 	// Get XBE Name :
 	std::string xbePath;
@@ -782,43 +777,7 @@ void CxbxKrnlEmulate(uint32_t blocks_reserved[384])
 	}
 
 	int BootFlags;
-	FILE* krnlLog = nullptr;
 	g_EmuShared->GetBootFlags(&BootFlags);
-
-	// debug console allocation (if configured)
-	if (DbgMode == DM_CONSOLE)
-	{
-		if (AllocConsole())
-		{
-			HANDLE StdHandle = GetStdHandle(STD_OUTPUT_HANDLE);
-			// Maximise the console scroll buffer height :
-			CONSOLE_SCREEN_BUFFER_INFO coninfo;
-			GetConsoleScreenBufferInfo(StdHandle, &coninfo);
-			coninfo.dwSize.Y = SHRT_MAX - 1; // = 32767-1 = 32766 = maximum value that works
-			SetConsoleScreenBufferSize(StdHandle, coninfo.dwSize);
-			(void)freopen("CONOUT$", "wt", stdout);
-			(void)freopen("CONIN$", "rt", stdin);
-			SetConsoleTitle("Cxbx-Reloaded : Kernel Debug Console");
-			SetConsoleTextAttribute(StdHandle, FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_RED);
-		}
-	}
-	else
-	{
-		FreeConsole();
-		if (DbgMode == DM_FILE) {
-			// Peform clean write to kernel log for first boot. Unless multi-xbe boot occur then perform append to existing log.
-			krnlLog = freopen(DebugFileName.c_str(), ((BootFlags == DebugMode::DM_NONE) ? "wt" : "at"), stdout);
-			// Append separator for better readability after reboot.
-			if (BootFlags != DebugMode::DM_NONE) {
-				std::cout << "\n------REBOOT------REBOOT------REBOOT------REBOOT------REBOOT------\n" << std::endl;
-			}
-		}
-		else {
-			char buffer[16];
-			if (GetConsoleTitle(buffer, 16) != NULL)
-				(void)freopen("nul", "w", stdout);
-		}
-	}
 
 	g_CurrentProcessHandle = GetCurrentProcess(); // OpenProcess(PROCESS_ALL_ACCESS, FALSE, GetCurrentProcessId());
 
@@ -860,6 +819,10 @@ void CxbxKrnlEmulate(uint32_t blocks_reserved[384])
 	DWORD dwExitCode = EXIT_SUCCESS;
 	g_EmuShared->GetKrnlProcID(&prevKrnlProcID);
 
+	// Save current kernel proccess id for next reboot if will occur in the future.
+	// And to tell previous kernel process we had take over. This allow reboot's shared memory buffer to survive.
+	g_EmuShared->SetKrnlProcID(GetCurrentProcessId());
+
 	// Force wait until previous kernel process is closed.
 	if (prevKrnlProcID != 0) {
 		HANDLE hProcess = OpenProcess(SYNCHRONIZE | PROCESS_QUERY_INFORMATION, FALSE, prevKrnlProcID);
@@ -877,14 +840,52 @@ void CxbxKrnlEmulate(uint32_t blocks_reserved[384])
 		CxbxKrnlShutDown();
 	}
 
+	/* Must be called after CxbxInitFilePaths and previous kernel process shutdown. */
+	if (!CxbxLockFilePath()) {
+		return;
+	}
+
+	FILE* krnlLog = nullptr;
+	// debug console allocation (if configured)
+	if (DbgMode == DM_CONSOLE)
+	{
+		if (AllocConsole())
+		{
+			HANDLE StdHandle = GetStdHandle(STD_OUTPUT_HANDLE);
+			// Maximise the console scroll buffer height :
+			CONSOLE_SCREEN_BUFFER_INFO coninfo;
+			GetConsoleScreenBufferInfo(StdHandle, &coninfo);
+			coninfo.dwSize.Y = SHRT_MAX - 1; // = 32767-1 = 32766 = maximum value that works
+			SetConsoleScreenBufferSize(StdHandle, coninfo.dwSize);
+			(void)freopen("CONOUT$", "wt", stdout);
+			(void)freopen("CONIN$", "rt", stdin);
+			SetConsoleTitle("Cxbx-Reloaded : Kernel Debug Console");
+			SetConsoleTextAttribute(StdHandle, FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_RED);
+		}
+	}
+	else
+	{
+		FreeConsole();
+		if (DbgMode == DM_FILE) {
+			// Peform clean write to kernel log for first boot. Unless multi-xbe boot occur then perform append to existing log.
+			krnlLog = freopen(DebugFileName.c_str(), ((BootFlags == DebugMode::DM_NONE) ? "wt" : "at"), stdout);
+			// Append separator for better readability after reboot.
+			if (BootFlags != DebugMode::DM_NONE) {
+				std::cout << "\n------REBOOT------REBOOT------REBOOT------REBOOT------REBOOT------\n" << std::endl;
+			}
+		}
+		else {
+			char buffer[16];
+			if (GetConsoleTitle(buffer, 16) != NULL)
+				(void)freopen("nul", "w", stdout);
+		}
+	}
+
 	bool isLogEnabled;
 	g_EmuShared->GetIsKrnlLogEnabled(&isLogEnabled);
 	g_bPrintfOn = isLogEnabled;
 
 	g_EmuShared->ResetKrnl();
-
-	// Save current kernel proccess id for next reboot if will occur in the future.
-	g_EmuShared->SetKrnlProcID(GetCurrentProcessId());
 
 	// Write a header to the log
 	{
