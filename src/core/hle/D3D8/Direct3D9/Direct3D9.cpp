@@ -933,7 +933,7 @@ IDirect3DBaseTexture *GetHostBaseTexture(XTL::X_D3DResource *pXboxResource, DWOR
 		return nullptr;
 
 	if (GetXboxCommonResourceType(pXboxResource) != X_D3DCOMMON_TYPE_TEXTURE) { // Allows breakpoint below
-        // Burnout and Outrun 2006 hit this case (retrieving a surface instead of a texture)
+        // test-case : Burnout and Outrun 2006 hit this case (retrieving a surface instead of a texture)
         // TODO : Surfaces can be set in the texture stages, instead of textures
         // We'll need to wrap the surface somehow before using it as a texture
         LOG_TEST_CASE("GetHostBaseTexture called on a non-texture object");
@@ -6818,7 +6818,7 @@ void CxbxDrawPrimitiveUP(CxbxDrawContext &DrawContext)
 
 		g_dwPrimPerFrame += DrawContext.dwHostPrimitiveCount;
 		if (DrawContext.XboxPrimitiveType == XTL::X_D3DPT_LINELOOP) {
-			// Note : XDK samples reaching this case : DebugKeyboard, Gamepad, Tiling, ShadowBuffer
+			// test-case : XDK samples reaching this case : DebugKeyboard, Gamepad, Tiling, ShadowBuffer
 			// Close line-loops using a final single line, drawn from the end to the start vertex :
 			CxbxDrawIndexedClosingLineUP(
 				(INDEX16)0, // LowIndex
@@ -7264,7 +7264,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVerticesUP)
 		g_dwPrimPerFrame += PrimitiveCount;
 		if (DrawContext.XboxPrimitiveType == X_D3DPT_LINELOOP) {
 			// Close line-loops using a final single line, drawn from the end to the start vertex
-			LOG_TEST_CASE("X_D3DPT_LINELOOP"); // TODO : Which titles reach this case?
+			LOG_TEST_CASE("X_D3DPT_LINELOOP"); // TODO : Which titles reach this test-case?
 			// Read the end and start index from the supplied index data
 			INDEX16 LowIndex = pXboxIndexData[0];
 			INDEX16 HighIndex = pXboxIndexData[DrawContext.dwHostPrimitiveCount];
