@@ -29,6 +29,8 @@
 
 #include "core\hle\D3D8\XbD3D8Types.h"
 
+#define VERTICES_PER_DOT 1
+#define VERTICES_PER_LINE 2
 #define VERTICES_PER_TRIANGLE 3
 #define VERTICES_PER_QUAD 4
 #define TRIANGLES_PER_QUAD 2
@@ -231,46 +233,41 @@ inline D3DSTENCILOP EmuXB2PC_D3DSTENCILOP(XTL::X_D3DSTENCILOP Value)
 }
 
 // table used for vertex->primitive count conversion
-extern UINT EmuD3DVertexToPrimitive[XTL::X_D3DPT_POLYGON + 1][2];
+extern const UINT g_XboxPrimitiveTypeInfo[XTL::X_D3DPT_POLYGON + 1][2];
 
-inline bool EmuD3DValidVertexCount(XTL::X_D3DPRIMITIVETYPE XboxPrimitiveType, UINT VertexCount)
+inline bool IsValidXboxVertexCount(XTL::X_D3DPRIMITIVETYPE XboxPrimitiveType, UINT VertexCount)
 {
+	assert(XboxPrimitiveType < XTL::X_D3DPT_MAX);
+
 	// Are there more vertices than required for setup?
-	if (VertexCount > EmuD3DVertexToPrimitive[XboxPrimitiveType][1])
+	if (VertexCount > g_XboxPrimitiveTypeInfo[XboxPrimitiveType][0])
 		// Are the additional vertices exact multiples of the required additional vertices per primitive?
-		if (0 == ((VertexCount - EmuD3DVertexToPrimitive[XboxPrimitiveType][1]) % EmuD3DVertexToPrimitive[XboxPrimitiveType][0]))
+		if (0 == ((VertexCount - g_XboxPrimitiveTypeInfo[XboxPrimitiveType][0]) % g_XboxPrimitiveTypeInfo[XboxPrimitiveType][1]))
 			return true;
 
 	return false;
 }
 
 // convert from vertex count to primitive count (Xbox)
-inline int EmuD3DVertex2PrimitiveCount(XTL::X_D3DPRIMITIVETYPE PrimitiveType, int VertexCount)
+inline unsigned ConvertXboxVertexCountToPrimitiveCount(XTL::X_D3DPRIMITIVETYPE XboxPrimitiveType, unsigned VertexCount)
 {
-    return (VertexCount - EmuD3DVertexToPrimitive[PrimitiveType][1]) / EmuD3DVertexToPrimitive[PrimitiveType][0];
-}
+	assert(XboxPrimitiveType < XTL::X_D3DPT_MAX);
 
-// convert from primitive count to vertex count (Xbox)
-inline int EmuD3DPrimitive2VertexCount(XTL::X_D3DPRIMITIVETYPE PrimitiveType, int PrimitiveCount)
-{
-    return (PrimitiveCount * EmuD3DVertexToPrimitive[PrimitiveType][0]) + EmuD3DVertexToPrimitive[PrimitiveType][1];
+	return (VertexCount - g_XboxPrimitiveTypeInfo[XboxPrimitiveType][0]) / g_XboxPrimitiveTypeInfo[XboxPrimitiveType][1];
 }
 
 // conversion table for xbox->pc primitive types
-extern D3DPRIMITIVETYPE EmuPrimitiveTypeLookup[];
+extern const D3DPRIMITIVETYPE g_XboxPrimitiveTypeToHost[];
 
 // convert xbox->pc primitive type
-inline D3DPRIMITIVETYPE EmuXB2PC_D3DPrimitiveType(XTL::X_D3DPRIMITIVETYPE PrimitiveType)
+inline D3DPRIMITIVETYPE EmuXB2PC_D3DPrimitiveType(XTL::X_D3DPRIMITIVETYPE XboxPrimitiveType)
 {
-    if((DWORD)PrimitiveType == 0x7FFFFFFF)
-        return D3DPT_FORCE_DWORD;
+	if (XboxPrimitiveType >= XTL::X_D3DPT_MAX) {
+		LOG_TEST_CASE("XboxPrimitiveType too large");
+		return D3DPT_FORCE_DWORD;
+	}
 
-    return EmuPrimitiveTypeLookup[PrimitiveType];
-}
-
-inline int EmuD3DIndexCountToVertexCount(XTL::X_D3DPRIMITIVETYPE XboxPrimitiveType, int IndexCount)
-{
-	return IndexCount;
+    return g_XboxPrimitiveTypeToHost[XboxPrimitiveType];
 }
 
 extern void EmuUnswizzleBox
