@@ -65,10 +65,7 @@ extern IDirect3DDevice *g_pD3DDevice;
 
 extern DWORD g_Xbox_VertexShader_Handle;
 
-extern XTL::X_PixelShader *g_D3DActivePixelShader;
-
-// EmuD3DTileCache (8 tiles maximum)
-extern XTL::X_D3DTILE EmuD3DTileCache[0x08];
+extern XTL::X_PixelShader *g_pXbox_PixelShader;
 
 // EmuD3DActiveTexture
 extern XTL::X_D3DBaseTexture *EmuD3DActiveTexture[XTL::X_D3DTS_STAGECOUNT];

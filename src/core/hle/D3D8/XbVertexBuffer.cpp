@@ -54,13 +54,11 @@ extern UINT                    g_InlineVertexBuffer_TableOffset = 0;
 FLOAT *g_InlineVertexBuffer_pData = nullptr;
 UINT   g_InlineVertexBuffer_DataSize = 0;
 
-extern XTL::X_D3DVertexBuffer      *g_pVertexBuffer = NULL;
-
 extern DWORD				g_dwPrimPerFrame = 0;
 extern XTL::X_D3DVertexBuffer*g_D3DStreams[X_VSH_MAX_STREAMS];
 extern UINT g_D3DStreamStrides[X_VSH_MAX_STREAMS];
-extern XTL::X_D3DSurface* g_pXboxRenderTarget;
-extern XTL::X_D3DSurface* g_XboxBackBufferSurface;
+extern XTL::X_D3DSurface* g_pXbox_RenderTarget;
+extern XTL::X_D3DSurface* g_pXbox_BackBufferSurface;
 void *GetDataFromXboxResource(XTL::X_D3DResource *pXboxResource);
 bool GetHostRenderTargetDimensions(DWORD* pHostWidth, DWORD* pHostHeight, IDirect3DSurface* pHostRenderTarget = nullptr);
 uint32_t GetPixelContainerWidth(XTL::X_D3DPixelContainer* pPixelContainer);
@@ -654,14 +652,14 @@ void CxbxVertexBufferConverter::ConvertStream
 		}
 
         // If for some reason the Xbox Render Target is not set, fallback to the backbuffer
-        if (g_pXboxRenderTarget == xbnullptr) {
+        if (g_pXbox_RenderTarget == xbnullptr) {
             LOG_TEST_CASE("SetRenderTarget fallback to backbuffer");
-            g_pXboxRenderTarget = g_XboxBackBufferSurface;
+            g_pXbox_RenderTarget = g_pXbox_BackBufferSurface;
         }
 
 		DWORD HostRenderTarget_Width, HostRenderTarget_Height;
-		DWORD XboxRenderTarget_Width = GetPixelContainerWidth(g_pXboxRenderTarget);
-		DWORD XboxRenderTarget_Height = GetPixelContainerHeight(g_pXboxRenderTarget);
+		DWORD XboxRenderTarget_Width = GetPixelContainerWidth(g_pXbox_RenderTarget);
+		DWORD XboxRenderTarget_Height = GetPixelContainerHeight(g_pXbox_RenderTarget);
 		if (!GetHostRenderTargetDimensions(&HostRenderTarget_Width, &HostRenderTarget_Height)) {
 			HostRenderTarget_Width = XboxRenderTarget_Width;
 			HostRenderTarget_Height = XboxRenderTarget_Height;
