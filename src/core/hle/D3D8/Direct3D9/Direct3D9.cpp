@@ -5023,26 +5023,33 @@ DWORD WINAPI XTL::EMUPATCH(D3DDevice_Swap)
 		auto pXboxBackBufferHostSurface = GetHostSurface(g_XboxBackBufferSurface, D3DUSAGE_RENDERTARGET);
 		if (pXboxBackBufferHostSurface) {
 			// Blit Xbox BackBuffer to host BackBuffer
-
+			
 			RECT destRect = { 0 };
 
 			SetRect(&destRect, 0, 0, BackBufferDesc.Width, BackBufferDesc.Height);
 
 			// Respect aspect ratio
-			float srcAr = (float)GetPixelContainerWidth(g_XboxBackBufferSurface) / GetPixelContainerHeight(g_XboxBackBufferSurface);// This will be determined by the Selected Video Mode
-			float dstAr = (float)destRect.right / destRect.bottom;
+			float srcAr; // This will be determined by the Selected Video Mode
+			auto dstAr = (float)destRect.right / destRect.bottom;
 
-			// Force widescreen if Widescreen mode is enabled in the eeprom. This is to handle games that support widescreen but not HD (eg. Simpsons Hit & Run)
-			// According to the incomplete list here: https://en.everybodywiki.com/List_of_Xbox_games_with_alternate_display_modes
-			// About half of all non-HD games support 16:9 in 480i or 480p
 			auto videoFlags = EEPROM->UserSettings.VideoFlags;
-			if (videoFlags & XC_VIDEO_FLAGS_WIDESCREEN)
+
+			bool changeAr = false;
+
+			switch (videoFlags & (XC_VIDEO_FLAGS_LETTERBOX | XC_VIDEO_FLAGS_WIDESCREEN))
 			{
-				srcAr = 16.0f / 9.0f;
+			case XC_VIDEO_FLAGS_WIDESCREEN:
+				// 16:9 aspect ratio
+				srcAr = 16.0f / 9;
+				break;
+			case XC_VIDEO_FLAGS_LETTERBOX:
+				// 16:9 aspect ratio video in a 4:3 framebuffer
+			default: // Normal
+				// 4:3 aspect ratio
+				srcAr = 4.0f / 3;
+				break;
 			}
 
-			// If the Xbox surface aspect ratio doesn't match the Window aspect ratio, then we need to calculate a destination rectangle that best fits the window
-			// while maintaining the aspect ratio of the xbox surface.
 			if (srcAr != dstAr) {
 				if (srcAr > dstAr) {
 					// Source is widescreen and destination is not
