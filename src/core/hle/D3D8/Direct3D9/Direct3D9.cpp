@@ -5024,12 +5024,17 @@ DWORD WINAPI XTL::EMUPATCH(D3DDevice_Swap)
 		if (pXboxBackBufferHostSurface) {
 			// Blit Xbox BackBuffer to host BackBuffer
 			
-			RECT destRect = { 0 };
+			D3DSURFACE_DESC XboxBackBufferDesc;
+			pXboxBackBufferHostSurface->GetDesc(&XboxBackBufferDesc);
 
+			RECT destRect = { 0 };
+			RECT sourRect = { 0 };
+
+			SetRect(&sourRect, 0, 0, XboxBackBufferDesc.Width, XboxBackBufferDesc.Height);
 			SetRect(&destRect, 0, 0, BackBufferDesc.Width, BackBufferDesc.Height);
 
 			// Respect aspect ratio
-			float srcAr; // This will be determined by the Selected Video Mode
+			auto srcAr = (float)sourRect.right / sourRect.bottom;
 			auto dstAr = (float)destRect.right / destRect.bottom;
 
 			auto videoFlags = EEPROM->UserSettings.VideoFlags;
@@ -5070,7 +5075,7 @@ DWORD WINAPI XTL::EMUPATCH(D3DDevice_Swap)
 
             hRet = g_pD3DDevice->StretchRect(
                 /* pSourceSurface = */ pXboxBackBufferHostSurface,
-                /* pSourceRect = */ nullptr,
+                /* pSourceRect = */ &sourRect,
                 /* pDestSurface = */ pCurrentHostBackBuffer,
                 /* pDestRect = */ &destRect,
                 /* Filter = */ LoadSurfaceFilter
