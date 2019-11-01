@@ -162,7 +162,7 @@ void InputWindow::UpdateDeviceList()
 // DetectInput is derived from InputReference::Detect() in ControlReference.cpp of Dolphin emulator
 // https://github.com/dolphin-emu/dolphin
 
-InputDevice::Input* InputWindow::DetectInput(InputDevice* const Device, Button* const xbox_button, int ms)
+InputDevice::Input* InputWindow::DetectInput(InputDevice* const Device, int ms)
 {
 	using namespace std::chrono;
 
@@ -173,7 +173,7 @@ InputDevice::Input* InputWindow::DetectInput(InputDevice* const Device, Button* 
 		e = Device->GetInputs().end(), b = i, s = e;
 	std::vector<bool> initial_states(Device->GetInputs().size());
 	for (std::vector<bool>::iterator state = initial_states.begin(); i != e; i++) {
-		*state++ = ((*i)->GetState() > INPUT_DETECT_THRESHOLD);
+		*state++ = ((*i)->GetState() > (1 - INPUT_DETECT_THRESHOLD));
 	}
 
 	auto now = system_clock::now();
@@ -182,24 +182,20 @@ InputDevice::Input* InputWindow::DetectInput(InputDevice* const Device, Button* 
 	while (now <= timeout) {
 		Device->UpdateInput();
 		std::vector<bool>::iterator state = initial_states.begin();
-		for (; i != e; i++, state++) {
-			ControlState curState = (*i)->GetState();
-			if (*state == true && (*i)->IsDetectable() && curState < INPUT_DETECT_THRESHOLD) {
-				// If selected input is released, then return input.
-				if (s == i) {
-					return *i;
-				}
-				*state = false;
-			}
-			// Check for any input pressed.
-			else if (*state == false && curState > INPUT_DETECT_THRESHOLD) {
-				// If the input bind is empty, preseve pressed input until it is release by user.
-				if (s == e) {
-					xbox_button->UpdateText(std::string("["+ (*i)->GetName()+"]").c_str());
+		for (; i != e && s == e; i++, state++) {
+			if ((*i)->IsDetectable() && (*i)->GetState() > INPUT_DETECT_THRESHOLD) {
+				if (*state == false) {
+					// input was not initially pressed or it was but released afterwards
 					s = i;
+					break;
 				}
-				*state = true;
+				else if ((*i)->GetState() < (1 - INPUT_DETECT_THRESHOLD)) {
+					*state = false;
+				}
 			}
+		}
+		if (s != e && (*s)->GetState() < (1 - INPUT_DETECT_THRESHOLD)) {
+			return *s;
 		}
 		std::this_thread::sleep_for(milliseconds(10));
 		now += milliseconds(10);
@@ -211,13 +207,14 @@ InputDevice::Input* InputWindow::DetectInput(InputDevice* const Device, Button* 
 
 void InputWindow::BindButton(int ControlID)
 {
+	// Check if binding thread is still active
+	// testcase: spacebar and enter keys; without this fix will cause repeat binding result.
+	if (m_bIsBinding) {
+		return;
+	}
+
 	auto dev = g_InputDeviceManager.FindDevice(m_host_dev);
 	if (dev != nullptr) {
-		// Check if binding thread is still active
-		// testcase: spacebar and enter keys; without this fix will cause repeat binding result.
-		if (m_bIsBinding) {
-			return;
-		}
 		m_bIsBinding = true;
 
 		// Don't block the message processing loop
@@ -227,7 +224,7 @@ void InputWindow::BindButton(int ControlID)
 			Button* xbox_button = m_DeviceConfig->FindButtonById(ControlID);
 			xbox_button->GetText(current_text, sizeof(current_text));
 			xbox_button->UpdateText("...");
-			std::future<InputDevice::Input*> fut = std::async(std::launch::async, &InputWindow::DetectInput, this, dev.get(), xbox_button, INPUT_TIMEOUT);
+			std::future<InputDevice::Input*> fut = std::async(std::launch::async, &InputWindow::DetectInput, this, dev.get(), INPUT_TIMEOUT);
 			InputDevice::Input* dev_button = fut.get();
 			if (dev_button) {
 				xbox_button->UpdateText(dev_button->GetName().c_str());

@@ -64,7 +64,7 @@ public:
 
 private:
 	typedef std::vector<Settings::s_input_profiles>::iterator ProfileIt;
-	InputDevice::Input* DetectInput(InputDevice* const Device, Button* const xbox_button, int ms);
+	InputDevice::Input* DetectInput(InputDevice* const Device, int ms);
 	void DetectOutput(int ms);
 	ProfileIt FindProfile(std::string& name);
 	void LoadProfile(std::string& name);
