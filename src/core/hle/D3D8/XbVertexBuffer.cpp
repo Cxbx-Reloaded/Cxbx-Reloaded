@@ -32,6 +32,7 @@
 #include "common\util\hasher.h"
 #include "core\kernel\support\Emu.h"
 #include "core\hle\D3D8\Direct3D9\Direct3D9.h" // For g_pD3DDevice
+#include "core\hle\D3D8\Direct3D9\WalkIndexBuffer.h" // for WalkIndexBuffer
 #include "core\hle\D3D8\ResourceTracker.h"
 #include "core\hle\D3D8\XbPushBuffer.h" // for DxbxFVF_GetNumberOfTextureCoordinates
 #include "core\hle\D3D8\XbVertexBuffer.h"
@@ -84,7 +85,7 @@ void CxbxPatchedStream::Activate(CxbxDrawContext *pDrawContext, UINT uiStream) c
 		//DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetStreamSource");
 		if (FAILED(hRet)) {
 			CxbxKrnlCleanup("Failed to set the type patched buffer as the new stream source!\n");
-			// TODO : Cartoon hits the above case when the vertex cache size is 0.
+			// TODO : test-case : XDK Cartoon hits the above case when the vertex cache size is 0.
 		}
 	}
 }
@@ -113,27 +114,6 @@ CxbxVertexBufferConverter::CxbxVertexBufferConverter()
 {
     m_uiNbrStreams = 0;
     m_pVertexShaderInfo = nullptr;
-}
-
-size_t GetVerticesInBuffer(DWORD dwOffset, DWORD dwVertexCount, PWORD pIndexData, DWORD dwIndexBase)
-{	
-	// If we are drawing from an offset, we know that the vertex count must have offset vertices
-	// before the first drawn vertices
-	dwVertexCount += dwOffset;
-	if (pIndexData == xbnullptr) {
-		return dwVertexCount;
-	}
-
-	// We are an indexed draw, so we have to parse the index buffer
-	// The highest index we see can be used to determine the vertex buffer size
-	DWORD highestVertexIndex = 0;
-	for (DWORD i = 0; i < dwVertexCount; i++) {
-		if (highestVertexIndex < pIndexData[i]) {
-			highestVertexIndex = pIndexData[i];
-		}
-	}
-
-	return dwIndexBase + highestVertexIndex + 1;
 }
 
 int CountActiveD3DStreams()
@@ -631,6 +611,7 @@ void CxbxVertexBufferConverter::ConvertStream
 				}
 				case XTL::X_D3DVSDT_NONE: { // 0x02:
 					// Test-case : WWE RAW2
+					// Test-case : PetitCopter 
 					LOG_TEST_CASE("X_D3DVSDT_NONE");
 					// No host element data (but Xbox size can be above zero, when used for X_D3DVSD_MASK_SKIP*
 					break;
@@ -783,12 +764,24 @@ void CxbxVertexBufferConverter::Apply(CxbxDrawContext *pDrawContext)
         m_pVertexShaderInfo = &(GetCxbxVertexShader(g_Xbox_VertexShader_Handle)->VertexShaderInfo);
     }
 
-	pDrawContext->VerticesInBuffer = GetVerticesInBuffer(
-		pDrawContext->dwStartVertex,
-		pDrawContext->dwVertexCount,
-		pDrawContext->pIndexData, 
-		pDrawContext->dwIndexBase
-	);
+	// If we are drawing from an offset, we know that the vertex count must have
+	// 'offset' vertices before the first drawn vertices
+	pDrawContext->VerticesInBuffer = pDrawContext->dwStartVertex + pDrawContext->dwVertexCount;
+	// When this is an indexed draw, take the index buffer into account
+	if (pDrawContext->pXboxIndexData) {
+		// Is the highest index in this buffer not set yet?
+		if (pDrawContext->HighIndex == 0) {
+			// TODO : Instead of calling WalkIndexBuffer here, set LowIndex and HighIndex
+			// in all callers that end up here (since they might be able to avoid the call)
+			LOG_TEST_CASE("HighIndex == 0"); // TODO : If this is never hit, replace entire block by assert(pDrawContext->HighIndex > 0);
+			WalkIndexBuffer(pDrawContext->LowIndex, pDrawContext->HighIndex, pDrawContext->pXboxIndexData, pDrawContext->dwVertexCount);
+		}
+		// Convert highest index (including the base offset) into a count
+		DWORD dwHighestVertexCount = pDrawContext->dwBaseVertexIndex + pDrawContext->HighIndex + 1;
+		// Use the biggest vertex count that can be reached
+		if (pDrawContext->VerticesInBuffer < dwHighestVertexCount)
+			pDrawContext->VerticesInBuffer = dwHighestVertexCount;
+	}
 
     // Get the number of streams
     m_uiNbrStreams = GetNbrStreams(pDrawContext);
@@ -812,9 +805,9 @@ void CxbxVertexBufferConverter::Apply(CxbxDrawContext *pDrawContext)
 		// handled by d3d :
 		// Test-case : XDK Samples (FocusBlur, MotionBlur, Trees, PaintEffect, PlayField)
 		// No need to set : pDrawContext->XboxPrimitiveType = X_D3DPT_TRIANGLESTRIP;
-		pDrawContext->dwHostPrimitiveCount = EmuD3DVertex2PrimitiveCount(XTL::X_D3DPT_TRIANGLESTRIP, pDrawContext->dwVertexCount);
+		pDrawContext->dwHostPrimitiveCount = ConvertXboxVertexCountToPrimitiveCount(XTL::X_D3DPT_TRIANGLESTRIP, pDrawContext->dwVertexCount);
 	} else {
-		pDrawContext->dwHostPrimitiveCount = EmuD3DVertex2PrimitiveCount(pDrawContext->XboxPrimitiveType, pDrawContext->dwVertexCount);
+		pDrawContext->dwHostPrimitiveCount = ConvertXboxVertexCountToPrimitiveCount(pDrawContext->XboxPrimitiveType, pDrawContext->dwVertexCount);
 	}
 
 	if (pDrawContext->XboxPrimitiveType == XTL::X_D3DPT_POLYGON) {

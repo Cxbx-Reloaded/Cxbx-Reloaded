@@ -147,10 +147,9 @@ bool VerifySymbolAddressAgainstXRef(char *SymbolName, xbaddr Address, int XRef)
         return true;
     }
 
-    // For XREF_D3DTSS_TEXCOORDINDEX, Kabuki Warriors hits this case
     CxbxPopupMessage(LOG_LEVEL::WARNING, CxbxMsgDlgIcon_Warn,
 		"Verification of %s failed : XREF was 0x%.8X while lookup gave 0x%.8X", SymbolName, XRefAddr, Address);
-    // For XREF_D3DTSS_TEXCOORDINDEX, Kabuki Warriors hits this case
+    // test case : Kabuki Warriors (for XREF_D3DTSS_TEXCOORDINDEX)
     return false;
 }*/
 
