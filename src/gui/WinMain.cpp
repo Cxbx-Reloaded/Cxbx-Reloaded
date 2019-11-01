@@ -203,7 +203,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     /*! optionally open xbe and start emulation, if command line parameter was specified */
     if(__argc > 1 && false == MainWindow->HasError())
     {
-        MainWindow->OpenXbe(__argv[1]);
+        MainWindow->OpenXbe(std::filesystem::absolute(std::filesystem::path(__argv[1])).string().c_str());
 
         MainWindow->StartEmulation(MainWindow->GetHwnd());
     }
