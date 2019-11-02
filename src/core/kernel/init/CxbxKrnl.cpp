@@ -870,7 +870,7 @@ void CxbxKrnlMain(int argc, char* argv[])
 {
 	// Skip '/load' switch
 	// Get XBE Name :
-	std::string xbePath = argv[2];
+	std::string xbePath = std::filesystem::absolute(std::filesystem::path(argv[2])).string();
 
 	// Get DCHandle :
 	HWND hWnd = 0;
