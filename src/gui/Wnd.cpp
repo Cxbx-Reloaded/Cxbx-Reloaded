@@ -72,7 +72,7 @@ bool Wnd::ProcessMessages()
         wnd_class.style         = m_clsstyle;
         wnd_class.hIcon         = 0; // TODO : LoadIcon(hmodule, ?)
         wnd_class.hCursor       = LoadCursor(NULL, IDC_ARROW);
-        wnd_class.lpszMenuName  = NULL;
+        wnd_class.lpszMenuName  = nullptr;
         wnd_class.cbClsExtra    = 0;
         wnd_class.cbWndExtra    = 0;
         wnd_class.hbrBackground = m_background;
@@ -81,7 +81,7 @@ bool Wnd::ProcessMessages()
 
         m_hwnd = CreateWindowEx
         (
-            NULL,
+            0,
             m_classname,
             m_wndname,
             m_wndstyle,

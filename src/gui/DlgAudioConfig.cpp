@@ -55,7 +55,7 @@ VOID ShowAudioConfig(HWND hwnd)
     g_XBAudio = g_Settings->m_audio;
 
     /*! show dialog box */
-    DialogBox(GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_AUDIO_CFG), hwnd, DlgAudioConfigProc);
+    DialogBox(GetModuleHandle(nullptr), MAKEINTRESOURCE(IDD_AUDIO_CFG), hwnd, DlgAudioConfigProc);
 }
 
 BOOL CALLBACK DSEnumProc(LPGUID lpGUID, LPCTSTR lpszDesc, LPCTSTR lpszDrvName, LPVOID lpContext)
@@ -92,14 +92,14 @@ INT_PTR CALLBACK DlgAudioConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPAR
             g_hAudioAdapter  = GetDlgItem(hWndDlg, IDC_AC_AUDIO_ADAPTER);
 
             /*! set window icon */
-            SetClassLong(hWndDlg, GCL_HICON, (LONG)LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_CXBX)));
+            SetClassLong(hWndDlg, GCL_HICON, (LONG)LoadIcon(GetModuleHandle(nullptr), MAKEINTRESOURCE(IDI_CXBX)));
 
             /*! enumerate audio adapters */
             {
 
                 SendMessage(g_hAudioAdapter, CB_RESETCONTENT, 0, 0);
 
-                DirectSoundEnumerate(&DSEnumProc, NULL);
+                DirectSoundEnumerate(&DSEnumProc, nullptr);
             }
 
             /*! refresh UI based on currently selected audio adapter */

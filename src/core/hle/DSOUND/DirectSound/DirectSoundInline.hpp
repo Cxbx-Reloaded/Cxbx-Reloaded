@@ -128,7 +128,7 @@ inline void XADPCM2PCMFormat(LPWAVEFORMATEX lpwfxFormat)
     //Enable this only if you have Xbox ADPCM Codec installed on your PC, or else it will fail every time.
     //This is just to verify format conversion is correct or not.
 #if 0
-    if (waveOutOpen(NULL, WAVE_MAPPER, lpwfxFormat, NULL, NULL, WAVE_FORMAT_QUERY) != MMSYSERR_NOERROR) {
+    if (waveOutOpen(nullptr, WAVE_MAPPER, lpwfxFormat, NULL, NULL, WAVE_FORMAT_QUERY) != MMSYSERR_NOERROR) {
         return DSERR_BADFORMAT;
     }
 #endif
@@ -556,7 +556,7 @@ inline void DSoundGenericUnlock(
 inline HRESULT DSoundBufferCreate(LPDSBUFFERDESC pDSBufferDesc, LPDIRECTSOUNDBUFFER8 &pDSBuffer)
 {
     LPDIRECTSOUNDBUFFER pTempBuffer;
-    HRESULT hRetDS = g_pDSound8->CreateSoundBuffer(pDSBufferDesc, &pTempBuffer, NULL);
+    HRESULT hRetDS = g_pDSound8->CreateSoundBuffer(pDSBufferDesc, &pTempBuffer, nullptr);
 
     if (hRetDS == DS_OK) {
         hRetDS = pTempBuffer->QueryInterface(IID_IDirectSoundBuffer8, (LPVOID*)&(pDSBuffer));

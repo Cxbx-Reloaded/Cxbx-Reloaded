@@ -68,7 +68,7 @@ void EmuShared::Init(DWORD guiProcessID)
         hMapObject = CreateFileMapping
         (
             INVALID_HANDLE_VALUE,   // Paging file
-            NULL,                   // default security attributes
+            nullptr,                // default security attributes
             PAGE_READWRITE,         // read/write access
             0,                      // size: high 32 bits
             sizeof(EmuShared),      // size: low 32 bits

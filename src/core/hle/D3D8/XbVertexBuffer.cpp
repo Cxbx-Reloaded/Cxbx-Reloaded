@@ -294,7 +294,7 @@ void CxbxVertexBufferConverter::ConvertStream
 	} else {
 		XTL::X_D3DVertexBuffer *pXboxVertexBuffer = g_D3DStreams[uiStream];
         pXboxVertexData = (uint8_t*)GetDataFromXboxResource(pXboxVertexBuffer);
-		if (pXboxVertexData == NULL) {
+		if (pXboxVertexData == xbnullptr) {
 			HRESULT hRet = g_pD3DDevice->SetStreamSource(
 				uiStream, 
 				nullptr, 
@@ -739,7 +739,7 @@ void CxbxVertexBufferConverter::ConvertStream
     patchedStream.uiVertexStreamInformationHash = pVertexShaderSteamInfoHash;
     patchedStream.uiCachedXboxVertexStride = uiXboxVertexStride;
     patchedStream.uiCachedHostVertexStride = uiHostVertexStride;
-    patchedStream.bCacheIsStreamZeroDrawUP = (pDrawContext->pXboxVertexStreamZeroData != NULL);
+    patchedStream.bCacheIsStreamZeroDrawUP = (pDrawContext->pXboxVertexStreamZeroData != xbnullptr);
     if (patchedStream.bCacheIsStreamZeroDrawUP) {
         patchedStream.pCachedHostVertexStreamZeroData = pHostVertexData;
         patchedStream.bCachedHostVertexStreamZeroDataIsAllocated = bNeedStreamCopy;

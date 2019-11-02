@@ -80,7 +80,7 @@ static void glo_init(void) {
     }
 
     /* Grab An Instance For Our Window */
-    glo.hInstance = GetModuleHandle(NULL);
+    glo.hInstance = GetModuleHandle(nullptr);
     glo.hDC = GetDC(g_hEmuWindow);
 
     /* Create a pixel format */

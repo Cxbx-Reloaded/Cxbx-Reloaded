@@ -123,7 +123,7 @@ void EmuExecutePushBuffer
 )
 {
 	//Check whether Fixup exists or not. 
-	if (pFixup != NULL) {
+	if (pFixup != xbnullptr) {
 		LOG_TEST_CASE("PushBuffer has fixups");
 		//Interpret address of PushBuffer Data and Fixup Data
 		UINT8* pPushBufferData = (UINT8*)pPushBuffer->Data;

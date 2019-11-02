@@ -272,7 +272,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                     ReleaseDC(hwnd, hDC);
             }
 
-            SetClassLong(hwnd, GCL_HICON, (LONG)LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_CXBX)));
+            SetClassLong(hwnd, GCL_HICON, (LONG)LoadIcon(GetModuleHandle(nullptr), MAKEINTRESOURCE(IDI_CXBX)));
 			DragAcceptFiles(hwnd, TRUE);
 
 			// Allow Drag and Drop if Cxbx is run with elevated privileges on Windows Vista and above
@@ -299,8 +299,8 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 						                        (XBOX_LED_COLOUR_GREEN << 16) |
 						                        (XBOX_LED_COLOUR_GREEN << 8) |
 						                        (XBOX_LED_COLOUR_GREEN);
-						SetTimer(hwnd, TIMERID_ACTIVE_EMULATION, 1000, (TIMERPROC)NULL);
-						SetTimer(hwnd, TIMERID_LED, XBOX_LED_FLASH_PERIOD, (TIMERPROC)NULL);
+						SetTimer(hwnd, TIMERID_ACTIVE_EMULATION, 1000, (TIMERPROC)nullptr);
+						SetTimer(hwnd, TIMERID_LED, XBOX_LED_FLASH_PERIOD, (TIMERPROC)nullptr);
 						m_hwndChild = GetWindow(hwnd, GW_CHILD);
 						UpdateCaption();
 						RefreshMenus();
@@ -565,9 +565,9 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 				ofn.lpstrFile = filename;
 				ofn.nMaxFile = MAX_PATH;
 				ofn.nFilterIndex = 1;
-				ofn.lpstrFileTitle = NULL;
+				ofn.lpstrFileTitle = nullptr;
 				ofn.nMaxFileTitle = 0;
-				ofn.lpstrInitialDir = NULL;
+				ofn.lpstrInitialDir = nullptr;
 				ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
 
 				if (GetOpenFileName(&ofn) == TRUE)
@@ -634,9 +634,9 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 				ofn.lpstrFile = filename;
 				ofn.nMaxFile = MAX_PATH;
 				ofn.nFilterIndex = 1;
-				ofn.lpstrFileTitle = NULL;
+				ofn.lpstrFileTitle = nullptr;
 				ofn.nMaxFileTitle = 0;
-				ofn.lpstrInitialDir = NULL;
+				ofn.lpstrInitialDir = nullptr;
 				ofn.lpstrDefExt = "bmp";
 				ofn.lpstrTitle = "Export Logo Bitmap";
 				ofn.Flags = OFN_PATHMUSTEXIST;
@@ -745,9 +745,9 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 				ofn.lpstrFile = filename;
 				ofn.nMaxFile = MAX_PATH;
 				ofn.nFilterIndex = 1;
-				ofn.lpstrFileTitle = NULL;
+				ofn.lpstrFileTitle = nullptr;
 				ofn.nMaxFileTitle = 0;
-				ofn.lpstrInitialDir = NULL;
+				ofn.lpstrInitialDir = nullptr;
 				ofn.lpstrDefExt = "bmp";
 				ofn.lpstrTitle = "Import Logo Bitmap";
 				ofn.Flags = OFN_PATHMUSTEXIST;
@@ -905,9 +905,9 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 				ofn.lpstrFile = filename;
 				ofn.nMaxFile = MAX_PATH;
 				ofn.nFilterIndex = 1;
-				ofn.lpstrFileTitle = NULL;
+				ofn.lpstrFileTitle = nullptr;
 				ofn.nMaxFileTitle = 0;
-				ofn.lpstrInitialDir = NULL;
+				ofn.lpstrInitialDir = nullptr;
 				ofn.lpstrDefExt = "txt";
 				ofn.Flags = OFN_PATHMUSTEXIST;
 
@@ -1000,17 +1000,17 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
 				BROWSEINFO bInfo;
 				bInfo.hwndOwner = NULL;
-				bInfo.pidlRoot = NULL;
+				bInfo.pidlRoot = nullptr;
 				bInfo.pszDisplayName = szDir;
 				bInfo.lpszTitle = "Please, select a folder";
 				bInfo.ulFlags = BIF_NEWDIALOGSTYLE, BIF_EDITBOX, BIF_VALIDATE;
-				bInfo.lpfn = NULL;
+				bInfo.lpfn = nullptr;
 				bInfo.lParam = 0;
 				bInfo.iImage = -1;
 
 				LPITEMIDLIST lpItem = SHBrowseForFolder(&bInfo);
 
-				if (lpItem != NULL)
+				if (lpItem != nullptr)
 				{
 					SHGetPathFromIDList(lpItem, szDir);
 
@@ -1134,9 +1134,9 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 					ofn.lpstrFile = filename;
 					ofn.nMaxFile = MAX_PATH;
 					ofn.nFilterIndex = 1;
-					ofn.lpstrFileTitle = NULL;
+					ofn.lpstrFileTitle = nullptr;
 					ofn.nMaxFileTitle = 0;
-					ofn.lpstrInitialDir = NULL;
+					ofn.lpstrInitialDir = nullptr;
 					ofn.lpstrDefExt = "txt";
 					ofn.Flags = OFN_PATHMUSTEXIST;
 
@@ -1192,9 +1192,9 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 					ofn.lpstrFile = filename;
 					ofn.nMaxFile = MAX_PATH;
 					ofn.nFilterIndex = 1;
-					ofn.lpstrFileTitle = NULL;
+					ofn.lpstrFileTitle = nullptr;
 					ofn.nMaxFileTitle = 0;
-					ofn.lpstrInitialDir = NULL;
+					ofn.lpstrInitialDir = nullptr;
 					ofn.lpstrDefExt = "txt";
 					ofn.Flags = OFN_PATHMUSTEXIST;
 
@@ -1286,7 +1286,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
             break;
 
             case ID_HELP_HOMEPAGE:
-                ShellExecute(NULL, "open", "https://github.com/Cxbx-Reloaded/Cxbx-Reloaded", NULL, NULL, SW_SHOWNORMAL);
+                ShellExecute(NULL, "open", "https://github.com/Cxbx-Reloaded/Cxbx-Reloaded", nullptr, nullptr, SW_SHOWNORMAL);
                 break;
 
             }
@@ -1298,7 +1298,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 		{
 			// Redraw the window on move, prevents corrupt background image that happens
 			// when windows doesn't call the WM_DRAW event when the window is moved too quickly.
-			RedrawWindow(hwnd, NULL, NULL, RDW_INVALIDATE);
+			RedrawWindow(hwnd, nullptr, NULL, RDW_INVALIDATE);
 			break;
 		}
 
@@ -1380,11 +1380,11 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 // suggest a file name
 void WndMain::SuggestFilename(const char *x_orig_filename, char *x_filename, char x_extension[4])
 {
-    if(strrchr(x_orig_filename, '\\') != NULL)
+    if(strrchr(x_orig_filename, '\\') != nullptr)
     {
         strcpy(x_filename, x_orig_filename);
 		char *loc = strrchr(x_filename, '.');
-		if (loc != NULL)
+		if (loc != nullptr)
 			strncpy(loc, &x_extension[0], 4);
     }
 }
@@ -1433,7 +1433,7 @@ void WndMain::LoadLogo()
         }
     }
 
-    RedrawWindow(m_hwnd, NULL, NULL, RDW_INVALIDATE);
+    RedrawWindow(m_hwnd, nullptr, NULL, RDW_INVALIDATE);
 }
 
 // TODO : Move these types to a more appropriate place
@@ -1482,7 +1482,7 @@ void WndMain::LoadGameLogo()
 	gameLogoWidth = 0;
 	gameLogoHeight = 0;
 
-    uint8_t *ImageData = NULL;
+    uint8_t *ImageData = nullptr;
 	XTL::X_D3DPixelContainer XboxPixelContainer = {};
 	XTL::X_D3DPixelContainer *pXboxPixelContainer = &XboxPixelContainer;
 
@@ -1568,7 +1568,7 @@ void WndMain::LoadGameLogo()
 	m_GameLogoDC = CreateCompatibleDC(hDC);
 	m_OrigGameLogo = (HBITMAP)SelectObject(m_GameLogoDC, m_GameLogoBMP);
 
-	RedrawWindow(m_hwnd, NULL, NULL, RDW_INVALIDATE);
+	RedrawWindow(m_hwnd, nullptr, NULL, RDW_INVALIDATE);
 
 	if (hDC != NULL)
 		ReleaseDC(m_hwnd, hDC);
@@ -1810,10 +1810,10 @@ void WndMain::UpdateDebugConsoles()
 		if (fileDesc != -1) {
 			FILE* file = _fdopen(fileDesc, "wt");
 
-			if (file != NULL) {
+			if (file != nullptr) {
 				int dup2Result = _dup2(_fileno(file), _fileno(stdout));
 				if (dup2Result == 0) {
-					std::setvbuf(stdout, NULL, _IONBF, 0);
+					std::setvbuf(stdout, nullptr, _IONBF, 0);
 				}
 				std::fclose(file);
 			}
@@ -1970,7 +1970,7 @@ void WndMain::OpenXbe(const char *x_filename)
 
 		delete m_Xbe; m_Xbe = nullptr;
 
-		RedrawWindow(m_hwnd, NULL, NULL, RDW_INVALIDATE);
+		RedrawWindow(m_hwnd, nullptr, NULL, RDW_INVALIDATE);
 
         MessageBox(m_hwnd, ErrorMessage.c_str(), "Cxbx-Reloaded", MB_ICONSTOP | MB_OK);
 
@@ -1988,7 +1988,7 @@ void WndMain::OpenXbe(const char *x_filename)
 		{
 			delete m_Xbe; m_Xbe = nullptr;
 			
-			RedrawWindow(m_hwnd, NULL, NULL, RDW_INVALIDATE);
+			RedrawWindow(m_hwnd, nullptr, NULL, RDW_INVALIDATE);
 			
 			UpdateCaption();
 			
@@ -2090,7 +2090,7 @@ void WndMain::CloseXbe()
 	DeleteObject(m_GameLogoDC);
 	DeleteObject(m_GameLogoBMP);
 
-    RedrawWindow(m_hwnd, NULL, NULL, RDW_INVALIDATE);
+    RedrawWindow(m_hwnd, nullptr, NULL, RDW_INVALIDATE);
 }
 
 void WndMain::OpenMRU(int mru)
@@ -2161,9 +2161,9 @@ void WndMain::SaveXbeAs()
     ofn.lpstrFile       = filename;
     ofn.nMaxFile        = MAX_PATH;
     ofn.nFilterIndex    = 1;
-    ofn.lpstrFileTitle  = NULL;
+    ofn.lpstrFileTitle  = nullptr;
     ofn.nMaxFileTitle   = 0;
-    ofn.lpstrInitialDir = NULL;
+    ofn.lpstrInitialDir = nullptr;
     ofn.lpstrDefExt     = "xbe";
     ofn.Flags           = OFN_PATHMUSTEXIST;
 
@@ -2216,7 +2216,7 @@ void WndMain::StartEmulation(HWND hwndParent, DebuggerState LocalDebuggerState /
     {
 
 		char szExeFileName[MAX_PATH];
-		GetModuleFileName(GetModuleHandle(NULL), szExeFileName, MAX_PATH);
+		GetModuleFileName(GetModuleHandle(nullptr), szExeFileName, MAX_PATH);
 
 		bool AttachLocalDebugger = (LocalDebuggerState == debuggerOn);
 		g_EmuShared->SetDebuggingFlag(&AttachLocalDebugger);

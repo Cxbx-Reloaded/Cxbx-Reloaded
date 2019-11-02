@@ -81,7 +81,7 @@ VOID ShowVideoConfig(HWND hwnd)
     }
 
     /*! show dialog box */
-    DialogBox(GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_VIDEO_CFG), hwnd, DlgVideoConfigProc);
+    DialogBox(GetModuleHandle(nullptr), MAKEINTRESOURCE(IDD_VIDEO_CFG), hwnd, DlgVideoConfigProc);
 
 cleanup:
 
@@ -107,7 +107,7 @@ INT_PTR CALLBACK DlgVideoConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPAR
 			g_hRenderResolution = GetDlgItem(hWndDlg, IDC_VC_RENDER_RESOLUTION);
 
             /*! set window icon */
-            SetClassLong(hWndDlg, GCL_HICON, (LONG)LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_CXBX)));
+            SetClassLong(hWndDlg, GCL_HICON, (LONG)LoadIcon(GetModuleHandle(nullptr), MAKEINTRESOURCE(IDI_CXBX)));
 
             /*! enumerate display adapters */
             {

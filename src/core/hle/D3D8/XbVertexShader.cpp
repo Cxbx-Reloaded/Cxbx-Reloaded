@@ -554,7 +554,7 @@ static VSH_OPCODE_PARAMS* VshGetOpCodeParams(VSH_ILU ILU,
 		if (MAC >= MAC_MOV && MAC <= MAC_ARL)
 			return (VSH_OPCODE_PARAMS*)&g_OpCodeParams_MAC[MAC];
 		else
-		    return NULL;
+		    return nullptr;
 }
 
 static void VshParseInstruction(uint32_t               *pShaderToken,
@@ -2577,17 +2577,17 @@ extern HRESULT EmuRecompileVshFunction
     DWORD               *pToken;
     boolean             EOI = false;
     VSH_XBOX_SHADER     *pShader = (VSH_XBOX_SHADER*)calloc(1, sizeof(VSH_XBOX_SHADER));
-	LPD3DXBUFFER		pErrors = NULL;
+	LPD3DXBUFFER		pErrors = nullptr;
     HRESULT             hRet = 0;
 
     // TODO: support this situation..
-    if(pXboxFunction == NULL)
+    if(pXboxFunction == xbnullptr)
         return E_FAIL;
 
 	// Initialize output arguments to zero
 	*pbUseDeclarationOnly = 0;
     *pXboxFunctionSize = 0;
-    *ppRecompiledShader = NULL;
+    *ppRecompiledShader = nullptr;
 
     if(!pShader)
     {
@@ -2751,7 +2751,7 @@ CxbxVertexShaderInfo *GetCxbxVertexShaderInfo(DWORD XboxVertexShaderHandle)
             return &pCxbxVertexShader->VertexShaderInfo;
         }
     }
-    return NULL;
+    return nullptr;
 }
 
 std::unordered_map<DWORD, CxbxVertexShader*> g_CxbxVertexShaders;

@@ -52,7 +52,7 @@ PBYTE GetSectorBuffered(
 			// If something went bad free the slot
 			This->SectorList[index] = 0;
 			This->LockList[index]--;
-			return NULL;
+			return nullptr;
 		}
 
 		This->WriteIndex++;
@@ -60,7 +60,7 @@ PBYTE GetSectorBuffered(
 	}
 
 	// We land here if all entries were locked, and that's BAD !
-	return NULL;
+	return nullptr;
 }
 //------------------------------------------------------------------------------
 void ReleaseBufferedSector(

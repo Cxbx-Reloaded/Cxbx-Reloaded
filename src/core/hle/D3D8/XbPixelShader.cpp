@@ -6151,7 +6151,7 @@ VOID DxbxUpdateActivePixelShader() // NOPATCH
 #define REVEL8N_PIXEL_SHADER_CHANGES
 
 // help functions
-char *pCodeBuffer=NULL;
+char *pCodeBuffer=nullptr;
 
 void WriteCode(const char *str, ...)
 {
@@ -8096,7 +8096,7 @@ inline void CorrectConstToReg(char *szConst, int *pPSC0, int *pPSC1)
 CorrectConstToReg_done:;
 }
 
-void DumpPixelShaderDefToFile(XTL::X_D3DPIXELSHADERDEF* pPSDef, const char* pszCode /*= NULL*/ )
+void DumpPixelShaderDefToFile(XTL::X_D3DPIXELSHADERDEF* pPSDef, const char* pszCode /*= nullptr*/ )
 {
 	static int PshNumber = 0;	// Keep track of how many pixel shaders we've attemted to convert.
 	char szPSDef[512];			
