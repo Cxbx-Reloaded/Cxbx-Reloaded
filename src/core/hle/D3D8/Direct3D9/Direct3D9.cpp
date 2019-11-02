@@ -77,12 +77,98 @@ using namespace std::literals::chrono_literals;
 // Global(s)
 HWND                                g_hEmuWindow   = NULL; // rendering window
 IDirect3DDevice                    *g_pD3DDevice   = nullptr; // Direct3D Device
-LPDIRECTDRAWSURFACE7                g_pDDSPrimary  = nullptr; // DirectDraw7 Primary Surface
-LPDIRECTDRAWCLIPPER                 g_pDDClipper   = nullptr; // DirectDraw7 Clipper
-DWORD                               g_Xbox_VertexShader_Handle = 0;
-XTL::X_PixelShader*					g_pXbox_PixelShader = xbnullptr;
-BOOL                                g_bIsFauxFullscreen = FALSE;
-DWORD								g_OverlaySwap = 0;
+
+// Static Variable(s)
+static IDirectDrawSurface7         *g_pDDSPrimary  = nullptr; // DirectDraw7 Primary Surface
+static IDirectDrawClipper          *g_pDDClipper   = nullptr; // DirectDraw7 Clipper
+static IDirectDraw7                *g_pDD7          = nullptr; // DirectDraw7
+static HMONITOR                     g_hMonitor      = NULL; // Handle to DirectDraw monitor
+static GUID                         g_ddguid = { 0 }; // DirectDraw driver GUID
+static DDCAPS                       g_DriverCaps = { 0 };
+
+static bool                         g_bSupportsFormatSurface[XTL::X_D3DFMT_LIN_R8G8B8A8 + 1] = { false };// Does device support surface format?
+static bool                         g_bSupportsFormatSurfaceRenderTarget[XTL::X_D3DFMT_LIN_R8G8B8A8 + 1] = { false };// Does device support surface format?
+static bool                         g_bSupportsFormatSurfaceDepthStencil[XTL::X_D3DFMT_LIN_R8G8B8A8 + 1] = { false };// Does device support surface format?
+static bool                         g_bSupportsFormatTexture[XTL::X_D3DFMT_LIN_R8G8B8A8 + 1] = { false }; // Does device support texture format?
+static bool                         g_bSupportsFormatTextureRenderTarget[XTL::X_D3DFMT_LIN_R8G8B8A8 + 1] = { false };// Does device support texture format?
+static bool                         g_bSupportsFormatTextureDepthStencil[XTL::X_D3DFMT_LIN_R8G8B8A8 + 1] = { false };// Does device support texture format?
+static bool                         g_bSupportsFormatVolumeTexture[XTL::X_D3DFMT_LIN_R8G8B8A8 + 1] = { false }; // Does device support surface format?
+static bool                         g_bSupportsFormatCubeTexture[XTL::X_D3DFMT_LIN_R8G8B8A8 + 1] = { false }; // Does device support surface format?
+static HBRUSH                       g_hBgBrush = NULL; // Background Brush
+static volatile bool                g_bRenderWindowActive = false;
+static BOOL                         g_bIsFauxFullscreen = FALSE;
+static DWORD						g_OverlaySwap = 0; // Set in D3DDevice_UpdateOverlay
+static int                          g_iWireframe = 0; // wireframe toggle
+static bool                         g_bHack_UnlockFramerate = false; // ignore the xbox presentation interval
+static bool                         g_bHasDepth = false;    // Does device have a Depth Buffer?
+static bool                         g_bHasStencil = false;  // Does device have a Stencil Buffer?
+static DWORD						g_dwPrimPerFrame = 0;	// Number of primitives within one frame
+
+static Settings::s_video            g_XBVideo;
+
+// D3D based variables
+static IDirect3D                   *g_pDirect3D = nullptr;
+       D3DCAPS						g_D3DCaps = {};         // Direct3D Caps
+static IDirect3DVertexBuffer       *g_pDummyBuffer = nullptr;  // Dummy buffer, used to set unused stream sources with
+static IDirect3DIndexBuffer        *g_pClosingLineLoopHostIndexBuffer = nullptr;
+static IDirect3DIndexBuffer        *g_pQuadToTriangleHostIndexBuffer = nullptr;
+static IDirect3DSurface            *g_pDefaultHostDepthBufferSurface = nullptr;
+
+// cached Direct3D state variable(s)
+static size_t                       g_QuadToTriangleHostIndexBuffer_Size = 0; // = NrOfQuadIndices
+static INDEX16                     *g_pQuadToTriangleIndexData = nullptr;
+static size_t                       g_QuadToTriangleIndexData_Size = 0; // = NrOfQuadIndices
+
+static CxbxVertexBufferConverter VertexBufferConverter = {};
+
+struct {
+	XTL::X_D3DSurface Surface;
+	RECT SrcRect;
+	RECT DstRect;
+	BOOL EnableColorKey;
+	D3DCOLOR ColorKey;
+} g_OverlayProxy;
+
+static std::condition_variable		g_VBConditionVariable;	// Used in BlockUntilVerticalBlank
+static std::mutex					g_VBConditionMutex;		// Used in BlockUntilVerticalBlank
+static DWORD                        g_VBLastSwap = 0;
+
+static XTL::DWORD                   g_Xbox_PresentationInterval_Default = D3DPRESENT_INTERVAL_IMMEDIATE;
+       XTL::DWORD                   g_Xbox_PresentationInterval_Override = 0;
+static XTL::X_D3DSWAPDATA			g_Xbox_SwapData = {0}; // current swap information
+static XTL::X_D3DSWAPCALLBACK		g_pXbox_SwapCallback = xbnullptr;	// Swap/Present callback routine
+static XTL::X_D3DVBLANKDATA			g_Xbox_VBlankData = {0}; // current vertical blank information
+static XTL::X_D3DVBLANKCALLBACK     g_pXbox_VerticalBlankCallback   = xbnullptr; // Vertical-Blank callback routine
+static XTL::X_D3DCALLBACK			g_pXbox_Callback		= xbnullptr;	// D3DDevice::InsertCallback routine
+static XTL::X_D3DCALLBACKTYPE		g_Xbox_Callback_Type;			// Callback type
+static XTL::DWORD					g_Xbox_Callback_Context;		// Callback param
+
+       XTL::X_D3DSurface           *g_pXbox_BackBufferSurface = xbnullptr;
+static XTL::X_D3DSurface           *g_pXbox_DefaultDepthStencilSurface = xbnullptr;
+       XTL::X_D3DSurface           *g_pXbox_RenderTarget = xbnullptr;
+static XTL::X_D3DSurface           *g_pXbox_DepthStencil = xbnullptr;
+
+       XTL::X_VERTEXSHADERCONSTANTMODE g_Xbox_VertexShaderConstantMode = X_D3DSCM_192CONSTANTS; // Set by D3DDevice_SetShaderConstantMode, TODO : Move to XbVertexShader.cpp
+static XTL::DWORD                   g_Xbox_BaseVertexIndex = 0; // Set by D3DDevice_SetIndices, read by D3DDevice_DrawIndexedVertices : a value that's effectively added to every vertex index (as stored in an index buffer) by multiplying this by vertex stride and added to the vertex buffer start (see BaseVertexIndex in CxbxDrawIndexed)
+static XTL::DWORD                  *g_pXbox_BeginPush_Buffer = xbnullptr; // primary push buffer
+
+       XTL::X_PixelShader*			g_pXbox_PixelShader = xbnullptr;
+static XTL::PVOID                   g_pXbox_Palette[XTL::X_D3DTS_STAGECOUNT] = { xbnullptr, xbnullptr, xbnullptr, xbnullptr }; // cached palette pointer
+
+       XTL::X_D3DBaseTexture       *EmuD3DActiveTexture[XTL::X_D3DTS_STAGECOUNT] = {0,0,0,0}; // Set by our D3DDevice_SetTexture and D3DDevice_SwitchTexture patches
+static XTL::X_D3DBaseTexture        CxbxActiveTextureCopies[XTL::X_D3DTS_STAGECOUNT] = {}; // cached active texture
+
+/* Unused :
+static XTL::DWORD                  *g_Xbox_D3DDevice; // TODO: This should be a D3DDevice structure
+
+static	DWORD						g_dwVertexShaderUsage = 0; // Unused. If needed, move to XbVertexShader.cpp
+*/
+
+// Active D3D Vertex Streams (and strides)
+       XTL::X_D3DVertexBuffer      *g_D3DStreams[16];
+       XTL::UINT                    g_D3DStreamStrides[16];
+static XTL::DWORD                   g_VertexShaderSlots[X_VSH_MAX_INSTRUCTION_COUNT];
+       XTL::DWORD                   g_Xbox_VertexShader_Handle = 0;
 
 // Static Function(s)
 static BOOL WINAPI                  EmuEnumDisplayDevices(GUID FAR *lpGUID, LPSTR lpDriverDescription, LPSTR lpDriverName, LPVOID lpContext, HMONITOR hm);
@@ -93,100 +179,9 @@ static DWORD WINAPI                 EmuUpdateTickCount(LPVOID);
 static inline void                  EmuVerifyResourceIsRegistered(XTL::X_D3DResource *pResource, DWORD D3DUsage, int iTextureStage, DWORD dwSize);
 static void							UpdateCurrentMSpFAndFPS(); // Used for benchmarking/fps count
 
-// Static Variable(s)
-static HMONITOR                     g_hMonitor      = NULL; // Handle to DirectDraw monitor
-static bool                         g_bSupportsFormatSurface[XTL::X_D3DFMT_LIN_R8G8B8A8 + 1] = { false };// Does device support surface format?
-static bool                         g_bSupportsFormatSurfaceRenderTarget[XTL::X_D3DFMT_LIN_R8G8B8A8 + 1] = { false };// Does device support surface format?
-static bool                         g_bSupportsFormatSurfaceDepthStencil[XTL::X_D3DFMT_LIN_R8G8B8A8 + 1] = { false };// Does device support surface format?
-static bool                         g_bSupportsFormatTexture[XTL::X_D3DFMT_LIN_R8G8B8A8 + 1] = { false }; // Does device support texture format?
-static bool                         g_bSupportsFormatTextureRenderTarget[XTL::X_D3DFMT_LIN_R8G8B8A8 + 1] = { false };// Does device support texture format?
-static bool                         g_bSupportsFormatTextureDepthStencil[XTL::X_D3DFMT_LIN_R8G8B8A8 + 1] = { false };// Does device support texture format?
-static bool                         g_bSupportsFormatVolumeTexture[XTL::X_D3DFMT_LIN_R8G8B8A8 + 1] = { false }; // Does device support surface format?
-static bool                         g_bSupportsFormatCubeTexture[XTL::X_D3DFMT_LIN_R8G8B8A8 + 1] = { false }; // Does device support surface format?
-static LPDIRECTDRAW7                g_pDD7          = nullptr; // DirectDraw7
-static DDCAPS                       g_DriverCaps          = { 0 };
-static HBRUSH                       g_hBgBrush      = NULL; // Background Brush
-static volatile bool                g_bRenderWindowActive = false;
-static Settings::s_video            g_XBVideo;
-static XTL::X_D3DVBLANKCALLBACK     g_pXbox_VerticalBlankCallback   = xbnullptr; // Vertical-Blank callback routine
-static std::condition_variable		g_VBConditionVariable;	// Used in BlockUntilVerticalBlank
-static std::mutex					g_VBConditionMutex;		// Used in BlockUntilVerticalBlank
-static XTL::X_D3DSWAPCALLBACK		g_pXbox_SwapCallback = xbnullptr;	// Swap/Present callback routine
-static XTL::X_D3DCALLBACK			g_pXbox_Callback		= xbnullptr;	// D3DDevice::InsertCallback routine
-static XTL::X_D3DCALLBACKTYPE		g_Xbox_Callback_Type;			// Callback type
-static DWORD						g_Xbox_Callback_Context;		// Callback param
-static bool                         g_bHasDepth = false;    // Does device have a Depth Buffer?
-static bool                         g_bHasStencil = false;  // Does device have a Stencil Buffer?
-static DWORD						g_dwPrimPerFrame = 0;	// Number of primitives within one frame
-
-// primary push buffer
-static XTL::DWORD                  *g_pXbox_BeginPush_Buffer = nullptr;
-
-struct {
-	XTL::X_D3DSurface Surface;
-	RECT SrcRect;
-	RECT DstRect;
-	BOOL EnableColorKey;
-	D3DCOLOR ColorKey;
-} g_OverlayProxy;
-
-// D3D based variables
-static GUID                         g_ddguid;               // DirectDraw driver GUID
-static IDirect3D                   *g_pDirect3D = nullptr;
-D3DCAPS								g_D3DCaps = {};         // Direct3D Caps
-
-// wireframe toggle
-static int                          g_iWireframe    = 0;
-
-typedef uint64_t resource_key_t;
-
 extern void UpdateFPSCounter();
 
-// current active vertex stream
-static IDirect3DVertexBuffer       *g_pDummyBuffer = nullptr;  // Dummy buffer, used to set unused stream sources with
-
-// current vertical blank information
-static XTL::X_D3DVBLANKDATA			g_Xbox_VBlankData = {0};
-static DWORD                        g_VBLastSwap = 0;
-
-// current swap information
-static XTL::X_D3DSWAPDATA			g_Xbox_SwapData = {0};
-
-static CxbxVertexBufferConverter VertexBufferConverter = {};
-
-// cached Direct3D state variable(s)
-static IDirect3DIndexBuffer        *g_pClosingLineLoopHostIndexBuffer = nullptr;
-
-static IDirect3DIndexBuffer        *g_pQuadToTriangleHostIndexBuffer = nullptr;
-static UINT                         g_QuadToTriangleHostIndexBuffer_Size = 0; // = NrOfQuadIndices
-
-static INDEX16                     *g_pQuadToTriangleIndexData = nullptr;
-static UINT                         g_QuadToTriangleIndexData_Size = 0; // = NrOfQuadIndices
-
-static IDirect3DSurface            *g_pDefaultHostDepthBufferSurface = nullptr;
-XTL::X_D3DSurface                  *g_pXbox_BackBufferSurface = xbnullptr;
-static XTL::X_D3DSurface           *g_pXbox_DefaultDepthStencilSurface = xbnullptr;
-XTL::X_D3DSurface                  *g_pXbox_RenderTarget = xbnullptr;
-static XTL::X_D3DSurface           *g_pXbox_DepthStencil = xbnullptr;
-static DWORD                        g_VertexShaderSlots[X_VSH_MAX_INSTRUCTION_COUNT];
-
-DWORD g_Xbox_BaseVertexIndex = 0; // Set by D3DDevice_SetIndices : a value that's effectively added to every vertex index (as stored in an index buffer) by multiplying this by vertex stride and added to the vertex buffer start (see BaseVertexIndex in CxbxDrawIndexed)
-DWORD g_Xbox_PresentationInterval_Default = D3DPRESENT_INTERVAL_IMMEDIATE;
-DWORD g_Xbox_PresentationInterval_Override = 0;
-bool g_bHack_UnlockFramerate = false; // ignore the xbox presentation interval
-
-// Active D3D Vertex Streams (and strides)
-XTL::X_D3DVertexBuffer*g_D3DStreams[16];
-UINT g_D3DStreamStrides[16];
-
-// cached palette pointer
-static PVOID g_pXbox_Palette[XTL::X_D3DTS_STAGECOUNT] = { nullptr, nullptr, nullptr, nullptr };
-
-static XTL::X_VERTEXSHADERCONSTANTMODE g_Xbox_VertexShaderConstantMode = X_D3DSCM_192CONSTANTS; // TODO : Move to XbVertexShader.cpp
-
-// cached active texture
-XTL::X_D3DBaseTexture *EmuD3DActiveTexture[XTL::X_D3DTS_STAGECOUNT] = {0,0,0,0};
-XTL::X_D3DBaseTexture CxbxActiveTextureCopies[XTL::X_D3DTS_STAGECOUNT] = {};
+typedef uint64_t resource_key_t;
 
 // information passed to the create device proxy thread
 struct EmuD3D8CreateDeviceProxyData
@@ -215,9 +210,6 @@ g_EmuCDPD = {0};
 		} \
 	} while (0)
 
-
-// TODO: This should be a D3DDevice structure
-DWORD* g_Xbox_D3DDevice;
 
 const char *CxbxGetErrorDescription(HRESULT hResult)
 {
@@ -2721,12 +2713,13 @@ void Direct3D_CreateDevice_Start
 
 void Direct3D_CreateDevice_End()
 {
+#if 0 // Unused :
     // Set g_Xbox_D3DDevice to point to the Xbox D3D Device
     auto it = g_SymbolAddresses.find("D3DDEVICE");
     if (it != g_SymbolAddresses.end()) {
         g_Xbox_D3DDevice = (DWORD*)it->second;
     }
-
+#endif
     // If the Xbox version of CreateDevice didn't call SetRenderTarget, we must derive the default backbuffer ourselves
     // This works because CreateDevice always sets the current render target to the Xbox Backbuffer
     // In later XDKs, it does this inline rather than by calling D3DDevice_SetRenderTarget
