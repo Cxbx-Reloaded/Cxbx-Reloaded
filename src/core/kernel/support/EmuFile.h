@@ -249,9 +249,9 @@ void _CxbxPVOIDDeleter(PVOID *ptr);
 #define SMART_PVOID(var, value, orig)                     \
 	PVOID var = value;                                    \
 	std::shared_ptr<PVOID> __var_shared_ptr;              \
-	if (NULL == var)                                      \
+	if (nullptr == var)                                   \
 	{                                                     \
-		__var_shared_ptr = NULL;                          \
+		__var_shared_ptr = nullptr;                       \
 		var = orig;                                       \
 	}                                                     \
 	else                                                  \

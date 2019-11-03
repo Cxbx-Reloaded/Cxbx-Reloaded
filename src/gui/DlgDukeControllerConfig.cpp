@@ -155,7 +155,7 @@ INT_PTR CALLBACK DlgXidControllerConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wPar
 		case IDC_SET_MOTOR: {
 			if (HIWORD(wParam) == BN_CLICKED) {
 				// Show rumble dialog box
-				DialogBox(GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_RUMBLE_CFG), hWndDlg, DlgRumbleConfigProc);
+				DialogBox(GetModuleHandle(nullptr), MAKEINTRESOURCE(IDD_RUMBLE_CFG), hWndDlg, DlgRumbleConfigProc);
 				g_InputWindow->UpdateRumble(RUMBLE_UPDATE);
 			}
 		}

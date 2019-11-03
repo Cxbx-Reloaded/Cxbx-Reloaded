@@ -101,7 +101,7 @@ static int g_DlgIndexes[] = {
 VOID ShowLoggingConfig(HWND hwnd, HWND ChildWnd)
 {
 	g_ChildWnd = ChildWnd;
-	DialogBox(GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_LOGGING_CFG), hwnd, DlgLogConfigProc);
+	DialogBox(GetModuleHandle(nullptr), MAKEINTRESOURCE(IDD_LOGGING_CFG), hwnd, DlgLogConfigProc);
 }
 
 INT_PTR CALLBACK DlgLogConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -118,7 +118,7 @@ INT_PTR CALLBACK DlgLogConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM
 			int LogLevel;
 
 			// Set window icon
-			SetClassLong(hWndDlg, GCL_HICON, (LONG)LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_CXBX)));
+			SetClassLong(hWndDlg, GCL_HICON, (LONG)LoadIcon(GetModuleHandle(nullptr), MAKEINTRESOURCE(IDI_CXBX)));
 
 			LoggedModules[0] = g_Settings->m_core.LoggedModules[0];
 			LoggedModules[1] = g_Settings->m_core.LoggedModules[1];

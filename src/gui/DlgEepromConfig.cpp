@@ -222,7 +222,7 @@ void ShowEepromConfig(HWND hwnd)
 	}
 
 	// Show dialog box
-	DialogBox(GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_EEPROM_CFG), hwnd, DlgEepromConfigProc);
+	DialogBox(GetModuleHandle(nullptr), MAKEINTRESOURCE(IDD_EEPROM_CFG), hwnd, DlgEepromConfigProc);
 }
 
 static void RefreshEepromDialog(HWND hWndDlg)
@@ -233,7 +233,7 @@ static void RefreshEepromDialog(HWND hWndDlg)
 	uint32_t value;
 
 	// Set window icon
-	SetClassLong(hWndDlg, GCL_HICON, (LONG)LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_CXBX)));
+	SetClassLong(hWndDlg, GCL_HICON, (LONG)LoadIcon(GetModuleHandle(nullptr), MAKEINTRESOURCE(IDI_CXBX)));
 
 	// Initialize the values of the drop-down lists
 	offset = 0;

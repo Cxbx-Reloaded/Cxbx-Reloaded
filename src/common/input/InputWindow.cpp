@@ -53,7 +53,7 @@ void InputWindow::Initialize(HWND hwnd, int port_num, int dev_type)
 	m_bIsBinding = false;
 
 	// Set window icon
-	SetClassLong(m_hwnd_window, GCL_HICON, (LONG)LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_CXBX)));
+	SetClassLong(m_hwnd_window, GCL_HICON, (LONG)LoadIcon(GetModuleHandle(nullptr), MAKEINTRESOURCE(IDI_CXBX)));
 
 	// Set window title
 	std::string title;

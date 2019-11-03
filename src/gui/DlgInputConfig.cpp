@@ -81,7 +81,7 @@ void ShowInputConfig(HWND hwnd, HWND ChildWnd)
 	g_ChildWnd = ChildWnd;
 
 	// Show dialog box
-	DialogBox(GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_INPUT_CFG), hwnd, DlgInputConfigProc);
+	DialogBox(GetModuleHandle(nullptr), MAKEINTRESOURCE(IDD_INPUT_CFG), hwnd, DlgInputConfigProc);
 }
 
 INT_PTR CALLBACK DlgInputConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -93,7 +93,7 @@ INT_PTR CALLBACK DlgInputConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPAR
 		HWND hHandle;
 
 		// Set window icon
-		SetClassLong(hWndDlg, GCL_HICON, (LONG)LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_CXBX)));
+		SetClassLong(hWndDlg, GCL_HICON, (LONG)LoadIcon(GetModuleHandle(nullptr), MAKEINTRESOURCE(IDI_CXBX)));
 
 		for (int i = 0, j = 0; i != 4; i++) {
 			hHandle = GetDlgItem(hWndDlg, IDC_DEVICE_PORT1 + i);
@@ -144,7 +144,7 @@ INT_PTR CALLBACK DlgInputConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPAR
 				{
 				case to_underlying(XBOX_INPUT_DEVICE::MS_CONTROLLER_DUKE): 
 				case to_underlying(XBOX_INPUT_DEVICE::MS_CONTROLLER_S): {
-					DialogBoxParam(GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_XID_DUKE_CFG), hWndDlg, DlgXidControllerConfigProc,
+					DialogBoxParam(GetModuleHandle(nullptr), MAKEINTRESOURCE(IDD_XID_DUKE_CFG), hWndDlg, DlgXidControllerConfigProc,
 						(DeviceType << 8) | port);
 				}
 				break;

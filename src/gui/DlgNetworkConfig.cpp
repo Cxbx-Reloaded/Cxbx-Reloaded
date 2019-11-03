@@ -44,7 +44,7 @@ VOID ShowNetworkConfig(HWND hwnd)
 {
 	g_XBNetwork = g_Settings->m_network;
     /*! show dialog box */
-    DialogBox(GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_NETWORK_CFG), hwnd, DlgNetworkConfigProc);
+    DialogBox(GetModuleHandle(nullptr), MAKEINTRESOURCE(IDD_NETWORK_CFG), hwnd, DlgNetworkConfigProc);
 }
 
 VOID FetchNetworkInterfaces(HWND hwnd)
@@ -86,7 +86,7 @@ INT_PTR CALLBACK DlgNetworkConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LP
 			g_hNetworkAdapters = GetDlgItem(hWndDlg, IDC_NETWORK_ADAPTER);
 
             /*! set window icon */
-            SetClassLong(hWndDlg, GCL_HICON, (LONG)LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_CXBX)));
+            SetClassLong(hWndDlg, GCL_HICON, (LONG)LoadIcon(GetModuleHandle(nullptr), MAKEINTRESOURCE(IDI_CXBX)));
 
 			SendMessage(g_hNetworkAdapters, CB_RESETCONTENT, 0, 0);
 			FetchNetworkInterfaces(hWndDlg);

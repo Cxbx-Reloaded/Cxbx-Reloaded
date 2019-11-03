@@ -104,7 +104,7 @@ Xbe::Xbe(const char *x_szFilename, bool bFromGUI)
         strcpy(m_szPath, x_szFilename);
 
 		char * c = strrchr(m_szPath, '\\');
-		if (c != NULL)
+		if (c != nullptr)
 			*(++c) = '\0';
     }
 
@@ -722,7 +722,7 @@ void *Xbe::FindSection(char *zsSectionName)
 		}
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 void* Xbe::FindSection(xboxkrnl::PXBEIMAGE_SECTION section)
@@ -737,7 +737,7 @@ void* Xbe::FindSection(xboxkrnl::PXBEIMAGE_SECTION section)
 
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 void Xbe::PurgeBadChar(std::string& s, const std::string& illegalChars)

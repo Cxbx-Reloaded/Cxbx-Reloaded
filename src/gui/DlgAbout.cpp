@@ -47,7 +47,7 @@ static INT_PTR CALLBACK DlgAboutProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPA
 VOID ShowAboutDialog(HWND hwnd)
 {
     /*! show dialog box */
-    DialogBox(GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_ABOUT), hwnd, DlgAboutProc);
+    DialogBox(GetModuleHandle(nullptr), MAKEINTRESOURCE(IDD_ABOUT), hwnd, DlgAboutProc);
 }
 
 INT_PTR CALLBACK DlgAboutProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -58,7 +58,7 @@ INT_PTR CALLBACK DlgAboutProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
         {
 			// Set the dialog icon
 			HICON hIcon = (HICON)LoadImageW(
-				GetModuleHandleW(NULL), MAKEINTRESOURCEW(IDI_CXBX), IMAGE_ICON, 0, 0, LR_DEFAULTCOLOR | LR_DEFAULTSIZE
+				GetModuleHandleW(nullptr), MAKEINTRESOURCEW(IDI_CXBX), IMAGE_ICON, 0, 0, LR_DEFAULTCOLOR | LR_DEFAULTSIZE
 			);
 
 			SendMessageW(hWndDlg, WM_SETICON, ICON_BIG, (LPARAM)hIcon);
@@ -87,7 +87,7 @@ INT_PTR CALLBACK DlgAboutProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 				tabRect.right - tabRect.left,
 				tabRect.bottom - tabRect.top,
 				GetDlgItem(hWndDlg, IDC_TAB1), (HMENU)1,
-				GetModuleHandle(NULL), NULL
+				GetModuleHandle(nullptr), nullptr
 			);
 
 			SendMessage(tab, WM_SETFONT, (WPARAM)GetStockObject(DEFAULT_GUI_FONT), TRUE);
@@ -95,24 +95,24 @@ INT_PTR CALLBACK DlgAboutProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 			aboutTabPanes.push_back(tab);
 			
         	// Tab Pane 2
-			HRSRC rContributors = FindResource(GetModuleHandle(NULL), MAKEINTRESOURCE(IDR_CONTRIBUTORS), "TXT");
+			HRSRC rContributors = FindResource(GetModuleHandle(nullptr), MAKEINTRESOURCE(IDR_CONTRIBUTORS), "TXT");
 
 			std::string contributors = "\n";
         	contributors += std::string(
-				(char*)LockResource(LoadResource(GetModuleHandle(NULL), rContributors)), 
-				SizeofResource(GetModuleHandle(NULL), rContributors)
+				(char*)LockResource(LoadResource(GetModuleHandle(nullptr), rContributors)),
+				SizeofResource(GetModuleHandle(nullptr), rContributors)
 			);
 
 			unix2dos(contributors);
 
 			tab = CreateWindowEx(
-				NULL, "EDIT", contributors.c_str(),
+				0, "EDIT", contributors.c_str(),
 				WS_CHILD | WS_VSCROLL |ES_MULTILINE | ES_READONLY,
 				tabRect.left + 10, tabRect.top + 10,
 				tabRect.right - tabRect.left,
 				tabRect.bottom - tabRect.top,
 				GetDlgItem(hWndDlg, IDC_TAB1), (HMENU)1,
-				GetModuleHandle(NULL), NULL
+				GetModuleHandle(nullptr), nullptr
 			);
 
 			SendMessage(tab, WM_SETFONT, (WPARAM)GetStockObject(DEFAULT_GUI_FONT), TRUE);
@@ -120,24 +120,24 @@ INT_PTR CALLBACK DlgAboutProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 			aboutTabPanes.push_back(tab);
 			
 			// Tab Pane 3
-			HRSRC rCopying = FindResource(GetModuleHandle(NULL), MAKEINTRESOURCE(IDR_COPYING), "TXT");
+			HRSRC rCopying = FindResource(GetModuleHandle(nullptr), MAKEINTRESOURCE(IDR_COPYING), "TXT");
 
 			std::string copying = "\n";
         	copying += std::string(
-				(char*)LockResource(LoadResource(GetModuleHandle(NULL), rCopying)),
-				SizeofResource(GetModuleHandle(NULL), rCopying)
+				(char*)LockResource(LoadResource(GetModuleHandle(nullptr), rCopying)),
+				SizeofResource(GetModuleHandle(nullptr), rCopying)
 			);
 
 			unix2dos(copying);
 
 			tab = CreateWindowEx(
-				NULL, "EDIT", copying.c_str(),
+				0, "EDIT", copying.c_str(),
 				WS_CHILD | WS_VSCROLL | ES_MULTILINE | ES_READONLY,
 				tabRect.left + 10, tabRect.top + 10,
 				tabRect.right - tabRect.left,
 				tabRect.bottom - tabRect.top,
 				GetDlgItem(hWndDlg, IDC_TAB1), (HMENU)1,
-				GetModuleHandle(NULL), NULL
+				GetModuleHandle(nullptr), nullptr
 			);
 
 			SendMessage(tab, WM_SETFONT, (WPARAM)GetStockObject(DEFAULT_GUI_FONT), TRUE);

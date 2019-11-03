@@ -1700,7 +1700,7 @@ bool WndMain::ReadSwizzledFormatIntoBitmap(uint32 format, unsigned char *data, u
 		return false;
 
 	xSwizzle = (uint32*)malloc(sizeof(uint32) * width);
-	if (xSwizzle == NULL)
+	if (xSwizzle == nullptr)
 		return false;
 
 	for (x = 0; x < width; x++)
@@ -1738,7 +1738,7 @@ bool WndMain::ReadSwizzled16bitFormatIntoBitmap(uint32 format, unsigned char *da
 		return false;
 
 	xSwizzle = (uint32*)malloc(sizeof(uint32) * width);
-	if (xSwizzle == NULL)
+	if (xSwizzle == nullptr)
 		return false;
 
 	for (x = 0; x < width; x++)

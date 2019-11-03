@@ -356,8 +356,8 @@ void XboxRenderStateConverter::ApplyDeferredRenderState(uint32_t State, uint32_t
             // Store this as an override for our frame limiter
             // Games can use this to limit certain scenes to a desired target framerate for a specific scene
             // If this value is not set, or is set to 0, the default interval passed to CreateDevice is used
-            extern DWORD g_PresentationIntervalOverride;
-            g_PresentationIntervalOverride = Value;
+            extern DWORD g_Xbox_PresentationInterval_Override;
+            g_Xbox_PresentationInterval_Override = Value;
         } return;
         case XTL::X_D3DRS_WRAP0:
         case XTL::X_D3DRS_WRAP1:

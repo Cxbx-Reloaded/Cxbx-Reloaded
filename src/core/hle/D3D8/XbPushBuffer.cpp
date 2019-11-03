@@ -41,7 +41,6 @@
 
 // TODO: Find somewhere to put this that doesn't conflict with XTL::
 extern void EmuUpdateActiveTextureStages();
-extern DWORD g_XboxBaseVertexIndex;
 
 const char *NV2AMethodToString(DWORD dwMethod); // forward
 
@@ -124,7 +123,7 @@ void EmuExecutePushBuffer
 )
 {
 	//Check whether Fixup exists or not. 
-	if (pFixup != NULL) {
+	if (pFixup != xbnullptr) {
 		LOG_TEST_CASE("PushBuffer has fixups");
 		//Interpret address of PushBuffer Data and Fixup Data
 		UINT8* pPushBufferData = (UINT8*)pPushBuffer->Data;

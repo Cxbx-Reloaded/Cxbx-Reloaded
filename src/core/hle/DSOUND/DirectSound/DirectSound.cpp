@@ -251,7 +251,7 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreate)
     g_bDSoundCreateCalled = TRUE;
 
     if (!initialized || g_pDSound8 == nullptr) {
-        hRet = DirectSoundCreate8(&g_XBAudio.adapterGUID, &g_pDSound8, NULL);
+        hRet = DirectSoundCreate8(&g_XBAudio.adapterGUID, &g_pDSound8, nullptr);
 
         LPCSTR dsErrorMsg = nullptr;
 
@@ -380,7 +380,7 @@ ULONG WINAPI XTL::EMUPATCH(IDirectSound_Release)
     ULONG uRet = g_pDSound8->Release();
     if (uRet == 0) {
         g_bDSoundCreateCalled = false;
-        g_pDSound8 = NULL;
+        g_pDSound8 = nullptr;
     }
 
     return uRet;
@@ -872,7 +872,7 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateBuffer)
     if (!g_pDSound8 && !g_bDSoundCreateCalled) {
         HRESULT hRet;
 
-        hRet = XTL::EMUPATCH(DirectSoundCreate)(NULL, &g_pDSound8, NULL);
+        hRet = XTL::EMUPATCH(DirectSoundCreate)(nullptr, &g_pDSound8, nullptr);
         if (hRet != DS_OK) {
             CxbxKrnlCleanup("Unable to initialize DirectSound!");
         }
@@ -1670,7 +1670,7 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateStream)
     if (!g_pDSound8 && !g_bDSoundCreateCalled) {
         HRESULT hRet;
 
-        hRet = XTL::EMUPATCH(DirectSoundCreate)(NULL, &g_pDSound8, NULL);
+        hRet = XTL::EMUPATCH(DirectSoundCreate)(nullptr, &g_pDSound8, nullptr);
         if (hRet != DS_OK) {
             CxbxKrnlCleanup("Unable to initialize DirectSound!");
         }
@@ -1884,7 +1884,7 @@ ULONG WINAPI XTL::EMUPATCH(CDirectSoundStream_Release)
         uRet = pThis->EmuDirectSoundBuffer8->Release();
 
         if (uRet == 0) {
-            if (pThis->EmuDirectSound3DBuffer8 != NULL) {
+            if (pThis->EmuDirectSound3DBuffer8 != nullptr) {
                 pThis->EmuDirectSound3DBuffer8->Release();
             }
 
@@ -3212,7 +3212,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_PlayEx)
         EmuLog(LOG_LEVEL::WARNING, "Not implemented for rtTimeStamp greater than 0 of %08d", rtTimeStamp);
     }
 
-    HRESULT hRet = XTL::EMUPATCH(IDirectSoundBuffer_Play)(pThis, NULL, NULL, dwFlags);
+    HRESULT hRet = XTL::EMUPATCH(IDirectSoundBuffer_Play)(pThis, xbnull, xbnull, dwFlags);
 
     return hRet;
 }

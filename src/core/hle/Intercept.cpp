@@ -107,7 +107,7 @@ std::string GetDetectedSymbolName(xbaddr address, int *symbolOffset)
 
     for (auto it = g_SymbolAddresses.begin(); it != g_SymbolAddresses.end(); ++it) {
         xbaddr symbolAddr = (*it).second;
-        if (symbolAddr == NULL)
+        if (symbolAddr == xbnull)
             continue;
 
         if (symbolAddr <= address)
