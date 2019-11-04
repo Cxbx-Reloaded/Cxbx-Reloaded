@@ -95,12 +95,8 @@ file (GLOB SOURCES
 csharp_set_windows_forms_properties(
  "${CXBXR_DEBUGGER_SRC_DIR}/Form1.Designer.cs"
  "${CXBXR_DEBUGGER_SRC_DIR}/Form1.cs"
+ "${CXBXR_DEBUGGER_SRC_DIR}/Form1.resx"
  "${CXBXR_DEBUGGER_SRC_DIR}/Properties/AssemblyInfo.cs"
- "${CXBXR_DEBUGGER_SRC_DIR}/Properties/Resources.Designer.cs"
- "${CXBXR_DEBUGGER_SRC_DIR}/Properties/Settings.Designer.cs"
-)
-
-csharp_set_designer_cs_properties(
  "${CXBXR_DEBUGGER_SRC_DIR}/Properties/Resources.Designer.cs"
  "${CXBXR_DEBUGGER_SRC_DIR}/Properties/Resources.resx"
  "${CXBXR_DEBUGGER_SRC_DIR}/Properties/Settings.Designer.cs"
@@ -114,7 +110,6 @@ set_source_files_properties("${CXBXR_DEBUGGER_SRC_DIR}/Form1.cs"
 set_source_files_properties("${CXBXR_DEBUGGER_SRC_DIR}/RicherTextBox.cs"
  VS_CSHARP_SubType "Component"
 )
-
 
 source_group(TREE ${CXBXR_ROOT_DIR} FILES ${SOURCES})
 
