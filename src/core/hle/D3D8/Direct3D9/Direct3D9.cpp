@@ -6877,6 +6877,50 @@ void CxbxUpdateNativeD3DResources()
 */
 }
 
+// This function mimicks NV2A software callback events.
+// Normally, these would be handled by actual push-buffer
+// command handling at the point where they where inserted.
+// Since our HLE mostly circumvents the NV2A pushbuffer,
+// this function has to be called after 'pushing' functions.
+void CxbxHandleXboxCallbacks()
+{
+	// Execute callback procedure
+	if (g_CallbackType == XTL::X_D3DCALLBACK_WRITE) {
+		if (g_pCallback) {
+			g_pCallback(g_CallbackParam);
+			// TODO: Reset pointer?
+		}
+	}
+}
+
+// On Xbox, this function inserts push-buffer commands that
+// will trigger the software handler to perform the callback
+// when the GPU processes these commands.
+// The type X_D3DCALLBACK_WRITE callbacks are prefixed with an
+// wait-for-idle command, but otherwise they're identical.
+// (Software handlers are triggered on NV2A via NV097_NO_OPERATION) 
+void CxbxImpl_InsertCallback
+(
+	XTL::X_D3DCALLBACKTYPE	Type,
+	XTL::X_D3DCALLBACK		pCallback,
+	XTL::DWORD				Context
+)
+{
+	if (Type > XTL::X_D3DCALLBACK_WRITE) {
+		LOG_TEST_CASE("Illegal callback type!");
+		return;
+	}
+
+	if (pCallback == xbnullptr) {
+		LOG_TEST_CASE("pCallback == xbnullptr!");
+		return;
+	}
+
+	g_pCallback = pCallback;
+	g_CallbackType = Type;
+	g_CallbackParam = Context;
+}
+
 VOID __declspec(noinline) D3DDevice_SetPixelShaderCommon(DWORD Handle)
 {
     // Cache the active shader handle
@@ -7080,13 +7124,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawVertices)
 		}
     }
 
-	// Execute callback procedure
-	if (g_Xbox_Callback_Type == X_D3DCALLBACK_WRITE) {
-		if (g_pXbox_Callback) {
-			g_pXbox_Callback(g_Xbox_Callback_Context);
-			// TODO: Reset pointer?
-		}
-	}
+	CxbxHandleXboxCallbacks();
 }
 
 // ******************************************************************
@@ -7127,13 +7165,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawVerticesUP)
 		CxbxDrawPrimitiveUP(DrawContext);
     }
 
-	// Execute callback procedure
-	if (g_Xbox_Callback_Type == X_D3DCALLBACK_WRITE) {
-		if (g_pXbox_Callback) {
-			g_pXbox_Callback(g_Xbox_Callback_Context);
-			// TODO: Reset pointer?
-		}
-	}
+	CxbxHandleXboxCallbacks();
 }
 
 // ******************************************************************
@@ -7178,15 +7210,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVertices)
 		CxbxDrawIndexed(DrawContext);
 	}
 
-	// Execute callback procedure
-	if (g_Xbox_Callback_Type == X_D3DCALLBACK_WRITE) {
-		if (g_pXbox_Callback) {
-			g_pXbox_Callback(g_Xbox_Callback_Context);
-			// TODO: Reset pointer?
-		}
-	}
-
-//#endif
+	CxbxHandleXboxCallbacks();
 }
 
 // ******************************************************************
@@ -7290,13 +7314,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVerticesUP)
 		}
     }
 
-	// Execute callback procedure
-	if (g_Xbox_Callback_Type == X_D3DCALLBACK_WRITE) {
-		if (g_pXbox_Callback) {
-			g_pXbox_Callback(g_Xbox_Callback_Context);
-			// TODO: Reset pointer?
-		}
-	}
+	CxbxHandleXboxCallbacks();
 }
 
 // ******************************************************************
@@ -8252,10 +8270,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_InsertCallback)
 		LOG_FUNC_ARG(Context)
 		LOG_FUNC_END;
 
-	// TODO: Implement
-	g_pXbox_Callback = pCallback;
-	g_Xbox_Callback_Type = Type;
-	g_Xbox_Callback_Context = Context;
+	CxbxImpl_InsertCallback(Type, pCallback, Context);
 
 	LOG_INCOMPLETE();
 }
