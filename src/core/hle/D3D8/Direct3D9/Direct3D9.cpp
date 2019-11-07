@@ -6979,6 +6979,7 @@ void CxbxHandleXboxCallbacks()
 				continue;
 			} else {
 				// New behaviour does place Read callbacks too
+				continue; // WARNING! DON'T, until we discover why Buffy, Indiana Jones, Halo 1 and 2 (PAL & NTSC) crash after opening videos
 			}
 		}
 
