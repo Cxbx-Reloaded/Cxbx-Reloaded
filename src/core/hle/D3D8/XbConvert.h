@@ -1814,8 +1814,9 @@ typedef struct _RenderStateInfo {
 }
 RenderStateInfo;
 
-#define D3DRS_NONE ((D3DRENDERSTATETYPE)0)
+#define D3DRS_UNSUPPORTED ((D3DRENDERSTATETYPE)0)
 
-extern const RenderStateInfo DxbxRenderStateInfo[];
+extern const RenderStateInfo& GetDxbxRenderStateInfo(int State);
+
 
 #endif
