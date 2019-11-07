@@ -260,6 +260,10 @@ void XboxTextureStateConverter::Apply()
         g_pD3DDevice->GetTexture(3, &pTexture);
         g_pD3DDevice->SetTexture(0, pTexture);
 
+        // Avoid a dangling reference that would lead to a memory leak
+        if (pTexture != nullptr)
+            pTexture->Release();
+
         // disable all other stages
         g_pD3DDevice->SetTextureStageState(1, D3DTSS_COLOROP, D3DTOP_DISABLE);
         g_pD3DDevice->SetTextureStageState(1, D3DTSS_ALPHAOP, D3DTOP_DISABLE);
