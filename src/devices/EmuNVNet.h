@@ -229,5 +229,4 @@ private:
 	std::string m_HostAdapterName;
 	mac_address m_HostMacAddress;
 	mac_address m_GuestMacAddress = { 0x00, 0x50, 0xF2, 0x00, 0x00, 0x34 };
-	mac_address m_BroadcastMacAddress = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
 };

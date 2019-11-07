@@ -710,13 +710,15 @@ size_t NVNetDevice::PCAPReceive(void* packet, size_t max_length)
 
 	if (int res = pcap_next_ex((pcap_t*)m_AdapterHandle, &header, &pkt_data) > 0) {
 		// Only forward packets that are multicast or specifically for Cxbx-R's MAC
+		// Multicast is defined as packets with the least significant bit of the first octet set to 1.
+		// Since broadcast packets have all bits set to 1, this matches those too.
 		ethernet_header* e_header = (ethernet_header*)pkt_data;
-		if (memcmp(e_header->dst.bytes, m_GuestMacAddress.bytes, 6) != 0 && memcmp(e_header->dst.bytes, m_BroadcastMacAddress.bytes, 6) != 0) {
-			return -1;
+		if (memcmp(e_header->dst.bytes, m_GuestMacAddress.bytes, 6) == 0 || (e_header->dst.bytes[0] & 1)) {
+			memcpy(packet, pkt_data, header->len);
+			return header->len;
 		}
 
-		memcpy(packet, pkt_data, header->len);
-		return header->len;
+		return -1;
 	}
 
 	return -1;
