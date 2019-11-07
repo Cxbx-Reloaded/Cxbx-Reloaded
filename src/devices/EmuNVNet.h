@@ -215,8 +215,6 @@ public:
 	uint32_t MMIORead(int barIndex, uint32_t addr, unsigned size);
 	void MMIOWrite(int barIndex, uint32_t addr, uint32_t value, unsigned size);
 
-	void SetGuestMacAddress(mac_address* mac);
-
 	__declspec(noinline) bool PCAPSend(void* packet, size_t length);
 	size_t PCAPReceive(void* packet, size_t max_length);
 private:
@@ -229,4 +227,5 @@ private:
 	std::string m_HostAdapterName;
 	mac_address m_HostMacAddress;
 	mac_address m_GuestMacAddress = { 0x00, 0x50, 0xF2, 0x00, 0x00, 0x34 };
+	mac_address m_BroadcastMacAddress = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
 };

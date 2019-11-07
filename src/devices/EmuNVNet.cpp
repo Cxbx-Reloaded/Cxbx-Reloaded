@@ -688,11 +688,13 @@ bool NVNetDevice::PCAPSend(void* packet, size_t length)
 
 	// TODO: Optional
 	// PrintPacket(packet, length);
-	
+
+	// Forward broadcast packets direct to the host PC, as well as over the network
 	if (memcmp(header->dst.bytes, m_BroadcastMacAddress.bytes, 6) == 0) {
 		static char pack[65536];
 		memcpy(pack, packet, length);
-		header->dst = m_HostMacAddress;
+		ethernet_header* _header = (ethernet_header*)pack;
+		_header->dst = m_HostMacAddress;
 		pcap_sendpacket((pcap_t*)m_AdapterHandle, (uint8_t*)pack, length);
 	}
 
