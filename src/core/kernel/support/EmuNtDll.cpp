@@ -86,6 +86,7 @@ IMPORT(NtReadFile);
 IMPORT(NtReleaseMutant);
 IMPORT(NtReleaseSemaphore);
 IMPORT(NtResumeThread);
+IMPORT(NtResetEvent);
 IMPORT(NtSetEvent);
 IMPORT(NtSetInformationFile);
 IMPORT(NtSetLdtEntries);

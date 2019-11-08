@@ -856,6 +856,16 @@ XBSYSAPI EXPORTNUM(246) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ObReferenceObjectByHa
 				status = STATUS_OBJECT_TYPE_MISMATCH;
 			}
 		} else {
+			// HACK: Since we forward to NtDll::NtCreateEvent, this *might* be a Windows handle instead of our own
+			// In this case, we must return the input handle
+			// Test Case: Xbox Live Dashboard, Network Test (or any other Xbox Live connection)
+			DWORD flags = 0;
+			if (GetHandleInformation(Handle, &flags)) {
+				// This was a Windows Handle, so return it.
+				*ReturnedObject = Handle;
+				return STATUS_SUCCESS;
+			}
+
 			status = STATUS_INVALID_HANDLE;
 		}
 	}
@@ -936,6 +946,14 @@ XBSYSAPI EXPORTNUM(250) xboxkrnl::VOID FASTCALL xboxkrnl::ObfDereferenceObject
 )
 {
 	LOG_FUNC_ONE_ARG_OUT(Object);
+
+	// HACK: Since we forward to NtDll::NtCreateEvent, this *might* be a Windows handle instead of our own
+	// In this case, we must do nothing, otherwise we'll crash...
+	// Test Case: Xbox Live Dashboard, Network Test (or any other Xbox Live connection)
+	DWORD flags = 0;
+	if (GetHandleInformation((HANDLE)Object, &flags)) {
+		return;
+	}
 
 	POBJECT_HEADER ObjectHeader = OBJECT_TO_OBJECT_HEADER(Object);
 	
