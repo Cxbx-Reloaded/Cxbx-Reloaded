@@ -1957,14 +1957,7 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
 				// TODO: ensure all other resources are cleaned up too
 
 				g_EmuCDPD.hRet = g_pD3DDevice->Release();
-
-				// Address DirectX Debug Runtime reported error in _DEBUG builds
-                // Direct3D8: (ERROR) :Not all objects were freed: the following indicate the types of unfreed objects.
-                #ifndef _DEBUG
-                    while(g_pD3DDevice->Release() != 0);
-                #endif
-
-                g_pD3DDevice = nullptr;
+				g_pD3DDevice = nullptr;
 
 				// cleanup overlay clipper
 				if (g_pDDClipper != nullptr) {
