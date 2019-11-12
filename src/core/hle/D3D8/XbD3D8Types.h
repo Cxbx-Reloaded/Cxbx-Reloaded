@@ -82,7 +82,7 @@
 #define IDirect3DSurface                IDirect3DSurface9
 #define IDirect3DVolume                 IDirect3DVolume9
 #define IDirect3DSwapChain              IDirect3DSwapChain9
-#define IDirect3DQuery                  IDirect3DQuery9 // unused
+#define IDirect3DQuery                  IDirect3DQuery9
 
 namespace XTL {
 

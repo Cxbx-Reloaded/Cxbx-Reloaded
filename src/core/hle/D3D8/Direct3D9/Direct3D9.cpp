@@ -129,6 +129,18 @@ struct {
 	D3DCOLOR ColorKey;
 } g_OverlayProxy;
 
+typedef struct {
+	// Arguments to D3DDevice_InsertCallback :
+	XTL::X_D3DCALLBACK			    pCallback;
+	XTL::X_D3DCALLBACKTYPE          Type;
+	XTL::DWORD                      Context;
+} s_Xbox_Callback;
+
+static std::queue<s_Xbox_Callback>  g_Xbox_CallbackQueue;
+static bool                         g_bHack_DisableHostGPUQueries = false; // TODO : Make configurable
+static IDirect3DQuery              *g_pHostQueryWaitForIdle = nullptr;
+static IDirect3DQuery              *g_pHostQueryCallbackEvent = nullptr;
+
 static std::condition_variable		g_VBConditionVariable;	// Used in BlockUntilVerticalBlank
 static std::mutex					g_VBConditionMutex;		// Used in BlockUntilVerticalBlank
 static DWORD                        g_VBLastSwap = 0;
@@ -139,9 +151,6 @@ static XTL::X_D3DSWAPDATA			g_Xbox_SwapData = {0}; // current swap information
 static XTL::X_D3DSWAPCALLBACK		g_pXbox_SwapCallback = xbnullptr;	// Swap/Present callback routine
 static XTL::X_D3DVBLANKDATA			g_Xbox_VBlankData = {0}; // current vertical blank information
 static XTL::X_D3DVBLANKCALLBACK     g_pXbox_VerticalBlankCallback   = xbnullptr; // Vertical-Blank callback routine
-static XTL::X_D3DCALLBACK			g_pXbox_Callback		= xbnullptr;	// D3DDevice::InsertCallback routine
-static XTL::X_D3DCALLBACKTYPE		g_Xbox_Callback_Type;			// Callback type
-static XTL::DWORD					g_Xbox_Callback_Context;		// Callback param
 
        XTL::X_D3DSurface           *g_pXbox_BackBufferSurface = xbnullptr;
 static XTL::X_D3DSurface           *g_pXbox_DefaultDepthStencilSurface = xbnullptr;
@@ -1948,14 +1957,7 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
 				// TODO: ensure all other resources are cleaned up too
 
 				g_EmuCDPD.hRet = g_pD3DDevice->Release();
-
-				// Address DirectX Debug Runtime reported error in _DEBUG builds
-                // Direct3D8: (ERROR) :Not all objects were freed: the following indicate the types of unfreed objects.
-                #ifndef _DEBUG
-                    while(g_pD3DDevice->Release() != 0);
-                #endif
-
-                g_pD3DDevice = nullptr;
+				g_pD3DDevice = nullptr;
 
 				// cleanup overlay clipper
 				if (g_pDDClipper != nullptr) {
@@ -2295,6 +2297,22 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
 				g_pD3DDevice->GetDepthStencilSurface(&g_pDefaultHostDepthBufferSurface);
 				UpdateDepthStencilFlags(g_pDefaultHostDepthBufferSurface);
 		
+				// Can host driver create event queries?
+				if (SUCCEEDED(g_pD3DDevice->CreateQuery(D3DQUERYTYPE_EVENT, nullptr))) {
+					// Is host GPU query creation enabled?
+					if (!g_bHack_DisableHostGPUQueries) {
+						// Create a D3D event query to handle "wait-for-idle" with
+						hRet = g_pD3DDevice->CreateQuery(D3DQUERYTYPE_EVENT, &g_pHostQueryWaitForIdle);
+						DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateQuery (wait for idle)");
+
+						// Create a D3D event query to handle "callback events" with
+						hRet = g_pD3DDevice->CreateQuery(D3DQUERYTYPE_EVENT, &g_pHostQueryCallbackEvent);
+						DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateQuery (callback event)");
+					}
+				} else {
+					LOG_TEST_CASE("Can't CreateQuery on host!");
+				}
+
 				hRet = g_pD3DDevice->CreateVertexBuffer
                 (
                     1, 0, 0, D3DPOOL_MANAGED,
@@ -6877,6 +6895,135 @@ void CxbxUpdateNativeD3DResources()
 */
 }
 
+// This function should be called in thight idle-wait loops.
+// It's purpose is to lower CPU cost in such a way that the
+// caller will still repond quickly, without actually waiting
+// or giving up it's time-slice.
+// See https://docs.microsoft.com/en-us/windows/win32/api/winnt/nf-winnt-yieldprocessor
+// and https://software.intel.com/en-us/cpp-compiler-developer-guide-and-reference-pause-intrinsic
+inline void CxbxCPUIdleWait() // TODO : Apply wherever applicable
+{
+	YieldProcessor();
+}
+
+// This function indicates whether Cxbx can flush host GPU commands.
+bool CxbxCanFlushHostGPU()
+{
+	return (g_pHostQueryWaitForIdle != nullptr);
+}
+
+// Wait until host GPU finished processing it's command queue
+bool CxbxFlushHostGPU()
+{
+	// The following can only work when host GPU queries are available
+	if (!CxbxCanFlushHostGPU()) {
+		// If we can't query host GPU, return failure
+		return false;
+	}
+
+	// See https://docs.microsoft.com/en-us/windows/win32/direct3d9/queries
+	// Add an end marker to the command buffer queue.
+	// This, so that the next GetData will always have at least one
+	// final query event to flush out, after which GPU will be done.
+	g_pHostQueryWaitForIdle->Issue(D3DISSUE_END);
+
+	// Empty the command buffer and wait until host GPU is idle.
+	while (S_FALSE == g_pHostQueryWaitForIdle->GetData(nullptr, 0, D3DGETDATA_FLUSH))
+		CxbxCPUIdleWait();
+
+	// Signal caller that host GPU has been flushed
+	return true;
+}
+
+// This function mimicks NV2A software callback events.
+// Normally, these would be handled by actual push-buffer
+// command handling at the point where they where inserted.
+// Since our HLE mostly circumvents the NV2A pushbuffer,
+// this function has to be called after 'pushing' functions.
+void CxbxHandleXboxCallbacks()
+{
+	// The following can only work when host GPU queries are available
+	if (g_pHostQueryCallbackEvent != nullptr) {
+		// Query whether host GPU encountered a callback event already
+		if (S_FALSE == g_pHostQueryCallbackEvent->GetData(nullptr, 0, 0)) {
+			// If not, don't handle callbacks
+			return;
+		}
+	}
+
+	// Process inserted callbacks
+	while (!g_Xbox_CallbackQueue.empty()) {
+		// Fetch a callback from the FIFO callback queue
+		s_Xbox_Callback XboxCallback = g_Xbox_CallbackQueue.front();
+		g_Xbox_CallbackQueue.pop();
+
+		// Differentiate between write and read callbacks
+		if (XboxCallback.Type == XTL::X_D3DCALLBACK_WRITE) {
+			// Write callbacks should wait until GPU is idle
+			if (!CxbxFlushHostGPU()) {
+				// Host GPU can't be flushed. In the old behaviour, we made the callback anyway
+				// TODO : Should we keep doing that?
+			}
+		} else {
+			assert(XboxCallback.Type == XTL::X_D3DCALLBACK_READ);
+			// Should we mimick Read callback old behaviour?
+			if (g_bHack_DisableHostGPUQueries) {
+				// Note : Previously, we only processed Write, and ignored Read callbacks
+				continue;
+			} else {
+				// New behaviour does place Read callbacks too
+			}
+		}
+
+		// Make the callback
+		XboxCallback.pCallback(XboxCallback.Context);
+	}
+}
+
+// On Xbox, this function inserts push-buffer commands that
+// will trigger the software handler to perform the callback
+// when the GPU processes these commands.
+// The type X_D3DCALLBACK_WRITE callbacks are prefixed with an
+// wait-for-idle command, but otherwise they're identical.
+// (Software handlers are triggered on NV2A via NV097_NO_OPERATION) 
+void CxbxImpl_InsertCallback
+(
+	XTL::X_D3DCALLBACKTYPE	Type,
+	XTL::X_D3DCALLBACK		pCallback,
+	XTL::DWORD				Context
+)
+{
+	if (Type > XTL::X_D3DCALLBACK_WRITE) {
+		LOG_TEST_CASE("Illegal callback type!");
+		return;
+	}
+
+	if (pCallback == xbnullptr) {
+		LOG_TEST_CASE("pCallback == xbnullptr!");
+		return;
+	}
+
+	// Should we mimick old behaviour?
+	if (g_bHack_DisableHostGPUQueries) {
+		// Mimick old behaviour, in which only the final callback event
+		// was remembered, by emptying the callback queue entirely :
+		while (!g_Xbox_CallbackQueue.empty()) {
+			g_Xbox_CallbackQueue.pop();
+		}
+	}
+
+	// Push this callback's arguments into the callback queue :
+	s_Xbox_Callback XboxCallback = { pCallback, Type, Context };
+	g_Xbox_CallbackQueue.push(XboxCallback); // g_Xbox_CallbackQueue.emplace(pCallback, Type, Context); doesn't compile?
+
+	// Does host supports GPU queries?
+	if (g_pHostQueryCallbackEvent != nullptr) {
+		// Insert a callback event on host GPU,
+		// which will be handled by CxbxHandleXboxCallback
+		g_pHostQueryCallbackEvent->Issue(D3DISSUE_END);
+	}
+}
+
 VOID __declspec(noinline) D3DDevice_SetPixelShaderCommon(DWORD Handle)
 {
     // Cache the active shader handle
@@ -7080,13 +7227,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawVertices)
 		}
     }
 
-	// Execute callback procedure
-	if (g_Xbox_Callback_Type == X_D3DCALLBACK_WRITE) {
-		if (g_pXbox_Callback) {
-			g_pXbox_Callback(g_Xbox_Callback_Context);
-			// TODO: Reset pointer?
-		}
-	}
+	CxbxHandleXboxCallbacks();
 }
 
 // ******************************************************************
@@ -7127,13 +7268,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawVerticesUP)
 		CxbxDrawPrimitiveUP(DrawContext);
     }
 
-	// Execute callback procedure
-	if (g_Xbox_Callback_Type == X_D3DCALLBACK_WRITE) {
-		if (g_pXbox_Callback) {
-			g_pXbox_Callback(g_Xbox_Callback_Context);
-			// TODO: Reset pointer?
-		}
-	}
+	CxbxHandleXboxCallbacks();
 }
 
 // ******************************************************************
@@ -7178,15 +7313,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVertices)
 		CxbxDrawIndexed(DrawContext);
 	}
 
-	// Execute callback procedure
-	if (g_Xbox_Callback_Type == X_D3DCALLBACK_WRITE) {
-		if (g_pXbox_Callback) {
-			g_pXbox_Callback(g_Xbox_Callback_Context);
-			// TODO: Reset pointer?
-		}
-	}
-
-//#endif
+	CxbxHandleXboxCallbacks();
 }
 
 // ******************************************************************
@@ -7290,13 +7417,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DrawIndexedVerticesUP)
 		}
     }
 
-	// Execute callback procedure
-	if (g_Xbox_Callback_Type == X_D3DCALLBACK_WRITE) {
-		if (g_pXbox_Callback) {
-			g_pXbox_Callback(g_Xbox_Callback_Context);
-			// TODO: Reset pointer?
-		}
-	}
+	CxbxHandleXboxCallbacks();
 }
 
 // ******************************************************************
@@ -8252,10 +8373,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_InsertCallback)
 		LOG_FUNC_ARG(Context)
 		LOG_FUNC_END;
 
-	// TODO: Implement
-	g_pXbox_Callback = pCallback;
-	g_Xbox_Callback_Type = Type;
-	g_Xbox_Callback_Context = Context;
+	CxbxImpl_InsertCallback(Type, pCallback, Context);
 
 	LOG_INCOMPLETE();
 }
