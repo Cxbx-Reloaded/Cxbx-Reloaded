@@ -36,6 +36,7 @@
 
 #include "XbD3D8Types.h" // For X_D3DVSDE_*
 #include <sstream>
+#include <regex>
 #include <unordered_map>
 #include <array>
 #include <bitset>
@@ -2562,6 +2563,22 @@ D3DVERTEXELEMENT *EmuRecompileVshDeclaration
     return pHostVertexElements;
 }
 
+// On Xbox, the special indexing register, a0.x, is truncated
+// But on vs_2_x and up, it's rounded to the closest integer
+// So we have to truncate it ourselves
+// Test Case: Buffy the Vampire Slayer
+std::string VshPostProcess_TruncateMovA(std::string shader) {
+	// find usages of mova
+	auto movA = std::regex("mova a0\\.x, (.*)$");
+	// The equivalent of floor() with a temp register
+	// and use the floored value
+	auto truncate =
+		"frc  r31,  $1\n"
+		"add  r31,  $1, -r31\n"
+		"mova a0.x, r31";
+	return std::regex_replace(shader, movA, truncate);
+}
+
 // recompile xbox vertex shader function
 extern HRESULT EmuRecompileVshFunction
 (
@@ -2647,12 +2664,15 @@ extern HRESULT EmuRecompileVshFunction
 		VshConvertShader(pShader, bNoReservedConstants);
 		VshWriteShader(pShader, pHostShaderDisassembly, pRecompiledDeclaration, TRUE);
 
+		// Post process the final shader
+		auto finalHostShader = VshPostProcess_TruncateMovA(pHostShaderDisassembly.str());
+
 		DbgVshPrintf("-- After conversion ---\n");
-		DbgVshPrintf("%s", pHostShaderDisassembly.str().c_str());
+		DbgVshPrintf("%s", finalHostShader.c_str());
 		DbgVshPrintf("-----------------------\n");
 
         // HACK: Azurik. Prevent Direct3D from trying to assemble this.
-		if(pHostShaderDisassembly.str() == "vs.2.x\n")
+		if(finalHostShader == "vs.2.x\n")
 		{
 			EmuLog(LOG_LEVEL::WARNING, "Replacing empty vertex shader with fallback");
 
@@ -2676,8 +2696,8 @@ extern HRESULT EmuRecompileVshFunction
 		else
 		{
 			hRet = D3DXAssembleShader(
-				pHostShaderDisassembly.str().c_str(),
-				pHostShaderDisassembly.str().length(),
+				finalHostShader.c_str(),
+				finalHostShader.length(),
 				/*pDefines=*/nullptr,
 				/*pInclude=*/nullptr,
 				/*Flags=*/0, // Was D3DXASM_SKIPVALIDATION,
