@@ -450,7 +450,7 @@ static const char* ILU_OpCode[] =
     "rcp",
     "rcc",
     "rsq",
-    "frc", // The Xbox EXP instruction behaves like FRC on PC, so we just translate it as frc. Fixes broken polygons in THPS2X
+    "expp", // The Xbox EXPP instruction behaves like vs_1_1
     "log",
     "lit"
 };
@@ -2563,6 +2563,45 @@ D3DVERTEXELEMENT *EmuRecompileVshDeclaration
     return pHostVertexElements;
 }
 
+// Xbox expp seems to behave the as vs_1_1
+std::string VshPostProcess_Expp(std::string shader) {
+	// Find usages of exp with each swizzle
+	// If there's no swizzle, we should still match so we do the calculation
+	// for all components
+	auto exp_x = std::regex("expp (\\w\\d\\d?)(\\.x)?, (.+)$");
+	auto exp_y = std::regex("expp (\\w\\d\\d?)(\\.y)?, (.+)$");
+	auto exp_z = std::regex("expp (\\w\\d\\d?)(\\.z)?, (.+)$");
+	auto exp_w = std::regex("expp (\\w\\d\\d?)(\\.w)?, (.+)$");
+
+	// We operate on a scalar so the input should have a swizzle?
+
+	if (std::regex_search(shader, exp_x))
+		LOG_TEST_CASE("Title uses the x component result of expp");
+
+	// dest.x = 2 ^ floor(x)
+	auto exp_x_host =
+		"frc r31.x, $3\n"
+		"add r31.x, $1$2, -r31.x\n"
+		"exp $1.x, r31.x";
+	shader = std::regex_replace(shader, exp_x, exp_x_host);
+
+	// dest.y = x - floor(x)
+	// Test Case: Tony Hawk Pro Skater 2X
+	auto exp_y_host = "frc $1.y, $3";
+	shader = std::regex_replace(shader, exp_y, exp_y_host);
+
+	// dest.z = approximate 2 ^ x
+	// Test Case: Mechassault
+	auto exp_z_host = "exp $1.z, $3";
+	shader = std::regex_replace(shader, exp_z, exp_z_host);
+
+	// TODO dest.w = 1
+	// auto exp_w_host = "mov $1.w, 1";
+	//shader = std::regex_replace(shader, exp_w, exp_w_host);
+
+	return shader;
+}
+
 // On Xbox, the special indexing register, a0.x, is truncated
 // But on vs_2_x and up, it's rounded to the closest integer
 // So we have to truncate it ourselves
@@ -2577,6 +2616,12 @@ std::string VshPostProcess_TruncateMovA(std::string shader) {
 		"add  r31,  $1, -r31\n"
 		"mova a0.x, r31";
 	return std::regex_replace(shader, movA, truncate);
+}
+
+// Post process the shader as a string
+std::string VshPostProcess(std::string shader) {
+	shader = VshPostProcess_Expp(shader);
+	return VshPostProcess_TruncateMovA(shader);
 }
 
 // recompile xbox vertex shader function
@@ -2665,7 +2710,7 @@ extern HRESULT EmuRecompileVshFunction
 		VshWriteShader(pShader, pHostShaderDisassembly, pRecompiledDeclaration, TRUE);
 
 		// Post process the final shader
-		auto finalHostShader = VshPostProcess_TruncateMovA(pHostShaderDisassembly.str());
+		auto finalHostShader = VshPostProcess(pHostShaderDisassembly.str());
 
 		DbgVshPrintf("-- After conversion ---\n");
 		DbgVshPrintf("%s", finalHostShader.c_str());
