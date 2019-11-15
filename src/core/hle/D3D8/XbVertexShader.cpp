@@ -870,6 +870,13 @@ D3DDECLUSAGE Xb2PCRegisterType
 
 extern D3DCAPS g_D3DCaps;
 
+// A free register
+static int scratchRegisterIndex = VSH_MAX_TEMPORARY_REGISTERS - 1;
+// Number of v registers useable by the Xbox
+const int XboxMaxVRegisters = 16;
+// We'll reserve an extra 16, for working around the problem of undeclared v registers
+static int undeclaredRegisterBaseIndex = scratchRegisterIndex - XboxMaxVRegisters;
+
 static void VshWriteShader(VSH_XBOX_SHADER *pShader,
                            std::stringstream& pDisassembly,
 						   D3DVERTEXELEMENT *pRecompiled,
@@ -897,12 +904,13 @@ static void VshWriteShader(VSH_XBOX_SHADER *pShader,
             break;
     }
 
+	// Ensure extra temporary registers are assigned at the beginning, as stand-ins for undeclared v registers
+	// Abusing the truncate flag, which implies we're writing the final host shader
 	if (Truncate) {
 		std::stringstream moveConstantsToTemporaries;
 
 		pDisassembly << "; Input usage declarations --\n";
-		unsigned i = 0;
-		do {
+		for(int i = 0; i < RegVIsUsedByShader.size(); i++){
 			if (RegVIsUsedByShader[i]) {
 				if (!RegVIsPresentInDeclaration[i]) {
 					// Log test case and skip
@@ -910,15 +918,13 @@ static void VshWriteShader(VSH_XBOX_SHADER *pShader,
 					// To correctly use the values given in SetVertexData4f.
 					// We need to move these constant values to temporaries so they can be used as input alongside other constants!
 					// We count down from the highest available on the host because Xbox titles don't use values that high, and we read from c192 (one above maximum Xbox c191 constant) and up
-					static int temporaryRegisterBase = g_D3DCaps.VS20Caps.NumTemps - 13;
-					moveConstantsToTemporaries << "mov r" << (temporaryRegisterBase + i) << ", c" << (CXBX_D3DVS_CONSTREG_VERTEXDATA4F_BASE + i) << "\n";
+					moveConstantsToTemporaries << "mov r" << (undeclaredRegisterBaseIndex + i) << ", c" << (CXBX_D3DVS_CONSTREG_VERTEXDATA4F_BASE + i) << "\n";
 					// test-case : Blade II (before menu's)
 					// test-case : Namco Museum 50th Anniversary (at boot)
 					// test-case : Pac-Man World 2 (at boot)
 					// test-case : The Simpsons Road Rage (leaving menu's, before entering in-game)
 					// test-case : The SpongeBob SquarePants Movie (before menu's)
 					LOG_TEST_CASE("Shader uses undeclared Vertex Input Registers");
-					i++;
 					continue;
 				}
 
@@ -928,9 +934,7 @@ static void VshWriteShader(VSH_XBOX_SHADER *pShader,
 				// So we treat them all as 'user-defined'
 				pDisassembly << "dcl_texcoord" << i << " v" << i << "\n";
 			}
-
-			i++;
-		} while (i < RegVIsUsedByShader.size());
+		}
 
 		pDisassembly << moveConstantsToTemporaries.str();
 	}
@@ -1508,12 +1512,12 @@ static boolean VshConvertShader(VSH_XBOX_SHADER *pShader,
                                 boolean         bNoReservedConstants
 )
 {
-    static const DWORD hostTemporaryRegisterCount = g_D3DCaps.VS20Caps.NumTemps;
-
+	// Assume we have 32 registers to play with
+	static const DWORD hostTemporaryRegisterCount = VSH_MAX_TEMPORARY_REGISTERS;
     boolean RUsage[VSH_MAX_TEMPORARY_REGISTERS] = { FALSE };
-	// Set the last 13 register to used (they are used for SetVertexData4f Constants)
-	for (int i = 1; i <= 13;  i++) {
-		RUsage[VSH_MAX_TEMPORARY_REGISTERS - i] = true;
+	// Registers above a certain point are reserved
+	for (int i = undeclaredRegisterBaseIndex; i <= VSH_MAX_TEMPORARY_REGISTERS;  i++) {
+		RUsage[i] = true;
 	}
 
     // TODO: What about state shaders and such?
@@ -1619,9 +1623,8 @@ static boolean VshConvertShader(VSH_XBOX_SHADER *pShader,
 						// This vertex register was not declared and therefore is not present within the Vertex Data object
 						// We read from temporary registers instead, that are set based on constants, in-turn, set by SetVertexData4f
 						// We count down from the highest available on the host because Xbox titles don't use values that high, and we read from c192 (one above maximum Xbox c191 constant) and up
-						static int temporaryRegisterBase = g_D3DCaps.VS20Caps.NumTemps - 13;
 						pIntermediate->Parameters[j].Parameter.ParameterType = PARAM_R;
-						pIntermediate->Parameters[j].Parameter.Address += temporaryRegisterBase;
+						pIntermediate->Parameters[j].Parameter.Address += undeclaredRegisterBaseIndex;
 					} 
 				}
 			}
@@ -2563,6 +2566,10 @@ D3DVERTEXELEMENT *EmuRecompileVshDeclaration
     return pHostVertexElements;
 }
 
+std::string UsingScratch(std::string input) {
+	return std::regex_replace(input, std::regex("tmp"), "r" + std::to_string(scratchRegisterIndex));
+}
+
 // Xbox expp seems to behave the as vs_1_1
 std::string VshPostProcess_Expp(std::string shader) {
 	// Find usages of exp with each swizzle
@@ -2579,10 +2586,10 @@ std::string VshPostProcess_Expp(std::string shader) {
 		LOG_TEST_CASE("Title uses the x component result of expp");
 
 	// dest.x = 2 ^ floor(x)
-	auto exp_x_host =
-		"frc r31.x, $3\n"
-		"add r31.x, $1$2, -r31.x\n"
-		"exp $1.x, r31.x";
+	static auto exp_x_host = UsingScratch(
+		"frc tmp.x, $3\n"
+		"add tmp.x, $1$2, -tmp.x\n"
+		"exp $1.x,  tmp.x");
 	shader = std::regex_replace(shader, exp_x, exp_x_host);
 
 	// dest.y = x - floor(x)
@@ -2611,10 +2618,10 @@ std::string VshPostProcess_TruncateMovA(std::string shader) {
 	auto movA = std::regex("mova a0\\.x, (.*)$");
 	// The equivalent of floor() with a temp register
 	// and use the floored value
-	auto truncate =
-		"frc  r31,  $1\n"
-		"add  r31,  $1, -r31\n"
-		"mova a0.x, r31";
+	static auto truncate = UsingScratch(
+		"frc  tmp,  $1\n"
+		"add  tmp,  $1, -tmp\n"
+		"mova a0.x, tmp");
 	return std::regex_replace(shader, movA, truncate);
 }
 
