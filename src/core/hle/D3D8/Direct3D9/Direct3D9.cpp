@@ -4368,23 +4368,13 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexData2s)
 	float fa, fb;
 	
 	// Test case: Halo
-	// Note : XQEMU recently verified that the int16_t arguments
+	// Note : XQEMU verified that the int16_t arguments
 	// must be mapped to floats in the range [-32768.0, 32767.0]
 	// (See https://github.com/xqemu/xqemu/pull/176)
 	fa = (float)a;
 	fb = (float)b;
 
     EMUPATCH(D3DDevice_SetVertexData4f)(Register, fa, fb, 0.0f, 1.0f);
-}
-
-DWORD FloatsToDWORD(FLOAT d, FLOAT a, FLOAT b, FLOAT c)
-{
-	DWORD ca = (FtoDW(d) << 24);
-	DWORD cr = (FtoDW(a) << 16) & 0x00FF0000;
-	DWORD cg = (FtoDW(b) << 8) & 0x0000FF00;
-	DWORD cb = (FtoDW(c) << 0) & 0x000000FF;
-
-	return ca | cr | cg | cb;
 }
 
 extern uint32_t HLE_read_NV2A_pgraph_register(const int reg); // Declared in PushBuffer.cpp
@@ -4409,6 +4399,8 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexData4f_16)
 	__asm{
 		mov Register, edi
 	}
+
+	LOG_FORWARD("D3DDevice_SetVertexData4f");
 
 	EMUPATCH(D3DDevice_SetVertexData4f)(Register, a, b, c, d);
 }
@@ -4727,7 +4719,9 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexData4s)
 	float fa, fb, fc, fd;
 
 	// Test case: Halo
-	// See comment note in D3DDevice_SetVertexData2s
+	// Note : XQEMU verified that the int16_t arguments
+	// must be mapped to floats in the range [-32768.0, 32767.0]
+	// (See https://github.com/xqemu/xqemu/pull/176)
 	fa = (float)a;
 	fb = (float)b;
 	fc = (float)c;
@@ -4747,12 +4741,9 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexDataColor)
 {
 	LOG_FORWARD("D3DDevice_SetVertexData4f");
 
-    FLOAT a = ((Color & 0xFF000000) >> 24) / 255.0f;
-    FLOAT r = ((Color & 0x00FF0000) >> 16) / 255.0f;
-    FLOAT g = ((Color & 0x0000FF00) >> 8) / 255.0f;
-    FLOAT b = ((Color & 0x000000FF) >> 0) / 255.0f;
+    D3DXCOLOR XColor = Color;
 
-    EMUPATCH(D3DDevice_SetVertexData4f)(Register, r, g, b, a);
+    EMUPATCH(D3DDevice_SetVertexData4f)(Register, XColor.r, XColor.g, XColor.b, XColor.a);
 }
 
 // ******************************************************************
