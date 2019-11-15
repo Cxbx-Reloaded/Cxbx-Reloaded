@@ -870,12 +870,14 @@ D3DDECLUSAGE Xb2PCRegisterType
 
 extern D3DCAPS g_D3DCaps;
 
-// A free register
-static int scratchRegisterIndex = VSH_MAX_TEMPORARY_REGISTERS - 1;
-// Number of v registers useable by the Xbox
-const int XboxMaxVRegisters = 16;
-// We'll reserve an extra 16, for working around the problem of undeclared v registers
-static int undeclaredRegisterBaseIndex = scratchRegisterIndex - XboxMaxVRegisters;
+enum {
+	X_VSH_TEMPORARY_REGISTER_COUNT = 12, // For Xbox temporary registers r0 to r11, mapped one-on-one to host
+	X_VSH_TEMP_OPOS = 12, // Used as intermediate storage for oPos (which Xbox can read through r12)
+	// X_VSH_TEMP_OFOG, // Enable once we treat oFog similar to oPos
+	// X_VSH_TEMP_OPTS, // Enable once we treat oPts similar to oPos
+	X_VSH_TEMP_SCRATCH = 13, // Used as intermediate storage in Xbox-to-host opcode conversion
+	X_VSH_TEMP_VERTEXREGBASE = 14 // Used for (1 up to 16) SetVertexData4f constants
+};
 
 static void VshWriteShader(VSH_XBOX_SHADER *pShader,
                            std::stringstream& pDisassembly,
@@ -918,7 +920,7 @@ static void VshWriteShader(VSH_XBOX_SHADER *pShader,
 					// To correctly use the values given in SetVertexData4f.
 					// We need to move these constant values to temporaries so they can be used as input alongside other constants!
 					// We count down from the highest available on the host because Xbox titles don't use values that high, and we read from c192 (one above maximum Xbox c191 constant) and up
-					moveConstantsToTemporaries << "mov r" << (undeclaredRegisterBaseIndex + i) << ", c" << (CXBX_D3DVS_CONSTREG_VERTEXDATA4F_BASE + i) << "\n";
+					moveConstantsToTemporaries << "mov r" << (X_VSH_TEMP_VERTEXREGBASE + i) << ", c" << (CXBX_D3DVS_CONSTREG_VERTEXDATA4F_BASE + i) << "\n";
 					// test-case : Blade II (before menu's)
 					// test-case : Namco Museum 50th Anniversary (at boot)
 					// test-case : Pac-Man World 2 (at boot)
@@ -1450,7 +1452,7 @@ static void VshRemoveScreenSpaceInstructions(VSH_XBOX_SHADER *pShader)
             {
                 // Redirect output to r12.
                 pIntermediate->Output.Type    = IMD_OUTPUT_R;
-                pIntermediate->Output.Address = 12;
+                pIntermediate->Output.Address = X_VSH_TEMP_OPOS;
 
                 // Scale r12 to r13. (mul r13.[mask], r12, c58)
                 VSH_INTERMEDIATE_FORMAT MulIntermediate;
@@ -1458,7 +1460,7 @@ static void VshRemoveScreenSpaceInstructions(VSH_XBOX_SHADER *pShader)
                 MulIntermediate.InstructionType   = IMD_MAC;
                 MulIntermediate.MAC               = MAC_MUL;
                 MulIntermediate.Output.Type       = IMD_OUTPUT_R;
-                MulIntermediate.Output.Address    = 13;
+                MulIntermediate.Output.Address    = X_VSH_TEMP_SCRATCH;
                 MulIntermediate.Output.Mask[0]    = pIntermediate->Output.Mask[0];
                 MulIntermediate.Output.Mask[1]    = pIntermediate->Output.Mask[1];
                 MulIntermediate.Output.Mask[2]    = pIntermediate->Output.Mask[2];
@@ -1466,7 +1468,7 @@ static void VshRemoveScreenSpaceInstructions(VSH_XBOX_SHADER *pShader)
                 MulIntermediate.Parameters[0].Active                  = TRUE;
                 MulIntermediate.Parameters[0].IndexesWithA0_X                   = FALSE;
                 MulIntermediate.Parameters[0].Parameter.ParameterType = PARAM_R;
-                MulIntermediate.Parameters[0].Parameter.Address       = 12;
+                MulIntermediate.Parameters[0].Parameter.Address       = X_VSH_TEMP_OPOS;
                 MulIntermediate.Parameters[0].Parameter.Neg           = FALSE;
                 VshSetSwizzle(&MulIntermediate.Parameters[0], SWIZZLE_X, SWIZZLE_Y, SWIZZLE_Z, SWIZZLE_W);
                 MulIntermediate.Parameters[1].Active                  = TRUE;
@@ -1484,7 +1486,7 @@ static void VshRemoveScreenSpaceInstructions(VSH_XBOX_SHADER *pShader)
                 AddIntermediate.Output.Type       = IMD_OUTPUT_O;
                 AddIntermediate.Output.Address    = OREG_OPOS;
                 AddIntermediate.Parameters[0].Parameter.ParameterType = PARAM_R;
-                AddIntermediate.Parameters[0].Parameter.Address       = 13;
+                AddIntermediate.Parameters[0].Parameter.Address       = X_VSH_TEMP_SCRATCH;
                 AddIntermediate.Parameters[1].Parameter.Address       = ConvertCRegister(59);
                 VshInsertIntermediate(pShader, &AddIntermediate, ++i);
             }
@@ -1512,14 +1514,6 @@ static boolean VshConvertShader(VSH_XBOX_SHADER *pShader,
                                 boolean         bNoReservedConstants
 )
 {
-	// Assume we have 32 registers to play with
-	static const DWORD hostTemporaryRegisterCount = VSH_MAX_TEMPORARY_REGISTERS;
-    boolean RUsage[VSH_MAX_TEMPORARY_REGISTERS] = { FALSE };
-	// Registers above a certain point are reserved
-	for (int i = undeclaredRegisterBaseIndex; i <= VSH_MAX_TEMPORARY_REGISTERS;  i++) {
-		RUsage[i] = true;
-	}
-
     // TODO: What about state shaders and such?
 
     pShader->ShaderHeader.Version = VERSION_CXBX;
@@ -1605,10 +1599,6 @@ static boolean VshConvertShader(VSH_XBOX_SHADER *pShader,
 		{
 			//if(pIntermediate->Parameters[j].Active)
 			{
-				if (pIntermediate->Parameters[j].Parameter.ParameterType == PARAM_R)
-				{
-					RUsage[pIntermediate->Parameters[j].Parameter.Address] = TRUE;
-				}
 				// Make constant registers range from 0 to 191 instead of -96 to 95
 				if (pIntermediate->Parameters[j].Parameter.ParameterType == PARAM_C)
 				{
@@ -1624,16 +1614,12 @@ static boolean VshConvertShader(VSH_XBOX_SHADER *pShader,
 						// We read from temporary registers instead, that are set based on constants, in-turn, set by SetVertexData4f
 						// We count down from the highest available on the host because Xbox titles don't use values that high, and we read from c192 (one above maximum Xbox c191 constant) and up
 						pIntermediate->Parameters[j].Parameter.ParameterType = PARAM_R;
-						pIntermediate->Parameters[j].Parameter.Address += undeclaredRegisterBaseIndex;
+						pIntermediate->Parameters[j].Parameter.Address += X_VSH_TEMP_VERTEXREGBASE;
 					} 
 				}
 			}
 		}
 
-        if(pIntermediate->Output.Type == IMD_OUTPUT_R)
-        {
-            RUsage[pIntermediate->Output.Address] = TRUE;
-        }
         // Make constant registers range from 0 to 191 instead of -96 to 95
         if(pIntermediate->Output.Type == IMD_OUTPUT_C)
         {
@@ -1653,40 +1639,18 @@ static boolean VshConvertShader(VSH_XBOX_SHADER *pShader,
                 // TODO: Complete dph support
                 EmuLog(LOG_LEVEL::WARNING, "Can't simulate dph for other than output r registers (yet)");
 
-				// attempt to find unused register...
-				int outRegister = -1;
-				for (int j = hostTemporaryRegisterCount - 1; j >= 0; --j)
-				{
-					// Skip r12, which host uses as a replacement for all Xbox oPos reads & writes (except final write).
-					// (Xbox can read from the write-only oPos register through the special thirteenth r12 register as well.)
-                    if (j == 12) continue;
-
-					if(!RUsage[j])
-					{
-						outRegister = j;
-						break;
-					}
-				}
-
-				// return failure if there are no available registers
-				if (outRegister == -1)
-				{
-					return FALSE;
-				}
-
 				VSH_INTERMEDIATE_FORMAT TmpIntermediate = *pIntermediate;
 
 				// modify the instructions
-				// the register value is not needed beyond these instructions so setting the usage flag should not be necessary (??)
 				pIntermediate->MAC = MAC_DP3;
 				pIntermediate->Output.Type = IMD_OUTPUT_R;
-				pIntermediate->Output.Address = outRegister;
+				pIntermediate->Output.Address = X_VSH_TEMP_SCRATCH;
 				VshSetOutputMask(&pIntermediate->Output, TRUE, TRUE, TRUE, TRUE);
 
 				TmpIntermediate.MAC = MAC_ADD;
 				TmpIntermediate.Parameters[0].IndexesWithA0_X = FALSE;
 				TmpIntermediate.Parameters[0].Parameter.ParameterType = PARAM_R;
-				TmpIntermediate.Parameters[0].Parameter.Address = outRegister;
+				TmpIntermediate.Parameters[0].Parameter.Address = X_VSH_TEMP_SCRATCH;
 				TmpIntermediate.Parameters[0].Parameter.Neg = FALSE;
 				VshSetSwizzle(&TmpIntermediate.Parameters[1], SWIZZLE_W, SWIZZLE_W, SWIZZLE_W, SWIZZLE_W);
 				// Is this output register a scalar
@@ -1741,20 +1705,22 @@ static boolean VshConvertShader(VSH_XBOX_SHADER *pShader,
         }
     }
 
-    // Finally, iterate through the shader, replace all writes to oPos with writes to r12
-    // This fixes shaders that read from r12 expecting to see oPos
+    // Replace all writes to oPos with writes to r12.
+	// On Xbox, oPos is read/write, essentially a 13th temporary register
+	// In DX9 and vs_2_x, oPos is write-only, so we'll use r12 in its place
+	// And at the end of the shader, write r12 to oPos
     for (int i = 0; i < pShader->IntermediateCount; i++) {
         VSH_INTERMEDIATE_FORMAT* pIntermediate = &pShader->Intermediate[i];
         if (pIntermediate->Output.Type == IMD_OUTPUT_O && pIntermediate->Output.Address == OREG_OPOS) {
             pIntermediate->Output.Type = IMD_OUTPUT_R;
-            pIntermediate->Output.Address = 12;
+            pIntermediate->Output.Address = X_VSH_TEMP_OPOS;
         }
     }
 
+	// We append one additional instruction to mov oPos, r12
 	// TODO : *IF* r12 is not read after the final write to oPos,
 	// it'd be more efficient to not-replace this oPos write by r12,
 	// so that we don't have to do the following :
-    // We append one additional instruction to mov oPos, r12
     VSH_INTERMEDIATE_FORMAT MovIntermediate = {0};
     MovIntermediate.MAC = MAC_MOV;
     MovIntermediate.Output.Type = IMD_OUTPUT_O;
@@ -1765,7 +1731,7 @@ static boolean VshConvertShader(VSH_XBOX_SHADER *pShader,
     MovIntermediate.Output.Mask[3] = true;
     MovIntermediate.Parameters[0].Active = true;
     MovIntermediate.Parameters[0].Parameter.ParameterType = PARAM_R;
-    MovIntermediate.Parameters[0].Parameter.Address = 12;
+    MovIntermediate.Parameters[0].Parameter.Address = X_VSH_TEMP_OPOS;
     MovIntermediate.Parameters[0].Parameter.Swizzle[0] = SWIZZLE_X;
     MovIntermediate.Parameters[0].Parameter.Swizzle[1] = SWIZZLE_Y;
     MovIntermediate.Parameters[0].Parameter.Swizzle[2] = SWIZZLE_Z;
@@ -2567,7 +2533,7 @@ D3DVERTEXELEMENT *EmuRecompileVshDeclaration
 }
 
 std::string UsingScratch(std::string input) {
-	return std::regex_replace(input, std::regex("tmp"), "r" + std::to_string(scratchRegisterIndex));
+	return std::regex_replace(input, std::regex("tmp"), "r" + std::to_string(X_VSH_TEMP_SCRATCH));
 }
 
 // Xbox expp seems to behave the as vs_1_1
