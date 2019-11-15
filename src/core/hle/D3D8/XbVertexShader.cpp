@@ -2550,8 +2550,11 @@ std::string VshPostProcess_Expp(std::string shader) {
 
 	if (std::regex_search(shader, exp_x))
 		LOG_TEST_CASE("Title uses the x component result of expp");
+	if (std::regex_search(shader, exp_w))
+		LOG_TEST_CASE("Title uses the w component result of expp");
 
 	// dest.x = 2 ^ floor(x)
+	// Test Case: ???
 	static auto exp_x_host = UsingScratch(
 		"frc tmp.x, $3\n"
 		"add tmp.x, $1$2, -tmp.x\n"
@@ -2568,9 +2571,13 @@ std::string VshPostProcess_Expp(std::string shader) {
 	const auto exp_z_host = "exp $1.z, $3";
 	shader = std::regex_replace(shader, exp_z, exp_z_host);
 
-	// TODO dest.w = 1
-	// const auto exp_w_host = "mov $1.w, 1";
-	//shader = std::regex_replace(shader, exp_w, exp_w_host);
+	// dest.w = 1
+	// Test Case: ???
+	// TODO do a constant read here
+	const auto exp_w_host = UsingScratch(
+		"sub tmp.x, tmp.x, tmp.x\n" // Get 0
+		"exp $1.w, tmp.x"); // 2 ^ 0 = 1
+	shader = std::regex_replace(shader, exp_w, exp_w_host);
 
 	return shader;
 }
