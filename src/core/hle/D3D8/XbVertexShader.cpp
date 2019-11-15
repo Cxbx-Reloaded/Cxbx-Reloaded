@@ -2556,6 +2556,7 @@ std::string VshPostProcess_Expp(std::string shader) {
 	// dest.x = 2 ^ floor(x)
 	// Test Case: ???
 	static auto exp_x_host = UsingScratch(
+		"; patch expp: dest.x = 2 ^ floor(x)\n"
 		"frc tmp.x, $3\n"
 		"add tmp.x, $1$2, -tmp.x\n"
 		"exp $1.x,  tmp.x");
@@ -2563,18 +2564,23 @@ std::string VshPostProcess_Expp(std::string shader) {
 
 	// dest.y = x - floor(x)
 	// Test Case: Tony Hawk Pro Skater 2X
-	const auto exp_y_host = "frc $1.y, $3";
+	const auto exp_y_host =
+		"; patch expp: dest.y = x - floor(x)\n"
+		"frc $1.y, $3";
 	shader = std::regex_replace(shader, exp_y, exp_y_host);
 
 	// dest.z = approximate 2 ^ x
 	// Test Case: Mechassault
-	const auto exp_z_host = "exp $1.z, $3";
+	const auto exp_z_host =
+		"; patch expp: dest.z = 2 ^ x\n"
+		"exp $1.z, $3";
 	shader = std::regex_replace(shader, exp_z, exp_z_host);
 
 	// dest.w = 1
 	// Test Case: ???
 	// TODO do a constant read here
 	const auto exp_w_host = UsingScratch(
+		"; patch expp: dest.w = 1\n"
 		"sub tmp.x, tmp.x, tmp.x\n" // Get 0
 		"exp $1.w, tmp.x"); // 2 ^ 0 = 1
 	shader = std::regex_replace(shader, exp_w, exp_w_host);
@@ -2592,6 +2598,7 @@ std::string VshPostProcess_TruncateMovA(std::string shader) {
 	// The equivalent of floor() with a temp register
 	// and use the floored value
 	static auto truncate = UsingScratch(
+		"; patch mova: a = floor(x)\n"
 		"frc  tmp,  $1\n"
 		"add  tmp,  $1, -tmp\n"
 		"mova a0.x, tmp");
