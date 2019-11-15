@@ -2541,10 +2541,10 @@ std::string VshPostProcess_Expp(std::string shader) {
 	// Find usages of exp with each swizzle
 	// If there's no swizzle, we should still match so we do the calculation
 	// for all components
-	auto exp_x = std::regex("expp (\\w\\d\\d?)(\\.x)?, (.+)$");
-	auto exp_y = std::regex("expp (\\w\\d\\d?)(\\.y)?, (.+)$");
-	auto exp_z = std::regex("expp (\\w\\d\\d?)(\\.z)?, (.+)$");
-	auto exp_w = std::regex("expp (\\w\\d\\d?)(\\.w)?, (.+)$");
+	const auto exp_x = std::regex("expp (\\w\\d\\d?)(\\.x)?, (.+)$");
+	const auto exp_y = std::regex("expp (\\w\\d\\d?)(\\.y)?, (.+)$");
+	const auto exp_z = std::regex("expp (\\w\\d\\d?)(\\.z)?, (.+)$");
+	const auto exp_w = std::regex("expp (\\w\\d\\d?)(\\.w)?, (.+)$");
 
 	// We operate on a scalar so the input should have a swizzle?
 
@@ -2560,16 +2560,16 @@ std::string VshPostProcess_Expp(std::string shader) {
 
 	// dest.y = x - floor(x)
 	// Test Case: Tony Hawk Pro Skater 2X
-	auto exp_y_host = "frc $1.y, $3";
+	const auto exp_y_host = "frc $1.y, $3";
 	shader = std::regex_replace(shader, exp_y, exp_y_host);
 
 	// dest.z = approximate 2 ^ x
 	// Test Case: Mechassault
-	auto exp_z_host = "exp $1.z, $3";
+	const auto exp_z_host = "exp $1.z, $3";
 	shader = std::regex_replace(shader, exp_z, exp_z_host);
 
 	// TODO dest.w = 1
-	// auto exp_w_host = "mov $1.w, 1";
+	// const auto exp_w_host = "mov $1.w, 1";
 	//shader = std::regex_replace(shader, exp_w, exp_w_host);
 
 	return shader;
@@ -2581,7 +2581,7 @@ std::string VshPostProcess_Expp(std::string shader) {
 // Test Case: Buffy the Vampire Slayer
 std::string VshPostProcess_TruncateMovA(std::string shader) {
 	// find usages of mova
-	auto movA = std::regex("mova a0\\.x, (.*)$");
+	const auto movA = std::regex("mova a0\\.x, (.*)$");
 	// The equivalent of floor() with a temp register
 	// and use the floored value
 	static auto truncate = UsingScratch(
