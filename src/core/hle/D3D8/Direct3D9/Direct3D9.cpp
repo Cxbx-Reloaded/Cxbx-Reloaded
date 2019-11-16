@@ -3630,8 +3630,8 @@ void UpdateViewPortOffsetAndScaleConstants()
 		float vScale[] = { (2.0f / ViewPort.Width) * g_RenderScaleFactor, (-2.0f / ViewPort.Height) * g_RenderScaleFactor, 0.0f, 0.0f };
 		static float vOffset[] = { -1.0f, 1.0f, 0.0f, 1.0f };
 
-		g_pD3DDevice->SetVertexShaderConstantF(58, vScale, 1);
-		g_pD3DDevice->SetVertexShaderConstantF(59, vOffset, 1);
+		g_pD3DDevice->SetVertexShaderConstantF(X_D3DVS_RESERVED_CONSTANT1_CORRECTED, vScale, 1);
+		g_pD3DDevice->SetVertexShaderConstantF(X_D3DVS_RESERVED_CONSTANT2_CORRECTED, vOffset, 1);
 	}
 }
 
