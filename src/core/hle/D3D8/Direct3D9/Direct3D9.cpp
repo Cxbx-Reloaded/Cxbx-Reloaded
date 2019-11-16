@@ -188,6 +188,10 @@ static DWORD WINAPI                 EmuUpdateTickCount(LPVOID);
 static inline void                  EmuVerifyResourceIsRegistered(XTL::X_D3DResource *pResource, DWORD D3DUsage, int iTextureStage, DWORD dwSize);
 static void							UpdateCurrentMSpFAndFPS(); // Used for benchmarking/fps count
 
+// Declared in XbVertexShader.cpp
+extern void CxbxImpl_SetVertexShaderInput(DWORD Handle, UINT StreamCount, XTL::X_STREAMINPUT* pStreamInputs);
+extern void CxbxImpl_SelectVertexShaderDirect(XTL::X_VERTEXATTRIBUTEFORMAT* pVAF, DWORD Address);
+
 extern void UpdateFPSCounter();
 
 typedef uint64_t resource_key_t;
@@ -7808,7 +7812,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SelectVertexShaderDirect)
 		LOG_FUNC_ARG(Address)
 		LOG_FUNC_END;
 
-    LOG_UNIMPLEMENTED(); 
+	CxbxImpl_SelectVertexShaderDirect(pVAF, Address);
 }
 
 // ******************************************************************
@@ -7933,15 +7937,8 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexShaderInput)
 		LOG_FUNC_ARG(pStreamInputs)
 		LOG_FUNC_END;
 
-	// If Handle is NULL, all VertexShader input state is cleared.
-	// Otherwise, Handle is the address of an Xbox VertexShader struct, or-ed with 1 (X_D3DFVF_RESERVED0)
-
-
-    LOG_UNIMPLEMENTED(); 
-
-	return;
+	CxbxImpl_SetVertexShaderInput(Handle, StreamCount, pStreamInputs);
 }
-
 
 // ******************************************************************
 // * patch: D3DDevice_RunVertexStateShader

@@ -2797,3 +2797,33 @@ void SetCxbxVertexShader(DWORD XboxVertexShaderHandle, CxbxVertexShader* shader)
 
 	g_CxbxVertexShaders[XboxVertexShaderHandle] = shader;
 }
+
+void CxbxImpl_SetVertexShaderInput
+(
+	DWORD              Handle,
+	UINT               StreamCount,
+	XTL::X_STREAMINPUT* pStreamInputs
+)
+{
+	LOG_INIT
+
+	// If Handle is NULL, all VertexShader input state is cleared.
+	// Otherwise, Handle is the address of an Xbox VertexShader struct, or-ed with 1 (X_D3DFVF_RESERVED0)
+	// (Thus, a FVF handle is an invalid argument.)
+	//
+
+	LOG_UNIMPLEMENTED();
+}
+
+void CxbxImpl_SelectVertexShaderDirect
+(
+	XTL::X_VERTEXATTRIBUTEFORMAT* pVAF,
+	DWORD Address
+)
+{
+	LOG_INIT;
+
+	// When pVAF is non-null, this vertex attribute format takes precedence over the the one	
+	LOG_UNIMPLEMENTED();
+}
+
