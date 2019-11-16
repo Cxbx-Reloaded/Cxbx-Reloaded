@@ -2,4 +2,4 @@
 
 #include "version.h"
 
-extern char * CxbxVersionStr;
+extern const char* CxbxVersionStr;

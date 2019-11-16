@@ -225,8 +225,8 @@ file (GLOB CXBXR_SOURCE_COMMON
  "${CXBXR_ROOT_DIR}/src/common/xbe/XbePrinter.cpp"
  "${CXBXR_ROOT_DIR}/src/common/xdvdfs-tools/buffered_io.cpp"
  "${CXBXR_ROOT_DIR}/src/common/xdvdfs-tools/xdvdfs.cpp"
- "${CXBXR_ROOT_DIR}/src/gui/DbgConsole.cpp"
  "${CXBXR_ROOT_DIR}/src/CxbxVersion.cpp"
+ "${CXBXR_ROOT_DIR}/src/gui/DbgConsole.cpp"
  "${CXBXR_ROOT_DIR}/src/HighPerformanceGraphicsEnabler.c"
 )
 
