@@ -141,6 +141,13 @@ static bool                         g_bHack_DisableHostGPUQueries = false; // TO
 static IDirect3DQuery              *g_pHostQueryWaitForIdle = nullptr;
 static IDirect3DQuery              *g_pHostQueryCallbackEvent = nullptr;
 
+// Vertex shader symbols, declared in XbVertexShader.cpp :
+extern void CxbxImpl_SelectVertexShaderDirect(XTL::X_VERTEXATTRIBUTEFORMAT* pVAF, DWORD Address);
+extern void CxbxImpl_SetVertexShaderInput(DWORD Handle, UINT StreamCount, XTL::X_STREAMINPUT* pStreamInputs);
+
+// Vertex buffer symbols, declared in XbVertexBuffer.cpp
+extern void CxbxImpl_SetStreamSource(UINT StreamNumber, XTL::X_D3DVertexBuffer* pStreamData, UINT Stride);
+
 static std::condition_variable		g_VBConditionVariable;	// Used in BlockUntilVerticalBlank
 static std::mutex					g_VBConditionMutex;		// Used in BlockUntilVerticalBlank
 static DWORD                        g_VBLastSwap = 0;
@@ -173,9 +180,6 @@ static XTL::DWORD                  *g_Xbox_D3DDevice; // TODO: This should be a 
 static	DWORD						g_dwVertexShaderUsage = 0; // Unused. If needed, move to XbVertexShader.cpp
 */
 
-// Active D3D Vertex Streams (and strides)
-       XTL::X_D3DVertexBuffer      *g_D3DStreams[16];
-       XTL::UINT                    g_D3DStreamStrides[16];
 static XTL::DWORD                   g_VertexShaderSlots[X_VSH_MAX_INSTRUCTION_COUNT];
        XTL::DWORD                   g_Xbox_VertexShader_Handle = 0;
 
@@ -187,10 +191,6 @@ static LRESULT WINAPI               EmuMsgProc(HWND hWnd, UINT msg, WPARAM wPara
 static DWORD WINAPI                 EmuUpdateTickCount(LPVOID);
 static inline void                  EmuVerifyResourceIsRegistered(XTL::X_D3DResource *pResource, DWORD D3DUsage, int iTextureStage, DWORD dwSize);
 static void							UpdateCurrentMSpFAndFPS(); // Used for benchmarking/fps count
-
-// Declared in XbVertexShader.cpp
-extern void CxbxImpl_SetVertexShaderInput(DWORD Handle, UINT StreamCount, XTL::X_STREAMINPUT* pStreamInputs);
-extern void CxbxImpl_SelectVertexShaderDirect(XTL::X_VERTEXATTRIBUTEFORMAT* pVAF, DWORD Address);
 
 extern void UpdateFPSCounter();
 
@@ -3424,7 +3424,7 @@ XTL::X_D3DSurface* WINAPI XTL::EMUPATCH(D3DDevice_GetBackBuffer2)
 	/** unsafe, somehow
 	HRESULT hRet = D3D_OK;
 
-	X_D3DSurface *pBackBuffer = EmuNewD3DSurface();
+	X_D3DSurface *pXboxBackBuffer = EmuNewD3DSurface();
 
 	if(BackBuffer == -1) {
 		static IDirect3DSurface *pCachedPrimarySurface = nullptr;
@@ -3436,21 +3436,21 @@ XTL::X_D3DSurface* WINAPI XTL::EMUPATCH(D3DDevice_GetBackBuffer2)
 			DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateOffscreenPlainSurface");
 		}
 
-		SetHostSurface(pBackBuffer, pCachedPrimarySurface);
+		SetHostSurface(pXboxBackBuffer, pCachedPrimarySurface);
 
 		hRet = g_pD3DDevice->GetFrontBuffer(pCachedPrimarySurface);
 		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->GetFrontBuffer");
 
 		if (FAILED(hRet)) {
 			EmuLog(LOG_LEVEL::WARNING, "Could not retrieve primary surface, using backbuffer");
-			SetHostSurface(pBackBuffer, nullptr);
+			SetHostSurface(pXboxBackBuffer, nullptr);
 			pCachedPrimarySurface->Release();
 			pCachedPrimarySurface = nullptr;
 			BackBuffer = 0;
 		}
 
 		// Debug: Save this image temporarily
-		//D3DXSaveSurfaceToFile("C:\\Aaron\\Textures\\FrontBuffer.bmp", D3DXIFF_BMP, GetHostSurface(pBackBuffer), nullptr, nullptr);
+		//D3DXSaveSurfaceToFile("C:\\Aaron\\Textures\\FrontBuffer.bmp", D3DXIFF_BMP, GetHostSurface(pXboxBackBuffer), nullptr, nullptr);
 	}
 
 	if(BackBuffer != -1) {
@@ -3461,7 +3461,7 @@ XTL::X_D3DSurface* WINAPI XTL::EMUPATCH(D3DDevice_GetBackBuffer2)
 	}
 	//*/
 
-	static X_D3DSurface *pBackBuffer = EmuNewD3DSurface();
+	static X_D3DSurface *pXboxBackBuffer = EmuNewD3DSurface();
 	IDirect3DSurface *pCurrentHostBackBuffer = nullptr;
 
 	 STATUS_SUCCESS;
@@ -3478,12 +3478,12 @@ XTL::X_D3DSurface* WINAPI XTL::EMUPATCH(D3DDevice_GetBackBuffer2)
 	if (FAILED(hRet))
 		CxbxKrnlCleanup("Unable to retrieve back buffer");
 
-	SetHostSurface(pBackBuffer, pCurrentHostBackBuffer);
+	SetHostSurface(pXboxBackBuffer, pCurrentHostBackBuffer);
 
 	// Increment reference count
-	pBackBuffer->Common++; // EMUPATCH(D3DResource_AddRef)(pBackBuffer);
+	pXboxBackBuffer->Common++; // EMUPATCH(D3DResource_AddRef)(pXboxBackBuffer);
 
-	return pBackBuffer;
+	return pXboxBackBuffer;
 #else // COPY_BACKBUFFER_TO_XBOX_SURFACE
 	// Rather than create a new surface, we should forward to the Xbox version of GetBackBuffer,
 	// This gives us the correct Xbox surface to update.
@@ -6409,15 +6409,12 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetStreamSource_4)
 	//	LOG_FUNC_END;
 	EmuLog(LOG_LEVEL::DEBUG, "D3DDevice_SetStreamSource_4(StreamNumber : %08X pStreamData : %08X Stride : %08X);", StreamNumber, pStreamData, Stride);
 
-	// Forward to Xbox implementation
+	CxbxImpl_SetStreamSource(StreamNumber, pStreamData, Stride);
+
+	// TODO : Forward to Xbox implementation
 	// This should stop us having to patch GetStreamSource!
 	//XB_trampoline(VOID, WINAPI, D3DDevice_SetStreamSource_4, (UINT, X_D3DVertexBuffer*, UINT));
 	//XB_D3DDevice_SetStreamSource_4(StreamNumber, pStreamData, Stride);
-
-	if (StreamNumber < 16) {
-		g_D3DStreams[StreamNumber] = pStreamData;
-		g_D3DStreamStrides[StreamNumber] = Stride;
-	}
 }
 
 // This uses a custom calling convention where parameter is passed in EAX
@@ -6442,15 +6439,12 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetStreamSource_8)
 	//	LOG_FUNC_END;
 	EmuLog(LOG_LEVEL::DEBUG, "D3DDevice_SetStreamSource_8(StreamNumber : %08X pStreamData : %08X Stride : %08X);", StreamNumber, pStreamData, Stride);
 
+	CxbxImpl_SetStreamSource(StreamNumber, pStreamData, Stride);
+
 	// TODO : Forward to Xbox implementation
 	// This should stop us having to patch GetStreamSource!
 	//XB_trampoline(VOID, WINAPI, D3DDevice_SetStreamSource_8, (X_D3DVertexBuffer*, UINT));
 	//XB_D3DDevice_SetStreamSource_8(pStreamData, Stride);
-
-	if (StreamNumber < 16) {
-		g_D3DStreams[StreamNumber] = pStreamData;
-		g_D3DStreamStrides[StreamNumber] = Stride;
-	}
 }
 
 // ******************************************************************
@@ -6469,19 +6463,12 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetStreamSource)
 		LOG_FUNC_ARG(Stride)
 		LOG_FUNC_END;
 
+	CxbxImpl_SetStreamSource(StreamNumber, pStreamData, Stride);
+
 	// Forward to Xbox implementation
 	// This should stop us having to patch GetStreamSource!
 	XB_trampoline(VOID, WINAPI, D3DDevice_SetStreamSource, (UINT, X_D3DVertexBuffer*, UINT));
 	XB_D3DDevice_SetStreamSource(StreamNumber, pStreamData, Stride);
-
-	if(pStreamData != xbnullptr && Stride == 0){
-		LOG_TEST_CASE("Stream stride set to 0");
-	}
-
-	if (StreamNumber < 16) {
-		g_D3DStreams[StreamNumber] = pStreamData;
-		g_D3DStreamStrides[StreamNumber] = Stride;
-	}
 }
 
 // ******************************************************************
@@ -7937,6 +7924,16 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexShaderInput)
 		LOG_FUNC_ARG(pStreamInputs)
 		LOG_FUNC_END;
 
+	// When this API is in effect, VertexBuffers as set by Xbox SetStreamSource are disregarded,
+	// instead, the pStreamInputs[].VertexBuffer streams are used.
+
+	// If Handle is NULL, all VertexShader input state is cleared (after which the VertexBuffers as set by SetStreamSource are used once again).
+
+	// Otherwise, Handle is the address of an Xbox VertexShader struct, or-ed with 1 (X_D3DFVF_RESERVED0)
+	// The given pStreamInputs are stored in a global array, and the NV2A is programmed to read
+	// each vertex attribute (as defined in the given VertexShader.VertexAttribute.Slots[]) to read
+	// the attribute data from the pStreamInputs[slot].VertexBuffer + pStreamInputs[slot].Offset + VertexShader.VertexAttribute.Slots[slot].Offset
+
 	CxbxImpl_SetVertexShaderInput(Handle, StreamCount, pStreamInputs);
 }
 
@@ -7953,6 +7950,9 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_RunVertexStateShader)
 		LOG_FUNC_ARG(Address)
 		LOG_FUNC_ARG(pData)
 		LOG_FUNC_END;
+
+	// If pData is assigned, pData[0..3] is pushed towards nv2a transform data registers
+	// then sends the nv2a a command to launch the vertex shader function located at Address
 
     LOG_UNIMPLEMENTED(); 
 }
