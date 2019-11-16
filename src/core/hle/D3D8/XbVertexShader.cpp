@@ -2541,49 +2541,49 @@ std::string VshPostProcess_Expp(std::string shader) {
 	// Find usages of exp with each swizzle
 	// If there's no swizzle, we should still match so we do the calculation
 	// for all components
-	const auto exp_x = std::regex("expp (\\w\\d\\d?)(\\.x)?, (.+)$");
-	const auto exp_y = std::regex("expp (\\w\\d\\d?)(\\.y)?, (.+)$");
-	const auto exp_z = std::regex("expp (\\w\\d\\d?)(\\.z)?, (.+)$");
-	const auto exp_w = std::regex("expp (\\w\\d\\d?)(\\.w)?, (.+)$");
+	const auto xbox_expp_x = std::regex("expp (\\w\\d\\d?)(\\.x)?, (.+)$");
+	const auto xbox_expp_y = std::regex("expp (\\w\\d\\d?)(\\.y)?, (.+)$");
+	const auto xbox_expp_z = std::regex("expp (\\w\\d\\d?)(\\.z)?, (.+)$");
+	const auto xbox_expp_w = std::regex("expp (\\w\\d\\d?)(\\.w)?, (.+)$");
 
 	// We operate on a scalar so the input should have a swizzle?
 
-	if (std::regex_search(shader, exp_x))
+	if (std::regex_search(shader, xbox_expp_x))
 		LOG_TEST_CASE("Title uses the x component result of expp");
-	if (std::regex_search(shader, exp_w))
+	if (std::regex_search(shader, xbox_expp_w))
 		LOG_TEST_CASE("Title uses the w component result of expp");
 
 	// dest.x = 2 ^ floor(x)
 	// Test Case: ???
-	static auto exp_x_host = UsingScratch(
+	static auto host_expp_x = UsingScratch(
 		"; patch expp: dest.x = 2 ^ floor(x)\n"
 		"frc tmp.x, $3\n"
 		"add tmp.x, $1$2, -tmp.x\n"
 		"exp $1.x,  tmp.x");
-	shader = std::regex_replace(shader, exp_x, exp_x_host);
+	shader = std::regex_replace(shader, xbox_expp_x, host_expp_x);
 
 	// dest.y = x - floor(x)
 	// Test Case: Tony Hawk Pro Skater 2X
-	const auto exp_y_host =
+	const auto host_expp_y =
 		"; patch expp: dest.y = x - floor(x)\n"
 		"frc $1.y, $3";
-	shader = std::regex_replace(shader, exp_y, exp_y_host);
+	shader = std::regex_replace(shader, xbox_expp_y, host_expp_y);
 
 	// dest.z = approximate 2 ^ x
 	// Test Case: Mechassault
-	const auto exp_z_host =
+	const auto host_expp_z =
 		"; patch expp: dest.z = 2 ^ x\n"
 		"exp $1.z, $3";
-	shader = std::regex_replace(shader, exp_z, exp_z_host);
+	shader = std::regex_replace(shader, xbox_expp_z, host_expp_z);
 
 	// dest.w = 1
 	// Test Case: ???
 	// TODO do a constant read here
-	const auto exp_w_host = UsingScratch(
+	const auto host_expp_w = UsingScratch(
 		"; patch expp: dest.w = 1\n"
 		"sub tmp.x, tmp.x, tmp.x\n" // Get 0
 		"exp $1.w, tmp.x"); // 2 ^ 0 = 1
-	shader = std::regex_replace(shader, exp_w, exp_w_host);
+	shader = std::regex_replace(shader, xbox_expp_w, host_expp_w);
 
 	return shader;
 }
