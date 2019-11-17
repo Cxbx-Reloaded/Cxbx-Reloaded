@@ -1496,30 +1496,23 @@ const RenderStateInfo DxbxRenderStateInfo[] = {
 	{ "D3DRS_EDGEANTIALIAS"               /*= 151*/, 3424, xtBOOL,                NV2A_LINE_SMOOTH_ENABLE, D3DRS_ANTIALIASEDLINEENABLE }, // Was D3DRS_EDGEANTIALIAS. Dxbx note : No Xbox ext. (according to Direct3D8) !
 	{ "D3DRS_MULTISAMPLEANTIALIAS"        /*= 152*/, 3424, xtBOOL,                NV2A_MULTISAMPLE_CONTROL, D3DRS_MULTISAMPLEANTIALIAS },
 	{ "D3DRS_MULTISAMPLEMASK"             /*= 153*/, 3424, xtDWORD,               NV2A_MULTISAMPLE_CONTROL, D3DRS_MULTISAMPLEMASK },
-	// For D3DRS_MULTISAMPLETYPE, see DxbxRenderStateInfo_D3DRS_MULTISAMPLETYPE_below_4039
-	{ "D3DRS_MULTISAMPLEMODE"             /*= 154*/, 4361, xtD3DMULTISAMPLEMODE,  0 }, // D3DMULTISAMPLEMODE for the backbuffer, might get replaced by DxbxRenderStateInfo_D3DRS_MULTISAMPLETYPE_below_4039
-	{ "D3DRS_MULTISAMPLERENDERTARGETMODE" /*= 155*/, 4039, xtD3DMULTISAMPLEMODE,  NV2A_RT_FORMAT }, // Was 4242
-	{ "D3DRS_SHADOWFUNC"                  /*= 156*/, 3424, xtD3DCMPFUNC,          NV2A_TX_RCOMP },
-	{ "D3DRS_LINEWIDTH"                   /*= 157*/, 3424, xtFloat,               NV2A_LINE_WIDTH },
-	{ "D3DRS_SAMPLEALPHA"                 /*= 158*/, 4627, xtD3DSAMPLEALPHA,      0 }, // TODO : Later than 3424, (still?) not in 4531, but possibly earlier than 4627?
-	{ "D3DRS_DXT1NOISEENABLE"             /*= 159*/, 3424, xtBOOL,                NV2A_CLEAR_DEPTH_VALUE },
-	{ "D3DRS_YUVENABLE"                   /*= 160*/, 3911, xtBOOL,                NV2A_CONTROL0 },
-	{ "D3DRS_OCCLUSIONCULLENABLE"         /*= 161*/, 3911, xtBOOL,                NV2A_OCCLUDE_ZSTENCIL_EN },
-	{ "D3DRS_STENCILCULLENABLE"           /*= 162*/, 3911, xtBOOL,                NV2A_OCCLUDE_ZSTENCIL_EN },
-	{ "D3DRS_ROPZCMPALWAYSREAD"           /*= 163*/, 3911, xtBOOL,                0 },
-	{ "D3DRS_ROPZREAD"                    /*= 164*/, 3911, xtBOOL,                0 },
-	{ "D3DRS_DONOTCULLUNCOMPRESSED"       /*= 165*/, 3911, xtBOOL,                0 }
+	{ "D3DRS_MULTISAMPLETYPE"             /*= 154*/, 3424, xtD3DMULTISAMPLE_TYPE, 0, D3DRS_UNSUPPORTED, "aliasses D3DMULTISAMPLE_TYPE, removed from 4039 onward", 4039 },
+	{ "D3DRS_MULTISAMPLEMODE"             /*= 155*/, 4361, xtD3DMULTISAMPLEMODE,  0 }, // D3DMULTISAMPLEMODE for the backbuffer
+	{ "D3DRS_MULTISAMPLERENDERTARGETMODE" /*= 156*/, 4039, xtD3DMULTISAMPLEMODE,  NV2A_RT_FORMAT }, // Was 4242
+	{ "D3DRS_SHADOWFUNC"                  /*= 157*/, 3424, xtD3DCMPFUNC,          NV2A_TX_RCOMP },
+	{ "D3DRS_LINEWIDTH"                   /*= 158*/, 3424, xtFloat,               NV2A_LINE_WIDTH },
+	{ "D3DRS_SAMPLEALPHA"                 /*= 159*/, 4627, xtD3DSAMPLEALPHA,      0 }, // TODO : Later than 3424, (still?) not in 4531, but possibly earlier than 4627?
+	{ "D3DRS_DXT1NOISEENABLE"             /*= 160*/, 3424, xtBOOL,                NV2A_CLEAR_DEPTH_VALUE },
+	{ "D3DRS_YUVENABLE"                   /*= 161*/, 3911, xtBOOL,                NV2A_CONTROL0 },
+	{ "D3DRS_OCCLUSIONCULLENABLE"         /*= 162*/, 3911, xtBOOL,                NV2A_OCCLUDE_ZSTENCIL_EN },
+	{ "D3DRS_STENCILCULLENABLE"           /*= 163*/, 3911, xtBOOL,                NV2A_OCCLUDE_ZSTENCIL_EN },
+	{ "D3DRS_ROPZCMPALWAYSREAD"           /*= 164*/, 3911, xtBOOL,                0 },
+	{ "D3DRS_ROPZREAD"                    /*= 165*/, 3911, xtBOOL,                0 },
+	{ "D3DRS_DONOTCULLUNCOMPRESSED"       /*= 166*/, 3911, xtBOOL,                0 }
 };
-
-const RenderStateInfo DxbxRenderStateInfo_D3DRS_MULTISAMPLETYPE_below_4039 =
-	{ "D3DRS_MULTISAMPLETYPE"             /*= 154*/, 3424, xtD3DMULTISAMPLE_TYPE, 0 }; // aliasses  D3DMULTISAMPLE_TYPE
 
 const RenderStateInfo& GetDxbxRenderStateInfo(int State)
 {
-	if (State == XTL::X_D3DRS_MULTISAMPLEMODE) // replace by old X_D3DRS_MULTISAMPLETYPE below 4039
-		if (g_LibVersion_D3D8 < 4039)
-			return DxbxRenderStateInfo_D3DRS_MULTISAMPLETYPE_below_4039;
-
 	return DxbxRenderStateInfo[State];
 }
 

@@ -818,19 +818,20 @@ typedef enum _X_D3DRENDERSTATETYPE {
 	X_D3DRS_EDGEANTIALIAS = 151, // Dxbx note : No Xbox ext. (according to Direct3D8) !
 	X_D3DRS_MULTISAMPLEANTIALIAS = 152,
 	X_D3DRS_MULTISAMPLEMASK = 153,
-	X_D3DRS_MULTISAMPLETYPE = 154, // [-4039] Xbox ext. \_ aliasses  D3DMULTISAMPLE_TYPE
-	X_D3DRS_MULTISAMPLEMODE = 154, // [4361+] Xbox ext. /            D3DMULTISAMPLEMODE for the backbuffer
-	X_D3DRS_MULTISAMPLERENDERTARGETMODE = 155, // [4039+] Xbox ext.
-	X_D3DRS_SHADOWFUNC = 156, // D3DCMPFUNC (Xbox extension)
-	X_D3DRS_LINEWIDTH = 157, // Xbox ext.
-	X_D3DRS_SAMPLEALPHA = 158, // Xbox ext.
-	X_D3DRS_DXT1NOISEENABLE = 159, // Xbox ext.
-	X_D3DRS_YUVENABLE = 160, // [3911+] Xbox ext.
-	X_D3DRS_OCCLUSIONCULLENABLE = 161, // [3911+] Xbox ext.
-	X_D3DRS_STENCILCULLENABLE = 162, // [3911+] Xbox ext.
-	X_D3DRS_ROPZCMPALWAYSREAD = 163, // [3911+] Xbox ext.
-	X_D3DRS_ROPZREAD = 164, // [3911+] Xbox ext.
-	X_D3DRS_DONOTCULLUNCOMPRESSED = 165, // [3911+] Xbox ext.
+	X_D3DRS_MULTISAMPLETYPE = 154, // [-4039] Xbox ext.
+	// Note : X_D3DRS_MULTISAMPLETYPE seems the only one that got removed, but it does need a slot, so the rest is increased by 1 compared to 5933.
+	X_D3DRS_MULTISAMPLEMODE = 155, // [4361+] Xbox ext. // D3DMULTISAMPLEMODE for the backbuffer
+	X_D3DRS_MULTISAMPLERENDERTARGETMODE = 156, // [4039+] Xbox ext.
+	X_D3DRS_SHADOWFUNC = 157, // D3DCMPFUNC (Xbox extension)
+	X_D3DRS_LINEWIDTH = 158, // Xbox ext.
+	X_D3DRS_SAMPLEALPHA = 159, // Xbox ext.
+	X_D3DRS_DXT1NOISEENABLE = 160, // Xbox ext.
+	X_D3DRS_YUVENABLE = 161, // [3911+] Xbox ext.
+	X_D3DRS_OCCLUSIONCULLENABLE = 162, // [3911+] Xbox ext.
+	X_D3DRS_STENCILCULLENABLE = 163, // [3911+] Xbox ext.
+	X_D3DRS_ROPZCMPALWAYSREAD = 164, // [3911+] Xbox ext.
+	X_D3DRS_ROPZREAD = 165, // [3911+] Xbox ext.
+	X_D3DRS_DONOTCULLUNCOMPRESSED = 166, // [3911+] Xbox ext.
 	// End of "complex" render states.
 	X_D3DRS_UNK = 0x7fffffff // deferred render state "unknown" flag
 } X_D3DRENDERSTATETYPE;

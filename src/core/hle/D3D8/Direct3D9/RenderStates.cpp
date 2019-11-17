@@ -112,7 +112,13 @@ void XboxRenderStateConverter::BuildRenderStateMappingTable()
     int XboxIndex = 0;
     for (unsigned int RenderState = XTL::X_D3DRS_FIRST; RenderState <= XTL::X_D3DRS_LAST; RenderState++) {
 		auto RenderStateInfo = GetDxbxRenderStateInfo(RenderState);
-        if (RenderStateInfo.V <= g_LibVersion_D3D8) {
+		bool bIsRenderStateAvailable = (RenderStateInfo.V <= g_LibVersion_D3D8);
+		if (RenderStateInfo.R > 0) { // Applies to XTL::X_D3DRS_MULTISAMPLETYPE
+			// Note : X_D3DRS_MULTISAMPLETYPE seems the only render state that got
+			// removed (from 4039 onwards), so we check that limitation here as well
+			bIsRenderStateAvailable &= (g_LibVersion_D3D8 < RenderStateInfo.R);
+		}
+        if (bIsRenderStateAvailable) {
             XboxRenderStateOffsets[RenderState] = XboxIndex;
             EmuLog(LOG_LEVEL::INFO, "%s = %d", RenderStateInfo.S, XboxIndex);
             XboxIndex++;
