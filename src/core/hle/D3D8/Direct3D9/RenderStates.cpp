@@ -57,6 +57,17 @@ bool XboxRenderStateConverter::Init()
     return true;
 }
 
+bool IsRenderStateAvailableInCurrentXboxD3D8Lib(RenderStateInfo& aRenderStateInfo)
+{
+	bool bIsRenderStateAvailable = (aRenderStateInfo.V <= g_LibVersion_D3D8);
+	if (aRenderStateInfo.R > 0) { // Applies to XTL::X_D3DRS_MULTISAMPLETYPE
+		// Note : X_D3DRS_MULTISAMPLETYPE seems the only render state that got
+		// removed (from 4039 onwards), so we check that limitation here as well
+		bIsRenderStateAvailable &= (g_LibVersion_D3D8 < aRenderStateInfo.R);
+	}
+	return bIsRenderStateAvailable;
+}
+
 void XboxRenderStateConverter::VerifyAndFixDeferredRenderStateOffset()
 {
     DWORD CullModeOffset = g_SymbolAddresses["D3DRS_CULLMODE"];
@@ -69,7 +80,8 @@ void XboxRenderStateConverter::VerifyAndFixDeferredRenderStateOffset()
     // Calculate index of D3DRS_CULLMODE for this XDK. We start counting from the first deferred state (D3DRS_FOGENABLE)
     DWORD CullModeIndex = 0;
     for (int i = XTL::X_D3DRS_DEFERRED_FIRST; i < XTL::X_D3DRS_CULLMODE; i++) {
-        if (GetDxbxRenderStateInfo(i).V <= g_LibVersion_D3D8) {
+        auto RenderStateInfo = GetDxbxRenderStateInfo(i);
+        if (IsRenderStateAvailableInCurrentXboxD3D8Lib(RenderStateInfo)) {
             CullModeIndex++;
         }
     }
@@ -92,7 +104,8 @@ void XboxRenderStateConverter::DeriveRenderStateOffsetFromDeferredRenderStateOff
     int FirstDeferredRenderStateOffset = 0;
     for (unsigned int RenderState = XTL::X_D3DRS_FIRST; RenderState < XTL::X_D3DRS_DEFERRED_FIRST; RenderState++) {
         // if the current renderstate exists in this XDK version, count it
-        if (GetDxbxRenderStateInfo(RenderState).V <= g_LibVersion_D3D8) {
+        auto RenderStateInfo = GetDxbxRenderStateInfo(RenderState);
+        if (IsRenderStateAvailableInCurrentXboxD3D8Lib(RenderStateInfo)) {
             FirstDeferredRenderStateOffset++;
         }
     }
@@ -111,14 +124,8 @@ void XboxRenderStateConverter::BuildRenderStateMappingTable()
 
     int XboxIndex = 0;
     for (unsigned int RenderState = XTL::X_D3DRS_FIRST; RenderState <= XTL::X_D3DRS_LAST; RenderState++) {
-		auto RenderStateInfo = GetDxbxRenderStateInfo(RenderState);
-		bool bIsRenderStateAvailable = (RenderStateInfo.V <= g_LibVersion_D3D8);
-		if (RenderStateInfo.R > 0) { // Applies to XTL::X_D3DRS_MULTISAMPLETYPE
-			// Note : X_D3DRS_MULTISAMPLETYPE seems the only render state that got
-			// removed (from 4039 onwards), so we check that limitation here as well
-			bIsRenderStateAvailable &= (g_LibVersion_D3D8 < RenderStateInfo.R);
-		}
-        if (bIsRenderStateAvailable) {
+        auto RenderStateInfo = GetDxbxRenderStateInfo(RenderState);
+        if (IsRenderStateAvailableInCurrentXboxD3D8Lib(RenderStateInfo)) {
             XboxRenderStateOffsets[RenderState] = XboxIndex;
             EmuLog(LOG_LEVEL::INFO, "%s = %d", RenderStateInfo.S, XboxIndex);
             XboxIndex++;
