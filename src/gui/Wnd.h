@@ -84,7 +84,7 @@ public:
         // ******************************************************************
         ATOM        m_class;
         const char *m_classname;
-        const char *m_wndname;
+        std::string m_wndname;
         UINT        m_clsstyle;
         DWORD       m_wndstyle;
         int         m_x, m_y, m_w, m_h;

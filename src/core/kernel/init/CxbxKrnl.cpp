@@ -999,7 +999,7 @@ void CxbxKrnlMain(int argc, char* argv[])
 
 	// Write a header to the log
 	{
-		printf("[0x%.4X] INIT: Cxbx-Reloaded Version %s\n", GetCurrentThreadId(), _CXBX_VERSION);
+		printf("[0x%.4X] INIT: Cxbx-Reloaded Version %s\n", GetCurrentThreadId(), CxbxVersionStr);
 
 		time_t startTime = time(nullptr);
 		struct tm* tm_info = localtime(&startTime);

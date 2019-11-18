@@ -83,7 +83,7 @@ bool Wnd::ProcessMessages()
         (
             0,
             m_classname,
-            m_wndname,
+            m_wndname.c_str(),
             m_wndstyle,
             m_x,
             m_y,
