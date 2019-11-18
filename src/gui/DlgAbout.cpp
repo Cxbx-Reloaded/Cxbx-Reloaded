@@ -81,7 +81,10 @@ INT_PTR CALLBACK DlgAboutProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 			SendMessage(GetDlgItem(hWndDlg, IDC_TAB1), TCM_ADJUSTRECT, FALSE, (LPARAM)&tabRect);
 			// Tab Pane 1
 			HWND tab = CreateWindowEx
-        	(NULL, "STATIC", "\nCxbx-Reloaded\nVersion " _CXBX_VERSION "\n© The Cxbx-Reloaded Team",
+        	(NULL, "STATIC", "\nCxbx-Reloaded\nVersion " _CXBX_VERSION "\n© The Cxbx-Reloaded Team"
+				"\nThis software comes with ABSOLUTELY NO WARRANTY."
+				"\nThis is free software, and you are welcome to redistribute it"
+				"\nunder certain conditions; See our website for details.",
 				WS_CHILD | WS_VISIBLE,
 				tabRect.left + 10, tabRect.top + 10,
 				tabRect.right - tabRect.left,
