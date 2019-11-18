@@ -173,7 +173,7 @@ WndMain::WndMain(HINSTANCE x_hInstance) :
 	// initialize members
 	{
 		m_classname = "WndMain";
-		m_wndname   = "Cxbx-Reloaded";
+		m_wndname   = "Cxbx-Reloaded " + std::string(CxbxVersionStr);
 	}
 
 	// load configuration from settings file
