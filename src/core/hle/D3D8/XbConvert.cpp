@@ -1333,6 +1333,14 @@ void EmuUnswizzleBox
 	}
 } // EmuUnswizzleBox NOPATCH
 
+// Notes :
+// * most renderstates were introduced in the (lowest known) XDK version : 3424
+// * additional renderstates were introduced between 3434 and 4627
+// * we MUST list exact versions for each of those, since their inserts impacts mapping!
+// * renderstates were finalized in 4627 (so no change after that version)
+// * renderstates after D3DRS_MULTISAMPLEMASK have no host mapping, thus no impact
+// * D3DRS_MULTISAMPLETYPE seems the only renderstate that got removed (after 3944, before 4039)
+// * all renderstates marked 3424 are also verified present in 3944
 const RenderStateInfo DxbxRenderStateInfo[] = {
 
 	// String                                 Ord  Version Type                   Method              Native
@@ -1420,16 +1428,16 @@ const RenderStateInfo DxbxRenderStateInfo[] = {
 	{ "D3DRS_POINTOFFSETENABLE"           /*=  79*/, 3424, xtBOOL,                NV2A_POLYGON_OFFSET_POINT_ENABLE },
 	{ "D3DRS_WIREFRAMEOFFSETENABLE"       /*=  80*/, 3424, xtBOOL,                NV2A_POLYGON_OFFSET_LINE_ENABLE },
 	{ "D3DRS_SOLIDOFFSETENABLE"           /*=  81*/, 3424, xtBOOL,                NV2A_POLYGON_OFFSET_FILL_ENABLE },
-	{ "D3DRS_DEPTHCLIPCONTROL"            /*=  82*/, 4432, xtD3DDCC,              NV2A_DEPTHCLIPCONTROL },
-	{ "D3DRS_STIPPLEENABLE"               /*=  83*/, 4627, xtBOOL,                NV2A_POLYGON_STIPPLE_ENABLE },
-	{ "D3DRS_SIMPLE_UNUSED8"              /*=  84*/, 4627, xtDWORD,               0 },
-	{ "D3DRS_SIMPLE_UNUSED7"              /*=  85*/, 4627, xtDWORD,               0 },
-	{ "D3DRS_SIMPLE_UNUSED6"              /*=  86*/, 4627, xtDWORD,               0 },
-	{ "D3DRS_SIMPLE_UNUSED5"              /*=  87*/, 4627, xtDWORD,               0 },
-	{ "D3DRS_SIMPLE_UNUSED4"              /*=  88*/, 4627, xtDWORD,               0 },
-	{ "D3DRS_SIMPLE_UNUSED3"              /*=  89*/, 4627, xtDWORD,               0 },
-	{ "D3DRS_SIMPLE_UNUSED2"              /*=  90*/, 4627, xtDWORD,               0 },
-	{ "D3DRS_SIMPLE_UNUSED1"              /*=  91*/, 4627, xtDWORD,               0 },
+	{ "D3DRS_DEPTHCLIPCONTROL"            /*=  82*/, 4432, xtD3DDCC,              NV2A_DEPTHCLIPCONTROL }, // Verified present in 4432, absent in 4361
+	{ "D3DRS_STIPPLEENABLE"               /*=  83*/, 4627, xtBOOL,                NV2A_POLYGON_STIPPLE_ENABLE }, // Verified present in 4627, absent in 4531
+	{ "D3DRS_SIMPLE_UNUSED8"              /*=  84*/, 4627, xtDWORD,               0 }, // Verified present in 4627, absent in 4531
+	{ "D3DRS_SIMPLE_UNUSED7"              /*=  85*/, 4627, xtDWORD,               0 }, // Verified present in 4627, absent in 4531
+	{ "D3DRS_SIMPLE_UNUSED6"              /*=  86*/, 4627, xtDWORD,               0 }, // Verified present in 4627, absent in 4531
+	{ "D3DRS_SIMPLE_UNUSED5"              /*=  87*/, 4627, xtDWORD,               0 }, // Verified present in 4627, absent in 4531
+	{ "D3DRS_SIMPLE_UNUSED4"              /*=  88*/, 4627, xtDWORD,               0 }, // Verified present in 4627, absent in 4531
+	{ "D3DRS_SIMPLE_UNUSED3"              /*=  89*/, 4627, xtDWORD,               0 }, // Verified present in 4627, absent in 4531
+	{ "D3DRS_SIMPLE_UNUSED2"              /*=  90*/, 4627, xtDWORD,               0 }, // Verified present in 4627, absent in 4531
+	{ "D3DRS_SIMPLE_UNUSED1"              /*=  91*/, 4627, xtDWORD,               0 }, // Verified present in 4627, absent in 4531
 	// End of "simple" render states, continuing with "deferred" render states :
 	// Verified as XDK 3911 Deferred RenderStates (3424 yet to do)
 	{ "D3DRS_FOGENABLE"                   /*=  92*/, 3424, xtBOOL,                NV2A_FOG_ENABLE, D3DRS_FOGENABLE }, // TRUE to enable fog blending
@@ -1467,16 +1475,16 @@ const RenderStateInfo DxbxRenderStateInfo[] = {
 	{ "D3DRS_PATCHEDGESTYLE"              /*= 124*/, 3424, xtDWORD,               0, D3DRS_PATCHEDGESTYLE }, // D3DPATCHEDGESTYLE
 	{ "D3DRS_PATCHSEGMENTS"               /*= 125*/, 3424, xtDWORD,               0 }, // DWORD number of segments per edge when drawing patches, nsp (D3DRS_PATCHSEGMENTS exists in Direct3D 8, but not in 9)
 	// TODO -oDxbx : Is X_D3DRS_SWAPFILTER really a xtD3DMULTISAMPLE_TYPE?
-	{ "D3DRS_SWAPFILTER"                  /*= 126*/, 4039, xtD3DMULTISAMPLE_TYPE, 0, D3DRS_UNSUPPORTED, "D3DTEXF_LINEAR etc. filter to use for Swap" }, // nsp.
-	{ "D3DRS_PRESENTATIONINTERVAL"        /*= 127*/, 4627, xtDWORD,               0 }, // nsp. TODO : Use 4361?
-	{ "D3DRS_DEFERRED_UNUSED8"            /*= 128*/, 4627, xtDWORD,               0 },
-	{ "D3DRS_DEFERRED_UNUSED7"            /*= 129*/, 4627, xtDWORD,               0 },
-	{ "D3DRS_DEFERRED_UNUSED6"            /*= 130*/, 4627, xtDWORD,               0 },
-	{ "D3DRS_DEFERRED_UNUSED5"            /*= 131*/, 4627, xtDWORD,               0 },
-	{ "D3DRS_DEFERRED_UNUSED4"            /*= 132*/, 4627, xtDWORD,               0 },
-	{ "D3DRS_DEFERRED_UNUSED3"            /*= 133*/, 4627, xtDWORD,               0 },
-	{ "D3DRS_DEFERRED_UNUSED2"            /*= 134*/, 4627, xtDWORD,               0 },
-	{ "D3DRS_DEFERRED_UNUSED1"            /*= 135*/, 4627, xtDWORD,               0 },
+	{ "D3DRS_SWAPFILTER"                  /*= 126*/, 4039, xtD3DMULTISAMPLE_TYPE, 0, D3DRS_UNSUPPORTED, "D3DTEXF_LINEAR etc. filter to use for Swap" }, // nsp. Verified present in 4039, absent in 3944  TODO : Might be introduced in 4034?
+	{ "D3DRS_PRESENTATIONINTERVAL"        /*= 127*/, 4627, xtDWORD,               0 }, // nsp. Verified present in 4627, absent in 4531. TODO : might be inserted before 4627?
+	{ "D3DRS_DEFERRED_UNUSED8"            /*= 128*/, 4627, xtDWORD,               0 }, // Verified present in 4627, absent in 4531
+	{ "D3DRS_DEFERRED_UNUSED7"            /*= 129*/, 4627, xtDWORD,               0 }, // Verified present in 4627, absent in 4531
+	{ "D3DRS_DEFERRED_UNUSED6"            /*= 130*/, 4627, xtDWORD,               0 }, // Verified present in 4627, absent in 4531
+	{ "D3DRS_DEFERRED_UNUSED5"            /*= 131*/, 4627, xtDWORD,               0 }, // Verified present in 4627, absent in 4531
+	{ "D3DRS_DEFERRED_UNUSED4"            /*= 132*/, 4627, xtDWORD,               0 }, // Verified present in 4627, absent in 4531
+	{ "D3DRS_DEFERRED_UNUSED3"            /*= 133*/, 4627, xtDWORD,               0 }, // Verified present in 4627, absent in 4531
+	{ "D3DRS_DEFERRED_UNUSED2"            /*= 134*/, 4627, xtDWORD,               0 }, // Verified present in 4627, absent in 4531
+	{ "D3DRS_DEFERRED_UNUSED1"            /*= 135*/, 4627, xtDWORD,               0 }, // Verified present in 4627, absent in 4531
 	// End of "deferred" render states, continuing with "complex" render states :
 	{ "D3DRS_PSTEXTUREMODES"              /*= 136*/, 3424, xtDWORD,               0 }, // This is where pPSDef->PSTextureModes is stored (outside the pPSDEF - see DxbxUpdateActivePixelShader)
 	{ "D3DRS_VERTEXBLEND"                 /*= 137*/, 3424, xtD3DVERTEXBLENDFLAGS, NV2A_SKIN_MODE, D3DRS_VERTEXBLEND },
@@ -1496,19 +1504,19 @@ const RenderStateInfo DxbxRenderStateInfo[] = {
 	{ "D3DRS_EDGEANTIALIAS"               /*= 151*/, 3424, xtBOOL,                NV2A_LINE_SMOOTH_ENABLE, D3DRS_ANTIALIASEDLINEENABLE }, // Was D3DRS_EDGEANTIALIAS. Dxbx note : No Xbox ext. (according to Direct3D8) !
 	{ "D3DRS_MULTISAMPLEANTIALIAS"        /*= 152*/, 3424, xtBOOL,                NV2A_MULTISAMPLE_CONTROL, D3DRS_MULTISAMPLEANTIALIAS },
 	{ "D3DRS_MULTISAMPLEMASK"             /*= 153*/, 3424, xtDWORD,               NV2A_MULTISAMPLE_CONTROL, D3DRS_MULTISAMPLEMASK },
-	{ "D3DRS_MULTISAMPLETYPE"             /*= 154*/, 3424, xtD3DMULTISAMPLE_TYPE, 0, D3DRS_UNSUPPORTED, "aliasses D3DMULTISAMPLE_TYPE, removed from 4039 onward", 4039 },
-	{ "D3DRS_MULTISAMPLEMODE"             /*= 155*/, 4361, xtD3DMULTISAMPLEMODE,  0 }, // D3DMULTISAMPLEMODE for the backbuffer
-	{ "D3DRS_MULTISAMPLERENDERTARGETMODE" /*= 156*/, 4034, xtD3DMULTISAMPLEMODE,  NV2A_RT_FORMAT }, // Was 4039 (and 4242 before that). 4034 is based on test-case The Simpsons Road Rage
+	{ "D3DRS_MULTISAMPLETYPE"             /*= 154*/, 3424, xtD3DMULTISAMPLE_TYPE, 0, D3DRS_UNSUPPORTED, "aliasses D3DMULTISAMPLE_TYPE, removed from 4039 onward", 4039 }, // Verified present in 3944, absent in 4039  TODO : Might be removed in 4034?
+	{ "D3DRS_MULTISAMPLEMODE"             /*= 155*/, 4039, xtD3DMULTISAMPLEMODE,  0 }, // D3DMULTISAMPLEMODE for the backbuffer. Verified present in 4039, absent in 3944  TODO : Might be introduced in 4034?
+	{ "D3DRS_MULTISAMPLERENDERTARGETMODE" /*= 156*/, 4034, xtD3DMULTISAMPLEMODE,  NV2A_RT_FORMAT }, // Verified present in 4039, absent in 3944. Presence in 4034 is based on test-case The Simpsons Road Rage
 	{ "D3DRS_SHADOWFUNC"                  /*= 157*/, 3424, xtD3DCMPFUNC,          NV2A_TX_RCOMP },
 	{ "D3DRS_LINEWIDTH"                   /*= 158*/, 3424, xtFloat,               NV2A_LINE_WIDTH },
-	{ "D3DRS_SAMPLEALPHA"                 /*= 159*/, 4627, xtD3DSAMPLEALPHA,      0 }, // TODO : Later than 3424, (still?) not in 4531, but possibly earlier than 4627?
+	{ "D3DRS_SAMPLEALPHA"                 /*= 159*/, 4627, xtD3DSAMPLEALPHA,      0 }, // Verified present in 4627, absent in 4531 TODO : might be inserted before 4627?
 	{ "D3DRS_DXT1NOISEENABLE"             /*= 160*/, 3424, xtBOOL,                NV2A_CLEAR_DEPTH_VALUE },
-	{ "D3DRS_YUVENABLE"                   /*= 161*/, 3911, xtBOOL,                NV2A_CONTROL0 },
-	{ "D3DRS_OCCLUSIONCULLENABLE"         /*= 162*/, 3911, xtBOOL,                NV2A_OCCLUDE_ZSTENCIL_EN },
-	{ "D3DRS_STENCILCULLENABLE"           /*= 163*/, 3911, xtBOOL,                NV2A_OCCLUDE_ZSTENCIL_EN },
-	{ "D3DRS_ROPZCMPALWAYSREAD"           /*= 164*/, 3911, xtBOOL,                0 },
-	{ "D3DRS_ROPZREAD"                    /*= 165*/, 3911, xtBOOL,                0 },
-	{ "D3DRS_DONOTCULLUNCOMPRESSED"       /*= 166*/, 3911, xtBOOL,                0 }
+	{ "D3DRS_YUVENABLE"                   /*= 161*/, 3911, xtBOOL,                NV2A_CONTROL0 }, // Verified present in 3944
+	{ "D3DRS_OCCLUSIONCULLENABLE"         /*= 162*/, 3911, xtBOOL,                NV2A_OCCLUDE_ZSTENCIL_EN }, // Verified present in 3944
+	{ "D3DRS_STENCILCULLENABLE"           /*= 163*/, 3911, xtBOOL,                NV2A_OCCLUDE_ZSTENCIL_EN }, // Verified present in 3944
+	{ "D3DRS_ROPZCMPALWAYSREAD"           /*= 164*/, 3911, xtBOOL,                0 }, // Verified present in 3944
+	{ "D3DRS_ROPZREAD"                    /*= 165*/, 3911, xtBOOL,                0 }, // Verified present in 3944
+	{ "D3DRS_DONOTCULLUNCOMPRESSED"       /*= 166*/, 3911, xtBOOL,                0 } // Verified present in 3944
 };
 
 const RenderStateInfo& GetDxbxRenderStateInfo(int State)
