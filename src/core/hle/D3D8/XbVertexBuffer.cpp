@@ -55,8 +55,10 @@ FLOAT *g_InlineVertexBuffer_pData = nullptr;
 UINT   g_InlineVertexBuffer_DataSize = 0;
 
 extern DWORD				g_dwPrimPerFrame = 0;
-extern XTL::X_D3DVertexBuffer*g_D3DStreams[X_VSH_MAX_STREAMS];
-extern UINT g_D3DStreamStrides[X_VSH_MAX_STREAMS];
+
+// Copy of active Xbox D3D Vertex Streams (and strides), set by [D3DDevice|CxbxImpl]_SetStreamSource*
+XTL::X_STREAMINPUT g_Xbox_SetStreamSource[X_VSH_MAX_STREAMS] = { 0 }; // Note : .Offset member is never set (so always 0)
+
 extern XTL::X_D3DSurface* g_pXbox_RenderTarget;
 extern XTL::X_D3DSurface* g_pXbox_BackBufferSurface;
 void *GetDataFromXboxResource(XTL::X_D3DResource *pXboxResource);
@@ -118,7 +120,7 @@ int CountActiveD3DStreams()
 {
 	int lastStreamIndex = 0;
 	for (int i = 0; i < X_VSH_MAX_STREAMS; i++) {
-		if (g_D3DStreams[i] != xbnullptr) {
+		if (g_Xbox_SetStreamSource[i].VertexBuffer != xbnullptr) {
 			lastStreamIndex = i + 1;
 		}
 	}
@@ -292,7 +294,7 @@ void CxbxVertexBufferConverter::ConvertStream
 		uiHostVertexStride = (bNeedVertexPatching) ? pVertexShaderStreamInfo->HostVertexStride : uiXboxVertexStride;
 		dwHostVertexDataSize = uiVertexCount * uiHostVertexStride;
 	} else {
-		XTL::X_D3DVertexBuffer *pXboxVertexBuffer = g_D3DStreams[uiStream];
+		XTL::X_D3DVertexBuffer *pXboxVertexBuffer = g_Xbox_SetStreamSource[uiStream].VertexBuffer;
         pXboxVertexData = (uint8_t*)GetDataFromXboxResource(pXboxVertexBuffer);
 		if (pXboxVertexData == xbnullptr) {
 			HRESULT hRet = g_pD3DDevice->SetStreamSource(
@@ -308,7 +310,7 @@ void CxbxVertexBufferConverter::ConvertStream
 			return;
 		}
 
-		uiXboxVertexStride = g_D3DStreamStrides[uiStream];
+		uiXboxVertexStride = g_Xbox_SetStreamSource[uiStream].Stride;
         // Set a new (exact) vertex count
 		uiVertexCount = pDrawContext->VerticesInBuffer;
 		// Dxbx note : Don't overwrite pDrawContext.dwVertexCount with uiVertexCount, because an indexed draw
@@ -986,4 +988,16 @@ VOID EmuFlushIVB()
 		//DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetVertexShader");
 	}
     g_InlineVertexBuffer_TableOffset = 0; // Might not be needed (also cleared in D3DDevice_Begin)
+}
+
+void CxbxImpl_SetStreamSource(UINT StreamNumber, XTL::X_D3DVertexBuffer* pStreamData, UINT Stride)
+{
+	if (pStreamData != xbnullptr && Stride == 0) {
+		LOG_TEST_CASE("CxbxImpl_SetStreamSource : Stream assigned, and stride set to 0 (might be okay)");
+	}
+
+	assert(StreamNumber < X_VSH_MAX_STREAMS);
+
+	g_Xbox_SetStreamSource[StreamNumber].VertexBuffer = pStreamData;
+	g_Xbox_SetStreamSource[StreamNumber].Stride = Stride;
 }

@@ -649,12 +649,12 @@ typedef enum _X_D3DRENDERSTATETYPE {
 
 	// Dxbx note : These declarations are from XDK version 5933, the most recent and complete version.
 	// Older versions are slightly different (some members are missing), so we use a mapping table to
-	// cater for the differences (see DxbxBuildRenderStateMappingTable). This enables to ignore these
-	// version-differences in the rest of our code (unless it matters somehow); We write via indirection :
-	//   *EmuMappedD3DRenderState[X_D3DRENDERSTATETYPE] = Value;
+	// cater for the differences (see XboxRenderStateConverter::BuildRenderStateMappingTable). This enables to ignore these
+	// version-differences in the rest of our code (unless it matters somehow); We write like this :
+	//   XboxRenderStates.SetXboxRenderState(X_D3DRENDERSTATETYPE, Value);
 	//
-	// And we read via the same mapping (do note, that missing elements all point to the same dummy) :
-	//   Result = *EmuMappedD3DRenderState[X_D3DRENDERSTATETYPE];
+	// And we read like this (do note, that missing elements all point to the same dummy) :
+	//   Result = XboxRenderStates.GetXboxRenderState(X_D3DRENDERSTATETYPE);
 
 	// Dxbx note : The PS* render states map 1-on-1 to the X_D3DPIXELSHADERDEF record,
 	// SetPixelShader actually pushes the definition into these render state slots.
@@ -737,14 +737,14 @@ typedef enum _X_D3DRENDERSTATETYPE {
 	X_D3DRS_STENCILMASK = 72, // BYTE mask value used in stencil test
 	X_D3DRS_STENCILWRITEMASK = 73, // BYTE write mask applied to values written to stencil buffer
 	X_D3DRS_BLENDOP = 74, // D3DBLENDOP setting
-	X_D3DRS_BLENDCOLOR = 75, // D3DCOLOR for D3DBLEND_CONSTANTCOLOR (Xbox ext.)
+	X_D3DRS_BLENDCOLOR = 75, // D3DCOLOR for D3DBLEND_CONSTANTCOLOR
 	X_D3DRS_SWATHWIDTH = 76, // D3DSWATHWIDTH (Xbox ext.)
 	X_D3DRS_POLYGONOFFSETZSLOPESCALE = 77, // float Z factor for shadow maps (Xbox ext.)
 	X_D3DRS_POLYGONOFFSETZOFFSET = 78, // Xbox ext.
 	X_D3DRS_POINTOFFSETENABLE = 79, // Xbox ext.
 	X_D3DRS_WIREFRAMEOFFSETENABLE = 80, // Xbox ext.
 	X_D3DRS_SOLIDOFFSETENABLE = 81, // Xbox ext.
-	X_D3DRS_DEPTHCLIPCONTROL = 82, // [4627+] Xbox ext.
+	X_D3DRS_DEPTHCLIPCONTROL = 82, // [4432+] Xbox ext.
 	X_D3DRS_STIPPLEENABLE = 83, // [4627+] Xbox ext.
 	X_D3DRS_SIMPLE_UNUSED8 = 84, // [4627+]
 	X_D3DRS_SIMPLE_UNUSED7 = 85, // [4627+]
@@ -789,8 +789,8 @@ typedef enum _X_D3DRENDERSTATETYPE {
 	X_D3DRS_POINTSIZE_MAX = 123,
 	X_D3DRS_PATCHEDGESTYLE = 124, // Dxbx addition
 	X_D3DRS_PATCHSEGMENTS = 125,
-	X_D3DRS_SWAPFILTER = 126, // [4361+] Xbox ext. nsp. D3DTEXF_LINEAR etc. filter to use for Swap
-	X_D3DRS_PRESENTATIONINTERVAL = 127, // [4627+] Xbox ext. nsp.
+	X_D3DRS_SWAPFILTER = 126, // [4039+] Xbox ext. nsp. D3DTEXF_LINEAR etc. filter to use for Swap
+	X_D3DRS_PRESENTATIONINTERVAL = 127, // [4627+] Xbox ext. nsp. TODO : Use 4361?
 	X_D3DRS_DEFERRED_UNUSED8 = 128, // [4627+]
 	X_D3DRS_DEFERRED_UNUSED7 = 129, // [4627+]
 	X_D3DRS_DEFERRED_UNUSED6 = 130, // [4627+]
@@ -814,23 +814,24 @@ typedef enum _X_D3DRENDERSTATETYPE {
 	X_D3DRS_CULLMODE = 147,
 	X_D3DRS_TEXTUREFACTOR = 148,
 	X_D3DRS_ZBIAS = 149,
-	X_D3DRS_LOGICOP = 150, // Xbox ext.
+	X_D3DRS_LOGICOP = 150, // Xbox ext. nsp.
 	X_D3DRS_EDGEANTIALIAS = 151, // Dxbx note : No Xbox ext. (according to Direct3D8) !
 	X_D3DRS_MULTISAMPLEANTIALIAS = 152,
 	X_D3DRS_MULTISAMPLEMASK = 153,
-	X_D3DRS_MULTISAMPLETYPE = 154, // [-3911] Xbox ext. \_ aliasses  D3DMULTISAMPLE_TYPE
-	X_D3DRS_MULTISAMPLEMODE = 154, // [4361+] Xbox ext. /            D3DMULTISAMPLEMODE for the backbuffer
-	X_D3DRS_MULTISAMPLERENDERTARGETMODE = 155, // [4361+] Xbox ext.
-	X_D3DRS_SHADOWFUNC = 156, // D3DCMPFUNC (Xbox extension)
-	X_D3DRS_LINEWIDTH = 157, // Xbox ext.
-	X_D3DRS_SAMPLEALPHA = 158, // Xbox ext.
-	X_D3DRS_DXT1NOISEENABLE = 159, // Xbox ext.
-	X_D3DRS_YUVENABLE = 160, // [3911+] Xbox ext.
-	X_D3DRS_OCCLUSIONCULLENABLE = 161, // [3911+] Xbox ext.
-	X_D3DRS_STENCILCULLENABLE = 162, // [3911+] Xbox ext.
-	X_D3DRS_ROPZCMPALWAYSREAD = 163, // [3911+] Xbox ext.
-	X_D3DRS_ROPZREAD = 164, // [3911+] Xbox ext.
-	X_D3DRS_DONOTCULLUNCOMPRESSED = 165, // [3911+] Xbox ext.
+	X_D3DRS_MULTISAMPLETYPE = 154, // [-4039] Xbox ext.
+	// Note : X_D3DRS_MULTISAMPLETYPE seems the only one that got removed, but it does need a slot, so the rest is increased by 1 compared to 5933.
+	X_D3DRS_MULTISAMPLEMODE = 155, // [4361+] Xbox ext. // D3DMULTISAMPLEMODE for the backbuffer
+	X_D3DRS_MULTISAMPLERENDERTARGETMODE = 156, // [4039+] Xbox ext.
+	X_D3DRS_SHADOWFUNC = 157, // D3DCMPFUNC (Xbox extension)
+	X_D3DRS_LINEWIDTH = 158, // Xbox ext.
+	X_D3DRS_SAMPLEALPHA = 159, // Xbox ext.
+	X_D3DRS_DXT1NOISEENABLE = 160, // Xbox ext.
+	X_D3DRS_YUVENABLE = 161, // [3911+] Xbox ext.
+	X_D3DRS_OCCLUSIONCULLENABLE = 162, // [3911+] Xbox ext.
+	X_D3DRS_STENCILCULLENABLE = 163, // [3911+] Xbox ext.
+	X_D3DRS_ROPZCMPALWAYSREAD = 164, // [3911+] Xbox ext.
+	X_D3DRS_ROPZREAD = 165, // [3911+] Xbox ext.
+	X_D3DRS_DONOTCULLUNCOMPRESSED = 166, // [3911+] Xbox ext.
 	// End of "complex" render states.
 	X_D3DRS_UNK = 0x7fffffff // deferred render state "unknown" flag
 } X_D3DRENDERSTATETYPE;

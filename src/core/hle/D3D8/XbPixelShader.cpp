@@ -1210,7 +1210,7 @@ float PSH_IMD_ARGUMENT::GetConstValue()
   if (HasModifier(ARGMOD_NEGATE))    Result = -Result;
 
   // y =  x-0.5  -> 0..1 > -0.5..0.5
-  if (HasModifier (ARGMOD_BIAS))      Result = Result-0.5f;
+  if (HasModifier(ARGMOD_BIAS))      Result = Result-0.5f;
 
   // y =  x*2    -> 0..1 >    0..2
   if (HasModifier(ARGMOD_SCALE_X2))  Result = Result*2.0f;
@@ -1650,7 +1650,7 @@ bool PSH_IMD_ARGUMENT::Decode(const DWORD Value, DWORD aMask, TArgumentType Argu
       Modifiers = (1 << ARGMOD_BIAS);
 	  break;
 //    case PS_INPUTMAPPING_HALFBIAS_NEGATE:
-//      Modifiers = ARGMOD_IDENTITY; ???
+//      Modifiers = (1 << ARGMOD_IDENTITY); ???
 //      break;
     case PS_INPUTMAPPING_SIGNED_IDENTITY:
       Modifiers = (1 << ARGMOD_IDENTITY);
@@ -5982,11 +5982,9 @@ VOID DxbxUpdateActivePixelShader() // NOPATCH
 
   HRESULT Result = D3D_OK;
 
-  // TODO: Is this even right? The first RenderState is PSAlpha,
+  // The first RenderState is PSAlpha,
   // The pixel shader is stored in pDevice->m_pPixelShader
   // For now, we still patch SetPixelShader and read from there...
-  //DWORD *XTL_D3D__RenderState = EmuMappedD3DRenderState[0];
-  //pPSDef = (XTL::X_D3DPIXELSHADERDEF*)(XTL_D3D__RenderState);
 
   // Use the pixel shader stored in D3D__RenderState rather than the set handle
   // This allows changes made via SetRenderState to actually take effect!
@@ -5994,6 +5992,7 @@ VOID DxbxUpdateActivePixelShader() // NOPATCH
   // All other fields are the same.
   // We cast D3D__RenderState to a pPSDef for these fields, but
   // manually read from D3D__RenderState[X_D3DRS_PSTEXTUREMODES) for that one field.
+  // See D3DDevice_SetPixelShaderCommon which implements this
 
   pPSDef = g_pXbox_PixelShader != nullptr ? (XTL::X_D3DPIXELSHADERDEF*)(XboxRenderStates.GetPixelShaderRenderStatePointer()) : nullptr;
  
@@ -6066,25 +6065,16 @@ VOID DxbxUpdateActivePixelShader() // NOPATCH
       if (RecompiledPixelShader->ConstInUse[i])
 	  {
         // Read the color from the corresponding render state slot :
-		// TODO: These should read from EmuMappedD3DRenderState, but it doesn't exist yet
-		// The required code needs o be ported from Wip_LessVertexPatching or Dxbx
         switch (i) {
           case PSH_XBOX_CONSTANT_FOG:
-            //dwColor = *EmuMappedD3DRenderState[XTL::X_D3DRS_FOGCOLOR] | 0xFF000000;
             // Note : FOG.RGB is correct like this, but FOG.a should be coming
             // from the vertex shader (oFog) - however, D3D8 does not forward this...
-			g_pD3DDevice->GetRenderState(D3DRS_FOGCOLOR, &dwColor);
-			fColor.a = ((dwColor >> 24) & 0xFF) / 255.0f;
-			fColor.r = ((dwColor >> 16) & 0xFF) / 255.0f;
-			fColor.g = ((dwColor >> 8) & 0xFF) / 255.0f;
-			fColor.b = (dwColor & 0xFF) / 255.0f;
+              fColor = dwColor = XboxRenderStates.GetXboxRenderState(XTL::X_D3DRS_FOGCOLOR);
 			break;
 		  case PSH_XBOX_CONSTANT_FC0:
-            //dwColor = *EmuMappedD3DRenderState[XTL::X_D3DRS_PSFINALCOMBINERCONSTANT0];
               fColor = dwColor = XboxRenderStates.GetXboxRenderState(XTL::X_D3DRS_PSFINALCOMBINERCONSTANT0);
 			break;
 		  case PSH_XBOX_CONSTANT_FC1:
-            //dwColor = *EmuMappedD3DRenderState[XTL::X_D3DRS_PSFINALCOMBINERCONSTANT1];
               fColor = dwColor = XboxRenderStates.GetXboxRenderState(XTL::X_D3DRS_PSFINALCOMBINERCONSTANT1);
 			break;
           case PSH_XBOX_CONSTANT_MUL0:
@@ -6119,7 +6109,6 @@ VOID DxbxUpdateActivePixelShader() // NOPATCH
               break;
           }
           default:
-            //dwColor = *EmuMappedD3DRenderState[XTL::X_D3DRS_PSCONSTANT0_0 + i];
               fColor = dwColor = XboxRenderStates.GetXboxRenderState(XTL::X_D3DRS_PSCONSTANT0_0 + i);
 			break;
         }
