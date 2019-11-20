@@ -1468,7 +1468,7 @@ static void VshRemoveScreenSpaceInstructions(VSH_XBOX_SHADER *pShader)
                 MulIntermediate.Parameters[1].Active                  = TRUE;
                 MulIntermediate.Parameters[1].IndexesWithA0_X                   = FALSE;
                 MulIntermediate.Parameters[1].Parameter.ParameterType = PARAM_C;
-                MulIntermediate.Parameters[1].Parameter.Address       = ConvertCRegister(58);
+                MulIntermediate.Parameters[1].Parameter.Address       = ConvertCRegister(X_D3DVS_RESERVED_CONSTANT1_CORRECTED);
                 MulIntermediate.Parameters[1].Parameter.Neg           = FALSE;
                 VshSetSwizzle(&MulIntermediate.Parameters[1], SWIZZLE_X, SWIZZLE_Y, SWIZZLE_Z, SWIZZLE_W);
                 MulIntermediate.Parameters[2].Active                  = FALSE;
@@ -1481,7 +1481,7 @@ static void VshRemoveScreenSpaceInstructions(VSH_XBOX_SHADER *pShader)
                 AddIntermediate.Output.Address    = OREG_OPOS;
                 AddIntermediate.Parameters[0].Parameter.ParameterType = PARAM_R;
                 AddIntermediate.Parameters[0].Parameter.Address       = 13;
-                AddIntermediate.Parameters[1].Parameter.Address       = ConvertCRegister(59);
+                AddIntermediate.Parameters[1].Parameter.Address       = ConvertCRegister(X_D3DVS_RESERVED_CONSTANT2_CORRECTED);
                 VshInsertIntermediate(pShader, &AddIntermediate, ++i);
             }
         }
@@ -2797,3 +2797,33 @@ void SetCxbxVertexShader(DWORD XboxVertexShaderHandle, CxbxVertexShader* shader)
 
 	g_CxbxVertexShaders[XboxVertexShaderHandle] = shader;
 }
+
+void CxbxImpl_SetVertexShaderInput
+(
+	DWORD              Handle,
+	UINT               StreamCount,
+	XTL::X_STREAMINPUT* pStreamInputs
+)
+{
+	LOG_INIT
+
+	// If Handle is NULL, all VertexShader input state is cleared.
+	// Otherwise, Handle is the address of an Xbox VertexShader struct, or-ed with 1 (X_D3DFVF_RESERVED0)
+	// (Thus, a FVF handle is an invalid argument.)
+	//
+
+	LOG_UNIMPLEMENTED();
+}
+
+void CxbxImpl_SelectVertexShaderDirect
+(
+	XTL::X_VERTEXATTRIBUTEFORMAT* pVAF,
+	DWORD Address
+)
+{
+	LOG_INIT;
+
+	// When pVAF is non-null, this vertex attribute format takes precedence over the the one	
+	LOG_UNIMPLEMENTED();
+}
+
