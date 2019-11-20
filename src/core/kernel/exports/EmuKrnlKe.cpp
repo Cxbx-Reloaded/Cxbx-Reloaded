@@ -746,6 +746,14 @@ XBSYSAPI EXPORTNUM(108) xboxkrnl::VOID NTAPI xboxkrnl::KeInitializeEvent
 		LOG_FUNC_ARG(SignalState)
 		LOG_FUNC_END;
 
+	// HACK: Since we forward to NtDll::NtCreateEvent, this *might* be a Windows handle instead of our own
+	// In this case, it is already initialized so no need tod o anything
+	// Test Case: Xbox Live Dashboard, Network Test (or any other Xbox Live connection)
+	DWORD flags = 0;
+	if (GetHandleInformation((HANDLE)Event, &flags)) {
+        return;
+	}
+
 	// Setup the Xbox event struct
 	Event->Header.Type = Type;
 	Event->Header.Size = sizeof(KEVENT) / sizeof(LONG);
@@ -1138,6 +1146,16 @@ XBSYSAPI EXPORTNUM(123) xboxkrnl::LONG NTAPI xboxkrnl::KePulseEvent
 
 	KIRQL OldIrql;
 	KiLockDispatcherDatabase(&OldIrql);
+
+	// HACK: Since we forward to NtDll::NtCreateEvent, this *might* be a Windows handle instead of our own
+	// In this case, we must call the NtDll function
+	// Test Case: Xbox Live Dashboard, Network Test (or any other Xbox Live connection)
+	DWORD flags = 0;
+	if (GetHandleInformation((HANDLE)Event, &flags)) {
+		KiUnlockDispatcherDatabase(OldIrql);
+		return NtDll::NtPulseEvent((HANDLE)Event, nullptr);
+	}
+
 	LONG OldState = Event->Header.SignalState;
 	if ((OldState == 0) && (IsListEmpty(&Event->Header.WaitListHead) == FALSE)) {
 		Event->Header.SignalState = 1;
@@ -1469,6 +1487,15 @@ XBSYSAPI EXPORTNUM(138) xboxkrnl::LONG NTAPI xboxkrnl::KeResetEvent
 	KIRQL OldIrql;
 	KiLockDispatcherDatabase(&OldIrql);
 
+	// HACK: Since we forward to NtDll::NtCreateEvent, this *might* be a Windows handle instead of our own
+	// In this case, we must call the NtDll function
+	// Test Case: Xbox Live Dashboard, Network Test (or any other Xbox Live connection)
+	DWORD flags = 0;
+	if (GetHandleInformation((HANDLE)Event, &flags)) {
+		KiUnlockDispatcherDatabase(OldIrql);
+		return NtDll::NtResetEvent((HANDLE)Event, nullptr);
+	}
+
 	LONG OldState = Event->Header.SignalState;
 	Event->Header.SignalState = 0;
 
@@ -1605,6 +1632,15 @@ XBSYSAPI EXPORTNUM(145) xboxkrnl::LONG NTAPI xboxkrnl::KeSetEvent
 	KIRQL OldIrql;
 	KiLockDispatcherDatabase(&OldIrql);
 
+	// HACK: Since we forward to NtDll::NtCreateEvent, this *might* be a Windows handle instead of our own
+	// In this case, we must call the NtDll function
+	// Test Case: Xbox Live Dashboard, Network Test (or any other Xbox Live connection)
+	DWORD flags = 0;
+	if (GetHandleInformation((HANDLE)Event, &flags)) {
+		KiUnlockDispatcherDatabase(OldIrql);
+		return NtDll::NtSetEvent((HANDLE)Event, nullptr);
+	}
+
 	LONG OldState = Event->Header.SignalState;
 	if (IsListEmpty(&Event->Header.WaitListHead) != FALSE) {
 		Event->Header.SignalState = 1;
@@ -1650,6 +1686,15 @@ XBSYSAPI EXPORTNUM(146) xboxkrnl::VOID NTAPI xboxkrnl::KeSetEventBoostPriority
 		LOG_FUNC_END;
 	KIRQL OldIrql;
 	KiLockDispatcherDatabase(&OldIrql);
+
+	// HACK: Since we forward to NtDll::NtCreateEvent, this *might* be a Windows handle instead of our own
+	// In this case, we must do nothing. Anything else *will* cause crashes
+	// Test Case: Xbox Live Dashboard, Network Test (or any other Xbox Live connection)
+	DWORD flags = 0;
+	if (GetHandleInformation((HANDLE)Event, &flags)) {
+		KiUnlockDispatcherDatabase(OldIrql);
+		return;
+	}
 
 	if (IsListEmpty(&Event->Header.WaitListHead) != FALSE) {
 		Event->Header.SignalState = 1;

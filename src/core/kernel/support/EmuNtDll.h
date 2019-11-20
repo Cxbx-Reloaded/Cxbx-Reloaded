@@ -1475,6 +1475,15 @@ typedef NTSTATUS(NTAPI *FPTR_NtPulseEvent)
 );
 
 // ******************************************************************
+// * NtResetEvent
+// ******************************************************************
+typedef NTSTATUS(NTAPI *FPTR_NtResetEvent)
+(
+    IN HANDLE	EventHandle,
+    OUT PLONG	PreviousState OPTIONAL
+);
+
+// ******************************************************************
 // * NtCreateMutant
 // ******************************************************************
 typedef NTSTATUS (NTAPI *FPTR_NtCreateMutant)
@@ -1946,6 +1955,7 @@ EXTERN(NtQueueApcThread);
 EXTERN(NtReadFile);
 EXTERN(NtReleaseMutant);
 EXTERN(NtReleaseSemaphore);
+EXTERN(NtResetEvent);
 EXTERN(NtResumeThread);
 EXTERN(NtSetEvent);
 EXTERN(NtSetInformationFile);

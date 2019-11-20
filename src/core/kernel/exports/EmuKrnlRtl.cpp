@@ -235,7 +235,15 @@ XBSYSAPI EXPORTNUM(264) xboxkrnl::VOID NTAPI xboxkrnl::RtlAssert
 		LOG_FUNC_ARG(Message)
 		LOG_FUNC_END;
 
-	CxbxPopupMessage(LOG_LEVEL::WARNING, CxbxMsgDlgIcon_Warn, "RtlAssert() raised by emulated program - consult Debug log");
+	std::stringstream ss;
+	ss << "RtlAssert() raised by emulated program\n" << FileName << ":" << LineNumber << ":" << FailedAssertion ;
+	if (Message) {
+		ss << " " << Message;
+	}
+
+	ss << ")";
+
+	CxbxPopupMessage(LOG_LEVEL::WARNING, CxbxMsgDlgIcon_Warn, ss.str().c_str());
 }
 
 // ******************************************************************
