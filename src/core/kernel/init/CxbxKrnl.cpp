@@ -1213,6 +1213,26 @@ void CxbxKrnlMain(int argc, char* argv[])
 
 		// Restore enough of the executable image headers to keep WinAPI's working :
 		RestoreExeImageHeader();
+
+		// HACK: Attempt to patch out XBE header reads
+		// This works by searching for the XBEH signature and replacing it with what appears in host address space instead
+		// Test case: Half Life 2
+		// Iterate through each CODE section
+		for (uint32_t sectionIndex = 0; sectionIndex < CxbxKrnl_Xbe->m_Header.dwSections; sectionIndex++) {
+			if (!CxbxKrnl_Xbe->m_SectionHeader[sectionIndex].dwFlags.bExecutable) {
+				continue;
+			}
+
+			EmuLogEx(CXBXR_MODULE::INIT, LOG_LEVEL::INFO, "Searching for XBEH in section %s\n", CxbxKrnl_Xbe->m_szSectionName[sectionIndex]);
+			xbaddr startAddr = CxbxKrnl_Xbe->m_SectionHeader[sectionIndex].dwVirtualAddr;
+			xbaddr endAddr = startAddr + CxbxKrnl_Xbe->m_SectionHeader[sectionIndex].dwSizeofRaw;
+			for (xbaddr addr = startAddr; addr < endAddr; addr++) {
+				if (*(uint32_t*)addr == 0x48454258) {
+					EmuLogEx(CXBXR_MODULE::INIT, LOG_LEVEL::INFO, "Patching XBEH at %X\n", addr);
+					*((uint32_t*)addr) = *(uint32_t*)XBE_IMAGE_BASE;
+				}
+			}
+		}
 	}
 
 	// Decode kernel thunk table address :
