@@ -1811,11 +1811,13 @@ typedef struct _RenderStateInfo {
 	XTL::NV2AMETHOD M; // The related push buffer method. Not always a 1-to-1 mapping. Needs push-buffer interpretation & conversion code.
 	D3DRENDERSTATETYPE PC = (D3DRENDERSTATETYPE)0; // Map XBox to PC render state
 	char *N;   // XDK notes. Defaults to ''.
+	WORD R; // The XDK version since which a render state was removed
 }
 RenderStateInfo;
 
-#define D3DRS_NONE ((D3DRENDERSTATETYPE)0)
+#define D3DRS_UNSUPPORTED ((D3DRENDERSTATETYPE)0)
 
-extern const RenderStateInfo DxbxRenderStateInfo[];
+extern const RenderStateInfo& GetDxbxRenderStateInfo(int State);
+
 
 #endif

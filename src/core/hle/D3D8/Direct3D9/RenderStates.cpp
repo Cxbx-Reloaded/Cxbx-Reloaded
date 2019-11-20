@@ -57,6 +57,17 @@ bool XboxRenderStateConverter::Init()
     return true;
 }
 
+bool IsRenderStateAvailableInCurrentXboxD3D8Lib(RenderStateInfo& aRenderStateInfo)
+{
+	bool bIsRenderStateAvailable = (aRenderStateInfo.V <= g_LibVersion_D3D8);
+	if (aRenderStateInfo.R > 0) { // Applies to XTL::X_D3DRS_MULTISAMPLETYPE
+		// Note : X_D3DRS_MULTISAMPLETYPE seems the only render state that got
+		// removed (from 4039 onwards), so we check that limitation here as well
+		bIsRenderStateAvailable &= (g_LibVersion_D3D8 < aRenderStateInfo.R);
+	}
+	return bIsRenderStateAvailable;
+}
+
 void XboxRenderStateConverter::VerifyAndFixDeferredRenderStateOffset()
 {
     DWORD CullModeOffset = g_SymbolAddresses["D3DRS_CULLMODE"];
@@ -68,8 +79,9 @@ void XboxRenderStateConverter::VerifyAndFixDeferredRenderStateOffset()
 
     // Calculate index of D3DRS_CULLMODE for this XDK. We start counting from the first deferred state (D3DRS_FOGENABLE)
     DWORD CullModeIndex = 0;
-    for (int i = XTL::X_D3DRS_FOGENABLE; i < XTL::X_D3DRS_CULLMODE; i++) {
-        if (DxbxRenderStateInfo[i].V <= g_LibVersion_D3D8) {
+    for (int i = XTL::X_D3DRS_DEFERRED_FIRST; i < XTL::X_D3DRS_CULLMODE; i++) {
+        auto RenderStateInfo = GetDxbxRenderStateInfo(i);
+        if (IsRenderStateAvailableInCurrentXboxD3D8Lib(RenderStateInfo)) {
             CullModeIndex++;
         }
     }
@@ -85,22 +97,23 @@ void XboxRenderStateConverter::VerifyAndFixDeferredRenderStateOffset()
 void XboxRenderStateConverter::DeriveRenderStateOffsetFromDeferredRenderStateOffset()
 {
     // When this function is called. D3D__RenderState actually points to the first deferred render state
-    // this is D3DRS_FOGENABLE. We can count back from this using our RenderStateInfo table to find
+    // (this is X_D3DRS_FOGENABLE). We can count back from this using our RenderStateInfo table to find
     // the start of D3D__RenderStates.
 
-    // Count the number of render states (for this XDK) between 0 and D3DRS_FOGENABLE
-    int FogEnableOffset = 0;
-    for (unsigned int RenderState = XTL::X_D3DRS_PSALPHAINPUTS0; RenderState < XTL::X_D3DRS_FOGENABLE; RenderState++) {
+    // Count the number of render states (for this XDK) between 0 and the first deferred render state (D3DRS_FOGENABLE)
+    int FirstDeferredRenderStateOffset = 0;
+    for (unsigned int RenderState = XTL::X_D3DRS_FIRST; RenderState < XTL::X_D3DRS_DEFERRED_FIRST; RenderState++) {
         // if the current renderstate exists in this XDK version, count it
-        if (DxbxRenderStateInfo[RenderState].V <= g_LibVersion_D3D8) {
-            FogEnableOffset++;
+        auto RenderStateInfo = GetDxbxRenderStateInfo(RenderState);
+        if (IsRenderStateAvailableInCurrentXboxD3D8Lib(RenderStateInfo)) {
+            FirstDeferredRenderStateOffset++;
         }
     }
 
-    // At this point, FogEnableOffset should point to the index of D3DRS_FOGENABLE for the given XDK
+    // At this point, FirstDeferredRenderStateOffset should point to the index of D3DRS_FOGENABLE for the given XDK
     // This will be correct as long as our table DxbxRenderStateInfo is correct
     // We can get the correct 0 offset by using a negative index
-    D3D__RenderState = &D3D__RenderState[-FogEnableOffset];
+    D3D__RenderState = &D3D__RenderState[-FirstDeferredRenderStateOffset];
 }
 
 void XboxRenderStateConverter::BuildRenderStateMappingTable()
@@ -110,15 +123,16 @@ void XboxRenderStateConverter::BuildRenderStateMappingTable()
     XboxRenderStateOffsets.fill(-1);
 
     int XboxIndex = 0;
-    for (unsigned int RenderState = XTL::X_D3DRS_PSALPHAINPUTS0; RenderState <= XTL::X_D3DRS_LAST; RenderState++) {
-        if (DxbxRenderStateInfo[RenderState].V <= g_LibVersion_D3D8) {
+    for (unsigned int RenderState = XTL::X_D3DRS_FIRST; RenderState <= XTL::X_D3DRS_LAST; RenderState++) {
+        auto RenderStateInfo = GetDxbxRenderStateInfo(RenderState);
+        if (IsRenderStateAvailableInCurrentXboxD3D8Lib(RenderStateInfo)) {
             XboxRenderStateOffsets[RenderState] = XboxIndex;
-            EmuLog(LOG_LEVEL::INFO, "%s = %d", DxbxRenderStateInfo[RenderState].S, XboxIndex);
+            EmuLog(LOG_LEVEL::INFO, "%s = %d", RenderStateInfo.S, XboxIndex);
             XboxIndex++;
             continue;
         }
 
-        EmuLog(LOG_LEVEL::INFO, "%s Not Present", DxbxRenderStateInfo[RenderState].S);
+        EmuLog(LOG_LEVEL::INFO, "%s Not Present", RenderStateInfo.S);
     }
 }
 
@@ -153,7 +167,7 @@ bool XboxRenderStateConverter::XboxRenderStateValueChanged(uint32_t State)
 void XboxRenderStateConverter::SetXboxRenderState(uint32_t State, uint32_t Value)
 {
     if (!XboxRenderStateExists(State)) {
-        EmuLog(LOG_LEVEL::WARNING, "Attempt to write a Renderstate (%s) that does not exist in the current D3D8 XDK Version (%d)", DxbxRenderStateInfo[State].S, g_LibVersion_D3D8);
+        EmuLog(LOG_LEVEL::WARNING, "Attempt to write a Renderstate (%s) that does not exist in the current D3D8 XDK Version (%d)", GetDxbxRenderStateInfo(State).S, g_LibVersion_D3D8);
         return;
     }
 
@@ -163,7 +177,7 @@ void XboxRenderStateConverter::SetXboxRenderState(uint32_t State, uint32_t Value
 uint32_t XboxRenderStateConverter::GetXboxRenderState(uint32_t State)
 {
     if (!XboxRenderStateExists(State)) {
-        EmuLog(LOG_LEVEL::WARNING, "Attempt to read a Renderstate (%s) that does not exist in the current D3D8 XDK Version (%d)", DxbxRenderStateInfo[State].S, g_LibVersion_D3D8);
+        EmuLog(LOG_LEVEL::WARNING, "Attempt to read a Renderstate (%s) that does not exist in the current D3D8 XDK Version (%d)", GetDxbxRenderStateInfo(State).S, g_LibVersion_D3D8);
         return 0;
     }
 
@@ -172,7 +186,7 @@ uint32_t XboxRenderStateConverter::GetXboxRenderState(uint32_t State)
 
 void XboxRenderStateConverter::StoreInitialValues()
 {
-    for (unsigned int RenderState = XTL::X_D3DRS_PSALPHAINPUTS0; RenderState <= XTL::X_D3DRS_LAST; RenderState++) {
+    for (unsigned int RenderState = XTL::X_D3DRS_FIRST; RenderState <= XTL::X_D3DRS_LAST; RenderState++) {
         // Skip Render States that don't exist within this XDK
         if (!XboxRenderStateExists(RenderState)) {
             continue;
@@ -203,7 +217,7 @@ void XboxRenderStateConverter::Apply()
         }
 
         auto Value = GetXboxRenderState(RenderState);
-        EmuLog(LOG_LEVEL::DEBUG, "XboxRenderStateConverter::Apply(%s, %X)\n", DxbxRenderStateInfo[RenderState].S, Value);
+        EmuLog(LOG_LEVEL::DEBUG, "XboxRenderStateConverter::Apply(%s, %X)\n", GetDxbxRenderStateInfo(RenderState).S, Value);
 
         if (RenderState <= XTL::X_D3DRS_SIMPLE_LAST) {
             ApplySimpleRenderState(RenderState, Value);
@@ -219,6 +233,8 @@ void XboxRenderStateConverter::Apply()
 
 void XboxRenderStateConverter::ApplySimpleRenderState(uint32_t State, uint32_t Value)
 {
+	auto RenderStateInfo = GetDxbxRenderStateInfo(State);
+
     switch (State) {
         case XTL::X_D3DRS_COLORWRITEENABLE: {
             DWORD OrigValue = Value;
@@ -278,23 +294,25 @@ void XboxRenderStateConverter::ApplySimpleRenderState(uint32_t State, uint32_t V
             break;
         default:
             // Only log missing state if it has a PC counterpart
-            if (DxbxRenderStateInfo[State].PC != 0) {
-                EmuLog(LOG_LEVEL::WARNING, "ApplySimpleRenderState(%s, 0x%.08X) is unimplemented!", DxbxRenderStateInfo[State].S, Value);
+            if (RenderStateInfo.PC != 0) {
+                EmuLog(LOG_LEVEL::WARNING, "ApplySimpleRenderState(%s, 0x%.08X) is unimplemented!", RenderStateInfo.S, Value);
             }
             return;
     }
 
     // Skip RenderStates that don't have a defined PC counterpart
-    if (DxbxRenderStateInfo[State].PC == 0) {
+    if (RenderStateInfo.PC == 0) {
         return;
     }
 
-    g_pD3DDevice->SetRenderState((D3DRENDERSTATETYPE)(DxbxRenderStateInfo[State].PC), Value);
+    g_pD3DDevice->SetRenderState((D3DRENDERSTATETYPE)(RenderStateInfo.PC), Value);
 }
 
 void XboxRenderStateConverter::ApplyDeferredRenderState(uint32_t State, uint32_t Value)
 {
-    // Convert from Xbox Data Formats to PC
+	auto RenderStateInfo = GetDxbxRenderStateInfo(State);
+
+	// Convert from Xbox Data Formats to PC
     switch (State) {
         case XTL::X_D3DRS_FOGSTART:
         case XTL::X_D3DRS_FOGEND: {
@@ -373,23 +391,25 @@ void XboxRenderStateConverter::ApplyDeferredRenderState(uint32_t State, uint32_t
         } break;
         default:
             // Only log missing state if it has a PC counterpart
-            if (DxbxRenderStateInfo[State].PC != 0) {
-                EmuLog(LOG_LEVEL::WARNING, "ApplyDeferredRenderState(%s, 0x%.08X) is unimplemented!", DxbxRenderStateInfo[State].S, Value);
+            if (RenderStateInfo.PC != 0) {
+                EmuLog(LOG_LEVEL::WARNING, "ApplyDeferredRenderState(%s, 0x%.08X) is unimplemented!", RenderStateInfo.S, Value);
             }
             return;
     }
 
     // Skip RenderStates that don't have a defined PC counterpart
-    if (DxbxRenderStateInfo[State].PC == 0) {
+    if (RenderStateInfo.PC == 0) {
         return;
     }
 
-    g_pD3DDevice->SetRenderState(DxbxRenderStateInfo[State].PC, Value);
+    g_pD3DDevice->SetRenderState(RenderStateInfo.PC, Value);
 }
 
 void XboxRenderStateConverter::ApplyComplexRenderState(uint32_t State, uint32_t Value)
 {
-    switch (State) {
+	auto RenderStateInfo = GetDxbxRenderStateInfo(State);
+
+	switch (State) {
         case XTL::X_D3DRS_VERTEXBLEND:
             // convert from Xbox direct3d to PC direct3d enumeration
             if (Value <= 1) {
@@ -439,16 +459,16 @@ void XboxRenderStateConverter::ApplyComplexRenderState(uint32_t State, uint32_t 
             break;
         default:
             // Only log missing state if it has a PC counterpart
-            if (DxbxRenderStateInfo[State].PC != 0) {
-                EmuLog(LOG_LEVEL::WARNING, "ApplyComplexRenderState(%s, 0x%.08X) is unimplemented!", DxbxRenderStateInfo[State].S, Value);
+            if (RenderStateInfo.PC != 0) {
+                EmuLog(LOG_LEVEL::WARNING, "ApplyComplexRenderState(%s, 0x%.08X) is unimplemented!", RenderStateInfo.S, Value);
             }
             return;
     }
 
     // Skip RenderStates that don't have a defined PC counterpart
-    if (DxbxRenderStateInfo[State].PC == 0) {
+    if (RenderStateInfo.PC == 0) {
         return;
     }
 
-    g_pD3DDevice->SetRenderState(DxbxRenderStateInfo[State].PC, Value);
+    g_pD3DDevice->SetRenderState(RenderStateInfo.PC, Value);
 }

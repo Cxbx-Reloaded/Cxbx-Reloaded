@@ -6192,8 +6192,8 @@ VOID __fastcall XTL::EMUPATCH(D3DDevice_SetRenderState_Simple)
 
     // Fetch the RenderState conversion info for the given input
     int XboxRenderStateIndex = -1;
-    for (int i = 0; i <= X_D3DRS_DONOTCULLUNCOMPRESSED; i++) {
-        if (DxbxRenderStateInfo[i].M == PUSH_METHOD(Method)) {
+    for (int i = X_D3DRS_FIRST; i <= X_D3DRS_LAST; i++) {
+        if (GetDxbxRenderStateInfo(i).M == PUSH_METHOD(Method)) {
             XboxRenderStateIndex = i;
             break;
         }
@@ -6201,11 +6201,11 @@ VOID __fastcall XTL::EMUPATCH(D3DDevice_SetRenderState_Simple)
 
     // If we could not map it, log and return
     if (XboxRenderStateIndex == -1) {
-        EmuLog(LOG_LEVEL::WARNING, "RenderState_Simple(0x%.08X (%s), 0x%.08X) could not be found in RenderState table", Method, DxbxRenderStateInfo[XboxRenderStateIndex].S, Value);
+        EmuLog(LOG_LEVEL::WARNING, "RenderState_Simple(0x%.08X (%s), 0x%.08X) could not be found in RenderState table", Method, GetDxbxRenderStateInfo(XboxRenderStateIndex).S, Value);
         return;
     }
 
-	EmuLog(LOG_LEVEL::DEBUG, "RenderState_Simple: %s = 0x%08X", DxbxRenderStateInfo[XboxRenderStateIndex].S, Value);
+	EmuLog(LOG_LEVEL::DEBUG, "RenderState_Simple: %s = 0x%08X", GetDxbxRenderStateInfo(XboxRenderStateIndex).S, Value);
 
     XboxRenderStates.SetXboxRenderState(XboxRenderStateIndex, Value);
 }
