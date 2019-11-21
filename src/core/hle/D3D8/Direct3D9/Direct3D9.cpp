@@ -137,7 +137,7 @@ typedef struct {
 } s_Xbox_Callback;
 
 static std::queue<s_Xbox_Callback>  g_Xbox_CallbackQueue;
-static bool                         g_bHack_DisableHostGPUQueries = false; // TODO : Make configurable
+static bool                         g_bHack_DisableHostGPUQueries = true; // TODO : Make configurable
 static IDirect3DQuery              *g_pHostQueryWaitForIdle = nullptr;
 static IDirect3DQuery              *g_pHostQueryCallbackEvent = nullptr;
 
@@ -172,7 +172,7 @@ static XTL::DWORD                  *g_pXbox_BeginPush_Buffer = xbnullptr; // pri
 static XTL::PVOID                   g_pXbox_Palette[XTL::X_D3DTS_STAGECOUNT] = { xbnullptr, xbnullptr, xbnullptr, xbnullptr }; // cached palette pointer
 
        XTL::X_D3DBaseTexture       *EmuD3DActiveTexture[XTL::X_D3DTS_STAGECOUNT] = {0,0,0,0}; // Set by our D3DDevice_SetTexture and D3DDevice_SwitchTexture patches
-static XTL::X_D3DBaseTexture        CxbxActiveTextureCopies[XTL::X_D3DTS_STAGECOUNT] = {}; // cached active texture
+static XTL::X_D3DBaseTexture        CxbxActiveTextureCopies[XTL::X_D3DTS_STAGECOUNT] = {}; // Set by D3DDevice_SwitchTexture. Cached active texture
 
 /* Unused :
 static XTL::DWORD                  *g_Xbox_D3DDevice; // TODO: This should be a D3DDevice structure
@@ -741,7 +741,7 @@ bool IsResourceAPixelContainer(XTL::X_D3DResource* pXboxResource)
 	return false;
 }
 
-resource_key_t GetHostResourceKey(XTL::X_D3DResource* pXboxResource)
+resource_key_t GetHostResourceKey(XTL::X_D3DResource* pXboxResource, int iTextureStage = 0)
 {
 	resource_key_t key = 0;
 	if (pXboxResource != xbnullptr) {
@@ -749,9 +749,20 @@ resource_key_t GetHostResourceKey(XTL::X_D3DResource* pXboxResource)
 		key ^= pXboxResource->Data;
 		key ^= (pXboxResource->Common & X_D3DCOMMON_TYPE_MASK) >> X_D3DCOMMON_TYPE_SHIFT;
 		if (IsResourceAPixelContainer(pXboxResource)) {
-			// Pixel containers have more values they are be identified by:
-			key ^= ((uint64_t)((XTL::X_D3DPixelContainer *)pXboxResource)->Format) << 24;
-			key ^= ((uint64_t)((XTL::X_D3DPixelContainer *)pXboxResource)->Size) << 32;
+			// Pixel containers have more values they must be identified by:
+			auto pPixelContainer = (XTL::X_D3DPixelContainer*)pXboxResource;
+			key ^= ((uint64_t)pPixelContainer->Format) << 24;
+			key ^= ((uint64_t)pPixelContainer->Size) << 32;
+			// For paletized textures, include the current palette hash as well
+			if (GetXboxPixelContainerFormat(pPixelContainer) == XTL::X_D3DFMT_P8) {
+				// Protect for when this gets hit before an actual texture is set
+				if (g_pXbox_Palette[iTextureStage] != xbnullptr) {
+					// This caters for palette changes (only the active one will be used,
+					// any intermediate changes have no effect). Obsolete palette texture
+					// conversions will be pruned together with g_Xbox_Direct3DResources
+					key ^= ComputeHash(g_pXbox_Palette[iTextureStage], 256 * sizeof(D3DCOLOR));
+				}
+			}
 		}
 		else {
 			// For other resource types, do include their Xbox resource address (TODO : come up with something better)
@@ -775,6 +786,23 @@ void FreeHostResource(resource_key_t key)
 	}
 }
 
+void PruneResourceCache()
+{
+	// TODO : Implement a better cache eviction algorithm (like least-recently used)
+	// Poor mans cache eviction policy: just clear it once it overflows (5000 entries should be good enough)
+	if (g_Xbox_Direct3DResources.size() < 5000)
+		return;
+
+	auto hostResourceIterator = g_Xbox_Direct3DResources.begin();
+	while (hostResourceIterator != g_Xbox_Direct3DResources.end()) {
+		if (hostResourceIterator->second.pHostResource) {
+			(hostResourceIterator->second.pHostResource)->Release();
+		}
+		hostResourceIterator++;
+	}
+	g_Xbox_Direct3DResources.clear();
+}
+
 void ForceResourceRehash(XTL::X_D3DResource* pXboxResource)
 {
 	auto key = GetHostResourceKey(pXboxResource);
@@ -791,7 +819,7 @@ IDirect3DResource *GetHostResource(XTL::X_D3DResource *pXboxResource, DWORD D3DU
 
 	EmuVerifyResourceIsRegistered(pXboxResource, D3DUsage, iTextureStage, /*dwSize=*/0);
 
-	auto key = GetHostResourceKey(pXboxResource);
+	auto key = GetHostResourceKey(pXboxResource, iTextureStage);
 	auto it = g_Xbox_Direct3DResources.find(key);
 	if (it == g_Xbox_Direct3DResources.end() || !it->second.pHostResource) {
 		EmuLog(LOG_LEVEL::WARNING, "GetHostResource: Resource not registered or does not have a host counterpart!");
@@ -2379,6 +2407,9 @@ static void EmuVerifyResourceIsRegistered(XTL::X_D3DResource *pResource, DWORD D
 	// Skip resources without data
 	if (pResource->Data == xbnull)
 		return;
+
+	// Before we start, make sure the cache stays limited in size
+	PruneResourceCache();
 
 	auto key = GetHostResourceKey(pResource);
 	auto it = g_Xbox_Direct3DResources.find(key);
@@ -7582,70 +7613,12 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetPalette)
 	//    g_pD3DDevice9->SetPaletteEntries(Stage?, (PALETTEENTRY*)pPalette->Data);
 	//    g_pD3DDevice9->SetCurrentTexturePalette(Stage, Stage);
 
-	if (Stage < XTL::X_D3DTS_STAGECOUNT) {
-		if (g_pXbox_Palette[Stage] != GetDataFromXboxResource(pPalette) && EmuD3DActiveTexture[Stage] != nullptr) {
-			// If the palette for a texture has changed, we need to re-convert the texture
-			FreeHostResource(GetHostResourceKey(EmuD3DActiveTexture[Stage]));
-		}
-
-		// Cache palette data and size
+	if (Stage >= XTL::X_D3DTS_STAGECOUNT) {
+		LOG_TEST_CASE("Stage out of bounds");
+	} else {
+		// Note : Actual update of paletized textures (X_D3DFMT_P8) happens in EmuUpdateActiveTextureStages!
 		g_pXbox_Palette[Stage] = GetDataFromXboxResource(pPalette);
 	}
-}
-
-
-// ******************************************************************
-// * patch: IDirect3DPalette8_Lock
-// ******************************************************************
-VOID WINAPI XTL::EMUPATCH(D3DPalette_Lock)
-(
-	X_D3DPalette   *pThis,
-	D3DCOLOR      **ppColors,
-	DWORD           Flags
-)
-{
-	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(pThis)
-		LOG_FUNC_ARG_OUT(ppColors)
-		LOG_FUNC_ARG(Flags)
-		LOG_FUNC_END;
-
-	XB_trampoline(VOID, WINAPI, D3DPalette_Lock, (X_D3DPalette*, D3DCOLOR**, DWORD));
-	XB_D3DPalette_Lock(pThis, ppColors, Flags);
-
-	// Check if this palette is in use by a texture stage, and force it to be re-converted if yes
-	for (int i = 0; i < XTL::X_D3DTS_STAGECOUNT; i++) {
-		if (EmuD3DActiveTexture[i] != nullptr && g_pXbox_Palette[i] == GetDataFromXboxResource(pThis)) {
-			FreeHostResource(GetHostResourceKey(EmuD3DActiveTexture[i]));
-		}
-	}
-}
-
-// ******************************************************************
-// * patch: IDirect3DPalette8_Lock2
-// ******************************************************************
-D3DCOLOR * WINAPI XTL::EMUPATCH(D3DPalette_Lock2)
-(
-	X_D3DPalette   *pThis,
-	DWORD           Flags
-)
-{
-	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(pThis)
-		LOG_FUNC_ARG(Flags)
-		LOG_FUNC_END;
-
-	XB_trampoline(D3DCOLOR*, WINAPI, D3DPalette_Lock2, (X_D3DPalette*, DWORD));
-	D3DCOLOR* pData = XB_D3DPalette_Lock2(pThis, Flags);
-
-	// Check if this palette is in use by a texture stage, and force it to be re-converted if yes
-	for (int i = 0; i < XTL::X_D3DTS_STAGECOUNT; i++) {
-		if (EmuD3DActiveTexture[i] != nullptr && g_pXbox_Palette[i] == GetDataFromXboxResource(pThis)) {
-			FreeHostResource(GetHostResourceKey(EmuD3DActiveTexture[i]));
-		}
-	}
-
-	RETURN(pData);
 }
 
 // LTCG specific D3DDevice_SetFlickerFilter function...

@@ -175,8 +175,6 @@ std::map<const std::string, const xbox_patch_t> g_PatchTable = {
 	PATCH_ENTRY("D3DDevice_Swap_0", XTL::EMUPATCH(D3DDevice_Swap_0), PATCH_HLE_D3D),
 	PATCH_ENTRY("D3DDevice_SwitchTexture", XTL::EMUPATCH(D3DDevice_SwitchTexture), PATCH_HLE_D3D),
 	PATCH_ENTRY("D3DDevice_UpdateOverlay", XTL::EMUPATCH(D3DDevice_UpdateOverlay), PATCH_HLE_D3D),
-	PATCH_ENTRY("D3DPalette_Lock", XTL::EMUPATCH(D3DPalette_Lock), PATCH_HLE_D3D),
-	PATCH_ENTRY("D3DPalette_Lock2", XTL::EMUPATCH(D3DPalette_Lock2), PATCH_HLE_D3D),
 	PATCH_ENTRY("D3DResource_BlockUntilNotBusy", XTL::EMUPATCH(D3DResource_BlockUntilNotBusy), PATCH_HLE_D3D),
 	PATCH_ENTRY("D3D_BlockOnTime", XTL::EMUPATCH(D3D_BlockOnTime), PATCH_HLE_D3D),
     PATCH_ENTRY("D3D_DestroyResource", XTL::EMUPATCH(D3D_DestroyResource), PATCH_HLE_D3D),
