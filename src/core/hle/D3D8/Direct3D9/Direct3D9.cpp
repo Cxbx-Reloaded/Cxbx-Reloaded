@@ -716,9 +716,9 @@ void *GetDataFromXboxResource(XTL::X_D3DResource *pXboxResource)
 
 typedef struct {
 	IDirect3DResource* pHostResource = nullptr;
-	XTL::X_D3DResource* pXboxResource = nullptr;
+	XTL::X_D3DResource* pXboxResource = xbnullptr;
 	DWORD dwXboxResourceType = 0;
-	void* pXboxData = nullptr;
+	void* pXboxData = xbnullptr;
 	size_t szXboxDataSize = 0;
 	uint64_t hash = 0;
 	bool forceRehash = false;
@@ -755,10 +755,10 @@ resource_key_t GetHostResourceKey(XTL::X_D3DResource* pXboxResource, int iTextur
 			auto pPixelContainer = (XTL::X_D3DPixelContainer*)pXboxResource;
 			key ^= ((uint64_t)pPixelContainer->Format) << 24;
 			key ^= ((uint64_t)pPixelContainer->Size) << 32;
-			// For paletized textures, include the current palette hash as well
-			if (GetXboxPixelContainerFormat(pPixelContainer) == XTL::X_D3DFMT_P8) {
-				// Protect for when this gets hit before an actual texture is set
-				if (g_pXbox_Palette_Data[iTextureStage] != xbnullptr) {
+			// Protect for when this gets hit before an actual palette is set
+			if (g_Xbox_Palette_Size[iTextureStage] >= /*256 >> XTL::X_D3DPALETTESIZE.D3DPALETTE_32=*/32) {
+				// For paletized textures, include the current palette hash as well
+				if (GetXboxPixelContainerFormat(pPixelContainer) == XTL::X_D3DFMT_P8) {
 					// This caters for palette changes (only the active one will be used,
 					// any intermediate changes have no effect). Obsolete palette texture
 					// conversions will be pruned together with g_Xbox_Direct3DResources
@@ -788,21 +788,24 @@ void FreeHostResource(resource_key_t key)
 	}
 }
 
+void ClearResourceCache()
+{
+	for (auto& hostResourceIterator : g_Xbox_Direct3DResources) {
+		if (hostResourceIterator.second.pHostResource) {
+			(hostResourceIterator.second.pHostResource)->Release();
+		}
+	}
+
+	g_Xbox_Direct3DResources.clear();
+}
+
 void PruneResourceCache()
 {
 	// TODO : Implement a better cache eviction algorithm (like least-recently used)
 	// Poor mans cache eviction policy: just clear it once it overflows (5000 entries should be good enough)
-	if (g_Xbox_Direct3DResources.size() < 5000)
-		return;
-
-	auto hostResourceIterator = g_Xbox_Direct3DResources.begin();
-	while (hostResourceIterator != g_Xbox_Direct3DResources.end()) {
-		if (hostResourceIterator->second.pHostResource) {
-			(hostResourceIterator->second.pHostResource)->Release();
-		}
-		hostResourceIterator++;
+	if (g_Xbox_Direct3DResources.size() >= 5000) {
+		ClearResourceCache();
 	}
-	g_Xbox_Direct3DResources.clear();
 }
 
 void ForceResourceRehash(XTL::X_D3DResource* pXboxResource)
@@ -1984,12 +1987,7 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
 
                 g_pD3DDevice->EndScene();
 
-				for (auto &hostResourceIterator : g_Xbox_Direct3DResources) {
-					if (hostResourceIterator.second.pHostResource) {
-						(hostResourceIterator.second.pHostResource)->Release();
-					}
-				}
-				g_Xbox_Direct3DResources.clear();
+				ClearResourceCache();
 
 				// TODO: ensure all other resources are cleaned up too
 
