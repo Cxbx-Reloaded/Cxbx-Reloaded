@@ -137,7 +137,7 @@ typedef struct {
 } s_Xbox_Callback;
 
 static std::queue<s_Xbox_Callback>  g_Xbox_CallbackQueue;
-static bool                         g_bHack_DisableHostGPUQueries = true; // TODO : Make configurable
+static bool                         g_bHack_DisableHostGPUQueries = false; // TODO : Make configurable
 static IDirect3DQuery              *g_pHostQueryWaitForIdle = nullptr;
 static IDirect3DQuery              *g_pHostQueryCallbackEvent = nullptr;
 
