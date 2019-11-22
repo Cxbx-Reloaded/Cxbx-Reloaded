@@ -169,7 +169,9 @@ static XTL::DWORD                   g_Xbox_BaseVertexIndex = 0; // Set by D3DDev
 static XTL::DWORD                  *g_pXbox_BeginPush_Buffer = xbnullptr; // primary push buffer
 
        XTL::X_PixelShader*			g_pXbox_PixelShader = xbnullptr;
-static XTL::PVOID                   g_pXbox_Palette[XTL::X_D3DTS_STAGECOUNT] = { xbnullptr, xbnullptr, xbnullptr, xbnullptr }; // cached palette pointer
+static XTL::PVOID                   g_pXbox_Palette_Data[XTL::X_D3DTS_STAGECOUNT] = { xbnullptr, xbnullptr, xbnullptr, xbnullptr }; // cached palette pointer
+static unsigned                     g_Xbox_Palette_Size[XTL::X_D3DTS_STAGECOUNT] = { 0 }; // cached palette size
+
 
        XTL::X_D3DBaseTexture       *EmuD3DActiveTexture[XTL::X_D3DTS_STAGECOUNT] = {0,0,0,0}; // Set by our D3DDevice_SetTexture and D3DDevice_SwitchTexture patches
 static XTL::X_D3DBaseTexture        CxbxActiveTextureCopies[XTL::X_D3DTS_STAGECOUNT] = {}; // Set by D3DDevice_SwitchTexture. Cached active texture
@@ -756,11 +758,11 @@ resource_key_t GetHostResourceKey(XTL::X_D3DResource* pXboxResource, int iTextur
 			// For paletized textures, include the current palette hash as well
 			if (GetXboxPixelContainerFormat(pPixelContainer) == XTL::X_D3DFMT_P8) {
 				// Protect for when this gets hit before an actual texture is set
-				if (g_pXbox_Palette[iTextureStage] != xbnullptr) {
+				if (g_pXbox_Palette_Data[iTextureStage] != xbnullptr) {
 					// This caters for palette changes (only the active one will be used,
 					// any intermediate changes have no effect). Obsolete palette texture
 					// conversions will be pruned together with g_Xbox_Direct3DResources
-					key ^= ComputeHash(g_pXbox_Palette[iTextureStage], 256 * sizeof(D3DCOLOR));
+					key ^= ComputeHash(g_pXbox_Palette_Data[iTextureStage], g_Xbox_Palette_Size[iTextureStage]);
 				}
 			}
 		}
@@ -1046,6 +1048,7 @@ void SetHostIndexBuffer(XTL::X_D3DResource *pXboxResource, IDirect3DIndexBuffer 
 
 int XboxD3DPaletteSizeToBytes(const XTL::X_D3DPALETTESIZE Size)
 {
+/*
 	static int lk[4] =
 	{
 		256 * sizeof(D3DCOLOR),    // D3DPALETTE_256
@@ -1055,6 +1058,8 @@ int XboxD3DPaletteSizeToBytes(const XTL::X_D3DPALETTESIZE Size)
 	};
 
 	return lk[Size];
+*/
+	return 256 >> (unsigned)Size;
 }
 
 inline XTL::X_D3DPALETTESIZE GetXboxPaletteSize(const XTL::X_D3DPalette *pPalette)
@@ -1350,7 +1355,7 @@ bool ConvertD3DTextureToARGBBuffer(
 
 	int AdditionalArgument;
 	if (X_Format == XTL::X_D3DFMT_P8)
-		AdditionalArgument = (int)g_pXbox_Palette[iTextureStage];
+		AdditionalArgument = (int)g_pXbox_Palette_Data[iTextureStage];
 	else
 		AdditionalArgument = DstRowPitch;
 
@@ -5925,7 +5930,7 @@ void CreateHostResource(XTL::X_D3DResource *pResource, DWORD D3DUsage, int iText
 							&destRect,
 							pSrc, // Source buffer
 							dwMipPitch, // Source pitch
-							g_pXbox_Palette,
+							g_pXbox_Palette_Data,
 							&SrcRect,
 							D3DX_DEFAULT, // D3DX_FILTER_NONE,
 							0 // No ColorKey?
@@ -7617,7 +7622,8 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetPalette)
 		LOG_TEST_CASE("Stage out of bounds");
 	} else {
 		// Note : Actual update of paletized textures (X_D3DFMT_P8) happens in EmuUpdateActiveTextureStages!
-		g_pXbox_Palette[Stage] = GetDataFromXboxResource(pPalette);
+		g_pXbox_Palette_Data[Stage] = GetDataFromXboxResource(pPalette);
+		g_Xbox_Palette_Size[Stage] = pPalette ? XboxD3DPaletteSizeToBytes(GetXboxPaletteSize(pPalette)) : 0;
 	}
 }
 
