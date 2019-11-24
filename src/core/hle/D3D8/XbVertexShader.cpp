@@ -2588,6 +2588,64 @@ std::string VshPostProcess_Expp(std::string shader) {
 	return shader;
 }
 
+std::string VshPostProcess_Log(std::string shader) {
+	const auto xbox_log_x = std::regex("log (\\w\\d\\d?)(\\.x)?, (.+)$");
+	const auto xbox_log_y = std::regex("log (\\w\\d\\d?)(\\.y)?, (.+)$");
+	const auto xbox_log_z = std::regex("log (\\w\\d\\d?)(\\.z)?, (.+)$");
+	const auto xbox_log_w = std::regex("log (\\w\\d\\d?)(\\.w)?, (.+)$");
+
+	if (std::regex_search(shader, xbox_log_x))
+		LOG_TEST_CASE("Title uses the x component result of log");
+	if (std::regex_search(shader, xbox_log_y))
+		LOG_TEST_CASE("Title uses the y component result of log");
+	if (std::regex_search(shader, xbox_log_w))
+		LOG_TEST_CASE("Title uses the w component result of log");
+
+	// exponent and mantissa functions such that
+	// x = mantissa(x) * 2 ^ exponent(x)
+
+	// dest.x = exponent(x)
+	// Test Case: ???
+	// floor(log(x))
+	static auto host_log_x = UsingScratch(
+		"; patch log: dest.x = exponent(x)\n"
+		"log tmp.x, $3\n"
+		"frc $tmp.y, $tmp.x\n"
+		"sub $1.x, tmp.x, tmp.y");
+	shader = std::regex_replace(shader, xbox_log_x, host_log_x);
+
+	// dest.y = mantissa(x)
+	// Test Case: ???
+	// x / 2 ^ exponent(x)
+	static auto host_log_y = UsingScratch(
+		"; patch log: dest.y = mantissa(x)\n"
+		"log tmp.x, $3\n"
+		"frc $tmp.y, $tmp.x\n"
+		"sub tmp.x, tmp.x, tmp.y\n" // tmp.x = exponent(x) = floor(log(x))
+		"exp tmp.x, tmp.x\n"
+		"rcp tmp.x, tmp.x\n" // tmp.x = 1 / (2 ^ exponent(x))
+		"mul $1.y, $3, tmp.x");
+	shader = std::regex_replace(shader, xbox_log_y, host_log_y);
+
+	// dest.z = log(x)
+	// Test Case: Mechassault (part of the mech glows depending on heat level)
+	static auto host_log_z =
+		"; patch log: dest.z = log(x)\n"
+		"log $1.z, $3";
+	shader = std::regex_replace(shader, xbox_log_z, host_log_z);
+
+	// dest.w = 1
+	// Test Case: ???
+	// TODO do a constant read here
+	const auto host_log_w = UsingScratch(
+		"; patch log: dest.w = 1\n"
+		"sub tmp.x, tmp.x, tmp.x\n" // Get 0
+		"exp $1.w, tmp.x"); // 2 ^ 0 = 1
+	shader = std::regex_replace(shader, xbox_log_w, host_log_w);
+
+	return shader;
+}
+
 // On Xbox, the special indexing register, a0.x, is truncated
 // But on vs_2_x and up, it's rounded to the closest integer
 // So we have to truncate it ourselves
@@ -2608,6 +2666,7 @@ std::string VshPostProcess_TruncateMovA(std::string shader) {
 // Post process the shader as a string
 std::string VshPostProcess(std::string shader) {
 	shader = VshPostProcess_Expp(shader);
+	shader = VshPostProcess_Log(shader);
 	return VshPostProcess_TruncateMovA(shader);
 }
 
