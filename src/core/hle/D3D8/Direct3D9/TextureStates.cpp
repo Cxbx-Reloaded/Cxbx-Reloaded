@@ -105,7 +105,8 @@ void XboxTextureStateConverter::BuildTextureStateMappingTable()
         // TODO: Verify which XDK version this change occurred at
         // Values range 0-9 (D3DTSS_COLOROP to D3DTSS_TEXTURETRANSFORMFLAGS) become 12-21
         // Values 10-21 (D3DTSS_ADDRESSU to D3DTSS_ALPHAKILL) become 0-11
-        if (g_LibVersion_D3D8 <= 3948) {
+        bool bOldOrder = g_LibVersion_D3D8 <= 3948; // Verfied old order in 3944, new order in 4039
+        if (bOldOrder) {
             if (State <= 9) {
                 index += 12;
             } else if (State <= 21) {
@@ -120,6 +121,7 @@ void XboxTextureStateConverter::BuildTextureStateMappingTable()
 
 DWORD XboxTextureStateConverter::GetHostTextureOpValue(DWORD Value)
 {
+    bool bOldOrder = g_LibVersion_D3D8 <= 3948; // Verified old order in 3944, new order in 4039
     switch (Value) {
         case XTL::X_D3DTOP_DISABLE: return D3DTOP_DISABLE;
         case XTL::X_D3DTOP_SELECTARG1: return D3DTOP_SELECTARG1;
@@ -133,10 +135,10 @@ DWORD XboxTextureStateConverter::GetHostTextureOpValue(DWORD Value)
         case XTL::X_D3DTOP_SUBTRACT: return D3DTOP_SUBTRACT;
         case XTL::X_D3DTOP_ADDSMOOTH: return D3DTOP_ADDSMOOTH;
         case XTL::X_D3DTOP_BLENDDIFFUSEALPHA: return D3DTOP_BLENDDIFFUSEALPHA;
-        case XTL::X_D3DTOP_BLENDCURRENTALPHA: return D3DTOP_BLENDCURRENTALPHA;
-        case XTL::X_D3DTOP_BLENDTEXTUREALPHA: return D3DTOP_BLENDTEXTUREALPHA;
-        case XTL::X_D3DTOP_BLENDFACTORALPHA: return D3DTOP_BLENDFACTORALPHA;
-        case XTL::X_D3DTOP_BLENDTEXTUREALPHAPM: return D3DTOP_BLENDTEXTUREALPHAPM;
+        case 0x0D/*XTL::X_D3DTOP_BLENDCURRENTALPHA  */: return bOldOrder ? D3DTOP_BLENDTEXTUREALPHA   : D3DTOP_BLENDCURRENTALPHA;
+        case 0x0E/*XTL::X_D3DTOP_BLENDTEXTUREALPHA  */: return bOldOrder ? D3DTOP_BLENDFACTORALPHA    : D3DTOP_BLENDTEXTUREALPHA;
+        case 0x0F/*XTL::X_D3DTOP_BLENDFACTORALPHA   */: return bOldOrder ? D3DTOP_BLENDTEXTUREALPHAPM : D3DTOP_BLENDFACTORALPHA;
+        case 0x10/*XTL::X_D3DTOP_BLENDTEXTUREALPHAPM*/: return bOldOrder ? D3DTOP_BLENDCURRENTALPHA   : D3DTOP_BLENDTEXTUREALPHAPM;
         case XTL::X_D3DTOP_PREMODULATE: return D3DTOP_PREMODULATE;
         case XTL::X_D3DTOP_MODULATEALPHA_ADDCOLOR: return D3DTOP_MODULATEALPHA_ADDCOLOR;
         case XTL::X_D3DTOP_MODULATECOLOR_ADDALPHA: return D3DTOP_MODULATECOLOR_ADDALPHA;
