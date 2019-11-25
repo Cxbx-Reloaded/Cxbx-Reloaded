@@ -67,8 +67,7 @@ extern DWORD g_Xbox_VertexShader_Handle;
 
 extern XTL::X_PixelShader *g_pXbox_PixelShader;
 
-// EmuD3DActiveTexture
-extern XTL::X_D3DBaseTexture *EmuD3DActiveTexture[XTL::X_D3DTS_STAGECOUNT];
+extern XTL::X_D3DBaseTexture *g_pXbox_SetTexture[XTL::X_D3DTS_STAGECOUNT];
 
 namespace XTL {
 

@@ -173,7 +173,7 @@ static XTL::PVOID                   g_pXbox_Palette_Data[XTL::X_D3DTS_STAGECOUNT
 static unsigned                     g_Xbox_Palette_Size[XTL::X_D3DTS_STAGECOUNT] = { 0 }; // cached palette size
 
 
-       XTL::X_D3DBaseTexture       *EmuD3DActiveTexture[XTL::X_D3DTS_STAGECOUNT] = {0,0,0,0}; // Set by our D3DDevice_SetTexture and D3DDevice_SwitchTexture patches
+       XTL::X_D3DBaseTexture       *g_pXbox_SetTexture[XTL::X_D3DTS_STAGECOUNT] = {0,0,0,0}; // Set by our D3DDevice_SetTexture and D3DDevice_SwitchTexture patches
 static XTL::X_D3DBaseTexture        CxbxActiveTextureCopies[XTL::X_D3DTS_STAGECOUNT] = {}; // Set by D3DDevice_SwitchTexture. Cached active texture
 
 /* Unused :
@@ -4253,7 +4253,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetTexture_4)
 	//XB_trampoline(VOID, WINAPI, D3DDevice_SetTexture_4, (X_D3DBaseTexture*));
 	//XB_D3DDevice_SetTexture_4(pTexture);
 
-	EmuD3DActiveTexture[Stage] = pTexture;
+	g_pXbox_SetTexture[Stage] = pTexture;
 }
 
 // ******************************************************************
@@ -4274,7 +4274,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetTexture)
 	XB_trampoline(VOID, WINAPI, D3DDevice_SetTexture, (DWORD, X_D3DBaseTexture*));
 	XB_D3DDevice_SetTexture(Stage, pTexture);
 
-	EmuD3DActiveTexture[Stage] = pTexture;
+	g_pXbox_SetTexture[Stage] = pTexture;
 }
 
 // ******************************************************************
@@ -4310,7 +4310,7 @@ VOID __fastcall XTL::EMUPATCH(D3DDevice_SwitchTexture)
     }
     else {
 		// Switch Texture updates the data pointer of an active texture using pushbuffer commands
-		if (EmuD3DActiveTexture[Stage] == xbnullptr) {
+		if (g_pXbox_SetTexture[Stage] == xbnullptr) {
 			LOG_TEST_CASE("D3DDevice_SwitchTexture without an active texture");
 		}
 		else {
@@ -4336,15 +4336,15 @@ VOID __fastcall XTL::EMUPATCH(D3DDevice_SwitchTexture)
 			// Test-case : Spider - Man 2
 
 			// Update data and format separately, instead of via GetDataFromXboxResource()
-			CxbxActiveTextureCopies[Stage].Common = EmuD3DActiveTexture[Stage]->Common;
+			CxbxActiveTextureCopies[Stage].Common = g_pXbox_SetTexture[Stage]->Common;
 			CxbxActiveTextureCopies[Stage].Data = Data;
 			CxbxActiveTextureCopies[Stage].Format = Format;
 			CxbxActiveTextureCopies[Stage].Lock = 0;
-			CxbxActiveTextureCopies[Stage].Size = EmuD3DActiveTexture[Stage]->Size;
+			CxbxActiveTextureCopies[Stage].Size = g_pXbox_SetTexture[Stage]->Size;
 
 			// Use the above modified copy, instead of altering the active Xbox texture
-			EmuD3DActiveTexture[Stage] = &CxbxActiveTextureCopies[Stage];
-			// Note : Since EmuD3DActiveTexture and CxbxActiveTextureCopies are host-managed,
+			g_pXbox_SetTexture[Stage] = &CxbxActiveTextureCopies[Stage];
+			// Note : Since g_pXbox_SetTexture and CxbxActiveTextureCopies are host-managed,
 			// Xbox code should never alter these members (so : no reference counting, etc).
 			// As long as that's guaranteed, this is a safe way to emulate SwitchTexture.
 			// (GetHostResourceKey also avoids using any Xbox texture resource memory address.)
@@ -6885,7 +6885,7 @@ void EmuUpdateActiveTextureStages()
 
 	for (int i = 0; i < XTL::X_D3DTS_STAGECOUNT; i++)
 	{
-		XTL::X_D3DBaseTexture *pBaseTexture = EmuD3DActiveTexture[i];
+		XTL::X_D3DBaseTexture *pBaseTexture = g_pXbox_SetTexture[i];
 		IDirect3DBaseTexture *pHostBaseTexture = nullptr;
 		bool bNeedRelease = false;
 
@@ -8713,7 +8713,7 @@ bool DestroyResource_Common(XTL::X_D3DResource* pResource)
     }
 
     for (int i = 0; i < XTL::X_D3DTS_STAGECOUNT; i++) {
-        if (pResource == EmuD3DActiveTexture[i]) {
+        if (pResource == g_pXbox_SetTexture[i]) {
             LOG_TEST_CASE("Skipping Release of active Xbox Texture");
             return false;
         }
