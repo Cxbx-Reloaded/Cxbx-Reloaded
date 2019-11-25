@@ -2322,7 +2322,7 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
 					0, // RenderTargetIndex
 					&pCurrentHostRenderTarget);
 				DEBUG_D3DRESULT(hRet, "g_pD3DDevice->GetRenderTarget");
-				// TODO : SetHostResource(BackBuffer[0], pCurrentHostRenderTarget);
+				// TODO : SetHostSurface(BackBuffer[0], pCurrentHostRenderTarget);
 */
 
 				// update z-stencil surface cache
@@ -2407,9 +2407,6 @@ static void EmuVerifyResourceIsRegistered(XTL::X_D3DResource *pResource, DWORD D
 	// Skip resources without data
 	if (pResource->Data == xbnull)
 		return;
-
-	// Before we start, make sure the cache stays limited in size
-	PruneResourceCache();
 
 	auto key = GetHostResourceKey(pResource);
 	auto it = g_Xbox_Direct3DResources.find(key);
@@ -6923,6 +6920,9 @@ void EmuUpdateActiveTextureStages()
 
 void CxbxUpdateNativeD3DResources()
 {
+	// Before we start, make sure our resource cache stays limited in size
+	PruneResourceCache(); // TODO : Could we move this to Swap instead?
+
     EmuUpdateActiveTextureStages();
 
 	// Some titles set Vertex Shader constants directly via pushbuffers rather than through D3D
