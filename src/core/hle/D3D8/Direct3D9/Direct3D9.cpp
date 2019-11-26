@@ -196,7 +196,44 @@ static void							UpdateCurrentMSpFAndFPS(); // Used for benchmarking/fps count
 
 extern void UpdateFPSCounter();
 
-typedef uint64_t resource_key_t;
+#define CXBX_D3DCOMMON_IDENTIFYING_MASK (X_D3DCOMMON_TYPE_MASK | X_D3DCOMMON_VIDEOMEMORY | X_D3DCOMMON_D3DCREATED)
+
+typedef struct resource_key_hash {
+	// All Xbox X_D3DResource structs have these fields :
+	DWORD Common; // We set this to the CXBX_D3DCOMMON_IDENTIFYING_MASK bits of the source Common field
+	DWORD Data; // We set this as-is to a copy of the source Data field
+	// DWORD Lock; // We leave away the source Lock field, since it's entirely volatile (not deterministic)
+	union {
+		struct {
+			// For non-pixel-containers, we set the Xbox resource address for now (TODO : Come up with something better) :
+			xbaddr ResourceAddr; // We set this as-is
+		};
+		struct {
+			// For XTL::X_D3DPixelContainer's we also set these fields :
+			DWORD Format; // We set this as-is
+			DWORD Size; // We set this as-is
+			// For X_D3DFMT_P8 paletized pixel-containers, we also set this field :
+			uint64_t PaletteHash;
+		};
+	};
+
+	// These operator overloads are required to use resource_key_t in std::unordered_map<> g_Xbox_Direct3DResources :
+	bool operator==(const struct resource_key_hash& other) const
+	{
+		return (Common == other.Common)
+			&& (Data == other.Data)
+			&& (Format == other.Format)
+			&& (Size == other.Size)
+			&& (PaletteHash == other.PaletteHash);
+		// Note : ResourceAddr doesn't need comparison, since it's union'ed with Format,Size,PaletteHash already
+	}
+
+	// See https://marknelson.us/posts/2011/09/03/hash-functions-for-c-unordered-containers.html
+	size_t operator()(const struct resource_key_hash& value) const
+	{
+		return (size_t)ComputeHash((void*)&value, sizeof(value));
+	}
+} resource_key_t;
 
 // information passed to the create device proxy thread
 struct EmuD3D8CreateDeviceProxyData
@@ -727,7 +764,7 @@ typedef struct {
     std::chrono::time_point<std::chrono::high_resolution_clock> lastUpdate;
 } resource_info_t;
 
-std::unordered_map <resource_key_t, resource_info_t> g_Xbox_Direct3DResources;
+std::unordered_map<resource_key_t, resource_info_t, resource_key_hash> g_Xbox_Direct3DResources;
 
 bool IsResourceAPixelContainer(XTL::X_D3DResource* pXboxResource)
 {
@@ -745,16 +782,16 @@ bool IsResourceAPixelContainer(XTL::X_D3DResource* pXboxResource)
 
 resource_key_t GetHostResourceKey(XTL::X_D3DResource* pXboxResource, int iTextureStage = 0)
 {
-	resource_key_t key = 0;
+	resource_key_t key = {};
 	if (pXboxResource != xbnullptr) {
 		// Initially, don't base the key on the address of the resource, but on it's uniquely identifying values
-		key ^= pXboxResource->Data;
-		key ^= (pXboxResource->Common & X_D3DCOMMON_TYPE_MASK) >> X_D3DCOMMON_TYPE_SHIFT;
+		key.Data = pXboxResource->Data;
+		key.Common = pXboxResource->Common & CXBX_D3DCOMMON_IDENTIFYING_MASK;
 		if (IsResourceAPixelContainer(pXboxResource)) {
 			// Pixel containers have more values they must be identified by:
 			auto pPixelContainer = (XTL::X_D3DPixelContainer*)pXboxResource;
-			key ^= ((uint64_t)pPixelContainer->Format) << 24;
-			key ^= ((uint64_t)pPixelContainer->Size) << 32;
+			key.Format = pPixelContainer->Format;
+			key.Size = pPixelContainer->Size;
 			// Protect for when this gets hit before an actual palette is set
 			if (g_Xbox_Palette_Size[iTextureStage] >= /*256 >> XTL::X_D3DPALETTESIZE.D3DPALETTE_32=*/32) {
 				// For paletized textures, include the current palette hash as well
@@ -762,13 +799,13 @@ resource_key_t GetHostResourceKey(XTL::X_D3DResource* pXboxResource, int iTextur
 					// This caters for palette changes (only the active one will be used,
 					// any intermediate changes have no effect). Obsolete palette texture
 					// conversions will be pruned together with g_Xbox_Direct3DResources
-					key ^= ComputeHash(g_pXbox_Palette_Data[iTextureStage], g_Xbox_Palette_Size[iTextureStage]);
+					key.PaletteHash = ComputeHash(g_pXbox_Palette_Data[iTextureStage], g_Xbox_Palette_Size[iTextureStage]);
 				}
 			}
 		}
 		else {
 			// For other resource types, do include their Xbox resource address (TODO : come up with something better)
-			key ^= ((uint64_t)pXboxResource) << 32;
+			key.ResourceAddr = (xbaddr)pXboxResource;
 		}
 	}
 
