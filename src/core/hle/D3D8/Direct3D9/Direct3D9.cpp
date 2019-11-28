@@ -643,7 +643,7 @@ XTL::X_D3DFORMAT GetXboxPixelContainerFormat(const XTL::DWORD XboxPixelContainer
 	return d3d_format;
 }
 
-XTL::X_D3DFORMAT GetXboxPixelContainerFormat(const XTL::X_D3DPixelContainer* pXboxPixelContainer)
+XTL::X_D3DFORMAT GetXboxPixelContainerFormat(const XTL::X_D3DPixelContainer *pXboxPixelContainer)
 {
 	// Don't pass in unassigned Xbox pixel container
 	assert(pXboxPixelContainer != xbnullptr);
@@ -898,7 +898,7 @@ void ForceResourceRehash(XTL::X_D3DResource* pXboxResource)
 	}
 }
 
-IDirect3DResource *GetHostResource(XTL::X_D3DResource *pXboxResource, DWORD D3DUsage = 0, int iTextureStage = 0)
+IDirect3DResource *GetHostResource(XTL::X_D3DResource *pXboxResource, DWORD D3DUsage = 0, int iTextureStage = -1)
 {
 	if (pXboxResource == xbnullptr || pXboxResource->Data == xbnull)
 		return nullptr;
@@ -1045,8 +1045,9 @@ IDirect3DBaseTexture *GetHostBaseTexture(XTL::X_D3DResource *pXboxResource, DWOR
 	if (pXboxResource == xbnullptr)
 		return nullptr;
 
-	if (GetXboxCommonResourceType(pXboxResource) != X_D3DCOMMON_TYPE_TEXTURE) // Allows breakpoint below
+	if (GetXboxCommonResourceType(pXboxResource) != X_D3DCOMMON_TYPE_TEXTURE) { // Allows breakpoint below
 		assert(GetXboxCommonResourceType(pXboxResource) == X_D3DCOMMON_TYPE_TEXTURE);
+	}
 
 	return (IDirect3DBaseTexture*)GetHostResource(pXboxResource, D3DUsage, iTextureStage);
 }
@@ -2487,7 +2488,7 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
 
 // check if a resource has been registered yet (if not, register it)
 void CreateHostResource(XTL::X_D3DResource *pResource, DWORD D3DUsage, int iTextureStage, DWORD dwSize); // Forward declartion to prevent restructure of code
-static void EmuVerifyResourceIsRegistered(XTL::X_D3DResource *pResource, DWORD D3DUsage = 0, int iTextureStage = 0, DWORD dwSize = 0)
+static void EmuVerifyResourceIsRegistered(XTL::X_D3DResource *pResource, DWORD D3DUsage, int iTextureStage, DWORD dwSize)
 {
 	// Skip resources without data
 	if (pResource->Data == xbnull)
@@ -2572,6 +2573,9 @@ static void EmuVerifyResourceIsRegistered(XTL::X_D3DResource *pResource, DWORD D
 		}
 
 		FreeHostResource(key);
+	} else {
+		resource_info_t newResource;
+		ResourceCache[key] = newResource;
 	}
 
 	CreateHostResource(pResource, D3DUsage, iTextureStage, dwSize);
