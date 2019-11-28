@@ -733,7 +733,7 @@ inline bool IsPaletizedTexture(const XTL::DWORD XboxPixelContainer_Format)
 #if 0 // unused
 inline bool IsYuvSurfaceOrTexture(const XTL::X_D3DResource* pXboxResource)
 {
-	if (GetXboxPixelContainerFormat((XTL::X_D3DPixelContainer*)pXboxResource) == XTL::X_D3DFMT_YUY2)
+	if (GetXboxPixelContainerFormat((XTL::X_D3DPixelContainer *)pXboxResource) == XTL::X_D3DFMT_YUY2)
 		return true;
 
 	return false;
@@ -1046,7 +1046,16 @@ IDirect3DBaseTexture *GetHostBaseTexture(XTL::X_D3DResource *pXboxResource, DWOR
 		return nullptr;
 
 	if (GetXboxCommonResourceType(pXboxResource) != X_D3DCOMMON_TYPE_TEXTURE) { // Allows breakpoint below
-		assert(GetXboxCommonResourceType(pXboxResource) == X_D3DCOMMON_TYPE_TEXTURE);
+		// test-case : Burnout and Outrun 2006 hit this case (retrieving a surface instead of a texture)
+		// TODO : Surfaces can be set in the texture stages, instead of textures - see preparations in CxbxConvertXboxSurfaceToHostTexture
+		// We'll need to wrap the surface somehow before using it as a texture
+		LOG_TEST_CASE("GetHostBaseTexture called on a non-texture object");
+		return nullptr;
+		// Note : We'd like to remove the above and do the following instead,
+		// but we can't yet since that seems to cause a "CreateCubeTexture Failed!"
+		// regression. The root cause for that seems to stem from the X_D3DRTYPE_SURFACE
+		// handling in CreateHostResource.
+		//assert(GetXboxCommonResourceType(pXboxResource) == X_D3DCOMMON_TYPE_TEXTURE);
 	}
 
 	return (IDirect3DBaseTexture*)GetHostResource(pXboxResource, D3DUsage, iTextureStage);
@@ -5504,6 +5513,9 @@ void CreateHostResource(XTL::X_D3DResource *pResource, DWORD D3DUsage, int iText
 		// Happens in some Outrun 2006 SetRenderTarget calls
 		if (pParentXboxTexture && (pXboxSurface->Format == pParentXboxTexture->Format)) {
             // For surfaces with a parent texture, map these to a host texture first
+			// TODO : Investigate how it's possible (and how we could fix) the case when
+			// the following call to GetHostBaseTexture would reject non-texture resources,
+			// which would seem to trigger a "CreateCubeTexture Failed!" regression.
 			IDirect3DBaseTexture *pParentHostBaseTexture = GetHostBaseTexture(pParentXboxTexture, D3DUsage, iTextureStage);
             IDirect3DSurface* pNewHostSurface;
 			switch (pParentHostBaseTexture->GetType()) {
@@ -6936,7 +6948,7 @@ IDirect3DBaseTexture* CxbxConvertXboxSurfaceToHostTexture(XTL::X_D3DBaseTexture*
 	LOG_INIT;
 
 	IDirect3DTexture* pNewHostTexture = nullptr;
-#if 0 // TODO : Complete, debug and activate
+#if 0 // TODO : Complete, debug and activate (and then cleanup GetHostBaseTexture)
 	D3DFORMAT PCFormat = D3DFMT_A8B8G8R8; // TODO : Derive from pBaseTexture
 
 	IDirect3DSurface* pHostSurface = GetHostSurface(pBaseTexture); // TODO : Extend this with a texture channel number too, if surfaces send to SetTexture can be paletized format?
@@ -6978,8 +6990,7 @@ void EmuUpdateActiveTextureStages()
 
 		if (pBaseTexture != xbnullptr) {
 			DWORD Type = GetXboxCommonResourceType(pBaseTexture);
-			switch (Type)
-			{
+			switch (Type) {
 			case X_D3DCOMMON_TYPE_TEXTURE:
 				pHostBaseTexture = GetHostBaseTexture(pBaseTexture, i);
 				break;
