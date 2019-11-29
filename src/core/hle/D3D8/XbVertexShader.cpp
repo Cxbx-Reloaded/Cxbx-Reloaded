@@ -2754,6 +2754,11 @@ extern HRESULT EmuRecompileVshFunction
 		DbgVshPrintf("%s", pXboxShaderDisassembly.str().c_str());
 		DbgVshPrintf("-----------------------\n");
 
+
+		DbgVshPrintf("-- HLSL conversion 1 ---\n");
+		DbgVshPrintf("%s", BuildShader(pShader));
+		DbgVshPrintf("-----------------------\n");
+
 		VshConvertShader(pShader, bNoReservedConstants);
 		VshWriteShader(pShader, pHostShaderDisassembly, pRecompiledDeclaration, TRUE);
 
@@ -2764,7 +2769,7 @@ extern HRESULT EmuRecompileVshFunction
 		DbgVshPrintf("%s", finalHostShader.c_str());
 		DbgVshPrintf("-----------------------\n");
 
-		DbgVshPrintf("-- HLSL conversion ---\n");
+		DbgVshPrintf("-- HLSL conversion 2 ---\n");
 		DbgVshPrintf("%s", BuildShader(pShader));
 		DbgVshPrintf("-----------------------\n");
 
@@ -2931,7 +2936,7 @@ std::string ToHlsl(VSH_IMD_OUTPUT& dest) {
 	switch (dest.Type)
 	{
 	case IMD_OUTPUT_O:
-		hlsl << "xOut." << OReg_Name[dest.Address];
+		hlsl << OReg_Name[dest.Address];
 		break;
 	case IMD_OUTPUT_A0X:
 		hlsl << "a";
@@ -2940,43 +2945,59 @@ std::string ToHlsl(VSH_IMD_OUTPUT& dest) {
 		hlsl << "c[" << dest.Address << "]"; //todo we can output to constants...?
 		break;
 	case IMD_OUTPUT_R:
-		hlsl << "r[" << dest.Address << "]";
+			hlsl << "r" << dest.Address;
 		break;
 	default:
 		break;
 	}
 
+	// If we're not writing all channels, write the mask
+	if (!(dest.Mask[0] && dest.Mask[1] && dest.Mask[2] && dest.Mask[3]))
+	{
+		hlsl << "." << (dest.Mask[0] ? "x" : "")
+					<< (dest.Mask[1] ? "y" : "")
+					<< (dest.Mask[2] ? "z" : "")
+					<< (dest.Mask[3] ? "w" : "");
+	}
+
 	return hlsl.str();
 }
 
-std::string ToHlsl(VSH_IMD_PARAMETER& parameter)
+std::string ToHlsl(VSH_IMD_PARAMETER& paramMeta)
 {
 	auto hlsl = std::stringstream();
 
-	hlsl << (parameter.Parameter.Neg ? "-" : "");
+	auto param = paramMeta.Parameter;
 
-	if (parameter.Parameter.ParameterType == PARAM_V)
-		hlsl << "xIn.";
+	hlsl << (param.Neg ? "-" : "");
 
-	hlsl << VshGetRegisterName(parameter.Parameter.ParameterType);
+	if (param.ParameterType == PARAM_C){
+		hlsl << "c";
 
-	if (parameter.Parameter.ParameterType == PARAM_C && parameter.IndexesWithA0_X)
-	{
+		// We'll use the c() function instead of direct indexing
 		// Only display the offset if it's not 0.
-		parameter.Parameter.Address
-			? hlsl << "[a+" << parameter.Parameter.Address << "]"
-			: hlsl << "[a]";
+		if (paramMeta.IndexesWithA0_X) {
+			param.Address
+				? hlsl << "(a+" << param.Address << ")"
+				: hlsl << "(a)";
+		}
+		else {
+			hlsl << "(" << param.Address << ")";
+		}
 	}
-	else
-	{
-		hlsl << "[" << parameter.Parameter.Address << "]";
+	else if (param.ParameterType == PARAM_R && param.Address == 12) {
+		// Replace r12 with oPos
+		hlsl << "oPos";
+	}
+	else {
+		hlsl << VshGetRegisterName(param.ParameterType) << param.Address;
 	}
 
 	// Only bother printing the swizzle if it is not .xyzw
-	if (!(parameter.Parameter.Swizzle[0] == SWIZZLE_X &&
-		parameter.Parameter.Swizzle[1] == SWIZZLE_Y &&
-		parameter.Parameter.Swizzle[2] == SWIZZLE_Z &&
-		parameter.Parameter.Swizzle[3] == SWIZZLE_W))
+	if (!(param.Swizzle[0] == SWIZZLE_X &&
+		  param.Swizzle[1] == SWIZZLE_Y &&
+		  param.Swizzle[2] == SWIZZLE_Z &&
+	      param.Swizzle[3] == SWIZZLE_W ))
 	{
 		hlsl << ".";
 
@@ -2984,14 +3005,14 @@ std::string ToHlsl(VSH_IMD_PARAMETER& parameter)
 		// "var.x" instead of "var.xxxx"
 		auto lastDiffIndex = 0;
 		for (int i = 1; i < 4; i++) {
-			if (parameter.Parameter.Swizzle[i] != parameter.Parameter.Swizzle[i-1])
+			if (param.Swizzle[i] != param.Swizzle[i-1])
 				lastDiffIndex = i;
 		}
 
 		for (int i = 0; i <= lastDiffIndex; i++)
 		{
 			char Swizzle = '?';
-			switch (parameter.Parameter.Swizzle[i])
+			switch (param.Swizzle[i])
 			{
 			case SWIZZLE_X:
 				Swizzle = 'x';
@@ -3085,7 +3106,7 @@ std::string BuildShader(VSH_XBOX_SHADER* pShader) {
 				hlsl << ToHlsl("dest = x_sge(src0, src1)", xboxInstruction);
 				break;
 			case MAC_ARL:
-				hlsl << ToHlsl("a = src0", xboxInstruction);
+				hlsl << ToHlsl("a = floor(src0)", xboxInstruction);
 				break;
 			default:
 				EmuLog(LOG_LEVEL::WARNING, "TODO message");
