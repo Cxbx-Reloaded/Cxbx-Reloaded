@@ -24,6 +24,10 @@ extern float4 hostConstants[192];
 // Map Xbox [-96, 95] to Host [0, 191]
 // Account for Xbox's negative constant indexes
 float4 c(int index) {
+	// Out-of-range reads return 0
+	if (index < -96 || index > 95)
+		return float4(0, 0, 0, 0);
+
 	return hostConstants[index + 96];
 }
 
