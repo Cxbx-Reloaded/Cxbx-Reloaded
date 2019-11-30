@@ -23,7 +23,7 @@ float4 c(int index);
 
 static int a; // Xbox index register
 
-int toXboxIndex(src0) {
+int toXboxIndex(float src0) {
 	// The address register should be floored
 	// Due to rounding differences with the Xbox (and increased precision on PC?)
 	// some titles produce values just below the threshold of the next integer.
@@ -36,7 +36,7 @@ float x_dph(float4 src0, float4 src1) {
 	return dot(src0, src1) + src1.w;
 }
 
-float4 x_sge(float4 a, float4 b) {
+float4 x_sge(float4 src0, float4 src1) {
 	float4 dest;
 	dest.x = (src0.x >= src1.x) ? 1.0f : 0.0f;
 	dest.y = (src0.y >= src1.y) ? 1.0f : 0.0f;
@@ -45,7 +45,7 @@ float4 x_sge(float4 a, float4 b) {
 	return dest;
 }
 
-float4 x_sge(float4 a, float4 src1) {
+float4 x_sle(float4 src0, float4 src1) {
 	float4 dest;
 	dest.x = (src0.x < src1.x) ? 1.0f : 0.0f;
 	dest.y = (src0.y < src1.y) ? 1.0f : 0.0f;
@@ -64,6 +64,21 @@ float x_rcc(float src0) {
 	return (r > 0)
 		? clamp(r, 5.42101e-020, 1.84467e+019)
 		: clamp(r, -5.42101e-020, -1.84467e+019);
+}
+
+float4 x_lit(float4 src0) {
+	const float epsilon = 1.0 / 256.0;
+	float diffuse = src0.x;
+	float blinn = src0.y;
+	float specPower = clamp(src0.w, -(128 - epsilon), (128 - epsilon));
+
+	float4 dest;
+	dest.x = 1;
+	dest.y = max(diffuse, 0);
+	dest.z = diffuse > 0 ? pow(2, specPower * log(blinn)) : 0;
+	dest.w = 1;
+
+	return dest;
 }
 
 VS_OUTPUT main(const VS_INPUT xIn)
@@ -100,7 +115,7 @@ VS_OUTPUT main(const VS_INPUT xIn)
 
 	// Insert Xbox shader here
 
-	<Xbox Shader>
+	// <Xbox Shader>
 
 	// Copy variables to output struct
 	VS_OUTPUT xOut;

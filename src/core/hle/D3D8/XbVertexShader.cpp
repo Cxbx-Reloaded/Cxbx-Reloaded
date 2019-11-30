@@ -3068,6 +3068,7 @@ std::string BuildShader(VSH_XBOX_SHADER* pShader) {
 			switch (xboxInstruction.MAC)
 			{
 			case MAC_NOP:
+				hlsl << "// NOP";
 				break;
 			case MAC_MOV:
 				hlsl << ToHlsl("dest = src0", xboxInstruction);
@@ -3117,6 +3118,7 @@ std::string BuildShader(VSH_XBOX_SHADER* pShader) {
 			switch (xboxInstruction.ILU)
 			{
 			case ILU_NOP:
+				hlsl << "// NOP";
 				break;
 			case ILU_MOV:
 				hlsl << ToHlsl("dest = src0", xboxInstruction);
@@ -3137,7 +3139,7 @@ std::string BuildShader(VSH_XBOX_SHADER* pShader) {
 				hlsl << ToHlsl("dest = x_log(src0)", xboxInstruction);
 				break;
 			case ILU_LIT:
-				hlsl << ToHlsl("// lit TODO", xboxInstruction);
+				hlsl << ToHlsl("dest = x_lit(src0)", xboxInstruction);
 				break;
 			default:
 				EmuLog(LOG_LEVEL::WARNING, "TODO message");
