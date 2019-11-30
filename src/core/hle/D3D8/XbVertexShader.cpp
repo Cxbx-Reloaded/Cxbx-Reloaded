@@ -2993,7 +2993,8 @@ std::string ToHlsl(VSH_IMD_PARAMETER& paramMeta)
 		hlsl << VshGetRegisterName(param.ParameterType) << param.Address;
 	}
 
-	// Only bother printing the swizzle if it is not .xyzw
+	// Write the swizzle if we need to
+	// Only bother printing the swizzle if it is not the default .xyzw
 	if (!(param.Swizzle[0] == SWIZZLE_X &&
 		  param.Swizzle[1] == SWIZZLE_Y &&
 		  param.Swizzle[2] == SWIZZLE_Z &&
@@ -3001,15 +3002,23 @@ std::string ToHlsl(VSH_IMD_PARAMETER& paramMeta)
 	{
 		hlsl << ".";
 
-		// Find the last difference, so we don't write repeated trailing swizzles
-		// "var.x" instead of "var.xxxx"
-		auto lastDiffIndex = 0;
-		for (int i = 1; i < 4; i++) {
-			if (param.Swizzle[i] != param.Swizzle[i-1])
-				lastDiffIndex = i;
+		// We'll try to simplify swizzles if we can
+		int swizzles;
+
+		// If all swizzles are the same, we only need to write one out
+		if (param.Swizzle[0] == param.Swizzle[1] &&
+			param.Swizzle[0] == param.Swizzle[2] &&
+			param.Swizzle[0] == param.Swizzle[3]) {
+			swizzles = 1;
+		}
+		else {
+			// We need to use the full swizzle
+			// Note we can't always remove trailing repeats, like in VS asm
+			// As it may change the type from float4, to float3 or float2
+			swizzles = 4;
 		}
 
-		for (int i = 0; i <= lastDiffIndex; i++)
+		for (int i = 0; i < swizzles; i++)
 		{
 			char Swizzle = '?';
 			switch (param.Swizzle[i])
