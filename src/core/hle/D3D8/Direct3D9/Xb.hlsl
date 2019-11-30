@@ -117,6 +117,10 @@ VS_OUTPUT main(const VS_INPUT xIn)
 
 	// <Xbox Shader>
 
+	// TODO fix scaling
+	// Apply scaling hack from existing code
+	oPos = oPos * c(-38) + c(-37);
+
 	// Copy variables to output struct
 	VS_OUTPUT xOut;
 
