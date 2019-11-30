@@ -2756,7 +2756,7 @@ extern HRESULT EmuRecompileVshFunction
 
 
 		DbgVshPrintf("-- HLSL conversion 1 ---\n");
-		DbgVshPrintf("%s", BuildShader(pShader));
+		DbgVshPrintf(BuildShader(pShader).c_str());
 		DbgVshPrintf("-----------------------\n");
 
 		VshConvertShader(pShader, bNoReservedConstants);
@@ -2770,7 +2770,7 @@ extern HRESULT EmuRecompileVshFunction
 		DbgVshPrintf("-----------------------\n");
 
 		DbgVshPrintf("-- HLSL conversion 2 ---\n");
-		DbgVshPrintf("%s", BuildShader(pShader));
+		DbgVshPrintf(BuildShader(pShader).c_str());
 		DbgVshPrintf("-----------------------\n");
 
         // HACK: Azurik. Prevent Direct3D from trying to assemble this.
