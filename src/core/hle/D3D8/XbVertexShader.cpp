@@ -3136,7 +3136,7 @@ std::string BuildShader(VSH_XBOX_SHADER* pShader) {
 				hlsl << ToHlsl("dest = rcp(src0)", xboxInstruction);
 				break;
 			case ILU_RCC:
-				hlsl << ToHlsl("dest = rcc(src0)", xboxInstruction);
+				hlsl << ToHlsl("dest = x_rcc(src0)", xboxInstruction);
 				break;
 			case ILU_RSQ:
 				hlsl << ToHlsl("dest = rsqrt(src0)", xboxInstruction);
