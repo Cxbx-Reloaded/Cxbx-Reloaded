@@ -3106,7 +3106,7 @@ std::string BuildShader(VSH_XBOX_SHADER* pShader) {
 				hlsl << ToHlsl("dest = x_sge(src0, src1)", xboxInstruction);
 				break;
 			case MAC_ARL:
-				hlsl << ToHlsl("a = floor(src0)", xboxInstruction);
+				hlsl << ToHlsl("a = toXboxIndex(src0)", xboxInstruction);
 				break;
 			default:
 				EmuLog(LOG_LEVEL::WARNING, "TODO message");
@@ -3122,19 +3122,19 @@ std::string BuildShader(VSH_XBOX_SHADER* pShader) {
 				hlsl << ToHlsl("dest = src0", xboxInstruction);
 				break;
 			case ILU_RCP:
-				hlsl << ToHlsl("// rcp TODO", xboxInstruction);
+				hlsl << ToHlsl("dest = rcp(src0)", xboxInstruction);
 				break;
 			case ILU_RCC:
-				hlsl << ToHlsl("// rcc TODO", xboxInstruction);
+				hlsl << ToHlsl("dest = rcc(src0)", xboxInstruction);
 				break;
 			case ILU_RSQ:
-				hlsl << ToHlsl("// rsq TODO", xboxInstruction);
+				hlsl << ToHlsl("dest = rsqrt(src0)", xboxInstruction);
 				break;
 			case ILU_EXP:
-				hlsl << ToHlsl("// exp TODO", xboxInstruction);
+				hlsl << ToHlsl("dest = x_exp(src0)", xboxInstruction);
 				break;
 			case ILU_LOG:
-				hlsl << ToHlsl("// log TODO", xboxInstruction);
+				hlsl << ToHlsl("dest = x_log(src0)", xboxInstruction);
 				break;
 			case ILU_LIT:
 				hlsl << ToHlsl("// lit TODO", xboxInstruction);

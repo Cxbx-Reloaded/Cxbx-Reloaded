@@ -21,7 +21,50 @@ struct VS_OUTPUT
 extern float4 hostConstants[192]; // Constant registers
 float4 c(int index);
 
-static int a; // address register
+static int a; // Xbox index register
+
+int toXboxIndex(src0) {
+	// The address register should be floored
+	// Due to rounding differences with the Xbox (and increased precision on PC?)
+	// some titles produce values just below the threshold of the next integer.
+	// We can add a small bias to make sure it's bumped over the threshold
+	// Test Case: Azurik (divides indexes 755, then scales them back in the vertex shader)
+	return floor(src0) + 0.00000001; // TODO test
+}
+
+float x_dph(float4 src0, float4 src1) {
+	return dot(src0, src1) + src1.w;
+}
+
+float4 x_sge(float4 a, float4 b) {
+	float4 dest;
+	dest.x = (src0.x >= src1.x) ? 1.0f : 0.0f;
+	dest.y = (src0.y >= src1.y) ? 1.0f : 0.0f;
+	dest.z = (src0.z >= src1.z) ? 1.0f : 0.0f;
+	dest.w = (src0.w >= src1.w) ? 1.0f : 0.0f;
+	return dest;
+}
+
+float4 x_sge(float4 a, float4 src1) {
+	float4 dest;
+	dest.x = (src0.x < src1.x) ? 1.0f : 0.0f;
+	dest.y = (src0.y < src1.y) ? 1.0f : 0.0f;
+	dest.z = (src0.z < src1.z) ? 1.0f : 0.0f;
+	dest.w = (src0.w < src1.w) ? 1.0f : 0.0f;
+	return dest;
+}
+
+// Clamped reciprocal
+float x_rcc(float src0) {
+
+	// Calculate the reciprocal
+	float r = 1.0f / src0;
+
+	// Clamp
+	return (r > 0)
+		? clamp(r, 5.42101e-020, 1.84467e+019)
+		: clamp(r, -5.42101e-020, -1.84467e+019);
+}
 
 VS_OUTPUT main(const VS_INPUT xIn)
 {
