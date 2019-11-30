@@ -18,10 +18,14 @@ struct VS_OUTPUT
 	float4 oT3  : TEXCOORD3; // Texture Coord 0
 };
 
-extern float4 hostConstants[192]; // Constant registers
-float4 c(int index);
+// Constant registers
+extern float4 hostConstants[192];
 
-static int a; // Xbox index register
+// Map Xbox [-96, 95] to Host [0, 191]
+// Account for Xbox's negative constant indexes
+float4 c(int index) {
+	return hostConstants[index + 96];
+}
 
 int toXboxIndex(float src0) {
 	// The address register should be floored
@@ -63,7 +67,7 @@ float x_rcc(float src0) {
 	// Clamp
 	return (r > 0)
 		? clamp(r, 5.42101e-020, 1.84467e+019)
-		: clamp(r, -5.42101e-020, -1.84467e+019);
+		: clamp(r, -1.84467e+019, -5.42101e-020);
 }
 
 float4 x_lit(float4 src0) {
@@ -81,6 +85,22 @@ float4 x_lit(float4 src0) {
 	return dest;
 }
 
+float4 reverseScreenspaceTransform(float4 oPos) {
+	// On Xbox, oPos should contain the vertex position in screenspace
+	// Conventionally, each Xbox Vertex Shader includes instructions like this
+	// mul oPos.xyz, r12, c-38
+	// +rcc r1.x, r12.w
+	// mad oPos.xyz, r12, r1.x, c-37
+	// where c-37 and c-38 are reserved transform values
+
+	// Lets hope c-37 and c-38 contain the conventional values
+	oPos.xyz -= c(-37); // reverse offset
+	oPos.xyz *= oPos.w; // reverse perspective divide
+	oPos.xyz /= c(-38); // reverse scale
+
+	return oPos;
+}
+
 VS_OUTPUT main(const VS_INPUT xIn)
 {
 	// Input registers
@@ -89,6 +109,9 @@ VS_OUTPUT main(const VS_INPUT xIn)
 	// Temporary variables
 	float4 r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11;
 	r0 = r1 = r2 = r3 = r4 = r5 = r6 = r7 = r8 = r9 = r10 = r11 = float4(0, 0, 0, 1); // TODO correct?
+
+	// Xbox index register
+	int a;
 
 	// Output variables
 	float4 oPos, oD0, oD1, oB0, oB1, oT0, oT1, oT2, oT3;
@@ -117,14 +140,10 @@ VS_OUTPUT main(const VS_INPUT xIn)
 
 	// <Xbox Shader>
 
-	// TODO fix scaling
-	// Apply scaling hack from existing code
-	oPos = oPos * c(-38) + c(-37);
-
 	// Copy variables to output struct
 	VS_OUTPUT xOut;
 
-	xOut.oPos = oPos;
+	xOut.oPos = reverseScreenspaceTransform(oPos);
 	xOut.oD0 = oD0;
 	xOut.oD1 = oD1;
 	xOut.oFog = oFog;
@@ -137,10 +156,4 @@ VS_OUTPUT main(const VS_INPUT xIn)
 	xOut.oT3 = oT3;
 
 	return xOut;
-}
-
-// Account for Xbox's negative constant indexes
-// Map Xbox [-96, 95] to Host [0, 191]
-float4 c(int index) {
-	return hostConstants[index + 96];
 }
