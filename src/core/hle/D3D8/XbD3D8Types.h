@@ -444,7 +444,7 @@ struct X_D3DResource
 #define X_D3DCOMMON_INTREFCOUNT_MASK   0x00780000
 #define X_D3DCOMMON_INTREFCOUNT_SHIFT  19
 #define X_D3DCOMMON_INTREFCOUNT_1      (1 << X_D3DCOMMON_INTREFCOUNT_SHIFT) // Dxbx addition
-#define X_D3DCOMMON_VIDEOMEMORY        0x00800000 // Not used.
+#define X_D3DCOMMON_VIDEOMEMORY        0x00000000 // Was 0x00800000, but Xbox doesn't have this flag!
 #define X_D3DCOMMON_D3DCREATED         0x01000000
 #define X_D3DCOMMON_ISLOCKED           0x02000010 // Surface is currently locked (potential unswizzle candidate)
 #define X_D3DCOMMON_UNUSED_MASK        0xFE000000

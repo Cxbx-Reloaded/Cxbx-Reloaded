@@ -196,7 +196,7 @@ static void							UpdateCurrentMSpFAndFPS(); // Used for benchmarking/fps count
 
 extern void UpdateFPSCounter();
 
-#define CXBX_D3DCOMMON_IDENTIFYING_MASK (X_D3DCOMMON_TYPE_MASK | X_D3DCOMMON_VIDEOMEMORY | X_D3DCOMMON_D3DCREATED)
+#define CXBX_D3DCOMMON_IDENTIFYING_MASK (X_D3DCOMMON_TYPE_MASK | X_D3DCOMMON_D3DCREATED)
 
 typedef struct resource_key_hash {
 	// All Xbox X_D3DResource structs have these fields :
