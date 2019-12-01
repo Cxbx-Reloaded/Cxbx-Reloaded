@@ -6992,7 +6992,7 @@ void EmuUpdateActiveTextureStages()
 			DWORD Type = GetXboxCommonResourceType(pBaseTexture);
 			switch (Type) {
 			case X_D3DCOMMON_TYPE_TEXTURE:
-				pHostBaseTexture = GetHostBaseTexture(pBaseTexture, i);
+				pHostBaseTexture = GetHostBaseTexture(pBaseTexture, /*D3DUsage=*/0, i);
 				break;
 			case X_D3DCOMMON_TYPE_SURFACE:
 				// Surfaces can be set in the texture stages, instead of textures
