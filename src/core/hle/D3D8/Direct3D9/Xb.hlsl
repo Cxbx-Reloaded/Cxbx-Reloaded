@@ -38,6 +38,7 @@ int toXboxIndex(float src0) {
 	// We can add a small bias to make sure it's bumped over the threshold
 	// Test Case: Azurik (divides indexes 755, then scales them back in the vertex shader)
 	return floor(src0 + 0.0001); // TODO test
+}
 
 float x_dph(float4 src0, float4 src1) {
 	return dot(src0, src1) + src1.w;
