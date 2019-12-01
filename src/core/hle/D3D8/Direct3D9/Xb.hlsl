@@ -53,7 +53,7 @@ float4 x_sge(float4 src0, float4 src1) {
 	return dest;
 }
 
-float4 x_sle(float4 src0, float4 src1) {
+float4 x_slt(float4 src0, float4 src1) {
 	float4 dest;
 	dest.x = (src0.x < src1.x) ? 1.0f : 0.0f;
 	dest.y = (src0.y < src1.y) ? 1.0f : 0.0f;
