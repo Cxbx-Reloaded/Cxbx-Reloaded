@@ -1,3 +1,5 @@
+#define r12 oPos // oPos and r12 are two ways of accessing the same register on Xbox
+
 struct VS_INPUT
 {
 	float4 v[16] : TEXCOORD;
