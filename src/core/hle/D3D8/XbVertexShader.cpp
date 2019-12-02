@@ -3089,16 +3089,16 @@ std::string BuildShader(VSH_XBOX_SHADER* pShader) {
 				hlsl << ToHlsl("dest = src0 + src1", xboxInstruction);
 				break;
 			case MAC_MAD:
-				hlsl << ToHlsl("dest = mad(src0, src1, src2)", xboxInstruction);
+				hlsl << ToHlsl("dest = src0 * src1 + src2", xboxInstruction);
 				break;
 			case MAC_DP3:
-				hlsl << ToHlsl("dest = dot(src0, src1)", xboxInstruction);
+				hlsl << ToHlsl("dest = x_dp3(src0, src1)", xboxInstruction);
 				break;
 			case MAC_DPH:
-				hlsl << ToHlsl("dest = dot(src0, src1) + src1.w", xboxInstruction);
+				hlsl << ToHlsl("dest = x_dph(src0, src1)", xboxInstruction);
 				break;
 			case MAC_DP4:
-				hlsl << ToHlsl("dest = dot(src0, src1)", xboxInstruction);
+				hlsl << ToHlsl("dest = x_dp4(src0, src1)", xboxInstruction);
 				break;
 			case MAC_DST:
 				hlsl << ToHlsl("dest = x_dst(src0, src1)", xboxInstruction);
