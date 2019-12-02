@@ -40,8 +40,16 @@ int toXboxIndex(float src0) {
 	return floor(src0 + 0.0001); // TODO test
 }
 
+float x_dp4(float4 src0, float4 src1) {
+	return dot(src0, src1);
+}
+
+float x_dp3(float3 src0, float3 src1) {
+	return dot(src0, src1);
+}
+
 float x_dph(float4 src0, float4 src1) {
-	return dot(src0, src1) + src1.w;
+	return x_dp3(src0, src1) + src1.w;
 }
 
 float4 x_sge(float4 src0, float4 src1) {
