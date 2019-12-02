@@ -169,10 +169,12 @@ static XTL::DWORD                   g_Xbox_BaseVertexIndex = 0; // Set by D3DDev
 static XTL::DWORD                  *g_pXbox_BeginPush_Buffer = xbnullptr; // primary push buffer
 
        XTL::X_PixelShader*			g_pXbox_PixelShader = xbnullptr;
-static XTL::PVOID                   g_pXbox_Palette[XTL::X_D3DTS_STAGECOUNT] = { xbnullptr, xbnullptr, xbnullptr, xbnullptr }; // cached palette pointer
+static XTL::PVOID                   g_pXbox_Palette_Data[XTL::X_D3DTS_STAGECOUNT] = { xbnullptr, xbnullptr, xbnullptr, xbnullptr }; // cached palette pointer
+static unsigned                     g_Xbox_Palette_Size[XTL::X_D3DTS_STAGECOUNT] = { 0 }; // cached palette size
 
-       XTL::X_D3DBaseTexture       *EmuD3DActiveTexture[XTL::X_D3DTS_STAGECOUNT] = {0,0,0,0}; // Set by our D3DDevice_SetTexture and D3DDevice_SwitchTexture patches
-static XTL::X_D3DBaseTexture        CxbxActiveTextureCopies[XTL::X_D3DTS_STAGECOUNT] = {}; // cached active texture
+
+       XTL::X_D3DBaseTexture       *g_pXbox_SetTexture[XTL::X_D3DTS_STAGECOUNT] = {0,0,0,0}; // Set by our D3DDevice_SetTexture and D3DDevice_SwitchTexture patches
+static XTL::X_D3DBaseTexture        CxbxActiveTextureCopies[XTL::X_D3DTS_STAGECOUNT] = {}; // Set by D3DDevice_SwitchTexture. Cached active texture
 
 /* Unused :
 static XTL::DWORD                  *g_Xbox_D3DDevice; // TODO: This should be a D3DDevice structure
@@ -194,7 +196,44 @@ static void							UpdateCurrentMSpFAndFPS(); // Used for benchmarking/fps count
 
 extern void UpdateFPSCounter();
 
-typedef uint64_t resource_key_t;
+#define CXBX_D3DCOMMON_IDENTIFYING_MASK (X_D3DCOMMON_TYPE_MASK | X_D3DCOMMON_D3DCREATED)
+
+typedef struct resource_key_hash {
+	// All Xbox X_D3DResource structs have these fields :
+	DWORD Common; // We set this to the CXBX_D3DCOMMON_IDENTIFYING_MASK bits of the source Common field
+	DWORD Data; // We set this as-is to a copy of the source Data field
+	// DWORD Lock; // We leave away the source Lock field, since it's entirely volatile (not deterministic)
+	union {
+		struct {
+			// For non-pixel-containers, we set the Xbox resource address for now (TODO : Come up with something better) :
+			xbaddr ResourceAddr; // We set this as-is
+		};
+		struct {
+			// For XTL::X_D3DPixelContainer's we also set these fields :
+			DWORD Format; // We set this as-is
+			DWORD Size; // We set this as-is
+			// For X_D3DFMT_P8 paletized pixel-containers, we also set this field :
+			uint64_t PaletteHash;
+		};
+	};
+
+	// These operator overloads are required to use resource_key_t in resource_cache_t :
+	bool operator==(const struct resource_key_hash& other) const
+	{
+		return (Common == other.Common)
+			&& (Data == other.Data)
+			&& (Format == other.Format)
+			&& (Size == other.Size)
+			&& (PaletteHash == other.PaletteHash);
+		// Note : ResourceAddr doesn't need comparison, since it's union'ed with Format,Size,PaletteHash already
+	}
+
+	// See https://marknelson.us/posts/2011/09/03/hash-functions-for-c-unordered-containers.html
+	size_t operator()(const struct resource_key_hash& value) const
+	{
+		return (size_t)ComputeHash((void*)&value, sizeof(value));
+	}
+} resource_key_t;
 
 // information passed to the create device proxy thread
 struct EmuD3D8CreateDeviceProxyData
@@ -584,13 +623,24 @@ void DrawUEM(HWND hWnd)
 	EndPaint(hWnd, &ps);
 }
 
-inline DWORD GetXboxCommonResourceType(const XTL::X_D3DResource *pXboxResource)
+inline DWORD GetXboxCommonResourceType(const XTL::DWORD XboxResource_Common)
+{
+	DWORD dwCommonType = XboxResource_Common & X_D3DCOMMON_TYPE_MASK;
+	return dwCommonType;
+}
+
+inline DWORD GetXboxCommonResourceType(const XTL::X_D3DResource* pXboxResource)
 {
 	// Don't pass in unassigned Xbox resources
 	assert(pXboxResource != xbnullptr);
 
-	DWORD dwCommonType = pXboxResource->Common & X_D3DCOMMON_TYPE_MASK;
-	return dwCommonType;
+	return GetXboxCommonResourceType(pXboxResource->Common);
+}
+
+XTL::X_D3DFORMAT GetXboxPixelContainerFormat(const XTL::DWORD XboxPixelContainer_Format)
+{
+	XTL::X_D3DFORMAT d3d_format = (XTL::X_D3DFORMAT)((XboxPixelContainer_Format & X_D3DFORMAT_FORMAT_MASK) >> X_D3DFORMAT_FORMAT_SHIFT);
+	return d3d_format;
 }
 
 XTL::X_D3DFORMAT GetXboxPixelContainerFormat(const XTL::X_D3DPixelContainer *pXboxPixelContainer)
@@ -598,7 +648,7 @@ XTL::X_D3DFORMAT GetXboxPixelContainerFormat(const XTL::X_D3DPixelContainer *pXb
 	// Don't pass in unassigned Xbox pixel container
 	assert(pXboxPixelContainer != xbnullptr);
 
-	return (XTL::X_D3DFORMAT)((pXboxPixelContainer->Format & X_D3DFORMAT_FORMAT_MASK) >> X_D3DFORMAT_FORMAT_SHIFT);
+	return GetXboxPixelContainerFormat(pXboxPixelContainer->Format);
 }
 
 inline int GetXboxPixelContainerDimensionCount(const XTL::X_D3DPixelContainer *pXboxPixelContainer)
@@ -675,25 +725,36 @@ inline bool IsResourceTypeGPUReadable(const DWORD ResourceType)
 	return false;
 }
 
-inline bool IsYuvSurfaceOrTexture(const XTL::X_D3DResource *pXboxResource)
+inline bool IsPaletizedTexture(const XTL::DWORD XboxPixelContainer_Format)
+{
+	return GetXboxPixelContainerFormat(XboxPixelContainer_Format) == XTL::X_D3DFMT_P8;
+}
+
+#if 0 // unused
+inline bool IsYuvSurfaceOrTexture(const XTL::X_D3DResource* pXboxResource)
 {
 	if (GetXboxPixelContainerFormat((XTL::X_D3DPixelContainer *)pXboxResource) == XTL::X_D3DFMT_YUY2)
 		return true;
 
 	return false;
 }
+#endif
 
+#if 0 // unused
 inline bool IsXboxResourceLocked(const XTL::X_D3DResource *pXboxResource)
 {
 	bool result = !!(pXboxResource->Common & X_D3DCOMMON_ISLOCKED);
 	return result;
 }
+#endif
 
+#if 0 // unused
 inline bool IsXboxResourceD3DCreated(const XTL::X_D3DResource *pXboxResource)
 {
 	bool result = !!(pXboxResource->Common & X_D3DCOMMON_D3DCREATED);
 	return result;
 }
+#endif
 
 void *GetDataFromXboxResource(XTL::X_D3DResource *pXboxResource)
 {
@@ -714,9 +775,9 @@ void *GetDataFromXboxResource(XTL::X_D3DResource *pXboxResource)
 
 typedef struct {
 	IDirect3DResource* pHostResource = nullptr;
-	XTL::X_D3DResource* pXboxResource = nullptr;
+	XTL::X_D3DResource* pXboxResource = xbnullptr;
 	DWORD dwXboxResourceType = 0;
-	void* pXboxData = nullptr;
+	void* pXboxData = xbnullptr;
 	size_t szXboxDataSize = 0;
 	uint64_t hash = 0;
 	bool forceRehash = false;
@@ -725,12 +786,13 @@ typedef struct {
     std::chrono::time_point<std::chrono::high_resolution_clock> lastUpdate;
 } resource_info_t;
 
-std::unordered_map <resource_key_t, resource_info_t> g_Xbox_Direct3DResources;
+typedef std::unordered_map<resource_key_t, resource_info_t, resource_key_hash> resource_cache_t;
+resource_cache_t g_Cxbx_Cached_Direct3DResources;
+resource_cache_t g_Cxbx_Cached_PaletizedTextures;
 
-bool IsResourceAPixelContainer(XTL::X_D3DResource* pXboxResource)
+bool IsResourceAPixelContainer(XTL::DWORD XboxResource_Common)
 {
-	// assert(pXboxResource);
-	DWORD Type = GetXboxCommonResourceType(pXboxResource);
+	DWORD Type = GetXboxCommonResourceType(XboxResource_Common);
 	switch (Type)
 	{
 	case X_D3DCOMMON_TYPE_TEXTURE:
@@ -741,21 +803,51 @@ bool IsResourceAPixelContainer(XTL::X_D3DResource* pXboxResource)
 	return false;
 }
 
-resource_key_t GetHostResourceKey(XTL::X_D3DResource* pXboxResource)
+bool IsResourceAPixelContainer(XTL::X_D3DResource* pXboxResource)
 {
-	resource_key_t key = 0;
+	// Don't pass in unassigned Xbox resources
+	assert(pXboxResource != xbnullptr);
+
+	return IsResourceAPixelContainer(pXboxResource->Common);
+}
+
+resource_cache_t& GetResourceCache(resource_key_t& key)
+{
+	return IsResourceAPixelContainer(key.Common) && IsPaletizedTexture(key.Format)
+		? g_Cxbx_Cached_PaletizedTextures : g_Cxbx_Cached_Direct3DResources;
+}
+
+resource_key_t GetHostResourceKey(XTL::X_D3DResource* pXboxResource, int iTextureStage = -1)
+{
+	resource_key_t key = {};
 	if (pXboxResource != xbnullptr) {
 		// Initially, don't base the key on the address of the resource, but on it's uniquely identifying values
-		key ^= pXboxResource->Data;
-		key ^= (pXboxResource->Common & X_D3DCOMMON_TYPE_MASK) >> X_D3DCOMMON_TYPE_SHIFT;
+		key.Data = pXboxResource->Data;
+		key.Common = pXboxResource->Common & CXBX_D3DCOMMON_IDENTIFYING_MASK;
 		if (IsResourceAPixelContainer(pXboxResource)) {
-			// Pixel containers have more values they are be identified by:
-			key ^= ((uint64_t)((XTL::X_D3DPixelContainer *)pXboxResource)->Format) << 24;
-			key ^= ((uint64_t)((XTL::X_D3DPixelContainer *)pXboxResource)->Size) << 32;
-		}
-		else {
+			// Pixel containers have more values they must be identified by:
+			auto pPixelContainer = (XTL::X_D3DPixelContainer*)pXboxResource;
+			key.Format = pPixelContainer->Format;
+			key.Size = pPixelContainer->Size;
+			// For paletized textures, include the current palette hash as well
+			if (IsPaletizedTexture(pPixelContainer->Format)) {
+				if (iTextureStage < 0) {
+					// ForceResourceRehash (called by Lock[23]DSurface) could hit this (not knowing the texture-stage)
+					LOG_TEST_CASE("Unknown texture stage!");
+				} else {
+					assert(iTextureStage < XTL::X_D3DTS_STAGECOUNT);
+					// Protect for when this gets hit before an actual palette is set
+					if (g_Xbox_Palette_Size[iTextureStage] > 0) {
+						// This caters for palette changes (only the active one will be used,
+						// any intermediate changes have no effect). Obsolete palette texture
+						// conversions will be pruned from g_Cxbx_Cached_PaletizedTextures
+						key.PaletteHash = ComputeHash(g_pXbox_Palette_Data[iTextureStage], g_Xbox_Palette_Size[iTextureStage]);
+					}
+				}
+			}
+		} else {
 			// For other resource types, do include their Xbox resource address (TODO : come up with something better)
-			key ^= ((uint64_t)pXboxResource) << 32;
+			key.ResourceAddr = (xbaddr)pXboxResource;
 		}
 	}
 
@@ -765,35 +857,58 @@ resource_key_t GetHostResourceKey(XTL::X_D3DResource* pXboxResource)
 void FreeHostResource(resource_key_t key)
 {
 	// Release the host resource and remove it from the list
-	auto hostResourceIterator = g_Xbox_Direct3DResources.find(key);
-	if (hostResourceIterator != g_Xbox_Direct3DResources.end()) {
+	auto& ResourceCache = GetResourceCache(key);
+	auto hostResourceIterator = ResourceCache.find(key);
+	if (hostResourceIterator != ResourceCache.end()) {
 		if (hostResourceIterator->second.pHostResource) {
 			(hostResourceIterator->second.pHostResource)->Release();
 		}
 
-		g_Xbox_Direct3DResources.erase(hostResourceIterator);
+		ResourceCache.erase(hostResourceIterator);
+	}
+}
+
+void ClearResourceCache(resource_cache_t& ResourceCache)
+{
+	for (auto& hostResourceIterator : ResourceCache) {
+		if (hostResourceIterator.second.pHostResource) {
+			(hostResourceIterator.second.pHostResource)->Release();
+		}
+	}
+
+	ResourceCache.clear();
+}
+
+void PrunePaletizedTexturesCache()
+{
+	// TODO : Implement a better cache eviction algorithm (like least-recently used, or just at-random)
+	// Poor mans cache eviction policy: just clear it once it overflows
+	if (g_Cxbx_Cached_PaletizedTextures.size() >= 1500) {
+		ClearResourceCache(g_Cxbx_Cached_PaletizedTextures);
 	}
 }
 
 void ForceResourceRehash(XTL::X_D3DResource* pXboxResource)
 {
-	auto key = GetHostResourceKey(pXboxResource);
-	auto it = g_Xbox_Direct3DResources.find(key);
-	if (it != g_Xbox_Direct3DResources.end() && it->second.pHostResource) {
+	auto key = GetHostResourceKey(pXboxResource); // Note : iTextureStage is unknown here!
+	auto& ResourceCache = GetResourceCache(key);
+	auto it = ResourceCache.find(key);
+	if (it != ResourceCache.end() && it->second.pHostResource) {
 		it->second.forceRehash = true;
 	}
 }
 
-IDirect3DResource *GetHostResource(XTL::X_D3DResource *pXboxResource, DWORD D3DUsage = 0, int iTextureStage = 0)
+IDirect3DResource *GetHostResource(XTL::X_D3DResource *pXboxResource, DWORD D3DUsage = 0, int iTextureStage = -1)
 {
 	if (pXboxResource == xbnullptr || pXboxResource->Data == xbnull)
 		return nullptr;
 
 	EmuVerifyResourceIsRegistered(pXboxResource, D3DUsage, iTextureStage, /*dwSize=*/0);
 
-	auto key = GetHostResourceKey(pXboxResource);
-	auto it = g_Xbox_Direct3DResources.find(key);
-	if (it == g_Xbox_Direct3DResources.end() || !it->second.pHostResource) {
+	auto key = GetHostResourceKey(pXboxResource, iTextureStage);
+	auto& ResourceCache = GetResourceCache(key);
+	auto it = ResourceCache.find(key);
+	if (it == ResourceCache.end() || !it->second.pHostResource) {
 		EmuLog(LOG_LEVEL::WARNING, "GetHostResource: Resource not registered or does not have a host counterpart!");
 		return nullptr;
 	}
@@ -817,9 +932,7 @@ VOID CxbxGetPixelContainerMeasures
 size_t GetXboxResourceSize(XTL::X_D3DResource* pXboxResource)
 {
 	// TODO: Smart size calculation based around format of resource
-	switch (GetXboxCommonResourceType(pXboxResource)) {
-	case X_D3DCOMMON_TYPE_SURFACE:
-	case X_D3DCOMMON_TYPE_TEXTURE:
+	if (IsResourceAPixelContainer(pXboxResource)) {
 		unsigned int Width, Height, Depth, RowPitch, SlicePitch;
 		// TODO : Accumulate all mipmap levels!!!
 		CxbxGetPixelContainerMeasures(
@@ -833,7 +946,7 @@ size_t GetXboxResourceSize(XTL::X_D3DResource* pXboxResource)
 		);
 
 		return SlicePitch * Depth;
-	default:
+	} else {
 		// Fallback to querying the allocation size, if no other calculation was present
 		return xboxkrnl::MmQueryAllocationSize(GetDataFromXboxResource(pXboxResource));
 	}
@@ -842,8 +955,9 @@ size_t GetXboxResourceSize(XTL::X_D3DResource* pXboxResource)
 
 bool HostResourceRequiresUpdate(resource_key_t key, DWORD dwSize)
 {
-	auto it = g_Xbox_Direct3DResources.find(key);
-	if (it == g_Xbox_Direct3DResources.end() || !it->second.pXboxResource) {
+	auto& ResourceCache = GetResourceCache(key);
+	auto it = ResourceCache.find(key);
+	if (it == ResourceCache.end() || !it->second.pXboxResource) {
 		return false;
 	}
 
@@ -893,10 +1007,11 @@ bool HostResourceRequiresUpdate(resource_key_t key, DWORD dwSize)
 	return modified;
 }
 
-void SetHostResource(XTL::X_D3DResource* pXboxResource, IDirect3DResource* pHostResource, DWORD dwSize = 0)
+void SetHostResource(XTL::X_D3DResource* pXboxResource, IDirect3DResource* pHostResource, int iTextureStage = -1, DWORD dwSize = 0)
 {
-	auto key = GetHostResourceKey(pXboxResource);
-	auto& resourceInfo = g_Xbox_Direct3DResources[key];	// Implicitely inserts a new entry if not already existing
+	auto key = GetHostResourceKey(pXboxResource, iTextureStage);
+	auto& ResourceCache = GetResourceCache(key);
+	auto& resourceInfo = ResourceCache[key];	// Implicitely inserts a new entry if not already existing
 
 	if (resourceInfo.pHostResource) {
 		EmuLog(LOG_LEVEL::WARNING, "SetHostResource: Overwriting an existing host resource");
@@ -931,16 +1046,22 @@ IDirect3DBaseTexture *GetHostBaseTexture(XTL::X_D3DResource *pXboxResource, DWOR
 		return nullptr;
 
 	if (GetXboxCommonResourceType(pXboxResource) != X_D3DCOMMON_TYPE_TEXTURE) { // Allows breakpoint below
-        // test-case : Burnout and Outrun 2006 hit this case (retrieving a surface instead of a texture)
-        // TODO : Surfaces can be set in the texture stages, instead of textures
-        // We'll need to wrap the surface somehow before using it as a texture
-        LOG_TEST_CASE("GetHostBaseTexture called on a non-texture object");
-        return nullptr;
+		// test-case : Burnout and Outrun 2006 hit this case (retrieving a surface instead of a texture)
+		// TODO : Surfaces can be set in the texture stages, instead of textures - see preparations in CxbxConvertXboxSurfaceToHostTexture
+		// We'll need to wrap the surface somehow before using it as a texture
+		LOG_TEST_CASE("GetHostBaseTexture called on a non-texture object");
+		return nullptr;
+		// Note : We'd like to remove the above and do the following instead,
+		// but we can't yet since that seems to cause a "CreateCubeTexture Failed!"
+		// regression. The root cause for that seems to stem from the X_D3DRTYPE_SURFACE
+		// handling in CreateHostResource.
+		//assert(GetXboxCommonResourceType(pXboxResource) == X_D3DCOMMON_TYPE_TEXTURE);
 	}
 
 	return (IDirect3DBaseTexture*)GetHostResource(pXboxResource, D3DUsage, iTextureStage);
 }
 
+#if 0 // unused
 IDirect3DTexture *GetHostTexture(XTL::X_D3DResource *pXboxResource, int iTextureStage = 0)
 {
 	if (pXboxResource == xbnullptr)
@@ -950,6 +1071,7 @@ IDirect3DTexture *GetHostTexture(XTL::X_D3DResource *pXboxResource, int iTexture
 
 	// TODO : Check for 1 face (and 2 dimensions)?
 }
+#endif
 
 IDirect3DVolumeTexture *GetHostVolumeTexture(XTL::X_D3DResource *pXboxResource, int iTextureStage = 0)
 {
@@ -958,6 +1080,7 @@ IDirect3DVolumeTexture *GetHostVolumeTexture(XTL::X_D3DResource *pXboxResource, 
 	// TODO : Check for 1 face (and 2 dimensions)?
 }
 
+#if 0 // unused
 IDirect3DIndexBuffer *GetHostIndexBuffer(XTL::X_D3DResource *pXboxResource)
 {
 	if (pXboxResource == xbnullptr)
@@ -967,45 +1090,46 @@ IDirect3DIndexBuffer *GetHostIndexBuffer(XTL::X_D3DResource *pXboxResource)
 
 	return (IDirect3DIndexBuffer*)GetHostResource(pXboxResource);
 }
+#endif
 
-void SetHostSurface(XTL::X_D3DResource *pXboxResource, IDirect3DSurface *pHostSurface)
+void SetHostSurface(XTL::X_D3DResource *pXboxResource, IDirect3DSurface *pHostSurface, int iTextureStage)
 {
 	assert(pXboxResource != xbnullptr);
 	assert(GetXboxCommonResourceType(pXboxResource) == X_D3DCOMMON_TYPE_SURFACE);
 
-	SetHostResource(pXboxResource, (IDirect3DResource*)pHostSurface);
+	SetHostResource(pXboxResource, (IDirect3DResource*)pHostSurface, iTextureStage);
 }
 
-void SetHostTexture(XTL::X_D3DResource *pXboxResource, IDirect3DTexture *pHostTexture)
+void SetHostTexture(XTL::X_D3DResource *pXboxResource, IDirect3DTexture *pHostTexture, int iTextureStage)
 {
 	assert(pXboxResource != xbnullptr);
 	assert(GetXboxCommonResourceType(pXboxResource) == X_D3DCOMMON_TYPE_TEXTURE);
 
-	SetHostResource(pXboxResource, (IDirect3DResource*)pHostTexture);
+	SetHostResource(pXboxResource, (IDirect3DResource*)pHostTexture, iTextureStage);
 }
 
-void SetHostCubeTexture(XTL::X_D3DResource *pXboxResource, IDirect3DCubeTexture *pHostCubeTexture)
+void SetHostCubeTexture(XTL::X_D3DResource *pXboxResource, IDirect3DCubeTexture *pHostCubeTexture, int iTextureStage)
 {
 	assert(pXboxResource != xbnullptr);
 	assert(GetXboxCommonResourceType(pXboxResource) == X_D3DCOMMON_TYPE_TEXTURE);
 
-	SetHostResource(pXboxResource, (IDirect3DResource*)pHostCubeTexture);
+	SetHostResource(pXboxResource, (IDirect3DResource*)pHostCubeTexture, iTextureStage);
 }
 
-void SetHostVolumeTexture(XTL::X_D3DResource *pXboxResource, IDirect3DVolumeTexture *pHostVolumeTexture)
+void SetHostVolumeTexture(XTL::X_D3DResource *pXboxResource, IDirect3DVolumeTexture *pHostVolumeTexture, int iTextureStage)
 {
 	assert(pXboxResource != xbnullptr);
 	assert(GetXboxCommonResourceType(pXboxResource) == X_D3DCOMMON_TYPE_TEXTURE);
 
-	SetHostResource(pXboxResource, (IDirect3DResource*)pHostVolumeTexture);
+	SetHostResource(pXboxResource, (IDirect3DResource*)pHostVolumeTexture, iTextureStage);
 }
 
-void SetHostVolume(XTL::X_D3DResource *pXboxResource, IDirect3DVolume *pHostVolume)
+void SetHostVolume(XTL::X_D3DResource *pXboxResource, IDirect3DVolume *pHostVolume, int iTextureStage)
 {
 	assert(pXboxResource != xbnullptr);
 	assert(GetXboxCommonResourceType(pXboxResource) == X_D3DCOMMON_TYPE_TEXTURE);
 
-	SetHostResource(pXboxResource, (IDirect3DResource*)pHostVolume);
+	SetHostResource(pXboxResource, (IDirect3DResource*)pHostVolume, iTextureStage);
 }
 
 void SetHostIndexBuffer(XTL::X_D3DResource *pXboxResource, IDirect3DIndexBuffer *pHostIndexBuffer)
@@ -1018,6 +1142,7 @@ void SetHostIndexBuffer(XTL::X_D3DResource *pXboxResource, IDirect3DIndexBuffer 
 
 int XboxD3DPaletteSizeToBytes(const XTL::X_D3DPALETTESIZE Size)
 {
+/*
 	static int lk[4] =
 	{
 		256 * sizeof(D3DCOLOR),    // D3DPALETTE_256
@@ -1027,6 +1152,8 @@ int XboxD3DPaletteSizeToBytes(const XTL::X_D3DPALETTESIZE Size)
 	};
 
 	return lk[Size];
+*/
+	return (256 * sizeof(D3DCOLOR)) >> (unsigned)Size;
 }
 
 inline XTL::X_D3DPALETTESIZE GetXboxPaletteSize(const XTL::X_D3DPalette *pPalette)
@@ -1211,7 +1338,7 @@ void GetSurfaceFaceAndLevelWithinTexture(XTL::X_D3DSurface* pSurface, XTL::X_D3D
     auto pTextureData = (uintptr_t)GetDataFromXboxResource(pTexture);
 
     // Fast path: If the data pointers match, this must be the first surface within the texture
-    if ((pSurfaceData == pTextureData)) {
+    if (pSurfaceData == pTextureData) {
         Level = 0;
         Face = D3DCUBEMAP_FACE_POSITIVE_X;
         return;
@@ -1322,7 +1449,7 @@ bool ConvertD3DTextureToARGBBuffer(
 
 	int AdditionalArgument;
 	if (X_Format == XTL::X_D3DFMT_P8)
-		AdditionalArgument = (int)g_pXbox_Palette[iTextureStage];
+		AdditionalArgument = (int)g_pXbox_Palette_Data[iTextureStage];
 	else
 		AdditionalArgument = DstRowPitch;
 
@@ -1951,12 +2078,8 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
 
                 g_pD3DDevice->EndScene();
 
-				for (auto &hostResourceIterator : g_Xbox_Direct3DResources) {
-					if (hostResourceIterator.second.pHostResource) {
-						(hostResourceIterator.second.pHostResource)->Release();
-					}
-				}
-				g_Xbox_Direct3DResources.clear();
+				ClearResourceCache(g_Cxbx_Cached_PaletizedTextures);
+				ClearResourceCache(g_Cxbx_Cached_Direct3DResources);
 
 				// TODO: ensure all other resources are cleaned up too
 
@@ -2294,7 +2417,7 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
 					0, // RenderTargetIndex
 					&pCurrentHostRenderTarget);
 				DEBUG_D3DRESULT(hRet, "g_pD3DDevice->GetRenderTarget");
-				// TODO : SetHostResource(BackBuffer[0], pCurrentHostRenderTarget);
+				// TODO : SetHostSurface(BackBuffer[0], pCurrentHostRenderTarget);
 */
 
 				// update z-stencil surface cache
@@ -2374,15 +2497,16 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
 
 // check if a resource has been registered yet (if not, register it)
 void CreateHostResource(XTL::X_D3DResource *pResource, DWORD D3DUsage, int iTextureStage, DWORD dwSize); // Forward declartion to prevent restructure of code
-static void EmuVerifyResourceIsRegistered(XTL::X_D3DResource *pResource, DWORD D3DUsage = 0, int iTextureStage = 0, DWORD dwSize = 0)
+static void EmuVerifyResourceIsRegistered(XTL::X_D3DResource *pResource, DWORD D3DUsage, int iTextureStage, DWORD dwSize)
 {
 	// Skip resources without data
 	if (pResource->Data == xbnull)
 		return;
 
-	auto key = GetHostResourceKey(pResource);
-	auto it = g_Xbox_Direct3DResources.find(key);
-	if (it != g_Xbox_Direct3DResources.end()) {
+	auto key = GetHostResourceKey(pResource, iTextureStage);
+	auto& ResourceCache = GetResourceCache(key);
+	auto it = ResourceCache.find(key);
+	if (it != ResourceCache.end()) {
 		if (D3DUsage == D3DUSAGE_RENDERTARGET && IsResourceAPixelContainer(pResource) && EmuXBFormatIsRenderTarget(GetXboxPixelContainerFormat((XTL::X_D3DPixelContainer*)pResource))) {
             // Render targets have special behavior: We can't trash them on guest modification
             // this fixes an issue where CubeMaps were broken because the surface Set in GetCubeMapSurface
@@ -2422,7 +2546,7 @@ static void EmuVerifyResourceIsRegistered(XTL::X_D3DResource *pResource, DWORD D
 
                         if (pParentXboxTexture) {
                             // Re-create the texture with D3DUSAGE_RENDERTARGET, this will automatically create any child-surfaces
-                            FreeHostResource(GetHostResourceKey(pParentXboxTexture));
+                            FreeHostResource(GetHostResourceKey(pParentXboxTexture, iTextureStage));
                             CreateHostResource(pParentXboxTexture, D3DUsage, iTextureStage, dwSize);
                         }
 
@@ -2460,7 +2584,7 @@ static void EmuVerifyResourceIsRegistered(XTL::X_D3DResource *pResource, DWORD D
 		FreeHostResource(key);
 	} else {
 		resource_info_t newResource;
-		g_Xbox_Direct3DResources[key] = newResource;
+		ResourceCache[key] = newResource;
 	}
 
 	CreateHostResource(pResource, D3DUsage, iTextureStage, dwSize);
@@ -3436,14 +3560,14 @@ XTL::X_D3DSurface* WINAPI XTL::EMUPATCH(D3DDevice_GetBackBuffer2)
 			DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateOffscreenPlainSurface");
 		}
 
-		SetHostSurface(pXboxBackBuffer, pCachedPrimarySurface);
+		SetHostSurface(pXboxBackBuffer, pCachedPrimarySurface); // No iTextureStage!
 
 		hRet = g_pD3DDevice->GetFrontBuffer(pCachedPrimarySurface);
 		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->GetFrontBuffer");
 
 		if (FAILED(hRet)) {
 			EmuLog(LOG_LEVEL::WARNING, "Could not retrieve primary surface, using backbuffer");
-			SetHostSurface(pXboxBackBuffer, nullptr);
+			SetHostSurface(pXboxBackBuffer, nullptr); // No iTextureStage!
 			pCachedPrimarySurface->Release();
 			pCachedPrimarySurface = nullptr;
 			BackBuffer = 0;
@@ -3478,7 +3602,7 @@ XTL::X_D3DSurface* WINAPI XTL::EMUPATCH(D3DDevice_GetBackBuffer2)
 	if (FAILED(hRet))
 		CxbxKrnlCleanup("Unable to retrieve back buffer");
 
-	SetHostSurface(pXboxBackBuffer, pCurrentHostBackBuffer);
+	SetHostSurface(pXboxBackBuffer, pCurrentHostBackBuffer); // No iTextureStage!
 
 	// Increment reference count
 	pXboxBackBuffer->Common++; // EMUPATCH(D3DResource_AddRef)(pXboxBackBuffer);
@@ -3606,9 +3730,9 @@ void ValidateRenderTargetDimensions(DWORD HostRenderTarget_Width, DWORD HostRend
     // Because of this, we need to validate that the associated host resource still matches the dimensions of the Xbox Render Target
     // If not, we must force them to be re-created
     // TEST CASE: Chihiro Factory Test Program
-    DWORD HostRenderTarget_Width_Unscaled = HostRenderTarget_Width / g_RenderScaleFactor;
-    DWORD HostRenderTarget_Height_Unscaled = HostRenderTarget_Height / g_RenderScaleFactor;
-    if (HostRenderTarget_Width_Unscaled != XboxRenderTarget_Width || HostRenderTarget_Height_Unscaled != XboxRenderTarget_Height) {
+    DWORD XboxRenderTarget_Width_Scaled = XboxRenderTarget_Width * g_RenderScaleFactor;
+    DWORD XboxRenderTarget_Height_Scaled = XboxRenderTarget_Height * g_RenderScaleFactor;
+    if (HostRenderTarget_Width != XboxRenderTarget_Width_Scaled || HostRenderTarget_Height != XboxRenderTarget_Height_Scaled) {
         LOG_TEST_CASE("Existing RenderTarget width/height changed");
 
         if (g_pXbox_RenderTarget == g_pXbox_BackBufferSurface) {
@@ -4225,7 +4349,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetTexture_4)
 	//XB_trampoline(VOID, WINAPI, D3DDevice_SetTexture_4, (X_D3DBaseTexture*));
 	//XB_D3DDevice_SetTexture_4(pTexture);
 
-	EmuD3DActiveTexture[Stage] = pTexture;
+	g_pXbox_SetTexture[Stage] = pTexture;
 }
 
 // ******************************************************************
@@ -4246,7 +4370,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetTexture)
 	XB_trampoline(VOID, WINAPI, D3DDevice_SetTexture, (DWORD, X_D3DBaseTexture*));
 	XB_D3DDevice_SetTexture(Stage, pTexture);
 
-	EmuD3DActiveTexture[Stage] = pTexture;
+	g_pXbox_SetTexture[Stage] = pTexture;
 }
 
 // ******************************************************************
@@ -4282,7 +4406,7 @@ VOID __fastcall XTL::EMUPATCH(D3DDevice_SwitchTexture)
     }
     else {
 		// Switch Texture updates the data pointer of an active texture using pushbuffer commands
-		if (EmuD3DActiveTexture[Stage] == xbnullptr) {
+		if (g_pXbox_SetTexture[Stage] == xbnullptr) {
 			LOG_TEST_CASE("D3DDevice_SwitchTexture without an active texture");
 		}
 		else {
@@ -4308,15 +4432,15 @@ VOID __fastcall XTL::EMUPATCH(D3DDevice_SwitchTexture)
 			// Test-case : Spider - Man 2
 
 			// Update data and format separately, instead of via GetDataFromXboxResource()
-			CxbxActiveTextureCopies[Stage].Common = EmuD3DActiveTexture[Stage]->Common;
+			CxbxActiveTextureCopies[Stage].Common = g_pXbox_SetTexture[Stage]->Common;
 			CxbxActiveTextureCopies[Stage].Data = Data;
 			CxbxActiveTextureCopies[Stage].Format = Format;
 			CxbxActiveTextureCopies[Stage].Lock = 0;
-			CxbxActiveTextureCopies[Stage].Size = EmuD3DActiveTexture[Stage]->Size;
+			CxbxActiveTextureCopies[Stage].Size = g_pXbox_SetTexture[Stage]->Size;
 
 			// Use the above modified copy, instead of altering the active Xbox texture
-			EmuD3DActiveTexture[Stage] = &CxbxActiveTextureCopies[Stage];
-			// Note : Since EmuD3DActiveTexture and CxbxActiveTextureCopies are host-managed,
+			g_pXbox_SetTexture[Stage] = &CxbxActiveTextureCopies[Stage];
+			// Note : Since g_pXbox_SetTexture and CxbxActiveTextureCopies are host-managed,
 			// Xbox code should never alter these members (so : no reference counting, etc).
 			// As long as that's guaranteed, this is a safe way to emulate SwitchTexture.
 			// (GetHostResourceKey also avoids using any Xbox texture resource memory address.)
@@ -5389,6 +5513,9 @@ void CreateHostResource(XTL::X_D3DResource *pResource, DWORD D3DUsage, int iText
 		// Happens in some Outrun 2006 SetRenderTarget calls
 		if (pParentXboxTexture && (pXboxSurface->Format == pParentXboxTexture->Format)) {
             // For surfaces with a parent texture, map these to a host texture first
+			// TODO : Investigate how it's possible (and how we could fix) the case when
+			// the following call to GetHostBaseTexture would reject non-texture resources,
+			// which would seem to trigger a "CreateCubeTexture Failed!" regression.
 			IDirect3DBaseTexture *pParentHostBaseTexture = GetHostBaseTexture(pParentXboxTexture, D3DUsage, iTextureStage);
             IDirect3DSurface* pNewHostSurface;
 			switch (pParentHostBaseTexture->GetType()) {
@@ -5407,9 +5534,9 @@ void CreateHostResource(XTL::X_D3DResource *pResource, DWORD D3DUsage, int iText
 
                 HRESULT hRet = pParentHostTexture->GetCubeMapSurface(CubeMapFace, SurfaceLevel, &pNewHostSurface);
 
-                DEBUG_D3DRESULT(hRet, "pHostParentTexture->GetSurfaceLevel");
+                DEBUG_D3DRESULT(hRet, "pHostParentTexture->GetCubeMapSurface");
                 if (hRet == D3D_OK) {
-                    SetHostSurface(pXboxSurface, pNewHostSurface);
+                    SetHostSurface(pXboxSurface, pNewHostSurface, iTextureStage);
                     EmuLog(LOG_LEVEL::DEBUG, "CreateHostResource : Successfully created CubeTexture surface level (Face: %u, Level: %u, pResource: 0x%.08X, pNewHostSurface: 0x%.08X)",
                         CubeMapFace, SurfaceLevel, pResource, pNewHostSurface);
                     return;
@@ -5426,7 +5553,7 @@ void CreateHostResource(XTL::X_D3DResource *pResource, DWORD D3DUsage, int iText
 
 				DEBUG_D3DRESULT(hRet, "pHostParentTexture->GetSurfaceLevel");
 				if (hRet == D3D_OK) {
-					SetHostSurface(pXboxSurface, pNewHostSurface);
+					SetHostSurface(pXboxSurface, pNewHostSurface, iTextureStage);
                     EmuLog(LOG_LEVEL::DEBUG, "CreateHostResource : Successfully created Texture surface level (Level: %u, pResource: 0x%.08X, pNewHostSurface: 0x%.08X)",
 						SurfaceLevel, pResource, pNewHostSurface);
 					return;
@@ -5451,7 +5578,7 @@ void CreateHostResource(XTL::X_D3DResource *pResource, DWORD D3DUsage, int iText
 			HRESULT hRet = pParentHostVolumeTexture->GetVolumeLevel(VolumeLevel, &pNewHostVolume);
 			DEBUG_D3DRESULT(hRet, "pParentHostVolumeTexture->GetVolumeLevel");
 			if (hRet == D3D_OK) {
-				SetHostVolume(pXboxVolume, pNewHostVolume);
+				SetHostVolume(pXboxVolume, pNewHostVolume, iTextureStage);
 				EmuLog(LOG_LEVEL::DEBUG, "CreateHostResource : Successfully created volume level (%u, 0x%.08X, 0x%.08X)",
 					VolumeLevel, pResource, pNewHostVolume);
 				return;
@@ -5648,7 +5775,7 @@ void CreateHostResource(XTL::X_D3DResource *pResource, DWORD D3DUsage, int iText
 					DXGetErrorString(hRet), DXGetErrorDescription(hRet));
 			}
 
-			SetHostSurface(pResource, pNewHostSurface);
+			SetHostSurface(pResource, pNewHostSurface, iTextureStage);
 			EmuLog(LOG_LEVEL::DEBUG, "CreateHostResource : Successfully created %s (0x%.08X, 0x%.08X)",
 				ResourceTypeName, pResource, pNewHostSurface);
 			EmuLog(LOG_LEVEL::DEBUG, "CreateHostResource : Width : %d, Height : %d, Format : %d",
@@ -5663,7 +5790,7 @@ void CreateHostResource(XTL::X_D3DResource *pResource, DWORD D3DUsage, int iText
 			// So, we need to do this differently - we need to step up to the containing VolumeTexture,
 			// and retrieve and convert all of it's GetVolumeLevel() slices.
 			pNewHostVolume = nullptr;
-			// SetHostVolume(pResource, pNewHostVolume);
+			// SetHostVolume(pResource, pNewHostVolume, iTextureStage);
 			// EmuLog(LOG_LEVEL::DEBUG, "CreateHostResource : Successfully created %s (0x%.08X, 0x%.08X)",
 			//	ResourceTypeName, pResource, pNewHostVolume);
 			break;
@@ -5716,7 +5843,7 @@ void CreateHostResource(XTL::X_D3DResource *pResource, DWORD D3DUsage, int iText
 					"Error: 0x%X\nFormat: %d\nDimensions: %dx%d", hRet, PCFormat, dwWidth, dwHeight);
 			}
 
-			SetHostTexture(pResource, pNewHostTexture);
+			SetHostTexture(pResource, pNewHostTexture, iTextureStage);
 			EmuLog(LOG_LEVEL::DEBUG, "CreateHostResource : Successfully created %s (0x%.08X, 0x%.08X)",
 				ResourceTypeName, pResource, pNewHostTexture);
 			break;
@@ -5742,7 +5869,7 @@ void CreateHostResource(XTL::X_D3DResource *pResource, DWORD D3DUsage, int iText
 					DXGetErrorString(hRet), DXGetErrorDescription(hRet));
 			}
 
-			SetHostVolumeTexture(pResource, pNewHostVolumeTexture);
+			SetHostVolumeTexture(pResource, pNewHostVolumeTexture, iTextureStage);
 			EmuLog(LOG_LEVEL::DEBUG, "CreateHostResource : Successfully created %s (0x%.08X, 0x%.08X)",
 				ResourceTypeName, pResource, pNewHostVolumeTexture);
 			break;
@@ -5771,7 +5898,7 @@ void CreateHostResource(XTL::X_D3DResource *pResource, DWORD D3DUsage, int iText
 					DXGetErrorString(hRet), DXGetErrorDescription(hRet)*/);
 			}
 
-			SetHostCubeTexture(pResource, pNewHostCubeTexture);
+			SetHostCubeTexture(pResource, pNewHostCubeTexture, iTextureStage);
 			// TODO : Cube face surfaces can be used as a render-target,
 			// so we need to associate host surfaces to each surface of this cube texture
             // However, we can't do it here: On Xbox, a new Surface is created on every call to
@@ -5894,7 +6021,7 @@ void CreateHostResource(XTL::X_D3DResource *pResource, DWORD D3DUsage, int iText
 							&destRect,
 							pSrc, // Source buffer
 							dwMipPitch, // Source pitch
-							g_pXbox_Palette,
+							g_pXbox_Palette_Data,
 							&SrcRect,
 							D3DX_DEFAULT, // D3DX_FILTER_NONE,
 							0 // No ColorKey?
@@ -6816,30 +6943,84 @@ void CxbxDrawPrimitiveUP(CxbxDrawContext &DrawContext)
 	}
 }
 
+IDirect3DBaseTexture* CxbxConvertXboxSurfaceToHostTexture(XTL::X_D3DBaseTexture* pBaseTexture)
+{
+	LOG_INIT;
+
+	IDirect3DTexture* pNewHostTexture = nullptr;
+#if 0 // TODO : Complete, debug and activate (and then cleanup GetHostBaseTexture)
+	D3DFORMAT PCFormat = D3DFMT_A8B8G8R8; // TODO : Derive from pBaseTexture
+
+	IDirect3DSurface* pHostSurface = GetHostSurface(pBaseTexture); // TODO : Extend this with a texture channel number too, if surfaces send to SetTexture can be paletized format?
+
+	DWORD dwWidth = GetPixelContainerWidth(pBaseTexture);
+	DWORD dwHeight = GetPixelContainerHeight(pBaseTexture);
+	UINT dwMipMapLevels = CxbxGetPixelContainerMipMapLevels(pBaseTexture);
+
+	HRESULT hRet = g_pD3DDevice->CreateTexture(dwWidth, dwHeight, dwMipMapLevels,
+		/*Usage=*/0, PCFormat, D3DPOOL_SYSTEMMEM, &pNewHostTexture, nullptr);
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateTexture (in CxbxConvertXboxSurfaceToHostTexture)");
+	if (hRet != D3D_OK) {
+		CxbxKrnlCleanup("CreateTexture Failed!\n\nError: \nDesc: "/*,
+			DXGetErrorString(hRet), DXGetErrorDescription(hRet)*/);
+	}
+
+	IDirect3DSurface* pHostTextureSurface = nullptr;
+	hRet = pNewHostTexture->GetSurfaceLevel(/*Level=*/0, &pHostTextureSurface);
+	DEBUG_D3DRESULT(hRet, "pHostBaseTexture->GetSurfaceLevel");
+
+	if (hRet == D3D_OK) {
+		hRet = D3DXLoadSurfaceFromSurface(pHostTextureSurface, nullptr, nullptr, pHostSurface, nullptr, nullptr, D3DX_FILTER_NONE, 0x00000000);
+		DEBUG_D3DRESULT(hRet, "D3DXLoadSurfaceFromSurface");
+		pHostTextureSurface->Release();
+	}
+#endif
+	return (IDirect3DBaseTexture*)pNewHostTexture; // return it as a base texture
+}
+
 void EmuUpdateActiveTextureStages()
 {
 	LOG_INIT;
 
 	for (int i = 0; i < XTL::X_D3DTS_STAGECOUNT; i++)
 	{
-		XTL::X_D3DBaseTexture *pBaseTexture = EmuD3DActiveTexture[i];
-		if (pBaseTexture == nullptr) {
-			HRESULT hRet = g_pD3DDevice->SetTexture(i, nullptr);
-			DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetTexture");
-			continue;
+		XTL::X_D3DBaseTexture *pBaseTexture = g_pXbox_SetTexture[i];
+		IDirect3DBaseTexture *pHostBaseTexture = nullptr;
+		bool bNeedRelease = false;
+
+		if (pBaseTexture != xbnullptr) {
+			DWORD Type = GetXboxCommonResourceType(pBaseTexture);
+			switch (Type) {
+			case X_D3DCOMMON_TYPE_TEXTURE:
+				pHostBaseTexture = GetHostBaseTexture(pBaseTexture, /*D3DUsage=*/0, i);
+				break;
+			case X_D3DCOMMON_TYPE_SURFACE:
+				// Surfaces can be set in the texture stages, instead of textures
+				LOG_TEST_CASE("ActiveTexture set to a surface (non-texture) resource"); // Test cases : Burnout, Outrun 2006
+				// We must wrap the surface before using it as a texture
+				pHostBaseTexture = CxbxConvertXboxSurfaceToHostTexture(pBaseTexture);
+				// Release this texture (after SetTexture) when we succeeded in creating it :
+				bNeedRelease = pHostBaseTexture != nullptr;
+				break;
+			default:
+				LOG_TEST_CASE("ActiveTexture set to an unhandled resource type!");
+				break;
+			}
 		}
 
-		IDirect3DTexture *pHostTexture = GetHostTexture(pBaseTexture, i);
-
-		if (pHostTexture != nullptr) {
-			HRESULT hRet = g_pD3DDevice->SetTexture(i, pHostTexture);
-			DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetTexture");
+		HRESULT hRet = g_pD3DDevice->SetTexture(i, pHostBaseTexture);
+		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetTexture");
+		if (bNeedRelease) {
+			pHostBaseTexture->Release();
 		}
 	}
 }
 
 void CxbxUpdateNativeD3DResources()
 {
+	// Before we start, make sure our resource cache stays limited in size
+	PrunePaletizedTexturesCache(); // TODO : Could we move this to Swap instead?
+
     EmuUpdateActiveTextureStages();
 
 	// Some titles set Vertex Shader constants directly via pushbuffers rather than through D3D
@@ -7582,70 +7763,13 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetPalette)
 	//    g_pD3DDevice9->SetPaletteEntries(Stage?, (PALETTEENTRY*)pPalette->Data);
 	//    g_pD3DDevice9->SetCurrentTexturePalette(Stage, Stage);
 
-	if (Stage < XTL::X_D3DTS_STAGECOUNT) {
-		if (g_pXbox_Palette[Stage] != GetDataFromXboxResource(pPalette) && EmuD3DActiveTexture[Stage] != nullptr) {
-			// If the palette for a texture has changed, we need to re-convert the texture
-			FreeHostResource(GetHostResourceKey(EmuD3DActiveTexture[Stage]));
-		}
-
-		// Cache palette data and size
-		g_pXbox_Palette[Stage] = GetDataFromXboxResource(pPalette);
+	if (Stage >= XTL::X_D3DTS_STAGECOUNT) {
+		LOG_TEST_CASE("Stage out of bounds");
+	} else {
+		// Note : Actual update of paletized textures (X_D3DFMT_P8) happens in EmuUpdateActiveTextureStages!
+		g_pXbox_Palette_Data[Stage] = GetDataFromXboxResource(pPalette);
+		g_Xbox_Palette_Size[Stage] = pPalette ? XboxD3DPaletteSizeToBytes(GetXboxPaletteSize(pPalette)) : 0;
 	}
-}
-
-
-// ******************************************************************
-// * patch: IDirect3DPalette8_Lock
-// ******************************************************************
-VOID WINAPI XTL::EMUPATCH(D3DPalette_Lock)
-(
-	X_D3DPalette   *pThis,
-	D3DCOLOR      **ppColors,
-	DWORD           Flags
-)
-{
-	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(pThis)
-		LOG_FUNC_ARG_OUT(ppColors)
-		LOG_FUNC_ARG(Flags)
-		LOG_FUNC_END;
-
-	XB_trampoline(VOID, WINAPI, D3DPalette_Lock, (X_D3DPalette*, D3DCOLOR**, DWORD));
-	XB_D3DPalette_Lock(pThis, ppColors, Flags);
-
-	// Check if this palette is in use by a texture stage, and force it to be re-converted if yes
-	for (int i = 0; i < XTL::X_D3DTS_STAGECOUNT; i++) {
-		if (EmuD3DActiveTexture[i] != nullptr && g_pXbox_Palette[i] == GetDataFromXboxResource(pThis)) {
-			FreeHostResource(GetHostResourceKey(EmuD3DActiveTexture[i]));
-		}
-	}
-}
-
-// ******************************************************************
-// * patch: IDirect3DPalette8_Lock2
-// ******************************************************************
-D3DCOLOR * WINAPI XTL::EMUPATCH(D3DPalette_Lock2)
-(
-	X_D3DPalette   *pThis,
-	DWORD           Flags
-)
-{
-	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(pThis)
-		LOG_FUNC_ARG(Flags)
-		LOG_FUNC_END;
-
-	XB_trampoline(D3DCOLOR*, WINAPI, D3DPalette_Lock2, (X_D3DPalette*, DWORD));
-	D3DCOLOR* pData = XB_D3DPalette_Lock2(pThis, Flags);
-
-	// Check if this palette is in use by a texture stage, and force it to be re-converted if yes
-	for (int i = 0; i < XTL::X_D3DTS_STAGECOUNT; i++) {
-		if (EmuD3DActiveTexture[i] != nullptr && g_pXbox_Palette[i] == GetDataFromXboxResource(pThis)) {
-			FreeHostResource(GetHostResourceKey(EmuD3DActiveTexture[i]));
-		}
-	}
-
-	RETURN(pData);
 }
 
 // LTCG specific D3DDevice_SetFlickerFilter function...
@@ -8666,9 +8790,6 @@ void WINAPI XTL::EMUPATCH(D3D_BlockOnTime)( DWORD Unknown1, int Unknown2 )
 
 bool DestroyResource_Common(XTL::X_D3DResource* pResource)
 {
-
-    auto key = GetHostResourceKey(pResource);
-
     if (pResource == g_pXbox_RenderTarget) {
         LOG_TEST_CASE("Skipping Release of active Xbox Render Target");
         return false;
@@ -8690,14 +8811,16 @@ bool DestroyResource_Common(XTL::X_D3DResource* pResource)
     }
 
     for (int i = 0; i < XTL::X_D3DTS_STAGECOUNT; i++) {
-        if (pResource == EmuD3DActiveTexture[i]) {
+        if (pResource == g_pXbox_SetTexture[i]) {
+            // This shouldn't happen, since texture resources that get destroyed,
+            // shouldn't be set to any stage anymore.
             LOG_TEST_CASE("Skipping Release of active Xbox Texture");
             return false;
         }
     }
 
     // Release the host copy (if it exists!)
-    FreeHostResource(key);
+    FreeHostResource(GetHostResourceKey(pResource));
 
     return true;
 }

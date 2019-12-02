@@ -2922,7 +2922,7 @@ bool PSH_XBOX_SHADER::InsertTextureModeInstruction(XTL::X_D3DPIXELSHADERDEF *pPS
             // and include the texture formats in the shader hash, somehow.
             bool bias = false;
 			auto biasModifier = (1 << ARGMOD_SCALE_BX2);
-			auto pXboxTexture = EmuD3DActiveTexture[inputStage];
+			auto pXboxTexture = g_pXbox_SetTexture[inputStage];
 			if (pXboxTexture != nullptr) {
 				extern XTL::X_D3DFORMAT GetXboxPixelContainerFormat(const XTL::X_D3DPixelContainer *pXboxPixelContainer); // TODO : Move to XTL-independent header file
 
