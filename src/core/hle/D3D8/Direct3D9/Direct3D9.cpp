@@ -4033,7 +4033,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateVertexShader)
 	g_pD3DDevice->SetVertexDeclaration(pCxbxVertexShader->pHostVertexDeclaration);
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetVertexDeclaration");
 
-	LPD3DXBUFFER  pRecompiledBuffer = nullptr;
+	ID3DBlob     *pRecompiledBuffer = nullptr;
 	DWORD         XboxFunctionSize = 0;
 	DWORD        *pRecompiledFunction = nullptr;
 	if (SUCCEEDED(hRet) && pFunction)
@@ -4074,36 +4074,36 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateVertexShader)
 	}
 
 	//* Fallback to dummy shader.
-	if (FAILED(hRet))
-	{
-		static const char dummy[] =
-			"vs.1.1\n"
-			"dcl_position v0\n"
-			"dp4 oPos.x, v0, c96\n"
-			"dp4 oPos.y, v0, c97\n"
-			"dp4 oPos.z, v0, c98\n"
-			"dp4 oPos.w, v0, c99\n";
+	//if (FAILED(hRet))
+	//{
+	//	static const char dummy[] =
+	//		"vs.1.1\n"
+	//		"dcl_position v0\n"
+	//		"dp4 oPos.x, v0, c96\n"
+	//		"dp4 oPos.y, v0, c97\n"
+	//		"dp4 oPos.z, v0, c98\n"
+	//		"dp4 oPos.w, v0, c99\n";
 
-		EmuLog(LOG_LEVEL::WARNING, "Trying fallback:\n%s", dummy);
+	//	EmuLog(LOG_LEVEL::WARNING, "Trying fallback:\n%s", dummy);
 
-		hRet = D3DXAssembleShader(
-			dummy,
-			strlen(dummy),
-			/*pDefines=*/nullptr,
-			/*pInclude=*/nullptr,
-			/*Flags=*/0, // Was D3DXASM_SKIPVALIDATION
-			/*ppCompiledShader=*/&pRecompiledBuffer,
-			/*ppCompilationErrors*/nullptr);
+	//	hRet = D3DXAssembleShader(
+	//		dummy,
+	//		strlen(dummy),
+	//		/*pDefines=*/nullptr,
+	//		/*pInclude=*/nullptr,
+	//		/*Flags=*/0, // Was D3DXASM_SKIPVALIDATION
+	//		/*ppCompiledShader=*/&pRecompiledBuffer,
+	//		/*ppCompilationErrors*/nullptr);
 
-		DEBUG_D3DRESULT(hRet, "D3DXAssembleShader");
+	//	DEBUG_D3DRESULT(hRet, "D3DXAssembleShader");
 
-		hRet = g_pD3DDevice->CreateVertexShader
-		(
-			(DWORD*)pRecompiledBuffer->GetBufferPointer(),
-			&pHostVertexShader
-		);
-		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateVertexShader(fallback)");
-	}
+	//	hRet = g_pD3DDevice->CreateVertexShader
+	//	(
+	//		(DWORD*)pRecompiledBuffer->GetBufferPointer(),
+	//		&pHostVertexShader
+	//	);
+	//	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateVertexShader(fallback)");
+	//}
 
 	if (pRecompiledBuffer != nullptr)
 	{

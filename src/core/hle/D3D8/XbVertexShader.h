@@ -25,6 +25,8 @@
 #ifndef XBVERTEXSHADER_H
 #define XBVERTEXSHADER_H
 
+#include <d3dcompiler.h>
+
 #include "core\hle\D3D8\XbD3D8Types.h" // for X_VSH_MAX_ATTRIBUTES
 
 // Host vertex shader counts
@@ -112,7 +114,7 @@ extern HRESULT EmuRecompileVshFunction
     D3DVERTEXELEMENT *pRecompiledDeclaration,
     bool   		 *pbUseDeclarationOnly,
     DWORD        *pXboxFunctionSize,
-	LPD3DXBUFFER *ppRecompiledShader
+	ID3DBlob **ppRecompiledShader
 );
 
 extern void FreeVertexDynamicPatch(CxbxVertexShader *pVertexShader);

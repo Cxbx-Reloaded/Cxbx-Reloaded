@@ -2663,6 +2663,9 @@ std::string VshPostProcess_TruncateMovA(std::string shader) {
 	return std::regex_replace(shader, movA, truncate);
 }
 
+#include <fstream>
+#include <streambuf>
+
 // Post process the shader as a string
 std::string VshPostProcess(std::string shader) {
 	shader = VshPostProcess_Expp(shader);
@@ -2680,14 +2683,14 @@ extern HRESULT EmuRecompileVshFunction
 	D3DVERTEXELEMENT *pRecompiledDeclaration,
     bool   		 *pbUseDeclarationOnly,
     DWORD        *pXboxFunctionSize,
-	LPD3DXBUFFER *ppRecompiledShader
+	ID3DBlob **ppRecompiledShader
 )
 {
 	XTL::X_VSH_SHADER_HEADER   *pXboxVertexShaderHeader = (XTL::X_VSH_SHADER_HEADER*)pXboxFunction;
-    DWORD               *pToken;
+    DWORD              *pToken;
     boolean             EOI = false;
-    VSH_XBOX_SHADER     *pShader = (VSH_XBOX_SHADER*)calloc(1, sizeof(VSH_XBOX_SHADER));
-	LPD3DXBUFFER		pErrors = nullptr;
+    VSH_XBOX_SHADER    *pShader = (VSH_XBOX_SHADER*)calloc(1, sizeof(VSH_XBOX_SHADER));
+	ID3DBlob           *pErrors;
     HRESULT             hRet = 0;
 
     // TODO: support this situation..
@@ -2749,18 +2752,28 @@ extern HRESULT EmuRecompileVshFunction
 		std::stringstream& pXboxShaderDisassembly = std::stringstream();
 		std::stringstream& pHostShaderDisassembly = std::stringstream();
 
+		//static std::ifstream t("Xb.hlsl");
+		static std::ifstream t("C:\\Users\\OEM\\Desktop\\repos\\Cxbx-Reloaded\\src\\core\\hle\\D3D8\\Direct3D9\\Xb.hlsl");
+		static  std::string hlslTemplate((std::istreambuf_iterator<char>(t)),
+			std::istreambuf_iterator<char>());
+
 		DbgVshPrintf("-- Before conversion --\n");
 		VshWriteShader(pShader, pXboxShaderDisassembly, pRecompiledDeclaration, FALSE);
 		DbgVshPrintf("%s", pXboxShaderDisassembly.str().c_str());
 		DbgVshPrintf("-----------------------\n");
 
+		auto hlslTest = BuildShader(pShader);
+		hlslTest = std::regex_replace(hlslTemplate, std::regex("// <Xbox Shader>"), hlslTest);
 
 		DbgVshPrintf("-- HLSL conversion 1 ---\n");
-		DbgVshPrintf(BuildShader(pShader).c_str());
+		DbgVshPrintf(hlslTest.c_str());
 		DbgVshPrintf("-----------------------\n");
 
 		VshConvertShader(pShader, bNoReservedConstants);
 		VshWriteShader(pShader, pHostShaderDisassembly, pRecompiledDeclaration, TRUE);
+
+		//auto hlslTest = BuildShader(pShader);
+		//hlslTest = std::regex_replace(hlslTemplate, std::regex("// <Xbox Shader>"), hlslTest);
 
 		// Post process the final shader
 		auto finalHostShader = VshPostProcess(pHostShaderDisassembly.str());
@@ -2778,43 +2791,41 @@ extern HRESULT EmuRecompileVshFunction
 		{
 			EmuLog(LOG_LEVEL::WARNING, "Replacing empty vertex shader with fallback");
 
-			static const char dummy[] =
+			finalHostShader = std::string(
 				"vs.2.x\n"
 				"dcl_position v0\n"
 				"dp4 oPos.x, v0, c96\n"
 				"dp4 oPos.y, v0, c97\n"
 				"dp4 oPos.z, v0, c98\n"
-				"dp4 oPos.w, v0, c99\n";
-
-			hRet = D3DXAssembleShader(
-				dummy,
-				strlen(dummy),
-				/*pDefines=*/nullptr,
-				/*pInclude=*/nullptr,
-				/*Flags=*/0, // Was D3DXASM_SKIPVALIDATION,
-				/*ppCompiledShader=*/ppRecompiledShader,
-				/*ppCompilationErrors*/nullptr);
+				"dp4 oPos.w, v0, c99\n"
+			);
 		}
 		else
 		{
-			hRet = D3DXAssembleShader(
-				finalHostShader.c_str(),
-				finalHostShader.length(),
-				/*pDefines=*/nullptr,
-				/*pInclude=*/nullptr,
-				/*Flags=*/0, // Was D3DXASM_SKIPVALIDATION,
-				/*ppCompiledShader=*/ppRecompiledShader,
-				/*ppCompilationErrors*/&pErrors);
+			hRet = D3DCompile(
+				hlslTest.c_str(),
+				hlslTest.length(),
+				nullptr, // pSourceName
+				nullptr, // pDefines
+				nullptr, // pInclude // TODO precompile x_* HLSL functions?
+				"main", // shader entry poiint
+				"vs_3_0", // shader profile
+				0, // flags1
+				0, // flags2
+				ppRecompiledShader, // out
+				&pErrors // ppErrorMsgs out
+			);
 		}
 
         if (FAILED(hRet))
         {
             EmuLog(LOG_LEVEL::WARNING, "Couldn't assemble recompiled vertex shader");
-			EmuLog(LOG_LEVEL::WARNING, "%s", pErrors->GetBufferPointer());
+			EmuLog(LOG_LEVEL::WARNING, "%s", (char*)(pErrors)->GetBufferPointer());
+			LOG_TEST_CASE((char *)pErrors->GetBufferPointer());
         }
 
-		if( pErrors )
-			pErrors->Release();
+		if (pErrors)
+			(pErrors)->Release();
     }
 
     free(pShader);
