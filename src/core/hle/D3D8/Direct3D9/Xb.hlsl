@@ -1,8 +1,6 @@
 // This starts the raw string (comment to get syntax highlighting, UNCOMMENT to compile) :
 R"DELIMITER(
 
-#define r12 oPos // oPos and r12 are two ways of accessing the same register on Xbox
-
 struct VS_INPUT
 {
 	float4 v[16] : TEXCOORD;
@@ -184,6 +182,7 @@ VS_OUTPUT main(const VS_INPUT xIn)
 	// Temporary variables
 	float4 r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11;
 	r0 = r1 = r2 = r3 = r4 = r5 = r6 = r7 = r8 = r9 = r10 = r11 = float4(0, 0, 0, 1); // TODO correct?
+    #define r12 oPos // oPos and r12 are two ways of accessing the same register on Xbox
 
 	// Xbox index register
 	int a;
@@ -191,9 +190,11 @@ VS_OUTPUT main(const VS_INPUT xIn)
 	// Output variables
 	float4 oPos, oD0, oD1, oB0, oB1, oT0, oT1, oT2, oT3;
 	oPos = oD0 = oD1 = oB0 = oB1 = oT0 = oT1 = oT2 = oT3 = float4(0, 0, 0, 1); // TODO correct?
+
 	// Single component outputs
 	// x is write-only on Xbox. Use float4 as some games use incorrect masks
-	float4 oFog = 0, oPts = 0;
+	float4 oFog, oPts;
+	oFog = oPts = 0;
 
 	// Initialize input variables
 	v0 = xIn.v[0];
