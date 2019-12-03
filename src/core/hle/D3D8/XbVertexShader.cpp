@@ -912,7 +912,7 @@ static void VshWriteShader(VSH_XBOX_SHADER *pShader,
 		std::stringstream moveConstantsToTemporaries;
 
 		pDisassembly << "; Input usage declarations --\n";
-		for(int i = 0; i < RegVIsUsedByShader.size(); i++){
+		for(size_t i = 0; i < RegVIsUsedByShader.size(); i++){
 			if (RegVIsUsedByShader[i]) {
 				if (!RegVIsPresentInDeclaration[i]) {
 					// Log test case and skip
@@ -2752,13 +2752,9 @@ extern HRESULT EmuRecompileVshFunction
 		std::stringstream& pXboxShaderDisassembly = std::stringstream();
 		std::stringstream& pHostShaderDisassembly = std::stringstream();
 
-		//static std::ifstream t("Xb.hlsl");
-		static std::ifstream t("..\\..\\..\\..\\src\\core\\hle\\D3D8\\Direct3D9\\Xb.hlsl");
-		const static  std::string hlslTemplate((std::istreambuf_iterator<char>(t)),
-			std::istreambuf_iterator<char>());
-		if (t.is_open()) {
-			t.close();
-		}
+		static std::string hlslTemplate =
+			#include "core\hle\D3D8\Direct3D9\Xb.hlsl" // Note : This included .hlsl defines a raw string
+			;
 
 		DbgVshPrintf("-- Before conversion --\n");
 		VshWriteShader(pShader, pXboxShaderDisassembly, pRecompiledDeclaration, FALSE);
@@ -2980,30 +2976,25 @@ std::string ToHlsl(VSH_IMD_OUTPUT& dest) {
 std::string ToHlsl(VSH_IMD_PARAMETER& paramMeta)
 {
 	auto hlsl = std::stringstream();
-
 	auto param = paramMeta.Parameter;
 
-	hlsl << (param.Neg ? "-" : "");
+	if (param.Neg) {
+		hlsl << "-";
+	}
 
-	if (param.ParameterType == PARAM_C){
-		hlsl << "c";
-
+	if (param.ParameterType == PARAM_C) {
 		// We'll use the c() function instead of direct indexing
-		// Only display the offset if it's not 0.
 		if (paramMeta.IndexesWithA0_X) {
-			param.Address
-				? hlsl << "(a+" << param.Address << ")"
-				: hlsl << "(a)";
+			// Only display the offset if it's not 0.
+			if (param.Address != 0) {
+				hlsl << "c(a+" << param.Address << ")";
+			} else {
+				hlsl << "c(a)";
+			}
+		} else {
+			hlsl << "c(" << param.Address << ")";
 		}
-		else {
-			hlsl << "(" << param.Address << ")";
-		}
-	}
-	else if (param.ParameterType == PARAM_R && param.Address == 12) {
-		// Replace r12 with oPos
-		hlsl << "oPos";
-	}
-	else {
+	} else {
 		hlsl << VshGetRegisterName(param.ParameterType) << param.Address;
 	}
 
@@ -3014,43 +3005,22 @@ std::string ToHlsl(VSH_IMD_PARAMETER& paramMeta)
 		  param.Swizzle[2] == SWIZZLE_Z &&
 	      param.Swizzle[3] == SWIZZLE_W ))
 	{
-		hlsl << ".";
-
 		// We'll try to simplify swizzles if we can
-		int swizzles;
-
 		// If all swizzles are the same, we only need to write one out
-		if (param.Swizzle[0] == param.Swizzle[1] &&
-			param.Swizzle[0] == param.Swizzle[2] &&
-			param.Swizzle[0] == param.Swizzle[3]) {
-			swizzles = 1;
-		}
-		else {
-			// We need to use the full swizzle
-			// Note we can't always remove trailing repeats, like in VS asm
-			// As it may change the type from float4, to float3 or float2
+		unsigned swizzles = 1;
+
+		// Otherwise, we need to use the full swizzle
+		if (param.Swizzle[0] != param.Swizzle[1] ||
+			param.Swizzle[0] != param.Swizzle[2] ||
+			param.Swizzle[0] != param.Swizzle[3]) {
+			// Note, we can't remove trailing repeats, like in VS asm,
+			// as it may change the type from float4 to float3, float2 or float1!
 			swizzles = 4;
 		}
 
-		for (int i = 0; i < swizzles; i++)
-		{
-			char Swizzle = '?';
-			switch (param.Swizzle[i])
-			{
-			case SWIZZLE_X:
-				Swizzle = 'x';
-				break;
-			case SWIZZLE_Y:
-				Swizzle = 'y';
-				break;
-			case SWIZZLE_Z:
-				Swizzle = 'z';
-				break;
-			case SWIZZLE_W:
-				Swizzle = 'w';
-				break;
-			}
-			hlsl << Swizzle;
+		hlsl << ".";
+		for (unsigned i = 0; i < swizzles; i++) {
+			hlsl << "xyzw"[param.Swizzle[i]];
 		}
 	}
 
@@ -3079,103 +3049,51 @@ std::string ToHlsl(std::string pattern, VSH_INTERMEDIATE_FORMAT& instruction) {
 
 std::string BuildShader(VSH_XBOX_SHADER* pShader) {
 
+	// HLSL strings for all MAC opcodes, indexed with VSH_MAC
+	static std::string VSH_MAC_HLSL[] = {
+		/*MAC_NOP:*/"// MAC_NOP\n",
+		/*MAC_MOV:*/"dest = x_mov(src0);\n",
+		/*MAC_MUL:*/"dest = x_mul(src0, src1);\n",
+		/*MAC_ADD:*/"dest = x_add(src0, src1);\n",
+		/*MAC_MAD:*/"dest = x_mad(src0, src1, src2);\n",
+		/*MAC_DP3:*/"dest = x_dp3(src0, src1);\n",
+		/*MAC_DPH:*/"dest = x_dph(src0, src1);\n",
+		/*MAC_DP4:*/"dest = x_dp4(src0, src1);\n",
+		/*MAC_DST:*/"dest = x_dst(src0, src1);\n",
+		/*MAC_MIN:*/"dest = x_min(src0, src1);\n",
+		/*MAC_MAX:*/"dest = x_max(src0, src1);\n",
+		/*MAC_SLT:*/"dest = x_slt(src0, src1);\n",
+		/*MAC_SGE:*/"dest = x_sge(src0, src1);\n",
+		/*MAC_ARL:*/"a = x_arl(src0);\n", // Note : For this MAC_ARL case, ToHlsl would always replace 'dest' with 'a', so we optimized this upfront
+		"// ??? VSH_MAC 14 ???;\n",
+		"// ??? VSH_MAC 15 ???;\n" // VSH_MAC 2 final values of the 4 bits are undefined/unknown  TODO : Investigate their effect (if any) and emulate that as well
+	};
+
+	// HLSL strings for all ILU opcodes, indexed with VSH_ILU
+	static std::string VSH_ILU_HLSL[] = {
+		/*ILU_NOP:*/"// ILU_NOP\n",
+		/*ILU_MOV:*/"dest = x_mov(src0);\n",
+		/*ILU_RCP:*/"dest = x_rcp(src0);\n",
+		/*ILU_RCC:*/"dest = x_rcc(src0);\n",
+		/*ILU_RSQ:*/"dest = x_rsq(src0);\n",
+		/*ILU_EXP:*/"dest = x_exp(src0);\n",
+		/*ILU_LOG:*/"dest = x_log(src0);\n",
+		/*ILU_LIT:*/"dest = x_lit(src0);\n" // = 7 - all values of the 3 bits are used
+	};
+
 	auto hlsl = std::stringstream();
 
-
 	for (int i = 0; i < pShader->IntermediateCount; i++) {
+		VSH_INTERMEDIATE_FORMAT& xboxInstruction = pShader->Intermediate[i];
 
-		VSH_INTERMEDIATE_FORMAT xboxInstruction = pShader->Intermediate[i];
-
-		if (xboxInstruction.InstructionType == IMD_MAC)
-		{
-			switch (xboxInstruction.MAC)
-			{
-			case MAC_NOP:
-				hlsl << "// NOP";
-				break;
-			case MAC_MOV:
-				hlsl << ToHlsl("dest = x_mov(src0)", xboxInstruction);
-				break;
-			case MAC_MUL:
-				hlsl << ToHlsl("dest = x_mul(src0, src1)", xboxInstruction);
-				break;
-			case MAC_ADD:
-				hlsl << ToHlsl("dest = x_add(src0, src1)", xboxInstruction);
-				break;
-			case MAC_MAD:
-				hlsl << ToHlsl("dest = x_mad(src0, src1, src2)", xboxInstruction);
-				break;
-			case MAC_DP3:
-				hlsl << ToHlsl("dest = x_dp3(src0, src1)", xboxInstruction);
-				break;
-			case MAC_DPH:
-				hlsl << ToHlsl("dest = x_dph(src0, src1)", xboxInstruction);
-				break;
-			case MAC_DP4:
-				hlsl << ToHlsl("dest = x_dp4(src0, src1)", xboxInstruction);
-				break;
-			case MAC_DST:
-				hlsl << ToHlsl("dest = x_dst(src0, src1)", xboxInstruction);
-				break;
-			case MAC_MIN:
-				hlsl << ToHlsl("dest = x_min(src0, src1)", xboxInstruction);
-				break;
-			case MAC_MAX:
-				hlsl << ToHlsl("dest = x_max(src0, src1)", xboxInstruction);
-				break;
-			case MAC_SLT:
-				hlsl << ToHlsl("dest = x_slt(src0, src1)", xboxInstruction);
-				break;
-			case MAC_SGE:
-				hlsl << ToHlsl("dest = x_sge(src0, src1)", xboxInstruction);
-				break;
-			case MAC_ARL:
-				hlsl << ToHlsl("a = x_arl(src0)", xboxInstruction);
-				break;
-			default:
-				EmuLog(LOG_LEVEL::WARNING, "TODO message");
-			}
-		}
-		else if (xboxInstruction.InstructionType == IMD_ILU)
-		{
-			switch (xboxInstruction.ILU)
-			{
-			case ILU_NOP:
-				hlsl << "// NOP";
-				break;
-			case ILU_MOV:
-				hlsl << ToHlsl("dest = src0", xboxInstruction);
-				break;
-			case ILU_RCP:
-				hlsl << ToHlsl("dest = rcp(src0)", xboxInstruction);
-				break;
-			case ILU_RCC:
-				hlsl << ToHlsl("dest = x_rcc(src0)", xboxInstruction);
-				break;
-			case ILU_RSQ:
-				hlsl << ToHlsl("dest = rsqrt(src0)", xboxInstruction);
-				break;
-			case ILU_EXP:
-				hlsl << ToHlsl("dest = x_exp(src0)", xboxInstruction);
-				break;
-			case ILU_LOG:
-				hlsl << ToHlsl("dest = x_log(src0)", xboxInstruction);
-				break;
-			case ILU_LIT:
-				hlsl << ToHlsl("dest = x_lit(src0)", xboxInstruction);
-				break;
-			default:
-				EmuLog(LOG_LEVEL::WARNING, "TODO message");
-			}
-		}
-		else
-		{
+		if (xboxInstruction.InstructionType == IMD_MAC) {
+			hlsl << ToHlsl(VSH_MAC_HLSL[xboxInstruction.MAC], xboxInstruction);
+		} else if (xboxInstruction.InstructionType == IMD_ILU) {
+			hlsl << ToHlsl(VSH_ILU_HLSL[xboxInstruction.ILU], xboxInstruction);
+		} else {
 			EmuLog(LOG_LEVEL::WARNING, "TODO message");
 		}
-
-		// Finish the line
-		hlsl << ";\n";
 	}
+
 	return hlsl.str();
 }
-

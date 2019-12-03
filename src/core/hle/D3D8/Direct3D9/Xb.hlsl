@@ -1,3 +1,6 @@
+// This starts the raw string (comment to get syntax highlighting, UNCOMMENT to compile) :
+R"DELIMITER(
+
 #define r12 oPos // oPos and r12 are two ways of accessing the same register on Xbox
 
 struct VS_INPUT
@@ -33,6 +36,21 @@ float4 c(int index) {
 	return hostConstants[index + 96];
 }
 
+// Generic macro's
+//#define x_mov(src0) src0
+
+// Macro's for MAC ('Multiply And Accumulate') opcodes
+//#define x_mul(src0, src1) src0 * src1
+//#define x_add(src0, src1) src0 + src1
+//#define x_min(src0, src1) min(src0, src1)
+//#define x_max(src0, src1) max(src0, src1)
+//#define x_mad(src0, src1, src2) src0 * src1 + src2
+
+// Macro's for ILU ('Inverse Logic Unit') opcodes
+#define x_rcp(src0) rcp(src0)
+#define x_rsq(src0) rsqrt(src0)
+
+// Xbox functions
 int x_arl(float src0) {
 	// The address register should be floored
 	// Due to rounding differences with the Xbox (and increased precision on PC?)
@@ -197,7 +215,7 @@ VS_OUTPUT main(const VS_INPUT xIn)
 
 	// Insert Xbox shader here
 
-	// <Xbox Shader>
+	// <Xbox Shader> // !!MUST CORRESPOND WITH THE REGEX IN EmuRecompileVshFunction!!
 
 	// Copy variables to output struct
 	VS_OUTPUT xOut;
@@ -216,3 +234,5 @@ VS_OUTPUT main(const VS_INPUT xIn)
 
 	return xOut;
 }
+
+// )DELIMITER" /* This terminates the raw string" // */
