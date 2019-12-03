@@ -2753,9 +2753,12 @@ extern HRESULT EmuRecompileVshFunction
 		std::stringstream& pHostShaderDisassembly = std::stringstream();
 
 		//static std::ifstream t("Xb.hlsl");
-		static std::ifstream t("C:\\Users\\OEM\\Desktop\\repos\\Cxbx-Reloaded\\src\\core\\hle\\D3D8\\Direct3D9\\Xb.hlsl");
-		static  std::string hlslTemplate((std::istreambuf_iterator<char>(t)),
+		static std::ifstream t("..\\..\\..\\..\\src\\core\\hle\\D3D8\\Direct3D9\\Xb.hlsl");
+		const static  std::string hlslTemplate((std::istreambuf_iterator<char>(t)),
 			std::istreambuf_iterator<char>());
+		if (t.is_open()) {
+			t.close();
+		}
 
 		DbgVshPrintf("-- Before conversion --\n");
 		VshWriteShader(pShader, pXboxShaderDisassembly, pRecompiledDeclaration, FALSE);
