@@ -2821,7 +2821,7 @@ extern HRESULT EmuRecompileVshFunction
         {
             EmuLog(LOG_LEVEL::WARNING, "Couldn't assemble recompiled vertex shader");
 			EmuLog(LOG_LEVEL::WARNING, "%s", (char*)(pErrors)->GetBufferPointer());
-			LOG_TEST_CASE((char *)pErrors->GetBufferPointer());
+			//LOG_TEST_CASE((char *)pErrors->GetBufferPointer());
         }
 
 		if (pErrors)
@@ -3091,16 +3091,16 @@ std::string BuildShader(VSH_XBOX_SHADER* pShader) {
 				hlsl << "// NOP";
 				break;
 			case MAC_MOV:
-				hlsl << ToHlsl("dest = src0", xboxInstruction);
+				hlsl << ToHlsl("dest = x_mov(src0)", xboxInstruction);
 				break;
 			case MAC_MUL:
-				hlsl << ToHlsl("dest = src0 * src1", xboxInstruction);
+				hlsl << ToHlsl("dest = x_mul(src0, src1)", xboxInstruction);
 				break;
 			case MAC_ADD:
-				hlsl << ToHlsl("dest = src0 + src1", xboxInstruction);
+				hlsl << ToHlsl("dest = x_add(src0, src1)", xboxInstruction);
 				break;
 			case MAC_MAD:
-				hlsl << ToHlsl("dest = src0 * src1 + src2", xboxInstruction);
+				hlsl << ToHlsl("dest = x_mad(src0, src1, src2)", xboxInstruction);
 				break;
 			case MAC_DP3:
 				hlsl << ToHlsl("dest = x_dp3(src0, src1)", xboxInstruction);
@@ -3115,10 +3115,10 @@ std::string BuildShader(VSH_XBOX_SHADER* pShader) {
 				hlsl << ToHlsl("dest = x_dst(src0, src1)", xboxInstruction);
 				break;
 			case MAC_MIN:
-				hlsl << ToHlsl("dest = min(src0, src1)", xboxInstruction);
+				hlsl << ToHlsl("dest = x_min(src0, src1)", xboxInstruction);
 				break;
 			case MAC_MAX:
-				hlsl << ToHlsl("dest = max(src0, src1)", xboxInstruction);
+				hlsl << ToHlsl("dest = x_max(src0, src1)", xboxInstruction);
 				break;
 			case MAC_SLT:
 				hlsl << ToHlsl("dest = x_slt(src0, src1)", xboxInstruction);
@@ -3127,7 +3127,7 @@ std::string BuildShader(VSH_XBOX_SHADER* pShader) {
 				hlsl << ToHlsl("dest = x_sge(src0, src1)", xboxInstruction);
 				break;
 			case MAC_ARL:
-				hlsl << ToHlsl("a = toXboxIndex(src0)", xboxInstruction);
+				hlsl << ToHlsl("a = x_arl(src0)", xboxInstruction);
 				break;
 			default:
 				EmuLog(LOG_LEVEL::WARNING, "TODO message");

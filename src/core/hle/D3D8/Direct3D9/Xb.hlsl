@@ -33,13 +33,56 @@ float4 c(int index) {
 	return hostConstants[index + 96];
 }
 
-int toXboxIndex(float src0) {
+int x_arl(float src0) {
 	// The address register should be floored
 	// Due to rounding differences with the Xbox (and increased precision on PC?)
 	// some titles produce values just below the threshold of the next integer.
 	// We can add a small bias to make sure it's bumped over the threshold
 	// Test Case: Azurik (divides indexes 755, then scales them back in the vertex shader)
 	return floor(src0 + 0.0001); // TODO test
+}
+
+// TODO order functions
+float4 x_mov(float4 src0) {
+	return src0;
+}
+
+float4 x_add(float4 src0, float4 src1) {
+	return src0 + src1;
+}
+
+float4 x_mul(float4 src0, float4 src1) {
+	return src0 * src1;
+}
+
+float4 x_mad(float4 src0, float4 src1, float4 src3) {
+	return src0 * src1 + src3;
+}
+
+float4 x_dst(float4 src0, float4 src1) {
+	return dst(src0, src1);
+}
+
+float4 x_min(float4 src0, float4 src1) {
+	return src0 * src1;
+}
+
+float4 x_max(float4 src0, float4 src1) {
+	return max(src0, src1);
+}
+
+float4 x_exp(float src0) {
+	float x = pow(2, floor(src0));
+	float fractional = frac(src0);
+	float power = pow(2, src0);
+	return float4(x, fractional, power, 1);
+}
+
+float4 x_log(float src0) {
+	float exponent = floor(log(src0));
+	float mantissa = 1 / pow(2, exponent);
+	float logResult = log(src0);
+	return float4(exponent, mantissa, logResult, 1);
 }
 
 float x_dp4(float4 src0, float4 src1) {
