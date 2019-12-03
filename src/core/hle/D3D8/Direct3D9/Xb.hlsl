@@ -173,7 +173,9 @@ VS_OUTPUT main(const VS_INPUT xIn)
 	// Output variables
 	float4 oPos, oD0, oD1, oB0, oB1, oT0, oT1, oT2, oT3;
 	oPos = oD0 = oD1 = oB0 = oB1 = oT0 = oT1 = oT2 = oT3 = float4(0, 0, 0, 1); // TODO correct?
-	float oFog = 0, oPts = 0;
+	// Single component outputs
+	// x is write-only on Xbox. Use float4 as some games use incorrect masks
+	float4 oFog = 0, oPts = 0;
 
 	// Initialize input variables
 	v0 = xIn.v[0];
