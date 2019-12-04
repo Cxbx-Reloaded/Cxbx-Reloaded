@@ -2819,12 +2819,15 @@ extern HRESULT EmuRecompileVshFunction
         if (FAILED(hRet))
         {
             EmuLog(LOG_LEVEL::WARNING, "Couldn't assemble recompiled vertex shader");
-			EmuLog(LOG_LEVEL::WARNING, "%s", (char*)(pErrors)->GetBufferPointer());
-			//LOG_TEST_CASE((char *)pErrors->GetBufferPointer());
         }
 
-		if (pErrors)
+		if (pErrors) {
+			// Determine the log level
+			auto hlslErrorLogLevel = FAILED(hRet) ? LOG_LEVEL::ERROR2 : LOG_LEVEL::DEBUG;
+			// Log HLSL compiler errors
+			EmuLog(hlslErrorLogLevel, "%s", (char*)(pErrors)->GetBufferPointer());
 			(pErrors)->Release();
+		}
     }
 
     free(pShader);
