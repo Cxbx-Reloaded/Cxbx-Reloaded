@@ -45,11 +45,7 @@ float4 c(int index) {
 #define x_max(src0, src1) max(src0, src1)
 #define x_mad(src0, src1, src2) src0 * src1 + src2
 
-// Macros for ILU ('Inverse Logic Unit') opcodes
-#define x_rcp(src0) rcp(src0)
-#define x_rsq(src0) rsqrt(src0)
-
-// Xbox functions
+// Xbox MAC functions
 int x_arl(float src0) {
 	// The address register should be floored
 	// Due to rounding differences with the Xbox (and increased precision on PC?)
@@ -57,20 +53,6 @@ int x_arl(float src0) {
 	// We can add a small bias to make sure it's bumped over the threshold
 	// Test Case: Azurik (divides indexes 755, then scales them back in the vertex shader)
 	return floor(src0 + 0.0001);
-}
-
-float4 x_exp(float src0) {
-	float x = pow(2, floor(src0));
-	float fractional = frac(src0);
-	float power = pow(2, src0);
-	return float4(x, fractional, power, 1);
-}
-
-float4 x_log(float src0) {
-	float exponent = floor(log(src0));
-	float mantissa = 1 / pow(2, exponent);
-	float logResult = log(src0);
-	return float4(exponent, mantissa, logResult, 1);
 }
 
 
@@ -104,16 +86,43 @@ float4 x_slt(float4 src0, float4 src1) {
 	return dest;
 }
 
+// Xbox ILU Functions
+
+float x_rcp(float4 src0) {
+	return 1 / src0.w; // use w component by default
+}
+
 // Clamped reciprocal
-float x_rcc(float src0) {
+float x_rcc(float4 src0) {
+	float input = src0.w; // use w component by default
 
 	// Calculate the reciprocal
-	float r = 1.0f / src0;
+	float r = 1.0f / input;
 
 	// Clamp
 	return (r > 0)
 		? clamp(r, 5.42101e-020, 1.84467e+019)
 		: clamp(r, -1.84467e+019, -5.42101e-020);
+}
+
+float x_rsq(float4 src0) {
+	return rsqrt(src0.w); // use w component by default
+}
+
+float4 x_exp(float4 src0) {
+	float input = src0.w; // use w component by default
+	float x = pow(2, floor(input));
+	float fractional = frac(input);
+	float power = pow(2, input);
+	return float4(x, fractional, power, 1);
+}
+
+float4 x_log(float4 src0) {
+	float input = src0.w; // use w component by default
+	float exponent = floor(log(input));
+	float mantissa = 1 / pow(2, exponent);
+	float logResult = log(input);
+	return float4(exponent, mantissa, logResult, 1);
 }
 
 float4 x_lit(float4 src0) {
