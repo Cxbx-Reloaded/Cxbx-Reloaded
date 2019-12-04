@@ -111,17 +111,17 @@ float x_rsq(float4 src0) {
 
 float4 x_exp(float4 src0) {
 	float input = src0.w; // use w component by default
-	float x = pow(2, floor(input));
+	float x = exp2(floor(input));
 	float fractional = frac(input);
-	float power = pow(2, input);
+	float power = exp2(input);
 	return float4(x, fractional, power, 1);
 }
 
 float4 x_log(float4 src0) {
 	float input = src0.w; // use w component by default
-	float exponent = floor(log(input));
-	float mantissa = 1 / pow(2, exponent);
-	float logResult = log(input);
+	float exponent = floor(log2(input));
+	float mantissa = 1 / exp2(exponent);
+	float logResult = log2(input);
 	return float4(exponent, mantissa, logResult, 1);
 }
 
