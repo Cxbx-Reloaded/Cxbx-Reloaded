@@ -2675,6 +2675,20 @@ std::string VshPostProcess(std::string shader) {
 
 extern std::string BuildShader(VSH_XBOX_SHADER* pShader);
 
+std::string DebugPrependLineNumbers(std::string shaderString) {
+	std::stringstream shader(shaderString);
+	auto debugShader = std::stringstream();
+
+	int i = 1;
+	for (std::string line; std::getline(shader, line); ) {
+		auto lineNumber = std::to_string(i++);
+		auto paddedLine = line.insert(0, 3 - lineNumber.size(), ' ');
+		debugShader << "/* " << lineNumber << " */ " << line << "\n";
+	}
+
+	return debugShader.str();
+}
+
 // recompile xbox vertex shader function
 extern HRESULT EmuRecompileVshFunction
 (
@@ -2765,7 +2779,7 @@ extern HRESULT EmuRecompileVshFunction
 		hlslTest = std::regex_replace(hlslTemplate, std::regex("// <Xbox Shader>"), hlslTest);
 
 		DbgVshPrintf("-- HLSL conversion 1 ---\n");
-		DbgVshPrintf(hlslTest.c_str());
+		DbgVshPrintf(DebugPrependLineNumbers(hlslTest).c_str());
 		DbgVshPrintf("-----------------------\n");
 
 		VshConvertShader(pShader, bNoReservedConstants);
@@ -2777,13 +2791,13 @@ extern HRESULT EmuRecompileVshFunction
 		// Post process the final shader
 		auto finalHostShader = VshPostProcess(pHostShaderDisassembly.str());
 
-		DbgVshPrintf("-- After conversion ---\n");
-		DbgVshPrintf("%s", finalHostShader.c_str());
-		DbgVshPrintf("-----------------------\n");
+		//DbgVshPrintf("-- After conversion ---\n");
+		//DbgVshPrintf("%s", finalHostShader.c_str());
+		//DbgVshPrintf("-----------------------\n");
 
-		DbgVshPrintf("-- HLSL conversion 2 ---\n");
-		DbgVshPrintf(BuildShader(pShader).c_str());
-		DbgVshPrintf("-----------------------\n");
+		//DbgVshPrintf("-- HLSL conversion 2 ---\n");
+		//DbgVshPrintf(BuildShader(pShader).c_str());
+		//DbgVshPrintf("-----------------------\n");
 
         // HACK: Azurik. Prevent Direct3D from trying to assemble this.
 		if(finalHostShader == "vs.2.x\n")
