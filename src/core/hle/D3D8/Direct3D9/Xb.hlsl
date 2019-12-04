@@ -34,17 +34,18 @@ float4 c(int index) {
 	return hostConstants[index + 96];
 }
 
-// Generic macro's
-//#define x_mov(src0) src0
+// Generic macros
+#define x_mov(src0) src0
 
-// Macro's for MAC ('Multiply And Accumulate') opcodes
-//#define x_mul(src0, src1) src0 * src1
-//#define x_add(src0, src1) src0 + src1
-//#define x_min(src0, src1) min(src0, src1)
-//#define x_max(src0, src1) max(src0, src1)
-//#define x_mad(src0, src1, src2) src0 * src1 + src2
+// Macros for MAC ('Multiply And Accumulate') opcodes
+#define x_mul(src0, src1) src0 * src1
+#define x_add(src0, src1) src0 + src1
+#define x_dst(src0, src1) dst(src0, src1)
+#define x_min(src0, src1) min(src0, src1)
+#define x_max(src0, src1) max(src0, src1)
+#define x_mad(src0, src1, src2) src0 * src1 + src2
 
-// Macro's for ILU ('Inverse Logic Unit') opcodes
+// Macros for ILU ('Inverse Logic Unit') opcodes
 #define x_rcp(src0) rcp(src0)
 #define x_rsq(src0) rsqrt(src0)
 
@@ -55,36 +56,7 @@ int x_arl(float src0) {
 	// some titles produce values just below the threshold of the next integer.
 	// We can add a small bias to make sure it's bumped over the threshold
 	// Test Case: Azurik (divides indexes 755, then scales them back in the vertex shader)
-	return floor(src0 + 0.0001); // TODO test
-}
-
-// TODO order functions
-float4 x_mov(float4 src0) {
-	return src0;
-}
-
-float4 x_add(float4 src0, float4 src1) {
-	return src0 + src1;
-}
-
-float4 x_mul(float4 src0, float4 src1) {
-	return src0 * src1;
-}
-
-float4 x_mad(float4 src0, float4 src1, float4 src3) {
-	return src0 * src1 + src3;
-}
-
-float4 x_dst(float4 src0, float4 src1) {
-	return dst(src0, src1);
-}
-
-float4 x_min(float4 src0, float4 src1) {
-	return src0 * src1;
-}
-
-float4 x_max(float4 src0, float4 src1) {
-	return max(src0, src1);
+	return floor(src0 + 0.0001);
 }
 
 float4 x_exp(float src0) {
@@ -101,16 +73,17 @@ float4 x_log(float src0) {
 	return float4(exponent, mantissa, logResult, 1);
 }
 
-float x_dp4(float4 src0, float4 src1) {
-	return dot(src0, src1);
-}
 
-float x_dp3(float3 src0, float3 src1) {
-	return dot(src0, src1);
+float x_dp3(float4 src0, float4 src1) {
+	return dot(src0.xyz, src1.xyz);
 }
 
 float x_dph(float4 src0, float4 src1) {
 	return x_dp3(src0, src1) + src1.w;
+}
+
+float x_dp4(float4 src0, float4 src1) {
+	return dot(src0, src1);
 }
 
 float4 x_sge(float4 src0, float4 src1) {
