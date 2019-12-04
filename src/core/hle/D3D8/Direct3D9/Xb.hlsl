@@ -16,9 +16,9 @@ struct VS_OUTPUT
 	float4 oB0  : TEXCOORD4; // Backface Colour 0
 	float4 oB1  : TEXCOORD5; // Backface Colour 1
 	float4 oT0  : TEXCOORD0; // Texture Coord 0
-	float4 oT1  : TEXCOORD1; // Texture Coord 0
-	float4 oT2  : TEXCOORD2; // Texture Coord 0
-	float4 oT3  : TEXCOORD3; // Texture Coord 0
+	float4 oT1  : TEXCOORD1; // Texture Coord 1
+	float4 oT2  : TEXCOORD2; // Texture Coord 2
+	float4 oT3  : TEXCOORD3; // Texture Coord 3
 };
 
 // Constant registers
