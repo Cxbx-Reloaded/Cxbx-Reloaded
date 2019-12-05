@@ -26,7 +26,8 @@ extern float4 hostConstants[192];
 
 // Map Xbox [-96, 95] to Host [0, 191]
 // Account for Xbox's negative constant indexes
-float4 c(int index) {
+float4 c(int index)
+{
 	// Out-of-range reads return 0
 	if (index < -96 || index > 95)
 		return float4(0, 0, 0, 0);
@@ -34,19 +35,45 @@ float4 c(int index) {
 	return hostConstants[index + 96];
 }
 
-// Generic macros
-#define x_mov(src0) src0
+// Functions for MAC ('Multiply And Accumulate') opcodes
 
-// Macros for MAC ('Multiply And Accumulate') opcodes
-#define x_mul(src0, src1) src0 * src1
-#define x_add(src0, src1) src0 + src1
-#define x_dst(src0, src1) dst(src0, src1)
-#define x_min(src0, src1) min(src0, src1)
-#define x_max(src0, src1) max(src0, src1)
-#define x_mad(src0, src1, src2) src0 * src1 + src2
+float4 x_mov(float4 src0)
+{
+	return src0;
+}
 
-// Xbox MAC functions
-int x_arl(float src0) {
+float4 x_mul(float4 src0, float4 src1)
+{
+	return src0 * src1;
+}
+
+float4 x_add(float4 src0, float4 src1)
+{
+	return src0 + src1;
+}
+
+float4 x_dst(float4 src0, float4 src1)
+{
+	return dst(src0, src1);
+}
+
+float4 x_min(float4 src0, float4 src1)
+{
+	return min(src0, src1);
+}
+
+float4 x_max(float4 src0, float4 src1)
+{
+	return max(src0, src1);
+}
+
+float4 x_mad(float4 src0, float4 src1, float4 src2)
+{
+	return (src0 * src1) + src2;
+}
+
+int x_arl(float src0)
+{
 	// The address register should be floored
 	// Due to rounding differences with the Xbox (and increased precision on PC?)
 	// some titles produce values just below the threshold of the next integer.
@@ -55,78 +82,92 @@ int x_arl(float src0) {
 	return floor(src0 + 0.0001);
 }
 
-
-float x_dp3(float4 src0, float4 src1) {
+float x_dp3(float4 src0, float4 src1)
+{
 	return dot(src0.xyz, src1.xyz);
 }
 
-float x_dph(float4 src0, float4 src1) {
+float x_dph(float4 src0, float4 src1)
+{
 	return x_dp3(src0, src1) + src1.w;
 }
 
-float x_dp4(float4 src0, float4 src1) {
+float x_dp4(float4 src0, float4 src1)
+{
 	return dot(src0, src1);
 }
 
-float4 x_sge(float4 src0, float4 src1) {
+float4 x_sge(float4 src0, float4 src1)
+{
 	float4 dest;
-	dest.x = (src0.x >= src1.x) ? 1.0f : 0.0f;
-	dest.y = (src0.y >= src1.y) ? 1.0f : 0.0f;
-	dest.z = (src0.z >= src1.z) ? 1.0f : 0.0f;
-	dest.w = (src0.w >= src1.w) ? 1.0f : 0.0f;
+	dest.x = (src0.x >= src1.x) ? 1 : 0;
+	dest.y = (src0.y >= src1.y) ? 1 : 0;
+	dest.z = (src0.z >= src1.z) ? 1 : 0;
+	dest.w = (src0.w >= src1.w) ? 1 : 0;
 	return dest;
 }
 
-float4 x_slt(float4 src0, float4 src1) {
+float4 x_slt(float4 src0, float4 src1)
+{
 	float4 dest;
-	dest.x = (src0.x < src1.x) ? 1.0f : 0.0f;
-	dest.y = (src0.y < src1.y) ? 1.0f : 0.0f;
-	dest.z = (src0.z < src1.z) ? 1.0f : 0.0f;
-	dest.w = (src0.w < src1.w) ? 1.0f : 0.0f;
+	dest.x = (src0.x < src1.x) ? 1 : 0;
+	dest.y = (src0.y < src1.y) ? 1 : 0;
+	dest.z = (src0.z < src1.z) ? 1 : 0;
+	dest.w = (src0.w < src1.w) ? 1 : 0;
 	return dest;
 }
 
 // Xbox ILU Functions
 
-float x_rcp(float4 src0) {
-	return 1 / src0.w; // use w component by default
+float scalar_component(float4 src0)
+{
+	return src0.w; // use w component by default
 }
 
-// Clamped reciprocal
-float x_rcc(float4 src0) {
-	float input = src0.w; // use w component by default
+float x_rcp(float4 src0)
+{
+	return 1 / scalar_component(src0);
+}
+
+float x_rcc(float4 src0)
+{
+	float input = scalar_component(src0);
 
 	// Calculate the reciprocal
-	float r = 1.0f / input;
+	float r = 1 / input;
 
 	// Clamp
 	return (r > 0)
-		? clamp(r, 5.42101e-020, 1.84467e+019)
-		: clamp(r, -1.84467e+019, -5.42101e-020);
+		? clamp(r, 5.42101e-020f, 1.84467e+019f)
+		: clamp(r, -1.84467e+019f, -5.42101e-020f);
 }
 
-float x_rsq(float4 src0) {
-	return rsqrt(src0.w); // use w component by default
+float x_rsq(float4 src0)
+{
+	return rsqrt(scalar_component(src0));
 }
 
-float4 x_exp(float4 src0) {
-	float input = src0.w; // use w component by default
+float4 x_exp(float4 src0)
+{
+	float input = scalar_component(src0);
 	float x = exp2(floor(input));
 	float fractional = frac(input);
 	float power = exp2(input);
 	return float4(x, fractional, power, 1);
 }
 
-float4 x_log(float4 src0) {
-	float input = src0.w; // use w component by default
+float4 x_log(float4 src0)
+{
+	float input = scalar_component(src0);
 	float exponent = floor(log2(input));
 	float mantissa = 1 / exp2(exponent);
 	float logResult = log2(input);
 	return float4(exponent, mantissa, logResult, 1);
 }
 
-float4 x_lit(float4 src0) {
-	const float epsilon = 1.0 / 256.0;
+float4 x_lit(float4 src0)
+{
+	const float epsilon = 1.0f / 256.0f;
 	float diffuse = src0.x;
 	float blinn = src0.y;
 	float specPower = clamp(src0.w, -(128 - epsilon), (128 - epsilon));
@@ -140,7 +181,8 @@ float4 x_lit(float4 src0) {
 	return dest;
 }
 
-float4 reverseScreenspaceTransform(float4 oPos) {
+float4 reverseScreenspaceTransform(float4 oPos)
+{
 	// On Xbox, oPos should contain the vertex position in screenspace
 	// Conventionally, each Xbox Vertex Shader includes instructions like this
 	// mul oPos.xyz, r12, c-38
@@ -149,9 +191,9 @@ float4 reverseScreenspaceTransform(float4 oPos) {
 	// where c-37 and c-38 are reserved transform values
 
 	// Lets hope c-37 and c-38 contain the conventional values
-	oPos.xyz -= c(-37); // reverse offset
+	oPos.xyz -= (float3)c(-37); // reverse offset
 	oPos.xyz *= oPos.w; // reverse perspective divide
-	oPos.xyz /= c(-38); // reverse scale
+	oPos.xyz /= (float3)c(-38); // reverse scale
 
 	return oPos;
 }
@@ -161,21 +203,19 @@ VS_OUTPUT main(const VS_INPUT xIn)
 	// Input registers
 	float4 v0, v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13, v14, v15;
 
-	// Temporary variables
+	// Temporary registers
 	float4 r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11;
 	r0 = r1 = r2 = r3 = r4 = r5 = r6 = r7 = r8 = r9 = r10 = r11 = float4(0, 0, 0, 1); // TODO correct?
-    #define r12 oPos // oPos and r12 are two ways of accessing the same register on Xbox
+	#define r12 oPos // oPos and r12 are two ways of accessing the same register on Xbox
 
-	// Xbox index register
-	int a;
+	// Address (index) register
+	int a0_x;
 
 	// Output variables
 	float4 oPos, oD0, oD1, oB0, oB1, oT0, oT1, oT2, oT3;
-	oPos = oD0 = oD1 = oB0 = oB1 = oT0 = oT1 = oT2 = oT3 = float4(0, 0, 0, 1); // TODO correct?
-
+	oPos = oD0 = oD1 = oB0 = oB1 = oT0 = oT1 = oT2 = oT3 = float4(0, 0, 0, 1); // Pre-initialize w component of outputs to 1
 	// Single component outputs
-	// x is write-only on Xbox. Use float4 as some games use incorrect masks
-	float4 oFog, oPts;
+	float4 oFog, oPts; // x is write-only on Xbox. Use float4 as some games use incorrect masks
 	oFog = oPts = 0;
 
 	// Initialize input variables

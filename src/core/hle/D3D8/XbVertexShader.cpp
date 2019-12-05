@@ -1178,11 +1178,6 @@ static boolean VshAddInstructionMAC_ARL(VSH_SHADER_INSTRUCTION *pInstruction,
     return TRUE;
 }
 
-// Dxbx addition : Scalar instructions reading from W should read from X instead
-static boolean DxbxFixupScalarParameter(VSH_SHADER_INSTRUCTION *pInstruction,
-    VSH_XBOX_SHADER *pShader,
-    VSH_PARAMETER *pParameter);
-
 static boolean VshAddInstructionILU_R(VSH_SHADER_INSTRUCTION *pInstruction,
                                       VSH_XBOX_SHADER        *pShader,
                                       boolean                IsCombined)
@@ -1260,9 +1255,6 @@ static void VshConvertToIntermediate(VSH_SHADER_INSTRUCTION *pInstruction,
     //   +ILU
     boolean IsCombined = FALSE;
 
-    // Dxbx note : Scalar instructions read from C, but use X instead of W, fix that :
-    DxbxFixupScalarParameter(pInstruction, pShader, &pInstruction->C);
-
     if(VshAddInstructionMAC_R(pInstruction, pShader, IsCombined))
     {
         if(HasMACO(pInstruction) ||
@@ -1333,16 +1325,11 @@ static inline void VshSetOutputMask(VSH_IMD_OUTPUT* pOutput,
 }
 
 // Dxbx addition : Scalar instructions reading from W should read from X instead
-static boolean DxbxFixupScalarParameter(VSH_SHADER_INSTRUCTION *pInstruction,
-    VSH_XBOX_SHADER *pShader,
-    VSH_PARAMETER *pParameter)
+static void DxbxFixupScalarParameter(VSH_INTERMEDIATE_FORMAT *pInstruction, VSH_IMD_PARAMETER *pParameter)
 {
-    boolean Result;
-
     // The DirectX vertex shader language specifies that the exp, log, rcc, rcp, and rsq instructions
     // all operate on the "w" component of the input. But the microcode versions of these instructions
     // actually operate on the "x" component of the input.
-    Result = false;
 
     // Test if this is a scalar instruction :
     if (pInstruction->ILU == ILU_RCP ||
@@ -1351,10 +1338,10 @@ static boolean DxbxFixupScalarParameter(VSH_SHADER_INSTRUCTION *pInstruction,
         pInstruction->ILU == ILU_LOG)
     {
         // Test if this parameter reads all components, including W (TODO : Or should we fixup any W reading swizzle?) :
-        if ((pParameter->Swizzle[0] == SWIZZLE_X)
-            && (pParameter->Swizzle[1] == SWIZZLE_Y)
-            && (pParameter->Swizzle[2] == SWIZZLE_Z)
-            && (pParameter->Swizzle[3] == SWIZZLE_W))
+        if ((pParameter->Parameter.Swizzle[0] == SWIZZLE_X)
+            && (pParameter->Parameter.Swizzle[1] == SWIZZLE_Y)
+            && (pParameter->Parameter.Swizzle[2] == SWIZZLE_Z)
+            && (pParameter->Parameter.Swizzle[3] == SWIZZLE_W))
         {
             // Change the read from W into a read from X (this fixes the XDK VolumeLight sample) :
             VshSetSwizzle(pParameter, SWIZZLE_X, SWIZZLE_X, SWIZZLE_X, SWIZZLE_X);
@@ -1362,8 +1349,6 @@ static boolean DxbxFixupScalarParameter(VSH_SHADER_INSTRUCTION *pInstruction,
             Result = true;
         }
     }
-
-    return Result;
 }
 
 /*
@@ -1535,6 +1520,9 @@ static boolean VshConvertShader(VSH_XBOX_SHADER *pShader,
         VSH_INTERMEDIATE_FORMAT* pIntermediate = &pShader->Intermediate[i];
         // Combining not supported in vs.1.1
         pIntermediate->IsCombined = FALSE;
+
+        // Dxbx note : Scalar instructions read from C, but use X instead of W, fix that :
+        DxbxFixupScalarParameter(pIntermediate, &(pIntermediate->Parameters[0]));
 
         if(pIntermediate->Output.Type == IMD_OUTPUT_O && (pIntermediate->Output.Address == OREG_OPTS || pIntermediate->Output.Address == OREG_OFOG))
         {
@@ -2842,6 +2830,8 @@ extern HRESULT EmuRecompileVshFunction
 			EmuLog(hlslErrorLogLevel, "%s", (char*)(pErrors)->GetBufferPointer());
 			(pErrors)->Release();
 		}
+
+		// TODO : If compiling hlsl failed, fall back on assembling finalHostShader?
     }
 
     free(pShader);
@@ -3004,9 +2994,9 @@ std::string ToHlsl(VSH_IMD_PARAMETER& paramMeta)
 		if (paramMeta.IndexesWithA0_X) {
 			// Only display the offset if it's not 0.
 			if (param.Address != 0) {
-				hlsl << "c(a+" << param.Address << ")";
+				hlsl << "c(a0_x+" << param.Address << ")";
 			} else {
-				hlsl << "c(a)";
+				hlsl << "c(a0_x)";
 			}
 		} else {
 			hlsl << "c(" << param.Address << ")";
