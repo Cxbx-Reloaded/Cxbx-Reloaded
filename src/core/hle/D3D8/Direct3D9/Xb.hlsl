@@ -1,6 +1,6 @@
 // This starts the raw string (comment to get syntax highlighting, UNCOMMENT to compile) :
 R"DELIMITER(
-
+// Xbox HLSL vertex shader (template populated at runtime)
 struct VS_INPUT
 {
 	float4 v[16] : TEXCOORD;
@@ -21,19 +21,8 @@ struct VS_OUTPUT
 	float4 oT3  : TEXCOORD3; // Texture Coord 3
 };
 
-// Constant registers
-extern float4 hostConstants[192];
-
-// Map Xbox [-96, 95] to Host [0, 191]
-// Account for Xbox's negative constant indexes
-float4 c(int index)
-{
-	// Out-of-range reads return 0
-	if (index < -96 || index > 95)
-		return float4(0, 0, 0, 0);
-
-	return hostConstants[index + 96];
-}
+// Xbox constant registers
+extern uniform float4 c[192] : register(c0);
 
 // Functions for MAC ('Multiply And Accumulate') opcodes
 
@@ -191,9 +180,9 @@ float4 reverseScreenspaceTransform(float4 oPos)
 	// where c-37 and c-38 are reserved transform values
 
 	// Lets hope c-37 and c-38 contain the conventional values
-	oPos.xyz -= (float3)c(-37); // reverse offset
+    oPos.xyz -= (float3)c[-37 + 96]; // reverse offset
 	oPos.xyz *= oPos.w; // reverse perspective divide
-	oPos.xyz /= (float3)c(-38); // reverse scale
+    oPos.xyz /= (float3)c[-38 + 96]; // reverse scale
 
 	return oPos;
 }
@@ -236,10 +225,8 @@ VS_OUTPUT main(const VS_INPUT xIn)
 	v14 = xIn.v[14];
 	v15 = xIn.v[15];
 
-	// Insert Xbox shader here
-
-	// <Xbox Shader> // !!MUST CORRESPOND WITH THE REGEX IN EmuRecompileVshFunction!!
-
+	// Xbox shader program
+// <Xbox Shader>
 	// Copy variables to output struct
 	VS_OUTPUT xOut;
 
@@ -258,4 +245,4 @@ VS_OUTPUT main(const VS_INPUT xIn)
 	return xOut;
 }
 
-// )DELIMITER" /* This terminates the raw string" // */
+// End of vertex shader )DELIMITER" /* This terminates the raw string" // */

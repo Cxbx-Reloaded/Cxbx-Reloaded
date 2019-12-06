@@ -41,16 +41,6 @@
 #include <array>
 #include <bitset>
 
-//#define CXBX_USE_VS30 // Separate the port to Vertex Shader model 3.0 from the port to Direct3D9
-#ifdef CXBX_USE_VS30
-	#define VSH_MAX_INSTRUCTION_COUNT VSH_VS30_MAX_INSTRUCTION_COUNT // == 512
-#else 
-	#define VSH_MAX_INSTRUCTION_COUNT VSH_VS2X_MAX_INSTRUCTION_COUNT // == 256
-#endif
-
-// Internal Vertex Shader version (mustn't conflict with any VERSION_XVS*)
-#define VERSION_CXBX 0x7863 // 'cx' Cxbx vertex shader, not an official value, used in VshConvertShader() and VshWriteShader()
-
 #define DbgVshPrintf \
 	LOG_CHECK_ENABLED(LOG_LEVEL::DEBUG) \
 		if(g_bPrintfOn) printf
@@ -67,8 +57,6 @@ typedef enum _VSH_SWIZZLE
 	SWIZZLE_W
 }
 VSH_SWIZZLE;
-
-typedef struct DxbxSwizzles { VSH_SWIZZLE s[4]; } DxbxSwizzles;
 
 typedef DWORD DxbxMask,
 *PDxbxMask;
@@ -423,38 +411,6 @@ static const VSH_OPCODE_PARAMS g_OpCodeParams_MAC[] =
     { /*ILU_NOP, MAC_ARL, */ TRUE,  FALSE, FALSE }
 };
 
-static const char* MAC_OpCode[] =
-{
-    "nop",
-    "mov",
-    "mul",
-    "add",
-    "mad",
-    "dp3",
-    "dph",
-    "dp4",
-    "dst",
-    "min",
-    "max",
-    "slt",
-    "sge",
-    "mova", // really "arl" Dxbx note : Alias for 'mov a0.x'
-    "???",
-    "???"
-};
-
-static const char* ILU_OpCode[] =
-{
-    "nop",
-    "mov",
-    "rcp",
-    "rcc",
-    "rsq",
-    "expp", // The Xbox EXPP instruction behaves like vs_1_1
-    "log",
-    "lit"
-};
-
 static const char* OReg_Name[] =
 {
     "oPos",
@@ -475,8 +431,7 @@ static const char* OReg_Name[] =
     "a0.x"
 };
 
-std::array<bool, 16> RegVIsPresentInDeclaration;
-std::array<bool, 16> RegVIsUsedByShader;
+// TODO : Reinstate and use : std::array<bool, 16> RegVIsPresentInDeclaration;
 
 /* TODO : map non-FVF Xbox vertex shader handle to CxbxVertexShader (a struct containing a host Xbox vertex shader handle and the original members)
 std::unordered_map<DWORD, CxbxVertexShader> g_CxbxVertexShaders;
@@ -683,85 +638,6 @@ static char *VshGetRegisterName(VSH_PARAMETER_TYPE ParameterType)
     }
 }
 
-static void VshWriteOutputMask(boolean *OutputMask,
-                               std::stringstream& pDisassembly)
-{
-    if(OutputMask[0] && OutputMask[1] && OutputMask[2] && OutputMask[3])
-    {
-        // All components are there, no need to print the mask
-        return;
-    }
-	pDisassembly << "." << (OutputMask[0] ? "x" : "")
-						<< (OutputMask[1] ? "y" : "")
-						<< (OutputMask[2] ? "z" : "")
-						<< (OutputMask[3] ? "w" : "");
-}
-
-static void VshWriteParameter(VSH_IMD_PARAMETER *pParameter,
-                              std::stringstream& pDisassembly)
-{
-    pDisassembly << ", " << (pParameter->Parameter.Neg ? "-" : "") << VshGetRegisterName(pParameter->Parameter.ParameterType);
-    if(pParameter->Parameter.ParameterType == PARAM_C && pParameter->IndexesWithA0_X)
-    {
-        // Only display the offset if it's not 0.
-        if(pParameter->Parameter.Address)
-        {
-			pDisassembly << "[a0.x+" << pParameter->Parameter.Address << "]";
-        }
-        else
-        {
-			pDisassembly << "[a0.x]";
-        }
-    }
-    else
-    {
-		pDisassembly << pParameter->Parameter.Address;
-    }
-    // Only bother printing the swizzle if it is not .xyzw
-    if(!(pParameter->Parameter.Swizzle[0] == SWIZZLE_X &&
-         pParameter->Parameter.Swizzle[1] == SWIZZLE_Y &&
-         pParameter->Parameter.Swizzle[2] == SWIZZLE_Z &&
-         pParameter->Parameter.Swizzle[3] == SWIZZLE_W))
-    {
-        int i;
-
-		pDisassembly << ".";
-        for (i = 0; i < 4; i++)
-        {
-            int j;
-            char Swizzle = '?';
-            switch(pParameter->Parameter.Swizzle[i])
-            {
-            case SWIZZLE_X:
-                Swizzle = 'x';
-                break;
-            case SWIZZLE_Y:
-                Swizzle = 'y';
-                break;
-            case SWIZZLE_Z:
-                Swizzle = 'z';
-                break;
-            case SWIZZLE_W:
-                Swizzle = 'w';
-                break;
-            }
-			pDisassembly << Swizzle;
-            for (j = i; j < 4; j++)
-            {
-                if(pParameter->Parameter.Swizzle[i] != pParameter->Parameter.Swizzle[j])
-                {
-                    break;
-                }
-            }
-            if(j == 4)
-            {
-                break;
-            }
-        }
-    }
-}
-
-
 char* XboxVertexRegisterAsString(DWORD VertexRegister)
 {
 	switch (VertexRegister)
@@ -869,151 +745,6 @@ D3DDECLUSAGE Xb2PCRegisterType
 }
 
 extern D3DCAPS g_D3DCaps;
-
-enum {
-	X_VSH_TEMPORARY_REGISTER_COUNT = 12, // For Xbox temporary registers r0 to r11, mapped one-on-one to host
-	X_VSH_TEMP_OPOS = 12, // Used as intermediate storage for oPos (which Xbox can read through r12)
-	// X_VSH_TEMP_OFOG, // Enable once we treat oFog similar to oPos
-	// X_VSH_TEMP_OPTS, // Enable once we treat oPts similar to oPos
-	X_VSH_TEMP_SCRATCH = 13, // Used as intermediate storage in Xbox-to-host opcode conversion
-	X_VSH_TEMP_VERTEXREGBASE = 14 // Used for (1 up to 16) SetVertexData4f constants
-};
-
-static void VshWriteShader(VSH_XBOX_SHADER *pShader,
-                           std::stringstream& pDisassembly,
-						   D3DVERTEXELEMENT *pRecompiled,
-                           boolean Truncate)
-{
-    switch(pShader->ShaderHeader.Version)
-    {
-        case VERSION_CXBX:
-#ifdef CXBX_USE_VS30
-			pDisassembly << "vs.3.0\n";
-#else
-			pDisassembly << "vs.2.x\n";
-#endif
-            break;
-        case VERSION_XVS:
-			pDisassembly << "xvs.1.1\n";
-            break;
-        case VERSION_XVSS:
-			pDisassembly << "xvss.1.1\n";
-            break;
-        case VERSION_XVSW:
-			pDisassembly << "xvsw.1.1\n";
-            break;
-        default:
-            break;
-    }
-
-	// Ensure extra temporary registers are assigned at the beginning, as stand-ins for undeclared v registers
-	// Abusing the truncate flag, which implies we're writing the final host shader
-	if (Truncate) {
-		std::stringstream moveConstantsToTemporaries;
-
-		pDisassembly << "; Input usage declarations --\n";
-		for(size_t i = 0; i < RegVIsUsedByShader.size(); i++){
-			if (RegVIsUsedByShader[i]) {
-				if (!RegVIsPresentInDeclaration[i]) {
-					// Log test case and skip
-					// Any registers hitting this critera were already replaced with constant/temporary reads
-					// To correctly use the values given in SetVertexData4f.
-					// We need to move these constant values to temporaries so they can be used as input alongside other constants!
-					// We count down from the highest available on the host because Xbox titles don't use values that high, and we read from c192 (one above maximum Xbox c191 constant) and up
-					moveConstantsToTemporaries << "mov r" << (X_VSH_TEMP_VERTEXREGBASE + i) << ", c" << (CXBX_D3DVS_CONSTREG_VERTEXDATA4F_BASE + i) << "\n";
-					// test-case : Blade II (before menu's)
-					// test-case : Namco Museum 50th Anniversary (at boot)
-					// test-case : Pac-Man World 2 (at boot)
-					// test-case : The Simpsons Road Rage (leaving menu's, before entering in-game)
-					// test-case : The SpongeBob SquarePants Movie (before menu's)
-					LOG_TEST_CASE("Shader uses undeclared Vertex Input Registers");
-					continue;
-				}
-
-				// dcl_texcoord can be useds for any user-defined data
-				// We need this because there is no reliable way to detect the real usage
-				// Xbox has no concept of 'usage types', it only requires a list of attribute register numbers.
-				// So we treat them all as 'user-defined'
-				pDisassembly << "dcl_texcoord" << i << " v" << i << "\n";
-			}
-		}
-
-		pDisassembly << moveConstantsToTemporaries.str();
-	}
-
-    for (int i = 0; i < pShader->IntermediateCount && (i < VSH_MAX_INSTRUCTION_COUNT || !Truncate); i++)
-    {
-        VSH_INTERMEDIATE_FORMAT *pIntermediate = &pShader->Intermediate[i];
-
-        if(i == VSH_MAX_INSTRUCTION_COUNT)
-        {
-			pDisassembly << "; -- Passing the truncation limit --\n";
-        }
-
-        // Writing combining sign if neccessary
-        if(pIntermediate->IsCombined)
-        {
-			pDisassembly << "+";
-        }
-
-        // Print the op code
-        if(pIntermediate->InstructionType == IMD_MAC)
-        {
-			// Dxbx addition : Safeguard against incorrect MAC opcodes :
-			if (pIntermediate->MAC > MAC_ARL)
-				pDisassembly << "??? ";
-			else
-				pDisassembly << MAC_OpCode[pIntermediate->MAC] << " ";
-        }
-        else // IMD_ILU
-        {
-			// Dxbx addition : Safeguard against incorrect ILU opcodes :
-			if (pIntermediate->ILU > ILU_LIT)
-				pDisassembly << "??? ";
-			else
-				pDisassembly << ILU_OpCode[pIntermediate->ILU] << " ";
-        }
-
-        // Print the output parameter
-        if(pIntermediate->Output.Type == IMD_OUTPUT_A0X)
-        {
-			pDisassembly << "a0.x";
-        }
-        else
-        {
-            switch(pIntermediate->Output.Type)
-            {
-            case IMD_OUTPUT_C:
-				pDisassembly << "c" << pIntermediate->Output.Address;
-                break;
-            case IMD_OUTPUT_R:
-				pDisassembly << "r" << pIntermediate->Output.Address;
-                break;
-            case IMD_OUTPUT_O:
-				// Dxbx addition : Safeguard against incorrect VSH_OREG_NAME values :
-				if ((int)pIntermediate->Output.Address > OREG_A0X)
-					; // don't add anything
-				else
-					pDisassembly << OReg_Name[pIntermediate->Output.Address];
-                break;
-            default:
-                CxbxKrnlCleanup("Invalid output register in vertex shader!");
-                break;
-            }
-            VshWriteOutputMask(pIntermediate->Output.Mask, pDisassembly);
-        }
-        // Print the parameters
-        for (int p = 0; p < 3; p++)
-        {
-            VSH_IMD_PARAMETER *pParameter = &pIntermediate->Parameters[p];
-            if(pParameter->Active)
-            {
-                VshWriteParameter(pParameter, pDisassembly);
-            }
-        }
-		pDisassembly << "\n";
-    }
-}
 
 static void VshAddParameter(VSH_PARAMETER     *pParameter,
                             boolean           a0x,
@@ -1310,423 +1041,6 @@ static inline void VshSetSwizzle(VSH_IMD_PARAMETER *pParameter,
                                  VSH_SWIZZLE       w)
 {
     VshSetSwizzle(&pParameter->Parameter, x, y, z, w);
-}
-
-static inline void VshSetOutputMask(VSH_IMD_OUTPUT* pOutput,
-                                    boolean MaskX,
-                                    boolean MaskY,
-                                    boolean MaskZ,
-                                    boolean MaskW)
-{
-    pOutput->Mask[0] = MaskX;
-    pOutput->Mask[1] = MaskY;
-    pOutput->Mask[2] = MaskZ;
-    pOutput->Mask[3] = MaskW;
-}
-
-// Dxbx addition : Scalar instructions reading from W should read from X instead
-static void DxbxFixupScalarParameter(VSH_INTERMEDIATE_FORMAT *pInstruction, VSH_IMD_PARAMETER *pParameter)
-{
-    // The DirectX vertex shader language specifies that the exp, log, rcc, rcp, and rsq instructions
-    // all operate on the "w" component of the input. But the microcode versions of these instructions
-    // actually operate on the "x" component of the input.
-
-    // Test if this is a scalar instruction :
-    if (pInstruction->ILU == ILU_RCP ||
-        pInstruction->ILU == ILU_RCC ||
-        pInstruction->ILU == ILU_RSQ ||
-        pInstruction->ILU == ILU_LOG)
-    {
-        // Test if this parameter reads all components, including W (TODO : Or should we fixup any W reading swizzle?) :
-        if ((pParameter->Parameter.Swizzle[0] == SWIZZLE_X)
-            && (pParameter->Parameter.Swizzle[1] == SWIZZLE_Y)
-            && (pParameter->Parameter.Swizzle[2] == SWIZZLE_Z)
-            && (pParameter->Parameter.Swizzle[3] == SWIZZLE_W))
-        {
-            // Change the read from W into a read from X (this fixes the XDK VolumeLight sample) :
-            VshSetSwizzle(pParameter, SWIZZLE_X, SWIZZLE_X, SWIZZLE_X, SWIZZLE_X);
-            DbgVshPrintf("Dxbx fixup on scalar instruction applied; Changed read of uninitialized W into a read of X!\n");
-            Result = true;
-        }
-    }
-}
-
-/*
-    mul oPos.xyz, r12, c-38
-    +rcc r1.x, r12.w
-
-    mad oPos.xyz, r12, r1.x, c-37
-*/
-static void VshRemoveScreenSpaceInstructions(VSH_XBOX_SHADER *pShader)
-{
-    int16_t PosC38    = -1;
-    int deleted     = 0;
-
-    for (int i = 0; i < pShader->IntermediateCount; i++)
-    {
-        VSH_INTERMEDIATE_FORMAT* pIntermediate = &pShader->Intermediate[i];
-
-        for (int k = 0; k < 3; k++)
-        {
-            if(pIntermediate->Parameters[k].Active)
-            {
-                if(pIntermediate->Parameters[k].Parameter.ParameterType == PARAM_C &&
-                   !pIntermediate->Parameters[k].IndexesWithA0_X)
-                {
-                    if(pIntermediate->Parameters[k].Parameter.Address == -37)
-                    {
-                        // Found c-37, remove the instruction
-                        if(k == 2 &&
-                           pIntermediate->Parameters[1].Active &&
-                           pIntermediate->Parameters[1].Parameter.ParameterType == PARAM_R)
-                        {
-                            DbgVshPrintf("PosC38 = %d i = %d\n", PosC38, i);
-                            for (int j = (i-1); j >= 0; j--)
-                            {
-                                VSH_INTERMEDIATE_FORMAT* pIntermediate1W = &pShader->Intermediate[j];
-                                // Time to start searching for +rcc r#.x, r12.w
-                                if(pIntermediate1W->InstructionType == IMD_ILU &&
-                                    pIntermediate1W->ILU == ILU_RCC &&
-                                    pIntermediate1W->Output.Type == IMD_OUTPUT_R &&
-                                    pIntermediate1W->Output.Address ==
-                                    pIntermediate->Parameters[1].Parameter.Address)
-                                {
-                                    DbgVshPrintf("Deleted +rcc r1.x, r12.w\n");
-                                    VshDeleteIntermediate(pShader, j);
-                                    deleted++;
-                                    i--;
-                                    //j--;
-                                    break;
-                                }
-                            }
-                        }
-                        VshDeleteIntermediate(pShader, i);
-                        deleted++;
-                        i--;
-                        DbgVshPrintf("Deleted mad oPos.xyz, r12, r1.x, c-37\n");
-                        break;
-                    }
-                    else if(pIntermediate->Parameters[k].Parameter.Address == -38)
-                    {
-                        VshDeleteIntermediate(pShader, i);
-                        PosC38 = i;
-                        deleted++;
-                        i--;
-                        DbgVshPrintf("Deleted mul oPos.xyz, r12, c-38\n");
-                    }
-                }
-            }
-        }
-    }
-
-    // If we couldn't find the generic screen space transformation we're
-    // assuming that the shader writes direct screen coordinates that must be
-    // normalized. This hack will fail if (a) the shader uses custom screen
-    // space transformation, (b) reads r13 or r12 after we have written to
-    // them, or (c) doesn't reserve c-38 and c-37 for scale and offset.
-    if(deleted != 3)
-    {
-        EmuLog(LOG_LEVEL::WARNING, "Applying screen space vertex shader patching hack!");
-        for (int i = 0; i < pShader->IntermediateCount; i++)
-        {
-            VSH_INTERMEDIATE_FORMAT* pIntermediate = &pShader->Intermediate[i];
-
-            // Find instructions outputting to oPos.
-            if( pIntermediate->Output.Type    == IMD_OUTPUT_O &&
-                pIntermediate->Output.Address == OREG_OPOS)
-            {
-                // Redirect output to r12.
-                pIntermediate->Output.Type    = IMD_OUTPUT_R;
-                pIntermediate->Output.Address = X_VSH_TEMP_OPOS;
-
-                // Scale r12 to r13. (mul r13.[mask], r12, c58)
-                VSH_INTERMEDIATE_FORMAT MulIntermediate;
-                MulIntermediate.IsCombined        = FALSE;
-                MulIntermediate.InstructionType   = IMD_MAC;
-                MulIntermediate.MAC               = MAC_MUL;
-                MulIntermediate.Output.Type       = IMD_OUTPUT_R;
-                MulIntermediate.Output.Address    = X_VSH_TEMP_SCRATCH;
-                MulIntermediate.Output.Mask[0]    = pIntermediate->Output.Mask[0];
-                MulIntermediate.Output.Mask[1]    = pIntermediate->Output.Mask[1];
-                MulIntermediate.Output.Mask[2]    = pIntermediate->Output.Mask[2];
-                MulIntermediate.Output.Mask[3]    = pIntermediate->Output.Mask[3];
-                MulIntermediate.Parameters[0].Active                  = TRUE;
-                MulIntermediate.Parameters[0].IndexesWithA0_X                   = FALSE;
-                MulIntermediate.Parameters[0].Parameter.ParameterType = PARAM_R;
-                MulIntermediate.Parameters[0].Parameter.Address       = X_VSH_TEMP_OPOS;
-                MulIntermediate.Parameters[0].Parameter.Neg           = FALSE;
-                VshSetSwizzle(&MulIntermediate.Parameters[0], SWIZZLE_X, SWIZZLE_Y, SWIZZLE_Z, SWIZZLE_W);
-                MulIntermediate.Parameters[1].Active                  = TRUE;
-                MulIntermediate.Parameters[1].IndexesWithA0_X                   = FALSE;
-                MulIntermediate.Parameters[1].Parameter.ParameterType = PARAM_C;
-                MulIntermediate.Parameters[1].Parameter.Address       = ConvertCRegister(X_D3DSCM_RESERVED_CONSTANT_SCALE);
-                MulIntermediate.Parameters[1].Parameter.Neg           = FALSE;
-                VshSetSwizzle(&MulIntermediate.Parameters[1], SWIZZLE_X, SWIZZLE_Y, SWIZZLE_Z, SWIZZLE_W);
-                MulIntermediate.Parameters[2].Active                  = FALSE;
-                VshInsertIntermediate(pShader, &MulIntermediate, ++i);
-
-                // Add offset with r13 to oPos (add oPos.[mask], r13, c59)
-                VSH_INTERMEDIATE_FORMAT AddIntermediate = MulIntermediate;
-                AddIntermediate.MAC               = MAC_ADD;
-                AddIntermediate.Output.Type       = IMD_OUTPUT_O;
-                AddIntermediate.Output.Address    = OREG_OPOS;
-                AddIntermediate.Parameters[0].Parameter.ParameterType = PARAM_R;
-                AddIntermediate.Parameters[0].Parameter.Address       = X_VSH_TEMP_SCRATCH;
-                AddIntermediate.Parameters[1].Parameter.Address       = ConvertCRegister(X_D3DSCM_RESERVED_CONSTANT_OFFSET);
-                VshInsertIntermediate(pShader, &AddIntermediate, ++i);
-            }
-        }
-    }
-}
-
-static void VshRemoveUnsupportedObRegisters(VSH_XBOX_SHADER *pShader)
-{
-	int deleted = 0;
-
-	for (int i = 0; i < pShader->IntermediateCount; i++) {
-		VSH_INTERMEDIATE_FORMAT* pIntermediate = &pShader->Intermediate[i];
-
-		if (pIntermediate->Output.Type == IMD_OUTPUT_O && (pIntermediate->Output.Address == OREG_OB0 || pIntermediate->Output.Address == OREG_OB1)) {
-			DbgVshPrintf("Deleted unsupported write to %s\n", OReg_Name[pIntermediate->Output.Address]);
-			VshDeleteIntermediate(pShader, i);
-			i--;
-		}
-	}
-}
-
-// Converts the intermediate format vertex shader to DirectX 8/9 format
-static boolean VshConvertShader(VSH_XBOX_SHADER *pShader,
-                                boolean         bNoReservedConstants
-)
-{
-    // TODO: What about state shaders and such?
-
-    pShader->ShaderHeader.Version = VERSION_CXBX;
-
-    // Search for the screen space instructions, and remove them
-    if(!bNoReservedConstants)
-    {
-        VshRemoveScreenSpaceInstructions(pShader);
-    }
-
-	// Windows does not support back-facing colours, so we remove them from the shaders
-	// Test Case: Panzer Dragoon Orta
-	VshRemoveUnsupportedObRegisters(pShader);
-
-    // TODO: Add routine for compacting r register usage so that at least one is freed (two if dph and r12)
-
-    for (int i = 0; i < pShader->IntermediateCount; i++)
-    {
-        VSH_INTERMEDIATE_FORMAT* pIntermediate = &pShader->Intermediate[i];
-        // Combining not supported in vs.1.1
-        pIntermediate->IsCombined = FALSE;
-
-        // Dxbx note : Scalar instructions read from C, but use X instead of W, fix that :
-        DxbxFixupScalarParameter(pIntermediate, &(pIntermediate->Parameters[0]));
-
-        if(pIntermediate->Output.Type == IMD_OUTPUT_O && (pIntermediate->Output.Address == OREG_OPTS || pIntermediate->Output.Address == OREG_OFOG))
-        {
-            // The PC shader assembler doesn't like masks on scalar registers
-			VshSetOutputMask(&pIntermediate->Output, TRUE, TRUE, TRUE, TRUE);
-
-			// Fix when mad or mov to a scaler input does not use a replicate swizzle
-			// MAD Test case: Panzer Dragoon Orta
-			// MOV Test case: DOA3, Mechassault (Const)
-			// MUL Test case: Amped
-			// TODO Previously we applied this fix for specified instructions
-			// When should we not apply the correction?
-			if (true)
-			{
-				// Clear all but the first swizzle for each parameter
-				// TODO: Is this sufficient? Perhaps we need to be smart about which swizzle to select
-				for (int param = 0; param < 3; param++) {
-					pIntermediate->Parameters[param].Parameter.Swizzle[1] = pIntermediate->Parameters[param].Parameter.Swizzle[0];
-					pIntermediate->Parameters[param].Parameter.Swizzle[2] = pIntermediate->Parameters[param].Parameter.Swizzle[0];
-					pIntermediate->Parameters[param].Parameter.Swizzle[3] = pIntermediate->Parameters[param].Parameter.Swizzle[0];
-				}
-			}
-        }
-
-        if(pIntermediate->InstructionType == IMD_ILU && pIntermediate->ILU == ILU_RCC)
-        {
-            // Convert rcc to rcp
-            pIntermediate->ILU = ILU_RCP;
-        }
-
-        auto sw = pIntermediate->Parameters[0].Parameter.Swizzle;
-        bool singleSwizzle = sw[0] == sw[1] && sw[1] == sw[2] && sw[2] == sw[3];
-
-        if (!singleSwizzle)
-        {
-            // Fix when RSQ reads from unitialized components
-            if (pIntermediate->InstructionType == IMD_ILU && pIntermediate->ILU == ILU_RSQ) {
-                int swizzle = (pIntermediate->Output.Mask[0]) | (pIntermediate->Output.Mask[1] << 1) | (pIntermediate->Output.Mask[2] << 2) | (pIntermediate->Output.Mask[3] << 3);
-                switch (swizzle)
-                {
-                case 1:
-                    VshSetSwizzle(&pIntermediate->Parameters[0], SWIZZLE_X, SWIZZLE_X, SWIZZLE_X, SWIZZLE_X);
-                    break;
-                case 2:
-                    VshSetSwizzle(&pIntermediate->Parameters[0], SWIZZLE_Y, SWIZZLE_Y, SWIZZLE_Y, SWIZZLE_Y);
-                    break;
-                case 4:
-                    VshSetSwizzle(&pIntermediate->Parameters[0], SWIZZLE_Z, SWIZZLE_Z, SWIZZLE_Z, SWIZZLE_Z);
-                    break;
-                case 8:
-                    VshSetSwizzle(&pIntermediate->Parameters[0], SWIZZLE_W, SWIZZLE_W, SWIZZLE_W, SWIZZLE_W);
-                    break;
-                case 15:
-                default:
-                    LOG_TEST_CASE("rsq instruction with invalid swizzle");
-                    break;
-                }
-            }
-        }
-
-		for (int j = 0; j < 3; j++)
-		{
-			//if(pIntermediate->Parameters[j].Active)
-			{
-				// Make constant registers range from 0 to 191 instead of -96 to 95
-				if (pIntermediate->Parameters[j].Parameter.ParameterType == PARAM_C)
-				{
-					//if(pIntermediate->Parameters[j].Parameter.Address < 0)
-					pIntermediate->Parameters[j].Parameter.Address += X_D3DSCM_CORRECTION;
-				}
-
-				if (pIntermediate->Parameters[j].Parameter.ParameterType == PARAM_V) {
-					RegVIsUsedByShader[pIntermediate->Parameters[j].Parameter.Address] = TRUE;
-
-					if (!RegVIsPresentInDeclaration[pIntermediate->Parameters[j].Parameter.Address]) {
-						// This vertex register was not declared and therefore is not present within the Vertex Data object
-						// We read from temporary registers instead, that are set based on constants, in-turn, set by SetVertexData4f
-						// We count down from the highest available on the host because Xbox titles don't use values that high, and we read from c192 (one above maximum Xbox c191 constant) and up
-						pIntermediate->Parameters[j].Parameter.ParameterType = PARAM_R;
-						pIntermediate->Parameters[j].Parameter.Address += X_VSH_TEMP_VERTEXREGBASE;
-					} 
-				}
-			}
-		}
-
-        // Make constant registers range from 0 to 191 instead of -96 to 95
-        if(pIntermediate->Output.Type == IMD_OUTPUT_C)
-        {
-			//if(pIntermediate->Output.Address < 0)
-				pIntermediate->Output.Address += X_D3DSCM_CORRECTION;
-        }
-
-
-
-        if(pIntermediate->InstructionType == IMD_MAC && pIntermediate->MAC == MAC_DPH)
-        {
-			// 2010/01/12 - revel8n - attempt to alleviate conversion issues relate to the dph instruction
-
-            // Replace dph with dp3 and add
-            if(pIntermediate->Output.Type != IMD_OUTPUT_R)
-            {
-                // TODO: Complete dph support
-                EmuLog(LOG_LEVEL::WARNING, "Can't simulate dph for other than output r registers (yet)");
-
-				VSH_INTERMEDIATE_FORMAT TmpIntermediate = *pIntermediate;
-
-				// modify the instructions
-				pIntermediate->MAC = MAC_DP3;
-				pIntermediate->Output.Type = IMD_OUTPUT_R;
-				pIntermediate->Output.Address = X_VSH_TEMP_SCRATCH;
-				VshSetOutputMask(&pIntermediate->Output, TRUE, TRUE, TRUE, TRUE);
-
-				TmpIntermediate.MAC = MAC_ADD;
-				TmpIntermediate.Parameters[0].IndexesWithA0_X = FALSE;
-				TmpIntermediate.Parameters[0].Parameter.ParameterType = PARAM_R;
-				TmpIntermediate.Parameters[0].Parameter.Address = X_VSH_TEMP_SCRATCH;
-				TmpIntermediate.Parameters[0].Parameter.Neg = FALSE;
-				VshSetSwizzle(&TmpIntermediate.Parameters[1], SWIZZLE_W, SWIZZLE_W, SWIZZLE_W, SWIZZLE_W);
-				// Is this output register a scalar
-				if (TmpIntermediate.Output.Type == IMD_OUTPUT_O) {
-					if ((TmpIntermediate.Output.Address == OREG_OFOG) || (TmpIntermediate.Output.Address == OREG_OPTS)) {
-						// This fixes test case "Namco Museum 50th Anniversary"
-						// The PC shader assembler doesn't like masks on scalar registers
-						VshSetOutputMask(&TmpIntermediate.Output, TRUE, TRUE, TRUE, TRUE);
-						// Make the first source parameter use the w swizzle too
-						VshSetSwizzle(&TmpIntermediate.Parameters[0], SWIZZLE_W, SWIZZLE_W, SWIZZLE_W, SWIZZLE_W);
-					}
-				}
-
-				VshInsertIntermediate(pShader, &TmpIntermediate, i + 1);
-            }
-			else
-			{
-				VSH_INTERMEDIATE_FORMAT TmpIntermediate = *pIntermediate;
-				pIntermediate->MAC = MAC_DP3;
-				TmpIntermediate.MAC = MAC_ADD;
-				TmpIntermediate.Parameters[0].IndexesWithA0_X = FALSE;
-				TmpIntermediate.Parameters[0].Parameter.ParameterType = PARAM_R;
-				TmpIntermediate.Parameters[0].Parameter.Address = TmpIntermediate.Output.Address;
-				TmpIntermediate.Parameters[0].Parameter.Neg = FALSE;
-
-				int swizzle = (TmpIntermediate.Output.Mask[0]) | (TmpIntermediate.Output.Mask[1] << 1) | (TmpIntermediate.Output.Mask[2] << 2) | (TmpIntermediate.Output.Mask[3] << 3);
-				switch (swizzle)
-				{
-				case 1:
-					VshSetSwizzle(&TmpIntermediate.Parameters[0], SWIZZLE_X, SWIZZLE_X, SWIZZLE_X, SWIZZLE_X);
-					break;
-				case 2:
-					VshSetSwizzle(&TmpIntermediate.Parameters[0], SWIZZLE_Y, SWIZZLE_Y, SWIZZLE_Y, SWIZZLE_Y);
-					break;
-				case 4:
-					VshSetSwizzle(&TmpIntermediate.Parameters[0], SWIZZLE_Z, SWIZZLE_Z, SWIZZLE_Z, SWIZZLE_Z);
-					break;
-				case 8:
-					VshSetSwizzle(&TmpIntermediate.Parameters[0], SWIZZLE_W, SWIZZLE_W, SWIZZLE_W, SWIZZLE_W);
-					break;
-				case 15:
-				default:
-					VshSetSwizzle(&TmpIntermediate.Parameters[0], SWIZZLE_X, SWIZZLE_Y, SWIZZLE_Z, SWIZZLE_W);
-					break;
-				}
-				//VshSetSwizzle(&TmpIntermediate.Parameters[0], SWIZZLE_W, SWIZZLE_W, SWIZZLE_W, SWIZZLE_W);
-				VshSetSwizzle(&TmpIntermediate.Parameters[1], SWIZZLE_W, SWIZZLE_W, SWIZZLE_W, SWIZZLE_W);
-				//VshSetOutputMask(&TmpIntermediate.Output, FALSE, FALSE, FALSE, TRUE);
-				VshInsertIntermediate(pShader, &TmpIntermediate, i + 1);
-			}
-            i++;
-        }
-    }
-
-    // Replace all writes to oPos with writes to r12.
-	// On Xbox, oPos is read/write, essentially a 13th temporary register
-	// In DX9 and vs_2_x, oPos is write-only, so we'll use r12 in its place
-	// And at the end of the shader, write r12 to oPos
-    for (int i = 0; i < pShader->IntermediateCount; i++) {
-        VSH_INTERMEDIATE_FORMAT* pIntermediate = &pShader->Intermediate[i];
-        if (pIntermediate->Output.Type == IMD_OUTPUT_O && pIntermediate->Output.Address == OREG_OPOS) {
-            pIntermediate->Output.Type = IMD_OUTPUT_R;
-            pIntermediate->Output.Address = X_VSH_TEMP_OPOS;
-        }
-    }
-
-	// We append one additional instruction to mov oPos, r12
-	// TODO : *IF* r12 is not read after the final write to oPos,
-	// it'd be more efficient to not-replace this oPos write by r12,
-	// so that we don't have to do the following :
-    VSH_INTERMEDIATE_FORMAT MovIntermediate = {0};
-    MovIntermediate.MAC = MAC_MOV;
-    MovIntermediate.Output.Type = IMD_OUTPUT_O;
-    MovIntermediate.Output.Address = OREG_OPOS;
-    MovIntermediate.Output.Mask[0] = true;
-    MovIntermediate.Output.Mask[1] = true;
-    MovIntermediate.Output.Mask[2] = true;
-    MovIntermediate.Output.Mask[3] = true;
-    MovIntermediate.Parameters[0].Active = true;
-    MovIntermediate.Parameters[0].Parameter.ParameterType = PARAM_R;
-    MovIntermediate.Parameters[0].Parameter.Address = X_VSH_TEMP_OPOS;
-    MovIntermediate.Parameters[0].Parameter.Swizzle[0] = SWIZZLE_X;
-    MovIntermediate.Parameters[0].Parameter.Swizzle[1] = SWIZZLE_Y;
-    MovIntermediate.Parameters[0].Parameter.Swizzle[2] = SWIZZLE_Z;
-    MovIntermediate.Parameters[0].Parameter.Swizzle[3] = SWIZZLE_W;
-    VshInsertIntermediate(pShader, &MovIntermediate, pShader->IntermediateCount);
-
-    return TRUE;
 }
 
 // ****************************************************************************
@@ -2126,7 +1440,7 @@ private:
 		}
 
 		// Add this register to the list of declared registers
-		RegVIsPresentInDeclaration[VertexRegister] = true;
+		// TODO : Reinstate and use : RegVIsPresentInDeclaration[VertexRegister] = true;
 
 		DWORD XboxVertexElementDataType = (*pXboxToken & X_D3DVSD_DATATYPEMASK) >> X_D3DVSD_DATATYPESHIFT;
 		WORD XboxVertexElementByteSize = 0;
@@ -2453,7 +1767,7 @@ public:
 
 		IsFixedFunction = bIsFixedFunction;
 
-		RegVIsPresentInDeclaration.fill(false);
+		// TODO : Reinstate and use : RegVIsPresentInDeclaration.fill(false);
 
 		// First of all some info:
 		// We have to figure out which flags are set and then
@@ -2520,147 +1834,6 @@ D3DVERTEXELEMENT *EmuRecompileVshDeclaration
     return pHostVertexElements;
 }
 
-std::string UsingScratch(std::string input) {
-	return std::regex_replace(input, std::regex("tmp"), "r" + std::to_string(X_VSH_TEMP_SCRATCH));
-}
-
-// Xbox expp seems to behave the as vs_1_1
-std::string VshPostProcess_Expp(std::string shader) {
-	// Find usages of exp with each swizzle
-	// If there's no swizzle, we should still match so we do the calculation
-	// for all components
-	const auto xbox_expp_x = std::regex("expp (\\w\\d\\d?)(\\.x)?, (.+)$");
-	const auto xbox_expp_y = std::regex("expp (\\w\\d\\d?)(\\.y)?, (.+)$");
-	const auto xbox_expp_z = std::regex("expp (\\w\\d\\d?)(\\.z)?, (.+)$");
-	const auto xbox_expp_w = std::regex("expp (\\w\\d\\d?)(\\.w)?, (.+)$");
-
-	// We operate on a scalar so the input should have a swizzle?
-
-	if (std::regex_search(shader, xbox_expp_x))
-		LOG_TEST_CASE("Title uses the x component result of expp");
-	if (std::regex_search(shader, xbox_expp_w))
-		LOG_TEST_CASE("Title uses the w component result of expp");
-
-	// dest.x = 2 ^ floor(x)
-	// Test Case: ???
-	static auto host_expp_x = UsingScratch(
-		"; patch expp: dest.x = 2 ^ floor(x)\n"
-		"frc tmp.x, $3\n"
-		"add tmp.x, $1$2, -tmp.x\n"
-		"exp $1.x,  tmp.x");
-	shader = std::regex_replace(shader, xbox_expp_x, host_expp_x);
-
-	// dest.y = x - floor(x)
-	// Test Case: Tony Hawk Pro Skater 2X
-	const auto host_expp_y =
-		"; patch expp: dest.y = x - floor(x)\n"
-		"frc $1.y, $3";
-	shader = std::regex_replace(shader, xbox_expp_y, host_expp_y);
-
-	// dest.z = approximate 2 ^ x
-	// Test Case: Mechassault
-	const auto host_expp_z =
-		"; patch expp: dest.z = 2 ^ x\n"
-		"exp $1.z, $3";
-	shader = std::regex_replace(shader, xbox_expp_z, host_expp_z);
-
-	// dest.w = 1
-	// Test Case: ???
-	// TODO do a constant read here
-	const auto host_expp_w = UsingScratch(
-		"; patch expp: dest.w = 1\n"
-		"sub tmp.x, tmp.x, tmp.x\n" // Get 0
-		"exp $1.w, tmp.x"); // 2 ^ 0 = 1
-	shader = std::regex_replace(shader, xbox_expp_w, host_expp_w);
-
-	return shader;
-}
-
-std::string VshPostProcess_Log(std::string shader) {
-	const auto xbox_log_x = std::regex("log (\\w\\d\\d?)(\\.x)?, (.+)$");
-	const auto xbox_log_y = std::regex("log (\\w\\d\\d?)(\\.y)?, (.+)$");
-	const auto xbox_log_z = std::regex("log (\\w\\d\\d?)(\\.z)?, (.+)$");
-	const auto xbox_log_w = std::regex("log (\\w\\d\\d?)(\\.w)?, (.+)$");
-
-	if (std::regex_search(shader, xbox_log_x))
-		LOG_TEST_CASE("Title uses the x component result of log");
-	if (std::regex_search(shader, xbox_log_y))
-		LOG_TEST_CASE("Title uses the y component result of log");
-	if (std::regex_search(shader, xbox_log_w))
-		LOG_TEST_CASE("Title uses the w component result of log");
-
-	// exponent and mantissa functions such that
-	// x = mantissa(x) * 2 ^ exponent(x)
-
-	// dest.x = exponent(x)
-	// Test Case: ???
-	// floor(log(x))
-	static auto host_log_x = UsingScratch(
-		"; patch log: dest.x = exponent(x)\n"
-		"log tmp.x, $3\n"
-		"frc $tmp.y, $tmp.x\n"
-		"sub $1.x, tmp.x, tmp.y");
-	shader = std::regex_replace(shader, xbox_log_x, host_log_x);
-
-	// dest.y = mantissa(x)
-	// Test Case: ???
-	// x / 2 ^ exponent(x)
-	static auto host_log_y = UsingScratch(
-		"; patch log: dest.y = mantissa(x)\n"
-		"log tmp.x, $3\n"
-		"frc $tmp.y, $tmp.x\n"
-		"sub tmp.x, tmp.x, tmp.y\n" // tmp.x = exponent(x) = floor(log(x))
-		"exp tmp.x, tmp.x\n"
-		"rcp tmp.x, tmp.x\n" // tmp.x = 1 / (2 ^ exponent(x))
-		"mul $1.y, $3, tmp.x");
-	shader = std::regex_replace(shader, xbox_log_y, host_log_y);
-
-	// dest.z = log(x)
-	// Test Case: Mechassault (part of the mech glows depending on heat level)
-	static auto host_log_z =
-		"; patch log: dest.z = log(x)\n"
-		"log $1.z, $3";
-	shader = std::regex_replace(shader, xbox_log_z, host_log_z);
-
-	// dest.w = 1
-	// Test Case: ???
-	// TODO do a constant read here
-	const auto host_log_w = UsingScratch(
-		"; patch log: dest.w = 1\n"
-		"sub tmp.x, tmp.x, tmp.x\n" // Get 0
-		"exp $1.w, tmp.x"); // 2 ^ 0 = 1
-	shader = std::regex_replace(shader, xbox_log_w, host_log_w);
-
-	return shader;
-}
-
-// On Xbox, the special indexing register, a0.x, is truncated
-// But on vs_2_x and up, it's rounded to the closest integer
-// So we have to truncate it ourselves
-// Test Case: Buffy the Vampire Slayer
-std::string VshPostProcess_TruncateMovA(std::string shader) {
-	// find usages of mova
-	const auto movA = std::regex("mova a0\\.x, (.*)$");
-	// The equivalent of floor() with a temp register
-	// and use the floored value
-	static auto truncate = UsingScratch(
-		"; patch mova: a = floor(x)\n"
-		"frc  tmp,  $1\n"
-		"add  tmp,  $1, -tmp\n"
-		"mova a0.x, tmp");
-	return std::regex_replace(shader, movA, truncate);
-}
-
-#include <fstream>
-#include <streambuf>
-
-// Post process the shader as a string
-std::string VshPostProcess(std::string shader) {
-	shader = VshPostProcess_Expp(shader);
-	shader = VshPostProcess_Log(shader);
-	return VshPostProcess_TruncateMovA(shader);
-}
-
 extern std::string BuildShader(VSH_XBOX_SHADER* pShader);
 
 std::string DebugPrependLineNumbers(std::string shaderString) {
@@ -2670,8 +1843,8 @@ std::string DebugPrependLineNumbers(std::string shaderString) {
 	int i = 1;
 	for (std::string line; std::getline(shader, line); ) {
 		auto lineNumber = std::to_string(i++);
-		auto paddedLine = line.insert(0, 3 - lineNumber.size(), ' ');
-		debugShader << "/* " << lineNumber << " */ " << line << "\n";
+		auto paddedLineNumber = lineNumber.insert(0, 3 - lineNumber.size(), ' ');
+		debugShader << "/* " << paddedLineNumber << " */ " << line << "\n";
 	}
 
 	return debugShader.str();
@@ -2692,7 +1865,7 @@ extern HRESULT EmuRecompileVshFunction
     DWORD              *pToken;
     boolean             EOI = false;
     VSH_XBOX_SHADER    *pShader = (VSH_XBOX_SHADER*)calloc(1, sizeof(VSH_XBOX_SHADER));
-	ID3DBlob           *pErrors;
+	ID3DBlob           *pErrors = nullptr;
     HRESULT             hRet = 0;
 
     // TODO: support this situation..
@@ -2704,14 +1877,13 @@ extern HRESULT EmuRecompileVshFunction
     *pXboxFunctionSize = 0;
     *ppRecompiledShader = nullptr;
 
-    if(!pShader)
-    {
+	if(!pShader) {
         EmuLog(LOG_LEVEL::WARNING, "Couldn't allocate memory for vertex shader conversion buffer");
         return E_OUTOFMEMORY;
     }
+
     pShader->ShaderHeader = *pXboxVertexShaderHeader;
-    switch(pXboxVertexShaderHeader->Version)
-    {
+    switch(pXboxVertexShaderHeader->Version) {
         case VERSION_XVS:
             break;
         case VERSION_XVSS:
@@ -2728,12 +1900,8 @@ extern HRESULT EmuRecompileVshFunction
             break;
     }
 
-    if(SUCCEEDED(hRet))
-    {
-		RegVIsUsedByShader.fill(false);
-
-        for (pToken = (DWORD*)((uint8_t*)pXboxFunction + sizeof(XTL::X_VSH_SHADER_HEADER)); !EOI; pToken += X_VSH_INSTRUCTION_SIZE)
-        {
+    if(SUCCEEDED(hRet)) {
+        for (pToken = (DWORD*)((uint8_t*)pXboxFunction + sizeof(XTL::X_VSH_SHADER_HEADER)); !EOI; pToken += X_VSH_INSTRUCTION_SIZE) {
             VSH_SHADER_INSTRUCTION Inst;
 
             VshParseInstruction((uint32_t*)pToken, &Inst);
@@ -2751,75 +1919,31 @@ extern HRESULT EmuRecompileVshFunction
 			return D3D_OK;
 		}
 
-		std::stringstream& pXboxShaderDisassembly = std::stringstream();
-		std::stringstream& pHostShaderDisassembly = std::stringstream();
-
 		static std::string hlslTemplate =
 			#include "core\hle\D3D8\Direct3D9\Xb.hlsl" // Note : This included .hlsl defines a raw string
 			;
 
-		DbgVshPrintf("-- Before conversion --\n");
-		VshWriteShader(pShader, pXboxShaderDisassembly, pRecompiledDeclaration, FALSE);
-		DbgVshPrintf("%s", pXboxShaderDisassembly.str().c_str());
-		DbgVshPrintf("-----------------------\n");
-
 		auto hlslTest = BuildShader(pShader);
 		hlslTest = std::regex_replace(hlslTemplate, std::regex("// <Xbox Shader>"), hlslTest);
 
-		DbgVshPrintf("-- HLSL conversion 1 ---\n");
+		DbgVshPrintf("--- HLSL conversion ---\n");
 		DbgVshPrintf(DebugPrependLineNumbers(hlslTest).c_str());
 		DbgVshPrintf("-----------------------\n");
 
-		VshConvertShader(pShader, bNoReservedConstants);
-		VshWriteShader(pShader, pHostShaderDisassembly, pRecompiledDeclaration, TRUE);
-
-		//auto hlslTest = BuildShader(pShader);
-		//hlslTest = std::regex_replace(hlslTemplate, std::regex("// <Xbox Shader>"), hlslTest);
-
-		// Post process the final shader
-		auto finalHostShader = VshPostProcess(pHostShaderDisassembly.str());
-
-		//DbgVshPrintf("-- After conversion ---\n");
-		//DbgVshPrintf("%s", finalHostShader.c_str());
-		//DbgVshPrintf("-----------------------\n");
-
-		//DbgVshPrintf("-- HLSL conversion 2 ---\n");
-		//DbgVshPrintf(BuildShader(pShader).c_str());
-		//DbgVshPrintf("-----------------------\n");
-
-        // HACK: Azurik. Prevent Direct3D from trying to assemble this.
-		if(finalHostShader == "vs.2.x\n")
-		{
-			EmuLog(LOG_LEVEL::WARNING, "Replacing empty vertex shader with fallback");
-
-			finalHostShader = std::string(
-				"vs.2.x\n"
-				"dcl_position v0\n"
-				"dp4 oPos.x, v0, c96\n"
-				"dp4 oPos.y, v0, c97\n"
-				"dp4 oPos.z, v0, c98\n"
-				"dp4 oPos.w, v0, c99\n"
-			);
-		}
-		else
-		{
-			hRet = D3DCompile(
-				hlslTest.c_str(),
-				hlslTest.length(),
-				nullptr, // pSourceName
-				nullptr, // pDefines
-				nullptr, // pInclude // TODO precompile x_* HLSL functions?
-				"main", // shader entry poiint
-				"vs_3_0", // shader profile
-				0, // flags1
-				0, // flags2
-				ppRecompiledShader, // out
-				&pErrors // ppErrorMsgs out
-			);
-		}
-
-        if (FAILED(hRet))
-        {
+		hRet = D3DCompile(
+			hlslTest.c_str(),
+			hlslTest.length(),
+			nullptr, // pSourceName
+			nullptr, // pDefines
+			nullptr, // pInclude // TODO precompile x_* HLSL functions?
+			"main", // shader entry poiint
+			"vs_3_0", // shader profile
+			0, // flags1
+			0, // flags2
+			ppRecompiledShader, // out
+			&pErrors // ppErrorMsgs out
+		);
+        if (FAILED(hRet)) {
             EmuLog(LOG_LEVEL::WARNING, "Couldn't assemble recompiled vertex shader");
         }
 
@@ -2827,11 +1951,9 @@ extern HRESULT EmuRecompileVshFunction
 			// Determine the log level
 			auto hlslErrorLogLevel = FAILED(hRet) ? LOG_LEVEL::ERROR2 : LOG_LEVEL::DEBUG;
 			// Log HLSL compiler errors
-			EmuLog(hlslErrorLogLevel, "%s", (char*)(pErrors)->GetBufferPointer());
-			(pErrors)->Release();
+			EmuLog(hlslErrorLogLevel, "%s", (char*)(pErrors->GetBufferPointer()));
+			pErrors->Release();
 		}
-
-		// TODO : If compiling hlsl failed, fall back on assembling finalHostShader?
     }
 
     free(pShader);
@@ -2948,61 +2070,68 @@ void CxbxImpl_SelectVertexShaderDirect
 
 // HLSL outputs
 
-std::string ToHlsl(VSH_IMD_OUTPUT& dest) {
-	auto hlsl = std::stringstream();
-	switch (dest.Type)
-	{
+void OutputHlsl(std::stringstream& hlsl, VSH_IMD_OUTPUT& dest)
+{
+	switch (dest.Type) {
+	case IMD_OUTPUT_C:
+		hlsl << "c[" << dest.Address << "]";
+		break;
+	case IMD_OUTPUT_R:
+		hlsl << "r" << dest.Address;
+		break;
 	case IMD_OUTPUT_O:
+		assert(dest.Address < OREG_A0X);
 		hlsl << OReg_Name[dest.Address];
 		break;
 	case IMD_OUTPUT_A0X:
-		hlsl << "a";
-		break;
-	case IMD_OUTPUT_C:
-		hlsl << "c[" << dest.Address << "]"; //todo we can output to constants...?
-		break;
-	case IMD_OUTPUT_R:
-			hlsl << "r" << dest.Address;
+		hlsl << "a0_x"; // Is this actually a valid output?
 		break;
 	default:
+		assert(false);
 		break;
 	}
 
 	// If we're not writing all channels, write the mask
 	if (!(dest.Mask[0] && dest.Mask[1] && dest.Mask[2] && dest.Mask[3]))
 	{
-		hlsl << "." << (dest.Mask[0] ? "x" : "")
-					<< (dest.Mask[1] ? "y" : "")
-					<< (dest.Mask[2] ? "z" : "")
-					<< (dest.Mask[3] ? "w" : "");
+		hlsl << ".";
+		unsigned vector_size = 0;
+		if (dest.Mask[0]) { hlsl << "x"; vector_size++; }
+		if (dest.Mask[1]) { hlsl << "y"; vector_size++; }
+		if (dest.Mask[2]) { hlsl << "z"; vector_size++; }
+		if (dest.Mask[3]) { hlsl << "w"; vector_size++; }
+		hlsl << " = (float" << vector_size << ")";
+	} else {
+		hlsl << " = ";
 	}
-
-	return hlsl.str();
 }
 
-std::string ToHlsl(VSH_IMD_PARAMETER& paramMeta)
+void ParameterHlsl(std::stringstream& hlsl, VSH_IMD_PARAMETER& paramMeta)
 {
-	auto hlsl = std::stringstream();
 	auto param = paramMeta.Parameter;
 
 	if (param.Neg) {
 		hlsl << "-";
 	}
 
+	int register_number = param.Address;
 	if (param.ParameterType == PARAM_C) {
-		// We'll use the c() function instead of direct indexing
+		// Map Xbox [-96, 95] to Host [0, 191]
+		// Account for Xbox's negative constant indexes
+		register_number += 96;
 		if (paramMeta.IndexesWithA0_X) {
 			// Only display the offset if it's not 0.
-			if (param.Address != 0) {
-				hlsl << "c(a0_x+" << param.Address << ")";
-			} else {
-				hlsl << "c(a0_x)";
+			if (register_number != 0) {
+				hlsl << "c[a0_x+" << register_number << "]";
+			}
+			else {
+				hlsl << "c[a0_x]";
 			}
 		} else {
-			hlsl << "c(" << param.Address << ")";
+			hlsl << "c[" << register_number << "]";
 		}
 	} else {
-		hlsl << VshGetRegisterName(param.ParameterType) << param.Address;
+		hlsl << VshGetRegisterName(param.ParameterType) << register_number;
 	}
 
 	// Write the swizzle if we need to
@@ -3030,62 +2159,40 @@ std::string ToHlsl(VSH_IMD_PARAMETER& paramMeta)
 			hlsl << "xyzw"[param.Swizzle[i]];
 		}
 	}
-
-	return hlsl.str();
 }
 
-std::string ToHlsl(std::string pattern, VSH_INTERMEDIATE_FORMAT& instruction) {
-	auto static regDest = std::regex("dest");
-	const std::regex regSrc[] = { std::regex("src0"), std::regex("src1"), std::regex("src2") };
-
-	// TODO use simple string replace
-	// Warn if we didn't replace anything etc.
-	// Replace dest
-	auto hlsl = std::regex_replace(pattern, regDest, ToHlsl(instruction.Output));
-
-	int srcNum = 0;
-	for (int i = 0; i < 3; i++) { // TODO remove magic number
-		if (instruction.Parameters[i].Active) {
-			hlsl = std::regex_replace(hlsl, regSrc[srcNum], ToHlsl(instruction.Parameters[i]));
-			srcNum += 1;
-		}
-	}
-
-	return hlsl;
-}
-
-std::string BuildShader(VSH_XBOX_SHADER* pShader) {
-
+std::string BuildShader(VSH_XBOX_SHADER* pShader)
+{
 	// HLSL strings for all MAC opcodes, indexed with VSH_MAC
 	static std::string VSH_MAC_HLSL[] = {
-		/*MAC_NOP:*/"// MAC_NOP\n",
-		/*MAC_MOV:*/"dest = x_mov(src0);\n",
-		/*MAC_MUL:*/"dest = x_mul(src0, src1);\n",
-		/*MAC_ADD:*/"dest = x_add(src0, src1);\n",
-		/*MAC_MAD:*/"dest = x_mad(src0, src1, src2);\n",
-		/*MAC_DP3:*/"dest = x_dp3(src0, src1);\n",
-		/*MAC_DPH:*/"dest = x_dph(src0, src1);\n",
-		/*MAC_DP4:*/"dest = x_dp4(src0, src1);\n",
-		/*MAC_DST:*/"dest = x_dst(src0, src1);\n",
-		/*MAC_MIN:*/"dest = x_min(src0, src1);\n",
-		/*MAC_MAX:*/"dest = x_max(src0, src1);\n",
-		/*MAC_SLT:*/"dest = x_slt(src0, src1);\n",
-		/*MAC_SGE:*/"dest = x_sge(src0, src1);\n",
-		/*MAC_ARL:*/"a = x_arl(src0);\n", // Note : For this MAC_ARL case, ToHlsl would always replace 'dest' with 'a', so we optimized this upfront
-		"// ??? VSH_MAC 14 ???;\n",
-		"// ??? VSH_MAC 15 ???;\n" // VSH_MAC 2 final values of the 4 bits are undefined/unknown  TODO : Investigate their effect (if any) and emulate that as well
+		/*MAC_NOP:*/"",
+		/*MAC_MOV:*/"x_mov",
+		/*MAC_MUL:*/"x_mul",
+		/*MAC_ADD:*/"x_add",
+		/*MAC_MAD:*/"x_mad",
+		/*MAC_DP3:*/"x_dp3",
+		/*MAC_DPH:*/"x_dph",
+		/*MAC_DP4:*/"x_dp4",
+		/*MAC_DST:*/"x_dst",
+		/*MAC_MIN:*/"x_min",
+		/*MAC_MAX:*/"x_max",
+		/*MAC_SLT:*/"x_slt",
+		/*MAC_SGE:*/"x_sge",
+		/*MAC_ARL:*/"x_arl", // Note : For this MAC_ARL case, ToHlsl would always replace 'dest' with 'a', so we optimized this upfront
+		            "",
+		            "" // VSH_MAC 2 final values of the 4 bits are undefined/unknown  TODO : Investigate their effect (if any) and emulate that as well
 	};
 
 	// HLSL strings for all ILU opcodes, indexed with VSH_ILU
 	static std::string VSH_ILU_HLSL[] = {
-		/*ILU_NOP:*/"// ILU_NOP\n",
-		/*ILU_MOV:*/"dest = x_mov(src0);\n",
-		/*ILU_RCP:*/"dest = x_rcp(src0);\n",
-		/*ILU_RCC:*/"dest = x_rcc(src0);\n",
-		/*ILU_RSQ:*/"dest = x_rsq(src0);\n",
-		/*ILU_EXP:*/"dest = x_exp(src0);\n",
-		/*ILU_LOG:*/"dest = x_log(src0);\n",
-		/*ILU_LIT:*/"dest = x_lit(src0);\n" // = 7 - all values of the 3 bits are used
+		/*ILU_NOP:*/"",
+		/*ILU_MOV:*/"x_mov",
+		/*ILU_RCP:*/"x_rcp",
+		/*ILU_RCC:*/"x_rcc",
+		/*ILU_RSQ:*/"x_rsq",
+		/*ILU_EXP:*/"x_exp",
+		/*ILU_LOG:*/"x_log",
+		/*ILU_LIT:*/"x_lit" // = 7 - all values of the 3 bits are used
 	};
 
 	auto hlsl = std::stringstream();
@@ -3093,12 +2200,30 @@ std::string BuildShader(VSH_XBOX_SHADER* pShader) {
 	for (int i = 0; i < pShader->IntermediateCount; i++) {
 		VSH_INTERMEDIATE_FORMAT& xboxInstruction = pShader->Intermediate[i];
 
+		std::string str = "";
 		if (xboxInstruction.InstructionType == IMD_MAC) {
-			hlsl << ToHlsl(VSH_MAC_HLSL[xboxInstruction.MAC], xboxInstruction);
+			if (xboxInstruction.MAC > MAC_NOP && xboxInstruction.MAC <= MAC_ARL) {
+				str = VSH_MAC_HLSL[xboxInstruction.MAC];
+			}
 		} else if (xboxInstruction.InstructionType == IMD_ILU) {
-			hlsl << ToHlsl(VSH_ILU_HLSL[xboxInstruction.ILU], xboxInstruction);
-		} else {
-			EmuLog(LOG_LEVEL::WARNING, "TODO message");
+			if (xboxInstruction.ILU > ILU_NOP) {
+				str = VSH_ILU_HLSL[xboxInstruction.ILU];
+			}
+		}
+
+		if (!str.empty()) {
+			hlsl << "\n  ";
+			OutputHlsl(hlsl, xboxInstruction.Output);
+			hlsl << str; // opcode
+			str = "(";
+			for (int i = 0; i < 3; i++) { // TODO remove magic number
+				if (xboxInstruction.Parameters[i].Active) {
+					hlsl << str; // separator
+					ParameterHlsl(hlsl, xboxInstruction.Parameters[i]);
+					str = ", ";
+				}
+			}
+			hlsl << ");";
 		}
 	}
 
