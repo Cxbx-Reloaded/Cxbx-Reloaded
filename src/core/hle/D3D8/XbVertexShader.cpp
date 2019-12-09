@@ -216,18 +216,6 @@ typedef enum _VSH_MAC
 }
 VSH_MAC;
 
-typedef struct _VSH_OPCODE_PARAMS
-{
-	// Dxbx Note : Since we split up g_OpCodeParams into g_OpCodeParams_ILU and g_OpCodeParams_MAC
-	// the following two members aren't needed anymore :
-	// VSH_ILU   ILU;
-    // VSH_MAC   MAC;
-    boolean   A;
-    boolean   B;
-    boolean   C;
-}
-VSH_OPCODE_PARAMS;
-
 typedef struct _VSH_PARAMETER
 {
     VSH_PARAMETER_TYPE  ParameterType;   // Parameter type, R, V or C
@@ -380,38 +368,6 @@ static const VSH_FIELDMAPPING g_FieldMapping[] =
 	{  FLD_FINAL,            3,    0,     1 }
 };
 
-static const VSH_OPCODE_PARAMS g_OpCodeParams_ILU[] =
-{
-	//  ILU OP   MAC OP      ParamA ParamB ParamC
-	{ /*ILU_NOP, MAC_NOP, */ FALSE, FALSE, FALSE },  // Dxbx note : Unused
-	{ /*ILU_MOV, MAC_NOP, */ FALSE, FALSE, TRUE  },
-	{ /*ILU_RCP, MAC_NOP, */ FALSE, FALSE, TRUE  },
-	{ /*ILU_RCC, MAC_NOP, */ FALSE, FALSE, TRUE  },
-	{ /*ILU_RSQ, MAC_NOP, */ FALSE, FALSE, TRUE  },
-	{ /*ILU_EXP, MAC_NOP, */ FALSE, FALSE, TRUE  },
-	{ /*ILU_LOG, MAC_NOP, */ FALSE, FALSE, TRUE  },
-	{ /*ILU_LIT, MAC_NOP, */ FALSE, FALSE, TRUE  },
-};
-
-static const VSH_OPCODE_PARAMS g_OpCodeParams_MAC[] =
-{
-	//  ILU OP   MAC OP      ParamA ParamB ParamC
-	{ /*ILU_NOP, MAC_NOP, */ FALSE, FALSE, FALSE },  // Dxbx note : Unused
-	{ /*ILU_NOP, MAC_MOV, */ TRUE,  FALSE, FALSE },
-	{ /*ILU_NOP, MAC_MUL, */ TRUE,  TRUE,  FALSE },
-    { /*ILU_NOP, MAC_ADD, */ TRUE,  FALSE, TRUE  },
-    { /*ILU_NOP, MAC_MAD, */ TRUE,  TRUE,  TRUE  },
-    { /*ILU_NOP, MAC_DP3, */ TRUE,  TRUE,  FALSE },
-    { /*ILU_NOP, MAC_DPH, */ TRUE,  TRUE,  FALSE },
-    { /*ILU_NOP, MAC_DP4, */ TRUE,  TRUE,  FALSE },
-    { /*ILU_NOP, MAC_DST, */ TRUE,  TRUE,  FALSE },
-    { /*ILU_NOP, MAC_MIN, */ TRUE,  TRUE,  FALSE },
-    { /*ILU_NOP, MAC_MAX, */ TRUE,  TRUE,  FALSE },
-    { /*ILU_NOP, MAC_SLT, */ TRUE,  TRUE,  FALSE },
-    { /*ILU_NOP, MAC_SGE, */ TRUE,  TRUE,  FALSE },
-    { /*ILU_NOP, MAC_ARL, */ TRUE,  FALSE, FALSE }
-};
-
 static const char* OReg_Name[] =
 {
     "oPos",
@@ -500,18 +456,6 @@ uint8_t VshGetField(uint32_t         *pShaderToken,
                                    g_FieldMapping[FieldName].SubToken,
                                    g_FieldMapping[FieldName].StartBit,
                                    g_FieldMapping[FieldName].BitLength));
-}
-
-static VSH_OPCODE_PARAMS* VshGetOpCodeParams(VSH_ILU ILU,
-                                             VSH_MAC MAC)
-{
-	if (ILU >= ILU_MOV && ILU <= ILU_LIT)
-		return (VSH_OPCODE_PARAMS*)&g_OpCodeParams_ILU[ILU];
-	else
-		if (MAC >= MAC_MOV && MAC <= MAC_ARL)
-			return (VSH_OPCODE_PARAMS*)&g_OpCodeParams_MAC[MAC];
-		else
-		    return nullptr;
 }
 
 static void VshParseInstruction(uint32_t               *pShaderToken,
@@ -763,24 +707,20 @@ static void VshAddParameters(VSH_SHADER_INSTRUCTION  *pInstruction,
                              VSH_IMD_PARAMETER       *pParameters)
 {
     uint8_t ParamCount = 0;
-    VSH_OPCODE_PARAMS* pParams = VshGetOpCodeParams(ILU, MAC);
-
-    // param A
-    if(pParams->A)
+	
+    if(MAC >= MAC_MOV)
     {
         VshAddParameter(&pInstruction->A, pInstruction->a0x, &pParameters[ParamCount]);
         ParamCount++;
     }
 
-    // param B
-    if(pParams->B)
+    if((MAC == MAC_MUL) || ((MAC >= MAC_MAD) && (MAC <= MAC_SGE)))
     {
         VshAddParameter(&pInstruction->B, pInstruction->a0x, &pParameters[ParamCount]);
         ParamCount++;
     }
 
-    // param C
-    if(pParams->C)
+    if((ILU >= ILU_MOV) || (MAC == MAC_ADD) || (MAC == MAC_MAD))
     {
         VshAddParameter(&pInstruction->C, pInstruction->a0x, &pParameters[ParamCount]);
         ParamCount++;
