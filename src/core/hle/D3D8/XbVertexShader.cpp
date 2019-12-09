@@ -155,10 +155,10 @@ VSH_OUTPUT_TYPE;
 typedef enum _VSH_ARGUMENT_TYPE
 {
     PARAM_UNKNOWN = 0,
-    PARAM_R,          // Temporary registers
+    PARAM_R,          // Temporary (scRatch) registers
     PARAM_V,          // Vertex registers
     PARAM_C,          // Constant registers, set by SetVertexShaderConstant
-    PARAM_O
+    PARAM_O // = 0??
 }
 VSH_ARGUMENT_TYPE;
 
@@ -246,10 +246,10 @@ typedef struct _VSH_OUTPUT
     int16_t             OutputAddress;
     // MAC output R register
     boolean             MACRMask[4];
-    boolean             MACRAddress;
+    int16_t             MACRAddress;
     // ILU output R register
     boolean             ILURMask[4];
-    boolean             ILURAddress;
+    int16_t             ILURAddress;
 }
 VSH_OUTPUT;
 
@@ -263,6 +263,7 @@ typedef struct _VSH_SHADER_INSTRUCTION
     VSH_PARAMETER B;
     VSH_PARAMETER C;
     boolean       a0x;
+    boolean       Final;
 }
 VSH_SHADER_INSTRUCTION;
 
@@ -618,6 +619,7 @@ static void VshParseInstruction(uint32_t               *pShaderToken,
     pInstruction->Output.ILURAddress = VshGetField(pShaderToken, FLD_OUT_R);
     // Finally, get a0.x indirect constant addressing
     pInstruction->a0x = VshGetField(pShaderToken, FLD_A0X);
+    pInstruction->Final = VshGetField(pShaderToken, FLD_FINAL);
 }
 
 // Print functions
@@ -800,30 +802,6 @@ static VSH_INTERMEDIATE_FORMAT *VshNewIntermediate(VSH_XBOX_SHADER *pShader)
     ZeroMemory(&pShader->Intermediate[pShader->IntermediateCount], sizeof(VSH_INTERMEDIATE_FORMAT));
 
     return &pShader->Intermediate[pShader->IntermediateCount++];
-}
-
-static void VshInsertIntermediate(VSH_XBOX_SHADER         *pShader,
-                                  VSH_INTERMEDIATE_FORMAT *pIntermediate,
-                                  uint16_t                 Pos)
-{
-    VshVerifyBufferBounds(pShader);
-
-    for (int i = pShader->IntermediateCount; i >= Pos; i--)
-    {
-        pShader->Intermediate[i + 1] = pShader->Intermediate[i];
-    }
-    pShader->Intermediate[Pos] = *pIntermediate;
-    pShader->IntermediateCount++;
-}
-
-static void VshDeleteIntermediate(VSH_XBOX_SHADER *pShader,
-                                  uint16_t         Pos)
-{
-    for (int i = Pos; i < (pShader->IntermediateCount - 1); i++)
-    {
-        pShader->Intermediate[i] = pShader->Intermediate[i + 1];
-    }
-    pShader->IntermediateCount--;
 }
 
 static boolean VshAddInstructionMAC_R(VSH_SHADER_INSTRUCTION *pInstruction,
@@ -1834,7 +1812,7 @@ D3DVERTEXELEMENT *EmuRecompileVshDeclaration
     return pHostVertexElements;
 }
 
-extern std::string BuildShader(VSH_XBOX_SHADER* pShader);
+extern void BuildShader(std::stringstream& hlsl, VSH_XBOX_SHADER* pShader);
 
 std::string DebugPrependLineNumbers(std::string shaderString) {
 	std::stringstream shader(shaderString);
@@ -1901,12 +1879,18 @@ extern HRESULT EmuRecompileVshFunction
     }
 
     if(SUCCEEDED(hRet)) {
+		static std::string hlsl_template =
+			#include "core\hle\D3D8\Direct3D9\Xb.hlsl" // Note : This included .hlsl defines a raw string
+			;
+
+		auto hlsl_stream = std::stringstream();
+
         for (pToken = (DWORD*)((uint8_t*)pXboxFunction + sizeof(XTL::X_VSH_SHADER_HEADER)); !EOI; pToken += X_VSH_INSTRUCTION_SIZE) {
             VSH_SHADER_INSTRUCTION Inst;
 
             VshParseInstruction((uint32_t*)pToken, &Inst);
             VshConvertToIntermediate(&Inst, pShader);
-            EOI = (boolean)VshGetField((uint32_t*)pToken, FLD_FINAL);
+            EOI = Inst.Final;
         }
 
         // The size of the shader is
@@ -1919,20 +1903,17 @@ extern HRESULT EmuRecompileVshFunction
 			return D3D_OK;
 		}
 
-		static std::string hlslTemplate =
-			#include "core\hle\D3D8\Direct3D9\Xb.hlsl" // Note : This included .hlsl defines a raw string
-			;
-
-		auto hlslTest = BuildShader(pShader);
-		hlslTest = std::regex_replace(hlslTemplate, std::regex("// <Xbox Shader>"), hlslTest);
+		BuildShader(hlsl_stream, pShader);
+		std::string hlsl_str = hlsl_stream.str();
+		hlsl_str = std::regex_replace(hlsl_template, std::regex("// <Xbox Shader>"), hlsl_str);
 
 		DbgVshPrintf("--- HLSL conversion ---\n");
-		DbgVshPrintf(DebugPrependLineNumbers(hlslTest).c_str());
+		DbgVshPrintf(DebugPrependLineNumbers(hlsl_str).c_str());
 		DbgVshPrintf("-----------------------\n");
 
 		hRet = D3DCompile(
-			hlslTest.c_str(),
-			hlslTest.length(),
+			hlsl_str.c_str(),
+			hlsl_str.length(),
 			nullptr, // pSourceName
 			nullptr, // pDefines
 			nullptr, // pInclude // TODO precompile x_* HLSL functions?
@@ -2095,14 +2076,10 @@ void OutputHlsl(std::stringstream& hlsl, VSH_IMD_OUTPUT& dest)
 	if (!(dest.Mask[0] && dest.Mask[1] && dest.Mask[2] && dest.Mask[3]))
 	{
 		hlsl << ".";
-		unsigned vector_size = 0;
-		if (dest.Mask[0]) { hlsl << "x"; vector_size++; }
-		if (dest.Mask[1]) { hlsl << "y"; vector_size++; }
-		if (dest.Mask[2]) { hlsl << "z"; vector_size++; }
-		if (dest.Mask[3]) { hlsl << "w"; vector_size++; }
-		hlsl << " = (float" << vector_size << ")";
-	} else {
-		hlsl << " = ";
+		if (dest.Mask[0]) hlsl << "x";
+		if (dest.Mask[1]) hlsl << "y";
+		if (dest.Mask[2]) hlsl << "z";
+		if (dest.Mask[3]) hlsl << "w";
 	}
 }
 
@@ -2161,7 +2138,7 @@ void ParameterHlsl(std::stringstream& hlsl, VSH_IMD_PARAMETER& paramMeta)
 	}
 }
 
-std::string BuildShader(VSH_XBOX_SHADER* pShader)
+void BuildShader(std::stringstream& hlsl, VSH_XBOX_SHADER* pShader)
 {
 	// HLSL strings for all MAC opcodes, indexed with VSH_MAC
 	static std::string VSH_MAC_HLSL[] = {
@@ -2178,7 +2155,7 @@ std::string BuildShader(VSH_XBOX_SHADER* pShader)
 		/*MAC_MAX:*/"x_max",
 		/*MAC_SLT:*/"x_slt",
 		/*MAC_SGE:*/"x_sge",
-		/*MAC_ARL:*/"x_arl", // Note : For this MAC_ARL case, ToHlsl would always replace 'dest' with 'a', so we optimized this upfront
+		/*MAC_ARL:*/"x_arl",
 		            "",
 		            "" // VSH_MAC 2 final values of the 4 bits are undefined/unknown  TODO : Investigate their effect (if any) and emulate that as well
 	};
@@ -2190,12 +2167,10 @@ std::string BuildShader(VSH_XBOX_SHADER* pShader)
 		/*ILU_RCP:*/"x_rcp",
 		/*ILU_RCC:*/"x_rcc",
 		/*ILU_RSQ:*/"x_rsq",
-		/*ILU_EXP:*/"x_exp",
-		/*ILU_LOG:*/"x_log",
+		/*ILU_EXP:*/"x_expp",
+		/*ILU_LOG:*/"x_logp",
 		/*ILU_LIT:*/"x_lit" // = 7 - all values of the 3 bits are used
 	};
-
-	auto hlsl = std::stringstream();
 
 	for (int i = 0; i < pShader->IntermediateCount; i++) {
 		VSH_INTERMEDIATE_FORMAT& xboxInstruction = pShader->Intermediate[i];
@@ -2212,20 +2187,15 @@ std::string BuildShader(VSH_XBOX_SHADER* pShader)
 		}
 
 		if (!str.empty()) {
-			hlsl << "\n  ";
+			hlsl << "\n  " << str << "("; // opcode
 			OutputHlsl(hlsl, xboxInstruction.Output);
-			hlsl << str; // opcode
-			str = "(";
-			for (int i = 0; i < 3; i++) { // TODO remove magic number
+			for (int i = 0; i < 3; i++) {
 				if (xboxInstruction.Parameters[i].Active) {
-					hlsl << str; // separator
+					hlsl << ", ";
 					ParameterHlsl(hlsl, xboxInstruction.Parameters[i]);
-					str = ", ";
 				}
 			}
 			hlsl << ");";
 		}
 	}
-
-	return hlsl.str();
 }

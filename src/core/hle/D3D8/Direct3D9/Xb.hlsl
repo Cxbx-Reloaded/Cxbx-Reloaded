@@ -1,5 +1,5 @@
 // This starts the raw string (comment to get syntax highlighting, UNCOMMENT to compile) :
-R"DELIMITER(
+//R"DELIMITER(
 // Xbox HLSL vertex shader (template populated at runtime)
 struct VS_INPUT
 {
@@ -26,67 +26,35 @@ extern uniform float4 c[192] : register(c0);
 
 // Functions for MAC ('Multiply And Accumulate') opcodes
 
-float4 x_mov(float4 src0)
-{
-	return src0;
-}
+#define x_mov(dest, src0) dest = src0
 
-float4 x_mul(float4 src0, float4 src1)
-{
-	return src0 * src1;
-}
+#define x_mul(dest, src0, src1) dest = src0 * src1
 
-float4 x_add(float4 src0, float4 src1)
-{
-	return src0 + src1;
-}
+#define x_add(dest, src0, src1) dest = src0 + src1
 
-float4 x_dst(float4 src0, float4 src1)
-{
-	return dst(src0, src1);
-}
+#define x_dst(dest, src0, src1) dest = dst(src0, src1) // equals { dest.x = 1; dest.y = src0.y * src1.y; dest.z = src0.z; dest.w = src1.w; }
 
-float4 x_min(float4 src0, float4 src1)
-{
-	return min(src0, src1);
-}
+#define x_min(dest, src0, src1) dest = min(src0, src1)
 
-float4 x_max(float4 src0, float4 src1)
-{
-	return max(src0, src1);
-}
+#define x_max(dest, src0, src1) dest = max(src0, src1)
 
-float4 x_mad(float4 src0, float4 src1, float4 src2)
-{
-	return (src0 * src1) + src2;
-}
+#define x_mad(dest, src0, src1, src2) dest = (src0 * src1) + src2
 
-int x_arl(float src0)
-{
-	// The address register should be floored
-	// Due to rounding differences with the Xbox (and increased precision on PC?)
-	// some titles produce values just below the threshold of the next integer.
-	// We can add a small bias to make sure it's bumped over the threshold
-	// Test Case: Azurik (divides indexes 755, then scales them back in the vertex shader)
-	return floor(src0 + 0.0001);
-}
+// The address register should be floored
+// Due to rounding differences with the Xbox (and increased precision on PC?)
+// some titles produce values just below the threshold of the next integer.
+// We can add a small bias to make sure it's bumped over the threshold
+// Test Case: Azurik (divides indexes 755, then scales them back in the vertex shader)
+#define x_arl(dest, src0) dest = floor(src0 + 0.0001)
 
-float x_dp3(float4 src0, float4 src1)
-{
-	return dot(src0.xyz, src1.xyz);
-}
+#define x_dp3(dest, src0, src1) dest = dot((float3)src0, (float3)src1)
 
-float x_dph(float4 src0, float4 src1)
-{
-	return x_dp3(src0, src1) + src1.w;
-}
+#define x_dph(dest, src0, src1) x_dp3(src0, src1) + src1.w
 
-float x_dp4(float4 src0, float4 src1)
-{
-	return dot(src0, src1);
-}
+#define x_dp4(dest, src0, src1) dest = dot(src0, src1)
 
-float4 x_sge(float4 src0, float4 src1)
+#define x_sge(dest, src0) dest = _sge(src0)
+float4 _sge(float4 src0, float4 src1)
 {
 	float4 dest;
 	dest.x = (src0.x >= src1.x) ? 1 : 0;
@@ -96,7 +64,8 @@ float4 x_sge(float4 src0, float4 src1)
 	return dest;
 }
 
-float4 x_slt(float4 src0, float4 src1)
+#define x_slt(dest, src0) dest = _slt(src0)
+float4 _slt(float4 src0, float4 src1)
 {
 	float4 dest;
 	dest.x = (src0.x < src1.x) ? 1 : 0;
@@ -108,17 +77,13 @@ float4 x_slt(float4 src0, float4 src1)
 
 // Xbox ILU Functions
 
-float scalar_component(float4 src0)
-{
-	return src0.w; // use w component by default
-}
+#define scalar_component(src0) src0.x
 
-float x_rcp(float4 src0)
-{
-	return 1 / scalar_component(src0);
-}
+#define x_rcp(dest, src0) dest = 1 / scalar_component(src0)
+// TODO : #define x_rcp(dest, src0) dest = (scalar_component(src0) == 0) ? 1.#INF : (1 / scalar_component(src0))
 
-float x_rcc(float4 src0)
+#define x_rcc(dest, src0) dest = _rcc(src0)
+float _rcc(float4 src0)
 {
 	float input = scalar_component(src0);
 
@@ -131,40 +96,52 @@ float x_rcc(float4 src0)
 		: clamp(r, -1.84467e+019f, -5.42101e-020f);
 }
 
-float x_rsq(float4 src0)
+#define x_rsq(dest, src0) dest = rsqrt(abs(scalar_component(src0)))
+
+#define x_expp(dest, src0) dest = x_expp(src0)
+float4 _expp(float4 src0)
 {
-	return rsqrt(scalar_component(src0));
+    float input = scalar_component(src0);
+    float base = floor(input);
+
+    float4 dest;
+    dest.x = exp2(base);
+    dest.y = input - base; // Was : frac(input)
+    dest.z = exp2(input);
+    dest.w = 1;
+
+	return dest;
 }
 
-float4 x_exp(float4 src0)
+#define x_logp(dest, src0) dest = _logp(src0)
+float4 _logp(float4 src0)
 {
-	float input = scalar_component(src0);
-	float x = exp2(floor(input));
-	float fractional = frac(input);
-	float power = exp2(input);
-	return float4(x, fractional, power, 1);
-}
-
-float4 x_log(float4 src0)
-{
-	float input = scalar_component(src0);
+    float input = abs(scalar_component(src0));
 	float exponent = floor(log2(input));
-	float mantissa = 1 / exp2(exponent);
-	float logResult = log2(input);
-	return float4(exponent, mantissa, logResult, 1);
+
+    float4 dest;
+    dest.x = exponent;
+    dest.y = 1 / exp2(exponent); // mantissa
+    dest.z = exponent + log2(input); // logResult
+    dest.w = 1;
+    
+	return dest;
 }
 
-float4 x_lit(float4 src0)
+#define x_lit(dest, src) dest = _lit(src)
+float4 _lit(float4 src0)
 {
 	const float epsilon = 1.0f / 256.0f;
+
 	float diffuse = src0.x;
 	float blinn = src0.y;
 	float specPower = clamp(src0.w, -(128 - epsilon), (128 - epsilon));
 
 	float4 dest;
 	dest.x = 1;
-	dest.y = max(diffuse, 0);
-	dest.z = diffuse > 0 ? pow(2, specPower * log(blinn)) : 0;
+	dest.y = max(0, diffuse);
+	dest.z = diffuse > 0 ? pow(2, specPower * log(blinn)) : 0; // TODO : Use exp2(#) instead of pow(2, #) ?
+	// TODO : Use dest.z = (diffuse > 0) && (blinn > 0) ? pow(blinn, specPower) : 0;
 	dest.w = 1;
 
 	return dest;
