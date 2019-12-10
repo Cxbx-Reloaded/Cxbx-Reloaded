@@ -1,5 +1,5 @@
 // This starts the raw string (comment to get syntax highlighting, UNCOMMENT to compile) :
-//R"DELIMITER(
+R"DELIMITER(
 // Xbox HLSL vertex shader (template populated at runtime)
 struct VS_INPUT
 {
@@ -26,34 +26,34 @@ extern uniform float4 c[192] : register(c0);
 
 // Functions for MAC ('Multiply And Accumulate') opcodes
 
-#define x_mov(dest, src0) dest = src0
+#define x_mov(dest, mask, src0) dest.mask = src0
 
-#define x_mul(dest, src0, src1) dest = src0 * src1
+#define x_mul(dest, mask, src0, src1) dest.mask = src0 * src1
 
-#define x_add(dest, src0, src1) dest = src0 + src1
+#define x_add(dest, mask, src0, src1) dest.mask = src0 + src1
 
-#define x_dst(dest, src0, src1) dest = dst(src0, src1) // equals { dest.x = 1; dest.y = src0.y * src1.y; dest.z = src0.z; dest.w = src1.w; }
+#define x_dst(dest, mask, src0, src1) dest.mask = dst(src0, src1) // equals { dest.x = 1; dest.y = src0.y * src1.y; dest.z = src0.z; dest.w = src1.w; }
 
-#define x_min(dest, src0, src1) dest = min(src0, src1)
+#define x_min(dest, mask, src0, src1) dest.mask = min(src0, src1)
 
-#define x_max(dest, src0, src1) dest = max(src0, src1)
+#define x_max(dest, mask, src0, src1) dest.mask = max(src0, src1)
 
-#define x_mad(dest, src0, src1, src2) dest = (src0 * src1) + src2
+#define x_mad(dest, mask, src0, src1, src2) dest.mask = (src0 * src1) + src2
 
 // The address register should be floored
 // Due to rounding differences with the Xbox (and increased precision on PC?)
 // some titles produce values just below the threshold of the next integer.
 // We can add a small bias to make sure it's bumped over the threshold
 // Test Case: Azurik (divides indexes 755, then scales them back in the vertex shader)
-#define x_arl(dest, src0) dest = floor(src0 + 0.0001)
+#define x_arl(dest, mask, src0) dest.mask = floor(src0 + 0.0001)
 
-#define x_dp3(dest, src0, src1) dest = dot((float3)src0, (float3)src1)
+#define x_dp3(dest, mask, src0, src1) dest.mask = dot((float3)src0, (float3)src1)
 
-#define x_dph(dest, src0, src1) x_dp3(src0, src1) + src1.w
+#define x_dph(dest, mask, src0, src1) dest.mask = dot((float3)src0, (float3)src1) + src1.w
 
-#define x_dp4(dest, src0, src1) dest = dot(src0, src1)
+#define x_dp4(dest, mask, src0, src1) dest.mask = dot(src0, src1)
 
-#define x_sge(dest, src0) dest = _sge(src0)
+#define x_sge(dest, mask, src0, src1) dest.mask = _sge(src0, src1).mask
 float4 _sge(float4 src0, float4 src1)
 {
 	float4 dest;
@@ -64,7 +64,7 @@ float4 _sge(float4 src0, float4 src1)
 	return dest;
 }
 
-#define x_slt(dest, src0) dest = _slt(src0)
+#define x_slt(dest, mask, src0, src1) dest.mask = _slt(src0, src1).mask
 float4 _slt(float4 src0, float4 src1)
 {
 	float4 dest;
@@ -79,10 +79,10 @@ float4 _slt(float4 src0, float4 src1)
 
 #define scalar_component(src0) src0.x
 
-#define x_rcp(dest, src0) dest = 1 / scalar_component(src0)
-// TODO : #define x_rcp(dest, src0) dest = (scalar_component(src0) == 0) ? 1.#INF : (1 / scalar_component(src0))
+#define x_rcp(dest, mask, src0) dest.mask = 1 / scalar_component(src0)
+// TODO : #define x_rcp(dest, mask, src0) dest.mask = (scalar_component(src0) == 0) ? 1.#INF : (1 / scalar_component(src0))
 
-#define x_rcc(dest, src0) dest = _rcc(src0)
+#define x_rcc(dest, mask, src0) dest.mask = _rcc(src0).mask
 float _rcc(float4 src0)
 {
 	float input = scalar_component(src0);
@@ -96,9 +96,9 @@ float _rcc(float4 src0)
 		: clamp(r, -1.84467e+019f, -5.42101e-020f);
 }
 
-#define x_rsq(dest, src0) dest = rsqrt(abs(scalar_component(src0)))
+#define x_rsq(dest, mask, src0) dest.mask = rsqrt(abs(scalar_component(src0)))
 
-#define x_expp(dest, src0) dest = x_expp(src0)
+#define x_expp(dest, mask, src0) dest.mask = _expp(src0).mask
 float4 _expp(float4 src0)
 {
     float input = scalar_component(src0);
@@ -113,7 +113,7 @@ float4 _expp(float4 src0)
 	return dest;
 }
 
-#define x_logp(dest, src0) dest = _logp(src0)
+#define x_logp(dest, mask, src0) dest.mask = _logp(src0).mask
 float4 _logp(float4 src0)
 {
     float input = abs(scalar_component(src0));
@@ -128,7 +128,7 @@ float4 _logp(float4 src0)
 	return dest;
 }
 
-#define x_lit(dest, src) dest = _lit(src)
+#define x_lit(dest, mask, src) dest.mask = _lit(src).mask
 float4 _lit(float4 src0)
 {
 	const float epsilon = 1.0f / 256.0f;
@@ -140,7 +140,7 @@ float4 _lit(float4 src0)
 	float4 dest;
 	dest.x = 1;
 	dest.y = max(0, diffuse);
-	dest.z = diffuse > 0 ? pow(2, specPower * log(blinn)) : 0; // TODO : Use exp2(#) instead of pow(2, #) ?
+	dest.z = diffuse > 0 ? exp2(specPower * log(blinn)) : 0;
 	// TODO : Use dest.z = (diffuse > 0) && (blinn > 0) ? pow(blinn, specPower) : 0;
 	dest.w = 1;
 
@@ -175,7 +175,7 @@ VS_OUTPUT main(const VS_INPUT xIn)
 	#define r12 oPos // oPos and r12 are two ways of accessing the same register on Xbox
 
 	// Address (index) register
-	int a0_x;
+	int1 a0;
 
 	// Output variables
 	float4 oPos, oD0, oD1, oB0, oB1, oT0, oT1, oT2, oT3;

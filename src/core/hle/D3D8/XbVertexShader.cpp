@@ -2005,22 +2005,20 @@ void OutputHlsl(std::stringstream& hlsl, VSH_IMD_OUTPUT& dest)
 		hlsl << OReg_Name[dest.Address];
 		break;
 	case IMD_OUTPUT_A0X:
-		hlsl << "a0_x"; // Is this actually a valid output?
+		hlsl << "a0"; // Is this actually a valid output?
 		break;
 	default:
 		assert(false);
 		break;
 	}
 
-	// If we're not writing all channels, write the mask
-	if (!(dest.Mask[0] && dest.Mask[1] && dest.Mask[2] && dest.Mask[3]))
-	{
-		hlsl << ".";
-		if (dest.Mask[0]) hlsl << "x";
-		if (dest.Mask[1]) hlsl << "y";
-		if (dest.Mask[2]) hlsl << "z";
-		if (dest.Mask[3]) hlsl << "w";
-	}
+	// Write the mask as a separate argument to the opcode defines
+	// (No space, so that "dest,mask, ..." looks close to "dest.mask, ...")
+	hlsl << ",";
+	if (dest.Mask[0]) hlsl << "x";
+	if (dest.Mask[1]) hlsl << "y";
+	if (dest.Mask[2]) hlsl << "z";
+	if (dest.Mask[3]) hlsl << "w";
 }
 
 void ParameterHlsl(std::stringstream& hlsl, VSH_IMD_PARAMETER& paramMeta)
@@ -2039,10 +2037,10 @@ void ParameterHlsl(std::stringstream& hlsl, VSH_IMD_PARAMETER& paramMeta)
 		if (paramMeta.IndexesWithA0_X) {
 			// Only display the offset if it's not 0.
 			if (register_number != 0) {
-				hlsl << "c[a0_x+" << register_number << "]";
+				hlsl << "c[a0.x+" << register_number << "]";
 			}
 			else {
-				hlsl << "c[a0_x]";
+				hlsl << "c[a0.x]";
 			}
 		} else {
 			hlsl << "c[" << register_number << "]";
