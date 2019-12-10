@@ -26,32 +26,32 @@ extern uniform float4 c[192] : register(c0);
 
 // Functions for MAC ('Multiply And Accumulate') opcodes
 
-#define x_mov(dest, mask, src0) dest.mask = src0
+#define x_mov(dest, mask, src0) dest.mask = ((float4)src0).mask
 
-#define x_mul(dest, mask, src0, src1) dest.mask = src0 * src1
+#define x_mul(dest, mask, src0, src1) dest.mask = ((float4)(src0 * src1)).mask
 
-#define x_add(dest, mask, src0, src1) dest.mask = src0 + src1
+#define x_add(dest, mask, src0, src1) dest.mask = ((float4)(src0 + src1)).mask
 
-#define x_dst(dest, mask, src0, src1) dest.mask = dst(src0, src1) // equals { dest.x = 1; dest.y = src0.y * src1.y; dest.z = src0.z; dest.w = src1.w; }
+#define x_dst(dest, mask, src0, src1) dest.mask = dst(src0, src1).mask /* equals { dest.x = 1; dest.y = src0.y * src1.y; dest.z = src0.z; dest.w = src1.w; } */
 
-#define x_min(dest, mask, src0, src1) dest.mask = min(src0, src1)
+#define x_min(dest, mask, src0, src1) dest.mask = min(src0, src1).mask
 
-#define x_max(dest, mask, src0, src1) dest.mask = max(src0, src1)
+#define x_max(dest, mask, src0, src1) dest.mask = max(src0, src1).mask
 
-#define x_mad(dest, mask, src0, src1, src2) dest.mask = (src0 * src1) + src2
+#define x_mad(dest, mask, src0, src1, src2) dest.mask = ((float4)((src0 * src1) + src2)).mask
 
 // The address register should be floored
 // Due to rounding differences with the Xbox (and increased precision on PC?)
 // some titles produce values just below the threshold of the next integer.
 // We can add a small bias to make sure it's bumped over the threshold
 // Test Case: Azurik (divides indexes 755, then scales them back in the vertex shader)
-#define x_arl(dest, mask, src0) dest.mask = floor(src0 + 0.0001)
+#define x_arl(dest, mask, src0) dest.mask = floor(src0 + 0.0001).mask
 
-#define x_dp3(dest, mask, src0, src1) dest.mask = dot((float3)src0, (float3)src1)
+#define x_dp3(dest, mask, src0, src1) dest.mask = dot((float3)src0, (float3)src1)  /* NO mask! */
 
-#define x_dph(dest, mask, src0, src1) dest.mask = dot((float3)src0, (float3)src1) + src1.w
+#define x_dph(dest, mask, src0, src1) dest.mask = dot((float3)src0, (float3)src1) + src1.w  /* NO mask! */
 
-#define x_dp4(dest, mask, src0, src1) dest.mask = dot(src0, src1)
+#define x_dp4(dest, mask, src0, src1) dest.mask = dot(src0, src1)  /* NO mask! */
 
 #define x_sge(dest, mask, src0, src1) dest.mask = _sge(src0, src1).mask
 float4 _sge(float4 src0, float4 src1)
@@ -96,7 +96,7 @@ float _rcc(float4 src0)
 		: clamp(r, -1.84467e+019f, -5.42101e-020f);
 }
 
-#define x_rsq(dest, mask, src0) dest.mask = rsqrt(abs(scalar_component(src0)))
+#define x_rsq(dest, mask, src0) dest.mask = rsqrt(abs(scalar_component(src0))) /* NO mask! */
 
 #define x_expp(dest, mask, src0) dest.mask = _expp(src0).mask
 float4 _expp(float4 src0)
@@ -204,14 +204,15 @@ VS_OUTPUT main(const VS_INPUT xIn)
 
 	// Xbox shader program
 // <Xbox Shader>
+
 	// Copy variables to output struct
 	VS_OUTPUT xOut;
 
 	xOut.oPos = reverseScreenspaceTransform(oPos);
 	xOut.oD0 = oD0;
 	xOut.oD1 = oD1;
-	xOut.oFog = oFog;
-	xOut.oPts = oPts;
+	xOut.oFog = oFog.x;
+	xOut.oPts = oPts.x;
 	xOut.oB0 = oB0;
 	xOut.oB1 = oB1;
 	xOut.oT0 = oT0;
