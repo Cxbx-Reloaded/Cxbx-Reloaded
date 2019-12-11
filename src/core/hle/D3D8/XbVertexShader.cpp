@@ -294,16 +294,6 @@ typedef struct _VSH_INTERMEDIATE_FORMAT
 }
 VSH_INTERMEDIATE_FORMAT;
 
-// Used for xvu spec definition
-typedef struct _VSH_FIELDMAPPING
-{
-    VSH_FIELD_NAME  FieldName;
-    uint8_t          SubToken;
-    uint8_t          StartBit;
-    uint8_t          BitLength;
-}
-VSH_FIELDMAPPING;
-
 typedef struct _VSH_XBOX_SHADER
 {
     XTL::X_VSH_SHADER_HEADER       ShaderHeader;
@@ -311,82 +301,6 @@ typedef struct _VSH_XBOX_SHADER
     VSH_INTERMEDIATE_FORMAT Intermediate[VSH_MAX_INTERMEDIATE_COUNT];
 }
 VSH_XBOX_SHADER;
-
-// Local constants
-static const VSH_FIELDMAPPING g_FieldMapping[] =
-{
-    // Field Name         DWORD BitPos BitSize
-    {  FLD_ILU,              1,   25,     3 },
-    {  FLD_MAC,              1,   21,     4 },
-    {  FLD_CONST,            1,   13,     8 },
-    {  FLD_V,                1,    9,     4 },
-    // Input A
-    {  FLD_A_NEG,            1,    8,     1 },
-    {  FLD_A_SWZ_X,          1,    6,     2 },
-    {  FLD_A_SWZ_Y,          1,    4,     2 },
-    {  FLD_A_SWZ_Z,          1,    2,     2 },
-    {  FLD_A_SWZ_W,          1,    0,     2 },
-    {  FLD_A_R,              2,   28,     4 },
-    {  FLD_A_MUX,            2,   26,     2 },
-    // Input B
-    {  FLD_B_NEG,            2,   25,     1 },
-    {  FLD_B_SWZ_X,          2,   23,     2 },
-    {  FLD_B_SWZ_Y,          2,   21,     2 },
-    {  FLD_B_SWZ_Z,          2,   19,     2 },
-    {  FLD_B_SWZ_W,          2,   17,     2 },
-    {  FLD_B_R,              2,   13,     4 },
-    {  FLD_B_MUX,            2,   11,     2 },
-    // Input C
-    {  FLD_C_NEG,            2,   10,     1 },
-    {  FLD_C_SWZ_X,          2,    8,     2 },
-    {  FLD_C_SWZ_Y,          2,    6,     2 },
-    {  FLD_C_SWZ_Z,          2,    4,     2 },
-    {  FLD_C_SWZ_W,          2,    2,     2 },
-    {  FLD_C_R_HIGH,         2,    0,     2 },
-    {  FLD_C_R_LOW,          3,   30,     2 },
-    {  FLD_C_MUX,            3,   28,     2 },
-    // Output
-    {  FLD_OUT_MAC_MASK_X,   3,   27,     1 },
-    {  FLD_OUT_MAC_MASK_Y,   3,   26,     1 },
-    {  FLD_OUT_MAC_MASK_Z,   3,   25,     1 },
-    {  FLD_OUT_MAC_MASK_W,   3,   24,     1 },
-    {  FLD_OUT_R,            3,   20,     4 },
-    {  FLD_OUT_ILU_MASK_X,   3,   19,     1 },
-    {  FLD_OUT_ILU_MASK_Y,   3,   18,     1 },
-    {  FLD_OUT_ILU_MASK_Z,   3,   17,     1 },
-    {  FLD_OUT_ILU_MASK_W,   3,   16,     1 },
-    {  FLD_OUT_O_MASK_X,     3,   15,     1 },
-    {  FLD_OUT_O_MASK_Y,     3,   14,     1 },
-    {  FLD_OUT_O_MASK_Z,     3,   13,     1 },
-    {  FLD_OUT_O_MASK_W,     3,   12,     1 },
-    {  FLD_OUT_ORB,          3,   11,     1 },
-    {  FLD_OUT_ADDRESS,      3,    3,     8 },
-    {  FLD_OUT_MUX,          3,    2,     1 },
-	// Relative addressing
-    {  FLD_A0X,              3,    1,     1 },
-	// Final instruction
-	{  FLD_FINAL,            3,    0,     1 }
-};
-
-static const char* OReg_Name[] =
-{
-    "oPos",
-    "???",
-    "???",
-    "oD0",
-    "oD1",
-    "oFog",
-    "oPts",
-    "oB0",
-    "oB1",
-    "oT0",
-    "oT1",
-    "oT2",
-    "oT3",
-    "???",
-    "???",
-    "a0.x"
-};
 
 // TODO : Reinstate and use : std::array<bool, 16> RegVIsPresentInDeclaration;
 
@@ -398,44 +312,8 @@ void CxbxUpdateVertexShader(DWORD XboxVertexShaderHandle)
 	CxbxVertexShader &VertexShader = g_CxbxVertexShaders[XboxVertexShaderHandle];
 }*/
 
-static inline int IsInUse(const boolean *pMask)
-{
-    return (pMask[0] || pMask[1] || pMask[2] || pMask[3]);
-}
-
-static inline boolean HasMACR(VSH_SHADER_INSTRUCTION *pInstruction)
-{
-    return IsInUse(pInstruction->Output.MACRMask) && pInstruction->MAC != MAC_NOP;
-}
-
-static inline boolean HasMACO(VSH_SHADER_INSTRUCTION *pInstruction)
-{
-    return IsInUse(pInstruction->Output.OutputMask) &&
-            pInstruction->Output.OutputMux == OMUX_MAC &&
-            pInstruction->MAC != MAC_NOP;
-}
-
-static inline boolean HasMACARL(VSH_SHADER_INSTRUCTION *pInstruction)
-{
-    return /*!IsInUse(pInstruction->Output.OutputMask) &&
-            pInstruction->Output.OutputMux == OMUX_MAC &&*/
-            pInstruction->MAC == MAC_ARL;
-}
-
-static inline boolean HasILUR(VSH_SHADER_INSTRUCTION *pInstruction)
-{
-    return IsInUse(pInstruction->Output.ILURMask) && pInstruction->ILU != ILU_NOP;
-}
-
-static inline boolean HasILUO(VSH_SHADER_INSTRUCTION *pInstruction)
-{
-    return IsInUse(pInstruction->Output.OutputMask) &&
-            pInstruction->Output.OutputMux == OMUX_ILU &&
-            pInstruction->ILU != ILU_NOP;
-}
-
 // Retrieves a number of bits in the instruction token
-static inline int VshGetFromToken(uint32_t *pShaderToken,
+static inline uint32_t VshGetFromToken(uint32_t *pShaderToken,
                                   uint8_t SubToken,
                                   uint8_t StartBit,
                                   uint8_t BitLength)
@@ -443,19 +321,78 @@ static inline int VshGetFromToken(uint32_t *pShaderToken,
     return (pShaderToken[SubToken] >> StartBit) & ~(0xFFFFFFFF << BitLength);
 }
 
+static uint8_t VshGetField(uint32_t         *pShaderToken,
+                   VSH_FIELD_NAME FieldName)
+{
+	// Used for xvu spec definition
+	static const struct {
+		uint8_t          SubToken;
+		uint8_t          StartBit;
+		uint8_t          BitLength;
+	} FieldMapping[/*VSH_FIELD_NAME*/] = {
+	// SubToken BitPos  BitSize
+		{  1,   25,     3 }, // FLD_ILU,              
+		{  1,   21,     4 }, // FLD_MAC,              
+		{  1,   13,     8 }, // FLD_CONST,            
+		{  1,    9,     4 }, // FLD_V,                
+		// Input A
+		{  1,    8,     1 }, // FLD_A_NEG,            
+		{  1,    6,     2 }, // FLD_A_SWZ_X,          
+		{  1,    4,     2 }, // FLD_A_SWZ_Y,          
+		{  1,    2,     2 }, // FLD_A_SWZ_Z,          
+		{  1,    0,     2 }, // FLD_A_SWZ_W,          
+		{  2,   28,     4 }, // FLD_A_R,              
+		{  2,   26,     2 }, // FLD_A_MUX,            
+		// Input B
+		{  2,   25,     1 }, // FLD_B_NEG,            
+		{  2,   23,     2 }, // FLD_B_SWZ_X,          
+		{  2,   21,     2 }, // FLD_B_SWZ_Y,          
+		{  2,   19,     2 }, // FLD_B_SWZ_Z,          
+		{  2,   17,     2 }, // FLD_B_SWZ_W,          
+		{  2,   13,     4 }, // FLD_B_R,              
+		{  2,   11,     2 }, // FLD_B_MUX,            
+		// Input C
+		{  2,   10,     1 }, // FLD_C_NEG,            
+		{  2,    8,     2 }, // FLD_C_SWZ_X,          
+		{  2,    6,     2 }, // FLD_C_SWZ_Y,          
+		{  2,    4,     2 }, // FLD_C_SWZ_Z,          
+		{  2,    2,     2 }, // FLD_C_SWZ_W,          
+		{  2,    0,     2 }, // FLD_C_R_HIGH,         
+		{  3,   30,     2 }, // FLD_C_R_LOW,          
+		{  3,   28,     2 }, // FLD_C_MUX,            
+		// Output
+		{  3,   27,     1 }, // FLD_OUT_MAC_MASK_X,   
+		{  3,   26,     1 }, // FLD_OUT_MAC_MASK_Y,   
+		{  3,   25,     1 }, // FLD_OUT_MAC_MASK_Z,   
+		{  3,   24,     1 }, // FLD_OUT_MAC_MASK_W,   
+		{  3,   20,     4 }, // FLD_OUT_R,            
+		{  3,   19,     1 }, // FLD_OUT_ILU_MASK_X,   
+		{  3,   18,     1 }, // FLD_OUT_ILU_MASK_Y,   
+		{  3,   17,     1 }, // FLD_OUT_ILU_MASK_Z,   
+		{  3,   16,     1 }, // FLD_OUT_ILU_MASK_W,   
+		{  3,   15,     1 }, // FLD_OUT_O_MASK_X,     
+		{  3,   14,     1 }, // FLD_OUT_O_MASK_Y,     
+		{  3,   13,     1 }, // FLD_OUT_O_MASK_Z,     
+		{  3,   12,     1 }, // FLD_OUT_O_MASK_W,     
+		{  3,   11,     1 }, // FLD_OUT_ORB,          
+		{  3,    3,     8 }, // FLD_OUT_ADDRESS,      
+		{  3,    2,     1 }, // FLD_OUT_MUX,          
+		// Relative addressing
+		{  3,    1,     1 }, // FLD_A0X,              
+		// Final instruction
+		{  3,    0,     1 }  // FLD_FINAL,            
+	};
+
+    return (uint8_t)(VshGetFromToken(pShaderToken,
+                                   FieldMapping[FieldName].SubToken,
+                                   FieldMapping[FieldName].StartBit,
+                                   FieldMapping[FieldName].BitLength));
+}
+
 // Converts the C register address to disassembly format
 static inline int16_t ConvertCRegister(const int16_t CReg)
 {
     return ((((CReg >> 5) & 7) - 3) * 32) + (CReg & 31);
-}
-
-uint8_t VshGetField(uint32_t         *pShaderToken,
-                   VSH_FIELD_NAME FieldName)
-{
-    return (uint8_t)(VshGetFromToken(pShaderToken,
-                                   g_FieldMapping[FieldName].SubToken,
-                                   g_FieldMapping[FieldName].StartBit,
-                                   g_FieldMapping[FieldName].BitLength));
 }
 
 static void VshParseInstruction(uint32_t               *pShaderToken,
@@ -566,65 +503,286 @@ static void VshParseInstruction(uint32_t               *pShaderToken,
     pInstruction->Final = VshGetField(pShaderToken, FLD_FINAL);
 }
 
-// Print functions
-static char *VshGetRegisterName(VSH_PARAMETER_TYPE ParameterType)
+static inline int VshIsMaskInUse(const boolean* pMask)
 {
-    switch(ParameterType)
+	return (pMask[0] || pMask[1] || pMask[2] || pMask[3]);
+}
+
+static inline boolean VshInstrWritesToMAC_R(VSH_SHADER_INSTRUCTION* pInstruction)
+{
+	return VshIsMaskInUse(pInstruction->Output.MACRMask)
+		&& pInstruction->MAC != MAC_NOP;
+}
+
+static inline boolean VshInstrWritesToMAC_O(VSH_SHADER_INSTRUCTION* pInstruction)
+{
+	return VshIsMaskInUse(pInstruction->Output.OutputMask)
+		&& pInstruction->Output.OutputMux == OMUX_MAC
+		&& pInstruction->MAC != MAC_NOP;
+}
+
+static inline boolean VshInstrWritesToMAC_ARL(VSH_SHADER_INSTRUCTION* pInstruction)
+{
+	return /*!VshIsMaskInUse(pInstruction->Output.OutputMask) &&
+			pInstruction->Output.OutputMux == OMUX_MAC &&*/
+		pInstruction->MAC == MAC_ARL;
+}
+
+static inline boolean VshInstrWritesToILU_R(VSH_SHADER_INSTRUCTION* pInstruction)
+{
+	return VshIsMaskInUse(pInstruction->Output.ILURMask)
+		&& pInstruction->ILU != ILU_NOP;
+}
+
+static inline boolean VshInstrWritesToILU_O(VSH_SHADER_INSTRUCTION* pInstruction)
+{
+	return VshIsMaskInUse(pInstruction->Output.OutputMask)
+		&& pInstruction->Output.OutputMux == OMUX_ILU
+		&& pInstruction->ILU != ILU_NOP;
+}
+
+static void VshAddParameter(VSH_PARAMETER     *pParameter,
+                            boolean           a0x,
+                            VSH_IMD_PARAMETER *pIntermediateParameter)
+{
+    pIntermediateParameter->Parameter = *pParameter;
+    pIntermediateParameter->Active    = TRUE;
+    pIntermediateParameter->IndexesWithA0_X     = a0x;
+}
+
+static void VshAddParameters(VSH_SHADER_INSTRUCTION  *pInstruction,
+                             VSH_ILU                 ILU,
+                             VSH_MAC                 MAC,
+                             VSH_IMD_PARAMETER       *pParameters)
+{
+    uint8_t ParamCount = 0;
+	
+    if(MAC >= MAC_MOV)
     {
-    case PARAM_R:
-        return "r";
-    case PARAM_V:
-        return "v";
-    case PARAM_C:
-        return "c";
-	case PARAM_O:
-		return "oPos";
-	default:
-        return "?";
+        VshAddParameter(&pInstruction->A, pInstruction->a0x, &pParameters[ParamCount]);
+        ParamCount++;
+    }
+
+    if((MAC == MAC_MUL) || ((MAC >= MAC_MAD) && (MAC <= MAC_SGE)))
+    {
+        VshAddParameter(&pInstruction->B, pInstruction->a0x, &pParameters[ParamCount]);
+        ParamCount++;
+    }
+
+    if((ILU >= ILU_MOV) || (MAC == MAC_ADD) || (MAC == MAC_MAD))
+    {
+        VshAddParameter(&pInstruction->C, pInstruction->a0x, &pParameters[ParamCount]);
+        ParamCount++;
     }
 }
 
-char* XboxVertexRegisterAsString(DWORD VertexRegister)
+static void VshVerifyBufferBounds(VSH_XBOX_SHADER *pShader)
 {
-	switch (VertexRegister)
-	{
-	case XTL::X_D3DVSDE_VERTEX: // -1
-		return "D3DVSDE_VERTEX /* xbox ext. */";
-	case XTL::X_D3DVSDE_POSITION: // 0
-		return "D3DVSDE_POSITION";
-	case XTL::X_D3DVSDE_BLENDWEIGHT: // 1
-		return "D3DVSDE_BLENDWEIGHT";
-	case XTL::X_D3DVSDE_NORMAL: // 2
-		return "D3DVSDE_NORMAL";
-	case XTL::X_D3DVSDE_DIFFUSE: // 3
-		return "D3DVSDE_DIFFUSE";
-	case XTL::X_D3DVSDE_SPECULAR: // 4
-		return "D3DVSDE_SPECULAR";
-	case XTL::X_D3DVSDE_FOG: // 5
-		return "D3DVSDE_FOG";
-	case XTL::X_D3DVSDE_POINTSIZE: // 6
-		return "D3DVDSE_POINTSIZE";
-	case XTL::X_D3DVSDE_BACKDIFFUSE: // 7
-		return "D3DVSDE_BACKDIFFUSE /* xbox ext. */";
-	case XTL::X_D3DVSDE_BACKSPECULAR: // 8
-		return "D3DVSDE_BACKSPECULAR /* xbox ext. */";
-	case XTL::X_D3DVSDE_TEXCOORD0: // 9
-		return "D3DVSDE_TEXCOORD0";
-	case XTL::X_D3DVSDE_TEXCOORD1: // 10
-		return "D3DVSDE_TEXCOORD1";
-	case XTL::X_D3DVSDE_TEXCOORD2: // 11
-		return "D3DVSDE_TEXCOORD2";
-	case XTL::X_D3DVSDE_TEXCOORD3: // 12
-		return "D3DVSDE_TEXCOORD3";
-	case 13:
-		return "13 /* unknown register */";
-	case 14:
-		return "14 /* unknown register */";
-	case 15:
-		return "15 /* unknown register */";
-	default:
-		return "16 /* or higher, unknown register */";
-	}
+    if(pShader->IntermediateCount >= VSH_MAX_INTERMEDIATE_COUNT)
+    {
+        CxbxKrnlCleanup("Shader exceeds conversion buffer!");
+    }
+}
+
+static VSH_INTERMEDIATE_FORMAT *VshNewIntermediate(VSH_XBOX_SHADER *pShader)
+{
+    VshVerifyBufferBounds(pShader);
+
+    ZeroMemory(&pShader->Intermediate[pShader->IntermediateCount], sizeof(VSH_INTERMEDIATE_FORMAT));
+
+    return &pShader->Intermediate[pShader->IntermediateCount++];
+}
+
+static boolean VshAddInstructionMAC_R(VSH_SHADER_INSTRUCTION *pInstruction,
+                                      VSH_XBOX_SHADER        *pShader,
+                                      boolean                IsCombined)
+{
+    VSH_INTERMEDIATE_FORMAT *pIntermediate;
+
+    if(!VshInstrWritesToMAC_R(pInstruction)) {
+        return FALSE;
+    }
+
+    pIntermediate = VshNewIntermediate(pShader);
+    pIntermediate->IsCombined = IsCombined;
+
+    // Opcode
+    pIntermediate->InstructionType = IMD_MAC;
+    pIntermediate->MAC = pInstruction->MAC;
+
+    // Output param
+    pIntermediate->Output.Type = IMD_OUTPUT_R;
+    pIntermediate->Output.Address = pInstruction->Output.MACRAddress;
+    memcpy(pIntermediate->Output.Mask, pInstruction->Output.MACRMask, sizeof(boolean) * 4);
+
+    // Other parameters
+    VshAddParameters(pInstruction, ILU_NOP, pInstruction->MAC, pIntermediate->Parameters);
+
+    return TRUE;
+}
+
+static boolean VshAddInstructionMAC_O(VSH_SHADER_INSTRUCTION* pInstruction,
+                                      VSH_XBOX_SHADER        *pShader,
+                                      boolean                IsCombined)
+{
+    VSH_INTERMEDIATE_FORMAT *pIntermediate;
+
+    if(!VshInstrWritesToMAC_O(pInstruction)) {
+        return FALSE;
+    }
+
+    pIntermediate = VshNewIntermediate(pShader);
+    pIntermediate->IsCombined = IsCombined;
+
+    // Opcode
+    pIntermediate->InstructionType = IMD_MAC;
+    pIntermediate->MAC = pInstruction->MAC;
+
+    // Output param
+	pIntermediate->Output.Type = pInstruction->Output.OutputType == OUTPUT_C ? IMD_OUTPUT_C : IMD_OUTPUT_O;
+    pIntermediate->Output.Address = pInstruction->Output.OutputAddress;
+    memcpy(pIntermediate->Output.Mask, pInstruction->Output.OutputMask, sizeof(boolean) * 4);
+
+    // Other parameters
+    VshAddParameters(pInstruction, ILU_NOP, pInstruction->MAC, pIntermediate->Parameters);
+
+    return TRUE;
+}
+
+static boolean VshAddInstructionMAC_ARL(VSH_SHADER_INSTRUCTION *pInstruction,
+                                        VSH_XBOX_SHADER        *pShader,
+                                        boolean                IsCombined)
+{
+    VSH_INTERMEDIATE_FORMAT *pIntermediate;
+
+    if(!VshInstrWritesToMAC_ARL(pInstruction)) {
+        return FALSE;
+    }
+
+    pIntermediate = VshNewIntermediate(pShader);
+    pIntermediate->IsCombined = IsCombined;
+
+    // Opcode
+    pIntermediate->InstructionType = IMD_MAC;
+    pIntermediate->MAC = pInstruction->MAC;
+
+    // Output param
+    pIntermediate->Output.Type = IMD_OUTPUT_A0X;
+    pIntermediate->Output.Address = pInstruction->Output.OutputAddress;
+
+    // Other parameters
+    VshAddParameters(pInstruction, ILU_NOP, pInstruction->MAC, pIntermediate->Parameters);
+
+    return TRUE;
+}
+
+static boolean VshAddInstructionILU_R(VSH_SHADER_INSTRUCTION *pInstruction,
+                                      VSH_XBOX_SHADER        *pShader,
+                                      boolean                IsCombined)
+{
+    VSH_INTERMEDIATE_FORMAT *pIntermediate;
+
+    if(!VshInstrWritesToILU_R(pInstruction)) {
+        return FALSE;
+    }
+
+	pIntermediate = VshNewIntermediate(pShader);
+    pIntermediate->IsCombined = IsCombined;
+
+    // Opcode
+    pIntermediate->InstructionType = IMD_ILU;
+    pIntermediate->ILU = pInstruction->ILU;
+
+    // Output param
+    pIntermediate->Output.Type = IMD_OUTPUT_R;
+    // If this is a combined instruction, only r1 is allowed (R address should not be used)
+    pIntermediate->Output.Address = IsCombined ? 1 : pInstruction->Output.ILURAddress;
+    memcpy(pIntermediate->Output.Mask, pInstruction->Output.ILURMask, sizeof(boolean) * 4);
+
+    // Other parameters
+    VshAddParameters(pInstruction, pInstruction->ILU, MAC_NOP, pIntermediate->Parameters);
+
+    return TRUE;
+}
+
+static boolean VshAddInstructionILU_O(VSH_SHADER_INSTRUCTION *pInstruction,
+                                      VSH_XBOX_SHADER        *pShader,
+                                      boolean                IsCombined)
+{
+    VSH_INTERMEDIATE_FORMAT *pIntermediate;
+
+    if(!VshInstrWritesToILU_O(pInstruction)) {
+        return FALSE;
+    }
+
+    pIntermediate = VshNewIntermediate(pShader);
+    pIntermediate->IsCombined = IsCombined;
+
+    // Opcode
+    pIntermediate->InstructionType = IMD_ILU;
+    pIntermediate->ILU = pInstruction->ILU;
+
+    // Output param
+    pIntermediate->Output.Type = pInstruction->Output.OutputType == OUTPUT_C ? IMD_OUTPUT_C : IMD_OUTPUT_O;
+    pIntermediate->Output.Address = pInstruction->Output.OutputAddress;
+    memcpy(pIntermediate->Output.Mask, pInstruction->Output.OutputMask, sizeof(boolean) * 4);
+
+    // Other parameters
+    VshAddParameters(pInstruction, pInstruction->ILU, MAC_NOP, pIntermediate->Parameters);
+
+    return TRUE;
+}
+
+static void VshConvertToIntermediate(VSH_SHADER_INSTRUCTION *pInstruction,
+                                     VSH_XBOX_SHADER        *pShader)
+{
+    // Five types of instructions:
+    //   MAC
+    //
+    //   ILU
+    //
+    //   MAC
+    //   +ILU
+    //
+    //   MAC
+    //   +MAC
+    //   +ILU
+    //
+    //   MAC
+    //   +ILU
+    //   +ILU
+    boolean IsCombined = FALSE;
+
+    if (VshAddInstructionMAC_R(pInstruction, pShader, IsCombined)) {
+        if (VshInstrWritesToMAC_O(pInstruction) ||
+            VshInstrWritesToILU_R(pInstruction) ||
+            VshInstrWritesToILU_O(pInstruction)) {
+            IsCombined = TRUE;
+        }
+    }
+
+	if (VshAddInstructionMAC_O(pInstruction, pShader, IsCombined)) {
+        if (VshInstrWritesToILU_R(pInstruction) ||
+            VshInstrWritesToILU_O(pInstruction)) {
+            IsCombined = TRUE;
+        }
+    }
+
+	// Special case, arl (mov a0.x, ...)
+    if (VshAddInstructionMAC_ARL(pInstruction, pShader, IsCombined)) {
+        if (VshInstrWritesToILU_R(pInstruction) ||
+            VshInstrWritesToILU_O(pInstruction)) {
+            IsCombined = TRUE;
+        }
+    }
+
+	if (VshAddInstructionILU_R(pInstruction, pShader, IsCombined)) {
+        if (VshInstrWritesToILU_O(pInstruction)) {
+            IsCombined = TRUE;
+        }
+    }
+
+	(void)VshAddInstructionILU_O(pInstruction, pShader, IsCombined);
 }
 
 #define D3DDECLUSAGE_UNSUPPORTED ((D3DDECLUSAGE)-1)
@@ -690,280 +848,54 @@ D3DDECLUSAGE Xb2PCRegisterType
 	return PCRegisterType;
 }
 
-extern D3DCAPS g_D3DCaps;
-
-static void VshAddParameter(VSH_PARAMETER     *pParameter,
-                            boolean           a0x,
-                            VSH_IMD_PARAMETER *pIntermediateParameter)
+char* XboxVertexRegisterAsString(DWORD VertexRegister)
 {
-    pIntermediateParameter->Parameter = *pParameter;
-    pIntermediateParameter->Active    = TRUE;
-    pIntermediateParameter->IndexesWithA0_X     = a0x;
-}
-
-static void VshAddParameters(VSH_SHADER_INSTRUCTION  *pInstruction,
-                             VSH_ILU                 ILU,
-                             VSH_MAC                 MAC,
-                             VSH_IMD_PARAMETER       *pParameters)
-{
-    uint8_t ParamCount = 0;
-	
-    if(MAC >= MAC_MOV)
-    {
-        VshAddParameter(&pInstruction->A, pInstruction->a0x, &pParameters[ParamCount]);
-        ParamCount++;
-    }
-
-    if((MAC == MAC_MUL) || ((MAC >= MAC_MAD) && (MAC <= MAC_SGE)))
-    {
-        VshAddParameter(&pInstruction->B, pInstruction->a0x, &pParameters[ParamCount]);
-        ParamCount++;
-    }
-
-    if((ILU >= ILU_MOV) || (MAC == MAC_ADD) || (MAC == MAC_MAD))
-    {
-        VshAddParameter(&pInstruction->C, pInstruction->a0x, &pParameters[ParamCount]);
-        ParamCount++;
-    }
-}
-
-static void VshVerifyBufferBounds(VSH_XBOX_SHADER *pShader)
-{
-    if(pShader->IntermediateCount >= VSH_MAX_INTERMEDIATE_COUNT)
-    {
-        CxbxKrnlCleanup("Shader exceeds conversion buffer!");
-    }
-}
-
-static VSH_INTERMEDIATE_FORMAT *VshNewIntermediate(VSH_XBOX_SHADER *pShader)
-{
-    VshVerifyBufferBounds(pShader);
-
-    ZeroMemory(&pShader->Intermediate[pShader->IntermediateCount], sizeof(VSH_INTERMEDIATE_FORMAT));
-
-    return &pShader->Intermediate[pShader->IntermediateCount++];
-}
-
-static boolean VshAddInstructionMAC_R(VSH_SHADER_INSTRUCTION *pInstruction,
-                                      VSH_XBOX_SHADER        *pShader,
-                                      boolean                IsCombined)
-{
-    VSH_INTERMEDIATE_FORMAT *pIntermediate;
-    if(!HasMACR(pInstruction))
-    {
-        return FALSE;
-    }
-
-    pIntermediate = VshNewIntermediate(pShader);
-    pIntermediate->IsCombined = IsCombined;
-
-    // Opcode
-    pIntermediate->InstructionType = IMD_MAC;
-    pIntermediate->MAC = pInstruction->MAC;
-
-    // Output param
-    pIntermediate->Output.Type = IMD_OUTPUT_R;
-    pIntermediate->Output.Address = pInstruction->Output.MACRAddress;
-    memcpy(pIntermediate->Output.Mask, pInstruction->Output.MACRMask, sizeof(boolean) * 4);
-
-    // Other parameters
-    VshAddParameters(pInstruction, ILU_NOP, pInstruction->MAC, pIntermediate->Parameters);
-
-    return TRUE;
-}
-
-static boolean VshAddInstructionMAC_O(VSH_SHADER_INSTRUCTION* pInstruction,
-                                      VSH_XBOX_SHADER        *pShader,
-                                      boolean                IsCombined)
-{
-    VSH_INTERMEDIATE_FORMAT *pIntermediate;
-    if(!HasMACO(pInstruction))
-    {
-        return FALSE;
-    }
-
-    pIntermediate = VshNewIntermediate(pShader);
-    pIntermediate->IsCombined = IsCombined;
-
-    // Opcode
-    pIntermediate->InstructionType = IMD_MAC;
-    pIntermediate->MAC = pInstruction->MAC;
-
-    // Output param
-	pIntermediate->Output.Type = pInstruction->Output.OutputType == OUTPUT_C ? IMD_OUTPUT_C : IMD_OUTPUT_O;
-    pIntermediate->Output.Address = pInstruction->Output.OutputAddress;
-    memcpy(pIntermediate->Output.Mask, pInstruction->Output.OutputMask, sizeof(boolean) * 4);
-
-    // Other parameters
-    VshAddParameters(pInstruction, ILU_NOP, pInstruction->MAC, pIntermediate->Parameters);
-
-    return TRUE;
-}
-
-static boolean VshAddInstructionMAC_ARL(VSH_SHADER_INSTRUCTION *pInstruction,
-                                        VSH_XBOX_SHADER        *pShader,
-                                        boolean                IsCombined)
-{
-    VSH_INTERMEDIATE_FORMAT *pIntermediate;
-    if(!HasMACARL(pInstruction))
-    {
-        return FALSE;
-    }
-
-    pIntermediate = VshNewIntermediate(pShader);
-    pIntermediate->IsCombined = IsCombined;
-
-    // Opcode
-    pIntermediate->InstructionType = IMD_MAC;
-    pIntermediate->MAC = pInstruction->MAC;
-
-    // Output param
-    pIntermediate->Output.Type = IMD_OUTPUT_A0X;
-    pIntermediate->Output.Address = pInstruction->Output.OutputAddress;
-
-    // Other parameters
-    VshAddParameters(pInstruction, ILU_NOP, pInstruction->MAC, pIntermediate->Parameters);
-
-    return TRUE;
-}
-
-static boolean VshAddInstructionILU_R(VSH_SHADER_INSTRUCTION *pInstruction,
-                                      VSH_XBOX_SHADER        *pShader,
-                                      boolean                IsCombined)
-{
-    VSH_INTERMEDIATE_FORMAT *pIntermediate;
-    if(!HasILUR(pInstruction))
-    {
-        return FALSE;
-    }
-
-	pIntermediate = VshNewIntermediate(pShader);
-    pIntermediate->IsCombined = IsCombined;
-
-    // Opcode
-    pIntermediate->InstructionType = IMD_ILU;
-    pIntermediate->ILU = pInstruction->ILU;
-
-    // Output param
-    pIntermediate->Output.Type = IMD_OUTPUT_R;
-    // If this is a combined instruction, only r1 is allowed (R address should not be used)
-    pIntermediate->Output.Address = IsCombined ? 1 : pInstruction->Output.ILURAddress;
-    memcpy(pIntermediate->Output.Mask, pInstruction->Output.ILURMask, sizeof(boolean) * 4);
-
-    // Other parameters
-    VshAddParameters(pInstruction, pInstruction->ILU, MAC_NOP, pIntermediate->Parameters);
-
-    return TRUE;
-}
-
-static boolean VshAddInstructionILU_O(VSH_SHADER_INSTRUCTION *pInstruction,
-                                      VSH_XBOX_SHADER        *pShader,
-                                      boolean                IsCombined)
-{
-    VSH_INTERMEDIATE_FORMAT *pIntermediate;
-    if(!HasILUO(pInstruction))
-    {
-        return FALSE;
-    }
-
-    pIntermediate = VshNewIntermediate(pShader);
-    pIntermediate->IsCombined = IsCombined;
-
-    // Opcode
-    pIntermediate->InstructionType = IMD_ILU;
-    pIntermediate->ILU = pInstruction->ILU;
-
-    // Output param
-    pIntermediate->Output.Type = pInstruction->Output.OutputType == OUTPUT_C ? IMD_OUTPUT_C : IMD_OUTPUT_O;
-    pIntermediate->Output.Address = pInstruction->Output.OutputAddress;
-    memcpy(pIntermediate->Output.Mask, pInstruction->Output.OutputMask, sizeof(boolean) * 4);
-
-    // Other parameters
-    VshAddParameters(pInstruction, pInstruction->ILU, MAC_NOP, pIntermediate->Parameters);
-
-    return TRUE;
-}
-
-static void VshConvertToIntermediate(VSH_SHADER_INSTRUCTION *pInstruction,
-                                     VSH_XBOX_SHADER        *pShader)
-{
-    // Five types of instructions:
-    //   MAC
-    //
-    //   ILU
-    //
-    //   MAC
-    //   +ILU
-    //
-    //   MAC
-    //   +MAC
-    //   +ILU
-    //
-    //   MAC
-    //   +ILU
-    //   +ILU
-    boolean IsCombined = FALSE;
-
-    if(VshAddInstructionMAC_R(pInstruction, pShader, IsCombined))
-    {
-        if(HasMACO(pInstruction) ||
-            HasILUR(pInstruction) ||
-            HasILUO(pInstruction))
-        {
-            IsCombined = TRUE;
-        }
-    }
-    if(VshAddInstructionMAC_O(pInstruction, pShader, IsCombined))
-    {
-        if(HasILUR(pInstruction) ||
-            HasILUO(pInstruction))
-        {
-            IsCombined = TRUE;
-        }
-    }
-    // Special case, arl (mov a0.x, ...)
-    if(VshAddInstructionMAC_ARL(pInstruction, pShader, IsCombined))
-    {
-        if(HasILUR(pInstruction) ||
-            HasILUO(pInstruction))
-        {
-            IsCombined = TRUE;
-        }
-    }
-    if(VshAddInstructionILU_R(pInstruction, pShader, IsCombined))
-    {
-        if(HasILUO(pInstruction))
-        {
-            IsCombined = TRUE;
-        }
-    }
-    (void)VshAddInstructionILU_O(pInstruction, pShader, IsCombined);
-}
-
-static inline void VshSetSwizzle(VSH_PARAMETER *pParameter,
-    VSH_SWIZZLE       x,
-    VSH_SWIZZLE       y,
-    VSH_SWIZZLE       z,
-    VSH_SWIZZLE       w)
-{
-    pParameter->Swizzle[0] = x;
-    pParameter->Swizzle[1] = y;
-    pParameter->Swizzle[2] = z;
-    pParameter->Swizzle[3] = w;
-}
-
-static inline void VshSetSwizzle(VSH_IMD_PARAMETER *pParameter,
-                                 VSH_SWIZZLE       x,
-                                 VSH_SWIZZLE       y,
-                                 VSH_SWIZZLE       z,
-                                 VSH_SWIZZLE       w)
-{
-    VshSetSwizzle(&pParameter->Parameter, x, y, z, w);
+	switch (VertexRegister)
+	{
+	case XTL::X_D3DVSDE_VERTEX: // -1
+		return "D3DVSDE_VERTEX /* xbox ext. */";
+	case XTL::X_D3DVSDE_POSITION: // 0
+		return "D3DVSDE_POSITION";
+	case XTL::X_D3DVSDE_BLENDWEIGHT: // 1
+		return "D3DVSDE_BLENDWEIGHT";
+	case XTL::X_D3DVSDE_NORMAL: // 2
+		return "D3DVSDE_NORMAL";
+	case XTL::X_D3DVSDE_DIFFUSE: // 3
+		return "D3DVSDE_DIFFUSE";
+	case XTL::X_D3DVSDE_SPECULAR: // 4
+		return "D3DVSDE_SPECULAR";
+	case XTL::X_D3DVSDE_FOG: // 5
+		return "D3DVSDE_FOG";
+	case XTL::X_D3DVSDE_POINTSIZE: // 6
+		return "D3DVDSE_POINTSIZE";
+	case XTL::X_D3DVSDE_BACKDIFFUSE: // 7
+		return "D3DVSDE_BACKDIFFUSE /* xbox ext. */";
+	case XTL::X_D3DVSDE_BACKSPECULAR: // 8
+		return "D3DVSDE_BACKSPECULAR /* xbox ext. */";
+	case XTL::X_D3DVSDE_TEXCOORD0: // 9
+		return "D3DVSDE_TEXCOORD0";
+	case XTL::X_D3DVSDE_TEXCOORD1: // 10
+		return "D3DVSDE_TEXCOORD1";
+	case XTL::X_D3DVSDE_TEXCOORD2: // 11
+		return "D3DVSDE_TEXCOORD2";
+	case XTL::X_D3DVSDE_TEXCOORD3: // 12
+		return "D3DVSDE_TEXCOORD3";
+	case 13:
+		return "13 /* unknown register */";
+	case 14:
+		return "14 /* unknown register */";
+	case 15:
+		return "15 /* unknown register */";
+	default:
+		return "16 /* or higher, unknown register */";
+	}
 }
 
 // ****************************************************************************
 // * Vertex shader declaration recompiler
 // ****************************************************************************
+
+extern D3DCAPS g_D3DCaps;
 
 class XboxVertexDeclarationConverter
 {
@@ -1993,6 +1925,26 @@ void CxbxImpl_SelectVertexShaderDirect
 
 void OutputHlsl(std::stringstream& hlsl, VSH_IMD_OUTPUT& dest)
 {
+	static const char* OReg_Name[] =
+	{
+		"oPos",
+		"???",
+		"???",
+		"oD0",
+		"oD1",
+		"oFog",
+		"oPts",
+		"oB0",
+		"oB1",
+		"oT0",
+		"oT1",
+		"oT2",
+		"oT3",
+		"???",
+		"???",
+		"a0.x"
+	};
+
 	switch (dest.Type) {
 	case IMD_OUTPUT_C:
 		hlsl << "c[" << dest.Address << "]";
@@ -2023,6 +1975,15 @@ void OutputHlsl(std::stringstream& hlsl, VSH_IMD_OUTPUT& dest)
 
 void ParameterHlsl(std::stringstream& hlsl, VSH_IMD_PARAMETER& paramMeta)
 {
+	// Print functions
+	static char* RegisterName[/*VSH_PARAMETER_TYPE*/] = {
+		"?", // PARAM_UNKNOWN = 0,
+		"r", // PARAM_R,          // Temporary (scRatch) registers
+		"v", // PARAM_V,          // Vertex registers
+		"c", // PARAM_C,          // Constant registers, set by SetVertexShaderConstant
+		"oPos" // PARAM_O // = 0??
+	};
+
 	auto param = paramMeta.Parameter;
 
 	if (param.Neg) {
@@ -2046,7 +2007,7 @@ void ParameterHlsl(std::stringstream& hlsl, VSH_IMD_PARAMETER& paramMeta)
 			hlsl << "c[" << register_number << "]";
 		}
 	} else {
-		hlsl << VshGetRegisterName(param.ParameterType) << register_number;
+		hlsl << RegisterName[param.ParameterType] << register_number;
 	}
 
 	// Write the swizzle if we need to
