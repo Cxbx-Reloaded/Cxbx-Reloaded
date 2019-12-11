@@ -24,10 +24,16 @@ struct VS_OUTPUT
 // Xbox constant registers
 extern uniform float4 c[192] : register(c0);
 
+// Overloaded casts, assuring all inputs are treated as float4
 float4 _cast(float src) { return float4(src); }
 float4 _cast(float2 src) { return src.xyyy; }
 float4 _cast(float3 src) { return src.xyzz; }
 float4 _cast(float4 src) { return src; }
+
+float4 _ssss(float src) { return float4(src); } // a scalar output replicated across a 4-component vector
+#define _scalar(src0) _cast(src0).x /* a scalar input */
+
+// https://www.opengl.org/registry/specs/NV/vertex_program1_1.txt
 
 // Functions for MAC ('Multiply And Accumulate') opcodes
 
@@ -52,11 +58,11 @@ float4 _cast(float4 src) { return src; }
 // Test Case: Azurik (divides indexes 755, then scales them back in the vertex shader)
 #define x_arl(dest, mask, src0) dest = floor(_cast(src0).x + 0.0001) /* NO mask! */
 
-#define x_dp3(dest, mask, src0, src1) dest.mask = dot(_cast(src0).xyz, _cast(src1).xyz) /* NO mask! */
+#define x_dp3(dest, mask, src0, src1) dest.mask = _ssss(dot(_cast(src0).xyz, _cast(src1).xyz)) /* NO mask! */
 
-#define x_dph(dest, mask, src0, src1) dest.mask = dot(float4(_cast(src0).xyz, 1), _cast(src1)) + src1.w /* NO mask! */
+#define x_dph(dest, mask, src0, src1) dest.mask = _ssss(dot(float4(_cast(src0).xyz, 1), _cast(src1)) + src1.w) /* NO mask! */
 
-#define x_dp4(dest, mask, src0, src1) dest.mask = dot(_cast(src0), _cast(src1))  /* NO mask! */
+#define x_dp4(dest, mask, src0, src1) dest.mask = _ssss(dot(_cast(src0), _cast(src1)))  /* NO mask! */
 
 #define x_sge(dest, mask, src0, src1) dest.mask = _sge(_cast(src0), _cast(src1)).mask
 float4 _sge(float4 src0, float4 src1)
@@ -82,12 +88,10 @@ float4 _slt(float4 src0, float4 src1)
 
 // Xbox ILU Functions
 
-#define _scalar(src0) _cast(src0).x
-
-#define x_rcp(dest, mask, src0) dest.mask = float4(1 / _scalar(src0)).mask
+#define x_rcp(dest, mask, src0) dest.mask = _ssss(1 / _scalar(src0)) /* NO mask! */
 // TODO : #define x_rcp(dest, mask, src0) dest.mask = (_scalar(src0) == 0) ? 1.#INF : (1 / _scalar(src0))
 
-#define x_rcc(dest, mask, src0) dest.mask = _rcc(_scalar(src0)).mask
+#define x_rcc(dest, mask, src0) dest.mask = _ssss(_rcc(_scalar(src0))) /* NO mask! */
 float _rcc(float input)
 {
 	// Calculate the reciprocal
@@ -99,7 +103,7 @@ float _rcc(float input)
 		: clamp(r, -1.84467e+019f, -5.42101e-020f);
 }
 
-#define x_rsq(dest, mask, src0) dest.mask = rsqrt(abs(_scalar(src0))) /* NO mask! */
+#define x_rsq(dest, mask, src0) dest.mask = _ssss(rsqrt(abs(_scalar(src0)))) /* NO mask! */
 
 #define x_expp(dest, mask, src0) dest.mask = _expp(_scalar(src0)).mask
 float4 _expp(float input)
