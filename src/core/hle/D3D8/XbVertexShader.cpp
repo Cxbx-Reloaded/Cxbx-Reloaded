@@ -1826,7 +1826,8 @@ static void OutputHlsl(std::stringstream& hlsl, VSH_IMD_OUTPUT& dest)
 		hlsl << OReg_Name[dest.Address];
 		break;
 	case IMD_OUTPUT_A0X:
-		hlsl << "a0"; // Is this actually a valid output?
+		hlsl << "a0";
+		dest.Mask[0] = true; // force a0.x
 		break;
 	default:
 		assert(false);
@@ -2091,6 +2092,8 @@ extern HRESULT EmuRecompileVshFunction
 			pErrors = nullptr;
 		}
 
+		LOG_CHECK_ENABLED(LOG_LEVEL::DEBUG)
+		if (g_bPrintfOn)
 		if (!FAILED(hRet)) {
 			// Log disassembly
 			hRet = D3DDisassemble(
