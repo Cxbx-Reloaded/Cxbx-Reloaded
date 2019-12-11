@@ -6,76 +6,76 @@ struct VS_INPUT
 	float4 v[16] : TEXCOORD;
 };
 
+// Output registers
 struct VS_OUTPUT
 {
-	float4 oPos : POSITION;
-	float4 oD0  : COLOR0; // Colour 0
-	float4 oD1  : COLOR1; // Colour 1
-	float  oFog : FOG;
-	float  oPts : PSIZE;
-	float4 oB0  : TEXCOORD4; // Backface Colour 0
-	float4 oB1  : TEXCOORD5; // Backface Colour 1
-	float4 oT0  : TEXCOORD0; // Texture Coord 0
-	float4 oT1  : TEXCOORD1; // Texture Coord 1
-	float4 oT2  : TEXCOORD2; // Texture Coord 2
-	float4 oT3  : TEXCOORD3; // Texture Coord 3
+	float4 oPos : POSITION;  // Homogeneous clip space position
+	float4 oD0  : COLOR0;    // Primary color (front-facing)
+	float4 oD1  : COLOR1;    // Secondary color (front-facing)
+	float  oFog : FOG;       // Fog coordinate
+	float  oPts : PSIZE;	 // Point size
+	float4 oB0  : TEXCOORD4; // Back-facing primary color
+	float4 oB1  : TEXCOORD5; // Back-facing secondary color
+	float4 oT0  : TEXCOORD0; // Texture coordinate set 0
+	float4 oT1  : TEXCOORD1; // Texture coordinate set 1
+	float4 oT2  : TEXCOORD2; // Texture coordinate set 2
+	float4 oT3  : TEXCOORD3; // Texture coordinate set 3
 };
 
 // Xbox constant registers
 extern uniform float4 c[192] : register(c0);
 
 // Overloaded casts, assuring all inputs are treated as float4
-float4 _cast(float src) { return float4(src); }
-float4 _cast(float2 src) { return src.xyyy; }
-float4 _cast(float3 src) { return src.xyzz; }
-float4 _cast(float4 src) { return src; }
+float4 _tof4(float  src) { return float4(src, src, src, src); }
+float4 _tof4(float2 src) { return src.xyyy; }
+float4 _tof4(float3 src) { return src.xyzz; }
+float4 _tof4(float4 src) { return src; }
+float4 _ssss(float s)    { return float4(s, s, s, s); } // a scalar output replicated across a 4-component vector
+#define _scalar(src) _tof4(src).x /* a scalar input */
 
-float4 _ssss(float src) { return float4(src); } // a scalar output replicated across a 4-component vector
-#define _scalar(src0) _cast(src0).x /* a scalar input */
-
-// https://www.opengl.org/registry/specs/NV/vertex_program1_1.txt
+// http://xboxdevwiki.net/NV2A/Vertex_Shader
+// https://www.khronos.org/registry/OpenGL/extensions/NV/NV_vertex_program.txt
+// https://www.khronos.org/registry/OpenGL/extensions/NV/NV_vertex_program1_1.txt
 
 // Functions for MAC ('Multiply And Accumulate') opcodes
 
-#define x_mov(dest, mask, src0) dest.mask = (_cast(src0)).mask
-
-#define x_mul(dest, mask, src0, src1) dest.mask = (_cast(src0) * _cast(src1)).mask
-
-#define x_add(dest, mask, src0, src1) dest.mask = (_cast(src0) + _cast(src1))).mask
-
-#define x_dst(dest, mask, src0, src1) dest.mask = dst(_cast(src0), _cast(src1)).mask /* equals { dest.x = 1; dest.y = src0.y * src1.y; dest.z = src0.z; dest.w = src1.w; } */
-
-#define x_min(dest, mask, src0, src1) dest.mask = min(_cast(src0), _cast(src1)).mask
-
-#define x_max(dest, mask, src0, src1) dest.mask = max(_cast(src0), _cast(src1)).mask
-
-#define x_mad(dest, mask, src0, src1, src2) dest.mask = (_cast(src0) * _cast(src1) + _cast(src2)).mask
-
+// 2.14.1.10.1  ARL: Address Register Load
 // The address register should be floored
 // Due to rounding differences with the Xbox (and increased precision on PC?)
 // some titles produce values just below the threshold of the next integer.
 // We can add a small bias to make sure it's bumped over the threshold
 // Test Case: Azurik (divides indexes 755, then scales them back in the vertex shader)
-#define x_arl(dest, mask, src0) dest = floor(_cast(src0).x + 0.0001) /* NO mask! */
+#define x_arl(dest, mask, src0) dest.mask = floor(_tof4(src0).x + 0.0001).mask
 
-#define x_dp3(dest, mask, src0, src1) dest.mask = _ssss(dot(_cast(src0).xyz, _cast(src1).xyz)) /* NO mask! */
+// 2.14.1.10.2  MOV: Move
+#define x_mov(dest, mask, src0) dest.mask = (_tof4(src0)).mask
 
-#define x_dph(dest, mask, src0, src1) dest.mask = _ssss(dot(float4(_cast(src0).xyz, 1), _cast(src1)) + src1.w) /* NO mask! */
+// 2.14.1.10.3  MUL: Multiply
+#define x_mul(dest, mask, src0, src1) dest.mask = (_tof4(src0) * _tof4(src1)).mask
 
-#define x_dp4(dest, mask, src0, src1) dest.mask = _ssss(dot(_cast(src0), _cast(src1)))  /* NO mask! */
+// 2.14.1.10.4  ADD: Add
+#define x_add(dest, mask, src0, src1) dest.mask = (_tof4(src0) + _tof4(src1)).mask
 
-#define x_sge(dest, mask, src0, src1) dest.mask = _sge(_cast(src0), _cast(src1)).mask
-float4 _sge(float4 src0, float4 src1)
-{
-	float4 dest;
-	dest.x = (src0.x >= src1.x) ? 1 : 0;
-	dest.y = (src0.y >= src1.y) ? 1 : 0;
-	dest.z = (src0.z >= src1.z) ? 1 : 0;
-	dest.w = (src0.w >= src1.w) ? 1 : 0;
-	return dest;
-}
+// 2.14.1.10.5  MAD: Multiply and Add
+#define x_mad(dest, mask, src0, src1, src2) dest.mask = (_tof4(src0) * _tof4(src1) + _tof4(src2)).mask
 
-#define x_slt(dest, mask, src0, src1) dest.mask = _slt(_cast(src0), _cast(src1)).mask
+// 2.14.1.10.8  DP3: Three-Component Dot Product
+#define x_dp3(dest, mask, src0, src1) dest.mask = _ssss(dot(_tof4(src0).xyz, _tof4(src1).xyz)).mask
+
+//  2.14.1.10.9  DP4: Four-Component Dot Product
+#define x_dp4(dest, mask, src0, src1) dest.mask = _ssss(dot(_tof4(src0), _tof4(src1))).mask
+
+// 2.14.1.10.10  DST: Distance Vector
+#define x_dst(dest, mask, src0, src1) dest.mask = dst(_tof4(src0), _tof4(src1)).mask /* equals { dest.x = 1; dest.y = src0.y * src1.y; dest.z = src0.z; dest.w = src1.w; } */
+
+// 2.14.1.10.11  MIN: Minimum
+#define x_min(dest, mask, src0, src1) dest.mask = min(_tof4(src0), _tof4(src1)).mask
+
+// 2.14.1.10.12  MAX: Maximum
+#define x_max(dest, mask, src0, src1) dest.mask = max(_tof4(src0), _tof4(src1)).mask
+
+// 2.14.1.10.13  SLT: Set On Less Than
+#define x_slt(dest, mask, src0, src1) dest.mask = _slt(_tof4(src0), _tof4(src1)).mask
 float4 _slt(float4 src0, float4 src1)
 {
 	float4 dest;
@@ -86,25 +86,31 @@ float4 _slt(float4 src0, float4 src1)
 	return dest;
 }
 
-// Xbox ILU Functions
-
-#define x_rcp(dest, mask, src0) dest.mask = _ssss(1 / _scalar(src0)) /* NO mask! */
-// TODO : #define x_rcp(dest, mask, src0) dest.mask = (_scalar(src0) == 0) ? 1.#INF : (1 / _scalar(src0))
-
-#define x_rcc(dest, mask, src0) dest.mask = _ssss(_rcc(_scalar(src0))) /* NO mask! */
-float _rcc(float input)
+// 2.14.1.10.14  SGE: Set On Greater or Equal Than
+#define x_sge(dest, mask, src0, src1) dest.mask = _sge(_tof4(src0), _tof4(src1)).mask
+float4 _sge(float4 src0, float4 src1)
 {
-	// Calculate the reciprocal
-	float r = 1 / input;
-
-	// Clamp
-	return (r > 0)
-		? clamp(r, 5.42101e-020f, 1.84467e+019f)
-		: clamp(r, -1.84467e+019f, -5.42101e-020f);
+	float4 dest;
+	dest.x = (src0.x >= src1.x) ? 1 : 0;
+	dest.y = (src0.y >= src1.y) ? 1 : 0;
+	dest.z = (src0.z >= src1.z) ? 1 : 0;
+	dest.w = (src0.w >= src1.w) ? 1 : 0;
+	return dest;
 }
 
-#define x_rsq(dest, mask, src0) dest.mask = _ssss(rsqrt(abs(_scalar(src0)))) /* NO mask! */
+// 2.14.1.10.18  DPH: Homogeneous Dot Product
+#define x_dph(dest, mask, src0, src1) dest.mask = _ssss(dot(float4(_tof4(src0).xyz, 1), _tof4(src1)) + src1.w).mask
 
+// Xbox ILU Functions
+
+// 2.14.1.10.6  RCP: Reciprocal
+#define x_rcp(dest, mask, src0) dest.mask = _ssss(1 / _scalar(src0)).mask
+// TODO : #define x_rcp(dest, mask, src0) dest.mask = (_scalar(src0) == 0) ? 1.#INF : (1 / _scalar(src0))
+
+// 2.14.1.10.7  RSQ: Reciprocal Square Root
+#define x_rsq(dest, mask, src0) dest.mask = _ssss(rsqrt(abs(_scalar(src0)))).mask
+
+// 2.14.1.10.15  EXP: Exponential Base 2
 #define x_expp(dest, mask, src0) dest.mask = _expp(_scalar(src0)).mask
 float4 _expp(float input)
 {
@@ -119,6 +125,7 @@ float4 _expp(float input)
 	return dest;
 }
 
+// 2.14.1.10.16  LOG: Logarithm Base 2
 #define x_logp(dest, mask, src0) dest.mask = _logp(_scalar(src0)).mask
 float4 _logp(float input)
 {
@@ -133,7 +140,8 @@ float4 _logp(float input)
 	return dest;
 }
 
-#define x_lit(dest, mask, src) dest.mask = _lit(_cast(src)).mask
+// 2.14.1.10.17  LIT: Light Coefficients
+#define x_lit(dest, mask, src) dest.mask = _lit(_tof4(src)).mask
 float4 _lit(float4 src0)
 {
 	const float epsilon = 1.0f / 256.0f;
@@ -150,6 +158,19 @@ float4 _lit(float4 src0)
 	dest.w = 1;
 
 	return dest;
+}
+
+// 2.14.1.10.19  RCC: Reciprocal Clamped
+#define x_rcc(dest, mask, src0) dest.mask = _ssss(_rcc(_scalar(src0))).mask
+float _rcc(float input)
+{
+	// Calculate the reciprocal
+	float r = 1 / input;
+
+	// Clamp
+	return (r >= 0)
+		? clamp(r,  5.42101e-020f,  1.84467e+019f)  // the IEEE 32-bit binary values 0x1F800000 and 0x5F800000
+		: clamp(r, -1.84467e+019f, -5.42101e-020f); // the IEEE 32-bit binary values 0xDF800000 and 0x9F800000
 }
 
 float4 reverseScreenspaceTransform(float4 oPos)
@@ -171,24 +192,24 @@ float4 reverseScreenspaceTransform(float4 oPos)
 
 VS_OUTPUT main(const VS_INPUT xIn)
 {
-	// Input registers
-	float4 v0, v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13, v14, v15;
+	// Output variables
+	float4 oPos, oD0, oD1, oB0, oB1, oT0, oT1, oT2, oT3;
+	oPos = oD0 = oD1 = oB0 = oB1 = oT0 = oT1 = oT2 = oT3 = float4(0, 0, 0, 1); // Pre-initialize w component of outputs to 1
+
+	// Single component outputs
+	float4 oFog, oPts; // x is write-only on Xbox. Use float4 as some games use incorrect masks
+	oFog = oPts = 0;
+
+	// Address (index) register
+	int1 a0 = 0;
 
 	// Temporary registers
 	float4 r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11;
 	r0 = r1 = r2 = r3 = r4 = r5 = r6 = r7 = r8 = r9 = r10 = r11 = float4(0, 0, 0, 0);
 	#define r12 oPos // oPos and r12 are two ways of accessing the same register on Xbox
 
-	// Address (index) register
-	int1 a0 = 0;
-
-	// Output variables
-	float4 oPos, oD0, oD1, oB0, oB1, oT0, oT1, oT2, oT3;
-	oPos = oD0 = oD1 = oB0 = oB1 = oT0 = oT1 = oT2 = oT3 = float4(0, 0, 0, 1); // Pre-initialize w component of outputs to 1
-	// Single component outputs
-	float4 oFog, oPts; // x is write-only on Xbox. Use float4 as some games use incorrect masks
-	oFog = oPts = 0;
-
+	// Input registers
+	float4 v0, v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13, v14, v15;
 	// Initialize input variables
 	v0 = xIn.v[0];
 	v1 = xIn.v[1];
