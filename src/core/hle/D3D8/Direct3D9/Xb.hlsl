@@ -24,36 +24,41 @@ struct VS_OUTPUT
 // Xbox constant registers
 extern uniform float4 c[192] : register(c0);
 
+float4 _cast(float src) { return float4(src); }
+float4 _cast(float2 src) { return src.xyyy; }
+float4 _cast(float3 src) { return src.xyzz; }
+float4 _cast(float4 src) { return src; }
+
 // Functions for MAC ('Multiply And Accumulate') opcodes
 
-#define x_mov(dest, mask, src0) dest.mask = ((float4)src0).mask
+#define x_mov(dest, mask, src0) dest.mask = (_cast(src0)).mask
 
-#define x_mul(dest, mask, src0, src1) dest.mask = ((float4)(src0 * src1)).mask
+#define x_mul(dest, mask, src0, src1) dest.mask = (_cast(src0) * _cast(src1)).mask
 
-#define x_add(dest, mask, src0, src1) dest.mask = ((float4)(src0 + src1)).mask
+#define x_add(dest, mask, src0, src1) dest.mask = (_cast(src0) + _cast(src1))).mask
 
-#define x_dst(dest, mask, src0, src1) dest.mask = dst(src0, src1).mask /* equals { dest.x = 1; dest.y = src0.y * src1.y; dest.z = src0.z; dest.w = src1.w; } */
+#define x_dst(dest, mask, src0, src1) dest.mask = dst(_cast(src0), _cast(src1)).mask /* equals { dest.x = 1; dest.y = src0.y * src1.y; dest.z = src0.z; dest.w = src1.w; } */
 
-#define x_min(dest, mask, src0, src1) dest.mask = min(src0, src1).mask
+#define x_min(dest, mask, src0, src1) dest.mask = min(_cast(src0), _cast(src1)).mask
 
-#define x_max(dest, mask, src0, src1) dest.mask = max(src0, src1).mask
+#define x_max(dest, mask, src0, src1) dest.mask = max(_cast(src0), _cast(src1)).mask
 
-#define x_mad(dest, mask, src0, src1, src2) dest.mask = ((float4)((src0 * src1) + src2)).mask
+#define x_mad(dest, mask, src0, src1, src2) dest.mask = (_cast(src0) * _cast(src1) + _cast(src2)).mask
 
 // The address register should be floored
 // Due to rounding differences with the Xbox (and increased precision on PC?)
 // some titles produce values just below the threshold of the next integer.
 // We can add a small bias to make sure it's bumped over the threshold
 // Test Case: Azurik (divides indexes 755, then scales them back in the vertex shader)
-#define x_arl(dest, mask, src0) dest.mask = floor(src0 + 0.0001).mask
+#define x_arl(dest, mask, src0) dest = floor(_cast(src0).x + 0.0001) /* NO mask! */
 
-#define x_dp3(dest, mask, src0, src1) dest.mask = dot((float3)src0, (float3)src1)  /* NO mask! */
+#define x_dp3(dest, mask, src0, src1) dest.mask = dot(_cast(src0).xyz, _cast(src1).xyz) /* NO mask! */
 
-#define x_dph(dest, mask, src0, src1) dest.mask = dot((float3)src0, (float3)src1) + src1.w  /* NO mask! */
+#define x_dph(dest, mask, src0, src1) dest.mask = dot(float4(_cast(src0).xyz, 1), _cast(src1)) + src1.w /* NO mask! */
 
-#define x_dp4(dest, mask, src0, src1) dest.mask = dot(src0, src1)  /* NO mask! */
+#define x_dp4(dest, mask, src0, src1) dest.mask = dot(_cast(src0), _cast(src1))  /* NO mask! */
 
-#define x_sge(dest, mask, src0, src1) dest.mask = _sge(src0, src1).mask
+#define x_sge(dest, mask, src0, src1) dest.mask = _sge(_cast(src0), _cast(src1)).mask
 float4 _sge(float4 src0, float4 src1)
 {
 	float4 dest;
@@ -64,7 +69,7 @@ float4 _sge(float4 src0, float4 src1)
 	return dest;
 }
 
-#define x_slt(dest, mask, src0, src1) dest.mask = _slt(src0, src1).mask
+#define x_slt(dest, mask, src0, src1) dest.mask = _slt(_cast(src0), _cast(src1)).mask
 float4 _slt(float4 src0, float4 src1)
 {
 	float4 dest;
@@ -77,16 +82,14 @@ float4 _slt(float4 src0, float4 src1)
 
 // Xbox ILU Functions
 
-#define scalar_component(src0) src0.x
+#define _scalar(src0) _cast(src0).x
 
-#define x_rcp(dest, mask, src0) dest.mask = 1 / scalar_component(src0)
-// TODO : #define x_rcp(dest, mask, src0) dest.mask = (scalar_component(src0) == 0) ? 1.#INF : (1 / scalar_component(src0))
+#define x_rcp(dest, mask, src0) dest.mask = float4(1 / _scalar(src0)).mask
+// TODO : #define x_rcp(dest, mask, src0) dest.mask = (_scalar(src0) == 0) ? 1.#INF : (1 / _scalar(src0))
 
-#define x_rcc(dest, mask, src0) dest.mask = _rcc(src0).mask
-float _rcc(float4 src0)
+#define x_rcc(dest, mask, src0) dest.mask = _rcc(_scalar(src0)).mask
+float _rcc(float input)
 {
-	float input = scalar_component(src0);
-
 	// Calculate the reciprocal
 	float r = 1 / input;
 
@@ -96,12 +99,11 @@ float _rcc(float4 src0)
 		: clamp(r, -1.84467e+019f, -5.42101e-020f);
 }
 
-#define x_rsq(dest, mask, src0) dest.mask = rsqrt(abs(scalar_component(src0))) /* NO mask! */
+#define x_rsq(dest, mask, src0) dest.mask = rsqrt(abs(_scalar(src0))) /* NO mask! */
 
-#define x_expp(dest, mask, src0) dest.mask = _expp(src0).mask
-float4 _expp(float4 src0)
+#define x_expp(dest, mask, src0) dest.mask = _expp(_scalar(src0)).mask
+float4 _expp(float input)
 {
-    float input = scalar_component(src0);
     float base = floor(input);
 
     float4 dest;
@@ -113,10 +115,9 @@ float4 _expp(float4 src0)
 	return dest;
 }
 
-#define x_logp(dest, mask, src0) dest.mask = _logp(src0).mask
-float4 _logp(float4 src0)
+#define x_logp(dest, mask, src0) dest.mask = _logp(_scalar(src0)).mask
+float4 _logp(float input)
 {
-    float input = abs(scalar_component(src0));
 	float exponent = floor(log2(input));
 
     float4 dest;
@@ -128,7 +129,7 @@ float4 _logp(float4 src0)
 	return dest;
 }
 
-#define x_lit(dest, mask, src) dest.mask = _lit(src).mask
+#define x_lit(dest, mask, src) dest.mask = _lit(_cast(src)).mask
 float4 _lit(float4 src0)
 {
 	const float epsilon = 1.0f / 256.0f;
@@ -171,11 +172,11 @@ VS_OUTPUT main(const VS_INPUT xIn)
 
 	// Temporary registers
 	float4 r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11;
-	r0 = r1 = r2 = r3 = r4 = r5 = r6 = r7 = r8 = r9 = r10 = r11 = float4(0, 0, 0, 1); // TODO correct?
+	r0 = r1 = r2 = r3 = r4 = r5 = r6 = r7 = r8 = r9 = r10 = r11 = float4(0, 0, 0, 0);
 	#define r12 oPos // oPos and r12 are two ways of accessing the same register on Xbox
 
 	// Address (index) register
-	int1 a0;
+	int1 a0 = 0;
 
 	// Output variables
 	float4 oPos, oD0, oD1, oB0, oB1, oT0, oT1, oT2, oT3;
