@@ -1684,136 +1684,6 @@ D3DVERTEXELEMENT *EmuRecompileVshDeclaration
     return pHostVertexElements;
 }
 
-extern void BuildShader(std::stringstream& hlsl, VSH_XBOX_SHADER* pShader);
-
-std::string DebugPrependLineNumbers(std::string shaderString) {
-	std::stringstream shader(shaderString);
-	auto debugShader = std::stringstream();
-
-	int i = 1;
-	for (std::string line; std::getline(shader, line); ) {
-		auto lineNumber = std::to_string(i++);
-		auto paddedLineNumber = lineNumber.insert(0, 3 - lineNumber.size(), ' ');
-		debugShader << "/* " << paddedLineNumber << " */ " << line << "\n";
-	}
-
-	return debugShader.str();
-}
-
-// recompile xbox vertex shader function
-extern HRESULT EmuRecompileVshFunction
-(
-    DWORD        *pXboxFunction,
-    bool          bNoReservedConstants,
-	D3DVERTEXELEMENT *pRecompiledDeclaration,
-    bool   		 *pbUseDeclarationOnly,
-    DWORD        *pXboxFunctionSize,
-	ID3DBlob **ppRecompiledShader
-)
-{
-	XTL::X_VSH_SHADER_HEADER   *pXboxVertexShaderHeader = (XTL::X_VSH_SHADER_HEADER*)pXboxFunction;
-    DWORD              *pToken;
-    boolean             EOI = false;
-    VSH_XBOX_SHADER    *pShader = (VSH_XBOX_SHADER*)calloc(1, sizeof(VSH_XBOX_SHADER));
-	ID3DBlob           *pErrors = nullptr;
-    HRESULT             hRet = 0;
-
-    // TODO: support this situation..
-    if(pXboxFunction == xbnullptr)
-        return E_FAIL;
-
-	// Initialize output arguments to zero
-	*pbUseDeclarationOnly = 0;
-    *pXboxFunctionSize = 0;
-    *ppRecompiledShader = nullptr;
-
-	if(!pShader) {
-        EmuLog(LOG_LEVEL::WARNING, "Couldn't allocate memory for vertex shader conversion buffer");
-        return E_OUTOFMEMORY;
-    }
-
-    pShader->ShaderHeader = *pXboxVertexShaderHeader;
-    switch(pXboxVertexShaderHeader->Version) {
-        case VERSION_XVS:
-            break;
-        case VERSION_XVSS:
-            EmuLog(LOG_LEVEL::WARNING, "Might not support vertex state shaders?");
-            hRet = E_FAIL;
-            break;
-        case VERSION_XVSW:
-            EmuLog(LOG_LEVEL::WARNING, "Might not support vertex read/write shaders?");
-            hRet = E_FAIL;
-            break;
-        default:
-            EmuLog(LOG_LEVEL::WARNING, "Unknown vertex shader version 0x%02X", pXboxVertexShaderHeader->Version);
-            hRet = E_FAIL;
-            break;
-    }
-
-    if(SUCCEEDED(hRet)) {
-		static std::string hlsl_template =
-			#include "core\hle\D3D8\Direct3D9\Xb.hlsl" // Note : This included .hlsl defines a raw string
-			;
-
-		auto hlsl_stream = std::stringstream();
-
-        for (pToken = (DWORD*)((uint8_t*)pXboxFunction + sizeof(XTL::X_VSH_SHADER_HEADER)); !EOI; pToken += X_VSH_INSTRUCTION_SIZE) {
-            VSH_SHADER_INSTRUCTION Inst;
-
-            VshParseInstruction((uint32_t*)pToken, &Inst);
-            VshConvertToIntermediate(&Inst, pShader);
-            EOI = Inst.Final;
-        }
-
-        // The size of the shader is
-        *pXboxFunctionSize = (intptr_t)pToken - (intptr_t)pXboxFunction;
-
-		// Do not attempt to compile empty shaders
-		if (pShader->IntermediateCount == 0) {
-            // This is a declaration only shader, so there is no function to recompile
-            *pbUseDeclarationOnly = 1;
-			return D3D_OK;
-		}
-
-		BuildShader(hlsl_stream, pShader);
-		std::string hlsl_str = hlsl_stream.str();
-		hlsl_str = std::regex_replace(hlsl_template, std::regex("// <Xbox Shader>"), hlsl_str);
-
-		DbgVshPrintf("--- HLSL conversion ---\n");
-		DbgVshPrintf(DebugPrependLineNumbers(hlsl_str).c_str());
-		DbgVshPrintf("-----------------------\n");
-
-		hRet = D3DCompile(
-			hlsl_str.c_str(),
-			hlsl_str.length(),
-			nullptr, // pSourceName
-			nullptr, // pDefines
-			nullptr, // pInclude // TODO precompile x_* HLSL functions?
-			"main", // shader entry poiint
-			"vs_3_0", // shader profile
-			0, // flags1
-			0, // flags2
-			ppRecompiledShader, // out
-			&pErrors // ppErrorMsgs out
-		);
-        if (FAILED(hRet)) {
-            EmuLog(LOG_LEVEL::WARNING, "Couldn't assemble recompiled vertex shader");
-        }
-
-		if (pErrors) {
-			// Determine the log level
-			auto hlslErrorLogLevel = FAILED(hRet) ? LOG_LEVEL::ERROR2 : LOG_LEVEL::DEBUG;
-			// Log HLSL compiler errors
-			EmuLog(hlslErrorLogLevel, "%s", (char*)(pErrors->GetBufferPointer()));
-			pErrors->Release();
-		}
-    }
-
-    free(pShader);
-
-    return hRet;
-}
-
 extern void FreeVertexDynamicPatch(CxbxVertexShader *pVertexShader)
 {
     pVertexShader->VertexShaderInfo.NumberOfVertexStreams = 0;
@@ -1923,10 +1793,9 @@ void CxbxImpl_SelectVertexShaderDirect
 
 // HLSL outputs
 
-void OutputHlsl(std::stringstream& hlsl, VSH_IMD_OUTPUT& dest)
+static void OutputHlsl(std::stringstream& hlsl, VSH_IMD_OUTPUT& dest)
 {
-	static const char* OReg_Name[] =
-	{
+	static const char* OReg_Name[/*VSH_OREG_NAME*/] = {
 		"oPos",
 		"???",
 		"???",
@@ -1973,7 +1842,7 @@ void OutputHlsl(std::stringstream& hlsl, VSH_IMD_OUTPUT& dest)
 	if (dest.Mask[3]) hlsl << "w";
 }
 
-void ParameterHlsl(std::stringstream& hlsl, VSH_IMD_PARAMETER& paramMeta)
+static void ParameterHlsl(std::stringstream& hlsl, VSH_IMD_PARAMETER& paramMeta)
 {
 	// Print functions
 	static char* RegisterName[/*VSH_PARAMETER_TYPE*/] = {
@@ -1999,8 +1868,7 @@ void ParameterHlsl(std::stringstream& hlsl, VSH_IMD_PARAMETER& paramMeta)
 			// Only display the offset if it's not 0.
 			if (register_number != 0) {
 				hlsl << "c[a0.x+" << register_number << "]";
-			}
-			else {
+			} else {
 				hlsl << "c[a0.x]";
 			}
 		} else {
@@ -2037,10 +1905,10 @@ void ParameterHlsl(std::stringstream& hlsl, VSH_IMD_PARAMETER& paramMeta)
 	}
 }
 
-void BuildShader(std::stringstream& hlsl, VSH_XBOX_SHADER* pShader)
+static void BuildShader(std::stringstream& hlsl, VSH_XBOX_SHADER* pShader)
 {
 	// HLSL strings for all MAC opcodes, indexed with VSH_MAC
-	static std::string VSH_MAC_HLSL[] = {
+	static std::string VSH_MAC_HLSL[/*VSH_MAC*/] = {
 		/*MAC_NOP:*/"",
 		/*MAC_MOV:*/"x_mov",
 		/*MAC_MUL:*/"x_mul",
@@ -2060,7 +1928,7 @@ void BuildShader(std::stringstream& hlsl, VSH_XBOX_SHADER* pShader)
 	};
 
 	// HLSL strings for all ILU opcodes, indexed with VSH_ILU
-	static std::string VSH_ILU_HLSL[] = {
+	static std::string VSH_ILU_HLSL[/*VSH_ILU*/] = {
 		/*ILU_NOP:*/"",
 		/*ILU_MOV:*/"x_mov",
 		/*ILU_RCP:*/"x_rcp",
@@ -2094,7 +1962,152 @@ void BuildShader(std::stringstream& hlsl, VSH_XBOX_SHADER* pShader)
 					ParameterHlsl(hlsl, xboxInstruction.Parameters[i]);
 				}
 			}
+
 			hlsl << ");";
 		}
 	}
+}
+
+std::string DebugPrependLineNumbers(std::string shaderString) {
+	std::stringstream shader(shaderString);
+	auto debugShader = std::stringstream();
+
+	int i = 1;
+	for (std::string line; std::getline(shader, line); ) {
+		auto lineNumber = std::to_string(i++);
+		auto paddedLineNumber = lineNumber.insert(0, 3 - lineNumber.size(), ' ');
+		debugShader << "/* " << paddedLineNumber << " */ " << line << "\n";
+	}
+
+	return debugShader.str();
+}
+
+// recompile xbox vertex shader function
+extern HRESULT EmuRecompileVshFunction
+(
+	DWORD* pXboxFunction,
+	bool          bNoReservedConstants,
+	D3DVERTEXELEMENT* pRecompiledDeclaration,
+	bool* pbUseDeclarationOnly,
+	DWORD* pXboxFunctionSize,
+	ID3DBlob** ppRecompiledShader
+)
+{
+	XTL::X_VSH_SHADER_HEADER* pXboxVertexShaderHeader = (XTL::X_VSH_SHADER_HEADER*)pXboxFunction;
+	DWORD* pToken;
+	boolean             EOI = false;
+	VSH_XBOX_SHADER* pShader = (VSH_XBOX_SHADER*)calloc(1, sizeof(VSH_XBOX_SHADER));
+	ID3DBlob* pErrors = nullptr;
+	HRESULT             hRet = 0;
+
+	// TODO: support this situation..
+	if (pXboxFunction == xbnullptr)
+		return E_FAIL;
+
+	// Initialize output arguments to zero
+	*pbUseDeclarationOnly = 0;
+	*pXboxFunctionSize = 0;
+	*ppRecompiledShader = nullptr;
+
+	if (!pShader) {
+		EmuLog(LOG_LEVEL::WARNING, "Couldn't allocate memory for vertex shader conversion buffer");
+		return E_OUTOFMEMORY;
+	}
+
+	pShader->ShaderHeader = *pXboxVertexShaderHeader;
+	switch (pXboxVertexShaderHeader->Version) {
+	case VERSION_XVS:
+		break;
+	case VERSION_XVSS:
+		EmuLog(LOG_LEVEL::WARNING, "Might not support vertex state shaders?");
+		hRet = E_FAIL;
+		break;
+	case VERSION_XVSW:
+		EmuLog(LOG_LEVEL::WARNING, "Might not support vertex read/write shaders?");
+		hRet = E_FAIL;
+		break;
+	default:
+		EmuLog(LOG_LEVEL::WARNING, "Unknown vertex shader version 0x%02X", pXboxVertexShaderHeader->Version);
+		hRet = E_FAIL;
+		break;
+	}
+
+	if (SUCCEEDED(hRet)) {
+		static std::string hlsl_template =
+			#include "core\hle\D3D8\Direct3D9\Xb.hlsl" // Note : This included .hlsl defines a raw string
+			;
+
+		auto hlsl_stream = std::stringstream();
+
+		for (pToken = (DWORD*)((uint8_t*)pXboxFunction + sizeof(XTL::X_VSH_SHADER_HEADER)); !EOI; pToken += X_VSH_INSTRUCTION_SIZE) {
+			VSH_SHADER_INSTRUCTION Inst;
+
+			VshParseInstruction((uint32_t*)pToken, &Inst);
+			VshConvertToIntermediate(&Inst, pShader);
+			EOI = Inst.Final;
+		}
+
+		// The size of the shader is
+		*pXboxFunctionSize = (intptr_t)pToken - (intptr_t)pXboxFunction;
+
+		// Do not attempt to compile empty shaders
+		if (pShader->IntermediateCount == 0) {
+			// This is a declaration only shader, so there is no function to recompile
+			*pbUseDeclarationOnly = 1;
+			return D3D_OK;
+		}
+
+		BuildShader(hlsl_stream, pShader);
+		std::string hlsl_str = hlsl_stream.str();
+		hlsl_str = std::regex_replace(hlsl_template, std::regex("// <Xbox Shader>"), hlsl_str);
+
+		DbgVshPrintf("--- HLSL conversion ---\n");
+		DbgVshPrintf(DebugPrependLineNumbers(hlsl_str).c_str());
+		DbgVshPrintf("-----------------------\n");
+
+		hRet = D3DCompile(
+			hlsl_str.c_str(),
+			hlsl_str.length(),
+			nullptr, // pSourceName
+			nullptr, // pDefines
+			nullptr, // pInclude // TODO precompile x_* HLSL functions?
+			"main", // shader entry poiint
+			"vs_3_0", // shader profile
+			0, // flags1
+			0, // flags2
+			ppRecompiledShader, // out
+			&pErrors // ppErrorMsgs out
+		);
+		if (FAILED(hRet)) {
+			EmuLog(LOG_LEVEL::WARNING, "Couldn't assemble recompiled vertex shader");
+		}
+
+		// Determine the log level
+		auto hlslErrorLogLevel = FAILED(hRet) ? LOG_LEVEL::ERROR2 : LOG_LEVEL::DEBUG;
+		if (pErrors) {
+			// Log HLSL compiler errors
+			EmuLog(hlslErrorLogLevel, "%s", (char*)(pErrors->GetBufferPointer()));
+			pErrors->Release();
+			pErrors = nullptr;
+		}
+
+		if (!FAILED(hRet)) {
+			// Log disassembly
+			hRet = D3DDisassemble(
+				(*ppRecompiledShader)->GetBufferPointer(),
+				(*ppRecompiledShader)->GetBufferSize(),
+				D3D_DISASM_ENABLE_DEFAULT_VALUE_PRINTS | D3D_DISASM_ENABLE_INSTRUCTION_NUMBERING,
+				NULL,
+				&pErrors
+			);
+			if (pErrors) {
+				EmuLog(hlslErrorLogLevel, "%s", (char*)(pErrors->GetBufferPointer()));
+				pErrors->Release();
+			}
+		}
+	}
+
+	free(pShader);
+
+	return hRet;
 }
