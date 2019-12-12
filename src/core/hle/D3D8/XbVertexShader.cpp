@@ -556,7 +556,7 @@ static void VshAddParameters(VSH_SHADER_INSTRUCTION  *pInstruction,
                              VSH_IMD_PARAMETER       *pParameters)
 {
     uint8_t ParamCount = 0;
-	
+
     if(MAC >= MAC_MOV)
     {
         VshAddParameter(&pInstruction->A, pInstruction->a0x, &pParameters[ParamCount]);
@@ -669,6 +669,7 @@ static boolean VshAddInstructionMAC_ARL(VSH_SHADER_INSTRUCTION *pInstruction,
     // Output param
     pIntermediate->Output.Type = IMD_OUTPUT_A0X;
     pIntermediate->Output.Address = pInstruction->Output.OutputAddress;
+    pIntermediate->Output.Mask[0] = true; // force a0.x
 
     // Other parameters
     VshAddParameters(pInstruction, ILU_NOP, pInstruction->MAC, pIntermediate->Parameters);
@@ -1640,7 +1641,7 @@ public:
 		// Free the preprocessed declaration copy
 		free(pXboxVertexDeclarationCopy);
 
-		for (int i = 0; i < RegVIsPresentInDeclaration.size(); i++) {
+		for (size_t i = 0; i < RegVIsPresentInDeclaration.size(); i++) {
 			pCxbxVertexShaderInfo->vRegisterInDeclaration[i] = RegVIsPresentInDeclaration[i];
 			EmuLog(LOG_LEVEL::DEBUG, "Vertex regs used: v%d %d", i, pCxbxVertexShaderInfo->vRegisterInDeclaration[i]);
 		}
@@ -1812,7 +1813,6 @@ static void OutputHlsl(std::stringstream& hlsl, VSH_IMD_OUTPUT& dest)
 		break;
 	case IMD_OUTPUT_A0X:
 		hlsl << "a0";
-		dest.Mask[0] = true; // force a0.x
 		break;
 	default:
 		assert(false);
