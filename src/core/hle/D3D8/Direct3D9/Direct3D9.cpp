@@ -489,6 +489,17 @@ const char *CxbxGetErrorDescription(HRESULT hResult)
 	return nullptr;
 }
 
+// TODO move to shader file. Needs to be called whenever a shader or declaration is set
+void SetOverrideFlags(CxbxVertexShader* pCxbxVertexShader) {
+	if (pCxbxVertexShader != nullptr && pCxbxVertexShader->pHostVertexShader != nullptr) {
+		float overrideFlags[16];
+		for (int i = 0; i < 16; i++) {
+			overrideFlags[i] = !pCxbxVertexShader->VertexShaderInfo.vRegisterInDeclaration[i];
+		}
+		g_pD3DDevice->SetVertexShaderConstantF(X_D3DVS_CONSTREG_VERTEXDATA4F_FLAG_BASE, overrideFlags, 4);
+	}
+}
+
 const char *D3DErrorString(HRESULT hResult)
 {
 	static char buffer[1024];
@@ -3452,6 +3463,8 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SelectVertexShader)
 		pHostVertexDeclaration = pCxbxVertexShader->pHostVertexDeclaration;
 		pHostVertexShader = pCxbxVertexShader->pHostVertexShader;
 		HostFVF = pCxbxVertexShader->HostFVF;
+
+		SetOverrideFlags(pCxbxVertexShader);
 	}
 
 	hRet = g_pD3DDevice->SetVertexDeclaration(pHostVertexDeclaration);
@@ -3808,14 +3821,9 @@ void UpdateViewPortOffsetAndScaleConstants()
 {
     float vOffset[4], vScale[4];
     GetViewPortOffsetAndScale(vOffset, vScale);
-    float vScaleReversed[4] = { 1.0f / (double)vScale[0], 1.0f / (double)vScale[1], 1.0f / (double)vScale[2], 0 };
 
-	g_pD3DDevice->SetVertexShaderConstantF(X_D3DVS_VIEWPORT_SCALE_MIRROR_INVERTED, vScaleReversed, 1);
+	g_pD3DDevice->SetVertexShaderConstantF(X_D3DVS_VIEWPORT_SCALE_MIRROR, vScale, 1);
     g_pD3DDevice->SetVertexShaderConstantF(X_D3DVS_VIEWPORT_OFFSET_MIRROR, vOffset, 1);
-
-    // Set 0 and 1 constant, used to compare and transform W when required
-    float ZeroOne[] = { 0, 1, 0, 0 };
-    g_pD3DDevice->SetVertexShaderConstantF(X_D3DVS_VIEWPORT_SCALE_ZERO_ONE, ZeroOne, 1);
 
 	// Store viewport offset and scale in constant registers 58 (c-38) and
 	// 59 (c-37) used for screen space transformation.
@@ -6674,18 +6682,12 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexShader)
 		}
 		else
 		{
+			SetOverrideFlags(pCxbxVertexShader);
+
 			hRet = g_pD3DDevice->SetVertexShader(pCxbxVertexShader->pHostVertexShader);
 			DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetVertexShader(VshHandleIsVertexShader)");
 		}
 
-		// Set default constant values for specular, diffuse, etc
-		static const float ColorBlack[4] = { 0,0,0,0 };
-		static const float ColorWhite[4] = { 1,1,1,1 };
-
-		g_pD3DDevice->SetVertexShaderConstantF(CXBX_D3DVS_CONSTREG_VERTEXDATA4F_BASE + XTL::X_D3DVSDE_DIFFUSE, ColorWhite, 1);
-		g_pD3DDevice->SetVertexShaderConstantF(CXBX_D3DVS_CONSTREG_VERTEXDATA4F_BASE + XTL::X_D3DVSDE_BACKDIFFUSE, ColorWhite, 1);
-		g_pD3DDevice->SetVertexShaderConstantF(CXBX_D3DVS_CONSTREG_VERTEXDATA4F_BASE + XTL::X_D3DVSDE_SPECULAR, ColorBlack, 1);
-		g_pD3DDevice->SetVertexShaderConstantF(CXBX_D3DVS_CONSTREG_VERTEXDATA4F_BASE + XTL::X_D3DVSDE_BACKSPECULAR, ColorBlack, 1);
 	} else {
 		hRet = g_pD3DDevice->SetVertexShader(nullptr);
 		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetVertexShader");

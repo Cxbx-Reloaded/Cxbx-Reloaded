@@ -25,6 +25,13 @@ struct VS_OUTPUT
 // Xbox constant registers
 extern uniform float4 c[192] : register(c0);
 
+// Vertex input overrides for SetVertexData4f support
+extern float4 vOverrideValue[16]  : register(c192);
+extern float4 vOverridePacked[4]  : register(c208);
+
+extern float4  xboxViewportScale   : register(c212);
+extern float4  xboxViewportOffset  : register(c213);
+
 // Overloaded casts, assuring all inputs are treated as float4
 float4 _tof4(float  src) { return float4(src, src, src, src); }
 float4 _tof4(float2 src) { return src.xyyy; }
@@ -176,16 +183,16 @@ float _rcc(float input)
 float4 reverseScreenspaceTransform(float4 oPos)
 {
 	// On Xbox, oPos should contain the vertex position in screenspace
+	// We need to reverse this transformation
 	// Conventionally, each Xbox Vertex Shader includes instructions like this
 	// mul oPos.xyz, r12, c-38
 	// +rcc r1.x, r12.w
 	// mad oPos.xyz, r12, r1.x, c-37
 	// where c-37 and c-38 are reserved transform values
 
-	// Lets hope c-37 and c-38 contain the conventional values
-    oPos.xyz -= (float3)c[-37 + 96]; // reverse offset
+	oPos.xyz -= xboxViewportOffset.xyz; // reverse offset
 	oPos.xyz *= oPos.w; // reverse perspective divide
-    oPos.xyz /= (float3)c[-38 + 96]; // reverse scale
+	oPos.xyz /= xboxViewportScale.xyz; // reverse scale
 
 	return oPos;
 }
@@ -208,25 +215,33 @@ VS_OUTPUT main(const VS_INPUT xIn)
 	r0 = r1 = r2 = r3 = r4 = r5 = r6 = r7 = r8 = r9 = r10 = r11 = float4(0, 0, 0, 0);
 	#define r12 oPos // oPos and r12 are two ways of accessing the same register on Xbox
 
-	// Input registers
-	float4 v0, v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13, v14, v15;
-	// Initialize input variables
-	v0 = xIn.v[0];
-	v1 = xIn.v[1];
-	v2 = xIn.v[2];
-	v3 = xIn.v[3];
-	v4 = xIn.v[4];
-	v5 = xIn.v[5];
-	v6 = xIn.v[6];
-	v7 = xIn.v[7];
-	v8 = xIn.v[8];
-	v9 = xIn.v[9];
-	v10 = xIn.v[10];
-	v11 = xIn.v[11];
-	v12 = xIn.v[12];
-	v13 = xIn.v[13];
-	v14 = xIn.v[14];
-	v15 = xIn.v[15];
+	// Input registerss
+	float4 v[16];
+	# define v0  v[0]
+	# define v1  v[1]
+	# define v2  v[2]
+	# define v3  v[3]
+	# define v4  v[4]
+	# define v5  v[5]
+	# define v6  v[6]
+	# define v7  v[7]
+	# define v8  v[8]
+	# define v9  v[9]
+	# define v10 v[10]
+	# define v11 v[11]
+	# define v12 v[12]
+	# define v13 v[13]
+	# define v14 v[14]
+	# define v15 v[15]
+
+	// View 4 packed overrides as an array of 16 floats
+	float vOverride[16] = (float[16])vOverridePacked;
+
+	// Initialize input registers from the vertex buffer
+	// Or use an override value set with SetVertexData4f
+	for(uint i = 0; i < 16; i++){
+		v[i] = vOverride[i] ? vOverrideValue[i] : xIn.v[i];
+	}
 
 	// Xbox shader program
 // <Xbox Shader>

@@ -302,7 +302,7 @@ typedef struct _VSH_XBOX_SHADER
 }
 VSH_XBOX_SHADER;
 
-// TODO : Reinstate and use : std::array<bool, 16> RegVIsPresentInDeclaration;
+std::array<bool, 16> RegVIsPresentInDeclaration;
 
 /* TODO : map non-FVF Xbox vertex shader handle to CxbxVertexShader (a struct containing a host Xbox vertex shader handle and the original members)
 std::unordered_map<DWORD, CxbxVertexShader> g_CxbxVertexShaders;
@@ -1290,7 +1290,7 @@ private:
 		}
 
 		// Add this register to the list of declared registers
-		// TODO : Reinstate and use : RegVIsPresentInDeclaration[VertexRegister] = true;
+		RegVIsPresentInDeclaration[VertexRegister] = true;
 
 		DWORD XboxVertexElementDataType = (*pXboxToken & X_D3DVSD_DATATYPEMASK) >> X_D3DVSD_DATATYPESHIFT;
 		WORD XboxVertexElementByteSize = 0;
@@ -1617,7 +1617,7 @@ public:
 
 		IsFixedFunction = bIsFixedFunction;
 
-		// TODO : Reinstate and use : RegVIsPresentInDeclaration.fill(false);
+		RegVIsPresentInDeclaration.fill(false);
 
 		// First of all some info:
 		// We have to figure out which flags are set and then
@@ -1660,6 +1660,11 @@ public:
 
 		// Free the preprocessed declaration copy
 		free(pXboxVertexDeclarationCopy);
+
+		for (int i = 0; i < RegVIsPresentInDeclaration.size(); i++) {
+			pCxbxVertexShaderInfo->vRegisterInDeclaration[i] = RegVIsPresentInDeclaration[i];
+			EmuLog(LOG_LEVEL::DEBUG, "Vertex regs used: v%d %d", i, pCxbxVertexShaderInfo->vRegisterInDeclaration[i]);
+		}
 
 		return Result;
 	}

@@ -71,6 +71,7 @@ typedef struct _CxbxVertexShaderInfo
 {
 	UINT                       NumberOfVertexStreams; // The number of streams the vertex shader uses
 	CxbxVertexShaderStreamInfo VertexStreams[X_VSH_MAX_STREAMS];
+	bool vRegisterInDeclaration[16];
 }
 CxbxVertexShaderInfo;
 
