@@ -61,10 +61,10 @@ VSH_SWIZZLE;
 typedef DWORD DxbxMask,
 *PDxbxMask;
 
-#define MASK_X 0x001
-#define MASK_Y 0x002
-#define MASK_Z 0x004
-#define MASK_W 0x008
+#define MASK_X 0x008
+#define MASK_Y 0x004
+#define MASK_Z 0x002
+#define MASK_W 0x001
 #define MASK_XYZ MASK_X | MASK_Y | MASK_Z
 #define MASK_XYZW MASK_X | MASK_Y | MASK_Z | MASK_W
 
@@ -101,19 +101,10 @@ typedef enum _VSH_FIELD_NAME
     FLD_C_R_LOW,
     FLD_C_MUX,
     // Output
-    FLD_OUT_MAC_MASK_X,
-    FLD_OUT_MAC_MASK_Y,
-    FLD_OUT_MAC_MASK_Z,
-    FLD_OUT_MAC_MASK_W,
+    FLD_OUT_MAC_MASK,
     FLD_OUT_R,
-    FLD_OUT_ILU_MASK_X,
-    FLD_OUT_ILU_MASK_Y,
-    FLD_OUT_ILU_MASK_Z,
-    FLD_OUT_ILU_MASK_W,
-    FLD_OUT_O_MASK_X,
-    FLD_OUT_O_MASK_Y,
-    FLD_OUT_O_MASK_Z,
-    FLD_OUT_O_MASK_W,
+    FLD_OUT_ILU_MASK,
+    FLD_OUT_O_MASK,
     FLD_OUT_ORB,
     FLD_OUT_ADDRESS,
     FLD_OUT_MUX,
@@ -230,14 +221,14 @@ typedef struct _VSH_OUTPUT
     // Output register
     VSH_OUTPUT_MUX      OutputMux;       // MAC or ILU used as output
 	VSH_OUTPUT_TYPE     OutputType;      // C or O
-    boolean             OutputMask[4];
+    int8_t              OutputMask;
     int16_t             OutputAddress;
-    // MAC output R register
-    boolean             MACRMask[4];
-    int16_t             MACRAddress;
-    // ILU output R register
-    boolean             ILURMask[4];
-    int16_t             ILURAddress;
+    // MAC output Mask
+    int8_t              MACRMask;
+    // ILU output mask
+    int8_t              ILURMask;
+    // MAC,ILU output R register
+    int16_t             RAddress;
 }
 VSH_OUTPUT;
 
@@ -265,8 +256,8 @@ VSH_IMD_INSTRUCTION_TYPE;
 typedef struct _VSH_IMD_OUTPUT
 {
     VSH_IMD_OUTPUT_TYPE Type;
-    boolean             Mask[4];
     int16_t             Address;
+    int8_t              Mask;
 }
 VSH_IMD_OUTPUT;
 
@@ -284,8 +275,6 @@ VSH_IMD_PARAMETER;
 
 typedef struct _VSH_INTERMEDIATE_FORMAT
 {
-
-    boolean                  IsCombined;
     VSH_IMD_INSTRUCTION_TYPE InstructionType;
     VSH_MAC                  MAC;
     VSH_ILU                  ILU;
@@ -361,19 +350,10 @@ static uint8_t VshGetField(uint32_t         *pShaderToken,
 		{  3,   30,     2 }, // FLD_C_R_LOW,          
 		{  3,   28,     2 }, // FLD_C_MUX,            
 		// Output
-		{  3,   27,     1 }, // FLD_OUT_MAC_MASK_X,   
-		{  3,   26,     1 }, // FLD_OUT_MAC_MASK_Y,   
-		{  3,   25,     1 }, // FLD_OUT_MAC_MASK_Z,   
-		{  3,   24,     1 }, // FLD_OUT_MAC_MASK_W,   
+		{  3,   24,     4 }, // FLD_OUT_MAC_MASK,   
 		{  3,   20,     4 }, // FLD_OUT_R,            
-		{  3,   19,     1 }, // FLD_OUT_ILU_MASK_X,   
-		{  3,   18,     1 }, // FLD_OUT_ILU_MASK_Y,   
-		{  3,   17,     1 }, // FLD_OUT_ILU_MASK_Z,   
-		{  3,   16,     1 }, // FLD_OUT_ILU_MASK_W,   
-		{  3,   15,     1 }, // FLD_OUT_O_MASK_X,     
-		{  3,   14,     1 }, // FLD_OUT_O_MASK_Y,     
-		{  3,   13,     1 }, // FLD_OUT_O_MASK_Z,     
-		{  3,   12,     1 }, // FLD_OUT_O_MASK_W,     
+		{  3,   16,     4 }, // FLD_OUT_ILU_MASK,
+		{  3,   12,     4 }, // FLD_OUT_O_MASK,
 		{  3,   11,     1 }, // FLD_OUT_ORB,          
 		{  3,    3,     8 }, // FLD_OUT_ADDRESS,      
 		{  3,    2,     1 }, // FLD_OUT_MUX,          
@@ -482,63 +462,13 @@ static void VshParseInstruction(uint32_t               *pShaderToken,
         break;
     }
     pInstruction->Output.OutputMux = (VSH_OUTPUT_MUX)VshGetField(pShaderToken, FLD_OUT_MUX);
-    pInstruction->Output.OutputMask[0] = VshGetField(pShaderToken, FLD_OUT_O_MASK_X);
-    pInstruction->Output.OutputMask[1] = VshGetField(pShaderToken, FLD_OUT_O_MASK_Y);
-    pInstruction->Output.OutputMask[2] = VshGetField(pShaderToken, FLD_OUT_O_MASK_Z);
-    pInstruction->Output.OutputMask[3] = VshGetField(pShaderToken, FLD_OUT_O_MASK_W);
-    // MAC output
-    pInstruction->Output.MACRMask[0] = VshGetField(pShaderToken, FLD_OUT_MAC_MASK_X);
-    pInstruction->Output.MACRMask[1] = VshGetField(pShaderToken, FLD_OUT_MAC_MASK_Y);
-    pInstruction->Output.MACRMask[2] = VshGetField(pShaderToken, FLD_OUT_MAC_MASK_Z);
-    pInstruction->Output.MACRMask[3] = VshGetField(pShaderToken, FLD_OUT_MAC_MASK_W);
-    pInstruction->Output.MACRAddress = VshGetField(pShaderToken, FLD_OUT_R);
-    // ILU output
-    pInstruction->Output.ILURMask[0] = VshGetField(pShaderToken, FLD_OUT_ILU_MASK_X);
-    pInstruction->Output.ILURMask[1] = VshGetField(pShaderToken, FLD_OUT_ILU_MASK_Y);
-    pInstruction->Output.ILURMask[2] = VshGetField(pShaderToken, FLD_OUT_ILU_MASK_Z);
-    pInstruction->Output.ILURMask[3] = VshGetField(pShaderToken, FLD_OUT_ILU_MASK_W);
-    pInstruction->Output.ILURAddress = VshGetField(pShaderToken, FLD_OUT_R);
+    pInstruction->Output.OutputMask = VshGetField(pShaderToken, FLD_OUT_O_MASK);
+    pInstruction->Output.MACRMask = VshGetField(pShaderToken, FLD_OUT_MAC_MASK);
+    pInstruction->Output.ILURMask = VshGetField(pShaderToken, FLD_OUT_ILU_MASK);
+    pInstruction->Output.RAddress = VshGetField(pShaderToken, FLD_OUT_R);
     // Finally, get a0.x indirect constant addressing
     pInstruction->a0x = VshGetField(pShaderToken, FLD_A0X);
     pInstruction->Final = VshGetField(pShaderToken, FLD_FINAL);
-}
-
-static inline int VshIsMaskInUse(const boolean* pMask)
-{
-	return (pMask[0] || pMask[1] || pMask[2] || pMask[3]);
-}
-
-static inline boolean VshInstrWritesToMAC_R(VSH_SHADER_INSTRUCTION* pInstruction)
-{
-	return VshIsMaskInUse(pInstruction->Output.MACRMask)
-		&& pInstruction->MAC != MAC_NOP;
-}
-
-static inline boolean VshInstrWritesToMAC_O(VSH_SHADER_INSTRUCTION* pInstruction)
-{
-	return VshIsMaskInUse(pInstruction->Output.OutputMask)
-		&& pInstruction->Output.OutputMux == OMUX_MAC
-		&& pInstruction->MAC != MAC_NOP;
-}
-
-static inline boolean VshInstrWritesToMAC_ARL(VSH_SHADER_INSTRUCTION* pInstruction)
-{
-	return /*!VshIsMaskInUse(pInstruction->Output.OutputMask) &&
-			pInstruction->Output.OutputMux == OMUX_MAC &&*/
-		pInstruction->MAC == MAC_ARL;
-}
-
-static inline boolean VshInstrWritesToILU_R(VSH_SHADER_INSTRUCTION* pInstruction)
-{
-	return VshIsMaskInUse(pInstruction->Output.ILURMask)
-		&& pInstruction->ILU != ILU_NOP;
-}
-
-static inline boolean VshInstrWritesToILU_O(VSH_SHADER_INSTRUCTION* pInstruction)
-{
-	return VshIsMaskInUse(pInstruction->Output.OutputMask)
-		&& pInstruction->Output.OutputMux == OMUX_ILU
-		&& pInstruction->ILU != ILU_NOP;
 }
 
 static void VshAddParameter(VSH_PARAMETER     *pParameter,
@@ -593,197 +523,67 @@ static VSH_INTERMEDIATE_FORMAT *VshNewIntermediate(VSH_XBOX_SHADER *pShader)
     return &pShader->Intermediate[pShader->IntermediateCount++];
 }
 
-static boolean VshAddInstructionMAC_R(VSH_SHADER_INSTRUCTION *pInstruction,
-                                      VSH_XBOX_SHADER        *pShader,
-                                      boolean                IsCombined)
+static void VshAddIntermediateOpcode(
+	VSH_SHADER_INSTRUCTION* pInstruction,
+    VSH_XBOX_SHADER        *pShader,
+	VSH_IMD_INSTRUCTION_TYPE instr_type,
+	int8_t mask)
 {
-    VSH_INTERMEDIATE_FORMAT *pIntermediate;
+	int R = pInstruction->Output.RAddress;
+	// Test for paired opcodes
+	if ((pInstruction->MAC != MAC_NOP) && (pInstruction->ILU != ILU_NOP)) {
+		if (instr_type == IMD_ILU) {
+			// Paired ILU opcodes can only write to R1
+			R = 1;
+		} else if (R == 1) {
+			// Ignore paired MAC opcodes that write to R1
+			mask = 0;
+		}
+	}
 
-    if(!VshInstrWritesToMAC_R(pInstruction)) {
-        return FALSE;
-    }
+	if (mask > 0) {
+		VSH_INTERMEDIATE_FORMAT* pIntermediate = VshNewIntermediate(pShader);
+		pIntermediate->InstructionType = instr_type;
+		pIntermediate->MAC = instr_type == IMD_MAC ? pInstruction->MAC : MAC_NOP;
+		pIntermediate->ILU = instr_type == IMD_ILU ? pInstruction->ILU : ILU_NOP;
+		if (pInstruction->MAC == MAC_ARL) {
+			pIntermediate->Output.Type = IMD_OUTPUT_A0X;
+			pIntermediate->Output.Address = 0;
+		} else {
+			pIntermediate->Output.Type = IMD_OUTPUT_R;
+			pIntermediate->Output.Address = R;
+		}
+		pIntermediate->Output.Mask = mask;
+		VshAddParameters(pInstruction, pIntermediate->ILU, pIntermediate->MAC, pIntermediate->Parameters);
+	}
 
-    pIntermediate = VshNewIntermediate(pShader);
-    pIntermediate->IsCombined = IsCombined;
-
-    // Opcode
-    pIntermediate->InstructionType = IMD_MAC;
-    pIntermediate->MAC = pInstruction->MAC;
-
-    // Output param
-    pIntermediate->Output.Type = IMD_OUTPUT_R;
-    pIntermediate->Output.Address = pInstruction->Output.MACRAddress;
-    memcpy(pIntermediate->Output.Mask, pInstruction->Output.MACRMask, sizeof(boolean) * 4);
-
-    // Other parameters
-    VshAddParameters(pInstruction, ILU_NOP, pInstruction->MAC, pIntermediate->Parameters);
-
-    return TRUE;
-}
-
-static boolean VshAddInstructionMAC_O(VSH_SHADER_INSTRUCTION* pInstruction,
-                                      VSH_XBOX_SHADER        *pShader,
-                                      boolean                IsCombined)
-{
-    VSH_INTERMEDIATE_FORMAT *pIntermediate;
-
-    if(!VshInstrWritesToMAC_O(pInstruction)) {
-        return FALSE;
-    }
-
-    pIntermediate = VshNewIntermediate(pShader);
-    pIntermediate->IsCombined = IsCombined;
-
-    // Opcode
-    pIntermediate->InstructionType = IMD_MAC;
-    pIntermediate->MAC = pInstruction->MAC;
-
-    // Output param
-	pIntermediate->Output.Type = pInstruction->Output.OutputType == OUTPUT_C ? IMD_OUTPUT_C : IMD_OUTPUT_O;
-    pIntermediate->Output.Address = pInstruction->Output.OutputAddress;
-    memcpy(pIntermediate->Output.Mask, pInstruction->Output.OutputMask, sizeof(boolean) * 4);
-
-    // Other parameters
-    VshAddParameters(pInstruction, ILU_NOP, pInstruction->MAC, pIntermediate->Parameters);
-
-    return TRUE;
-}
-
-static boolean VshAddInstructionMAC_ARL(VSH_SHADER_INSTRUCTION *pInstruction,
-                                        VSH_XBOX_SHADER        *pShader,
-                                        boolean                IsCombined)
-{
-    VSH_INTERMEDIATE_FORMAT *pIntermediate;
-
-    if(!VshInstrWritesToMAC_ARL(pInstruction)) {
-        return FALSE;
-    }
-
-    pIntermediate = VshNewIntermediate(pShader);
-    pIntermediate->IsCombined = IsCombined;
-
-    // Opcode
-    pIntermediate->InstructionType = IMD_MAC;
-    pIntermediate->MAC = pInstruction->MAC;
-
-    // Output param
-    pIntermediate->Output.Type = IMD_OUTPUT_A0X;
-    pIntermediate->Output.Address = pInstruction->Output.OutputAddress;
-    pIntermediate->Output.Mask[0] = true; // force a0.x
-
-    // Other parameters
-    VshAddParameters(pInstruction, ILU_NOP, pInstruction->MAC, pIntermediate->Parameters);
-
-    return TRUE;
-}
-
-static boolean VshAddInstructionILU_R(VSH_SHADER_INSTRUCTION *pInstruction,
-                                      VSH_XBOX_SHADER        *pShader,
-                                      boolean                IsCombined)
-{
-    VSH_INTERMEDIATE_FORMAT *pIntermediate;
-
-    if(!VshInstrWritesToILU_R(pInstruction)) {
-        return FALSE;
-    }
-
-	pIntermediate = VshNewIntermediate(pShader);
-    pIntermediate->IsCombined = IsCombined;
-
-    // Opcode
-    pIntermediate->InstructionType = IMD_ILU;
-    pIntermediate->ILU = pInstruction->ILU;
-
-    // Output param
-    pIntermediate->Output.Type = IMD_OUTPUT_R;
-    // If this is a combined instruction, only r1 is allowed (R address should not be used)
-    pIntermediate->Output.Address = IsCombined ? 1 : pInstruction->Output.ILURAddress;
-    memcpy(pIntermediate->Output.Mask, pInstruction->Output.ILURMask, sizeof(boolean) * 4);
-
-    // Other parameters
-    VshAddParameters(pInstruction, pInstruction->ILU, MAC_NOP, pIntermediate->Parameters);
-
-    return TRUE;
-}
-
-static boolean VshAddInstructionILU_O(VSH_SHADER_INSTRUCTION *pInstruction,
-                                      VSH_XBOX_SHADER        *pShader,
-                                      boolean                IsCombined)
-{
-    VSH_INTERMEDIATE_FORMAT *pIntermediate;
-
-    if(!VshInstrWritesToILU_O(pInstruction)) {
-        return FALSE;
-    }
-
-    pIntermediate = VshNewIntermediate(pShader);
-    pIntermediate->IsCombined = IsCombined;
-
-    // Opcode
-    pIntermediate->InstructionType = IMD_ILU;
-    pIntermediate->ILU = pInstruction->ILU;
-
-    // Output param
-    pIntermediate->Output.Type = pInstruction->Output.OutputType == OUTPUT_C ? IMD_OUTPUT_C : IMD_OUTPUT_O;
-    pIntermediate->Output.Address = pInstruction->Output.OutputAddress;
-    memcpy(pIntermediate->Output.Mask, pInstruction->Output.OutputMask, sizeof(boolean) * 4);
-
-    // Other parameters
-    VshAddParameters(pInstruction, pInstruction->ILU, MAC_NOP, pIntermediate->Parameters);
-
-    return TRUE;
+	// Is the output mask set?
+	if (pInstruction->Output.OutputMask > 0) {
+		// Check if we must add a muxed opcode too
+		if ((uint8_t)(pInstruction->Output.OutputMux) == (uint8_t)instr_type) {
+			VSH_INTERMEDIATE_FORMAT* pMuxedIntermediate = VshNewIntermediate(pShader);
+			pMuxedIntermediate->InstructionType = instr_type;
+			pMuxedIntermediate->MAC = instr_type == IMD_MAC ? pInstruction->MAC : MAC_NOP;
+			pMuxedIntermediate->ILU = instr_type == IMD_ILU ? pInstruction->ILU : ILU_NOP;
+			pMuxedIntermediate->Output.Type = pInstruction->Output.OutputType == OUTPUT_C ? IMD_OUTPUT_C : IMD_OUTPUT_O;
+			pMuxedIntermediate->Output.Address = pInstruction->Output.OutputAddress;
+			pMuxedIntermediate->Output.Mask = pInstruction->Output.OutputMask;
+			VshAddParameters(pInstruction, pMuxedIntermediate->ILU, pMuxedIntermediate->MAC, pMuxedIntermediate->Parameters);
+		}
+	}
 }
 
 static void VshConvertToIntermediate(VSH_SHADER_INSTRUCTION *pInstruction,
                                      VSH_XBOX_SHADER        *pShader)
 {
-    // Five types of instructions:
-    //   MAC
-    //
-    //   ILU
-    //
-    //   MAC
-    //   +ILU
-    //
-    //   MAC
-    //   +MAC
-    //   +ILU
-    //
-    //   MAC
-    //   +ILU
-    //   +ILU
-    boolean IsCombined = FALSE;
+	if (pInstruction->MAC != MAC_NOP) {
+		int8_t mask = pInstruction->MAC == MAC_ARL ? MASK_X : pInstruction->Output.MACRMask;
+		VshAddIntermediateOpcode(pInstruction, pShader, IMD_MAC, mask);
+	}
 
-    if (VshAddInstructionMAC_R(pInstruction, pShader, IsCombined)) {
-        if (VshInstrWritesToMAC_O(pInstruction) ||
-            VshInstrWritesToILU_R(pInstruction) ||
-            VshInstrWritesToILU_O(pInstruction)) {
-            IsCombined = TRUE;
-        }
-    }
-
-	if (VshAddInstructionMAC_O(pInstruction, pShader, IsCombined)) {
-        if (VshInstrWritesToILU_R(pInstruction) ||
-            VshInstrWritesToILU_O(pInstruction)) {
-            IsCombined = TRUE;
-        }
-    }
-
-	// Special case, arl (mov a0.x, ...)
-    if (VshAddInstructionMAC_ARL(pInstruction, pShader, IsCombined)) {
-        if (VshInstrWritesToILU_R(pInstruction) ||
-            VshInstrWritesToILU_O(pInstruction)) {
-            IsCombined = TRUE;
-        }
-    }
-
-	if (VshAddInstructionILU_R(pInstruction, pShader, IsCombined)) {
-        if (VshInstrWritesToILU_O(pInstruction)) {
-            IsCombined = TRUE;
-        }
-    }
-
-	(void)VshAddInstructionILU_O(pInstruction, pShader, IsCombined);
+	if (pInstruction->ILU != ILU_NOP) {
+		VshAddIntermediateOpcode(pInstruction, pShader, IMD_ILU, pInstruction->Output.ILURMask);
+	}
 }
 
 #define D3DDECLUSAGE_UNSUPPORTED ((D3DDECLUSAGE)-1)
@@ -1822,10 +1622,10 @@ static void OutputHlsl(std::stringstream& hlsl, VSH_IMD_OUTPUT& dest)
 	// Write the mask as a separate argument to the opcode defines
 	// (No space, so that "dest,mask, ..." looks close to "dest.mask, ...")
 	hlsl << ",";
-	if (dest.Mask[0]) hlsl << "x";
-	if (dest.Mask[1]) hlsl << "y";
-	if (dest.Mask[2]) hlsl << "z";
-	if (dest.Mask[3]) hlsl << "w";
+	if (dest.Mask & MASK_X) hlsl << "x";
+	if (dest.Mask & MASK_Y) hlsl << "y";
+	if (dest.Mask & MASK_Z) hlsl << "z";
+	if (dest.Mask & MASK_W) hlsl << "w";
 }
 
 static void ParameterHlsl(std::stringstream& hlsl, VSH_IMD_PARAMETER& paramMeta)
