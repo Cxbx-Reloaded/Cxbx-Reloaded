@@ -3806,15 +3806,57 @@ void GetViewPortOffsetAndScale(float (&vOffset)[4], float(&vScale)[4])
     float scaleZ = zScale * (ViewPort.MaxZ - ViewPort.MinZ);
     float offsetZ = zScale * ViewPort.MinZ;
 
-    vOffset[0] = offsetWidth + ViewPort.X;
-    vOffset[1] = offsetHeight + ViewPort.Y;
-    vOffset[2] = offsetZ;
-    vOffset[3] = 0.0f;
+	// TODO will we need to do something here to support upscaling?
+	// TODO remove the code above as required
 
-    vScale[0] = scaleWidth;
-    vScale[1] = scaleHeight;
-    vScale[2] = scaleZ;
-    vScale[3] = 0.0f;
+	// Default scale and offset.
+	// Multisample state will affect these
+	float xScale = 1;
+	float yScale = 1;
+	float xOffset = 0.5;
+	float yOffset = 0.5;
+
+	// MULTISAMPLE options have offset of 0
+	// Various sample sizes have various x and y scales
+	switch (g_EmuCDPD.XboxPresentationParameters.MultiSampleType)
+	{
+		case XTL::X_D3DMULTISAMPLE_2_SAMPLES_MULTISAMPLE_LINEAR:
+		case XTL::X_D3DMULTISAMPLE_2_SAMPLES_MULTISAMPLE_QUINCUNX:
+		case XTL::X_D3DMULTISAMPLE_4_SAMPLES_MULTISAMPLE_LINEAR:
+		case XTL::X_D3DMULTISAMPLE_4_SAMPLES_MULTISAMPLE_GAUSSIAN:
+			xOffset = yOffset = 0;
+			break;
+		case XTL::X_D3DMULTISAMPLE_2_SAMPLES_SUPERSAMPLE_HORIZONTAL_LINEAR:
+			xScale = 2;
+			break;
+		case XTL::X_D3DMULTISAMPLE_2_SAMPLES_SUPERSAMPLE_VERTICAL_LINEAR:
+			yScale = 2;
+			break;
+		case XTL::X_D3DMULTISAMPLE_4_SAMPLES_SUPERSAMPLE_LINEAR:
+		case XTL::X_D3DMULTISAMPLE_4_SAMPLES_SUPERSAMPLE_GAUSSIAN:
+			xScale = yScale = 2;
+			break;
+		case XTL::X_D3DMULTISAMPLE_9_SAMPLES_MULTISAMPLE_GAUSSIAN:
+			xScale = yScale = 1.5f;
+			xOffset = yOffset = 0;
+			break;
+		case XTL::X_D3DMULTISAMPLE_9_SAMPLES_SUPERSAMPLE_GAUSSIAN:
+			xScale = yScale = 3.0f;
+			break;
+	}
+
+
+	// Offset with OGL pixel correction (?) TODO verify
+	vOffset[0] = xOffset + (2.0f / ViewPort.Width);
+	vOffset[1] = yOffset + (2.0f / ViewPort.Height);
+	vOffset[2] = 0; //offsetZ;
+	vOffset[3] = 0.0f;
+
+	// Scale
+	vScale[0] = xScale * ViewPort.Width;
+	vScale[1] = yScale * ViewPort.Height;
+	vScale[2] = scaleZ; // ?
+	vScale[3] = 1.0f; // ?
 }
 
 void UpdateViewPortOffsetAndScaleConstants()
