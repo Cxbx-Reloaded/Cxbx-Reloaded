@@ -939,21 +939,12 @@ private:
 	inline DWORD VshGetVertexRegister(DWORD XboxToken)
 	{
 		DWORD regNum = (XboxToken & X_D3DVSD_VERTEXREGMASK) >> X_D3DVSD_VERTEXREGSHIFT;
-		if (regNum >= hostTemporaryRegisterCount /*12 for D3D8, D3D9 value depends on host GPU */) {
-			// test-case : BLiNX: the time sweeper
-			// test-case : Lego Star Wars
-			LOG_TEST_CASE("RegNum > NumTemps");
-		}
 		return regNum;
 	}
 
 	inline DWORD VshGetVertexRegisterIn(DWORD XboxToken)
 	{
 		DWORD regNum = (XboxToken & X_D3DVSD_VERTEXREGINMASK) >> X_D3DVSD_VERTEXREGINSHIFT;
-		if (regNum >= hostTemporaryRegisterCount /*12 for D3D8, D3D9 value depends on host GPU */) {
-			// test-case : Lego Star Wars
-			LOG_TEST_CASE("RegNum > NumTemps");
-		}
 		return regNum;
 	}
 
@@ -1602,18 +1593,6 @@ public:
 		auto pXboxVertexDeclarationCopy = RemoveXboxDeclarationRedefinition(pXboxDeclaration);
 
 		pVertexShaderInfoToSet = pCxbxVertexShaderInfo;
-		hostTemporaryRegisterCount = g_D3DCaps.VS20Caps.NumTemps;
-		if (hostTemporaryRegisterCount < VSH_MIN_TEMPORARY_REGISTERS) {
-			LOG_TEST_CASE("g_D3DCaps.VS20Caps.NumTemps < 12 (Host minimal vertex shader temporary register count)");
-		}
-		if (hostTemporaryRegisterCount < 12+1) { // TODO : Use a constant (see X_D3DVSD_REG)
-			LOG_TEST_CASE("g_D3DCaps.VS20Caps.NumTemps < 12+1 (Xbox vertex shader temporary register count + r12, reading oPos)");
-		}
-
-		// Note, that some Direct3D 9 drivers return only the required minimum temporary register count of 12,
-		// but regardless, shaders that use temporary register numbers above r12 still seem to work correctly.
-		// So it seems we can't rely on VS20Caps.NumTemps indicating accurately what host hardware supports.
-		// (Although it could be that the driver switches to software vertex processing when a shader exceeds hardware limits.)
 
 		IsFixedFunction = bIsFixedFunction;
 

@@ -30,8 +30,6 @@
 #include "core\hle\D3D8\XbD3D8Types.h" // for X_VSH_MAX_ATTRIBUTES
 
 // Host vertex shader counts
-#define VSH_MIN_TEMPORARY_REGISTERS 12 // Equal to D3DCAPS9.VS20Caps.NumTemps (at least 12 for vs_2_x) - https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/dx9-graphics-reference-asm-vs-registers-vs-2-x
-#define VSH_MAX_TEMPORARY_REGISTERS 32
 #define VSH_MAX_INTERMEDIATE_COUNT     1024 // The maximum number of intermediate format slots
 #define VSH_VS11_MAX_INSTRUCTION_COUNT 128
 #define VSH_VS2X_MAX_INSTRUCTION_COUNT 256
