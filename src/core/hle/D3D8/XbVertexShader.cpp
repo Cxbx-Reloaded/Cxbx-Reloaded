@@ -1822,6 +1822,7 @@ static void OutputHlsl(std::stringstream& hlsl, VSH_IMD_OUTPUT& dest)
 	switch (dest.Type) {
 	case IMD_OUTPUT_C:
 		hlsl << "c[" << dest.Address << "]";
+		LOG_TEST_CASE("Vertex shader writes to constant table");
 		break;
 	case IMD_OUTPUT_R:
 		hlsl << "r" << dest.Address;
