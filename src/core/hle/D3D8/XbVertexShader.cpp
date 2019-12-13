@@ -265,11 +265,6 @@ typedef struct _VSH_IMD_PARAMETER
 {
     boolean         Active;
     VSH_PARAMETER   Parameter;
-	// There is only a single address register in Microsoft DirectX 8.0.
-	// The address register, designated as a0.x, may be used as signed
-	// integer offset in relative addressing into the constant register file.
-	//     c[a0.x + n]
-	boolean         IndexesWithA0_X;
 }
 VSH_IMD_PARAMETER;
 
@@ -280,6 +275,11 @@ typedef struct _VSH_INTERMEDIATE_FORMAT
     VSH_ILU                  ILU;
     VSH_IMD_OUTPUT           Output;
     VSH_IMD_PARAMETER        Parameters[3];
+	// There is only a single address register in Microsoft DirectX 8.0.
+	// The address register, designated as a0.x, may be used as signed
+	// integer offset in relative addressing into the constant register file.
+	//     c[a0.x + n]
+	boolean         IndexesWithA0_X;
 }
 VSH_INTERMEDIATE_FORMAT;
 
@@ -472,12 +472,10 @@ static void VshParseInstruction(uint32_t               *pShaderToken,
 }
 
 static void VshAddParameter(VSH_PARAMETER     *pParameter,
-                            boolean           a0x,
                             VSH_IMD_PARAMETER *pIntermediateParameter)
 {
     pIntermediateParameter->Parameter = *pParameter;
     pIntermediateParameter->Active    = TRUE;
-    pIntermediateParameter->IndexesWithA0_X     = a0x;
 }
 
 static void VshAddParameters(VSH_SHADER_INSTRUCTION  *pInstruction,
@@ -489,19 +487,19 @@ static void VshAddParameters(VSH_SHADER_INSTRUCTION  *pInstruction,
 
     if(MAC >= MAC_MOV)
     {
-        VshAddParameter(&pInstruction->A, pInstruction->a0x, &pParameters[ParamCount]);
+        VshAddParameter(&pInstruction->A, &pParameters[ParamCount]);
         ParamCount++;
     }
 
     if((MAC == MAC_MUL) || ((MAC >= MAC_MAD) && (MAC <= MAC_SGE)))
     {
-        VshAddParameter(&pInstruction->B, pInstruction->a0x, &pParameters[ParamCount]);
+        VshAddParameter(&pInstruction->B, &pParameters[ParamCount]);
         ParamCount++;
     }
 
     if((ILU >= ILU_MOV) || (MAC == MAC_ADD) || (MAC == MAC_MAD))
     {
-        VshAddParameter(&pInstruction->C, pInstruction->a0x, &pParameters[ParamCount]);
+        VshAddParameter(&pInstruction->C, &pParameters[ParamCount]);
         ParamCount++;
     }
 }
@@ -554,6 +552,7 @@ static void VshAddIntermediateOpcode(
 			pIntermediate->Output.Address = R;
 		}
 		pIntermediate->Output.Mask = mask;
+		pIntermediate->IndexesWithA0_X = pInstruction->a0x;
 		VshAddParameters(pInstruction, pIntermediate->ILU, pIntermediate->MAC, pIntermediate->Parameters);
 	}
 
@@ -568,6 +567,7 @@ static void VshAddIntermediateOpcode(
 			pMuxedIntermediate->Output.Type = pInstruction->Output.OutputType == OUTPUT_C ? IMD_OUTPUT_C : IMD_OUTPUT_O;
 			pMuxedIntermediate->Output.Address = pInstruction->Output.OutputAddress;
 			pMuxedIntermediate->Output.Mask = pInstruction->Output.OutputMask;
+			pMuxedIntermediate->IndexesWithA0_X = pInstruction->a0x;
 			VshAddParameters(pInstruction, pMuxedIntermediate->ILU, pMuxedIntermediate->MAC, pMuxedIntermediate->Parameters);
 		}
 	}
@@ -576,7 +576,7 @@ static void VshAddIntermediateOpcode(
 static void VshConvertToIntermediate(VSH_SHADER_INSTRUCTION *pInstruction,
                                      VSH_XBOX_SHADER        *pShader)
 {
-	if (pInstruction->MAC != MAC_NOP) {
+	if (pInstruction->MAC > MAC_NOP && pInstruction->MAC <= MAC_ARL) {
 		int8_t mask = pInstruction->MAC == MAC_ARL ? MASK_X : pInstruction->Output.MACRMask;
 		VshAddIntermediateOpcode(pInstruction, pShader, IMD_MAC, mask);
 	}
@@ -1630,7 +1630,7 @@ static void OutputHlsl(std::stringstream& hlsl, VSH_IMD_OUTPUT& dest)
 	if (dest.Mask & MASK_W) hlsl << "w";
 }
 
-static void ParameterHlsl(std::stringstream& hlsl, VSH_IMD_PARAMETER& paramMeta)
+static void ParameterHlsl(std::stringstream& hlsl, VSH_IMD_PARAMETER& paramMeta, bool IndexesWithA0_X)
 {
 	// Print functions
 	static char* RegisterName[/*VSH_PARAMETER_TYPE*/] = {
@@ -1647,24 +1647,23 @@ static void ParameterHlsl(std::stringstream& hlsl, VSH_IMD_PARAMETER& paramMeta)
 		hlsl << "-";
 	}
 
-	int register_number = param.Address;
 	if (param.ParameterType == PARAM_C) {
 		// Access constant registers through our HLSL c() function,
 		// which allows dumping negative indices (like Xbox shaders),
 		// and which returns zero when out-of-bounds indices are passed in:
-		if (paramMeta.IndexesWithA0_X) {
-			if (register_number == 0) {
+		if (IndexesWithA0_X) {
+			if (param.Address == 0) {
 				hlsl << "c(a0.x)"; // Hide the offset if it's 0
-			} else if (register_number < 0) {
-				hlsl << "c(a0.x" << register_number << ")"; // minus is part of the offset
+			} else if (param.Address < 0) {
+				hlsl << "c(a0.x" << param.Address << ")"; // minus is part of the offset
 			} else {
-				hlsl << "c(a0.x+" << register_number << ")"; // show addition character
+				hlsl << "c(a0.x+" << param.Address << ")"; // show addition character
 			}
 		} else {
-			hlsl << "c(" << register_number << ")";
+			hlsl << "c(" << param.Address << ")";
 		}
 	} else {
-		hlsl << RegisterName[param.ParameterType] << register_number;
+		hlsl << RegisterName[param.ParameterType] << param.Address;
 	}
 
 	// Write the swizzle if we need to
@@ -1733,27 +1732,22 @@ static void BuildShader(std::stringstream& hlsl, VSH_XBOX_SHADER* pShader)
 
 		std::string str = "";
 		if (xboxInstruction.InstructionType == IMD_MAC) {
-			if (xboxInstruction.MAC > MAC_NOP && xboxInstruction.MAC <= MAC_ARL) {
-				str = VSH_MAC_HLSL[xboxInstruction.MAC];
-			}
+			str = VSH_MAC_HLSL[xboxInstruction.MAC];
 		} else if (xboxInstruction.InstructionType == IMD_ILU) {
-			if (xboxInstruction.ILU > ILU_NOP) {
-				str = VSH_ILU_HLSL[xboxInstruction.ILU];
+			str = VSH_ILU_HLSL[xboxInstruction.ILU];
+		}
+
+		assert(!str.empty());
+		hlsl << "\n  " << str << "("; // opcode
+		OutputHlsl(hlsl, xboxInstruction.Output);
+		for (int i = 0; i < 3; i++) {
+			if (xboxInstruction.Parameters[i].Active) {
+				hlsl << ", ";
+				ParameterHlsl(hlsl, xboxInstruction.Parameters[i], xboxInstruction.IndexesWithA0_X);
 			}
 		}
 
-		if (!str.empty()) {
-			hlsl << "\n  " << str << "("; // opcode
-			OutputHlsl(hlsl, xboxInstruction.Output);
-			for (int i = 0; i < 3; i++) {
-				if (xboxInstruction.Parameters[i].Active) {
-					hlsl << ", ";
-					ParameterHlsl(hlsl, xboxInstruction.Parameters[i]);
-				}
-			}
-
-			hlsl << ");";
-		}
+		hlsl << ");";
 	}
 }
 
