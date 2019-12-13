@@ -986,7 +986,7 @@ typedef DWORD X_VERTEXSHADERCONSTANTMODE;
 #define X_D3DSCM_RESERVED_CONSTANT_SCALE -38 // Becomes 58 after correction, contains Scale v
 #define X_D3DSCM_RESERVED_CONSTANT_OFFSET -37 // Becomes 59 after correction, contains Offset
 
-#define X_D3DSCM_CORRECTION                 96 // Add 96 to arrive at the range 0..191 (instead of 96..95)
+#define X_D3DSCM_CORRECTION                 96 // Add 96 to arrive at the range 0..191 (instead of -96..95)
 #define X_D3DVS_CONSTREG_COUNT              192
 
 // Special Registers, used to pass additional information to the shaders

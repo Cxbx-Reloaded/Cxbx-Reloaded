@@ -22,15 +22,18 @@ struct VS_OUTPUT
 	float4 oT3  : TEXCOORD3; // Texture coordinate set 3
 };
 
+#define X_D3DSCM_CORRECTION                 96 // Add 96 to arrive at the range 0..191 (instead of -96..95)
+#define X_D3DVS_CONSTREG_COUNT              192
+
 // Xbox constant registers
-extern uniform float4 c[192] : register(c0);
+uniform float4 C[X_D3DVS_CONSTREG_COUNT] : register(c0);
 
 // Vertex input overrides for SetVertexData4f support
-extern float4 vOverrideValue[16]  : register(c192);
-extern float4 vOverridePacked[4]  : register(c208);
+uniform float4 vOverrideValue[16]  : register(c192);
+uniform float4 vOverridePacked[4]  : register(c208);
 
-extern float4  xboxViewportScale   : register(c212);
-extern float4  xboxViewportOffset  : register(c213);
+uniform float4 xboxViewportScale   : register(c212);
+uniform float4 xboxViewportOffset  : register(c213);
 
 // Overloaded casts, assuring all inputs are treated as float4
 float4 _tof4(float  src) { return float4(src, src, src, src); }
@@ -39,6 +42,20 @@ float4 _tof4(float3 src) { return src.xyzz; }
 float4 _tof4(float4 src) { return src; }
 float4 _ssss(float s)    { return float4(s, s, s, s); } // a scalar output replicated across a 4-component vector
 #define _scalar(src) _tof4(src).x /* a scalar input */
+
+float4 c(int register_number)
+{
+	// Map Xbox [-96, 95] to Host [0, 191]
+	// Account for Xbox's negative constant indexes
+    register_number += X_D3DSCM_CORRECTION;
+    if (register_number < 0)
+        return 0;
+    
+    if (register_number >= X_D3DVS_CONSTREG_COUNT) // X_D3DVS_CONSTREG_COUNT
+        return 0;
+
+    return C[register_number];
+}
 
 // http://xboxdevwiki.net/NV2A/Vertex_Shader
 // https://www.khronos.org/registry/OpenGL/extensions/NV/NV_vertex_program.txt

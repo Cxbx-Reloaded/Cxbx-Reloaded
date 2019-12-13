@@ -1601,7 +1601,9 @@ static void OutputHlsl(std::stringstream& hlsl, VSH_IMD_OUTPUT& dest)
 
 	switch (dest.Type) {
 	case IMD_OUTPUT_C:
-		hlsl << "c[" << dest.Address << "]";
+		// Access the HLSL capital C[] constants array, with the index bias applied :
+		// TODO : Avoid out-of-bound writes (perhaps writing to a reserverd index?)
+		hlsl << "C[" << dest.Address + X_D3DSCM_CORRECTION << "]";
 		LOG_TEST_CASE("Vertex shader writes to constant table");
 		break;
 	case IMD_OUTPUT_R:
@@ -1647,18 +1649,19 @@ static void ParameterHlsl(std::stringstream& hlsl, VSH_IMD_PARAMETER& paramMeta)
 
 	int register_number = param.Address;
 	if (param.ParameterType == PARAM_C) {
-		// Map Xbox [-96, 95] to Host [0, 191]
-		// Account for Xbox's negative constant indexes
-		register_number += 96;
+		// Access constant registers through our HLSL c() function,
+		// which allows dumping negative indices (like Xbox shaders),
+		// and which returns zero when out-of-bounds indices are passed in:
 		if (paramMeta.IndexesWithA0_X) {
-			// Only display the offset if it's not 0.
-			if (register_number != 0) {
-				hlsl << "c[a0.x+" << register_number << "]";
+			if (register_number == 0) {
+				hlsl << "c(a0.x)"; // Hide the offset if it's 0
+			} else if (register_number < 0) {
+				hlsl << "c(a0.x" << register_number << ")"; // minus is part of the offset
 			} else {
-				hlsl << "c[a0.x]";
+				hlsl << "c(a0.x+" << register_number << ")"; // show addition character
 			}
 		} else {
-			hlsl << "c[" << register_number << "]";
+			hlsl << "c(" << register_number << ")";
 		}
 	} else {
 		hlsl << RegisterName[param.ParameterType] << register_number;
