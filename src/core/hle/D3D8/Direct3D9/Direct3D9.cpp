@@ -2846,7 +2846,7 @@ void Direct3D_CreateDevice_Start
     // Disable multisampling for now, this fixes an issue where GTA3 only renders to half-screen
     // TODO: Find a better way of fixing this, we cannot just create larger backbuffers as it breaks
     // many games, despite working in the dashboard
-    pPresentationParameters->MultiSampleType = XTL::X_D3DMULTISAMPLE_NONE;
+	pPresentationParameters->MultiSampleType = XTL::X_D3DMULTISAMPLE_NONE;
 
 	// create default device *before* calling Xbox Direct3D_CreateDevice trampline
 	// to avoid hitting EMUPATCH'es that need a valid g_pD3DDevice
@@ -3845,16 +3845,25 @@ void GetViewPortOffsetAndScale(float (&vOffset)[4], float(&vScale)[4])
 			break;
 	}
 
+	// Xbox correct values?
+	xOffset = xOffset + (1.0f / 32.0f);
+	yOffset = yOffset + (1.0f / 32.0f);
+	xScale = xScale * ViewPort.Width;
+	yScale = yScale * ViewPort.Height;
 
-	// Offset with OGL pixel correction (?) TODO verify
-	vOffset[0] = xOffset + (2.0f / ViewPort.Width);
-	vOffset[1] = yOffset + (2.0f / ViewPort.Height);
+	// HACK: Add a host correction factor to these values
+	// So that after we reverse the screenspace transformation
+	// Pre-transformed 2d geometry is in the same space as the 3d geometry...?
+
+	// Offset with a host correction
+	vOffset[0] = xOffset + (0.5 * ViewPort.Width / g_RenderScaleFactor);
+	vOffset[1] = yOffset + (0.5 * ViewPort.Height / g_RenderScaleFactor);
 	vOffset[2] = 0; //offsetZ;
 	vOffset[3] = 0.0f;
 
-	// Scale
-	vScale[0] = xScale * ViewPort.Width;
-	vScale[1] = yScale * ViewPort.Height;
+	// Scale with a host correction
+	vScale[0] = xScale * (1.0f / (2.0f * g_RenderScaleFactor));
+	vScale[1] = yScale * (1.0f / (-2.0f * g_RenderScaleFactor));
 	vScale[2] = scaleZ; // ?
 	vScale[3] = 1.0f; // ?
 }
