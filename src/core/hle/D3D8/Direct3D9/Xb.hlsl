@@ -123,7 +123,11 @@ float4 _sge(float4 src0, float4 src1)
 }
 
 // 2.14.1.10.18  DPH: Homogeneous Dot Product
-#define x_dph(dest, mask, src0, src1) dest.mask = _ssss(dot(float4(_tof4(src0).xyz, 1), _tof4(src1)) + src1.w).mask
+#define x_dph(dest, mask, src0, src1) dest.mask = _ssss(_dph(_tof4(src0), _tof4(src1))).mask
+float _dph(float4 src0, float4 src1)
+{
+	return dot(src0.xyz, src1.xyz) + src1.w;
+}
 
 // Xbox ILU Functions
 
