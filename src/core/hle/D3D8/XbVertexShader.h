@@ -30,10 +30,11 @@
 #include "core\hle\D3D8\XbD3D8Types.h" // for X_VSH_MAX_ATTRIBUTES
 
 // Host vertex shader counts
-#define VSH_MAX_INTERMEDIATE_COUNT     1024 // The maximum number of intermediate format slots
 #define VSH_VS11_MAX_INSTRUCTION_COUNT 128
 #define VSH_VS2X_MAX_INSTRUCTION_COUNT 256
 #define VSH_VS30_MAX_INSTRUCTION_COUNT 512
+
+#define VSH_MAX_INTERMEDIATE_COUNT (X_VSH_MAX_INSTRUCTION_COUNT * 3) // The maximum number of shader function slots
 
 typedef struct _CxbxVertexShaderStreamElement
 {

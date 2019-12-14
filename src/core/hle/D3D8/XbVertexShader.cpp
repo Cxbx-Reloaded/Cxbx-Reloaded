@@ -58,9 +58,6 @@ typedef enum _VSH_SWIZZLE
 }
 VSH_SWIZZLE;
 
-typedef DWORD DxbxMask,
-*PDxbxMask;
-
 #define MASK_X 0x008
 #define MASK_Y 0x004
 #define MASK_Z 0x002
@@ -210,7 +207,7 @@ VSH_MAC;
 typedef struct _VSH_PARAMETER
 {
     VSH_PARAMETER_TYPE  ParameterType;   // Parameter type, R, V or C
-    boolean             Neg;             // TRUE if negated, FALSE if not
+    bool                Neg;             // true if negated, false if not
     VSH_SWIZZLE         Swizzle[4];      // The four swizzles
     int16_t             Address;         // Register address
 }
@@ -241,8 +238,8 @@ typedef struct _VSH_SHADER_INSTRUCTION
     VSH_PARAMETER A;
     VSH_PARAMETER B;
     VSH_PARAMETER C;
-    boolean       a0x;
-    boolean       Final;
+    bool          a0x;
+    bool          Final;
 }
 VSH_SHADER_INSTRUCTION;
 
@@ -263,7 +260,7 @@ VSH_IMD_OUTPUT;
 
 typedef struct _VSH_IMD_PARAMETER
 {
-    boolean         Active;
+    bool            Active;
     VSH_PARAMETER   Parameter;
 }
 VSH_IMD_PARAMETER;
@@ -279,15 +276,15 @@ typedef struct _VSH_INTERMEDIATE_FORMAT
 	// The address register, designated as a0.x, may be used as signed
 	// integer offset in relative addressing into the constant register file.
 	//     c[a0.x + n]
-	boolean         IndexesWithA0_X;
+	bool                     IndexesWithA0_X;
 }
 VSH_INTERMEDIATE_FORMAT;
 
 typedef struct _VSH_XBOX_SHADER
 {
-    XTL::X_VSH_SHADER_HEADER       ShaderHeader;
-    uint16_t                IntermediateCount;
-    VSH_INTERMEDIATE_FORMAT Intermediate[VSH_MAX_INTERMEDIATE_COUNT];
+    XTL::X_VSH_SHADER_HEADER ShaderHeader;
+    uint16_t                 IntermediateCount;
+    VSH_INTERMEDIATE_FORMAT  Intermediate[VSH_MAX_INTERMEDIATE_COUNT];
 }
 VSH_XBOX_SHADER;
 
@@ -302,16 +299,18 @@ void CxbxUpdateVertexShader(DWORD XboxVertexShaderHandle)
 }*/
 
 // Retrieves a number of bits in the instruction token
-static inline uint32_t VshGetFromToken(uint32_t *pShaderToken,
-                                  uint8_t SubToken,
-                                  uint8_t StartBit,
-                                  uint8_t BitLength)
+static inline uint32_t VshGetFromToken(
+	uint32_t *pShaderToken,
+    uint8_t SubToken,
+    uint8_t StartBit,
+    uint8_t BitLength)
 {
     return (pShaderToken[SubToken] >> StartBit) & ~(0xFFFFFFFF << BitLength);
 }
 
-static uint8_t VshGetField(uint32_t         *pShaderToken,
-                   VSH_FIELD_NAME FieldName)
+static uint8_t VshGetField(
+	uint32_t         *pShaderToken,
+    VSH_FIELD_NAME FieldName)
 {
 	// Used for xvu spec definition
 	static const struct {
@@ -375,8 +374,9 @@ static inline int16_t ConvertCRegister(const int16_t CReg)
     return ((((CReg >> 5) & 7) - 3) * 32) + (CReg & 31);
 }
 
-static void VshParseInstruction(uint32_t               *pShaderToken,
-                                VSH_SHADER_INSTRUCTION *pInstruction)
+static void VshParseInstruction(
+	uint32_t               *pShaderToken,
+    VSH_SHADER_INSTRUCTION *pInstruction)
 {
     // First get the instruction(s).
     pInstruction->ILU = (VSH_ILU)VshGetField(pShaderToken, FLD_ILU);
@@ -471,120 +471,89 @@ static void VshParseInstruction(uint32_t               *pShaderToken,
     pInstruction->Final = VshGetField(pShaderToken, FLD_FINAL);
 }
 
-static void VshAddParameter(VSH_PARAMETER     *pParameter,
-                            VSH_IMD_PARAMETER *pIntermediateParameter)
-{
-    pIntermediateParameter->Parameter = *pParameter;
-    pIntermediateParameter->Active    = TRUE;
-}
-
-static void VshAddParameters(VSH_SHADER_INSTRUCTION  *pInstruction,
-                             VSH_ILU                 ILU,
-                             VSH_MAC                 MAC,
-                             VSH_IMD_PARAMETER       *pParameters)
-{
-    uint8_t ParamCount = 0;
-
-    if(MAC >= MAC_MOV)
-    {
-        VshAddParameter(&pInstruction->A, &pParameters[ParamCount]);
-        ParamCount++;
-    }
-
-    if((MAC == MAC_MUL) || ((MAC >= MAC_MAD) && (MAC <= MAC_SGE)))
-    {
-        VshAddParameter(&pInstruction->B, &pParameters[ParamCount]);
-        ParamCount++;
-    }
-
-    if((ILU >= ILU_MOV) || (MAC == MAC_ADD) || (MAC == MAC_MAD))
-    {
-        VshAddParameter(&pInstruction->C, &pParameters[ParamCount]);
-        ParamCount++;
-    }
-}
-
-static void VshVerifyBufferBounds(VSH_XBOX_SHADER *pShader)
-{
-    if(pShader->IntermediateCount >= VSH_MAX_INTERMEDIATE_COUNT)
-    {
-        CxbxKrnlCleanup("Shader exceeds conversion buffer!");
-    }
-}
-
-static VSH_INTERMEDIATE_FORMAT *VshNewIntermediate(VSH_XBOX_SHADER *pShader)
-{
-    VshVerifyBufferBounds(pShader);
-
-    ZeroMemory(&pShader->Intermediate[pShader->IntermediateCount], sizeof(VSH_INTERMEDIATE_FORMAT));
-
-    return &pShader->Intermediate[pShader->IntermediateCount++];
-}
-
 static void VshAddIntermediateOpcode(
 	VSH_SHADER_INSTRUCTION* pInstruction,
-    VSH_XBOX_SHADER        *pShader,
+	VSH_XBOX_SHADER* pShader,
 	VSH_IMD_INSTRUCTION_TYPE instr_type,
-	int8_t mask)
+	VSH_IMD_OUTPUT_TYPE output_type,
+	int16_t output_address,
+	int8_t output_mask)
 {
-	int R = pInstruction->Output.RAddress;
-	// Test for paired opcodes
-	if ((pInstruction->MAC != MAC_NOP) && (pInstruction->ILU != ILU_NOP)) {
-		if (instr_type == IMD_ILU) {
-			// Paired ILU opcodes can only write to R1
-			R = 1;
-		} else if (R == 1) {
-			// Ignore paired MAC opcodes that write to R1
-			mask = 0;
-		}
-	}
-
-	if (mask > 0) {
-		VSH_INTERMEDIATE_FORMAT* pIntermediate = VshNewIntermediate(pShader);
-		pIntermediate->InstructionType = instr_type;
-		pIntermediate->MAC = instr_type == IMD_MAC ? pInstruction->MAC : MAC_NOP;
-		pIntermediate->ILU = instr_type == IMD_ILU ? pInstruction->ILU : ILU_NOP;
-
-		if (pIntermediate->MAC == MAC_ARL) {
-			pIntermediate->Output.Type = IMD_OUTPUT_A0X;
-			pIntermediate->Output.Address = 0;
-		} else {
-			pIntermediate->Output.Type = IMD_OUTPUT_R;
-			pIntermediate->Output.Address = R;
-		}
-
-		pIntermediate->Output.Mask = mask;
-		pIntermediate->IndexesWithA0_X = pInstruction->a0x;
-		VshAddParameters(pInstruction, pIntermediate->ILU, pIntermediate->MAC, pIntermediate->Parameters);
-	}
-
 	// Is the output mask set?
-	if (pInstruction->Output.OutputMask > 0) {
-		// Check if we must add a muxed opcode too
-		if ((uint8_t)(pInstruction->Output.OutputMux) == (uint8_t)instr_type) {
-			VSH_INTERMEDIATE_FORMAT* pMuxedIntermediate = VshNewIntermediate(pShader);
-			pMuxedIntermediate->InstructionType = instr_type;
-			pMuxedIntermediate->MAC = instr_type == IMD_MAC ? pInstruction->MAC : MAC_NOP;
-			pMuxedIntermediate->ILU = instr_type == IMD_ILU ? pInstruction->ILU : ILU_NOP;
-			pMuxedIntermediate->Output.Type = pInstruction->Output.OutputType == OUTPUT_C ? IMD_OUTPUT_C : IMD_OUTPUT_O;
-			pMuxedIntermediate->Output.Address = pInstruction->Output.OutputAddress;
-			pMuxedIntermediate->Output.Mask = pInstruction->Output.OutputMask;
-			pMuxedIntermediate->IndexesWithA0_X = pInstruction->a0x;
-			VshAddParameters(pInstruction, pMuxedIntermediate->ILU, pMuxedIntermediate->MAC, pMuxedIntermediate->Parameters);
-		}
+	if (output_mask == 0) {
+		return;
+	}
+
+	if(pShader->IntermediateCount >= VSH_MAX_INTERMEDIATE_COUNT) {
+		CxbxKrnlCleanup("Shader exceeds conversion buffer!");
+	}
+
+	VSH_MAC MAC = (instr_type == IMD_MAC) ? pInstruction->MAC : MAC_NOP;
+	VSH_ILU ILU = (instr_type == IMD_ILU) ? pInstruction->ILU : ILU_NOP;
+	VSH_INTERMEDIATE_FORMAT* pIntermediate = &pShader->Intermediate[pShader->IntermediateCount++];
+
+	pIntermediate->InstructionType = instr_type;
+	pIntermediate->MAC = MAC;
+	pIntermediate->ILU = ILU;
+	pIntermediate->Output.Type = output_type;
+	pIntermediate->Output.Address = output_address;
+	pIntermediate->Output.Mask = output_mask;
+	pIntermediate->IndexesWithA0_X = pInstruction->a0x;
+
+	// Parameters[0].Active will always be set, but [1] and [2] may not, so reset them:
+	pIntermediate->Parameters[1].Active = false;
+	pIntermediate->Parameters[2].Active = false;
+	uint8_t ParamCount = 0;
+    if(MAC >= MAC_MOV) {
+		pIntermediate->Parameters[ParamCount].Parameter = pInstruction->A;
+		pIntermediate->Parameters[ParamCount++].Active = true;
+    }
+
+    if((MAC == MAC_MUL) || ((MAC >= MAC_MAD) && (MAC <= MAC_SGE))) {
+		pIntermediate->Parameters[ParamCount].Parameter = pInstruction->B;
+		pIntermediate->Parameters[ParamCount++].Active = true;
+	}
+
+    if((ILU >= ILU_MOV) || (MAC == MAC_ADD) || (MAC == MAC_MAD)) {
+		pIntermediate->Parameters[ParamCount].Parameter = pInstruction->C;
+		pIntermediate->Parameters[ParamCount++].Active = true;
 	}
 }
 
-static void VshConvertToIntermediate(VSH_SHADER_INSTRUCTION *pInstruction,
-                                     VSH_XBOX_SHADER        *pShader)
+static void VshConvertToIntermediate(
+	VSH_SHADER_INSTRUCTION *pInstruction,
+    VSH_XBOX_SHADER        *pShader)
 {
+	// Test for paired opcodes
+	bool bIsPaired = (pInstruction->MAC != MAC_NOP) && (pInstruction->ILU != ILU_NOP);
+	VSH_IMD_OUTPUT_TYPE OutputType2 = pInstruction->Output.OutputType == OUTPUT_C ? IMD_OUTPUT_C : IMD_OUTPUT_O;
+
+	// Check if there's a MAC opcode
 	if (pInstruction->MAC > MAC_NOP && pInstruction->MAC <= MAC_ARL) {
-		int8_t mask = pInstruction->MAC == MAC_ARL ? MASK_X : pInstruction->Output.MACRMask;
-		VshAddIntermediateOpcode(pInstruction, pShader, IMD_MAC, mask);
+		if (bIsPaired && pInstruction->Output.RAddress == 1) {
+			// Ignore paired MAC opcodes that write to R1
+		} else {
+			if (pInstruction->MAC == MAC_ARL) {
+				VshAddIntermediateOpcode(pInstruction, pShader, IMD_MAC, IMD_OUTPUT_A0X, 0, MASK_X);
+			} else {
+				VshAddIntermediateOpcode(pInstruction, pShader, IMD_MAC, IMD_OUTPUT_R, pInstruction->Output.RAddress, pInstruction->Output.MACRMask);
+			}
+		}
+
+		// Check if we must add a muxed MAC opcode as well
+		if (pInstruction->Output.OutputMux == OMUX_MAC) {
+			VshAddIntermediateOpcode(pInstruction, pShader, IMD_MAC, OutputType2, pInstruction->Output.OutputAddress, pInstruction->Output.OutputMask);
+		}
 	}
 
+	// Check if there's an ILU opcode
 	if (pInstruction->ILU != ILU_NOP) {
-		VshAddIntermediateOpcode(pInstruction, pShader, IMD_ILU, pInstruction->Output.ILURMask);
+		// Paired ILU opcodes will only write to R1
+		VshAddIntermediateOpcode(pInstruction, pShader, IMD_ILU, IMD_OUTPUT_R, bIsPaired ? 1 : pInstruction->Output.RAddress, pInstruction->Output.ILURMask);
+		// Check if we must add a muxed ILU opcode as well
+		if (pInstruction->Output.OutputMux == OMUX_ILU) {
+			VshAddIntermediateOpcode(pInstruction, pShader, IMD_ILU, OutputType2, pInstruction->Output.OutputAddress, pInstruction->Output.OutputMask);
+		}
 	}
 }
 
@@ -1001,8 +970,8 @@ private:
 
 			// new stream
 			pCurrentVertexShaderStreamInfo = &(pVertexShaderInfoToSet->VertexStreams[StreamNumber]);
-			pCurrentVertexShaderStreamInfo->NeedPatch = FALSE;
-			pCurrentVertexShaderStreamInfo->DeclPosition = FALSE;
+			pCurrentVertexShaderStreamInfo->NeedPatch = false;
+			pCurrentVertexShaderStreamInfo->DeclPosition = false;
 			pCurrentVertexShaderStreamInfo->CurrentStreamNumber = 0;
 			pCurrentVertexShaderStreamInfo->HostVertexStride = 0;
 			pCurrentVertexShaderStreamInfo->NumberOfVertexElements = 0;
@@ -1019,7 +988,7 @@ private:
 		UINT XboxVertexElementDataType,
 		UINT XboxVertexElementByteSize,
 		UINT HostVertexElementByteSize,
-		BOOL NeedPatching)
+		bool NeedPatching)
 	{
 		CxbxVertexShaderStreamElement* pCurrentElement = &(pCurrentVertexShaderStreamInfo->VertexElements[pCurrentVertexShaderStreamInfo->NumberOfVertexElements]);
 		pCurrentElement->XboxType = XboxVertexElementDataType;
@@ -1049,7 +1018,7 @@ private:
 
 		// Register a 'skip' element, so that Xbox data will be skipped
 		// without increasing host stride - this does require patching :
-		VshConvert_RegisterVertexElement(XTL::X_D3DVSDT_NONE, SkipBytesCount, /*HostSize=*/0, /*NeedPatching=*/TRUE);
+		VshConvert_RegisterVertexElement(XTL::X_D3DVSDT_NONE, SkipBytesCount, /*HostSize=*/0, /*NeedPatching=*/true);
 	}
 
 	void VshConvertToken_STREAMDATA_SKIP(DWORD *pXboxToken)
@@ -1067,7 +1036,7 @@ private:
 	void VshConvertToken_STREAMDATA_REG(DWORD *pXboxToken)
 	{
 		DWORD VertexRegister = VshGetVertexRegister(*pXboxToken);
-		BOOL NeedPatching = FALSE;
+		bool NeedPatching = false;
 		BYTE Index;
 		BYTE HostVertexRegisterType;
 
@@ -1132,7 +1101,7 @@ private:
 				HostVertexElementByteSize = 1 * sizeof(FLOAT);
 			}
 			XboxVertexElementByteSize = 1 * sizeof(XTL::SHORT);
-			NeedPatching = TRUE;
+			NeedPatching = true;
 			break;
 		case XTL::X_D3DVSDT_NORMSHORT2: // 0x21:
 			if (g_D3DCaps.DeclTypes & D3DDTCAPS_SHORT2N) {
@@ -1145,7 +1114,7 @@ private:
 				HostVertexElementDataType = D3DDECLTYPE_FLOAT2;
 				HostVertexElementByteSize = 2 * sizeof(FLOAT);
 				XboxVertexElementByteSize = 2 * sizeof(XTL::SHORT);
-				NeedPatching = TRUE;
+				NeedPatching = true;
 			}
 			break;
 		case XTL::X_D3DVSDT_NORMSHORT3: // 0x31:
@@ -1159,7 +1128,7 @@ private:
 				HostVertexElementByteSize = 3 * sizeof(FLOAT);
 			}
 			XboxVertexElementByteSize = 3 * sizeof(XTL::SHORT);
-			NeedPatching = TRUE;
+			NeedPatching = true;
 			break;
 		case XTL::X_D3DVSDT_NORMSHORT4: // 0x41:
 			if (g_D3DCaps.DeclTypes & D3DDTCAPS_SHORT4N) {
@@ -1172,26 +1141,26 @@ private:
 				HostVertexElementDataType = D3DDECLTYPE_FLOAT4;
 				HostVertexElementByteSize = 4 * sizeof(FLOAT);
 				XboxVertexElementByteSize = 4 * sizeof(XTL::SHORT);
-				NeedPatching = TRUE;
+				NeedPatching = true;
 			}
 			break;
 		case XTL::X_D3DVSDT_NORMPACKED3: // 0x16:
 			HostVertexElementDataType = D3DDECLTYPE_FLOAT3;
 			HostVertexElementByteSize = 3 * sizeof(FLOAT);
 			XboxVertexElementByteSize = 1 * sizeof(XTL::DWORD);
-			NeedPatching = TRUE;
+			NeedPatching = true;
 			break;
 		case XTL::X_D3DVSDT_SHORT1: // 0x15:
 			HostVertexElementDataType = D3DDECLTYPE_SHORT2;
 			HostVertexElementByteSize = 2 * sizeof(SHORT);
 			XboxVertexElementByteSize = 1 * sizeof(XTL::SHORT);
-			NeedPatching = TRUE;
+			NeedPatching = true;
 			break;
 		case XTL::X_D3DVSDT_SHORT3: // 0x35:
 			HostVertexElementDataType = D3DDECLTYPE_SHORT4;
 			HostVertexElementByteSize = 4 * sizeof(SHORT);
 			XboxVertexElementByteSize = 3 * sizeof(XTL::SHORT);
-			NeedPatching = TRUE;
+			NeedPatching = true;
 			break;
 		case XTL::X_D3DVSDT_PBYTE1: // 0x14:
 			if (g_D3DCaps.DeclTypes & D3DDTCAPS_UBYTE4N) {
@@ -1204,7 +1173,7 @@ private:
 				HostVertexElementByteSize = 1 * sizeof(FLOAT);
 			}
 			XboxVertexElementByteSize = 1 * sizeof(XTL::BYTE);
-			NeedPatching = TRUE;
+			NeedPatching = true;
 			break;
 		case XTL::X_D3DVSDT_PBYTE2: // 0x24:
 			if (g_D3DCaps.DeclTypes & D3DDTCAPS_UBYTE4N) {
@@ -1217,7 +1186,7 @@ private:
 				HostVertexElementByteSize = 2 * sizeof(FLOAT);
 			}
 			XboxVertexElementByteSize = 2 * sizeof(XTL::BYTE);
-			NeedPatching = TRUE;
+			NeedPatching = true;
 			break;
 		case XTL::X_D3DVSDT_PBYTE3: // 0x34:
 			if (g_D3DCaps.DeclTypes & D3DDTCAPS_UBYTE4N) {
@@ -1230,7 +1199,7 @@ private:
 				HostVertexElementByteSize = 3 * sizeof(FLOAT);
 			}
 			XboxVertexElementByteSize = 3 * sizeof(XTL::BYTE);
-			NeedPatching = TRUE;
+			NeedPatching = true;
 			break;
 		case XTL::X_D3DVSDT_PBYTE4: // 0x44:
 			// Test-case : Panzer
@@ -1244,14 +1213,14 @@ private:
 				HostVertexElementDataType = D3DDECLTYPE_FLOAT4;
 				HostVertexElementByteSize = 4 * sizeof(FLOAT);
 				XboxVertexElementByteSize = 4 * sizeof(XTL::BYTE);
-				NeedPatching = TRUE;
+				NeedPatching = true;
 			}
 			break;
 		case XTL::X_D3DVSDT_FLOAT2H: // 0x72:
 			HostVertexElementDataType = D3DDECLTYPE_FLOAT4;
 			HostVertexElementByteSize = 4 * sizeof(FLOAT);
 			XboxVertexElementByteSize = 3 * sizeof(FLOAT);
-			NeedPatching = TRUE;
+			NeedPatching = true;
 			break;
 		case XTL::X_D3DVSDT_NONE: // 0x02:
 			// No host element data, so no patching
@@ -1477,7 +1446,7 @@ extern void FreeVertexDynamicPatch(CxbxVertexShader *pVertexShader)
 }
 
 // Checks for failed vertex shaders, and shaders that would need patching
-boolean VshHandleIsValidShader(DWORD XboxVertexShaderHandle)
+bool VshHandleIsValidShader(DWORD XboxVertexShaderHandle)
 {
 #if 0
 	//printf( "VS = 0x%.08X\n", XboxVertexShaderHandle );
@@ -1486,7 +1455,7 @@ boolean VshHandleIsValidShader(DWORD XboxVertexShaderHandle)
     if (pCxbxVertexShader) {
         if (pCxbxVertexShader->XboxStatus != 0)
         {
-            return FALSE;
+            return false;
         }
         /*
         for (uint32 i = 0; i < pCxbxVertexShader->VertexShaderInfo.NumberOfVertexStreams; i++)
@@ -1495,13 +1464,13 @@ boolean VshHandleIsValidShader(DWORD XboxVertexShaderHandle)
             {
                 // Just for caching purposes
                 pCxbxVertexShader->XboxStatus = 0x80000001;
-                return FALSE;
+                return false;
             }
         }
         */
     }
 #endif
-    return TRUE;
+    return true;
 }
 
 extern boolean IsValidCurrentShader(void)
@@ -1780,7 +1749,7 @@ extern HRESULT EmuRecompileVshFunction
 {
 	XTL::X_VSH_SHADER_HEADER* pXboxVertexShaderHeader = (XTL::X_VSH_SHADER_HEADER*)pXboxFunction;
 	DWORD* pToken;
-	boolean             EOI = false;
+	bool             EOI = false;
 	VSH_XBOX_SHADER* pShader = (VSH_XBOX_SHADER*)calloc(1, sizeof(VSH_XBOX_SHADER));
 	ID3DBlob* pErrors = nullptr;
 	HRESULT             hRet = 0;
