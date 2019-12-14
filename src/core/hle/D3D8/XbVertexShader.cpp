@@ -544,13 +544,15 @@ static void VshAddIntermediateOpcode(
 		pIntermediate->InstructionType = instr_type;
 		pIntermediate->MAC = instr_type == IMD_MAC ? pInstruction->MAC : MAC_NOP;
 		pIntermediate->ILU = instr_type == IMD_ILU ? pInstruction->ILU : ILU_NOP;
-		if (pInstruction->MAC == MAC_ARL) {
+
+		if (pIntermediate->MAC == MAC_ARL) {
 			pIntermediate->Output.Type = IMD_OUTPUT_A0X;
 			pIntermediate->Output.Address = 0;
 		} else {
 			pIntermediate->Output.Type = IMD_OUTPUT_R;
 			pIntermediate->Output.Address = R;
 		}
+
 		pIntermediate->Output.Mask = mask;
 		pIntermediate->IndexesWithA0_X = pInstruction->a0x;
 		VshAddParameters(pInstruction, pIntermediate->ILU, pIntermediate->MAC, pIntermediate->Parameters);
