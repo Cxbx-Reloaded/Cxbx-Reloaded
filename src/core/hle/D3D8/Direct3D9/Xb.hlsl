@@ -256,7 +256,7 @@ VS_OUTPUT main(const VS_INPUT xIn)
 
 	// Initialize input registers from the vertex buffer
 	// Or use an override value set with SetVertexData4f
-	for(uint i = 0; i < 16; i++){
+	for(int i = 0; i < 16; i++){
 		v[i] = vOverride[i] ? vOverrideValue[i] : xIn.v[i];
 	}
 
