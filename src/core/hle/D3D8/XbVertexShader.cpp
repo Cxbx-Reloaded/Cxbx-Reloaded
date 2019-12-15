@@ -1788,7 +1788,7 @@ extern HRESULT EmuRecompileVshFunction
 
 	if (SUCCEEDED(hRet)) {
 		static std::string hlsl_template =
-			#include "core\hle\D3D8\Direct3D9\Xb.hlsl" // Note : This included .hlsl defines a raw string
+			#include "core\hle\D3D8\Direct3D9\CxbxVertexShaderTemplate.hlsl" // Note : This included .hlsl defines a raw string
 			;
 
 		auto hlsl_stream = std::stringstream();

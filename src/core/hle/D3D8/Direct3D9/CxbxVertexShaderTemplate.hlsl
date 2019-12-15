@@ -57,6 +57,23 @@ float4 c(int register_number)
     return C[register_number];
 }
 
+// Due to rounding differences with the Xbox (and increased precision on PC?)
+// some titles produce values just below the threshold of the next integer.
+// We can add a small bias to make sure it's bumped over the threshold
+// Test Case: Azurik (divides indexes 755, then scales them back in the vertex shader)
+#define BIAS 0.0001
+// TODO : Use 0.001 like xqemu?
+
+// 2.14.1.11  Vertex Program Floating Point Requirements
+// The floor operations used by the ARL and EXP instructions must
+// operate identically.  Specifically, the EXP instruction's floor(t.x)
+// intermediate result must exactly match the integer stored in the
+// address register by the ARL instruction.
+float x_floor(float src)
+{
+	return floor(src + BIAS);
+}
+
 // http://xboxdevwiki.net/NV2A/Vertex_Shader
 // https://www.khronos.org/registry/OpenGL/extensions/NV/NV_vertex_program.txt
 // https://www.khronos.org/registry/OpenGL/extensions/NV/NV_vertex_program1_1.txt
@@ -65,11 +82,7 @@ float4 c(int register_number)
 
 // 2.14.1.10.1  ARL: Address Register Load
 // The address register should be floored
-// Due to rounding differences with the Xbox (and increased precision on PC?)
-// some titles produce values just below the threshold of the next integer.
-// We can add a small bias to make sure it's bumped over the threshold
-// Test Case: Azurik (divides indexes 755, then scales them back in the vertex shader)
-#define x_arl(dest, mask, src0) dest.mask = floor(_tof4(src0).x + 0.0001).mask
+#define x_arl(dest, mask, src0) dest.mask = x_floor(_tof4(src0).x).mask
 
 // 2.14.1.10.2  MOV: Move
 #define x_mov(dest, mask, src0) dest.mask = (_tof4(src0)).mask
@@ -132,22 +145,38 @@ float _dph(float4 src0, float4 src1)
 // Xbox ILU Functions
 
 // 2.14.1.10.6  RCP: Reciprocal
-#define x_rcp(dest, mask, src0) dest.mask = _ssss(1 / _scalar(src0)).mask
-// TODO : #define x_rcp(dest, mask, src0) dest.mask = (_scalar(src0) == 0) ? 1.#INF : (1 / _scalar(src0))
+#define x_rcp(dest, mask, src0) dest.mask = _ssss(_rcp(_scalar(src0))).mask
+float _rcp(float src)
+{
+#if 0 // TODO : Enable
+	if (src == 1) return 1;
+	if (src == 0) return 1.#INF;
+#endif
+	return 1/ src;
+}
 
 // 2.14.1.10.7  RSQ: Reciprocal Square Root
-#define x_rsq(dest, mask, src0) dest.mask = _ssss(rsqrt(abs(_scalar(src0)))).mask
+#define x_rsq(dest, mask, src0) dest.mask = _ssss(_rsq(_scalar(src0))).mask
+float _rsq(float src)
+{
+	float a = abs(src);
+#if 0 // TODO : Enable
+	if (a == 1) return 1;
+	if (a == 0) return 1.#INF;
+#endif
+	return rsqrt(a);
+}
 
 // 2.14.1.10.15  EXP: Exponential Base 2
 #define x_expp(dest, mask, src0) dest.mask = _expp(_scalar(src0)).mask
-float4 _expp(float input)
+float4 _expp(float src)
 {
-    float base = floor(input);
+    float floor_src = x_floor(src);
 
     float4 dest;
-    dest.x = exp2(base);
-    dest.y = input - base; // Was : frac(input)
-    dest.z = exp2(input);
+    dest.x = exp2(floor_src);
+    dest.y = src - floor_src;
+    dest.z = exp2(src);
     dest.w = 1;
 
 	return dest;
@@ -155,16 +184,34 @@ float4 _expp(float input)
 
 // 2.14.1.10.16  LOG: Logarithm Base 2
 #define x_logp(dest, mask, src0) dest.mask = _logp(_scalar(src0)).mask
-float4 _logp(float input)
+float4 _logp(float src)
 {
-	float exponent = floor(log2(input));
-
     float4 dest;
-    dest.x = exponent;
-    dest.y = 1 / exp2(exponent); // mantissa
-    dest.z = log2(input);
-    dest.w = 1;
-    
+#if 0 // TODO : Enable
+	float t = abs(src);
+	if (t != 0) {
+		if (t == 1.#INF) {
+			dest.x = 1.#INF;
+			dest.y = 1;
+			dest.z = 1.#INF;
+		} else {
+#endif
+			float exponent = floor(log2(src)); // TODO : x_floor
+			float mantissa = 1 / exp2(exponent);
+			float z = log2(src); // TODO : exponent + log2(mantissa); // TODO : Or log2(t)?
+			// TODO : float exponent = frexp(src + BIAS, /*out*/mantissa);
+			dest.x = exponent;
+			dest.y = mantissa;
+			dest.z = z;
+#if 0
+		}
+	} else {
+		dest.x = -1.#INF;
+		dest.y = 1;
+		dest.z = -1.#INF;
+	}
+#endif
+    dest.w = 1;    
 	return dest;
 }
 
@@ -190,10 +237,10 @@ float4 _lit(float4 src0)
 
 // 2.14.1.10.19  RCC: Reciprocal Clamped
 #define x_rcc(dest, mask, src0) dest.mask = _ssss(_rcc(_scalar(src0))).mask
-float _rcc(float input)
+float _rcc(float src)
 {
 	// Calculate the reciprocal
-	float r = 1 / input;
+	float r = 1 / src;
 
 	// Clamp
 	return (r >= 0)

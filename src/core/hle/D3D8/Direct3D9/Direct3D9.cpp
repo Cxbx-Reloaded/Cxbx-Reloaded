@@ -3811,10 +3811,10 @@ void GetViewPortOffsetAndScale(float (&vOffset)[4], float(&vScale)[4])
 
 	// Default scale and offset.
 	// Multisample state will affect these
-	float xScale = 1;
-	float yScale = 1;
-	float xOffset = 0.5;
-	float yOffset = 0.5;
+	float xScale = 1.0f;
+	float yScale = 1.0f;
+	float xOffset = 0.5f;
+	float yOffset = 0.5f;
 
 	// MULTISAMPLE options have offset of 0
 	// Various sample sizes have various x and y scales
@@ -3824,21 +3824,21 @@ void GetViewPortOffsetAndScale(float (&vOffset)[4], float(&vScale)[4])
 		case XTL::X_D3DMULTISAMPLE_2_SAMPLES_MULTISAMPLE_QUINCUNX:
 		case XTL::X_D3DMULTISAMPLE_4_SAMPLES_MULTISAMPLE_LINEAR:
 		case XTL::X_D3DMULTISAMPLE_4_SAMPLES_MULTISAMPLE_GAUSSIAN:
-			xOffset = yOffset = 0;
+			xOffset = yOffset = 0.0f;
 			break;
 		case XTL::X_D3DMULTISAMPLE_2_SAMPLES_SUPERSAMPLE_HORIZONTAL_LINEAR:
-			xScale = 2;
+			xScale = 2.0f;
 			break;
 		case XTL::X_D3DMULTISAMPLE_2_SAMPLES_SUPERSAMPLE_VERTICAL_LINEAR:
-			yScale = 2;
+			yScale = 2.0f;
 			break;
 		case XTL::X_D3DMULTISAMPLE_4_SAMPLES_SUPERSAMPLE_LINEAR:
 		case XTL::X_D3DMULTISAMPLE_4_SAMPLES_SUPERSAMPLE_GAUSSIAN:
-			xScale = yScale = 2;
+			xScale = yScale = 2.0f;
 			break;
 		case XTL::X_D3DMULTISAMPLE_9_SAMPLES_MULTISAMPLE_GAUSSIAN:
 			xScale = yScale = 1.5f;
-			xOffset = yOffset = 0;
+			xOffset = yOffset = 0.0f;
 			break;
 		case XTL::X_D3DMULTISAMPLE_9_SAMPLES_SUPERSAMPLE_GAUSSIAN:
 			xScale = yScale = 3.0f;
@@ -3856,14 +3856,14 @@ void GetViewPortOffsetAndScale(float (&vOffset)[4], float(&vScale)[4])
 	// Pre-transformed 2d geometry is in the same space as the 3d geometry...?
 
 	// Offset with a host correction
-	vOffset[0] = xOffset + (0.5 * ViewPort.Width / g_RenderScaleFactor);
-	vOffset[1] = yOffset + (0.5 * ViewPort.Height / g_RenderScaleFactor);
-	vOffset[2] = 0; //offsetZ;
+	vOffset[0] = xOffset + (0.5f * (float)ViewPort.Width / (float)g_RenderScaleFactor);
+	vOffset[1] = yOffset + (0.5f * (float)ViewPort.Height / (float)g_RenderScaleFactor);
+	vOffset[2] = 0.0f; //offsetZ;
 	vOffset[3] = 0.0f;
 
 	// Scale with a host correction
-	vScale[0] = xScale * (1.0f / (2.0f * g_RenderScaleFactor));
-	vScale[1] = yScale * (1.0f / (-2.0f * g_RenderScaleFactor));
+	vScale[0] = xScale * (1.0f / ( 2.0f * (float)g_RenderScaleFactor));
+	vScale[1] = yScale * (1.0f / (-2.0f * (float)g_RenderScaleFactor));
 	vScale[2] = scaleZ; // ?
 	vScale[3] = 1.0f; // ?
 }
