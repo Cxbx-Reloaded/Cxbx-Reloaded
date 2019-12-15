@@ -162,7 +162,7 @@ float4 _logp(float input)
     float4 dest;
     dest.x = exponent;
     dest.y = 1 / exp2(exponent); // mantissa
-    dest.z = exponent + log2(input); // logResult
+    dest.z = log2(input);
     dest.w = 1;
     
 	return dest;
