@@ -45,476 +45,617 @@
 	LOG_CHECK_ENABLED(LOG_LEVEL::DEBUG) \
 		if(g_bPrintfOn) printf
 
+std::array<bool, 16> RegVIsPresentInDeclaration; // TODO : Scope this better than global
+
 // ****************************************************************************
 // * Vertex shader function recompiler
 // ****************************************************************************
 
-typedef enum _VSH_SWIZZLE
+class XboxVertexShaderDecoder
 {
-	SWIZZLE_X = 0,
-	SWIZZLE_Y,
-	SWIZZLE_Z,
-	SWIZZLE_W
-}
-VSH_SWIZZLE;
+private:
+	// Xbox Vertex SHader microcode types
 
-#define MASK_X 0x008
-#define MASK_Y 0x004
-#define MASK_Z 0x002
-#define MASK_W 0x001
-#define MASK_XYZ MASK_X | MASK_Y | MASK_Z
-#define MASK_XYZW MASK_X | MASK_Y | MASK_Z | MASK_W
-
-// Local types
-typedef enum _VSH_FIELD_NAME
-{
-    FLD_ILU = 0,
-    FLD_MAC,
-    FLD_CONST,
-    FLD_V,
-    // Input A
-    FLD_A_NEG,
-    FLD_A_SWZ_X,
-    FLD_A_SWZ_Y,
-    FLD_A_SWZ_Z,
-    FLD_A_SWZ_W,
-    FLD_A_R,
-    FLD_A_MUX,
-    // Input B
-    FLD_B_NEG,
-    FLD_B_SWZ_X,
-    FLD_B_SWZ_Y,
-    FLD_B_SWZ_Z,
-    FLD_B_SWZ_W,
-    FLD_B_R,
-    FLD_B_MUX,
-    // Input C
-    FLD_C_NEG,
-    FLD_C_SWZ_X,
-    FLD_C_SWZ_Y,
-    FLD_C_SWZ_Z,
-    FLD_C_SWZ_W,
-    FLD_C_R_HIGH,
-    FLD_C_R_LOW,
-    FLD_C_MUX,
-    // Output
-    FLD_OUT_MAC_MASK,
-    FLD_OUT_R,
-    FLD_OUT_ILU_MASK,
-    FLD_OUT_O_MASK,
-    FLD_OUT_ORB,
-    FLD_OUT_ADDRESS,
-    FLD_OUT_MUX,
-    // Relative addressing
-    FLD_A0X,
-    // Final instruction
-    FLD_FINAL
-}
-VSH_FIELD_NAME;
-
-typedef enum _VSH_OREG_NAME
-{
-	OREG_OPOS,    //  0
-	OREG_UNUSED1, //  1
-	OREG_UNUSED2, //  2
-	OREG_OD0,     //  3
-	OREG_OD1,     //  4
-	OREG_OFOG,    //  5
-	OREG_OPTS,    //  6
-	OREG_OB0,     //  7
-	OREG_OB1,     //  8
-	OREG_OT0,     //  9
-	OREG_OT1,     // 10
-	OREG_OT2,     // 11
-	OREG_OT3,     // 12
-	OREG_UNUSED3, // 13
-	OREG_UNUSED4, // 14
-	OREG_A0X      // 15 - all values of the 4 bits are used
-}
-VSH_OREG_NAME;
-
-typedef enum _VSH_OUTPUT_TYPE
-{
-    OUTPUT_C = 0,
-    OUTPUT_O
-}
-VSH_OUTPUT_TYPE;
-
-typedef enum _VSH_ARGUMENT_TYPE
-{
-    PARAM_UNKNOWN = 0,
-    PARAM_R,          // Temporary (scRatch) registers
-    PARAM_V,          // Vertex registers
-    PARAM_C,          // Constant registers, set by SetVertexShaderConstant
-    PARAM_O // = 0??
-}
-VSH_ARGUMENT_TYPE;
-
-typedef VSH_ARGUMENT_TYPE VSH_PARAMETER_TYPE; // Alias, to indicate difference between a parameter and a generic argument
-
-typedef enum _VSH_OUTPUT_MUX
-{
-    OMUX_MAC = 0,
-    OMUX_ILU
-}
-VSH_OUTPUT_MUX;
-
-typedef enum _VSH_IMD_OUTPUT_TYPE
-{
-    IMD_OUTPUT_C,
-    IMD_OUTPUT_R,
-    IMD_OUTPUT_O,
-    IMD_OUTPUT_A0X
-}
-VSH_IMD_OUTPUT_TYPE;
-
-// Dxbx note : ILU stands for 'Inverse Logic Unit' opcodes
-typedef enum _VSH_ILU
-{
-    ILU_NOP = 0,
-    ILU_MOV,
-    ILU_RCP,
-    ILU_RCC,
-    ILU_RSQ,
-    ILU_EXP,
-    ILU_LOG,
-    ILU_LIT // = 7 - all values of the 3 bits are used
-}
-VSH_ILU;
-
-// Dxbx note : MAC stands for 'Multiply And Accumulate' opcodes
-typedef enum _VSH_MAC
-{
-    MAC_NOP = 0,
-    MAC_MOV,
-    MAC_MUL,
-    MAC_ADD,
-    MAC_MAD,
-    MAC_DP3,
-    MAC_DPH,
-    MAC_DP4,
-    MAC_DST,
-    MAC_MIN,
-    MAC_MAX,
-    MAC_SLT,
-    MAC_SGE,
-    MAC_ARL
-	// ??? 14
-	// ??? 15 - 2 values of the 4 bits are undefined
-}
-VSH_MAC;
-
-typedef enum _VSH_IMD_INSTRUCTION_TYPE
-{
-    IMD_MAC,
-    IMD_ILU
-}
-VSH_IMD_INSTRUCTION_TYPE;
-
-typedef struct _VSH_IMD_OUTPUT
-{
-    VSH_IMD_OUTPUT_TYPE Type;
-    int16_t             Address;
-    int8_t              Mask;
-}
-VSH_IMD_OUTPUT;
-
-typedef struct _VSH_IMD_PARAMETER
-{
-    bool                Active;
-    VSH_PARAMETER_TYPE  ParameterType;   // Parameter type, R, V or C
-    bool                Neg;             // true if negated, false if not
-    VSH_SWIZZLE         Swizzle[4];      // The four swizzles
-    int16_t             Address;         // Register address
-}
-VSH_IMD_PARAMETER;
-
-typedef struct _VSH_INTERMEDIATE_FORMAT
-{
-    VSH_IMD_INSTRUCTION_TYPE InstructionType;
-    VSH_MAC                  MAC;
-    VSH_ILU                  ILU;
-    VSH_IMD_OUTPUT           Output;
-    VSH_IMD_PARAMETER        Parameters[3];
-	// There is only a single address register in Microsoft DirectX 8.0.
-	// The address register, designated as a0.x, may be used as signed
-	// integer offset in relative addressing into the constant register file.
-	//     c[a0.x + n]
-	bool                     IndexesWithA0_X;
-}
-VSH_INTERMEDIATE_FORMAT;
-
-typedef struct _VSH_XBOX_SHADER
-{
-    XTL::X_VSH_SHADER_HEADER ShaderHeader;
-    uint16_t                 IntermediateCount;
-    VSH_INTERMEDIATE_FORMAT  Intermediate[VSH_MAX_INTERMEDIATE_COUNT];
-}
-VSH_XBOX_SHADER;
-
-std::array<bool, 16> RegVIsPresentInDeclaration;
-
-/* TODO : map non-FVF Xbox vertex shader handle to CxbxVertexShader (a struct containing a host Xbox vertex shader handle and the original members)
-std::unordered_map<DWORD, CxbxVertexShader> g_CxbxVertexShaders;
-
-void CxbxUpdateVertexShader(DWORD XboxVertexShaderHandle)
-{
-	CxbxVertexShader &VertexShader = g_CxbxVertexShaders[XboxVertexShaderHandle];
-}*/
-
-// Retrieves a number of bits in the instruction token
-static inline uint32_t VshGetFromToken(
-	uint32_t *pShaderToken,
-    uint8_t SubToken,
-    uint8_t StartBit,
-    uint8_t BitLength)
-{
-    return (pShaderToken[SubToken] >> StartBit) & ~(0xFFFFFFFF << BitLength);
-}
-
-static uint8_t VshGetField(
-	uint32_t         *pShaderToken,
-    VSH_FIELD_NAME FieldName)
-{
-	// Used for xvu spec definition
-	static const struct {
-		uint8_t          SubToken;
-		uint8_t          StartBit;
-		uint8_t          BitLength;
-	} FieldMapping[/*VSH_FIELD_NAME*/] = {
-	// SubToken BitPos  BitSize
-		{  1,   25,     3 }, // FLD_ILU,              
-		{  1,   21,     4 }, // FLD_MAC,              
-		{  1,   13,     8 }, // FLD_CONST,            
-		{  1,    9,     4 }, // FLD_V,                
-		// Input A
-		{  1,    8,     1 }, // FLD_A_NEG,            
-		{  1,    6,     2 }, // FLD_A_SWZ_X,          
-		{  1,    4,     2 }, // FLD_A_SWZ_Y,          
-		{  1,    2,     2 }, // FLD_A_SWZ_Z,          
-		{  1,    0,     2 }, // FLD_A_SWZ_W,          
-		{  2,   28,     4 }, // FLD_A_R,              
-		{  2,   26,     2 }, // FLD_A_MUX,            
-		// Input B
-		{  2,   25,     1 }, // FLD_B_NEG,            
-		{  2,   23,     2 }, // FLD_B_SWZ_X,          
-		{  2,   21,     2 }, // FLD_B_SWZ_Y,          
-		{  2,   19,     2 }, // FLD_B_SWZ_Z,          
-		{  2,   17,     2 }, // FLD_B_SWZ_W,          
-		{  2,   13,     4 }, // FLD_B_R,              
-		{  2,   11,     2 }, // FLD_B_MUX,            
-		// Input C
-		{  2,   10,     1 }, // FLD_C_NEG,            
-		{  2,    8,     2 }, // FLD_C_SWZ_X,          
-		{  2,    6,     2 }, // FLD_C_SWZ_Y,          
-		{  2,    4,     2 }, // FLD_C_SWZ_Z,          
-		{  2,    2,     2 }, // FLD_C_SWZ_W,          
-		{  2,    0,     2 }, // FLD_C_R_HIGH,         
-		{  3,   30,     2 }, // FLD_C_R_LOW,          
-		{  3,   28,     2 }, // FLD_C_MUX,            
-		// Output
-		{  3,   24,     4 }, // FLD_OUT_MAC_MASK,   
-		{  3,   20,     4 }, // FLD_OUT_R,            
-		{  3,   16,     4 }, // FLD_OUT_ILU_MASK,
-		{  3,   12,     4 }, // FLD_OUT_O_MASK,
-		{  3,   11,     1 }, // FLD_OUT_ORB,          
-		{  3,    3,     8 }, // FLD_OUT_ADDRESS,      
-		{  3,    2,     1 }, // FLD_OUT_MUX,          
-		// Relative addressing
-		{  3,    1,     1 }, // FLD_A0X,              
-		// Final instruction
-		{  3,    0,     1 }  // FLD_FINAL,            
+	enum VSH_SWIZZLE {
+		SWIZZLE_X = 0,
+		SWIZZLE_Y,
+		SWIZZLE_Z,
+		SWIZZLE_W
 	};
 
-    return (uint8_t)(VshGetFromToken(pShaderToken,
-                                   FieldMapping[FieldName].SubToken,
-                                   FieldMapping[FieldName].StartBit,
-                                   FieldMapping[FieldName].BitLength));
-}
+	#define MASK_X 0x008
+	#define MASK_Y 0x004
+	#define MASK_Z 0x002
+	#define MASK_W 0x001
 
-// Converts the C register address to disassembly format
-static inline int16_t ConvertCRegister(const int16_t CReg)
-{
-    return ((((CReg >> 5) & 7) - 3) * 32) + (CReg & 31);
-}
+	enum VSH_OREG_NAME {
+		OREG_OPOS,    //  0
+		OREG_UNUSED1, //  1
+		OREG_UNUSED2, //  2
+		OREG_OD0,     //  3
+		OREG_OD1,     //  4
+		OREG_OFOG,    //  5
+		OREG_OPTS,    //  6
+		OREG_OB0,     //  7
+		OREG_OB1,     //  8
+		OREG_OT0,     //  9
+		OREG_OT1,     // 10
+		OREG_OT2,     // 11
+		OREG_OT3,     // 12
+		OREG_UNUSED3, // 13
+		OREG_UNUSED4, // 14
+		OREG_A0X      // 15 - all values of the 4 bits are used
+	};
 
-static void VshConvertIntermediateParam(VSH_IMD_PARAMETER& Param,
-	uint32_t* pShaderToken,
-	VSH_FIELD_NAME FLD_MUX,
-	VSH_FIELD_NAME FLD_NEG,
-	uint16_t R,
-	uint16_t V,
-	uint16_t C)
-{
-	Param.Active = true;
-	Param.ParameterType = (VSH_PARAMETER_TYPE)VshGetField(pShaderToken, FLD_MUX);
-	switch (Param.ParameterType) {
-	case PARAM_R:
-		Param.Address = R;
-		break;
-	case PARAM_V:
-		Param.Address = V;
-		break;
-	case PARAM_C:
-		Param.Address = C;
-		break;
-	default:
-		LOG_TEST_CASE("parameter type unknown");
+	enum VSH_OUTPUT_TYPE {
+		OUTPUT_C = 0,
+		OUTPUT_O
+	};
+
+	enum VSH_PARAMETER_TYPE {
+		PARAM_UNKNOWN = 0,
+		PARAM_R,          // Temporary (scRatch) registers
+		PARAM_V,          // Vertex registers
+		PARAM_C,          // Constant registers, set by SetVertexShaderConstant
+		PARAM_O // = 0??
+	};
+
+	enum VSH_OUTPUT_MUX {
+		OMUX_MAC = 0,
+		OMUX_ILU
+	};
+
+	enum VSH_ILU { // Dxbx note : ILU stands for 'Inverse Logic Unit' opcodes
+		ILU_NOP = 0,
+		ILU_MOV,
+		ILU_RCP,
+		ILU_RCC,
+		ILU_RSQ,
+		ILU_EXP,
+		ILU_LOG,
+		ILU_LIT // = 7 - all values of the 3 bits are used
+	};
+
+	enum VSH_MAC { // Dxbx note : MAC stands for 'Multiply And Accumulate' opcodes
+		MAC_NOP = 0,
+		MAC_MOV,
+		MAC_MUL,
+		MAC_ADD,
+		MAC_MAD,
+		MAC_DP3,
+		MAC_DPH,
+		MAC_DP4,
+		MAC_DST,
+		MAC_MIN,
+		MAC_MAX,
+		MAC_SLT,
+		MAC_SGE,
+		MAC_ARL
+		// ??? 14
+		// ??? 15 - 2 values of the 4 bits are undefined
+	};
+
+	// Host intermediate vertex shader types
+
+	enum VSH_FIELD_NAME {
+		FLD_ILU = 0,
+		FLD_MAC,
+		FLD_CONST,
+		FLD_V,
+		// Input A
+		FLD_A_NEG,
+		FLD_A_SWZ_X,
+		FLD_A_SWZ_Y,
+		FLD_A_SWZ_Z,
+		FLD_A_SWZ_W,
+		FLD_A_R,
+		FLD_A_MUX,
+		// Input B
+		FLD_B_NEG,
+		FLD_B_SWZ_X,
+		FLD_B_SWZ_Y,
+		FLD_B_SWZ_Z,
+		FLD_B_SWZ_W,
+		FLD_B_R,
+		FLD_B_MUX,
+		// Input C
+		FLD_C_NEG,
+		FLD_C_SWZ_X,
+		FLD_C_SWZ_Y,
+		FLD_C_SWZ_Z,
+		FLD_C_SWZ_W,
+		FLD_C_R_HIGH,
+		FLD_C_R_LOW,
+		FLD_C_MUX,
+		// Output
+		FLD_OUT_MAC_MASK,
+		FLD_OUT_R,
+		FLD_OUT_ILU_MASK,
+		FLD_OUT_O_MASK,
+		FLD_OUT_ORB,
+		FLD_OUT_ADDRESS,
+		FLD_OUT_MUX,
+		// Relative addressing
+		FLD_A0X,
+		// Final instruction
+		FLD_FINAL
+	};
+
+	enum VSH_IMD_INSTRUCTION_TYPE {
+		IMD_MAC,
+		IMD_ILU
+	};
+
+	enum VSH_IMD_OUTPUT_TYPE {
+		IMD_OUTPUT_C,
+		IMD_OUTPUT_R,
+		IMD_OUTPUT_O,
+		IMD_OUTPUT_A0X
+	} ;
+
+	typedef struct _VSH_IMD_OUTPUT {
+		VSH_IMD_OUTPUT_TYPE Type;
+		int16_t             Address;
+		int8_t              Mask;
+	} VSH_IMD_OUTPUT;
+
+	typedef struct _VSH_IMD_PARAMETER {
+		bool                Active;
+		VSH_PARAMETER_TYPE  ParameterType;   // Parameter type, R, V or C
+		bool                Neg;             // true if negated, false if not
+		VSH_SWIZZLE         Swizzle[4];      // The four swizzles
+		int16_t             Address;         // Register address
+	} VSH_IMD_PARAMETER;
+
+	typedef struct _VSH_INTERMEDIATE_FORMAT {
+		VSH_IMD_INSTRUCTION_TYPE InstructionType;
+		VSH_MAC                  MAC;
+		VSH_ILU                  ILU;
+		VSH_IMD_OUTPUT           Output;
+		VSH_IMD_PARAMETER        Parameters[3];
+		// There is only a single address register in Microsoft DirectX 8.0.
+		// The address register, designated as a0.x, may be used as signed
+		// integer offset in relative addressing into the constant register file.
+		//     c[a0.x + n]
+		bool                     IndexesWithA0_X;
+	} VSH_INTERMEDIATE_FORMAT;
+
+	// State variables :
+
+	uint16_t                 IntermediateCount;
+	VSH_INTERMEDIATE_FORMAT  Intermediate[VSH_MAX_INTERMEDIATE_COUNT];
+
+	// Retrieves a number of bits in the instruction token
+	static inline uint32_t VshGetFromToken(
+		uint32_t* pShaderToken,
+		uint8_t SubToken,
+		uint8_t StartBit,
+		uint8_t BitLength)
+	{
+		return (pShaderToken[SubToken] >> StartBit) & ~(0xFFFFFFFF << BitLength);
 	}
 
-	int d = FLD_NEG - FLD_A_NEG;
-	Param.Neg = VshGetField(pShaderToken, (VSH_FIELD_NAME)(d + FLD_A_NEG));
-	Param.Swizzle[0] = (VSH_SWIZZLE)VshGetField(pShaderToken, (VSH_FIELD_NAME)(d + FLD_A_SWZ_X));
-	Param.Swizzle[1] = (VSH_SWIZZLE)VshGetField(pShaderToken, (VSH_FIELD_NAME)(d + FLD_A_SWZ_Y));
-	Param.Swizzle[2] = (VSH_SWIZZLE)VshGetField(pShaderToken, (VSH_FIELD_NAME)(d + FLD_A_SWZ_Z));
-	Param.Swizzle[3] = (VSH_SWIZZLE)VshGetField(pShaderToken, (VSH_FIELD_NAME)(d + FLD_A_SWZ_W));
-}
+	static uint8_t VshGetField(
+		uint32_t* pShaderToken,
+		VSH_FIELD_NAME FieldName)
+	{
+		// Used for xvu spec definition
+		static const struct {
+			uint8_t          SubToken;
+			uint8_t          StartBit;
+			uint8_t          BitLength;
+		} FieldMapping[/*VSH_FIELD_NAME*/] = {
+			// SubToken BitPos  BitSize
+			{  1,   25,     3 }, // FLD_ILU,              
+			{  1,   21,     4 }, // FLD_MAC,              
+			{  1,   13,     8 }, // FLD_CONST,            
+			{  1,    9,     4 }, // FLD_V,                
+			// Input A
+			{  1,    8,     1 }, // FLD_A_NEG,            
+			{  1,    6,     2 }, // FLD_A_SWZ_X,          
+			{  1,    4,     2 }, // FLD_A_SWZ_Y,          
+			{  1,    2,     2 }, // FLD_A_SWZ_Z,          
+			{  1,    0,     2 }, // FLD_A_SWZ_W,          
+			{  2,   28,     4 }, // FLD_A_R,              
+			{  2,   26,     2 }, // FLD_A_MUX,            
+			// Input B
+			{  2,   25,     1 }, // FLD_B_NEG,            
+			{  2,   23,     2 }, // FLD_B_SWZ_X,          
+			{  2,   21,     2 }, // FLD_B_SWZ_Y,          
+			{  2,   19,     2 }, // FLD_B_SWZ_Z,          
+			{  2,   17,     2 }, // FLD_B_SWZ_W,          
+			{  2,   13,     4 }, // FLD_B_R,              
+			{  2,   11,     2 }, // FLD_B_MUX,            
+			// Input C
+			{  2,   10,     1 }, // FLD_C_NEG,            
+			{  2,    8,     2 }, // FLD_C_SWZ_X,          
+			{  2,    6,     2 }, // FLD_C_SWZ_Y,          
+			{  2,    4,     2 }, // FLD_C_SWZ_Z,          
+			{  2,    2,     2 }, // FLD_C_SWZ_W,          
+			{  2,    0,     2 }, // FLD_C_R_HIGH,         
+			{  3,   30,     2 }, // FLD_C_R_LOW,          
+			{  3,   28,     2 }, // FLD_C_MUX,            
+			// Output
+			{  3,   24,     4 }, // FLD_OUT_MAC_MASK,   
+			{  3,   20,     4 }, // FLD_OUT_R,            
+			{  3,   16,     4 }, // FLD_OUT_ILU_MASK,
+			{  3,   12,     4 }, // FLD_OUT_O_MASK,
+			{  3,   11,     1 }, // FLD_OUT_ORB,          
+			{  3,    3,     8 }, // FLD_OUT_ADDRESS,      
+			{  3,    2,     1 }, // FLD_OUT_MUX,          
+			// Relative addressing
+			{  3,    1,     1 }, // FLD_A0X,              
+			// Final instruction
+			{  3,    0,     1 }  // FLD_FINAL,            
+		};
 
-static void VshConvertIntermediateParams(
-	VSH_INTERMEDIATE_FORMAT *pIntermediate,
-	uint32_t* pShaderToken)
-{
-	// Get a0.x indirect constant addressing
-	pIntermediate->IndexesWithA0_X = VshGetField(pShaderToken, FLD_A0X) > 0;
-
-	int16_t R;
-	int16_t V = VshGetField(pShaderToken, FLD_V);
-	int16_t C = ConvertCRegister(VshGetField(pShaderToken, FLD_CONST));
-	uint8_t ParamCount = 0;
-
-	// Parameters[0].Active will always be set, but [1] and [2] may not, so reset them:
-	pIntermediate->Parameters[1].Active = false;
-	pIntermediate->Parameters[2].Active = false;
-	if(pIntermediate->MAC >= MAC_MOV) {
-		// Get parameter A
-		R = VshGetField(pShaderToken, FLD_A_R);
-		VshConvertIntermediateParam(pIntermediate->Parameters[ParamCount++], pShaderToken, FLD_A_MUX, FLD_A_NEG, R, V, C);
-    }
-
-    if((pIntermediate->MAC == MAC_MUL) || ((pIntermediate->MAC >= MAC_MAD) && (pIntermediate->MAC <= MAC_SGE))) {
-		// Get parameter B
-		R = VshGetField(pShaderToken, FLD_B_R);
-		VshConvertIntermediateParam(pIntermediate->Parameters[ParamCount++], pShaderToken, FLD_B_MUX, FLD_B_NEG, R, V, C);
+		return (uint8_t)(VshGetFromToken(pShaderToken,
+			FieldMapping[FieldName].SubToken,
+			FieldMapping[FieldName].StartBit,
+			FieldMapping[FieldName].BitLength));
 	}
 
-    if((pIntermediate->ILU >= ILU_MOV) || (pIntermediate->MAC == MAC_ADD) || (pIntermediate->MAC == MAC_MAD)) {
-		// Get parameter C
-		R = VshGetField(pShaderToken, FLD_C_R_HIGH) << 2 | VshGetField(pShaderToken, FLD_C_R_LOW);
-		VshConvertIntermediateParam(pIntermediate->Parameters[ParamCount++], pShaderToken, FLD_C_MUX, FLD_C_NEG, R, V, C);
-	}
-}
-
-static VSH_INTERMEDIATE_FORMAT* VshAddIntermediateInstruction(
-	VSH_XBOX_SHADER* pShader,
-	VSH_IMD_OUTPUT_TYPE output_type,
-	int16_t output_address,
-	int8_t output_mask)
-{
-	// Is the output mask set?
-	if (output_mask == 0) {
-		return nullptr;
+	// Converts the C register address to disassembly format
+	static inline int16_t ConvertCRegister(const int16_t CReg)
+	{
+		return ((((CReg >> 5) & 7) - 3) * 32) + (CReg & 31);
 	}
 
-	if (pShader->IntermediateCount >= VSH_MAX_INTERMEDIATE_COUNT) {
-		CxbxKrnlCleanup("Shader exceeds conversion buffer!");
+	static void VshConvertIntermediateParam(VSH_IMD_PARAMETER& Param,
+		uint32_t* pShaderToken,
+		VSH_FIELD_NAME FLD_MUX,
+		VSH_FIELD_NAME FLD_NEG,
+		uint16_t R,
+		uint16_t V,
+		uint16_t C)
+	{
+		Param.Active = true;
+		Param.ParameterType = (VSH_PARAMETER_TYPE)VshGetField(pShaderToken, FLD_MUX);
+		switch (Param.ParameterType) {
+		case PARAM_R:
+			Param.Address = R;
+			break;
+		case PARAM_V:
+			Param.Address = V;
+			break;
+		case PARAM_C:
+			Param.Address = C;
+			break;
+		default:
+			LOG_TEST_CASE("parameter type unknown");
+		}
+
+		int d = FLD_NEG - FLD_A_NEG;
+		Param.Neg = VshGetField(pShaderToken, (VSH_FIELD_NAME)(d + FLD_A_NEG));
+		Param.Swizzle[0] = (VSH_SWIZZLE)VshGetField(pShaderToken, (VSH_FIELD_NAME)(d + FLD_A_SWZ_X));
+		Param.Swizzle[1] = (VSH_SWIZZLE)VshGetField(pShaderToken, (VSH_FIELD_NAME)(d + FLD_A_SWZ_Y));
+		Param.Swizzle[2] = (VSH_SWIZZLE)VshGetField(pShaderToken, (VSH_FIELD_NAME)(d + FLD_A_SWZ_Z));
+		Param.Swizzle[3] = (VSH_SWIZZLE)VshGetField(pShaderToken, (VSH_FIELD_NAME)(d + FLD_A_SWZ_W));
 	}
 
-	VSH_INTERMEDIATE_FORMAT* pIntermediate = &(pShader->Intermediate[pShader->IntermediateCount++]);
-	pIntermediate->Output.Type = output_type;
-	pIntermediate->Output.Address = output_address;
-	pIntermediate->Output.Mask = output_mask;
-	return pIntermediate;
-}
+	static void VshConvertIntermediateParams(
+		VSH_INTERMEDIATE_FORMAT* pIntermediate,
+		uint32_t* pShaderToken)
+	{
+		// Get a0.x indirect constant addressing
+		pIntermediate->IndexesWithA0_X = VshGetField(pShaderToken, FLD_A0X) > 0; // Applies to IMD_OUTPUT_C parameter reads
 
-static void VshAddIntermediateMACOpcode(
-	VSH_XBOX_SHADER* pShader,
-	uint32_t* pShaderToken,
-	VSH_MAC MAC,
-	VSH_IMD_OUTPUT_TYPE output_type,
-	int16_t output_address,
-	int8_t output_mask)
-{
-	VSH_INTERMEDIATE_FORMAT* pIntermediate = VshAddIntermediateInstruction(pShader, output_type, output_address, output_mask);
-	if (!pIntermediate) return;
+		int16_t R;
+		int16_t V = VshGetField(pShaderToken, FLD_V);
+		int16_t C = ConvertCRegister(VshGetField(pShaderToken, FLD_CONST));
+		uint8_t ParamCount = 0;
 
-	pIntermediate->InstructionType = IMD_MAC;
-	pIntermediate->MAC = MAC;
-	pIntermediate->ILU = ILU_NOP;
-	VshConvertIntermediateParams(pIntermediate, pShaderToken);
-}
+		// Parameters[0].Active will always be set, but [1] and [2] may not, so reset them:
+		pIntermediate->Parameters[1].Active = false;
+		pIntermediate->Parameters[2].Active = false;
+		if (pIntermediate->MAC >= MAC_MOV) {
+			// Get parameter A
+			R = VshGetField(pShaderToken, FLD_A_R);
+			VshConvertIntermediateParam(pIntermediate->Parameters[ParamCount++], pShaderToken, FLD_A_MUX, FLD_A_NEG, R, V, C);
+		}
 
-static void VshAddIntermediateILUOpcode(
-	VSH_XBOX_SHADER* pShader,
-	uint32_t* pShaderToken,
-	VSH_ILU ILU,
-	VSH_IMD_OUTPUT_TYPE output_type,
-	int16_t output_address,
-	int8_t output_mask)
-{
-	VSH_INTERMEDIATE_FORMAT* pIntermediate = VshAddIntermediateInstruction(pShader, output_type, output_address, output_mask);
-	if (!pIntermediate) return;
+		if ((pIntermediate->MAC == MAC_MUL) || ((pIntermediate->MAC >= MAC_MAD) && (pIntermediate->MAC <= MAC_SGE))) {
+			// Get parameter B
+			R = VshGetField(pShaderToken, FLD_B_R);
+			VshConvertIntermediateParam(pIntermediate->Parameters[ParamCount++], pShaderToken, FLD_B_MUX, FLD_B_NEG, R, V, C);
+		}
 
-	pIntermediate->InstructionType = IMD_ILU;
-	pIntermediate->MAC = MAC_NOP;
-	pIntermediate->ILU = ILU;
-	VshConvertIntermediateParams(pIntermediate, pShaderToken);
-}
-
-static bool VshConvertToIntermediate(
-    VSH_XBOX_SHADER *pShader,
-	uint32_t *pShaderToken)
-{
-	// First get the instruction(s).
-	VSH_ILU ILU = (VSH_ILU)VshGetField(pShaderToken, FLD_ILU);
-	VSH_MAC MAC = (VSH_MAC)VshGetField(pShaderToken, FLD_MAC);
-
-	// Output register
-	VSH_IMD_OUTPUT_TYPE OutputType;
-	int16_t OutputAddress = VshGetField(pShaderToken, FLD_OUT_ADDRESS);
-	if ((VSH_OUTPUT_TYPE)VshGetField(pShaderToken, FLD_OUT_ORB) == OUTPUT_C) {
-		OutputType = IMD_OUTPUT_C;
-		OutputAddress = ConvertCRegister(OutputAddress);
-	} else { // OUTPUT_O:
-		OutputType = IMD_OUTPUT_O;
-		OutputAddress = OutputAddress & 0xF;
+		if ((pIntermediate->ILU >= ILU_MOV) || (pIntermediate->MAC == MAC_ADD) || (pIntermediate->MAC == MAC_MAD)) {
+			// Get parameter C
+			R = VshGetField(pShaderToken, FLD_C_R_HIGH) << 2 | VshGetField(pShaderToken, FLD_C_R_LOW);
+			VshConvertIntermediateParam(pIntermediate->Parameters[ParamCount++], pShaderToken, FLD_C_MUX, FLD_C_NEG, R, V, C);
+		}
 	}
 
-	// MAC,ILU output R register
-	int16_t RAddress = VshGetField(pShaderToken, FLD_OUT_R);
+	VSH_INTERMEDIATE_FORMAT* VshAddIntermediateInstruction(
+		VSH_IMD_OUTPUT_TYPE output_type,
+		int16_t output_address,
+		int8_t output_mask)
+	{
+		// Is the output mask set?
+		if (output_mask == 0) {
+			return nullptr;
+		}
 
-	// Test for paired opcodes
-	bool bIsPaired = (MAC != MAC_NOP) && (ILU != ILU_NOP);
+		if (IntermediateCount >= VSH_MAX_INTERMEDIATE_COUNT) {
+			CxbxKrnlCleanup("Shader exceeds conversion buffer!");
+		}
 
-	// Check if there's a MAC opcode
-	if (MAC > MAC_NOP && MAC <= MAC_ARL) {
-		if (bIsPaired && RAddress == 1) {
-			// Ignore paired MAC opcodes that write to R1
-		} else {
-			if (MAC == MAC_ARL) {
-				VshAddIntermediateMACOpcode(pShader, pShaderToken, MAC, IMD_OUTPUT_A0X, 0, MASK_X);
+		VSH_INTERMEDIATE_FORMAT* pIntermediate = &(Intermediate[IntermediateCount++]);
+		pIntermediate->Output.Type = output_type;
+		pIntermediate->Output.Address = output_address;
+		pIntermediate->Output.Mask = output_mask;
+		return pIntermediate;
+	}
+
+	void VshAddIntermediateMACOpcode(
+		uint32_t* pShaderToken,
+		VSH_MAC MAC,
+		VSH_IMD_OUTPUT_TYPE output_type,
+		int16_t output_address,
+		int8_t output_mask)
+	{
+		VSH_INTERMEDIATE_FORMAT* pIntermediate = VshAddIntermediateInstruction(output_type, output_address, output_mask);
+		if (!pIntermediate) return;
+
+		pIntermediate->InstructionType = IMD_MAC;
+		pIntermediate->MAC = MAC;
+		pIntermediate->ILU = ILU_NOP;
+		VshConvertIntermediateParams(pIntermediate, pShaderToken);
+	}
+
+	void VshAddIntermediateILUOpcode(
+		uint32_t* pShaderToken,
+		VSH_ILU ILU,
+		VSH_IMD_OUTPUT_TYPE output_type,
+		int16_t output_address,
+		int8_t output_mask)
+	{
+		VSH_INTERMEDIATE_FORMAT* pIntermediate = VshAddIntermediateInstruction(output_type, output_address, output_mask);
+		if (!pIntermediate) return;
+
+		pIntermediate->InstructionType = IMD_ILU;
+		pIntermediate->MAC = MAC_NOP;
+		pIntermediate->ILU = ILU;
+		VshConvertIntermediateParams(pIntermediate, pShaderToken);
+	}
+
+public:
+	bool VshConvertToIntermediate(uint32_t* pShaderToken)
+	{
+		// First get the instruction(s).
+		VSH_ILU ILU = (VSH_ILU)VshGetField(pShaderToken, FLD_ILU);
+		VSH_MAC MAC = (VSH_MAC)VshGetField(pShaderToken, FLD_MAC);
+
+		// Output register
+		VSH_OUTPUT_MUX OutputMux = (VSH_OUTPUT_MUX)VshGetField(pShaderToken, FLD_OUT_MUX);
+		int16_t OutputAddress = VshGetField(pShaderToken, FLD_OUT_ADDRESS);
+		VSH_IMD_OUTPUT_TYPE OutputType;
+		if ((VSH_OUTPUT_TYPE)VshGetField(pShaderToken, FLD_OUT_ORB) == OUTPUT_C) {
+			OutputType = IMD_OUTPUT_C;
+			OutputAddress = ConvertCRegister(OutputAddress);
+		} else { // OUTPUT_O:
+			OutputType = IMD_OUTPUT_O;
+			OutputAddress = OutputAddress & 0xF;
+		}
+
+		// MAC,ILU output R register
+		int16_t RAddress = VshGetField(pShaderToken, FLD_OUT_R);
+
+		// Test for paired opcodes
+		bool bIsPaired = (MAC != MAC_NOP) && (ILU != ILU_NOP);
+
+		// Check if there's a MAC opcode
+		if (MAC > MAC_NOP && MAC <= MAC_ARL) {
+			if (bIsPaired && RAddress == 1) {
+				// Ignore paired MAC opcodes that write to R1
 			} else {
-				VshAddIntermediateMACOpcode(pShader, pShaderToken, MAC, IMD_OUTPUT_R, RAddress, VshGetField(pShaderToken, FLD_OUT_MAC_MASK));
+				if (MAC == MAC_ARL) {
+					VshAddIntermediateMACOpcode(pShaderToken, MAC, IMD_OUTPUT_A0X, 0, MASK_X);
+				} else {
+					VshAddIntermediateMACOpcode(pShaderToken, MAC, IMD_OUTPUT_R, RAddress, VshGetField(pShaderToken, FLD_OUT_MAC_MASK));
+				}
+			}
+
+			// Check if we must add a muxed MAC opcode as well
+			if (OutputMux == OMUX_MAC) {
+				VshAddIntermediateMACOpcode(pShaderToken, MAC, OutputType, OutputAddress, VshGetField(pShaderToken, FLD_OUT_O_MASK));
 			}
 		}
 
-		// Check if we must add a muxed MAC opcode as well
-		if ((VSH_OUTPUT_MUX)VshGetField(pShaderToken, FLD_OUT_MUX) == OMUX_MAC) {
-			VshAddIntermediateMACOpcode(pShader, pShaderToken, MAC, OutputType, OutputAddress, VshGetField(pShaderToken, FLD_OUT_O_MASK));
+		// Check if there's an ILU opcode
+		if (ILU != ILU_NOP) {
+			// Paired ILU opcodes will only write to R1
+			VshAddIntermediateILUOpcode(pShaderToken, ILU, IMD_OUTPUT_R, bIsPaired ? 1 : RAddress, VshGetField(pShaderToken, FLD_OUT_ILU_MASK));
+			// Check if we must add a muxed ILU opcode as well
+			if (OutputMux == OMUX_ILU) {
+				VshAddIntermediateILUOpcode(pShaderToken, ILU, OutputType, OutputAddress, VshGetField(pShaderToken, FLD_OUT_O_MASK));
+			}
+		}
+
+		return VshGetField(pShaderToken, FLD_FINAL) == 0;
+	}
+
+	// HLSL generation - TODO : Move this to another (friend) class??
+private:
+	static void OutputHlsl(std::stringstream& hlsl, VSH_IMD_OUTPUT& dest)
+	{
+		static const char* OReg_Name[/*VSH_OREG_NAME*/] = {
+			"oPos",
+			"???",
+			"???",
+			"oD0",
+			"oD1",
+			"oFog",
+			"oPts",
+			"oB0",
+			"oB1",
+			"oT0",
+			"oT1",
+			"oT2",
+			"oT3",
+			"???",
+			"???",
+			"a0.x"
+		};
+
+		switch (dest.Type) {
+		case IMD_OUTPUT_C:
+			// Access the HLSL capital C[] constants array, with the index bias applied :
+			// TODO : Avoid out-of-bound writes (perhaps writing to a reserverd index?)
+			hlsl << "C[" << dest.Address + X_D3DSCM_CORRECTION << "]";
+			LOG_TEST_CASE("Vertex shader writes to constant table");
+			break;
+		case IMD_OUTPUT_R:
+			hlsl << "r" << dest.Address;
+			break;
+		case IMD_OUTPUT_O:
+			assert(dest.Address < OREG_A0X);
+			hlsl << OReg_Name[dest.Address];
+			break;
+		case IMD_OUTPUT_A0X:
+			hlsl << "a0";
+			break;
+		default:
+			assert(false);
+			break;
+		}
+
+		// Write the mask as a separate argument to the opcode defines
+		// (No space, so that "dest,mask, ..." looks close to "dest.mask, ...")
+		hlsl << ",";
+		if (dest.Mask & MASK_X) hlsl << "x";
+		if (dest.Mask & MASK_Y) hlsl << "y";
+		if (dest.Mask & MASK_Z) hlsl << "z";
+		if (dest.Mask & MASK_W) hlsl << "w";
+	}
+
+	static void ParameterHlsl(std::stringstream& hlsl, VSH_IMD_PARAMETER& param, bool IndexesWithA0_X)
+	{
+		// Print functions
+		static char* RegisterName[/*VSH_PARAMETER_TYPE*/] = {
+			"?", // PARAM_UNKNOWN = 0,
+			"r", // PARAM_R,          // Temporary (scRatch) registers
+			"v", // PARAM_V,          // Vertex registers
+			"c", // PARAM_C,          // Constant registers, set by SetVertexShaderConstant
+			"oPos" // PARAM_O // = 0??
+		};
+
+		if (param.Neg) {
+			hlsl << "-";
+		}
+
+		if (param.ParameterType == PARAM_C) {
+			// Access constant registers through our HLSL c() function,
+			// which allows dumping negative indices (like Xbox shaders),
+			// and which returns zero when out-of-bounds indices are passed in:
+			if (IndexesWithA0_X) {
+				if (param.Address == 0) {
+					hlsl << "c(a0.x)"; // Hide the offset if it's 0
+				}
+				else if (param.Address < 0) {
+					hlsl << "c(a0.x" << param.Address << ")"; // minus is part of the offset
+				}
+				else {
+					hlsl << "c(a0.x+" << param.Address << ")"; // show addition character
+				}
+			}
+			else {
+				hlsl << "c(" << param.Address << ")";
+			}
+		}
+		else {
+			hlsl << RegisterName[param.ParameterType] << param.Address;
+		}
+
+		// Write the swizzle if we need to
+		// Only bother printing the swizzle if it is not the default .xyzw
+		if (!(param.Swizzle[0] == SWIZZLE_X &&
+			param.Swizzle[1] == SWIZZLE_Y &&
+			param.Swizzle[2] == SWIZZLE_Z &&
+			param.Swizzle[3] == SWIZZLE_W))
+		{
+			// We'll try to simplify swizzles if we can
+			// If all swizzles are the same, we only need to write one out
+			unsigned swizzles = 1;
+
+			// Otherwise, we need to use the full swizzle
+			if (param.Swizzle[0] != param.Swizzle[1] ||
+				param.Swizzle[0] != param.Swizzle[2] ||
+				param.Swizzle[0] != param.Swizzle[3]) {
+				// Note, we can't remove trailing repeats, like in VS asm,
+				// as it may change the type from float4 to float3, float2 or float1!
+				swizzles = 4;
+			}
+
+			hlsl << ".";
+			for (unsigned i = 0; i < swizzles; i++) {
+				hlsl << "xyzw"[param.Swizzle[i]];
+			}
 		}
 	}
 
-	// Check if there's an ILU opcode
-	if (ILU != ILU_NOP) {
-		// Paired ILU opcodes will only write to R1
-		VshAddIntermediateILUOpcode(pShader, pShaderToken, ILU, IMD_OUTPUT_R, bIsPaired ? 1 : RAddress, VshGetField(pShaderToken, FLD_OUT_ILU_MASK));
-		// Check if we must add a muxed ILU opcode as well
-		if ((VSH_OUTPUT_MUX)VshGetField(pShaderToken, FLD_OUT_MUX) == OMUX_ILU) {
-			VshAddIntermediateILUOpcode(pShader, pShaderToken, ILU, OutputType, OutputAddress, VshGetField(pShaderToken, FLD_OUT_O_MASK));
-		}
-	}
+public:
+	bool BuildShader(std::stringstream& hlsl)
+	{
+		// HLSL strings for all MAC opcodes, indexed with VSH_MAC
+		static std::string VSH_MAC_HLSL[/*VSH_MAC*/] = {
+			/*MAC_NOP:*/"",
+			/*MAC_MOV:*/"x_mov",
+			/*MAC_MUL:*/"x_mul",
+			/*MAC_ADD:*/"x_add",
+			/*MAC_MAD:*/"x_mad",
+			/*MAC_DP3:*/"x_dp3",
+			/*MAC_DPH:*/"x_dph",
+			/*MAC_DP4:*/"x_dp4",
+			/*MAC_DST:*/"x_dst",
+			/*MAC_MIN:*/"x_min",
+			/*MAC_MAX:*/"x_max",
+			/*MAC_SLT:*/"x_slt",
+			/*MAC_SGE:*/"x_sge",
+			/*MAC_ARL:*/"x_arl",
+						"",
+						"" // VSH_MAC 2 final values of the 4 bits are undefined/unknown  TODO : Investigate their effect (if any) and emulate that as well
+		};
 
-	return VshGetField(pShaderToken, FLD_FINAL);
-}
+		// HLSL strings for all ILU opcodes, indexed with VSH_ILU
+		static std::string VSH_ILU_HLSL[/*VSH_ILU*/] = {
+			/*ILU_NOP:*/"",
+			/*ILU_MOV:*/"x_mov",
+			/*ILU_RCP:*/"x_rcp",
+			/*ILU_RCC:*/"x_rcc",
+			/*ILU_RSQ:*/"x_rsq",
+			/*ILU_EXP:*/"x_expp",
+			/*ILU_LOG:*/"x_logp",
+			/*ILU_LIT:*/"x_lit" // = 7 - all values of the 3 bits are used
+		};
+
+		for (int i = 0; i < IntermediateCount; i++) {
+			VSH_INTERMEDIATE_FORMAT& IntermediateInstruction = Intermediate[i];
+
+			std::string str;
+			if (IntermediateInstruction.InstructionType == IMD_MAC) {
+				str = VSH_MAC_HLSL[IntermediateInstruction.MAC];
+			} else {
+				assert(IntermediateInstruction.InstructionType == IMD_ILU);
+				str = VSH_ILU_HLSL[IntermediateInstruction.ILU];
+			}
+
+			hlsl << "\n  " << str << "("; // opcode
+			OutputHlsl(hlsl, IntermediateInstruction.Output);
+			for (int i = 0; i < 3; i++) {
+				if (IntermediateInstruction.Parameters[i].Active) {
+					hlsl << ", ";
+					ParameterHlsl(hlsl, IntermediateInstruction.Parameters[i], IntermediateInstruction.IndexesWithA0_X);
+				}
+			}
+
+			hlsl << ");";
+		}
+
+		return IntermediateCount > 0;
+	}
+};
 
 #define D3DDECLUSAGE_UNSUPPORTED ((D3DDECLUSAGE)-1)
 
@@ -1506,179 +1647,6 @@ void CxbxImpl_SelectVertexShaderDirect
 	LOG_UNIMPLEMENTED();
 }
 
-// HLSL outputs
-
-static void OutputHlsl(std::stringstream& hlsl, VSH_IMD_OUTPUT& dest)
-{
-	static const char* OReg_Name[/*VSH_OREG_NAME*/] = {
-		"oPos",
-		"???",
-		"???",
-		"oD0",
-		"oD1",
-		"oFog",
-		"oPts",
-		"oB0",
-		"oB1",
-		"oT0",
-		"oT1",
-		"oT2",
-		"oT3",
-		"???",
-		"???",
-		"a0.x"
-	};
-
-	switch (dest.Type) {
-	case IMD_OUTPUT_C:
-		// Access the HLSL capital C[] constants array, with the index bias applied :
-		// TODO : Avoid out-of-bound writes (perhaps writing to a reserverd index?)
-		hlsl << "C[" << dest.Address + X_D3DSCM_CORRECTION << "]";
-		LOG_TEST_CASE("Vertex shader writes to constant table");
-		break;
-	case IMD_OUTPUT_R:
-		hlsl << "r" << dest.Address;
-		break;
-	case IMD_OUTPUT_O:
-		assert(dest.Address < OREG_A0X);
-		hlsl << OReg_Name[dest.Address];
-		break;
-	case IMD_OUTPUT_A0X:
-		hlsl << "a0";
-		break;
-	default:
-		assert(false);
-		break;
-	}
-
-	// Write the mask as a separate argument to the opcode defines
-	// (No space, so that "dest,mask, ..." looks close to "dest.mask, ...")
-	hlsl << ",";
-	if (dest.Mask & MASK_X) hlsl << "x";
-	if (dest.Mask & MASK_Y) hlsl << "y";
-	if (dest.Mask & MASK_Z) hlsl << "z";
-	if (dest.Mask & MASK_W) hlsl << "w";
-}
-
-static void ParameterHlsl(std::stringstream& hlsl, VSH_IMD_PARAMETER& param, bool IndexesWithA0_X)
-{
-	// Print functions
-	static char* RegisterName[/*VSH_PARAMETER_TYPE*/] = {
-		"?", // PARAM_UNKNOWN = 0,
-		"r", // PARAM_R,          // Temporary (scRatch) registers
-		"v", // PARAM_V,          // Vertex registers
-		"c", // PARAM_C,          // Constant registers, set by SetVertexShaderConstant
-		"oPos" // PARAM_O // = 0??
-	};
-
-	if (param.Neg) {
-		hlsl << "-";
-	}
-
-	if (param.ParameterType == PARAM_C) {
-		// Access constant registers through our HLSL c() function,
-		// which allows dumping negative indices (like Xbox shaders),
-		// and which returns zero when out-of-bounds indices are passed in:
-		if (IndexesWithA0_X) {
-			if (param.Address == 0) {
-				hlsl << "c(a0.x)"; // Hide the offset if it's 0
-			} else if (param.Address < 0) {
-				hlsl << "c(a0.x" << param.Address << ")"; // minus is part of the offset
-			} else {
-				hlsl << "c(a0.x+" << param.Address << ")"; // show addition character
-			}
-		} else {
-			hlsl << "c(" << param.Address << ")";
-		}
-	} else {
-		hlsl << RegisterName[param.ParameterType] << param.Address;
-	}
-
-	// Write the swizzle if we need to
-	// Only bother printing the swizzle if it is not the default .xyzw
-	if (!(param.Swizzle[0] == SWIZZLE_X &&
-		  param.Swizzle[1] == SWIZZLE_Y &&
-		  param.Swizzle[2] == SWIZZLE_Z &&
-	      param.Swizzle[3] == SWIZZLE_W ))
-	{
-		// We'll try to simplify swizzles if we can
-		// If all swizzles are the same, we only need to write one out
-		unsigned swizzles = 1;
-
-		// Otherwise, we need to use the full swizzle
-		if (param.Swizzle[0] != param.Swizzle[1] ||
-			param.Swizzle[0] != param.Swizzle[2] ||
-			param.Swizzle[0] != param.Swizzle[3]) {
-			// Note, we can't remove trailing repeats, like in VS asm,
-			// as it may change the type from float4 to float3, float2 or float1!
-			swizzles = 4;
-		}
-
-		hlsl << ".";
-		for (unsigned i = 0; i < swizzles; i++) {
-			hlsl << "xyzw"[param.Swizzle[i]];
-		}
-	}
-}
-
-static void BuildShader(std::stringstream& hlsl, VSH_XBOX_SHADER* pShader)
-{
-	// HLSL strings for all MAC opcodes, indexed with VSH_MAC
-	static std::string VSH_MAC_HLSL[/*VSH_MAC*/] = {
-		/*MAC_NOP:*/"",
-		/*MAC_MOV:*/"x_mov",
-		/*MAC_MUL:*/"x_mul",
-		/*MAC_ADD:*/"x_add",
-		/*MAC_MAD:*/"x_mad",
-		/*MAC_DP3:*/"x_dp3",
-		/*MAC_DPH:*/"x_dph",
-		/*MAC_DP4:*/"x_dp4",
-		/*MAC_DST:*/"x_dst",
-		/*MAC_MIN:*/"x_min",
-		/*MAC_MAX:*/"x_max",
-		/*MAC_SLT:*/"x_slt",
-		/*MAC_SGE:*/"x_sge",
-		/*MAC_ARL:*/"x_arl",
-		            "",
-		            "" // VSH_MAC 2 final values of the 4 bits are undefined/unknown  TODO : Investigate their effect (if any) and emulate that as well
-	};
-
-	// HLSL strings for all ILU opcodes, indexed with VSH_ILU
-	static std::string VSH_ILU_HLSL[/*VSH_ILU*/] = {
-		/*ILU_NOP:*/"",
-		/*ILU_MOV:*/"x_mov",
-		/*ILU_RCP:*/"x_rcp",
-		/*ILU_RCC:*/"x_rcc",
-		/*ILU_RSQ:*/"x_rsq",
-		/*ILU_EXP:*/"x_expp",
-		/*ILU_LOG:*/"x_logp",
-		/*ILU_LIT:*/"x_lit" // = 7 - all values of the 3 bits are used
-	};
-
-	for (int i = 0; i < pShader->IntermediateCount; i++) {
-		VSH_INTERMEDIATE_FORMAT& IntermediateInstruction = pShader->Intermediate[i];
-
-		std::string str = "";
-		if (IntermediateInstruction.InstructionType == IMD_MAC) {
-			str = VSH_MAC_HLSL[IntermediateInstruction.MAC];
-		} else if (IntermediateInstruction.InstructionType == IMD_ILU) {
-			str = VSH_ILU_HLSL[IntermediateInstruction.ILU];
-		}
-
-		assert(!str.empty());
-		hlsl << "\n  " << str << "("; // opcode
-		OutputHlsl(hlsl, IntermediateInstruction.Output);
-		for (int i = 0; i < 3; i++) {
-			if (IntermediateInstruction.Parameters[i].Active) {
-				hlsl << ", ";
-				ParameterHlsl(hlsl, IntermediateInstruction.Parameters[i], IntermediateInstruction.IndexesWithA0_X);
-			}
-		}
-
-		hlsl << ");";
-	}
-}
-
 std::string DebugPrependLineNumbers(std::string shaderString) {
 	std::stringstream shader(shaderString);
 	auto debugShader = std::stringstream();
@@ -1705,27 +1673,21 @@ extern HRESULT EmuRecompileVshFunction
 )
 {
 	XTL::X_VSH_SHADER_HEADER* pXboxVertexShaderHeader = (XTL::X_VSH_SHADER_HEADER*)pXboxFunction;
-	DWORD* pToken;
-	bool             EOI = false;
-	VSH_XBOX_SHADER* pShader = (VSH_XBOX_SHADER*)calloc(1, sizeof(VSH_XBOX_SHADER));
+	uint32_t* pToken;
+	XboxVertexShaderDecoder VshDecoder;
 	ID3DBlob* pErrors = nullptr;
 	HRESULT             hRet = 0;
 
 	// TODO: support this situation..
-	if (pXboxFunction == xbnullptr)
+	if (pXboxFunction == xbnullptr) {
 		return E_FAIL;
+	}
 
 	// Initialize output arguments to zero
-	*pbUseDeclarationOnly = 0;
+	*pbUseDeclarationOnly = false;
 	*pXboxFunctionSize = 0;
 	*ppRecompiledShader = nullptr;
 
-	if (!pShader) {
-		EmuLog(LOG_LEVEL::WARNING, "Couldn't allocate memory for vertex shader conversion buffer");
-		return E_OUTOFMEMORY;
-	}
-
-	pShader->ShaderHeader = *pXboxVertexShaderHeader;
 	switch (pXboxVertexShaderHeader->Version) {
 	case VERSION_XVS:
 		break;
@@ -1743,80 +1705,79 @@ extern HRESULT EmuRecompileVshFunction
 		break;
 	}
 
-	if (SUCCEEDED(hRet)) {
-		static std::string hlsl_template =
-			#include "core\hle\D3D8\Direct3D9\CxbxVertexShaderTemplate.hlsl" // Note : This included .hlsl defines a raw string
-			;
+	if (!SUCCEEDED(hRet)) return hRet;
 
-		auto hlsl_stream = std::stringstream();
+	static std::string hlsl_template =
+		#include "core\hle\D3D8\Direct3D9\CxbxVertexShaderTemplate.hlsl" // Note : This included .hlsl defines a raw string
+		;
 
-		for (pToken = (DWORD*)((uint8_t*)pXboxFunction + sizeof(XTL::X_VSH_SHADER_HEADER)); !EOI; pToken += X_VSH_INSTRUCTION_SIZE) {
-			EOI = VshConvertToIntermediate(pShader, (uint32_t*)pToken);
-		}
-
-		// The size of the shader is
-		*pXboxFunctionSize = (intptr_t)pToken - (intptr_t)pXboxFunction;
-
-		// Do not attempt to compile empty shaders
-		if (pShader->IntermediateCount == 0) {
-			// This is a declaration only shader, so there is no function to recompile
-			*pbUseDeclarationOnly = 1;
-			return D3D_OK;
-		}
-
-		BuildShader(hlsl_stream, pShader);
-		std::string hlsl_str = hlsl_stream.str();
-		hlsl_str = std::regex_replace(hlsl_template, std::regex("// <Xbox Shader>"), hlsl_str);
-
-		DbgVshPrintf("--- HLSL conversion ---\n");
-		DbgVshPrintf(DebugPrependLineNumbers(hlsl_str).c_str());
-		DbgVshPrintf("-----------------------\n");
-
-		hRet = D3DCompile(
-			hlsl_str.c_str(),
-			hlsl_str.length(),
-			nullptr, // pSourceName
-			nullptr, // pDefines
-			nullptr, // pInclude // TODO precompile x_* HLSL functions?
-			"main", // shader entry poiint
-			"vs_3_0", // shader profile
-			0, // flags1
-			0, // flags2
-			ppRecompiledShader, // out
-			&pErrors // ppErrorMsgs out
-		);
-		if (FAILED(hRet)) {
-			EmuLog(LOG_LEVEL::WARNING, "Couldn't assemble recompiled vertex shader");
-		}
-
-		// Determine the log level
-		auto hlslErrorLogLevel = FAILED(hRet) ? LOG_LEVEL::ERROR2 : LOG_LEVEL::DEBUG;
-		if (pErrors) {
-			// Log HLSL compiler errors
-			EmuLog(hlslErrorLogLevel, "%s", (char*)(pErrors->GetBufferPointer()));
-			pErrors->Release();
-			pErrors = nullptr;
-		}
-
-		LOG_CHECK_ENABLED(LOG_LEVEL::DEBUG)
-		if (g_bPrintfOn)
-		if (!FAILED(hRet)) {
-			// Log disassembly
-			hRet = D3DDisassemble(
-				(*ppRecompiledShader)->GetBufferPointer(),
-				(*ppRecompiledShader)->GetBufferSize(),
-				D3D_DISASM_ENABLE_DEFAULT_VALUE_PRINTS | D3D_DISASM_ENABLE_INSTRUCTION_NUMBERING,
-				NULL,
-				&pErrors
-			);
-			if (pErrors) {
-				EmuLog(hlslErrorLogLevel, "%s", (char*)(pErrors->GetBufferPointer()));
-				pErrors->Release();
-			}
-		}
+	// Decode the vertex shader program tokens into an intermediate representation
+	pToken = (uint32_t*)((uintptr_t)pXboxFunction + sizeof(XTL::X_VSH_SHADER_HEADER));
+	while (VshDecoder.VshConvertToIntermediate(pToken)) {
+		pToken += X_VSH_INSTRUCTION_SIZE;
 	}
 
-	free(pShader);
+	// The size of the shader is
+	pToken += X_VSH_INSTRUCTION_SIZE; // always at least one token
+	*pXboxFunctionSize = (intptr_t)pToken - (intptr_t)pXboxFunction;
+
+	auto hlsl_stream = std::stringstream();
+	if (!VshDecoder.BuildShader(hlsl_stream)) {
+		// Do not attempt to compile empty shaders
+		// This is a declaration only shader, so there is no function to recompile
+		*pbUseDeclarationOnly = true;
+		return D3D_OK;
+	}
+
+	std::string hlsl_str = hlsl_stream.str();
+	hlsl_str = std::regex_replace(hlsl_template, std::regex("// <Xbox Shader>"), hlsl_str);
+
+	DbgVshPrintf("--- HLSL conversion ---\n");
+	DbgVshPrintf(DebugPrependLineNumbers(hlsl_str).c_str());
+	DbgVshPrintf("-----------------------\n");
+
+	hRet = D3DCompile(
+		hlsl_str.c_str(),
+		hlsl_str.length(),
+		nullptr, // pSourceName
+		nullptr, // pDefines
+		nullptr, // pInclude // TODO precompile x_* HLSL functions?
+		"main", // shader entry poiint
+		"vs_3_0", // shader profile
+		0, // flags1
+		0, // flags2
+		ppRecompiledShader, // out
+		&pErrors // ppErrorMsgs out
+	);
+	if (FAILED(hRet)) {
+		EmuLog(LOG_LEVEL::WARNING, "Couldn't assemble recompiled vertex shader");
+	}
+
+	// Determine the log level
+	auto hlslErrorLogLevel = FAILED(hRet) ? LOG_LEVEL::ERROR2 : LOG_LEVEL::DEBUG;
+	if (pErrors) {
+		// Log HLSL compiler errors
+		EmuLog(hlslErrorLogLevel, "%s", (char*)(pErrors->GetBufferPointer()));
+		pErrors->Release();
+		pErrors = nullptr;
+	}
+
+	LOG_CHECK_ENABLED(LOG_LEVEL::DEBUG)
+	if (g_bPrintfOn)
+	if (!FAILED(hRet)) {
+		// Log disassembly
+		hRet = D3DDisassemble(
+			(*ppRecompiledShader)->GetBufferPointer(),
+			(*ppRecompiledShader)->GetBufferSize(),
+			D3D_DISASM_ENABLE_DEFAULT_VALUE_PRINTS | D3D_DISASM_ENABLE_INSTRUCTION_NUMBERING,
+			NULL,
+			&pErrors
+		);
+		if (pErrors) {
+			EmuLog(hlslErrorLogLevel, "%s", (char*)(pErrors->GetBufferPointer()));
+			pErrors->Release();
+		}
+	}
 
 	return hRet;
 }
