@@ -222,8 +222,8 @@ private:
 
 	// State variables :
 
-	uint16_t                 IntermediateCount;
-	VSH_INTERMEDIATE_FORMAT  Intermediate[VSH_MAX_INTERMEDIATE_COUNT];
+	uint16_t                 IntermediateCount = 0;
+	VSH_INTERMEDIATE_FORMAT  Intermediate[VSH_MAX_INTERMEDIATE_COUNT] = {};
 
 	// Retrieves a number of bits in the instruction token
 	static inline uint32_t VshGetFromToken(
