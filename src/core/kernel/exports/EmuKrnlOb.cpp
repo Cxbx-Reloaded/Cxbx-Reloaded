@@ -859,12 +859,12 @@ XBSYSAPI EXPORTNUM(246) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ObReferenceObjectByHa
 			// HACK: Since we forward to NtDll::NtCreateEvent, this *might* be a Windows handle instead of our own
 			// In this case, we must return the input handle
 			// Test Case: Xbox Live Dashboard, Network Test (or any other Xbox Live connection)
-			//DWORD flags = 0;
-			//if (GetHandleInformation(Handle, &flags)) {
-			//	// This was a Windows Handle, so return it.
-			//	*ReturnedObject = Handle;
-			//	return STATUS_SUCCESS;
-			//}
+			DWORD flags = 0;
+			if (GetHandleInformation(Handle, &flags)) {
+				// This was a Windows Handle, so return it.
+				*ReturnedObject = Handle;
+				return STATUS_SUCCESS;
+			}
 
 			status = STATUS_INVALID_HANDLE;
 		}
