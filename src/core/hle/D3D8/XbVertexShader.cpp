@@ -657,112 +657,6 @@ public:
 	}
 };
 
-#define D3DDECLUSAGE_UNSUPPORTED ((D3DDECLUSAGE)-1)
-
-D3DDECLUSAGE Xb2PCRegisterType
-(
-	DWORD VertexRegister,
-	BYTE& PCUsageIndex
-)
-{
-	D3DDECLUSAGE PCRegisterType;
-	PCUsageIndex = 0;
-
-	switch (VertexRegister)
-	{
-	case XTL::X_D3DVSDE_VERTEX: // -1
-		PCRegisterType = D3DDECLUSAGE_UNSUPPORTED;
-		break;
-	case XTL::X_D3DVSDE_POSITION: // 0
-		PCRegisterType = D3DDECLUSAGE_POSITION;
-		break;
-	case XTL::X_D3DVSDE_BLENDWEIGHT: // 1
-		PCRegisterType = D3DDECLUSAGE_BLENDWEIGHT;
-		break;
-	case XTL::X_D3DVSDE_NORMAL: // 2
-		PCRegisterType = D3DDECLUSAGE_NORMAL;
-		break;
-	case XTL::X_D3DVSDE_DIFFUSE: // 3
-		PCRegisterType = D3DDECLUSAGE_COLOR; PCUsageIndex = 0;
-		break;
-	case XTL::X_D3DVSDE_SPECULAR: // 4
-		PCRegisterType = D3DDECLUSAGE_COLOR; PCUsageIndex = 1;
-		break;
-	case XTL::X_D3DVSDE_FOG: // 5
-		PCRegisterType = D3DDECLUSAGE_FOG;
-		break;
-	case XTL::X_D3DVSDE_POINTSIZE: // 6
-		PCRegisterType = D3DDECLUSAGE_PSIZE;
-		break;
-	case XTL::X_D3DVSDE_BACKDIFFUSE: // 7
-		PCRegisterType = D3DDECLUSAGE_COLOR; PCUsageIndex = 2;
-		break;
-	case XTL::X_D3DVSDE_BACKSPECULAR: // 8
-		PCRegisterType = D3DDECLUSAGE_COLOR; PCUsageIndex = 3;
-		break;
-	case XTL::X_D3DVSDE_TEXCOORD0: // 9
-		PCRegisterType = D3DDECLUSAGE_TEXCOORD; PCUsageIndex = 0;
-		break;
-	case XTL::X_D3DVSDE_TEXCOORD1: // 10
-		PCRegisterType = D3DDECLUSAGE_TEXCOORD; PCUsageIndex = 1;
-		break;
-	case XTL::X_D3DVSDE_TEXCOORD2: // 11
-		PCRegisterType = D3DDECLUSAGE_TEXCOORD; PCUsageIndex = 2;
-		break;
-	case XTL::X_D3DVSDE_TEXCOORD3: // 12
-		PCRegisterType = D3DDECLUSAGE_TEXCOORD; PCUsageIndex = 3;
-		break;
-	default:
-		PCRegisterType = D3DDECLUSAGE_UNSUPPORTED;
-		break;
-	}
-
-	return PCRegisterType;
-}
-
-char* XboxVertexRegisterAsString(DWORD VertexRegister)
-{
-	switch (VertexRegister)
-	{
-	case XTL::X_D3DVSDE_VERTEX: // -1
-		return "D3DVSDE_VERTEX /* xbox ext. */";
-	case XTL::X_D3DVSDE_POSITION: // 0
-		return "D3DVSDE_POSITION";
-	case XTL::X_D3DVSDE_BLENDWEIGHT: // 1
-		return "D3DVSDE_BLENDWEIGHT";
-	case XTL::X_D3DVSDE_NORMAL: // 2
-		return "D3DVSDE_NORMAL";
-	case XTL::X_D3DVSDE_DIFFUSE: // 3
-		return "D3DVSDE_DIFFUSE";
-	case XTL::X_D3DVSDE_SPECULAR: // 4
-		return "D3DVSDE_SPECULAR";
-	case XTL::X_D3DVSDE_FOG: // 5
-		return "D3DVSDE_FOG";
-	case XTL::X_D3DVSDE_POINTSIZE: // 6
-		return "D3DVDSE_POINTSIZE";
-	case XTL::X_D3DVSDE_BACKDIFFUSE: // 7
-		return "D3DVSDE_BACKDIFFUSE /* xbox ext. */";
-	case XTL::X_D3DVSDE_BACKSPECULAR: // 8
-		return "D3DVSDE_BACKSPECULAR /* xbox ext. */";
-	case XTL::X_D3DVSDE_TEXCOORD0: // 9
-		return "D3DVSDE_TEXCOORD0";
-	case XTL::X_D3DVSDE_TEXCOORD1: // 10
-		return "D3DVSDE_TEXCOORD1";
-	case XTL::X_D3DVSDE_TEXCOORD2: // 11
-		return "D3DVSDE_TEXCOORD2";
-	case XTL::X_D3DVSDE_TEXCOORD3: // 12
-		return "D3DVSDE_TEXCOORD3";
-	case 13:
-		return "13 /* unknown register */";
-	case 14:
-		return "14 /* unknown register */";
-	case 15:
-		return "15 /* unknown register */";
-	default:
-		return "16 /* or higher, unknown register */";
-	}
-}
-
 // ****************************************************************************
 // * Vertex shader declaration recompiler
 // ****************************************************************************
@@ -785,6 +679,112 @@ public:
 	DWORD HostDeclarationSize;
 
 private:
+	#define D3DDECLUSAGE_UNSUPPORTED ((D3DDECLUSAGE)-1)
+
+	static D3DDECLUSAGE Xb2PCRegisterType
+	(
+		DWORD VertexRegister,
+		BYTE& PCUsageIndex
+	)
+	{
+		D3DDECLUSAGE PCRegisterType;
+		PCUsageIndex = 0;
+
+		switch (VertexRegister)
+		{
+		case XTL::X_D3DVSDE_VERTEX: // -1
+			PCRegisterType = D3DDECLUSAGE_UNSUPPORTED;
+			break;
+		case XTL::X_D3DVSDE_POSITION: // 0
+			PCRegisterType = D3DDECLUSAGE_POSITION;
+			break;
+		case XTL::X_D3DVSDE_BLENDWEIGHT: // 1
+			PCRegisterType = D3DDECLUSAGE_BLENDWEIGHT;
+			break;
+		case XTL::X_D3DVSDE_NORMAL: // 2
+			PCRegisterType = D3DDECLUSAGE_NORMAL;
+			break;
+		case XTL::X_D3DVSDE_DIFFUSE: // 3
+			PCRegisterType = D3DDECLUSAGE_COLOR; PCUsageIndex = 0;
+			break;
+		case XTL::X_D3DVSDE_SPECULAR: // 4
+			PCRegisterType = D3DDECLUSAGE_COLOR; PCUsageIndex = 1;
+			break;
+		case XTL::X_D3DVSDE_FOG: // 5
+			PCRegisterType = D3DDECLUSAGE_FOG;
+			break;
+		case XTL::X_D3DVSDE_POINTSIZE: // 6
+			PCRegisterType = D3DDECLUSAGE_PSIZE;
+			break;
+		case XTL::X_D3DVSDE_BACKDIFFUSE: // 7
+			PCRegisterType = D3DDECLUSAGE_COLOR; PCUsageIndex = 2;
+			break;
+		case XTL::X_D3DVSDE_BACKSPECULAR: // 8
+			PCRegisterType = D3DDECLUSAGE_COLOR; PCUsageIndex = 3;
+			break;
+		case XTL::X_D3DVSDE_TEXCOORD0: // 9
+			PCRegisterType = D3DDECLUSAGE_TEXCOORD; PCUsageIndex = 0;
+			break;
+		case XTL::X_D3DVSDE_TEXCOORD1: // 10
+			PCRegisterType = D3DDECLUSAGE_TEXCOORD; PCUsageIndex = 1;
+			break;
+		case XTL::X_D3DVSDE_TEXCOORD2: // 11
+			PCRegisterType = D3DDECLUSAGE_TEXCOORD; PCUsageIndex = 2;
+			break;
+		case XTL::X_D3DVSDE_TEXCOORD3: // 12
+			PCRegisterType = D3DDECLUSAGE_TEXCOORD; PCUsageIndex = 3;
+			break;
+		default:
+			PCRegisterType = D3DDECLUSAGE_UNSUPPORTED;
+			break;
+		}
+
+		return PCRegisterType;
+	}
+
+	static char* XboxVertexRegisterAsString(DWORD VertexRegister)
+	{
+		switch (VertexRegister)
+		{
+		case XTL::X_D3DVSDE_VERTEX: // -1
+			return "D3DVSDE_VERTEX /* xbox ext. */";
+		case XTL::X_D3DVSDE_POSITION: // 0
+			return "D3DVSDE_POSITION";
+		case XTL::X_D3DVSDE_BLENDWEIGHT: // 1
+			return "D3DVSDE_BLENDWEIGHT";
+		case XTL::X_D3DVSDE_NORMAL: // 2
+			return "D3DVSDE_NORMAL";
+		case XTL::X_D3DVSDE_DIFFUSE: // 3
+			return "D3DVSDE_DIFFUSE";
+		case XTL::X_D3DVSDE_SPECULAR: // 4
+			return "D3DVSDE_SPECULAR";
+		case XTL::X_D3DVSDE_FOG: // 5
+			return "D3DVSDE_FOG";
+		case XTL::X_D3DVSDE_POINTSIZE: // 6
+			return "D3DVDSE_POINTSIZE";
+		case XTL::X_D3DVSDE_BACKDIFFUSE: // 7
+			return "D3DVSDE_BACKDIFFUSE /* xbox ext. */";
+		case XTL::X_D3DVSDE_BACKSPECULAR: // 8
+			return "D3DVSDE_BACKSPECULAR /* xbox ext. */";
+		case XTL::X_D3DVSDE_TEXCOORD0: // 9
+			return "D3DVSDE_TEXCOORD0";
+		case XTL::X_D3DVSDE_TEXCOORD1: // 10
+			return "D3DVSDE_TEXCOORD1";
+		case XTL::X_D3DVSDE_TEXCOORD2: // 11
+			return "D3DVSDE_TEXCOORD2";
+		case XTL::X_D3DVSDE_TEXCOORD3: // 12
+			return "D3DVSDE_TEXCOORD3";
+		case 13:
+			return "13 /* unknown register */";
+		case 14:
+			return "14 /* unknown register */";
+		case 15:
+			return "15 /* unknown register */";
+		default:
+			return "16 /* or higher, unknown register */";
+		}
+	}
+
 	// VERTEX SHADER
 
 	static DWORD VshGetDeclarationCount(DWORD *pXboxDeclaration)
@@ -808,13 +808,13 @@ private:
 		return (XboxToken & X_D3DVSD_STREAMNUMBERMASK) >> X_D3DVSD_STREAMNUMBERSHIFT;
 	}
 
-	inline DWORD VshGetVertexRegister(DWORD XboxToken)
+	static inline DWORD VshGetVertexRegister(DWORD XboxToken)
 	{
 		DWORD regNum = (XboxToken & X_D3DVSD_VERTEXREGMASK) >> X_D3DVSD_VERTEXREGSHIFT;
 		return regNum;
 	}
 
-	inline DWORD VshGetVertexRegisterIn(DWORD XboxToken)
+	static inline DWORD VshGetVertexRegisterIn(DWORD XboxToken)
 	{
 		DWORD regNum = (XboxToken & X_D3DVSD_VERTEXREGINMASK) >> X_D3DVSD_VERTEXREGINSHIFT;
 		return regNum;
@@ -1006,7 +1006,7 @@ private:
 		DbgVshPrintf("// NbrStreams: %d\n", iNumberOfVertexStreams);
 	}
 
-	void VshConvertToken_NOP(DWORD *pXboxToken)
+	static void VshConvertToken_NOP(DWORD *pXboxToken)
 	{
 		if(*pXboxToken != X_D3DVSD_NOP())
 		{
@@ -1014,7 +1014,7 @@ private:
 		}
 	}
 
-	DWORD VshConvertToken_CONSTMEM(DWORD *pXboxToken)
+	static DWORD VshConvertToken_CONSTMEM(DWORD *pXboxToken)
 	{
 		// DWORD ConstantAddress = (*pXboxToken & X_D3DVSD_CONSTADDRESSMASK) >> X_D3DVSD_CONSTADDRESSSHIFT;
 		DWORD Count           = (*pXboxToken & X_D3DVSD_CONSTCOUNTMASK) >> X_D3DVSD_CONSTCOUNTSHIFT;
@@ -1411,7 +1411,7 @@ private:
 		return Step;
 	}
 
-	DWORD* RemoveXboxDeclarationRedefinition(DWORD* pXboxDeclaration)
+	static DWORD* RemoveXboxDeclarationRedefinition(DWORD* pXboxDeclaration)
 	{
 		// Detect and remove register redefinitions by preprocessing the Xbox Vertex Declaration
 		// Test Case: King Kong
