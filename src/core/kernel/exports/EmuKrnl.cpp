@@ -463,8 +463,7 @@ XBSYSAPI EXPORTNUM(163) xboxkrnl::VOID FASTCALL xboxkrnl::KiUnlockDispatcherData
 // ******************************************************************
 // * 0x0165 - IdexChannelObject
 // ******************************************************************
-// TODO : Determine size, structure & filling behind IdexChannelObject
-XBSYSAPI EXPORTNUM(357) xboxkrnl::BYTE xboxkrnl::IdexChannelObject[0x100] = { };
+XBSYSAPI EXPORTNUM(357) xboxkrnl::IDE_CHANNEL_OBJECT xboxkrnl::IdexChannelObject = { };
 
 // ******************************************************************
 // * 0x0169 - RtlSnprintf()

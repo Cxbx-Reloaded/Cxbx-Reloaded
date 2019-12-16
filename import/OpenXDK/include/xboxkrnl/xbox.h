@@ -483,7 +483,7 @@ XBSYSAPI EXPORTNUM(355) UCHAR XePublicKeyDataChihiroBoot[284];
 // ******************************************************************
 // * 0x0165 - IdexChannelObject
 // ******************************************************************
-XBSYSAPI EXPORTNUM(357) BYTE IdexChannelObject[0x100];
+XBSYSAPI EXPORTNUM(357) IDE_CHANNEL_OBJECT IdexChannelObject;
 
 // ******************************************************************
 // * 0x0169 - RtlSnprintf()

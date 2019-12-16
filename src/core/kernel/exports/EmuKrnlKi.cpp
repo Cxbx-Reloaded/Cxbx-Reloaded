@@ -112,6 +112,8 @@ xboxkrnl::VOID xboxkrnl::KiInitSystem()
 		KiTimerTableListHead[i].Time.u.HighPart = 0xFFFFFFFF;
 		KiTimerTableListHead[i].Time.u.LowPart = 0;
 	}
+
+	InitializeListHead(&IdexChannelObject.DeviceQueue.DeviceListHead);
 }
 
 xboxkrnl::VOID xboxkrnl::KiTimerLock()
