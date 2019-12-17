@@ -1686,7 +1686,7 @@ extern HRESULT EmuRecompileVshFunction
 	}
 
 	std::string hlsl_str = hlsl_stream.str();
-	hlsl_str = std::regex_replace(hlsl_template, std::regex("// <Xbox Shader>"), hlsl_str);
+	hlsl_str = std::regex_replace(hlsl_template, std::regex("// <Xbox Shader>"), hlsl_str, std::regex_constants::format_first_only);
 
 	DbgVshPrintf("--- HLSL conversion ---\n");
 	DbgVshPrintf(DebugPrependLineNumbers(hlsl_str).c_str());
