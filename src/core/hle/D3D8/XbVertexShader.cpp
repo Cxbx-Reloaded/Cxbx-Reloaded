@@ -36,7 +36,6 @@
 
 #include "XbD3D8Types.h" // For X_D3DVSDE_*
 #include <sstream>
-#include <regex>
 #include <unordered_map>
 #include <array>
 #include <bitset>
@@ -1663,9 +1662,10 @@ extern HRESULT EmuRecompileVshFunction
 
 	if (!SUCCEEDED(hRet)) return hRet;
 
-	static std::string hlsl_template =
-		#include "core\hle\D3D8\Direct3D9\CxbxVertexShaderTemplate.hlsl" // Note : This included .hlsl defines a raw string
-		;
+	// Include HLSL header and footer as raw strings :
+	static std::string hlsl_template[2] = {
+		#include "core\hle\D3D8\Direct3D9\CxbxVertexShaderTemplate.hlsl"
+	};
 
 	// Decode the vertex shader program tokens into an intermediate representation
 	pToken = (uint32_t*)((uintptr_t)pXboxFunction + sizeof(XTL::X_VSH_SHADER_HEADER));
@@ -1678,6 +1678,7 @@ extern HRESULT EmuRecompileVshFunction
 	*pXboxFunctionSize = (intptr_t)pToken - (intptr_t)pXboxFunction;
 
 	auto hlsl_stream = std::stringstream();
+	hlsl_stream << hlsl_template[0]; // Start with the HLSL template header
 	if (!VshDecoder.BuildShader(hlsl_stream)) {
 		// Do not attempt to compile empty shaders
 		// This is a declaration only shader, so there is no function to recompile
@@ -1685,8 +1686,8 @@ extern HRESULT EmuRecompileVshFunction
 		return D3D_OK;
 	}
 
+	hlsl_stream << hlsl_template[1]; // Finish with the HLSL template footer
 	std::string hlsl_str = hlsl_stream.str();
-	hlsl_str = std::regex_replace(hlsl_template, std::regex("// <Xbox Shader>"), hlsl_str, std::regex_constants::format_first_only);
 
 	DbgVshPrintf("--- HLSL conversion ---\n");
 	DbgVshPrintf(DebugPrependLineNumbers(hlsl_str).c_str());
