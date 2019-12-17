@@ -1692,6 +1692,10 @@ extern HRESULT EmuRecompileVshFunction
 	DbgVshPrintf(DebugPrependLineNumbers(hlsl_str).c_str());
 	DbgVshPrintf("-----------------------\n");
 
+	// Level 0 for fastest runtime compilation
+	// TODO Can we recompile an optimized shader in the background?
+	UINT flags1 = D3DCOMPILE_OPTIMIZATION_LEVEL0;
+
 	hRet = D3DCompile(
 		hlsl_str.c_str(),
 		hlsl_str.length(),
@@ -1700,7 +1704,7 @@ extern HRESULT EmuRecompileVshFunction
 		nullptr, // pInclude // TODO precompile x_* HLSL functions?
 		"main", // shader entry poiint
 		"vs_3_0", // shader profile
-		0, // flags1
+		flags1, // flags1
 		0, // flags2
 		ppRecompiledShader, // out
 		&pErrors // ppErrorMsgs out
