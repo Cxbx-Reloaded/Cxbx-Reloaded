@@ -496,7 +496,7 @@ void SetOverrideFlags(CxbxVertexShader* pCxbxVertexShader) {
 		for (int i = 0; i < 16; i++) {
 			overrideFlags[i] = pCxbxVertexShader->VertexShaderInfo.vRegisterInDeclaration[i] ? 1.0f : 0.0f;
 		}
-		g_pD3DDevice->SetVertexShaderConstantF(X_D3DVS_CONSTREG_VERTEXDATA4F_FLAG_BASE, overrideFlags, 4);
+		g_pD3DDevice->SetVertexShaderConstantF(CXBX_D3DVS_CONSTREG_VERTEXDATA4F_FLAG_BASE, overrideFlags, 4);
 	}
 }
 
@@ -3873,8 +3873,8 @@ void UpdateViewPortOffsetAndScaleConstants()
     float vOffset[4], vScale[4];
     GetViewPortOffsetAndScale(vOffset, vScale);
 
-	g_pD3DDevice->SetVertexShaderConstantF(X_D3DVS_VIEWPORT_SCALE_MIRROR, vScale, 1);
-    g_pD3DDevice->SetVertexShaderConstantF(X_D3DVS_VIEWPORT_OFFSET_MIRROR, vOffset, 1);
+	g_pD3DDevice->SetVertexShaderConstantF(CXBX_D3DVS_VIEWPORT_SCALE_MIRROR, vScale, 1);
+    g_pD3DDevice->SetVertexShaderConstantF(CXBX_D3DVS_VIEWPORT_OFFSET_MIRROR, vOffset, 1);
 
 	// Store viewport offset and scale in constant registers 58 (c-38) and
 	// 59 (c-37) used for screen space transformation.
@@ -4303,6 +4303,8 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexShaderConstant)
     // The host does not support negative, so we adjust to 0..191
 	Register += X_D3DSCM_CORRECTION;
 
+	if (Register < 0) LOG_TEST_CASE("Register < 0");
+	if (Register + ConstantCount > X_D3DVS_CONSTREG_COUNT) LOG_TEST_CASE("Register + ConstantCount > X_D3DVS_CONSTREG_COUNT");
     HRESULT hRet;
 	hRet = g_pD3DDevice->SetVertexShaderConstantF(
 		Register,
@@ -4647,6 +4649,8 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexData4f)
 		// not present in the vertex declaration.
 		// We use range 193 and up to store these values, as Xbox shaders stop at c192!
 		FLOAT values[] = {a,b,c,d};
+		if (Register < 0) LOG_TEST_CASE("Register < 0");
+		if (Register >= 16) LOG_TEST_CASE("Register >= 16");
 		g_pD3DDevice->SetVertexShaderConstantF(CXBX_D3DVS_CONSTREG_VERTEXDATA4F_BASE + Register, values, 1);
 	}
 
