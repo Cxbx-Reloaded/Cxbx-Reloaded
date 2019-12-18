@@ -620,7 +620,6 @@ protected:
 	// Internal variables
 	CxbxVertexShaderInfo* pVertexShaderInfoToSet;
 	CxbxVertexShaderStreamInfo* pCurrentVertexShaderStreamInfo = nullptr;
-	DWORD hostTemporaryRegisterCount;
 	bool IsFixedFunction;
 	D3DVERTEXELEMENT* pRecompiled;
 	std::array<bool, 16> RegVIsPresentInDeclaration;
@@ -1708,7 +1707,8 @@ extern HRESULT EmuRecompileVshFunction
 		&pErrors // ppErrorMsgs out
 	);
 	if (FAILED(hRet)) {
-		EmuLog(LOG_LEVEL::WARNING, "Couldn't assemble recompiled vertex shader");
+		LOG_TEST_CASE("Couldn't assemble recompiled vertex shader");
+		//EmuLog(LOG_LEVEL::WARNING, "Couldn't assemble recompiled vertex shader");
 	}
 
 	// Determine the log level
