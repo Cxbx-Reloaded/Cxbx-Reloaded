@@ -202,7 +202,6 @@ private:
 	} VSH_IMD_PARAMETER;
 
 	typedef struct _VSH_INTERMEDIATE_FORMAT {
-		bool                     IsMAC; // otherwise ILU
 		VSH_MAC                  MAC;
 		VSH_ILU                  ILU;
 		VSH_IMD_OUTPUT           Output;
@@ -345,7 +344,6 @@ private:
 		}
 
 		VSH_INTERMEDIATE_FORMAT* pIntermediate = &(Intermediate[IntermediateCount++]);
-		pIntermediate->IsMAC = MAC > MAC_NOP;
 		pIntermediate->MAC = MAC;
 		pIntermediate->ILU = ILU;
 		pIntermediate->Output.Type = output_type;
@@ -590,7 +588,7 @@ public:
 			VSH_INTERMEDIATE_FORMAT& IntermediateInstruction = Intermediate[i];
 
 			std::string str;
-			if (IntermediateInstruction.IsMAC) {
+			if (IntermediateInstruction.MAC > MAC_NOP) {
 				str = VSH_MAC_HLSL[IntermediateInstruction.MAC];
 			} else {
 				str = VSH_ILU_HLSL[IntermediateInstruction.ILU];
