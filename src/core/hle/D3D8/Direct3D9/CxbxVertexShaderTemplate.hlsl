@@ -283,33 +283,20 @@ VS_OUTPUT main(const VS_INPUT xIn)
 	r0 = r1 = r2 = r3 = r4 = r5 = r6 = r7 = r8 = r9 = r10 = r11 = float4(0, 0, 0, 0);
 	#define r12 oPos // oPos and r12 are two ways of accessing the same register on Xbox
 
-	// Input registerss
-	float4 v[16];
-	# define v0  v[0]
-	# define v1  v[1]
-	# define v2  v[2]
-	# define v3  v[3]
-	# define v4  v[4]
-	# define v5  v[5]
-	# define v6  v[6]
-	# define v7  v[7]
-	# define v8  v[8]
-	# define v9  v[9]
-	# define v10 v[10]
-	# define v11 v[11]
-	# define v12 v[12]
-	# define v13 v[13]
-	# define v14 v[14]
-	# define v15 v[15]
+	// Input registers
+	float4 v0, v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13, v14, v15;
 
 	// View 4 packed overrides as an array of 16 floats
 	float vOverride[16] = (float[16])vOverridePacked;
 
 	// Initialize input registers from the vertex buffer
 	// Or use an override value set with SetVertexData4f
-	for(int i = 0; i < 16; i++){
-		v[i] = vOverride[i] ? vOverrideValue[i] : xIn.v[i];
-	}
+	#define init_v(i) v##i = lerp(xIn.v[i], vOverride[i], vOverrideValue[i]);
+	// Note : unroll manually instead of for-loop, because of the ## concatenation
+	init_v( 0); init_v( 1); init_v( 2); init_v( 3);
+	init_v( 4); init_v( 5); init_v( 6); init_v( 7);
+	init_v( 8); init_v( 9); init_v(10); init_v(11);
+	init_v(12); init_v(13); init_v(14); init_v(15);
 
 	// Xbox shader program)DELIMITER", /* This terminates the header raw string" // */
 

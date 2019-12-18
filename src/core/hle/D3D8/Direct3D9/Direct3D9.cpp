@@ -494,7 +494,7 @@ void SetOverrideFlags(CxbxVertexShader* pCxbxVertexShader) {
 	if (pCxbxVertexShader != nullptr && pCxbxVertexShader->pHostVertexShader != nullptr) {
 		float overrideFlags[16];
 		for (int i = 0; i < 16; i++) {
-			overrideFlags[i] = !pCxbxVertexShader->VertexShaderInfo.vRegisterInDeclaration[i];
+			overrideFlags[i] = pCxbxVertexShader->VertexShaderInfo.vRegisterInDeclaration[i] ? 1.0f : 0.0f;
 		}
 		g_pD3DDevice->SetVertexShaderConstantF(X_D3DVS_CONSTREG_VERTEXDATA4F_FLAG_BASE, overrideFlags, 4);
 	}
