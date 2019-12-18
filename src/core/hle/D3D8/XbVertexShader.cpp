@@ -44,8 +44,6 @@
 	LOG_CHECK_ENABLED(LOG_LEVEL::DEBUG) \
 		if(g_bPrintfOn) printf
 
-std::array<bool, 16> RegVIsPresentInDeclaration; // TODO : Scope this better than global
-
 // ****************************************************************************
 // * Vertex shader function recompiler
 // ****************************************************************************
@@ -625,6 +623,7 @@ protected:
 	DWORD hostTemporaryRegisterCount;
 	bool IsFixedFunction;
 	D3DVERTEXELEMENT* pRecompiled;
+	std::array<bool, 16> RegVIsPresentInDeclaration;
 
 public:
 	// Output
@@ -1023,8 +1022,8 @@ private:
 
 			// new stream
 			pCurrentVertexShaderStreamInfo = &(pVertexShaderInfoToSet->VertexStreams[StreamNumber]);
-			pCurrentVertexShaderStreamInfo->NeedPatch = false;
-			pCurrentVertexShaderStreamInfo->DeclPosition = false;
+			pCurrentVertexShaderStreamInfo->NeedPatch = FALSE;
+			pCurrentVertexShaderStreamInfo->DeclPosition = FALSE;
 			pCurrentVertexShaderStreamInfo->CurrentStreamNumber = 0;
 			pCurrentVertexShaderStreamInfo->HostVertexStride = 0;
 			pCurrentVertexShaderStreamInfo->NumberOfVertexElements = 0;
@@ -1041,7 +1040,7 @@ private:
 		UINT XboxVertexElementDataType,
 		UINT XboxVertexElementByteSize,
 		UINT HostVertexElementByteSize,
-		bool NeedPatching)
+		BOOL NeedPatching)
 	{
 		CxbxVertexShaderStreamElement* pCurrentElement = &(pCurrentVertexShaderStreamInfo->VertexElements[pCurrentVertexShaderStreamInfo->NumberOfVertexElements]);
 		pCurrentElement->XboxType = XboxVertexElementDataType;
@@ -1071,7 +1070,7 @@ private:
 
 		// Register a 'skip' element, so that Xbox data will be skipped
 		// without increasing host stride - this does require patching :
-		VshConvert_RegisterVertexElement(XTL::X_D3DVSDT_NONE, SkipBytesCount, /*HostSize=*/0, /*NeedPatching=*/true);
+		VshConvert_RegisterVertexElement(XTL::X_D3DVSDT_NONE, SkipBytesCount, /*HostSize=*/0, /*NeedPatching=*/TRUE);
 	}
 
 	void VshConvertToken_STREAMDATA_SKIP(DWORD *pXboxToken)
@@ -1089,7 +1088,7 @@ private:
 	void VshConvertToken_STREAMDATA_REG(DWORD *pXboxToken)
 	{
 		DWORD VertexRegister = VshGetVertexRegister(*pXboxToken);
-		bool NeedPatching = false;
+		BOOL NeedPatching = FALSE;
 		BYTE Index;
 		BYTE HostVertexRegisterType;
 
@@ -1154,7 +1153,7 @@ private:
 				HostVertexElementByteSize = 1 * sizeof(FLOAT);
 			}
 			XboxVertexElementByteSize = 1 * sizeof(XTL::SHORT);
-			NeedPatching = true;
+			NeedPatching = TRUE;
 			break;
 		case XTL::X_D3DVSDT_NORMSHORT2: // 0x21:
 			if (g_D3DCaps.DeclTypes & D3DDTCAPS_SHORT2N) {
@@ -1167,7 +1166,7 @@ private:
 				HostVertexElementDataType = D3DDECLTYPE_FLOAT2;
 				HostVertexElementByteSize = 2 * sizeof(FLOAT);
 				XboxVertexElementByteSize = 2 * sizeof(XTL::SHORT);
-				NeedPatching = true;
+				NeedPatching = TRUE;
 			}
 			break;
 		case XTL::X_D3DVSDT_NORMSHORT3: // 0x31:
@@ -1181,7 +1180,7 @@ private:
 				HostVertexElementByteSize = 3 * sizeof(FLOAT);
 			}
 			XboxVertexElementByteSize = 3 * sizeof(XTL::SHORT);
-			NeedPatching = true;
+			NeedPatching = TRUE;
 			break;
 		case XTL::X_D3DVSDT_NORMSHORT4: // 0x41:
 			if (g_D3DCaps.DeclTypes & D3DDTCAPS_SHORT4N) {
@@ -1194,26 +1193,26 @@ private:
 				HostVertexElementDataType = D3DDECLTYPE_FLOAT4;
 				HostVertexElementByteSize = 4 * sizeof(FLOAT);
 				XboxVertexElementByteSize = 4 * sizeof(XTL::SHORT);
-				NeedPatching = true;
+				NeedPatching = TRUE;
 			}
 			break;
 		case XTL::X_D3DVSDT_NORMPACKED3: // 0x16:
 			HostVertexElementDataType = D3DDECLTYPE_FLOAT3;
 			HostVertexElementByteSize = 3 * sizeof(FLOAT);
 			XboxVertexElementByteSize = 1 * sizeof(XTL::DWORD);
-			NeedPatching = true;
+			NeedPatching = TRUE;
 			break;
 		case XTL::X_D3DVSDT_SHORT1: // 0x15:
 			HostVertexElementDataType = D3DDECLTYPE_SHORT2;
 			HostVertexElementByteSize = 2 * sizeof(SHORT);
 			XboxVertexElementByteSize = 1 * sizeof(XTL::SHORT);
-			NeedPatching = true;
+			NeedPatching = TRUE;
 			break;
 		case XTL::X_D3DVSDT_SHORT3: // 0x35:
 			HostVertexElementDataType = D3DDECLTYPE_SHORT4;
 			HostVertexElementByteSize = 4 * sizeof(SHORT);
 			XboxVertexElementByteSize = 3 * sizeof(XTL::SHORT);
-			NeedPatching = true;
+			NeedPatching = TRUE;
 			break;
 		case XTL::X_D3DVSDT_PBYTE1: // 0x14:
 			if (g_D3DCaps.DeclTypes & D3DDTCAPS_UBYTE4N) {
@@ -1226,7 +1225,7 @@ private:
 				HostVertexElementByteSize = 1 * sizeof(FLOAT);
 			}
 			XboxVertexElementByteSize = 1 * sizeof(XTL::BYTE);
-			NeedPatching = true;
+			NeedPatching = TRUE;
 			break;
 		case XTL::X_D3DVSDT_PBYTE2: // 0x24:
 			if (g_D3DCaps.DeclTypes & D3DDTCAPS_UBYTE4N) {
@@ -1239,7 +1238,7 @@ private:
 				HostVertexElementByteSize = 2 * sizeof(FLOAT);
 			}
 			XboxVertexElementByteSize = 2 * sizeof(XTL::BYTE);
-			NeedPatching = true;
+			NeedPatching = TRUE;
 			break;
 		case XTL::X_D3DVSDT_PBYTE3: // 0x34:
 			if (g_D3DCaps.DeclTypes & D3DDTCAPS_UBYTE4N) {
@@ -1252,7 +1251,7 @@ private:
 				HostVertexElementByteSize = 3 * sizeof(FLOAT);
 			}
 			XboxVertexElementByteSize = 3 * sizeof(XTL::BYTE);
-			NeedPatching = true;
+			NeedPatching = TRUE;
 			break;
 		case XTL::X_D3DVSDT_PBYTE4: // 0x44:
 			// Test-case : Panzer
@@ -1266,14 +1265,14 @@ private:
 				HostVertexElementDataType = D3DDECLTYPE_FLOAT4;
 				HostVertexElementByteSize = 4 * sizeof(FLOAT);
 				XboxVertexElementByteSize = 4 * sizeof(XTL::BYTE);
-				NeedPatching = true;
+				NeedPatching = TRUE;
 			}
 			break;
 		case XTL::X_D3DVSDT_FLOAT2H: // 0x72:
 			HostVertexElementDataType = D3DDECLTYPE_FLOAT4;
 			HostVertexElementByteSize = 4 * sizeof(FLOAT);
 			XboxVertexElementByteSize = 3 * sizeof(FLOAT);
-			NeedPatching = true;
+			NeedPatching = TRUE;
 			break;
 		case XTL::X_D3DVSDT_NONE: // 0x02:
 			// No host element data, so no patching
@@ -1499,7 +1498,7 @@ extern void FreeVertexDynamicPatch(CxbxVertexShader *pVertexShader)
 }
 
 // Checks for failed vertex shaders, and shaders that would need patching
-bool VshHandleIsValidShader(DWORD XboxVertexShaderHandle)
+boolean VshHandleIsValidShader(DWORD XboxVertexShaderHandle)
 {
 #if 0
 	//printf( "VS = 0x%.08X\n", XboxVertexShaderHandle );
@@ -1508,7 +1507,7 @@ bool VshHandleIsValidShader(DWORD XboxVertexShaderHandle)
     if (pCxbxVertexShader) {
         if (pCxbxVertexShader->XboxStatus != 0)
         {
-            return false;
+            return FALSE;
         }
         /*
         for (uint32 i = 0; i < pCxbxVertexShader->VertexShaderInfo.NumberOfVertexStreams; i++)
@@ -1517,13 +1516,13 @@ bool VshHandleIsValidShader(DWORD XboxVertexShaderHandle)
             {
                 // Just for caching purposes
                 pCxbxVertexShader->XboxStatus = 0x80000001;
-                return false;
+                return FALSE;
             }
         }
         */
     }
 #endif
-    return true;
+    return TRUE;
 }
 
 extern boolean IsValidCurrentShader(void)

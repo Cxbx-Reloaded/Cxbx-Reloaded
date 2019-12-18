@@ -2846,7 +2846,7 @@ void Direct3D_CreateDevice_Start
     // Disable multisampling for now, this fixes an issue where GTA3 only renders to half-screen
     // TODO: Find a better way of fixing this, we cannot just create larger backbuffers as it breaks
     // many games, despite working in the dashboard
-	pPresentationParameters->MultiSampleType = XTL::X_D3DMULTISAMPLE_NONE;
+    pPresentationParameters->MultiSampleType = XTL::X_D3DMULTISAMPLE_NONE;
 
 	// create default device *before* calling Xbox Direct3D_CreateDevice trampline
 	// to avoid hitting EMUPATCH'es that need a valid g_pD3DDevice
