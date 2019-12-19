@@ -1633,8 +1633,7 @@ extern HRESULT EmuRecompileVshFunction
 	case VERSION_XVS:
 		break;
 	case VERSION_XVSS:
-		EmuLog(LOG_LEVEL::WARNING, "Might not support vertex state shaders?");
-		hRet = E_FAIL;
+		LOG_TEST_CASE("Might not support vertex state shaders?");
 		break;
 	case VERSION_XVSW:
 		EmuLog(LOG_LEVEL::WARNING, "Might not support vertex read/write shaders?");
@@ -1697,8 +1696,27 @@ extern HRESULT EmuRecompileVshFunction
 		&pErrors // ppErrorMsgs out
 	);
 	if (FAILED(hRet)) {
-		LOG_TEST_CASE("Couldn't assemble recompiled vertex shader");
-		//EmuLog(LOG_LEVEL::WARNING, "Couldn't assemble recompiled vertex shader");
+		// Attempt to retry in compatibility mode, this allows some vertex-state shaders to compile
+		// Test Case: Spy vs Spy
+		flags1 |= D3DCOMPILE_ENABLE_BACKWARDS_COMPATIBILITY;
+		hRet = D3DCompile(
+			hlsl_str.c_str(),
+			hlsl_str.length(),
+			nullptr, // pSourceName
+			nullptr, // pDefines
+			nullptr, // pInclude // TODO precompile x_* HLSL functions?
+			"main", // shader entry poiint
+			"vs_3_0", // shader profile
+			flags1, // flags1
+			0, // flags2
+			ppRecompiledShader, // out
+			&pErrors // ppErrorMsgs out
+		);
+
+		if (FAILED(hRet)) {
+			LOG_TEST_CASE("Couldn't assemble recompiled vertex shader");
+			//EmuLog(LOG_LEVEL::WARNING, "Couldn't assemble recompiled vertex shader");
+		}
 	}
 
 	// Determine the log level
