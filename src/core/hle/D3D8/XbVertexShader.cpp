@@ -192,7 +192,6 @@ private:
 	} VSH_IMD_OUTPUT;
 
 	typedef struct _VSH_IMD_PARAMETER {
-		bool                Active;
 		VSH_PARAMETER_TYPE  ParameterType;   // Parameter type, R, V or C
 		bool                Neg;             // true if negated, false if not
 		VSH_SWIZZLE         Swizzle[4];      // The four swizzles
@@ -203,6 +202,7 @@ private:
 		VSH_MAC                  MAC;
 		VSH_ILU                  ILU;
 		VSH_IMD_OUTPUT           Output;
+		unsigned                 ParamCount;
 		VSH_IMD_PARAMETER        Parameters[3];
 		// There is only a single address register in Microsoft DirectX 8.0.
 		// The address register, designated as a0.x, may be used as signed
@@ -300,7 +300,6 @@ private:
 		uint16_t V,
 		uint16_t C)
 	{
-		Param.Active = true;
 		Param.ParameterType = (VSH_PARAMETER_TYPE)VshGetField(pShaderToken, FLD_MUX);
 		switch (Param.ParameterType) {
 		case PARAM_R:
@@ -317,7 +316,7 @@ private:
 		}
 
 		int d = FLD_NEG - FLD_A_NEG;
-		Param.Neg = VshGetField(pShaderToken, (VSH_FIELD_NAME)(d + FLD_A_NEG));
+		Param.Neg = VshGetField(pShaderToken, (VSH_FIELD_NAME)(d + FLD_A_NEG)) > 0;
 		Param.Swizzle[0] = (VSH_SWIZZLE)VshGetField(pShaderToken, (VSH_FIELD_NAME)(d + FLD_A_SWZ_X));
 		Param.Swizzle[1] = (VSH_SWIZZLE)VshGetField(pShaderToken, (VSH_FIELD_NAME)(d + FLD_A_SWZ_Y));
 		Param.Swizzle[2] = (VSH_SWIZZLE)VshGetField(pShaderToken, (VSH_FIELD_NAME)(d + FLD_A_SWZ_Z));
@@ -353,27 +352,23 @@ private:
 		int16_t R;
 		int16_t V = VshGetField(pShaderToken, FLD_V);
 		int16_t C = ConvertCRegister(VshGetField(pShaderToken, FLD_CONST));
-		unsigned ParamCount = 0;
-
-		// Parameters[0].Active will always be set, but [1] and [2] may not, so reset them:
-		pIntermediate->Parameters[1].Active = false;
-		pIntermediate->Parameters[2].Active = false;
+		pIntermediate->ParamCount = 0;
 		if (MAC >= MAC_MOV) {
 			// Get parameter A
 			R = VshGetField(pShaderToken, FLD_A_R);
-			VshConvertIntermediateParam(pIntermediate->Parameters[ParamCount++], pShaderToken, FLD_A_MUX, FLD_A_NEG, R, V, C);
+			VshConvertIntermediateParam(pIntermediate->Parameters[pIntermediate->ParamCount++], pShaderToken, FLD_A_MUX, FLD_A_NEG, R, V, C);
 		}
 
 		if ((MAC == MAC_MUL) || ((MAC >= MAC_MAD) && (MAC <= MAC_SGE))) {
 			// Get parameter B
 			R = VshGetField(pShaderToken, FLD_B_R);
-			VshConvertIntermediateParam(pIntermediate->Parameters[ParamCount++], pShaderToken, FLD_B_MUX, FLD_B_NEG, R, V, C);
+			VshConvertIntermediateParam(pIntermediate->Parameters[pIntermediate->ParamCount++], pShaderToken, FLD_B_MUX, FLD_B_NEG, R, V, C);
 		}
 
 		if ((ILU >= ILU_MOV) || (MAC == MAC_ADD) || (MAC == MAC_MAD)) {
 			// Get parameter C
 			R = VshGetField(pShaderToken, FLD_C_R_HIGH) << 2 | VshGetField(pShaderToken, FLD_C_R_LOW);
-			VshConvertIntermediateParam(pIntermediate->Parameters[ParamCount++], pShaderToken, FLD_C_MUX, FLD_C_NEG, R, V, C);
+			VshConvertIntermediateParam(pIntermediate->Parameters[pIntermediate->ParamCount++], pShaderToken, FLD_C_MUX, FLD_C_NEG, R, V, C);
 		}
 	}
 
@@ -594,11 +589,9 @@ public:
 
 			hlsl << "\n  " << str << "("; // opcode
 			OutputHlsl(hlsl, IntermediateInstruction.Output);
-			for (int i = 0; i < 3; i++) {
-				if (IntermediateInstruction.Parameters[i].Active) {
-					hlsl << ", ";
-					ParameterHlsl(hlsl, IntermediateInstruction.Parameters[i], IntermediateInstruction.IndexesWithA0_X);
-				}
+			for (unsigned i = 0; i < IntermediateInstruction.ParamCount; i++) {
+				hlsl << ", ";
+				ParameterHlsl(hlsl, IntermediateInstruction.Parameters[i], IntermediateInstruction.IndexesWithA0_X);
 			}
 
 			hlsl << ");";
