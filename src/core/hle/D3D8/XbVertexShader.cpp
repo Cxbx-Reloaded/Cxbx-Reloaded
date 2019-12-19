@@ -620,7 +620,6 @@ protected:
 public:
 	// Output
 	DWORD XboxDeclarationCount;
-	DWORD HostDeclarationSize;
 
 private:
 	#define D3DDECLUSAGE_UNSUPPORTED ((D3DDECLUSAGE)-1)
@@ -1425,7 +1424,7 @@ public:
 		// Calculate size of declaration
 		XboxDeclarationCount = VshGetDeclarationCount(pXboxVertexDeclarationCopy);
 		// For Direct3D9, we need to reserve at least twice the number of elements, as one token can generate two registers (in and out) :
-		HostDeclarationSize = XboxDeclarationCount * sizeof(D3DVERTEXELEMENT) * 2;
+		unsigned HostDeclarationSize = XboxDeclarationCount * sizeof(D3DVERTEXELEMENT) * 2;
 	
 		D3DVERTEXELEMENT *Result = (D3DVERTEXELEMENT *)calloc(1, HostDeclarationSize);
 		pRecompiled = Result;
@@ -1470,7 +1469,6 @@ D3DVERTEXELEMENT *EmuRecompileVshDeclaration
     DWORD                *pXboxDeclaration,
     bool                  bIsFixedFunction,
     DWORD                *pXboxDeclarationCount,
-    DWORD                *pHostDeclarationSize,
     CxbxVertexShaderInfo *pCxbxVertexShaderInfo
 )
 {
@@ -1479,7 +1477,6 @@ D3DVERTEXELEMENT *EmuRecompileVshDeclaration
 	D3DVERTEXELEMENT* pHostVertexElements = Converter.Convert(pXboxDeclaration, bIsFixedFunction, pCxbxVertexShaderInfo);
 
 	*pXboxDeclarationCount = Converter.XboxDeclarationCount;
-	*pHostDeclarationSize = Converter.HostDeclarationSize;
 
     return pHostVertexElements;
 }

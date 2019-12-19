@@ -4122,14 +4122,12 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateVertexShader)
 
 	// Now, we can create the host vertex shader
 	DWORD             XboxDeclarationCount = 0;
-	DWORD             HostDeclarationSize = 0;
 	CxbxVertexShader* pCxbxVertexShader = (CxbxVertexShader*)calloc(1, sizeof(CxbxVertexShader));
 	D3DVERTEXELEMENT *pRecompiledDeclaration = nullptr;
 
 	pRecompiledDeclaration = EmuRecompileVshDeclaration((DWORD*)pDeclaration,
                                                    /*bIsFixedFunction=*/pFunction == xbnullptr,
                                                    &XboxDeclarationCount,
-                                                   &HostDeclarationSize,
                                                    &pCxbxVertexShader->VertexShaderInfo);
 
 	// Create the vertex declaration

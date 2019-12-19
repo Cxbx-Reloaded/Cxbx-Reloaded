@@ -102,7 +102,6 @@ extern D3DVERTEXELEMENT *EmuRecompileVshDeclaration
     DWORD                *pXboxDeclaration,
     bool                  bIsFixedFunction,
     DWORD                *pXboxDeclarationCount,
-    DWORD                *pHostDeclarationSize,
     CxbxVertexShaderInfo *pCxbxVertexShaderInfo
 );
 
