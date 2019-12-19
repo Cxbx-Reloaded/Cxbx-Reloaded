@@ -983,13 +983,21 @@ typedef DWORD X_VERTEXSHADERCONSTANTMODE;
 #define X_D3DSCM_192CONSTANTSANDFIXEDPIPELINE 0x02 // Unsupported?
 #define X_D3DSCM_NORESERVEDCONSTANTS          0x10  // Do not reserve constant -38 and -37
 
-// Xbox vertex shader constants
-#define X_D3DVS_CONSTREG_BIAS       96 // Add 96 to arrive at the range 0..191 (instead of -96..95)
-#define X_D3DVS_CONSTREG_COUNT     192
-#define X_D3DVS_RESERVED_CONSTANT1 -38 // Becomes 58 after correction, contains Scale v
-#define X_D3DVS_RESERVED_CONSTANT2 -37 // Becomes 59 after correction, contains Offset
-#define X_D3DVS_RESERVED_CONSTANT1_CORRECTED (X_D3DVS_RESERVED_CONSTANT1 + X_D3DVS_CONSTREG_BIAS)
-#define X_D3DVS_RESERVED_CONSTANT2_CORRECTED (X_D3DVS_RESERVED_CONSTANT2 + X_D3DVS_CONSTREG_BIAS)
+#define X_D3DSCM_RESERVED_CONSTANT_SCALE -38 // Becomes 58 after correction, contains Scale v
+#define X_D3DSCM_RESERVED_CONSTANT_OFFSET -37 // Becomes 59 after correction, contains Offset
+
+#define X_D3DSCM_CORRECTION                 96 // Add 96 to arrive at the range 0..191 (instead of -96..95)
+#define X_D3DVS_CONSTREG_COUNT              192
+
+// Special Registers, used to pass additional information to the shaders
+// TODO co-locate shader workaround constants with shader code
+#define CXBX_D3DVS_CONSTREG_VERTEXDATA4F_BASE      (X_D3DVS_CONSTREG_COUNT)
+#define CXBX_D3DVS_CONSTREG_VERTEXDATA4F_FLAG_BASE (CXBX_D3DVS_CONSTREG_VERTEXDATA4F_BASE + 16)
+#define CXBX_D3DVS_VIEWPORT_SCALE_MIRROR           (CXBX_D3DVS_CONSTREG_VERTEXDATA4F_FLAG_BASE + 4)
+#define CXBX_D3DVS_VIEWPORT_OFFSET_MIRROR          (CXBX_D3DVS_VIEWPORT_SCALE_MIRROR + 1)
+
+#define X_D3DSCM_RESERVED_CONSTANT_SCALE_CORRECTED (X_D3DSCM_RESERVED_CONSTANT_SCALE + X_D3DSCM_CORRECTION)
+#define X_D3DSCM_RESERVED_CONSTANT_OFFSET_CORRECTED (X_D3DSCM_RESERVED_CONSTANT_OFFSET + X_D3DSCM_CORRECTION)
 
 // Xbox vertex declaration token bit masks
 #define X_D3DVSD_MASK_TESSUV 0x10000000
@@ -1208,9 +1216,6 @@ typedef DWORD NV2AMETHOD;
 //
 // Below declarations are used by Cxbx, not by the Xbox!!!
 //
-
-// Host vertex shader counts
-#define CXBX_D3DVS_CONSTREG_VERTEXDATA4F_BASE   X_D3DVS_CONSTREG_COUNT 
 
 } // end of namespace XTL
 

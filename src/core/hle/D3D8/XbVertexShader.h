@@ -25,15 +25,16 @@
 #ifndef XBVERTEXSHADER_H
 #define XBVERTEXSHADER_H
 
+#include <d3dcompiler.h>
+
 #include "core\hle\D3D8\XbD3D8Types.h" // for X_VSH_MAX_ATTRIBUTES
 
 // Host vertex shader counts
-#define VSH_MIN_TEMPORARY_REGISTERS 12 // Equal to D3DCAPS9.VS20Caps.NumTemps (at least 12 for vs_2_x) - https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/dx9-graphics-reference-asm-vs-registers-vs-2-x
-#define VSH_MAX_TEMPORARY_REGISTERS 32
-#define VSH_MAX_INTERMEDIATE_COUNT     1024 // The maximum number of intermediate format slots
 #define VSH_VS11_MAX_INSTRUCTION_COUNT 128
 #define VSH_VS2X_MAX_INSTRUCTION_COUNT 256
 #define VSH_VS30_MAX_INSTRUCTION_COUNT 512
+
+#define VSH_MAX_INTERMEDIATE_COUNT (X_VSH_MAX_INSTRUCTION_COUNT * 3) // The maximum number of shader function slots
 
 typedef struct _CxbxVertexShaderStreamElement
 {
@@ -69,6 +70,7 @@ typedef struct _CxbxVertexShaderInfo
 {
 	UINT                       NumberOfVertexStreams; // The number of streams the vertex shader uses
 	CxbxVertexShaderStreamInfo VertexStreams[X_VSH_MAX_STREAMS];
+	bool vRegisterInDeclaration[16];
 }
 CxbxVertexShaderInfo;
 
@@ -100,7 +102,6 @@ extern D3DVERTEXELEMENT *EmuRecompileVshDeclaration
     DWORD                *pXboxDeclaration,
     bool                  bIsFixedFunction,
     DWORD                *pXboxDeclarationCount,
-    DWORD                *pHostDeclarationSize,
     CxbxVertexShaderInfo *pCxbxVertexShaderInfo
 );
 
@@ -112,7 +113,7 @@ extern HRESULT EmuRecompileVshFunction
     D3DVERTEXELEMENT *pRecompiledDeclaration,
     bool   		 *pbUseDeclarationOnly,
     DWORD        *pXboxFunctionSize,
-	LPD3DXBUFFER *ppRecompiledShader
+	ID3DBlob **ppRecompiledShader
 );
 
 extern void FreeVertexDynamicPatch(CxbxVertexShader *pVertexShader);
