@@ -3239,7 +3239,11 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_BeginVisibilityTest)()
 {
 	LOG_FUNC();
 
-	g_pD3DDevice->CreateQuery(D3DQUERYTYPE_OCCLUSION, &g_pVisibilityQuery);
+	HRESULT hRes = g_pD3DDevice->CreateQuery(D3DQUERYTYPE_OCCLUSION, &g_pVisibilityQuery);
+	if (hRes != D3D_OK) {
+		LOG_TEST_CASE("BeginVisibilityTest: CreateQuery failed");
+		RETURN(hRes);
+	}
 
 	g_pVisibilityQuery->Issue(D3DISSUE_BEGIN);
 
