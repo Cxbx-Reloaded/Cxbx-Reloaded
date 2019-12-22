@@ -3231,14 +3231,20 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_EndPush)(DWORD *pPush)
 	}
 }
 
+IDirect3DQuery9* VisibilityQuery;
+
 // ******************************************************************
 // * patch: D3DDevice_BeginVisibilityTest
 // ******************************************************************
-VOID WINAPI XTL::EMUPATCH(D3DDevice_BeginVisibilityTest)()
+HRESULT WINAPI XTL::EMUPATCH(D3DDevice_BeginVisibilityTest)()
 {
 	LOG_FUNC();
 
-	LOG_UNIMPLEMENTED();
+	g_pD3DDevice->CreateQuery(D3DQUERYTYPE_OCCLUSION, &VisibilityQuery);
+
+	VisibilityQuery->Issue(D3DISSUE_BEGIN);
+
+	return D3D_OK;
 }
 
 // LTCG specific D3DDevice_EndVisibilityTest function...
@@ -3267,7 +3273,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_EndVisibilityTest)
 {
 	LOG_FUNC_ONE_ARG(Index);
 
-	LOG_UNIMPLEMENTED();
+	VisibilityQuery->Issue(D3DISSUE_END);
 
     return D3D_OK;
 }
@@ -3301,13 +3307,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_GetVisibilityTestResult)
 		LOG_FUNC_ARG(pTimeStamp)
 		LOG_FUNC_END;
 
-    // TODO: actually emulate this!?
-
-    if(pResult != 0)
-        *pResult = 640*480;
-
-    if(pTimeStamp != 0)
-        *pTimeStamp = 0;
+	while(S_FALSE == VisibilityQuery->GetData(pResult, sizeof(DWORD), D3DGETDATA_FLUSH));
 
     return D3D_OK;
 }

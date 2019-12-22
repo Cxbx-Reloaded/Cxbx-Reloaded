@@ -161,7 +161,7 @@ VOID WINAPI EMUPATCH(D3DDevice_EndPush)(DWORD *pPush);
 // ******************************************************************
 // * patch: D3DDevice_BeginVisibilityTest
 // ******************************************************************
-VOID WINAPI EMUPATCH(D3DDevice_BeginVisibilityTest)();
+HRESULT WINAPI EMUPATCH(D3DDevice_BeginVisibilityTest)();
 
 // ******************************************************************
 // * patch: D3DDevice_EndVisibilityTest
