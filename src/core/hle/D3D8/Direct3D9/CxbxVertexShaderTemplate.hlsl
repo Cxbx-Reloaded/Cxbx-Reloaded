@@ -61,8 +61,8 @@ float4 c(int register_number)
 // some titles produce values just below the threshold of the next integer.
 // We can add a small bias to make sure it's bumped over the threshold
 // Test Case: Azurik (divides indexes 755, then scales them back in the vertex shader)
-#define BIAS 0.0001
-// TODO : Use 0.001 like xqemu?
+#define BIAS 0.001
+// NOTE : Was 0.0001, unlike xqemu
 
 // 2.14.1.11  Vertex Program Floating Point Requirements
 // The floor operations used by the ARL and EXP instructions must
@@ -196,10 +196,9 @@ float4 _logp(float src)
 			dest.z = 1.#INF;
 		} else {
 #endif
-			float exponent = floor(log2(src)); // TODO : x_floor
-			float mantissa = 1 / exp2(exponent);
-			float z = log2(src); // TODO : exponent + log2(mantissa); // TODO : Or log2(t)?
-			// TODO : float exponent = frexp(src + BIAS, /*out*/mantissa);
+			float exponent;
+			float mantissa = frexp(src/* + BIAS*/, /*out*/exponent);
+			float z = log2(src);
 			dest.x = exponent;
 			dest.y = mantissa;
 			dest.z = z;
@@ -228,8 +227,7 @@ float4 _lit(float4 src0)
 	float4 dest;
 	dest.x = 1;
 	dest.y = max(0, diffuse);
-	dest.z = diffuse > 0 ? exp2(specPower * log(blinn)) : 0;
-	// TODO : Use dest.z = (diffuse > 0) && (blinn > 0) ? pow(blinn, specPower) : 0;
+	dest.z = (diffuse > 0) && (blinn > 0) ? pow(blinn, specPower) : 0;
 	dest.w = 1;
 
 	return dest;
@@ -306,12 +304,12 @@ R"DELIMITER(
 	VS_OUTPUT xOut;
 
 	xOut.oPos = reverseScreenspaceTransform(oPos);
-	xOut.oD0 = oD0;
-	xOut.oD1 = oD1;
+	xOut.oD0 = saturate(oD0);
+	xOut.oD1 = saturate(oD1);
 	xOut.oFog = oFog.x;
 	xOut.oPts = oPts.x;
-	xOut.oB0 = oB0;
-	xOut.oB1 = oB1;
+	xOut.oB0 = saturate(oB0);
+	xOut.oB1 = saturate(oB1);
 	xOut.oT0 = oT0;
 	xOut.oT1 = oT1;
 	xOut.oT2 = oT2;
