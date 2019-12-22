@@ -113,6 +113,7 @@ static IDirect3DVertexBuffer       *g_pDummyBuffer = nullptr;  // Dummy buffer, 
 static IDirect3DIndexBuffer        *g_pClosingLineLoopHostIndexBuffer = nullptr;
 static IDirect3DIndexBuffer        *g_pQuadToTriangleHostIndexBuffer = nullptr;
 static IDirect3DSurface            *g_pDefaultHostDepthBufferSurface = nullptr;
+static IDirect3DQuery              *g_pVisibilityQuery = nullptr;
 
 // cached Direct3D state variable(s)
 static size_t                       g_QuadToTriangleHostIndexBuffer_Size = 0; // = NrOfQuadIndices
@@ -3231,8 +3232,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_EndPush)(DWORD *pPush)
 	}
 }
 
-IDirect3DQuery9* VisibilityQuery;
-
 // ******************************************************************
 // * patch: D3DDevice_BeginVisibilityTest
 // ******************************************************************
@@ -3240,9 +3239,9 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_BeginVisibilityTest)()
 {
 	LOG_FUNC();
 
-	g_pD3DDevice->CreateQuery(D3DQUERYTYPE_OCCLUSION, &VisibilityQuery);
+	g_pD3DDevice->CreateQuery(D3DQUERYTYPE_OCCLUSION, &g_pVisibilityQuery);
 
-	VisibilityQuery->Issue(D3DISSUE_BEGIN);
+	g_pVisibilityQuery->Issue(D3DISSUE_BEGIN);
 
 	return D3D_OK;
 }
@@ -3273,7 +3272,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_EndVisibilityTest)
 {
 	LOG_FUNC_ONE_ARG(Index);
 
-	VisibilityQuery->Issue(D3DISSUE_END);
+	g_pVisibilityQuery->Issue(D3DISSUE_END);
 
     return D3D_OK;
 }
@@ -3307,7 +3306,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_GetVisibilityTestResult)
 		LOG_FUNC_ARG(pTimeStamp)
 		LOG_FUNC_END;
 
-	while(S_FALSE == VisibilityQuery->GetData(pResult, sizeof(DWORD), D3DGETDATA_FLUSH));
+	while(S_FALSE == g_pVisibilityQuery->GetData(pResult, sizeof(DWORD), D3DGETDATA_FLUSH));
 
     return D3D_OK;
 }
