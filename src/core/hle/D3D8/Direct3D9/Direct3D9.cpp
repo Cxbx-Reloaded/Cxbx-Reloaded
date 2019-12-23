@@ -3322,7 +3322,14 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_GetVisibilityTestResult)
 		LOG_FUNC_ARG(pTimeStamp)
 		LOG_FUNC_END;
 
-	while(S_FALSE == g_pVisibilityQuery->GetData(pResult, sizeof(DWORD), D3DGETDATA_FLUSH));
+	if (g_pVisibilityQuery != nullptr)
+	{
+		while (S_FALSE == g_pVisibilityQuery->GetData(pResult, sizeof(DWORD), D3DGETDATA_FLUSH));
+	}
+	else
+	{
+		LOG_TEST_CASE("GetVisibilityTestResult: g_pVisibilityQuery = nullptr");
+	}
 
     return D3D_OK;
 }
