@@ -3276,7 +3276,19 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_EndVisibilityTest)
 {
 	LOG_FUNC_ONE_ARG(Index);
 
-	g_pVisibilityQuery->Issue(D3DISSUE_END);
+	if (g_pVisibilityQuery != nullptr)
+	{
+		HRESULT hRes = g_pVisibilityQuery->Issue(D3DISSUE_END);
+		if (hRes != D3D_OK)
+		{
+			LOG_TEST_CASE("EndVisibilityTest: Failed to issue query");
+			RETURN(hRes);
+		}
+	}
+	else
+	{
+		LOG_TEST_CASE("EndVisibilityTest: g_pVisibilityQuery = nullptr");
+	}
 
     return D3D_OK;
 }
