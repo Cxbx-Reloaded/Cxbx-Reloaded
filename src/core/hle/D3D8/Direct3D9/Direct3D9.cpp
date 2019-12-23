@@ -3324,6 +3324,11 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_GetVisibilityTestResult)
 
 	if (g_pVisibilityQuery != nullptr)
 	{
+		// In order to prevent an endless loop if the D3D device becomes lost, we pass
+		// the D3DGETDATA_FLUSH flag. This tells GetData to return D3DERR_DEVICELOST if
+		// such a situation occurs, and break out of the loop as a result.
+		// Note: By Cxbx's design, we cannot do drawing within this while loop in order
+		// to further prevent any other endless loop situations.
 		while (S_FALSE == g_pVisibilityQuery->GetData(pResult, sizeof(DWORD), D3DGETDATA_FLUSH));
 	}
 	else
