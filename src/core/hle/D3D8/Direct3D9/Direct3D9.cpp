@@ -28,6 +28,7 @@
 
 #include "common\util\hasher.h"
 #include <condition_variable>
+#include <stack>
 
 // prevent name collisions
 namespace xboxkrnl
@@ -113,7 +114,10 @@ static IDirect3DVertexBuffer       *g_pDummyBuffer = nullptr;  // Dummy buffer, 
 static IDirect3DIndexBuffer        *g_pClosingLineLoopHostIndexBuffer = nullptr;
 static IDirect3DIndexBuffer        *g_pQuadToTriangleHostIndexBuffer = nullptr;
 static IDirect3DSurface            *g_pDefaultHostDepthBufferSurface = nullptr;
-static IDirect3DQuery              *g_pVisibilityQuery = nullptr;
+
+static bool                         g_bEnableHostQueryVisibilityTest = true;
+static std::stack<IDirect3DQuery*>  g_HostQueryVisibilityTests;
+static std::map<int, IDirect3DQuery*> g_HostVisibilityTestMap;
 
 // cached Direct3D state variable(s)
 static size_t                       g_QuadToTriangleHostIndexBuffer_Size = 0; // = NrOfQuadIndices
@@ -2449,7 +2453,20 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
 						DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateQuery (callback event)");
 					}
 				} else {
-					LOG_TEST_CASE("Can't CreateQuery on host!");
+					LOG_TEST_CASE("Can't CreateQuery(D3DQUERYTYPE_EVENT) on host!");
+				}
+
+				// Can host driver create occlusion queries?
+				g_bEnableHostQueryVisibilityTest = false;
+				if (SUCCEEDED(g_pD3DDevice->CreateQuery(D3DQUERYTYPE_OCCLUSION, nullptr))) {
+					// Is host GPU query creation enabled?
+					if (!g_bHack_DisableHostGPUQueries) {
+						g_bEnableHostQueryVisibilityTest = true;
+					} else {
+						LOG_TEST_CASE("Disabled D3DQUERYTYPE_OCCLUSION on host!");
+					}
+				} else {
+					LOG_TEST_CASE("Can't CreateQuery(D3DQUERYTYPE_OCCLUSION) on host!");
 				}
 
 				hRet = g_pD3DDevice->CreateVertexBuffer
@@ -3239,13 +3256,24 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_BeginVisibilityTest)()
 {
 	LOG_FUNC();
 
-	HRESULT hRes = g_pD3DDevice->CreateQuery(D3DQUERYTYPE_OCCLUSION, &g_pVisibilityQuery);
-	if (hRes != D3D_OK) {
-		LOG_TEST_CASE("BeginVisibilityTest: CreateQuery failed");
-		RETURN(hRes);
-	}
+	if (g_bEnableHostQueryVisibilityTest) {
+		// Create a D3D occlusion query to handle "visibility test" with
+		IDirect3DQuery* pHostQueryVisibilityTest = nullptr;
+		HRESULT hRet = g_pD3DDevice->CreateQuery(D3DQUERYTYPE_OCCLUSION, &pHostQueryVisibilityTest);
+		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateQuery (visibility test)");
+		if (pHostQueryVisibilityTest != nullptr) {
+			hRet = pHostQueryVisibilityTest->Issue(D3DISSUE_BEGIN);
+			DEBUG_D3DRESULT(hRet, "g_pHostQueryVisibilityTest->Issue(D3DISSUE_BEGIN)");
+			if (SUCCEEDED(hRet)) {
+				g_HostQueryVisibilityTests.push(pHostQueryVisibilityTest);
+			} else {
+				LOG_TEST_CASE("Failed to issue query");
+				pHostQueryVisibilityTest->Release();
+			}
 
-	g_pVisibilityQuery->Issue(D3DISSUE_BEGIN);
+			pHostQueryVisibilityTest = nullptr;
+		}
+	}
 
 	return D3D_OK;
 }
@@ -3276,18 +3304,29 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_EndVisibilityTest)
 {
 	LOG_FUNC_ONE_ARG(Index);
 
-	if (g_pVisibilityQuery != nullptr)
-	{
-		HRESULT hRes = g_pVisibilityQuery->Issue(D3DISSUE_END);
-		if (hRes != D3D_OK)
-		{
-			LOG_TEST_CASE("EndVisibilityTest: Failed to issue query");
-			RETURN(hRes);
+	if (g_bEnableHostQueryVisibilityTest) {
+		// Check that the dedicated storage for the given Index isn't in use
+		if (g_HostVisibilityTestMap[Index] != nullptr) {
+			return E_OUTOFMEMORY;
 		}
-	}
-	else
-	{
-		LOG_TEST_CASE("EndVisibilityTest: g_pVisibilityQuery = nullptr");
+
+		if (g_HostQueryVisibilityTests.empty()) {
+			return 2088; // visibility test incomplete (a prior BeginVisibilityTest call is needed)
+		}
+
+		IDirect3DQuery* pHostQueryVisibilityTest = g_HostQueryVisibilityTests.top();
+		g_HostQueryVisibilityTests.pop();
+		assert(pHostQueryVisibilityTest != nullptr);
+
+		HRESULT hRet = pHostQueryVisibilityTest->Issue(D3DISSUE_END);
+		DEBUG_D3DRESULT(hRet, "g_pHostQueryVisibilityTest->Issue(D3DISSUE_END)");
+		if (hRet == D3D_OK) {
+			// Associate the result of this call with the given Index
+			g_HostVisibilityTestMap[Index] = pHostQueryVisibilityTest;
+		} else {
+			LOG_TEST_CASE("Failed to issue query");
+			pHostQueryVisibilityTest->Release();
+		}
 	}
 
     return D3D_OK;
@@ -3322,18 +3361,31 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_GetVisibilityTestResult)
 		LOG_FUNC_ARG(pTimeStamp)
 		LOG_FUNC_END;
 
-	if (g_pVisibilityQuery != nullptr)
-	{
+	if (g_bEnableHostQueryVisibilityTest) {
+		IDirect3DQuery* pHostQueryVisibilityTest = g_HostVisibilityTestMap[Index];
+		if (pHostQueryVisibilityTest == nullptr) {
+			return E_OUTOFMEMORY;
+		}
+
 		// In order to prevent an endless loop if the D3D device becomes lost, we pass
 		// the D3DGETDATA_FLUSH flag. This tells GetData to return D3DERR_DEVICELOST if
 		// such a situation occurs, and break out of the loop as a result.
 		// Note: By Cxbx's design, we cannot do drawing within this while loop in order
 		// to further prevent any other endless loop situations.
-		while (S_FALSE == g_pVisibilityQuery->GetData(pResult, sizeof(DWORD), D3DGETDATA_FLUSH));
+		while (S_FALSE == pHostQueryVisibilityTest->GetData(pResult, sizeof(DWORD), D3DGETDATA_FLUSH));
+
+		g_HostVisibilityTestMap[Index] = nullptr;
+		pHostQueryVisibilityTest->Release();
+	} else {
+		// Fallback to old faked result when there's no host occlusion query :
+		if (pResult != xbnullptr) {
+			*pResult = 640 * 480; // TODO : Use actual backbuffer dimensions
+		}
 	}
-	else
-	{
-		LOG_TEST_CASE("GetVisibilityTestResult: g_pVisibilityQuery = nullptr");
+
+	if (pTimeStamp != xbnullptr) {
+		LOG_TEST_CASE("pTimeStamp = nullptr");
+		*pTimeStamp = sizeof(DWORD); // TODO : This should be an incrementing GPU-memory based DWORD-aligned memory address
 	}
 
     return D3D_OK;
