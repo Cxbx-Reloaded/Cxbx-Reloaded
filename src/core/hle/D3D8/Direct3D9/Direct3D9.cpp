@@ -3384,7 +3384,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_GetVisibilityTestResult)
 	}
 
 	if (pTimeStamp != xbnullptr) {
-		LOG_TEST_CASE("pTimeStamp = nullptr");
+		LOG_TEST_CASE("requested value for pTimeStamp");
 		*pTimeStamp = sizeof(DWORD); // TODO : This should be an incrementing GPU-memory based DWORD-aligned memory address
 	}
 
