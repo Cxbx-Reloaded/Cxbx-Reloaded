@@ -343,7 +343,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 			if (xdkVersion < BuildVersion) {
 				xdkVersion = BuildVersion;
 			}
-			XbLibFlag = XbSymbolLibraryToFlag(std::string(pLibraryVersion[v].szName, pLibraryVersion[v].szName + 8).c_str());
+			XbLibFlag = XbSymbolDatabase_LibraryToFlag(std::string(pLibraryVersion[v].szName, pLibraryVersion[v].szName + 8).c_str());
 			XbLibScan |= XbLibFlag;
 
 			// Keep certain library versions for plugin usage.
@@ -412,7 +412,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 		// Verify the version of the cache file against the Symbol Database version hash
 		const uint32_t SymbolDatabaseVersionHash = symbolCacheData.GetLongValue(section_info, sect_info_keys.SymbolDatabaseVersionHash, /*Default=*/0);
 
-		if (SymbolDatabaseVersionHash == XbSymbolLibraryVersion()) {
+		if (SymbolDatabaseVersionHash == XbSymbolDatabase_LibraryVersion()) {
 			g_SymbolCacheUsed = true;
 			CSimpleIniA::TNamesDepend symbol_names;
 
@@ -499,7 +499,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
         }
 #endif
 
-		XbSymbolSetOutputMessage(EmuOutputMessage);
+		XbSymbolDatabase_SetOutputMessage(EmuOutputMessage);
 
 		XbSymbolScan(pXbeHeader, EmuRegisterSymbol, false);
 	}
@@ -510,7 +510,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 	symbolCacheData.Reset();
 
 	// Store Symbol Database version
-	symbolCacheData.SetLongValue(section_info, sect_info_keys.SymbolDatabaseVersionHash, XbSymbolLibraryVersion(), nullptr, /*UseHex =*/false);
+	symbolCacheData.SetLongValue(section_info, sect_info_keys.SymbolDatabaseVersionHash, XbSymbolDatabase_LibraryVersion(), nullptr, /*UseHex =*/false);
 
 	// Store Certificate Details
 	symbolCacheData.SetValue(section_certificate, sect_certificate_keys.Name, tAsciiTitle);
