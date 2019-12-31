@@ -390,7 +390,7 @@ inline bool TitleRequiresUnpatchedFibers()
 
 
 // NOTE: EmuInstallPatch do not get to be in XbSymbolDatabase, do the patches in Cxbx project only.
-inline void EmuInstallPatch(std::string FunctionName, xbaddr FunctionAddr)
+inline void EmuInstallPatch(const std::string FunctionName, const xbaddr FunctionAddr)
 {
 	auto it = g_PatchTable.find(FunctionName);
 	if (it == g_PatchTable.end()) {
@@ -431,12 +431,15 @@ void EmuInstallPatches()
 	for (const auto& it : g_SymbolAddresses) {
 		EmuInstallPatch(it.first, it.second);
 	}
+
+	LookupTrampolines();
 }
 
-void* GetPatchedFunctionTrampoline(std::string functionName)
+void* GetPatchedFunctionTrampoline(const std::string functionName)
 {
-	if (g_FunctionHooks.find(functionName) != g_FunctionHooks.end()) {
-		auto trampoline = g_FunctionHooks[functionName].GetTrampoline();
+	auto it = g_FunctionHooks.find(functionName);
+	if (it != g_FunctionHooks.end()) {
+		auto trampoline = it->second.GetTrampoline();
 		if (trampoline == nullptr) {
 			EmuLogEx(CXBXR_MODULE::HLE, LOG_LEVEL::WARNING, "Failed to get XB_Trampoline for %s", functionName.c_str());
 		}

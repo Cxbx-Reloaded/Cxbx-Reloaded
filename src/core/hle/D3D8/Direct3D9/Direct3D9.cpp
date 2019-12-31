@@ -267,6 +267,58 @@ g_EmuCDPD = {0};
 		} \
 	} while (0)
 
+// Declare trampolines
+#define XB_TRAMPOLINES(XB_MACRO)                                                                                                                                       \
+    XB_MACRO(HRESULT,            WINAPI,     D3DDevice_CreateVertexShader,      (CONST DWORD*, CONST DWORD*, DWORD*, DWORD)                                        );  \
+    XB_MACRO(VOID,               WINAPI,     D3DDevice_DeleteVertexShader,      (DWORD)                                                                            );  \
+    XB_MACRO(VOID,               WINAPI,     D3DDevice_GetBackBuffer,           (INT, D3DBACKBUFFER_TYPE, XTL::X_D3DSurface**)                                     );  \
+    XB_MACRO(XTL::X_D3DSurface*, WINAPI,     D3DDevice_GetBackBuffer2,          (INT)                                                                              );  \
+    XB_MACRO(HRESULT,            WINAPI,     D3DDevice_GetDepthStencilSurface,  (XTL::X_D3DSurface**)                                                              );  \
+    XB_MACRO(XTL::X_D3DSurface*, WINAPI,     D3DDevice_GetDepthStencilSurface2, (VOID)                                                                             );  \
+    XB_MACRO(VOID,               WINAPI,     D3DDevice_GetDisplayMode,          (XTL::X_D3DDISPLAYMODE*)                                                           );  \
+    XB_MACRO(HRESULT,            WINAPI,     D3DDevice_GetRenderTarget,         (XTL::X_D3DSurface**)                                                              );  \
+    XB_MACRO(XTL::X_D3DSurface*, WINAPI,     D3DDevice_GetRenderTarget2,        (VOID)                                                                             );  \
+    XB_MACRO(HRESULT,            WINAPI,     D3DDevice_LightEnable,             (DWORD, BOOL)                                                                      );  \
+  /*XB_MACRO(VOID,               WINAPI,     D3DDevice_LoadVertexShader,        (DWORD, DWORD)                                                                     );*/\
+  /*XB_MACRO(VOID,               WINAPI,     D3DDevice_LoadVertexShaderProgram, (CONST DWORD*, DWORD)                                                              );*/\
+  /*XB_MACRO(VOID,               __stdcall,  D3DDevice_LoadVertexShader_0,      ()                                                                                 );*/\
+  /*XB_MACRO(VOID,               WINAPI,     D3DDevice_LoadVertexShader_4,      (DWORD)                                                                            );*/\
+    XB_MACRO(HRESULT,            WINAPI,     D3DDevice_Reset,                   (XTL::X_D3DPRESENT_PARAMETERS*)                                                    );  \
+  /*XB_MACRO(VOID,               WINAPI,     D3DDevice_SelectVertexShader,      (DWORD, DWORD)                                                                     );*/\
+  /*XB_MACRO(VOID,               __stdcall,  D3DDevice_SelectVertexShader_0,    ()                                                                                 );*/\
+  /*XB_MACRO(VOID,               __stdcall,  D3DDevice_SelectVertexShader_4,    (DWORD)                                                                            );*/\
+  /*XB_MACRO(VOID,               WINAPI,     D3DDevice_SetGammaRamp,            (DWORD, CONST X_D3DGAMMARAMP*)                                                     );*/\
+    XB_MACRO(VOID,               WINAPI,     D3DDevice_SetIndices,              (XTL::X_D3DIndexBuffer*, UINT)                                                     );  \
+    XB_MACRO(VOID,               WINAPI,     D3DDevice_SetIndices_4,            (UINT)                                                                             );  \
+    XB_MACRO(HRESULT,            WINAPI,     D3DDevice_SetLight,                (DWORD, CONST XTL::X_D3DLIGHT8*)                                                   );  \
+    XB_MACRO(VOID,               WINAPI,     D3DDevice_SetPixelShader,          (DWORD)                                                                            );  \
+    XB_MACRO(VOID,               WINAPI,     D3DDevice_SetPixelShader_0,        ()                                                                                 );  \
+    XB_MACRO(VOID,               __fastcall, D3DDevice_SetRenderState_Simple,   (DWORD, DWORD)                                                                     );  \
+    XB_MACRO(VOID,               WINAPI,     D3DDevice_SetRenderTarget,         (XTL::X_D3DSurface*, XTL::X_D3DSurface*)                                           );  \
+    XB_MACRO(VOID,               WINAPI,     D3DDevice_SetStreamSource,         (UINT, XTL::X_D3DVertexBuffer*, UINT)                                              );  \
+    XB_MACRO(VOID,               WINAPI,     D3DDevice_SetStreamSource_4,       (UINT, XTL::X_D3DVertexBuffer*, UINT)                                              );  \
+    XB_MACRO(VOID,               WINAPI,     D3DDevice_SetStreamSource_8,       (XTL::X_D3DVertexBuffer*, UINT)                                                    );  \
+    XB_MACRO(VOID,               WINAPI,     D3DDevice_SetTexture,              (DWORD, XTL::X_D3DBaseTexture*)                                                    );  \
+    XB_MACRO(VOID,               WINAPI,     D3DDevice_SetTexture_4,            (XTL::X_D3DBaseTexture*)                                                           );  \
+  /*XB_MACRO(VOID,               WINAPI,     D3DDevice_SetVertexShader,         (DWORD)                                                                            );*/\
+  /*XB_MACRO(VOID,               WINAPI,     D3DDevice_SetVertexShaderInput,    (DWORD, UINT, XTL::X_STREAMINPUT*)                                                 );*/\
+    XB_MACRO(VOID,               WINAPI,     D3DDevice_SetViewport,             (CONST XTL::X_D3DVIEWPORT8*)                                                       );  \
+    XB_MACRO(VOID,               WINAPI,     D3D_DestroyResource,               (XTL::X_D3DResource*)                                                              );  \
+    XB_MACRO(VOID,               WINAPI,     D3D_DestroyResource__LTCG,         (VOID)                                                                             );  \
+    XB_MACRO(HRESULT,            WINAPI,     Direct3D_CreateDevice,             (UINT, D3DDEVTYPE, HWND, DWORD, XTL::X_D3DPRESENT_PARAMETERS*, IDirect3DDevice**)  );  \
+    XB_MACRO(HRESULT,            WINAPI,     Direct3D_CreateDevice_16,          (UINT, D3DDEVTYPE, HWND, XTL::X_D3DPRESENT_PARAMETERS*)                            );  \
+    XB_MACRO(HRESULT,            WINAPI,     Direct3D_CreateDevice_4,           (XTL::X_D3DPRESENT_PARAMETERS*)                                                    );  \
+    XB_MACRO(VOID,               WINAPI,     Lock2DSurface,                     (XTL::X_D3DPixelContainer*, D3DCUBEMAP_FACES, UINT, D3DLOCKED_RECT*, RECT*, DWORD) );  \
+    XB_MACRO(VOID,               WINAPI,     Lock3DSurface,                     (XTL::X_D3DPixelContainer*, UINT, D3DLOCKED_BOX*, D3DBOX*, DWORD)                  );  \
+
+XB_TRAMPOLINES(XB_trampoline_declare);
+
+void LookupTrampolines()
+{
+	XB_TRAMPOLINES(XB_trampoline_lookup);
+}
+
+#undef XB_TRAMPOLINES
 
 const char *CxbxGetErrorDescription(HRESULT hResult)
 {
@@ -2908,14 +2960,11 @@ void Direct3D_CreateDevice_End()
     }
 
     if (g_pXbox_BackBufferSurface == xbnullptr) {
-        // Setup trampolines for both versions of D3DDevice_GetRenderTarget
-        XB_trampoline(HRESULT, WINAPI, D3DDevice_GetRenderTarget, (XTL::X_D3DSurface**));
-        XB_trampoline(XTL::X_D3DSurface*, WINAPI, D3DDevice_GetRenderTarget2, (VOID));
-        if (XB_D3DDevice_GetRenderTarget) {
-            XB_D3DDevice_GetRenderTarget(&g_pXbox_BackBufferSurface);
+        if (XB_TRMP(D3DDevice_GetRenderTarget)) {
+            XB_TRMP(D3DDevice_GetRenderTarget)(&g_pXbox_BackBufferSurface);
         }
-        else if (XB_D3DDevice_GetRenderTarget2) {
-            g_pXbox_BackBufferSurface = XB_D3DDevice_GetRenderTarget2();
+        else if (XB_TRMP(D3DDevice_GetRenderTarget2)) {
+            g_pXbox_BackBufferSurface = XB_TRMP(D3DDevice_GetRenderTarget2)();
         }
 
         // At this point, pRenderTarget should now point to a valid render target
@@ -2931,14 +2980,11 @@ void Direct3D_CreateDevice_End()
 
     // Now do the same, but for the default depth stencil surface
     if (g_pXbox_DefaultDepthStencilSurface == xbnullptr) {
-        // Setup trampolines for both versions of D3DDevice_GetDepthStencilSurface
-        XB_trampoline(HRESULT, WINAPI, D3DDevice_GetDepthStencilSurface, (XTL::X_D3DSurface**));
-        XB_trampoline(XTL::X_D3DSurface*, WINAPI, D3DDevice_GetDepthStencilSurface2, (VOID));
-        if (XB_D3DDevice_GetDepthStencilSurface) {
-            XB_D3DDevice_GetDepthStencilSurface(&g_pXbox_DefaultDepthStencilSurface);
+        if (XB_TRMP(D3DDevice_GetDepthStencilSurface)) {
+            XB_TRMP(D3DDevice_GetDepthStencilSurface)(&g_pXbox_DefaultDepthStencilSurface);
         }
-        else if (XB_D3DDevice_GetDepthStencilSurface2) {
-            g_pXbox_DefaultDepthStencilSurface = XB_D3DDevice_GetDepthStencilSurface2();
+        else if (XB_TRMP(D3DDevice_GetDepthStencilSurface2)) {
+            g_pXbox_DefaultDepthStencilSurface = XB_TRMP(D3DDevice_GetDepthStencilSurface2)();
         }
 
         // At this point, g_pXbox_DefaultDepthStencilSurface should now point to a valid depth stencil
@@ -2977,12 +3023,11 @@ HRESULT WINAPI XTL::EMUPATCH(Direct3D_CreateDevice_4)
     HRESULT hRet = 0;
 
 	// Only then call Xbox CreateDevice function
-	XB_trampoline(HRESULT, WINAPI, Direct3D_CreateDevice_4, (X_D3DPRESENT_PARAMETERS*));
     __asm {
         mov eax, BehaviorFlags
         mov ecx, ppReturnedDeviceInterface
         push pPresentationParameters
-        call XB_Direct3D_CreateDevice_4
+        call XB_TRMP(Direct3D_CreateDevice_4)
         mov hRet, eax
     }
 
@@ -3012,8 +3057,7 @@ HRESULT WINAPI XTL::EMUPATCH(Direct3D_CreateDevice_16)
 	Direct3D_CreateDevice_Start(pPresentationParameters);
 
 	// Only then call Xbox CreateDevice function
-	XB_trampoline(HRESULT, WINAPI, Direct3D_CreateDevice_16, (UINT, D3DDEVTYPE, HWND, X_D3DPRESENT_PARAMETERS*));
-	HRESULT hRet = XB_Direct3D_CreateDevice_16(Adapter, DeviceType, hFocusWindow, pPresentationParameters);
+	HRESULT hRet = XB_TRMP(Direct3D_CreateDevice_16)(Adapter, DeviceType, hFocusWindow, pPresentationParameters);
 
 	Direct3D_CreateDevice_End();
 
@@ -3040,11 +3084,10 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetIndices_4)
     g_Xbox_BaseVertexIndex = BaseVertexIndex;
 
     // Call LTCG-specific trampoline
-    XB_trampoline(VOID, WINAPI, D3DDevice_SetIndices_4, (UINT));
     __asm {
         mov ebx, pIndexData
         push BaseVertexIndex
-        call XB_D3DDevice_SetIndices_4;
+        call XB_TRMP(D3DDevice_SetIndices_4);
     }
 }
 
@@ -3066,8 +3109,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetIndices)
 	// Cache the base vertex index then call the Xbox function
 	g_Xbox_BaseVertexIndex = BaseVertexIndex;
 
-	XB_trampoline(VOID, WINAPI, D3DDevice_SetIndices, (X_D3DIndexBuffer*, UINT));
-	XB_D3DDevice_SetIndices(pIndexData, BaseVertexIndex);
+	XB_TRMP(D3DDevice_SetIndices)(pIndexData, BaseVertexIndex);
 }
 
 // ******************************************************************
@@ -3095,8 +3137,7 @@ HRESULT WINAPI XTL::EMUPATCH(Direct3D_CreateDevice)
 	Direct3D_CreateDevice_Start(pPresentationParameters);
 
 	// Only then call Xbox CreateDevice function
-	XB_trampoline(HRESULT, WINAPI, Direct3D_CreateDevice, (UINT, D3DDEVTYPE, HWND, DWORD, X_D3DPRESENT_PARAMETERS*, IDirect3DDevice**));
-	HRESULT hRet = XB_Direct3D_CreateDevice(Adapter, DeviceType, hFocusWindow, BehaviorFlags, pPresentationParameters, ppReturnedDeviceInterface);
+	HRESULT hRet = XB_TRMP(Direct3D_CreateDevice)(Adapter, DeviceType, hFocusWindow, BehaviorFlags, pPresentationParameters, ppReturnedDeviceInterface);
 
 	Direct3D_CreateDevice_End();
 
@@ -3130,8 +3171,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_Reset)
 	FreeHostResource(GetHostResourceKey(g_pXbox_DefaultDepthStencilSurface));
 	
 	// Call the Xbox Reset function to do the rest of the work for us
-	XB_trampoline(HRESULT, WINAPI, D3DDevice_Reset, (X_D3DPRESENT_PARAMETERS*));
-	HRESULT hRet = XB_D3DDevice_Reset(pPresentationParameters);
+	HRESULT hRet = XB_TRMP(D3DDevice_Reset)(pPresentationParameters);
 
 	// Refresh the current render target and depth stencil, to apply changes made within D3DDevice_Reset
 	// Some XDKs do this for us, but not all do!
@@ -3156,15 +3196,12 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_GetDisplayFieldStatus)(X_D3DFIELD_STATUS *pF
 	// but we don't have an OOVPA for that. Instead, we call the Xbox implementation of 
 	// D3DDevice_GetDisplayMode and read the result
 
-	// Get a function pointer to the unpatched xbox function D3DDevice_GetDisplayMode
-	XB_trampoline(VOID, WINAPI, D3DDevice_GetDisplayMode, (X_D3DDISPLAYMODE*));
-	
 	X_D3DDISPLAYMODE displayMode;
 
 	// If we can find the Xbox version of GetDisplayMode, use the real data returned, otherwise
 	// use a sensible default
-	if (XB_D3DDevice_GetDisplayMode != nullptr) {
-		XB_D3DDevice_GetDisplayMode(&displayMode);
+	if (XB_TRMP(D3DDevice_GetDisplayMode) != nullptr) {
+		XB_TRMP(D3DDevice_GetDisplayMode)(&displayMode);
 	} else {
 		// We don't show a warning because doing so pollutes the kernel debug log as this function gets called every frame
 		displayMode.Flags = X_D3DPRESENTFLAG_INTERLACED;
@@ -3704,16 +3741,13 @@ XTL::X_D3DSurface* WINAPI XTL::EMUPATCH(D3DDevice_GetBackBuffer2)
 	// Rather than create a new surface, we should forward to the Xbox version of GetBackBuffer,
 	// This gives us the correct Xbox surface to update.
 	// We get signatures for both backbuffer functions as it changed in later XDKs
-	XB_trampoline(X_D3DSurface*, WINAPI, D3DDevice_GetBackBuffer2, (INT));
-
-	XB_trampoline(VOID, WINAPI, D3DDevice_GetBackBuffer, (INT, D3DBACKBUFFER_TYPE, X_D3DSurface**));
 
 	// This also updates the reference count, so we don't need to do this ourselves
-	if (XB_D3DDevice_GetBackBuffer != nullptr) {
-		XB_D3DDevice_GetBackBuffer(BackBuffer, D3DBACKBUFFER_TYPE_MONO, &pXboxBackBuffer);
+	if (XB_TRMP(D3DDevice_GetBackBuffer) != nullptr) {
+		XB_TRMP(D3DDevice_GetBackBuffer)(BackBuffer, D3DBACKBUFFER_TYPE_MONO, &pXboxBackBuffer);
 	}
 	else {
-		pXboxBackBuffer = XB_D3DDevice_GetBackBuffer2(BackBuffer);
+		pXboxBackBuffer = XB_TRMP(D3DDevice_GetBackBuffer2)(BackBuffer);
 	}
 
 	// Now pXboxBackbuffer points to the requested Xbox backbuffer
@@ -3976,8 +4010,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetViewport)
 	LOG_FUNC_ONE_ARG(pViewport);
 
 	// Always call the Xbox SetViewPort to update D3D Internal State
-	XB_trampoline(VOID, WINAPI, D3DDevice_SetViewport, (CONST X_D3DVIEWPORT8 *));
-	XB_D3DDevice_SetViewport(pViewport);
+	XB_TRMP(D3DDevice_SetViewport)(pViewport);
 
 	// Host does not support pViewPort = nullptr
 	if (pViewport == nullptr) {
@@ -4167,14 +4200,13 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateVertexShader)
 	// Parse results are pushed to the push buffer
 	// Sets other fields
 	// pHandle recieves the addres of the new shader, or-ed with 1 (D3DFVF_RESERVED0)
-	XB_trampoline(HRESULT, WINAPI, D3DDevice_CreateVertexShader, (CONST DWORD*, CONST DWORD*, DWORD*, DWORD));
 
     HRESULT hRet = D3D_OK;
 
-    if (XB_D3DDevice_CreateVertexShader) {
-        HRESULT hRet = XB_D3DDevice_CreateVertexShader(pDeclaration, pFunction, pHandle, Usage);
+    if (XB_TRMP(D3DDevice_CreateVertexShader)) {
+        HRESULT hRet = XB_TRMP(D3DDevice_CreateVertexShader)(pDeclaration, pFunction, pHandle, Usage);
         if (FAILED(hRet)) {
-            LOG_TEST_CASE("XB_D3DDevice_CreateVertexShader failed");
+            LOG_TEST_CASE("D3DDevice_CreateVertexShader trampoline call returned failure");
             RETURN(hRet);
         }
     } else {
@@ -4503,8 +4535,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetTexture_4)
 	EmuLog(LOG_LEVEL::DEBUG, "D3DDevice_SetTexture_4(Stage : %d pTexture : %08x);", Stage, pTexture);
 
 	// Call the Xbox implementation of this function, to properly handle reference counting for us
-	//XB_trampoline(VOID, WINAPI, D3DDevice_SetTexture_4, (X_D3DBaseTexture*));
-	//XB_D3DDevice_SetTexture_4(pTexture);
+	//XB_TRMP(D3DDevice_SetTexture_4)(pTexture);
 
 	g_pXbox_SetTexture[Stage] = pTexture;
 }
@@ -4524,8 +4555,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetTexture)
 		LOG_FUNC_END;
 
 	// Call the Xbox implementation of this function, to properly handle reference counting for us
-	XB_trampoline(VOID, WINAPI, D3DDevice_SetTexture, (DWORD, X_D3DBaseTexture*));
-	XB_D3DDevice_SetTexture(Stage, pTexture);
+	XB_TRMP(D3DDevice_SetTexture)(Stage, pTexture);
 
 	g_pXbox_SetTexture[Stage] = pTexture;
 }
@@ -6477,8 +6507,7 @@ VOID __fastcall XTL::EMUPATCH(D3DDevice_SetRenderState_Simple)
         LOG_FUNC_ARG(Value)
         LOG_FUNC_END;
 
-    XB_trampoline(VOID, __fastcall, D3DDevice_SetRenderState_Simple, (DWORD, DWORD));
-    XB_D3DDevice_SetRenderState_Simple(Method, Value);
+    XB_TRMP(D3DDevice_SetRenderState_Simple)(Method, Value);
 
     // Fetch the RenderState conversion info for the given input
     int XboxRenderStateIndex = -1;
@@ -6623,9 +6652,7 @@ VOID WINAPI XTL::EMUPATCH(Lock2DSurface)
 
 
 	// Pass through to the Xbox implementation of this function
-	XB_trampoline(VOID, WINAPI, Lock2DSurface, (X_D3DPixelContainer*, D3DCUBEMAP_FACES, UINT, D3DLOCKED_RECT*, RECT*, DWORD));
-
-	XB_Lock2DSurface(pPixelContainer, FaceType, Level, pLockedRect, pRect, Flags);
+	XB_TRMP(Lock2DSurface)(pPixelContainer, FaceType, Level, pLockedRect, pRect, Flags);
 
 	// Mark the resource as modified
 	ForceResourceRehash(pPixelContainer);
@@ -6653,9 +6680,7 @@ VOID WINAPI XTL::EMUPATCH(Lock3DSurface)
 		LOG_FUNC_END;
 
 	// Pass through to the Xbox implementation of this function
-	XB_trampoline(VOID, WINAPI, Lock3DSurface, (X_D3DPixelContainer*, UINT, D3DLOCKED_BOX*, D3DBOX*, DWORD));
-
-	XB_Lock3DSurface(pPixelContainer, Level, pLockedVolume, pBox, Flags);
+	XB_TRMP(Lock3DSurface)(pPixelContainer, Level, pLockedVolume, pBox, Flags);
 
 	// Mark the resource as modified
 	ForceResourceRehash(pPixelContainer);
@@ -6690,8 +6715,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetStreamSource_4)
 
 	// TODO : Forward to Xbox implementation
 	// This should stop us having to patch GetStreamSource!
-	//XB_trampoline(VOID, WINAPI, D3DDevice_SetStreamSource_4, (UINT, X_D3DVertexBuffer*, UINT));
-	//XB_D3DDevice_SetStreamSource_4(StreamNumber, pStreamData, Stride);
+	//XB_TRMP(D3DDevice_SetStreamSource_4)(StreamNumber, pStreamData, Stride);
 }
 
 // This uses a custom calling convention where parameter is passed in EAX
@@ -6720,8 +6744,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetStreamSource_8)
 
 	// TODO : Forward to Xbox implementation
 	// This should stop us having to patch GetStreamSource!
-	//XB_trampoline(VOID, WINAPI, D3DDevice_SetStreamSource_8, (X_D3DVertexBuffer*, UINT));
-	//XB_D3DDevice_SetStreamSource_8(pStreamData, Stride);
+	//XB_TRMP(D3DDevice_SetStreamSource_8)(pStreamData, Stride);
 }
 
 // ******************************************************************
@@ -6744,8 +6767,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetStreamSource)
 
 	// Forward to Xbox implementation
 	// This should stop us having to patch GetStreamSource!
-	XB_trampoline(VOID, WINAPI, D3DDevice_SetStreamSource, (UINT, X_D3DVertexBuffer*, UINT));
-	XB_D3DDevice_SetStreamSource(StreamNumber, pStreamData, Stride);
+	XB_TRMP(D3DDevice_SetStreamSource)(StreamNumber, pStreamData, Stride);
 }
 
 // ******************************************************************
@@ -7366,10 +7388,9 @@ VOID WINAPI D3DDevice_SetPixelShader_0_IMPL
     LOG_FUNC_ONE_ARG(Handle);
 
     // Call the Xbox function to make sure D3D structures get set
-    XB_trampoline(VOID, WINAPI, D3DDevice_SetPixelShader_0, ());
     __asm {
         mov eax, Handle
-        call XB_D3DDevice_SetPixelShader_0
+        call XB_TRMP(D3DDevice_SetPixelShader_0)
     }
 
     D3DDevice_SetPixelShaderCommon(Handle);
@@ -7395,8 +7416,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetPixelShader)
 	LOG_FUNC_ONE_ARG(Handle);
 
 	// Call the Xbox function to make sure D3D structures get set
-	XB_trampoline(VOID, WINAPI, D3DDevice_SetPixelShader, (DWORD));
-	XB_D3DDevice_SetPixelShader(Handle);
+	XB_TRMP(D3DDevice_SetPixelShader)(Handle);
 
 	D3DDevice_SetPixelShaderCommon(Handle);
 }
@@ -7750,8 +7770,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_SetLight)
 		LOG_FUNC_ARG(pLight)
 		LOG_FUNC_END;
 
-	XB_trampoline(HRESULT, WINAPI, D3DDevice_SetLight, (DWORD, CONST X_D3DLIGHT8*));
-	XB_D3DDevice_SetLight(Index, pLight);
+	XB_TRMP(D3DDevice_SetLight)(Index, pLight);
 
     HRESULT hRet = g_pD3DDevice->SetLight(Index, pLight);
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetLight");    
@@ -7787,8 +7806,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_LightEnable)
 		LOG_FUNC_ARG(bEnable)
 		LOG_FUNC_END;
 
-	XB_trampoline(HRESULT, WINAPI, D3DDevice_LightEnable, (DWORD, BOOL));
-	XB_D3DDevice_LightEnable(Index, bEnable);
+	XB_TRMP(D3DDevice_LightEnable)(Index, bEnable);
 
     HRESULT hRet = g_pD3DDevice->LightEnable(Index, bEnable);
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->LightEnable");    
@@ -7813,8 +7831,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderTarget)
 	IDirect3DSurface *pHostRenderTarget = nullptr;
 	IDirect3DSurface *pHostDepthStencil = nullptr;
 
-	XB_trampoline(void, WINAPI, D3DDevice_SetRenderTarget, (X_D3DSurface*, X_D3DSurface*));
-	XB_D3DDevice_SetRenderTarget(pRenderTarget, pNewZStencil);
+	XB_TRMP(D3DDevice_SetRenderTarget)(pRenderTarget, pNewZStencil);
 
 	// In Xbox titles, CreateDevice calls SetRenderTarget for the back buffer
 	// We can use this to determine the Xbox backbuffer surface for later use!
@@ -8018,8 +8035,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DeleteVertexShader)
 {
 	LOG_FUNC_ONE_ARG(Handle);
 
-	XB_trampoline(void, WINAPI, D3DDevice_DeleteVertexShader, (DWORD));
-	XB_D3DDevice_DeleteVertexShader(Handle);
+	XB_TRMP(D3DDevice_DeleteVertexShader)(Handle);
 
 	// Handle is always address of an Xbox VertexShader struct, or-ed with 1 (X_D3DFVF_RESERVED0)
 	// It's reference count is lowered. If it reaches zero (0), the struct is freed.
@@ -8989,8 +9005,7 @@ void WINAPI XTL::EMUPATCH(D3D_DestroyResource)(X_D3DResource* pResource)
 
     if (DestroyResource_Common(pResource)) {
         // Call the Xbox version of DestroyResource
-        XB_trampoline(void, WINAPI, D3D_DestroyResource, (X_D3DResource*));
-        XB_D3D_DestroyResource(pResource);
+		XB_TRMP(D3D_DestroyResource)(pResource);
     }
 }
 
@@ -9006,10 +9021,9 @@ void WINAPI XTL::EMUPATCH(D3D_DestroyResource__LTCG)()
 
     if (DestroyResource_Common(pResource)) {
         // Call the Xbox version of DestroyResource
-        XB_trampoline(void, WINAPI, D3D_DestroyResource__LTCG, (VOID));
         __asm {
             mov edi, pResource
-            call XB_D3D_DestroyResource__LTCG
+            call XB_TRMP(D3D_DestroyResource__LTCG)
         }
     }
 }
