@@ -36,13 +36,21 @@ extern std::map<std::string, xbaddr> g_SymbolAddresses;
 
 void EmuHLEIntercept(Xbe::Header *XbeHeader);
 
-std::string GetDetectedSymbolName(xbaddr address, int *symbolOffset);
+std::string GetDetectedSymbolName(const xbaddr address, int * const symbolOffset);
 void* GetXboxFunctionPointer(std::string functionName);
 
+#define XB_TYPE(func) XB_TRAMPOLINE_##func##_t
+#define XB_NAME(func) XB_TRAMPOLINE_##func##_str
+#define XB_TRMP(func) XB_TRAMPOLINE_##func
+
 // Declares an unpatched Xbox function trampoline, callable by name (with a 'XB_' prefix attached)
-#define XB_trampoline(ret, conv, name, arguments) \
-    typedef ret(conv *XB_##name##_t)arguments; \
-    static XB_##name##_t XB_##name = (XB_##name##_t)GetXboxFunctionPointer(#name);
+#define XB_trampoline_declare(ret, conv, func, arguments) \
+    typedef ret(conv * XB_TYPE(func))arguments; \
+    static const std::string XB_NAME(func) = #func; \
+    static XB_TYPE(func) XB_TRMP(func) = nullptr
+
+#define XB_trampoline_lookup(ret, conv, func, arguments) \
+    XB_TRMP(func) = (XB_TYPE(func))GetXboxFunctionPointer(XB_NAME(func))
 
 #ifdef _DEBUG_TRACE
 void VerifyHLEDataBase();

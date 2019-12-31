@@ -100,13 +100,13 @@ void* GetXboxFunctionPointer(std::string functionName)
 }
 
 // NOTE: GetDetectedSymbolName do not get to be in XbSymbolDatabase, get symbol string in Cxbx project only.
-std::string GetDetectedSymbolName(xbaddr address, int *symbolOffset)
+std::string GetDetectedSymbolName(const xbaddr address, int * const symbolOffset)
 {
     std::string result = "";
     int closestMatch = MAXINT;
 
     for (auto it = g_SymbolAddresses.begin(); it != g_SymbolAddresses.end(); ++it) {
-        xbaddr symbolAddr = (*it).second;
+        xbaddr symbolAddr = it->second;
         if (symbolAddr == xbnull)
             continue;
 
@@ -116,7 +116,7 @@ std::string GetDetectedSymbolName(xbaddr address, int *symbolOffset)
             if (closestMatch > distance)
             {
                 closestMatch = distance;
-                result = (*it).first;
+                result = it->first;
             }
         }
     }
@@ -427,8 +427,8 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 
 				// Iterate through the map of symbol addresses, calling GetEmuPatchAddr on all functions.
 				for (auto it = g_SymbolAddresses.begin(); it != g_SymbolAddresses.end(); ++it) {
-					std::string functionName = (*it).first;
-					xbaddr location = (*it).second;
+					std::string functionName = it->first;
+					xbaddr location = it->second;
 
 					std::stringstream output;
 					output << "SymbolCache: 0x" << std::setfill('0') << std::setw(8) << std::hex << location
