@@ -1615,7 +1615,7 @@ extern HRESULT EmuRecompileVshFunction
 {
 	XTL::X_VSH_SHADER_HEADER* pXboxVertexShaderHeader = (XTL::X_VSH_SHADER_HEADER*)pXboxFunction;
 	uint32_t* pToken;
-	XboxVertexShaderDecoder VshDecoder;
+	std::unique_ptr<XboxVertexShaderDecoder> VshDecoder = std::make_unique<XboxVertexShaderDecoder>();
 	ID3DBlob* pErrors = nullptr;
 	HRESULT             hRet = 0;
 
@@ -1654,7 +1654,7 @@ extern HRESULT EmuRecompileVshFunction
 
 	// Decode the vertex shader program tokens into an intermediate representation
 	pToken = (uint32_t*)((uintptr_t)pXboxFunction + sizeof(XTL::X_VSH_SHADER_HEADER));
-	while (VshDecoder.VshConvertToIntermediate(pToken)) {
+	while (VshDecoder->VshConvertToIntermediate(pToken)) {
 		pToken += X_VSH_INSTRUCTION_SIZE;
 	}
 
@@ -1664,7 +1664,7 @@ extern HRESULT EmuRecompileVshFunction
 
 	auto hlsl_stream = std::stringstream();
 	hlsl_stream << hlsl_template[0]; // Start with the HLSL template header
-	if (!VshDecoder.BuildShader(hlsl_stream)) {
+	if (!VshDecoder->BuildShader(hlsl_stream)) {
 		// Do not attempt to compile empty shaders
 		// This is a declaration only shader, so there is no function to recompile
 		*pbUseDeclarationOnly = true;
