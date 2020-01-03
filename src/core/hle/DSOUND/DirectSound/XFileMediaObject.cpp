@@ -25,7 +25,7 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#define LOG_PREFIX CXBXR_MODULE::DSOUND
+#define LOG_PREFIX CXBXR_MODULE::XMO
 
 // prevent name collisions
 namespace xboxkrnl {

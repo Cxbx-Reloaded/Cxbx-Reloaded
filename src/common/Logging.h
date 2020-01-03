@@ -83,6 +83,10 @@ typedef enum class _CXBXR_MODULE: unsigned int {
 	XIDCTRL,
 	ADM,
 	INPSYS,
+	DSBUFFER,
+	DSSTREAM,
+	DS3DCALC,
+	XMO,
 	// kernel
 	KRNL,
 	LOG,
