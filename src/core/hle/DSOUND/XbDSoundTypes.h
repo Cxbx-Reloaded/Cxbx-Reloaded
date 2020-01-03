@@ -35,6 +35,11 @@ namespace XTL {
 
 #define WAVE_FORMAT_XBOX_ADPCM 0x0069
 
+// Xbox SGE Memory layout
+#define                             XTL_DS_SGE_COUNT_MAX 2047
+#define                             XTL_DS_SGE_PAGE_MAX (4 * ONE_KB)
+#define                             XTL_DS_SGE_SIZE_MAX (XTL_DS_SGE_COUNT_MAX * XTL_DS_SGE_PAGE_MAX)
+
 // XDSMIXBIN Flags
 #define XDSMIXBIN_FRONT_LEFT        0
 #define XDSMIXBIN_FRONT_RIGHT       1

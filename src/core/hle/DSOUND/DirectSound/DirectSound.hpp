@@ -18,7 +18,7 @@
 // *  59 Temple Place - Suite 330, Bostom, MA 02111-1307, USA.
 // *
 // *  (c) 2002-2003 Aaron Robinson <caustik@caustik.com>
-// *  (c) 2017-2018 RadWolfie
+// *  (c) 2017-2020 RadWolfie
 // *
 // *  All rights reserved
 // *
