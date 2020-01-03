@@ -4171,11 +4171,10 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundStream_SetPitch)
 HRESULT WINAPI XTL::EMUPATCH(IDirectSoundStream_SetLFO)
 (
     X_CDirectSoundStream*   pThis,
-    LPCDSLFODESC            pLFODesc) {
-    LOG_FUNC_BEGIN
-        LOG_FUNC_ARG(pThis)
-        LOG_FUNC_ARG(pLFODesc)
-        LOG_FUNC_END;
+    LPCDSLFODESC            pLFODesc)
+{
+
+    LOG_FORWARD("CDirectSoundStream_SetLFO");
 
     return XTL::EMUPATCH(CDirectSoundStream_SetLFO)(pThis, pLFODesc);
 }
@@ -4190,10 +4189,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundStream_SetEG)
 {
     DSoundMutexGuardLock;
 
-    LOG_FUNC_BEGIN
-        LOG_FUNC_ARG(pThis)
-        LOG_FUNC_ARG(pEnvelopeDesc)
-        LOG_FUNC_END;
+    LOG_FORWARD("CDirectSoundStream_SetEG");
 
     return XTL::EMUPATCH(CDirectSoundStream_SetEG)(pThis, pEnvelopeDesc);
 }
@@ -4208,10 +4204,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundStream_SetFilter)
 {
     DSoundMutexGuardLock;
 
-    LOG_FUNC_BEGIN
-        LOG_FUNC_ARG(pThis)
-        LOG_FUNC_ARG(pFilterDesc)
-        LOG_FUNC_END;
+    LOG_FORWARD("CDirectSoundStream_SetFilter");
 
     return XTL::EMUPATCH(CDirectSoundStream_SetFilter)(pThis, pFilterDesc);
 }
@@ -4226,10 +4219,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundStream_SetHeadroom)
 {
     DSoundMutexGuardLock;
 
-    LOG_FUNC_BEGIN
-        LOG_FUNC_ARG(pThis)
-        LOG_FUNC_ARG(dwHeadroom)
-        LOG_FUNC_END;
+    LOG_FORWARD("CDirectSoundStream_SetHeadroom");
 
     return XTL::EMUPATCH(CDirectSoundStream_SetHeadroom)(pThis, dwHeadroom);
 }
@@ -4264,10 +4254,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundStream_SetMixBins)
 {
     DSoundMutexGuardLock;
 
-    LOG_FUNC_BEGIN
-        LOG_FUNC_ARG(pThis)
-        LOG_FUNC_ARG(pMixBins)
-        LOG_FUNC_END;
+    LOG_FORWARD("CDirectSoundStream_SetMixBins");
 
     return XTL::EMUPATCH(CDirectSoundStream_SetMixBins)(pThis, pMixBins);
 }
