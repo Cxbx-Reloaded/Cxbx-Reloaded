@@ -93,7 +93,7 @@ const static int8_t IndexTable[16] = {
     -1, -1, -1, -1, 2, 4, 6, 8
 };
 
-int TXboxAdpcmDecoder_DecodeSample(int Code, TAdpcmState *State) {
+static int TXboxAdpcmDecoder_DecodeSample(int Code, TAdpcmState *State) {
     int     Delta,
         Result;
 
@@ -111,7 +111,7 @@ int TXboxAdpcmDecoder_DecodeSample(int Code, TAdpcmState *State) {
     return(Result);
 }
 
-int TXboxAdpcmDecoder_Decode_Memory(uint8_t *in, int inlen, uint8_t *out, const int FChannels) {
+static int TXboxAdpcmDecoder_Decode_Memory(uint8_t *in, int inlen, uint8_t *out, const int FChannels) {
     TAdpcmState FAdpcmState[2];
     int16_t     Buffers[2][8];
     uint32_t    CodeBuf;
@@ -150,7 +150,7 @@ int TXboxAdpcmDecoder_Decode_Memory(uint8_t *in, int inlen, uint8_t *out, const 
     }
     return(outlen * XBOX_ADPCM_DSTSIZE * FChannels);
 }
-int TXboxAdpcmDecoder_guess_output_size(int SourceSize) {
+static int TXboxAdpcmDecoder_guess_output_size(int SourceSize) {
     return((SourceSize / XBOX_ADPCM_SRCSIZE) * XBOX_ADPCM_DSTSIZE);
 }
 
