@@ -40,6 +40,7 @@ namespace xboxkrnl {
 #include "DirectSoundLogging.hpp"
 #include "..\XbDSoundLogging.hpp"
 
+#include "DSStream_PacketManager.hpp"
 
 // TODO: Tasks need to do for DirectSound HLE
 // * Missing CDirectSoundStream patch
@@ -102,15 +103,15 @@ void DirectSoundDoWork_Stream(xboxkrnl::LARGE_INTEGER& time)
         if (pThis->Xb_rtPauseEx != 0 && pThis->Xb_rtPauseEx <= time.QuadPart) {
             pThis->Xb_rtPauseEx = 0LL;
             pThis->EmuFlags ^= DSE_FLAG_PAUSE;
-            // Don't call play here, let DSoundStreamProcess deal with it.
+            // Don't call play here, let DSStream_Packet_Process deal with it.
         }
         if ((pThis->EmuFlags & DSE_FLAG_FLUSH_ASYNC) == 0) {
-            DSoundStreamProcess(pThis);
+            DSStream_Packet_Process(pThis);
         } else {
             // Confirmed flush packet must be done in DirectSoundDoWork only when title is ready.
             if (pThis->Xb_rtFlushEx != 0 && pThis->Xb_rtFlushEx <= time.QuadPart) {
                 pThis->Xb_rtFlushEx = 0LL;
-                DSoundStreamProcess(pThis);
+                DSStream_Packet_Process(pThis);
             }
         }
     }
@@ -159,7 +160,7 @@ ULONG WINAPI XTL::EMUPATCH(CDirectSoundStream_Release)
             }
 
             for (auto buffer = pThis->Host_BufferPacketArray.begin(); buffer != pThis->Host_BufferPacketArray.end();) {
-                DSoundStreamClearPacket(buffer, XMP_STATUS_RELEASE_CXBXR, nullptr, nullptr, pThis);
+                DSStream_Packet_Clear(buffer, XMP_STATUS_RELEASE_CXBXR, nullptr, nullptr, pThis);
             }
 
             if (pThis->EmuBufferDesc.lpwfxFormat != nullptr) {
@@ -347,7 +348,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_Discontinuity)
     pThis->Xb_rtPauseEx = 0LL;
 
     for (auto buffer = pThis->Host_BufferPacketArray.begin(); buffer != pThis->Host_BufferPacketArray.end();) {
-        DSoundStreamClearPacket(buffer, XMP_STATUS_FLUSHED, pThis->Xb_lpfnCallback, pThis->Xb_lpvContext, pThis);
+        DSStream_Packet_Clear(buffer, XMP_STATUS_FLUSHED, pThis->Xb_lpfnCallback, pThis->Xb_lpvContext, pThis);
     }
 
     return DS_OK;
@@ -370,7 +371,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_Flush)
     pThis->EmuFlags &= ~(DSE_FLAG_FLUSH_ASYNC | DSE_FLAG_ENVELOPE | DSE_FLAG_ENVELOPE2);
     pThis->Xb_rtFlushEx = 0LL;
 
-    while (DSoundStreamProcess(pThis));
+    while (DSStream_Packet_Process(pThis));
 
     return DS_OK;
 }
@@ -909,7 +910,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetFormat)
 
     for (auto buffer = pThis->Host_BufferPacketArray.begin(); buffer != pThis->Host_BufferPacketArray.end();) {
         // TODO: Also need to pass down callback and context as well?
-        DSoundStreamClearPacket(buffer, XMP_STATUS_FLUSHED, nullptr, nullptr, pThis);
+        DSStream_Packet_Clear(buffer, XMP_STATUS_FLUSHED, nullptr, nullptr, pThis);
     }
 
     HRESULT hRet = HybridDirectSoundBuffer_SetFormat(pThis->EmuDirectSoundBuffer8, pwfxFormat, pThis->EmuBufferDesc,

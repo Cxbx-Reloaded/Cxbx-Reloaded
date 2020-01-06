@@ -40,6 +40,8 @@ namespace xboxkrnl {
 #include "DirectSoundLogging.hpp"
 #include "..\XbDSoundLogging.hpp"
 
+#include "DSStream_PacketManager.hpp"
+
 #include <mmreg.h>
 #include <msacm.h>
 #include <process.h>
@@ -391,7 +393,7 @@ static void dsound_thread_worker(LPVOID nullPtr)
                 continue;
             }
             if (((*ppDSStream)->EmuFlags & DSE_FLAG_FLUSH_ASYNC) > 0 && (*ppDSStream)->Xb_rtFlushEx == 0) {
-                DSoundStreamProcess((*ppDSStream));
+                DSStream_Packet_Process((*ppDSStream));
             }
         }
     }
@@ -901,7 +903,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSound_SynchPlayback)
         }
         if (((*ppDSStream)->EmuFlags & DSE_FLAG_SYNCHPLAYBACK_CONTROL) > 0) {
             DSoundBufferSynchPlaybackFlagRemove((*ppDSStream)->EmuFlags);
-            DSoundStreamProcess((*ppDSStream));
+            DSStream_Packet_Process((*ppDSStream));
         }
     }
 
