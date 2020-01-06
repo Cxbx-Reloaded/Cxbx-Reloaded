@@ -168,8 +168,11 @@ class X_CMcpxStream
 struct host_voice_packet {
     XTL::XMEDIAPACKET xmp_data;
     PVOID   pBuffer_data;
-    DWORD   rangeStart;
-    bool    isWritten;
+    DWORD   nextWriteOffset;
+    DWORD   lastWritePos;
+    DWORD   bufPlayed;
+    DWORD   bufWrittenIndex;
+    DWORD   avgBytesPerSec;
     bool    isPlayed;
 };
 
@@ -250,7 +253,6 @@ class X_CDirectSoundStream
         DWORD                                   X_MaxAttachedPackets;
         std::vector<struct host_voice_packet>   Host_BufferPacketArray;
         DWORD                                   Host_dwWriteOffsetNext;
-        DWORD                                   Host_dwTriggerRange;
         bool                                    Host_isProcessing;
         LPFNXMOCALLBACK                         Xb_lpfnCallback;
         LPVOID                                  Xb_lpvContext;
@@ -262,6 +264,7 @@ class X_CDirectSoundStream
         X_DSENVOLOPEDESC                        Xb_EnvolopeDesc;
         X_DSVOICEPROPS                          Xb_VoiceProperties;
         DWORD                                   Xb_Frequency;
+        DWORD                                   Host_dwLastWritePos;
 };
 
 // ******************************************************************
