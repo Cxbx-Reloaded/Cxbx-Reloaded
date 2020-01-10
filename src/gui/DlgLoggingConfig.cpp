@@ -74,6 +74,10 @@ static int g_DlgIndexes[] = {
 	IDC_LOG_XIDCTRL,
 	IDC_LOG_ADM,
 	IDC_LOG_INPSYS,
+	IDC_LOG_DSBUFFER,
+	IDC_LOG_DSSTREAM,
+	IDC_LOG_DS3DCALC,
+	IDC_LOG_XMO,
 	// Kernel
 	IDC_LOG_KRNL,
 	IDC_LOG_LOG,
@@ -324,63 +328,67 @@ INT_PTR CALLBACK DlgLogConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM
 				}
 				break;
 
-				case IDC_LOG_CXBXR:  
+				case IDC_LOG_CXBXR:
 				case IDC_LOG_XBE:
-				case IDC_LOG_INIT: 
-				case IDC_LOG_VMEM:       
-				case IDC_LOG_PMEM:       
-				case IDC_LOG_GUI:        
-				case IDC_LOG_EEPR:       
-				case IDC_LOG_RSA:        
-				case IDC_LOG_POOLMEM:    
-				case IDC_LOG_D3D8:       
-				case IDC_LOG_D3DST:      
-				case IDC_LOG_D3DCVT:     
-				case IDC_LOG_DSOUND:     
-				case IDC_LOG_XAPI:       
-				case IDC_LOG_XACT:       
-				case IDC_LOG_XGRP:       
-				case IDC_LOG_XONLINE:    
-				case IDC_LOG_FS:         
-				case IDC_LOG_PSHB:       
-				case IDC_LOG_PXSH:       
-				case IDC_LOG_VTXSH:      
-				case IDC_LOG_VTXB:       
-				case IDC_LOG_DINP:       
+				case IDC_LOG_INIT:
+				case IDC_LOG_VMEM:
+				case IDC_LOG_PMEM:
+				case IDC_LOG_GUI:
+				case IDC_LOG_EEPR:
+				case IDC_LOG_RSA:
+				case IDC_LOG_POOLMEM:
+				case IDC_LOG_D3D8:
+				case IDC_LOG_D3DST:
+				case IDC_LOG_D3DCVT:
+				case IDC_LOG_DSOUND:
+				case IDC_LOG_DSBUFFER:
+				case IDC_LOG_DSSTREAM:
+				case IDC_LOG_DS3DCALC:
+				case IDC_LOG_XMO:
+				case IDC_LOG_XAPI:
+				case IDC_LOG_XACT:
+				case IDC_LOG_XGRP:
+				case IDC_LOG_XONLINE:
+				case IDC_LOG_FS:
+				case IDC_LOG_PSHB:
+				case IDC_LOG_PXSH:
+				case IDC_LOG_VTXSH:
+				case IDC_LOG_VTXB:
+				case IDC_LOG_DINP:
 				case IDC_LOG_XINP:
 				case IDC_LOG_SDL:
-				case IDC_LOG_FILE:       
-				case IDC_LOG_X86:        
-				case IDC_LOG_HLE:        
-				case IDC_LOG_NET:        
-				case IDC_LOG_MCPX:       
-				case IDC_LOG_NV2A:       
-				case IDC_LOG_SMC:        
-				case IDC_LOG_OHCI:       
-				case IDC_LOG_USB:        
-				case IDC_LOG_HUB:        
-				case IDC_LOG_XIDCTRL:    
+				case IDC_LOG_FILE:
+				case IDC_LOG_X86:
+				case IDC_LOG_HLE:
+				case IDC_LOG_NET:
+				case IDC_LOG_MCPX:
+				case IDC_LOG_NV2A:
+				case IDC_LOG_SMC:
+				case IDC_LOG_OHCI:
+				case IDC_LOG_USB:
+				case IDC_LOG_HUB:
+				case IDC_LOG_XIDCTRL:
 				case IDC_LOG_ADM:
 				case IDC_LOG_INPSYS:
-				case IDC_LOG_KRNL:       
-				case IDC_LOG_LOG:        
-				case IDC_LOG_XBOX:       
-				case IDC_LOG_XBDM:       
-				case IDC_LOG_AV:         
-				case IDC_LOG_DBG:        
-				case IDC_LOG_EX:         
-				case IDC_LOG_FSC:        
-				case IDC_LOG_HAL:        
-				case IDC_LOG_IO:         
-				case IDC_LOG_KD:         
-				case IDC_LOG_KE:         
-				case IDC_LOG_KI:         
-				case IDC_LOG_MM:         
-				case IDC_LOG_NT:         
-				case IDC_LOG_OB:         
-				case IDC_LOG_PS:         
-				case IDC_LOG_RTL:        
-				case IDC_LOG_XC:         
+				case IDC_LOG_KRNL:
+				case IDC_LOG_LOG:
+				case IDC_LOG_XBOX:
+				case IDC_LOG_XBDM:
+				case IDC_LOG_AV:
+				case IDC_LOG_DBG:
+				case IDC_LOG_EX:
+				case IDC_LOG_FSC:
+				case IDC_LOG_HAL:
+				case IDC_LOG_IO:
+				case IDC_LOG_KD:
+				case IDC_LOG_KE:
+				case IDC_LOG_KI:
+				case IDC_LOG_MM:
+				case IDC_LOG_NT:
+				case IDC_LOG_OB:
+				case IDC_LOG_PS:
+				case IDC_LOG_RTL:
+				case IDC_LOG_XC:
 				case IDC_LOG_XE:
 					if (HIWORD(wParam) == BN_CLICKED) {
 						g_bHasChanges = true;

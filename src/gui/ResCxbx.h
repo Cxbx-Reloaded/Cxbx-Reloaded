@@ -87,6 +87,10 @@
 #define IDC_LOG_XC                      955
 #define IDC_LOG_XE                      956
 #define IDC_LOG_INPSYS                  957
+#define IDC_LOG_DSBUFFER                958
+#define IDC_LOG_DSSTREAM                959
+#define IDC_LOG_DS3DCALC                960
+#define IDC_LOG_XMO                     961
 #define IDC_SET_MOTOR                   999
 #define IDC_SET_X                       1000
 #define IDC_SET_Y                       1001
