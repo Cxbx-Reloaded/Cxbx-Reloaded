@@ -584,7 +584,8 @@ static inline void DSound3DBufferCreate(LPDIRECTSOUNDBUFFER8 pDSBuffer, LPDIRECT
     pThis->Xb_VolumeMixbin = 0L; \
     pThis->Xb_dwHeadroom = 600; /* default for 2D voice */ \
     pThis->Xb_EnvolopeDesc = { 0 }; \
-    InitVoiceProperties(pThis->Xb_VoiceProperties); /* The rest will initialize in GeneratePCMFormat to GenerateMixBinDefault. */
+    InitVoiceProperties(pThis->Xb_VoiceProperties); /* The rest will initialize in GeneratePCMFormat to GenerateMixBinDefault. */ \
+    pThis->Xb_Frequency = XTL_DSXFREQUENCY_ORIGINAL;
     //pThis->EmuBufferDesc = { 0 }; // Enable this when become necessary.
     /*
     pThis->EmuLockPtr1 = xbnullptr; \
@@ -605,9 +606,9 @@ static inline void DSoundBufferTransferSettings(
     LPDIRECTSOUNDBUFFER8       &pDSBufferOld,
     LPDIRECTSOUNDBUFFER8       &pDSBufferNew,
     LPDIRECTSOUND3DBUFFER8     &pDS3DBufferOld,
-    LPDIRECTSOUND3DBUFFER8     &pDS3DBufferNew)
+    LPDIRECTSOUND3DBUFFER8     &pDS3DBufferNew,
+    DWORD                       Xb_Frequency)
 {
-    DWORD dwFrequency;
     LONG lVolume, lPan;
     DS3DBUFFER ds3dBuffer;
 
@@ -615,10 +616,9 @@ static inline void DSoundBufferTransferSettings(
 		return;
 	}
 
-    pDSBufferOld->GetVolume(&lVolume);
-    pDSBufferOld->GetFrequency(&dwFrequency);
+    pDSBufferNew->SetFrequency(Xb_Frequency);
 
-    pDSBufferNew->SetFrequency(dwFrequency);
+    pDSBufferOld->GetVolume(&lVolume);
     pDSBufferNew->SetVolume(lVolume);
 
     if (pDS3DBufferOld != nullptr && pDS3DBufferNew != nullptr) {
@@ -636,7 +636,8 @@ static inline void DSoundBufferReCreate(
     DSBUFFERDESC               &DSBufferDesc,
     LPDIRECTSOUND3DBUFFER8     &pDS3DBuffer,
     LPDIRECTSOUNDBUFFER8       &pDSBufferNew,
-    LPDIRECTSOUND3DBUFFER8     &pDS3DBufferNew) {
+    LPDIRECTSOUND3DBUFFER8     &pDS3DBufferNew,
+    DWORD                       Xb_Frequency) {
 
 
     DSoundBufferCreate(&DSBufferDesc, pDSBufferNew);
@@ -645,7 +646,7 @@ static inline void DSoundBufferReCreate(
         DSound3DBufferCreate(pDSBufferNew, pDS3DBufferNew);
     }
 
-    DSoundBufferTransferSettings(pDSBuffer, pDSBufferNew, pDS3DBuffer, pDS3DBufferNew);
+    DSoundBufferTransferSettings(pDSBuffer, pDSBufferNew, pDS3DBuffer, pDS3DBufferNew, Xb_Frequency);
 }
 
 static inline void DSoundBufferRelease(
@@ -695,7 +696,7 @@ static inline void DSoundBufferResizeSetSize(
     LPDIRECTSOUND3DBUFFER8       pDS3DBufferNew = nullptr;
 
     DSoundBufferReCreate(pThis->EmuDirectSoundBuffer8, pThis->EmuBufferDesc, pThis->EmuDirectSound3DBuffer8,
-                         pDSBufferNew, pDS3DBufferNew);
+                         pDSBufferNew, pDS3DBufferNew, pThis->Xb_Frequency);
 
     // release old buffer
     DSoundBufferRelease(pThis->EmuDirectSoundBuffer8, pThis->EmuDirectSound3DBuffer8, refCount);
@@ -781,14 +782,15 @@ static inline void DSoundBufferReplace(
     LPDIRECTSOUNDBUFFER8       &pDSBuffer,
     DSBUFFERDESC               &DSBufferDesc,
     DWORD                       PlayFlags,
-    LPDIRECTSOUND3DBUFFER8     &pDS3DBuffer)
+    LPDIRECTSOUND3DBUFFER8     &pDS3DBuffer,
+    DWORD                       Xb_Frequency)
 {
     DWORD refCount, dwPlayCursor, dwStatus;
     LPDIRECTSOUNDBUFFER8       pDSBufferNew = nullptr;
     LPDIRECTSOUND3DBUFFER8       pDS3DBufferNew = nullptr;
 
     DSoundBufferReCreate(pDSBuffer, DSBufferDesc, pDS3DBuffer,
-                         pDSBufferNew, pDS3DBufferNew);
+                         pDSBufferNew, pDS3DBufferNew, Xb_Frequency);
 
     HRESULT hRet = pDSBuffer->GetStatus(&dwStatus);
 
@@ -1425,7 +1427,8 @@ static inline HRESULT HybridDirectSoundBuffer_SetFormat(
     LPVOID                 &X_BufferCache,
     DWORD                  &X_BufferCacheSize,
     XTL::X_DSVOICEPROPS    &Xb_VoiceProperties,
-    XTL::X_LPDSMIXBINS      mixbins_output)
+    XTL::X_LPDSMIXBINS      mixbins_output,
+    DWORD                   Xb_Frequency)
 {
     pDSBuffer->Stop();
 
@@ -1444,7 +1447,7 @@ static inline HRESULT HybridDirectSoundBuffer_SetFormat(
             // Allocate at least 5 second worth of bytes in PCM format.
             BufferDesc.dwBufferBytes = BufferDesc.lpwfxFormat->nAvgBytesPerSec * 5;
         }
-        DSoundBufferReplace(pDSBuffer, BufferDesc, dwPlayFlags, pDS3DBuffer);
+        DSoundBufferReplace(pDSBuffer, BufferDesc, dwPlayFlags, pDS3DBuffer, Xb_Frequency);
     }
 
     RETURN_RESULT_CHECK(hRet);
@@ -1454,10 +1457,12 @@ static inline HRESULT HybridDirectSoundBuffer_SetFormat(
 //IDirectSoundBuffer
 static inline HRESULT HybridDirectSoundBuffer_SetFrequency(
     LPDIRECTSOUNDBUFFER8 pDSBuffer,
-    DWORD               dwFrequency)
+    DWORD               dwFrequency,
+    DWORD              &Xb_Frequency)
 {
     HRESULT hRet = S_OK;
 
+    Xb_Frequency = dwFrequency;
     hRet = pDSBuffer->SetFrequency(dwFrequency);
 
     RETURN_RESULT_CHECK(hRet);
@@ -1666,15 +1671,13 @@ static inline HRESULT HybridDirectSoundBuffer_SetOutputBuffer(
 //IDirectSoundBuffer
 static inline HRESULT HybridDirectSoundBuffer_SetPitch(
     LPDIRECTSOUNDBUFFER8 pDSBuffer,
-    LONG                lPitch)
+    LONG                lPitch,
+    DWORD              &Xb_Frequency)
 {
 
     // Convert pitch back to frequency
-    if (lPitch == 0) {
-        lPitch = 48000; // NOTE: pitch = 0 is equal to 48 KHz.
-    } else {
-        lPitch = static_cast<LONG>(exp((lPitch / 4096.0f) * log(2)) * 48000.0f);
-    }
+    // NOTE: pitch = 0 is equal to 48 KHz.
+    Xb_Frequency = static_cast<DWORD>(exp((lPitch / 4096.0f) * log(2)) * 48000.0f);
 
     /* For research purpose of how to convert frequency to pitch and back to frequency.
     // Edit hertz variable to see the result.
@@ -1689,7 +1692,7 @@ static inline HRESULT HybridDirectSoundBuffer_SetPitch(
     // Convert pitch to hertz
     hertz = exp((pitch / pitchRatio) * log(2)) * hertzRatio;*/
 
-    RETURN_RESULT_CHECK(pDSBuffer->SetFrequency(lPitch));
+    RETURN_RESULT_CHECK(pDSBuffer->SetFrequency(Xb_Frequency));
 }
 /*
 //Only has one function, this is not a requirement.
