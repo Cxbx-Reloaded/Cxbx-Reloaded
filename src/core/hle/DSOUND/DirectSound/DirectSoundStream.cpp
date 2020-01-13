@@ -904,7 +904,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetFormat)
     HRESULT hRet = HybridDirectSoundBuffer_SetFormat(pThis->EmuDirectSoundBuffer8, pwfxFormat, pThis->EmuBufferDesc,
                                              pThis->EmuFlags, pThis->EmuPlayFlags, pThis->EmuDirectSound3DBuffer8,
                                              0, pThis->X_BufferCache, pThis->X_BufferCacheSize,
-                                             pThis->Xb_VoiceProperties, xbnullptr);
+                                             pThis->Xb_VoiceProperties, xbnullptr, pThis->Xb_Frequency);
 
     return hRet;
 }
@@ -924,7 +924,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetFrequency)
 		LOG_FUNC_ARG(dwFrequency)
 		LOG_FUNC_END;
 
-    HRESULT hRet = HybridDirectSoundBuffer_SetFrequency(pThis->EmuDirectSoundBuffer8, dwFrequency);
+    HRESULT hRet = HybridDirectSoundBuffer_SetFrequency(pThis->EmuDirectSoundBuffer8, dwFrequency, pThis->Xb_Frequency);
 
     return hRet;
 }
@@ -1231,7 +1231,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetPitch)
         LOG_FUNC_ARG(lPitch)
         LOG_FUNC_END;
 
-    HRESULT hRet = HybridDirectSoundBuffer_SetPitch(pThis->EmuDirectSoundBuffer8, lPitch);
+    HRESULT hRet = HybridDirectSoundBuffer_SetPitch(pThis->EmuDirectSoundBuffer8, lPitch, pThis->Xb_Frequency);
 
     return hRet;
 }
