@@ -5613,6 +5613,12 @@ bool PSH_XBOX_SHADER::FixOverusedRegisters()
 
         int InsertPos = i;
 
+        // Skip this operation on LRP instructions
+        // This prevents "error X5765: Dest register for LRP cannot be the same as first or third source register" in WWE RAW2
+        if (Intermediate[i].Opcode == PO_LRP) {
+            continue;
+        }
+
         // Handle PARAM_C, PARAM_V and PARAM_T (in that order) :
         for (int t = PARAM_C; t >= PARAM_T; t--) {
             enum PSH_ARGUMENT_TYPE param_t = (enum PSH_ARGUMENT_TYPE)t;
@@ -5626,11 +5632,6 @@ bool PSH_XBOX_SHADER::FixOverusedRegisters()
                     if (Intermediate[i].Parameters[p].Type == param_t)
                     {
                         int output = NextFreeRegisterFromIndexUntil(i, PARAM_R, i);
-
-                        // This prevents "error X5765: Dest register for LRP cannot be the same as first or third source register" in WWE RAW2
-                        if (Intermediate[i].Opcode == PO_LRP)
-                            if (Intermediate[i].Output[0].IsRegister(PARAM_R, output, 0))
-                                continue; // for
 
                         // This inserts a MOV opcode that writes to R, reading from a C, V or T register
                         Ins.Output[0].SetRegister(PARAM_R, output, 0);
