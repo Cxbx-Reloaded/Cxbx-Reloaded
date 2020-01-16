@@ -481,7 +481,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
 						break;
 					}
-					// fall through
+					break;
                 }
 
                 case VK_F6:
@@ -492,7 +492,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 						StopEmulation();
 						break;
 					}
-					// fall through
+					break;
                 }
 
 				case VK_F7:
@@ -505,7 +505,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 						OpenDashboard();
 						break;
 					}
-					// fall through
+					break;
 				}
 
 				case VK_F9:
@@ -521,7 +521,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
 						break;
 					}
-					// fall through
+					break;
 				}
 
                 default:
@@ -534,6 +534,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                     {
                         DefWindowProc(hwnd, uMsg, wParam, lParam);
                     }
+					break;
                 }
             }
         }
