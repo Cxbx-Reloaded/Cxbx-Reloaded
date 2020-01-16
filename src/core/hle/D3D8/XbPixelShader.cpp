@@ -5613,9 +5613,9 @@ bool PSH_XBOX_SHADER::FixOverusedRegisters()
 
         int InsertPos = i;
 
-        // Skip this operation on LRP instructions targeting r0
+        // Skip this operation on LRP instructions
         // This prevents "error X5765: Dest register for LRP cannot be the same as first or third source register" in WWE RAW2
-        if (Intermediate[i].Opcode == PO_LRP && Intermediate[i].Output[0].IsRegister(PARAM_R, 0)) {
+        if (Intermediate[i].Opcode == PO_LRP) {
             continue;
         }
 
