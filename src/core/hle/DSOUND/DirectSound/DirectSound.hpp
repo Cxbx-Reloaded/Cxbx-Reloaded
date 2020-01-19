@@ -171,8 +171,7 @@ struct host_voice_packet {
     DWORD   nextWriteOffset;
     DWORD   lastWritePos;
     DWORD   bufPlayed;
-    DWORD   bufWrittenIndex;
-    DWORD   avgBytesPerSec;
+    DWORD   bufWrittenBytes;
     bool    isPlayed;
 };
 

@@ -114,45 +114,42 @@ void DSStream_Packet_Clear(
 
 static inline void DSStream_Packet_UploadPartial(
     XTL::X_CDirectSoundStream* pThis,
-    vector_hvp_iterator &bufferCurrent
+    vector_hvp_iterator &packetCurrent
     )
 {
     // Don't write beyond given buffer data, force do nothing.
-    if (bufferCurrent->bufPlayed >= bufferCurrent->xmp_data.dwMaxSize) {
-        EmuLog(LOG_LEVEL::DEBUG, "Attempted packet buffer overflow | pThis = %08X | bufferCurrent = %08X | bufferSize - %08X | dwBufferBytes = %08X",
-        pThis, bufferCurrent, bufferCurrent->xmp_data.dwMaxSize, pThis->EmuBufferDesc.dwBufferBytes);
+    if (packetCurrent->bufWrittenBytes == packetCurrent->xmp_data.dwMaxSize) {
         return;
     }
+    LPWAVEFORMATEX pwfxFormat = pThis->EmuBufferDesc.lpwfxFormat;
 
-    uint32_t avgBytesPerSec = bufferCurrent->avgBytesPerSec;
-    uint32_t bufferOffset = avgBytesPerSec * bufferCurrent->bufWrittenIndex;
+    // Write one avg second worth of buffer ahead into host's audio buffer.
+    if (packetCurrent->bufWrittenBytes <= (packetCurrent->bufPlayed + pwfxFormat->nAvgBytesPerSec)) {
+        uint32_t bufWriteLength = pwfxFormat->nAvgBytesPerSec;
+        uint32_t bufferOffset = packetCurrent->bufWrittenBytes;
 
-    if ((bufferOffset + avgBytesPerSec) > bufferCurrent->xmp_data.dwMaxSize) {
-        avgBytesPerSec = bufferCurrent->xmp_data.dwMaxSize - bufferOffset;
-    }
+        if ((bufferOffset + bufWriteLength) > packetCurrent->xmp_data.dwMaxSize) {
+            bufWriteLength = packetCurrent->xmp_data.dwMaxSize - bufferOffset;
+        }
+        packetCurrent->bufWrittenBytes += bufWriteLength;
 
-    DSStream_Packet_UpdateHostBuffer(pThis->EmuDirectSoundBuffer8, bufferCurrent->nextWriteOffset, (uint8_t*)bufferCurrent->pBuffer_data + bufferOffset, avgBytesPerSec);
-    bufferCurrent->nextWriteOffset += avgBytesPerSec;
-    if (pThis->EmuBufferDesc.dwBufferBytes < bufferCurrent->nextWriteOffset) {
-        bufferCurrent->nextWriteOffset -= pThis->EmuBufferDesc.dwBufferBytes;
-    }
+        DSStream_Packet_UpdateHostBuffer(pThis->EmuDirectSoundBuffer8, packetCurrent->nextWriteOffset, (uint8_t*)packetCurrent->pBuffer_data + bufferOffset, bufWriteLength);
+        packetCurrent->nextWriteOffset += bufWriteLength;
+        if (pThis->EmuBufferDesc.dwBufferBytes < packetCurrent->nextWriteOffset) {
+            packetCurrent->nextWriteOffset -= pThis->EmuBufferDesc.dwBufferBytes;
+        }
 
 #if 0
-    // Debug area begin
-    EmuLog(LOG_LEVEL::DEBUG, "upload packet buffer process | pThis = %08X | bufferCurrent = %08X",
-        pThis, bufferCurrent._Ptr);
-    EmuLog(LOG_LEVEL::DEBUG, "nextWriteOffset = %08X | bufPlayed = %08X | bufWrittenIndex = %08X",
-        bufferCurrent->nextWriteOffset, bufferCurrent->bufPlayed, bufferCurrent->bufWrittenIndex);
-    EmuLog(LOG_LEVEL::DEBUG, "bufferSize - %08X | dwBufferBytes = %08X | dwLastWritePos = %08X | dwWriteOffsetNext = %08X\n",
-        bufferCurrent->xmp_data.dwMaxSize, pThis->EmuBufferDesc.dwBufferBytes, pThis->Host_dwLastWritePos, pThis->Host_dwWriteOffsetNext);
-    // Debug area end
+        // Debug area begin
+        EmuLog(LOG_LEVEL::DEBUG, "upload packet buffer process | pThis = %08X | packetCurrent = %08X",
+            pThis, packetCurrent._Ptr);
+        EmuLog(LOG_LEVEL::DEBUG, "nextWriteOffset = %08X | bufPlayed = %08X | bufWrittenIndex = %08X",
+            packetCurrent->nextWriteOffset, packetCurrent->bufPlayed, packetCurrent->bufWrittenIndex);
+        EmuLog(LOG_LEVEL::DEBUG, "bufferSize - %08X | dwBufferBytes = %08X | dwLastWritePos = %08X | dwWriteOffsetNext = %08X\n",
+            packetCurrent->xmp_data.dwMaxSize, pThis->EmuBufferDesc.dwBufferBytes, pThis->Host_dwLastWritePos, pThis->Host_dwWriteOffsetNext);
+        // Debug area end
 #endif
-
-    if (pThis->Host_isProcessing == false) {
-        pThis->EmuDirectSoundBuffer8->Play(0, 0, pThis->EmuPlayFlags);
-        pThis->Host_isProcessing = true;
     }
-    bufferCurrent->bufWrittenIndex++;
 }
 
 static inline void DSStream_Packet_Starved(
@@ -161,6 +158,32 @@ static inline void DSStream_Packet_Starved(
 {
     pThis->Host_isProcessing = false;
     pThis->EmuDirectSoundBuffer8->Stop();
+    // We need to log this info since some titles may have stop/played audio often in middle of processing (relative to videos).
+    EmuLog(LOG_LEVEL::INFO, "Starved: pThis = %08X;",
+        pThis
+    );
+}
+
+// Prefill buffer with at least 1 second worth of buffer. See "nAvgBytesPerSec" below for inspection.
+static void DSStream_Packet_Prefill(
+    XTL::X_CDirectSoundStream* pThis,
+    vector_hvp_iterator packetCurrent
+    )
+{
+    unsigned int streamBufferSize = 0;
+
+    while (packetCurrent != pThis->Host_BufferPacketArray.end()) {
+        // If buffer had been written, then ignore it.
+        if (packetCurrent->bufWrittenBytes == 0) {
+            DSStream_Packet_UploadPartial(pThis, packetCurrent);
+        }
+        // Get remaining size left in current packet.
+        streamBufferSize += (packetCurrent->xmp_data.dwMaxSize - packetCurrent->bufPlayed);
+        if (streamBufferSize > pThis->EmuBufferDesc.lpwfxFormat->nAvgBytesPerSec) {
+            break;
+        }
+        packetCurrent++;
+    }
 }
 
 bool DSStream_Packet_Process(
@@ -169,12 +192,12 @@ bool DSStream_Packet_Process(
 {
 
     // If title want to pause, then don't process the packets.
-    if ((pThis->EmuFlags & DSE_FLAG_PAUSE) > 0) {
-        return 0;
-    }
-
     // If media object is being used as playback synch, then don't process the packets.
-    if ((pThis->EmuFlags & DSE_FLAG_SYNCHPLAYBACK_CONTROL) > 0) {
+    if ((pThis->EmuFlags & DSE_FLAG_PAUSE) > 0 ||
+        (pThis->EmuFlags & DSE_FLAG_SYNCHPLAYBACK_CONTROL) > 0) {
+
+        vector_hvp_iterator packetCurrent = pThis->Host_BufferPacketArray.begin();
+        DSStream_Packet_Prefill(pThis, packetCurrent);
         return 0;
     }
 
@@ -186,87 +209,92 @@ bool DSStream_Packet_Process(
     DWORD dwAudioBytes;
     HRESULT hRet = pThis->EmuDirectSoundBuffer8->GetStatus(&dwAudioBytes);
     if (hRet == DS_OK) {
-        vector_hvp_iterator bufferCurrent = pThis->Host_BufferPacketArray.begin();
-        vector_hvp_iterator bufferPrev = bufferCurrent;
-        if (bufferCurrent->bufWrittenIndex == 0) {
+        vector_hvp_iterator packetCurrent = pThis->Host_BufferPacketArray.begin();
 
-            DSStream_Packet_UploadPartial(pThis, bufferCurrent);
-        } else {
-            // NOTE: p1. Do not use play cursor, use write cursor to check ahead since by the time it gets there. The buffer is already played.
-            // p2. Plus play cursor is not reliable to check, write cursor is reliable as it is update more often.
-            // Test case proof: Gauntlet Dark Legacy give 256 bytes of data to a per packet during intro FMV.
-            DWORD writePos = 0;
-            hRet = pThis->EmuDirectSoundBuffer8->GetCurrentPosition(nullptr, &writePos);
-            if (hRet == DS_OK) {
-
-                int bufPlayed = writePos - bufferCurrent->lastWritePos;
+        // NOTE: p1. Do not use play cursor, use write cursor to check ahead since by the time it gets there. The buffer is already played.
+        // p2. Plus play cursor is not reliable to check, write cursor is reliable as it is update more often.
+        // Test case proof: Gauntlet Dark Legacy give 256 bytes of data to a per packet during intro FMV.
+        // TODO: Need a better solution to give actual playtime since beginning of audio do run ahead of time.
+        DWORD writePos = 0;
+        hRet = pThis->EmuDirectSoundBuffer8->GetCurrentPosition(nullptr, &writePos);
+        if (hRet == DS_OK) {
+            do {
+                int bufPlayed = writePos - packetCurrent->lastWritePos;
 
                 // Correct it if buffer was playing and is at beginning.
-                if (writePos < bufferCurrent->lastWritePos) {
-                    bufPlayed = writePos + (pThis->EmuBufferDesc.dwBufferBytes - bufferCurrent->lastWritePos);
+                if (writePos < packetCurrent->lastWritePos) {
+                    bufPlayed = writePos + (pThis->EmuBufferDesc.dwBufferBytes - packetCurrent->lastWritePos);
                 }
-                bufferCurrent->lastWritePos = writePos;
-                bufferCurrent->bufPlayed += bufPlayed;
+                packetCurrent->lastWritePos = writePos;
+                packetCurrent->bufPlayed += bufPlayed;
 
-                if (bufferCurrent->isPlayed == false) {
-                    bufferCurrent->isPlayed = true;
+                if (packetCurrent->isPlayed == false) {
+                    packetCurrent->isPlayed = true;
                 }
 #if 0           // Extend debug verification
                 if (pThis->Host_BufferPacketArray.size() == 1) {
                     EmuLog(LOG_LEVEL::DEBUG, "pThis: %08X; bufPlayed: %08X; bufdesc-bufferBytes: %08X; xmp-maxSize: %08X",
-                    pThis,
-                    bufPlayed,
-                    pThis->EmuBufferDesc.dwBufferBytes,
-                    bufferCurrent->xmp_data.dwMaxSize
+                        pThis,
+                        bufPlayed,
+                        pThis->EmuBufferDesc.dwBufferBytes,
+                        packetCurrent->xmp_data.dwMaxSize
                     );
                 }
 #endif
-                if (bufferCurrent->bufPlayed >= bufferCurrent->xmp_data.dwMaxSize) {
-                    bufPlayed = bufferCurrent->bufPlayed - bufferCurrent->xmp_data.dwMaxSize;
-                    bufferCurrent->bufPlayed = bufferCurrent->xmp_data.dwMaxSize;
+                // if bufPlayed is over dwMaxSize, then re-correct it to return dwMaxSize only.
+                if (packetCurrent->bufPlayed >= packetCurrent->xmp_data.dwMaxSize) {
+                    bufPlayed = packetCurrent->bufPlayed - packetCurrent->xmp_data.dwMaxSize;
+                    packetCurrent->bufPlayed = packetCurrent->xmp_data.dwMaxSize;
                 }
-                if (bufferCurrent->xmp_data.pdwCompletedSize != xbnullptr) {
-                    (*bufferCurrent->xmp_data.pdwCompletedSize) = DSoundBufferGetXboxBufferSize(pThis->EmuFlags, bufferCurrent->bufPlayed);
+                // Return current completed size to Xbox's application.
+                if (packetCurrent->xmp_data.pdwCompletedSize != xbnullptr) {
+                    (*packetCurrent->xmp_data.pdwCompletedSize) = DSoundBufferGetXboxBufferSize(pThis->EmuFlags, packetCurrent->bufPlayed);
                 }
-                if (bufferCurrent->bufPlayed == bufferCurrent->xmp_data.dwMaxSize) {
+                // Once bufPlayed is equal to dwMaxSize, we know the packet is completed.
+                if (packetCurrent->bufPlayed == packetCurrent->xmp_data.dwMaxSize) {
 
-                    DSStream_Packet_Clear(bufferCurrent, XMP_STATUS_SUCCESS, pThis->Xb_lpfnCallback, pThis->Xb_lpvContext, pThis);
+                    DSStream_Packet_Clear(packetCurrent, XMP_STATUS_SUCCESS, pThis->Xb_lpfnCallback, pThis->Xb_lpvContext, pThis);
 
                     if (pThis->Host_BufferPacketArray.size() == 0) {
                         DSStream_Packet_Starved(pThis);
                         return 0;
                     }
 #if 0               // Extend debug verification
-                    EmuLog(LOG_LEVEL::DEBUG, "nextBuffer: %08X; bufferCurrent->bufPlayed: %08X; bufPlayed: %08X;\n",
-                            bufferCurrent._Ptr,
-                            bufferCurrent->bufPlayed,
+                    EmuLog(LOG_LEVEL::DEBUG, "nextBuffer: %08X; packetCurrent->bufPlayed: %08X; bufPlayed: %08X;\n",
+                        packetCurrent._Ptr,
+                        packetCurrent->bufPlayed,
+                        bufPlayed
+                    );
+#endif
+                    // Is this important or already have it handled by using while statement?
+                    if (packetCurrent->bufWrittenBytes == 0) {
+                        EmuLog(LOG_LEVEL::INFO, "audio gap detected: %08X; packetCurrent->bufPlayed: %08X; bufPlayed: %08X;\n",
+                            packetCurrent._Ptr,
+                            packetCurrent->bufPlayed,
                             bufPlayed
-                            );
-#endif
-#if 0               //TODO: How to send extra play process to next packet?
-                    // Save what had been played in next packet.
-                    //bufferCurrent->bufPlayed += bufPlayed;
-#endif
-                }
-                if (bufferCurrent == bufferPrev) {
-                    if ((bufferCurrent->bufWrittenIndex * bufferCurrent->avgBytesPerSec) <= bufferCurrent->bufPlayed) {
-                        DSStream_Packet_UploadPartial(pThis, bufferCurrent);
+                        );
                     }
+                    // Since we have later packet ready to be process, let's process it in the loop.
                 }
-                if (pThis->Host_BufferPacketArray.size() > 1) {
-                    if ((bufferCurrent->xmp_data.dwMaxSize - bufferCurrent->bufPlayed) <= pThis->EmuBufferDesc.lpwfxFormat->nAvgBytesPerSec
-                        && (bufferCurrent + 1)->bufWrittenIndex == 0) {
-                        bufferCurrent++;
-                        DSStream_Packet_UploadPartial(pThis, bufferCurrent);
-                    }
+                // Otherwise, continue upload partial of the packet's data to host if there are any left.
+                else {
+                    DSStream_Packet_UploadPartial(pThis, packetCurrent);
+                    break; // Leave loop since there is more buffer haven't been process in the current packet.
                 }
-            }
-            // Out of packets, let's stop it.
-            if (pThis->Host_BufferPacketArray.size() == 0) {
-                DSStream_Packet_Starved(pThis);
-                return 0;
-            }
+            } while (true);
+
+            DSStream_Packet_Prefill(pThis, packetCurrent);
         }
+        // Out of packets, let's stop stream's buffer.
+        if (pThis->Host_BufferPacketArray.size() == 0) {
+            DSStream_Packet_Starved(pThis);
+            return 0;
+        }
+    }
+
+    if (pThis->Host_isProcessing == false) {
+        pThis->EmuDirectSoundBuffer8->Play(0, 0, pThis->EmuPlayFlags);
+        pThis->Host_isProcessing = true;
     }
     return 1;
 }

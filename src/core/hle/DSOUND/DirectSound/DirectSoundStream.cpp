@@ -616,17 +616,10 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_Process)
             if (pThis->Host_BufferPacketArray.size() != pThis->X_MaxAttachedPackets) {
                 host_voice_packet packet_input;
                 packet_input.pBuffer_data = nullptr;
-                packet_input.avgBytesPerSec = 0;
                 packet_input.xmp_data = *pInputBuffer;
                 packet_input.xmp_data.dwMaxSize = DSoundBufferGetPCMBufferSize(pThis->EmuFlags, pInputBuffer->dwMaxSize);
                 if (packet_input.xmp_data.dwMaxSize != 0) {
                     packet_input.pBuffer_data = malloc(packet_input.xmp_data.dwMaxSize);
-                    if (packet_input.xmp_data.dwMaxSize > pThis->EmuBufferDesc.lpwfxFormat->nAvgBytesPerSec) {
-                        packet_input.avgBytesPerSec = pThis->EmuBufferDesc.lpwfxFormat->nAvgBytesPerSec;
-                    }
-                    else {
-                        packet_input.avgBytesPerSec = packet_input.xmp_data.dwMaxSize;
-                    }
                     DSoundSGEMemAlloc(packet_input.xmp_data.dwMaxSize);
                 }
                 packet_input.nextWriteOffset = pThis->Host_dwWriteOffsetNext;
@@ -636,7 +629,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_Process)
                 while (pThis->EmuBufferDesc.dwBufferBytes <= pThis->Host_dwWriteOffsetNext) {
                     pThis->Host_dwWriteOffsetNext -= pThis->EmuBufferDesc.dwBufferBytes;
                 }
-                packet_input.bufWrittenIndex = 0;
+                packet_input.bufWrittenBytes = 0;
                 packet_input.bufPlayed = 0;
                 packet_input.isPlayed = false;
 
