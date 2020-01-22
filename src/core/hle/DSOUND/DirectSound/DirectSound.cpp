@@ -383,17 +383,21 @@ static void dsound_thread_worker(LPVOID nullPtr)
 	SetThreadAffinityMask(GetCurrentThread(), g_CPUOthers);
 
     while (true) {
-		Sleep(1);
+        // Testcase: Gauntlet Dark Legacy, if Sleep(1) then intro videos start to starved often
+        // unless console is open with logging enabled. This is the cause of stopping intro videos often.
+        Sleep(300);
+        // Enforce mutex guard lock only occur inside below bracket for proper compile build.
+        {
+            DSoundMutexGuardLock;
 
-        DSoundMutexGuardLock;
-
-        vector_ds_stream::iterator ppDSStream = g_pDSoundStreamCache.begin();
-        for (; ppDSStream != g_pDSoundStreamCache.end(); ppDSStream++) {
-            if ((*ppDSStream)->Host_BufferPacketArray.size() == 0) {
-                continue;
-            }
-            if (((*ppDSStream)->EmuFlags & DSE_FLAG_FLUSH_ASYNC) > 0 && (*ppDSStream)->Xb_rtFlushEx == 0) {
-                DSStream_Packet_Process((*ppDSStream));
+            vector_ds_stream::iterator ppDSStream = g_pDSoundStreamCache.begin();
+            for (; ppDSStream != g_pDSoundStreamCache.end(); ppDSStream++) {
+                if ((*ppDSStream)->Host_BufferPacketArray.size() == 0) {
+                    continue;
+                }
+                if (((*ppDSStream)->EmuFlags & DSE_FLAG_FLUSH_ASYNC) > 0 && (*ppDSStream)->Xb_rtFlushEx == 0) {
+                    DSStream_Packet_Process((*ppDSStream));
+                }
             }
         }
     }
