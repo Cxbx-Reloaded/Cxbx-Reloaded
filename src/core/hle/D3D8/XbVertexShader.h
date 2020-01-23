@@ -26,6 +26,7 @@
 #define XBVERTEXSHADER_H
 
 #include <d3dcompiler.h>
+#include <vector>
 
 #include "core\hle\D3D8\XbD3D8Types.h" // for X_VSH_MAX_ATTRIBUTES
 
@@ -105,15 +106,121 @@ extern D3DVERTEXELEMENT *EmuRecompileVshDeclaration
     CxbxVertexShaderInfo *pCxbxVertexShaderInfo
 );
 
-// recompile xbox vertex shader function
-extern HRESULT EmuRecompileVshFunction
+// Intermediate vertex shader structures
+
+enum VSH_OREG_NAME {
+	OREG_OPOS,    //  0
+	OREG_UNUSED1, //  1
+	OREG_UNUSED2, //  2
+	OREG_OD0,     //  3
+	OREG_OD1,     //  4
+	OREG_OFOG,    //  5
+	OREG_OPTS,    //  6
+	OREG_OB0,     //  7
+	OREG_OB1,     //  8
+	OREG_OT0,     //  9
+	OREG_OT1,     // 10
+	OREG_OT2,     // 11
+	OREG_OT3,     // 12
+	OREG_UNUSED3, // 13
+	OREG_UNUSED4, // 14
+	OREG_A0X      // 15 - all values of the 4 bits are used
+};
+
+static const int MASK_X = 0x008;
+static const int MASK_Y = 0x004;
+static const int MASK_Z = 0x002;
+static const int MASK_W = 0x001;
+
+enum VSH_ILU { // Dxbx note : ILU stands for 'Inverse Logic Unit' opcodes
+	ILU_NOP = 0,
+	ILU_MOV,
+	ILU_RCP,
+	ILU_RCC,
+	ILU_RSQ,
+	ILU_EXP,
+	ILU_LOG,
+	ILU_LIT // = 7 - all values of the 3 bits are used
+};
+
+enum VSH_MAC { // Dxbx note : MAC stands for 'Multiply And Accumulate' opcodes
+	MAC_NOP = 0,
+	MAC_MOV,
+	MAC_MUL,
+	MAC_ADD,
+	MAC_MAD,
+	MAC_DP3,
+	MAC_DPH,
+	MAC_DP4,
+	MAC_DST,
+	MAC_MIN,
+	MAC_MAX,
+	MAC_SLT,
+	MAC_SGE,
+	MAC_ARL
+	// ??? 14
+	// ??? 15 - 2 values of the 4 bits are undefined
+};
+
+enum VSH_IMD_OUTPUT_TYPE {
+	IMD_OUTPUT_C,
+	IMD_OUTPUT_R,
+	IMD_OUTPUT_O,
+	IMD_OUTPUT_A0X
+};
+
+typedef struct _VSH_IMD_OUTPUT {
+	VSH_IMD_OUTPUT_TYPE Type;
+	int16_t             Address;
+	int8_t              Mask;
+} VSH_IMD_OUTPUT;
+
+enum VSH_SWIZZLE {
+	SWIZZLE_X = 0,
+	SWIZZLE_Y,
+	SWIZZLE_Z,
+	SWIZZLE_W
+};
+
+enum VSH_PARAMETER_TYPE {
+	PARAM_UNKNOWN = 0,
+	PARAM_R,          // Temporary (scRatch) registers
+	PARAM_V,          // Vertex registers
+	PARAM_C,          // Constant registers, set by SetVertexShaderConstant
+	PARAM_O // = 0??
+};
+
+typedef struct _VSH_IMD_PARAMETER {
+	VSH_PARAMETER_TYPE  ParameterType;   // Parameter type, R, V or C
+	bool                Neg;             // true if negated, false if not
+	VSH_SWIZZLE         Swizzle[4];      // The four swizzles
+	int16_t             Address;         // Register address
+} VSH_IMD_PARAMETER;
+
+typedef struct _VSH_INTERMEDIATE_FORMAT {
+	VSH_MAC                  MAC;
+	VSH_ILU                  ILU;
+	VSH_IMD_OUTPUT           Output;
+	unsigned                 ParamCount;
+	VSH_IMD_PARAMETER        Parameters[3];
+	// There is only a single address register in Microsoft DirectX 8.0.
+	// The address register, designated as a0.x, may be used as signed
+	// integer offset in relative addressing into the constant register file.
+	//     c[a0.x + n]
+	bool                     IndexesWithA0_X;
+} VSH_INTERMEDIATE_FORMAT;
+
+typedef struct _IntermediateVertexShader {
+	XTL::X_VSH_SHADER_HEADER Header;
+	std::vector<VSH_INTERMEDIATE_FORMAT> Instructions;
+} IntermediateVertexShader;
+
+// parse xbox vertex shader function into an intermediate format
+extern HRESULT EmuParseVshFunction
 (
-    DWORD        *pXboxFunction,
-    bool          bNoReservedConstants,
-    D3DVERTEXELEMENT *pRecompiledDeclaration,
-    bool   		 *pbUseDeclarationOnly,
-    DWORD        *pXboxFunctionSize,
-	ID3DBlob **ppRecompiledShader
+	DWORD* pXboxFunction,
+	DWORD* pXboxFunctionSize,
+	IntermediateVertexShader* pShader
 );
 
 extern void FreeVertexDynamicPatch(CxbxVertexShader *pVertexShader);

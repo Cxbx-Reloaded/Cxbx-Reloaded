@@ -62,6 +62,7 @@ namespace xboxkrnl
 #include "core\kernel\common\strings.hpp" // For uem_str
 #include "common\input\SdlJoystick.h"
 #include "common/util/strConverter.hpp" // for utf8_to_utf16
+#include "VertexShader.h"
 
 #include <assert.h>
 #include <process.h>
@@ -4259,12 +4260,20 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateVertexShader)
 	{
 		bool bUseDeclarationOnly = false;
 
-		hRet = EmuRecompileVshFunction((DWORD*)pFunction,
-			/*bNoReservedConstants=*/g_Xbox_VertexShaderConstantMode == X_D3DSCM_NORESERVEDCONSTANTS,
-			pRecompiledDeclaration,
-			&bUseDeclarationOnly,
+		auto intermediateShader = IntermediateVertexShader();
+
+		// TOOD handle parse return value?
+		hRet = EmuParseVshFunction((DWORD*)pFunction,
 			&XboxFunctionSize,
-			&pRecompiledBuffer);
+			&intermediateShader);
+
+		hRet = EmuCompileShader(
+			&intermediateShader,
+			/*bNoReservedConstants=*/g_Xbox_VertexShaderConstantMode == X_D3DSCM_NORESERVEDCONSTANTS,
+			&bUseDeclarationOnly,
+			&pRecompiledBuffer
+		);
+
 		if (SUCCEEDED(hRet))
 		{
 			if (!bUseDeclarationOnly)

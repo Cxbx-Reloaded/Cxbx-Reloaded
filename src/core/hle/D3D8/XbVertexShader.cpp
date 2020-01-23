@@ -53,83 +53,14 @@ class XboxVertexShaderDecoder
 private:
 	// Xbox Vertex SHader microcode types
 
-	enum VSH_SWIZZLE {
-		SWIZZLE_X = 0,
-		SWIZZLE_Y,
-		SWIZZLE_Z,
-		SWIZZLE_W
-	};
-
-	#define MASK_X 0x008
-	#define MASK_Y 0x004
-	#define MASK_Z 0x002
-	#define MASK_W 0x001
-
-	enum VSH_OREG_NAME {
-		OREG_OPOS,    //  0
-		OREG_UNUSED1, //  1
-		OREG_UNUSED2, //  2
-		OREG_OD0,     //  3
-		OREG_OD1,     //  4
-		OREG_OFOG,    //  5
-		OREG_OPTS,    //  6
-		OREG_OB0,     //  7
-		OREG_OB1,     //  8
-		OREG_OT0,     //  9
-		OREG_OT1,     // 10
-		OREG_OT2,     // 11
-		OREG_OT3,     // 12
-		OREG_UNUSED3, // 13
-		OREG_UNUSED4, // 14
-		OREG_A0X      // 15 - all values of the 4 bits are used
-	};
-
 	enum VSH_OUTPUT_TYPE {
 		OUTPUT_C = 0,
 		OUTPUT_O
 	};
 
-	enum VSH_PARAMETER_TYPE {
-		PARAM_UNKNOWN = 0,
-		PARAM_R,          // Temporary (scRatch) registers
-		PARAM_V,          // Vertex registers
-		PARAM_C,          // Constant registers, set by SetVertexShaderConstant
-		PARAM_O // = 0??
-	};
-
 	enum VSH_OUTPUT_MUX {
 		OMUX_MAC = 0,
 		OMUX_ILU
-	};
-
-	enum VSH_ILU { // Dxbx note : ILU stands for 'Inverse Logic Unit' opcodes
-		ILU_NOP = 0,
-		ILU_MOV,
-		ILU_RCP,
-		ILU_RCC,
-		ILU_RSQ,
-		ILU_EXP,
-		ILU_LOG,
-		ILU_LIT // = 7 - all values of the 3 bits are used
-	};
-
-	enum VSH_MAC { // Dxbx note : MAC stands for 'Multiply And Accumulate' opcodes
-		MAC_NOP = 0,
-		MAC_MOV,
-		MAC_MUL,
-		MAC_ADD,
-		MAC_MAD,
-		MAC_DP3,
-		MAC_DPH,
-		MAC_DP4,
-		MAC_DST,
-		MAC_MIN,
-		MAC_MAX,
-		MAC_SLT,
-		MAC_SGE,
-		MAC_ARL
-		// ??? 14
-		// ??? 15 - 2 values of the 4 bits are undefined
 	};
 
 	// Host intermediate vertex shader types
@@ -177,44 +108,6 @@ private:
 		// Final instruction
 		FLD_FINAL
 	};
-
-	enum VSH_IMD_OUTPUT_TYPE {
-		IMD_OUTPUT_C,
-		IMD_OUTPUT_R,
-		IMD_OUTPUT_O,
-		IMD_OUTPUT_A0X
-	} ;
-
-	typedef struct _VSH_IMD_OUTPUT {
-		VSH_IMD_OUTPUT_TYPE Type;
-		int16_t             Address;
-		int8_t              Mask;
-	} VSH_IMD_OUTPUT;
-
-	typedef struct _VSH_IMD_PARAMETER {
-		VSH_PARAMETER_TYPE  ParameterType;   // Parameter type, R, V or C
-		bool                Neg;             // true if negated, false if not
-		VSH_SWIZZLE         Swizzle[4];      // The four swizzles
-		int16_t             Address;         // Register address
-	} VSH_IMD_PARAMETER;
-
-	typedef struct _VSH_INTERMEDIATE_FORMAT {
-		VSH_MAC                  MAC;
-		VSH_ILU                  ILU;
-		VSH_IMD_OUTPUT           Output;
-		unsigned                 ParamCount;
-		VSH_IMD_PARAMETER        Parameters[3];
-		// There is only a single address register in Microsoft DirectX 8.0.
-		// The address register, designated as a0.x, may be used as signed
-		// integer offset in relative addressing into the constant register file.
-		//     c[a0.x + n]
-		bool                     IndexesWithA0_X;
-	} VSH_INTERMEDIATE_FORMAT;
-
-	// State variables :
-
-	uint16_t                 IntermediateCount = 0;
-	VSH_INTERMEDIATE_FORMAT  Intermediate[VSH_MAX_INTERMEDIATE_COUNT] = {};
 
 	// Retrieves a number of bits in the instruction token
 	static inline uint32_t VshGetFromToken(
@@ -325,6 +218,7 @@ private:
 
 	void VshAddIntermediateInstruction(
 		uint32_t* pShaderToken,
+		IntermediateVertexShader* pShader,
 		VSH_MAC MAC,
 		VSH_ILU ILU,
 		VSH_IMD_OUTPUT_TYPE output_type,
@@ -336,44 +230,47 @@ private:
 			return;
 		}
 
-		if (IntermediateCount >= VSH_MAX_INTERMEDIATE_COUNT) {
+		if (pShader->Instructions.size() >= VSH_MAX_INTERMEDIATE_COUNT) {
 			CxbxKrnlCleanup("Shader exceeds conversion buffer!");
 		}
 
-		VSH_INTERMEDIATE_FORMAT* pIntermediate = &(Intermediate[IntermediateCount++]);
-		pIntermediate->MAC = MAC;
-		pIntermediate->ILU = ILU;
-		pIntermediate->Output.Type = output_type;
-		pIntermediate->Output.Address = output_address;
-		pIntermediate->Output.Mask = output_mask;
+		VSH_INTERMEDIATE_FORMAT intermediate;
+		intermediate.MAC = MAC;
+		intermediate.ILU = ILU;
+		intermediate.Output.Type = output_type;
+		intermediate.Output.Address = output_address;
+		intermediate.Output.Mask = output_mask;
 		// Get a0.x indirect constant addressing
-		pIntermediate->IndexesWithA0_X = VshGetField(pShaderToken, FLD_A0X) > 0; // Applies to PARAM_C parameter reads
+		intermediate.IndexesWithA0_X = VshGetField(pShaderToken, FLD_A0X) > 0; // Applies to PARAM_C parameter reads
 
 		int16_t R;
 		int16_t V = VshGetField(pShaderToken, FLD_V);
 		int16_t C = ConvertCRegister(VshGetField(pShaderToken, FLD_CONST));
-		pIntermediate->ParamCount = 0;
+		intermediate.ParamCount = 0;
 		if (MAC >= MAC_MOV) {
 			// Get parameter A
 			R = VshGetField(pShaderToken, FLD_A_R);
-			VshConvertIntermediateParam(pIntermediate->Parameters[pIntermediate->ParamCount++], pShaderToken, FLD_A_MUX, FLD_A_NEG, R, V, C);
+			VshConvertIntermediateParam(intermediate.Parameters[intermediate.ParamCount++], pShaderToken, FLD_A_MUX, FLD_A_NEG, R, V, C);
 		}
 
 		if ((MAC == MAC_MUL) || ((MAC >= MAC_MAD) && (MAC <= MAC_SGE))) {
 			// Get parameter B
 			R = VshGetField(pShaderToken, FLD_B_R);
-			VshConvertIntermediateParam(pIntermediate->Parameters[pIntermediate->ParamCount++], pShaderToken, FLD_B_MUX, FLD_B_NEG, R, V, C);
+			VshConvertIntermediateParam(intermediate.Parameters[intermediate.ParamCount++], pShaderToken, FLD_B_MUX, FLD_B_NEG, R, V, C);
 		}
 
 		if ((ILU >= ILU_MOV) || (MAC == MAC_ADD) || (MAC == MAC_MAD)) {
 			// Get parameter C
 			R = VshGetField(pShaderToken, FLD_C_R_HIGH) << 2 | VshGetField(pShaderToken, FLD_C_R_LOW);
-			VshConvertIntermediateParam(pIntermediate->Parameters[pIntermediate->ParamCount++], pShaderToken, FLD_C_MUX, FLD_C_NEG, R, V, C);
+			VshConvertIntermediateParam(intermediate.Parameters[intermediate.ParamCount++], pShaderToken, FLD_C_MUX, FLD_C_NEG, R, V, C);
 		}
+
+		// Add the instruction to the shader
+		pShader->Instructions.push_back(intermediate);
 	}
 
 public:
-	bool VshConvertToIntermediate(uint32_t* pShaderToken)
+	bool VshConvertToIntermediate(uint32_t* pShaderToken, IntermediateVertexShader* pShader)
 	{
 		// First get the instruction(s).
 		VSH_ILU ILU = (VSH_ILU)VshGetField(pShaderToken, FLD_ILU);
@@ -404,201 +301,31 @@ public:
 				// Ignore paired MAC opcodes that write to R1
 			} else {
 				if (MAC == MAC_ARL) {
-					VshAddIntermediateInstruction(pShaderToken, MAC, ILU_NOP, IMD_OUTPUT_A0X, 0, MASK_X);
+					VshAddIntermediateInstruction(pShaderToken, pShader, MAC, ILU_NOP, IMD_OUTPUT_A0X, 0, MASK_X);
 				} else {
-					VshAddIntermediateInstruction(pShaderToken, MAC, ILU_NOP, IMD_OUTPUT_R, RAddress, VshGetField(pShaderToken, FLD_OUT_MAC_MASK));
+					VshAddIntermediateInstruction(pShaderToken, pShader, MAC, ILU_NOP, IMD_OUTPUT_R, RAddress, VshGetField(pShaderToken, FLD_OUT_MAC_MASK));
 				}
 			}
 
 			// Check if we must add a muxed MAC opcode as well
 			if (OutputMux == OMUX_MAC) {
-				VshAddIntermediateInstruction(pShaderToken, MAC, ILU_NOP, OutputType, OutputAddress, VshGetField(pShaderToken, FLD_OUT_O_MASK));
+				VshAddIntermediateInstruction(pShaderToken, pShader, MAC, ILU_NOP, OutputType, OutputAddress, VshGetField(pShaderToken, FLD_OUT_O_MASK));
 			}
 		}
 
 		// Check if there's an ILU opcode
 		if (ILU != ILU_NOP) {
 			// Paired ILU opcodes will only write to R1
-			VshAddIntermediateInstruction(pShaderToken, MAC_NOP, ILU, IMD_OUTPUT_R, bIsPaired ? 1 : RAddress, VshGetField(pShaderToken, FLD_OUT_ILU_MASK));
+			VshAddIntermediateInstruction(pShaderToken, pShader, MAC_NOP, ILU, IMD_OUTPUT_R, bIsPaired ? 1 : RAddress, VshGetField(pShaderToken, FLD_OUT_ILU_MASK));
 			// Check if we must add a muxed ILU opcode as well
 			if (OutputMux == OMUX_ILU) {
-				VshAddIntermediateInstruction(pShaderToken, MAC_NOP, ILU, OutputType, OutputAddress, VshGetField(pShaderToken, FLD_OUT_O_MASK));
+				VshAddIntermediateInstruction(pShaderToken, pShader, MAC_NOP, ILU, OutputType, OutputAddress, VshGetField(pShaderToken, FLD_OUT_O_MASK));
 			}
 		}
 
 		return VshGetField(pShaderToken, FLD_FINAL) == 0;
 	}
 
-	// HLSL generation - TODO : Move this to another (friend) class??
-private:
-	static void OutputHlsl(std::stringstream& hlsl, VSH_IMD_OUTPUT& dest)
-	{
-		static const char* OReg_Name[/*VSH_OREG_NAME*/] = {
-			"oPos",
-			"???",
-			"???",
-			"oD0",
-			"oD1",
-			"oFog",
-			"oPts",
-			"oB0",
-			"oB1",
-			"oT0",
-			"oT1",
-			"oT2",
-			"oT3",
-			"???",
-			"???",
-			"a0.x"
-		};
-
-		switch (dest.Type) {
-		case IMD_OUTPUT_C:
-			// Access the HLSL capital C[] constants array, with the index bias applied :
-			// TODO : Avoid out-of-bound writes (perhaps writing to a reserved index?)
-			hlsl << "C[" << dest.Address + X_D3DSCM_CORRECTION << "]";
-			LOG_TEST_CASE("Vertex shader writes to constant table");
-			break;
-		case IMD_OUTPUT_R:
-			hlsl << "r" << dest.Address;
-			break;
-		case IMD_OUTPUT_O:
-			assert(dest.Address < OREG_A0X);
-			hlsl << OReg_Name[dest.Address];
-			break;
-		case IMD_OUTPUT_A0X:
-			hlsl << "a0";
-			break;
-		default:
-			assert(false);
-			break;
-		}
-
-		// Write the mask as a separate argument to the opcode defines
-		// (No space, so that "dest,mask, ..." looks close to "dest.mask, ...")
-		hlsl << ",";
-		if (dest.Mask & MASK_X) hlsl << "x";
-		if (dest.Mask & MASK_Y) hlsl << "y";
-		if (dest.Mask & MASK_Z) hlsl << "z";
-		if (dest.Mask & MASK_W) hlsl << "w";
-	}
-
-	static void ParameterHlsl(std::stringstream& hlsl, VSH_IMD_PARAMETER& param, bool IndexesWithA0_X)
-	{
-		static char* RegisterName[/*VSH_PARAMETER_TYPE*/] = {
-			"?", // PARAM_UNKNOWN = 0,
-			"r", // PARAM_R,          // Temporary (scRatch) registers
-			"v", // PARAM_V,          // Vertex registers
-			"c", // PARAM_C,          // Constant registers, set by SetVertexShaderConstant
-			"oPos" // PARAM_O // = 0??
-		};
-
-		if (param.Neg) {
-			hlsl << "-";
-		}
-
-		if (param.ParameterType == PARAM_C) {
-			// Access constant registers through our HLSL c() function,
-			// which allows dumping negative indices (like Xbox shaders),
-			// and which returns zero when out-of-bounds indices are passed in:
-			if (IndexesWithA0_X) {
-				if (param.Address == 0) {
-					hlsl << "c(a0.x)"; // Hide the offset if it's 0
-				} else if (param.Address < 0) {
-					hlsl << "c(a0.x" << param.Address << ")"; // minus is part of the offset
-				} else {
-					hlsl << "c(a0.x+" << param.Address << ")"; // show addition character
-				}
-			} else {
-				hlsl << "c(" << param.Address << ")";
-			}
-		} else {
-			hlsl << RegisterName[param.ParameterType] << param.Address;
-		}
-
-		// Write the swizzle if we need to
-		// Only bother printing the swizzle if it is not the default .xyzw
-		if (!(param.Swizzle[0] == SWIZZLE_X &&
-			param.Swizzle[1] == SWIZZLE_Y &&
-			param.Swizzle[2] == SWIZZLE_Z &&
-			param.Swizzle[3] == SWIZZLE_W)) {
-			// We'll try to simplify swizzles if we can
-			// If all swizzles are the same, we only need to write one out
-			unsigned swizzles = 1;
-
-			// Otherwise, we need to use the full swizzle
-			if (param.Swizzle[0] != param.Swizzle[1] ||
-				param.Swizzle[0] != param.Swizzle[2] ||
-				param.Swizzle[0] != param.Swizzle[3]) {
-				// Note, we can't remove trailing repeats, like in VS asm,
-				// as it may change the type from float4 to float3, float2 or float1!
-				swizzles = 4;
-			}
-
-			hlsl << ".";
-			for (unsigned i = 0; i < swizzles; i++) {
-				hlsl << "xyzw"[param.Swizzle[i]];
-			}
-		}
-	}
-
-public:
-	bool BuildShader(std::stringstream& hlsl)
-	{
-		// HLSL strings for all MAC opcodes, indexed with VSH_MAC
-		static std::string VSH_MAC_HLSL[/*VSH_MAC*/] = {
-			/*MAC_NOP:*/"",
-			/*MAC_MOV:*/"x_mov",
-			/*MAC_MUL:*/"x_mul",
-			/*MAC_ADD:*/"x_add",
-			/*MAC_MAD:*/"x_mad",
-			/*MAC_DP3:*/"x_dp3",
-			/*MAC_DPH:*/"x_dph",
-			/*MAC_DP4:*/"x_dp4",
-			/*MAC_DST:*/"x_dst",
-			/*MAC_MIN:*/"x_min",
-			/*MAC_MAX:*/"x_max",
-			/*MAC_SLT:*/"x_slt",
-			/*MAC_SGE:*/"x_sge",
-			/*MAC_ARL:*/"x_arl",
-						"",
-						"" // VSH_MAC 2 final values of the 4 bits are undefined/unknown  TODO : Investigate their effect (if any) and emulate that as well
-		};
-
-		// HLSL strings for all ILU opcodes, indexed with VSH_ILU
-		static std::string VSH_ILU_HLSL[/*VSH_ILU*/] = {
-			/*ILU_NOP:*/"",
-			/*ILU_MOV:*/"x_mov",
-			/*ILU_RCP:*/"x_rcp",
-			/*ILU_RCC:*/"x_rcc",
-			/*ILU_RSQ:*/"x_rsq",
-			/*ILU_EXP:*/"x_expp",
-			/*ILU_LOG:*/"x_logp",
-			/*ILU_LIT:*/"x_lit" // = 7 - all values of the 3 bits are used
-		};
-
-		for (int i = 0; i < IntermediateCount; i++) {
-			VSH_INTERMEDIATE_FORMAT& IntermediateInstruction = Intermediate[i];
-
-			std::string str;
-			if (IntermediateInstruction.MAC > MAC_NOP) {
-				str = VSH_MAC_HLSL[IntermediateInstruction.MAC];
-			} else {
-				str = VSH_ILU_HLSL[IntermediateInstruction.ILU];
-			}
-
-			hlsl << "\n  " << str << "("; // opcode
-			OutputHlsl(hlsl, IntermediateInstruction.Output);
-			for (unsigned i = 0; i < IntermediateInstruction.ParamCount; i++) {
-				hlsl << ", ";
-				ParameterHlsl(hlsl, IntermediateInstruction.Parameters[i], IntermediateInstruction.IndexesWithA0_X);
-			}
-
-			hlsl << ");";
-		}
-
-		return IntermediateCount > 0;
-	}
 };
 
 // ****************************************************************************
@@ -1588,34 +1315,16 @@ void CxbxImpl_SelectVertexShaderDirect
 	LOG_UNIMPLEMENTED();
 }
 
-std::string DebugPrependLineNumbers(std::string shaderString) {
-	std::stringstream shader(shaderString);
-	auto debugShader = std::stringstream();
-
-	int i = 1;
-	for (std::string line; std::getline(shader, line); ) {
-		auto lineNumber = std::to_string(i++);
-		auto paddedLineNumber = lineNumber.insert(0, 3 - lineNumber.size(), ' ');
-		debugShader << "/* " << paddedLineNumber << " */ " << line << "\n";
-	}
-
-	return debugShader.str();
-}
-
-// recompile xbox vertex shader function
-extern HRESULT EmuRecompileVshFunction
+// parse xbox vertex shader function into an intermediate format
+extern HRESULT EmuParseVshFunction
 (
 	DWORD* pXboxFunction,
-	bool          bNoReservedConstants,
-	D3DVERTEXELEMENT* pRecompiledDeclaration,
-	bool* pbUseDeclarationOnly,
 	DWORD* pXboxFunctionSize,
-	ID3DBlob** ppRecompiledShader
+	IntermediateVertexShader* pShader
 )
 {
-	XTL::X_VSH_SHADER_HEADER* pXboxVertexShaderHeader = (XTL::X_VSH_SHADER_HEADER*)pXboxFunction;
 	uint32_t* pToken;
-	std::unique_ptr<XboxVertexShaderDecoder> VshDecoder = std::make_unique<XboxVertexShaderDecoder>();
+	auto VshDecoder = XboxVertexShaderDecoder();
 	ID3DBlob* pErrors = nullptr;
 	HRESULT             hRet = 0;
 
@@ -1624,37 +1333,14 @@ extern HRESULT EmuRecompileVshFunction
 		return E_FAIL;
 	}
 
-	// Initialize output arguments to zero
-	*pbUseDeclarationOnly = false;
 	*pXboxFunctionSize = 0;
-	*ppRecompiledShader = nullptr;
 
-	switch (pXboxVertexShaderHeader->Version) {
-	case VERSION_XVS:
-		break;
-	case VERSION_XVSS:
-		LOG_TEST_CASE("Might not support vertex state shaders?");
-		break;
-	case VERSION_XVSW:
-		EmuLog(LOG_LEVEL::WARNING, "Might not support vertex read/write shaders?");
-		hRet = E_FAIL;
-		break;
-	default:
-		EmuLog(LOG_LEVEL::WARNING, "Unknown vertex shader version 0x%02X", pXboxVertexShaderHeader->Version);
-		hRet = E_FAIL;
-		break;
-	}
-
-	if (!SUCCEEDED(hRet)) return hRet;
-
-	// Include HLSL header and footer as raw strings :
-	static std::string hlsl_template[2] = {
-		#include "core\hle\D3D8\Direct3D9\CxbxVertexShaderTemplate.hlsl"
-	};
+	// Just copy the header for now
+	pShader->Header = *(XTL::X_VSH_SHADER_HEADER*)pXboxFunction;
 
 	// Decode the vertex shader program tokens into an intermediate representation
 	pToken = (uint32_t*)((uintptr_t)pXboxFunction + sizeof(XTL::X_VSH_SHADER_HEADER));
-	while (VshDecoder->VshConvertToIntermediate(pToken)) {
+	while (VshDecoder.VshConvertToIntermediate(pToken, pShader)) {
 		pToken += X_VSH_INSTRUCTION_SIZE;
 	}
 
@@ -1662,88 +1348,6 @@ extern HRESULT EmuRecompileVshFunction
 	pToken += X_VSH_INSTRUCTION_SIZE; // always at least one token
 	*pXboxFunctionSize = (intptr_t)pToken - (intptr_t)pXboxFunction;
 
-	auto hlsl_stream = std::stringstream();
-	hlsl_stream << hlsl_template[0]; // Start with the HLSL template header
-	if (!VshDecoder->BuildShader(hlsl_stream)) {
-		// Do not attempt to compile empty shaders
-		// This is a declaration only shader, so there is no function to recompile
-		*pbUseDeclarationOnly = true;
-		return D3D_OK;
-	}
-
-	hlsl_stream << hlsl_template[1]; // Finish with the HLSL template footer
-	std::string hlsl_str = hlsl_stream.str();
-
-	DbgVshPrintf("--- HLSL conversion ---\n");
-	DbgVshPrintf(DebugPrependLineNumbers(hlsl_str).c_str());
-	DbgVshPrintf("-----------------------\n");
-
-	// Level 0 for fastest runtime compilation
-	// TODO Can we recompile an optimized shader in the background?
-	UINT flags1 = D3DCOMPILE_OPTIMIZATION_LEVEL0;
-
-	hRet = D3DCompile(
-		hlsl_str.c_str(),
-		hlsl_str.length(),
-		nullptr, // pSourceName
-		nullptr, // pDefines
-		nullptr, // pInclude // TODO precompile x_* HLSL functions?
-		"main", // shader entry poiint
-		"vs_3_0", // shader profile
-		flags1, // flags1
-		0, // flags2
-		ppRecompiledShader, // out
-		&pErrors // ppErrorMsgs out
-	);
-	if (FAILED(hRet)) {
-		// Attempt to retry in compatibility mode, this allows some vertex-state shaders to compile
-		// Test Case: Spy vs Spy
-		flags1 |= D3DCOMPILE_ENABLE_BACKWARDS_COMPATIBILITY;
-		hRet = D3DCompile(
-			hlsl_str.c_str(),
-			hlsl_str.length(),
-			nullptr, // pSourceName
-			nullptr, // pDefines
-			nullptr, // pInclude // TODO precompile x_* HLSL functions?
-			"main", // shader entry poiint
-			"vs_3_0", // shader profile
-			flags1, // flags1
-			0, // flags2
-			ppRecompiledShader, // out
-			&pErrors // ppErrorMsgs out
-		);
-
-		if (FAILED(hRet)) {
-			LOG_TEST_CASE("Couldn't assemble recompiled vertex shader");
-			//EmuLog(LOG_LEVEL::WARNING, "Couldn't assemble recompiled vertex shader");
-		}
-	}
-
-	// Determine the log level
-	auto hlslErrorLogLevel = FAILED(hRet) ? LOG_LEVEL::ERROR2 : LOG_LEVEL::DEBUG;
-	if (pErrors) {
-		// Log HLSL compiler errors
-		EmuLog(hlslErrorLogLevel, "%s", (char*)(pErrors->GetBufferPointer()));
-		pErrors->Release();
-		pErrors = nullptr;
-	}
-
-	LOG_CHECK_ENABLED(LOG_LEVEL::DEBUG)
-	if (g_bPrintfOn)
-	if (!FAILED(hRet)) {
-		// Log disassembly
-		hRet = D3DDisassemble(
-			(*ppRecompiledShader)->GetBufferPointer(),
-			(*ppRecompiledShader)->GetBufferSize(),
-			D3D_DISASM_ENABLE_DEFAULT_VALUE_PRINTS | D3D_DISASM_ENABLE_INSTRUCTION_NUMBERING,
-			NULL,
-			&pErrors
-		);
-		if (pErrors) {
-			EmuLog(hlslErrorLogLevel, "%s", (char*)(pErrors->GetBufferPointer()));
-			pErrors->Release();
-		}
-	}
 
 	return hRet;
 }
