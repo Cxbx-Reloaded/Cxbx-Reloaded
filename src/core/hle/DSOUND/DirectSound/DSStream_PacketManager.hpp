@@ -38,3 +38,5 @@ extern void DSStream_Packet_Clear(
     XTL::X_CDirectSoundStream*  pThis);
 
 extern bool DSStream_Packet_Process(XTL::X_CDirectSoundStream* pThis);
+
+extern bool DSStream_Packet_Flush(XTL::X_CDirectSoundStream* pThis);

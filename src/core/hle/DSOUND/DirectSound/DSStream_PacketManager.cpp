@@ -298,3 +298,26 @@ bool DSStream_Packet_Process(
     }
     return 1;
 }
+
+bool DSStream_Packet_Flush(
+    XTL::X_CDirectSoundStream* pThis
+    )
+{
+    // If host's audio is still playing then return busy-state until buffer has stop playing.
+    DWORD dwStatus;
+    pThis->EmuDirectSoundBuffer8->GetStatus(&dwStatus);
+    if ((dwStatus & DSBSTATUS_PLAYING) > 0) {
+        // We need to stop the play state
+        pThis->EmuDirectSoundBuffer8->Stop();
+        DSStream_Packet_Process(pThis);
+        return true;
+    }
+    // Once stopped, we can safely flush the packets.
+    pThis->EmuDirectSoundBuffer8->SetCurrentPosition(0);
+    pThis->Host_dwLastWritePos = 0;
+    pThis->Host_isProcessing = false;
+    for (auto buffer = pThis->Host_BufferPacketArray.begin(); buffer != pThis->Host_BufferPacketArray.end();) {
+        DSStream_Packet_Clear(buffer, XMP_STATUS_FLUSHED, pThis->Xb_lpfnCallback, pThis->Xb_lpvContext, pThis);
+    }
+    return false;
+}

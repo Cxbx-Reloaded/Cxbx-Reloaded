@@ -100,7 +100,7 @@ void DirectSoundDoWork_Stream(xboxkrnl::LARGE_INTEGER& time)
         }
         XTL::X_CDirectSoundStream* pThis = (*ppDSStream);
         // TODO: Do we need this in async thread loop?
-        if (pThis->Xb_rtPauseEx != 0 && pThis->Xb_rtPauseEx <= time.QuadPart) {
+        if (pThis->Xb_rtPauseEx != 0LL && pThis->Xb_rtPauseEx <= time.QuadPart) {
             pThis->Xb_rtPauseEx = 0LL;
             pThis->EmuFlags ^= DSE_FLAG_PAUSE;
             // Don't call play here, let DSStream_Packet_Process deal with it.
@@ -109,9 +109,9 @@ void DirectSoundDoWork_Stream(xboxkrnl::LARGE_INTEGER& time)
             DSStream_Packet_Process(pThis);
         } else {
             // Confirmed flush packet must be done in DirectSoundDoWork only when title is ready.
-            if (pThis->Xb_rtFlushEx != 0 && pThis->Xb_rtFlushEx <= time.QuadPart) {
+            if (pThis->Xb_rtFlushEx != 0LL && pThis->Xb_rtFlushEx <= time.QuadPart) {
                 pThis->Xb_rtFlushEx = 0LL;
-                DSStream_Packet_Process(pThis);
+                DSStream_Packet_Flush(pThis);
             }
         }
     }
@@ -335,20 +335,13 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_Discontinuity)
 
 	LOG_FUNC_ONE_ARG(pThis);
 
-    // NOTE: Perform check if has pending data. if so, stop stream.
     // default ret = DSERR_GENERIC
 
-    pThis->EmuDirectSoundBuffer8->Stop();
-    pThis->Host_isProcessing = false;
-
-    // NOTE: Must reset flags in discontinuity and rtTimeStamps.
-    pThis->EmuFlags &= ~(DSE_FLAG_PAUSE | DSE_FLAG_FLUSH_ASYNC | DSE_FLAG_ENVELOPE | DSE_FLAG_ENVELOPE2);
-    DSoundBufferSynchPlaybackFlagRemove(pThis->EmuFlags);
-    pThis->Xb_rtFlushEx = 0LL;
-    pThis->Xb_rtPauseEx = 0LL;
-
-    for (auto buffer = pThis->Host_BufferPacketArray.begin(); buffer != pThis->Host_BufferPacketArray.end();) {
-        DSStream_Packet_Clear(buffer, XMP_STATUS_FLUSHED, pThis->Xb_lpfnCallback, pThis->Xb_lpvContext, pThis);
+    // Perform check if has pending data. if so, clear pending packets.
+    if (pThis->Host_BufferPacketArray.size() > 1) {
+        for (auto buffer = pThis->Host_BufferPacketArray.begin() + 1; buffer != pThis->Host_BufferPacketArray.end();) {
+            DSStream_Packet_Clear(buffer, XMP_STATUS_FLUSHED, pThis->Xb_lpfnCallback, pThis->Xb_lpvContext, pThis);
+        }
     }
 
     return DS_OK;
@@ -371,7 +364,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_Flush)
     pThis->EmuFlags &= ~(DSE_FLAG_FLUSH_ASYNC | DSE_FLAG_ENVELOPE | DSE_FLAG_ENVELOPE2);
     pThis->Xb_rtFlushEx = 0LL;
 
-    while (DSStream_Packet_Process(pThis));
+    while (DSStream_Packet_Flush(pThis));
 
     return DS_OK;
 }
@@ -405,15 +398,18 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_FlushEx)
     else if ((dwFlags & X_DSSFLUSHEX_ASYNC) > 0) {
 
         pThis->EmuFlags |= DSE_FLAG_FLUSH_ASYNC;
-        pThis->Xb_rtFlushEx = rtTimeStamp;
+        // If rtTimeStamp is zero'd, then it must be flush in worker thread right away.
+        if (rtTimeStamp == 0LL) {
+            xboxkrnl::LARGE_INTEGER getTime;
+            xboxkrnl::KeQuerySystemTime(&getTime);
+            pThis->Xb_rtFlushEx = getTime.QuadPart;
+        }
+        else {
+            pThis->Xb_rtFlushEx = rtTimeStamp;
+        }
 
-        // Set or remove flags (This is the only place it will set/remove other than Flush perform remove the flags.)
+        // Set or remove flags (This is the only place it will set/remove other than flush perform remove the flags.)
         if ((dwFlags & X_DSSFLUSHEX_ENVELOPE) > 0) {
-            if (rtTimeStamp == 0LL) {
-                xboxkrnl::LARGE_INTEGER getTime;
-                xboxkrnl::KeQuerySystemTime(&getTime);
-                pThis->Xb_rtFlushEx = getTime.QuadPart;
-            }
             pThis->Xb_rtFlushEx += (pThis->Xb_EnvolopeDesc.dwRelease * 512) / 48000;
         }
 
@@ -898,21 +894,12 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetFormat)
 		LOG_FUNC_ARG(pwfxFormat)
 		LOG_FUNC_END;
 
-    pThis->Host_isProcessing = false;
-    pThis->EmuDirectSoundBuffer8->Stop();
-
-    for (auto buffer = pThis->Host_BufferPacketArray.begin(); buffer != pThis->Host_BufferPacketArray.end();) {
-        // TODO: Also need to pass down callback and context as well?
-        DSStream_Packet_Clear(buffer, XMP_STATUS_FLUSHED, nullptr, nullptr, pThis);
-    }
+    while (DSStream_Packet_Flush(pThis));
 
     HRESULT hRet = HybridDirectSoundBuffer_SetFormat(pThis->EmuDirectSoundBuffer8, pwfxFormat, pThis->EmuBufferDesc,
                                              pThis->EmuFlags, pThis->EmuPlayFlags, pThis->EmuDirectSound3DBuffer8,
                                              0, pThis->X_BufferCache, pThis->X_BufferCacheSize,
                                              pThis->Xb_VoiceProperties, xbnullptr, pThis->Xb_Frequency);
-
-    pThis->EmuDirectSoundBuffer8->SetCurrentPosition(0);
-    pThis->Host_dwLastWritePos = 0;
 
     return hRet;
 }
