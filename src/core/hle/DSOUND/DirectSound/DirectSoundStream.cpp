@@ -40,6 +40,7 @@ namespace xboxkrnl {
 #include "DirectSoundLogging.hpp"
 #include "..\XbDSoundLogging.hpp"
 
+#include "DSStream_PacketManager.hpp"
 
 // TODO: Tasks need to do for DirectSound HLE
 // * Missing CDirectSoundStream patch
@@ -102,15 +103,15 @@ void DirectSoundDoWork_Stream(xboxkrnl::LARGE_INTEGER& time)
         if (pThis->Xb_rtPauseEx != 0 && pThis->Xb_rtPauseEx <= time.QuadPart) {
             pThis->Xb_rtPauseEx = 0LL;
             pThis->EmuFlags ^= DSE_FLAG_PAUSE;
-            // Don't call play here, let DSoundStreamProcess deal with it.
+            // Don't call play here, let DSStream_Packet_Process deal with it.
         }
         if ((pThis->EmuFlags & DSE_FLAG_FLUSH_ASYNC) == 0) {
-            DSoundStreamProcess(pThis);
+            DSStream_Packet_Process(pThis);
         } else {
             // Confirmed flush packet must be done in DirectSoundDoWork only when title is ready.
             if (pThis->Xb_rtFlushEx != 0 && pThis->Xb_rtFlushEx <= time.QuadPart) {
                 pThis->Xb_rtFlushEx = 0LL;
-                DSoundStreamProcess(pThis);
+                DSStream_Packet_Process(pThis);
             }
         }
     }
@@ -159,7 +160,7 @@ ULONG WINAPI XTL::EMUPATCH(CDirectSoundStream_Release)
             }
 
             for (auto buffer = pThis->Host_BufferPacketArray.begin(); buffer != pThis->Host_BufferPacketArray.end();) {
-                DSoundStreamClearPacket(buffer, XMP_STATUS_RELEASE_CXBXR, nullptr, nullptr, pThis);
+                DSStream_Packet_Clear(buffer, XMP_STATUS_RELEASE_CXBXR, nullptr, nullptr, pThis);
             }
 
             if (pThis->EmuBufferDesc.lpwfxFormat != nullptr) {
@@ -236,16 +237,17 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateStream)
         GeneratePCMFormat(DSBufferDesc, pdssd->lpwfxFormat, (*ppStream)->EmuFlags, 0,
                           xbnullptr, (*ppStream)->X_BufferCacheSize, (*ppStream)->Xb_VoiceProperties, pdssd->lpMixBinsOutput);
 
-        // Test case: Star Wars: KotOR has one packet greater than 5 seconds worth. Increasing to 10 seconds works out fine, can increase more if need to.
-        // Allocate at least 10 second worth of bytes in PCM format.
-        DSBufferDesc.dwBufferBytes = DSBufferDesc.lpwfxFormat->nAvgBytesPerSec * 10;
+        // Test case: Star Wars: KotOR has one packet greater than 5 seconds worth. Increasing to 10 seconds allow stream to work until
+        // another test case below proven host's buffer size does not matter since packet's size can be greater than host's buffer size.
+        // Test case: GTA 3 / Vice City, and some other titles has packet's buffer size are bigger than 10 seconds worth of buffer size.
+        // Allocate at least 5 second worth of bytes in PCM format to allow partial upload packet's buffer.
+        DSBufferDesc.dwBufferBytes = DSBufferDesc.lpwfxFormat->nAvgBytesPerSec * 5;
         (*ppStream)->EmuBufferDesc = DSBufferDesc;
-
-        (*ppStream)->Host_dwTriggerRange = (DSBufferDesc.lpwfxFormat->nSamplesPerSec / DSBufferDesc.lpwfxFormat->wBitsPerSample);
 
         (*ppStream)->X_MaxAttachedPackets = pdssd->dwMaxAttachedPackets;
         (*ppStream)->Host_BufferPacketArray.reserve(pdssd->dwMaxAttachedPackets);
         (*ppStream)->Host_dwWriteOffsetNext = 0;
+        (*ppStream)->Host_dwLastWritePos = 0;
         (*ppStream)->Host_isProcessing = false;
         (*ppStream)->Xb_lpfnCallback = pdssd->lpfnCallback;
         (*ppStream)->Xb_lpvContext = pdssd->lpvContext;
@@ -346,7 +348,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_Discontinuity)
     pThis->Xb_rtPauseEx = 0LL;
 
     for (auto buffer = pThis->Host_BufferPacketArray.begin(); buffer != pThis->Host_BufferPacketArray.end();) {
-        DSoundStreamClearPacket(buffer, XMP_STATUS_FLUSHED, pThis->Xb_lpfnCallback, pThis->Xb_lpvContext, pThis);
+        DSStream_Packet_Clear(buffer, XMP_STATUS_FLUSHED, pThis->Xb_lpfnCallback, pThis->Xb_lpvContext, pThis);
     }
 
     return DS_OK;
@@ -369,7 +371,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_Flush)
     pThis->EmuFlags &= ~(DSE_FLAG_FLUSH_ASYNC | DSE_FLAG_ENVELOPE | DSE_FLAG_ENVELOPE2);
     pThis->Xb_rtFlushEx = 0LL;
 
-    while (DSoundStreamProcess(pThis));
+    while (DSStream_Packet_Process(pThis));
 
     return DS_OK;
 }
@@ -613,23 +615,26 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_Process)
             // Add packets from title until it gets full.
             if (pThis->Host_BufferPacketArray.size() != pThis->X_MaxAttachedPackets) {
                 host_voice_packet packet_input;
+                packet_input.pBuffer_data = nullptr;
                 packet_input.xmp_data = *pInputBuffer;
                 packet_input.xmp_data.dwMaxSize = DSoundBufferGetPCMBufferSize(pThis->EmuFlags, pInputBuffer->dwMaxSize);
-                if (packet_input.xmp_data.dwMaxSize == 0) {
-                    packet_input.pBuffer_data = nullptr;
-                } else {
+                if (packet_input.xmp_data.dwMaxSize != 0) {
                     packet_input.pBuffer_data = malloc(packet_input.xmp_data.dwMaxSize);
                     DSoundSGEMemAlloc(packet_input.xmp_data.dwMaxSize);
                 }
-                packet_input.rangeStart = pThis->Host_dwWriteOffsetNext;
+                packet_input.nextWriteOffset = pThis->Host_dwWriteOffsetNext;
+                packet_input.lastWritePos = packet_input.nextWriteOffset;
                 pThis->Host_dwWriteOffsetNext += packet_input.xmp_data.dwMaxSize;
-                if (pThis->EmuBufferDesc.dwBufferBytes <= pThis->Host_dwWriteOffsetNext) {
+                // Packet size may be larger than host's pre-allocated buffer size, loop is a requirement until within range is known.
+                while (pThis->EmuBufferDesc.dwBufferBytes <= pThis->Host_dwWriteOffsetNext) {
                     pThis->Host_dwWriteOffsetNext -= pThis->EmuBufferDesc.dwBufferBytes;
                 }
-                packet_input.isWritten = false;
+                packet_input.bufWrittenBytes = 0;
+                packet_input.bufPlayed = 0;
                 packet_input.isPlayed = false;
 
                 DSoundBufferOutputXBtoHost(pThis->EmuFlags, pThis->EmuBufferDesc, pInputBuffer->pvBuffer, pInputBuffer->dwMaxSize, packet_input.pBuffer_data, packet_input.xmp_data.dwMaxSize);
+
                 pThis->Host_BufferPacketArray.push_back(packet_input);
 
                 if (pInputBuffer->pdwStatus != xbnullptr) {
@@ -639,7 +644,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_Process)
                     (*pInputBuffer->pdwCompletedSize) = 0;
                 }
                 if (pThis->Host_isProcessing == false && pThis->Host_BufferPacketArray.size() == 1) {
-                    pThis->EmuDirectSoundBuffer8->SetCurrentPosition(packet_input.rangeStart);
+                    pThis->EmuDirectSoundBuffer8->SetCurrentPosition(packet_input.nextWriteOffset);
                 }
             // Once full it needs to change status to flushed when cannot hold any more packets.
             } else {
@@ -898,13 +903,16 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetFormat)
 
     for (auto buffer = pThis->Host_BufferPacketArray.begin(); buffer != pThis->Host_BufferPacketArray.end();) {
         // TODO: Also need to pass down callback and context as well?
-        DSoundStreamClearPacket(buffer, XMP_STATUS_FLUSHED, nullptr, nullptr, pThis);
+        DSStream_Packet_Clear(buffer, XMP_STATUS_FLUSHED, nullptr, nullptr, pThis);
     }
 
     HRESULT hRet = HybridDirectSoundBuffer_SetFormat(pThis->EmuDirectSoundBuffer8, pwfxFormat, pThis->EmuBufferDesc,
                                              pThis->EmuFlags, pThis->EmuPlayFlags, pThis->EmuDirectSound3DBuffer8,
                                              0, pThis->X_BufferCache, pThis->X_BufferCacheSize,
                                              pThis->Xb_VoiceProperties, xbnullptr, pThis->Xb_Frequency);
+
+    pThis->EmuDirectSoundBuffer8->SetCurrentPosition(0);
+    pThis->Host_dwLastWritePos = 0;
 
     return hRet;
 }
