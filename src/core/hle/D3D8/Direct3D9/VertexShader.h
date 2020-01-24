@@ -4,6 +4,14 @@
 
 #include "core\hle\D3D8\XbVertexShader.h"
 
+enum class ShaderType {
+	Empty = 0,
+	Compilable,
+	Unsupported,
+};
+
+extern ShaderType EmuGetShaderInfo(IntermediateVertexShader* pIntermediateShader);
+
 extern HRESULT EmuCompileShader
 (
     IntermediateVertexShader* pIntermediateShader,

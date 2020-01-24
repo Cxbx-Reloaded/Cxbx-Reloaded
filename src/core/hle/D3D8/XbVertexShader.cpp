@@ -1316,7 +1316,7 @@ void CxbxImpl_SelectVertexShaderDirect
 }
 
 // parse xbox vertex shader function into an intermediate format
-extern HRESULT EmuParseVshFunction
+extern void EmuParseVshFunction
 (
 	DWORD* pXboxFunction,
 	DWORD* pXboxFunctionSize,
@@ -1325,13 +1325,6 @@ extern HRESULT EmuParseVshFunction
 {
 	uint32_t* pToken;
 	auto VshDecoder = XboxVertexShaderDecoder();
-	ID3DBlob* pErrors = nullptr;
-	HRESULT             hRet = 0;
-
-	// TODO: support this situation..
-	if (pXboxFunction == xbnullptr) {
-		return E_FAIL;
-	}
 
 	*pXboxFunctionSize = 0;
 
@@ -1347,7 +1340,4 @@ extern HRESULT EmuParseVshFunction
 	// The size of the shader is
 	pToken += X_VSH_INSTRUCTION_SIZE; // always at least one token
 	*pXboxFunctionSize = (intptr_t)pToken - (intptr_t)pXboxFunction;
-
-
-	return hRet;
 }
