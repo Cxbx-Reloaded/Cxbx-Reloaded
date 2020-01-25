@@ -122,7 +122,7 @@ void ParameterHlsl(std::stringstream& hlsl, VSH_IMD_PARAMETER& param, bool Index
 	}
 }
 
-bool BuildShader(IntermediateVertexShader* pShader, std::stringstream& hlsl)
+void BuildShader(IntermediateVertexShader* pShader, std::stringstream& hlsl)
 {
 	// HLSL strings for all MAC opcodes, indexed with VSH_MAC
 	static std::string VSH_MAC_HLSL[/*VSH_MAC*/] = {
@@ -176,8 +176,6 @@ bool BuildShader(IntermediateVertexShader* pShader, std::stringstream& hlsl)
 
 		hlsl << ");";
 	}
-
-	return pShader->Instructions.size() > 0;
 }
 
 std::string DebugPrependLineNumbers(std::string shaderString) {
@@ -198,8 +196,6 @@ std::string DebugPrependLineNumbers(std::string shaderString) {
 extern HRESULT EmuCompileShader
 (
 	IntermediateVertexShader* pIntermediateShader,
-	bool          bNoReservedConstants,
-	bool* pbUseDeclarationOnly,
 	ID3DBlob** ppHostShader
 )
 {
@@ -207,9 +203,6 @@ extern HRESULT EmuCompileShader
 	//XTL::X_VSH_SHADER_HEADER* pXboxVertexShaderHeader = (XTL::X_VSH_SHADER_HEADER*)pXboxFunction;
 	ID3DBlob* pErrors = nullptr;
 	HRESULT             hRet = 0;
-
-	// Initialize output arguments to zero
-	*pbUseDeclarationOnly = false;
 
 	switch (pIntermediateShader->Header.Version) {
 	case VERSION_XVS:
@@ -229,6 +222,13 @@ extern HRESULT EmuCompileShader
 	
 	if (!SUCCEEDED(hRet)) return hRet;
 
+	if (pIntermediateShader->Instructions.size() == 0) {
+		// Do not attempt to compile empty shaders
+		// This is a declaration only shader, so there is no function to recompile
+		ppHostShader = nullptr;
+		return D3D_OK;
+	}
+
 	// Include HLSL header and footer as raw strings :
 	static std::string hlsl_template[2] = {
 		#include "core\hle\D3D8\Direct3D9\CxbxVertexShaderTemplate.hlsl"
@@ -236,12 +236,8 @@ extern HRESULT EmuCompileShader
 
 	auto hlsl_stream = std::stringstream();
 	hlsl_stream << hlsl_template[0]; // Start with the HLSL template header
-	if (!BuildShader(pIntermediateShader, hlsl_stream)) {
-		// Do not attempt to compile empty shaders
-		// This is a declaration only shader, so there is no function to recompile
-		*pbUseDeclarationOnly = true;
-		return D3D_OK;
-	}
+	assert(pIntermediateShader->Instructions.size() > 0);
+	BuildShader(pIntermediateShader, hlsl_stream);
 
 	hlsl_stream << hlsl_template[1]; // Finish with the HLSL template footer
 	std::string hlsl_str = hlsl_stream.str();

@@ -4258,8 +4258,6 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateVertexShader)
 	DWORD        *pRecompiledFunction = nullptr;
 	if (SUCCEEDED(hRet) && pFunction)
 	{
-		bool bUseDeclarationOnly = false;
-
 		auto intermediateShader = IntermediateVertexShader();
 
 		// TOOD handle parse return value?
@@ -4267,16 +4265,15 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateVertexShader)
 			&XboxFunctionSize,
 			&intermediateShader);
 
+		// Try to compile the shader
 		hRet = EmuCompileShader(
 			&intermediateShader,
-			/*bNoReservedConstants=*/g_Xbox_VertexShaderConstantMode == X_D3DSCM_NORESERVEDCONSTANTS,
-			&bUseDeclarationOnly,
 			&pRecompiledBuffer
 		);
 
 		if (SUCCEEDED(hRet))
 		{
-			if (!bUseDeclarationOnly)
+			if (pRecompiledBuffer)
 				pRecompiledFunction = (DWORD*)pRecompiledBuffer->GetBufferPointer();
 			else
 				pRecompiledFunction = nullptr;

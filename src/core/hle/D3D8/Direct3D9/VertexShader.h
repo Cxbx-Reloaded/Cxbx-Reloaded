@@ -7,8 +7,6 @@
 extern HRESULT EmuCompileShader
 (
     IntermediateVertexShader* pIntermediateShader,
-    bool          bNoReservedConstants,
-    bool* pbUseDeclarationOnly,
     ID3DBlob** ppHostShader
 );
 
