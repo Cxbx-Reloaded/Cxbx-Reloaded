@@ -395,7 +395,7 @@ static void dsound_thread_worker(LPVOID nullPtr)
                 if ((*ppDSStream)->Host_BufferPacketArray.size() == 0) {
                     continue;
                 }
-                if (((*ppDSStream)->EmuFlags & DSE_FLAG_FLUSH_ASYNC) > 0 && (*ppDSStream)->Xb_rtFlushEx == 0) {
+                if (((*ppDSStream)->EmuFlags & DSE_FLAG_FLUSH_ASYNC) > 0 && (*ppDSStream)->Xb_rtFlushEx == 0LL) {
                     DSStream_Packet_Process((*ppDSStream));
                 }
             }
