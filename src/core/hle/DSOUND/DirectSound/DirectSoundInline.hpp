@@ -199,7 +199,7 @@ static inline void InitVoiceProperties(XTL::X_DSVOICEPROPS& Xb_VoiceProperties)
 static inline void GenerateMixBinDefault(
     XTL::X_DSVOICEPROPS    &Xb_VoiceProperties,
     LPCWAVEFORMATEX         lpwfxFormat,
-    XTL::X_DSMIXBINS*       mixbins_output,
+    XTL::X_LPDSMIXBINS      mixbins_output,
     bool                    is3D)
 {
     if (g_LibVersion_DSOUND < 4039) {

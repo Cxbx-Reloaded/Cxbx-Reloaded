@@ -1118,16 +1118,28 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetMinDistance)
 HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetMixBins)
 (
     X_CDirectSoundBuffer*   pThis,
-    X_LPDSMIXBINS           pMixBins)
+    DWORD                   dwMixBinMask)
 {
     DSoundMutexGuardLock;
+    HRESULT hRet = DS_OK;
+    X_LPDSMIXBINS pMixBins = reinterpret_cast<X_LPDSMIXBINS>(dwMixBinMask);
 
-	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(pThis)
-		LOG_FUNC_ARG(pMixBins)
-		LOG_FUNC_END;
+    if (g_LibVersion_DSOUND < 4039) {
+        LOG_FUNC_BEGIN
+            LOG_FUNC_ARG(pThis)
+            LOG_FUNC_ARG(dwMixBinMask)
+            LOG_FUNC_END;
 
-    HRESULT hRet = HybridDirectSoundBuffer_SetMixBins(pThis->Xb_VoiceProperties, pMixBins, pThis->EmuBufferDesc.lpwfxFormat, pThis->EmuBufferDesc);
+        LOG_UNIMPLEMENTED();
+    }
+    else {
+        LOG_FUNC_BEGIN
+            LOG_FUNC_ARG(pThis)
+            LOG_FUNC_ARG(pMixBins)
+            LOG_FUNC_END;
+
+        hRet = HybridDirectSoundBuffer_SetMixBins(pThis->Xb_VoiceProperties, pMixBins, pThis->EmuBufferDesc.lpwfxFormat, pThis->EmuBufferDesc);
+    }
 
     return hRet;
 }

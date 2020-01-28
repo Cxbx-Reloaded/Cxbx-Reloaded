@@ -61,6 +61,7 @@ typedef struct _XDSMIXBINVOLUMEPAIR {
 // ******************************************************************
 // * X_DSMIXBINS
 // ******************************************************************
+// Revision 2 (4039+)
 typedef struct _XDSMIXBINS {
     DWORD                       dwCount;
     X_LPDSMIXBINVOLUMEPAIR     lpMixBinVolumePairs;
