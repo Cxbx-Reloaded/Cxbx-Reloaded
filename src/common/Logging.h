@@ -447,7 +447,9 @@ extern thread_local std::string _logThreadPrefix;
 #define FLAGS2STR_END_and_LOGRENDER(FlagType) FLAGS2STR_END LOGRENDER_TYPE(FlagType)
 
 // Macro's for Struct-member rendering :
+#define LOGRENDER_MEMBER_ARRAY_OFFSET(Name, Offset) << LOG_ARG_START << (Name) << "[" << (Offset) << "]: {"
 #define LOGRENDER_MEMBER_NAME_VALUE(Name, Value) << LOG_ARG_START << (Name) << "  : " << (Value)
+#define LOGRENDER_MEMBER_NAME_TYPE_PTR(Name, Type, Value) << LOG_ARG_START << (Name) << "  : " << hex4((uint32_t)Value) << " -> " << (Type) << "* {"
 #define LOGRENDER_MEMBER_NAME_TYPE_VALUE(Name, Type, Value) << LOG_ARG_START << (Name) << "  : " << (Type)(Value)
 #define LOGRENDER_MEMBER_NAME(Member) << LOG_ARG_START << "."#Member << "  : "
 #define LOGRENDER_MEMBER(Member) LOGRENDER_MEMBER_NAME_VALUE("."#Member, value.Member)
@@ -456,6 +458,23 @@ extern thread_local std::string _logThreadPrefix;
 
 // Macro to ease declaration of two render functions, for type and pointer-to-type :
 #define LOGRENDER_HEADER(Type) LOGRENDER_HEADER_BY_PTR(Type); LOGRENDER_HEADER_BY_REF(Type);
+
+// Macro's for dynamic array structure rendering :
+template<class A, class B>
+static std::string
+LogRenderGenerate_Array(std::string MemberStr, A MemberValue, B Count) {
+	B counter = 0;
+	std::ostringstream strGenerator;
+	while (counter < Count) {
+		strGenerator LOGRENDER_MEMBER_ARRAY_OFFSET(MemberStr, counter)
+			<< *MemberValue << "}";
+		MemberValue++;
+		counter++;
+	}
+	strGenerator << "}";
+	return strGenerator.str();
+}
+#define LOGRENDER_MEMBER_ARRAY_TYPE(Type, Member, Count) LOGRENDER_MEMBER_NAME_TYPE_PTR("."#Member, #Type, value.Member) << LogRenderGenerate_Array("."#Member, (Type*)value.Member, value.Count)
 
 // Traits to switch ostreams to our preferred rendering of hexadecimal values
 template <class _CharT, class _Traits>

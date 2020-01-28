@@ -183,8 +183,7 @@ LOGRENDER(X_DSMIXBINS)
 {
 	return os
 		LOGRENDER_MEMBER(dwCount)
-		// TODO: Need to make a loop somehow for complete output base on dwCount variable.
-		LOGRENDER_MEMBER_TYPE(X_LPDSMIXBINVOLUMEPAIR, lpMixBinVolumePairs)
+		LOGRENDER_MEMBER_ARRAY_TYPE(X_DSMIXBINVOLUMEPAIR, lpMixBinVolumePairs, dwCount)
 		;
 }
 
