@@ -547,19 +547,6 @@ const char *CxbxGetErrorDescription(HRESULT hResult)
 	return nullptr;
 }
 
-// TODO move to shader file. Needs to be called whenever a shader or declaration is set
-void SetVertexRegisterDefaultFlags(CxbxVertexShader* pCxbxVertexShader) {
-	if (pCxbxVertexShader != nullptr && pCxbxVertexShader->VertexShaderKey != 0) {
-		// Titles can specify default values for registers via calls like SetVertexData4f
-		// HLSL shaders need to know whether to use vertex data or default vertex shader values
-		// Any register not in the vertex declaration should be set to the default value
-		float vertexDefaultFlags[16];
-		for (int i = 0; i < 16; i++) {
-			vertexDefaultFlags[i] = pCxbxVertexShader->VertexShaderInfo.vRegisterInDeclaration[i] ? 0.0f : 1.0f;
-		}
-		g_pD3DDevice->SetVertexShaderConstantF(CXBX_D3DVS_CONSTREG_VREGDEFAULTS_FLAG_BASE, vertexDefaultFlags, 4);
-	}
-}
 
 const char *D3DErrorString(HRESULT hResult)
 {
@@ -987,6 +974,48 @@ IDirect3DResource *GetHostResource(XTL::X_D3DResource *pXboxResource, DWORD D3DU
 	}
 
 	return it->second.pHostResource;
+}
+
+void SetCxbxVertexShader(CxbxVertexShader* pCxbxVertexShader) {
+
+	LOG_INIT
+
+	HRESULT hRet;
+
+	// Get vertex shader if we have a key
+	auto pHostShader = pCxbxVertexShader->VertexShaderKey
+		? g_VertexShaderSource.GetShader(pCxbxVertexShader->VertexShaderKey)
+		: nullptr;
+
+	// Set vertex shader
+	hRet = g_pD3DDevice->SetVertexShader(pHostShader);
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetVertexShader");
+
+	// Set either FVF or the vertex declaration
+	if (pCxbxVertexShader->HostFVF)
+	{
+		// Set the FVF
+		hRet = g_pD3DDevice->SetFVF(pCxbxVertexShader->HostFVF);
+		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetFVF");
+	}
+	else
+	{
+		// Set vertex declaration
+		hRet = g_pD3DDevice->SetVertexDeclaration(pCxbxVertexShader->pHostVertexDeclaration);
+		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetVertexDeclaration");
+	}
+
+	// Set vertex shader constants if necessary
+	if (pHostShader) {
+		// Titles can specify default values for registers via calls like SetVertexData4f
+		// HLSL shaders need to know whether to use vertex data or default vertex shader values
+		// Any register not in the vertex declaration should be set to the default value
+		float vertexDefaultFlags[16];
+		for (int i = 0; i < 16; i++) {
+			vertexDefaultFlags[i] = pCxbxVertexShader->VertexShaderInfo.vRegisterInDeclaration[i] ? 0.0f : 1.0f;
+		}
+		g_pD3DDevice->SetVertexShaderConstantF(CXBX_D3DVS_CONSTREG_VREGDEFAULTS_FLAG_BASE, vertexDefaultFlags, 4);
+	}
 }
 
 // Forward declaration of CxbxGetPixelContainerMeasures to prevent
@@ -3558,10 +3587,17 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SelectVertexShader)
     if(VshHandleIsVertexShader(Handle))
     {
         pCxbxVertexShader = GetCxbxVertexShader(Handle);
+		SetCxbxVertexShader(pCxbxVertexShader);
     }
     else if(Handle == xbnull)
     {
 		HostFVF = D3DFVF_XYZ | D3DFVF_TEX0;
+		// Clear any vertex shader that may be set
+		hRet = g_pD3DDevice->SetVertexShader(nullptr);
+		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetVertexShader()");
+		// Set the FVF
+		hRet = g_pD3DDevice->SetFVF(HostFVF);
+		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetFVF(D3DFVF_XYZ | D3DFVF_TEX0)");
 	}
     else if(Address < 136)
     {
@@ -3578,28 +3614,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SelectVertexShader)
             EmuLog(LOG_LEVEL::WARNING, "g_VertexShaderSlots[%d] = 0", Address);
 		}
     }
-
-	IDirect3DVertexDeclaration* pHostVertexDeclaration = nullptr;
-	IDirect3DVertexShader* pHostVertexShader = nullptr;
-
-	if (pCxbxVertexShader)
-	{
-		pHostVertexDeclaration = pCxbxVertexShader->pHostVertexDeclaration;
-		pHostVertexShader = g_VertexShaderSource.GetShader(pCxbxVertexShader->VertexShaderKey);
-		HostFVF = pCxbxVertexShader->HostFVF;
-
-		SetVertexRegisterDefaultFlags(pCxbxVertexShader);
-	}
-
-	hRet = g_pD3DDevice->SetVertexDeclaration(pHostVertexDeclaration);
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetVertexDeclaration()");
-	hRet = g_pD3DDevice->SetVertexShader(pHostVertexShader);
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetVertexShader()");
-	if (HostFVF) // should equal (pHostVertexShader == nullptr)
-	{
-		hRet = g_pD3DDevice->SetFVF(HostFVF);
-		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetFVF(D3DFVF_XYZ | D3DFVF_TEX0)");
-	}
 
 	if (FAILED(hRet))
 	{
@@ -6762,21 +6776,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexShader)
 
 	if (VshHandleIsVertexShader(Handle)) {
  		CxbxVertexShader *pCxbxVertexShader = GetCxbxVertexShader(Handle);
-		hRet = g_pD3DDevice->SetVertexDeclaration(pCxbxVertexShader->pHostVertexDeclaration);
-		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetVertexDeclaration");
-		if (pCxbxVertexShader->HostFVF)
-		{
-			hRet = g_pD3DDevice->SetFVF(pCxbxVertexShader->HostFVF);
-			DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetFVF(VshHandleIsVertexShader)");
-		}
-		else
-		{
-			SetVertexRegisterDefaultFlags(pCxbxVertexShader);
-
-			auto pHostShader = g_VertexShaderSource.GetShader(pCxbxVertexShader->VertexShaderKey);
-			hRet = g_pD3DDevice->SetVertexShader(pHostShader);
-			DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetVertexShader(VshHandleIsVertexShader)");
-		}
+		SetCxbxVertexShader(pCxbxVertexShader);
 
 	} else {
 		hRet = g_pD3DDevice->SetVertexShader(nullptr);
