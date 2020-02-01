@@ -1,4 +1,4 @@
-#define LOG_PREFIX CXBXR_MODULE::VTXSH
+#define LOG_PREFIX CXBXR_MODULE::VSHCACHE
 
 #include "VertexShaderSource.h"
 
