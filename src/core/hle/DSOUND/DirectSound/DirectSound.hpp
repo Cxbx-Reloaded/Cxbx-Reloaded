@@ -1135,13 +1135,13 @@ HRESULT WINAPI EMUPATCH(CDirectSoundStream_SetLFO)
 );
 
 // ******************************************************************
-// * patch: XAudioCreateAdpcmFormat
+// * patch: XAudioCreateAdpcmFormat // NOTE: Not require to patch
 // ******************************************************************
 VOID WINAPI EMUPATCH(XAudioCreateAdpcmFormat)
 (
-    WORD                   nChannels,
-    DWORD                  nSamplesPerSec,
-    LPXBOXADPCMWAVEFORMAT  pwfx
+    WORD                        nChannels,
+    DWORD                       nSamplesPerSec,
+    OUT LPXBOXADPCMWAVEFORMAT   pwfx
 );
 
 // ******************************************************************
