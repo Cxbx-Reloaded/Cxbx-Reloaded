@@ -474,7 +474,7 @@ HRESULT WINAPI EMUPATCH(IDirectSound_SetMixBinHeadroom)
 HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_SetMixBins)
 (
     X_CDirectSoundBuffer*   pThis,
-    XTL::X_LPDSMIXBINS      pMixBins
+    DWORD                   dwMixBinMask
 );
 
 // ******************************************************************
@@ -955,7 +955,7 @@ HRESULT WINAPI EMUPATCH(CDirectSoundStream_SetI3DL2Source)
 HRESULT WINAPI EMUPATCH(CDirectSoundStream_SetMixBins)
 (
     X_CDirectSoundStream*   pThis,
-    XTL::X_LPDSMIXBINS      pMixBins
+    DWORD                   dwMixBinMask
 );
 
 // s+
@@ -1662,7 +1662,7 @@ HRESULT WINAPI EMUPATCH(IDirectSoundStream_SetFrequency)
 HRESULT WINAPI EMUPATCH(IDirectSoundStream_SetMixBins)
 (
     X_CDirectSoundStream*   pThis,
-    XTL::X_LPDSMIXBINS      pMixBins);
+    DWORD                   dwMixBinMask);
 
 // ******************************************************************
 // * patch:  CDirectSound3DCalculator_Calculate3D
