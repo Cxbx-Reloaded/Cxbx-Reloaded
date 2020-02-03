@@ -28,9 +28,9 @@ struct VS_OUTPUT
 // Xbox constant registers
 uniform float4 C[X_D3DVS_CONSTREG_COUNT] : register(c0);
 
-// Vertex input overrides for SetVertexData4f support
-uniform float4 vOverrideValue[16]  : register(c192);
-uniform float4 vOverridePacked[4]  : register(c208);
+// Default values for vertex registers, and whether to use them
+uniform float4 vRegisterDefaultValues[16]  : register(c192);
+uniform float4 vRegisterDefaultFlagsPacked[4]  : register(c208);
 
 uniform float4 xboxViewportScale   : register(c212);
 uniform float4 xboxViewportOffset  : register(c213);
@@ -284,12 +284,12 @@ VS_OUTPUT main(const VS_INPUT xIn)
 	// Input registers
 	float4 v0, v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13, v14, v15;
 
-	// View 4 packed overrides as an array of 16 floats
-	float vOverride[16] = (float[16])vOverridePacked;
+	// Unpack 16 flags from 4 float4 constant registers
+	float vRegisterDefaultFlags[16] = (float[16])vRegisterDefaultFlagsPacked;
 
-	// Initialize input registers from the vertex buffer
-	// Or use an override value set with SetVertexData4f
-	#define init_v(i) v##i = lerp(xIn.v[i], vOverride[i], vOverrideValue[i]);
+	// Initialize input registers from the vertex buffer data
+	// Or use the register's default value (which can be changed by the title)
+	#define init_v(i) v##i = lerp(xIn.v[i], vRegisterDefaultValues[i], vRegisterDefaultFlags[i]);
 	// Note : unroll manually instead of for-loop, because of the ## concatenation
 	init_v( 0); init_v( 1); init_v( 2); init_v( 3);
 	init_v( 4); init_v( 5); init_v( 6); init_v( 7);

@@ -547,13 +547,16 @@ const char *CxbxGetErrorDescription(HRESULT hResult)
 }
 
 // TODO move to shader file. Needs to be called whenever a shader or declaration is set
-void SetOverrideFlags(CxbxVertexShader* pCxbxVertexShader) {
+void SetVertexRegisterDefaultFlags(CxbxVertexShader* pCxbxVertexShader) {
 	if (pCxbxVertexShader != nullptr && pCxbxVertexShader->pHostVertexShader != nullptr) {
-		float overrideFlags[16];
+		// Titles can specify default values for registers via calls like SetVertexData4f
+		// HLSL shaders need to know whether to use vertex data or default vertex shader values
+		// Any register not in the vertex declaration should be set to the default value
+		float vertexDefaultFlags[16];
 		for (int i = 0; i < 16; i++) {
-			overrideFlags[i] = pCxbxVertexShader->VertexShaderInfo.vRegisterInDeclaration[i] ? 1.0f : 0.0f;
+			vertexDefaultFlags[i] = pCxbxVertexShader->VertexShaderInfo.vRegisterInDeclaration[i] ? 0.0f : 1.0f;
 		}
-		g_pD3DDevice->SetVertexShaderConstantF(CXBX_D3DVS_CONSTREG_VERTEXDATA4F_FLAG_BASE, overrideFlags, 4);
+		g_pD3DDevice->SetVertexShaderConstantF(CXBX_D3DVS_CONSTREG_VREGDEFAULTS_FLAG_BASE, vertexDefaultFlags, 4);
 	}
 }
 
@@ -3580,7 +3583,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SelectVertexShader)
 		pHostVertexShader = pCxbxVertexShader->pHostVertexShader;
 		HostFVF = pCxbxVertexShader->HostFVF;
 
-		SetOverrideFlags(pCxbxVertexShader);
+		SetVertexRegisterDefaultFlags(pCxbxVertexShader);
 	}
 
 	hRet = g_pD3DDevice->SetVertexDeclaration(pHostVertexDeclaration);
@@ -4758,7 +4761,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexData4f)
 		FLOAT values[] = {a,b,c,d};
 		if (Register < 0) LOG_TEST_CASE("Register < 0");
 		if (Register >= 16) LOG_TEST_CASE("Register >= 16");
-		g_pD3DDevice->SetVertexShaderConstantF(CXBX_D3DVS_CONSTREG_VERTEXDATA4F_BASE + Register, values, 1);
+		g_pD3DDevice->SetVertexShaderConstantF(CXBX_D3DVS_CONSTREG_VREGDEFAULTS_BASE + Register, values, 1);
 	}
 
 	// Grow g_InlineVertexBuffer_Table to contain at least current, and a potentially next vertex
@@ -6804,7 +6807,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexShader)
 		}
 		else
 		{
-			SetOverrideFlags(pCxbxVertexShader);
+			SetVertexRegisterDefaultFlags(pCxbxVertexShader);
 
 			hRet = g_pD3DDevice->SetVertexShader(pCxbxVertexShader->pHostVertexShader);
 			DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetVertexShader(VshHandleIsVertexShader)");
