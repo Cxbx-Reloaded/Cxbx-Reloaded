@@ -268,7 +268,7 @@ static inline void GenerateMixBinDefault(
                     counter++;
                 }
 
-                if ((channelMask & SPEAKER_FRONT_LEFT) > 0) {
+                if ((channelMask & SPEAKER_FRONT_RIGHT) > 0) {
                     xb_mixbinArray[counter].dwMixBin = 1;
                     xb_mixbinArray[counter].lVolume = 0;
                     counter++;

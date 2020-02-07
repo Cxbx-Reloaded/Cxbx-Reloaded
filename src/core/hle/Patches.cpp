@@ -319,7 +319,7 @@ std::map<const std::string, const xbox_patch_t> g_PatchTable = {
 	PATCH_ENTRY("IDirectSound_SetRolloffFactor", XTL::EMUPATCH(IDirectSound_SetRolloffFactor), PATCH_HLE_DSOUND),
 	PATCH_ENTRY("IDirectSound_SetVelocity", XTL::EMUPATCH(IDirectSound_SetVelocity), PATCH_HLE_DSOUND),
 	PATCH_ENTRY("IDirectSound_SynchPlayback", XTL::EMUPATCH(IDirectSound_SynchPlayback), PATCH_HLE_DSOUND),
-	PATCH_ENTRY("XAudioCreateAdpcmFormat", XTL::EMUPATCH(XAudioCreateAdpcmFormat), PATCH_HLE_DSOUND),
+	//PATCH_ENTRY("XAudioCreateAdpcmFormat", XTL::EMUPATCH(XAudioCreateAdpcmFormat), PATCH_HLE_DSOUND), // NOTE: Not require to patch
 	PATCH_ENTRY("XAudioDownloadEffectsImage", XTL::EMUPATCH(XAudioDownloadEffectsImage), PATCH_HLE_DSOUND),
 	PATCH_ENTRY("XAudioSetEffectData", XTL::EMUPATCH(XAudioSetEffectData), PATCH_HLE_DSOUND),
 

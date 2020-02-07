@@ -69,34 +69,35 @@ XTL::X_XFileMediaObject::_vtbl XTL::X_XFileMediaObject::vtbl =
     there is chance of failure which contain value greater than 0.
  */
 
+#if 0 // NOTE: Not require to patch
 // ******************************************************************
 // * patch: XAudioCreateAdpcmFormat
 // ******************************************************************
 VOID WINAPI XTL::EMUPATCH(XAudioCreateAdpcmFormat)
 (
-    WORD                   nChannels,
-    DWORD                  nSamplesPerSec,
-    LPXBOXADPCMWAVEFORMAT  pwfx)
+    WORD                        nChannels,
+    DWORD                       nSamplesPerSec,
+    OUT LPXBOXADPCMWAVEFORMAT   pwfx)
 {
     DSoundMutexGuardLock;
 
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(nChannels)
 		LOG_FUNC_ARG(nSamplesPerSec)
-		LOG_FUNC_ARG(pwfx)
+		LOG_FUNC_ARG_OUT(pwfx)
 		LOG_FUNC_END;
 
     // Fill out the pwfx structure with the appropriate data
     pwfx->wfx.wFormatTag = WAVE_FORMAT_XBOX_ADPCM;
     pwfx->wfx.nChannels = nChannels;
     pwfx->wfx.nSamplesPerSec = nSamplesPerSec;
-    pwfx->wfx.nAvgBytesPerSec = (nSamplesPerSec*nChannels * 36) / 64;
     pwfx->wfx.nBlockAlign = nChannels * 36;
+    pwfx->wfx.nAvgBytesPerSec = (nSamplesPerSec / 64/*Always 64 samples per block*/) * pwfx->wfx.nBlockAlign;
     pwfx->wfx.wBitsPerSample = 4;
     pwfx->wfx.cbSize = 2;
     pwfx->wSamplesPerBlock = 64;
-
 }
+#endif
 
 // ******************************************************************
 // * patch: XAudioDownloadEffectsImage

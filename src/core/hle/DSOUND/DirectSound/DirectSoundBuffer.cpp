@@ -193,14 +193,14 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateBuffer)
             EmuLog(LOG_LEVEL::WARNING, "Use of unsupported pdsbd->dwFlags mask(s) (0x%.08X)", pdsbd->dwFlags & (~dwAcceptableMask));
         }
 
-        // HACK: Hot fix for titles not giving CTRL3D flag. Xbox might accept it, however the host does not.
-        if ((pdsbd->dwFlags & DSBCAPS_MUTE3DATMAXDISTANCE) > 0 && (pdsbd->dwFlags & DSBCAPS_CTRL3D) == 0) {
-            pdsbd->dwFlags &= ~DSBCAPS_MUTE3DATMAXDISTANCE;
-        }
-
         DSBufferDesc.dwSize = sizeof(DSBUFFERDESC);
         DSBufferDesc.dwFlags = (pdsbd->dwFlags & dwAcceptableMask) | DSBCAPS_CTRLVOLUME | DSBCAPS_GETCURRENTPOSITION2 | DSBCAPS_CTRLFREQUENCY |
             (g_XBAudio.mute_on_unfocus ? 0 : DSBCAPS_GLOBALFOCUS);
+
+        // HACK: Hot fix for titles not giving CTRL3D flag. Xbox might accept it, however the host does not.
+        if ((pdsbd->dwFlags & DSBCAPS_MUTE3DATMAXDISTANCE) > 0 && (pdsbd->dwFlags & DSBCAPS_CTRL3D) == 0) {
+            DSBufferDesc.dwFlags &= ~DSBCAPS_MUTE3DATMAXDISTANCE;
+        }
 
         // TODO: Garbage Collection
         *ppBuffer = new X_CDirectSoundBuffer();
