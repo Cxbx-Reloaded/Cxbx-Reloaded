@@ -57,6 +57,7 @@ static int g_DlgIndexes[] = {
 	IDC_LOG_PSHB,
 	IDC_LOG_PXSH,
 	IDC_LOG_VTXSH,
+	IDC_LOG_VSHCACHE,
 	IDC_LOG_VTXB,
 	IDC_LOG_DINP,
 	IDC_LOG_XINP,
@@ -353,6 +354,7 @@ INT_PTR CALLBACK DlgLogConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM
 				case IDC_LOG_PSHB:
 				case IDC_LOG_PXSH:
 				case IDC_LOG_VTXSH:
+				case IDC_LOG_VSHCACHE:
 				case IDC_LOG_VTXB:
 				case IDC_LOG_DINP:
 				case IDC_LOG_XINP:

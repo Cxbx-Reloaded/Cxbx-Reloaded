@@ -66,6 +66,7 @@ typedef enum class _CXBXR_MODULE: unsigned int {
 	PSHB,
 	PXSH,
 	VTXSH,
+	VSHCACHE,
 	VTXB,
 	DINP,
 	XINP,

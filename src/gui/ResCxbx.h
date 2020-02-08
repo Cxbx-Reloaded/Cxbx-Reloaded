@@ -91,6 +91,7 @@
 #define IDC_LOG_DSSTREAM                959
 #define IDC_LOG_DS3DCALC                960
 #define IDC_LOG_XMO                     961
+#define IDC_LOG_VSHCACHE                962
 #define IDC_SET_MOTOR                   999
 #define IDC_SET_X                       1000
 #define IDC_SET_Y                       1001
@@ -368,7 +369,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        136
 #define _APS_NEXT_COMMAND_VALUE         40113
-#define _APS_NEXT_CONTROL_VALUE         1277
+#define _APS_NEXT_CONTROL_VALUE         1278
 #define _APS_NEXT_SYMED_VALUE           109
 #endif
 #endif

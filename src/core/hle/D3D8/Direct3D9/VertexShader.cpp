@@ -192,6 +192,32 @@ std::string DebugPrependLineNumbers(std::string shaderString) {
 	return debugShader.str();
 }
 
+
+extern ShaderType EmuGetShaderInfo(IntermediateVertexShader* pIntermediateShader) {
+
+	if (pIntermediateShader->Instructions.size() == 0) {
+		// Do not attempt to compile empty shaders
+		// This is a declaration only shader, so there is no function to compile
+		return ShaderType::Empty;
+	}
+
+	switch (pIntermediateShader->Header.Version) {
+		case VERSION_XVS:
+			break;
+		case VERSION_XVSS:
+			LOG_TEST_CASE("Might not support vertex state shaders?");
+			break;
+		case VERSION_XVSW:
+			EmuLog(LOG_LEVEL::WARNING, "Might not support vertex read/write shaders?");
+			return ShaderType::Unsupported;
+		default:
+			EmuLog(LOG_LEVEL::WARNING, "Unknown vertex shader version 0x%02X", pIntermediateShader->Header.Version);
+			return ShaderType::Unsupported;
+	}
+
+	return ShaderType::Compilable;
+}
+
 // recompile xbox vertex shader function
 extern HRESULT EmuCompileShader
 (
@@ -203,31 +229,6 @@ extern HRESULT EmuCompileShader
 	//XTL::X_VSH_SHADER_HEADER* pXboxVertexShaderHeader = (XTL::X_VSH_SHADER_HEADER*)pXboxFunction;
 	ID3DBlob* pErrors = nullptr;
 	HRESULT             hRet = 0;
-
-	switch (pIntermediateShader->Header.Version) {
-	case VERSION_XVS:
-		break;
-	case VERSION_XVSS:
-		LOG_TEST_CASE("Might not support vertex state shaders?");
-		break;
-	case VERSION_XVSW:
-		EmuLog(LOG_LEVEL::WARNING, "Might not support vertex read/write shaders?");
-		hRet = E_FAIL;
-		break;
-	default:
-		EmuLog(LOG_LEVEL::WARNING, "Unknown vertex shader version 0x%02X", pIntermediateShader->Header.Version);
-		hRet = E_FAIL;
-		break;
-	}
-	
-	if (!SUCCEEDED(hRet)) return hRet;
-
-	if (pIntermediateShader->Instructions.size() == 0) {
-		// Do not attempt to compile empty shaders
-		// This is a declaration only shader, so there is no function to recompile
-		ppHostShader = nullptr;
-		return D3D_OK;
-	}
 
 	// Include HLSL header and footer as raw strings :
 	static std::string hlsl_template[2] = {
