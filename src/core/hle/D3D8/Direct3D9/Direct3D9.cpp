@@ -291,6 +291,7 @@ g_EmuCDPD = {0};
   /*XB_MACRO(VOID,               WINAPI,     D3DDevice_LoadVertexShaderProgram, (CONST DWORD*, DWORD)                                                              );*/\
   /*XB_MACRO(VOID,               __stdcall,  D3DDevice_LoadVertexShader_0,      ()                                                                                 );*/\
   /*XB_MACRO(VOID,               WINAPI,     D3DDevice_LoadVertexShader_4,      (DWORD)                                                                            );*/\
+    XB_MACRO(HRESULT,            WINAPI,     D3DDevice_PersistDisplay,          (VOID)                                                                             );  \
     XB_MACRO(HRESULT,            WINAPI,     D3DDevice_Reset,                   (XTL::X_D3DPRESENT_PARAMETERS*)                                                    );  \
   /*XB_MACRO(VOID,               WINAPI,     D3DDevice_SelectVertexShader,      (DWORD, DWORD)                                                                     );*/\
   /*XB_MACRO(VOID,               __stdcall,  D3DDevice_SelectVertexShader_0,    ()                                                                                 );*/\
@@ -8864,8 +8865,10 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_PersistDisplay)()
 	// 6. Call AvSetSavedDataAddress, passing the xbox surface data pointer
 
 	// Call the native Xbox function so that AvSetSavedDataAddress is called and the VMManager can know its correct address
-	XB_trampoline(HRESULT, WINAPI, D3DDevice_PersistDisplay, (VOID));
-	return XB_D3DDevice_PersistDisplay();
+	if (XB_TRMP(D3DDevice_PersistDisplay))
+		return XB_TRMP(D3DDevice_PersistDisplay)();
+
+	return 0;
 }
 
 // ******************************************************************
