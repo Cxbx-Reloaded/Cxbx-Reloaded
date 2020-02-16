@@ -8324,31 +8324,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_LoadVertexShaderProgram)
 }
 
 // ******************************************************************
-// * patch: D3DDevice_GetVertexShaderType
-// ******************************************************************
-VOID WINAPI XTL::EMUPATCH(D3DDevice_GetVertexShaderType)
-(
-    DWORD  Handle,
-    DWORD *pType
-)
-{
-	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(Handle)
-		LOG_FUNC_ARG(pType)
-		LOG_FUNC_END;
-
-	// Handle is always address of an Xbox VertexShader struct, or-ed with 1 (X_D3DFVF_RESERVED0)
-	// *pType is set according to flags in the VertexShader struct
-
-	if (pType) {
-		CxbxVertexShader *pCxbxVertexShader = GetCxbxVertexShader(Handle);
-		if (pCxbxVertexShader) {
-			*pType = pCxbxVertexShader->XboxVertexShaderType;
-		}
-    }
-}
-
-// ******************************************************************
 // * patch: D3DDevice_GetVertexShaderDeclaration
 // ******************************************************************
 HRESULT WINAPI XTL::EMUPATCH(D3DDevice_GetVertexShaderDeclaration)
