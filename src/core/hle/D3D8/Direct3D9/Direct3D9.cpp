@@ -7954,28 +7954,6 @@ void WINAPI XTL::EMUPATCH(D3DDevice_SetSoftDisplayFilter)
 	LOG_IGNORED();
 }
 
-// ******************************************************************
-// * patch: D3DDevice_GetVertexShaderSize
-// ******************************************************************
-VOID WINAPI XTL::EMUPATCH(D3DDevice_GetVertexShaderSize)
-(
-    DWORD Handle,
-    UINT* pSize
-)
-{
-	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(Handle)
-		LOG_FUNC_ARG(pSize)
-		LOG_FUNC_END;
-
-	// Handle is always address of an Xbox VertexShader struct, or-ed with 1 (X_D3DFVF_RESERVED0)
-
-    if (pSize) {
-        CxbxVertexShader *pVertexShader = GetCxbxVertexShader(Handle);
-        *pSize = pVertexShader ? pVertexShader->XboxNrAddressSlots : 0;
-    }
-}
-
 // LTCG specific D3DDevice_DeleteVertexShader function...
 // This uses a custom calling convention where parameter is passed in EAX
 // UNTESTED - Need test-case!

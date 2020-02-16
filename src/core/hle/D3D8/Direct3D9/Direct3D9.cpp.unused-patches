@@ -3921,3 +3921,25 @@ D3DCOLOR * WINAPI XTL::EMUPATCH(D3DPalette_Lock2)
 
 	RETURN(pData);
 }
+
+// ******************************************************************	
+// * patch: D3DDevice_GetVertexShaderSize	
+// ******************************************************************	
+VOID WINAPI XTL::EMUPATCH(D3DDevice_GetVertexShaderSize)	
+(	
+    DWORD Handle,	
+    UINT* pSize	
+)	
+{	
+	LOG_FUNC_BEGIN	
+		LOG_FUNC_ARG(Handle)	
+		LOG_FUNC_ARG(pSize)	
+		LOG_FUNC_END;	
+
+	// Handle is always address of an Xbox VertexShader struct, or-ed with 1 (X_D3DFVF_RESERVED0)	
+
+    if (pSize) {	
+        CxbxVertexShader *pVertexShader = GetCxbxVertexShader(Handle);	
+        *pSize = pVertexShader ? pVertexShader->XboxNrAddressSlots : 0;	
+    }	
+}

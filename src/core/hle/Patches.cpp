@@ -95,7 +95,7 @@ std::map<const std::string, const xbox_patch_t> g_PatchTable = {
 	PATCH_ENTRY("D3DDevice_GetVertexShaderDeclaration", XTL::EMUPATCH(D3DDevice_GetVertexShaderDeclaration), PATCH_HLE_D3D),
 	PATCH_ENTRY("D3DDevice_GetVertexShaderFunction", XTL::EMUPATCH(D3DDevice_GetVertexShaderFunction), PATCH_HLE_D3D),
 	PATCH_ENTRY("D3DDevice_GetVertexShaderInput", XTL::EMUPATCH(D3DDevice_GetVertexShaderInput), PATCH_HLE_D3D),
-	PATCH_ENTRY("D3DDevice_GetVertexShaderSize", XTL::EMUPATCH(D3DDevice_GetVertexShaderSize), PATCH_HLE_D3D),
+	//PATCH_ENTRY("D3DDevice_GetVertexShaderSize", XTL::EMUPATCH(D3DDevice_GetVertexShaderSize), PATCH_HLE_D3D),
 	PATCH_ENTRY("D3DDevice_GetVertexShaderType", XTL::EMUPATCH(D3DDevice_GetVertexShaderType), PATCH_HLE_D3D),
 	PATCH_ENTRY("D3DDevice_GetViewportOffsetAndScale", XTL::EMUPATCH(D3DDevice_GetViewportOffsetAndScale), PATCH_HLE_D3D),
 	PATCH_ENTRY("D3DDevice_GetVisibilityTestResult", XTL::EMUPATCH(D3DDevice_GetVisibilityTestResult), PATCH_HLE_D3D),
