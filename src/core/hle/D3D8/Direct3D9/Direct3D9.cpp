@@ -4092,81 +4092,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetViewport)
 	UpdateViewPortOffsetAndScaleConstants();
 }
 
-// LTCG specific D3DDevice_GetViewportOffsetAndScale function...
-// This function is still not working so should be investigated...
-// This uses a custom calling convention where parameter is passed in EDX, ECX
-// Test-case: RalliSport Challenge 2
-VOID __stdcall XTL::EMUPATCH(D3DDevice_GetViewportOffsetAndScale_0)
-(
-)
-{
-    D3DXVECTOR4 *pOffset;
-    D3DXVECTOR4 *pScale;
-
-	__asm {
-		mov pScale, ecx
-		mov pOffset, edx
-	}
-
-	return EMUPATCH(D3DDevice_GetViewportOffsetAndScale)(pOffset, pScale);
-}
-
-// ******************************************************************
-// * patch: D3DDevice_GetViewportOffsetAndScale
-// ******************************************************************
-VOID WINAPI XTL::EMUPATCH(D3DDevice_GetViewportOffsetAndScale)
-(
-    X_D3DXVECTOR4 *pOffset,
-	X_D3DXVECTOR4 *pScale
-)
-{
-	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(pOffset)
-		LOG_FUNC_ARG(pScale)
-		LOG_FUNC_END;
-
-	// LOG_TEST_CASE("D3DDevice_GetViewportOffsetAndScale"); // Get us some test-cases
-	// Test case : 007: From Russia with Love
-	// Test case : Army Men?: Sarge's War
-	// Test case : BeatDown - Fists of Vengeance
-	// Test case : Big Mutha Truckers
-	// Test case : Big Mutha Truckers 2
-	// Test case : Classified : The Sentinel Crisis
-	// Test case : Cold Fear
-	// Test case : Commandos SF
-	// Test case : Darkwatch
-	// Test case : Dr.Muto
-	// Test case : GTA : Vice City
-	// Test case : Jacked
-	// Test case : Madagascar
-	// Test case : Max Payne 2
-	// Test case : NBA LIVE 2005
-	// Test case : NFS : Underground
-	// Test case : NFS : Underground 2
-	// Test case : PoP : The Sands of Time
-	// Test case : Prince of Persia : T2T - see #1109 (comment)
-	// Test case : RPM Tuning
-	// Test case : Street Racing Syndicate
-	// Test case : Spongebob - Battle for Bikini Bottom
-	// Test case : The Incredibles : Rise of the Underminer
-	// Test case : The SpongeBob SquarePants Movie
-	// Test case : TMNT(R)2
-	// Test case : TMNT(R)3
-
-    float vOffset[4], vScale[4];
-    GetViewPortOffsetAndScale(vOffset, vScale);
-
-    pOffset->x = vOffset[0];
-    pOffset->y = vOffset[1];
-    pOffset->z = vOffset[2];
-    pOffset->w = vOffset[3];
-
-    pScale->x = vScale[0];
-    pScale->y = vScale[1];
-    pScale->z = vScale[2];
-    pScale->w = vScale[3];
-}
-
 // LTCG specific D3DDevice_SetShaderConstantMode function...
 // This uses a custom calling convention where parameter is passed in EAX
 VOID __stdcall XTL::EMUPATCH(D3DDevice_SetShaderConstantMode_0)
@@ -7954,28 +7879,6 @@ void WINAPI XTL::EMUPATCH(D3DDevice_SetSoftDisplayFilter)
 	LOG_IGNORED();
 }
 
-// ******************************************************************
-// * patch: D3DDevice_GetVertexShaderSize
-// ******************************************************************
-VOID WINAPI XTL::EMUPATCH(D3DDevice_GetVertexShaderSize)
-(
-    DWORD Handle,
-    UINT* pSize
-)
-{
-	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(Handle)
-		LOG_FUNC_ARG(pSize)
-		LOG_FUNC_END;
-
-	// Handle is always address of an Xbox VertexShader struct, or-ed with 1 (X_D3DFVF_RESERVED0)
-
-    if (pSize) {
-        CxbxVertexShader *pVertexShader = GetCxbxVertexShader(Handle);
-        *pSize = pVertexShader ? pVertexShader->XboxNrAddressSlots : 0;
-    }
-}
-
 // LTCG specific D3DDevice_DeleteVertexShader function...
 // This uses a custom calling convention where parameter is passed in EAX
 // UNTESTED - Need test-case!
@@ -8343,31 +8246,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_LoadVertexShaderProgram)
 	g_LoadVertexShaderProgramCache[shaderCacheKey] = hNewXboxShader;
 
 	EmuLog(LOG_LEVEL::WARNING, "Vertex Shader Cache Size: %d", g_LoadVertexShaderProgramCache.size());
-}
-
-// ******************************************************************
-// * patch: D3DDevice_GetVertexShaderType
-// ******************************************************************
-VOID WINAPI XTL::EMUPATCH(D3DDevice_GetVertexShaderType)
-(
-    DWORD  Handle,
-    DWORD *pType
-)
-{
-	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(Handle)
-		LOG_FUNC_ARG(pType)
-		LOG_FUNC_END;
-
-	// Handle is always address of an Xbox VertexShader struct, or-ed with 1 (X_D3DFVF_RESERVED0)
-	// *pType is set according to flags in the VertexShader struct
-
-	if (pType) {
-		CxbxVertexShader *pCxbxVertexShader = GetCxbxVertexShader(Handle);
-		if (pCxbxVertexShader) {
-			*pType = pCxbxVertexShader->XboxVertexShaderType;
-		}
-    }
 }
 
 // ******************************************************************
