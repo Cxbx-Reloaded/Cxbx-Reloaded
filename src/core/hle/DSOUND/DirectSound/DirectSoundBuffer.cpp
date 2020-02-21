@@ -205,14 +205,14 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateBuffer)
         // TODO: Garbage Collection
         *ppBuffer = new X_CDirectSoundBuffer();
 
-        DSoundBufferSetDefault((*ppBuffer), 0);
+        DSoundBufferSetDefault((*ppBuffer), 0, pdsbd->dwFlags);
         (*ppBuffer)->Host_lock = { 0 };
         (*ppBuffer)->Xb_rtStopEx = 0LL;
 
         DSoundBufferRegionSetDefault(*ppBuffer);
 
         // We have to set DSBufferDesc last due to EmuFlags must be either 0 or previously written value to preserve other flags.
-        GeneratePCMFormat(DSBufferDesc, pdsbd->lpwfxFormat, (*ppBuffer)->EmuFlags, pdsbd->dwBufferBytes,
+        GeneratePCMFormat(DSBufferDesc, pdsbd->lpwfxFormat, pdsbd->dwFlags, (*ppBuffer)->EmuFlags, pdsbd->dwBufferBytes,
                           &(*ppBuffer)->X_BufferCache, (*ppBuffer)->X_BufferCacheSize, (*ppBuffer)->Xb_VoiceProperties, pdsbd->lpMixBinsOutput);
         (*ppBuffer)->EmuBufferDesc = DSBufferDesc;
 
@@ -929,8 +929,8 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetFormat)
 		LOG_FUNC_ARG(pwfxFormat)
 		LOG_FUNC_END;
 
-    HRESULT hRet = HybridDirectSoundBuffer_SetFormat(pThis->EmuDirectSoundBuffer8, pwfxFormat, 
-                                                     pThis->EmuBufferDesc, pThis->EmuFlags, 
+    HRESULT hRet = HybridDirectSoundBuffer_SetFormat(pThis->EmuDirectSoundBuffer8, pwfxFormat, pThis->Xb_Flags,
+                                                     pThis->EmuBufferDesc, pThis->EmuFlags,
                                                      pThis->EmuPlayFlags, pThis->EmuDirectSound3DBuffer8,
                                                      0, pThis->X_BufferCache, pThis->X_BufferCacheSize,
                                                      pThis->Xb_VoiceProperties, xbnullptr, pThis->Xb_Frequency);

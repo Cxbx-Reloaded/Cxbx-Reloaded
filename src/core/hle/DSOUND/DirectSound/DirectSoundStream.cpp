@@ -230,11 +230,11 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateStream)
             DSBufferDesc.dwFlags |= DSBCAPS_CTRLPAN;
         }
 
-        DSoundBufferSetDefault((*ppStream), DSBPLAY_LOOPING);
+        DSoundBufferSetDefault((*ppStream), DSBPLAY_LOOPING, pdssd->dwFlags);
         (*ppStream)->Xb_rtFlushEx = 0LL;
 
         // We have to set DSBufferDesc last due to EmuFlags must be either 0 or previously written value to preserve other flags.
-        GeneratePCMFormat(DSBufferDesc, pdssd->lpwfxFormat, (*ppStream)->EmuFlags, 0,
+        GeneratePCMFormat(DSBufferDesc, pdssd->lpwfxFormat, pdssd->dwFlags, (*ppStream)->EmuFlags, 0,
                           xbnullptr, (*ppStream)->X_BufferCacheSize, (*ppStream)->Xb_VoiceProperties, pdssd->lpMixBinsOutput);
 
         // Test case: Star Wars: KotOR has one packet greater than 5 seconds worth. Increasing to 10 seconds allow stream to work until
@@ -896,10 +896,11 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetFormat)
 
     while (DSStream_Packet_Flush(pThis));
 
-    HRESULT hRet = HybridDirectSoundBuffer_SetFormat(pThis->EmuDirectSoundBuffer8, pwfxFormat, pThis->EmuBufferDesc,
-                                             pThis->EmuFlags, pThis->EmuPlayFlags, pThis->EmuDirectSound3DBuffer8,
-                                             0, pThis->X_BufferCache, pThis->X_BufferCacheSize,
-                                             pThis->Xb_VoiceProperties, xbnullptr, pThis->Xb_Frequency);
+    HRESULT hRet = HybridDirectSoundBuffer_SetFormat(pThis->EmuDirectSoundBuffer8, pwfxFormat, pThis->Xb_Flags,
+                                                     pThis->EmuBufferDesc, pThis->EmuFlags, pThis->EmuPlayFlags,
+                                                     pThis->EmuDirectSound3DBuffer8, 0, pThis->X_BufferCache,
+                                                     pThis->X_BufferCacheSize, pThis->Xb_VoiceProperties,
+                                                     xbnullptr, pThis->Xb_Frequency);
 
     return hRet;
 }

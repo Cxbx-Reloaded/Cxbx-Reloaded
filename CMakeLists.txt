@@ -141,6 +141,7 @@ file (GLOB CXBXR_HEADER_EMU
  "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/XbState.h"
  "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/XbVertexBuffer.h"
  "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/XbVertexShader.h"
+ "${CXBXR_ROOT_DIR}/src/core/hle/DSOUND/common/windows/WFXformat.hpp"
  "${CXBXR_ROOT_DIR}/src/core/hle/DSOUND/DirectSound/DirectSound.hpp"
  "${CXBXR_ROOT_DIR}/src/core/hle/DSOUND/DirectSound/DirectSoundGlobal.hpp"
  "${CXBXR_ROOT_DIR}/src/core/hle/DSOUND/DirectSound/DirectSoundInline.hpp"
