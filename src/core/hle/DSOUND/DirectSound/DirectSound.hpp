@@ -109,6 +109,7 @@ struct X_CDirectSoundBuffer
     X_DSENVOLOPEDESC        Xb_EnvolopeDesc;
     X_DSVOICEPROPS          Xb_VoiceProperties;
     DWORD                   Xb_Frequency;
+    DWORD                   Xb_Flags;
 };
 
 //Custom flags (4 bytes support up to 31 shifts,starting from 0)
@@ -264,6 +265,7 @@ class X_CDirectSoundStream
         X_DSVOICEPROPS                          Xb_VoiceProperties;
         DWORD                                   Xb_Frequency;
         DWORD                                   Host_dwLastWritePos;
+        DWORD                                   Xb_Flags;
 };
 
 // ******************************************************************

@@ -30,6 +30,7 @@
 
 #include "common/XADPCM.h"
 #include "core/hle/DSOUND/XbDSoundTypes.h"
+#include "core/hle/DSOUND/common/windows/WFXformat.hpp"
 
 #include <mmreg.h>
 
@@ -83,75 +84,6 @@ static void DSoundBufferOutputXBtoHost(DWORD emuFlags, DSBUFFERDESC &DSBufferDes
     } else {
         memcpy_s(pPCaudioPtr, dwPCMAudioBytes, pXBaudioPtr, dwPCMAudioBytes);
     }
-}
-
-// Convert XADPCM to PCM format helper function
-static inline void XADPCM2PCMFormat(LPWAVEFORMATEX lpwfxFormat)
-{
-
-#if 0 //For testing purpose if XADPCM to PCM is not accurate.
-	EmuLog(LOG_LEVEL::DEBUG,
-          "EmuDSound: XADPCM WAVEFORMATEX\n"
-          "{\n"
-          "   wFormatTag              : 0x%.04hX\n"
-          "   nChannels               : 0x%.02hd\n"
-          "   nSamplesPerSec          : 0x%.08X\n"
-          "   nAvgBytesPerSec         : 0x%.08X\n"
-          "   nBlockAlign             : 0x%.02hd\n"
-          "   wBitsPerSample          : 0x%.04hX\n"
-          "   cbSize                  : 0x%.04hX\n"
-          "}\n",
-          lpwfxFormat->wFormatTag,
-          lpwfxFormat->nChannels,
-          lpwfxFormat->nSamplesPerSec,
-          lpwfxFormat->nAvgBytesPerSec,
-          lpwfxFormat->nBlockAlign,
-          lpwfxFormat->wBitsPerSample,
-          lpwfxFormat->cbSize);
-#endif
-
-    lpwfxFormat->wFormatTag = WAVE_FORMAT_PCM;
-
-    //lpwfxFormat.wFormatTag;         /* format type */
-    //lpwfxFormat.nChannels;          /* number of channels (i.e. mono, stereo...) */ NO CHANGE
-    //lpwfxFormat.nSamplesPerSec;     /* sample rate */ NO CHANGE
-    //lpwfxFormat.nAvgBytesPerSec;    /* for buffer estimation */
-    //lpwfxFormat.nBlockAlign;        /* block size of data */
-    //lpwfxFormat.wBitsPerSample;     /* number of bits per sample of mono data */
-    //lpwfxFormat.cbSize;             /* the count in bytes of the size of extra information (after cbSize) */
-
-    lpwfxFormat->wBitsPerSample = 16;
-    lpwfxFormat->nBlockAlign = 2 * lpwfxFormat->nChannels;
-    lpwfxFormat->nAvgBytesPerSec = lpwfxFormat->nSamplesPerSec * lpwfxFormat->nBlockAlign;
-    lpwfxFormat->cbSize = 0;
-    //Enable this only if you have Xbox ADPCM Codec installed on your PC, or else it will fail every time.
-    //This is just to verify format conversion is correct or not.
-#if 0
-    if (waveOutOpen(nullptr, WAVE_MAPPER, lpwfxFormat, NULL, NULL, WAVE_FORMAT_QUERY) != MMSYSERR_NOERROR) {
-        return DSERR_BADFORMAT;
-    }
-#endif
-
-#if 0 //For testing purpose if XADPCM to PCM is not accurate.
-    EmuLog(LOG_LEVEL::DEBUG,
-          "EmuDSound: Converted to PCM WAVEFORMATEX\n"
-          "{\n"
-          "   wFormatTag              : 0x%.04hX\n"
-          "   nChannels               : 0x%.02hd\n"
-          "   nSamplesPerSec          : 0x%.08X\n"
-          "   nAvgBytesPerSec         : 0x%.08X\n"
-          "   nBlockAlign             : 0x%.02hd\n"
-          "   wBitsPerSample          : 0x%.04hX\n"
-          "   cbSize                  : 0x%.04hX\n"
-          "}\n",
-          lpwfxFormat->wFormatTag,
-          lpwfxFormat->nChannels,
-          lpwfxFormat->nSamplesPerSec,
-          lpwfxFormat->nAvgBytesPerSec,
-          lpwfxFormat->nBlockAlign,
-          lpwfxFormat->wBitsPerSample,
-          lpwfxFormat->cbSize);
-#endif
 }
 
 static inline void GenerateXboxBufferCache(
@@ -312,7 +244,8 @@ static inline void GenerateMixBinDefault(
 
 static inline void GeneratePCMFormat(
     DSBUFFERDESC   &DSBufferDesc,
-    LPCWAVEFORMATEX lpwfxFormat,
+    LPCWAVEFORMATEX Xb_lpwfxFormat,
+    DWORD          &Xb_flags,
     DWORD          &dwEmuFlags,
     DWORD           X_BufferSizeRequest,
     LPVOID*         X_BufferCache,
@@ -321,184 +254,59 @@ static inline void GeneratePCMFormat(
     XTL::X_LPDSMIXBINS mixbins_output)
 {
     bool bIsSpecial = false;
-    DWORD checkAvgBps;
 
-    GenerateMixBinDefault(Xb_VoiceProperties, lpwfxFormat, mixbins_output, ((DSBufferDesc.dwFlags & DSBCAPS_CTRL3D) > 0));
+    GenerateMixBinDefault(Xb_VoiceProperties, Xb_lpwfxFormat, mixbins_output, ((DSBufferDesc.dwFlags & DSBCAPS_CTRL3D) > 0));
 
     // convert from Xbox to PC DSound
     {
         DSBufferDesc.dwReserved = 0;
 
-        if (lpwfxFormat != xbnullptr) {
+        // Allocate only once, does not need to re-allocate.
+        if (DSBufferDesc.lpwfxFormat == nullptr) {
+            // Only allocate extra value for setting extra values later on. WAVEFORMATEXTENSIBLE is the highest size I had seen.
+            DSBufferDesc.lpwfxFormat = (WAVEFORMATEX*)calloc(1, sizeof(WAVEFORMATEXTENSIBLE));
+        }
 
-            //TODO: RadWolfie - Need implement support for WAVEFORMATEXTENSIBLE as stated in CDirectSoundStream_SetFormat function note below
-            // Do we need to convert it? Or just do the WAVEFORMATEX only?
+        if (DSBufferDesc.lpwfxFormat == nullptr) {
+            CxbxKrnlCleanup("Unable to allocate DSBufferDesc.Xb_lpwfxFormat");
+        }
 
-            // NOTE: pwfxFormat is not always a WAVEFORMATEX structure, it can
-            // be WAVEFORMATEXTENSIBLE if that's what the programmer(s) wanted
-            // in the first place, FYI.
+        if (Xb_lpwfxFormat != xbnullptr) {
 
-            // Allocate only once, does not need to re-allocate.
-            if (DSBufferDesc.lpwfxFormat == nullptr) {
-                // Only allocate extra value for setting extra values later on. WAVEFORMATEXTENSIBLE is the highest size I had seen.
-                DSBufferDesc.lpwfxFormat = (WAVEFORMATEX*)calloc(1, sizeof(WAVEFORMATEXTENSIBLE));
-            }
-            WAVEFORMATEX* lpwfxFormatHost = DSBufferDesc.lpwfxFormat;
+            PWAVEFORMATEXTENSIBLE lpwfxFormatHost = reinterpret_cast<PWAVEFORMATEXTENSIBLE>(DSBufferDesc.lpwfxFormat);
 
-            if (lpwfxFormat->wFormatTag == WAVE_FORMAT_PCM) {
-                // Test case: Hulk crash due to cbSize is not a valid size.
-                memcpy(lpwfxFormatHost, lpwfxFormat, sizeof(WAVEFORMATEX));
-                lpwfxFormatHost->cbSize = 0; // Let's enforce this value to prevent any other exception later on.
-            }
-            else if (lpwfxFormat->wFormatTag == 0 && (DSBufferDesc.dwFlags & DSBCAPS_LOCDEFER) > 0) {
-                // NOTE: This is currently a hack for ability to create buffer class with DSBCAPS_LOCDEFER flag.
-                lpwfxFormatHost->wFormatTag = WAVE_FORMAT_PCM;
-                lpwfxFormatHost->nChannels = 2;
-                lpwfxFormatHost->nSamplesPerSec = 44100;
-                lpwfxFormatHost->wBitsPerSample = 8;
-                lpwfxFormatHost->nBlockAlign = lpwfxFormatHost->nChannels * static_cast<uint32_t>(lpwfxFormatHost->wBitsPerSample) / 8;
-                lpwfxFormatHost->nAvgBytesPerSec = lpwfxFormatHost->nSamplesPerSec * lpwfxFormatHost->nBlockAlign;
+            if (Xb_lpwfxFormat->wFormatTag == WAVE_FORMAT_EXTENSIBLE) {
+                memcpy(lpwfxFormatHost, Xb_lpwfxFormat, sizeof(WAVEFORMATEX) + Xb_lpwfxFormat->cbSize);
             }
             else {
-                memcpy(lpwfxFormatHost, lpwfxFormat, sizeof(WAVEFORMATEX) + lpwfxFormat->cbSize);
-            }
-
-            // NOTE: Currently a workaround hack fix until custom management for buffer/stream can allow unallocated buffer.
-            // Without this fix, some titles wouldn't progress further. Plus no matter what values are set in Xbox's wfxFormat
-            // are approved. It does need further investigation which require LLE APU stubbed and a HLE verbose plugin.
-            if (X_BufferSizeRequest == 0 &&
-                (lpwfxFormatHost->nSamplesPerSec == 0 || lpwfxFormatHost->nAvgBytesPerSec == 0)) {
-                // NOTE: When X_BufferSizeRequest is 0, creation is allow to be performed until allocated size is given from different API.
-                // Set dwBufferBytes is not needed as it is handled later on.
-                // Test case: Hobbit did not input nSamplesPerSec & nAvgBytesPerSec variable, yet isn't a requirement.
-                if (lpwfxFormatHost->nChannels == 0) {
-                    lpwfxFormatHost->nChannels = 2;
-                }
-                if (lpwfxFormatHost->wBitsPerSample == 0) {
-                    lpwfxFormatHost->wBitsPerSample = 8;
-                }
-
-                if (lpwfxFormatHost->nBlockAlign == 0) {
-                    lpwfxFormatHost->nBlockAlign = lpwfxFormatHost->nChannels * static_cast<uint32_t>(lpwfxFormatHost->wBitsPerSample) / 8;
-                }
-
-                if (lpwfxFormatHost->nSamplesPerSec == 0) {
-                    lpwfxFormatHost->nSamplesPerSec = 44100;
-                    lpwfxFormatHost->nAvgBytesPerSec = lpwfxFormatHost->nSamplesPerSec * lpwfxFormatHost->nBlockAlign;
-                }
-
-                // TODO: I don't think we need WAVEFORMATEXTENSIBLE stub for this fix.
-                if (lpwfxFormat->wFormatTag == WAVE_FORMAT_EXTENSIBLE) {
-                    EmuLog(LOG_LEVEL::WARNING, "Is WAVE_FORMAT_EXTENSIBLE having problem with creation?");
-                }
+                // Other formats will enforce use WAVEFORMATEX size, we cannot allow corruption sneak into WAVEFORMATEXTENSIBLE's structure.
+                memcpy(lpwfxFormatHost, Xb_lpwfxFormat, sizeof(WAVEFORMATEX));
+                lpwfxFormatHost->Format.cbSize = 0;
             }
 
             dwEmuFlags = dwEmuFlags & ~DSE_FLAG_AUDIO_CODECS;
 
-            switch (DSBufferDesc.lpwfxFormat->wFormatTag) {
-                case WAVE_FORMAT_PCM:
+            CODEC_FORMAT cf_audio = WFXformat_SyncHostFormat(DSBufferDesc.lpwfxFormat, Xb_lpwfxFormat, X_BufferSizeRequest, Xb_flags);
+            if (cf_audio == CF_PCM) {
                     dwEmuFlags |= DSE_FLAG_PCM;
-
-                    //TODO: Phantasy Star Online Episode I & II made an attempt to use avg byte/second below sample/second requirement.
-                    //In other word, this is a workaround to fix title mistake...
-                    checkAvgBps = lpwfxFormat->nSamplesPerSec * lpwfxFormat->nBlockAlign;
-                    if (lpwfxFormat->nAvgBytesPerSec < checkAvgBps) {
-                        DSBufferDesc.lpwfxFormat->nAvgBytesPerSec = checkAvgBps;
-                    }
-                    break;
-                case WAVE_FORMAT_XBOX_ADPCM:
-                    dwEmuFlags |= DSE_FLAG_XADPCM;
-                    XADPCM2PCMFormat(DSBufferDesc.lpwfxFormat);
-                    break;
-                default:
-                    dwEmuFlags |= DSE_FLAG_PCM_UNKNOWN;
-                    break;
             }
+            else if (cf_audio == CF_XADPCM) {
+                    dwEmuFlags |= DSE_FLAG_XADPCM;
+            }
+            else {
+                    dwEmuFlags |= DSE_FLAG_PCM_UNKNOWN;
+            }
+
         } else {
-            bIsSpecial = true;
             dwEmuFlags |= DSE_FLAG_RECIEVEDATA;
 
-            EmuLog(LOG_LEVEL::WARNING, "Creating dummy WAVEFORMATEX (pdsbd->lpwfxFormat = xbnullptr)...");
-
-            // HACK: This is a special sound buffer, create dummy WAVEFORMATEX data.
-            // It's supposed to recieve data rather than generate it.  Buffers created
-            // with flags DSBCAPS_MIXIN, DSBCAPS_FXIN, and DSBCAPS_FXIN2 will have no
-            // WAVEFORMATEX structure by default.
-
-            // TODO: A better response to this scenario if possible.
-
-            DSBufferDesc.lpwfxFormat = (WAVEFORMATEX*)malloc(sizeof(WAVEFORMATEXTENSIBLE));
-
-            //memset(pDSBufferDescSpecial->lpwfxFormat, 0, sizeof(WAVEFORMATEX)); 
-            //memset(pDSBufferDescSpecial, 0, sizeof(DSBUFFERDESC)); 
-
-            DSBufferDesc.lpwfxFormat->wFormatTag = WAVE_FORMAT_PCM;
-            DSBufferDesc.lpwfxFormat->nChannels = 2;
-            DSBufferDesc.lpwfxFormat->nSamplesPerSec = 22050;
-            DSBufferDesc.lpwfxFormat->nBlockAlign = 4;
-            DSBufferDesc.lpwfxFormat->nAvgBytesPerSec = DSBufferDesc.lpwfxFormat->nSamplesPerSec * DSBufferDesc.lpwfxFormat->nBlockAlign;
-            DSBufferDesc.lpwfxFormat->wBitsPerSample = 16;
-            DSBufferDesc.lpwfxFormat->cbSize = 0;
+            (void)WFXformat_SyncHostFormat(DSBufferDesc.lpwfxFormat, Xb_lpwfxFormat, X_BufferSizeRequest, Xb_flags);
 
             DSBufferDesc.dwFlags = DSBCAPS_CTRLPAN | DSBCAPS_CTRLVOLUME | DSBCAPS_CTRLFREQUENCY;
-            DSBufferDesc.dwBufferBytes = 3 * DSBufferDesc.lpwfxFormat->nAvgBytesPerSec;
-
-            //        DSBufferDesc.lpwfxFormat = (WAVEFORMATEX*)malloc(sizeof(WAVEFORMATEX)/*+pdsbd->lpwfxFormat->cbSize*/);
-
-            ////    DSBufferDesc.lpwfxFormat->cbSize = sizeof( WAVEFORMATEX );
-            //        DSBufferDesc.lpwfxFormat->nChannels = 1;
-            //        DSBufferDesc.lpwfxFormat->wFormatTag = WAVE_FORMAT_PCM;
-            //        DSBufferDesc.lpwfxFormat->nSamplesPerSec = 22050;
-            //        DSBufferDesc.lpwfxFormat->nBlockAlign = 4;
-            //        DSBufferDesc.lpwfxFormat->nAvgBytesPerSec = 4 * 22050;
-            //        DSBufferDesc.lpwfxFormat->wBitsPerSample = 16;
-
-            // Give this buffer 3 seconds of data if needed
-            /*if(pdsbd->dwBufferBytes == 0) {
-                DSBufferDesc.dwBufferBytes = 3 * DSBufferDesc.lpwfxFormat->nAvgBytesPerSec;
-            }*/
+            DSBufferDesc.dwBufferBytes = 5 * DSBufferDesc.lpwfxFormat->nAvgBytesPerSec;
         }
 
         DSBufferDesc.guid3DAlgorithm = DS3DALG_DEFAULT;
-    }
-
-    // TODO: Still a requirement? Need to retest it again. Can't remember which title cause problem or had been resolved.
-    // sanity check
-    if (!bIsSpecial) {
-        if (DSBufferDesc.lpwfxFormat->nBlockAlign != DSBufferDesc.lpwfxFormat->nChannels* static_cast<uint32_t>(DSBufferDesc.lpwfxFormat->wBitsPerSample) / 8) {
-            DSBufferDesc.lpwfxFormat->nBlockAlign = (2 * DSBufferDesc.lpwfxFormat->wBitsPerSample) / 8;
-            DSBufferDesc.lpwfxFormat->nAvgBytesPerSec = DSBufferDesc.lpwfxFormat->nSamplesPerSec * DSBufferDesc.lpwfxFormat->nBlockAlign;
-        }
-    }
-
-    if (DSBufferDesc.lpwfxFormat != nullptr) {
-
-        // NOTE: This process check for 2+ channels whenever XADPCM or PCM format from xbox titles input in nChannels.
-        // Since the host do not support 2+ channels on PCM only format. We must convert/update allocated wfxFormat to EXTENSIBLE
-        // format which had been allocated enough to update.
-        if (DSBufferDesc.lpwfxFormat->nChannels > 2 && DSBufferDesc.lpwfxFormat->wFormatTag != WAVE_FORMAT_EXTENSIBLE) {
-            PWAVEFORMATEXTENSIBLE lpwfxFormatExtensible = (PWAVEFORMATEXTENSIBLE)DSBufferDesc.lpwfxFormat;
-            lpwfxFormatExtensible->Format.wFormatTag = WAVE_FORMAT_EXTENSIBLE;
-            lpwfxFormatExtensible->Format.cbSize = sizeof(WAVEFORMATEXTENSIBLE) - sizeof(WAVEFORMATEX);
-            lpwfxFormatExtensible->Samples.wValidBitsPerSample = lpwfxFormatExtensible->Format.wBitsPerSample;
-            lpwfxFormatExtensible->Samples.wSamplesPerBlock = 0;
-            lpwfxFormatExtensible->Samples.wReserved = 0;
-            lpwfxFormatExtensible->dwChannelMask = SPEAKER_FRONT_LEFT | SPEAKER_FRONT_RIGHT;
-
-            // Add rear speakers
-            if (lpwfxFormat->nChannels >= 4) {
-                lpwfxFormatExtensible->dwChannelMask |= SPEAKER_BACK_LEFT | SPEAKER_BACK_RIGHT;
-            }
-            // Add center speaker
-            if (lpwfxFormat->nChannels >= 5) {
-                lpwfxFormatExtensible->dwChannelMask |= SPEAKER_FRONT_CENTER;
-            }
-            // Add subwoofer mask (pretty sure 3 channels is 2.1, not 3.0 for xbox purpose)
-            if (lpwfxFormat->nChannels == 6 || lpwfxFormat->nChannels == 3) {
-                lpwfxFormatExtensible->dwChannelMask |= SPEAKER_LOW_FREQUENCY;
-            }
-            lpwfxFormatExtensible->SubFormat = KSDATAFORMAT_SUBTYPE_PCM;
-        }
     }
 
     if (X_BufferSizeRequest < DSBSIZE_MIN) {
@@ -572,7 +380,7 @@ static inline void DSound3DBufferCreate(LPDIRECTSOUNDBUFFER8 pDSBuffer, LPDIRECT
     }
 }
 
-#define DSoundBufferSetDefault(pThis, dwEmuPlayFlags) \
+#define DSoundBufferSetDefault(pThis, dwEmuPlayFlags, Xb_dwFlags) \
     pThis->EmuDirectSoundBuffer8 = nullptr; \
     pThis->EmuDirectSound3DBuffer8 = nullptr; \
     pThis->X_BufferCache = xbnullptr; \
@@ -585,7 +393,8 @@ static inline void DSound3DBufferCreate(LPDIRECTSOUNDBUFFER8 pDSBuffer, LPDIRECT
     pThis->Xb_dwHeadroom = 600; /* default for 2D voice */ \
     pThis->Xb_EnvolopeDesc = { 0 }; \
     InitVoiceProperties(pThis->Xb_VoiceProperties); /* The rest will initialize in GeneratePCMFormat to GenerateMixBinDefault. */ \
-    pThis->Xb_Frequency = XTL_DSXFREQUENCY_ORIGINAL;
+    pThis->Xb_Frequency = XTL_DSXFREQUENCY_ORIGINAL; \
+    pThis->Xb_Flags = Xb_dwFlags;
     //pThis->EmuBufferDesc = { 0 }; // Enable this when become necessary.
     /*
     pThis->EmuLockPtr1 = xbnullptr; \
@@ -1259,7 +1068,8 @@ static inline HRESULT HybridDirectSoundBuffer_SetFilter(
 //IDirectSoundBuffer
 static inline HRESULT HybridDirectSoundBuffer_SetFormat(
     LPDIRECTSOUNDBUFFER8   &pDSBuffer,
-    LPCWAVEFORMATEX         pwfxFormat,
+    LPCWAVEFORMATEX         Xb_pwfxFormat,
+    DWORD                   Xb_flags,
     DSBUFFERDESC           &BufferDesc,
     DWORD                  &dwEmuFlags,
     DWORD                  &dwPlayFlags,
@@ -1274,10 +1084,10 @@ static inline HRESULT HybridDirectSoundBuffer_SetFormat(
     pDSBuffer->Stop();
 
     if (X_BufferAllocate) {
-        GeneratePCMFormat(BufferDesc, pwfxFormat, dwEmuFlags, X_BufferCacheSize, xbnullptr, X_BufferCacheSize, Xb_VoiceProperties, mixbins_output);
+        GeneratePCMFormat(BufferDesc, Xb_pwfxFormat, Xb_flags, dwEmuFlags, X_BufferCacheSize, xbnullptr, X_BufferCacheSize, Xb_VoiceProperties, mixbins_output);
     // Don't allocate for DS Stream class, it is using straight from the source.
     } else {
-        GeneratePCMFormat(BufferDesc, pwfxFormat, dwEmuFlags, 0, xbnullptr, X_BufferCacheSize, Xb_VoiceProperties, mixbins_output);
+        GeneratePCMFormat(BufferDesc, Xb_pwfxFormat, Xb_flags, dwEmuFlags, 0, xbnullptr, X_BufferCacheSize, Xb_VoiceProperties, mixbins_output);
     }
     HRESULT hRet = DS_OK;
     if (g_pDSoundPrimaryBuffer == pDSBuffer) {
