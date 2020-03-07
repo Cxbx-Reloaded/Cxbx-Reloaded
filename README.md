@@ -1,4 +1,4 @@
-# Cxbx-Reloaded - Original Xbox Emulator 
+# Cxbx-Reloaded - Original Xbox Emulator
 [![License: GPL v2](https://img.shields.io/badge/License-GPL%20v2-blue.svg)](https://img.shields.io/badge/License-GPL%20v2-blue.svg)
 [![AppVeyor](https://ci.appveyor.com/api/projects/status/iao43irxl3umbp33?svg=true)](https://ci.appveyor.com/project/SoullessSentinel/cxbx-reloaded)
 [![Azure](https://Cxbx-Reloaded.visualstudio.com/Cxbx-Reloaded/_apis/build/status/Cxbx-Reloaded.Cxbx-Reloaded?branchName=develop)](https://Cxbx-Reloaded.visualstudio.com/Cxbx-Reloaded/_build/latest?definitionId=7&branchName=develop)
@@ -9,42 +9,42 @@ Cxbx-Reloaded is an emulator for running Microsoft Xbox (and eventually, Chihiro
 
 ## System Requirements
 ### Minimum
-  * OS: Windows 7+ x64. 32-bit installations are not supported.
-  * GPU: Anything that supports Direct3D 9 (HLE) and OpenGL 3.3 (LLE).
+  * OS: Windows 7+ x64. 32-bit is not supported.
+  * GPU: Direct3D 9.0c with Pixel Shader Model 2.x, and Vertex Shader Model 3.0.
 
 ### Prerequisites
-  * 32-bit (x86) Visual C++ 2019 redistributable is required. Download it [here](https://support.microsoft.com/en-gb/help/2977003/the-latest-supported-visual-c-downloads).
-    * Make sure to install the 32-bit (x86) version even if you're on a 64-bit machine, as the 64-bit build does not include both!
-  * Npcap (Used for Network emulation): Download the Installer [here](https://nmap.org/npcap/#download). Make sure to enable winpcap compatibility mode!
+  * [32-bit (x86) Visual C++ 2019 Redistributable](https://aka.ms/vs/16/release/vc_redist.x86.exe)
+  * [Npcap *(used for network emulation)*](https://nmap.org/npcap/#download)
+    * Make sure to enable winpcap compatibility mode!
 
 ## Automated Builds
 Cxbx-Reloaded is not yet ready for general release, but the latest development builds can be downloaded using the links below:
 
-### Development Builds
-* [Latest Development Build](https://ci.appveyor.com/api/projects/SoullessSentinel/cxbx-reloaded/artifacts/Release.zip?branch=develop&job=Configuration:%20Release&pr=false)
+  * **[Latest Development Build](https://ci.appveyor.com/api/projects/SoullessSentinel/cxbx-reloaded/artifacts/Release.zip?branch=develop&job=Configuration:%20Release&pr=false)**
 
-* [Full build history](https://ci.appveyor.com/project/SoullessSentinel/cxbx-reloaded/history)
+  * *[Full build history](https://ci.appveyor.com/project/SoullessSentinel/cxbx-reloaded/history)*
 
 ## Compatibility
-Cxbx-Reloaded has a [compatibility list](https://github.com/Cxbx-Reloaded/game-compatibility/issues).
+Cxbx-Reloaded has a [compatibility list](https://github.com/Cxbx-Reloaded/game-compatibility#cxbx-reloaded-game-compatibility-project).
 
 If you have something to report on a title, please create or update the issue for it there.
 
 Please read the [Readme file](https://github.com/Cxbx-Reloaded/game-compatibility/blob/master/README.md) first!
 
 ## Bug Reports
-Game or software specific issues can be reported in the [compatibility list](https://github.com/Cxbx-Reloaded/game-compatibility/issues).
+Game or software specific issues can be reported in the [compatibility list](https://github.com/Cxbx-Reloaded/game-compatibility#cxbx-reloaded-game-compatibility-project).
 
 For emulation issues that are not specific to any single piece of software, a bug report can be submitted at [the Cxbx-Reloaded issue tracker](https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/issues).
 
 Make sure bug reports contain:
-* The build tested with, error message displayed (if any)
-* Screenshots 
-* Xbe dump (created via [Edit > Dump Xbe Info To > File])
-* Kernel Debug log (created when running a game with [View > Debug Output (Kernel) > File] selected).
+  * The build tested with, error message displayed (if any)
+  * Screenshots 
+  * Xbe dump (created via `Edit > Dump Xbe Info To > File`)
+  * Kernel Debug log (created when running a game with `View > Debug Output (Kernel) > File` selected).
 
 ## Additional information
 Cxbx-Reloaded has a [wiki](https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/wiki) containing various subjects and background information.
+
 Chat on [Discord](https://discord.gg/26Xjx23).
 
 ## Contributing
@@ -52,59 +52,63 @@ We welcome contributions, large and small.
 
 If you want to do some coding, be sure to read the [Developer notes](https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/wiki/Developer-notes).
 
-**IMPORTANT: Pull-Requests containing code derived from XQEMU will _not_ be approved until an agreement is reached to make work mutually beneficial. this includes updates to existing xqemu derived code. We should not/will not become a hostile fork.**
+**IMPORTANT: Pull-Requests containing code derived from XQEMU will _not_ be approved until an agreement is reached to make work mutually beneficial. this includes updates to existing XQEMU derived code. We should not/will not become a hostile fork.**
 
 Please contact us before you start working on something, so we can make sure your work is going to be accepted once finished.
 
 ### Main Prerequisites
-1. [Git for Windows](https://git-scm.com/)
-2. [CMake](https://cmake.org/)
-   * **REMARK:** Some IDEs already have CMake support, so this is optional.
+1. [Git for Windows](https://git-scm.com)
+2. [CMake](https://cmake.org)
+    * Some IDEs already have CMake support, so this is optional.
 
 ### Fetching the code
-Run the following command on the command line:
-`git clone --recurse-submodules https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/`
+Run the following command in the command line:
 
-Please note the `--recurse-submodules` parameter. This is required to fetch sub-modules.
+`git clone --recurse-submodules https://github.com/Cxbx-Reloaded/Cxbx-Reloaded.git`
 
-Without this, Cxbx-Reloaded will fail to build.
+Please note the `--recurse-submodules` parameter. This is required.
 
-If Cxbx-Reloaded was previously checked out without the submodules, they can be updated/fetched with the following command:
+If Cxbx-Reloaded was checked out without submodules, they can be updated/fetched with the following command:
+
 `git submodule update --init --recursive`
 
 ### Compiling
-Please note that Debug builds are significantly slower, but may help diagnose a problematic title.
 
-## Windows
-**NOTE:** It's not recommended to open CMakeLists.txt from Visual Studio, as it won't generate files in the build directory.
+#### Windows
+**NOTE:** Don't open `CMakeLists.txt` from Visual Studio, as it won't generate files in the `build` directory.
 
-### Prerequisites
-1. [Visual Studio 2019](https://www.visualstudio.com/downloads/) or 2017
-   * Both C++ and C# desktop development
-   * Windows Universal CRT SDK
-   * C++ CMake tools for Windows **(optional if CMake is installed on system)**
-2. [Microsoft Child Process Debugging Power Tool](https://marketplace.visualstudio.com/items?itemName=GreggMiskelly.MicrosoftChildProcessDebuggingPowerTool)
+##### Prerequisites
+1. [Visual Studio](https://visualstudio.microsoft.com/downloads/) 2017 or later
+    * C++ and C# desktop development
+    * Windows Universal CRT SDK
+    * C++ CMake tools for Windows
+      * *Optional if CMake is installed*
+    * [Microsoft Child Process Debugging Power Tool](https://marketplace.visualstudio.com/items?itemName=vsdbgplat.MicrosoftChildProcessDebuggingPowerTool)
 
-### Create Visual Studio generator files
-1. Open "___ Native Tools Command Prompt for VS 20__" from Start Menu.
-   * Ignore this step if you have CMake installed on your system.
-2. Navigate to downloaded Cxbx-Reloaded repo's directory as current working directory.
-3. Then run these commands.
-   1. `mkdir build & cd build` - Requirement to create and go in the build directory.
-      * **REMARK:** You can use `build-x86` as your preferred directory as well.
-   2. `cmake .. -G "Visual Studio 16 2019" -A Win32` - Create generated files for Visual Studio 2019.
-      * Or use `"Visual Studio 15 2017"` for Visual Studio 2017.
-        * **REMARK:** CMake 1.14 or later is the requirement to support Visual Studio 2019 generator.
-          * Visual Studio **16.1** 2019 or later has CMake 1.14 bundled.
-4. Open `Cxbx-Reloaded.sln` from build-x86 directory, select your configuration (Release or Debug), then hit Build.
+##### Generate Visual Studio files
+1. If you don't have CMake installed, open `___ Native Tools Command Prompt for VS 20##`.
+2. Run these commands:
+    ```cmd
+    cd Cxbx-Reloaded
+    mkdir build && cd build
+    # Visual Studio 2019 16.1 or later has CMake 1.14 bundled, and is required
+    cmake .. -G "Visual Studio 16 2019" -A Win32
+    # Or for Visual Studio 2017
+    cmake .. -G "Visual Studio 15 2017" -A Win32
+    Cxbx-Reloaded.sln
+    ```
+3. Select the Release or Debug configuration, then click Build.
+  * Debug builds are significantly slower, but may help diagnose a problematic title.
 
-## Linux / macOS
-Currently not supported yet.
+    If you aren't sure, choose Release.
+
+#### Linux / macOS
+Not supported yet.
 
 ## Support
 You can support [Luke Usher](https://github.com/LukeUsher), initiator of Cxbx-Reloaded, on [Patreon](https://www.patreon.com/LukeUsher).
 
 ## Special Thanks
 * All contributors to the original Cxbx and [Dxbx](https://github.com/PatrickvL/Dxbx) projects. Without them Cxbx-Reloaded would not exist at all.
-* [XQEMU](https://github.com/xqemu/xqemu) - While the majority of Cxbx-R is our own work (Kernel, HLE, etc), the NV2A LLE implementation and NVNet implementation are primarily the work of the XQEMU developers.
-* [XboxDev](https://github.com/xboxdev/) - Providing Xbox Hardware Research & Useful Tooling
+* [XQEMU](https://github.com/xqemu/xqemu) - While the majority of Cxbx-R is our own work (Kernel, HLE, etc), the NV2A LLE and NVNet implementation are primarily the work of the XQEMU developers.
+* [XboxDev](https://github.com/xboxdev) - Providing Xbox hardware research & useful tooling.
