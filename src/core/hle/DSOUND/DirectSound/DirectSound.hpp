@@ -122,6 +122,7 @@ struct X_CDirectSoundBuffer
 #define DSE_FLAG_ENVELOPE               (1 << 13)
 #define DSE_FLAG_ENVELOPE2              (1 << 14) // NOTE: This flag is a requirement for GetStatus to return X_DSSSTATUS_ENVELOPECOMPLETE value.
 #define DSE_FLAG_RECIEVEDATA            (1 << 20)
+#define DSE_FLAG_IS_ACTIVATED           (1 << 21) // Only used for DirectSoundStream class, to acknowledge pause's no activate flag.
 #define DSE_FLAG_DEBUG_MUTE             (1 << 30) // Cxbx-R debugging usage only
 #define DSE_FLAG_BUFFER_EXTERNAL        (1 << 31)
 #define DSE_FLAG_AUDIO_CODECS           (DSE_FLAG_PCM | DSE_FLAG_XADPCM | DSE_FLAG_PCM_UNKNOWN)
@@ -174,6 +175,7 @@ struct host_voice_packet {
     DWORD   bufPlayed;
     DWORD   bufWrittenBytes;
     bool    isPlayed;
+    bool    isStreamEnd;
 };
 
 // ******************************************************************
@@ -266,6 +268,7 @@ class X_CDirectSoundStream
         DWORD                                   Xb_Frequency;
         DWORD                                   Host_dwLastWritePos;
         DWORD                                   Xb_Flags;
+        DWORD                                   Xb_Status;
 };
 
 // ******************************************************************

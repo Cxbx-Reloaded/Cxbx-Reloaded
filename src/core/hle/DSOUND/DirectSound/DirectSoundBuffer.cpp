@@ -81,7 +81,7 @@ void DirectSoundDoWork_Buffer(xboxkrnl::LARGE_INTEGER &time)
         // TODO: Do we need this in async thread loop?
         if (pThis->Xb_rtPauseEx != 0LL && pThis->Xb_rtPauseEx <= time.QuadPart) {
             pThis->Xb_rtPauseEx = 0LL;
-            pThis->EmuFlags ^= DSE_FLAG_PAUSE;
+            pThis->EmuFlags &= ~DSE_FLAG_PAUSE;
             pThis->EmuDirectSoundBuffer8->Play(0, 0, pThis->EmuPlayFlags);
         }
 
