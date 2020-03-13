@@ -889,7 +889,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSound_SynchPlayback)
 
         if (((*ppDSBuffer)->EmuFlags & DSE_FLAG_SYNCHPLAYBACK_CONTROL) > 0) {
             DSoundBufferSynchPlaybackFlagRemove((*ppDSBuffer)->EmuFlags);
-            EmuLog(LOG_LEVEL::DEBUG, "SynchPlayback - EmuPlayFlags: %08X", (*ppDSBuffer)->EmuPlayFlags);
+            EmuLog(LOG_LEVEL::DEBUG, "SynchPlayback - pDSBuffer: %08X; EmuPlayFlags: %08X", *ppDSBuffer, (*ppDSBuffer)->EmuPlayFlags);
             (*ppDSBuffer)->EmuDirectSoundBuffer8->Play(0, 0, (*ppDSBuffer)->EmuPlayFlags);
         }
     }
@@ -901,6 +901,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSound_SynchPlayback)
         }
         if (((*ppDSStream)->EmuFlags & DSE_FLAG_SYNCHPLAYBACK_CONTROL) > 0) {
             DSoundBufferSynchPlaybackFlagRemove((*ppDSStream)->EmuFlags);
+            EmuLog(LOG_LEVEL::DEBUG, "SynchPlayback - pDSStream: %08X; EmuPlayFlags: %08X", *ppDSStream, (*ppDSStream)->EmuPlayFlags);
             DSStream_Packet_Process((*ppDSStream));
         }
     }
