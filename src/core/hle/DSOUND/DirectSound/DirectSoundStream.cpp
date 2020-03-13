@@ -360,10 +360,6 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_Flush)
 
     DSoundBufferSynchPlaybackFlagRemove(pThis->EmuFlags);
 
-    // Remove flags only (This is the only place it will remove other than FlushEx perform set/remove the flags.)
-    pThis->EmuFlags &= ~(DSE_FLAG_FLUSH_ASYNC | DSE_FLAG_ENVELOPE | DSE_FLAG_ENVELOPE2);
-    pThis->Xb_rtFlushEx = 0LL;
-
     while (DSStream_Packet_Flush(pThis));
 
     return DS_OK;
@@ -387,6 +383,8 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_FlushEx)
 		LOG_FUNC_END;
 
     HRESULT hRet = DSERR_INVALIDPARAM;
+    // Reset flags here to reprocess dwFlags request.
+    DSStream_Packet_FlushEx_Reset(pThis);
 
     // Cannot use rtTimeStamp here, it must be flush.
     if (dwFlags == X_DSSFLUSHEX_IMMEDIATE) {

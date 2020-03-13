@@ -299,10 +299,21 @@ bool DSStream_Packet_Process(
     return 1;
 }
 
+void DSStream_Packet_FlushEx_Reset(
+    XTL::X_CDirectSoundStream* pThis
+    )
+{
+    // Remove flags only (This is the only place it will remove other than FlushEx perform set/remove the flags.)
+    pThis->EmuFlags &= ~(DSE_FLAG_FLUSH_ASYNC | DSE_FLAG_ENVELOPE | DSE_FLAG_ENVELOPE2);
+    pThis->Xb_rtFlushEx = 0LL;
+}
+
 bool DSStream_Packet_Flush(
     XTL::X_CDirectSoundStream* pThis
     )
 {
+    DSStream_Packet_FlushEx_Reset(pThis);
+
     // If host's audio is still playing then return busy-state until buffer has stop playing.
     DWORD dwStatus;
     pThis->EmuDirectSoundBuffer8->GetStatus(&dwStatus);
