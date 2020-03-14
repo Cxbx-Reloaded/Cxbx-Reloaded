@@ -105,14 +105,14 @@ void DirectSoundDoWork_Stream(xboxkrnl::LARGE_INTEGER& time)
             pThis->EmuFlags &= ~DSE_FLAG_PAUSE;
             // Don't call play here, let DSStream_Packet_Process deal with it.
         }
-        if ((pThis->EmuFlags & DSE_FLAG_FLUSH_ASYNC) == 0) {
-            DSStream_Packet_Process(pThis);
-        } else {
-            // Confirmed flush packet must be done in DirectSoundDoWork only when title is ready.
-            if (pThis->Xb_rtFlushEx != 0LL && pThis->Xb_rtFlushEx <= time.QuadPart) {
-                pThis->Xb_rtFlushEx = 0LL;
-                DSStream_Packet_Flush(pThis);
+        // If has flush async requested then verify time has expired to perform flush process.
+        if ((pThis->EmuFlags & DSE_FLAG_FLUSH_ASYNC) > 0 && pThis->Xb_rtFlushEx <= time.QuadPart) {
+            if (pThis->Xb_rtFlushEx == 0LL) {
+                EmuLog(LOG_LEVEL::WARNING, "Attempted to flush without Xb_rtFlushEx set to non-zero");
             }
+            while(DSStream_Packet_Flush(pThis));
+        } else {
+            DSStream_Packet_Process(pThis);
         }
     }
 }
