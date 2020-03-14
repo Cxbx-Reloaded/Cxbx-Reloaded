@@ -466,8 +466,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_GetStatus)
 
     // Convert host to xbox status flag.
     if (hRet == DS_OK) {
-        DWORD testSize = pThis->Host_BufferPacketArray.size();
-        if ((dwStatusHost & DSBSTATUS_PLAYING) > 0 && !(dwStatusXbox & X_DSSSTATUS_PAUSED)) {
+        if (pThis->Host_isProcessing && !(dwStatusXbox & X_DSSSTATUS_PAUSED)) {
             dwStatusXbox |= X_DSSSTATUS_PLAYING;
 
         }
@@ -547,6 +546,9 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_Pause)
                 pThis->Xb_Status |= X_DSSSTATUS_PAUSED;
             }
         }
+    }
+    else if (!pThis->Host_isProcessing) {
+        DSStream_Packet_Process(pThis);
     }
 
     return hRet;
@@ -645,6 +647,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_Process)
                 if ((pThis->EmuFlags & DSE_FLAG_IS_ACTIVATED) > 0 && (pThis->EmuFlags & DSE_FLAG_PAUSE) > 0) {
                     pThis->Xb_Status |= X_DSSSTATUS_PAUSED;
                 }
+                DSStream_Packet_Process(pThis);
             // Once full it needs to change status to flushed when cannot hold any more packets.
             } else {
                 if (pInputBuffer->pdwStatus != xbnullptr) {

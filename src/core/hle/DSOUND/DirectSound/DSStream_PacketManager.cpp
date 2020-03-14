@@ -253,7 +253,8 @@ bool DSStream_Packet_Process(
         DWORD writePos = 0;
         hRet = pThis->EmuDirectSoundBuffer8->GetCurrentPosition(nullptr, &writePos);
         if (hRet == DS_OK) {
-            do {
+            // Disabled do/while loop since xbox thread will be processing as well.
+            //do {
                 int bufPlayed = writePos - packetCurrent->lastWritePos;
 
                 // Correct it if buffer was playing and is at beginning.
@@ -320,9 +321,9 @@ bool DSStream_Packet_Process(
                 // Otherwise, continue upload partial of the packet's data to host if there are any left.
                 else {
                     DSStream_Packet_UploadPartial(pThis, packetCurrent);
-                    break; // Leave loop since there is more buffer haven't been process in the current packet.
+                    //break; // Leave loop since there is more buffer haven't been process in the current packet.
                 }
-            } while (true);
+            //} while (true);
 
             DSStream_Packet_Prefill(pThis, packetCurrent);
         }
@@ -333,9 +334,12 @@ bool DSStream_Packet_Process(
         }
     }
 
+    // The only place when Host_isProcessing is set to true to start play Host's audio buffer.
     if (pThis->Host_isProcessing == false) {
         pThis->EmuDirectSoundBuffer8->Play(0, 0, pThis->EmuPlayFlags);
         pThis->Host_isProcessing = true;
+        // Add debug log for verify if Host_isProcessing has set to true.
+        EmuLog(LOG_LEVEL::DEBUG, "pStream = %08X:Host_isProcessing is set to true.", pThis);
     }
     return 1;
 }
