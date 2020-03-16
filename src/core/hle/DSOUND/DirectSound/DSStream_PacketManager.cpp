@@ -152,12 +152,37 @@ static inline void DSStream_Packet_UploadPartial(
     }
 }
 
-static inline void DSStream_Packet_Starved(
+static inline void DSStream_Packet_Stop_Internal(
     XTL::X_CDirectSoundStream* pThis
     )
 {
     pThis->Host_isProcessing = false;
     pThis->EmuDirectSoundBuffer8->Stop();
+}
+
+static inline void DSStream_Packet_Stop(
+    XTL::X_CDirectSoundStream* pThis
+    )
+{
+    DSStream_Packet_Stop_Internal(pThis);
+
+    if (pThis->Host_BufferPacketArray.size() == 0) {
+        if ((pThis->EmuFlags & DSE_FLAG_ENVELOPE2) > 0) {
+            pThis->Xb_Status |= X_DSSSTATUS_ENVELOPECOMPLETE;
+        }
+    }
+    // We need to log this info since some titles may have stop/played audio often in middle of processing (relative to videos).
+    EmuLog(LOG_LEVEL::INFO, "Stopped: pThis = %08X; Remaining packet(s): %d",
+        pThis, pThis->Host_BufferPacketArray.size()
+    );
+}
+
+static inline void DSStream_Packet_Starved(
+    XTL::X_CDirectSoundStream* pThis
+    )
+{
+    DSStream_Packet_Stop_Internal(pThis);
+    pThis->Xb_Status |= X_DSSSTATUS_STARVED | X_DSSSTATUS_PAUSED;
     // We need to log this info since some titles may have stop/played audio often in middle of processing (relative to videos).
     EmuLog(LOG_LEVEL::INFO, "Starved: pThis = %08X;",
         pThis
@@ -191,6 +216,11 @@ bool DSStream_Packet_Process(
     )
 {
 
+    // Do not allow to process if there is no packets.
+    if (pThis->Host_BufferPacketArray.size() == 0) {
+        return 0;
+    }
+
     // If title want to pause, then don't process the packets.
     // If media object is being used as playback synch, then don't process the packets.
     if ((pThis->EmuFlags & DSE_FLAG_PAUSE) > 0 ||
@@ -201,9 +231,14 @@ bool DSStream_Packet_Process(
         return 0;
     }
 
-    // Do not allow to process if there is no packets.
-    if (pThis->Host_BufferPacketArray.size() == 0) {
-        return 0;
+    if ((pThis->Xb_Status & X_DSSSTATUS_PAUSED) > 0) {
+        pThis->Xb_Status &= ~X_DSSSTATUS_PAUSED;
+    }
+
+    if (pThis->Host_isProcessing == false) {
+        if (!(pThis->EmuFlags & DSE_FLAG_IS_ACTIVATED)) {
+            pThis->EmuFlags |= DSE_FLAG_IS_ACTIVATED;
+        }
     }
 
     DWORD dwAudioBytes;
@@ -218,7 +253,8 @@ bool DSStream_Packet_Process(
         DWORD writePos = 0;
         hRet = pThis->EmuDirectSoundBuffer8->GetCurrentPosition(nullptr, &writePos);
         if (hRet == DS_OK) {
-            do {
+            // Disabled do/while loop since xbox thread will be processing as well.
+            //do {
                 int bufPlayed = writePos - packetCurrent->lastWritePos;
 
                 // Correct it if buffer was playing and is at beginning.
@@ -253,10 +289,16 @@ bool DSStream_Packet_Process(
                 // Once bufPlayed is equal to dwMaxSize, we know the packet is completed.
                 if (packetCurrent->bufPlayed == packetCurrent->xmp_data.dwMaxSize) {
 
+                    bool isStreamEnd = packetCurrent->isStreamEnd;
                     DSStream_Packet_Clear(packetCurrent, XMP_STATUS_SUCCESS, pThis->Xb_lpfnCallback, pThis->Xb_lpvContext, pThis);
 
                     if (pThis->Host_BufferPacketArray.size() == 0) {
-                        DSStream_Packet_Starved(pThis);
+                        if (isStreamEnd) {
+                            DSStream_Packet_Stop(pThis);
+                        }
+                        else {
+                            DSStream_Packet_Starved(pThis);
+                        }
                         return 0;
                     }
 #if 0               // Extend debug verification
@@ -279,9 +321,9 @@ bool DSStream_Packet_Process(
                 // Otherwise, continue upload partial of the packet's data to host if there are any left.
                 else {
                     DSStream_Packet_UploadPartial(pThis, packetCurrent);
-                    break; // Leave loop since there is more buffer haven't been process in the current packet.
+                    //break; // Leave loop since there is more buffer haven't been process in the current packet.
                 }
-            } while (true);
+            //} while (true);
 
             DSStream_Packet_Prefill(pThis, packetCurrent);
         }
@@ -292,17 +334,32 @@ bool DSStream_Packet_Process(
         }
     }
 
+    // The only place when Host_isProcessing is set to true to start play Host's audio buffer.
     if (pThis->Host_isProcessing == false) {
         pThis->EmuDirectSoundBuffer8->Play(0, 0, pThis->EmuPlayFlags);
         pThis->Host_isProcessing = true;
+        // Add debug log for verify if Host_isProcessing has set to true.
+        EmuLog(LOG_LEVEL::DEBUG, "pStream = %08X:Host_isProcessing is set to true.", pThis);
     }
     return 1;
+}
+
+void DSStream_Packet_FlushEx_Reset(
+    XTL::X_CDirectSoundStream* pThis
+    )
+{
+    // Remove flags only (This is the only place it will remove other than FlushEx perform set/remove the flags.)
+    pThis->EmuFlags &= ~(DSE_FLAG_FLUSH_ASYNC | DSE_FLAG_ENVELOPE | DSE_FLAG_ENVELOPE2 | DSE_FLAG_PAUSE);
+    pThis->Xb_rtFlushEx = 0LL;
+    pThis->Xb_Status = 0;
 }
 
 bool DSStream_Packet_Flush(
     XTL::X_CDirectSoundStream* pThis
     )
 {
+    DSStream_Packet_FlushEx_Reset(pThis);
+
     // If host's audio is still playing then return busy-state until buffer has stop playing.
     DWORD dwStatus;
     pThis->EmuDirectSoundBuffer8->GetStatus(&dwStatus);

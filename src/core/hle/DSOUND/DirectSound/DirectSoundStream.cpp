@@ -102,17 +102,17 @@ void DirectSoundDoWork_Stream(xboxkrnl::LARGE_INTEGER& time)
         // TODO: Do we need this in async thread loop?
         if (pThis->Xb_rtPauseEx != 0LL && pThis->Xb_rtPauseEx <= time.QuadPart) {
             pThis->Xb_rtPauseEx = 0LL;
-            pThis->EmuFlags ^= DSE_FLAG_PAUSE;
+            pThis->EmuFlags &= ~DSE_FLAG_PAUSE;
             // Don't call play here, let DSStream_Packet_Process deal with it.
         }
-        if ((pThis->EmuFlags & DSE_FLAG_FLUSH_ASYNC) == 0) {
-            DSStream_Packet_Process(pThis);
-        } else {
-            // Confirmed flush packet must be done in DirectSoundDoWork only when title is ready.
-            if (pThis->Xb_rtFlushEx != 0LL && pThis->Xb_rtFlushEx <= time.QuadPart) {
-                pThis->Xb_rtFlushEx = 0LL;
-                DSStream_Packet_Flush(pThis);
+        // If has flush async requested then verify time has expired to perform flush process.
+        if ((pThis->EmuFlags & DSE_FLAG_FLUSH_ASYNC) > 0 && pThis->Xb_rtFlushEx <= time.QuadPart) {
+            if (pThis->Xb_rtFlushEx == 0LL) {
+                EmuLog(LOG_LEVEL::WARNING, "Attempted to flush without Xb_rtFlushEx set to non-zero");
             }
+            while(DSStream_Packet_Flush(pThis));
+        } else {
+            DSStream_Packet_Process(pThis);
         }
     }
 }
@@ -251,6 +251,7 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateStream)
         (*ppStream)->Host_isProcessing = false;
         (*ppStream)->Xb_lpfnCallback = pdssd->lpfnCallback;
         (*ppStream)->Xb_lpvContext = pdssd->lpvContext;
+        (*ppStream)->Xb_Status = 0;
         //TODO: Implement mixbin variable support. Or just merge pdssd struct into DS Stream class.
 
         EmuLog(LOG_LEVEL::DEBUG, "DirectSoundCreateStream, *ppStream := 0x%.08X", *ppStream);
@@ -337,11 +338,9 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_Discontinuity)
 
     // default ret = DSERR_GENERIC
 
-    // Perform check if has pending data. if so, clear pending packets.
-    if (pThis->Host_BufferPacketArray.size() > 1) {
-        for (auto buffer = pThis->Host_BufferPacketArray.begin() + 1; buffer != pThis->Host_BufferPacketArray.end();) {
-            DSStream_Packet_Clear(buffer, XMP_STATUS_FLUSHED, pThis->Xb_lpfnCallback, pThis->Xb_lpvContext, pThis);
-        }
+    // Perform check if packets exist, then mark the last submited packet as end of stream.
+    if (!pThis->Host_BufferPacketArray.empty()) {
+        pThis->Host_BufferPacketArray.back().isStreamEnd = true;
     }
 
     return DS_OK;
@@ -359,10 +358,6 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_Flush)
 	LOG_FUNC_ONE_ARG(pThis);
 
     DSoundBufferSynchPlaybackFlagRemove(pThis->EmuFlags);
-
-    // Remove flags only (This is the only place it will remove other than FlushEx perform set/remove the flags.)
-    pThis->EmuFlags &= ~(DSE_FLAG_FLUSH_ASYNC | DSE_FLAG_ENVELOPE | DSE_FLAG_ENVELOPE2);
-    pThis->Xb_rtFlushEx = 0LL;
 
     while (DSStream_Packet_Flush(pThis));
 
@@ -387,6 +382,8 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_FlushEx)
 		LOG_FUNC_END;
 
     HRESULT hRet = DSERR_INVALIDPARAM;
+    // Reset flags here to reprocess dwFlags request.
+    DSStream_Packet_FlushEx_Reset(pThis);
 
     // Cannot use rtTimeStamp here, it must be flush.
     if (dwFlags == X_DSSFLUSHEX_IMMEDIATE) {
@@ -464,32 +461,14 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_GetStatus)
         LOG_FUNC_ARG_OUT(pdwStatus)
         LOG_FUNC_END;
 
-    DWORD dwStatusXbox = 0, dwStatusHost;
+    DWORD dwStatusXbox = pThis->Xb_Status, dwStatusHost;
     HRESULT hRet = pThis->EmuDirectSoundBuffer8->GetStatus(&dwStatusHost);
 
     // Convert host to xbox status flag.
     if (hRet == DS_OK) {
-        DWORD testSize = pThis->Host_BufferPacketArray.size();
-        if ((dwStatusHost & DSBSTATUS_PLAYING) > 0) {
+        if (pThis->Host_isProcessing && !(dwStatusXbox & X_DSSSTATUS_PAUSED)) {
             dwStatusXbox |= X_DSSSTATUS_PLAYING;
 
-        } else {
-
-            if ((pThis->EmuFlags & DSE_FLAG_PAUSE) > 0) {
-                dwStatusXbox |= X_DSSSTATUS_PAUSED;
-
-            // Set to paused when has packet(s) queued and is not processing.
-            } else if (pThis->Host_BufferPacketArray.size() != 0 && pThis->Host_isProcessing == false) {
-                dwStatusXbox |= X_DSSSTATUS_PAUSED;
-            }
-
-            if (pThis->Host_BufferPacketArray.size() == 0) {
-                dwStatusXbox |= X_DSSSTATUS_STARVED;
-
-                if ((pThis->EmuFlags & DSE_FLAG_ENVELOPE2) > 0) {
-                    dwStatusXbox |= X_DSSSTATUS_ENVELOPECOMPLETE;
-                }
-            }
         }
         if (pThis->Host_BufferPacketArray.size() != pThis->X_MaxAttachedPackets) {
             dwStatusXbox |= X_DSSSTATUS_READY;
@@ -553,6 +532,24 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_Pause)
 
     HRESULT hRet = HybridDirectSoundBuffer_Pause(pThis->EmuDirectSoundBuffer8, dwPause, pThis->EmuFlags, pThis->EmuPlayFlags,
                                                  pThis->Host_isProcessing, 0LL, pThis->Xb_rtPauseEx);
+
+    if (dwPause == X_DSSPAUSE_PAUSENOACTIVATE) {
+        if (pThis->Host_BufferPacketArray.size() == 0 && !(pThis->EmuFlags & DSE_FLAG_IS_ACTIVATED)) {
+            pThis->EmuFlags |= DSE_FLAG_PAUSE;
+        }
+    }
+
+    if ((pThis->EmuFlags & DSE_FLAG_PAUSE) > 0) {
+        pThis->Host_isProcessing = false;
+        if ((pThis->EmuFlags & DSE_FLAG_IS_ACTIVATED) > 0) {
+            if (pThis->Host_BufferPacketArray.size() != 0) {
+                pThis->Xb_Status |= X_DSSSTATUS_PAUSED;
+            }
+        }
+    }
+    else if (!pThis->Host_isProcessing) {
+        DSStream_Packet_Process(pThis);
+    }
 
     return hRet;
 }
@@ -628,6 +625,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_Process)
                 packet_input.bufWrittenBytes = 0;
                 packet_input.bufPlayed = 0;
                 packet_input.isPlayed = false;
+                packet_input.isStreamEnd = false;
 
                 DSoundBufferOutputXBtoHost(pThis->EmuFlags, pThis->EmuBufferDesc, pInputBuffer->pvBuffer, pInputBuffer->dwMaxSize, packet_input.pBuffer_data, packet_input.xmp_data.dwMaxSize);
 
@@ -642,10 +640,18 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_Process)
                 if (pThis->Host_isProcessing == false && pThis->Host_BufferPacketArray.size() == 1) {
                     pThis->EmuDirectSoundBuffer8->SetCurrentPosition(packet_input.nextWriteOffset);
                 }
+
+                if ((pThis->Xb_Status & X_DSSSTATUS_STARVED) > 0) {
+                    pThis->Xb_Status &= ~X_DSSSTATUS_STARVED;
+                }
+                if ((pThis->EmuFlags & DSE_FLAG_IS_ACTIVATED) > 0 && (pThis->EmuFlags & DSE_FLAG_PAUSE) > 0) {
+                    pThis->Xb_Status |= X_DSSSTATUS_PAUSED;
+                }
+                DSStream_Packet_Process(pThis);
             // Once full it needs to change status to flushed when cannot hold any more packets.
             } else {
                 if (pInputBuffer->pdwStatus != xbnullptr) {
-                    (*pInputBuffer->pdwStatus) = XMP_STATUS_FLUSHED;
+                    (*pInputBuffer->pdwStatus) = XMP_STATUS_FAILURE;
                 }
             }
         }

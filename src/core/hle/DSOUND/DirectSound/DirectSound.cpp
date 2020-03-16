@@ -390,15 +390,9 @@ static void dsound_thread_worker(LPVOID nullPtr)
         {
             DSoundMutexGuardLock;
 
-            vector_ds_stream::iterator ppDSStream = g_pDSoundStreamCache.begin();
-            for (; ppDSStream != g_pDSoundStreamCache.end(); ppDSStream++) {
-                if ((*ppDSStream)->Host_BufferPacketArray.size() == 0) {
-                    continue;
-                }
-                if (((*ppDSStream)->EmuFlags & DSE_FLAG_FLUSH_ASYNC) > 0 && (*ppDSStream)->Xb_rtFlushEx == 0LL) {
-                    DSStream_Packet_Process((*ppDSStream));
-                }
-            }
+            xboxkrnl::LARGE_INTEGER getTime;
+            xboxkrnl::KeQuerySystemTime(&getTime);
+            DirectSoundDoWork_Stream(getTime);
         }
     }
 }
@@ -895,7 +889,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSound_SynchPlayback)
 
         if (((*ppDSBuffer)->EmuFlags & DSE_FLAG_SYNCHPLAYBACK_CONTROL) > 0) {
             DSoundBufferSynchPlaybackFlagRemove((*ppDSBuffer)->EmuFlags);
-            EmuLog(LOG_LEVEL::DEBUG, "SynchPlayback - EmuPlayFlags: %08X", (*ppDSBuffer)->EmuPlayFlags);
+            EmuLog(LOG_LEVEL::DEBUG, "SynchPlayback - pDSBuffer: %08X; EmuPlayFlags: %08X", *ppDSBuffer, (*ppDSBuffer)->EmuPlayFlags);
             (*ppDSBuffer)->EmuDirectSoundBuffer8->Play(0, 0, (*ppDSBuffer)->EmuPlayFlags);
         }
     }
@@ -907,6 +901,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSound_SynchPlayback)
         }
         if (((*ppDSStream)->EmuFlags & DSE_FLAG_SYNCHPLAYBACK_CONTROL) > 0) {
             DSoundBufferSynchPlaybackFlagRemove((*ppDSStream)->EmuFlags);
+            EmuLog(LOG_LEVEL::DEBUG, "SynchPlayback - pDSStream: %08X; EmuPlayFlags: %08X", *ppDSStream, (*ppDSStream)->EmuPlayFlags);
             DSStream_Packet_Process((*ppDSStream));
         }
     }
