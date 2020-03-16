@@ -4,8 +4,17 @@ trigger:
     - '*'
   paths:
     exclude:
+    - doc/*
+    - doc/*/*
+    - .github/*
+    - .github/*/*
     - .appveyor.yml
     - .travis.yml
+    - CONTRIBUTORS
+    - COPYING
+    - README.md
+    - gen-msvc-project.bat
+    - setup.bat
 
 pr:
   branches:
@@ -13,8 +22,17 @@ pr:
     - '*'
   paths:
     exclude:
+    - doc/*
+    - doc/*/*
+    - .github/*
+    - .github/*/*
     - .appveyor.yml
     - .travis.yml
+    - CONTRIBUTORS
+    - COPYING
+    - README.md
+    - gen-msvc-project.bat
+    - setup.bat
 
 jobs:
 - job:
@@ -28,16 +46,17 @@ jobs:
         configuration: Debug
 
   steps:
+  - checkout: self
+    submodules: recursive
+
   - script: |
-      git submodule update --init --recursive
       mkdir build
       cd build
       cmake .. -G "Visual Studio 16 2019" -A Win32
     displayName: 'Before build'
 
-  - script: |
-      cd build
-      cmake --build . --config %configuration%
+  - script: cmake --build . --config %configuration%
+    workingDirectory: build
     displayName: 'Build'
 
   - task: CopyFiles@2
