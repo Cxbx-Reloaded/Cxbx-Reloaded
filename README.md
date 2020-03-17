@@ -62,15 +62,13 @@ Please contact us before you start working on something, so we can make sure you
     * Some IDEs already have CMake support, so this is optional.
 
 ### Fetching the code
-Run the following command in the command line:
+1. Run the following command in the command line:
 
-`git clone --recurse-submodules https://github.com/Cxbx-Reloaded/Cxbx-Reloaded.git`
+    `git clone --recurse-submodules https://github.com/Cxbx-Reloaded/Cxbx-Reloaded.git`
+    * Please note the `--recurse-submodules` parameter. This is required.
+      * If Cxbx-Reloaded was checked out without submodules, they can be updated/fetched with the following command:
 
-Please note the `--recurse-submodules` parameter. This is required.
-
-If Cxbx-Reloaded was checked out without submodules, they can be updated/fetched with the following command:
-
-`git submodule update --init --recursive`
+        `git submodule update --init --recursive`
 
 ### Compiling
 
@@ -87,20 +85,15 @@ If Cxbx-Reloaded was checked out without submodules, they can be updated/fetched
 
 ##### Generate Visual Studio files
 1. If you don't have CMake installed, open `___ Native Tools Command Prompt for VS 20##`.
-2. Run these commands:
-    ```cmd
-    cd Cxbx-Reloaded
-    mkdir build && cd build
-    # Visual Studio 2019 16.1 or later has CMake 1.14 bundled, and is required
-    cmake .. -G "Visual Studio 16 2019" -A Win32
-    # Or for Visual Studio 2017
-    cmake .. -G "Visual Studio 15 2017" -A Win32
-    Cxbx-Reloaded.sln
-    ```
-3. Select the Release or Debug configuration, then click Build.
-  * Debug builds are significantly slower, but may help diagnose a problematic title.
-
-    If you aren't sure, choose Release.
+2. `cd` to the Cxbx-Reloaded directory.
+3. Run these commands.
+    1. `mkdir build && cd build`
+    2. `cmake .. -G "Visual Studio 16 2019" -A Win32`
+      * Visual Studio 2019 16.1 or later has CMake 1.14 bundled, and is required for the Visual Studio 2019 generator.
+      * Use `cmake .. -G "Visual Studio 15 2017" -A Win32` for Visual Studio 2017.
+4. Open `Cxbx-Reloaded.sln` from the `build` directory.
+5. Select the Release configuration, then click Build.
+    * Debug builds are **significantly slower, and only for developers**.
 
 #### Linux / macOS
 Not supported yet.
