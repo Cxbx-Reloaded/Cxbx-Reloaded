@@ -38,6 +38,9 @@ static constexpr char hwnd[] = "hwnd";
 static constexpr char debug_mode[] = "dm";
 static constexpr char debug_file[] = "df";
 static constexpr char sid[] = "sid";
+static constexpr char system_retail[] = "retail";
+static constexpr char system_devkit[] = "devkit";
+static constexpr char system_chihiro[] = "chihiro";
 
 bool GenConfig(char** argv, int argc);
 size_t ConfigSize();
@@ -52,5 +55,7 @@ long long GetSessionID();
 
 // Change xbe path to launch.
 void SetLoad(const std::string value);
+
+void SetSystemType(const std::string value);
 
 }

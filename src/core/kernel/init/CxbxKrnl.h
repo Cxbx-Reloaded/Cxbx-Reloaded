@@ -237,7 +237,7 @@ bool CreateSettings();
 bool HandleFirstLaunch();
 
 /*! Cxbx Kernel Entry Point */
-void CxbxKrnlEmulate(uint32_t blocks_reserved[384]);
+void CxbxKrnlEmulate(unsigned int system, uint32_t blocks_reserved[384]);
 
 /*! initialize emulation */
 __declspec(noreturn) void CxbxKrnlInit(void *pTLSData, Xbe::TLS *pTLS, Xbe::LibraryVersion *LibraryVersion, DebugMode DbgMode, const char *szDebugFilename, Xbe::Header *XbeHeader, uint32_t XbeHeaderSize, void (*Entry)(), int BootFlags);

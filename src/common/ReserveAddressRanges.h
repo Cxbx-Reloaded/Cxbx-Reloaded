@@ -26,4 +26,8 @@
 // ******************************************************************
 #pragma once
 
-extern bool ReserveAddressRanges(const int system, uint32_t blocks_reserved[384]);
+extern bool ReserveAddressRanges(const unsigned int system, uint32_t blocks_reserved[384]);
+
+extern void FreeAddressRanges(const unsigned int system, unsigned int release_systems, uint32_t blocks_reserved[384]);
+
+extern bool AttemptReserveAddressRanges(unsigned int* p_reserved_systems, uint32_t blocks_reserved[384]);

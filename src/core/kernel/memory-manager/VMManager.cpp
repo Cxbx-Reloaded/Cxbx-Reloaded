@@ -73,17 +73,19 @@ bool VirtualMemoryArea::CanBeMergedWith(const VirtualMemoryArea& next) const
 	return false;
 }
 
-void VMManager::Initialize(int SystemType, int BootFlags, uint32_t blocks_reserved[384])
+void VMManager::Initialize(unsigned int SystemType, int BootFlags, uint32_t blocks_reserved[384])
 {
-#ifndef CXBXR_EMU
 	if ((BootFlags & BOOT_QUICK_REBOOT) == 0) {
+#ifndef CXBXR_EMU
 		SystemType = g_bIsRetail ? SYSTEM_XBOX : g_bIsChihiro ? SYSTEM_CHIHIRO : SYSTEM_DEVKIT; // TODO: Temporary placeholder until loader is functional.
+#endif
 		g_EmuShared->SetMmLayout(&SystemType);
 	}
 	else {
 		g_EmuShared->GetMmLayout(&SystemType);
 	}
 
+#ifndef CXBXR_EMU
 	if (!ReserveAddressRanges(SystemType, blocks_reserved)) {
 		CxbxKrnlCleanup("Failed to reserve required memory ranges!", GetLastError());
 	}
@@ -113,26 +115,19 @@ void VMManager::Initialize(int SystemType, int BootFlags, uint32_t blocks_reserv
 		}
 	}
 
+	// Construct VMAs base on reserved bit indexes for devkit and system region blocks.
 	if (SystemType == SYSTEM_DEVKIT) {
-		for (int i = 0; i < 4096; i++) {
+		for (unsigned int i = BLOCK_REGION_DEVKIT_INDEX_BEGIN; i < BLOCK_REGION_DEVKIT_INDEX_END; i++) {
 			if ((blocks_reserved[i / 32] & (1 << (i % 32))) == 0) {
 				// The loader was unable to reserve this block, so discard it from the memory region
 				ConstructVMA(DEVKIT_MEMORY_BASE + i * (64 * ONE_KB), (64 * ONE_KB), DevkitRegion, ReservedVma, false);
 			}
 		}
-		for (int i = 4096; i < 12288; i++) {
-			if ((blocks_reserved[i / 32] & (1 << (i % 32))) == 0) {
-				// The loader was unable to reserve this block, so discard it from the memory region
-				ConstructVMA(SYSTEM_MEMORY_BASE + i * (64 * ONE_KB), (64 * ONE_KB), SystemRegion, ReservedVma, false);
-			}
-		}
 	}
-	else {
-		for (int i = 0; i < 8192; i++) {
-			if ((blocks_reserved[i / 32] & (1 << (i % 32))) == 0) {
-				// The loader was unable to reserve this block, so discard it from the memory region
-				ConstructVMA(SYSTEM_MEMORY_BASE + i * (64 * ONE_KB), (64 * ONE_KB), SystemRegion, ReservedVma, false);
-			}
+	for (unsigned int i = BLOCK_REGION_SYSTEM_INDEX_BEGIN; i < BLOCK_REGION_SYSTEM_INDEX_END; i++) {
+		if ((blocks_reserved[i / 32] & (1 << (i % 32))) == 0) {
+			// The loader was unable to reserve this block, so discard it from the memory region
+			ConstructVMA(SYSTEM_MEMORY_BASE + i * (64 * ONE_KB), (64 * ONE_KB), SystemRegion, ReservedVma, false);
 		}
 	}
 

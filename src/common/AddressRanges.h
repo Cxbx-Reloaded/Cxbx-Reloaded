@@ -56,7 +56,7 @@ const struct {
 #ifdef DEBUG
 	uint32_t End; // TODO : Add validation that this End corresponds to specified Size
 #endif
-	int Size;
+	uint32_t Size;
 	DWORD InitialMemoryProtection; // Memory page protection, for use by VirtualAlloc
 	// Shortend symbol aliasses for memory page protection
 	#define PROT_UNH 0 // UNHANDLED
@@ -64,7 +64,7 @@ const struct {
 	#define PROT_XRW PAGE_EXECUTE_READWRITE
 	#define PROT_NAC PAGE_NOACCESS
 
-	int RangeFlags;
+	unsigned int RangeFlags;
 	// Range flags (used for system selection and optional marker)
 	#define MAY_FAIL       (1 << 0) // Optional (may fail address range reservation)
 	#define SYSTEM_XBOX    (1 << 1)
@@ -85,10 +85,10 @@ const struct {
 	// See http://xboxdevwiki.net/Memory
 	// and http://xboxdevwiki.net/Boot_Process#Paging
 	// Entry :  Start     , End       , Size            , Protect , RangeFlags              , Comment
-	RANGE_ENTRY(0x00010000, 0x03FFFFFF, MB( 64) - KB(64), PROT_XRW, SYSTEM_XBOX   | MAY_FAIL, "MemLowVirtual (Retail Xbox) Optional (already reserved via virtual_memory_placeholder)"),
-	RANGE_ENTRY(0x00010000, 0x07FFFFFF, MB(128) - KB(64), PROT_XRW, SYSTEM_128MB  | MAY_FAIL, "MemLowVirtual (Chihiro / DevKit)"),
-	RANGE_ENTRY(0x80000000, 0x83FFFFFF, MB( 64)         , PROT_UNH, SYSTEM_XBOX             , "MemPhysical   (Retail)"),
-	RANGE_ENTRY(0x80000000, 0x87FFFFFF, MB(128)         , PROT_UNH, SYSTEM_128MB            , "MemPhysical   (Chihiro / DevKit)"),
+	RANGE_ENTRY(0x00010000, 0x03FFFFFF, MB( 64) - KB(64), PROT_XRW, SYSTEM_ALL    | MAY_FAIL, "MemLowVirtual (General Xbox type) lower 64 MB Optional (already reserved via virtual_memory_placeholder)"),
+	RANGE_ENTRY(0x04000000, 0x07FFFFFF, MB( 64)         , PROT_XRW, SYSTEM_128MB  | MAY_FAIL, "MemLowVirtual (Chihiro / DevKit)  ^ + upper 64 MB"),
+	RANGE_ENTRY(0x80000000, 0x83FFFFFF, MB( 64)         , PROT_UNH, SYSTEM_ALL              , "MemPhysical   (General Xbox type) lower 64 MB"),
+	RANGE_ENTRY(0x84000000, 0x87FFFFFF, MB( 64)         , PROT_UNH, SYSTEM_128MB            , "MemPhysical   (Chihiro / DevKit)  ^ + upper 64 MB"),
 	RANGE_ENTRY(0xB0000000, 0xBFFFFFFF, MB(256)         , PROT_NAC, SYSTEM_DEVKIT           , "DevKitMemory"), // TODO : Check reserved range (might behave like MemTiled)
 	RANGE_ENTRY(0xC0000000, 0xC03FFFFF, MB(  4)         , PROT_RW,  SYSTEM_ALL              , "MemPageTable"), // See PAGE_TABLES_SIZE, which contains one 4 byte entry per PAGE_SIZE
 	RANGE_ENTRY(0xD0000000, 0xEFFFFFFF, MB(512)         , PROT_RW,  SYSTEM_ALL    | MAY_FAIL, "SystemMemory  Optional"), // TODO : Check reserved range (might behave like MemTiled)
@@ -107,8 +107,14 @@ const struct {
 	#undef RANGE_ENTRY
 };
 
-extern bool AddressRangeMatchesFlags(const int index, const int flags);
+#define BLOCK_REGION_DEVKIT_INDEX_BEGIN 0
+#define BLOCK_REGION_DEVKIT_INDEX_END   4096
+#define BLOCK_REGION_SYSTEM_INDEX_BEGIN 4096
+#define BLOCK_REGION_SYSTEM_INDEX_END   12288
+
+extern bool AddressRangeMatchesFlags(const int index, const unsigned int flags);
 extern bool IsOptionalAddressRange(const int index);
+extern int AddressRangeGetSystemFlags(const int index);
 
 extern bool VerifyWow64();
 

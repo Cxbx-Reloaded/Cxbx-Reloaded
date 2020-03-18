@@ -122,7 +122,7 @@ CommandLineToArgvA(
 	return argv;
 }
 
-DWORD WINAPI Emulate(int system, uint32_t blocks_reserved[384])
+DWORD WINAPI Emulate(unsigned int reserved_systems, uint32_t blocks_reserved[384])
 {
 	FUNC_EXPORTS
 
@@ -170,7 +170,13 @@ DWORD WINAPI Emulate(int system, uint32_t blocks_reserved[384])
 		return EXIT_FAILURE;
 	}
 
-	CxbxKrnlEmulate(blocks_reserved);
+	if (!reserved_systems) {
+		CxbxShowError("Unable to preserve any system's memory ranges!");
+		EmuShared::Cleanup();
+		return EXIT_FAILURE;
+	}
+
+	CxbxKrnlEmulate(reserved_systems, blocks_reserved);
 
 	/*! cleanup shared memory */
 	EmuShared::Cleanup();
