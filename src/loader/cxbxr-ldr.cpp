@@ -137,29 +137,16 @@ DWORD CALLBACK rawMain()
 		return ERROR_BAD_ENVIRONMENT;
 	}
 
-	// TODO: NOTE - Must reserve all memory by default. This is a requirement for standalone emulation support.
-	// It is still possible to release upper 64 MB space after determine the first xbe file.
-	// However, it is not recommended since modded xbox hardware can have 128MB yet still only able to use lower 64MB if xbe is not patched.
-	int system = SYSTEM_XBOX; // By default, we'll emulate a retail Xbox
-
-	// Note : Since we only have kernel32 API's available (not even the standard libary),
-	// we use the (exclusively wide-char) FindStringOrdinal() here instead of strstr():
-	LPWSTR CommandLine = GetCommandLineW();
-	// TODO: Below options must go, see "NOTE -" comment above for the reasons.
-	if (FindStringOrdinal(FIND_FROMSTART, CommandLine, -1, L" /chihiro", -1, true) >= 0) {
-		system = SYSTEM_CHIHIRO;
-	} else {
-		if (FindStringOrdinal(FIND_FROMSTART, CommandLine, -1, L" /devkit", -1, true) >= 0) {
-			system = SYSTEM_DEVKIT;
-		}
-	}
+	// Reserve all memory by default. This is a requirement for standalone emulation support.
+	// Emulator's initial process will decide which memory ranges will be free.
+	unsigned int system = SYSTEM_ALL; // Reserve all systems.
 
 	// Marking this as static to avoid an implicit call to memset, which is not available in the loader
 	static uint32_t SystemDevBlocksReserved[384];
 
-	if (!ReserveAddressRanges(system, SystemDevBlocksReserved)) {
+	if (!AttemptReserveAddressRanges(&system, SystemDevBlocksReserved)) {
 		// If we get here, emulation lacks important address ranges; Don't launch
-		OutputMessage("Required address range couldn't be reserved!\n");
+		OutputMessage("None of system types' required address range(s) could be reserved!\n");
 		return ERROR_NOT_ENOUGH_MEMORY;
 	}
 
@@ -177,7 +164,7 @@ DWORD CALLBACK rawMain()
 	}
 
 	// Find the main emulation function in our DLL
-	typedef void (WINAPI *Emulate_t)(int, uint32_t[384]);
+	typedef void (WINAPI *Emulate_t)(unsigned int, uint32_t[384]);
 	Emulate_t pfnEmulate = (Emulate_t)GetProcAddress(hEmulationDLL, "Emulate");
 	if (!pfnEmulate) {
 		OutputMessage("Entrypoint not found!\n");

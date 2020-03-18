@@ -163,4 +163,20 @@ long long GetSessionID()
     return sessionID;
 }
 
+void SetSystemType(const std::string value)
+{
+    // If system types key exist, then do not replace old one.
+    if (hasKey(cli_config::system_retail)
+        || hasKey(cli_config::system_devkit)
+        || hasKey(cli_config::system_chihiro)) {
+        return;
+    }
+    // If one of system types match, then set it.
+    if (value.compare(cli_config::system_retail) == 0
+        || value.compare(cli_config::system_devkit) == 0
+        || value.compare(cli_config::system_chihiro) == 0) {
+        SetValue(value, "");
+    }
+}
+
 }

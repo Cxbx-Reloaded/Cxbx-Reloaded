@@ -195,8 +195,8 @@ class EmuShared : public Mutex
 		// ******************************************************************
 		// * Previous Memory Layout value Accessors
 		// ******************************************************************
-		void GetMmLayout(int* value) { Lock(); *value = m_PreviousMmLayout; Unlock(); }
-		void SetMmLayout(int* value) { Lock(); m_PreviousMmLayout = *value; Unlock(); }
+		void GetMmLayout(unsigned int* value) { Lock(); *value = m_PreviousMmLayout; Unlock(); }
+		void SetMmLayout(unsigned int* value) { Lock(); m_PreviousMmLayout = *value; Unlock(); }
 #endif
 		// ******************************************************************
 		// * Log Level value Accessors
@@ -272,7 +272,7 @@ class EmuShared : public Mutex
 		bool         m_bReady_status;
 		bool         m_bEmulating_status;
 #ifndef CXBX_LOADER // Temporary usage for cxbx.exe's emu
-		int          m_PreviousMmLayout;
+		unsigned int m_PreviousMmLayout;
 		int          m_Reserved7[3];
 #else
 		int          m_Reserved7[4];

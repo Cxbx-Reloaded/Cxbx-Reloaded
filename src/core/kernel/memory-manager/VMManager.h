@@ -28,9 +28,15 @@
 #ifndef VMMANAGER_H
 #define VMMANAGER_H
 
+// TODO: Need to move defines below into one header files.
 #define SYSTEM_XBOX    (1 << 1)
 #define SYSTEM_DEVKIT  (1 << 2)
 #define SYSTEM_CHIHIRO (1 << 3)
+
+#define BLOCK_REGION_DEVKIT_INDEX_BEGIN 0
+#define BLOCK_REGION_DEVKIT_INDEX_END   4096
+#define BLOCK_REGION_SYSTEM_INDEX_BEGIN 4096
+#define BLOCK_REGION_SYSTEM_INDEX_END   12288
 
 #include "PhysicalMemory.h"
 
@@ -103,7 +109,7 @@ class VMManager : public PhysicalMemory
 		// shutdown routine
 		void Shutdown();
 		// initializes the memory manager to the default configuration
-		void Initialize(int SystemType, int BootFlags, uint32_t blocks_reserved[384]);
+		void Initialize(unsigned int SystemType, int BootFlags, uint32_t blocks_reserved[384]);
 		// retrieves memory statistics
 		void MemoryStatistics(xboxkrnl::PMM_STATISTICS memory_statistics);
 		// allocates memory in the user region

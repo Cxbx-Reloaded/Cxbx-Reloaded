@@ -27,7 +27,7 @@
 
 #include "AddressRanges.h"
 
-bool AddressRangeMatchesFlags(const int index, const int flags)
+bool AddressRangeMatchesFlags(const int index, const unsigned int flags)
 {
 	return XboxAddressRanges[index].RangeFlags & flags;
 }
@@ -35,6 +35,11 @@ bool AddressRangeMatchesFlags(const int index, const int flags)
 bool IsOptionalAddressRange(const int index)
 {
 	return AddressRangeMatchesFlags(index, MAY_FAIL);
+}
+
+int AddressRangeGetSystemFlags(const int index)
+{
+	return XboxAddressRanges[index].RangeFlags & SYSTEM_ALL;
 }
 
 bool VerifyWow64()
