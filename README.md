@@ -89,8 +89,8 @@ Please contact us before you start working on something, so we can make sure you
 3. Run these commands.
     1. `mkdir build & cd build`
     2. `cmake .. -G "Visual Studio 16 2019" -A Win32`
-      * Visual Studio 2019 16.1 or later has CMake 1.14 bundled, and is required for the Visual Studio 2019 generator.
-      * Use `cmake .. -G "Visual Studio 15 2017" -A Win32` for Visual Studio 2017.
+        * Visual Studio 2019 16.1 or later has CMake 1.14 bundled, and is required for the Visual Studio 2019 generator.
+        * Use `cmake .. -G "Visual Studio 15 2017" -A Win32` for Visual Studio 2017.
 4. Open `Cxbx-Reloaded.sln` from the `build` directory.
 5. Select the Release configuration, then click Build.
     * Debug builds are **significantly slower, and only for developers**.
