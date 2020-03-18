@@ -65,7 +65,7 @@ Please contact us before you start working on something, so we can make sure you
 1. Run the following command in the command line:
 
     `git clone --recurse-submodules https://github.com/Cxbx-Reloaded/Cxbx-Reloaded.git`
-    * Please note the `--recurse-submodules` parameter. This is required.
+    * Please note the `--recurse-submodules` parameter. This is required to fetch submodules.
       * If Cxbx-Reloaded was checked out without submodules, they can be updated/fetched with the following command:
 
         `git submodule update --init --recursive`
@@ -87,7 +87,7 @@ Please contact us before you start working on something, so we can make sure you
 1. If you don't have CMake installed, open `___ Native Tools Command Prompt for VS 20##`.
 2. `cd` to the Cxbx-Reloaded directory.
 3. Run these commands.
-    1. `mkdir build && cd build`
+    1. `mkdir build & cd build`
     2. `cmake .. -G "Visual Studio 16 2019" -A Win32`
       * Visual Studio 2019 16.1 or later has CMake 1.14 bundled, and is required for the Visual Studio 2019 generator.
       * Use `cmake .. -G "Visual Studio 15 2017" -A Win32` for Visual Studio 2017.
