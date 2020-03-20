@@ -96,7 +96,7 @@ Please contact us before you start working on something, so we can make sure you
     * Debug builds are **significantly slower, and only for developers**.
 
 #### Linux / macOS
-Not supported yet.
+Currently not supported.
 
 ## Support
 You can support [Luke Usher](https://github.com/LukeUsher), initiator of Cxbx-Reloaded, on [Patreon](https://www.patreon.com/LukeUsher).
