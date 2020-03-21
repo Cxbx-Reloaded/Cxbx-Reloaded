@@ -215,7 +215,7 @@ void log_set_config(int LogLevel, unsigned int* LoggedModules)
 void log_generate_active_filter_output(const CXBXR_MODULE cxbxr_module)
 {
 	LOG_THREAD_INIT;
-	std::string generic_output_str = _logThreadPrefix + g_EnumModules2String[to_underlying(cxbxr_module)];
+	std::string generic_output_str = _logThreadPrefix + log_info + g_EnumModules2String[to_underlying(cxbxr_module)];
 
 	std::cout << generic_output_str << "Current log level: " << g_CurrentLogLevel << std::endl;
 
