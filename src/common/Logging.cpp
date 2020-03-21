@@ -110,7 +110,44 @@ const char log_error[] = "ERROR: ";
 const char log_fatal[] = "FATAL: ";
 const char log_unkwn[] = "???? : ";
 
-// print out a warning message to the kernel debug log file
+// Do not use EmuLogOutput function outside of this file.
+void EmuLogOutput(CXBXR_MODULE cxbxr_module, LOG_LEVEL level, const char *szWarningMessage, va_list argp)
+{
+	LOG_THREAD_INIT;
+
+	const char* level_str;
+	switch (level) {
+		default:
+			level_str = log_unkwn;
+			break;
+		case LOG_LEVEL::DEBUG:
+			level_str = log_debug;
+			break;
+		case LOG_LEVEL::INFO:
+			level_str = log_info;
+			break;
+		case LOG_LEVEL::WARNING:
+			level_str = log_warn;
+			break;
+		case LOG_LEVEL::ERROR2:
+			level_str = log_error;
+			break;
+		case LOG_LEVEL::FATAL:
+			level_str = log_fatal;
+			break;
+	}
+
+	std::cout << _logThreadPrefix << level_str
+		<< g_EnumModules2String[to_underlying(cxbxr_module)];
+
+	vfprintf(stdout, szWarningMessage, argp);
+
+	fprintf(stdout, "\n");
+
+	fflush(stdout);
+}
+
+// print out a custom message to the console or kernel debug log file
 void NTAPI EmuLogEx(CXBXR_MODULE cxbxr_module, LOG_LEVEL level, const char *szWarningMessage, ...)
 {
 	if (szWarningMessage == NULL) {
@@ -120,47 +157,30 @@ void NTAPI EmuLogEx(CXBXR_MODULE cxbxr_module, LOG_LEVEL level, const char *szWa
 	LOG_CHECK_ENABLED_EX(cxbxr_module, level) {
 		if (g_bPrintfOn) {
 
-			va_list argp;
-			const char* level_str;
-
 			LOG_THREAD_INIT;
 
-			switch (level) {
-				default:
-					level_str = log_unkwn;
-					break;
-				case LOG_LEVEL::DEBUG:
-					level_str = log_debug;
-					break;
-				case LOG_LEVEL::INFO:
-					level_str = log_info;
-					break;
-				case LOG_LEVEL::WARNING:
-					level_str = log_warn;
-					break;
-				case LOG_LEVEL::ERROR2:
-					level_str = log_error;
-					break;
-				case LOG_LEVEL::FATAL:
-					level_str = log_fatal;
-					break;
-			}
-
-			std::cout << _logThreadPrefix << level_str
-				<< g_EnumModules2String[to_underlying(cxbxr_module)];
-
+			va_list argp;
 			va_start(argp, szWarningMessage);
 
-			vfprintf(stdout, szWarningMessage, argp);
+			EmuLogOutput(cxbxr_module, level, szWarningMessage, argp);
 
 			va_end(argp);
-
-			fprintf(stdout, "\n");
-
-			fflush(stdout);
-
 		}
 	}
+}
+
+void NTAPI EmuLogInit(LOG_LEVEL level, const char *szWarningMessage, ...)
+{
+	if (szWarningMessage == NULL) {
+		return;
+	}
+
+	va_list argp;
+	va_start(argp, szWarningMessage);
+
+	EmuLogOutput(CXBXR_MODULE::INIT, level, szWarningMessage, argp);
+
+	va_end(argp);
 }
 
 // Set up the logging variables for the GUI process
