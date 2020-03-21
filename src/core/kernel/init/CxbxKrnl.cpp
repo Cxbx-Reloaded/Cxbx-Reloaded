@@ -362,20 +362,20 @@ HANDLE CxbxRestoreContiguousMemory(char *szFilePath_memory_bin)
 		return nullptr;
 	}
 
-	printf("[0x%.4X] INIT: Mapped %d MiB of Xbox contiguous memory at 0x%.8X to 0x%.8X\n",
-		GetCurrentThreadId(), CONTIGUOUS_MEMORY_CHIHIRO_SIZE / ONE_MB, CONTIGUOUS_MEMORY_BASE, CONTIGUOUS_MEMORY_BASE + CONTIGUOUS_MEMORY_CHIHIRO_SIZE - 1);
+	EmuLogInit(LOG_LEVEL::INFO, "Mapped %d MiB of Xbox contiguous memory at 0x%.8X to 0x%.8X",
+		 CONTIGUOUS_MEMORY_CHIHIRO_SIZE / ONE_MB, CONTIGUOUS_MEMORY_BASE, CONTIGUOUS_MEMORY_BASE + CONTIGUOUS_MEMORY_CHIHIRO_SIZE - 1);
 
 	if (NeedsInitialization)
 	{
 		memset(memory, 0, CONTIGUOUS_MEMORY_CHIHIRO_SIZE);
-		printf("[0x%.4X] INIT: Initialized contiguous memory\n", GetCurrentThreadId());
+		EmuLogInit(LOG_LEVEL::INFO, "Initialized contiguous memory");
 	}
 	else
-		printf("[0x%.4X] INIT: Loaded contiguous memory.bin\n", GetCurrentThreadId());
+		EmuLogInit(LOG_LEVEL::INFO, "Loaded contiguous memory.bin");
 
 	size_t tiledMemorySize = XBOX_WRITE_COMBINED_SIZE;
 	if (g_bIsWine) {
-		printf("Wine detected: Using 64MB Tiled Memory Size\n");
+		EmuLogInit(LOG_LEVEL::INFO, "Wine detected: Using 64MB Tiled Memory Size");
 		// TODO: Figure out why Wine needs this and Windows doesn't.
 		// Perhaps it's a Wine bug, or perhaps Wine reserves this memory for it's own usage?
 		tiledMemorySize = XBOX_WRITE_COMBINED_SIZE / 2;
@@ -399,8 +399,8 @@ HANDLE CxbxRestoreContiguousMemory(char *szFilePath_memory_bin)
 		return nullptr;
 	}
 
-	printf("[0x%.4X] INIT: Mapped contiguous memory to Xbox tiled memory at 0x%.8X to 0x%.8X\n",
-		GetCurrentThreadId(), XBOX_WRITE_COMBINED_BASE, XBOX_WRITE_COMBINED_BASE + tiledMemorySize - 1);
+	EmuLogInit(LOG_LEVEL::INFO, "Mapped contiguous memory to Xbox tiled memory at 0x%.8X to 0x%.8X",
+		XBOX_WRITE_COMBINED_BASE, XBOX_WRITE_COMBINED_BASE + tiledMemorySize - 1);
 
 
 	return hFileMapping;
@@ -474,16 +474,16 @@ HANDLE CxbxRestorePageTablesMemory(char* szFilePath_page_tables)
 		CxbxKrnlCleanup("%s: Couldn't map PageTables.bin to 0xC0000000!", __func__);
 	}
 
-	printf("[0x%.4X] INIT: Mapped %d MiB of Xbox page tables memory at 0x%.8X to 0x%.8X\n",
-		GetCurrentThreadId(), 4, PAGE_TABLES_BASE, PAGE_TABLES_END);
+	EmuLogInit(LOG_LEVEL::INFO, "Mapped %d MiB of Xbox page tables memory at 0x%.8X to 0x%.8X",
+		4, PAGE_TABLES_BASE, PAGE_TABLES_END);
 
 	if (NeedsInitialization)
 	{
 		memset(memory, 0, 4 * ONE_MB);
-		printf("[0x%.4X] INIT: Initialized page tables memory\n", GetCurrentThreadId());
+		EmuLogInit(LOG_LEVEL::INFO, "Initialized page tables memory");
 	}
 	else
-		printf("[0x%.4X] INIT: Loaded PageTables.bin\n", GetCurrentThreadId());
+		EmuLogInit(LOG_LEVEL::INFO, "Loaded PageTables.bin");
 
 	return hFileMapping;
 }
@@ -520,7 +520,7 @@ void CxbxPopupMessageEx(CXBXR_MODULE cxbxr_module, LOG_LEVEL level, CxbxMsgDlgIc
 	vsprintf(Buffer, message, argp);
 	va_end(argp);
 
-	EmuLogEx(cxbxr_module, level, "Popup : %s\n", Buffer);
+	EmuLogEx(cxbxr_module, level, "Popup : %s", Buffer);
 
 	MessageBox(NULL, Buffer, TEXT("Cxbx-Reloaded"), uType);
 }
@@ -528,7 +528,7 @@ void CxbxPopupMessageEx(CXBXR_MODULE cxbxr_module, LOG_LEVEL level, CxbxMsgDlgIc
 void PrintCurrentConfigurationLog()
 {
 	if (g_bIsWine) {
-		printf("Running under Wine Version %s \n", wine_get_version());
+		EmuLogInit(LOG_LEVEL::INFO, "Running under Wine Version %s", wine_get_version());
 	}
 
 	// HACK: For API TRace..
@@ -536,11 +536,11 @@ void PrintCurrentConfigurationLog()
 
 	// Print current LLE configuration
 	{
-		printf("---------------------------- LLE CONFIG ----------------------------\n");
-		printf("LLE for APU is %s\n", bLLE_APU ? "enabled" : "disabled");
-		printf("LLE for GPU is %s\n", bLLE_GPU ? "enabled" : "disabled");
-		printf("LLE for USB is %s\n", bLLE_USB ? "enabled" : "disabled");
-		printf("LLE for JIT is %s\n", bLLE_JIT ? "enabled" : "disabled");
+		EmuLogInit(LOG_LEVEL::INFO, "---------------------------- LLE CONFIG ----------------------------");
+		EmuLogInit(LOG_LEVEL::INFO, "LLE for APU is %s", bLLE_APU ? "enabled" : "disabled");
+		EmuLogInit(LOG_LEVEL::INFO, "LLE for GPU is %s", bLLE_GPU ? "enabled" : "disabled");
+		EmuLogInit(LOG_LEVEL::INFO, "LLE for USB is %s", bLLE_USB ? "enabled" : "disabled");
+		EmuLogInit(LOG_LEVEL::INFO, "LLE for JIT is %s", bLLE_JIT ? "enabled" : "disabled");
 	}
 
 	// Print current video configuration (DirectX/HLE)
@@ -548,12 +548,12 @@ void PrintCurrentConfigurationLog()
 		Settings::s_video XBVideoConf;
 		g_EmuShared->GetVideoSettings(&XBVideoConf);
 
-		printf("--------------------------- VIDEO CONFIG ---------------------------\n");
-		printf("Direct3D Device: %s\n", XBVideoConf.direct3DDevice == 0 ? "Direct3D HAL (Hardware Accelerated)" : "Direct3D REF (Software)");
-		printf("Video Resolution: %s\n", XBVideoConf.szVideoResolution);
-		printf("Force VSync is %s\n", XBVideoConf.bVSync ? "enabled" : "disabled");
-		printf("Fullscreen is %s\n", XBVideoConf.bFullScreen ? "enabled" : "disabled");
-		printf("Hardware YUV is %s\n", XBVideoConf.bHardwareYUV ? "enabled" : "disabled");
+		EmuLogInit(LOG_LEVEL::INFO, "--------------------------- VIDEO CONFIG ---------------------------");
+		EmuLogInit(LOG_LEVEL::INFO, "Direct3D Device: %s", XBVideoConf.direct3DDevice == 0 ? "Direct3D HAL (Hardware Accelerated)" : "Direct3D REF (Software)");
+		EmuLogInit(LOG_LEVEL::INFO, "Video Resolution: %s", XBVideoConf.szVideoResolution);
+		EmuLogInit(LOG_LEVEL::INFO, "Force VSync is %s", XBVideoConf.bVSync ? "enabled" : "disabled");
+		EmuLogInit(LOG_LEVEL::INFO, "Fullscreen is %s", XBVideoConf.bFullScreen ? "enabled" : "disabled");
+		EmuLogInit(LOG_LEVEL::INFO, "Hardware YUV is %s", XBVideoConf.bHardwareYUV ? "enabled" : "disabled");
 	}
 
 	// Print current audio configuration
@@ -561,11 +561,11 @@ void PrintCurrentConfigurationLog()
 		Settings::s_audio XBAudioConf;
 		g_EmuShared->GetAudioSettings(&XBAudioConf);
 
-		printf("--------------------------- AUDIO CONFIG ---------------------------\n");
-		printf("Audio Adapter: %s\n", XBAudioConf.adapterGUID.Data1 == 0 ? "Primary Audio Device" : "Secondary Audio Device");
-		printf("PCM is %s\n", XBAudioConf.codec_pcm ? "enabled" : "disabled");
-		printf("XADPCM is %s\n", XBAudioConf.codec_xadpcm ? "enabled" : "disabled");
-		printf("Unknown Codec is %s\n", XBAudioConf.codec_unknown ? "enabled" : "disabled");
+		EmuLogInit(LOG_LEVEL::INFO, "--------------------------- AUDIO CONFIG ---------------------------");
+		EmuLogInit(LOG_LEVEL::INFO, "Audio Adapter: %s", XBAudioConf.adapterGUID.Data1 == 0 ? "Primary Audio Device" : "Secondary Audio Device");
+		EmuLogInit(LOG_LEVEL::INFO, "PCM is %s", XBAudioConf.codec_pcm ? "enabled" : "disabled");
+		EmuLogInit(LOG_LEVEL::INFO, "XADPCM is %s", XBAudioConf.codec_xadpcm ? "enabled" : "disabled");
+		EmuLogInit(LOG_LEVEL::INFO, "Unknown Codec is %s", XBAudioConf.codec_unknown ? "enabled" : "disabled");
 	}
 
 	// Print current network configuration
@@ -573,19 +573,19 @@ void PrintCurrentConfigurationLog()
 		Settings::s_network XBNetworkConf;
 		g_EmuShared->GetNetworkSettings(&XBNetworkConf);
 
-		printf("--------------------------- NETWORK CONFIG -------------------------\n");
-		printf("Network Adapter Name: %s\n", strlen(XBNetworkConf.adapter_name) == 0 ? "Not Configured" : XBNetworkConf.adapter_name);
+		EmuLogInit(LOG_LEVEL::INFO, "--------------------------- NETWORK CONFIG -------------------------");
+		EmuLogInit(LOG_LEVEL::INFO, "Network Adapter Name: %s", strlen(XBNetworkConf.adapter_name) == 0 ? "Not Configured" : XBNetworkConf.adapter_name);
 	}
 
 	// Print Enabled Hacks
 	{
-		printf("--------------------------- HACKS CONFIG ---------------------------\n");
-		printf("Disable Pixel Shaders: %s\n", g_DisablePixelShaders == 1 ? "On" : "Off (Default)");
-		printf("Run Xbox threads on all cores: %s\n", g_UseAllCores == 1 ? "On" : "Off (Default)");
-		printf("Skip RDTSC Patching: %s\n", g_SkipRdtscPatching == 1 ? "On" : "Off (Default)");
+		EmuLogInit(LOG_LEVEL::INFO, "--------------------------- HACKS CONFIG ---------------------------");
+		EmuLogInit(LOG_LEVEL::INFO, "Disable Pixel Shaders: %s", g_DisablePixelShaders == 1 ? "On" : "Off (Default)");
+		EmuLogInit(LOG_LEVEL::INFO, "Run Xbox threads on all cores: %s", g_UseAllCores == 1 ? "On" : "Off (Default)");
+		EmuLogInit(LOG_LEVEL::INFO, "Skip RDTSC Patching: %s", g_SkipRdtscPatching == 1 ? "On" : "Off (Default)");
 	}
 
-	printf("------------------------- END OF CONFIG LOG ------------------------\n");
+	EmuLogInit(LOG_LEVEL::INFO, "------------------------- END OF CONFIG LOG ------------------------");
 	
 }
 
@@ -712,7 +712,7 @@ void PatchRdtsc(xbaddr addr)
 	// When using int 3, attached debuggers trap and rdtsc is used often enough
 	// that it makes Cxbx-Reloaded unusable
 	// A privilaged instruction (like OUT) does not suffer from this
-	printf("INIT: Patching rdtsc opcode at 0x%.8X\n", (DWORD)addr);
+	EmuLogInit(LOG_LEVEL::DEBUG, "Patching rdtsc opcode at 0x%.8X", (DWORD)addr);
 	*(uint16_t*)addr = OPCODE_PATCH_RDTSC;
 	g_RdtscPatches.push_back(addr);
 }
@@ -773,7 +773,7 @@ void PatchRdtscInstructions()
 			continue;
 		}
 
-		printf("INIT: Searching for rdtsc in section %s\n", CxbxKrnl_Xbe->m_szSectionName[sectionIndex]);
+		EmuLogInit(LOG_LEVEL::INFO, "Searching for rdtsc in section %s", CxbxKrnl_Xbe->m_szSectionName[sectionIndex]);
 		xbaddr startAddr = CxbxKrnl_Xbe->m_SectionHeader[sectionIndex].dwVirtualAddr;
 		//rdtsc is two bytes instruction, it needs at least one opcode byte after it to finish a function, so the endAddr need to substract 3 bytes.
 		xbaddr endAddr = startAddr + CxbxKrnl_Xbe->m_SectionHeader[sectionIndex].dwSizeofRaw-3;
@@ -792,7 +792,7 @@ void PatchRdtscInstructions()
 						{
 							if (*(uint8_t*)(addr - 2) == 0x88 && *(uint8_t*)(addr - 1) == 0x5C)
 							{
-								printf("Skipped false positive: rdtsc pattern  0x%.2X, @ 0x%.8X\n", next_byte, (DWORD)addr);
+								EmuLogInit(LOG_LEVEL::INFO, "Skipped false positive: rdtsc pattern  0x%.2X, @ 0x%.8X", next_byte, (DWORD)addr);
 								continue;
 							}
 
@@ -801,7 +801,7 @@ void PatchRdtscInstructions()
 						{
 							if (*(uint8_t*)(addr - 2) == 0x83 && *(uint8_t*)(addr - 1) == 0xE2)
 							{
-								printf("Skipped false positive: rdtsc pattern  0x%.2X, @ 0x%.8X\n", next_byte, (DWORD)addr);
+								EmuLogInit(LOG_LEVEL::INFO, "Skipped false positive: rdtsc pattern  0x%.2X, @ 0x%.8X", next_byte, (DWORD)addr);
 								continue;
 							}
 
@@ -816,13 +816,13 @@ void PatchRdtscInstructions()
 				if (i>= sizeof_rdtsc_pattern)
 				{
 					//no pattern matched, keep record for detections we treat as non-rdtsc for future debugging.
-					printf("Skipped potential rdtsc: Unknown opcode pattern  0x%.2X, @ 0x%.8X\n", next_byte, (DWORD)addr);
+					EmuLogInit(LOG_LEVEL::INFO, "Skipped potential rdtsc: Unknown opcode pattern  0x%.2X, @ 0x%.8X", next_byte, (DWORD)addr);
 				}
 			}
 		}
 	}
 
-	printf("INIT: Done patching rdtsc, total %d rdtsc instructions patched\n", g_RdtscPatches.size());
+	EmuLogInit(LOG_LEVEL::INFO, "Done patching rdtsc, total %d rdtsc instructions patched", g_RdtscPatches.size());
 }
 
 void MapThunkTable(uint32_t* kt, uint32_t* pThunkTable)
@@ -859,6 +859,7 @@ void ImportLibraries(XbeImportEntry *pImportDirectory)
 			MapThunkTable((uint32_t *)pImportDirectory->ThunkAddr, Cxbx_LibXbdmThunkTable);
 		}
 		else {
+			// TODO: replace wprintf to EmuLogInit, how?
 			wprintf(L"LOAD : Skipping unrecognized import library : %s\n", LibName.c_str());
 		}
 
@@ -999,18 +1000,18 @@ void CxbxKrnlMain(int argc, char* argv[])
 
 	// Write a header to the log
 	{
-		printf("[0x%.4X] INIT: Cxbx-Reloaded Version %s\n", GetCurrentThreadId(), CxbxVersionStr);
+		EmuLogInit(LOG_LEVEL::INFO, "Cxbx-Reloaded Version %s", CxbxVersionStr);
 
 		time_t startTime = time(nullptr);
 		struct tm* tm_info = localtime(&startTime);
 		char timeString[26];
 		strftime(timeString, 26, "%F %T", tm_info);
-		printf("[0x%.4X] INIT: Log started at %s\n", GetCurrentThreadId(), timeString);
+		EmuLogInit(LOG_LEVEL::INFO, "Log started at %s", timeString);
 
 #ifdef _DEBUG_TRACE
-		printf("[0x%.4X] INIT: Debug Trace Enabled.\n", GetCurrentThreadId());
+		EmuLogInit(LOG_LEVEL::INFO, "Debug Trace Enabled.");
 #else
-		printf("[0x%.4X] INIT: Debug Trace Disabled.\n", GetCurrentThreadId());
+		EmuLogInit(LOG_LEVEL::INFO, "Debug Trace Disabled.");
 #endif
 	}
 
@@ -1136,10 +1137,10 @@ void CxbxKrnlMain(int argc, char* argv[])
 
 		// Check the signature of the xbe
 		if (CxbxKrnl_Xbe->CheckXbeSignature()) {
-			printf("[0x%X] INIT: Valid xbe signature. Xbe is legit\n", GetCurrentThreadId());
+			EmuLogInit(LOG_LEVEL::INFO, "Valid xbe signature. Xbe is legit");
 		}
 		else {
-			printf("[0x%X] INIT: Invalid xbe signature. Homebrew, tampered or pirated xbe?\n", GetCurrentThreadId());
+			EmuLogInit(LOG_LEVEL::WARNING, "Invalid xbe signature. Homebrew, tampered or pirated xbe?");
 		}
 
 		// Check the integrity of the xbe sections
@@ -1152,10 +1153,10 @@ void CxbxKrnlMain(int argc, char* argv[])
 			CalcSHA1Hash(SHADigest, CxbxKrnl_Xbe->m_bzSection[sectionIndex], RawSize);
 
 			if (memcmp(SHADigest, (CxbxKrnl_Xbe->m_SectionHeader)[sectionIndex].bzSectionDigest, A_SHA_DIGEST_LEN) != 0) {
-				printf("[0x%X] INIT: SHA hash of section %s doesn't match, possible section corruption\n", GetCurrentThreadId(), CxbxKrnl_Xbe->m_szSectionName[sectionIndex]);
+				EmuLogInit(LOG_LEVEL::WARNING, "SHA hash of section %s doesn't match, possible section corruption", CxbxKrnl_Xbe->m_szSectionName[sectionIndex]);
 			}
 			else {
-				printf("[0x%X] INIT: SHA hash check of section %s successful\n", GetCurrentThreadId(), CxbxKrnl_Xbe->m_szSectionName[sectionIndex]);
+				EmuLogInit(LOG_LEVEL::INFO, "SHA hash check of section %s successful", CxbxKrnl_Xbe->m_szSectionName[sectionIndex]);
 			}
 		}
 
@@ -1203,7 +1204,7 @@ void CxbxKrnlMain(int argc, char* argv[])
 			if ((sectionHeaders[i].Flags & XBEIMAGE_SECTION_PRELOAD) != 0) {
 				NTSTATUS result = xboxkrnl::XeLoadSection(&sectionHeaders[i]);
 				if (FAILED(result)) {
-					EmuLogEx(LOG_PREFIX_INIT, LOG_LEVEL::WARNING, "Failed to preload XBE section: %s", CxbxKrnl_Xbe->m_szSectionName[i]);
+					EmuLogInit(LOG_LEVEL::WARNING, "Failed to preload XBE section: %s", CxbxKrnl_Xbe->m_szSectionName[i]);
 				}
 			}
 		}
@@ -1223,12 +1224,12 @@ void CxbxKrnlMain(int argc, char* argv[])
 				continue;
 			}
 
-			EmuLogEx(CXBXR_MODULE::INIT, LOG_LEVEL::INFO, "Searching for XBEH in section %s\n", CxbxKrnl_Xbe->m_szSectionName[sectionIndex]);
+			EmuLogInit(LOG_LEVEL::INFO, "Searching for XBEH in section %s", CxbxKrnl_Xbe->m_szSectionName[sectionIndex]);
 			xbaddr startAddr = CxbxKrnl_Xbe->m_SectionHeader[sectionIndex].dwVirtualAddr;
 			xbaddr endAddr = startAddr + CxbxKrnl_Xbe->m_SectionHeader[sectionIndex].dwSizeofRaw;
 			for (xbaddr addr = startAddr; addr < endAddr; addr++) {
 				if (*(uint32_t*)addr == 0x48454258) {
-					EmuLogEx(CXBXR_MODULE::INIT, LOG_LEVEL::INFO, "Patching XBEH at %X\n", addr);
+					EmuLogInit(LOG_LEVEL::INFO, "Patching XBEH at 0x%08X", addr);
 					*((uint32_t*)addr) = *(uint32_t*)XBE_IMAGE_BASE;
 				}
 			}
@@ -1349,8 +1350,8 @@ __declspec(noreturn) void CxbxKrnlInit
 	// debug trace
 	{
 #ifdef _DEBUG_TRACE
-		printf("[0x%X] INIT: Debug Trace Enabled.\n", GetCurrentThreadId());
-		printf("[0x%X] INIT: CxbxKrnlInit\n"
+		EmuLogInit(LOG_LEVEL::INFO, "Debug Trace Enabled.");
+		EmuLogInit(LOG_LEVEL::INFO, "CxbxKrnlInit\n"
 			"(\n"
 			"   hwndParent          : 0x%.08p\n"
 			"   pTLSData            : 0x%.08p\n"
@@ -1361,10 +1362,10 @@ __declspec(noreturn) void CxbxKrnlInit
 			"   pXBEHeader          : 0x%.08p\n"
 			"   dwXBEHeaderSize     : 0x%.08X\n"
 			"   Entry               : 0x%.08p\n"
-			");\n",
-			GetCurrentThreadId(), CxbxKrnl_hEmuParent, pTLSData, pTLS, pLibraryVersion, DbgMode, szDebugFilename, pXbeHeader, dwXbeHeaderSize, Entry);
+			");",
+			CxbxKrnl_hEmuParent, pTLSData, pTLS, pLibraryVersion, DbgMode, szDebugFilename, pXbeHeader, dwXbeHeaderSize, Entry);
 #else
-		printf("[0x%X] INIT: Debug Trace Disabled.\n", GetCurrentThreadId());
+		EmuLogInit(LOG_LEVEL::INFO, "Debug Trace Disabled.");
 #endif
 	}
 
@@ -1385,7 +1386,7 @@ __declspec(noreturn) void CxbxKrnlInit
 		DummyKernel->FileHeader.NumberOfSections = 1;
 		// as long as this doesn't start with "INIT"
 		strncpy_s((PSTR)DummyKernel->SectionHeader.Name, 8, "DONGS", 8);
-		printf("[0x%.4X] INIT: Initialized dummy kernel image header.\n", GetCurrentThreadId());
+		EmuLogInit(LOG_LEVEL::INFO, "Initialized dummy kernel image header.");
 	}
 
 	// Read which components need to be LLE'ed per user request
@@ -1455,7 +1456,7 @@ __declspec(noreturn) void CxbxKrnlInit
 	CxbxRegisterDeviceHostPath(DeviceHarddisk0Partition7, CxbxBasePath + "Partition7");
 
 	// Create default symbolic links :
-	EmuLogEx(LOG_PREFIX_INIT, LOG_LEVEL::DEBUG, "Creating default symbolic links.\n");
+	EmuLogInit(LOG_LEVEL::DEBUG, "Creating default symbolic links.");
 	{
 		// TODO: DriveD should always point to the Xbe Path
 		// This is the only symbolic link the Xbox Kernel sets, the rest are set by the application, usually via XAPI.
@@ -1484,13 +1485,13 @@ __declspec(noreturn) void CxbxKrnlInit
 		xboxkrnl::XeImageFileName.Buffer = (PCHAR)g_VMManager.Allocate(MAX_PATH);
 		sprintf(xboxkrnl::XeImageFileName.Buffer, "%c:\\%s", CxbxDefaultXbeDriveLetter, fileName.c_str());
 		xboxkrnl::XeImageFileName.Length = (USHORT)strlen(xboxkrnl::XeImageFileName.Buffer);
-		printf("[0x%.4X] INIT: XeImageFileName = %s\n", GetCurrentThreadId(), xboxkrnl::XeImageFileName.Buffer);
+		EmuLogInit(LOG_LEVEL::INFO, "XeImageFileName = %s", xboxkrnl::XeImageFileName.Buffer);
 	}
 
 	// Dump Xbe information
 	{
 		if (CxbxKrnl_Xbe != nullptr) {
-			printf("[0x%.4X] INIT: Title : %s\n", GetCurrentThreadId(), CxbxKrnl_Xbe->m_szAsciiTitle);
+			EmuLogInit(LOG_LEVEL::INFO, "Title : %s", CxbxKrnl_Xbe->m_szAsciiTitle);
 		}
 
 		// Dump Xbe certificate
@@ -1498,18 +1499,18 @@ __declspec(noreturn) void CxbxKrnlInit
 			std::stringstream titleIdHex;
 			titleIdHex << std::hex << g_pCertificate->dwTitleId;
 
-			printf("[0x%.4X] INIT: XBE TitleID : %s\n", GetCurrentThreadId(), FormatTitleId(g_pCertificate->dwTitleId).c_str());
-			printf("[0x%.4X] INIT: XBE TitleID (Hex) : 0x%s\n", GetCurrentThreadId(), titleIdHex.str().c_str());
-			printf("[0x%.4X] INIT: XBE Version : 1.%02d\n", GetCurrentThreadId(), g_pCertificate->dwVersion);
-			printf("[0x%.4X] INIT: XBE TitleName : %ls\n", GetCurrentThreadId(), g_pCertificate->wszTitleName);
-			printf("[0x%.4X] INIT: XBE Region : %s\n", GetCurrentThreadId(), CxbxKrnl_Xbe->GameRegionToString());
+			EmuLogInit(LOG_LEVEL::INFO, "XBE TitleID : %s", FormatTitleId(g_pCertificate->dwTitleId).c_str());
+			EmuLogInit(LOG_LEVEL::INFO, "XBE TitleID (Hex) : 0x%s", titleIdHex.str().c_str());
+			EmuLogInit(LOG_LEVEL::INFO, "XBE Version : 1.%02d", g_pCertificate->dwVersion);
+			EmuLogInit(LOG_LEVEL::INFO, "XBE TitleName : %ls", g_pCertificate->wszTitleName);
+			EmuLogInit(LOG_LEVEL::INFO, "XBE Region : %s", CxbxKrnl_Xbe->GameRegionToString());
 		}
 
 		// Dump Xbe library build numbers
 		Xbe::LibraryVersion* libVersionInfo = pLibraryVersion;// (LibraryVersion *)(CxbxKrnl_XbeHeader->dwLibraryVersionsAddr);
 		if (libVersionInfo != NULL) {
 			for (uint32_t v = 0; v < CxbxKrnl_XbeHeader->dwLibraryVersions; v++) {
-				printf("[0x%.4X] INIT: XBE Library %u : %.8s (version %d)\n", GetCurrentThreadId(), v, libVersionInfo->szName, libVersionInfo->wBuildVersion);
+				EmuLogInit(LOG_LEVEL::INFO, "XBE Library %u : %.8s (version %d)", v, libVersionInfo->szName, libVersionInfo->wBuildVersion);
 				libVersionInfo++;
 			}
 		}
@@ -1519,7 +1520,7 @@ __declspec(noreturn) void CxbxKrnlInit
 
 	// Make sure the Xbox1 code runs on one core (as the box itself has only 1 CPU,
 	// this will better aproximate the environment with regard to multi-threading) :
-	EmuLogEx(LOG_PREFIX_INIT, LOG_LEVEL::DEBUG, "Determining CPU affinity.\n");
+	EmuLogInit(LOG_LEVEL::DEBUG, "Determining CPU affinity.");
 	{
 		if (!GetProcessAffinityMask(g_CurrentProcessHandle, &g_CPUXbox, &g_CPUOthers))
 			CxbxKrnlCleanupEx(LOG_PREFIX_INIT, "GetProcessAffinityMask failed.");
@@ -1538,7 +1539,7 @@ __declspec(noreturn) void CxbxKrnlInit
 	}
 
 	// initialize graphics
-	EmuLogEx(LOG_PREFIX_INIT, LOG_LEVEL::DEBUG, "Initializing render window.\n");
+	EmuLogInit(LOG_LEVEL::DEBUG, "Initializing render window.");
 	CxbxInitWindow(true);
 
 	// Now process the boot flags to see if there are any special conditions to handle
@@ -1574,7 +1575,7 @@ __declspec(noreturn) void CxbxKrnlInit
 
 	if (!bLLE_GPU)
 	{
-		EmuLogEx(LOG_PREFIX_INIT, LOG_LEVEL::DEBUG, "Initializing Direct3D.\n");
+		EmuLogInit(LOG_LEVEL::DEBUG, "Initializing Direct3D.");
 		EmuD3DInit();
 	}
 	
@@ -1616,13 +1617,13 @@ __declspec(noreturn) void CxbxKrnlInit
 	TimerObject* KernelClockThr = Timer_Create(CxbxKrnlClockThread, nullptr, "Kernel clock thread", &g_CPUOthers);
 	Timer_Start(KernelClockThr, SCALE_MS_IN_NS);
 
-	EmuLogEx(LOG_PREFIX_INIT, LOG_LEVEL::DEBUG, "Calling XBE entry point...\n");
+	EmuLogInit(LOG_LEVEL::DEBUG, "Calling XBE entry point...");
 	CxbxLaunchXbe(Entry);
 
 	// FIXME: Wait for Cxbx to exit or error fatally
 	Sleep(INFINITE);
 
-	EmuLogEx(LOG_PREFIX_INIT, LOG_LEVEL::DEBUG, "XBE entry point returned\n");
+	EmuLogInit(LOG_LEVEL::DEBUG, "XBE entry point returned");
 	fflush(stdout);
 
 	//	EmuShared::Cleanup();   FIXME: commenting this line is a bad workaround for issue #617 (https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/issues/617)
@@ -1683,7 +1684,7 @@ __declspec(noreturn) void CxbxKrnlCleanupEx(CXBXR_MODULE cxbxr_module, const cha
 		CxbxPopupMessageEx(cxbxr_module, LOG_LEVEL::FATAL, CxbxMsgDlgIcon_Error, "Received Fatal Message:\n\n* %s\n", szBuffer2); // Will also EmuLogEx
     }
 
-    printf("[0x%.4X] MAIN: Terminating Process\n", GetCurrentThreadId());
+	EmuLogInit(LOG_LEVEL::INFO, "MAIN: Terminating Process");
     fflush(stdout);
 
     // cleanup debug output
