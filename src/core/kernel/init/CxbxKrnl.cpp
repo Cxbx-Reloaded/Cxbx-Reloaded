@@ -118,6 +118,7 @@ ULONG g_CxbxFatalErrorCode = FATAL_ERROR_NONE;
 // Define function located in EmuXApi so we can call it from here
 void SetupXboxDeviceTypes();
 
+// TODO: Move below function into a common(?) file
 // ported from Dxbx's XbeExplorer
 XbeType GetXbeType(Xbe::Header *pXbeHeader)
 {
@@ -135,6 +136,7 @@ XbeType GetXbeType(Xbe::Header *pXbeHeader)
 	return xtRetail;
 }
 
+// TODO: Move below function into a common(?) file
 const char* GetSystemTypeToStr(unsigned int system)
 {
 	if (system == SYSTEM_CHIHIRO) {
@@ -152,6 +154,7 @@ const char* GetSystemTypeToStr(unsigned int system)
 	return nullptr;
 }
 
+// TODO: Move below function into a common(?) file
 const char* GetXbeTypeToStr(XbeType xbe_type)
 {
 	if (xbe_type == xtChihiro) {
