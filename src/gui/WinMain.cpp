@@ -82,7 +82,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 	if (cli_config::hasKey("load")) {
 #ifndef CXBXR_EMU
-		CxbxKrnlEmulate(nullptr);
+		CxbxKrnlEmulate(0, nullptr);
 		EmuShared::Cleanup();
 		return EXIT_SUCCESS;
 #else

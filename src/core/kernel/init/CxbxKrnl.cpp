@@ -54,6 +54,7 @@ namespace xboxkrnl
 #include "CxbxDebugger.h"
 #include "common/util/cliConfig.hpp"
 #include "common/util/xxhash.h"
+#include "common/ReserveAddressRanges.h"
 
 #include <clocale>
 #include <process.h>
@@ -117,6 +118,7 @@ ULONG g_CxbxFatalErrorCode = FATAL_ERROR_NONE;
 // Define function located in EmuXApi so we can call it from here
 void SetupXboxDeviceTypes();
 
+// TODO: Move below function into a common(?) file
 // ported from Dxbx's XbeExplorer
 XbeType GetXbeType(Xbe::Header *pXbeHeader)
 {
@@ -132,6 +134,38 @@ XbeType GetXbeType(Xbe::Header *pXbeHeader)
 
 	// Otherwise, the XBE is a Retail build :
 	return xtRetail;
+}
+
+// TODO: Move below function into a common(?) file
+const char* GetSystemTypeToStr(unsigned int system)
+{
+	if (system == SYSTEM_CHIHIRO) {
+		return cli_config::system_chihiro;
+	}
+
+	if (system == SYSTEM_DEVKIT) {
+		return cli_config::system_devkit;
+	}
+
+	if (system == SYSTEM_XBOX) {
+		return cli_config::system_retail;
+	}
+
+	return nullptr;
+}
+
+// TODO: Move below function into a common(?) file
+const char* GetXbeTypeToStr(XbeType xbe_type)
+{
+	if (xbe_type == xtChihiro) {
+		return "chihiro";
+	}
+
+	if (xbe_type == xtDebug) {
+		return "debug";
+	}
+
+	return "retail";
 }
 
 void ApplyMediaPatches()
@@ -724,7 +758,23 @@ bool HandleFirstLaunch()
 	return true;
 }
 
-void CxbxKrnlEmulate(uint32_t blocks_reserved[384])
+// TODO: Need to move isSystemFlagSupport function somewhere other than CxbxKrnl.cpp file.
+bool isSystemFlagSupport(int reserved_systems, int assign_system)
+{
+	if (reserved_systems & assign_system) {
+		return true;
+	}
+// TODO: Once host's standalone emulation is remove from GUI, remove below as well.
+#ifndef CXBXR_EMU
+	if (reserved_systems == 0) {
+		return true;
+	}
+#endif
+
+	return false;
+}
+
+void CxbxKrnlEmulate(unsigned int reserved_systems, uint32_t blocks_reserved[384])
 {
 	std::string tempStr;
 
@@ -1075,8 +1125,51 @@ void CxbxKrnlEmulate(uint32_t blocks_reserved[384])
 			}
 		}
 
-		// Detect XBE type :
-		g_XbeType = GetXbeType(&CxbxKrnl_Xbe->m_Header);
+		// If CLI has given console type, then enforce it.
+		if (cli_config::hasKey(cli_config::system_chihiro)) {
+			EmuLogInit(LOG_LEVEL::INFO, "Auto detect is disabled, running as chihiro.");
+			g_XbeType = xtChihiro;
+		}
+		else if (cli_config::hasKey(cli_config::system_devkit)) {
+			EmuLogInit(LOG_LEVEL::INFO, "Auto detect is disabled, running as devkit.");
+			g_XbeType = xtDebug;
+		}
+		else if (cli_config::hasKey(cli_config::system_retail)) {
+			EmuLogInit(LOG_LEVEL::INFO, "Auto detect is disabled, running as retail.");
+			g_XbeType = xtRetail;
+		}
+		// Otherwise, use auto detect method.
+		else {
+			// Detect XBE type :
+			g_XbeType = GetXbeType(&CxbxKrnl_Xbe->m_Header);
+			EmuLogInit(LOG_LEVEL::INFO, "Auto detect: XbeType = %s", GetXbeTypeToStr(g_XbeType));
+		}
+
+		EmuLogInit(LOG_LEVEL::INFO, "Host's compatible system types: %2X", reserved_systems);
+		unsigned int emulate_system = 0;
+		// Set reserved_systems which system we will about to emulate.
+		if (isSystemFlagSupport(reserved_systems, SYSTEM_CHIHIRO) && g_XbeType == xtChihiro) {
+			emulate_system = SYSTEM_CHIHIRO;
+		}
+		else if (isSystemFlagSupport(reserved_systems, SYSTEM_DEVKIT) && g_XbeType == xtDebug) {
+			emulate_system = SYSTEM_DEVKIT;
+		}
+		else if (isSystemFlagSupport(reserved_systems, SYSTEM_XBOX) && g_XbeType == xtRetail) {
+			emulate_system = SYSTEM_XBOX;
+		}
+		// If none of system type requested to emulate isn't supported on host's end. Then enforce failure.
+		else {
+			CxbxKrnlCleanup("Unable to emulate system type due to host is not able to reserve required memory ranges.");
+			return;
+		}
+		// Clear emulation system from reserved systems to be free.
+		reserved_systems &= ~emulate_system;
+
+		// Once we have determine which system type to run as, enforce it in future reboots.
+		if ((BootFlags & BOOT_QUICK_REBOOT) == 0) {
+			const char* system_str = GetSystemTypeToStr(emulate_system);
+			cli_config::SetSystemType(system_str);
+		}
 
 		// Register if we're running an Chihiro executable or a debug xbe, otherwise it's an Xbox retail executable
 		g_bIsChihiro = (g_XbeType == xtChihiro);
@@ -1106,9 +1199,9 @@ void CxbxKrnlEmulate(uint32_t blocks_reserved[384])
 		uint32_t SystemDevBlocksReserved[384] = { 0 };
 		g_VMManager.Initialize(0, BootFlags, SystemDevBlocksReserved);
 #else
-		// TODO: Retrieve the system type from the loader and be sure that it doesn't change between quick reboots
+		FreeAddressRanges(emulate_system, reserved_systems, blocks_reserved);
 		// Initialize the memory manager
-		g_VMManager.Initialize(SYSTEM_XBOX, BootFlags, blocks_reserved);
+		g_VMManager.Initialize(emulate_system, BootFlags, blocks_reserved);
 #endif
 
 		// Commit the memory used by the xbe header

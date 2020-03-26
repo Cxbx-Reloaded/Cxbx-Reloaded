@@ -26,6 +26,12 @@
 // *
 // ******************************************************************
 
+// NOTE: Cannot be use in loader project due to force exclude std libraries.
+//#define DEBUG // Uncomment whenever need to verify memory leaks or bad configure.
+
+#ifdef DEBUG
+#include <cstdio> // For printf
+#endif
 #include <cstdint> // For uint32_t
 
 #include "AddressRanges.h"
@@ -42,8 +48,14 @@ bool ReserveMemoryRange(int index, uint32_t blocks_reserved[384])
 
 	const DWORD Protect = XboxAddressRanges[index].InitialMemoryProtection;
 	bool NeedsReservationTracking = false;
+	unsigned int arr_index = BLOCK_REGION_DEVKIT_INDEX_BEGIN;
+#ifdef DEBUG
+	std::printf("DEBUG: ReserveMemoryRange call begin\n");
+	std::printf("     : Comment = %s\n", XboxAddressRanges[index].Comment);
+#endif
 	switch (Start) {
 		case 0x80000000:
+		case 0x84000000:
 		case 0xF0000000: {
 			static bool NeedsInitialization = true;
 			static	HANDLE hFileMapping;
@@ -63,51 +75,133 @@ bool ReserveMemoryRange(int index, uint32_t blocks_reserved[384])
 			}
 			LPVOID Result = MapViewOfFileEx(
 				hFileMapping,
-				Start == 0x80000000 ?
+				(Start == 0x80000000 || Start == 0x84000000) ?
 				(FILE_MAP_READ | FILE_MAP_WRITE | FILE_MAP_EXECUTE) : (FILE_MAP_READ | FILE_MAP_WRITE),
 				0,
 				0,
 				Size,
 				(LPVOID)Start);
+#ifdef DEBUG
+			std::printf("     : MapViewOfFile; Start = 0x%08X; Result = %p\n", Start, Result);
+#endif
 			if (Result == nullptr) {
 				HadAnyFailure = true;
 			}
 		}
 		break;
 
-		case 0xB0000000:
-		case 0xD0000000: {
+		case 0xD0000000:
+			// If additional addresses need to be assign in region's block.
+			// Then check for nonzero value.
+			arr_index = BLOCK_REGION_SYSTEM_INDEX_BEGIN;
+		[[fallthrough]];
+		case 0xB0000000: {
+			// arr_index's default is BLOCK_REGION_DEVKIT_INDEX_BEGIN which is zero.
+			// Any block region above zero should be place above this case to override zero value.
+			//arr_index = BLOCK_REGION_DEVKIT_INDEX_BEGIN;
 			NeedsReservationTracking = true;
 		}
 		[[fallthrough]];
 
 		default: {
 			while (Size > 0) {
-				static int arr_index = 0;
 				SIZE_T BlockSize = (SIZE_T)(Size > BLOCK_SIZE) ? BLOCK_SIZE : Size;
 				LPVOID Result = VirtualAlloc((LPVOID)Start, BlockSize, MEM_RESERVE, Protect);
 				if (Result == nullptr) {
 					HadAnyFailure = true;
 				}
+#ifdef DEBUG
+				std::printf("     : Start = %08X; Result = %p;\n", Start, Result);
+#endif
 				// Handle the next block
 				Start += BLOCK_SIZE;
 				Size -= BLOCK_SIZE;
 				if (NeedsReservationTracking) {
 					if (Result != nullptr) {
 						blocks_reserved[arr_index / 32] |= (1 << (arr_index % 32));
+#ifdef DEBUG
+						std::printf("     : arr_index = 0x%08X; set bit = 0x%08X;\n", arr_index, (1 << (arr_index % 32)));
+						std::printf("     : blocks_reserved[%08X] = 0x%08X\n", arr_index/32, blocks_reserved[arr_index/32]);
+#endif
 					}
 					arr_index++;
 				}
 			}
 		}
 	}
+#ifdef DEBUG
+	std::printf("     : ReserveMemoryRange call end: HadAnyFailure = %d\n\n", HadAnyFailure);
+#endif
 
 	// Only a complete success when the entire request was reserved in a single range
 	// (Otherwise, we have either a complete failure, or reserved it partially over multiple ranges)
 	return !HadAnyFailure;
 }
 
-bool ReserveAddressRanges(const int system, uint32_t blocks_reserved[384]) {
+// Free address range from the host.
+void FreeMemoryRange(int index, uint32_t blocks_reserved[384])
+{
+	uint32_t Start = XboxAddressRanges[index].Start, _Start;
+	int Size = XboxAddressRanges[index].Size;
+	bool NeedsReservationTracking = false;
+	unsigned int arr_index = BLOCK_REGION_DEVKIT_INDEX_BEGIN;
+#ifdef DEBUG
+	std::printf("DEBUG: FreeMemoryRange call begin\n");
+	std::printf("     : Comment = %s\n", XboxAddressRanges[index].Comment);
+#endif
+	switch (Start) {
+		case 0x80000000:
+		case 0x84000000:
+		case 0xF0000000: {
+			(void)UnmapViewOfFile((LPVOID)Start);
+#ifdef DEBUG
+			std::printf("     : UnmapViewOfFile; Start = 0x%08X\n", Start);
+#endif
+		}
+		break;
+
+		case 0xD0000000:
+			// If additional addresses need to be assign in region's block.
+			// Then check for nonzero value.
+			arr_index = BLOCK_REGION_SYSTEM_INDEX_BEGIN;
+		[[fallthrough]];
+		case 0xB0000000: {
+			// arr_index's default is BLOCK_REGION_DEVKIT_INDEX_BEGIN which is zero.
+			// Any block region above zero should be place above this case to override zero value.
+			//arr_index = BLOCK_REGION_DEVKIT_INDEX_BEGIN;
+			NeedsReservationTracking = true;
+		}
+		[[fallthrough]];
+
+		default: {
+			while (Size > 0) {
+				_Start = Start; // Require to silence C6001's warning complaint
+				BOOL Result = VirtualFree((LPVOID)_Start, 0, MEM_RELEASE);
+#ifdef DEBUG
+				std::printf("     : Start = %08X; Result = %d;\n", Start, Result);
+#endif
+				// Handle the next block
+				Start += BLOCK_SIZE;
+				Size -= BLOCK_SIZE;
+				if (NeedsReservationTracking) {
+					if (Result != 0) {
+						blocks_reserved[arr_index / 32] &= ~(1 << (arr_index % 32));
+#ifdef DEBUG
+						std::printf("     : arr_index = 0x%08X; clear bit = 0x%08X;\n", arr_index, (1 << (arr_index % 32)));
+						std::printf("     : blocks_reserved[%08X] = 0x%08X\n", arr_index/32, blocks_reserved[arr_index/32]);
+#endif
+					}
+					arr_index++;
+				}
+			}
+		}
+	}
+#ifdef DEBUG
+	std::printf("     : FreeMemoryRange call end\n\n");
+#endif
+}
+
+bool ReserveAddressRanges(const unsigned int system, uint32_t blocks_reserved[384]) {
 	// Loop over all Xbox address ranges
 	for (int i = 0; i < ARRAY_SIZE(XboxAddressRanges); i++) {
 		// Skip address ranges that don't match the given flags
@@ -124,5 +218,76 @@ bool ReserveAddressRanges(const int system, uint32_t blocks_reserved[384]) {
 		}
 	}
 
+	return true;
+}
+
+void FreeAddressRanges(const unsigned int system, unsigned int release_systems, uint32_t blocks_reserved[384]) {
+	// If reserved_systems is empty, then there's nothing to be freed up.
+	if (release_systems == 0) {
+		return;
+	}
+	// Loop over all Xbox address ranges
+	for (int i = 0; i < ARRAY_SIZE(XboxAddressRanges); i++) {
+		// Skip address ranges that do match specific flag
+		if (AddressRangeMatchesFlags(i, system))
+			continue;
+
+		// Skip address ranges that doesn't match the reserved flags
+		if (!AddressRangeMatchesFlags(i, release_systems))
+			continue;
+
+		FreeMemoryRange(i, blocks_reserved);
+	}
+
+}
+
+bool AttemptReserveAddressRanges(unsigned int* p_reserved_systems, uint32_t blocks_reserved[384]) {
+
+	int iLast = 0;
+	unsigned int reserved_systems = *p_reserved_systems, clear_systems = 0;
+	// Loop over all Xbox address ranges
+	for (int i = 0; i < ARRAY_SIZE(XboxAddressRanges); i++) {
+
+		// Once back to original spot, let's resume.
+		if (i == iLast && clear_systems) {
+			reserved_systems &= ~clear_systems;
+			if (reserved_systems == 0) {
+				*p_reserved_systems = 0;
+				return false;
+			}
+			// Resume virtual allocated range.
+			clear_systems = 0;
+			continue;
+		}
+
+		if (clear_systems) {
+			// Skip address ranges that doesn't match the given flags
+			if (!AddressRangeMatchesFlags(i, clear_systems))
+				continue;
+
+			// Release incompatible system's memory range
+			FreeMemoryRange(i, blocks_reserved);
+		}
+		else {
+			// Skip address ranges that don't match the given flags
+			if (!AddressRangeMatchesFlags(i, reserved_systems))
+				continue;
+
+			// Try to reserve each address range
+			if (ReserveMemoryRange(i, blocks_reserved))
+				continue;
+
+			// Some ranges are allowed to fail reserving
+			if (!IsOptionalAddressRange(i)) {
+				// If not, then let's free them and downgrade host's limitation.
+				iLast = i;
+				i = -1; // Reset index back to zero after for statement's increment.
+				clear_systems = AddressRangeGetSystemFlags(i);
+				continue;
+			}
+		}
+	}
+
+	*p_reserved_systems = reserved_systems;
 	return true;
 }
