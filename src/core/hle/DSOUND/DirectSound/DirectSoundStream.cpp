@@ -172,7 +172,7 @@ ULONG WINAPI XTL::EMUPATCH(CDirectSoundStream_Release)
         }
     }
 
-    return uRet;
+    RETURN(uRet);
 }
 
 // ******************************************************************

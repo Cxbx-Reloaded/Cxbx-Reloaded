@@ -147,7 +147,7 @@ ULONG WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Release)
         }
     //}
 
-    return uRet;
+    RETURN(uRet);
 }
 
 // ******************************************************************
