@@ -110,7 +110,7 @@ void DirectSoundDoWork_Stream(xboxkrnl::LARGE_INTEGER& time)
             if (pThis->Xb_rtFlushEx == 0LL) {
                 EmuLog(LOG_LEVEL::WARNING, "Attempted to flush without Xb_rtFlushEx set to non-zero");
             }
-            while(DSStream_Packet_Flush(pThis));
+            DSStream_Packet_Flush(pThis);
         } else {
             DSStream_Packet_Process(pThis);
         }
@@ -393,10 +393,14 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_FlushEx)
     }
     // Remaining flags require X_DSSFLUSHEX_ASYNC to be include.
     else if ((dwFlags & X_DSSFLUSHEX_ASYNC) > 0) {
-
-        pThis->EmuFlags |= DSE_FLAG_FLUSH_ASYNC;
-        // If rtTimeStamp is zero'd, then it must be flush in worker thread right away.
+        // If rtTimeStamp is zero'd, then call flush once and allow process flush in worker thread.
         if (rtTimeStamp == 0LL) {
+            bool isBusy = DSStream_Packet_Flush(pThis);
+            if (!isBusy) {
+                // testcase: Obscure will crash after new game's video if not call DSStream_Packet_Flush in same thread.
+                // If flush is not busy, then we don't need worker thread to continue flushing.
+                return hRet;
+            }
             xboxkrnl::LARGE_INTEGER getTime;
             xboxkrnl::KeQuerySystemTime(&getTime);
             pThis->Xb_rtFlushEx = getTime.QuadPart;
@@ -404,6 +408,8 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_FlushEx)
         else {
             pThis->Xb_rtFlushEx = rtTimeStamp;
         }
+
+        pThis->EmuFlags |= DSE_FLAG_FLUSH_ASYNC;
 
         // Set or remove flags (This is the only place it will set/remove other than flush perform remove the flags.)
         if ((dwFlags & X_DSSFLUSHEX_ENVELOPE) > 0) {
