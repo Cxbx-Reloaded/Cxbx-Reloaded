@@ -34,6 +34,7 @@
 #endif
 #include <cstdint> // For uint32_t
 
+#include "util/std_extend.hpp"
 #include "AddressRanges.h"
 
 // Reserve an address range up to the extend of what the host allows.
@@ -203,7 +204,7 @@ void FreeMemoryRange(int index, uint32_t blocks_reserved[384])
 
 bool ReserveAddressRanges(const unsigned int system, uint32_t blocks_reserved[384]) {
 	// Loop over all Xbox address ranges
-	for (int i = 0; i < ARRAY_SIZE(XboxAddressRanges); i++) {
+	for (size_t i = 0; i < ARRAY_SIZE(XboxAddressRanges); i++) {
 		// Skip address ranges that don't match the given flags
 		if (!AddressRangeMatchesFlags(i, system))
 			continue;
@@ -227,7 +228,7 @@ void FreeAddressRanges(const unsigned int system, unsigned int release_systems, 
 		return;
 	}
 	// Loop over all Xbox address ranges
-	for (int i = 0; i < ARRAY_SIZE(XboxAddressRanges); i++) {
+	for (size_t i = 0; i < ARRAY_SIZE(XboxAddressRanges); i++) {
 		// Skip address ranges that do match specific flag
 		if (AddressRangeMatchesFlags(i, system))
 			continue;
@@ -243,10 +244,10 @@ void FreeAddressRanges(const unsigned int system, unsigned int release_systems, 
 
 bool AttemptReserveAddressRanges(unsigned int* p_reserved_systems, uint32_t blocks_reserved[384]) {
 
-	int iLast = 0;
+	size_t iLast = 0;
 	unsigned int reserved_systems = *p_reserved_systems, clear_systems = 0;
 	// Loop over all Xbox address ranges
-	for (int i = 0; i < ARRAY_SIZE(XboxAddressRanges); i++) {
+	for (size_t i = 0; i < ARRAY_SIZE(XboxAddressRanges); i++) {
 
 		// Once back to original spot, let's resume.
 		if (i == iLast && clear_systems) {

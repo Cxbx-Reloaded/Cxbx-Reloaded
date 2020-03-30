@@ -47,10 +47,6 @@ const int BLOCK_SIZE = KB(64);
 // One allocation block consists of 16 pages (since PAGE_SIZE is 4 kilobytes)
 const int PAGE_SIZE = KB(4);
 
-#define ARRAY_SIZE(a)                               \
-  ((sizeof(a) / sizeof(*(a))) /                     \
-  static_cast<size_t>(!(sizeof(a) % sizeof(*(a)))))
-
 const struct {
 	uint32_t Start;
 #ifdef DEBUG

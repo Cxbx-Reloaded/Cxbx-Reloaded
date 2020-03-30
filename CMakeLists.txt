@@ -90,6 +90,7 @@ file (GLOB CXBXR_HEADER_COMMON
  "${CXBXR_ROOT_DIR}/src/common/util/CPUID.h"
  "${CXBXR_ROOT_DIR}/src/common/util/crc32c.h"
  "${CXBXR_ROOT_DIR}/src/common/util/CxbxUtil.h"
+ "${CXBXR_ROOT_DIR}/src/common/util/std_extend.hpp"
  "${CXBXR_ROOT_DIR}/src/common/util/strConverter.hpp"
  "${CXBXR_ROOT_DIR}/src/common/win32/AlignPosfix1.h"
  "${CXBXR_ROOT_DIR}/src/common/win32/AlignPrefix1.h"
