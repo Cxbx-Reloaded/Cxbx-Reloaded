@@ -25,6 +25,7 @@
 // *
 // ******************************************************************
 
+#include "util/std_extend.hpp"
 #include "AddressRanges.h"
 
 bool AddressRangeMatchesFlags(const int index, const unsigned int flags)
