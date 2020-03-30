@@ -56,31 +56,3 @@ bool VerifyWow64()
 
 	return (bIsWow64 != FALSE);
 }
-
-LPTSTR GetLastErrorString()
-{
-	DWORD err = GetLastError();
-
-	// Translate ErrorCode to String.
-	LPTSTR Error = nullptr;
-	if (::FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
-		NULL,
-		err,
-		0,
-		(LPTSTR)&Error,
-		0,
-		NULL) == 0) {
-		// Failed in translating.
-	}
-
-	return Error;
-}
-
-void FreeLastErrorString(LPTSTR Error)
-{
-	if (Error) {
-		::LocalFree(Error);
-		Error = nullptr;
-	}
-}
-

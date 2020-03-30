@@ -113,7 +113,3 @@ extern bool IsOptionalAddressRange(const int index);
 extern int AddressRangeGetSystemFlags(const int index);
 
 extern bool VerifyWow64();
-
-extern LPTSTR GetLastErrorString();
-extern void FreeLastErrorString(LPTSTR Error);
-extern void OutputMessage(const char* msg);
