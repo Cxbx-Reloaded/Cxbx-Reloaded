@@ -35,6 +35,7 @@
 
 #define LOG_PREFIX CXBXR_MODULE::VMEM
 
+#include "common/AddressRanges.h"
 #include "PoolManager.h"
 #include "Logging.h"
 #include "EmuShared.h"
