@@ -173,7 +173,7 @@ DWORD CALLBACK rawMain()
 
 	// Call the main emulation function in our DLL, passing in the results
 	// of the address range reservations
-	pfnEmulate(system, SystemDevBlocksReserved); // TODO : Pass along all data that we've gathered up until here (or rebuild it over there)
+	pfnEmulate(system, SystemDevBlocksReserved);
 
 	// Once emulation actually started, execution may never return here
 	// because all code and data that have been used up until now are
