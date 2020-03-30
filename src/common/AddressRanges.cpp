@@ -47,26 +47,26 @@ const _XboxAddressRanges XboxAddressRanges[] = {
 #endif
 	// See http://xboxdevwiki.net/Memory
 	// and http://xboxdevwiki.net/Boot_Process#Paging
-	// Entry :  Start     , End       , Size            , Protect , RangeFlags              , Comment
-	RANGE_ENTRY(0x00010000, 0x03FFFFFF, MB( 64) - KB(64), PROT_XRW, SYSTEM_ALL    | MAY_FAIL, "MemLowVirtual (General Xbox type) lower 64 MB Optional (already reserved via virtual_memory_placeholder)"),
-	RANGE_ENTRY(0x04000000, 0x07FFFFFF, MB( 64)         , PROT_XRW, SYSTEM_128MB  | MAY_FAIL, "MemLowVirtual (Chihiro / DevKit)  ^ + upper 64 MB"),
-	RANGE_ENTRY(0x80000000, 0x83FFFFFF, MB( 64)         , PROT_UNH, SYSTEM_ALL              , "MemPhysical   (General Xbox type) lower 64 MB"),
-	RANGE_ENTRY(0x84000000, 0x87FFFFFF, MB( 64)         , PROT_UNH, SYSTEM_128MB            , "MemPhysical   (Chihiro / DevKit)  ^ + upper 64 MB"),
-	RANGE_ENTRY(0xB0000000, 0xBFFFFFFF, MB(256)         , PROT_NAC, SYSTEM_DEVKIT           , "DevKitMemory"), // TODO : Check reserved range (might behave like MemTiled)
-	RANGE_ENTRY(0xC0000000, 0xC03FFFFF, MB(  4)         , PROT_RW,  SYSTEM_ALL              , "MemPageTable"), // See PAGE_TABLES_SIZE, which contains one 4 byte entry per PAGE_SIZE
-	RANGE_ENTRY(0xD0000000, 0xEFFFFFFF, MB(512)         , PROT_RW,  SYSTEM_ALL    | MAY_FAIL, "SystemMemory  Optional"), // TODO : Check reserved range (might behave like MemTiled)
-	RANGE_ENTRY(0xF0000000, 0xF3FFFFFF, MB( 64)         , PROT_UNH, SYSTEM_ALL              , "MemTiled      Optional (even though it can't be reserved, MapViewOfFileEx to this range still works!?)"),
-	RANGE_ENTRY(0xFD000000, 0xFD6FFFFF, MB(  7)         , PROT_NAC, SYSTEM_ALL              , "DeviceNV2A_a  (GPU)"),
-	RANGE_ENTRY(0xFD700000, 0xFD7FFFFF, MB(  1)         , PROT_RW,  SYSTEM_ALL              , "MemNV2APRAMIN"),
-	RANGE_ENTRY(0xFD800000, 0xFDFFFFFF, MB(  8)         , PROT_NAC, SYSTEM_ALL              , "DeviceNV2A_b  (GPU)"),
-	RANGE_ENTRY(0xFE800000, 0xFE87FFFF, KB(512)         , PROT_NAC, SYSTEM_ALL              , "DeviceAPU"),
-	RANGE_ENTRY(0xFEC00000, 0xFEC00FFF, KB(  4)         , PROT_NAC, SYSTEM_ALL              , "DeviceAC97    (ACI)"),
-	RANGE_ENTRY(0xFED00000, 0xFED00FFF, KB(  4)         , PROT_NAC, SYSTEM_ALL              , "DeviceUSB"),
-	RANGE_ENTRY(0xFEF00000, 0xFEF003FF, KB(  1)         , PROT_NAC, SYSTEM_ALL              , "DeviceNVNet"),
-	RANGE_ENTRY(0xFF000000, 0xFF3FFFFF, MB(  4)         , PROT_NAC, SYSTEM_ALL              , "DeviceFlash_a (Flash mirror 1)"),
-	RANGE_ENTRY(0xFF400000, 0xFF7FFFFF, MB(  4)         , PROT_NAC, SYSTEM_ALL              , "DeviceFlash_b (Flash mirror 2)"),
-	RANGE_ENTRY(0xFF800000, 0xFFBFFFFF, MB(  4)         , PROT_NAC, SYSTEM_ALL              , "DeviceFlash_c (Flash mirror 3)"),
-	RANGE_ENTRY(0xFFC00000, 0xFFFFFFFF, MB(  4)         , PROT_NAC, SYSTEM_ALL    | MAY_FAIL, "DeviceFlash_d (Flash mirror 4) Optional (will probably fail reservation, which is acceptable - the 3 other mirrors work just fine"),
+	// Entry :  Start             , End              , Size              , Protect , RangeFlags              , Comment
+	RANGE_ENTRY(USER_ADDRESS1_BASE, USER_ADDRESS1_END, USER_ADDRESS1_SIZE, PROT_XRW, SYSTEM_ALL    | MAY_FAIL, "MemLowVirtual (General Xbox type) lower 64 MB Optional (already reserved via virtual_memory_placeholder)"),
+	RANGE_ENTRY(USER_ADDRESS2_BASE, USER_ADDRESS2_END, USER_ADDRESS2_SIZE, PROT_XRW, SYSTEM_128MB  | MAY_FAIL, "MemLowVirtual (Chihiro / DevKit)  ^ + upper 64 MB"),
+	RANGE_ENTRY(PHYSICAL_MAP1_BASE, PHYSICAL_MAP1_END, PHYSICAL_MAP1_SIZE, PROT_UNH, SYSTEM_ALL              , "MemPhysical   (General Xbox type) lower 64 MB"),
+	RANGE_ENTRY(PHYSICAL_MAP2_BASE, PHYSICAL_MAP2_END, PHYSICAL_MAP2_SIZE, PROT_UNH, SYSTEM_128MB            , "MemPhysical   (Chihiro / DevKit)  ^ + upper 64 MB"),
+	RANGE_ENTRY(DEVKIT_MEMORY_BASE, DEVKIT_MEMORY_END, DEVKIT_MEMORY_SIZE, PROT_NAC, SYSTEM_DEVKIT           , "DevKitMemory"), // TODO : Check reserved range (might behave like MemTiled)
+	RANGE_ENTRY(PAGE_TABLES_BASE  , PAGE_TABLES_END  , PAGE_TABLES_SIZE  , PROT_RW , SYSTEM_ALL              , "MemPageTable"), // See PAGE_TABLES_SIZE, which contains one 4 byte entry per PAGE_SIZE
+	RANGE_ENTRY(SYSTEM_MEMORY_BASE, SYSTEM_MEMORY_END, SYSTEM_MEMORY_SIZE, PROT_RW , SYSTEM_ALL    | MAY_FAIL, "SystemMemory  Optional"), // TODO : Check reserved range (might behave like MemTiled)
+	RANGE_ENTRY(TILED_MEMORY_BASE , TILED_MEMORY_END , TILED_MEMORY_SIZE , PROT_UNH, SYSTEM_ALL              , "MemTiled      Optional (even though it can't be reserved, MapViewOfFileEx to this range still works!?)"),
+	RANGE_ENTRY(NV2A_DEVICE1_BASE , NV2A_DEVICE1_END , NV2A_DEVICE1_SIZE , PROT_NAC, SYSTEM_ALL              , "DeviceNV2A_a  (GPU)"),
+	RANGE_ENTRY(NV2A_PRAMIN_BASE  , NV2A_PRAMIN_END  , NV2A_PRAMIN_SIZE1 , PROT_RW , SYSTEM_ALL              , "MemNV2APRAMIN"),
+	RANGE_ENTRY(NV2A_DEVICE2_BASE , NV2A_DEVICE2_END , NV2A_DEVICE2_SIZE , PROT_NAC, SYSTEM_ALL              , "DeviceNV2A_b  (GPU)"),
+	RANGE_ENTRY(APU_DEVICE_BASE   , APU_DEVICE_END   , APU_DEVICE_SIZE   , PROT_NAC, SYSTEM_ALL              , "DeviceAPU"),
+	RANGE_ENTRY(AC97_DEVICE_BASE  , AC97_DEVICE_END  , AC97_DEVICE_SIZE  , PROT_NAC, SYSTEM_ALL              , "DeviceAC97    (ACI)"),
+	RANGE_ENTRY(USB_DEVICE_BASE   , USB_DEVICE_END   , USB_DEVICE_SIZE   , PROT_NAC, SYSTEM_ALL              , "DeviceUSB"),
+	RANGE_ENTRY(NVNET_DEVICE_BASE , NVNET_DEVICE_END , NVNET_DEVICE_SIZE , PROT_NAC, SYSTEM_ALL              , "DeviceNVNet"),
+	RANGE_ENTRY(FLASH_DEVICE1_BASE, FLASH_DEVICE1_END, FLASH_DEVICEN_SIZE, PROT_NAC, SYSTEM_ALL              , "DeviceFlash_a (Flash mirror 1)"),
+	RANGE_ENTRY(FLASH_DEVICE2_BASE, FLASH_DEVICE2_END, FLASH_DEVICEN_SIZE, PROT_NAC, SYSTEM_ALL              , "DeviceFlash_b (Flash mirror 2)"),
+	RANGE_ENTRY(FLASH_DEVICE3_BASE, FLASH_DEVICE3_END, FLASH_DEVICEN_SIZE, PROT_NAC, SYSTEM_ALL              , "DeviceFlash_c (Flash mirror 3)"),
+	RANGE_ENTRY(FLASH_DEVICE4_BASE, FLASH_DEVICE4_END, FLASH_DEVICEN_SIZE, PROT_NAC, SYSTEM_ALL    | MAY_FAIL, "DeviceFlash_d (Flash mirror 4) Optional (will probably fail reservation, which is acceptable - the 3 other mirrors work just fine"),
 	#undef RANGE_ENTRY
 };
 
