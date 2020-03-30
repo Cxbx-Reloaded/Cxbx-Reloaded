@@ -58,9 +58,9 @@ bool ReserveMemoryRange(int index, uint32_t blocks_reserved[384])
 	std::printf("     : Comment = %s\n", XboxAddressRanges[index].Comment);
 #endif
 	switch (Start) {
-		case 0x80000000:
-		case 0x84000000:
-		case 0xF0000000: {
+		case PHYSICAL_MAP1_BASE:
+		case PHYSICAL_MAP2_BASE:
+		case TILED_MEMORY_BASE: {
 			static bool NeedsInitialization = true;
 			static	HANDLE hFileMapping;
 			if (NeedsInitialization) {
@@ -79,7 +79,7 @@ bool ReserveMemoryRange(int index, uint32_t blocks_reserved[384])
 			}
 			LPVOID Result = MapViewOfFileEx(
 				hFileMapping,
-				(Start == 0x80000000 || Start == 0x84000000) ?
+				(Start == PHYSICAL_MAP1_BASE || Start == PHYSICAL_MAP2_BASE) ?
 				(FILE_MAP_READ | FILE_MAP_WRITE | FILE_MAP_EXECUTE) : (FILE_MAP_READ | FILE_MAP_WRITE),
 				0,
 				0,
@@ -94,12 +94,12 @@ bool ReserveMemoryRange(int index, uint32_t blocks_reserved[384])
 		}
 		break;
 
-		case 0xD0000000:
+		case SYSTEM_MEMORY_BASE:
 			// If additional addresses need to be assign in region's block.
 			// Then check for nonzero value.
 			arr_index = BLOCK_REGION_SYSTEM_INDEX_BEGIN;
 		[[fallthrough]];
-		case 0xB0000000: {
+		case DEVKIT_MEMORY_BASE: {
 			// arr_index's default is BLOCK_REGION_DEVKIT_INDEX_BEGIN which is zero.
 			// Any block region above zero should be place above this case to override zero value.
 			//arr_index = BLOCK_REGION_DEVKIT_INDEX_BEGIN;
@@ -154,9 +154,9 @@ void FreeMemoryRange(int index, uint32_t blocks_reserved[384])
 	std::printf("     : Comment = %s\n", XboxAddressRanges[index].Comment);
 #endif
 	switch (Start) {
-		case 0x80000000:
-		case 0x84000000:
-		case 0xF0000000: {
+		case PHYSICAL_MAP1_BASE:
+		case PHYSICAL_MAP2_BASE:
+		case TILED_MEMORY_BASE: {
 			(void)UnmapViewOfFile((LPVOID)Start);
 #ifdef DEBUG
 			std::printf("     : UnmapViewOfFile; Start = 0x%08X\n", Start);
@@ -164,12 +164,12 @@ void FreeMemoryRange(int index, uint32_t blocks_reserved[384])
 		}
 		break;
 
-		case 0xD0000000:
+		case SYSTEM_MEMORY_BASE:
 			// If additional addresses need to be assign in region's block.
 			// Then check for nonzero value.
 			arr_index = BLOCK_REGION_SYSTEM_INDEX_BEGIN;
 		[[fallthrough]];
-		case 0xB0000000: {
+		case DEVKIT_MEMORY_BASE: {
 			// arr_index's default is BLOCK_REGION_DEVKIT_INDEX_BEGIN which is zero.
 			// Any block region above zero should be place above this case to override zero value.
 			//arr_index = BLOCK_REGION_DEVKIT_INDEX_BEGIN;
