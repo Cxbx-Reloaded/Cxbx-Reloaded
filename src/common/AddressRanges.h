@@ -47,33 +47,33 @@
 #define PHYSICAL_MAP_SIZE                   (MB(256)) // = 0x10000000
 #define PHYSICAL_MAP_END                    (PHYSICAL_MAP_BASE + PHYSICAL_MAP_SIZE - 1) // 0x8FFFFFFF
 
-#define PHYSICAL_MAP1_BASE                  0x80000000
-#define PHYSICAL_MAP1_SIZE                  (MB(64)) // = 0x04000000
-#define PHYSICAL_MAP1_END                   (PHYSICAL_MAP1_BASE + PHYSICAL_MAP1_SIZE - 1) // 0x83FFFFFF
+inline constexpr uint32_t PHYSICAL_MAP1_BASE =     0x80000000;
+inline constexpr uint32_t PHYSICAL_MAP1_SIZE =     (MB(64)); // = 0x04000000
+inline constexpr uint32_t PHYSICAL_MAP1_END  =     (PHYSICAL_MAP1_BASE + PHYSICAL_MAP1_SIZE - 1); // 0x83FFFFFF
 
-#define PHYSICAL_MAP2_BASE                  0x84000000
-#define PHYSICAL_MAP2_SIZE                  (MB(64)) // = 0x04000000
-#define PHYSICAL_MAP2_END                   (PHYSICAL_MAP2_BASE + PHYSICAL_MAP2_SIZE - 1) // 0x8FFFFFFF
+inline constexpr uint32_t PHYSICAL_MAP2_BASE =     0x84000000;
+inline constexpr uint32_t PHYSICAL_MAP2_SIZE =     (MB(64)); // = 0x04000000
+inline constexpr uint32_t PHYSICAL_MAP2_END  =     (PHYSICAL_MAP2_BASE + PHYSICAL_MAP2_SIZE - 1); // 0x8FFFFFFF
 
 #define CONTIGUOUS_MEMORY_BASE              KSEG0_BASE // = 0x80000000
 #define XBOX_CONTIGUOUS_MEMORY_SIZE         (MB(64))
 #define CHIHIRO_CONTIGUOUS_MEMORY_SIZE      (MB(128))
 
-#define DEVKIT_MEMORY_BASE                  0xB0000000
-#define DEVKIT_MEMORY_SIZE                  (MB(256)) // = 0x10000000
-#define DEVKIT_MEMORY_END                   (DEVKIT_MEMORY_BASE + DEVKIT_MEMORY_SIZE - 1) // 0xBFFFFFFF
+inline constexpr uint32_t DEVKIT_MEMORY_BASE =     0xB0000000;
+inline constexpr uint32_t DEVKIT_MEMORY_SIZE =     (MB(256)); // = 0x10000000
+inline constexpr uint32_t DEVKIT_MEMORY_END  =     (DEVKIT_MEMORY_BASE + DEVKIT_MEMORY_SIZE - 1); // 0xBFFFFFFF
 
-#define PAGE_TABLES_BASE                    0xC0000000
-#define PAGE_TABLES_SIZE                    (MB(4)) // = 0x00400000
-#define PAGE_TABLES_END                     (PAGE_TABLES_BASE + PAGE_TABLES_SIZE - 1) // 0xC03FFFFF
+inline constexpr uint32_t PAGE_TABLES_BASE =       0xC0000000;
+inline constexpr uint32_t PAGE_TABLES_SIZE =       (MB(4)); // = 0x00400000
+inline constexpr uint32_t PAGE_TABLES_END  =       (PAGE_TABLES_BASE + PAGE_TABLES_SIZE - 1); // 0xC03FFFFF
 
-#define SYSTEM_MEMORY_BASE                  0xD0000000
-#define SYSTEM_MEMORY_SIZE                  (MB(512)) // = 0x20000000
-#define SYSTEM_MEMORY_END                   (SYSTEM_MEMORY_BASE + SYSTEM_MEMORY_SIZE - 1) // 0xEFFFFFFF
+inline constexpr uint32_t SYSTEM_MEMORY_BASE =     0xD0000000;
+inline constexpr uint32_t SYSTEM_MEMORY_SIZE =     (MB(512)); // = 0x20000000
+inline constexpr uint32_t SYSTEM_MEMORY_END  =     (SYSTEM_MEMORY_BASE + SYSTEM_MEMORY_SIZE - 1); // 0xEFFFFFFF
 
-#define TILED_MEMORY_BASE                   0xF0000000
-#define TILED_MEMORY_SIZE                   (MB(64)) // = 0x04000000
-#define TILED_MEMORY_END                    (TILED_MEMORY_BASE + TILED_MEMORY_SIZE - 1) // 0xF3FFFFFF
+inline constexpr uint32_t TILED_MEMORY_BASE =      0xF0000000;
+inline constexpr uint32_t TILED_MEMORY_SIZE =      (MB(64)); // = 0x04000000
+inline constexpr uint32_t TILED_MEMORY_END  =      (TILED_MEMORY_BASE + TILED_MEMORY_SIZE - 1); // 0xF3FFFFFF
 
 #define XBOX_WRITE_COMBINED_BASE            0xF0000000 // WC (The WC memory is another name of the tiled memory)
 #define XBOX_WRITE_COMBINED_SIZE            (MB(128)) // = 0x08000000
@@ -83,50 +83,50 @@
 #define XBOX_UNCACHED_SIZE                  (MB(128 - 4)) // = 0x07C00000
 #define XBOX_UNCACHED_END                   (XBOX_UNCACHED_BASE + XBOX_UNCACHED_SIZE - 1) // - 0xFFBFFFFF
 
-#define NV2A_DEVICE1_BASE                   0xFD000000
-#define NV2A_DEVICE1_SIZE                   (MB(7)) // = 0x00700000
-#define NV2A_DEVICE1_END                    (NV2A_DEVICE1_BASE + NV2A_DEVICE1_SIZE - 1) // 0xFD6FFFFF
+inline constexpr uint32_t NV2A_DEVICE1_BASE =      0xFD000000;
+inline constexpr uint32_t NV2A_DEVICE1_SIZE =      (MB(7)); // = 0x00700000
+inline constexpr uint32_t NV2A_DEVICE1_END  =      (NV2A_DEVICE1_BASE + NV2A_DEVICE1_SIZE - 1); // 0xFD6FFFFF
 
-#define NV2A_PRAMIN_BASE                    0xFD700000
-#define NV2A_PRAMIN_SIZE1                   (MB(1)) // = 0x00100000 // TODO: Might be best to merge PCIDevice.h's address ranges into this header file.
-#define NV2A_PRAMIN_END                     (NV2A_PRAMIN_BASE + NV2A_PRAMIN_SIZE1 - 1) // 0xFD7FFFFF
+inline constexpr uint32_t NV2A_PRAMIN_BASE  =      0xFD700000;
+inline constexpr uint32_t NV2A_PRAMIN_SIZE1 =      (MB(1)); // = 0x00100000 // TODO: Might be best to merge PCIDevice.h's address ranges into this header file.
+inline constexpr uint32_t NV2A_PRAMIN_END   =      (NV2A_PRAMIN_BASE + NV2A_PRAMIN_SIZE1 - 1); // 0xFD7FFFFF
 
-#define NV2A_DEVICE2_BASE                   0xFD800000
-#define NV2A_DEVICE2_SIZE                   (MB(8)) // = 0x00800000
-#define NV2A_DEVICE2_END                    (NV2A_DEVICE2_BASE + NV2A_DEVICE2_SIZE - 1) // 0xFDFFFFFF
+inline constexpr uint32_t NV2A_DEVICE2_BASE =      0xFD800000;
+inline constexpr uint32_t NV2A_DEVICE2_SIZE =      (MB(8)); // = 0x00800000
+inline constexpr uint32_t NV2A_DEVICE2_END  =      (NV2A_DEVICE2_BASE + NV2A_DEVICE2_SIZE - 1); // 0xFDFFFFFF
 
-#define APU_DEVICE_BASE                     0xFE800000
-#define APU_DEVICE_SIZE                     (KB(512)) // = 0x00080000
-#define APU_DEVICE_END                      (APU_DEVICE_BASE + APU_DEVICE_SIZE - 1) // 0xFE87FFFF
+inline constexpr uint32_t APU_DEVICE_BASE =        0xFE800000;
+inline constexpr uint32_t APU_DEVICE_SIZE =        (KB(512)); // = 0x00080000
+inline constexpr uint32_t APU_DEVICE_END  =        (APU_DEVICE_BASE + APU_DEVICE_SIZE - 1); // 0xFE87FFFF
 
-#define AC97_DEVICE_BASE                    0xFEC00000
-#define AC97_DEVICE_SIZE                    (KB(4)) // = 0x0001000
-#define AC97_DEVICE_END                     (AC97_DEVICE_BASE + AC97_DEVICE_SIZE - 1) // 0xFEC00FFF
+inline constexpr uint32_t AC97_DEVICE_BASE =       0xFEC00000;
+inline constexpr uint32_t AC97_DEVICE_SIZE =       (KB(4)); // = 0x0001000
+inline constexpr uint32_t AC97_DEVICE_END  =       (AC97_DEVICE_BASE + AC97_DEVICE_SIZE - 1); // 0xFEC00FFF
 
-#define USB_DEVICE_BASE                     0xFED00000
-#define USB_DEVICE_SIZE                     (KB(4)) // = 0x0001000
-#define USB_DEVICE_END                      (USB_DEVICE_BASE + USB_DEVICE_SIZE - 1) // 0xFED00FFF
+inline constexpr uint32_t USB_DEVICE_BASE =        0xFED00000;
+inline constexpr uint32_t USB_DEVICE_SIZE =        (KB(4)); // = 0x0001000
+inline constexpr uint32_t USB_DEVICE_END  =        (USB_DEVICE_BASE + USB_DEVICE_SIZE - 1); // 0xFED00FFF
 
-#define NVNET_DEVICE_BASE                   0xFEF00000
-#define NVNET_DEVICE_SIZE                   (KB(1)) // = 0x00000400
-#define NVNET_DEVICE_END                    (NVNET_DEVICE_BASE + NVNET_DEVICE_SIZE - 1) // 0xFEF003FF
+inline constexpr uint32_t NVNET_DEVICE_BASE =      0xFEF00000;
+inline constexpr uint32_t NVNET_DEVICE_SIZE =      (KB(1)); // = 0x00000400
+inline constexpr uint32_t NVNET_DEVICE_END  =      (NVNET_DEVICE_BASE + NVNET_DEVICE_SIZE - 1); // 0xFEF003FF
 
 #define XBOX_FLASH_ROM_BASE                 0xFFF00000
 #define XBOX_FLASH_ROM_SIZE                 (MB(1)) // = 0x00100000
 #define XBOX_FLASH_ROM_END                  (XBOX_FLASH_ROM_BASE + XBOX_FLASH_ROM_SIZE - 1) // - 0xFFFFFFF
 
-#define FLASH_DEVICEN_SIZE                  (MB(4)) // = 0x00400000
-#define FLASH_DEVICE1_BASE                  0xFF000000
-#define FLASH_DEVICE1_END                   (FLASH_DEVICE1_BASE + FLASH_DEVICEN_SIZE - 1) // 0xFF3FFFFF
+inline constexpr uint32_t FLASH_DEVICEN_SIZE =     (MB(4)); // = 0x00400000
+inline constexpr uint32_t FLASH_DEVICE1_BASE =     0xFF000000;
+inline constexpr uint32_t FLASH_DEVICE1_END  =     (FLASH_DEVICE1_BASE + FLASH_DEVICEN_SIZE - 1); // 0xFF3FFFFF
 
-#define FLASH_DEVICE2_BASE                  0xFF400000
-#define FLASH_DEVICE2_END                   (FLASH_DEVICE2_BASE + FLASH_DEVICEN_SIZE - 1) // 0xFF7FFFFF
+inline constexpr uint32_t FLASH_DEVICE2_BASE =     0xFF400000;
+inline constexpr uint32_t FLASH_DEVICE2_END  =     (FLASH_DEVICE2_BASE + FLASH_DEVICEN_SIZE - 1); // 0xFF7FFFFF
 
-#define FLASH_DEVICE3_BASE                  0xFF800000
-#define FLASH_DEVICE3_END                   (FLASH_DEVICE3_BASE + FLASH_DEVICEN_SIZE - 1) // 0xFFBFFFFF
+inline constexpr uint32_t FLASH_DEVICE3_BASE =     0xFF800000;
+inline constexpr uint32_t FLASH_DEVICE3_END  =     (FLASH_DEVICE3_BASE + FLASH_DEVICEN_SIZE - 1); // 0xFFBFFFFF
 
-#define FLASH_DEVICE4_BASE                  0xFFC00000
-#define FLASH_DEVICE4_END                   (FLASH_DEVICE4_BASE + FLASH_DEVICEN_SIZE - 1) // 0xFFFFFFFF
+inline constexpr uint32_t FLASH_DEVICE4_BASE =     0xFFC00000;
+inline constexpr uint32_t FLASH_DEVICE4_END  =     (FLASH_DEVICE4_BASE - 1 + FLASH_DEVICEN_SIZE); // 0xFFFFFFFF // -1 must be before size to remove compiler warning.
 
 // Miscellaneous base addresses
 #define XBE_IMAGE_BASE                      0x00010000
