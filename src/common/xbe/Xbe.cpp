@@ -42,6 +42,7 @@ namespace xboxkrnl
 #include "common\crypto\EmuRsa.h" // For the RSA functions
 #include "core\hle\XAPI\Xapi.h" // For LDT_FROM_DASHBOARD
 #include "core\hle\D3D8\Direct3D9\Direct3D9.h" // For CxbxInitWindow
+#include "common/AddressRanges.h"
 
 namespace fs = std::filesystem;
 

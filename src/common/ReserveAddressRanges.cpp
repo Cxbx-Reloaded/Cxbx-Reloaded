@@ -26,6 +26,9 @@
 // *
 // ******************************************************************
 
+#define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
+#include <Windows.h> // For DWORD, CALLBACK, VirtualAlloc, LPVOID, SIZE_T, HMODULE 
+
 // NOTE: Cannot be use in loader project due to force exclude std libraries.
 //#define DEBUG // Uncomment whenever need to verify memory leaks or bad configure.
 
@@ -204,7 +207,7 @@ void FreeMemoryRange(int index, uint32_t blocks_reserved[384])
 
 bool ReserveAddressRanges(const unsigned int system, uint32_t blocks_reserved[384]) {
 	// Loop over all Xbox address ranges
-	for (size_t i = 0; i < ARRAY_SIZE(XboxAddressRanges); i++) {
+	for (size_t i = 0; i < XboxAddressRanges_size; i++) {
 		// Skip address ranges that don't match the given flags
 		if (!AddressRangeMatchesFlags(i, system))
 			continue;
@@ -228,7 +231,7 @@ void FreeAddressRanges(const unsigned int system, unsigned int release_systems, 
 		return;
 	}
 	// Loop over all Xbox address ranges
-	for (size_t i = 0; i < ARRAY_SIZE(XboxAddressRanges); i++) {
+	for (size_t i = 0; i < XboxAddressRanges_size; i++) {
 		// Skip address ranges that do match specific flag
 		if (AddressRangeMatchesFlags(i, system))
 			continue;
@@ -247,7 +250,7 @@ bool AttemptReserveAddressRanges(unsigned int* p_reserved_systems, uint32_t bloc
 	size_t iLast = 0;
 	unsigned int reserved_systems = *p_reserved_systems, clear_systems = 0;
 	// Loop over all Xbox address ranges
-	for (size_t i = 0; i < ARRAY_SIZE(XboxAddressRanges); i++) {
+	for (size_t i = 0; i < XboxAddressRanges_size; i++) {
 
 		// Once back to original spot, let's resume.
 		if (i == iLast && clear_systems) {
