@@ -48,11 +48,11 @@ const char* GetSystemTypeToStr(unsigned int system)
 
 const char* GetXbeTypeToStr(XbeType xbe_type)
 {
-	if (xbe_type == xtChihiro) {
+	if (xbe_type == XbeType::xtChihiro) {
 		return "chihiro";
 	}
 
-	if (xbe_type == xtDebug) {
+	if (xbe_type == XbeType::xtDebug) {
 		return "debug";
 	}
 
