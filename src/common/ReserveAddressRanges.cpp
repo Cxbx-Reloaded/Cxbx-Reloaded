@@ -295,3 +295,18 @@ bool AttemptReserveAddressRanges(unsigned int* p_reserved_systems, uint32_t bloc
 	*p_reserved_systems = reserved_systems;
 	return true;
 }
+
+bool isSystemFlagSupport(unsigned int reserved_systems, unsigned int assign_system)
+{
+	if (reserved_systems & assign_system) {
+		return true;
+	}
+// TODO: Once host's standalone emulation is remove from GUI, remove below as well.
+#ifndef CXBXR_EMU
+	if (reserved_systems == 0) {
+		return true;
+	}
+#endif
+
+	return false;
+}

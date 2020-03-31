@@ -1,11 +1,9 @@
-// This is an open source non-commercial project. Dear PVS-Studio, please check it.
-// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 // ******************************************************************
 // *
-// *  This file is part of Cxbx-Reloaded.
+// *  This file is part of the Cxbx project.
 // *
-// *  Cxbx-Reloaded is free software; you can redistribute it
-// *  and/or modify it under the terms of the GNU General Public
+// *  Cxbx and Cxbe are free software; you can redistribute them
+// *  and/or modify them under the terms of the GNU General Public
 // *  License as published by the Free Software Foundation; either
 // *  version 2 of the license, or (at your option) any later version.
 // *
@@ -19,17 +17,17 @@
 // *  If not, write to the Free Software Foundation, Inc.,
 // *  59 Temple Place - Suite 330, Bostom, MA 02111-1307, USA.
 // *
-// *  (c) 2017-2019 Patrick van Logchem <pvanlogchem@gmail.com>
+// *  (c) 2017 Patrick van Logchem <pvanlogchem@gmail.com>
+// *  (c) 2020 RadWolfie
 // *
 // *  All rights reserved
 // *
 // ******************************************************************
 #pragma once
 
-extern bool ReserveAddressRanges(const unsigned int system, uint32_t blocks_reserved[384]);
+/*! type of Xbe */
+enum XbeType { xtRetail, xtDebug, xtChihiro };
 
-extern void FreeAddressRanges(const unsigned int system, unsigned int release_systems, uint32_t blocks_reserved[384]);
+const char* GetSystemTypeToStr(unsigned int system);
 
-extern bool AttemptReserveAddressRanges(unsigned int* p_reserved_systems, uint32_t blocks_reserved[384]);
-
-extern bool isSystemFlagSupport(unsigned int reserved_systems, unsigned int assign_system);
+const char* GetXbeTypeToStr(XbeType xbe_type);

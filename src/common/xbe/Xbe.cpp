@@ -20,6 +20,7 @@
 // *  59 Temple Place - Suite 330, Bostom, MA 02111-1307, USA.
 // *
 // *  (c) 2002-2003 Aaron Robinson <caustik@caustik.com>
+// *  (c) 2017 Patrick van Logchem <pvanlogchem@gmail.com>
 // *
 // *  All rights reserved
 // *
@@ -43,6 +44,7 @@ namespace xboxkrnl
 #include "core\hle\XAPI\Xapi.h" // For LDT_FROM_DASHBOARD
 #include "core\hle\D3D8\Direct3D9\Direct3D9.h" // For CxbxInitWindow
 #include "common/AddressRanges.h"
+#include "common/xbox/Types.hpp"
 
 namespace fs = std::filesystem;
 
@@ -806,4 +808,21 @@ bool Xbe::CheckXbeSignature()
 	// Default to the Retail key if no key matched, just to make sure we don't init in an invalid state
 	memcpy(xboxkrnl::XePublicKeyData, xboxkrnl::XePublicKeyDataRetail, 284);
 	return false;  // signature check failed
+}
+
+// ported from Dxbx's XbeExplorer
+XbeType Xbe::GetXbeType()
+{
+	// Detect if the XBE is for Chihiro (Untested!) :
+	// This is based on https://github.com/radare/radare2/blob/master/libr/bin/p/bin_xbe.c#L45
+	if ((m_Header.dwEntryAddr & 0xf0000000) == 0x40000000)
+		return xtChihiro;
+
+	// Check for Debug XBE, using high bit of the kernel thunk address :
+	// (DO NOT test like https://github.com/radare/radare2/blob/master/libr/bin/p/bin_xbe.c#L49 !)
+	if ((m_Header.dwKernelImageThunkAddr & 0x80000000) > 0)
+		return xtDebug;
+
+	// Otherwise, the XBE is a Retail build :
+	return xtRetail;
 }
