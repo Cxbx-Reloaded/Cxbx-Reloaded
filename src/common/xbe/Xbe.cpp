@@ -816,13 +816,13 @@ XbeType Xbe::GetXbeType()
 	// Detect if the XBE is for Chihiro (Untested!) :
 	// This is based on https://github.com/radare/radare2/blob/master/libr/bin/p/bin_xbe.c#L45
 	if ((m_Header.dwEntryAddr & 0xf0000000) == 0x40000000)
-		return xtChihiro;
+		return XbeType::xtChihiro;
 
 	// Check for Debug XBE, using high bit of the kernel thunk address :
 	// (DO NOT test like https://github.com/radare/radare2/blob/master/libr/bin/p/bin_xbe.c#L49 !)
 	if ((m_Header.dwKernelImageThunkAddr & 0x80000000) > 0)
-		return xtDebug;
+		return XbeType::xtDebug;
 
 	// Otherwise, the XBE is a Retail build :
-	return xtRetail;
+	return XbeType::xtRetail;
 }

@@ -26,7 +26,7 @@
 #pragma once
 
 /*! type of Xbe */
-enum XbeType { xtRetail, xtDebug, xtChihiro };
+enum class XbeType { xtRetail, xtDebug, xtChihiro };
 
 const char* GetSystemTypeToStr(unsigned int system);
 

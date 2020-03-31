@@ -1000,7 +1000,7 @@ void CxbxKrnlEmulate(unsigned int reserved_systems, uint32_t blocks_reserved[384
 
 	// Now we can load and run the XBE :
 	// MapAndRunXBE(XbePath, DCHandle);
-	XbeType xbeType = xtRetail;
+	XbeType xbeType = XbeType::xtRetail;
 	{
 		// NOTE: This is a safety to clean the file path for any malicious file path attempt.
 		// Might want to move this into a utility function.
@@ -1063,15 +1063,15 @@ void CxbxKrnlEmulate(unsigned int reserved_systems, uint32_t blocks_reserved[384
 		// If CLI has given console type, then enforce it.
 		if (cli_config::hasKey(cli_config::system_chihiro)) {
 			EmuLogInit(LOG_LEVEL::INFO, "Auto detect is disabled, running as chihiro.");
-			xbeType = xtChihiro;
+			xbeType = XbeType::xtChihiro;
 		}
 		else if (cli_config::hasKey(cli_config::system_devkit)) {
 			EmuLogInit(LOG_LEVEL::INFO, "Auto detect is disabled, running as devkit.");
-			xbeType = xtDebug;
+			xbeType = XbeType::xtDebug;
 		}
 		else if (cli_config::hasKey(cli_config::system_retail)) {
 			EmuLogInit(LOG_LEVEL::INFO, "Auto detect is disabled, running as retail.");
-			xbeType = xtRetail;
+			xbeType = XbeType::xtRetail;
 		}
 		// Otherwise, use auto detect method.
 		else {
@@ -1083,13 +1083,13 @@ void CxbxKrnlEmulate(unsigned int reserved_systems, uint32_t blocks_reserved[384
 		EmuLogInit(LOG_LEVEL::INFO, "Host's compatible system types: %2X", reserved_systems);
 		unsigned int emulate_system = 0;
 		// Set reserved_systems which system we will about to emulate.
-		if (isSystemFlagSupport(reserved_systems, SYSTEM_CHIHIRO) && xbeType == xtChihiro) {
+		if (isSystemFlagSupport(reserved_systems, SYSTEM_CHIHIRO) && xbeType == XbeType::xtChihiro) {
 			emulate_system = SYSTEM_CHIHIRO;
 		}
-		else if (isSystemFlagSupport(reserved_systems, SYSTEM_DEVKIT) && xbeType == xtDebug) {
+		else if (isSystemFlagSupport(reserved_systems, SYSTEM_DEVKIT) && xbeType == XbeType::xtDebug) {
 			emulate_system = SYSTEM_DEVKIT;
 		}
-		else if (isSystemFlagSupport(reserved_systems, SYSTEM_XBOX) && xbeType == xtRetail) {
+		else if (isSystemFlagSupport(reserved_systems, SYSTEM_XBOX) && xbeType == XbeType::xtRetail) {
 			emulate_system = SYSTEM_XBOX;
 		}
 		// If none of system type requested to emulate isn't supported on host's end. Then enforce failure.
@@ -1107,9 +1107,9 @@ void CxbxKrnlEmulate(unsigned int reserved_systems, uint32_t blocks_reserved[384
 		}
 
 		// Register if we're running an Chihiro executable or a debug xbe, otherwise it's an Xbox retail executable
-		g_bIsChihiro = (xbeType == xtChihiro);
-		g_bIsDebug = (xbeType == xtDebug);
-		g_bIsRetail = (xbeType == xtRetail);
+		g_bIsChihiro = (xbeType == XbeType::xtChihiro);
+		g_bIsDebug = (xbeType == XbeType::xtDebug);
+		g_bIsRetail = (xbeType == XbeType::xtRetail);
 
 		// Disabled: The media board rom fails to run because it REQUIRES LLE USB, which is not yet enabled.
 		// Chihiro games can be ran directly for now. 
@@ -1189,7 +1189,7 @@ void CxbxKrnlEmulate(unsigned int reserved_systems, uint32_t blocks_reserved[384
 
 	// Decode kernel thunk table address :
 	uint32_t kt = CxbxKrnl_Xbe->m_Header.dwKernelImageThunkAddr;
-	kt ^= XOR_KT_KEY[xbeType];
+	kt ^= XOR_KT_KEY[to_underlying(xbeType)];
 
 	// Process the Kernel thunk table to map Kernel function calls to their actual address :
 	MapThunkTable((uint32_t*)kt, CxbxKrnl_KernelThunkTable);
@@ -1206,7 +1206,7 @@ void CxbxKrnlEmulate(unsigned int reserved_systems, uint32_t blocks_reserved[384
 		void* XbeTlsData = (XbeTls != nullptr) ? (void*)CxbxKrnl_Xbe->m_TLS->dwDataStartAddr : nullptr;
 		// Decode Entry Point
 		xbaddr EntryPoint = CxbxKrnl_Xbe->m_Header.dwEntryAddr;
-		EntryPoint ^= XOR_EP_KEY[xbeType];
+		EntryPoint ^= XOR_EP_KEY[to_underlying(xbeType)];
 		// Launch XBE
 		CxbxKrnlInit(
 			XbeTlsData, 
