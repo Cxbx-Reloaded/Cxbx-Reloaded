@@ -55,6 +55,7 @@ namespace xboxkrnl
 #include "common/util/cliConfig.hpp"
 #include "common/util/xxhash.h"
 #include "common/ReserveAddressRanges.h"
+#include "common/xbox/Types.hpp"
 
 #include <clocale>
 #include <process.h>
@@ -96,7 +97,6 @@ char szFilePath_Xbe[MAX_PATH*2] = { 0 }; // NOTE: LAUNCH_DATA_HEADER's szLaunchP
 std::string CxbxBasePath;
 HANDLE CxbxBasePathHandle;
 Xbe* CxbxKrnl_Xbe = NULL;
-XbeType g_XbeType = xtRetail;
 bool g_bIsChihiro = false;
 bool g_bIsDebug = false;
 bool g_bIsRetail = false;
@@ -117,56 +117,6 @@ ULONG g_CxbxFatalErrorCode = FATAL_ERROR_NONE;
 
 // Define function located in EmuXApi so we can call it from here
 void SetupXboxDeviceTypes();
-
-// TODO: Move below function into a common(?) file
-// ported from Dxbx's XbeExplorer
-XbeType GetXbeType(Xbe::Header *pXbeHeader)
-{
-	// Detect if the XBE is for Chihiro (Untested!) :
-	// This is based on https://github.com/radare/radare2/blob/master/libr/bin/p/bin_xbe.c#L45
-	if ((pXbeHeader->dwEntryAddr & 0xf0000000) == 0x40000000)
-		return xtChihiro;
-
-	// Check for Debug XBE, using high bit of the kernel thunk address :
-	// (DO NOT test like https://github.com/radare/radare2/blob/master/libr/bin/p/bin_xbe.c#L49 !)
-	if ((pXbeHeader->dwKernelImageThunkAddr & 0x80000000) > 0)
-		return xtDebug;
-
-	// Otherwise, the XBE is a Retail build :
-	return xtRetail;
-}
-
-// TODO: Move below function into a common(?) file
-const char* GetSystemTypeToStr(unsigned int system)
-{
-	if (system == SYSTEM_CHIHIRO) {
-		return cli_config::system_chihiro;
-	}
-
-	if (system == SYSTEM_DEVKIT) {
-		return cli_config::system_devkit;
-	}
-
-	if (system == SYSTEM_XBOX) {
-		return cli_config::system_retail;
-	}
-
-	return nullptr;
-}
-
-// TODO: Move below function into a common(?) file
-const char* GetXbeTypeToStr(XbeType xbe_type)
-{
-	if (xbe_type == xtChihiro) {
-		return "chihiro";
-	}
-
-	if (xbe_type == xtDebug) {
-		return "debug";
-	}
-
-	return "retail";
-}
 
 void ApplyMediaPatches()
 {
@@ -758,22 +708,6 @@ bool HandleFirstLaunch()
 	return true;
 }
 
-// TODO: Need to move isSystemFlagSupport function somewhere other than CxbxKrnl.cpp file.
-bool isSystemFlagSupport(int reserved_systems, int assign_system)
-{
-	if (reserved_systems & assign_system) {
-		return true;
-	}
-// TODO: Once host's standalone emulation is remove from GUI, remove below as well.
-#ifndef CXBXR_EMU
-	if (reserved_systems == 0) {
-		return true;
-	}
-#endif
-
-	return false;
-}
-
 void CxbxKrnlEmulate(unsigned int reserved_systems, uint32_t blocks_reserved[384])
 {
 	std::string tempStr;
@@ -1066,6 +1000,7 @@ void CxbxKrnlEmulate(unsigned int reserved_systems, uint32_t blocks_reserved[384
 
 	// Now we can load and run the XBE :
 	// MapAndRunXBE(XbePath, DCHandle);
+	XbeType xbeType = xtRetail;
 	{
 		// NOTE: This is a safety to clean the file path for any malicious file path attempt.
 		// Might want to move this into a utility function.
@@ -1128,33 +1063,33 @@ void CxbxKrnlEmulate(unsigned int reserved_systems, uint32_t blocks_reserved[384
 		// If CLI has given console type, then enforce it.
 		if (cli_config::hasKey(cli_config::system_chihiro)) {
 			EmuLogInit(LOG_LEVEL::INFO, "Auto detect is disabled, running as chihiro.");
-			g_XbeType = xtChihiro;
+			xbeType = xtChihiro;
 		}
 		else if (cli_config::hasKey(cli_config::system_devkit)) {
 			EmuLogInit(LOG_LEVEL::INFO, "Auto detect is disabled, running as devkit.");
-			g_XbeType = xtDebug;
+			xbeType = xtDebug;
 		}
 		else if (cli_config::hasKey(cli_config::system_retail)) {
 			EmuLogInit(LOG_LEVEL::INFO, "Auto detect is disabled, running as retail.");
-			g_XbeType = xtRetail;
+			xbeType = xtRetail;
 		}
 		// Otherwise, use auto detect method.
 		else {
 			// Detect XBE type :
-			g_XbeType = GetXbeType(&CxbxKrnl_Xbe->m_Header);
-			EmuLogInit(LOG_LEVEL::INFO, "Auto detect: XbeType = %s", GetXbeTypeToStr(g_XbeType));
+			xbeType = CxbxKrnl_Xbe->GetXbeType();
+			EmuLogInit(LOG_LEVEL::INFO, "Auto detect: XbeType = %s", GetXbeTypeToStr(xbeType));
 		}
 
 		EmuLogInit(LOG_LEVEL::INFO, "Host's compatible system types: %2X", reserved_systems);
 		unsigned int emulate_system = 0;
 		// Set reserved_systems which system we will about to emulate.
-		if (isSystemFlagSupport(reserved_systems, SYSTEM_CHIHIRO) && g_XbeType == xtChihiro) {
+		if (isSystemFlagSupport(reserved_systems, SYSTEM_CHIHIRO) && xbeType == xtChihiro) {
 			emulate_system = SYSTEM_CHIHIRO;
 		}
-		else if (isSystemFlagSupport(reserved_systems, SYSTEM_DEVKIT) && g_XbeType == xtDebug) {
+		else if (isSystemFlagSupport(reserved_systems, SYSTEM_DEVKIT) && xbeType == xtDebug) {
 			emulate_system = SYSTEM_DEVKIT;
 		}
-		else if (isSystemFlagSupport(reserved_systems, SYSTEM_XBOX) && g_XbeType == xtRetail) {
+		else if (isSystemFlagSupport(reserved_systems, SYSTEM_XBOX) && xbeType == xtRetail) {
 			emulate_system = SYSTEM_XBOX;
 		}
 		// If none of system type requested to emulate isn't supported on host's end. Then enforce failure.
@@ -1172,9 +1107,9 @@ void CxbxKrnlEmulate(unsigned int reserved_systems, uint32_t blocks_reserved[384
 		}
 
 		// Register if we're running an Chihiro executable or a debug xbe, otherwise it's an Xbox retail executable
-		g_bIsChihiro = (g_XbeType == xtChihiro);
-		g_bIsDebug = (g_XbeType == xtDebug);
-		g_bIsRetail = (g_XbeType == xtRetail);
+		g_bIsChihiro = (xbeType == xtChihiro);
+		g_bIsDebug = (xbeType == xtDebug);
+		g_bIsRetail = (xbeType == xtRetail);
 
 		// Disabled: The media board rom fails to run because it REQUIRES LLE USB, which is not yet enabled.
 		// Chihiro games can be ran directly for now. 
@@ -1254,7 +1189,7 @@ void CxbxKrnlEmulate(unsigned int reserved_systems, uint32_t blocks_reserved[384
 
 	// Decode kernel thunk table address :
 	uint32_t kt = CxbxKrnl_Xbe->m_Header.dwKernelImageThunkAddr;
-	kt ^= XOR_KT_KEY[g_XbeType];
+	kt ^= XOR_KT_KEY[xbeType];
 
 	// Process the Kernel thunk table to map Kernel function calls to their actual address :
 	MapThunkTable((uint32_t*)kt, CxbxKrnl_KernelThunkTable);
@@ -1271,7 +1206,7 @@ void CxbxKrnlEmulate(unsigned int reserved_systems, uint32_t blocks_reserved[384
 		void* XbeTlsData = (XbeTls != nullptr) ? (void*)CxbxKrnl_Xbe->m_TLS->dwDataStartAddr : nullptr;
 		// Decode Entry Point
 		xbaddr EntryPoint = CxbxKrnl_Xbe->m_Header.dwEntryAddr;
-		EntryPoint ^= XOR_EP_KEY[g_XbeType];
+		EntryPoint ^= XOR_EP_KEY[xbeType];
 		// Launch XBE
 		CxbxKrnlInit(
 			XbeTlsData, 

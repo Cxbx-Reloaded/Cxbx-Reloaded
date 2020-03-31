@@ -70,11 +70,6 @@ enum DebugMode { DM_NONE, DM_CONSOLE, DM_FILE };
 /*! debugger enable state */
 enum DebuggerState { debuggerOff, debuggerOn };
 
-/*! type of Xbe */
-enum XbeType { xtRetail, xtDebug, xtChihiro };
-
-extern XbeType g_XbeType;
-
 /*! indicates emulation of an Chihiro (arcade, instead of Xbox console) executable */
 extern bool g_bIsChihiro;
 
