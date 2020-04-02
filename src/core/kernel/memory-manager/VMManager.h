@@ -99,7 +99,7 @@ class VMManager : public PhysicalMemory
 		// shutdown routine
 		void Shutdown();
 		// initializes the memory manager to the default configuration
-		void Initialize(unsigned int SystemType, int BootFlags, uint32_t blocks_reserved[384]);
+		void Initialize(unsigned int SystemType, int BootFlags, blocks_reserved_t blocks_reserved);
 		// retrieves memory statistics
 		void MemoryStatistics(xboxkrnl::PMM_STATISTICS memory_statistics);
 		// allocates memory in the user region

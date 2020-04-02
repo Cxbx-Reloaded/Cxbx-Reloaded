@@ -27,6 +27,7 @@
 
 #include "Cxbx.h"
 #include "common\AddressRanges.h"
+#include "common/ReserveAddressRanges.h"
 #include "common\xbe\Xbe.h"
 #include "Logging.h"
 
@@ -168,7 +169,7 @@ bool CreateSettings();
 bool HandleFirstLaunch();
 
 /*! Cxbx Kernel Entry Point */
-void CxbxKrnlEmulate(unsigned int system, uint32_t blocks_reserved[384]);
+void CxbxKrnlEmulate(unsigned int system, blocks_reserved_t blocks_reserved);
 
 /*! initialize emulation */
 __declspec(noreturn) void CxbxKrnlInit(void *pTLSData, Xbe::TLS *pTLS, Xbe::LibraryVersion *LibraryVersion, DebugMode DbgMode, const char *szDebugFilename, Xbe::Header *XbeHeader, uint32_t XbeHeaderSize, void (*Entry)(), int BootFlags);

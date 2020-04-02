@@ -38,10 +38,11 @@
 #include <cstdint> // For uint32_t
 
 #include "util/std_extend.hpp"
+#include "ReserveAddressRanges.h"
 #include "AddressRanges.h"
 
 // Reserve an address range up to the extend of what the host allows.
-bool ReserveMemoryRange(int index, uint32_t blocks_reserved[384])
+bool ReserveMemoryRange(int index, blocks_reserved_t blocks_reserved)
 {
 	uint32_t Start = XboxAddressRanges[index].Start;
 	int Size = XboxAddressRanges[index].Size;
@@ -143,7 +144,7 @@ bool ReserveMemoryRange(int index, uint32_t blocks_reserved[384])
 }
 
 // Free address range from the host.
-void FreeMemoryRange(int index, uint32_t blocks_reserved[384])
+void FreeMemoryRange(int index, blocks_reserved_t blocks_reserved)
 {
 	uint32_t Start = XboxAddressRanges[index].Start, _Start;
 	int Size = XboxAddressRanges[index].Size;
@@ -205,7 +206,7 @@ void FreeMemoryRange(int index, uint32_t blocks_reserved[384])
 #endif
 }
 
-bool ReserveAddressRanges(const unsigned int system, uint32_t blocks_reserved[384]) {
+bool ReserveAddressRanges(const unsigned int system, blocks_reserved_t blocks_reserved) {
 	// Loop over all Xbox address ranges
 	for (size_t i = 0; i < XboxAddressRanges_size; i++) {
 		// Skip address ranges that don't match the given flags
@@ -225,7 +226,7 @@ bool ReserveAddressRanges(const unsigned int system, uint32_t blocks_reserved[38
 	return true;
 }
 
-void FreeAddressRanges(const unsigned int system, unsigned int release_systems, uint32_t blocks_reserved[384]) {
+void FreeAddressRanges(const unsigned int system, unsigned int release_systems, blocks_reserved_t blocks_reserved) {
 	// If reserved_systems is empty, then there's nothing to be freed up.
 	if (release_systems == 0) {
 		return;
@@ -245,7 +246,7 @@ void FreeAddressRanges(const unsigned int system, unsigned int release_systems, 
 
 }
 
-bool AttemptReserveAddressRanges(unsigned int* p_reserved_systems, uint32_t blocks_reserved[384]) {
+bool AttemptReserveAddressRanges(unsigned int* p_reserved_systems, blocks_reserved_t blocks_reserved) {
 
 	size_t iLast = 0;
 	unsigned int reserved_systems = *p_reserved_systems, clear_systems = 0;
