@@ -196,11 +196,6 @@ extern const struct _XboxAddressRanges {
 
 extern const size_t XboxAddressRanges_size;
 
-#define BLOCK_REGION_DEVKIT_INDEX_BEGIN 0
-#define BLOCK_REGION_DEVKIT_INDEX_END   4096
-#define BLOCK_REGION_SYSTEM_INDEX_BEGIN 4096
-#define BLOCK_REGION_SYSTEM_INDEX_END   12288
-
 extern bool AddressRangeMatchesFlags(const int index, const unsigned int flags);
 extern bool IsOptionalAddressRange(const int index);
 extern int AddressRangeGetSystemFlags(const int index);

@@ -74,7 +74,7 @@ bool VirtualMemoryArea::CanBeMergedWith(const VirtualMemoryArea& next) const
 	return false;
 }
 
-void VMManager::Initialize(unsigned int SystemType, int BootFlags, uint32_t blocks_reserved[384])
+void VMManager::Initialize(unsigned int SystemType, int BootFlags, blocks_reserved_t blocks_reserved)
 {
 	if ((BootFlags & BOOT_QUICK_REBOOT) == 0) {
 #ifndef CXBXR_EMU
@@ -117,6 +117,7 @@ void VMManager::Initialize(unsigned int SystemType, int BootFlags, uint32_t bloc
 	}
 
 	// Construct VMAs base on reserved bit indexes for devkit and system region blocks.
+	// See "blocks_reserved_t" notes.
 	if (SystemType == SYSTEM_DEVKIT) {
 		for (unsigned int i = BLOCK_REGION_DEVKIT_INDEX_BEGIN; i < BLOCK_REGION_DEVKIT_INDEX_END; i++) {
 			if ((blocks_reserved[i / 32] & (1 << (i % 32))) == 0) {

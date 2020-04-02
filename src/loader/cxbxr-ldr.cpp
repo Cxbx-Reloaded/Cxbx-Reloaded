@@ -172,9 +172,9 @@ DWORD CALLBACK rawMain()
 	unsigned int system = SYSTEM_ALL; // Reserve all systems.
 
 	// Marking this as static to avoid an implicit call to memset, which is not available in the loader
-	static uint32_t SystemDevBlocksReserved[384];
+	static blocks_reserved_t blocks_reserved;
 
-	if (!AttemptReserveAddressRanges(&system, SystemDevBlocksReserved)) {
+	if (!AttemptReserveAddressRanges(&system, blocks_reserved)) {
 		// If we get here, emulation lacks important address ranges; Don't launch
 		OutputMessage("None of system types' required address range(s) could be reserved!\n");
 		return ERROR_NOT_ENOUGH_MEMORY;
@@ -194,7 +194,7 @@ DWORD CALLBACK rawMain()
 	}
 
 	// Find the main emulation function in our DLL
-	typedef void (WINAPI *Emulate_t)(unsigned int, uint32_t[384]);
+	typedef void (WINAPI *Emulate_t)(unsigned int, blocks_reserved_t);
 	Emulate_t pfnEmulate = (Emulate_t)GetProcAddress(hEmulationDLL, "Emulate");
 	if (!pfnEmulate) {
 		OutputMessage("Entrypoint not found!\n");
@@ -203,7 +203,7 @@ DWORD CALLBACK rawMain()
 
 	// Call the main emulation function in our DLL, passing in the results
 	// of the address range reservations
-	pfnEmulate(system, SystemDevBlocksReserved);
+	pfnEmulate(system, blocks_reserved);
 
 	// Once emulation actually started, execution may never return here
 	// because all code and data that have been used up until now are

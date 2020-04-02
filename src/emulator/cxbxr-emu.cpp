@@ -122,7 +122,7 @@ CommandLineToArgvA(
 	return argv;
 }
 
-DWORD WINAPI Emulate(unsigned int reserved_systems, uint32_t blocks_reserved[384])
+DWORD WINAPI Emulate(unsigned int reserved_systems, blocks_reserved_t blocks_reserved)
 {
 	FUNC_EXPORTS
 

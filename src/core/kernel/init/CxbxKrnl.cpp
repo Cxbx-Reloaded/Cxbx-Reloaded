@@ -708,7 +708,7 @@ bool HandleFirstLaunch()
 	return true;
 }
 
-void CxbxKrnlEmulate(unsigned int reserved_systems, uint32_t blocks_reserved[384])
+void CxbxKrnlEmulate(unsigned int reserved_systems, blocks_reserved_t blocks_reserved)
 {
 	std::string tempStr;
 
@@ -1131,7 +1131,7 @@ void CxbxKrnlEmulate(unsigned int reserved_systems, uint32_t blocks_reserved[384
 
 #ifndef CXBXR_EMU
 		// Initialize the memory manager
-		uint32_t SystemDevBlocksReserved[384] = { 0 };
+		blocks_reserved_t SystemDevBlocksReserved = { 0 };
 		g_VMManager.Initialize(0, BootFlags, SystemDevBlocksReserved);
 #else
 		FreeAddressRanges(emulate_system, reserved_systems, blocks_reserved);
