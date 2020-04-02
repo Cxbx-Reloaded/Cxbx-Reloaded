@@ -1265,6 +1265,13 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 				break;
 
 			case ID_HACKS_RUNXBOXTHREADSONALLCORES:
+				if (g_Settings->m_hacks.UseAllCores == false) {
+					int ret = MessageBox(hwnd, "Activating this hack will make the emulator more likely to crash and/or hang. \
+Please do not report issues with games while this hack is active. Are you sure you want to turn it on?", "Cxbx-Reloaded", MB_YESNO | MB_ICONWARNING | MB_APPLMODAL);
+					if (ret == IDNO) {
+						break;
+					}
+				}
 				g_Settings->m_hacks.UseAllCores = !g_Settings->m_hacks.UseAllCores;
 				RefreshMenus();
 				break;
