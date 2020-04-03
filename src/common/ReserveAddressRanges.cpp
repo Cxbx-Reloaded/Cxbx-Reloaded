@@ -48,7 +48,7 @@ bool ReserveMemoryRange(int index, blocks_reserved_t blocks_reserved)
 	int Size = XboxAddressRanges[index].Size;
 	bool HadAnyFailure = false;
 
-	// Reserve this range in 64 Kb block increments, so that during emulation
+	// Reserve this range in 64 KiB block increments, so that during emulation
 	// our memory-management code can VirtualFree() each block individually :
 
 	const DWORD Protect = XboxAddressRanges[index].InitialMemoryProtection;
