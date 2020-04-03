@@ -48,10 +48,10 @@ const _XboxAddressRanges XboxAddressRanges[] = {
 	// See http://xboxdevwiki.net/Memory
 	// and http://xboxdevwiki.net/Boot_Process#Paging
 	// Entry :  Start             , End              , Size              , Protect , RangeFlags              , Comment
-	RANGE_ENTRY(USER_ADDRESS1_BASE, USER_ADDRESS1_END, USER_ADDRESS1_SIZE, PROT_XRW, SYSTEM_ALL    | MAY_FAIL, "MemLowVirtual (General Xbox type) lower 64 MB Optional (already reserved via virtual_memory_placeholder)"),
-	RANGE_ENTRY(USER_ADDRESS2_BASE, USER_ADDRESS2_END, USER_ADDRESS2_SIZE, PROT_XRW, SYSTEM_128MB  | MAY_FAIL, "MemLowVirtual (Chihiro / DevKit)  ^ + upper 64 MB"),
-	RANGE_ENTRY(PHYSICAL_MAP1_BASE, PHYSICAL_MAP1_END, PHYSICAL_MAP1_SIZE, PROT_UNH, SYSTEM_ALL              , "MemPhysical   (General Xbox type) lower 64 MB"),
-	RANGE_ENTRY(PHYSICAL_MAP2_BASE, PHYSICAL_MAP2_END, PHYSICAL_MAP2_SIZE, PROT_UNH, SYSTEM_128MB            , "MemPhysical   (Chihiro / DevKit)  ^ + upper 64 MB"),
+	RANGE_ENTRY(USER_ADDRESS1_BASE, USER_ADDRESS1_END, USER_ADDRESS1_SIZE, PROT_XRW, SYSTEM_ALL    | MAY_FAIL, "MemLowVirtual (General Xbox type) lower 64 MiB Optional (already reserved via virtual_memory_placeholder)"),
+	RANGE_ENTRY(USER_ADDRESS2_BASE, USER_ADDRESS2_END, USER_ADDRESS2_SIZE, PROT_XRW, SYSTEM_128MB  | MAY_FAIL, "MemLowVirtual (Chihiro / DevKit)  ^ + upper 64 MiB"),
+	RANGE_ENTRY(PHYSICAL_MAP1_BASE, PHYSICAL_MAP1_END, PHYSICAL_MAP1_SIZE, PROT_UNH, SYSTEM_ALL              , "MemPhysical   (General Xbox type) lower 64 MiB"),
+	RANGE_ENTRY(PHYSICAL_MAP2_BASE, PHYSICAL_MAP2_END, PHYSICAL_MAP2_SIZE, PROT_UNH, SYSTEM_128MB            , "MemPhysical   (Chihiro / DevKit)  ^ + upper 64 MiB"),
 	RANGE_ENTRY(DEVKIT_MEMORY_BASE, DEVKIT_MEMORY_END, DEVKIT_MEMORY_SIZE, PROT_NAC, SYSTEM_DEVKIT           , "DevKitMemory"), // TODO : Check reserved range (might behave like MemTiled)
 	RANGE_ENTRY(PAGE_TABLES_BASE  , PAGE_TABLES_END  , PAGE_TABLES_SIZE  , PROT_RW , SYSTEM_ALL              , "MemPageTable"), // See PAGE_TABLES_SIZE, which contains one 4 byte entry per PAGE_SIZE
 	RANGE_ENTRY(SYSTEM_MEMORY_BASE, SYSTEM_MEMORY_END, SYSTEM_MEMORY_SIZE, PROT_RW , SYSTEM_ALL    | MAY_FAIL, "SystemMemory  Optional"), // TODO : Check reserved range (might behave like MemTiled)

@@ -38,7 +38,7 @@
 // This variable *MUST* be this large, for it to take up address space
 // so that all other code and data in this module are placed outside of the
 // maximum virtual memory range.
-#define VM_PLACEHOLDER_SIZE MB(128) // Enough to cover MemLowVirtual (Cihiro/Devkit)
+#define VM_PLACEHOLDER_SIZE MiB(128) // Enough to cover MemLowVirtual (Cihiro/Devkit)
 
 // Note : In the old setup, we used #pragma section(".text"); __declspec(allocate(".text"))
 // to put this variable at the exact image base address 0x00010000, but that resulted in
