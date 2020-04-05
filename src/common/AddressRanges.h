@@ -32,6 +32,7 @@
 #define KiB(x) ((x) *    1024 ) // = 0x00000400
 #define MiB(x) ((x) * KiB(1024)) // = 0x00100000
 
+// TODO: Convert the rest of defines to constexpr or const in AddressRanges.h file in master/develop branch.
 #define USER_ADDRESS1_BASE                  0x00010000
 #define USER_ADDRESS1_SIZE                  (MiB(64) - KiB(64)) // = 0x03FF0000
 #define USER_ADDRESS1_END                   (USER_ADDRESS1_BASE + USER_ADDRESS1_SIZE - 1) // 0x03FFFFFF
@@ -41,6 +42,9 @@
 #define USER_ADDRESS2_END                   (USER_ADDRESS2_BASE + USER_ADDRESS2_SIZE - 1) // 0x07FFFFFF
 
 // Base addresses of various components
+// Segaboot entry point xor address
+inline const uint32_t SEGABOOT_EP_XOR =            0x40000000;
+// Kernel Segment Zero
 #define KSEG0_BASE                          0x80000000
 
 #define PHYSICAL_MAP_BASE                   0x80000000
