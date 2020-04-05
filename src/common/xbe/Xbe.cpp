@@ -815,12 +815,12 @@ XbeType Xbe::GetXbeType()
 {
 	// Detect if the XBE is for Chihiro (Untested!) :
 	// This is based on https://github.com/radare/radare2/blob/master/libr/bin/p/bin_xbe.c#L45
-	if ((m_Header.dwEntryAddr & 0xf0000000) == 0x40000000)
+	if ((m_Header.dwEntryAddr & XBOX_WRITE_COMBINED_BASE) == SEGABOOT_EP_XOR)
 		return XbeType::xtChihiro;
 
 	// Check for Debug XBE, using high bit of the kernel thunk address :
 	// (DO NOT test like https://github.com/radare/radare2/blob/master/libr/bin/p/bin_xbe.c#L49 !)
-	if ((m_Header.dwKernelImageThunkAddr & 0x80000000) > 0)
+	if ((m_Header.dwKernelImageThunkAddr & KSEG0_BASE) > 0)
 		return XbeType::xtDebug;
 
 	// Otherwise, the XBE is a Retail build :
