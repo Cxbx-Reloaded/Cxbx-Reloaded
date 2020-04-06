@@ -271,7 +271,7 @@ int InputWindow::EnableDefaultButton()
 	}
 }
 
-InputWindow::ProfileIt InputWindow::FindProfile(std::string& name)
+InputWindow::ProfileIt InputWindow::FindProfile(const std::string& name)
 {
 	auto it = std::find_if(g_Settings->m_input_profiles[m_dev_type].begin(),
 		g_Settings->m_input_profiles[m_dev_type].end(), [&name](const auto& profile) {
@@ -280,7 +280,7 @@ InputWindow::ProfileIt InputWindow::FindProfile(std::string& name)
 	return it;
 }
 
-void InputWindow::UpdateProfile(std::string& name, int command)
+void InputWindow::UpdateProfile(const std::string& name, int command)
 {
 	switch (command)
 	{
@@ -314,7 +314,7 @@ void InputWindow::UpdateProfile(std::string& name, int command)
 	}
 }
 
-void InputWindow::LoadProfile(std::string& name)
+void InputWindow::LoadProfile(const std::string& name)
 {
 	ProfileIt profile = FindProfile(name);
 	if (profile == g_Settings->m_input_profiles[m_dev_type].end()) {
@@ -339,7 +339,7 @@ void InputWindow::LoadProfile(std::string& name)
 	m_bHasChanges = false;
 }
 
-bool InputWindow::SaveProfile(std::string& name)
+bool InputWindow::SaveProfile(const std::string& name)
 {
 	if (name == std::string()) {
 		MessageBox(m_hwnd_window, "Cannot save. Profile name must not be empty", "Cxbx-Reloaded", MB_OK | MB_ICONSTOP | MB_APPLMODAL);
@@ -368,7 +368,7 @@ bool InputWindow::SaveProfile(std::string& name)
 	return true;
 }
 
-void InputWindow::DeleteProfile(std::string& name)
+void InputWindow::DeleteProfile(const std::string& name)
 {
 	ProfileIt profile = FindProfile(name);
 	if (profile == g_Settings->m_input_profiles[m_dev_type].end()) {
@@ -390,7 +390,7 @@ void InputWindow::DeleteProfile(std::string& name)
 	g_Settings->m_input_profiles[m_dev_type].erase(profile);
 }
 
-void InputWindow::OverwriteProfile(std::string& name)
+void InputWindow::OverwriteProfile(const std::string& name)
 {
 	ProfileIt profile = FindProfile(name);
 	if (profile == g_Settings->m_input_profiles[m_dev_type].end()) {

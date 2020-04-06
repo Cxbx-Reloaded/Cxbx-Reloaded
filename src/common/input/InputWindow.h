@@ -56,7 +56,7 @@ public:
 	void BindButton(int ControlID);
 	void BindDefault();
 	void ClearBindings();
-	void UpdateProfile(std::string& name, int command);
+	void UpdateProfile(const std::string& name, int command);
 	void UpdateRumble(int command);
 	void UpdateCurrentDevice();
 	bool IsProfileSaved();
@@ -66,11 +66,11 @@ private:
 	typedef std::vector<Settings::s_input_profiles>::iterator ProfileIt;
 	InputDevice::Input* DetectInput(InputDevice* const Device, int ms);
 	void DetectOutput(int ms);
-	ProfileIt FindProfile(std::string& name);
-	void LoadProfile(std::string& name);
-	bool SaveProfile(std::string& name);
-	void DeleteProfile(std::string& name);
-	void OverwriteProfile(std::string& name);
+	ProfileIt FindProfile(const std::string& name);
+	void LoadProfile(const std::string& name);
+	bool SaveProfile(const std::string& name);
+	void DeleteProfile(const std::string& name);
+	void OverwriteProfile(const std::string& name);
 	void LoadDefaultProfile();
 	int EnableDefaultButton();
 
