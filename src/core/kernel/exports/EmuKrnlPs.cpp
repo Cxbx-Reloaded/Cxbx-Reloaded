@@ -36,6 +36,7 @@ namespace xboxkrnl
 };
 
 #include <process.h> // For __beginthreadex(), etc.
+#include <float.h> // For _controlfp constants
 
 #include "Logging.h" // For LOG_FUNC()
 #include "EmuKrnlLogging.h"

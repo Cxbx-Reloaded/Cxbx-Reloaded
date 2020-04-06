@@ -58,6 +58,7 @@ namespace xboxkrnl
 	#include <xboxkrnl/xboxkrnl.h> // For PKINTERRUPT, etc.
 };
 
+#include <cstring>
 #include "XidGamepad.h"
 #include "USBDevice.h"
 #include "common\input\InputManager.h"

@@ -30,6 +30,7 @@
 
 #include "InputDevice.h"
 #include <SDL_haptic.h>
+#include <thread>
 
 
 namespace Sdl

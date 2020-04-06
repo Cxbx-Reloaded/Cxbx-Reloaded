@@ -26,6 +26,8 @@
 #ifndef EMURSA_H
 #define EMURSA_H
 
+#include <cstdlib> // For size_t
+
 #pragma pack(4)
 
 typedef union _RSA_PUBLIC_KEY

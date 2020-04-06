@@ -26,6 +26,7 @@
 // ******************************************************************
 
 #include <fstream>
+#include <cstring> // For memcpy
 #include "EmuEEPROM.h" // For EEPROMInfo, EEPROMInfos
 #include "core\kernel\init\CxbxKrnl.h"
 #include "DlgEepromConfig.h"
