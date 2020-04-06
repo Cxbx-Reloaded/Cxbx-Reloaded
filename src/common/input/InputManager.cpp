@@ -473,7 +473,7 @@ std::vector<std::string> InputDeviceManager::GetDeviceList() const
 	return dev_list;
 }
 
-std::shared_ptr<InputDevice> InputDeviceManager::FindDevice(std::string& QualifiedName) const
+std::shared_ptr<InputDevice> InputDeviceManager::FindDevice(const std::string& QualifiedName) const
 {
 	std::lock_guard<std::mutex> lck(m_Mtx);
 
