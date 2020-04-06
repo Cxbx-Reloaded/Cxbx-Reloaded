@@ -52,7 +52,7 @@ typedef struct EEPROMInfo {
 #define XC_END_MARKER (xboxkrnl::XC_VALUE_INDEX)-1
 
 #define EEPROM_INFO_ENTRY(XC, Member, REG_Type) \
-	{ xboxkrnl::##XC, offsetof(xboxkrnl::XBOX_EEPROM, Member), REG_Type, sizeof(((xboxkrnl::XBOX_EEPROM *)0)->Member) }
+	{ xboxkrnl::XC, offsetof(xboxkrnl::XBOX_EEPROM, Member), REG_Type, sizeof(((xboxkrnl::XBOX_EEPROM *)0)->Member) }
 
 static const EEPROMInfo EEPROMInfos[] = {
 	EEPROM_INFO_ENTRY(XC_TIMEZONE_BIAS,         UserSettings.TimeZoneBias,                REG_DWORD),

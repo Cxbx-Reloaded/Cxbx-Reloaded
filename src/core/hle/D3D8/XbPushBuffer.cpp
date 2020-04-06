@@ -636,7 +636,7 @@ const char *NV2AMethodToString(DWORD dwMethod)
 	switch (dwMethod) {
 
 #define ENUM_RANGED_ToString_N(Name, Method, Pitch, N) \
-	case Name(N): return #Name ## "((" #N ")*" #Pitch ## ")";
+	case Name(N): return #Name "((" #N ")*" #Pitch ")";
 
 #define ENUM_RANGED_ToString_1(Name, Method, Pitch) \
 	ENUM_RANGED_ToString_N(Name, Method, Pitch, 0)

@@ -34,13 +34,13 @@
 // ******************************************************************
 
 #define DEBUG_START(DEV) \
-const char *DebugNV_##DEV##(xbaddr addr) \
+const char *DebugNV_##DEV(xbaddr addr) \
 { \
 	switch (addr) {
 #define DEBUG_CASE(a) \
 		case a: return #a;
 #define DEBUG_CASE_EX(a, c) \
-		case a: return #a##c;
+		case a: return #a c;
 #define DEBUG_END(DEV) \
 		default: \
 			return "Unknown " #DEV " Address"; \
