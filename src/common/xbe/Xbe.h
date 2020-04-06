@@ -18,6 +18,7 @@
 // *  59 Temple Place - Suite 330, Bostom, MA 02111-1307, USA.
 // *
 // *  (c) 2002-2003 Aaron Robinson <caustik@caustik.com>
+// *  (c) 2017 Patrick van Logchem <pvanlogchem@gmail.com>
 // *
 // *  All rights reserved
 // *
@@ -26,6 +27,7 @@
 #define XBE_H
 
 #include "common\Error.h"
+#include "common/xbox/Types.hpp"
 
 #include <cstdio>
 
@@ -75,6 +77,8 @@ class Xbe : public Error
 
         // Convert game region field to string
         const char *GameRegionToString();
+
+        XbeType GetXbeType();
 
         // Xbe header
         #include "AlignPrefix1.h"

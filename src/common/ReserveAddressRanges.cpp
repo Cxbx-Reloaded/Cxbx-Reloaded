@@ -26,6 +26,9 @@
 // *
 // ******************************************************************
 
+#define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
+#include <Windows.h> // For DWORD, CALLBACK, VirtualAlloc, LPVOID, SIZE_T, HMODULE 
+
 // NOTE: Cannot be use in loader project due to force exclude std libraries.
 //#define DEBUG // Uncomment whenever need to verify memory leaks or bad configure.
 
@@ -34,16 +37,18 @@
 #endif
 #include <cstdint> // For uint32_t
 
+#include "util/std_extend.hpp"
+#include "ReserveAddressRanges.h"
 #include "AddressRanges.h"
 
 // Reserve an address range up to the extend of what the host allows.
-bool ReserveMemoryRange(int index, uint32_t blocks_reserved[384])
+bool ReserveMemoryRange(int index, blocks_reserved_t blocks_reserved)
 {
 	uint32_t Start = XboxAddressRanges[index].Start;
 	int Size = XboxAddressRanges[index].Size;
 	bool HadAnyFailure = false;
 
-	// Reserve this range in 64 Kb block increments, so that during emulation
+	// Reserve this range in 64 KiB block increments, so that during emulation
 	// our memory-management code can VirtualFree() each block individually :
 
 	const DWORD Protect = XboxAddressRanges[index].InitialMemoryProtection;
@@ -54,9 +59,9 @@ bool ReserveMemoryRange(int index, uint32_t blocks_reserved[384])
 	std::printf("     : Comment = %s\n", XboxAddressRanges[index].Comment);
 #endif
 	switch (Start) {
-		case 0x80000000:
-		case 0x84000000:
-		case 0xF0000000: {
+		case PHYSICAL_MAP1_BASE:
+		case PHYSICAL_MAP2_BASE:
+		case TILED_MEMORY_BASE: {
 			static bool NeedsInitialization = true;
 			static	HANDLE hFileMapping;
 			if (NeedsInitialization) {
@@ -75,7 +80,7 @@ bool ReserveMemoryRange(int index, uint32_t blocks_reserved[384])
 			}
 			LPVOID Result = MapViewOfFileEx(
 				hFileMapping,
-				(Start == 0x80000000 || Start == 0x84000000) ?
+				(Start == PHYSICAL_MAP1_BASE || Start == PHYSICAL_MAP2_BASE) ?
 				(FILE_MAP_READ | FILE_MAP_WRITE | FILE_MAP_EXECUTE) : (FILE_MAP_READ | FILE_MAP_WRITE),
 				0,
 				0,
@@ -90,12 +95,12 @@ bool ReserveMemoryRange(int index, uint32_t blocks_reserved[384])
 		}
 		break;
 
-		case 0xD0000000:
+		case SYSTEM_MEMORY_BASE:
 			// If additional addresses need to be assign in region's block.
 			// Then check for nonzero value.
 			arr_index = BLOCK_REGION_SYSTEM_INDEX_BEGIN;
 		[[fallthrough]];
-		case 0xB0000000: {
+		case DEVKIT_MEMORY_BASE: {
 			// arr_index's default is BLOCK_REGION_DEVKIT_INDEX_BEGIN which is zero.
 			// Any block region above zero should be place above this case to override zero value.
 			//arr_index = BLOCK_REGION_DEVKIT_INDEX_BEGIN;
@@ -139,7 +144,7 @@ bool ReserveMemoryRange(int index, uint32_t blocks_reserved[384])
 }
 
 // Free address range from the host.
-void FreeMemoryRange(int index, uint32_t blocks_reserved[384])
+void FreeMemoryRange(int index, blocks_reserved_t blocks_reserved)
 {
 	uint32_t Start = XboxAddressRanges[index].Start, _Start;
 	int Size = XboxAddressRanges[index].Size;
@@ -150,9 +155,9 @@ void FreeMemoryRange(int index, uint32_t blocks_reserved[384])
 	std::printf("     : Comment = %s\n", XboxAddressRanges[index].Comment);
 #endif
 	switch (Start) {
-		case 0x80000000:
-		case 0x84000000:
-		case 0xF0000000: {
+		case PHYSICAL_MAP1_BASE:
+		case PHYSICAL_MAP2_BASE:
+		case TILED_MEMORY_BASE: {
 			(void)UnmapViewOfFile((LPVOID)Start);
 #ifdef DEBUG
 			std::printf("     : UnmapViewOfFile; Start = 0x%08X\n", Start);
@@ -160,12 +165,12 @@ void FreeMemoryRange(int index, uint32_t blocks_reserved[384])
 		}
 		break;
 
-		case 0xD0000000:
+		case SYSTEM_MEMORY_BASE:
 			// If additional addresses need to be assign in region's block.
 			// Then check for nonzero value.
 			arr_index = BLOCK_REGION_SYSTEM_INDEX_BEGIN;
 		[[fallthrough]];
-		case 0xB0000000: {
+		case DEVKIT_MEMORY_BASE: {
 			// arr_index's default is BLOCK_REGION_DEVKIT_INDEX_BEGIN which is zero.
 			// Any block region above zero should be place above this case to override zero value.
 			//arr_index = BLOCK_REGION_DEVKIT_INDEX_BEGIN;
@@ -201,9 +206,9 @@ void FreeMemoryRange(int index, uint32_t blocks_reserved[384])
 #endif
 }
 
-bool ReserveAddressRanges(const unsigned int system, uint32_t blocks_reserved[384]) {
+bool ReserveAddressRanges(const unsigned int system, blocks_reserved_t blocks_reserved) {
 	// Loop over all Xbox address ranges
-	for (int i = 0; i < ARRAY_SIZE(XboxAddressRanges); i++) {
+	for (size_t i = 0; i < XboxAddressRanges_size; i++) {
 		// Skip address ranges that don't match the given flags
 		if (!AddressRangeMatchesFlags(i, system))
 			continue;
@@ -221,13 +226,13 @@ bool ReserveAddressRanges(const unsigned int system, uint32_t blocks_reserved[38
 	return true;
 }
 
-void FreeAddressRanges(const unsigned int system, unsigned int release_systems, uint32_t blocks_reserved[384]) {
+void FreeAddressRanges(const unsigned int system, unsigned int release_systems, blocks_reserved_t blocks_reserved) {
 	// If reserved_systems is empty, then there's nothing to be freed up.
 	if (release_systems == 0) {
 		return;
 	}
 	// Loop over all Xbox address ranges
-	for (int i = 0; i < ARRAY_SIZE(XboxAddressRanges); i++) {
+	for (size_t i = 0; i < XboxAddressRanges_size; i++) {
 		// Skip address ranges that do match specific flag
 		if (AddressRangeMatchesFlags(i, system))
 			continue;
@@ -241,12 +246,12 @@ void FreeAddressRanges(const unsigned int system, unsigned int release_systems, 
 
 }
 
-bool AttemptReserveAddressRanges(unsigned int* p_reserved_systems, uint32_t blocks_reserved[384]) {
+bool AttemptReserveAddressRanges(unsigned int* p_reserved_systems, blocks_reserved_t blocks_reserved) {
 
-	int iLast = 0;
+	size_t iLast = 0;
 	unsigned int reserved_systems = *p_reserved_systems, clear_systems = 0;
 	// Loop over all Xbox address ranges
-	for (int i = 0; i < ARRAY_SIZE(XboxAddressRanges); i++) {
+	for (size_t i = 0; i < XboxAddressRanges_size; i++) {
 
 		// Once back to original spot, let's resume.
 		if (i == iLast && clear_systems) {
@@ -290,4 +295,19 @@ bool AttemptReserveAddressRanges(unsigned int* p_reserved_systems, uint32_t bloc
 
 	*p_reserved_systems = reserved_systems;
 	return true;
+}
+
+bool isSystemFlagSupport(unsigned int reserved_systems, unsigned int assign_system)
+{
+	if (reserved_systems & assign_system) {
+		return true;
+	}
+// TODO: Once host's standalone emulation is remove from GUI, remove below as well.
+#ifndef CXBXR_EMU
+	if (reserved_systems == 0) {
+		return true;
+	}
+#endif
+
+	return false;
 }

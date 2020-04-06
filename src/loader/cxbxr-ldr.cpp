@@ -26,6 +26,9 @@
 // *
 // ******************************************************************
 
+#define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
+#include <Windows.h> // For LPTSTR, FormatMessage, GetSystemInfo, etc
+
 #include "..\Common\AddressRanges.h"
 #include "..\Common\ReserveAddressRanges.h"
 
@@ -35,7 +38,7 @@
 // This variable *MUST* be this large, for it to take up address space
 // so that all other code and data in this module are placed outside of the
 // maximum virtual memory range.
-#define VM_PLACEHOLDER_SIZE MB(128) // Enough to cover MemLowVirtual (Cihiro/Devkit)
+#define VM_PLACEHOLDER_SIZE MiB(128) // Enough to cover MemLowVirtual (Cihiro/Devkit)
 
 // Note : In the old setup, we used #pragma section(".text"); __declspec(allocate(".text"))
 // to put this variable at the exact image base address 0x00010000, but that resulted in
@@ -104,6 +107,33 @@ void OutputMessage(const char* msg)
 	}
 }
 
+LPTSTR GetLastErrorString()
+{
+	DWORD err = GetLastError();
+
+	// Translate ErrorCode to String.
+	LPTSTR Error = nullptr;
+	if (::FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
+		NULL,
+		err,
+		0,
+		(LPTSTR)&Error,
+		0,
+		NULL) == 0) {
+		// Failed in translating.
+	}
+
+	return Error;
+}
+
+void FreeLastErrorString(LPTSTR Error)
+{
+	if (Error) {
+		::LocalFree(Error);
+		Error = nullptr;
+	}
+}
+
 #define EMULATION_DLL "cxbxr-emu.dll"
 
 DWORD CALLBACK rawMain()
@@ -142,9 +172,9 @@ DWORD CALLBACK rawMain()
 	unsigned int system = SYSTEM_ALL; // Reserve all systems.
 
 	// Marking this as static to avoid an implicit call to memset, which is not available in the loader
-	static uint32_t SystemDevBlocksReserved[384];
+	static blocks_reserved_t blocks_reserved;
 
-	if (!AttemptReserveAddressRanges(&system, SystemDevBlocksReserved)) {
+	if (!AttemptReserveAddressRanges(&system, blocks_reserved)) {
 		// If we get here, emulation lacks important address ranges; Don't launch
 		OutputMessage("None of system types' required address range(s) could be reserved!\n");
 		return ERROR_NOT_ENOUGH_MEMORY;
@@ -164,7 +194,7 @@ DWORD CALLBACK rawMain()
 	}
 
 	// Find the main emulation function in our DLL
-	typedef void (WINAPI *Emulate_t)(unsigned int, uint32_t[384]);
+	typedef void (WINAPI *Emulate_t)(unsigned int, blocks_reserved_t);
 	Emulate_t pfnEmulate = (Emulate_t)GetProcAddress(hEmulationDLL, "Emulate");
 	if (!pfnEmulate) {
 		OutputMessage("Entrypoint not found!\n");
@@ -173,7 +203,7 @@ DWORD CALLBACK rawMain()
 
 	// Call the main emulation function in our DLL, passing in the results
 	// of the address range reservations
-	pfnEmulate(system, SystemDevBlocksReserved); // TODO : Pass along all data that we've gathered up until here (or rebuild it over there)
+	pfnEmulate(system, blocks_reserved);
 
 	// Once emulation actually started, execution may never return here
 	// because all code and data that have been used up until now are

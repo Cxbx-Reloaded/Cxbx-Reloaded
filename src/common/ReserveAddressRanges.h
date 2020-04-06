@@ -26,8 +26,22 @@
 // ******************************************************************
 #pragma once
 
-extern bool ReserveAddressRanges(const unsigned int system, uint32_t blocks_reserved[384]);
+#include <cstdint> // For uint32_t
 
-extern void FreeAddressRanges(const unsigned int system, unsigned int release_systems, uint32_t blocks_reserved[384]);
+// First block section will be devkit region (256MiB) = 262144KiB / 64 KiB = 4096 bits needed -> 4096 / 32 (sizeof(uint32_t)) = 128 entries blocks_reserved array.
+// Next block section will be system region (512MiB) = 524288KiB / 64KiB = 8192 bits needed -> 8192 / 32 (sizeof(uint32_t)) = 256 entries of blocks_reserved array.
+// 1 bit per block_size (64KiB).
+typedef uint32_t blocks_reserved_t[384]; // 384 = 128 (devkit region) + 256 (system region)
 
-extern bool AttemptReserveAddressRanges(unsigned int* p_reserved_systems, uint32_t blocks_reserved[384]);
+inline constexpr uint32_t BLOCK_REGION_DEVKIT_INDEX_BEGIN = 0;
+inline constexpr uint32_t BLOCK_REGION_DEVKIT_INDEX_END   = 4096;
+inline constexpr uint32_t BLOCK_REGION_SYSTEM_INDEX_BEGIN = 4096;
+inline constexpr uint32_t BLOCK_REGION_SYSTEM_INDEX_END   = 12288;
+
+extern bool ReserveAddressRanges(const unsigned int system, blocks_reserved_t blocks_reserved);
+
+extern void FreeAddressRanges(const unsigned int system, unsigned int release_systems, blocks_reserved_t blocks_reserved);
+
+extern bool AttemptReserveAddressRanges(unsigned int* p_reserved_systems, blocks_reserved_t blocks_reserved);
+
+extern bool isSystemFlagSupport(unsigned int reserved_systems, unsigned int assign_system);

@@ -35,6 +35,7 @@
 
 #define LOG_PREFIX CXBXR_MODULE::VMEM
 
+#include "common/AddressRanges.h"
 #include "PoolManager.h"
 #include "Logging.h"
 #include "EmuShared.h"
@@ -73,7 +74,7 @@ bool VirtualMemoryArea::CanBeMergedWith(const VirtualMemoryArea& next) const
 	return false;
 }
 
-void VMManager::Initialize(unsigned int SystemType, int BootFlags, uint32_t blocks_reserved[384])
+void VMManager::Initialize(unsigned int SystemType, int BootFlags, blocks_reserved_t blocks_reserved)
 {
 	if ((BootFlags & BOOT_QUICK_REBOOT) == 0) {
 #ifndef CXBXR_EMU
@@ -97,7 +98,7 @@ void VMManager::Initialize(unsigned int SystemType, int BootFlags, uint32_t bloc
 	// Set up the critical section to synchronize accesses
 	InitializeCriticalSectionAndSpinCount(&m_CriticalSection, 0x400);
 
-	m_AllocationGranularity = 64 * ONE_KB;
+	m_AllocationGranularity = KiB(64);
 	g_SystemMaxMemory = XBOX_MEMORY_SIZE;
 
 	// Set up the structs tracking the memory regions
@@ -110,24 +111,25 @@ void VMManager::Initialize(unsigned int SystemType, int BootFlags, uint32_t bloc
 	// We are looping here because memory-reservation happens in 64 KiB increments
 	for (int i = 0; i < 64; i++) {
 		LPVOID ret = VirtualAlloc((LPVOID)(PAGE_TABLES_BASE + i * m_AllocationGranularity), m_AllocationGranularity, MEM_COMMIT, PAGE_READWRITE);
-		if (ret != (LPVOID)(PAGE_TABLES_BASE + i * (64 * ONE_KB))) {
+		if (ret != (LPVOID)(PAGE_TABLES_BASE + i * KiB(64))) {
 			CxbxKrnlCleanup("VirtualAlloc failed to commit the memory for the page tables. The error was 0x%08X", GetLastError());
 		}
 	}
 
 	// Construct VMAs base on reserved bit indexes for devkit and system region blocks.
+	// See "blocks_reserved_t" notes.
 	if (SystemType == SYSTEM_DEVKIT) {
 		for (unsigned int i = BLOCK_REGION_DEVKIT_INDEX_BEGIN; i < BLOCK_REGION_DEVKIT_INDEX_END; i++) {
 			if ((blocks_reserved[i / 32] & (1 << (i % 32))) == 0) {
 				// The loader was unable to reserve this block, so discard it from the memory region
-				ConstructVMA(DEVKIT_MEMORY_BASE + i * (64 * ONE_KB), (64 * ONE_KB), DevkitRegion, ReservedVma, false);
+				ConstructVMA(DEVKIT_MEMORY_BASE + i * KiB(64), KiB(64), DevkitRegion, ReservedVma, false);
 			}
 		}
 	}
 	for (unsigned int i = BLOCK_REGION_SYSTEM_INDEX_BEGIN; i < BLOCK_REGION_SYSTEM_INDEX_END; i++) {
 		if ((blocks_reserved[i / 32] & (1 << (i % 32))) == 0) {
 			// The loader was unable to reserve this block, so discard it from the memory region
-			ConstructVMA(SYSTEM_MEMORY_BASE + i * (64 * ONE_KB), (64 * ONE_KB), SystemRegion, ReservedVma, false);
+			ConstructVMA(SYSTEM_MEMORY_BASE + i * KiB(64), KiB(64), SystemRegion, ReservedVma, false);
 		}
 	}
 
@@ -343,18 +345,18 @@ void VMManager::RestorePersistentMemory()
 		RemoveFree(1, &pfn, 0, pte.Hardware.PFN, pte.Hardware.PFN);
 		if (m_MmLayoutChihiro) {
 			memcpy(CHIHIRO_PFN_ELEMENT(pte.Hardware.PFN),
-				&((PXBOX_PFN)&persisted_mem->Data[(persisted_mem->NumOfPtes * 2) + (persisted_mem->NumOfPtes - 32) * ONE_KB])[pte.Hardware.PFN],
+				&((PXBOX_PFN)&persisted_mem->Data[(persisted_mem->NumOfPtes * 2) + (persisted_mem->NumOfPtes - 32) * KiB(1)])[pte.Hardware.PFN],
 				sizeof(XBOX_PFN));
 			if ((uint32_t*)persisted_mem->Data[i] < (uint32_t*)CHIHIRO_PFN_ADDRESS) {
-				memcpy((void*)(persisted_mem->Data[i]), &persisted_mem->Data[persisted_mem->NumOfPtes * 2 + i * ONE_KB], PAGE_SIZE);
+				memcpy((void*)(persisted_mem->Data[i]), &persisted_mem->Data[persisted_mem->NumOfPtes * 2 + i * KiB(1)], PAGE_SIZE);
 			}
 		}
 		else {
 			memcpy(XBOX_PFN_ELEMENT(pte.Hardware.PFN),
-				&((PXBOX_PFN)&persisted_mem->Data[(persisted_mem->NumOfPtes * 2) + (persisted_mem->NumOfPtes - 16) * ONE_KB])[pte.Hardware.PFN],
+				&((PXBOX_PFN)&persisted_mem->Data[(persisted_mem->NumOfPtes * 2) + (persisted_mem->NumOfPtes - 16) * KiB(1)])[pte.Hardware.PFN],
 				sizeof(XBOX_PFN));
 			if ((uint32_t*)persisted_mem->Data[i] < (uint32_t*)XBOX_PFN_ADDRESS) {
-				memcpy((void*)(persisted_mem->Data[i]), &persisted_mem->Data[persisted_mem->NumOfPtes * 2 + i * ONE_KB], PAGE_SIZE);
+				memcpy((void*)(persisted_mem->Data[i]), &persisted_mem->Data[persisted_mem->NumOfPtes * 2 + i * KiB(1)], PAGE_SIZE);
 			}
 		}
 	}
@@ -478,7 +480,7 @@ void VMManager::SavePersistentMemory()
 	for (const auto &pte : cached_persisted_ptes) {
 		persisted_mem->Data[i] = GetVAddrMappedByPte(pte);
 		persisted_mem->Data[num_persisted_ptes + i] = pte->Default;
-		memcpy(&persisted_mem->Data[num_persisted_ptes * 2 + i * ONE_KB], (void *)(persisted_mem->Data[i]), PAGE_SIZE);
+		memcpy(&persisted_mem->Data[num_persisted_ptes * 2 + i * KiB(1)], (void *)(persisted_mem->Data[i]), PAGE_SIZE);
 		i++;
 	}
 
