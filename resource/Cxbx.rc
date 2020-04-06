@@ -589,10 +589,10 @@ BEGIN
         MENUITEM "&Open Xbe...",                ID_FILE_OPEN_XBE,MFT_STRING,MFS_ENABLED
         MENUITEM "Open D&ashboard...\tF7",      ID_FILE_OPEN_DASHBOARD,MFT_STRING,MFS_ENABLED
         MENUITEM "&Close Xbe",                  ID_FILE_CLOSE_XBE,MFT_STRING,MFS_ENABLED
-        MENUITEM MFT_SEPARATOR
+        MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "&Save Xbe",                   ID_FILE_SAVEXBEFILE,MFT_STRING,MFS_ENABLED
         MENUITEM "Save Xbe &As...",             ID_FILE_SAVEXBEFILEAS,MFT_STRING,MFS_ENABLED
-        MENUITEM MFT_SEPARATOR
+        MENUITEM "", -1, MFT_SEPARATOR
         POPUP "&Recent Xbe Files",              65535,MFT_STRING,MFS_ENABLED
         BEGIN
             MENUITEM "&0 : Recent Placeholder",     ID_FILE_RXBE_0,MFT_STRING,MFS_ENABLED
@@ -606,7 +606,7 @@ BEGIN
             MENUITEM "&8 : Recent Placeholder",     ID_FILE_RXBE_8,MFT_STRING,MFS_ENABLED
             MENUITEM "&9 : Recent Placeholder",     ID_FILE_RXBE_9,MFT_STRING,MFS_ENABLED
         END
-        MENUITEM MFT_SEPARATOR
+        MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "E&xit",                       ID_FILE_EXIT,MFT_STRING,MFS_ENABLED
     END
     POPUP "&Edit",                          65535,MFT_STRING,MFS_ENABLED
@@ -621,7 +621,7 @@ BEGIN
             MENUITEM "&Allow >64 MB",               ID_EDIT_PATCH_ALLOW64MB,MFT_STRING,MFS_ENABLED
             MENUITEM "&Debug Mode",                 ID_EDIT_PATCH_DEBUGMODE,MFT_STRING,MFS_ENABLED
         END
-        MENUITEM MFT_SEPARATOR
+        MENUITEM "", -1, MFT_SEPARATOR
         POPUP "Dump &Xbe Info To...",           65535,MFT_STRING,MFS_ENABLED
         BEGIN
             MENUITEM "&File...",                    ID_EDIT_DUMPXBEINFOTO_FILE,MFT_STRING,MFS_ENABLED
@@ -660,7 +660,7 @@ BEGIN
             MENUITEM "&Clear entire Symbol Cache",  ID_CACHE_CLEARHLECACHE_ALL,MFT_STRING,MFS_ENABLED
             MENUITEM "&Rescan title Symbol Cache",  ID_CACHE_CLEARHLECACHE_CURRENT,MFT_STRING,MFS_ENABLED
         END
-        MENUITEM MFT_SEPARATOR
+        MENUITEM "", -1, MFT_SEPARATOR
         POPUP "&LLE (Experimental)",            65535,MFT_STRING,MFS_ENABLED
         BEGIN
             MENUITEM "LLE &GPU",                    ID_EMULATION_LLE_GPU,MFT_STRING,MFS_GRAYED
@@ -675,20 +675,20 @@ BEGIN
             MENUITEM "Skip rdtsc patching",         ID_HACKS_SKIPRDTSCPATCHING,MFT_STRING,MFS_ENABLED
         END
         MENUITEM "Allow Admin Privilege",       ID_SETTINGS_ALLOWADMINPRIVILEGE,MFT_STRING,MFS_ENABLED
-        MENUITEM MFT_SEPARATOR
+        MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "Reset To Defaults",           ID_SETTINGS_INITIALIZE,MFT_STRING,MFS_ENABLED
     END
     POPUP "E&mulation",                     65535,MFT_STRING,MFS_ENABLED
     BEGIN
         MENUITEM "&Start\tF5",                  ID_EMULATION_START,MFT_STRING,MFS_ENABLED
         MENUITEM "Start &Debugger...\tF9",      ID_EMULATION_STARTDEBUGGER,MFT_STRING,MFS_ENABLED
-        MENUITEM MFT_SEPARATOR
+        MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "S&top\tF6",                   ID_EMULATION_STOP,MFT_STRING,MFS_ENABLED
     END
     POPUP "&Help",                          65535,MFT_STRING,MFS_ENABLED
     BEGIN
         MENUITEM "&Go To The Official Cxbx Web Site...", ID_HELP_HOMEPAGE,MFT_STRING,MFS_ENABLED
-        MENUITEM MFT_SEPARATOR
+        MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "&About",                      ID_HELP_ABOUT,MFT_STRING,MFS_ENABLED
     END
     MENUITEM " ",                           ID_FPS,MFT_STRING | MFT_RIGHTJUSTIFY,MFS_ENABLED
