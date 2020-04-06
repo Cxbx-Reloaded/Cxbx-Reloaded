@@ -26,8 +26,8 @@
 #define EMUNTDLL_H
 
 #if defined(__cplusplus)
-extern "C"
-{
+//extern "C"
+//{
 #endif
 
 #include <ctype.h>  // winnt ntndis
@@ -2021,7 +2021,7 @@ EXTERN(RtlUpperString);
 EXTERN(RtlUshortByteSwap);
 
 #if defined(__cplusplus)
-}
+//}
 #endif
 
 #endif

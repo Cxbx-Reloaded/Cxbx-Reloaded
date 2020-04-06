@@ -13,8 +13,8 @@
 #define XBOXKRNL_H
 
 #if defined(__cplusplus)
-extern "C"
-{
+//extern "C"
+//{
 #endif
 
 // ******************************************************************
@@ -2712,7 +2712,7 @@ typedef struct _IDE_CHANNEL_OBJECT
 #include "xbox.h"
 
 #if defined(__cplusplus)
-}
+//}
 #endif
 
 #endif

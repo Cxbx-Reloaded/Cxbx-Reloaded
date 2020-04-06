@@ -28,8 +28,8 @@
 #define EMU_EEPROM_H
 
 #if defined(__cplusplus)
-extern "C"
-{
+//extern "C"
+//{
 #endif
 
 // prevent name collisions
@@ -163,7 +163,7 @@ extern void EmuEEPROMReset(xboxkrnl::XBOX_EEPROM* eeprom);
 void gen_section_CRCs(xboxkrnl::XBOX_EEPROM*);
 
 #if defined(__cplusplus)
-}
+//}
 #endif
 
 #endif // EMU_EEPROM_H

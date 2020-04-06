@@ -4,7 +4,7 @@
 #define __XDVDFS_H__
 
 #ifdef __cplusplus
-extern "C" {
+//extern "C" {
 #endif
 
 #include <xboxkrnl/xboxkrnl.h> //#include <stdtypes.h>
@@ -158,7 +158,7 @@ extern DWORD	XDVDFS_FileSeek(
 					DWORD			SeekMode);
 
 #ifdef __cplusplus
-}
+//}
 #endif
 
 #endif // __XDVDFS_H__
