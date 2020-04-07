@@ -47,7 +47,7 @@ void Mutex::Lock()
     while(true)
     {
         // Grab the lock, letting us look at the variables
-#if (_MSC_VER < 1300)  // We are not using VC++.NET
+#if defined(_MSC_VER) && (_MSC_VER < 1300)  // We are not using VC++.NET
         while(InterlockedCompareExchange((LPVOID*)&m_MutexLock, (LPVOID)1, (LPVOID)0))
 #else
         while(InterlockedCompareExchange((LPLONG)&m_MutexLock, (LONG)1, (LONG)0))
@@ -98,7 +98,7 @@ void Mutex::Lock()
 void Mutex::Unlock()
 {
     // Grab the lock, letting us look at the variables
-#if (_MSC_VER < 1300)  // We are not using VC++.NET
+#if defined(_MSC_VER) && (_MSC_VER < 1300)  // We are not using VC++.NET
     while(InterlockedCompareExchange((LPVOID*)&m_MutexLock, (LPVOID)1, (LPVOID)0))
 #else
     while (InterlockedCompareExchange((LPLONG)&m_MutexLock, (LONG)1, (LONG)0))
