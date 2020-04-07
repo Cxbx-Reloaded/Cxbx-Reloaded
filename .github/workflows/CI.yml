@@ -64,28 +64,32 @@ jobs:
           name: CxbxReloaded-${{ matrix.configuration }}-${{ matrix.vsver }}
           path: artifacts
 
-  release: # TODO: Remove develop once rebased
-    if: github.event.action != 'pull_request' && github.ref == 'refs/heads/develop' || 'refs/heads/master' && github.repository == 'Cxbx-Reloaded/Cxbx-Reloaded'
+  release:
+    if: | # TODO: Remove develop once rebased
+      github.event.action != 'pull_request' &&
+      (github.ref == 'refs/heads/develop' ||
+       github.ref == 'refs/heads/master')   &&
+      github.repository == 'Cxbx-Reloaded/Cxbx-Reloaded'
     needs: build-windows
     env:
-      artifact-1: CxbxReloaded-Release-VS2019
-      artifact-2: CxbxReloaded-Release-VS2017
+      artifact_1: CxbxReloaded-Release-VS2019
+      artifact_2: CxbxReloaded-Release-VS2017
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v2
       - name: Download artifacts (1)
         uses: actions/download-artifact@v1
         with:
-          name: ${{ env.artifact-1 }}
+          name: ${{ env.artifact_1 }}
       - name: Download artifacts (2)
         uses: actions/download-artifact@v1
         with:
-          name: ${{ env.artifact-2 }}
+          name: ${{ env.artifact_2 }}
       - name: Prepare artifacts for release
         run: | # download-artifact doesn't download a zip, so rezip it
-          7z a -mx1 $env:artifact-1.zip .\$env:artifact-1\*
-          7z a -mx1 $env:artifact-2.zip .\$env:artifact-2\*
           echo "::set-env name=short_commit_sha::$(git rev-parse --short HEAD)"
+          7z a -mx1 "$env:artifact_1.zip" ".\$env:artifact_1\*"
+          7z a -mx1 "$env:artifact_2.zip" ".\$env:artifact_2\*"
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
@@ -101,8 +105,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ${{ env.artifact-1 }}.zip
-          asset_name: ${{ env.artifact-1 }}.zip
+          asset_path: ${{ env.artifact_1 }}.zip
+          asset_name: ${{ env.artifact_1 }}.zip
           asset_content_type: application/zip
       - name: Upload Release Asset (2)
         uses: actions/upload-release-asset@v1
@@ -110,6 +114,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ${{ env.artifact-2 }}.zip
-          asset_name: ${{ env.artifact-2 }}.zip
+          asset_path: ${{ env.artifact_2 }}.zip
+          asset_name: ${{ env.artifact_2 }}.zip
           asset_content_type: application/zip
