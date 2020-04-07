@@ -28,7 +28,6 @@
 // prevent name collisions
 namespace xboxkrnl
 {
-#include <xboxkrnl/xboxkrnl.h>
 
 // Additional types, exclusively for logging (not really enums) :
 enum  ALLOCATION_TYPE : int;
@@ -43,6 +42,17 @@ enum  PROTECTION_TYPE : int;
 #include <windows.h> // for PULONG
 #include <sstream> // for std::ostream
 #include "Logging.h"
+
+// MinGW defines these as macros, which cause issues with overloads
+#ifdef EXCEPTION_DISPOSITION
+#undef EXCEPTION_DISPOSITION
+#undef ExceptionContinueExecution
+#undef ExceptionContinueSearch
+#undef ExceptionNestedException
+#undef ExceptionCollidedUnwind
+#endif
+
+#include <xboxkrnl/xboxkrnl.h>
 
 // prevent name collisions
 namespace xboxkrnl
