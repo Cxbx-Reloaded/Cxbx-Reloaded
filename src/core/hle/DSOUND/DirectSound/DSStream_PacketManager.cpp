@@ -311,7 +311,7 @@ bool DSStream_Packet_Process(
                     // Is this important or already have it handled by using while statement?
                     if (packetCurrent->bufWrittenBytes == 0) {
                         EmuLog(LOG_LEVEL::INFO, "audio gap detected: %08X; packetCurrent->bufPlayed: %08X; bufPlayed: %08X;\n",
-                            packetCurrent._Ptr,
+                            &*packetCurrent,
                             packetCurrent->bufPlayed,
                             bufPlayed
                         );

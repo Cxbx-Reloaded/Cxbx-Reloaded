@@ -37,6 +37,9 @@
 #define DSoundBufferGetPCMBufferSize(EmuFlags, size) (EmuFlags & DSE_FLAG_XADPCM) > 0 ? DWORD((size / float(XBOX_ADPCM_SRCSIZE)) * XBOX_ADPCM_DSTSIZE) : size
 #define DSoundBufferGetXboxBufferSize(EmuFlags, size) (EmuFlags & DSE_FLAG_XADPCM) > 0 ? DWORD((size / float(XBOX_ADPCM_DSTSIZE)) * XBOX_ADPCM_SRCSIZE) : size
 
+typedef struct IDirectSound3DBuffer8* LPDIRECTSOUND3DBUFFER8;
+typedef LONGLONG REFERENCE_TIME;
+
 // Memory managed xbox audio function handler
 static inline DWORD DSoundSGEFreeBuffer() {
     int count =  (XTL_DS_SGE_SIZE_MAX - g_dwXbMemAllocated);
@@ -1090,7 +1093,7 @@ static inline HRESULT HybridDirectSoundBuffer_SetFormat(
         GeneratePCMFormat(BufferDesc, Xb_pwfxFormat, Xb_flags, dwEmuFlags, 0, xbnullptr, X_BufferCacheSize, Xb_VoiceProperties, mixbins_output);
     }
     HRESULT hRet = DS_OK;
-    if (g_pDSoundPrimaryBuffer == pDSBuffer) {
+    if ((void*)g_pDSoundPrimaryBuffer == (void*)pDSBuffer) {
         hRet = pDSBuffer->SetFormat(BufferDesc.lpwfxFormat);
     } else {
         // DSound Stream only
