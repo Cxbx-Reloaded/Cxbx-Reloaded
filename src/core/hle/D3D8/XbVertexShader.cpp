@@ -362,7 +362,7 @@ private:
 
 		switch (VertexRegister)
 		{
-		case XTL::X_D3DVSDE_VERTEX: // -1
+		case (DWORD)XTL::X_D3DVSDE_VERTEX: // -1
 			PCRegisterType = D3DDECLUSAGE_UNSUPPORTED;
 			break;
 		case XTL::X_D3DVSDE_POSITION: // 0
@@ -416,7 +416,7 @@ private:
 	{
 		switch (VertexRegister)
 		{
-		case XTL::X_D3DVSDE_VERTEX: // -1
+		case (DWORD)XTL::X_D3DVSDE_VERTEX: // -1
 			return "D3DVSDE_VERTEX /* xbox ext. */";
 		case XTL::X_D3DVSDE_POSITION: // 0
 			return "D3DVSDE_POSITION";
