@@ -12,11 +12,6 @@
 #ifndef XBOXKRNL_H
 #define XBOXKRNL_H
 
-#if defined(__cplusplus)
-//extern "C"
-//{
-#endif
-
 // ******************************************************************
 // * dll import/export
 // ******************************************************************
@@ -2710,10 +2705,6 @@ typedef struct _IDE_CHANNEL_OBJECT
 // * XBox
 // ******************************************************************
 #include "xbox.h"
-
-#if defined(__cplusplus)
-//}
-#endif
 
 #endif
 
