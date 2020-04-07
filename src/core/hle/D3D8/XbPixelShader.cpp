@@ -6596,10 +6596,11 @@ inline void HandleInputOutput
 
 		// As first do the ab operation
 		char szCmd[100]="\0";
+        char empty[8] = "";
 		BOOL bOptimized = OptimizeOperation(
 			szABOp, 
 			szCDOp, 
-			bVAccess[2] ? "" : szABCDOp, 
+			bVAccess[2] ? empty : szABCDOp, 
 			szOutputMod, 
 
 #ifdef REVEL8N_PIXEL_SHADER_CHANGES
