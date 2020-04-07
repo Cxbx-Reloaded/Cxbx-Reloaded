@@ -699,6 +699,11 @@ static __inline uint32_t Clamp(int32_t val) {
 #define SIMD_ALIGNED32(var) __declspec(align(64)) var
 typedef __declspec(align(32)) int16_t lvec16[16];
 typedef __declspec(align(32)) int8_t lvec8[32];
+#elif __GNUC__
+#define SIMD_ALIGNED(var) __attribute__((aligned(16)))var
+#define SIMD_ALIGNED32(var) __attribute__((aligned(64))) var
+typedef __attribute__((aligned(32))) int16_t lvec16[16];
+typedef __attribute__((aligned(32))) int8_t lvec8[32];
 #endif
 
 struct YuvConstants {
