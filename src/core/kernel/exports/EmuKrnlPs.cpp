@@ -274,9 +274,9 @@ XBSYSAPI EXPORTNUM(255) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PsCreateSystemThreadE
         // PCSTProxy is responsible for cleaning up this pointer
 		PCSTProxyParam *iPCSTProxyParam = (PCSTProxyParam*)malloc(sizeof(PCSTProxyParam));
 
-        iPCSTProxyParam->StartRoutine = StartRoutine;
+        iPCSTProxyParam->StartRoutine = (PVOID)StartRoutine;
         iPCSTProxyParam->StartContext = StartContext;
-        iPCSTProxyParam->SystemRoutine = SystemRoutine; // NULL, XapiThreadStartup or unknown?
+        iPCSTProxyParam->SystemRoutine = (PVOID)SystemRoutine; // NULL, XapiThreadStartup or unknown?
         iPCSTProxyParam->StartSuspended = CreateSuspended;
 	    iPCSTProxyParam->hStartedEvent = hStartedEvent;
 
@@ -399,7 +399,7 @@ XBSYSAPI EXPORTNUM(257) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PsSetCreateThreadNoti
 		// that we don't accidently register the same routine twice!
 		if (g_pfnThreadNotification[i] == NULL)
 		{
-			g_pfnThreadNotification[i] = NotifyRoutine;
+			g_pfnThreadNotification[i] = (PVOID)NotifyRoutine;
 			g_iThreadNotificationCount++;
 			ret = STATUS_SUCCESS;
 			break;

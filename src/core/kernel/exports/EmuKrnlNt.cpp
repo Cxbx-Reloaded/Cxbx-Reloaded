@@ -1655,7 +1655,7 @@ XBSYSAPI EXPORTNUM(219) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtReadFile
 	NTSTATUS ret = NtDll::NtReadFile(
 		FileHandle,
 		Event,
-		ApcRoutine,
+		(PVOID)ApcRoutine,
 		ApcContext,
 		IoStatusBlock,
 		Buffer,
@@ -2175,7 +2175,7 @@ XBSYSAPI EXPORTNUM(236) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtWriteFile
 	NTSTATUS ret = NtDll::NtWriteFile(
 		FileHandle,
 		Event,
-		ApcRoutine,
+		(PVOID)ApcRoutine,
 		ApcContext,
 		IoStatusBlock,
 		Buffer,

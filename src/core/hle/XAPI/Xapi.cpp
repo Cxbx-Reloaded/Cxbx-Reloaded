@@ -958,7 +958,7 @@ VOID WINAPI XTL::EMUPATCH(XRegisterThreadNotifyRoutine)
 			// that we don't accidently register the same routine twice!
 			if(g_pfnThreadNotification[i] == NULL)
 			{
-				g_pfnThreadNotification[i] = pThreadNotification->pfnNotifyRoutine;				
+				g_pfnThreadNotification[i] = (PVOID)pThreadNotification->pfnNotifyRoutine;				
 				g_iThreadNotificationCount++;
 				break;
 			}
