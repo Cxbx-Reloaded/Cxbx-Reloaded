@@ -31,12 +31,12 @@ namespace xboxkrnl
 #include <xboxkrnl/xboxkrnl.h>
 
 // Additional types, exclusively for logging (not really enums) :
-enum  ALLOCATION_TYPE;
-enum  CREATE_DISPOSITION;
-enum  CREATE_OPTION;
-//enum  NTSTATUS;
-enum  KIRQL_TYPE; // fake enum, since KIRQL is an unsigned char, which clashes with BOOLEAN
-enum  PROTECTION_TYPE;
+enum  ALLOCATION_TYPE : int;
+enum  CREATE_DISPOSITION : int;
+enum  CREATE_OPTION : int;
+//enum  NTSTATUS : int;
+enum  KIRQL_TYPE : int; // fake enum, since KIRQL is an unsigned char, which clashes with BOOLEAN
+enum  PROTECTION_TYPE : int;
 };
 
 
