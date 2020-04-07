@@ -49,7 +49,7 @@ const uint32_t PATCH_HLE_OHCI = 1 << 3;
 const uint32_t PATCH_IS_FIBER = 1 << 4;
 
 #define PATCH_ENTRY(Name, Func, Flags) \
-    { Name, { &Func, Flags} }
+    { Name, xbox_patch_t { (void *)&Func, Flags} }
 
 // Map of Xbox Patch names to Emulator Patches
 // A std::string is used as it's possible for a symbol to have multiple names
