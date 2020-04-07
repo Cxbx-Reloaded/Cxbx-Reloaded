@@ -201,7 +201,7 @@ XMEDIAPACKET, *PXMEDIAPACKET, *LPXMEDIAPACKET;
 #define XMP_STATUS_PENDING          E_PENDING
 #define XMP_STATUS_FLUSHED          E_ABORT
 #define XMP_STATUS_FAILURE          E_FAIL
-#define XMP_STATUS_RELEASE_CXBXR    -1
+#define XMP_STATUS_RELEASE_CXBXR    0xFFFFFFFF
 
 // ******************************************************************
 // * XMEDIAINFO
