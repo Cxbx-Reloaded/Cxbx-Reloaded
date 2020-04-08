@@ -1,6 +1,6 @@
 # Cxbx-Reloaded - Original Xbox Emulator
 [![License: GPL v2](https://img.shields.io/badge/License-GPL%20v2-blue.svg)](https://img.shields.io/badge/License-GPL%20v2-blue.svg)
-[![GitHub Actions](https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/workflows/CI/badge.svg)](https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/actions)
+[![GitHub Actions](https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/workflows/GitHub%20CI/badge.svg)](https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/actions)
 [![AppVeyor](https://ci.appveyor.com/api/projects/status/iao43irxl3umbp33?svg=true)](https://ci.appveyor.com/project/SoullessSentinel/cxbx-reloaded)
 [![Azure](https://Cxbx-Reloaded.visualstudio.com/Cxbx-Reloaded/_apis/build/status/Cxbx-Reloaded.Cxbx-Reloaded?branchName=develop)](https://Cxbx-Reloaded.visualstudio.com/Cxbx-Reloaded/_build/latest?definitionId=7&branchName=develop)
 [![Travis](https://travis-ci.org/Cxbx-Reloaded/Cxbx-Reloaded.svg?branch=develop)](https://travis-ci.org/Cxbx-Reloaded/Cxbx-Reloaded)
