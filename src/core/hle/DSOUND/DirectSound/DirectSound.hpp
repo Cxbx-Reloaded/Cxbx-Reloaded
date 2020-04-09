@@ -29,6 +29,9 @@
 #include "core\kernel\init\CxbxKrnl.h"
 #include "core\hle\DSOUND\XbDSoundTypes.h"
 
+typedef struct IDirectSound3DListener8* LPDIRECTSOUND3DLISTENER8;
+typedef struct IDirectSound3DBuffer8* LPDIRECTSOUND3DBUFFER8;
+
 #ifdef __cplusplus
 extern "C" {
 #endif

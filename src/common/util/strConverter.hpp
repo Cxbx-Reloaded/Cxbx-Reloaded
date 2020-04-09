@@ -25,6 +25,7 @@
 #pragma once
 
 #include <string>
+#include <cstring>
 #include <SDL_stdinc.h>
 
 // Depending on what type of UTF-8 string is input, otherwise will use native by default.

@@ -1,8 +1,9 @@
 // This is an open source non-commercial project. Dear PVS-Studio, please check it.
 // PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 
-#include <stdlib.h>
-#include <string.h>
+#include <cstdlib>
+#include <cstring>
+#include <cstddef>
 #include <sys/types.h>
 
 #include "xdvdfs.h"

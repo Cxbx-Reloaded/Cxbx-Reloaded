@@ -27,6 +27,11 @@
 
 #pragma once
 
+#ifndef DIK_PREVTRACK
+// Not defined by MinGW
+#define DIK_PREVTRACK 0x90
+#endif
+
 {DIK_A, "A"}, { DIK_B, "B" }, { DIK_C, "C" }, { DIK_D, "D" }, { DIK_E, "E" }, { DIK_F, "F" }, { DIK_G, "G" },
 { DIK_H, "H" }, { DIK_I, "I" }, { DIK_J, "J" }, { DIK_K, "K" }, { DIK_L, "L" }, { DIK_M, "M" },
 { DIK_N, "N" }, { DIK_O, "O" }, { DIK_P, "P" }, { DIK_Q, "Q" }, { DIK_R, "R" }, { DIK_S, "S" },

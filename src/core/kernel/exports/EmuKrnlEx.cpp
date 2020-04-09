@@ -306,7 +306,7 @@ XBSYSAPI EXPORTNUM(20) xboxkrnl::VOID FASTCALL xboxkrnl::ExInterlockedAddLargeSt
 		LOG_FUNC_ARG(Increment)
 		LOG_FUNC_END;
 
-	auto &Target = std::atomic<LONGLONG>(Addend->QuadPart);
+	std::atomic<LONGLONG> Target(Addend->QuadPart);
 	Target.fetch_add(Increment);
 }
 
@@ -327,7 +327,7 @@ XBSYSAPI EXPORTNUM(21) xboxkrnl::LONGLONG FASTCALL xboxkrnl::ExInterlockedCompar
 		LOG_FUNC_ARG(Comparand)
 		LOG_FUNC_END;
 
-	auto &Target = std::atomic<LONGLONG>(*Destination);
+	std::atomic<LONGLONG> Target(*Destination);
 
 	LONGLONG Result = *Comparand;
 	Target.compare_exchange_strong(Result, *Exchange);

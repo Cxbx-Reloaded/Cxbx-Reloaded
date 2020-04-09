@@ -47,6 +47,10 @@ namespace xboxkrnl {
 #include <process.h>
 #include <clocale>
 
+#ifndef IID_IDirectSound3DListener8
+#define IID_IDirectSound3DListener8 IID_IDirectSound3DListener
+#endif
+
 // Temporary APU Timer Functions
 // TODO: Move these to LLE APUDevice once we have one!
 

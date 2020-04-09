@@ -82,7 +82,7 @@ void CxbxCreatePartitionHeaderFile(std::string filename, bool partition0 = false
 {
 	HANDLE hf = CreateFile(filename.c_str(), GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 0, 0);
 	if (!hf) {
-		CxbxKrnlCleanup("CxbxCreatePartitionHeaderFile Failed\nUnable to create file: %s (%s)", filename);
+		CxbxKrnlCleanup("CxbxCreatePartitionHeaderFile Failed\nUnable to create file: %s (%s)", filename.c_str());
 		return;
 	}
 

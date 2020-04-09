@@ -33,24 +33,24 @@ namespace XTL {
 // TODO: Everything, only small portions had been implemented.
 
 // DSound flag/enum
-enum DSMIXBIN_SPEAKER;
-enum DSSPEAKER_FLAG;
+enum DSMIXBIN_SPEAKER : int;
+enum DSSPEAKER_FLAG : int;
 // DSound generic flag/enum
-enum DSFILTER_MODE;
+enum DSFILTER_MODE : int;
 // DSound Buffer flag/enum
-enum DSBCAPS_FLAG;
-enum DSBPAUSE_FLAG;
-enum DSBPLAY_FLAG;
-enum DSBSTATUS_FLAG;
-enum DSBSTOPEX_FLAG;
+enum DSBCAPS_FLAG : int;
+enum DSBPAUSE_FLAG : int;
+enum DSBPLAY_FLAG : int;
+enum DSBSTATUS_FLAG : int;
+enum DSBSTOPEX_FLAG : int;
 // DSound Stream flag/enum
-enum DSSCAPS_FLAG;
-enum DSSFLUSHEX_FLAG;
-enum DSSPAUSE_FLAG;
-enum DSSSTATUS_FLAG;
+enum DSSCAPS_FLAG : int;
+enum DSSFLUSHEX_FLAG : int;
+enum DSSPAUSE_FLAG : int;
+enum DSSSTATUS_FLAG : int;
 // DSound XMedia flag/enum
-enum XMP_STATUS;
-enum XMO_STREAMF;
+enum XMP_STATUS : int;
+enum XMO_STREAMF : int;
 
 // DSound flag/enum
 FLAGS2STR_HEADER(DSSPEAKER_FLAG)

@@ -27,11 +27,6 @@
 #ifndef EMU_EEPROM_H
 #define EMU_EEPROM_H
 
-#if defined(__cplusplus)
-extern "C"
-{
-#endif
-
 // prevent name collisions
 namespace xboxkrnl
 {
@@ -52,7 +47,7 @@ typedef struct EEPROMInfo {
 #define XC_END_MARKER (xboxkrnl::XC_VALUE_INDEX)-1
 
 #define EEPROM_INFO_ENTRY(XC, Member, REG_Type) \
-	{ xboxkrnl::##XC, offsetof(xboxkrnl::XBOX_EEPROM, Member), REG_Type, sizeof(((xboxkrnl::XBOX_EEPROM *)0)->Member) }
+	{ xboxkrnl::XC, offsetof(xboxkrnl::XBOX_EEPROM, Member), REG_Type, sizeof(((xboxkrnl::XBOX_EEPROM *)0)->Member) }
 
 static const EEPROMInfo EEPROMInfos[] = {
 	EEPROM_INFO_ENTRY(XC_TIMEZONE_BIAS,         UserSettings.TimeZoneBias,                REG_DWORD),
@@ -161,9 +156,5 @@ extern xboxkrnl::ULONG XboxFactoryGameRegion;
 extern void EmuEEPROMReset(xboxkrnl::XBOX_EEPROM* eeprom);
 
 void gen_section_CRCs(xboxkrnl::XBOX_EEPROM*);
-
-#if defined(__cplusplus)
-}
-#endif
 
 #endif // EMU_EEPROM_H

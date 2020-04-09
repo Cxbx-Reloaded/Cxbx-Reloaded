@@ -41,6 +41,7 @@ typedef struct tagTHREADNAME_INFO
 } THREADNAME_INFO;
 #pragma pack(pop)  
 
+#ifdef _MSC_VER
 void SetThreadName(DWORD dwThreadID, const char* szThreadName)
 {
 	if (!IsDebuggerPresent())
@@ -61,6 +62,12 @@ void SetThreadName(DWORD dwThreadID, const char* szThreadName)
 	__except (EXCEPTION_EXECUTE_HANDLER) {
 	}
 }
+#else
+void SetThreadName(DWORD dwThreadID, const char* szThreadName)
+{
+	// TODO: Use SetThreadDescription
+}
+#endif
 
 void SetCurrentThreadName(const char* szThreadName)
 {

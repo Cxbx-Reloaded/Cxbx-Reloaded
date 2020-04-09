@@ -2287,7 +2287,7 @@ void WndMain::StopEmulation()
 }
 
 // wrapper function to call CrashMonitor
-DWORD WINAPI WndMain::CrashMonitorWrapper(LPVOID lpParam)
+DWORD WndMain::CrashMonitorWrapper(LPVOID lpParam)
 {
 	CxbxSetThreadName("Cxbx Crash Monitor");
 
@@ -2347,7 +2347,7 @@ void WndMain::CrashMonitor(DWORD dwChildProcID)
 }
 
 // monitor for Debugger to close then set as "available" (For limit to 1 debugger per Cxbx GUI.)
-DWORD WINAPI WndMain::DebuggerMonitor(LPVOID lpVoid)
+DWORD WndMain::DebuggerMonitor(LPVOID lpVoid)
 {
 	CxbxSetThreadName("Cxbx Debugger Monitor");
 	WndMain* pThis = static_cast<WndMain*>(lpVoid);

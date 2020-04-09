@@ -61,6 +61,7 @@ namespace xboxkrnl
 	#include <xboxkrnl/xboxkrnl.h> // For PKINTERRUPT, etc.
 };
 
+#include <cstring> // For memcpy
 #include "OHCI.h"
 #include "Hub.h"
 #include "core\kernel\exports\EmuKrnl.h"  // For EmuLog

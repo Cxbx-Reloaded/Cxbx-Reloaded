@@ -12,7 +12,6 @@ if ("${CMAKE_C_COMPILER_ID}" STREQUAL "MSVC")
 endif()
 
 add_compile_definitions(
- LTM_DESC
  LTC_SOURCE
  LTC_NO_TEST
  LTC_NO_PROTOTYPES
@@ -460,6 +459,8 @@ source_group(TREE ${CXBXR_ROOT_DIR}/import/libtomcrypt/src/headers PREFIX header
 source_group(TREE ${CXBXR_ROOT_DIR}/import/libtomcrypt/src PREFIX source FILES ${SOURCES})
 
 add_library(libtomcrypt ${HEADERS} ${SOURCES})
+
+target_compile_definitions(libtomcrypt PUBLIC LTM_DESC=1)
 
 target_link_libraries(libtomcrypt
  PUBLIC libtommath

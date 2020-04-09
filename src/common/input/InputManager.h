@@ -28,6 +28,7 @@
 #ifndef INPUTMANAGER_H_
 #define INPUTMANAGER_H_
 
+#include <thread>
 #include "InputDevice.h"
 #include "EmuDevice.h"
 
@@ -74,7 +75,7 @@ public:
 	// get the name of the devices currently detected
 	std::vector<std::string> GetDeviceList() const;
 	// find device from its gui name
-	std::shared_ptr<InputDevice> FindDevice(std::string& QualifiedName) const;
+	std::shared_ptr<InputDevice> FindDevice(const std::string& QualifiedName) const;
 	// find device from its sdl id
 	std::shared_ptr<InputDevice> FindDevice(SDL_JoystickID id) const;
 	// find device from its xbox port

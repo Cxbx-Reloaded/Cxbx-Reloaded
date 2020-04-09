@@ -131,7 +131,7 @@ class WndMain : public Wnd
 		// ******************************************************************
 		// * crash monitoring wrapper function
 		// ******************************************************************
-		static DWORD WINAPI CrashMonitorWrapper(LPVOID lpParam);
+		static DWORD CrashMonitorWrapper(LPVOID lpParam);
 
 		// ******************************************************************
 		// * crash monitoring function thread
@@ -141,7 +141,7 @@ class WndMain : public Wnd
 		// ******************************************************************
 		// * Debugger monitoring function thread
 		// ******************************************************************
-		static DWORD WINAPI DebuggerMonitor(LPVOID lpVoid);
+		static DWORD DebuggerMonitor(LPVOID lpVoid);
 
 		// ******************************************************************
 		// * Close debugger monitoring function

@@ -29,37 +29,37 @@
 #include "XbD3D8Types.h"
 
 // Additional types, exclusively for logging (not really enums) :
-enum D3DVS20CAPS;
-enum D3DPS20CAPS;
-enum _D3DCAPS;
-enum D3DCAPS2;
-enum D3DCAPS3;
-enum D3DPRESENT_INTERVAL;
-enum D3DCURSORCAPS;
-enum D3DDEVCAPS;
-enum D3DPMISCCAPS;
-enum D3DLINECAPS;
-enum D3DPRASTERCAPS;
-enum D3DPCMPCAPS;
-enum D3DPBLENDCAPS;
-enum D3DPSHADECAPS;
-enum D3DPTEXTURECAPS;
-enum D3DPTFILTERCAPS;
-enum D3DPTADDRESSCAPS;
-enum D3DSTENCILCAPS;
-enum D3DTEXOPCAPS;
-enum D3DFVFCAPS;
-enum D3DVTXPCAPS;
-enum D3DDEVCAPS2;
-enum D3DDTCAPS;
+enum D3DVS20CAPS : int;
+enum D3DPS20CAPS : int;
+enum _D3DCAPS : int;
+enum D3DCAPS2 : int;
+enum D3DCAPS3 : int;
+enum D3DPRESENT_INTERVAL : int;
+enum D3DCURSORCAPS : int;
+enum D3DDEVCAPS : int;
+enum D3DPMISCCAPS : int;
+enum D3DLINECAPS : int;
+enum D3DPRASTERCAPS : int;
+enum D3DPCMPCAPS : int;
+enum D3DPBLENDCAPS : int;
+enum D3DPSHADECAPS : int;
+enum D3DPTEXTURECAPS : int;
+enum D3DPTFILTERCAPS : int;
+enum D3DPTADDRESSCAPS : int;
+enum D3DSTENCILCAPS : int;
+enum D3DTEXOPCAPS : int;
+enum D3DFVFCAPS : int;
+enum D3DVTXPCAPS : int;
+enum D3DDEVCAPS2 : int;
+enum D3DDTCAPS : int;
 
 namespace XTL {
 
-enum X_D3DUSAGE;
-enum X_D3DCOMMON_TYPE;
-enum X_D3DRESOURCE_COMMON;
-enum X_D3DRESOURCE_FORMAT;
-enum X_D3DRESOURCE_SIZE;
+enum X_D3DUSAGE : int;
+enum X_D3DCOMMON_TYPE : int;
+enum X_D3DRESOURCE_COMMON : int;
+enum X_D3DRESOURCE_FORMAT : int;
+enum X_D3DRESOURCE_SIZE : int;
 
 } // end of namespace XTL
 

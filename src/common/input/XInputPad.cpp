@@ -38,6 +38,11 @@
 #include "core\kernel\support\Emu.h"
 #include "InputManager.h"
 
+// For MinGW
+#ifndef XINPUT_DLL
+#define XINPUT_DLL "xinput1_3.dll"
+#endif
+
 #ifndef XINPUT_GAMEPAD_GUIDE
 #define XINPUT_GAMEPAD_GUIDE 0x0400
 #endif

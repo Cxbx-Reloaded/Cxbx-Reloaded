@@ -26,6 +26,7 @@
 #define XBVERTEXBUFFER_H
 
 #include <unordered_map>
+#include <list>
 
 #include "Cxbx.h"
 

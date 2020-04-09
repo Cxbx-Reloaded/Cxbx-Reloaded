@@ -27,6 +27,7 @@
 #include <dsound.h>
 
 #include <thread>
+#include <mutex>
 #include "core/kernel/support/Emu.h"
 #include "common/win32/EmuShared.h"
 #include "core/hle/D3D8/Direct3D9/Direct3D9.h" // For D3D_OK

@@ -45,9 +45,6 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
   LTC_NO_PRNGS
   LTC_NO_MISC
   LTC_NO_PROTOTYPES
-
-  # Use inline XXHash version
-  XXH_INLINE_ALL
  )
  
  # Reference: https://docs.microsoft.com/en-us/cpp/build/reference/compiler-options-listed-alphabetically
@@ -65,6 +62,9 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
 endif()
 
 add_compile_definitions(NOMINMAX
+
+# Use inline XXHash version
+XXH_INLINE_ALL
 )
 
 file (GLOB RESOURCES
