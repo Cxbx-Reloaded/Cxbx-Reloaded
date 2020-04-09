@@ -6,6 +6,8 @@
 
 #include <sstream>
 
+extern const char* g_vs_model = vs_model_3_0;
+
 // HLSL generation
 void OutputHlsl(std::stringstream& hlsl, VSH_IMD_OUTPUT& dest)
 {
@@ -247,9 +249,8 @@ extern HRESULT EmuCompileShader
 	EmuLog(LOG_LEVEL::DEBUG, DebugPrependLineNumbers(hlsl_str).c_str());
 	EmuLog(LOG_LEVEL::DEBUG, "-----------------------");
 
-	// Level 0 for fastest runtime compilation
-	// TODO Can we recompile an optimized shader in the background?
-	UINT flags1 = D3DCOMPILE_OPTIMIZATION_LEVEL0;
+
+	UINT flags1 = D3DCOMPILE_OPTIMIZATION_LEVEL3 | D3DCOMPILE_AVOID_FLOW_CONTROL;
 
 	hRet = D3DCompile(
 		hlsl_str.c_str(),
@@ -258,7 +259,7 @@ extern HRESULT EmuCompileShader
 		nullptr, // pDefines
 		nullptr, // pInclude // TODO precompile x_* HLSL functions?
 		"main", // shader entry poiint
-		"vs_3_0", // shader profile
+		g_vs_model, // shader profile
 		flags1, // flags1
 		0, // flags2
 		ppHostShader, // out
@@ -275,7 +276,7 @@ extern HRESULT EmuCompileShader
 			nullptr, // pDefines
 			nullptr, // pInclude // TODO precompile x_* HLSL functions?
 			"main", // shader entry poiint
-			"vs_3_0", // shader profile
+			g_vs_model, // shader profile
 			flags1, // flags1
 			0, // flags2
 			ppHostShader, // out

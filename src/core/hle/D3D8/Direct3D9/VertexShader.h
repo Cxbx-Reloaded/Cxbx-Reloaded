@@ -10,6 +10,10 @@ enum class ShaderType {
 	Unsupported,
 };
 
+static const char* vs_model_2_a = "vs_2_a";
+static const char* vs_model_3_0 = "vs_3_0";
+extern const char* g_vs_model;
+
 extern ShaderType EmuGetShaderInfo(IntermediateVertexShader* pIntermediateShader);
 
 extern HRESULT EmuCompileShader
