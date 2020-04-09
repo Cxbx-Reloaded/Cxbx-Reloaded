@@ -54,32 +54,49 @@ bool ReserveMemoryRange(int index, blocks_reserved_t blocks_reserved)
 	const DWORD Protect = XboxAddressRanges[index].InitialMemoryProtection;
 	bool NeedsReservationTracking = false;
 	unsigned int arr_index = BLOCK_REGION_DEVKIT_INDEX_BEGIN;
+	static HANDLE hFileMapping1;
+	static HANDLE hFileMapping2;
+
 #ifdef DEBUG
 	std::printf("DEBUG: ReserveMemoryRange call begin\n");
 	std::printf("     : Comment = %s\n", XboxAddressRanges[index].Comment);
 #endif
 	switch (Start) {
 		case PHYSICAL_MAP1_BASE:
+			hFileMapping1 = CreateFileMapping(
+				INVALID_HANDLE_VALUE,
+				nullptr,
+				PAGE_EXECUTE_READWRITE,
+				0,
+				Size,
+				nullptr);
+			if (hFileMapping1 == nullptr) {
+				HadAnyFailure = true;
+				break;
+			}
+			[[fallthrough]];
+
 		case PHYSICAL_MAP2_BASE:
 		case TILED_MEMORY_BASE: {
-			static bool NeedsInitialization = true;
-			static	HANDLE hFileMapping;
-			if (NeedsInitialization) {
-				hFileMapping = CreateFileMapping(
+			static bool NeedsInitializationMap = true;
+
+			if (NeedsInitializationMap) {
+				hFileMapping2 = CreateFileMapping(
 					INVALID_HANDLE_VALUE,
 					nullptr,
 					PAGE_EXECUTE_READWRITE,
 					0,
 					Size,
 					nullptr);
-				if (hFileMapping == nullptr) {
+				if (hFileMapping2 == nullptr) {
 					HadAnyFailure = true;
 					break;
 				}
-				NeedsInitialization = false;
+				NeedsInitializationMap = false;
 			}
+
 			LPVOID Result = MapViewOfFileEx(
-				hFileMapping,
+				(Start == PHYSICAL_MAP1_BASE || Start == TILED_MEMORY_BASE) ? hFileMapping1 : hFileMapping2,
 				(Start == PHYSICAL_MAP1_BASE || Start == PHYSICAL_MAP2_BASE) ?
 				(FILE_MAP_READ | FILE_MAP_WRITE | FILE_MAP_EXECUTE) : (FILE_MAP_READ | FILE_MAP_WRITE),
 				0,
@@ -99,14 +116,14 @@ bool ReserveMemoryRange(int index, blocks_reserved_t blocks_reserved)
 			// If additional addresses need to be assign in region's block.
 			// Then check for nonzero value.
 			arr_index = BLOCK_REGION_SYSTEM_INDEX_BEGIN;
-		[[fallthrough]];
-		case DEVKIT_MEMORY_BASE: {
+			[[fallthrough]];
+
+		case DEVKIT_MEMORY_BASE:
 			// arr_index's default is BLOCK_REGION_DEVKIT_INDEX_BEGIN which is zero.
 			// Any block region above zero should be place above this case to override zero value.
 			//arr_index = BLOCK_REGION_DEVKIT_INDEX_BEGIN;
 			NeedsReservationTracking = true;
-		}
-		[[fallthrough]];
+			[[fallthrough]];
 
 		default: {
 			while (Size > 0) {
