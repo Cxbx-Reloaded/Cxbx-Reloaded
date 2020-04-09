@@ -1,9 +1,7 @@
 # Cxbx-Reloaded - Original Xbox Emulator
 [![License: GPL v2](https://img.shields.io/badge/License-GPL%20v2-blue.svg)](https://img.shields.io/badge/License-GPL%20v2-blue.svg)
-[![GitHub Actions](https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/workflows/GitHub%20CI/badge.svg)](https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/actions)
-[![AppVeyor](https://ci.appveyor.com/api/projects/status/iao43irxl3umbp33?svg=true)](https://ci.appveyor.com/project/SoullessSentinel/cxbx-reloaded)
+[![GitHub Actions](https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/workflows/GitHub%20CI/badge.svg)](https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/actions?query=workflow%3A%22GitHub+CI%22)
 [![Azure](https://Cxbx-Reloaded.visualstudio.com/Cxbx-Reloaded/_apis/build/status/Cxbx-Reloaded.Cxbx-Reloaded?branchName=develop)](https://Cxbx-Reloaded.visualstudio.com/Cxbx-Reloaded/_build/latest?definitionId=7&branchName=develop)
-[![Travis](https://travis-ci.org/Cxbx-Reloaded/Cxbx-Reloaded.svg?branch=develop)](https://travis-ci.org/Cxbx-Reloaded/Cxbx-Reloaded)
 [![Discord](https://img.shields.io/badge/chat-on%20discord-7289da.svg?logo=discord)](https://discord.gg/26Xjx23)
 
 Cxbx-Reloaded is an emulator for running Microsoft Xbox (and eventually, Chihiro) games on Microsoft Windows.
@@ -19,11 +17,11 @@ Cxbx-Reloaded is an emulator for running Microsoft Xbox (and eventually, Chihiro
     * Make sure to enable winpcap compatibility mode!
 
 ## Automated Builds
-Cxbx-Reloaded is not yet ready for general release, but the latest development builds can be downloaded using the links below:
+Cxbx-Reloaded doesn't currently have stable builds, but you can obtain pre-release builds from the Releases tab, or the links below:
 
-  * **[Latest Development Build](https://ci.appveyor.com/api/projects/SoullessSentinel/cxbx-reloaded/artifacts/Release.zip?branch=develop&job=Configuration:%20Release&pr=false)**
-
-  * *[Full build history](https://ci.appveyor.com/project/SoullessSentinel/cxbx-reloaded/history)*
+  * **[Release Builds](https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/releases)**
+    * **WINE users will need to use `CxbxReloaded-Release-VS2017.zip` for it to run correctly.**
+  * *[Full build history](https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/actions?query=workflow%3A%22GitHub+CI%22)*
 
 ## Compatibility
 Cxbx-Reloaded has a [compatibility list](https://github.com/Cxbx-Reloaded/game-compatibility#cxbx-reloaded-game-compatibility-project).
