@@ -23,6 +23,7 @@ image: # If this is modified, please also update the build script
 
 configuration: # The builds will be run in this order
   - Release
+  - Debug
 
 before_build:
   - |-
@@ -36,8 +37,10 @@ build_script:
 
 on_success:
   - ps: |-
-      cd bin\$env:configuration
-      7z u "$env:configuration.zip" ..\..\..\COPYING ..\..\..\README.md
-      7z u "$env:configuration.zip" Cxbx.exe glew32.dll subhook.dll SDL2.dll
-      7z u "$env:configuration.zip" cxbxr-debugger.exe capstone.dll cs_x86.dll
-      Get-ChildItem .\*.zip | % { Push-AppveyorArtifact $_.FullName -FileName $_.Name }
+      If ($env:configuration -eq 'Release') {
+        cd bin\$env:configuration
+        7z u "$env:configuration.zip" ..\..\..\COPYING ..\..\..\README.md
+        7z u "$env:configuration.zip" Cxbx.exe glew32.dll subhook.dll SDL2.dll
+        7z u "$env:configuration.zip" cxbxr-debugger.exe capstone.dll cs_x86.dll
+        Get-ChildItem .\*.zip | % { Push-AppveyorArtifact $_.FullName -FileName $_.Name }
+      }
