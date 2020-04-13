@@ -48,11 +48,16 @@ float4 c(int register_number)
 	// Map Xbox [-96, 95] to Host [0, 191]
 	// Account for Xbox's negative constant indexes
     register_number += X_D3DSCM_CORRECTION;
-    if (register_number < 0)
-        return 0;
-    
+
+    // Like Xbox, out-of-range indices are guaranteed to be zero in HLSL
+    // so no need to bounds check negative numbers
+    // if (register_number < 0)
+    //    return 0;
+
+    // If the index is too large, set it to -1 so 0 is returned
+    // Note: returning 0 directly requires many more instructions
     if (register_number >= X_D3DVS_CONSTREG_COUNT) // X_D3DVS_CONSTREG_COUNT
-        return 0;
+        register_number = -1;
 
     return C[register_number];
 }
