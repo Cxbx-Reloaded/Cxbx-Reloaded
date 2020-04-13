@@ -1670,7 +1670,7 @@ VOID EmuD3DInit()
 		// 1002 and 1022 are vendor ids of AMD gpus
 		if (status == D3D_OK && (adapter_info.VendorId == 0x1002 || adapter_info.VendorId == 0x1022)) {
 			g_vs_model = vs_model_2_a;
-			EmuLog(LOG_LEVEL::WARNING, "AMD GPU Detected, falling back to shader model 2.X to prevent missing polygons");
+			EmuLogInit(LOG_LEVEL::WARNING, "AMD GPU Detected, falling back to shader model 2.X to prevent missing polygons");
 		}
 	}
 }
