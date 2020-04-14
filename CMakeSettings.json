@@ -1,0 +1,28 @@
+﻿{
+  "configurations": [
+    {
+      "name": "x86-Release",
+      "configurationType": "Release",
+      "inheritEnvironments": [
+        "msvc_x86"
+      ],
+      "buildRoot": "${workspaceRoot}\\build\\${name}",
+      "installRoot": "${workspaceRoot}\\bin\\Release",
+      "cmakeCommandArgs": "",
+      "buildCommandArgs": "/v:m",
+      "ctestCommandArgs": ""
+    },
+    {
+      "name": "x86-Debug",
+      "configurationType": "Debug",
+      "inheritEnvironments": [
+        "msvc_x86"
+      ],
+      "buildRoot": "${workspaceRoot}\\build\\${name}",
+      "installRoot": "${workspaceRoot}\\bin\\Debug",
+      "cmakeCommandArgs": "",
+      "buildCommandArgs": "/v:m",
+      "ctestCommandArgs": ""
+    }
+  ]
+}

@@ -1,0 +1,119 @@
+name: GitHub CI
+
+on:
+  push:
+    paths-ignore:
+      - '.github/CONTRIBUTING.md'
+      - '.github/FUNDING.md'
+      - '.github/ISSUE_TEMPLATE/*'
+      - 'doc/*'
+      - 'doc/*/*'
+      - '.appveyor.yml'
+      - '.azure-pipelines.yml'
+      - '.travis.yml'
+      - 'gen-msvc-project.bat'
+      - 'setup.bat'
+  pull_request:
+    paths-ignore:
+      - '.github/CONTRIBUTING.md'
+      - '.github/FUNDING.md'
+      - '.github/ISSUE_TEMPLATE/*'
+      - 'doc/*'
+      - 'doc/*/*'
+      - '.appveyor.yml'
+      - '.azure-pipelines.yml'
+      - '.travis.yml'
+      - 'gen-msvc-project.bat'
+      - 'setup.bat'
+
+jobs:
+  build-windows:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        configuration: [Release, Debug]
+        vsver: [VS2019, VS2017]
+        include:
+          - vsver: VS2019
+            os: windows-latest
+          - vsver: VS2017    # TODO: Remove VS2017 once WINE supports VS2019 runtimes;
+            os: windows-2016 # https://github.com/actions/virtual-environments/issues/68#issuecomment-602652021
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: recursive
+      - name: Generate cmake files
+        run: |
+          mkdir build && cd build
+          cmake .. -A Win32
+      - name: Build
+        working-directory: build
+        run: cmake --build . --config ${{ matrix.configuration }} -j $env:NUMBER_OF_PROCESSORS
+      - name: Prepare artifacts
+        if: matrix.configuration == 'Release'
+        run: |
+          robocopy . artifacts COPYING README.md /r:0 /w:0
+          robocopy build\bin\${{ matrix.configuration }} artifacts `
+            Cxbx.exe glew32.dll subhook.dll SDL2.dll `
+            cxbxr-debugger.exe capstone.dll cs_x86.dll /r:0 /w:0
+          If ($LastExitCode -le 7) { $LastExitCode = 0 }
+      - uses: actions/upload-artifact@v1
+        if: matrix.configuration == 'Release'
+        with:
+          name: CxbxReloaded-${{ matrix.configuration }}-${{ matrix.vsver }}
+          path: artifacts
+
+  release:
+    if: | # TODO: Remove develop once rebased
+      github.event.action != 'pull_request' &&
+      (github.ref == 'refs/heads/develop' ||
+       github.ref == 'refs/heads/master')   &&
+      github.repository == 'Cxbx-Reloaded/Cxbx-Reloaded'
+    needs: build-windows
+    env:
+      artifact_1: CxbxReloaded-Release-VS2019
+      artifact_2: CxbxReloaded-Release-VS2017
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Download artifacts (1)
+        uses: actions/download-artifact@v1
+        with:
+          name: ${{ env.artifact_1 }}
+      - name: Download artifacts (2)
+        uses: actions/download-artifact@v1
+        with:
+          name: ${{ env.artifact_2 }}
+      - name: Prepare artifacts for release
+        run: | # download-artifact doesn't download a zip, so rezip it
+          echo "::set-env name=short_commit_sha::$(git rev-parse --short HEAD)"
+          7z a -mx1 "$env:artifact_1.zip" ".\$env:artifact_1\*"
+          7z a -mx1 "$env:artifact_2.zip" ".\$env:artifact_2\*"
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: CI-${{ env.short_commit_sha }}
+          release_name: CI-${{ env.short_commit_sha }}
+          prerelease: true
+      - name: Upload Release Asset (1)
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ${{ env.artifact_1 }}.zip
+          asset_name: ${{ env.artifact_1 }}.zip
+          asset_content_type: application/zip
+      - name: Upload Release Asset (2)
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ${{ env.artifact_2 }}.zip
+          asset_name: ${{ env.artifact_2 }}.zip
+          asset_content_type: application/zip

@@ -17,3 +17,6 @@
 *.PDF	 diff=astextplain
 *.rtf	 diff=astextplain
 *.RTF	 diff=astextplain
+
+[Cc][Mm]ake[Ll]ists.txt text=lf
+*.bat text=lf

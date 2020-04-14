@@ -1,1 +1,0 @@
-These files were taken from the MechCommander2 Source code distribution and are property of Microsoft Corporation.

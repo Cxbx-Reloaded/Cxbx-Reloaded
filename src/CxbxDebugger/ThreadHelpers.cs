@@ -256,7 +256,7 @@ namespace CxbxDebugger
     }
 
     /// <summary>
-    /// http://msdn.microsoft.com/en-us/library/windows/desktop/aa363082(v=vs.85).aspx
+    /// https://msdn.microsoft.com/en-us/library/windows/desktop/aa363082(v=vs.85).aspx
     /// </summary>
     public enum ExceptionCode : uint
     {

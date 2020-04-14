@@ -1,0 +1,1534 @@
+// ******************************************************************
+// *
+// *  This file is part of the Cxbx project.
+// *
+// *  Cxbx and Cxbe are free software; you can redistribute them
+// *  and/or modify them under the terms of the GNU General Public
+// *  License as published by the Free Software Foundation; either
+// *  version 2 of the license, or (at your option) any later version.
+// *
+// *  This program is distributed in the hope that it will be useful,
+// *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+// *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// *  GNU General Public License for more details.
+// *
+// *  You should have recieved a copy of the GNU General Public License
+// *  along with this program; see the file COPYING.
+// *  If not, write to the Free Software Foundation, Inc.,
+// *  59 Temple Place - Suite 330, Bostom, MA 02111-1307, USA.
+// *
+// *  (c) 2002-2003 Aaron Robinson <caustik@caustik.com>
+// *  (c) 2017 blueshogun96
+// *  (c) 2017-2020 RadWolfie
+// *
+// *  All rights reserved
+// *
+// ******************************************************************
+#pragma once
+
+#include <mutex>
+
+#include "common/XADPCM.h"
+#include "core/hle/DSOUND/XbDSoundTypes.h"
+#include "core/hle/DSOUND/common/windows/WFXformat.hpp"
+
+#include <mmreg.h>
+
+#define DSoundBufferGetPCMBufferSize(EmuFlags, size) (EmuFlags & DSE_FLAG_XADPCM) > 0 ? DWORD((size / float(XBOX_ADPCM_SRCSIZE)) * XBOX_ADPCM_DSTSIZE) : size
+#define DSoundBufferGetXboxBufferSize(EmuFlags, size) (EmuFlags & DSE_FLAG_XADPCM) > 0 ? DWORD((size / float(XBOX_ADPCM_DSTSIZE)) * XBOX_ADPCM_SRCSIZE) : size
+
+typedef struct IDirectSound3DBuffer8* LPDIRECTSOUND3DBUFFER8;
+typedef LONGLONG REFERENCE_TIME;
+
+// Memory managed xbox audio function handler
+static inline DWORD DSoundSGEFreeBuffer() {
+    int count =  (XTL_DS_SGE_SIZE_MAX - g_dwXbMemAllocated);
+    count =  count / XTL_DS_SGE_PAGE_MAX;
+    // Check for negative value, we don't need warning as we are allowing overflow one time only.
+    if (count < 0) {
+        return 0;
+    }
+    return (DWORD)count;
+}
+static inline void DSoundSGEMemAlloc(DWORD size) {
+    g_dwXbMemAllocated += size;
+}
+static inline void DSoundSGEMemDealloc(DWORD size) {
+    g_dwXbMemAllocated -= size;
+}
+static inline bool DSoundSGEMenAllocCheck(DWORD sizeRequest) {
+    int leftOverSize = XTL_DS_SGE_SIZE_MAX - (g_dwXbMemAllocated + sizeRequest);
+    // Don't let xbox title to alloc any more.
+    if (leftOverSize < 0) {
+        return false;
+    }
+    return true;
+}
+
+#if 0
+// Debugging controlled audio section for audible only
+static inline void DSoundDebugMuteFlag(DWORD Xb_bufferBytes, DWORD &EmuFlags) {
+    if (Xb_bufferBytes != 0xEA0) {
+        EmuFlags |= DSE_FLAG_DEBUG_MUTE;
+    } else {
+        EmuFlags ^= DSE_FLAG_DEBUG_MUTE;
+    }
+}
+#else
+#define DSoundDebugMuteFlag
+#endif
+
+static void DSoundBufferOutputXBtoHost(DWORD emuFlags, DSBUFFERDESC &DSBufferDesc, LPVOID pXBaudioPtr, DWORD dwXBAudioBytes, LPVOID pPCaudioPtr, DWORD dwPCMAudioBytes) {
+    if ((emuFlags & DSE_FLAG_XADPCM) > 0) {
+
+        TXboxAdpcmDecoder_Decode_Memory((uint8_t*)pXBaudioPtr, dwXBAudioBytes, (uint8_t*)pPCaudioPtr, DSBufferDesc.lpwfxFormat->nChannels);
+
+    // PCM format, no changes requirement.
+    } else {
+        memcpy_s(pPCaudioPtr, dwPCMAudioBytes, pXBaudioPtr, dwPCMAudioBytes);
+    }
+}
+
+static inline void GenerateXboxBufferCache(
+    DSBUFFERDESC   &DSBufferDesc,
+    DWORD          &dwEmuFlags,
+    DWORD           X_BufferSizeRequest,
+    LPVOID*         X_BufferCache,
+    DWORD          &X_BufferCacheSize) {
+
+    // Generate xbox buffer cache size
+    // If the size is the same, don't realloc
+    if (X_BufferCacheSize != X_BufferSizeRequest) {
+        // Check if buffer cache exist, then copy over old ones.
+        if (*X_BufferCache != xbnullptr && (dwEmuFlags & DSE_FLAG_BUFFER_EXTERNAL) == 0) {
+            LPVOID tempBuffer = *X_BufferCache;
+            *X_BufferCache = malloc(X_BufferSizeRequest);
+
+            // This will perform partial alloc/dealloc instead of call twice for alloc and dealloc functions.
+            DSoundSGEMemAlloc(X_BufferSizeRequest - X_BufferCacheSize);
+
+            // Don't copy over the limit.
+            if (X_BufferCacheSize > X_BufferSizeRequest) {
+                X_BufferCacheSize = X_BufferSizeRequest;
+            }
+            memcpy_s(*X_BufferCache, X_BufferSizeRequest, tempBuffer, X_BufferCacheSize);
+            free(tempBuffer);
+        } else {
+            *X_BufferCache = calloc(1, X_BufferSizeRequest);
+            DSoundSGEMemAlloc(X_BufferSizeRequest);
+        }
+        X_BufferCacheSize = X_BufferSizeRequest;
+    }
+}
+
+static inline void InitVoiceProperties(XTL::X_DSVOICEPROPS& Xb_VoiceProperties)
+{
+    Xb_VoiceProperties.l3DConeVolume = 0;
+    Xb_VoiceProperties.l3DDistanceVolume = 0;
+    Xb_VoiceProperties.l3DDopplerPitch = 0;
+    Xb_VoiceProperties.lI3DL2DirectVolume = 0;
+    Xb_VoiceProperties.lI3DL2RoomVolume = 0;
+    Xb_VoiceProperties.lPitch = -4597;
+}
+
+static inline void GenerateMixBinDefault(
+    XTL::X_DSVOICEPROPS    &Xb_VoiceProperties,
+    LPCWAVEFORMATEX         lpwfxFormat,
+    XTL::X_LPDSMIXBINS      mixbins_output,
+    bool                    is3D)
+{
+    if (g_LibVersion_DSOUND < 4039) {
+        // Do not apply any update since below 4039 doesn't provide access to get properties.
+        return;
+    }
+
+    auto& xb_mixbinArray = Xb_VoiceProperties.MixBinVolumePairs;
+    unsigned int i;
+
+    // Use custom mixbin if provided.
+    if (mixbins_output != xbnullptr) {
+
+        Xb_VoiceProperties.dwMixBinCount = mixbins_output->dwCount;
+        auto& mixbinArray_output = mixbins_output->lpMixBinVolumePairs;
+
+        for (i = 0; i < Xb_VoiceProperties.dwMixBinCount; i++) {
+            xb_mixbinArray[i].dwMixBin = mixbinArray_output[i].dwMixBin;
+            xb_mixbinArray[i].lVolume = 0;
+        }
+    }
+    // Otherwise use default setup as instructed by internally.
+    else {
+        unsigned int counter = 0;
+
+
+        if (is3D) {
+
+            xb_mixbinArray[counter].dwMixBin = 6;
+            xb_mixbinArray[counter].lVolume = 0;
+            counter++;
+
+            xb_mixbinArray[counter].dwMixBin = 8;
+            xb_mixbinArray[counter].lVolume = 0;
+            counter++;
+
+            xb_mixbinArray[counter].dwMixBin = 7;
+            xb_mixbinArray[counter].lVolume = 0;
+            counter++;
+
+            xb_mixbinArray[counter].dwMixBin = 9;
+            xb_mixbinArray[counter].lVolume = 0;
+            counter++;
+
+            xb_mixbinArray[counter].dwMixBin = 10;
+            xb_mixbinArray[counter].lVolume = 0;
+            counter++;
+        }
+        else {
+            // If format is PCM/XADPCM, then use stereo mixbin as default.
+            if (lpwfxFormat == xbnullptr || lpwfxFormat->wFormatTag != WAVE_FORMAT_EXTENSIBLE) {
+                counter = 2;
+                for (i = 0; i < counter; i++) {
+                    xb_mixbinArray[i].dwMixBin = i;
+                    xb_mixbinArray[i].lVolume = 0;
+                }
+            }
+            // Otherwise, the format is extensible and using channel mask as default.
+            else {
+                const WAVEFORMATEXTENSIBLE* wfxFormatExtensible = reinterpret_cast<const WAVEFORMATEXTENSIBLE*>(lpwfxFormat);
+                auto& channelMask = wfxFormatExtensible->dwChannelMask;
+
+                if ((channelMask & SPEAKER_FRONT_LEFT) > 0) {
+                    xb_mixbinArray[counter].dwMixBin = 0;
+                    xb_mixbinArray[counter].lVolume = 0;
+                    counter++;
+                }
+
+                if ((channelMask & SPEAKER_FRONT_RIGHT) > 0) {
+                    xb_mixbinArray[counter].dwMixBin = 1;
+                    xb_mixbinArray[counter].lVolume = 0;
+                    counter++;
+                }
+
+                if ((channelMask & SPEAKER_FRONT_CENTER) > 0) {
+                    xb_mixbinArray[counter].dwMixBin = 2;
+                    xb_mixbinArray[counter].lVolume = 0;
+                    counter++;
+                }
+
+                if ((channelMask & SPEAKER_LOW_FREQUENCY) > 0) {
+                    xb_mixbinArray[counter].dwMixBin = 3;
+                    xb_mixbinArray[counter].lVolume = 0;
+                    counter++;
+                }
+
+                if ((channelMask & SPEAKER_BACK_LEFT) > 0) {
+                    xb_mixbinArray[counter].dwMixBin = 4;
+                    xb_mixbinArray[counter].lVolume = 0;
+                    counter++;
+                }
+
+                if ((channelMask & SPEAKER_BACK_RIGHT) > 0) {
+                    xb_mixbinArray[counter].dwMixBin = 5;
+                    xb_mixbinArray[counter].lVolume = 0;
+                    counter++;
+                }
+            }
+        }
+
+        Xb_VoiceProperties.dwMixBinCount = counter;
+    }
+
+    // Finally, set the rest as invalid/silent.
+    for (int i = Xb_VoiceProperties.dwMixBinCount; i < 8; i++) {
+        xb_mixbinArray[i].dwMixBin = 0xFFFFFFFF;
+        xb_mixbinArray[i].lVolume = -10000;
+    }
+}
+
+static inline void GeneratePCMFormat(
+    DSBUFFERDESC   &DSBufferDesc,
+    LPCWAVEFORMATEX Xb_lpwfxFormat,
+    DWORD          &Xb_flags,
+    DWORD          &dwEmuFlags,
+    DWORD           X_BufferSizeRequest,
+    LPVOID*         X_BufferCache,
+    DWORD          &X_BufferCacheSize,
+    XTL::X_DSVOICEPROPS& Xb_VoiceProperties,
+    XTL::X_LPDSMIXBINS mixbins_output)
+{
+    bool bIsSpecial = false;
+
+    GenerateMixBinDefault(Xb_VoiceProperties, Xb_lpwfxFormat, mixbins_output, ((DSBufferDesc.dwFlags & DSBCAPS_CTRL3D) > 0));
+
+    // convert from Xbox to PC DSound
+    {
+        DSBufferDesc.dwReserved = 0;
+
+        // Allocate only once, does not need to re-allocate.
+        if (DSBufferDesc.lpwfxFormat == nullptr) {
+            // Only allocate extra value for setting extra values later on. WAVEFORMATEXTENSIBLE is the highest size I had seen.
+            DSBufferDesc.lpwfxFormat = (WAVEFORMATEX*)calloc(1, sizeof(WAVEFORMATEXTENSIBLE));
+        }
+
+        if (DSBufferDesc.lpwfxFormat == nullptr) {
+            CxbxKrnlCleanup("Unable to allocate DSBufferDesc.Xb_lpwfxFormat");
+        }
+
+        if (Xb_lpwfxFormat != xbnullptr) {
+
+            PWAVEFORMATEXTENSIBLE lpwfxFormatHost = reinterpret_cast<PWAVEFORMATEXTENSIBLE>(DSBufferDesc.lpwfxFormat);
+
+            if (Xb_lpwfxFormat->wFormatTag == WAVE_FORMAT_EXTENSIBLE) {
+                memcpy(lpwfxFormatHost, Xb_lpwfxFormat, sizeof(WAVEFORMATEX) + Xb_lpwfxFormat->cbSize);
+            }
+            else {
+                // Other formats will enforce use WAVEFORMATEX size, we cannot allow corruption sneak into WAVEFORMATEXTENSIBLE's structure.
+                memcpy(lpwfxFormatHost, Xb_lpwfxFormat, sizeof(WAVEFORMATEX));
+                lpwfxFormatHost->Format.cbSize = 0;
+            }
+
+            dwEmuFlags = dwEmuFlags & ~DSE_FLAG_AUDIO_CODECS;
+
+            CODEC_FORMAT cf_audio = WFXformat_SyncHostFormat(DSBufferDesc.lpwfxFormat, Xb_lpwfxFormat, X_BufferSizeRequest, Xb_flags);
+            if (cf_audio == CF_PCM) {
+                    dwEmuFlags |= DSE_FLAG_PCM;
+            }
+            else if (cf_audio == CF_XADPCM) {
+                    dwEmuFlags |= DSE_FLAG_XADPCM;
+            }
+            else {
+                    dwEmuFlags |= DSE_FLAG_PCM_UNKNOWN;
+            }
+
+        } else {
+            dwEmuFlags |= DSE_FLAG_RECIEVEDATA;
+
+            (void)WFXformat_SyncHostFormat(DSBufferDesc.lpwfxFormat, Xb_lpwfxFormat, X_BufferSizeRequest, Xb_flags);
+
+            DSBufferDesc.dwFlags = DSBCAPS_CTRLPAN | DSBCAPS_CTRLVOLUME | DSBCAPS_CTRLFREQUENCY;
+            DSBufferDesc.dwBufferBytes = 5 * DSBufferDesc.lpwfxFormat->nAvgBytesPerSec;
+        }
+
+        DSBufferDesc.guid3DAlgorithm = DS3DALG_DEFAULT;
+    }
+
+    if (X_BufferSizeRequest < DSBSIZE_MIN) {
+        X_BufferSizeRequest = DSBSIZE_MIN;
+    } else if (X_BufferSizeRequest > DSBSIZE_MAX) {
+        X_BufferSizeRequest = DSBSIZE_MAX;
+    }
+    if (X_BufferCache != nullptr) {
+        GenerateXboxBufferCache(DSBufferDesc, dwEmuFlags, X_BufferSizeRequest, X_BufferCache, X_BufferCacheSize);
+    }
+
+    // Handle DSound Buffer only
+    if (X_BufferCacheSize > 0) {
+        DSBufferDesc.dwBufferBytes = DSoundBufferGetPCMBufferSize(dwEmuFlags, X_BufferCacheSize);
+    }
+}
+
+static inline void DSoundGenericUnlock(
+    DWORD                   dwEmuFlags,
+    LPDIRECTSOUNDBUFFER8    pDSBuffer,
+    DSBUFFERDESC           &DSBufferDesc,
+    XTL::DSoundBuffer_Lock &Host_lock,
+    LPVOID                  X_BufferCache,
+    DWORD                   X_Offset,
+    DWORD                   X_dwLockBytes1,
+    DWORD                   X_dwLockBytes2)
+{
+    // close any existing locks
+    if (Host_lock.pLockPtr1 != nullptr) {
+
+
+        if (X_BufferCache != xbnullptr) {
+            DSoundBufferOutputXBtoHost(dwEmuFlags, DSBufferDesc, ((PBYTE)X_BufferCache + X_Offset), X_dwLockBytes1, Host_lock.pLockPtr1, Host_lock.dwLockBytes1);
+
+            if (Host_lock.pLockPtr2 != nullptr) {
+
+                DSoundBufferOutputXBtoHost(dwEmuFlags, DSBufferDesc, X_BufferCache, X_dwLockBytes2, Host_lock.pLockPtr2, Host_lock.dwLockBytes2);
+            }
+        }
+
+        HRESULT hRet = pDSBuffer->Unlock(Host_lock.pLockPtr1, Host_lock.dwLockBytes1, Host_lock.pLockPtr2, Host_lock.dwLockBytes2);
+
+        if (hRet != DS_OK) {
+            CxbxKrnlCleanup("DirectSoundBuffer Unlock Failed!");
+        }
+
+        Host_lock.pLockPtr1 = nullptr;
+        Host_lock.pLockPtr2 = nullptr;
+    }
+
+}
+
+// Temporary creation since we need IDIRECTSOUNDBUFFER8, not IDIRECTSOUNDBUFFER class.
+static inline HRESULT DSoundBufferCreate(LPDSBUFFERDESC pDSBufferDesc, LPDIRECTSOUNDBUFFER8 &pDSBuffer)
+{
+    LPDIRECTSOUNDBUFFER pTempBuffer;
+    HRESULT hRetDS = g_pDSound8->CreateSoundBuffer(pDSBufferDesc, &pTempBuffer, nullptr);
+
+    if (hRetDS == DS_OK) {
+        hRetDS = pTempBuffer->QueryInterface(IID_IDirectSoundBuffer8, (LPVOID*)&(pDSBuffer));
+        pTempBuffer->Release();
+    }
+    return hRetDS;
+}
+
+static inline void DSound3DBufferCreate(LPDIRECTSOUNDBUFFER8 pDSBuffer, LPDIRECTSOUND3DBUFFER8 &pDS3DBuffer) {
+    HRESULT hRetDS3D = pDSBuffer->QueryInterface(IID_IDirectSound3DBuffer, (LPVOID*)&(pDS3DBuffer));
+    if (hRetDS3D != DS_OK) {
+        EmuLog(LOG_LEVEL::WARNING, "CreateSound3DBuffer Failed!");
+        pDS3DBuffer = nullptr;
+    }
+}
+
+#define DSoundBufferSetDefault(pThis, dwEmuPlayFlags, Xb_dwFlags) \
+    pThis->EmuDirectSoundBuffer8 = nullptr; \
+    pThis->EmuDirectSound3DBuffer8 = nullptr; \
+    pThis->X_BufferCache = xbnullptr; \
+    pThis->EmuFlags = 0; \
+    pThis->EmuPlayFlags = dwEmuPlayFlags; \
+    pThis->X_BufferCacheSize = 0; \
+    pThis->Xb_rtPauseEx = 0LL; \
+    pThis->Xb_Volume = 0L; \
+    pThis->Xb_VolumeMixbin = 0L; \
+    pThis->Xb_dwHeadroom = 600; /* default for 2D voice */ \
+    pThis->Xb_EnvolopeDesc = { 0 }; \
+    InitVoiceProperties(pThis->Xb_VoiceProperties); /* The rest will initialize in GeneratePCMFormat to GenerateMixBinDefault. */ \
+    pThis->Xb_Frequency = XTL_DSXFREQUENCY_ORIGINAL; \
+    pThis->Xb_Flags = Xb_dwFlags;
+    //pThis->EmuBufferDesc = { 0 }; // Enable this when become necessary.
+    /*
+    pThis->EmuLockPtr1 = xbnullptr; \
+    pThis->EmuLockBytes1 = 0; \
+    pThis->EmuLockPtr2 = xbnullptr; \
+    pThis->EmuLockBytes2 = 0; \ */
+
+static inline void DSoundBufferRegionSetDefault(XTL::X_CDirectSoundBuffer *pThis) {
+    pThis->EmuBufferToggle = XTL::X_DSB_TOGGLE_DEFAULT;
+    pThis->EmuRegionLoopStartOffset = 0;
+    pThis->EmuRegionLoopLength = 0;
+    pThis->EmuRegionPlayStartOffset = 0;
+    pThis->EmuRegionPlayLength = 0;
+
+}
+
+static inline void DSoundBufferTransferSettings(
+    LPDIRECTSOUNDBUFFER8       &pDSBufferOld,
+    LPDIRECTSOUNDBUFFER8       &pDSBufferNew,
+    LPDIRECTSOUND3DBUFFER8     &pDS3DBufferOld,
+    LPDIRECTSOUND3DBUFFER8     &pDS3DBufferNew,
+    DWORD                       Xb_Frequency)
+{
+    LONG lVolume, lPan;
+    DS3DBUFFER ds3dBuffer;
+
+	if (pDSBufferOld == nullptr) {
+		return;
+	}
+
+    pDSBufferNew->SetFrequency(Xb_Frequency);
+
+    pDSBufferOld->GetVolume(&lVolume);
+    pDSBufferNew->SetVolume(lVolume);
+
+    if (pDS3DBufferOld != nullptr && pDS3DBufferNew != nullptr) {
+        pDS3DBufferOld->GetAllParameters(&ds3dBuffer);
+
+        pDS3DBufferNew->SetAllParameters(&ds3dBuffer, DS3D_IMMEDIATE);
+    } else {
+        pDSBufferOld->GetPan(&lPan);
+        pDSBufferNew->SetPan(lPan);
+    }
+}
+
+static inline void DSoundBufferReCreate(
+    LPDIRECTSOUNDBUFFER8       &pDSBuffer,
+    DSBUFFERDESC               &DSBufferDesc,
+    LPDIRECTSOUND3DBUFFER8     &pDS3DBuffer,
+    LPDIRECTSOUNDBUFFER8       &pDSBufferNew,
+    LPDIRECTSOUND3DBUFFER8     &pDS3DBufferNew,
+    DWORD                       Xb_Frequency) {
+
+
+    DSoundBufferCreate(&DSBufferDesc, pDSBufferNew);
+
+    if (pDS3DBuffer != nullptr) {
+        DSound3DBufferCreate(pDSBufferNew, pDS3DBufferNew);
+    }
+
+    DSoundBufferTransferSettings(pDSBuffer, pDSBufferNew, pDS3DBuffer, pDS3DBufferNew, Xb_Frequency);
+}
+
+static inline void DSoundBufferRelease(
+    LPDIRECTSOUNDBUFFER8       &pDSBuffer,
+    LPDIRECTSOUND3DBUFFER8     &pDS3DBuffer,
+    DWORD                      &refCount) {
+
+    // Release 3D buffer first
+    if (pDS3DBuffer != nullptr) {
+        refCount = pDS3DBuffer->Release();
+        if (refCount > 0) {
+            CxbxKrnlCleanup("Nope, wasn't fully cleaned up.");
+        }
+    }
+
+    refCount = pDSBuffer->Release();
+    if (refCount) {
+        // NOTE: This is base on AddRef call, so this is a requirement.
+        // The reason is to have ability "transfer" ref count is due to some titles doesn't care about ref count.
+        // If AddRef was called, then it will "internally" increment the ref count, not the return value check.
+        while (pDSBuffer->Release() > 0) {}
+    }
+}
+
+static inline void DSoundBufferResizeSetSize(
+    XTL::X_CDirectSoundBuffer*  pThis,
+    HRESULT                    &hRet,
+    DWORD                       Xb_dwByteLength) {
+
+    // General return OK, nothing needs to set as invalid for now.
+    hRet = DS_OK;
+
+    DWORD Host_dwByteLength = DSoundBufferGetPCMBufferSize(pThis->EmuFlags, Xb_dwByteLength);
+
+    // Don't re-create buffer if size is the same.
+    if (pThis->EmuBufferDesc.dwBufferBytes == Host_dwByteLength) {
+        return;
+    }
+
+    pThis->EmuBufferDesc.dwBufferBytes = Host_dwByteLength;
+
+    // NOTE: Test case JSRF, if we allow to re-alloc without checking allocated buffer size.
+    // Then it is somehow binded to IDirectSound_SetPosition control for any allocated audio afterward.
+
+    DWORD refCount;
+    LPDIRECTSOUNDBUFFER8       pDSBufferNew = nullptr;
+    LPDIRECTSOUND3DBUFFER8       pDS3DBufferNew = nullptr;
+
+    DSoundBufferReCreate(pThis->EmuDirectSoundBuffer8, pThis->EmuBufferDesc, pThis->EmuDirectSound3DBuffer8,
+                         pDSBufferNew, pDS3DBufferNew, pThis->Xb_Frequency);
+
+    // release old buffer
+    DSoundBufferRelease(pThis->EmuDirectSoundBuffer8, pThis->EmuDirectSound3DBuffer8, refCount);
+
+    pThis->EmuDirectSoundBuffer8 = pDSBufferNew;
+    pThis->EmuDirectSound3DBuffer8 = pDS3DBufferNew;
+
+    if (refCount) {
+        while (pThis->EmuDirectSoundBuffer8->AddRef() < refCount);
+    }
+}
+
+static inline void DSoundBufferResizeUpdate(
+    XTL::X_CDirectSoundBuffer*  pThis,
+    DWORD                       dwPlayFlags,
+    HRESULT                    &hRet,
+    DWORD                       Xb_dwStartOffset,
+    DWORD                       Xb_dwByteLength) {
+
+    DSoundBufferResizeSetSize(pThis, hRet, Xb_dwByteLength);
+
+    hRet = pThis->EmuDirectSoundBuffer8->Lock(0, 0, &pThis->Host_lock.pLockPtr1, &pThis->Host_lock.dwLockBytes1,
+                                              nullptr, nullptr, DSBLOCK_ENTIREBUFFER);
+    if (hRet != DS_OK) {
+        CxbxKrnlCleanup("Unable to lock region buffer!");
+    }
+    DSoundGenericUnlock(pThis->EmuFlags,
+                        pThis->EmuDirectSoundBuffer8,
+                        pThis->EmuBufferDesc,
+                        pThis->Host_lock,
+                        pThis->X_BufferCache,
+                        Xb_dwStartOffset,
+                        Xb_dwByteLength,
+                        0);
+}
+
+static inline void DSoundBufferRegionCurrentLocation(
+    XTL::X_CDirectSoundBuffer*  pThis,
+    DWORD                       dwPlayFlags,
+    HRESULT                    &hRet,
+    DWORD                      &Xb_dwStartOffset,
+    DWORD                      &Xb_dwByteLength) {
+    if ((dwPlayFlags & X_DSBPLAY_LOOPING) > 0) {
+        Xb_dwStartOffset = pThis->EmuRegionPlayStartOffset + pThis->EmuRegionLoopStartOffset;
+
+        // Must check for zero length, then apply true length.
+        if (pThis->EmuRegionLoopLength == 0) {
+            if (pThis->EmuRegionPlayLength != 0) {
+                Xb_dwByteLength = pThis->EmuRegionPlayLength;
+            } else {
+                Xb_dwByteLength = pThis->X_BufferCacheSize - Xb_dwStartOffset;
+            }
+        } else {
+            Xb_dwByteLength = pThis->EmuRegionLoopLength;
+        }
+    } else {
+        Xb_dwStartOffset = pThis->EmuRegionPlayStartOffset;
+
+        // Must check for zero length, then apply true length.
+        if (pThis->EmuRegionPlayLength != 0) {
+            Xb_dwByteLength = pThis->EmuRegionPlayLength;
+        } else {
+            Xb_dwByteLength = pThis->X_BufferCacheSize - Xb_dwStartOffset;
+        }
+    }
+}
+
+static inline void DSoundBufferUpdate(
+    XTL::X_CDirectSoundBuffer*  pThis,
+    DWORD                       dwPlayFlags,
+    HRESULT                    &hRet) {
+
+    // Process Play/Loop Region buffer
+    DWORD Xb_dwByteLength;
+    DWORD Xb_dwStartOffset;
+
+    DSoundBufferRegionCurrentLocation(pThis, dwPlayFlags, hRet, Xb_dwStartOffset, Xb_dwByteLength);
+
+    DSoundBufferResizeUpdate(pThis, dwPlayFlags, hRet, Xb_dwStartOffset, Xb_dwByteLength);
+}
+
+static inline void DSoundBufferReplace(
+    LPDIRECTSOUNDBUFFER8       &pDSBuffer,
+    DSBUFFERDESC               &DSBufferDesc,
+    DWORD                       PlayFlags,
+    LPDIRECTSOUND3DBUFFER8     &pDS3DBuffer,
+    DWORD                       Xb_Frequency)
+{
+    DWORD refCount, dwPlayCursor, dwStatus;
+    LPDIRECTSOUNDBUFFER8       pDSBufferNew = nullptr;
+    LPDIRECTSOUND3DBUFFER8       pDS3DBufferNew = nullptr;
+
+    DSoundBufferReCreate(pDSBuffer, DSBufferDesc, pDS3DBuffer,
+                         pDSBufferNew, pDS3DBufferNew, Xb_Frequency);
+
+    HRESULT hRet = pDSBuffer->GetStatus(&dwStatus);
+
+    if (hRet != DS_OK) {
+        CxbxKrnlCleanup("Unable to retrieve current status for replace DS buffer!");
+    }
+
+    pDSBuffer->Stop();
+
+    hRet = pDSBuffer->GetCurrentPosition(&dwPlayCursor, nullptr);
+
+    if (hRet != DS_OK) {
+        CxbxKrnlCleanup("Unable to retrieve current position for replace DS buffer!");
+    }
+
+    // TODO: Untested if transfer buffer to new audio buffer is necessary.
+    PVOID pLockPtr1Old, pLockPtr1New;
+    DWORD dwLockBytes1Old, dwLockBytes1New;
+    pDSBuffer->Lock(0, 0, &pLockPtr1Old, &dwLockBytes1Old, nullptr, nullptr, DSBLOCK_ENTIREBUFFER);
+    pDSBufferNew->Lock(0, 0, &pLockPtr1New, &dwLockBytes1New, nullptr, nullptr, DSBLOCK_ENTIREBUFFER);
+    if (dwLockBytes1Old > dwLockBytes1New) {
+        memcpy_s(pLockPtr1New, dwLockBytes1New, pLockPtr1Old, dwLockBytes1New);
+    } else {
+        memcpy_s(pLockPtr1New, dwLockBytes1Old, pLockPtr1Old, dwLockBytes1Old);
+    }
+    pDSBuffer->Unlock(pLockPtr1Old, dwLockBytes1Old, nullptr, 0);
+    pDSBufferNew->Unlock(pLockPtr1New, dwLockBytes1New, nullptr, 0);
+
+    pDSBufferNew->SetCurrentPosition(dwPlayCursor);
+
+    if (dwStatus & DSBSTATUS_PLAYING) {
+        pDSBufferNew->Play(0, 0, PlayFlags);
+    }
+
+    // release old buffer
+    DSoundBufferRelease(pDSBuffer, pDS3DBuffer, refCount);
+
+    pDSBuffer = pDSBufferNew;
+    pDS3DBuffer = pDS3DBufferNew;
+
+    if (refCount) {
+        while (pDSBuffer->AddRef() < refCount);
+    }
+}
+
+// Generic force remove synch playback control flag.
+static inline void DSoundBufferSynchPlaybackFlagRemove(
+    DWORD                  &dwEmuFlags
+
+    )
+{
+    if (g_iDSoundSynchPlaybackCounter == 0) {
+        return;
+    }
+
+    if ((dwEmuFlags & DSE_FLAG_SYNCHPLAYBACK_CONTROL) > 0) {
+        g_iDSoundSynchPlaybackCounter--;
+        dwEmuFlags ^= DSE_FLAG_SYNCHPLAYBACK_CONTROL;
+    }
+}
+
+static inline HRESULT DSoundBufferSynchPlaybackFlagAdd(
+    DWORD                  &dwEmuFlags
+
+    )
+{
+    if (g_iDSoundSynchPlaybackCounter >= DSOUND_MAX_SYNCHPLAYBACK_AUDIO) {
+        return DSERR_GENERIC;
+    }
+
+    if ((dwEmuFlags & DSE_FLAG_SYNCHPLAYBACK_CONTROL) == 0) {
+        g_iDSoundSynchPlaybackCounter++;
+        dwEmuFlags |= DSE_FLAG_SYNCHPLAYBACK_CONTROL;
+    }
+    return DS_OK;
+}
+
+//TODO: RadWolfie - Need to implement DirectSoundBuffer create support. Or not able to do so due to all three classes function differently.
+//IDirectSound
+//IDirectSoundStream
+//IDirectSoundBuffer
+/*static inline HRESULT HybridDirectSoundBuffer_Create(
+    LPDIRECTSOUNDBUFFER8 pDSBuffer) {
+
+    return DS_OK;
+};*/
+
+static inline ULONG HybridDirectSoundBuffer_AddRef(
+    LPDIRECTSOUNDBUFFER8    pDSBuffer)
+{
+    ULONG uRet = pDSBuffer->AddRef();
+
+    return uRet;
+}
+
+static inline ULONG HybridDirectSoundBuffer_Release(
+    LPDIRECTSOUNDBUFFER8    pDSBuffer)
+{
+    ULONG uRet = pDSBuffer->Release();
+
+    return uRet;
+}
+
+/*
+//IDirectSoundStream
+static inline HRESULT HybridDirectSoundBuffer_Discontinuity(
+    LPDIRECTSOUNDBUFFER8 pDSBuffer) {
+
+    return DS_OK;
+}
+
+//IDirectSoundStream
+static inline HRESULT HybridDirectSoundBuffer_Flush(
+    LPDIRECTSOUNDBUFFER8 pDSBuffer) {
+
+    return DS_OK;
+}
+
+//IDirectSoundStream
+static inline HRESULT HybridDirectSoundBuffer_FlushEx(
+    LPDIRECTSOUNDBUFFER8 pDSBuffer) {
+
+    return DS_OK;
+}
+
+//IDirectSoundStream
+static inline HRESULT HybridDirectSoundBuffer_GetInfo(
+    LPDIRECTSOUNDBUFFER8 pDSBuffer) {
+
+    return DS_OK;
+}*/
+
+// Only has one function, this is not a requirement.
+//IDirectSoundBuffer
+static inline HRESULT HybridDirectSoundBuffer_GetCurrentPosition(
+    LPDIRECTSOUNDBUFFER8    pDSBuffer,
+    PDWORD                  pdwCurrentPlayCursor,
+    PDWORD                  pdwCurrentWriteCursor,
+    DWORD                   EmuFlags)
+{
+    DWORD dwCurrentPlayCursor, dwCurrentWriteCursor;
+    HRESULT hRet = pDSBuffer->GetCurrentPosition(&dwCurrentPlayCursor, &dwCurrentWriteCursor);
+
+    if (hRet != DS_OK) {
+        EmuLog(LOG_LEVEL::WARNING, "GetCurrentPosition Failed!");
+    }
+
+    if (pdwCurrentPlayCursor != xbnullptr) {
+        *pdwCurrentPlayCursor = DSoundBufferGetXboxBufferSize(EmuFlags, dwCurrentPlayCursor);
+    }
+    if (pdwCurrentWriteCursor != xbnullptr) {
+        *pdwCurrentWriteCursor = DSoundBufferGetXboxBufferSize(EmuFlags, dwCurrentWriteCursor);
+    }
+
+    RETURN_RESULT_CHECK(hRet);
+}
+
+/*
+// NOTE: Flags are 100% not compatible, not use Hybrid version
+//IDirectSoundStream
+//IDirectSoundBuffer
+static inline HRESULT HybridDirectSoundBuffer_GetStatus(
+    LPDIRECTSOUNDBUFFER8    pDSBuffer,
+    PDWORD                  pdwStatus)
+{
+    HRESULT hRet = pDSBuffer->GetStatus(pdwStatus);
+
+    RETURN_RESULT_CHECK(hRet);
+}*/
+
+/*
+static inline HRESULT HybridDirectSoundBuffer_GetVoiceProperties(
+    LPDIRECTSOUNDBUFFER8    pDSBuffer)
+{
+
+    return DS_OK;
+}
+
+//IDirectSoundBuffer
+static inline HRESULT HybridDirectSoundBuffer_Lock(
+    LPDIRECTSOUNDBUFFER8 pDSBuffer)
+{
+
+    return DS_OK;
+}*/
+
+//IDirectSoundStream
+//IDirectSoundBuffer
+static inline HRESULT HybridDirectSoundBuffer_Pause(
+    LPDIRECTSOUNDBUFFER8    pDSBuffer,
+    DWORD                   dwPause,
+    DWORD                  &dwEmuFlags,
+    DWORD                   dwEmuPlayFlags,
+    bool                    triggerPlayPermission,
+    REFERENCE_TIME          rtTimeStamp,
+    REFERENCE_TIME         &Xb_rtTimeStamp)
+{
+    HRESULT hRet = DS_OK;
+    switch (dwPause) {
+        case X_DSSPAUSE_RESUME:
+            if (triggerPlayPermission) {
+                pDSBuffer->Play(0, 0, dwEmuPlayFlags);
+            }
+            DSoundBufferSynchPlaybackFlagRemove(dwEmuFlags);
+            dwEmuFlags &= ~DSE_FLAG_PAUSE;
+            Xb_rtTimeStamp = 0;
+            break;
+        case X_DSSPAUSE_PAUSE:
+            pDSBuffer->Stop();
+            DSoundBufferSynchPlaybackFlagRemove(dwEmuFlags);
+            dwEmuFlags |= DSE_FLAG_PAUSE;
+            Xb_rtTimeStamp = rtTimeStamp;
+            break;
+        case X_DSSPAUSE_SYNCHPLAYBACK:
+            //TODO: Test case Rayman 3 - Hoodlum Havoc, Battlestar Galactica, Miami Vice, Star Wars: KotOR, and... ?
+
+            //SynchPlayback flag append should only occur in HybridDirectSoundBuffer_Pause function, nothing else is able to do this.
+            hRet = DSoundBufferSynchPlaybackFlagAdd(dwEmuFlags);
+            if (hRet == DS_OK) {
+                pDSBuffer->Stop();
+            }
+            break;
+        // TODO: NOTE: If stream is playing, it perform same behavior as pause flag. If it is not played, it act as a queue until trigger to play it.
+        case X_DSSPAUSE_PAUSENOACTIVATE:
+            break;
+    }
+
+    RETURN_RESULT_CHECK(hRet);
+}
+/*
+static inline HRESULT HybridDirectSoundBuffer_PauseEx(
+    LPDIRECTSOUNDBUFFER8 pDSBuffer)
+{
+
+    return DS_OK;
+}
+
+//Not really require it.
+//IDirectSoundStream
+static inline HRESULT HybridDirectSoundBuffer_Process(
+    LPDIRECTSOUNDBUFFER8 pDSBuffer)
+{
+
+    return DS_OK;
+}*/
+/* PlayEx is now calling to Play function instead of this hybrid function.
+//Both Play(Ex) only has one function, aka this is not a requirement.
+//IDirectSoundBuffer
+static inline HRESULT HybridDirectSoundBuffer_Play(
+    LPDIRECTSOUNDBUFFER8    pDSBuffer,
+    DWORD                  &dwFlags,
+    DWORD                  &dwEmuFlags)
+{
+
+    if (dwFlags & ~(X_DSBPLAY_LOOPING | X_DSBPLAY_FROMSTART | X_DSBPLAY_SYNCHPLAYBACK)) {
+        CxbxKrnlCleanup("Unsupported Playing Flags");
+    }
+    // rewind buffer
+    if ((dwFlags & X_DSBPLAY_FROMSTART)) {
+        if (pDSBuffer->SetCurrentPosition(0) != DS_OK) {
+            EmuLog(LOG_LEVEL::WARNING, "Rewinding buffer failed!");
+        }
+
+        dwFlags &= ~X_DSBPLAY_FROMSTART;
+    }
+
+    if (dwFlags & X_DSBPLAY_SYNCHPLAYBACK) {
+        dwFlags ^= X_DSBPLAY_SYNCHPLAYBACK;
+        dwEmuFlags |= DSB_FLAG_SYNCHPLAYBACK_CONTROL;
+    }
+
+    HRESULT hRet = DS_OK;
+
+    if ((dwEmuFlags & DSB_FLAG_SYNCHPLAYBACK_CONTROL) == 0) {
+        hRet = pDSBuffer->Play(0, 0, dwFlags);
+    }
+
+    RETURN_RESULT_CHECK(hRet);
+}
+*/
+/*
+//IDirectSoundBuffer
+static inline HRESULT HybridDirectSoundBuffer_PlayEx(
+    LPDIRECTSOUNDBUFFER8 pDSBuffer,
+    REFERENCE_TIME      rtTimeStamp,
+    DWORD               dwEmuFlags)
+{
+
+    return DS_OK;
+}*/
+
+/*
+//IDirectSoundBuffer
+static inline HRESULT HybridDirectSoundBuffer_Restore(
+    LPDIRECTSOUNDBUFFER8 pDSBuffer)
+{
+
+    return DS_OK;
+}*/
+
+//IDirectSoundStream
+//IDirectSoundBuffer
+static inline HRESULT HybridDirectSound3DBuffer_SetAllParameters(
+    LPDIRECTSOUND3DBUFFER8  pDS3DBuffer,
+    XTL::X_DS3DBUFFER*      pDS3DBufferParams,
+    DWORD                   dwApply)
+{
+    HRESULT hRet = DS_OK;
+    if (pDS3DBuffer != nullptr) {
+
+        DS3DBUFFER pDS3DBufferParamsTemp;
+        pDS3DBufferParamsTemp.dwSize = sizeof(DS3DBUFFER);
+        pDS3DBufferParamsTemp.vPosition = pDS3DBufferParams->vPosition;
+        pDS3DBufferParamsTemp.vVelocity = pDS3DBufferParams->vVelocity;
+        pDS3DBufferParamsTemp.dwInsideConeAngle = pDS3DBufferParams->dwInsideConeAngle;
+        pDS3DBufferParamsTemp.dwOutsideConeAngle = pDS3DBufferParams->dwOutsideConeAngle;
+        pDS3DBufferParamsTemp.vConeOrientation = pDS3DBufferParams->vConeOrientation;
+        pDS3DBufferParamsTemp.lConeOutsideVolume = pDS3DBufferParams->lConeOutsideVolume;
+        pDS3DBufferParamsTemp.flMinDistance = pDS3DBufferParams->flMinDistance;
+        pDS3DBufferParamsTemp.flMaxDistance = pDS3DBufferParams->flMaxDistance;
+        pDS3DBufferParamsTemp.dwMode = pDS3DBufferParams->dwMode;
+
+        hRet = pDS3DBuffer->SetAllParameters(&pDS3DBufferParamsTemp, dwApply);
+        if (hRet != DS_OK) {
+            RETURN_RESULT_CHECK(hRet);
+        }
+
+        hRet = g_pDSoundPrimary3DListener8->SetDistanceFactor(pDS3DBufferParams->flDistanceFactor, dwApply);
+        if (hRet != DS_OK) {
+            RETURN_RESULT_CHECK(hRet);
+        }
+
+        hRet = g_pDSoundPrimary3DListener8->SetRolloffFactor(pDS3DBufferParams->flRolloffFactor, dwApply);
+        if (hRet != DS_OK) {
+            RETURN_RESULT_CHECK(hRet);
+        }
+
+        hRet = g_pDSoundPrimary3DListener8->SetDopplerFactor(pDS3DBufferParams->flDopplerFactor, dwApply);
+    }
+
+    RETURN_RESULT_CHECK(hRet);
+}
+/*
+//Only has one function, this is not a requirement.
+//IDirectSoundBuffer
+static inline HRESULT HybridDirectSoundBuffer_SetBufferData(
+    LPDIRECTSOUNDBUFFER8 pDSBuffer)
+{
+
+    return DS_OK;
+}*/
+
+//IDirectSoundStream
+//IDirectSoundBuffer
+static inline HRESULT HybridDirectSound3DBuffer_SetConeAngles(
+    LPDIRECTSOUND3DBUFFER8  pDS3DBuffer,
+    DWORD                   dwInsideConeAngle,
+    DWORD                   dwOutsideConeAngle,
+    DWORD                   dwApply)
+{
+    HRESULT hRet = DS_OK;
+    if (pDS3DBuffer != nullptr) {
+        hRet = pDS3DBuffer->SetConeAngles(dwInsideConeAngle, dwOutsideConeAngle, dwApply);
+    }
+
+    RETURN_RESULT_CHECK(hRet);
+}
+
+//IDirectSoundStream
+//IDirectSoundBuffer
+static inline HRESULT HybridDirectSound3DBuffer_SetConeOrientation(
+    LPDIRECTSOUND3DBUFFER8  pDS3DBuffer,
+    D3DVALUE                x,
+    D3DVALUE                y,
+    D3DVALUE                z,
+    DWORD                   dwApply)
+{
+    HRESULT hRet = DS_OK;
+    if (pDS3DBuffer != nullptr) {
+        // TODO: (DSound) Should we do restrictive or passive to return actual result back to titles?
+        // Test case: Turok Evolution, Jet Set Radio Future, ?
+        if (x == 0.0f && y == 0.0f && z == 0.0f) {
+            printf("WARNING: SetConeOrientation was called with x = 0, y = 0, and z = 0. Current action is ignore call to PC.\n");
+        } else {
+            hRet = pDS3DBuffer->SetConeOrientation(x, y, z, dwApply);
+        }
+    }
+
+    RETURN_RESULT_CHECK(hRet);
+}
+
+//IDirectSoundStream
+//IDirectSoundBuffer
+static inline HRESULT HybridDirectSound3DBuffer_SetConeOutsideVolume(
+    LPDIRECTSOUND3DBUFFER8  pDS3DBuffer,
+    LONG                    lConeOutsideVolume,
+    DWORD                   dwApply)
+{
+    HRESULT hRet = DS_OK;
+    if (pDS3DBuffer != nullptr) {
+        hRet = pDS3DBuffer->SetConeOutsideVolume(lConeOutsideVolume, dwApply);
+    }
+
+    RETURN_RESULT_CHECK(hRet);
+}
+/*
+//Only has one function, this is not a requirement.
+//IDirectSoundBuffer
+static inline HRESULT HybridDirectSoundBuffer_SetCurrentPosition(
+    LPDIRECTSOUNDBUFFER8 pDSBuffer,
+    DWORD               dwNewPosition)
+{
+
+    return DS_OK;
+}*/
+
+//IDirectSound
+//IDirectSoundStream
+//IDirectSoundBuffer
+static inline HRESULT HybridDirectSound3DListener_SetDistanceFactor(
+    LPDIRECTSOUND3DLISTENER8    pDS3DListener,
+    FLOAT                       flDistanceFactor,
+    DWORD                       dwApply)
+{
+    HRESULT hRet = pDS3DListener->SetDistanceFactor(flDistanceFactor, dwApply);
+
+    RETURN_RESULT_CHECK(hRet);
+}
+
+//IDirectSound
+//IDirectSoundStream
+//IDirectSoundBuffer
+static inline HRESULT HybridDirectSound3DListener_SetDopplerFactor(
+    LPDIRECTSOUND3DLISTENER8    pDS3DListener,
+    FLOAT                       flDopplerFactor,
+    DWORD                       dwApply)
+{
+    HRESULT hRet = pDS3DListener->SetDopplerFactor(flDopplerFactor, dwApply);
+
+    RETURN_RESULT_CHECK(hRet);
+}
+/*
+//TODO: PC DirectSound does not have SetHeadroom method function.
+//IDirectSoundStream
+//IDirectSoundBuffer
+static inline HRESULT HybridDirectSoundBuffer_SetEG(
+    LPDIRECTSOUNDBUFFER8 pDSBuffer,
+    LPVOID              pEnvelopeDesc)
+{
+
+    return DS_OK;
+}
+
+//TODO: PC DirectSound does not have SetHeadroom method function.
+//IDirectSoundStream
+//IDirectSoundBuffer
+static inline HRESULT HybridDirectSoundBuffer_SetFilter(
+    LPDIRECTSOUNDBUFFER8     pDSBuffer,
+    XTL::X_DSFILTERDESC*    pFilterDesc)
+{
+
+    return DS_OK;
+}*/
+
+//IDirectSoundStream
+//IDirectSoundBuffer
+static inline HRESULT HybridDirectSoundBuffer_SetFormat(
+    LPDIRECTSOUNDBUFFER8   &pDSBuffer,
+    LPCWAVEFORMATEX         Xb_pwfxFormat,
+    DWORD                   Xb_flags,
+    DSBUFFERDESC           &BufferDesc,
+    DWORD                  &dwEmuFlags,
+    DWORD                  &dwPlayFlags,
+    LPDIRECTSOUND3DBUFFER8 &pDS3DBuffer,
+    bool                    X_BufferAllocate,
+    LPVOID                 &X_BufferCache,
+    DWORD                  &X_BufferCacheSize,
+    XTL::X_DSVOICEPROPS    &Xb_VoiceProperties,
+    XTL::X_LPDSMIXBINS      mixbins_output,
+    DWORD                   Xb_Frequency)
+{
+    pDSBuffer->Stop();
+
+    if (X_BufferAllocate) {
+        GeneratePCMFormat(BufferDesc, Xb_pwfxFormat, Xb_flags, dwEmuFlags, X_BufferCacheSize, xbnullptr, X_BufferCacheSize, Xb_VoiceProperties, mixbins_output);
+    // Don't allocate for DS Stream class, it is using straight from the source.
+    } else {
+        GeneratePCMFormat(BufferDesc, Xb_pwfxFormat, Xb_flags, dwEmuFlags, 0, xbnullptr, X_BufferCacheSize, Xb_VoiceProperties, mixbins_output);
+    }
+    HRESULT hRet = DS_OK;
+    if ((void*)g_pDSoundPrimaryBuffer == (void*)pDSBuffer) {
+        hRet = pDSBuffer->SetFormat(BufferDesc.lpwfxFormat);
+    } else {
+        // DSound Stream only
+        if (X_BufferCacheSize == 0) {
+            // Allocate at least 5 second worth of bytes in PCM format.
+            BufferDesc.dwBufferBytes = BufferDesc.lpwfxFormat->nAvgBytesPerSec * 5;
+        }
+        DSoundBufferReplace(pDSBuffer, BufferDesc, dwPlayFlags, pDS3DBuffer, Xb_Frequency);
+    }
+
+    RETURN_RESULT_CHECK(hRet);
+}
+
+//IDirectSoundStream
+//IDirectSoundBuffer
+static inline HRESULT HybridDirectSoundBuffer_SetFrequency(
+    LPDIRECTSOUNDBUFFER8 pDSBuffer,
+    DWORD               dwFrequency,
+    DWORD              &Xb_Frequency)
+{
+    HRESULT hRet = S_OK;
+
+    Xb_Frequency = dwFrequency;
+    hRet = pDSBuffer->SetFrequency(dwFrequency);
+
+    RETURN_RESULT_CHECK(hRet);
+}
+
+static HRESULT HybridDirectSoundBuffer_SetVolume(LPDIRECTSOUNDBUFFER8, LONG, DWORD, LPLONG, LONG, DWORD);
+
+//IDirectSoundStream
+//IDirectSoundBuffer
+// NOTE: 0 to 10,000; For initialize value would be 3D default to 0 and 2D default to 600.
+static inline HRESULT HybridDirectSoundBuffer_SetHeadroom(
+    LPDIRECTSOUNDBUFFER8 pDSBuffer,
+    DWORD               dwHeadroom,
+    DWORD              &Xb_dwHeadroom,
+    LONG                Xb_volume,
+    LONG                Xb_volumeMixbin,
+    DWORD               dwEmuFlags)
+{
+    HRESULT hRet;
+    if (dwHeadroom > 10000) {
+        hRet = DSERR_INVALIDPARAM;
+    } else {
+        Xb_dwHeadroom = dwHeadroom;
+        hRet = DS_OK;
+        HybridDirectSoundBuffer_SetVolume(pDSBuffer, Xb_volume, dwEmuFlags, xbnullptr, Xb_volumeMixbin, dwHeadroom);
+    }
+
+    return DS_OK;
+}
+
+/*
+//TODO: PC DirectSound does not have SetI3DL2Source method function.
+//IDirectSoundStream
+//IDirectSoundBuffer
+static inline HRESULT HybridDirectSoundBuffer_SetI3DL2Source(
+    LPDIRECTSOUNDBUFFER8 pDSBuffer,
+    PVOID               pds3db,
+    DWORD               dwApply)
+{
+
+    return DS_OK;
+}
+
+//TODO: PC DirectSound does not have SetLFO method function.
+//IDirectSoundStream
+//IDirectSoundBuffer
+static inline HRESULT HybridDirectSoundBuffer_SetLFO(
+    LPDIRECTSOUNDBUFFER8 pDSBuffer,
+    LPCDSLFODESC        pLFODesc)
+{
+
+    return DS_OK;
+}*/
+
+/*
+//Only has one function, this is not a requirement.
+//IDirectSoundBuffer
+static inline HRESULT HybridDirectSoundBuffer_SetLoopRegion(
+    LPDIRECTSOUNDBUFFER8 pDSBuffer,
+    DWORD               dwLoopStart,
+    DWORD               dwLoopLength)
+{
+
+    return DS_OK;
+}*/
+
+//IDirectSoundStream
+//IDirectSoundBuffer
+static inline HRESULT HybridDirectSound3DBuffer_SetMaxDistance(
+    LPDIRECTSOUND3DBUFFER8  pDS3DBuffer,
+    D3DVALUE                flMaxDistance,
+    DWORD                   dwApply)
+{
+    HRESULT hRet = DS_OK;
+    if (pDS3DBuffer != nullptr) {
+        hRet = pDS3DBuffer->SetMaxDistance(flMaxDistance, dwApply);
+    }
+
+    RETURN_RESULT_CHECK(hRet);
+}
+
+//IDirectSoundStream
+//IDirectSoundBuffer
+static inline HRESULT HybridDirectSound3DBuffer_SetMinDistance(
+    LPDIRECTSOUND3DBUFFER8  pDS3DBuffer,
+    D3DVALUE                flMinDistance,
+    DWORD                   dwApply)
+{
+    HRESULT hRet = DS_OK;
+    if (pDS3DBuffer != nullptr) {
+        hRet = pDS3DBuffer->SetMinDistance(flMinDistance, dwApply);
+    }
+
+    RETURN_RESULT_CHECK(hRet);
+}
+/*
+//TODO: PC DirectSound does not have SetMixBins method function.
+//IDirectSoundStream
+//IDirectSoundBuffer
+static inline HRESULT HybridDirectSoundBuffer_SetMixBins(
+    LPDIRECTSOUNDBUFFER8 pDSBuffer,
+    PVOID               pMixBins)
+{
+
+    return DS_OK;
+}*/
+
+//IDirectSoundStream x2
+//IDirectSoundBuffer x2
+static inline HRESULT HybridDirectSoundBuffer_SetMixBinVolumes_8(
+    LPDIRECTSOUNDBUFFER8 pDSBuffer,
+    XTL::X_LPDSMIXBINS   pMixBins,
+    XTL::X_DSVOICEPROPS& Xb_VoiceProperties,
+    DWORD                EmuFlags,
+    LONG                 Xb_volume,
+    LONG                &Xb_volumeMixBin,
+    DWORD                Xb_dwHeadroom)
+{
+    HRESULT hRet = DSERR_INVALIDPARAM;
+
+    if (pMixBins != xbnullptr) {
+        DWORD counter = pMixBins->dwCount, count = pMixBins->dwCount;
+        LONG volume = 0;
+        if (pMixBins->lpMixBinVolumePairs != xbnullptr) {
+            // Let's normalize audio level except for low frequency (subwoofer)
+            for (DWORD i = 0; i < count; i++) {
+                // Update the mixbin volume only, do not reassign volume pair array.
+                for (DWORD i = 0; i < count; i++) {
+                    auto& it_in = pMixBins->lpMixBinVolumePairs[i];
+                    for (DWORD ii = 0; ii < Xb_VoiceProperties.dwMixBinCount; ii++) {
+                        auto& it_internal = Xb_VoiceProperties.MixBinVolumePairs[ii];
+
+                        // Once found a match, set the volume.
+                        // NOTE If titles input duplicate with different volume,
+                        //      it will override previous value.
+                        if (it_in.dwMixBin == it_internal.dwMixBin) {
+                            it_internal.lVolume = it_in.lVolume;
+                        }
+                    }
+                }
+
+#if 0 // This code isn't ideal for DirectSound, since it's not possible to set volume for each speakers.
+                if (pMixBins->lpMixBinVolumePairs[i].dwMixBin != XDSMIXBIN_LOW_FREQUENCY
+                    // We only want to focus on speaker volumes, nothing else.
+                    && pMixBins->lpMixBinVolumePairs[i].dwMixBin < XDSMIXBIN_SPEAKERS_MAX) {
+#endif
+                if (pMixBins->lpMixBinVolumePairs[i].dwMixBin == XDSMIXBIN_FRONT_LEFT
+                    // We only want to focus on front speaker volumes, nothing else.
+                    || pMixBins->lpMixBinVolumePairs[i].dwMixBin == XDSMIXBIN_FRONT_RIGHT) {
+                    volume += pMixBins->lpMixBinVolumePairs[i].lVolume;
+                } else {
+                    counter--;
+                }
+            }
+            if (counter > 0) {
+                Xb_volumeMixBin = volume / (LONG)counter;
+                hRet = HybridDirectSoundBuffer_SetVolume(pDSBuffer, Xb_volume, EmuFlags, nullptr,
+                                                         Xb_volumeMixBin, Xb_dwHeadroom);
+            } else {
+                hRet = DS_OK;
+            }
+        }
+    }
+
+    return hRet;
+}
+
+//IDirectSoundStream
+//IDirectSoundBuffer
+static inline HRESULT HybridDirectSound3DBuffer_SetMode(
+    LPDIRECTSOUND3DBUFFER8  pDS3DBuffer,
+    DWORD                   dwMode,
+    DWORD                   dwApply)
+{
+    HRESULT hRet = DS_OK;
+    if (pDS3DBuffer != nullptr) {
+        hRet = pDS3DBuffer->SetMode(dwMode, dwApply);
+    }
+
+    RETURN_RESULT_CHECK(hRet);
+}
+/*
+//Only has one function, this is not a requirement.
+//IDirectSoundBuffer
+static inline HRESULT HybridDirectSoundBuffer_SetNotificationPositions(
+    LPDIRECTSOUNDBUFFER8     pDSBuffer,
+    DWORD                   dwNotifyCount,
+    LPCDSBPOSITIONNOTIFY    paNotifies)
+{
+
+    return DS_OK;
+}*/
+/*
+//TODO: PC DirectSound does not have SetOutputBuffer method function.
+//IDirectSoundStream
+//IDirectSoundBuffer
+static inline HRESULT HybridDirectSoundBuffer_SetOutputBuffer(
+    LPDIRECTSOUNDBUFFER8     pDSBuffer,
+    X_CDirectSoundBuffer*   pOutputBuffer)
+{
+
+    return DS_OK;
+}
+*/
+//IDirectSoundStream
+//IDirectSoundBuffer
+static inline HRESULT HybridDirectSoundBuffer_SetPitch(
+    LPDIRECTSOUNDBUFFER8 pDSBuffer,
+    LONG                lPitch,
+    DWORD              &Xb_Frequency)
+{
+
+    // Convert pitch back to frequency
+    // NOTE: pitch = 0 is equal to 48 KHz.
+    Xb_Frequency = static_cast<DWORD>(exp((lPitch / 4096.0f) * log(2)) * 48000.0f);
+
+    /* For research purpose of how to convert frequency to pitch and back to frequency.
+    // Edit hertz variable to see the result.
+    float hertz = 12000.0f;
+
+    float hertzRatio = 48000.0f;
+    float pitchRatio = 4096.0f;
+
+    // Convert hertz to pitch
+    float pitch = log2(hertz / hertzRatio) * pitchRatio;
+
+    // Convert pitch to hertz
+    hertz = exp((pitch / pitchRatio) * log(2)) * hertzRatio;*/
+
+    RETURN_RESULT_CHECK(pDSBuffer->SetFrequency(Xb_Frequency));
+}
+/*
+//Only has one function, this is not a requirement.
+//IDirectSoundBuffer
+static inline HRESULT HybridDirectSoundBuffer_SetPlayRegion(
+    LPDIRECTSOUNDBUFFER8 pDSBuffer,
+    DWORD               dwPlayStart,
+    DWORD               dwPlayLength)
+{
+
+    return DS_OK;
+}*/
+
+//IDirectSoundStream
+//IDirectSoundBuffer
+static inline HRESULT HybridDirectSound3DBuffer_SetPosition(
+    LPDIRECTSOUND3DBUFFER8  pDS3DBuffer,
+    D3DVALUE                x,
+    D3DVALUE                y,
+    D3DVALUE                z,
+    DWORD                   dwApply)
+{
+    HRESULT hRet = DS_OK;
+    if (pDS3DBuffer != nullptr) {
+        hRet = pDS3DBuffer->SetPosition(x, y, z, dwApply);
+    }
+
+    RETURN_RESULT_CHECK(hRet);
+}
+/*
+//TODO: PC DirectSound does not have SetRolloffCurve method function.
+//IDirectSoundStream
+//IDirectSoundBuffer
+static inline HRESULT HybridDirectSoundBuffer_SetRolloffCurve(
+    LPDIRECTSOUNDBUFFER8 pDSBuffer,
+    const FLOAT        *pflPoints,
+    DWORD               dwPointCount,
+    DWORD               dwApply)
+{
+
+    return DS_OK;
+}*/
+
+//IDirectSound
+//IDirectSoundStream
+//IDirectSoundBuffer
+static inline HRESULT HybridDirectSound3DListener_SetRolloffFactor(
+    LPDIRECTSOUND3DLISTENER8    pDSBuffer,
+    FLOAT                       fRolloffFactor,
+    DWORD                       dwApply)
+{
+    HRESULT hRet = pDSBuffer->SetRolloffFactor(fRolloffFactor, dwApply);
+
+    RETURN_RESULT_CHECK(hRet);
+}
+
+//IDirectSound
+//IDirectSoundStream
+//IDirectSoundBuffer
+static inline HRESULT HybridDirectSound3DBuffer_SetVelocity(
+    LPDIRECTSOUND3DBUFFER8  pDS3DBuffer,
+    FLOAT                   x,
+    FLOAT                   y,
+    FLOAT                   z,
+    DWORD                   dwApply)
+{
+    HRESULT hRet = DS_OK;
+    if (pDS3DBuffer != nullptr) {
+        hRet = pDS3DBuffer->SetVelocity(x, y, z, dwApply);
+    }
+
+    RETURN_RESULT_CHECK(hRet);
+}
+
+//IDirectSoundStream x2
+//IDirectSoundBuffer
+// NOTE: real volume = mixbins volume + 3D volume + volume - headroom
+// 100 millibels (mB) = 1 dB
+static inline HRESULT HybridDirectSoundBuffer_SetVolume(
+    LPDIRECTSOUNDBUFFER8    pDSBuffer,
+    LONG                    lVolume,
+    DWORD                   dwEmuFlags,
+    LPLONG                  Xb_lpVolume,
+    LONG                    Xb_volumeMixbin,
+    DWORD                   Xb_dwHeadroom)
+{
+    // Preserve original volume
+    if (Xb_lpVolume != xbnullptr) {
+        *Xb_lpVolume = lVolume;
+    }
+
+#if 0 // TODO: Restore it once DSound work update comes up
+    // For time being, this log is kept in case of something changed somewhere making a wrong input into the API.
+    printf("DEBUG: SetVolume | lVolume = %ld | volumeMixbin = %ld | dwHeadroom = %8u\n", lVolume, Xb_volumeMixbin, Xb_dwHeadroom);
+#endif
+
+    lVolume += Xb_volumeMixbin - Xb_dwHeadroom;
+
+    if ((dwEmuFlags & DSE_FLAG_PCM) > 0) {
+        if (!g_XBAudio.codec_pcm) {
+            lVolume = DSBVOLUME_MIN;
+        }
+    } else if ((dwEmuFlags & DSE_FLAG_XADPCM) > 0) {
+        if (!g_XBAudio.codec_xadpcm) {
+            lVolume = DSBVOLUME_MIN;
+        }
+    } else if ((dwEmuFlags & DSE_FLAG_PCM_UNKNOWN) > 0) {
+        if (!g_XBAudio.codec_unknown) {
+            lVolume = DSBVOLUME_MIN;
+        }
+    }
+    if (lVolume <= -6400 && lVolume != DSBVOLUME_MIN) {
+        lVolume = DSBVOLUME_MIN;
+    } else if (lVolume > 0) {
+        EmuLog(LOG_LEVEL::WARNING, "HybridDirectSoundBuffer_SetVolume has received greater than 0: %ld", lVolume);
+        lVolume = 0;
+    }
+    if ((dwEmuFlags & DSE_FLAG_DEBUG_MUTE) > 0) {
+        lVolume = DSBVOLUME_MIN;
+    }
+
+    HRESULT hRet = pDSBuffer->SetVolume(lVolume);
+
+    RETURN_RESULT_CHECK(hRet);
+}
+/*/
+//Only has one function, this is not a requirement.
+//IDirectSoundBuffer
+static inline HRESULT HybridDirectSoundBuffer_Stop(
+    LPDIRECTSOUNDBUFFER8 pDSBuffer)
+{
+
+    return DS_OK;
+}
+
+//Only has one function, this is not a requirement.
+//IDirectSoundBuffer
+static inline HRESULT HybridDirectSoundBuffer_StopEx(
+    LPDIRECTSOUNDBUFFER8 pDSBuffer,
+    REFERENCE_TIME      rtTimeStamp,
+    DWORD               dwEmuFlags)
+{
+
+    return DS_OK;
+}
+
+//IDirectSoundBuffer
+static inline HRESULT HybridDirectSoundBuffer_Unlock(
+    LPDIRECTSOUNDBUFFER8 pDSBuffer)
+{
+
+    return DS_OK;
+}//*/
+
+static inline HRESULT HybridDirectSoundBuffer_GetVoiceProperties(
+    XTL::X_DSVOICEPROPS& Xb_VoiceProperties,
+    XTL::X_DSVOICEPROPS* out_VoiceProperties
+)
+{
+    HRESULT ret = DS_OK;
+
+    if (out_VoiceProperties != xbnullptr) {
+        // Simply copy the data from Xb_VoiceProperties.
+        *out_VoiceProperties = Xb_VoiceProperties;
+    }
+    else {
+        ret = DSERR_INVALIDPARAM;
+    }
+
+    return ret;
+}
+
+static inline HRESULT HybridDirectSoundBuffer_SetMixBins(
+    XTL::X_DSVOICEPROPS& Xb_VoiceProperties,
+    XTL::X_LPDSMIXBINS   in_MixBins,
+    LPCWAVEFORMATEX      pwfxFormat,
+    DSBUFFERDESC&        BufferDesc
+)
+{
+    HRESULT ret = DS_OK;
+
+    GenerateMixBinDefault(Xb_VoiceProperties, pwfxFormat, in_MixBins, ((BufferDesc.dwFlags & DSBCAPS_CTRL3D) > 0));
+
+    return ret;
+}

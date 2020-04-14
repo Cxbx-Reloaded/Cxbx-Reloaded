@@ -2,15 +2,6 @@
 // PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 // ******************************************************************
 // *
-// *    .,-:::::    .,::      .::::::::.    .,::      .:
-// *  ,;;;'````'    `;;;,  .,;;  ;;;'';;'   `;;;,  .,;;
-// *  [[[             '[[,,[['   [[[__[[\.    '[[,,[['
-// *  $$$              Y$$$P     $$""""Y$$     Y$$$P
-// *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
-// *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
-// *
-// *   src->devices->Xbox.h
-// *
 // *  This file is part of the Cxbx project.
 // *
 // *  Cxbx and Cxbe are free software; you can redistribute them
@@ -43,6 +34,7 @@
 #include "EmuNVNet.h" // For NVNetDevice
 #include "ADM1032Device.h" // For ADM1032
 #include "devices\video\nv2a.h" // For NV2ADevice
+#include "Usb\USBDevice.h" // For USBDevice
 
 #define SMBUS_ADDRESS_MCPX 0x10 // = Write; Read = 0x11
 #define SMBUS_ADDRESS_TV_ENCODER 0x88 // = Write; Read = 0x89
@@ -65,7 +57,7 @@ typedef enum {
 } HardwareModel;
 
 typedef enum { // TODO : Move to it's own file
-	// http://xboxdevwiki.net/Hardware_Revisions#Video_encoder
+	// https://xboxdevwiki.net/Hardware_Revisions#Video_encoder
 	Conexant,
 	Focus,
 	XCalibur
@@ -78,5 +70,6 @@ extern SMCDevice* g_SMC;
 extern EEPROMDevice* g_EEPROM;
 extern NVNetDevice* g_NVNet;
 extern NV2ADevice* g_NV2A;
+extern USBDevice* g_USB0;
 
 extern void InitXboxHardware(HardwareModel hardwareModel);

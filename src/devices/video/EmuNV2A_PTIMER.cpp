@@ -1,21 +1,41 @@
-static inline uint64_t muldiv64(uint64_t a, uint32_t b, uint32_t c)
-{
-	union {
-		uint64_t ll;
-		struct {
-			uint32_t low, high;
-		} l;
-	} u, res;
-	uint64_t rl, rh;
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
+// ******************************************************************
+// *
+// *  This file is part of the Cxbx project.
+// *
+// *  Cxbx and Cxbe are free software; you can redistribute them
+// *  and/or modify them under the terms of the GNU General Public
+// *  License as published by the Free Software Foundation; either
+// *  version 2 of the license, or (at your option) any later version.
+// *
+// *  This program is distributed in the hope that it will be useful,
+// *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+// *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// *  GNU General Public License for more details.
+// *
+// *  You should have recieved a copy of the GNU General Public License
+// *  along with this program; see the file COPYING.
+// *  If not, write to the Free Software Foundation, Inc.,
+// *  59 Temple Place - Suite 330, Bostom, MA 02111-1307, USA.
+// *
+// *  This file is heavily based on code from XQEMU
+// *  https://github.com/xqemu/xqemu/blob/master/hw/xbox/nv2a/nv2a_ptimer.c
+// *  Copyright (c) 2012 espes
+// *  Copyright (c) 2015 Jannik Vogel
+// *  Copyright (c) 2018 Matt Borgerson
+// *
+// *  Contributions for Cxbx-Reloaded
+// *  Copyright (c) 2017-2018 Luke Usher <luke.usher@outlook.com>
+// *  Copyright (c) 2018 Patrick van Logchem <pvanlogchem@gmail.com>
+// *
+// *  All rights reserved
+// *
+// ******************************************************************
 
-	u.ll = a;
-	rl = (uint64_t)u.l.low * (uint64_t)b;
-	rh = (uint64_t)u.l.high * (uint64_t)b;
-	rh += (rl >> 32);
-	res.l.high = (uint32_t)(rh / c);
-	res.l.low = (((rh % c) << 32) + (rl & 0xffffffff)) / c;
-	return res.ll;
-}
+#include "common\util\CxbxUtil.h"
+
+#define NANOSECONDS_PER_SECOND 1000000000
 
 /* PTIMER - time measurement and time-based alarms */
 static uint64_t ptimer_get_clock(NV2AState * d)
@@ -23,9 +43,11 @@ static uint64_t ptimer_get_clock(NV2AState * d)
 	// Get time in nanoseconds
     uint64_t time = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
 	
-	return muldiv64(time,
-					uint32_t(d->pramdac.core_clock_freq * d->ptimer.numerator),
-					CLOCKS_PER_SEC * d->ptimer.denominator);
+	return Muldiv64(Muldiv64(time,
+					(uint32_t)d->pramdac.core_clock_freq, // TODO : Research how this can be updated to accept uint64_t
+					NANOSECONDS_PER_SECOND), // Was CLOCKS_PER_SEC
+				d->ptimer.denominator,
+				d->ptimer.numerator);
 }
 
 DEVICE_READ32(PTIMER)

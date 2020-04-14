@@ -12,11 +12,6 @@
 #ifndef XBOXKRNL_H
 #define XBOXKRNL_H
 
-#if defined(__cplusplus)
-extern "C"
-{
-#endif
-
 // ******************************************************************
 // * dll import/export
 // ******************************************************************
@@ -27,19 +22,9 @@ extern "C"
 // ******************************************************************
 // * kernel exports, others either import or link locally
 // ******************************************************************
-#define XBSYSAPI DECLSPEC_IMPORT
-
-#ifdef _XBOXKRNL_INTERNAL_
-#undef  XBSYSAPI
-#define XBSYSAPI DECLSPEC_EXPORT
-#define KRNL(API) API
-#endif
-#ifdef _XBOXKRNL_DEFEXTRN_
-#undef  XBSYSAPI
 #define XBSYSAPI DECLSPEC_EXTERN
 // The KRNL macro prevents naming collisions
 #define KRNL(API) KRNL##API
-#endif
 #define RESTRICTED_POINTER
 //TODO : When #define RESTRICTED_POINTER __restrict
 
@@ -149,6 +134,8 @@ typedef long                            NTSTATUS;
 
 #define NT_SUCCESS(Status)              ((NTSTATUS) (Status) >= 0)
 #define STATUS_SUCCESS                   ((DWORD   )0x00000000L)
+#define STATUS_ABANDONED                 ((DWORD   )0x00000080L)
+#define STATUS_MUTANT_LIMIT_EXCEEDED     ((DWORD   )0xC0000191L)
 #ifndef STATUS_PENDING
 #define STATUS_PENDING                   ((DWORD   )0x00000103L)
 #endif
@@ -183,6 +170,7 @@ typedef long                            NTSTATUS;
 // * Registry value types
 // ******************************************************************
 // Used in ExQueryNonVolatileSetting and ExSaveNonVolatileSetting
+#ifndef _WIN32 // Avoid "warning C4005:  'REG_NONE': macro redefinition" (conflicting with winnt.h)
 #define REG_NONE                    ( 0 )   // No defined value type.
 #define REG_SZ                      ( 1 )   // A null - terminated string. This will be either a Unicode or an ANSI string, depending on whether you use the Unicode or ANSI functions.
 #define REG_EXPAND_SZ               ( 2 )   // A null - terminated string that contains unexpanded references to environment variables (for example, "%PATH%"). It will be a Unicode or ANSI string depending on whether you use the Unicode or ANSI functions. To expand the environment variable references, use the ExpandEnvironmentStrings function.
@@ -195,6 +183,7 @@ typedef long                            NTSTATUS;
 #define REG_RESOURCE_LIST           ( 8 )   // Resource list in the resource map
 #define REG_FULL_RESOURCE_DESCRIPTOR ( 9 )  // Resource list in the hardware description
 #define REG_RESOURCE_REQUIREMENTS_LIST ( 10 )
+#endif
 
 // ******************************************************************
 // * calling conventions
@@ -351,56 +340,6 @@ typedef struct _LIST_ENTRY
     struct _LIST_ENTRY *Blink;
 }
 LIST_ENTRY, *PLIST_ENTRY;
-
-// See the links below for the details about the kernel structure LIST_ENTRY and the related functions
-// https://www.codeproject.com/Articles/800404/Understanding-LIST-ENTRY-Lists-and-Its-Importance
-// https://docs.microsoft.com/en-us/windows-hardware/drivers/kernel/singly-and-doubly-linked-lists
-
-#define LIST_ENTRY_DEFINE_HEAD(ListHead) xboxkrnl::LIST_ENTRY (ListHead) = { &(ListHead), &(ListHead) }
-
-#define LIST_ENTRY_INITIALIZE_HEAD(ListHead) ((ListHead)->Flink = (ListHead)->Blink = (ListHead))
-
-#define LIST_ENTRY_INITIALIZE(ListEntry) ((ListEntry)->Flink = (ListEntry)->Blink = nullptr)
-
-#define LIST_ENTRY_ACCESS_RECORD(address, type, field) \
-((type*)((UCHAR*)(address) - (ULONG)(&((type*)0)->field)))
-
-#define IS_LIST_EMPTY(ListHead) ((ListHead)->Flink == (ListHead))
-
-#define LIST_ENTRY_INSERT_HEAD(ListHead, Entry) {\
-xboxkrnl::PLIST_ENTRY Flink;\
-Flink = (ListHead)->Flink;\
-(Entry)->Flink = Flink;\
-(Entry)->Blink = (ListHead);\
-(Flink)->Blink = Entry;\
-(ListHead)->Flink = Entry;\
-}
-
-#define LIST_ENTRY_INSERT_TAIL(ListHead, Entry) {\
-xboxkrnl::PLIST_ENTRY Blink;\
-Blink = (ListHead)->Blink;\
-(Entry)->Flink = ListHead;\
-(Entry)->Blink = Blink;\
-(Blink)->Flink = Entry;\
-(ListHead)->Blink = Entry;\
-}
-
-#define LIST_ENTRY_REMOVE(Entry) {\
-xboxkrnl::PLIST_ENTRY ExFlink;\
-xboxkrnl::PLIST_ENTRY ExBlink;\
-ExFlink = (Entry)->Flink;\
-ExBlink = (Entry)->Blink;\
-(ExFlink)->Blink = ExBlink;\
-(ExBlink)->Flink = ExFlink;\
-}
-
-#define LIST_ENTRY_REMOVE_AT_HEAD(ListHead) \
-(ListHead)->Flink;\
-LIST_ENTRY_REMOVE((ListHead)->Flink)
-
-#define REMOVE_HEAD_LIST(ListHead) \
-(ListHead)->Flink;\
-{LIST_ENTRY_REMOVE((ListHead)->Flink)}
 
 // ******************************************************************
 // * SLIST_ENTRY
@@ -1590,6 +1529,17 @@ typedef struct _KDPC
 KDPC, *PKDPC;
 
 // ******************************************************************
+// * DPC queue entry structure
+// ******************************************************************
+typedef struct _DPC_QUEUE_ENTRY
+{
+	PKDPC Dpc;
+	PKDEFERRED_ROUTINE Routine;
+	PVOID Context;
+}
+DPC_QUEUE_ENTRY, *PDPC_QUEUE_ENTRY;
+
+// ******************************************************************
 // * KFLOATING_SAVE
 // ******************************************************************
 // See NtDll::FLOATING_SAVE_AREA
@@ -1607,14 +1557,17 @@ typedef struct _KFLOATING_SAVE
 }
 KFLOATING_SAVE, *PKFLOATING_SAVE;
 
+#define DISPATCHER_OBJECT_TYPE_MASK 0x7
 // ******************************************************************
 // * KOBJECTS
 // ******************************************************************
 typedef enum _KOBJECTS
 {
+	EventSynchronizationObject = 1,
 	MutantObject = 2,
 	QueueObject = 4,
 	SemaphoreObject = 5,
+	ThreadObject = 6,
 	TimerNotificationObject = 8,
 	TimerSynchronizationObject = 9,
 	ApcObject = 0x12,
@@ -1683,12 +1636,17 @@ KINTERRUPT_MODE;
 // ******************************************************************
 // * IRQ (Interrupt ReQuest) Priority Levels
 // ******************************************************************
-#define PASSIVE_LEVEL 0
-#define APC_LEVEL 1
+#define PASSIVE_LEVEL  0
+#define APC_LEVEL      1
 #define DISPATCH_LEVEL 2
-#define PROFILE_LEVEL 26
-#define SYNC_LEVEL 28
-#define HIGH_LEVEL 31
+#define PROFILE_LEVEL  26
+#define CLOCK1_LEVEL   28
+#define CLOCK2_LEVEL   28
+#define SYNC_LEVEL     28
+#define IPI_LEVEL      29
+#define POWER_LEVEL    30
+#define HIGH_LEVEL     31
+#define CLOCK_LEVEL    CLOCK2_LEVEL
 
 #define DISPATCH_SIZE 22
 
@@ -1737,7 +1695,7 @@ PS_STATISTICS, *PPS_STATISTICS;
 // ******************************************************************
 typedef struct _RTL_CRITICAL_SECTION
 {
-    DWORD               Unknown[4];                                     // 0x00
+	DISPATCHER_HEADER   Event;                                          // 0x00
     LONG                LockCount;                                      // 0x10
     LONG                RecursionCount;                                 // 0x14
     HANDLE              OwningThread;                                   // 0x18
@@ -1870,11 +1828,9 @@ EXCEPTION_DISPOSITION, *PEXCEPTION_DISPOSITION;
 // ******************************************************************
 // * EXCEPTION_REGISTRATION_RECORD
 // ******************************************************************
-typedef struct _EXCEPTION_REGISTRATION_RECORD *PEXCEPTION_REGISTRATION_RECORD; // forward
-
 typedef struct _EXCEPTION_REGISTRATION_RECORD
 {
-	PEXCEPTION_REGISTRATION_RECORD Next;
+	struct _EXCEPTION_REGISTRATION_RECORD *Next; // Don't forward declare PEXCEPTION_REGISTRATION_RECORD to avoid conflict with winnt.h
 	PEXCEPTION_DISPOSITION Handler;
 }
 EXCEPTION_REGISTRATION_RECORD, *PEXCEPTION_REGISTRATION_RECORD;
@@ -1991,7 +1947,7 @@ typedef struct _KTHREAD
 	/* 0x55/85 */ CHAR WaitMode;
 	/* 0x56/86 */ CHAR WaitNext;
 	/* 0x57/87 */ CHAR WaitReason;
-	/* 0x58/88 */ PVOID WaitBlockList;
+	/* 0x58/88 */ PKWAIT_BLOCK WaitBlockList;
 	/* 0x5C/92 */ LIST_ENTRY WaitListEntry;
 	/* 0x64/100 */ ULONG WaitTime;
 	/* 0x68/104 */ ULONG KernelApcDisable;
@@ -2612,52 +2568,88 @@ typedef struct _DISK_GEOMETRY {
 	DWORD BytesPerSector;
 } DISK_GEOMETRY, *PDISK_GEOMETRY;
 
-// This is modeled around the Windows definition
-typedef struct _FLOATING_SAVE_AREA {
-	DWORD   ControlWord;
-	DWORD   StatusWord;
-	DWORD   TagWord;
-	DWORD   ErrorOffset;
-	DWORD   ErrorSelector;
-	DWORD   DataOffset;
-	DWORD   DataSelector;
-	BYTE    RegisterArea[80];
-	DWORD   Cr0NpxState;
-} FLOATING_SAVE_AREA;
+// From nxdk
+#pragma pack(push, 1)
+typedef struct _FLOATING_SAVE_AREA
+{
+    WORD ControlWord;
+    WORD StatusWord;
+    WORD TagWord;
+    WORD ErrorOpcode;
+    DWORD ErrorOffset;
+    DWORD ErrorSelector;
+    DWORD DataOffset;
+    DWORD DataSelector;
+    DWORD MXCsr;
+    DWORD Reserved2;
+    BYTE RegisterArea[128];
+    BYTE XmmRegisterArea[128];
+    BYTE Reserved4[224];
+    DWORD Cr0NpxState;
+} FLOATING_SAVE_AREA, *PFLOATING_SAVE_AREA;
+#pragma pack(pop)
 
-// This is modeled around the Windows definition
-typedef struct _CONTEXT {
-	DWORD ContextFlags;
-	DWORD   Dr0;
-	DWORD   Dr1;
-	DWORD   Dr2;
-	DWORD   Dr3;
-	DWORD   Dr6;
-	DWORD   Dr7;
-	FLOATING_SAVE_AREA FloatSave;
-	DWORD   SegGs;
-	DWORD   SegFs;
-	DWORD   SegEs;
-	DWORD   SegDs;
-	DWORD   Edi;
-	DWORD   Esi;
-	DWORD   Ebx;
-	DWORD   Edx;
-	DWORD   Ecx;
-	DWORD   Eax;
-	DWORD   Ebp;
-	DWORD   Eip;
-	DWORD   SegCs;
-	DWORD   EFlags;
-	DWORD   Esp;
-	DWORD   SegSs;
-	BYTE    ExtendedRegisters[512];
+typedef struct _CONTEXT
+{
+    DWORD ContextFlags; // 0x00
+    FLOATING_SAVE_AREA FloatSave; // 0x04
+    DWORD Edi; // 0x208
+    DWORD Esi; // 0x20C
+    DWORD Ebx; // 0x210
+    DWORD Edx; // 0x214
+    DWORD Ecx; // 0x218
+    DWORD Eax; // 0x21C
+    DWORD Ebp; // 0x220
+    DWORD Eip; // 0x224
+    DWORD SegCs; // 0x228
+    DWORD EFlags; // 0x22C
+    DWORD Esp; // 0x230
+    DWORD SegSs; // 0x234
 } CONTEXT, *PCONTEXT;
 
 // This is modeled around the Windows definition
 typedef struct _IO_COMPLETION_BASIC_INFORMATION {
 	LONG Depth;
 } IO_COMPLETION_BASIC_INFORMATION, *PIO_COMPLETION_BASIC_INFORMATION;
+
+typedef VOID(*PIDE_INTERRUPT_ROUTINE) (void);
+
+typedef VOID(*PIDE_FINISHIO_ROUTINE) (void);
+
+typedef BOOLEAN(*PIDE_POLL_RESET_COMPLETE_ROUTINE) (void);
+
+typedef VOID(*PIDE_TIMEOUT_EXPIRED_ROUTINE) (void);
+
+typedef VOID(*PIDE_START_PACKET_ROUTINE) (
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp
+);
+
+typedef VOID(*PIDE_START_NEXT_PACKET_ROUTINE) (void);
+
+typedef struct _IDE_CHANNEL_OBJECT
+{
+    PIDE_INTERRUPT_ROUTINE InterruptRoutine;
+    PIDE_FINISHIO_ROUTINE FinishIoRoutine;
+    PIDE_POLL_RESET_COMPLETE_ROUTINE PollResetCompleteRoutine;
+    PIDE_TIMEOUT_EXPIRED_ROUTINE TimeoutExpiredRoutine;
+    PIDE_START_PACKET_ROUTINE StartPacketRoutine;
+    PIDE_START_NEXT_PACKET_ROUTINE StartNextPacketRoutine;
+    KIRQL InterruptIrql;
+    BOOLEAN ExpectingBusMasterInterrupt;
+    BOOLEAN StartPacketBusy;
+    BOOLEAN StartPacketRequested;
+    UCHAR Timeout;
+    UCHAR IoRetries;
+    UCHAR MaximumIoRetries;
+    PIRP CurrentIrp;
+    KDEVICE_QUEUE DeviceQueue;
+    ULONG PhysicalRegionDescriptorTablePhysical;
+    KDPC TimerDpc;
+    KDPC FinishDpc;
+    KTIMER Timer;
+    KINTERRUPT InterruptObject;
+} IDE_CHANNEL_OBJECT, *PIDE_CHANNEL_OBJECT;
 
 // ******************************************************************
 // * Debug
@@ -2713,10 +2705,6 @@ typedef struct _IO_COMPLETION_BASIC_INFORMATION {
 // * XBox
 // ******************************************************************
 #include "xbox.h"
-
-#if defined(__cplusplus)
-}
-#endif
 
 #endif
 

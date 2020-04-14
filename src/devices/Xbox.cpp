@@ -2,15 +2,6 @@
 // PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 // ******************************************************************
 // *
-// *    .,-:::::    .,::      .::::::::.    .,::      .:
-// *  ,;;;'````'    `;;;,  .,;;  ;;;'';;'   `;;;,  .,;;
-// *  [[[             '[[,,[['   [[[__[[\.    '[[,,[['
-// *  $$$              Y$$$P     $$""""Y$$     Y$$$P
-// *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
-// *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
-// *
-// *   src->devices->Xbox.cpp
-// *
 // *  This file is part of the Cxbx project.
 // *
 // *  Cxbx and Cxbe are free software; you can redistribute them
@@ -33,7 +24,10 @@
 // *  All rights reserved
 // *
 // ******************************************************************
+
 #include "Xbox.h" // For HardwareModel
+#include "common\xbe\Xbe.h"  // Without this HLEIntercept complains about some undefined xbe variables
+#include "core\hle\Intercept.hpp"
 
 PCIBus* g_PCIBus;
 SMBus* g_SMBus;
@@ -43,6 +37,7 @@ EEPROMDevice* g_EEPROM;
 NVNetDevice* g_NVNet;
 NV2ADevice* g_NV2A;
 ADM1032Device* g_ADM1032;
+USBDevice* g_USB0;
 
 MCPXRevision MCPXRevisionFromHardwareModel(HardwareModel hardwareModel)
 {
@@ -56,7 +51,7 @@ MCPXRevision MCPXRevisionFromHardwareModel(HardwareModel hardwareModel)
 	case Revision1_6:
 		return MCPXRevision::MCPX_X3;
 	case DebugKit:
-		// EmuWarning("Guessing MCPXVersion");
+		// EmuLog(LOG_LEVEL::WARNING, "Guessing MCPXVersion");
 		return MCPXRevision::MCPX_X2;
 	default:
 		// UNREACHABLE(hardwareModel);
@@ -75,7 +70,7 @@ SCMRevision SCMRevisionFromHardwareModel(HardwareModel hardwareModel)
 	case Revision1_4:
 	case Revision1_5:
 	case Revision1_6:
-		// EmuWarning("Guessing SCMRevision");
+		// EmuLog(LOG_LEVEL::WARNING, "Guessing SCMRevision");
 		return SCMRevision::P2L; // Assumption; Our SCM returns PIC version string "P05"
 	case DebugKit:
 		return SCMRevision::D01; // Our SCM returns PIC version string "DXB"
@@ -122,11 +117,17 @@ void InitXboxHardware(HardwareModel hardwareModel)
 
 	// Create devices
 	g_MCPX = new MCPXDevice(mcpx_revision);
-	g_SMC = new SMCDevice(smc_revision);
+															
+	g_SMC = new SMCDevice(smc_revision, g_bIsChihiro ? 6 : 1); // 6 = AV_PACK_STANDARD, 1 = AV_PACK_HDTV. Chihiro doesn't support HDTV!
+															   // SMC uses different AV_PACK values than the Kernel
+															   // See https://xboxdevwiki.net/PIC#The_AV_Pack
 	g_EEPROM = new EEPROMDevice();
 	g_NVNet = new NVNetDevice();
 	g_NV2A = new NV2ADevice();
 	g_ADM1032 = new ADM1032Device();
+	if (bLLE_USB) {
+		g_USB0 = new USBDevice();
+	}
 
 	// Connect devices to SM bus
 	g_SMBus->ConnectDevice(SMBUS_ADDRESS_SYSTEM_MICRO_CONTROLLER, g_SMC); // W 0x20 R 0x21
@@ -155,10 +156,18 @@ void InitXboxHardware(HardwareModel hardwareModel)
 	//g_PCIBus->ConnectDevice(PCI_DEVID(0, PCI_DEVFN(5, 0)), g_NVAPU);
 	//g_PCIBus->ConnectDevice(PCI_DEVID(0, PCI_DEVFN(6, 0)), g_AC97);
 	g_PCIBus->ConnectDevice(PCI_DEVID(1, PCI_DEVFN(0, 0)), g_NV2A);
+	if (bLLE_USB) {
+		// ergo720: according to some research done by LukeUsher, only Xbox Alpha Kits have a two HCs configuration. This seems to also be confirmed by the xboxdevwiki,
+		// which states that it has a xircom PGPCI2(OPTI 82C861) 2 USB port PCI card -> 2 ports, not 4. Finally, I disassembled various xbe's and discovered that the number
+		// of ports per HC is hardcoded as 4 in the driver instead of being detected at runtime by reading the HcRhDescriptorA register and so a game would have to be
+		// recompiled to support 2 HCs, which further confirms the point. Because we are not going to emulate an Alpha Kit, we can simply ignore the USB1 device.
+
+		g_PCIBus->ConnectDevice(PCI_DEVID(0, PCI_DEVFN(2, 0)), g_USB0);
+	}
 
 	// TODO : Handle other SMBUS Addresses, like PIC_ADDRESS, XCALIBUR_ADDRESS
 	// Resources : http://pablot.com/misc/fancontroller.cpp
 	// https://github.com/JayFoxRox/Chihiro-Launcher/blob/master/hook.h
 	// https://github.com/docbrown/vxb/wiki/Xbox-Hardware-Information
-	// https://web.archive.org/web/20100617022549/http://www.xbox-linux.org/wiki/PIC
+	// https://web.archive.org/web/20100617022549/https://www.xbox-linux.org/wiki/PIC
 }

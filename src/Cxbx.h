@@ -1,14 +1,5 @@
 // ******************************************************************
 // *
-// *    .,-:::::    .,::      .::::::::.    .,::      .:
-// *  ,;;;'````'    `;;;,  .,;;  ;;;'';;'   `;;;,  .,;;
-// *  [[[             '[[,,[['   [[[__[[\.    '[[,,[['
-// *  $$$              Y$$$P     $$""""Y$$     Y$$$P
-// *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
-// *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
-// *
-// *   Cxbx->Cxbx.h
-// *
 // *  This file is part of the Cxbx project.
 // *
 // *  Cxbx and Cxbe are free software; you can redistribute them
@@ -34,37 +25,10 @@
 #ifndef CXBX_H
 #define CXBX_H
 
-#define FUNC_EXPORTS __pragma(comment(linker, "/EXPORT:" __FUNCTION__ "=" __FUNCDNAME__))
-
-/*! \name primitive typedefs */
-/*! \{ */
-typedef signed int     sint;
-typedef unsigned int   uint;
-typedef char           int8;
-typedef char           int08;
-typedef short          int16;
-typedef long           int32;
-typedef unsigned char  uint8;
-typedef unsigned char  uint08;
-typedef unsigned short uint16;
-typedef unsigned long  uint32;
-/*! \} */
-
-typedef signed char      s8;
-typedef __int16          s16;
-typedef __int32          s32;
-typedef __int64          s64;
-typedef unsigned char    u8;
-typedef unsigned __int16 u16;
-typedef unsigned __int32 u32;
-typedef unsigned __int64 u64;
-typedef s8               i8;
-typedef s16              i16;
-typedef s32              i32;
-typedef s64              i64;
+#include <cstdint>
 
 /*! xbaddr is the type of a physical address */
-typedef u32              xbaddr;
+typedef uint32_t xbaddr;
 
 /*! xbnullptr is the type of null pointer address*/
 #define xbnullptr nullptr
@@ -73,12 +37,6 @@ typedef u32              xbaddr;
 #define xbnull  0
 
 #ifdef _DEBUG
-/*! define this to track vertex buffers */
-#define _DEBUG_TRACK_VB
-/*! define this to track vertex shaders */
-#define _DEBUG_TRACK_VS
-/*! define this to track pixel shaders */
-#define _DEBUG_TRACK_PS
 /*! define this to track memory allocations */
 //#define _DEBUG_ALLOC
 #endif
@@ -86,8 +44,6 @@ typedef u32              xbaddr;
 #ifdef _DEBUG
 #define _DEBUG_TRACE 1
 #endif
-/*! define this to trace warnings */
-#define _DEBUG_WARNINGS
 /*! define this to trace vertex shader constants */
 #define _DEBUG_TRACK_VS_CONST
 /*! define this to print current configuration at kernel startup */
@@ -129,26 +85,8 @@ extern bool g_bIsRetail;
 /*! indicates ability to save on exit (needed for settings reset) */
 extern bool g_SaveOnExit;
 
-/*! maximum number of threads cxbx can handle */
-#define MAXIMUM_XBOX_THREADS 256
-
-/*! runtime DbgPrintf toggle boolean */
+/*! runtime logging toggle boolean */
 extern volatile bool g_bPrintfOn;
-
-#ifdef _MSC_VER
-#pragma warning(disable : 4477)
-#endif
-
-/*! DbgPrintf enabled if _DEBUG_TRACE is set */
-#ifdef _DEBUG_TRACE
-	#define DbgPrintf(fmt, ...) { \
-        CXBX_CHECK_INTEGRITY(); \
-        if(g_bPrintfOn) printf("[0x%.4X] "##fmt, GetCurrentThreadId(), ##__VA_ARGS__); \
-     }
-#else
-	inline void null_func(...) { }
-	#define DbgPrintf null_func
-#endif
 
 #if WIN32
 #include "Win32\Threads.h"
@@ -156,5 +94,7 @@ extern volatile bool g_bPrintfOn;
 #else
 #define CxbxSetThreadName(Name)
 #endif
+
+#include <filesystem>
 
 #endif

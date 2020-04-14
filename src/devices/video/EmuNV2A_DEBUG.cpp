@@ -1,11 +1,46 @@
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
+// ******************************************************************
+// *
+// *  This file is part of the Cxbx project.
+// *
+// *  Cxbx and Cxbe are free software; you can redistribute them
+// *  and/or modify them under the terms of the GNU General Public
+// *  License as published by the Free Software Foundation; either
+// *  version 2 of the license, or (at your option) any later version.
+// *
+// *  This program is distributed in the hope that it will be useful,
+// *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+// *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// *  GNU General Public License for more details.
+// *
+// *  You should have recieved a copy of the GNU General Public License
+// *  along with this program; see the file COPYING.
+// *  If not, write to the Free Software Foundation, Inc.,
+// *  59 Temple Place - Suite 330, Bostom, MA 02111-1307, USA.
+// *
+// *  This file is heavily based on code from XQEMU
+// *  https://github.com/xqemu/xqemu/tree/master/hw/xbox/nv2a/nv2a_debug.c
+// *  Copyright (c) 2012 espes
+// *  Copyright (c) 2015 Jannik Vogel
+// *  Copyright (c) 2018 Matt Borgerson
+// *
+// *  Contributions for Cxbx-Reloaded
+// *  Copyright (c) 2017-2018 Luke Usher <luke.usher@outlook.com>
+// *  Copyright (c) 2018 Patrick van Logchem <pvanlogchem@gmail.com>
+// *
+// *  All rights reserved
+// *
+// ******************************************************************
+
 #define DEBUG_START(DEV) \
-const char *DebugNV_##DEV##(xbaddr addr) \
+const char *DebugNV_##DEV(xbaddr addr) \
 { \
 	switch (addr) {
 #define DEBUG_CASE(a) \
 		case a: return #a;
 #define DEBUG_CASE_EX(a, c) \
-		case a: return #a##c;
+		case a: return #a c;
 #define DEBUG_END(DEV) \
 		default: \
 			return "Unknown " #DEV " Address"; \
@@ -93,6 +128,8 @@ DEBUG_START(PFIFO)
 	DEBUG_CASE(NV_PFIFO_CACHE1_DMA_GET_JMP_SHADOW);
 	DEBUG_CASE(NV_PFIFO_CACHE1_DMA_RSVD_SHADOW);
 	DEBUG_CASE(NV_PFIFO_CACHE1_DMA_DATA_SHADOW);
+	DEBUG_CASE(NV_PFIFO_CACHE1_METHOD);
+	DEBUG_CASE(NV_PFIFO_CACHE1_DATA);
 DEBUG_END(PFIFO)
 
 // TODO: Remove disabled warning once case are add to PRMA switch.
@@ -281,6 +318,12 @@ DEBUG_START(PGRAPH)
 	DEBUG_CASE(NV_PGRAPH_CTX_SWITCH2);
 	DEBUG_CASE(NV_PGRAPH_CTX_SWITCH3);
 	DEBUG_CASE(NV_PGRAPH_CTX_SWITCH4);
+	DEBUG_CASE(NV_PGRAPH_CTX_SWITCH5);
+	DEBUG_CASE(NV_PGRAPH_CTX_CACHE1);
+	DEBUG_CASE(NV_PGRAPH_CTX_CACHE2);
+	DEBUG_CASE(NV_PGRAPH_CTX_CACHE3);
+	DEBUG_CASE(NV_PGRAPH_CTX_CACHE4);
+	DEBUG_CASE(NV_PGRAPH_CTX_CACHE5);
 	DEBUG_CASE(NV_PGRAPH_STATUS);
 	DEBUG_CASE(NV_PGRAPH_TRAPPED_ADDR);
 	DEBUG_CASE(NV_PGRAPH_TRAPPED_DATA_LOW);
@@ -337,6 +380,7 @@ DEBUG_START(PGRAPH)
 	DEBUG_CASE(NV_PGRAPH_ZCOMP_OFFSET);
 	DEBUG_CASE(NV_PGRAPH_FBCFG0);
 	DEBUG_CASE(NV_PGRAPH_FBCFG1);
+	DEBUG_CASE(NV_PGRAPH_PATT_COLOR0);
 	DEBUG_CASE(NV_PGRAPH_DEBUG_6);
 	DEBUG_CASE(NV_PGRAPH_DEBUG_7);
 	DEBUG_CASE(NV_PGRAPH_DEBUG_10);
@@ -345,6 +389,7 @@ DEBUG_START(PGRAPH)
 	DEBUG_CASE(NV_PGRAPH_CSV1_B);
 	DEBUG_CASE(NV_PGRAPH_CSV1_A);
 	DEBUG_CASE(NV_PGRAPH_CHEOPS_OFFSET);
+	DEBUG_CASE(NV_PGRAPH_DMA_STATE);
 	DEBUG_CASE(NV_PGRAPH_BLEND);
 	DEBUG_CASE(NV_PGRAPH_BLENDCOLOR);
 	DEBUG_CASE(NV_PGRAPH_BORDERCOLOR0);
@@ -366,6 +411,7 @@ DEBUG_START(PGRAPH)
 	DEBUG_CASE(NV_PGRAPH_COMBINESPECFOG0);
 	DEBUG_CASE(NV_PGRAPH_COMBINESPECFOG1);
 	DEBUG_CASE(NV_PGRAPH_CONTROL_0);
+	DEBUG_CASE(NV_PGRAPH_CONTROL_1);
 	DEBUG_CASE(NV_PGRAPH_CONTROL_2);
 	DEBUG_CASE(NV_PGRAPH_CONTROL_3);
 	DEBUG_CASE(NV_PGRAPH_FOGCOLOR);
@@ -375,6 +421,7 @@ DEBUG_START(PGRAPH)
 	DEBUG_CASE(NV_PGRAPH_SHADERCLIPMODE);
 	DEBUG_CASE(NV_PGRAPH_SHADERCTL);
 	DEBUG_CASE(NV_PGRAPH_SHADERPROG);
+	DEBUG_CASE(NV_PGRAPH_SEMAPHOREOFFSET);
 	DEBUG_CASE(NV_PGRAPH_SHADOWZSLOPETHRESHOLD);
 	DEBUG_CASE(NV_PGRAPH_SPECFOGFACTOR0);
 	DEBUG_CASE(NV_PGRAPH_SPECFOGFACTOR1);
@@ -412,6 +459,22 @@ DEBUG_START(PGRAPH)
 	DEBUG_CASE(NV_PGRAPH_TEXPALETTE1);
 	DEBUG_CASE(NV_PGRAPH_TEXPALETTE2);
 	DEBUG_CASE(NV_PGRAPH_TEXPALETTE3);
+	DEBUG_CASE(NV_PGRAPH_WINDOWCLIPX0);
+	DEBUG_CASE(NV_PGRAPH_WINDOWCLIPX1);
+	DEBUG_CASE(NV_PGRAPH_WINDOWCLIPX2);
+	DEBUG_CASE(NV_PGRAPH_WINDOWCLIPX3);
+	DEBUG_CASE(NV_PGRAPH_WINDOWCLIPX4);
+	DEBUG_CASE(NV_PGRAPH_WINDOWCLIPX5);
+	DEBUG_CASE(NV_PGRAPH_WINDOWCLIPX6);
+	DEBUG_CASE(NV_PGRAPH_WINDOWCLIPX7);
+	DEBUG_CASE(NV_PGRAPH_WINDOWCLIPY0);
+	DEBUG_CASE(NV_PGRAPH_WINDOWCLIPY1);
+	DEBUG_CASE(NV_PGRAPH_WINDOWCLIPY2);
+	DEBUG_CASE(NV_PGRAPH_WINDOWCLIPY3);
+	DEBUG_CASE(NV_PGRAPH_WINDOWCLIPY4);
+	DEBUG_CASE(NV_PGRAPH_WINDOWCLIPY5);
+	DEBUG_CASE(NV_PGRAPH_WINDOWCLIPY6);
+	DEBUG_CASE(NV_PGRAPH_WINDOWCLIPY7);
 	DEBUG_CASE(NV_PGRAPH_ZSTENCILCLEARVALUE);
 	DEBUG_CASE(NV_PGRAPH_ZCLIPMIN);
 	DEBUG_CASE(NV_PGRAPH_ZOFFSETBIAS);

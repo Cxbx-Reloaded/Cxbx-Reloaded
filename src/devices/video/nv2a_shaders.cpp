@@ -15,7 +15,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program; if not, see <http://www.gnu.org/licenses/>.
+ * along with this program; if not, see <https://www.gnu.org/licenses/>.
  */
 
 //#include "qemu-common.h"
@@ -759,7 +759,7 @@ STRUCT_VERTEX_DATA);
 
     /* Return combined header + source */
     qstring_append(header, qstring_get_str(body));
-    QDECREF(body);
+    qobject_unref(body);
     return header;
 
 }
@@ -775,7 +775,7 @@ STRUCT_VERTEX_DATA);
     NV2A_DPRINTF("compile new %s, code:\n%s\n", name, code);
 
     GLuint shader = glCreateShader(gl_shader_type);
-    glShaderSource(shader, 1, &code, 0);
+    glShaderSource(shader, 1, &code, NULL);
     glCompileShader(shader);
 
     /* Check it compiled */
@@ -824,7 +824,7 @@ ShaderBinding* generate_shaders(const ShaderState state)
                                                   "geometry shader");
         glAttachShader(program, geometry_shader);
 
-        QDECREF(geometry_shader_code);
+        qobject_unref(geometry_shader_code);
 
         vtx_prefix = 'v';
     } else {
@@ -838,7 +838,7 @@ ShaderBinding* generate_shaders(const ShaderState state)
                                             qstring_get_str(vertex_shader_code),
                                             "vertex shader");
     glAttachShader(program, vertex_shader);
-    QDECREF(vertex_shader_code);
+    qobject_unref(vertex_shader_code);
 
 
     /* Bind attributes for vertices */
@@ -859,7 +859,7 @@ ShaderBinding* generate_shaders(const ShaderState state)
                                               "fragment shader");
     glAttachShader(program, fragment_shader);
 
-    QDECREF(fragment_shader_code);
+    qobject_unref(fragment_shader_code);
 
 
     /* link the program */
@@ -951,6 +951,10 @@ ShaderBinding* generate_shaders(const ShaderState state)
         ret->light_local_position_loc[i] = glGetUniformLocation(program, tmp);
         snprintf(tmp, sizeof(tmp), "lightLocalAttenuation%d", i);
         ret->light_local_attenuation_loc[i] = glGetUniformLocation(program, tmp);
+    }
+    for (i = 0; i < 8; i++) {
+        snprintf(tmp, sizeof(tmp), "clipRegion[%d]", i);
+        ret->clip_region_loc[i] = glGetUniformLocation(program, tmp);
     }
 
     return ret;

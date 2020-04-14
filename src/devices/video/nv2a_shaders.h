@@ -15,19 +15,18 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program; if not, see <http://www.gnu.org/licenses/>.
+ * along with this program; if not, see <https://www.gnu.org/licenses/>.
  */
 
 #ifndef HW_NV2A_SHADERS_H
 #define HW_NV2A_SHADERS_H
 
 #include "qstring.h"
-#include "CxbxKrnl/gloffscreen/gloffscreen.h"
+#include "common\util\gloffscreen\gloffscreen.h" // For GLenum, etc
 
 #include "nv2a_vsh.h"
 #include "nv2a_psh.h"
-#include "nv2a_int.h"
-
+#include "nv2a_regs.h"
 
 enum ShaderPrimitiveMode {
     PRIM_TYPE_NONE,
@@ -108,6 +107,7 @@ typedef struct ShaderBinding {
     GLint light_local_position_loc[NV2A_MAX_LIGHTS];
     GLint light_local_attenuation_loc[NV2A_MAX_LIGHTS];
 
+    GLint clip_region_loc[8];
 } ShaderBinding;
 
 ShaderBinding* generate_shaders(const ShaderState state);

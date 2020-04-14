@@ -1,3 +1,38 @@
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
+// ******************************************************************
+// *
+// *  This file is part of the Cxbx project.
+// *
+// *  Cxbx and Cxbe are free software; you can redistribute them
+// *  and/or modify them under the terms of the GNU General Public
+// *  License as published by the Free Software Foundation; either
+// *  version 2 of the license, or (at your option) any later version.
+// *
+// *  This program is distributed in the hope that it will be useful,
+// *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+// *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// *  GNU General Public License for more details.
+// *
+// *  You should have recieved a copy of the GNU General Public License
+// *  along with this program; see the file COPYING.
+// *  If not, write to the Free Software Foundation, Inc.,
+// *  59 Temple Place - Suite 330, Bostom, MA 02111-1307, USA.
+// *
+// *  This file is heavily based on code from XQEMU
+// *  https://github.com/xqemu/xqemu/blob/master/hw/xbox/nv2a/nv2a_pgraph.c
+// *  Copyright (c) 2012 espes
+// *  Copyright (c) 2015 Jannik Vogel
+// *  Copyright (c) 2018 Matt Borgerson
+// *
+// *  Contributions for Cxbx-Reloaded
+// *  Copyright (c) 2017-2018 Luke Usher <luke.usher@outlook.com>
+// *  Copyright (c) 2018 Patrick van Logchem <pvanlogchem@gmail.com>
+// *
+// *  All rights reserved
+// *
+// ******************************************************************
+
 // FIXME
 #define qemu_mutex_lock_iothread()
 #define qemu_mutex_unlock_iothread()
@@ -125,35 +160,54 @@ static const GLenum pgraph_stencil_op_map[] = {
     GL_DECR_WRAP,
 };
 
+enum FormatEncoding {
+	linear = 0,
+	swizzled, // for all NV097_SET_TEXTURE_FORMAT_*_SZ_*
+	compressed // for all NV097_SET_TEXTURE_FORMAT_*_DXT*
+};
+
 typedef struct ColorFormatInfo {
-    unsigned int bytes_per_pixel;
-    bool linear;
+    unsigned int bytes_per_pixel; // Derived from the total number of channel bits
+    FormatEncoding encoding;
     GLint gl_internal_format;
-    GLenum gl_format;
+    GLenum gl_format; // == 0 for compressed formats
     GLenum gl_type;
-    GLenum gl_swizzle_mask[4];
+    GLint *gl_swizzle_mask; // == nullptr when gl_internal_format, gl_format and gl_type are sufficient
 } ColorFormatInfo;
+
+// Resulting gl_internal_format, gl_format and gl_type values, for formats handled by convert_texture_data()
+#define GL_CONVERT_TEXTURE_DATA_RESULTING_FORMAT GL_RGBA8, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV
+
+static GLint gl_swizzle_mask_0RG1[4] = { GL_ZERO, GL_RED, GL_GREEN, GL_ONE };
+static GLint gl_swizzle_mask_111R[4] = { GL_ONE, GL_ONE, GL_ONE, GL_RED };
+static GLint gl_swizzle_mask_ARGB[4] = { GL_ALPHA, GL_RED, GL_GREEN, GL_BLUE };
+static GLint gl_swizzle_mask_BGRA[4] = { GL_BLUE, GL_GREEN, GL_RED, GL_ALPHA };
+static GLint gl_swizzle_mask_GGGR[4] = { GL_GREEN, GL_GREEN, GL_GREEN, GL_RED };
+static GLint gl_swizzle_mask_R0G1[4] = { GL_RED, GL_ZERO, GL_GREEN, GL_ONE };
+static GLint gl_swizzle_mask_RRR1[4] = { GL_RED, GL_RED, GL_RED, GL_ONE };
+static GLint gl_swizzle_mask_RRRG[4] = { GL_RED, GL_RED, GL_RED, GL_GREEN };
+static GLint gl_swizzle_mask_RRRR[4] = { GL_RED, GL_RED, GL_RED, GL_RED };
 
 // Note : Avoid designated initializers to facilitate C++ builds
 static const ColorFormatInfo kelvin_color_format_map[256] = {
     //0x00 [NV097_SET_TEXTURE_FORMAT_COLOR_SZ_Y8] =
-        {1, false, GL_R8, GL_RED, GL_UNSIGNED_BYTE,
-         {GL_RED, GL_RED, GL_RED, GL_ONE}},
+        {1, swizzled, GL_R8, GL_RED, GL_UNSIGNED_BYTE,
+         gl_swizzle_mask_RRR1},
     //0x01 [NV097_SET_TEXTURE_FORMAT_COLOR_SZ_AY8] =
-        {1, false, GL_R8, GL_RED, GL_UNSIGNED_BYTE,
-         {GL_RED, GL_RED, GL_RED, GL_RED}},
+        {1, swizzled, GL_R8, GL_RED, GL_UNSIGNED_BYTE,
+         gl_swizzle_mask_RRRR},
     //0x02 [NV097_SET_TEXTURE_FORMAT_COLOR_SZ_A1R5G5B5] =
-        {2, false, GL_RGB5_A1, GL_BGRA, GL_UNSIGNED_SHORT_1_5_5_5_REV},
+        {2, swizzled, GL_RGB5_A1, GL_BGRA, GL_UNSIGNED_SHORT_1_5_5_5_REV},
     //0x03 [NV097_SET_TEXTURE_FORMAT_COLOR_SZ_X1R5G5B5] =
-        {2, false, GL_RGB5, GL_BGRA, GL_UNSIGNED_SHORT_1_5_5_5_REV},
+        {2, swizzled, GL_RGB5, GL_BGRA, GL_UNSIGNED_SHORT_1_5_5_5_REV},
     //0x04 [NV097_SET_TEXTURE_FORMAT_COLOR_SZ_A4R4G4B4] =
-        {2, false, GL_RGBA4, GL_BGRA, GL_UNSIGNED_SHORT_4_4_4_4_REV},
+        {2, swizzled, GL_RGBA4, GL_BGRA, GL_UNSIGNED_SHORT_4_4_4_4_REV},
     //0x05 [NV097_SET_TEXTURE_FORMAT_COLOR_SZ_R5G6B5] =
-        {2, false, GL_RGB565, GL_RGB, GL_UNSIGNED_SHORT_5_6_5},
+        {2, swizzled, GL_RGB565, GL_RGB, GL_UNSIGNED_SHORT_5_6_5},
     //0x06 [NV097_SET_TEXTURE_FORMAT_COLOR_SZ_A8R8G8B8] =
-        {4, false, GL_RGBA8, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV},
+        {4, swizzled, GL_RGBA8, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV},
     //0x07 [NV097_SET_TEXTURE_FORMAT_COLOR_SZ_X8R8G8B8] =
-        {4, false, GL_RGB8, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV},
+        {4, swizzled, GL_RGB8, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV},
 	//0x08 [?] =
 		{},
 	//0x09 [?] =
@@ -162,133 +216,140 @@ static const ColorFormatInfo kelvin_color_format_map[256] = {
 		{},
 
     /* paletted texture */
-    //0x0B [NV097_SET_TEXTURE_FORMAT_COLOR_SZ_I8_A8R8G8B8] =
-        {1, false, GL_RGBA8, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV},
+    //0x0B [NV097_SET_TEXTURE_FORMAT_COLOR_SZ_I8_A8R8G8B8] = // See convert_texture_data
+        {1, swizzled, GL_CONVERT_TEXTURE_DATA_RESULTING_FORMAT},
 
     //0x0C [NV097_SET_TEXTURE_FORMAT_COLOR_L_DXT1_A1R5G5B5] =
-        {4, false, GL_COMPRESSED_RGBA_S3TC_DXT1_EXT, 0, GL_RGBA},
+        {4, compressed, GL_COMPRESSED_RGBA_S3TC_DXT1_EXT, 0, GL_RGBA},
 	//0x0D [?] =
 		{},
     //0x0E [NV097_SET_TEXTURE_FORMAT_COLOR_L_DXT23_A8R8G8B8] =
-        {4, false, GL_COMPRESSED_RGBA_S3TC_DXT3_EXT, 0, GL_RGBA},
+        {4, compressed, GL_COMPRESSED_RGBA_S3TC_DXT3_EXT, 0, GL_RGBA},
     //0x0F [NV097_SET_TEXTURE_FORMAT_COLOR_L_DXT45_A8R8G8B8] =
-        {4, false, GL_COMPRESSED_RGBA_S3TC_DXT5_EXT, 0, GL_RGBA},
+        {4, compressed, GL_COMPRESSED_RGBA_S3TC_DXT5_EXT, 0, GL_RGBA},
     //0x10 [NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_A1R5G5B5] =
-        {2, true, GL_RGB5_A1, GL_BGRA, GL_UNSIGNED_SHORT_1_5_5_5_REV},
+        {2, linear, GL_RGB5_A1, GL_BGRA, GL_UNSIGNED_SHORT_1_5_5_5_REV},
     //0x11 [NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_R5G6B5] =
-        {2, true, GL_RGB565, GL_RGB, GL_UNSIGNED_SHORT_5_6_5},
+        {2, linear, GL_RGB565, GL_RGB, GL_UNSIGNED_SHORT_5_6_5},
     //0x12 [NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_A8R8G8B8] =
-        {4, true, GL_RGBA8, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV},
+        {4, linear, GL_RGBA8, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV},
     //0x13 [NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_Y8] =
-        {1, true, GL_R8, GL_RED, GL_UNSIGNED_BYTE,
-         {GL_RED, GL_RED, GL_RED, GL_ONE}},
-	//0x14 [?] =
-		{},
-	//0x15 [?] =
-		{},
-	//0x16 [?] =
-		{},
-	//0x17 [?] =
-		{},
-	//0x18 [?] =
-		{},
+        {1, linear, GL_R8, GL_RED, GL_UNSIGNED_BYTE,
+         gl_swizzle_mask_RRR1},
+	//0x14 [NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_SY8] =
+        {1, linear, GL_R8_SNORM, GL_RED, GL_BYTE,
+         gl_swizzle_mask_RRR1}, // TODO : Verify
+	//0x15 [NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_X7SY9] = // See convert_texture_data FIXME
+		{2, linear, GL_CONVERT_TEXTURE_DATA_RESULTING_FORMAT}, // TODO : Verify
+	//0x16 [NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_R8B8] =
+        {2, linear, GL_RG8, GL_RG, GL_UNSIGNED_BYTE,
+         gl_swizzle_mask_R0G1}, // TODO : Verify
+	//0x17 [NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_G8B8] =
+        {2, linear, GL_RG8, GL_RG, GL_UNSIGNED_BYTE,
+         gl_swizzle_mask_0RG1}, // TODO : Verify
+	//0x18 [NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_SG8SB8] =
+        {2, linear, GL_RG8_SNORM, GL_RG, GL_BYTE,
+         gl_swizzle_mask_0RG1}, // TODO : Verify
 
     //0x19 [NV097_SET_TEXTURE_FORMAT_COLOR_SZ_A8] =
-        {1, false, GL_R8, GL_RED, GL_UNSIGNED_BYTE,
-         {GL_ONE, GL_ONE, GL_ONE, GL_RED}},
+        {1, swizzled, GL_R8, GL_RED, GL_UNSIGNED_BYTE,
+         gl_swizzle_mask_111R},
     //0x1A [NV097_SET_TEXTURE_FORMAT_COLOR_SZ_A8Y8] =
-        {2, false, GL_RG8, GL_RG, GL_UNSIGNED_BYTE,
-         {GL_GREEN, GL_GREEN, GL_GREEN, GL_RED}},
+        {2, swizzled, GL_RG8, GL_RG, GL_UNSIGNED_BYTE,
+         gl_swizzle_mask_GGGR},
     //0x1B [NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_AY8] =
-        {1, true, GL_R8, GL_RED, GL_UNSIGNED_BYTE,
-         {GL_RED, GL_RED, GL_RED, GL_RED}},
+        {1, linear, GL_R8, GL_RED, GL_UNSIGNED_BYTE,
+         gl_swizzle_mask_RRRR},
     //0x1C [NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_X1R5G5B5] =
-        {2, true, GL_RGB5, GL_BGRA, GL_UNSIGNED_SHORT_1_5_5_5_REV},
+        {2, linear, GL_RGB5, GL_BGRA, GL_UNSIGNED_SHORT_1_5_5_5_REV},
     //0x1D [NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_A4R4G4B4] =
-        {2, false, GL_RGBA4, GL_BGRA, GL_UNSIGNED_SHORT_4_4_4_4_REV},
+        {2, linear, GL_RGBA4, GL_BGRA, GL_UNSIGNED_SHORT_4_4_4_4_REV}, // TODO : Verify this is truely linear
     //0x1E [NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_X8R8G8B8] =
-        {4, true, GL_RGB8, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV},
+        {4, linear, GL_RGB8, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV},
     //0x1F [NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_A8] =
-        {1, true, GL_R8, GL_RED, GL_UNSIGNED_BYTE,
-         {GL_ONE, GL_ONE, GL_ONE, GL_RED}},
+        {1, linear, GL_R8, GL_RED, GL_UNSIGNED_BYTE,
+         gl_swizzle_mask_111R},
     //0x20 [NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_A8Y8] =
-        {2, true, GL_RG8, GL_RG, GL_UNSIGNED_BYTE,
-         {GL_GREEN, GL_GREEN, GL_GREEN, GL_RED}},
+        {2, linear, GL_RG8, GL_RG, GL_UNSIGNED_BYTE,
+         gl_swizzle_mask_GGGR},
 	//0x21 [?] =
 		{},
 	//0x22 [?] =
 		{},
 	//0x23 [?] =
 		{},
-	//0x24 [NV097_SET_TEXTURE_FORMAT_COLOR_LC_IMAGE_CR8YB8CB8YA8] =
-		{ 2, true, GL_RGBA8,  GL_RGBA, GL_UNSIGNED_INT_8_8_8_8_REV }, // TODO: format conversion
-	//0x25 [?] =
-		{},
-	//0x26 [?] =
-		{},
+	//0x24 [NV097_SET_TEXTURE_FORMAT_COLOR_LC_IMAGE_CR8YB8CB8YA8] = // See convert_texture_data calling ____UYVYToARGBRow_C
+		{2, linear, GL_CONVERT_TEXTURE_DATA_RESULTING_FORMAT}, // TODO : Verify
+	//0x25 [NV097_SET_TEXTURE_FORMAT_COLOR_LC_IMAGE_YB8CR8YA8CB8] = // See convert_texture_data calling ____YUY2ToARGBRow_C
+		{2, linear, GL_CONVERT_TEXTURE_DATA_RESULTING_FORMAT}, // TODO : Verify
+	//0x26 [NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_A8CR8CB8Y8] = // See convert_texture_data FIXME
+		{2, linear, GL_CONVERT_TEXTURE_DATA_RESULTING_FORMAT}, // TODO : Verify
 
-    //0x27 [NV097_SET_TEXTURE_FORMAT_COLOR_SZ_R6G5B5] =
-        {2, false, GL_RGB8_SNORM, GL_RGB, GL_BYTE}, /* FIXME: This might be signed */
+    //0x27 [NV097_SET_TEXTURE_FORMAT_COLOR_SZ_R6G5B5] = // See convert_texture_data calling __R6G5B5ToARGBRow_C
+        {2, swizzled, GL_CONVERT_TEXTURE_DATA_RESULTING_FORMAT}, // TODO : Verify
     //0x28 [NV097_SET_TEXTURE_FORMAT_COLOR_SZ_G8B8] =
-        {2, false, GL_RG8_SNORM, GL_RG, GL_BYTE, /* FIXME: This might be signed */
-         {GL_ZERO, GL_RED, GL_GREEN, GL_ONE}},
+        {2, swizzled, GL_RG8, GL_RG, GL_UNSIGNED_BYTE,
+         gl_swizzle_mask_0RG1},
     //0x29 [NV097_SET_TEXTURE_FORMAT_COLOR_SZ_R8B8] =
-        {2, false, GL_RG8_SNORM, GL_RG, GL_BYTE, /* FIXME: This might be signed */
-         {GL_RED, GL_ZERO, GL_GREEN, GL_ONE}},
-	//0x2A [?] =
-		{},
-	//0x2B [?] =
-		{},
-	//0x2C [?] =
-		{},
-	//0x2D [?] =
-		{},
+        {2, swizzled, GL_RG8, GL_RG, GL_UNSIGNED_BYTE,
+         gl_swizzle_mask_R0G1},
+	//0x2A [NV097_SET_TEXTURE_FORMAT_COLOR_SZ_DEPTH_X8_Y24_FIXED] =
+		{4, swizzled, GL_DEPTH24_STENCIL8, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8}, // TODO : Verify
+	//0x2B [NV097_SET_TEXTURE_FORMAT_COLOR_SZ_DEPTH_X8_Y24_FLOAT] =
+		{4, swizzled, GL_DEPTH24_STENCIL8, GL_DEPTH_STENCIL, GL_FLOAT_32_UNSIGNED_INT_24_8_REV}, // TODO : Verify
+	//0x2C [NV097_SET_TEXTURE_FORMAT_COLOR_SZ_DEPTH_Y16_FIXED] =
+		{2, swizzled, GL_DEPTH_COMPONENT16, GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT}, // TODO : Verify
+	//0x2D [NV097_SET_TEXTURE_FORMAT_COLOR_SZ_DEPTH_Y16_FLOAT] =
+		{2, swizzled, GL_DEPTH_COMPONENT16, GL_DEPTH_COMPONENT, GL_FLOAT}, // TODO : Verify
 
 
     /* TODO: format conversion */
     //0x2E [NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_DEPTH_X8_Y24_FIXED] =
-        {4, true, GL_DEPTH24_STENCIL8, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8},
+        {4, linear, GL_DEPTH24_STENCIL8, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8},
 	//0x2F [?] =
 		{},
     //0x30 [NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_DEPTH_Y16_FIXED] =
-        {2, true, GL_DEPTH_COMPONENT16, GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT},
-	//0x31 [?] =
-		{},
-	//0x32 [?] =
-		{},
-	//0x33 [?] =
-		{},
-	//0x34 [?] =
-		{},
+        {2, linear, GL_DEPTH_COMPONENT16, GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT},
+	//0x31 [NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_DEPTH_Y16_FLOAT] =
+        {2, linear, GL_DEPTH_COMPONENT16, GL_DEPTH_COMPONENT, GL_FLOAT}, // TODO : Verify
+	//0x32 [NV097_SET_TEXTURE_FORMAT_COLOR_SZ_Y16] =
+        {2, swizzled, GL_R16, GL_RED, GL_UNSIGNED_SHORT, // TODO : Verify
+         gl_swizzle_mask_RRR1},
+	//0x33 [NV097_SET_TEXTURE_FORMAT_COLOR_SZ_YB16YA16] =
+        {4, swizzled, GL_RG16, GL_RG, GL_UNSIGNED_SHORT, // TODO : Verify
+         gl_swizzle_mask_RRRG},
+	//0x34 [NV097_SET_TEXTURE_FORMAT_COLOR_LC_IMAGE_A4V6YB6A4U6YA6] = // TODO : handle in convert_texture_data
+		{2, linear, GL_CONVERT_TEXTURE_DATA_RESULTING_FORMAT}, // TODO : Verify
     //0x35 [NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_Y16] =
-        {2, true, GL_R16, GL_RED, GL_UNSIGNED_SHORT,
-         {GL_RED, GL_RED, GL_RED, GL_ONE}},
-	//0x36 [?] =
-		{},
-	//0x37 [?] =
-		{},
-	//0x38 [?] =
-		{},
-	//0x39 [?] =
-		{},
+        {2, linear, GL_R16, GL_RED, GL_UNSIGNED_SHORT,
+         gl_swizzle_mask_RRR1},
+	//0x36 [NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_YB16YA16] =
+        {4, linear, GL_RG16, GL_RG, GL_UNSIGNED_SHORT, // TODO : Verify
+         gl_swizzle_mask_RRRG},
+	//0x37 [NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_R6G5B5] = // See convert_texture_data calling __R6G5B5ToARGBRow_C
+        {2, linear, GL_CONVERT_TEXTURE_DATA_RESULTING_FORMAT}, // TODO : Verify
+	//0x38 [NV097_SET_TEXTURE_FORMAT_COLOR_SZ_R5G5B5A1] =
+		{2, swizzled, GL_RGB5_A1, GL_RGBA, GL_UNSIGNED_SHORT_5_5_5_1}, // TODO : Verify
+	//0x39 [NV097_SET_TEXTURE_FORMAT_COLOR_SZ_R4G4B4A4] =
+		{2, swizzled, GL_RGBA, GL_RGBA, GL_UNSIGNED_SHORT_4_4_4_4}, // TODO : Verify
     //0x3A [NV097_SET_TEXTURE_FORMAT_COLOR_SZ_A8B8G8R8] =
-        {4, false, GL_RGBA8, GL_RGBA, GL_UNSIGNED_INT_8_8_8_8_REV},
-	//0x3B [?] =
-		{},
+        {4, swizzled, GL_RGBA8, GL_RGBA, GL_UNSIGNED_INT_8_8_8_8_REV}, // TODO : Verify
+	//0x3B [NV097_SET_TEXTURE_FORMAT_COLOR_SZ_B8G8R8A8] =
+		{4, swizzled, GL_RGBA8, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8}, // TODO : Verify
 
     //0x3C [NV097_SET_TEXTURE_FORMAT_COLOR_SZ_R8G8B8A8] =
-        {4, false, GL_RGBA8, GL_RGBA, GL_UNSIGNED_INT_8_8_8_8},
-	//0x3D [?] =
-		{},
-	//0x3E [?] =
-		{},
+        {4, swizzled, GL_RGBA8, GL_RGBA, GL_UNSIGNED_INT_8_8_8_8},
+	//0x3D [NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_R5G5B5A1] =
+		{2, linear, GL_RGB5_A1, GL_RGBA, GL_UNSIGNED_SHORT_5_5_5_1}, // TODO : Verify
+	//0x3E [NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_R4G4B4A4] =
+        {2, linear, GL_RGBA, GL_RGBA, GL_UNSIGNED_SHORT_4_4_4_4}, // TODO : Verify
 
     //0x3F [NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_A8B8G8R8] =
-        {4, true, GL_RGBA8, GL_RGBA, GL_UNSIGNED_INT_8_8_8_8_REV},
+        {4, linear, GL_RGBA8, GL_RGBA, GL_UNSIGNED_INT_8_8_8_8_REV}, // TODO : Verify
     //0x40 [NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_B8G8R8A8] =
-        {4, true, GL_RGBA8, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8},
+        {4, linear, GL_RGBA8, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8}, // TODO : Verify
     //0x41 [NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_R8G8B8A8] =
-        {4, true, GL_RGBA8, GL_RGBA, GL_UNSIGNED_INT_8_8_8_8},
+        {4, linear, GL_RGBA8, GL_RGBA, GL_UNSIGNED_INT_8_8_8_8}, // TODO : Verify
 };
 
 typedef struct SurfaceColorFormatInfo {
@@ -319,9 +380,9 @@ static const SurfaceColorFormatInfo kelvin_surface_color_format_map[16] = {
     //0x08 [NV097_SET_SURFACE_FORMAT_COLOR_LE_A8R8G8B8] =
         {4, GL_RGBA8, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV},
 	//0x09 [NV097_SET_SURFACE_FORMAT_COLOR_LE_B8] =
-		{}, // TODO : {1, GL_R8, GL_R8, GL_UNSIGNED_BYTE}, // PatrickvL guesstimate
+		{}, // TODO : {1, GL_R8, GL_RED, GL_UNSIGNED_BYTE}, // PatrickvL guesstimate
 	//0x0A [NV097_SET_SURFACE_FORMAT_COLOR_LE_G8B8] =
-		{},
+		{}, // TODO : {2, GL_RG8, GL_RG, GL_UNSIGNED_BYTE}, // PatrickvL guesstimate
 	//0x0B [?] = 
 		{},
 	//0x0C [?] = 
@@ -334,10 +395,16 @@ static const SurfaceColorFormatInfo kelvin_surface_color_format_map[16] = {
 		{}
 };
 
-static void pgraph_switch_context(NV2AState *d, unsigned int channel_id);
-static void pgraph_set_context_user(NV2AState *d, uint32_t value);
-static void pgraph_wait_fifo_access(NV2AState *d);
-static void pgraph_handle_method(NV2AState *d, unsigned int subchannel, unsigned int method, uint32_t parameter);
+void (*pgraph_draw_arrays)(NV2AState *d);
+void (*pgraph_draw_inline_buffer)(NV2AState *d);
+void (*pgraph_draw_inline_array)(NV2AState *d);
+void (*pgraph_draw_inline_elements)(NV2AState *d);
+void (*pgraph_draw_state_update)(NV2AState *d);
+void (*pgraph_draw_clear)(NV2AState *d);
+
+//static void pgraph_set_context_user(NV2AState *d, uint32_t value);
+void pgraph_handle_method(NV2AState *d, unsigned int subchannel, unsigned int method, uint32_t parameter);
+static void pgraph_log_method(unsigned int subchannel, unsigned int graphics_class, unsigned int method, uint32_t parameter);
 static void pgraph_allocate_inline_buffer_vertices(PGRAPHState *pg, unsigned int attr);
 static void pgraph_finish_inline_buffer_vertex(PGRAPHState *pg);
 static void pgraph_update_shader_constants(PGRAPHState *pg, ShaderBinding *binding, bool binding_changed, bool vertex_program, bool fixed_function);
@@ -355,14 +422,10 @@ static void pgraph_update_memory_buffer(NV2AState *d, hwaddr addr, hwaddr size, 
 static void pgraph_bind_vertex_attributes(NV2AState *d, unsigned int num_elements, bool inline_data, unsigned int inline_stride);
 static unsigned int pgraph_bind_inline_array(NV2AState *d);
 
-static void load_graphics_object(NV2AState *d, hwaddr instance_address, GraphicsObject *obj);
-static GraphicsObject* lookup_graphics_object(PGRAPHState *s, hwaddr instance_address);
 static float convert_f16_to_float(uint16_t f16);
 static float convert_f24_to_float(uint32_t f24);
-static uint8_t cliptobyte(int x);
-static void convert_yuy2_to_rgb(const uint8_t *line, unsigned int ix, uint8_t *r, uint8_t *g, uint8_t* b);
-static uint8_t* convert_texture_data(const TextureShape s, const uint8_t *data, const uint8_t *palette_data, unsigned int width, unsigned int height, unsigned int depth, unsigned int row_pitch, unsigned int slice_pitch);
-static void upload_gl_texture(GLenum gl_target, const TextureShape s, const uint8_t *texture_data, const uint8_t *palette_data);
+static uint8_t* convert_texture_data(const unsigned int color_format, const uint8_t *data, const uint8_t *palette_data, const unsigned int width, const unsigned int height, const unsigned int depth, const unsigned int row_pitch, const unsigned int slice_pitch);
+static int upload_gl_texture(GLenum gl_target, const TextureShape s, const uint8_t *texture_data, const uint8_t *palette_data);
 static TextureBinding* generate_texture(const TextureShape s, const uint8_t *texture_data, const uint8_t *palette_data);
 static guint texture_key_hash(gconstpointer key);
 static gboolean texture_key_equal(gconstpointer a, gconstpointer b);
@@ -374,14 +437,13 @@ static gboolean shader_equal(gconstpointer a, gconstpointer b);
 static unsigned int kelvin_map_stencil_op(uint32_t parameter);
 static unsigned int kelvin_map_polygon_mode(uint32_t parameter);
 static unsigned int kelvin_map_texgen(uint32_t parameter, unsigned int channel);
-static void pgraph_log_method(unsigned int subchannel, unsigned int graphics_class, unsigned int method, uint32_t parameter);
 static uint64_t fnv_hash(const uint8_t *data, size_t len);
 static uint64_t fast_hash(const uint8_t *data, size_t len, unsigned int samples);
 
 /* PGRAPH - accelerated 2d/3d drawing engine */
 DEVICE_READ32(PGRAPH)
 {
-	qemu_mutex_lock(&d->pgraph.lock);
+	qemu_mutex_lock(&d->pgraph.pgraph_lock);
 
 	DEVICE_READ32_SWITCH() {
 	case NV_PGRAPH_INTR:
@@ -390,60 +452,22 @@ DEVICE_READ32(PGRAPH)
 	case NV_PGRAPH_INTR_EN:
 		result = d->pgraph.enabled_interrupts;
 		break;
-	case NV_PGRAPH_NSOURCE:
-		result = d->pgraph.notify_source;
-		break;
-	case NV_PGRAPH_CTX_USER:
-		SET_MASK(result, NV_PGRAPH_CTX_USER_CHANNEL_3D,
-			d->pgraph.context[d->pgraph.channel_id].channel_3d);
-		SET_MASK(result, NV_PGRAPH_CTX_USER_CHANNEL_3D_VALID, 1);
-		SET_MASK(result, NV_PGRAPH_CTX_USER_SUBCH,
-			d->pgraph.context[d->pgraph.channel_id].subchannel << 13);
-		SET_MASK(result, NV_PGRAPH_CTX_USER_CHID, d->pgraph.channel_id);
-		break;
-	case NV_PGRAPH_TRAPPED_ADDR:
-		SET_MASK(result, NV_PGRAPH_TRAPPED_ADDR_CHID, d->pgraph.trapped_channel_id);
-		SET_MASK(result, NV_PGRAPH_TRAPPED_ADDR_SUBCH, d->pgraph.trapped_subchannel);
-		SET_MASK(result, NV_PGRAPH_TRAPPED_ADDR_MTHD, d->pgraph.trapped_method);
-		break;
-	case NV_PGRAPH_TRAPPED_DATA_LOW:
-		result = d->pgraph.trapped_data[0];
-		break;
-	case NV_PGRAPH_FIFO:
-		SET_MASK(result, NV_PGRAPH_FIFO_ACCESS, d->pgraph.fifo_access);
-		break;
-	case NV_PGRAPH_CHANNEL_CTX_TABLE:
-		result = d->pgraph.context_table >> 4;
-		break;
-	case NV_PGRAPH_CHANNEL_CTX_POINTER:
-		result = d->pgraph.context_address >> 4;
-		break;
 	default:
 		DEVICE_READ32_REG(pgraph); // Was : DEBUG_READ32_UNHANDLED(PGRAPH);
 	}
 
-	qemu_mutex_unlock(&d->pgraph.lock);
+	qemu_mutex_unlock(&d->pgraph.pgraph_lock);
 
 //    reg_log_read(NV_PGRAPH, addr, r);
 
 	DEVICE_READ32_END(PGRAPH);
 }
 
-static void pgraph_set_context_user(NV2AState *d, uint32_t value)
-{
-	d->pgraph.channel_id = (value & NV_PGRAPH_CTX_USER_CHID) >> 24;
-
-	d->pgraph.context[d->pgraph.channel_id].channel_3d =
-		GET_MASK(value, NV_PGRAPH_CTX_USER_CHANNEL_3D);
-	d->pgraph.context[d->pgraph.channel_id].subchannel =
-		GET_MASK(value, NV_PGRAPH_CTX_USER_SUBCH);
-}
-
 DEVICE_WRITE32(PGRAPH)
 {
 //    reg_log_write(NV_PGRAPH, addr, val);
 
-	qemu_mutex_lock(&d->pgraph.lock);
+	qemu_mutex_lock(&d->pgraph.pgraph_lock);
 
 	switch (addr) {
 	case NV_PGRAPH_INTR:
@@ -452,12 +476,6 @@ DEVICE_WRITE32(PGRAPH)
 		break;
 	case NV_PGRAPH_INTR_EN:
 		d->pgraph.enabled_interrupts = value;
-		break;
-	case NV_PGRAPH_CTX_CONTROL:
-		d->pgraph.channel_valid = (value & NV_PGRAPH_CTX_CONTROL_CHID);
-		break;
-	case NV_PGRAPH_CTX_USER:
-		pgraph_set_context_user(d, value);
 		break;
 	case NV_PGRAPH_INCREMENT:
 		if (value & NV_PGRAPH_INCREMENT_READ_3D) {
@@ -470,88 +488,635 @@ DEVICE_WRITE32(PGRAPH)
 			qemu_cond_broadcast(&d->pgraph.flip_3d);
 		}
 		break;
-	case NV_PGRAPH_FIFO:
-		d->pgraph.fifo_access = GET_MASK(value, NV_PGRAPH_FIFO_ACCESS);
-		qemu_cond_broadcast(&d->pgraph.fifo_access_cond);
-		break;
-	case NV_PGRAPH_CHANNEL_CTX_TABLE:
-		d->pgraph.context_table =
-			(value & NV_PGRAPH_CHANNEL_CTX_TABLE_INST) << 4;
-		break;
-	case NV_PGRAPH_CHANNEL_CTX_POINTER:
-		d->pgraph.context_address =
-			(value & NV_PGRAPH_CHANNEL_CTX_POINTER_INST) << 4;
-		break;
-	case NV_PGRAPH_CHANNEL_CTX_TRIGGER:
+	case NV_PGRAPH_CHANNEL_CTX_TRIGGER: {
+		xbaddr context_address =
+			GET_MASK(d->pgraph.regs[NV_PGRAPH_CHANNEL_CTX_POINTER], NV_PGRAPH_CHANNEL_CTX_POINTER_INST) << 4;
 
 		if (value & NV_PGRAPH_CHANNEL_CTX_TRIGGER_READ_IN) {
-			NV2A_DPRINTF("PGRAPH: read channel %d context from %" HWADDR_PRIx "\n",
-				d->pgraph.channel_id, d->pgraph.context_address);
+			unsigned pgraph_channel_id =
+				GET_MASK(d->pgraph.regs[NV_PGRAPH_CTX_USER], NV_PGRAPH_CTX_USER_CHID);
 
-			uint8_t *context_ptr = d->pramin.ramin_ptr + d->pgraph.context_address;
+			NV2A_DPRINTF("PGRAPH: read channel %d context from %" HWADDR_PRIx "\n",
+				pgraph_channel_id, context_address);
+
+			uint8_t *context_ptr = d->pramin.ramin_ptr + context_address;
 			uint32_t context_user = ldl_le_p((uint32_t*)context_ptr);
 
-			NV2A_DPRINTF("    - CTX_USER = 0x%x\n", context_user);
+			NV2A_DPRINTF("    - CTX_USER = 0x%08X\n", context_user);
 
-
-			pgraph_set_context_user(d, context_user);
+			d->pgraph.regs[NV_PGRAPH_CTX_USER] = context_user;
+			// pgraph_set_context_user(d, context_user);
 		}
 		if (value & NV_PGRAPH_CHANNEL_CTX_TRIGGER_WRITE_OUT) {
 			/* do stuff ... */
 		}
 
 		break;
+    }
 	default: 
 		DEVICE_WRITE32_REG(pgraph); // Was : DEBUG_WRITE32_UNHANDLED(PGRAPH);
 		break;
 	}
 
-	qemu_mutex_unlock(&d->pgraph.lock);
+    // events
+    switch (addr) {
+    case NV_PGRAPH_FIFO:
+        qemu_cond_broadcast(&d->pgraph.fifo_access_cond);
+        break;
+    }
+
+	qemu_mutex_unlock(&d->pgraph.pgraph_lock);
 
 	DEVICE_WRITE32_END(PGRAPH);
 }
 
-static void pgraph_handle_method(NV2AState *d,
+void OpenGL_draw_end(NV2AState *d); // forward declaration
+
+void OpenGL_draw_arrays(NV2AState *d)
+{
+	PGRAPHState *pg = &d->pgraph;
+
+	assert(pg->opengl_enabled);
+	assert(pg->shader_binding);
+
+	pgraph_bind_vertex_attributes(d, pg->draw_arrays_max_count,
+		false, 0);
+	glMultiDrawArrays(pg->shader_binding->gl_primitive_mode,
+		pg->gl_draw_arrays_start,
+		pg->gl_draw_arrays_count,
+		pg->draw_arrays_length);
+
+	OpenGL_draw_end(d);
+}
+
+void OpenGL_draw_inline_buffer(NV2AState *d)
+{
+	PGRAPHState *pg = &d->pgraph;
+
+	assert(pg->opengl_enabled);
+	assert(pg->shader_binding);
+
+	for (unsigned int i = 0; i < NV2A_VERTEXSHADER_ATTRIBUTES; i++) {
+		VertexAttribute *vertex_attribute = &pg->vertex_attributes[i];
+
+		if (vertex_attribute->inline_buffer) {
+
+			glBindBuffer(GL_ARRAY_BUFFER,
+				vertex_attribute->gl_inline_buffer);
+			glBufferData(GL_ARRAY_BUFFER,
+				pg->inline_buffer_length
+				* sizeof(float) * 4,
+				vertex_attribute->inline_buffer,
+				GL_DYNAMIC_DRAW);
+
+			/* Clear buffer for next batch */
+			g_free(vertex_attribute->inline_buffer);
+			vertex_attribute->inline_buffer = NULL;
+
+			glVertexAttribPointer(i, 4, GL_FLOAT, GL_FALSE, 0, 0);
+			glEnableVertexAttribArray(i);
+		}
+		else {
+			glDisableVertexAttribArray(i);
+			glVertexAttrib4fv(i, vertex_attribute->inline_value);
+		}
+	}
+
+	glDrawArrays(pg->shader_binding->gl_primitive_mode,
+		0, pg->inline_buffer_length);
+
+	OpenGL_draw_end(d);
+}
+
+void OpenGL_draw_inline_array(NV2AState *d)
+{
+	PGRAPHState *pg = &d->pgraph;
+
+	assert(pg->opengl_enabled);
+	assert(pg->shader_binding);
+
+	unsigned int index_count = pgraph_bind_inline_array(d);
+	glDrawArrays(pg->shader_binding->gl_primitive_mode,
+		0, index_count);
+
+	OpenGL_draw_end(d);
+}
+
+void OpenGL_draw_inline_elements(NV2AState *d)
+{
+	PGRAPHState *pg = &d->pgraph;
+
+	assert(pg->opengl_enabled);
+	assert(pg->shader_binding);
+
+	uint32_t max_element = 0;
+	uint32_t min_element = (uint32_t)-1;
+	for (unsigned int i = 0; i < pg->inline_elements_length; i++) {
+		max_element = MAX(pg->inline_elements[i], max_element);
+		min_element = MIN(pg->inline_elements[i], min_element);
+	}
+	pgraph_bind_vertex_attributes(d, max_element + 1, false, 0);
+
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, pg->gl_element_buffer);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER,
+		pg->inline_elements_length * sizeof(pg->inline_elements[0]),
+		pg->inline_elements,
+		GL_DYNAMIC_DRAW);
+
+	glDrawRangeElements(pg->shader_binding->gl_primitive_mode,
+		min_element, max_element,
+		pg->inline_elements_length,
+		GL_UNSIGNED_SHORT, // Cxbx-Reloaded TODO : Restore GL_UNSIGNED_INT once HLE_draw_inline_elements can draw using uint32_t
+		(void*)0);
+
+	OpenGL_draw_end(d);
+}
+
+void OpenGL_draw_state_update(NV2AState *d)
+{
+	PGRAPHState *pg = &d->pgraph;
+
+	assert(pg->opengl_enabled);
+
+	NV2A_GL_DGROUP_BEGIN("NV097_SET_BEGIN_END: 0x%x", pg->primitive_mode);
+
+	uint32_t control_0 = pg->regs[NV_PGRAPH_CONTROL_0];
+	uint32_t control_1 = pg->regs[NV_PGRAPH_CONTROL_1];
+
+	bool depth_test = control_0
+		& NV_PGRAPH_CONTROL_0_ZENABLE;
+	bool stencil_test = control_1
+		& NV_PGRAPH_CONTROL_1_STENCIL_TEST_ENABLE;
+
+	pgraph_update_surface(d, true, true, depth_test || stencil_test);
+
+	bool alpha = control_0 & NV_PGRAPH_CONTROL_0_ALPHA_WRITE_ENABLE;
+	bool red = control_0 & NV_PGRAPH_CONTROL_0_RED_WRITE_ENABLE;
+	bool green = control_0 & NV_PGRAPH_CONTROL_0_GREEN_WRITE_ENABLE;
+	bool blue = control_0 & NV_PGRAPH_CONTROL_0_BLUE_WRITE_ENABLE;
+	glColorMask(red, green, blue, alpha);
+	glDepthMask(!!(control_0 & NV_PGRAPH_CONTROL_0_ZWRITEENABLE));
+	glStencilMask(GET_MASK(control_1,
+		NV_PGRAPH_CONTROL_1_STENCIL_MASK_WRITE));
+
+	uint32_t blend = pg->regs[NV_PGRAPH_BLEND];
+	if (blend & NV_PGRAPH_BLEND_EN) {
+		glEnable(GL_BLEND);
+		uint32_t sfactor = GET_MASK(blend,
+			NV_PGRAPH_BLEND_SFACTOR);
+		uint32_t dfactor = GET_MASK(blend,
+			NV_PGRAPH_BLEND_DFACTOR);
+		assert(sfactor < ARRAY_SIZE(pgraph_blend_factor_map));
+		assert(dfactor < ARRAY_SIZE(pgraph_blend_factor_map));
+		glBlendFunc(pgraph_blend_factor_map[sfactor],
+			pgraph_blend_factor_map[dfactor]);
+
+		uint32_t equation = GET_MASK(blend,
+			NV_PGRAPH_BLEND_EQN);
+		assert(equation < ARRAY_SIZE(pgraph_blend_equation_map));
+		glBlendEquation(pgraph_blend_equation_map[equation]);
+
+		uint32_t blend_color = pg->regs[NV_PGRAPH_BLENDCOLOR];
+		glBlendColor(((blend_color >> 16) & 0xFF) / 255.0f, /* red */
+			((blend_color >> 8) & 0xFF) / 255.0f,  /* green */
+			(blend_color & 0xFF) / 255.0f,         /* blue */
+			((blend_color >> 24) & 0xFF) / 255.0f);/* alpha */
+	}
+	else {
+		glDisable(GL_BLEND);
+	}
+
+	/* Face culling */
+	uint32_t setupraster = pg->regs[NV_PGRAPH_SETUPRASTER];
+	if (setupraster
+		& NV_PGRAPH_SETUPRASTER_CULLENABLE) {
+		uint32_t cull_face = GET_MASK(setupraster,
+			NV_PGRAPH_SETUPRASTER_CULLCTRL);
+		assert(cull_face < ARRAY_SIZE(pgraph_cull_face_map));
+		glCullFace(pgraph_cull_face_map[cull_face]);
+		glEnable(GL_CULL_FACE);
+	}
+	else {
+		glDisable(GL_CULL_FACE);
+	}
+
+	/* Front-face select */
+	glFrontFace(setupraster
+		& NV_PGRAPH_SETUPRASTER_FRONTFACE
+		? GL_CCW : GL_CW);
+
+	/* Polygon offset */
+	/* FIXME: GL implementation-specific, maybe do this in VS? */
+	if (setupraster &
+		NV_PGRAPH_SETUPRASTER_POFFSETFILLENABLE) {
+		glEnable(GL_POLYGON_OFFSET_FILL);
+	}
+	else {
+		glDisable(GL_POLYGON_OFFSET_FILL);
+	}
+	if (setupraster &
+		NV_PGRAPH_SETUPRASTER_POFFSETLINEENABLE) {
+		glEnable(GL_POLYGON_OFFSET_LINE);
+	}
+	else {
+		glDisable(GL_POLYGON_OFFSET_LINE);
+	}
+	if (setupraster &
+		NV_PGRAPH_SETUPRASTER_POFFSETPOINTENABLE) {
+		glEnable(GL_POLYGON_OFFSET_POINT);
+	}
+	else {
+		glDisable(GL_POLYGON_OFFSET_POINT);
+	}
+	if (setupraster &
+		(NV_PGRAPH_SETUPRASTER_POFFSETFILLENABLE |
+			NV_PGRAPH_SETUPRASTER_POFFSETLINEENABLE |
+			NV_PGRAPH_SETUPRASTER_POFFSETPOINTENABLE)) {
+		GLfloat zfactor = *(float*)&pg->regs[NV_PGRAPH_ZOFFSETFACTOR];
+		GLfloat zbias = *(float*)&pg->regs[NV_PGRAPH_ZOFFSETBIAS];
+		glPolygonOffset(zfactor, zbias);
+	}
+
+	/* Depth testing */
+	if (depth_test) {
+		glEnable(GL_DEPTH_TEST);
+
+		uint32_t depth_func = GET_MASK(control_0,
+			NV_PGRAPH_CONTROL_0_ZFUNC);
+		assert(depth_func < ARRAY_SIZE(pgraph_depth_func_map));
+		glDepthFunc(pgraph_depth_func_map[depth_func]);
+	}
+	else {
+		glDisable(GL_DEPTH_TEST);
+	}
+
+	if (stencil_test) {
+		glEnable(GL_STENCIL_TEST);
+
+		uint32_t stencil_func = GET_MASK(control_1,
+			NV_PGRAPH_CONTROL_1_STENCIL_FUNC);
+		uint32_t stencil_ref = GET_MASK(control_1,
+			NV_PGRAPH_CONTROL_1_STENCIL_REF);
+		uint32_t func_mask = GET_MASK(control_1,
+			NV_PGRAPH_CONTROL_1_STENCIL_MASK_READ);
+		uint32_t control2 = pg->regs[NV_PGRAPH_CONTROL_2];
+		uint32_t op_fail = GET_MASK(control2,
+			NV_PGRAPH_CONTROL_2_STENCIL_OP_FAIL);
+		uint32_t op_zfail = GET_MASK(control2,
+			NV_PGRAPH_CONTROL_2_STENCIL_OP_ZFAIL);
+		uint32_t op_zpass = GET_MASK(control2,
+			NV_PGRAPH_CONTROL_2_STENCIL_OP_ZPASS);
+
+		assert(stencil_func < ARRAY_SIZE(pgraph_stencil_func_map));
+		assert(op_fail < ARRAY_SIZE(pgraph_stencil_op_map));
+		assert(op_zfail < ARRAY_SIZE(pgraph_stencil_op_map));
+		assert(op_zpass < ARRAY_SIZE(pgraph_stencil_op_map));
+
+		glStencilFunc(
+			pgraph_stencil_func_map[stencil_func],
+			stencil_ref,
+			func_mask);
+
+		glStencilOp(
+			pgraph_stencil_op_map[op_fail],
+			pgraph_stencil_op_map[op_zfail],
+			pgraph_stencil_op_map[op_zpass]);
+
+	}
+	else {
+		glDisable(GL_STENCIL_TEST);
+	}
+
+	/* Dither */
+	/* FIXME: GL implementation dependent */
+	if (control_0 &
+		NV_PGRAPH_CONTROL_0_DITHERENABLE) {
+		glEnable(GL_DITHER);
+	}
+	else {
+		glDisable(GL_DITHER);
+	}
+
+	pgraph_bind_shaders(pg);
+	pgraph_bind_textures(d);
+
+	//glDisableVertexAttribArray(NV2A_VERTEX_ATTR_DIFFUSE);
+	//glVertexAttrib4f(NV2A_VERTEX_ATTR_DIFFUSE, 1.0f, 1.0f, 1.0f, 1.0f);
+
+	unsigned int width, height;
+	pgraph_get_surface_dimensions(pg, &width, &height);
+	pgraph_apply_anti_aliasing_factor(pg, &width, &height);
+	glViewport(0, 0, width, height);
+
+	/* Visibility testing */
+	if (pg->zpass_pixel_count_enable) {
+		GLuint gl_query;
+		glGenQueries(1, &gl_query);
+		pg->gl_zpass_pixel_count_query_count++;
+		pg->gl_zpass_pixel_count_queries = (GLuint*)g_realloc(
+			pg->gl_zpass_pixel_count_queries,
+			sizeof(GLuint) * pg->gl_zpass_pixel_count_query_count);
+		pg->gl_zpass_pixel_count_queries[
+			pg->gl_zpass_pixel_count_query_count - 1] = gl_query;
+		glBeginQuery(GL_SAMPLES_PASSED, gl_query);
+	}
+}
+
+void OpenGL_draw_end(NV2AState *d)
+{
+	PGRAPHState *pg = &d->pgraph;
+
+	assert(pg->opengl_enabled);
+
+	/* End of visibility testing */
+	if (pg->zpass_pixel_count_enable) {
+		glEndQuery(GL_SAMPLES_PASSED);
+	}
+
+	NV2A_GL_DGROUP_END();
+}
+
+void OpenGL_draw_clear(NV2AState *d)
+{
+	PGRAPHState *pg = &d->pgraph;
+
+	assert(pg->opengl_enabled);
+
+	NV2A_DPRINTF("---------PRE CLEAR ------\n");
+	GLbitfield gl_mask = 0;
+
+	bool write_color = (pg->clear_surface & NV097_CLEAR_SURFACE_COLOR);
+	bool write_zeta =
+		(pg->clear_surface & (NV097_CLEAR_SURFACE_Z | NV097_CLEAR_SURFACE_STENCIL));
+
+	if (write_zeta) {
+		uint32_t clear_zstencil =
+			d->pgraph.regs[NV_PGRAPH_ZSTENCILCLEARVALUE];
+		GLint gl_clear_stencil;
+		GLfloat gl_clear_depth;
+
+		/* FIXME: Put these in some lookup table */
+		const float f16_max = 511.9375f;
+		/* FIXME: 7 bits of mantissa unused. maybe use full buffer? */
+		const float f24_max = 3.4027977E38f;
+
+		switch (pg->surface_shape.zeta_format) {
+		case NV097_SET_SURFACE_FORMAT_ZETA_Z16: {
+			if (pg->clear_surface & NV097_CLEAR_SURFACE_Z) {
+				gl_mask |= GL_DEPTH_BUFFER_BIT;
+				uint16_t z = clear_zstencil & 0xFFFF;
+				if (pg->surface_shape.z_format) {
+					gl_clear_depth = convert_f16_to_float(z) / f16_max;
+					assert(false); /* FIXME: Untested */
+				}
+				else {
+					gl_clear_depth = z / (float)0xFFFF;
+				}
+			}
+			break;
+		}
+		case NV097_SET_SURFACE_FORMAT_ZETA_Z24S8: {
+			if (pg->clear_surface & NV097_CLEAR_SURFACE_STENCIL) {
+				gl_mask |= GL_STENCIL_BUFFER_BIT;
+				gl_clear_stencil = clear_zstencil & 0xFF;
+			}
+			if (pg->clear_surface & NV097_CLEAR_SURFACE_Z) {
+				gl_mask |= GL_DEPTH_BUFFER_BIT;
+				uint32_t z = clear_zstencil >> 8;
+				if (pg->surface_shape.z_format) {
+					gl_clear_depth = convert_f24_to_float(z) / f24_max;
+					assert(false); /* FIXME: Untested */
+				}
+				else {
+					gl_clear_depth = z / (float)0xFFFFFF;
+				}
+			}
+			break;
+		}
+		default:
+			fprintf(stderr, "Unknown zeta surface format: 0x%x\n", pg->surface_shape.zeta_format);
+			assert(false);
+			break;
+		}
+
+		if (gl_mask & GL_DEPTH_BUFFER_BIT) {
+			glDepthMask(GL_TRUE);
+			glClearDepth(gl_clear_depth);
+		}
+
+		if (gl_mask & GL_STENCIL_BUFFER_BIT) {
+			glStencilMask(0xff);
+			glClearStencil(gl_clear_stencil);
+		}
+	}
+
+	if (write_color) {
+		gl_mask |= GL_COLOR_BUFFER_BIT;
+		glColorMask((pg->clear_surface & NV097_CLEAR_SURFACE_R)
+			? GL_TRUE : GL_FALSE,
+			(pg->clear_surface & NV097_CLEAR_SURFACE_G)
+			? GL_TRUE : GL_FALSE,
+			(pg->clear_surface & NV097_CLEAR_SURFACE_B)
+			? GL_TRUE : GL_FALSE,
+			(pg->clear_surface & NV097_CLEAR_SURFACE_A)
+			? GL_TRUE : GL_FALSE);
+		uint32_t clear_color = d->pgraph.regs[NV_PGRAPH_COLORCLEARVALUE];
+
+		/* Handle RGB */
+		GLfloat red, green, blue;
+		switch (pg->surface_shape.color_format) {
+		case NV097_SET_SURFACE_FORMAT_COLOR_LE_X1R5G5B5_Z1R5G5B5:
+		case NV097_SET_SURFACE_FORMAT_COLOR_LE_X1R5G5B5_O1R5G5B5:
+			red = ((clear_color >> 10) & 0x1F) / 31.0f;
+			green = ((clear_color >> 5) & 0x1F) / 31.0f;
+			blue = (clear_color & 0x1F) / 31.0f;
+			assert(false); /* Untested */
+			break;
+		case NV097_SET_SURFACE_FORMAT_COLOR_LE_R5G6B5:
+			red = ((clear_color >> 11) & 0x1F) / 31.0f;
+			green = ((clear_color >> 5) & 0x3F) / 63.0f;
+			blue = (clear_color & 0x1F) / 31.0f;
+			break;
+		case NV097_SET_SURFACE_FORMAT_COLOR_LE_X8R8G8B8_Z8R8G8B8:
+		case NV097_SET_SURFACE_FORMAT_COLOR_LE_X8R8G8B8_O8R8G8B8:
+		case NV097_SET_SURFACE_FORMAT_COLOR_LE_X1A7R8G8B8_Z1A7R8G8B8:
+		case NV097_SET_SURFACE_FORMAT_COLOR_LE_X1A7R8G8B8_O1A7R8G8B8:
+		case NV097_SET_SURFACE_FORMAT_COLOR_LE_A8R8G8B8:
+			red = ((clear_color >> 16) & 0xFF) / 255.0f;
+			green = ((clear_color >> 8) & 0xFF) / 255.0f;
+			blue = (clear_color & 0xFF) / 255.0f;
+			break;
+		case NV097_SET_SURFACE_FORMAT_COLOR_LE_B8:
+		case NV097_SET_SURFACE_FORMAT_COLOR_LE_G8B8:
+			/* Xbox D3D doesn't support clearing those */
+		default:
+			red = 1.0f;
+			green = 0.0f;
+			blue = 1.0f;
+			fprintf(stderr, "CLEAR_SURFACE for color_format 0x%x unsupported",
+				pg->surface_shape.color_format);
+			assert(false);
+			break;
+		}
+
+		/* Handle alpha */
+		GLfloat alpha;
+		switch (pg->surface_shape.color_format) {
+			/* FIXME: CLEAR_SURFACE seems to work like memset, so maybe we
+			*        also have to clear non-alpha bits with alpha value?
+			*        As GL doesn't own those pixels we'd have to do this on
+			*        our own in xbox memory.
+			*/
+		case NV097_SET_SURFACE_FORMAT_COLOR_LE_X1A7R8G8B8_Z1A7R8G8B8:
+		case NV097_SET_SURFACE_FORMAT_COLOR_LE_X1A7R8G8B8_O1A7R8G8B8:
+			alpha = ((clear_color >> 24) & 0x7F) / 127.0f;
+			assert(false); /* Untested */
+			break;
+		case NV097_SET_SURFACE_FORMAT_COLOR_LE_A8R8G8B8:
+			alpha = ((clear_color >> 24) & 0xFF) / 255.0f;
+			break;
+		default:
+			alpha = 1.0f;
+			break;
+		}
+
+		glClearColor(red, green, blue, alpha);
+	}
+
+	if (gl_mask) {
+		pgraph_update_surface(d, true, write_color, write_zeta);
+
+		glEnable(GL_SCISSOR_TEST);
+
+		unsigned int xmin = GET_MASK(pg->regs[NV_PGRAPH_CLEARRECTX],
+			NV_PGRAPH_CLEARRECTX_XMIN);
+		unsigned int xmax = GET_MASK(pg->regs[NV_PGRAPH_CLEARRECTX],
+			NV_PGRAPH_CLEARRECTX_XMAX);
+		unsigned int ymin = GET_MASK(pg->regs[NV_PGRAPH_CLEARRECTY],
+			NV_PGRAPH_CLEARRECTY_YMIN);
+		unsigned int ymax = GET_MASK(pg->regs[NV_PGRAPH_CLEARRECTY],
+			NV_PGRAPH_CLEARRECTY_YMAX);
+
+		unsigned int scissor_x = xmin;
+		unsigned int scissor_y = pg->surface_shape.clip_height - ymax - 1;
+
+		unsigned int scissor_width = xmax - xmin + 1;
+		unsigned int scissor_height = ymax - ymin + 1;
+
+		pgraph_apply_anti_aliasing_factor(pg, &scissor_x, &scissor_y);
+		pgraph_apply_anti_aliasing_factor(pg, &scissor_width, &scissor_height);
+
+		/* FIXME: Should this really be inverted instead of ymin? */
+		glScissor(scissor_x, scissor_y, scissor_width, scissor_height);
+
+		/* FIXME: Respect window clip?!?! */
+
+		NV2A_DPRINTF("------------------CLEAR 0x%x %d,%d - %d,%d  %x---------------\n",
+			parameter, xmin, ymin, xmax, ymax, d->pgraph.regs[NV_PGRAPH_COLORCLEARVALUE]);
+
+		/* Dither */
+		/* FIXME: Maybe also disable it here? + GL implementation dependent */
+		if (pg->regs[NV_PGRAPH_CONTROL_0] &
+			NV_PGRAPH_CONTROL_0_DITHERENABLE) {
+			glEnable(GL_DITHER);
+		}
+		else {
+			glDisable(GL_DITHER);
+		}
+
+		glClear(gl_mask);
+
+		glDisable(GL_SCISSOR_TEST);
+	}
+
+	pgraph_set_surface_dirty(pg, write_color, write_zeta);
+}
+
+void OpenGL_init_pgraph_plugins()
+{
+	pgraph_draw_arrays = OpenGL_draw_arrays;
+	pgraph_draw_inline_buffer = OpenGL_draw_inline_buffer;
+	pgraph_draw_inline_array = OpenGL_draw_inline_array;
+	pgraph_draw_inline_elements = OpenGL_draw_inline_elements;
+	pgraph_draw_state_update = OpenGL_draw_state_update;
+	pgraph_draw_clear = OpenGL_draw_clear;
+}
+
+void pgraph_handle_method(NV2AState *d,
 							unsigned int subchannel,
 							unsigned int method,
 							uint32_t parameter)
 {
 	unsigned int i;
-
-	GraphicsSubchannel *subchannel_data;
-	GraphicsObject *object;
-
 	unsigned int slot;
 
     PGRAPHState *pg = &d->pgraph;
 
-	assert(pg->channel_valid);
-	subchannel_data = &pg->subchannel_data[subchannel];
-	object = &subchannel_data->object;
+    bool channel_valid =
+        d->pgraph.regs[NV_PGRAPH_CTX_CONTROL] & NV_PGRAPH_CTX_CONTROL_CHID;
+    assert(channel_valid);
 
-	ContextSurfaces2DState *context_surfaces_2d
-		= &object->data.context_surfaces_2d;
-	ImageBlitState *image_blit = &object->data.image_blit;
-	KelvinState *kelvin = &object->data.kelvin;
+    unsigned channel_id = GET_MASK(pg->regs[NV_PGRAPH_CTX_USER], NV_PGRAPH_CTX_USER_CHID);
 
+	ContextSurfaces2DState *context_surfaces_2d = &pg->context_surfaces_2d;
+	ImageBlitState *image_blit = &pg->image_blit;
+	KelvinState *kelvin = &pg->kelvin;
 
-	// Logging is slow.. disable for now..
-	//pgraph_log_method(subchannel, object->graphics_class, method, parameter);
+    assert(subchannel < 8);
 
 	if (method == NV_SET_OBJECT) {
-		subchannel_data->object_instance = parameter;
+        assert(parameter < d->pramin.ramin_size);
+        uint8_t *obj_ptr = d->pramin.ramin_ptr + parameter;
 
-		//qemu_mutex_lock_iothread();
-		load_graphics_object(d, parameter, object);
-		//qemu_mutex_unlock_iothread();
-		return;
-	}
+        uint32_t ctx_1 = ldl_le_p((uint32_t*)obj_ptr);
+        uint32_t ctx_2 = ldl_le_p((uint32_t*)(obj_ptr+4));
+        uint32_t ctx_3 = ldl_le_p((uint32_t*)(obj_ptr+8));
+        uint32_t ctx_4 = ldl_le_p((uint32_t*)(obj_ptr+12));
+        uint32_t ctx_5 = parameter;
+
+        pg->regs[NV_PGRAPH_CTX_CACHE1 + subchannel * 4] = ctx_1;
+        pg->regs[NV_PGRAPH_CTX_CACHE2 + subchannel * 4] = ctx_2;
+        pg->regs[NV_PGRAPH_CTX_CACHE3 + subchannel * 4] = ctx_3;
+        pg->regs[NV_PGRAPH_CTX_CACHE4 + subchannel * 4] = ctx_4;
+        pg->regs[NV_PGRAPH_CTX_CACHE5 + subchannel * 4] = ctx_5;
+    }
+
+    // is this right?
+    pg->regs[NV_PGRAPH_CTX_SWITCH1] = pg->regs[NV_PGRAPH_CTX_CACHE1 + subchannel * 4];
+    pg->regs[NV_PGRAPH_CTX_SWITCH2] = pg->regs[NV_PGRAPH_CTX_CACHE2 + subchannel * 4];
+    pg->regs[NV_PGRAPH_CTX_SWITCH3] = pg->regs[NV_PGRAPH_CTX_CACHE3 + subchannel * 4];
+    pg->regs[NV_PGRAPH_CTX_SWITCH4] = pg->regs[NV_PGRAPH_CTX_CACHE4 + subchannel * 4];
+    pg->regs[NV_PGRAPH_CTX_SWITCH5] = pg->regs[NV_PGRAPH_CTX_CACHE5 + subchannel * 4];
+
+    uint32_t graphics_class = GET_MASK(pg->regs[NV_PGRAPH_CTX_SWITCH1],
+                                       NV_PGRAPH_CTX_SWITCH1_GRCLASS);
+
+	// Logging is slow.. disable for now..
+	//pgraph_log_method(subchannel, graphics_class, method, parameter);
+
+    if (subchannel != 0) {
+        // catches context switching issues on xbox d3d
+        assert(graphics_class != 0x97);
+    }
 
     /* ugly switch for now */
-	switch (object->graphics_class) {
+    switch (graphics_class) {
 
-	case NV_CONTEXT_SURFACES_2D: {
+    case NV_CONTEXT_PATTERN: {
 		switch (method) {
+		case NV044_SET_MONOCHROME_COLOR0:
+			pg->regs[NV_PGRAPH_PATT_COLOR0] = parameter;
+			break;
+		}
+		
+		break;
+	}
+
+    case NV_CONTEXT_SURFACES_2D: {
+		switch (method) {
+		case NV062_SET_OBJECT:
+			context_surfaces_2d->object_instance = parameter;
+			break;
 		case NV062_SET_CONTEXT_DMA_IMAGE_SOURCE:
 			context_surfaces_2d->dma_image_source = parameter;
 			break;
@@ -572,7 +1137,7 @@ static void pgraph_handle_method(NV2AState *d,
 			context_surfaces_2d->dest_offset = parameter & 0x07FFFFFF;
 			break;
 		default:
-			EmuWarning("NV2A: Unknown NV_CONTEXT_SURFACES_2D Method: 0x%08X\n", method);
+			EmuLog(LOG_LEVEL::WARNING, "Unknown NV_CONTEXT_SURFACES_2D Method: 0x%08X", method);
 		}
 	
 		break; 
@@ -580,6 +1145,9 @@ static void pgraph_handle_method(NV2AState *d,
 	
 	case NV_IMAGE_BLIT: {
 		switch (method) {
+		case NV09F_SET_OBJECT:
+			image_blit->object_instance = parameter;
+			break;
 		case NV09F_SET_CONTEXT_SURFACES:
 			image_blit->context_surfaces = parameter;
 			break;
@@ -603,14 +1171,9 @@ static void pgraph_handle_method(NV2AState *d,
 
 				NV2A_GL_DPRINTF(true, "NV09F_SET_OPERATION_SRCCOPY");
 
-				GraphicsObject *context_surfaces_obj =
-					lookup_graphics_object(pg, image_blit->context_surfaces);
-				assert(context_surfaces_obj);
-				assert(context_surfaces_obj->graphics_class
-					== NV_CONTEXT_SURFACES_2D);
-
-				ContextSurfaces2DState *context_surfaces =
-					&context_surfaces_obj->data.context_surfaces_2d;
+				ContextSurfaces2DState *context_surfaces = context_surfaces_2d;
+				assert(context_surfaces->object_instance
+					== image_blit->context_surfaces);
 
 				unsigned int bytes_per_pixel;
 				switch (context_surfaces->color_format) {
@@ -665,13 +1228,17 @@ static void pgraph_handle_method(NV2AState *d,
 
 			break;
 		default:
-			EmuWarning("NV2A: Unknown NV_IMAGE_BLIT Method: 0x%08X\n", method);
+			EmuLog(LOG_LEVEL::WARNING, "Unknown NV_IMAGE_BLIT Method: 0x%08X", method);
 		}
 		break;
 	}
 
 	case NV_KELVIN_PRIMITIVE: {
 		switch (method) {
+		case NV097_SET_OBJECT:
+			kelvin->object_instance = parameter;
+			break;
+
 		case NV097_NO_OPERATION:
 			/* The bios uses nop as a software method call -
 			 * it seems to expect a notify interrupt if the parameter isn't 0.
@@ -682,31 +1249,30 @@ static void pgraph_handle_method(NV2AState *d,
 			if (parameter != 0) {
 				assert(!(pg->pending_interrupts & NV_PGRAPH_INTR_ERROR));
 
-
-				pg->trapped_channel_id = pg->channel_id;
-				pg->trapped_subchannel = subchannel;
-				pg->trapped_method = method;
-				pg->trapped_data[0] = parameter;
-				pg->notify_source = NV_PGRAPH_NSOURCE_NOTIFICATION; /* TODO: check this */
+				SET_MASK(pg->regs[NV_PGRAPH_TRAPPED_ADDR],
+					NV_PGRAPH_TRAPPED_ADDR_CHID, channel_id);
+				SET_MASK(pg->regs[NV_PGRAPH_TRAPPED_ADDR],
+					NV_PGRAPH_TRAPPED_ADDR_SUBCH, subchannel);
+				SET_MASK(pg->regs[NV_PGRAPH_TRAPPED_ADDR],
+					NV_PGRAPH_TRAPPED_ADDR_MTHD, method);
+				pg->regs[NV_PGRAPH_TRAPPED_DATA_LOW] = parameter;
+				pg->regs[NV_PGRAPH_NSOURCE] = NV_PGRAPH_NSOURCE_NOTIFICATION; /* TODO: check this */
 				pg->pending_interrupts |= NV_PGRAPH_INTR_ERROR;
 
-				qemu_mutex_unlock(&d->pgraph.lock);
+				qemu_mutex_unlock(&pg->pgraph_lock);
 				qemu_mutex_lock_iothread();
 				update_irq(d);
-
-				qemu_mutex_lock(&d->pgraph.lock);
+				qemu_mutex_lock(&pg->pgraph_lock);
 				qemu_mutex_unlock_iothread();
 
 				while (pg->pending_interrupts & NV_PGRAPH_INTR_ERROR) {
-					qemu_cond_wait(&d->pgraph.interrupt_cond, &d->pgraph.lock);
+					qemu_cond_wait(&pg->interrupt_cond, &pg->pgraph_lock);
 				}
 			}
 			break;
 
 		case NV097_WAIT_FOR_IDLE:
-			lockGL(pg);
 			pgraph_update_surface(d, false, true, true);
-			unlockGL(pg);
 			break;
 
 
@@ -723,7 +1289,6 @@ static void pgraph_handle_method(NV2AState *d,
 				parameter);
 			break;
 		case NV097_FLIP_INCREMENT_WRITE: {
-			lockGL(pg);
 			NV2A_DPRINTF("flip increment write %d -> ",
 				GET_MASK(pg->regs[NV_PGRAPH_SURFACE],
 					NV_PGRAPH_SURFACE_WRITE_3D));
@@ -742,13 +1307,10 @@ static void pgraph_handle_method(NV2AState *d,
 				glFrameTerminatorGREMEDY();
 			}
 #endif // __APPLE__
-			unlockGL(pg);
 			break;
 		}
 		case NV097_FLIP_STALL:
-			lockGL(pg);
 			pgraph_update_surface(d, false, true, true);
-			unlockGL(pg);
 
 
 			// TODO: Fix this (why does it hang?)
@@ -773,7 +1335,7 @@ static void pgraph_handle_method(NV2AState *d,
 			break;
 
 		case NV097_SET_CONTEXT_DMA_NOTIFIES:
-			kelvin->dma_notifies = parameter;
+			pg->dma_notifies = parameter;
 			break;
 		case NV097_SET_CONTEXT_DMA_A:
 			pg->dma_a = parameter;
@@ -782,13 +1344,11 @@ static void pgraph_handle_method(NV2AState *d,
 			pg->dma_b = parameter;
 			break;
 		case NV097_SET_CONTEXT_DMA_STATE:
-			kelvin->dma_state = parameter;
+			pg->dma_state = parameter;
 			break;
 		case NV097_SET_CONTEXT_DMA_COLOR:
 			/* try to get any straggling draws in before the surface's changed :/ */
-			lockGL(pg);
 			pgraph_update_surface(d, false, true, true);
-			unlockGL(pg);
 
 			pg->dma_color = parameter;
 			break;
@@ -802,16 +1362,14 @@ static void pgraph_handle_method(NV2AState *d,
 			pg->dma_vertex_b = parameter;
 			break;
 		case NV097_SET_CONTEXT_DMA_SEMAPHORE:
-			kelvin->dma_semaphore = parameter;
+			pg->dma_semaphore = parameter;
 			break;
 		case NV097_SET_CONTEXT_DMA_REPORT:
 			pg->dma_report = parameter;
 			break;
 
 		case NV097_SET_SURFACE_CLIP_HORIZONTAL:
-			lockGL(pg);
 			pgraph_update_surface(d, false, true, true);
-			unlockGL(pg);
 
 			pg->surface_shape.clip_x =
 				GET_MASK(parameter, NV097_SET_SURFACE_CLIP_HORIZONTAL_X);
@@ -819,9 +1377,7 @@ static void pgraph_handle_method(NV2AState *d,
 				GET_MASK(parameter, NV097_SET_SURFACE_CLIP_HORIZONTAL_WIDTH);
 			break;
 		case NV097_SET_SURFACE_CLIP_VERTICAL:
-			lockGL(pg);
 			pgraph_update_surface(d, false, true, true);
-			unlockGL(pg);
 			
 			pg->surface_shape.clip_y =
 				GET_MASK(parameter, NV097_SET_SURFACE_CLIP_VERTICAL_Y);
@@ -829,9 +1385,7 @@ static void pgraph_handle_method(NV2AState *d,
 				GET_MASK(parameter, NV097_SET_SURFACE_CLIP_VERTICAL_HEIGHT);
 			break;
 		case NV097_SET_SURFACE_FORMAT:
-			lockGL(pg);
 			pgraph_update_surface(d, false, true, true);
-			unlockGL(pg);
 
 			pg->surface_shape.color_format =
 				GET_MASK(parameter, NV097_SET_SURFACE_FORMAT_COLOR);
@@ -847,9 +1401,7 @@ static void pgraph_handle_method(NV2AState *d,
 				GET_MASK(parameter, NV097_SET_SURFACE_FORMAT_HEIGHT);
 			break;
 		case NV097_SET_SURFACE_PITCH:
-			lockGL(pg);
 			pgraph_update_surface(d, false, true, true);
-			unlockGL(pg);
 
 			pg->surface_color.pitch =
 				GET_MASK(parameter, NV097_SET_SURFACE_PITCH_COLOR);
@@ -857,16 +1409,12 @@ static void pgraph_handle_method(NV2AState *d,
 				GET_MASK(parameter, NV097_SET_SURFACE_PITCH_ZETA);
 			break;
 		case NV097_SET_SURFACE_COLOR_OFFSET:
-			lockGL(pg);
 			pgraph_update_surface(d, false, true, true);
-			unlockGL(pg);
 
 			pg->surface_color.offset = parameter;
 			break;
 		case NV097_SET_SURFACE_ZETA_OFFSET:
-			lockGL(pg);
 			pgraph_update_surface(d, false, true, true);
-			unlockGL(pg);
 
 			pg->surface_zeta.offset = parameter;
 			break;
@@ -889,9 +1437,7 @@ static void pgraph_handle_method(NV2AState *d,
 			pg->regs[NV_PGRAPH_TEXADDRESS0 + slot * 4] = parameter;
 			break;
 		case NV097_SET_CONTROL0: {
-			lockGL(pg);
 			pgraph_update_surface(d, false, true, true);
-			unlockGL(pg);
 
 			bool stencil_write_enable =
 				parameter & NV097_SET_CONTROL0_STENCIL_WRITE_ENABLE;
@@ -908,6 +1454,12 @@ static void pgraph_handle_method(NV2AState *d,
 			SET_MASK(pg->regs[NV_PGRAPH_CONTROL_0],
 				NV_PGRAPH_CONTROL_0_Z_PERSPECTIVE_ENABLE,
 				z_perspective);
+
+			int color_space_convert =
+				GET_MASK(parameter, NV097_SET_CONTROL0_COLOR_SPACE_CONVERT);
+			SET_MASK(pg->regs[NV_PGRAPH_CONTROL_0],
+				NV_PGRAPH_CONTROL_0_CSCONVERT,
+				color_space_convert);
 			break;
 		}
 
@@ -976,6 +1528,18 @@ static void pgraph_handle_method(NV2AState *d,
 			SET_MASK(pg->regs[NV_PGRAPH_FOGCOLOR], NV_PGRAPH_FOGCOLOR_BLUE, blue);
 			break;
 		}
+		case NV097_SET_WINDOW_CLIP_TYPE:
+			SET_MASK(pg->regs[NV_PGRAPH_SETUPRASTER],
+				NV_PGRAPH_SETUPRASTER_WINDOWCLIPTYPE, parameter);
+			break;
+		CASE_8(NV097_SET_WINDOW_CLIP_HORIZONTAL, 4):
+			slot = (method - NV097_SET_WINDOW_CLIP_HORIZONTAL) / 4;
+			pg->regs[NV_PGRAPH_WINDOWCLIPX0 + slot * 4] = parameter;
+			break;
+		CASE_8(NV097_SET_WINDOW_CLIP_VERTICAL, 4):
+			slot = (method - NV097_SET_WINDOW_CLIP_VERTICAL) / 4;
+			pg->regs[NV_PGRAPH_WINDOWCLIPY0 + slot * 4] = parameter;
+			break;
 		case NV097_SET_ALPHA_TEST_ENABLE:
 			SET_MASK(pg->regs[NV_PGRAPH_CONTROL_0],
 				NV_PGRAPH_CONTROL_0_ALPHATESTENABLE, parameter);
@@ -989,6 +1553,7 @@ static void pgraph_handle_method(NV2AState *d,
 				parameter);
 			break;
 		case NV097_SET_DEPTH_TEST_ENABLE:
+			// Test-case : Whiplash
 			SET_MASK(pg->regs[NV_PGRAPH_CONTROL_0], NV_PGRAPH_CONTROL_0_ZENABLE,
 				parameter);
 			break;
@@ -1145,6 +1710,7 @@ static void pgraph_handle_method(NV2AState *d,
 		}
 
 		case NV097_SET_DEPTH_FUNC:
+			// Test-case : Whiplash
 			SET_MASK(pg->regs[NV_PGRAPH_CONTROL_0], NV_PGRAPH_CONTROL_0_ZFUNC,
 				parameter & 0xF);
 			break;
@@ -1488,8 +2054,7 @@ static void pgraph_handle_method(NV2AState *d,
 		}
 
 		/* Handles NV097_SET_BACK_LIGHT_* */
-		CASE_78(NV097_SET_BACK_LIGHT_AMBIENT_COLOR, 4): {
-			// NV097_SET_BACK_LIGHT_SPECULAR_COLOR 0x00000C18 - 0x00000C00 + 0x1C8 = 0x1E0; /4= 78d
+		CASE_128(NV097_SET_BACK_LIGHT_AMBIENT_COLOR, 4): {
 			slot = (method - NV097_SET_BACK_LIGHT_AMBIENT_COLOR) / 4;
 			unsigned int part = NV097_SET_BACK_LIGHT_AMBIENT_COLOR / 4 + slot % 16;
 			slot /= 16; /* [Light index] */
@@ -1517,8 +2082,7 @@ static void pgraph_handle_method(NV2AState *d,
 			break;
 		}
 		/* Handles all the light source props except for NV097_SET_BACK_LIGHT_* */
-		CASE_253(NV097_SET_LIGHT_AMBIENT_COLOR, 4): {
-			// NV097_SET_LIGHT_LOCAL_ATTENUATION 0x00001068 - 0x00001000 + 0x38C = 0x3F4; /4= 253d
+		CASE_256(NV097_SET_LIGHT_AMBIENT_COLOR, 4): {
 			slot = (method - NV097_SET_LIGHT_AMBIENT_COLOR) / 4;
 			unsigned int part = NV097_SET_LIGHT_AMBIENT_COLOR / 4 + slot % 32;
 			slot /= 32; /* [Light index] */
@@ -1613,7 +2177,7 @@ static void pgraph_handle_method(NV2AState *d,
 				vertex_attribute->gl_normalize = GL_TRUE;
 				vertex_attribute->size = 1;
 				assert(vertex_attribute->count == 4);
-				// http://www.opengl.org/registry/specs/ARB/vertex_array_bgra.txt
+				// https://www.opengl.org/registry/specs/ARB/vertex_array_bgra.txt
 				vertex_attribute->gl_count = GL_BGRA;
 				vertex_attribute->needs_conversion = false;
 				break;
@@ -1672,11 +2236,12 @@ static void pgraph_handle_method(NV2AState *d,
 
 			slot = (method - NV097_SET_VERTEX_DATA_ARRAY_OFFSET) / 4;
 
-			VertexAttribute *vertex_attribute = &pg->vertex_attributes[slot];
+			pg->vertex_attributes[slot].dma_select =
+				parameter & 0x80000000;
+			pg->vertex_attributes[slot].offset =
+				parameter & 0x7fffffff;
 
-			vertex_attribute->dma_select = parameter & 0x80000000;
-			vertex_attribute->offset = parameter & 0x7fffffff;
-			vertex_attribute->converted_elements = 0;
+			pg->vertex_attributes[slot].converted_elements = 0;
 
 			break;
 		}
@@ -1692,7 +2257,6 @@ static void pgraph_handle_method(NV2AState *d,
 			break;
 
 		case NV097_CLEAR_REPORT_VALUE:
-			lockGL(pg);
 
 			/* FIXME: Does this have a value in parameter? Also does this (also?) modify
 			 *        the report memory block?
@@ -1706,7 +2270,6 @@ static void pgraph_handle_method(NV2AState *d,
 			}
 			pg->zpass_pixel_count_result = 0;
 
-			unlockGL(pg);
 			break;
 
 		case NV097_SET_ZPASS_PIXEL_COUNT_ENABLE:
@@ -1714,8 +2277,6 @@ static void pgraph_handle_method(NV2AState *d,
 			break;
 
 		case NV097_GET_REPORT: {
-			lockGL(pg);
-
 			/* FIXME: This was first intended to be watchpoint-based. However,
 			 *        qemu / kvm only supports virtual-address watchpoints.
 			 *        This'll do for now, but accuracy and performance with other
@@ -1757,7 +2318,6 @@ static void pgraph_handle_method(NV2AState *d,
 				stl_le_p((uint32_t*)&report_data[12], done);
 			}
 
-			unlockGL(pg);
 			break;
 		}
 
@@ -1768,307 +2328,82 @@ static void pgraph_handle_method(NV2AState *d,
 			break;
 
 		case NV097_SET_BEGIN_END: {
-			lockGL(pg);
-
 			uint32_t control_0 = pg->regs[NV_PGRAPH_CONTROL_0];
 			uint32_t control_1 = pg->regs[NV_PGRAPH_CONTROL_1];
 
 			bool depth_test = control_0
 				& NV_PGRAPH_CONTROL_0_ZENABLE;
 			bool stencil_test = control_1
-									& NV_PGRAPH_CONTROL_1_STENCIL_TEST_ENABLE;
+				& NV_PGRAPH_CONTROL_1_STENCIL_TEST_ENABLE;
 
-			if (pg->opengl_enabled) {
-				if (parameter == NV097_SET_BEGIN_END_OP_END) {
+			if (parameter == NV097_SET_BEGIN_END_OP_END) {
 
-					assert(pg->shader_binding);
+				if (pg->draw_arrays_length) {
 
-					if (pg->draw_arrays_length) {
+					NV2A_GL_DPRINTF(false, "Draw Arrays");
 
-						NV2A_GL_DPRINTF(false, "Draw Arrays");
+					assert(pg->inline_buffer_length == 0);
+					assert(pg->inline_array_length == 0);
+					assert(pg->inline_elements_length == 0);
 
-						assert(pg->inline_buffer_length == 0);
-						assert(pg->inline_array_length == 0);
-						assert(pg->inline_elements_length == 0);
-
-						pgraph_bind_vertex_attributes(d, pg->draw_arrays_max_count,
-													  false, 0);
-						glMultiDrawArrays(pg->shader_binding->gl_primitive_mode,
-										  pg->gl_draw_arrays_start,
-										  pg->gl_draw_arrays_count,
-										  pg->draw_arrays_length);
-					} else if (pg->inline_buffer_length) {
-
-						NV2A_GL_DPRINTF(false, "Inline Buffer");
-
-						assert(pg->draw_arrays_length == 0);
-						assert(pg->inline_array_length == 0);
-						assert(pg->inline_elements_length == 0);
-
-						for (i = 0; i < NV2A_VERTEXSHADER_ATTRIBUTES; i++) {
-							VertexAttribute *vertex_attribute = &pg->vertex_attributes[i];
-
-							if (vertex_attribute->inline_buffer) {
-
-								glBindBuffer(GL_ARRAY_BUFFER,
-											 vertex_attribute->gl_inline_buffer);
-								glBufferData(GL_ARRAY_BUFFER,
-											 pg->inline_buffer_length
-												* sizeof(float) * 4,
-											 vertex_attribute->inline_buffer,
-											 GL_DYNAMIC_DRAW);
-
-								/* Clear buffer for next batch */
-								g_free(vertex_attribute->inline_buffer);
-								vertex_attribute->inline_buffer = NULL;
-
-								glVertexAttribPointer(i, 4, GL_FLOAT, GL_FALSE, 0, 0);
-								glEnableVertexAttribArray(i);
-							} else {
-								glDisableVertexAttribArray(i);
-
-								glVertexAttrib4fv(i, vertex_attribute->inline_value);
-							}
-
-						}
-
-						glDrawArrays(pg->shader_binding->gl_primitive_mode,
-									 0, pg->inline_buffer_length);
-					} else if (pg->inline_array_length) {
-
-						NV2A_GL_DPRINTF(false, "Inline Array");
-
-						assert(pg->draw_arrays_length == 0);
-						assert(pg->inline_buffer_length == 0);
-						assert(pg->inline_elements_length == 0);
-
-						unsigned int index_count = pgraph_bind_inline_array(d);
-						glDrawArrays(pg->shader_binding->gl_primitive_mode,
-									 0, index_count);
-					} else if (pg->inline_elements_length) {
-
-						NV2A_GL_DPRINTF(false, "Inline Elements");
-
-						assert(pg->draw_arrays_length == 0);
-						assert(pg->inline_buffer_length == 0);
-						assert(pg->inline_array_length == 0);
-
-						uint32_t max_element = 0;
-						uint32_t min_element = (uint32_t)-1;
-						for (i=0; i<pg->inline_elements_length; i++) {
-							max_element = MAX(pg->inline_elements[i], max_element);
-							min_element = MIN(pg->inline_elements[i], min_element);
-						}
-
-						pgraph_bind_vertex_attributes(d, max_element+1, false, 0);
-
-						glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, pg->gl_element_buffer);
-						glBufferData(GL_ELEMENT_ARRAY_BUFFER,
-									 pg->inline_elements_length*4,
-									 pg->inline_elements,
-									 GL_DYNAMIC_DRAW);
-
-						glDrawRangeElements(pg->shader_binding->gl_primitive_mode,
-											min_element, max_element,
-											pg->inline_elements_length,
-											GL_UNSIGNED_INT,
-											(void*)0);
-
-					} else {
-						NV2A_GL_DPRINTF(true, "EMPTY NV097_SET_BEGIN_END");
-						assert(false);
+					if (pgraph_draw_arrays != nullptr) {
+						pgraph_draw_arrays(d);
 					}
+				} else if (pg->inline_buffer_length) {
 
-					/* End of visibility testing */
-					if (pg->zpass_pixel_count_enable) {
-						glEndQuery(GL_SAMPLES_PASSED);
+					NV2A_GL_DPRINTF(false, "Inline Buffer");
+
+					assert(pg->draw_arrays_length == 0);
+					assert(pg->inline_array_length == 0);
+					assert(pg->inline_elements_length == 0);
+
+					if (pgraph_draw_inline_buffer != nullptr) {
+						pgraph_draw_inline_buffer(d);
 					}
+				} else if (pg->inline_array_length) {
 
-					NV2A_GL_DGROUP_END();
+					NV2A_GL_DPRINTF(false, "Inline Array");
+
+					assert(pg->draw_arrays_length == 0);
+					assert(pg->inline_buffer_length == 0);
+					assert(pg->inline_elements_length == 0);
+
+					if (pgraph_draw_inline_array != nullptr) {
+						pgraph_draw_inline_array(d);
+					}
+				} else if (pg->inline_elements_length) {
+
+					NV2A_GL_DPRINTF(false, "Inline Elements");
+
+					assert(pg->draw_arrays_length == 0);
+					assert(pg->inline_buffer_length == 0);
+					assert(pg->inline_array_length == 0);
+
+					if (pgraph_draw_inline_elements != nullptr) {
+						pgraph_draw_inline_elements(d);
+					}
 				} else {
-					NV2A_GL_DGROUP_BEGIN("NV097_SET_BEGIN_END: 0x%x", parameter);
-					assert(parameter <= NV097_SET_BEGIN_END_OP_POLYGON);
-
-					pgraph_update_surface(d, true, true, depth_test || stencil_test);
-
-					pg->primitive_mode = parameter;
-
-					bool alpha = control_0 & NV_PGRAPH_CONTROL_0_ALPHA_WRITE_ENABLE;
-					bool red = control_0 & NV_PGRAPH_CONTROL_0_RED_WRITE_ENABLE;
-					bool green = control_0 & NV_PGRAPH_CONTROL_0_GREEN_WRITE_ENABLE;
-					bool blue = control_0 & NV_PGRAPH_CONTROL_0_BLUE_WRITE_ENABLE;
-					glColorMask(red, green, blue, alpha);
-					glDepthMask(!!(control_0 & NV_PGRAPH_CONTROL_0_ZWRITEENABLE));
-					glStencilMask(GET_MASK(control_1,
-										   NV_PGRAPH_CONTROL_1_STENCIL_MASK_WRITE));
-
-					uint32_t blend = pg->regs[NV_PGRAPH_BLEND];
-					if (blend & NV_PGRAPH_BLEND_EN) {
-						glEnable(GL_BLEND);
-						uint32_t sfactor = GET_MASK(blend,
-													NV_PGRAPH_BLEND_SFACTOR);
-						uint32_t dfactor = GET_MASK(blend,
-													NV_PGRAPH_BLEND_DFACTOR);
-						assert(sfactor < ARRAY_SIZE(pgraph_blend_factor_map));
-						assert(dfactor < ARRAY_SIZE(pgraph_blend_factor_map));
-						glBlendFunc(pgraph_blend_factor_map[sfactor],
-									pgraph_blend_factor_map[dfactor]);
-
-						uint32_t equation = GET_MASK(blend,
-													 NV_PGRAPH_BLEND_EQN);
-						assert(equation < ARRAY_SIZE(pgraph_blend_equation_map));
-						glBlendEquation(pgraph_blend_equation_map[equation]);
-
-						uint32_t blend_color = pg->regs[NV_PGRAPH_BLENDCOLOR];
-						glBlendColor( ((blend_color >> 16) & 0xFF) / 255.0f, /* red */
-									  ((blend_color >> 8) & 0xFF) / 255.0f,  /* green */
-									  (blend_color & 0xFF) / 255.0f,         /* blue */
-									  ((blend_color >> 24) & 0xFF) / 255.0f);/* alpha */
-					} else {
-						glDisable(GL_BLEND);
-					}
-
-					/* Face culling */
-					uint32_t setupraster = pg->regs[NV_PGRAPH_SETUPRASTER];
-					if (setupraster
-							& NV_PGRAPH_SETUPRASTER_CULLENABLE) {
-						uint32_t cull_face = GET_MASK(setupraster,
-													  NV_PGRAPH_SETUPRASTER_CULLCTRL);
-						assert(cull_face < ARRAY_SIZE(pgraph_cull_face_map));
-						glCullFace(pgraph_cull_face_map[cull_face]);
-						glEnable(GL_CULL_FACE);
-					} else {
-						glDisable(GL_CULL_FACE);
-					}
-
-					/* Front-face select */
-					glFrontFace(setupraster
-									& NV_PGRAPH_SETUPRASTER_FRONTFACE
-										? GL_CCW : GL_CW);
-
-					/* Polygon offset */
-					/* FIXME: GL implementation-specific, maybe do this in VS? */
-					if (setupraster &
-							NV_PGRAPH_SETUPRASTER_POFFSETFILLENABLE) {
-						glEnable(GL_POLYGON_OFFSET_FILL);
-					} else {
-						glDisable(GL_POLYGON_OFFSET_FILL);
-					}
-					if (setupraster &
-							NV_PGRAPH_SETUPRASTER_POFFSETLINEENABLE) {
-						glEnable(GL_POLYGON_OFFSET_LINE);
-					} else {
-						glDisable(GL_POLYGON_OFFSET_LINE);
-					}
-					if (setupraster &
-							NV_PGRAPH_SETUPRASTER_POFFSETPOINTENABLE) {
-						glEnable(GL_POLYGON_OFFSET_POINT);
-					} else {
-						glDisable(GL_POLYGON_OFFSET_POINT);
-					}
-					if (setupraster &
-							(NV_PGRAPH_SETUPRASTER_POFFSETFILLENABLE |
-							 NV_PGRAPH_SETUPRASTER_POFFSETLINEENABLE |
-							 NV_PGRAPH_SETUPRASTER_POFFSETPOINTENABLE)) {
-						GLfloat zfactor = *(float*)&pg->regs[NV_PGRAPH_ZOFFSETFACTOR];
-						GLfloat zbias = *(float*)&pg->regs[NV_PGRAPH_ZOFFSETBIAS];
-						glPolygonOffset(zfactor, zbias);
-					}
-
-					/* Depth testing */
-					if (depth_test) {
-						glEnable(GL_DEPTH_TEST);
-
-						uint32_t depth_func = GET_MASK(control_0,
-													   NV_PGRAPH_CONTROL_0_ZFUNC);
-						assert(depth_func < ARRAY_SIZE(pgraph_depth_func_map));
-						glDepthFunc(pgraph_depth_func_map[depth_func]);
-					} else {
-						glDisable(GL_DEPTH_TEST);
-					}
-
-					if (stencil_test) {
-						glEnable(GL_STENCIL_TEST);
-
-						uint32_t stencil_func = GET_MASK(control_1,
-													NV_PGRAPH_CONTROL_1_STENCIL_FUNC);
-						uint32_t stencil_ref = GET_MASK(control_1,
-													NV_PGRAPH_CONTROL_1_STENCIL_REF);
-						uint32_t func_mask = GET_MASK(control_1,
-												NV_PGRAPH_CONTROL_1_STENCIL_MASK_READ);
-						uint32_t control2 = pg->regs[NV_PGRAPH_CONTROL_2];
-						uint32_t op_fail = GET_MASK(control2,
-												NV_PGRAPH_CONTROL_2_STENCIL_OP_FAIL);
-						uint32_t op_zfail = GET_MASK(control2,
-												NV_PGRAPH_CONTROL_2_STENCIL_OP_ZFAIL);
-						uint32_t op_zpass = GET_MASK(control2,
-												NV_PGRAPH_CONTROL_2_STENCIL_OP_ZPASS);
-
-						assert(stencil_func < ARRAY_SIZE(pgraph_stencil_func_map));
-						assert(op_fail < ARRAY_SIZE(pgraph_stencil_op_map));
-						assert(op_zfail < ARRAY_SIZE(pgraph_stencil_op_map));
-						assert(op_zpass < ARRAY_SIZE(pgraph_stencil_op_map));
-
-						glStencilFunc(
-							pgraph_stencil_func_map[stencil_func],
-							stencil_ref,
-							func_mask);
-
-						glStencilOp(
-							pgraph_stencil_op_map[op_fail],
-							pgraph_stencil_op_map[op_zfail],
-							pgraph_stencil_op_map[op_zpass]);
-
-					} else {
-						glDisable(GL_STENCIL_TEST);
-					}
-
-					/* Dither */
-					/* FIXME: GL implementation dependent */
-					if (control_0 &
-							NV_PGRAPH_CONTROL_0_DITHERENABLE) {
-						glEnable(GL_DITHER);
-					} else {
-						glDisable(GL_DITHER);
-					}
-
-					pgraph_bind_shaders(pg);
-					pgraph_bind_textures(d);
-
-					//glDisableVertexAttribArray(NV2A_VERTEX_ATTR_DIFFUSE);
-					//glVertexAttrib4f(NV2A_VERTEX_ATTR_DIFFUSE, 1.0f, 1.0f, 1.0f, 1.0f);
-
-
-					unsigned int width, height;
-					pgraph_get_surface_dimensions(pg, &width, &height);
-					pgraph_apply_anti_aliasing_factor(pg, &width, &height);
-					glViewport(0, 0, width, height);
-
-					pg->inline_elements_length = 0;
-					pg->inline_array_length = 0;
-					pg->inline_buffer_length = 0;
-					pg->draw_arrays_length = 0;
-					pg->draw_arrays_max_count = 0;
-
-					/* Visibility testing */
-					if (pg->zpass_pixel_count_enable) {
-						GLuint gl_query;
-						glGenQueries(1, &gl_query);
-						pg->gl_zpass_pixel_count_query_count++;
-						pg->gl_zpass_pixel_count_queries = (GLuint*)g_realloc(
-							pg->gl_zpass_pixel_count_queries,
-							sizeof(GLuint) * pg->gl_zpass_pixel_count_query_count);
-						pg->gl_zpass_pixel_count_queries[
-							pg->gl_zpass_pixel_count_query_count - 1] = gl_query;
-						glBeginQuery(GL_SAMPLES_PASSED, gl_query);
-					}
-
+					NV2A_GL_DPRINTF(true, "EMPTY NV097_SET_BEGIN_END");
+					assert(false);
 				}
+			} else {
+
+				assert(parameter <= NV097_SET_BEGIN_END_OP_POLYGON);
+
+				pg->primitive_mode = parameter;
+
+				if (pgraph_draw_state_update != nullptr) {
+					pgraph_draw_state_update(d);
+				}
+
+				pg->inline_elements_length = 0;
+				pg->inline_array_length = 0;
+				pg->inline_buffer_length = 0;
+				pg->draw_arrays_length = 0;
+				pg->draw_arrays_max_count = 0;
 			}
 
 			pgraph_set_surface_dirty(pg, true, depth_test || stencil_test);
-
-			unlockGL(pg);
 			break;
 		}
 		CASE_4(NV097_SET_TEXTURE_OFFSET, 64):
@@ -2176,6 +2511,10 @@ static void pgraph_handle_method(NV2AState *d,
 			break;
 
 		case NV097_ARRAY_ELEMENT16:
+			//LOG_TEST_CASE("NV2A_VB_ELEMENT_U16");	
+			// Test-case : Turok (in main menu)	
+			// Test-case : Hunter Redeemer	
+			// Test-case : Otogi (see https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/pull/1113#issuecomment-385593814)
 			assert(pg->inline_elements_length < NV2A_MAX_BATCH_LENGTH);
 			pg->inline_elements[
 				pg->inline_elements_length++] = parameter & 0xFFFF;
@@ -2183,6 +2522,8 @@ static void pgraph_handle_method(NV2AState *d,
 				pg->inline_elements_length++] = parameter >> 16;
 			break;
 		case NV097_ARRAY_ELEMENT32:
+			//LOG_TEST_CASE("NV2A_VB_ELEMENT_U32");	
+			// Test-case : Turok (in main menu)
 			assert(pg->inline_elements_length < NV2A_MAX_BATCH_LENGTH);
 			pg->inline_elements[
 				pg->inline_elements_length++] = parameter;
@@ -2302,25 +2643,25 @@ static void pgraph_handle_method(NV2AState *d,
 			break;
 		}
 		case NV097_SET_SEMAPHORE_OFFSET:
-			kelvin->semaphore_offset = parameter;
+			pg->regs[NV_PGRAPH_SEMAPHOREOFFSET] = parameter;
 			break;
 		case NV097_BACK_END_WRITE_SEMAPHORE_RELEASE: {
-			lockGL(pg);
 			pgraph_update_surface(d, false, true, true);
-			unlockGL(pg);
 
-			//qemu_mutex_unlock(&d->pg->pgraph_lock);
+			//qemu_mutex_unlock(&pg->pgraph_lock);
 			//qemu_mutex_lock_iothread();
 
+			uint32_t semaphore_offset = pg->regs[NV_PGRAPH_SEMAPHOREOFFSET];
+
 			xbaddr semaphore_dma_len;
-			uint8_t *semaphore_data = (uint8_t*)nv_dma_map(d, kelvin->dma_semaphore,
+			uint8_t *semaphore_data = (uint8_t*)nv_dma_map(d, pg->dma_semaphore,
 				&semaphore_dma_len);
-			assert(kelvin->semaphore_offset < semaphore_dma_len);
-			semaphore_data += kelvin->semaphore_offset;
+			assert(semaphore_offset < semaphore_dma_len);
+			semaphore_data += semaphore_offset;
 
 			stl_le_p((uint32_t*)semaphore_data, parameter);
 
-			//qemu_mutex_lock(&d->pg->pgraph_lock);
+			//qemu_mutex_lock(&pg->pgraph_lock);
 			//qemu_mutex_unlock_iothread();
 
 			break;
@@ -2334,182 +2675,10 @@ static void pgraph_handle_method(NV2AState *d,
 			break;
 
 		case NV097_CLEAR_SURFACE: {
-			lockGL(pg);
-			NV2A_DPRINTF("---------PRE CLEAR ------\n");
-			GLbitfield gl_mask = 0;
-
-			bool write_color = (parameter & NV097_CLEAR_SURFACE_COLOR);
-			bool write_zeta =
-				(parameter & (NV097_CLEAR_SURFACE_Z | NV097_CLEAR_SURFACE_STENCIL));
-			if (pg->opengl_enabled) {
-			
-				if (write_zeta) {
-					uint32_t clear_zstencil =
-						d->pgraph.regs[NV_PGRAPH_ZSTENCILCLEARVALUE];
-					GLint gl_clear_stencil;
-					GLfloat gl_clear_depth;
-
-					/* FIXME: Put these in some lookup table */
-					const float f16_max = 511.9375f;
-					/* FIXME: 7 bits of mantissa unused. maybe use full buffer? */
-					const float f24_max = 3.4027977E38f;
-
-					switch(pg->surface_shape.zeta_format) {
-					case NV097_SET_SURFACE_FORMAT_ZETA_Z16: {
-						uint16_t z = clear_zstencil & 0xFFFF;
-						/* FIXME: Remove bit for stencil clear? */
-						if (pg->surface_shape.z_format) {
-							gl_clear_depth = convert_f16_to_float(z) / f16_max;
-							assert(false); /* FIXME: Untested */
-						} else {
-							gl_clear_depth = z / (float)0xFFFF;
-						}
-						break;
-					}
-					case NV097_SET_SURFACE_FORMAT_ZETA_Z24S8: {
-						gl_clear_stencil = clear_zstencil & 0xFF;
-						uint32_t z = clear_zstencil >> 8;
-						if (pg->surface_shape.z_format) {
-							gl_clear_depth = convert_f24_to_float(z) / f24_max;
-							assert(false); /* FIXME: Untested */
-						} else {
-							gl_clear_depth = z / (float)0xFFFFFF;
-						}
-						break;
-					}
-					default:
-						fprintf(stderr, "Unknown zeta surface format: 0x%x\n", pg->surface_shape.zeta_format);
-						assert(false);
-						break;
-					}
-					if (parameter & NV097_CLEAR_SURFACE_Z) {
-						gl_mask |= GL_DEPTH_BUFFER_BIT;
-						glDepthMask(GL_TRUE);
-						glClearDepth(gl_clear_depth);
-					}
-					if (parameter & NV097_CLEAR_SURFACE_STENCIL) {
-						gl_mask |= GL_STENCIL_BUFFER_BIT;
-						glStencilMask(0xff);
-						glClearStencil(gl_clear_stencil);            
-					}
-				}
-				if (write_color) {
-					gl_mask |= GL_COLOR_BUFFER_BIT;
-					glColorMask((parameter & NV097_CLEAR_SURFACE_R)
-									 ? GL_TRUE : GL_FALSE,
-								(parameter & NV097_CLEAR_SURFACE_G)
-									 ? GL_TRUE : GL_FALSE,
-								(parameter & NV097_CLEAR_SURFACE_B)
-									 ? GL_TRUE : GL_FALSE,
-								(parameter & NV097_CLEAR_SURFACE_A)
-									 ? GL_TRUE : GL_FALSE);
-					uint32_t clear_color = d->pgraph.regs[NV_PGRAPH_COLORCLEARVALUE];
-
-					/* Handle RGB */
-					GLfloat red, green, blue;
-					switch(pg->surface_shape.color_format) {
-					case NV097_SET_SURFACE_FORMAT_COLOR_LE_X1R5G5B5_Z1R5G5B5:
-					case NV097_SET_SURFACE_FORMAT_COLOR_LE_X1R5G5B5_O1R5G5B5:
-						red = ((clear_color >> 10) & 0x1F) / 31.0f;
-						green = ((clear_color >> 5) & 0x1F) / 31.0f;
-						blue = (clear_color & 0x1F) / 31.0f;
-						assert(false); /* Untested */
-						break;
-					case NV097_SET_SURFACE_FORMAT_COLOR_LE_R5G6B5:
-						red = ((clear_color >> 11) & 0x1F) / 31.0f;
-						green = ((clear_color >> 5) & 0x3F) / 63.0f;
-						blue = (clear_color & 0x1F) / 31.0f;
-						break;
-					case NV097_SET_SURFACE_FORMAT_COLOR_LE_X8R8G8B8_Z8R8G8B8:
-					case NV097_SET_SURFACE_FORMAT_COLOR_LE_X8R8G8B8_O8R8G8B8:
-					case NV097_SET_SURFACE_FORMAT_COLOR_LE_X1A7R8G8B8_Z1A7R8G8B8:
-					case NV097_SET_SURFACE_FORMAT_COLOR_LE_X1A7R8G8B8_O1A7R8G8B8:
-					case NV097_SET_SURFACE_FORMAT_COLOR_LE_A8R8G8B8:
-						red = ((clear_color >> 16) & 0xFF) / 255.0f;
-						green = ((clear_color >> 8) & 0xFF) / 255.0f;
-						blue = (clear_color & 0xFF) / 255.0f;
-						break;
-					case NV097_SET_SURFACE_FORMAT_COLOR_LE_B8:
-					case NV097_SET_SURFACE_FORMAT_COLOR_LE_G8B8:
-						/* Xbox D3D doesn't support clearing those */
-					default:
-						red = 1.0f;
-						green = 0.0f;
-						blue = 1.0f;
-						fprintf(stderr, "CLEAR_SURFACE for color_format 0x%x unsupported",
-								pg->surface_shape.color_format);
-						assert(false);
-						break;
-					}
-
-					/* Handle alpha */
-					GLfloat alpha;
-					switch(pg->surface_shape.color_format) {
-					/* FIXME: CLEAR_SURFACE seems to work like memset, so maybe we
-					 *        also have to clear non-alpha bits with alpha value?
-					 *        As GL doesn't own those pixels we'd have to do this on
-					 *        our own in xbox memory.
-					 */
-					case NV097_SET_SURFACE_FORMAT_COLOR_LE_X1A7R8G8B8_Z1A7R8G8B8:
-					case NV097_SET_SURFACE_FORMAT_COLOR_LE_X1A7R8G8B8_O1A7R8G8B8:
-						alpha = ((clear_color >> 24) & 0x7F) / 127.0f;
-						assert(false); /* Untested */
-						break;
-					case NV097_SET_SURFACE_FORMAT_COLOR_LE_A8R8G8B8:
-						alpha = ((clear_color >> 24) & 0xFF) / 255.0f;
-						break;
-					default:
-						alpha = 1.0f;
-						break;
-					}
-
-					glClearColor(red, green, blue, alpha);
-				}
-				pgraph_update_surface(d, true, write_color, write_zeta);
-
-				glEnable(GL_SCISSOR_TEST);
-
-				unsigned int xmin = GET_MASK(pg->regs[NV_PGRAPH_CLEARRECTX],
-						NV_PGRAPH_CLEARRECTX_XMIN);
-				unsigned int xmax = GET_MASK(pg->regs[NV_PGRAPH_CLEARRECTX],
-						NV_PGRAPH_CLEARRECTX_XMAX);
-				unsigned int ymin = GET_MASK(pg->regs[NV_PGRAPH_CLEARRECTY],
-						NV_PGRAPH_CLEARRECTY_YMIN);
-				unsigned int ymax = GET_MASK(pg->regs[NV_PGRAPH_CLEARRECTY],
-						NV_PGRAPH_CLEARRECTY_YMAX);
-
-				unsigned int scissor_x = xmin;
-				unsigned int scissor_y = pg->surface_shape.clip_height - ymax - 1;
-
-				unsigned int scissor_width = xmax - xmin + 1;
-				unsigned int scissor_height = ymax - ymin + 1;
-
-				pgraph_apply_anti_aliasing_factor(pg, &scissor_x, &scissor_y);
-				pgraph_apply_anti_aliasing_factor(pg, &scissor_width, &scissor_height);
-
-				/* FIXME: Should this really be inverted instead of ymin? */
-				glScissor(scissor_x, scissor_y, scissor_width, scissor_height);
-
-				NV2A_DPRINTF("------------------CLEAR 0x%x %d,%d - %d,%d  %x---------------\n",
-					parameter, xmin, ymin, xmax, ymax, d->pgraph.regs[NV_PGRAPH_COLORCLEARVALUE]);
-
-				/* Dither */
-				/* FIXME: Maybe also disable it here? + GL implementation dependent */
-				if (pg->regs[NV_PGRAPH_CONTROL_0] &
-						NV_PGRAPH_CONTROL_0_DITHERENABLE) {
-					glEnable(GL_DITHER);
-				} else {
-					glDisable(GL_DITHER);
-				}
-
-				glClear(gl_mask);
-
-				glDisable(GL_SCISSOR_TEST);
+			pg->clear_surface = parameter;
+			if (pgraph_draw_clear != nullptr) {
+				pgraph_draw_clear(d);
 			}
-
-			pgraph_set_surface_dirty(pg, write_color, write_zeta);
-
-			unlockGL(pg);
 			break;
 		}
 
@@ -2552,6 +2721,7 @@ static void pgraph_handle_method(NV2AState *d,
 			break;
 
 		case NV097_SET_TRANSFORM_EXECUTION_MODE:
+			// Test-case : Whiplash
 			SET_MASK(pg->regs[NV_PGRAPH_CSV0_D], NV_PGRAPH_CSV0_D_MODE,
 				GET_MASK(parameter,
 					NV097_SET_TRANSFORM_EXECUTION_MODE_MODE));
@@ -2560,6 +2730,7 @@ static void pgraph_handle_method(NV2AState *d,
 					NV097_SET_TRANSFORM_EXECUTION_MODE_RANGE_MODE));
 			break;
 		case NV097_SET_TRANSFORM_PROGRAM_CXT_WRITE_EN:
+			// Test-case : Whiplash
 			pg->enable_vertex_program_write = parameter;
 			break;
 		case NV097_SET_TRANSFORM_PROGRAM_LOAD:
@@ -2585,15 +2756,15 @@ static void pgraph_handle_method(NV2AState *d,
 			break;
 		default:
 			NV2A_GL_DPRINTF(true, "    unhandled  (0x%02x 0x%08x)",
-					object->graphics_class, method);
+					graphics_class, method);
 			break;
 		}
 		break;
 	}
 
 	default:
-		NV2A_GL_DPRINTF(true, "Unknown Graphics Class/Method 0x%08X/0x%08X\n",
-						object->graphics_class, method);
+		NV2A_GL_DPRINTF(true, "Unknown Graphics Class/Method 0x%08X/0x%08X",
+						graphics_class, method);
 		break;
 	}
 
@@ -2601,35 +2772,39 @@ static void pgraph_handle_method(NV2AState *d,
 
 static void pgraph_switch_context(NV2AState *d, unsigned int channel_id)
 {
-	bool valid;
-
+    bool channel_valid =
+        d->pgraph.regs[NV_PGRAPH_CTX_CONTROL] & NV_PGRAPH_CTX_CONTROL_CHID;
+    unsigned pgraph_channel_id = GET_MASK(d->pgraph.regs[NV_PGRAPH_CTX_USER], NV_PGRAPH_CTX_USER_CHID);
 	// Cxbx Note : This isn't present in xqemu / OpenXbox : d->pgraph.pgraph_lock.lock();
-	valid = d->pgraph.channel_valid && d->pgraph.channel_id == channel_id;
+    bool valid = channel_valid && pgraph_channel_id == channel_id;
 	if (!valid) {
-		d->pgraph.trapped_channel_id = channel_id;
-	}
-	// Cxbx Note : This isn't present in xqemu / OpenXbox : d->pgraph.pgraph_lock.unlock();
+        SET_MASK(d->pgraph.regs[NV_PGRAPH_TRAPPED_ADDR],
+                 NV_PGRAPH_TRAPPED_ADDR_CHID, channel_id);
 
-	if (!valid) {
-		NV2A_DPRINTF("puller needs to switch to ch %d\n", channel_id);
+        NV2A_DPRINTF("pgraph switching to ch %d\n", channel_id);
 
-		qemu_mutex_unlock(&d->pgraph.lock);
+        /* TODO: hardware context switching */
+        assert(!(d->pgraph.regs[NV_PGRAPH_DEBUG_3]
+                & NV_PGRAPH_DEBUG_3_HW_CONTEXT_SWITCH));
+
+		qemu_mutex_unlock(&d->pgraph.pgraph_lock);
 		qemu_mutex_lock_iothread();
-		d->pgraph.pending_interrupts |= NV_PGRAPH_INTR_CONTEXT_SWITCH;
+		d->pgraph.pending_interrupts |= NV_PGRAPH_INTR_CONTEXT_SWITCH; // TODO : Should this be done before unlocking pgraph_lock?
 		update_irq(d);
 
-		qemu_mutex_lock(&d->pgraph.lock);
+		qemu_mutex_lock(&d->pgraph.pgraph_lock);
 		qemu_mutex_unlock_iothread();
 
+        // wait for the interrupt to be serviced
 		while (d->pgraph.pending_interrupts & NV_PGRAPH_INTR_CONTEXT_SWITCH) {
-			qemu_cond_wait(&d->pgraph.interrupt_cond, &d->pgraph.lock);
+			qemu_cond_wait(&d->pgraph.interrupt_cond, &d->pgraph.pgraph_lock);
 		}
 	}
 }
 
 static void pgraph_wait_fifo_access(NV2AState *d) {
-	while (!d->pgraph.fifo_access) {
-		qemu_cond_wait(&d->pgraph.fifo_access_cond, &d->pgraph.lock);
+    while (!(d->pgraph.regs[NV_PGRAPH_FIFO] & NV_PGRAPH_FIFO_ACCESS)) {
+		qemu_cond_wait(&d->pgraph.fifo_access_cond, &d->pgraph.pgraph_lock);
 	}
 }
 
@@ -2647,29 +2822,28 @@ static void pgraph_log_method(unsigned int subchannel,
 						subchannel, last, method_name, count);
 	}
 	if (method != 0x1800) {
-		const char* method_name = NV2AMethodToString(method);
-		unsigned int nmethod = 0;
-		switch (graphics_class) {
-		case NV_KELVIN_PRIMITIVE:
-			nmethod = method | (0x5c << 16);
-			break;
-		case NV_CONTEXT_SURFACES_2D:
-			nmethod = method | (0x6d << 16);
-			break;
-		default:
-			break;
-		}
-		/*
-		if (nmethod != 0 && nmethod < ARRAY_SIZE(nv2a_method_names)) {
-			method_name = nv2a_method_names[nmethod];
-		}*/
-		if (method_name) {
-			NV2A_DPRINTF("d->pgraph method (%d): %s (0x%x)\n",
-				subchannel, method_name, parameter);
-		} else {
-			NV2A_DPRINTF("d->pgraph method (%d): 0x%x -> 0x%04x (0x%x)\n",
+		// const char* method_name = NV2AMethodToString(method);
+		// unsigned int nmethod = 0;
+		// switch (graphics_class) {
+		// case NV_KELVIN_PRIMITIVE:
+		// 	nmethod = method | (0x5c << 16);
+		// 	break;
+		// case NV_CONTEXT_SURFACES_2D:
+		// 	nmethod = method | (0x6d << 16);
+		// 	break;
+        // case NV_CONTEXT_PATTERN:
+        // 	nmethod = method | (0x68 << 16);
+        // 	break;
+		// default:
+		// 	break;
+		// }
+		// if (method_name) {
+		// 	NV2A_DPRINTF("d->pgraph method (%d): %s (0x%x)\n",
+		// 		subchannel, method_name, parameter);
+		// } else {
+			NV2A_DPRINTF("pgraph method (%d): 0x%08X -> 0x%04x (0x%x)\n",
 				subchannel, graphics_class, method, parameter);
-		}
+		// }
 
 	}
 	if (method == last) { count++; }
@@ -2722,8 +2896,7 @@ void pgraph_init(NV2AState *d)
 
     PGRAPHState *pg = &d->pgraph;
 
-	qemu_mutex_init(&pg->lock);
-	qemu_mutex_init(&pg->gl_lock);
+	qemu_mutex_init(&pg->pgraph_lock);
 	qemu_cond_init(&pg->interrupt_cond);
 	qemu_cond_init(&pg->fifo_access_cond);
 	qemu_cond_init(&pg->flip_3d);
@@ -2731,9 +2904,10 @@ void pgraph_init(NV2AState *d)
 	if (!(pg->opengl_enabled))
 		return;
 
-	/* fire up opengl */
+	/* attach OpenGL render plugins */
+	OpenGL_init_pgraph_plugins();
 
-	lockGL(pg);
+	/* fire up opengl */
 
     pg->gl_context = glo_context_create();
     assert(pg->gl_context);
@@ -2810,14 +2984,18 @@ void pgraph_init(NV2AState *d)
 
 //    assert(glGetError() == GL_NO_ERROR);
 
-	unlockGL(&d->pgraph);
+    glo_set_current(NULL);
 }
 
 void pgraph_destroy(PGRAPHState *pg)
 {
-	if (pg->opengl_enabled) {
-		lockGL(pg);
 
+	qemu_mutex_destroy(&pg->pgraph_lock);
+	qemu_cond_destroy(&pg->interrupt_cond);
+	qemu_cond_destroy(&pg->fifo_access_cond);
+	qemu_cond_destroy(&pg->flip_3d);
+
+	if (pg->opengl_enabled) {
 		glo_set_current(pg->gl_context);
 
 		if (pg->gl_color_buffer) {
@@ -2834,8 +3012,6 @@ void pgraph_destroy(PGRAPHState *pg)
 		glo_set_current(NULL);
 
 		glo_context_destroy(pg->gl_context);
-
-		unlockGL(pg);
 	}
 }
 
@@ -3052,6 +3228,8 @@ static void pgraph_bind_shaders(PGRAPHState *pg)
 
 	ShaderState state;
 	/* register combiner stuff */
+	state.psh.window_clip_exclusive = pg->regs[NV_PGRAPH_SETUPRASTER]
+                                       & NV_PGRAPH_SETUPRASTER_WINDOWCLIPTYPE,
 	state.psh.combiner_control = pg->regs[NV_PGRAPH_COMBINECTL];
 	state.psh.shader_stage_program = pg->regs[NV_PGRAPH_SHADERPROG];
 	state.psh.other_stage_input = pg->regs[NV_PGRAPH_SHADERCTL];
@@ -3147,6 +3325,45 @@ static void pgraph_bind_shaders(PGRAPHState *pg)
         }
     }
 
+    /* Window clip
+     *
+     * Optimization note: very quickly check to ignore any repeated or zero-size
+     * clipping regions. Note that if region number 7 is valid, but the rest are
+     * not, we will still add all of them. Clip regions seem to be typically
+     * front-loaded (meaning the first one or two regions are populated, and the
+     * following are zeroed-out), so let's avoid adding any more complicated
+     * masking or copying logic here for now unless we discover a valid case.
+     */
+    assert(!state.psh.window_clip_exclusive); /* FIXME: Untested */
+    state.psh.window_clip_count = 0;
+    uint32_t last_x = 0, last_y = 0;
+
+    for (i = 0; i < 8; i++) {
+        const uint32_t x = pg->regs[NV_PGRAPH_WINDOWCLIPX0 + i * 4];
+        const uint32_t y = pg->regs[NV_PGRAPH_WINDOWCLIPY0 + i * 4];
+        const uint32_t x_min = GET_MASK(x, NV_PGRAPH_WINDOWCLIPX0_XMIN);
+        const uint32_t x_max = GET_MASK(x, NV_PGRAPH_WINDOWCLIPX0_XMAX);
+        const uint32_t y_min = GET_MASK(y, NV_PGRAPH_WINDOWCLIPY0_YMIN);
+        const uint32_t y_max = GET_MASK(y, NV_PGRAPH_WINDOWCLIPY0_YMAX);
+
+        /* Check for zero width or height clipping region */
+        if ((x_min == x_max) || (y_min == y_max)) {
+            continue;
+        }
+
+        /* Check for in-order duplicate regions */
+        if ((x == last_x) && (y == last_y)) {
+            continue;
+        }
+
+        NV2A_DPRINTF("Clipping Region %d: min=(%d, %d) max=(%d, %d)\n",
+            i, x_min, y_min, x_max, y_max);
+
+        state.psh.window_clip_count = i + 1;
+        last_x = x;
+        last_y = y;
+    }
+
     for (i = 0; i < 8; i++) {
         state.psh.rgb_inputs[i] = pg->regs[NV_PGRAPH_COMBINECOLORI0 + i * 4];
         state.psh.rgb_outputs[i] = pg->regs[NV_PGRAPH_COMBINECOLORO0 + i * 4];
@@ -3164,7 +3381,7 @@ static void pgraph_bind_shaders(PGRAPHState *pg)
             GET_MASK(pg->regs[NV_PGRAPH_TEXFMT0 + i*4],
                      NV_PGRAPH_TEXFMT0_COLOR);
 
-        if (enabled && kelvin_color_format_map[color_format].linear) {
+        if (enabled && kelvin_color_format_map[color_format].encoding == linear) {
             state.psh.rect_tex[i] = true;
         }
 
@@ -3197,6 +3414,33 @@ static void pgraph_bind_shaders(PGRAPHState *pg)
     bool binding_changed = (pg->shader_binding != old_binding);
 
     glUseProgram(pg->shader_binding->gl_program);
+
+    /* Clipping regions */
+    for (i = 0; i < state.psh.window_clip_count; i++) {
+        if (pg->shader_binding->clip_region_loc[i] == -1) {
+            continue;
+        }
+
+        uint32_t x   = pg->regs[NV_PGRAPH_WINDOWCLIPX0 + i * 4];
+        GLuint x_min = GET_MASK(x, NV_PGRAPH_WINDOWCLIPX0_XMIN);
+        GLuint x_max = GET_MASK(x, NV_PGRAPH_WINDOWCLIPX0_XMAX);
+
+        /* Adjust y-coordinates for the OpenGL viewport: translate coordinates
+         * to have the origin at the bottom-left of the surface (as opposed to
+         * top-left), and flip y-min and y-max accordingly.
+         */
+        uint32_t y   = pg->regs[NV_PGRAPH_WINDOWCLIPY0 + i * 4];
+        GLuint y_min = (pg->surface_shape.clip_height - 1) -
+                       GET_MASK(y, NV_PGRAPH_WINDOWCLIPY0_YMAX);
+        GLuint y_max = (pg->surface_shape.clip_height - 1) -
+                       GET_MASK(y, NV_PGRAPH_WINDOWCLIPY0_YMIN);
+
+        pgraph_apply_anti_aliasing_factor(pg, &x_min, &y_min);
+        pgraph_apply_anti_aliasing_factor(pg, &x_max, &y_max);
+
+        glUniform4i(pg->shader_binding->clip_region_loc[i],
+                    x_min, y_min, x_max, y_max);
+    }
 
     pgraph_update_shader_constants(pg, pg->shader_binding, binding_changed,
                                    vertex_program, fixed_function);
@@ -3254,7 +3498,8 @@ static void pgraph_update_surface_part(NV2AState *d, bool upload, bool color) {
     hwaddr dma_address;
     GLuint *gl_buffer;
     unsigned int bytes_per_pixel;
-    GLenum gl_internal_format, gl_format, gl_type, gl_attachment;
+    GLint gl_internal_format;
+    GLenum gl_format, gl_type, gl_attachment;
 
     if (color) {
         surface = &pg->surface_color;
@@ -3425,7 +3670,7 @@ static void pgraph_update_surface_part(NV2AState *d, bool upload, bool color) {
         }
         surface->buffer_dirty = false;
 
-
+#ifdef DEBUG_NV2A
         uint8_t *out = data + surface->offset + 64;
         NV2A_DPRINTF("upload_surface %s 0x%" HWADDR_PRIx " - 0x%" HWADDR_PRIx ", "
                       "(0x%" HWADDR_PRIx " - 0x%" HWADDR_PRIx ", "
@@ -3439,7 +3684,7 @@ static void pgraph_update_surface_part(NV2AState *d, bool upload, bool color) {
             pg->surface_shape.clip_height,
             surface->pitch,
             out[0], out[1], out[2], out[3]);
-
+#endif
     }
 
     if (!upload && surface->draw_dirty) {
@@ -3475,6 +3720,7 @@ static void pgraph_update_surface_part(NV2AState *d, bool upload, bool color) {
         surface->draw_dirty = false;
         surface->write_enabled_cache = false;
 
+#ifdef DEBUG_NV2A
         uint8_t *out = data + surface->offset + 64;
         NV2A_DPRINTF("read_surface %s 0x%" HWADDR_PRIx " - 0x%" HWADDR_PRIx ", "
                       "(0x%" HWADDR_PRIx " - 0x%" HWADDR_PRIx ", "
@@ -3487,7 +3733,7 @@ static void pgraph_update_surface_part(NV2AState *d, bool upload, bool color) {
             pg->surface_shape.clip_width, pg->surface_shape.clip_height,
             surface->pitch,
             out[0], out[1], out[2], out[3]);
-
+#endif
     }
 
     if (swizzle) {
@@ -3605,9 +3851,10 @@ static void pgraph_bind_textures(NV2AState *d)
         unsigned int rect_height =
             GET_MASK(pg->regs[NV_PGRAPH_TEXIMAGERECT0 + i*4],
                      NV_PGRAPH_TEXIMAGERECT0_HEIGHT);
-
+#ifdef DEBUG_NV2A
         unsigned int lod_bias =
             GET_MASK(filter, NV_PGRAPH_TEXFILTER0_MIPMAP_LOD_BIAS);
+#endif
         unsigned int min_filter = GET_MASK(filter, NV_PGRAPH_TEXFILTER0_MIN);
         unsigned int mag_filter = GET_MASK(filter, NV_PGRAPH_TEXFILTER0_MAG);
 
@@ -3658,9 +3905,9 @@ static void pgraph_bind_textures(NV2AState *d)
             continue;
         }
 
-        NV2A_DPRINTF(" texture %d is format 0x%x, (r %d, %d or %d, %d, %d; %d%s),"
+        NV2A_DPRINTF(" texture %d is format 0x%x, off 0x%x (r %d, %d or %d, %d, %d; %d%s),"
                         " filter %x %x, levels %d-%d %d bias %d\n",
-                     i, color_format,
+                     i, color_format, offset,
                      rect_width, rect_height,
                      1 << log_width, 1 << log_height, 1 << log_depth,
                      pitch,
@@ -3678,7 +3925,7 @@ static void pgraph_bind_textures(NV2AState *d)
         }
 
         unsigned int width, height, depth;
-        if (f.linear) {
+        if (f.encoding == linear) {
             assert(dimensionality == 2);
             width = rect_width;
             height = rect_height;
@@ -3690,7 +3937,7 @@ static void pgraph_bind_textures(NV2AState *d)
 
             /* FIXME: What about 3D mipmaps? */
             levels = MIN(levels, max_mipmap_level + 1);
-            if (f.gl_format != 0) {
+            if (f.encoding == swizzled) {
                 /* Discard mipmap levels that would be smaller than 1x1.
                  * FIXME: Is this actually needed?
                  *
@@ -3756,7 +4003,7 @@ static void pgraph_bind_textures(NV2AState *d)
         NV2A_DPRINTF(" - 0x%tx\n", texture_data - d->vram_ptr);
 
         size_t length = 0;
-        if (f.linear) {
+        if (f.encoding == linear) {
             assert(cubemap == false);
             assert(dimensionality == 2);
             length = height * pitch;
@@ -3764,7 +4011,7 @@ static void pgraph_bind_textures(NV2AState *d)
             if (dimensionality >= 2) {
                 unsigned int w = width, h = height;
                 unsigned int level;
-                if (f.gl_format != 0) {
+                if (f.encoding == swizzled) {
                     for (level = 0; level < levels; level++) {
                         w = MAX(w, 1); h = MAX(h, 1);
                         length += w * h * f.bytes_per_pixel;
@@ -3832,8 +4079,8 @@ static void pgraph_bind_textures(NV2AState *d)
         glBindTexture(binding->gl_target, binding->gl_texture);
 
 
-        if (f.linear) {
-            /* somtimes games try to set mipmap min filters on linear textures.
+        if (f.encoding == linear) {
+            /* sometimes games try to set mipmap min filters on linear textures.
              * this could indicate a bug... */
             switch (min_filter) {
             case NV_PGRAPH_TEXFILTER0_MIN_BOX_NEARESTLOD:
@@ -4102,44 +4349,6 @@ static unsigned int pgraph_bind_inline_array(NV2AState *d)
     return index_count;
 }
 
-static void load_graphics_object(NV2AState *d, hwaddr instance_address,
-									GraphicsObject *obj)
-{
-	uint8_t *obj_ptr;
-	uint32_t switch1, switch2, switch3;
-	
-	assert(instance_address < d->pramin.ramin_size);
-
-	obj_ptr = d->pramin.ramin_ptr + instance_address;
-
-	switch1 = ldl_le_p((uint32_t*)obj_ptr);
-	switch2 = ldl_le_p((uint32_t*)(obj_ptr + 4));
-	switch3 = ldl_le_p((uint32_t*)(obj_ptr + 8));
-
-	obj->graphics_class = switch1 & NV_PGRAPH_CTX_SWITCH1_GRCLASS;
-
-	/* init graphics object */
-	switch (obj->graphics_class) {
-	case NV_KELVIN_PRIMITIVE:
-		// kelvin->vertex_attributes[NV2A_VERTEX_ATTR_DIFFUSE].inline_value = 0xFFFFFFF;
-		break;
-	default:
-		break;
-	}
-}
-
-static GraphicsObject* lookup_graphics_object(PGRAPHState *s,
-												hwaddr instance_address)
-{
-	int i;
-	for (i = 0; i<NV2A_NUM_SUBCHANNELS; i++) {
-		if (s->subchannel_data[i].object_instance == instance_address) {
-			return &s->subchannel_data[i].object;
-		}
-	}
-	return NULL;
-}
-
 /* 16 bit to [0.0, F16_MAX = 511.9375] */
 static float convert_f16_to_float(uint16_t f16) {
     if (f16 == 0x0000) { return 0.0f; }
@@ -4156,94 +4365,100 @@ static float convert_f24_to_float(uint32_t f24) {
     return *(float*)&i;
 }
 
-static uint8_t cliptobyte(int x)
-{
-    return (uint8_t)((x < 0) ? 0 : ((x > 255) ? 255 : x));
-}
+extern void __R6G5B5ToARGBRow_C(const uint8_t* src_r6g5b5, uint8_t* dst_argb, int width);
+extern void ____YUY2ToARGBRow_C(const uint8_t* src_yuy2, uint8_t* rgb_buf, int width);
+extern void ____UYVYToARGBRow_C(const uint8_t* src_uyvy, uint8_t* rgb_buf, int width);
 
-static void convert_yuy2_to_rgb(const uint8_t *line, unsigned int ix,
-                                uint8_t *r, uint8_t *g, uint8_t* b) {
-    int c, d, e;
-    c = (int)line[ix * 2] - 16;
-    if (ix % 2) {
-        d = (int)line[ix * 2 - 1] - 128;
-        e = (int)line[ix * 2 + 1] - 128;
-    } else {
-        d = (int)line[ix * 2 + 1] - 128;
-        e = (int)line[ix * 2 + 3] - 128;
-    }
-    *r = cliptobyte((298 * c + 409 * e + 128) >> 8);
-    *g = cliptobyte((298 * c - 100 * d - 208 * e + 128) >> 8);
-    *b = cliptobyte((298 * c + 516 * d + 128) >> 8);
-}
+/* 'converted_format' indicates the format that results when convert_texture_data() returns non-NULL converted_data. */
+static const int converted_format = NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_A8R8G8B8;
 
-static uint8_t* convert_texture_data(const TextureShape s,
+static uint8_t* convert_texture_data(const unsigned int color_format,
                                      const uint8_t *data,
                                      const uint8_t *palette_data,
-                                     unsigned int width,
-                                     unsigned int height,
-                                     unsigned int depth,
-                                     unsigned int row_pitch,
-                                     unsigned int slice_pitch)
+                                     const unsigned int width,
+                                     const unsigned int height,
+                                     const unsigned int depth,
+                                     const unsigned int row_pitch,
+                                     const unsigned int slice_pitch)
 {
-    if (s.color_format == NV097_SET_TEXTURE_FORMAT_COLOR_SZ_I8_A8R8G8B8) {
-        assert(depth == 1); /* FIXME */
-        uint8_t* converted_data = (uint8_t*)g_malloc(width * height * 4);
+	// Note : Unswizzle is already done when entering here
+	switch (color_format) {
+	case NV097_SET_TEXTURE_FORMAT_COLOR_SZ_I8_A8R8G8B8: {
+		// Test-case : WWE RAW2
+		assert(depth == 1); /* FIXME */
+		uint8_t* converted_data = (uint8_t*)g_malloc(width * height * 4);
 		unsigned int x, y;
-        for (y = 0; y < height; y++) {
-            for (x = 0; x < width; x++) {
-                uint8_t index = data[y * row_pitch + x];
-                uint32_t color = *(uint32_t*)(palette_data + index * 4);
-                *(uint32_t*)(converted_data + y * width * 4 + x * 4) = color;
-            }
-        }
-        return converted_data;
-    } else if (s.color_format
-                   == NV097_SET_TEXTURE_FORMAT_COLOR_LC_IMAGE_CR8YB8CB8YA8) {
-        assert(depth == 1); /* FIXME */
-        uint8_t* converted_data = (uint8_t*)g_malloc(width * height * 4);
-		unsigned int x, y;
-        for (y = 0; y < height; y++) {
-            const uint8_t* line = &data[y * s.width * 2];
-            for (x = 0; x < width; x++) {
-                uint8_t* pixel = &converted_data[(y * s.width + x) * 4];
-                /* FIXME: Actually needs uyvy? */
-                convert_yuy2_to_rgb(line, x, &pixel[0], &pixel[1], &pixel[2]);
-                pixel[3] = 255;
-          }
-        }
-        return converted_data;
-    } else if (s.color_format
-                   == NV097_SET_TEXTURE_FORMAT_COLOR_SZ_R6G5B5) {
-        assert(depth == 1); /* FIXME */
-        uint8_t *converted_data = (uint8_t*)g_malloc(width * height * 3);
-		unsigned int x, y;
-        for (y = 0; y < height; y++) {
-            for (x = 0; x < width; x++) {
-                uint16_t rgb655 = *(uint16_t*)(data + y * row_pitch + x * 2);
-                int8_t *pixel = (int8_t*)&converted_data[(y * width + x) * 3];
-                /* Maps 5 bit G and B signed value range to 8 bit
-                 * signed values. R is probably unsigned.
-                 */
-                rgb655 ^= (1 << 9) | (1 << 4);
-                pixel[0] = ((rgb655 & 0xFC00) >> 10) * 0x7F / 0x3F;
-                pixel[1] = ((rgb655 & 0x03E0) >> 5) * 0xFF / 0x1F - 0x80;
-                pixel[2] = (rgb655 & 0x001F) * 0xFF / 0x1F - 0x80;
-            }
-        }
-        return converted_data;
-    } else {
+		for (y = 0; y < height; y++) {
+			for (x = 0; x < width; x++) {
+				uint8_t index = data[y * row_pitch + x];
+				uint32_t color = *(uint32_t*)(palette_data + index * 4);
+				*(uint32_t*)(converted_data + y * width * 4 + x * 4) = color;
+			}
+		}
+		return converted_data;
+	}
+	case NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_X7SY9: {
+		assert(false); /* FIXME */
+		return NULL;
+	}
+	case NV097_SET_TEXTURE_FORMAT_COLOR_LC_IMAGE_CR8YB8CB8YA8: {
+		// Test-case : WWE RAW2
+		assert(depth == 1); /* FIXME */
+		uint8_t* converted_data = (uint8_t*)g_malloc(width * height * 4);
+		unsigned int y;
+		for (y = 0; y < height; y++) {
+			const uint8_t* line = &data[y * width * 2];
+			uint8_t* pixel = &converted_data[(y * width) * 4];
+			____YUY2ToARGBRow_C(line, pixel, width);
+			// Note : LC_IMAGE_CR8YB8CB8YA8 suggests UYVY format,
+			// but for an unknown reason, the actual encoding is YUY2
+		}
+		return converted_data;
+	}	
+	case NV097_SET_TEXTURE_FORMAT_COLOR_LC_IMAGE_YB8CR8YA8CB8: {
+		assert(depth == 1); /* FIXME */
+		uint8_t* converted_data = (uint8_t*)g_malloc(width * height * 4);
+		unsigned int y;
+		for (y = 0; y < height; y++) {
+			const uint8_t* line = &data[y * width * 2];
+			uint8_t* pixel = &converted_data[(y * width) * 4];
+			____UYVYToARGBRow_C(line, pixel, width); // TODO : Validate LC_IMAGE_YB8CR8YA8CB8 indeed requires ____UYVYToARGBRow_C()
+		}
+		return converted_data;
+	}
+	case NV097_SET_TEXTURE_FORMAT_COLOR_LC_IMAGE_A4V6YB6A4U6YA6: {
+		assert(false); /* FIXME */
+		return NULL;
+	}
+	case NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_A8CR8CB8Y8: {
+		assert(false); /* FIXME */
+		return NULL;
+	}
+	case NV097_SET_TEXTURE_FORMAT_COLOR_SZ_R6G5B5:
+	case NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_R6G5B5: {
+		assert(depth == 1); /* FIXME */
+		uint8_t *converted_data = (uint8_t*)g_malloc(width * height * 4);
+		unsigned int y;
+		for (y = 0; y < height; y++) {
+			uint16_t rgb655 = *(uint16_t*)(data + y * row_pitch);
+			int8_t *pixel = (int8_t*)&converted_data[(y * width) * 4];
+			__R6G5B5ToARGBRow_C((const uint8_t*)rgb655, (uint8_t*)pixel, width);
+		}
+		return converted_data;
+	}
+	default:
         return NULL;
     }
 }
 
-static void upload_gl_texture(GLenum gl_target,
+/* returns the format of the output, either identical to the input format, or the converted format - see converted_format */
+static int upload_gl_texture(GLenum gl_target,
                               const TextureShape s,
                               const uint8_t *texture_data,
                               const uint8_t *palette_data)
 {
 	//assert(pg->opengl_enabled);
-
+    int resulting_format = s.color_format;
     ColorFormatInfo f = kelvin_color_format_map[s.color_format];
 
     switch(gl_target) {
@@ -4256,18 +4471,29 @@ static void upload_gl_texture(GLenum gl_target,
         glPixelStorei(GL_UNPACK_ROW_LENGTH,
                       s.pitch / f.bytes_per_pixel);
 
-        uint8_t *converted = convert_texture_data(s, texture_data,
+		uint8_t *unswizzled = NULL;
+        if (f.encoding == swizzled) { // TODO : Verify this works correctly
+            unswizzled = (uint8_t*)g_malloc(s.height * s.pitch);
+            unswizzle_rect(texture_data, s.width, s.height,
+                            unswizzled, s.pitch, f.bytes_per_pixel);
+        }
+        uint8_t *converted = convert_texture_data(s.color_format, unswizzled ? unswizzled : texture_data,
                                                   palette_data,
                                                   s.width, s.height, 1,
                                                   s.pitch, 0);
 
-        glTexImage2D(gl_target, 0, f.gl_internal_format,
+        resulting_format = converted ? converted_format : s.color_format;
+        ColorFormatInfo cf = kelvin_color_format_map[resulting_format];
+        glTexImage2D(gl_target, 0, cf.gl_internal_format,
                      s.width, s.height, 0,
-                     f.gl_format, f.gl_type,
-                     converted ? converted : texture_data);
+                     cf.gl_format, cf.gl_type,
+                     converted ? converted : unswizzled ? unswizzled : texture_data);
 
         if (converted) {
           g_free(converted);
+        }
+		if (unswizzled) {
+			g_free(unswizzled);
         }
 
         glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
@@ -4285,7 +4511,7 @@ static void upload_gl_texture(GLenum gl_target,
 
         unsigned int level;
         for (level = 0; level < s.levels; level++) {
-            if (f.gl_format == 0) { /* compressed */
+            if (f.encoding == compressed) {
 
                 width = MAX(width, 4); height = MAX(height, 4);
 
@@ -4307,26 +4533,33 @@ static void upload_gl_texture(GLenum gl_target,
                 width = MAX(width, 1); height = MAX(height, 1);
 
                 unsigned int pitch = width * f.bytes_per_pixel;
-                uint8_t *unswizzled = (uint8_t*)g_malloc(height * pitch);
-                unswizzle_rect(texture_data, width, height,
-                               unswizzled, pitch, f.bytes_per_pixel);
+                uint8_t *unswizzled = NULL;
+                if (f.encoding == swizzled) {
+                    unswizzled = (uint8_t*)g_malloc(height * pitch);
+                    unswizzle_rect(texture_data, width, height,
+                                   unswizzled, pitch, f.bytes_per_pixel);
+                }
 
-                uint8_t *converted = convert_texture_data(s, unswizzled,
+                uint8_t *converted = convert_texture_data(s.color_format, unswizzled ? unswizzled : texture_data,
                                                           palette_data,
                                                           width, height, 1,
                                                           pitch, 0);
 
-                glTexImage2D(gl_target, level, f.gl_internal_format,
+                resulting_format = converted ? converted_format : s.color_format;
+                ColorFormatInfo cf = kelvin_color_format_map[resulting_format];
+                glTexImage2D(gl_target, level, cf.gl_internal_format,
                              width, height, 0,
-                             f.gl_format, f.gl_type,
-                             converted ? converted : unswizzled);
+                             cf.gl_format, cf.gl_type,
+                             converted ? converted : unswizzled ? unswizzled : texture_data);
 
                 if (converted) {
                     g_free(converted);
                 }
-                g_free(unswizzled);
+                if (unswizzled) {
+                    g_free(unswizzled);
+                }
 
-                texture_data += width * height * f.bytes_per_pixel;
+                texture_data += pitch * height;
             }
 
             width /= 2;
@@ -4339,32 +4572,35 @@ static void upload_gl_texture(GLenum gl_target,
 
         unsigned int width = s.width, height = s.height, depth = s.depth;
 
-        assert(f.gl_format != 0); /* FIXME: compressed not supported yet */
-        assert(f.linear == false);
-
         unsigned int level;
         for (level = 0; level < s.levels; level++) {
 
             unsigned int row_pitch = width * f.bytes_per_pixel;
             unsigned int slice_pitch = row_pitch * height;
-            uint8_t *unswizzled = (uint8_t*)g_malloc(slice_pitch * depth);
-            unswizzle_box(texture_data, width, height, depth, unswizzled,
-                           row_pitch, slice_pitch, f.bytes_per_pixel);
-
-            uint8_t *converted = convert_texture_data(s, unswizzled,
+            uint8_t *unswizzled = NULL;
+            if (f.encoding == swizzled) {
+                unswizzled = (uint8_t*)g_malloc(slice_pitch * depth);
+                unswizzle_box(texture_data, width, height, depth, unswizzled,
+                               row_pitch, slice_pitch, f.bytes_per_pixel);
+            }
+            uint8_t *converted = convert_texture_data(s.color_format, unswizzled ? unswizzled : texture_data,
                                                       palette_data,
                                                       width, height, depth,
                                                       row_pitch, slice_pitch);
 
-            glTexImage3D(gl_target, level, f.gl_internal_format,
+            resulting_format = converted ? converted_format : s.color_format;
+            ColorFormatInfo cf = kelvin_color_format_map[resulting_format];
+            glTexImage3D(gl_target, level, cf.gl_internal_format,
                          width, height, depth, 0,
-                         f.gl_format, f.gl_type,
-                         converted ? converted : unswizzled);
+                         cf.gl_format, cf.gl_type,
+                         converted ? converted : unswizzled ? unswizzled : texture_data);
 
             if (converted) {
                 g_free(converted);
             }
-            g_free(unswizzled);
+            if (unswizzled) {
+                g_free(unswizzled);
+            }
 
             texture_data += width * height * depth * f.bytes_per_pixel;
 
@@ -4378,6 +4614,7 @@ static void upload_gl_texture(GLenum gl_target,
         assert(false);
         break;
     }
+	return resulting_format;
 }
 
 static TextureBinding* generate_texture(const TextureShape s,
@@ -4394,11 +4631,11 @@ static TextureBinding* generate_texture(const TextureShape s,
 
     GLenum gl_target;
     if (s.cubemap) {
-        assert(f.linear == false);
+        assert(f.encoding != linear);
         assert(s.dimensionality == 2);
         gl_target = GL_TEXTURE_CUBE_MAP;
     } else {
-        if (f.linear) {
+        if (f.encoding == linear) { /* FIXME : Include compressed too? (!= swizzled) */
             /* linear textures use unnormalised texcoords.
              * GL_TEXTURE_RECTANGLE_ARB conveniently also does, but
              * does not allow repeat and mirror wrap modes.
@@ -4425,9 +4662,23 @@ static TextureBinding* generate_texture(const TextureShape s,
 
     NV2A_GL_DLABEL(GL_TEXTURE, gl_texture,
                    "format: 0x%02X%s, %d dimensions%s, width: %d, height: %d, depth: %d",
-                   s.color_format, f.linear ? "" : " (SZ)",
+                   s.color_format, (f.encoding == linear) ? "" : (f.encoding == swizzled) ? " (SZ)" : " (DXT)", // compressed
                    s.dimensionality, s.cubemap ? " (Cubemap)" : "",
                    s.width, s.height, s.depth);
+
+    /* Linear textures don't support mipmapping */
+    if (f.encoding != linear) {
+        glTexParameteri(gl_target, GL_TEXTURE_BASE_LEVEL,
+            s.min_mipmap_level);
+        glTexParameteri(gl_target, GL_TEXTURE_MAX_LEVEL,
+            s.levels - 1);
+    }
+
+	/* Set this before calling upload_gl_texture() to prevent potential conversions */
+    if (f.gl_swizzle_mask) {
+        glTexParameteriv(gl_target, GL_TEXTURE_SWIZZLE_RGBA,
+                         f.gl_swizzle_mask);
+    }
 
     if (gl_target == GL_TEXTURE_CUBE_MAP) {
 
@@ -4455,20 +4706,6 @@ static TextureBinding* generate_texture(const TextureShape s,
                           s, texture_data + 5 * length, palette_data);
     } else {
         upload_gl_texture(gl_target, s, texture_data, palette_data);
-    }
-
-    /* Linear textures don't support mipmapping */
-    if (!f.linear) {
-        glTexParameteri(gl_target, GL_TEXTURE_BASE_LEVEL,
-            s.min_mipmap_level);
-        glTexParameteri(gl_target, GL_TEXTURE_MAX_LEVEL,
-            s.levels - 1);
-    }
-
-    if (f.gl_swizzle_mask[0] != 0 || f.gl_swizzle_mask[1] != 0
-        || f.gl_swizzle_mask[2] != 0 || f.gl_swizzle_mask[3] != 0) {
-        glTexParameteriv(gl_target, GL_TEXTURE_SWIZZLE_RGBA,
-                         (const GLint *)f.gl_swizzle_mask);
     }
 
     TextureBinding* ret = (TextureBinding *)g_malloc(sizeof(TextureBinding));
