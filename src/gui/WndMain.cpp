@@ -1242,6 +1242,13 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 			}
 			break;
 #endif
+			case ID_USELOADEREXEC:
+			{
+				g_Settings->m_core.bUseLoaderExec = !g_Settings->m_core.bUseLoaderExec;
+				RefreshMenus();
+			}
+			break;
+
             case ID_EMULATION_START:
                 if (m_Xbe != nullptr)
                 {
@@ -1718,8 +1725,8 @@ void WndMain::RefreshMenus()
 			//chk_flag = (g_Settings->m_core.FlagsLLE & LLE_USB) ? MF_CHECKED : MF_UNCHECKED; // Reenable this when LLE USB actually works
 			//CheckMenuItem(settings_menu, ID_EMULATION_LLE_USB, chk_flag);
 
-			chk_flag = g_Settings->m_core.loaderExperiment ? MF_CHECKED : MF_UNCHECKED;
-			CheckMenuItem(settings_menu, ID_EXPERIMENTAL_LOADERPROJECT, chk_flag);
+			chk_flag = g_Settings->m_core.bUseLoaderExec ? MF_CHECKED : MF_UNCHECKED;
+			CheckMenuItem(settings_menu, ID_USELOADEREXEC, chk_flag);
 
 			chk_flag = (g_Settings->m_hacks.DisablePixelShaders) ? MF_CHECKED : MF_UNCHECKED;
 			CheckMenuItem(settings_menu, ID_HACKS_DISABLEPIXELSHADERS, chk_flag);
@@ -2235,7 +2242,7 @@ void WndMain::StartEmulation(HWND hwndParent, DebuggerState LocalDebuggerState /
 
 		char szExeFileName[MAX_PATH];
 		GetModuleFileName(GetModuleHandle(nullptr), szExeFileName, MAX_PATH);
-		if (g_Settings->m_core.loaderExperiment) {
+		if (g_Settings->m_core.bUseLoaderExec) {
 			PathRemoveFileSpec(szExeFileName);
 			PathAppend(szExeFileName, "\\cxbxr-ldr.exe");
 		}

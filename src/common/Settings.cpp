@@ -59,7 +59,7 @@ uint16_t g_LibVersion_DSOUND = 0;
 // * 4: (LukeUsher), added network settings
 // * 5: (ergo720),   added new input gui settings and revision to core
 ///////////////////////////
-const unsigned int settings_version = 5;
+const unsigned int settings_version = 6;
 
 Settings* g_Settings = nullptr;
 
@@ -89,7 +89,7 @@ static struct {
 	const char* AllowAdminPrivilege = "AllowAdminPrivilege";
 	const char* LoggedModules = "LoggedModules";
 	const char* LogLevel = "LogLevel";
-	const char* LoaderExperiment = "LoaderExperiment";
+	const char* LoaderExecutable = "LoaderExecutable";
 } sect_core_keys;
 
 static const char* section_video = "video";
@@ -351,7 +351,7 @@ bool Settings::LoadConfig()
 		index++;
 	}
 
-	m_core.loaderExperiment = m_si.GetBoolValue(section_core, sect_core_keys.LoaderExperiment, /*Default=*/false);
+	m_core.bUseLoaderExec = m_si.GetBoolValue(section_core, sect_core_keys.LoaderExecutable, /*Default=*/true);
 
 	// ==== Core End ============
 
@@ -528,7 +528,7 @@ bool Settings::Save(std::string file_path)
 		m_si.SetValue(section_core, sect_core_keys.LoggedModules, stream.str().c_str(), nullptr, false);
 	}
 
-	m_si.SetBoolValue(section_core, sect_core_keys.LoaderExperiment, m_core.loaderExperiment, nullptr, true);
+	m_si.SetBoolValue(section_core, sect_core_keys.LoaderExecutable, m_core.bUseLoaderExec, nullptr, true);
 
 	// ==== Core End ============
 
@@ -872,6 +872,9 @@ void Settings::RemoveLegacyConfigs(unsigned int CurrentRevision)
 		m_si.Delete(section_controller_port, nullptr, true);
 		break;
 	case 5:
+		m_si.Delete(section_core, "LoaderExperiment", true);
+		break;
+	case 6:
 	default:
 		break;
 	}
