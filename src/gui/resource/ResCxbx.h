@@ -362,7 +362,7 @@
 #define ID_SETTINGS_CONFIG_NETWORK      40111
 #define ID_SYNC_CONFIG_INPUT            40112
 #define ID_SETTINGS_EXPERIMENTAL        40113
-#define ID_EXPERIMENTAL_LOADERPROJECT   40114
+#define ID_USELOADEREXEC                40114
 #define IDC_STATIC                      -1
 
 // Next default values for new objects
