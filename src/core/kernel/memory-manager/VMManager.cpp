@@ -77,20 +77,12 @@ bool VirtualMemoryArea::CanBeMergedWith(const VirtualMemoryArea& next) const
 void VMManager::Initialize(unsigned int SystemType, int BootFlags, blocks_reserved_t blocks_reserved)
 {
 	if ((BootFlags & BOOT_QUICK_REBOOT) == 0) {
-#ifndef CXBXR_EMU
-		SystemType = g_bIsRetail ? SYSTEM_XBOX : g_bIsChihiro ? SYSTEM_CHIHIRO : SYSTEM_DEVKIT; // TODO: Temporary placeholder until loader is functional.
-#endif
 		g_EmuShared->SetMmLayout(&SystemType);
 	}
 	else {
 		g_EmuShared->GetMmLayout(&SystemType);
 	}
 
-#ifndef CXBXR_EMU
-	if (!ReserveAddressRanges(SystemType, blocks_reserved)) {
-		CxbxKrnlCleanup("Failed to reserve required memory ranges!", GetLastError());
-	}
-#endif
 	m_MmLayoutChihiro = (SystemType == SYSTEM_CHIHIRO);
 	m_MmLayoutDebug = (SystemType == SYSTEM_DEVKIT);
 	m_MmLayoutRetail = (SystemType == SYSTEM_XBOX);

@@ -1130,10 +1130,16 @@ void CxbxKrnlEmulate(unsigned int reserved_systems, blocks_reserved_t blocks_res
 #endif
 
 #ifndef CXBXR_EMU
+		// Only for GUI executable with emulation code.
+		blocks_reserved_t blocks_reserved_gui = { 0 };
+		// Reserve console system's memory ranges before start initialize.
+		if (!ReserveAddressRanges(emulate_system, blocks_reserved_gui)) {
+			CxbxKrnlCleanup("Failed to reserve required memory ranges!", GetLastError());
+		}
 		// Initialize the memory manager
-		blocks_reserved_t SystemDevBlocksReserved = { 0 };
-		g_VMManager.Initialize(0, BootFlags, SystemDevBlocksReserved);
+		g_VMManager.Initialize(emulate_system, BootFlags, blocks_reserved_gui);
 #else
+		// Release unnecessary memory ranges to allow console/host to use those memory ranges.
 		FreeAddressRanges(emulate_system, reserved_systems, blocks_reserved);
 		// Initialize the memory manager
 		g_VMManager.Initialize(emulate_system, BootFlags, blocks_reserved);
