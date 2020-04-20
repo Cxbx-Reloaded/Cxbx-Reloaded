@@ -28,7 +28,7 @@
 #include"Button.h"
 #include "InputManager.h"
 #include "layout_xbox_controller.h"
-#include "..\..\gui\ResCxbx.h"
+#include "gui/resource/ResCxbx.h"
 
 
 EmuDevice::EmuDevice(int type, HWND hwnd)
@@ -38,7 +38,7 @@ EmuDevice::EmuDevice(int type, HWND hwnd)
 	case to_underlying(XBOX_INPUT_DEVICE::MS_CONTROLLER_DUKE):
 	case to_underlying(XBOX_INPUT_DEVICE::MS_CONTROLLER_S): {
 		m_hwnd = hwnd;
-		for (int i = 0; i < ARRAY_SIZE(button_xbox_ctrl_id); i++) {
+		for (size_t i = 0; i < ARRAY_SIZE(button_xbox_ctrl_id); i++) {
 			m_buttons.push_back(new Button(button_xbox_ctrl_id[i], i, hwnd));
 
 			// Install the subclass for the button control

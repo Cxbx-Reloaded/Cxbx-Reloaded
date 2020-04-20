@@ -85,9 +85,12 @@ file (GLOB CXBXR_HEADER_COMMON
  "${CXBXR_ROOT_DIR}/src/common/ReservedMemory.h"
  "${CXBXR_ROOT_DIR}/src/common/Settings.hpp"
  "${CXBXR_ROOT_DIR}/src/common/Timer.h"
+ "${CXBXR_ROOT_DIR}/src/common/util/cliConfig.hpp"
+ "${CXBXR_ROOT_DIR}/src/common/util/cliConverter.hpp"
  "${CXBXR_ROOT_DIR}/src/common/util/CPUID.h"
  "${CXBXR_ROOT_DIR}/src/common/util/crc32c.h"
  "${CXBXR_ROOT_DIR}/src/common/util/CxbxUtil.h"
+ "${CXBXR_ROOT_DIR}/src/common/util/std_extend.hpp"
  "${CXBXR_ROOT_DIR}/src/common/util/strConverter.hpp"
  "${CXBXR_ROOT_DIR}/src/common/win32/AlignPosfix1.h"
  "${CXBXR_ROOT_DIR}/src/common/win32/AlignPrefix1.h"
@@ -97,6 +100,7 @@ file (GLOB CXBXR_HEADER_COMMON
  "${CXBXR_ROOT_DIR}/src/common/xbdm/CxbxXbdm.h"
  "${CXBXR_ROOT_DIR}/src/common/xbe/Xbe.h"
  "${CXBXR_ROOT_DIR}/src/common/xbe/XbePrinter.h"
+ "${CXBXR_ROOT_DIR}/src/common/xbox/Types.hpp"
  "${CXBXR_ROOT_DIR}/src/common/xdvdfs-tools/buffered_io.h"
  "${CXBXR_ROOT_DIR}/src/common/xdvdfs-tools/xdvdfs.h"
  "${CXBXR_ROOT_DIR}/src/Cxbx.h"
@@ -125,6 +129,7 @@ file (GLOB CXBXR_HEADER_GUIv1
 
 # Emulator (module)
 file (GLOB CXBXR_HEADER_EMU
+ "${CXBXR_ROOT_DIR}/src/common/AddressRanges.h"
  "${CXBXR_ROOT_DIR}/src/common/util/gloffscreen/glextensions.h"
  "${CXBXR_ROOT_DIR}/src/common/util/gloffscreen/gloffscreen.h"
  "${CXBXR_ROOT_DIR}/src/common/XADPCM.h"
@@ -217,6 +222,8 @@ file (GLOB CXBXR_SOURCE_COMMON
  "${CXBXR_ROOT_DIR}/src/common/Logging.cpp"
  "${CXBXR_ROOT_DIR}/src/common/Settings.cpp"
  "${CXBXR_ROOT_DIR}/src/common/Timer.cpp"
+ "${CXBXR_ROOT_DIR}/src/common/util/cliConfig.cpp"
+ "${CXBXR_ROOT_DIR}/src/common/util/cliConverter.cpp"
  "${CXBXR_ROOT_DIR}/src/common/util/crc32c.cpp"
  "${CXBXR_ROOT_DIR}/src/common/util/CxbxUtil.cpp"
  "${CXBXR_ROOT_DIR}/src/common/util/hasher.cpp"
@@ -228,6 +235,7 @@ file (GLOB CXBXR_SOURCE_COMMON
  "${CXBXR_ROOT_DIR}/src/common/xbdm/CxbxXbdm.cpp"
  "${CXBXR_ROOT_DIR}/src/common/xbe/Xbe.cpp"
  "${CXBXR_ROOT_DIR}/src/common/xbe/XbePrinter.cpp"
+ "${CXBXR_ROOT_DIR}/src/common/xbox/Types.cpp"
  "${CXBXR_ROOT_DIR}/src/common/xdvdfs-tools/buffered_io.cpp"
  "${CXBXR_ROOT_DIR}/src/common/xdvdfs-tools/xdvdfs.cpp"
  "${CXBXR_ROOT_DIR}/src/CxbxVersion.cpp"
@@ -261,6 +269,8 @@ file (GLOB CXBXR_KRNL_CPP
 file (GLOB CXBXR_SOURCE_EMU
  "${CXBXR_KRNL_CPP}"
  "${CXBXR_ROOT_DIR}/HighPerformanceGraphicsEnabler.c"
+ "${CXBXR_ROOT_DIR}/src/common/AddressRanges.cpp"
+ "${CXBXR_ROOT_DIR}/src/common/VerifyAddressRanges.cpp"
  "${CXBXR_ROOT_DIR}/src/common/util/gloffscreen/glextensions.cpp"
  "${CXBXR_ROOT_DIR}/src/common/util/gloffscreen/gloffscreen_common.cpp"
  "${CXBXR_ROOT_DIR}/src/common/util/gloffscreen/gloffscreen_wgl.cpp"
@@ -362,9 +372,15 @@ file (GLOB CXBXR_SOURCE_EMU
  "${CXBXR_ROOT_DIR}/src/devices/video/swizzle.cpp"
  "${CXBXR_ROOT_DIR}/src/devices/x86/EmuX86.cpp"
  "${CXBXR_ROOT_DIR}/src/devices/Xbox.cpp"
+ # Temporary usage for need ReserveAddressRanges func with cxbx.exe's emulation.
+ "${CXBXR_ROOT_DIR}/src/common/ReserveAddressRanges.cpp"
 )
 
 add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/projects/cxbx")
+
+add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/projects/cxbxr-ldr")
+
+add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/projects/cxbxr-emu")
 
 # Issues with compile (the same with develop branch) and
 # for some reason did not put the files into virtual folder?
@@ -395,6 +411,6 @@ if(${CMAKE_GENERATOR} MATCHES "Visual Studio ([^9]|[9][0-9])")
 endif()
 
 # Cxbx-Reloaded project with third-party libraries
-set_target_properties(cxbx subhook XbSymbolDatabase libtommath libtomcrypt
+set_target_properties(cxbx cxbxr-ldr cxbxr-emu subhook XbSymbolDatabase libtommath libtomcrypt
  PROPERTIES FOLDER Cxbx-Reloaded
 )

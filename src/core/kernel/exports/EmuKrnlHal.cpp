@@ -38,7 +38,7 @@ namespace xboxkrnl
 #include "Logging.h" // For LOG_FUNC()
 #include "EmuKrnl.h" // For InitializeListHead(), etc.
 #include "EmuKrnlLogging.h"
-#include "core\kernel\init\CxbxKrnl.h" // For CxbxKrnlCleanup, CxbxConvertArgToString, and CxbxExec
+#include "core\kernel\init\CxbxKrnl.h" // For CxbxKrnlCleanup, and CxbxExec
 #include "core\kernel\support\Emu.h" // For EmuLog(LOG_LEVEL::WARNING, )
 #include "EmuKrnl.h"
 #include "devices\x86\EmuX86.h" // HalReadWritePciSpace needs this
@@ -48,6 +48,8 @@ namespace xboxkrnl
 #include "devices\Xbox.h" // For g_SMBus, SMBUS_ADDRESS_SYSTEM_MICRO_CONTROLLER
 #include "devices\SMCDevice.h" // For SMC_COMMAND_SCRATCH
 #include "common/util/strConverter.hpp" // for utf16_to_ascii
+#include "core\kernel\memory-manager\VMManager.h"
+#include "common/util/cliConfig.hpp"
 
 #include <algorithm> // for std::replace
 #include <locale>
@@ -561,21 +563,40 @@ XBSYSAPI EXPORTNUM(49) xboxkrnl::VOID DECLSPEC_NORETURN NTAPI xboxkrnl::HalRetur
 
 			// Relaunch Cxbx, to load another Xbe
 			{
-				bool bMultiXbe = true;
 				int QuickReboot;
 				g_EmuShared->GetBootFlags(&QuickReboot);
 				QuickReboot |= BOOT_QUICK_REBOOT;
 				g_EmuShared->SetBootFlags(&QuickReboot);
 
+				g_VMManager.SavePersistentMemory();
+
 				// Some titles (Xbox Dashboard and retail/demo discs) use ";" as a current directory path seperator
 				// This process is handled during initialization. No speical handling here required.
 
-				std::string szProcArgsBuffer;
-				CxbxConvertArgToString(szProcArgsBuffer, szFilePath_CxbxReloaded_Exe, XbePath.c_str(), CxbxKrnl_hEmuParent, CxbxKrnl_DebugMode, CxbxKrnl_DebugFileName.c_str());
-
-				if (!CxbxExec(szProcArgsBuffer, nullptr, false)) {
+				cli_config::SetLoad(XbePath);
+				if (!CxbxExec(false, nullptr, false)) {
 					CxbxKrnlCleanup("Could not launch %s", XbePath.c_str());
 				}
+
+				// This is a requirement to have shared memory buffers remain alive and transfer to new emulation process.
+				unsigned int retryAttempt = 0;
+				unsigned int curProcID = 0;
+				unsigned int oldProcID = GetCurrentProcessId();
+				while(true) {
+					std::this_thread::sleep_for(std::chrono::milliseconds(100));
+					g_EmuShared->GetKrnlProcID(&curProcID);
+					// Break when new emulation process has take over.
+					if (curProcID != oldProcID) {
+						break;
+					}
+					retryAttempt++;
+					// Terminate after 5 seconds of failure.
+					if (retryAttempt >= (5 * (1000 / 100))) {
+						CxbxShowError("Could not reboot, new emulation process did not take over.");
+						break;
+					}
+				}
+
 			}
 		}
 		break;
@@ -587,15 +608,12 @@ XBSYSAPI EXPORTNUM(49) xboxkrnl::VOID DECLSPEC_NORETURN NTAPI xboxkrnl::HalRetur
 
 	case ReturnFirmwareFatal:
 	{
-		// NOTE: the error code is displayed by ExDisplayFatalError by other code paths so we need to change our corresponding
-		// paths if we want to emulate all the possible fatal errors
-
 		xboxkrnl::HalWriteSMBusValue(SMBUS_ADDRESS_SYSTEM_MICRO_CONTROLLER, SMC_COMMAND_SCRATCH, 0, SMC_SCRATCH_DISPLAY_FATAL_ERROR);
 
-		std::string szProcArgsBuffer;
-		CxbxConvertArgToString(szProcArgsBuffer, szFilePath_CxbxReloaded_Exe, szFilePath_Xbe, CxbxKrnl_hEmuParent, CxbxKrnl_DebugMode, CxbxKrnl_DebugFileName.c_str());
+		g_VMManager.SavePersistentMemory();
 
-		if (!CxbxExec(szProcArgsBuffer, nullptr, false)) {
+		cli_config::SetLoad(szFilePath_Xbe);
+		if (!CxbxExec(false, nullptr, false)) {
 			CxbxKrnlCleanup("Could not launch %s", szFilePath_Xbe);
 		}
 		break;
@@ -610,7 +628,7 @@ XBSYSAPI EXPORTNUM(49) xboxkrnl::VOID DECLSPEC_NORETURN NTAPI xboxkrnl::HalRetur
 	}
 
 	EmuShared::Cleanup();
-	ExitProcess(EXIT_SUCCESS);
+	TerminateProcess(GetCurrentProcess(), EXIT_SUCCESS);
 }
 
 // ******************************************************************

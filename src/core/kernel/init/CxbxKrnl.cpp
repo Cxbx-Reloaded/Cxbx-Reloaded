@@ -34,7 +34,7 @@ namespace xboxkrnl
     #include <xboxkrnl/xboxkrnl.h>
 };
 
-#include "gui\ResCxbx.h"
+#include "gui/resource/ResCxbx.h"
 #include "core\kernel\init\CxbxKrnl.h"
 #include "common\xbdm\CxbxXbdm.h" // For Cxbx_LibXbdmThunkTable
 #include "CxbxVersion.h"
@@ -52,6 +52,10 @@ namespace xboxkrnl
 #include "ReservedMemory.h" // For virtual_memory_placeholder
 #include "core\kernel\memory-manager\VMManager.h"
 #include "CxbxDebugger.h"
+#include "common/util/cliConfig.hpp"
+#include "common/util/xxhash.h"
+#include "common/ReserveAddressRanges.h"
+#include "common/xbox/Types.hpp"
 
 #include <clocale>
 #include <process.h>
@@ -88,14 +92,11 @@ static std::vector<HANDLE> g_hThreads;
 char szFilePath_CxbxReloaded_Exe[MAX_PATH] = { 0 };
 char szFolder_CxbxReloadedData[MAX_PATH] = { 0 };
 char szFilePath_EEPROM_bin[MAX_PATH] = { 0 };
-char szFilePath_memory_bin[MAX_PATH] = { 0 };
-char szFilePath_page_tables[MAX_PATH] = { 0 };
 char szFilePath_Xbe[MAX_PATH*2] = { 0 }; // NOTE: LAUNCH_DATA_HEADER's szLaunchPath is MAX_PATH*2 = 520
 
 std::string CxbxBasePath;
 HANDLE CxbxBasePathHandle;
 Xbe* CxbxKrnl_Xbe = NULL;
-XbeType g_XbeType = xtRetail;
 bool g_bIsChihiro = false;
 bool g_bIsDebug = false;
 bool g_bIsRetail = false;
@@ -116,23 +117,6 @@ ULONG g_CxbxFatalErrorCode = FATAL_ERROR_NONE;
 
 // Define function located in EmuXApi so we can call it from here
 void SetupXboxDeviceTypes();
-
-// ported from Dxbx's XbeExplorer
-XbeType GetXbeType(Xbe::Header *pXbeHeader)
-{
-	// Detect if the XBE is for Chihiro (Untested!) :
-	// This is based on https://github.com/radare/radare2/blob/master/libr/bin/p/bin_xbe.c#L45
-	if ((pXbeHeader->dwEntryAddr & 0xf0000000) == 0x40000000)
-		return xtChihiro;
-
-	// Check for Debug XBE, using high bit of the kernel thunk address :
-	// (DO NOT test like https://github.com/radare/radare2/blob/master/libr/bin/p/bin_xbe.c#L49 !)
-	if ((pXbeHeader->dwKernelImageThunkAddr & 0x80000000) > 0)
-		return xtDebug;
-
-	// Otherwise, the XBE is a Retail build :
-	return xtRetail;
-}
 
 void ApplyMediaPatches()
 {
@@ -290,205 +274,19 @@ std::string CxbxGetLastErrorString(char * lpszFunction)
 	return result;
 }
 
-HANDLE CxbxRestoreContiguousMemory(char *szFilePath_memory_bin)
-{
-	// First, try to open an existing memory.bin file :
-	HANDLE hFile = CreateFile(szFilePath_memory_bin,
-		GENERIC_READ | GENERIC_WRITE | GENERIC_EXECUTE,
-		FILE_SHARE_READ | FILE_SHARE_WRITE,
-		/* lpSecurityAttributes */nullptr,
-		OPEN_EXISTING,
-		FILE_ATTRIBUTE_NORMAL, // FILE_FLAG_WRITE_THROUGH
-		/* hTemplateFile */nullptr);
-
-	bool NeedsInitialization = (hFile == INVALID_HANDLE_VALUE);
-	if (NeedsInitialization)
-	{
-		// If the memory.bin file doesn't exist yet, create it :
-		hFile = CreateFile(szFilePath_memory_bin,
-			GENERIC_READ | GENERIC_WRITE | GENERIC_EXECUTE,
-			FILE_SHARE_READ | FILE_SHARE_WRITE,
-			/* lpSecurityAttributes */nullptr,
-			OPEN_ALWAYS,
-			FILE_ATTRIBUTE_NORMAL, // FILE_FLAG_WRITE_THROUGH
-			/* hTemplateFile */nullptr);
-		if (hFile == INVALID_HANDLE_VALUE)
-		{
-			CxbxKrnlCleanup("%s : Couldn't create memory.bin file!\n", __func__);
-			return nullptr;
-		}
-	}
-
-	// Make sure memory.bin is at least 128 MB in size
-	SetFilePointer(hFile, CHIHIRO_MEMORY_SIZE, nullptr, FILE_BEGIN);
-	SetEndOfFile(hFile);
-
-	HANDLE hFileMapping = CreateFileMapping(
-		hFile,
-		/* lpFileMappingAttributes */nullptr,
-		PAGE_EXECUTE_READWRITE,
-		/* dwMaximumSizeHigh */0,
-		/* dwMaximumSizeLow */CHIHIRO_MEMORY_SIZE,
-		/**/nullptr);
-	if (hFileMapping == NULL)
-	{
-		CxbxKrnlCleanup("%s : Couldn't create contiguous memory.bin file mapping!\n", __func__);
-		return nullptr;
-	}
-
-	LARGE_INTEGER  len_li;
-	GetFileSizeEx(hFile, &len_li);
-	unsigned int FileSize = len_li.u.LowPart;
-	if (FileSize != CHIHIRO_MEMORY_SIZE)
-	{
-		CxbxKrnlCleanup("%s : memory.bin file is not 128 MiB large!\n", __func__);
-		return nullptr;
-	}
-
-	// Map memory.bin contents into memory :
-	void *memory = (void *)MapViewOfFileEx(
-		hFileMapping,
-		FILE_MAP_READ | FILE_MAP_WRITE | FILE_MAP_EXECUTE,
-		/* dwFileOffsetHigh */0,
-		/* dwFileOffsetLow */0,
-		CONTIGUOUS_MEMORY_CHIHIRO_SIZE,
-		(void *)CONTIGUOUS_MEMORY_BASE);
-	if (memory != (void *)CONTIGUOUS_MEMORY_BASE)
-	{
-		if (memory)
-			UnmapViewOfFile(memory);
-
-		CxbxKrnlCleanup("%s: Couldn't map contiguous memory.bin to 0x80000000!", __func__);
-		return nullptr;
-	}
-
-	EmuLogInit(LOG_LEVEL::INFO, "Mapped %d MiB of Xbox contiguous memory at 0x%.8X to 0x%.8X",
-		 CONTIGUOUS_MEMORY_CHIHIRO_SIZE / ONE_MB, CONTIGUOUS_MEMORY_BASE, CONTIGUOUS_MEMORY_BASE + CONTIGUOUS_MEMORY_CHIHIRO_SIZE - 1);
-
-	if (NeedsInitialization)
-	{
-		memset(memory, 0, CONTIGUOUS_MEMORY_CHIHIRO_SIZE);
-		EmuLogInit(LOG_LEVEL::INFO, "Initialized contiguous memory");
-	}
-	else
-		EmuLogInit(LOG_LEVEL::INFO, "Loaded contiguous memory.bin");
-
-	size_t tiledMemorySize = XBOX_WRITE_COMBINED_SIZE;
-	if (g_bIsWine) {
-		EmuLogInit(LOG_LEVEL::INFO, "Wine detected: Using 64MB Tiled Memory Size");
-		// TODO: Figure out why Wine needs this and Windows doesn't.
-		// Perhaps it's a Wine bug, or perhaps Wine reserves this memory for it's own usage?
-		tiledMemorySize = XBOX_WRITE_COMBINED_SIZE / 2;
-	}
-
-	// Map memory.bin contents into tiled memory too :
-	void *tiled_memory = (void *)MapViewOfFileEx(
-		hFileMapping,
-		FILE_MAP_READ | FILE_MAP_WRITE,
-		/* dwFileOffsetHigh */0,
-		/* dwFileOffsetLow */0,
-		tiledMemorySize,
-		(void *)XBOX_WRITE_COMBINED_BASE);
-
-	if (tiled_memory != (void *)XBOX_WRITE_COMBINED_BASE)
-	{
-		if (tiled_memory)
-			UnmapViewOfFile(tiled_memory);
-
-		CxbxKrnlCleanup("%s: Couldn't map contiguous memory.bin into tiled memory at 0xF0000000!", __func__);
-		return nullptr;
-	}
-
-	EmuLogInit(LOG_LEVEL::INFO, "Mapped contiguous memory to Xbox tiled memory at 0x%.8X to 0x%.8X",
-		XBOX_WRITE_COMBINED_BASE, XBOX_WRITE_COMBINED_BASE + tiledMemorySize - 1);
-
-
-	return hFileMapping;
-}
-
-HANDLE CxbxRestorePageTablesMemory(char* szFilePath_page_tables)
-{
-	// First, try to open an existing PageTables.bin file :
-	HANDLE hFile = CreateFile(szFilePath_page_tables,
-		GENERIC_READ | GENERIC_WRITE,
-		FILE_SHARE_READ | FILE_SHARE_WRITE,
-		/* lpSecurityAttributes */nullptr,
-		OPEN_EXISTING,
-		FILE_ATTRIBUTE_NORMAL, // FILE_FLAG_WRITE_THROUGH
-		/* hTemplateFile */nullptr);
-
-	bool NeedsInitialization = (hFile == INVALID_HANDLE_VALUE);
-	if (NeedsInitialization)
-	{
-		// If the PageTables.bin file doesn't exist yet, create it :
-		hFile = CreateFile(szFilePath_page_tables,
-		GENERIC_READ | GENERIC_WRITE,
-		FILE_SHARE_READ | FILE_SHARE_WRITE,
-		/* lpSecurityAttributes */nullptr,
-		OPEN_ALWAYS,
-		FILE_ATTRIBUTE_NORMAL, // FILE_FLAG_WRITE_THROUGH
-		/* hTemplateFile */nullptr);
-		if (hFile == INVALID_HANDLE_VALUE)
-		{
-			CxbxKrnlCleanup("%s : Couldn't create PageTables.bin file!\n", __func__);
-		}
-	}
-
-	// Make sure PageTables.bin is at least 4 MB in size
-	SetFilePointer(hFile, PAGE_TABLES_SIZE, nullptr, FILE_BEGIN);
-	SetEndOfFile(hFile);
-
-	HANDLE hFileMapping = CreateFileMapping(
-	hFile,
-	/* lpFileMappingAttributes */nullptr,
-	PAGE_READWRITE,
-	/* dwMaximumSizeHigh */0,
-	/* dwMaximumSizeLow */PAGE_TABLES_SIZE,
-	/**/nullptr);
-	if (hFileMapping == NULL)
-	{
-		CxbxKrnlCleanup("%s : Couldn't create PageTables.bin file mapping!\n", __func__);
-	}
-
-	LARGE_INTEGER  len_li;
-	GetFileSizeEx(hFile, &len_li);
-	unsigned int FileSize = len_li.u.LowPart;
-	if (FileSize != PAGE_TABLES_SIZE)
-	{
-		CxbxKrnlCleanup("%s : PageTables.bin file is not 4 MiB large!\n", __func__);
-	}
-
-	// Map PageTables.bin contents into memory :
-	void *memory = (void *)MapViewOfFileEx(
-	hFileMapping,
-	FILE_MAP_READ | FILE_MAP_WRITE,
-	/* dwFileOffsetHigh */0,
-	/* dwFileOffsetLow */0,
-	4 * ONE_MB,
-	(void *)PAGE_TABLES_BASE);
-	if (memory != (void *)PAGE_TABLES_BASE)
-	{
-		if (memory)
-			UnmapViewOfFile(memory);
-
-		CxbxKrnlCleanup("%s: Couldn't map PageTables.bin to 0xC0000000!", __func__);
-	}
-
-	EmuLogInit(LOG_LEVEL::INFO, "Mapped %d MiB of Xbox page tables memory at 0x%.8X to 0x%.8X",
-		4, PAGE_TABLES_BASE, PAGE_TABLES_END);
-
-	if (NeedsInitialization)
-	{
-		memset(memory, 0, 4 * ONE_MB);
-		EmuLogInit(LOG_LEVEL::INFO, "Initialized page tables memory");
-	}
-	else
-		EmuLogInit(LOG_LEVEL::INFO, "Loaded PageTables.bin");
-
-	return hFileMapping;
-}
-
 #pragma optimize("", off)
+
+int CxbxMessageBox(const char* msg, UINT uType, HWND hWnd)
+{
+	return MessageBox(hWnd, msg, /*lpCaption=*/TEXT("Cxbx-Reloaded"), uType);
+}
+
+void CxbxShowError(const char* msg, HWND hWnd)
+{
+	const UINT uType = MB_OK | MB_TOPMOST | MB_SETFOREGROUND | MB_ICONERROR; // Note : MB_ICONERROR == MB_ICONSTOP == MB_ICONHAND
+
+	(void)CxbxMessageBox(msg, uType, hWnd);
+}
 
 void CxbxPopupMessageEx(CXBXR_MODULE cxbxr_module, LOG_LEVEL level, CxbxMsgDlgIcon icon, const char *message, ...)
 {
@@ -522,7 +320,7 @@ void CxbxPopupMessageEx(CXBXR_MODULE cxbxr_module, LOG_LEVEL level, CxbxMsgDlgIc
 
 	EmuLogEx(cxbxr_module, level, "Popup : %s", Buffer);
 
-	MessageBox(NULL, Buffer, TEXT("Cxbx-Reloaded"), uType);
+	(void)CxbxMessageBox(Buffer, uType);
 }
 
 void PrintCurrentConfigurationLog()
@@ -867,75 +665,115 @@ void ImportLibraries(XbeImportEntry *pImportDirectory)
 	}
 }
 
-void CxbxKrnlMain(int argc, char* argv[])
+bool CreateSettings()
 {
+	g_Settings = new Settings();
+	if (g_Settings == nullptr) {
+		CxbxShowError(szSettings_alloc_error);
+		return false;
+	}
+
+	if (!g_Settings->Init()) {
+		return false;
+	}
+
+	log_get_settings();
+	return true;
+}
+
+bool HandleFirstLaunch()
+{
+	bool bFirstLaunch;
+	g_EmuShared->GetIsFirstLaunch(&bFirstLaunch);
+
+	/* check if process is launch with elevated access then prompt for continue on or not. */
+	if (!bFirstLaunch) {
+		if (!CreateSettings()) {
+			return false;
+		}
+
+		bool bElevated = CxbxIsElevated();
+		if (bElevated && !g_Settings->m_core.allowAdminPrivilege) {
+			int ret = CxbxMessageBox("Cxbx-Reloaded has detected that it has been launched with Administrator rights.\n"
+				"\nThis is dangerous, as a maliciously modified Xbox titles could take control of your system.\n"
+				"\nAre you sure you want to continue?", MB_YESNO | MB_ICONWARNING);
+			if (ret != IDYES) {
+				return false;
+			}
+		}
+
+		g_EmuShared->SetIsFirstLaunch(true);
+	}
+
+	return true;
+}
+
+void CxbxKrnlEmulate(unsigned int reserved_systems, blocks_reserved_t blocks_reserved)
+{
+	std::string tempStr;
+
+	// NOTE: This is designated for standalone kernel mode launch without GUI
+	if (g_Settings != nullptr) {
+
+		// Reset to default
+		g_EmuShared->Reset();
+
+		g_Settings->Verify();
+		g_Settings->SyncToEmulator();
+
+		// We don't need to keep Settings open plus allow emulator to use unused memory.
+		delete g_Settings;
+		g_Settings = nullptr;
+
+		// Perform identical to what GUI will do to certain EmuShared's variable before launch.
+		g_EmuShared->SetIsEmulating(true);
+
+		// NOTE: This setting the ready status is optional. Internal kernel process is checking if GUI is running.
+		// Except if enforce check, then we need to re-set ready status every time for non-GUI.
+		//g_EmuShared->SetIsReady(true);
+	}
+
+	/* Initialize Cxbx File Paths */
+	CxbxInitFilePaths();
+
 	// Skip '/load' switch
 	// Get XBE Name :
-	std::string xbePath = std::filesystem::absolute(std::filesystem::path(argv[2])).string();
+	std::string xbePath;
+	cli_config::GetValue(cli_config::load, &xbePath);
+	xbePath = std::filesystem::absolute(std::filesystem::path(xbePath)).string();
 
 	// Get DCHandle :
-	HWND hWnd = 0;
-	if (argc > 3) {
-		hWnd = (HWND)std::atoi(argv[3]);
+	// We must save this handle now to keep the child window working in the case we need to display the UEM
+	HWND hWnd = nullptr;
+	if (cli_config::GetValue(cli_config::hwnd, &tempStr)) {
+		hWnd = (HWND)std::atoi(tempStr.c_str());
 	}
+	CxbxKrnl_hEmuParent = IsWindow(hWnd) ? hWnd : nullptr;
 
 	// Get KernelDebugMode :
 	DebugMode DbgMode = DebugMode::DM_NONE;
-	if (argc > 4) {
-		DbgMode = (DebugMode)std::atoi(argv[4]);
+	if (cli_config::GetValue(cli_config::debug_mode, &tempStr)) {
+		DbgMode = (DebugMode)std::atoi(tempStr.c_str());
 	}
 
 	// Get KernelDebugFileName :
 	std::string DebugFileName = "";
-	if (argc > 5) {
-		DebugFileName = argv[5];
+	if (cli_config::GetValue(cli_config::debug_file, &tempStr)) {
+		DebugFileName = tempStr;
 	}
 
 	int BootFlags;
 	g_EmuShared->GetBootFlags(&BootFlags);
 
-	// debug console allocation (if configured)
-	if (DbgMode == DM_CONSOLE)
-	{
-		if (AllocConsole())
-		{
-			HANDLE StdHandle = GetStdHandle(STD_OUTPUT_HANDLE);
-			// Maximise the console scroll buffer height :
-			CONSOLE_SCREEN_BUFFER_INFO coninfo;
-			GetConsoleScreenBufferInfo(StdHandle, &coninfo);
-			coninfo.dwSize.Y = SHRT_MAX - 1; // = 32767-1 = 32766 = maximum value that works
-			SetConsoleScreenBufferSize(StdHandle, coninfo.dwSize);
-			freopen("CONOUT$", "wt", stdout);
-			freopen("CONIN$", "rt", stdin);
-			SetConsoleTitle("Cxbx-Reloaded : Kernel Debug Console");
-			SetConsoleTextAttribute(StdHandle, FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_RED);
-		}
-	}
-	else
-	{
-		FreeConsole();
-		if (DbgMode == DM_FILE) {
-			// Peform clean write to kernel log for first boot. Unless multi-xbe boot occur then perform append to existing log.
-			freopen(DebugFileName.c_str(), ((BootFlags == DebugMode::DM_NONE) ? "wt" : "at"), stdout);
-			// Append separator for better readability after reboot.
-			if (BootFlags != DebugMode::DM_NONE) {
-				std::cout << "\n------REBOOT------REBOOT------REBOOT------REBOOT------REBOOT------\n" << std::endl;
-			}
-		}
-		else {
-			char buffer[16];
-			if (GetConsoleTitle(buffer, 16) != NULL)
-				freopen("nul", "w", stdout);
-		}
-	}
-
-	// We must save this handle now to keep the child window working in the case we need to display the UEM
-	CxbxKrnl_hEmuParent = IsWindow(hWnd) ? hWnd : NULL;
-
 	g_CurrentProcessHandle = GetCurrentProcess(); // OpenProcess(PROCESS_ALL_ACCESS, FALSE, GetCurrentProcessId());
 
 	// Set up the logging variables for the kernel process during initialization.
 	log_sync_config();
+
+	// When a reboot occur, we need to keep persistent memory buffer open before emulation process shutdown.
+	if ((BootFlags & BOOT_QUICK_REBOOT) != 0) {
+		g_VMManager.GetPersistentMemory();
+	}
 
 	if (CxbxKrnl_hEmuParent != NULL) {
 		ipc_send_gui_update(IPC_UPDATE_GUI::KRNL_IS_READY, static_cast<UINT>(GetCurrentProcessId()));
@@ -955,7 +793,7 @@ void CxbxKrnlMain(int argc, char* argv[])
 			}
 			if (!isReady) {
 				EmuLog(LOG_LEVEL::WARNING, "GUI process is not ready!");
-				int mbRet = MessageBox(NULL, "GUI process is not ready, do you wish to retry?", TEXT("Cxbx-Reloaded"),
+				int mbRet = CxbxMessageBox("GUI process is not ready, do you wish to retry?",
 										MB_ICONWARNING | MB_RETRYCANCEL | MB_TOPMOST | MB_SETFOREGROUND);
 				if (mbRet == IDRETRY) {
 					continue;
@@ -972,6 +810,10 @@ void CxbxKrnlMain(int argc, char* argv[])
 	DWORD dwExitCode = EXIT_SUCCESS;
 	g_EmuShared->GetKrnlProcID(&prevKrnlProcID);
 
+	// Save current kernel proccess id for next reboot if will occur in the future.
+	// And to tell previous kernel process we had take over. This allow reboot's shared memory buffer to survive.
+	g_EmuShared->SetKrnlProcID(GetCurrentProcessId());
+
 	// Force wait until previous kernel process is closed.
 	if (prevKrnlProcID != 0) {
 		HANDLE hProcess = OpenProcess(SYNCHRONIZE | PROCESS_QUERY_INFORMATION, FALSE, prevKrnlProcID);
@@ -985,8 +827,49 @@ void CxbxKrnlMain(int argc, char* argv[])
 		}
 	}
 
-	if (dwExitCode != EXIT_SUCCESS) {// StopEmulation
+	if (dwExitCode != EXIT_SUCCESS) {// Stop emulation
 		CxbxKrnlShutDown();
+	}
+
+	/* Must be called after CxbxInitFilePaths and previous kernel process shutdown. */
+	if (!CxbxLockFilePath()) {
+		return;
+	}
+
+	FILE* krnlLog = nullptr;
+	// debug console allocation (if configured)
+	if (DbgMode == DM_CONSOLE)
+	{
+		if (AllocConsole())
+		{
+			HANDLE StdHandle = GetStdHandle(STD_OUTPUT_HANDLE);
+			// Maximise the console scroll buffer height :
+			CONSOLE_SCREEN_BUFFER_INFO coninfo;
+			GetConsoleScreenBufferInfo(StdHandle, &coninfo);
+			coninfo.dwSize.Y = SHRT_MAX - 1; // = 32767-1 = 32766 = maximum value that works
+			SetConsoleScreenBufferSize(StdHandle, coninfo.dwSize);
+			(void)freopen("CONOUT$", "wt", stdout);
+			(void)freopen("CONIN$", "rt", stdin);
+			SetConsoleTitle("Cxbx-Reloaded : Kernel Debug Console");
+			SetConsoleTextAttribute(StdHandle, FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_RED);
+		}
+	}
+	else
+	{
+		FreeConsole();
+		if (DbgMode == DM_FILE) {
+			// Peform clean write to kernel log for first boot. Unless multi-xbe boot occur then perform append to existing log.
+			krnlLog = freopen(DebugFileName.c_str(), ((BootFlags == DebugMode::DM_NONE) ? "wt" : "at"), stdout);
+			// Append separator for better readability after reboot.
+			if (BootFlags != DebugMode::DM_NONE) {
+				std::cout << "\n------REBOOT------REBOOT------REBOOT------REBOOT------REBOOT------\n" << std::endl;
+			}
+		}
+		else {
+			char buffer[16];
+			if (GetConsoleTitle(buffer, 16) != NULL)
+				(void)freopen("nul", "w", stdout);
+		}
 	}
 
 	bool isLogEnabled;
@@ -994,9 +877,6 @@ void CxbxKrnlMain(int argc, char* argv[])
 	g_bPrintfOn = isLogEnabled;
 
 	g_EmuShared->ResetKrnl();
-
-	// Save current kernel proccess id for next reboot if will occur in the future.
-	g_EmuShared->SetKrnlProcID(GetCurrentProcessId());
 
 	// Write a header to the log
 	{
@@ -1048,12 +928,14 @@ void CxbxKrnlMain(int argc, char* argv[])
 			return; // TODO : Halt(0); 
 		}
 
+#ifndef CXBXR_EMU
 		// verify virtual_memory_placeholder is located at 0x00011000
 		if ((UINT_PTR)(&(virtual_memory_placeholder[0])) != (XBE_IMAGE_BASE + CXBX_BASE_OF_CODE))
 		{
 			CxbxPopupMessage(LOG_LEVEL::FATAL, CxbxMsgDlgIcon_Error, "virtual_memory_placeholder is not loaded to base address 0x00011000 (which is a requirement for Xbox emulation)");
 			return; // TODO : Halt(0); 
 		}
+#endif
 
 		// Create a safe copy of the complete EXE header:
 		DWORD ExeHeaderSize = ExeOptionalHeader->SizeOfHeaders; // Should end up as 0x400
@@ -1074,7 +956,27 @@ void CxbxKrnlMain(int argc, char* argv[])
 
 		// Mark the virtual memory range completely accessible
 		DWORD OldProtection;
-		VirtualProtect((void*)XBE_IMAGE_BASE, XBE_MAX_VA - XBE_IMAGE_BASE, PAGE_EXECUTE_READWRITE, &OldProtection);
+		if (0 == VirtualProtect((void*)XBE_IMAGE_BASE, XBE_MAX_VA - XBE_IMAGE_BASE, PAGE_EXECUTE_READWRITE, &OldProtection)) {
+			DWORD err = GetLastError();
+
+			// Translate ErrorCode to String.
+			LPTSTR Error = 0;
+			if (::FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
+				NULL,
+				err,
+				0,
+				(LPTSTR)&Error,
+				0,
+				NULL) == 0) {
+				// Failed in translating.
+			}
+
+			// Free the buffer.
+			if (Error) {
+				::LocalFree(Error);
+				Error = 0;
+			}
+		}
 
 		// Clear out the virtual memory range
 		memset((void*)XBE_IMAGE_BASE, 0, XBE_MAX_VA - XBE_IMAGE_BASE);
@@ -1082,9 +984,6 @@ void CxbxKrnlMain(int argc, char* argv[])
 		// Restore enough of the executable image headers to keep WinAPI's working :
 		RestoreExeImageHeader();
 	}
-
-	HANDLE hMemoryBin = CxbxRestoreContiguousMemory(szFilePath_memory_bin);
-	HANDLE hPageTables = CxbxRestorePageTablesMemory(szFilePath_page_tables);
 
 	// Load Per-Xbe Keys from the Cxbx-Reloaded AppData directory
 	LoadXboxKeys(szFolder_CxbxReloadedData);
@@ -1101,6 +1000,7 @@ void CxbxKrnlMain(int argc, char* argv[])
 
 	// Now we can load and run the XBE :
 	// MapAndRunXBE(XbePath, DCHandle);
+	XbeType xbeType = XbeType::xtRetail;
 	{
 		// NOTE: This is a safety to clean the file path for any malicious file path attempt.
 		// Might want to move this into a utility function.
@@ -1160,13 +1060,56 @@ void CxbxKrnlMain(int argc, char* argv[])
 			}
 		}
 
-		// Detect XBE type :
-		g_XbeType = GetXbeType(&CxbxKrnl_Xbe->m_Header);
+		// If CLI has given console type, then enforce it.
+		if (cli_config::hasKey(cli_config::system_chihiro)) {
+			EmuLogInit(LOG_LEVEL::INFO, "Auto detect is disabled, running as chihiro.");
+			xbeType = XbeType::xtChihiro;
+		}
+		else if (cli_config::hasKey(cli_config::system_devkit)) {
+			EmuLogInit(LOG_LEVEL::INFO, "Auto detect is disabled, running as devkit.");
+			xbeType = XbeType::xtDebug;
+		}
+		else if (cli_config::hasKey(cli_config::system_retail)) {
+			EmuLogInit(LOG_LEVEL::INFO, "Auto detect is disabled, running as retail.");
+			xbeType = XbeType::xtRetail;
+		}
+		// Otherwise, use auto detect method.
+		else {
+			// Detect XBE type :
+			xbeType = CxbxKrnl_Xbe->GetXbeType();
+			EmuLogInit(LOG_LEVEL::INFO, "Auto detect: XbeType = %s", GetXbeTypeToStr(xbeType));
+		}
+
+		EmuLogInit(LOG_LEVEL::INFO, "Host's compatible system types: %2X", reserved_systems);
+		unsigned int emulate_system = 0;
+		// Set reserved_systems which system we will about to emulate.
+		if (isSystemFlagSupport(reserved_systems, SYSTEM_CHIHIRO) && xbeType == XbeType::xtChihiro) {
+			emulate_system = SYSTEM_CHIHIRO;
+		}
+		else if (isSystemFlagSupport(reserved_systems, SYSTEM_DEVKIT) && xbeType == XbeType::xtDebug) {
+			emulate_system = SYSTEM_DEVKIT;
+		}
+		else if (isSystemFlagSupport(reserved_systems, SYSTEM_XBOX) && xbeType == XbeType::xtRetail) {
+			emulate_system = SYSTEM_XBOX;
+		}
+		// If none of system type requested to emulate isn't supported on host's end. Then enforce failure.
+		else {
+			CxbxKrnlCleanup("Unable to emulate system type due to host is not able to reserve required memory ranges.");
+			return;
+		}
+		// Clear emulation system from reserved systems to be free.
+		reserved_systems &= ~emulate_system;
+
+		// Once we have determine which system type to run as, enforce it in future reboots.
+		if ((BootFlags & BOOT_QUICK_REBOOT) == 0) {
+			const char* system_str = GetSystemTypeToStr(emulate_system);
+			cli_config::SetSystemType(system_str);
+		}
 
 		// Register if we're running an Chihiro executable or a debug xbe, otherwise it's an Xbox retail executable
-		g_bIsChihiro = (g_XbeType == xtChihiro);
-		g_bIsDebug = (g_XbeType == xtDebug);
-		g_bIsRetail = (g_XbeType == xtRetail);
+		g_bIsChihiro = (xbeType == XbeType::xtChihiro);
+		g_bIsDebug = (xbeType == XbeType::xtDebug);
+		g_bIsRetail = (xbeType == XbeType::xtRetail);
 
 		// Disabled: The media board rom fails to run because it REQUIRES LLE USB, which is not yet enabled.
 		// Chihiro games can be ran directly for now. 
@@ -1185,8 +1128,22 @@ void CxbxKrnlMain(int argc, char* argv[])
 			CxbxKrnl_Xbe = new Xbe(chihiroMediaBoardRom.c_str(), false);
 		}
 #endif
-		// Initialize the virtual manager
-		g_VMManager.Initialize(hMemoryBin, hPageTables, BootFlags);
+
+#ifndef CXBXR_EMU
+		// Only for GUI executable with emulation code.
+		blocks_reserved_t blocks_reserved_gui = { 0 };
+		// Reserve console system's memory ranges before start initialize.
+		if (!ReserveAddressRanges(emulate_system, blocks_reserved_gui)) {
+			CxbxKrnlCleanup("Failed to reserve required memory ranges!", GetLastError());
+		}
+		// Initialize the memory manager
+		g_VMManager.Initialize(emulate_system, BootFlags, blocks_reserved_gui);
+#else
+		// Release unnecessary memory ranges to allow console/host to use those memory ranges.
+		FreeAddressRanges(emulate_system, reserved_systems, blocks_reserved);
+		// Initialize the memory manager
+		g_VMManager.Initialize(emulate_system, BootFlags, blocks_reserved);
+#endif
 
 		// Commit the memory used by the xbe header
 		size_t HeaderSize = CxbxKrnl_Xbe->m_Header.dwSizeofHeaders;
@@ -1238,7 +1195,7 @@ void CxbxKrnlMain(int argc, char* argv[])
 
 	// Decode kernel thunk table address :
 	uint32_t kt = CxbxKrnl_Xbe->m_Header.dwKernelImageThunkAddr;
-	kt ^= XOR_KT_KEY[g_XbeType];
+	kt ^= XOR_KT_KEY[to_underlying(xbeType)];
 
 	// Process the Kernel thunk table to map Kernel function calls to their actual address :
 	MapThunkTable((uint32_t*)kt, CxbxKrnl_KernelThunkTable);
@@ -1255,7 +1212,7 @@ void CxbxKrnlMain(int argc, char* argv[])
 		void* XbeTlsData = (XbeTls != nullptr) ? (void*)CxbxKrnl_Xbe->m_TLS->dwDataStartAddr : nullptr;
 		// Decode Entry Point
 		xbaddr EntryPoint = CxbxKrnl_Xbe->m_Header.dwEntryAddr;
-		EntryPoint ^= XOR_EP_KEY[g_XbeType];
+		EntryPoint ^= XOR_EP_KEY[to_underlying(xbeType)];
 		// Launch XBE
 		CxbxKrnlInit(
 			XbeTlsData, 
@@ -1268,6 +1225,10 @@ void CxbxKrnlMain(int argc, char* argv[])
 			(void(*)())EntryPoint,
  			BootFlags
 		);
+	}
+
+	if (!krnlLog) {
+		(void)fclose(krnlLog);
 	}
 }
 #pragma optimize("", on)
@@ -1626,13 +1587,21 @@ __declspec(noreturn) void CxbxKrnlInit
 	EmuLogInit(LOG_LEVEL::DEBUG, "XBE entry point returned");
 	fflush(stdout);
 
+	CxbxUnlockFilePath();
+
 	//	EmuShared::Cleanup();   FIXME: commenting this line is a bad workaround for issue #617 (https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/issues/617)
     CxbxKrnlTerminateThread();
 }
 
 void CxbxInitFilePaths()
 {
-	g_EmuShared->GetStorageLocation(szFolder_CxbxReloadedData);
+	if (g_Settings) {
+		std::string dataLoc = g_Settings->GetDataLocation();
+		std::strncpy(szFolder_CxbxReloadedData, dataLoc.c_str(), dataLoc.length() + 1);
+	}
+	else {
+		g_EmuShared->GetStorageLocation(szFolder_CxbxReloadedData);
+	}
 
 	// Make sure our data folder exists :
 	bool result = std::filesystem::exists(szFolder_CxbxReloadedData);
@@ -1648,10 +1617,52 @@ void CxbxInitFilePaths()
 	}
 
 	snprintf(szFilePath_EEPROM_bin, MAX_PATH, "%s\\EEPROM.bin", szFolder_CxbxReloadedData);
-	snprintf(szFilePath_memory_bin, MAX_PATH, "%s\\memory.bin", szFolder_CxbxReloadedData);
-	snprintf(szFilePath_page_tables, MAX_PATH, "%s\\PageTables.bin", szFolder_CxbxReloadedData);
 
 	GetModuleFileName(GetModuleHandle(nullptr), szFilePath_CxbxReloaded_Exe, MAX_PATH);
+}
+
+HANDLE hMapDataHash = nullptr;
+
+bool CxbxLockFilePath()
+{
+    std::stringstream filePathHash("Local\\");
+    uint64_t hashValue = XXH3_64bits(szFolder_CxbxReloadedData, strlen(szFolder_CxbxReloadedData) + 1);
+    if (!hashValue) {
+        CxbxKrnlCleanup("%s : Couldn't generate Cxbx-Reloaded's data folder hash!", __func__);
+    }
+
+    filePathHash << std::hex << hashValue;
+
+    hMapDataHash = CreateFileMapping
+    (
+        INVALID_HANDLE_VALUE,       // Paging file
+        nullptr,                    // default security attributes
+        PAGE_READONLY,              // readonly access
+        0,                          // size: high 32 bits
+        /*Dummy size*/4,            // size: low 32 bits
+        filePathHash.str().c_str()  // name of map object
+    );
+
+    if (hMapDataHash == nullptr) {
+        return false;
+    }
+
+    if (GetLastError() == ERROR_ALREADY_EXISTS) {
+        CxbxShowError("Data path directory is currently in used.\nUse different data path directory or stop emulation from another process.");
+        CloseHandle(hMapDataHash);
+        return false;
+    }
+
+    return true;
+}
+
+void CxbxUnlockFilePath()
+{
+    // Close opened file path lockdown shared memory.
+    if (hMapDataHash) {
+        CloseHandle(hMapDataHash);
+        hMapDataHash = nullptr;
+    }
 }
 
 // REMARK: the following is useless, but PatrickvL has asked to keep it for documentation purposes
@@ -1799,8 +1810,14 @@ void CxbxKrnlShutDown()
 	// Shutdown the input device manager
 	g_InputDeviceManager.Shutdown();
 
-	if (CxbxKrnl_hEmuParent != NULL)
+	// Shutdown the memory manager
+	g_VMManager.Shutdown();
+
+	CxbxUnlockFilePath();
+
+	if (CxbxKrnl_hEmuParent != NULL) {
 		SendMessage(CxbxKrnl_hEmuParent, WM_PARENTNOTIFY, WM_DESTROY, 0);
+	}
 
 	EmuShared::Cleanup();
 	TerminateProcess(g_CurrentProcessHandle, 0);
@@ -1895,21 +1912,6 @@ __declspec(noreturn) void CxbxKrnlTerminateThread()
 void CxbxKrnlPanic()
 {
     CxbxKrnlCleanup("Kernel Panic!");
-}
-
-void CxbxConvertArgToString(std::string &dest, const char* krnlExe, const char* xbeFile, HWND hwndParent, DebugMode krnlDebug, const char* krnlDebugFile) {
-
-    std::stringstream szArgsStream;
-
-    // The format is: "krnlExe" /load "xbeFile" hwndParent krnlDebug "krnlDebugFile"
-    szArgsStream <<
-        "\"" << krnlExe << "\""
-        " /load \"" << xbeFile << "\""
-        " " << std::dec << (int)hwndParent <<
-        " " << std::dec << (int)krnlDebug <<
-        " \"" << krnlDebugFile << "\"";
-
-    dest = szArgsStream.str();
 }
 
 static clock_t						g_DeltaTime = 0;			 // Used for benchmarking/fps count

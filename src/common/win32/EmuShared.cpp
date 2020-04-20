@@ -43,10 +43,12 @@ EmuShared *g_EmuShared = nullptr;
 // ******************************************************************
 HANDLE hMapObject = NULL;
 
+HMODULE hActiveModule = NULL;
+
 // ******************************************************************
 // * func: EmuShared::EmuSharedInit
 // ******************************************************************
-void EmuShared::Init(DWORD guiProcessID)
+bool EmuShared::Init(long long sessionID)
 {
     // ******************************************************************
     // * Ensure initialization only occurs once
@@ -56,15 +58,22 @@ void EmuShared::Init(DWORD guiProcessID)
     // ******************************************************************
     // * Prevent multiple initializations
     // ******************************************************************
-    if(hMapObject != NULL)
-        return;
+    if (hMapObject != NULL) {
+        return true;
+    }
+
+    // ******************************************************************
+    // * Prevent invalid session process id
+    // ******************************************************************
+    if (sessionID == 0) {
+        return false;
+    }
 
     // ******************************************************************
     // * Create the shared memory "file"
     // ******************************************************************
     {
-        // NOTE: guiProcessID support is not available due to 2+ emulation is causing problem with graphic screen.
-        std::string emuSharedStr = "Local\\EmuShared-s" + std::to_string(settings_version);// +"-p" + std::to_string(guiProcessID);
+        std::string emuSharedStr = "Local\\EmuShared-s" + std::to_string(sessionID);
         hMapObject = CreateFileMapping
         (
             INVALID_HANDLE_VALUE,   // Paging file
@@ -76,7 +85,7 @@ void EmuShared::Init(DWORD guiProcessID)
         );
 
         if(hMapObject == NULL)
-            CxbxKrnlCleanupEx(CXBXR_MODULE::INIT, "Could not map shared memory!");
+            return false; // CxbxKrnlCleanupEx(CXBXR_MODULE::INIT, "Could not map shared memory!");
 
         if(GetLastError() == ERROR_ALREADY_EXISTS)
             bRequireConstruction = false;
@@ -95,8 +104,10 @@ void EmuShared::Init(DWORD guiProcessID)
             0               // default: map entire file
         );
 
-        if(g_EmuShared == nullptr)
-            CxbxKrnlCleanupEx(CXBXR_MODULE::INIT, "Could not map view of shared memory!");
+        if (g_EmuShared == nullptr) {
+            CloseHandle(hMapObject);
+            return false; // CxbxKrnlCleanupEx(CXBXR_MODULE::INIT, "Could not map view of shared memory!");
+        }
     }
 
     // ******************************************************************
@@ -107,6 +118,13 @@ void EmuShared::Init(DWORD guiProcessID)
     }
 
     g_EmuShared->m_RefCount++;
+
+    if (g_EmuShared->m_size != sizeof(EmuShared)) {
+        EmuShared::Cleanup();
+        return false;
+    }
+
+	return true;
 }
 
 // ******************************************************************
@@ -128,6 +146,9 @@ void EmuShared::Cleanup()
 // ******************************************************************
 EmuShared::EmuShared()
 {
+	m_size = sizeof(EmuShared);
+//	m_bMultiXbe = false;
+//	m_LaunchDataPAddress = NULL;
 	m_bDebugging = false;
 	m_bEmulating_status = false;
 	m_bFirstLaunch = false;

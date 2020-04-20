@@ -18,3 +18,25 @@ script:
   - if [ $TRAVIS_OS_NAME == 'windows' ]; then
     cmake --build . --config $configuration;
     fi
+
+# Bug with the Windows builder requires us to not filter secrets
+#filter_secrets: false
+
+#before_deploy:
+#  - mkdir export
+#  - 7z u export/${configuration} COPYING README.md
+#  - cd build/win32/${configuration}
+#  - 7z u ../../../export/${configuration} cxbx.exe cxbxr-ldr.exe cxbxr-emu.dll glew32.dll subhook.dll SDL2.dll
+#  - 7z u ../../../export/${configuration} CxbxDebugger.exe capstone.dll cs_x86.dll
+#  - cd ../../../
+
+#deploy:
+#  provider: releases
+#  api_key: $GH_TOKEN
+#  file: "export/${configuration}.7z"
+#  skip_cleanup: true
+#  on:
+#    # Can disable this to deploy all builds appears as "untagged-buildhash" on GH
+#    tags: true
+#    branch: develop
+#    condition: $configuration = Release

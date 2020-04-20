@@ -27,11 +27,16 @@
 
 #include "WndMain.h"
 
+#include "AddressRanges.h" // For VerifyWow64()
+#include "VerifyAddressRanges.h" // For VerifyBaseAddr()
 #include "core\kernel\init\CxbxKrnl.h"
 #include "core\kernel\support\Emu.h"
 #include "EmuShared.h"
 #include "common\Settings.hpp"
 #include <commctrl.h>
+#include "common/util/cliConverter.hpp"
+#include "common/util/cliConfig.hpp"
+
 
 // Enable Visual Styles
 #pragma comment(linker,"\"/manifestdependency:type='win32' \
@@ -41,143 +46,58 @@ processorArchitecture = '*' publicKeyToken = '6595b64144ccf1df' language = '*'\"
 /*! program entry point */
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
+	hActiveModule = hInstance; // == GetModuleHandle(NULL); // Points to GUI (Cxbx.exe) ImageBase
+	std::string tempStr;
+
 	// First detect if we are running on WoW64, if not, prevent Cxbx-Reloaded from starting
-	// Cxbx-Relaoded needs access to high memory, only exposed to WoW64.
-	typedef BOOL(WINAPI *LPFN_ISWOW64PROCESS) (HANDLE, PBOOL);
-	BOOL bIsWow64 = FALSE;
-	LPFN_ISWOW64PROCESS fnIsWow64Process = (LPFN_ISWOW64PROCESS)GetProcAddress(GetModuleHandle(TEXT("kernel32")), "IsWow64Process");
-	if (fnIsWow64Process != nullptr) {
-		fnIsWow64Process(GetCurrentProcess(), &bIsWow64);
-	}
-	
-	if (bIsWow64 == FALSE) {
-		MessageBox(NULL, "Cxbx-Reloaded can only run under WoW64\nThis means either a 64-bit version of Windows or Wine with a 64-bit prefix", "Cxbx-Reloaded",
-			MB_OK | MB_ICONERROR);
+	// Cxbx-Reloaded needs access to high memory, only exposed to WoW64.
+	if (!VerifyWow64()) {
+		CxbxShowError("Cxbx-Reloaded can only run under WoW64\nThis means either a 64-bit version of Windows or Wine with a 64-bit prefix");
 		return EXIT_FAILURE;
 	}
 
+#ifndef CXBXR_EMU
 	/*! verify Cxbx.exe is loaded to base address 0x00010000 */
-	if ((UINT_PTR)GetModuleHandle(nullptr) != CXBX_BASE_ADDR)
-	{
-		/*! CXBX_BASE_ADDR is defined as 0x00010000, which is the base address of
-		    the Cxbx.exe host executable.
-		    Set in Cxbx Project options, Linker, Advanced, Base Address */
-		MessageBox(NULL, "Cxbx.exe is not loaded to base address 0x00010000 (which is a requirement for Xbox emulation)", "Cxbx-Reloaded",
-			MB_OK | MB_ICONERROR);
+	if (!VerifyBaseAddr()) {
+		CxbxShowError("Cxbx.exe is not loaded to base address 0x00010000 (which is a requirement for Xbox emulation)");
 		return EXIT_FAILURE;
 	}
+#endif
 
-	bool bRet, bKernel;
-	HWND hWnd = nullptr;
-	DWORD guiProcessID = 0;
-
-	// TODO: Convert ALL __argc & __argv to use main(int argc, char** argv) method.
-	if (__argc >= 2 && std::strcmp(__argv[1], "/load") == 0 && std::strlen(__argv[2]) > 0) {
-		bKernel = true;
-
-		// Perform check if command line contain gui's hWnd value.
-		if (__argc > 3) {
-			hWnd = (HWND)std::stoi(__argv[3], nullptr, 10);
-
-			hWnd = IsWindow(hWnd) ? hWnd : nullptr;
-			if (hWnd != nullptr) {
-				// We don't need thread ID from window handle.
-				GetWindowThreadProcessId(hWnd, &guiProcessID);
-			}
-		}
+	if (!cli_config::GenConfig(__argv, __argc)) {
+		CxbxShowError("Couldn't convert parsed command line!");
+		return EXIT_FAILURE;
 	}
-	else {
-		bKernel = false;
-		guiProcessID = GetCurrentProcessId();
-	}
-	g_exec_filepath = __argv[0]; // NOTE: Workaround solution until simulated "main" function is made.
 
 	/*! initialize shared memory */
-	EmuShared::Init(guiProcessID);
-
-	bool bFirstLaunch;
-	g_EmuShared->GetIsFirstLaunch(&bFirstLaunch);
-
-    /* check if process is launch with elevated access then prompt for continue on or not. */
-	if (!bFirstLaunch) {
-
-		g_Settings = new Settings();
-
-		if (g_Settings == nullptr) {
-			MessageBox(nullptr, szSettings_alloc_error, "Cxbx-Reloaded", MB_OK);
-			EmuShared::Cleanup();
-			return EXIT_FAILURE;
-		}
-
-		bRet = g_Settings->Init();
-		if (!bRet) {
-			EmuShared::Cleanup();
-			return EXIT_FAILURE;
-		}
-
-		log_get_settings();
-
-		bool bElevated = CxbxIsElevated();
-
-		if (bElevated && !g_Settings->m_core.allowAdminPrivilege) {
-			int ret = MessageBox(NULL, "Cxbx-Reloaded has detected that it has been launched with Administrator rights.\n"
-			                    "\nThis is dangerous, as a maliciously modified Xbox titles could take control of your system.\n"
-			                    "\nAre you sure you want to continue?", "Cxbx-Reloaded", MB_YESNO | MB_ICONWARNING);
-			if (ret != IDYES) {
-				EmuShared::Cleanup();
-				return EXIT_FAILURE;
-			}
-		}
-		g_EmuShared->SetIsFirstLaunch(true);
+	if (!EmuShared::Init(cli_config::GetSessionID())) {
+		CxbxShowError("Could not map shared memory!");
+		return EXIT_FAILURE;
 	}
 
-	if (bKernel) {
+	if (!HandleFirstLaunch()) {
+		EmuShared::Cleanup();
+		return EXIT_FAILURE;
+	}
 
-		// NOTE: This is designated for standalone kernel mode launch without GUI
-		if (g_Settings != nullptr) {
-
-			// Reset to default
-			g_EmuShared->Reset();
-
-			g_Settings->Verify();
-			g_Settings->SyncToEmulator();
-
-			// We don't need to keep Settings open plus allow emulator to use unused memory.
-			delete g_Settings;
-			g_Settings = nullptr;
-
-			// Perform identical to what GUI will do to certain EmuShared's variable before launch.
-			g_EmuShared->SetIsEmulating(true);
-
-			// NOTE: This setting the ready status is optional. Internal kernel process is checking if GUI is running.
-			// Except if enforce check, then we need to re-set ready status every time for non-GUI.
-			//g_EmuShared->SetIsReady(true);
-		}
-
-		/* Initialize Cxbx File Paths */
-		CxbxInitFilePaths();
-
-		CxbxKrnlMain(__argc, __argv);
+	if (cli_config::hasKey("load")) {
+#ifndef CXBXR_EMU
+		CxbxKrnlEmulate(0, nullptr);
+		EmuShared::Cleanup();
 		return EXIT_SUCCESS;
+#else
+		CxbxShowError("Emulation must be launched from cxbxr-ldr.exe!");
+		EmuShared::Cleanup();
+		return EXIT_FAILURE;
+#endif
 	}
 
 	// If 2nd GUI executable is launched, load settings file for GUI for editable support.
 	if (g_Settings == nullptr) {
-		g_Settings = new Settings();
-
-		if (g_Settings == nullptr) {
-			MessageBox(nullptr, szSettings_alloc_error, "Cxbx-Reloaded", MB_OK);
+		if (!CreateSettings()) {
 			EmuShared::Cleanup();
 			return EXIT_FAILURE;
 		}
-
-		bRet = g_Settings->Init();
-		if (!bRet) {
-			EmuShared::Cleanup();
-			return EXIT_FAILURE;
-		}
-
-		log_get_settings();
 	}
 
 	// Possible optional output for GUI
@@ -201,9 +121,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     }
 
     /*! optionally open xbe and start emulation, if command line parameter was specified */
-    if(__argc > 1 && false == MainWindow->HasError())
+    if(cli_config::ConfigSize() > 1 && false == MainWindow->HasError() && cli_config::GetValue(cli_config::arg1, &tempStr))
     {
-		MainWindow->OpenXbe(std::filesystem::absolute(std::filesystem::path(__argv[1])).string().c_str());
+        tempStr = std::filesystem::absolute(std::filesystem::path(tempStr)).string();
+        MainWindow->OpenXbe(tempStr.c_str());
 
         MainWindow->StartEmulation(MainWindow->GetHwnd());
     }
@@ -215,9 +136,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     }
 
     /*! if an error occurred, notify user */
-    if(MainWindow->HasError())
-    {
-        MessageBox(NULL, MainWindow->GetError().c_str(), "Cxbx-Reloaded", MB_ICONSTOP | MB_OK);
+    if(MainWindow->HasError()) {
+		CxbxShowError(MainWindow->GetError().c_str());
     }
 
     delete MainWindow;

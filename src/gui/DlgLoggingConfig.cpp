@@ -26,7 +26,7 @@
 #include "Logging.h"
 #include "EmuShared.h"
 #include "DlgLoggingConfig.h"
-#include "ResCxbx.h"
+#include "resource/ResCxbx.h"
 #include "common\IPCHybrid.hpp"
 
 

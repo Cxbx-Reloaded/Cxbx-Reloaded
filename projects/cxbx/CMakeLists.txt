@@ -72,11 +72,11 @@ file (GLOB RESOURCES
  "${CXBXR_ROOT_DIR}/CONTRIBUTORS"
  "${CXBXR_ROOT_DIR}/COPYING"
  "${CXBXR_ROOT_DIR}/README.md"
- "${CXBXR_ROOT_DIR}/resource/.editorconfig"
- "${CXBXR_ROOT_DIR}/resource/Cxbx.rc"
- "${CXBXR_ROOT_DIR}/resource/Cxbx-R.ico"
- "${CXBXR_ROOT_DIR}/resource/Logo.bmp"
- "${CXBXR_ROOT_DIR}/resource/Logo-License-CC4.bmp"
+ "${CXBXR_ROOT_DIR}/src/gui/resource/.editorconfig"
+ "${CXBXR_ROOT_DIR}/src/gui/resource/Cxbx.rc"
+ "${CXBXR_ROOT_DIR}/src/gui/resource/Cxbx-R.ico"
+ "${CXBXR_ROOT_DIR}/src/gui/resource/Logo.bmp"
+ "${CXBXR_ROOT_DIR}/src/gui/resource/Logo-License-CC4.bmp"
  "${CXBXR_ROOT_DIR}/src/.editorconfig"
 )
 
@@ -191,6 +191,8 @@ target_link_libraries(cxbx
 if(${CMAKE_GENERATOR} MATCHES "Visual Studio ([^9]|[9][0-9])")
   add_dependencies(cxbx cxbxr-debugger)
 endif()
+
+add_dependencies(cxbx cxbxr-ldr cxbxr-emu)
 
 set(CXBXR_GLEW_DLL "${CXBXR_ROOT_DIR}/import/glew-2.0.0/bin/Release/Win32/glew32.dll")
 

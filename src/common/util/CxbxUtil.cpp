@@ -258,15 +258,25 @@ void unix2dos(std::string& string)
 // Refer to the license.txt file of Dolphin at https://github.com/dolphin-emu/dolphin/blob/master/license.txt.
 
 // Source: StringUtil.cpp of Dolphin emulator
-/* Turns "  hello " into "hello". Also handles tabs */
-std::string StripSpaces(const std::string& str)
+std::string StripChars(const std::string& str, const char* strip_chars)
 {
-	const size_t s = str.find_first_not_of(" \t\r\n");
+	const size_t s = str.find_first_not_of(strip_chars);
 
 	if (str.npos != s) {
-		return str.substr(s, str.find_last_not_of(" \t\r\n") - s + 1);
+		return str.substr(s, str.find_last_not_of(strip_chars) - s + 1);
 	}
 	else {
 		return "";
 	}
+}
+
+/* Turns "  hello " into "hello". Also handles tabs */
+std::string StripSpaces(const std::string& str)
+{
+	return StripChars(str, " \t\r\n");
+}
+
+std::string StripQuotes(const std::string& str)
+{
+	return StripChars(str, "\"");
 }

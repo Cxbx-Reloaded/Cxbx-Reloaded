@@ -26,6 +26,11 @@
 // ******************************************************************
 #define LOG_PREFIX CXBXR_MODULE::D3D8
 
+#ifdef CXBXR_EMU_EXPORTS // DbgConsole only in Cxbx/cxbxr, not in cxbxr-emu
+	#undef INCLUDE_DBG_CONSOLE
+#else
+	#define INCLUDE_DBG_CONSOLE
+#endif
 #include "common\util\hasher.h"
 #include <condition_variable>
 #include <stack>
@@ -41,7 +46,9 @@ namespace xboxkrnl
 #include "core\kernel\init\CxbxKrnl.h"
 #include "core\kernel\support\Emu.h"
 #include "EmuShared.h"
+#ifdef INCLUDE_DBG_CONSOLE
 #include "gui\DbgConsole.h"
+#endif
 #include "core\hle\D3D8\ResourceTracker.h"
 #include "core\hle\D3D8\Direct3D9\Direct3D9.h" // For LPDIRECTDRAWSURFACE7
 #include "core\hle\D3D8\XbVertexBuffer.h"
@@ -55,7 +62,7 @@ namespace xboxkrnl
 #include "..\XbD3D8Logging.h"
 #include "core\hle\Intercept.hpp" // for bLLE_GPU
 #include "devices\video\nv2a.h" // For GET_MASK, NV_PGRAPH_CONTROL_0, PUSH_METHOD
-#include "gui\ResCxbx.h"
+#include "gui/resource/ResCxbx.h"
 #include "RenderStates.h"
 #include "TextureStates.h"
 #include "WalkIndexBuffer.h"
@@ -284,6 +291,7 @@ g_EmuCDPD = {0};
   /*XB_MACRO(VOID,               WINAPI,     D3DDevice_LoadVertexShaderProgram, (CONST DWORD*, DWORD)                                                              );*/\
   /*XB_MACRO(VOID,               __stdcall,  D3DDevice_LoadVertexShader_0,      ()                                                                                 );*/\
   /*XB_MACRO(VOID,               WINAPI,     D3DDevice_LoadVertexShader_4,      (DWORD)                                                                            );*/\
+    XB_MACRO(HRESULT,            WINAPI,     D3DDevice_PersistDisplay,          (VOID)                                                    );  \
     XB_MACRO(HRESULT,            WINAPI,     D3DDevice_Reset,                   (XTL::X_D3DPRESENT_PARAMETERS*)                                                    );  \
   /*XB_MACRO(VOID,               WINAPI,     D3DDevice_SelectVertexShader,      (DWORD, DWORD)                                                                     );*/\
   /*XB_MACRO(VOID,               __stdcall,  D3DDevice_SelectVertexShader_0,    ()                                                                                 );*/\
@@ -1719,7 +1727,7 @@ static DWORD WINAPI EmuRenderWindow(LPVOID lpVoid)
             sizeof(WNDCLASSEX),
             CS_CLASSDC,
             EmuMsgProc,
-            0, 0, GetModuleHandle(nullptr),
+            0, 0, hActiveModule, // Was GetModuleHandle(nullptr),
 			0, // TODO : LoadIcon(hmodule, ?)
             LoadCursor(NULL, IDC_ARROW),
             (HBRUSH)(g_hBgBrush), NULL,
@@ -1766,7 +1774,8 @@ static DWORD WINAPI EmuRenderWindow(LPVOID lpVoid)
 			windowRect.top,
 			windowRect.right - windowRect.left,
 			windowRect.bottom - windowRect.top,
-            hwndParent, NULL, GetModuleHandle(nullptr), nullptr
+            hwndParent, nullptr, hActiveModule, // Was GetModuleHandle(nullptr),
+            nullptr
         );
     }
 
@@ -1782,7 +1791,9 @@ static DWORD WINAPI EmuRenderWindow(LPVOID lpVoid)
 
     SetFocus(g_hEmuWindow);
 
-    DbgConsole *dbgConsole = new DbgConsole();
+#ifdef INCLUDE_DBG_CONSOLE
+	DbgConsole *dbgConsole = new DbgConsole();
+#endif
 
     // message processing loop
     {
@@ -1805,21 +1816,27 @@ static DWORD WINAPI EmuRenderWindow(LPVOID lpVoid)
             {
 				Sleep(0);
 
+#ifdef INCLUDE_DBG_CONSOLE
                 // if we've just switched back to display off, clear buffer & display prompt
                 if(!g_bPrintfOn && lPrintfOn)
                 {
-                    dbgConsole->Reset();
+					dbgConsole->Reset();
                 }
+#endif
 
                 lPrintfOn = g_bPrintfOn;
 
-                dbgConsole->Process();
+#ifdef INCLUDE_DBG_CONSOLE
+				dbgConsole->Process();
+#endif
             }
         }
 
         g_bRenderWindowActive = false;
 
-        delete dbgConsole;
+#ifdef INCLUDE_DBG_CONSOLE
+		delete dbgConsole;
+#endif
 
         CxbxKrnlCleanup(nullptr);
     }
@@ -8681,9 +8698,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_PersistDisplay)()
 {
 	LOG_FUNC();
 
-	HRESULT hRet = D3D_OK;
-
-	LOG_UNIMPLEMENTED();
+	LOG_INCOMPLETE();
 
 	// TODO: This function simply saves a copy of the display to a surface and persists it in contiguous memory
 	// This function, if ever required, can be implemented as the following
@@ -8695,8 +8710,11 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_PersistDisplay)()
 	// 5. Use MmPersistContigousMemory to persist the surface data across reboot
 	// 6. Call AvSetSavedDataAddress, passing the xbox surface data pointer
 
-
-	return hRet;
+	// Call the native Xbox function so that AvSetSavedDataAddress is called and the VMManager can know its correct address
+	if (XB_TRMP(D3DDevice_PersistDisplay)) {
+		return XB_TRMP(D3DDevice_PersistDisplay)();
+	}
+	return 0;
 }
 
 // ******************************************************************

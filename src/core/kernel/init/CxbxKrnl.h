@@ -26,6 +26,8 @@
 #define CXBXKRNL_H
 
 #include "Cxbx.h"
+#include "common\AddressRanges.h"
+#include "common/ReserveAddressRanges.h"
 #include "common\xbe\Xbe.h"
 #include "Logging.h"
 
@@ -45,97 +47,33 @@ extern "C" {
 
 // Sizes
 #define ONE_KB 1024
-#define ONE_MB (1024 * 1024)
-#define X64KB 64 * ONE_KB
-
-// NT_TIB (Thread Information Block) offsets - see https://www.microsoft.com/msj/archive/S2CE.aspx
-#define TIB_ArbitraryDataSlot  0x14 // = 20 = offsetof(NT_TIB, ArbitraryUserPointer)
-#define TIB_LinearSelfAddress  0x18 // = 24 = offsetof(NT_TIB, Self)
+#define ONE_MB (1024 * ONE_KB)
+#define X64KB (64 * ONE_KB)
 
 #define XBADDR_BITS 32
 #define XBADDR_MAX UINT32_MAX
 
-// Miscellaneous memory variables
-#define KERNEL_STACK_SIZE           12288 // 0x03000, needed by PsCreateSystemThreadEx, however the current implementation doesn't use it
-#define KERNEL_SIZE                 sizeof(DUMMY_KERNEL)
-#define PAGE_SHIFT                  12 // 2^12 = 4K
-#define PAGE_SHIFT_LARGE            22 // 2^22 = 4M
-// Xbox pages are (1 << 12) = 0x00001000 = 4096 bytes in size. Large pages are 4 MiB instead
-// NOTE: PAGE_SIZE is also defined in xfile.h (oxdk) and linux_wrapper.h (oxdk)
-#define PAGE_SIZE                   (1 << PAGE_SHIFT)
-#define PAGE_SIZE_LARGE             0x400000
-#define PAGE_MASK                   (PAGE_SIZE - 1)
-#define BYTES_IN_PHYSICAL_MAP       256 * ONE_MB // this refears to the system RAM physical window 0x80000000 - 0x8FFFFFFF
-#define MAXIMUM_ZERO_BITS           21 // for XbAllocateVirtualMemory
-
-/*! memory size per system */
-#define XBOX_MEMORY_SIZE (64 * ONE_MB)
-#define CHIHIRO_MEMORY_SIZE (128 * ONE_MB)
-#define XBE_IMAGE_BASE 0x00010000
-
-// Define virtual base and alternate virtual base of kernel.
-#define KSEG0_BASE                  0x80000000
-
 // Define virtual base addresses used by the system.
-#define KERNEL_PHYSICAL_ADDRESS                 XBE_IMAGE_BASE // = 0x10000
-#define XBOX_HIGHEST_PHYSICAL_PAGE              0x03FFF
-#define CHIHIRO_HIGHEST_PHYSICAL_PAGE           0x07FFF
-#define X64M_PHYSICAL_PAGE                      0x04000
-#define XBOX_INSTANCE_PHYSICAL_PAGE             0x03FE0
-#define CHIHIRO_INSTANCE_PHYSICAL_PAGE          0x07FF0
-#define XBOX_PFN_DATABASE_PHYSICAL_PAGE         0x03FF0
-#define CHIHIRO_PFN_DATABASE_PHYSICAL_PAGE      0x07FD0
-#define XBOX_CONTIGUOUS_MEMORY_LIMIT            0x03FDF
-#define CHIHIRO_CONTIGUOUS_MEMORY_LIMIT         0x07FCF
-#define PAGE_DIRECTORY_PHYSICAL_ADDRESS         0x0F000
-#define D3D_PHYSICAL_PAGE                       0x00000
-#define DEBUGKIT_FIRST_UPPER_HALF_PAGE          X64M_PHYSICAL_PAGE // = 0x4000
-#define NV2A_INSTANCE_PAGE_COUNT                16
-#define CONTIGUOUS_MEMORY_BASE                  KSEG0_BASE // = 0x80000000
-#define CONTIGUOUS_MEMORY_XBOX_SIZE             (64 * ONE_MB)
-#define CONTIGUOUS_MEMORY_CHIHIRO_SIZE          (128 * ONE_MB)
-#define XBOX_PFN_ADDRESS                        ((XBOX_PFN_DATABASE_PHYSICAL_PAGE << PAGE_SHIFT) + (PCHAR)KSEG0_BASE)
-#define CHIHIRO_PFN_ADDRESS                     ((CHIHIRO_PFN_DATABASE_PHYSICAL_PAGE << PAGE_SHIFT) + (PCHAR)KSEG0_BASE)
-#define MAX_VIRTUAL_ADDRESS                     0xFFFFFFFF
+#define XBOX_CONTIGUOUS_MEMORY_LIMIT        0x03FDF
+#define XBOX_INSTANCE_PHYSICAL_PAGE         0x03FE0
+#define XBOX_PFN_DATABASE_PHYSICAL_PAGE     0x03FF0
+#define XBOX_HIGHEST_PHYSICAL_PAGE          0x03FFF
 
-/*! base addresses of various components */
-// The WC memory is another name of the tiled memory
-#define XBOX_WRITE_COMBINED_BASE 0xF0000000 // WC
-#define XBOX_WRITE_COMBINED_SIZE 0x08000000 // - 0xF7FFFFFF
-#define XBOX_WRITE_COMBINE_END   XBOX_WRITE_COMBINED_BASE + XBOX_WRITE_COMBINED_SIZE // 128 MiB
+#define X64M_PHYSICAL_PAGE                  0x04000
 
-#define XBOX_UNCACHED_BASE       0xF8000000 // UC
-#define XBOX_UNCACHED_SIZE       0x07C00000 // - 0xFFBFFFFF
-#define XBOX_UNCACHED_END        XBOX_UNCACHED_BASE + XBOX_UNCACHED_SIZE - 1 // 128 MiB - 4 MiB
+#define CHIHIRO_CONTIGUOUS_MEMORY_LIMIT     0x07FCF
+#define CHIHIRO_PFN_DATABASE_PHYSICAL_PAGE  0x07FD0
+#define CHIHIRO_INSTANCE_PHYSICAL_PAGE      0x07FF0
+#define CHIHIRO_HIGHEST_PHYSICAL_PAGE       0x07FFF
 
-#define SYSTEM_MEMORY_BASE       0xD0000000
-#define SYSTEM_MEMORY_SIZE       0x20000000 // 512 MiB
-#define SYSTEM_MEMORY_END        SYSTEM_MEMORY_BASE + SYSTEM_MEMORY_SIZE - 1 // 0xEFFFFFFF
+#define PAGE_DIRECTORY_PHYSICAL_ADDRESS     0x0F000
+#define D3D_PHYSICAL_PAGE                   0x00000
+#define DEBUGKIT_FIRST_UPPER_HALF_PAGE      X64M_PHYSICAL_PAGE // = 0x4000
 
-#define DEVKIT_MEMORY_BASE       0xB0000000
-#define DEVKIT_MEMORY_SIZE       0x10000000 // 256 MiB
-#define DEVKIT_MEMORY_END        DEVKIT_MEMORY_BASE + DEVKIT_MEMORY_SIZE - 1 // 0xBFFFFFFF
+#define XBOX_PFN_ADDRESS                    ((XBOX_PFN_DATABASE_PHYSICAL_PAGE << PAGE_SHIFT) + (PCHAR)KSEG0_BASE)
+#define CHIHIRO_PFN_ADDRESS                 ((CHIHIRO_PFN_DATABASE_PHYSICAL_PAGE << PAGE_SHIFT) + (PCHAR)KSEG0_BASE)
 
-#define PHYSICAL_MAP_BASE        0x80000000
-#define PHYSICAL_MAP_SIZE        0x10000000 // 256 MiB
-#define PHYSICAL_MAP_END         PHYSICAL_MAP_BASE + PHYSICAL_MAP_SIZE - 1 // 0x8FFFFFFF
-
-#define XBOX_NV2A_INIT_VECTOR    0xFF000008
-
-#define XBOX_FLASH_ROM_BASE      0xFFF00000
-#define XBOX_FLASH_ROM_SIZE      0x00100000 // - 0xFFFFFFF
-
-#define LOWEST_USER_ADDRESS      XBE_IMAGE_BASE // = 0x10000
-#define HIGHEST_USER_ADDRESS     0x7FFEFFFF
-#define HIGHEST_VMA_ADDRESS      HIGHEST_USER_ADDRESS - X64KB // for NtAllocateVirtualMemory
-#define USER_MEMORY_SIZE         HIGHEST_USER_ADDRESS - LOWEST_USER_ADDRESS + 1 // 0x7FFE0000 = 2 GiB - 128 KiB
-
-#define PAGE_DIRECTORY_BASE      0xC0300000
-#define PAGE_TABLES_BASE         0xC0000000
-#define PAGE_TABLES_SIZE         4 * ONE_MB
-#define PAGE_TABLES_END          PAGE_TABLES_BASE + PAGE_TABLES_SIZE - 1
-
-#define XBOX_KERNEL_BASE (PHYSICAL_MAP_BASE + XBE_IMAGE_BASE)
+#define NV2A_INSTANCE_PAGE_COUNT            16
 
 // For now, virtual addresses are somewhat limited, as we use
 // these soley for loading XBE sections. The largest that we
@@ -144,11 +82,19 @@ extern "C" {
 // fit in 51 MB. If we ever encounter an even larger XBE, this
 // value will have to be increased likewise (maybe up to 64 MB
 // for XBOX_MEMORY_SIZE or even 128 MB for CHIHIRO_MEMORY_SIZE).
-#define XBE_MAX_VA	(64 * ONE_MB)
+#ifdef CXBXR_EMU
+#define XBE_MAX_VA  (128 * ONE_MB)
+#else
+#define XBE_MAX_VA  (64 * ONE_MB)
+#endif
 
 /*! base address of Cxbx host executable, see Cxbx project options, Linker, Advanced, Base Address */
-#define CXBX_BASE_ADDR XBE_IMAGE_BASE
-#define CXBX_BASE_OF_CODE 0x00001000
+#define CXBX_BASE_ADDR     XBE_IMAGE_BASE
+#define CXBX_BASE_OF_CODE  0x00001000
+
+// NT_TIB (Thread Information Block) offsets - see https://www.microsoft.com/msj/archive/S2CE.aspx
+#define TIB_ArbitraryDataSlot  0x14 // = 20 = offsetof(NT_TIB, ArbitraryUserPointer)
+#define TIB_LinearSelfAddress  0x18 // = 24 = offsetof(NT_TIB, Self)
 
 #define MAX_BUS_INTERRUPT_LEVEL 27
 #define MAX_NUM_INTERRUPTS 256
@@ -194,8 +140,11 @@ typedef enum _CxbxMsgDlgIcon {
     CxbxMsgDlgIcon_Warn,
     CxbxMsgDlgIcon_Error,
     CxbxMsgDlgIcon_Unknown
-
 } CxbxMsgDlgIcon;
+
+int CxbxMessageBox(const char* msg, UINT uType = MB_OK, HWND hWnd = NULL);
+
+void CxbxShowError(const char* msg, HWND hWnd = NULL);
 
 void CxbxPopupMessageEx(CXBXR_MODULE cxbxr_module, LOG_LEVEL level, CxbxMsgDlgIcon icon, const char *message, ...);
 
@@ -215,8 +164,12 @@ bool CxbxKrnlVerifyVersion(const char *szVersion);
 
 extern bool g_bIsDebugKernel;
 
+bool CreateSettings();
+
+bool HandleFirstLaunch();
+
 /*! Cxbx Kernel Entry Point */
-void CxbxKrnlMain(int argc, char* argv[]);
+void CxbxKrnlEmulate(unsigned int system, blocks_reserved_t blocks_reserved);
 
 /*! initialize emulation */
 __declspec(noreturn) void CxbxKrnlInit(void *pTLSData, Xbe::TLS *pTLS, Xbe::LibraryVersion *LibraryVersion, DebugMode DbgMode, const char *szDebugFilename, Xbe::Header *XbeHeader, uint32_t XbeHeaderSize, void (*Entry)(), int BootFlags);
@@ -257,10 +210,11 @@ void CxbxInitPerformanceCounters(); // Implemented in EmuKrnlKe.cpp
 
 void CxbxInitFilePaths();
 
-/*! Generate a standard arg format string */
-void CxbxConvertArgToString(std::string &dest, const char* krnlExe, const char* xbeFile, HWND hwndParent, DebugMode krnlDebug, const char* krnlDebugFile);
+// For emulation usage only
+bool CxbxLockFilePath();
+void CxbxUnlockFilePath();
 
-bool CxbxExec(std::string &execCommand, HANDLE* hProcess, bool requestHandleProcess);
+bool CxbxExec(bool useDebugger, HANDLE* hProcess, bool requestHandleProcess);
 
 bool CxbxIsElevated();
 

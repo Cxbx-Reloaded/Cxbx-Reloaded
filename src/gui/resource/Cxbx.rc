@@ -1,6 +1,6 @@
 // Microsoft Visual C++ generated resource script.
 //
-#include "..\src\gui\ResCxbx.h"
+#include "ResCxbx.h"
 
 #define APSTUDIO_READONLY_SYMBOLS
 /////////////////////////////////////////////////////////////////////////////
@@ -550,7 +550,7 @@ IDI_CXBX                ICON                    "Cxbx-R.ico"
 
 1 TEXTINCLUDE 
 BEGIN
-    "..\\src\\gui\\ResCxbx.h\0"
+    "ResCxbx.h\0"
 END
 
 2 TEXTINCLUDE 
@@ -661,9 +661,12 @@ BEGIN
             MENUITEM "&Rescan title Symbol Cache",  ID_CACHE_CLEARHLECACHE_CURRENT,MFT_STRING,MFS_ENABLED
         END
         MENUITEM "", -1, MFT_SEPARATOR
-        POPUP "&LLE (Experimental)",            65535,MFT_STRING,MFS_ENABLED
+        POPUP "Experimental",                   65535,MFT_STRING,MFS_ENABLED
         BEGIN
-            MENUITEM "LLE &GPU",                    ID_EMULATION_LLE_GPU,MFT_STRING,MFS_GRAYED
+            POPUP "&LLE",                           65535,MFT_STRING,MFS_ENABLED
+            BEGIN
+                MENUITEM "LLE &GPU",                    ID_EMULATION_LLE_GPU,MFT_STRING,MFS_GRAYED
+            END
         END
         POPUP "Hacks",                          65535,MFT_STRING,MFS_ENABLED
         BEGIN
@@ -674,6 +677,7 @@ BEGIN
             MENUITEM "Disable Pixel Shaders",       ID_HACKS_DISABLEPIXELSHADERS,MFT_STRING,MFS_ENABLED
             MENUITEM "Skip rdtsc patching",         ID_HACKS_SKIPRDTSCPATCHING,MFT_STRING,MFS_ENABLED
         END
+        MENUITEM "Use Loader Executable",       ID_USELOADEREXEC,MFT_STRING,MFS_ENABLED
         MENUITEM "Allow Admin Privilege",       ID_SETTINGS_ALLOWADMINPRIVILEGE,MFT_STRING,MFS_ENABLED
         MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "Reset To Defaults",           ID_SETTINGS_INITIALIZE,MFT_STRING,MFS_ENABLED

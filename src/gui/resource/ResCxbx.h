@@ -1,6 +1,6 @@
 ﻿//{{NO_DEPENDENCIES}}
 // Microsoft Visual C++ generated include file.
-// Used by C:\Users\anonymous\Documents\xbox\Cxbx-Reloaded\resource\Cxbx.rc
+// Used by Cxbx.rc
 //
 #define IDI_CXBX                        101
 #define IDB_SPLASH                      102
@@ -194,7 +194,7 @@
 #define ID_GUI_STATUS_LLE_FLAGS         1097
 #define ID_GUI_STATUS_XBOX_LED_COLOUR   1098
 #define ID_GUI_STATUS_LOG_ENABLED       1099
-#define IDC_AC_MUTE_ON_UNFOCUS_DISABLE  1100
+#define IDC_AC_MUTE_ON_UNFOCUS_DISABLE  1101
 #define IDC_XBOX_PORT_0                 1158
 #define IDC_XBOX_PORT_1                 1166
 #define IDC_XBOX_PORT_2                 1174
@@ -361,6 +361,8 @@
 #define ID_LOG                          40110
 #define ID_SETTINGS_CONFIG_NETWORK      40111
 #define ID_SYNC_CONFIG_INPUT            40112
+#define ID_SETTINGS_EXPERIMENTAL        40113
+#define ID_USELOADEREXEC                40114
 #define IDC_STATIC                      -1
 
 // Next default values for new objects
@@ -368,8 +370,8 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        136
-#define _APS_NEXT_COMMAND_VALUE         40113
-#define _APS_NEXT_CONTROL_VALUE         1278
+#define _APS_NEXT_COMMAND_VALUE         40115
+#define _APS_NEXT_CONTROL_VALUE         1304
 #define _APS_NEXT_SYMED_VALUE           109
 #endif
 #endif

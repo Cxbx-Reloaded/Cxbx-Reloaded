@@ -19,7 +19,7 @@
 // *  If not, write to the Free Software Foundation, Inc.,
 // *  59 Temple Place - Suite 330, Bostom, MA 02111-1307, USA.
 // *
-// *  (c) 2017-2018      ergo720
+// *  (c) 2017-2018-2019      ergo720
 // *
 // *  All rights reserved
 // *
@@ -52,12 +52,10 @@ typedef unsigned int PFN_COUNT;
 typedef struct _FreeBlock
 {
 	PFN start;                        // starting page of the block
-	PFN_COUNT size;                   // number of pages in the block (edges included)
+	PFN_COUNT size;                   // number of pages in the block
 	xboxkrnl::LIST_ENTRY ListEntry;
 }FreeBlock, *PFreeBlock;
 
-
-// NOTE: all the bit fields below can have endianess issues...
 
 /* The Xbox PTE, modelled around the Intel 386 PTE specification */
 typedef struct _XBOX_PTE
@@ -79,36 +77,31 @@ typedef struct _XBOX_PTE
 
 
 /* PTE as used by the memory manager */
-typedef struct _MMPTE
+typedef union _MMPTE
 {
-	union
-	{
-		ULONG Default;
-		XBOX_PTE Hardware;
-	};
-} MMPTE, *PMMPTE;
+	ULONG Default;
+	XBOX_PTE Hardware;
+}MMPTE, *PMMPTE;
 
 
 /* PFN entry used by the memory manager */
-typedef struct _XBOX_PFN {
-	union
-	{
-		ULONG Default;
-		struct {
-			ULONG LockCount : 16;  // Set to prevent page relocation. Used by MmLockUnlockPhysicalPage and others
-			ULONG Busy : 1;        // If set, PFN is in use
-			ULONG Unused : 1;
-			ULONG PteIndex : 10;   // Offset in the PT that maps the pte (it seems to be needed only for page relocations)
-			ULONG BusyType : 4;    // What the page is used for
-		} Busy;
-		struct {
-			ULONG LockCount : 16;  // Set to prevent page relocation. Used by MmLockUnlockPhysicalPage and others
-			ULONG Busy : 1;        // If set, PFN is in use
-			ULONG PtesUsed : 11;   // Number of used pte's in the PT pointed by the pde
-			ULONG BusyType : 4;    // What the page is used for (must be VirtualPageTableType or SystemPageTableType)
-		} PTPageFrame;
-	};
-} XBOX_PFN, *PXBOX_PFN;
+typedef union _XBOX_PFN
+{
+	ULONG Default;
+	struct {
+		ULONG LockCount : 16;  // Set to prevent page relocation. Used by MmLockUnlockPhysicalPage and others
+		ULONG Busy : 1;        // If set, PFN is in use
+		ULONG Unused : 1;
+		ULONG PteIndex : 10;   // Offset in the PT that maps the pte (it seems to be needed only for page relocations)
+		ULONG BusyType : 4;    // What the page is used for
+	} Busy;
+	struct {
+		ULONG LockCount : 16;  // Set to prevent page relocation. Used by MmLockUnlockPhysicalPage and others
+		ULONG Busy : 1;        // If set, PFN is in use
+		ULONG PtesUsed : 11;   // Number of used pte's in the PT pointed by the pde
+		ULONG BusyType : 4;    // What the page is used for (must be VirtualPageTableType or SystemPageTableType)
+	} PTPageFrame;
+}XBOX_PFN, *PXBOX_PFN;
 
 
 /* enum describing the usage type of the memory pages */
@@ -129,7 +122,7 @@ typedef enum _PageType
 }PageType;
 
 
-/* enum describing the memory layouts available on the Xbox */
+/* enum describing the memory layouts the memory manager can use */
 typedef enum _MmLayout
 {
 	MmChihiro = 1,
@@ -173,17 +166,12 @@ typedef enum _MmLayout
 #define IsPteOnPdeBoundary(Pte) (((ULONG_PTR)(Pte) & (PAGE_SIZE - 1)) == 0)
 #define WRITE_ZERO_PTE(pPte) ((pPte)->Default = 0)
 #define WRITE_PTE(pPte, Pte) (*(pPte) = Pte)
-// On real hardware, enabling only the cache disable bit would result in an effective caching type of USWC
-// (uncacheable speculative write combining), so we set both to achieve it
 #define DISABLE_CACHING(Pte) ((Pte).Hardware.CacheDisable = 1); ((Pte).Hardware.WriteThrough = 1)
 #define SET_WRITE_COMBINE(Pte) ((Pte).Hardware.CacheDisable = 0); ((Pte).Hardware.WriteThrough = 1)
 #define ValidKernelPteBits (PTE_VALID_MASK | PTE_WRITE_MASK | PTE_DIRTY_MASK | PTE_ACCESS_MASK) // 0x63
 #define ValidKernelPdeBits (PTE_VALID_MASK | PTE_WRITE_MASK | PTE_OWNER_MASK | PTE_DIRTY_MASK | PTE_ACCESS_MASK) // 0x67
-// This returns the VAddr in the contiguous region
 #define CONVERT_PFN_TO_CONTIGUOUS_PHYSICAL(Pfn) ((PCHAR)PHYSICAL_MAP_BASE + ((Pfn) << PAGE_SHIFT))
-// This works with both PAddr and VAddr in the contiguous region
 #define CONVERT_CONTIGUOUS_PHYSICAL_TO_PFN(Va) (((Va) & (BYTES_IN_PHYSICAL_MAP - 1)) >> PAGE_SHIFT)
-// This returns the address of the PFN entry for Xbox/Chihiro
 #define XBOX_PFN_ELEMENT(pfn) (&((PXBOX_PFN)XBOX_PFN_ADDRESS)[pfn])
 #define CHIHIRO_PFN_ELEMENT(pfn) (&((PXBOX_PFN)CHIHIRO_PFN_ADDRESS)[pfn])
 
@@ -195,9 +183,9 @@ typedef enum _MmLayout
 #define ROUND_DOWN(size, alignment) ((size) & (~(alignment - 1)))
 #define CHECK_ALIGNMENT(size, alignment) (((size) % (alignment)) == 0)
 #define PAGES_SPANNED(Va, Size) ((ULONG)((((VAddr)(Va) & (PAGE_SIZE - 1)) + (Size) + (PAGE_SIZE - 1)) >> PAGE_SHIFT))
-#define PAGES_SPANNED_LARGE(Va, Size) ((ULONG)((((VAddr)(Va) & (PAGE_SIZE_LARGE - 1)) + (Size) + (PAGE_SIZE_LARGE - 1)) >> PAGE_SHIFT_LARGE))
+#define PAGES_SPANNED_LARGE(Va, Size) ((ULONG)((((VAddr)(Va) & (LARGE_PAGE_SIZE - 1)) + (Size) + (LARGE_PAGE_SIZE - 1)) >> LARGE_PAGE_SHIFT))
 #define BYTE_OFFSET(Va) ((ULONG)((VAddr)(Va) & (PAGE_SIZE - 1)))
-#define BYTE_OFFSET_LARGE(Va) ((ULONG)((VAddr)(Va) & (PAGE_SIZE_LARGE - 1)))
+#define BYTE_OFFSET_LARGE(Va) ((ULONG)((VAddr)(Va) & (LARGE_PAGE_SIZE - 1)))
 #define PAGE_END(Va) (((ULONG_PTR)(Va) & (PAGE_SIZE - 1)) == 0)
 
 
@@ -253,13 +241,13 @@ class PhysicalMemory
 		// release a contiguous number of pages
 		void InsertFree(PFN start, PFN end);
 		// convert from Xbox to the desired system pte protection (if possible) and return it
-		bool ConvertXboxToSystemPteProtection(DWORD perms, PMMPTE pPte);
+		bool ConvertXboxToSystemPtePermissions(DWORD perms, PMMPTE pPte);
 		// convert from Xbox to non-system pte protection (if possible) and return it
-		bool ConvertXboxToPteProtection(DWORD perms, PMMPTE pPte);
+		bool ConvertXboxToPtePermissions(DWORD perms, PMMPTE pPte);
 		// convert from pte permissions to the corresponding Xbox protection code
-		DWORD ConvertPteToXboxProtection(ULONG PteMask);
+		DWORD ConvertPteToXboxPermissions(ULONG PteMask);
 		// convert from Xbox to Windows permissions
-		DWORD ConvertXboxToWinProtection(DWORD Perms);
+		DWORD ConvertXboxToWinPermissions(DWORD Perms);
 		// add execute rights if the permission mask doesn't include it
 		DWORD PatchXboxPermissions(DWORD Perms);
 		// commit page tables (if necessary)

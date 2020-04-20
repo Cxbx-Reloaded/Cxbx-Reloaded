@@ -33,6 +33,8 @@
 #include <filesystem>
 #include "common\input\InputManager.h"
 #include "common\input\layout_xbox_controller.h"
+#include <fstream>
+#include "common/util/cliConfig.hpp"
 
 // TODO: Implement Qt support when real CPU emulation is available.
 #ifndef QT_VERSION // NOTE: Non-Qt will be using current directory for data
@@ -44,8 +46,6 @@ static_assert(false, "Please implement support for cross-platform's user profile
 #include <QFile> // for check file existance
 #include <QStandardPaths> // for cross-platform's user profile support
 #endif
-
-std::string g_exec_filepath;
 
 // Individual library version
 uint16_t g_LibVersion_D3D8 = 0;
@@ -59,7 +59,7 @@ uint16_t g_LibVersion_DSOUND = 0;
 // * 4: (LukeUsher), added network settings
 // * 5: (ergo720),   added new input gui settings and revision to core
 ///////////////////////////
-const unsigned int settings_version = 5;
+const unsigned int settings_version = 6;
 
 Settings* g_Settings = nullptr;
 
@@ -89,6 +89,7 @@ static struct {
 	const char* AllowAdminPrivilege = "AllowAdminPrivilege";
 	const char* LoggedModules = "LoggedModules";
 	const char* LogLevel = "LogLevel";
+	const char* LoaderExecutable = "LoaderExecutable";
 } sect_core_keys;
 
 static const char* section_video = "video";
@@ -144,7 +145,9 @@ static struct {
 
 std::string GenerateExecDirectoryStr()
 {
-	return g_exec_filepath.substr(0, g_exec_filepath.find_last_of("\\/"));
+	std::string exec_path;
+	(void)cli_config::GetValue(cli_config::exec, &exec_path);
+	return exec_path.substr(0, exec_path.find_last_of("\\/"));
 }
 
 // NOTE: This function will be only have Qt support, std::filesystem doesn't have generic support.
@@ -203,41 +206,12 @@ bool Settings::Init()
 	// Enter setup installer process
 	if (!bRet) {
 
-		std::string saveFile;
-#ifdef RETRO_API_VERSION // TODO: Change me to #ifndef QT_VERSION
-		// Can only have one option without Qt.
-		saveFile = GenerateExecDirectoryStr();
+		std::string setupFile;
+		m_gui.DataStorageToggle = SetupFile(setupFile);
 
-#else // Only support for Qt compile build.
-		int iRet = MessageBox(nullptr, szSettings_save_user_option_message, "Cxbx-Reloaded", MB_YESNOCANCEL | MB_ICONQUESTION);
-
-		if (iRet == IDYES) {
-			saveFile = GenerateExecDirectoryStr();
-			m_gui.DataStorageToggle = CXBX_DATA_EXECDIR;
-		}
-		else if (iRet == IDNO){
-			saveFile = GenerateUserProfileDirectoryStr();
-			m_gui.DataStorageToggle = CXBX_DATA_APPDATA;
-			if (saveFile.size() == 0) {
-				return false;
-			}
-
-			// Check if data directory exists.
-			bRet = std::filesystem::exists(saveFile);
-			if (!bRet) {
-				// Then try create data directory.
-				bRet = std::filesystem::create_directory(saveFile);
-				if (!bRet) {
-					// Unable to create a data directory
-					return false;
-				}
-			}
-		}
-		else {
+		if (m_gui.DataStorageToggle == CXBX_DATA_INVALID) {
 			return false;
 		}
-#endif
-		saveFile.append(szSettings_settings_file);
 
 		// Call LoadConfig, this will load the config, applying defaults for any missing fields
 		bRet = LoadConfig();
@@ -247,30 +221,18 @@ bool Settings::Init()
 			return false;
 		}
 
-		bRet = Save(saveFile);
+		bRet = Save(setupFile);
 	}
 	return bRet;
 }
 
 bool Settings::LoadUserConfig()
 {
-	std::string fileSearch = GenerateExecDirectoryStr();
+	std::string fileSearch;
+	m_gui.DataStorageToggle = FindSettingsLocation(fileSearch);
 
-	fileSearch.append(szSettings_settings_file);
-
-	// Check and see if file exists from portable, current, directory.
-	if (std::filesystem::exists(fileSearch) == false) {
-
-		fileSearch = GenerateUserProfileDirectoryStr();
-		if (fileSearch.size() == 0) {
-			return false;
-		}
-		fileSearch.append(szSettings_settings_file);
-
-		// Check if the user profile directory settings file exists.
-		if (std::filesystem::exists(fileSearch) == false) {
-			return false;
-		}
+	if (m_gui.DataStorageToggle == CXBX_DATA_INVALID) {
+		return false;
 	}
 
 	return LoadFile(fileSearch);
@@ -388,6 +350,8 @@ bool Settings::LoadConfig()
 		m_core.LoggedModules[index] = 0;
 		index++;
 	}
+
+	m_core.bUseLoaderExec = m_si.GetBoolValue(section_core, sect_core_keys.LoaderExecutable, /*Default=*/true);
 
 	// ==== Core End ============
 
@@ -563,6 +527,8 @@ bool Settings::Save(std::string file_path)
 		stream << "0x" << std::hex << m_core.LoggedModules[i];
 		m_si.SetValue(section_core, sect_core_keys.LoggedModules, stream.str().c_str(), nullptr, false);
 	}
+
+	m_si.SetBoolValue(section_core, sect_core_keys.LoaderExecutable, m_core.bUseLoaderExec, nullptr, true);
 
 	// ==== Core End ============
 
@@ -820,6 +786,82 @@ std::string Settings::GetDataLocation()
 	return m_current_data_location;
 }
 
+// Detect where settings file is located and return default data mode.
+CXBX_DATA Settings::FindSettingsLocation(std::string& file_path_out)
+{
+	std::string fileSearch = GenerateExecDirectoryStr();
+	CXBX_DATA ret = CXBX_DATA_EXECDIR;
+
+	fileSearch.append(szSettings_settings_file);
+
+	// Check and see if file exists from portable, current, directory.
+	if (std::filesystem::exists(fileSearch) == false) {
+
+		fileSearch = GenerateUserProfileDirectoryStr();
+		if (fileSearch.size() == 0) {
+			return CXBX_DATA_INVALID;
+		}
+		CXBX_DATA ret = CXBX_DATA_APPDATA;
+		fileSearch.append(szSettings_settings_file);
+
+		// Check if the user profile directory settings file exists.
+		if (std::filesystem::exists(fileSearch) == false) {
+			return CXBX_DATA_INVALID;
+		}
+	}
+	file_path_out = fileSearch;
+
+	return ret;
+}
+
+// Enter setup installer process
+CXBX_DATA Settings::SetupFile(std::string& file_path_out)
+{
+	std::string setupFile;
+	CXBX_DATA data_ret = CXBX_DATA_INVALID;
+#ifdef RETRO_API_VERSION // TODO: Change me to #ifndef QT_VERSION
+	// Can only have one option without Qt.
+	setupFile = GenerateExecDirectoryStr();
+
+#else // Only support for Qt compile build.
+	int iRet = MessageBox(nullptr, szSettings_save_user_option_message, "Cxbx-Reloaded", MB_YESNOCANCEL | MB_ICONQUESTION);
+
+	if (iRet == IDYES) {
+		setupFile = GenerateExecDirectoryStr();
+		data_ret = CXBX_DATA_EXECDIR;
+	}
+	else if (iRet == IDNO) {
+		setupFile = GenerateUserProfileDirectoryStr();
+		data_ret = CXBX_DATA_APPDATA;
+		if (setupFile.size() != 0) {
+			// Check if data directory exists.
+			if (!std::filesystem::exists(setupFile)) {
+				// Then try create data directory.
+				if (!std::filesystem::create_directory(setupFile)) {
+					// Unable to create a data directory
+					data_ret = CXBX_DATA_INVALID;
+				}
+			}
+		}
+	}
+#endif
+
+	if (data_ret == CXBX_DATA_INVALID) {
+		MessageBox(nullptr, szSettings_setup_error, "Cxbx-Reloaded", MB_OK);
+	}
+	else {
+		setupFile.append(szSettings_settings_file);
+		// Create the file, that's it. Load the default configuration later on;
+		std::ofstream createFile(setupFile);
+		if (createFile.is_open()) {
+			createFile.close();
+		}
+		file_path_out = setupFile;
+	}
+
+	return data_ret;
+}
+
 void Settings::RemoveLegacyConfigs(unsigned int CurrentRevision)
 {
 	switch (CurrentRevision) {
@@ -830,6 +872,9 @@ void Settings::RemoveLegacyConfigs(unsigned int CurrentRevision)
 		m_si.Delete(section_controller_port, nullptr, true);
 		break;
 	case 5:
+		m_si.Delete(section_core, "LoaderExperiment", true);
+		break;
+	case 6:
 	default:
 		break;
 	}
