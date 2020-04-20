@@ -1,10 +1,10 @@
 @echo off
 
-REM CXbx-Reloaded setup script
+REM Cxbx-Reloaded setup script
 REM
-REM Depends on git,  cmake and Visual Studio being installed.
+REM Depends on git, cmake and Visual Studio being installed.
 
-echo Pulling lastest version from git...
+echo Pulling latest version from git...
 REM git clone --recurse-submodules https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/
 git pull --recurse-submodules
 
@@ -21,6 +21,6 @@ REM cmake .. -G "Visual Studio 16 2019" -A Win32
 cmake .. -A Win32
 
 echo Building solution...
-cmake --build .
+cmake --build . -j %NUMBER_OF_PROCESSORS%
 
 echo Done! Enjoy using Cxbx-Reloaded!
