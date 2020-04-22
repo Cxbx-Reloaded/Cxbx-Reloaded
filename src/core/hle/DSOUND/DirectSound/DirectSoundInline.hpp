@@ -1045,7 +1045,7 @@ static inline HRESULT HybridDirectSound3DListener_SetDopplerFactor(
     RETURN_RESULT_CHECK(hRet);
 }
 /*
-//TODO: PC DirectSound does not have SetHeadroom method function.
+//TODO: PC DirectSound does not have SetEG method function.
 //IDirectSoundStream
 //IDirectSoundBuffer
 static inline HRESULT HybridDirectSoundBuffer_SetEG(
@@ -1056,7 +1056,7 @@ static inline HRESULT HybridDirectSoundBuffer_SetEG(
     return DS_OK;
 }
 
-//TODO: PC DirectSound does not have SetHeadroom method function.
+//TODO: PC DirectSound does not have SetFilter method function.
 //IDirectSoundStream
 //IDirectSoundBuffer
 static inline HRESULT HybridDirectSoundBuffer_SetFilter(

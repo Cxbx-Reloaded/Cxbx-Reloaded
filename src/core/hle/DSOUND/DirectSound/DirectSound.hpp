@@ -1420,7 +1420,7 @@ HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_SetNotificationPositions)
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(CDirectSoundStream_SetRolloffCurve)
 (
-    X_CDirectSoundBuffer*   pThis,
+    X_CDirectSoundStream*   pThis,
     const FLOAT*            pflPoints,
     DWORD                   dwPointCount,
     DWORD                   dwApply
