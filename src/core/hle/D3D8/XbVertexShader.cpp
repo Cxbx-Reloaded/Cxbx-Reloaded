@@ -338,7 +338,7 @@ class XboxVertexDeclarationConverter
 {
 protected:
 	// Internal variables
-	CxbxVertexShaderInfo* pVertexShaderInfoToSet;
+	CxbxVertexDeclaration* pVertexDeclarationToSet;
 	CxbxVertexShaderStreamInfo* pCurrentVertexShaderStreamInfo = nullptr;
 	bool IsFixedFunction;
 	D3DVERTEXELEMENT* pRecompiled;
@@ -739,7 +739,7 @@ private:
 			DWORD StreamNumber = VshGetVertexStream(*pXboxToken);
 
 			// new stream
-			pCurrentVertexShaderStreamInfo = &(pVertexShaderInfoToSet->VertexStreams[StreamNumber]);
+			pCurrentVertexShaderStreamInfo = &(pVertexDeclarationToSet->VertexStreams[StreamNumber]);
 			pCurrentVertexShaderStreamInfo->NeedPatch = FALSE;
 			pCurrentVertexShaderStreamInfo->DeclPosition = FALSE;
 			pCurrentVertexShaderStreamInfo->CurrentStreamNumber = 0;
@@ -749,7 +749,7 @@ private:
 			// Dxbx note : Use Dophin(s), FieldRender, MatrixPaletteSkinning and PersistDisplay as a testcase
 
 			pCurrentVertexShaderStreamInfo->CurrentStreamNumber = VshGetVertexStream(*pXboxToken);
-			pVertexShaderInfoToSet->NumberOfVertexStreams++;
+			pVertexDeclarationToSet->NumberOfVertexStreams++;
 			// TODO : Keep a bitmask for all StreamNumber's seen?
 		}
 	}
@@ -1129,12 +1129,12 @@ private:
 	}
 
 public:
-	D3DVERTEXELEMENT *Convert(DWORD* pXboxDeclaration, bool bIsFixedFunction, CxbxVertexShaderInfo* pCxbxVertexShaderInfo)
+	D3DVERTEXELEMENT *Convert(DWORD* pXboxDeclaration, bool bIsFixedFunction, CxbxVertexDeclaration* pCxbxVertexDeclaration)
 	{
 		// Get a preprocessed copy of the original Xbox Vertex Declaration
 		auto pXboxVertexDeclarationCopy = RemoveXboxDeclarationRedefinition(pXboxDeclaration);
 
-		pVertexShaderInfoToSet = pCxbxVertexShaderInfo;
+		pVertexDeclarationToSet = pCxbxVertexDeclaration;
 
 		IsFixedFunction = bIsFixedFunction;
 
@@ -1184,7 +1184,7 @@ public:
 
 		// Record which registers are in the vertex declaration
 		for (size_t i = 0; i < RegVIsPresentInDeclaration.size(); i++) {
-			pCxbxVertexShaderInfo->vRegisterInDeclaration[i] = RegVIsPresentInDeclaration[i];
+			pCxbxVertexDeclaration->vRegisterInDeclaration[i] = RegVIsPresentInDeclaration[i];
 		}
 
 		return Result;
@@ -1196,12 +1196,12 @@ D3DVERTEXELEMENT *EmuRecompileVshDeclaration
     DWORD                *pXboxDeclaration,
     bool                  bIsFixedFunction,
     DWORD                *pXboxDeclarationCount,
-    CxbxVertexShaderInfo *pCxbxVertexShaderInfo
+    CxbxVertexDeclaration *pCxbxVertexDeclaration
 )
 {
 	XboxVertexDeclarationConverter Converter;
 
-	D3DVERTEXELEMENT* pHostVertexElements = Converter.Convert(pXboxDeclaration, bIsFixedFunction, pCxbxVertexShaderInfo);
+	D3DVERTEXELEMENT* pHostVertexElements = Converter.Convert(pXboxDeclaration, bIsFixedFunction, pCxbxVertexDeclaration);
 
 	*pXboxDeclarationCount = Converter.XboxDeclarationCount;
 
@@ -1210,7 +1210,7 @@ D3DVERTEXELEMENT *EmuRecompileVshDeclaration
 
 extern void FreeVertexDynamicPatch(CxbxVertexShader *pVertexShader)
 {
-    pVertexShader->VertexShaderInfo.NumberOfVertexStreams = 0;
+    pVertexShader->Declaration.NumberOfVertexStreams = 0;
 }
 
 // Checks for failed vertex shaders, and shaders that would need patching
@@ -1248,15 +1248,15 @@ extern boolean IsValidCurrentShader(void)
 	return VshHandleIsValidShader(g_Xbox_VertexShader_Handle);
 }
 
-CxbxVertexShaderInfo *GetCxbxVertexShaderInfo(DWORD XboxVertexShaderHandle)
+CxbxVertexDeclaration *GetCxbxVertexDeclaration(DWORD XboxVertexShaderHandle)
 {
     CxbxVertexShader *pCxbxVertexShader = GetCxbxVertexShader(XboxVertexShaderHandle);
 
-    for (uint32_t i = 0; i < pCxbxVertexShader->VertexShaderInfo.NumberOfVertexStreams; i++)
+    for (uint32_t i = 0; i < pCxbxVertexShader->Declaration.NumberOfVertexStreams; i++)
     {
-        if (pCxbxVertexShader->VertexShaderInfo.VertexStreams[i].NeedPatch)
+        if (pCxbxVertexShader->Declaration.VertexStreams[i].NeedPatch)
         {
-            return &pCxbxVertexShader->VertexShaderInfo;
+            return &pCxbxVertexShader->Declaration;
         }
     }
     return nullptr;

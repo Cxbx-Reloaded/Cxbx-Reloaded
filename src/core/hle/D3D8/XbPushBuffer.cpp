@@ -180,9 +180,9 @@ DWORD CxbxGetStrideFromVertexShaderHandle(DWORD dwVertexShader)
 
 		CxbxVertexShader *pCxbxVertexShader = GetCxbxVertexShader(dwVertexShader);
 		if (pCxbxVertexShader) {
-			if (pCxbxVertexShader->VertexShaderInfo.NumberOfVertexStreams == 1) {
+			if (pCxbxVertexShader->Declaration.NumberOfVertexStreams == 1) {
 				// Note : This assumes that the only stream in use will be stream zero :
-				Stride = pCxbxVertexShader->VertexShaderInfo.VertexStreams[0].HostVertexStride;
+				Stride = pCxbxVertexShader->Declaration.VertexStreams[0].HostVertexStride;
 			}
 			else {
 				LOG_TEST_CASE("Non-FVF Vertex Shaders with multiple streams not supported for PushBuffer emulation!");
