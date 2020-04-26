@@ -1323,21 +1323,47 @@ extern void EmuParseVshFunction
 	IntermediateVertexShader* pShader
 )
 {
-	uint32_t* pToken;
 	auto VshDecoder = XboxVertexShaderDecoder();
 
 	*pXboxFunctionSize = 0;
 
-	// Just copy the header for now
-	pShader->Header = *(XTL::X_VSH_SHADER_HEADER*)pXboxFunction;
+	// FIXME tidy handling of the header vs headerless cases
+	// Normally, pXboxFunction has a shader header before the shader tokens
+	// But we can also load shader tokens directly from the Xbox vertex shader slots too
+
+	bool headerless = pXboxFunction[0] == 0; // if its a token instead of a header, first DWORD is unused
+	auto headerSize = headerless ? 0 : sizeof(XTL::X_VSH_SHADER_HEADER);
 
 	// Decode the vertex shader program tokens into an intermediate representation
-	pToken = (uint32_t*)((uintptr_t)pXboxFunction + sizeof(XTL::X_VSH_SHADER_HEADER));
-	while (VshDecoder.VshConvertToIntermediate(pToken, pShader)) {
-		pToken += X_VSH_INSTRUCTION_SIZE;
+	uint32_t* pCurToken = (uint32_t*)((uintptr_t)pXboxFunction + headerSize);
+
+	if (headerless) {
+		// We've been fed shader slots. Make up a header...
+		pShader->Header.Version = VERSION_XVS;
+		pShader->Header.NumInst = pShader->Instructions.size();
+
+		// Decode until we hit a token marked final
+		while (VshDecoder.VshConvertToIntermediate(pCurToken, pShader)) {
+			pCurToken += X_VSH_INSTRUCTION_SIZE;
+		}
+	}
+	else {
+		pShader->Header = *(XTL::X_VSH_SHADER_HEADER*)pXboxFunction;
+		// Decode only up to the number of instructions in the header
+		// The last instruction may not be marked final:
+		// Test case: Multiple Vertex Shaders sample
+		for (int i = 0; i < pShader->Header.NumInst; i++) {
+			if (!VshDecoder.VshConvertToIntermediate(pCurToken, pShader)) {
+				if (i < pShader->Header.NumInst - 1) {
+					LOG_TEST_CASE("Shader instructions after final instruction");
+				}
+				break;
+			}
+			pCurToken += X_VSH_INSTRUCTION_SIZE;
+		}
 	}
 
 	// The size of the shader is
-	pToken += X_VSH_INSTRUCTION_SIZE; // always at least one token
-	*pXboxFunctionSize = (intptr_t)pToken - (intptr_t)pXboxFunction;
+	pCurToken += X_VSH_INSTRUCTION_SIZE; // always at least one token
+	*pXboxFunctionSize = (intptr_t)pCurToken - (intptr_t)pXboxFunction;
 }

@@ -47,6 +47,7 @@ ShaderKey VertexShaderSource::CreateShader(const DWORD* pXboxFunction, DWORD *pX
 		pXboxFunctionSize,
 		&intermediateShader);
 
+	// FIXME ignore shader header when creating key
 	ShaderKey key = ComputeHash((void*)pXboxFunction, *pXboxFunctionSize);
 
 	// Check if we need to create the shader
