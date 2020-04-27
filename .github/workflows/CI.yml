@@ -65,10 +65,9 @@ jobs:
           path: artifacts
 
   release:
-    if: | # TODO: Remove develop once rebased
+    if: |
       github.event.action != 'pull_request' &&
-      (github.ref == 'refs/heads/develop' ||
-       github.ref == 'refs/heads/master')   &&
+      github.ref == 'refs/heads/master' &&
       github.repository == 'Cxbx-Reloaded/Cxbx-Reloaded'
     needs: build-windows
     env:
