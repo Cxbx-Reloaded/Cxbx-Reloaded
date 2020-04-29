@@ -195,7 +195,6 @@ static XTL::DWORD                  *g_Xbox_D3DDevice; // TODO: This should be a 
 static	DWORD						g_dwVertexShaderUsage = 0; // Unused. If needed, move to XbVertexShader.cpp
 */
 
-static std::array<DWORD[X_VSH_INSTRUCTION_SIZE], X_VSH_MAX_INSTRUCTION_COUNT> g_VertexShaderSlots = { 0 };
        XTL::DWORD                   g_Xbox_VertexShader_Handle = 0;
 
 // Static Function(s)
@@ -3532,27 +3531,23 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_LoadVertexShader)
 	// Handle is always address of an X_D3DVertexShader struct, thus always or-ed with 1 (X_D3DFVF_RESERVED0)
 	// Address is the slot (offset) from which the program must be written onwards (as whole DWORDS)
 	// D3DDevice_LoadVertexShader pushes the program contained in the Xbox VertexShader struct to the NV2A
-	if(Address < g_VertexShaderSlots.size()) {
+	auto CxbxVertexShaderSlotPtr = GetCxbxVertexShaderSlotPtr(Address);
+	if(CxbxVertexShaderSlotPtr) {
 		CxbxVertexShader * pCxbxVertexShader = GetCxbxVertexShader(Handle);
 		if (pCxbxVertexShader) {
 			int upToSlot = Address + pCxbxVertexShader->XboxNrAddressSlots;
-			if (upToSlot > g_VertexShaderSlots.size()) {
+			if (upToSlot > X_VSH_MAX_INSTRUCTION_COUNT) {
 				LOG_TEST_CASE("Shader does not fit in vertex shader slots");
 				return;
 			}
 
 			// Skip the header DWORD at the beginning
 			auto pTokens = &pCxbxVertexShader->pXboxFunctionCopy[1];
-			for (DWORD i = 0; i < pCxbxVertexShader->XboxNrAddressSlots * X_VSH_INSTRUCTION_SIZE; i++) {
-				g_VertexShaderSlots[Address][i] = pTokens[i];
-			}
+			memcpy(CxbxVertexShaderSlotPtr, pTokens, pCxbxVertexShader->XboxNrAddressSlots * X_VSH_INSTRUCTION_SIZE_BYTES);
 		}
 		else {
 			LOG_TEST_CASE("LoadVertexShader called with unrecognized handle %d", Handle);
 		}
-	}
-	else {
-		LOG_TEST_CASE("LoadVertexShader address %d out of range", Address);
 	}
 }
 
@@ -3625,15 +3620,12 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SelectVertexShader)
 		SetCxbxVertexShader(pCxbxVertexShader);
     }
 
-	if (Address < g_VertexShaderSlots.size()) {
+	auto pTokens = GetCxbxVertexShaderSlotPtr(Address);
+	if (pTokens) {
 		// Create a vertex shader from the tokens
-		auto pTokens = &g_VertexShaderSlots[Address][0];
 		DWORD shaderSize;
 		auto shaderKey = g_VertexShaderSource.CreateShader(pTokens, &shaderSize);
 		g_pD3DDevice->SetVertexShader(g_VertexShaderSource.GetShader(shaderKey));
-	}
-	else {
-		LOG_TEST_CASE("SelectVertexShader address %d out of range", Address);
 	}
 
 	if (FAILED(hRet))
@@ -8144,11 +8136,13 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_LoadVertexShaderProgram)
 	// D3DDevice_LoadVertexShaderProgram splits the given function buffer into batch-wise pushes to the NV2A
 
 	// Copy shader instructions to shader slots
+	auto CxbxVertexShaderSlotPtr = GetCxbxVertexShaderSlotPtr(Address);
+	if (CxbxVertexShaderSlotPtr == nullptr)
+		return;
+
 	auto shaderHeader = *((XTL::X_VSH_SHADER_HEADER*) pFunction);
 	auto tokens = &pFunction[1];
-	for (int i = 0; i < shaderHeader.NumInst * X_VSH_INSTRUCTION_SIZE; i++) {
-		g_VertexShaderSlots[Address][i] = tokens[i];
-	}
+	memcpy(CxbxVertexShaderSlotPtr, tokens, shaderHeader.NumInst * X_VSH_INSTRUCTION_SIZE_BYTES);
 }
 
 // ******************************************************************

@@ -233,6 +233,7 @@ inline boolean VshHandleIsVertexShader(DWORD Handle) { return (Handle & X_D3DFVF
 inline boolean VshHandleIsFVF(DWORD Handle) { return !VshHandleIsVertexShader(Handle); }
 inline XTL::X_D3DVertexShader *VshHandleToXboxVertexShader(DWORD Handle) { return (XTL::X_D3DVertexShader *)(Handle & ~X_D3DFVF_RESERVED0);}
 
+extern DWORD* GetCxbxVertexShaderSlotPtr(const DWORD SlotIndexAddress);
 extern CxbxVertexShader* GetCxbxVertexShader(DWORD XboxVertexShaderHandle);
 extern void SetCxbxVertexShader(DWORD XboxVertexShaderHandle, CxbxVertexShader* shader);
 

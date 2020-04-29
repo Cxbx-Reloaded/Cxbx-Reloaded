@@ -1248,6 +1248,18 @@ extern boolean IsValidCurrentShader(void)
 	return VshHandleIsValidShader(g_Xbox_VertexShader_Handle);
 }
 
+static DWORD g_CxbxVertexShaderSlots[X_VSH_MAX_INSTRUCTION_COUNT * X_VSH_INSTRUCTION_SIZE] = { 0 };
+
+DWORD* GetCxbxVertexShaderSlotPtr(const DWORD SlotIndexAddress)
+{
+	if (SlotIndexAddress < X_VSH_MAX_INSTRUCTION_COUNT) {
+		return &g_CxbxVertexShaderSlots[SlotIndexAddress * X_VSH_INSTRUCTION_SIZE];
+	} else {
+		LOG_TEST_CASE("SlotIndexAddress %d out of range", SlotIndexAddress);
+		return nullptr;
+	}
+}
+
 CxbxVertexDeclaration *GetCxbxVertexDeclaration(DWORD XboxVertexShaderHandle)
 {
     CxbxVertexShader *pCxbxVertexShader = GetCxbxVertexShader(XboxVertexShaderHandle);
