@@ -74,7 +74,6 @@ typedef struct _CxbxVertexDeclaration
 	IDirect3DVertexDeclaration* pHostVertexDeclaration;
 	DWORD* pXboxDeclarationCopy;
 	DWORD  XboxDeclarationCount; // Xbox's number of DWORD-sized X_D3DVSD* tokens
-	DWORD HostFVF; // Flexible Vertex Format (used when there's no host vertex shader)
 	UINT                       NumberOfVertexStreams; // The number of streams the vertex shader uses
 	bool vRegisterInDeclaration[X_VSH_MAX_ATTRIBUTES];
 }
@@ -92,7 +91,7 @@ typedef struct _CxbxVertexShader
 	// DWORD              XboxStatus; // Used by VshHandleIsValidShader()
 
 	// The resulting host variables
-	uint64_t VertexShaderKey; // if nullptr, use SetFVF(HostFVF);
+	uint64_t VertexShaderKey;
 
 	// Needed for dynamic stream patching
 	CxbxVertexDeclaration  Declaration;

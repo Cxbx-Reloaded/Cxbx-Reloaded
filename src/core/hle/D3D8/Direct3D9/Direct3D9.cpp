@@ -999,19 +999,9 @@ void SetCxbxVertexShader(CxbxVertexShader* pCxbxVertexShader) {
 	hRet = g_pD3DDevice->SetVertexShader(pHostShader);
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetVertexShader");
 
-	// Set either FVF or the vertex declaration
-	if (pCxbxVertexShader->Declaration.HostFVF)
-	{
-		// Set the FVF
-		hRet = g_pD3DDevice->SetFVF(pCxbxVertexShader->Declaration.HostFVF);
-		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetFVF");
-	}
-	else
-	{
-		// Set vertex declaration
-		hRet = g_pD3DDevice->SetVertexDeclaration(pCxbxVertexShader->Declaration.pHostVertexDeclaration);
-		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetVertexDeclaration");
-	}
+	// Set vertex declaration
+	hRet = g_pD3DDevice->SetVertexDeclaration(pCxbxVertexShader->Declaration.pHostVertexDeclaration);
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetVertexDeclaration");
 
 	// Set vertex shader constants if necessary
 	if (pHostShader) {
@@ -4248,7 +4238,6 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateVertexShader)
 	pCxbxVertexShader->pXboxFunctionCopy = nullptr;
 	pCxbxVertexShader->XboxVertexShaderType = X_VST_NORMAL; // TODO : This can vary
 	pCxbxVertexShader->XboxNrAddressSlots = (XboxFunctionSize - sizeof(X_VSH_SHADER_HEADER)) / X_VSH_INSTRUCTION_SIZE_BYTES;
-	pCxbxVertexShader->Declaration.HostFVF = 0;
 	pCxbxVertexShader->VertexShaderKey = vertexShaderKey;
 	pCxbxVertexShader->Declaration.XboxDeclarationCount = XboxDeclarationCount;
 	// Save the status, to remove things later
