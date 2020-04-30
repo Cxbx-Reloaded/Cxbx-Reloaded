@@ -1426,6 +1426,42 @@ void CxbxImpl_SetVertexShader(DWORD Handle)
 	}
 }
 
+void CxbxImpl_DeleteVertexShader(DWORD Handle)
+{
+	LOG_INIT // Allows use of DEBUG_D3DRESULT
+
+	// Handle is always address of an Xbox VertexShader struct, or-ed with 1 (X_D3DFVF_RESERVED0)
+	// It's reference count is lowered. If it reaches zero (0), the struct is freed.
+
+	if (VshHandleIsVertexShader(Handle))
+	{
+		CxbxVertexShader* pCxbxVertexShader = GetCxbxVertexShader(Handle);
+		SetCxbxVertexShader(Handle, nullptr);
+
+		if (pCxbxVertexShader->Declaration.pHostVertexDeclaration) {
+			HRESULT hRet = pCxbxVertexShader->Declaration.pHostVertexDeclaration->Release();
+			DEBUG_D3DRESULT(hRet, "g_pD3DDevice->DeleteVertexShader(pHostVertexDeclaration)");
+		}
+
+		// Release the host vertex shader
+		g_VertexShaderSource.ReleaseShader(pCxbxVertexShader->VertexShaderKey);
+
+		if (pCxbxVertexShader->Declaration.pXboxDeclarationCopy)
+		{
+			free(pCxbxVertexShader->Declaration.pXboxDeclarationCopy);
+		}
+
+		if (pCxbxVertexShader->pXboxFunctionCopy)
+		{
+			free(pCxbxVertexShader->pXboxFunctionCopy);
+		}
+
+		FreeVertexDynamicPatch(pCxbxVertexShader);
+
+		free(pCxbxVertexShader);
+	}
+}
+
 void CxbxImpl_SetVertexShaderConstant(INT Register, PVOID pConstantData, DWORD ConstantCount)
 {
 	LOG_INIT // Allows use of DEBUG_D3DRESULT

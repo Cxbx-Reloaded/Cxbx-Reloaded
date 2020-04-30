@@ -7793,36 +7793,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_DeleteVertexShader)
 
 	XB_TRMP(D3DDevice_DeleteVertexShader)(Handle);
 
-	// Handle is always address of an Xbox VertexShader struct, or-ed with 1 (X_D3DFVF_RESERVED0)
-	// It's reference count is lowered. If it reaches zero (0), the struct is freed.
-
-	if (VshHandleIsVertexShader(Handle))
-	{
-		CxbxVertexShader *pCxbxVertexShader = GetCxbxVertexShader(Handle);
-		SetCxbxVertexShader(Handle, nullptr);
-
-		if (pCxbxVertexShader->Declaration.pHostVertexDeclaration) {
-			HRESULT hRet = pCxbxVertexShader->Declaration.pHostVertexDeclaration->Release();
-			DEBUG_D3DRESULT(hRet, "g_pD3DDevice->DeleteVertexShader(pHostVertexDeclaration)");
-		}
-
-		// Release the host vertex shader
-		g_VertexShaderSource.ReleaseShader(pCxbxVertexShader->VertexShaderKey);
-
-		if (pCxbxVertexShader->Declaration.pXboxDeclarationCopy)
-		{
-			free(pCxbxVertexShader->Declaration.pXboxDeclarationCopy);
-		}
-
-		if (pCxbxVertexShader->pXboxFunctionCopy)
-		{
-			free(pCxbxVertexShader->pXboxFunctionCopy);
-		}
-
-		FreeVertexDynamicPatch(pCxbxVertexShader);
-
-		free(pCxbxVertexShader);
-	}
+	CxbxImpl_DeleteVertexShader(Handle);
 }
 
 // ******************************************************************

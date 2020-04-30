@@ -243,5 +243,6 @@ extern void CxbxImpl_SelectVertexShaderDirect(XTL::X_VERTEXATTRIBUTEFORMAT* pVAF
 extern void CxbxImpl_SelectVertexShader(DWORD Handle, DWORD Address);
 extern void CxbxImpl_SetVertexShaderInput(DWORD Handle, UINT StreamCount, XTL::X_STREAMINPUT* pStreamInputs);
 extern void CxbxImpl_SetVertexShaderConstant(INT Register, PVOID pConstantData, DWORD ConstantCount);
+extern void CxbxImpl_DeleteVertexShader(DWORD Handle);
 
 #endif
