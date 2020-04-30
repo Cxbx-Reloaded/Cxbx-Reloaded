@@ -3528,27 +3528,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_LoadVertexShader)
 		LOG_FUNC_ARG(Address)
 	LOG_FUNC_END;
 
-	// Handle is always address of an X_D3DVertexShader struct, thus always or-ed with 1 (X_D3DFVF_RESERVED0)
-	// Address is the slot (offset) from which the program must be written onwards (as whole DWORDS)
-	// D3DDevice_LoadVertexShader pushes the program contained in the Xbox VertexShader struct to the NV2A
-	auto CxbxVertexShaderSlotPtr = GetCxbxVertexShaderSlotPtr(Address);
-	if(CxbxVertexShaderSlotPtr) {
-		CxbxVertexShader * pCxbxVertexShader = GetCxbxVertexShader(Handle);
-		if (pCxbxVertexShader) {
-			int upToSlot = Address + pCxbxVertexShader->XboxNrAddressSlots;
-			if (upToSlot > X_VSH_MAX_INSTRUCTION_COUNT) {
-				LOG_TEST_CASE("Shader does not fit in vertex shader slots");
-				return;
-			}
-
-			// Skip the header DWORD at the beginning
-			auto pTokens = &pCxbxVertexShader->pXboxFunctionCopy[1];
-			memcpy(CxbxVertexShaderSlotPtr, pTokens, pCxbxVertexShader->XboxNrAddressSlots * X_VSH_INSTRUCTION_SIZE_BYTES);
-		}
-		else {
-			LOG_TEST_CASE("LoadVertexShader called with unrecognized handle %d", Handle);
-		}
-	}
+	CxbxImpl_LoadVertexShader(Handle, Address);
 }
 
 // LTCG specific D3DDevice_SelectVertexShader function...

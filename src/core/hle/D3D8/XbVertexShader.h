@@ -237,4 +237,6 @@ extern DWORD* GetCxbxVertexShaderSlotPtr(const DWORD SlotIndexAddress);
 extern CxbxVertexShader* GetCxbxVertexShader(DWORD XboxVertexShaderHandle);
 extern void SetCxbxVertexShader(DWORD XboxVertexShaderHandle, CxbxVertexShader* shader);
 
+extern void CxbxImpl_LoadVertexShader(DWORD Handle, DWORD Address);
+
 #endif
