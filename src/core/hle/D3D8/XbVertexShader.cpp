@@ -1349,7 +1349,7 @@ void CxbxImpl_LoadVertexShader(DWORD Handle, DWORD Address)
 			memcpy(CxbxVertexShaderSlotPtr, pTokens, pCxbxVertexShader->XboxNrAddressSlots * X_VSH_INSTRUCTION_SIZE_BYTES);
 		}
 		else {
-			LOG_TEST_CASE("LoadVertexShader called with unrecognized handle %d", Handle);
+			LOG_TEST_CASE("LoadVertexShader called with unrecognized handle"); // FIXME  : extend with value (once supported by LOG_TEST_CASE)
 		}
 	}
 }
@@ -1445,7 +1445,7 @@ extern void EmuParseVshFunction
 	if (headerless) {
 		// We've been fed shader slots. Make up a header...
 		pShader->Header.Version = VERSION_XVS;
-		pShader->Header.NumInst = pShader->Instructions.size();
+		pShader->Header.NumInst = (uint16_t)pShader->Instructions.size();
 
 		// Decode until we hit a token marked final
 		while (VshDecoder.VshConvertToIntermediate(pCurToken, pShader)) {
