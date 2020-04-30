@@ -1255,7 +1255,7 @@ DWORD* GetCxbxVertexShaderSlotPtr(const DWORD SlotIndexAddress)
 	if (SlotIndexAddress < X_VSH_MAX_INSTRUCTION_COUNT) {
 		return &g_CxbxVertexShaderSlots[SlotIndexAddress * X_VSH_INSTRUCTION_SIZE];
 	} else {
-		LOG_TEST_CASE("SlotIndexAddress %d out of range", SlotIndexAddress);
+		LOG_TEST_CASE("SlotIndexAddress out of range"); // FIXME : extend with value (once supported by LOG_TEST_CASE)
 		return nullptr;
 	}
 }
