@@ -265,15 +265,6 @@ struct EmuD3D8CreateDeviceProxyData
 }
 g_EmuCDPD = {0};
 
-#define DEBUG_D3DRESULT(hRet, message) \
-	do { \
-		LOG_CHECK_ENABLED(LOG_LEVEL::DEBUG) { \
-			if (FAILED(hRet)) \
-				if(g_bPrintfOn) \
-					printf("%s%s : %s D3D error (0x%.08X: %s)\n", _logThreadPrefix.c_str(), _logFuncPrefix.c_str(), message, hRet, D3DErrorString(hRet)); \
-		} \
-	} while (0)
-
 // Declare trampolines
 #define XB_TRAMPOLINES(XB_MACRO)                                                                                                                                       \
     XB_MACRO(HRESULT,            WINAPI,     D3DDevice_CreateVertexShader,      (CONST DWORD*, CONST DWORD*, DWORD*, DWORD)                                        );  \

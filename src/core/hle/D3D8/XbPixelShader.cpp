@@ -58,6 +58,7 @@
 #include "core\kernel\support\Emu.h"
 #include "core\hle\D3D8\Direct3D9\Direct3D9.h" // For g_pD3DDevice, g_pXbox_PixelShader
 #include "core\hle\D3D8\XbPixelShader.h"
+#include "core\hle\D3D8\XbD3D8Logging.h" // For D3DErrorString()
 
 #include "core\kernel\init\CxbxKrnl.h" // For CxbxKrnlCleanup()
 
@@ -5920,8 +5921,6 @@ static const
       );
 
 	  if (hRet != D3D_OK) {
-		  extern const char *D3DErrorString(HRESULT hResult);
-
 		  printf(D3DErrorString(hRet));
 	  }
 	}
