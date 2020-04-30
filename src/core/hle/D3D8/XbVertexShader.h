@@ -236,7 +236,7 @@ inline XTL::X_D3DVertexShader *VshHandleToXboxVertexShader(DWORD Handle) { retur
 extern DWORD* GetCxbxVertexShaderSlotPtr(const DWORD SlotIndexAddress);
 extern CxbxVertexShader* GetCxbxVertexShader(DWORD XboxVertexShaderHandle);
 extern void SetCxbxVertexShader(DWORD XboxVertexShaderHandle, CxbxVertexShader* shader);
-extern void SetCxbxVertexShader(CxbxVertexShader* pCxbxVertexShader); // Implemented in Direct3D9.cpp (for now)
+extern void SetCxbxVertexShader(CxbxVertexShader* pCxbxVertexShader);
 extern void CxbxImpl_LoadVertexShader(DWORD Handle, DWORD Address);
 extern void CxbxImpl_SetVertexShader(DWORD Handle);
 extern void CxbxImpl_SelectVertexShaderDirect(XTL::X_VERTEXATTRIBUTEFORMAT* pVAF, DWORD Address);

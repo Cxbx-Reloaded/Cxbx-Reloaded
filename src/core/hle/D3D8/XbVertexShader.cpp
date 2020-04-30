@@ -1301,6 +1301,38 @@ void SetCxbxVertexShader(DWORD XboxVertexShaderHandle, CxbxVertexShader* shader)
 	g_CxbxVertexShaders[XboxVertexShaderHandle] = shader;
 }
 
+void SetCxbxVertexShader(CxbxVertexShader* pCxbxVertexShader)
+{
+	LOG_INIT
+
+	HRESULT hRet;
+
+	// Get vertex shader if we have a key
+	auto pHostShader = pCxbxVertexShader->VertexShaderKey
+		? g_VertexShaderSource.GetShader(pCxbxVertexShader->VertexShaderKey)
+		: nullptr;
+
+	// Set vertex shader
+	hRet = g_pD3DDevice->SetVertexShader(pHostShader);
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetVertexShader");
+
+	// Set vertex declaration
+	hRet = g_pD3DDevice->SetVertexDeclaration(pCxbxVertexShader->Declaration.pHostVertexDeclaration);
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetVertexDeclaration");
+
+	// Set vertex shader constants if necessary
+	if (pHostShader) {
+		// Titles can specify default values for registers via calls like SetVertexData4f
+		// HLSL shaders need to know whether to use vertex data or default vertex shader values
+		// Any register not in the vertex declaration should be set to the default value
+		float vertexDefaultFlags[16];
+		for (int i = 0; i < 16; i++) {
+			vertexDefaultFlags[i] = pCxbxVertexShader->Declaration.vRegisterInDeclaration[i] ? 0.0f : 1.0f;
+		}
+		g_pD3DDevice->SetVertexShaderConstantF(CXBX_D3DVS_CONSTREG_VREGDEFAULTS_FLAG_BASE, vertexDefaultFlags, 4);
+	}
+}
+
 void CxbxImpl_SetVertexShaderInput
 (
 	DWORD              Handle,
