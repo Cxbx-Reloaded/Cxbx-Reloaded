@@ -7861,16 +7861,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_LoadVertexShaderProgram)
 		LOG_FUNC_ARG(Address)
 		LOG_FUNC_END;
 
-	// D3DDevice_LoadVertexShaderProgram splits the given function buffer into batch-wise pushes to the NV2A
-
-	// Copy shader instructions to shader slots
-	auto CxbxVertexShaderSlotPtr = GetCxbxVertexShaderSlotPtr(Address);
-	if (CxbxVertexShaderSlotPtr == nullptr)
-		return;
-
-	auto shaderHeader = *((XTL::X_VSH_SHADER_HEADER*) pFunction);
-	auto tokens = &pFunction[1];
-	memcpy(CxbxVertexShaderSlotPtr, tokens, shaderHeader.NumInst * X_VSH_INSTRUCTION_SIZE_BYTES);
+	CxbxImpl_LoadVertexShaderProgram(pFunction, Address);
 }
 
 // ******************************************************************

@@ -1403,6 +1403,20 @@ void CxbxImpl_SelectVertexShader(DWORD Handle, DWORD Address)
 	}
 }
 
+void CxbxImpl_LoadVertexShaderProgram(CONST DWORD* pFunction, DWORD Address)
+{
+	// D3DDevice_LoadVertexShaderProgram splits the given function buffer into batch-wise pushes to the NV2A
+
+	// Copy shader instructions to shader slots
+	auto CxbxVertexShaderSlotPtr = GetCxbxVertexShaderSlotPtr(Address);
+	if (CxbxVertexShaderSlotPtr == nullptr)
+		return;
+
+	auto shaderHeader = *((XTL::X_VSH_SHADER_HEADER*) pFunction);
+	auto tokens = &pFunction[1];
+	memcpy(CxbxVertexShaderSlotPtr, tokens, shaderHeader.NumInst * X_VSH_INSTRUCTION_SIZE_BYTES);
+}
+
 void CxbxImpl_LoadVertexShader(DWORD Handle, DWORD Address)
 {
 	// Handle is always address of an X_D3DVertexShader struct, thus always or-ed with 1 (X_D3DFVF_RESERVED0)
