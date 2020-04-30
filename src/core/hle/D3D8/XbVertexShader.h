@@ -239,5 +239,8 @@ extern void SetCxbxVertexShader(DWORD XboxVertexShaderHandle, CxbxVertexShader* 
 extern void SetCxbxVertexShader(CxbxVertexShader* pCxbxVertexShader); // Implemented in Direct3D9.cpp (for now)
 extern void CxbxImpl_LoadVertexShader(DWORD Handle, DWORD Address);
 extern void CxbxImpl_SetVertexShader(DWORD Handle);
+extern void CxbxImpl_SelectVertexShaderDirect(XTL::X_VERTEXATTRIBUTEFORMAT* pVAF, DWORD Address);
+extern void CxbxImpl_SetVertexShaderInput(DWORD Handle, UINT StreamCount, XTL::X_STREAMINPUT* pStreamInputs);
+extern void CxbxImpl_SetVertexShaderConstant(INT Register, PVOID pConstantData, DWORD ConstantCount);
 
 #endif

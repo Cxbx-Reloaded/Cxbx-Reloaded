@@ -154,10 +154,6 @@ static bool                         g_bHack_DisableHostGPUQueries = false; // TO
 static IDirect3DQuery              *g_pHostQueryWaitForIdle = nullptr;
 static IDirect3DQuery              *g_pHostQueryCallbackEvent = nullptr;
 
-// Vertex shader symbols, declared in XbVertexShader.cpp :
-extern void CxbxImpl_SelectVertexShaderDirect(XTL::X_VERTEXATTRIBUTEFORMAT* pVAF, DWORD Address);
-extern void CxbxImpl_SetVertexShaderInput(DWORD Handle, UINT StreamCount, XTL::X_STREAMINPUT* pStreamInputs);
-
 // Vertex buffer symbols, declared in XbVertexBuffer.cpp
 extern void CxbxImpl_SetStreamSource(UINT StreamNumber, XTL::X_D3DVertexBuffer* pStreamData, UINT Stride);
 
@@ -4280,37 +4276,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexShaderConstant)
 		LOG_FUNC_ARG(ConstantCount)
 		LOG_FUNC_END;
 
-/*#ifdef _DEBUG_TRACK_VS_CONST
-    for (uint32_t i = 0; i < ConstantCount; i++)
-    {
-        printf("SetVertexShaderConstant, c%d  = { %f, %f, %f, %f }\n",
-               Register + i,
-               *((float*)pConstantData + 4 * i),
-               *((float*)pConstantData + 4 * i + 1),
-               *((float*)pConstantData + 4 * i + 2),
-               *((float*)pConstantData + 4 * i + 3));
-    }
-#endif*/ // _DEBUG_TRACK_VS_CONST
-
-    // Xbox vertex shader constants range from -96 to 95
-    // The host does not support negative, so we adjust to 0..191
-	Register += X_D3DSCM_CORRECTION;
-
-	if (Register < 0) LOG_TEST_CASE("Register < 0");
-	if (Register + ConstantCount > X_D3DVS_CONSTREG_COUNT) LOG_TEST_CASE("Register + ConstantCount > X_D3DVS_CONSTREG_COUNT");
-    HRESULT hRet;
-	hRet = g_pD3DDevice->SetVertexShaderConstantF(
-		Register,
-		(float*)pConstantData,
-		ConstantCount
-	);
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetVertexShaderConstant");
-
-    if(FAILED(hRet))
-    {
-        EmuLog(LOG_LEVEL::WARNING, "We're lying about setting a vertex shader constant!");
-        hRet = D3D_OK;
-    }   
+	CxbxImpl_SetVertexShaderConstant(Register, pConstantData, ConstantCount);
 }
 
 // ******************************************************************
