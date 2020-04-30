@@ -27,7 +27,7 @@
 // ******************************************************************
 #define LOG_PREFIX CXBXR_MODULE::VTXSH
 
-#define _DEBUG_TRACK_VS
+//#define _DEBUG_TRACK_VS
 
 #include "core\kernel\init\CxbxKrnl.h"
 #include "core\kernel\support\Emu.h"
@@ -1458,6 +1458,103 @@ void CxbxImpl_SetVertexShader(DWORD Handle)
 	}
 }
 
+HRESULT CxbxImpl_CreateVertexShader(CONST DWORD *pDeclaration, CONST DWORD *pFunction, DWORD *pHandle, DWORD Usage)
+{
+	LOG_INIT // Allows use of DEBUG_D3DRESULT
+
+	HRESULT hRet = D3D_OK;
+
+	if (g_pD3DDevice == nullptr) {
+		LOG_TEST_CASE("D3DDevice_CreateVertexShader called before Direct3D_CreateDevice");
+		// We lie to allow the game to continue for now, but it probably won't work well
+		return 0; // == STATUS_SUCCESS
+	}
+
+	// HACK: TODO: support this situation
+	if (pDeclaration == nullptr) {
+		LOG_TEST_CASE("Vertex shader without declaration");
+		*pHandle = xbnull;
+		return D3D_OK;
+	}
+
+	// Now, we can create the host vertex shader
+	DWORD             XboxDeclarationCount = 0;
+	CxbxVertexShader* pCxbxVertexShader = (CxbxVertexShader*)calloc(1, sizeof(CxbxVertexShader));
+	D3DVERTEXELEMENT* pRecompiledDeclaration = nullptr;
+
+	pRecompiledDeclaration = EmuRecompileVshDeclaration((DWORD*)pDeclaration,
+		/*bIsFixedFunction=*/pFunction == xbnullptr,
+		&XboxDeclarationCount,
+		&pCxbxVertexShader->Declaration);
+
+	// Create the vertex declaration
+	hRet = g_pD3DDevice->CreateVertexDeclaration(pRecompiledDeclaration, &pCxbxVertexShader->Declaration.pHostVertexDeclaration);
+	free(pRecompiledDeclaration);
+
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateVertexDeclaration");
+
+	if (FAILED(hRet)) {
+		// NOTE: This is a fatal error because it ALWAYS triggers a crash within DrawVertices if not set
+		CxbxKrnlCleanup("Failed to create Vertex Declaration");
+	}
+	hRet = g_pD3DDevice->SetVertexDeclaration(pCxbxVertexShader->Declaration.pHostVertexDeclaration);
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetVertexDeclaration");
+	if (FAILED(hRet)) {
+		CxbxKrnlCleanup("Failed to set Vertex Declaration");
+	}
+
+	uint64_t      vertexShaderKey = 0;
+	DWORD         XboxFunctionSize = 0;
+	if (SUCCEEDED(hRet) && pFunction)
+	{
+		vertexShaderKey = g_VertexShaderSource.CreateShader(pFunction, &XboxFunctionSize);
+	}
+
+	pCxbxVertexShader->Declaration.pXboxDeclarationCopy = (DWORD*)malloc(XboxDeclarationCount * sizeof(DWORD));
+	memcpy(pCxbxVertexShader->Declaration.pXboxDeclarationCopy, pDeclaration, XboxDeclarationCount * sizeof(DWORD));
+	pCxbxVertexShader->XboxFunctionSize = 0;
+	pCxbxVertexShader->pXboxFunctionCopy = nullptr;
+	pCxbxVertexShader->XboxVertexShaderType = X_VST_NORMAL; // TODO : This can vary
+	pCxbxVertexShader->XboxNrAddressSlots = (XboxFunctionSize - sizeof(XTL::X_VSH_SHADER_HEADER)) / X_VSH_INSTRUCTION_SIZE_BYTES;
+	pCxbxVertexShader->VertexShaderKey = vertexShaderKey;
+	pCxbxVertexShader->Declaration.XboxDeclarationCount = XboxDeclarationCount;
+	// Save the status, to remove things later
+	// pCxbxVertexShader->XboxStatus = hRet; // Not even used by VshHandleIsValidShader()
+
+	if (pFunction != xbnullptr)
+	{
+		pCxbxVertexShader->XboxFunctionSize = XboxFunctionSize;
+		pCxbxVertexShader->pXboxFunctionCopy = (DWORD*)malloc(XboxFunctionSize);
+		memcpy(pCxbxVertexShader->pXboxFunctionCopy, pFunction, XboxFunctionSize);
+	}
+
+	// Register the host Vertex Shader
+	SetCxbxVertexShader(*pHandle, pCxbxVertexShader);
+
+	if (FAILED(hRet))
+	{
+#ifdef _DEBUG_TRACK_VS
+		if (pFunction)
+		{
+			char pFileName[30];
+			static int FailedShaderCount = 0;
+			XTL::X_VSH_SHADER_HEADER* pHeader = (XTL::X_VSH_SHADER_HEADER*)pFunction;
+			EmuLog(LOG_LEVEL::WARNING, "Couldn't create vertex shader!");
+			sprintf(pFileName, "failed%05d.xvu", FailedShaderCount);
+			FILE* f = fopen(pFileName, "wb");
+			if (f)
+			{
+				fwrite(pFunction, sizeof(XTL::X_VSH_SHADER_HEADER) + pHeader->NumInst * 16, 1, f);
+				fclose(f);
+			}
+			FailedShaderCount++;
+		}
+#endif // _DEBUG_TRACK_VS
+		//hRet = D3D_OK;
+	}
+
+	return hRet;
+}
 void CxbxImpl_DeleteVertexShader(DWORD Handle)
 {
 	LOG_INIT // Allows use of DEBUG_D3DRESULT
