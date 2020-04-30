@@ -33,6 +33,8 @@
 #include "core\kernel\support\Emu.h"
 #include "core\hle\D3D8\Direct3D9\Direct3D9.h" // For g_Xbox_VertexShader_Handle
 #include "core\hle\D3D8\XbVertexShader.h"
+#include "core\hle\D3D8\XbD3D8Logging.h" // For DEBUG_D3DRESULT
+#include "common\Logging.h" // For LOG_INIT
 
 #include "XbD3D8Types.h" // For X_D3DVSDE_*
 #include <sstream>
@@ -1349,6 +1351,36 @@ void CxbxImpl_LoadVertexShader(DWORD Handle, DWORD Address)
 		else {
 			LOG_TEST_CASE("LoadVertexShader called with unrecognized handle %d", Handle);
 		}
+	}
+}
+
+void CxbxImpl_SetVertexShader(DWORD Handle)
+{
+	LOG_INIT // Allows use of DEBUG_D3DRESULT
+
+	// Checks if the Handle has bit 0 set - if not, it's a FVF
+	// which is converted to a global Xbox Vertex Shader struct
+	// Otherwise bit 0 is cleared and the resulting address is
+	// validated to be a valid Xbox Vertex Shader
+	// D3D state fields are updated.
+	// If the shader contains a program, the handle is passed to
+	// D3DDevice_LoadVertexShader and D3DDevice_SelectVertexShader.
+	// Otherwise the shader is send using push buffer commands.
+
+	HRESULT hRet = D3D_OK;
+
+	g_Xbox_VertexShader_Handle = Handle;
+
+	if (VshHandleIsVertexShader(Handle)) {
+		CxbxVertexShader* pCxbxVertexShader = GetCxbxVertexShader(Handle);
+		SetCxbxVertexShader(pCxbxVertexShader);
+
+	}
+	else {
+		hRet = g_pD3DDevice->SetVertexShader(nullptr);
+		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetVertexShader");
+		hRet = g_pD3DDevice->SetFVF(Handle);
+		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetFVF");
 	}
 }
 
