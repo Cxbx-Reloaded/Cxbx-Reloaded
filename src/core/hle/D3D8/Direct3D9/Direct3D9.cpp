@@ -3563,43 +3563,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SelectVertexShader)
 		LOG_FUNC_ARG(Address)
 		LOG_FUNC_END;
 
-	HRESULT hRet = D3D_OK;
-
-	// Address always indicates a previously loaded vertex shader slot (from where the program is used).
-	// Handle can be null if the current Xbox VertexShader is assigned
-	// Handle can be an address of an Xbox VertexShader struct, or-ed with 1 (X_D3DFVF_RESERVED0)
-	// If Handle is assigned, it becomes the new current Xbox VertexShader,
-	// which resets a bit of state (nv2a execution mode, viewport, ?)
-	// Either way, the given address slot is selected as the start of the current vertex shader program
-	g_Xbox_VertexShader_Handle = Handle;
-
-	CxbxVertexShader *pCxbxVertexShader = nullptr;
-
-    if(VshHandleIsVertexShader(Handle))
-    {
-        pCxbxVertexShader = GetCxbxVertexShader(Handle);
-		if (pCxbxVertexShader == nullptr) {
-			LOG_TEST_CASE("Shader handle has not been created");
-		}
-
-		// TODO we should only set the vertex declaration here?
-		SetCxbxVertexShader(pCxbxVertexShader);
-    }
-
-	auto pTokens = GetCxbxVertexShaderSlotPtr(Address);
-	if (pTokens) {
-		// Create a vertex shader from the tokens
-		DWORD shaderSize;
-		auto shaderKey = g_VertexShaderSource.CreateShader(pTokens, &shaderSize);
-		g_pD3DDevice->SetVertexShader(g_VertexShaderSource.GetShader(shaderKey));
-	}
-
-	if (FAILED(hRet))
-	{
-		EmuLog(LOG_LEVEL::WARNING, "We're lying about setting a vertext shader!");
-
-		hRet = D3D_OK;
-	}
+	CxbxImpl_SelectVertexShader(Handle, Address);
 }
 
 // ******************************************************************
