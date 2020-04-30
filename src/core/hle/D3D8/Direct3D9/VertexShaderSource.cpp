@@ -6,6 +6,8 @@
 #include "util/hasher.h"
 #include "core/kernel/support/Emu.h"
 
+VertexShaderSource g_VertexShaderSource = VertexShaderSource();
+
 ID3DBlob* AsyncCreateVertexShader(IntermediateVertexShader intermediateShader, ShaderKey key) {
 	// HACK set thread affinity every call to reduce interference with Xbox main thread
 	// TODO use a thread pool library for better control over workers

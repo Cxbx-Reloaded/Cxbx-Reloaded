@@ -842,7 +842,6 @@ typedef struct {
 typedef std::unordered_map<resource_key_t, resource_info_t, resource_key_hash> resource_cache_t;
 resource_cache_t g_Cxbx_Cached_Direct3DResources;
 resource_cache_t g_Cxbx_Cached_PaletizedTextures;
-VertexShaderSource g_VertexShaderSource = VertexShaderSource();
 
 bool IsResourceAPixelContainer(XTL::DWORD XboxResource_Common)
 {
