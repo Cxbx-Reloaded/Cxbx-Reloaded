@@ -394,7 +394,6 @@ static inline void DSound3DBufferCreate(LPDIRECTSOUNDBUFFER8 pDSBuffer, LPDIRECT
     pThis->Xb_rtPauseEx = 0LL; \
     pThis->Xb_Volume = 0L; \
     pThis->Xb_VolumeMixbin = 0L; \
-    pThis->Xb_dwHeadroom = 600; /* default for 2D voice */ \
     pThis->Xb_EnvolopeDesc = { 0 }; \
     InitVoiceProperties(pThis->Xb_VoiceProperties); /* The rest will initialize in GeneratePCMFormat to GenerateMixBinDefault. */ \
     pThis->Xb_Flags = Xb_dwFlags;
@@ -1133,7 +1132,7 @@ static inline HRESULT HybridDirectSoundBuffer_SetFrequency(
     RETURN_RESULT_CHECK(hRet);
 }
 
-static HRESULT HybridDirectSoundBuffer_SetVolume(LPDIRECTSOUNDBUFFER8, LONG, DWORD, LPLONG, LONG, DWORD, XTL::CDirectSoundVoice*);
+static HRESULT HybridDirectSoundBuffer_SetVolume(LPDIRECTSOUNDBUFFER8, LONG, DWORD, LONG, XTL::CDirectSoundVoice*);
 
 //IDirectSoundStream
 //IDirectSoundBuffer
@@ -1141,7 +1140,6 @@ static HRESULT HybridDirectSoundBuffer_SetVolume(LPDIRECTSOUNDBUFFER8, LONG, DWO
 static inline HRESULT HybridDirectSoundBuffer_SetHeadroom(
     LPDIRECTSOUNDBUFFER8 pDSBuffer,
     DWORD               dwHeadroom,
-    DWORD              &Xb_dwHeadroom,
     LONG                Xb_volume,
     LONG                Xb_volumeMixbin,
     DWORD               dwEmuFlags,
@@ -1151,9 +1149,10 @@ static inline HRESULT HybridDirectSoundBuffer_SetHeadroom(
     if (dwHeadroom > 10000) {
         hRet = DSERR_INVALIDPARAM;
     } else {
-        Xb_dwHeadroom = dwHeadroom;
         hRet = DS_OK;
-        HybridDirectSoundBuffer_SetVolume(pDSBuffer, Xb_volume, dwEmuFlags, xbnullptr, Xb_volumeMixbin, dwHeadroom, Xb_Voice);
+        Xb_Voice->SetHeadroom(Xb_Voice, dwHeadroom);
+        uint32_t volume = Xb_Voice->GetVolume(Xb_Voice);
+        pDSBuffer->SetVolume(volume);
     }
 
     return DS_OK;
@@ -1245,7 +1244,6 @@ static inline HRESULT HybridDirectSoundBuffer_SetMixBinVolumes_8(
     DWORD                EmuFlags,
     LONG                 Xb_volume,
     LONG                &Xb_volumeMixBin,
-    DWORD                Xb_dwHeadroom,
     XTL::CDirectSoundVoice* Xb_Voice)
 {
     HRESULT hRet = DSERR_INVALIDPARAM;
@@ -1286,8 +1284,8 @@ static inline HRESULT HybridDirectSoundBuffer_SetMixBinVolumes_8(
             }
             if (counter > 0) {
                 Xb_volumeMixBin = volume / (LONG)counter;
-                hRet = HybridDirectSoundBuffer_SetVolume(pDSBuffer, Xb_volume, EmuFlags, nullptr,
-                                                         Xb_volumeMixBin, Xb_dwHeadroom, Xb_Voice);
+                hRet = HybridDirectSoundBuffer_SetVolume(pDSBuffer, Xb_volume, EmuFlags,
+                                                         Xb_volumeMixBin, Xb_Voice);
             } else {
                 hRet = DS_OK;
             }
@@ -1429,22 +1427,18 @@ static inline HRESULT HybridDirectSoundBuffer_SetVolume(
     LPDIRECTSOUNDBUFFER8    pDSBuffer,
     LONG                    lVolume,
     DWORD                   dwEmuFlags,
-    LPLONG                  Xb_lpVolume,
     LONG                    Xb_volumeMixbin,
-    DWORD                   Xb_dwHeadroom,
     XTL::CDirectSoundVoice* Xb_Voice)
 {
-    // Preserve original volume
-    if (Xb_lpVolume != xbnullptr) {
-        *Xb_lpVolume = lVolume;
-    }
 
 #if 0 // TODO: Restore it once DSound work update comes up
     // For time being, this log is kept in case of something changed somewhere making a wrong input into the API.
     printf("DEBUG: SetVolume | lVolume = %ld | volumeMixbin = %ld | dwHeadroom = %8u\n", lVolume, Xb_volumeMixbin, Xb_dwHeadroom);
 #endif
 
-    lVolume += Xb_volumeMixbin - Xb_dwHeadroom;
+    Xb_Voice->SetVolume(Xb_Voice, lVolume);
+    lVolume = Xb_Voice->GetVolume(Xb_Voice);
+    lVolume += Xb_volumeMixbin;
 
     if ((dwEmuFlags & DSE_FLAG_PCM) > 0) {
         if (!g_XBAudio.codec_pcm) {

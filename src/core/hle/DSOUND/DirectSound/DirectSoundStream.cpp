@@ -271,14 +271,13 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateStream)
         else {
             if (DSBufferDesc.dwFlags & DSBCAPS_CTRL3D) {
                 DSound3DBufferCreate((*ppStream)->EmuDirectSoundBuffer8, (*ppStream)->EmuDirectSound3DBuffer8);
-                (*ppStream)->Xb_dwHeadroom = 0; // Default for 3D
             }
 
             DSoundDebugMuteFlag((*ppStream)->EmuBufferDesc.dwBufferBytes, (*ppStream)->EmuFlags);
 
             // Pre-set volume to enforce silence if one of audio codec is disabled.
-            HybridDirectSoundBuffer_SetVolume((*ppStream)->EmuDirectSoundBuffer8, 0L, (*ppStream)->EmuFlags, nullptr,
-                (*ppStream)->Xb_VolumeMixbin, (*ppStream)->Xb_dwHeadroom, &(*ppStream)->Xb_Voice);
+            HybridDirectSoundBuffer_SetVolume((*ppStream)->EmuDirectSoundBuffer8, 0L, (*ppStream)->EmuFlags,
+                (*ppStream)->Xb_VolumeMixbin, &(*ppStream)->Xb_Voice);
 
             g_pDSoundStreamCache.push_back(*ppStream);
         }
@@ -969,7 +968,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetHeadroom)
 		LOG_FUNC_ARG(dwHeadroom)
 		LOG_FUNC_END;
 
-    HRESULT hRet = HybridDirectSoundBuffer_SetHeadroom(pThis->EmuDirectSoundBuffer8, dwHeadroom, pThis->Xb_dwHeadroom,
+    HRESULT hRet = HybridDirectSoundBuffer_SetHeadroom(pThis->EmuDirectSoundBuffer8, dwHeadroom,
                                                        pThis->Xb_Volume, pThis->Xb_VolumeMixbin, pThis->EmuFlags, &pThis->Xb_Voice);
 
     return hRet;
@@ -1210,7 +1209,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetMixBinVolumes_8)
 		LOG_FUNC_END;
 
     HRESULT hRet = HybridDirectSoundBuffer_SetMixBinVolumes_8(pThis->EmuDirectSoundBuffer8, pMixBins, pThis->Xb_VoiceProperties,
-                                                              pThis->EmuFlags, pThis->Xb_Volume, pThis->Xb_VolumeMixbin, pThis->Xb_dwHeadroom,
+                                                              pThis->EmuFlags, pThis->Xb_Volume, pThis->Xb_VolumeMixbin,
                                                               &pThis->Xb_Voice);
 
     return hRet;
@@ -1390,8 +1389,8 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetVolume)
 		LOG_FUNC_ARG(lVolume)
 		LOG_FUNC_END;
 
-    HRESULT hRet = HybridDirectSoundBuffer_SetVolume(pThis->EmuDirectSoundBuffer8, lVolume, pThis->EmuFlags, &pThis->Xb_Volume,
-                                                     pThis->Xb_VolumeMixbin, pThis->Xb_dwHeadroom, &pThis->Xb_Voice);
+    HRESULT hRet = HybridDirectSoundBuffer_SetVolume(pThis->EmuDirectSoundBuffer8, lVolume, pThis->EmuFlags,
+                                                     pThis->Xb_VolumeMixbin, &pThis->Xb_Voice);
 
     return hRet;
 }
