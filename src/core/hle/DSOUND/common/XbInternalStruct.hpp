@@ -148,32 +148,32 @@ struct CDirectSoundVoice : CUnknownGenericManager {
     } funcs;
     static_assert(sizeof(funcs) == 0x24);
 
-    static inline void GetFormat(CDirectSoundVoice* pThis, audio_format& format) {
-        pThis->funcs.GetFormat(pThis->u, format);
+    inline void GetFormat(audio_format& format) {
+        funcs.GetFormat(u, format);
     };
-    static inline void SetFormat(CDirectSoundVoice* pThis, audio_format format) {
-        pThis->funcs.SetFormat(pThis->u, format);
+    inline void SetFormat(audio_format format) {
+        funcs.SetFormat(u, format);
     };
-    static inline uint32_t GetFrequencyDefault(CDirectSoundVoice* pThis) {
-        return pThis->funcs.GetFrequencyDefault(pThis->u);
+    inline uint32_t GetFrequencyDefault() {
+        return funcs.GetFrequencyDefault(u);
     };
-    static inline int32_t GetPitch(CDirectSoundVoice* pThis) {
-        return pThis->funcs.GetPitch(pThis->u);
+    inline int32_t GetPitch() {
+        return funcs.GetPitch(u);
     };
-    static inline void SetPitch(CDirectSoundVoice* pThis, int32_t pitch) {
-        pThis->funcs.SetPitch(pThis->u, pitch);
+    inline void SetPitch(int32_t pitch) {
+        funcs.SetPitch(u, pitch);
     };
-    static inline uint32_t GetVolume(CDirectSoundVoice* pThis) {
-        return pThis->funcs.GetVolume(pThis->u);
+    inline uint32_t GetVolume() {
+        return funcs.GetVolume(u);
     };
-    static inline void SetVolume(CDirectSoundVoice* pThis, uint32_t volume) {
-        pThis->funcs.SetVolume(pThis->u, volume);
+    inline void SetVolume(uint32_t volume) {
+        funcs.SetVolume(u, volume);
     };
-    static inline uint32_t GetHeadroom(CDirectSoundVoice* pThis) {
-        return pThis->funcs.GetHeadroom(pThis->u);
+    inline uint32_t GetHeadroom() {
+        return funcs.GetHeadroom(u);
     };
-    static inline void SetHeadroom(CDirectSoundVoice* pThis, uint32_t headroom) {
-        pThis->funcs.SetHeadroom(pThis->u, headroom);
+    inline void SetHeadroom(uint32_t headroom) {
+        funcs.SetHeadroom(u, headroom);
     };
 };
 static_assert(sizeof(CDirectSoundVoice) == sizeof(CUnknownGenericManager) + sizeof(CDirectSoundVoice::_u) + sizeof(CDirectSoundVoice::funcs));

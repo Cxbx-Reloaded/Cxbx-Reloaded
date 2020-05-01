@@ -27,237 +27,174 @@
 #include "XbInternalStruct.hpp"
 
 // Interface for get format
-void GetFormat_4034_lower(XTL::CDirectSoundVoice::_u& u, XTL::audio_format& format)
+template<class T>
+void GetFormat_4034_lower(T& settings, XTL::audio_format& format)
 {
-    format.audio_codec = u.settings_4034_lower.p_audio_format->wfx.wFormatTag = format.audio_codec;
-    format.nChannels = u.settings_4034_lower.p_audio_format->wfx.nChannels;
-    format.cbSize = u.settings_4034_lower.p_audio_format->wfx.cbSize;
-    format.nSamplesPerSec = u.settings_4034_lower.p_audio_format->wfx.nSamplesPerSec;
-    format.bitsPerSample = u.settings_4034_lower.p_audio_format->wfx.wBitsPerSample;
+    format.audio_codec = settings.p_audio_format->wfx.wFormatTag = format.audio_codec;
+    format.nChannels = settings.p_audio_format->wfx.nChannels;
+    format.cbSize = settings.p_audio_format->wfx.cbSize;
+    format.nSamplesPerSec = settings.p_audio_format->wfx.nSamplesPerSec;
+    format.bitsPerSample = settings.p_audio_format->wfx.wBitsPerSample;
 }
-void GetFormat_4039_only(XTL::CDirectSoundVoice::_u& u, XTL::audio_format& format)
+template<class T>
+void GetFormat_4039_upper(T& settings, XTL::audio_format& format)
 {
-    format.audio_codec = u.settings_4039_only.audio_codec;
-    format.nChannels = u.settings_4039_only.nChannels;
-    format.cbSize = u.settings_4039_only.cbSize;
-    format.nSamplesPerSec = u.settings_4039_only.nSamplesPerSec_default;
-    format.bitsPerSample = u.settings_4039_only.bitsPerSample;
-}
-void GetFormat_4134_upper(XTL::CDirectSoundVoice::_u& u, XTL::audio_format& format)
-{
-    format.audio_codec = u.settings_4134_upper.audio_codec;
-    format.nChannels = u.settings_4134_upper.nChannels;
-    format.cbSize = u.settings_4134_upper.cbSize;
-    format.nSamplesPerSec = u.settings_4134_upper.nSamplesPerSec_default;
-    format.bitsPerSample = u.settings_4134_upper.bitsPerSample;
+    format.audio_codec = settings.audio_codec;
+    format.nChannels = settings.nChannels;
+    format.cbSize = settings.cbSize;
+    format.nSamplesPerSec = settings.nSamplesPerSec_default;
+    format.bitsPerSample = settings.bitsPerSample;
 }
 
 // Interface for set format
-void SetFormat_4034_lower(XTL::CDirectSoundVoice::_u& u, XTL::audio_format format)
+template<class T>
+void SetFormat_4034_lower(T& settings, XTL::audio_format format)
 {
-    u.settings_4034_lower.p_audio_format->wfx.wFormatTag = format.audio_codec;
-    u.settings_4034_lower.p_audio_format->wfx.nChannels = static_cast<uint16_t>(format.nChannels);
-    u.settings_4034_lower.p_audio_format->wfx.cbSize = static_cast<uint16_t>(format.cbSize);
-    u.settings_4034_lower.p_audio_format->wfx.nSamplesPerSec = format.nSamplesPerSec;
-    u.settings_4034_lower.p_audio_format->wfx.wBitsPerSample = static_cast<uint16_t>(format.bitsPerSample);
+    settings.p_audio_format->wfx.wFormatTag = format.audio_codec;
+    settings.p_audio_format->wfx.nChannels = static_cast<uint16_t>(format.nChannels);
+    settings.p_audio_format->wfx.cbSize = static_cast<uint16_t>(format.cbSize);
+    settings.p_audio_format->wfx.nSamplesPerSec = format.nSamplesPerSec;
+    settings.p_audio_format->wfx.wBitsPerSample = static_cast<uint16_t>(format.bitsPerSample);
     if (format.audio_codec == WAVE_FORMAT_XBOX_ADPCM) {
-        u.settings_4034_lower.p_audio_format->wSamplesPerBlock = 64;
+        settings.p_audio_format->wSamplesPerBlock = 64;
     }
-    u.settings_4039_only.pitch = XTL::converter_freq2pitch(format.nSamplesPerSec);
+    settings.pitch = XTL::converter_freq2pitch(format.nSamplesPerSec);
 }
-void SetFormat_4039_only(XTL::CDirectSoundVoice::_u& u, XTL::audio_format format)
+template<class T>
+void SetFormat_4039_only(T& settings, XTL::audio_format format)
 {
-    u.settings_4039_only.audio_codec = format.audio_codec;
-    u.settings_4039_only.nChannels = format.nChannels;
-    u.settings_4039_only.cbSize = format.cbSize;
-    u.settings_4039_only.nSamplesPerSec_default = format.nSamplesPerSec;
-    u.settings_4039_only.bitsPerSample = format.bitsPerSample;
-    u.settings_4039_only.pitch = XTL::converter_freq2pitch(format.nSamplesPerSec);
+    settings.audio_codec = format.audio_codec;
+    settings.nChannels = format.nChannels;
+    settings.cbSize = format.cbSize;
+    settings.nSamplesPerSec_default = format.nSamplesPerSec;
+    settings.bitsPerSample = format.bitsPerSample;
+    settings.pitch = XTL::converter_freq2pitch(format.nSamplesPerSec);
 }
-void SetFormat_4134_upper(XTL::CDirectSoundVoice::_u& u, XTL::audio_format format)
+template<class T>
+void SetFormat_4134_upper(T& settings, XTL::audio_format format)
 {
-    u.settings_4134_upper.audio_codec = static_cast<uint16_t>(format.audio_codec);
-    u.settings_4134_upper.nChannels = static_cast<uint8_t>(format.nChannels);
-    u.settings_4134_upper.cbSize = static_cast<uint8_t>(format.cbSize);
-    u.settings_4134_upper.nSamplesPerSec_default = format.nSamplesPerSec;
-    u.settings_4134_upper.bitsPerSample = format.bitsPerSample;
-    u.settings_4134_upper.pitch = XTL::converter_freq2pitch(format.nSamplesPerSec);
+    settings.audio_codec = static_cast<uint16_t>(format.audio_codec);
+    settings.nChannels = static_cast<uint8_t>(format.nChannels);
+    settings.cbSize = static_cast<uint8_t>(format.cbSize);
+    settings.nSamplesPerSec_default = format.nSamplesPerSec;
+    settings.bitsPerSample = format.bitsPerSample;
+    settings.pitch = XTL::converter_freq2pitch(format.nSamplesPerSec);
 }
 
 // Interface for get frequency
-uint32_t GetFrequencyDefault_4034_lower(XTL::CDirectSoundVoice::_u& u)
+template<class T>
+uint32_t GetFrequencyDefault_4034_lower(T& settings)
 {
-    return u.settings_4034_lower.p_audio_format->wfx.nSamplesPerSec;
+    return settings.p_audio_format->wfx.nSamplesPerSec;
 }
-uint32_t GetFrequencyDefault_4039_only(XTL::CDirectSoundVoice::_u& u)
+template<class T>
+uint32_t GetFrequencyDefault_4039_upper(T& settings)
 {
-    return u.settings_4039_only.nSamplesPerSec_default;
-}
-uint32_t GetFrequencyDefault_4134_upper(XTL::CDirectSoundVoice::_u& u)
-{
-    return u.settings_4134_upper.nSamplesPerSec_default;
+    return settings.nSamplesPerSec_default;
 }
 
 // Interface for get pitch
-int32_t GetPitch_4034_lower(XTL::CDirectSoundVoice::_u& u)
+template<class T>
+int32_t GetPitch(T& settings)
 {
-    return u.settings_4034_lower.pitch;
-}
-int32_t GetPitch_4039_only(XTL::CDirectSoundVoice::_u& u)
-{
-    return u.settings_4039_only.pitch;
-}
-int32_t GetPitch_4134_upper(XTL::CDirectSoundVoice::_u& u)
-{
-    return u.settings_4134_upper.pitch;
+    return settings.pitch;
 }
 
 // Interface for set pitch
-void SetPitch_4034_lower(XTL::CDirectSoundVoice::_u& u, int32_t pitch)
+template<class T>
+void SetPitch(T& settings, int32_t pitch)
 {
-    u.settings_4034_lower.pitch = pitch;
-}
-void SetPitch_4039_only(XTL::CDirectSoundVoice::_u& u, int32_t pitch)
-{
-    u.settings_4039_only.pitch = pitch;
-}
-void SetPitch_4134_upper(XTL::CDirectSoundVoice::_u& u, int32_t pitch)
-{
-    u.settings_4134_upper.pitch = pitch;
+    settings.pitch = pitch;
 }
 
 // Interface for get volume
-uint32_t GetVolume_4034_lower(XTL::CDirectSoundVoice::_u& u)
+template<class T>
+uint32_t GetVolume(T& settings)
 {
-    return u.settings_4034_lower.volume;
-}
-uint32_t GetVolume_4039_only(XTL::CDirectSoundVoice::_u& u)
-{
-    return u.settings_4039_only.volume;
-}
-uint32_t GetVolume_4134_upper(XTL::CDirectSoundVoice::_u& u)
-{
-    return u.settings_4134_upper.volume;
+    return settings.volume;
 }
 
-void SetVolume_calc(uint32_t& cur_volume, uint32_t headroom, uint32_t set_volume)
-{
-    cur_volume = set_volume - headroom;
-}
 // Interface for set volume
-void SetVolume_4034_lower(XTL::CDirectSoundVoice::_u& u, uint32_t volume)
+template<class T>
+void SetVolume(T& settings, uint32_t volume)
 {
-    SetVolume_calc(u.settings_4034_lower.volume, u.settings_4034_lower.headroom, volume);
-}
-void SetVolume_4039_only(XTL::CDirectSoundVoice::_u& u, uint32_t volume)
-{
-    SetVolume_calc(u.settings_4039_only.volume, u.settings_4039_only.headroom, volume);
-}
-void SetVolume_4134_upper(XTL::CDirectSoundVoice::_u& u, uint32_t volume)
-{
-    SetVolume_calc(u.settings_4134_upper.volume, u.settings_4134_upper.headroom, volume);
+    settings.volume = volume - settings.headroom;
 }
 
 // Interface for get headroom
-uint32_t GetHeadroom_4034_lower(XTL::CDirectSoundVoice::_u& u)
+template<class T>
+uint32_t GetHeadroom(T& settings)
 {
-    return u.settings_4034_lower.headroom;
-}
-uint32_t GetHeadroom_4039_only(XTL::CDirectSoundVoice::_u& u)
-{
-    return u.settings_4039_only.headroom;
-}
-uint32_t GetHeadroom_4134_upper(XTL::CDirectSoundVoice::_u& u)
-{
-    return u.settings_4134_upper.headroom;
+    return settings.headroom;
 }
 
-void SetHeadroom_calc(uint32_t& cur_headroom, uint32_t& volume, uint32_t set_headroom)
-{
-    volume = volume - set_headroom - cur_headroom;
-    cur_headroom = set_headroom;
-}
 // Interface for set headroom
-void SetHeadroom_4034_lower(XTL::CDirectSoundVoice::_u& u, uint32_t headroom)
+template<class T>
+void SetHeadroom(T& settings, uint32_t set_headroom)
 {
-    SetHeadroom_calc(u.settings_4034_lower.headroom, u.settings_4034_lower.volume, headroom);
-}
-void SetHeadroom_4039_only(XTL::CDirectSoundVoice::_u& u, uint32_t headroom)
-{
-    SetHeadroom_calc(u.settings_4039_only.headroom, u.settings_4039_only.volume, headroom);
-}
-void SetHeadroom_4134_upper(XTL::CDirectSoundVoice::_u& u, uint32_t headroom)
-{
-    SetHeadroom_calc(u.settings_4134_upper.headroom, u.settings_4134_upper.volume, headroom);
+    settings.volume = settings.volume - set_headroom - settings.headroom;
+    settings.headroom = set_headroom;
 }
 
 void Init_Headroom(uint32_t& headroom, bool is3D)
 {
     headroom = is3D? 0 : 600;
 }
-void Init_4034_lower(XTL::CDirectSoundVoice::_u::_settings_4034_lower& settings, bool is3D)
+template<class T>
+void Init(T& settings, bool is3D)
 {
     Init_Headroom(settings.headroom, is3D);
     settings.volume = 0 - settings.headroom;
-}
-void Init_4039_only(XTL::CDirectSoundVoice::_u::_settings_4039_only& settings, bool is3D)
-{
-    Init_Headroom(settings.headroom, is3D);
-    settings.volume = 0 - settings.headroom;
-}
-void Init_4134_upper(XTL::CDirectSoundVoice::_u::_settings_4134_upper& settings, bool is3D)
-{
-    Init_Headroom(settings.headroom, is3D);
     settings.volume = 0 - settings.headroom;
 }
 
 XTL::CDirectSoundVoice::CDirectSoundVoice(bool is3D)
 {
-    memset(u.settings_interface.unknown_08, 0, sizeof(u.settings_interface));
+    u = { 0 };
 
     if (g_LibVersion_DSOUND < 4039) {
         u.settings_4034_lower.p_audio_format = new XBOXADPCMWAVEFORMAT;
         memset(&u.settings_4034_lower.p_audio_format->wfx, 0, sizeof(XBOXADPCMWAVEFORMAT));
 
-        Init_4034_lower(u.settings_4034_lower, is3D);
+        Init<_u::_settings_4034_lower>(u.settings_4034_lower, is3D);
 
-        funcs.GetFormat = GetFormat_4034_lower;
-        funcs.SetFormat = SetFormat_4034_lower;
-        funcs.GetFrequencyDefault = GetFrequencyDefault_4034_lower;
-        funcs.GetPitch = GetPitch_4034_lower;
-        funcs.SetPitch = SetPitch_4034_lower;
-        funcs.GetVolume = GetVolume_4034_lower;
-        funcs.SetVolume = SetVolume_4034_lower;
-        funcs.GetHeadroom = GetHeadroom_4034_lower;
-        funcs.SetHeadroom = SetHeadroom_4034_lower;
+        funcs.GetFormat = reinterpret_cast<void(*)(_u&, audio_format&)>(::GetFormat_4034_lower<_u::_settings_4034_lower>);
+        funcs.SetFormat = reinterpret_cast<void(*)(_u&, audio_format)>(::SetFormat_4034_lower<_u::_settings_4034_lower>);
+        funcs.GetFrequencyDefault = reinterpret_cast<uint32_t(*)(_u&)>(::GetFrequencyDefault_4034_lower<_u::_settings_4034_lower>);
+        funcs.GetPitch = reinterpret_cast<int32_t(*)(_u&)>(::GetPitch<_u::_settings_4034_lower>);
+        funcs.SetPitch = reinterpret_cast<void(*)(_u&, int32_t)>(::SetPitch<_u::_settings_4034_lower>);
+        funcs.GetVolume = reinterpret_cast<uint32_t(*)(_u&)>(::GetVolume<_u::_settings_4034_lower>);
+        funcs.SetVolume = reinterpret_cast<void(*)(_u&, uint32_t)>(::SetVolume<_u::_settings_4034_lower>);
+        funcs.GetHeadroom = reinterpret_cast<uint32_t(*)(_u&)>(::GetHeadroom<_u::_settings_4034_lower>);
+        funcs.SetHeadroom = reinterpret_cast<void(*)(_u&, uint32_t)>(::SetHeadroom<_u::_settings_4034_lower>);
     }
     else if (g_LibVersion_DSOUND == 4039) {
 
-        Init_4039_only(u.settings_4039_only, is3D);
+        Init<_u::_settings_4039_only>(u.settings_4039_only, is3D);
 
-        funcs.GetFormat = GetFormat_4039_only;
-        funcs.SetFormat = SetFormat_4039_only;
-        funcs.GetFrequencyDefault = GetFrequencyDefault_4039_only;
-        funcs.GetPitch = GetPitch_4039_only;
-        funcs.SetPitch = SetPitch_4039_only;
-        funcs.GetVolume = GetVolume_4039_only;
-        funcs.SetVolume = SetVolume_4039_only;
-        funcs.GetHeadroom = GetHeadroom_4039_only;
-        funcs.SetHeadroom = SetHeadroom_4039_only;
+        funcs.GetFormat = reinterpret_cast<void(*)(_u&, audio_format&)>(::GetFormat_4039_upper<_u::_settings_4039_only>);
+        funcs.SetFormat = reinterpret_cast<void(*)(_u&, audio_format)>(::SetFormat_4039_only<_u::_settings_4039_only>);
+        funcs.GetFrequencyDefault = reinterpret_cast<uint32_t(*)(_u&)>(::GetFrequencyDefault_4039_upper<_u::_settings_4039_only>);
+        funcs.GetPitch = reinterpret_cast<int32_t(*)(_u&)>(::GetPitch<_u::_settings_4039_only>);
+        funcs.SetPitch = reinterpret_cast<void(*)(_u&, int32_t)>(::SetPitch<_u::_settings_4039_only>);
+        funcs.GetVolume = reinterpret_cast<uint32_t(*)(_u&)>(::GetVolume<_u::_settings_4039_only>);
+        funcs.SetVolume = reinterpret_cast<void(*)(_u&, uint32_t)>(::SetVolume<_u::_settings_4039_only>);
+        funcs.GetHeadroom = reinterpret_cast<uint32_t(*)(_u&)>(::GetHeadroom<_u::_settings_4039_only>);
+        funcs.SetHeadroom = reinterpret_cast<void(*)(_u&, uint32_t)>(::SetHeadroom<_u::_settings_4039_only>);
     }
     else {
 
-        Init_4134_upper(u.settings_4134_upper, is3D);
+        Init<_u::_settings_4134_upper>(u.settings_4134_upper, is3D);
 
-        funcs.GetFormat = GetFormat_4134_upper;
-        funcs.SetFormat = SetFormat_4134_upper;
-        funcs.GetFrequencyDefault = GetFrequencyDefault_4134_upper;
-        funcs.GetPitch = GetPitch_4134_upper;
-        funcs.SetPitch = SetPitch_4134_upper;
-        funcs.GetVolume = GetVolume_4134_upper;
-        funcs.SetVolume = SetVolume_4134_upper;
-        funcs.GetHeadroom = GetHeadroom_4134_upper;
-        funcs.SetHeadroom = SetHeadroom_4134_upper;
+        funcs.GetFormat = reinterpret_cast<void(*)(_u&, audio_format&)>(::GetFormat_4039_upper<_u::_settings_4134_upper>);
+        funcs.SetFormat = reinterpret_cast<void(*)(_u&, audio_format)>(::SetFormat_4134_upper<_u::_settings_4134_upper>);
+        funcs.GetFrequencyDefault = reinterpret_cast<uint32_t(*)(_u&)>(::GetFrequencyDefault_4039_upper<_u::_settings_4134_upper>);
+        funcs.GetPitch = reinterpret_cast<int32_t(*)(_u&)>(::GetPitch<_u::_settings_4134_upper>);
+        funcs.SetPitch = reinterpret_cast<void(*)(_u&, int32_t)>(::SetPitch<_u::_settings_4134_upper>);
+        funcs.GetVolume = reinterpret_cast<uint32_t(*)(_u&)>(::GetVolume<_u::_settings_4134_upper>);
+        funcs.SetVolume = reinterpret_cast<void(*)(_u&, uint32_t)>(::SetVolume<_u::_settings_4134_upper>);
+        funcs.GetHeadroom = reinterpret_cast<uint32_t(*)(_u&)>(::GetHeadroom<_u::_settings_4134_upper>);
+        funcs.SetHeadroom = reinterpret_cast<void(*)(_u&, uint32_t)>(::SetHeadroom<_u::_settings_4134_upper>);
     }
 }
 

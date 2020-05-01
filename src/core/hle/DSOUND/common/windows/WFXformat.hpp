@@ -340,7 +340,7 @@ static CODEC_FORMAT WFXformat_SyncHostFormat(
     xb_format.cbSize = (codec_format_ret == CF_XADPCM ? 4 : 0);
     xb_format.nSamplesPerSec = Host_wfxFormat->Format.nSamplesPerSec;
     xb_format.bitsPerSample = (codec_format_ret == CF_XADPCM ? 4 : Host_wfxFormat->Format.wBitsPerSample);
-    Xb_Voice->SetFormat(Xb_Voice, xb_format);
+    Xb_Voice->SetFormat(xb_format);
 
     return codec_format_ret;
 }

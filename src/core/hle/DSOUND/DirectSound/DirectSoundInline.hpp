@@ -428,7 +428,7 @@ static inline void DSoundBufferTransferSettings(
 	}
 
     // if sync current frequency used (then use pitch only).
-    uint32_t freq = XTL::converter_pitch2freq(Xb_Voice->GetPitch(Xb_Voice));
+    uint32_t freq = XTL::converter_pitch2freq(Xb_Voice->GetPitch());
     pDSBufferNew->SetFrequency(freq);
 
     pDSBufferOld->GetVolume(&lVolume);
@@ -1125,7 +1125,7 @@ static inline HRESULT HybridDirectSoundBuffer_SetFrequency(
 {
     HRESULT hRet = S_OK;
 
-    int32_t pitch = XTL::converter_freq2pitch((dwFrequency!=0 ? dwFrequency : Xb_Voice->GetFrequencyDefault(Xb_Voice)));
+    int32_t pitch = XTL::converter_freq2pitch((dwFrequency!=0 ? dwFrequency : Xb_Voice->GetFrequencyDefault()));
 
     hRet = HybridDirectSoundBuffer_SetPitch(pDSBuffer, pitch, Xb_Voice);
 
@@ -1150,8 +1150,8 @@ static inline HRESULT HybridDirectSoundBuffer_SetHeadroom(
         hRet = DSERR_INVALIDPARAM;
     } else {
         hRet = DS_OK;
-        Xb_Voice->SetHeadroom(Xb_Voice, dwHeadroom);
-        uint32_t volume = Xb_Voice->GetVolume(Xb_Voice);
+        Xb_Voice->SetHeadroom(dwHeadroom);
+        uint32_t volume = Xb_Voice->GetVolume();
         pDSBuffer->SetVolume(volume);
     }
 
@@ -1340,7 +1340,7 @@ static inline HRESULT HybridDirectSoundBuffer_SetPitch(
     XTL::CDirectSoundVoice* Xb_Voice)
 {
 
-    Xb_Voice->SetPitch(Xb_Voice, lPitch);
+    Xb_Voice->SetPitch(lPitch);
     // Convert pitch back to frequency
     uint32_t setFrequency = XTL::converter_pitch2freq(lPitch);
 
@@ -1436,8 +1436,8 @@ static inline HRESULT HybridDirectSoundBuffer_SetVolume(
     printf("DEBUG: SetVolume | lVolume = %ld | volumeMixbin = %ld | dwHeadroom = %8u\n", lVolume, Xb_volumeMixbin, Xb_dwHeadroom);
 #endif
 
-    Xb_Voice->SetVolume(Xb_Voice, lVolume);
-    lVolume = Xb_Voice->GetVolume(Xb_Voice);
+    Xb_Voice->SetVolume(lVolume);
+    lVolume = Xb_Voice->GetVolume();
     lVolume += Xb_volumeMixbin;
 
     if ((dwEmuFlags & DSE_FLAG_PCM) > 0) {
