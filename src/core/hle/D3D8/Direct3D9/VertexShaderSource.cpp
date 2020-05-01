@@ -7,6 +7,8 @@
 #include "core/kernel/support/Emu.h"
 
 VertexShaderSource g_VertexShaderSource = VertexShaderSource();
+// FIXME : This should really be released and created in step with the D3D device lifecycle rather than being a thing on its own
+// (And the ResetD3DDevice method should be removed)
 
 ID3DBlob* AsyncCreateVertexShader(IntermediateVertexShader intermediateShader, ShaderKey key) {
 	// HACK set thread affinity every call to reduce interference with Xbox main thread
