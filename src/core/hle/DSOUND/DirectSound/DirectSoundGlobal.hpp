@@ -45,7 +45,7 @@ extern std::recursive_mutex         g_DSoundMutex;
 // Xbox maximum synch playback audio
 #define DSOUND_MAX_SYNCHPLAYBACK_AUDIO 29
 
-#define vector_ds_buffer std::vector<XTL::X_CDirectSoundBuffer*>
+#define vector_ds_buffer std::vector<XTL::XbHybridDSBuffer*>
 #define vector_ds_stream std::vector<XTL::X_CDirectSoundStream*>
 extern vector_ds_buffer                    g_pDSoundBufferCache;
 extern vector_ds_stream                    g_pDSoundStreamCache;

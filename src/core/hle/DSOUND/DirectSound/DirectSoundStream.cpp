@@ -70,9 +70,9 @@ XTL::X_CDirectSoundStream::_vtbl XTL::X_CDirectSoundStream::vtbl =
     &XTL::EMUPATCH(CDirectSoundStream_Process),         // 0x10
     &XTL::EMUPATCH(CDirectSoundStream_Discontinuity),   // 0x14
     &XTL::EMUPATCH(CDirectSoundStream_Flush),           // 0x18
-    0xBEEFB003,                                         // 0x1C
-    0xBEEFB004,                                         // 0x20
-    0xBEEFB005,                                         // 0x24
+    0xBEEFB003,                                         // 0x1C // unknown function
+    0xBEEFB004,                                         // 0x20 // DS_CRefCount_AddRef
+    0xBEEFB005,                                         // 0x24 // DS_CRefCount_Release
     0xBEEFB006,                                         // 0x28
     0xBEEFB007,                                         // 0x2C
     0xBEEFB008,                                         // 0x30
@@ -208,8 +208,6 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateStream)
         hRet = DSERR_OUTOFMEMORY;
         *ppStream = xbnullptr;
     } else {
-        // TODO: Garbage Collection
-        *ppStream = new X_CDirectSoundStream();
 
         DSBUFFERDESC DSBufferDesc = { 0 };
 
@@ -230,12 +228,16 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateStream)
             DSBufferDesc.dwFlags |= DSBCAPS_CTRLPAN;
         }
 
+        // TODO: Garbage Collection
+        *ppStream = new X_CDirectSoundStream((DSBufferDesc.dwFlags & DSBCAPS_CTRL3D) != 0);
+
         DSoundBufferSetDefault((*ppStream), DSBPLAY_LOOPING, pdssd->dwFlags);
         (*ppStream)->Xb_rtFlushEx = 0LL;
 
         // We have to set DSBufferDesc last due to EmuFlags must be either 0 or previously written value to preserve other flags.
         GeneratePCMFormat(DSBufferDesc, pdssd->lpwfxFormat, pdssd->dwFlags, (*ppStream)->EmuFlags, 0,
-                          xbnullptr, (*ppStream)->X_BufferCacheSize, (*ppStream)->Xb_VoiceProperties, pdssd->lpMixBinsOutput);
+                          xbnullptr, (*ppStream)->X_BufferCacheSize, (*ppStream)->Xb_VoiceProperties, pdssd->lpMixBinsOutput,
+                          &(*ppStream)->Xb_Voice);
 
         // Test case: Star Wars: KotOR has one packet greater than 5 seconds worth. Increasing to 10 seconds allow stream to work until
         // another test case below proven host's buffer size does not matter since packet's size can be greater than host's buffer size.
@@ -276,7 +278,7 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateStream)
 
             // Pre-set volume to enforce silence if one of audio codec is disabled.
             HybridDirectSoundBuffer_SetVolume((*ppStream)->EmuDirectSoundBuffer8, 0L, (*ppStream)->EmuFlags, nullptr,
-                (*ppStream)->Xb_VolumeMixbin, (*ppStream)->Xb_dwHeadroom);
+                (*ppStream)->Xb_VolumeMixbin, (*ppStream)->Xb_dwHeadroom, &(*ppStream)->Xb_Voice);
 
             g_pDSoundStreamCache.push_back(*ppStream);
         }
@@ -912,7 +914,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetFormat)
                                                      pThis->EmuBufferDesc, pThis->EmuFlags, pThis->EmuPlayFlags,
                                                      pThis->EmuDirectSound3DBuffer8, 0, pThis->X_BufferCache,
                                                      pThis->X_BufferCacheSize, pThis->Xb_VoiceProperties,
-                                                     xbnullptr, pThis->Xb_Frequency);
+                                                     xbnullptr, &pThis->Xb_Voice);
 
     return hRet;
 }
@@ -932,7 +934,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetFrequency)
 		LOG_FUNC_ARG(dwFrequency)
 		LOG_FUNC_END;
 
-    HRESULT hRet = HybridDirectSoundBuffer_SetFrequency(pThis->EmuDirectSoundBuffer8, dwFrequency, pThis->Xb_Frequency);
+    HRESULT hRet = HybridDirectSoundBuffer_SetFrequency(pThis->EmuDirectSoundBuffer8, dwFrequency, &pThis->Xb_Voice);
 
     return hRet;
 }
@@ -968,7 +970,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetHeadroom)
 		LOG_FUNC_END;
 
     HRESULT hRet = HybridDirectSoundBuffer_SetHeadroom(pThis->EmuDirectSoundBuffer8, dwHeadroom, pThis->Xb_dwHeadroom,
-                                                       pThis->Xb_Volume, pThis->Xb_VolumeMixbin, pThis->EmuFlags);
+                                                       pThis->Xb_Volume, pThis->Xb_VolumeMixbin, pThis->EmuFlags, &pThis->Xb_Voice);
 
     return hRet;
 }
@@ -1208,7 +1210,8 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetMixBinVolumes_8)
 		LOG_FUNC_END;
 
     HRESULT hRet = HybridDirectSoundBuffer_SetMixBinVolumes_8(pThis->EmuDirectSoundBuffer8, pMixBins, pThis->Xb_VoiceProperties,
-                                                              pThis->EmuFlags, pThis->Xb_Volume, pThis->Xb_VolumeMixbin, pThis->Xb_dwHeadroom);
+                                                              pThis->EmuFlags, pThis->Xb_Volume, pThis->Xb_VolumeMixbin, pThis->Xb_dwHeadroom,
+                                                              &pThis->Xb_Voice);
 
     return hRet;
 }
@@ -1219,7 +1222,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetMixBinVolumes_8)
 HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetOutputBuffer)
 (
     X_CDirectSoundStream*   pThis,
-    X_CDirectSoundBuffer*   pOutputBuffer)
+    XbHybridDSBuffer*       pOutputBuffer)
 {
     DSoundMutexGuardLock;
 
@@ -1252,7 +1255,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetPitch)
         LOG_FUNC_ARG(lPitch)
         LOG_FUNC_END;
 
-    HRESULT hRet = HybridDirectSoundBuffer_SetPitch(pThis->EmuDirectSoundBuffer8, lPitch, pThis->Xb_Frequency);
+    HRESULT hRet = HybridDirectSoundBuffer_SetPitch(pThis->EmuDirectSoundBuffer8, lPitch, &pThis->Xb_Voice);
 
     return hRet;
 }
@@ -1388,7 +1391,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetVolume)
 		LOG_FUNC_END;
 
     HRESULT hRet = HybridDirectSoundBuffer_SetVolume(pThis->EmuDirectSoundBuffer8, lVolume, pThis->EmuFlags, &pThis->Xb_Volume,
-                                                     pThis->Xb_VolumeMixbin, pThis->Xb_dwHeadroom);
+                                                     pThis->Xb_VolumeMixbin, pThis->Xb_dwHeadroom, &pThis->Xb_Voice);
 
     return hRet;
 }

@@ -370,6 +370,30 @@ struct X_DSVOICEPROPS {
     LONG lI3DL2RoomVolume;
 };
 
+// Convert frequency to pitch helper
+static inline int32_t converter_freq2pitch(uint32_t freq) {
+    // NOTE: pitch = 0 is equal to 48 KHz.
+    /* For research purpose of how to convert frequency to pitch and back to frequency.
+    // Edit hertz variable to see the result.
+    float hertz = 12000.0f;
+
+    float hertzRatio = 48000.0f;
+    float pitchRatio = 4096.0f;
+
+    // Convert hertz to pitch
+    float pitch = log2(hertz / hertzRatio) * pitchRatio;
+
+    // Convert pitch to hertz
+    hertz = exp((pitch / pitchRatio) * log(2)) * hertzRatio;*/
+    return static_cast<int32_t>(log2(freq / 48000.0f) * 4096.0f);
+}
+
+// Convert pitch to frequency helper
+static inline uint32_t converter_pitch2freq(int32_t pitch) {
+    //* See research documentation above for conversion example.
+    return static_cast<uint32_t>(exp((pitch / 4096.0f) * log(2)) * 48000.0f);
+}
+
 } // end of namespace XTL
 
 #endif

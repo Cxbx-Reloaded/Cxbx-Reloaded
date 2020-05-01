@@ -887,14 +887,15 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSound_SynchPlayback)
 
     vector_ds_buffer::iterator ppDSBuffer = g_pDSoundBufferCache.begin();
     for (; ppDSBuffer != g_pDSoundBufferCache.end(); ppDSBuffer++) {
-        if ((*ppDSBuffer)->X_BufferCache == nullptr) {
+        EmuDirectSoundBuffer* pDSBuffer = (*ppDSBuffer)->emuDSBuffer;
+        if (pDSBuffer->X_BufferCache == nullptr) {
             continue;
         }
 
-        if (((*ppDSBuffer)->EmuFlags & DSE_FLAG_SYNCHPLAYBACK_CONTROL) > 0) {
-            DSoundBufferSynchPlaybackFlagRemove((*ppDSBuffer)->EmuFlags);
-            EmuLog(LOG_LEVEL::DEBUG, "SynchPlayback - pDSBuffer: %08X; EmuPlayFlags: %08X", *ppDSBuffer, (*ppDSBuffer)->EmuPlayFlags);
-            (*ppDSBuffer)->EmuDirectSoundBuffer8->Play(0, 0, (*ppDSBuffer)->EmuPlayFlags);
+        if ((pDSBuffer->EmuFlags & DSE_FLAG_SYNCHPLAYBACK_CONTROL) > 0) {
+            DSoundBufferSynchPlaybackFlagRemove(pDSBuffer->EmuFlags);
+            EmuLog(LOG_LEVEL::DEBUG, "SynchPlayback - pDSBuffer: %08X; EmuPlayFlags: %08X", *ppDSBuffer, pDSBuffer->EmuPlayFlags);
+            pDSBuffer->EmuDirectSoundBuffer8->Play(0, 0, pDSBuffer->EmuPlayFlags);
         }
     }
 
