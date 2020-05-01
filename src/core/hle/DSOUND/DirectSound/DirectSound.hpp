@@ -705,8 +705,8 @@ HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_Stop)
 HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_StopEx)
 (
     XbHybridDSBuffer*       pHybridThis,
-    REFERENCE_TIME        rtTimeStamp,
-    DWORD                 dwFlags
+    REFERENCE_TIME          rtTimeStamp,
+    DWORD                   dwFlags
 );
 
 // ******************************************************************
@@ -1008,7 +1008,7 @@ HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_SetRolloffFactor)
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_SetDistanceFactor)
 (
-    XbHybridDSBuffer*   pHybridThis,
+    XbHybridDSBuffer*       pHybridThis,
     FLOAT                   flDistanceFactor,
     DWORD                   dwApply
 );
@@ -1367,7 +1367,7 @@ HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_SetOutputBuffer)
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(CDirectSoundStream_SetOutputBuffer)
 (
-    X_CDirectSoundStream*    pThis,
+    X_CDirectSoundStream*   pThis,
     XbHybridDSBuffer*       pOutputBuffer
 );
 
@@ -1396,7 +1396,7 @@ HRESULT WINAPI EMUPATCH(XWaveFileCreateMediaObject)
 HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_SetEG)
 (
     XbHybridDSBuffer*   pHybridThis,
-    X_DSENVOLOPEDESC*       pEnvelopeDesc
+    X_DSENVOLOPEDESC*   pEnvelopeDesc
 );
 
 // ******************************************************************
