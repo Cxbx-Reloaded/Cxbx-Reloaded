@@ -290,7 +290,7 @@ static inline void GeneratePCMFormat(
 
             dwEmuFlags = dwEmuFlags & ~DSE_FLAG_AUDIO_CODECS;
 
-            CODEC_FORMAT cf_audio = WFXformat_SyncHostFormat(DSBufferDesc.lpwfxFormat, Xb_lpwfxFormat, X_BufferSizeRequest, Xb_flags);
+            CODEC_FORMAT cf_audio = WFXformat_SyncHostFormat(DSBufferDesc.lpwfxFormat, Xb_lpwfxFormat, X_BufferSizeRequest, Xb_flags, Xb_Voice);
             if (cf_audio == CF_PCM) {
                     dwEmuFlags |= DSE_FLAG_PCM;
             }
@@ -304,7 +304,7 @@ static inline void GeneratePCMFormat(
         } else {
             dwEmuFlags |= DSE_FLAG_RECIEVEDATA;
 
-            (void)WFXformat_SyncHostFormat(DSBufferDesc.lpwfxFormat, Xb_lpwfxFormat, X_BufferSizeRequest, Xb_flags);
+            (void)WFXformat_SyncHostFormat(DSBufferDesc.lpwfxFormat, Xb_lpwfxFormat, X_BufferSizeRequest, Xb_flags, Xb_Voice);
 
             DSBufferDesc.dwFlags = DSBCAPS_CTRLPAN | DSBCAPS_CTRLVOLUME | DSBCAPS_CTRLFREQUENCY;
             DSBufferDesc.dwBufferBytes = 5 * DSBufferDesc.lpwfxFormat->nAvgBytesPerSec;
