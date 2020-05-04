@@ -158,7 +158,7 @@ void BuildShader(IntermediateVertexShader* pShader, std::stringstream& hlsl)
 		/*ILU_LIT:*/"x_lit" // = 7 - all values of the 3 bits are used
 	};
 
-	for (int i = 0; i < pShader->Instructions.size(); i++) {
+	for (size_t i = 0; i < pShader->Instructions.size(); i++) {
 		VSH_INTERMEDIATE_FORMAT& IntermediateInstruction = pShader->Instructions[i];
 
 		std::string str;

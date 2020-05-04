@@ -1303,13 +1303,13 @@ void SetCxbxVertexShader(DWORD XboxVertexShaderHandle, CxbxVertexShader* shader)
 	g_CxbxVertexShaders[XboxVertexShaderHandle] = shader;
 }
 
-void SetCxbxVertexShaderHandleDeclaration(CxbxVertexShader* pCxbxVertexShader) {
+void SetCxbxVertexDeclaration(CxbxVertexDeclaration& pCxbxVertexDeclaration) {
 	LOG_INIT
 
 	HRESULT hRet;
 
 	// Set vertex declaration
-	hRet = g_pD3DDevice->SetVertexDeclaration(pCxbxVertexShader->Declaration.pHostVertexDeclaration);
+	hRet = g_pD3DDevice->SetVertexDeclaration(pCxbxVertexDeclaration.pHostVertexDeclaration);
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetVertexDeclaration");
 
 	// Titles can specify default values for registers via calls like SetVertexData4f
@@ -1317,7 +1317,7 @@ void SetCxbxVertexShaderHandleDeclaration(CxbxVertexShader* pCxbxVertexShader) {
 	// Any register not in the vertex declaration should be set to the default value
 	float vertexDefaultFlags[16];
 	for (int i = 0; i < 16; i++) {
-		vertexDefaultFlags[i] = pCxbxVertexShader->Declaration.vRegisterInDeclaration[i] ? 0.0f : 1.0f;
+		vertexDefaultFlags[i] = pCxbxVertexDeclaration.vRegisterInDeclaration[i] ? 0.0f : 1.0f;
 	}
 	g_pD3DDevice->SetVertexShaderConstantF(CXBX_D3DVS_CONSTREG_VREGDEFAULTS_FLAG_BASE, vertexDefaultFlags, 4);
 }
@@ -1352,7 +1352,7 @@ void SetCxbxVertexShaderHandle(CxbxVertexShader* pCxbxVertexShader)
 	hRet = g_pD3DDevice->SetVertexShader(pHostShader);
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetVertexShader");
 
-	SetCxbxVertexShaderHandleDeclaration(pCxbxVertexShader);
+	SetCxbxVertexDeclaration(pCxbxVertexShader->Declaration);
 }
 
 void CxbxImpl_SetVertexShaderInput
@@ -1395,17 +1395,15 @@ void CxbxImpl_SelectVertexShader(DWORD Handle, DWORD Address)
 	g_Xbox_VertexShader_Handle = Handle;
 	g_CxbxVertexShaderSlotAddress = Address;
 
-	CxbxVertexShader* pCxbxVertexShader = nullptr;
-
 	if (VshHandleIsVertexShader(Handle))
 	{
-		pCxbxVertexShader = GetCxbxVertexShader(Handle);
+		auto pCxbxVertexShader = GetCxbxVertexShader(Handle);
 		if (pCxbxVertexShader == nullptr) {
 			LOG_TEST_CASE("Shader handle has not been created");
 		}
 		else {
 			// Set the shader handle declaration
-			SetCxbxVertexShaderHandleDeclaration(pCxbxVertexShader);
+			SetCxbxVertexDeclaration(pCxbxVertexShader->Declaration);
 		}
 	}
 
