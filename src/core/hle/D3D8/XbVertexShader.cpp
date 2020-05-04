@@ -1471,13 +1471,18 @@ void CxbxImpl_SetVertexShader(DWORD Handle)
 
 	if (VshHandleIsVertexShader(Handle)) {
 		CxbxVertexShader* pCxbxVertexShader = GetCxbxVertexShader(Handle);
-		SetCxbxVertexShaderHandle(pCxbxVertexShader);
+		if (pCxbxVertexShader) {
+			SetCxbxVertexShaderHandle(pCxbxVertexShader);
 
-		auto CxbxVertexShaderSlotPtr = GetCxbxVertexShaderSlotPtr(g_CxbxVertexShaderSlotAddress);
-		if (CxbxVertexShaderSlotPtr) {
-			// Skip the header DWORD at the beginning
-			auto pTokens = &pCxbxVertexShader->pXboxFunctionCopy[1];
-			memcpy(CxbxVertexShaderSlotPtr, pTokens, pCxbxVertexShader->XboxNrAddressSlots * X_VSH_INSTRUCTION_SIZE_BYTES);
+			auto CxbxVertexShaderSlotPtr = GetCxbxVertexShaderSlotPtr(g_CxbxVertexShaderSlotAddress);
+			if (CxbxVertexShaderSlotPtr) {
+				// Skip the header DWORD at the beginning
+				auto pTokens = &pCxbxVertexShader->pXboxFunctionCopy[1];
+				memcpy(CxbxVertexShaderSlotPtr, pTokens, pCxbxVertexShader->XboxNrAddressSlots * X_VSH_INSTRUCTION_SIZE_BYTES);
+			}
+		}
+		else {
+			EmuLog(LOG_LEVEL::DEBUG, "SetVertexShader with shader handle that has not been created");
 		}
 	}
 	else {
