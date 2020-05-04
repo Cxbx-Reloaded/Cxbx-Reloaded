@@ -1251,6 +1251,8 @@ extern boolean IsValidCurrentShader(void)
 	return VshHandleIsValidShader(g_Xbox_VertexShader_Handle);
 }
 
+// Vertex shader state
+static DWORD g_CxbxVertexShaderSlotAddress = 0;
 static DWORD g_CxbxVertexShaderSlots[X_VSH_MAX_INSTRUCTION_COUNT * X_VSH_INSTRUCTION_SIZE] = { 0 };
 
 DWORD* GetCxbxVertexShaderSlotPtr(const DWORD SlotIndexAddress)
@@ -1301,7 +1303,41 @@ void SetCxbxVertexShader(DWORD XboxVertexShaderHandle, CxbxVertexShader* shader)
 	g_CxbxVertexShaders[XboxVertexShaderHandle] = shader;
 }
 
-void SetCxbxVertexShader(CxbxVertexShader* pCxbxVertexShader)
+void SetCxbxVertexShaderHandleDeclaration(CxbxVertexShader* pCxbxVertexShader) {
+	LOG_INIT
+
+	HRESULT hRet;
+
+	// Set vertex declaration
+	hRet = g_pD3DDevice->SetVertexDeclaration(pCxbxVertexShader->Declaration.pHostVertexDeclaration);
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetVertexDeclaration");
+
+	// Titles can specify default values for registers via calls like SetVertexData4f
+	// HLSL shaders need to know whether to use vertex data or default vertex shader values
+	// Any register not in the vertex declaration should be set to the default value
+	float vertexDefaultFlags[16];
+	for (int i = 0; i < 16; i++) {
+		vertexDefaultFlags[i] = pCxbxVertexShader->Declaration.vRegisterInDeclaration[i] ? 0.0f : 1.0f;
+	}
+	g_pD3DDevice->SetVertexShaderConstantF(CXBX_D3DVS_CONSTREG_VREGDEFAULTS_FLAG_BASE, vertexDefaultFlags, 4);
+}
+
+// TODO Call this when state is dirty in UpdateNativeD3DResources
+// Rather than every time state changes
+void SetVertexShaderFromSlots() {
+	LOG_INIT
+
+	auto pTokens = GetCxbxVertexShaderSlotPtr(g_CxbxVertexShaderSlotAddress);
+	if (pTokens) {
+		// Create a vertex shader from the tokens
+		DWORD shaderSize;
+		auto shaderKey = g_VertexShaderSource.CreateShader(pTokens, &shaderSize);
+		HRESULT hRet = g_pD3DDevice->SetVertexShader(g_VertexShaderSource.GetShader(shaderKey));
+		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetVertexShader");
+	}
+}
+
+void SetCxbxVertexShaderHandle(CxbxVertexShader* pCxbxVertexShader)
 {
 	LOG_INIT
 
@@ -1316,21 +1352,7 @@ void SetCxbxVertexShader(CxbxVertexShader* pCxbxVertexShader)
 	hRet = g_pD3DDevice->SetVertexShader(pHostShader);
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetVertexShader");
 
-	// Set vertex declaration
-	hRet = g_pD3DDevice->SetVertexDeclaration(pCxbxVertexShader->Declaration.pHostVertexDeclaration);
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetVertexDeclaration");
-
-	// Set vertex shader constants if necessary
-	if (pHostShader) {
-		// Titles can specify default values for registers via calls like SetVertexData4f
-		// HLSL shaders need to know whether to use vertex data or default vertex shader values
-		// Any register not in the vertex declaration should be set to the default value
-		float vertexDefaultFlags[16];
-		for (int i = 0; i < 16; i++) {
-			vertexDefaultFlags[i] = pCxbxVertexShader->Declaration.vRegisterInDeclaration[i] ? 0.0f : 1.0f;
-		}
-		g_pD3DDevice->SetVertexShaderConstantF(CXBX_D3DVS_CONSTREG_VREGDEFAULTS_FLAG_BASE, vertexDefaultFlags, 4);
-	}
+	SetCxbxVertexShaderHandleDeclaration(pCxbxVertexShader);
 }
 
 void CxbxImpl_SetVertexShaderInput
@@ -1364,8 +1386,6 @@ void CxbxImpl_SelectVertexShaderDirect
 
 void CxbxImpl_SelectVertexShader(DWORD Handle, DWORD Address)
 {
-	HRESULT hRet = D3D_OK;
-
 	// Address always indicates a previously loaded vertex shader slot (from where the program is used).
 	// Handle can be null if the current Xbox VertexShader is assigned
 	// Handle can be an address of an Xbox VertexShader struct, or-ed with 1 (X_D3DFVF_RESERVED0)
@@ -1373,6 +1393,7 @@ void CxbxImpl_SelectVertexShader(DWORD Handle, DWORD Address)
 	// which resets a bit of state (nv2a execution mode, viewport, ?)
 	// Either way, the given address slot is selected as the start of the current vertex shader program
 	g_Xbox_VertexShader_Handle = Handle;
+	g_CxbxVertexShaderSlotAddress = Address;
 
 	CxbxVertexShader* pCxbxVertexShader = nullptr;
 
@@ -1382,25 +1403,13 @@ void CxbxImpl_SelectVertexShader(DWORD Handle, DWORD Address)
 		if (pCxbxVertexShader == nullptr) {
 			LOG_TEST_CASE("Shader handle has not been created");
 		}
-
-		// TODO we should only set the vertex declaration here?
-		SetCxbxVertexShader(pCxbxVertexShader);
+		else {
+			// Set the shader handle declaration
+			SetCxbxVertexShaderHandleDeclaration(pCxbxVertexShader);
+		}
 	}
 
-	auto pTokens = GetCxbxVertexShaderSlotPtr(Address);
-	if (pTokens) {
-		// Create a vertex shader from the tokens
-		DWORD shaderSize;
-		auto shaderKey = g_VertexShaderSource.CreateShader(pTokens, &shaderSize);
-		g_pD3DDevice->SetVertexShader(g_VertexShaderSource.GetShader(shaderKey));
-	}
-
-	if (FAILED(hRet))
-	{
-		EmuLog(LOG_LEVEL::WARNING, "We're lying about setting a vertext shader!");
-
-		hRet = D3D_OK;
-	}
+	SetVertexShaderFromSlots();
 }
 
 void CxbxImpl_LoadVertexShaderProgram(CONST DWORD* pFunction, DWORD Address)
@@ -1415,6 +1424,8 @@ void CxbxImpl_LoadVertexShaderProgram(CONST DWORD* pFunction, DWORD Address)
 	auto shaderHeader = *((XTL::X_VSH_SHADER_HEADER*) pFunction);
 	auto tokens = &pFunction[1];
 	memcpy(CxbxVertexShaderSlotPtr, tokens, shaderHeader.NumInst * X_VSH_INSTRUCTION_SIZE_BYTES);
+
+	SetVertexShaderFromSlots();
 }
 
 void CxbxImpl_LoadVertexShader(DWORD Handle, DWORD Address)
@@ -1458,11 +1469,18 @@ void CxbxImpl_SetVertexShader(DWORD Handle)
 	HRESULT hRet = D3D_OK;
 
 	g_Xbox_VertexShader_Handle = Handle;
+	g_CxbxVertexShaderSlotAddress = 0;
 
 	if (VshHandleIsVertexShader(Handle)) {
 		CxbxVertexShader* pCxbxVertexShader = GetCxbxVertexShader(Handle);
-		SetCxbxVertexShader(pCxbxVertexShader);
+		SetCxbxVertexShaderHandle(pCxbxVertexShader);
 
+		auto CxbxVertexShaderSlotPtr = GetCxbxVertexShaderSlotPtr(g_CxbxVertexShaderSlotAddress);
+		if (CxbxVertexShaderSlotPtr) {
+			// Skip the header DWORD at the beginning
+			auto pTokens = &pCxbxVertexShader->pXboxFunctionCopy[1];
+			memcpy(CxbxVertexShaderSlotPtr, pTokens, pCxbxVertexShader->XboxNrAddressSlots * X_VSH_INSTRUCTION_SIZE_BYTES);
+		}
 	}
 	else {
 		hRet = g_pD3DDevice->SetVertexShader(nullptr);
