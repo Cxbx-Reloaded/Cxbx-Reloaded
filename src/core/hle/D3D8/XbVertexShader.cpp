@@ -1540,30 +1540,27 @@ HRESULT CxbxImpl_CreateVertexShader(CONST DWORD *pDeclaration, CONST DWORD *pFun
 	}
 #endif
 
-	uint64_t      vertexShaderKey = 0;
-	DWORD         XboxFunctionSize = 0;
-	if (SUCCEEDED(hRet) && pFunction)
-	{
-		vertexShaderKey = g_VertexShaderSource.CreateShader(pFunction, &XboxFunctionSize);
-	}
-
+	// Set handle declaration properties
 	pCxbxVertexShader->Declaration.pXboxDeclarationCopy = (DWORD*)malloc(XboxDeclarationCount * sizeof(DWORD));
 	memcpy(pCxbxVertexShader->Declaration.pXboxDeclarationCopy, pDeclaration, XboxDeclarationCount * sizeof(DWORD));
-	pCxbxVertexShader->XboxFunctionSize = 0;
-	pCxbxVertexShader->pXboxFunctionCopy = nullptr;
-	pCxbxVertexShader->XboxVertexShaderType = X_VST_NORMAL; // TODO : This can vary
-	pCxbxVertexShader->XboxNrAddressSlots = (XboxFunctionSize - sizeof(XTL::X_VSH_SHADER_HEADER)) / X_VSH_INSTRUCTION_SIZE_BYTES;
-	pCxbxVertexShader->VertexShaderKey = vertexShaderKey;
 	pCxbxVertexShader->Declaration.XboxDeclarationCount = XboxDeclarationCount;
-	// Save the status, to remove things later
-	// pCxbxVertexShader->XboxStatus = hRet; // Not even used by VshHandleIsValidShader()
 
 	if (pFunction != xbnullptr)
 	{
-		pCxbxVertexShader->XboxFunctionSize = XboxFunctionSize;
-		pCxbxVertexShader->pXboxFunctionCopy = (DWORD*)malloc(XboxFunctionSize);
-		memcpy(pCxbxVertexShader->pXboxFunctionCopy, pFunction, XboxFunctionSize);
+		// Parse and compile the shader
+		DWORD xboxFunctionSize = 0;
+		pCxbxVertexShader->VertexShaderKey = g_VertexShaderSource.CreateShader(pFunction, &xboxFunctionSize);
+
+		// Set handle shader function properties
+		pCxbxVertexShader->XboxFunctionSize = xboxFunctionSize;
+		pCxbxVertexShader->pXboxFunctionCopy = (DWORD*)malloc(xboxFunctionSize);
+		memcpy(pCxbxVertexShader->pXboxFunctionCopy, pFunction, xboxFunctionSize);
+		pCxbxVertexShader->XboxNrAddressSlots = (xboxFunctionSize - sizeof(XTL::X_VSH_SHADER_HEADER)) / X_VSH_INSTRUCTION_SIZE_BYTES;
+		pCxbxVertexShader->XboxVertexShaderType = X_VST_NORMAL; // TODO : This can vary
 	}
+
+	// Save the status, to remove things later
+	// pCxbxVertexShader->XboxStatus = hRet; // Not even used by VshHandleIsValidShader()
 
 	RegisterCxbxVertexShader(*pHandle, pCxbxVertexShader);
 
