@@ -1293,7 +1293,7 @@ CxbxVertexShader* GetCxbxVertexShader(DWORD XboxVertexShaderHandle)
 	return nullptr;
 }
 
-void SetCxbxVertexShader(DWORD XboxVertexShaderHandle, CxbxVertexShader* shader)
+void RegisterCxbxVertexShader(DWORD XboxVertexShaderHandle, CxbxVertexShader* shader)
 {
 	auto it = g_CxbxVertexShaders.find(XboxVertexShaderHandle);
 	if (it != g_CxbxVertexShaders.end() && it->second != nullptr && shader != nullptr) {
@@ -1315,8 +1315,8 @@ void SetCxbxVertexDeclaration(CxbxVertexDeclaration& pCxbxVertexDeclaration) {
 	// Titles can specify default values for registers via calls like SetVertexData4f
 	// HLSL shaders need to know whether to use vertex data or default vertex shader values
 	// Any register not in the vertex declaration should be set to the default value
-	float vertexDefaultFlags[16];
-	for (int i = 0; i < 16; i++) {
+	float vertexDefaultFlags[X_VSH_MAX_ATTRIBUTES];
+	for (int i = 0; i < X_VSH_MAX_ATTRIBUTES; i++) {
 		vertexDefaultFlags[i] = pCxbxVertexDeclaration.vRegisterInDeclaration[i] ? 0.0f : 1.0f;
 	}
 	g_pD3DDevice->SetVertexShaderConstantF(CXBX_D3DVS_CONSTREG_VREGDEFAULTS_FLAG_BASE, vertexDefaultFlags, 4);
@@ -1527,11 +1527,13 @@ HRESULT CxbxImpl_CreateVertexShader(CONST DWORD *pDeclaration, CONST DWORD *pFun
 		// NOTE: This is a fatal error because it ALWAYS triggers a crash within DrawVertices if not set
 		CxbxKrnlCleanup("Failed to create Vertex Declaration");
 	}
+#if 0 // Creating a vertex shader doesn't imply activating it!
 	hRet = g_pD3DDevice->SetVertexDeclaration(pCxbxVertexShader->Declaration.pHostVertexDeclaration);
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetVertexDeclaration");
 	if (FAILED(hRet)) {
 		CxbxKrnlCleanup("Failed to set Vertex Declaration");
 	}
+#endif
 
 	uint64_t      vertexShaderKey = 0;
 	DWORD         XboxFunctionSize = 0;
@@ -1558,8 +1560,7 @@ HRESULT CxbxImpl_CreateVertexShader(CONST DWORD *pDeclaration, CONST DWORD *pFun
 		memcpy(pCxbxVertexShader->pXboxFunctionCopy, pFunction, XboxFunctionSize);
 	}
 
-	// Register the host Vertex Shader
-	SetCxbxVertexShader(*pHandle, pCxbxVertexShader);
+	RegisterCxbxVertexShader(*pHandle, pCxbxVertexShader);
 
 	if (FAILED(hRet))
 	{
@@ -1585,6 +1586,7 @@ HRESULT CxbxImpl_CreateVertexShader(CONST DWORD *pDeclaration, CONST DWORD *pFun
 
 	return hRet;
 }
+
 void CxbxImpl_DeleteVertexShader(DWORD Handle)
 {
 	LOG_INIT // Allows use of DEBUG_D3DRESULT
@@ -1594,8 +1596,12 @@ void CxbxImpl_DeleteVertexShader(DWORD Handle)
 
 	if (VshHandleIsVertexShader(Handle))
 	{
-		CxbxVertexShader* pCxbxVertexShader = GetCxbxVertexShader(Handle);
-		SetCxbxVertexShader(Handle, nullptr);
+		CxbxVertexShader* pCxbxVertexShader = GetCxbxVertexShader(Handle); // Fetch from cache
+		if (pCxbxVertexShader == nullptr) {
+			return; // Avoid crash if no shader was cached yet
+		}
+
+		RegisterCxbxVertexShader(Handle, nullptr); // Remove from cache
 
 		if (pCxbxVertexShader->Declaration.pHostVertexDeclaration) {
 			HRESULT hRet = pCxbxVertexShader->Declaration.pHostVertexDeclaration->Release();
