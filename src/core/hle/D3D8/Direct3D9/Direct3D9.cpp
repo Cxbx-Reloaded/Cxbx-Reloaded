@@ -121,7 +121,6 @@ static IDirect3D                   *g_pDirect3D = nullptr;
 static IDirect3DVertexBuffer       *g_pDummyBuffer = nullptr;  // Dummy buffer, used to set unused stream sources with
 static IDirect3DIndexBuffer        *g_pClosingLineLoopHostIndexBuffer = nullptr;
 static IDirect3DIndexBuffer        *g_pQuadToTriangleHostIndexBuffer = nullptr;
-static IDirect3DSurface            *g_pDefaultHostDepthBufferSurface = nullptr;
 
 static bool                         g_bEnableHostQueryVisibilityTest = true;
 static std::stack<IDirect3DQuery*>  g_HostQueryVisibilityTests;
@@ -2182,108 +2181,67 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
 				// Apply render scale factor for high-resolution rendering
 				g_RenderScaleFactor = g_XBVideo.renderScaleFactor;
 
-                if(g_EmuCDPD.XboxPresentationParameters.BufferSurfaces[0] != xbnullptr)
-                    EmuLog(LOG_LEVEL::WARNING, "BufferSurfaces[0] : 0x%.08X", g_EmuCDPD.XboxPresentationParameters.BufferSurfaces[0]);
+				// Setup the HostPresentationParameters
+				{
+					g_EmuCDPD.HostPresentationParameters = {};
+					g_EmuCDPD.HostPresentationParameters.Windowed = !g_XBVideo.bFullScreen;
 
-                if(g_EmuCDPD.XboxPresentationParameters.DepthStencilSurface != xbnullptr)
-                    EmuLog(LOG_LEVEL::WARNING, "DepthStencilSurface : 0x%.08X", g_EmuCDPD.XboxPresentationParameters.DepthStencilSurface);
+					// TODO: Investigate the best option for this
+					g_EmuCDPD.HostPresentationParameters.SwapEffect = D3DSWAPEFFECT_COPY;
 
-				// Make a binary copy of the Xbox D3DPRESENT_PARAMETERS
-				memcpy(&g_EmuCDPD.HostPresentationParameters, &(g_EmuCDPD.XboxPresentationParameters), sizeof(D3DPRESENT_PARAMETERS));
-
-				// make adjustments to parameters to make sense with windows Direct3D
-                {
-                    g_EmuCDPD.HostPresentationParameters.Windowed = !g_XBVideo.bFullScreen;
-
-                    // TODO: Investigate the best option for this
-                    g_EmuCDPD.HostPresentationParameters.SwapEffect = D3DSWAPEFFECT_COPY;
-
-                    g_EmuCDPD.HostPresentationParameters.BackBufferFormat       = EmuXB2PC_D3DFormat(g_EmuCDPD.XboxPresentationParameters.BackBufferFormat);
-					g_EmuCDPD.HostPresentationParameters.AutoDepthStencilFormat = EmuXB2PC_D3DFormat(g_EmuCDPD.XboxPresentationParameters.AutoDepthStencilFormat);
+					// Attempt to match backbuffer format, this is not *required*, but leads to faster blitting/swapping
+					g_EmuCDPD.HostPresentationParameters.BackBufferFormat = EmuXB2PC_D3DFormat(g_EmuCDPD.XboxPresentationParameters.BackBufferFormat);
 
 					g_EmuCDPD.HostPresentationParameters.PresentationInterval = g_XBVideo.bVSync ? D3DPRESENT_INTERVAL_ONE : D3DPRESENT_INTERVAL_IMMEDIATE;
 					g_Xbox_PresentationInterval_Default = g_EmuCDPD.XboxPresentationParameters.PresentationInterval;
 
-					// HACK: Disable Tripple Buffering for now...
-					// TODO: Enumerate maximum BackBufferCount if possible.
-					if(g_EmuCDPD.XboxPresentationParameters.BackBufferCount > 1)
-					{
-						EmuLog(LOG_LEVEL::WARNING, "Limiting BackBufferCount to 1...");
-						g_EmuCDPD.HostPresentationParameters.BackBufferCount = 1;
-					}
+					// We only want *one* backbuffer on the host, triple buffering, etc should be handled by our Present/Swap impl
+					g_EmuCDPD.HostPresentationParameters.BackBufferCount = 1;
 
-					// We disable multisampling on the host backbuffer completely for now
-					// It causes issues with backbuffer locking.
-					// NOTE: multisampling is could potentially be implemented by having the host backbuffer normal size
- 					// the Xbox backbuffer being multisampled and scaled during blit
+					// We don't want multisampling on the host backbuffer, it should be applied to Xbox surfaces if required
 					g_EmuCDPD.HostPresentationParameters.MultiSampleType = D3DMULTISAMPLE_NONE;
 					g_EmuCDPD.HostPresentationParameters.MultiSampleQuality = 0;
 
-					/*
-                    if(g_EmuCDPD.XboxPresentationParameters.MultiSampleType != 0) {
-                        // TODO: Check card for multisampling abilities
-                        if(g_EmuCDPD.XboxPresentationParameters.MultiSampleType == XTL::X_D3DMULTISAMPLE_2_SAMPLES_MULTISAMPLE_QUINCUNX) // = 0x00001121 = 4385
-							// Test-case : Galleon
-                            g_EmuCDPD.HostPresentationParameters.MultiSampleType = D3DMULTISAMPLE_2_SAMPLES;
-						else {
-							// CxbxKrnlCleanup("Unknown MultiSampleType (0x%.08X)", g_EmuCDPD.XboxPresentationParameters.MultiSampleType);
-							EmuLog(LOG_LEVEL::WARNING, "MultiSampleType 0x%.08X is not supported!", g_EmuCDPD.XboxPresentationParameters.MultiSampleType);
-							g_EmuCDPD.HostPresentationParameters.MultiSampleType = D3DMULTISAMPLE_NONE;
-						}
-                    }*/
+					// We want a lockable backbuffer for swapping/blitting purposes
+					g_EmuCDPD.HostPresentationParameters.Flags = D3DPRESENTFLAG_LOCKABLE_BACKBUFFER;
 
-                    g_EmuCDPD.HostPresentationParameters.Flags = D3DPRESENTFLAG_LOCKABLE_BACKBUFFER;
+					// retrieve resolution from configuration
+					char szBackBufferFormat[16] = {};
+					const char* resolution = g_XBVideo.szVideoResolution;
+					if (4 != sscanf(resolution, "%u x %u %*dbit %s (%u hz)",
+						&g_EmuCDPD.HostPresentationParameters.BackBufferWidth,
+						&g_EmuCDPD.HostPresentationParameters.BackBufferHeight,
+						szBackBufferFormat,
+						&g_EmuCDPD.HostPresentationParameters.FullScreen_RefreshRateInHz)) {
+						EmuLog(LOG_LEVEL::DEBUG, "EmuCreateDeviceProxy: Couldn't parse resolution : %s. Using Xbox Default (%d, %d @ %uhz)", resolution,
+							g_EmuCDPD.XboxPresentationParameters.BackBufferWidth, g_EmuCDPD.XboxPresentationParameters.BackBufferHeight,
+							g_EmuCDPD.XboxPresentationParameters.FullScreen_RefreshRateInHz);
+						g_EmuCDPD.HostPresentationParameters.BackBufferWidth = g_EmuCDPD.XboxPresentationParameters.BackBufferWidth;
+						g_EmuCDPD.HostPresentationParameters.BackBufferHeight = g_EmuCDPD.XboxPresentationParameters.BackBufferHeight;
+						g_EmuCDPD.HostPresentationParameters.FullScreen_RefreshRateInHz = g_EmuCDPD.XboxPresentationParameters.FullScreen_RefreshRateInHz;
+					}
 
-                    // retrieve resolution from configuration
                     if(g_EmuCDPD.HostPresentationParameters.Windowed)
-                    {
-						const char* resolution = g_XBVideo.szVideoResolution;
-						if (2 != sscanf(resolution, "%u x %u", &g_EmuCDPD.HostPresentationParameters.BackBufferWidth, &g_EmuCDPD.HostPresentationParameters.BackBufferHeight)) {
-							EmuLog(LOG_LEVEL::DEBUG, "EmuCreateDeviceProxy: Couldn't parse resolution : %s.", resolution);
-						}
-						else {
-							if (g_EmuCDPD.HostPresentationParameters.BackBufferWidth == 640)
-								EmuLog(LOG_LEVEL::DEBUG, "EmuCreateDeviceProxy: Default width wasn't updated.");
-							if (g_EmuCDPD.HostPresentationParameters.BackBufferWidth == 480)
-								EmuLog(LOG_LEVEL::DEBUG, "EmuCreateDeviceProxy: Default height wasn't updated.");
-						}
+					{
+						D3DDISPLAYMODE D3DDisplayMode;
+						g_pDirect3D->GetAdapterDisplayMode(g_EmuCDPD.Adapter, &D3DDisplayMode);
 
-                        D3DDISPLAYMODE D3DDisplayMode;
-
-                        g_pDirect3D->GetAdapterDisplayMode(g_EmuCDPD.Adapter, &D3DDisplayMode);
-
-                        g_EmuCDPD.HostPresentationParameters.BackBufferFormat = D3DDisplayMode.Format;
-                        g_EmuCDPD.HostPresentationParameters.FullScreen_RefreshRateInHz = 0;
-                    }
-                    else
-                    {
-                        char szBackBufferFormat[16] = {};
-
-						const char* resolution = g_XBVideo.szVideoResolution;
-						if (4 != sscanf(resolution, "%u x %u %*dbit %s (%u hz)",
-							&g_EmuCDPD.HostPresentationParameters.BackBufferWidth,
-							&g_EmuCDPD.HostPresentationParameters.BackBufferHeight,
-							szBackBufferFormat,
-							&g_EmuCDPD.HostPresentationParameters.FullScreen_RefreshRateInHz)) {
-							EmuLog(LOG_LEVEL::DEBUG, "EmuCreateDeviceProxy: Couldn't parse resolution : %s.", resolution);
-						}
-						else {
-							if (g_EmuCDPD.HostPresentationParameters.BackBufferWidth == 640)
-								EmuLog(LOG_LEVEL::DEBUG, "EmuCreateDeviceProxy: Default width wasn't updated.");
-							if (g_EmuCDPD.HostPresentationParameters.BackBufferWidth == 480)
-								EmuLog(LOG_LEVEL::DEBUG, "EmuCreateDeviceProxy: Default height wasn't updated.");
-						}
-
-                        if(strcmp(szBackBufferFormat, "x1r5g5b5") == 0)
+						g_EmuCDPD.HostPresentationParameters.BackBufferFormat = D3DDisplayMode.Format;
+						g_EmuCDPD.HostPresentationParameters.FullScreen_RefreshRateInHz = 0;
+					}
+					else
+					{
+						// In exclusive fullscreen mode, make *sure* to use the info that was in the resolution string
+						if (strcmp(szBackBufferFormat, "x1r5g5b5") == 0)
 							g_EmuCDPD.HostPresentationParameters.BackBufferFormat = D3DFMT_X1R5G5B5;
-                        else if(strcmp(szBackBufferFormat, "r5g6r5") == 0)
+						else if (strcmp(szBackBufferFormat, "r5g6r5") == 0)
 							g_EmuCDPD.HostPresentationParameters.BackBufferFormat = D3DFMT_R5G6B5;
-                        else if(strcmp(szBackBufferFormat, "x8r8g8b8") == 0)
+						else if (strcmp(szBackBufferFormat, "x8r8g8b8") == 0)
 							g_EmuCDPD.HostPresentationParameters.BackBufferFormat = D3DFMT_X8R8G8B8;
-                        else if(strcmp(szBackBufferFormat, "a8r8g8b8") == 0)
+						else if (strcmp(szBackBufferFormat, "a8r8g8b8") == 0)
 							g_EmuCDPD.HostPresentationParameters.BackBufferFormat = D3DFMT_A8R8G8B8;
-                    }
-                }
+					}
+				}
 
                 // detect vertex processing capabilities
                 if((g_D3DCaps.DevCaps & D3DDEVCAPS_HWTRANSFORMANDLIGHT) && g_EmuCDPD.DeviceType == D3DDEVTYPE_HAL)
@@ -2307,31 +2265,8 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
                 // Direct3D8: (WARN) :Device that was created without D3DCREATE_MULTITHREADED is being used by a thread other than the creation thread.
                 g_EmuCDPD.BehaviorFlags |= D3DCREATE_MULTITHREADED;
 
-				// If a depth stencil format is set, enable AutoDepthStencil
-				if (g_EmuCDPD.HostPresentationParameters.AutoDepthStencilFormat != 0) {
-					g_EmuCDPD.HostPresentationParameters.EnableAutoDepthStencil = TRUE;
-				}
-
-				// If the depth stencil format is unsupported by the host, use a sensible fallback
-				if (g_pDirect3D->CheckDeviceFormat(
-					D3DADAPTER_DEFAULT,
-					D3DDEVTYPE_HAL,
-					g_EmuCDPD.HostPresentationParameters.BackBufferFormat,
-					D3DUSAGE_DEPTHSTENCIL,
-					D3DRTYPE_SURFACE,
-					g_EmuCDPD.HostPresentationParameters.AutoDepthStencilFormat) != D3D_OK) {
-					g_EmuCDPD.HostPresentationParameters.AutoDepthStencilFormat = D3DFMT_D24S8;
-				}
-
-				// For some reason, D3DFMT_D16_LOCKABLE as the AudoDepthStencil causes CreateDevice to fail...
-				if (g_EmuCDPD.HostPresentationParameters.AutoDepthStencilFormat == D3DFMT_D16_LOCKABLE) {
-					g_EmuCDPD.HostPresentationParameters.AutoDepthStencilFormat = D3DFMT_D16;
-				}
-
-				// DirectX9 doesn't support 0 as a swap effect
-				if (g_EmuCDPD.HostPresentationParameters.SwapEffect == 0) {
-					g_EmuCDPD.HostPresentationParameters.SwapEffect = D3DSWAPEFFECT_DISCARD;
-				}
+				// We never want auto-depth stencil on the host, Xbox D3D will handle this for us
+				g_EmuCDPD.HostPresentationParameters.EnableAutoDepthStencil = FALSE;
 
                 // redirect to windows Direct3D
                 g_EmuCDPD.hRet = g_pDirect3D->CreateDevice(
@@ -2483,20 +2418,6 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
                     free(lpCodes);						
 				}
 
-/* Disabled for now, as this has no other side-effect (other then adding a reference count that's never Released)
-                // update render target cache
-				IDirect3DSurface *pCurrentHostRenderTarget = nullptr;
-                hRet = g_pD3DDevice->GetRenderTarget(
-					0, // RenderTargetIndex
-					&pCurrentHostRenderTarget);
-				DEBUG_D3DRESULT(hRet, "g_pD3DDevice->GetRenderTarget");
-				// TODO : SetHostSurface(BackBuffer[0], pCurrentHostRenderTarget);
-*/
-
-				// update z-stencil surface cache
-				g_pD3DDevice->GetDepthStencilSurface(&g_pDefaultHostDepthBufferSurface);
-				UpdateDepthStencilFlags(g_pDefaultHostDepthBufferSurface);
-		
 				// Can host driver create event queries?
 				if (SUCCEEDED(g_pD3DDevice->CreateQuery(D3DQUERYTYPE_EVENT, nullptr))) {
 					// Is host GPU query creation enabled?

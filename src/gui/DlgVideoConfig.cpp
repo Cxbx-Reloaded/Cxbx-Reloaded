@@ -349,7 +349,7 @@ VOID RefreshDirect3DDevice()
 				, D3DFMT_X8R8G8B8
 			);
 
-            SendMessage(g_hVideoResolution, CB_ADDSTRING, 0, (LPARAM)"Automatic (Default)");
+            SendMessage(g_hVideoResolution, CB_ADDSTRING, 0, (LPARAM)"Automatic (Xbox Default)");
 
             /*! enumerate through available adapter modes */
             for(uint32_t v=0;v<dwAdapterModeCount;v++)
