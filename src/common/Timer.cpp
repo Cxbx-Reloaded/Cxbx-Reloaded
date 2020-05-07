@@ -54,7 +54,7 @@ std::mutex TimerMtx;
 
 
 // Returns the current time of the timer
-inline uint64_t GetTime_NS(TimerObject* Timer)
+uint64_t GetTime_NS(TimerObject* Timer)
 {
 #ifdef _WIN32
 	LARGE_INTEGER li;
