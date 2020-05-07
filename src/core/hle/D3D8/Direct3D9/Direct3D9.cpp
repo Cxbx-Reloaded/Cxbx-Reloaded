@@ -2908,7 +2908,7 @@ void Direct3D_CreateDevice_Start
 	// to avoid hitting EMUPATCH'es that need a valid g_pD3DDevice
 	{
 		// Wait until proxy is done with an existing call (i highly doubt this situation will come up)
-		while (g_EmuCDPD.bReady)d
+		while (g_EmuCDPD.bReady)
 			Sleep(10);
 
 		// Cache parameters
