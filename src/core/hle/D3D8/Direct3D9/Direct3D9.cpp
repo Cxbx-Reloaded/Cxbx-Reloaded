@@ -2962,7 +2962,7 @@ void Direct3D_CreateDevice_End()
     // We fix the situation by calling the Xbox GetRenderTarget function, which immediately after CreateDevice
     // WILL always return the Backbuffer!
     // Test Case: Shin Megami Tensei: Nine
-    if (g_pXbox_BackBufferSurface == xbnullptr || g_pXbox_DefaultDepthStencilSurface == xbnullptr) {
+    if (g_pXbox_BackBufferSurface == xbnullptr && g_pXbox_DefaultDepthStencilSurface == xbnullptr) {
         // First, log the test case
         LOG_TEST_CASE("Xbox CreateDevice did not call SetRenderTarget");
     }
