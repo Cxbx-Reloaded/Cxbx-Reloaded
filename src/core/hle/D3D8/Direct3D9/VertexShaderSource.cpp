@@ -6,6 +6,10 @@
 #include "util/hasher.h"
 #include "core/kernel/support/Emu.h"
 
+VertexShaderSource g_VertexShaderSource = VertexShaderSource();
+// FIXME : This should really be released and created in step with the D3D device lifecycle rather than being a thing on its own
+// (And the ResetD3DDevice method should be removed)
+
 ID3DBlob* AsyncCreateVertexShader(IntermediateVertexShader intermediateShader, ShaderKey key) {
 	// HACK set thread affinity every call to reduce interference with Xbox main thread
 	// TODO use a thread pool library for better control over workers
@@ -47,6 +51,7 @@ ShaderKey VertexShaderSource::CreateShader(const DWORD* pXboxFunction, DWORD *pX
 		pXboxFunctionSize,
 		&intermediateShader);
 
+	// FIXME ignore shader header when creating key
 	ShaderKey key = ComputeHash((void*)pXboxFunction, *pXboxFunctionSize);
 
 	// Check if we need to create the shader

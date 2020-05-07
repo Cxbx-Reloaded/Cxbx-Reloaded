@@ -30,7 +30,7 @@
 
 #include "Cxbx.h"
 
-#include "core\hle\D3D8\XbVertexShader.h" // for CxbxVertexShaderInfo
+#include "core\hle\D3D8\XbVertexShader.h"
 
 typedef struct _CxbxDrawContext
 {
@@ -90,7 +90,7 @@ class CxbxVertexBufferConverter
         std::list<CxbxPatchedStream> m_PatchedStreamUsageList;             // Linked list of vertex streams, least recently used is last in the list
         CxbxPatchedStream& GetPatchedStream(uint64_t);                     // Fetches (or inserts) a patched stream associated with the given key
 
-        CxbxVertexShaderInfo *m_pVertexShaderInfo;
+        CxbxVertexDeclaration *m_pCxbxVertexDeclaration;
 
         // Returns the number of streams of a patch
         UINT GetNbrStreams(CxbxDrawContext *pPatchDesc);

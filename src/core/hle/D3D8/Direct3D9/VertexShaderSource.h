@@ -42,4 +42,6 @@ private:
 	bool VertexShaderSource::_FindShader(ShaderKey key, LazyVertexShader** ppLazyShader);
 };
 
+extern VertexShaderSource g_VertexShaderSource;
+
 #endif
