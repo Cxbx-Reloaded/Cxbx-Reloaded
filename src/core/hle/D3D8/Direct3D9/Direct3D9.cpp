@@ -3766,8 +3766,11 @@ void GetMultiSampleOffsetAndScale(float& xScale, float& yScale, float& xOffset, 
 			case XTL::X_D3DMULTISAMPLE_2_SAMPLES_MULTISAMPLE_QUINCUNX:
 			case XTL::X_D3DMULTISAMPLE_4_SAMPLES_MULTISAMPLE_LINEAR:
 			case XTL::X_D3DMULTISAMPLE_4_SAMPLES_MULTISAMPLE_GAUSSIAN:
+				xOffset = yOffset = 0.0f;
+				break;
 			case XTL::X_D3DMULTISAMPLE_9_SAMPLES_MULTISAMPLE_GAUSSIAN:
 				xOffset = yOffset = 0.0f;
+				LOG_TEST_CASE("X_D3DMULTISAMPLE_9_SAMPLES_MULTISAMPLE_GAUSSIAN");
 				break;
 		}
 
