@@ -61,10 +61,13 @@ XTL::X_STREAMINPUT g_Xbox_SetStreamSource[X_VSH_MAX_STREAMS] = { 0 }; // Note : 
 
 extern XTL::X_D3DSurface* g_pXbox_RenderTarget;
 extern XTL::X_D3DSurface* g_pXbox_BackBufferSurface;
+extern XTL::X_D3DMULTISAMPLE_TYPE g_Xbox_MultiSampleType;
+
 void *GetDataFromXboxResource(XTL::X_D3DResource *pXboxResource);
 bool GetHostRenderTargetDimensions(DWORD* pHostWidth, DWORD* pHostHeight, IDirect3DSurface* pHostRenderTarget = nullptr);
 uint32_t GetPixelContainerWidth(XTL::X_D3DPixelContainer* pPixelContainer);
 uint32_t GetPixelContainerHeight(XTL::X_D3DPixelContainer* pPixelContainer);
+void ApplyXboxMultiSampleOffsetAndScale(float& x, float& y);
 
 void CxbxPatchedStream::Activate(CxbxDrawContext *pDrawContext, UINT uiStream) const
 {
@@ -667,7 +670,7 @@ void CxbxVertexBufferConverter::ConvertStream
 			HostRenderTarget_Height = XboxRenderTarget_Height;
 		}
 
-		bool bNeedRHWTransform = XboxRenderTarget_Width < HostRenderTarget_Width && XboxRenderTarget_Height < HostRenderTarget_Height;
+		bool bNeedRHWTransform = (g_Xbox_MultiSampleType > XTL::X_D3DMULTISAMPLE_NONE) || (XboxRenderTarget_Width < HostRenderTarget_Width && XboxRenderTarget_Height < HostRenderTarget_Height);
 
 		for (uint32_t uiVertex = 0; uiVertex < uiVertexCount; uiVertex++) {
 			FLOAT *pVertexDataAsFloat = (FLOAT*)(&pHostVertexData[uiVertex * uiHostVertexStride]);
@@ -679,6 +682,8 @@ void CxbxVertexBufferConverter::ConvertStream
 				if (bNeedRHWTransform) {
 					pVertexDataAsFloat[0] *= g_RenderScaleFactor;
 					pVertexDataAsFloat[1] *= g_RenderScaleFactor;
+
+					ApplyXboxMultiSampleOffsetAndScale(pVertexDataAsFloat[0], pVertexDataAsFloat[1]);
 				}
 
 #if 0
