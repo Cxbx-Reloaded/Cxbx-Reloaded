@@ -3817,11 +3817,10 @@ void GetViewPortOffsetAndScale(float (&vOffset)[4], float(&vScale)[4])
 	// TODO will we need to do something here to support upscaling?
 	// TODO remove the code above as required
 
-	// Default scale and offset.
+	// Reset to default scale (as we accounted for MSAA scale above)
+	// But don't reset the offset
 	xScale = 1.0f;
 	yScale = 1.0f;
-	xOffset = 0.5f;
-	yOffset = 0.5f;
 
 	// Xbox correct values?
 	xOffset = xOffset + (1.0f / 32.0f);
