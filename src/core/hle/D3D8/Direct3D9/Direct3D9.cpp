@@ -171,7 +171,7 @@ static XTL::X_D3DVBLANKCALLBACK     g_pXbox_VerticalBlankCallback   = xbnullptr;
 static XTL::X_D3DSurface           *g_pXbox_DefaultDepthStencilSurface = xbnullptr;
        XTL::X_D3DSurface           *g_pXbox_RenderTarget = xbnullptr;
 static XTL::X_D3DSurface           *g_pXbox_DepthStencil = xbnullptr;
-       XTL::X_D3DMULTISAMPLE_TYPE   g_XboxMultiSampleType = XTL::X_D3DMULTISAMPLE_NONE;
+       XTL::X_D3DMULTISAMPLE_TYPE   g_Xbox_MultiSampleType = XTL::X_D3DMULTISAMPLE_NONE;
 
        XTL::X_VERTEXSHADERCONSTANTMODE g_Xbox_VertexShaderConstantMode = X_D3DSCM_192CONSTANTS; // Set by D3DDevice_SetShaderConstantMode, TODO : Move to XbVertexShader.cpp
 static XTL::DWORD                   g_Xbox_BaseVertexIndex = 0; // Set by D3DDevice_SetIndices, read by D3DDevice_DrawIndexedVertices : a value that's effectively added to every vertex index (as stored in an index buffer) by multiplying this by vertex stride and added to the vertex buffer start (see BaseVertexIndex in CxbxDrawIndexed)
@@ -2843,7 +2843,7 @@ void Direct3D_CreateDevice_Start
         CxbxKrnlCleanup("Failed to init XboxTextureStates");
     }
 
-	g_XboxMultiSampleType = pPresentationParameters->MultiSampleType;
+	g_Xbox_MultiSampleType = pPresentationParameters->MultiSampleType;
 
 	// create default device *before* calling Xbox Direct3D_CreateDevice trampline
 	// to avoid hitting EMUPATCH'es that need a valid g_pD3DDevice
@@ -3085,7 +3085,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_Reset)
 	// Instead, it simply re-creates the backbuffer with a new configuration
 
 	// Store the new multisampling configuration
-	g_XboxMultiSampleType = pPresentationParameters->MultiSampleType;
+	g_Xbox_MultiSampleType = pPresentationParameters->MultiSampleType;
 
 	// Since Reset will call create a new backbuffer surface, we can clear our current association
 	// NOTE: We don't actually free the Xbox data, the Xbox side will do this for us when we call the trampoline below.
@@ -3759,8 +3759,8 @@ void GetMultiSampleOffsetAndScale(float& xScale, float& yScale, float& xOffset, 
 	xOffset = 0.5f;
 	yOffset = 0.5f;
 
-	if (g_XboxMultiSampleType != XTL::X_D3DMULTISAMPLE_NONE) {
-		switch (g_XboxMultiSampleType)
+	if (g_Xbox_MultiSampleType != XTL::X_D3DMULTISAMPLE_NONE) {
+		switch (g_Xbox_MultiSampleType)
 		{
 			case XTL::X_D3DMULTISAMPLE_2_SAMPLES_MULTISAMPLE_LINEAR:
 			case XTL::X_D3DMULTISAMPLE_2_SAMPLES_MULTISAMPLE_QUINCUNX:
@@ -3777,11 +3777,11 @@ void GetMultiSampleOffsetAndScale(float& xScale, float& yScale, float& xOffset, 
 		#define MULTISAMPLE_YSCALE_MASK     0x000f
 		#define MULTISAMPLE_YSCALE_SHIFT    0
 
-		#define NULTISAMPLE_XSCALE(type) ((type & MULTISAMPLE_XSCALE_MASK) >> MULTISAMPLE_XSCALE_SHIFT)
-		#define NULTISAMPLE_YSCALE(type) ((type & MULTISAMPLE_YSCALE_MASK) >> MULTISAMPLE_YSCALE_SHIFT)
+		#define MULTISAMPLE_XSCALE(type) ((type & MULTISAMPLE_XSCALE_MASK) >> MULTISAMPLE_XSCALE_SHIFT)
+		#define MULTISAMPLE_YSCALE(type) ((type & MULTISAMPLE_YSCALE_MASK) >> MULTISAMPLE_YSCALE_SHIFT)
 
-		xScale = (float)NULTISAMPLE_XSCALE(g_XboxMultiSampleType);
-		yScale = (float)NULTISAMPLE_YSCALE(g_XboxMultiSampleType);
+		xScale = (float)MULTISAMPLE_XSCALE(g_Xbox_MultiSampleType);
+		yScale = (float)MULTISAMPLE_YSCALE(g_Xbox_MultiSampleType);
 	}
 }
 
