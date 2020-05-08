@@ -2830,6 +2830,89 @@ ConvertedIndexBuffer& CxbxUpdateActiveIndexBuffer
 	return CacheEntry;
 }
 
+#define CXBX_D3DMULTISAMPLE_XSCALE(type) (((type) & XTL::X_D3DMULTISAMPLE_XSCALE_MASK) >> XTL::X_D3DMULTISAMPLE_XSCALE_SHIFT)
+#define CXBX_D3DMULTISAMPLE_YSCALE(type) (((type) & XTL::X_D3DMULTISAMPLE_YSCALE_MASK) >> XTL::X_D3DMULTISAMPLE_YSCALE_SHIFT)
+
+void SetXboxMultiSampleType(XTL::X_D3DMULTISAMPLE_TYPE value)
+{
+	// Validate & correct input, to detect test cases and avoid trouble when using g_Xbox_MultiSampleType :
+	if (value == 0) {
+		LOG_TEST_CASE("Correcting zero to X_D3DMULTISAMPLE_NONE");
+		value = XTL::X_D3DMULTISAMPLE_NONE;
+	}
+	if (value & ~XTL::X_D3DMULTISAMPLE_KNOWN_MASK) {
+		LOG_TEST_CASE("Removing unknown X_D3DMULTISAMPLE bits");
+		value &= XTL::X_D3DMULTISAMPLE_KNOWN_MASK;
+	}
+	if (CXBX_D3DMULTISAMPLE_XSCALE(value) == 0) {
+		LOG_TEST_CASE("Correcting XSCALE 0 to 1");
+		value |= 1 << XTL::X_D3DMULTISAMPLE_XSCALE_SHIFT;
+	}
+	if (CXBX_D3DMULTISAMPLE_YSCALE(value) == 0) {
+		LOG_TEST_CASE("Correcting YSCALE 0 to 1");
+		value |= 1 << XTL::X_D3DMULTISAMPLE_YSCALE_SHIFT;
+	}
+	if ((CXBX_D3DMULTISAMPLE_XSCALE(value) == 1) && (CXBX_D3DMULTISAMPLE_YSCALE(value) == 1)) {
+		if (value & XTL::X_D3DMULTISAMPLE_ALGO_MASK) {
+			LOG_TEST_CASE("Removing algorithm for 1 by 1 scale");
+			value &= ~XTL::X_D3DMULTISAMPLE_ALGO_MASK;
+		}
+		if (value & XTL::X_D3DMULTISAMPLE_SAMPLING_MASK) {
+			LOG_TEST_CASE("Removing sampling for 1 by 1 scale");
+			value &= ~XTL::X_D3DMULTISAMPLE_SAMPLING_MASK;
+		}
+	}
+	if (value == XTL::X_D3DMULTISAMPLE_9_SAMPLES_MULTISAMPLE_GAUSSIAN) {
+		LOG_TEST_CASE("X_D3DMULTISAMPLE_9_SAMPLES_MULTISAMPLE_GAUSSIAN"); // This used to use scale 1.5f
+	}
+	// Set the now-validated g_Xbox_MultiSampleType value :
+	g_Xbox_MultiSampleType = value;
+}
+
+static inline float GetMultiSampleOffsetDelta()
+{
+	// TODO : What impact does X_D3DMULTISAMPLE_SAMPLING_SUPER have on offset?
+	return (g_Xbox_MultiSampleType & XTL::X_D3DMULTISAMPLE_SAMPLING_MULTI) ? 0.0f : 0.5f;
+}
+
+static inline void GetMultiSampleOffset(float& xOffset, float& yOffset)
+{
+	xOffset = yOffset = GetMultiSampleOffsetDelta();
+}
+
+static inline void GetMultiSampleScale(float& xScale, float& yScale)
+{
+	xScale = (float)CXBX_D3DMULTISAMPLE_XSCALE(g_Xbox_MultiSampleType);
+	yScale = (float)CXBX_D3DMULTISAMPLE_YSCALE(g_Xbox_MultiSampleType);
+}
+
+void GetMultiSampleOffsetAndScale(float& xScale, float& yScale, float& xOffset, float& yOffset)
+{
+	GetMultiSampleScale(xScale, yScale);
+	GetMultiSampleOffset(xOffset, yOffset);
+}
+
+static void ApplyXboxMultiSampleOffset(float& x, float& y)
+{
+	float d = GetMultiSampleOffsetDelta();
+	x += d;
+	y += d;
+}
+
+static void ApplyXboxMultiSampleScale(float& x, float& y)
+{
+	float xs, ys;
+	GetMultiSampleScale(xs, ys);
+	x *= xs;
+	y *= ys;
+}
+
+void ApplyXboxMultiSampleOffsetAndScale(float& x, float& y)
+{
+	ApplyXboxMultiSampleScale(x, y);
+	ApplyXboxMultiSampleOffset(x, y);
+}
+
 void Direct3D_CreateDevice_Start
 (
 	XTL::X_D3DPRESENT_PARAMETERS     *pPresentationParameters
@@ -2843,7 +2926,7 @@ void Direct3D_CreateDevice_Start
         CxbxKrnlCleanup("Failed to init XboxTextureStates");
     }
 
-	g_Xbox_MultiSampleType = pPresentationParameters->MultiSampleType;
+	SetXboxMultiSampleType(pPresentationParameters->MultiSampleType);
 
 	// create default device *before* calling Xbox Direct3D_CreateDevice trampline
 	// to avoid hitting EMUPATCH'es that need a valid g_pD3DDevice
@@ -3085,7 +3168,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_Reset)
 	// Instead, it simply re-creates the backbuffer with a new configuration
 
 	// Store the new multisampling configuration
-	g_Xbox_MultiSampleType = pPresentationParameters->MultiSampleType;
+	SetXboxMultiSampleType(pPresentationParameters->MultiSampleType);
 
 	// Since Reset will call create a new backbuffer surface, we can clear our current association
 	// NOTE: We don't actually free the Xbox data, the Xbox side will do this for us when we call the trampoline below.
@@ -3751,44 +3834,6 @@ float GetZScaleForSurface(XTL::X_D3DSurface* pSurface)
     return 1;
 }
 
-void GetMultiSampleOffsetAndScale(float& xScale, float& yScale, float& xOffset, float& yOffset)
-{
-	// Default values
-	xScale = 1.0f;
-	yScale = 1.0f;
-	xOffset = 0.5f;
-	yOffset = 0.5f;
-
-	// NOTE: Can be 0, so we need to check for that too
-	if (g_Xbox_MultiSampleType > 0) {
-		switch (g_Xbox_MultiSampleType)
-		{
-			case XTL::X_D3DMULTISAMPLE_2_SAMPLES_MULTISAMPLE_LINEAR:
-			case XTL::X_D3DMULTISAMPLE_2_SAMPLES_MULTISAMPLE_QUINCUNX:
-			case XTL::X_D3DMULTISAMPLE_4_SAMPLES_MULTISAMPLE_LINEAR:
-			case XTL::X_D3DMULTISAMPLE_4_SAMPLES_MULTISAMPLE_GAUSSIAN:
-				xOffset = yOffset = 0.0f;
-				break;
-			case XTL::X_D3DMULTISAMPLE_9_SAMPLES_MULTISAMPLE_GAUSSIAN:
-				xOffset = yOffset = 0.0f;
-				LOG_TEST_CASE("X_D3DMULTISAMPLE_9_SAMPLES_MULTISAMPLE_GAUSSIAN");
-				break;
-		}
-
-		#define MULTISAMPLE_XSCALE_MASK     0x00f0
-		#define MULTISAMPLE_XSCALE_SHIFT    4
-
-		#define MULTISAMPLE_YSCALE_MASK     0x000f
-		#define MULTISAMPLE_YSCALE_SHIFT    0
-
-		#define MULTISAMPLE_XSCALE(type) ((type & MULTISAMPLE_XSCALE_MASK) >> MULTISAMPLE_XSCALE_SHIFT)
-		#define MULTISAMPLE_YSCALE(type) ((type & MULTISAMPLE_YSCALE_MASK) >> MULTISAMPLE_YSCALE_SHIFT)
-
-		xScale = (float)MULTISAMPLE_XSCALE(g_Xbox_MultiSampleType);
-		yScale = (float)MULTISAMPLE_YSCALE(g_Xbox_MultiSampleType);
-	}
-}
-
 void GetViewPortOffsetAndScale(float (&vOffset)[4], float(&vScale)[4])
 {
     // Store viewport offset and scale in constant registers
@@ -3801,8 +3846,11 @@ void GetViewPortOffsetAndScale(float (&vOffset)[4], float(&vScale)[4])
 	float xScale, yScale;
 	float xOffset, yOffset;
 	GetMultiSampleOffsetAndScale(xScale, yScale, xOffset, yOffset);
-	ViewPort.Width /= xScale;
-	ViewPort.Height /= yScale;
+	// Since Width and Height are DWORD, subtracting MultiSampleOffset 0.0f or 0.5f makes no sense
+	//ViewPort.Width -= xOffset;
+	//ViewPort.Height -= yOffset;
+	ViewPort.Width /= (DWORD)xScale;
+	ViewPort.Height /= (DWORD)yScale;
 
     // Calculate Width/Height scale & offset
     float scaleWidth = (2.0f / ViewPort.Width) * g_RenderScaleFactor;
@@ -3929,12 +3977,12 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetViewport)
 		}
 	}
 
-	// Apply MSAA scale
+	// Apply MSAA scale and offset
 	float xScale, yScale;
-	float xOffset, yOffset;
-	GetMultiSampleOffsetAndScale(xScale, yScale, xOffset, yOffset);
-	HostViewPort.Width *= xScale;
-	HostViewPort.Height *= yScale;
+	GetMultiSampleScale(xScale, yScale);
+	HostViewPort.Width *= (DWORD)xScale;
+	HostViewPort.Height *= (DWORD)yScale;
+	// Since Width and Height are DWORD, adding GetMultiSampleOffset 0.0f or 0.5f makes no sense
 
 	HRESULT hRet = g_pD3DDevice->SetViewport(&HostViewPort);
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetViewport");
@@ -5036,8 +5084,7 @@ DWORD WINAPI XTL::EMUPATCH(D3DDevice_Swap)
 
 				// We also need to account for any MSAA which may have enlarged the Xbox Backbuffer
 				float xScale, yScale;
-				float xOffset, yOffset;
-				GetMultiSampleOffsetAndScale(xScale, yScale, xOffset, yOffset);
+				GetMultiSampleScale(xScale, yScale);
 
                 xScale = (float)BackBufferDesc.Width / ((float)XboxBackBufferWidth / xScale);
                 yScale = (float)BackBufferDesc.Height / ((float)XboxBackBufferHeight / yScale);
