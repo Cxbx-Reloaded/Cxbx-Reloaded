@@ -3759,7 +3759,8 @@ void GetMultiSampleOffsetAndScale(float& xScale, float& yScale, float& xOffset, 
 	xOffset = 0.5f;
 	yOffset = 0.5f;
 
-	if (g_Xbox_MultiSampleType != XTL::X_D3DMULTISAMPLE_NONE) {
+	// NOTE: Can be 0, so we need to check for that too
+	if (g_Xbox_MultiSampleType > 0 && g_Xbox_MultiSampleType != XTL::X_D3DMULTISAMPLE_NONE) {
 		switch (g_Xbox_MultiSampleType)
 		{
 			case XTL::X_D3DMULTISAMPLE_2_SAMPLES_MULTISAMPLE_LINEAR:
