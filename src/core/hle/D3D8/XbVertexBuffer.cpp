@@ -669,7 +669,7 @@ void CxbxVertexBufferConverter::ConvertStream
 			HostRenderTarget_Height = XboxRenderTarget_Height;
 		}
 
-		bool bNeedRHWTransform = (g_Xbox_MultiSampleType > 0 && g_Xbox_MultiSampleType != XTL::X_D3DMULTISAMPLE_NONE) || (XboxRenderTarget_Width < HostRenderTarget_Width && XboxRenderTarget_Height < HostRenderTarget_Height);
+		bool bNeedRHWTransform = g_Xbox_MultiSampleType > 0 || (XboxRenderTarget_Width < HostRenderTarget_Width && XboxRenderTarget_Height < HostRenderTarget_Height);
 
 		for (uint32_t uiVertex = 0; uiVertex < uiVertexCount; uiVertex++) {
 			FLOAT *pVertexDataAsFloat = (FLOAT*)(&pHostVertexData[uiVertex * uiHostVertexStride]);
