@@ -2837,7 +2837,7 @@ void SetXboxMultiSampleType(XTL::X_D3DMULTISAMPLE_TYPE value)
 {
 	// Validate & correct input, to detect test cases and avoid trouble when using g_Xbox_MultiSampleType :
 	if (value == 0) {
-		LOG_TEST_CASE("Correcting zero to X_D3DMULTISAMPLE_NONE");
+		// Correcting zero to X_D3DMULTISAMPLE_NONE
 		value = XTL::X_D3DMULTISAMPLE_NONE;
 	}
 	if (value & ~XTL::X_D3DMULTISAMPLE_KNOWN_MASK) {
