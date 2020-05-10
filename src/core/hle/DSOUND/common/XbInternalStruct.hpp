@@ -135,16 +135,23 @@ struct CDirectSoundVoice : CUnknownGenericManager {
     } u;
     static_assert(sizeof(_u) == 0x300);
 
+    // Generic interface without need to check xdk's build revision every time.
+    typedef void            (*pGetFormat)(_u& u, audio_format& format);
+    typedef void            (*pSetFormat)(_u& u, audio_format format);
+    typedef uint32_t        (*pGetUint32)(_u& u);
+    typedef void            (*pSetUint32)(_u& u, uint32_t value);
+    typedef int32_t         (*pGetInt32)(_u& u);
+    typedef void            (*pSetInt32)(_u& u, int32_t value);
     struct {
-        void                (*GetFormat)(_u& u, audio_format& format);
-        void                (*SetFormat)(_u& u, audio_format format);
-        uint32_t            (*GetFrequencyDefault)(_u& u);
-        int32_t             (*GetPitch)(_u& u);
-        void                (*SetPitch)(_u& u, int32_t pitch);
-        uint32_t            (*GetVolume)(_u& u);
-        void                (*SetVolume)(_u& u, uint32_t volume);
-        uint32_t            (*GetHeadroom)(_u& u);
-        void                (*SetHeadroom)(_u& u, uint32_t headroom);
+        pGetFormat          GetFormat;
+        pSetFormat          SetFormat;
+        pGetUint32          GetFrequencyDefault;
+        pGetInt32           GetPitch;
+        pSetInt32           SetPitch;
+        pGetUint32          GetVolume;
+        pSetUint32          SetVolume;
+        pGetUint32          GetHeadroom;
+        pSetUint32          SetHeadroom;
     } funcs;
     static_assert(sizeof(funcs) == 0x24);
 

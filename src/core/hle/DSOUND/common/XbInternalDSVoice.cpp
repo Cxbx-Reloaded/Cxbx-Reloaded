@@ -158,43 +158,43 @@ XTL::CDirectSoundVoice::CDirectSoundVoice(bool is3D)
 
         Init<_u::_settings_4034_lower>(u.settings_4034_lower, is3D);
 
-        funcs.GetFormat = reinterpret_cast<void(*)(_u&, audio_format&)>(::GetFormat_4034_lower<_u::_settings_4034_lower>);
-        funcs.SetFormat = reinterpret_cast<void(*)(_u&, audio_format)>(::SetFormat_4034_lower<_u::_settings_4034_lower>);
-        funcs.GetFrequencyDefault = reinterpret_cast<uint32_t(*)(_u&)>(::GetFrequencyDefault_4034_lower<_u::_settings_4034_lower>);
-        funcs.GetPitch = reinterpret_cast<int32_t(*)(_u&)>(::GetPitch<_u::_settings_4034_lower>);
-        funcs.SetPitch = reinterpret_cast<void(*)(_u&, int32_t)>(::SetPitch<_u::_settings_4034_lower>);
-        funcs.GetVolume = reinterpret_cast<uint32_t(*)(_u&)>(::GetVolume<_u::_settings_4034_lower>);
-        funcs.SetVolume = reinterpret_cast<void(*)(_u&, uint32_t)>(::SetVolume<_u::_settings_4034_lower>);
-        funcs.GetHeadroom = reinterpret_cast<uint32_t(*)(_u&)>(::GetHeadroom<_u::_settings_4034_lower>);
-        funcs.SetHeadroom = reinterpret_cast<void(*)(_u&, uint32_t)>(::SetHeadroom<_u::_settings_4034_lower>);
+        funcs.GetFormat = reinterpret_cast<pGetFormat>(::GetFormat_4034_lower<_u::_settings_4034_lower>);
+        funcs.SetFormat = reinterpret_cast<pSetFormat>(::SetFormat_4034_lower<_u::_settings_4034_lower>);
+        funcs.GetFrequencyDefault = reinterpret_cast<pGetUint32>(::GetFrequencyDefault_4034_lower<_u::_settings_4034_lower>);
+        funcs.GetPitch = reinterpret_cast<pGetInt32>(::GetPitch<_u::_settings_4034_lower>);
+        funcs.SetPitch = reinterpret_cast<pSetInt32>(::SetPitch<_u::_settings_4034_lower>);
+        funcs.GetVolume = reinterpret_cast<pGetUint32>(::GetVolume<_u::_settings_4034_lower>);
+        funcs.SetVolume = reinterpret_cast<pSetUint32>(::SetVolume<_u::_settings_4034_lower>);
+        funcs.GetHeadroom = reinterpret_cast<pGetUint32>(::GetHeadroom<_u::_settings_4034_lower>);
+        funcs.SetHeadroom = reinterpret_cast<pSetUint32>(::SetHeadroom<_u::_settings_4034_lower>);
     }
     else if (g_LibVersion_DSOUND == 4039) {
 
         Init<_u::_settings_4039_only>(u.settings_4039_only, is3D);
 
-        funcs.GetFormat = reinterpret_cast<void(*)(_u&, audio_format&)>(::GetFormat_4039_upper<_u::_settings_4039_only>);
-        funcs.SetFormat = reinterpret_cast<void(*)(_u&, audio_format)>(::SetFormat_4039_only<_u::_settings_4039_only>);
-        funcs.GetFrequencyDefault = reinterpret_cast<uint32_t(*)(_u&)>(::GetFrequencyDefault_4039_upper<_u::_settings_4039_only>);
-        funcs.GetPitch = reinterpret_cast<int32_t(*)(_u&)>(::GetPitch<_u::_settings_4039_only>);
-        funcs.SetPitch = reinterpret_cast<void(*)(_u&, int32_t)>(::SetPitch<_u::_settings_4039_only>);
-        funcs.GetVolume = reinterpret_cast<uint32_t(*)(_u&)>(::GetVolume<_u::_settings_4039_only>);
-        funcs.SetVolume = reinterpret_cast<void(*)(_u&, uint32_t)>(::SetVolume<_u::_settings_4039_only>);
-        funcs.GetHeadroom = reinterpret_cast<uint32_t(*)(_u&)>(::GetHeadroom<_u::_settings_4039_only>);
-        funcs.SetHeadroom = reinterpret_cast<void(*)(_u&, uint32_t)>(::SetHeadroom<_u::_settings_4039_only>);
+        funcs.GetFormat = reinterpret_cast<pGetFormat>(::GetFormat_4039_upper<_u::_settings_4039_only>);
+        funcs.SetFormat = reinterpret_cast<pSetFormat>(::SetFormat_4039_only<_u::_settings_4039_only>);
+        funcs.GetFrequencyDefault = reinterpret_cast<pGetUint32>(::GetFrequencyDefault_4039_upper<_u::_settings_4039_only>);
+        funcs.GetPitch = reinterpret_cast<pGetInt32>(::GetPitch<_u::_settings_4039_only>);
+        funcs.SetPitch = reinterpret_cast<pSetInt32>(::SetPitch<_u::_settings_4039_only>);
+        funcs.GetVolume = reinterpret_cast<pGetUint32>(::GetVolume<_u::_settings_4039_only>);
+        funcs.SetVolume = reinterpret_cast<pSetUint32>(::SetVolume<_u::_settings_4039_only>);
+        funcs.GetHeadroom = reinterpret_cast<pGetUint32>(::GetHeadroom<_u::_settings_4039_only>);
+        funcs.SetHeadroom = reinterpret_cast<pSetUint32>(::SetHeadroom<_u::_settings_4039_only>);
     }
     else {
 
         Init<_u::_settings_4134_upper>(u.settings_4134_upper, is3D);
 
-        funcs.GetFormat = reinterpret_cast<void(*)(_u&, audio_format&)>(::GetFormat_4039_upper<_u::_settings_4134_upper>);
-        funcs.SetFormat = reinterpret_cast<void(*)(_u&, audio_format)>(::SetFormat_4134_upper<_u::_settings_4134_upper>);
-        funcs.GetFrequencyDefault = reinterpret_cast<uint32_t(*)(_u&)>(::GetFrequencyDefault_4039_upper<_u::_settings_4134_upper>);
-        funcs.GetPitch = reinterpret_cast<int32_t(*)(_u&)>(::GetPitch<_u::_settings_4134_upper>);
-        funcs.SetPitch = reinterpret_cast<void(*)(_u&, int32_t)>(::SetPitch<_u::_settings_4134_upper>);
-        funcs.GetVolume = reinterpret_cast<uint32_t(*)(_u&)>(::GetVolume<_u::_settings_4134_upper>);
-        funcs.SetVolume = reinterpret_cast<void(*)(_u&, uint32_t)>(::SetVolume<_u::_settings_4134_upper>);
-        funcs.GetHeadroom = reinterpret_cast<uint32_t(*)(_u&)>(::GetHeadroom<_u::_settings_4134_upper>);
-        funcs.SetHeadroom = reinterpret_cast<void(*)(_u&, uint32_t)>(::SetHeadroom<_u::_settings_4134_upper>);
+        funcs.GetFormat = reinterpret_cast<pGetFormat>(::GetFormat_4039_upper<_u::_settings_4134_upper>);
+        funcs.SetFormat = reinterpret_cast<pSetFormat>(::SetFormat_4134_upper<_u::_settings_4134_upper>);
+        funcs.GetFrequencyDefault = reinterpret_cast<pGetUint32>(::GetFrequencyDefault_4039_upper<_u::_settings_4134_upper>);
+        funcs.GetPitch = reinterpret_cast<pGetInt32>(::GetPitch<_u::_settings_4134_upper>);
+        funcs.SetPitch = reinterpret_cast<pSetInt32>(::SetPitch<_u::_settings_4134_upper>);
+        funcs.GetVolume = reinterpret_cast<pGetUint32>(::GetVolume<_u::_settings_4134_upper>);
+        funcs.SetVolume = reinterpret_cast<pSetUint32>(::SetVolume<_u::_settings_4134_upper>);
+        funcs.GetHeadroom = reinterpret_cast<pGetUint32>(::GetHeadroom<_u::_settings_4134_upper>);
+        funcs.SetHeadroom = reinterpret_cast<pSetUint32>(::SetHeadroom<_u::_settings_4134_upper>);
     }
 }
 
