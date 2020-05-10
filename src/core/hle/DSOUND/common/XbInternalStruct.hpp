@@ -31,6 +31,11 @@ namespace XTL {
 
 // TODO: Everything, only small portions had been implemented.
 
+// Note to all maintainers, make sure structure's class-like are not misalign.
+// There is always a virtual function pointer to vtable list at offset 0 (uint32_t size).
+// Afterward are depending on what internal data are placed. So, whenever implementing a functions.
+// Whenever implementing functional codes, make sure they are at the bottom of the xbox's structure. Thanks!
+
 struct audio_format {
     uint32_t                audio_codec;
     uint32_t                nChannels;
@@ -50,6 +55,7 @@ struct CUnknownGenericManager {
 
     uint32_t ref_count;                                     // 0x04
 };
+// Require to verify there is no other unknown additional data by compiler itself.
 static_assert(sizeof(CUnknownGenericManager) == 0x08);
 
 struct CUnknownTemplate {
@@ -67,6 +73,7 @@ struct CUnknownTemplate {
     // If need to add more virtual functions, add them above here.
     uint32_t ref_count;                                     // 0x04
 };
+// Require to verify there is no other unknown additional data by compiler itself.
 static_assert(sizeof(CUnknownTemplate) == 0x08);
 
 struct CMcpxVoiceClient: CUnknownTemplate {
@@ -84,6 +91,7 @@ struct CMcpxVoiceClient: CUnknownTemplate {
     // global _settings for this class
     static _settings default_settings;
 };
+// Require to verify there is no other unknown additional data by compiler itself.
 static_assert(sizeof(CMcpxVoiceClient) == 0x300);
 
 struct CDirectSoundVoice : CUnknownGenericManager {
@@ -133,7 +141,7 @@ struct CDirectSoundVoice : CUnknownGenericManager {
             uint32_t                unknown_24[(0x300 - 0x24) / 4]; // 0x024 - 0x300 (unknown size, likely over 0x200 size.
         } settings_4134_upper;
     } u;
-    static_assert(sizeof(_u) == 0x300);
+    static_assert(sizeof(_u) == 0x300); // Not really require
 
     // Generic interface without need to check xdk's build revision every time.
     typedef void            (*pGetFormat)(_u& u, audio_format& format);
@@ -153,7 +161,7 @@ struct CDirectSoundVoice : CUnknownGenericManager {
         pGetUint32          GetHeadroom;
         pSetUint32          SetHeadroom;
     } funcs;
-    static_assert(sizeof(funcs) == 0x24);
+    static_assert(sizeof(funcs) == 0x24); // Not really require
 
     inline void GetFormat(audio_format& format) {
         funcs.GetFormat(u, format);
@@ -183,6 +191,7 @@ struct CDirectSoundVoice : CUnknownGenericManager {
         funcs.SetHeadroom(u, headroom);
     };
 };
+// Require to verify there is no other unknown additional data by compiler itself.
 static_assert(sizeof(CDirectSoundVoice) == sizeof(CUnknownGenericManager) + sizeof(CDirectSoundVoice::_u) + sizeof(CDirectSoundVoice::funcs));
 
 struct DSBUFFER_S : CUnknownTemplate {
@@ -229,6 +238,7 @@ struct DSBUFFER_S : CUnknownTemplate {
         dsb_c.p_unknown_14 = dsb_c.p_unknown_18;
     }
 };
+// Require to verify there is no other unknown additional data by compiler itself.
 static_assert(sizeof(DSBUFFER_S) == 0x34);
 
 }
