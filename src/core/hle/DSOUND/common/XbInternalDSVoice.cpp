@@ -150,60 +150,63 @@ void Init(T& settings, bool is3D)
 
 XTL::CDirectSoundVoice::CDirectSoundVoice(bool is3D)
 {
-    u = { 0 };
+    settings = { 0 };
 
     if (g_LibVersion_DSOUND < 4039) {
-        u.settings_4034_lower.p_audio_format = new XBOXADPCMWAVEFORMAT;
-        memset(&u.settings_4034_lower.p_audio_format->wfx, 0, sizeof(XBOXADPCMWAVEFORMAT));
+        settings.r4034_lower.p_audio_format = new XBOXADPCMWAVEFORMAT;
+        memset(&settings.r4034_lower.p_audio_format->wfx, 0, sizeof(XBOXADPCMWAVEFORMAT));
 
-        Init<_u::_settings_4034_lower>(u.settings_4034_lower, is3D);
+        using settings_template = _settings::_r4034_lower;
+        Init<settings_template>(settings.r4034_lower, is3D);
 
-        funcs.GetFormat = reinterpret_cast<pGetFormat>(::GetFormat_4034_lower<_u::_settings_4034_lower>);
-        funcs.SetFormat = reinterpret_cast<pSetFormat>(::SetFormat_4034_lower<_u::_settings_4034_lower>);
-        funcs.GetFrequencyDefault = reinterpret_cast<pGetUint32>(::GetFrequencyDefault_4034_lower<_u::_settings_4034_lower>);
-        funcs.GetPitch = reinterpret_cast<pGetInt32>(::GetPitch<_u::_settings_4034_lower>);
-        funcs.SetPitch = reinterpret_cast<pSetInt32>(::SetPitch<_u::_settings_4034_lower>);
-        funcs.GetVolume = reinterpret_cast<pGetInt32>(::GetVolume<_u::_settings_4034_lower>);
-        funcs.SetVolume = reinterpret_cast<pSetInt32>(::SetVolume<_u::_settings_4034_lower>);
-        funcs.GetHeadroom = reinterpret_cast<pGetUint32>(::GetHeadroom<_u::_settings_4034_lower>);
-        funcs.SetHeadroom = reinterpret_cast<pSetUint32>(::SetHeadroom<_u::_settings_4034_lower>);
+        funcs.GetFormat = reinterpret_cast<pGetFormat>(::GetFormat_4034_lower<settings_template>);
+        funcs.SetFormat = reinterpret_cast<pSetFormat>(::SetFormat_4034_lower<settings_template>);
+        funcs.GetFrequencyDefault = reinterpret_cast<pGetUint32>(::GetFrequencyDefault_4034_lower<settings_template>);
+        funcs.GetPitch = reinterpret_cast<pGetInt32>(::GetPitch<settings_template>);
+        funcs.SetPitch = reinterpret_cast<pSetInt32>(::SetPitch<settings_template>);
+        funcs.GetVolume = reinterpret_cast<pGetInt32>(::GetVolume<settings_template>);
+        funcs.SetVolume = reinterpret_cast<pSetInt32>(::SetVolume<settings_template>);
+        funcs.GetHeadroom = reinterpret_cast<pGetUint32>(::GetHeadroom<settings_template>);
+        funcs.SetHeadroom = reinterpret_cast<pSetUint32>(::SetHeadroom<settings_template>);
     }
     else if (g_LibVersion_DSOUND == 4039) {
 
-        Init<_u::_settings_4039_only>(u.settings_4039_only, is3D);
+        using settings_template = _settings::_r4039_only;
+        Init<settings_template>(settings.r4039_only, is3D);
 
-        funcs.GetFormat = reinterpret_cast<pGetFormat>(::GetFormat_4039_upper<_u::_settings_4039_only>);
-        funcs.SetFormat = reinterpret_cast<pSetFormat>(::SetFormat_4039_only<_u::_settings_4039_only>);
-        funcs.GetFrequencyDefault = reinterpret_cast<pGetUint32>(::GetFrequencyDefault_4039_upper<_u::_settings_4039_only>);
-        funcs.GetPitch = reinterpret_cast<pGetInt32>(::GetPitch<_u::_settings_4039_only>);
-        funcs.SetPitch = reinterpret_cast<pSetInt32>(::SetPitch<_u::_settings_4039_only>);
-        funcs.GetVolume = reinterpret_cast<pGetInt32>(::GetVolume<_u::_settings_4039_only>);
-        funcs.SetVolume = reinterpret_cast<pSetInt32>(::SetVolume<_u::_settings_4039_only>);
-        funcs.GetHeadroom = reinterpret_cast<pGetUint32>(::GetHeadroom<_u::_settings_4039_only>);
-        funcs.SetHeadroom = reinterpret_cast<pSetUint32>(::SetHeadroom<_u::_settings_4039_only>);
+        funcs.GetFormat = reinterpret_cast<pGetFormat>(::GetFormat_4039_upper<settings_template>);
+        funcs.SetFormat = reinterpret_cast<pSetFormat>(::SetFormat_4039_only<settings_template>);
+        funcs.GetFrequencyDefault = reinterpret_cast<pGetUint32>(::GetFrequencyDefault_4039_upper<settings_template>);
+        funcs.GetPitch = reinterpret_cast<pGetInt32>(::GetPitch<settings_template>);
+        funcs.SetPitch = reinterpret_cast<pSetInt32>(::SetPitch<settings_template>);
+        funcs.GetVolume = reinterpret_cast<pGetInt32>(::GetVolume<settings_template>);
+        funcs.SetVolume = reinterpret_cast<pSetInt32>(::SetVolume<settings_template>);
+        funcs.GetHeadroom = reinterpret_cast<pGetUint32>(::GetHeadroom<settings_template>);
+        funcs.SetHeadroom = reinterpret_cast<pSetUint32>(::SetHeadroom<settings_template>);
     }
     else {
 
-        Init<_u::_settings_4134_upper>(u.settings_4134_upper, is3D);
+        using settings_template = _settings::_r4134_upper;
+        Init<settings_template>(settings.r4134_upper, is3D);
 
-        funcs.GetFormat = reinterpret_cast<pGetFormat>(::GetFormat_4039_upper<_u::_settings_4134_upper>);
-        funcs.SetFormat = reinterpret_cast<pSetFormat>(::SetFormat_4134_upper<_u::_settings_4134_upper>);
-        funcs.GetFrequencyDefault = reinterpret_cast<pGetUint32>(::GetFrequencyDefault_4039_upper<_u::_settings_4134_upper>);
-        funcs.GetPitch = reinterpret_cast<pGetInt32>(::GetPitch<_u::_settings_4134_upper>);
-        funcs.SetPitch = reinterpret_cast<pSetInt32>(::SetPitch<_u::_settings_4134_upper>);
-        funcs.GetVolume = reinterpret_cast<pGetInt32>(::GetVolume<_u::_settings_4134_upper>);
-        funcs.SetVolume = reinterpret_cast<pSetInt32>(::SetVolume<_u::_settings_4134_upper>);
-        funcs.GetHeadroom = reinterpret_cast<pGetUint32>(::GetHeadroom<_u::_settings_4134_upper>);
-        funcs.SetHeadroom = reinterpret_cast<pSetUint32>(::SetHeadroom<_u::_settings_4134_upper>);
+        funcs.GetFormat = reinterpret_cast<pGetFormat>(::GetFormat_4039_upper<settings_template>);
+        funcs.SetFormat = reinterpret_cast<pSetFormat>(::SetFormat_4134_upper<settings_template>);
+        funcs.GetFrequencyDefault = reinterpret_cast<pGetUint32>(::GetFrequencyDefault_4039_upper<settings_template>);
+        funcs.GetPitch = reinterpret_cast<pGetInt32>(::GetPitch<settings_template>);
+        funcs.SetPitch = reinterpret_cast<pSetInt32>(::SetPitch<settings_template>);
+        funcs.GetVolume = reinterpret_cast<pGetInt32>(::GetVolume<settings_template>);
+        funcs.SetVolume = reinterpret_cast<pSetInt32>(::SetVolume<settings_template>);
+        funcs.GetHeadroom = reinterpret_cast<pGetUint32>(::GetHeadroom<settings_template>);
+        funcs.SetHeadroom = reinterpret_cast<pSetUint32>(::SetHeadroom<settings_template>);
     }
 }
 
 XTL::CDirectSoundVoice::~CDirectSoundVoice()
 {
     if (g_LibVersion_DSOUND < 4039) {
-        if (!u.settings_4034_lower.p_audio_format) {
-            delete u.settings_4034_lower.p_audio_format;
-            u.settings_4034_lower.p_audio_format = nullptr;
+        if (!settings.r4034_lower.p_audio_format) {
+            delete settings.r4034_lower.p_audio_format;
+            settings.r4034_lower.p_audio_format = nullptr;
         }
     }
 }

@@ -100,22 +100,22 @@ struct CDirectSoundVoice : CUnknownGenericManager {
     virtual ~CDirectSoundVoice();
 
     // CUnknownGenericManager                                   // 0x00 - ???
-    union _u {
-        struct _settings_interface
+    union _settings {
+        struct _unknown
         {
             uint32_t                unknown_08[0x300 / 4];      // 0x000 - 0x300 (unknown size, likely over 0x200 size.
-        } settings_interface;
+        } unknown;
 
-        struct _settings_4034_lower {
+        struct _r4034_lower {
             xbaddr                  p_unknown_08;               // 0x008
             uint16_t                unknown_0C;                 // 0x00C // zero'd - unknown
             XBOXADPCMWAVEFORMAT*    p_audio_format;             // 0x010 // Same as XBOXADPCMWAVEFORMAT / WAVEFORMATEX structure
             int32_t                 pitch;                      // 0x014 // Always init and custom pitch from SetFrequency, SetPitch, SetFormat, etc calls.
             int32_t                 volume;                     // 0x018 // default: (set volume - headroom)
             uint32_t                headroom;                   // 0x01C // default: (set headroom then update volume)
-        } settings_4034_lower;
+        } r4034_lower;
 
-        struct _settings_4039_only {
+        struct _r4039_only {
             uint32_t                unknown_08;                 // 0x008
             uint32_t                audio_codec;                // 0x00C // Setter is 32 bit, yet getter is 16 bit integer reader
             uint32_t                nChannels;                  // 0x010
@@ -126,9 +126,9 @@ struct CDirectSoundVoice : CUnknownGenericManager {
             int32_t                 volume;                     // 0x024 // (set volume - headroom)
             uint32_t                headroom;                   // 0x028 // (set headroom then update volume)
             uint32_t                unknown_2C[(0x300 - 0x2C) / 4]; // 0x02C - 0x300 (unknown size, likely over 0x200 size.
-        } settings_4039_only;
+        } r4039_only;
 
-        struct _settings_4134_upper {
+        struct _r4134_upper {
             uint32_t                unknown_08;                 // 0x008
             uint16_t                audio_codec;                // 0x00C
             uint8_t                 nChannels;                  // 0x00E
@@ -139,17 +139,17 @@ struct CDirectSoundVoice : CUnknownGenericManager {
             int32_t                 volume;                     // 0x01C // (set volume - headroom)
             uint32_t                headroom;                   // 0x020 // (set headroom then update volume)
             uint32_t                unknown_24[(0x300 - 0x24) / 4]; // 0x024 - 0x300 (unknown size, likely over 0x200 size.
-        } settings_4134_upper;
-    } u;
-    static_assert(sizeof(_u) == 0x300); // Not really require
+        } r4134_upper;
+    } settings;
+    static_assert(sizeof(_settings) == 0x300); // Not really require
 
     // Generic interface without need to check xdk's build revision every time.
-    typedef void            (*pGetFormat)(_u& u, audio_format& format);
-    typedef void            (*pSetFormat)(_u& u, audio_format format);
-    typedef uint32_t        (*pGetUint32)(_u& u);
-    typedef void            (*pSetUint32)(_u& u, uint32_t value);
-    typedef int32_t         (*pGetInt32)(_u& u);
-    typedef void            (*pSetInt32)(_u& u, int32_t value);
+    typedef void            (*pGetFormat)(_settings& settings, audio_format& format);
+    typedef void            (*pSetFormat)(_settings& settings, audio_format format);
+    typedef uint32_t        (*pGetUint32)(_settings& settings);
+    typedef void            (*pSetUint32)(_settings& settings, uint32_t value);
+    typedef int32_t         (*pGetInt32)(_settings& settings);
+    typedef void            (*pSetInt32)(_settings& settings, int32_t value);
     struct {
         pGetFormat          GetFormat;
         pSetFormat          SetFormat;
@@ -164,35 +164,35 @@ struct CDirectSoundVoice : CUnknownGenericManager {
     static_assert(sizeof(funcs) == 0x24); // Not really require
 
     inline void GetFormat(audio_format& format) {
-        funcs.GetFormat(u, format);
+        funcs.GetFormat(settings, format);
     };
     inline void SetFormat(audio_format format) {
-        funcs.SetFormat(u, format);
+        funcs.SetFormat(settings, format);
     };
     inline uint32_t GetFrequencyDefault() {
-        return funcs.GetFrequencyDefault(u);
+        return funcs.GetFrequencyDefault(settings);
     };
     inline int32_t GetPitch() {
-        return funcs.GetPitch(u);
+        return funcs.GetPitch(settings);
     };
     inline void SetPitch(int32_t pitch) {
-        funcs.SetPitch(u, pitch);
+        funcs.SetPitch(settings, pitch);
     };
     inline int32_t GetVolume() {
-        return funcs.GetVolume(u);
+        return funcs.GetVolume(settings);
     };
     inline void SetVolume(int32_t volume) {
-        funcs.SetVolume(u, volume);
+        funcs.SetVolume(settings, volume);
     };
     inline uint32_t GetHeadroom() {
-        return funcs.GetHeadroom(u);
+        return funcs.GetHeadroom(settings);
     };
     inline void SetHeadroom(uint32_t headroom) {
-        funcs.SetHeadroom(u, headroom);
+        funcs.SetHeadroom(settings, headroom);
     };
 };
 // Require to verify there is no other unknown additional data by compiler itself.
-static_assert(sizeof(CDirectSoundVoice) == sizeof(CUnknownGenericManager) + sizeof(CDirectSoundVoice::_u) + sizeof(CDirectSoundVoice::funcs));
+static_assert(sizeof(CDirectSoundVoice) == sizeof(CUnknownGenericManager) + sizeof(CDirectSoundVoice::_settings) + sizeof(CDirectSoundVoice::funcs));
 
 struct DSBUFFER_S : CUnknownTemplate {
 
