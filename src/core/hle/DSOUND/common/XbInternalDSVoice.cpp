@@ -93,6 +93,7 @@ uint32_t GetFrequencyDefault_4039_upper(T& settings)
     return settings.nSamplesPerSec_default;
 }
 
+// test case: WWE RAW 2's rdata section will directly access pitch value then call IDirectSoundBuffer_SetPitch.
 // Interface for get pitch
 template<class T>
 int32_t GetPitch(T& settings)
