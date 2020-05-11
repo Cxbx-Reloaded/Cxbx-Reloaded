@@ -103,7 +103,6 @@ struct EmuDirectSoundBuffer
     DSoundBuffer_Lock       X_lock;
     REFERENCE_TIME          Xb_rtPauseEx;
     REFERENCE_TIME          Xb_rtStopEx;
-    LONG                    Xb_Volume;
     LONG                    Xb_VolumeMixbin;
     X_DSENVOLOPEDESC        Xb_EnvolopeDesc;
     X_DSVOICEPROPS          Xb_VoiceProperties;
@@ -271,7 +270,6 @@ class X_CDirectSoundStream
         LPVOID                                  Xb_lpvContext;
         REFERENCE_TIME                          Xb_rtFlushEx;
         REFERENCE_TIME                          Xb_rtPauseEx;
-        LONG                                    Xb_Volume;
         LONG                                    Xb_VolumeMixbin;
         X_DSENVOLOPEDESC                        Xb_EnvolopeDesc;
         X_DSVOICEPROPS                          Xb_VoiceProperties;

@@ -1001,7 +1001,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetHeadroom)
 
     EmuDirectSoundBuffer* pThis = pHybridThis->emuDSBuffer;
     HRESULT hRet = HybridDirectSoundBuffer_SetHeadroom(pThis->EmuDirectSoundBuffer8, dwHeadroom,
-                                                       pThis->Xb_Volume, pThis->Xb_VolumeMixbin, pThis->EmuFlags,
+                                                       pThis->Xb_VolumeMixbin, pThis->EmuFlags,
                                                        pHybridThis->p_CDSVoice);
 
     return hRet;
@@ -1220,8 +1220,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetMixBinVolumes_8)
 
     EmuDirectSoundBuffer* pThis = pHybridThis->emuDSBuffer;
     HRESULT hRet = HybridDirectSoundBuffer_SetMixBinVolumes_8(pThis->EmuDirectSoundBuffer8, pMixBins, pThis->Xb_VoiceProperties,
-                                                              pThis->EmuFlags, pThis->Xb_Volume, pThis->Xb_VolumeMixbin,
-                                                              pHybridThis->p_CDSVoice);
+                                                              pThis->EmuFlags, pThis->Xb_VolumeMixbin, pHybridThis->p_CDSVoice);
 
     return hRet;
 }

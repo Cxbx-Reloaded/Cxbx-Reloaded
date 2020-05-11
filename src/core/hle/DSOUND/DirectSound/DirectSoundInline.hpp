@@ -392,7 +392,6 @@ static inline void DSound3DBufferCreate(LPDIRECTSOUNDBUFFER8 pDSBuffer, LPDIRECT
     pThis->EmuPlayFlags = dwEmuPlayFlags; \
     pThis->X_BufferCacheSize = 0; \
     pThis->Xb_rtPauseEx = 0LL; \
-    pThis->Xb_Volume = 0L; \
     pThis->Xb_VolumeMixbin = 0L; \
     pThis->Xb_EnvolopeDesc = { 0 }; \
     InitVoiceProperties(pThis->Xb_VoiceProperties); /* The rest will initialize in GeneratePCMFormat to GenerateMixBinDefault. */ \
@@ -683,6 +682,40 @@ static inline HRESULT DSoundBufferSynchPlaybackFlagAdd(
         dwEmuFlags |= DSE_FLAG_SYNCHPLAYBACK_CONTROL;
     }
     return DS_OK;
+}
+
+static inline HRESULT DSoundBufferUpdateHostVolume(
+    LPDIRECTSOUNDBUFFER8    pDSBuffer,
+    uint32_t                dwEmuFlags,
+    uint32_t                volume
+
+    )
+{
+
+    if ((dwEmuFlags & DSE_FLAG_PCM) > 0) {
+        if (!g_XBAudio.codec_pcm) {
+            volume = DSBVOLUME_MIN;
+        }
+    } else if ((dwEmuFlags & DSE_FLAG_XADPCM) > 0) {
+        if (!g_XBAudio.codec_xadpcm) {
+            volume = DSBVOLUME_MIN;
+        }
+    } else if ((dwEmuFlags & DSE_FLAG_PCM_UNKNOWN) > 0) {
+        if (!g_XBAudio.codec_unknown) {
+            volume = DSBVOLUME_MIN;
+        }
+    }
+    if (volume <= -6400 && volume != DSBVOLUME_MIN) {
+        volume = DSBVOLUME_MIN;
+    } else if (volume > 0) {
+        EmuLog(LOG_LEVEL::WARNING, "volume has received greater than 0: %ld", volume);
+        volume = 0;
+    }
+    if ((dwEmuFlags & DSE_FLAG_DEBUG_MUTE) > 0) {
+        volume = DSBVOLUME_MIN;
+    }
+
+    return pDSBuffer->SetVolume(volume);
 }
 
 //TODO: RadWolfie - Need to implement DirectSoundBuffer create support. Or not able to do so due to all three classes function differently.
@@ -1140,7 +1173,6 @@ static HRESULT HybridDirectSoundBuffer_SetVolume(LPDIRECTSOUNDBUFFER8, LONG, DWO
 static inline HRESULT HybridDirectSoundBuffer_SetHeadroom(
     LPDIRECTSOUNDBUFFER8 pDSBuffer,
     DWORD               dwHeadroom,
-    LONG                Xb_volume,
     LONG                Xb_volumeMixbin,
     DWORD               dwEmuFlags,
     XTL::CDirectSoundVoice* Xb_Voice)
@@ -1152,7 +1184,7 @@ static inline HRESULT HybridDirectSoundBuffer_SetHeadroom(
         hRet = DS_OK;
         Xb_Voice->SetHeadroom(dwHeadroom);
         uint32_t volume = Xb_Voice->GetVolume();
-        pDSBuffer->SetVolume(volume);
+        hRet = DSoundBufferUpdateHostVolume(pDSBuffer, dwEmuFlags, volume);
     }
 
     return DS_OK;
@@ -1242,7 +1274,6 @@ static inline HRESULT HybridDirectSoundBuffer_SetMixBinVolumes_8(
     XTL::X_LPDSMIXBINS   pMixBins,
     XTL::X_DSVOICEPROPS& Xb_VoiceProperties,
     DWORD                EmuFlags,
-    LONG                 Xb_volume,
     LONG                &Xb_volumeMixBin,
     XTL::CDirectSoundVoice* Xb_Voice)
 {
@@ -1284,6 +1315,7 @@ static inline HRESULT HybridDirectSoundBuffer_SetMixBinVolumes_8(
             }
             if (counter > 0) {
                 Xb_volumeMixBin = volume / (LONG)counter;
+                uint32_t Xb_volume = Xb_Voice->GetVolume();
                 hRet = HybridDirectSoundBuffer_SetVolume(pDSBuffer, Xb_volume, EmuFlags,
                                                          Xb_volumeMixBin, Xb_Voice);
             } else {
@@ -1440,30 +1472,7 @@ static inline HRESULT HybridDirectSoundBuffer_SetVolume(
     lVolume = Xb_Voice->GetVolume();
     lVolume += Xb_volumeMixbin;
 
-    if ((dwEmuFlags & DSE_FLAG_PCM) > 0) {
-        if (!g_XBAudio.codec_pcm) {
-            lVolume = DSBVOLUME_MIN;
-        }
-    } else if ((dwEmuFlags & DSE_FLAG_XADPCM) > 0) {
-        if (!g_XBAudio.codec_xadpcm) {
-            lVolume = DSBVOLUME_MIN;
-        }
-    } else if ((dwEmuFlags & DSE_FLAG_PCM_UNKNOWN) > 0) {
-        if (!g_XBAudio.codec_unknown) {
-            lVolume = DSBVOLUME_MIN;
-        }
-    }
-    if (lVolume <= -6400 && lVolume != DSBVOLUME_MIN) {
-        lVolume = DSBVOLUME_MIN;
-    } else if (lVolume > 0) {
-        EmuLog(LOG_LEVEL::WARNING, "HybridDirectSoundBuffer_SetVolume has received greater than 0: %ld", lVolume);
-        lVolume = 0;
-    }
-    if ((dwEmuFlags & DSE_FLAG_DEBUG_MUTE) > 0) {
-        lVolume = DSBVOLUME_MIN;
-    }
-
-    HRESULT hRet = pDSBuffer->SetVolume(lVolume);
+    HRESULT hRet = DSoundBufferUpdateHostVolume(pDSBuffer, dwEmuFlags, lVolume);
 
     RETURN_RESULT_CHECK(hRet);
 }
