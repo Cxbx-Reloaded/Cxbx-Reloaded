@@ -687,7 +687,7 @@ static inline HRESULT DSoundBufferSynchPlaybackFlagAdd(
 static inline HRESULT DSoundBufferUpdateHostVolume(
     LPDIRECTSOUNDBUFFER8    pDSBuffer,
     uint32_t                dwEmuFlags,
-    uint32_t                volume
+    int32_t                 volume
 
     )
 {
@@ -1183,7 +1183,7 @@ static inline HRESULT HybridDirectSoundBuffer_SetHeadroom(
     } else {
         hRet = DS_OK;
         Xb_Voice->SetHeadroom(dwHeadroom);
-        uint32_t volume = Xb_Voice->GetVolume();
+        int32_t volume = Xb_Voice->GetVolume();
         hRet = DSoundBufferUpdateHostVolume(pDSBuffer, dwEmuFlags, volume);
     }
 
@@ -1315,7 +1315,7 @@ static inline HRESULT HybridDirectSoundBuffer_SetMixBinVolumes_8(
             }
             if (counter > 0) {
                 Xb_volumeMixBin = volume / (LONG)counter;
-                uint32_t Xb_volume = Xb_Voice->GetVolume();
+                int32_t Xb_volume = Xb_Voice->GetVolume();
                 hRet = HybridDirectSoundBuffer_SetVolume(pDSBuffer, Xb_volume, EmuFlags,
                                                          Xb_volumeMixBin, Xb_Voice);
             } else {

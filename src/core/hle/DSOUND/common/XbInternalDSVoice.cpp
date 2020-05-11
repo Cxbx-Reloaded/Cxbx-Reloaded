@@ -163,8 +163,8 @@ XTL::CDirectSoundVoice::CDirectSoundVoice(bool is3D)
         funcs.GetFrequencyDefault = reinterpret_cast<pGetUint32>(::GetFrequencyDefault_4034_lower<_u::_settings_4034_lower>);
         funcs.GetPitch = reinterpret_cast<pGetInt32>(::GetPitch<_u::_settings_4034_lower>);
         funcs.SetPitch = reinterpret_cast<pSetInt32>(::SetPitch<_u::_settings_4034_lower>);
-        funcs.GetVolume = reinterpret_cast<pGetUint32>(::GetVolume<_u::_settings_4034_lower>);
-        funcs.SetVolume = reinterpret_cast<pSetUint32>(::SetVolume<_u::_settings_4034_lower>);
+        funcs.GetVolume = reinterpret_cast<pGetInt32>(::GetVolume<_u::_settings_4034_lower>);
+        funcs.SetVolume = reinterpret_cast<pSetInt32>(::SetVolume<_u::_settings_4034_lower>);
         funcs.GetHeadroom = reinterpret_cast<pGetUint32>(::GetHeadroom<_u::_settings_4034_lower>);
         funcs.SetHeadroom = reinterpret_cast<pSetUint32>(::SetHeadroom<_u::_settings_4034_lower>);
     }
@@ -177,8 +177,8 @@ XTL::CDirectSoundVoice::CDirectSoundVoice(bool is3D)
         funcs.GetFrequencyDefault = reinterpret_cast<pGetUint32>(::GetFrequencyDefault_4039_upper<_u::_settings_4039_only>);
         funcs.GetPitch = reinterpret_cast<pGetInt32>(::GetPitch<_u::_settings_4039_only>);
         funcs.SetPitch = reinterpret_cast<pSetInt32>(::SetPitch<_u::_settings_4039_only>);
-        funcs.GetVolume = reinterpret_cast<pGetUint32>(::GetVolume<_u::_settings_4039_only>);
-        funcs.SetVolume = reinterpret_cast<pSetUint32>(::SetVolume<_u::_settings_4039_only>);
+        funcs.GetVolume = reinterpret_cast<pGetInt32>(::GetVolume<_u::_settings_4039_only>);
+        funcs.SetVolume = reinterpret_cast<pSetInt32>(::SetVolume<_u::_settings_4039_only>);
         funcs.GetHeadroom = reinterpret_cast<pGetUint32>(::GetHeadroom<_u::_settings_4039_only>);
         funcs.SetHeadroom = reinterpret_cast<pSetUint32>(::SetHeadroom<_u::_settings_4039_only>);
     }
@@ -191,8 +191,8 @@ XTL::CDirectSoundVoice::CDirectSoundVoice(bool is3D)
         funcs.GetFrequencyDefault = reinterpret_cast<pGetUint32>(::GetFrequencyDefault_4039_upper<_u::_settings_4134_upper>);
         funcs.GetPitch = reinterpret_cast<pGetInt32>(::GetPitch<_u::_settings_4134_upper>);
         funcs.SetPitch = reinterpret_cast<pSetInt32>(::SetPitch<_u::_settings_4134_upper>);
-        funcs.GetVolume = reinterpret_cast<pGetUint32>(::GetVolume<_u::_settings_4134_upper>);
-        funcs.SetVolume = reinterpret_cast<pSetUint32>(::SetVolume<_u::_settings_4134_upper>);
+        funcs.GetVolume = reinterpret_cast<pGetInt32>(::GetVolume<_u::_settings_4134_upper>);
+        funcs.SetVolume = reinterpret_cast<pSetInt32>(::SetVolume<_u::_settings_4134_upper>);
         funcs.GetHeadroom = reinterpret_cast<pGetUint32>(::GetHeadroom<_u::_settings_4134_upper>);
         funcs.SetHeadroom = reinterpret_cast<pSetUint32>(::SetHeadroom<_u::_settings_4134_upper>);
     }
