@@ -110,7 +110,7 @@ struct CDirectSoundVoice : CUnknownGenericManager {
             xbaddr                  p_unknown_08;               // 0x008
             uint16_t                unknown_0C;                 // 0x00C // zero'd - unknown
             XBOXADPCMWAVEFORMAT*    p_audio_format;             // 0x010 // Same as XBOXADPCMWAVEFORMAT / WAVEFORMATEX structure
-            uint32_t                pitch;                      // 0x014 // Always init and custom pitch from SetFrequency, SetPitch, SetFormat, etc calls.
+            int32_t                 pitch;                      // 0x014 // Always init and custom pitch from SetFrequency, SetPitch, SetFormat, etc calls.
             int32_t                 volume;                     // 0x018 // default: (set volume - headroom)
             uint32_t                headroom;                   // 0x01C // default: (set headroom then update volume)
         } settings_4034_lower;
@@ -122,7 +122,7 @@ struct CDirectSoundVoice : CUnknownGenericManager {
             uint32_t                cbSize;                     // 0x014
             int32_t                 nSamplesPerSec_default;     // 0x018 // Always original frequency for check if SetFrequency is given with 0 then use original one.
             uint32_t                bitsPerSample;              // 0x01C
-            uint32_t                pitch;                      // 0x020 // Always init and custom pitch from SetFrequency, SetPitch, SetFormat, etc calls.
+            int32_t                 pitch;                      // 0x020 // Always init and custom pitch from SetFrequency, SetPitch, SetFormat, etc calls.
             int32_t                 volume;                     // 0x024 // (set volume - headroom)
             uint32_t                headroom;                   // 0x028 // (set headroom then update volume)
             uint32_t                unknown_2C[(0x300 - 0x2C) / 4]; // 0x02C - 0x300 (unknown size, likely over 0x200 size.
