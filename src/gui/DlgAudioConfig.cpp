@@ -113,7 +113,7 @@ INT_PTR CALLBACK DlgAudioConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPAR
 
                 SendMessage(GetDlgItem(hWndDlg, IDC_AC_UNKNOWN_CODEC), BM_SETCHECK, (WPARAM)g_XBAudio.codec_unknown, 0);
 
-                SendMessage(GetDlgItem(hWndDlg, IDC_AC_MUTE_ON_UNFOCUS_DISABLE), BM_SETCHECK, (WPARAM)g_XBAudio.mute_on_unfocus==0, 0);
+                SendMessage(GetDlgItem(hWndDlg, IDC_AC_MUTE_WHEN_UNFOCUS), BM_SETCHECK, (WPARAM)g_XBAudio.mute_on_unfocus==true, 0);
             }
         }
         break;
@@ -168,9 +168,9 @@ INT_PTR CALLBACK DlgAudioConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPAR
 
                         g_XBAudio.codec_unknown = (lRet == BST_CHECKED);
 
-                        lRet = SendMessage(GetDlgItem(hWndDlg, IDC_AC_MUTE_ON_UNFOCUS_DISABLE), BM_GETCHECK, 0, 0);
+                        lRet = SendMessage(GetDlgItem(hWndDlg, IDC_AC_MUTE_WHEN_UNFOCUS), BM_GETCHECK, 0, 0);
 
-                        g_XBAudio.mute_on_unfocus = (lRet != BST_CHECKED);
+                        g_XBAudio.mute_on_unfocus = (lRet == BST_CHECKED);
                     }
 
                     /*! save audio configuration */
