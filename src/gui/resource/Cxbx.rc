@@ -337,8 +337,7 @@ BEGIN
     LTEXT           "Audio Adapter:",IDC_STATIC,13,14,57,8,0,WS_EX_RIGHT
     LTEXT           "Codec Options:",IDC_STATIC,13,34,57,8,0,WS_EX_RIGHT
     LTEXT           "Other Options:",IDC_STATIC,13,60,57,8,0,WS_EX_RIGHT
-    CONTROL         "Disable mute on unfocus",IDC_AC_MUTE_ON_UNFOCUS_DISABLE,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,78,60,97,10
+    CONTROL         "Mute when unfocus",IDC_AC_MUTE_WHEN_UNFOCUS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,78,60,78,10
 END
 
 IDD_NETWORK_CFG DIALOGEX 0, 0, 404, 76
