@@ -50,8 +50,8 @@ struct CUnknownGenericManager {
 
     // all VMT (Virtual Method Table) are stored in local offset 0x00's pointer
     virtual ~CUnknownGenericManager() {};                           // 0x00
-    virtual uint32_t WINAPI AddRef() { return ++ref_count; };       // 0x04
-    virtual uint32_t WINAPI Release() { return --ref_count; };      // 0x08
+    virtual uint32_t WINAPI AddRef() { return ref_count++; };       // 0x04
+    virtual uint32_t WINAPI Release() { return ref_count--; };      // 0x08
 
     uint32_t ref_count;                                     // 0x04
 };
