@@ -74,8 +74,12 @@ typedef struct _DSoundBuffer_Lock {
 // ******************************************************************
 // * X_CDirectSoundBuffer
 // ******************************************************************
+struct XbHybridDSBuffer;
 struct EmuDirectSoundBuffer
 {
+    virtual ~EmuDirectSoundBuffer();
+    XbHybridDSBuffer*       pHybridThis;
+
     union
     {
         PVOID                   pMpcxBuffer;
@@ -118,6 +122,10 @@ struct SharedDSBuffer : DSBUFFER_S {
         emuDSBuffer = new EmuDirectSoundBuffer();
     }
     EmuDirectSoundBuffer*   emuDSBuffer;
+
+    virtual ~SharedDSBuffer() {
+        delete emuDSBuffer;
+    }
 };
 
 //Custom flags (4 bytes support up to 31 shifts,starting from 0)

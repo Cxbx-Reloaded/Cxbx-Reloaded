@@ -110,6 +110,30 @@ ULONG WINAPI XTL::EMUPATCH(IDirectSoundBuffer_AddRef)
 }
 
 // ******************************************************************
+// * EmuDirectSoundBuffer destructor handler
+// ******************************************************************
+XTL::EmuDirectSoundBuffer::~EmuDirectSoundBuffer()
+{
+    if (this->EmuDirectSound3DBuffer8 != nullptr) {
+        this->EmuDirectSound3DBuffer8->Release();
+    }
+
+    // remove cache entry
+    vector_ds_buffer::iterator ppDSBuffer = std::find(g_pDSoundBufferCache.begin(), g_pDSoundBufferCache.end(), this->pHybridThis);
+    if (ppDSBuffer != g_pDSoundBufferCache.end()) {
+        g_pDSoundBufferCache.erase(ppDSBuffer);
+    }
+
+    if (this->EmuBufferDesc.lpwfxFormat != nullptr) {
+        free(this->EmuBufferDesc.lpwfxFormat);
+    }
+    if (this->X_BufferCache != xbnullptr && (this->EmuFlags & DSE_FLAG_BUFFER_EXTERNAL) == 0) {
+        free(this->X_BufferCache);
+        DSoundSGEMemDealloc(this->X_BufferCacheSize);
+    }
+}
+
+// ******************************************************************
 // * patch: IDirectSoundBuffer_Release
 // ******************************************************************
 ULONG WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Release)
@@ -127,27 +151,8 @@ ULONG WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Release)
         uRet = pThis->EmuDirectSoundBuffer8->Release();
 
         if (uRet == 0) {
-            if (pThis->EmuDirectSound3DBuffer8 != nullptr) {
-                pThis->EmuDirectSound3DBuffer8->Release();
-            }
-
-            // remove cache entry
-            vector_ds_buffer::iterator ppDSBuffer = std::find(g_pDSoundBufferCache.begin(), g_pDSoundBufferCache.end(), pHybridThis);
-            if (ppDSBuffer != g_pDSoundBufferCache.end()) {
-                g_pDSoundBufferCache.erase(ppDSBuffer);
-            }
-
-            if (pThis->EmuBufferDesc.lpwfxFormat != nullptr) {
-                free(pThis->EmuBufferDesc.lpwfxFormat);
-            }
-            if (pThis->X_BufferCache != xbnullptr && (pThis->EmuFlags & DSE_FLAG_BUFFER_EXTERNAL) == 0) {
-                free(pThis->X_BufferCache);
-                DSoundSGEMemDealloc(pThis->X_BufferCacheSize);
-            }
-
             size_t size = sizeof(SharedDSBuffer) - sizeof(XbHybridDSBuffer);
             SharedDSBuffer* pSharedThis = reinterpret_cast<SharedDSBuffer*>(reinterpret_cast<uint8_t*>(pHybridThis) - size);
-            delete pSharedThis->emuDSBuffer;
             delete pSharedThis;
         }
     //}
@@ -212,6 +217,7 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateBuffer)
         XbHybridDSBuffer* pHybridBuffer = reinterpret_cast<XbHybridDSBuffer*>(&pBuffer->dsb_i);
         *ppBuffer = pHybridBuffer;
         EmuDirectSoundBuffer* pEmuBuffer = pBuffer->emuDSBuffer;
+        pEmuBuffer->pHybridThis = pHybridBuffer;
 
         DSoundBufferSetDefault(pEmuBuffer, 0, pdsbd->dwFlags);
         pEmuBuffer->Host_lock = { 0 };
