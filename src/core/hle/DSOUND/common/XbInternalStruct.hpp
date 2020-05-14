@@ -32,7 +32,7 @@ namespace XTL {
 // TODO: Everything, only small portions had been implemented.
 
 // Note to all maintainers, make sure structure's class-like are not misalign.
-// There is always a virtual function pointer to vtable list at offset 0 (uint32_t size).
+// There is always a VMT (Virtual Method Table) pointer at offset 0x00 (uint32_t size).
 // Afterward are depending on what internal data are placed. So, whenever implementing a functions.
 // Whenever implementing functional codes, make sure they are at the bottom of the xbox's structure. Thanks!
 
@@ -48,10 +48,10 @@ struct CUnknownGenericManager {
     // construct vtable (or grab ptr to existing)
     CUnknownGenericManager() : ref_count(1) {}
 
-    // all virtual functions are stored in local offset 0x00's pointer
-    virtual ~CUnknownGenericManager() {};                   // 0x00
-    virtual uint32_t WINAPI AddRef() { return ++ref_count; };      // 0x04
-    virtual uint32_t WINAPI Release() { return --ref_count; };     // 0x08
+    // all VMT (Virtual Method Table) are stored in local offset 0x00's pointer
+    virtual ~CUnknownGenericManager() {};                           // 0x00
+    virtual uint32_t WINAPI AddRef() { return ++ref_count; };       // 0x04
+    virtual uint32_t WINAPI Release() { return --ref_count; };      // 0x08
 
     uint32_t ref_count;                                     // 0x04
 };
@@ -62,7 +62,7 @@ struct CUnknownTemplate {
     // construct vtable (or grab ptr to existing)
     CUnknownTemplate();
 
-    virtual ~CUnknownTemplate() {};                         // 0x00
+    virtual ~CUnknownTemplate() {};                                             // 0x00
     virtual void WINAPI pUnknown_04() { throw std::exception("pUnknown_04"); }; // 0x04
     virtual void WINAPI pUnknown_08() { throw std::exception("pUnknown_08"); }; // 0x08
     virtual void WINAPI pUnknown_0C() { throw std::exception("pUnknown_0C"); }; // 0x0C
@@ -70,7 +70,7 @@ struct CUnknownTemplate {
     virtual void WINAPI pUnknown_14() { throw std::exception("pUnknown_14"); }; // 0x14
     virtual void WINAPI pUnknown_18() { throw std::exception("pUnknown_18"); }; // 0x18
     virtual void WINAPI pUnknown_1C() { throw std::exception("pUnknown_1C"); }; // 0x1C
-    // If need to add more virtual functions, add them above here.
+    // If need to add more VMT (Virtual Method Table), add them above here.
     uint32_t ref_count;                                     // 0x04
 };
 // Require to verify there is no other unknown additional data by compiler itself.
@@ -78,7 +78,7 @@ static_assert(sizeof(CUnknownTemplate) == 0x08);
 
 struct CMcpxVoiceClient: CUnknownTemplate {
     CMcpxVoiceClient() : settings(default_settings) {};
-    // all virtual functions are stored in local offset 0x00's pointer
+    // all VMT (Virtual Method Table) are stored in local offset 0x00's pointer
     virtual ~CMcpxVoiceClient() {};
 
     // CUnknownTemplate                                     // 0x00 - ???
@@ -96,7 +96,7 @@ static_assert(sizeof(CMcpxVoiceClient) == 0x300);
 
 struct CDirectSoundVoice : CUnknownGenericManager {
     CDirectSoundVoice(bool is3D);
-    // all virtual functions are stored in local offset 0x00's pointer
+    // all VMT (Virtual Method Table) are stored in local offset 0x00's pointer
     virtual ~CDirectSoundVoice();
 
     // CUnknownGenericManager                                   // 0x00 - ???
