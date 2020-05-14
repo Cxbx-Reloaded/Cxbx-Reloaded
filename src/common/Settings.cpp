@@ -78,6 +78,7 @@ static struct {
 	const char* RecentXbeFiles = "RecentXbeFiles";
 	const char* DataStorageToggle = "DataStorageToggle";
 	const char* DataCustomLocation = "DataCustomLocation";
+	const char* IgnoreInvalidXbeSig = "IgnoreInvalidXbeSig";
 } sect_gui_keys;
 
 static const char* section_core = "core";
@@ -309,6 +310,8 @@ bool Settings::LoadConfig()
 		index++;
 	}
 
+	m_gui.bIgnoreInvalidXbeSig = m_si.GetBoolValue(section_gui, sect_gui_keys.IgnoreInvalidXbeSig, /*Default=*/false);
+
 	// ==== GUI End =============
 
 	// ==== Core Begin ==========
@@ -507,6 +510,8 @@ bool Settings::Save(std::string file_path)
 	for (unsigned int i = 1; i < 10; i++) {
 		m_si.SetValue(section_gui, sect_gui_keys.RecentXbeFiles, m_gui.szRecentXbeFiles[i].c_str(), nullptr, false);
 	}
+
+	m_si.SetBoolValue(section_gui, sect_gui_keys.IgnoreInvalidXbeSig, m_gui.bIgnoreInvalidXbeSig, nullptr, true);
 
 	// ==== GUI End =============
 

@@ -1289,6 +1289,11 @@ Please do not report issues with games while this hack is active. Are you sure y
 				RefreshMenus();
 				break;
 
+			case ID_SETTINGS_IGNOREINVALIDXBESIG:
+				g_Settings->m_gui.bIgnoreInvalidXbeSig = !g_Settings->m_gui.bIgnoreInvalidXbeSig;
+				RefreshMenus();
+				break;
+
 			case ID_SETTINGS_ALLOWADMINPRIVILEGE:
 				g_Settings->m_core.allowAdminPrivilege = !g_Settings->m_core.allowAdminPrivilege;
 				RefreshMenus();
@@ -1757,6 +1762,9 @@ void WndMain::RefreshMenus()
 					break;
 			}
 
+			chk_flag = (g_Settings->m_gui.bIgnoreInvalidXbeSig) ? MF_CHECKED : MF_UNCHECKED;
+			CheckMenuItem(settings_menu, ID_SETTINGS_IGNOREINVALIDXBESIG, chk_flag);
+
 			chk_flag = (g_Settings->m_core.allowAdminPrivilege) ? MF_CHECKED : MF_UNCHECKED;
 			CheckMenuItem(settings_menu, ID_SETTINGS_ALLOWADMINPRIVILEGE, chk_flag);
 		}
@@ -1997,7 +2005,7 @@ void WndMain::OpenXbe(const char *x_filename)
         return;
     }
 	
-	if (!g_Settings->m_core.allowAdminPrivilege && !m_Xbe->CheckXbeSignature())
+	if (!g_Settings->m_gui.bIgnoreInvalidXbeSig && !m_Xbe->CheckXbeSignature())
 	{
 		int ret = MessageBox(m_hwnd, "XBE signature check failed!\n"
 			"\nThis is dangerous, as maliciously modified Xbox titles could take control of your system.\n"

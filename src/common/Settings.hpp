@@ -85,6 +85,7 @@ public:
 		std::string szRecentXbeFiles[10];
 		unsigned int DataStorageToggle;
 		std::string szCustomLocation = "";
+		bool bIgnoreInvalidXbeSig;
 	} m_gui;
 
 	// Core settings
