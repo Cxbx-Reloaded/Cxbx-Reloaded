@@ -41,6 +41,9 @@ extern uint16_t g_LibVersion_D3D8;
 extern uint16_t g_LibVersion_DSOUND;
 
 #define szSettings_alloc_error "ERROR: Unable to allocate Settings class."
+#define assert_check_shared_memory(type) \
+ "Invalid "#type" size, please verify structure is align, not adding new member, or is using placeholder reserves." \
+ " Otherwise, please perform versioning upgrade and update "#type" sizeof check."
 
 // Cxbx-Reloaded's data storage location.
 typedef enum _CXBX_DATA {
@@ -95,14 +98,15 @@ public:
 		DebugMode KrnlDebugMode;
 		char szKrnlDebug[MAX_PATH] = "";
 		char szStorageLocation[MAX_PATH] = "";
-		bool allowAdminPrivilege;
         unsigned int LoggedModules[NUM_INTEGERS_LOG];
 		int LogLevel = 1;
 		bool bUseLoaderExec;
+		bool allowAdminPrivilege;
 		bool Reserved3 = 0;
 		bool Reserved4 = 0;
 		int  Reserved99[10] = { 0 };
 	} m_core;
+	static_assert(sizeof(s_core) == 0x24C, assert_check_shared_memory(s_core));
 
 	// Video settings
 	struct s_video {
@@ -116,6 +120,7 @@ public:
 		int  renderScaleFactor = 1;
 		int  Reserved99[9] = { 0 };
 	} m_video;
+	static_assert(sizeof(s_video) == 0x98, assert_check_shared_memory(s_video));
 
 	// Audio settings
 	struct s_audio {
@@ -126,6 +131,7 @@ public:
 		bool mute_on_unfocus;
 		int  Reserved99[14] = { 0 };
 	} m_audio;
+	static_assert(sizeof(s_audio) == 0x4C, assert_check_shared_memory(s_audio));
 
 	struct s_input {
 		int Type;
@@ -146,6 +152,7 @@ public:
 	struct s_network {
 		char adapter_name[MAX_PATH] = "";
 	} m_network;
+	static_assert(sizeof(s_network) == 0x104, assert_check_shared_memory(s_network));
 
 	// Hack settings
 	// NOTE: When removing fields, replace them with place-holders
@@ -162,6 +169,7 @@ public:
 		bool Reserved8 = 0;
 		int  Reserved99[8] = { 0 };
 	} m_hacks;
+	static_assert(sizeof(s_hack) == 0x28, assert_check_shared_memory(s_hack));
 
 private:
 	void RemoveLegacyConfigs(unsigned int CurrentRevision);

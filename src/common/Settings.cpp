@@ -58,8 +58,10 @@ uint16_t g_LibVersion_DSOUND = 0;
 // * 3: (ergo720),   added logging settings
 // * 4: (LukeUsher), added network settings
 // * 5: (ergo720),   added new input gui settings and revision to core
+// * 6: (RadWolfie), added loader executable member to core, only for clean up loader expertimental setting
+// * 7: (RadWolfie), fix allowAdminPrivilege not align with other boolean members
 ///////////////////////////
-const unsigned int settings_version = 6;
+const unsigned int settings_version = 7;
 
 Settings* g_Settings = nullptr;
 
