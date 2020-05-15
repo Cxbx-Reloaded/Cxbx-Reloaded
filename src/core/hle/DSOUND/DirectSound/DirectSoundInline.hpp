@@ -427,7 +427,7 @@ static inline void DSoundBufferTransferSettings(
 	}
 
     // if sync current frequency used (then use pitch only).
-    uint32_t freq = XTL::converter_pitch2freq(Xb_Voice->GetPitch());
+    uint32_t freq = converter_pitch2freq(Xb_Voice->GetPitch());
     pDSBufferNew->SetFrequency(freq);
 
     pDSBufferOld->GetVolume(&lVolume);
@@ -1158,7 +1158,7 @@ static inline HRESULT HybridDirectSoundBuffer_SetFrequency(
 {
     HRESULT hRet = S_OK;
 
-    int32_t pitch = XTL::converter_freq2pitch((dwFrequency!=0 ? dwFrequency : Xb_Voice->GetFrequencyDefault()));
+    int32_t pitch = converter_freq2pitch((dwFrequency!=0 ? dwFrequency : Xb_Voice->GetFrequencyDefault()));
 
     hRet = HybridDirectSoundBuffer_SetPitch(pDSBuffer, pitch, Xb_Voice);
 
@@ -1374,7 +1374,7 @@ static inline HRESULT HybridDirectSoundBuffer_SetPitch(
 
     Xb_Voice->SetPitch(lPitch);
     // Convert pitch back to frequency
-    uint32_t setFrequency = XTL::converter_pitch2freq(lPitch);
+    uint32_t setFrequency = converter_pitch2freq(lPitch);
 
     RETURN_RESULT_CHECK(pDSBuffer->SetFrequency(setFrequency));
 }

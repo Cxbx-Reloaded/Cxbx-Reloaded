@@ -26,6 +26,7 @@
 
 #include "Cxbx.h"
 #include "core\hle\DSOUND\XbDSoundTypes.h"
+#include "common/audio/converter.hpp"
 
 namespace XTL {
 

@@ -58,7 +58,7 @@ void SetFormat_4034_lower(T& settings, XTL::audio_format format)
     if (format.audio_codec == WAVE_FORMAT_XBOX_ADPCM) {
         settings.p_audio_format->wSamplesPerBlock = 64;
     }
-    settings.pitch = XTL::converter_freq2pitch(format.nSamplesPerSec);
+    settings.pitch = converter_freq2pitch(format.nSamplesPerSec);
 }
 template<class T>
 void SetFormat_4039_only(T& settings, XTL::audio_format format)
@@ -68,7 +68,7 @@ void SetFormat_4039_only(T& settings, XTL::audio_format format)
     settings.cbSize = format.cbSize;
     settings.nSamplesPerSec_default = format.nSamplesPerSec;
     settings.bitsPerSample = format.bitsPerSample;
-    settings.pitch = XTL::converter_freq2pitch(format.nSamplesPerSec);
+    settings.pitch = converter_freq2pitch(format.nSamplesPerSec);
 }
 template<class T>
 void SetFormat_4134_upper(T& settings, XTL::audio_format format)
@@ -78,7 +78,7 @@ void SetFormat_4134_upper(T& settings, XTL::audio_format format)
     settings.cbSize = static_cast<uint8_t>(format.cbSize);
     settings.nSamplesPerSec_default = format.nSamplesPerSec;
     settings.bitsPerSample = format.bitsPerSample;
-    settings.pitch = XTL::converter_freq2pitch(format.nSamplesPerSec);
+    settings.pitch = converter_freq2pitch(format.nSamplesPerSec);
 }
 
 // Interface for get frequency
