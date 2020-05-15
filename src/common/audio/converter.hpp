@@ -33,8 +33,8 @@ static inline int32_t converter_freq2pitch(uint32_t freq) {
     // Edit hertz variable to see the result.
     float hertz = 12000.0f;
 
-    float hertzRatio = 48000.0f;
-    float pitchRatio = 4096.0f;
+    float hertzRatio = 48000.0f; // base frequency
+    float pitchRatio = 4096.0f;  // pitch per octave
 
     // Convert hertz to pitch
     float pitch = log2(hertz / hertzRatio) * pitchRatio;
