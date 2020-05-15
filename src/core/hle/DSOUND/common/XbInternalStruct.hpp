@@ -50,6 +50,7 @@ struct CUnknownGenericManager {
     CUnknownGenericManager() : ref_count(1) {}
 
     // all VMT (Virtual Method Table) are stored in local offset 0x00's pointer
+    // TODO: Implement to use derived's override AddRef/Release. Also, each class has its own ref counter and is not shareable.
     virtual ~CUnknownGenericManager() {};                           // 0x00
     virtual uint32_t WINAPI AddRef() { return ref_count++; };       // 0x04
     virtual uint32_t WINAPI Release() { return ref_count--; };      // 0x08
