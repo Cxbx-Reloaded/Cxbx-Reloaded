@@ -251,15 +251,17 @@ static void WFXformat_SanityFix(
 }
 
 static CODEC_FORMAT WFXformat_SyncHostFormat(
-    void*           Host_wfx_ptr,
-    const void*     Xb_wfx_ptr,
-    uint32_t        Xb_buffer_request_size,
-    uint32_t        Xb_flags)
+    void*                   Host_wfx_ptr,
+    const void*             Xb_wfx_ptr,
+    uint32_t                Xb_buffer_request_size,
+    uint32_t                Xb_flags,
+    XTL::CDirectSoundVoice* Xb_Voice)
 {
     PWAVEFORMATEXTENSIBLE Xb_wfxFormat = (PWAVEFORMATEXTENSIBLE)Xb_wfx_ptr;
     PWAVEFORMATEXTENSIBLE Host_wfxFormat = (PWAVEFORMATEXTENSIBLE)Host_wfx_ptr;
     CODEC_FORMAT codec_format_ret = CF_PCM;
     bool require_validate = true;
+    XTL::audio_format xb_format;
 
     // If no format is provided, then use default.
     if (Xb_wfx_ptr == xbnullptr) {
@@ -332,5 +334,13 @@ static CODEC_FORMAT WFXformat_SyncHostFormat(
             WFXformat_GeneratePCMFormat(2, 44100, 16, Host_wfxFormat);
         }
     }
+    // Forward xbox format to internal XTL::CDirectSoundVoice class.
+    xb_format.audio_codec = (codec_format_ret == CF_XADPCM ? WAVE_FORMAT_XBOX_ADPCM : WAVE_FORMAT_PCM);
+    xb_format.nChannels = Host_wfxFormat->Format.nChannels;
+    xb_format.cbSize = (codec_format_ret == CF_XADPCM ? 4 : 0);
+    xb_format.nSamplesPerSec = Host_wfxFormat->Format.nSamplesPerSec;
+    xb_format.bitsPerSample = (codec_format_ret == CF_XADPCM ? 4 : Host_wfxFormat->Format.wBitsPerSample);
+    Xb_Voice->SetFormat(xb_format);
+
     return codec_format_ret;
 }
