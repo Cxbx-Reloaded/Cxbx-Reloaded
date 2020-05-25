@@ -144,17 +144,29 @@ static bool eeprom_data_is_valid(xboxkrnl::XC_VALUE_INDEX index)
 // * 0x000C - ExAcquireReadWriteLockExclusive()
 // ******************************************************************
 // Source:APILogger - Uncertain
-XBSYSAPI EXPORTNUM(12) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExAcquireReadWriteLockExclusive
+XBSYSAPI EXPORTNUM(12) xboxkrnl::VOID NTAPI xboxkrnl::ExAcquireReadWriteLockExclusive
 (
 	IN PERWLOCK ReadWriteLock
 )
 {
 	LOG_FUNC_ONE_ARG(ReadWriteLock);
 
-	// KeWaitForSingleObject
-	LOG_UNIMPLEMENTED();
-
-	RETURN(S_OK);
+	bool interrupt_mode = DisableInterrupts();
+	ReadWriteLock->LockCount++;
+	if (ReadWriteLock->LockCount != 0) {
+		ReadWriteLock->WritersWaitingCount++;
+		RestoreInterruptMode(interrupt_mode);
+		KeWaitForSingleObject(
+			&ReadWriteLock->WriterEvent,
+			Executive,
+			0,
+			0,
+			0
+		);
+	}
+	else {
+		RestoreInterruptMode(interrupt_mode);
+	}
 }
 
 // ******************************************************************
