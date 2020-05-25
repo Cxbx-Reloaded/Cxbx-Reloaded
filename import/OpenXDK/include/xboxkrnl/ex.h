@@ -17,7 +17,7 @@ XBSYSAPI EXPORTNUM(12) VOID NTAPI ExAcquireReadWriteLockExclusive
 	IN PERWLOCK ReadWriteLock
 );
 
-XBSYSAPI EXPORTNUM(13) NTSTATUS NTAPI ExAcquireReadWriteLockShared
+XBSYSAPI EXPORTNUM(13) VOID NTAPI ExAcquireReadWriteLockShared
 (
 	IN PERWLOCK ReadWriteLock
 );
