@@ -1279,8 +1279,8 @@ EVENT_BASIC_INFORMATION, *PEVENT_BASIC_INFORMATION;
 // ******************************************************************
 typedef struct _KSEMAPHORE
 {
-	DISPATCHER_HEADER Header;
-	LONG Limit;
+	DISPATCHER_HEADER Header; // 0x00
+	LONG Limit;               // 0x10
 }
 KSEMAPHORE, *PKSEMAPHORE, *RESTRICTED_POINTER PRKSEMAPHORE;
 
@@ -1310,12 +1310,12 @@ MUTANT_BASIC_INFORMATION, *PMUTANT_BASIC_INFORMATION;
 // ******************************************************************
 typedef struct _ERWLOCK
 {
-	LONG LockCount;
-	ULONG WritersWaitingCount;
-	ULONG ReadersWaitingCount;
-	ULONG ReadersEntryCount;
-	KEVENT WriterEvent;
-	KSEMAPHORE ReaderSemaphore;
+	LONG LockCount;             // 0x00
+	ULONG WritersWaitingCount;  // 0x04
+	ULONG ReadersWaitingCount;  // 0x08
+	ULONG ReadersEntryCount;    // 0x0C
+	KEVENT WriterEvent;         // 0x10
+	KSEMAPHORE ReaderSemaphore; // 0x20
 }
 ERWLOCK, *PERWLOCK;
 
