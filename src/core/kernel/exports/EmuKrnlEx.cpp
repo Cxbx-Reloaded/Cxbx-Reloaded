@@ -601,16 +601,46 @@ XBSYSAPI EXPORTNUM(27) xboxkrnl::VOID NTAPI xboxkrnl::ExRaiseStatus
 // * 0x001C - ExReleaseReadWriteLock()
 // ******************************************************************
 // Source:APILogger - Uncertain
-XBSYSAPI EXPORTNUM(28) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExReleaseReadWriteLock
+XBSYSAPI EXPORTNUM(28) xboxkrnl::VOID NTAPI xboxkrnl::ExReleaseReadWriteLock
 (
 	IN PERWLOCK ReadWriteLock
 )
 {
 	LOG_FUNC_ONE_ARG(ReadWriteLock);
 
-	LOG_UNIMPLEMENTED();
-
-	RETURN(S_OK);
+	bool interrupt_mode = DisableInterrupts();
+	ReadWriteLock->LockCount--;
+	if (ReadWriteLock->LockCount >= 0) {
+		if(ReadWriteLock->ReadersEntryCount == 0) {
+			if(ReadWriteLock->ReadersWaitingCount == 0) {
+				ReadWriteLock->WritersWaitingCount--;
+				RestoreInterruptMode(interrupt_mode);
+				KeSetEvent(&ReadWriteLock->WriterEvent, 1, 0);
+			}
+			else {
+				ULONG temp_readers_waiting = ReadWriteLock->ReadersWaitingCount;
+				ReadWriteLock->ReadersEntryCount = ReadWriteLock->ReadersWaitingCount;
+				ReadWriteLock->ReadersWaitingCount = 0;
+				RestoreInterruptMode(interrupt_mode);
+				KeReleaseSemaphore(&ReadWriteLock->ReaderSemaphore, 1, (BOOLEAN)temp_readers_waiting, 0);
+			}
+		}
+		else {
+			ReadWriteLock->ReadersEntryCount--;
+			if(ReadWriteLock->ReadersEntryCount == 0) {
+				ReadWriteLock->WritersWaitingCount--;
+				RestoreInterruptMode(interrupt_mode);
+				KeSetEvent(&ReadWriteLock->WriterEvent, 1, 0);
+			}
+			else {
+				RestoreInterruptMode(interrupt_mode);
+			}
+		}
+	}
+	else {
+		ReadWriteLock->ReadersEntryCount = 0;
+		RestoreInterruptMode(interrupt_mode);
+	}
 }
 
 // ******************************************************************
