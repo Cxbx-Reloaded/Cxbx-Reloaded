@@ -181,40 +181,22 @@ XBSYSAPI EXPORTNUM(13) xboxkrnl::VOID NTAPI xboxkrnl::ExAcquireReadWriteLockShar
 	LOG_FUNC_ONE_ARG(ReadWriteLock);
 
 	bool interrupt_mode = DisableInterrupts();
+	bool must_wait_on_active_write = ReadWriteLock->ReadersEntryCount == 0;
+	bool must_wait_on_queued_write = (ReadWriteLock->ReadersEntryCount != 0) && (ReadWriteLock->WritersWaitingCount != 0);
+	bool must_wait = must_wait_on_active_write || must_wait_on_queued_write;
 	ReadWriteLock->LockCount++;
-	if (ReadWriteLock->LockCount != 0) {
-		if (ReadWriteLock->ReadersEntryCount == 0) {
-			ReadWriteLock->ReadersWaitingCount++;
-			RestoreInterruptMode(interrupt_mode);
+	if ((ReadWriteLock->LockCount != 0) && must_wait) {
+		ReadWriteLock->ReadersWaitingCount++;
+		RestoreInterruptMode(interrupt_mode);
 #if 0 //FIXME - Enable once KeReleaseSempahore is implemented (used in ExFreeReadWriteLock for Sharedlocks).
-			KeWaitForSingleObject(
-				&ReadWriteLock->ReaderSemaphore,
-				Executive,
-				0,
-				0,
-				0
-			);
+		KeWaitForSingleObject(
+			&ReadWriteLock->ReaderSemaphore,
+			Executive,
+			0,
+			0,
+			0
+		);
 #endif
-		}
-		else {
-			if (ReadWriteLock->WritersWaitingCount == 0) {
-				ReadWriteLock->ReadersEntryCount++;
-				RestoreInterruptMode(interrupt_mode);
-			}
-			else {
-				ReadWriteLock->ReadersWaitingCount++;
-				RestoreInterruptMode(interrupt_mode);
-#if 0 //FIXME - Enable once KeReleaseSempahore is implemented (used in ExFreeReadWriteLock for Sharedlocks).
-				KeWaitForSingleObject(
-					&ReadWriteLock->ReaderSemaphore,
-					Executive,
-					0,
-					0,
-					0
-				);
-#endif
-			}
-		}
 	}
 	else {
 		ReadWriteLock->ReadersEntryCount++;
