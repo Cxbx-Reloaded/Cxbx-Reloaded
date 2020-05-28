@@ -592,37 +592,33 @@ XBSYSAPI EXPORTNUM(28) xboxkrnl::VOID NTAPI xboxkrnl::ExReleaseReadWriteLock
 
 	bool interrupt_mode = DisableInterrupts();
 	ReadWriteLock->LockCount--;
-	if (ReadWriteLock->LockCount >= 0) {
-		if(ReadWriteLock->ReadersEntryCount == 0) {
-			if(ReadWriteLock->ReadersWaitingCount == 0) {
-				ReadWriteLock->WritersWaitingCount--;
-				RestoreInterruptMode(interrupt_mode);
-				KeSetEvent(&ReadWriteLock->WriterEvent, 1, 0);
-			}
-			else {
-				ULONG temp_readers_waiting = ReadWriteLock->ReadersWaitingCount;
-				ReadWriteLock->ReadersEntryCount = ReadWriteLock->ReadersWaitingCount;
-				ReadWriteLock->ReadersWaitingCount = 0;
-				RestoreInterruptMode(interrupt_mode);
-				KeReleaseSemaphore(&ReadWriteLock->ReaderSemaphore, 1, (BOOLEAN)temp_readers_waiting, 0);
-			}
-		}
-		else {
-			ReadWriteLock->ReadersEntryCount--;
-			if(ReadWriteLock->ReadersEntryCount == 0) {
-				ReadWriteLock->WritersWaitingCount--;
-				RestoreInterruptMode(interrupt_mode);
-				KeSetEvent(&ReadWriteLock->WriterEvent, 1, 0);
-			}
-			else {
-				RestoreInterruptMode(interrupt_mode);
-			}
+	if (ReadWriteLock->LockCount == -1) {
+		ReadWriteLock->ReadersEntryCount = 0;
+		RestoreInterruptMode(interrupt_mode);
+		return;
+	}
+
+	if (ReadWriteLock->ReadersEntryCount == 0) {
+		if (ReadWriteLock->ReadersWaitingCount != 0) {
+			ULONG temp_readers_waiting = ReadWriteLock->ReadersWaitingCount;
+			ReadWriteLock->ReadersEntryCount = ReadWriteLock->ReadersWaitingCount;
+			ReadWriteLock->ReadersWaitingCount = 0;
+			RestoreInterruptMode(interrupt_mode);
+			KeReleaseSemaphore(&ReadWriteLock->ReaderSemaphore, 1, (BOOLEAN)temp_readers_waiting, 0);
+			return;
 		}
 	}
 	else {
-		ReadWriteLock->ReadersEntryCount = 0;
-		RestoreInterruptMode(interrupt_mode);
+		ReadWriteLock->ReadersEntryCount--;
+		if (ReadWriteLock->ReadersEntryCount != 0) {
+			RestoreInterruptMode(interrupt_mode);
+			return;
+		}
 	}
+
+	ReadWriteLock->WritersWaitingCount--;
+	RestoreInterruptMode(interrupt_mode);
+	KeSetEvent(&ReadWriteLock->WriterEvent, 1, 0);
 }
 
 // ******************************************************************
