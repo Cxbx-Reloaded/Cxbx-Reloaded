@@ -1281,7 +1281,7 @@ typedef struct _KSEMAPHORE
 {
 	DISPATCHER_HEADER Header; // 0x00
 	LONG Limit;               // 0x10
-}
+}                             // 0x14
 KSEMAPHORE, *PKSEMAPHORE, *RESTRICTED_POINTER PRKSEMAPHORE;
 
 // ******************************************************************
@@ -1316,7 +1316,7 @@ typedef struct _ERWLOCK
 	ULONG ReadersEntryCount;    // 0x0C
 	KEVENT WriterEvent;         // 0x10
 	KSEMAPHORE ReaderSemaphore; // 0x20
-}
+}                               // 0x34
 ERWLOCK, *PERWLOCK;
 
 // ******************************************************************
