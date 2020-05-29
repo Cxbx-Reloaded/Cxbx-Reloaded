@@ -144,34 +144,64 @@ static bool eeprom_data_is_valid(xboxkrnl::XC_VALUE_INDEX index)
 // * 0x000C - ExAcquireReadWriteLockExclusive()
 // ******************************************************************
 // Source:APILogger - Uncertain
-XBSYSAPI EXPORTNUM(12) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExAcquireReadWriteLockExclusive
+XBSYSAPI EXPORTNUM(12) xboxkrnl::VOID NTAPI xboxkrnl::ExAcquireReadWriteLockExclusive
 (
 	IN PERWLOCK ReadWriteLock
 )
 {
 	LOG_FUNC_ONE_ARG(ReadWriteLock);
 
-	// KeWaitForSingleObject
-	LOG_UNIMPLEMENTED();
-
-	RETURN(S_OK);
+	bool interrupt_mode = DisableInterrupts();
+	ReadWriteLock->LockCount++;
+	if (ReadWriteLock->LockCount != 0) {
+		ReadWriteLock->WritersWaitingCount++;
+		RestoreInterruptMode(interrupt_mode);
+		KeWaitForSingleObject(
+			&ReadWriteLock->WriterEvent,
+			Executive,
+			0,
+			0,
+			0
+		);
+	}
+	else {
+		RestoreInterruptMode(interrupt_mode);
+	}
 }
 
 // ******************************************************************
 // * 0x000D - ExAcquireReadWriteLockShared()
 // ******************************************************************
 // Source:APILogger - Uncertain
-XBSYSAPI EXPORTNUM(13) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExAcquireReadWriteLockShared
+XBSYSAPI EXPORTNUM(13) xboxkrnl::VOID NTAPI xboxkrnl::ExAcquireReadWriteLockShared
 (
 	IN PERWLOCK ReadWriteLock
 )
 {
 	LOG_FUNC_ONE_ARG(ReadWriteLock);
 
-	// KeWaitForSingleObject
-	LOG_UNIMPLEMENTED();
-
-	RETURN(S_OK);
+	bool interrupt_mode = DisableInterrupts();
+	bool must_wait_on_active_write = ReadWriteLock->ReadersEntryCount == 0;
+	bool must_wait_on_queued_write = (ReadWriteLock->ReadersEntryCount != 0) && (ReadWriteLock->WritersWaitingCount != 0);
+	bool must_wait = must_wait_on_active_write || must_wait_on_queued_write;
+	ReadWriteLock->LockCount++;
+	if ((ReadWriteLock->LockCount != 0) && must_wait) {
+		ReadWriteLock->ReadersWaitingCount++;
+		RestoreInterruptMode(interrupt_mode);
+#if 0 //FIXME - Enable once KeReleaseSempahore is implemented (used in ExFreeReadWriteLock for Sharedlocks).
+		KeWaitForSingleObject(
+			&ReadWriteLock->ReaderSemaphore,
+			Executive,
+			0,
+			0,
+			0
+		);
+#endif
+	}
+	else {
+		ReadWriteLock->ReadersEntryCount++;
+		RestoreInterruptMode(interrupt_mode);
+	}
 }
 
 // ******************************************************************
@@ -553,16 +583,42 @@ XBSYSAPI EXPORTNUM(27) xboxkrnl::VOID NTAPI xboxkrnl::ExRaiseStatus
 // * 0x001C - ExReleaseReadWriteLock()
 // ******************************************************************
 // Source:APILogger - Uncertain
-XBSYSAPI EXPORTNUM(28) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExReleaseReadWriteLock
+XBSYSAPI EXPORTNUM(28) xboxkrnl::VOID NTAPI xboxkrnl::ExReleaseReadWriteLock
 (
 	IN PERWLOCK ReadWriteLock
 )
 {
 	LOG_FUNC_ONE_ARG(ReadWriteLock);
 
-	LOG_UNIMPLEMENTED();
+	bool interrupt_mode = DisableInterrupts();
+	ReadWriteLock->LockCount--;
+	if (ReadWriteLock->LockCount == -1) {
+		ReadWriteLock->ReadersEntryCount = 0;
+		RestoreInterruptMode(interrupt_mode);
+		return;
+	}
 
-	RETURN(S_OK);
+	if (ReadWriteLock->ReadersEntryCount == 0) {
+		if (ReadWriteLock->ReadersWaitingCount != 0) {
+			ULONG temp_readers_waiting = ReadWriteLock->ReadersWaitingCount;
+			ReadWriteLock->ReadersEntryCount = ReadWriteLock->ReadersWaitingCount;
+			ReadWriteLock->ReadersWaitingCount = 0;
+			RestoreInterruptMode(interrupt_mode);
+			KeReleaseSemaphore(&ReadWriteLock->ReaderSemaphore, 1, (BOOLEAN)temp_readers_waiting, 0);
+			return;
+		}
+	}
+	else {
+		ReadWriteLock->ReadersEntryCount--;
+		if (ReadWriteLock->ReadersEntryCount != 0) {
+			RestoreInterruptMode(interrupt_mode);
+			return;
+		}
+	}
+
+	ReadWriteLock->WritersWaitingCount--;
+	RestoreInterruptMode(interrupt_mode);
+	KeSetEvent(&ReadWriteLock->WriterEvent, 1, 0);
 }
 
 // ******************************************************************
