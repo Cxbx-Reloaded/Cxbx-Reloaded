@@ -986,15 +986,8 @@ typedef struct {
 
 void WINAPI EmuFiberStartup(fiber_context_t* context)
 {
-	__try
-	{
-		LPFIBER_START_ROUTINE pfStartRoutine = (LPFIBER_START_ROUTINE)context->lpStartRoutine;
-		pfStartRoutine(context->lpParameter);
-	}
-	__except (EmuException(GetExceptionInformation()))
-	{
-		EmuLog(LOG_LEVEL::WARNING, "Problem with ExceptionFilter");
-	}
+	LPFIBER_START_ROUTINE pfStartRoutine = (LPFIBER_START_ROUTINE)context->lpStartRoutine;
+	pfStartRoutine(context->lpParameter);
 }
 
 // ******************************************************************

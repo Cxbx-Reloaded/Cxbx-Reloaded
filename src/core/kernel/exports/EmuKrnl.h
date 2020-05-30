@@ -88,14 +88,8 @@ public:
 			m_Pending = false;
 		}
 
-		__try {
-			BOOLEAN(__stdcall *ServiceRoutine)(xboxkrnl::PKINTERRUPT, void*) = (BOOLEAN(__stdcall *)(xboxkrnl::PKINTERRUPT, void*))Interrupt->ServiceRoutine;
-			BOOLEAN result = ServiceRoutine(Interrupt, Interrupt->ServiceContext);
-		}
-		__except (EmuException(GetExceptionInformation()))
-		{
-			EmuLogEx(CXBXR_MODULE::KRNL, LOG_LEVEL::WARNING, "Problem with ExceptionFilter!");
-		}
+		BOOLEAN(__stdcall *ServiceRoutine)(xboxkrnl::PKINTERRUPT, void*) = (BOOLEAN(__stdcall *)(xboxkrnl::PKINTERRUPT, void*))Interrupt->ServiceRoutine;
+		BOOLEAN result = ServiceRoutine(Interrupt, Interrupt->ServiceContext);
 	}
 private:
 	bool m_Asserted = false;

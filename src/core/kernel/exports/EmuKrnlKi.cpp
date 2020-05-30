@@ -643,19 +643,14 @@ xboxkrnl::VOID NTAPI xboxkrnl::KiTimerExpiration
 					{
 						/* Call the DPC */
 						EmuLog(LOG_LEVEL::DEBUG, "%s, calling DPC at 0x%.8X", __func__, DpcEntry[i].Routine);
-						__try {
-							// Call the Deferred Procedure  :
-							DpcEntry[i].Routine(
-								DpcEntry[i].Dpc,
-								DpcEntry[i].Context,
-								UlongToPtr(SystemTime.u.LowPart),
-								UlongToPtr(SystemTime.u.HighPart)
-							);
-						}
-						__except (EmuException(GetExceptionInformation()))
-						{
-							EmuLog(LOG_LEVEL::WARNING, "Problem with ExceptionFilter!");
-						}
+
+						// Call the Deferred Procedure  :
+						DpcEntry[i].Routine(
+							DpcEntry[i].Dpc,
+							DpcEntry[i].Context,
+							UlongToPtr(SystemTime.u.LowPart),
+							UlongToPtr(SystemTime.u.HighPart)
+						);
 					}
 
 					/* Reset accounting */
@@ -691,19 +686,14 @@ xboxkrnl::VOID NTAPI xboxkrnl::KiTimerExpiration
 					{
 						/* Call the DPC */
 						EmuLog(LOG_LEVEL::DEBUG, "%s, calling DPC at 0x%.8X", __func__, DpcEntry[i].Routine);
-						__try {
-							// Call the Deferred Procedure  :
-							DpcEntry[i].Routine(
-								DpcEntry[i].Dpc,
-								DpcEntry[i].Context,
-								UlongToPtr(SystemTime.u.LowPart),
-								UlongToPtr(SystemTime.u.HighPart)
-							);
-						}
-						__except (EmuException(GetExceptionInformation()))
-						{
-							EmuLog(LOG_LEVEL::WARNING, "Problem with ExceptionFilter!");
-						}
+
+						// Call the Deferred Procedure  :
+						DpcEntry[i].Routine(
+							DpcEntry[i].Dpc,
+							DpcEntry[i].Context,
+							UlongToPtr(SystemTime.u.LowPart),
+							UlongToPtr(SystemTime.u.HighPart)
+						);
 					}
 
 					/* Reset accounting */
@@ -736,19 +726,14 @@ xboxkrnl::VOID NTAPI xboxkrnl::KiTimerExpiration
 		{
 			/* Call the DPC */
 			EmuLog(LOG_LEVEL::DEBUG, "%s, calling DPC at 0x%.8X", __func__, DpcEntry[i].Routine);
-			__try {
-				// Call the Deferred Procedure  :
-				DpcEntry[i].Routine(
-					DpcEntry[i].Dpc,
-					DpcEntry[i].Context,
-					UlongToPtr(SystemTime.u.LowPart),
-					UlongToPtr(SystemTime.u.HighPart)
-				);
-			}
-			__except (EmuException(GetExceptionInformation()))
-			{
-				EmuLog(LOG_LEVEL::WARNING, "Problem with ExceptionFilter!");
-			}
+
+			// Call the Deferred Procedure  :
+			DpcEntry[i].Routine(
+				DpcEntry[i].Dpc,
+				DpcEntry[i].Context,
+				UlongToPtr(SystemTime.u.LowPart),
+				UlongToPtr(SystemTime.u.HighPart)
+			);
 		}
 
 		/* Lower IRQL if we need to */
@@ -851,19 +836,14 @@ xboxkrnl::VOID FASTCALL xboxkrnl::KiTimerListExpire
 		{
 			/* Call the DPC */
 			EmuLog(LOG_LEVEL::DEBUG, "%s, calling DPC at 0x%.8X", __func__, DpcEntry[i].Routine);
-			__try {
-				// Call the Deferred Procedure  :
-				DpcEntry[i].Routine(
-					DpcEntry[i].Dpc,
-					DpcEntry[i].Context,
-					UlongToPtr(SystemTime.u.LowPart),
-					UlongToPtr(SystemTime.u.HighPart)
-				);
-			}
-			__except (EmuException(GetExceptionInformation()))
-			{
-				EmuLog(LOG_LEVEL::WARNING, "Problem with ExceptionFilter!");
-			}
+
+			// Call the Deferred Procedure  :
+			DpcEntry[i].Routine(
+				DpcEntry[i].Dpc,
+				DpcEntry[i].Context,
+				UlongToPtr(SystemTime.u.LowPart),
+				UlongToPtr(SystemTime.u.HighPart)
+			);
 		}
 
 		/* Lower IRQL */

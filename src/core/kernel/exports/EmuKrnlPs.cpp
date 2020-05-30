@@ -137,19 +137,12 @@ static unsigned int WINAPI PCSTProxy
 		SuspendThread(GetCurrentThread());
 	}
 
-	__try
-	{
-		auto routine = (xboxkrnl::PKSYSTEM_ROUTINE)SystemRoutine;
-		// Debugging notice : When the below line shows up with an Exception dialog and a
-		// message like: "Exception thrown at 0x00026190 in cxbx.exe: 0xC0000005: Access
-		// violation reading location 0xFD001804.", then this is AS-DESIGNED behaviour!
-		// (To avoid repetitions, uncheck "Break when this exception type is thrown").
-		routine(xboxkrnl::PKSTART_ROUTINE(StartRoutine), StartContext);
-	}
-	__except (EmuException(GetExceptionInformation()))
-	{
-		EmuLog(LOG_LEVEL::WARNING, "Problem with ExceptionFilter!");
-	}
+	auto routine = (xboxkrnl::PKSYSTEM_ROUTINE)SystemRoutine;
+	// Debugging notice : When the below line shows up with an Exception dialog and a
+	// message like: "Exception thrown at 0x00026190 in cxbx.exe: 0xC0000005: Access
+	// violation reading location 0xFD001804.", then this is AS-DESIGNED behaviour!
+	// (To avoid repetitions, uncheck "Break when this exception type is thrown").
+	routine(xboxkrnl::PKSTART_ROUTINE(StartRoutine), StartContext);
 
 	// This will also handle thread notification :
 	LOG_TEST_CASE("Thread returned from SystemRoutine");
@@ -165,15 +158,8 @@ void PspSystemThreadStartup
 	IN PVOID StartContext
 )
 {
-	__try
-	{
-		(StartRoutine)(StartContext);
-	}
-	__except (EmuException(GetExceptionInformation()))
 	// TODO : Call PspUnhandledExceptionInSystemThread(GetExceptionInformation())
-	{
-		EmuLog(LOG_LEVEL::WARNING, "Problem with ExceptionFilter!"); // TODO : Disable?
-	}
+	(StartRoutine)(StartContext);
 
 	xboxkrnl::PsTerminateSystemThread(STATUS_SUCCESS);
 }

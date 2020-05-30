@@ -35,8 +35,6 @@
 std::string FormatTitleId(uint32_t title_id);
 
 // exception handler
-extern LONG NTAPI lleException(EXCEPTION_POINTERS *e);
-int EmuException(EXCEPTION_POINTERS *e);
 class ExceptionManager {
 public:
 	ExceptionManager();
