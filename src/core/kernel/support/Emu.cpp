@@ -384,6 +384,46 @@ int ExitException(LPEXCEPTION_POINTERS e)
     return EXCEPTION_CONTINUE_SEARCH;
 }
 
+// Exception Mananger class; Any custom exceptions must be above this line.
+ExceptionManager *g_ExceptionManager = nullptr;
+
+ExceptionManager::ExceptionManager()
+{
+	accept_request = true;
+}
+
+ExceptionManager::~ExceptionManager()
+{
+	for (auto i_handle : veh_handles) {
+		RemoveVectoredExceptionHandler(i_handle);
+	}
+	veh_handles.clear();
+}
+
+// Require to be set right before we call xbe's entry point.
+void ExceptionManager::EmuX86_Init()
+{
+	accept_request = false; // Do not allow add VEH during emulation.
+}
+
+bool ExceptionManager::AddVEH(unsigned long first, PVECTORED_EXCEPTION_HANDLER veh_handler)
+{
+	return AddVEH(first, veh_handler, false);
+}
+
+bool ExceptionManager::AddVEH(unsigned long first, PVECTORED_EXCEPTION_HANDLER veh_handler, bool override_request)
+{
+	bool isSuccess = false;
+	if (accept_request || override_request) {
+		void* veh_handle = AddVectoredExceptionHandler(first, veh_handler);
+		if (veh_handle) {
+			veh_handles.push_back(veh_handle);
+			isSuccess = true;
+		}
+	}
+	return isSuccess;
+}
+
 #ifdef _DEBUG
 // print call stack trace
 void EmuPrintStackTrace(PCONTEXT ContextRecord)
