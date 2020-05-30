@@ -47,6 +47,7 @@ CRITICAL_SECTION dbgCritical;
 HANDLE           g_hCurDir    = NULL;
 CHAR            *g_strCurDrive= NULL;
 volatile thread_local  bool    g_bEmuException = false;
+static thread_local bool bOverrideEmuException;
 volatile bool    g_bEmuSuspended = false;
 volatile bool    g_bPrintfOn = true;
 bool g_DisablePixelShaders = false;
@@ -242,14 +243,12 @@ void genericException(EXCEPTION_POINTERS *e) {
 	}
 }
 
-static thread_local bool bOverrideException;
-
 bool IsRdtscInstruction(xbaddr addr); // Implemented in CxbxKrnl.cpp
 void EmuX86_Opcode_RDTSC(EXCEPTION_POINTERS *e); // Implemented in EmuX86.cpp
 bool lleTryHandleException(EXCEPTION_POINTERS *e)
 {
 	// Initalize local thread variable
-	bOverrideException = false;
+	bOverrideEmuException = false;
 
 	// Only handle exceptions which originate from Xbox code
 	if (!IsXboxCodeAddress(e->ContextRecord->Eip)) {
@@ -286,17 +285,17 @@ bool lleTryHandleException(EXCEPTION_POINTERS *e)
 	}
 
 	// We do not need EmuException to handle it again.
-	bOverrideException = true;
+	bOverrideEmuException = true;
 
 	// Unhandled exception :
 	return false;
 }
 
 // Only for LLE emulation coding (to help performance a little bit better)
-LONG WINAPI lleException(EXCEPTION_POINTERS *e)
+long WINAPI lleException(EXCEPTION_POINTERS *e)
 {
 	g_bEmuException = true;
-	LONG result = lleTryHandleException(e) ? EXCEPTION_CONTINUE_EXECUTION : EXCEPTION_CONTINUE_SEARCH;
+	long result = lleTryHandleException(e) ? EXCEPTION_CONTINUE_EXECUTION : EXCEPTION_CONTINUE_SEARCH;
 	g_bEmuException = false;
 	return result;
 }
@@ -306,7 +305,7 @@ bool EmuTryHandleException(EXCEPTION_POINTERS *e)
 {
 
 	// Check if lle exception is already called first before emu exception.
-	if (bOverrideException) {
+	if (bOverrideEmuException) {
 		genericException(e);
 		return false;
 	}
@@ -355,7 +354,7 @@ bool EmuTryHandleException(EXCEPTION_POINTERS *e)
 long WINAPI EmuException(struct _EXCEPTION_POINTERS* e)
 {
 	g_bEmuException = true;
-	LONG result = EmuTryHandleException(e) ? EXCEPTION_CONTINUE_EXECUTION : EXCEPTION_CONTINUE_SEARCH;
+	long result = EmuTryHandleException(e) ? EXCEPTION_CONTINUE_EXECUTION : EXCEPTION_CONTINUE_SEARCH;
 	g_bEmuException = false;
 	return result;
 }
