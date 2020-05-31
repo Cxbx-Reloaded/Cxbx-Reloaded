@@ -617,7 +617,9 @@ bool NVNetDevice::PCAPInit()
 	char errorBuffer[PCAP_ERRBUF_SIZE];
 
 	// Open the desired network adapter
+#ifdef _MSC_VER // TODO: Implement loaded pcap driver detection for cross-platform support or make a requirement for non-Windows platform.
 	__try {
+#endif
 		char buffer[MAX_PATH];
 		snprintf(buffer, MAX_PATH, "\\Device\\NPF_%s", m_HostAdapterName.c_str());
 		m_AdapterHandle = pcap_open_live(buffer,
@@ -626,10 +628,12 @@ bool NVNetDevice::PCAPInit()
 			1,		// Read Timeout
 			errorBuffer
 		);
+#ifdef _MSC_VER
 	} __except(EXCEPTION_EXECUTE_HANDLER) {
 		m_AdapterHandle = nullptr;
 		snprintf(errorBuffer, PCAP_ERRBUF_SIZE, "Could not initialize pcap");
 	}
+#endif
 
 	if (m_AdapterHandle == nullptr) {
 		EmuLog(LOG_LEVEL::WARNING, "Unable to open Network Adapter:\n%s\nNetworking will be disabled", errorBuffer);
