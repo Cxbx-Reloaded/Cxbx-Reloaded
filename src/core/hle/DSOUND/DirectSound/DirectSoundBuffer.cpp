@@ -465,8 +465,16 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Lock)
     if (pThis->Host_lock.pLockPtr2 != nullptr) {
         *ppvAudioPtr2 = pThis->X_lock.pLockPtr2 = pThis->X_BufferCache;
         *pdwAudioBytes2 = pThis->X_lock.dwLockBytes2 = DSoundBufferGetXboxBufferSize(pThis->EmuFlags, pThis->Host_lock.dwLockBytes2);
-    } else if (ppvAudioPtr2 != xbnullptr) {
-        *ppvAudioPtr2 = xbnullptr;
+    } else {
+        // If secondary pointers are not used, then set them as zero.
+        // There are applications bug didn't check for audio pointer that is null pointer which should not use invalid audio bytes.
+        // Since internal functions do set them zero. We'll set them here as well.
+        if (ppvAudioPtr2 != xbnullptr) {
+            *ppvAudioPtr2 = xbnullptr;
+        }
+        if (pdwAudioBytes2 != xbnullptr) {
+            *pdwAudioBytes2 = 0;
+        }
     }
 
     RETURN_RESULT_CHECK(hRet);
