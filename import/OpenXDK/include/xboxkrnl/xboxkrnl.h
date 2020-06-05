@@ -152,6 +152,7 @@ typedef long                            NTSTATUS;
 #define STATUS_USER_APC                  ((DWORD   )0x000000C0L)
 // The SCSI input buffer was too large (not necessarily an error!)
 #define STATUS_DATA_OVERRUN              ((DWORD   )0xC000003CL)
+#define STATUS_SEMAPHORE_LIMIT_EXCEEDED  ((DWORD   )0xC0000047L)
 #define STATUS_INVALID_IMAGE_FORMAT      ((DWORD   )0xC000007BL)
 #define STATUS_INSUFFICIENT_RESOURCES    ((DWORD   )0xC000009AL)
 #define STATUS_TOO_MANY_SECRETS          ((DWORD   )0xC0000156L)
