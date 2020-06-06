@@ -70,6 +70,9 @@ XBSYSAPI EXPORTNUM(36) xboxkrnl::VOID NTAPI xboxkrnl::FscInvalidateIdleBlocks()
 	LOG_UNIMPLEMENTED();
 }
 
+static xboxkrnl::KEVENT FscCacheEvent;
+static xboxkrnl::PKEVENT FscCacheEventPtr = nullptr;
+
 // ******************************************************************
 // * 0x0025 - FscSetCacheSize()
 // ******************************************************************
@@ -80,18 +83,33 @@ XBSYSAPI EXPORTNUM(37) xboxkrnl::NTSTATUS NTAPI xboxkrnl::FscSetCacheSize
 {
 	LOG_FUNC_ONE_ARG(NumberOfCachePages);
 
-	NTSTATUS ret = STATUS_SUCCESS;
+	if (FscCacheEventPtr == nullptr) {
+		KeInitializeEvent(&FscCacheEvent, SynchronizationEvent, 1);
+		FscCacheEventPtr = &FscCacheEvent;
+	}
 
-	if (NumberOfCachePages > FSCACHE_MAXIMUM_NUMBER_OF_CACHE_PAGES)
+	NTSTATUS ret = STATUS_SUCCESS;
+	KeWaitForSingleObject(FscCacheEventPtr, Executive, 0, 0, 0);
+	UCHAR orig_irql = KeRaiseIrqlToDpcLevel();
+
+	if (NumberOfCachePages > FSCACHE_MAXIMUM_NUMBER_OF_CACHE_PAGES) {
 		ret = STATUS_INVALID_PARAMETER;
-	else
-	{
-		// TODO : Actually allocate file system cache pages, for example do something like this :
-		// if (NumberOfCachePages < g_FscNumberOfCachePages) FscShrinkCacheSize(NumberOfCachePages)
-		// if (NumberOfCachePages > g_FscNumberOfCachePages) FscGrowCacheSize(NumberOfCachePages), possibly return STATUS_INSUFFICIENT_RESOURCES
+	}
+	else {
+		// TODO : Actually allocate file system cache pages.
+#if 0
+		if (NumberOfCachePages > g_FscNumberOfCachePages) {
+			ret = FscGrowCacheSize(NumberOfCachePages);
+		}
+		else if (NumberOfCachePages < g_FscNumberOfCachePages) {
+			ret = FscShrinkCacheSize(NumberOfCachePages);
+		}
+#endif
 		g_FscNumberOfCachePages = NumberOfCachePages;
 	}
 
+	KfLowerIrql(orig_irql);
+	KeSetEvent(FscCacheEventPtr, 0, 0);
 	RETURN(ret);
 }
 
