@@ -28,6 +28,7 @@
 #include <mmreg.h>
 #include "core/kernel/init/CxbxKrnl.h"
 #include "core/hle/DSOUND/XbDSoundTypes.h"
+#include "core/hle/DSOUND/XbDSoundFuncs.hpp"
 
 #include "Logging.h"
 #include "core/hle/DSOUND/DirectSound/DirectSoundLogging.hpp"
@@ -183,7 +184,7 @@ static void WFXformat_SanityFix(
     // Generic enforcement
     // If Xbox applications supply invalid total channels, enforce to use either mono or stereo channel
     if (Host_pwfxFormat->Format.nChannels == 0 || Host_pwfxFormat->Format.nChannels > 6) {
-        Host_pwfxFormat->Format.nChannels = 2;
+        Host_pwfxFormat->Format.nChannels = XTL::DSOUND::PresetChannelDefault(Xb_flags);
         isNotSanity = true;
     }
     // If nSamplesPerSec is zero'd then use 44.1kHz by default
@@ -265,7 +266,7 @@ static CODEC_FORMAT WFXformat_SyncHostFormat(
 
     // If no format is provided, then use default.
     if (Xb_wfx_ptr == xbnullptr) {
-        WFXformat_GeneratePCMFormat(2, 44100, 16, Host_wfxFormat);
+        WFXformat_GeneratePCMFormat(XTL::DSOUND::PresetChannelDefault(Xb_flags), 44100, 16, Host_wfxFormat);
         require_validate = false;
     }
     // HACK: This is a special sound buffer, create dummy WAVEFORMATEX data.
@@ -274,7 +275,7 @@ static CODEC_FORMAT WFXformat_SyncHostFormat(
     // WAVEFORMATEX structure by default.
     else if ((Xb_flags & (XTL_DSBCAPS_MIXIN | XTL_DSBCAPS_FXIN | XTL_DSBCAPS_FXIN2)) > 0) {
         EmuLog(LOG_LEVEL::WARNING, "Creating dummy WAVEFORMATEX (pdsbd->Xb_lpwfxFormat = xbnullptr)...");
-        WFXformat_GeneratePCMFormat(2, 44100, 16, Host_wfxFormat);
+        WFXformat_GeneratePCMFormat(XTL::DSOUND::PresetChannelDefault(Xb_flags), 44100, 16, Host_wfxFormat);
         require_validate = false;
     }
     // Otherwise, let's process given format.
@@ -305,7 +306,7 @@ static CODEC_FORMAT WFXformat_SyncHostFormat(
             // Both 0 and default will use static structure until given a valid one.
             case 0:
                 // NOTE: This is currently a hack for ability to create buffer class with DSBCAPS_LOCDEFER flag.
-                WFXformat_GeneratePCMFormat(2, 44100, 16, Host_wfxFormat);
+                WFXformat_GeneratePCMFormat(XTL::DSOUND::PresetChannelDefault(Xb_flags), 44100, 16, Host_wfxFormat);
                 require_validate = false;
                 LOG_TEST_CASE("WAVE_FORMAT_(0) found");
                 break;
@@ -331,7 +332,7 @@ static CODEC_FORMAT WFXformat_SyncHostFormat(
         }
         // Any unknown formats will be using default PCM format.
         else {
-            WFXformat_GeneratePCMFormat(2, 44100, 16, Host_wfxFormat);
+            WFXformat_GeneratePCMFormat(XTL::DSOUND::PresetChannelDefault(Xb_flags), 44100, 16, Host_wfxFormat);
         }
     }
     // Forward xbox format to internal XTL::CDirectSoundVoice class.

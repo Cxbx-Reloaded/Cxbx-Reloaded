@@ -153,6 +153,7 @@ file (GLOB CXBXR_HEADER_EMU
  "${CXBXR_ROOT_DIR}/src/core/hle/DSOUND/DirectSound/DirectSoundInline.hpp"
  "${CXBXR_ROOT_DIR}/src/core/hle/DSOUND/DirectSound/DirectSoundLogging.hpp"
  "${CXBXR_ROOT_DIR}/src/core/hle/DSOUND/DirectSound/DSStream_PacketManager.hpp"
+ "${CXBXR_ROOT_DIR}/src/core/hle/DSOUND/XbDSoundFuncs.hpp"
  "${CXBXR_ROOT_DIR}/src/core/hle/DSOUND/XbDSoundLogging.hpp"
  "${CXBXR_ROOT_DIR}/src/core/hle/DSOUND/XbDSoundTypes.h"
  "${CXBXR_ROOT_DIR}/src/core/hle/DSOUND/common/XbInternalStruct.hpp"
