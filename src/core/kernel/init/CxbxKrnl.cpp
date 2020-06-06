@@ -1285,6 +1285,8 @@ __declspec(noreturn) void CxbxKrnlInit
     // But with this, we can replace some busy loops with sleeps.
     timeBeginPeriod(1);
 
+    xboxkrnl::InitializeFscCacheEvent();
+
 	// update caches
 	CxbxKrnl_TLS = pTLS;
 	CxbxKrnl_TLSData = pTLSData;
