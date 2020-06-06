@@ -15,7 +15,7 @@
 // ******************************************************************
 // * HalReadSMCTrayState
 // ******************************************************************
-XBSYSAPI EXPORTNUM(9) VOID NTAPI HalReadSMCTrayState
+XBSYSAPI EXPORTNUM(9) NTSTATUS NTAPI HalReadSMCTrayState
 (
 	DWORD*	State,
 	DWORD*	Count
