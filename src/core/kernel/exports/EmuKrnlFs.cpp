@@ -70,11 +70,11 @@ XBSYSAPI EXPORTNUM(36) xboxkrnl::VOID NTAPI xboxkrnl::FscInvalidateIdleBlocks()
 	LOG_UNIMPLEMENTED();
 }
 
-static xboxkrnl::KEVENT FscCacheEvent;
+static xboxkrnl::KEVENT g_FscCacheEvent;
 
 xboxkrnl::VOID xboxkrnl::InitializeFscCacheEvent()
 {
-    KeInitializeEvent(&FscCacheEvent, SynchronizationEvent, TRUE);
+    KeInitializeEvent(&g_FscCacheEvent, SynchronizationEvent, TRUE);
 }
 
 // ******************************************************************
@@ -88,7 +88,7 @@ XBSYSAPI EXPORTNUM(37) xboxkrnl::NTSTATUS NTAPI xboxkrnl::FscSetCacheSize
 	LOG_FUNC_ONE_ARG(NumberOfCachePages);
 
 	NTSTATUS ret = STATUS_SUCCESS;
-	KeWaitForSingleObject(&FscCacheEvent, Executive, 0, 0, 0);
+	KeWaitForSingleObject(&g_FscCacheEvent, Executive, 0, 0, 0);
 	UCHAR orig_irql = KeRaiseIrqlToDpcLevel();
 
 	if (NumberOfCachePages > FSCACHE_MAXIMUM_NUMBER_OF_CACHE_PAGES) {
@@ -108,7 +108,7 @@ XBSYSAPI EXPORTNUM(37) xboxkrnl::NTSTATUS NTAPI xboxkrnl::FscSetCacheSize
 	}
 
 	KfLowerIrql(orig_irql);
-	KeSetEvent(&FscCacheEvent, 0, 0);
+	KeSetEvent(&g_FscCacheEvent, 0, 0);
 	RETURN(ret);
 }
 
