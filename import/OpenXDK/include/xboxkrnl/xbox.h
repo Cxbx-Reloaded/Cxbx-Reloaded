@@ -73,6 +73,8 @@
 #define AV_OPTION_CGMS                    18
 #define AV_OPTION_WIDESCREEN              19
 
+VOID InitializeFscCacheEvent();
+
 // ******************************************************************
 // * 0x0001 - AvGetSavedDataAddress()
 // ******************************************************************
