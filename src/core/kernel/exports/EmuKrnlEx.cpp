@@ -600,11 +600,11 @@ XBSYSAPI EXPORTNUM(28) xboxkrnl::VOID NTAPI xboxkrnl::ExReleaseReadWriteLock
 
 	if (ReadWriteLock->ReadersEntryCount == 0) {
 		if (ReadWriteLock->ReadersWaitingCount != 0) {
-			ULONG temp_readers_waiting = ReadWriteLock->ReadersWaitingCount;
+			ULONG orig_readers_waiting = ReadWriteLock->ReadersWaitingCount;
 			ReadWriteLock->ReadersEntryCount = ReadWriteLock->ReadersWaitingCount;
 			ReadWriteLock->ReadersWaitingCount = 0;
 			RestoreInterruptMode(interrupt_mode);
-			KeReleaseSemaphore(&ReadWriteLock->ReaderSemaphore, 1, (BOOLEAN)temp_readers_waiting, 0);
+			KeReleaseSemaphore(&ReadWriteLock->ReaderSemaphore, 1, (LONG)orig_readers_waiting, 0);
 			return;
 		}
 	}

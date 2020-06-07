@@ -321,7 +321,7 @@ XBSYSAPI EXPORTNUM(132) LONG NTAPI KeReleaseSemaphore
 (
 	IN PRKSEMAPHORE Semaphore,
 	IN KPRIORITY Increment,
-	IN BOOLEAN Adjustment,
+	IN LONG Adjustment,
 	IN BOOLEAN Wait
 );
 

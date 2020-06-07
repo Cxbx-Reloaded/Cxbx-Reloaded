@@ -1314,7 +1314,7 @@ XBSYSAPI EXPORTNUM(132) xboxkrnl::LONG NTAPI xboxkrnl::KeReleaseSemaphore
 (
 	IN PRKSEMAPHORE Semaphore,
 	IN KPRIORITY Increment,
-	IN BOOLEAN Adjustment,
+	IN LONG Adjustment,
 	IN BOOLEAN Wait
 )
 {
@@ -1325,9 +1325,35 @@ XBSYSAPI EXPORTNUM(132) xboxkrnl::LONG NTAPI xboxkrnl::KeReleaseSemaphore
 		LOG_FUNC_ARG(Wait)
 		LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED();
+	UCHAR orig_irql = KeRaiseIrqlToDpcLevel();
+	LONG initial_state = Semaphore->Header.SignalState;
+	LONG adjusted_signalstate = Semaphore->Header.SignalState + Adjustment;
 
-	RETURN(0);
+	BOOL limit_reached = adjusted_signalstate > Semaphore->Limit;
+	BOOL signalstate_overflow = adjusted_signalstate < initial_state;
+	if (limit_reached || signalstate_overflow) {
+		KiUnlockDispatcherDatabase(orig_irql);
+		ExRaiseStatus(STATUS_SEMAPHORE_LIMIT_EXCEEDED);
+	}
+	Semaphore->Header.SignalState = adjusted_signalstate;
+
+	//TODO: Implement KiWaitTest
+#if 0
+	if ((initial_state == 0) && (IsListEmpty(&Semaphore->Header.WaitListHead) == FALSE)) {
+		KiWaitTest(&Semaphore->Header, Increment);
+	}
+#endif
+
+	if (Wait) {
+		PKTHREAD current_thread = KeGetCurrentThread();
+		current_thread->WaitNext = TRUE;
+		current_thread->WaitIrql = orig_irql;
+	}
+	else {
+		KiUnlockDispatcherDatabase(orig_irql);
+	}
+
+	RETURN(initial_state);
 }
 
 XBSYSAPI EXPORTNUM(133) xboxkrnl::PKDEVICE_QUEUE_ENTRY NTAPI xboxkrnl::KeRemoveByKeyDeviceQueue
