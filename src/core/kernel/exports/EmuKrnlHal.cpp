@@ -72,10 +72,17 @@ xboxkrnl::LIST_ENTRY ShutdownRoutineList = { &ShutdownRoutineList , &ShutdownRou
 // ******************************************************************
 xboxkrnl::KPCR* WINAPI KeGetPcr();
 
+#define TRAY_CLOSED_MEDIA_PRESENT 0x60
+#define TRAY_CLOSED_NO_MEDIA 0x40
+#define TRAY_OPEN 0x10
+#define INIT_TRAY_STATE 0xFFFFFFFF
+static DWORD g_TrayState = INIT_TRAY_STATE;
+static DWORD g_TrayCount = 0;
+
 // ******************************************************************
 // * 0x0009 - HalReadSMCTrayState()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(9) xboxkrnl::VOID NTAPI xboxkrnl::HalReadSMCTrayState
+XBSYSAPI EXPORTNUM(9) xboxkrnl::NTSTATUS NTAPI xboxkrnl::HalReadSMCTrayState
 (
 	DWORD*	State,
 	DWORD*	Count
@@ -86,22 +93,36 @@ XBSYSAPI EXPORTNUM(9) xboxkrnl::VOID NTAPI xboxkrnl::HalReadSMCTrayState
 		LOG_FUNC_ARG(Count)
 		LOG_FUNC_END;
 
-#define TRAY_CLOSED_MEDIA_PRESENT 96
-#define TRAY_CLOSED_NO_MEDIA 64
-#define TRAY_OPEN 16
+	UCHAR orig_irql = KeRaiseIrqlToDpcLevel();
+	DWORD TrayState = g_TrayState;
+	DWORD orig_TrayCount = g_TrayCount;
+	KfLowerIrql(orig_irql);
 
-	// TODO: Make this configurable?
-	// TODO: What is the count parameter for??
-
-	if (Count)
-		*Count = 1;
-
-	// Pretend the tray is open
+	NTSTATUS ret = STATUS_SUCCESS;
+	if (TrayState == INIT_TRAY_STATE) {
+		ret = HalReadSMBusValue(SMBUS_ADDRESS_SYSTEM_MICRO_CONTROLLER, SMC_COMMAND_TRAY_STATE, 0, &TrayState);
+		// If bit 31 = 1, then there is an error so do not execute this code.
+		if ((ret >> 31) == 0) {
+			TrayState &= 0x70;
+			if ((TrayState != TRAY_CLOSED_MEDIA_PRESENT) && (TrayState != TRAY_CLOSED_NO_MEDIA)) {
+				TrayState = TRAY_OPEN;
+			}
+			orig_irql = KeRaiseIrqlToDpcLevel();
+			if (orig_TrayCount != g_TrayCount) {
+				g_TrayState = TrayState;
+			}
+			KfLowerIrql(orig_irql);
+		}
+	}
+	// FIXME: Pretend the tray is open
 	// TRAY_CLOSED_NO_MEDIA causes Dashboard to call DeviceIoControl, which we do not implement
 	// TRAY_CLOSED_MEDIA_PRESENT causes Dashboard to attempt to launch media, causing errors.
+	//*State = TrayState;
 	*State = TRAY_OPEN;
-
-	//	*Count = 1;
+	if (Count) {
+		*Count = orig_TrayCount;
+	}
+	RETURN(ret);
 }
 
 // ******************************************************************

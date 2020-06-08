@@ -44,20 +44,20 @@
 
 // From https://web.archive.org/web/20100617022549/https://www.xbox-linux.org/wiki/PIC :
 // Command	Description
-#define SMC_COMMAND_VERSION 0x01	// PIC version string
-//0x03	tray state
-#define SMC_COMMAND_AV_PACK 0x04	// A / V Pack state
-#define SMC_COMMAND_CPU_TEMP 0x09 // CPU temperature (°C)
-#define SMC_COMMAND_MOTHERBOARD_TEMP 0x0A // motherboard temperature (°C)
+#define SMC_COMMAND_VERSION            0x01	// PIC version string
+#define SMC_COMMAND_TRAY_STATE         0x03 //tray state
+#define SMC_COMMAND_AV_PACK            0x04	// A / V Pack state
+#define SMC_COMMAND_CPU_TEMP           0x09 // CPU temperature (°C)
+#define SMC_COMMAND_MOTHERBOARD_TEMP   0x0A // motherboard temperature (°C)
 //0x0F	reads scratch register written with 0x0E
 #define SMC_COMMAND_POWER_FAN_READBACK 0x10 // Current power fan speed (0-50)
 //0x11	interrupt reason
 //0x18	reading this reg locks up xbox in "overheated" state
-#define SMC_COMMAND_SCRATCH 0x1B	// scratch register for the original kernel
-#define SMC_COMMAND_CHALLENGE_1C 0x1C	// random number for boot challenge
-#define SMC_COMMAND_CHALLENGE_1D 0x1D	// random number for boot challenge
-#define SMC_COMMAND_CHALLENGE_1E 0x1E	// random number for boot challenge
-#define SMC_COMMAND_CHALLENGE_1F 0x1F	// random number for boot challenge
+#define SMC_COMMAND_SCRATCH            0x1B	// scratch register for the original kernel
+#define SMC_COMMAND_CHALLENGE_1C       0x1C	// random number for boot challenge
+#define SMC_COMMAND_CHALLENGE_1D       0x1D	// random number for boot challenge
+#define SMC_COMMAND_CHALLENGE_1E       0x1E	// random number for boot challenge
+#define SMC_COMMAND_CHALLENGE_1F       0x1F	// random number for boot challenge
 //
 // Writing:
 //
