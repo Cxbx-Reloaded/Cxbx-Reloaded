@@ -251,19 +251,19 @@ void CxbxPopupMessageEx(CXBXR_MODULE cxbxr_module, LOG_LEVEL level, CxbxMsgDlgIc
     UINT uType = MB_OK | MB_TOPMOST | MB_SETFOREGROUND;
 
     switch (icon) {
-        case CxbxMsgDlgIcon_Warn: {
+        case CxbxMsgDlgIcon::Warn: {
             uType |= MB_ICONWARNING;
             break;
         }
-        case CxbxMsgDlgIcon_Error: {
+        case CxbxMsgDlgIcon::Error: {
             uType |= MB_ICONERROR;
             break;
         }
-        case CxbxMsgDlgIcon_Info: {
+        case CxbxMsgDlgIcon::Info: {
             uType |= MB_ICONINFORMATION;
             break;
         }
-        case CxbxMsgDlgIcon_Unknown:
+        case CxbxMsgDlgIcon::Unknown:
         default: {
             uType |= MB_ICONQUESTION;
             break;

@@ -132,7 +132,7 @@ void log_set_config(int LogLevel, unsigned int* LoggedModules, bool LogPopupTest
 
 void log_generate_active_filter_output(const CXBXR_MODULE cxbxr_module);
 
-typedef enum _CxbxMsgDlgIcon {
+typedef enum class _CxbxMsgDlgIcon {
 	Info = 0,
 	Warn,
 	Error,
