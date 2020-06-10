@@ -132,6 +132,11 @@ void log_set_config(int LogLevel, unsigned int* LoggedModules, bool LogPopupTest
 
 void log_generate_active_filter_output(const CXBXR_MODULE cxbxr_module);
 
+// Use emulation environment to manage popup messages
+// If log_init_popup_msg is not called at earliest point of emulation.
+// Then users will have a chance of popup message appear during start of emulation in full screen.
+void log_init_popup_msg();
+
 typedef enum class _CxbxMsgDlgIcon {
 	Info = 0,
 	Warn,
@@ -139,7 +144,7 @@ typedef enum class _CxbxMsgDlgIcon {
 	Unknown
 } CxbxMsgDlgIcon;
 
-int CxbxMessageBox(const char* msg, UINT uType = MB_OK, HWND hWnd = NULL);
+int CxbxMessageBox(const char* msg, UINT uType = MB_OK, HWND hWnd = NULL, int default_return = IDCANCEL);
 
 void CxbxShowError(const char* msg, HWND hWnd = NULL);
 

@@ -103,6 +103,7 @@ const char* g_EnumModules2String[to_underlying(CXBXR_MODULE::MAX)] = {
 };
 std::atomic_int g_CurrentLogLevel = to_underlying(LOG_LEVEL::INFO);
 std::atomic_bool g_CurrentLogPopupTestcase = true;
+static bool g_bFullScreen = false;
 
 const char log_debug[] = "DEBUG: ";
 const char log_info[]  = "INFO : ";
@@ -232,8 +233,19 @@ void log_generate_active_filter_output(const CXBXR_MODULE cxbxr_module)
 	std::cout << std::flush;
 }
 
-int CxbxMessageBox(const char* msg, UINT uType, HWND hWnd)
+// Use kernel managed environment
+void log_init_popup_msg()
 {
+	Settings::s_video vSettings;
+	g_EmuShared->GetVideoSettings(&vSettings);
+	g_bFullScreen = vSettings.bFullScreen;
+}
+
+int CxbxMessageBox(const char* msg, UINT uType, HWND hWnd, int default_return)
+{
+	if (g_bFullScreen) {
+		return default_return;
+	}
 	return MessageBox(hWnd, msg, /*lpCaption=*/TEXT("Cxbx-Reloaded"), uType);
 }
 

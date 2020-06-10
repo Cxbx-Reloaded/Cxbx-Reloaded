@@ -201,7 +201,7 @@ void EmuExceptionNonBreakpointUnhandledShow(LPEXCEPTION_POINTERS e)
 		"  Press \"Cancel\" to debug.",
 		e->ExceptionRecord->ExceptionCode, EIPToString(e->ContextRecord->Eip).c_str());
 
-	if (CxbxMessageBox(buffer, MB_ICONSTOP | MB_OKCANCEL, g_hEmuWindow) == IDOK)
+	if (CxbxMessageBox(buffer, MB_ICONSTOP | MB_OKCANCEL, g_hEmuWindow, IDOK) == IDOK)
 	{
 		EmuExceptionExitProcess();
 	}
