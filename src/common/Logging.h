@@ -132,6 +132,30 @@ void log_set_config(int LogLevel, unsigned int* LoggedModules, bool LogPopupTest
 
 void log_generate_active_filter_output(const CXBXR_MODULE cxbxr_module);
 
+typedef enum _CxbxMsgDlgIcon {
+	Info = 0,
+	Warn,
+	Error,
+	Unknown
+} CxbxMsgDlgIcon;
+
+int CxbxMessageBox(const char* msg, UINT uType = MB_OK, HWND hWnd = NULL);
+
+void CxbxShowError(const char* msg, HWND hWnd = NULL);
+
+void CxbxPopupMessageEx(CXBXR_MODULE cxbxr_module, LOG_LEVEL level, CxbxMsgDlgIcon icon, const char* message, ...);
+
+#define CxbxPopupMessage(level, icon, fmt, ...) CxbxPopupMessageEx(LOG_PREFIX, level, icon, fmt, ##__VA_ARGS__)
+
+#define LOG_TEST_CASE(message) do { static bool bTestCaseLogged = false; \
+    if (bTestCaseLogged) break; \
+    bTestCaseLogged = true; \
+    if (!g_CurrentLogPopupTestcase) break;\
+	LOG_CHECK_ENABLED(LOG_LEVEL::INFO) { \
+		CxbxPopupMessage(LOG_LEVEL::INFO, CxbxMsgDlgIcon::Info, "Please report that %s shows the following message:\nLOG_TEST_CASE: %s\nIn %s (%s line %d)", \
+		CxbxKrnl_Xbe->m_szAsciiTitle, message, __func__, __FILE__, __LINE__); } } while (0)
+// was g_pCertificate->wszTitleName
+
 //
 // __FILENAME__
 //

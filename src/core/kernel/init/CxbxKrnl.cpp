@@ -276,53 +276,6 @@ std::string CxbxGetLastErrorString(char * lpszFunction)
 
 #pragma optimize("", off)
 
-int CxbxMessageBox(const char* msg, UINT uType, HWND hWnd)
-{
-	return MessageBox(hWnd, msg, /*lpCaption=*/TEXT("Cxbx-Reloaded"), uType);
-}
-
-void CxbxShowError(const char* msg, HWND hWnd)
-{
-	const UINT uType = MB_OK | MB_TOPMOST | MB_SETFOREGROUND | MB_ICONERROR; // Note : MB_ICONERROR == MB_ICONSTOP == MB_ICONHAND
-
-	(void)CxbxMessageBox(msg, uType, hWnd);
-}
-
-void CxbxPopupMessageEx(CXBXR_MODULE cxbxr_module, LOG_LEVEL level, CxbxMsgDlgIcon icon, const char *message, ...)
-{
-	char Buffer[1024];
-	va_list argp;
-    UINT uType = MB_OK | MB_TOPMOST | MB_SETFOREGROUND;
-
-    switch (icon) {
-        case CxbxMsgDlgIcon_Warn: {
-            uType |= MB_ICONWARNING;
-            break;
-        }
-        case CxbxMsgDlgIcon_Error: {
-            uType |= MB_ICONERROR;
-            break;
-        }
-        case CxbxMsgDlgIcon_Info: {
-            uType |= MB_ICONINFORMATION;
-            break;
-        }
-        case CxbxMsgDlgIcon_Unknown:
-        default: {
-            uType |= MB_ICONQUESTION;
-            break;
-        }
-    }
-
-	va_start(argp, message);
-	vsprintf(Buffer, message, argp);
-	va_end(argp);
-
-	EmuLogEx(cxbxr_module, level, "Popup : %s", Buffer);
-
-	(void)CxbxMessageBox(Buffer, uType);
-}
-
 void PrintCurrentConfigurationLog()
 {
 	if (g_bIsWine) {
@@ -924,7 +877,7 @@ void CxbxKrnlEmulate(unsigned int reserved_systems, blocks_reserved_t blocks_res
 		// verify base of code of our executable is 0x00001000
 		if (ExeNtHeader->OptionalHeader.BaseOfCode != CXBX_BASE_OF_CODE)
 		{
-			CxbxPopupMessage(LOG_LEVEL::FATAL, CxbxMsgDlgIcon_Error, "Cxbx-Reloaded executuable requires it's base of code to be 0x00001000");
+			CxbxPopupMessage(LOG_LEVEL::FATAL, CxbxMsgDlgIcon::Error, "Cxbx-Reloaded executuable requires it's base of code to be 0x00001000");
 			return; // TODO : Halt(0); 
 		}
 
@@ -932,7 +885,7 @@ void CxbxKrnlEmulate(unsigned int reserved_systems, blocks_reserved_t blocks_res
 		// verify virtual_memory_placeholder is located at 0x00011000
 		if ((UINT_PTR)(&(virtual_memory_placeholder[0])) != (XBE_IMAGE_BASE + CXBX_BASE_OF_CODE))
 		{
-			CxbxPopupMessage(LOG_LEVEL::FATAL, CxbxMsgDlgIcon_Error, "virtual_memory_placeholder is not loaded to base address 0x00011000 (which is a requirement for Xbox emulation)");
+			CxbxPopupMessage(LOG_LEVEL::FATAL, CxbxMsgDlgIcon::Error, "virtual_memory_placeholder is not loaded to base address 0x00011000 (which is a requirement for Xbox emulation)");
 			return; // TODO : Halt(0); 
 		}
 #endif
@@ -991,7 +944,7 @@ void CxbxKrnlEmulate(unsigned int reserved_systems, blocks_reserved_t blocks_res
 	EEPROM = CxbxRestoreEEPROM(szFilePath_EEPROM_bin);
 	if (EEPROM == nullptr)
 	{
-		CxbxPopupMessage(LOG_LEVEL::FATAL, CxbxMsgDlgIcon_Error, "Couldn't init EEPROM!");
+		CxbxPopupMessage(LOG_LEVEL::FATAL, CxbxMsgDlgIcon::Error, "Couldn't init EEPROM!");
 		return; // TODO : Halt(0); 
 	}
 
@@ -1694,7 +1647,7 @@ __declspec(noreturn) void CxbxKrnlCleanupEx(CXBXR_MODULE cxbxr_module, const cha
         vsprintf(szBuffer2, szErrorMessage, argp);
         va_end(argp);
 
-		CxbxPopupMessageEx(cxbxr_module, LOG_LEVEL::FATAL, CxbxMsgDlgIcon_Error, "Received Fatal Message:\n\n* %s\n", szBuffer2); // Will also EmuLogEx
+		CxbxPopupMessageEx(cxbxr_module, LOG_LEVEL::FATAL, CxbxMsgDlgIcon::Error, "Received Fatal Message:\n\n* %s\n", szBuffer2); // Will also EmuLogEx
     }
 
 	EmuLogInit(LOG_LEVEL::INFO, "MAIN: Terminating Process");
@@ -1898,11 +1851,11 @@ void CxbxPrintUEMInfo(ULONG ErrorCode)
 	if (it != UEMErrorTable.end())
 	{
 		std::string ErrorMessage = "Fatal error. " + it->second + ". This error screen will persist indefinitely. Stop the emulation to close it";
-		CxbxPopupMessage(LOG_LEVEL::FATAL, CxbxMsgDlgIcon_Error, ErrorMessage.c_str());
+		CxbxPopupMessage(LOG_LEVEL::FATAL, CxbxMsgDlgIcon::Error, ErrorMessage.c_str());
 	}
 	else
 	{
-		CxbxPopupMessage(LOG_LEVEL::FATAL, CxbxMsgDlgIcon_Error, "Unknown fatal error. This error screen will persist indefinitely. Stop the emulation to close it");
+		CxbxPopupMessage(LOG_LEVEL::FATAL, CxbxMsgDlgIcon::Error, "Unknown fatal error. This error screen will persist indefinitely. Stop the emulation to close it");
 	}
 }
 

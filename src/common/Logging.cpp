@@ -232,6 +232,53 @@ void log_generate_active_filter_output(const CXBXR_MODULE cxbxr_module)
 	std::cout << std::flush;
 }
 
+int CxbxMessageBox(const char* msg, UINT uType, HWND hWnd)
+{
+	return MessageBox(hWnd, msg, /*lpCaption=*/TEXT("Cxbx-Reloaded"), uType);
+}
+
+void CxbxShowError(const char* msg, HWND hWnd)
+{
+	const UINT uType = MB_OK | MB_TOPMOST | MB_SETFOREGROUND | MB_ICONERROR; // Note : MB_ICONERROR == MB_ICONSTOP == MB_ICONHAND
+
+	(void)CxbxMessageBox(msg, uType, hWnd);
+}
+
+void CxbxPopupMessageEx(CXBXR_MODULE cxbxr_module, LOG_LEVEL level, CxbxMsgDlgIcon icon, const char *message, ...)
+{
+	char Buffer[1024];
+	va_list argp;
+    UINT uType = MB_OK | MB_TOPMOST | MB_SETFOREGROUND;
+
+    switch (icon) {
+        case CxbxMsgDlgIcon_Warn: {
+            uType |= MB_ICONWARNING;
+            break;
+        }
+        case CxbxMsgDlgIcon_Error: {
+            uType |= MB_ICONERROR;
+            break;
+        }
+        case CxbxMsgDlgIcon_Info: {
+            uType |= MB_ICONINFORMATION;
+            break;
+        }
+        case CxbxMsgDlgIcon_Unknown:
+        default: {
+            uType |= MB_ICONQUESTION;
+            break;
+        }
+    }
+
+	va_start(argp, message);
+	vsprintf(Buffer, message, argp);
+	va_end(argp);
+
+	EmuLogEx(cxbxr_module, level, "Popup : %s", Buffer);
+
+	(void)CxbxMessageBox(Buffer, uType);
+}
+
 const bool needs_escape(const wint_t _char)
 {
 	// Escaping is needed for control characters,
