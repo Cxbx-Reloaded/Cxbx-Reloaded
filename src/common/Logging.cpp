@@ -102,6 +102,7 @@ const char* g_EnumModules2String[to_underlying(CXBXR_MODULE::MAX)] = {
 	"XE      ",
 };
 std::atomic_int g_CurrentLogLevel = to_underlying(LOG_LEVEL::INFO);
+std::atomic_bool g_CurrentLogPopupTestcase = true;
 
 const char log_debug[] = "DEBUG: ";
 const char log_info[]  = "INFO : ";
@@ -186,19 +187,21 @@ void NTAPI EmuLogInit(LOG_LEVEL level, const char *szWarningMessage, ...)
 // Set up the logging variables for the GUI process
 inline void log_get_settings()
 {
-	log_set_config(g_Settings->m_core.LogLevel, g_Settings->m_core.LoggedModules);
+	log_set_config(g_Settings->m_core.LogLevel, g_Settings->m_core.LoggedModules, g_Settings->m_core.bLogPopupTestcase);
 }
 
 inline void log_sync_config()
 {
 	int LogLevel;
 	unsigned int LoggedModules[NUM_INTEGERS_LOG];
+	bool LogPopupTestcase;
 	g_EmuShared->GetLogLv(&LogLevel);
 	g_EmuShared->GetLogModules(LoggedModules);
-	log_set_config(LogLevel, LoggedModules);
+	g_EmuShared->GetLogPopupTestcase(&LogPopupTestcase);
+	log_set_config(LogLevel, LoggedModules, LogPopupTestcase);
 }
 
-void log_set_config(int LogLevel, unsigned int* LoggedModules)
+void log_set_config(int LogLevel, unsigned int* LoggedModules, bool LogPopupTestcase)
 {
 	g_CurrentLogLevel = LogLevel;
 	for (unsigned int index = to_underlying(CXBXR_MODULE::CXBXR); index < to_underlying(CXBXR_MODULE::MAX); index++) {
@@ -209,6 +212,7 @@ void log_set_config(int LogLevel, unsigned int* LoggedModules)
 			g_EnabledModules[index] = false;
 		}
 	}
+	g_CurrentLogPopupTestcase = LogPopupTestcase;
 }
 
 // Generate active log filter output.

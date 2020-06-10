@@ -93,6 +93,7 @@ static struct {
 	const char* LoggedModules = "LoggedModules";
 	const char* LogLevel = "LogLevel";
 	const char* LoaderExecutable = "LoaderExecutable";
+	const char* LogPopupTestcase = "LogPopupTestcase";
 } sect_core_keys;
 
 static const char* section_video = "video";
@@ -355,6 +356,7 @@ bool Settings::LoadConfig()
 		m_core.LoggedModules[index] = 0;
 		index++;
 	}
+	m_core.bLogPopupTestcase = m_si.GetBoolValue(section_core, sect_core_keys.LogPopupTestcase, /*Default=*/true);
 
 	m_core.bUseLoaderExec = m_si.GetBoolValue(section_core, sect_core_keys.LoaderExecutable, /*Default=*/true);
 
@@ -534,6 +536,7 @@ bool Settings::Save(std::string file_path)
 		stream << "0x" << std::hex << m_core.LoggedModules[i];
 		m_si.SetValue(section_core, sect_core_keys.LoggedModules, stream.str().c_str(), nullptr, false);
 	}
+	m_si.SetBoolValue(section_core, sect_core_keys.LogPopupTestcase, m_core.bLogPopupTestcase, nullptr, true);
 
 	m_si.SetBoolValue(section_core, sect_core_keys.LoaderExecutable, m_core.bUseLoaderExec, nullptr, true);
 

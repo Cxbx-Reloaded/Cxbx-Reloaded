@@ -151,10 +151,12 @@ void CxbxPopupMessageEx(CXBXR_MODULE cxbxr_module, LOG_LEVEL level, CxbxMsgDlgIc
 #define CxbxPopupMessage(level, icon, fmt, ...) CxbxPopupMessageEx(LOG_PREFIX, level, icon, fmt, ##__VA_ARGS__)
 
 #define LOG_TEST_CASE(message) do { static bool bTestCaseLogged = false; \
-    if (!bTestCaseLogged) { bTestCaseLogged = true; \
+    if (bTestCaseLogged) break; \
+    bTestCaseLogged = true; \
+    if (!g_CurrentLogPopupTestcase) break;\
 	LOG_CHECK_ENABLED(LOG_LEVEL::INFO) { \
 		CxbxPopupMessage(LOG_LEVEL::INFO, CxbxMsgDlgIcon_Info, "Please report that %s shows the following message:\nLOG_TEST_CASE: %s\nIn %s (%s line %d)", \
-		CxbxKrnl_Xbe->m_szAsciiTitle, message, __func__, __FILE__, __LINE__); } } } while (0)
+		CxbxKrnl_Xbe->m_szAsciiTitle, message, __func__, __FILE__, __LINE__); } } while (0)
 // was g_pCertificate->wszTitleName
 
 extern Xbe::Certificate *g_pCertificate;
