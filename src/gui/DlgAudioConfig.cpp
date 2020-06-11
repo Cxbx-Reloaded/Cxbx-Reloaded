@@ -25,7 +25,10 @@
 // *
 // ******************************************************************
 
+#define LOG_PREFIX CXBXR_MODULE::GUI
+
 #include "common\Settings.hpp" // for g_Settings
+#include "common/Logging.h"
 
 #include "DlgAudioConfig.h"
 #include "resource/ResCxbx.h"
@@ -123,14 +126,14 @@ INT_PTR CALLBACK DlgAudioConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPAR
             /*! if changes have been made, check if the user wants to save them */
             if(g_bHasChanges)
             {
-                int ret = MessageBox(hWndDlg, "Do you wish to apply your changes?", "Cxbx-Reloaded", MB_ICONQUESTION | MB_YESNOCANCEL);
+                MsgDlgRet ret = CxbxPopupMsgQuestionSimple(hWndDlg, "Do you wish to apply your changes?");
 
                 switch(ret)
                 {
-                    case IDYES:
+                    case MsgDlgRet::RET_YES:
                         PostMessage(hWndDlg, WM_COMMAND, IDC_AC_ACCEPT, 0);
                         break;
-                    case IDNO:
+                    case MsgDlgRet::RET_NO:
                         PostMessage(hWndDlg, WM_COMMAND, IDC_AC_CANCEL, 0);
                         break;
                 }
@@ -226,8 +229,7 @@ VOID RefreshAudioAdapter()
         if (pGUID == (LPGUID)CB_ERR) {
             SendMessage(g_hAudioAdapter, CB_SETCURSEL, 0, 0);
             g_Settings->m_audio = g_XBAudio;
-            MessageBox(nullptr, "Your selected audio adapter is invalid,\n"
-                                "reverting to default audio adapter.", "Cxbx-Reloaded", MB_OK | MB_ICONEXCLAMATION);
+            (void)CxbxPopupMsgWarnSimple(nullptr, "Your selected audio adapter is invalid,\nreverting to default audio adapter.");
         }
     }
 }
