@@ -148,6 +148,13 @@ void EmuLogOutput(CXBXR_MODULE cxbxr_module, LOG_LEVEL level, const char *szWarn
 
 	fflush(stdout);
 }
+static inline void EmuLogOutputEx(CXBXR_MODULE cxbxr_module, LOG_LEVEL level, const char *szWarningMessage, ...)
+{
+	va_list argp;
+	va_start(argp, szWarningMessage);
+	EmuLogOutput(cxbxr_module, level, szWarningMessage, argp);
+	va_end(argp);
+}
 
 // print out a custom message to the console or kernel debug log file
 void NTAPI EmuLogEx(CXBXR_MODULE cxbxr_module, LOG_LEVEL level, const char *szWarningMessage, ...)
@@ -286,7 +293,7 @@ void CxbxPopupMessageEx(CXBXR_MODULE cxbxr_module, LOG_LEVEL level, CxbxMsgDlgIc
 	vsprintf(Buffer, message, argp);
 	va_end(argp);
 
-	EmuLogEx(cxbxr_module, level, "Popup : %s", Buffer);
+	EmuLogOutputEx(cxbxr_module, level, "Popup : %s", Buffer);
 
 	(void)CxbxMessageBox(Buffer, uType);
 }
