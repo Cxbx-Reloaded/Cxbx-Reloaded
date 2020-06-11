@@ -243,7 +243,7 @@ XBSYSAPI EXPORTNUM(264) xboxkrnl::VOID NTAPI xboxkrnl::RtlAssert
 
 	ss << ")";
 
-	CxbxPopupMessage(LOG_LEVEL::WARNING, CxbxMsgDlgIcon::Warn, ss.str().c_str());
+	(void)CxbxPopupMsgWarnSimple(nullptr, ss.str().c_str());
 }
 
 // ******************************************************************

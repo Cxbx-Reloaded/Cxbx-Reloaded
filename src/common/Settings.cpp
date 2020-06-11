@@ -27,6 +27,8 @@
 // *
 // ******************************************************************
 
+#define LOG_PREFIX CXBXR_MODULE::CXBXR
+
 #include "Settings.hpp"
 #include "core\kernel\support\Emu.h"
 #include "EmuShared.h"
@@ -221,7 +223,7 @@ bool Settings::Init()
 		bRet = LoadConfig();
 
 		if (!bRet) {
-			MessageBox(nullptr, szSettings_setup_error, "Cxbx-Reloaded", MB_OK);
+			(void)CxbxPopupMsgErrorSimple(nullptr, szSettings_setup_error);
 			return false;
 		}
 
@@ -834,13 +836,13 @@ CXBX_DATA Settings::SetupFile(std::string& file_path_out)
 	setupFile = GenerateExecDirectoryStr();
 
 #else // Only support for Qt compile build.
-	int iRet = MessageBox(nullptr, szSettings_save_user_option_message, "Cxbx-Reloaded", MB_YESNOCANCEL | MB_ICONQUESTION);
+	MsgDlgRet eRet = CxbxPopupMsgQuestionSimple(nullptr, szSettings_save_user_option_message);
 
-	if (iRet == IDYES) {
+	if (eRet == MsgDlgRet::RET_YES) {
 		setupFile = GenerateExecDirectoryStr();
 		data_ret = CXBX_DATA_EXECDIR;
 	}
-	else if (iRet == IDNO) {
+	else if (eRet == MsgDlgRet::RET_NO) {
 		setupFile = GenerateUserProfileDirectoryStr();
 		data_ret = CXBX_DATA_APPDATA;
 		if (setupFile.size() != 0) {
@@ -857,7 +859,7 @@ CXBX_DATA Settings::SetupFile(std::string& file_path_out)
 #endif
 
 	if (data_ret == CXBX_DATA_INVALID) {
-		MessageBox(nullptr, szSettings_setup_error, "Cxbx-Reloaded", MB_OK);
+		(void)CxbxPopupMsgErrorSimple(nullptr, szSettings_setup_error);
 	}
 	else {
 		setupFile.append(szSettings_settings_file);

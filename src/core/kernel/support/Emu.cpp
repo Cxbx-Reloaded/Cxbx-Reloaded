@@ -25,6 +25,8 @@
 // *
 // ******************************************************************
 
+#define LOG_PREFIX CXBXR_MODULE::X86
+
 // prevent name collisions
 namespace xboxkrnl
 {
@@ -201,7 +203,7 @@ void EmuExceptionNonBreakpointUnhandledShow(LPEXCEPTION_POINTERS e)
 		"  Press \"Cancel\" to debug.",
 		e->ExceptionRecord->ExceptionCode, EIPToString(e->ContextRecord->Eip).c_str());
 
-	if (CxbxMessageBox(buffer, MB_ICONSTOP | MB_OKCANCEL, g_hEmuWindow, IDOK) == IDOK)
+	if (CxbxPopupMsgFatal(nullptr, MsgDlgButtons::OK_CANCEL, MsgDlgRet::RET_OK, buffer) == MsgDlgRet::RET_OK)
 	{
 		EmuExceptionExitProcess();
 	}
@@ -366,13 +368,13 @@ int ExitException(LPEXCEPTION_POINTERS e)
 
     fflush(stdout);
 
-    (void)CxbxMessageBox("Warning: Could not safely terminate process!", MB_OK, g_hEmuWindow);
+    (void)CxbxPopupMsgFatalSimple(nullptr, "Warning: Could not safely terminate process!");
 
     count++;
 
     if(count > 1)
     {
-        (void)CxbxMessageBox("Warning: Multiple Problems!", MB_OK, g_hEmuWindow);
+        (void)CxbxPopupMsgFatalSimple(nullptr, "Warning: Multiple Problems!");
         return EXCEPTION_CONTINUE_SEARCH;
     }
 

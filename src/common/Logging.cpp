@@ -248,45 +248,87 @@ void log_init_popup_msg()
 	g_bFullScreen = vSettings.bFullScreen;
 }
 
-int CxbxMessageBox(const char* msg, UINT uType, HWND hWnd, int default_return)
+MsgDlgRet CxbxMessageBox(const char* msg, MsgDlgRet ret_default, UINT uType, HWND hWnd)
 {
+	// If user is using exclusive fullscreen, we need to refrain all popups.
 	if (g_bFullScreen) {
-		return default_return;
+		return ret_default;
 	}
-	return MessageBox(hWnd, msg, /*lpCaption=*/TEXT("Cxbx-Reloaded"), uType);
+	int ret = MessageBox(hWnd, msg, /*lpCaption=*/TEXT("Cxbx-Reloaded"), uType);
+
+    switch (ret) {
+        default:
+        case IDCANCEL:
+            return MsgDlgRet::RET_CANCEL;
+        case IDOK:
+            return MsgDlgRet::RET_OK;
+        case IDABORT:
+            return MsgDlgRet::RET_ABORT;
+        case IDRETRY:
+            return MsgDlgRet::RET_RETRY;
+        case IDIGNORE:
+            return MsgDlgRet::RET_IGNORE;
+        case IDYES:
+            return MsgDlgRet::RET_YES;
+        case IDNO:
+            return MsgDlgRet::RET_NO;
+    }
 }
 
-void CxbxShowError(const char* msg, HWND hWnd)
-{
-	const UINT uType = MB_OK | MB_TOPMOST | MB_SETFOREGROUND | MB_ICONERROR; // Note : MB_ICONERROR == MB_ICONSTOP == MB_ICONHAND
-
-	(void)CxbxMessageBox(msg, uType, hWnd);
-}
-
-void CxbxPopupMessageEx(CXBXR_MODULE cxbxr_module, LOG_LEVEL level, CxbxMsgDlgIcon icon, const char *message, ...)
+MsgDlgRet CxbxPopupMessageEx(void* hwnd, CXBXR_MODULE cxbxr_module, LOG_LEVEL level, MsgDlgIcon icon, MsgDlgButtons buttons, MsgDlgRet ret_default, const char *message, ...)
 {
 	char Buffer[1024];
 	va_list argp;
-    UINT uType = MB_OK | MB_TOPMOST | MB_SETFOREGROUND;
+    UINT uType = MB_TOPMOST | MB_SETFOREGROUND;
+
+	// If there's no message, then return default value.
+	if (!message) {
+		uType |= MB_ICONERROR | MB_OK;
+		(void)CxbxMessageBox("message is null pointer", ret_default, uType, reinterpret_cast<HWND>(hwnd));
+		return ret_default;
+	}
 
     switch (icon) {
-        case CxbxMsgDlgIcon::Warn: {
+        case MsgDlgIcon::Warn: {
             uType |= MB_ICONWARNING;
             break;
         }
-        case CxbxMsgDlgIcon::Error: {
-            uType |= MB_ICONERROR;
+        case MsgDlgIcon::Error: {
+            uType |= MB_ICONERROR; // Note : MB_ICONERROR == MB_ICONSTOP == MB_ICONHAND
             break;
         }
-        case CxbxMsgDlgIcon::Info: {
+        case MsgDlgIcon::Info: {
             uType |= MB_ICONINFORMATION;
             break;
         }
-        case CxbxMsgDlgIcon::Unknown:
+        case MsgDlgIcon::Question:
+        case MsgDlgIcon::Unknown:
         default: {
             uType |= MB_ICONQUESTION;
             break;
         }
+    }
+
+    switch (buttons) {
+        default:
+        case MsgDlgButtons::OK:
+            uType |= MB_OK;
+            break;
+        case MsgDlgButtons::OK_CANCEL:
+            uType |= MB_OKCANCEL;
+            break;
+        case MsgDlgButtons::ABORT_RETRY_IGNORE:
+            uType |= MB_RETRYCANCEL;
+            break;
+        case MsgDlgButtons::YES_NO_CANCEL:
+            uType |= MB_YESNOCANCEL;
+            break;
+        case MsgDlgButtons::YES_NO:
+            uType |= MB_YESNO;
+            break;
+        case MsgDlgButtons::RETRY_CANCEL:
+            uType |= MB_RETRYCANCEL;
+            break;
     }
 
 	va_start(argp, message);
@@ -295,7 +337,7 @@ void CxbxPopupMessageEx(CXBXR_MODULE cxbxr_module, LOG_LEVEL level, CxbxMsgDlgIc
 
 	EmuLogOutputEx(cxbxr_module, level, "Popup : %s", Buffer);
 
-	(void)CxbxMessageBox(Buffer, uType);
+	return CxbxMessageBox(Buffer, ret_default, uType, reinterpret_cast<HWND>(hwnd));
 }
 
 const bool needs_escape(const wint_t _char)

@@ -137,27 +137,56 @@ void log_generate_active_filter_output(const CXBXR_MODULE cxbxr_module);
 // Then users will have a chance of popup message appear during start of emulation in full screen.
 void log_init_popup_msg();
 
-typedef enum class _CxbxMsgDlgIcon {
-	Info = 0,
+typedef enum class _MsgDlgIcon {
+	Unknown = 0,
+	Question,
+	Info,
 	Warn,
-	Error,
-	Unknown
-} CxbxMsgDlgIcon;
+	Error
+} MsgDlgIcon;
 
-int CxbxMessageBox(const char* msg, UINT uType = MB_OK, HWND hWnd = NULL, int default_return = IDCANCEL);
+typedef enum class _MsgDlgButtons {
+	Unknown = 0,
+	OK,
+	OK_CANCEL,
+	ABORT_RETRY_IGNORE,
+	YES_NO_CANCEL,
+	YES_NO,
+	RETRY_CANCEL
+} MsgDlgButtons;
 
-void CxbxShowError(const char* msg, HWND hWnd = NULL);
+typedef enum class _MsgDlgRet {
+	RET_Unknown = 0,
+	RET_OK,
+	RET_CANCEL,
+	RET_ABORT,
+	RET_RETRY,
+	RET_IGNORE,
+	RET_YES,
+	RET_NO
+} MsgDlgRet;
 
-void CxbxPopupMessageEx(CXBXR_MODULE cxbxr_module, LOG_LEVEL level, CxbxMsgDlgIcon icon, const char* message, ...);
+MsgDlgRet CxbxPopupMessageEx(void* hwnd, CXBXR_MODULE cxbxr_module, LOG_LEVEL level, MsgDlgIcon icon, MsgDlgButtons buttons, MsgDlgRet ret_default, const char* message, ...);
 
-#define CxbxPopupMessage(level, icon, fmt, ...) CxbxPopupMessageEx(LOG_PREFIX, level, icon, fmt, ##__VA_ARGS__)
+#define CxbxPopupMessage(hwnd, level, icon, buttons, ret_default, fmt, ...) CxbxPopupMessageEx(hwnd, LOG_PREFIX, level, icon, buttons, ret_default, fmt, ## __VA_ARGS__)
+#define CxbxPopupMsgUnknown(hwnd, level, buttons, ret_default, fmt, ...) CxbxPopupMessage(hwnd, level, MsgDlgIcon::Unknown, buttons, ret_default, fmt, ## __VA_ARGS__)
+#define CxbxPopupMsgQuestion(hwnd, level, buttons, ret_default, fmt, ...) CxbxPopupMessage(hwnd, level, MsgDlgIcon::Question, buttons, ret_default, fmt, ## __VA_ARGS__)
+#define CxbxPopupMsgQuestionSimple(hwnd, fmt, ...) CxbxPopupMessage(hwnd, LOG_LEVEL::INFO, MsgDlgIcon::Question, MsgDlgButtons::YES_NO_CANCEL, MsgDlgRet::RET_CANCEL, fmt, ## __VA_ARGS__)
+#define CxbxPopupMsgInfo(hwnd, buttons, ret_default, fmt, ...) CxbxPopupMessage(hwnd, LOG_LEVEL::INFO, MsgDlgIcon::Info, buttons, ret_default, fmt, ## __VA_ARGS__)
+#define CxbxPopupMsgInfoSimple(hwnd, fmt, ...) CxbxPopupMsgInfo(hwnd, MsgDlgButtons::OK, MsgDlgRet::RET_OK, fmt, ## __VA_ARGS__)
+#define CxbxPopupMsgWarn(hwnd, buttons, ret_default, fmt, ...) CxbxPopupMessage(hwnd, LOG_LEVEL::WARNING, MsgDlgIcon::Warn, buttons, ret_default, fmt, ## __VA_ARGS__)
+#define CxbxPopupMsgWarnSimple(hwnd, fmt, ...) CxbxPopupMsgWarn(hwnd, MsgDlgButtons::OK, MsgDlgRet::RET_OK, fmt, ## __VA_ARGS__)
+#define CxbxPopupMsgError(hwnd, buttons, ret_default, fmt, ...) CxbxPopupMessage(hwnd, LOG_LEVEL::ERROR2, MsgDlgIcon::Error, buttons, ret_default, fmt, ## __VA_ARGS__)
+#define CxbxPopupMsgErrorSimple(hwnd, fmt, ...) CxbxPopupMsgError(hwnd, MsgDlgButtons::OK, MsgDlgRet::RET_OK, fmt, ## __VA_ARGS__)
+#define CxbxPopupMsgFatal(hwnd, buttons, ret_default, fmt, ...) CxbxPopupMessage(hwnd, LOG_LEVEL::FATAL, MsgDlgIcon::Error, buttons, ret_default, fmt, ## __VA_ARGS__)
+#define CxbxPopupMsgFatalSimple(hwnd, fmt, ...) CxbxPopupMsgFatal(hwnd, MsgDlgButtons::OK, MsgDlgRet::RET_OK, fmt, ## __VA_ARGS__)
 
 #define LOG_TEST_CASE(message) do { static bool bTestCaseLogged = false; \
     if (bTestCaseLogged) break; \
     bTestCaseLogged = true; \
     if (!g_CurrentLogPopupTestcase) break;\
 	LOG_CHECK_ENABLED(LOG_LEVEL::INFO) { \
-		CxbxPopupMessage(LOG_LEVEL::INFO, CxbxMsgDlgIcon::Info, "Please report that %s shows the following message:\nLOG_TEST_CASE: %s\nIn %s (%s line %d)", \
+		CxbxPopupMsgInfoSimple(nullptr, "Please report that %s shows the following message:\nLOG_TEST_CASE: %s\nIn %s (%s line %d)", \
 		CxbxKrnl_Xbe->m_szAsciiTitle, message, __func__, __FILE__, __LINE__); } } while (0)
 // was g_pCertificate->wszTitleName
 
