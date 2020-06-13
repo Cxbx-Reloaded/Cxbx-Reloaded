@@ -181,13 +181,26 @@ MsgDlgRet CxbxPopupMessageEx(void* hwnd, CXBXR_MODULE cxbxr_module, LOG_LEVEL le
 #define CxbxPopupMsgFatal(hwnd, buttons, ret_default, fmt, ...) CxbxPopupMessage(hwnd, LOG_LEVEL::FATAL, MsgDlgIcon::Error, buttons, ret_default, fmt, ## __VA_ARGS__)
 #define CxbxPopupMsgFatalSimple(hwnd, fmt, ...) CxbxPopupMsgFatal(hwnd, MsgDlgButtons::OK, MsgDlgRet::RET_OK, fmt, ## __VA_ARGS__)
 
-#define LOG_TEST_CASE(message) do { static bool bTestCaseLogged = false; \
-    if (bTestCaseLogged) break; \
-    bTestCaseLogged = true; \
-    if (!g_CurrentLogPopupTestcase) break;\
-	LOG_CHECK_ENABLED(LOG_LEVEL::INFO) { \
-		(void)CxbxPopupMsgInfoSimple(nullptr, "Please report that %s shows the following message:\nLOG_TEST_CASE: %s\nIn %s (%s line %d)", \
-		CxbxKrnl_Xbe->m_szAsciiTitle, message, __func__, __FILE__, __LINE__); } } while (0)
+// For LOG_TEST_CASE
+extern inline void EmuLogOutputEx(CXBXR_MODULE cxbxr_module, LOG_LEVEL level, const char *szWarningMessage, ...);
+
+#define LOG_TEST_CASE(message) do { \
+	static bool bTestCaseLogged = false; \
+	if (bTestCaseLogged) break; \
+	bTestCaseLogged = true; \
+	bool logOnly = true; \
+	if (g_CurrentLogPopupTestcase) { \
+		LOG_CHECK_ENABLED(LOG_LEVEL::INFO) { \
+			(void)CxbxPopupMsgInfoSimple(nullptr, "Please report that %s shows the following message:\nLOG_TEST_CASE: %s\nIn %s (%s line %d)", \
+			CxbxKrnl_Xbe->m_szAsciiTitle, message, __func__, __FILE__, __LINE__); \
+			logOnly = false; \
+		} \
+	} \
+	if (logOnly) { \
+		EmuLogOutputEx(LOG_PREFIX, LOG_LEVEL::INFO, "Please report that %s shows the following message:\nLOG_TEST_CASE: %s\nIn %s (%s line %d)", \
+		CxbxKrnl_Xbe->m_szAsciiTitle, message, __func__, __FILE__, __LINE__); \
+	} \
+} while (0)
 // was g_pCertificate->wszTitleName
 
 //

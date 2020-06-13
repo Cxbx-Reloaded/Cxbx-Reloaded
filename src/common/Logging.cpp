@@ -148,7 +148,7 @@ void EmuLogOutput(CXBXR_MODULE cxbxr_module, LOG_LEVEL level, const char *szWarn
 
 	fflush(stdout);
 }
-static inline void EmuLogOutputEx(CXBXR_MODULE cxbxr_module, LOG_LEVEL level, const char *szWarningMessage, ...)
+inline void EmuLogOutputEx(CXBXR_MODULE cxbxr_module, LOG_LEVEL level, const char *szWarningMessage, ...)
 {
 	va_list argp;
 	va_start(argp, szWarningMessage);
