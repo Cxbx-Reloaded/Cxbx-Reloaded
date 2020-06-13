@@ -227,8 +227,8 @@ class EmuShared : public Mutex
 		// ******************************************************************
 		// * Log Level value Accessors
 		// ******************************************************************
-		void GetLogPopupTestcase(bool *value) { Lock(); *value = m_core.bLogPopupTestcase; Unlock(); }
-		void SetLogPopupTestcase(bool value) { Lock(); m_core.bLogPopupTestcase = value; Unlock(); }
+		void GetLogPopupTestCase(bool *value) { Lock(); *value = m_core.bLogPopupTestCase; Unlock(); }
+		void SetLogPopupTestCase(bool value) { Lock(); m_core.bLogPopupTestCase = value; Unlock(); }
 
 		// ******************************************************************
 		// * File storage location

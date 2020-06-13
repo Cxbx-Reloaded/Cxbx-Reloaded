@@ -102,8 +102,8 @@ const char* g_EnumModules2String[to_underlying(CXBXR_MODULE::MAX)] = {
 	"XE      ",
 };
 std::atomic_int g_CurrentLogLevel = to_underlying(LOG_LEVEL::INFO);
-std::atomic_bool g_CurrentLogPopupTestcase = true;
-static bool g_bFullScreen = false;
+std::atomic_bool g_CurrentLogPopupTestCase = true;
+static bool g_disablePopupMessages = false;
 
 const char log_debug[] = "DEBUG: ";
 const char log_info[]  = "INFO : ";
@@ -195,21 +195,21 @@ void NTAPI EmuLogInit(LOG_LEVEL level, const char *szWarningMessage, ...)
 // Set up the logging variables for the GUI process
 inline void log_get_settings()
 {
-	log_set_config(g_Settings->m_core.LogLevel, g_Settings->m_core.LoggedModules, g_Settings->m_core.bLogPopupTestcase);
+	log_set_config(g_Settings->m_core.LogLevel, g_Settings->m_core.LoggedModules, g_Settings->m_core.bLogPopupTestCase);
 }
 
 inline void log_sync_config()
 {
 	int LogLevel;
 	unsigned int LoggedModules[NUM_INTEGERS_LOG];
-	bool LogPopupTestcase;
+	bool LogPopupTestCase;
 	g_EmuShared->GetLogLv(&LogLevel);
 	g_EmuShared->GetLogModules(LoggedModules);
-	g_EmuShared->GetLogPopupTestcase(&LogPopupTestcase);
-	log_set_config(LogLevel, LoggedModules, LogPopupTestcase);
+	g_EmuShared->GetLogPopupTestCase(&LogPopupTestCase);
+	log_set_config(LogLevel, LoggedModules, LogPopupTestCase);
 }
 
-void log_set_config(int LogLevel, unsigned int* LoggedModules, bool LogPopupTestcase)
+void log_set_config(int LogLevel, unsigned int* LoggedModules, bool LogPopupTestCase)
 {
 	g_CurrentLogLevel = LogLevel;
 	for (unsigned int index = to_underlying(CXBXR_MODULE::CXBXR); index < to_underlying(CXBXR_MODULE::MAX); index++) {
@@ -220,7 +220,7 @@ void log_set_config(int LogLevel, unsigned int* LoggedModules, bool LogPopupTest
 			g_EnabledModules[index] = false;
 		}
 	}
-	g_CurrentLogPopupTestcase = LogPopupTestcase;
+	g_CurrentLogPopupTestCase = LogPopupTestCase;
 }
 
 // Generate active log filter output.
@@ -245,13 +245,13 @@ void log_init_popup_msg()
 {
 	Settings::s_video vSettings;
 	g_EmuShared->GetVideoSettings(&vSettings);
-	g_bFullScreen = vSettings.bFullScreen;
+	g_disablePopupMessages = vSettings.bFullScreen;
 }
 
 MsgDlgRet CxbxMessageBox(const char* msg, MsgDlgRet ret_default, UINT uType, HWND hWnd)
 {
 	// If user is using exclusive fullscreen, we need to refrain all popups.
-	if (g_bFullScreen) {
+	if (g_disablePopupMessages) {
 		return ret_default;
 	}
 	int ret = MessageBox(hWnd, msg, /*lpCaption=*/TEXT("Cxbx-Reloaded"), uType);

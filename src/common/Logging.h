@@ -116,7 +116,7 @@ typedef enum class _CXBXR_MODULE: unsigned int {
 extern std::atomic_bool g_EnabledModules[to_underlying(CXBXR_MODULE::MAX)];
 extern const char* g_EnumModules2String[to_underlying(CXBXR_MODULE::MAX)];
 extern std::atomic_int g_CurrentLogLevel;
-extern std::atomic_bool g_CurrentLogPopupTestcase;
+extern std::atomic_bool g_CurrentLogPopupTestCase;
 
 // print out a log message to the console or kernel debug log file if level is high enough
 void NTAPI EmuLogEx(CXBXR_MODULE cxbxr_module, LOG_LEVEL level, const char *szWarningMessage, ...);
@@ -128,7 +128,7 @@ extern inline void log_get_settings();
 
 extern inline void log_sync_config();
 
-void log_set_config(int LogLevel, unsigned int* LoggedModules, bool LogPopupTestcase);
+void log_set_config(int LogLevel, unsigned int* LoggedModules, bool LogPopupTestCase);
 
 void log_generate_active_filter_output(const CXBXR_MODULE cxbxr_module);
 
@@ -189,7 +189,7 @@ extern inline void EmuLogOutputEx(CXBXR_MODULE cxbxr_module, LOG_LEVEL level, co
 	if (bTestCaseLogged) break; \
 	bTestCaseLogged = true; \
 	bool logOnly = true; \
-	if (g_CurrentLogPopupTestcase) { \
+	if (g_CurrentLogPopupTestCase) { \
 		LOG_CHECK_ENABLED(LOG_LEVEL::INFO) { \
 			(void)CxbxPopupMsgInfoSimple(nullptr, "Please report that %s shows the following message:\nLOG_TEST_CASE: %s\nIn %s (%s line %d)", \
 			CxbxKrnl_Xbe->m_szAsciiTitle, message, __func__, __FILE__, __LINE__); \

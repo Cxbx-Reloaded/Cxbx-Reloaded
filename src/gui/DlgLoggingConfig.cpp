@@ -121,7 +121,7 @@ INT_PTR CALLBACK DlgLogConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM
 			int TempLevel;
 			unsigned int LoggedModules[NUM_INTEGERS_LOG];
 			int LogLevel;
-			bool LogPopupTestcase;
+			bool LogPopupTestCase;
 
 			// Set window icon
 			SetClassLong(hWndDlg, GCL_HICON, (LONG)LoadIcon(GetModuleHandle(nullptr), MAKEINTRESOURCE(IDI_CXBX)));
@@ -129,7 +129,7 @@ INT_PTR CALLBACK DlgLogConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM
 			LoggedModules[0] = g_Settings->m_core.LoggedModules[0];
 			LoggedModules[1] = g_Settings->m_core.LoggedModules[1];
 			LogLevel = g_Settings->m_core.LogLevel;
-			LogPopupTestcase = g_Settings->m_core.bLogPopupTestcase;
+			LogPopupTestCase = g_Settings->m_core.bLogPopupTestCase;
 
 			hHandle = GetDlgItem(hWndDlg, IDC_EVENT_LV);
 			TempLevel = to_underlying(LOG_LEVEL::DEBUG);
@@ -146,7 +146,7 @@ INT_PTR CALLBACK DlgLogConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM
 				}
 			}
 
-			if (LogPopupTestcase) {
+			if (LogPopupTestCase) {
 				(void)SendMessage(GetDlgItem(hWndDlg, IDC_LOG_POPUP_TESTCASE), BM_SETCHECK, BST_CHECKED, 0);
 			}
 
@@ -239,18 +239,18 @@ INT_PTR CALLBACK DlgLogConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM
 							}
 						}
 
-						bool LogPopupTestcase = false;
+						bool LogPopupTestCase = false;
 						if (SendMessage(GetDlgItem(hWndDlg, IDC_LOG_POPUP_TESTCASE), BM_GETCHECK, 0, 0) == BST_CHECKED) {
-							LogPopupTestcase = true;
+							LogPopupTestCase = true;
 						}
 
 						g_Settings->m_core.LoggedModules[0] = LoggedModules[0];
 						g_Settings->m_core.LoggedModules[1] = LoggedModules[1];
 						g_Settings->m_core.LogLevel = LogLevel;
-						g_Settings->m_core.bLogPopupTestcase = LogPopupTestcase;
+						g_Settings->m_core.bLogPopupTestCase = LogPopupTestCase;
 
 						// Update the logging variables for the GUI process
-						log_set_config(LogLevel, LoggedModules, LogPopupTestcase);
+						log_set_config(LogLevel, LoggedModules, LogPopupTestCase);
 						log_generate_active_filter_output(CXBXR_MODULE::GUI);
 
 						// Also inform the kernel process if it exists
@@ -258,7 +258,7 @@ INT_PTR CALLBACK DlgLogConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM
 							// Sync updated log to kernel process to use run-time settings.
 							g_EmuShared->SetLogLv(&LogLevel);
 							g_EmuShared->SetLogModules(LoggedModules);
-							g_EmuShared->SetLogPopupTestcase(LogPopupTestcase);
+							g_EmuShared->SetLogPopupTestCase(LogPopupTestCase);
 							ipc_send_kernel_update(IPC_UPDATE_KERNEL::CONFIG_LOGGING_SYNC, 0, reinterpret_cast<std::uintptr_t>(g_ChildWnd));
 						}
 					}
