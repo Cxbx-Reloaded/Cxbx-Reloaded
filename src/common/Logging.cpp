@@ -113,7 +113,7 @@ const char log_fatal[] = "FATAL: ";
 const char log_unkwn[] = "???? : ";
 
 // Do not use EmuLogOutput function outside of this file.
-void EmuLogOutput(CXBXR_MODULE cxbxr_module, LOG_LEVEL level, const char *szWarningMessage, va_list argp)
+void EmuLogOutput(CXBXR_MODULE cxbxr_module, LOG_LEVEL level, const char *szWarningMessage, const va_list argp)
 {
 	LOG_THREAD_INIT;
 
@@ -148,7 +148,7 @@ void EmuLogOutput(CXBXR_MODULE cxbxr_module, LOG_LEVEL level, const char *szWarn
 
 	fflush(stdout);
 }
-inline void EmuLogOutputEx(CXBXR_MODULE cxbxr_module, LOG_LEVEL level, const char *szWarningMessage, ...)
+inline void EmuLogOutputEx(const CXBXR_MODULE cxbxr_module, const LOG_LEVEL level, const char *szWarningMessage, ...)
 {
 	va_list argp;
 	va_start(argp, szWarningMessage);
@@ -248,7 +248,7 @@ void log_init_popup_msg()
 	g_disablePopupMessages = vSettings.bFullScreen;
 }
 
-MsgDlgRet CxbxMessageBox(const char* msg, MsgDlgRet ret_default, UINT uType, HWND hWnd)
+MsgDlgRet CxbxMessageBox(const char* msg, const MsgDlgRet ret_default, const UINT uType, const HWND hWnd)
 {
 	// If user is using exclusive fullscreen, we need to refrain all popups.
 	if (g_disablePopupMessages) {
@@ -275,7 +275,7 @@ MsgDlgRet CxbxMessageBox(const char* msg, MsgDlgRet ret_default, UINT uType, HWN
     }
 }
 
-MsgDlgRet CxbxPopupMessageEx(void* hwnd, CXBXR_MODULE cxbxr_module, LOG_LEVEL level, MsgDlgIcon icon, MsgDlgButtons buttons, MsgDlgRet ret_default, const char *message, ...)
+MsgDlgRet CxbxPopupMessageEx(const void* hwnd, const CXBXR_MODULE cxbxr_module, const LOG_LEVEL level, const MsgDlgIcon icon, const MsgDlgButtons buttons, const MsgDlgRet ret_default, const char *message, ...)
 {
 	char Buffer[1024];
 	va_list argp;
@@ -284,7 +284,7 @@ MsgDlgRet CxbxPopupMessageEx(void* hwnd, CXBXR_MODULE cxbxr_module, LOG_LEVEL le
 	// If there's no message, then return default value.
 	if (!message) {
 		uType |= MB_ICONERROR | MB_OK;
-		(void)CxbxMessageBox("message is null pointer", ret_default, uType, reinterpret_cast<HWND>(hwnd));
+		(void)CxbxMessageBox("message is null pointer", ret_default, uType, (const HWND)hwnd);
 		return ret_default;
 	}
 
@@ -337,7 +337,7 @@ MsgDlgRet CxbxPopupMessageEx(void* hwnd, CXBXR_MODULE cxbxr_module, LOG_LEVEL le
 
 	EmuLogOutputEx(cxbxr_module, level, "Popup : %s", Buffer);
 
-	return CxbxMessageBox(Buffer, ret_default, uType, reinterpret_cast<HWND>(hwnd));
+	return CxbxMessageBox(Buffer, ret_default, uType, (const HWND)hwnd);
 }
 
 const bool needs_escape(const wint_t _char)

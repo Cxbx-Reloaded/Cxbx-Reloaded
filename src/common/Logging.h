@@ -166,7 +166,7 @@ typedef enum class _MsgDlgRet {
 	RET_NO
 } MsgDlgRet;
 
-MsgDlgRet CxbxPopupMessageEx(void* hwnd, CXBXR_MODULE cxbxr_module, LOG_LEVEL level, MsgDlgIcon icon, MsgDlgButtons buttons, MsgDlgRet ret_default, const char* message, ...);
+MsgDlgRet CxbxPopupMessageEx(const void* hwnd, const CXBXR_MODULE cxbxr_module, const LOG_LEVEL level, const MsgDlgIcon icon, const MsgDlgButtons buttons, const MsgDlgRet ret_default, const char* message, ...);
 
 #define CxbxPopupMessage(hwnd, level, icon, buttons, ret_default, fmt, ...) CxbxPopupMessageEx(hwnd, LOG_PREFIX, level, icon, buttons, ret_default, fmt, ## __VA_ARGS__)
 #define CxbxPopupMsgUnknown(hwnd, level, buttons, ret_default, fmt, ...) CxbxPopupMessage(hwnd, level, MsgDlgIcon::Unknown, buttons, ret_default, fmt, ## __VA_ARGS__)
@@ -182,7 +182,7 @@ MsgDlgRet CxbxPopupMessageEx(void* hwnd, CXBXR_MODULE cxbxr_module, LOG_LEVEL le
 #define CxbxPopupMsgFatalSimple(hwnd, fmt, ...) CxbxPopupMsgFatal(hwnd, MsgDlgButtons::OK, MsgDlgRet::RET_OK, fmt, ## __VA_ARGS__)
 
 // For LOG_TEST_CASE
-extern inline void EmuLogOutputEx(CXBXR_MODULE cxbxr_module, LOG_LEVEL level, const char *szWarningMessage, ...);
+extern inline void EmuLogOutputEx(const CXBXR_MODULE cxbxr_module, const LOG_LEVEL level, const char *szWarningMessage, ...);
 
 #define LOG_TEST_CASE(message) do { \
 	static bool bTestCaseLogged = false; \
