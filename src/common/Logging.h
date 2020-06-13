@@ -186,7 +186,7 @@ MsgDlgRet CxbxPopupMessageEx(void* hwnd, CXBXR_MODULE cxbxr_module, LOG_LEVEL le
     bTestCaseLogged = true; \
     if (!g_CurrentLogPopupTestcase) break;\
 	LOG_CHECK_ENABLED(LOG_LEVEL::INFO) { \
-		CxbxPopupMsgInfoSimple(nullptr, "Please report that %s shows the following message:\nLOG_TEST_CASE: %s\nIn %s (%s line %d)", \
+		(void)CxbxPopupMsgInfoSimple(nullptr, "Please report that %s shows the following message:\nLOG_TEST_CASE: %s\nIn %s (%s line %d)", \
 		CxbxKrnl_Xbe->m_szAsciiTitle, message, __func__, __FILE__, __LINE__); } } while (0)
 // was g_pCertificate->wszTitleName
 

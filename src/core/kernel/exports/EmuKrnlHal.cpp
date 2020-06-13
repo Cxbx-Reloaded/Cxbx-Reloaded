@@ -613,7 +613,7 @@ XBSYSAPI EXPORTNUM(49) xboxkrnl::VOID DECLSPEC_NORETURN NTAPI xboxkrnl::HalRetur
 					retryAttempt++;
 					// Terminate after 5 seconds of failure.
 					if (retryAttempt >= (5 * (1000 / 100))) {
-						CxbxPopupMsgErrorSimple(nullptr, "Could not reboot, new emulation process did not take over.");
+						(void)CxbxPopupMsgErrorSimple(nullptr, "Could not reboot, new emulation process did not take over.");
 						break;
 					}
 				}

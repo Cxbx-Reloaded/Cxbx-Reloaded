@@ -622,7 +622,7 @@ bool CreateSettings()
 {
 	g_Settings = new Settings();
 	if (g_Settings == nullptr) {
-		CxbxPopupMsgErrorSimple(nullptr, szSettings_alloc_error);
+		(void)CxbxPopupMsgErrorSimple(nullptr, szSettings_alloc_error);
 		return false;
 	}
 
@@ -1607,7 +1607,7 @@ bool CxbxLockFilePath()
     }
 
     if (GetLastError() == ERROR_ALREADY_EXISTS) {
-        CxbxPopupMsgErrorSimple(nullptr, "Data path directory is currently in used.\nUse different data path directory or stop emulation from another process.");
+        (void)CxbxPopupMsgErrorSimple(nullptr, "Data path directory is currently in used.\nUse different data path directory or stop emulation from another process.");
         CloseHandle(hMapDataHash);
         return false;
     }

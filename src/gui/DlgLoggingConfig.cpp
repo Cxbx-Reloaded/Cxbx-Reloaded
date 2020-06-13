@@ -147,7 +147,7 @@ INT_PTR CALLBACK DlgLogConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM
 			}
 
 			if (LogPopupTestcase) {
-				SendMessage(GetDlgItem(hWndDlg, IDC_LOG_POPUP_TESTCASE), BM_SETCHECK, BST_CHECKED, 0);
+				(void)SendMessage(GetDlgItem(hWndDlg, IDC_LOG_POPUP_TESTCASE), BM_SETCHECK, BST_CHECKED, 0);
 			}
 
 			counter = 0;
