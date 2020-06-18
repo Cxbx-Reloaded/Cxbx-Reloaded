@@ -91,7 +91,7 @@ jobs:
           7z a -mx1 "$env:artifact_2.zip" ".\$env:artifact_2\*"
       - name: Create Release
         id: create_release
-        uses: actions/create-release@v1
+        uses: actions/create-release@v1.1.1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
