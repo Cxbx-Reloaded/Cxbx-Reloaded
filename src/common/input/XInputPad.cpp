@@ -38,11 +38,6 @@
 #include "core\kernel\support\Emu.h"
 #include "InputManager.h"
 
-// For MinGW
-#ifndef XINPUT_DLL
-#define XINPUT_DLL "xinput1_3.dll"
-#endif
-
 #ifndef XINPUT_GAMEPAD_GUIDE
 #define XINPUT_GAMEPAD_GUIDE 0x0400
 #endif
@@ -106,19 +101,19 @@ namespace XInput
 	{
 		std::unique_lock<std::mutex> lck(Mtx);
 
-		// Because we use _WIN32_WINNT=0x0601, this will load the XInput 9.1.0 library
-		// The 9.1.0 (Win7) doesn't provide support for the guide button, but the legacy 1.3 does. Unfortunately, it requires
-		// that the user has installed the June 2010 release of the DirectX SDK to be available. If they didn't, we will default
-		// to the 9.1.0 instead of failing the initialization
-		if (std::string(XINPUT_DLL).compare(TEXT("xinput9_1_0.dll")) == 0) {
-			hXInput = ::LoadLibrary(TEXT("xinput1_3.dll"));
-		}
+		// will only work on Win8/10; provides guide button info
+		hXInput = ::LoadLibrary(TEXT("xinput1_4.dll"));
 		if (!hXInput) {
-			hXInput = ::LoadLibrary(XINPUT_DLL);
+			// will only work if the user has installed the June 2010 release of the DirectX SDK; provides guide button info
+			hXInput = ::LoadLibrary(TEXT("xinput1_3.dll"));
 			if (!hXInput) {
-				EmuLog(LOG_LEVEL::ERROR2, "Failed to initialize XInput subsystem!");
-				XInputInitStatus = XINPUT_INIT_ERROR;
-				return;
+				// will work on Win7; does NOT provide guide button info
+				hXInput = ::LoadLibrary(TEXT("xinput9_1_0.dll"));
+				if (!hXInput) {
+					EmuLog(LOG_LEVEL::ERROR2, "Failed to initialize XInput subsystem!");
+					XInputInitStatus = XINPUT_INIT_ERROR;
+					return;
+				}
 			}
 		}
 
