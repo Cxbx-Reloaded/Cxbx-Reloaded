@@ -101,14 +101,21 @@ namespace XInput
 	{
 		std::unique_lock<std::mutex> lck(Mtx);
 
+		// Load the most appropriate version of the xinput library depending on which Windows OS version we are running on.
+		// We will try the 9.1.0 version as a last resort since that's the only one that doesn't provide support for the guide button.
+		// For more info, see MS documentation at https://docs.microsoft.com/en-us/windows/win32/xinput/xinput-versions.
+
 		// will only work on Win8/10; provides guide button info
-		hXInput = ::LoadLibrary(TEXT("xinput1_4.dll"));
+		std::string xinput_dll_name = "xinput1_4.dll";
+		hXInput = ::LoadLibrary(TEXT(xinput_dll_name.c_str()));
 		if (!hXInput) {
 			// will only work if the user has installed the June 2010 release of the DirectX SDK; provides guide button info
-			hXInput = ::LoadLibrary(TEXT("xinput1_3.dll"));
+			xinput_dll_name = "xinput1_3.dll";
+			hXInput = ::LoadLibrary(TEXT(xinput_dll_name.c_str()));
 			if (!hXInput) {
 				// will work on Win7; does NOT provide guide button info
-				hXInput = ::LoadLibrary(TEXT("xinput9_1_0.dll"));
+				xinput_dll_name = "xinput9_1_0.dll";
+				hXInput = ::LoadLibrary(TEXT(xinput_dll_name.c_str()));
 				if (!hXInput) {
 					EmuLog(LOG_LEVEL::ERROR2, "Failed to initialize XInput subsystem!");
 					XInputInitStatus = XINPUT_INIT_ERROR;
@@ -116,6 +123,8 @@ namespace XInput
 				}
 			}
 		}
+
+		EmuLog(LOG_LEVEL::INFO, "Loaded %s library", xinput_dll_name.c_str());
 
 		PXInputGetCapabilities =
 			(XInputGetCapabilities_t)::GetProcAddress(hXInput, "XInputGetCapabilities");
@@ -125,9 +134,11 @@ namespace XInput
 		// button info. Try loading it and fall back if needed.
 		PXInputGetState = (XInputGetState_t)::GetProcAddress(hXInput, (LPCSTR)100);
 		if (PXInputGetState) {
+			EmuLog(LOG_LEVEL::INFO, "Guide button information available");
 			haveGuideButton = true;
 		}
 		else {
+			EmuLog(LOG_LEVEL::INFO, "Guide button information not available");
 			PXInputGetState = (XInputGetState_t)::GetProcAddress(hXInput, "XInputGetState");
 		}
 
