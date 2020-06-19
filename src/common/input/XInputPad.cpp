@@ -38,11 +38,6 @@
 #include "core\kernel\support\Emu.h"
 #include "InputManager.h"
 
-// For MinGW
-#ifndef XINPUT_DLL
-#define XINPUT_DLL "xinput1_3.dll"
-#endif
-
 #ifndef XINPUT_GAMEPAD_GUIDE
 #define XINPUT_GAMEPAD_GUIDE 0x0400
 #endif
@@ -106,21 +101,30 @@ namespace XInput
 	{
 		std::unique_lock<std::mutex> lck(Mtx);
 
-		// Because we use _WIN32_WINNT=0x0601, this will load the XInput 9.1.0 library
-		// The 9.1.0 (Win7) doesn't provide support for the guide button, but the legacy 1.3 does. Unfortunately, it requires
-		// that the user has installed the June 2010 release of the DirectX SDK to be available. If they didn't, we will default
-		// to the 9.1.0 instead of failing the initialization
-		if (std::string(XINPUT_DLL).compare(TEXT("xinput9_1_0.dll")) == 0) {
-			hXInput = ::LoadLibrary(TEXT("xinput1_3.dll"));
-		}
+		// Load the most appropriate version of the xinput library depending on which Windows OS version we are running on.
+		// We will try the 9.1.0 version as a last resort since that's the only one that doesn't provide support for the guide button.
+		// For more info, see MS documentation at https://docs.microsoft.com/en-us/windows/win32/xinput/xinput-versions.
+
+		// will only work on Win8/10; provides guide button info
+		std::string xinput_dll_name = "xinput1_4.dll";
+		hXInput = ::LoadLibrary(TEXT(xinput_dll_name.c_str()));
 		if (!hXInput) {
-			hXInput = ::LoadLibrary(XINPUT_DLL);
+			// will only work if the user has installed the June 2010 release of the DirectX SDK; provides guide button info
+			xinput_dll_name = "xinput1_3.dll";
+			hXInput = ::LoadLibrary(TEXT(xinput_dll_name.c_str()));
 			if (!hXInput) {
-				EmuLog(LOG_LEVEL::ERROR2, "Failed to initialize XInput subsystem!");
-				XInputInitStatus = XINPUT_INIT_ERROR;
-				return;
+				// will work on Win7; does NOT provide guide button info
+				xinput_dll_name = "xinput9_1_0.dll";
+				hXInput = ::LoadLibrary(TEXT(xinput_dll_name.c_str()));
+				if (!hXInput) {
+					EmuLog(LOG_LEVEL::ERROR2, "Failed to initialize XInput subsystem!");
+					XInputInitStatus = XINPUT_INIT_ERROR;
+					return;
+				}
 			}
 		}
+
+		EmuLog(LOG_LEVEL::INFO, "Loaded %s library", xinput_dll_name.c_str());
 
 		PXInputGetCapabilities =
 			(XInputGetCapabilities_t)::GetProcAddress(hXInput, "XInputGetCapabilities");
@@ -130,9 +134,11 @@ namespace XInput
 		// button info. Try loading it and fall back if needed.
 		PXInputGetState = (XInputGetState_t)::GetProcAddress(hXInput, (LPCSTR)100);
 		if (PXInputGetState) {
+			EmuLog(LOG_LEVEL::INFO, "Guide button information available");
 			haveGuideButton = true;
 		}
 		else {
+			EmuLog(LOG_LEVEL::INFO, "Guide button information not available");
 			PXInputGetState = (XInputGetState_t)::GetProcAddress(hXInput, "XInputGetState");
 		}
 
