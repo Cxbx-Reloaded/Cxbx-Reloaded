@@ -172,12 +172,12 @@ bool EmuExceptionBreakpointAsk(LPEXCEPTION_POINTERS e)
 		"  Press Ignore to continue emulation.",
 		EIPToString(e->ContextRecord->Eip).c_str());
 
-	int ret = CxbxMessageBox(buffer, MB_ICONSTOP | MB_ABORTRETRYIGNORE, g_hEmuWindow);
-	if (ret == IDABORT)
+	PopupReturn ret = PopupWarningEx(g_hEmuWindow, PopupButtons::AbortRetryIgnore, PopupReturn::Ignore, buffer);
+	if (ret == PopupReturn::Abort)
 	{
 		EmuExceptionExitProcess();
 	}
-	else if (ret == IDIGNORE)
+	else if (ret == PopupReturn::Ignore)
 	{
 		printf("[0x%.4X] MAIN: Ignored Breakpoint Exception\n", GetCurrentThreadId());
 		fflush(stdout);
