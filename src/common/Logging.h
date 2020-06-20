@@ -187,18 +187,15 @@ extern inline void EmuLogOutputEx(const CXBXR_MODULE cxbxr_module, const LOG_LEV
 	static bool bTestCaseLogged = false; \
 	if (bTestCaseLogged) break; \
 	bTestCaseLogged = true; \
-	bool logOnly = true; \
 	if (g_CurrentLogPopupTestCase) { \
 		LOG_CHECK_ENABLED(LOG_LEVEL::INFO) { \
 			PopupInfo(nullptr, "Please report that %s shows the following message:\nLOG_TEST_CASE: %s\nIn %s (%s line %d)", \
 			CxbxKrnl_Xbe->m_szAsciiTitle, message, __func__, __FILE__, __LINE__); \
-			logOnly = false; \
+			continue; \
 		} \
 	} \
-	if (logOnly) { \
-		EmuLogOutputEx(LOG_PREFIX, LOG_LEVEL::INFO, "Please report that %s shows the following message:\nLOG_TEST_CASE: %s\nIn %s (%s line %d)", \
-		CxbxKrnl_Xbe->m_szAsciiTitle, message, __func__, __FILE__, __LINE__); \
-	} \
+	EmuLogOutputEx(LOG_PREFIX, LOG_LEVEL::INFO, "Please report that %s shows the following message:\nLOG_TEST_CASE: %s\nIn %s (%s line %d)", \
+	CxbxKrnl_Xbe->m_szAsciiTitle, message, __func__, __FILE__, __LINE__); \
 } while (0)
 // was g_pCertificate->wszTitleName
 
