@@ -248,12 +248,10 @@ void log_init_popup_msg()
 	g_disablePopupMessages = vSettings.bFullScreen;
 }
 
-PopupReturn CxbxMessageBox(const char* msg, const PopupReturn ret_default, const UINT uType, const HWND hWnd)
+// TODO: Move PopupPlatformHandler into common GUI's window source code or use imgui in the future.
+// PopupPlatformHandler is intended to be use as internal wrapper function.
+static PopupReturn PopupPlatformHandler(const char* msg, const PopupReturn ret_default, const UINT uType, const HWND hWnd)
 {
-	// If user is using exclusive fullscreen, we need to refrain all popups.
-	if (g_disablePopupMessages) {
-		return ret_default;
-	}
 	int ret = MessageBox(hWnd, msg, /*lpCaption=*/TEXT("Cxbx-Reloaded"), uType);
 
     switch (ret) {
@@ -333,7 +331,12 @@ PopupReturn PopupCustomEx(const void* hwnd, const CXBXR_MODULE cxbxr_module, con
 
 	EmuLogOutputEx(cxbxr_module, level, "Popup : %s", Buffer);
 
-	return CxbxMessageBox(Buffer, ret_default, uType, (const HWND)hwnd);
+	// If user is using exclusive fullscreen, we need to refrain all popups.
+	if (g_disablePopupMessages) {
+		return ret_default;
+	}
+
+	return PopupPlatformHandler(Buffer, ret_default, uType, (const HWND)hwnd);
 }
 
 const bool needs_escape(const wint_t _char)
