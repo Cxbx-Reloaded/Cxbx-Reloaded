@@ -275,8 +275,6 @@ static PopupReturn PopupPlatformHandler(const char* msg, const PopupReturn ret_d
 
 PopupReturn PopupCustomEx(const void* hwnd, const CXBXR_MODULE cxbxr_module, const LOG_LEVEL level, const PopupIcon icon, const PopupButtons buttons, const PopupReturn ret_default, const char *message, ...)
 {
-	char Buffer[1024];
-	va_list argp;
     UINT uType = MB_TOPMOST | MB_SETFOREGROUND;
 
 	// Make assert whenever the format string is null pointer which isn't allow in here.
@@ -325,8 +323,11 @@ PopupReturn PopupCustomEx(const void* hwnd, const CXBXR_MODULE cxbxr_module, con
             break;
     }
 
+	va_list argp;
 	va_start(argp, message);
-	vsprintf(Buffer, message, argp);
+	// allocate predicted buffer size then write to buffer afterward.
+	std::vector<char> Buffer(1+std::vsnprintf(nullptr, 0, message, argp));
+	vsnprintf(Buffer.data(), Buffer.size(), message, argp);
 	va_end(argp);
 
 	EmuLogOutputEx(cxbxr_module, level, "Popup : %s", Buffer);
@@ -336,7 +337,7 @@ PopupReturn PopupCustomEx(const void* hwnd, const CXBXR_MODULE cxbxr_module, con
 		return ret_default;
 	}
 
-	return PopupPlatformHandler(Buffer, ret_default, uType, (const HWND)hwnd);
+	return PopupPlatformHandler(Buffer.data(), ret_default, uType, (const HWND)hwnd);
 }
 
 const bool needs_escape(const wint_t _char)
