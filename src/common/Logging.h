@@ -183,6 +183,8 @@ PopupReturn PopupCustomEx(const void* hwnd, const CXBXR_MODULE cxbxr_module, con
 // For LOG_TEST_CASE
 extern inline void EmuLogOutputEx(const CXBXR_MODULE cxbxr_module, const LOG_LEVEL level, const char *szWarningMessage, ...);
 
+// The reason of having EmuLogOutputEx in LOG_TEST_CASE is to allow dump to log directly for any test cases triggered.
+// Which will make developers easier to note which applications has triggered quicker, easier, and doesn't require any individual log enabled to capture them.
 #define LOG_TEST_CASE(message) do { \
 	static bool bTestCaseLogged = false; \
 	if (bTestCaseLogged) break; \
