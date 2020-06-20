@@ -25,6 +25,8 @@
 // *
 // ******************************************************************
 
+#define LOG_PREFIX CXBXR_MODULE::X86
+
 // prevent name collisions
 namespace xboxkrnl
 {
@@ -170,12 +172,12 @@ bool EmuExceptionBreakpointAsk(LPEXCEPTION_POINTERS e)
 		"  Press Ignore to continue emulation.",
 		EIPToString(e->ContextRecord->Eip).c_str());
 
-	int ret = CxbxMessageBox(buffer, MB_ICONSTOP | MB_ABORTRETRYIGNORE, g_hEmuWindow);
-	if (ret == IDABORT)
+	PopupReturn ret = PopupWarningEx(g_hEmuWindow, PopupButtons::AbortRetryIgnore, PopupReturn::Ignore, buffer);
+	if (ret == PopupReturn::Abort)
 	{
 		EmuExceptionExitProcess();
 	}
-	else if (ret == IDIGNORE)
+	else if (ret == PopupReturn::Ignore)
 	{
 		printf("[0x%.4X] MAIN: Ignored Breakpoint Exception\n", GetCurrentThreadId());
 		fflush(stdout);
@@ -201,7 +203,7 @@ void EmuExceptionNonBreakpointUnhandledShow(LPEXCEPTION_POINTERS e)
 		"  Press \"Cancel\" to debug.",
 		e->ExceptionRecord->ExceptionCode, EIPToString(e->ContextRecord->Eip).c_str());
 
-	if (CxbxMessageBox(buffer, MB_ICONSTOP | MB_OKCANCEL, g_hEmuWindow) == IDOK)
+	if (PopupFatalEx(nullptr, PopupButtons::OkCancel, PopupReturn::Ok, buffer) == PopupReturn::Ok)
 	{
 		EmuExceptionExitProcess();
 	}
@@ -366,13 +368,13 @@ int ExitException(LPEXCEPTION_POINTERS e)
 
     fflush(stdout);
 
-    (void)CxbxMessageBox("Warning: Could not safely terminate process!", MB_OK, g_hEmuWindow);
+    PopupFatal(nullptr, "Warning: Could not safely terminate process!");
 
     count++;
 
     if(count > 1)
     {
-        (void)CxbxMessageBox("Warning: Multiple Problems!", MB_OK, g_hEmuWindow);
+        PopupFatal(nullptr, "Warning: Multiple Problems!");
         return EXCEPTION_CONTINUE_SEARCH;
     }
 

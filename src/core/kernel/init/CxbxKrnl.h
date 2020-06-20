@@ -135,28 +135,6 @@ extern "C" {
 #define XBOX_MEM_NOZERO             0x800000 // Replaces MEM_ROTATE on WinXP+
 #define XBOX_MEM_IMAGE              0x1000000 // ?
 
-typedef enum _CxbxMsgDlgIcon {
-    CxbxMsgDlgIcon_Info=0,
-    CxbxMsgDlgIcon_Warn,
-    CxbxMsgDlgIcon_Error,
-    CxbxMsgDlgIcon_Unknown
-} CxbxMsgDlgIcon;
-
-int CxbxMessageBox(const char* msg, UINT uType = MB_OK, HWND hWnd = NULL);
-
-void CxbxShowError(const char* msg, HWND hWnd = NULL);
-
-void CxbxPopupMessageEx(CXBXR_MODULE cxbxr_module, LOG_LEVEL level, CxbxMsgDlgIcon icon, const char *message, ...);
-
-#define CxbxPopupMessage(level, icon, fmt, ...) CxbxPopupMessageEx(LOG_PREFIX, level, icon, fmt, ##__VA_ARGS__)
-
-#define LOG_TEST_CASE(message) do { static bool bTestCaseLogged = false; \
-    if (!bTestCaseLogged) { bTestCaseLogged = true; \
-	LOG_CHECK_ENABLED(LOG_LEVEL::INFO) { \
-		CxbxPopupMessage(LOG_LEVEL::INFO, CxbxMsgDlgIcon_Info, "Please report that %s shows the following message:\nLOG_TEST_CASE: %s\nIn %s (%s line %d)", \
-		CxbxKrnl_Xbe->m_szAsciiTitle, message, __func__, __FILE__, __LINE__); } } } while (0)
-// was g_pCertificate->wszTitleName
-
 extern Xbe::Certificate *g_pCertificate;
 
 /*! validate version string match */

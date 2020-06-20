@@ -25,10 +25,13 @@
 // *
 // ******************************************************************
 
+#define LOG_PREFIX CXBXR_MODULE::GUI
+
 #include "Windows.h"
 #include "resource/ResCxbx.h"
 #include "input\InputWindow.h"
 #include "gui\DlgInputConfig.h"
+#include "common/Logging.h"
 
 
 static INT_PTR CALLBACK DlgRumbleConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -108,7 +111,7 @@ INT_PTR CALLBACK DlgXidControllerConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wPar
 
 		case IDC_XID_CLEAR: {
 			if (HIWORD(wParam) == BN_CLICKED) {
-				if (MessageBox(hWndDlg, "Remove all button bindings. Ok?", "Cxbx-Reloaded", MB_OKCANCEL | MB_ICONINFORMATION | MB_APPLMODAL) == IDOK) {
+				if (PopupQuestionEx(hWndDlg, LOG_LEVEL::WARNING, PopupButtons::YesNo, PopupReturn::No, "Are you sure you want to remove all button bindings?") == PopupReturn::Yes) {
 					g_InputWindow->ClearBindings();
 				}
 			}

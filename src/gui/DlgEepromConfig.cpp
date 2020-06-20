@@ -25,12 +25,15 @@
 // *
 // ******************************************************************
 
+#define LOG_PREFIX CXBXR_MODULE::GUI
+
 #include <fstream>
 #include <cstring> // For memcpy
 #include "EmuEEPROM.h" // For EEPROMInfo, EEPROMInfos
 #include "core\kernel\init\CxbxKrnl.h"
 #include "DlgEepromConfig.h"
 #include "resource/ResCxbx.h"
+#include "common/Logging.h"
 #include <Commctrl.h>
 
 
@@ -208,7 +211,7 @@ void ShowEepromConfig(HWND hwnd)
 			EepromFile.close();
 		}
 		else {
-			MessageBox(hwnd, "Couldn't open eeprom file!", "Cxbx-Reloaded", MB_ICONEXCLAMATION | MB_OK);
+			PopupWarning(hwnd, "Couldn't open eeprom file!");
 			return;
 		}
 	}
@@ -456,7 +459,7 @@ INT_PTR CALLBACK DlgEepromConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPA
 							EepromFile.close();
 						}
 						else {
-							MessageBox(hWndDlg, "Couldn't write eeprom file to disk!", "Cxbx-Reloaded", MB_ICONEXCLAMATION | MB_OK);
+							PopupWarning(hWndDlg, "Couldn't write eeprom file to disk!");
 						}
 					}
 					PostMessage(hWndDlg, WM_COMMAND, IDC_EE_CANCEL, 0);

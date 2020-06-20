@@ -25,6 +25,8 @@
 // *
 // ******************************************************************
 
+#define LOG_PREFIX CXBXR_MODULE::GUI
+
 // Without this, you'll get a ton of errors from the std library for some unknown reason...
 #include "Logging.h"
 
@@ -159,14 +161,14 @@ INT_PTR CALLBACK DlgVideoConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPAR
             /*! if changes have been made, check if the user wants to save them */
             if(g_bHasChanges)
             {
-                int ret = MessageBox(hWndDlg, "Do you wish to apply your changes?", "Cxbx-Reloaded", MB_ICONQUESTION | MB_YESNOCANCEL);
+                PopupReturn ret = PopupQuestion(hWndDlg, "Do you wish to apply your changes?");
 
                 switch(ret)
                 {
-                    case IDYES:
+                    case PopupReturn::Yes:
                         PostMessage(hWndDlg, WM_COMMAND, IDC_VC_ACCEPT, 0);
                         break;
-                    case IDNO:
+                    case PopupReturn::No:
                         PostMessage(hWndDlg, WM_COMMAND, IDC_VC_CANCEL, 0);
                         break;
                 }

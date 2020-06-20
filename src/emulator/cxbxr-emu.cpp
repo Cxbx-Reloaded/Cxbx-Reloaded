@@ -27,6 +27,8 @@
 
 // cxbxr-emu.cpp : Defines the exported functions for the DLL application.
 
+#define LOG_PREFIX CXBXR_MODULE::CXBXR
+
 #include "Cxbx.h" // For FUNC_EXPORTS
 #include "VerifyAddressRanges.h" // For VerifyBaseAddr()
 //#include "CxbxKrnl/Emu.h"
@@ -128,25 +130,25 @@ DWORD WINAPI Emulate(unsigned int reserved_systems, blocks_reserved_t blocks_res
 
 	/*! Verify our host executable, cxbxr-ldr.exe, is loaded to base address 0x00010000 */
 	if (!VerifyBaseAddr()) {
-		CxbxShowError("cxbx-ldr.exe was not loaded to base address 0x00010000 (which is a requirement for Xbox emulation)");
+		PopupError(nullptr, "cxbx-ldr.exe was not loaded to base address 0x00010000 (which is a requirement for Xbox emulation)");
 		return EXIT_FAILURE;
 	}
 
 	LPSTR CommandLine = GetCommandLine();
 	if (!CommandLine) {
-		CxbxShowError("Couldn't retrieve command line!");
+		PopupError(nullptr, "Couldn't retrieve command line!");
 		return EXIT_FAILURE;
 	}
 
 	int argc = 0;
 	PCHAR *argv = CommandLineToArgvA(CommandLine, &argc);
 	if (!argv) {
-		CxbxShowError("Couldn't parse command line!");
+		PopupError(nullptr, "Couldn't parse command line!");
 		return EXIT_FAILURE;
 	}
 
 	if (!cli_config::GenConfig(argv, argc)) {
-		CxbxShowError("Couldn't convert parsed command line!");
+		PopupError(nullptr, "Couldn't convert parsed command line!");
 		LocalFree(argv);
 		return EXIT_FAILURE;
 	}
@@ -154,24 +156,24 @@ DWORD WINAPI Emulate(unsigned int reserved_systems, blocks_reserved_t blocks_res
 
 	/*! verify load argument is included */
 	if (!cli_config::hasKey("load")) {
-		CxbxShowError("No /load argument in command line!");
+		PopupError(nullptr, "No /load argument in command line!");
 		return EXIT_FAILURE;
 	}
 
 	/*! initialize shared memory */
 	if (!EmuShared::Init(cli_config::GetSessionID())) {
-		CxbxShowError("Could not map shared memory!");
+		PopupError(nullptr, "Could not map shared memory!");
 		return EXIT_FAILURE;
 	}
 
 	if (!HandleFirstLaunch()) {
-		CxbxShowError("First launch failed!");
+		PopupError(nullptr, "First launch failed!");
 		EmuShared::Cleanup();
 		return EXIT_FAILURE;
 	}
 
 	if (!reserved_systems) {
-		CxbxShowError("Unable to preserve any system's memory ranges!");
+		PopupError(nullptr, "Unable to preserve any system's memory ranges!");
 		EmuShared::Cleanup();
 		return EXIT_FAILURE;
 	}

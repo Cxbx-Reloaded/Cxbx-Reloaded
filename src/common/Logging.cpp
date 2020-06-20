@@ -102,6 +102,8 @@ const char* g_EnumModules2String[to_underlying(CXBXR_MODULE::MAX)] = {
 	"XE      ",
 };
 std::atomic_int g_CurrentLogLevel = to_underlying(LOG_LEVEL::INFO);
+std::atomic_bool g_CurrentLogPopupTestCase = true;
+static bool g_disablePopupMessages = false;
 
 const char log_debug[] = "DEBUG: ";
 const char log_info[]  = "INFO : ";
@@ -111,7 +113,7 @@ const char log_fatal[] = "FATAL: ";
 const char log_unkwn[] = "???? : ";
 
 // Do not use EmuLogOutput function outside of this file.
-void EmuLogOutput(CXBXR_MODULE cxbxr_module, LOG_LEVEL level, const char *szWarningMessage, va_list argp)
+void EmuLogOutput(CXBXR_MODULE cxbxr_module, LOG_LEVEL level, const char *szWarningMessage, const va_list argp)
 {
 	LOG_THREAD_INIT;
 
@@ -145,6 +147,13 @@ void EmuLogOutput(CXBXR_MODULE cxbxr_module, LOG_LEVEL level, const char *szWarn
 	fprintf(stdout, "\n");
 
 	fflush(stdout);
+}
+inline void EmuLogOutputEx(const CXBXR_MODULE cxbxr_module, const LOG_LEVEL level, const char *szWarningMessage, ...)
+{
+	va_list argp;
+	va_start(argp, szWarningMessage);
+	EmuLogOutput(cxbxr_module, level, szWarningMessage, argp);
+	va_end(argp);
 }
 
 // print out a custom message to the console or kernel debug log file
@@ -186,19 +195,21 @@ void NTAPI EmuLogInit(LOG_LEVEL level, const char *szWarningMessage, ...)
 // Set up the logging variables for the GUI process
 inline void log_get_settings()
 {
-	log_set_config(g_Settings->m_core.LogLevel, g_Settings->m_core.LoggedModules);
+	log_set_config(g_Settings->m_core.LogLevel, g_Settings->m_core.LoggedModules, g_Settings->m_core.bLogPopupTestCase);
 }
 
 inline void log_sync_config()
 {
 	int LogLevel;
 	unsigned int LoggedModules[NUM_INTEGERS_LOG];
+	bool LogPopupTestCase;
 	g_EmuShared->GetLogLv(&LogLevel);
 	g_EmuShared->GetLogModules(LoggedModules);
-	log_set_config(LogLevel, LoggedModules);
+	g_EmuShared->GetLogPopupTestCase(&LogPopupTestCase);
+	log_set_config(LogLevel, LoggedModules, LogPopupTestCase);
 }
 
-void log_set_config(int LogLevel, unsigned int* LoggedModules)
+void log_set_config(int LogLevel, unsigned int* LoggedModules, bool LogPopupTestCase)
 {
 	g_CurrentLogLevel = LogLevel;
 	for (unsigned int index = to_underlying(CXBXR_MODULE::CXBXR); index < to_underlying(CXBXR_MODULE::MAX); index++) {
@@ -209,6 +220,7 @@ void log_set_config(int LogLevel, unsigned int* LoggedModules)
 			g_EnabledModules[index] = false;
 		}
 	}
+	g_CurrentLogPopupTestCase = LogPopupTestCase;
 }
 
 // Generate active log filter output.
@@ -226,6 +238,106 @@ void log_generate_active_filter_output(const CXBXR_MODULE cxbxr_module)
 		}
 	}
 	std::cout << std::flush;
+}
+
+// Use kernel managed environment
+void log_init_popup_msg()
+{
+	Settings::s_video vSettings;
+	g_EmuShared->GetVideoSettings(&vSettings);
+	g_disablePopupMessages = vSettings.bFullScreen;
+}
+
+// TODO: Move PopupPlatformHandler into common GUI's window source code or use imgui in the future.
+// PopupPlatformHandler is intended to be use as internal wrapper function.
+static PopupReturn PopupPlatformHandler(const char* msg, const PopupReturn ret_default, const UINT uType, const HWND hWnd)
+{
+	int ret = MessageBox(hWnd, msg, /*lpCaption=*/TEXT("Cxbx-Reloaded"), uType);
+
+    switch (ret) {
+        default:
+        case IDCANCEL:
+            return PopupReturn::Cancel;
+        case IDOK:
+            return PopupReturn::Ok;
+        case IDABORT:
+            return PopupReturn::Abort;
+        case IDRETRY:
+            return PopupReturn::Retry;
+        case IDIGNORE:
+            return PopupReturn::Ignore;
+        case IDYES:
+            return PopupReturn::Yes;
+        case IDNO:
+            return PopupReturn::No;
+    }
+}
+
+PopupReturn PopupCustomEx(const void* hwnd, const CXBXR_MODULE cxbxr_module, const LOG_LEVEL level, const PopupIcon icon, const PopupButtons buttons, const PopupReturn ret_default, const char *message, ...)
+{
+    UINT uType = MB_TOPMOST | MB_SETFOREGROUND;
+
+	// Make assert whenever the format string is null pointer which isn't allow in here.
+	assert(!message);
+
+    switch (icon) {
+        case PopupIcon::Warning: {
+            uType |= MB_ICONWARNING;
+            break;
+        }
+        case PopupIcon::Error: {
+            uType |= MB_ICONERROR; // Note : MB_ICONERROR == MB_ICONSTOP == MB_ICONHAND
+            break;
+        }
+        case PopupIcon::Info: {
+            uType |= MB_ICONINFORMATION;
+            break;
+        }
+        case PopupIcon::Question:
+        case PopupIcon::Unknown:
+        default: {
+            uType |= MB_ICONQUESTION;
+            break;
+        }
+    }
+
+    switch (buttons) {
+        default:
+        case PopupButtons::Ok:
+            uType |= MB_OK;
+            break;
+        case PopupButtons::OkCancel:
+            uType |= MB_OKCANCEL;
+            break;
+        case PopupButtons::AbortRetryIgnore:
+            uType |= MB_RETRYCANCEL;
+            break;
+        case PopupButtons::YesNoCancel:
+            uType |= MB_YESNOCANCEL;
+            break;
+        case PopupButtons::YesNo:
+            uType |= MB_YESNO;
+            break;
+        case PopupButtons::RetryCancel:
+            uType |= MB_RETRYCANCEL;
+            break;
+    }
+
+	va_list argp;
+	va_start(argp, message);
+	// allocate predicted buffer size then write to buffer afterward.
+	std::vector<char> Buffer(1+std::vsnprintf(nullptr, 0, message, argp));
+	vsnprintf(Buffer.data(), Buffer.size(), message, argp);
+	va_end(argp);
+
+	EmuLogOutputEx(cxbxr_module, level, "Popup : %s", Buffer);
+
+	// If user is using exclusive fullscreen, we need to refrain all popups.
+	if (g_disablePopupMessages) {
+		return ret_default;
+	}
+
+	return PopupPlatformHandler(Buffer.data(), ret_default, uType, (const HWND)hwnd);
 }
 
 const bool needs_escape(const wint_t _char)

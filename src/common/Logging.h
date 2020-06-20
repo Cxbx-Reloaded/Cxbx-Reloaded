@@ -116,6 +116,7 @@ typedef enum class _CXBXR_MODULE: unsigned int {
 extern std::atomic_bool g_EnabledModules[to_underlying(CXBXR_MODULE::MAX)];
 extern const char* g_EnumModules2String[to_underlying(CXBXR_MODULE::MAX)];
 extern std::atomic_int g_CurrentLogLevel;
+extern std::atomic_bool g_CurrentLogPopupTestCase;
 
 // print out a log message to the console or kernel debug log file if level is high enough
 void NTAPI EmuLogEx(CXBXR_MODULE cxbxr_module, LOG_LEVEL level, const char *szWarningMessage, ...);
@@ -127,9 +128,78 @@ extern inline void log_get_settings();
 
 extern inline void log_sync_config();
 
-void log_set_config(int LogLevel, unsigned int* LoggedModules);
+void log_set_config(int LogLevel, unsigned int* LoggedModules, bool LogPopupTestCase);
 
 void log_generate_active_filter_output(const CXBXR_MODULE cxbxr_module);
+
+// Use emulation environment to manage popup messages
+// If log_init_popup_msg is not called at earliest point of emulation.
+// Then users will have a chance of popup message appear during start of emulation in full screen.
+void log_init_popup_msg();
+
+typedef enum class _PopupIcon {
+	Unknown = 0,
+	Question,
+	Info,
+	Warning,
+	Error
+} PopupIcon;
+
+typedef enum class _PopupButtons {
+	Unknown = 0,
+	Ok,
+	OkCancel,
+	AbortRetryIgnore,
+	YesNoCancel,
+	YesNo,
+	RetryCancel
+} PopupButtons;
+
+typedef enum class _PopupReturn {
+	Unknown = 0,
+	Ok,
+	Cancel,
+	Abort,
+	Retry,
+	Ignore,
+	Yes,
+	No
+} PopupReturn;
+
+PopupReturn PopupCustomEx(const void* hwnd, const CXBXR_MODULE cxbxr_module, const LOG_LEVEL level, const PopupIcon icon, const PopupButtons buttons, const PopupReturn ret_default, const char* message, ...);
+
+#define PopupCustom(hwnd, level, icon, buttons, ret_default, fmt, ...) PopupCustomEx(hwnd, LOG_PREFIX, level, icon, buttons, ret_default, fmt, ## __VA_ARGS__)
+#define PopupQuestionEx(hwnd, level, buttons, ret_default, fmt, ...) PopupCustom(hwnd, level, PopupIcon::Question, buttons, ret_default, fmt, ## __VA_ARGS__)
+#define PopupQuestion(hwnd, fmt, ...) PopupQuestionEx(hwnd, LOG_LEVEL::INFO, PopupButtons::YesNoCancel, PopupReturn::Cancel, fmt, ## __VA_ARGS__)
+#define PopupInfoEx(hwnd, buttons, ret_default, fmt, ...) PopupCustom(hwnd, LOG_LEVEL::INFO, PopupIcon::Info, buttons, ret_default, fmt, ## __VA_ARGS__)
+#define PopupInfo(hwnd, fmt, ...) (void)PopupInfoEx(hwnd, PopupButtons::Ok, PopupReturn::Ok, fmt, ## __VA_ARGS__)
+#define PopupWarningEx(hwnd, buttons, ret_default, fmt, ...) PopupCustom(hwnd, LOG_LEVEL::WARNING, PopupIcon::Warning, buttons, ret_default, fmt, ## __VA_ARGS__)
+#define PopupWarning(hwnd, fmt, ...) (void)PopupWarningEx(hwnd, PopupButtons::Ok, PopupReturn::Ok, fmt, ## __VA_ARGS__)
+#define PopupErrorEx(hwnd, buttons, ret_default, fmt, ...) PopupCustom(hwnd, LOG_LEVEL::ERROR2, PopupIcon::Error, buttons, ret_default, fmt, ## __VA_ARGS__)
+#define PopupError(hwnd, fmt, ...) (void)PopupErrorEx(hwnd, PopupButtons::Ok, PopupReturn::Ok, fmt, ## __VA_ARGS__)
+#define PopupFatalEx(hwnd, buttons, ret_default, fmt, ...) PopupCustom(hwnd, LOG_LEVEL::FATAL, PopupIcon::Error, buttons, ret_default, fmt, ## __VA_ARGS__)
+#define PopupFatal(hwnd, fmt, ...) (void)PopupFatalEx(hwnd, PopupButtons::Ok, PopupReturn::Ok, fmt, ## __VA_ARGS__)
+
+// For LOG_TEST_CASE
+extern inline void EmuLogOutputEx(const CXBXR_MODULE cxbxr_module, const LOG_LEVEL level, const char *szWarningMessage, ...);
+
+// The reason of having EmuLogOutputEx in LOG_TEST_CASE is to allow dump to log directly for any test cases triggered.
+// Which will make developers easier to note which applications has triggered quicker, easier, and doesn't require any individual log enabled to capture them.
+#define LOG_TEST_CASE(message) do { \
+	static bool bTestCaseLogged = false; \
+	if (bTestCaseLogged) break; \
+	bTestCaseLogged = true; \
+	if (g_CurrentLogPopupTestCase) { \
+		LOG_CHECK_ENABLED(LOG_LEVEL::INFO) { \
+			PopupInfo(nullptr, "Please report that %s shows the following message:\nLOG_TEST_CASE: %s\nIn %s (%s line %d)", \
+			CxbxKrnl_Xbe->m_szAsciiTitle, message, __func__, __FILE__, __LINE__); \
+			continue; \
+		} \
+	} \
+	EmuLogOutputEx(LOG_PREFIX, LOG_LEVEL::INFO, "Please report that %s shows the following message:\nLOG_TEST_CASE: %s\nIn %s (%s line %d)", \
+	CxbxKrnl_Xbe->m_szAsciiTitle, message, __func__, __FILE__, __LINE__); \
+} while (0)
+// was g_pCertificate->wszTitleName
 
 //
 // __FILENAME__

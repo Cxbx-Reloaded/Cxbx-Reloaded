@@ -102,7 +102,7 @@ public:
 		int LogLevel = 1;
 		bool bUseLoaderExec;
 		bool allowAdminPrivilege;
-		bool Reserved3 = 0;
+		bool bLogPopupTestCase;
 		bool Reserved4 = 0;
 		int  Reserved99[10] = { 0 };
 	} m_core;

@@ -276,53 +276,6 @@ std::string CxbxGetLastErrorString(char * lpszFunction)
 
 #pragma optimize("", off)
 
-int CxbxMessageBox(const char* msg, UINT uType, HWND hWnd)
-{
-	return MessageBox(hWnd, msg, /*lpCaption=*/TEXT("Cxbx-Reloaded"), uType);
-}
-
-void CxbxShowError(const char* msg, HWND hWnd)
-{
-	const UINT uType = MB_OK | MB_TOPMOST | MB_SETFOREGROUND | MB_ICONERROR; // Note : MB_ICONERROR == MB_ICONSTOP == MB_ICONHAND
-
-	(void)CxbxMessageBox(msg, uType, hWnd);
-}
-
-void CxbxPopupMessageEx(CXBXR_MODULE cxbxr_module, LOG_LEVEL level, CxbxMsgDlgIcon icon, const char *message, ...)
-{
-	char Buffer[1024];
-	va_list argp;
-    UINT uType = MB_OK | MB_TOPMOST | MB_SETFOREGROUND;
-
-    switch (icon) {
-        case CxbxMsgDlgIcon_Warn: {
-            uType |= MB_ICONWARNING;
-            break;
-        }
-        case CxbxMsgDlgIcon_Error: {
-            uType |= MB_ICONERROR;
-            break;
-        }
-        case CxbxMsgDlgIcon_Info: {
-            uType |= MB_ICONINFORMATION;
-            break;
-        }
-        case CxbxMsgDlgIcon_Unknown:
-        default: {
-            uType |= MB_ICONQUESTION;
-            break;
-        }
-    }
-
-	va_start(argp, message);
-	vsprintf(Buffer, message, argp);
-	va_end(argp);
-
-	EmuLogEx(cxbxr_module, level, "Popup : %s", Buffer);
-
-	(void)CxbxMessageBox(Buffer, uType);
-}
-
 void PrintCurrentConfigurationLog()
 {
 	if (g_bIsWine) {
@@ -669,7 +622,7 @@ bool CreateSettings()
 {
 	g_Settings = new Settings();
 	if (g_Settings == nullptr) {
-		CxbxShowError(szSettings_alloc_error);
+		PopupError(nullptr, szSettings_alloc_error);
 		return false;
 	}
 
@@ -694,10 +647,11 @@ bool HandleFirstLaunch()
 
 		bool bElevated = CxbxIsElevated();
 		if (bElevated && !g_Settings->m_core.allowAdminPrivilege) {
-			int ret = CxbxMessageBox("Cxbx-Reloaded has detected that it has been launched with Administrator rights.\n"
+			PopupReturn ret = PopupWarningEx(nullptr, PopupButtons::YesNo, PopupReturn::No,
+				"Cxbx-Reloaded has detected that it has been launched with Administrator rights.\n"
 				"\nThis is dangerous, as a maliciously modified Xbox titles could take control of your system.\n"
-				"\nAre you sure you want to continue?", MB_YESNO | MB_ICONWARNING);
-			if (ret != IDYES) {
+				"\nAre you sure you want to continue?");
+			if (ret != PopupReturn::Yes) {
 				return false;
 			}
 		}
@@ -732,6 +686,9 @@ void CxbxKrnlEmulate(unsigned int reserved_systems, blocks_reserved_t blocks_res
 		// Except if enforce check, then we need to re-set ready status every time for non-GUI.
 		//g_EmuShared->SetIsReady(true);
 	}
+
+	/* Initialize popup message management from kernel side. */
+	log_init_popup_msg();
 
 	/* Initialize Cxbx File Paths */
 	CxbxInitFilePaths();
@@ -793,9 +750,9 @@ void CxbxKrnlEmulate(unsigned int reserved_systems, blocks_reserved_t blocks_res
 			}
 			if (!isReady) {
 				EmuLog(LOG_LEVEL::WARNING, "GUI process is not ready!");
-				int mbRet = CxbxMessageBox("GUI process is not ready, do you wish to retry?",
-										MB_ICONWARNING | MB_RETRYCANCEL | MB_TOPMOST | MB_SETFOREGROUND);
-				if (mbRet == IDRETRY) {
+				PopupReturn mbRet = PopupWarningEx(nullptr, PopupButtons::RetryCancel, PopupReturn::Cancel,
+					"GUI process is not ready, do you wish to retry?");
+				if (mbRet == PopupReturn::Retry) {
 					continue;
 				}
 				CxbxKrnlShutDown();
@@ -924,7 +881,7 @@ void CxbxKrnlEmulate(unsigned int reserved_systems, blocks_reserved_t blocks_res
 		// verify base of code of our executable is 0x00001000
 		if (ExeNtHeader->OptionalHeader.BaseOfCode != CXBX_BASE_OF_CODE)
 		{
-			CxbxPopupMessage(LOG_LEVEL::FATAL, CxbxMsgDlgIcon_Error, "Cxbx-Reloaded executuable requires it's base of code to be 0x00001000");
+			PopupFatal(nullptr, "Cxbx-Reloaded executuable requires it's base of code to be 0x00001000");
 			return; // TODO : Halt(0); 
 		}
 
@@ -932,7 +889,7 @@ void CxbxKrnlEmulate(unsigned int reserved_systems, blocks_reserved_t blocks_res
 		// verify virtual_memory_placeholder is located at 0x00011000
 		if ((UINT_PTR)(&(virtual_memory_placeholder[0])) != (XBE_IMAGE_BASE + CXBX_BASE_OF_CODE))
 		{
-			CxbxPopupMessage(LOG_LEVEL::FATAL, CxbxMsgDlgIcon_Error, "virtual_memory_placeholder is not loaded to base address 0x00011000 (which is a requirement for Xbox emulation)");
+			PopupFatal(nullptr, "virtual_memory_placeholder is not loaded to base address 0x00011000 (which is a requirement for Xbox emulation)");
 			return; // TODO : Halt(0); 
 		}
 #endif
@@ -991,7 +948,7 @@ void CxbxKrnlEmulate(unsigned int reserved_systems, blocks_reserved_t blocks_res
 	EEPROM = CxbxRestoreEEPROM(szFilePath_EEPROM_bin);
 	if (EEPROM == nullptr)
 	{
-		CxbxPopupMessage(LOG_LEVEL::FATAL, CxbxMsgDlgIcon_Error, "Couldn't init EEPROM!");
+		PopupFatal(nullptr, "Couldn't init EEPROM!");
 		return; // TODO : Halt(0); 
 	}
 
@@ -1306,7 +1263,7 @@ __declspec(noreturn) void CxbxKrnlInit
 	// Initialize time-related variables for the kernel and the timers
 	CxbxInitPerformanceCounters();
 #ifdef _DEBUG
-//	CxbxPopupMessage(LOG_LEVEL::INFO, "Attach a Debugger");
+//	PopupCustom(LOG_LEVEL::INFO, "Attach a Debugger");
 //  Debug child processes using https://marketplace.visualstudio.com/items?itemName=GreggMiskelly.MicrosoftChildProcessDebuggingPowerTool
 #endif
 
@@ -1650,7 +1607,7 @@ bool CxbxLockFilePath()
     }
 
     if (GetLastError() == ERROR_ALREADY_EXISTS) {
-        CxbxShowError("Data path directory is currently in used.\nUse different data path directory or stop emulation from another process.");
+        PopupError(nullptr, "Data path directory is currently in used.\nUse different data path directory or stop emulation from another process.");
         CloseHandle(hMapDataHash);
         return false;
     }
@@ -1694,7 +1651,7 @@ __declspec(noreturn) void CxbxKrnlCleanupEx(CXBXR_MODULE cxbxr_module, const cha
         vsprintf(szBuffer2, szErrorMessage, argp);
         va_end(argp);
 
-		CxbxPopupMessageEx(cxbxr_module, LOG_LEVEL::FATAL, CxbxMsgDlgIcon_Error, "Received Fatal Message:\n\n* %s\n", szBuffer2); // Will also EmuLogEx
+		(void)PopupCustomEx(nullptr, cxbxr_module, LOG_LEVEL::FATAL, PopupIcon::Error, PopupButtons::Ok, PopupReturn::Ok, "Received Fatal Message:\n\n* %s\n", szBuffer2); // Will also EmuLogEx
     }
 
 	EmuLogInit(LOG_LEVEL::INFO, "MAIN: Terminating Process");
@@ -1897,12 +1854,12 @@ void CxbxPrintUEMInfo(ULONG ErrorCode)
 	auto it = UEMErrorTable.find(ErrorCode);
 	if (it != UEMErrorTable.end())
 	{
-		std::string ErrorMessage = "Fatal error. " + it->second + ". This error screen will persist indefinitely. Stop the emulation to close it";
-		CxbxPopupMessage(LOG_LEVEL::FATAL, CxbxMsgDlgIcon_Error, ErrorMessage.c_str());
+		std::string ErrorMessage = "Fatal error. " + it->second + ". This error screen will persist indefinitely. Stop the emulation to close it.";
+		PopupFatal(nullptr, ErrorMessage.c_str());
 	}
 	else
 	{
-		CxbxPopupMessage(LOG_LEVEL::FATAL, CxbxMsgDlgIcon_Error, "Unknown fatal error. This error screen will persist indefinitely. Stop the emulation to close it");
+		PopupFatal(nullptr, "Unknown fatal error. This error screen will persist indefinitely. Stop the emulation to close it.");
 	}
 }
 

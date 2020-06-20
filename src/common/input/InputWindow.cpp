@@ -25,10 +25,13 @@
 // *
 // ******************************************************************
 
+#define LOG_PREFIX CXBXR_MODULE::GUI
+
 #include "InputWindow.h"
 #include "gui/resource/ResCxbx.h"
 #include "common\IPCHybrid.hpp"
 #include "EmuShared.h"
+#include "Logging.h"
 #include <future>
 
 #define INPUT_TIMEOUT  5000
@@ -108,10 +111,10 @@ InputWindow::~InputWindow()
 bool InputWindow::IsProfileSaved()
 {
 	if (m_bHasChanges) {
-		int ret = MessageBox(m_hwnd_window, "Current configuration is not saved. Save before closing?", "Cxbx-Reloaded", MB_YESNOCANCEL | MB_ICONWARNING | MB_APPLMODAL);
+		PopupReturn ret = PopupQuestion(m_hwnd_window, "Current configuration is not saved. Save before closing?");
 		switch (ret)
 		{
-		case IDYES: {
+		case PopupReturn::Yes: {
 			char name[50];
 			SendMessage(m_hwnd_profile_list, WM_GETTEXT, sizeof(name), reinterpret_cast<LPARAM>(name));
 			if (SaveProfile(std::string(name))) {
@@ -120,11 +123,11 @@ bool InputWindow::IsProfileSaved()
 			return false;
 		}
 
-		case IDNO: {
+		case PopupReturn::No: {
 			return true;
 		}
 
-		case IDCANCEL:
+		case PopupReturn::Cancel:
 		default: {
 			return false;
 		}
@@ -342,11 +345,11 @@ void InputWindow::LoadProfile(const std::string& name)
 bool InputWindow::SaveProfile(const std::string& name)
 {
 	if (name == std::string()) {
-		MessageBox(m_hwnd_window, "Cannot save. Profile name must not be empty", "Cxbx-Reloaded", MB_OK | MB_ICONSTOP | MB_APPLMODAL);
+		PopupError(m_hwnd_window, "Cannot save. Profile name must not be empty.");
 		return false;
 	}
 	if (m_host_dev == std::string()) {
-		MessageBox(m_hwnd_window, "Cannot save. No input devices detected", "Cxbx-Reloaded", MB_OK | MB_ICONSTOP | MB_APPLMODAL);
+		PopupError(m_hwnd_window, "Cannot save. No input devices detected", "Cxbx-Reloaded");
 		return false;
 	}
 	OverwriteProfile(name);
