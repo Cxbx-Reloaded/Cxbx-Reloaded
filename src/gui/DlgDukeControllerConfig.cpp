@@ -111,7 +111,7 @@ INT_PTR CALLBACK DlgXidControllerConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wPar
 
 		case IDC_XID_CLEAR: {
 			if (HIWORD(wParam) == BN_CLICKED) {
-				if (CxbxPopupMsgQuestion(hWndDlg, LOG_LEVEL::WARNING, MsgDlgButtons::YES_NO, MsgDlgRet::RET_NO, "Are you sure you want to remove all button bindings?") == MsgDlgRet::RET_YES) {
+				if (PopupQuestionEx(hWndDlg, LOG_LEVEL::WARNING, PopupButtons::YesNo, PopupReturn::No, "Are you sure you want to remove all button bindings?") == PopupReturn::Yes) {
 					g_InputWindow->ClearBindings();
 				}
 			}

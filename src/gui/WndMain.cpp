@@ -647,8 +647,8 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 					// ask permission to overwrite if file already exists
 					if (_access(ofn.lpstrFile, 0) != -1)
 					{
-						if (CxbxPopupMsgQuestion(m_hwnd, LOG_LEVEL::WARNING, MsgDlgButtons::YES_NO, MsgDlgRet::RET_NO,
-							"Overwrite existing file?") != MsgDlgRet::RET_YES)
+						if (PopupQuestionEx(m_hwnd, LOG_LEVEL::WARNING, PopupButtons::YesNo, PopupReturn::No,
+							"Overwrite existing file?") != PopupReturn::Yes)
 							return TRUE;
 					}
 
@@ -719,14 +719,14 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 						}
 
 						if (m_Xbe->HasError())
-							(void)CxbxPopupMsgErrorSimple(m_hwnd, m_Xbe->GetError().c_str());
+							PopupError(m_hwnd, m_Xbe->GetError().c_str());
 						else
 						{
 							char buffer[255];
 
 							sprintf(buffer, "%s's logo bitmap was successfully exported.", m_Xbe->m_szAsciiTitle);
 
-							(void)CxbxPopupMsgInfoSimple(m_hwnd, buffer);
+							PopupInfo(m_hwnd, buffer);
 						}
 					}
 				}
@@ -803,7 +803,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
 							if (bmp_err != 0)
 							{
-								(void)CxbxPopupMsgErrorSimple(m_hwnd, bmp_err);
+								PopupError(m_hwnd, bmp_err);
 								break;
 							}
 						}
@@ -812,7 +812,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
 						if (m_Xbe->HasError())
 						{
-							(void)CxbxPopupMsgErrorSimple(m_hwnd, m_Xbe->GetError().c_str());
+							PopupError(m_hwnd, m_Xbe->GetError().c_str());
 
 							if (m_Xbe->HasFatalError())
 							{
@@ -834,7 +834,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
 							sprintf(buffer, "%s's logo bitmap was successfully updated.", m_Xbe->m_szAsciiTitle);
 
-							(void)CxbxPopupMsgInfoSimple(m_hwnd, buffer);
+							PopupInfo(m_hwnd, buffer);
 						}
 					}
 				}
@@ -914,7 +914,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 					// ask permission to overwrite if file exists
 					if (_access(ofn.lpstrFile, 0) != -1)
 					{
-						if (CxbxPopupMsgQuestionSimple(m_hwnd, "Overwrite existing file?") != MsgDlgRet::RET_YES)
+						if (PopupQuestion(m_hwnd, "Overwrite existing file?") != PopupReturn::Yes)
 							return TRUE;
 					}
 
@@ -922,7 +922,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 					{
 						std::string Xbe_info = DumpInformation(m_Xbe);
 						if (m_Xbe->HasError()) {
-							(void)CxbxPopupMsgErrorSimple(m_hwnd, m_Xbe->GetError().c_str());
+							PopupError(m_hwnd, m_Xbe->GetError().c_str());
 						}
 						else {
 							std::ofstream Xbe_dump_file(ofn.lpstrFile);
@@ -931,10 +931,10 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 								Xbe_dump_file.close();
 								char buffer[255];
 								sprintf(buffer, "%s's .xbe info was successfully dumped.", m_Xbe->m_szAsciiTitle);
-								(void)CxbxPopupMsgInfoSimple(m_hwnd, buffer);
+								PopupInfo(m_hwnd, buffer);
 							}
 							else {
-								(void)CxbxPopupMsgErrorSimple(m_hwnd, "Could not open Xbe text file.");
+								PopupError(m_hwnd, "Could not open Xbe text file.");
 							}
 						}
 					}
@@ -946,7 +946,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 			{
 				std::string Xbe_info = DumpInformation(m_Xbe);
 				if (m_Xbe->HasError()) {
-					(void)CxbxPopupMsgErrorSimple(m_hwnd, m_Xbe->GetError().c_str());
+					PopupError(m_hwnd, m_Xbe->GetError().c_str());
 				}
 				else {
 					std::cout << Xbe_info;
@@ -978,7 +978,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 				if (m_bIsStarted) {
 					// We don't allow changing the contents of the eeprom while a game is running, mostly because we lack a "pause emulation"
 					// function necessary to modify the contents safely (the game itself can modify the eeprom)
-					(void)CxbxPopupMsgErrorSimple(hwnd, "Cannot modify eeprom file while a title is running");
+					PopupError(hwnd, "Cannot modify eeprom file while a title is running");
 					break;
 				}
 				ShowEepromConfig(hwnd);
@@ -1014,24 +1014,24 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 					// -14 is for \\Cxbx-Reloaded string to be include later down below.
 					size_t szLen = strnlen(szDir, MAX_PATH - 14);
 					if (szLen == 0) {
-						(void)CxbxPopupMsgErrorSimple(hwnd, "You've selected an invalid folder... Go back and try again.");
+						PopupError(hwnd, "You've selected an invalid folder... Go back and try again.");
 						break;
 					}
 					else if (szLen == MAX_PATH - 14) {
-						(void)CxbxPopupMsgErrorSimple(hwnd, "You've selected a folder path which is too long... Go back and try again.");
+						PopupError(hwnd, "You've selected a folder path which is too long... Go back and try again.");
 						break;
 					}
 
 					std::string szDirTemp = std::string(szDir) + std::string("\\Cxbx-Reloaded");
 
 					if (szDirTemp.size() > MAX_PATH) {
-						(void)CxbxPopupMsgErrorSimple(hwnd, "Directory path is too long. Go back and choose a shorter path.");
+						PopupError(hwnd, "Directory path is too long. Go back and choose a shorter path.");
 						break;
 					}
 
 					int result = SHCreateDirectoryEx(nullptr, szDirTemp.c_str(), nullptr);
 					if ((result != ERROR_SUCCESS) && (result != ERROR_ALREADY_EXISTS)) {
-						(void)CxbxPopupMsgErrorSimple(hwnd, "You don't have write permissions on that directory...");
+						PopupError(hwnd, "You don't have write permissions on that directory...");
 						break;
 					}
 
@@ -1059,7 +1059,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 			case ID_CACHE_CLEARHLECACHE_ALL:
 			{
 				ClearSymbolCache(g_Settings->GetDataLocation().c_str());
-				(void)CxbxPopupMsgInfoSimple(m_hwnd, "The entire Symbol Cache has been cleared.");
+				PopupInfo(m_hwnd, "The entire Symbol Cache has been cleared.");
 			}
 			break;
 
@@ -1076,19 +1076,19 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 				std::string fullpath = sstream.str();
 
 				if (std::filesystem::remove(fullpath)) {
-					(void)CxbxPopupMsgInfoSimple(m_hwnd, "This title's Symbol Cache entry has been cleared.");
+					PopupInfo(m_hwnd, "This title's Symbol Cache entry has been cleared.");
 				}
 			}
 			break;
 
 			case ID_SETTINGS_INITIALIZE:
 			{
-				MsgDlgRet ret = CxbxPopupMsgWarn(m_hwnd, MsgDlgButtons::YES_NO, MsgDlgRet::RET_NO,
+				PopupReturn ret = PopupWarningEx(m_hwnd, PopupButtons::YesNo, PopupReturn::No,
 					"Warning: This will reset all Cxbx-Reloaded settings to their default values.\nAre you sure you want to proceed?", "Cxbx-Reloaded");
 
-				if (ret == MsgDlgRet::RET_YES) {
+				if (ret == PopupReturn::Yes) {
 					InitializeSettings();
-					(void)CxbxPopupMsgInfoSimple(m_hwnd, "Cxbx-Reloaded has been initialized and will now close.");
+					PopupInfo(m_hwnd, "Cxbx-Reloaded has been initialized and will now close.");
 					SendMessage(hwnd, WM_CLOSE, 0, 0);
 				}
 			}
@@ -1102,7 +1102,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 				else {
 					g_Settings->m_core.KrnlDebugMode = DM_NONE;
 				}
-				(void)CxbxPopupMsgInfoSimple(m_hwnd, "This will not take effect until the next time emulation is started.");
+				PopupInfo(m_hwnd, "This will not take effect until the next time emulation is started.");
 
 				RefreshMenus();
 
@@ -1139,7 +1139,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
 					if (GetSaveFileName(&ofn) != FALSE)
 					{
-						(void)CxbxPopupMsgInfoSimple(m_hwnd, "This will not take effect until emulation is (re)started.");
+						PopupInfo(m_hwnd, "This will not take effect until emulation is (re)started.");
 
 						strncpy(g_Settings->m_core.szKrnlDebug, ofn.lpstrFile, MAX_PATH - 1);
 
@@ -1270,10 +1270,10 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
 			case ID_HACKS_RUNXBOXTHREADSONALLCORES:
 				if (g_Settings->m_hacks.UseAllCores == false) {
-					MsgDlgRet ret = CxbxPopupMsgWarn(hwnd, MsgDlgButtons::YES_NO, MsgDlgRet::RET_NO,
+					PopupReturn ret = PopupWarningEx(hwnd, PopupButtons::YesNo, PopupReturn::No,
 						"Activating this hack will make the emulator more likely to crash and/or hang."
 						"\nPlease do not report issues with games while this hack is active. Are you sure you want to turn it on?");
-					if (ret != MsgDlgRet::RET_YES) {
+					if (ret != PopupReturn::Yes) {
 						break;
 					}
 				}
@@ -1430,7 +1430,7 @@ void WndMain::LoadLogo()
 
     if(m_Xbe->HasError())
     {
-        (void)CxbxPopupMsgErrorSimple(m_hwnd, m_Xbe->GetError().c_str());
+        PopupError(m_hwnd, m_Xbe->GetError().c_str());
 
         if (m_Xbe->HasFatalError())
         {
@@ -1995,7 +1995,7 @@ void WndMain::OpenXbe(const char *x_filename)
 
 		RedrawWindow(m_hwnd, nullptr, NULL, RDW_INVALIDATE);
 
-        (void)CxbxPopupMsgErrorSimple(m_hwnd, ErrorMessage.c_str());
+        PopupError(m_hwnd, ErrorMessage.c_str());
 
         UpdateCaption();
 
@@ -2004,11 +2004,11 @@ void WndMain::OpenXbe(const char *x_filename)
 	
 	if (!g_Settings->m_gui.bIgnoreInvalidXbeSig && !m_Xbe->CheckXbeSignature())
 	{
-		MsgDlgRet ret = CxbxPopupMsgWarn(m_hwnd, MsgDlgButtons::YES_NO, MsgDlgRet::RET_NO,
+		PopupReturn ret = PopupWarningEx(m_hwnd, PopupButtons::YesNo, PopupReturn::No,
 			"XBE signature check failed!\n"
 			"\nThis is dangerous, as maliciously modified Xbox titles could take control of your system.\n"
 			"\nAre you sure you want to continue?");
-		if (ret != MsgDlgRet::RET_YES)
+		if (ret != PopupReturn::Yes)
 		{
 			delete m_Xbe; m_Xbe = nullptr;
 			
@@ -2077,11 +2077,11 @@ void WndMain::CloseXbe()
 
     if(m_bXbeChanged)
     {
-        MsgDlgRet ret = CxbxPopupMsgQuestionSimple(m_hwnd, "Changes have been made, do you wish to save?");
+        PopupReturn ret = PopupQuestion(m_hwnd, "Changes have been made, do you wish to save?");
 
-        if(ret == MsgDlgRet::RET_YES)
+        if(ret == PopupReturn::Yes)
             SaveXbeAs();
-        else if(ret == MsgDlgRet::RET_CANCEL)
+        else if(ret == PopupReturn::Cancel)
             return;
     }
 
@@ -2145,7 +2145,7 @@ void WndMain::SaveXbe(const char *x_filename)
     // ask permission to overwrite if the file already exists
     if(_access(x_filename, 0) != -1)
     {
-        if(CxbxPopupMsgQuestion(m_hwnd, LOG_LEVEL::INFO, MsgDlgButtons::YES_NO, MsgDlgRet::RET_NO, "Overwrite existing file?") != MsgDlgRet::RET_YES)
+        if(PopupQuestionEx(m_hwnd, LOG_LEVEL::INFO, PopupButtons::YesNo, PopupReturn::No, "Overwrite existing file?") != PopupReturn::Yes)
             return;
     }
 
@@ -2154,14 +2154,14 @@ void WndMain::SaveXbe(const char *x_filename)
         m_Xbe->Export(x_filename);
 
         if(m_Xbe->HasError())
-            (void)CxbxPopupMsgErrorSimple(m_hwnd, m_Xbe->GetError().c_str());
+            PopupError(m_hwnd, m_Xbe->GetError().c_str());
         else
         {
             char buffer[255];
 
             sprintf(buffer, "%s was successfully saved.", m_Xbe->m_szAsciiTitle);
 
-            (void)CxbxPopupMsgInfoSimple(m_hwnd, buffer);
+            PopupInfo(m_hwnd, buffer);
 
             m_bXbeChanged = false;
         }
@@ -2208,7 +2208,7 @@ void WndMain::StartEmulation(HWND hwndParent, DebuggerState LocalDebuggerState /
     g_EmuShared->GetIsEmulating(&isEmulating);
 
     if (isEmulating) {
-        (void)CxbxPopupMsgErrorSimple(m_hwnd, "A title is currently emulating, please stop emulation before attempting to start again.");
+        PopupError(m_hwnd, "A title is currently emulating, please stop emulation before attempting to start again.");
         return;
     }
 
@@ -2273,7 +2273,7 @@ void WndMain::StartEmulation(HWND hwndParent, DebuggerState LocalDebuggerState /
             DebuggerMonitorClose();
 
             if (!CxbxExec(true, &m_hDebuggerProc, true)) {
-                (void)CxbxPopupMsgErrorSimple(m_hwnd, "Failed to start emulation with the debugger.\n\nYou will need to build CxbxDebugger manually.");
+                PopupError(m_hwnd, "Failed to start emulation with the debugger.\n\nYou will need to build CxbxDebugger manually.");
 
                 printf("WndMain: %s debugger shell failed.\n", m_Xbe->m_szAsciiTitle);
             }
@@ -2286,7 +2286,7 @@ void WndMain::StartEmulation(HWND hwndParent, DebuggerState LocalDebuggerState /
         else {
 
             if (!CxbxExec(false, nullptr, false)) {
-                (void)CxbxPopupMsgErrorSimple(m_hwnd, "Emulation failed.\n\n If this message repeats, the Xbe is not supported.");
+                PopupError(m_hwnd, "Emulation failed.\n\n If this message repeats, the Xbe is not supported.");
 
                 printf("WndMain: %s shell failed.\n", m_Xbe->m_szAsciiTitle);
             }

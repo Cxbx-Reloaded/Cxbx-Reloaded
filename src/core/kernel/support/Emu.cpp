@@ -203,7 +203,7 @@ void EmuExceptionNonBreakpointUnhandledShow(LPEXCEPTION_POINTERS e)
 		"  Press \"Cancel\" to debug.",
 		e->ExceptionRecord->ExceptionCode, EIPToString(e->ContextRecord->Eip).c_str());
 
-	if (CxbxPopupMsgFatal(nullptr, MsgDlgButtons::OK_CANCEL, MsgDlgRet::RET_OK, buffer) == MsgDlgRet::RET_OK)
+	if (PopupFatalEx(nullptr, PopupButtons::OkCancel, PopupReturn::Ok, buffer) == PopupReturn::Ok)
 	{
 		EmuExceptionExitProcess();
 	}
@@ -368,13 +368,13 @@ int ExitException(LPEXCEPTION_POINTERS e)
 
     fflush(stdout);
 
-    (void)CxbxPopupMsgFatalSimple(nullptr, "Warning: Could not safely terminate process!");
+    PopupFatal(nullptr, "Warning: Could not safely terminate process!");
 
     count++;
 
     if(count > 1)
     {
-        (void)CxbxPopupMsgFatalSimple(nullptr, "Warning: Multiple Problems!");
+        PopupFatal(nullptr, "Warning: Multiple Problems!");
         return EXCEPTION_CONTINUE_SEARCH;
     }
 

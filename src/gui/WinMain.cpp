@@ -54,26 +54,26 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	// First detect if we are running on WoW64, if not, prevent Cxbx-Reloaded from starting
 	// Cxbx-Reloaded needs access to high memory, only exposed to WoW64.
 	if (!VerifyWow64()) {
-		(void)CxbxPopupMsgErrorSimple(nullptr, "Cxbx-Reloaded can only run under WoW64\nThis means either a 64-bit version of Windows or Wine with a 64-bit prefix");
+		PopupError(nullptr, "Cxbx-Reloaded can only run under WoW64\nThis means either a 64-bit version of Windows or Wine with a 64-bit prefix");
 		return EXIT_FAILURE;
 	}
 
 #ifndef CXBXR_EMU
 	/*! verify Cxbx.exe is loaded to base address 0x00010000 */
 	if (!VerifyBaseAddr()) {
-		(void)CxbxPopupMsgErrorSimple(nullptr, "Cxbx.exe is not loaded to base address 0x00010000 (which is a requirement for Xbox emulation)");
+		PopupError(nullptr, "Cxbx.exe is not loaded to base address 0x00010000 (which is a requirement for Xbox emulation)");
 		return EXIT_FAILURE;
 	}
 #endif
 
 	if (!cli_config::GenConfig(__argv, __argc)) {
-		(void)CxbxPopupMsgErrorSimple(nullptr, "Couldn't convert parsed command line!");
+		PopupError(nullptr, "Couldn't convert parsed command line!");
 		return EXIT_FAILURE;
 	}
 
 	/*! initialize shared memory */
 	if (!EmuShared::Init(cli_config::GetSessionID())) {
-		(void)CxbxPopupMsgErrorSimple(nullptr, "Could not map shared memory!");
+		PopupError(nullptr, "Could not map shared memory!");
 		return EXIT_FAILURE;
 	}
 
@@ -88,7 +88,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		EmuShared::Cleanup();
 		return EXIT_SUCCESS;
 #else
-		(void)CxbxPopupMsgErrorSimple(nullptr, "Emulation must be launched from cxbxr-ldr.exe!");
+		PopupError(nullptr, "Emulation must be launched from cxbxr-ldr.exe!");
 		EmuShared::Cleanup();
 		return EXIT_FAILURE;
 #endif
@@ -139,7 +139,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     /*! if an error occurred, notify user */
     if(MainWindow->HasError()) {
-		(void)CxbxPopupMsgErrorSimple(nullptr, MainWindow->GetError().c_str());
+		PopupError(nullptr, MainWindow->GetError().c_str());
     }
 
     delete MainWindow;

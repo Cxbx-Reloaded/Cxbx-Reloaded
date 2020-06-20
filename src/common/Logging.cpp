@@ -248,7 +248,7 @@ void log_init_popup_msg()
 	g_disablePopupMessages = vSettings.bFullScreen;
 }
 
-MsgDlgRet CxbxMessageBox(const char* msg, const MsgDlgRet ret_default, const UINT uType, const HWND hWnd)
+PopupReturn CxbxMessageBox(const char* msg, const PopupReturn ret_default, const UINT uType, const HWND hWnd)
 {
 	// If user is using exclusive fullscreen, we need to refrain all popups.
 	if (g_disablePopupMessages) {
@@ -259,23 +259,23 @@ MsgDlgRet CxbxMessageBox(const char* msg, const MsgDlgRet ret_default, const UIN
     switch (ret) {
         default:
         case IDCANCEL:
-            return MsgDlgRet::RET_CANCEL;
+            return PopupReturn::Cancel;
         case IDOK:
-            return MsgDlgRet::RET_OK;
+            return PopupReturn::Ok;
         case IDABORT:
-            return MsgDlgRet::RET_ABORT;
+            return PopupReturn::Abort;
         case IDRETRY:
-            return MsgDlgRet::RET_RETRY;
+            return PopupReturn::Retry;
         case IDIGNORE:
-            return MsgDlgRet::RET_IGNORE;
+            return PopupReturn::Ignore;
         case IDYES:
-            return MsgDlgRet::RET_YES;
+            return PopupReturn::Yes;
         case IDNO:
-            return MsgDlgRet::RET_NO;
+            return PopupReturn::No;
     }
 }
 
-MsgDlgRet CxbxPopupMessageEx(const void* hwnd, const CXBXR_MODULE cxbxr_module, const LOG_LEVEL level, const MsgDlgIcon icon, const MsgDlgButtons buttons, const MsgDlgRet ret_default, const char *message, ...)
+PopupReturn PopupCustomEx(const void* hwnd, const CXBXR_MODULE cxbxr_module, const LOG_LEVEL level, const PopupIcon icon, const PopupButtons buttons, const PopupReturn ret_default, const char *message, ...)
 {
 	char Buffer[1024];
 	va_list argp;
@@ -289,20 +289,20 @@ MsgDlgRet CxbxPopupMessageEx(const void* hwnd, const CXBXR_MODULE cxbxr_module, 
 	}
 
     switch (icon) {
-        case MsgDlgIcon::Warn: {
+        case PopupIcon::Warning: {
             uType |= MB_ICONWARNING;
             break;
         }
-        case MsgDlgIcon::Error: {
+        case PopupIcon::Error: {
             uType |= MB_ICONERROR; // Note : MB_ICONERROR == MB_ICONSTOP == MB_ICONHAND
             break;
         }
-        case MsgDlgIcon::Info: {
+        case PopupIcon::Info: {
             uType |= MB_ICONINFORMATION;
             break;
         }
-        case MsgDlgIcon::Question:
-        case MsgDlgIcon::Unknown:
+        case PopupIcon::Question:
+        case PopupIcon::Unknown:
         default: {
             uType |= MB_ICONQUESTION;
             break;
@@ -311,22 +311,22 @@ MsgDlgRet CxbxPopupMessageEx(const void* hwnd, const CXBXR_MODULE cxbxr_module, 
 
     switch (buttons) {
         default:
-        case MsgDlgButtons::OK:
+        case PopupButtons::Ok:
             uType |= MB_OK;
             break;
-        case MsgDlgButtons::OK_CANCEL:
+        case PopupButtons::OkCancel:
             uType |= MB_OKCANCEL;
             break;
-        case MsgDlgButtons::ABORT_RETRY_IGNORE:
+        case PopupButtons::AbortRetryIgnore:
             uType |= MB_RETRYCANCEL;
             break;
-        case MsgDlgButtons::YES_NO_CANCEL:
+        case PopupButtons::YesNoCancel:
             uType |= MB_YESNOCANCEL;
             break;
-        case MsgDlgButtons::YES_NO:
+        case PopupButtons::YesNo:
             uType |= MB_YESNO;
             break;
-        case MsgDlgButtons::RETRY_CANCEL:
+        case PopupButtons::RetryCancel:
             uType |= MB_RETRYCANCEL;
             break;
     }

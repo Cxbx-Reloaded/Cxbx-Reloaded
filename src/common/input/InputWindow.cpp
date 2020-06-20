@@ -111,10 +111,10 @@ InputWindow::~InputWindow()
 bool InputWindow::IsProfileSaved()
 {
 	if (m_bHasChanges) {
-		MsgDlgRet ret = CxbxPopupMsgQuestionSimple(m_hwnd_window, "Current configuration is not saved. Save before closing?");
+		PopupReturn ret = PopupQuestion(m_hwnd_window, "Current configuration is not saved. Save before closing?");
 		switch (ret)
 		{
-		case MsgDlgRet::RET_YES: {
+		case PopupReturn::Yes: {
 			char name[50];
 			SendMessage(m_hwnd_profile_list, WM_GETTEXT, sizeof(name), reinterpret_cast<LPARAM>(name));
 			if (SaveProfile(std::string(name))) {
@@ -123,11 +123,11 @@ bool InputWindow::IsProfileSaved()
 			return false;
 		}
 
-		case MsgDlgRet::RET_NO: {
+		case PopupReturn::No: {
 			return true;
 		}
 
-		case MsgDlgRet::RET_CANCEL:
+		case PopupReturn::Cancel:
 		default: {
 			return false;
 		}
@@ -345,11 +345,11 @@ void InputWindow::LoadProfile(const std::string& name)
 bool InputWindow::SaveProfile(const std::string& name)
 {
 	if (name == std::string()) {
-		(void)CxbxPopupMsgErrorSimple(m_hwnd_window, "Cannot save. Profile name must not be empty.");
+		PopupError(m_hwnd_window, "Cannot save. Profile name must not be empty.");
 		return false;
 	}
 	if (m_host_dev == std::string()) {
-		(void)CxbxPopupMsgErrorSimple(m_hwnd_window, "Cannot save. No input devices detected", "Cxbx-Reloaded");
+		PopupError(m_hwnd_window, "Cannot save. No input devices detected", "Cxbx-Reloaded");
 		return false;
 	}
 	OverwriteProfile(name);

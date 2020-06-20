@@ -211,7 +211,7 @@ void ShowEepromConfig(HWND hwnd)
 			EepromFile.close();
 		}
 		else {
-			(void)CxbxPopupMsgWarnSimple(hwnd, "Couldn't open eeprom file!");
+			PopupWarning(hwnd, "Couldn't open eeprom file!");
 			return;
 		}
 	}
@@ -459,7 +459,7 @@ INT_PTR CALLBACK DlgEepromConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPA
 							EepromFile.close();
 						}
 						else {
-							(void)CxbxPopupMsgWarnSimple(hWndDlg, "Couldn't write eeprom file to disk!");
+							PopupWarning(hWndDlg, "Couldn't write eeprom file to disk!");
 						}
 					}
 					PostMessage(hWndDlg, WM_COMMAND, IDC_EE_CANCEL, 0);

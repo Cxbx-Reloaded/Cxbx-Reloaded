@@ -223,7 +223,7 @@ bool Settings::Init()
 		bRet = LoadConfig();
 
 		if (!bRet) {
-			(void)CxbxPopupMsgErrorSimple(nullptr, szSettings_setup_error);
+			PopupError(nullptr, szSettings_setup_error);
 			return false;
 		}
 
@@ -836,13 +836,13 @@ CXBX_DATA Settings::SetupFile(std::string& file_path_out)
 	setupFile = GenerateExecDirectoryStr();
 
 #else // Only support for Qt compile build.
-	MsgDlgRet eRet = CxbxPopupMsgQuestionSimple(nullptr, szSettings_save_user_option_message);
+	PopupReturn eRet = PopupQuestion(nullptr, szSettings_save_user_option_message);
 
-	if (eRet == MsgDlgRet::RET_YES) {
+	if (eRet == PopupReturn::Yes) {
 		setupFile = GenerateExecDirectoryStr();
 		data_ret = CXBX_DATA_EXECDIR;
 	}
-	else if (eRet == MsgDlgRet::RET_NO) {
+	else if (eRet == PopupReturn::No) {
 		setupFile = GenerateUserProfileDirectoryStr();
 		data_ret = CXBX_DATA_APPDATA;
 		if (setupFile.size() != 0) {
@@ -859,7 +859,7 @@ CXBX_DATA Settings::SetupFile(std::string& file_path_out)
 #endif
 
 	if (data_ret == CXBX_DATA_INVALID) {
-		(void)CxbxPopupMsgErrorSimple(nullptr, szSettings_setup_error);
+		PopupError(nullptr, szSettings_setup_error);
 	}
 	else {
 		setupFile.append(szSettings_settings_file);

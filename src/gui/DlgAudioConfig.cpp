@@ -126,14 +126,14 @@ INT_PTR CALLBACK DlgAudioConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPAR
             /*! if changes have been made, check if the user wants to save them */
             if(g_bHasChanges)
             {
-                MsgDlgRet ret = CxbxPopupMsgQuestionSimple(hWndDlg, "Do you wish to apply your changes?");
+                PopupReturn ret = PopupQuestion(hWndDlg, "Do you wish to apply your changes?");
 
                 switch(ret)
                 {
-                    case MsgDlgRet::RET_YES:
+                    case PopupReturn::Yes:
                         PostMessage(hWndDlg, WM_COMMAND, IDC_AC_ACCEPT, 0);
                         break;
-                    case MsgDlgRet::RET_NO:
+                    case PopupReturn::No:
                         PostMessage(hWndDlg, WM_COMMAND, IDC_AC_CANCEL, 0);
                         break;
                 }
@@ -229,7 +229,7 @@ VOID RefreshAudioAdapter()
         if (pGUID == (LPGUID)CB_ERR) {
             SendMessage(g_hAudioAdapter, CB_SETCURSEL, 0, 0);
             g_Settings->m_audio = g_XBAudio;
-            (void)CxbxPopupMsgWarnSimple(nullptr, "Your selected audio adapter is invalid,\nreverting to default audio adapter.");
+            PopupWarning(nullptr, "Your selected audio adapter is invalid,\nreverting to default audio adapter.");
         }
     }
 }
