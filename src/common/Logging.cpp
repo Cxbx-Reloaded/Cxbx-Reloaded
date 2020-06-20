@@ -281,12 +281,8 @@ PopupReturn PopupCustomEx(const void* hwnd, const CXBXR_MODULE cxbxr_module, con
 	va_list argp;
     UINT uType = MB_TOPMOST | MB_SETFOREGROUND;
 
-	// If there's no message, then return default value.
-	if (!message) {
-		uType |= MB_ICONERROR | MB_OK;
-		(void)CxbxMessageBox("message is null pointer", ret_default, uType, (const HWND)hwnd);
-		return ret_default;
-	}
+	// Make assert whenever the format string is null pointer which isn't allow in here.
+	assert(!message);
 
     switch (icon) {
         case PopupIcon::Warning: {
