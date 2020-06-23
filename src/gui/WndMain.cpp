@@ -2010,18 +2010,15 @@ void WndMain::OpenXbe(const char *x_filename)
         return;
     }
 
-	bool invalidXbe = false;
-	std::string errorMsg = "";
+	std::string errorMsg;
 	
 	if (!g_Settings->m_gui.bIgnoreInvalidXbeSig && !m_Xbe->CheckSignature()) {
-		invalidXbe = true;
 		errorMsg += "- XBE signature check failed!\n";
 	}
 
 	if (!g_Settings->m_gui.bIgnoreInvalidXbeSec) {
 		for (uint32_t sectionIndex = 0; sectionIndex < m_Xbe->m_Header.dwSections; sectionIndex++) {
 			if (!m_Xbe->CheckSectionIntegrity(sectionIndex)) {
-				invalidXbe = true;
 				errorMsg += "- One or more XBE section(s) are corrupted!\n";
 
 				// if we find a corrupted section, we won't bother checking the remaining sections since we know
@@ -2031,7 +2028,7 @@ void WndMain::OpenXbe(const char *x_filename)
 		}
 	}
 
-	if (invalidXbe) {
+	if (!errorMsg.empty()) {
 		errorMsg += ("\nThis is dangerous, as maliciously modified Xbox applications could take control of your system."
 			"\nPlease do not report issues for this application.\n"
 			"\nAre you sure you want to continue?");
