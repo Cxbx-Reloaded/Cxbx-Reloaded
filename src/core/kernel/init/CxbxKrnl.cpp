@@ -993,7 +993,7 @@ void CxbxKrnlEmulate(unsigned int reserved_systems, blocks_reserved_t blocks_res
 		}
 
 		// Check the signature of the xbe
-		if (CxbxKrnl_Xbe->CheckXbeSignature()) {
+		if (CxbxKrnl_Xbe->CheckSignature()) {
 			EmuLogInit(LOG_LEVEL::INFO, "Valid xbe signature. Xbe is legit");
 		}
 		else {
@@ -1002,18 +1002,11 @@ void CxbxKrnlEmulate(unsigned int reserved_systems, blocks_reserved_t blocks_res
 
 		// Check the integrity of the xbe sections
 		for (uint32_t sectionIndex = 0; sectionIndex < CxbxKrnl_Xbe->m_Header.dwSections; sectionIndex++) {
-			uint32_t RawSize = CxbxKrnl_Xbe->m_SectionHeader[sectionIndex].dwSizeofRaw;
-			if (RawSize == 0) {
-				continue;
-			}
-			unsigned char SHADigest[A_SHA_DIGEST_LEN];
-			CalcSHA1Hash(SHADigest, CxbxKrnl_Xbe->m_bzSection[sectionIndex], RawSize);
-
-			if (memcmp(SHADigest, (CxbxKrnl_Xbe->m_SectionHeader)[sectionIndex].bzSectionDigest, A_SHA_DIGEST_LEN) != 0) {
-				EmuLogInit(LOG_LEVEL::WARNING, "SHA hash of section %s doesn't match, possible section corruption", CxbxKrnl_Xbe->m_szSectionName[sectionIndex]);
+			if (CxbxKrnl_Xbe->CheckSectionIntegrity(sectionIndex)) {
+				EmuLogInit(LOG_LEVEL::INFO, "SHA hash check of section %s successful", CxbxKrnl_Xbe->m_szSectionName[sectionIndex]);
 			}
 			else {
-				EmuLogInit(LOG_LEVEL::INFO, "SHA hash check of section %s successful", CxbxKrnl_Xbe->m_szSectionName[sectionIndex]);
+				EmuLogInit(LOG_LEVEL::WARNING, "SHA hash of section %s doesn't match, section is corrupted", CxbxKrnl_Xbe->m_szSectionName[sectionIndex]);
 			}
 		}
 

@@ -779,7 +779,7 @@ const wchar_t *Xbe::GetUnicodeFilenameAddr()
     return (const wchar_t *)GetAddr(m_Header.dwDebugUnicodeFilenameAddr);
 }
 
-bool Xbe::CheckXbeSignature()
+bool Xbe::CheckSignature()
 {
 	init_tom_lib();
 
@@ -808,6 +808,24 @@ bool Xbe::CheckXbeSignature()
 	// Default to the Retail key if no key matched, just to make sure we don't init in an invalid state
 	memcpy(xboxkrnl::XePublicKeyData, xboxkrnl::XePublicKeyDataRetail, 284);
 	return false;  // signature check failed
+}
+
+bool Xbe::CheckSectionIntegrity(uint32_t sectionIndex)
+{
+    uint32_t RawSize = m_SectionHeader[sectionIndex].dwSizeofRaw;
+    if (RawSize == 0) {
+        return true;
+    }
+
+    unsigned char SHADigest[A_SHA_DIGEST_LEN];
+    CalcSHA1Hash(SHADigest, m_bzSection[sectionIndex], RawSize);
+
+    if (std::memcmp(SHADigest, m_SectionHeader[sectionIndex].bzSectionDigest, A_SHA_DIGEST_LEN) != 0) {
+        return false;
+    }
+    else {
+        return true;
+    }
 }
 
 // ported from Dxbx's XbeExplorer

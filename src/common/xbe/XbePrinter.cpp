@@ -276,7 +276,7 @@ std::string XbePrinter::GenGeneralHeaderInfo2()
 std::string XbePrinter::ValidateXbeSignature()
 {
 	std::string text("\nInvalid xbe signature. Homebrew, tampered or pirated xbe?\n");
-	if (Xbe_to_print->CheckXbeSignature()) {
+	if (Xbe_to_print->CheckSignature()) {
 		text = "\nValid xbe signature. Xbe is legit\n";
 	}
 	return text;
@@ -417,6 +417,12 @@ std::string XbePrinter::GenSectionHeaders()
         text << "Head Shared Reference Count Addr : 0x" << std::setw(8) << Xbe_to_print->m_SectionHeader[v].dwHeadSharedRefCountAddr << "\n";
         text << "Tail Shared Reference Count Addr : 0x" << std::setw(8) << Xbe_to_print->m_SectionHeader[v].dwTailSharedRefCountAddr << "\n";
         text << GenSectionDigest(Xbe_to_print->m_SectionHeader[v]) << "\n";
+        if (Xbe_to_print->CheckSectionIntegrity(v)) {
+            text << "SHA hash check of section " << Xbe_to_print->m_szSectionName[v] << " successful" << "\n\n";
+        }
+        else {
+            text << "SHA hash of section " << Xbe_to_print->m_szSectionName[v] << " doesn't match, section is corrupted" << "\n\n";
+        }
     }
     return text.str();
 }
@@ -454,7 +460,6 @@ std::string XbePrinter::GenSectionDigest(Xbe::SectionHeader section_header)
     std::string text;
     text.append("Section Digest                   : ");
     text.append(GenHexRow(&section_header.bzSectionDigest[0], 0, 20));
-    text.append("\n");
     return text;
 }
 

@@ -89,6 +89,7 @@ public:
 		unsigned int DataStorageToggle;
 		std::string szCustomLocation = "";
 		bool bIgnoreInvalidXbeSig;
+		bool bIgnoreInvalidXbeSec;
 	} m_gui;
 
 	// Core settings
