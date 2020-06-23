@@ -1291,6 +1291,11 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 				RefreshMenus();
 				break;
 
+			case ID_SETTINGS_IGNOREINVALIDXBESEC:
+				g_Settings->m_gui.bIgnoreInvalidXbeSec = !g_Settings->m_gui.bIgnoreInvalidXbeSec;
+				RefreshMenus();
+				break;
+
 			case ID_SETTINGS_ALLOWADMINPRIVILEGE:
 				g_Settings->m_core.allowAdminPrivilege = !g_Settings->m_core.allowAdminPrivilege;
 				RefreshMenus();
@@ -1762,6 +1767,9 @@ void WndMain::RefreshMenus()
 			chk_flag = (g_Settings->m_gui.bIgnoreInvalidXbeSig) ? MF_CHECKED : MF_UNCHECKED;
 			CheckMenuItem(settings_menu, ID_SETTINGS_IGNOREINVALIDXBESIG, chk_flag);
 
+			chk_flag = (g_Settings->m_gui.bIgnoreInvalidXbeSec) ? MF_CHECKED : MF_UNCHECKED;
+			CheckMenuItem(settings_menu, ID_SETTINGS_IGNOREINVALIDXBESEC, chk_flag);
+
 			chk_flag = (g_Settings->m_core.allowAdminPrivilege) ? MF_CHECKED : MF_UNCHECKED;
 			CheckMenuItem(settings_menu, ID_SETTINGS_ALLOWADMINPRIVILEGE, chk_flag);
 		}
@@ -2001,25 +2009,43 @@ void WndMain::OpenXbe(const char *x_filename)
 
         return;
     }
+
+	std::string errorMsg;
 	
-	if (!g_Settings->m_gui.bIgnoreInvalidXbeSig && !m_Xbe->CheckXbeSignature())
-	{
-		PopupReturn ret = PopupWarningEx(m_hwnd, PopupButtons::YesNo, PopupReturn::No,
-			"XBE signature check failed!\n"
-			"\nThis is dangerous, as maliciously modified Xbox titles could take control of your system.\n"
+	if (!g_Settings->m_gui.bIgnoreInvalidXbeSig && !m_Xbe->CheckSignature()) {
+		errorMsg += "- XBE signature check failed!\n";
+	}
+
+	if (!g_Settings->m_gui.bIgnoreInvalidXbeSec) {
+		for (uint32_t sectionIndex = 0; sectionIndex < m_Xbe->m_Header.dwSections; sectionIndex++) {
+			if (!m_Xbe->CheckSectionIntegrity(sectionIndex)) {
+				errorMsg += "- One or more XBE section(s) are corrupted!\n";
+
+				// if we find a corrupted section, we won't bother checking the remaining sections since we know
+				// already at this point that the xbe is invalid
+				break;
+			}
+		}
+	}
+
+	if (!errorMsg.empty()) {
+		errorMsg += ("\nThis is dangerous, as maliciously modified Xbox applications could take control of your system."
+			"\nPlease do not report issues for this application.\n"
 			"\nAre you sure you want to continue?");
+
+		PopupReturn ret = PopupWarningEx(m_hwnd, PopupButtons::YesNo, PopupReturn::No, errorMsg.c_str());
 		if (ret != PopupReturn::Yes)
 		{
 			delete m_Xbe; m_Xbe = nullptr;
-			
+
 			RedrawWindow(m_hwnd, nullptr, NULL, RDW_INVALIDATE);
-			
+
 			UpdateCaption();
-			
+
 			return;
 		}
 	}
-	
+
     // save this xbe to the list of recent xbe files
     if(m_XbeFilename[0] != '\0') {
         bool found = false;

@@ -278,7 +278,7 @@ PopupReturn PopupCustomEx(const void* hwnd, const CXBXR_MODULE cxbxr_module, con
     UINT uType = MB_TOPMOST | MB_SETFOREGROUND;
 
 	// Make assert whenever the format string is null pointer which isn't allow in here.
-	assert(!message);
+	assert(message != nullptr);
 
     switch (icon) {
         case PopupIcon::Warning: {
