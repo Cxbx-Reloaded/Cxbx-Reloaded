@@ -256,7 +256,9 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateStream)
         (*ppStream)->Xb_Status = 0;
         //TODO: Implement mixbin variable support. Or just merge pdssd struct into DS Stream class.
 
-        EmuLog(LOG_LEVEL::DEBUG, "DirectSoundCreateStream, *ppStream := 0x%.08X", *ppStream);
+        LOG_FUNC_BEGIN_ARG_RESULT
+            LOG_FUNC_ARG_RESULT(ppStream)
+        LOG_FUNC_END_ARG_RESULT;
 
         hRet = DSoundBufferCreate(&DSBufferDesc, (*ppStream)->EmuDirectSoundBuffer8);
         if (FAILED(hRet)) {
@@ -486,8 +488,12 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_GetStatus)
         *pdwStatus = 0;
     }
 
-    EmuLog(LOG_LEVEL::DEBUG, "SET dwStatus = %08X; packet array size: %d",
-        *pdwStatus, pThis->Host_BufferPacketArray.size());
+    // Only used for debugging any future issues with custom stream's packet management
+    EmuLog(LOG_LEVEL::DEBUG, "packet array size: %d", pThis->Host_BufferPacketArray.size());
+
+    LOG_FUNC_BEGIN_ARG_RESULT
+        LOG_FUNC_ARG_RESULT_TYPE(DSSSTATUS_FLAG, pdwStatus)
+    LOG_FUNC_END_ARG_RESULT;
 
     return hRet;
 }
