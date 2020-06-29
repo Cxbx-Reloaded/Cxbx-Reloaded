@@ -393,6 +393,44 @@ extern thread_local std::string _logThreadPrefix;
 		} } while (0); \
 	}
 
+#define LOG_FUNC_BEGIN_ARG_RESULT_NO_INIT \
+	do { if(g_bPrintfOn) { \
+		bool _had_arg = false; \
+		std::stringstream msg; \
+		msg << _logThreadPrefix << _logFuncPrefix << " returns OUT {";
+
+#define LOG_FUNC_BEGIN_ARG_RESULT \
+		LOG_CHECK_ENABLED(LOG_LEVEL::DEBUG) { \
+			LOG_FUNC_BEGIN_ARG_RESULT_NO_INIT
+
+// LOG_FUNC_ARG_RESULT writes output via all available ostream << operator overloads, sanitizing and adding detail where possible
+#define LOG_FUNC_ARG_RESULT(arg) \
+		_had_arg = true; \
+		msg << LOG_ARG_START << "*"#arg << " : "; \
+		if (arg != nullptr) { \
+			msg << _log_sanitize(*arg); \
+		} else { \
+			msg << "NOT SET"; \
+		}
+
+// LOG_FUNC_ARG_RESULT_TYPE writes result output using the overloaded << operator of the given type
+#define LOG_FUNC_ARG_RESULT_TYPE(type, arg) \
+		_had_arg = true; \
+		msg << LOG_ARG_START << "*"#arg << " : "; \
+		if (arg != nullptr) { \
+			msg << (type)*arg; \
+		} else { \
+			msg << "NOT SET"; \
+		}
+
+// LOG_FUNC_END_ARG_RESULT closes off function and optional argument result logging
+#define LOG_FUNC_END_ARG_RESULT \
+			if (_had_arg) msg << "\n"; \
+			msg << "};\n"; \
+			std::cout << msg.str(); \
+		} } while (0); \
+	}
+
 // LOG_FUNC_RESULT logs the function return result
 #define LOG_FUNC_RESULT(r) \
 	std::cout << _logThreadPrefix << _logFuncPrefix << " returns " << _log_sanitize(r) << "\n";
