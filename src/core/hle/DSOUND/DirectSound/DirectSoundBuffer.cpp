@@ -231,7 +231,7 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateBuffer)
                           pHybridBuffer->p_CDSVoice);
         pEmuBuffer->EmuBufferDesc = DSBufferDesc;
 
-        EmuLog(LOG_LEVEL::DEBUG, "DirectSoundCreateBuffer, *ppBuffer := 0x%08X, bytes := 0x%08X", *ppBuffer, pEmuBuffer->EmuBufferDesc.dwBufferBytes);
+        EmuLog(LOG_LEVEL::DEBUG, "DirectSoundCreateBuffer: bytes := 0x%08X", pEmuBuffer->EmuBufferDesc.dwBufferBytes);
 
         hRet = DSoundBufferCreate(&DSBufferDesc, pEmuBuffer->EmuDirectSoundBuffer8);
         if (FAILED(hRet)) {
@@ -258,7 +258,11 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateBuffer)
         }
     }
 
-    return hRet;
+    LOG_FUNC_BEGIN_ARG_RESULT
+        LOG_FUNC_ARG_RESULT(ppBuffer)
+    LOG_FUNC_END_ARG_RESULT;
+
+    RETURN(hRet);
 }
 
 // ******************************************************************
@@ -302,7 +306,12 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_GetCurrentPosition)
     EmuDirectSoundBuffer* pThis = pHybridThis->emuDSBuffer;
     HRESULT hRet = HybridDirectSoundBuffer_GetCurrentPosition(pThis->EmuDirectSoundBuffer8, pdwCurrentPlayCursor, pdwCurrentWriteCursor, pThis->EmuFlags);
 
-    return hRet;
+    LOG_FUNC_BEGIN_ARG_RESULT
+        LOG_FUNC_ARG_RESULT(pdwCurrentPlayCursor)
+        LOG_FUNC_ARG_RESULT(pdwCurrentWriteCursor)
+    LOG_FUNC_END_ARG_RESULT;
+
+    RETURN(hRet);
 }
 
 // ******************************************************************
@@ -370,7 +379,11 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_GetStatus)
         hRet = DSERR_INVALIDPARAM;
     }
 
-    return hRet;
+    LOG_FUNC_BEGIN_ARG_RESULT
+        LOG_FUNC_ARG_RESULT_TYPE(DSBSTATUS_FLAG, pdwStatus)
+    LOG_FUNC_END_ARG_RESULT;
+
+    RETURN(hRet);
 }
 
 // ******************************************************************
@@ -450,7 +463,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Lock)
     }
 
     if (hRet != DS_OK) {
-        CxbxKrnlCleanup("DirectSoundBuffer Lock Failed!");
+        CxbxKrnlCleanup("IDirectSoundBuffer_Lock Failed!");
     }
 
     // Host lock position
@@ -476,6 +489,13 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Lock)
             *pdwAudioBytes2 = 0;
         }
     }
+
+    LOG_FUNC_BEGIN_ARG_RESULT
+        LOG_FUNC_ARG_RESULT(ppvAudioPtr1)
+        LOG_FUNC_ARG_RESULT(pdwAudioBytes1)
+        LOG_FUNC_ARG_RESULT(ppvAudioPtr2)
+        LOG_FUNC_ARG_RESULT(pdwAudioBytes2)
+    LOG_FUNC_END_ARG_RESULT;
 
     RETURN_RESULT_CHECK(hRet);
 }

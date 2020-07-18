@@ -245,6 +245,10 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreate)
         *ppDirectSound = g_pDSound8;
     }
 
+    LOG_FUNC_BEGIN_ARG_RESULT
+        LOG_FUNC_ARG_RESULT_TYPE(void*, ppDirectSound)
+    LOG_FUNC_END_ARG_RESULT;
+
     RETURN_RESULT_CHECK(hRet);
 }
 
@@ -594,9 +598,11 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound_GetCaps)
         // TODO: What are the max values for 2D and 3D Buffers? Once discover, then perform real time update in global variable.
         pDSCaps->dwFree2DBuffers = (pDSCaps->dwFreeBufferSGEs == 0 ? 0 : 0x200 /* TODO: Replace me to g_dwFree2DBuffers*/ );
         pDSCaps->dwFree3DBuffers = (pDSCaps->dwFreeBufferSGEs == 0 ? 0 : 0x200 /* TODO: Replace me to g_dwFree3DBuffers*/ );
-
-        EmuLog(LOG_LEVEL::DEBUG, "X_DSCAPS: dwFree2DBuffers = %8X | dwFree3DBuffers = %8X | dwFreeBufferSGEs = %08X | dwMemAlloc = %08X", pDSCaps->dwFree2DBuffers, pDSCaps->dwFree3DBuffers, pDSCaps->dwFreeBufferSGEs, pDSCaps->dwMemoryAllocated);
     }
+
+    LOG_FUNC_BEGIN_ARG_RESULT
+        LOG_FUNC_ARG_RESULT(pDSCaps)
+    LOG_FUNC_END_ARG_RESULT;
 
     return S_OK;
 }
@@ -644,6 +650,10 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSound_GetSpeakerConfig)
 
     // TODO: Fix me!
     *pdwSpeakerConfig = 0; // STEREO
+
+    LOG_FUNC_BEGIN_ARG_RESULT
+        LOG_FUNC_ARG_RESULT(pdwSpeakerConfig)
+    LOG_FUNC_END_ARG_RESULT;
 
     return S_OK;
 }
