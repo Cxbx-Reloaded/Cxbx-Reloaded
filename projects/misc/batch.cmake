@@ -20,3 +20,10 @@ configure_file(
  "${CMAKE_SOURCE_DIR}/src/version.h.in" "${CMAKE_SOURCE_DIR}/src/version.h" @ONLY
  NEWLINE_STYLE LF
 )
+
+
+message("Runtime Build Directory: ${TargetRunTimeDir}")
+
+# Copy glew32.dll to build type's folder.
+set(CXBXR_GLEW_DLL "${CMAKE_SOURCE_DIR}/import/glew-2.0.0/bin/Release/Win32/glew32.dll")
+file(COPY ${CXBXR_GLEW_DLL} DESTINATION  ${TargetRunTimeDir})

@@ -30,7 +30,8 @@ endif()
 set(CXBXR_ROOT_DIR ${CMAKE_CURRENT_LIST_DIR})
 
 add_custom_target(misc-batch
-  ${CMAKE_COMMAND} -P ${CXBXR_ROOT_DIR}/projects/misc/batch.cmake
+  ${CMAKE_COMMAND} -DTargetRunTimeDir=${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/$<CONFIG>
+  -P ${CXBXR_ROOT_DIR}/projects/misc/batch.cmake
   WORKING_DIRECTORY ${CXBXR_ROOT_DIR}
 )
 

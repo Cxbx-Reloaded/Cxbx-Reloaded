@@ -193,10 +193,3 @@ if(${CMAKE_GENERATOR} MATCHES "Visual Studio ([^9]|[9][0-9])")
 endif()
 
 add_dependencies(cxbx cxbxr-ldr cxbxr-emu misc-batch)
-
-set(CXBXR_GLEW_DLL "${CXBXR_ROOT_DIR}/import/glew-2.0.0/bin/Release/Win32/glew32.dll")
-
-# Copy glew32.dll to build type's folder after build.
-add_custom_command(TARGET cxbx POST_BUILD
- COMMAND ${CMAKE_COMMAND} -E copy ${CXBXR_GLEW_DLL} $<TARGET_FILE_DIR:cxbx>
-)
