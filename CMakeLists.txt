@@ -29,30 +29,12 @@ endif()
 # Cxbx-Reloaded projects
 set(CXBXR_ROOT_DIR ${CMAKE_CURRENT_LIST_DIR})
 
-add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/projects/libtom")
-
-find_package(Git)
-
-if(Git_FOUND)
- message("Git found: ${GIT_EXECUTABLE}")
-
- execute_process(
-  COMMAND git describe --always --tags --first-parent
-  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-  OUTPUT_VARIABLE _GIT_VERSION
-  OUTPUT_STRIP_TRAILING_WHITESPACE
- )
-
- message("Git version: " ${_GIT_VERSION})
-else()
- set(_GIT_VERSION "unknown")
-endif()
-
-# Appears to update whenever define has changed.
-configure_file(
- "${CXBXR_ROOT_DIR}/src/version.h.in" "${CXBXR_ROOT_DIR}/src/version.h" @ONLY
- NEWLINE_STYLE LF
+add_custom_target(misc-batch
+  ${CMAKE_COMMAND} -P ${CXBXR_ROOT_DIR}/projects/misc/batch.cmake
+  WORKING_DIRECTORY ${CXBXR_ROOT_DIR}
 )
+
+add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/projects/libtom")
 
 #add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/projects/vsbc")
 
@@ -416,6 +398,6 @@ if(${CMAKE_GENERATOR} MATCHES "Visual Studio ([^9]|[9][0-9])")
 endif()
 
 # Cxbx-Reloaded project with third-party libraries
-set_target_properties(cxbx cxbxr-ldr cxbxr-emu subhook XbSymbolDatabase libtommath libtomcrypt
+set_target_properties(cxbx cxbxr-ldr cxbxr-emu misc-batch subhook XbSymbolDatabase libtommath libtomcrypt
  PROPERTIES FOLDER Cxbx-Reloaded
 )

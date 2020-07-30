@@ -164,7 +164,7 @@ target_link_libraries(cxbxr-emu
  ${WINS_LIB}
 )
 
-add_dependencies(cxbxr-emu cxbxr-ldr)
+add_dependencies(cxbxr-emu cxbxr-ldr misc-batch)
 
 set(CXBXR_GLEW_DLL "${CXBXR_ROOT_DIR}/import/glew-2.0.0/bin/Release/Win32/glew32.dll")
 
