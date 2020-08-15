@@ -106,16 +106,31 @@ XBSYSAPI EXPORTNUM(8) xboxkrnl::ULONG _cdecl xboxkrnl::DbgPrint
 		LOG_FUNC_END;
 
 	if (Format != NULL) {
-		char szBuffer[MAX_PATH];
-
-		va_list argp;
+		va_list argp, argp_copy;
 		va_start(argp, Format);
 
-		vsprintf(szBuffer, Format, argp);
+		// Allocate a sufficient buffer to hold the formatted string
+		// We make a copy of the argument structure, this prevents issues
+		// as the call to vsnprintf will modify the va_list.
+		va_copy(argp_copy, argp);
+		auto size = vsnprintf(nullptr, 0, Format, argp_copy);
+		va_end(argp_copy);
+
+        auto buffer = (char*)malloc(size);
+        if (buffer == nullptr) {
+            // Prevent a crash if we can't allocate enough memory
+            // We want this to be transparent to the running Xbox application
+            // Hence, we return success.
+            return STATUS_SUCCESS;
+        }
+
+        // Perform the actual print operation
+		vsnprintf(buffer, size, Format, argp);
 		va_end(argp);
 
 		// Allow DbgPrint to be disabled
-		EmuLog(LOG_LEVEL::INFO, "%s", szBuffer);
+		EmuLog(LOG_LEVEL::INFO, "%s", buffer);
+		free(buffer);
 		fflush(stdout);
 	}
 
