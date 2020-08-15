@@ -343,7 +343,7 @@ std::map<const std::string, const xbox_patch_t> g_PatchTable = {
 	PATCH_ENTRY("GetExitCodeThread", XTL::EMUPATCH(GetExitCodeThread), PATCH_ALWAYS),
 	PATCH_ENTRY("GetThreadPriority", XTL::EMUPATCH(GetThreadPriority), PATCH_ALWAYS),
 	PATCH_ENTRY("OutputDebugStringA", XTL::EMUPATCH(OutputDebugStringA), PATCH_ALWAYS),
-	PATCH_ENTRY("RaiseException", XTL::EMUPATCH(RaiseException), PATCH_ALWAYS),
+	//PATCH_ENTRY("RaiseException", XTL::EMUPATCH(RaiseException), PATCH_ALWAYS),
 	PATCH_ENTRY("SetThreadPriority", XTL::EMUPATCH(SetThreadPriority), PATCH_ALWAYS),
 	PATCH_ENTRY("SetThreadPriorityBoost", XTL::EMUPATCH(SetThreadPriorityBoost), PATCH_ALWAYS),
 	PATCH_ENTRY("SignalObjectAndWait", XTL::EMUPATCH(SignalObjectAndWait), PATCH_ALWAYS),
