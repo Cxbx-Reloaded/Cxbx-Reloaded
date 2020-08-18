@@ -25,12 +25,8 @@
 // *
 // ******************************************************************
 
-// prevent name collisions
-namespace xboxkrnl
-{
-    #include <xboxkrnl/xboxkrnl.h>
-};
 
+#include <xboxkrnl/xboxkrnl.h>
 #include "Cxbx.h" // For CxbxKrnl_KernelThunkTable
 #include "core\kernel\init\CxbxKrnl.h" // For UINT
 

@@ -57,12 +57,8 @@
 
 #define LOG_PREFIX CXBXR_MODULE::USB
 
-// prevent name collisions
-namespace xboxkrnl
-{
-	#include <xboxkrnl/xboxkrnl.h> // For PKINTERRUPT, etc.
-};
 
+#include <xboxkrnl/xboxkrnl.h> // For PKINTERRUPT, etc.
 #include <cstring>
 #include "USBDevice.h"
 #include "OHCI.h"

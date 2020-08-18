@@ -26,11 +26,8 @@
 // ******************************************************************
 #define LOG_PREFIX CXBXR_MODULE::DSSTREAM
 
-// prevent name collisions
-namespace xboxkrnl {
-    #include <xboxkrnl/xboxkrnl.h>
-};
 
+#include <xboxkrnl/xboxkrnl.h>
 #include <dsound.h>
 #include "DirectSoundGlobal.hpp"
 

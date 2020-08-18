@@ -27,12 +27,8 @@
 
 #define LOG_PREFIX CXBXR_MODULE::XACT
 
-// prevent name collisions
-namespace xboxkrnl
-{
-    #include <xboxkrnl/xboxkrnl.h>
-};
 
+#include <xboxkrnl/xboxkrnl.h>
 #include "core\kernel\init\CxbxKrnl.h"
 #include "common\Logging.h"
 #include "core\kernel\support\Emu.h"

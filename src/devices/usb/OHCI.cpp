@@ -51,12 +51,8 @@
 
 #define LOG_PREFIX CXBXR_MODULE::OHCI
 
-/* prevent name collisions */
-namespace xboxkrnl
-{
-	#include <xboxkrnl/xboxkrnl.h>
-};
 
+#include <xboxkrnl/xboxkrnl.h>
 #include "OHCI.h"
 #include "core\kernel\exports\EmuKrnl.h"  // For HalSystemInterrupt
 #include "common\util\CxbxUtil.h"

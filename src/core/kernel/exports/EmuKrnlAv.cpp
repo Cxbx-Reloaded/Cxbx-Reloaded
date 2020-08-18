@@ -28,12 +28,8 @@
 
 #define LOG_PREFIX CXBXR_MODULE::AV
 
-// prevent name collisions
-namespace xboxkrnl
-{
-	#include <xboxkrnl/xboxkrnl.h> // For AvGetSavedDataAddress, etc.
-};
 
+#include <xboxkrnl/xboxkrnl.h> // For AvGetSavedDataAddress, etc.
 #include "Logging.h" // For LOG_FUNC()
 #include "EmuKrnlLogging.h"
 

@@ -28,12 +28,8 @@
 
 #define LOG_PREFIX CXBXR_MODULE::HAL
 
-// prevent name collisions
-namespace xboxkrnl
-{
-#include <xboxkrnl/xboxkrnl.h> // For HalReadSMCTrayState, etc.
-};
 
+#include <xboxkrnl/xboxkrnl.h> // For HalReadSMCTrayState, etc.
 #include <Shlwapi.h> // For PathRemoveFileSpec()
 #include "Logging.h" // For LOG_FUNC()
 #include "EmuKrnl.h" // For InitializeListHead(), etc.

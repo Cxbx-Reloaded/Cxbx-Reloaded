@@ -7,6 +7,9 @@
 extern "C" {
 #endif
 
+namespace xboxkrnl
+{
+
 #define BOOL BOOLEAN
 #define LPSTR LPCH
 
@@ -43,6 +46,8 @@ extern PBYTE GetSectorBuffered(
 extern void ReleaseBufferedSector(
 				PCDIO_READ This,
 				DWORD SectorNumber);
+
+};
 
 #ifdef __cplusplus
 }

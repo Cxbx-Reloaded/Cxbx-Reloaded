@@ -28,12 +28,8 @@
 
 #define LOG_PREFIX CXBXR_MODULE::KD
 
-// prevent name collisions
-namespace xboxkrnl
-{
-#include <xboxkrnl/xboxkrnl.h> // For KdDebuggerEnabled, etc.
-};
 
+#include <xboxkrnl/xboxkrnl.h> // For KdDebuggerEnabled, etc.
 #include "Logging.h"
 
 // ******************************************************************

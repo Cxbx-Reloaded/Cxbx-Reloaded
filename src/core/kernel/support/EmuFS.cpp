@@ -27,12 +27,8 @@
 
 #define LOG_PREFIX CXBXR_MODULE::FS
 
-// prevent name collisions
-namespace xboxkrnl
-{
-#include <xboxkrnl/xboxkrnl.h>
-};
 
+#include <xboxkrnl/xboxkrnl.h>
 #include "core\kernel\exports\EmuKrnl.h" // For InitializeListHead(), etc.
 #include "core\kernel\exports\EmuKrnlKe.h"
 #include "core\kernel\support\EmuFS.h" // For fs_instruction_t

@@ -24,14 +24,8 @@
 #ifndef EMUFILE_H
 #define EMUFILE_H
 
-// ******************************************************************
-// * prevent name collisions
-// ******************************************************************
-namespace xboxkrnl
-{
-    #include <xboxkrnl/xboxkrnl.h>
-};
 
+#include <xboxkrnl/xboxkrnl.h>
 #include <vector>
 #include <cstdio>
 #include <string>

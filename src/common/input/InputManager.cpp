@@ -35,12 +35,8 @@
 #define _XBOXKRNL_DEFEXTRN_
 #define LOG_PREFIX CXBXR_MODULE::INPSYS
 
-// prevent name collisions
-namespace xboxkrnl
-{
-#include <xboxkrnl/xboxkrnl.h> // For PKINTERRUPT, etc.
-};
 
+#include <xboxkrnl/xboxkrnl.h> // For PKINTERRUPT, etc.
 #include "SdlJoystick.h"
 #include "XInputPad.h"
 #include "DInputKeyboardMouse.h"

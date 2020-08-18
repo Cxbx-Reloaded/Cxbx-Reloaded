@@ -26,12 +26,8 @@
 // *
 // ******************************************************************
 
-// prevent name collisions
-namespace xboxkrnl
-{
-	#include <xboxkrnl/xboxkrnl.h>
-};
 
+#include <xboxkrnl/xboxkrnl.h>
 #include "common\xbe\Xbe.h"
 #include "common\util\CxbxUtil.h" // For RoundUp
 #include <filesystem> // filesystem related functions available on C++ 17

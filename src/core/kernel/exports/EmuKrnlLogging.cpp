@@ -27,13 +27,8 @@
 
 #define LOG_PREFIX CXBXR_MODULE::LOG
 
-// prevent name collisions
-namespace xboxkrnl
-{
+
 #include <xboxkrnl/xboxkrnl.h>
-};
-
-
 #include "Logging.h"
 #include "EmuKrnlLogging.h"
 #include "core\kernel\init\CxbxKrnl.h"

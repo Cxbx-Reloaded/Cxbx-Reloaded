@@ -28,12 +28,8 @@
 
 #define LOG_PREFIX CXBXR_MODULE::DBG
 
-// prevent name collisions
-namespace xboxkrnl
-{
-#include <xboxkrnl/xboxkrnl.h> // For DbgPrint, etc.
-};
 
+#include <xboxkrnl/xboxkrnl.h> // For DbgPrint, etc.
 #include "Logging.h" // For LOG_FUNC()
 #include "EmuKrnlLogging.h"
 

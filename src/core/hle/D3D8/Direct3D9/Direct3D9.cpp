@@ -35,12 +35,8 @@
 #include <condition_variable>
 #include <stack>
 
-// prevent name collisions
-namespace xboxkrnl
-{
-    #include <xboxkrnl\xboxkrnl.h>
-};
 
+#include <xboxkrnl\xboxkrnl.h>
 #include "common\util\CxbxUtil.h"
 #include "CxbxVersion.h"
 #include "core\kernel\init\CxbxKrnl.h"

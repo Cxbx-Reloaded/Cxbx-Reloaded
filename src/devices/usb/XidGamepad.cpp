@@ -52,12 +52,8 @@
 
 #define LOG_PREFIX CXBXR_MODULE::XIDCTRL
 
-// prevent name collisions
-namespace xboxkrnl
-{
-	#include <xboxkrnl/xboxkrnl.h> // For PKINTERRUPT, etc.
-};
 
+#include <xboxkrnl/xboxkrnl.h> // For PKINTERRUPT, etc.
 #include <cstring>
 #include "XidGamepad.h"
 #include "USBDevice.h"

@@ -29,12 +29,8 @@
 
 #define LOG_PREFIX CXBXR_MODULE::MM
 
-// prevent name collisions
-namespace xboxkrnl
-{
-	#include <xboxkrnl/xboxkrnl.h> // For MmGlobalData, etc.
-};
 
+#include <xboxkrnl/xboxkrnl.h> // For MmGlobalData, etc.
 #include "Logging.h" // For LOG_FUNC()
 #include "EmuKrnl.h" // For DefaultLaunchDataPage
 #include "EmuKrnlLogging.h"

@@ -28,12 +28,8 @@
 #define LOG_PREFIX CXBXR_MODULE::CXBXR
 #define LOG_PREFIX_INIT CXBXR_MODULE::INIT
 
-/* prevent name collisions */
-namespace xboxkrnl
-{
-    #include <xboxkrnl/xboxkrnl.h>
-};
 
+#include <xboxkrnl/xboxkrnl.h>
 #include "gui/resource/ResCxbx.h"
 #include "core\kernel\init\CxbxKrnl.h"
 #include "common\xbdm\CxbxXbdm.h" // For Cxbx_LibXbdmThunkTable

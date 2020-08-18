@@ -28,12 +28,7 @@
 
 #define LOG_PREFIX CXBXR_MODULE::FSC
 
-// prevent name collisions
-namespace xboxkrnl
-{
 #include <xboxkrnl/xboxkrnl.h> // For FscGetCacheSize, etc.
-};
-
 #include "Logging.h" // For LOG_FUNC()
 #include "EmuKrnlLogging.h"
 

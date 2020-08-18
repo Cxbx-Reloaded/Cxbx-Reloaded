@@ -29,12 +29,8 @@
 #define LOG_PREFIX CXBXR_MODULE::RTL
 #define CHECK_ALIGNMENT(size, alignment) (((size) % (alignment)) == 0) // For RtlFillMemoryUlong
 
-// prevent name collisions
-namespace xboxkrnl
-{
-#include <xboxkrnl/xboxkrnl.h> // For RtlAnsiStringToUnicodeString, etc.
-};
 
+#include <xboxkrnl/xboxkrnl.h> // For RtlAnsiStringToUnicodeString, etc.
 #include "Logging.h" // For LOG_FUNC()
 #include "EmuKrnlLogging.h"
 

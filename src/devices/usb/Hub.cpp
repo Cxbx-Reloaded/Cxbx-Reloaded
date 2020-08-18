@@ -55,12 +55,8 @@
 
 #define LOG_PREFIX CXBXR_MODULE::HUB
 
-// prevent name collisions
-namespace xboxkrnl
-{
-	#include <xboxkrnl/xboxkrnl.h> // For PKINTERRUPT, etc.
-};
 
+#include <xboxkrnl/xboxkrnl.h> // For PKINTERRUPT, etc.
 #include <cstring> // For memcpy
 #include "OHCI.h"
 #include "Hub.h"
