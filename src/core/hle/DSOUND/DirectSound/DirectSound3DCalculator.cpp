@@ -27,11 +27,8 @@
 // ******************************************************************
 #define LOG_PREFIX CXBXR_MODULE::DS3DCALC
 
-// prevent name collisions
-namespace xboxkrnl {
-    #include <xboxkrnl/xboxkrnl.h>
-};
 
+#include <xboxkrnl/xboxkrnl.h>
 #include <dsound.h>
 #include "DirectSoundGlobal.hpp" // Global variables
 

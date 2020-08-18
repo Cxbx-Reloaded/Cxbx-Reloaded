@@ -78,12 +78,8 @@ the said software).
 
 #define LOG_PREFIX CXBXR_MODULE::KI
 
-// prevent name collisions
-namespace xboxkrnl
-{
-#include <xboxkrnl/xboxkrnl.h> // For KeBugCheck, etc.
-};
 
+#include <xboxkrnl/xboxkrnl.h> // For KeBugCheck, etc.
 #include "Logging.h" // For LOG_FUNC()
 #include "EmuKrnl.h" // for the list support functions
 #include "EmuKrnlKi.h"

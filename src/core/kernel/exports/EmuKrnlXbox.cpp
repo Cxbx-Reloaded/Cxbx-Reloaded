@@ -28,12 +28,8 @@
 
 #define LOG_PREFIX CXBXR_MODULE::XBOX
 
-// prevent name collisions
-namespace xboxkrnl
-{
-#include <xboxkrnl/xboxkrnl.h> // For XboxEEPROMKey, etc.
-};
 
+#include <xboxkrnl/xboxkrnl.h> // For XboxEEPROMKey, etc.
 #include "Logging.h"
 
 // Certificate Key

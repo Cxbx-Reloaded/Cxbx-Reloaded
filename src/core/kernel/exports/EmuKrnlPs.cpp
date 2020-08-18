@@ -29,12 +29,8 @@
 #define LOG_PREFIX CXBXR_MODULE::PS
 #include <common\util\CxbxUtil.h>
 
-// prevent name collisions
-namespace xboxkrnl
-{
-#include <xboxkrnl/xboxkrnl.h> // For PsCreateSystemThreadEx, etc.
-};
 
+#include <xboxkrnl/xboxkrnl.h> // For PsCreateSystemThreadEx, etc.
 #include <process.h> // For __beginthreadex(), etc.
 #include <float.h> // For _controlfp constants
 

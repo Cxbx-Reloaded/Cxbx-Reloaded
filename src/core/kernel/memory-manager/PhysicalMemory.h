@@ -29,11 +29,7 @@
 #define PHYSICAL_MEMORY_H
 
 
-namespace xboxkrnl
-{
-	#include <xboxkrnl/xboxkrnl.h>
-};
-
+#include <xboxkrnl/xboxkrnl.h>
 #include "core\kernel\support\Emu.h"
 #include "core\kernel\init\CxbxKrnl.h"
 #include <windows.h>

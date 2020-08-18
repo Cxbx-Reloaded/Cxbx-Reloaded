@@ -28,12 +28,8 @@
 
 #define LOG_PREFIX CXBXR_MODULE::EX
 
-// prevent name collisions
-namespace xboxkrnl
-{
-	#include <xboxkrnl/xboxkrnl.h> // For ExAllocatePool, etc.
-};
 
+#include <xboxkrnl/xboxkrnl.h> // For ExAllocatePool, etc.
 #include "Logging.h" // For LOG_FUNC()
 #include "EmuEEPROM.h" // For EmuFindEEPROMInfo, EEPROM, XboxFactoryGameRegion
 #include "EmuKrnlLogging.h"

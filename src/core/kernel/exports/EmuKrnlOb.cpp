@@ -28,12 +28,8 @@
 
 #define LOG_PREFIX CXBXR_MODULE::OB
 
-// prevent name collisions
-namespace xboxkrnl
-{
-#include <xboxkrnl/xboxkrnl.h> // For ObDirectoryObjectType, etc.
-};
 
+#include <xboxkrnl/xboxkrnl.h> // For ObDirectoryObjectType, etc.
 #include "Logging.h" // For LOG_FUNC()
 #include "EmuKrnlLogging.h"
 #include "core\kernel\init\CxbxKrnl.h" // For CxbxKrnlCleanup

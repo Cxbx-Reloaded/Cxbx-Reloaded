@@ -25,11 +25,8 @@
 // *
 // ******************************************************************
 
-// prevent name collisions
-namespace xboxkrnl
-{
-    #include <xboxkrnl/xboxkrnl.h>
-};
+
+#include <xboxkrnl/xboxkrnl.h>
 
 #define LOG_PREFIX CXBXR_MODULE::KRNL
 

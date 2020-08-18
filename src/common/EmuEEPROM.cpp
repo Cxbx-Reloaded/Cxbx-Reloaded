@@ -27,12 +27,8 @@
 #define LOG_PREFIX CXBXR_MODULE::EEPR
 #define LOG_PREFIX_INIT CXBXR_MODULE::INIT
 
-// prevent name collisions
-namespace xboxkrnl
-{
-	#include <xboxkrnl/xboxkrnl.h> // For XC_VALUE_INDEX and XBOX_EEPROM
-};
 
+#include <xboxkrnl/xboxkrnl.h> // For XC_VALUE_INDEX and XBOX_EEPROM
 #include <stdio.h> // For printf
 #include <shlobj.h> // For HANDLE, CreateFile, CreateFileMapping, MapViewOfFile
 #include <random>

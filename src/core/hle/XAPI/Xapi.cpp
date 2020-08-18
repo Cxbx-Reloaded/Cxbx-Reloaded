@@ -28,12 +28,9 @@
 #define LOG_PREFIX CXBXR_MODULE::XAPI
 
 #undef FIELD_OFFSET     // prevent macro redefinition warnings
-/* prevent name collisions */
-namespace xboxkrnl
-{
-	#include <xboxkrnl\xboxkrnl.h>
-};
 
+
+#include <xboxkrnl\xboxkrnl.h>
 #include "common\input\SdlJoystick.h"
 #include "common\input\InputManager.h"
 #include <Shlwapi.h>

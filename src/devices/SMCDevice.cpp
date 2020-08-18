@@ -27,12 +27,8 @@
 
 #define LOG_PREFIX CXBXR_MODULE::SMC
 
-/* prevent name collisions */
-namespace xboxkrnl
-{
-#include <xboxkrnl/xboxkrnl.h> // For xbox.h:AV_PACK_HDTV
-};
 
+#include <xboxkrnl/xboxkrnl.h> // For xbox.h:AV_PACK_HDTV
 #include "core\kernel\init\CxbxKrnl.h"
 #include "EmuShared.h"
 
