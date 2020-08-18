@@ -52,6 +52,7 @@ void SetThreadName(DWORD dwThreadID, const char* szThreadName)
 	info.szName = szThreadName;
 	info.dwThreadID = dwThreadID;
 	info.dwFlags = 0;
+	// NOTE: Require to support Windows platform older than Windows 10 version 1607. Or alternative method will require Windows 10. (see link at top of source file)
 	__try {
 		RaiseException(MS_VC_EXCEPTION, 0, sizeof(info) / sizeof(ULONG_PTR), (ULONG_PTR*)&info);
 	}

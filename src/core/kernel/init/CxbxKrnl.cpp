@@ -171,14 +171,7 @@ void SetupPerTitleKeys()
 
 void CxbxLaunchXbe(void(*Entry)())
 {
-	__try
-	{
-		Entry();
-	}
-	__except (EmuException(GetExceptionInformation()))
-	{
-		EmuLog(LOG_LEVEL::WARNING, "Problem with ExceptionFilter");
-	}
+	Entry();
 }
 
 // Entry point address XOR keys per Xbe type (Retail, Debug or Chihiro) :
@@ -1155,6 +1148,8 @@ void CxbxKrnlEmulate(unsigned int reserved_systems, blocks_reserved_t blocks_res
 		ImportLibraries((XbeImportEntry*)CxbxKrnl_Xbe->m_Header.dwNonKernelImportDirAddr);
 	}
 
+	g_ExceptionManager = new ExceptionManager(); // If in need to add VEHs, move this line earlier. (just in case)
+
 	// Launch the XBE :
 	{
 		// Load TLS
@@ -1772,6 +1767,12 @@ void CxbxKrnlShutDown()
 	}
 
 	EmuShared::Cleanup();
+
+	if (g_ExceptionManager) {
+		delete g_ExceptionManager;
+		g_ExceptionManager = nullptr;
+	}
+
 	TerminateProcess(g_CurrentProcessHandle, 0);
 }
 

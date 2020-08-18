@@ -301,17 +301,13 @@ void ExecuteDpcQueue()
 		// Set DpcRoutineActive to support KeIsExecutingDpc:
 		KeGetCurrentPrcb()->DpcRoutineActive = TRUE; // Experimental
 		EmuLog(LOG_LEVEL::DEBUG, "Global DpcQueue, calling DPC at 0x%.8X", pkdpc->DeferredRoutine);
-		__try {
-			// Call the Deferred Procedure  :
-			pkdpc->DeferredRoutine(
-				pkdpc,
-				pkdpc->DeferredContext,
-				pkdpc->SystemArgument1,
-				pkdpc->SystemArgument2);
-		} __except (EmuException(GetExceptionInformation()))
-		{
-			EmuLog(LOG_LEVEL::WARNING, "Problem with ExceptionFilter!");
-		}
+
+		// Call the Deferred Procedure  :
+		pkdpc->DeferredRoutine(
+			pkdpc,
+			pkdpc->DeferredContext,
+			pkdpc->SystemArgument1,
+			pkdpc->SystemArgument2);
 
 		KeGetCurrentPrcb()->DpcRoutineActive = FALSE; // Experimental
 	}

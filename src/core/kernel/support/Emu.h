@@ -35,8 +35,22 @@
 std::string FormatTitleId(uint32_t title_id);
 
 // exception handler
-extern LONG NTAPI lleException(EXCEPTION_POINTERS *e);
-int EmuException(EXCEPTION_POINTERS *e);
+class ExceptionManager {
+public:
+	ExceptionManager();
+	virtual ~ExceptionManager();
+	// We want to make sure the core's exception is trigger front and last of exception management. For two reasons:
+	// Performance wise for LLE emulation and general emulation, to remove false positive exception from drivers, before we show an actual fatal error message.
+	void EmuX86_Init();
+	// If any custom VEH should be add here than try on their own. See private AddVEH function's comment.
+	bool AddVEH(unsigned long first, PVECTORED_EXCEPTION_HANDLER veh_handler);
+private:
+	std::vector<void*> veh_handles;
+	bool accept_request;
+	// Since Vectored Exception Handlers are global than per thread, we only need to register once.
+	bool AddVEH(unsigned long first, PVECTORED_EXCEPTION_HANDLER veh_handler, bool override_request);
+};
+extern class ExceptionManager* g_ExceptionManager;
 
 // print call stack trace
 #ifdef _DEBUG

@@ -57,6 +57,8 @@ extern std::atomic_bool g_bEnableAllInterrupts;
 
 static int field_pin = 0;
 
+static thread_local bool g_tls_isEmuX86Managed;
+
 uint32_t EmuX86_IORead(xbaddr addr, int size)
 {
 	switch (addr) {
@@ -110,48 +112,36 @@ void EmuX86_IOWrite(xbaddr addr, uint32_t value, int size)
 
 uint32_t EmuX86_Mem_Read(xbaddr addr, int size)
 {
-	__try {
-
-		switch (size) {
-		case sizeof(uint32_t) :
-			return *(uint32_t*)addr;
-		case sizeof(uint16_t) :
-			return *(uint16_t*)addr;
-		case sizeof(uint8_t) :
-			return *(uint8_t*)addr;
-		default:
-			// UNREACHABLE(size);
-			assert(false);
-			return 0;
-		}
-	}
-	__except (true) { // TODO : EXCEPTION_EXECUTE_HANDLER instead of true?
-		EmuLog(LOG_LEVEL::WARNING, "EmuX86_Mem_Read Failed (0x%08X, %d)", addr, size);
+	switch (size) {
+	case sizeof(uint32_t) :
+		return *(uint32_t*)addr;
+	case sizeof(uint16_t) :
+		return *(uint16_t*)addr;
+	case sizeof(uint8_t) :
+		return *(uint8_t*)addr;
+	default:
+		// UNREACHABLE(size);
+		assert(false);
 		return 0;
 	}
 }
 
 void EmuX86_Mem_Write(xbaddr addr, uint32_t value, int size)
 {
-	__try {
-		switch (size) {
-		case sizeof(uint32_t) :
-			*(uint32_t*)addr = (uint32_t)value;
-			break;
-		case sizeof(uint16_t) :
-			*(uint16_t*)addr = (uint16_t)value;
-			break;
-		case sizeof(uint8_t) :
-			*(uint8_t*)addr = (uint8_t)value;
-			break;
-		default:
-			// UNREACHABLE(size);
-			assert(false);
-			return;
-		}
-	}
-	__except (true) { // TODO : EXCEPTION_EXECUTE_HANDLER instead of true?
-		EmuLog(LOG_LEVEL::WARNING, "EmuX86_Mem_Write Failed (0x%08X, 0x%08X, %d)", addr, value, size);
+	switch (size) {
+	case sizeof(uint32_t) :
+		*(uint32_t*)addr = (uint32_t)value;
+		break;
+	case sizeof(uint16_t) :
+		*(uint16_t*)addr = (uint16_t)value;
+		break;
+	case sizeof(uint8_t) :
+		*(uint8_t*)addr = (uint8_t)value;
+		break;
+	default:
+		// UNREACHABLE(size);
+		assert(false);
+		return;
 	}
 }
 
@@ -187,23 +177,25 @@ uint32_t EmuX86_Read(xbaddr addr, int size)
 	uint32_t value;
 
 	if (addr >= XBOX_FLASH_ROM_BASE) { // 0xFFF00000 - 0xFFFFFFF
-		value = EmuFlash_Read32(addr - XBOX_FLASH_ROM_BASE); // TODO : Make flash access size-aware
-	} else if(addr == 0xFE80200C) {
-		// TODO: Remove this once we have an LLE APU Device
-		return GetAPUTime();
-	} else {
-		// Pass the Read to the PCI Bus, this will handle devices with BARs set to MMIO addresses
-		if (g_PCIBus->MMIORead(addr, &value, size)) {
-			return value;
-		}
-
-		//pass the memory-access through to normal memory :
-		value = EmuX86_Mem_Read(addr, size);
-
-		EmuLog(LOG_LEVEL::DEBUG, "Read(0x%08X, %d) = 0x%08X", addr, size, value);
+		return EmuFlash_Read32(addr - XBOX_FLASH_ROM_BASE); // TODO : Make flash access size-aware
 	}
 
-	return value;
+	// TODO: Remove this once we have an LLE APU Device
+	if(addr == 0xFE80200C) {
+		return GetAPUTime();
+	}
+
+	// Pass the Read to the PCI Bus, this will handle devices with BARs set to MMIO addresses
+	if (g_PCIBus->MMIORead(addr, &value, size)) {
+		return value;
+	}
+
+	// EmuX86 is not suppose to do direct read to host memory and should be handle from
+	// redirect from above statements. If it doesn't meet any requirement, then should be
+	// handle as possible fatal crash instead of return corrupt value.
+	g_tls_isEmuX86Managed = false;
+
+	return 0;
 }
 
 void EmuX86_Write(xbaddr addr, uint32_t value, int size)
@@ -224,9 +216,10 @@ void EmuX86_Write(xbaddr addr, uint32_t value, int size)
 		return;
 	}
 
-	// Pass the memory-access through to normal memory :
-	EmuLog(LOG_LEVEL::DEBUG, "Write(0x%.8X, 0x%.8X, %d)", addr, value, size);
-	EmuX86_Mem_Write(addr, value, size);
+	// EmuX86 is not suppose to do direct write to host memory and should be handle from
+	// redirect from above statements. If it doesn't meet any requirement, then should be
+	// handle as possible fatal crash instead of set corrupt value.
+	g_tls_isEmuX86Managed = false;
 }
 
 int ContextRecordOffsetByRegisterType[/*_RegisterType*/R_DR7 + 1] = { 0 };
@@ -2786,7 +2779,7 @@ void output_segment(std::stringstream &output, _DInst &info)
 		output << Distorm_RegStrings[SEGMENT_GET(info.segment)] << ":";
 }
 
-void EmuX86_DistormLogInstruction(const uint8_t *Eip, _DInst &info)
+void EmuX86_DistormLogInstruction(const uint8_t *Eip, _DInst &info, LOG_LEVEL log_level)
 {
 	std::stringstream output;
 
@@ -2907,7 +2900,7 @@ void EmuX86_DistormLogInstruction(const uint8_t *Eip, _DInst &info)
 #define FLAG_GET_PREFIX(flags) ((flags) & 7) // To get the LOCK/REPNZ/REP prefixes.
 */
 
-	EmuLog(LOG_LEVEL::DEBUG, output.str().c_str());
+	EmuLog(log_level, output.str().c_str());
 }
 
 int EmuX86_OpcodeSize(uint8_t *Eip)
@@ -2928,10 +2921,9 @@ bool EmuX86_DecodeException(LPEXCEPTION_POINTERS e)
 	// However, if for any reason, an opcode operand cannot be read from or written to,
 	// that case may be logged, but it shouldn't fail the opcode handler.
 	_DInst info;
+	g_tls_isEmuX86Managed = true;
 	DWORD StartingEip = e->ContextRecord->Eip;
-	LOG_CHECK_ENABLED(LOG_LEVEL::DEBUG) {
-			EmuLog(LOG_LEVEL::DEBUG, "Starting instruction emulation from 0x%08X", e->ContextRecord->Eip);
-	}
+	EmuLog(LOG_LEVEL::DEBUG, "Starting instruction emulation from 0x%08X", e->ContextRecord->Eip);
 
 	// Execute op-codes until we hit an unhandled instruction, or an error occurs
 	//while (true)
@@ -2947,7 +2939,7 @@ bool EmuX86_DecodeException(LPEXCEPTION_POINTERS e)
 		}
 
 		LOG_CHECK_ENABLED(LOG_LEVEL::DEBUG) {
-			EmuX86_DistormLogInstruction((uint8_t*)e->ContextRecord->Eip, info);
+			EmuX86_DistormLogInstruction((uint8_t*)e->ContextRecord->Eip, info, LOG_LEVEL::DEBUG);
 		}
 
 		switch (info.opcode) { // Keep these cases alphabetically ordered and condensed
@@ -3295,10 +3287,15 @@ bool EmuX86_DecodeException(LPEXCEPTION_POINTERS e)
 				return true;
 		} // switch info.opcode
 
-		e->ContextRecord->Eip += info.size;
+		if (g_tls_isEmuX86Managed) {
+			e->ContextRecord->Eip += info.size;
+		}
+		else {
+			break;
+		}
 	} // while true
 
-	return true;
+	return g_tls_isEmuX86Managed;
 
 opcode_error:
 	EmuLog(LOG_LEVEL::WARNING, "0x%08X: Error while handling instruction %s (%u)", e->ContextRecord->Eip, Distorm_OpcodeString(info.opcode), info.opcode);
@@ -3310,7 +3307,8 @@ void EmuX86_Init()
 {
 	EmuLog(LOG_LEVEL::DEBUG, "Initializing distorm version %d", distorm_version());
 
-	AddVectoredExceptionHandler(/*FirstHandler=*/ULONG(true), lleException);
+	// Initialize emulation exception to ensure they are front and last line of exception.
+	g_ExceptionManager->EmuX86_Init();
 
 	EmuX86_InitContextRecordOffsetByRegisterType();
 	EmuX86_InitMemoryBackedRegisters();

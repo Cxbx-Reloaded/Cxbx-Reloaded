@@ -49,6 +49,7 @@ CRITICAL_SECTION dbgCritical;
 HANDLE           g_hCurDir    = NULL;
 CHAR            *g_strCurDrive= NULL;
 volatile thread_local  bool    g_bEmuException = false;
+static thread_local bool bOverrideEmuException;
 volatile bool    g_bEmuSuspended = false;
 volatile bool    g_bPrintfOn = true;
 bool g_DisablePixelShaders = false;
@@ -219,7 +220,14 @@ bool IsXboxCodeAddress(xbaddr addr)
 	// Note : Not IS_USER_ADDRESS(), that would include host DLL code
 }
 
+#include "distorm.h"
+bool EmuX86_DecodeOpcode(const uint8_t* Eip, _DInst& info);
+void EmuX86_DistormLogInstruction(const uint8_t* Eip, _DInst& info, LOG_LEVEL log_level);
 void genericException(EXCEPTION_POINTERS *e) {
+	_DInst info;
+	if (EmuX86_DecodeOpcode((uint8_t*)e->ContextRecord->Eip, info)) {
+		EmuX86_DistormLogInstruction((uint8_t*)e->ContextRecord->Eip, info, LOG_LEVEL::FATAL);
+	}
 	// Try to report this exception to the debugger, which may allow handling of this exception
 	if (CxbxDebugger::CanReport()) {
 		bool DebuggerHandled = false;
@@ -237,14 +245,12 @@ void genericException(EXCEPTION_POINTERS *e) {
 	}
 }
 
-static thread_local bool bOverrideException;
-
 bool IsRdtscInstruction(xbaddr addr); // Implemented in CxbxKrnl.cpp
 void EmuX86_Opcode_RDTSC(EXCEPTION_POINTERS *e); // Implemented in EmuX86.cpp
 bool lleTryHandleException(EXCEPTION_POINTERS *e)
 {
 	// Initalize local thread variable
-	bOverrideException = false;
+	bOverrideEmuException = false;
 
 	// Only handle exceptions which originate from Xbox code
 	if (!IsXboxCodeAddress(e->ContextRecord->Eip)) {
@@ -280,20 +286,18 @@ bool lleTryHandleException(EXCEPTION_POINTERS *e)
 		return true;
 	}
 
-	genericException(e);
-
 	// We do not need EmuException to handle it again.
-	bOverrideException = true;
+	bOverrideEmuException = true;
 
 	// Unhandled exception :
 	return false;
 }
 
 // Only for LLE emulation coding (to help performance a little bit better)
-LONG NTAPI lleException(EXCEPTION_POINTERS *e)
+long WINAPI lleException(EXCEPTION_POINTERS *e)
 {
 	g_bEmuException = true;
-	LONG result = lleTryHandleException(e) ? EXCEPTION_CONTINUE_EXECUTION : EXCEPTION_CONTINUE_SEARCH;
+	long result = lleTryHandleException(e) ? EXCEPTION_CONTINUE_EXECUTION : EXCEPTION_CONTINUE_SEARCH;
 	g_bEmuException = false;
 	return result;
 }
@@ -303,7 +307,8 @@ bool EmuTryHandleException(EXCEPTION_POINTERS *e)
 {
 
 	// Check if lle exception is already called first before emu exception.
-	if (bOverrideException) {
+	if (bOverrideEmuException) {
+		genericException(e);
 		return false;
 	}
 
@@ -348,15 +353,16 @@ bool EmuTryHandleException(EXCEPTION_POINTERS *e)
 	return false;
 }
 
-int EmuException(EXCEPTION_POINTERS *e)
+long WINAPI EmuException(struct _EXCEPTION_POINTERS* e)
 {
 	g_bEmuException = true;
-	LONG result = EmuTryHandleException(e) ? EXCEPTION_CONTINUE_EXECUTION : EXCEPTION_CONTINUE_SEARCH;
+	long result = EmuTryHandleException(e) ? EXCEPTION_CONTINUE_EXECUTION : EXCEPTION_CONTINUE_SEARCH;
 	g_bEmuException = false;
 	return result;
 }
 
 // exception handle for that tough final exit :)
+// TODO: We might just well as delete this, duplicate of EmuExceptionNonBreakpointUnhandledShow
 int ExitException(LPEXCEPTION_POINTERS e)
 {
     static int count = 0;
@@ -384,6 +390,56 @@ int ExitException(LPEXCEPTION_POINTERS e)
     ExitProcess(1);
 
     return EXCEPTION_CONTINUE_SEARCH;
+}
+
+// Exception Mananger class; Any custom exceptions must be above this line.
+ExceptionManager *g_ExceptionManager = nullptr;
+
+ExceptionManager::ExceptionManager()
+{
+	accept_request = true;
+}
+
+ExceptionManager::~ExceptionManager()
+{
+	for (auto i_handle : veh_handles) {
+		(void)RemoveVectoredExceptionHandler(i_handle);
+	}
+	veh_handles.clear();
+#ifdef _MSC_VER // Windows' C++ exception is using SEH, we cannot use VEH for error reporter system.
+	(void)SetUnhandledExceptionFilter(nullptr);
+#endif
+}
+
+// Require to be set right before we call xbe's entry point.
+void ExceptionManager::EmuX86_Init()
+{
+	accept_request = false; // Do not allow add VEH during emulation.
+	AddVEH(1, lleException, true); // Front line call
+	// Last call plus show exception error than terminate early.
+#ifdef _MSC_VER // Windows' C++ exception is using SEH, we cannot use VEH for error reporter system.
+	(void)SetUnhandledExceptionFilter(EmuException);
+#else // Untested for other platforms, may will behave as expected.
+	AddVEH(0, EmuException, true);
+#endif
+}
+
+bool ExceptionManager::AddVEH(unsigned long first, PVECTORED_EXCEPTION_HANDLER veh_handler)
+{
+	return AddVEH(first, veh_handler, false);
+}
+
+bool ExceptionManager::AddVEH(unsigned long first, PVECTORED_EXCEPTION_HANDLER veh_handler, bool override_request)
+{
+	bool isSuccess = false;
+	if (accept_request || override_request) {
+		void* veh_handle = AddVectoredExceptionHandler(first, veh_handler);
+		if (veh_handle) {
+			veh_handles.push_back(veh_handle);
+			isSuccess = true;
+		}
+	}
+	return isSuccess;
 }
 
 #ifdef _DEBUG
