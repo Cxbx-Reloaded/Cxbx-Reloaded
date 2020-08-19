@@ -830,9 +830,9 @@ typedef struct {
 	size_t szXboxDataSize = 0;
 	uint64_t hash = 0;
 	bool forceRehash = false;
-	std::chrono::time_point<std::chrono::high_resolution_clock> nextHashTime;
+	std::chrono::time_point<std::chrono::steady_clock> nextHashTime;
 	std::chrono::milliseconds hashLifeTime = 1ms;
-    std::chrono::time_point<std::chrono::high_resolution_clock> lastUpdate;
+    std::chrono::time_point<std::chrono::steady_clock> lastUpdate;
 } resource_info_t;
 
 typedef std::unordered_map<resource_key_t, resource_info_t, resource_key_hash> resource_cache_t;
@@ -1029,7 +1029,7 @@ bool HostResourceRequiresUpdate(resource_key_t key, DWORD dwSize)
 
 	bool modified = false;
 
-	auto now = std::chrono::high_resolution_clock::now();
+	auto now = std::chrono::steady_clock::now();
 	if (now > it->second.nextHashTime || it->second.forceRehash) {
 		uint64_t oldHash = it->second.hash;
 		it->second.hash = ComputeHash(it->second.pXboxData, it->second.szXboxDataSize);
@@ -1073,7 +1073,7 @@ void SetHostResource(XTL::X_D3DResource* pXboxResource, IDirect3DResource* pHost
 	resourceInfo.szXboxDataSize = dwSize > 0 ? dwSize : GetXboxResourceSize(pXboxResource);
 	resourceInfo.hash = ComputeHash(resourceInfo.pXboxData, resourceInfo.szXboxDataSize);
 	resourceInfo.hashLifeTime = 1ms;
-	resourceInfo.lastUpdate = std::chrono::high_resolution_clock::now();
+	resourceInfo.lastUpdate = std::chrono::steady_clock::now();
 	resourceInfo.nextHashTime = resourceInfo.lastUpdate + resourceInfo.hashLifeTime;
 	resourceInfo.forceRehash = false;
 }
@@ -4954,7 +4954,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_Present)
 	EMUPATCH(D3DDevice_Swap)(CXBX_SWAP_PRESENT_FORWARD); // Xbox present ignores
 }
 
-std::chrono::time_point<std::chrono::high_resolution_clock> frameStartTime;
+std::chrono::time_point<std::chrono::steady_clock> frameStartTime;
 
 // LTCG specific swap function...
 // Massive hack, but could coax some more LTCG titles into booting with HLE
@@ -5211,25 +5211,25 @@ DWORD WINAPI XTL::EMUPATCH(D3DDevice_Swap)
 
         auto targetDuration = std::chrono::duration<double, std::milli>(((1000.0f / targetRefreshRate) * multiplier));
         auto targetTimestamp = frameStartTime + targetDuration;
-        auto actualDuration = std::chrono::duration<double, std::milli>(std::chrono::high_resolution_clock::now() - frameStartTime);
+        auto actualDuration = std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - frameStartTime);
         auto startTimeAjustment = actualDuration - targetDuration;
 
         // Only enter the wait loop if the frame took too long
         if (actualDuration < targetDuration) {
             // If we need to wait for a larger amount of time (>= 1 frame at 60FPS), we can just sleep
-            if (std::chrono::duration_cast<std::chrono::milliseconds>(targetTimestamp - std::chrono::high_resolution_clock::now()).count() > 16) {
+            if (std::chrono::duration_cast<std::chrono::milliseconds>(targetTimestamp - std::chrono::steady_clock::now()).count() > 16) {
                 std::this_thread::sleep_until(targetTimestamp);
             } else {
                 // Otherwise, we fall-through and just keep polling
                 // This prevents large waits from hogging CPU power, but allows small waits/ to remain precice.
-                while (std::chrono::high_resolution_clock::now() < targetTimestamp) {
+                while (std::chrono::steady_clock::now() < targetTimestamp) {
                     ;
                 }
             }
         }
     }
 
-    frameStartTime = std::chrono::high_resolution_clock::now();
+    frameStartTime = std::chrono::steady_clock::now();
 
 	UpdateFPSCounter();
 

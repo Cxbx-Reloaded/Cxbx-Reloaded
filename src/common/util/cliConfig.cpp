@@ -155,7 +155,7 @@ long long GetSessionID()
 
     // Check if previous session ID had been set then use it.
     if (!GetValue(cli_config::sid, &sessionID)) {
-        sessionID = std::chrono::high_resolution_clock::now().time_since_epoch().count();
+        sessionID = std::chrono::steady_clock::now().time_since_epoch().count();
         // From now and the future will continue to use the same sessionID until all processes end.
         SetSID(sessionID);
     }
