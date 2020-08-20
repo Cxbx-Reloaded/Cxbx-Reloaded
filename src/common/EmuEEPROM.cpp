@@ -38,12 +38,12 @@
 #include "..\..\src\devices\LED.h" // For SetLEDSequence
 #include "..\core\kernel\init\CxbxKrnl.h"
 
-xboxkrnl::XBOX_EEPROM *EEPROM = nullptr; // Set using CxbxRestoreEEPROM()
+xbox::XBOX_EEPROM *EEPROM = nullptr; // Set using CxbxRestoreEEPROM()
 
 // Default value (NA), overwritten with the actual content in the eeprom by CxbxRestoreEEPROM
-xboxkrnl::ULONG XboxFactoryGameRegion = XC_GAME_REGION_NA;
+xbox::ULONG XboxFactoryGameRegion = XC_GAME_REGION_NA;
 
-const EEPROMInfo* EmuFindEEPROMInfo(xboxkrnl::XC_VALUE_INDEX index)
+const EEPROMInfo* EmuFindEEPROMInfo(xbox::XC_VALUE_INDEX index)
 {
 	for (int i = 0; EEPROMInfos[i].index != XC_END_MARKER; i++)
 		if (EEPROMInfos[i].index == index)
@@ -75,7 +75,7 @@ static void EepromCRC(unsigned char *crc, unsigned char *data, long dataLen) {
     free(CRC_Data);
 }
 
-void gen_section_CRCs(xboxkrnl::XBOX_EEPROM* eeprom) {
+void gen_section_CRCs(xbox::XBOX_EEPROM* eeprom) {
     const long Factory_size = sizeof(eeprom->FactorySettings) - sizeof(eeprom->FactorySettings.Checksum);
     const long User_size = sizeof(eeprom->UserSettings) - sizeof(eeprom->UserSettings.Checksum);
     EepromCRC(
@@ -90,9 +90,9 @@ void gen_section_CRCs(xboxkrnl::XBOX_EEPROM* eeprom) {
     );
 }
 
-xboxkrnl::XBOX_EEPROM *CxbxRestoreEEPROM(char *szFilePath_EEPROM_bin)
+xbox::XBOX_EEPROM *CxbxRestoreEEPROM(char *szFilePath_EEPROM_bin)
 {
-	xboxkrnl::XBOX_EEPROM *pEEPROM;
+	xbox::XBOX_EEPROM *pEEPROM;
 
 	// First, try to open an existing EEPROM.bin file :
 	HANDLE hFileEEPROM = CreateFile(szFilePath_EEPROM_bin,
@@ -148,7 +148,7 @@ xboxkrnl::XBOX_EEPROM *CxbxRestoreEEPROM(char *szFilePath_EEPROM_bin)
 	}
 
 	// Map EEPROM.bin contents into memory :
-	pEEPROM = (xboxkrnl::XBOX_EEPROM *)MapViewOfFile(
+	pEEPROM = (xbox::XBOX_EEPROM *)MapViewOfFile(
 		hFileMappingEEPROM,
 		FILE_MAP_READ | FILE_MAP_WRITE,
 		/* dwFileOffsetHigh */0,
@@ -180,11 +180,11 @@ xboxkrnl::XBOX_EEPROM *CxbxRestoreEEPROM(char *szFilePath_EEPROM_bin)
 	}
 
 	// Read the HDD (and eventually also the online) keys stored in the eeprom file. Users can input them in the eeprom menu
-	memcpy(xboxkrnl::XboxHDKey, pEEPROM->EncryptedSettings.HDKey, xboxkrnl::XBOX_KEY_LENGTH);
+	memcpy(xbox::XboxHDKey, pEEPROM->EncryptedSettings.HDKey, xbox::XBOX_KEY_LENGTH);
 
 	// Verify the checksum of the eeprom header
 	UCHAR Checksum[20] = { 0 };
-	xboxkrnl::XcHMAC(xboxkrnl::XboxEEPROMKey, 16, pEEPROM->EncryptedSettings.Confounder, 8, pEEPROM->EncryptedSettings.HDKey, 20, Checksum);
+	xbox::XcHMAC(xbox::XboxEEPROMKey, 16, pEEPROM->EncryptedSettings.Confounder, 8, pEEPROM->EncryptedSettings.HDKey, 20, Checksum);
 	if (memcmp(Checksum, pEEPROM->EncryptedSettings.Checksum, 20))
 	{
 		// The checksums do not match. Log this error and flash the LED (red, off, red, off)
@@ -195,9 +195,9 @@ xboxkrnl::XBOX_EEPROM *CxbxRestoreEEPROM(char *szFilePath_EEPROM_bin)
 	return pEEPROM;
 }
 
-void EmuEEPROMReset(xboxkrnl::XBOX_EEPROM* eeprom)
+void EmuEEPROMReset(xbox::XBOX_EEPROM* eeprom)
 {
-	memset(eeprom, 0, sizeof(xboxkrnl::XBOX_EEPROM));
+	memset(eeprom, 0, sizeof(xbox::XBOX_EEPROM));
 
 	// Set Factory Settings
 	eeprom->FactorySettings.AVRegion = AV_STANDARD_NTSC_M | AV_FLAGS_60Hz;
@@ -208,7 +208,7 @@ void EmuEEPROMReset(xboxkrnl::XBOX_EEPROM* eeprom)
 	// Encrypted Section
 	eeprom->EncryptedSettings.GameRegion = XC_GAME_REGION_NA;
 	// TODO: HDD Key
-	xboxkrnl::XcHMAC(xboxkrnl::XboxEEPROMKey, 16, eeprom->EncryptedSettings.Confounder, 8, eeprom->EncryptedSettings.HDKey, 20, eeprom->EncryptedSettings.Checksum);
+	xbox::XcHMAC(xbox::XboxEEPROMKey, 16, eeprom->EncryptedSettings.Confounder, 8, eeprom->EncryptedSettings.HDKey, 20, eeprom->EncryptedSettings.Checksum);
 
 	// User Settings
 	eeprom->UserSettings.Language = XC_LANGUAGE_ENGLISH;  // = English

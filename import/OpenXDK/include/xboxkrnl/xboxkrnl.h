@@ -14,7 +14,7 @@
 
 #include "xbox_types.h"
 
-namespace xboxkrnl
+namespace xbox
 {
 
 // ******************************************************************

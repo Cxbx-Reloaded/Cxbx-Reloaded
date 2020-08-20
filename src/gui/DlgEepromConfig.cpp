@@ -44,7 +44,7 @@ static INT_PTR CALLBACK DlgEepromConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wPar
 // Indicates that changes have been made in the eeprom menu
 static bool g_bHasChanges = false;
 // Pointer to the cached eeprom in memory
-static xboxkrnl::XBOX_EEPROM* pEEPROM_GUI = nullptr;
+static xbox::XBOX_EEPROM* pEEPROM_GUI = nullptr;
 // Window procedure of the subclass
 LRESULT CALLBACK ControlSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
 // Array containing all the values used to initialize the combo box controls
@@ -195,7 +195,7 @@ void WriteEepromInMemory(HWND hDlg)
 		EepromFile.read(EepromKey, 16);
 		EepromFile.close();
 	}
-	xboxkrnl::XcHMAC(EepromKey, 16, pEEPROM_GUI->EncryptedSettings.Confounder, 8, pEEPROM_GUI->EncryptedSettings.HDKey, 20,
+	xbox::XcHMAC(EepromKey, 16, pEEPROM_GUI->EncryptedSettings.Confounder, 8, pEEPROM_GUI->EncryptedSettings.HDKey, 20,
 		pEEPROM_GUI->EncryptedSettings.Checksum);
 	gen_section_CRCs(pEEPROM_GUI);
 }
@@ -206,7 +206,7 @@ void ShowEepromConfig(HWND hwnd)
 	if (pEEPROM_GUI == nullptr) {
 		std::basic_ifstream<uint8_t> EepromFile(szFilePath_EEPROM_bin, std::ios::binary);
 		if (EepromFile.is_open()) {
-			pEEPROM_GUI = new xboxkrnl::XBOX_EEPROM;
+			pEEPROM_GUI = new xbox::XBOX_EEPROM;
 			EepromFile.read(reinterpret_cast<uint8_t*>(pEEPROM_GUI), EEPROM_SIZE);
 			EepromFile.close();
 		}

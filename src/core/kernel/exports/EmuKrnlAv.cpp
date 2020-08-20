@@ -53,27 +53,27 @@ namespace NtDll
 #endif
 
 // HW Register helper functions
-xboxkrnl::UCHAR REG_RD08(VOID* Ptr, xboxkrnl::ULONG Addr)
+xbox::UCHAR REG_RD08(VOID* Ptr, xbox::ULONG Addr)
 {
 	return EmuX86_Read((xbox::addr)Ptr + Addr, sizeof(uint8_t));
 }
 
-VOID REG_WR08(VOID* Ptr, xboxkrnl::ULONG Addr, xboxkrnl::UCHAR Val)
+VOID REG_WR08(VOID* Ptr, xbox::ULONG Addr, xbox::UCHAR Val)
 {
 	EmuX86_Write((xbox::addr)Ptr + Addr, Val, sizeof(uint8_t));
 }
 
-xboxkrnl::ULONG REG_RD32(VOID* Ptr, xboxkrnl::ULONG Addr)
+xbox::ULONG REG_RD32(VOID* Ptr, xbox::ULONG Addr)
 {
 	return EmuX86_Read((xbox::addr)Ptr + Addr, sizeof(uint32_t));
 }
 
-VOID REG_WR32(VOID* Ptr, xboxkrnl::ULONG Addr, xboxkrnl::ULONG Val)
+VOID REG_WR32(VOID* Ptr, xbox::ULONG Addr, xbox::ULONG Val)
 {
 	EmuX86_Write((xbox::addr)Ptr + Addr, Val, sizeof(uint32_t));
 }
 
-VOID CRTC_WR(VOID* Ptr, xboxkrnl::UCHAR i, xboxkrnl::UCHAR d)
+VOID CRTC_WR(VOID* Ptr, xbox::UCHAR i, xbox::UCHAR d)
 {
 	static const NV2ABlockInfo* block = EmuNV2A_Block(NV_PRMCIO_CRX__COLOR);
 
@@ -81,7 +81,7 @@ VOID CRTC_WR(VOID* Ptr, xboxkrnl::UCHAR i, xboxkrnl::UCHAR d)
 	g_NV2A->BlockWrite(block, NV_PRMCIO_CR__COLOR, d, sizeof(uint8_t));
 }
 
-VOID SRX_WR(VOID *Ptr, xboxkrnl::UCHAR i, xboxkrnl::UCHAR d)
+VOID SRX_WR(VOID *Ptr, xbox::UCHAR i, xbox::UCHAR d)
 {
 	static const NV2ABlockInfo* block = EmuNV2A_Block(NV_PRMVIO_SRX);
 
@@ -89,7 +89,7 @@ VOID SRX_WR(VOID *Ptr, xboxkrnl::UCHAR i, xboxkrnl::UCHAR d)
 	g_NV2A->BlockWrite(block, NV_PRMVIO_SR, d, sizeof(uint8_t));
 }
 
-VOID GRX_WR(VOID *Ptr, xboxkrnl::UCHAR i, xboxkrnl::UCHAR d)
+VOID GRX_WR(VOID *Ptr, xbox::UCHAR i, xbox::UCHAR d)
 {
 	static const NV2ABlockInfo* block = EmuNV2A_Block(NV_PRMVIO_GRX);
 
@@ -97,7 +97,7 @@ VOID GRX_WR(VOID *Ptr, xboxkrnl::UCHAR i, xboxkrnl::UCHAR d)
 	g_NV2A->BlockWrite(block, NV_PRMVIO_GX, d, sizeof(uint8_t));
 }
 
-VOID ARX_WR(VOID *Ptr, xboxkrnl::UCHAR i, xboxkrnl::UCHAR d)
+VOID ARX_WR(VOID *Ptr, xbox::UCHAR i, xbox::UCHAR d)
 {
 	static const NV2ABlockInfo* block = EmuNV2A_Block(NV_PRMCIO_ARX);
 
@@ -128,14 +128,14 @@ ULONG AvSMCVideoModeToAVPack(ULONG VideoMode)
 
 ULONG AvQueryAvCapabilities()
 {
-	ULONG avpack = AvSMCVideoModeToAVPack(xboxkrnl::HalBootSMCVideoMode);
+	ULONG avpack = AvSMCVideoModeToAVPack(xbox::HalBootSMCVideoMode);
 	ULONG type;
 	ULONG resultSize;
 
 	// First, read the factory AV settings
 	ULONG avRegion;
-	NTSTATUS result = xboxkrnl::ExQueryNonVolatileSetting(
-		xboxkrnl::XC_FACTORY_AV_REGION,
+	NTSTATUS result = xbox::ExQueryNonVolatileSetting(
+		xbox::XC_FACTORY_AV_REGION,
 		&type,
 		&avRegion,
 		sizeof(ULONG),
@@ -148,8 +148,8 @@ ULONG AvQueryAvCapabilities()
 
 	// Read the user-configurable (via the dashboard) settings
 	ULONG userSettings;
-	result = xboxkrnl::ExQueryNonVolatileSetting(
-		xboxkrnl::XC_VIDEO,
+	result = xbox::ExQueryNonVolatileSetting(
+		xbox::XC_VIDEO,
 		&type,
 		&userSettings,
 		sizeof(ULONG),
@@ -163,12 +163,12 @@ ULONG AvQueryAvCapabilities()
 	return avpack | (avRegion & (AV_STANDARD_MASK | AV_REFRESH_MASK)) | (userSettings & ~(AV_STANDARD_MASK | AV_PACK_MASK));
 }
 
-xboxkrnl::PVOID xboxkrnl::AvSavedDataAddress = xbox::zeroptr;
+xbox::PVOID xbox::AvSavedDataAddress = xbox::zeroptr;
 
 // ******************************************************************
 // * 0x0001 - AvGetSavedDataAddress()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(1) xboxkrnl::PVOID NTAPI xboxkrnl::AvGetSavedDataAddress(void)
+XBSYSAPI EXPORTNUM(1) xbox::PVOID NTAPI xbox::AvGetSavedDataAddress(void)
 {
 	LOG_FUNC();
 
@@ -178,7 +178,7 @@ XBSYSAPI EXPORTNUM(1) xboxkrnl::PVOID NTAPI xboxkrnl::AvGetSavedDataAddress(void
 // ******************************************************************
 // * 0x0002 - AvSendTVEncoderOption()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(2) VOID NTAPI xboxkrnl::AvSendTVEncoderOption
+XBSYSAPI EXPORTNUM(2) VOID NTAPI xbox::AvSendTVEncoderOption
 (
 	IN  PVOID   RegisterBase,
 	IN  ULONG   Option,
@@ -257,7 +257,7 @@ XBSYSAPI EXPORTNUM(2) VOID NTAPI xboxkrnl::AvSendTVEncoderOption
 // ******************************************************************
 // * 0x0003 - AvSetDisplayMode()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(3) xboxkrnl::ULONG NTAPI xboxkrnl::AvSetDisplayMode
+XBSYSAPI EXPORTNUM(3) xbox::ULONG NTAPI xbox::AvSetDisplayMode
 (
 	IN  PVOID   RegisterBase,
 	IN  ULONG   Step,
@@ -405,7 +405,7 @@ XBSYSAPI EXPORTNUM(3) xboxkrnl::ULONG NTAPI xboxkrnl::AvSetDisplayMode
 // ******************************************************************
 // * 0x0004 - AvSetSavedDataAddress()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(4) VOID NTAPI xboxkrnl::AvSetSavedDataAddress
+XBSYSAPI EXPORTNUM(4) VOID NTAPI xbox::AvSetSavedDataAddress
 (
 	IN  PVOID   Address
 )

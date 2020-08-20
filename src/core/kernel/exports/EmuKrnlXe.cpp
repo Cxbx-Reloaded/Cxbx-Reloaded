@@ -38,7 +38,7 @@
 // ******************************************************************
 // * 0x0146 - XeImageFileName
 // ******************************************************************
-XBSYSAPI EXPORTNUM(326) xboxkrnl::OBJECT_STRING xboxkrnl::XeImageFileName =
+XBSYSAPI EXPORTNUM(326) xbox::OBJECT_STRING xbox::XeImageFileName =
 // XeImageFileName.Buffer points to path of XBE
 //
 // Format is like this: \Device\Harddisk0\Partition1\bla.xbe
@@ -55,7 +55,7 @@ XBSYSAPI EXPORTNUM(326) xboxkrnl::OBJECT_STRING xboxkrnl::XeImageFileName =
 // count is now above zero.
 //
 // New to the XBOX.
-XBSYSAPI EXPORTNUM(327) xboxkrnl::NTSTATUS NTAPI xboxkrnl::XeLoadSection
+XBSYSAPI EXPORTNUM(327) xbox::NTSTATUS NTAPI xbox::XeLoadSection
 (
 	IN PXBEIMAGE_SECTION Section
 )
@@ -108,7 +108,7 @@ XBSYSAPI EXPORTNUM(327) xboxkrnl::NTSTATUS NTAPI xboxkrnl::XeLoadSection
 // if the count is now zero.
 //
 // New to the XBOX.
-XBSYSAPI EXPORTNUM(328) xboxkrnl::NTSTATUS NTAPI xboxkrnl::XeUnloadSection
+XBSYSAPI EXPORTNUM(328) xbox::NTSTATUS NTAPI xbox::XeUnloadSection
 (
 	IN PXBEIMAGE_SECTION Section
 )
@@ -164,10 +164,10 @@ XBSYSAPI EXPORTNUM(328) xboxkrnl::NTSTATUS NTAPI xboxkrnl::XeUnloadSection
 // * 0x0163 - XePublicKeyData
 // ******************************************************************
 // Define XePublicKeyData: This will be overwritten by the correct key for the given Xbe at runtime
-XBSYSAPI EXPORTNUM(355) xboxkrnl::UCHAR xboxkrnl::XePublicKeyData[284] = { 0 };
+XBSYSAPI EXPORTNUM(355) xbox::UCHAR xbox::XePublicKeyData[284] = { 0 };
 
 // We are allowed to use the real RSA public key since it cannot be used to sign data, only verify it -> it's not secret/private
-xboxkrnl::UCHAR xboxkrnl::XePublicKeyDataRetail[284] = {
+xbox::UCHAR xbox::XePublicKeyDataRetail[284] = {
 	0x52,0x53,0x41,0x31, 0x08,0x01,0x00,0x00, 0x00,0x08,0x00,0x00, 0xff,0x00,0x00,0x00,
 	0x01,0x00,0x01,0x00,
 	// Public Modulus "m"
@@ -192,7 +192,7 @@ xboxkrnl::UCHAR xboxkrnl::XePublicKeyDataRetail[284] = {
 };
 
 // Chihiro Game Public Key
-xboxkrnl::UCHAR xboxkrnl::XePublicKeyDataChihiroGame[284] = {
+xbox::UCHAR xbox::XePublicKeyDataChihiroGame[284] = {
 	0x52, 0x53, 0x41, 0x31, 0x08, 0x01, 0x00, 0x00, 0x00, 0x08, 0x00, 0x00,
 	0xFF, 0x00, 0x00, 0x00, 0x01, 0x00, 0x01, 0x00, 0x9B, 0x83, 0xD4, 0xD5,
 	0xDE, 0x16, 0x25, 0x8E, 0xE5, 0x15, 0xF2, 0x18, 0x9D, 0x19, 0x1C, 0xF8,
@@ -220,7 +220,7 @@ xboxkrnl::UCHAR xboxkrnl::XePublicKeyDataChihiroGame[284] = {
 };
 
 // Chihiro bootloader public key (Segaboot)
-xboxkrnl::UCHAR xboxkrnl::XePublicKeyDataChihiroBoot[284] = {
+xbox::UCHAR xbox::XePublicKeyDataChihiroBoot[284] = {
 	0x52, 0x53, 0x41, 0x31, 0x08, 0x01, 0x00, 0x00, 0x00, 0x08, 0x00, 0x00,
 	0xFF, 0x00, 0x00, 0x00, 0x01, 0x00, 0x01, 0x00, 0x6B, 0x7B, 0x38, 0x78,
 	0xE3, 0x16, 0x04, 0x88, 0x1D, 0xAF, 0x63, 0x4E, 0x23, 0xDB, 0x10, 0x14,

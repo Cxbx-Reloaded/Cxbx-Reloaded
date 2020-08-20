@@ -44,8 +44,8 @@
 #define FIELD_OFFSET(type,field)  ((ULONG)&(((type *)0)->field))
 
 #define INITIALIZED_OBJECT_STRING(ObjectString, Value)                  \
-	xboxkrnl::CHAR ObjectString##Buffer[] = Value;                      \
-	xboxkrnl::OBJECT_STRING ObjectString = {							\
+	xbox::CHAR ObjectString##Buffer[] = Value;                      \
+	xbox::OBJECT_STRING ObjectString = {							\
 	sizeof(Value) - sizeof(CHAR),                                      \
 	sizeof(Value),                                                      \
 	ObjectString##Buffer                                                \
@@ -55,20 +55,20 @@ INITIALIZED_OBJECT_STRING(ObpDosDevicesString, "\\??");
 INITIALIZED_OBJECT_STRING(ObpIoDevicesString, "\\Device");
 INITIALIZED_OBJECT_STRING(ObpWin32NamedObjectsString, "\\Win32NamedObjects");
 
-xboxkrnl::POBJECT_DIRECTORY ObpDosDevicesDirectoryObject;
-xboxkrnl::POBJECT_DIRECTORY ObpWin32NamedObjectsDirectoryObject;
-xboxkrnl::POBJECT_DIRECTORY ObpRootDirectoryObject;
-xboxkrnl::POBJECT_DIRECTORY ObpIoDevicesDirectoryObject;
+xbox::POBJECT_DIRECTORY ObpDosDevicesDirectoryObject;
+xbox::POBJECT_DIRECTORY ObpWin32NamedObjectsDirectoryObject;
+xbox::POBJECT_DIRECTORY ObpRootDirectoryObject;
+xbox::POBJECT_DIRECTORY ObpIoDevicesDirectoryObject;
 
-XBSYSAPI EXPORTNUM(245) xboxkrnl::OBJECT_HANDLE_TABLE xboxkrnl::ObpObjectHandleTable = {
+XBSYSAPI EXPORTNUM(245) xbox::OBJECT_HANDLE_TABLE xbox::ObpObjectHandleTable = {
 
 };
 
-xboxkrnl::PVOID ObpDosDevicesDriveLetterMap['Z' - 'A' + 1];
+xbox::PVOID ObpDosDevicesDriveLetterMap['Z' - 'A' + 1];
 
-xboxkrnl::BOOLEAN xboxkrnl::ObpCreatePermanentDirectoryObject(
-	IN xboxkrnl::POBJECT_STRING DirectoryName OPTIONAL,
-	OUT xboxkrnl::POBJECT_DIRECTORY *DirectoryObject
+xbox::BOOLEAN xbox::ObpCreatePermanentDirectoryObject(
+	IN xbox::POBJECT_STRING DirectoryName OPTIONAL,
+	OUT xbox::POBJECT_DIRECTORY *DirectoryObject
 )
 {
 	LOG_FUNC_BEGIN
@@ -97,7 +97,7 @@ xboxkrnl::BOOLEAN xboxkrnl::ObpCreatePermanentDirectoryObject(
 	RETURN(TRUE);
 }
 
-xboxkrnl::NTSTATUS xboxkrnl::ObpReferenceObjectByName(
+xbox::NTSTATUS xbox::ObpReferenceObjectByName(
 	IN HANDLE RootDirectoryHandle,
 	IN POBJECT_STRING ObjectName,
 	IN ULONG Attributes,
@@ -236,7 +236,7 @@ CleanupAndExit:
 	return status;
 }
 
-xboxkrnl::BOOLEAN xboxkrnl::ObInitSystem()
+xbox::BOOLEAN xbox::ObInitSystem()
 {
 	ObpObjectHandleTable.HandleCount = 0;
 	ObpObjectHandleTable.FirstFreeTableEntry = -1;
@@ -264,7 +264,7 @@ xboxkrnl::BOOLEAN xboxkrnl::ObInitSystem()
 	return TRUE;
 }
 
-xboxkrnl::BOOLEAN xboxkrnl::ObpExtendObjectHandleTable()
+xbox::BOOLEAN xbox::ObpExtendObjectHandleTable()
 {
 	PVOID* NewTable = (PVOID*)ExAllocatePoolWithTag(sizeof(PVOID) * OB_HANDLES_PER_TABLE, 'tHbO');
 	if (NewTable == NULL) {
@@ -320,7 +320,7 @@ xboxkrnl::BOOLEAN xboxkrnl::ObpExtendObjectHandleTable()
 	return TRUE;
 }
 
-xboxkrnl::HANDLE xboxkrnl::ObpCreateObjectHandle(xboxkrnl::PVOID Object)
+xbox::HANDLE xbox::ObpCreateObjectHandle(xbox::PVOID Object)
 {
 	LOG_FUNC_ONE_ARG(Object);
 
@@ -342,7 +342,7 @@ xboxkrnl::HANDLE xboxkrnl::ObpCreateObjectHandle(xboxkrnl::PVOID Object)
 	return Handle;
 }
 
-xboxkrnl::VOID xboxkrnl::ObDissectName(OBJECT_STRING Path, POBJECT_STRING FirstName, POBJECT_STRING RemainingName)
+xbox::VOID xbox::ObDissectName(OBJECT_STRING Path, POBJECT_STRING FirstName, POBJECT_STRING RemainingName)
 {
 	ULONG i = 0;
 	
@@ -385,7 +385,7 @@ xboxkrnl::VOID xboxkrnl::ObDissectName(OBJECT_STRING Path, POBJECT_STRING FirstN
 // ******************************************************************
 // * 0x00EF - ObCreateObject()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(239) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ObCreateObject
+XBSYSAPI EXPORTNUM(239) xbox::NTSTATUS NTAPI xbox::ObCreateObject
 (
 	IN POBJECT_TYPE ObjectType,
 	IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
@@ -465,18 +465,18 @@ XBSYSAPI EXPORTNUM(239) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ObCreateObject
 // ******************************************************************
 // * 0x00F0 - ObDirectoryObjectType
 // ******************************************************************
-XBSYSAPI EXPORTNUM(240) xboxkrnl::OBJECT_TYPE xboxkrnl::ObDirectoryObjectType =
+XBSYSAPI EXPORTNUM(240) xbox::OBJECT_TYPE xbox::ObDirectoryObjectType =
 {
-	xboxkrnl::ExAllocatePoolWithTag,
-	xboxkrnl::ExFreePool,
+	xbox::ExAllocatePoolWithTag,
+	xbox::ExFreePool,
 	NULL,
 	NULL,
 	NULL,
-	NULL, // TODO : &xboxkrnl::ObpDefaultObject,
+	NULL, // TODO : &xbox::ObpDefaultObject,
 	'eriD' // = first four characters of "Directory" in reverse
 };
 
-xboxkrnl::PVOID xboxkrnl::ObpGetObjectHandleContents(HANDLE Handle)
+xbox::PVOID xbox::ObpGetObjectHandleContents(HANDLE Handle)
 {
 	PVOID *HandleContents;
 	PVOID Object;
@@ -494,7 +494,7 @@ xboxkrnl::PVOID xboxkrnl::ObpGetObjectHandleContents(HANDLE Handle)
 	return NULL;
 }
 
-xboxkrnl::ULONG FASTCALL xboxkrnl::ObpComputeHashIndex(
+xbox::ULONG FASTCALL xbox::ObpComputeHashIndex(
 	IN POBJECT_STRING ElementName
 )
 {
@@ -521,7 +521,7 @@ xboxkrnl::ULONG FASTCALL xboxkrnl::ObpComputeHashIndex(
 	return HashIndex % OB_NUMBER_HASH_BUCKETS;
 }
 
-xboxkrnl::PVOID xboxkrnl::ObpGetObjectHandleReference(HANDLE Handle)
+xbox::PVOID xbox::ObpGetObjectHandleReference(HANDLE Handle)
 {
 	PVOID *HandleContents;
 	Handle = ObpMaskOffApplicationBits(Handle);
@@ -542,7 +542,7 @@ xboxkrnl::PVOID xboxkrnl::ObpGetObjectHandleReference(HANDLE Handle)
 	return NULL;
 }
 
-xboxkrnl::BOOLEAN xboxkrnl::ObpLookupElementNameInDirectory(
+xbox::BOOLEAN xbox::ObpLookupElementNameInDirectory(
 	IN POBJECT_DIRECTORY Directory,
 	IN POBJECT_STRING ElementName,
 	IN BOOLEAN ResolveSymbolicLink,
@@ -590,7 +590,7 @@ xboxkrnl::BOOLEAN xboxkrnl::ObpLookupElementNameInDirectory(
 // ******************************************************************
 // * 0x00F1 - ObInsertObject()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(241) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ObInsertObject
+XBSYSAPI EXPORTNUM(241) xbox::NTSTATUS NTAPI xbox::ObInsertObject
 (
 	IN PVOID Object,
 	IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
@@ -745,7 +745,7 @@ CleanupAndExit:
 // ******************************************************************
 // * 0x00F2 - ObMakeTemporaryObject()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(242) xboxkrnl::VOID NTAPI xboxkrnl::ObMakeTemporaryObject
+XBSYSAPI EXPORTNUM(242) xbox::VOID NTAPI xbox::ObMakeTemporaryObject
 (
 	IN PVOID Object
 )
@@ -759,7 +759,7 @@ XBSYSAPI EXPORTNUM(242) xboxkrnl::VOID NTAPI xboxkrnl::ObMakeTemporaryObject
 // ******************************************************************
 // * 0x00F3 - ObOpenObjectByName()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(243) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ObOpenObjectByName
+XBSYSAPI EXPORTNUM(243) xbox::NTSTATUS NTAPI xbox::ObOpenObjectByName
 (
 	IN POBJECT_ATTRIBUTES ObjectAttributes,
 	IN POBJECT_TYPE ObjectType,
@@ -783,7 +783,7 @@ XBSYSAPI EXPORTNUM(243) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ObOpenObjectByName
 // ******************************************************************
 // * 0x00F4 - ObOpenObjectByPointer()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(244) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ObOpenObjectByPointer
+XBSYSAPI EXPORTNUM(244) xbox::NTSTATUS NTAPI xbox::ObOpenObjectByPointer
 (
 	IN PVOID Object,
 	IN POBJECT_TYPE ObjectType,
@@ -811,7 +811,7 @@ XBSYSAPI EXPORTNUM(244) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ObOpenObjectByPointer
 //
 // Differences from NT: There are no DesiredAccess, AccessMode, or
 //     HandleInformation parameters.
-XBSYSAPI EXPORTNUM(246) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ObReferenceObjectByHandle
+XBSYSAPI EXPORTNUM(246) xbox::NTSTATUS NTAPI xbox::ObReferenceObjectByHandle
 (
 	IN HANDLE Handle,
 	IN POBJECT_TYPE ObjectType OPTIONAL,
@@ -874,7 +874,7 @@ XBSYSAPI EXPORTNUM(246) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ObReferenceObjectByHa
 // ******************************************************************
 // * 0x00F7 - ObReferenceObjectByName()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(247) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ObReferenceObjectByName
+XBSYSAPI EXPORTNUM(247) xbox::NTSTATUS NTAPI xbox::ObReferenceObjectByName
 (
 	IN POBJECT_STRING ObjectName,
 	IN ULONG Attributes,
@@ -898,7 +898,7 @@ XBSYSAPI EXPORTNUM(247) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ObReferenceObjectByNa
 // ******************************************************************
 // * 0x00F8 - ObReferenceObjectByPointer()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(248) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ObReferenceObjectByPointer
+XBSYSAPI EXPORTNUM(248) xbox::NTSTATUS NTAPI xbox::ObReferenceObjectByPointer
 (
 	IN PVOID Object,
 	IN POBJECT_TYPE ObjectType
@@ -922,21 +922,21 @@ XBSYSAPI EXPORTNUM(248) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ObReferenceObjectByPo
 // ******************************************************************
 // * 0x00F9 - ObSymbolicLinkObjectType
 // ******************************************************************
-XBSYSAPI EXPORTNUM(249) xboxkrnl::OBJECT_TYPE xboxkrnl::ObSymbolicLinkObjectType =
+XBSYSAPI EXPORTNUM(249) xbox::OBJECT_TYPE xbox::ObSymbolicLinkObjectType =
 {
-	xboxkrnl::ExAllocatePoolWithTag,
-	xboxkrnl::ExFreePool,
+	xbox::ExAllocatePoolWithTag,
+	xbox::ExFreePool,
 	NULL,
-	NULL, // TODO : xboxkrnl::ObpDeleteSymbolicLink,
+	NULL, // TODO : xbox::ObpDeleteSymbolicLink,
 	NULL,
-	NULL, // TODO : &xboxkrnl::ObpDefaultObject,
+	NULL, // TODO : &xbox::ObpDefaultObject,
 	'bmyS' // = first four characters of "SymbolicLink" in reverse
 };
 
 // ******************************************************************
 // * 0x00FA - ObfDereferenceObject()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(250) xboxkrnl::VOID FASTCALL xboxkrnl::ObfDereferenceObject
+XBSYSAPI EXPORTNUM(250) xbox::VOID FASTCALL xbox::ObfDereferenceObject
 (
 	IN PVOID Object
 )
@@ -972,7 +972,7 @@ XBSYSAPI EXPORTNUM(250) xboxkrnl::VOID FASTCALL xboxkrnl::ObfDereferenceObject
 // ******************************************************************
 // * 0x00FB - ObfReferenceObject()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(251) xboxkrnl::VOID FASTCALL xboxkrnl::ObfReferenceObject
+XBSYSAPI EXPORTNUM(251) xbox::VOID FASTCALL xbox::ObfReferenceObject
 (
 	IN PVOID Object
 )

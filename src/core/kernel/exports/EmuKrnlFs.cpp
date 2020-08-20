@@ -43,12 +43,12 @@ namespace NtDll
 #define FSCACHE_MAXIMUM_NUMBER_OF_CACHE_PAGES 2048
 
 // global variables
-xboxkrnl::LONG g_FscNumberOfCachePages = 16; // 16 = default number of file system cache pages
+xbox::LONG g_FscNumberOfCachePages = 16; // 16 = default number of file system cache pages
 
 // ******************************************************************
 // * 0x0023 - FscGetCacheSize()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(35) xboxkrnl::ULONG NTAPI xboxkrnl::FscGetCacheSize()
+XBSYSAPI EXPORTNUM(35) xbox::ULONG NTAPI xbox::FscGetCacheSize()
 {
 	LOG_FUNC();
 
@@ -58,16 +58,16 @@ XBSYSAPI EXPORTNUM(35) xboxkrnl::ULONG NTAPI xboxkrnl::FscGetCacheSize()
 // ******************************************************************
 // * 0x0024 - FscInvalidateIdleBlocks()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(36) xboxkrnl::VOID NTAPI xboxkrnl::FscInvalidateIdleBlocks()
+XBSYSAPI EXPORTNUM(36) xbox::VOID NTAPI xbox::FscInvalidateIdleBlocks()
 {
 	LOG_FUNC();
 
 	LOG_UNIMPLEMENTED();
 }
 
-static xboxkrnl::KEVENT g_FscCacheEvent;
+static xbox::KEVENT g_FscCacheEvent;
 
-xboxkrnl::VOID xboxkrnl::InitializeFscCacheEvent()
+xbox::VOID xbox::InitializeFscCacheEvent()
 {
     KeInitializeEvent(&g_FscCacheEvent, SynchronizationEvent, TRUE);
 }
@@ -75,7 +75,7 @@ xboxkrnl::VOID xboxkrnl::InitializeFscCacheEvent()
 // ******************************************************************
 // * 0x0025 - FscSetCacheSize()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(37) xboxkrnl::NTSTATUS NTAPI xboxkrnl::FscSetCacheSize
+XBSYSAPI EXPORTNUM(37) xbox::NTSTATUS NTAPI xbox::FscSetCacheSize
 (
 	ULONG NumberOfCachePages
 )

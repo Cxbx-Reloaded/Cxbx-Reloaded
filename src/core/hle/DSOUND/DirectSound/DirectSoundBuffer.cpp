@@ -56,7 +56,7 @@
 // ******************************************************************
 // * patch: DirectSoundDoWork (buffer)
 // ******************************************************************
-void DirectSoundDoWork_Buffer(xboxkrnl::LARGE_INTEGER &time)
+void DirectSoundDoWork_Buffer(xbox::LARGE_INTEGER &time)
 {
 
     vector_ds_buffer::iterator ppDSBuffer = g_pDSoundBufferCache.begin();
@@ -1609,8 +1609,8 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_StopEx)
 
             if ((dwFlags & X_DSBSTOPEX_ENVELOPE) > 0) {
                 if (rtTimeStamp == 0LL) {
-                    xboxkrnl::LARGE_INTEGER getTime;
-                    xboxkrnl::KeQuerySystemTime(&getTime);
+                    xbox::LARGE_INTEGER getTime;
+                    xbox::KeQuerySystemTime(&getTime);
                     pThis->Xb_rtStopEx = getTime.QuadPart;
                 }
                 else {

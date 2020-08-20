@@ -149,7 +149,7 @@ void VMManager::Initialize(unsigned int SystemType, int BootFlags, blocks_reserv
 	}
 
 	// Insert all the pages available on the system in the free list
-	xboxkrnl::PLIST_ENTRY ListEntry = FreeList.Blink;
+	xbox::PLIST_ENTRY ListEntry = FreeList.Blink;
 	PFreeBlock block = new FreeBlock;
 	block->start = 0;
 	block->size = m_HighestPage + 1;
@@ -319,12 +319,12 @@ void VMManager::RestorePersistentMemory()
 	}
 
 	if (persisted_mem->LaunchFrameAddresses[0] != 0 && IS_PHYSICAL_ADDRESS(persisted_mem->LaunchFrameAddresses[0])) {
-		xboxkrnl::LaunchDataPage = (xboxkrnl::PLAUNCH_DATA_PAGE)persisted_mem->LaunchFrameAddresses[0];
+		xbox::LaunchDataPage = (xbox::PLAUNCH_DATA_PAGE)persisted_mem->LaunchFrameAddresses[0];
 		EmuLog(LOG_LEVEL::INFO, "Restored LaunchDataPage\n");
 	}
 
 	if (persisted_mem->LaunchFrameAddresses[1] != 0 && IS_PHYSICAL_ADDRESS(persisted_mem->LaunchFrameAddresses[1])) {
-		xboxkrnl::AvSavedDataAddress = (xboxkrnl::PVOID)persisted_mem->LaunchFrameAddresses[1];
+		xbox::AvSavedDataAddress = (xbox::PVOID)persisted_mem->LaunchFrameAddresses[1];
 		EmuLog(LOG_LEVEL::INFO, "Restored Framebuffer\n");
 	}
 
@@ -457,13 +457,13 @@ void VMManager::SavePersistentMemory()
 	persisted_mem = (PersistedMemory*)addr;
 	persisted_mem->NumOfPtes = num_persisted_ptes;
 
-	if (xboxkrnl::LaunchDataPage != xbox::zeroptr) {
-		persisted_mem->LaunchFrameAddresses[0] = (VAddr)xboxkrnl::LaunchDataPage;
+	if (xbox::LaunchDataPage != xbox::zeroptr) {
+		persisted_mem->LaunchFrameAddresses[0] = (VAddr)xbox::LaunchDataPage;
 		EmuLog(LOG_LEVEL::INFO, "Persisted LaunchDataPage\n");
 	}
 
-	if (xboxkrnl::AvSavedDataAddress != xbox::zeroptr) {
-		persisted_mem->LaunchFrameAddresses[1] = (VAddr)xboxkrnl::AvSavedDataAddress;
+	if (xbox::AvSavedDataAddress != xbox::zeroptr) {
+		persisted_mem->LaunchFrameAddresses[1] = (VAddr)xbox::AvSavedDataAddress;
 		EmuLog(LOG_LEVEL::INFO, "Persisted Framebuffer\n");
 	}
 
@@ -531,7 +531,7 @@ PFN_COUNT VMManager::QueryNumberOfFreeDebuggerPages()
 	return m_DebuggerPagesAvailable;
 }
 
-void VMManager::MemoryStatistics(xboxkrnl::PMM_STATISTICS memory_statistics)
+void VMManager::MemoryStatistics(xbox::PMM_STATISTICS memory_statistics)
 {
 	Lock();
 
@@ -716,7 +716,7 @@ VAddr VMManager::AllocateZeroed(size_t Size)
 	LOG_FORWARD("g_VMManager.Allocate");
 
 	VAddr addr = Allocate(Size);
-	if (addr) { xboxkrnl::RtlFillMemoryUlong((void*)addr, ROUND_UP_4K(Size), 0); }
+	if (addr) { xbox::RtlFillMemoryUlong((void*)addr, ROUND_UP_4K(Size), 0); }
 
 	RETURN(addr);
 }
@@ -1372,7 +1372,7 @@ void VMManager::LockBufferOrSinglePage(PAddr paddr, VAddr addr, size_t Size, boo
 	Unlock();
 }
 
-xboxkrnl::NTSTATUS VMManager::XbAllocateVirtualMemory(VAddr* addr, ULONG ZeroBits, size_t* Size, DWORD AllocationType, DWORD Protect)
+xbox::NTSTATUS VMManager::XbAllocateVirtualMemory(VAddr* addr, ULONG ZeroBits, size_t* Size, DWORD AllocationType, DWORD Protect)
 {
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(*addr)
@@ -1389,7 +1389,7 @@ xboxkrnl::NTSTATUS VMManager::XbAllocateVirtualMemory(VAddr* addr, ULONG ZeroBit
 	PFN_COUNT PteNumber = 0;
 	PFN TempPfn;
 	PageType BusyType;
-	xboxkrnl::NTSTATUS status;
+	xbox::NTSTATUS status;
 	VAddr CapturedBase = *addr;
 	size_t CapturedSize = *Size;
 	VAddr MaxAllowedAddress;
@@ -1631,7 +1631,7 @@ xboxkrnl::NTSTATUS VMManager::XbAllocateVirtualMemory(VAddr* addr, ULONG ZeroBit
 	RETURN(status);
 }
 
-xboxkrnl::NTSTATUS VMManager::XbFreeVirtualMemory(VAddr* addr, size_t* Size, DWORD FreeType)
+xbox::NTSTATUS VMManager::XbFreeVirtualMemory(VAddr* addr, size_t* Size, DWORD FreeType)
 {
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(*addr)
@@ -1643,7 +1643,7 @@ xboxkrnl::NTSTATUS VMManager::XbFreeVirtualMemory(VAddr* addr, size_t* Size, DWO
 	size_t CapturedSize = *Size;
 	VAddr AlignedCapturedBase;
 	size_t AlignedCapturedSize;
-	xboxkrnl::NTSTATUS status;
+	xbox::NTSTATUS status;
 	PMMPTE PointerPte;
 	PMMPTE EndingPte;
 	PMMPTE StartingPte;
@@ -1789,7 +1789,7 @@ xboxkrnl::NTSTATUS VMManager::XbFreeVirtualMemory(VAddr* addr, size_t* Size, DWO
 	RETURN(status);
 }
 
-xboxkrnl::NTSTATUS VMManager::XbVirtualProtect(VAddr* addr, size_t* Size, DWORD* Protect)
+xbox::NTSTATUS VMManager::XbVirtualProtect(VAddr* addr, size_t* Size, DWORD* Protect)
 {
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(*addr)
@@ -1802,7 +1802,7 @@ xboxkrnl::NTSTATUS VMManager::XbVirtualProtect(VAddr* addr, size_t* Size, DWORD*
 	size_t CapturedSize = *Size;
 	VAddr AlignedCapturedBase;
 	size_t AlignedCapturedSize;
-	xboxkrnl::NTSTATUS status;
+	xbox::NTSTATUS status;
 	PMMPTE PointerPte;
 	PMMPTE EndingPte;
 	PMMPTE StartingPte;
@@ -1907,7 +1907,7 @@ xboxkrnl::NTSTATUS VMManager::XbVirtualProtect(VAddr* addr, size_t* Size, DWORD*
 	RETURN(status);
 }
 
-xboxkrnl::NTSTATUS VMManager::XbVirtualMemoryStatistics(VAddr addr, xboxkrnl::PMEMORY_BASIC_INFORMATION memory_statistics)
+xbox::NTSTATUS VMManager::XbVirtualMemoryStatistics(VAddr addr, xbox::PMEMORY_BASIC_INFORMATION memory_statistics)
 {
 	VMAIter it;
 	PMMPTE PointerPte;

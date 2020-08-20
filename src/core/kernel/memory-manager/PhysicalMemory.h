@@ -49,7 +49,7 @@ typedef struct _FreeBlock
 {
 	PFN start;                        // starting page of the block
 	PFN_COUNT size;                   // number of pages in the block
-	xboxkrnl::LIST_ENTRY ListEntry;
+	xbox::LIST_ENTRY ListEntry;
 }FreeBlock, *PFreeBlock;
 
 
@@ -197,7 +197,7 @@ class PhysicalMemory
 {
 	protected:
 		// doubly linked list tracking the free physical pages
-		xboxkrnl::LIST_ENTRY FreeList = { &FreeList , &FreeList };
+		xbox::LIST_ENTRY FreeList = { &FreeList , &FreeList };
 		// highest pfn available for contiguous allocations
 		PAddr m_MaxContiguousPfn = XBOX_CONTIGUOUS_MEMORY_LIMIT;
 		// amount of free physical pages available for non-debugger usage

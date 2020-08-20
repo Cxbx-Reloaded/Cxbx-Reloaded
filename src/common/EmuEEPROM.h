@@ -32,19 +32,19 @@
 #include <xboxkrnl/xboxkrnl.h> // For XC_VALUE_INDEX and XBOX_EEPROM
 #define _WIN32
 
-#define EEPROM_SIZE sizeof(xboxkrnl::XBOX_EEPROM)
+#define EEPROM_SIZE sizeof(xbox::XBOX_EEPROM)
 
 typedef struct EEPROMInfo {
-	xboxkrnl::XC_VALUE_INDEX index;
+	xbox::XC_VALUE_INDEX index;
 	int value_offset;
 	int value_type;
 	int value_length;
 } EEPROMInfo;
 
-#define XC_END_MARKER (xboxkrnl::XC_VALUE_INDEX)-1
+#define XC_END_MARKER (xbox::XC_VALUE_INDEX)-1
 
 #define EEPROM_INFO_ENTRY(XC, Member, REG_Type) \
-	{ xboxkrnl::XC, offsetof(xboxkrnl::XBOX_EEPROM, Member), REG_Type, sizeof(((xboxkrnl::XBOX_EEPROM *)0)->Member) }
+	{ xbox::XC, offsetof(xbox::XBOX_EEPROM, Member), REG_Type, sizeof(((xbox::XBOX_EEPROM *)0)->Member) }
 
 static const EEPROMInfo EEPROMInfos[] = {
 	EEPROM_INFO_ENTRY(XC_TIMEZONE_BIAS,         UserSettings.TimeZoneBias,                REG_DWORD),
@@ -78,7 +78,7 @@ static const EEPROMInfo EEPROMInfos[] = {
 	// Note : XC_FACTORY_GAME_REGION is linked to a separate ULONG XboxFactoryGameRegion (of type REG_DWORD)
 	EEPROM_INFO_ENTRY(XC_FACTORY_GAME_REGION,   EncryptedSettings.GameRegion,             REG_DWORD),
 	EEPROM_INFO_ENTRY(XC_ENCRYPTED_SECTION,     EncryptedSettings,                        REG_BINARY),
-	{ xboxkrnl::XC_MAX_ALL,                     0,                                        REG_BINARY, sizeof(xboxkrnl::XBOX_EEPROM) },
+	{ xbox::XC_MAX_ALL,                     0,                                        REG_BINARY, sizeof(xbox::XBOX_EEPROM) },
 	{ XC_END_MARKER }
 };
 
@@ -142,16 +142,16 @@ static const EEPROMInfo EEPROMInfos[] = {
 #define DVD_REGION_RESERVED         7
 #define DVD_REGION_INTERNATIONAL    8
 
-extern xboxkrnl::XBOX_EEPROM *CxbxRestoreEEPROM(char *szFilePath_EEPROM_bin);
+extern xbox::XBOX_EEPROM *CxbxRestoreEEPROM(char *szFilePath_EEPROM_bin);
 
-extern const EEPROMInfo* EmuFindEEPROMInfo(xboxkrnl::XC_VALUE_INDEX index);
+extern const EEPROMInfo* EmuFindEEPROMInfo(xbox::XC_VALUE_INDEX index);
 
-extern xboxkrnl::XBOX_EEPROM *EEPROM;
+extern xbox::XBOX_EEPROM *EEPROM;
 
-extern xboxkrnl::ULONG XboxFactoryGameRegion;
+extern xbox::ULONG XboxFactoryGameRegion;
 
-extern void EmuEEPROMReset(xboxkrnl::XBOX_EEPROM* eeprom);
+extern void EmuEEPROMReset(xbox::XBOX_EEPROM* eeprom);
 
-void gen_section_CRCs(xboxkrnl::XBOX_EEPROM*);
+void gen_section_CRCs(xbox::XBOX_EEPROM*);
 
 #endif // EMU_EEPROM_H

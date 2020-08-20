@@ -37,18 +37,18 @@
 #define OBJECT_TO_OBJECT_HEADER(Object) \
     CONTAINING_RECORD(Object, OBJECT_HEADER, Body)
 
-void InitializeListHead(xboxkrnl::PLIST_ENTRY pListHead);
-bool IsListEmpty(xboxkrnl::PLIST_ENTRY pListHead);
-void InsertHeadList(xboxkrnl::PLIST_ENTRY pListHead, xboxkrnl::PLIST_ENTRY pEntry);
-void InsertTailList(xboxkrnl::PLIST_ENTRY pListHead, xboxkrnl::PLIST_ENTRY pEntry);
+void InitializeListHead(xbox::PLIST_ENTRY pListHead);
+bool IsListEmpty(xbox::PLIST_ENTRY pListHead);
+void InsertHeadList(xbox::PLIST_ENTRY pListHead, xbox::PLIST_ENTRY pEntry);
+void InsertTailList(xbox::PLIST_ENTRY pListHead, xbox::PLIST_ENTRY pEntry);
 //#define RemoveEntryList(e) do { PLIST_ENTRY f = (e)->Flink, b = (e)->Blink; f->Blink = b; b->Flink = f; (e)->Flink = (e)->Blink = NULL; } while (0)
 
-xboxkrnl::BOOLEAN RemoveEntryList(xboxkrnl::PLIST_ENTRY pEntry);
-xboxkrnl::PLIST_ENTRY RemoveHeadList(xboxkrnl::PLIST_ENTRY pListHead);
-xboxkrnl::PLIST_ENTRY RemoveTailList(xboxkrnl::PLIST_ENTRY pListHead);
+xbox::BOOLEAN RemoveEntryList(xbox::PLIST_ENTRY pEntry);
+xbox::PLIST_ENTRY RemoveHeadList(xbox::PLIST_ENTRY pListHead);
+xbox::PLIST_ENTRY RemoveTailList(xbox::PLIST_ENTRY pListHead);
 
-extern xboxkrnl::LAUNCH_DATA_PAGE DefaultLaunchDataPage;
-extern xboxkrnl::PKINTERRUPT EmuInterruptList[MAX_BUS_INTERRUPT_LEVEL + 1];
+extern xbox::LAUNCH_DATA_PAGE DefaultLaunchDataPage;
+extern xbox::PKINTERRUPT EmuInterruptList[MAX_BUS_INTERRUPT_LEVEL + 1];
 
 class HalSystemInterrupt {
 public:
@@ -77,24 +77,24 @@ public:
 		return m_Asserted && m_Pending;
 	}
 
-	void SetInterruptMode(xboxkrnl::KINTERRUPT_MODE InterruptMode) {
+	void SetInterruptMode(xbox::KINTERRUPT_MODE InterruptMode) {
 		m_InterruptMode = InterruptMode;
 	}
 
-	void Trigger(xboxkrnl::PKINTERRUPT Interrupt) {
+	void Trigger(xbox::PKINTERRUPT Interrupt) {
 		// If interrupt was level sensitive, we clear the pending flag, preventing the interrupt from being triggered 
 		// until it is deasserted then asserted again. Latched interrupts are triggered until the line is Deasserted!
-		if (m_InterruptMode == xboxkrnl::KINTERRUPT_MODE::LevelSensitive) {
+		if (m_InterruptMode == xbox::KINTERRUPT_MODE::LevelSensitive) {
 			m_Pending = false;
 		}
 
-		BOOLEAN(__stdcall *ServiceRoutine)(xboxkrnl::PKINTERRUPT, void*) = (BOOLEAN(__stdcall *)(xboxkrnl::PKINTERRUPT, void*))Interrupt->ServiceRoutine;
+		BOOLEAN(__stdcall *ServiceRoutine)(xbox::PKINTERRUPT, void*) = (BOOLEAN(__stdcall *)(xbox::PKINTERRUPT, void*))Interrupt->ServiceRoutine;
 		BOOLEAN result = ServiceRoutine(Interrupt, Interrupt->ServiceContext);
 	}
 private:
 	bool m_Asserted = false;
 	bool m_Enabled = false;
-	xboxkrnl::KINTERRUPT_MODE m_InterruptMode;
+	xbox::KINTERRUPT_MODE m_InterruptMode;
 	bool m_Pending = false;
 };
 
@@ -102,6 +102,6 @@ extern HalSystemInterrupt HalSystemInterrupts[MAX_BUS_INTERRUPT_LEVEL + 1];
 
 bool DisableInterrupts();
 void RestoreInterruptMode(bool value);
-void CallSoftwareInterrupt(const xboxkrnl::KIRQL SoftwareIrql);
+void CallSoftwareInterrupt(const xbox::KIRQL SoftwareIrql);
 
 #endif

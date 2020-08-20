@@ -115,7 +115,7 @@ NT_TIB *GetNtTib()
 }
 
 
-xboxkrnl::KPCR* WINAPI KeGetPcr();
+xbox::KPCR* WINAPI KeGetPcr();
 
 uint32_t fs_lock = 0;
 
@@ -156,7 +156,7 @@ __declspec(naked) void UnlockFS()
 	}
 }
 
-void EmuKeSetPcr(xboxkrnl::KPCR *Pcr)
+void EmuKeSetPcr(xbox::KPCR *Pcr)
 {
 	// Store the Xbox KPCR pointer in FS (See KeGetPcr())
 	// 
@@ -580,9 +580,9 @@ void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData)
 	}
 
 	// Allocate the xbox KPCR structure
-	xboxkrnl::KPCR *NewPcr = (xboxkrnl::KPCR*)g_VMManager.AllocateZeroed(sizeof(xboxkrnl::KPCR));
-	xboxkrnl::NT_TIB *XbTib = &(NewPcr->NtTib);
-	xboxkrnl::PKPRCB Prcb = &(NewPcr->PrcbData);
+	xbox::KPCR *NewPcr = (xbox::KPCR*)g_VMManager.AllocateZeroed(sizeof(xbox::KPCR));
+	xbox::NT_TIB *XbTib = &(NewPcr->NtTib);
+	xbox::PKPRCB Prcb = &(NewPcr->PrcbData);
 	// Note : As explained above (at EmuKeSetPcr), Cxbx cannot allocate one NT_TIB and KPRCB
 	// structure per thread, since Cxbx currently doesn't do thread-switching.
 	// Thus, the only way to give each thread it's own PrcbData.CurrentThread, is to put the
@@ -626,22 +626,22 @@ void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData)
 
 	// Initialize a fake PrcbData.CurrentThread 
 	{
-		xboxkrnl::ETHREAD *EThread = (xboxkrnl::ETHREAD*)g_VMManager.AllocateZeroed(sizeof(xboxkrnl::ETHREAD)); // Clear, to prevent side-effects on random contents
+		xbox::ETHREAD *EThread = (xbox::ETHREAD*)g_VMManager.AllocateZeroed(sizeof(xbox::ETHREAD)); // Clear, to prevent side-effects on random contents
 
 		EThread->Tcb.TlsData = pNewTLS;
 		EThread->UniqueThread = GetCurrentThreadId();
 		// Set PrcbData.CurrentThread
-		Prcb->CurrentThread = (xboxkrnl::KTHREAD*)EThread;
+		Prcb->CurrentThread = (xbox::KTHREAD*)EThread;
 		// Initialize the thread header and its wait list
-		Prcb->CurrentThread->Header.Type = xboxkrnl::ThreadObject;
-		Prcb->CurrentThread->Header.Size = sizeof(xboxkrnl::KTHREAD) / sizeof(xboxkrnl::LONG);
+		Prcb->CurrentThread->Header.Type = xbox::ThreadObject;
+		Prcb->CurrentThread->Header.Size = sizeof(xbox::KTHREAD) / sizeof(xbox::LONG);
 		InitializeListHead(&Prcb->CurrentThread->Header.WaitListHead);
 		// Also initialize the timer associated with the thread
-		xboxkrnl::KeInitializeTimer(&Prcb->CurrentThread->Timer);
-		xboxkrnl::PKWAIT_BLOCK WaitBlock = &Prcb->CurrentThread->TimerWaitBlock;
+		xbox::KeInitializeTimer(&Prcb->CurrentThread->Timer);
+		xbox::PKWAIT_BLOCK WaitBlock = &Prcb->CurrentThread->TimerWaitBlock;
 		WaitBlock->Object = &Prcb->CurrentThread->Timer;
-		WaitBlock->WaitKey = (xboxkrnl::CSHORT)STATUS_TIMEOUT;
-		WaitBlock->WaitType = xboxkrnl::WaitAny;
+		WaitBlock->WaitKey = (xbox::CSHORT)STATUS_TIMEOUT;
+		WaitBlock->WaitType = xbox::WaitAny;
 		WaitBlock->Thread = Prcb->CurrentThread;
 		WaitBlock->WaitListEntry.Flink = &Prcb->CurrentThread->Timer.Header.WaitListHead;
 		WaitBlock->WaitListEntry.Blink = &Prcb->CurrentThread->Timer.Header.WaitListHead;

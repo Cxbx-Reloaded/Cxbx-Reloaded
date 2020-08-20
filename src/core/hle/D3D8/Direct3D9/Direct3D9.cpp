@@ -997,7 +997,7 @@ size_t GetXboxResourceSize(XTL::X_D3DResource* pXboxResource)
 		return SlicePitch * Depth;
 	} else {
 		// Fallback to querying the allocation size, if no other calculation was present
-		return xboxkrnl::MmQueryAllocationSize(GetDataFromXboxResource(pXboxResource));
+		return xbox::MmQueryAllocationSize(GetDataFromXboxResource(pXboxResource));
 	}
 	
 }

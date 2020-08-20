@@ -45,7 +45,7 @@ namespace NtDll
 // ******************************************************************
 // * 0x0005 - DbgBreakPoint()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(5) xboxkrnl::VOID NTAPI xboxkrnl::DbgBreakPoint()
+XBSYSAPI EXPORTNUM(5) xbox::VOID NTAPI xbox::DbgBreakPoint()
 {
 	LOG_FUNC();
 
@@ -55,7 +55,7 @@ XBSYSAPI EXPORTNUM(5) xboxkrnl::VOID NTAPI xboxkrnl::DbgBreakPoint()
 // ******************************************************************
 // * 0x0006 - DbgBreakPointWithStatus()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(6) xboxkrnl::VOID NTAPI xboxkrnl::DbgBreakPointWithStatus
+XBSYSAPI EXPORTNUM(6) xbox::VOID NTAPI xbox::DbgBreakPointWithStatus
 (
 	IN ULONG Status 
 )
@@ -68,7 +68,7 @@ XBSYSAPI EXPORTNUM(6) xboxkrnl::VOID NTAPI xboxkrnl::DbgBreakPointWithStatus
 // ******************************************************************
 // * 0x0007 - DbgLoadImageSymbols()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(7) xboxkrnl::NTSTATUS NTAPI xboxkrnl::DbgLoadImageSymbols
+XBSYSAPI EXPORTNUM(7) xbox::NTSTATUS NTAPI xbox::DbgLoadImageSymbols
 (
 	IN PANSI_STRING Name,
 	IN PVOID Base,
@@ -91,7 +91,7 @@ XBSYSAPI EXPORTNUM(7) xboxkrnl::NTSTATUS NTAPI xboxkrnl::DbgLoadImageSymbols
 // ******************************************************************
 // * 0x0008 - DbgPrint()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(8) xboxkrnl::ULONG _cdecl xboxkrnl::DbgPrint
+XBSYSAPI EXPORTNUM(8) xbox::ULONG _cdecl xbox::DbgPrint
 (
 	PCHAR  Format, ...
 )
@@ -137,7 +137,7 @@ XBSYSAPI EXPORTNUM(8) xboxkrnl::ULONG _cdecl xboxkrnl::DbgPrint
 // * 0x000A - DbgPrompt()
 // ******************************************************************
 // Source:ReactOS
-XBSYSAPI EXPORTNUM(10) xboxkrnl::ULONG NTAPI xboxkrnl::DbgPrompt
+XBSYSAPI EXPORTNUM(10) xbox::ULONG NTAPI xbox::DbgPrompt
 (
 	IN PCCH Prompt,
 	OUT PCH Response,
@@ -161,7 +161,7 @@ XBSYSAPI EXPORTNUM(10) xboxkrnl::ULONG NTAPI xboxkrnl::DbgPrompt
 // * 0x000B - DbgUnLoadImageSymbols()
 // ******************************************************************
 // Source:ReactOS
-XBSYSAPI EXPORTNUM(11) xboxkrnl::VOID NTAPI xboxkrnl::DbgUnLoadImageSymbols
+XBSYSAPI EXPORTNUM(11) xbox::VOID NTAPI xbox::DbgUnLoadImageSymbols
 (
 	IN PANSI_STRING Name,
 	IN PVOID Base,

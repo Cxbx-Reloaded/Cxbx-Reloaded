@@ -72,5 +72,5 @@ extern DWORD                               g_dwFree3DBuffers;
     EmuLog(LOG_LEVEL::WARNING, "An issue has been found. Please report game title and console's output of return result," \
     " function, and file name to https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/issues/485"); } return hRet; }
 
-extern void DirectSoundDoWork_Buffer(xboxkrnl::LARGE_INTEGER& time);
-extern void DirectSoundDoWork_Stream(xboxkrnl::LARGE_INTEGER& time);
+extern void DirectSoundDoWork_Buffer(xbox::LARGE_INTEGER& time);
+extern void DirectSoundDoWork_Stream(xbox::LARGE_INTEGER& time);

@@ -150,17 +150,17 @@ void SetupPerTitleKeys()
 	UCHAR Digest[20] = {};
 
 	// Set the LAN Key
-	xboxkrnl::XcHMAC(xboxkrnl::XboxCertificateKey, xboxkrnl::XBOX_KEY_LENGTH, g_pCertificate->bzLanKey, xboxkrnl::XBOX_KEY_LENGTH, NULL, 0, Digest);
-	memcpy(xboxkrnl::XboxLANKey, Digest, xboxkrnl::XBOX_KEY_LENGTH);
+	xbox::XcHMAC(xbox::XboxCertificateKey, xbox::XBOX_KEY_LENGTH, g_pCertificate->bzLanKey, xbox::XBOX_KEY_LENGTH, NULL, 0, Digest);
+	memcpy(xbox::XboxLANKey, Digest, xbox::XBOX_KEY_LENGTH);
 
 	// Signature Key
-	xboxkrnl::XcHMAC(xboxkrnl::XboxCertificateKey, xboxkrnl::XBOX_KEY_LENGTH, g_pCertificate->bzSignatureKey, xboxkrnl::XBOX_KEY_LENGTH, NULL, 0, Digest);
-	memcpy(xboxkrnl::XboxSignatureKey, Digest, xboxkrnl::XBOX_KEY_LENGTH);
+	xbox::XcHMAC(xbox::XboxCertificateKey, xbox::XBOX_KEY_LENGTH, g_pCertificate->bzSignatureKey, xbox::XBOX_KEY_LENGTH, NULL, 0, Digest);
+	memcpy(xbox::XboxSignatureKey, Digest, xbox::XBOX_KEY_LENGTH);
 
 	// Alternate Signature Keys
-	for (int i = 0; i < xboxkrnl::ALTERNATE_SIGNATURE_COUNT; i++) {
-		xboxkrnl::XcHMAC(xboxkrnl::XboxCertificateKey, xboxkrnl::XBOX_KEY_LENGTH, g_pCertificate->bzTitleAlternateSignatureKey[i], xboxkrnl::XBOX_KEY_LENGTH, NULL, 0, Digest);
-		memcpy(xboxkrnl::XboxAlternateSignatureKeys[i], Digest, xboxkrnl::XBOX_KEY_LENGTH);
+	for (int i = 0; i < xbox::ALTERNATE_SIGNATURE_COUNT; i++) {
+		xbox::XcHMAC(xbox::XboxCertificateKey, xbox::XBOX_KEY_LENGTH, g_pCertificate->bzTitleAlternateSignatureKey[i], xbox::XBOX_KEY_LENGTH, NULL, 0, Digest);
+		memcpy(xbox::XboxAlternateSignatureKeys[i], Digest, xbox::XBOX_KEY_LENGTH);
 	}
 
 }
@@ -351,16 +351,16 @@ BOOLEAN DispatchInterrupt
 void InitSoftwareInterrupts()
 {
 	// Init software interrupt 1 (for APC dispatching)
-	xboxkrnl::KINTERRUPT SoftwareInterrupt_1;
+	xbox::KINTERRUPT SoftwareInterrupt_1;
 	SoftwareInterrupt_1.BusInterruptLevel = 1;
 	SoftwareInterrupt_1.ServiceRoutine = ApcInterrupt;
-	xboxkrnl::KeConnectInterrupt(&SoftwareInterrupt_1);
+	xbox::KeConnectInterrupt(&SoftwareInterrupt_1);
 
 	// Init software interrupt 2 (for DPC dispatching)
-	xboxkrnl::KINTERRUPT SoftwareInterrupt_2;
+	xbox::KINTERRUPT SoftwareInterrupt_2;
 	SoftwareInterrupt_2.BusInterruptLevel = 2;
 	SoftwareInterrupt_2.ServiceRoutine = DispatchInterrupt;
-	xboxkrnl::KeConnectInterrupt(&SoftwareInterrupt_2);
+	xbox::KeConnectInterrupt(&SoftwareInterrupt_2);
 }
 #endif
 
@@ -427,7 +427,7 @@ static void CxbxKrnlClockThread(void* pVoid)
 	IncrementScaling = (unsigned int)(UnaccountedMicroseconds / 1000); // -> 1 ms = 1000us -> time between two xbox clock interrupts
 	UnaccountedMicroseconds -= (IncrementScaling * 1000);
 
-	xboxkrnl::KiClockIsr(IncrementScaling);
+	xbox::KiClockIsr(IncrementScaling);
 }
 
 std::vector<xbox::addr> g_RdtscPatches;
@@ -1095,10 +1095,10 @@ void CxbxKrnlEmulate(unsigned int reserved_systems, blocks_reserved_t blocks_res
 		memcpy((void*)(CxbxKrnl_Xbe->m_Header.dwBaseAddr + sizeof(Xbe::Header)), CxbxKrnl_Xbe->m_HeaderEx, CxbxKrnl_Xbe->m_ExSize);
 
 		// Load all sections marked as preload using the in-memory copy of the xbe header
-		xboxkrnl::PXBEIMAGE_SECTION sectionHeaders = (xboxkrnl::PXBEIMAGE_SECTION)CxbxKrnl_Xbe->m_Header.dwSectionHeadersAddr;
+		xbox::PXBEIMAGE_SECTION sectionHeaders = (xbox::PXBEIMAGE_SECTION)CxbxKrnl_Xbe->m_Header.dwSectionHeadersAddr;
 		for (uint32_t i = 0; i < CxbxKrnl_Xbe->m_Header.dwSections; i++) {
 			if ((sectionHeaders[i].Flags & XBEIMAGE_SECTION_PRELOAD) != 0) {
-				NTSTATUS result = xboxkrnl::XeLoadSection(&sectionHeaders[i]);
+				NTSTATUS result = xbox::XeLoadSection(&sectionHeaders[i]);
 				if (FAILED(result)) {
 					EmuLogInit(LOG_LEVEL::WARNING, "Failed to preload XBE section: %s", CxbxKrnl_Xbe->m_szSectionName[i]);
 				}
@@ -1185,20 +1185,20 @@ void LoadXboxKeys(std::string path)
 
 	if (fp != nullptr) {
 		// Determine size of Keys.bin
-		xboxkrnl::XBOX_KEY_DATA keys[2];
+		xbox::XBOX_KEY_DATA keys[2];
 		fseek(fp, 0, SEEK_END);
 		long size = ftell(fp);
 		rewind(fp);
 
 		// If the size of Keys.bin is correct (two keys), read it
-		if (size == xboxkrnl::XBOX_KEY_LENGTH * 2) {
-			fread(keys, xboxkrnl::XBOX_KEY_LENGTH, 2, fp);
+		if (size == xbox::XBOX_KEY_LENGTH * 2) {
+			fread(keys, xbox::XBOX_KEY_LENGTH, 2, fp);
 
-			memcpy(xboxkrnl::XboxEEPROMKey, &keys[0], xboxkrnl::XBOX_KEY_LENGTH);
-			memcpy(xboxkrnl::XboxCertificateKey, &keys[1], xboxkrnl::XBOX_KEY_LENGTH);
+			memcpy(xbox::XboxEEPROMKey, &keys[0], xbox::XBOX_KEY_LENGTH);
+			memcpy(xbox::XboxCertificateKey, &keys[1], xbox::XBOX_KEY_LENGTH);
 		}
 		else {
-			EmuLog(LOG_LEVEL::WARNING, "Keys.bin has an incorrect filesize. Should be %d bytes", xboxkrnl::XBOX_KEY_LENGTH * 2);
+			EmuLog(LOG_LEVEL::WARNING, "Keys.bin has an incorrect filesize. Should be %d bytes", xbox::XBOX_KEY_LENGTH * 2);
 		}
 
 		fclose(fp);
@@ -1226,7 +1226,7 @@ __declspec(noreturn) void CxbxKrnlInit
     // But with this, we can replace some busy loops with sleeps.
     timeBeginPeriod(1);
 
-    xboxkrnl::InitializeFscCacheEvent();
+    xbox::InitializeFscCacheEvent();
 
 	// update caches
 	CxbxKrnl_TLS = pTLS;
@@ -1381,15 +1381,15 @@ __declspec(noreturn) void CxbxKrnlInit
 		if (fileName.rfind('\\') != std::string::npos)
 			fileName = fileName.substr(fileName.rfind('\\') + 1);
 
-		if (xboxkrnl::XeImageFileName.Buffer != NULL)
-			free(xboxkrnl::XeImageFileName.Buffer);
+		if (xbox::XeImageFileName.Buffer != NULL)
+			free(xbox::XeImageFileName.Buffer);
 
 		// Assign the running Xbe path, so it can be accessed via the kernel thunk 'XeImageFileName' :
-		xboxkrnl::XeImageFileName.MaximumLength = MAX_PATH;
-		xboxkrnl::XeImageFileName.Buffer = (PCHAR)g_VMManager.Allocate(MAX_PATH);
-		sprintf(xboxkrnl::XeImageFileName.Buffer, "%c:\\%s", CxbxDefaultXbeDriveLetter, fileName.c_str());
-		xboxkrnl::XeImageFileName.Length = (USHORT)strlen(xboxkrnl::XeImageFileName.Buffer);
-		EmuLogInit(LOG_LEVEL::INFO, "XeImageFileName = %s", xboxkrnl::XeImageFileName.Buffer);
+		xbox::XeImageFileName.MaximumLength = MAX_PATH;
+		xbox::XeImageFileName.Buffer = (PCHAR)g_VMManager.Allocate(MAX_PATH);
+		sprintf(xbox::XeImageFileName.Buffer, "%c:\\%s", CxbxDefaultXbeDriveLetter, fileName.c_str());
+		xbox::XeImageFileName.Length = (USHORT)strlen(xbox::XeImageFileName.Buffer);
+		EmuLogInit(LOG_LEVEL::INFO, "XeImageFileName = %s", xbox::XeImageFileName.Buffer);
 	}
 
 	// Dump Xbe information
@@ -1470,7 +1470,7 @@ __declspec(noreturn) void CxbxKrnlInit
 	InitXboxHardware(HardwareModel::Revision1_5); // TODO : Make configurable
 
 	// Read Xbox video mode from the SMC, store it in HalBootSMCVideoMode
-	xboxkrnl::HalReadSMBusValue(SMBUS_ADDRESS_SYSTEM_MICRO_CONTROLLER, SMC_COMMAND_AV_PACK, FALSE, &xboxkrnl::HalBootSMCVideoMode);
+	xbox::HalReadSMBusValue(SMBUS_ADDRESS_SYSTEM_MICRO_CONTROLLER, SMC_COMMAND_AV_PACK, FALSE, &xbox::HalBootSMCVideoMode);
 
 	g_InputDeviceManager.Initialize(false);
 
@@ -1510,8 +1510,8 @@ __declspec(noreturn) void CxbxKrnlInit
 	EmuInitFS();
 
 	InitXboxThread(g_CPUXbox);
-	xboxkrnl::ObInitSystem();
-	xboxkrnl::KiInitSystem();
+	xbox::ObInitSystem();
+	xbox::KiInitSystem();
 
 	EmuX86_Init();
 	// Create the interrupt processing thread
@@ -1609,7 +1609,7 @@ void CxbxUnlockFilePath()
 }
 
 // REMARK: the following is useless, but PatrickvL has asked to keep it for documentation purposes
-/*xboxkrnl::LAUNCH_DATA_PAGE DefaultLaunchDataPage =
+/*xbox::LAUNCH_DATA_PAGE DefaultLaunchDataPage =
 {
 	{   // header
 		2,  // 2: dashboard, 0: title
@@ -1775,14 +1775,14 @@ void CxbxKrnlShutDown()
 void CxbxKrnlPrintUEM(ULONG ErrorCode)
 {
 	ULONG Type;
-	xboxkrnl::XBOX_EEPROM Eeprom;
+	xbox::XBOX_EEPROM Eeprom;
 	ULONG ResultSize;
 
-	xboxkrnl::NTSTATUS status = xboxkrnl::ExQueryNonVolatileSetting(xboxkrnl::XC_MAX_ALL, &Type, &Eeprom, sizeof(Eeprom), &ResultSize);
+	xbox::NTSTATUS status = xbox::ExQueryNonVolatileSetting(xbox::XC_MAX_ALL, &Type, &Eeprom, sizeof(Eeprom), &ResultSize);
 
 	if (status == STATUS_SUCCESS)
 	{
-		xboxkrnl::XBOX_UEM_INFO* UEMInfo = (xboxkrnl::XBOX_UEM_INFO*)&(Eeprom.UEMInfo[0]);
+		xbox::XBOX_UEM_INFO* UEMInfo = (xbox::XBOX_UEM_INFO*)&(Eeprom.UEMInfo[0]);
 
 		if (UEMInfo->ErrorCode == FATAL_ERROR_NONE)
 		{
@@ -1796,7 +1796,7 @@ void CxbxKrnlPrintUEM(ULONG ErrorCode)
 		else {
 			UEMInfo->ErrorCode = FATAL_ERROR_NONE;
 		}
-		xboxkrnl::ExSaveNonVolatileSetting(xboxkrnl::XC_MAX_ALL, Type, &Eeprom, sizeof(Eeprom));
+		xbox::ExSaveNonVolatileSetting(xbox::XC_MAX_ALL, Type, &Eeprom, sizeof(Eeprom));
 	}
 	else {
 		CxbxKrnlCleanup("Could not display the fatal error screen");

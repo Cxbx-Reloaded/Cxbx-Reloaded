@@ -372,8 +372,8 @@ VOID WINAPI XTL::EMUPATCH(DirectSoundDoWork)()
 
 	LOG_FUNC();
 
-    xboxkrnl::LARGE_INTEGER getTime;
-    xboxkrnl::KeQuerySystemTime(&getTime);
+    xbox::LARGE_INTEGER getTime;
+    xbox::KeQuerySystemTime(&getTime);
 
     DirectSoundDoWork_Buffer(getTime);
 
@@ -395,8 +395,8 @@ static void dsound_thread_worker(LPVOID nullPtr)
         {
             DSoundMutexGuardLock;
 
-            xboxkrnl::LARGE_INTEGER getTime;
-            xboxkrnl::KeQuerySystemTime(&getTime);
+            xbox::LARGE_INTEGER getTime;
+            xbox::KeQuerySystemTime(&getTime);
             DirectSoundDoWork_Stream(getTime);
         }
     }

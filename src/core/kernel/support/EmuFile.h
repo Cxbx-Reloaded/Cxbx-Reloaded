@@ -95,44 +95,44 @@ extern int CxbxDefaultXbeDriveIndex;
 extern std::string CxbxBasePath;
 extern HANDLE CxbxBasePathHandle;
 
-const size_t XboxFileInfoStructSizes[xboxkrnl::FileMaximumInformation] = {
+const size_t XboxFileInfoStructSizes[xbox::FileMaximumInformation] = {
 	0,                                                    // (index 0)
-	sizeof(xboxkrnl::FILE_DIRECTORY_INFORMATION),         // FileDirectoryInformation
-	sizeof(xboxkrnl::FILE_DIRECTORY_INFORMATION),         // FileFullDirectoryInformation
-	sizeof(xboxkrnl::FILE_DIRECTORY_INFORMATION),         // FileBothDirectoryInformation
-	sizeof(xboxkrnl::FILE_BASIC_INFORMATION),             // FileBasicInformation
-	sizeof(xboxkrnl::FILE_STANDARD_INFORMATION),          // FileStandardInformation
-	sizeof(xboxkrnl::FILE_INTERNAL_INFORMATION),          // FileInternalInformation
-	sizeof(xboxkrnl::FILE_EA_INFORMATION),                // FileEaInformation
-	sizeof(xboxkrnl::FILE_ACCESS_INFORMATION),            // FileAccessInformation
-	sizeof(xboxkrnl::FILE_NAME_INFORMATION),              // FileNameInformation
-	sizeof(xboxkrnl::FILE_RENAME_INFORMATION),            // FileRenameInformation
-	sizeof(xboxkrnl::FILE_LINK_INFORMATION),              // FileLinkInformation
-	sizeof(xboxkrnl::FILE_DIRECTORY_INFORMATION),         // FileNamesInformation
-	sizeof(xboxkrnl::FILE_DISPOSITION_INFORMATION),       // FileDispositionInformation
-	sizeof(xboxkrnl::FILE_POSITION_INFORMATION),          // FilePositionInformation
-	sizeof(xboxkrnl::FILE_FULL_EA_INFORMATION),           // FileFullEaInformation
-	sizeof(xboxkrnl::FILE_MODE_INFORMATION),              // FileModeInformation
-	sizeof(xboxkrnl::FILE_ALIGNMENT_INFORMATION),         // FileAlignmentInformation
-	sizeof(xboxkrnl::FILE_ALL_INFORMATION),               // FileAllInformation
-	sizeof(xboxkrnl::FILE_ALLOCATION_INFORMATION),        // FileAllocationInformation
-	sizeof(xboxkrnl::FILE_END_OF_FILE_INFORMATION),       // FileEndOfFileInformation
-	sizeof(xboxkrnl::FILE_NAME_INFORMATION),              // FileAlternateNameInformation
-	sizeof(xboxkrnl::FILE_STREAM_INFORMATION),            // FileStreamInformation
-	sizeof(xboxkrnl::FILE_PIPE_INFORMATION),              // FilePipeInformation
-	sizeof(xboxkrnl::FILE_PIPE_LOCAL_INFORMATION),        // FilePipeLocalInformation
-	sizeof(xboxkrnl::FILE_PIPE_REMOTE_INFORMATION),       // FilePipeRemoteInformation
-	sizeof(xboxkrnl::FILE_MAILSLOT_QUERY_INFORMATION),    // FileMailslotQueryInformation
-	sizeof(xboxkrnl::FILE_MAILSLOT_SET_INFORMATION),      // FileMailslotSetInformation
-	sizeof(xboxkrnl::FILE_COMPRESSION_INFORMATION),       // FileCompressionInformation
+	sizeof(xbox::FILE_DIRECTORY_INFORMATION),         // FileDirectoryInformation
+	sizeof(xbox::FILE_DIRECTORY_INFORMATION),         // FileFullDirectoryInformation
+	sizeof(xbox::FILE_DIRECTORY_INFORMATION),         // FileBothDirectoryInformation
+	sizeof(xbox::FILE_BASIC_INFORMATION),             // FileBasicInformation
+	sizeof(xbox::FILE_STANDARD_INFORMATION),          // FileStandardInformation
+	sizeof(xbox::FILE_INTERNAL_INFORMATION),          // FileInternalInformation
+	sizeof(xbox::FILE_EA_INFORMATION),                // FileEaInformation
+	sizeof(xbox::FILE_ACCESS_INFORMATION),            // FileAccessInformation
+	sizeof(xbox::FILE_NAME_INFORMATION),              // FileNameInformation
+	sizeof(xbox::FILE_RENAME_INFORMATION),            // FileRenameInformation
+	sizeof(xbox::FILE_LINK_INFORMATION),              // FileLinkInformation
+	sizeof(xbox::FILE_DIRECTORY_INFORMATION),         // FileNamesInformation
+	sizeof(xbox::FILE_DISPOSITION_INFORMATION),       // FileDispositionInformation
+	sizeof(xbox::FILE_POSITION_INFORMATION),          // FilePositionInformation
+	sizeof(xbox::FILE_FULL_EA_INFORMATION),           // FileFullEaInformation
+	sizeof(xbox::FILE_MODE_INFORMATION),              // FileModeInformation
+	sizeof(xbox::FILE_ALIGNMENT_INFORMATION),         // FileAlignmentInformation
+	sizeof(xbox::FILE_ALL_INFORMATION),               // FileAllInformation
+	sizeof(xbox::FILE_ALLOCATION_INFORMATION),        // FileAllocationInformation
+	sizeof(xbox::FILE_END_OF_FILE_INFORMATION),       // FileEndOfFileInformation
+	sizeof(xbox::FILE_NAME_INFORMATION),              // FileAlternateNameInformation
+	sizeof(xbox::FILE_STREAM_INFORMATION),            // FileStreamInformation
+	sizeof(xbox::FILE_PIPE_INFORMATION),              // FilePipeInformation
+	sizeof(xbox::FILE_PIPE_LOCAL_INFORMATION),        // FilePipeLocalInformation
+	sizeof(xbox::FILE_PIPE_REMOTE_INFORMATION),       // FilePipeRemoteInformation
+	sizeof(xbox::FILE_MAILSLOT_QUERY_INFORMATION),    // FileMailslotQueryInformation
+	sizeof(xbox::FILE_MAILSLOT_SET_INFORMATION),      // FileMailslotSetInformation
+	sizeof(xbox::FILE_COMPRESSION_INFORMATION),       // FileCompressionInformation
 	0,                                                    // FileCopyOnWriteInformation
-	sizeof(xboxkrnl::FILE_COMPLETION_INFORMATION),        // FileCompletionInformation
-	sizeof(xboxkrnl::FILE_MOVE_CLUSTER_INFORMATION),      // FileMoveClusterInformation
+	sizeof(xbox::FILE_COMPLETION_INFORMATION),        // FileCompletionInformation
+	sizeof(xbox::FILE_MOVE_CLUSTER_INFORMATION),      // FileMoveClusterInformation
 	0,                                                    // FileQuotaInformation
-	sizeof(xboxkrnl::FILE_REPARSE_POINT_INFORMATION),     // FileReparsePointInformation
-	sizeof(xboxkrnl::FILE_NETWORK_OPEN_INFORMATION),      // FileNetworkOpenInformation
-	sizeof(xboxkrnl::FILE_DIRECTORY_INFORMATION),         // FileObjectIdInformation
-	sizeof(xboxkrnl::FILE_TRACKING_INFORMATION),          // FileTrackingInformation
+	sizeof(xbox::FILE_REPARSE_POINT_INFORMATION),     // FileReparsePointInformation
+	sizeof(xbox::FILE_NETWORK_OPEN_INFORMATION),      // FileNetworkOpenInformation
+	sizeof(xbox::FILE_DIRECTORY_INFORMATION),         // FileObjectIdInformation
+	sizeof(xbox::FILE_TRACKING_INFORMATION),          // FileTrackingInformation
 	0,                                                    // FileOleDirectoryInformation
 	0,                                                    // FileContentIndexInformation
 	0,                                                    // FileInheritContentIndexInformation
@@ -151,7 +151,7 @@ struct NativeObjectAttributes {
 	NtDll::POBJECT_ATTRIBUTES NtObjAttrPtr;
 };
 
-NTSTATUS CxbxObjectAttributesToNT(xboxkrnl::POBJECT_ATTRIBUTES ObjectAttributes, NativeObjectAttributes& nativeObjectAttributes, std::string aFileAPIName = "", bool partitionHeader = false);
+NTSTATUS CxbxObjectAttributesToNT(xbox::POBJECT_ATTRIBUTES ObjectAttributes, NativeObjectAttributes& nativeObjectAttributes, std::string aFileAPIName = "", bool partitionHeader = false);
 NTSTATUS CxbxConvertFilePath(std::string RelativeXboxPath, OUT std::wstring &RelativeHostPath, IN OUT NtDll::HANDLE *RootDirectory, std::string aFileAPIName = "", bool partitionHeader = false);
 
 // ******************************************************************
@@ -229,8 +229,8 @@ NTSTATUS CxbxCreateSymbolicLink(std::string SymbolicLinkName, std::string FullPa
 
 std::wstring string_to_wstring(std::string const & src);
 std::wstring PUNICODE_STRING_to_wstring(NtDll::PUNICODE_STRING const & src);
-std::string PSTRING_to_string(xboxkrnl::PSTRING const & src);
-void copy_string_to_PSTRING_to(std::string const & src, const xboxkrnl::PSTRING & dest);
+std::string PSTRING_to_string(xbox::PSTRING const & src);
+void copy_string_to_PSTRING_to(std::string const & src, const xbox::PSTRING & dest);
 
 static int NtFileDirectoryInformationSize = sizeof(NtDll::FILE_DIRECTORY_INFORMATION) - 1;
 static int NtPathBufferSize = MAX_PATH * sizeof(wchar_t);

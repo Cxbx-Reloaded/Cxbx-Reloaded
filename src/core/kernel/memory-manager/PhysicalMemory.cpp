@@ -38,7 +38,7 @@
 // https://docs.microsoft.com/en-us/windows-hardware/drivers/kernel/singly-and-doubly-linked-lists
 #define LIST_ENTRY_INITIALIZE(ListEntry) ((ListEntry)->Flink = (ListEntry)->Blink = nullptr)
 
-inline FreeBlock* ListEntryToFreeBlock(xboxkrnl::PLIST_ENTRY pListEntry)
+inline FreeBlock* ListEntryToFreeBlock(xbox::PLIST_ENTRY pListEntry)
 {
 	return CONTAINING_RECORD(pListEntry, FreeBlock, ListEntry);
 }
@@ -165,7 +165,7 @@ void PhysicalMemory::WritePte(PMMPTE pPteStart, PMMPTE pPteEnd, MMPTE Pte, PFN p
 
 bool PhysicalMemory::RemoveFree(PFN_COUNT NumberOfPages, PFN* result, PFN_COUNT PfnAlignment, PFN start, PFN end)
 {
-	xboxkrnl::PLIST_ENTRY ListEntry;
+	xbox::PLIST_ENTRY ListEntry;
 	PFN PfnStart;
 	PFN PfnEnd;
 	PFN IntersectionStart;
@@ -309,7 +309,7 @@ bool PhysicalMemory::RemoveFree(PFN_COUNT NumberOfPages, PFN* result, PFN_COUNT 
 
 void PhysicalMemory::InsertFree(PFN start, PFN end)
 {
-	xboxkrnl::PLIST_ENTRY ListEntry;
+	xbox::PLIST_ENTRY ListEntry;
 	PFN_COUNT size = end - start + 1;
 
 	ListEntry = FreeList.Blink; // search from the top
@@ -342,7 +342,7 @@ void PhysicalMemory::InsertFree(PFN start, PFN end)
 				start + size == ListEntryToFreeBlock(ListEntry->Flink)->start)
 			{
 				// Merge forward
-				xboxkrnl::PLIST_ENTRY temp = ListEntry->Flink;
+				xbox::PLIST_ENTRY temp = ListEntry->Flink;
 				ListEntryToFreeBlock(ListEntry)->size +=
 					ListEntryToFreeBlock(temp)->size;
 				RemoveEntryList(temp);

@@ -34,7 +34,7 @@
 #include "core\kernel\init\CxbxKrnl.h"
 
 // prevent name collisions
-namespace xboxkrnl
+namespace xbox
 {
 
 LOGRENDER_HEADER_BY_REF(BOOLEAN)
@@ -270,7 +270,7 @@ ENUM2STR_START(MODE)
 ENUM2STR_END_and_LOGRENDER(MODE)
 
 /* TODO : Fix error C2593 "'operator <<' is ambiguous",
-// because often NtDLL::NTSTATUS is used instead of xboxkrnl::NTSTATUS
+// because often NtDLL::NTSTATUS is used instead of xbox::NTSTATUS
 ENUM2STR_START(NTSTATUS) // Not really an enum
 	ENUM2STR_CASE(STATUS_SUCCESS)
 	ENUM2STR_CASE(STATUS_PENDING)
@@ -427,4 +427,4 @@ LOGRENDER(UNICODE_STRING)
 		LOGRENDER_MEMBER_SANITIZED(Buffer, wchar_t *, value.Length);
 }
 
-}; // end of namespace xboxkrnl;
+}; // end of namespace xbox;

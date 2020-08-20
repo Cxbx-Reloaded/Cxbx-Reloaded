@@ -101,7 +101,7 @@ class VMManager : public PhysicalMemory
 		// initializes the memory manager to the default configuration
 		void Initialize(unsigned int SystemType, int BootFlags, blocks_reserved_t blocks_reserved);
 		// retrieves memory statistics
-		void MemoryStatistics(xboxkrnl::PMM_STATISTICS memory_statistics);
+		void MemoryStatistics(xbox::PMM_STATISTICS memory_statistics);
 		// allocates memory in the user region
 		VAddr Allocate(size_t Size);
 		// allocates memory in the user region and zeros it
@@ -141,13 +141,13 @@ class VMManager : public PhysicalMemory
 		// retrieves the number of free debugger pages
 		PFN_COUNT QueryNumberOfFreeDebuggerPages();
 		// xbox implementation of NtAllocateVirtualMemory
-		xboxkrnl::NTSTATUS XbAllocateVirtualMemory(VAddr* addr, ULONG ZeroBits, size_t* Size, DWORD AllocationType, DWORD Protect);
+		xbox::NTSTATUS XbAllocateVirtualMemory(VAddr* addr, ULONG ZeroBits, size_t* Size, DWORD AllocationType, DWORD Protect);
 		// xbox implementation of NtFreeVirtualMemory
-		xboxkrnl::NTSTATUS XbFreeVirtualMemory(VAddr* addr, size_t* Size, DWORD FreeType);
+		xbox::NTSTATUS XbFreeVirtualMemory(VAddr* addr, size_t* Size, DWORD FreeType);
 		// xbox implementation of NtProtectVirtualMemory
-		xboxkrnl::NTSTATUS XbVirtualProtect(VAddr* addr, size_t* Size, DWORD* Protect);
+		xbox::NTSTATUS XbVirtualProtect(VAddr* addr, size_t* Size, DWORD* Protect);
 		// xbox implementation of NtQueryVirtualMemory
-		xboxkrnl::NTSTATUS XbVirtualMemoryStatistics(VAddr addr, xboxkrnl::PMEMORY_BASIC_INFORMATION memory_statistics);
+		xbox::NTSTATUS XbVirtualMemoryStatistics(VAddr addr, xbox::PMEMORY_BASIC_INFORMATION memory_statistics);
 		// get persistent memory from previous process until RestorePersistentMemory is called
 		void GetPersistentMemory();
 		// saves all persisted memory just before a quick reboot

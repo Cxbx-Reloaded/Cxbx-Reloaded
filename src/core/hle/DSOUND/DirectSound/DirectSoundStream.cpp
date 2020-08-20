@@ -87,7 +87,7 @@ XTL::X_CDirectSoundStream::_vtbl XTL::X_CDirectSoundStream::vtbl =
 // ******************************************************************
 // * patch: DirectSoundDoWork (stream)
 // ******************************************************************
-void DirectSoundDoWork_Stream(xboxkrnl::LARGE_INTEGER& time)
+void DirectSoundDoWork_Stream(xbox::LARGE_INTEGER& time)
 {
     // Actually, DirectSoundStream need to process buffer packets here.
     vector_ds_stream::iterator ppDSStream = g_pDSoundStreamCache.begin();
@@ -401,8 +401,8 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_FlushEx)
                 // If flush is not busy, then we don't need worker thread to continue flushing.
                 return hRet;
             }
-            xboxkrnl::LARGE_INTEGER getTime;
-            xboxkrnl::KeQuerySystemTime(&getTime);
+            xbox::LARGE_INTEGER getTime;
+            xbox::KeQuerySystemTime(&getTime);
             pThis->Xb_rtFlushEx = getTime.QuadPart;
         }
         else {

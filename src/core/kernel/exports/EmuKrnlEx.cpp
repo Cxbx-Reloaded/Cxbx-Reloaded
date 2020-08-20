@@ -73,15 +73,15 @@ void UnlockEeprom()
 }
 
 static bool section_does_not_require_checksum(
-    xboxkrnl::XC_VALUE_INDEX index
+    xbox::XC_VALUE_INDEX index
 )
 {
     switch(index) {
-        case xboxkrnl::XC_FACTORY_GAME_REGION:
+        case xbox::XC_FACTORY_GAME_REGION:
             return true;
-        case xboxkrnl::XC_ENCRYPTED_SECTION:
+        case xbox::XC_ENCRYPTED_SECTION:
             return true;
-        case xboxkrnl::XC_MAX_ALL:
+        case xbox::XC_MAX_ALL:
             return true;
         default:
             return false;
@@ -113,7 +113,7 @@ static uint32_t eeprom_section_checksum(
     return (uint32_t)(checksum & bitmask);
 }
 
-static bool eeprom_data_is_valid(xboxkrnl::XC_VALUE_INDEX index)
+static bool eeprom_data_is_valid(xbox::XC_VALUE_INDEX index)
 {
     const ULONG valid_checksum = 0xFFFFFFFF;
     const uint32_t* UserSettings_data = (uint32_t*)&EEPROM->UserSettings;
@@ -124,10 +124,10 @@ static bool eeprom_data_is_valid(xboxkrnl::XC_VALUE_INDEX index)
         return true;
     }
 
-    if((index >= xboxkrnl::XC_TIMEZONE_BIAS) && (index <= xboxkrnl::XC_MAX_OS)) {
+    if((index >= xbox::XC_TIMEZONE_BIAS) && (index <= xbox::XC_MAX_OS)) {
         checksum = eeprom_section_checksum(UserSettings_data, sizeof(EEPROM->UserSettings));
     }
-    else if((index >= xboxkrnl::XC_FACTORY_START_INDEX) && (index <= xboxkrnl::XC_MAX_FACTORY)) {
+    else if((index >= xbox::XC_FACTORY_START_INDEX) && (index <= xbox::XC_MAX_FACTORY)) {
         checksum = eeprom_section_checksum(FactorySettings_data, sizeof(EEPROM->FactorySettings));
     }
     else {
@@ -140,7 +140,7 @@ static bool eeprom_data_is_valid(xboxkrnl::XC_VALUE_INDEX index)
 // * 0x000C - ExAcquireReadWriteLockExclusive()
 // ******************************************************************
 // Source:APILogger - Uncertain
-XBSYSAPI EXPORTNUM(12) xboxkrnl::VOID NTAPI xboxkrnl::ExAcquireReadWriteLockExclusive
+XBSYSAPI EXPORTNUM(12) xbox::VOID NTAPI xbox::ExAcquireReadWriteLockExclusive
 (
 	IN PERWLOCK ReadWriteLock
 )
@@ -169,7 +169,7 @@ XBSYSAPI EXPORTNUM(12) xboxkrnl::VOID NTAPI xboxkrnl::ExAcquireReadWriteLockExcl
 // * 0x000D - ExAcquireReadWriteLockShared()
 // ******************************************************************
 // Source:APILogger - Uncertain
-XBSYSAPI EXPORTNUM(13) xboxkrnl::VOID NTAPI xboxkrnl::ExAcquireReadWriteLockShared
+XBSYSAPI EXPORTNUM(13) xbox::VOID NTAPI xbox::ExAcquireReadWriteLockShared
 (
 	IN PERWLOCK ReadWriteLock
 )
@@ -203,7 +203,7 @@ XBSYSAPI EXPORTNUM(13) xboxkrnl::VOID NTAPI xboxkrnl::ExAcquireReadWriteLockShar
 // ******************************************************************
 // * 0x000E - ExAllocatePool()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(14) xboxkrnl::PVOID NTAPI xboxkrnl::ExAllocatePool
+XBSYSAPI EXPORTNUM(14) xbox::PVOID NTAPI xbox::ExAllocatePool
 (
 	IN SIZE_T NumberOfBytes
 )
@@ -219,7 +219,7 @@ XBSYSAPI EXPORTNUM(14) xboxkrnl::PVOID NTAPI xboxkrnl::ExAllocatePool
 // * Differences from NT: There is no PoolType field, as the XBOX
 // * only has 1 pool, the non-paged pool.
 // ******************************************************************
-XBSYSAPI EXPORTNUM(15) xboxkrnl::PVOID NTAPI xboxkrnl::ExAllocatePoolWithTag
+XBSYSAPI EXPORTNUM(15) xbox::PVOID NTAPI xbox::ExAllocatePoolWithTag
 (
 	IN SIZE_T NumberOfBytes,
 	IN ULONG Tag
@@ -238,21 +238,21 @@ XBSYSAPI EXPORTNUM(15) xboxkrnl::PVOID NTAPI xboxkrnl::ExAllocatePoolWithTag
 // ******************************************************************
 // * 0x0010 - ExEventObjectType
 // ******************************************************************
-XBSYSAPI EXPORTNUM(16) xboxkrnl::OBJECT_TYPE xboxkrnl::ExEventObjectType =
+XBSYSAPI EXPORTNUM(16) xbox::OBJECT_TYPE xbox::ExEventObjectType =
 {
-	xboxkrnl::ExAllocatePoolWithTag,
-	xboxkrnl::ExFreePool,
+	xbox::ExAllocatePoolWithTag,
+	xbox::ExFreePool,
 	NULL,
 	NULL,
 	NULL,
-	(PVOID)offsetof(xboxkrnl::KEVENT, Header),
+	(PVOID)offsetof(xbox::KEVENT, Header),
 	'vevE' // = first four characters of "Event" in reverse
 };
 
 // ******************************************************************
 // * 0x0011 - ExFreePool()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(17) xboxkrnl::VOID NTAPI xboxkrnl::ExFreePool
+XBSYSAPI EXPORTNUM(17) xbox::VOID NTAPI xbox::ExFreePool
 (
 	IN PVOID	P
 )
@@ -266,7 +266,7 @@ XBSYSAPI EXPORTNUM(17) xboxkrnl::VOID NTAPI xboxkrnl::ExFreePool
 // * 0x0012 - ExInitializeReadWriteLock()
 // ******************************************************************
 // Source:APILogger - Uncertain
-XBSYSAPI EXPORTNUM(18) xboxkrnl::VOID NTAPI xboxkrnl::ExInitializeReadWriteLock
+XBSYSAPI EXPORTNUM(18) xbox::VOID NTAPI xbox::ExInitializeReadWriteLock
 (
 	IN PERWLOCK ReadWriteLock
 )
@@ -285,7 +285,7 @@ XBSYSAPI EXPORTNUM(18) xboxkrnl::VOID NTAPI xboxkrnl::ExInitializeReadWriteLock
 // * 0x0013 - ExInterlockedAddLargeInteger()
 // ******************************************************************
 // Source:ReactOS https://doxygen.reactos.org/d0/d35/ntoskrnl_2ex_2interlocked_8c_source.html#l00062
-XBSYSAPI EXPORTNUM(19) xboxkrnl::LARGE_INTEGER NTAPI xboxkrnl::ExInterlockedAddLargeInteger
+XBSYSAPI EXPORTNUM(19) xbox::LARGE_INTEGER NTAPI xbox::ExInterlockedAddLargeInteger
 (
 	IN OUT PLARGE_INTEGER Addend,
 	IN LARGE_INTEGER Increment,
@@ -321,7 +321,7 @@ XBSYSAPI EXPORTNUM(19) xboxkrnl::LARGE_INTEGER NTAPI xboxkrnl::ExInterlockedAddL
 // * 0x0014 - ExInterlockedAddLargeStatistic()
 // ******************************************************************
 // Source:ReactOS
-XBSYSAPI EXPORTNUM(20) xboxkrnl::VOID FASTCALL xboxkrnl::ExInterlockedAddLargeStatistic
+XBSYSAPI EXPORTNUM(20) xbox::VOID FASTCALL xbox::ExInterlockedAddLargeStatistic
 (
 	IN PLARGE_INTEGER Addend,
 	IN ULONG Increment
@@ -340,7 +340,7 @@ XBSYSAPI EXPORTNUM(20) xboxkrnl::VOID FASTCALL xboxkrnl::ExInterlockedAddLargeSt
 // * 0x0015 - ExInterlockedCompareExchange64()
 // ******************************************************************
 // Source:ReactOS
-XBSYSAPI EXPORTNUM(21) xboxkrnl::LONGLONG FASTCALL xboxkrnl::ExInterlockedCompareExchange64
+XBSYSAPI EXPORTNUM(21) xbox::LONGLONG FASTCALL xbox::ExInterlockedCompareExchange64
 (
 	IN OUT PLONGLONG Destination,
 	IN PLONGLONG Exchange,
@@ -364,21 +364,21 @@ XBSYSAPI EXPORTNUM(21) xboxkrnl::LONGLONG FASTCALL xboxkrnl::ExInterlockedCompar
 // ******************************************************************
 // * 0x0016 - ExMutantObjectType
 // ******************************************************************
-XBSYSAPI EXPORTNUM(22) xboxkrnl::OBJECT_TYPE xboxkrnl::ExMutantObjectType = 
+XBSYSAPI EXPORTNUM(22) xbox::OBJECT_TYPE xbox::ExMutantObjectType = 
 {
-	xboxkrnl::ExAllocatePoolWithTag,
-	xboxkrnl::ExFreePool,
+	xbox::ExAllocatePoolWithTag,
+	xbox::ExFreePool,
 	NULL,
-	NULL, // TODO : xboxkrnl::ExpDeleteMutant,
+	NULL, // TODO : xbox::ExpDeleteMutant,
 	NULL,
-	(PVOID)offsetof(xboxkrnl::KMUTANT, Header),
+	(PVOID)offsetof(xbox::KMUTANT, Header),
 	'atuM' // = first four characters of "Mutant" in reverse
 };
 
 // ******************************************************************
 // * 0x0017 - ExQueryPoolBlockSize()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(23) xboxkrnl::ULONG NTAPI xboxkrnl::ExQueryPoolBlockSize
+XBSYSAPI EXPORTNUM(23) xbox::ULONG NTAPI xbox::ExQueryPoolBlockSize
 (
 	IN PVOID PoolBlock
 )
@@ -393,7 +393,7 @@ XBSYSAPI EXPORTNUM(23) xboxkrnl::ULONG NTAPI xboxkrnl::ExQueryPoolBlockSize
 // ******************************************************************
 // * 0x0018 - ExQueryNonVolatileSetting()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(24) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExQueryNonVolatileSetting
+XBSYSAPI EXPORTNUM(24) xbox::NTSTATUS NTAPI xbox::ExQueryNonVolatileSetting
 (
 	IN  DWORD   ValueIndex,
 	OUT DWORD   *Type,
@@ -414,7 +414,7 @@ XBSYSAPI EXPORTNUM(24) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExQueryNonVolatileSett
 	void * value_addr = nullptr;
 	int value_type;
 	int result_length;
-	xboxkrnl::XC_VALUE_INDEX index = (XC_VALUE_INDEX)ValueIndex;
+	xbox::XC_VALUE_INDEX index = (XC_VALUE_INDEX)ValueIndex;
 
 	// handle eeprom read
 	if (index == XC_FACTORY_GAME_REGION) {
@@ -470,7 +470,7 @@ XBSYSAPI EXPORTNUM(24) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExQueryNonVolatileSett
 // ******************************************************************
 // * 0x0019 - ExReadWriteRefurbInfo()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(25) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExReadWriteRefurbInfo
+XBSYSAPI EXPORTNUM(25) xbox::NTSTATUS NTAPI xbox::ExReadWriteRefurbInfo
 (
 	IN OUT PXBOX_REFURB_INFO	pRefurbInfo,
 	IN ULONG	dwBufferSize,
@@ -501,7 +501,7 @@ XBSYSAPI EXPORTNUM(25) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExReadWriteRefurbInfo
 
 			Handle ConfigPartitionHandle;
 			IO_STATUS_BLOCK IoStatusBlock;
-			Result = xboxkrnl::NtOpenFile(
+			Result = xbox::NtOpenFile(
 				&ConfigPartitionHandle,
 				GENERIC_READ or DWORD(iif(aIsWriteMode, GENERIC_WRITE, 0)) or SYNCHRONIZE,
 				&ObjectAttributes,
@@ -518,11 +518,11 @@ XBSYSAPI EXPORTNUM(25) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExReadWriteRefurbInfo
 				{
 					RefurbInfoCopy = *pRefurbInfo;
 					RefurbInfoCopy.Signature_ = XBOX_REFURB_INFO_SIGNATURE;
-					Result = xboxkrnl::NtWriteFile(ConfigPartitionHandle, 0, NULL, NULL, &IoStatusBlock, &RefurbInfoCopy, XBOX_HD_SECTOR_SIZE, &ByteOffset);
+					Result = xbox::NtWriteFile(ConfigPartitionHandle, 0, NULL, NULL, &IoStatusBlock, &RefurbInfoCopy, XBOX_HD_SECTOR_SIZE, &ByteOffset);
 				}
 				else
 				{
-					Result = xboxkrnl::NtReadFile(ConfigPartitionHandle, 0, NULL, NULL, &IoStatusBlock, &RefurbInfoCopy, XBOX_HD_SECTOR_SIZE, &ByteOffset);
+					Result = xbox::NtReadFile(ConfigPartitionHandle, 0, NULL, NULL, &IoStatusBlock, &RefurbInfoCopy, XBOX_HD_SECTOR_SIZE, &ByteOffset);
 					if (NT_SUCCESS(Result)) 
 					{
 						if (RefurbInfoCopy.Signature_ == XBOX_REFURB_INFO_SIGNATURE)
@@ -550,7 +550,7 @@ XBSYSAPI EXPORTNUM(25) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExReadWriteRefurbInfo
 // * 0x001A - ExRaiseException()
 // ******************************************************************
 // Source:ReactOS
-XBSYSAPI EXPORTNUM(26) xboxkrnl::VOID NTAPI xboxkrnl::ExRaiseException
+XBSYSAPI EXPORTNUM(26) xbox::VOID NTAPI xbox::ExRaiseException
 (
 	IN PEXCEPTION_RECORD ExceptionRecord
 )
@@ -565,7 +565,7 @@ XBSYSAPI EXPORTNUM(26) xboxkrnl::VOID NTAPI xboxkrnl::ExRaiseException
 // * 0x001B - ExRaiseStatus()
 // ******************************************************************
 // Source:ReactOS
-XBSYSAPI EXPORTNUM(27) xboxkrnl::VOID NTAPI xboxkrnl::ExRaiseStatus
+XBSYSAPI EXPORTNUM(27) xbox::VOID NTAPI xbox::ExRaiseStatus
 (
 	IN NTSTATUS Status
 )
@@ -579,7 +579,7 @@ XBSYSAPI EXPORTNUM(27) xboxkrnl::VOID NTAPI xboxkrnl::ExRaiseStatus
 // * 0x001C - ExReleaseReadWriteLock()
 // ******************************************************************
 // Source:APILogger - Uncertain
-XBSYSAPI EXPORTNUM(28) xboxkrnl::VOID NTAPI xboxkrnl::ExReleaseReadWriteLock
+XBSYSAPI EXPORTNUM(28) xbox::VOID NTAPI xbox::ExReleaseReadWriteLock
 (
 	IN PERWLOCK ReadWriteLock
 )
@@ -620,7 +620,7 @@ XBSYSAPI EXPORTNUM(28) xboxkrnl::VOID NTAPI xboxkrnl::ExReleaseReadWriteLock
 // ******************************************************************
 // * 0x001D - ExSaveNonVolatileSetting()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(29) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExSaveNonVolatileSetting
+XBSYSAPI EXPORTNUM(29) xbox::NTSTATUS NTAPI xbox::ExSaveNonVolatileSetting
 (
 	IN  DWORD			   ValueIndex,
 	IN  DWORD			   Type,
@@ -671,7 +671,7 @@ XBSYSAPI EXPORTNUM(29) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExSaveNonVolatileSetti
 			{
 				// Update the global XboxFactoryGameRegion
 
-				XboxFactoryGameRegion = *(xboxkrnl::PULONG)Value;
+				XboxFactoryGameRegion = *(xbox::PULONG)Value;
 			}
 
 			gen_section_CRCs(EEPROM);
@@ -692,28 +692,28 @@ XBSYSAPI EXPORTNUM(29) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExSaveNonVolatileSetti
 // ******************************************************************
 // * 0x001E - ExSemaphoreObjectType
 // ******************************************************************
-XBSYSAPI EXPORTNUM(30) xboxkrnl::OBJECT_TYPE xboxkrnl::ExSemaphoreObjectType = 
+XBSYSAPI EXPORTNUM(30) xbox::OBJECT_TYPE xbox::ExSemaphoreObjectType = 
 {
-	xboxkrnl::ExAllocatePoolWithTag,
-	xboxkrnl::ExFreePool,
+	xbox::ExAllocatePoolWithTag,
+	xbox::ExFreePool,
 	NULL,
 	NULL,
 	NULL,
-	(PVOID)offsetof(xboxkrnl::KSEMAPHORE, Header),
+	(PVOID)offsetof(xbox::KSEMAPHORE, Header),
 	'ameS' // = first four characters of "Semaphore" in reverse
 };
 
 // ******************************************************************
 // * 0x001F - ExTimerObjectType
 // ******************************************************************
-XBSYSAPI EXPORTNUM(31) xboxkrnl::OBJECT_TYPE xboxkrnl::ExTimerObjectType = 
+XBSYSAPI EXPORTNUM(31) xbox::OBJECT_TYPE xbox::ExTimerObjectType = 
 {
-	xboxkrnl::ExAllocatePoolWithTag,
-	xboxkrnl::ExFreePool,
+	xbox::ExAllocatePoolWithTag,
+	xbox::ExFreePool,
 	NULL,
-	NULL, // TODO : xboxkrnl::ExpDeleteTimer,
+	NULL, // TODO : xbox::ExpDeleteTimer,
 	NULL,
-	(PVOID)offsetof(xboxkrnl::KTIMER, Header),
+	(PVOID)offsetof(xbox::KTIMER, Header),
 	'emiT' // = first four characters of "Timer" in reverse
 };
 
@@ -721,7 +721,7 @@ XBSYSAPI EXPORTNUM(31) xboxkrnl::OBJECT_TYPE xboxkrnl::ExTimerObjectType =
 // * 0x0020 - ExfInterlockedInsertHeadList()
 // ******************************************************************
 // Source:ReactOS
-XBSYSAPI EXPORTNUM(32) xboxkrnl::PLIST_ENTRY FASTCALL xboxkrnl::ExfInterlockedInsertHeadList
+XBSYSAPI EXPORTNUM(32) xbox::PLIST_ENTRY FASTCALL xbox::ExfInterlockedInsertHeadList
 (
 	IN PLIST_ENTRY ListHead,
 	IN PLIST_ENTRY ListEntry
@@ -755,7 +755,7 @@ XBSYSAPI EXPORTNUM(32) xboxkrnl::PLIST_ENTRY FASTCALL xboxkrnl::ExfInterlockedIn
 // * 0x0021 - ExfInterlockedInsertTailList()
 // ******************************************************************
 // Source:ReactOS
-XBSYSAPI EXPORTNUM(33) xboxkrnl::PLIST_ENTRY FASTCALL xboxkrnl::ExfInterlockedInsertTailList
+XBSYSAPI EXPORTNUM(33) xbox::PLIST_ENTRY FASTCALL xbox::ExfInterlockedInsertTailList
 (
 	IN PLIST_ENTRY ListHead,	
 	IN PLIST_ENTRY ListEntry
@@ -790,7 +790,7 @@ XBSYSAPI EXPORTNUM(33) xboxkrnl::PLIST_ENTRY FASTCALL xboxkrnl::ExfInterlockedIn
 // * 0x0022 - ExfInterlockedRemoveHeadList()
 // ******************************************************************
 // Source:ReactOS
-XBSYSAPI EXPORTNUM(34) xboxkrnl::PLIST_ENTRY FASTCALL xboxkrnl::ExfInterlockedRemoveHeadList
+XBSYSAPI EXPORTNUM(34) xbox::PLIST_ENTRY FASTCALL xbox::ExfInterlockedRemoveHeadList
 (
 	IN PLIST_ENTRY ListHead
 )
