@@ -5217,7 +5217,7 @@ DWORD WINAPI XTL::EMUPATCH(D3DDevice_Swap)
         // Only enter the wait loop if the frame took too long
         if (actualDuration < targetDuration) {
             // If we need to wait for a larger amount of time (>= 1 frame at 60FPS), we can just sleep
-            if (std::chrono::duration_cast<std::chrono::milliseconds>(targetTimestamp - std::chrono::steady_clock::now()).count() > 16) {
+            if ((targetTimestamp - std::chrono::steady_clock::now()) > std::chrono::duration<double, std::milli>(16.0)) {
                 std::this_thread::sleep_until(targetTimestamp);
             } else {
                 // Otherwise, we fall-through and just keep polling

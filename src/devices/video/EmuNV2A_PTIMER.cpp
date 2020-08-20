@@ -41,7 +41,7 @@
 static uint64_t ptimer_get_clock(NV2AState * d)
 {
 	// Get time in nanoseconds
-    uint64_t time = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
+    uint64_t time = std::chrono::duration<uint64_t, std::nano>(std::chrono::steady_clock::now().time_since_epoch()).count();
 
 	return Muldiv64(Muldiv64(time,
 					(uint32_t)d->pramdac.core_clock_freq, // TODO : Research how this can be updated to accept uint64_t
