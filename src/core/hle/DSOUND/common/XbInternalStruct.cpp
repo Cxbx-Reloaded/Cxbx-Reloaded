@@ -25,9 +25,9 @@
 
 #include "XbInternalStruct.hpp"
 
-XTL::CUnknownTemplate::CUnknownTemplate() { ref_count = 1; }
+xbox::CUnknownTemplate::CUnknownTemplate() { ref_count = 1; }
 
-XTL::CMcpxVoiceClient::_settings XTL::CMcpxVoiceClient::default_settings =
+xbox::CMcpxVoiceClient::_settings xbox::CMcpxVoiceClient::default_settings =
 {
     0,                              // 0x08
                                     // ...

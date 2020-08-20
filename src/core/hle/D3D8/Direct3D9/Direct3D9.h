@@ -38,18 +38,18 @@ extern VOID CxbxInitWindow(bool bFullInit);
 
 extern VOID CxbxSetPixelContainerHeader
 (
-	XTL::X_D3DPixelContainer* pPixelContainer,
+	xbox::X_D3DPixelContainer* pPixelContainer,
 	DWORD           	Common,
 	UINT				Width,
 	UINT				Height,
 	UINT				Levels,
-	XTL::X_D3DFORMAT	Format,
+	xbox::X_D3DFORMAT	Format,
 	UINT				Dimensions,
 	UINT				Pitch
 );
 
 extern uint8_t *ConvertD3DTextureToARGB(
-	XTL::X_D3DPixelContainer *pXboxPixelContainer,
+	xbox::X_D3DPixelContainer *pXboxPixelContainer,
 	uint8_t *pSrc,
 	int *pWidth, int *pHeight,
 	int TextureStage = 0
@@ -67,11 +67,11 @@ extern IDirect3DDevice *g_pD3DDevice;
 
 extern DWORD g_Xbox_VertexShader_Handle;
 
-extern XTL::X_PixelShader *g_pXbox_PixelShader;
+extern xbox::X_PixelShader *g_pXbox_PixelShader;
 
-extern XTL::X_D3DBaseTexture *g_pXbox_SetTexture[XTL::X_D3DTS_STAGECOUNT];
+extern xbox::X_D3DBaseTexture *g_pXbox_SetTexture[xbox::X_D3DTS_STAGECOUNT];
 
-namespace XTL {
+namespace xbox {
 
 // ******************************************************************
 // * patch: Direct3D_CreateDevice
@@ -345,7 +345,7 @@ VOID __stdcall EMUPATCH(D3DDevice_GetViewportOffsetAndScale_0)();
 // ******************************************************************
 VOID WINAPI EMUPATCH(D3DDevice_SetShaderConstantMode)
 (
-    XTL::X_VERTEXSHADERCONSTANTMODE Mode
+    xbox::X_VERTEXSHADERCONSTANTMODE Mode
 );
 
 VOID __stdcall EMUPATCH(D3DDevice_SetShaderConstantMode_0)();
@@ -1339,7 +1339,7 @@ BYTE* WINAPI EMUPATCH(D3DVertexBuffer_Lock2)
 // ******************************************************************
 // * patch: D3DDevice_GetStreamSource2
 // ******************************************************************
-XTL::X_D3DVertexBuffer* WINAPI EMUPATCH(D3DDevice_GetStreamSource2)
+xbox::X_D3DVertexBuffer* WINAPI EMUPATCH(D3DDevice_GetStreamSource2)
 (
     UINT  StreamNumber,
     UINT *pStride
@@ -2126,6 +2126,6 @@ VOID WINAPI EMUPATCH(D3DDevice_GetMaterial)
 	X_D3DMATERIAL8* pMaterial
 );
 
-} // end of namespace XTL
+} // end of namespace xbox
 
 #endif

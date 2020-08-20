@@ -28,9 +28,9 @@
 
 #include "xbox_types.h"
 
-namespace XTL {
+namespace xbox {
 
-#include <dsound.h> // TODO: FIXME after global namespace XTL issue is resolved.
+#include <dsound.h> // TODO: FIXME after global namespace xbox issue is resolved.
 // TODO: Port PC dsound.h to xbox edition here base on previous research.
 // TODO: Also need to use fixed size to able support cross-platform without extra work.
 //       Such as uint32_t, uint16_t, etc.
@@ -372,6 +372,6 @@ struct X_DSVOICEPROPS {
     LONG lI3DL2RoomVolume;
 };
 
-} // end of namespace XTL
+} // end of namespace xbox
 
 #endif

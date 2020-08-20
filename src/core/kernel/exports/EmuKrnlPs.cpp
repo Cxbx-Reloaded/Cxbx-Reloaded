@@ -272,7 +272,7 @@ XBSYSAPI EXPORTNUM(255) xbox::NTSTATUS NTAPI xbox::PsCreateSystemThreadEx
 				// TODO: XAPI notification routines are already handeld by XapiThreadStartup and don't need to be called by us
 				// TODO: This type of notification routine is PCREATE_THREAD_NOTIFY_ROUTINE, which takes an ETHREAD pointer as well as Thread ID as input
 				// TODO: This is impossible to support currently, as we do not create or register Xbox ETHREAD objects, so we're better to skip it entirely!
-				XTL::XTHREAD_NOTIFY_PROC pfnNotificationRoutine = (XTL::XTHREAD_NOTIFY_PROC)g_pfnThreadNotification[i];
+				xbox::XTHREAD_NOTIFY_PROC pfnNotificationRoutine = (xbox::XTHREAD_NOTIFY_PROC)g_pfnThreadNotification[i];
 
 				// If the routine doesn't exist, don't execute it!
 				if (pfnNotificationRoutine == NULL)
@@ -368,7 +368,7 @@ XBSYSAPI EXPORTNUM(257) xbox::NTSTATUS NTAPI xbox::PsSetCreateThreadNotifyRoutin
 
 	NTSTATUS ret = STATUS_INSUFFICIENT_RESOURCES;
 
-	// Taken from XTL::EmuXRegisterThreadNotifyRoutine (perhaps that can be removed now) :
+	// Taken from xbox::EmuXRegisterThreadNotifyRoutine (perhaps that can be removed now) :
 
 	// I honestly don't expect this to happen, but if it does...
 	if (g_iThreadNotificationCount >= PSP_MAX_CREATE_THREAD_NOTIFY)
@@ -410,7 +410,7 @@ XBSYSAPI EXPORTNUM(258) xbox::VOID NTAPI xbox::PsTerminateSystemThread
 	{
 		for (int i = 0; i < 16; i++)
 		{
-			XTL::XTHREAD_NOTIFY_PROC pfnNotificationRoutine = (XTL::XTHREAD_NOTIFY_PROC)g_pfnThreadNotification[i];
+			xbox::XTHREAD_NOTIFY_PROC pfnNotificationRoutine = (xbox::XTHREAD_NOTIFY_PROC)g_pfnThreadNotification[i];
 
 			// If the routine doesn't exist, don't execute it!
 			if (pfnNotificationRoutine == NULL)

@@ -1505,8 +1505,8 @@ void WndMain::LoadGameLogo()
 	gameLogoHeight = 0;
 
     uint8_t *ImageData = nullptr;
-	XTL::X_D3DPixelContainer XboxPixelContainer = {};
-	XTL::X_D3DPixelContainer *pXboxPixelContainer = &XboxPixelContainer;
+	xbox::X_D3DPixelContainer XboxPixelContainer = {};
+	xbox::X_D3DPixelContainer *pXboxPixelContainer = &XboxPixelContainer;
 
 	switch (*(DWORD*)pSection) {
 	case MAKEFOURCC('D', 'D', 'S', ' '): {
@@ -1551,7 +1551,7 @@ void WndMain::LoadGameLogo()
 		uint8_t *ResourceHeaders = pSection + sizeof(Xbe::XprHeader);
 		uint8_t *ResourceData = ResourceHeaders + SizeOfResourceHeaders;
 
-		pXboxPixelContainer = (XTL::X_D3DPixelContainer*)ResourceHeaders;
+		pXboxPixelContainer = (xbox::X_D3DPixelContainer*)ResourceHeaders;
 		ImageData = ResourceData;
 
 		break;

@@ -28,7 +28,7 @@
 
 // Interface for get format
 template<class T>
-void GetFormat_4034_lower(T& settings, XTL::audio_format& format)
+void GetFormat_4034_lower(T& settings, xbox::audio_format& format)
 {
     format.audio_codec = settings.p_audio_format->wfx.wFormatTag = format.audio_codec;
     format.nChannels = settings.p_audio_format->wfx.nChannels;
@@ -37,7 +37,7 @@ void GetFormat_4034_lower(T& settings, XTL::audio_format& format)
     format.bitsPerSample = settings.p_audio_format->wfx.wBitsPerSample;
 }
 template<class T>
-void GetFormat_4039_upper(T& settings, XTL::audio_format& format)
+void GetFormat_4039_upper(T& settings, xbox::audio_format& format)
 {
     format.audio_codec = settings.audio_codec;
     format.nChannels = settings.nChannels;
@@ -48,7 +48,7 @@ void GetFormat_4039_upper(T& settings, XTL::audio_format& format)
 
 // Interface for set format
 template<class T>
-void SetFormat_4034_lower(T& settings, XTL::audio_format format)
+void SetFormat_4034_lower(T& settings, xbox::audio_format format)
 {
     settings.p_audio_format->wfx.wFormatTag = format.audio_codec;
     settings.p_audio_format->wfx.nChannels = static_cast<uint16_t>(format.nChannels);
@@ -61,7 +61,7 @@ void SetFormat_4034_lower(T& settings, XTL::audio_format format)
     settings.pitch = converter_freq2pitch(format.nSamplesPerSec);
 }
 template<class T>
-void SetFormat_4039_only(T& settings, XTL::audio_format format)
+void SetFormat_4039_only(T& settings, xbox::audio_format format)
 {
     settings.audio_codec = format.audio_codec;
     settings.nChannels = format.nChannels;
@@ -71,7 +71,7 @@ void SetFormat_4039_only(T& settings, XTL::audio_format format)
     settings.pitch = converter_freq2pitch(format.nSamplesPerSec);
 }
 template<class T>
-void SetFormat_4134_upper(T& settings, XTL::audio_format format)
+void SetFormat_4134_upper(T& settings, xbox::audio_format format)
 {
     settings.audio_codec = static_cast<uint16_t>(format.audio_codec);
     settings.nChannels = static_cast<uint8_t>(format.nChannels);
@@ -149,7 +149,7 @@ void Init(T& settings, bool is3D)
     settings.volume = 0 - settings.headroom;
 }
 
-XTL::CDirectSoundVoice::CDirectSoundVoice(bool is3D)
+xbox::CDirectSoundVoice::CDirectSoundVoice(bool is3D)
 {
     settings = { 0 };
 
@@ -202,7 +202,7 @@ XTL::CDirectSoundVoice::CDirectSoundVoice(bool is3D)
     }
 }
 
-XTL::CDirectSoundVoice::~CDirectSoundVoice()
+xbox::CDirectSoundVoice::~CDirectSoundVoice()
 {
     if (g_LibVersion_DSOUND < 4039) {
         if (!settings.r4034_lower.p_audio_format) {

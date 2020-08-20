@@ -42,38 +42,38 @@
 
 typedef void(*FormatToARGBRow)(const uint8_t* src, uint8_t* dst_argb, int width);
 
-extern const FormatToARGBRow EmuXBFormatComponentConverter(XTL::X_D3DFORMAT Format);
+extern const FormatToARGBRow EmuXBFormatComponentConverter(xbox::X_D3DFORMAT Format);
 
-bool EmuXBFormatCanBeConvertedToARGB(XTL::X_D3DFORMAT Format);
+bool EmuXBFormatCanBeConvertedToARGB(xbox::X_D3DFORMAT Format);
 
-bool EmuXBFormatRequiresConversionToARGB(XTL::X_D3DFORMAT Format);
+bool EmuXBFormatRequiresConversionToARGB(xbox::X_D3DFORMAT Format);
 
 // how many bits does this format use per pixel?
-extern DWORD EmuXBFormatBitsPerPixel(XTL::X_D3DFORMAT Format);
+extern DWORD EmuXBFormatBitsPerPixel(xbox::X_D3DFORMAT Format);
 
 // how many bytes does this format use per pixel?
-extern DWORD EmuXBFormatBytesPerPixel(XTL::X_D3DFORMAT Format);
+extern DWORD EmuXBFormatBytesPerPixel(xbox::X_D3DFORMAT Format);
 
 // is this format compressed?
-extern BOOL EmuXBFormatIsCompressed(XTL::X_D3DFORMAT Format);
+extern BOOL EmuXBFormatIsCompressed(xbox::X_D3DFORMAT Format);
 
 // is this format linear?
-extern BOOL EmuXBFormatIsLinear(XTL::X_D3DFORMAT Format);
+extern BOOL EmuXBFormatIsLinear(xbox::X_D3DFORMAT Format);
 
 // is this format swizzled?
-extern BOOL EmuXBFormatIsSwizzled(XTL::X_D3DFORMAT Format);
+extern BOOL EmuXBFormatIsSwizzled(xbox::X_D3DFORMAT Format);
 
 // is this format a valid render target?
-extern BOOL EmuXBFormatIsRenderTarget(XTL::X_D3DFORMAT Format);
+extern BOOL EmuXBFormatIsRenderTarget(xbox::X_D3DFORMAT Format);
 
 // is this format a valid depth buffer?
-extern BOOL EmuXBFormatIsDepthBuffer(XTL::X_D3DFORMAT Format);
+extern BOOL EmuXBFormatIsDepthBuffer(xbox::X_D3DFORMAT Format);
 
 // convert from xbox to pc color formats
-extern D3DFORMAT EmuXB2PC_D3DFormat(XTL::X_D3DFORMAT Format);
+extern D3DFORMAT EmuXB2PC_D3DFormat(xbox::X_D3DFORMAT Format);
 
 // convert from pc to xbox color formats
-extern XTL::X_D3DFORMAT EmuPC2XB_D3DFormat(D3DFORMAT Format, bool bPreferLinear = true);
+extern xbox::X_D3DFORMAT EmuPC2XB_D3DFormat(D3DFORMAT Format, bool bPreferLinear = true);
 
 // convert from xbox to pc d3d lock flags
 extern DWORD EmuXB2PC_D3DLock(DWORD Flags);
@@ -120,7 +120,7 @@ inline D3DTRANSFORMSTATETYPE EmuXB2PC_D3DTS(D3DTRANSFORMSTATETYPE State)
 }
 
 // convert from xbox to pc blend ops
-inline D3DBLENDOP EmuXB2PC_D3DBLENDOP(XTL::X_D3DBLENDOP Value)
+inline D3DBLENDOP EmuXB2PC_D3DBLENDOP(xbox::X_D3DBLENDOP Value)
 {
 	switch(Value)
     {
@@ -145,7 +145,7 @@ inline D3DBLENDOP EmuXB2PC_D3DBLENDOP(XTL::X_D3DBLENDOP Value)
 }
 
 // convert from xbox to pc blend types 
-inline D3DBLEND EmuXB2PC_D3DBLEND(XTL::X_D3DBLEND Value)
+inline D3DBLEND EmuXB2PC_D3DBLEND(xbox::X_D3DBLEND Value)
 {
 	switch (Value) {
         case 0x000: return D3DBLEND_ZERO;
@@ -170,7 +170,7 @@ inline D3DBLEND EmuXB2PC_D3DBLEND(XTL::X_D3DBLEND Value)
 }
 
 // convert from xbox to pc comparison functions
-inline D3DCMPFUNC EmuXB2PC_D3DCMPFUNC(XTL::X_D3DCMPFUNC Value)
+inline D3DCMPFUNC EmuXB2PC_D3DCMPFUNC(xbox::X_D3DCMPFUNC Value)
 {
 	switch (Value) {
         case 0x200: return D3DCMP_NEVER;
@@ -188,7 +188,7 @@ inline D3DCMPFUNC EmuXB2PC_D3DCMPFUNC(XTL::X_D3DCMPFUNC Value)
 }
 
 // convert from xbox to pc fill modes
-inline D3DFILLMODE EmuXB2PC_D3DFILLMODE(XTL::X_D3DFILLMODE Value)
+inline D3DFILLMODE EmuXB2PC_D3DFILLMODE(xbox::X_D3DFILLMODE Value)
 {
 	switch (Value) {
         case 0x1B00: return D3DFILL_POINT;
@@ -201,7 +201,7 @@ inline D3DFILLMODE EmuXB2PC_D3DFILLMODE(XTL::X_D3DFILLMODE Value)
 }
 
 // convert from xbox to pc shade modes
-inline D3DSHADEMODE EmuXB2PC_D3DSHADEMODE(XTL::X_D3DSHADEMODE Value)
+inline D3DSHADEMODE EmuXB2PC_D3DSHADEMODE(xbox::X_D3DSHADEMODE Value)
 {
 	switch (Value) {
         case 0x1D00: return D3DSHADE_FLAT;
@@ -213,7 +213,7 @@ inline D3DSHADEMODE EmuXB2PC_D3DSHADEMODE(XTL::X_D3DSHADEMODE Value)
 }
 
 // convert from xbox to pc stencilop modes
-inline D3DSTENCILOP EmuXB2PC_D3DSTENCILOP(XTL::X_D3DSTENCILOP Value)
+inline D3DSTENCILOP EmuXB2PC_D3DSTENCILOP(xbox::X_D3DSTENCILOP Value)
 {
     switch(Value)
     {
@@ -233,11 +233,11 @@ inline D3DSTENCILOP EmuXB2PC_D3DSTENCILOP(XTL::X_D3DSTENCILOP Value)
 }
 
 // table used for vertex->primitive count conversion
-extern const UINT g_XboxPrimitiveTypeInfo[XTL::X_D3DPT_POLYGON + 1][2];
+extern const UINT g_XboxPrimitiveTypeInfo[xbox::X_D3DPT_POLYGON + 1][2];
 
-inline bool IsValidXboxVertexCount(XTL::X_D3DPRIMITIVETYPE XboxPrimitiveType, UINT VertexCount)
+inline bool IsValidXboxVertexCount(xbox::X_D3DPRIMITIVETYPE XboxPrimitiveType, UINT VertexCount)
 {
-	assert(XboxPrimitiveType < XTL::X_D3DPT_MAX);
+	assert(XboxPrimitiveType < xbox::X_D3DPT_MAX);
 
 	// Are there more vertices than required for setup?
 	if (VertexCount > g_XboxPrimitiveTypeInfo[XboxPrimitiveType][0])
@@ -249,9 +249,9 @@ inline bool IsValidXboxVertexCount(XTL::X_D3DPRIMITIVETYPE XboxPrimitiveType, UI
 }
 
 // convert from vertex count to primitive count (Xbox)
-inline unsigned ConvertXboxVertexCountToPrimitiveCount(XTL::X_D3DPRIMITIVETYPE XboxPrimitiveType, unsigned VertexCount)
+inline unsigned ConvertXboxVertexCountToPrimitiveCount(xbox::X_D3DPRIMITIVETYPE XboxPrimitiveType, unsigned VertexCount)
 {
-	assert(XboxPrimitiveType < XTL::X_D3DPT_MAX);
+	assert(XboxPrimitiveType < xbox::X_D3DPT_MAX);
 
 	return (VertexCount - g_XboxPrimitiveTypeInfo[XboxPrimitiveType][0]) / g_XboxPrimitiveTypeInfo[XboxPrimitiveType][1];
 }
@@ -260,9 +260,9 @@ inline unsigned ConvertXboxVertexCountToPrimitiveCount(XTL::X_D3DPRIMITIVETYPE X
 extern const D3DPRIMITIVETYPE g_XboxPrimitiveTypeToHost[];
 
 // convert xbox->pc primitive type
-inline D3DPRIMITIVETYPE EmuXB2PC_D3DPrimitiveType(XTL::X_D3DPRIMITIVETYPE XboxPrimitiveType)
+inline D3DPRIMITIVETYPE EmuXB2PC_D3DPrimitiveType(xbox::X_D3DPRIMITIVETYPE XboxPrimitiveType)
 {
-	if (XboxPrimitiveType >= XTL::X_D3DPT_MAX) {
+	if (XboxPrimitiveType >= xbox::X_D3DPT_MAX) {
 		LOG_TEST_CASE("XboxPrimitiveType too large");
 		return D3DPT_FORCE_DWORD;
 	}
@@ -1808,7 +1808,7 @@ typedef struct _RenderStateInfo {
 	char *S;   // String representation.
 	WORD V;    // The XDK version since which a render state was introduced (using the 5911 declarations as a base).
 	TXBType T = xt_Unknown; // The Xbox data type. Defaults to xt_Unknown.
-	XTL::NV2AMETHOD M; // The related push buffer method. Not always a 1-to-1 mapping. Needs push-buffer interpretation & conversion code.
+	xbox::NV2AMETHOD M; // The related push buffer method. Not always a 1-to-1 mapping. Needs push-buffer interpretation & conversion code.
 	D3DRENDERSTATETYPE PC = (D3DRENDERSTATETYPE)0; // Map XBox to PC render state
 	char *N;   // XDK notes. Defaults to ''.
 	WORD R; // The XDK version since which a render state was removed

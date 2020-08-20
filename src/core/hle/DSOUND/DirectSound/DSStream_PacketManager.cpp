@@ -67,9 +67,9 @@ static inline void DSStream_Packet_UpdateHostBuffer(
 void DSStream_Packet_Clear(
     vector_hvp_iterator        &buffer,
     DWORD                       status,
-    XTL::LPFNXMOCALLBACK        Xb_lpfnCallback,
+    xbox::LPFNXMOCALLBACK        Xb_lpfnCallback,
     LPVOID                      Xb_lpvContext,
-    XTL::X_CDirectSoundStream*  pThis
+    xbox::X_CDirectSoundStream*  pThis
     )
 {
 
@@ -110,7 +110,7 @@ void DSStream_Packet_Clear(
 }
 
 static inline void DSStream_Packet_UploadPartial(
-    XTL::X_CDirectSoundStream* pThis,
+    xbox::X_CDirectSoundStream* pThis,
     vector_hvp_iterator &packetCurrent
     )
 {
@@ -150,7 +150,7 @@ static inline void DSStream_Packet_UploadPartial(
 }
 
 static inline void DSStream_Packet_Stop_Internal(
-    XTL::X_CDirectSoundStream* pThis
+    xbox::X_CDirectSoundStream* pThis
     )
 {
     pThis->Host_isProcessing = false;
@@ -158,7 +158,7 @@ static inline void DSStream_Packet_Stop_Internal(
 }
 
 static inline void DSStream_Packet_Stop(
-    XTL::X_CDirectSoundStream* pThis
+    xbox::X_CDirectSoundStream* pThis
     )
 {
     DSStream_Packet_Stop_Internal(pThis);
@@ -175,7 +175,7 @@ static inline void DSStream_Packet_Stop(
 }
 
 static inline void DSStream_Packet_Starved(
-    XTL::X_CDirectSoundStream* pThis
+    xbox::X_CDirectSoundStream* pThis
     )
 {
     DSStream_Packet_Stop_Internal(pThis);
@@ -188,7 +188,7 @@ static inline void DSStream_Packet_Starved(
 
 // Prefill buffer with at least 1 second worth of buffer. See "nAvgBytesPerSec" below for inspection.
 static void DSStream_Packet_Prefill(
-    XTL::X_CDirectSoundStream* pThis,
+    xbox::X_CDirectSoundStream* pThis,
     vector_hvp_iterator packetCurrent
     )
 {
@@ -209,7 +209,7 @@ static void DSStream_Packet_Prefill(
 }
 
 bool DSStream_Packet_Process(
-    XTL::X_CDirectSoundStream* pThis
+    xbox::X_CDirectSoundStream* pThis
     )
 {
 
@@ -342,7 +342,7 @@ bool DSStream_Packet_Process(
 }
 
 void DSStream_Packet_FlushEx_Reset(
-    XTL::X_CDirectSoundStream* pThis
+    xbox::X_CDirectSoundStream* pThis
     )
 {
     // Remove flags only (This is the only place it will remove other than FlushEx perform set/remove the flags.)
@@ -351,7 +351,7 @@ void DSStream_Packet_FlushEx_Reset(
 }
 
 bool DSStream_Packet_Flush(
-    XTL::X_CDirectSoundStream* pThis
+    xbox::X_CDirectSoundStream* pThis
     )
 {
     // If host's audio is still playing then return busy-state until buffer has stop playing.

@@ -121,7 +121,7 @@ static inline void GenerateXboxBufferCache(
     }
 }
 
-static inline void InitVoiceProperties(XTL::X_DSVOICEPROPS& Xb_VoiceProperties)
+static inline void InitVoiceProperties(xbox::X_DSVOICEPROPS& Xb_VoiceProperties)
 {
     Xb_VoiceProperties.l3DConeVolume = 0;
     Xb_VoiceProperties.l3DDistanceVolume = 0;
@@ -132,9 +132,9 @@ static inline void InitVoiceProperties(XTL::X_DSVOICEPROPS& Xb_VoiceProperties)
 }
 
 static inline void GenerateMixBinDefault(
-    XTL::X_DSVOICEPROPS    &Xb_VoiceProperties,
+    xbox::X_DSVOICEPROPS    &Xb_VoiceProperties,
     LPCWAVEFORMATEX         lpwfxFormat,
-    XTL::X_LPDSMIXBINS      mixbins_output,
+    xbox::X_LPDSMIXBINS      mixbins_output,
     bool                    is3D)
 {
     if (g_LibVersion_DSOUND < 4039) {
@@ -253,9 +253,9 @@ static inline void GeneratePCMFormat(
     DWORD           X_BufferSizeRequest,
     LPVOID*         X_BufferCache,
     DWORD          &X_BufferCacheSize,
-    XTL::X_DSVOICEPROPS& Xb_VoiceProperties,
-    XTL::X_LPDSMIXBINS mixbins_output,
-    XTL::CDirectSoundVoice* Xb_Voice)
+    xbox::X_DSVOICEPROPS& Xb_VoiceProperties,
+    xbox::X_LPDSMIXBINS mixbins_output,
+    xbox::CDirectSoundVoice* Xb_Voice)
 {
     bool bIsSpecial = false;
 
@@ -332,7 +332,7 @@ static inline void DSoundGenericUnlock(
     DWORD                   dwEmuFlags,
     LPDIRECTSOUNDBUFFER8    pDSBuffer,
     DSBUFFERDESC           &DSBufferDesc,
-    XTL::DSoundBuffer_Lock &Host_lock,
+    xbox::DSoundBuffer_Lock &Host_lock,
     LPVOID                  X_BufferCache,
     DWORD                   X_Offset,
     DWORD                   X_dwLockBytes1,
@@ -403,8 +403,8 @@ static inline void DSound3DBufferCreate(LPDIRECTSOUNDBUFFER8 pDSBuffer, LPDIRECT
     pThis->EmuLockPtr2 = xbox::zeroptr; \
     pThis->EmuLockBytes2 = 0; \ */
 
-static inline void DSoundBufferRegionSetDefault(XTL::EmuDirectSoundBuffer *pThis) {
-    pThis->EmuBufferToggle = XTL::X_DSB_TOGGLE_DEFAULT;
+static inline void DSoundBufferRegionSetDefault(xbox::EmuDirectSoundBuffer *pThis) {
+    pThis->EmuBufferToggle = xbox::X_DSB_TOGGLE_DEFAULT;
     pThis->EmuRegionLoopStartOffset = 0;
     pThis->EmuRegionLoopLength = 0;
     pThis->EmuRegionPlayStartOffset = 0;
@@ -417,7 +417,7 @@ static inline void DSoundBufferTransferSettings(
     LPDIRECTSOUNDBUFFER8       &pDSBufferNew,
     LPDIRECTSOUND3DBUFFER8     &pDS3DBufferOld,
     LPDIRECTSOUND3DBUFFER8     &pDS3DBufferNew,
-    XTL::CDirectSoundVoice*     Xb_Voice)
+    xbox::CDirectSoundVoice*     Xb_Voice)
 {
     LONG lVolume, lPan;
     DS3DBUFFER ds3dBuffer;
@@ -449,7 +449,7 @@ static inline void DSoundBufferReCreate(
     LPDIRECTSOUND3DBUFFER8     &pDS3DBuffer,
     LPDIRECTSOUNDBUFFER8       &pDSBufferNew,
     LPDIRECTSOUND3DBUFFER8     &pDS3DBufferNew,
-    XTL::CDirectSoundVoice*     Xb_Voice) {
+    xbox::CDirectSoundVoice*     Xb_Voice) {
 
 
     DSoundBufferCreate(&DSBufferDesc, pDSBufferNew);
@@ -484,11 +484,11 @@ static inline void DSoundBufferRelease(
 }
 
 static inline void DSoundBufferResizeSetSize(
-    XTL::XbHybridDSBuffer*      pHybridThis,
+    xbox::XbHybridDSBuffer*      pHybridThis,
     HRESULT                    &hRet,
     DWORD                       Xb_dwByteLength) {
 
-    XTL::EmuDirectSoundBuffer* pThis = pHybridThis->emuDSBuffer;
+    xbox::EmuDirectSoundBuffer* pThis = pHybridThis->emuDSBuffer;
     // General return OK, nothing needs to set as invalid for now.
     hRet = DS_OK;
 
@@ -523,13 +523,13 @@ static inline void DSoundBufferResizeSetSize(
 }
 
 static inline void DSoundBufferResizeUpdate(
-    XTL::XbHybridDSBuffer*      pHybridThis,
+    xbox::XbHybridDSBuffer*      pHybridThis,
     DWORD                       dwPlayFlags,
     HRESULT                    &hRet,
     DWORD                       Xb_dwStartOffset,
     DWORD                       Xb_dwByteLength) {
 
-    XTL::EmuDirectSoundBuffer* pThis = pHybridThis->emuDSBuffer;
+    xbox::EmuDirectSoundBuffer* pThis = pHybridThis->emuDSBuffer;
     DSoundBufferResizeSetSize(pHybridThis, hRet, Xb_dwByteLength);
 
     hRet = pThis->EmuDirectSoundBuffer8->Lock(0, 0, &pThis->Host_lock.pLockPtr1, &pThis->Host_lock.dwLockBytes1,
@@ -548,13 +548,13 @@ static inline void DSoundBufferResizeUpdate(
 }
 
 static inline void DSoundBufferRegionCurrentLocation(
-    XTL::XbHybridDSBuffer*      pHybridThis,
+    xbox::XbHybridDSBuffer*      pHybridThis,
     DWORD                       dwPlayFlags,
     HRESULT                    &hRet,
     DWORD                      &Xb_dwStartOffset,
     DWORD                      &Xb_dwByteLength)
 {
-    XTL::EmuDirectSoundBuffer* pThis = pHybridThis->emuDSBuffer;
+    xbox::EmuDirectSoundBuffer* pThis = pHybridThis->emuDSBuffer;
     if ((dwPlayFlags & X_DSBPLAY_LOOPING) > 0) {
         Xb_dwStartOffset = pThis->EmuRegionPlayStartOffset + pThis->EmuRegionLoopStartOffset;
 
@@ -581,7 +581,7 @@ static inline void DSoundBufferRegionCurrentLocation(
 }
 
 static inline void DSoundBufferUpdate(
-    XTL::XbHybridDSBuffer*      pHybridThis,
+    xbox::XbHybridDSBuffer*      pHybridThis,
     DWORD                       dwPlayFlags,
     HRESULT                    &hRet) {
 
@@ -599,7 +599,7 @@ static inline void DSoundBufferRegenWithNewFormat(
     DSBUFFERDESC               &DSBufferDesc,
     DWORD                       PlayFlags,
     LPDIRECTSOUND3DBUFFER8     &pDS3DBuffer,
-    XTL::CDirectSoundVoice*   Xb_Voice)
+    xbox::CDirectSoundVoice*   Xb_Voice)
 {
     DWORD refCount, dwPlayCursor, dwStatus;
     LPDIRECTSOUNDBUFFER8       pDSBufferNew = nullptr;
@@ -945,7 +945,7 @@ static inline HRESULT HybridDirectSoundBuffer_Restore(
 //IDirectSoundBuffer
 static inline HRESULT HybridDirectSound3DBuffer_SetAllParameters(
     LPDIRECTSOUND3DBUFFER8  pDS3DBuffer,
-    XTL::X_DS3DBUFFER*      pDS3DBufferParams,
+    xbox::X_DS3DBUFFER*      pDS3DBufferParams,
     DWORD                   dwApply)
 {
     HRESULT hRet = DS_OK;
@@ -1099,7 +1099,7 @@ static inline HRESULT HybridDirectSoundBuffer_SetEG(
 //IDirectSoundBuffer
 static inline HRESULT HybridDirectSoundBuffer_SetFilter(
     LPDIRECTSOUNDBUFFER8     pDSBuffer,
-    XTL::X_DSFILTERDESC*    pFilterDesc)
+    xbox::X_DSFILTERDESC*    pFilterDesc)
 {
 
     return DS_OK;
@@ -1118,9 +1118,9 @@ static inline HRESULT HybridDirectSoundBuffer_SetFormat(
     bool                    X_BufferAllocate,
     LPVOID                 &X_BufferCache,
     DWORD                  &X_BufferCacheSize,
-    XTL::X_DSVOICEPROPS    &Xb_VoiceProperties,
-    XTL::X_LPDSMIXBINS      mixbins_output,
-    XTL::CDirectSoundVoice* Xb_Voice)
+    xbox::X_DSVOICEPROPS    &Xb_VoiceProperties,
+    xbox::X_LPDSMIXBINS      mixbins_output,
+    xbox::CDirectSoundVoice* Xb_Voice)
 {
     pDSBuffer->Stop();
 
@@ -1147,14 +1147,14 @@ static inline HRESULT HybridDirectSoundBuffer_SetFormat(
     RETURN_RESULT_CHECK(hRet);
 }
 
-static HRESULT HybridDirectSoundBuffer_SetPitch(LPDIRECTSOUNDBUFFER8, LONG, XTL::CDirectSoundVoice*);
+static HRESULT HybridDirectSoundBuffer_SetPitch(LPDIRECTSOUNDBUFFER8, LONG, xbox::CDirectSoundVoice*);
 
 //IDirectSoundStream
 //IDirectSoundBuffer
 static inline HRESULT HybridDirectSoundBuffer_SetFrequency(
     LPDIRECTSOUNDBUFFER8 pDSBuffer,
     DWORD               dwFrequency,
-    XTL::CDirectSoundVoice* Xb_Voice)
+    xbox::CDirectSoundVoice* Xb_Voice)
 {
     HRESULT hRet = S_OK;
 
@@ -1165,7 +1165,7 @@ static inline HRESULT HybridDirectSoundBuffer_SetFrequency(
     RETURN_RESULT_CHECK(hRet);
 }
 
-static HRESULT HybridDirectSoundBuffer_SetVolume(LPDIRECTSOUNDBUFFER8, LONG, DWORD, LONG, XTL::CDirectSoundVoice*);
+static HRESULT HybridDirectSoundBuffer_SetVolume(LPDIRECTSOUNDBUFFER8, LONG, DWORD, LONG, xbox::CDirectSoundVoice*);
 
 //IDirectSoundStream
 //IDirectSoundBuffer
@@ -1175,7 +1175,7 @@ static inline HRESULT HybridDirectSoundBuffer_SetHeadroom(
     DWORD               dwHeadroom,
     LONG                Xb_volumeMixbin,
     DWORD               dwEmuFlags,
-    XTL::CDirectSoundVoice* Xb_Voice)
+    xbox::CDirectSoundVoice* Xb_Voice)
 {
     HRESULT hRet;
     if (dwHeadroom > 10000) {
@@ -1271,11 +1271,11 @@ static inline HRESULT HybridDirectSoundBuffer_SetMixBins(
 //IDirectSoundBuffer x2
 static inline HRESULT HybridDirectSoundBuffer_SetMixBinVolumes_8(
     LPDIRECTSOUNDBUFFER8 pDSBuffer,
-    XTL::X_LPDSMIXBINS   pMixBins,
-    XTL::X_DSVOICEPROPS& Xb_VoiceProperties,
+    xbox::X_LPDSMIXBINS   pMixBins,
+    xbox::X_DSVOICEPROPS& Xb_VoiceProperties,
     DWORD                EmuFlags,
     LONG                &Xb_volumeMixBin,
-    XTL::CDirectSoundVoice* Xb_Voice)
+    xbox::CDirectSoundVoice* Xb_Voice)
 {
     HRESULT hRet = DSERR_INVALIDPARAM;
 
@@ -1369,7 +1369,7 @@ static inline HRESULT HybridDirectSoundBuffer_SetOutputBuffer(
 static inline HRESULT HybridDirectSoundBuffer_SetPitch(
     LPDIRECTSOUNDBUFFER8 pDSBuffer,
     LONG                lPitch,
-    XTL::CDirectSoundVoice* Xb_Voice)
+    xbox::CDirectSoundVoice* Xb_Voice)
 {
 
     Xb_Voice->SetPitch(lPitch);
@@ -1460,7 +1460,7 @@ static inline HRESULT HybridDirectSoundBuffer_SetVolume(
     LONG                    lVolume,
     DWORD                   dwEmuFlags,
     LONG                    Xb_volumeMixbin,
-    XTL::CDirectSoundVoice* Xb_Voice)
+    xbox::CDirectSoundVoice* Xb_Voice)
 {
 
 #if 0 // TODO: Restore it once DSound work update comes up
@@ -1506,8 +1506,8 @@ static inline HRESULT HybridDirectSoundBuffer_Unlock(
 }//*/
 
 static inline HRESULT HybridDirectSoundBuffer_GetVoiceProperties(
-    XTL::X_DSVOICEPROPS& Xb_VoiceProperties,
-    XTL::X_DSVOICEPROPS* out_VoiceProperties
+    xbox::X_DSVOICEPROPS& Xb_VoiceProperties,
+    xbox::X_DSVOICEPROPS* out_VoiceProperties
 )
 {
     HRESULT ret = DS_OK;
@@ -1524,8 +1524,8 @@ static inline HRESULT HybridDirectSoundBuffer_GetVoiceProperties(
 }
 
 static inline HRESULT HybridDirectSoundBuffer_SetMixBins(
-    XTL::X_DSVOICEPROPS& Xb_VoiceProperties,
-    XTL::X_LPDSMIXBINS   in_MixBins,
+    xbox::X_DSVOICEPROPS& Xb_VoiceProperties,
+    xbox::X_LPDSMIXBINS   in_MixBins,
     LPCWAVEFORMATEX      pwfxFormat,
     DSBUFFERDESC&        BufferDesc
 )

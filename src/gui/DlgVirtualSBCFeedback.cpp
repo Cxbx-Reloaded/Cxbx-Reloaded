@@ -93,7 +93,7 @@ void UpdateVirtualSBCFeedbackDlg(UCHAR * pXboxSBCFeedback) {
     DWORD NibbleIndex = 0, ByteIndex = 0, FeedbackStatus = 0;
     for (NibbleIndex = 0; NibbleIndex<X_SBC_FEEDBACK_MAX; NibbleIndex++) {
         ByteIndex = NibbleIndex >> 1;
-        //UCHAR temp=XTL::XboxSBCFeedbackNames[ByteIndex];
+        //UCHAR temp=xbox::XboxSBCFeedbackNames[ByteIndex];
         UCHAR temp = pXboxSBCFeedback[ByteIndex];
         if (NibbleIndex % 2 > 0) {
         FeedbackStatus = (temp & 0xF0) >> 4;
@@ -207,7 +207,7 @@ LRESULT CALLBACK DlgVirtualSBCFeedbackProc(HWND hWndDlg, UINT uMsg, WPARAM wPara
             /*! set window icon */
             SetClassLong(hWndDlg, GCL_HICON, (LONG)LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_CXBX)));
             //Load saved configuration from registry.
-            //XTL::Load("Software\\Cxbx-Reloaded\\XboxPortHostMapping");//"Software\\Cxbx-Reloaded\\XboxPortHostMapping"
+            //xbox::Load("Software\\Cxbx-Reloaded\\XboxPortHostMapping");//"Software\\Cxbx-Reloaded\\XboxPortHostMapping"
             //Init dialog selections per global array contenst.
             //Button_SetCheck(GetDlgItem(hWndDlg, wXboxToHostTypePORT[port][index]), BST_CHECKED);
             //PostMessage(hWndDlg, WM_COMMAND, wXboxToHostTypePORT[port][index], 0);
@@ -244,7 +244,7 @@ LRESULT CALLBACK DlgVirtualSBCFeedbackProc(HWND hWndDlg, UINT uMsg, WPARAM wPara
             DWORD NibbleIndex = 0, ByteIndex = 0, FeedbackStatus = 0;
             for (NibbleIndex = 0; NibbleIndex<X_SBC_FEEDBACK_MAX; NibbleIndex++) {
                 ByteIndex = NibbleIndex >> 1;
-                //UCHAR temp=XTL::XboxSBCFeedbackNames[ByteIndex];
+                //UCHAR temp=xbox::XboxSBCFeedbackNames[ByteIndex];
                 /*UCHAR temp = pXboxSBCFeedback[ByteIndex];
                 if (NibbleIndex % 2 > 0) {
                     FeedbackStatus = (temp & 0xF0) >> 4;

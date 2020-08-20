@@ -28,7 +28,7 @@
 #include "core\hle\DSOUND\XbDSoundTypes.h"
 #include "common/audio/converter.hpp"
 
-namespace XTL {
+namespace xbox {
 
 // TODO: Everything, only small portions had been implemented.
 

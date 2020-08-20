@@ -60,7 +60,7 @@ bool XboxRenderStateConverter::Init()
 bool IsRenderStateAvailableInCurrentXboxD3D8Lib(RenderStateInfo& aRenderStateInfo)
 {
 	bool bIsRenderStateAvailable = (aRenderStateInfo.V <= g_LibVersion_D3D8);
-	if (aRenderStateInfo.R > 0) { // Applies to XTL::X_D3DRS_MULTISAMPLETYPE
+	if (aRenderStateInfo.R > 0) { // Applies to xbox::X_D3DRS_MULTISAMPLETYPE
 		// Note : X_D3DRS_MULTISAMPLETYPE seems the only render state that got
 		// removed (from 4039 onwards), so we check that limitation here as well
 		bIsRenderStateAvailable &= (g_LibVersion_D3D8 < aRenderStateInfo.R);
@@ -79,7 +79,7 @@ void XboxRenderStateConverter::VerifyAndFixDeferredRenderStateOffset()
 
     // Calculate index of D3DRS_CULLMODE for this XDK. We start counting from the first deferred state (D3DRS_FOGENABLE)
     DWORD CullModeIndex = 0;
-    for (int i = XTL::X_D3DRS_DEFERRED_FIRST; i < XTL::X_D3DRS_CULLMODE; i++) {
+    for (int i = xbox::X_D3DRS_DEFERRED_FIRST; i < xbox::X_D3DRS_CULLMODE; i++) {
         auto RenderStateInfo = GetDxbxRenderStateInfo(i);
         if (IsRenderStateAvailableInCurrentXboxD3D8Lib(RenderStateInfo)) {
             CullModeIndex++;
@@ -102,7 +102,7 @@ void XboxRenderStateConverter::DeriveRenderStateOffsetFromDeferredRenderStateOff
 
     // Count the number of render states (for this XDK) between 0 and the first deferred render state (D3DRS_FOGENABLE)
     int FirstDeferredRenderStateOffset = 0;
-    for (unsigned int RenderState = XTL::X_D3DRS_FIRST; RenderState < XTL::X_D3DRS_DEFERRED_FIRST; RenderState++) {
+    for (unsigned int RenderState = xbox::X_D3DRS_FIRST; RenderState < xbox::X_D3DRS_DEFERRED_FIRST; RenderState++) {
         // if the current renderstate exists in this XDK version, count it
         auto RenderStateInfo = GetDxbxRenderStateInfo(RenderState);
         if (IsRenderStateAvailableInCurrentXboxD3D8Lib(RenderStateInfo)) {
@@ -123,7 +123,7 @@ void XboxRenderStateConverter::BuildRenderStateMappingTable()
     XboxRenderStateOffsets.fill(-1);
 
     int XboxIndex = 0;
-    for (unsigned int RenderState = XTL::X_D3DRS_FIRST; RenderState <= XTL::X_D3DRS_LAST; RenderState++) {
+    for (unsigned int RenderState = xbox::X_D3DRS_FIRST; RenderState <= xbox::X_D3DRS_LAST; RenderState++) {
         auto RenderStateInfo = GetDxbxRenderStateInfo(RenderState);
         if (IsRenderStateAvailableInCurrentXboxD3D8Lib(RenderStateInfo)) {
             XboxRenderStateOffsets[RenderState] = XboxIndex;
@@ -143,7 +143,7 @@ void XboxRenderStateConverter::SetDirty()
 
 void* XboxRenderStateConverter::GetPixelShaderRenderStatePointer()
 {
-    return &D3D__RenderState[XTL::X_D3DRS_PS_FIRST];
+    return &D3D__RenderState[xbox::X_D3DRS_PS_FIRST];
 }
 
 bool XboxRenderStateConverter::XboxRenderStateExists(uint32_t State)
@@ -186,7 +186,7 @@ uint32_t XboxRenderStateConverter::GetXboxRenderState(uint32_t State)
 
 void XboxRenderStateConverter::StoreInitialValues()
 {
-    for (unsigned int RenderState = XTL::X_D3DRS_FIRST; RenderState <= XTL::X_D3DRS_LAST; RenderState++) {
+    for (unsigned int RenderState = xbox::X_D3DRS_FIRST; RenderState <= xbox::X_D3DRS_LAST; RenderState++) {
         // Skip Render States that don't exist within this XDK
         if (!XboxRenderStateExists(RenderState)) {
             continue;
@@ -202,28 +202,28 @@ void XboxRenderStateConverter::SetWireFrameMode(int wireframe)
 
     // Wireframe mode changed, so we must force the Fill Mode renderstate to dirty
     // At next call to Apply, the desired WireFrame mode will be set
-    PreviousRenderStateValues[XTL::X_D3DRS_FILLMODE] = -1;
+    PreviousRenderStateValues[xbox::X_D3DRS_FILLMODE] = -1;
 }
 
 void XboxRenderStateConverter::Apply()
 {
     // Iterate through each RenderState and set the associated host render state
     // We start counting at X_D3DRS_SIMPLE_FIRST, to skip the pixel shader renderstates handled elsewhere
-    for (unsigned int RenderState = XTL::X_D3DRS_SIMPLE_FIRST; RenderState <= XTL::X_D3DRS_LAST; RenderState++) {
+    for (unsigned int RenderState = xbox::X_D3DRS_SIMPLE_FIRST; RenderState <= xbox::X_D3DRS_LAST; RenderState++) {
         // Skip any renderstate that does not exist in the current XDK, or have not changed since the previous update call
         // Also skip PSTextureModes, which is a special case used by Pixel Shaders
-        if (!XboxRenderStateExists(RenderState) || !XboxRenderStateValueChanged(RenderState) || RenderState == XTL::X_D3DRS_PSTEXTUREMODES) {
+        if (!XboxRenderStateExists(RenderState) || !XboxRenderStateValueChanged(RenderState) || RenderState == xbox::X_D3DRS_PSTEXTUREMODES) {
             continue;
         }
 
         auto Value = GetXboxRenderState(RenderState);
         EmuLog(LOG_LEVEL::DEBUG, "XboxRenderStateConverter::Apply(%s, %X)\n", GetDxbxRenderStateInfo(RenderState).S, Value);
 
-        if (RenderState <= XTL::X_D3DRS_SIMPLE_LAST) {
+        if (RenderState <= xbox::X_D3DRS_SIMPLE_LAST) {
             ApplySimpleRenderState(RenderState, Value);
-        } else if (RenderState <= XTL::X_D3DRS_DEFERRED_LAST) {
+        } else if (RenderState <= xbox::X_D3DRS_DEFERRED_LAST) {
             ApplyDeferredRenderState(RenderState, Value);
-        } else if (RenderState <= XTL::X_D3DRS_COMPLEX_LAST) {
+        } else if (RenderState <= xbox::X_D3DRS_COMPLEX_LAST) {
             ApplyComplexRenderState(RenderState, Value);
         }
 
@@ -236,7 +236,7 @@ void XboxRenderStateConverter::ApplySimpleRenderState(uint32_t State, uint32_t V
 	auto RenderStateInfo = GetDxbxRenderStateInfo(State);
 
     switch (State) {
-        case XTL::X_D3DRS_COLORWRITEENABLE: {
+        case xbox::X_D3DRS_COLORWRITEENABLE: {
             DWORD OrigValue = Value;
             Value = 0;
 
@@ -256,26 +256,26 @@ void XboxRenderStateConverter::ApplySimpleRenderState(uint32_t State, uint32_t V
                 Value |= D3DCOLORWRITEENABLE_ALPHA;
             }
         } break;
-        case XTL::X_D3DRS_SHADEMODE:
+        case xbox::X_D3DRS_SHADEMODE:
             Value = EmuXB2PC_D3DSHADEMODE(Value);
             break;
-        case XTL::X_D3DRS_BLENDOP:
+        case xbox::X_D3DRS_BLENDOP:
             Value = EmuXB2PC_D3DBLENDOP(Value);
             break;
-        case XTL::X_D3DRS_SRCBLEND:
-        case XTL::X_D3DRS_DESTBLEND:
+        case xbox::X_D3DRS_SRCBLEND:
+        case xbox::X_D3DRS_DESTBLEND:
             Value = EmuXB2PC_D3DBLEND(Value);
             break;
-        case XTL::X_D3DRS_ZFUNC:
-        case XTL::X_D3DRS_ALPHAFUNC:
-        case XTL::X_D3DRS_STENCILFUNC:
+        case xbox::X_D3DRS_ZFUNC:
+        case xbox::X_D3DRS_ALPHAFUNC:
+        case xbox::X_D3DRS_STENCILFUNC:
             Value = EmuXB2PC_D3DCMPFUNC(Value);
             break;
-        case XTL::X_D3DRS_STENCILZFAIL:
-        case XTL::X_D3DRS_STENCILPASS:
+        case xbox::X_D3DRS_STENCILZFAIL:
+        case xbox::X_D3DRS_STENCILPASS:
             Value = EmuXB2PC_D3DSTENCILOP(Value);
             break;
-        case XTL::X_D3DRS_ALPHATESTENABLE:
+        case xbox::X_D3DRS_ALPHATESTENABLE:
             if (g_LibVersion_D3D8 == 3925) {
                 // HACK: Many 3925 have missing polygons when this is true
                 // Until  we find out the true underlying cause, and carry on
@@ -284,11 +284,11 @@ void XboxRenderStateConverter::ApplySimpleRenderState(uint32_t State, uint32_t V
                 Value = false;
             }
             break;
-        case XTL::X_D3DRS_ALPHABLENDENABLE:
-        case XTL::X_D3DRS_BLENDCOLOR:
-        case XTL::X_D3DRS_ALPHAREF: case XTL::X_D3DRS_ZWRITEENABLE:
-        case XTL::X_D3DRS_DITHERENABLE: case XTL::X_D3DRS_STENCILREF:
-        case XTL::X_D3DRS_STENCILMASK: case XTL::X_D3DRS_STENCILWRITEMASK:
+        case xbox::X_D3DRS_ALPHABLENDENABLE:
+        case xbox::X_D3DRS_BLENDCOLOR:
+        case xbox::X_D3DRS_ALPHAREF: case xbox::X_D3DRS_ZWRITEENABLE:
+        case xbox::X_D3DRS_DITHERENABLE: case xbox::X_D3DRS_STENCILREF:
+        case xbox::X_D3DRS_STENCILMASK: case xbox::X_D3DRS_STENCILWRITEMASK:
             // These render states require no conversion, so we simply
             // allow SetRenderState to be called with no changes
             break;
@@ -314,8 +314,8 @@ void XboxRenderStateConverter::ApplyDeferredRenderState(uint32_t State, uint32_t
 
 	// Convert from Xbox Data Formats to PC
     switch (State) {
-        case XTL::X_D3DRS_FOGSTART:
-        case XTL::X_D3DRS_FOGEND: {
+        case xbox::X_D3DRS_FOGSTART:
+        case xbox::X_D3DRS_FOGEND: {
             // HACK: If the fog start/fog-end are negative, make them positive
             // This fixes Smashing Drive on non-nvidia hardware
             // Cause appears to be non-nvidia drivers clamping values < 0 to 0
@@ -328,7 +328,7 @@ void XboxRenderStateConverter::ApplyDeferredRenderState(uint32_t State, uint32_t
                 Value = *(DWORD*)& fogValue;
             }
         } break;
-        case XTL::X_D3DRS_FOGENABLE:
+        case xbox::X_D3DRS_FOGENABLE:
             if (g_LibVersion_D3D8 == 3925) {
                 // HACK: Many 3925 games only show a black screen if fog is enabled
                 // Initially, this was thought to be bad offsets, but it has been verified to be correct
@@ -338,49 +338,49 @@ void XboxRenderStateConverter::ApplyDeferredRenderState(uint32_t State, uint32_t
                 Value = false;
             }
             break;
-        case XTL::X_D3DRS_FOGTABLEMODE:
-        case XTL::X_D3DRS_FOGDENSITY:
-        case XTL::X_D3DRS_RANGEFOGENABLE:
-        case XTL::X_D3DRS_LIGHTING:
-        case XTL::X_D3DRS_SPECULARENABLE:
-        case XTL::X_D3DRS_LOCALVIEWER:
-        case XTL::X_D3DRS_COLORVERTEX:
-        case XTL::X_D3DRS_SPECULARMATERIALSOURCE:
-        case XTL::X_D3DRS_DIFFUSEMATERIALSOURCE:
-        case XTL::X_D3DRS_AMBIENTMATERIALSOURCE:
-        case XTL::X_D3DRS_EMISSIVEMATERIALSOURCE:
-        case XTL::X_D3DRS_AMBIENT:
-        case XTL::X_D3DRS_POINTSIZE:
-        case XTL::X_D3DRS_POINTSIZE_MIN:
-        case XTL::X_D3DRS_POINTSPRITEENABLE:
-        case XTL::X_D3DRS_POINTSCALEENABLE:
-        case XTL::X_D3DRS_POINTSCALE_A:
-        case XTL::X_D3DRS_POINTSCALE_B:
-        case XTL::X_D3DRS_POINTSCALE_C:
-        case XTL::X_D3DRS_POINTSIZE_MAX:
-        case XTL::X_D3DRS_PATCHEDGESTYLE:
-        case XTL::X_D3DRS_PATCHSEGMENTS:
+        case xbox::X_D3DRS_FOGTABLEMODE:
+        case xbox::X_D3DRS_FOGDENSITY:
+        case xbox::X_D3DRS_RANGEFOGENABLE:
+        case xbox::X_D3DRS_LIGHTING:
+        case xbox::X_D3DRS_SPECULARENABLE:
+        case xbox::X_D3DRS_LOCALVIEWER:
+        case xbox::X_D3DRS_COLORVERTEX:
+        case xbox::X_D3DRS_SPECULARMATERIALSOURCE:
+        case xbox::X_D3DRS_DIFFUSEMATERIALSOURCE:
+        case xbox::X_D3DRS_AMBIENTMATERIALSOURCE:
+        case xbox::X_D3DRS_EMISSIVEMATERIALSOURCE:
+        case xbox::X_D3DRS_AMBIENT:
+        case xbox::X_D3DRS_POINTSIZE:
+        case xbox::X_D3DRS_POINTSIZE_MIN:
+        case xbox::X_D3DRS_POINTSPRITEENABLE:
+        case xbox::X_D3DRS_POINTSCALEENABLE:
+        case xbox::X_D3DRS_POINTSCALE_A:
+        case xbox::X_D3DRS_POINTSCALE_B:
+        case xbox::X_D3DRS_POINTSCALE_C:
+        case xbox::X_D3DRS_POINTSIZE_MAX:
+        case xbox::X_D3DRS_PATCHEDGESTYLE:
+        case xbox::X_D3DRS_PATCHSEGMENTS:
             // These render states require no conversion, so we can use them as-is
             break;
-        case XTL::X_D3DRS_BACKSPECULARMATERIALSOURCE:
-        case XTL::X_D3DRS_BACKDIFFUSEMATERIALSOURCE:
-        case XTL::X_D3DRS_BACKAMBIENTMATERIALSOURCE:
-        case XTL::X_D3DRS_BACKEMISSIVEMATERIALSOURCE:
-        case XTL::X_D3DRS_BACKAMBIENT:
-        case XTL::X_D3DRS_SWAPFILTER:
+        case xbox::X_D3DRS_BACKSPECULARMATERIALSOURCE:
+        case xbox::X_D3DRS_BACKDIFFUSEMATERIALSOURCE:
+        case xbox::X_D3DRS_BACKAMBIENTMATERIALSOURCE:
+        case xbox::X_D3DRS_BACKEMISSIVEMATERIALSOURCE:
+        case xbox::X_D3DRS_BACKAMBIENT:
+        case xbox::X_D3DRS_SWAPFILTER:
             // These states are unsupported by the host and are ignored (for now)
             return;
-        case XTL::X_D3DRS_PRESENTATIONINTERVAL: {
+        case xbox::X_D3DRS_PRESENTATIONINTERVAL: {
             // Store this as an override for our frame limiter
             // Games can use this to limit certain scenes to a desired target framerate for a specific scene
             // If this value is not set, or is set to 0, the default interval passed to CreateDevice is used
             extern DWORD g_Xbox_PresentationInterval_Override;
             g_Xbox_PresentationInterval_Override = Value;
         } return;
-        case XTL::X_D3DRS_WRAP0:
-        case XTL::X_D3DRS_WRAP1:
-        case XTL::X_D3DRS_WRAP2:
-        case XTL::X_D3DRS_WRAP3: {
+        case xbox::X_D3DRS_WRAP0:
+        case xbox::X_D3DRS_WRAP1:
+        case xbox::X_D3DRS_WRAP2:
+        case xbox::X_D3DRS_WRAP3: {
             DWORD OldValue = Value;
             Value = 0;
 
@@ -410,7 +410,7 @@ void XboxRenderStateConverter::ApplyComplexRenderState(uint32_t State, uint32_t 
 	auto RenderStateInfo = GetDxbxRenderStateInfo(State);
 
 	switch (State) {
-        case XTL::X_D3DRS_VERTEXBLEND:
+        case xbox::X_D3DRS_VERTEXBLEND:
             // convert from Xbox direct3d to PC direct3d enumeration
             if (Value <= 1) {
                 Value = Value;
@@ -423,7 +423,7 @@ void XboxRenderStateConverter::ApplyComplexRenderState(uint32_t State, uint32_t 
                 return;
             }
             break;
-        case XTL::X_D3DRS_FILLMODE:
+        case xbox::X_D3DRS_FILLMODE:
             Value = EmuXB2PC_D3DFILLMODE(Value);
 
             if (WireFrameMode > 0) {
@@ -434,28 +434,28 @@ void XboxRenderStateConverter::ApplyComplexRenderState(uint32_t State, uint32_t 
                 }
             }
             break;
-        case XTL::X_D3DRS_CULLMODE:
+        case xbox::X_D3DRS_CULLMODE:
             switch (Value) {
-                case XTL::X_D3DCULL_NONE: Value = D3DCULL_NONE; break;
-                case XTL::X_D3DCULL_CW: Value = D3DCULL_CW; break;
-                case XTL::X_D3DCULL_CCW: Value = D3DCULL_CCW;break;
+                case xbox::X_D3DCULL_NONE: Value = D3DCULL_NONE; break;
+                case xbox::X_D3DCULL_CW: Value = D3DCULL_CW; break;
+                case xbox::X_D3DCULL_CCW: Value = D3DCULL_CCW;break;
                 default: LOG_TEST_CASE("EmuD3DDevice_SetRenderState_CullMode: Unknown Cullmode");
             }
             break;
-        case XTL::X_D3DRS_ZBIAS: {
+        case xbox::X_D3DRS_ZBIAS: {
             FLOAT Biased = static_cast<FLOAT>(Value) * -0.000005f;
             Value = *reinterpret_cast<const DWORD*>(&Biased);
         } break;
         // These states require no conversions, so can just be passed through to the host directly
-        case XTL::X_D3DRS_FOGCOLOR:
-        case XTL::X_D3DRS_NORMALIZENORMALS:
-        case XTL::X_D3DRS_ZENABLE:
-        case XTL::X_D3DRS_STENCILENABLE:
-        case XTL::X_D3DRS_STENCILFAIL:
-        case XTL::X_D3DRS_TEXTUREFACTOR:
-        case XTL::X_D3DRS_EDGEANTIALIAS:
-        case XTL::X_D3DRS_MULTISAMPLEANTIALIAS:
-        case XTL::X_D3DRS_MULTISAMPLEMASK:
+        case xbox::X_D3DRS_FOGCOLOR:
+        case xbox::X_D3DRS_NORMALIZENORMALS:
+        case xbox::X_D3DRS_ZENABLE:
+        case xbox::X_D3DRS_STENCILENABLE:
+        case xbox::X_D3DRS_STENCILFAIL:
+        case xbox::X_D3DRS_TEXTUREFACTOR:
+        case xbox::X_D3DRS_EDGEANTIALIAS:
+        case xbox::X_D3DRS_MULTISAMPLEANTIALIAS:
+        case xbox::X_D3DRS_MULTISAMPLEMASK:
             break;
         default:
             // Only log missing state if it has a PC counterpart

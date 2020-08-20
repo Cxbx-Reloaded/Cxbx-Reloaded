@@ -39,7 +39,7 @@
 #include "devices/video/nv2a_int.h" // For NV** defines
 #include "Logging.h"
 
-// TODO: Find somewhere to put this that doesn't conflict with XTL::
+// TODO: Find somewhere to put this that doesn't conflict with xbox::
 extern void EmuUpdateActiveTextureStages();
 
 const char *NV2AMethodToString(DWORD dwMethod); // forward
@@ -118,8 +118,8 @@ UINT DxbxFVFToVertexSizeInBytes(DWORD dwFVF, BOOL bIncludeTextures)
 
 void EmuExecutePushBuffer
 (
-	XTL::X_D3DPushBuffer       *pPushBuffer,
-	XTL::X_D3DFixup            *pFixup
+	xbox::X_D3DPushBuffer       *pPushBuffer,
+	xbox::X_D3DFixup            *pFixup
 )
 {
 	//Check whether Fixup exists or not. 
@@ -238,7 +238,7 @@ void HLE_draw_inline_array(NV2AState *d)
 			UINT VertexCount = (pg->inline_array_length * sizeof(DWORD)) / dwVertexStride;
 			CxbxDrawContext DrawContext = {};
 
-			DrawContext.XboxPrimitiveType = (XTL::X_D3DPRIMITIVETYPE)pg->primitive_mode;
+			DrawContext.XboxPrimitiveType = (xbox::X_D3DPRIMITIVETYPE)pg->primitive_mode;
 			DrawContext.dwVertexCount = VertexCount;
 			DrawContext.pXboxVertexStreamZeroData = pg->inline_array;
 			DrawContext.uiXboxVertexStreamZeroStride = dwVertexStride;
@@ -256,7 +256,7 @@ void HLE_draw_inline_elements(NV2AState *d)
 		unsigned int uiIndexCount = pg->inline_elements_length;
 		CxbxDrawContext DrawContext = {};
 
-		DrawContext.XboxPrimitiveType = (XTL::X_D3DPRIMITIVETYPE)pg->primitive_mode;
+		DrawContext.XboxPrimitiveType = (xbox::X_D3DPRIMITIVETYPE)pg->primitive_mode;
 		DrawContext.dwVertexCount = uiIndexCount;
 		DrawContext.pXboxIndexData = d->pgraph.inline_elements;
 
@@ -474,7 +474,7 @@ extern void EmuExecutePushBufferRaw
 	uint32_t *dma_put; // pushbuffer current end address
 	uint32_t *dma_get; //pushbuffer current read address
 	struct {
-		XTL::NV2AMETHOD mthd; // Current method
+		xbox::NV2AMETHOD mthd; // Current method
 		uint32_t subc; // :3 = Current subchannel
 		uint32_t mcnt; // :24 = Current method count
 		bool ni; // Current command's NI (non-increasing) flag

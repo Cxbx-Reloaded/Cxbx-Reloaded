@@ -43,10 +43,10 @@ void CxbxInitAudio();
 }
 #endif
 
-namespace XTL {
+namespace xbox {
 
 #undef FIELD_OFFSET     // prevent macro redefinition warnings
-#include <dsound.h> // TODO: FIXME after global namespace XTL issue is resolved.
+#include <dsound.h> // TODO: FIXME after global namespace xbox issue is resolved.
 
 // ******************************************************************
 // * X_CDirectSound
@@ -184,7 +184,7 @@ class X_CMcpxStream
 
 // host_voice_packet is needed for DirectSoundStream packet handling internally.
 struct host_voice_packet {
-    XTL::XMEDIAPACKET xmp_data;
+    xbox::XMEDIAPACKET xmp_data;
     PVOID   pBuffer_data;
     DWORD   nextWriteOffset;
     DWORD   lastWritePos;
@@ -1731,6 +1731,6 @@ HRESULT WINAPI EMUPATCH(IDirectSoundStream_Use3DVoiceData)
 
 } // end of extern "C"
 
-} // end of namespace XTL
+} // end of namespace xbox
 
 #endif

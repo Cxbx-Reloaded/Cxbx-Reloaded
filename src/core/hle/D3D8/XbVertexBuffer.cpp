@@ -45,7 +45,7 @@
 #define MAX_STREAM_NOT_USED_TIME (2 * CLOCKS_PER_SEC) // TODO: Trim the not used time
 
 // Inline vertex buffer emulation
-extern XTL::X_D3DPRIMITIVETYPE g_InlineVertexBuffer_PrimitiveType = XTL::X_D3DPT_INVALID;
+extern xbox::X_D3DPRIMITIVETYPE g_InlineVertexBuffer_PrimitiveType = xbox::X_D3DPT_INVALID;
 extern DWORD                   g_InlineVertexBuffer_FVF = 0;
 extern struct _D3DIVB         *g_InlineVertexBuffer_Table = nullptr;
 extern UINT                    g_InlineVertexBuffer_TableLength = 0;
@@ -57,16 +57,16 @@ UINT   g_InlineVertexBuffer_DataSize = 0;
 extern DWORD				g_dwPrimPerFrame = 0;
 
 // Copy of active Xbox D3D Vertex Streams (and strides), set by [D3DDevice|CxbxImpl]_SetStreamSource*
-XTL::X_STREAMINPUT g_Xbox_SetStreamSource[X_VSH_MAX_STREAMS] = { 0 }; // Note : .Offset member is never set (so always 0)
+xbox::X_STREAMINPUT g_Xbox_SetStreamSource[X_VSH_MAX_STREAMS] = { 0 }; // Note : .Offset member is never set (so always 0)
 
-extern XTL::X_D3DSurface* g_pXbox_RenderTarget;
-extern XTL::X_D3DSurface* g_pXbox_BackBufferSurface;
-extern XTL::X_D3DMULTISAMPLE_TYPE g_Xbox_MultiSampleType;
+extern xbox::X_D3DSurface* g_pXbox_RenderTarget;
+extern xbox::X_D3DSurface* g_pXbox_BackBufferSurface;
+extern xbox::X_D3DMULTISAMPLE_TYPE g_Xbox_MultiSampleType;
 
-void *GetDataFromXboxResource(XTL::X_D3DResource *pXboxResource);
+void *GetDataFromXboxResource(xbox::X_D3DResource *pXboxResource);
 bool GetHostRenderTargetDimensions(DWORD* pHostWidth, DWORD* pHostHeight, IDirect3DSurface* pHostRenderTarget = nullptr);
-uint32_t GetPixelContainerWidth(XTL::X_D3DPixelContainer* pPixelContainer);
-uint32_t GetPixelContainerHeight(XTL::X_D3DPixelContainer* pPixelContainer);
+uint32_t GetPixelContainerWidth(xbox::X_D3DPixelContainer* pPixelContainer);
+uint32_t GetPixelContainerHeight(xbox::X_D3DPixelContainer* pPixelContainer);
 void ApplyXboxMultiSampleOffsetAndScale(float& x, float& y);
 
 void CxbxPatchedStream::Activate(CxbxDrawContext *pDrawContext, UINT uiStream) const
@@ -228,26 +228,26 @@ void CxbxVertexBufferConverter::ConvertStream
 	DWORD XboxFVF = bVshHandleIsFVF ? g_Xbox_VertexShader_Handle : 0;
 	// Texture normalization can only be set for FVF shaders
 	bool bNeedTextureNormalization = false;
-	struct { int NrTexCoords; bool bTexIsLinear; int Width; int Height; int Depth; } pActivePixelContainer[XTL::X_D3DTS_STAGECOUNT] = { 0 };
+	struct { int NrTexCoords; bool bTexIsLinear; int Width; int Height; int Depth; } pActivePixelContainer[xbox::X_D3DTS_STAGECOUNT] = { 0 };
 
 	if (bVshHandleIsFVF) {
 		DWORD dwTexN = (XboxFVF & D3DFVF_TEXCOUNT_MASK) >> D3DFVF_TEXCOUNT_SHIFT;
-		if (dwTexN > XTL::X_D3DTS_STAGECOUNT) {
+		if (dwTexN > xbox::X_D3DTS_STAGECOUNT) {
 			LOG_TEST_CASE("FVF,dwTexN > X_D3DTS_STAGECOUNT");
 		}
 
 		// Check for active linear textures.
-		//X_D3DBaseTexture *pLinearBaseTexture[XTL::X_D3DTS_STAGECOUNT];
-		for (unsigned int i = 0; i < XTL::X_D3DTS_STAGECOUNT; i++) {
+		//X_D3DBaseTexture *pLinearBaseTexture[xbox::X_D3DTS_STAGECOUNT];
+		for (unsigned int i = 0; i < xbox::X_D3DTS_STAGECOUNT; i++) {
 			// Only normalize coordinates used by the FVF shader :
 			if (i + 1 <= dwTexN) {
 				pActivePixelContainer[i].NrTexCoords = DxbxFVF_GetNumberOfTextureCoordinates(XboxFVF, i);
 				// TODO : Use GetXboxBaseTexture()
-				XTL::X_D3DBaseTexture *pXboxBaseTexture = g_pXbox_SetTexture[i];
+				xbox::X_D3DBaseTexture *pXboxBaseTexture = g_pXbox_SetTexture[i];
 				if (pXboxBaseTexture != xbox::zeroptr) {
-					extern XTL::X_D3DFORMAT GetXboxPixelContainerFormat(const XTL::X_D3DPixelContainer *pXboxPixelContainer); // TODO : Move to XTL-independent header file
+					extern xbox::X_D3DFORMAT GetXboxPixelContainerFormat(const xbox::X_D3DPixelContainer *pXboxPixelContainer); // TODO : Move to XTL-independent header file
 
-					XTL::X_D3DFORMAT XboxFormat = GetXboxPixelContainerFormat(pXboxBaseTexture);
+					xbox::X_D3DFORMAT XboxFormat = GetXboxPixelContainerFormat(pXboxBaseTexture);
 					if (EmuXBFormatIsLinear(XboxFormat)) {
 						// This is often hit by the help screen in XDK samples.
 						bNeedTextureNormalization = true;
@@ -297,7 +297,7 @@ void CxbxVertexBufferConverter::ConvertStream
 		uiHostVertexStride = (bNeedVertexPatching) ? pVertexShaderStreamInfo->HostVertexStride : uiXboxVertexStride;
 		dwHostVertexDataSize = uiVertexCount * uiHostVertexStride;
 	} else {
-		XTL::X_D3DVertexBuffer *pXboxVertexBuffer = g_Xbox_SetStreamSource[uiStream].VertexBuffer;
+		xbox::X_D3DVertexBuffer *pXboxVertexBuffer = g_Xbox_SetStreamSource[uiStream].VertexBuffer;
         pXboxVertexData = (uint8_t*)GetDataFromXboxResource(pXboxVertexBuffer);
 		if (pXboxVertexData == xbox::zeroptr) {
 			HRESULT hRet = g_pD3DDevice->SetStreamSource(
@@ -434,7 +434,7 @@ void CxbxVertexBufferConverter::ConvertStream
 				// Dxbx note : The following code handles only the D3DVSDT enums that need conversion;
 				// All other cases are catched by the memcpy in the default-block.
 				switch (pVertexShaderStreamInfo->VertexElements[uiElement].XboxType) {
-				case XTL::X_D3DVSDT_NORMSHORT1: { // 0x11:
+				case xbox::X_D3DVSDT_NORMSHORT1: { // 0x11:
 					// Test-cases : Halo - Combat Evolved
 					if (g_D3DCaps.DeclTypes & D3DDTCAPS_SHORT2N) {
 						// Make it SHORT2N
@@ -449,7 +449,7 @@ void CxbxVertexBufferConverter::ConvertStream
 					}
 					break;
 				}
-				case XTL::X_D3DVSDT_NORMSHORT2: { // 0x21:
+				case xbox::X_D3DVSDT_NORMSHORT2: { // 0x21:
 					// Test-cases : Baldur's Gate: Dark Alliance 2, F1 2002, Gun, Halo - Combat Evolved, Scrapland 
 					if (g_D3DCaps.DeclTypes & D3DDTCAPS_SHORT2N) {
 						// No need for patching when D3D9 supports D3DDECLTYPE_SHORT2N
@@ -467,7 +467,7 @@ void CxbxVertexBufferConverter::ConvertStream
 					}
 					break;
 				}
-				case XTL::X_D3DVSDT_NORMSHORT3: { // 0x31:
+				case xbox::X_D3DVSDT_NORMSHORT3: { // 0x31:
 					// Test-cases : Cel Damage, Constantine, Destroy All Humans!
 					if (g_D3DCaps.DeclTypes & D3DDTCAPS_SHORT4N) {
 						// Make it SHORT4N
@@ -485,7 +485,7 @@ void CxbxVertexBufferConverter::ConvertStream
 					}
 					break;
 				}
-				case XTL::X_D3DVSDT_NORMSHORT4: { // 0x41:
+				case xbox::X_D3DVSDT_NORMSHORT4: { // 0x41:
 					// Test-cases : Judge Dredd: Dredd vs Death, NHL Hitz 2002, Silent Hill 2, Sneakers, Tony Hawk Pro Skater 4
 					if (g_D3DCaps.DeclTypes & D3DDTCAPS_SHORT4N) {
 						// No need for patching when D3D9 supports D3DDECLTYPE_SHORT4N
@@ -507,7 +507,7 @@ void CxbxVertexBufferConverter::ConvertStream
 					}
 					break;
 				}
-				case XTL::X_D3DVSDT_NORMPACKED3: { // 0x16:
+				case xbox::X_D3DVSDT_NORMPACKED3: { // 0x16:
 					// Test-cases : Dashboard
 					// Make it FLOAT3
 					union {
@@ -526,13 +526,13 @@ void CxbxVertexBufferConverter::ConvertStream
 					pHostVertexAsFloat[2] = PackedIntToFloat(NormPacked3.z, 511.0f, 512.f);
 					break;
 				}
-				case XTL::X_D3DVSDT_SHORT1: { // 0x15:
+				case xbox::X_D3DVSDT_SHORT1: { // 0x15:
 					// Make it SHORT2 and set the second short to 0
 					pHostVertexAsShort[0] = pXboxVertexAsShort[0];
 					pHostVertexAsShort[1] = 0;
 					break;
 				}
-				case XTL::X_D3DVSDT_SHORT3: { // 0x35:
+				case xbox::X_D3DVSDT_SHORT3: { // 0x35:
 					// Test-cases : Turok
 					// Make it a SHORT4 and set the fourth short to 1
 					pHostVertexAsShort[0] = pXboxVertexAsShort[0];
@@ -541,7 +541,7 @@ void CxbxVertexBufferConverter::ConvertStream
 					pHostVertexAsShort[3] = 1; // Turok verified (character disappears when this is 32767)
 					break;
 				}
-				case XTL::X_D3DVSDT_PBYTE1: { // 0x14:
+				case xbox::X_D3DVSDT_PBYTE1: { // 0x14:
 					if (g_D3DCaps.DeclTypes & D3DDTCAPS_UBYTE4N) {
 						// Make it UBYTE4N
 						pHostVertexAsByte[0] = pXboxVertexAsByte[0];
@@ -556,7 +556,7 @@ void CxbxVertexBufferConverter::ConvertStream
 					}
 					break;
 				}
-				case XTL::X_D3DVSDT_PBYTE2: { // 0x24:
+				case xbox::X_D3DVSDT_PBYTE2: { // 0x24:
 					if (g_D3DCaps.DeclTypes & D3DDTCAPS_UBYTE4N) {
 						// Make it UBYTE4N
 						pHostVertexAsByte[0] = pXboxVertexAsByte[0];
@@ -572,7 +572,7 @@ void CxbxVertexBufferConverter::ConvertStream
 					}
 					break;
 				}
-				case XTL::X_D3DVSDT_PBYTE3: { // 0x34:
+				case xbox::X_D3DVSDT_PBYTE3: { // 0x34:
 					// Test-cases : Turok
 					if (g_D3DCaps.DeclTypes & D3DDTCAPS_UBYTE4N) {
 						// Make it UBYTE4N
@@ -590,7 +590,7 @@ void CxbxVertexBufferConverter::ConvertStream
 					}
 					break;
 				}
-				case XTL::X_D3DVSDT_PBYTE4: { // 0x44:
+				case xbox::X_D3DVSDT_PBYTE4: { // 0x44:
 					// Test-case : Jet Set Radio Future
 					if (g_D3DCaps.DeclTypes & D3DDTCAPS_UBYTE4N) {
 						// No need for patching when D3D9 supports D3DDECLTYPE_UBYTE4N
@@ -612,7 +612,7 @@ void CxbxVertexBufferConverter::ConvertStream
 					}
 					break;
 				}
-				case XTL::X_D3DVSDT_FLOAT2H: { // 0x72:
+				case xbox::X_D3DVSDT_FLOAT2H: { // 0x72:
 					// Make it FLOAT4 and set the third float to 0.0
 					pHostVertexAsFloat[0] = pXboxVertexAsFloat[0];
 					pHostVertexAsFloat[1] = pXboxVertexAsFloat[1];
@@ -620,7 +620,7 @@ void CxbxVertexBufferConverter::ConvertStream
 					pHostVertexAsFloat[3] = pXboxVertexAsFloat[2];
 					break;
 				}
-				case XTL::X_D3DVSDT_NONE: { // 0x02:
+				case xbox::X_D3DVSDT_NONE: { // 0x02:
 					// Test-case : WWE RAW2
 					// Test-case : PetitCopter 
 					LOG_TEST_CASE("X_D3DVSDT_NONE");
@@ -678,7 +678,7 @@ void CxbxVertexBufferConverter::ConvertStream
 			HostRenderTarget_Height = XboxRenderTarget_Height;
 		}
 
-		bool bNeedRHWTransform = (g_Xbox_MultiSampleType > XTL::X_D3DMULTISAMPLE_NONE) || (XboxRenderTarget_Width < HostRenderTarget_Width && XboxRenderTarget_Height < HostRenderTarget_Height);
+		bool bNeedRHWTransform = (g_Xbox_MultiSampleType > xbox::X_D3DMULTISAMPLE_NONE) || (XboxRenderTarget_Width < HostRenderTarget_Width && XboxRenderTarget_Height < HostRenderTarget_Height);
 
 		for (uint32_t uiVertex = 0; uiVertex < uiVertexCount; uiVertex++) {
 			FLOAT *pVertexDataAsFloat = (FLOAT*)(&pHostVertexData[uiVertex * uiHostVertexStride]);
@@ -713,7 +713,7 @@ void CxbxVertexBufferConverter::ConvertStream
 			// Normalize texture coordinates in FVF stream if needed
 			if (uiTextureCoordinatesByteOffsetInVertex > 0) { // implies bNeedTextureNormalization (using one is more efficient than both)
 				FLOAT *pVertexUVData = (FLOAT*)((uintptr_t)pVertexDataAsFloat + uiTextureCoordinatesByteOffsetInVertex);
-				for (unsigned int i = 0; i < XTL::X_D3DTS_STAGECOUNT; i++) {
+				for (unsigned int i = 0; i < xbox::X_D3DTS_STAGECOUNT; i++) {
 					if (pActivePixelContainer[i].bTexIsLinear) {
 						switch (pActivePixelContainer[i].NrTexCoords) {
 						case 0:
@@ -769,7 +769,7 @@ void CxbxVertexBufferConverter::ConvertStream
 
 void CxbxVertexBufferConverter::Apply(CxbxDrawContext *pDrawContext)
 {
-	if ((pDrawContext->XboxPrimitiveType < XTL::X_D3DPT_POINTLIST) || (pDrawContext->XboxPrimitiveType > XTL::X_D3DPT_POLYGON))
+	if ((pDrawContext->XboxPrimitiveType < xbox::X_D3DPT_POINTLIST) || (pDrawContext->XboxPrimitiveType > xbox::X_D3DPT_POLYGON))
 		CxbxKrnlCleanup("Unknown primitive type: 0x%.02X\n", pDrawContext->XboxPrimitiveType);
 
     m_pCxbxVertexDeclaration = nullptr;
@@ -807,7 +807,7 @@ void CxbxVertexBufferConverter::Apply(CxbxDrawContext *pDrawContext)
 		ConvertStream(pDrawContext, uiStream);
     }
 
-	if (pDrawContext->XboxPrimitiveType == XTL::X_D3DPT_QUADSTRIP) {
+	if (pDrawContext->XboxPrimitiveType == xbox::X_D3DPT_QUADSTRIP) {
 		// Quad strip is just like a triangle strip, but requires two vertices per primitive.
 		// A quadstrip starts with 4 vertices and adds 2 vertices per additional quad.
 		// This is much like a trianglestrip, which starts with 3 vertices and adds
@@ -818,12 +818,12 @@ void CxbxVertexBufferConverter::Apply(CxbxDrawContext *pDrawContext)
 		// handled by d3d :
 		// Test-case : XDK Samples (FocusBlur, MotionBlur, Trees, PaintEffect, PlayField)
 		// No need to set : pDrawContext->XboxPrimitiveType = X_D3DPT_TRIANGLESTRIP;
-		pDrawContext->dwHostPrimitiveCount = ConvertXboxVertexCountToPrimitiveCount(XTL::X_D3DPT_TRIANGLESTRIP, pDrawContext->dwVertexCount);
+		pDrawContext->dwHostPrimitiveCount = ConvertXboxVertexCountToPrimitiveCount(xbox::X_D3DPT_TRIANGLESTRIP, pDrawContext->dwVertexCount);
 	} else {
 		pDrawContext->dwHostPrimitiveCount = ConvertXboxVertexCountToPrimitiveCount(pDrawContext->XboxPrimitiveType, pDrawContext->dwVertexCount);
 	}
 
-	if (pDrawContext->XboxPrimitiveType == XTL::X_D3DPT_POLYGON) {
+	if (pDrawContext->XboxPrimitiveType == xbox::X_D3DPT_POLYGON) {
 		// Convex polygon is the same as a triangle fan.
 		// No need to set : pDrawContext->XboxPrimitiveType = X_D3DPT_TRIANGLEFAN;
 		// Test-case : Panzer Dragoon ORTA (when entering in-game)
@@ -865,7 +865,7 @@ VOID EmuFlushIVB()
 
 	DWORD dwPos = dwCurFVF & D3DFVF_POSITION_MASK;
 	DWORD dwTexN = (dwCurFVF & D3DFVF_TEXCOUNT_MASK) >> D3DFVF_TEXCOUNT_SHIFT;
-	size_t TexSize[XTL::X_D3DTS_STAGECOUNT]; // Xbox supports up to 4 textures
+	size_t TexSize[xbox::X_D3DTS_STAGECOUNT]; // Xbox supports up to 4 textures
 
 	for (unsigned int i = 0; i < dwTexN; i++) {
 		TexSize[i] = DxbxFVF_GetNumberOfTextureCoordinates(dwCurFVF, i);
@@ -1003,7 +1003,7 @@ VOID EmuFlushIVB()
     g_InlineVertexBuffer_TableOffset = 0; // Might not be needed (also cleared in D3DDevice_Begin)
 }
 
-void CxbxImpl_SetStreamSource(UINT StreamNumber, XTL::X_D3DVertexBuffer* pStreamData, UINT Stride)
+void CxbxImpl_SetStreamSource(UINT StreamNumber, xbox::X_D3DVertexBuffer* pStreamData, UINT Stride)
 {
 	if (pStreamData != xbox::zeroptr && Stride == 0) {
 		LOG_TEST_CASE("CxbxImpl_SetStreamSource : Stream assigned, and stride set to 0 (might be okay)");

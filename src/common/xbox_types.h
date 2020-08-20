@@ -61,12 +61,16 @@ namespace xbox
 	typedef unsigned long       SIZE_T, *PSIZE_T;
 	typedef unsigned long       ACCESS_MASK, *PACCESS_MASK;
 	typedef unsigned long       PHYSICAL_ADDRESS;
+	typedef unsigned int        UINT;
 	typedef int                 INT;
 	typedef long                INT_PTR;
 	typedef signed __int64      LONGLONG;
 	typedef unsigned __int64    ULONGLONG;
 	typedef wchar_t             WCHAR;
 	typedef unsigned __int64    QUAD; // 8 byte aligned 8 byte long
+	typedef int                 BOOL;
+	typedef LONG                HRESULT;
+
 
 	// ******************************************************************
 	// * Pointer types
@@ -78,6 +82,7 @@ namespace xbox
 	typedef BOOLEAN *PBOOLEAN;
 	typedef UCHAR *PUCHAR;
 	typedef USHORT *PUSHORT;
+	typedef unsigned int *PUINT;
 	typedef ULONG *PULONG;
 	typedef DWORD *PDWORD, *LPDWORD;
 	typedef ACCESS_MASK *PACCESS_MASK;

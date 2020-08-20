@@ -28,11 +28,11 @@
 #include "XbDSoundLogging.hpp"
 #include "common/Settings.hpp"
 
-// For XTL::DSBUFFERDESC and XTL::DSSTREAMDESC temporary usage
+// For xbox::DSBUFFERDESC and xbox::DSSTREAMDESC temporary usage
 extern LOGRENDER_HEADER(WAVEFORMATEX)
 extern LOGRENDER_HEADER(D3DVECTOR)
 
-namespace XTL {
+namespace xbox {
 
 // DSound class usage
 ENUM2STR_START(DSMIXBIN_SPEAKER)

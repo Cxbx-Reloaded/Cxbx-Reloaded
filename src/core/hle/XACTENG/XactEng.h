@@ -33,7 +33,7 @@
 
 #include <dsound.h>
 
-namespace XTL {
+namespace xbox {
 
 // ******************************************************************
 // * XACT Interfaces
@@ -345,6 +345,6 @@ HRESULT WINAPI EMUPATCH(IXACTEngine_UnRegisterWaveBank)
     X_XACTWaveBank*	pWaveBank
 );
 
-} // end of namespace XTL
+} // end of namespace xbox
 
 #endif
