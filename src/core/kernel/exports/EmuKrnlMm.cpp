@@ -58,7 +58,7 @@ XBSYSAPI EXPORTNUM(102) xboxkrnl::PVOID xboxkrnl::MmGlobalData[8] = { NULL, NULL
 // the xbox kernel. Kernel code accessses this as a normal variable.
 // XAPI code however, reference to the address of this kernel variable,
 // thus use indirection (*LaunchDataPage) to get to the same contents.
-XBSYSAPI EXPORTNUM(164) xboxkrnl::PLAUNCH_DATA_PAGE xboxkrnl::LaunchDataPage = xbnullptr;
+XBSYSAPI EXPORTNUM(164) xboxkrnl::PLAUNCH_DATA_PAGE xboxkrnl::LaunchDataPage = xbox::zeroptr;
 
 // ******************************************************************
 // * 0x00A5 - MmAllocateContiguousMemory()

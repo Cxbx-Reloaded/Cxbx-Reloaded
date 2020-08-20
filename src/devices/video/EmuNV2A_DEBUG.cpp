@@ -34,7 +34,7 @@
 // ******************************************************************
 
 #define DEBUG_START(DEV) \
-const char *DebugNV_##DEV(xbaddr addr) \
+const char *DebugNV_##DEV(xbox::addr addr) \
 { \
 	switch (addr) {
 #define DEBUG_CASE(a) \

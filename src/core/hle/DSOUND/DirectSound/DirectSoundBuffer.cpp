@@ -124,7 +124,7 @@ XTL::EmuDirectSoundBuffer::~EmuDirectSoundBuffer()
     if (this->EmuBufferDesc.lpwfxFormat != nullptr) {
         free(this->EmuBufferDesc.lpwfxFormat);
     }
-    if (this->X_BufferCache != xbnullptr && (this->EmuFlags & DSE_FLAG_BUFFER_EXTERNAL) == 0) {
+    if (this->X_BufferCache != xbox::zeroptr && (this->EmuFlags & DSE_FLAG_BUFFER_EXTERNAL) == 0) {
         free(this->X_BufferCache);
         DSoundSGEMemDealloc(this->X_BufferCacheSize);
     }
@@ -188,7 +188,7 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateBuffer)
     if (X_DIRECTSOUND_CACHE_COUNT == X_DIRECTSOUND_CACHE_MAX || !DSoundSGEMenAllocCheck(pdsbd->dwBufferBytes)) {
 
         hRet = DSERR_OUTOFMEMORY;
-        *ppBuffer = xbnullptr;
+        *ppBuffer = xbox::zeroptr;
     } else {
 
         DSBUFFERDESC DSBufferDesc = { 0 };
@@ -370,7 +370,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_GetStatus)
         }
     }
 
-    if (pdwStatus != xbnullptr) {
+    if (pdwStatus != xbox::zeroptr) {
         *pdwStatus = dwStatusXbox;
     } else {
         hRet = DSERR_INVALIDPARAM;
@@ -398,8 +398,8 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_GetVoiceProperties)
         LOG_FUNC_ARG_OUT(pVoiceProps)
         LOG_FUNC_END;
 
-    if (pVoiceProps == xbnullptr) {
-        LOG_TEST_CASE("pVoiceProps == xbnullptr");
+    if (pVoiceProps == xbox::zeroptr) {
+        LOG_TEST_CASE("pVoiceProps == xbox::zeroptr");
         RETURN(DS_OK);
     }
 
@@ -450,7 +450,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Lock)
                         pThis->X_lock.dwLockBytes1,
                         pThis->X_lock.dwLockBytes2);
 
-    if (ppvAudioPtr2 == xbnullptr) {
+    if (ppvAudioPtr2 == xbox::zeroptr) {
         hRet = pThis->EmuDirectSoundBuffer8->Lock(pcmOffset, pcmSize, &pThis->Host_lock.pLockPtr1, &pThis->Host_lock.dwLockBytes1,
                                                   nullptr, 0, dwFlags);
         pThis->Host_lock.pLockPtr2 = nullptr;
@@ -479,10 +479,10 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Lock)
         // If secondary pointers are not used, then set them as zero.
         // There are applications bug didn't check for audio pointer that is null pointer which should not use invalid audio bytes.
         // Since internal functions do set them zero. We'll set them here as well.
-        if (ppvAudioPtr2 != xbnullptr) {
-            *ppvAudioPtr2 = xbnullptr;
+        if (ppvAudioPtr2 != xbox::zeroptr) {
+            *ppvAudioPtr2 = xbox::zeroptr;
         }
-        if (pdwAudioBytes2 != xbnullptr) {
+        if (pdwAudioBytes2 != xbox::zeroptr) {
             *pdwAudioBytes2 = 0;
         }
     }
@@ -521,7 +521,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Unlock)
 
     EmuDirectSoundBuffer* pThis = pHybridThis->emuDSBuffer;
     // TODO: Find out why pThis->EmuLockPtr1 is nullptr... (workaround atm is to check if it is not a nullptr.)
-    if (pThis->X_BufferCache != xbnullptr && pThis->Host_lock.pLockPtr1 != nullptr) {
+    if (pThis->X_BufferCache != xbox::zeroptr && pThis->Host_lock.pLockPtr1 != nullptr) {
 
         memcpy_s((PBYTE)pThis->X_BufferCache + pThis->X_lock.dwLockOffset,
                  pThis->X_BufferCacheSize - pThis->X_lock.dwLockOffset,
@@ -688,7 +688,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_PlayEx)
         EmuLog(LOG_LEVEL::WARNING, "Not implemented for rtTimeStamp greater than 0 of %08d", rtTimeStamp);
     }
 
-    HRESULT hRet = XTL::EMUPATCH(IDirectSoundBuffer_Play)(pThis, xbnull, xbnull, dwFlags);
+    HRESULT hRet = XTL::EMUPATCH(IDirectSoundBuffer_Play)(pThis, xbox::zero, xbox::zero, dwFlags);
 
     return hRet;
 }
@@ -742,7 +742,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetBufferData)
                             pThis->EmuDirectSoundBuffer8,
                             pThis->EmuBufferDesc,
                             pThis->Host_lock,
-                            xbnullptr,
+                            xbox::zeroptr,
                             pThis->X_lock.dwLockOffset,
                             pThis->X_lock.dwLockBytes1,
                             pThis->X_lock.dwLockBytes2);
@@ -764,7 +764,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetBufferData)
     }
 
     // Allocate memory whenever made request internally
-    if (pvBufferData == xbnullptr && DSoundSGEMenAllocCheck(dwBufferBytes)) {
+    if (pvBufferData == xbox::zeroptr && DSoundSGEMenAllocCheck(dwBufferBytes)) {
 
         // Confirmed it perform a reset to default.
         DSoundBufferRegionSetDefault(pThis);
@@ -781,7 +781,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetBufferData)
         // Only perform a resize, for lock emulation purpose.
         DSoundBufferResizeSetSize(pHybridThis, hRet, dwBufferBytes);
 
-    } else if (pvBufferData != xbnullptr) {
+    } else if (pvBufferData != xbox::zeroptr) {
         // Free internal buffer cache if exist
         if ((pThis->EmuFlags & DSE_FLAG_BUFFER_EXTERNAL) == 0) {
             free(pThis->X_BufferCache);
@@ -988,7 +988,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetFormat)
                                                      pThis->EmuBufferDesc, pThis->EmuFlags,
                                                      pThis->EmuPlayFlags, pThis->EmuDirectSound3DBuffer8,
                                                      0, pThis->X_BufferCache, pThis->X_BufferCacheSize,
-                                                     pThis->Xb_VoiceProperties, xbnullptr, pHybridThis->p_CDSVoice);
+                                                     pThis->Xb_VoiceProperties, xbox::zeroptr, pHybridThis->p_CDSVoice);
 
     return hRet;
 }

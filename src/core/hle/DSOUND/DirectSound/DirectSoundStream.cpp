@@ -203,7 +203,7 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateStream)
     if (X_DIRECTSOUND_CACHE_COUNT == X_DIRECTSOUND_CACHE_MAX) {
 
         hRet = DSERR_OUTOFMEMORY;
-        *ppStream = xbnullptr;
+        *ppStream = xbox::zeroptr;
     } else {
 
         DSBUFFERDESC DSBufferDesc = { 0 };
@@ -233,7 +233,7 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateStream)
 
         // We have to set DSBufferDesc last due to EmuFlags must be either 0 or previously written value to preserve other flags.
         GeneratePCMFormat(DSBufferDesc, pdssd->lpwfxFormat, pdssd->dwFlags, (*ppStream)->EmuFlags, 0,
-                          xbnullptr, (*ppStream)->X_BufferCacheSize, (*ppStream)->Xb_VoiceProperties, pdssd->lpMixBinsOutput,
+                          xbox::zeroptr, (*ppStream)->X_BufferCacheSize, (*ppStream)->Xb_VoiceProperties, pdssd->lpMixBinsOutput,
                           &(*ppStream)->Xb_Voice);
 
         // Test case: Star Wars: KotOR has one packet greater than 5 seconds worth. Increasing to 10 seconds allow stream to work until
@@ -481,7 +481,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_GetStatus)
         }
         *pdwStatus = dwStatusXbox;
 
-    } else if (pdwStatus != xbnullptr) {
+    } else if (pdwStatus != xbox::zeroptr) {
         *pdwStatus = 0;
     }
 
@@ -510,8 +510,8 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_GetVoiceProperties)
         LOG_FUNC_ARG_OUT(pVoiceProps)
         LOG_FUNC_END;
 
-    if (pVoiceProps == xbnullptr) {
-        LOG_TEST_CASE("pVoiceProps == xbnullptr");
+    if (pVoiceProps == xbox::zeroptr) {
+        LOG_TEST_CASE("pVoiceProps == xbox::zeroptr");
         RETURN(DS_OK);
     }
 
@@ -613,7 +613,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_Process)
 
     if (pThis->EmuDirectSoundBuffer8 != nullptr) {
 
-        if (pInputBuffer != xbnullptr) {
+        if (pInputBuffer != xbox::zeroptr) {
 
             // Add packets from title until it gets full.
             if (pThis->Host_BufferPacketArray.size() != pThis->X_MaxAttachedPackets) {
@@ -641,10 +641,10 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_Process)
 
                 pThis->Host_BufferPacketArray.push_back(packet_input);
 
-                if (pInputBuffer->pdwStatus != xbnullptr) {
+                if (pInputBuffer->pdwStatus != xbox::zeroptr) {
                     (*pInputBuffer->pdwStatus) = XMP_STATUS_PENDING;
                 }
-                if (pInputBuffer->pdwCompletedSize != xbnullptr) {
+                if (pInputBuffer->pdwCompletedSize != xbox::zeroptr) {
                     (*pInputBuffer->pdwCompletedSize) = 0;
                 }
                 if (pThis->Host_isProcessing == false && pThis->Host_BufferPacketArray.size() == 1) {
@@ -660,7 +660,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_Process)
                 DSStream_Packet_Process(pThis);
             // Once full it needs to change status to flushed when cannot hold any more packets.
             } else {
-                if (pInputBuffer->pdwStatus != xbnullptr) {
+                if (pInputBuffer->pdwStatus != xbox::zeroptr) {
                     (*pInputBuffer->pdwStatus) = XMP_STATUS_FAILURE;
                 }
             }
@@ -668,12 +668,12 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_Process)
 
         //TODO: What to do with output buffer audio variable? Need test case or functional source code.
         // NOTE: pOutputBuffer is reserved, must be set to NULL from titles.
-        if (pOutputBuffer != xbnullptr) {
+        if (pOutputBuffer != xbox::zeroptr) {
             LOG_TEST_CASE("pOutputBuffer is not nullptr, please report title test case to issue tracker. Thanks!");
         }
 
     } else {
-        if (pInputBuffer != xbnullptr && pInputBuffer->pdwStatus != xbnullptr) {
+        if (pInputBuffer != xbox::zeroptr && pInputBuffer->pdwStatus != xbox::zeroptr) {
             (*pInputBuffer->pdwStatus) = XMP_STATUS_SUCCESS;
         }
     }
@@ -916,7 +916,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetFormat)
                                                      pThis->EmuBufferDesc, pThis->EmuFlags, pThis->EmuPlayFlags,
                                                      pThis->EmuDirectSound3DBuffer8, 0, pThis->X_BufferCache,
                                                      pThis->X_BufferCacheSize, pThis->Xb_VoiceProperties,
-                                                     xbnullptr, &pThis->Xb_Voice);
+                                                     xbox::zeroptr, &pThis->Xb_Voice);
 
     return hRet;
 }

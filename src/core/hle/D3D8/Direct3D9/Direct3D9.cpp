@@ -159,22 +159,22 @@ static DWORD                        g_VBLastSwap = 0;
 static XTL::DWORD                   g_Xbox_PresentationInterval_Default = D3DPRESENT_INTERVAL_IMMEDIATE;
        XTL::DWORD                   g_Xbox_PresentationInterval_Override = 0;
 static XTL::X_D3DSWAPDATA			g_Xbox_SwapData = {0}; // current swap information
-static XTL::X_D3DSWAPCALLBACK		g_pXbox_SwapCallback = xbnullptr;	// Swap/Present callback routine
+static XTL::X_D3DSWAPCALLBACK		g_pXbox_SwapCallback = xbox::zeroptr;	// Swap/Present callback routine
 static XTL::X_D3DVBLANKDATA			g_Xbox_VBlankData = {0}; // current vertical blank information
-static XTL::X_D3DVBLANKCALLBACK     g_pXbox_VerticalBlankCallback   = xbnullptr; // Vertical-Blank callback routine
+static XTL::X_D3DVBLANKCALLBACK     g_pXbox_VerticalBlankCallback   = xbox::zeroptr; // Vertical-Blank callback routine
 
-       XTL::X_D3DSurface           *g_pXbox_BackBufferSurface = xbnullptr;
-static XTL::X_D3DSurface           *g_pXbox_DefaultDepthStencilSurface = xbnullptr;
-       XTL::X_D3DSurface           *g_pXbox_RenderTarget = xbnullptr;
-static XTL::X_D3DSurface           *g_pXbox_DepthStencil = xbnullptr;
+       XTL::X_D3DSurface           *g_pXbox_BackBufferSurface = xbox::zeroptr;
+static XTL::X_D3DSurface           *g_pXbox_DefaultDepthStencilSurface = xbox::zeroptr;
+       XTL::X_D3DSurface           *g_pXbox_RenderTarget = xbox::zeroptr;
+static XTL::X_D3DSurface           *g_pXbox_DepthStencil = xbox::zeroptr;
        XTL::X_D3DMULTISAMPLE_TYPE   g_Xbox_MultiSampleType = XTL::X_D3DMULTISAMPLE_NONE;
 
        XTL::X_VERTEXSHADERCONSTANTMODE g_Xbox_VertexShaderConstantMode = X_D3DSCM_192CONSTANTS; // Set by D3DDevice_SetShaderConstantMode, TODO : Move to XbVertexShader.cpp
 static XTL::DWORD                   g_Xbox_BaseVertexIndex = 0; // Set by D3DDevice_SetIndices, read by D3DDevice_DrawIndexedVertices : a value that's effectively added to every vertex index (as stored in an index buffer) by multiplying this by vertex stride and added to the vertex buffer start (see BaseVertexIndex in CxbxDrawIndexed)
-static XTL::DWORD                  *g_pXbox_BeginPush_Buffer = xbnullptr; // primary push buffer
+static XTL::DWORD                  *g_pXbox_BeginPush_Buffer = xbox::zeroptr; // primary push buffer
 
-       XTL::X_PixelShader*			g_pXbox_PixelShader = xbnullptr;
-static XTL::PVOID                   g_pXbox_Palette_Data[XTL::X_D3DTS_STAGECOUNT] = { xbnullptr, xbnullptr, xbnullptr, xbnullptr }; // cached palette pointer
+       XTL::X_PixelShader*			g_pXbox_PixelShader = xbox::zeroptr;
+static XTL::PVOID                   g_pXbox_Palette_Data[XTL::X_D3DTS_STAGECOUNT] = { xbox::zeroptr, xbox::zeroptr, xbox::zeroptr, xbox::zeroptr }; // cached palette pointer
 static unsigned                     g_Xbox_Palette_Size[XTL::X_D3DTS_STAGECOUNT] = { 0 }; // cached palette size
 
 
@@ -210,7 +210,7 @@ typedef struct resource_key_hash {
 	union {
 		struct {
 			// For non-pixel-containers, we set the Xbox resource address for now (TODO : Come up with something better) :
-			xbaddr ResourceAddr; // We set this as-is
+			xbox::addr ResourceAddr; // We set this as-is
 		};
 		struct {
 			// For XTL::X_D3DPixelContainer's we also set these fields :
@@ -681,7 +681,7 @@ inline DWORD GetXboxCommonResourceType(const XTL::DWORD XboxResource_Common)
 inline DWORD GetXboxCommonResourceType(const XTL::X_D3DResource* pXboxResource)
 {
 	// Don't pass in unassigned Xbox resources
-	assert(pXboxResource != xbnullptr);
+	assert(pXboxResource != xbox::zeroptr);
 
 	return GetXboxCommonResourceType(pXboxResource->Common);
 }
@@ -695,7 +695,7 @@ XTL::X_D3DFORMAT GetXboxPixelContainerFormat(const XTL::DWORD XboxPixelContainer
 XTL::X_D3DFORMAT GetXboxPixelContainerFormat(const XTL::X_D3DPixelContainer *pXboxPixelContainer)
 {
 	// Don't pass in unassigned Xbox pixel container
-	assert(pXboxPixelContainer != xbnullptr);
+	assert(pXboxPixelContainer != xbox::zeroptr);
 
 	return GetXboxPixelContainerFormat(pXboxPixelContainer->Format);
 }
@@ -703,7 +703,7 @@ XTL::X_D3DFORMAT GetXboxPixelContainerFormat(const XTL::X_D3DPixelContainer *pXb
 inline int GetXboxPixelContainerDimensionCount(const XTL::X_D3DPixelContainer *pXboxPixelContainer)
 {
 	// Don't pass in unassigned Xbox pixel container
-	assert(pXboxPixelContainer != xbnullptr);
+	assert(pXboxPixelContainer != xbox::zeroptr);
 
 	return (XTL::X_D3DFORMAT)((pXboxPixelContainer->Format & X_D3DFORMAT_DIMENSION_MASK) >> X_D3DFORMAT_DIMENSION_SHIFT);
 }
@@ -808,11 +808,11 @@ inline bool IsXboxResourceD3DCreated(const XTL::X_D3DResource *pXboxResource)
 void *GetDataFromXboxResource(XTL::X_D3DResource *pXboxResource)
 {
 	// Don't pass in unassigned Xbox resources
-	if (pXboxResource == xbnullptr)
+	if (pXboxResource == xbox::zeroptr)
 		return nullptr;
 
-	xbaddr pData = pXboxResource->Data;
-	if (pData == xbnull)
+	xbox::addr pData = pXboxResource->Data;
+	if (pData == xbox::zero)
 		return nullptr;
 
 	DWORD dwCommonType = GetXboxCommonResourceType(pXboxResource);
@@ -824,9 +824,9 @@ void *GetDataFromXboxResource(XTL::X_D3DResource *pXboxResource)
 
 typedef struct {
 	IDirect3DResource* pHostResource = nullptr;
-	XTL::X_D3DResource* pXboxResource = xbnullptr;
+	XTL::X_D3DResource* pXboxResource = xbox::zeroptr;
 	DWORD dwXboxResourceType = 0;
-	void* pXboxData = xbnullptr;
+	void* pXboxData = xbox::zeroptr;
 	size_t szXboxDataSize = 0;
 	uint64_t hash = 0;
 	bool forceRehash = false;
@@ -855,7 +855,7 @@ bool IsResourceAPixelContainer(XTL::DWORD XboxResource_Common)
 bool IsResourceAPixelContainer(XTL::X_D3DResource* pXboxResource)
 {
 	// Don't pass in unassigned Xbox resources
-	assert(pXboxResource != xbnullptr);
+	assert(pXboxResource != xbox::zeroptr);
 
 	return IsResourceAPixelContainer(pXboxResource->Common);
 }
@@ -869,7 +869,7 @@ resource_cache_t& GetResourceCache(resource_key_t& key)
 resource_key_t GetHostResourceKey(XTL::X_D3DResource* pXboxResource, int iTextureStage = -1)
 {
 	resource_key_t key = {};
-	if (pXboxResource != xbnullptr) {
+	if (pXboxResource != xbox::zeroptr) {
 		// Initially, don't base the key on the address of the resource, but on it's uniquely identifying values
 		key.Data = pXboxResource->Data;
 		key.Common = pXboxResource->Common & CXBX_D3DCOMMON_IDENTIFYING_MASK;
@@ -896,7 +896,7 @@ resource_key_t GetHostResourceKey(XTL::X_D3DResource* pXboxResource, int iTextur
 			}
 		} else {
 			// For other resource types, do include their Xbox resource address (TODO : come up with something better)
-			key.ResourceAddr = (xbaddr)pXboxResource;
+			key.ResourceAddr = (xbox::addr)pXboxResource;
 		}
 	}
 
@@ -949,7 +949,7 @@ void ForceResourceRehash(XTL::X_D3DResource* pXboxResource)
 
 IDirect3DResource *GetHostResource(XTL::X_D3DResource *pXboxResource, DWORD D3DUsage = 0, int iTextureStage = -1)
 {
-	if (pXboxResource == xbnullptr || pXboxResource->Data == xbnull)
+	if (pXboxResource == xbox::zeroptr || pXboxResource->Data == xbox::zero)
 		return nullptr;
 
 	EmuVerifyResourceIsRegistered(pXboxResource, D3DUsage, iTextureStage, /*dwSize=*/0);
@@ -1080,7 +1080,7 @@ void SetHostResource(XTL::X_D3DResource* pXboxResource, IDirect3DResource* pHost
 
 IDirect3DSurface *GetHostSurface(XTL::X_D3DResource *pXboxResource, DWORD D3DUsage = 0)
 {
-	if (pXboxResource == xbnullptr)
+	if (pXboxResource == xbox::zeroptr)
 		return nullptr;
 
 	if (GetXboxCommonResourceType(pXboxResource) != X_D3DCOMMON_TYPE_SURFACE) // Allows breakpoint below
@@ -1091,7 +1091,7 @@ IDirect3DSurface *GetHostSurface(XTL::X_D3DResource *pXboxResource, DWORD D3DUsa
 
 IDirect3DBaseTexture *GetHostBaseTexture(XTL::X_D3DResource *pXboxResource, DWORD D3DUsage = 0, int iTextureStage = 0)
 {
-	if (pXboxResource == xbnullptr)
+	if (pXboxResource == xbox::zeroptr)
 		return nullptr;
 
 	if (GetXboxCommonResourceType(pXboxResource) != X_D3DCOMMON_TYPE_TEXTURE) { // Allows breakpoint below
@@ -1113,7 +1113,7 @@ IDirect3DBaseTexture *GetHostBaseTexture(XTL::X_D3DResource *pXboxResource, DWOR
 #if 0 // unused
 IDirect3DTexture *GetHostTexture(XTL::X_D3DResource *pXboxResource, int iTextureStage = 0)
 {
-	if (pXboxResource == xbnullptr)
+	if (pXboxResource == xbox::zeroptr)
 		return nullptr;
 
 	return (IDirect3DTexture *)GetHostBaseTexture(pXboxResource, 0, iTextureStage);
@@ -1132,7 +1132,7 @@ IDirect3DVolumeTexture *GetHostVolumeTexture(XTL::X_D3DResource *pXboxResource, 
 #if 0 // unused
 IDirect3DIndexBuffer *GetHostIndexBuffer(XTL::X_D3DResource *pXboxResource)
 {
-	if (pXboxResource == xbnullptr)
+	if (pXboxResource == xbox::zeroptr)
 		return nullptr;
 
 	assert(GetXboxCommonResourceType(pXboxResource) == X_D3DCOMMON_TYPE_INDEXBUFFER);
@@ -1143,7 +1143,7 @@ IDirect3DIndexBuffer *GetHostIndexBuffer(XTL::X_D3DResource *pXboxResource)
 
 void SetHostSurface(XTL::X_D3DResource *pXboxResource, IDirect3DSurface *pHostSurface, int iTextureStage)
 {
-	assert(pXboxResource != xbnullptr);
+	assert(pXboxResource != xbox::zeroptr);
 	assert(GetXboxCommonResourceType(pXboxResource) == X_D3DCOMMON_TYPE_SURFACE);
 
 	SetHostResource(pXboxResource, (IDirect3DResource*)pHostSurface, iTextureStage);
@@ -1151,7 +1151,7 @@ void SetHostSurface(XTL::X_D3DResource *pXboxResource, IDirect3DSurface *pHostSu
 
 void SetHostTexture(XTL::X_D3DResource *pXboxResource, IDirect3DTexture *pHostTexture, int iTextureStage)
 {
-	assert(pXboxResource != xbnullptr);
+	assert(pXboxResource != xbox::zeroptr);
 	assert(GetXboxCommonResourceType(pXboxResource) == X_D3DCOMMON_TYPE_TEXTURE);
 
 	SetHostResource(pXboxResource, (IDirect3DResource*)pHostTexture, iTextureStage);
@@ -1159,7 +1159,7 @@ void SetHostTexture(XTL::X_D3DResource *pXboxResource, IDirect3DTexture *pHostTe
 
 void SetHostCubeTexture(XTL::X_D3DResource *pXboxResource, IDirect3DCubeTexture *pHostCubeTexture, int iTextureStage)
 {
-	assert(pXboxResource != xbnullptr);
+	assert(pXboxResource != xbox::zeroptr);
 	assert(GetXboxCommonResourceType(pXboxResource) == X_D3DCOMMON_TYPE_TEXTURE);
 
 	SetHostResource(pXboxResource, (IDirect3DResource*)pHostCubeTexture, iTextureStage);
@@ -1167,7 +1167,7 @@ void SetHostCubeTexture(XTL::X_D3DResource *pXboxResource, IDirect3DCubeTexture 
 
 void SetHostVolumeTexture(XTL::X_D3DResource *pXboxResource, IDirect3DVolumeTexture *pHostVolumeTexture, int iTextureStage)
 {
-	assert(pXboxResource != xbnullptr);
+	assert(pXboxResource != xbox::zeroptr);
 	assert(GetXboxCommonResourceType(pXboxResource) == X_D3DCOMMON_TYPE_TEXTURE);
 
 	SetHostResource(pXboxResource, (IDirect3DResource*)pHostVolumeTexture, iTextureStage);
@@ -1175,7 +1175,7 @@ void SetHostVolumeTexture(XTL::X_D3DResource *pXboxResource, IDirect3DVolumeText
 
 void SetHostVolume(XTL::X_D3DResource *pXboxResource, IDirect3DVolume *pHostVolume, int iTextureStage)
 {
-	assert(pXboxResource != xbnullptr);
+	assert(pXboxResource != xbox::zeroptr);
 	assert(GetXboxCommonResourceType(pXboxResource) == X_D3DCOMMON_TYPE_TEXTURE);
 
 	SetHostResource(pXboxResource, (IDirect3DResource*)pHostVolume, iTextureStage);
@@ -1183,7 +1183,7 @@ void SetHostVolume(XTL::X_D3DResource *pXboxResource, IDirect3DVolume *pHostVolu
 
 void SetHostIndexBuffer(XTL::X_D3DResource *pXboxResource, IDirect3DIndexBuffer *pHostIndexBuffer)
 {
-	assert(pXboxResource != xbnullptr);
+	assert(pXboxResource != xbox::zeroptr);
 	assert(GetXboxCommonResourceType(pXboxResource) == X_D3DCOMMON_TYPE_INDEXBUFFER);
 
 	SetHostResource(pXboxResource, (IDirect3DResource*)pHostIndexBuffer);
@@ -2072,7 +2072,7 @@ static DWORD WINAPI EmuUpdateTickCount(LPVOID)
 			// TODO: Fixme.  This may not be right...
 			g_Xbox_SwapData.SwapVBlank = 1;
 
-            if(g_pXbox_VerticalBlankCallback != xbnullptr)
+            if(g_pXbox_VerticalBlankCallback != xbox::zeroptr)
             {
                     
                 g_pXbox_VerticalBlankCallback(&g_Xbox_VBlankData);
@@ -2507,7 +2507,7 @@ void CreateHostResource(XTL::X_D3DResource *pResource, DWORD D3DUsage, int iText
 static void EmuVerifyResourceIsRegistered(XTL::X_D3DResource *pResource, DWORD D3DUsage, int iTextureStage, DWORD dwSize)
 {
 	// Skip resources without data
-	if (pResource->Data == xbnull)
+	if (pResource->Data == xbox::zero)
 		return;
 
 	auto key = GetHostResourceKey(pResource, iTextureStage);
@@ -2549,7 +2549,7 @@ static void EmuVerifyResourceIsRegistered(XTL::X_D3DResource *pResource, DWORD D
                         FreeHostResource(key);
 
                         // Free the parent texture, if present
-                        XTL::X_D3DTexture* pParentXboxTexture = (pResource) ? (XTL::X_D3DTexture*)xboxSurface->Parent : xbnullptr;
+                        XTL::X_D3DTexture* pParentXboxTexture = (pResource) ? (XTL::X_D3DTexture*)xboxSurface->Parent : xbox::zeroptr;
 
                         if (pParentXboxTexture) {
                             // Re-create the texture with D3DUSAGE_RENDERTARGET, this will automatically create any child-surfaces
@@ -2960,12 +2960,12 @@ void Direct3D_CreateDevice_End()
     // We fix the situation by calling the Xbox GetRenderTarget function, which immediately after CreateDevice
     // WILL always return the Backbuffer!
     // Test Case: Shin Megami Tensei: Nine
-    if (g_pXbox_BackBufferSurface == xbnullptr && g_pXbox_DefaultDepthStencilSurface == xbnullptr) {
+    if (g_pXbox_BackBufferSurface == xbox::zeroptr && g_pXbox_DefaultDepthStencilSurface == xbox::zeroptr) {
         // First, log the test case
         LOG_TEST_CASE("Xbox CreateDevice did not call SetRenderTarget");
     }
 
-    if (g_pXbox_BackBufferSurface == xbnullptr) {
+    if (g_pXbox_BackBufferSurface == xbox::zeroptr) {
         if (XB_TRMP(D3DDevice_GetRenderTarget)) {
             XB_TRMP(D3DDevice_GetRenderTarget)(&g_pXbox_BackBufferSurface);
         }
@@ -2975,17 +2975,17 @@ void Direct3D_CreateDevice_End()
 
         // At this point, pRenderTarget should now point to a valid render target
         // if it still doesn't, we cannot continue without crashing at draw time
-        if (g_pXbox_BackBufferSurface == xbnullptr) {
+        if (g_pXbox_BackBufferSurface == xbox::zeroptr) {
             CxbxKrnlCleanup("Unable to determine default Xbox backbuffer");
         }
 
         // We must also call our SetRenderTarget patch to properly setup the host state
         // Update only the Back buffer
-        XTL::EMUPATCH(D3DDevice_SetRenderTarget)(g_pXbox_BackBufferSurface, xbnullptr);
+        XTL::EMUPATCH(D3DDevice_SetRenderTarget)(g_pXbox_BackBufferSurface, xbox::zeroptr);
     }
 
     // Now do the same, but for the default depth stencil surface
-    if (g_pXbox_DefaultDepthStencilSurface == xbnullptr) {
+    if (g_pXbox_DefaultDepthStencilSurface == xbox::zeroptr) {
         if (XB_TRMP(D3DDevice_GetDepthStencilSurface)) {
             XB_TRMP(D3DDevice_GetDepthStencilSurface)(&g_pXbox_DefaultDepthStencilSurface);
         }
@@ -2995,11 +2995,11 @@ void Direct3D_CreateDevice_End()
 
         // At this point, g_pXbox_DefaultDepthStencilSurface should now point to a valid depth stencil
         // If it doesn't, just log and carry on: Unlike RenderTarget, this situation is not fatal
-        if (g_pXbox_DefaultDepthStencilSurface == xbnullptr) {
+        if (g_pXbox_DefaultDepthStencilSurface == xbox::zeroptr) {
             LOG_TEST_CASE("Unable to determine default Xbox depth stencil");
         } else {
             // Update only the depth stencil
-            XTL::EMUPATCH(D3DDevice_SetRenderTarget)(xbnullptr, g_pXbox_DefaultDepthStencilSurface);
+            XTL::EMUPATCH(D3DDevice_SetRenderTarget)(xbox::zeroptr, g_pXbox_DefaultDepthStencilSurface);
         }
     }
 }
@@ -3419,12 +3419,12 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_GetVisibilityTestResult)
 		pHostQueryVisibilityTest->Release();
 	} else {
 		// Fallback to old faked result when there's no host occlusion query :
-		if (pResult != xbnullptr) {
+		if (pResult != xbox::zeroptr) {
 			*pResult = 640 * 480; // TODO : Use actual backbuffer dimensions
 		}
 	}
 
-	if (pTimeStamp != xbnullptr) {
+	if (pTimeStamp != xbox::zeroptr) {
 		LOG_TEST_CASE("requested value for pTimeStamp");
 		*pTimeStamp = sizeof(DWORD); // TODO : This should be an incrementing GPU-memory based DWORD-aligned memory address
 	}
@@ -3800,7 +3800,7 @@ void ValidateRenderTargetDimensions(DWORD HostRenderTarget_Width, DWORD HostRend
 float GetZScaleForSurface(XTL::X_D3DSurface* pSurface)
 {
     // If no surface was present, fallback to 1
-    if (pSurface == xbnullptr) {
+    if (pSurface == xbox::zeroptr) {
         return 1;
     }
 
@@ -4269,7 +4269,7 @@ VOID __fastcall XTL::EMUPATCH(D3DDevice_SwitchTexture)
     }
     else {
 		// Switch Texture updates the data pointer of an active texture using pushbuffer commands
-		if (g_pXbox_SetTexture[Stage] == xbnullptr) {
+		if (g_pXbox_SetTexture[Stage] == xbox::zeroptr) {
 			LOG_TEST_CASE("D3DDevice_SwitchTexture without an active texture");
 		}
 		else {
@@ -5263,7 +5263,7 @@ DWORD WINAPI XTL::EMUPATCH(D3DDevice_Swap)
 	{
 		g_Xbox_SwapData.Swap++;
 
-		if(g_pXbox_SwapCallback != xbnullptr) 
+		if(g_pXbox_SwapCallback != xbox::zeroptr) 
 		{
 				
 			g_pXbox_SwapCallback(&g_Xbox_SwapData);
@@ -5328,7 +5328,7 @@ bool IsSupportedFormat(XTL::X_D3DFORMAT X_Format, XTL::X_D3DRESOURCETYPE XboxRes
 // Was patch: IDirect3DResource8_Register
 void CreateHostResource(XTL::X_D3DResource *pResource, DWORD D3DUsage, int iTextureStage, DWORD dwSize)
 {
-	if (pResource == xbnullptr)
+	if (pResource == xbox::zeroptr)
 		return;
 
 	// Determine the resource type name
@@ -5376,7 +5376,7 @@ void CreateHostResource(XTL::X_D3DResource *pResource, DWORD D3DUsage, int iText
 
 	case XTL::X_D3DRTYPE_SURFACE: {
 		XTL::X_D3DSurface *pXboxSurface = (XTL::X_D3DSurface *)pResource;
-		XTL::X_D3DBaseTexture *pParentXboxTexture = (pXboxSurface) ? (XTL::X_D3DBaseTexture*)pXboxSurface->Parent : xbnullptr;
+		XTL::X_D3DBaseTexture *pParentXboxTexture = (pXboxSurface) ? (XTL::X_D3DBaseTexture*)pXboxSurface->Parent : xbox::zeroptr;
 
 		// Don't init the Parent if the Surface and Surface Parent formats differ
 		// Happens in some Outrun 2006 SetRenderTarget calls
@@ -5437,8 +5437,8 @@ void CreateHostResource(XTL::X_D3DResource *pResource, DWORD D3DUsage, int iText
 	}
 	case XTL::X_D3DRTYPE_VOLUME: {
 		// Note : Use and check for null, since X_D3DRTYPE_SURFACE might fall through here (by design) 
-		XTL::X_D3DVolume *pXboxVolume = (XboxResourceType == XTL::X_D3DRTYPE_VOLUME) ? (XTL::X_D3DVolume *)pResource : xbnullptr;
-		XTL::X_D3DVolumeTexture *pParentXboxVolumeTexture = (pXboxVolume) ? (XTL::X_D3DVolumeTexture *)pXboxVolume->Parent : xbnullptr;
+		XTL::X_D3DVolume *pXboxVolume = (XboxResourceType == XTL::X_D3DRTYPE_VOLUME) ? (XTL::X_D3DVolume *)pResource : xbox::zeroptr;
+		XTL::X_D3DVolumeTexture *pParentXboxVolumeTexture = (pXboxVolume) ? (XTL::X_D3DVolumeTexture *)pXboxVolume->Parent : xbox::zeroptr;
 		if (pParentXboxVolumeTexture) {
 			// For volumes with a parent volume texture, map these to a host volume texture first
 			IDirect3DVolumeTexture *pParentHostVolumeTexture = GetHostVolumeTexture(pParentXboxVolumeTexture, iTextureStage);
@@ -6707,7 +6707,7 @@ void CxbxDrawPrimitiveUP(CxbxDrawContext &DrawContext)
 	LOG_INIT // Allows use of DEBUG_D3DRESULT
 
 	assert(DrawContext.dwStartVertex == 0);
-	assert(DrawContext.pXboxVertexStreamZeroData != xbnullptr);
+	assert(DrawContext.pXboxVertexStreamZeroData != xbox::zeroptr);
 	assert(DrawContext.uiXboxVertexStreamZeroStride > 0);
 	assert(DrawContext.dwBaseVertexIndex == 0); // No IndexBase under Draw*UP
 
@@ -6808,7 +6808,7 @@ void EmuUpdateActiveTextureStages()
 		IDirect3DBaseTexture *pHostBaseTexture = nullptr;
 		bool bNeedRelease = false;
 
-		if (pBaseTexture != xbnullptr) {
+		if (pBaseTexture != xbox::zeroptr) {
 			DWORD Type = GetXboxCommonResourceType(pBaseTexture);
 			switch (Type) {
 			case X_D3DCOMMON_TYPE_TEXTURE:
@@ -6981,8 +6981,8 @@ void CxbxImpl_InsertCallback
 		return;
 	}
 
-	if (pCallback == xbnullptr) {
-		LOG_TEST_CASE("pCallback == xbnullptr!");
+	if (pCallback == xbox::zeroptr) {
+		LOG_TEST_CASE("pCallback == xbox::zeroptr!");
 		return;
 	}
 
@@ -7480,25 +7480,25 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderTarget)
 
 	// In Xbox titles, CreateDevice calls SetRenderTarget for the back buffer
 	// We can use this to determine the Xbox backbuffer surface for later use!
-	if (g_pXbox_BackBufferSurface == xbnullptr) {
+	if (g_pXbox_BackBufferSurface == xbox::zeroptr) {
 		g_pXbox_BackBufferSurface = pRenderTarget;
 		// TODO : Some titles might render to another backbuffer later on,
 		// if that happens, we might need to skip the first one or two calls?
 	}
 
-    if (g_pXbox_DefaultDepthStencilSurface == xbnullptr) {
+    if (g_pXbox_DefaultDepthStencilSurface == xbox::zeroptr) {
         g_pXbox_DefaultDepthStencilSurface = pNewZStencil;
     }
 
 	// The current render target is only replaced if it's passed in here non-null
-	if (pRenderTarget != xbnullptr) {
+	if (pRenderTarget != xbox::zeroptr) {
 		g_pXbox_RenderTarget = pRenderTarget;
 	}
 	else {
 		// If non is given, use the current Xbox render target
 		pRenderTarget = g_pXbox_RenderTarget;
 		// If there's no Xbox render target yet, fallback to the Xbox back buffer
-		if (pRenderTarget == xbnullptr) {
+		if (pRenderTarget == xbox::zeroptr) {
 			LOG_TEST_CASE("SetRenderTarget fallback to backbuffer");
 			pRenderTarget = g_pXbox_BackBufferSurface;
 		}

@@ -148,7 +148,7 @@ size_t IoVecFromBuffer(const IoVec* iov, unsigned int iov_cnt, size_t offset, vo
 }
 
 // Read an array of DWORDs in memory
-bool GetDwords(xbaddr Paddr, uint32_t* Buffer, int Number)
+bool GetDwords(xbox::addr Paddr, uint32_t* Buffer, int Number)
 {
 	for (int i = 0; i < Number; i++, Buffer++, Paddr += sizeof(*Buffer)) {
 		// dropped little -> big endian conversion from XQEMU
@@ -160,7 +160,7 @@ bool GetDwords(xbaddr Paddr, uint32_t* Buffer, int Number)
 }
 
 // Write an array of DWORDs in memory
-bool WriteDwords(xbaddr Paddr, uint32_t* Buffer, int Number)
+bool WriteDwords(xbox::addr Paddr, uint32_t* Buffer, int Number)
 {
 	for (int i = 0; i < Number; i++, Buffer++, Paddr += sizeof(*Buffer)) {
 		// dropped big -> little endian conversion from XQEMU
@@ -172,7 +172,7 @@ bool WriteDwords(xbaddr Paddr, uint32_t* Buffer, int Number)
 }
 
 // Read an array of WORDs in memory
-bool GetWords(xbaddr Paddr, uint16_t* Buffer, int Number)
+bool GetWords(xbox::addr Paddr, uint16_t* Buffer, int Number)
 {
 	for (int i = 0; i < Number; i++, Buffer++, Paddr += sizeof(*Buffer)) {
 		// dropped little -> big endian conversion from XQEMU
@@ -184,7 +184,7 @@ bool GetWords(xbaddr Paddr, uint16_t* Buffer, int Number)
 }
 
 // Write an array of WORDs in memory
-bool WriteWords(xbaddr Paddr, uint16_t* Buffer, int Number)
+bool WriteWords(xbox::addr Paddr, uint16_t* Buffer, int Number)
 {
 	for (int i = 0; i < Number; i++, Buffer++, Paddr += sizeof(*Buffer)) {
 		// dropped big -> little endian conversion from XQEMU

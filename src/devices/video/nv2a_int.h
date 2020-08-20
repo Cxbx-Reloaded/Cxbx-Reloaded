@@ -29,7 +29,7 @@
 #include <thread>
 #include <GL/glew.h>
 
-#include "Cxbx.h" // For xbaddr
+#include "xbox_types.h" // For xbox::addr
 
 #include "qemu-thread.h" // For qemu_mutex, etc
 
@@ -45,7 +45,7 @@
 #include "nv2a_regs.h" // For NV2A_MAX_TEXTURES, etc
 
 
-typedef xbaddr hwaddr; // Compatibility; Cxbx uses xbaddr, xqemu and OpenXbox use hwaddr 
+typedef xbox::addr hwaddr; // Compatibility; Cxbx uses xbox::addr, xqemu and OpenXbox use hwaddr 
 typedef uint32_t value_t; // Compatibility; Cxbx values are uint32_t (xqemu and OpenXbox use uint64_t)
 
 #define NV_PMC_SIZE                 0x001000
@@ -127,13 +127,13 @@ enum FIFOEngine {
 typedef struct DMAObject {
 	unsigned int dma_class;
 	unsigned int dma_target;
-	xbaddr address;
-	xbaddr limit;
+	xbox::addr address;
+	xbox::addr limit;
 } DMAObject;
 
 typedef struct VertexAttribute {
 	bool dma_select;
-	xbaddr offset;
+	xbox::addr offset;
 
 	/* inline arrays are packed in order?
 	* Need to pass the offset to converted attributes */
@@ -168,7 +168,7 @@ typedef struct Surface {
 	bool write_enabled_cache;
 	unsigned int pitch;
 
-	xbaddr offset;
+	xbox::addr offset;
 } Surface;
 
 typedef struct SurfaceShape {
@@ -206,21 +206,21 @@ typedef struct TextureBinding {
 } TextureBinding;
 
 typedef struct KelvinState {
-	xbaddr object_instance;
+	xbox::addr object_instance;
 } KelvinState;
 
 typedef struct ContextSurfaces2DState {
-	xbaddr object_instance;
-	xbaddr dma_image_source;
-	xbaddr dma_image_dest;
+	xbox::addr object_instance;
+	xbox::addr dma_image_source;
+	xbox::addr dma_image_dest;
 	unsigned int color_format;
 	unsigned int source_pitch, dest_pitch;
-	xbaddr source_offset, dest_offset;
+	xbox::addr source_offset, dest_offset;
 } ContextSurfaces2DState;
 
 typedef struct ImageBlitState {
-	xbaddr object_instance;
-	xbaddr context_surfaces;
+	xbox::addr object_instance;
+	xbox::addr context_surfaces;
 	unsigned int operation;
 	unsigned int in_x, in_y;
 	unsigned int out_x, out_y;
@@ -243,13 +243,13 @@ typedef struct PGRAPHState {
 	QemuCond fifo_access_cond;
 	QemuCond flip_3d;
 
-	xbaddr dma_color, dma_zeta;
+	xbox::addr dma_color, dma_zeta;
 	Surface surface_color, surface_zeta;
 	unsigned int surface_type;
 	SurfaceShape surface_shape;
 	SurfaceShape last_surface_shape;
 
-	xbaddr dma_a, dma_b;
+	xbox::addr dma_a, dma_b;
 #ifdef USE_TEXTURE_CACHE
 	GLruCache *texture_cache;
 #endif
@@ -270,18 +270,18 @@ typedef struct PGRAPHState {
 	GLuint gl_framebuffer;
 	GLuint gl_color_buffer, gl_zeta_buffer;
 
-	xbaddr dma_state;
-	xbaddr dma_notifies;
-	xbaddr dma_semaphore;
+	xbox::addr dma_state;
+	xbox::addr dma_notifies;
+	xbox::addr dma_semaphore;
 
-	xbaddr dma_report;
-	xbaddr report_offset;
+	xbox::addr dma_report;
+	xbox::addr report_offset;
 	bool zpass_pixel_count_enable;
 	unsigned int zpass_pixel_count_result;
 	unsigned int gl_zpass_pixel_count_query_count;
 	GLuint* gl_zpass_pixel_count_queries;
 
-	xbaddr dma_vertex_a, dma_vertex_b;
+	xbox::addr dma_vertex_a, dma_vertex_b;
 
 	unsigned int primitive_mode;
 
@@ -459,7 +459,7 @@ typedef struct {
 	DWORD Ignored[0x10];
 	PPUSH Put; // On Xbox1, this field is only written to by the CPU (the GPU uses this as a trigger to start executing from the given address)
 	PPUSH Get; // On Xbox1, this field is only read from by the CPU (the GPU reflects in here where it is/stopped executing)
-	PPUSH Reference; // TODO : xbaddr / void* / DWORD ? 
+	PPUSH Reference; // TODO : xbox::addr / void* / DWORD ? 
 	DWORD Ignored2[0x7ED];
 } Nv2AControlDma;
 #endif

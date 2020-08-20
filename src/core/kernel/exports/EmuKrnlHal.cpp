@@ -355,7 +355,7 @@ XBSYSAPI EXPORTNUM(46) xboxkrnl::VOID NTAPI xboxkrnl::HalReadWritePCISpace
 		int ByteOffset = RegisterNumber % sizeof(ULONG);
 		int Size = RegisterDataSizes[RegisterNumber % sizeof(ULONG)][Length % sizeof(ULONG)];
 
-		EmuX86_IOWrite((xbaddr)PCI_TYPE1_ADDR_PORT, CfgBits.u.AsULONG, sizeof(uint32_t));
+		EmuX86_IOWrite((xbox::addr)PCI_TYPE1_ADDR_PORT, CfgBits.u.AsULONG, sizeof(uint32_t));
 
 		if (WritePCISpace) {
 			EmuX86_IOWrite(PCI_TYPE1_DATA_PORT, *((PUCHAR)Buffer), Size);
@@ -708,7 +708,7 @@ XBSYSAPI EXPORTNUM(329) xboxkrnl::VOID NTAPI xboxkrnl::READ_PORT_BUFFER_UCHAR
 		LOG_FUNC_END;
 
 	while (Count-- > 0)
-		*Buffer++ = (uint8_t)EmuX86_IORead((xbaddr)Port, sizeof(uint8_t));
+		*Buffer++ = (uint8_t)EmuX86_IORead((xbox::addr)Port, sizeof(uint8_t));
 }
 
 // ******************************************************************
@@ -728,7 +728,7 @@ XBSYSAPI EXPORTNUM(330) xboxkrnl::VOID NTAPI xboxkrnl::READ_PORT_BUFFER_USHORT
 		LOG_FUNC_END;
 
 	while (Count-- > 0)
-		*Buffer++ = (uint16_t)EmuX86_IORead((xbaddr)Port, sizeof(uint16_t));
+		*Buffer++ = (uint16_t)EmuX86_IORead((xbox::addr)Port, sizeof(uint16_t));
 }
 
 // ******************************************************************
@@ -748,7 +748,7 @@ XBSYSAPI EXPORTNUM(331) xboxkrnl::VOID NTAPI xboxkrnl::READ_PORT_BUFFER_ULONG
 		LOG_FUNC_END;
 
 	while (Count-- > 0)
-		*Buffer++ = EmuX86_IORead((xbaddr)Port, sizeof(uint32_t));
+		*Buffer++ = EmuX86_IORead((xbox::addr)Port, sizeof(uint32_t));
 }
 
 // ******************************************************************
@@ -768,7 +768,7 @@ XBSYSAPI EXPORTNUM(332) xboxkrnl::VOID NTAPI xboxkrnl::WRITE_PORT_BUFFER_UCHAR
 		LOG_FUNC_END;
 
 	while (Count-- > 0)
-		EmuX86_IOWrite((xbaddr)Port, *Buffer++, sizeof(uint8_t));
+		EmuX86_IOWrite((xbox::addr)Port, *Buffer++, sizeof(uint8_t));
 }
 
 // ******************************************************************
@@ -788,7 +788,7 @@ XBSYSAPI EXPORTNUM(333) xboxkrnl::VOID NTAPI xboxkrnl::WRITE_PORT_BUFFER_USHORT
 		LOG_FUNC_END;
 
 	while (Count-- > 0)
-		EmuX86_IOWrite((xbaddr)Port, *Buffer++, sizeof(uint16_t));
+		EmuX86_IOWrite((xbox::addr)Port, *Buffer++, sizeof(uint16_t));
 }
 
 // ******************************************************************
@@ -808,7 +808,7 @@ XBSYSAPI EXPORTNUM(334) xboxkrnl::VOID NTAPI xboxkrnl::WRITE_PORT_BUFFER_ULONG
 		LOG_FUNC_END;
 
 	while (Count-- > 0)
-		EmuX86_IOWrite((xbaddr)Port, *Buffer++, sizeof(uint32_t));
+		EmuX86_IOWrite((xbox::addr)Port, *Buffer++, sizeof(uint32_t));
 }
 
 // ******************************************************************

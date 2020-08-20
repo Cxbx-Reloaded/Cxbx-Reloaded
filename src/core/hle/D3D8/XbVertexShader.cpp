@@ -1519,7 +1519,7 @@ HRESULT CxbxImpl_CreateVertexShader(CONST DWORD *pDeclaration, CONST DWORD *pFun
 	// HACK: TODO: support this situation
 	if (pDeclaration == nullptr) {
 		LOG_TEST_CASE("Vertex shader without declaration");
-		*pHandle = xbnull;
+		*pHandle = xbox::zero;
 		return D3D_OK;
 	}
 
@@ -1529,7 +1529,7 @@ HRESULT CxbxImpl_CreateVertexShader(CONST DWORD *pDeclaration, CONST DWORD *pFun
 	D3DVERTEXELEMENT* pRecompiledDeclaration = nullptr;
 
 	pRecompiledDeclaration = EmuRecompileVshDeclaration((DWORD*)pDeclaration,
-		/*bIsFixedFunction=*/pFunction == xbnullptr,
+		/*bIsFixedFunction=*/pFunction == xbox::zeroptr,
 		&XboxDeclarationCount,
 		&pCxbxVertexShader->Declaration);
 
@@ -1556,7 +1556,7 @@ HRESULT CxbxImpl_CreateVertexShader(CONST DWORD *pDeclaration, CONST DWORD *pFun
 	memcpy(pCxbxVertexShader->Declaration.pXboxDeclarationCopy, pDeclaration, XboxDeclarationCount * sizeof(DWORD));
 	pCxbxVertexShader->Declaration.XboxDeclarationCount = XboxDeclarationCount;
 
-	if (pFunction != xbnullptr)
+	if (pFunction != xbox::zeroptr)
 	{
 		// Parse and compile the shader
 		DWORD xboxFunctionSize = 0;

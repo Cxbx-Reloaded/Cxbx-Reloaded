@@ -476,9 +476,9 @@ void EmuInitFS()
 		}
 
 		EmuLogEx(CXBXR_MODULE::INIT, LOG_LEVEL::DEBUG, "Searching for FS Instruction in section %s\n", CxbxKrnl_Xbe->m_szSectionName[sectionIndex]);
-		xbaddr startAddr = CxbxKrnl_Xbe->m_SectionHeader[sectionIndex].dwVirtualAddr;
-		xbaddr endAddr = startAddr + CxbxKrnl_Xbe->m_SectionHeader[sectionIndex].dwSizeofRaw;
-		for (xbaddr addr = startAddr; addr < endAddr; addr++)
+		xbox::addr startAddr = CxbxKrnl_Xbe->m_SectionHeader[sectionIndex].dwVirtualAddr;
+		xbox::addr endAddr = startAddr + CxbxKrnl_Xbe->m_SectionHeader[sectionIndex].dwSizeofRaw;
+		for (xbox::addr addr = startAddr; addr < endAddr; addr++)
 		{
 			for (int i = 0; i < numberOfInstructions; i++)
 			{
@@ -554,7 +554,7 @@ void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData)
                         uint8_t *bByte = (uint8_t*)pNewTLS + v;
 
                         if (v % 0x10 == 0) {
-							EmuLog(LOG_LEVEL::DEBUG, "0x%.8X:", (xbaddr)bByte);
+							EmuLog(LOG_LEVEL::DEBUG, "0x%.8X:", (xbox::addr)bByte);
                         }
 
                         // Note : Use printf instead of EmuLog here, which prefixes with GetCurrentThreadId() :
@@ -570,7 +570,7 @@ void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData)
 		// prepare TLS
 		{
 			if (pTLS->dwTLSIndexAddr != 0) {
-				*(xbaddr*)pTLS->dwTLSIndexAddr = xbnull;
+				*(xbox::addr*)pTLS->dwTLSIndexAddr = xbox::zero;
 			}
 
 			// dword @ pTLSData := pTLSData

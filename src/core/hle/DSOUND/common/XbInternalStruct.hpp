@@ -109,7 +109,7 @@ struct CDirectSoundVoice : CUnknownGenericManager {
         } unknown;
 
         struct _r4034_lower {
-            xbaddr                  p_unknown_08;               // 0x008
+            xbox::addr                  p_unknown_08;               // 0x008
             uint16_t                unknown_0C;                 // 0x00C // zero'd - unknown
             XBOXADPCMWAVEFORMAT*    p_audio_format;             // 0x010 // Same as XBOXADPCMWAVEFORMAT / WAVEFORMATEX structure
             int32_t                 pitch;                      // 0x014 // Always init and custom pitch from SetFrequency, SetPitch, SetFormat, etc calls.
@@ -203,16 +203,16 @@ struct DSBUFFER_S : CUnknownTemplate {
         uint32_t            unknown_08;                     // Offset 0x08 // -0x14
         CMcpxVoiceClient*   p_CMcpxVoiceClient;             // Offset 0x0C // -0x10
         CDirectSoundVoice*  p_CDSVoice;                     // Offset 0x10 // -0x0C
-        xbaddr              p_unknown_14;                   // Offset 0x14 // -0x08 // (points to this address)
-        xbaddr              p_unknown_18;                   // Offset 0x18 // -0x04 // (points to above address)
+        xbox::addr              p_unknown_14;                   // Offset 0x14 // -0x08 // (points to this address)
+        xbox::addr              p_unknown_18;                   // Offset 0x18 // -0x04 // (points to above address)
     } dsb_c;
     static_assert(sizeof(DSBUFFER_C) == 0x14);
 
     struct DSBUFFER_I {
         CDirectSoundVoice*  p_CDSVoice;                     // Offset 0x1C //  0x00 // Same as p_CDSVoice (above); pThis
         CMcpxVoiceClient*   p_CMcpxVoiceClient;             // Offset 0x20 //  0x04 // Same as p_CMcpxVoiceClient (above)
-        xbaddr              p_unknown_24;                   // Offset 0x24 //  0x08
-        xbaddr              p_unknown_28;                   // Offset 0x28 //  0x0C
+        xbox::addr              p_unknown_24;                   // Offset 0x24 //  0x08
+        xbox::addr              p_unknown_28;                   // Offset 0x28 //  0x0C
         uint32_t            unknown_2C;                     // Offset 0x2C //  0x10 // was integer, later shift to offset 0x30
         uint32_t            unknown_30;                     // Offset 0x30 //  0x14 // later shifted from offset 0x2C; integer
     } dsb_i;
@@ -227,16 +227,16 @@ struct DSBUFFER_S : CUnknownTemplate {
     }
     virtual void init_member() {
         dsb_c.unknown_08 = 0;
-        dsb_i.p_unknown_24 = xbnull;
-        dsb_i.p_unknown_28 = xbnull;
-        dsb_i.unknown_2C = xbnull;
-        dsb_i.unknown_30 = xbnull;
+        dsb_i.p_unknown_24 = xbox::zero;
+        dsb_i.p_unknown_28 = xbox::zero;
+        dsb_i.unknown_2C = xbox::zero;
+        dsb_i.unknown_30 = xbox::zero;
     }
     virtual void init(bool is3D) {
         init_member();
         dsb_c.p_CMcpxVoiceClient = new CMcpxVoiceClient(); dsb_i.p_CMcpxVoiceClient = dsb_c.p_CMcpxVoiceClient;
         dsb_c.p_CDSVoice = new CDirectSoundVoice(is3D); dsb_i.p_CDSVoice = dsb_c.p_CDSVoice;
-        dsb_c.p_unknown_18 = reinterpret_cast<xbaddr>(&dsb_c.p_unknown_14);
+        dsb_c.p_unknown_18 = reinterpret_cast<xbox::addr>(&dsb_c.p_unknown_14);
         dsb_c.p_unknown_14 = dsb_c.p_unknown_18;
     }
 };

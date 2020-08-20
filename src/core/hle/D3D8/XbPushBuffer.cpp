@@ -123,7 +123,7 @@ void EmuExecutePushBuffer
 )
 {
 	//Check whether Fixup exists or not. 
-	if (pFixup != xbnullptr) {
+	if (pFixup != xbox::zeroptr) {
 		LOG_TEST_CASE("PushBuffer has fixups");
 		//Interpret address of PushBuffer Data and Fixup Data
 		UINT8* pPushBufferData = (UINT8*)pPushBuffer->Data;
@@ -468,7 +468,7 @@ extern void EmuExecutePushBufferRaw
 
 	// DMA Pusher state -- see https://envytools.readthedocs.io/en/latest/hw/fifo/dma-pusher.html#pusher-state
 #if 0
-	static xbaddr dma_pushbuffer; // the pushbuffer and IB DMA object
+	static xbox::addr dma_pushbuffer; // the pushbuffer and IB DMA object
 #endif
 	uint32_t *dma_limit; // pushbuffer size limit
 	uint32_t *dma_put; // pushbuffer current end address
@@ -497,8 +497,8 @@ extern void EmuExecutePushBufferRaw
 	};
 
 	// Initialize working variables
-	dma_limit = (uint32_t*)((xbaddr)pPushData + uSizeInBytes); // TODO : If this an absolute addresss?
-	dma_put = (uint32_t*)((xbaddr)pPushData + uSizeInBytes);
+	dma_limit = (uint32_t*)((xbox::addr)pPushData + uSizeInBytes); // TODO : If this an absolute addresss?
+	dma_put = (uint32_t*)((xbox::addr)pPushData + uSizeInBytes);
 	dma_get = (uint32_t*)pPushData;
 	dma_state = {};
 

@@ -26,6 +26,8 @@
 #ifndef XBDSOUNDTYPES_H
 #define XBDSOUNDTYPES_H
 
+#include "xbox_types.h"
+
 namespace XTL {
 
 #include <dsound.h> // TODO: FIXME after global namespace XTL issue is resolved.

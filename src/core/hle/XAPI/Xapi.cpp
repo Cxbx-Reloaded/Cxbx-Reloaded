@@ -190,11 +190,11 @@ void SetupXboxDeviceTypes()
 	if (g_DeviceType_Gamepad == nullptr) {
 		// First, attempt to find GetTypeInformation
 		auto typeInformation = g_SymbolAddresses.find("GetTypeInformation");
-		if (typeInformation != g_SymbolAddresses.end() && typeInformation->second != xbnull) {
+		if (typeInformation != g_SymbolAddresses.end() && typeInformation->second != xbox::zero) {
 			printf("Deriving XDEVICE_TYPE_GAMEPAD from DeviceTable (via GetTypeInformation)\n");
 			// Read the offset values of the device table structure from GetTypeInformation
-			xbaddr deviceTableStartOffset = *(uint32_t*)((uint32_t)typeInformation->second + 0x01);
-			xbaddr deviceTableEndOffset = *(uint32_t*)((uint32_t)typeInformation->second + 0x09);
+			xbox::addr deviceTableStartOffset = *(uint32_t*)((uint32_t)typeInformation->second + 0x01);
+			xbox::addr deviceTableEndOffset = *(uint32_t*)((uint32_t)typeInformation->second + 0x09);
 
 			// Calculate the number of device entires in the table
 			size_t deviceTableEntryCount = (deviceTableEndOffset - deviceTableStartOffset) / sizeof(uint32_t);
@@ -1148,7 +1148,7 @@ DWORD WINAPI XTL::EMUPATCH(XLaunchNewImageA)
 
 	// Update the kernel's LaunchDataPage :
 	{
-		if (xboxkrnl::LaunchDataPage == xbnullptr)
+		if (xboxkrnl::LaunchDataPage == xbox::zeroptr)
 		{
 			PVOID LaunchDataVAddr = xboxkrnl::MmAllocateContiguousMemory(sizeof(xboxkrnl::LAUNCH_DATA_PAGE));
 			if (!LaunchDataVAddr)
@@ -1164,11 +1164,11 @@ DWORD WINAPI XTL::EMUPATCH(XLaunchNewImageA)
 
 		xboxkrnl::MmPersistContiguousMemory((PVOID)xboxkrnl::LaunchDataPage, PAGE_SIZE, TRUE);
 
-		if (pLaunchData != xbnullptr)
+		if (pLaunchData != xbox::zeroptr)
 			// Save the launch data
 			memcpy(&(xboxkrnl::LaunchDataPage->LaunchData[0]), pLaunchData, sizeof(LAUNCH_DATA));
 
-		if (lpTitlePath == xbnullptr)
+		if (lpTitlePath == xbox::zeroptr)
 		{
 			// If no path is specified, then the xbe is rebooting to dashboard
 			char szDashboardPath[MAX_PATH] = { 0 };

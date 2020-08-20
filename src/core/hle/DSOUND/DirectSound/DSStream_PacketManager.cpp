@@ -82,10 +82,10 @@ void DSStream_Packet_Clear(
         return;
     }
 
-    if (buffer->xmp_data.pdwStatus != xbnullptr) {
+    if (buffer->xmp_data.pdwStatus != xbox::zeroptr) {
         (*buffer->xmp_data.pdwStatus) = status;
     }
-    if (buffer->xmp_data.pdwCompletedSize != xbnullptr) {
+    if (buffer->xmp_data.pdwCompletedSize != xbox::zeroptr) {
         (*buffer->xmp_data.pdwCompletedSize) = DSoundBufferGetXboxBufferSize(pThis->EmuFlags, buffer->xmp_data.dwMaxSize);
     }
     DSoundSGEMemDealloc(buffer->xmp_data.dwMaxSize);
@@ -98,7 +98,7 @@ void DSStream_Packet_Clear(
     //    It only need to call process once.
 
     // If a callback is set, only do the callback instead of event handle.
-    if (Xb_lpfnCallback != xbnullptr) {
+    if (Xb_lpfnCallback != xbox::zeroptr) {
         Xb_lpfnCallback(Xb_lpvContext, unionEventContext, status);
     } else if (unionEventContext != 0) {
         BOOL checkHandle = SetEvent(unionEventContext);
@@ -280,7 +280,7 @@ bool DSStream_Packet_Process(
                     packetCurrent->bufPlayed = packetCurrent->xmp_data.dwMaxSize;
                 }
                 // Return current completed size to Xbox's application.
-                if (packetCurrent->xmp_data.pdwCompletedSize != xbnullptr) {
+                if (packetCurrent->xmp_data.pdwCompletedSize != xbox::zeroptr) {
                     (*packetCurrent->xmp_data.pdwCompletedSize) = DSoundBufferGetXboxBufferSize(pThis->EmuFlags, packetCurrent->bufPlayed);
                 }
                 // Once bufPlayed is equal to dwMaxSize, we know the packet is completed.

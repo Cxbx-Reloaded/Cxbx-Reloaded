@@ -17,42 +17,27 @@
 // *  If not, write to the Free Software Foundation, Inc.,
 // *  59 Temple Place - Suite 330, Bostom, MA 02111-1307, USA.
 // *
-// *  (c) 2002-2003 Aaron Robinson <caustik@caustik.com>
-// *  (c) 2016 Luke Usher <luke.usher@outlook.com>
+// *  (c) 2020 ergo720
+// *
 // *  All rights reserved
 // *
 // ******************************************************************
-#ifndef EMUX86_H
-#define EMUX86_H
 
-#include "Cxbx.h"
+#pragma once
+
 #include <cstdint>
-#include <windows.h>
+#include <cstddef>
 
-#define EMUX86_EFLAG_CF 0
-#define EMUX86_EFLAG_PF 2
-#define EMUX86_EFLAG_AF 4
-#define EMUX86_EFLAG_ZF 6
-#define EMUX86_EFLAG_SF 7
-#define EMUX86_EFLAG_TF 8
-#define EMUX86_EFLAG_IF 9
-#define EMUX86_EFLAG_DF 10
-#define EMUX86_EFLAG_OF 11
-#define EMUX86_EFLAG_IOPL1 12
-#define EMUX86_EFLAG_IOPL2 13
-#define EMUX86_EFLAG_NT 14
-#define EMUX86_EFLAG_RF 16
-#define EMUX86_EFLAG_VM 17
-#define EMUX86_EFLAG_AC 18
-#define EMUX86_EFLAG_VIF 19
-#define EMUX86_EFLAG_VIP 20
-#define EMUX86_EFLAG_ID 21
 
-void EmuX86_Init();
-int EmuX86_OpcodeSize(uint8_t *Eip);
-bool EmuX86_DecodeException(LPEXCEPTION_POINTERS e);
-uint32_t EmuX86_IORead(xbox::addr addr, int size);
-void EmuX86_IOWrite(xbox::addr addr, uint32_t value, int size);
-uint32_t EmuX86_Read(xbox::addr addr, int size);
-void EmuX86_Write(xbox::addr addr, uint32_t value, int size);
-#endif
+namespace xbox
+{
+	/*! addr is the type of a physical address */
+	using addr = std::uint32_t;
+
+	/*! zero is the type of null address or value */
+	inline constexpr addr zero = 0;
+
+	/*! zeroptr is the type of null pointer address */
+	using zeroptr_t = std::nullptr_t;
+	inline constexpr zeroptr_t zeroptr = nullptr;
+}

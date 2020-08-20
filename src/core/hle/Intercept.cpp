@@ -73,7 +73,7 @@ static struct {
 
 static const char* section_symbols = "Symbols";
 
-std::map<std::string, xbaddr> g_SymbolAddresses;
+std::map<std::string, xbox::addr> g_SymbolAddresses;
 bool g_SymbolCacheUsed = false;
 
 bool bLLE_APU = false; // Set this to true for experimental APU (sound) LLE
@@ -100,14 +100,14 @@ void* GetXboxFunctionPointer(std::string functionName)
 }
 
 // NOTE: GetDetectedSymbolName do not get to be in XbSymbolDatabase, get symbol string in Cxbx project only.
-std::string GetDetectedSymbolName(const xbaddr address, int * const symbolOffset)
+std::string GetDetectedSymbolName(const xbox::addr address, int * const symbolOffset)
 {
     std::string result = "";
     int closestMatch = MAXINT;
 
     for (auto it = g_SymbolAddresses.begin(); it != g_SymbolAddresses.end(); ++it) {
-        xbaddr symbolAddr = it->second;
-        if (symbolAddr == xbnull)
+        xbox::addr symbolAddr = it->second;
+        if (symbolAddr == xbox::zero)
             continue;
 
         if (symbolAddr <= address)
@@ -133,11 +133,11 @@ std::string GetDetectedSymbolName(const xbaddr address, int * const symbolOffset
 
 // NOTE: VerifySymbolAddressAgainstXRef do not get to be in XbSymbolDatabase, perform verification in Cxbx project only.
 /*
-bool VerifySymbolAddressAgainstXRef(char *SymbolName, xbaddr Address, int XRef)
+bool VerifySymbolAddressAgainstXRef(char *SymbolName, xbox::addr Address, int XRef)
 {
     // Temporary verification - is XREF_D3DTSS_TEXCOORDINDEX derived correctly?
     // TODO : Remove this when XREF_D3DTSS_TEXCOORDINDEX derivation is deemed stable
-    xbaddr XRefAddr = XRefDataBase[XRef];
+    xbox::addr XRefAddr = XRefDataBase[XRef];
     if (XRefAddr == Address)
         return true;
 
@@ -428,7 +428,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 				// Iterate through the map of symbol addresses, calling GetEmuPatchAddr on all functions.
 				for (auto it = g_SymbolAddresses.begin(); it != g_SymbolAddresses.end(); ++it) {
 					std::string functionName = it->first;
-					xbaddr location = it->second;
+					xbox::addr location = it->second;
 
 					std::stringstream output;
 					output << "SymbolCache: 0x" << std::setfill('0') << std::setw(8) << std::hex << location

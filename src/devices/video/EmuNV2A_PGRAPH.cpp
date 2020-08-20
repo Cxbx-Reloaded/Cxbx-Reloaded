@@ -489,7 +489,7 @@ DEVICE_WRITE32(PGRAPH)
 		}
 		break;
 	case NV_PGRAPH_CHANNEL_CTX_TRIGGER: {
-		xbaddr context_address =
+		xbox::addr context_address =
 			GET_MASK(d->pgraph.regs[NV_PGRAPH_CHANNEL_CTX_POINTER], NV_PGRAPH_CHANNEL_CTX_POINTER_INST) << 4;
 
 		if (value & NV_PGRAPH_CHANNEL_CTX_TRIGGER_READ_IN) {
@@ -1192,7 +1192,7 @@ void pgraph_handle_method(NV2AState *d,
 					break;
 				}
 
-				xbaddr source_dma_len, dest_dma_len;
+				xbox::addr source_dma_len, dest_dma_len;
 				uint8_t *source, *dest;
 
 				source = (uint8_t*)nv_dma_map(d, context_surfaces->dma_image_source,
@@ -2653,7 +2653,7 @@ void pgraph_handle_method(NV2AState *d,
 
 			uint32_t semaphore_offset = pg->regs[NV_PGRAPH_SEMAPHOREOFFSET];
 
-			xbaddr semaphore_dma_len;
+			xbox::addr semaphore_dma_len;
 			uint8_t *semaphore_data = (uint8_t*)nv_dma_map(d, pg->dma_semaphore,
 				&semaphore_dma_len);
 			assert(semaphore_offset < semaphore_dma_len);

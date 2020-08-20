@@ -100,7 +100,7 @@ static inline void GenerateXboxBufferCache(
     // If the size is the same, don't realloc
     if (X_BufferCacheSize != X_BufferSizeRequest) {
         // Check if buffer cache exist, then copy over old ones.
-        if (*X_BufferCache != xbnullptr && (dwEmuFlags & DSE_FLAG_BUFFER_EXTERNAL) == 0) {
+        if (*X_BufferCache != xbox::zeroptr && (dwEmuFlags & DSE_FLAG_BUFFER_EXTERNAL) == 0) {
             LPVOID tempBuffer = *X_BufferCache;
             *X_BufferCache = malloc(X_BufferSizeRequest);
 
@@ -146,7 +146,7 @@ static inline void GenerateMixBinDefault(
     unsigned int i;
 
     // Use custom mixbin if provided.
-    if (mixbins_output != xbnullptr) {
+    if (mixbins_output != xbox::zeroptr) {
 
         Xb_VoiceProperties.dwMixBinCount = mixbins_output->dwCount;
         auto& mixbinArray_output = mixbins_output->lpMixBinVolumePairs;
@@ -185,7 +185,7 @@ static inline void GenerateMixBinDefault(
         }
         else {
             // If format is PCM/XADPCM, then use stereo mixbin as default.
-            if (lpwfxFormat == xbnullptr || lpwfxFormat->wFormatTag != WAVE_FORMAT_EXTENSIBLE) {
+            if (lpwfxFormat == xbox::zeroptr || lpwfxFormat->wFormatTag != WAVE_FORMAT_EXTENSIBLE) {
                 counter = 2;
                 for (i = 0; i < counter; i++) {
                     xb_mixbinArray[i].dwMixBin = i;
@@ -275,7 +275,7 @@ static inline void GeneratePCMFormat(
             CxbxKrnlCleanup("Unable to allocate DSBufferDesc.Xb_lpwfxFormat");
         }
 
-        if (Xb_lpwfxFormat != xbnullptr) {
+        if (Xb_lpwfxFormat != xbox::zeroptr) {
 
             PWAVEFORMATEXTENSIBLE lpwfxFormatHost = reinterpret_cast<PWAVEFORMATEXTENSIBLE>(DSBufferDesc.lpwfxFormat);
 
@@ -342,7 +342,7 @@ static inline void DSoundGenericUnlock(
     if (Host_lock.pLockPtr1 != nullptr) {
 
 
-        if (X_BufferCache != xbnullptr) {
+        if (X_BufferCache != xbox::zeroptr) {
             DSoundBufferOutputXBtoHost(dwEmuFlags, DSBufferDesc, ((PBYTE)X_BufferCache + X_Offset), X_dwLockBytes1, Host_lock.pLockPtr1, Host_lock.dwLockBytes1);
 
             if (Host_lock.pLockPtr2 != nullptr) {
@@ -387,7 +387,7 @@ static inline void DSound3DBufferCreate(LPDIRECTSOUNDBUFFER8 pDSBuffer, LPDIRECT
 #define DSoundBufferSetDefault(pThis, dwEmuPlayFlags, Xb_dwFlags) \
     pThis->EmuDirectSoundBuffer8 = nullptr; \
     pThis->EmuDirectSound3DBuffer8 = nullptr; \
-    pThis->X_BufferCache = xbnullptr; \
+    pThis->X_BufferCache = xbox::zeroptr; \
     pThis->EmuFlags = 0; \
     pThis->EmuPlayFlags = dwEmuPlayFlags; \
     pThis->X_BufferCacheSize = 0; \
@@ -398,9 +398,9 @@ static inline void DSound3DBufferCreate(LPDIRECTSOUNDBUFFER8 pDSBuffer, LPDIRECT
     pThis->Xb_Flags = Xb_dwFlags;
     //pThis->EmuBufferDesc = { 0 }; // Enable this when become necessary.
     /*
-    pThis->EmuLockPtr1 = xbnullptr; \
+    pThis->EmuLockPtr1 = xbox::zeroptr; \
     pThis->EmuLockBytes1 = 0; \
-    pThis->EmuLockPtr2 = xbnullptr; \
+    pThis->EmuLockPtr2 = xbox::zeroptr; \
     pThis->EmuLockBytes2 = 0; \ */
 
 static inline void DSoundBufferRegionSetDefault(XTL::EmuDirectSoundBuffer *pThis) {
@@ -788,10 +788,10 @@ static inline HRESULT HybridDirectSoundBuffer_GetCurrentPosition(
         EmuLog(LOG_LEVEL::WARNING, "GetCurrentPosition Failed!");
     }
 
-    if (pdwCurrentPlayCursor != xbnullptr) {
+    if (pdwCurrentPlayCursor != xbox::zeroptr) {
         *pdwCurrentPlayCursor = DSoundBufferGetXboxBufferSize(EmuFlags, dwCurrentPlayCursor);
     }
-    if (pdwCurrentWriteCursor != xbnullptr) {
+    if (pdwCurrentWriteCursor != xbox::zeroptr) {
         *pdwCurrentWriteCursor = DSoundBufferGetXboxBufferSize(EmuFlags, dwCurrentWriteCursor);
     }
 
@@ -1126,11 +1126,11 @@ static inline HRESULT HybridDirectSoundBuffer_SetFormat(
 
     if (X_BufferAllocate) {
         GeneratePCMFormat(BufferDesc, Xb_pwfxFormat, Xb_flags, dwEmuFlags, X_BufferCacheSize,
-                          xbnullptr, X_BufferCacheSize, Xb_VoiceProperties, mixbins_output, Xb_Voice);
+                           xbox::zeroptr, X_BufferCacheSize, Xb_VoiceProperties, mixbins_output, Xb_Voice);
     // Don't allocate for DS Stream class, it is using straight from the source.
     } else {
         GeneratePCMFormat(BufferDesc, Xb_pwfxFormat, Xb_flags, dwEmuFlags, 0,
-                          xbnullptr, X_BufferCacheSize, Xb_VoiceProperties, mixbins_output, Xb_Voice);
+                           xbox::zeroptr, X_BufferCacheSize, Xb_VoiceProperties, mixbins_output, Xb_Voice);
     }
     HRESULT hRet = DS_OK;
     if ((void*)g_pDSoundPrimaryBuffer == (void*)pDSBuffer) {
@@ -1279,10 +1279,10 @@ static inline HRESULT HybridDirectSoundBuffer_SetMixBinVolumes_8(
 {
     HRESULT hRet = DSERR_INVALIDPARAM;
 
-    if (pMixBins != xbnullptr) {
+    if (pMixBins != xbox::zeroptr) {
         DWORD counter = pMixBins->dwCount, count = pMixBins->dwCount;
         LONG volume = 0;
-        if (pMixBins->lpMixBinVolumePairs != xbnullptr) {
+        if (pMixBins->lpMixBinVolumePairs != xbox::zeroptr) {
             // Let's normalize audio level except for low frequency (subwoofer)
             for (DWORD i = 0; i < count; i++) {
                 // Update the mixbin volume only, do not reassign volume pair array.
@@ -1512,7 +1512,7 @@ static inline HRESULT HybridDirectSoundBuffer_GetVoiceProperties(
 {
     HRESULT ret = DS_OK;
 
-    if (out_VoiceProperties != xbnullptr) {
+    if (out_VoiceProperties != xbox::zeroptr) {
         // Simply copy the data from Xb_VoiceProperties.
         *out_VoiceProperties = Xb_VoiceProperties;
     }

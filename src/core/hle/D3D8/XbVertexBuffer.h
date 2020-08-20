@@ -59,7 +59,7 @@ public:
     void Activate(CxbxDrawContext *pDrawContext, UINT uiStream) const;
     bool                    isValid = false;
     XTL::X_D3DPRIMITIVETYPE XboxPrimitiveType = XTL::X_D3DPT_NONE;
-    PVOID                   pCachedXboxVertexData = xbnullptr;
+    PVOID                   pCachedXboxVertexData = xbox::zeroptr;
     UINT                    uiCachedXboxVertexDataSize = 0;
     uint64_t                uiVertexDataHash = 0;
     uint64_t                uiVertexStreamInformationHash = 0;

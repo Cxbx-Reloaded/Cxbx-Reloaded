@@ -265,7 +265,7 @@ static CODEC_FORMAT WFXformat_SyncHostFormat(
     XTL::audio_format xb_format;
 
     // If no format is provided, then use default.
-    if (Xb_wfx_ptr == xbnullptr) {
+    if (Xb_wfx_ptr == xbox::zeroptr) {
         WFXformat_GeneratePCMFormat(XTL::DSOUND::PresetChannelDefault(Xb_flags), 44100, 16, Host_wfxFormat);
         require_validate = false;
     }
@@ -274,7 +274,7 @@ static CODEC_FORMAT WFXformat_SyncHostFormat(
     // with flags DSBCAPS_MIXIN, DSBCAPS_FXIN, and DSBCAPS_FXIN2 will have no
     // WAVEFORMATEX structure by default.
     else if ((Xb_flags & (XTL_DSBCAPS_MIXIN | XTL_DSBCAPS_FXIN | XTL_DSBCAPS_FXIN2)) > 0) {
-        EmuLog(LOG_LEVEL::WARNING, "Creating dummy WAVEFORMATEX (pdsbd->Xb_lpwfxFormat = xbnullptr)...");
+        EmuLog(LOG_LEVEL::WARNING, "Creating dummy WAVEFORMATEX (pdsbd->Xb_lpwfxFormat = xbox::zeroptr)...");
         WFXformat_GeneratePCMFormat(XTL::DSOUND::PresetChannelDefault(Xb_flags), 44100, 16, Host_wfxFormat);
         require_validate = false;
     }

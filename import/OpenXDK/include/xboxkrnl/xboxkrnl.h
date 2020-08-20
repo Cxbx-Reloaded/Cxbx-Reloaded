@@ -12,6 +12,8 @@
 #ifndef XBOXKRNL_H
 #define XBOXKRNL_H
 
+#include "xbox_types.h"
+
 namespace xboxkrnl
 {
 

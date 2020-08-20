@@ -123,7 +123,7 @@ int CountActiveD3DStreams()
 {
 	int lastStreamIndex = 0;
 	for (int i = 0; i < X_VSH_MAX_STREAMS; i++) {
-		if (g_Xbox_SetStreamSource[i].VertexBuffer != xbnullptr) {
+		if (g_Xbox_SetStreamSource[i].VertexBuffer != xbox::zeroptr) {
 			lastStreamIndex = i + 1;
 		}
 	}
@@ -136,7 +136,7 @@ CxbxVertexDeclaration *GetCxbxVertexDeclaration(DWORD XboxVertexShaderHandle); /
 UINT CxbxVertexBufferConverter::GetNbrStreams(CxbxDrawContext *pDrawContext)
 {
 	// Draw..Up always have one stream
-	if (pDrawContext->pXboxVertexStreamZeroData != xbnullptr) {
+	if (pDrawContext->pXboxVertexStreamZeroData != xbox::zeroptr) {
 		return 1;
 	}
 
@@ -244,7 +244,7 @@ void CxbxVertexBufferConverter::ConvertStream
 				pActivePixelContainer[i].NrTexCoords = DxbxFVF_GetNumberOfTextureCoordinates(XboxFVF, i);
 				// TODO : Use GetXboxBaseTexture()
 				XTL::X_D3DBaseTexture *pXboxBaseTexture = g_pXbox_SetTexture[i];
-				if (pXboxBaseTexture != xbnullptr) {
+				if (pXboxBaseTexture != xbox::zeroptr) {
 					extern XTL::X_D3DFORMAT GetXboxPixelContainerFormat(const XTL::X_D3DPixelContainer *pXboxPixelContainer); // TODO : Move to XTL-independent header file
 
 					XTL::X_D3DFORMAT XboxFormat = GetXboxPixelContainerFormat(pXboxBaseTexture);
@@ -277,7 +277,7 @@ void CxbxVertexBufferConverter::ConvertStream
 	bool bNeedRHWReset = bVshHandleIsFVF && ((XboxFVF & D3DFVF_POSITION_MASK) == D3DFVF_XYZRHW);
 	bool bNeedStreamCopy = bNeedTextureNormalization || bNeedVertexPatching || bNeedRHWReset;
 
-	uint8_t *pXboxVertexData = xbnullptr;
+	uint8_t *pXboxVertexData = xbox::zeroptr;
 	UINT uiXboxVertexStride = 0;
 	UINT uiVertexCount = 0;
 	UINT uiHostVertexStride = 0;
@@ -285,7 +285,7 @@ void CxbxVertexBufferConverter::ConvertStream
 	uint8_t *pHostVertexData = nullptr;
 	IDirect3DVertexBuffer *pNewHostVertexBuffer = nullptr;
 
-    if (pDrawContext->pXboxVertexStreamZeroData != xbnullptr) {
+    if (pDrawContext->pXboxVertexStreamZeroData != xbox::zeroptr) {
 		// There should only be one stream (stream zero) in this case
 		if (uiStream != 0) {
 			CxbxKrnlCleanup("Trying to patch a Draw..UP with more than stream zero!");
@@ -299,7 +299,7 @@ void CxbxVertexBufferConverter::ConvertStream
 	} else {
 		XTL::X_D3DVertexBuffer *pXboxVertexBuffer = g_Xbox_SetStreamSource[uiStream].VertexBuffer;
         pXboxVertexData = (uint8_t*)GetDataFromXboxResource(pXboxVertexBuffer);
-		if (pXboxVertexData == xbnullptr) {
+		if (pXboxVertexData == xbox::zeroptr) {
 			HRESULT hRet = g_pD3DDevice->SetStreamSource(
 				uiStream, 
 				nullptr, 
@@ -329,7 +329,7 @@ void CxbxVertexBufferConverter::ConvertStream
 
     // FAST PATH: If this draw is a zerostream based draw, and does not require patching, we can use it directly
     // No need to hash or patch at all in this case!
-    if (pDrawContext->pXboxVertexStreamZeroData != xbnullptr && !bNeedStreamCopy) {
+    if (pDrawContext->pXboxVertexStreamZeroData != xbox::zeroptr && !bNeedStreamCopy) {
         pHostVertexData = pXboxVertexData;
 
         CxbxPatchedStream stream;
@@ -392,7 +392,7 @@ void CxbxVertexBufferConverter::ConvertStream
 	}
 
     // Allocate new buffers
-    if (pDrawContext->pXboxVertexStreamZeroData != xbnullptr) {
+    if (pDrawContext->pXboxVertexStreamZeroData != xbox::zeroptr) {
         pHostVertexData = (uint8_t*)malloc(dwHostVertexDataSize);
 
         if (pHostVertexData == nullptr) {
@@ -665,7 +665,7 @@ void CxbxVertexBufferConverter::ConvertStream
 		}
 
         // If for some reason the Xbox Render Target is not set, fallback to the backbuffer
-        if (g_pXbox_RenderTarget == xbnullptr) {
+        if (g_pXbox_RenderTarget == xbox::zeroptr) {
             LOG_TEST_CASE("SetRenderTarget fallback to backbuffer");
             g_pXbox_RenderTarget = g_pXbox_BackBufferSurface;
         }
@@ -754,7 +754,7 @@ void CxbxVertexBufferConverter::ConvertStream
     patchedStream.uiVertexStreamInformationHash = pVertexShaderSteamInfoHash;
     patchedStream.uiCachedXboxVertexStride = uiXboxVertexStride;
     patchedStream.uiCachedHostVertexStride = uiHostVertexStride;
-    patchedStream.bCacheIsStreamZeroDrawUP = (pDrawContext->pXboxVertexStreamZeroData != xbnullptr);
+    patchedStream.bCacheIsStreamZeroDrawUP = (pDrawContext->pXboxVertexStreamZeroData != xbox::zeroptr);
     if (patchedStream.bCacheIsStreamZeroDrawUP) {
         patchedStream.pCachedHostVertexStreamZeroData = pHostVertexData;
         patchedStream.bCachedHostVertexStreamZeroDataIsAllocated = bNeedStreamCopy;
@@ -1005,7 +1005,7 @@ VOID EmuFlushIVB()
 
 void CxbxImpl_SetStreamSource(UINT StreamNumber, XTL::X_D3DVertexBuffer* pStreamData, UINT Stride)
 {
-	if (pStreamData != xbnullptr && Stride == 0) {
+	if (pStreamData != xbox::zeroptr && Stride == 0) {
 		LOG_TEST_CASE("CxbxImpl_SetStreamSource : Stream assigned, and stride set to 0 (might be okay)");
 	}
 

@@ -55,22 +55,22 @@ namespace NtDll
 // HW Register helper functions
 xboxkrnl::UCHAR REG_RD08(VOID* Ptr, xboxkrnl::ULONG Addr)
 {
-	return EmuX86_Read((xbaddr)Ptr + Addr, sizeof(uint8_t));
+	return EmuX86_Read((xbox::addr)Ptr + Addr, sizeof(uint8_t));
 }
 
 VOID REG_WR08(VOID* Ptr, xboxkrnl::ULONG Addr, xboxkrnl::UCHAR Val)
 {
-	EmuX86_Write((xbaddr)Ptr + Addr, Val, sizeof(uint8_t));
+	EmuX86_Write((xbox::addr)Ptr + Addr, Val, sizeof(uint8_t));
 }
 
 xboxkrnl::ULONG REG_RD32(VOID* Ptr, xboxkrnl::ULONG Addr)
 {
-	return EmuX86_Read((xbaddr)Ptr + Addr, sizeof(uint32_t));
+	return EmuX86_Read((xbox::addr)Ptr + Addr, sizeof(uint32_t));
 }
 
 VOID REG_WR32(VOID* Ptr, xboxkrnl::ULONG Addr, xboxkrnl::ULONG Val)
 {
-	EmuX86_Write((xbaddr)Ptr + Addr, Val, sizeof(uint32_t));
+	EmuX86_Write((xbox::addr)Ptr + Addr, Val, sizeof(uint32_t));
 }
 
 VOID CRTC_WR(VOID* Ptr, xboxkrnl::UCHAR i, xboxkrnl::UCHAR d)
@@ -163,7 +163,7 @@ ULONG AvQueryAvCapabilities()
 	return avpack | (avRegion & (AV_STANDARD_MASK | AV_REFRESH_MASK)) | (userSettings & ~(AV_STANDARD_MASK | AV_PACK_MASK));
 }
 
-xboxkrnl::PVOID xboxkrnl::AvSavedDataAddress = xbnullptr;
+xboxkrnl::PVOID xboxkrnl::AvSavedDataAddress = xbox::zeroptr;
 
 // ******************************************************************
 // * 0x0001 - AvGetSavedDataAddress()

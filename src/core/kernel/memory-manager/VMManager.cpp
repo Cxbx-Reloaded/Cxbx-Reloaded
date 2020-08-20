@@ -457,12 +457,12 @@ void VMManager::SavePersistentMemory()
 	persisted_mem = (PersistedMemory*)addr;
 	persisted_mem->NumOfPtes = num_persisted_ptes;
 
-	if (xboxkrnl::LaunchDataPage != xbnullptr) {
+	if (xboxkrnl::LaunchDataPage != xbox::zeroptr) {
 		persisted_mem->LaunchFrameAddresses[0] = (VAddr)xboxkrnl::LaunchDataPage;
 		EmuLog(LOG_LEVEL::INFO, "Persisted LaunchDataPage\n");
 	}
 
-	if (xboxkrnl::AvSavedDataAddress != xbnullptr) {
+	if (xboxkrnl::AvSavedDataAddress != xbox::zeroptr) {
 		persisted_mem->LaunchFrameAddresses[1] = (VAddr)xboxkrnl::AvSavedDataAddress;
 		EmuLog(LOG_LEVEL::INFO, "Persisted Framebuffer\n");
 	}

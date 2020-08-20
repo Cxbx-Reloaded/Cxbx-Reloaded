@@ -161,12 +161,12 @@ static void update_irq(NV2AState *d)
 #define DEBUG_WRITE32(DEV)             EmuLog(LOG_LEVEL::DEBUG, "Wr32 NV2A " #DEV "(0x%08X, 0x%08X) [Handled %s]", addr, value, DebugNV_##DEV(addr))
 #define DEBUG_WRITE32_UNHANDLED(DEV) { EmuLog(LOG_LEVEL::DEBUG, "Wr32 NV2A " #DEV "(0x%08X, 0x%08X) [Unhandled %s]", addr, value, DebugNV_##DEV(addr)); return; }
 
-#define DEVICE_READ32(DEV) uint32_t EmuNV2A_##DEV##_Read32(NV2AState *d, xbaddr addr)
+#define DEVICE_READ32(DEV) uint32_t EmuNV2A_##DEV##_Read32(NV2AState *d, xbox::addr addr)
 #define DEVICE_READ32_SWITCH() uint32_t result = 0; switch (addr) 
 #define DEVICE_READ32_REG(dev) result = d->dev.regs[addr]
 #define DEVICE_READ32_END(DEV) DEBUG_READ32(DEV); return result
 
-#define DEVICE_WRITE32(DEV) void EmuNV2A_##DEV##_Write32(NV2AState *d, xbaddr addr, uint32_t value)
+#define DEVICE_WRITE32(DEV) void EmuNV2A_##DEV##_Write32(NV2AState *d, xbox::addr addr, uint32_t value)
 #define DEVICE_WRITE32_REG(dev) d->dev.regs[addr] = value
 #define DEVICE_WRITE32_END(DEV) DEBUG_WRITE32(DEV)
 
@@ -185,7 +185,7 @@ static inline void stl_le_p(uint32_t *p, uint32_t v)
 	*p = v;
 }
 
-static DMAObject nv_dma_load(NV2AState *d, xbaddr dma_obj_address)
+static DMAObject nv_dma_load(NV2AState *d, xbox::addr dma_obj_address)
 {
 	assert(dma_obj_address < d->pramin.ramin_size);
 
@@ -203,7 +203,7 @@ static DMAObject nv_dma_load(NV2AState *d, xbaddr dma_obj_address)
 	return object;
 }
 
-static void *nv_dma_map(NV2AState *d, xbaddr dma_obj_address, xbaddr *len)
+static void *nv_dma_map(NV2AState *d, xbox::addr dma_obj_address, xbox::addr *len)
 {
 //	assert(dma_obj_address < d->pramin.ramin_size);
 
@@ -299,7 +299,7 @@ const NV2ABlockInfo regions[] = { // blocktable
 #undef ENTRY
 };
 
-const NV2ABlockInfo* EmuNV2A_Block(xbaddr addr)
+const NV2ABlockInfo* EmuNV2A_Block(xbox::addr addr)
 {
 	// Find the block in the block table
 	const NV2ABlockInfo* block = &regions[0];
@@ -689,7 +689,7 @@ void cxbx_gl_render_framebuffer(NV2AState *d)
 {
 	// Update the frame texture
 	uint8_t* frame_pixels = (uint8_t*)(/*CONTIGUOUS_MEMORY_BASE=*/0x80000000 | d->pcrtc.start); // NV_PCRTC_START
-	uint8_t* palette_data = xbnullptr; // Note : Framebuffer formats aren't paletized
+	uint8_t* palette_data = xbox::zeroptr; // Note : Framebuffer formats aren't paletized
 
 	TextureShape s;
 	s.cubemap = false; // Note : Unused in upload_gl_texture GL_TEXTURE_2D path
@@ -1288,7 +1288,7 @@ void NV2ADevice::BlockWrite(const NV2ABlockInfo* block, uint32_t addr, uint32_t 
 	switch (size) {
 	case sizeof(uint8_t) : {
 #if 0
-		xbaddr aligned_addr;
+		xbox::addr aligned_addr;
 		uint32_t aligned_value;
 		int shift;
 		uint32_t mask;
@@ -1306,7 +1306,7 @@ void NV2ADevice::BlockWrite(const NV2ABlockInfo* block, uint32_t addr, uint32_t 
 	case sizeof(uint16_t) : {
 		assert((addr & 1) == 0); // TODO : What if this fails?
 
-		xbaddr aligned_addr;
+		xbox::addr aligned_addr;
 		uint32_t aligned_value;
 		int shift;
 		uint32_t mask;
