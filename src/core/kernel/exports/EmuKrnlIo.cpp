@@ -290,6 +290,7 @@ XBSYSAPI EXPORTNUM(66) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoCreateFile
 	if (FAILED(ret))
 	{
 		EmuLog(LOG_LEVEL::WARNING, "IoCreateFile Failed! (%s)\n", NtStatusToString(ret));
+		*FileHandle = INVALID_HANDLE_VALUE;
 	}
 	else
 	{
