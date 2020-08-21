@@ -383,6 +383,14 @@ void CxbxVertexBufferConverter::ConvertStream
         }
     }
 
+	// If dwHostVertexDataSize is zero, the allocation/creation will fail
+	// This can be caused by a stride of 0, and 'other' invalid configurations
+	// Test Case :SSX series of games
+	if (dwHostVertexDataSize == 0) {
+		LOG_TEST_CASE("Attempted to use a 0 sized vertex stream");
+		return;
+	}
+
     // Allocate new buffers
     if (pDrawContext->pXboxVertexStreamZeroData != xbnullptr) {
         pHostVertexData = (uint8_t*)malloc(dwHostVertexDataSize);
