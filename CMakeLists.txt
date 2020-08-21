@@ -330,6 +330,8 @@ file (GLOB CXBXR_SOURCE_EMU
  "${CXBXR_ROOT_DIR}/src/devices/usb/OHCI.cpp"
  "${CXBXR_ROOT_DIR}/src/devices/usb/USBDevice.cpp"
  "${CXBXR_ROOT_DIR}/src/devices/usb/XidGamepad.cpp"
+
+ #NOTE: These files are direct includes inside nv2a.cpp file. If we comment them out, we will have compile errors.
  #"${CXBXR_ROOT_DIR}/src/devices/video/EmuNV2A_DEBUG.cpp"
  #"${CXBXR_ROOT_DIR}/src/devices/video/EmuNV2A_PBUS.cpp"
  #"${CXBXR_ROOT_DIR}/src/devices/video/EmuNV2A_PCOUNTER.cpp"
@@ -351,6 +353,7 @@ file (GLOB CXBXR_SOURCE_EMU
  #"${CXBXR_ROOT_DIR}/src/devices/video/EmuNV2A_PVIDEO.cpp"
  #"${CXBXR_ROOT_DIR}/src/devices/video/EmuNV2A_PVPE.cpp"
  #"${CXBXR_ROOT_DIR}/src/devices/video/EmuNV2A_USER.cpp"
+
  "${CXBXR_ROOT_DIR}/src/devices/video/nv2a.cpp"
  "${CXBXR_ROOT_DIR}/src/devices/video/nv2a_debug.cpp"
  "${CXBXR_ROOT_DIR}/src/devices/video/nv2a_psh.cpp"
