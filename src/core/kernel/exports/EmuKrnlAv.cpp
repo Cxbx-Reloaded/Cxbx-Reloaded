@@ -30,7 +30,6 @@
 
 
 #include <xboxkrnl/xboxkrnl.h> // For AvGetSavedDataAddress, etc.
-#include "Logging.h" // For LOG_FUNC()
 #include "EmuKrnlLogging.h"
 
 // prevent name collisions
@@ -38,6 +37,10 @@ namespace NtDll
 {
 #include "core\kernel\support\EmuNtDll.h"
 };
+
+#ifndef VOID
+#define VOID void
+#endif
 
 #include "core\kernel\support\Emu.h" // For EmuLog(LOG_LEVEL::WARNING, )
 #include "core\hle\D3D8\Direct3D9\Direct3D9.h"
@@ -48,32 +51,33 @@ namespace NtDll
 #include "devices\video\nv2a_int.h"
 #include "devices\video\nv2a.h" // For NV2ABlockInfo, EmuNV2A_Block()
 
-#ifndef VOID
-#define VOID void
+#ifdef VOID
+#undef VOID
 #endif
 
+
 // HW Register helper functions
-xbox::UCHAR REG_RD08(VOID* Ptr, xbox::ULONG Addr)
+xbox::UCHAR REG_RD08(void* Ptr, xbox::ULONG Addr)
 {
 	return EmuX86_Read((xbox::addr)Ptr + Addr, sizeof(uint8_t));
 }
 
-VOID REG_WR08(VOID* Ptr, xbox::ULONG Addr, xbox::UCHAR Val)
+void REG_WR08(void* Ptr, xbox::ULONG Addr, xbox::UCHAR Val)
 {
 	EmuX86_Write((xbox::addr)Ptr + Addr, Val, sizeof(uint8_t));
 }
 
-xbox::ULONG REG_RD32(VOID* Ptr, xbox::ULONG Addr)
+xbox::ULONG REG_RD32(void* Ptr, xbox::ULONG Addr)
 {
 	return EmuX86_Read((xbox::addr)Ptr + Addr, sizeof(uint32_t));
 }
 
-VOID REG_WR32(VOID* Ptr, xbox::ULONG Addr, xbox::ULONG Val)
+void REG_WR32(void* Ptr, xbox::ULONG Addr, xbox::ULONG Val)
 {
 	EmuX86_Write((xbox::addr)Ptr + Addr, Val, sizeof(uint32_t));
 }
 
-VOID CRTC_WR(VOID* Ptr, xbox::UCHAR i, xbox::UCHAR d)
+void CRTC_WR(void* Ptr, xbox::UCHAR i, xbox::UCHAR d)
 {
 	static const NV2ABlockInfo* block = EmuNV2A_Block(NV_PRMCIO_CRX__COLOR);
 
@@ -81,7 +85,7 @@ VOID CRTC_WR(VOID* Ptr, xbox::UCHAR i, xbox::UCHAR d)
 	g_NV2A->BlockWrite(block, NV_PRMCIO_CR__COLOR, d, sizeof(uint8_t));
 }
 
-VOID SRX_WR(VOID *Ptr, xbox::UCHAR i, xbox::UCHAR d)
+void SRX_WR(void *Ptr, xbox::UCHAR i, xbox::UCHAR d)
 {
 	static const NV2ABlockInfo* block = EmuNV2A_Block(NV_PRMVIO_SRX);
 
@@ -89,7 +93,7 @@ VOID SRX_WR(VOID *Ptr, xbox::UCHAR i, xbox::UCHAR d)
 	g_NV2A->BlockWrite(block, NV_PRMVIO_SR, d, sizeof(uint8_t));
 }
 
-VOID GRX_WR(VOID *Ptr, xbox::UCHAR i, xbox::UCHAR d)
+void GRX_WR(void *Ptr, xbox::UCHAR i, xbox::UCHAR d)
 {
 	static const NV2ABlockInfo* block = EmuNV2A_Block(NV_PRMVIO_GRX);
 
@@ -97,7 +101,7 @@ VOID GRX_WR(VOID *Ptr, xbox::UCHAR i, xbox::UCHAR d)
 	g_NV2A->BlockWrite(block, NV_PRMVIO_GX, d, sizeof(uint8_t));
 }
 
-VOID ARX_WR(VOID *Ptr, xbox::UCHAR i, xbox::UCHAR d)
+void ARX_WR(void *Ptr, xbox::UCHAR i, xbox::UCHAR d)
 {
 	static const NV2ABlockInfo* block = EmuNV2A_Block(NV_PRMCIO_ARX);
 
@@ -178,7 +182,7 @@ XBSYSAPI EXPORTNUM(1) xbox::PVOID NTAPI xbox::AvGetSavedDataAddress(void)
 // ******************************************************************
 // * 0x0002 - AvSendTVEncoderOption()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(2) VOID NTAPI xbox::AvSendTVEncoderOption
+XBSYSAPI EXPORTNUM(2) xbox::VOID NTAPI xbox::AvSendTVEncoderOption
 (
 	IN  PVOID   RegisterBase,
 	IN  ULONG   Option,
@@ -405,7 +409,7 @@ XBSYSAPI EXPORTNUM(3) xbox::ULONG NTAPI xbox::AvSetDisplayMode
 // ******************************************************************
 // * 0x0004 - AvSetSavedDataAddress()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(4) VOID NTAPI xbox::AvSetSavedDataAddress
+XBSYSAPI EXPORTNUM(4) xbox::VOID NTAPI xbox::AvSetSavedDataAddress
 (
 	IN  PVOID   Address
 )

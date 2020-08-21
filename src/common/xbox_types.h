@@ -63,7 +63,7 @@ namespace xbox
 	typedef unsigned long       PHYSICAL_ADDRESS;
 	typedef unsigned int        UINT;
 	typedef int                 INT;
-	typedef long                INT_PTR;
+	typedef int                 INT_PTR;
 	typedef signed __int64      LONGLONG;
 	typedef unsigned __int64    ULONGLONG;
 	typedef wchar_t             WCHAR;
@@ -87,14 +87,14 @@ namespace xbox
 	typedef DWORD *PDWORD, *LPDWORD;
 	typedef ACCESS_MASK *PACCESS_MASK;
 	typedef LONG *PLONG;
-	typedef long *PINT_PTR;
+	typedef int *PINT_PTR;
 	typedef VOID *PVOID, *LPVOID;
 	typedef void *HANDLE;
 	typedef HANDLE *PHANDLE;
 
 	// Additional basic and pointer types :
-	typedef __int32				LONG_PTR;
-	typedef unsigned __int32	ULONG_PTR;
+	typedef long                LONG_PTR;
+	typedef unsigned long       ULONG_PTR;
 
 	typedef LONGLONG *PLONGLONG;
 	typedef QUAD *PQUAD;
