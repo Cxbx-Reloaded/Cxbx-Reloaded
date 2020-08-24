@@ -48,9 +48,9 @@ namespace NtDll
 
 // The following are the default implementations of the crypto functions
 
-xboxkrnl::VOID NTAPI JumpedSHAInit
+xbox::VOID NTAPI JumpedSHAInit
 (
-	xboxkrnl::PUCHAR pbSHAContext
+	xbox::PUCHAR pbSHAContext
 )
 {
 	// The sha1 context supplied to this function has an extra 24 bytes at the beginning which are unsed by our implementation,
@@ -59,54 +59,54 @@ xboxkrnl::VOID NTAPI JumpedSHAInit
 	SHA1Init((SHA1_CTX*)(pbSHAContext + 24));
 }
 
-xboxkrnl::VOID NTAPI JumpedSHAUpdate
+xbox::VOID NTAPI JumpedSHAUpdate
 (
-	xboxkrnl::PUCHAR pbSHAContext,
-	xboxkrnl::PUCHAR pbInput,
-	xboxkrnl::ULONG dwInputLength
+	xbox::PUCHAR pbSHAContext,
+	xbox::PUCHAR pbInput,
+	xbox::ULONG dwInputLength
 )
 {
 	SHA1Update((SHA1_CTX*)(pbSHAContext + 24), pbInput, dwInputLength);
 }
 
-xboxkrnl::VOID NTAPI JumpedSHAFinal
+xbox::VOID NTAPI JumpedSHAFinal
 (
-	xboxkrnl::PUCHAR pbSHAContext,
-	xboxkrnl::PUCHAR pbDigest
+	xbox::PUCHAR pbSHAContext,
+	xbox::PUCHAR pbDigest
 )
 {
 	SHA1Final(pbDigest, (SHA1_CTX*)(pbSHAContext + 24));
 }
 
-xboxkrnl::VOID NTAPI JumpedRC4Key
+xbox::VOID NTAPI JumpedRC4Key
 (
-	xboxkrnl::PUCHAR pbKeyStruct,
-	xboxkrnl::ULONG dwKeyLength,
-	xboxkrnl::PUCHAR pbKey
+	xbox::PUCHAR pbKeyStruct,
+	xbox::ULONG dwKeyLength,
+	xbox::PUCHAR pbKey
 )
 {
 	Rc4Initialise((Rc4Context*)pbKeyStruct, pbKey, dwKeyLength, 0);
 }
 
-xboxkrnl::VOID NTAPI JumpedRC4Crypt
+xbox::VOID NTAPI JumpedRC4Crypt
 (
-	xboxkrnl::PUCHAR pbKeyStruct,
-	xboxkrnl::ULONG dwInputLength,
-	xboxkrnl::PUCHAR pbInput
+	xbox::PUCHAR pbKeyStruct,
+	xbox::ULONG dwInputLength,
+	xbox::PUCHAR pbInput
 )
 {
 	Rc4Xor((Rc4Context*)pbKeyStruct, pbInput, pbInput, dwInputLength);
 }
 
-xboxkrnl::VOID NTAPI JumpedHMAC
+xbox::VOID NTAPI JumpedHMAC
 (
-	xboxkrnl::PBYTE pbKeyMaterial,
-	xboxkrnl::ULONG cbKeyMaterial,
-	xboxkrnl::PBYTE pbData,
-	xboxkrnl::ULONG cbData,
-	xboxkrnl::PBYTE pbData2,
-	xboxkrnl::ULONG cbData2,
-	xboxkrnl::PBYTE HmacData
+	xbox::PBYTE pbKeyMaterial,
+	xbox::ULONG cbKeyMaterial,
+	xbox::PBYTE pbData,
+	xbox::ULONG cbData,
+	xbox::PBYTE pbData2,
+	xbox::ULONG cbData2,
+	xbox::PBYTE HmacData
 )
 {
 	if (cbKeyMaterial > 64) {
@@ -147,11 +147,11 @@ xboxkrnl::VOID NTAPI JumpedHMAC
 	SHA1Final(HmacData, &ShaContext);
 }
 
-xboxkrnl::ULONG NTAPI JumpedPKEncPublic
+xbox::ULONG NTAPI JumpedPKEncPublic
 (
-	xboxkrnl::PUCHAR pbPubKey,
-	xboxkrnl::PUCHAR pbInput,
-	xboxkrnl::PUCHAR pbOutput
+	xbox::PUCHAR pbPubKey,
+	xbox::PUCHAR pbInput,
+	xbox::PUCHAR pbOutput
 )
 {
 	ULONG ret = 0;
@@ -161,11 +161,11 @@ xboxkrnl::ULONG NTAPI JumpedPKEncPublic
 	return ret;
 }
 
-xboxkrnl::ULONG NTAPI JumpedPKDecPrivate
+xbox::ULONG NTAPI JumpedPKDecPrivate
 (
-	xboxkrnl::PUCHAR pbPrvKey,
-	xboxkrnl::PUCHAR pbInput,
-	xboxkrnl::PUCHAR pbOutput
+	xbox::PUCHAR pbPrvKey,
+	xbox::PUCHAR pbInput,
+	xbox::PUCHAR pbOutput
 )
 {
 	ULONG ret = 0;
@@ -175,9 +175,9 @@ xboxkrnl::ULONG NTAPI JumpedPKDecPrivate
 	return ret;
 }
 
-xboxkrnl::ULONG NTAPI JumpedPKGetKeyLen
+xbox::ULONG NTAPI JumpedPKGetKeyLen
 (
-	xboxkrnl::PUCHAR pbPubKey
+	xbox::PUCHAR pbPubKey
 )
 {
 	ULONG ret = 0;
@@ -187,11 +187,11 @@ xboxkrnl::ULONG NTAPI JumpedPKGetKeyLen
 	return ret;
 }
 
-xboxkrnl::BOOLEAN NTAPI JumpedVerifyPKCS1Signature
+xbox::BOOLEAN NTAPI JumpedVerifyPKCS1Signature
 (
-	xboxkrnl::PUCHAR pbSig,
-	xboxkrnl::PUCHAR pbPubKey,
-	xboxkrnl::PUCHAR pbDigest
+	xbox::PUCHAR pbSig,
+	xbox::PUCHAR pbPubKey,
+	xbox::PUCHAR pbDigest
 )
 {
 	BOOLEAN ret = TRUE;
@@ -201,13 +201,13 @@ xboxkrnl::BOOLEAN NTAPI JumpedVerifyPKCS1Signature
 	return ret;
 }
 
-xboxkrnl::ULONG NTAPI JumpedModExp
+xbox::ULONG NTAPI JumpedModExp
 (
-	xboxkrnl::LPDWORD pA,
-	xboxkrnl::LPDWORD pB,
-	xboxkrnl::LPDWORD pC,
-	xboxkrnl::LPDWORD pD,
-	xboxkrnl::ULONG dwN
+	xbox::LPDWORD pA,
+	xbox::LPDWORD pB,
+	xbox::LPDWORD pC,
+	xbox::LPDWORD pD,
+	xbox::ULONG dwN
 )
 {
 	unsigned int len = dwN * 4;
@@ -218,20 +218,20 @@ xboxkrnl::ULONG NTAPI JumpedModExp
 	return 0;
 }
 
-xboxkrnl::VOID NTAPI JumpedDESKeyParity
+xbox::VOID NTAPI JumpedDESKeyParity
 (
-	xboxkrnl::PUCHAR pbKey,
-	xboxkrnl::ULONG dwKeyLength
+	xbox::PUCHAR pbKey,
+	xbox::ULONG dwKeyLength
 )
 {
 	mbedtls_des_key_set_parity(pbKey, dwKeyLength);
 }
 
-xboxkrnl::VOID NTAPI JumpedKeyTable
+xbox::VOID NTAPI JumpedKeyTable
 (
-	xboxkrnl::ULONG dwCipher,
-	xboxkrnl::PUCHAR pbKeyTable,
-	xboxkrnl::PUCHAR pbKey
+	xbox::ULONG dwCipher,
+	xbox::PUCHAR pbKeyTable,
+	xbox::PUCHAR pbKey
 )
 {
 	if (dwCipher) {
@@ -242,13 +242,13 @@ xboxkrnl::VOID NTAPI JumpedKeyTable
 	}
 }
 
-xboxkrnl::VOID NTAPI JumpedBlockCrypt
+xbox::VOID NTAPI JumpedBlockCrypt
 (
-	xboxkrnl::ULONG dwCipher,
-	xboxkrnl::PUCHAR pbOutput,
-	xboxkrnl::PUCHAR pbInput,
-	xboxkrnl::PUCHAR pbKeyTable,
-	xboxkrnl::ULONG dwOp
+	xbox::ULONG dwCipher,
+	xbox::PUCHAR pbOutput,
+	xbox::PUCHAR pbInput,
+	xbox::PUCHAR pbKeyTable,
+	xbox::ULONG dwOp
 )
 {
 	if (dwCipher) {
@@ -259,15 +259,15 @@ xboxkrnl::VOID NTAPI JumpedBlockCrypt
 	}
 }
 
-xboxkrnl::VOID NTAPI JumpedBlockCryptCBC
+xbox::VOID NTAPI JumpedBlockCryptCBC
 (
-	xboxkrnl::ULONG dwCipher,
-	xboxkrnl::ULONG dwInputLength,
-	xboxkrnl::PUCHAR pbOutput,
-	xboxkrnl::PUCHAR pbInput,
-	xboxkrnl::PUCHAR pbKeyTable,
-	xboxkrnl::ULONG dwOp,
-	xboxkrnl::PUCHAR pbFeedback
+	xbox::ULONG dwCipher,
+	xbox::ULONG dwInputLength,
+	xbox::PUCHAR pbOutput,
+	xbox::PUCHAR pbInput,
+	xbox::PUCHAR pbKeyTable,
+	xbox::ULONG dwOp,
+	xbox::PUCHAR pbFeedback
 )
 {
 	int ret;
@@ -284,10 +284,10 @@ xboxkrnl::VOID NTAPI JumpedBlockCryptCBC
 	}
 }
 
-xboxkrnl::ULONG NTAPI JumpedCryptService
+xbox::ULONG NTAPI JumpedCryptService
 (
-	xboxkrnl::ULONG dwOp,
-	xboxkrnl::PVOID pArgs
+	xbox::ULONG dwOp,
+	xbox::PVOID pArgs
 )
 {
 	// This seems to be a dummy function. It just returns zero regardless of the input arguments, which are left unchanged.
@@ -296,7 +296,7 @@ xboxkrnl::ULONG NTAPI JumpedCryptService
 }
 
 /* This struct contains the original crypto functions exposed by the kernel */
-const xboxkrnl::CRYPTO_VECTOR DefaultCryptoStruct =
+const xbox::CRYPTO_VECTOR DefaultCryptoStruct =
 {
 	JumpedSHAInit,
 	JumpedSHAUpdate,
@@ -317,12 +317,12 @@ const xboxkrnl::CRYPTO_VECTOR DefaultCryptoStruct =
 };
 
 /* This struct contains the updated crypto functions which can be changed by the title with XcUpdateCrypto */
-xboxkrnl::CRYPTO_VECTOR UpdatedCryptoStruct = DefaultCryptoStruct;
+xbox::CRYPTO_VECTOR UpdatedCryptoStruct = DefaultCryptoStruct;
 
 // ******************************************************************
 // * 0x015F - XcUpdateCrypto()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(351) xboxkrnl::VOID NTAPI xboxkrnl::XcUpdateCrypto
+XBSYSAPI EXPORTNUM(351) xbox::VOID NTAPI xbox::XcUpdateCrypto
 (
 	IN PCRYPTO_VECTOR pNewVector,
 	OUT PCRYPTO_VECTOR pROMVector OPTIONAL
@@ -413,7 +413,7 @@ XBSYSAPI EXPORTNUM(351) xboxkrnl::VOID NTAPI xboxkrnl::XcUpdateCrypto
 // ******************************************************************
 // * 0x014F - XcSHAInit()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(335) xboxkrnl::VOID NTAPI xboxkrnl::XcSHAInit
+XBSYSAPI EXPORTNUM(335) xbox::VOID NTAPI xbox::XcSHAInit
 (
 	IN PUCHAR pbSHAContext
 )
@@ -426,7 +426,7 @@ XBSYSAPI EXPORTNUM(335) xboxkrnl::VOID NTAPI xboxkrnl::XcSHAInit
 // ******************************************************************
 // * 0x0150 - XcSHAUpdate()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(336) xboxkrnl::VOID NTAPI xboxkrnl::XcSHAUpdate
+XBSYSAPI EXPORTNUM(336) xbox::VOID NTAPI xbox::XcSHAUpdate
 (
 	PUCHAR pbSHAContext,
 	PUCHAR pbInput,
@@ -445,7 +445,7 @@ XBSYSAPI EXPORTNUM(336) xboxkrnl::VOID NTAPI xboxkrnl::XcSHAUpdate
 // ******************************************************************
 // * 0x0151 - XcSHAFinal()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(337) xboxkrnl::VOID NTAPI xboxkrnl::XcSHAFinal
+XBSYSAPI EXPORTNUM(337) xbox::VOID NTAPI xbox::XcSHAFinal
 (
 	IN PUCHAR pbSHAContext,
 	IN PUCHAR pbDigest
@@ -462,7 +462,7 @@ XBSYSAPI EXPORTNUM(337) xboxkrnl::VOID NTAPI xboxkrnl::XcSHAFinal
 // ******************************************************************
 // * 0x0152 - XcRC4Key()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(338) xboxkrnl::VOID NTAPI xboxkrnl::XcRC4Key
+XBSYSAPI EXPORTNUM(338) xbox::VOID NTAPI xbox::XcRC4Key
 (
 	IN PUCHAR pbKeyStruct,
 	IN ULONG dwKeyLength,
@@ -481,7 +481,7 @@ XBSYSAPI EXPORTNUM(338) xboxkrnl::VOID NTAPI xboxkrnl::XcRC4Key
 // ******************************************************************
 // * 0x0153 - XcRC4Crypt
 // ******************************************************************
-XBSYSAPI EXPORTNUM(339) xboxkrnl::VOID NTAPI xboxkrnl::XcRC4Crypt
+XBSYSAPI EXPORTNUM(339) xbox::VOID NTAPI xbox::XcRC4Crypt
 (
 	IN PUCHAR pbKeyStruct,
 	IN ULONG dwInputLength,
@@ -500,7 +500,7 @@ XBSYSAPI EXPORTNUM(339) xboxkrnl::VOID NTAPI xboxkrnl::XcRC4Crypt
 // ******************************************************************
 // * 0x0154 - XcHMAC()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(340) xboxkrnl::VOID NTAPI xboxkrnl::XcHMAC
+XBSYSAPI EXPORTNUM(340) xbox::VOID NTAPI xbox::XcHMAC
 (
 	IN PBYTE pbKeyMaterial,
 	IN ULONG cbKeyMaterial,
@@ -527,7 +527,7 @@ XBSYSAPI EXPORTNUM(340) xboxkrnl::VOID NTAPI xboxkrnl::XcHMAC
 // ******************************************************************
 // * 0x0155 - XcPKEncPublic()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(341) xboxkrnl::ULONG NTAPI xboxkrnl::XcPKEncPublic
+XBSYSAPI EXPORTNUM(341) xbox::ULONG NTAPI xbox::XcPKEncPublic
 (
 	IN PUCHAR pbPubKey,
 	IN PUCHAR pbInput,
@@ -548,7 +548,7 @@ XBSYSAPI EXPORTNUM(341) xboxkrnl::ULONG NTAPI xboxkrnl::XcPKEncPublic
 // ******************************************************************
 // * 0x0156 - XcPKDecPrivate()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(342) xboxkrnl::ULONG NTAPI xboxkrnl::XcPKDecPrivate
+XBSYSAPI EXPORTNUM(342) xbox::ULONG NTAPI xbox::XcPKDecPrivate
 (
 	IN PUCHAR pbPrvKey,
 	IN PUCHAR pbInput,
@@ -569,7 +569,7 @@ XBSYSAPI EXPORTNUM(342) xboxkrnl::ULONG NTAPI xboxkrnl::XcPKDecPrivate
 // ******************************************************************
 // * 0x0157 - XcPKGetKeyLen()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(343) xboxkrnl::ULONG NTAPI xboxkrnl::XcPKGetKeyLen
+XBSYSAPI EXPORTNUM(343) xbox::ULONG NTAPI xbox::XcPKGetKeyLen
 (
 	OUT PUCHAR pbPubKey
 )
@@ -584,7 +584,7 @@ XBSYSAPI EXPORTNUM(343) xboxkrnl::ULONG NTAPI xboxkrnl::XcPKGetKeyLen
 // ******************************************************************
 // * 0x0158 - XcVerifyPKCS1Signature()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(344) xboxkrnl::BOOLEAN NTAPI xboxkrnl::XcVerifyPKCS1Signature
+XBSYSAPI EXPORTNUM(344) xbox::BOOLEAN NTAPI xbox::XcVerifyPKCS1Signature
 (
 	IN PUCHAR pbSig,
 	IN PUCHAR pbPubKey,
@@ -605,7 +605,7 @@ XBSYSAPI EXPORTNUM(344) xboxkrnl::BOOLEAN NTAPI xboxkrnl::XcVerifyPKCS1Signature
 // ******************************************************************
 // * 0x0159 - XcModExp()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(345) xboxkrnl::ULONG NTAPI xboxkrnl::XcModExp
+XBSYSAPI EXPORTNUM(345) xbox::ULONG NTAPI xbox::XcModExp
 (
 	IN LPDWORD pA,
 	IN LPDWORD pB,
@@ -630,7 +630,7 @@ XBSYSAPI EXPORTNUM(345) xboxkrnl::ULONG NTAPI xboxkrnl::XcModExp
 // ******************************************************************
 // * 0x015A - XcDESKeyParity()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(346) xboxkrnl::VOID NTAPI xboxkrnl::XcDESKeyParity
+XBSYSAPI EXPORTNUM(346) xbox::VOID NTAPI xbox::XcDESKeyParity
 (
 	IN PUCHAR pbKey,
 	IN ULONG dwKeyLength
@@ -647,7 +647,7 @@ XBSYSAPI EXPORTNUM(346) xboxkrnl::VOID NTAPI xboxkrnl::XcDESKeyParity
 // ******************************************************************
 // * 0x015B - XcKeyTable()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(347) xboxkrnl::VOID NTAPI xboxkrnl::XcKeyTable
+XBSYSAPI EXPORTNUM(347) xbox::VOID NTAPI xbox::XcKeyTable
 (
 	IN ULONG dwCipher,
 	OUT PUCHAR pbKeyTable,
@@ -666,7 +666,7 @@ XBSYSAPI EXPORTNUM(347) xboxkrnl::VOID NTAPI xboxkrnl::XcKeyTable
 // ******************************************************************
 // * 0x015C - XcBlockCrypt()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(348) xboxkrnl::VOID NTAPI xboxkrnl::XcBlockCrypt
+XBSYSAPI EXPORTNUM(348) xbox::VOID NTAPI xbox::XcBlockCrypt
 (
 	IN ULONG dwCipher,
 	OUT PUCHAR pbOutput,
@@ -689,7 +689,7 @@ XBSYSAPI EXPORTNUM(348) xboxkrnl::VOID NTAPI xboxkrnl::XcBlockCrypt
 // ******************************************************************
 // * 0x015D - XcBlockCryptCBC()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(349) xboxkrnl::VOID NTAPI xboxkrnl::XcBlockCryptCBC
+XBSYSAPI EXPORTNUM(349) xbox::VOID NTAPI xbox::XcBlockCryptCBC
 (
 	IN ULONG dwCipher,
 	IN ULONG dwInputLength,
@@ -716,7 +716,7 @@ XBSYSAPI EXPORTNUM(349) xboxkrnl::VOID NTAPI xboxkrnl::XcBlockCryptCBC
 // ******************************************************************
 // * 0x015E - XcCryptService()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(350) xboxkrnl::ULONG NTAPI xboxkrnl::XcCryptService
+XBSYSAPI EXPORTNUM(350) xbox::ULONG NTAPI xbox::XcCryptService
 (
 	IN ULONG dwOp,
 	IN PVOID pArgs

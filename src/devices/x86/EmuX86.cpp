@@ -59,7 +59,7 @@ static int field_pin = 0;
 
 static thread_local bool g_tls_isEmuX86Managed;
 
-uint32_t EmuX86_IORead(xbaddr addr, int size)
+uint32_t EmuX86_IORead(xbox::addr addr, int size)
 {
 	switch (addr) {
 	case 0x8008: { // TODO : Move 0x8008 TIMER to a device
@@ -93,7 +93,7 @@ uint32_t EmuX86_IORead(xbaddr addr, int size)
 	return 0;
 }
 
-void EmuX86_IOWrite(xbaddr addr, uint32_t value, int size)
+void EmuX86_IOWrite(xbox::addr addr, uint32_t value, int size)
 {
 	// Pass the IO Write to the PCI Bus, this will handle devices with BARs set to IO addresses
 	if (g_PCIBus->IOWrite(addr, value, size)) {
@@ -110,7 +110,7 @@ void EmuX86_IOWrite(xbaddr addr, uint32_t value, int size)
 // to prevent recursive exceptions when accessing unallocated memory.
 //
 
-uint32_t EmuX86_Mem_Read(xbaddr addr, int size)
+uint32_t EmuX86_Mem_Read(xbox::addr addr, int size)
 {
 	switch (size) {
 	case sizeof(uint32_t) :
@@ -126,7 +126,7 @@ uint32_t EmuX86_Mem_Read(xbaddr addr, int size)
 	}
 }
 
-void EmuX86_Mem_Write(xbaddr addr, uint32_t value, int size)
+void EmuX86_Mem_Write(xbox::addr addr, uint32_t value, int size)
 {
 	switch (size) {
 	case sizeof(uint32_t) :
@@ -145,7 +145,7 @@ void EmuX86_Mem_Write(xbaddr addr, uint32_t value, int size)
 	}
 }
 
-uint32_t EmuFlash_Read32(xbaddr addr) // TODO : Move to EmuFlash.cpp
+uint32_t EmuFlash_Read32(xbox::addr addr) // TODO : Move to EmuFlash.cpp
 {
 	uint32_t r;
 
@@ -166,7 +166,7 @@ uint32_t EmuFlash_Read32(xbaddr addr) // TODO : Move to EmuFlash.cpp
 // Read & write handlers for memory-mapped hardware devices
 //
 
-uint32_t EmuX86_Read(xbaddr addr, int size)
+uint32_t EmuX86_Read(xbox::addr addr, int size)
 {
 	if ((addr & (size - 1)) != 0) {
 		EmuLog(LOG_LEVEL::WARNING, "EmuX86_Read(0x%08X, %d) [Unaligned unimplemented]", addr, size);
@@ -198,7 +198,7 @@ uint32_t EmuX86_Read(xbaddr addr, int size)
 	return 0;
 }
 
-void EmuX86_Write(xbaddr addr, uint32_t value, int size)
+void EmuX86_Write(xbox::addr addr, uint32_t value, int size)
 {
 	if ((addr & (size - 1)) != 0) {
 		EmuLog(LOG_LEVEL::WARNING, "EmuX86_Write(0x%08X, 0x%08X, %d) [Unaligned unimplemented]", addr, value, size);
@@ -425,7 +425,7 @@ uint32_t EmuX86_Distorm_read_disp(const _DInst& info)
 }
 
 typedef struct {
-	xbaddr addr = 0;
+	xbox::addr addr = 0;
 	bool is_internal_addr = false; // If set, addr points to a CPU context (or Distorm immedate value) member (instead of Xbox memory)
 	int size = 0; // Expressed in bytes, not bits!
 } OperandAddress;
@@ -446,7 +446,7 @@ bool EmuX86_Operand_Addr_ForReadOnly(const LPEXCEPTION_POINTERS e, const _DInst&
 		assert(opAddr.size == EmuX86_DistormRegSize(info.ops[operand].index));
 
 		opAddr.is_internal_addr = true;
-		opAddr.addr = (xbaddr)EmuX86_GetRegisterPointer(e, info.ops[operand].index);
+		opAddr.addr = (xbox::addr)EmuX86_GetRegisterPointer(e, info.ops[operand].index);
 		return true;
 	}
 	case O_IMM: // instruction.imm.
@@ -454,7 +454,7 @@ bool EmuX86_Operand_Addr_ForReadOnly(const LPEXCEPTION_POINTERS e, const _DInst&
 		assert(opAddr.size == sizeof(uint8_t) || opAddr.size == sizeof(uint16_t) || opAddr.size == sizeof(uint32_t));
 
 		opAddr.is_internal_addr = true;
-		opAddr.addr = (xbaddr)(&info.imm);
+		opAddr.addr = (xbox::addr)(&info.imm);
 		return true;
 	}
 	case O_IMM1: // instruction.imm.ex.i1.
@@ -462,7 +462,7 @@ bool EmuX86_Operand_Addr_ForReadOnly(const LPEXCEPTION_POINTERS e, const _DInst&
 		assert(opAddr.size == sizeof(uint8_t) || opAddr.size == sizeof(uint16_t) || opAddr.size == sizeof(uint32_t));
 
 		opAddr.is_internal_addr = true;
-		opAddr.addr = (xbaddr)(&info.imm.ex.i1);
+		opAddr.addr = (xbox::addr)(&info.imm.ex.i1);
 		return true;
 	}
 	case O_IMM2: // instruction.imm.ex.i2.
@@ -470,7 +470,7 @@ bool EmuX86_Operand_Addr_ForReadOnly(const LPEXCEPTION_POINTERS e, const _DInst&
 		assert(opAddr.size == sizeof(uint8_t) || opAddr.size == sizeof(uint16_t) || opAddr.size == sizeof(uint32_t));
 
 		opAddr.is_internal_addr = true;
-		opAddr.addr = (xbaddr)(&info.imm.ex.i2);
+		opAddr.addr = (xbox::addr)(&info.imm.ex.i2);
 		return true;
 	}
 	case O_DISP: // memory dereference with displacement only, instruction.disp.
@@ -513,7 +513,7 @@ bool EmuX86_Operand_Addr_ForReadOnly(const LPEXCEPTION_POINTERS e, const _DInst&
 		assert(opAddr.size == sizeof(uint8_t) || opAddr.size == sizeof(uint32_t));
 
 		opAddr.is_internal_addr = false;
-		opAddr.addr = (xbaddr)e->ContextRecord->Eip + (xbaddr)INSTRUCTION_GET_TARGET(&info);
+		opAddr.addr = (xbox::addr)e->ContextRecord->Eip + (xbox::addr)INSTRUCTION_GET_TARGET(&info);
 		return true;
 	}
 	case O_PTR: // the absolute target address of a far branch instruction(instruction.imm.ptr.seg / off).
@@ -521,7 +521,7 @@ bool EmuX86_Operand_Addr_ForReadOnly(const LPEXCEPTION_POINTERS e, const _DInst&
 		assert(opAddr.size == 0);
 
 		opAddr.is_internal_addr = false;
-		opAddr.addr = (xbaddr)info.imm.ptr.off; // TODO : Needs test-case. What about info.imm.ptr.seg ?
+		opAddr.addr = (xbox::addr)info.imm.ptr.off; // TODO : Needs test-case. What about info.imm.ptr.seg ?
 		return true;
 	}
 	default:
@@ -2784,7 +2784,7 @@ void EmuX86_DistormLogInstruction(const uint8_t *Eip, _DInst &info, LOG_LEVEL lo
 	std::stringstream output;
 
 	output << "Disassembly : "
-		<< std::setfill('0') << std::setw(8) << std::right << std::hex << std::uppercase << (xbaddr)Eip;
+		<< std::setfill('0') << std::setw(8) << std::right << std::hex << std::uppercase << (xbox::addr)Eip;
 	for (int b = 0; b < MAX(7, info.size); b++) {
 		if (b < info.size)
 			//output << " " << std::setfill('0') << std::setw(2) << std::right << std::hex << ((uint8_t)0+Eip[b]); // add 2 hex nibbles, not chars
@@ -2871,7 +2871,7 @@ void EmuX86_DistormLogInstruction(const uint8_t *Eip, _DInst &info, LOG_LEVEL lo
 			output << "]";
 			break;
 		case O_PC:
-			output_value(output, 8, (xbaddr)Eip + (xbaddr)INSTRUCTION_GET_TARGET(&info));
+			output_value(output, 8, (xbox::addr)Eip + (xbox::addr)INSTRUCTION_GET_TARGET(&info));
 			break;
 		case O_PTR: // TODO : Needs test-case
 			output << "+" << std::setfill('0') << info.imm.ptr.seg << "/";

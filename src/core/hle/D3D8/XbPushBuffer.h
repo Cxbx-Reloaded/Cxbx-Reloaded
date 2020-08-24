@@ -35,8 +35,8 @@ extern void CxbxDrawPrimitiveUP(CxbxDrawContext &DrawContext);
 
 extern void EmuExecutePushBuffer
 (
-	XTL::X_D3DPushBuffer       *pPushBuffer,
-	XTL::X_D3DFixup            *pFixup
+	xbox::X_D3DPushBuffer       *pPushBuffer,
+	xbox::X_D3DFixup            *pFixup
 );
 
 extern void EmuExecutePushBufferRaw

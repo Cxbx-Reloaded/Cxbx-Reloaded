@@ -27,7 +27,7 @@
 #include "core\kernel\support\Emu.h"
 #include "core\hle\XAPI\Xapi.h" // For EMUPATCH
 
-namespace XTL {
+namespace xbox {
 
 // ******************************************************************
 // * patch: WSAStartup
@@ -123,6 +123,6 @@ int WINAPI EMUPATCH(ioctlsocket)
     u_long FAR *argp
 );
 
-} // end of namespace XTL
+} // end of namespace xbox
 
 #endif

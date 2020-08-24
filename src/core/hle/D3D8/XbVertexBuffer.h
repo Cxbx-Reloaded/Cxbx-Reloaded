@@ -34,7 +34,7 @@
 
 typedef struct _CxbxDrawContext
 {
-    IN     XTL::X_D3DPRIMITIVETYPE    XboxPrimitiveType;
+    IN     xbox::X_D3DPRIMITIVETYPE    XboxPrimitiveType;
     IN     DWORD                 dwVertexCount;
     IN     DWORD                 dwStartVertex; // Only D3DDevice_DrawVertices sets this (potentially higher than default 0)
 	IN	   PWORD				 pXboxIndexData; // Set by D3DDevice_DrawIndexedVertices, D3DDevice_DrawIndexedVerticesUP and HLE_draw_inline_elements
@@ -58,8 +58,8 @@ public:
     ~CxbxPatchedStream();
     void Activate(CxbxDrawContext *pDrawContext, UINT uiStream) const;
     bool                    isValid = false;
-    XTL::X_D3DPRIMITIVETYPE XboxPrimitiveType = XTL::X_D3DPT_NONE;
-    PVOID                   pCachedXboxVertexData = xbnullptr;
+    xbox::X_D3DPRIMITIVETYPE XboxPrimitiveType = xbox::X_D3DPT_NONE;
+    PVOID                   pCachedXboxVertexData = xbox::zeroptr;
     UINT                    uiCachedXboxVertexDataSize = 0;
     uint64_t                uiVertexDataHash = 0;
     uint64_t                uiVertexStreamInformationHash = 0;
@@ -100,7 +100,7 @@ class CxbxVertexBufferConverter
 };
 
 // inline vertex buffer emulation
-extern XTL::X_D3DPRIMITIVETYPE      g_InlineVertexBuffer_PrimitiveType;
+extern xbox::X_D3DPRIMITIVETYPE      g_InlineVertexBuffer_PrimitiveType;
 extern DWORD                   g_InlineVertexBuffer_FVF;
 
 extern struct _D3DIVB

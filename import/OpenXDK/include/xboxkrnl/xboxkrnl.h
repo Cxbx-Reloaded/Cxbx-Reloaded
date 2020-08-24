@@ -12,7 +12,9 @@
 #ifndef XBOXKRNL_H
 #define XBOXKRNL_H
 
-namespace xboxkrnl
+#include "xbox_types.h"
+
+namespace xbox
 {
 
 // ******************************************************************
@@ -58,72 +60,6 @@ namespace xboxkrnl
 // ******************************************************************
 #undef VOLATILE
 #define VOLATILE            volatile
-
-// ******************************************************************
-// * VOID
-// ******************************************************************
-#ifndef VOID
-	typedef void                VOID;
-#endif
-
-// ******************************************************************
-// * Basic types
-// ******************************************************************
-typedef char                CHAR, CCHAR;
-typedef short               SHORT, CSHORT;
-typedef long                LONG;
-typedef unsigned char       UCHAR;
-typedef unsigned char       BYTE;
-typedef unsigned char       BOOLEAN;
-typedef unsigned short      USHORT;
-typedef unsigned short      WORD;
-typedef unsigned long       ULONG;
-typedef unsigned long       DWORD;
-typedef unsigned long       SIZE_T, *PSIZE_T;
-typedef unsigned long       ACCESS_MASK, *PACCESS_MASK;
-typedef unsigned long       PHYSICAL_ADDRESS;
-typedef int                 INT;
-typedef long                INT_PTR;
-typedef signed __int64      LONGLONG;
-typedef unsigned __int64    ULONGLONG;
-typedef wchar_t             WCHAR;
-typedef unsigned __int64    QUAD; // 8 byte aligned 8 byte long
-
-// ******************************************************************
-// * Pointer types
-// ******************************************************************
-typedef CHAR               *PCHAR;
-typedef char               *PSZ;
-typedef CHAR               *PCSZ;
-typedef BYTE               *PBYTE;
-typedef BOOLEAN            *PBOOLEAN;
-typedef UCHAR              *PUCHAR;
-typedef USHORT             *PUSHORT;
-typedef ULONG              *PULONG;
-typedef DWORD              *PDWORD, *LPDWORD;
-typedef ACCESS_MASK        *PACCESS_MASK;
-typedef LONG               *PLONG;
-typedef long               *PINT_PTR;
-typedef VOID               *PVOID, *LPVOID;
-typedef void               *HANDLE;
-typedef HANDLE             *PHANDLE;
-
-// Additional basic and pointer types :
-typedef __int32				LONG_PTR; // TODO : Update this declaration for 64 bit
-typedef unsigned __int32	ULONG_PTR; // TODO : Update this declaration for 64 bit
-
-typedef LONGLONG            *PLONGLONG;
-typedef QUAD                *PQUAD;
-
-// ******************************************************************
-// ANSI (Multi-byte Character) types
-// ******************************************************************
-typedef CHAR *PCHAR, *LPCH, *PCH;
-typedef CONST CHAR *LPCCH, *PCCH;
-typedef WCHAR *LPWSTR, *PWSTR;
-
-typedef /*_Null_terminated_*/ CONST WCHAR *LPCWSTR, *PCWSTR;
-
 
 // ******************************************************************
 // * LPSECURITY_ATTRIBUTES

@@ -29,7 +29,7 @@
 #include <array>
 #include "core\hle\D3D8\XbD3D8Types.h"
 
-#define CXBX_D3DRS_UNSUPPORTED (XTL::X_D3DRS_LAST + 1)
+#define CXBX_D3DRS_UNSUPPORTED (xbox::X_D3DRS_LAST + 1)
 
 class XboxRenderStateConverter;
 
@@ -44,6 +44,6 @@ private:
     DWORD GetHostTextureOpValue(DWORD XboxTextureOp);
 
     uint32_t* D3D__TextureState = nullptr;
-    std::array<int, XTL::X_D3DTSS_LAST + 1> XboxTextureStateOffsets;
+    std::array<int, xbox::X_D3DTSS_LAST + 1> XboxTextureStateOffsets;
     XboxRenderStateConverter* pXboxRenderStates;
 };

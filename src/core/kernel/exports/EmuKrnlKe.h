@@ -25,7 +25,7 @@
 
 #pragma once
 
-namespace xboxkrnl
+namespace xbox
 {
 	VOID NTAPI KeSetSystemTime
 	(

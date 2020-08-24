@@ -88,7 +88,7 @@ std::string FormatTitleId(uint32_t title_id)
 	return ss.str();
 }
 
-std::string EIPToString(xbaddr EIP)
+std::string EIPToString(xbox::addr EIP)
 {
 	char buffer[256];
 	
@@ -207,7 +207,7 @@ void EmuExceptionNonBreakpointUnhandledShow(LPEXCEPTION_POINTERS e)
 }
 
 // Returns weither the given address is part of an Xbox managed memory region
-bool IsXboxCodeAddress(xbaddr addr)
+bool IsXboxCodeAddress(xbox::addr addr)
 {
 	// TODO : Replace the following with a (fast) check weither
 	// the given address lies in xbox allocated virtual memory,
@@ -241,7 +241,7 @@ void genericException(EXCEPTION_POINTERS *e) {
 	}
 }
 
-bool IsRdtscInstruction(xbaddr addr); // Implemented in CxbxKrnl.cpp
+bool IsRdtscInstruction(xbox::addr addr); // Implemented in CxbxKrnl.cpp
 void EmuX86_Opcode_RDTSC(EXCEPTION_POINTERS *e); // Implemented in EmuX86.cpp
 bool lleTryHandleException(EXCEPTION_POINTERS *e)
 {
@@ -323,7 +323,7 @@ bool EmuTryHandleException(EXCEPTION_POINTERS *e)
 				switch (e->ContextRecord->Eax) {
 					case 1: // DEBUG_PRINT
 						// In this case, ECX should point to an ANSI String
-						printf("DEBUG_PRINT: %s\n", ((xboxkrnl::PANSI_STRING)e->ContextRecord->Ecx)->Buffer);
+						printf("DEBUG_PRINT: %s\n", ((xbox::PANSI_STRING)e->ContextRecord->Ecx)->Buffer);
 						break;
 					default:
 						printf("Unhandled Debug Command: int 2Dh, EAX = %d", e->ContextRecord->Eip);
@@ -497,7 +497,7 @@ void EmuPrintStackTrace(PCONTEXT ContextRecord)
 			// Try getting a symbol name from the HLE cache :
 			int symbolOffset = 0;
 
-			symbolName = GetDetectedSymbolName((xbaddr)frame.AddrPC.Offset, &symbolOffset);
+			symbolName = GetDetectedSymbolName((xbox::addr)frame.AddrPC.Offset, &symbolOffset);
 			if (symbolOffset < 1000)
 				dwDisplacement = (DWORD64)symbolOffset;
 			else

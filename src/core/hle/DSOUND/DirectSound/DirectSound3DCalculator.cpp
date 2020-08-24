@@ -49,7 +49,7 @@
 // ******************************************************************
 // * patch:  CDirectSound3DCalculator_Calculate3D
 // ******************************************************************
-VOID WINAPI XTL::EMUPATCH(CDirectSound3DCalculator_Calculate3D)
+VOID WINAPI xbox::EMUPATCH(CDirectSound3DCalculator_Calculate3D)
 (
     DWORD a1,
     DWORD a2
@@ -68,7 +68,7 @@ VOID WINAPI XTL::EMUPATCH(CDirectSound3DCalculator_Calculate3D)
 // ******************************************************************
 // * patch:  CDirectSound3DCalculator_GetVoiceData
 // ******************************************************************
-VOID WINAPI XTL::EMUPATCH(CDirectSound3DCalculator_GetVoiceData)
+VOID WINAPI xbox::EMUPATCH(CDirectSound3DCalculator_GetVoiceData)
 (
     DWORD a1,
     DWORD a2,

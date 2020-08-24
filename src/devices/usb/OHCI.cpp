@@ -309,7 +309,7 @@ void OHCI::OHCI_FrameBoundaryWorker()
 	if (m_OldHcControl & (~m_Registers.HcControl) & (OHCI_CTL_BLE | OHCI_CTL_CLE)) {
 		if (m_AsyncTD) {
 			m_UsbDevice->USB_CancelPacket(&m_UsbPacket);
-			m_AsyncTD = xbnull;
+			m_AsyncTD = xbox::zero;
 		}
 		OHCI_StopEndpoints();
 	}
@@ -380,46 +380,46 @@ void OHCI::OHCI_FatalError()
 	EmuLog(LOG_LEVEL::ERROR2, "An unrecoverable error has occoured!\n");
 }
 
-bool OHCI::OHCI_ReadHCCA(xbaddr Paddr, OHCI_HCCA* Hcca)
+bool OHCI::OHCI_ReadHCCA(xbox::addr Paddr, OHCI_HCCA* Hcca)
 {
 	return Memory_R(reinterpret_cast<void*>(Paddr), Hcca, sizeof(OHCI_HCCA));
 }
 
-bool OHCI::OHCI_WriteHCCA(xbaddr Paddr, OHCI_HCCA* Hcca)
+bool OHCI::OHCI_WriteHCCA(xbox::addr Paddr, OHCI_HCCA* Hcca)
 {
 	// We need to calculate the offset of the HccaFrameNumber member to avoid overwriting HccaInterrruptTable
 	size_t OffsetOfFrameNumber = offsetof(OHCI_HCCA, HccaFrameNumber);
 	return Memory_W(reinterpret_cast<void*>(Paddr + OffsetOfFrameNumber), reinterpret_cast<uint8_t*>(Hcca) + OffsetOfFrameNumber, 8);
 }
 
-bool OHCI::OHCI_ReadED(xbaddr Paddr, OHCI_ED* Ed)
+bool OHCI::OHCI_ReadED(xbox::addr Paddr, OHCI_ED* Ed)
 {
 	return GetDwords(Paddr, reinterpret_cast<uint32_t*>(Ed), sizeof(*Ed) >> 2); // ED is 16 bytes large
 }
 
-bool OHCI::OHCI_WriteED(xbaddr Paddr, OHCI_ED* Ed)
+bool OHCI::OHCI_WriteED(xbox::addr Paddr, OHCI_ED* Ed)
 {
 	// According to the standard, only the HeadP field is writable by the HC, so we'll write just that
 	size_t OffsetOfHeadP = offsetof(OHCI_ED, HeadP);
 	return WriteDwords(Paddr + OffsetOfHeadP, reinterpret_cast<uint32_t*>(reinterpret_cast<uint8_t*>(Ed) + OffsetOfHeadP), 1);
 }
 
-bool OHCI::OHCI_ReadTD(xbaddr Paddr, OHCI_TD* Td)
+bool OHCI::OHCI_ReadTD(xbox::addr Paddr, OHCI_TD* Td)
 {
 	return GetDwords(Paddr, reinterpret_cast<uint32_t*>(Td), sizeof(*Td) >> 2); // TD is 16 bytes large
 }
 
-bool OHCI::OHCI_WriteTD(xbaddr Paddr, OHCI_TD* Td)
+bool OHCI::OHCI_WriteTD(xbox::addr Paddr, OHCI_TD* Td)
 {
 	return WriteDwords(Paddr, reinterpret_cast<uint32_t*>(Td), sizeof(*Td) >> 2);
 }
 
-bool OHCI::OHCI_ReadIsoTD(xbaddr Paddr, OHCI_ISO_TD* td)
+bool OHCI::OHCI_ReadIsoTD(xbox::addr Paddr, OHCI_ISO_TD* td)
 {
 	return GetDwords(Paddr, reinterpret_cast<uint32_t*>(td), 4) || GetWords(Paddr + 16, td->Offset, 8);
 }
 
-bool OHCI::OHCI_WriteIsoTD(xbaddr Paddr, OHCI_ISO_TD* td)
+bool OHCI::OHCI_WriteIsoTD(xbox::addr Paddr, OHCI_ISO_TD* td)
 {
 	return WriteDwords(Paddr, reinterpret_cast<uint32_t*>(td), 4) || WriteWords(Paddr + 16, td->Offset, 8);
 }
@@ -480,16 +480,16 @@ bool OHCI::OHCI_CopyIsoTDBuffer(uint32_t start_addr, uint32_t end_addr, uint8_t*
 	return false;
 }
 
-int OHCI::OHCI_ServiceEDlist(xbaddr Head, int Completion)
+int OHCI::OHCI_ServiceEDlist(xbox::addr Head, int Completion)
 {
 	OHCI_ED ed;
-	xbaddr next_ed;
-	xbaddr current;
+	xbox::addr next_ed;
+	xbox::addr current;
 	int active;
 
 	active = 0;
 
-	if (Head == xbnull) {
+	if (Head == xbox::zero) {
 		// no ED here, nothing to do
 		return 0;
 	}
@@ -507,10 +507,10 @@ int OHCI::OHCI_ServiceEDlist(xbaddr Head, int Completion)
 
 		if ((ed.HeadP & OHCI_ED_H) || (ed.Flags & OHCI_ED_K)) { // halted or skip
 			// Cancel pending packets for ED that have been paused
-			xbaddr addr = ed.HeadP & OHCI_DPTR_MASK;
+			xbox::addr addr = ed.HeadP & OHCI_DPTR_MASK;
 			if (m_AsyncTD && addr == m_AsyncTD) {
 				m_UsbDevice->USB_CancelPacket(&m_UsbPacket);
-				m_AsyncTD = xbnull;
+				m_AsyncTD = xbox::zero;
 				m_UsbDevice->USB_DeviceEPstopped(m_UsbPacket.Endpoint->Dev, m_UsbPacket.Endpoint);
 			}
 			continue;
@@ -566,7 +566,7 @@ int OHCI::OHCI_ServiceTD(OHCI_ED* Ed)
 	XboxDeviceState* dev;
 	USBEndpoint* ep;
 	OHCI_TD td;
-	xbaddr addr;
+	xbox::addr addr;
 	int flag_r;
 	int completion;
 
@@ -866,7 +866,7 @@ void OHCI::OHCI_StateReset()
 	}
 	if (m_AsyncTD) {
 		m_UsbDevice->USB_CancelPacket(&m_UsbPacket);
-		m_AsyncTD = xbnull;
+		m_AsyncTD = xbox::zero;
 	}
 
 	OHCI_StopEndpoints();
@@ -951,7 +951,7 @@ void OHCI::OHCI_PacketInit(USBPacket* packet)
 	vec->Size = 0;
 }
 
-uint32_t OHCI::OHCI_ReadRegister(xbaddr Addr)
+uint32_t OHCI::OHCI_ReadRegister(xbox::addr Addr)
 {
 	uint32_t ret = 0xFFFFFFFF;
 
@@ -1092,7 +1092,7 @@ uint32_t OHCI::OHCI_ReadRegister(xbaddr Addr)
 	}
 }
 
-void OHCI::OHCI_WriteRegister(xbaddr Addr, uint32_t Value)
+void OHCI::OHCI_WriteRegister(xbox::addr Addr, uint32_t Value)
 {
 	if (Addr & 3) {
 		// The standard allows only aligned writes to the registers
@@ -1533,7 +1533,7 @@ void OHCI::OHCI_AsyncCancelDevice(XboxDeviceState* dev)
 		m_UsbDevice->USB_IsPacketInflight(&m_UsbPacket) &&
 		m_UsbPacket.Endpoint->Dev == dev) {
 		m_UsbDevice->USB_CancelPacket(&m_UsbPacket);
-		m_AsyncTD = xbnull;
+		m_AsyncTD = xbox::zero;
 	}
 }
 

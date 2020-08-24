@@ -5,7 +5,7 @@
 #include <xboxkrnl/xboxkrnl.h> //#include <stdtypes.h>
 #include "buffered_io.h"
 
-namespace xboxkrnl
+namespace xbox
 {
 
 PBYTE GetSectorBuffered(

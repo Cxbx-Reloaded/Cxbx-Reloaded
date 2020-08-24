@@ -621,7 +621,7 @@ const char *PSH_ARGUMENT_TYPE_Str[/*PSH_ARGUMENT_TYPE*/] = {
     "oC",      //
 };
 
-constexpr int XFC_COMBINERSTAGENR = XTL::X_PSH_COMBINECOUNT; // Always call XFC 'stage 9', 1 after the 8th combiner
+constexpr int XFC_COMBINERSTAGENR = xbox::X_PSH_COMBINECOUNT; // Always call XFC 'stage 9', 1 after the 8th combiner
 
 constexpr int PSH_XBOX_MAX_C_REGISTER_COUNT = 16;
 constexpr int PSH_XBOX_MAX_R_REGISTER_COUNT = 2;
@@ -789,7 +789,7 @@ enum
 };
 
 typedef struct _PSH_RECOMPILED_SHADER {
-    XTL::X_D3DPIXELSHADERDEF PSDef;
+    xbox::X_D3DPIXELSHADERDEF PSDef;
     std::string NewShaderStr;
     DWORD ConvertedHandle;
     bool ConstInUse[PSH_XBOX_CONSTANT_MAX];
@@ -861,19 +861,19 @@ struct PSH_XBOX_SHADER {
 	int PSH_PC_MAX_REGISTER_COUNT;
 
 	// Reserve enough slots for all shaders, so we need space for 2 constants, 5 lines per texture addressing codes and 10 lines per opcode : :
-	PSH_INTERMEDIATE_FORMAT Intermediate[2 + (XTL::X_D3DTS_STAGECOUNT * 5) + (XTL::X_PSH_COMBINECOUNT * 10) + 1];
+	PSH_INTERMEDIATE_FORMAT Intermediate[2 + (xbox::X_D3DTS_STAGECOUNT * 5) + (xbox::X_PSH_COMBINECOUNT * 10) + 1];
 	int IntermediateCount;
 
-	PS_TEXTUREMODES PSTextureModes[XTL::X_D3DTS_STAGECOUNT];
-	PS_DOTMAPPING PSDotMapping[XTL::X_D3DTS_STAGECOUNT];
-	DWORD PSCompareMode[XTL::X_D3DTS_STAGECOUNT];
-	int PSInputTexture[XTL::X_D3DTS_STAGECOUNT];
+	PS_TEXTUREMODES PSTextureModes[xbox::X_D3DTS_STAGECOUNT];
+	PS_DOTMAPPING PSDotMapping[xbox::X_D3DTS_STAGECOUNT];
+	DWORD PSCompareMode[xbox::X_D3DTS_STAGECOUNT];
+	int PSInputTexture[xbox::X_D3DTS_STAGECOUNT];
 
 	PS_FINALCOMBINERSETTING FinalCombinerFlags;
 	// Note : The following constants are only needed for PSH_XBOX_SHADER::DecodedToString,
 	// they are not involved in the actual pixel shader recompilation anymore :
 	RPSFinalCombiner FinalCombiner;
-	RPSCombinerStage Combiners[XTL::X_PSH_COMBINECOUNT];
+	RPSCombinerStage Combiners[xbox::X_PSH_COMBINECOUNT];
 	int NumberOfCombiners;
 	DWORD CombinerCountFlags; // For PS_COMBINERCOUNTFLAGS
 	// Read from CombinerCountFlags :
@@ -893,23 +893,23 @@ struct PSH_XBOX_SHADER {
 	void InsertIntermediate(PPSH_INTERMEDIATE_FORMAT pIntermediate, int Index);
 	void DeleteIntermediate(int Index);
 	void DeleteLastIntermediate();
-	std::string static OriginalToString(XTL::X_D3DPIXELSHADERDEF *pPSDef);
-	void Decode(XTL::X_D3DPIXELSHADERDEF *pPSDef);
-	PSH_RECOMPILED_SHADER Convert(XTL::X_D3DPIXELSHADERDEF *pPSDef);
-	std::string DecodedToString(XTL::X_D3DPIXELSHADERDEF *pPSDef);
+	std::string static OriginalToString(xbox::X_D3DPIXELSHADERDEF *pPSDef);
+	void Decode(xbox::X_D3DPIXELSHADERDEF *pPSDef);
+	PSH_RECOMPILED_SHADER Convert(xbox::X_D3DPIXELSHADERDEF *pPSDef);
+	std::string DecodedToString(xbox::X_D3DPIXELSHADERDEF *pPSDef);
 	bool _NextIs2D(int Stage);
-	bool DecodeTextureModes(XTL::X_D3DPIXELSHADERDEF *pPSDef);
+	bool DecodeTextureModes(xbox::X_D3DPIXELSHADERDEF *pPSDef);
     int GetTextureStageModifiers(int Stage);
     void InsertTex3x2Instructions(int Stage, int inputStage, std::vector<PSH_INTERMEDIATE_FORMAT>& InsertIns);
     void InsertTex3x3Instructions(int Stage, int inputStage, std::vector<PSH_INTERMEDIATE_FORMAT>& InsertIns);
-    bool InsertTextureModeInstruction(XTL::X_D3DPIXELSHADERDEF *pPSDef, int Stage, PSH_OPCODE opcode, std::vector<PSH_INTERMEDIATE_FORMAT>& InsertIns, int& InsertPos);
+    bool InsertTextureModeInstruction(xbox::X_D3DPIXELSHADERDEF *pPSDef, int Stage, PSH_OPCODE opcode, std::vector<PSH_INTERMEDIATE_FORMAT>& InsertIns, int& InsertPos);
 	bool MoveRemovableParametersRight();
-	void ConvertXboxOpcodesToNative(XTL::X_D3DPIXELSHADERDEF *pPSDef);
+	void ConvertXboxOpcodesToNative(xbox::X_D3DPIXELSHADERDEF *pPSDef);
 	void _SetColor(/*var OUT*/PSH_INTERMEDIATE_FORMAT &NewIns, D3DCOLOR ConstColor);
     void _SetColor(/*var OUT*/PSH_INTERMEDIATE_FORMAT &NewIns, D3DCOLORVALUE ConstColor);
     int _MapConstant(int ConstNr, bool *NativeConstInUse);
 	int _HandleConst(int XboxConst, /*var OUT*/PSH_RECOMPILED_SHADER *Recompiled, bool *NativeConstInUse, bool *EmittedNewConstant);
-	bool ConvertConstantsToNative(XTL::X_D3DPIXELSHADERDEF *pPSDef, /*var OUT*/PSH_RECOMPILED_SHADER *Recompiled);
+	bool ConvertConstantsToNative(xbox::X_D3DPIXELSHADERDEF *pPSDef, /*var OUT*/PSH_RECOMPILED_SHADER *Recompiled);
 	bool RemoveUselessWrites();
     int MaxRegisterCount(PSH_ARGUMENT_TYPE aRegType);
     bool IsValidNativeOutputRegister(PSH_ARGUMENT_TYPE aRegType, int index = -1);
@@ -955,10 +955,10 @@ struct PSH_XBOX_SHADER {
 	bool FixOverusedRegisters();
     bool FinalizeShader();
 
-    static void GetPSTextureModes(XTL::X_D3DPIXELSHADERDEF* pPSDef, PS_TEXTUREMODES psTextureModes[XTL::X_D3DTS_STAGECOUNT]);
-    static void GetPSDotMapping(XTL::X_D3DPIXELSHADERDEF* pPSDef, PS_DOTMAPPING psDotMapping[XTL::X_D3DTS_STAGECOUNT]);
-    static void GetPSCompareModes(XTL::X_D3DPIXELSHADERDEF* pPSDef, DWORD psCompareModes[XTL::X_D3DTS_STAGECOUNT]);
-    static void GetPSInputTexture(XTL::X_D3DPIXELSHADERDEF* pPSDef, int psInputTexture[XTL::X_D3DTS_STAGECOUNT]);
+    static void GetPSTextureModes(xbox::X_D3DPIXELSHADERDEF* pPSDef, PS_TEXTUREMODES psTextureModes[xbox::X_D3DTS_STAGECOUNT]);
+    static void GetPSDotMapping(xbox::X_D3DPIXELSHADERDEF* pPSDef, PS_DOTMAPPING psDotMapping[xbox::X_D3DTS_STAGECOUNT]);
+    static void GetPSCompareModes(xbox::X_D3DPIXELSHADERDEF* pPSDef, DWORD psCompareModes[xbox::X_D3DTS_STAGECOUNT]);
+    static void GetPSInputTexture(xbox::X_D3DPIXELSHADERDEF* pPSDef, int psInputTexture[xbox::X_D3DTS_STAGECOUNT]);
 };
 
 /*
@@ -2282,7 +2282,7 @@ void PSH_XBOX_SHADER::DeleteLastIntermediate()
     DeleteIntermediate(IntermediateCount - 1);
 }
 
-std::string PSH_XBOX_SHADER::OriginalToString(XTL::X_D3DPIXELSHADERDEF *pPSDef) // static
+std::string PSH_XBOX_SHADER::OriginalToString(xbox::X_D3DPIXELSHADERDEF *pPSDef) // static
 {
   char buffer[4096];
   return std::string(buffer, sprintf(buffer, "PSAphaInputs[8]              = 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X 0x%.08X\n"
@@ -2321,7 +2321,7 @@ std::string PSH_XBOX_SHADER::OriginalToString(XTL::X_D3DPIXELSHADERDEF *pPSDef) 
                   pPSDef->PSRGBOutputs[0], pPSDef->PSRGBOutputs[1], pPSDef->PSRGBOutputs[2], pPSDef->PSRGBOutputs[3],
                   pPSDef->PSRGBOutputs[4], pPSDef->PSRGBOutputs[5], pPSDef->PSRGBOutputs[6], pPSDef->PSRGBOutputs[7],
                   pPSDef->PSCombinerCount,
-                  XboxRenderStates.GetXboxRenderState(XTL::X_D3DRS_PSTEXTUREMODES), /* pPSDef->PSTextureModes is stored in a different place than pPSDef*/
+                  XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_PSTEXTUREMODES), /* pPSDef->PSTextureModes is stored in a different place than pPSDef*/
                   pPSDef->PSDotMapping,
                   pPSDef->PSInputTexture,
                   pPSDef->PSC0Mapping,
@@ -2329,15 +2329,15 @@ std::string PSH_XBOX_SHADER::OriginalToString(XTL::X_D3DPIXELSHADERDEF *pPSDef) 
                   pPSDef->PSFinalCombinerConstants));
 }
 
-void PSH_XBOX_SHADER::GetPSTextureModes(XTL::X_D3DPIXELSHADERDEF* pPSDef, PS_TEXTUREMODES psTextureModes[XTL::X_D3DTS_STAGECOUNT])
+void PSH_XBOX_SHADER::GetPSTextureModes(xbox::X_D3DPIXELSHADERDEF* pPSDef, PS_TEXTUREMODES psTextureModes[xbox::X_D3DTS_STAGECOUNT])
 {
-    for (int i = 0; i < XTL::X_D3DTS_STAGECOUNT; i++)
+    for (int i = 0; i < xbox::X_D3DTS_STAGECOUNT; i++)
     {
-        psTextureModes[i] = (PS_TEXTUREMODES)((XboxRenderStates.GetXboxRenderState(XTL::X_D3DRS_PSTEXTUREMODES) >> (i * 5)) & 0x1F);
+        psTextureModes[i] = (PS_TEXTUREMODES)((XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_PSTEXTUREMODES) >> (i * 5)) & 0x1F);
     }
 }
 
-void PSH_XBOX_SHADER::GetPSDotMapping(XTL::X_D3DPIXELSHADERDEF* pPSDef, PS_DOTMAPPING psDotMapping[XTL::X_D3DTS_STAGECOUNT])
+void PSH_XBOX_SHADER::GetPSDotMapping(xbox::X_D3DPIXELSHADERDEF* pPSDef, PS_DOTMAPPING psDotMapping[xbox::X_D3DTS_STAGECOUNT])
 {
     psDotMapping[0] = (PS_DOTMAPPING)(0);
     psDotMapping[1] = (PS_DOTMAPPING)((pPSDef->PSDotMapping >> 0) & 0x7);
@@ -2345,15 +2345,15 @@ void PSH_XBOX_SHADER::GetPSDotMapping(XTL::X_D3DPIXELSHADERDEF* pPSDef, PS_DOTMA
     psDotMapping[3] = (PS_DOTMAPPING)((pPSDef->PSDotMapping >> 8) & 0x7);
 }
 
-void PSH_XBOX_SHADER::GetPSCompareModes(XTL::X_D3DPIXELSHADERDEF* pPSDef, DWORD psCompareModes[XTL::X_D3DTS_STAGECOUNT])
+void PSH_XBOX_SHADER::GetPSCompareModes(xbox::X_D3DPIXELSHADERDEF* pPSDef, DWORD psCompareModes[xbox::X_D3DTS_STAGECOUNT])
 {
-    for (int i = 0; i < XTL::X_D3DTS_STAGECOUNT; i++)
+    for (int i = 0; i < xbox::X_D3DTS_STAGECOUNT; i++)
     {
         psCompareModes[i] = (pPSDef->PSCompareMode >> (i * 4)) & 0xF;
     }
 }
 
-void PSH_XBOX_SHADER::GetPSInputTexture(XTL::X_D3DPIXELSHADERDEF* pPSDef, int psInputTexture[XTL::X_D3DTS_STAGECOUNT])
+void PSH_XBOX_SHADER::GetPSInputTexture(xbox::X_D3DPIXELSHADERDEF* pPSDef, int psInputTexture[xbox::X_D3DTS_STAGECOUNT])
 {
     psInputTexture[0] = -1; // Stage 0 has no predecessors
     psInputTexture[1] = 0; // Stage 1 can only use stage 0
@@ -2361,7 +2361,7 @@ void PSH_XBOX_SHADER::GetPSInputTexture(XTL::X_D3DPIXELSHADERDEF* pPSDef, int ps
     psInputTexture[3] = (pPSDef->PSInputTexture >> 20) & 0x3; // Stage 3 can only use stage 0, 1 or 2
 }
 
-void PSH_XBOX_SHADER::Decode(XTL::X_D3DPIXELSHADERDEF *pPSDef)
+void PSH_XBOX_SHADER::Decode(xbox::X_D3DPIXELSHADERDEF *pPSDef)
 {
 	int i;
 
@@ -2384,7 +2384,7 @@ void PSH_XBOX_SHADER::Decode(XTL::X_D3DPIXELSHADERDEF *pPSDef)
 
 	// Backwards compatible decoding (purely for logging) :
 	{
-		for (i = 0; i < XTL::X_PSH_COMBINECOUNT; i++) {
+		for (i = 0; i < xbox::X_PSH_COMBINECOUNT; i++) {
 			Combiners[i].RGB.Decode(pPSDef->PSRGBInputs[i], pPSDef->PSRGBOutputs[i]);
 			Combiners[i].Alpha.Decode(pPSDef->PSAlphaInputs[i], pPSDef->PSAlphaOutputs[i], /*aIsAlpha=*/true);
 		}
@@ -2393,7 +2393,7 @@ void PSH_XBOX_SHADER::Decode(XTL::X_D3DPIXELSHADERDEF *pPSDef)
 	}
 }
 
-PSH_RECOMPILED_SHADER PSH_XBOX_SHADER::Convert(XTL::X_D3DPIXELSHADERDEF *pPSDef)
+PSH_RECOMPILED_SHADER PSH_XBOX_SHADER::Convert(xbox::X_D3DPIXELSHADERDEF *pPSDef)
 {
   int i;
   Recompiled = {};
@@ -2525,7 +2525,7 @@ PSH_RECOMPILED_SHADER PSH_XBOX_SHADER::Convert(XTL::X_D3DPIXELSHADERDEF *pPSDef)
   return Recompiled;
 }
 
-std::string PSH_XBOX_SHADER::DecodedToString(XTL::X_D3DPIXELSHADERDEF *pPSDef)
+std::string PSH_XBOX_SHADER::DecodedToString(xbox::X_D3DPIXELSHADERDEF *pPSDef)
 // print relevant contents to the debug console
 
   #define _AddStr1(aStr) \
@@ -2545,7 +2545,7 @@ std::string PSH_XBOX_SHADER::DecodedToString(XTL::X_D3DPIXELSHADERDEF *pPSDef)
   _AddStr1("\n-----PixelShader Definition Contents-----");
   _AddStr1(OriginalToString(pPSDef));
 
-  if (XboxRenderStates.GetXboxRenderState(XTL::X_D3DRS_PSTEXTUREMODES) > 0)
+  if (XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_PSTEXTUREMODES) > 0)
   {
     _AddStr1("\nPSTextureModes ->"); // Texture addressing modes
     _AddStr("Stage 0: %s", PS_TextureModesStr[PSTextureModes[0]]);
@@ -2673,13 +2673,13 @@ std::string PSH_XBOX_SHADER::DecodedToString(XTL::X_D3DPIXELSHADERDEF *pPSDef)
 
   bool PSH_XBOX_SHADER::_NextIs2D(int Stage)
   {
-    if (Stage < XTL::X_D3DTS_STAGECOUNT-1)
+    if (Stage < xbox::X_D3DTS_STAGECOUNT-1)
       return (PSTextureModes[Stage + 1] == PS_TEXTUREMODES_DOT_ST) || (PSTextureModes[Stage + 1] == PS_TEXTUREMODES_DOT_ZW);
     else
       return false;
   }
 
-bool PSH_XBOX_SHADER::DecodeTextureModes(XTL::X_D3DPIXELSHADERDEF *pPSDef)
+bool PSH_XBOX_SHADER::DecodeTextureModes(xbox::X_D3DPIXELSHADERDEF *pPSDef)
 {
   int InsertPos;
   PSH_INTERMEDIATE_FORMAT Ins = {};
@@ -2687,7 +2687,7 @@ bool PSH_XBOX_SHADER::DecodeTextureModes(XTL::X_D3DPIXELSHADERDEF *pPSDef)
   int Stage;
 
   InsertIns.reserve(32); // arbitrary allotment of instructions
-  InsertIns.resize(XTL::X_D3DTS_STAGECOUNT); // default initialized to PO_COMMENT instructions
+  InsertIns.resize(xbox::X_D3DTS_STAGECOUNT); // default initialized to PO_COMMENT instructions
 
   bool Result = false;
 
@@ -2697,7 +2697,7 @@ bool PSH_XBOX_SHADER::DecodeTextureModes(XTL::X_D3DPIXELSHADERDEF *pPSDef)
   } while (_OpcodeMustStayBeforeTextureMode(Intermediate[InsertPos].Opcode, InsertPos));
 
       Ins.Initialize(PO_DCL);
-	  for (Stage = 0; Stage < XTL::X_D3DTS_STAGECOUNT; Stage++)
+	  for (Stage = 0; Stage < xbox::X_D3DTS_STAGECOUNT; Stage++)
 	  {
 		if (PSTextureModes[Stage] != PS_TEXTUREMODES_NONE || Stage < PSH_XBOX_MAX_T_REGISTER_COUNT)
 		{
@@ -2764,7 +2764,7 @@ bool PSH_XBOX_SHADER::DecodeTextureModes(XTL::X_D3DPIXELSHADERDEF *pPSDef)
 
       Opcode = PO_TEXLD2;
 
-  for (Stage = 0; Stage < XTL::X_D3DTS_STAGECOUNT; Stage++)
+  for (Stage = 0; Stage < xbox::X_D3DTS_STAGECOUNT; Stage++)
   {
     // TODO : Apply conversions when PS_GLOBALFLAGS_TEXMODE_ADJUST is set (but ... how to check the texture type? read D3DRS_PSTEXTUREMODES?)
 
@@ -2813,7 +2813,7 @@ bool PSH_XBOX_SHADER::DecodeTextureModes(XTL::X_D3DPIXELSHADERDEF *pPSDef)
   {
       for (unsigned i = 0; i < InsertIns.size(); ++i)
       {
-          if (i >= XTL::X_D3DTS_STAGECOUNT || InsertIns[i].Opcode != PO_COMMENT)
+          if (i >= xbox::X_D3DTS_STAGECOUNT || InsertIns[i].Opcode != PO_COMMENT)
           {
               InsertIntermediate(&InsertIns[i], InsertPos);
               ++InsertPos;
@@ -2895,7 +2895,7 @@ void PSH_XBOX_SHADER::InsertTex3x3Instructions(int Stage, int inputStage, std::v
     InsertIns.emplace_back(Ins);
 }
 
-bool PSH_XBOX_SHADER::InsertTextureModeInstruction(XTL::X_D3DPIXELSHADERDEF *pPSDef, int Stage, PSH_OPCODE opcode, std::vector<PSH_INTERMEDIATE_FORMAT>& InsertIns, int& InsertPos)
+bool PSH_XBOX_SHADER::InsertTextureModeInstruction(xbox::X_D3DPIXELSHADERDEF *pPSDef, int Stage, PSH_OPCODE opcode, std::vector<PSH_INTERMEDIATE_FORMAT>& InsertIns, int& InsertPos)
 {
   PSH_INTERMEDIATE_FORMAT Ins = {};
 
@@ -2925,21 +2925,21 @@ bool PSH_XBOX_SHADER::InsertTextureModeInstruction(XTL::X_D3DPIXELSHADERDEF *pPS
 			auto biasModifier = (1 << ARGMOD_SCALE_BX2);
 			auto pXboxTexture = g_pXbox_SetTexture[inputStage];
 			if (pXboxTexture != nullptr) {
-				extern XTL::X_D3DFORMAT GetXboxPixelContainerFormat(const XTL::X_D3DPixelContainer *pXboxPixelContainer); // TODO : Move to XTL-independent header file
+				extern xbox::X_D3DFORMAT GetXboxPixelContainerFormat(const xbox::X_D3DPixelContainer *pXboxPixelContainer); // TODO : Move to XTL-independent header file
 
 				switch (GetXboxPixelContainerFormat(pXboxTexture)) {
-					case XTL::X_D3DFMT_L6V5U5: {
-						extern XTL::X_D3DRESOURCETYPE GetXboxD3DResourceType(const XTL::X_D3DResource *pXboxResource); // TODO : Move to XTL-independent header file
-						extern bool IsSupportedFormat(XTL::X_D3DFORMAT X_Format, XTL::X_D3DRESOURCETYPE XboxResourceType, DWORD D3DUsage); // TODO : Move to XTL-independent header file
+					case xbox::X_D3DFMT_L6V5U5: {
+						extern xbox::X_D3DRESOURCETYPE GetXboxD3DResourceType(const xbox::X_D3DResource *pXboxResource); // TODO : Move to XTL-independent header file
+						extern bool IsSupportedFormat(xbox::X_D3DFORMAT X_Format, xbox::X_D3DRESOURCETYPE XboxResourceType, DWORD D3DUsage); // TODO : Move to XTL-independent header file
 
 						// L6V5U5 format is converted incorrectly if not supported by the device
-						XTL::X_D3DRESOURCETYPE XboxResourceType = GetXboxD3DResourceType(pXboxTexture);
+						xbox::X_D3DRESOURCETYPE XboxResourceType = GetXboxD3DResourceType(pXboxTexture);
 						DWORD D3DUsage = 0; // TODO : Since it's not yet know how to determine D3DUsage in this case, 'hack' it by using no specific D3DUSAGE_* flags.
 
-						bias = !IsSupportedFormat(/*XboxFormat=*/XTL::X_D3DFMT_L6V5U5, XboxResourceType, D3DUsage);
+						bias = !IsSupportedFormat(/*XboxFormat=*/xbox::X_D3DFMT_L6V5U5, XboxResourceType, D3DUsage);
 						break;
 					}
-					case XTL::X_D3DFMT_X8L8V8U8: {
+					case xbox::X_D3DFMT_X8L8V8U8: {
 						bias = true;
 						break;
 					}
@@ -3290,9 +3290,9 @@ bool PSH_XBOX_SHADER::InsertTextureModeInstruction(XTL::X_D3DPIXELSHADERDEF *pPS
 
         // Insert move instructions in reverse order to prevent overwriting wrong register
         // Create instructions to move loaded temporary registers into extra temporary registers
-        InsertIns[XTL::X_D3DTS_STAGECOUNT - Stage - 1].Initialize(PO_MOV);
-        InsertIns[XTL::X_D3DTS_STAGECOUNT - Stage - 1].Output[0].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + Stage, 0);
-        InsertIns[XTL::X_D3DTS_STAGECOUNT - Stage - 1].Parameters[0].SetRegister(PARAM_R, Stage, 0);
+        InsertIns[xbox::X_D3DTS_STAGECOUNT - Stage - 1].Initialize(PO_MOV);
+        InsertIns[xbox::X_D3DTS_STAGECOUNT - Stage - 1].Output[0].SetRegister(PARAM_R, PSH_XBOX_MAX_R_REGISTER_COUNT + Stage, 0);
+        InsertIns[xbox::X_D3DTS_STAGECOUNT - Stage - 1].Parameters[0].SetRegister(PARAM_R, Stage, 0);
 
         if (Ins.Opcode == PO_TEXCRD)
         {
@@ -3398,7 +3398,7 @@ bool PSH_XBOX_SHADER::MoveRemovableParametersRight()
   return Result;
 } // MoveRemovableParametersRight
 
-//bool PSH_XBOX_SHADER::ConvertConstantsToNative(XTL::X_D3DPIXELSHADERDEF *pPSDef, /*var OUT*/PSH_RECOMPILED_SHADER *Recompiled)
+//bool PSH_XBOX_SHADER::ConvertConstantsToNative(xbox::X_D3DPIXELSHADERDEF *pPSDef, /*var OUT*/PSH_RECOMPILED_SHADER *Recompiled)
 
   void PSH_XBOX_SHADER::_SetColor(/*var OUT*/PSH_INTERMEDIATE_FORMAT &NewIns, D3DCOLOR ConstColor)
   {
@@ -3469,7 +3469,7 @@ bool PSH_XBOX_SHADER::MoveRemovableParametersRight()
     return Recompiled->ConstMapping[XboxConst];
   }
 
-bool PSH_XBOX_SHADER::ConvertConstantsToNative(XTL::X_D3DPIXELSHADERDEF *pPSDef, /*var OUT*/PSH_RECOMPILED_SHADER *Recompiled)
+bool PSH_XBOX_SHADER::ConvertConstantsToNative(xbox::X_D3DPIXELSHADERDEF *pPSDef, /*var OUT*/PSH_RECOMPILED_SHADER *Recompiled)
 {
   int i, j;
   PPSH_INTERMEDIATE_FORMAT Cur;
@@ -3500,7 +3500,7 @@ bool PSH_XBOX_SHADER::ConvertConstantsToNative(XTL::X_D3DPIXELSHADERDEF *pPSDef,
     _SetColor(NewIns, {1.0, 2.0, 4.0, 8.0});
     InsertIntermediate(&NewIns, 1);
 
-        for (i = 0; i < XTL::X_D3DTS_STAGECOUNT; i++)
+        for (i = 0; i < xbox::X_D3DTS_STAGECOUNT; i++)
         {
             _HandleConst(PSH_XBOX_CONSTANT_BEM + i, Recompiled, &NativeConstInUse[0], &EmittedNewConstant);
             _HandleConst(PSH_XBOX_CONSTANT_LUM + i, Recompiled, &NativeConstInUse[0], &EmittedNewConstant);
@@ -3672,7 +3672,7 @@ bool PSH_XBOX_SHADER::RemoveUselessWrites()
   return Result;
 } // RemoveUselessWrites
 
-void PSH_XBOX_SHADER::ConvertXboxOpcodesToNative(XTL::X_D3DPIXELSHADERDEF *pPSDef)
+void PSH_XBOX_SHADER::ConvertXboxOpcodesToNative(xbox::X_D3DPIXELSHADERDEF *pPSDef)
 {
   int i;
   PPSH_INTERMEDIATE_FORMAT Cur;
@@ -5816,7 +5816,7 @@ void RPSFinalCombiner::Decode(const DWORD PSFinalCombinerInputsABCD, const DWORD
   dwPS_GLOBALFLAGS = (PSFinalCombinerConstants >> 8) & 0x1;
 }
 
-void XTL_DumpPixelShaderToFile(XTL::X_D3DPIXELSHADERDEF *pPSDef)
+void XTL_DumpPixelShaderToFile(xbox::X_D3DPIXELSHADERDEF *pPSDef)
 {
   static int PshNumber = 0; // Keep track of how many pixel shaders we've attempted to convert.
   // Don't dump more than 100 shaders, to prevent cluttering the filesystem :
@@ -5834,7 +5834,7 @@ void XTL_DumpPixelShaderToFile(XTL::X_D3DPIXELSHADERDEF *pPSDef)
   }
 }
 
-PSH_RECOMPILED_SHADER XTL_EmuRecompilePshDef(XTL::X_D3DPIXELSHADERDEF *pPSDef)
+PSH_RECOMPILED_SHADER XTL_EmuRecompilePshDef(xbox::X_D3DPIXELSHADERDEF *pPSDef)
 {
 	uint32_t PSVersion = D3DPS_VERSION(2, 0); // Use pixel shader model 2.0 by default
 
@@ -5853,7 +5853,7 @@ PSH_RECOMPILED_SHADER XTL_EmuRecompilePshDef(XTL::X_D3DPIXELSHADERDEF *pPSDef)
 
 // From Dxbx uState.pas :
 
-PSH_RECOMPILED_SHADER DxbxRecompilePixelShader(XTL::X_D3DPIXELSHADERDEF *pPSDef)
+PSH_RECOMPILED_SHADER DxbxRecompilePixelShader(xbox::X_D3DPIXELSHADERDEF *pPSDef)
 {
 static const
   char *szDiffusePixelShader =
@@ -5943,7 +5943,7 @@ std::vector<PSH_RECOMPILED_SHADER> g_RecompiledPixelShaders;
 
 VOID DxbxUpdateActivePixelShader() // NOPATCH
 {
-  XTL::X_D3DPIXELSHADERDEF *pPSDef;
+  xbox::X_D3DPIXELSHADERDEF *pPSDef;
   PPSH_RECOMPILED_SHADER RecompiledPixelShader;
   DWORD ConvertedPixelShaderHandle;
   DWORD CurrentPixelShader;
@@ -5966,7 +5966,7 @@ VOID DxbxUpdateActivePixelShader() // NOPATCH
   // manually read from D3D__RenderState[X_D3DRS_PSTEXTUREMODES) for that one field.
   // See D3DDevice_SetPixelShaderCommon which implements this
 
-  pPSDef = g_pXbox_PixelShader != nullptr ? (XTL::X_D3DPIXELSHADERDEF*)(XboxRenderStates.GetPixelShaderRenderStatePointer()) : nullptr;
+  pPSDef = g_pXbox_PixelShader != nullptr ? (xbox::X_D3DPIXELSHADERDEF*)(XboxRenderStates.GetPixelShaderRenderStatePointer()) : nullptr;
  
   if (pPSDef != nullptr)
   {
@@ -6011,10 +6011,10 @@ VOID DxbxUpdateActivePixelShader() // NOPATCH
     }
 #endif
 
-    //PS_TEXTUREMODES psTextureModes[XTL::X_D3DTS_STAGECOUNT];
+    //PS_TEXTUREMODES psTextureModes[xbox::X_D3DTS_STAGECOUNT];
     //PSH_XBOX_SHADER::GetPSTextureModes(pPSDef, psTextureModes);
     //
-    //for (i = 0; i < XTL::X_D3DTS_STAGECOUNT; i++)
+    //for (i = 0; i < xbox::X_D3DTS_STAGECOUNT; i++)
     //{
     //    switch (psTextureModes[i])
     //    {
@@ -6041,13 +6041,13 @@ VOID DxbxUpdateActivePixelShader() // NOPATCH
           case PSH_XBOX_CONSTANT_FOG:
             // Note : FOG.RGB is correct like this, but FOG.a should be coming
             // from the vertex shader (oFog) - however, D3D8 does not forward this...
-              fColor = dwColor = XboxRenderStates.GetXboxRenderState(XTL::X_D3DRS_FOGCOLOR);
+              fColor = dwColor = XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_FOGCOLOR);
 			break;
 		  case PSH_XBOX_CONSTANT_FC0:
-              fColor = dwColor = XboxRenderStates.GetXboxRenderState(XTL::X_D3DRS_PSFINALCOMBINERCONSTANT0);
+              fColor = dwColor = XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_PSFINALCOMBINERCONSTANT0);
 			break;
 		  case PSH_XBOX_CONSTANT_FC1:
-              fColor = dwColor = XboxRenderStates.GetXboxRenderState(XTL::X_D3DRS_PSFINALCOMBINERCONSTANT1);
+              fColor = dwColor = XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_PSFINALCOMBINERCONSTANT1);
 			break;
           case PSH_XBOX_CONSTANT_MUL0:
           case PSH_XBOX_CONSTANT_MUL1:
@@ -6081,7 +6081,7 @@ VOID DxbxUpdateActivePixelShader() // NOPATCH
               break;
           }
           default:
-              fColor = dwColor = XboxRenderStates.GetXboxRenderState(XTL::X_D3DRS_PSCONSTANT0_0 + i);
+              fColor = dwColor = XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_PSCONSTANT0_0 + i);
 			break;
         }
 
@@ -8058,7 +8058,7 @@ inline void CorrectConstToReg(char *szConst, int *pPSC0, int *pPSC1)
 CorrectConstToReg_done:;
 }
 
-void DumpPixelShaderDefToFile(XTL::X_D3DPIXELSHADERDEF* pPSDef, const char* pszCode /*= nullptr*/ )
+void DumpPixelShaderDefToFile(xbox::X_D3DPIXELSHADERDEF* pPSDef, const char* pszCode /*= nullptr*/ )
 {
 	static int PshNumber = 0;	// Keep track of how many pixel shaders we've attemted to convert.
 	char szPSDef[512];			
@@ -8104,7 +8104,7 @@ void DumpPixelShaderDefToFile(XTL::X_D3DPIXELSHADERDEF* pPSDef, const char* pszC
 					  pPSDef->PSRGBOutputs[0], pPSDef->PSRGBOutputs[1], pPSDef->PSRGBOutputs[2], pPSDef->PSRGBOutputs[3], 
 					  pPSDef->PSRGBOutputs[4], pPSDef->PSRGBOutputs[5], pPSDef->PSRGBOutputs[6], pPSDef->PSRGBOutputs[7], 
 					  pPSDef->PSCombinerCount,
-                      XboxRenderStates.GetXboxRenderState(XTL::X_D3DRS_PSTEXTUREMODES), /* pPSDef->PSTextureModes is stored in a different place than pPSDef*/
+                      XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_PSTEXTUREMODES), /* pPSDef->PSTextureModes is stored in a different place than pPSDef*/
 					  pPSDef->PSDotMapping,
 					  pPSDef->PSInputTexture,
 					  pPSDef->PSC0Mapping,
@@ -8120,19 +8120,19 @@ void DumpPixelShaderDefToFile(XTL::X_D3DPIXELSHADERDEF* pPSDef, const char* pszC
 }
 
 // print relevant contents to the debug console
-void PrintPixelShaderDefContents(XTL::X_D3DPIXELSHADERDEF* pPSDef )
+void PrintPixelShaderDefContents(xbox::X_D3DPIXELSHADERDEF* pPSDef )
 {
 	// Show the contents to the user
 	if( pPSDef )
 	{
 		DbgPshPrintf( "\n-----PixelShader Def Contents-----\n" );
 
-		if(XboxRenderStates.GetXboxRenderState(XTL::X_D3DRS_PSTEXTUREMODES))
+		if(XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_PSTEXTUREMODES))
 		{
-			DWORD dwPSTexMode0 = (XboxRenderStates.GetXboxRenderState(XTL::X_D3DRS_PSTEXTUREMODES) >> 0 ) & 0x1F;
-			DWORD dwPSTexMode1 = (XboxRenderStates.GetXboxRenderState(XTL::X_D3DRS_PSTEXTUREMODES) >> 5 ) & 0x1F;
-			DWORD dwPSTexMode2 = (XboxRenderStates.GetXboxRenderState(XTL::X_D3DRS_PSTEXTUREMODES) >> 10 ) & 0x1F;
-			DWORD dwPSTexMode3 = (XboxRenderStates.GetXboxRenderState(XTL::X_D3DRS_PSTEXTUREMODES) >> 15 ) & 0x1F;
+			DWORD dwPSTexMode0 = (XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_PSTEXTUREMODES) >> 0 ) & 0x1F;
+			DWORD dwPSTexMode1 = (XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_PSTEXTUREMODES) >> 5 ) & 0x1F;
+			DWORD dwPSTexMode2 = (XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_PSTEXTUREMODES) >> 10 ) & 0x1F;
+			DWORD dwPSTexMode3 = (XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_PSTEXTUREMODES) >> 15 ) & 0x1F;
 
 			DbgPshPrintf( "PSTextureModes ->\n" );
 			DbgPshPrintf( "Stage 0: %s\n", PS_TextureModesStr[dwPSTexMode0] );

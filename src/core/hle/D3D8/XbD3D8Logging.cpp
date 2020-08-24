@@ -557,7 +557,7 @@ LOGRENDER(RECT)
 
 
 // prevent name collisions
-namespace XTL {
+namespace xbox {
 
 //
 // Cxbx D3D LOGRENDER(Type) implementations
@@ -769,4 +769,4 @@ LOGRENDER(X_D3DPixelContainer)
 		LOGRENDER_MEMBER_TYPE(X_D3DRESOURCE_SIZE, Size);
 }
 
-} // end of namespace XTL
+} // end of namespace xbox

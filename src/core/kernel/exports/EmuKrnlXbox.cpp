@@ -34,18 +34,18 @@
 
 // Certificate Key
 // Not exported but used to generate per-title keys
-xboxkrnl::XBOX_KEY_DATA xboxkrnl::XboxCertificateKey = { 0 };
+xbox::XBOX_KEY_DATA xbox::XboxCertificateKey = { 0 };
 
 // ******************************************************************
 // * 0x0141 - XboxEEPROMKey
 // ******************************************************************
 // TODO : What should we initialize this to?
-XBSYSAPI EXPORTNUM(321) xboxkrnl::XBOX_KEY_DATA xboxkrnl::XboxEEPROMKey = { 0 };
+XBSYSAPI EXPORTNUM(321) xbox::XBOX_KEY_DATA xbox::XboxEEPROMKey = { 0 };
 
 // ******************************************************************
 // * 0x0142 - XboxHardwareInfo
 // ******************************************************************
-XBSYSAPI EXPORTNUM(322) xboxkrnl::XBOX_HARDWARE_INFO xboxkrnl::XboxHardwareInfo =
+XBSYSAPI EXPORTNUM(322) xbox::XBOX_HARDWARE_INFO xbox::XboxHardwareInfo =
 {
 	0xC0000031, // Flags: 1=INTERNAL_USB, 2=DEVKIT, 4=MACROVISION, 8=CHIHIRO
 	0xA2, // GpuRevision, byte read from NV2A first register, at 0xFD0000000 - see NV_PMC_BOOT_0
@@ -57,13 +57,13 @@ XBSYSAPI EXPORTNUM(322) xboxkrnl::XBOX_HARDWARE_INFO xboxkrnl::XboxHardwareInfo 
 // ******************************************************************
 // * 0x0143 - XboxHDKey
 // ******************************************************************
-XBSYSAPI EXPORTNUM(323) xboxkrnl::XBOX_KEY_DATA xboxkrnl::XboxHDKey = { 0 };
+XBSYSAPI EXPORTNUM(323) xbox::XBOX_KEY_DATA xbox::XboxHDKey = { 0 };
 
 // ******************************************************************
 // * 0x0144 - XboxKrnlVersion
 // ******************************************************************
 // Xbox Kernel version (part of kernel thunk table)
-XBSYSAPI EXPORTNUM(324) xboxkrnl::XBOX_KRNL_VERSION xboxkrnl::XboxKrnlVersion =
+XBSYSAPI EXPORTNUM(324) xbox::XBOX_KRNL_VERSION xbox::XboxKrnlVersion =
 {
 	// Default Cxbx to emulating kernel version 5838 :
 	1, 0, 5838, 1 // TODO : Make this configurable
@@ -74,19 +74,19 @@ XBSYSAPI EXPORTNUM(324) xboxkrnl::XBOX_KRNL_VERSION xboxkrnl::XboxKrnlVersion =
 // Generated in SetupPerTitleKeys() using the Certificate Key and the 
 // XBE's Signature Key
 // ******************************************************************
-XBSYSAPI EXPORTNUM(325) xboxkrnl::XBOX_KEY_DATA xboxkrnl::XboxSignatureKey = { 0 };
+XBSYSAPI EXPORTNUM(325) xbox::XBOX_KEY_DATA xbox::XboxSignatureKey = { 0 };
 
 // ******************************************************************
 // * 0x0161 - XboxLANKey
 // Generated in SetupPerTitleKeys() using the Certificate Key and the 
 // XBE's LAN Key
 // ******************************************************************
-XBSYSAPI EXPORTNUM(353) xboxkrnl::XBOX_KEY_DATA xboxkrnl::XboxLANKey = { 0 };
+XBSYSAPI EXPORTNUM(353) xbox::XBOX_KEY_DATA xbox::XboxLANKey = { 0 };
 
 // ******************************************************************
 // * 0x0162 - XboxAlternateSignatureKeys
 // Generated in SetupPerTitleKeys() using the Certificate Key and the 
 // XBE's Alternate Signature Keys Key
 // ******************************************************************
-XBSYSAPI EXPORTNUM(354) xboxkrnl::XBOX_KEY_DATA xboxkrnl::XboxAlternateSignatureKeys[ALTERNATE_SIGNATURE_COUNT] = { 0 };
+XBSYSAPI EXPORTNUM(354) xbox::XBOX_KEY_DATA xbox::XboxAlternateSignatureKeys[ALTERNATE_SIGNATURE_COUNT] = { 0 };
 

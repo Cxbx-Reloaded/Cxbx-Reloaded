@@ -39,7 +39,7 @@
 #include "devices/video/nv2a_int.h" // For NV** defines
 #include "Logging.h"
 
-// TODO: Find somewhere to put this that doesn't conflict with XTL::
+// TODO: Find somewhere to put this that doesn't conflict with xbox::
 extern void EmuUpdateActiveTextureStages();
 
 const char *NV2AMethodToString(DWORD dwMethod); // forward
@@ -118,12 +118,12 @@ UINT DxbxFVFToVertexSizeInBytes(DWORD dwFVF, BOOL bIncludeTextures)
 
 void EmuExecutePushBuffer
 (
-	XTL::X_D3DPushBuffer       *pPushBuffer,
-	XTL::X_D3DFixup            *pFixup
+	xbox::X_D3DPushBuffer       *pPushBuffer,
+	xbox::X_D3DFixup            *pFixup
 )
 {
 	//Check whether Fixup exists or not. 
-	if (pFixup != xbnullptr) {
+	if (pFixup != xbox::zeroptr) {
 		LOG_TEST_CASE("PushBuffer has fixups");
 		//Interpret address of PushBuffer Data and Fixup Data
 		UINT8* pPushBufferData = (UINT8*)pPushBuffer->Data;
@@ -238,7 +238,7 @@ void HLE_draw_inline_array(NV2AState *d)
 			UINT VertexCount = (pg->inline_array_length * sizeof(DWORD)) / dwVertexStride;
 			CxbxDrawContext DrawContext = {};
 
-			DrawContext.XboxPrimitiveType = (XTL::X_D3DPRIMITIVETYPE)pg->primitive_mode;
+			DrawContext.XboxPrimitiveType = (xbox::X_D3DPRIMITIVETYPE)pg->primitive_mode;
 			DrawContext.dwVertexCount = VertexCount;
 			DrawContext.pXboxVertexStreamZeroData = pg->inline_array;
 			DrawContext.uiXboxVertexStreamZeroStride = dwVertexStride;
@@ -256,7 +256,7 @@ void HLE_draw_inline_elements(NV2AState *d)
 		unsigned int uiIndexCount = pg->inline_elements_length;
 		CxbxDrawContext DrawContext = {};
 
-		DrawContext.XboxPrimitiveType = (XTL::X_D3DPRIMITIVETYPE)pg->primitive_mode;
+		DrawContext.XboxPrimitiveType = (xbox::X_D3DPRIMITIVETYPE)pg->primitive_mode;
 		DrawContext.dwVertexCount = uiIndexCount;
 		DrawContext.pXboxIndexData = d->pgraph.inline_elements;
 
@@ -468,13 +468,13 @@ extern void EmuExecutePushBufferRaw
 
 	// DMA Pusher state -- see https://envytools.readthedocs.io/en/latest/hw/fifo/dma-pusher.html#pusher-state
 #if 0
-	static xbaddr dma_pushbuffer; // the pushbuffer and IB DMA object
+	static xbox::addr dma_pushbuffer; // the pushbuffer and IB DMA object
 #endif
 	uint32_t *dma_limit; // pushbuffer size limit
 	uint32_t *dma_put; // pushbuffer current end address
 	uint32_t *dma_get; //pushbuffer current read address
 	struct {
-		XTL::NV2AMETHOD mthd; // Current method
+		xbox::NV2AMETHOD mthd; // Current method
 		uint32_t subc; // :3 = Current subchannel
 		uint32_t mcnt; // :24 = Current method count
 		bool ni; // Current command's NI (non-increasing) flag
@@ -497,8 +497,8 @@ extern void EmuExecutePushBufferRaw
 	};
 
 	// Initialize working variables
-	dma_limit = (uint32_t*)((xbaddr)pPushData + uSizeInBytes); // TODO : If this an absolute addresss?
-	dma_put = (uint32_t*)((xbaddr)pPushData + uSizeInBytes);
+	dma_limit = (uint32_t*)((xbox::addr)pPushData + uSizeInBytes); // TODO : If this an absolute addresss?
+	dma_put = (uint32_t*)((xbox::addr)pPushData + uSizeInBytes);
 	dma_get = (uint32_t*)pPushData;
 	dma_state = {};
 

@@ -7,7 +7,7 @@
 
 #include "buffered_io.h"
 
-using namespace xboxkrnl;
+using namespace xbox;
 
 CONST CHAR *XDVDFS_Signature = "MICROSOFT*XBOX*MEDIA";
 

@@ -64,7 +64,7 @@ enum D3DVTXPCAPS : int;
 enum D3DDEVCAPS2 : int;
 enum D3DDTCAPS : int;
 
-namespace XTL {
+namespace xbox {
 
 enum X_D3DUSAGE : int;
 enum X_D3DCOMMON_TYPE : int;
@@ -72,7 +72,7 @@ enum X_D3DRESOURCE_COMMON : int;
 enum X_D3DRESOURCE_FORMAT : int;
 enum X_D3DRESOURCE_SIZE : int;
 
-} // end of namespace XTL
+} // end of namespace xbox
 
 //
 // Headers for rendering host D3D enum types :
@@ -118,7 +118,7 @@ LOGRENDER_HEADER(D3DCAPS)
 LOGRENDER_HEADER(D3DLOCKED_RECT)
 LOGRENDER_HEADER(RECT)
 
-namespace XTL {
+namespace xbox {
 
 //
 // Headers for rendering Xbox D3D enum types :
@@ -158,6 +158,6 @@ LOGRENDER_HEADER(X_D3DDISPLAYMODE)
 LOGRENDER_HEADER(X_D3DResource)
 LOGRENDER_HEADER(X_D3DPixelContainer)
 
-} // end of namespace XTL
+} // end of namespace xbox
 
 #endif _EMU_D3D8_LOGGING_H

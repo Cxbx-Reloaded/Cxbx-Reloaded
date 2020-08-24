@@ -47,20 +47,20 @@ namespace NtDll
 
 // See also :
 // https://github.com/reactos/reactos/blob/40a16a9cf1cdfca399e9154b42d32c30b63480f5/reactos/drivers/filesystems/udfs/Include/env_spec_w32.h
-void InitializeListHead(xboxkrnl::PLIST_ENTRY pListHead)
+void InitializeListHead(xbox::PLIST_ENTRY pListHead)
 {
 	pListHead->Flink = pListHead->Blink = pListHead;
 }
 
-bool IsListEmpty(xboxkrnl::PLIST_ENTRY pListHead)
+bool IsListEmpty(xbox::PLIST_ENTRY pListHead)
 {
 	return (pListHead->Flink == pListHead);
 }
 
-void InsertHeadList(xboxkrnl::PLIST_ENTRY pListHead, xboxkrnl::PLIST_ENTRY pEntry)
+void InsertHeadList(xbox::PLIST_ENTRY pListHead, xbox::PLIST_ENTRY pEntry)
 {
-	xboxkrnl::PLIST_ENTRY _EX_ListHead = pListHead;
-	xboxkrnl::PLIST_ENTRY _EX_Flink = _EX_ListHead->Flink;
+	xbox::PLIST_ENTRY _EX_ListHead = pListHead;
+	xbox::PLIST_ENTRY _EX_Flink = _EX_ListHead->Flink;
 
 	pEntry->Flink = _EX_Flink;
 	pEntry->Blink = _EX_ListHead;
@@ -68,10 +68,10 @@ void InsertHeadList(xboxkrnl::PLIST_ENTRY pListHead, xboxkrnl::PLIST_ENTRY pEntr
 	_EX_ListHead->Flink = pEntry;
 }
 
-void InsertTailList(xboxkrnl::PLIST_ENTRY pListHead, xboxkrnl::PLIST_ENTRY pEntry)
+void InsertTailList(xbox::PLIST_ENTRY pListHead, xbox::PLIST_ENTRY pEntry)
 {
-	xboxkrnl::PLIST_ENTRY _EX_ListHead = pListHead;
-	xboxkrnl::PLIST_ENTRY _EX_Blink = _EX_ListHead->Blink;
+	xbox::PLIST_ENTRY _EX_ListHead = pListHead;
+	xbox::PLIST_ENTRY _EX_Blink = _EX_ListHead->Blink;
 
 	pEntry->Flink = _EX_ListHead;
 	pEntry->Blink = _EX_Blink;
@@ -82,10 +82,10 @@ void InsertTailList(xboxkrnl::PLIST_ENTRY pListHead, xboxkrnl::PLIST_ENTRY pEntr
 //#define RemoveEntryList(e) do { PLIST_ENTRY f = (e)->Flink, b = (e)->Blink; f->Blink = b; b->Flink = f; (e)->Flink = (e)->Blink = NULL; } while (0)
 
 // Returns TRUE if the list has become empty after removing the element, FALSE otherwise.
-xboxkrnl::BOOLEAN RemoveEntryList(xboxkrnl::PLIST_ENTRY pEntry)
+xbox::BOOLEAN RemoveEntryList(xbox::PLIST_ENTRY pEntry)
 {
-	xboxkrnl::PLIST_ENTRY _EX_Flink = pEntry->Flink;
-	xboxkrnl::PLIST_ENTRY _EX_Blink = pEntry->Blink;
+	xbox::PLIST_ENTRY _EX_Flink = pEntry->Flink;
+	xbox::PLIST_ENTRY _EX_Blink = pEntry->Blink;
 
 	if (_EX_Blink != nullptr) {
 		_EX_Blink->Flink = _EX_Flink;
@@ -103,17 +103,17 @@ xboxkrnl::BOOLEAN RemoveEntryList(xboxkrnl::PLIST_ENTRY pEntry)
 	return FALSE;
 }
 
-xboxkrnl::PLIST_ENTRY RemoveHeadList(xboxkrnl::PLIST_ENTRY pListHead)
+xbox::PLIST_ENTRY RemoveHeadList(xbox::PLIST_ENTRY pListHead)
 {
-	xboxkrnl::PLIST_ENTRY Result = pListHead->Flink;
+	xbox::PLIST_ENTRY Result = pListHead->Flink;
 
 	RemoveEntryList(pListHead->Flink);
 	return Result;
 }
 
-xboxkrnl::PLIST_ENTRY RemoveTailList(xboxkrnl::PLIST_ENTRY pListHead)
+xbox::PLIST_ENTRY RemoveTailList(xbox::PLIST_ENTRY pListHead)
 {
-	xboxkrnl::PLIST_ENTRY Result = pListHead->Blink;
+	xbox::PLIST_ENTRY Result = pListHead->Blink;
 
 	RemoveEntryList(pListHead->Blink);
 	return Result;
@@ -123,7 +123,7 @@ xboxkrnl::PLIST_ENTRY RemoveTailList(xboxkrnl::PLIST_ENTRY pListHead)
 // * Declaring this in a header causes errors with xboxkrnl
 // * namespace, so we must declare it within any file that uses it
 // ******************************************************************
-xboxkrnl::KPCR* WINAPI KeGetPcr();
+xbox::KPCR* WINAPI KeGetPcr();
 
 // Interrupts
 
@@ -147,11 +147,11 @@ extern void ExecuteDpcQueue();
 
 void KiUnexpectedInterrupt()
 {
-	xboxkrnl::KeBugCheck(TRAP_CAUSE_UNKNOWN); // see
+	xbox::KeBugCheck(TRAP_CAUSE_UNKNOWN); // see
 	CxbxKrnlCleanup("Unexpected Software Interrupt!");
 }
 
-void CallSoftwareInterrupt(const xboxkrnl::KIRQL SoftwareIrql)
+void CallSoftwareInterrupt(const xbox::KIRQL SoftwareIrql)
 {
 	switch (SoftwareIrql) {
 	case PASSIVE_LEVEL:
@@ -217,7 +217,7 @@ const DWORD IrqlMasks[] = {
 // * 0x0033 - InterlockedCompareExchange()
 // ******************************************************************
 // Source:ReactOS
-XBSYSAPI EXPORTNUM(51) xboxkrnl::LONG FASTCALL xboxkrnl::KRNL(InterlockedCompareExchange)
+XBSYSAPI EXPORTNUM(51) xbox::LONG FASTCALL xbox::KRNL(InterlockedCompareExchange)
 (
 	IN OUT PLONG VOLATILE Destination,
 	IN LONG  Exchange,
@@ -239,7 +239,7 @@ XBSYSAPI EXPORTNUM(51) xboxkrnl::LONG FASTCALL xboxkrnl::KRNL(InterlockedCompare
 // * 0x0034 - InterlockedDecrement()
 // ******************************************************************
 // Source:ReactOS
-XBSYSAPI EXPORTNUM(52) xboxkrnl::LONG FASTCALL xboxkrnl::KRNL(InterlockedDecrement)
+XBSYSAPI EXPORTNUM(52) xbox::LONG FASTCALL xbox::KRNL(InterlockedDecrement)
 (
 	IN OUT PLONG Addend
 )
@@ -255,7 +255,7 @@ XBSYSAPI EXPORTNUM(52) xboxkrnl::LONG FASTCALL xboxkrnl::KRNL(InterlockedDecreme
 // * 0x0035 - InterlockedIncrement()
 // ******************************************************************
 // Source:ReactOS
-XBSYSAPI EXPORTNUM(53) xboxkrnl::LONG FASTCALL xboxkrnl::KRNL(InterlockedIncrement)
+XBSYSAPI EXPORTNUM(53) xbox::LONG FASTCALL xbox::KRNL(InterlockedIncrement)
 (
 	IN OUT PLONG Addend
 )
@@ -271,7 +271,7 @@ XBSYSAPI EXPORTNUM(53) xboxkrnl::LONG FASTCALL xboxkrnl::KRNL(InterlockedIncreme
 // * 0x0036 - InterlockedExchange()
 // ******************************************************************
 // Source:ReactOS
-XBSYSAPI EXPORTNUM(54) xboxkrnl::LONG FASTCALL xboxkrnl::KRNL(InterlockedExchange)
+XBSYSAPI EXPORTNUM(54) xbox::LONG FASTCALL xbox::KRNL(InterlockedExchange)
 (
 	IN PLONG VOLATILE Destination,
 	IN LONG Value
@@ -291,7 +291,7 @@ XBSYSAPI EXPORTNUM(54) xboxkrnl::LONG FASTCALL xboxkrnl::KRNL(InterlockedExchang
 // * 0x0037 - InterlockedExchangeAdd()
 // ******************************************************************
 // Source:ReactOS
-XBSYSAPI EXPORTNUM(55) xboxkrnl::LONG FASTCALL xboxkrnl::KRNL(InterlockedExchangeAdd)
+XBSYSAPI EXPORTNUM(55) xbox::LONG FASTCALL xbox::KRNL(InterlockedExchangeAdd)
 (
 	IN PLONG VOLATILE Addend,
 	IN LONG	Value
@@ -312,9 +312,9 @@ XBSYSAPI EXPORTNUM(55) xboxkrnl::LONG FASTCALL xboxkrnl::KRNL(InterlockedExchang
 // ******************************************************************
 // Source:ReactOS
 // Dxbx Note : The Xbox1 SINGLE_LIST strucures are the same as in WinNT
-XBSYSAPI EXPORTNUM(56) xboxkrnl::PSINGLE_LIST_ENTRY FASTCALL xboxkrnl::KRNL(InterlockedFlushSList)
+XBSYSAPI EXPORTNUM(56) xbox::PSINGLE_LIST_ENTRY FASTCALL xbox::KRNL(InterlockedFlushSList)
 (
-	IN xboxkrnl::PSLIST_HEADER ListHead
+	IN xbox::PSLIST_HEADER ListHead
 )
 {
 	LOG_FUNC_ONE_ARG(ListHead);
@@ -328,7 +328,7 @@ XBSYSAPI EXPORTNUM(56) xboxkrnl::PSINGLE_LIST_ENTRY FASTCALL xboxkrnl::KRNL(Inte
 // * 0x0039 - InterlockedPopEntrySList()
 // ******************************************************************
 // Source:ReactOS
-XBSYSAPI EXPORTNUM(57) xboxkrnl::PSLIST_ENTRY FASTCALL xboxkrnl::KRNL(InterlockedPopEntrySList)
+XBSYSAPI EXPORTNUM(57) xbox::PSLIST_ENTRY FASTCALL xbox::KRNL(InterlockedPopEntrySList)
 (
 	IN PSLIST_HEADER ListHead
 )
@@ -344,7 +344,7 @@ XBSYSAPI EXPORTNUM(57) xboxkrnl::PSLIST_ENTRY FASTCALL xboxkrnl::KRNL(Interlocke
 // * 0x003A - InterlockedPushEntrySList()
 // ******************************************************************
 // Source:ReactOS
-XBSYSAPI EXPORTNUM(58) xboxkrnl::PSLIST_ENTRY FASTCALL xboxkrnl::KRNL(InterlockedPushEntrySList)
+XBSYSAPI EXPORTNUM(58) xbox::PSLIST_ENTRY FASTCALL xbox::KRNL(InterlockedPushEntrySList)
 (
 	IN PSLIST_HEADER ListHead,
 	IN PSLIST_ENTRY ListEntry
@@ -366,7 +366,7 @@ XBSYSAPI EXPORTNUM(58) xboxkrnl::PSLIST_ENTRY FASTCALL xboxkrnl::KRNL(Interlocke
 // Raises the hardware priority (irq level)
 // NewIrql = Irq level to raise to
 // RETURN VALUE previous irq level
-XBSYSAPI EXPORTNUM(160) xboxkrnl::KIRQL FASTCALL xboxkrnl::KfRaiseIrql
+XBSYSAPI EXPORTNUM(160) xbox::KIRQL FASTCALL xbox::KfRaiseIrql
 (
     IN KIRQL NewIrql
 )
@@ -395,7 +395,7 @@ inline int bsr(const uint32_t a) { DWORD result; _BitScanReverse(&result, a); re
 // ******************************************************************
 // Restores the irq level on the current processor
 // ARGUMENTS NewIrql = Irql to lower to
-XBSYSAPI EXPORTNUM(161) xboxkrnl::VOID FASTCALL xboxkrnl::KfLowerIrql
+XBSYSAPI EXPORTNUM(161) xbox::VOID FASTCALL xbox::KfLowerIrql
 (
     IN KIRQL NewIrql
 )
@@ -436,14 +436,14 @@ XBSYSAPI EXPORTNUM(161) xboxkrnl::VOID FASTCALL xboxkrnl::KfLowerIrql
 // * 0x00A2 - KiBugCheckData
 // ******************************************************************
 // Source:ReactOS
-XBSYSAPI EXPORTNUM(162) xboxkrnl::ULONG_PTR xboxkrnl::KiBugCheckData[5] = { NULL, NULL, NULL, NULL, NULL };
+XBSYSAPI EXPORTNUM(162) xbox::ULONG_PTR xbox::KiBugCheckData[5] = { NULL, NULL, NULL, NULL, NULL };
 
-extern xboxkrnl::KPRCB *KeGetCurrentPrcb();
+extern xbox::KPRCB *KeGetCurrentPrcb();
 
 // ******************************************************************
 // * 0x00A3 - KiUnlockDispatcherDatabase()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(163) xboxkrnl::VOID FASTCALL xboxkrnl::KiUnlockDispatcherDatabase
+XBSYSAPI EXPORTNUM(163) xbox::VOID FASTCALL xbox::KiUnlockDispatcherDatabase
 (
 	IN KIRQL OldIrql
 )
@@ -461,12 +461,12 @@ XBSYSAPI EXPORTNUM(163) xboxkrnl::VOID FASTCALL xboxkrnl::KiUnlockDispatcherData
 // ******************************************************************
 // * 0x0165 - IdexChannelObject
 // ******************************************************************
-XBSYSAPI EXPORTNUM(357) xboxkrnl::IDE_CHANNEL_OBJECT xboxkrnl::IdexChannelObject = { };
+XBSYSAPI EXPORTNUM(357) xbox::IDE_CHANNEL_OBJECT xbox::IdexChannelObject = { };
 
 // ******************************************************************
 // * 0x0169 - RtlSnprintf()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(361) xboxkrnl::INT CDECL xboxkrnl::RtlSnprintf
+XBSYSAPI EXPORTNUM(361) xbox::INT CDECL xbox::RtlSnprintf
 (
 	IN PCHAR string,
 	IN SIZE_T count,
@@ -493,7 +493,7 @@ XBSYSAPI EXPORTNUM(361) xboxkrnl::INT CDECL xboxkrnl::RtlSnprintf
 // ******************************************************************
 // * 0x016A - RtlSprintf()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(362) xboxkrnl::INT CDECL xboxkrnl::RtlSprintf
+XBSYSAPI EXPORTNUM(362) xbox::INT CDECL xbox::RtlSprintf
 (
 	IN PCHAR string,
 	IN LPCCH format,
@@ -518,7 +518,7 @@ XBSYSAPI EXPORTNUM(362) xboxkrnl::INT CDECL xboxkrnl::RtlSprintf
 // ******************************************************************
 // * 0x016B - RtlVsnprintf()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(363) xboxkrnl::INT CDECL xboxkrnl::RtlVsnprintf
+XBSYSAPI EXPORTNUM(363) xbox::INT CDECL xbox::RtlVsnprintf
 (
 	IN PCHAR string,
 	IN SIZE_T count,
@@ -545,7 +545,7 @@ XBSYSAPI EXPORTNUM(363) xboxkrnl::INT CDECL xboxkrnl::RtlVsnprintf
 // ******************************************************************
 // * 0x016C - RtlVsprintf()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(364) xboxkrnl::INT CDECL xboxkrnl::RtlVsprintf
+XBSYSAPI EXPORTNUM(364) xbox::INT CDECL xbox::RtlVsprintf
 (
 	IN PCHAR string,
 	IN LPCCH format,
@@ -570,7 +570,7 @@ XBSYSAPI EXPORTNUM(364) xboxkrnl::INT CDECL xboxkrnl::RtlVsprintf
 // ******************************************************************
 // * 0x016F - UnknownAPI367()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(367) xboxkrnl::NTSTATUS NTAPI xboxkrnl::UnknownAPI367
+XBSYSAPI EXPORTNUM(367) xbox::NTSTATUS NTAPI xbox::UnknownAPI367
 (
 	// UNKNOWN ARGUMENTS
 )
@@ -585,7 +585,7 @@ XBSYSAPI EXPORTNUM(367) xboxkrnl::NTSTATUS NTAPI xboxkrnl::UnknownAPI367
 // ******************************************************************
 // * 0x0170 - UnknownAPI368()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(368) xboxkrnl::NTSTATUS NTAPI xboxkrnl::UnknownAPI368
+XBSYSAPI EXPORTNUM(368) xbox::NTSTATUS NTAPI xbox::UnknownAPI368
 (
 	// UNKNOWN ARGUMENTS
 )
@@ -600,7 +600,7 @@ XBSYSAPI EXPORTNUM(368) xboxkrnl::NTSTATUS NTAPI xboxkrnl::UnknownAPI368
 // ******************************************************************
 // * 0x0171 - UnknownAPI369()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(369) xboxkrnl::NTSTATUS NTAPI xboxkrnl::UnknownAPI369
+XBSYSAPI EXPORTNUM(369) xbox::NTSTATUS NTAPI xbox::UnknownAPI369
 (
 	// UNKNOWN ARGUMENTS
 )
@@ -615,7 +615,7 @@ XBSYSAPI EXPORTNUM(369) xboxkrnl::NTSTATUS NTAPI xboxkrnl::UnknownAPI369
 // ******************************************************************
 // * 0x0172 - XProfpControl()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(370) xboxkrnl::NTSTATUS NTAPI xboxkrnl::XProfpControl // PROFILING
+XBSYSAPI EXPORTNUM(370) xbox::NTSTATUS NTAPI xbox::XProfpControl // PROFILING
 (
 	ULONG Action,
 	ULONG Param
@@ -634,7 +634,7 @@ XBSYSAPI EXPORTNUM(370) xboxkrnl::NTSTATUS NTAPI xboxkrnl::XProfpControl // PROF
 // ******************************************************************
 // * 0x0173 - XProfpGetData()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(371) xboxkrnl::NTSTATUS NTAPI xboxkrnl::XProfpGetData // PROFILING 
+XBSYSAPI EXPORTNUM(371) xbox::NTSTATUS NTAPI xbox::XProfpGetData // PROFILING 
 (
 	// NO ARGUMENTS
 )
@@ -649,7 +649,7 @@ XBSYSAPI EXPORTNUM(371) xboxkrnl::NTSTATUS NTAPI xboxkrnl::XProfpGetData // PROF
 // ******************************************************************
 // * 0x0174 - IrtClientInitFast()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(372) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IrtClientInitFast // PROFILING
+XBSYSAPI EXPORTNUM(372) xbox::NTSTATUS NTAPI xbox::IrtClientInitFast // PROFILING
 (
 	// UNKNOWN ARGUMENTS
 )
@@ -664,7 +664,7 @@ XBSYSAPI EXPORTNUM(372) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IrtClientInitFast // 
 // ******************************************************************
 // * 0x0175 - IrtSweep()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(373) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IrtSweep // PROFILING
+XBSYSAPI EXPORTNUM(373) xbox::NTSTATUS NTAPI xbox::IrtSweep // PROFILING
 (
 	// UNKNOWN ARGUMENTS
 )

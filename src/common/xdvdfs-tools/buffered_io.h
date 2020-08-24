@@ -7,7 +7,7 @@
 extern "C" {
 #endif
 
-namespace xboxkrnl
+namespace xbox
 {
 
 #define BOOL BOOLEAN

@@ -51,8 +51,8 @@
 void EmuX86_Init();
 int EmuX86_OpcodeSize(uint8_t *Eip);
 bool EmuX86_DecodeException(LPEXCEPTION_POINTERS e);
-uint32_t EmuX86_IORead(xbaddr addr, int size);
-void EmuX86_IOWrite(xbaddr addr, uint32_t value, int size);
-uint32_t EmuX86_Read(xbaddr addr, int size);
-void EmuX86_Write(xbaddr addr, uint32_t value, int size);
+uint32_t EmuX86_IORead(xbox::addr addr, int size);
+void EmuX86_IOWrite(xbox::addr addr, uint32_t value, int size);
+uint32_t EmuX86_Read(xbox::addr addr, int size);
+void EmuX86_Write(xbox::addr addr, uint32_t value, int size);
 #endif

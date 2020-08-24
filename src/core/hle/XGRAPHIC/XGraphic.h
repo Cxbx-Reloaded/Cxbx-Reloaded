@@ -27,7 +27,7 @@
 
 #include "core\hle\D3D8\XbD3D8Types.h"
 
-namespace XTL {
+namespace xbox {
 
 typedef struct _XGPOINT3D
 {
@@ -115,6 +115,6 @@ HRESULT WINAPI EMUPATCH(XFONT_OpenBitmapFontFromMemory)
 	void			**ppFont
 );
 
-} // end of namespace XTL
+} // end of namespace xbox
 
 #endif

@@ -73,7 +73,7 @@ namespace NtDll
 #define EXCEPTION_COLLIDED_UNWIND 0x40
 #define EXCEPTION_UNWIND (EXCEPTION_UNWINDING | EXCEPTION_EXIT_UNWIND | EXCEPTION_TARGET_UNWIND | EXCEPTION_COLLIDED_UNWIND)
 
-DWORD WINAPI RtlAnsiStringToUnicodeSize(const xboxkrnl::STRING *str)
+DWORD WINAPI RtlAnsiStringToUnicodeSize(const xbox::STRING *str)
 {
 	return (str->Length + sizeof(ANSI_NULL)) * sizeof(WCHAR);
 }
@@ -81,7 +81,7 @@ DWORD WINAPI RtlAnsiStringToUnicodeSize(const xboxkrnl::STRING *str)
 // ******************************************************************
 // * 0x0104 - RtlAnsiStringToUnicodeString()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(260) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlAnsiStringToUnicodeString
+XBSYSAPI EXPORTNUM(260) xbox::NTSTATUS NTAPI xbox::RtlAnsiStringToUnicodeString
 (
 	OUT PUNICODE_STRING DestinationString,
 	IN PSTRING         SourceString,
@@ -122,7 +122,7 @@ XBSYSAPI EXPORTNUM(260) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlAnsiStringToUnicod
 // ******************************************************************
 // * 0x0105 - RtlAppendStringToString()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(261) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlAppendStringToString
+XBSYSAPI EXPORTNUM(261) xbox::NTSTATUS NTAPI xbox::RtlAppendStringToString
 (
 	IN PSTRING Destination,
 	IN PSTRING Source
@@ -155,7 +155,7 @@ XBSYSAPI EXPORTNUM(261) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlAppendStringToStri
 // ******************************************************************
 // * 0x0106 - RtlAppendUnicodeStringToString()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(262) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlAppendUnicodeStringToString
+XBSYSAPI EXPORTNUM(262) xbox::NTSTATUS NTAPI xbox::RtlAppendUnicodeStringToString
 (
 	IN PUNICODE_STRING Destination,
 	IN PUNICODE_STRING Source
@@ -190,7 +190,7 @@ XBSYSAPI EXPORTNUM(262) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlAppendUnicodeStrin
 // ******************************************************************
 // * 0x0107 - RtlAppendUnicodeToString()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(263) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlAppendUnicodeToString
+XBSYSAPI EXPORTNUM(263) xbox::NTSTATUS NTAPI xbox::RtlAppendUnicodeToString
 (
 	IN OUT PUNICODE_STRING Destination,
 	IN LPCWSTR Source
@@ -216,7 +216,7 @@ XBSYSAPI EXPORTNUM(263) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlAppendUnicodeToStr
 // * 0x0108 - RtlAssert()
 // ******************************************************************
 // Debug API?
-XBSYSAPI EXPORTNUM(264) xboxkrnl::VOID NTAPI xboxkrnl::RtlAssert
+XBSYSAPI EXPORTNUM(264) xbox::VOID NTAPI xbox::RtlAssert
 (
 	PCHAR   FailedAssertion,
 	PCHAR   FileName,
@@ -246,7 +246,7 @@ XBSYSAPI EXPORTNUM(264) xboxkrnl::VOID NTAPI xboxkrnl::RtlAssert
 // * 0x0109 - RtlCaptureContext()
 // ******************************************************************
 __declspec(naked) // REQUIRED - No registers can be touched by the compiler or the state will be corrupted.
-XBSYSAPI EXPORTNUM(265) xboxkrnl::VOID NTAPI xboxkrnl::RtlCaptureContext
+XBSYSAPI EXPORTNUM(265) xbox::VOID NTAPI xbox::RtlCaptureContext
 (
 	IN PCONTEXT ContextRecord
 )
@@ -283,7 +283,7 @@ XBSYSAPI EXPORTNUM(265) xboxkrnl::VOID NTAPI xboxkrnl::RtlCaptureContext
 // ******************************************************************
 // * 0x010A - RtlCaptureStackBackTrace()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(266) xboxkrnl::USHORT NTAPI xboxkrnl::RtlCaptureStackBackTrace
+XBSYSAPI EXPORTNUM(266) xbox::USHORT NTAPI xbox::RtlCaptureStackBackTrace
 (
 	IN ULONG FramesToSkip,
 	IN ULONG FramesToCapture,
@@ -306,7 +306,7 @@ XBSYSAPI EXPORTNUM(266) xboxkrnl::USHORT NTAPI xboxkrnl::RtlCaptureStackBackTrac
 // ******************************************************************
 // * 0x010B - RtlCharToInteger()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(267) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlCharToInteger
+XBSYSAPI EXPORTNUM(267) xbox::NTSTATUS NTAPI xbox::RtlCharToInteger
 (
 	IN     PCSZ   String,
 	IN     ULONG  Base OPTIONAL,
@@ -395,7 +395,7 @@ XBSYSAPI EXPORTNUM(267) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlCharToInteger
 // ******************************************************************
 // * compare block of memory, return number of equivalent bytes.
 // ******************************************************************
-XBSYSAPI EXPORTNUM(268) xboxkrnl::SIZE_T NTAPI xboxkrnl::RtlCompareMemory
+XBSYSAPI EXPORTNUM(268) xbox::SIZE_T NTAPI xbox::RtlCompareMemory
 (
 	IN CONST VOID *Source1,
 	IN CONST VOID *Source2,
@@ -425,7 +425,7 @@ XBSYSAPI EXPORTNUM(268) xboxkrnl::SIZE_T NTAPI xboxkrnl::RtlCompareMemory
 // ******************************************************************
 // * 0x010D - RtlCompareMemoryUlong()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(269) xboxkrnl::SIZE_T NTAPI xboxkrnl::RtlCompareMemoryUlong
+XBSYSAPI EXPORTNUM(269) xbox::SIZE_T NTAPI xbox::RtlCompareMemoryUlong
 (
 	IN PVOID Source,
 	IN SIZE_T Length,
@@ -457,7 +457,7 @@ XBSYSAPI EXPORTNUM(269) xboxkrnl::SIZE_T NTAPI xboxkrnl::RtlCompareMemoryUlong
 // ******************************************************************
 // * 0x010E - RtlCompareString()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(270) xboxkrnl::LONG NTAPI xboxkrnl::RtlCompareString
+XBSYSAPI EXPORTNUM(270) xbox::LONG NTAPI xbox::RtlCompareString
 (
 	IN PSTRING String1,
 	IN PSTRING String2,
@@ -492,7 +492,7 @@ XBSYSAPI EXPORTNUM(270) xboxkrnl::LONG NTAPI xboxkrnl::RtlCompareString
 // ******************************************************************
 // * 0x010F - RtlCompareUnicodeString()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(271) xboxkrnl::LONG NTAPI xboxkrnl::RtlCompareUnicodeString
+XBSYSAPI EXPORTNUM(271) xbox::LONG NTAPI xbox::RtlCompareUnicodeString
 (
 	IN PUNICODE_STRING String1,
 	IN PUNICODE_STRING String2,
@@ -527,7 +527,7 @@ XBSYSAPI EXPORTNUM(271) xboxkrnl::LONG NTAPI xboxkrnl::RtlCompareUnicodeString
 // ******************************************************************
 // * 0x0110 - RtlCopyString()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(272) xboxkrnl::VOID NTAPI xboxkrnl::RtlCopyString
+XBSYSAPI EXPORTNUM(272) xbox::VOID NTAPI xbox::RtlCopyString
 (
 	OUT PSTRING DestinationString,
 	IN PSTRING SourceString OPTIONAL
@@ -557,7 +557,7 @@ XBSYSAPI EXPORTNUM(272) xboxkrnl::VOID NTAPI xboxkrnl::RtlCopyString
 // ******************************************************************
 // * 0x0111 - RtlCopyUnicodeString()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(273) xboxkrnl::VOID NTAPI xboxkrnl::RtlCopyUnicodeString
+XBSYSAPI EXPORTNUM(273) xbox::VOID NTAPI xbox::RtlCopyUnicodeString
 (
 	OUT PUNICODE_STRING DestinationString,
 	IN PUNICODE_STRING SourceString OPTIONAL
@@ -587,7 +587,7 @@ XBSYSAPI EXPORTNUM(273) xboxkrnl::VOID NTAPI xboxkrnl::RtlCopyUnicodeString
 // ******************************************************************
 // * 0x0112 - RtlCreateUnicodeString()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(274) xboxkrnl::BOOLEAN NTAPI xboxkrnl::RtlCreateUnicodeString
+XBSYSAPI EXPORTNUM(274) xbox::BOOLEAN NTAPI xbox::RtlCreateUnicodeString
 (
 	OUT PUNICODE_STRING DestinationString,
 	IN PCWSTR SourceString
@@ -617,7 +617,7 @@ XBSYSAPI EXPORTNUM(274) xboxkrnl::BOOLEAN NTAPI xboxkrnl::RtlCreateUnicodeString
 // ******************************************************************
 // * 0x0113 - RtlDowncaseUnicodeChar()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(275) xboxkrnl::WCHAR NTAPI xboxkrnl::RtlDowncaseUnicodeChar
+XBSYSAPI EXPORTNUM(275) xbox::WCHAR NTAPI xbox::RtlDowncaseUnicodeChar
 (
 	IN WCHAR SourceCharacter
 )
@@ -632,7 +632,7 @@ XBSYSAPI EXPORTNUM(275) xboxkrnl::WCHAR NTAPI xboxkrnl::RtlDowncaseUnicodeChar
 // ******************************************************************
 // * 0x0114 - RtlDowncaseUnicodeString()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(276) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlDowncaseUnicodeString
+XBSYSAPI EXPORTNUM(276) xbox::NTSTATUS NTAPI xbox::RtlDowncaseUnicodeString
 (
 	OUT PUNICODE_STRING DestinationString,
 	IN PUNICODE_STRING SourceString,
@@ -675,7 +675,7 @@ XBSYSAPI EXPORTNUM(276) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlDowncaseUnicodeStr
 // ******************************************************************
 // * 0x0115 - RtlEnterCriticalSection()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(277) xboxkrnl::VOID NTAPI xboxkrnl::RtlEnterCriticalSection
+XBSYSAPI EXPORTNUM(277) xbox::VOID NTAPI xbox::RtlEnterCriticalSection
 (
     IN PRTL_CRITICAL_SECTION CriticalSection
 )
@@ -717,7 +717,7 @@ XBSYSAPI EXPORTNUM(277) xboxkrnl::VOID NTAPI xboxkrnl::RtlEnterCriticalSection
 // ******************************************************************
 // * 0x0116 - RtlEnterCriticalSectionAndRegion()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(278) xboxkrnl::VOID NTAPI xboxkrnl::RtlEnterCriticalSectionAndRegion
+XBSYSAPI EXPORTNUM(278) xbox::VOID NTAPI xbox::RtlEnterCriticalSectionAndRegion
 (
     IN PRTL_CRITICAL_SECTION CriticalSection
 )
@@ -731,7 +731,7 @@ XBSYSAPI EXPORTNUM(278) xboxkrnl::VOID NTAPI xboxkrnl::RtlEnterCriticalSectionAn
 // ******************************************************************
 // * 0x0117 - RtlEqualString()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(279) xboxkrnl::BOOLEAN NTAPI xboxkrnl::RtlEqualString
+XBSYSAPI EXPORTNUM(279) xbox::BOOLEAN NTAPI xbox::RtlEqualString
 (
 	IN PSTRING String1,
 	IN PSTRING String2,
@@ -784,7 +784,7 @@ XBSYSAPI EXPORTNUM(279) xboxkrnl::BOOLEAN NTAPI xboxkrnl::RtlEqualString
 // ******************************************************************
 // * 0x0118 - RtlEqualUnicodeString()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(280) xboxkrnl::BOOLEAN NTAPI xboxkrnl::RtlEqualUnicodeString
+XBSYSAPI EXPORTNUM(280) xbox::BOOLEAN NTAPI xbox::RtlEqualUnicodeString
 (
 	IN PUNICODE_STRING String1,
 	IN PUNICODE_STRING String2,
@@ -838,7 +838,7 @@ XBSYSAPI EXPORTNUM(280) xboxkrnl::BOOLEAN NTAPI xboxkrnl::RtlEqualUnicodeString
 // ******************************************************************
 // * 0x0119 - RtlExtendedIntegerMultiply()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(281) xboxkrnl::LARGE_INTEGER NTAPI xboxkrnl::RtlExtendedIntegerMultiply
+XBSYSAPI EXPORTNUM(281) xbox::LARGE_INTEGER NTAPI xbox::RtlExtendedIntegerMultiply
 (
 	IN LARGE_INTEGER Multiplicand,
 	IN LONG Multiplier
@@ -859,7 +859,7 @@ XBSYSAPI EXPORTNUM(281) xboxkrnl::LARGE_INTEGER NTAPI xboxkrnl::RtlExtendedInteg
 // ******************************************************************
 // * 0x011A - RtlExtendedLargeIntegerDivide()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(282) xboxkrnl::LARGE_INTEGER NTAPI xboxkrnl::RtlExtendedLargeIntegerDivide
+XBSYSAPI EXPORTNUM(282) xbox::LARGE_INTEGER NTAPI xbox::RtlExtendedLargeIntegerDivide
 (
 	IN LARGE_INTEGER Dividend,
 	IN ULONG Divisor,
@@ -906,7 +906,7 @@ XBSYSAPI EXPORTNUM(282) xboxkrnl::LARGE_INTEGER NTAPI xboxkrnl::RtlExtendedLarge
 // ******************************************************************
 // * 0x011B - RtlExtendedMagicDivide()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(283) xboxkrnl::LARGE_INTEGER NTAPI xboxkrnl::RtlExtendedMagicDivide
+XBSYSAPI EXPORTNUM(283) xbox::LARGE_INTEGER NTAPI xbox::RtlExtendedMagicDivide
 (
 	IN	LARGE_INTEGER Dividend,
 	IN	LARGE_INTEGER MagicDivisor,
@@ -962,7 +962,7 @@ XBSYSAPI EXPORTNUM(283) xboxkrnl::LARGE_INTEGER NTAPI xboxkrnl::RtlExtendedMagic
 // ******************************************************************
 // * 0x011C - RtlFillMemory()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(284) xboxkrnl::VOID NTAPI xboxkrnl::RtlFillMemory
+XBSYSAPI EXPORTNUM(284) xbox::VOID NTAPI xbox::RtlFillMemory
 (
 	IN VOID UNALIGNED *Destination,
 	IN DWORD Length,
@@ -981,7 +981,7 @@ XBSYSAPI EXPORTNUM(284) xboxkrnl::VOID NTAPI xboxkrnl::RtlFillMemory
 // ******************************************************************
 // * 0x011D - RtlFillMemoryUlong()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(285) xboxkrnl::VOID NTAPI xboxkrnl::RtlFillMemoryUlong
+XBSYSAPI EXPORTNUM(285) xbox::VOID NTAPI xbox::RtlFillMemoryUlong
 (
 	IN PVOID Destination,
 	IN SIZE_T Length,
@@ -1013,7 +1013,7 @@ XBSYSAPI EXPORTNUM(285) xboxkrnl::VOID NTAPI xboxkrnl::RtlFillMemoryUlong
 // ******************************************************************
 // * 0x011E - RtlFreeAnsiString()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(286) xboxkrnl::VOID NTAPI xboxkrnl::RtlFreeAnsiString
+XBSYSAPI EXPORTNUM(286) xbox::VOID NTAPI xbox::RtlFreeAnsiString
 (
 	IN OUT PANSI_STRING AnsiString
 )
@@ -1029,7 +1029,7 @@ XBSYSAPI EXPORTNUM(286) xboxkrnl::VOID NTAPI xboxkrnl::RtlFreeAnsiString
 // ******************************************************************
 // * 0x011F - RtlFreeUnicodeString()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(287) xboxkrnl::VOID NTAPI xboxkrnl::RtlFreeUnicodeString
+XBSYSAPI EXPORTNUM(287) xbox::VOID NTAPI xbox::RtlFreeUnicodeString
 (
 	IN OUT PUNICODE_STRING UnicodeString
 )
@@ -1045,7 +1045,7 @@ XBSYSAPI EXPORTNUM(287) xboxkrnl::VOID NTAPI xboxkrnl::RtlFreeUnicodeString
 // ******************************************************************
 // * 0x0120 - RtlGetCallersAddress()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(288) xboxkrnl::VOID NTAPI xboxkrnl::RtlGetCallersAddress
+XBSYSAPI EXPORTNUM(288) xbox::VOID NTAPI xbox::RtlGetCallersAddress
 (
 	OUT PVOID *CallersAddress,
 	OUT PVOID *CallersCaller
@@ -1062,7 +1062,7 @@ XBSYSAPI EXPORTNUM(288) xboxkrnl::VOID NTAPI xboxkrnl::RtlGetCallersAddress
 // ******************************************************************
 // * 0x0121 - RtlInitAnsiString()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(289) xboxkrnl::VOID NTAPI xboxkrnl::RtlInitAnsiString
+XBSYSAPI EXPORTNUM(289) xbox::VOID NTAPI xbox::RtlInitAnsiString
 (
 	IN OUT PANSI_STRING DestinationString,
 	IN     PCSZ         SourceString
@@ -1088,7 +1088,7 @@ XBSYSAPI EXPORTNUM(289) xboxkrnl::VOID NTAPI xboxkrnl::RtlInitAnsiString
 // ******************************************************************
 // * 0x0122 - RtlInitUnicodeString()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(290) xboxkrnl::VOID NTAPI xboxkrnl::RtlInitUnicodeString
+XBSYSAPI EXPORTNUM(290) xbox::VOID NTAPI xbox::RtlInitUnicodeString
 (
 	IN OUT PUNICODE_STRING DestinationString,
 	IN     PCWSTR         SourceString
@@ -1113,7 +1113,7 @@ XBSYSAPI EXPORTNUM(290) xboxkrnl::VOID NTAPI xboxkrnl::RtlInitUnicodeString
 // ******************************************************************
 // * 0x0123 - RtlInitializeCriticalSection()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(291) xboxkrnl::VOID NTAPI xboxkrnl::RtlInitializeCriticalSection
+XBSYSAPI EXPORTNUM(291) xbox::VOID NTAPI xbox::RtlInitializeCriticalSection
 (
     IN PRTL_CRITICAL_SECTION CriticalSection
 )
@@ -1129,7 +1129,7 @@ XBSYSAPI EXPORTNUM(291) xboxkrnl::VOID NTAPI xboxkrnl::RtlInitializeCriticalSect
 // ******************************************************************
 // * 0x0124 - RtlIntegerToChar()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(292) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlIntegerToChar
+XBSYSAPI EXPORTNUM(292) xbox::NTSTATUS NTAPI xbox::RtlIntegerToChar
 (
 	IN ULONG Value,
 	IN ULONG Base,
@@ -1188,7 +1188,7 @@ XBSYSAPI EXPORTNUM(292) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlIntegerToChar
 // ******************************************************************
 // * 0x0125 - RtlIntegerToUnicodeString()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(293) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlIntegerToUnicodeString
+XBSYSAPI EXPORTNUM(293) xbox::NTSTATUS NTAPI xbox::RtlIntegerToUnicodeString
 (
 	IN     ULONG Value,
 	IN     ULONG Base,
@@ -1220,7 +1220,7 @@ XBSYSAPI EXPORTNUM(293) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlIntegerToUnicodeSt
 // ******************************************************************
 // * 0x0126 - RtlLeaveCriticalSection()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(294) xboxkrnl::VOID NTAPI xboxkrnl::RtlLeaveCriticalSection
+XBSYSAPI EXPORTNUM(294) xbox::VOID NTAPI xbox::RtlLeaveCriticalSection
 (
     IN PRTL_CRITICAL_SECTION CriticalSection
 )
@@ -1240,7 +1240,7 @@ XBSYSAPI EXPORTNUM(294) xboxkrnl::VOID NTAPI xboxkrnl::RtlLeaveCriticalSection
 // ******************************************************************
 // * 0x0127 - RtlLeaveCriticalSectionAndRegion()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(295) xboxkrnl::VOID NTAPI xboxkrnl::RtlLeaveCriticalSectionAndRegion
+XBSYSAPI EXPORTNUM(295) xbox::VOID NTAPI xbox::RtlLeaveCriticalSectionAndRegion
 (
     IN PRTL_CRITICAL_SECTION CriticalSection
 )
@@ -1257,7 +1257,7 @@ XBSYSAPI EXPORTNUM(295) xboxkrnl::VOID NTAPI xboxkrnl::RtlLeaveCriticalSectionAn
 // ******************************************************************
 // * 0x0128 - RtlLowerChar()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(296) xboxkrnl::CHAR NTAPI xboxkrnl::RtlLowerChar
+XBSYSAPI EXPORTNUM(296) xbox::CHAR NTAPI xbox::RtlLowerChar
 (
 	CHAR Character
 )
@@ -1283,7 +1283,7 @@ XBSYSAPI EXPORTNUM(296) xboxkrnl::CHAR NTAPI xboxkrnl::RtlLowerChar
 // ******************************************************************
 // * 0x0129 - RtlMapGenericMask()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(297) xboxkrnl::VOID NTAPI xboxkrnl::RtlMapGenericMask
+XBSYSAPI EXPORTNUM(297) xbox::VOID NTAPI xbox::RtlMapGenericMask
 (
 	IN PACCESS_MASK AccessMask,
 	IN PGENERIC_MAPPING GenericMapping
@@ -1313,7 +1313,7 @@ XBSYSAPI EXPORTNUM(297) xboxkrnl::VOID NTAPI xboxkrnl::RtlMapGenericMask
 // ******************************************************************
 // * 0x012A - RtlMoveMemory()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(298) xboxkrnl::VOID NTAPI xboxkrnl::RtlMoveMemory
+XBSYSAPI EXPORTNUM(298) xbox::VOID NTAPI xbox::RtlMoveMemory
 (
 	IN VOID UNALIGNED       *Destination,
 	IN CONST VOID UNALIGNED *Source,
@@ -1332,7 +1332,7 @@ XBSYSAPI EXPORTNUM(298) xboxkrnl::VOID NTAPI xboxkrnl::RtlMoveMemory
 // ******************************************************************
 // * 0x012B - RtlMultiByteToUnicodeN()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(299) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlMultiByteToUnicodeN
+XBSYSAPI EXPORTNUM(299) xbox::NTSTATUS NTAPI xbox::RtlMultiByteToUnicodeN
 (
 	IN     PWSTR UnicodeString,
 	IN     ULONG MaxBytesInUnicodeString,
@@ -1370,7 +1370,7 @@ XBSYSAPI EXPORTNUM(299) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlMultiByteToUnicode
 // ******************************************************************
 // * 0x012C - RtlMultiByteToUnicodeSize()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(300) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlMultiByteToUnicodeSize
+XBSYSAPI EXPORTNUM(300) xbox::NTSTATUS NTAPI xbox::RtlMultiByteToUnicodeSize
 (
 	IN PULONG BytesInUnicodeString,
 	IN PCHAR MultiByteString,
@@ -1391,7 +1391,7 @@ XBSYSAPI EXPORTNUM(300) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlMultiByteToUnicode
 // ******************************************************************
 // * 0x012D - RtlNtStatusToDosError()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(301) xboxkrnl::ULONG NTAPI xboxkrnl::RtlNtStatusToDosError
+XBSYSAPI EXPORTNUM(301) xbox::ULONG NTAPI xbox::RtlNtStatusToDosError
 (
 	IN NTSTATUS Status
 )
@@ -1482,7 +1482,7 @@ static inline BOOL IsLeapYear(int Year)
 // ******************************************************************
 // * 0x012E - RtlRaiseException()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(302) xboxkrnl::VOID NTAPI xboxkrnl::RtlRaiseException
+XBSYSAPI EXPORTNUM(302) xbox::VOID NTAPI xbox::RtlRaiseException
 (
 	IN PEXCEPTION_RECORD ExceptionRecord
 )
@@ -1495,7 +1495,7 @@ XBSYSAPI EXPORTNUM(302) xboxkrnl::VOID NTAPI xboxkrnl::RtlRaiseException
 // ******************************************************************
 // * 0x012F - RtlRaiseStatus()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(303) xboxkrnl::VOID NTAPI xboxkrnl::RtlRaiseStatus
+XBSYSAPI EXPORTNUM(303) xbox::VOID NTAPI xbox::RtlRaiseStatus
 (
 	IN NTSTATUS Status
 )
@@ -1514,7 +1514,7 @@ XBSYSAPI EXPORTNUM(303) xboxkrnl::VOID NTAPI xboxkrnl::RtlRaiseStatus
 // ******************************************************************
 // * 0x0130 - RtlTimeFieldsToTime()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(304) xboxkrnl::BOOLEAN NTAPI xboxkrnl::RtlTimeFieldsToTime
+XBSYSAPI EXPORTNUM(304) xbox::BOOLEAN NTAPI xbox::RtlTimeFieldsToTime
 (
 	IN  PTIME_FIELDS    TimeFields,
 	OUT PLARGE_INTEGER  Time
@@ -1574,7 +1574,7 @@ XBSYSAPI EXPORTNUM(304) xboxkrnl::BOOLEAN NTAPI xboxkrnl::RtlTimeFieldsToTime
 // ******************************************************************
 // * 0x0131 - RtlTimeToTimeFields()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(305) xboxkrnl::VOID NTAPI xboxkrnl::RtlTimeToTimeFields
+XBSYSAPI EXPORTNUM(305) xbox::VOID NTAPI xbox::RtlTimeToTimeFields
 (
 	IN  PLARGE_INTEGER  Time,
 	OUT PTIME_FIELDS    TimeFields
@@ -1637,7 +1637,7 @@ XBSYSAPI EXPORTNUM(305) xboxkrnl::VOID NTAPI xboxkrnl::RtlTimeToTimeFields
 // ******************************************************************
 // * 0x0132 - RtlTryEnterCriticalSection()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(306) xboxkrnl::BOOLEAN NTAPI xboxkrnl::RtlTryEnterCriticalSection
+XBSYSAPI EXPORTNUM(306) xbox::BOOLEAN NTAPI xbox::RtlTryEnterCriticalSection
 (
 	IN PRTL_CRITICAL_SECTION CriticalSection
 )
@@ -1666,7 +1666,7 @@ XBSYSAPI EXPORTNUM(306) xboxkrnl::BOOLEAN NTAPI xboxkrnl::RtlTryEnterCriticalSec
 // ******************************************************************
 // * 0x0133 - RtlUlongByteSwap()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(307) xboxkrnl::ULONG FASTCALL xboxkrnl::RtlUlongByteSwap
+XBSYSAPI EXPORTNUM(307) xbox::ULONG FASTCALL xbox::RtlUlongByteSwap
 (
 	IN ULONG Source
 )
@@ -1678,7 +1678,7 @@ XBSYSAPI EXPORTNUM(307) xboxkrnl::ULONG FASTCALL xboxkrnl::RtlUlongByteSwap
 	RETURN(ret);
 }
 
-DWORD WINAPI RtlUnicodeStringToAnsiSize(const xboxkrnl::UNICODE_STRING *str)
+DWORD WINAPI RtlUnicodeStringToAnsiSize(const xbox::UNICODE_STRING *str)
 {
 	const wchar_t *src = (const wchar_t *)(str->Buffer);
 	DWORD ret = wcsrtombs(nullptr, &src, (size_t)str->Length, nullptr);
@@ -1688,7 +1688,7 @@ DWORD WINAPI RtlUnicodeStringToAnsiSize(const xboxkrnl::UNICODE_STRING *str)
 // ******************************************************************
 // * 0x0134 - RtlUnicodeStringToAnsiString()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(308) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlUnicodeStringToAnsiString
+XBSYSAPI EXPORTNUM(308) xbox::NTSTATUS NTAPI xbox::RtlUnicodeStringToAnsiString
 (
 	IN OUT PSTRING         DestinationString,
 	IN     PUNICODE_STRING SourceString,
@@ -1729,7 +1729,7 @@ XBSYSAPI EXPORTNUM(308) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlUnicodeStringToAns
 // ******************************************************************
 // * 0x0135 - RtlUnicodeStringToInteger()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(309) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlUnicodeStringToInteger
+XBSYSAPI EXPORTNUM(309) xbox::NTSTATUS NTAPI xbox::RtlUnicodeStringToInteger
 (
 	IN     PUNICODE_STRING String,
 	IN     ULONG Base,
@@ -1828,7 +1828,7 @@ XBSYSAPI EXPORTNUM(309) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlUnicodeStringToInt
 // ******************************************************************
 // * 0x0136 - RtlUnicodeToMultiByteN()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(310) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlUnicodeToMultiByteN
+XBSYSAPI EXPORTNUM(310) xbox::NTSTATUS NTAPI xbox::RtlUnicodeToMultiByteN
 (
 	IN PCHAR MultiByteString,
 	IN ULONG MaxBytesInMultiByteString,
@@ -1866,7 +1866,7 @@ XBSYSAPI EXPORTNUM(310) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlUnicodeToMultiByte
 // ******************************************************************
 // * 0x0137 - RtlUnicodeToMultiByteSize()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(311) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlUnicodeToMultiByteSize
+XBSYSAPI EXPORTNUM(311) xbox::NTSTATUS NTAPI xbox::RtlUnicodeToMultiByteSize
 (
 	IN PULONG BytesInMultiByteString,
 	IN PWSTR UnicodeString,
@@ -1887,7 +1887,7 @@ XBSYSAPI EXPORTNUM(311) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlUnicodeToMultiByte
 // ******************************************************************
 // * 0x0138 - RtlUnwind()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(312) xboxkrnl::VOID NTAPI xboxkrnl::RtlUnwind
+XBSYSAPI EXPORTNUM(312) xbox::VOID NTAPI xbox::RtlUnwind
 (
 	IN PVOID TargetFrame OPTIONAL,
 	IN PVOID TargetIp OPTIONAL,
@@ -1908,7 +1908,7 @@ XBSYSAPI EXPORTNUM(312) xboxkrnl::VOID NTAPI xboxkrnl::RtlUnwind
 // ******************************************************************
 // * 0x0139 - RtlUpcaseUnicodeChar()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(313) xboxkrnl::WCHAR NTAPI xboxkrnl::RtlUpcaseUnicodeChar
+XBSYSAPI EXPORTNUM(313) xbox::WCHAR NTAPI xbox::RtlUpcaseUnicodeChar
 (
 	IN WCHAR SourceCharacter
 )
@@ -1923,7 +1923,7 @@ XBSYSAPI EXPORTNUM(313) xboxkrnl::WCHAR NTAPI xboxkrnl::RtlUpcaseUnicodeChar
 // ******************************************************************
 // * 0x013A - RtlUpcaseUnicodeString()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(314) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlUpcaseUnicodeString
+XBSYSAPI EXPORTNUM(314) xbox::NTSTATUS NTAPI xbox::RtlUpcaseUnicodeString
 (
 	OUT PUNICODE_STRING DestinationString,
 	IN  PUNICODE_STRING SourceString,
@@ -1964,7 +1964,7 @@ XBSYSAPI EXPORTNUM(314) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlUpcaseUnicodeStrin
 // ******************************************************************
 // * 0x013B - RtlUpcaseUnicodeToMultiByteN()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(315) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlUpcaseUnicodeToMultiByteN
+XBSYSAPI EXPORTNUM(315) xbox::NTSTATUS NTAPI xbox::RtlUpcaseUnicodeToMultiByteN
 (
 	IN OUT PCHAR MultiByteString,
 	IN ULONG MaxBytesInMultiByteString,
@@ -2005,7 +2005,7 @@ XBSYSAPI EXPORTNUM(315) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlUpcaseUnicodeToMul
 // ******************************************************************
 // * 0x013C - RtlUpperChar()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(316) xboxkrnl::CHAR NTAPI xboxkrnl::RtlUpperChar
+XBSYSAPI EXPORTNUM(316) xbox::CHAR NTAPI xbox::RtlUpperChar
 (
 	CHAR Character
 )
@@ -2036,7 +2036,7 @@ XBSYSAPI EXPORTNUM(316) xboxkrnl::CHAR NTAPI xboxkrnl::RtlUpperChar
 // ******************************************************************
 // * 0x013D - RtlUpperString()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(317) xboxkrnl::VOID NTAPI xboxkrnl::RtlUpperString
+XBSYSAPI EXPORTNUM(317) xbox::VOID NTAPI xbox::RtlUpperString
 (
 	OUT PSTRING DestinationString,
 	IN  PSTRING SourceString
@@ -2064,7 +2064,7 @@ XBSYSAPI EXPORTNUM(317) xboxkrnl::VOID NTAPI xboxkrnl::RtlUpperString
 // ******************************************************************
 // * 0x013E - RtlUshortByteSwap()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(318) xboxkrnl::USHORT FASTCALL xboxkrnl::RtlUshortByteSwap
+XBSYSAPI EXPORTNUM(318) xbox::USHORT FASTCALL xbox::RtlUshortByteSwap
 (
 	IN USHORT Source
 )
@@ -2079,7 +2079,7 @@ XBSYSAPI EXPORTNUM(318) xboxkrnl::USHORT FASTCALL xboxkrnl::RtlUshortByteSwap
 // ******************************************************************
 // * 0x013F - RtlWalkFrameChain()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(319) xboxkrnl::ULONG NTAPI xboxkrnl::RtlWalkFrameChain
+XBSYSAPI EXPORTNUM(319) xbox::ULONG NTAPI xbox::RtlWalkFrameChain
 (
 	OUT PVOID *Callers,
 	IN ULONG Count,
@@ -2100,7 +2100,7 @@ XBSYSAPI EXPORTNUM(319) xboxkrnl::ULONG NTAPI xboxkrnl::RtlWalkFrameChain
 // ******************************************************************
 // * 0x0140 - RtlZeroMemory()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(320) xboxkrnl::VOID NTAPI xboxkrnl::RtlZeroMemory
+XBSYSAPI EXPORTNUM(320) xbox::VOID NTAPI xbox::RtlZeroMemory
 (
 	IN VOID UNALIGNED  *Destination,
 	IN SIZE_T           Length
@@ -2117,7 +2117,7 @@ XBSYSAPI EXPORTNUM(320) xboxkrnl::VOID NTAPI xboxkrnl::RtlZeroMemory
 // ******************************************************************
 // * 0x0160 - RtlRip
 // ******************************************************************
-XBSYSAPI EXPORTNUM(352) xboxkrnl::VOID NTAPI xboxkrnl::RtlRip
+XBSYSAPI EXPORTNUM(352) xbox::VOID NTAPI xbox::RtlRip
 (
 	PCHAR	ApiName,
 	PCHAR	Expression,

@@ -29,15 +29,6 @@
 
 #define FUNC_EXPORTS __pragma(comment(linker, "/EXPORT:" __FUNCTION__ "=" __FUNCDNAME__))
 
-/*! xbaddr is the type of a physical address */
-typedef uint32_t xbaddr;
-
-/*! xbnullptr is the type of null pointer address*/
-#define xbnullptr nullptr
-
-/*! xbnull is the type of null address or value*/
-#define xbnull  0
-
 #ifdef _DEBUG
 /*! define this to track memory allocations */
 //#define _DEBUG_ALLOC

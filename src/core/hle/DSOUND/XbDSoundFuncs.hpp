@@ -27,7 +27,7 @@
 #include <cstdint>
 #include "XbDSoundTypes.h"
 
-namespace XTL {
+namespace xbox {
     namespace DSOUND {
 
     static inline uint16_t PresetChannelDefault(uint32_t Xb_flags)

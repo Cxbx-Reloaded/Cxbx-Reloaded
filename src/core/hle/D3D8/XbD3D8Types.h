@@ -84,7 +84,7 @@
 #define IDirect3DSwapChain              IDirect3DSwapChain9
 #define IDirect3DQuery                  IDirect3DQuery9
 
-namespace XTL {
+namespace xbox {
 
 // TODO : Declare these aliasses as Xbox type
 typedef D3DLIGHT9 X_D3DLIGHT8;
@@ -1242,6 +1242,6 @@ typedef DWORD NV2AMETHOD;
 // Below declarations are used by Cxbx, not by the Xbox!!!
 //
 
-} // end of namespace XTL
+} // end of namespace xbox
 
 #endif

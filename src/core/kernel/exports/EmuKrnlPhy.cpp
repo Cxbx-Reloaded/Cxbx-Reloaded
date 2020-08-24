@@ -99,7 +99,7 @@ void PhyClearMDIOLOCK()
 	int timeout = PHYRW_TIMEOUT;
 
 	do {
-		xboxkrnl::KeStallExecutionProcessor(50);
+		xbox::KeStallExecutionProcessor(50);
 		timeout -= 50;
 	} while (timeout > 0 && (g_NVNet->MMIORead(0, NvRegMIIControl, sizeof(DWORD)) & MDIOADR_LOCK));
 }
@@ -119,7 +119,7 @@ BOOL PhyReadReg(DWORD phyreg, DWORD* val)
 	mdioadr |= MDIOADR_LOCK;
 
 	for (timeout = PHYRW_TIMEOUT; timeout > 0 && (mdioadr & MDIOADR_LOCK); timeout -= 50) {
-		xboxkrnl::KeStallExecutionProcessor(50);
+		xbox::KeStallExecutionProcessor(50);
 		mdioadr = g_NVNet->MMIORead(0, NvRegMIIControl, sizeof(DWORD));
 	}
 
@@ -150,7 +150,7 @@ BOOL PhyWriteReg(DWORD phyreg, DWORD val)
 	mdioadr |= MDIOADR_LOCK;
 
 	for (timeout = PHYRW_TIMEOUT; timeout > 0 && (mdioadr & MDIOADR_LOCK); timeout -= 50) {
-		xboxkrnl::KeStallExecutionProcessor(50);
+		xbox::KeStallExecutionProcessor(50);
 		mdioadr = g_NVNet->MMIORead(0, NvRegMIIControl, sizeof(DWORD));
 	}
 
@@ -167,7 +167,7 @@ DWORD PhyWaitForLinkUp()
 	DWORD miiStatus = 0;
 	INT timeout = 1000;
 	while (timeout-- && !(miiStatus & MIISTATUS_LINK_IS_UP)) {
-		xboxkrnl::KeStallExecutionProcessor(500);
+		xbox::KeStallExecutionProcessor(500);
 		if (!PhyReadReg(MIIREG_STATUS, &miiStatus)) {
 			break;
 		}
@@ -209,7 +209,7 @@ BOOL PhyUpdateLinkState()
 // ******************************************************************
 // * 0x00FC - PhyGetLinkState()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(252) xboxkrnl::DWORD NTAPI xboxkrnl::PhyGetLinkState
+XBSYSAPI EXPORTNUM(252) xbox::DWORD NTAPI xbox::PhyGetLinkState
 (
 	IN ULONG	Mode
 )
@@ -227,7 +227,7 @@ XBSYSAPI EXPORTNUM(252) xboxkrnl::DWORD NTAPI xboxkrnl::PhyGetLinkState
 // ******************************************************************
 // * 0x00FD - PhyInitialize()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(253) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PhyInitialize
+XBSYSAPI EXPORTNUM(253) xbox::NTSTATUS NTAPI xbox::PhyInitialize
 (
 	IN ULONG	forceReset,
 	IN PVOID	Parameter2

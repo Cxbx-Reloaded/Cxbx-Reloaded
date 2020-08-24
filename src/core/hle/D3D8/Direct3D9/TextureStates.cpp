@@ -98,7 +98,7 @@ bool XboxTextureStateConverter::Init(XboxRenderStateConverter* pState)
 void XboxTextureStateConverter::BuildTextureStateMappingTable()
 {
     EmuLog(LOG_LEVEL::INFO, "Building Cxbx to XDK Texture State Mapping Table");
-    for (int State = XTL::X_D3DTSS_FIRST; State <= XTL::X_D3DTSS_LAST; State++) {
+    for (int State = xbox::X_D3DTSS_FIRST; State <= xbox::X_D3DTSS_LAST; State++) {
         int index = State;
 
         // On early XDKs, we need to shuffle the values around a little
@@ -123,32 +123,32 @@ DWORD XboxTextureStateConverter::GetHostTextureOpValue(DWORD Value)
 {
     bool bOldOrder = g_LibVersion_D3D8 <= 3948; // Verified old order in 3944, new order in 4039
     switch (Value) {
-        case XTL::X_D3DTOP_DISABLE: return D3DTOP_DISABLE;
-        case XTL::X_D3DTOP_SELECTARG1: return D3DTOP_SELECTARG1;
-        case XTL::X_D3DTOP_SELECTARG2: return D3DTOP_SELECTARG2;
-        case XTL::X_D3DTOP_MODULATE: return D3DTOP_MODULATE;
-        case XTL::X_D3DTOP_MODULATE2X: return D3DTOP_MODULATE2X;
-        case XTL::X_D3DTOP_MODULATE4X: return D3DTOP_MODULATE4X;
-        case XTL::X_D3DTOP_ADD: return D3DTOP_ADD;
-        case XTL::X_D3DTOP_ADDSIGNED: return D3DTOP_ADDSIGNED;
-        case XTL::X_D3DTOP_ADDSIGNED2X: return D3DTOP_ADDSIGNED2X;
-        case XTL::X_D3DTOP_SUBTRACT: return D3DTOP_SUBTRACT;
-        case XTL::X_D3DTOP_ADDSMOOTH: return D3DTOP_ADDSMOOTH;
-        case XTL::X_D3DTOP_BLENDDIFFUSEALPHA: return D3DTOP_BLENDDIFFUSEALPHA;
-        case 0x0D/*XTL::X_D3DTOP_BLENDCURRENTALPHA  */: return bOldOrder ? D3DTOP_BLENDTEXTUREALPHA   : D3DTOP_BLENDCURRENTALPHA;
-        case 0x0E/*XTL::X_D3DTOP_BLENDTEXTUREALPHA  */: return bOldOrder ? D3DTOP_BLENDFACTORALPHA    : D3DTOP_BLENDTEXTUREALPHA;
-        case 0x0F/*XTL::X_D3DTOP_BLENDFACTORALPHA   */: return bOldOrder ? D3DTOP_BLENDTEXTUREALPHAPM : D3DTOP_BLENDFACTORALPHA;
-        case 0x10/*XTL::X_D3DTOP_BLENDTEXTUREALPHAPM*/: return bOldOrder ? D3DTOP_BLENDCURRENTALPHA   : D3DTOP_BLENDTEXTUREALPHAPM;
-        case XTL::X_D3DTOP_PREMODULATE: return D3DTOP_PREMODULATE;
-        case XTL::X_D3DTOP_MODULATEALPHA_ADDCOLOR: return D3DTOP_MODULATEALPHA_ADDCOLOR;
-        case XTL::X_D3DTOP_MODULATECOLOR_ADDALPHA: return D3DTOP_MODULATECOLOR_ADDALPHA;
-        case XTL::X_D3DTOP_MODULATEINVALPHA_ADDCOLOR: return D3DTOP_MODULATEINVALPHA_ADDCOLOR;
-        case XTL::X_D3DTOP_MODULATEINVCOLOR_ADDALPHA: return D3DTOP_MODULATEINVCOLOR_ADDALPHA;
-        case XTL::X_D3DTOP_DOTPRODUCT3: return D3DTOP_DOTPRODUCT3;
-        case XTL::X_D3DTOP_MULTIPLYADD: return D3DTOP_MULTIPLYADD;
-        case XTL::X_D3DTOP_LERP: return D3DTOP_LERP;
-        case XTL::X_D3DTOP_BUMPENVMAP: return D3DTOP_BUMPENVMAP;
-        case XTL::X_D3DTOP_BUMPENVMAPLUMINANCE: return D3DTOP_BUMPENVMAPLUMINANCE;
+        case xbox::X_D3DTOP_DISABLE: return D3DTOP_DISABLE;
+        case xbox::X_D3DTOP_SELECTARG1: return D3DTOP_SELECTARG1;
+        case xbox::X_D3DTOP_SELECTARG2: return D3DTOP_SELECTARG2;
+        case xbox::X_D3DTOP_MODULATE: return D3DTOP_MODULATE;
+        case xbox::X_D3DTOP_MODULATE2X: return D3DTOP_MODULATE2X;
+        case xbox::X_D3DTOP_MODULATE4X: return D3DTOP_MODULATE4X;
+        case xbox::X_D3DTOP_ADD: return D3DTOP_ADD;
+        case xbox::X_D3DTOP_ADDSIGNED: return D3DTOP_ADDSIGNED;
+        case xbox::X_D3DTOP_ADDSIGNED2X: return D3DTOP_ADDSIGNED2X;
+        case xbox::X_D3DTOP_SUBTRACT: return D3DTOP_SUBTRACT;
+        case xbox::X_D3DTOP_ADDSMOOTH: return D3DTOP_ADDSMOOTH;
+        case xbox::X_D3DTOP_BLENDDIFFUSEALPHA: return D3DTOP_BLENDDIFFUSEALPHA;
+        case 0x0D/*xbox::X_D3DTOP_BLENDCURRENTALPHA  */: return bOldOrder ? D3DTOP_BLENDTEXTUREALPHA   : D3DTOP_BLENDCURRENTALPHA;
+        case 0x0E/*xbox::X_D3DTOP_BLENDTEXTUREALPHA  */: return bOldOrder ? D3DTOP_BLENDFACTORALPHA    : D3DTOP_BLENDTEXTUREALPHA;
+        case 0x0F/*xbox::X_D3DTOP_BLENDFACTORALPHA   */: return bOldOrder ? D3DTOP_BLENDTEXTUREALPHAPM : D3DTOP_BLENDFACTORALPHA;
+        case 0x10/*xbox::X_D3DTOP_BLENDTEXTUREALPHAPM*/: return bOldOrder ? D3DTOP_BLENDCURRENTALPHA   : D3DTOP_BLENDTEXTUREALPHAPM;
+        case xbox::X_D3DTOP_PREMODULATE: return D3DTOP_PREMODULATE;
+        case xbox::X_D3DTOP_MODULATEALPHA_ADDCOLOR: return D3DTOP_MODULATEALPHA_ADDCOLOR;
+        case xbox::X_D3DTOP_MODULATECOLOR_ADDALPHA: return D3DTOP_MODULATECOLOR_ADDALPHA;
+        case xbox::X_D3DTOP_MODULATEINVALPHA_ADDCOLOR: return D3DTOP_MODULATEINVALPHA_ADDCOLOR;
+        case xbox::X_D3DTOP_MODULATEINVCOLOR_ADDALPHA: return D3DTOP_MODULATEINVCOLOR_ADDALPHA;
+        case xbox::X_D3DTOP_DOTPRODUCT3: return D3DTOP_DOTPRODUCT3;
+        case xbox::X_D3DTOP_MULTIPLYADD: return D3DTOP_MULTIPLYADD;
+        case xbox::X_D3DTOP_LERP: return D3DTOP_LERP;
+        case xbox::X_D3DTOP_BUMPENVMAP: return D3DTOP_BUMPENVMAP;
+        case xbox::X_D3DTOP_BUMPENVMAPLUMINANCE: return D3DTOP_BUMPENVMAPLUMINANCE;
     }
 
     EmuLog(LOG_LEVEL::WARNING, "Unsupported D3DTOP Value (%d)", Value);
@@ -164,18 +164,18 @@ void XboxTextureStateConverter::Apply()
     // The Xbox NV2A uses only Stage 3 for point-sprites, so we emulate this
     // by mapping Stage 3 to Stage 0, and disabling all stages > 0
     bool pointSpriteOverride = false;
-    bool pointSpritesEnabled = pXboxRenderStates->GetXboxRenderState(XTL::X_D3DRS_POINTSPRITEENABLE);
+    bool pointSpritesEnabled = pXboxRenderStates->GetXboxRenderState(xbox::X_D3DRS_POINTSPRITEENABLE);
     if (pointSpritesEnabled) {
         pointSpriteOverride = true;
     }
 
-    for (int XboxStage = 0; XboxStage < XTL::X_D3DTS_STAGECOUNT; XboxStage++) {
+    for (int XboxStage = 0; XboxStage < xbox::X_D3DTS_STAGECOUNT; XboxStage++) {
         // If point sprites are enabled, we need to overwrite our existing state 0 with State 3 also
         DWORD HostStage = (pointSpriteOverride && XboxStage == 3) ? 0 : XboxStage;
 
-        for (int StateIndex = XTL::X_D3DTSS_FIRST; StateIndex <= XTL::X_D3DTSS_LAST; StateIndex++) {
+        for (int StateIndex = xbox::X_D3DTSS_FIRST; StateIndex <= xbox::X_D3DTSS_LAST; StateIndex++) {
             // Read the value of the current stage/state from the Xbox data structure
-            DWORD Value = D3D__TextureState[(XboxStage * XTL::X_D3DTS_STAGESIZE) + StateIndex];
+            DWORD Value = D3D__TextureState[(XboxStage * xbox::X_D3DTS_STAGESIZE) + StateIndex];
 
             // Convert the index of the current state to an index that we can use
             // This handles the case when XDKs have different state values
@@ -183,8 +183,8 @@ void XboxTextureStateConverter::Apply()
 
             switch (State) {
                 // These types map 1:1 but have some unsupported values
-                case XTL::X_D3DTSS_ADDRESSU: case XTL::X_D3DTSS_ADDRESSV: case XTL::X_D3DTSS_ADDRESSW:
-                    if (Value == XTL::X_D3DTADDRESS_CLAMPTOEDGE) {
+                case xbox::X_D3DTSS_ADDRESSU: case xbox::X_D3DTSS_ADDRESSV: case xbox::X_D3DTSS_ADDRESSW:
+                    if (Value == xbox::X_D3DTADDRESS_CLAMPTOEDGE) {
                         EmuLog(LOG_LEVEL::WARNING, "D3DTADDRESS_CLAMPTOEDGE is unsupported");
                         // D3DTADDRESS_BORDER is the closest host match, CLAMPTOEDGE is identical
                         // Except it has additional restrictions.
@@ -192,15 +192,15 @@ void XboxTextureStateConverter::Apply()
                         break;
                     }
                     break;
-                case XTL::X_D3DTSS_MAGFILTER: case XTL::X_D3DTSS_MINFILTER: case XTL::X_D3DTSS_MIPFILTER:
-                    if (Value == XTL::X_D3DTEXF_QUINCUNX) {
+                case xbox::X_D3DTSS_MAGFILTER: case xbox::X_D3DTSS_MINFILTER: case xbox::X_D3DTSS_MIPFILTER:
+                    if (Value == xbox::X_D3DTEXF_QUINCUNX) {
                         EmuLog(LOG_LEVEL::WARNING, "D3DTEXF_QUINCUNX is unsupported");
                         // Fallback to D3DTEXF_ANISOTROPIC 
                         Value = D3DTEXF_ANISOTROPIC;
                         break;
                     }
                     break;
-                case XTL::X_D3DTSS_TEXCOORDINDEX:
+                case xbox::X_D3DTSS_TEXCOORDINDEX:
                     switch (Value) {
                         case 0x00040000:
                             // This value is TCI_OBJECT on Xbox,which is not supported by the host
@@ -215,18 +215,18 @@ void XboxTextureStateConverter::Apply()
                     }
                     break;
                 // These types require value remapping for all supported values
-                case XTL::X_D3DTSS_COLOROP: case XTL::X_D3DTSS_ALPHAOP:
+                case xbox::X_D3DTSS_COLOROP: case xbox::X_D3DTSS_ALPHAOP:
                     Value = GetHostTextureOpValue(Value);
                     break;
                 // These types  require no conversion, so we just pass through as-is
-                case XTL::X_D3DTSS_COLORARG0: case XTL::X_D3DTSS_COLORARG1: case XTL::X_D3DTSS_COLORARG2:
-                case XTL::X_D3DTSS_ALPHAARG0: case XTL::X_D3DTSS_ALPHAARG1: case XTL::X_D3DTSS_ALPHAARG2:
-                case XTL::X_D3DTSS_RESULTARG: case XTL::X_D3DTSS_TEXTURETRANSFORMFLAGS:
-                case XTL::X_D3DTSS_BUMPENVMAT00: case XTL::X_D3DTSS_BUMPENVMAT01:
-                case XTL::X_D3DTSS_BUMPENVMAT11: case XTL::X_D3DTSS_BUMPENVMAT10:
-                case XTL::X_D3DTSS_BUMPENVLSCALE: case XTL::X_D3DTSS_BUMPENVLOFFSET:
-                case XTL::X_D3DTSS_BORDERCOLOR: case XTL::X_D3DTSS_MIPMAPLODBIAS:
-                case XTL::X_D3DTSS_MAXMIPLEVEL: case XTL::X_D3DTSS_MAXANISOTROPY:
+                case xbox::X_D3DTSS_COLORARG0: case xbox::X_D3DTSS_COLORARG1: case xbox::X_D3DTSS_COLORARG2:
+                case xbox::X_D3DTSS_ALPHAARG0: case xbox::X_D3DTSS_ALPHAARG1: case xbox::X_D3DTSS_ALPHAARG2:
+                case xbox::X_D3DTSS_RESULTARG: case xbox::X_D3DTSS_TEXTURETRANSFORMFLAGS:
+                case xbox::X_D3DTSS_BUMPENVMAT00: case xbox::X_D3DTSS_BUMPENVMAT01:
+                case xbox::X_D3DTSS_BUMPENVMAT11: case xbox::X_D3DTSS_BUMPENVMAT10:
+                case xbox::X_D3DTSS_BUMPENVLSCALE: case xbox::X_D3DTSS_BUMPENVLOFFSET:
+                case xbox::X_D3DTSS_BORDERCOLOR: case xbox::X_D3DTSS_MIPMAPLODBIAS:
+                case xbox::X_D3DTSS_MAXMIPLEVEL: case xbox::X_D3DTSS_MAXANISOTROPY:
                     break;
                 default:
                     // Only log missing state if it has a PC counterpart

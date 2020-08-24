@@ -30,7 +30,6 @@
 
 
 #include <xboxkrnl/xboxkrnl.h> // For AvGetSavedDataAddress, etc.
-#include "Logging.h" // For LOG_FUNC()
 #include "EmuKrnlLogging.h"
 
 // prevent name collisions
@@ -38,6 +37,10 @@ namespace NtDll
 {
 #include "core\kernel\support\EmuNtDll.h"
 };
+
+#ifndef VOID
+#define VOID void
+#endif
 
 #include "core\kernel\support\Emu.h" // For EmuLog(LOG_LEVEL::WARNING, )
 #include "core\hle\D3D8\Direct3D9\Direct3D9.h"
@@ -48,32 +51,33 @@ namespace NtDll
 #include "devices\video\nv2a_int.h"
 #include "devices\video\nv2a.h" // For NV2ABlockInfo, EmuNV2A_Block()
 
-#ifndef VOID
-#define VOID void
+#ifdef VOID
+#undef VOID
 #endif
 
+
 // HW Register helper functions
-xboxkrnl::UCHAR REG_RD08(VOID* Ptr, xboxkrnl::ULONG Addr)
+xbox::UCHAR REG_RD08(void* Ptr, xbox::ULONG Addr)
 {
-	return EmuX86_Read((xbaddr)Ptr + Addr, sizeof(uint8_t));
+	return EmuX86_Read((xbox::addr)Ptr + Addr, sizeof(uint8_t));
 }
 
-VOID REG_WR08(VOID* Ptr, xboxkrnl::ULONG Addr, xboxkrnl::UCHAR Val)
+void REG_WR08(void* Ptr, xbox::ULONG Addr, xbox::UCHAR Val)
 {
-	EmuX86_Write((xbaddr)Ptr + Addr, Val, sizeof(uint8_t));
+	EmuX86_Write((xbox::addr)Ptr + Addr, Val, sizeof(uint8_t));
 }
 
-xboxkrnl::ULONG REG_RD32(VOID* Ptr, xboxkrnl::ULONG Addr)
+xbox::ULONG REG_RD32(void* Ptr, xbox::ULONG Addr)
 {
-	return EmuX86_Read((xbaddr)Ptr + Addr, sizeof(uint32_t));
+	return EmuX86_Read((xbox::addr)Ptr + Addr, sizeof(uint32_t));
 }
 
-VOID REG_WR32(VOID* Ptr, xboxkrnl::ULONG Addr, xboxkrnl::ULONG Val)
+void REG_WR32(void* Ptr, xbox::ULONG Addr, xbox::ULONG Val)
 {
-	EmuX86_Write((xbaddr)Ptr + Addr, Val, sizeof(uint32_t));
+	EmuX86_Write((xbox::addr)Ptr + Addr, Val, sizeof(uint32_t));
 }
 
-VOID CRTC_WR(VOID* Ptr, xboxkrnl::UCHAR i, xboxkrnl::UCHAR d)
+void CRTC_WR(void* Ptr, xbox::UCHAR i, xbox::UCHAR d)
 {
 	static const NV2ABlockInfo* block = EmuNV2A_Block(NV_PRMCIO_CRX__COLOR);
 
@@ -81,7 +85,7 @@ VOID CRTC_WR(VOID* Ptr, xboxkrnl::UCHAR i, xboxkrnl::UCHAR d)
 	g_NV2A->BlockWrite(block, NV_PRMCIO_CR__COLOR, d, sizeof(uint8_t));
 }
 
-VOID SRX_WR(VOID *Ptr, xboxkrnl::UCHAR i, xboxkrnl::UCHAR d)
+void SRX_WR(void *Ptr, xbox::UCHAR i, xbox::UCHAR d)
 {
 	static const NV2ABlockInfo* block = EmuNV2A_Block(NV_PRMVIO_SRX);
 
@@ -89,7 +93,7 @@ VOID SRX_WR(VOID *Ptr, xboxkrnl::UCHAR i, xboxkrnl::UCHAR d)
 	g_NV2A->BlockWrite(block, NV_PRMVIO_SR, d, sizeof(uint8_t));
 }
 
-VOID GRX_WR(VOID *Ptr, xboxkrnl::UCHAR i, xboxkrnl::UCHAR d)
+void GRX_WR(void *Ptr, xbox::UCHAR i, xbox::UCHAR d)
 {
 	static const NV2ABlockInfo* block = EmuNV2A_Block(NV_PRMVIO_GRX);
 
@@ -97,7 +101,7 @@ VOID GRX_WR(VOID *Ptr, xboxkrnl::UCHAR i, xboxkrnl::UCHAR d)
 	g_NV2A->BlockWrite(block, NV_PRMVIO_GX, d, sizeof(uint8_t));
 }
 
-VOID ARX_WR(VOID *Ptr, xboxkrnl::UCHAR i, xboxkrnl::UCHAR d)
+void ARX_WR(void *Ptr, xbox::UCHAR i, xbox::UCHAR d)
 {
 	static const NV2ABlockInfo* block = EmuNV2A_Block(NV_PRMCIO_ARX);
 
@@ -128,14 +132,14 @@ ULONG AvSMCVideoModeToAVPack(ULONG VideoMode)
 
 ULONG AvQueryAvCapabilities()
 {
-	ULONG avpack = AvSMCVideoModeToAVPack(xboxkrnl::HalBootSMCVideoMode);
+	ULONG avpack = AvSMCVideoModeToAVPack(xbox::HalBootSMCVideoMode);
 	ULONG type;
 	ULONG resultSize;
 
 	// First, read the factory AV settings
 	ULONG avRegion;
-	NTSTATUS result = xboxkrnl::ExQueryNonVolatileSetting(
-		xboxkrnl::XC_FACTORY_AV_REGION,
+	NTSTATUS result = xbox::ExQueryNonVolatileSetting(
+		xbox::XC_FACTORY_AV_REGION,
 		&type,
 		&avRegion,
 		sizeof(ULONG),
@@ -148,8 +152,8 @@ ULONG AvQueryAvCapabilities()
 
 	// Read the user-configurable (via the dashboard) settings
 	ULONG userSettings;
-	result = xboxkrnl::ExQueryNonVolatileSetting(
-		xboxkrnl::XC_VIDEO,
+	result = xbox::ExQueryNonVolatileSetting(
+		xbox::XC_VIDEO,
 		&type,
 		&userSettings,
 		sizeof(ULONG),
@@ -163,12 +167,12 @@ ULONG AvQueryAvCapabilities()
 	return avpack | (avRegion & (AV_STANDARD_MASK | AV_REFRESH_MASK)) | (userSettings & ~(AV_STANDARD_MASK | AV_PACK_MASK));
 }
 
-xboxkrnl::PVOID xboxkrnl::AvSavedDataAddress = xbnullptr;
+xbox::PVOID xbox::AvSavedDataAddress = xbox::zeroptr;
 
 // ******************************************************************
 // * 0x0001 - AvGetSavedDataAddress()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(1) xboxkrnl::PVOID NTAPI xboxkrnl::AvGetSavedDataAddress(void)
+XBSYSAPI EXPORTNUM(1) xbox::PVOID NTAPI xbox::AvGetSavedDataAddress(void)
 {
 	LOG_FUNC();
 
@@ -178,7 +182,7 @@ XBSYSAPI EXPORTNUM(1) xboxkrnl::PVOID NTAPI xboxkrnl::AvGetSavedDataAddress(void
 // ******************************************************************
 // * 0x0002 - AvSendTVEncoderOption()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(2) VOID NTAPI xboxkrnl::AvSendTVEncoderOption
+XBSYSAPI EXPORTNUM(2) xbox::VOID NTAPI xbox::AvSendTVEncoderOption
 (
 	IN  PVOID   RegisterBase,
 	IN  ULONG   Option,
@@ -257,7 +261,7 @@ XBSYSAPI EXPORTNUM(2) VOID NTAPI xboxkrnl::AvSendTVEncoderOption
 // ******************************************************************
 // * 0x0003 - AvSetDisplayMode()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(3) xboxkrnl::ULONG NTAPI xboxkrnl::AvSetDisplayMode
+XBSYSAPI EXPORTNUM(3) xbox::ULONG NTAPI xbox::AvSetDisplayMode
 (
 	IN  PVOID   RegisterBase,
 	IN  ULONG   Step,
@@ -292,17 +296,17 @@ XBSYSAPI EXPORTNUM(3) xboxkrnl::ULONG NTAPI xboxkrnl::AvSetDisplayMode
 
 	switch (Format)
 	{
-	case XTL::X_D3DFMT_LIN_A1R5G5B5:
-	case XTL::X_D3DFMT_LIN_X1R5G5B5:
+	case xbox::X_D3DFMT_LIN_A1R5G5B5:
+	case xbox::X_D3DFMT_LIN_X1R5G5B5:
 		GeneralControl = NV_PRAMDAC_GENERAL_CONTROL_BPC_8BITS | NV_PRAMDAC_GENERAL_CONTROL_PIXMIX_ON; /*=0x00100030*/
 		CR28Depth = 2;
 		break;
-	case XTL::X_D3DFMT_LIN_R5G6B5:
+	case xbox::X_D3DFMT_LIN_R5G6B5:
 		GeneralControl = NV_PRAMDAC_GENERAL_CONTROL_BPC_8BITS | NV_PRAMDAC_GENERAL_CONTROL_ALT_MODE_SEL | NV_PRAMDAC_GENERAL_CONTROL_PIXMIX_ON; /*=0x00101030*/
 		CR28Depth = 2;
 		break;
-	case XTL::X_D3DFMT_LIN_A8R8G8B8:
-	case XTL::X_D3DFMT_LIN_X8R8G8B8:
+	case xbox::X_D3DFMT_LIN_A8R8G8B8:
+	case xbox::X_D3DFMT_LIN_X8R8G8B8:
 		GeneralControl = NV_PRAMDAC_GENERAL_CONTROL_BPC_8BITS | NV_PRAMDAC_GENERAL_CONTROL_PIXMIX_ON; /*=0x00100030*/
 		CR28Depth = 3;
 		break;
@@ -405,7 +409,7 @@ XBSYSAPI EXPORTNUM(3) xboxkrnl::ULONG NTAPI xboxkrnl::AvSetDisplayMode
 // ******************************************************************
 // * 0x0004 - AvSetSavedDataAddress()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(4) VOID NTAPI xboxkrnl::AvSetSavedDataAddress
+XBSYSAPI EXPORTNUM(4) xbox::VOID NTAPI xbox::AvSetSavedDataAddress
 (
 	IN  PVOID   Address
 )

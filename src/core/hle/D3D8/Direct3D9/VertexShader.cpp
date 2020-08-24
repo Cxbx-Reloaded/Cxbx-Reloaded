@@ -228,7 +228,7 @@ extern HRESULT EmuCompileShader
 )
 {
 	// TODO include header in vertex shader
-	//XTL::X_VSH_SHADER_HEADER* pXboxVertexShaderHeader = (XTL::X_VSH_SHADER_HEADER*)pXboxFunction;
+	//xbox::X_VSH_SHADER_HEADER* pXboxVertexShaderHeader = (xbox::X_VSH_SHADER_HEADER*)pXboxFunction;
 	ID3DBlob* pErrors = nullptr;
 	HRESULT             hRet = 0;
 

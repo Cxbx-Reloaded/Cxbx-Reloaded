@@ -42,12 +42,12 @@ typedef struct _POOL_DESCRIPTOR {
 	ULONG RunningDeAllocs;
 	ULONG TotalPages;
 	ULONG TotalBigPages;
-	xboxkrnl::LIST_ENTRY ListHeads[POOL_LIST_HEADS];
+	xbox::LIST_ENTRY ListHeads[POOL_LIST_HEADS];
 } POOL_DESCRIPTOR, *PPOOL_DESCRIPTOR;
 
 
 typedef struct _POOL_LOOKASIDE_LIST {
-	xboxkrnl::SLIST_HEADER ListHead;
+	xbox::SLIST_HEADER ListHead;
 	USHORT Depth;
 	USHORT Padding;
 	ULONG TotalAllocates;

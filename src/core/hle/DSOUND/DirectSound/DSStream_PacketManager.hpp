@@ -28,17 +28,17 @@
 
 #include "DirectSound.hpp"
 
-#define vector_hvp_iterator std::vector<XTL::host_voice_packet>::iterator
+#define vector_hvp_iterator std::vector<xbox::host_voice_packet>::iterator
 
 extern void DSStream_Packet_Clear(
     vector_hvp_iterator        &buffer,
     DWORD                       status,
-    XTL::LPFNXMOCALLBACK        Xb_lpfnCallback,
+    xbox::LPFNXMOCALLBACK        Xb_lpfnCallback,
     LPVOID                      Xb_lpvContext,
-    XTL::X_CDirectSoundStream*  pThis);
+    xbox::X_CDirectSoundStream*  pThis);
 
-extern bool DSStream_Packet_Process(XTL::X_CDirectSoundStream* pThis);
+extern bool DSStream_Packet_Process(xbox::X_CDirectSoundStream* pThis);
 
-extern void DSStream_Packet_FlushEx_Reset(XTL::X_CDirectSoundStream* pThis);
+extern void DSStream_Packet_FlushEx_Reset(xbox::X_CDirectSoundStream* pThis);
 
-extern bool DSStream_Packet_Flush(XTL::X_CDirectSoundStream* pThis);
+extern bool DSStream_Packet_Flush(xbox::X_CDirectSoundStream* pThis);

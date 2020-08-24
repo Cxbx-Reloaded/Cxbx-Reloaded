@@ -79,7 +79,7 @@ typedef struct NV2ABlockInfo {
 	MemoryRegionOps ops;
 } NV2ABlockInfo;
 
-const NV2ABlockInfo* EmuNV2A_Block(xbaddr addr);
+const NV2ABlockInfo* EmuNV2A_Block(xbox::addr addr);
 
 void CxbxReserveNV2AMemory(NV2AState *d);
 

@@ -133,16 +133,16 @@ static unsigned int WINAPI PCSTProxy
 		SuspendThread(GetCurrentThread());
 	}
 
-	auto routine = (xboxkrnl::PKSYSTEM_ROUTINE)SystemRoutine;
+	auto routine = (xbox::PKSYSTEM_ROUTINE)SystemRoutine;
 	// Debugging notice : When the below line shows up with an Exception dialog and a
 	// message like: "Exception thrown at 0x00026190 in cxbx.exe: 0xC0000005: Access
 	// violation reading location 0xFD001804.", then this is AS-DESIGNED behaviour!
 	// (To avoid repetitions, uncheck "Break when this exception type is thrown").
-	routine(xboxkrnl::PKSTART_ROUTINE(StartRoutine), StartContext);
+	routine(xbox::PKSTART_ROUTINE(StartRoutine), StartContext);
 
 	// This will also handle thread notification :
 	LOG_TEST_CASE("Thread returned from SystemRoutine");
-	xboxkrnl::PsTerminateSystemThread(STATUS_SUCCESS);
+	xbox::PsTerminateSystemThread(STATUS_SUCCESS);
 
 	return 0; // will never be reached
 }
@@ -150,20 +150,20 @@ static unsigned int WINAPI PCSTProxy
 // Placeholder system function, instead of XapiThreadStartup
 void PspSystemThreadStartup
 (
-	IN xboxkrnl::PKSTART_ROUTINE StartRoutine,
+	IN xbox::PKSTART_ROUTINE StartRoutine,
 	IN PVOID StartContext
 )
 {
 	// TODO : Call PspUnhandledExceptionInSystemThread(GetExceptionInformation())
 	(StartRoutine)(StartContext);
 
-	xboxkrnl::PsTerminateSystemThread(STATUS_SUCCESS);
+	xbox::PsTerminateSystemThread(STATUS_SUCCESS);
 }
 
 // ******************************************************************
 // * 0x00FE - PsCreateSystemThread()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(254) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PsCreateSystemThread
+XBSYSAPI EXPORTNUM(254) xbox::NTSTATUS NTAPI xbox::PsCreateSystemThread
 (
 	OUT PHANDLE         ThreadHandle,
 	OUT PHANDLE         ThreadId OPTIONAL,
@@ -204,7 +204,7 @@ XBSYSAPI EXPORTNUM(254) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PsCreateSystemThread
 // SystemRoutine: System function (normally XapiThreadStartup) called when the thread is created
 //
 // New to the XBOX.
-XBSYSAPI EXPORTNUM(255) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PsCreateSystemThreadEx
+XBSYSAPI EXPORTNUM(255) xbox::NTSTATUS NTAPI xbox::PsCreateSystemThreadEx
 (
 	OUT PHANDLE         ThreadHandle,
 	IN  ULONG           ThreadExtensionSize,
@@ -272,7 +272,7 @@ XBSYSAPI EXPORTNUM(255) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PsCreateSystemThreadE
 				// TODO: XAPI notification routines are already handeld by XapiThreadStartup and don't need to be called by us
 				// TODO: This type of notification routine is PCREATE_THREAD_NOTIFY_ROUTINE, which takes an ETHREAD pointer as well as Thread ID as input
 				// TODO: This is impossible to support currently, as we do not create or register Xbox ETHREAD objects, so we're better to skip it entirely!
-				XTL::XTHREAD_NOTIFY_PROC pfnNotificationRoutine = (XTL::XTHREAD_NOTIFY_PROC)g_pfnThreadNotification[i];
+				xbox::XTHREAD_NOTIFY_PROC pfnNotificationRoutine = (xbox::XTHREAD_NOTIFY_PROC)g_pfnThreadNotification[i];
 
 				// If the routine doesn't exist, don't execute it!
 				if (pfnNotificationRoutine == NULL)
@@ -324,7 +324,7 @@ XBSYSAPI EXPORTNUM(255) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PsCreateSystemThreadE
 		CxbxKrnlRegisterThread(*ThreadHandle);
 
 		if (ThreadId != NULL)
-			*ThreadId = (xboxkrnl::HANDLE)dwThreadId;
+			*ThreadId = (xbox::HANDLE)dwThreadId;
 	}
 
 	SwitchToThread();
@@ -336,7 +336,7 @@ XBSYSAPI EXPORTNUM(255) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PsCreateSystemThreadE
 // ******************************************************************
 // * 0x0100 - PsQueryStatistics()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(256) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PsQueryStatistics
+XBSYSAPI EXPORTNUM(256) xbox::NTSTATUS NTAPI xbox::PsQueryStatistics
 (
 	IN OUT PPS_STATISTICS ProcessStatistics
 )
@@ -359,7 +359,7 @@ XBSYSAPI EXPORTNUM(256) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PsQueryStatistics
 // ******************************************************************
 // * 0x0101 - PsSetCreateThreadNotifyRoutine()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(257) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PsSetCreateThreadNotifyRoutine
+XBSYSAPI EXPORTNUM(257) xbox::NTSTATUS NTAPI xbox::PsSetCreateThreadNotifyRoutine
 (
 	IN PCREATE_THREAD_NOTIFY_ROUTINE NotifyRoutine
 )
@@ -368,7 +368,7 @@ XBSYSAPI EXPORTNUM(257) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PsSetCreateThreadNoti
 
 	NTSTATUS ret = STATUS_INSUFFICIENT_RESOURCES;
 
-	// Taken from XTL::EmuXRegisterThreadNotifyRoutine (perhaps that can be removed now) :
+	// Taken from xbox::EmuXRegisterThreadNotifyRoutine (perhaps that can be removed now) :
 
 	// I honestly don't expect this to happen, but if it does...
 	if (g_iThreadNotificationCount >= PSP_MAX_CREATE_THREAD_NOTIFY)
@@ -397,7 +397,7 @@ XBSYSAPI EXPORTNUM(257) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PsSetCreateThreadNoti
 // Exits the current system thread.  Must be called from a system thread.
 //
 // Differences from NT: None.
-XBSYSAPI EXPORTNUM(258) xboxkrnl::VOID NTAPI xboxkrnl::PsTerminateSystemThread
+XBSYSAPI EXPORTNUM(258) xbox::VOID NTAPI xbox::PsTerminateSystemThread
 (
 	IN NTSTATUS ExitStatus
 )
@@ -410,7 +410,7 @@ XBSYSAPI EXPORTNUM(258) xboxkrnl::VOID NTAPI xboxkrnl::PsTerminateSystemThread
 	{
 		for (int i = 0; i < 16; i++)
 		{
-			XTL::XTHREAD_NOTIFY_PROC pfnNotificationRoutine = (XTL::XTHREAD_NOTIFY_PROC)g_pfnThreadNotification[i];
+			xbox::XTHREAD_NOTIFY_PROC pfnNotificationRoutine = (xbox::XTHREAD_NOTIFY_PROC)g_pfnThreadNotification[i];
 
 			// If the routine doesn't exist, don't execute it!
 			if (pfnNotificationRoutine == NULL)
@@ -430,13 +430,13 @@ XBSYSAPI EXPORTNUM(258) xboxkrnl::VOID NTAPI xboxkrnl::PsTerminateSystemThread
 // ******************************************************************
 // * 0x0103 - PsThreadObjectType
 // ******************************************************************
-XBSYSAPI EXPORTNUM(259) xboxkrnl::OBJECT_TYPE VOLATILE xboxkrnl::PsThreadObjectType =
+XBSYSAPI EXPORTNUM(259) xbox::OBJECT_TYPE VOLATILE xbox::PsThreadObjectType =
 {
-	xboxkrnl::ExAllocatePoolWithTag,
-	xboxkrnl::ExFreePool,
+	xbox::ExAllocatePoolWithTag,
+	xbox::ExFreePool,
 	NULL,
 	NULL,
 	NULL,
-	(PVOID)offsetof(xboxkrnl::KTHREAD, Header),
+	(PVOID)offsetof(xbox::KTHREAD, Header),
 	'erhT' // = first four characters of "Thread" in reverse
 };

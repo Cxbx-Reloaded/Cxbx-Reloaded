@@ -948,9 +948,9 @@ static const FormatInfo FormatInfos[] = {
 #endif
 };
 
-const FormatToARGBRow EmuXBFormatComponentConverter(XTL::X_D3DFORMAT Format)
+const FormatToARGBRow EmuXBFormatComponentConverter(xbox::X_D3DFORMAT Format)
 {
-	if (Format <= XTL::X_D3DFMT_LIN_R8G8B8A8)
+	if (Format <= xbox::X_D3DFMT_LIN_R8G8B8A8)
 		if (FormatInfos[Format].components != NoCmpnts)
 			return ComponentConverters[FormatInfos[Format].components];
 
@@ -958,7 +958,7 @@ const FormatToARGBRow EmuXBFormatComponentConverter(XTL::X_D3DFORMAT Format)
 }
 
 // Is there a converter available from the supplied format to ARGB?
-bool EmuXBFormatCanBeConvertedToARGB(XTL::X_D3DFORMAT Format)
+bool EmuXBFormatCanBeConvertedToARGB(xbox::X_D3DFORMAT Format)
 {
 	const FormatToARGBRow info = EmuXBFormatComponentConverter(Format);
 	return (info != nullptr);
@@ -966,7 +966,7 @@ bool EmuXBFormatCanBeConvertedToARGB(XTL::X_D3DFORMAT Format)
 
 // Returns if convertion to ARGB is required. This is the case when
 // the format has a warning message and there's a converter present.
-bool EmuXBFormatRequiresConversionToARGB(XTL::X_D3DFORMAT Format)
+bool EmuXBFormatRequiresConversionToARGB(xbox::X_D3DFORMAT Format)
 {
 	if (FormatInfos[Format].warning != nullptr)
 		if (EmuXBFormatCanBeConvertedToARGB(Format))
@@ -975,63 +975,63 @@ bool EmuXBFormatRequiresConversionToARGB(XTL::X_D3DFORMAT Format)
 	return false;
 }
 
-DWORD EmuXBFormatBitsPerPixel(XTL::X_D3DFORMAT Format)
+DWORD EmuXBFormatBitsPerPixel(xbox::X_D3DFORMAT Format)
 {
-	if (Format <= XTL::X_D3DFMT_LIN_R8G8B8A8)
+	if (Format <= xbox::X_D3DFMT_LIN_R8G8B8A8)
 		if (FormatInfos[Format].bits_per_pixel > 0) // TODO : Remove this
 			return FormatInfos[Format].bits_per_pixel;
 
 	return 16; // TODO : 8
 }
 
-DWORD EmuXBFormatBytesPerPixel(XTL::X_D3DFORMAT Format)
+DWORD EmuXBFormatBytesPerPixel(xbox::X_D3DFORMAT Format)
 {
 	return ((EmuXBFormatBitsPerPixel(Format) + 4) / 8);
 }
 
-BOOL EmuXBFormatIsCompressed(XTL::X_D3DFORMAT Format)
+BOOL EmuXBFormatIsCompressed(xbox::X_D3DFORMAT Format)
 {
-	if (Format <= XTL::X_D3DFMT_LIN_R8G8B8A8)
+	if (Format <= xbox::X_D3DFMT_LIN_R8G8B8A8)
 		return (FormatInfos[Format].stored == Cmprsd);
 
 	return false;
 }
 
-BOOL EmuXBFormatIsLinear(XTL::X_D3DFORMAT Format)
+BOOL EmuXBFormatIsLinear(xbox::X_D3DFORMAT Format)
 {
-	if (Format <= XTL::X_D3DFMT_LIN_R8G8B8A8)
+	if (Format <= xbox::X_D3DFMT_LIN_R8G8B8A8)
 		return (FormatInfos[Format].stored == Linear);
 
-	return (Format == XTL::X_D3DFMT_VERTEXDATA); // TODO : false;
+	return (Format == xbox::X_D3DFMT_VERTEXDATA); // TODO : false;
 }
 
-BOOL EmuXBFormatIsSwizzled(XTL::X_D3DFORMAT Format)
+BOOL EmuXBFormatIsSwizzled(xbox::X_D3DFORMAT Format)
 {
-	if (Format <= XTL::X_D3DFMT_LIN_R8G8B8A8)
+	if (Format <= xbox::X_D3DFMT_LIN_R8G8B8A8)
 		return (FormatInfos[Format].stored == Swzzld);
 
 	return false;
 }
 
-BOOL EmuXBFormatIsRenderTarget(XTL::X_D3DFORMAT Format)
+BOOL EmuXBFormatIsRenderTarget(xbox::X_D3DFORMAT Format)
 {
-	if (Format <= XTL::X_D3DFMT_LIN_R8G8B8A8)
+	if (Format <= xbox::X_D3DFMT_LIN_R8G8B8A8)
 		return (FormatInfos[Format].usage == RenderTarget);
 
 	return false;
 }
 
-BOOL EmuXBFormatIsDepthBuffer(XTL::X_D3DFORMAT Format)
+BOOL EmuXBFormatIsDepthBuffer(xbox::X_D3DFORMAT Format)
 {
-	if (Format <= XTL::X_D3DFMT_LIN_R8G8B8A8)
+	if (Format <= xbox::X_D3DFMT_LIN_R8G8B8A8)
 		return (FormatInfos[Format].usage == DepthBuffer);
 
 	return false;
 }
 
-D3DFORMAT EmuXB2PC_D3DFormat(XTL::X_D3DFORMAT Format)
+D3DFORMAT EmuXB2PC_D3DFormat(xbox::X_D3DFORMAT Format)
 {
-	if (Format <= XTL::X_D3DFMT_LIN_R8G8B8A8 && Format != -1 /*XTL::X_D3DFMT_UNKNOWN*/) // The last bit prevents crashing (Metal Slug 3)
+	if (Format <= xbox::X_D3DFMT_LIN_R8G8B8A8 && Format != -1 /*xbox::X_D3DFMT_UNKNOWN*/) // The last bit prevents crashing (Metal Slug 3)
 	{
 		const FormatInfo *info = &FormatInfos[Format];
 		if (info->warning != nullptr) {
@@ -1042,9 +1042,9 @@ D3DFORMAT EmuXB2PC_D3DFormat(XTL::X_D3DFORMAT Format)
 	}
 
 	switch (Format) {
-	case XTL::X_D3DFMT_VERTEXDATA:
+	case xbox::X_D3DFMT_VERTEXDATA:
 		return D3DFMT_VERTEXDATA;
-	case ((XTL::X_D3DFORMAT)0xffffffff):
+	case ((xbox::X_D3DFORMAT)0xffffffff):
 		return D3DFMT_UNKNOWN; // TODO -oCXBX: Not sure if this counts as swizzled or not...
 	default:
 		CxbxKrnlCleanup("EmuXB2PC_D3DFormat: Unknown Format (0x%.08X)", Format);
@@ -1053,80 +1053,80 @@ D3DFORMAT EmuXB2PC_D3DFormat(XTL::X_D3DFORMAT Format)
 	return D3DFMT_UNKNOWN;
 }
 
-XTL::X_D3DFORMAT EmuPC2XB_D3DFormat(D3DFORMAT Format, bool bPreferLinear)
+xbox::X_D3DFORMAT EmuPC2XB_D3DFormat(D3DFORMAT Format, bool bPreferLinear)
 {
-	XTL::X_D3DFORMAT result;
+	xbox::X_D3DFORMAT result;
     switch(Format)
     {
 	case D3DFMT_YUY2:
-		result = XTL::X_D3DFMT_YUY2;
+		result = xbox::X_D3DFMT_YUY2;
 		break;
 	case D3DFMT_UYVY:
-		result = XTL::X_D3DFMT_UYVY;
+		result = xbox::X_D3DFMT_UYVY;
 		break;
 	case D3DFMT_R5G6B5:
-		result = bPreferLinear ? XTL::X_D3DFMT_LIN_R5G6B5 : XTL::X_D3DFMT_R5G6B5;
+		result = bPreferLinear ? xbox::X_D3DFMT_LIN_R5G6B5 : xbox::X_D3DFMT_R5G6B5;
 		break;
 	case D3DFMT_D24S8:
-		result = bPreferLinear ? XTL::X_D3DFMT_LIN_D24S8 : XTL::X_D3DFMT_D24S8;
+		result = bPreferLinear ? xbox::X_D3DFMT_LIN_D24S8 : xbox::X_D3DFMT_D24S8;
 		break;
 	case D3DFMT_DXT5:
-		result = XTL::X_D3DFMT_DXT5; // Compressed
+		result = xbox::X_D3DFMT_DXT5; // Compressed
 		break;
 	case D3DFMT_DXT4:
-		result = XTL::X_D3DFMT_DXT4;  // Compressed // Same as XTL::X_D3DFMT_DXT5
+		result = xbox::X_D3DFMT_DXT4;  // Compressed // Same as xbox::X_D3DFMT_DXT5
 		break;
 	case D3DFMT_DXT3:
-		result = XTL::X_D3DFMT_DXT3; // Compressed
+		result = xbox::X_D3DFMT_DXT3; // Compressed
 		break;
 	case D3DFMT_DXT2:
-		result = XTL::X_D3DFMT_DXT2; // Compressed // Same as XTL::X_D3DFMT_DXT3
+		result = xbox::X_D3DFMT_DXT2; // Compressed // Same as xbox::X_D3DFMT_DXT3
 		break;
 	case D3DFMT_DXT1:
-		result = XTL::X_D3DFMT_DXT1; // Compressed
+		result = xbox::X_D3DFMT_DXT1; // Compressed
 		break;
 	case D3DFMT_A1R5G5B5:
-		result = bPreferLinear ? XTL::X_D3DFMT_LIN_A1R5G5B5 : XTL::X_D3DFMT_A1R5G5B5;
+		result = bPreferLinear ? xbox::X_D3DFMT_LIN_A1R5G5B5 : xbox::X_D3DFMT_A1R5G5B5;
 		break;
 	case D3DFMT_X8R8G8B8:
-		result = bPreferLinear ? XTL::X_D3DFMT_LIN_X8R8G8B8 : XTL::X_D3DFMT_X8R8G8B8;
+		result = bPreferLinear ? xbox::X_D3DFMT_LIN_X8R8G8B8 : xbox::X_D3DFMT_X8R8G8B8;
 		break;
 	case D3DFMT_A8R8G8B8:
-		result = bPreferLinear ? XTL::X_D3DFMT_LIN_A8R8G8B8 : XTL::X_D3DFMT_A8R8G8B8;
+		result = bPreferLinear ? xbox::X_D3DFMT_LIN_A8R8G8B8 : xbox::X_D3DFMT_A8R8G8B8;
 		break;
 	case D3DFMT_A4R4G4B4:
-		result = bPreferLinear ? XTL::X_D3DFMT_LIN_A4R4G4B4 : XTL::X_D3DFMT_A4R4G4B4;
+		result = bPreferLinear ? xbox::X_D3DFMT_LIN_A4R4G4B4 : xbox::X_D3DFMT_A4R4G4B4;
 		break;
 	case D3DFMT_X1R5G5B5:
-		result = bPreferLinear ? XTL::X_D3DFMT_LIN_X1R5G5B5 : XTL::X_D3DFMT_X1R5G5B5;
+		result = bPreferLinear ? xbox::X_D3DFMT_LIN_X1R5G5B5 : xbox::X_D3DFMT_X1R5G5B5;
 		break;
 	case D3DFMT_A8:
-		result = bPreferLinear ? XTL::X_D3DFMT_LIN_A8 : XTL::X_D3DFMT_A8;
+		result = bPreferLinear ? xbox::X_D3DFMT_LIN_A8 : xbox::X_D3DFMT_A8;
 		break;
 	case D3DFMT_L8:
-		result = bPreferLinear ? XTL::X_D3DFMT_LIN_L8 : XTL::X_D3DFMT_L8;
+		result = bPreferLinear ? xbox::X_D3DFMT_LIN_L8 : xbox::X_D3DFMT_L8;
 		break;
 	case D3DFMT_D16:
-		result = bPreferLinear ? XTL::X_D3DFMT_LIN_D16 : XTL::X_D3DFMT_D16;
+		result = bPreferLinear ? xbox::X_D3DFMT_LIN_D16 : xbox::X_D3DFMT_D16;
 		break;
 	case D3DFMT_D16_LOCKABLE:
-		result = XTL::X_D3DFMT_D16_LOCKABLE;
+		result = xbox::X_D3DFMT_D16_LOCKABLE;
 		break; 
 	case D3DFMT_UNKNOWN:
-		result = ((XTL::X_D3DFORMAT)0xffffffff); // TODO : return XTL::X_D3DFMT_UNKNOWN ?
+		result = ((xbox::X_D3DFORMAT)0xffffffff); // TODO : return xbox::X_D3DFMT_UNKNOWN ?
 		break;
 	// Dxbx additions :
 	case D3DFMT_L6V5U5:
-		result = bPreferLinear ? XTL::X_D3DFMT_LIN_L6V5U5 : XTL::X_D3DFMT_L6V5U5;
+		result = bPreferLinear ? xbox::X_D3DFMT_LIN_L6V5U5 : xbox::X_D3DFMT_L6V5U5;
 		break;
 	case D3DFMT_V8U8:
-		result = bPreferLinear ? XTL::X_D3DFMT_LIN_V8U8 : XTL::X_D3DFMT_V8U8;
+		result = bPreferLinear ? xbox::X_D3DFMT_LIN_V8U8 : xbox::X_D3DFMT_V8U8;
 		break;
 	case D3DFMT_V16U16:
-		result = bPreferLinear ? XTL::X_D3DFMT_LIN_V16U16 : XTL::X_D3DFMT_V16U16;
+		result = bPreferLinear ? xbox::X_D3DFMT_LIN_V16U16 : xbox::X_D3DFMT_V16U16;
 		break;
 	case D3DFMT_VERTEXDATA:
-		result = XTL::X_D3DFMT_VERTEXDATA;
+		result = xbox::X_D3DFMT_VERTEXDATA;
 		break;
 	default:
 		CxbxKrnlCleanup("EmuPC2XB_D3DFormat: Unknown Format (%d)", Format);
@@ -1161,23 +1161,23 @@ D3DMULTISAMPLE_TYPE EmuXB2PC_D3DMultiSampleFormat(DWORD Type)
 	D3DMULTISAMPLE_TYPE result;
 	switch (Type & 0xFFFF)
 	{
-	case XTL::X_D3DMULTISAMPLE_NONE:
+	case xbox::X_D3DMULTISAMPLE_NONE:
 		result = D3DMULTISAMPLE_NONE;
 		break;
-	case XTL::X_D3DMULTISAMPLE_2_SAMPLES_MULTISAMPLE_LINEAR: 
-	case XTL::X_D3DMULTISAMPLE_2_SAMPLES_MULTISAMPLE_QUINCUNX: 
-	case XTL::X_D3DMULTISAMPLE_2_SAMPLES_SUPERSAMPLE_HORIZONTAL_LINEAR: 
-	case XTL::X_D3DMULTISAMPLE_2_SAMPLES_SUPERSAMPLE_VERTICAL_LINEAR:
+	case xbox::X_D3DMULTISAMPLE_2_SAMPLES_MULTISAMPLE_LINEAR: 
+	case xbox::X_D3DMULTISAMPLE_2_SAMPLES_MULTISAMPLE_QUINCUNX: 
+	case xbox::X_D3DMULTISAMPLE_2_SAMPLES_SUPERSAMPLE_HORIZONTAL_LINEAR: 
+	case xbox::X_D3DMULTISAMPLE_2_SAMPLES_SUPERSAMPLE_VERTICAL_LINEAR:
 		result = D3DMULTISAMPLE_2_SAMPLES;
 		break;
-	case XTL::X_D3DMULTISAMPLE_4_SAMPLES_MULTISAMPLE_LINEAR: 
-	case XTL::X_D3DMULTISAMPLE_4_SAMPLES_MULTISAMPLE_GAUSSIAN: 
-	case XTL::X_D3DMULTISAMPLE_4_SAMPLES_SUPERSAMPLE_LINEAR: 
-	case XTL::X_D3DMULTISAMPLE_4_SAMPLES_SUPERSAMPLE_GAUSSIAN:
+	case xbox::X_D3DMULTISAMPLE_4_SAMPLES_MULTISAMPLE_LINEAR: 
+	case xbox::X_D3DMULTISAMPLE_4_SAMPLES_MULTISAMPLE_GAUSSIAN: 
+	case xbox::X_D3DMULTISAMPLE_4_SAMPLES_SUPERSAMPLE_LINEAR: 
+	case xbox::X_D3DMULTISAMPLE_4_SAMPLES_SUPERSAMPLE_GAUSSIAN:
 		result = D3DMULTISAMPLE_4_SAMPLES;
 		break;
-	case XTL::X_D3DMULTISAMPLE_9_SAMPLES_MULTISAMPLE_GAUSSIAN: 
-	case XTL::X_D3DMULTISAMPLE_9_SAMPLES_SUPERSAMPLE_GAUSSIAN:
+	case xbox::X_D3DMULTISAMPLE_9_SAMPLES_MULTISAMPLE_GAUSSIAN: 
+	case xbox::X_D3DMULTISAMPLE_9_SAMPLES_SUPERSAMPLE_GAUSSIAN:
 		result = D3DMULTISAMPLE_9_SAMPLES;
 		break;
 	default:
@@ -1625,14 +1625,14 @@ bool WndMain::ReadS3TCFormatIntoBitmap(uint32 format, unsigned char *data, uint3
 	j = k = p = x = y = 0;
 
 	// sanity checks
-	if (format != XTL::X_D3DFMT_DXT1 && format != XTL::X_D3DFMT_DXT3 && format != XTL::X_D3DFMT_DXT5)
+	if (format != xbox::X_D3DFMT_DXT1 && format != xbox::X_D3DFMT_DXT3 && format != xbox::X_D3DFMT_DXT5)
 		return false;
 	if (!(width > 0) || !(height > 0))
 		return false;
 
 	while (j < dataSize) {
 
-		if (format != XTL::X_D3DFMT_DXT1) // Skip XTL::X_D3DFMT_DXT3 and XTL::X_D3DFMT_DXT5 alpha data (ported from Dxbx)
+		if (format != xbox::X_D3DFMT_DXT1) // Skip xbox::X_D3DFMT_DXT3 and xbox::X_D3DFMT_DXT5 alpha data (ported from Dxbx)
 			j += 8;
 
 		// Read two 16-bit pixels
@@ -1715,7 +1715,7 @@ bool WndMain::ReadSwizzledFormatIntoBitmap(uint32 format, unsigned char *data, u
 	TRGB32* yscanline;
 
 	// sanity checks
-	if (format != XTL::X_D3DFMT_A8R8G8B8 && format != XTL::X_D3DFMT_X8R8G8B8)
+	if (format != xbox::X_D3DFMT_A8R8G8B8 && format != xbox::X_D3DFMT_X8R8G8B8)
 		return false;
 	if (!(width > 0) || !(height > 0))
 		return false;
@@ -1753,7 +1753,7 @@ bool WndMain::ReadSwizzled16bitFormatIntoBitmap(uint32 format, unsigned char *da
 	TRGB16* yscanline;
 
 	// sanity checks
-	if (format != XTL::X_D3DFMT_R5G6B5)
+	if (format != xbox::X_D3DFMT_R5G6B5)
 		return false;
 	if (!(width > 0) || !(height > 0))
 		return false;

@@ -28,7 +28,7 @@
 #include "Logging.h"
 #include "XbDSoundTypes.h"
 
-namespace XTL {
+namespace xbox {
 
 // TODO: Everything, only small portions had been implemented.
 

@@ -26,7 +26,7 @@
 #define _EMU_KERNEL_LOGGING_H
 
 // prevent name collisions
-namespace xboxkrnl
+namespace xbox
 {
 
 // Additional types, exclusively for logging (not really enums) :
@@ -55,7 +55,7 @@ enum  PROTECTION_TYPE : int;
 #include <xboxkrnl/xboxkrnl.h>
 
 // prevent name collisions
-namespace xboxkrnl
+namespace xbox
 {
 
 // Headers for rendering Xbox kernel enum types :
@@ -152,6 +152,6 @@ LOGRENDER_HEADER(UNICODE_STRING)
 // TODO : LOGRENDER_HEADER(XBOX_HARDWARE_INFO)
 // TODO : LOGRENDER_HEADER(XBOX_REFURB_INFO)
 
-}; // end of namespace xboxkrnl
+}; // end of namespace xbox
 
 #endif _EMU_KERNEL_LOGGING_H

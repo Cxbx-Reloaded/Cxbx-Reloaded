@@ -212,7 +212,7 @@ typedef struct _VSH_INTERMEDIATE_FORMAT {
 } VSH_INTERMEDIATE_FORMAT;
 
 typedef struct _IntermediateVertexShader {
-	XTL::X_VSH_SHADER_HEADER Header;
+	xbox::X_VSH_SHADER_HEADER Header;
 	std::vector<VSH_INTERMEDIATE_FORMAT> Instructions;
 } IntermediateVertexShader;
 
@@ -231,16 +231,16 @@ extern boolean IsValidCurrentShader(void);
 
 inline boolean VshHandleIsVertexShader(DWORD Handle) { return (Handle & X_D3DFVF_RESERVED0) ? TRUE : FALSE; }
 inline boolean VshHandleIsFVF(DWORD Handle) { return !VshHandleIsVertexShader(Handle); }
-inline XTL::X_D3DVertexShader *VshHandleToXboxVertexShader(DWORD Handle) { return (XTL::X_D3DVertexShader *)(Handle & ~X_D3DFVF_RESERVED0);}
+inline xbox::X_D3DVertexShader *VshHandleToXboxVertexShader(DWORD Handle) { return (xbox::X_D3DVertexShader *)(Handle & ~X_D3DFVF_RESERVED0);}
 
 extern CxbxVertexShader* GetCxbxVertexShader(DWORD XboxVertexShaderHandle);
 
 extern void CxbxImpl_LoadVertexShaderProgram(CONST DWORD* pFunction, DWORD Address);
 extern void CxbxImpl_LoadVertexShader(DWORD Handle, DWORD Address);
 extern void CxbxImpl_SetVertexShader(DWORD Handle);
-extern void CxbxImpl_SelectVertexShaderDirect(XTL::X_VERTEXATTRIBUTEFORMAT* pVAF, DWORD Address);
+extern void CxbxImpl_SelectVertexShaderDirect(xbox::X_VERTEXATTRIBUTEFORMAT* pVAF, DWORD Address);
 extern void CxbxImpl_SelectVertexShader(DWORD Handle, DWORD Address);
-extern void CxbxImpl_SetVertexShaderInput(DWORD Handle, UINT StreamCount, XTL::X_STREAMINPUT* pStreamInputs);
+extern void CxbxImpl_SetVertexShaderInput(DWORD Handle, UINT StreamCount, xbox::X_STREAMINPUT* pStreamInputs);
 extern void CxbxImpl_SetVertexShaderConstant(INT Register, PVOID pConstantData, DWORD ConstantCount);
 extern HRESULT CxbxImpl_CreateVertexShader(CONST DWORD *pDeclaration, CONST DWORD *pFunction, DWORD *pHandle, DWORD Usage);
 extern void CxbxImpl_DeleteVertexShader(DWORD Handle);

@@ -96,7 +96,7 @@ namespace DlgVSBCFeedback
         DWORD NibbleIndex = 0, ByteIndex = 0, FeedbackStatus = 0;
         for (NibbleIndex = 0; NibbleIndex < X_SBC_FEEDBACK_MAX; NibbleIndex++) {
             ByteIndex = NibbleIndex >> 1;
-            //UCHAR temp=XTL::XboxSBCFeedbackNames[ByteIndex];
+            //UCHAR temp=xbox::XboxSBCFeedbackNames[ByteIndex];
             UCHAR temp = pXboxSBCFeedback[ByteIndex];
             if (NibbleIndex % 2 > 0) {
                 FeedbackStatus = (temp & 0xF0) >> 4;

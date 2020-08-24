@@ -122,7 +122,7 @@ void CxbxInitAudio()
 // ******************************************************************
 // * patch: DirectSoundCreate
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreate)
+HRESULT WINAPI xbox::EMUPATCH(DirectSoundCreate)
 (
     LPVOID          pguidDeviceId,
     OUT LPDIRECTSOUND8* ppDirectSound,
@@ -195,7 +195,7 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreate)
         // clear sound buffer cache
         vector_ds_buffer::iterator ppDSBuffer = g_pDSoundBufferCache.begin();
         for (; ppDSBuffer != g_pDSoundBufferCache.end();) {
-            while (XTL::EMUPATCH(IDirectSoundBuffer_Release)((*ppDSBuffer)) != 0) {};
+            while (xbox::EMUPATCH(IDirectSoundBuffer_Release)((*ppDSBuffer)) != 0) {};
             ppDSBuffer = g_pDSoundBufferCache.begin();
         }
         g_pDSoundBufferCache.reserve(X_DIRECTSOUND_CACHE_MAX);
@@ -203,7 +203,7 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreate)
         // clear sound stream cache
         vector_ds_stream::iterator ppDSStream = g_pDSoundStreamCache.begin();
         for (; ppDSStream != g_pDSoundStreamCache.end();) {
-            while (XTL::EMUPATCH(CDirectSoundStream_Release)((*ppDSStream)) != 0);
+            while (xbox::EMUPATCH(CDirectSoundStream_Release)((*ppDSStream)) != 0);
             ppDSStream = g_pDSoundStreamCache.begin();
         }
         g_pDSoundStreamCache.reserve(X_DIRECTSOUND_CACHE_MAX);
@@ -252,7 +252,7 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreate)
 // ******************************************************************
 // * patch: IDirectSound_AddRef
 // ******************************************************************
-ULONG WINAPI XTL::EMUPATCH(IDirectSound_AddRef)
+ULONG WINAPI xbox::EMUPATCH(IDirectSound_AddRef)
 (
     LPDIRECTSOUND8          pThis)
 {
@@ -270,7 +270,7 @@ ULONG WINAPI XTL::EMUPATCH(IDirectSound_AddRef)
 // ******************************************************************
 // * patch: IDirectSound_Release
 // ******************************************************************
-ULONG WINAPI XTL::EMUPATCH(IDirectSound_Release)
+ULONG WINAPI xbox::EMUPATCH(IDirectSound_Release)
 (
     LPDIRECTSOUND8          pThis)
 {
@@ -292,7 +292,7 @@ ULONG WINAPI XTL::EMUPATCH(IDirectSound_Release)
 // ******************************************************************
 // * patch: DirectSoundGetSampleTime
 // ******************************************************************
-DWORD WINAPI XTL::EMUPATCH(DirectSoundGetSampleTime)()
+DWORD WINAPI xbox::EMUPATCH(DirectSoundGetSampleTime)()
 {
     DSoundMutexGuardLock;
 
@@ -306,7 +306,7 @@ DWORD WINAPI XTL::EMUPATCH(DirectSoundGetSampleTime)()
 // ******************************************************************
 // * patch: DirectSoundUseFullHRTF
 // ******************************************************************
-void WINAPI XTL::EMUPATCH(DirectSoundUseFullHRTF)
+void WINAPI xbox::EMUPATCH(DirectSoundUseFullHRTF)
 (
     void)
 {
@@ -320,7 +320,7 @@ void WINAPI XTL::EMUPATCH(DirectSoundUseFullHRTF)
 // ******************************************************************
 // * patch: DirectSoundUseLightHRTF
 // ******************************************************************
-void WINAPI XTL::EMUPATCH(DirectSoundUseLightHRTF)
+void WINAPI xbox::EMUPATCH(DirectSoundUseLightHRTF)
 (
     void)
 {
@@ -334,7 +334,7 @@ void WINAPI XTL::EMUPATCH(DirectSoundUseLightHRTF)
 // ******************************************************************
 // * patch: DirectSoundUseFullHRTF4Channel
 // ******************************************************************
-void WINAPI XTL::EMUPATCH(DirectSoundUseFullHRTF4Channel)
+void WINAPI xbox::EMUPATCH(DirectSoundUseFullHRTF4Channel)
 (
     void)
 {
@@ -348,7 +348,7 @@ void WINAPI XTL::EMUPATCH(DirectSoundUseFullHRTF4Channel)
 // ******************************************************************
 // * patch: DirectSoundUseLightHRTF4Channel
 // ******************************************************************
-void WINAPI XTL::EMUPATCH(DirectSoundUseLightHRTF4Channel)
+void WINAPI xbox::EMUPATCH(DirectSoundUseLightHRTF4Channel)
 (
     void)
 {
@@ -362,7 +362,7 @@ void WINAPI XTL::EMUPATCH(DirectSoundUseLightHRTF4Channel)
 // ******************************************************************
 // * patch: DirectSoundDoWork
 // ******************************************************************
-VOID WINAPI XTL::EMUPATCH(DirectSoundDoWork)()
+VOID WINAPI xbox::EMUPATCH(DirectSoundDoWork)()
 {
     DSoundMutexGuardLock;
 
@@ -372,8 +372,8 @@ VOID WINAPI XTL::EMUPATCH(DirectSoundDoWork)()
 
 	LOG_FUNC();
 
-    xboxkrnl::LARGE_INTEGER getTime;
-    xboxkrnl::KeQuerySystemTime(&getTime);
+    xbox::LARGE_INTEGER getTime;
+    xbox::KeQuerySystemTime(&getTime);
 
     DirectSoundDoWork_Buffer(getTime);
 
@@ -395,22 +395,22 @@ static void dsound_thread_worker(LPVOID nullPtr)
         {
             DSoundMutexGuardLock;
 
-            xboxkrnl::LARGE_INTEGER getTime;
-            xboxkrnl::KeQuerySystemTime(&getTime);
+            xbox::LARGE_INTEGER getTime;
+            xbox::KeQuerySystemTime(&getTime);
             DirectSoundDoWork_Stream(getTime);
         }
     }
 }
 
 // Kismet given name for RadWolfie's experiment major issue in the mutt.
-#define DirectSuicideWork XTL::EMUPATCH(DirectSoundDoWork)
+#define DirectSuicideWork xbox::EMUPATCH(DirectSoundDoWork)
 
 /* ------------- Sorted relative functions begin ------------------*/
 
 // ******************************************************************
 // * patch: CDirectSound_CommitDeferredSettings
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(CDirectSound_CommitDeferredSettings)
+HRESULT WINAPI xbox::EMUPATCH(CDirectSound_CommitDeferredSettings)
 (
     X_CDirectSound*         pThis)
 {
@@ -429,7 +429,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSound_CommitDeferredSettings)
 // ******************************************************************
 // * patch: IDirectSound_CommitDeferredSettings
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(IDirectSound_CommitDeferredSettings)
+HRESULT WINAPI xbox::EMUPATCH(IDirectSound_CommitDeferredSettings)
 (
     X_CDirectSound*     pThis)
 {
@@ -437,14 +437,14 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound_CommitDeferredSettings)
 
     LOG_FORWARD("CDirectSound_CommitDeferredSettings");
 
-    return XTL::EMUPATCH(CDirectSound_CommitDeferredSettings)(pThis);
+    return xbox::EMUPATCH(CDirectSound_CommitDeferredSettings)(pThis);
 }
 
 // ******************************************************************
 // * patch: IDirectSound_CommitEffectData
 // ******************************************************************
 // This API is used relative with DSP effect.
-HRESULT WINAPI XTL::EMUPATCH(IDirectSound_CommitEffectData)
+HRESULT WINAPI xbox::EMUPATCH(IDirectSound_CommitEffectData)
 (
     X_CDirectSound*     pThis)
 {
@@ -462,7 +462,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound_CommitEffectData)
 // ******************************************************************
 // * patch: IDirectSound_GetEffectData
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(IDirectSound_GetEffectData)
+HRESULT WINAPI xbox::EMUPATCH(IDirectSound_GetEffectData)
 (
     X_CDirectSound* pThis,
     DWORD           dwEffectIndex,
@@ -495,7 +495,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound_GetEffectData)
 // ******************************************************************
 // * patch: IDirectSound_SetEffectData
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(IDirectSound_SetEffectData)
+HRESULT WINAPI xbox::EMUPATCH(IDirectSound_SetEffectData)
 (
     LPVOID  pThis,
     DWORD   dwEffectIndex,
@@ -525,7 +525,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound_SetEffectData)
 // ******************************************************************
 // * patch: IDirectSound_DownloadEffectsImage
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(IDirectSound_DownloadEffectsImage)
+HRESULT WINAPI xbox::EMUPATCH(IDirectSound_DownloadEffectsImage)
 (
     LPDIRECTSOUND8  pThis,
     LPCVOID         pvImageBuffer,
@@ -553,7 +553,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound_DownloadEffectsImage)
 // ******************************************************************
 // * patch: IDirectSound_EnableHeadphones
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(IDirectSound_EnableHeadphones)
+HRESULT WINAPI xbox::EMUPATCH(IDirectSound_EnableHeadphones)
 (
     LPDIRECTSOUND8      pThis,
     BOOL                fEnabled)
@@ -574,7 +574,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound_EnableHeadphones)
 // ******************************************************************
 // * patch: IDirectSound_GetCaps
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(IDirectSound_GetCaps)
+HRESULT WINAPI xbox::EMUPATCH(IDirectSound_GetCaps)
 (
     X_CDirectSound*     pThis,
     OUT X_DSCAPS*           pDSCaps)
@@ -607,7 +607,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound_GetCaps)
 // ******************************************************************
 // * patch: IDirectSound_GetOutputLevels
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(IDirectSound_GetOutputLevels)
+HRESULT WINAPI xbox::EMUPATCH(IDirectSound_GetOutputLevels)
 (
     LPDIRECTSOUND8*         pThis,
     OUT X_DSOUTPUTLEVELS*       pOutputLevels,
@@ -633,7 +633,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound_GetOutputLevels)
 // ******************************************************************
 // * patch: CDirectSound_GetSpeakerConfig
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(CDirectSound_GetSpeakerConfig)
+HRESULT WINAPI xbox::EMUPATCH(CDirectSound_GetSpeakerConfig)
 (
     X_CDirectSound*         pThis,
     OUT PDWORD              pdwSpeakerConfig)
@@ -658,7 +658,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSound_GetSpeakerConfig)
 // ******************************************************************
 // * patch: IDirectSound_GetSpeakerConfig
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(IDirectSound_GetSpeakerConfig)
+HRESULT WINAPI xbox::EMUPATCH(IDirectSound_GetSpeakerConfig)
 (
     X_CDirectSound*         pThis,
     OUT LPDWORD*            pdwSpeakerConfig)
@@ -680,7 +680,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound_GetSpeakerConfig)
 // * patch: IDirectSound_SetAllParameters
 // ******************************************************************
 // NOTE: No conversion requirement for XB to PC.
-HRESULT WINAPI XTL::EMUPATCH(IDirectSound_SetAllParameters)
+HRESULT WINAPI xbox::EMUPATCH(IDirectSound_SetAllParameters)
 (
     LPDIRECTSOUND8          pThis,
     LPCDS3DLISTENER         pDS3DListenerParameters,
@@ -702,7 +702,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound_SetAllParameters)
 // ******************************************************************
 // * patch: IDirectSound_SetDistanceFactor
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(IDirectSound_SetDistanceFactor)
+HRESULT WINAPI xbox::EMUPATCH(IDirectSound_SetDistanceFactor)
 (
     LPDIRECTSOUND8  pThis,
     FLOAT           fDistanceFactor,
@@ -724,7 +724,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound_SetDistanceFactor)
 // ******************************************************************
 // * patch: IDirectSound_SetDopplerFactor
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(IDirectSound_SetDopplerFactor)
+HRESULT WINAPI xbox::EMUPATCH(IDirectSound_SetDopplerFactor)
 (
     LPDIRECTSOUND8  pThis,
     FLOAT           fDopplerFactor,
@@ -746,7 +746,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound_SetDopplerFactor)
 // ******************************************************************
 // * patch: IDirectSound_SetI3DL2Listener
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(IDirectSound_SetI3DL2Listener)
+HRESULT WINAPI xbox::EMUPATCH(IDirectSound_SetI3DL2Listener)
 (
     LPDIRECTSOUND8          pThis,
     X_DSI3DL2LISTENER      *pds3dl,
@@ -770,7 +770,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound_SetI3DL2Listener)
 // ******************************************************************
 // * patch: IDirectSound_SetMixBinHeadroom
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(IDirectSound_SetMixBinHeadroom)
+HRESULT WINAPI xbox::EMUPATCH(IDirectSound_SetMixBinHeadroom)
 (
     LPDIRECTSOUND8          pThis,
     DWORD                   dwMixBinMask,
@@ -792,7 +792,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound_SetMixBinHeadroom)
 // ******************************************************************
 // * patch: IDirectSound_SetOrientation
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(IDirectSound_SetOrientation)
+HRESULT WINAPI xbox::EMUPATCH(IDirectSound_SetOrientation)
 (
     LPDIRECTSOUND8  pThis,
     FLOAT           xFront,
@@ -834,7 +834,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound_SetOrientation)
 // ******************************************************************
 // * patch: IDirectSound_SetPosition
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(IDirectSound_SetPosition)
+HRESULT WINAPI xbox::EMUPATCH(IDirectSound_SetPosition)
 (
     LPDIRECTSOUND8          pThis,
     FLOAT                   x,
@@ -860,7 +860,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound_SetPosition)
 // ******************************************************************
 // * patch: IDirectSound_SetRolloffFactor
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(IDirectSound_SetRolloffFactor)
+HRESULT WINAPI xbox::EMUPATCH(IDirectSound_SetRolloffFactor)
 (
     LPDIRECTSOUND8  pThis,
     FLOAT           fRolloffFactor,
@@ -882,7 +882,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound_SetRolloffFactor)
 // ******************************************************************
 // * patch: CDirectSound_SynchPlayback
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(CDirectSound_SynchPlayback)
+HRESULT WINAPI xbox::EMUPATCH(CDirectSound_SynchPlayback)
 (
     LPDIRECTSOUND8 pThis)
 {
@@ -926,7 +926,7 @@ HRESULT WINAPI XTL::EMUPATCH(CDirectSound_SynchPlayback)
 // ******************************************************************
 // * patch: IDirectSound_SynchPlayback
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(IDirectSound_SynchPlayback)
+HRESULT WINAPI xbox::EMUPATCH(IDirectSound_SynchPlayback)
 (
     LPDIRECTSOUND8          pThis)
 {
@@ -934,13 +934,13 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound_SynchPlayback)
 
 	LOG_FORWARD("CDirectSound_SynchPlayback");
 
-    return XTL::EMUPATCH(CDirectSound_SynchPlayback)(pThis);
+    return xbox::EMUPATCH(CDirectSound_SynchPlayback)(pThis);
 }
 
 // ******************************************************************
 // * patch: IDirectSound_SetVelocity
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(IDirectSound_SetVelocity)
+HRESULT WINAPI xbox::EMUPATCH(IDirectSound_SetVelocity)
 (
     LPDIRECTSOUND8          pThis,
     FLOAT                   x,

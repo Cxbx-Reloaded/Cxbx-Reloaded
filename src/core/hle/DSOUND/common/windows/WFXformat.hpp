@@ -184,7 +184,7 @@ static void WFXformat_SanityFix(
     // Generic enforcement
     // If Xbox applications supply invalid total channels, enforce to use either mono or stereo channel
     if (Host_pwfxFormat->Format.nChannels == 0 || Host_pwfxFormat->Format.nChannels > 6) {
-        Host_pwfxFormat->Format.nChannels = XTL::DSOUND::PresetChannelDefault(Xb_flags);
+        Host_pwfxFormat->Format.nChannels = xbox::DSOUND::PresetChannelDefault(Xb_flags);
         isNotSanity = true;
     }
     // If nSamplesPerSec is zero'd then use 44.1kHz by default
@@ -256,17 +256,17 @@ static CODEC_FORMAT WFXformat_SyncHostFormat(
     const void*             Xb_wfx_ptr,
     uint32_t                Xb_buffer_request_size,
     uint32_t                Xb_flags,
-    XTL::CDirectSoundVoice* Xb_Voice)
+    xbox::CDirectSoundVoice* Xb_Voice)
 {
     PWAVEFORMATEXTENSIBLE Xb_wfxFormat = (PWAVEFORMATEXTENSIBLE)Xb_wfx_ptr;
     PWAVEFORMATEXTENSIBLE Host_wfxFormat = (PWAVEFORMATEXTENSIBLE)Host_wfx_ptr;
     CODEC_FORMAT codec_format_ret = CF_PCM;
     bool require_validate = true;
-    XTL::audio_format xb_format;
+    xbox::audio_format xb_format;
 
     // If no format is provided, then use default.
-    if (Xb_wfx_ptr == xbnullptr) {
-        WFXformat_GeneratePCMFormat(XTL::DSOUND::PresetChannelDefault(Xb_flags), 44100, 16, Host_wfxFormat);
+    if (Xb_wfx_ptr == xbox::zeroptr) {
+        WFXformat_GeneratePCMFormat(xbox::DSOUND::PresetChannelDefault(Xb_flags), 44100, 16, Host_wfxFormat);
         require_validate = false;
     }
     // HACK: This is a special sound buffer, create dummy WAVEFORMATEX data.
@@ -274,8 +274,8 @@ static CODEC_FORMAT WFXformat_SyncHostFormat(
     // with flags DSBCAPS_MIXIN, DSBCAPS_FXIN, and DSBCAPS_FXIN2 will have no
     // WAVEFORMATEX structure by default.
     else if ((Xb_flags & (XTL_DSBCAPS_MIXIN | XTL_DSBCAPS_FXIN | XTL_DSBCAPS_FXIN2)) > 0) {
-        EmuLog(LOG_LEVEL::WARNING, "Creating dummy WAVEFORMATEX (pdsbd->Xb_lpwfxFormat = xbnullptr)...");
-        WFXformat_GeneratePCMFormat(XTL::DSOUND::PresetChannelDefault(Xb_flags), 44100, 16, Host_wfxFormat);
+        EmuLog(LOG_LEVEL::WARNING, "Creating dummy WAVEFORMATEX (pdsbd->Xb_lpwfxFormat = xbox::zeroptr)...");
+        WFXformat_GeneratePCMFormat(xbox::DSOUND::PresetChannelDefault(Xb_flags), 44100, 16, Host_wfxFormat);
         require_validate = false;
     }
     // Otherwise, let's process given format.
@@ -306,7 +306,7 @@ static CODEC_FORMAT WFXformat_SyncHostFormat(
             // Both 0 and default will use static structure until given a valid one.
             case 0:
                 // NOTE: This is currently a hack for ability to create buffer class with DSBCAPS_LOCDEFER flag.
-                WFXformat_GeneratePCMFormat(XTL::DSOUND::PresetChannelDefault(Xb_flags), 44100, 16, Host_wfxFormat);
+                WFXformat_GeneratePCMFormat(xbox::DSOUND::PresetChannelDefault(Xb_flags), 44100, 16, Host_wfxFormat);
                 require_validate = false;
                 LOG_TEST_CASE("WAVE_FORMAT_(0) found");
                 break;
@@ -332,10 +332,10 @@ static CODEC_FORMAT WFXformat_SyncHostFormat(
         }
         // Any unknown formats will be using default PCM format.
         else {
-            WFXformat_GeneratePCMFormat(XTL::DSOUND::PresetChannelDefault(Xb_flags), 44100, 16, Host_wfxFormat);
+            WFXformat_GeneratePCMFormat(xbox::DSOUND::PresetChannelDefault(Xb_flags), 44100, 16, Host_wfxFormat);
         }
     }
-    // Forward xbox format to internal XTL::CDirectSoundVoice class.
+    // Forward xbox format to internal xbox::CDirectSoundVoice class.
     xb_format.audio_codec = (codec_format_ret == CF_XADPCM ? WAVE_FORMAT_XBOX_ADPCM : WAVE_FORMAT_PCM);
     xb_format.nChannels = Host_wfxFormat->Format.nChannels;
     xb_format.cbSize = (codec_format_ret == CF_XADPCM ? 4 : 0);

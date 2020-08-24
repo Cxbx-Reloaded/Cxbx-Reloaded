@@ -76,9 +76,9 @@ Xbe::Xbe(const char *x_szFilename, bool bFromGUI)
 
 			ULONG FatalErrorCode = FATAL_ERROR_XBE_DASH_GENERIC;
 
-			if (xboxkrnl::LaunchDataPage && xboxkrnl::LaunchDataPage->Header.dwLaunchDataType == LDT_FROM_DASHBOARD)
+			if (xbox::LaunchDataPage && xbox::LaunchDataPage->Header.dwLaunchDataType == LDT_FROM_DASHBOARD)
 			{
-				xboxkrnl::PDASH_LAUNCH_DATA pLaunchDashboard = (xboxkrnl::PDASH_LAUNCH_DATA)&(xboxkrnl::LaunchDataPage->LaunchData[0]);
+				xbox::PDASH_LAUNCH_DATA pLaunchDashboard = (xbox::PDASH_LAUNCH_DATA)&(xbox::LaunchDataPage->LaunchData[0]);
 				FatalErrorCode += pLaunchDashboard->dwReason;
 			}
 			SetLEDSequence(0xE1); // green, red, red, red
@@ -724,7 +724,7 @@ void *Xbe::FindSection(char *zsSectionName)
 	return nullptr;
 }
 
-void* Xbe::FindSection(xboxkrnl::PXBEIMAGE_SECTION section)
+void* Xbe::FindSection(xbox::PXBEIMAGE_SECTION section)
 {
 	for (uint32_t v = 0; v < m_Header.dwSections; v++) {
 		if (m_SectionHeader[v].dwVirtualAddr > 0 && m_SectionHeader[v].dwVirtualSize > 0) {
@@ -786,23 +786,23 @@ bool Xbe::CheckSignature()
 
 	// Hash against all currently known public keys, if these pass, we can guarantee the Xbe is unmodified
 	std::array<RSA_PUBLIC_KEY, 3> keys = { 0 };
-	memcpy(keys[0].Default, (void*)xboxkrnl::XePublicKeyDataRetail, 284);
-	memcpy(keys[1].Default, (void*)xboxkrnl::XePublicKeyDataChihiroGame, 284);
-	memcpy(keys[2].Default, (void*)xboxkrnl::XePublicKeyDataChihiroBoot, 284);
-	// TODO: memcpy(keys[3].Default, (void*)xboxkrnl::XePublicKeyDataDebug, 284);
+	memcpy(keys[0].Default, (void*)xbox::XePublicKeyDataRetail, 284);
+	memcpy(keys[1].Default, (void*)xbox::XePublicKeyDataChihiroGame, 284);
+	memcpy(keys[2].Default, (void*)xbox::XePublicKeyDataChihiroBoot, 284);
+	// TODO: memcpy(keys[3].Default, (void*)xbox::XePublicKeyDataDebug, 284);
 
 	for (unsigned int i = 0; i < keys.size(); i++) {
 		if (xbox_rsa_public(m_Header.pbDigitalSignature, crypt_buffer, keys[i])) {
 			if (verify_hash(SHADigest, crypt_buffer, keys[i])) {
 				// Load the successful key into XboxKrnl::XePublicKeyData for application use
-				memcpy(xboxkrnl::XePublicKeyData, keys[i].Default, 284);
+				memcpy(xbox::XePublicKeyData, keys[i].Default, 284);
 				return true; // success
 			}
 		}
 	}
 
 	// Default to the Retail key if no key matched, just to make sure we don't init in an invalid state
-	memcpy(xboxkrnl::XePublicKeyData, xboxkrnl::XePublicKeyDataRetail, 284);
+	memcpy(xbox::XePublicKeyData, xbox::XePublicKeyDataRetail, 284);
 	return false;  // signature check failed
 }
 

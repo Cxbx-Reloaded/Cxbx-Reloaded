@@ -36,7 +36,7 @@
 // ReactOS uses a size of 512, but disassembling the kernel reveals it to be 32 instead
 #define TIMER_TABLE_SIZE 32
 
-namespace xboxkrnl
+namespace xbox
 {
 	typedef struct _KTIMER_TABLE_ENTRY
 	{
@@ -141,10 +141,10 @@ namespace xboxkrnl
 	);
 };
 
-extern const xboxkrnl::ULONG CLOCK_TIME_INCREMENT;
-extern xboxkrnl::LIST_ENTRY KiWaitInListHead;
-extern xboxkrnl::KTIMER_TABLE_ENTRY KiTimerTableListHead[TIMER_TABLE_SIZE];
-extern xboxkrnl::KI_TIMER_LOCK KiTimerMtx;
+extern const xbox::ULONG CLOCK_TIME_INCREMENT;
+extern xbox::LIST_ENTRY KiWaitInListHead;
+extern xbox::KTIMER_TABLE_ENTRY KiTimerTableListHead[TIMER_TABLE_SIZE];
+extern xbox::KI_TIMER_LOCK KiTimerMtx;
 
 #define KiLockDispatcherDatabase(OldIrql)      \
 	*(OldIrql) = KeRaiseIrqlToDpcLevel()
