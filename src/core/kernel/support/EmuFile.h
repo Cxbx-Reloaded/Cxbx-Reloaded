@@ -97,42 +97,42 @@ extern HANDLE CxbxBasePathHandle;
 
 const size_t XboxFileInfoStructSizes[xbox::FileMaximumInformation] = {
 	0,                                                    // (index 0)
-	sizeof(xbox::FILE_DIRECTORY_INFORMATION),         // FileDirectoryInformation
-	sizeof(xbox::FILE_DIRECTORY_INFORMATION),         // FileFullDirectoryInformation
-	sizeof(xbox::FILE_DIRECTORY_INFORMATION),         // FileBothDirectoryInformation
-	sizeof(xbox::FILE_BASIC_INFORMATION),             // FileBasicInformation
-	sizeof(xbox::FILE_STANDARD_INFORMATION),          // FileStandardInformation
-	sizeof(xbox::FILE_INTERNAL_INFORMATION),          // FileInternalInformation
-	sizeof(xbox::FILE_EA_INFORMATION),                // FileEaInformation
-	sizeof(xbox::FILE_ACCESS_INFORMATION),            // FileAccessInformation
-	sizeof(xbox::FILE_NAME_INFORMATION),              // FileNameInformation
-	sizeof(xbox::FILE_RENAME_INFORMATION),            // FileRenameInformation
-	sizeof(xbox::FILE_LINK_INFORMATION),              // FileLinkInformation
-	sizeof(xbox::FILE_DIRECTORY_INFORMATION),         // FileNamesInformation
-	sizeof(xbox::FILE_DISPOSITION_INFORMATION),       // FileDispositionInformation
-	sizeof(xbox::FILE_POSITION_INFORMATION),          // FilePositionInformation
-	sizeof(xbox::FILE_FULL_EA_INFORMATION),           // FileFullEaInformation
-	sizeof(xbox::FILE_MODE_INFORMATION),              // FileModeInformation
-	sizeof(xbox::FILE_ALIGNMENT_INFORMATION),         // FileAlignmentInformation
-	sizeof(xbox::FILE_ALL_INFORMATION),               // FileAllInformation
-	sizeof(xbox::FILE_ALLOCATION_INFORMATION),        // FileAllocationInformation
-	sizeof(xbox::FILE_END_OF_FILE_INFORMATION),       // FileEndOfFileInformation
-	sizeof(xbox::FILE_NAME_INFORMATION),              // FileAlternateNameInformation
-	sizeof(xbox::FILE_STREAM_INFORMATION),            // FileStreamInformation
-	sizeof(xbox::FILE_PIPE_INFORMATION),              // FilePipeInformation
-	sizeof(xbox::FILE_PIPE_LOCAL_INFORMATION),        // FilePipeLocalInformation
-	sizeof(xbox::FILE_PIPE_REMOTE_INFORMATION),       // FilePipeRemoteInformation
-	sizeof(xbox::FILE_MAILSLOT_QUERY_INFORMATION),    // FileMailslotQueryInformation
-	sizeof(xbox::FILE_MAILSLOT_SET_INFORMATION),      // FileMailslotSetInformation
-	sizeof(xbox::FILE_COMPRESSION_INFORMATION),       // FileCompressionInformation
+	sizeof(xbox::FILE_DIRECTORY_INFORMATION),             // FileDirectoryInformation
+	sizeof(xbox::FILE_DIRECTORY_INFORMATION),             // FileFullDirectoryInformation
+	sizeof(xbox::FILE_DIRECTORY_INFORMATION),             // FileBothDirectoryInformation
+	sizeof(xbox::FILE_BASIC_INFORMATION),                 // FileBasicInformation
+	sizeof(xbox::FILE_STANDARD_INFORMATION),              // FileStandardInformation
+	sizeof(xbox::FILE_INTERNAL_INFORMATION),              // FileInternalInformation
+	sizeof(xbox::FILE_EA_INFORMATION),                    // FileEaInformation
+	sizeof(xbox::FILE_ACCESS_INFORMATION),                // FileAccessInformation
+	sizeof(xbox::FILE_NAME_INFORMATION),                  // FileNameInformation
+	sizeof(xbox::FILE_RENAME_INFORMATION),                // FileRenameInformation
+	sizeof(xbox::FILE_LINK_INFORMATION),                  // FileLinkInformation
+	sizeof(xbox::FILE_DIRECTORY_INFORMATION),             // FileNamesInformation
+	sizeof(xbox::FILE_DISPOSITION_INFORMATION),           // FileDispositionInformation
+	sizeof(xbox::FILE_POSITION_INFORMATION),              // FilePositionInformation
+	sizeof(xbox::FILE_FULL_EA_INFORMATION),               // FileFullEaInformation
+	sizeof(xbox::FILE_MODE_INFORMATION),                  // FileModeInformation
+	sizeof(xbox::FILE_ALIGNMENT_INFORMATION),             // FileAlignmentInformation
+	sizeof(xbox::FILE_ALL_INFORMATION),                   // FileAllInformation
+	sizeof(xbox::FILE_ALLOCATION_INFORMATION),            // FileAllocationInformation
+	sizeof(xbox::FILE_END_OF_FILE_INFORMATION),           // FileEndOfFileInformation
+	sizeof(xbox::FILE_NAME_INFORMATION),                  // FileAlternateNameInformation
+	sizeof(xbox::FILE_STREAM_INFORMATION),                // FileStreamInformation
+	sizeof(xbox::FILE_PIPE_INFORMATION),                  // FilePipeInformation
+	sizeof(xbox::FILE_PIPE_LOCAL_INFORMATION),            // FilePipeLocalInformation
+	sizeof(xbox::FILE_PIPE_REMOTE_INFORMATION),           // FilePipeRemoteInformation
+	sizeof(xbox::FILE_MAILSLOT_QUERY_INFORMATION),        // FileMailslotQueryInformation
+	sizeof(xbox::FILE_MAILSLOT_SET_INFORMATION),          // FileMailslotSetInformation
+	sizeof(xbox::FILE_COMPRESSION_INFORMATION),           // FileCompressionInformation
 	0,                                                    // FileCopyOnWriteInformation
-	sizeof(xbox::FILE_COMPLETION_INFORMATION),        // FileCompletionInformation
-	sizeof(xbox::FILE_MOVE_CLUSTER_INFORMATION),      // FileMoveClusterInformation
+	sizeof(xbox::FILE_COMPLETION_INFORMATION),            // FileCompletionInformation
+	sizeof(xbox::FILE_MOVE_CLUSTER_INFORMATION),          // FileMoveClusterInformation
 	0,                                                    // FileQuotaInformation
-	sizeof(xbox::FILE_REPARSE_POINT_INFORMATION),     // FileReparsePointInformation
-	sizeof(xbox::FILE_NETWORK_OPEN_INFORMATION),      // FileNetworkOpenInformation
-	sizeof(xbox::FILE_DIRECTORY_INFORMATION),         // FileObjectIdInformation
-	sizeof(xbox::FILE_TRACKING_INFORMATION),          // FileTrackingInformation
+	sizeof(xbox::FILE_REPARSE_POINT_INFORMATION),         // FileReparsePointInformation
+	sizeof(xbox::FILE_NETWORK_OPEN_INFORMATION),          // FileNetworkOpenInformation
+	sizeof(xbox::FILE_DIRECTORY_INFORMATION),             // FileObjectIdInformation
+	sizeof(xbox::FILE_TRACKING_INFORMATION),              // FileTrackingInformation
 	0,                                                    // FileOleDirectoryInformation
 	0,                                                    // FileContentIndexInformation
 	0,                                                    // FileInheritContentIndexInformation

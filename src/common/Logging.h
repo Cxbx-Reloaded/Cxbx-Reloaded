@@ -309,13 +309,13 @@ constexpr const char* remove_prefix(const char* str, const char *prefix) {
 	return (str_skip_prefix(str, prefix) == str + str_length(prefix)) ? str_skip_prefix(str, prefix) : str;
 }
 
-static const char* xtl_prefix = "xbox::";
+static const char* xbox_prefix = "xbox::";
 static const char* emupatch_prefix = "EmuPatch_"; // See #define EMUPATCH
 
 constexpr const char* remove_emupatch_prefix(const char* str) {
 	// return an empty string when str isn't given
 	// skip xbox:: and/or EmuPatch_ prefix if present
-	return remove_prefix(remove_prefix(str, xtl_prefix), emupatch_prefix);
+	return remove_prefix(remove_prefix(str, xbox_prefix), emupatch_prefix);
 }
 
 #define LOG_ARG_START "\n   " << std::setfill(' ') << std::setw(20) << std::left 

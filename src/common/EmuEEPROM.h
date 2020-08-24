@@ -78,7 +78,7 @@ static const EEPROMInfo EEPROMInfos[] = {
 	// Note : XC_FACTORY_GAME_REGION is linked to a separate ULONG XboxFactoryGameRegion (of type REG_DWORD)
 	EEPROM_INFO_ENTRY(XC_FACTORY_GAME_REGION,   EncryptedSettings.GameRegion,             REG_DWORD),
 	EEPROM_INFO_ENTRY(XC_ENCRYPTED_SECTION,     EncryptedSettings,                        REG_BINARY),
-	{ xbox::XC_MAX_ALL,                     0,                                        REG_BINARY, sizeof(xbox::XBOX_EEPROM) },
+	{ xbox::XC_MAX_ALL,                         0,                                        REG_BINARY, sizeof(xbox::XBOX_EEPROM) },
 	{ XC_END_MARKER }
 };
 
