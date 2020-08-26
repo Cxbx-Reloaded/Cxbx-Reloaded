@@ -70,6 +70,10 @@ namespace xbox
 	typedef unsigned __int64    QUAD; // 8 byte aligned 8 byte long
 	typedef int                 BOOL;
 	typedef LONG                HRESULT;
+	typedef float               FLOAT;
+	// TODO: Remove __stdcall once lib86cpu is implemented.
+	#define XBOXAPI             __stdcall
+	#define XCALLBACK           XBOXAPI
 
 
 	// ******************************************************************
@@ -107,4 +111,21 @@ namespace xbox
 	typedef WCHAR *LPWSTR, *PWSTR;
 
 	typedef /*_Null_terminated_*/ const WCHAR *LPCWSTR, *PCWSTR;
+
+	// ******************************************************************
+	// Misc
+	// ******************************************************************
+	typedef struct _XD3DVECTOR {
+		FLOAT x;
+		FLOAT y;
+		FLOAT z;
+	} D3DVECTOR;
+
+	template<typename A, typename B>
+	inline void CopyD3DVector(A& a, const B& b)
+	{
+		a.x = b.x;
+		a.y = b.y;
+		a.z = b.z;
+	}
 }
