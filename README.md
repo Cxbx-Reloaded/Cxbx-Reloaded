@@ -34,11 +34,14 @@ Game or software specific issues can be reported in the [compatibility list](htt
 
 For emulation issues that are not specific to any single piece of software, a bug report can be submitted at [the Cxbx-Reloaded issue tracker](https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/issues).
 
-Make sure bug reports contain:
+Make sure to follow the issue template and that it contains:
   * The build tested with, error message displayed (if any)
-  * Screenshots 
-  * Xbe dump (created via `Edit > Dump Xbe Info To > File`)
-  * Kernel Debug log (created when running a game with `View > Debug Output (Kernel) > File` selected).
+    * **(You can copy and paste any popup messages. However, please keep it clean by paste and trimming down to only the message itself.)**
+  * Screenshots
+    * (optional unless has any graphic bug for references)
+
+**NOTICE: Failure to follow template will auto close your ticket.**
+
 
 ## Additional information
 Cxbx-Reloaded has a [wiki](https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/wiki) containing various subjects and background information.
