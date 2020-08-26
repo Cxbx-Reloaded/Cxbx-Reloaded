@@ -1255,17 +1255,21 @@ static inline HRESULT HybridDirectSound3DBuffer_SetMinDistance(
 
     RETURN_RESULT_CHECK(hRet);
 }
-/*
-//TODO: PC DirectSound does not have SetMixBins method function.
+
 //IDirectSoundStream
 //IDirectSoundBuffer
 static inline HRESULT HybridDirectSoundBuffer_SetMixBins(
-    LPDIRECTSOUNDBUFFER8 pDSBuffer,
-    PVOID               pMixBins)
+    xbox::X_DSVOICEPROPS&   Xb_VoiceProperties,
+    xbox::X_LPDSMIXBINS     in_MixBins,
+    DSBUFFERDESC&           BufferDesc
+)
 {
+    HRESULT ret = DS_OK;
 
-    return DS_OK;
-}*/
+    GenerateMixBinDefault(Xb_VoiceProperties, BufferDesc.lpwfxFormat, in_MixBins, ((BufferDesc.dwFlags & DSBCAPS_CTRL3D) > 0));
+
+    return ret;
+}
 
 //IDirectSoundStream x2
 //IDirectSoundBuffer x2
@@ -1519,19 +1523,6 @@ static inline HRESULT HybridDirectSoundBuffer_GetVoiceProperties(
     else {
         ret = DSERR_INVALIDPARAM;
     }
-
-    return ret;
-}
-
-static inline HRESULT HybridDirectSoundBuffer_SetMixBins(
-    xbox::X_DSVOICEPROPS&   Xb_VoiceProperties,
-    xbox::X_LPDSMIXBINS     in_MixBins,
-    DSBUFFERDESC&           BufferDesc
-)
-{
-    HRESULT ret = DS_OK;
-
-    GenerateMixBinDefault(Xb_VoiceProperties, BufferDesc.lpwfxFormat, in_MixBins, ((BufferDesc.dwFlags & DSBCAPS_CTRL3D) > 0));
 
     return ret;
 }
