@@ -1526,13 +1526,12 @@ static inline HRESULT HybridDirectSoundBuffer_GetVoiceProperties(
 static inline HRESULT HybridDirectSoundBuffer_SetMixBins(
     xbox::X_DSVOICEPROPS&   Xb_VoiceProperties,
     xbox::X_LPDSMIXBINS     in_MixBins,
-    ::LPCWAVEFORMATEX       pwfxFormat,
     DSBUFFERDESC&           BufferDesc
 )
 {
     HRESULT ret = DS_OK;
 
-    GenerateMixBinDefault(Xb_VoiceProperties, pwfxFormat, in_MixBins, ((BufferDesc.dwFlags & DSBCAPS_CTRL3D) > 0));
+    GenerateMixBinDefault(Xb_VoiceProperties, BufferDesc.lpwfxFormat, in_MixBins, ((BufferDesc.dwFlags & DSBCAPS_CTRL3D) > 0));
 
     return ret;
 }

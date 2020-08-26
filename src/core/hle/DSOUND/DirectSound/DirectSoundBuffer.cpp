@@ -1201,7 +1201,7 @@ HRESULT WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetMixBins)
             LOG_FUNC_END;
 
         EmuDirectSoundBuffer* pThis = pHybridThis->emuDSBuffer;
-        hRet = HybridDirectSoundBuffer_SetMixBins(pThis->Xb_VoiceProperties, pMixBins, pThis->EmuBufferDesc.lpwfxFormat, pThis->EmuBufferDesc);
+        hRet = HybridDirectSoundBuffer_SetMixBins(pThis->Xb_VoiceProperties, pMixBins, pThis->EmuBufferDesc);
     }
 
     return hRet;
