@@ -53,14 +53,14 @@ We welcome contributions, large and small.
 
 If you want to do some coding, be sure to read the [Developer notes](https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/wiki/Developer-notes).
 
-**IMPORTANT: Pull-Requests containing code derived from XQEMU will _not_ be approved until an agreement is reached to make work mutually beneficial. this includes updates to existing XQEMU derived code. We should not/will not become a hostile fork.**
+**IMPORTANT: Pull-Requests containing code derived from XQEMU will _not_ be approved until an agreement is reached to make work mutually beneficial. This includes updates to existing XQEMU derived code. We should not/will not become a hostile fork.**
 
 Please contact us before you start working on something, so we can make sure your work is going to be accepted once finished.
 
 ### Main Prerequisites
 1. [Git for Windows](https://git-scm.com)
 2. [CMake](https://cmake.org)
-    * Some IDEs already have CMake support, so this is optional.
+    * Some IDEs already have CMake support, this is optional.
 
 ### Fetching the code
 1. Run the following command in the command line:
