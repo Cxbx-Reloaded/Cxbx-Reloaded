@@ -30,7 +30,6 @@
 
 namespace xbox {
 
-// TODO: Port PC dsound.h to xbox edition here base on previous research.
 // TODO: Also need to use fixed size to able support cross-platform without extra work.
 //       Such as uint32_t, uint16_t, etc.
 
