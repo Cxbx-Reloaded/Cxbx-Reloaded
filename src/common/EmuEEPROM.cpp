@@ -199,15 +199,44 @@ void EmuEEPROMReset(xbox::XBOX_EEPROM* eeprom)
 {
 	memset(eeprom, 0, sizeof(xbox::XBOX_EEPROM));
 
-	// Set Factory Settings
-	eeprom->FactorySettings.AVRegion = AV_STANDARD_NTSC_M | AV_FLAGS_60Hz;
-	memcpy(eeprom->FactorySettings.SerialNumber, "Cxbx-R      ", 12);
-	// TODO: Ethernet Address
-	// TODO: Online Key
+	// Setup random number generator
+	std::random_device rd;
+	std::mt19937 gen(rd());
+	std::uniform_int_distribution<> randomDis(0, 255);
 
-	// Encrypted Section
+	// Factory Settings
+	eeprom->FactorySettings.AVRegion = AV_STANDARD_NTSC_M | AV_FLAGS_60Hz;
+
+	// Generate a random serial number
+	std::uniform_int_distribution<> serialDis(0, 9);
+	std::string serial = "";
+	for (int i = 0; i < 12; i++) {
+		serial += std::to_string(serialDis(gen));
+	}
+	memset(eeprom->FactorySettings.SerialNumber, 0, 12);
+	strncpy((char*)eeprom->FactorySettings.SerialNumber, serial.c_str(), 12);
+
+	// Generate a random mac address, starting with the Microsoft prefix
+	eeprom->FactorySettings.EthernetAddr[0] = 0x00;
+	eeprom->FactorySettings.EthernetAddr[1] = 0x50;
+	eeprom->FactorySettings.EthernetAddr[2] = 0xF2;
+	for (int i = 3; i < 6; i++) {
+		eeprom->FactorySettings.EthernetAddr[i] = randomDis(gen);
+	}
+
+	// Generate a random Online Key
+	for (int i = 0; i < 16; i++) {
+		eeprom->FactorySettings.OnlineKey[i] = randomDis(gen);
+	}
+
+	// Encrypted Settings
 	eeprom->EncryptedSettings.GameRegion = XC_GAME_REGION_NA;
-	// TODO: HDD Key
+
+	// Generate a random HDD Key
+	for (int i = 0; i < 16; i++) {
+		eeprom->EncryptedSettings.HDKey[i] = randomDis(gen);
+	}
+
 	xbox::XcHMAC(xbox::XboxEEPROMKey, 16, eeprom->EncryptedSettings.Confounder, 8, eeprom->EncryptedSettings.HDKey, 20, eeprom->EncryptedSettings.Checksum);
 
 	// User Settings
@@ -217,35 +246,6 @@ void EmuEEPROMReset(xbox::XBOX_EEPROM* eeprom)
 	eeprom->UserSettings.ParentalControlGames = XC_PC_ESRB_ALL; // = XC_PC_ESRB_ALL
 	eeprom->UserSettings.ParentalControlMovies = XC_PC_MAX; // = XC_PRTL_CRTL_MAX
 	eeprom->UserSettings.MiscFlags = 0;  // No automatic power down
-
-	// Online Settings
-
-	// Setup the Serial and Mac Generators
-	std::random_device rd;
-	std::mt19937 gen(rd());
-	std::uniform_int_distribution<> serialDis (0, 9);
-	std::uniform_int_distribution<> macOnlineDis(0, 255);
-
-	// Generate a random serial number
-	std::string serial = "";
-	for (int i = 0; i < 12; i++) {
-		serial += std::to_string(serialDis(gen));
-	}
-	memset(eeprom->FactorySettings.SerialNumber, 0, 12);
-	strncpy((char*)eeprom->FactorySettings.SerialNumber, serial.c_str(), 12);
-
-	// Generate a random mac address
-	eeprom->FactorySettings.EthernetAddr[0] = 0x00;
-	eeprom->FactorySettings.EthernetAddr[1] = 0x50;
-	eeprom->FactorySettings.EthernetAddr[2] = 0xF2;
-	for (int i = 3; i < 6; i++) {
-		eeprom->FactorySettings.EthernetAddr[i] = macOnlineDis(gen);
-	}
-
-	// Generate a random Online Key
-	for (int i = 0; i < 16; i++) {
-		eeprom->FactorySettings.OnlineKey[i] = macOnlineDis(gen);
-	}
 
 	// TODO: TimeZone Settings
 }
