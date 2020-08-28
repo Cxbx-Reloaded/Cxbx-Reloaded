@@ -108,6 +108,8 @@ static bool                         g_bHack_UnlockFramerate = false; // ignore t
 static bool                         g_bHasDepth = false;    // Does device have a Depth Buffer?
 static bool                         g_bHasStencil = false;  // Does device have a Stencil Buffer?
 static DWORD						g_dwPrimPerFrame = 0;	// Number of primitives within one frame
+static unsigned int                 g_AspectBackbufferWidth = 0; // Used for aspect ratio correction
+static unsigned int                 g_AspectBackbufferHeight = 0;// Used for aspect ratio correction
 
 static Settings::s_video            g_XBVideo;
 
@@ -2953,6 +2955,22 @@ void Direct3D_CreateDevice_End()
         g_Xbox_D3DDevice = (DWORD*)it->second;
     }
 #endif
+
+    // Cache default backbuffer width and height for aspect ratio scaling purposes
+    g_AspectBackbufferHeight = g_EmuCDPD.XboxPresentationParameters.BackBufferHeight;
+    g_AspectBackbufferWidth = g_EmuCDPD.XboxPresentationParameters.BackBufferWidth;
+
+    // NOTE: Some games use anamorphic widesceen (expecting a 4:3 surface to be displayed at 16:9)
+    // For those, we *lie* about the default width, for the scaler
+    // 720p / 1080i are *always* widescreen, and will have the correct backbuffer size, so we only
+    // apply this 'hack' for non-hd resolutions
+    if (g_EmuCDPD.XboxPresentationParameters.Flags & X_D3DPRESENTFLAG_WIDESCREEN && g_AspectBackbufferHeight < 720) {
+        // Lie and pretend we are 1280x720, this works because this ratio is only used in calculations
+        // and not used as actual raw input values
+        g_AspectBackbufferWidth = 1280;
+        g_AspectBackbufferHeight = 720;
+    }
+
     // If the Xbox version of CreateDevice didn't call SetRenderTarget, we must derive the default backbuffer ourselves
     // This works because CreateDevice always sets the current render target to the Xbox Backbuffer
     // In later XDKs, it does this inline rather than by calling D3DDevice_SetRenderTarget
@@ -5008,13 +5026,27 @@ DWORD WINAPI xbox::EMUPATCH(D3DDevice_Swap)
 
 		auto pXboxBackBufferHostSurface = GetHostSurface(g_pXbox_BackBufferSurface, D3DUSAGE_RENDERTARGET);
 		if (pXboxBackBufferHostSurface) {
-			// Blit Xbox BackBuffer to host BackBuffer
-			// TODO: Respect aspect ratio
+            // Calculate the aspect ratio scale factor
+            const auto imageAspect = (float)g_AspectBackbufferWidth/ (float)g_AspectBackbufferHeight;
+            const auto screenAspect = (float)BackBufferDesc.Width / (float)BackBufferDesc.Height;
+            const auto scaleFactor = screenAspect > imageAspect ? (float)BackBufferDesc.Height / (float)g_AspectBackbufferHeight : (float)BackBufferDesc.Width / (float)g_AspectBackbufferWidth;
+
+            const auto width = g_AspectBackbufferWidth * scaleFactor;
+            const auto height = g_AspectBackbufferHeight * scaleFactor;
+
+            // Caclulate the centered rectangle
+            RECT dest{};
+            dest.top = (BackBufferDesc.Height - height) / 2;
+            dest.left = (BackBufferDesc.Width - width) / 2;
+            dest.right = dest.left + width;
+            dest.bottom = dest.top + height;
+
+            // Blit Xbox BackBuffer to host BackBuffer
             hRet = g_pD3DDevice->StretchRect(
                 /* pSourceSurface = */ pXboxBackBufferHostSurface,
                 /* pSourceRect = */ nullptr,
                 /* pDestSurface = */ pCurrentHostBackBuffer,
-                /* pDestRect = */ nullptr,
+                /* pDestRect = */ &dest,
                 /* Filter = */ LoadSurfaceFilter
             );
 		
