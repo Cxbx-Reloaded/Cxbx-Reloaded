@@ -5060,7 +5060,7 @@ DWORD WINAPI xbox::EMUPATCH(D3DDevice_Swap)
             const auto width = g_AspectRatioScaleWidth * g_AspectRatioScale;
             const auto height = g_AspectRatioScaleHeight * g_AspectRatioScale;
 
-            // Caclulate the centered rectangle
+            // Calculate the centered rectangle
             RECT dest{};
             dest.top = (LONG)((g_HostBackBufferDesc.Height - height) / 2);
             dest.left = (LONG)((g_HostBackBufferDesc.Width - width) / 2);
