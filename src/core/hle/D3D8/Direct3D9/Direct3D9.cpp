@@ -2852,9 +2852,9 @@ void UpdateHostBackBufferDesc()
 void SetAspectRatioScale(xbox::X_D3DPRESENT_PARAMETERS* pPresentationParameters)
 {
     // NOTE: Some games use anamorphic widesceen (expecting a 4:3 surface to be displayed at 16:9)
-     // For those, we *lie* about the default width, for the scaler
-     // 720p / 1080i are *always* widescreen, and will have the correct backbuffer size, so we only
-     // apply this 'hack' for non-hd resolutions
+    // For those, we *lie* about the default width, for the scaler
+    // 720p / 1080i are *always* widescreen, and will have the correct backbuffer size, so we only
+    // apply this 'hack' for non-hd resolutions
     g_AspectRatioScaleWidth = pPresentationParameters->BackBufferWidth;
     g_AspectRatioScaleHeight = pPresentationParameters->BackBufferHeight;
 
