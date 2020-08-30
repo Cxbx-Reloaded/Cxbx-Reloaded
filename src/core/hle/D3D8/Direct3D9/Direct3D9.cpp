@@ -5042,10 +5042,26 @@ DWORD WINAPI xbox::EMUPATCH(D3DDevice_Swap)
 	HRESULT hRet = g_pD3DDevice->GetBackBuffer(
 		0, // iSwapChain
 		0, D3DBACKBUFFER_TYPE_MONO, &pCurrentHostBackBuffer);
+
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->GetBackBuffer - Unable to get backbuffer surface!");
 	if (hRet == D3D_OK) {
 		assert(pCurrentHostBackBuffer != nullptr);
 
+        // Clear the backbuffer surface
+        IDirect3DSurface* pExistingRenderTarget = nullptr;
+        hRet = g_pD3DDevice->GetRenderTarget(0, &pExistingRenderTarget);
+        if (hRet == D3D_OK) {
+            g_pD3DDevice->SetRenderTarget(0, pCurrentHostBackBuffer);
+            g_pD3DDevice->Clear(
+                /*Count=*/0,
+                /*pRects=*/nullptr,
+                D3DCLEAR_TARGET | (g_bHasDepth ? D3DCLEAR_ZBUFFER : 0) | (g_bHasStencil ? D3DCLEAR_STENCIL : 0),
+                /*Color=*/0xFF000000, // TODO : Use constant for this
+                /*Z=*/g_bHasDepth ? 1.0f : 0.0f,
+                /*Stencil=*/0);
+            g_pD3DDevice->SetRenderTarget(0, pExistingRenderTarget);
+        }
+        
         // TODO: Implement a hot-key to change the filter?
         // Note: LoadSurfaceFilter Must be D3DTEXF_NONE, D3DTEXF_POINT or D3DTEXF_LINEAR
         // Before StretchRects we used D3DX_FILTER_POINT here, but that gave jagged edges in Dashboard.
@@ -5056,7 +5072,7 @@ DWORD WINAPI xbox::EMUPATCH(D3DDevice_Swap)
 
 		auto pXboxBackBufferHostSurface = GetHostSurface(g_pXbox_BackBufferSurface, D3DUSAGE_RENDERTARGET);
 		if (pXboxBackBufferHostSurface) {
-            // Calculate the aspect ratio scale factor
+            // Calculate the target width/height
             const auto width = g_AspectRatioScaleWidth * g_AspectRatioScale;
             const auto height = g_AspectRatioScaleHeight * g_AspectRatioScale;
 
@@ -5141,17 +5157,32 @@ DWORD WINAPI xbox::EMUPATCH(D3DDevice_Swap)
 				float xScale, yScale;
 				GetMultiSampleScale(xScale, yScale);
 
-                xScale = (float)g_HostBackBufferDesc.Width / ((float)XboxBackBufferWidth / xScale);
-                yScale = (float)g_HostBackBufferDesc.Height / ((float)XboxBackBufferHeight / yScale);
+                const auto width = g_AspectRatioScaleWidth * g_AspectRatioScale;
+                const auto height = g_AspectRatioScaleHeight * g_AspectRatioScale;
+                xScale = (float)width / ((float)XboxBackBufferWidth / xScale);
+                yScale = (float)height / ((float)XboxBackBufferHeight / yScale);
 
+                // Scale the destination co-ordinates by the correct scale factor
                 EmuDestRect.top = (LONG)(EmuDestRect.top * yScale);
                 EmuDestRect.left = (LONG)(EmuDestRect.left * xScale);
                 EmuDestRect.bottom = (LONG)(EmuDestRect.bottom * yScale);
                 EmuDestRect.right = (LONG)(EmuDestRect.right * xScale);
+
+                // Finally, adjust to correct on-screen position (
+                EmuDestRect.top += (LONG)((g_HostBackBufferDesc.Height - height) / 2);
+                EmuDestRect.left += (LONG)((g_HostBackBufferDesc.Width - width) / 2);
+                EmuDestRect.right += (LONG)((g_HostBackBufferDesc.Width - width) / 2);
+                EmuDestRect.bottom += (LONG)((g_HostBackBufferDesc.Height - height) / 2);
 			} else {
 				// Use backbuffer width/height since that may differ from the Window size
-                EmuDestRect.right = g_HostBackBufferDesc.Width;
-                EmuDestRect.bottom = g_HostBackBufferDesc.Height;
+                const auto width = g_AspectRatioScaleWidth * g_AspectRatioScale;
+                const auto height = g_AspectRatioScaleHeight * g_AspectRatioScale;
+
+                // Calculate the centered rectangle
+                EmuDestRect.top = (LONG)((g_HostBackBufferDesc.Height - height) / 2);
+                EmuDestRect.left = (LONG)((g_HostBackBufferDesc.Width - width) / 2);
+                EmuDestRect.right = (LONG)(EmuDestRect.left + width);
+                EmuDestRect.bottom = (LONG)(EmuDestRect.top + height);
 			}
 
 			// load the YUY2 into the backbuffer
@@ -5207,7 +5238,6 @@ DWORD WINAPI xbox::EMUPATCH(D3DDevice_Swap)
                 if (hRet != D3D_OK) {
                     EmuLog(LOG_LEVEL::WARNING, "Couldn't load Xbox overlay to host surface : %X", hRet);
                 } else {
-                    // TODO: Respect aspect ratio
                     hRet = g_pD3DDevice->StretchRect(
                         /* pSourceSurface = */ pTemporaryOverlaySurface,
                         /* pSourceRect = */ &EmuSourRect,
