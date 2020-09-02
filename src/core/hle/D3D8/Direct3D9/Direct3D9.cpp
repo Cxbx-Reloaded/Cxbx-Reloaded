@@ -4999,7 +4999,7 @@ VOID WINAPI xbox::EMUPATCH(D3DDevice_CopyRects)
         DestRect.top *= destScaleY;
         DestRect.bottom *= destScaleY;
 
-        HRESULT hRet = g_pD3DDevice->StretchRect(pHostSourceSurface, &SourceRect, pHostDestSurface, &DestRect, D3DTEXF_NONE);
+        HRESULT hRet = g_pD3DDevice->StretchRect(pHostSourceSurface, &SourceRect, pHostDestSurface, &DestRect, D3DTEXF_LINEAR);
         if (FAILED(hRet)) {
             LOG_TEST_CASE("D3DDevice_CopyRects: Failed to copy surface");
         }
