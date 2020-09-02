@@ -5047,7 +5047,8 @@ DWORD WINAPI xbox::EMUPATCH(D3DDevice_Swap)
 	if (hRet == D3D_OK) {
 		assert(pCurrentHostBackBuffer != nullptr);
 
-        // Clear the backbuffer surface
+        // Clear the backbuffer surface, this prevents artifacts when switching aspect-ratio
+        // Test-case: Dashboard
         IDirect3DSurface* pExistingRenderTarget = nullptr;
         hRet = g_pD3DDevice->GetRenderTarget(0, &pExistingRenderTarget);
         if (hRet == D3D_OK) {
