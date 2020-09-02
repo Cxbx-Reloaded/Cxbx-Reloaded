@@ -4921,7 +4921,7 @@ VOID WINAPI xbox::EMUPATCH(D3DDevice_CopyRects)
     // We skip the trampoline to prevent unnecessary work
     // As our surfaces remain on the GPU, calling the trampoline would just
     // result in a memcpy from an empty Xbox surface to another empty Xbox Surface
-    D3DSURFACE_DESC SourceDesc, DestinationDesc;
+    D3DSURFACE_DESC hostSourceDesc, hostDestDesc;
     auto pHostSourceSurface = GetHostSurface(pSourceSurface);
     auto pHostDestSurface = GetHostSurface(pDestinationSurface);
 
@@ -4932,22 +4932,29 @@ VOID WINAPI xbox::EMUPATCH(D3DDevice_CopyRects)
         return;
     }
 
-    pHostSourceSurface->GetDesc(&SourceDesc);
-    pHostDestSurface->GetDesc(&DestinationDesc);
+    pHostSourceSurface->GetDesc(&hostSourceDesc);
+    pHostDestSurface->GetDesc(&hostDestDesc);
 
     // If the source is a render-target and the destination is not, we need force it to be re-created as one
     // This is because StrechRects cannot copy from a Render-Target to a Non-Render Target
     // Test Case: Crash Bandicoot: Wrath of Cortex attemps to copy the render-target to a texture
     // This fixes an issue on the pause screen where the screenshot of the current scene was not displayed correctly
-    if ((SourceDesc.Usage & D3DUSAGE_RENDERTARGET) != 0 && (DestinationDesc.Usage & D3DUSAGE_RENDERTARGET) == 0) {
+    if ((hostSourceDesc.Usage & D3DUSAGE_RENDERTARGET) != 0 && (hostDestDesc.Usage & D3DUSAGE_RENDERTARGET) == 0) {
         pHostDestSurface = GetHostSurface(pDestinationSurface, D3DUSAGE_RENDERTARGET);
-        pHostDestSurface->GetDesc(&DestinationDesc);
+        pHostDestSurface->GetDesc(&hostDestDesc);
     }
 
     // If no rectangles were given, default to 1 (entire surface)
     if (cRects == 0) {
         cRects = 1;
     }
+
+    // Get Xbox surface dimensions
+    // Host resources may be scaled so we'll account for that later
+    auto xboxSourceWidth = GetPixelContainerWidth(pSourceSurface);
+    auto xboxSourceHeight = GetPixelContainerHeight(pSourceSurface);
+    auto xboxDestWidth = GetPixelContainerWidth(pDestinationSurface);
+    auto xboxDestHeight = GetPixelContainerHeight(pDestinationSurface);
 
     for (UINT i = 0; i < cRects; i++) {
         RECT SourceRect, DestRect;
@@ -4956,9 +4963,9 @@ VOID WINAPI xbox::EMUPATCH(D3DDevice_CopyRects)
             SourceRect = pSourceRectsArray[i];
         } else {
             SourceRect.left = 0;
-            SourceRect.right = SourceDesc.Width;
+            SourceRect.right = xboxSourceWidth;
             SourceRect.top = 0;
-            SourceRect.bottom = SourceDesc.Height;
+            SourceRect.bottom = xboxSourceHeight;
         }
 
         if (pDestPointsArray != nullptr) {
@@ -4970,12 +4977,29 @@ VOID WINAPI xbox::EMUPATCH(D3DDevice_CopyRects)
             DestRect = SourceRect;
         } else {
             DestRect.left = 0;
-            DestRect.right = DestinationDesc.Width;
+            DestRect.right = xboxDestWidth;
             DestRect.top = 0;
-            DestRect.bottom = DestinationDesc.Height;
+            DestRect.bottom = xboxDestHeight;
         }
 
-        HRESULT hRet = g_pD3DDevice->StretchRect(pHostSourceSurface, &SourceRect, pHostDestSurface, &DestRect, D3DTEXF_NONE);
+        // Scale the source and destination rects
+        auto sourceScaleX = (uint32_t)hostSourceDesc.Width / xboxSourceWidth;
+        auto sourceScaleY = (uint32_t)hostSourceDesc.Height / xboxSourceHeight;
+
+        SourceRect.left *= sourceScaleX;
+        SourceRect.right *= sourceScaleX;
+        SourceRect.top *= sourceScaleY;
+        SourceRect.bottom *= sourceScaleY;
+
+        auto destScaleX = (uint32_t) hostDestDesc.Width / xboxDestWidth;
+        auto destScaleY = (uint32_t) hostDestDesc.Height / xboxDestHeight;
+
+        DestRect.left *= destScaleX;
+        DestRect.right *= destScaleX;
+        DestRect.top *= destScaleY;
+        DestRect.bottom *= destScaleY;
+
+        HRESULT hRet = g_pD3DDevice->StretchRect(pHostSourceSurface, &SourceRect, pHostDestSurface, &DestRect, D3DTEXF_LINEAR);
         if (FAILED(hRet)) {
             LOG_TEST_CASE("D3DDevice_CopyRects: Failed to copy surface");
         }
