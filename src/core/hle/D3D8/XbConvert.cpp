@@ -929,7 +929,7 @@ static const FormatInfo FormatInfos[] = {
 	/* 0x33 X_D3DFMT_V16U16       */ { 32, Swzzld, NoCmpnts, D3DFMT_V16U16    },
 	/* 0x34 undefined             */ {},
 	/* 0x35 X_D3DFMT_LIN_L16      */ { 16, Linear, _____L16, D3DFMT_L16       },
-	/* 0x36 X_D3DFMT_LIN_V16U16   */ { 32, Linear, NoCmpnts, D3DFMT_V16U16    }, // Note : Seems ununsed on Xbox
+	/* 0x36 X_D3DFMT_LIN_V16U16   */ { 32, Linear, NoCmpnts, D3DFMT_V16U16    }, // Note : Seems unused on Xbox
 	/* 0x37 X_D3DFMT_LIN_L6V5U5   */ { 16, Linear, __R6G5B5, D3DFMT_L6V5U5    }, // Alias : X_D3DFMT_LIN_R6G5B5
 	/* 0x38 X_D3DFMT_R5G5B5A1     */ { 16, Swzzld, R5G5B5A1, D3DFMT_A1R5G5B5  , Texture, "X_D3DFMT_R5G5B5A1 -> D3DFMT_A1R5G5B5" },
 	/* 0x39 X_D3DFMT_R4G4B4A4     */ { 16, Swzzld, R4G4B4A4, D3DFMT_A4R4G4B4  , Texture, "X_D3DFMT_R4G4B4A4 -> D3DFMT_A4R4G4B4" },

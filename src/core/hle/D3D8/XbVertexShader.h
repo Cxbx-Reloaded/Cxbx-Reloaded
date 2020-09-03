@@ -40,9 +40,10 @@
 
 typedef struct _CxbxVertexShaderStreamElement
 {
-	UINT XboxType; // The stream element data types (xbox)
-	UINT XboxByteSize; // The stream element data sizes (xbox)
-	UINT HostByteSize; // The stream element data sizes (pc)
+	UINT XboxType; // The stream element data type (xbox)
+	UINT XboxByteSize; // The stream element data size (xbox)
+	BYTE HostDataType; // The stream element data type (pc)
+	UINT HostByteSize; // The stream element data size (pc)
 }
 CxbxVertexShaderStreamElement;
 
@@ -60,52 +61,24 @@ CxbxVertexShaderStreamElement;
 typedef struct _CxbxVertexShaderStreamInfo
 {
 	BOOL  NeedPatch;       // This is to know whether it's data which must be patched
-	BOOL DeclPosition;
 	WORD HostVertexStride;
 	DWORD NumberOfVertexElements;        // Number of the stream data types
-	WORD CurrentStreamNumber;
-	CxbxVertexShaderStreamElement VertexElements[X_VSH_MAX_ATTRIBUTES + 16]; // TODO : Why 16 extra host additions?)
+	WORD XboxStreamIndex;
+	CxbxVertexShaderStreamElement VertexElements[X_VSH_MAX_ATTRIBUTES];
 }
 CxbxVertexShaderStreamInfo;
 
+typedef uint64_t VertexDeclarationKey;
+
 typedef struct _CxbxVertexDeclaration
 {
-	CxbxVertexShaderStreamInfo VertexStreams[X_VSH_MAX_STREAMS];
+	VertexDeclarationKey Key;
+	CxbxVertexShaderStreamInfo VertexStreams[X_VSH_MAX_STREAMS]; // Note : VertexStreams is indexed by a counter, NOT StreamIndex!
 	IDirect3DVertexDeclaration* pHostVertexDeclaration;
-	DWORD* pXboxDeclarationCopy;
-	DWORD  XboxDeclarationCount; // Xbox's number of DWORD-sized X_D3DVSD* tokens
-	UINT                       NumberOfVertexStreams; // The number of streams the vertex shader uses
+	UINT NumberOfVertexStreams; // The number of streams the vertex shader uses
 	bool vRegisterInDeclaration[X_VSH_MAX_ATTRIBUTES];
 }
 CxbxVertexDeclaration;
-
-
-typedef struct _CxbxVertexShader
-{
-	// These are the parameters given by the XBE,
-	// we save them to be able to return them when necessary.
-	DWORD                 XboxFunctionSize;
-	DWORD* pXboxFunctionCopy;
-	UINT                  XboxNrAddressSlots;
-	DWORD                 XboxVertexShaderType;
-	// DWORD              XboxStatus; // Used by VshHandleIsValidShader()
-
-	// The resulting host variables
-	uint64_t VertexShaderKey;
-
-	// Needed for dynamic stream patching
-	CxbxVertexDeclaration  Declaration;
-}
-CxbxVertexShader;
-
-// recompile xbox vertex shader declaration
-extern D3DVERTEXELEMENT *EmuRecompileVshDeclaration
-(
-    DWORD                *pXboxDeclaration,
-    bool                  bIsFixedFunction,
-    DWORD                *pXboxDeclarationCount,
-    CxbxVertexDeclaration *pCxbxVertexDeclaration
-);
 
 // Intermediate vertex shader structures
 
@@ -224,25 +197,21 @@ extern void EmuParseVshFunction
 	IntermediateVertexShader* pShader
 );
 
-extern void FreeVertexDynamicPatch(CxbxVertexShader *pVertexShader);
-
-// Checks for failed vertex shaders, and shaders that would need patching
-extern boolean IsValidCurrentShader(void);
-
 inline boolean VshHandleIsVertexShader(DWORD Handle) { return (Handle & X_D3DFVF_RESERVED0) ? TRUE : FALSE; }
-inline boolean VshHandleIsFVF(DWORD Handle) { return !VshHandleIsVertexShader(Handle); }
 inline xbox::X_D3DVertexShader *VshHandleToXboxVertexShader(DWORD Handle) { return (xbox::X_D3DVertexShader *)(Handle & ~X_D3DFVF_RESERVED0);}
 
-extern CxbxVertexShader* GetCxbxVertexShader(DWORD XboxVertexShaderHandle);
+extern bool g_Xbox_VertexShader_IsFixedFunction;
 
+extern CxbxVertexDeclaration* CxbxGetVertexDeclaration();
+extern xbox::X_STREAMINPUT& GetXboxVertexStreamInput(unsigned XboxStreamNumber);
+
+extern void CxbxImpl_SetScreenSpaceOffset(float x, float y);
 extern void CxbxImpl_LoadVertexShaderProgram(CONST DWORD* pFunction, DWORD Address);
 extern void CxbxImpl_LoadVertexShader(DWORD Handle, DWORD Address);
 extern void CxbxImpl_SetVertexShader(DWORD Handle);
-extern void CxbxImpl_SelectVertexShaderDirect(xbox::X_VERTEXATTRIBUTEFORMAT* pVAF, DWORD Address);
 extern void CxbxImpl_SelectVertexShader(DWORD Handle, DWORD Address);
 extern void CxbxImpl_SetVertexShaderInput(DWORD Handle, UINT StreamCount, xbox::X_STREAMINPUT* pStreamInputs);
 extern void CxbxImpl_SetVertexShaderConstant(INT Register, PVOID pConstantData, DWORD ConstantCount);
-extern HRESULT CxbxImpl_CreateVertexShader(CONST DWORD *pDeclaration, CONST DWORD *pFunction, DWORD *pHandle, DWORD Usage);
 extern void CxbxImpl_DeleteVertexShader(DWORD Handle);
 
 #endif

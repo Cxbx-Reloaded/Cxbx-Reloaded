@@ -77,7 +77,7 @@ TextureStateInfo CxbxTextureStateInfo[] = {
 
 bool XboxTextureStateConverter::Init(XboxRenderStateConverter* pState)
 {
-    // Deferred states start at 0, this menas that D3DDeferredTextureState IS D3D__TextureState
+    // Deferred states start at 0, this means that D3DDeferredTextureState IS D3D__TextureState
     // No further works is required to derive the offset
     if (g_SymbolAddresses.find("D3DDeferredTextureState") != g_SymbolAddresses.end()) {
         D3D__TextureState = (uint32_t*)g_SymbolAddresses["D3DDeferredTextureState"];
@@ -184,41 +184,89 @@ void XboxTextureStateConverter::Apply()
             switch (State) {
                 // These types map 1:1 but have some unsupported values
                 case xbox::X_D3DTSS_ADDRESSU: case xbox::X_D3DTSS_ADDRESSV: case xbox::X_D3DTSS_ADDRESSW:
-                    if (Value == xbox::X_D3DTADDRESS_CLAMPTOEDGE) {
-                        EmuLog(LOG_LEVEL::WARNING, "D3DTADDRESS_CLAMPTOEDGE is unsupported");
-                        // D3DTADDRESS_BORDER is the closest host match, CLAMPTOEDGE is identical
-                        // Except it has additional restrictions.
-                        Value = D3DTADDRESS_BORDER; 
-                        break;
+                    switch (Value) {
+                        case 0: // Let's ignore zero (its no known X_D3DTADDRESS_ mode, but logging this seems useless)
+                        case xbox::X_D3DTADDRESS_WRAP:        // = 1 = D3DTADDRESS_WRAP = 1,
+                        case xbox::X_D3DTADDRESS_MIRROR:      // = 2 = D3DTADDRESS_MIRROR = 2,
+                        case xbox::X_D3DTADDRESS_CLAMP:       // = 3 = D3DTADDRESS_CLAMP = 3,
+                        case xbox::X_D3DTADDRESS_BORDER:      // = 4 = D3DTADDRESS_BORDER = 4,
+                            // These match host Direct3D 9 values, so no update necessary
+                            break;
+                        case xbox::X_D3DTADDRESS_CLAMPTOEDGE: // = 5
+                            LOG_TEST_CASE("X_D3DTADDRESS_CLAMPTOEDGE unsupported, falling back to D3DTADDRESS_BORDER");
+                            // D3DTADDRESS_BORDER is the closest host match, CLAMPTOEDGE is identical
+                            // Except it has additional restrictions.
+                            Value = D3DTADDRESS_BORDER; 
+                            break;
+                        default:
+                            EmuLog(LOG_LEVEL::WARNING, "Unsupported X_D3DTSS_ADDRESS? value %x", Value);
+                            Value = D3DTADDRESS_WRAP;
+                            break;
                     }
                     break;
                 case xbox::X_D3DTSS_MAGFILTER: case xbox::X_D3DTSS_MINFILTER: case xbox::X_D3DTSS_MIPFILTER:
-                    if (Value == xbox::X_D3DTEXF_QUINCUNX) {
-                        EmuLog(LOG_LEVEL::WARNING, "D3DTEXF_QUINCUNX is unsupported");
-                        // Fallback to D3DTEXF_ANISOTROPIC 
-                        Value = D3DTEXF_ANISOTROPIC;
-                        break;
-                    }
-                    break;
-                case xbox::X_D3DTSS_TEXCOORDINDEX:
                     switch (Value) {
-                        case 0x00040000:
-                            // This value is TCI_OBJECT on Xbox,which is not supported by the host
-                            // In this case, we reset to 0.
-                            EmuLog(LOG_LEVEL::WARNING, "EmuD3DDevice_SetTextureState_TexCoordIndex: D3DTSS_TCI_OBJECT is unsupported", Value);
-                            Value = 0;
+                        case xbox::X_D3DTEXF_NONE:        // = 0 = D3DTEXF_NONE = 0,        // filtering disabled (valid for mip filter only)
+                        case xbox::X_D3DTEXF_POINT:       // = 1 = D3DTEXF_POINT = 1,       // nearest
+                        case xbox::X_D3DTEXF_LINEAR:      // = 2 = D3DTEXF_LINEAR = 2,      // linear interpolation
+                        case xbox::X_D3DTEXF_ANISOTROPIC: // = 3 = D3DTEXF_ANISOTROPIC = 3, // anisotropic
+                            // These match host Direct3D 9 values, so no update necessary
                             break;
-                        case 0x00050000:
-                            // This value is TCI_SPHERE on Xbox, let's map it to D3DTSS_TCI_SPHEREMAP for the host
-                            Value = D3DTSS_TCI_SPHEREMAP;
+                        case xbox::X_D3DTEXF_QUINCUNX:    // = 4; // quincunx kernel (Xbox extension), also known as "flat cubic"
+                            LOG_TEST_CASE("X_D3DTEXF_QUINCUNX unsupported, falling back to D3DTEXF_ANISOTROPIC");
+                            Value = D3DTEXF_ANISOTROPIC;
+                            break;
+                        case xbox::X_D3DTEXF_GAUSSIANCUBIC: // = 5 // Xbox extension, different cubic kernel
+                            // Direct3D 9 alternatives : 
+                            // D3DTEXF_PYRAMIDALQUAD = 6,    // 4-sample tent
+                            // D3DTEXF_GAUSSIANQUAD = 7,    // 4-sample gaussian
+                            // D3DTEXF_CONVOLUTIONMONO = 8,    // Convolution filter for monochrome textures
+                            LOG_TEST_CASE("X_D3DTEXF_QUINCUNX unsupported, falling back to D3DTEXF_GAUSSIANQUAD");
+                            Value = D3DTEXF_GAUSSIANQUAD;
+                            break;
+                        default:
+                            EmuLog(LOG_LEVEL::WARNING, "Unsupported X_D3DTSS_M??FILTER value %x", Value);
+                            Value = D3DTEXF_NONE;
                             break;
                     }
                     break;
+                case xbox::X_D3DTSS_TEXCOORDINDEX: {
+                    int texCoordIndex = Value & 0x0000FFFF;
+                    if (texCoordIndex > 3) {
+                        LOG_TEST_CASE("TEXCOORDINDEX out of bounds, masking to lowest 2 bits");
+                        texCoordIndex = Value & 3;
+                    }
+                    switch (Value & 0xFFFF0000) {
+                        case X_D3DTSS_TCI_PASSTHRU:                    // = 0x00000000
+                        case X_D3DTSS_TCI_CAMERASPACENORMAL:           // = 0x00010000
+                        case X_D3DTSS_TCI_CAMERASPACEPOSITION:         // = 0x00020000
+                        case X_D3DTSS_TCI_CAMERASPACEREFLECTIONVECTOR: // = 0x00030000
+                            // These match host Direct3D 9 values, so no update necessary
+                            break;
+                        case X_D3DTSS_TCI_OBJECT:                      // = 0x00040000
+                            // Collides with host Direct3D 9 D3DTSS_TCI_SPHEREMAP
+                            // This value is not supported on host in Direct3D 9
+                            // It probably means "TexGen ObjectLinear", or '(untransformed) object space identity mapping'
+                            LOG_TEST_CASE("Xbox D3DTSS_TCI_OBJECT unsupported on host");
+                            // Test-case : Terrain XDK sample
+                            Value = texCoordIndex;
+                            break;
+                        case X_D3DTSS_TCI_SPHEREMAP:                   // = 0x00050000
+                            // Convert Xbox sphere mapping bit to host Direct3D 9 (which uses a different bit)
+                            Value = D3DTSS_TCI_SPHEREMAP | texCoordIndex;
+                            break;
+                        default:
+                            EmuLog(LOG_LEVEL::WARNING, "Unsupported X_D3DTSS_TEXCOORDINDEX value %x", Value);
+                            Value = texCoordIndex;
+                            break;
+                    }
+                    break;
+                }
                 // These types require value remapping for all supported values
                 case xbox::X_D3DTSS_COLOROP: case xbox::X_D3DTSS_ALPHAOP:
                     Value = GetHostTextureOpValue(Value);
                     break;
-                // These types  require no conversion, so we just pass through as-is
+                // These types require no conversion, so we just pass through as-is
                 case xbox::X_D3DTSS_COLORARG0: case xbox::X_D3DTSS_COLORARG1: case xbox::X_D3DTSS_COLORARG2:
                 case xbox::X_D3DTSS_ALPHAARG0: case xbox::X_D3DTSS_ALPHAARG1: case xbox::X_D3DTSS_ALPHAARG2:
                 case xbox::X_D3DTSS_RESULTARG: case xbox::X_D3DTSS_TEXTURETRANSFORMFLAGS:
@@ -272,4 +320,13 @@ void XboxTextureStateConverter::Apply()
 
         // no need to actually copy here, since it was handled in the loop above
     }
+}
+
+uint32_t XboxTextureStateConverter::Get(int textureStage, DWORD xboxState) {
+    if (textureStage < 0 || textureStage > 3)
+        CxbxKrnlCleanup("Requested texture stage was out of range: %d", textureStage);
+    if (xboxState < xbox::X_D3DTSS_FIRST || xboxState > xbox::X_D3DTSS_LAST)
+        CxbxKrnlCleanup("Requested texture state was out of range: %d", xboxState);
+
+    return D3D__TextureState[(textureStage * xbox::X_D3DTS_STAGESIZE) + xboxState];
 }

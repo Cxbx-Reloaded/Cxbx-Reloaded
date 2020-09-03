@@ -441,22 +441,78 @@ static uint64_t fnv_hash(const uint8_t *data, size_t len);
 static uint64_t fast_hash(const uint8_t *data, size_t len, unsigned int samples);
 
 /* PGRAPH - accelerated 2d/3d drawing engine */
+
+static uint32_t pgraph_rdi_read(PGRAPHState *pg,
+                                unsigned int select, unsigned int address)
+{
+    uint32_t r = 0;
+    switch(select) {
+    case RDI_INDEX_VTX_CONSTANTS0:
+    case RDI_INDEX_VTX_CONSTANTS1:
+        assert((address / 4) < NV2A_VERTEXSHADER_CONSTANTS);
+        r = pg->vsh_constants[address / 4][3 - address % 4];
+        break;
+    default:
+        fprintf(stderr, "nv2a: unknown rdi read select 0x%x address 0x%x\n",
+                select, address);
+        assert(false);
+        break;
+    }
+    return r;
+}
+
+static void pgraph_rdi_write(PGRAPHState *pg,
+                             unsigned int select, unsigned int address,
+                             uint32_t val)
+{
+    switch(select) {
+    case RDI_INDEX_VTX_CONSTANTS0:
+    case RDI_INDEX_VTX_CONSTANTS1:
+        assert(false); /* Untested */
+        assert((address / 4) < NV2A_VERTEXSHADER_CONSTANTS);
+        pg->vsh_constants_dirty[address / 4] |=
+            (val != pg->vsh_constants[address / 4][3 - address % 4]);
+        pg->vsh_constants[address / 4][3 - address % 4] = val;
+        break;
+    default:
+        NV2A_DPRINTF("unknown rdi write select 0x%x, address 0x%x, val 0x%08x\n",
+                     select, address, val);
+        break;
+    }
+}
+
 DEVICE_READ32(PGRAPH)
 {
 	qemu_mutex_lock(&d->pgraph.pgraph_lock);
 
+    PGRAPHState *pg = &d->pgraph;
 	DEVICE_READ32_SWITCH() {
 	case NV_PGRAPH_INTR:
-		result = d->pgraph.pending_interrupts;
+		result = pg->pending_interrupts;
 		break;
 	case NV_PGRAPH_INTR_EN:
-		result = d->pgraph.enabled_interrupts;
+		result = pg->enabled_interrupts;
 		break;
+    case NV_PGRAPH_RDI_DATA: {
+        unsigned int select = GET_MASK(pg->regs[NV_PGRAPH_RDI_INDEX],
+                                       NV_PGRAPH_RDI_INDEX_SELECT);
+        int address = GET_MASK(pg->regs[NV_PGRAPH_RDI_INDEX],
+                                        NV_PGRAPH_RDI_INDEX_ADDRESS);
+
+        result = pgraph_rdi_read(pg, select, address);
+
+        /* FIXME: Overflow into select? */
+        assert(address < GET_MASK(NV_PGRAPH_RDI_INDEX_ADDRESS,
+                                  NV_PGRAPH_RDI_INDEX_ADDRESS));
+        SET_MASK(pg->regs[NV_PGRAPH_RDI_INDEX],
+                 NV_PGRAPH_RDI_INDEX_ADDRESS, address + 1);
+        break;
+    }
 	default:
 		DEVICE_READ32_REG(pgraph); // Was : DEBUG_READ32_UNHANDLED(PGRAPH);
 	}
 
-	qemu_mutex_unlock(&d->pgraph.pgraph_lock);
+	qemu_mutex_unlock(&pg->pgraph_lock);
 
 //    reg_log_read(NV_PGRAPH, addr, r);
 
@@ -465,36 +521,53 @@ DEVICE_READ32(PGRAPH)
 
 DEVICE_WRITE32(PGRAPH)
 {
+    PGRAPHState *pg = &d->pgraph;
 //    reg_log_write(NV_PGRAPH, addr, val);
 
-	qemu_mutex_lock(&d->pgraph.pgraph_lock);
+	qemu_mutex_lock(&pg->pgraph_lock);
 
 	switch (addr) {
 	case NV_PGRAPH_INTR:
-		d->pgraph.pending_interrupts &= ~value;
-		qemu_cond_broadcast(&d->pgraph.interrupt_cond);
+		pg->pending_interrupts &= ~value;
+		qemu_cond_broadcast(&pg->interrupt_cond);
 		break;
 	case NV_PGRAPH_INTR_EN:
-		d->pgraph.enabled_interrupts = value;
+		pg->enabled_interrupts = value;
 		break;
 	case NV_PGRAPH_INCREMENT:
 		if (value & NV_PGRAPH_INCREMENT_READ_3D) {
-			SET_MASK(d->pgraph.regs[NV_PGRAPH_SURFACE],
+			SET_MASK(pg->regs[NV_PGRAPH_SURFACE],
 				NV_PGRAPH_SURFACE_READ_3D,
-				(GET_MASK(d->pgraph.regs[NV_PGRAPH_SURFACE],
+				(GET_MASK(pg->regs[NV_PGRAPH_SURFACE],
 					NV_PGRAPH_SURFACE_READ_3D) + 1)
-				% GET_MASK(d->pgraph.regs[NV_PGRAPH_SURFACE],
+				% GET_MASK(pg->regs[NV_PGRAPH_SURFACE],
 					NV_PGRAPH_SURFACE_MODULO_3D));
-			qemu_cond_broadcast(&d->pgraph.flip_3d);
+			qemu_cond_broadcast(&pg->flip_3d);
 		}
 		break;
+    case NV_PGRAPH_RDI_DATA: {
+        unsigned int select = GET_MASK(pg->regs[NV_PGRAPH_RDI_INDEX],
+                                       NV_PGRAPH_RDI_INDEX_SELECT);
+        int address = GET_MASK(pg->regs[NV_PGRAPH_RDI_INDEX],
+                                        NV_PGRAPH_RDI_INDEX_ADDRESS);
+
+        pgraph_rdi_write(pg, select, address, value);
+
+        /* FIXME: Overflow into select? */
+        assert(address < GET_MASK(NV_PGRAPH_RDI_INDEX_ADDRESS,
+                                  NV_PGRAPH_RDI_INDEX_ADDRESS));
+        SET_MASK(pg->regs[NV_PGRAPH_RDI_INDEX],
+                 NV_PGRAPH_RDI_INDEX_ADDRESS, address + 1);
+        break;
+    }
 	case NV_PGRAPH_CHANNEL_CTX_TRIGGER: {
 		xbox::addr_xt context_address =
-			GET_MASK(d->pgraph.regs[NV_PGRAPH_CHANNEL_CTX_POINTER], NV_PGRAPH_CHANNEL_CTX_POINTER_INST) << 4;
+			GET_MASK(pg->regs[NV_PGRAPH_CHANNEL_CTX_POINTER],
+				NV_PGRAPH_CHANNEL_CTX_POINTER_INST) << 4;
 
 		if (value & NV_PGRAPH_CHANNEL_CTX_TRIGGER_READ_IN) {
 			unsigned pgraph_channel_id =
-				GET_MASK(d->pgraph.regs[NV_PGRAPH_CTX_USER], NV_PGRAPH_CTX_USER_CHID);
+				GET_MASK(pg->regs[NV_PGRAPH_CTX_USER], NV_PGRAPH_CTX_USER_CHID);
 
 			NV2A_DPRINTF("PGRAPH: read channel %d context from %" HWADDR_PRIx "\n",
 				pgraph_channel_id, context_address);
@@ -504,7 +577,7 @@ DEVICE_WRITE32(PGRAPH)
 
 			NV2A_DPRINTF("    - CTX_USER = 0x%08X\n", context_user);
 
-			d->pgraph.regs[NV_PGRAPH_CTX_USER] = context_user;
+			pg->regs[NV_PGRAPH_CTX_USER] = context_user;
 			// pgraph_set_context_user(d, context_user);
 		}
 		if (value & NV_PGRAPH_CHANNEL_CTX_TRIGGER_WRITE_OUT) {
@@ -521,11 +594,11 @@ DEVICE_WRITE32(PGRAPH)
     // events
     switch (addr) {
     case NV_PGRAPH_FIFO:
-        qemu_cond_broadcast(&d->pgraph.fifo_access_cond);
+        qemu_cond_broadcast(&pg->fifo_access_cond);
         break;
     }
 
-	qemu_mutex_unlock(&d->pgraph.pgraph_lock);
+	qemu_mutex_unlock(&pg->pgraph_lock);
 
 	DEVICE_WRITE32_END(PGRAPH);
 }
@@ -1407,16 +1480,20 @@ void pgraph_handle_method(NV2AState *d,
 				GET_MASK(parameter, NV097_SET_SURFACE_PITCH_COLOR);
 			pg->surface_zeta.pitch =
 				GET_MASK(parameter, NV097_SET_SURFACE_PITCH_ZETA);
+        pg->surface_color.buffer_dirty = true;
+        pg->surface_zeta.buffer_dirty = true;
 			break;
 		case NV097_SET_SURFACE_COLOR_OFFSET:
 			pgraph_update_surface(d, false, true, true);
 
 			pg->surface_color.offset = parameter;
+        pg->surface_color.buffer_dirty = true;
 			break;
 		case NV097_SET_SURFACE_ZETA_OFFSET:
 			pgraph_update_surface(d, false, true, true);
 
 			pg->surface_zeta.offset = parameter;
+        pg->surface_zeta.buffer_dirty = true;
 			break;
 
 		CASE_8(NV097_SET_COMBINER_ALPHA_ICW, 4) :
@@ -2596,17 +2673,12 @@ void pgraph_handle_method(NV2AState *d,
 			assert(false); /* FIXME: Untested! */
 			VertexAttribute *vertex_attribute = &pg->vertex_attributes[slot];
 			pgraph_allocate_inline_buffer_vertices(pg, slot);
-			/* FIXME: Is mapping to [-1,+1] correct? */
-			vertex_attribute->inline_value[0] = ((int16_t)(parameter & 0xFFFF) * 2.0f + 1)
-											 / 65535.0f;
-			vertex_attribute->inline_value[1] = ((int16_t)(parameter >> 16) * 2.0f + 1)
-											 / 65535.0f;
-			/* FIXME: Should these really be set to 0.0 and 1.0 ? Conditions? */
+			vertex_attribute->inline_value[0] = (float)(int16_t)(parameter & 0xFFFF);
+			vertex_attribute->inline_value[1] = (float)(int16_t)(parameter >> 16);
 			vertex_attribute->inline_value[2] = 0.0f;
 			vertex_attribute->inline_value[3] = 1.0f;
 			if (slot == 0) {
 				pgraph_finish_inline_buffer_vertex(pg);
-				assert(false); /* FIXME: Untested */
 			}
 			break;
 		}
@@ -2638,7 +2710,6 @@ void pgraph_handle_method(NV2AState *d,
 														 * 2.0f + 1) / 65535.0f;
 			if ((slot == 0) && (part == 1)) {
 				pgraph_finish_inline_buffer_vertex(pg);
-				assert(false); /* FIXME: Untested */
 			}
 			break;
 		}
@@ -3364,7 +3435,15 @@ static void pgraph_bind_shaders(PGRAPHState *pg)
         last_y = y;
     }
 
-    for (i = 0; i < 8; i++) {
+    /* FIXME: We should memset(state, 0x00, sizeof(state)) instead */
+    memset(state.psh.rgb_inputs, 0, sizeof(state.psh.rgb_inputs));
+    memset(state.psh.rgb_outputs, 0, sizeof(state.psh.rgb_outputs));
+    memset(state.psh.alpha_inputs, 0, sizeof(state.psh.alpha_inputs));
+    memset(state.psh.alpha_outputs, 0, sizeof(state.psh.alpha_outputs));
+
+    /* Copy content of enabled combiner stages */
+    unsigned int num_stages = pg->regs[NV_PGRAPH_COMBINECTL] & 0xFF;
+    for (i = 0; i < num_stages; i++) {
         state.psh.rgb_inputs[i] = pg->regs[NV_PGRAPH_COMBINECOLORI0 + i * 4];
         state.psh.rgb_outputs[i] = pg->regs[NV_PGRAPH_COMBINECOLORO0 + i * 4];
         state.psh.alpha_inputs[i] = pg->regs[NV_PGRAPH_COMBINEALPHAI0 + i * 4];
@@ -3439,7 +3518,7 @@ static void pgraph_bind_shaders(PGRAPHState *pg)
         pgraph_apply_anti_aliasing_factor(pg, &x_max, &y_max);
 
         glUniform4i(pg->shader_binding->clip_region_loc[i],
-                    x_min, y_min, x_max, y_max);
+                    x_min, y_min, x_max + 1, y_max + 1);
     }
 
     pgraph_update_shader_constants(pg, pg->shader_binding, binding_changed,
@@ -3787,10 +3866,10 @@ static void pgraph_update_surface(NV2AState *d, bool upload,
 			glDeleteTextures(1, &pg->gl_zeta_buffer);
 			pg->gl_zeta_buffer = 0;
 		}
-	}
 
-    memcpy(&pg->last_surface_shape, &pg->surface_shape,
+		memcpy(&pg->last_surface_shape, &pg->surface_shape,
             sizeof(SurfaceShape));
+	}
 
     if ((color_write || (!upload && pg->surface_color.write_enabled_cache))
         && (upload || pg->surface_color.draw_dirty)) {

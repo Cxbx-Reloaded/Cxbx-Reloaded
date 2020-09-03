@@ -11,7 +11,7 @@ typedef uint64_t ShaderKey;
 class VertexShaderSource {
 
 public:
-	ShaderKey CreateShader(const DWORD* pXboxFunction, DWORD* pXboxFunctionSize);
+	ShaderKey CreateShader(const xbox::dword_xt* pXboxFunction, DWORD* pXboxFunctionSize);
 	IDirect3DVertexShader *GetShader(ShaderKey key);
 	void ReleaseShader(ShaderKey key);
 

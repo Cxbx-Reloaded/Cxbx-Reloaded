@@ -29,19 +29,322 @@
 
 //#define _DEBUG_TRACK_VS
 
+#include "common\util\hasher.h" // For ComputeHash
 #include "core\kernel\init\CxbxKrnl.h"
 #include "core\kernel\support\Emu.h"
 #include "core\hle\D3D8\Direct3D9\Direct3D9.h" // For g_Xbox_VertexShader_Handle
+#include "core\hle\D3D8\Direct3D9\RenderStates.h" // For XboxRenderStateConverter
 #include "core\hle\D3D8\Direct3D9\VertexShaderSource.h" // For g_VertexShaderSource
+#include "core\hle\D3D8\XbVertexBuffer.h" // For CxbxImpl_SetVertexData4f
 #include "core\hle\D3D8\XbVertexShader.h"
 #include "core\hle\D3D8\XbD3D8Logging.h" // For DEBUG_D3DRESULT
+#include "core\hle\D3D8\XbConvert.h" // For NV2A_VP_UPLOAD_INST, NV2A_VP_UPLOAD_CONST_ID, NV2A_VP_UPLOAD_CONST
+#include "devices\video\nv2a.h" // For D3DPUSH_DECODE
 #include "common\Logging.h" // For LOG_INIT
+#include "common\Settings.hpp" // for g_LibVersion_D3D8
 
 #include "XbD3D8Types.h" // For X_D3DVSDE_*
 #include <sstream>
 #include <unordered_map>
 #include <array>
 #include <bitset>
+
+// External symbols :
+extern xbox::X_STREAMINPUT g_Xbox_SetStreamSource[X_VSH_MAX_STREAMS]; // Declared in XbVertexBuffer.cpp
+extern XboxRenderStateConverter XboxRenderStates; // Declared in Direct3D9.cpp
+
+// Variables set by [D3DDevice|CxbxImpl]_SetVertexShaderInput() :
+                      unsigned g_Xbox_SetVertexShaderInput_Count = 0; // Read by GetXboxVertexAttributes
+           xbox::X_STREAMINPUT g_Xbox_SetVertexShaderInput_Data[X_VSH_MAX_STREAMS] = { 0 }; // Active when g_Xbox_SetVertexShaderInput_Count > 0
+ xbox::X_VERTEXATTRIBUTEFORMAT g_Xbox_SetVertexShaderInput_Attributes = { 0 }; // Read by GetXboxVertexAttributes when g_Xbox_SetVertexShaderInput_Count > 0
+
+// Variables set by [D3DDevice|CxbxImpl]_SetVertexShader() and [D3DDevice|CxbxImpl]_SelectVertexShader() :
+                          bool g_Xbox_VertexShader_IsFixedFunction = true;
+						  bool g_Xbox_VertexShader_IsPassthrough = false;
+                xbox::dword_xt g_Xbox_VertexShader_Handle = 0;
+#ifdef CXBX_USE_GLOBAL_VERTEXSHADER_POINTER // TODO : Would this be more accurate / simpler?
+      xbox::X_D3DVertexShader *g_Xbox_VertexShader_Ptr = nullptr;
+#endif
+                xbox::dword_xt g_Xbox_VertexShader_FunctionSlots_StartAddress = 0;
+
+// Variable set by [D3DDevice|CxbxImpl]_LoadVertexShader() / [D3DDevice|CxbxImpl]_LoadVertexShaderProgram() (both through CxbxCopyVertexShaderFunctionSlots):
+                xbox::dword_xt g_Xbox_VertexShader_FunctionSlots[(X_VSH_MAX_INSTRUCTION_COUNT + 1) * X_VSH_INSTRUCTION_SIZE] = { 0 }; // One extra for FLD_FINAL terminator
+
+// Variables set by [D3DDevice|CxbxImpl]_SetScreenSpaceOffset:
+				         float g_Xbox_ScreenSpaceOffset_x = 0.0f;
+				         float g_Xbox_ScreenSpaceOffset_y = 0.0f;
+
+
+static xbox::X_D3DVertexShader g_Xbox_VertexShader_ForFVF = {};
+
+// Converts an Xbox FVF shader handle to X_D3DVertexShader
+// Note : Temporary, until we reliably locate the Xbox internal state for this
+// See D3DXDeclaratorFromFVF docs https://docs.microsoft.com/en-us/windows/win32/direct3d9/d3dxdeclaratorfromfvf
+// and https://github.com/reactos/wine/blob/2e8dfbb1ad71f24c41e8485a39df01bb9304127f/dlls/d3dx9_36/mesh.c#L2041
+static xbox::X_D3DVertexShader* XboxVertexShaderFromFVF(DWORD xboxFvf)
+{
+	using namespace xbox;
+
+	// Note : FVFs don't tessellate, all slots read from stream zero, therefore
+	// the following zero-initialization of StreamIndex (like all other fields)
+	// is never updated below.
+	g_Xbox_VertexShader_ForFVF = { 0 };
+
+	// Shorthand, glueing earlier implementation below to global g_Xbox_VertexShader_ForFVF variable :
+	X_VERTEXATTRIBUTEFORMAT &declaration = g_Xbox_VertexShader_ForFVF.VertexAttribute;
+
+	static DWORD X_D3DVSDT_FLOAT[] = { 0, X_D3DVSDT_FLOAT1, X_D3DVSDT_FLOAT2, X_D3DVSDT_FLOAT3, X_D3DVSDT_FLOAT4 };
+
+	static const DWORD InvalidXboxFVFBits = X_D3DFVF_RESERVED0 | X_D3DFVF_RESERVED1 /* probably D3DFVF_PSIZE if detected */
+		| 0x0000F000 // Bits between texture count and the texture formats
+		| 0xFF000000; // All bits above the four alllowed texture formats
+
+	if (xboxFvf & InvalidXboxFVFBits) {
+		// Test-case : JSRF (after "now Loading...") TODO : Figure out what's going on
+		// LOG_TEST_CASE("Invalid Xbox FVF bits detected!");
+	}
+
+	// Position & Blendweights
+	int nrPositionFloats = 3;
+	int nrBlendWeights = 0;
+	unsigned offset = 0;
+	DWORD position = (xboxFvf & X_D3DFVF_POSITION_MASK);
+	switch (position) {
+	case 0: nrPositionFloats = 0; LOG_TEST_CASE("FVF without position"); break; // Note : Remove logging if this occurs often
+	case X_D3DFVF_XYZ: /*nrPositionFloats is set to 3 by default*/ break;
+	case X_D3DFVF_XYZRHW:
+		g_Xbox_VertexShader_ForFVF.Flags |= X_VERTEXSHADER_FLAG_PASSTHROUGH;
+		nrPositionFloats = 4;
+		break;
+	case X_D3DFVF_XYZB1: nrBlendWeights = 1; break;
+	case X_D3DFVF_XYZB2: nrBlendWeights = 2; break;
+	case X_D3DFVF_XYZB3: nrBlendWeights = 3; break;
+	case X_D3DFVF_XYZB4: nrBlendWeights = 4; break;
+	case X_D3DFVF_POSITION_MASK: /*Keep nrPositionFloats set to 3*/ LOG_TEST_CASE("FVF invalid (5th blendweight?)"); break;
+		DEFAULT_UNREACHABLE;
+	}
+
+	// Assign vertex element (attribute) slots
+	X_VERTEXSHADERINPUT* pSlot;
+
+	// Write Position
+	if (nrPositionFloats > 0) {
+		pSlot = &declaration.Slots[X_D3DVSDE_POSITION];
+		pSlot->Format = X_D3DVSDT_FLOAT[nrPositionFloats];
+		pSlot->Offset = offset;
+		offset += sizeof(float) * nrPositionFloats;
+		// Write Blend Weights
+		if (nrBlendWeights > 0) {
+			pSlot = &declaration.Slots[X_D3DVSDE_BLENDWEIGHT];
+			pSlot->Format = X_D3DVSDT_FLOAT[nrBlendWeights];
+			pSlot->Offset = offset;
+			offset += sizeof(float) * nrBlendWeights;
+		}
+	}
+
+	// Write Normal, Diffuse, and Specular
+	if (xboxFvf & X_D3DFVF_NORMAL) {
+		if (position == X_D3DFVF_XYZRHW) {
+			LOG_TEST_CASE("X_D3DFVF_NORMAL shouldn't use X_D3DFVF_XYZRHW");
+		}
+
+		pSlot = &declaration.Slots[X_D3DVSDE_NORMAL];
+		pSlot->Format = X_D3DVSDT_FLOAT[3];
+		pSlot->Offset = offset;
+		offset += sizeof(float) * 3;
+	}
+
+	if (xboxFvf & X_D3DFVF_DIFFUSE) {
+		g_Xbox_VertexShader_ForFVF.Flags |= X_VERTEXSHADER_FLAG_HASDIFFUSE;
+		pSlot = &declaration.Slots[X_D3DVSDE_DIFFUSE];
+		pSlot->Format = X_D3DVSDT_D3DCOLOR;
+		pSlot->Offset = offset;
+		offset += sizeof(DWORD) * 1;
+	}
+
+	if (xboxFvf & X_D3DFVF_SPECULAR) {
+		g_Xbox_VertexShader_ForFVF.Flags |= X_VERTEXSHADER_FLAG_HASSPECULAR; 
+		pSlot = &declaration.Slots[X_D3DVSDE_SPECULAR];
+		pSlot->Format = X_D3DVSDT_D3DCOLOR;
+		pSlot->Offset = offset;
+		offset += sizeof(DWORD) * 1;
+	}
+
+	// Write Texture Coordinates
+	int textureCount = (xboxFvf & X_D3DFVF_TEXCOUNT_MASK) >> X_D3DFVF_TEXCOUNT_SHIFT;
+	if (textureCount > 4) {
+		LOG_TEST_CASE("Limiting FVF to 4 textures");
+		textureCount = 4; // Safeguard, since the X_D3DFVF_TEXCOUNT bitfield could contain invalid values (5 up to 15)
+	}
+	for (int i = 0; i < textureCount; i++) {
+		int numberOfCoordinates = 0;
+		auto FVFTextureFormat = (xboxFvf >> X_D3DFVF_TEXCOORDSIZE_SHIFT(i)) & 0x003;
+		switch (FVFTextureFormat) {
+		case X_D3DFVF_TEXTUREFORMAT1: numberOfCoordinates = 1; break;
+		case X_D3DFVF_TEXTUREFORMAT2: numberOfCoordinates = 2; break;
+		case X_D3DFVF_TEXTUREFORMAT3: numberOfCoordinates = 3; break;
+		case X_D3DFVF_TEXTUREFORMAT4: numberOfCoordinates = 4; break;
+			DEFAULT_UNREACHABLE;
+		}
+
+		assert(numberOfCoordinates > 0);
+		pSlot = &declaration.Slots[X_D3DVSDE_TEXCOORD0 + i];
+		pSlot->Format = X_D3DVSDT_FLOAT[numberOfCoordinates];
+		pSlot->Offset = offset;
+		offset += sizeof(float) * numberOfCoordinates;
+		// Update the VertexShader texture Dimensionality field here as well
+		g_Xbox_VertexShader_ForFVF.Dimensionality[i] = numberOfCoordinates;
+	}
+
+	// Make sure all unused slots have a X_D3DVSDT_NONE format
+	// TODO : Actually, maybe not, since this could avoid VshConvertToken_STREAMDATA_REG() calls!
+	for (unsigned i = 0; i < X_VSH_MAX_ATTRIBUTES; i++) {
+		pSlot = &declaration.Slots[i];
+		if (pSlot->Format == 0) {
+			pSlot->Format = X_D3DVSDT_NONE;
+		}
+	}
+
+	// Return the global g_Xbox_VertexShader_ForFVF variable 
+	return &g_Xbox_VertexShader_ForFVF;
+}
+
+static xbox::X_D3DVertexShader* CxbxGetXboxVertexShaderForHandle(DWORD Handle)
+{
+	if (VshHandleIsVertexShader(Handle)) {
+		return VshHandleToXboxVertexShader(Handle);
+	} else {
+		return XboxVertexShaderFromFVF(Handle);
+	}
+}
+
+// TODO : Start using this function everywhere g_Xbox_VertexShader_Handle is accessed currently!
+xbox::X_D3DVertexShader* GetXboxVertexShader()
+{
+	// LOG_INIT; // Allows use of DEBUG_D3DRESULT
+
+	using namespace xbox;
+
+	X_D3DVertexShader* pXboxVertexShader = xbox::zeroptr;
+#if 0 // TODO : Retrieve vertex shader from actual Xbox D3D state
+	// Only when we're sure of the location of the Xbox Device.m_pVertexShader variable
+	if (XboxVertexShaders.g_XboxAddr_pVertexShader) {
+		// read that (so that we get access to internal vertex shaders, like those generated
+		// to contain the attribute-information for FVF shaders) :
+		pXboxVertexShader = (X_D3DVertexShader*)(*XboxVertexShaders.g_XboxAddr_pVertexShader);
+	}
+	else
+	{
+		LOG_TEST_CASE("Unknown pVertexShader symbol location!");
+#endif
+		// Otherwise, we have no choice but to use what we've last stored in the
+		// g_Xbox_VertexShader_Handle variable via our D3DDevice_SetVertexShader
+		// and D3DDevice_SelectVertexShader* patches.
+
+		// Note, that once we have a fail-safe way to determine the location of the
+		// Xbox Device.m_pVertexShader symbol, the FVF and the accompanying Address,
+		// we no longer need this statement block, nor patches on D3DDevice_SetVertexShader
+		// nor D3DDevice_SelectVertexShader* !
+
+		// Now, to convert, we do need to have a valid vertex shader :
+		if (g_Xbox_VertexShader_Handle == 0) {
+			LOG_TEST_CASE("Unassigned Xbox vertex shader!");
+			return nullptr;
+		}
+
+#if 0 // TODO : Retrieve vertex shader from actual Xbox D3D state
+		if (!VshHandleIsVertexShader(g_Xbox_VertexShader_Handle)) {
+			LOG_TEST_CASE("Xbox vertex shader lacks X_D3DFVF_RESERVED0 bit!");
+			return nullptr;
+		}
+#endif
+
+#ifdef CXBX_USE_GLOBAL_VERTEXSHADER_POINTER
+		pXboxVertexShader = g_Xbox_VertexShader_Ptr;
+#else
+		pXboxVertexShader = CxbxGetXboxVertexShaderForHandle(g_Xbox_VertexShader_Handle);
+#endif
+
+#if 0 // TODO : Retrieve vertex shader from actual Xbox D3D state
+	}
+#endif
+
+	return pXboxVertexShader;
+}
+
+static bool UseXboxD3DVertexShaderTypeForVersion3948(xbox::X_D3DVertexShader* pXboxVertexShader)
+{
+	// Don't check XDK version for our internal FVF vertex shader
+	// because g_Xbox_VertexShader_ForFVF is an internal variable
+	// that's compiled in as a xbox::X_D3DVertexShader
+	if (pXboxVertexShader == &g_Xbox_VertexShader_ForFVF) {
+		return false;
+	}
+
+	return g_LibVersion_D3D8 <= 3948;
+}
+
+static xbox::X_VERTEXATTRIBUTEFORMAT* CxbxGetVertexShaderAttributes(xbox::X_D3DVertexShader* pXboxVertexShader)
+{
+	if (UseXboxD3DVertexShaderTypeForVersion3948(pXboxVertexShader)) {
+		auto pXboxVertexShader3948 = (xbox::X_D3DVertexShader3948*)pXboxVertexShader;
+		return &(pXboxVertexShader3948->VertexAttribute);
+	}
+
+	return &(pXboxVertexShader->VertexAttribute);
+}
+
+static DWORD* CxbxGetVertexShaderTokens(xbox::X_D3DVertexShader* pXboxVertexShader, DWORD* pNrTokens)
+{
+	if (UseXboxD3DVertexShaderTypeForVersion3948(pXboxVertexShader)) {
+		auto pXboxVertexShader3948 = (xbox::X_D3DVertexShader3948*)pXboxVertexShader;
+		*pNrTokens = pXboxVertexShader3948->ProgramAndConstantsDwords;
+		return &pXboxVertexShader3948->ProgramAndConstants[0];
+	}
+
+	*pNrTokens = pXboxVertexShader->ProgramAndConstantsDwords;
+	return &pXboxVertexShader->ProgramAndConstants[0];
+}
+
+extern bool g_InlineVertexBuffer_DeclarationOverride; // TMP glue
+extern xbox::X_VERTEXATTRIBUTEFORMAT g_InlineVertexBuffer_AttributeFormat; // TMP glue
+
+xbox::X_VERTEXATTRIBUTEFORMAT* GetXboxVertexAttributeFormat()
+{
+	// Special case for CxbxImpl_End() based drawing
+	if (g_InlineVertexBuffer_DeclarationOverride) {
+		return &g_InlineVertexBuffer_AttributeFormat;
+	}
+
+	xbox::X_D3DVertexShader* pXboxVertexShader = GetXboxVertexShader();
+	if (pXboxVertexShader == xbox::zeroptr) {
+		// Despite possibly not being used, the pXboxVertexShader argument must always be assigned
+		LOG_TEST_CASE("Xbox should always have a VertexShader set (even for FVF's)");
+		return &g_Xbox_SetVertexShaderInput_Attributes; // WRONG result, but it's already strange this happens
+	}
+
+	// If SetVertexShaderInput is active, its arguments overrule those of the active vertex shader
+	if (g_Xbox_SetVertexShaderInput_Count > 0) {
+		// Take overrides (on declarations and streaminputs, as optionally set by SetVertexShaderInput) into account :
+		// Test-case : Crazy taxi 3
+		LOG_TEST_CASE("SetVertexShaderInput_Attributes override in effect!");
+		return &g_Xbox_SetVertexShaderInput_Attributes;
+	}
+
+	return CxbxGetVertexShaderAttributes(pXboxVertexShader);
+}
+
+// Reads the active Xbox stream input values (containing VertexBuffer, Offset and Stride) for the given stream index.
+// (These values are set through SetStreamSource and can be overridden by SetVertexShaderInput.)
+xbox::X_STREAMINPUT& GetXboxVertexStreamInput(unsigned XboxStreamNumber)
+{
+	// If SetVertexShaderInput is active, its arguments overrule those of SetStreamSource
+	if (g_Xbox_SetVertexShaderInput_Count > 0) {
+		return g_Xbox_SetVertexShaderInput_Data[XboxStreamNumber];
+	}
+
+	return g_Xbox_SetStreamSource[XboxStreamNumber];
+}
 
 #define DbgVshPrintf \
 	LOG_CHECK_ENABLED(LOG_LEVEL::DEBUG) \
@@ -341,500 +644,74 @@ class XboxVertexDeclarationConverter
 {
 protected:
 	// Internal variables
-	CxbxVertexDeclaration* pVertexDeclarationToSet;
+	CxbxVertexDeclaration* pCurrentVertexDeclaration;
 	CxbxVertexShaderStreamInfo* pCurrentVertexShaderStreamInfo = nullptr;
 	bool IsFixedFunction;
-	D3DVERTEXELEMENT* pRecompiled;
+	D3DVERTEXELEMENT* pCurrentHostVertexElement;
 	std::array<bool, 16> RegVIsPresentInDeclaration;
-
-public:
-	// Output
-	DWORD XboxDeclarationCount;
 
 private:
 	#define D3DDECLUSAGE_UNSUPPORTED ((D3DDECLUSAGE)-1)
 
-	static D3DDECLUSAGE Xb2PCRegisterType
-	(
-		DWORD VertexRegister,
-		BYTE& PCUsageIndex
-	)
+	D3DDECLUSAGE Xb2PCRegisterType(DWORD VertexRegister, BYTE &UsageIndex)
 	{
-		D3DDECLUSAGE PCRegisterType;
-		PCUsageIndex = 0;
-
-		switch (VertexRegister)
-		{
-		case (DWORD)xbox::X_D3DVSDE_VERTEX: // -1
-			PCRegisterType = D3DDECLUSAGE_UNSUPPORTED;
-			break;
-		case xbox::X_D3DVSDE_POSITION: // 0
-			PCRegisterType = D3DDECLUSAGE_POSITION;
-			break;
-		case xbox::X_D3DVSDE_BLENDWEIGHT: // 1
-			PCRegisterType = D3DDECLUSAGE_BLENDWEIGHT;
-			break;
-		case xbox::X_D3DVSDE_NORMAL: // 2
-			PCRegisterType = D3DDECLUSAGE_NORMAL;
-			break;
-		case xbox::X_D3DVSDE_DIFFUSE: // 3
-			PCRegisterType = D3DDECLUSAGE_COLOR; PCUsageIndex = 0;
-			break;
-		case xbox::X_D3DVSDE_SPECULAR: // 4
-			PCRegisterType = D3DDECLUSAGE_COLOR; PCUsageIndex = 1;
-			break;
-		case xbox::X_D3DVSDE_FOG: // 5
-			PCRegisterType = D3DDECLUSAGE_FOG;
-			break;
-		case xbox::X_D3DVSDE_POINTSIZE: // 6
-			PCRegisterType = D3DDECLUSAGE_PSIZE;
-			break;
-		case xbox::X_D3DVSDE_BACKDIFFUSE: // 7
-			PCRegisterType = D3DDECLUSAGE_COLOR; PCUsageIndex = 2;
-			break;
-		case xbox::X_D3DVSDE_BACKSPECULAR: // 8
-			PCRegisterType = D3DDECLUSAGE_COLOR; PCUsageIndex = 3;
-			break;
-		case xbox::X_D3DVSDE_TEXCOORD0: // 9
-			PCRegisterType = D3DDECLUSAGE_TEXCOORD; PCUsageIndex = 0;
-			break;
-		case xbox::X_D3DVSDE_TEXCOORD1: // 10
-			PCRegisterType = D3DDECLUSAGE_TEXCOORD; PCUsageIndex = 1;
-			break;
-		case xbox::X_D3DVSDE_TEXCOORD2: // 11
-			PCRegisterType = D3DDECLUSAGE_TEXCOORD; PCUsageIndex = 2;
-			break;
-		case xbox::X_D3DVSDE_TEXCOORD3: // 12
-			PCRegisterType = D3DDECLUSAGE_TEXCOORD; PCUsageIndex = 3;
-			break;
-		default:
-			PCRegisterType = D3DDECLUSAGE_UNSUPPORTED;
-			break;
-		}
-
-		return PCRegisterType;
-	}
-
-	static char* XboxVertexRegisterAsString(DWORD VertexRegister)
-	{
-		switch (VertexRegister)
-		{
-		case (DWORD)xbox::X_D3DVSDE_VERTEX: // -1
-			return "D3DVSDE_VERTEX /* xbox ext. */";
-		case xbox::X_D3DVSDE_POSITION: // 0
-			return "D3DVSDE_POSITION";
-		case xbox::X_D3DVSDE_BLENDWEIGHT: // 1
-			return "D3DVSDE_BLENDWEIGHT";
-		case xbox::X_D3DVSDE_NORMAL: // 2
-			return "D3DVSDE_NORMAL";
-		case xbox::X_D3DVSDE_DIFFUSE: // 3
-			return "D3DVSDE_DIFFUSE";
-		case xbox::X_D3DVSDE_SPECULAR: // 4
-			return "D3DVSDE_SPECULAR";
-		case xbox::X_D3DVSDE_FOG: // 5
-			return "D3DVSDE_FOG";
-		case xbox::X_D3DVSDE_POINTSIZE: // 6
-			return "D3DVDSE_POINTSIZE";
-		case xbox::X_D3DVSDE_BACKDIFFUSE: // 7
-			return "D3DVSDE_BACKDIFFUSE /* xbox ext. */";
-		case xbox::X_D3DVSDE_BACKSPECULAR: // 8
-			return "D3DVSDE_BACKSPECULAR /* xbox ext. */";
-		case xbox::X_D3DVSDE_TEXCOORD0: // 9
-			return "D3DVSDE_TEXCOORD0";
-		case xbox::X_D3DVSDE_TEXCOORD1: // 10
-			return "D3DVSDE_TEXCOORD1";
-		case xbox::X_D3DVSDE_TEXCOORD2: // 11
-			return "D3DVSDE_TEXCOORD2";
-		case xbox::X_D3DVSDE_TEXCOORD3: // 12
-			return "D3DVSDE_TEXCOORD3";
-		case 13:
-			return "13 /* unknown register */";
-		case 14:
-			return "14 /* unknown register */";
-		case 15:
-			return "15 /* unknown register */";
-		default:
-			return "16 /* or higher, unknown register */";
+		UsageIndex = 0;
+		switch (VertexRegister) {
+			case xbox::X_D3DVSDE_POSITION    /*= 0*/:                 return D3DDECLUSAGE_POSITION;
+			case xbox::X_D3DVSDE_BLENDWEIGHT /*= 1*/:                 return D3DDECLUSAGE_BLENDWEIGHT;
+			case xbox::X_D3DVSDE_NORMAL      /*= 2*/:                 return D3DDECLUSAGE_NORMAL;
+			case xbox::X_D3DVSDE_DIFFUSE     /*= 3*/:                 return D3DDECLUSAGE_COLOR;
+			case xbox::X_D3DVSDE_SPECULAR    /*= 4*/: UsageIndex = 1; return D3DDECLUSAGE_COLOR;
+			case xbox::X_D3DVSDE_FOG         /*= 5*/:                 return D3DDECLUSAGE_FOG;
+			case xbox::X_D3DVSDE_POINTSIZE   /*= 6*/:                 return D3DDECLUSAGE_PSIZE;
+			case xbox::X_D3DVSDE_BACKDIFFUSE /*= 7*/: UsageIndex = 2; return D3DDECLUSAGE_COLOR;
+			case xbox::X_D3DVSDE_BACKSPECULAR/*= 8*/: UsageIndex = 3; return D3DDECLUSAGE_COLOR;
+			case xbox::X_D3DVSDE_TEXCOORD0   /*= 9*/:                 return D3DDECLUSAGE_TEXCOORD;
+			case xbox::X_D3DVSDE_TEXCOORD1   /*=10*/: UsageIndex = 1; return D3DDECLUSAGE_TEXCOORD;
+			case xbox::X_D3DVSDE_TEXCOORD2   /*=11*/: UsageIndex = 2; return D3DDECLUSAGE_TEXCOORD;
+			case xbox::X_D3DVSDE_TEXCOORD3   /*=12*/: UsageIndex = 3; return D3DDECLUSAGE_TEXCOORD;
+			default /*13-15*/ :
+				return D3DDECLUSAGE_UNSUPPORTED;
 		}
 	}
 
 	// VERTEX SHADER
 
-	static DWORD VshGetDeclarationCount(DWORD *pXboxDeclaration)
+	bool VshConvertToken_STREAMDATA_REG(DWORD VertexRegister, xbox::X_VERTEXSHADERINPUT &slot)
 	{
-		DWORD Pos = 0;
-		while (pXboxDeclaration[Pos] != X_D3DVSD_END())
-		{
-			Pos++;
-		}
+		DWORD XboxVertexElementDataType = slot.Format;
 
-		return Pos + 1;
-	}
-
-	static inline DWORD VshGetTokenType(DWORD XboxToken)
-	{
-		return (XboxToken & X_D3DVSD_TOKENTYPEMASK) >> X_D3DVSD_TOKENTYPESHIFT;
-	}
-
-	static inline WORD VshGetVertexStream(DWORD XboxToken)
-	{
-		return (XboxToken & X_D3DVSD_STREAMNUMBERMASK) >> X_D3DVSD_STREAMNUMBERSHIFT;
-	}
-
-	static inline DWORD VshGetVertexRegister(DWORD XboxToken)
-	{
-		DWORD regNum = (XboxToken & X_D3DVSD_VERTEXREGMASK) >> X_D3DVSD_VERTEXREGSHIFT;
-		return regNum;
-	}
-
-	static inline DWORD VshGetVertexRegisterIn(DWORD XboxToken)
-	{
-		DWORD regNum = (XboxToken & X_D3DVSD_VERTEXREGINMASK) >> X_D3DVSD_VERTEXREGINSHIFT;
-		return regNum;
-	}
-
-	void VshDumpXboxDeclaration(DWORD* pXboxDeclaration)
-	{
-		DbgVshPrintf("DWORD dwVSHDecl[] =\n{\n");
-		unsigned iNumberOfVertexStreams = 0;
-		bool bStreamNeedsPatching = false;
-		auto pXboxToken = pXboxDeclaration;
-		while (*pXboxToken != X_D3DVSD_END()) // X_D3DVSD_TOKEN_END 
-		{
-			DWORD Step = 1;
-
-			switch (VshGetTokenType(*pXboxToken)) {
-			case xbox::X_D3DVSD_TOKEN_NOP: {
-				DbgVshPrintf("\tD3DVSD_NOP(),\n");
-				break;
-			}
-			case xbox::X_D3DVSD_TOKEN_STREAM: {
-				if (*pXboxToken & X_D3DVSD_STREAMTESSMASK) {
-					DbgVshPrintf("\tD3DVSD_STREAM_TESS(),\n");
-				} else {
-					if (iNumberOfVertexStreams > 0) {
-						DbgVshPrintf("\t// NeedPatching: %d\n", bStreamNeedsPatching);
-					}
-					DWORD StreamNumber = VshGetVertexStream(*pXboxToken);
-					DbgVshPrintf("\tD3DVSD_STREAM(%u),\n", StreamNumber);
-					iNumberOfVertexStreams++;
-					bStreamNeedsPatching = false;
-				}
-				break;
-			}
-			case xbox::X_D3DVSD_TOKEN_STREAMDATA: {
-				if (*pXboxToken & X_D3DVSD_MASK_SKIP) {
- 					WORD SkipCount = (*pXboxToken & X_D3DVSD_SKIPCOUNTMASK) >> X_D3DVSD_SKIPCOUNTSHIFT;
-					if (*pXboxToken & X_D3DVSD_MASK_SKIPBYTES) {
-						DbgVshPrintf("\tD3DVSD_SKIPBYTES(%d), /* xbox ext. */\n", SkipCount);
-					} else {
-						DbgVshPrintf("\tD3DVSD_SKIP(%d),\n", SkipCount);
-					}
-				} else {
-					DWORD VertexRegister = VshGetVertexRegister(*pXboxToken);
-					if (IsFixedFunction) {
-						DbgVshPrintf("\t\tD3DVSD_REG(%s, ", XboxVertexRegisterAsString(VertexRegister));
-					} else {
-						DbgVshPrintf("\t\tD3DVSD_REG(%d, ", (BYTE)VertexRegister);
-					}
-
-					DWORD XboxVertexElementDataType = (*pXboxToken & X_D3DVSD_DATATYPEMASK) >> X_D3DVSD_DATATYPESHIFT;
-					switch (XboxVertexElementDataType) {
-					case xbox::X_D3DVSDT_FLOAT1: // 0x12:
-						DbgVshPrintf("D3DVSDT_FLOAT1");
-						break;
-					case xbox::X_D3DVSDT_FLOAT2: // 0x22:
-						DbgVshPrintf("D3DVSDT_FLOAT2");
-						break;
-					case xbox::X_D3DVSDT_FLOAT3: // 0x32:
-						DbgVshPrintf("D3DVSDT_FLOAT3");
-						break;
-					case xbox::X_D3DVSDT_FLOAT4: // 0x42:
-						DbgVshPrintf("D3DVSDT_FLOAT4");
-						break;
-					case xbox::X_D3DVSDT_D3DCOLOR: // 0x40:
-						DbgVshPrintf("D3DVSDT_D3DCOLOR");
-						break;
-					case xbox::X_D3DVSDT_SHORT2: // 0x25:
-						DbgVshPrintf("D3DVSDT_SHORT2");
-						break;
-					case xbox::X_D3DVSDT_SHORT4: // 0x45:
-						DbgVshPrintf("D3DVSDT_SHORT4");
-						break;
-					case xbox::X_D3DVSDT_NORMSHORT1: // 0x11:
-						DbgVshPrintf("D3DVSDT_NORMSHORT1 /* xbox ext. */");
-						bStreamNeedsPatching = true;
-						break;
-					case xbox::X_D3DVSDT_NORMSHORT2: // 0x21:
-						if (g_D3DCaps.DeclTypes & D3DDTCAPS_SHORT2N) {
-							DbgVshPrintf("D3DVSDT_NORMSHORT2");
-						} else {
-							DbgVshPrintf("D3DVSDT_NORMSHORT2 /* xbox ext. */");
-							bStreamNeedsPatching = true;
-						}
-						break;
-					case xbox::X_D3DVSDT_NORMSHORT3: // 0x31:
-						DbgVshPrintf("D3DVSDT_NORMSHORT3 /* xbox ext. */");
-						bStreamNeedsPatching = true;
-						break;
-					case xbox::X_D3DVSDT_NORMSHORT4: // 0x41:
-						if (g_D3DCaps.DeclTypes & D3DDTCAPS_SHORT4N) {
-							DbgVshPrintf("D3DVSDT_NORMSHORT4");
-							// No need for patching in D3D9
-						} else {
-							DbgVshPrintf("D3DVSDT_NORMSHORT4 /* xbox ext. */");
-							bStreamNeedsPatching = true;
-						}
-						break;
-					case xbox::X_D3DVSDT_NORMPACKED3: // 0x16:
-						DbgVshPrintf("D3DVSDT_NORMPACKED3 /* xbox ext. */");
-						bStreamNeedsPatching = true;
-						break;
-					case xbox::X_D3DVSDT_SHORT1: // 0x15:
-						DbgVshPrintf("D3DVSDT_SHORT1 /* xbox ext. */");
-						bStreamNeedsPatching = true;
-						break;
-					case xbox::X_D3DVSDT_SHORT3: // 0x35:
-						DbgVshPrintf("D3DVSDT_SHORT3 /* xbox ext. */");
-						bStreamNeedsPatching = true;
-						break;
-					case xbox::X_D3DVSDT_PBYTE1: // 0x14:
-						DbgVshPrintf("D3DVSDT_PBYTE1 /* xbox ext. */");
-						bStreamNeedsPatching = true;
-						break;
-					case xbox::X_D3DVSDT_PBYTE2: // 0x24:
-						DbgVshPrintf("D3DVSDT_PBYTE2 /* xbox ext. */");
-						bStreamNeedsPatching = true;
-						break;
-					case xbox::X_D3DVSDT_PBYTE3: // 0x34:
-						DbgVshPrintf("D3DVSDT_PBYTE3 /* xbox ext. */");
-						bStreamNeedsPatching = true;
-						break;
-					case xbox::X_D3DVSDT_PBYTE4: // 0x44:
-						if (g_D3DCaps.DeclTypes & D3DDTCAPS_UBYTE4N) {
-							DbgVshPrintf("D3DVSDT_PBYTE4");
-						} else {
-							DbgVshPrintf("D3DVSDT_PBYTE4 /* xbox ext. */");
-							bStreamNeedsPatching = true;
-						}
-						break;
-					case xbox::X_D3DVSDT_FLOAT2H: // 0x72:
-						DbgVshPrintf("D3DVSDT_FLOAT2H /* xbox ext. */");
-						bStreamNeedsPatching = true;
-						break;
-					case xbox::X_D3DVSDT_NONE: // 0x02:
-						DbgVshPrintf("D3DVSDT_NONE /* xbox ext. */");
-						break;
-					default:
-						DbgVshPrintf("Unknown data type for D3DVSD_REG: 0x%02X\n", XboxVertexElementDataType);
-						break;
-					}
-
-					DbgVshPrintf("),\n");
-				};
-				break;
-			}
-			case xbox::X_D3DVSD_TOKEN_TESSELLATOR: {
-				DWORD VertexRegisterOut = VshGetVertexRegister(*pXboxToken);
-				if (*pXboxToken & X_D3DVSD_MASK_TESSUV) {
-					DbgVshPrintf("\tD3DVSD_TESSUV(%s),\n", XboxVertexRegisterAsString(VertexRegisterOut));
-				} else { // D3DVSD_TESSNORMAL
-					DWORD VertexRegisterIn = VshGetVertexRegisterIn(*pXboxToken);
-					DbgVshPrintf("\tD3DVSD_TESSNORMAL(%s, %s),\n",
-						XboxVertexRegisterAsString(VertexRegisterIn),
-						XboxVertexRegisterAsString(VertexRegisterOut));
-				}
-				break;
-			}
-			case xbox::X_D3DVSD_TOKEN_CONSTMEM: {
-				DWORD ConstantAddress = (*pXboxToken & X_D3DVSD_CONSTADDRESSMASK) >> X_D3DVSD_CONSTADDRESSSHIFT;
-				DWORD Count = (*pXboxToken & X_D3DVSD_CONSTCOUNTMASK) >> X_D3DVSD_CONSTCOUNTSHIFT;
-				DbgVshPrintf("\tD3DVSD_CONST(%d, %d),\n", ConstantAddress, Count);
-				LOG_TEST_CASE("X_D3DVSD_TOKEN_CONSTMEM");
-				Step = Count * 4 + 1;
-				break;
-			}
-			case xbox::X_D3DVSD_TOKEN_EXT: {
-				DWORD ExtInfo = (*pXboxToken & X_D3DVSD_EXTINFOMASK) >> X_D3DVSD_EXTINFOSHIFT;
-				DWORD Count = (*pXboxToken & X_D3DVSD_EXTCOUNTMASK) >> X_D3DVSD_EXTCOUNTSHIFT;
-				DbgVshPrintf("\tD3DVSD_EXT(%d, %d),\n", ExtInfo, Count);
-				LOG_TEST_CASE("X_D3DVSD_TOKEN_EXT");
-				Step = Count * 4 + 1; // TODO : Is this correct?
-				break;
-			}
+		// Does this attribute use no storage present the vertex (check this as early as possible to avoid needless processing) ?
+		if (XboxVertexElementDataType == xbox::X_D3DVSDT_NONE) {
+			// Handle tessellating attributes
+			switch (slot.TessellationType) {
+			case 0: return false; // AUTONONE
+			case 1: // AUTONORMAL
+				// Note : .Stream, .Offset and .Type are copied from pAttributeSlot->TessellationSource in a post-processing step below,
+				// because these could all go through an Xbox to host conversion step, so must be copied over afterwards.
+				pCurrentHostVertexElement->Method = D3DDECLMETHOD_CROSSUV; // for D3DVSD_TESSNORMAL
+				pCurrentHostVertexElement->Usage = D3DDECLUSAGE_NORMAL; // TODO : Is this correct?
+				pCurrentHostVertexElement->UsageIndex = 0; // Note : 1 would be wrong
+				return true;
+			case 2: // AUTOTEXCOORD
+				// pCurrentHostVertexElement->Stream = 0; // The input stream is unused (but must be set to 0), which is the current default value
+				// pCurrentHostVertexElement->Offset = 0; // The input offset is unused (but must be set to 0), which is the current default value
+				pCurrentHostVertexElement->Type = D3DDECLTYPE_UNUSED; // The input type for D3DDECLMETHOD_UV must be D3DDECLTYPE_UNUSED (the output type implied by D3DDECLMETHOD_UV is D3DDECLTYPE_FLOAT2)
+				pCurrentHostVertexElement->Method = D3DDECLMETHOD_UV; // For X_D3DVSD_MASK_TESSUV
+				pCurrentHostVertexElement->Usage = D3DDECLUSAGE_NORMAL; // Note : In Fixed Function Vertex Pipeline, D3DDECLMETHOD_UV must specify usage D3DDECLUSAGE_TEXCOORD or D3DDECLUSAGE_BLENDWEIGHT. TODO : So, what to do?
+				pCurrentHostVertexElement->UsageIndex = 1; // TODO ; Is this correct?
+				return true;
 			default:
-				DbgVshPrintf("Unknown token type: %d\n", VshGetTokenType(*pXboxToken));
-				break;
-			}
-
-			pXboxToken += Step;
-		}
-
-		if (iNumberOfVertexStreams > 0) {
-			DbgVshPrintf("\t// NeedPatching: %d\n", bStreamNeedsPatching);
-		}
-
-		DbgVshPrintf("\tD3DVSD_END()\n};\n");
-
-		DbgVshPrintf("// NbrStreams: %d\n", iNumberOfVertexStreams);
-	}
-
-	static void VshConvertToken_NOP(DWORD *pXboxToken)
-	{
-		if(*pXboxToken != X_D3DVSD_NOP())
-		{
-			LOG_TEST_CASE("Token NOP found, but extra parameters are given!");
-		}
-	}
-
-	static DWORD VshConvertToken_CONSTMEM(DWORD *pXboxToken)
-	{
-		// DWORD ConstantAddress = (*pXboxToken & X_D3DVSD_CONSTADDRESSMASK) >> X_D3DVSD_CONSTADDRESSSHIFT;
-		DWORD Count           = (*pXboxToken & X_D3DVSD_CONSTCOUNTMASK) >> X_D3DVSD_CONSTCOUNTSHIFT;
-		LOG_TEST_CASE("CONST"); // TODO : Implement
-		return Count * 4 + 1;
-	}
-
-	void VshConvertToken_TESSELATOR(DWORD *pXboxToken)
-	{
-		BYTE Index;
-
-		if(*pXboxToken & X_D3DVSD_MASK_TESSUV)
-		{
-			DWORD VertexRegister    = VshGetVertexRegister(*pXboxToken);
-			DWORD NewVertexRegister = VertexRegister;
-
-			NewVertexRegister = Xb2PCRegisterType(VertexRegister, Index);
-			// TODO : Expand on the setting of this TESSUV register element :
-			pRecompiled->Usage = D3DDECLUSAGE(NewVertexRegister);
-			pRecompiled->UsageIndex = Index;
-		}
-		else // D3DVSD_TESSNORMAL
-		{
-			DWORD VertexRegisterIn  = VshGetVertexRegisterIn(*pXboxToken);
-			DWORD VertexRegisterOut = VshGetVertexRegister(*pXboxToken);
-
-			DWORD NewVertexRegisterIn  = VertexRegisterIn;
-			DWORD NewVertexRegisterOut = VertexRegisterOut;
-
-			NewVertexRegisterIn = Xb2PCRegisterType(VertexRegisterIn, Index);
-			// TODO : Expand on the setting of this TESSNORMAL input register element :
-			pRecompiled->Usage = D3DDECLUSAGE(NewVertexRegisterIn);
-			pRecompiled->UsageIndex = Index;
-
-			NewVertexRegisterOut = Xb2PCRegisterType(VertexRegisterOut, Index);
-			// TODO : Expand on the setting of this TESSNORMAL output register element :
-			pRecompiled++;
-			pRecompiled->Usage = D3DDECLUSAGE(NewVertexRegisterOut);
-			pRecompiled->UsageIndex = Index;
-		}
-	}
-
-	void VshConvertToken_STREAM(DWORD *pXboxToken)
-	{
-		// D3DVSD_STREAM_TESS
-		if(*pXboxToken & X_D3DVSD_STREAMTESSMASK)
-		{
-			// TODO
-		}
-		else // D3DVSD_STREAM
-		{
-			DWORD StreamNumber = VshGetVertexStream(*pXboxToken);
-
-			// new stream
-			pCurrentVertexShaderStreamInfo = &(pVertexDeclarationToSet->VertexStreams[StreamNumber]);
-			pCurrentVertexShaderStreamInfo->NeedPatch = FALSE;
-			pCurrentVertexShaderStreamInfo->DeclPosition = FALSE;
-			pCurrentVertexShaderStreamInfo->CurrentStreamNumber = 0;
-			pCurrentVertexShaderStreamInfo->HostVertexStride = 0;
-			pCurrentVertexShaderStreamInfo->NumberOfVertexElements = 0;
-
-			// Dxbx note : Use Dophin(s), FieldRender, MatrixPaletteSkinning and PersistDisplay as a testcase
-
-			pCurrentVertexShaderStreamInfo->CurrentStreamNumber = VshGetVertexStream(*pXboxToken);
-			pVertexDeclarationToSet->NumberOfVertexStreams++;
-			// TODO : Keep a bitmask for all StreamNumber's seen?
-		}
-	}
-
-	void VshConvert_RegisterVertexElement(
-		UINT XboxVertexElementDataType,
-		UINT XboxVertexElementByteSize,
-		UINT HostVertexElementByteSize,
-		BOOL NeedPatching)
-	{
-		CxbxVertexShaderStreamElement* pCurrentElement = &(pCurrentVertexShaderStreamInfo->VertexElements[pCurrentVertexShaderStreamInfo->NumberOfVertexElements]);
-		pCurrentElement->XboxType = XboxVertexElementDataType;
-		pCurrentElement->XboxByteSize = XboxVertexElementByteSize;
-		pCurrentElement->HostByteSize = HostVertexElementByteSize;
-		pCurrentVertexShaderStreamInfo->NumberOfVertexElements++;
-		pCurrentVertexShaderStreamInfo->NeedPatch |= NeedPatching;
-	}
-
-	void VshConvert_SkipBytes(int SkipBytesCount)
-	{
-		if (SkipBytesCount % sizeof(DWORD)) {
-			LOG_TEST_CASE("D3DVSD_SKIPBYTES not divisble by 4!");
-		}
-#if 0 // Potential optimization, for now disabled for simplicity :
-		else {
-			// Skip size is a whole multiple of 4 bytes;
-			// Is stream patching not needed up until this element?
-			if (!pCurrentVertexShaderStreamInfo->NeedPatch) {
-				// Then we can get away with increasing the host stride,
-				// which avoids otherwise needless vertex buffer patching :
-				pCurrentVertexShaderStreamInfo->HostVertexStride += SkipBytesCount;
-				return;
+				LOG_TEST_CASE("invalid TessellationType");
+				return false;
 			}
 		}
-#endif
 
-		// Register a 'skip' element, so that Xbox data will be skipped
-		// without increasing host stride - this does require patching :
-		VshConvert_RegisterVertexElement(xbox::X_D3DVSDT_NONE, SkipBytesCount, /*HostSize=*/0, /*NeedPatching=*/TRUE);
-	}
-
-	void VshConvertToken_STREAMDATA_SKIP(DWORD *pXboxToken)
-	{
-		WORD SkipCount = (*pXboxToken & X_D3DVSD_SKIPCOUNTMASK) >> X_D3DVSD_SKIPCOUNTSHIFT;
-		VshConvert_SkipBytes(SkipCount * sizeof(DWORD));
-	}
-
-	void VshConvertToken_STREAMDATA_SKIPBYTES(DWORD* pXboxToken)
-	{
-		WORD SkipBytesCount = (*pXboxToken & X_D3DVSD_SKIPCOUNTMASK) >> X_D3DVSD_SKIPCOUNTSHIFT;
-		VshConvert_SkipBytes(SkipBytesCount);
-	}
-
-	void VshConvertToken_STREAMDATA_REG(DWORD *pXboxToken)
-	{
-		DWORD VertexRegister = VshGetVertexRegister(*pXboxToken);
-		BOOL NeedPatching = FALSE;
-		BYTE Index;
-		BYTE HostVertexRegisterType;
-
-		if (IsFixedFunction) {
-			HostVertexRegisterType = Xb2PCRegisterType(VertexRegister, Index);
-		} else {
-			// D3DDECLUSAGE_TEXCOORD can be useds for any user-defined data
-			// We need this because there is no reliable way to detect the real usage
-			// Xbox has no concept of 'usage types', it only requires a list of attribute register numbers.
-			// So we treat them all as 'user-defined' with an Index of the Vertex Register Index
-			// this prevents information loss in shaders due to non-matching dcl types!
-			HostVertexRegisterType = D3DDECLUSAGE_TEXCOORD;
-			Index = (BYTE)VertexRegister;
-		}
-
-		// Add this register to the list of declared registers
-		RegVIsPresentInDeclaration[VertexRegister] = true;
-
-		DWORD XboxVertexElementDataType = (*pXboxToken & X_D3DVSD_DATATYPEMASK) >> X_D3DVSD_DATATYPESHIFT;
-		WORD XboxVertexElementByteSize = 0;
+		WORD XboxVertexElementByteSize = 0; // When set above 0, implies NeedPatching
 		BYTE HostVertexElementDataType = 0;
 		WORD HostVertexElementByteSize = 0;
 
-		switch (XboxVertexElementDataType)
-		{
+		switch (XboxVertexElementDataType) {
 		case xbox::X_D3DVSDT_FLOAT1: // 0x12:
 			HostVertexElementDataType = D3DDECLTYPE_FLOAT1;
 			HostVertexElementByteSize = 1 * sizeof(FLOAT);
@@ -867,112 +744,88 @@ private:
 			if (g_D3DCaps.DeclTypes & D3DDTCAPS_SHORT2N) {
 				HostVertexElementDataType = D3DDECLTYPE_SHORT2N;
 				HostVertexElementByteSize = 2 * sizeof(SHORT);
-			}
-			else
-			{
+			} else {
 				HostVertexElementDataType = D3DDECLTYPE_FLOAT1;
 				HostVertexElementByteSize = 1 * sizeof(FLOAT);
 			}
 			XboxVertexElementByteSize = 1 * sizeof(xbox::short_xt);
-			NeedPatching = TRUE;
 			break;
 		case xbox::X_D3DVSDT_NORMSHORT2: // 0x21:
 			if (g_D3DCaps.DeclTypes & D3DDTCAPS_SHORT2N) {
 				HostVertexElementDataType = D3DDECLTYPE_SHORT2N;
 				HostVertexElementByteSize = 2 * sizeof(SHORT);
 				// No need for patching in D3D9
-			}
-			else
-			{
+			} else {
 				HostVertexElementDataType = D3DDECLTYPE_FLOAT2;
 				HostVertexElementByteSize = 2 * sizeof(FLOAT);
 				XboxVertexElementByteSize = 2 * sizeof(xbox::short_xt);
-				NeedPatching = TRUE;
 			}
 			break;
 		case xbox::X_D3DVSDT_NORMSHORT3: // 0x31:
 			if (g_D3DCaps.DeclTypes & D3DDTCAPS_SHORT4N) {
 				HostVertexElementDataType = D3DDECLTYPE_SHORT4N;
 				HostVertexElementByteSize = 4 * sizeof(SHORT);
-			}
-			else
-			{
+			} else {
 				HostVertexElementDataType = D3DDECLTYPE_FLOAT3;
 				HostVertexElementByteSize = 3 * sizeof(FLOAT);
 			}
 			XboxVertexElementByteSize = 3 * sizeof(xbox::short_xt);
-			NeedPatching = TRUE;
 			break;
 		case xbox::X_D3DVSDT_NORMSHORT4: // 0x41:
 			if (g_D3DCaps.DeclTypes & D3DDTCAPS_SHORT4N) {
 				HostVertexElementDataType = D3DDECLTYPE_SHORT4N;
 				HostVertexElementByteSize = 4 * sizeof(SHORT);
 				// No need for patching in D3D9
-			}
-			else
-			{
+			} else {
 				HostVertexElementDataType = D3DDECLTYPE_FLOAT4;
 				HostVertexElementByteSize = 4 * sizeof(FLOAT);
 				XboxVertexElementByteSize = 4 * sizeof(xbox::short_xt);
-				NeedPatching = TRUE;
 			}
 			break;
 		case xbox::X_D3DVSDT_NORMPACKED3: // 0x16:
 			HostVertexElementDataType = D3DDECLTYPE_FLOAT3;
 			HostVertexElementByteSize = 3 * sizeof(FLOAT);
 			XboxVertexElementByteSize = 1 * sizeof(xbox::dword_xt);
-			NeedPatching = TRUE;
 			break;
 		case xbox::X_D3DVSDT_SHORT1: // 0x15:
 			HostVertexElementDataType = D3DDECLTYPE_SHORT2;
 			HostVertexElementByteSize = 2 * sizeof(SHORT);
 			XboxVertexElementByteSize = 1 * sizeof(xbox::short_xt);
-			NeedPatching = TRUE;
 			break;
 		case xbox::X_D3DVSDT_SHORT3: // 0x35:
 			HostVertexElementDataType = D3DDECLTYPE_SHORT4;
 			HostVertexElementByteSize = 4 * sizeof(SHORT);
 			XboxVertexElementByteSize = 3 * sizeof(xbox::short_xt);
-			NeedPatching = TRUE;
 			break;
 		case xbox::X_D3DVSDT_PBYTE1: // 0x14:
 			if (g_D3DCaps.DeclTypes & D3DDTCAPS_UBYTE4N) {
 				HostVertexElementDataType = D3DDECLTYPE_UBYTE4N;
 				HostVertexElementByteSize = 4 * sizeof(BYTE);
-			}
-			else
-			{
+			} else {
 				HostVertexElementDataType = D3DDECLTYPE_FLOAT1;
 				HostVertexElementByteSize = 1 * sizeof(FLOAT);
 			}
 			XboxVertexElementByteSize = 1 * sizeof(xbox::byte_xt);
-			NeedPatching = TRUE;
 			break;
 		case xbox::X_D3DVSDT_PBYTE2: // 0x24:
 			if (g_D3DCaps.DeclTypes & D3DDTCAPS_UBYTE4N) {
 				HostVertexElementDataType = D3DDECLTYPE_UBYTE4N;
 				HostVertexElementByteSize = 4 * sizeof(BYTE);
-			}
-			else
-			{
+			} else {
 				HostVertexElementDataType = D3DDECLTYPE_FLOAT2;
 				HostVertexElementByteSize = 2 * sizeof(FLOAT);
 			}
 			XboxVertexElementByteSize = 2 * sizeof(xbox::byte_xt);
-			NeedPatching = TRUE;
 			break;
 		case xbox::X_D3DVSDT_PBYTE3: // 0x34:
 			if (g_D3DCaps.DeclTypes & D3DDTCAPS_UBYTE4N) {
 				HostVertexElementDataType = D3DDECLTYPE_UBYTE4N;
 				HostVertexElementByteSize = 4 * sizeof(BYTE);
-			}
-			else
-			{
+			} else {
 				HostVertexElementDataType = D3DDECLTYPE_FLOAT3;
 				HostVertexElementByteSize = 3 * sizeof(FLOAT);
 			}
 			XboxVertexElementByteSize = 3 * sizeof(xbox::byte_xt);
-			NeedPatching = TRUE;
 			break;
 		case xbox::X_D3DVSDT_PBYTE4: // 0x44:
 			// Test-case : Panzer
@@ -980,225 +833,180 @@ private:
 				HostVertexElementDataType = D3DDECLTYPE_UBYTE4N;
 				HostVertexElementByteSize = 4 * sizeof(BYTE);
 				// No need for patching when D3D9 supports D3DDECLTYPE_UBYTE4N
-			}
-			else
-			{
+			} else {
 				HostVertexElementDataType = D3DDECLTYPE_FLOAT4;
 				HostVertexElementByteSize = 4 * sizeof(FLOAT);
 				XboxVertexElementByteSize = 4 * sizeof(xbox::byte_xt);
-				NeedPatching = TRUE;
 			}
 			break;
 		case xbox::X_D3DVSDT_FLOAT2H: // 0x72:
 			HostVertexElementDataType = D3DDECLTYPE_FLOAT4;
 			HostVertexElementByteSize = 4 * sizeof(FLOAT);
 			XboxVertexElementByteSize = 3 * sizeof(FLOAT);
-			NeedPatching = TRUE;
 			break;
 		case xbox::X_D3DVSDT_NONE: // 0x02:
-			// No host element data, so no patching
+			assert(false); // Should already be handled above
 			break;
 		default:
-			//LOG_TEST_CASE("Unknown data type for D3DVSD_REG: 0x%02X\n", XboxVertexElementDataType);
-			break;
+			LOG_TEST_CASE("Unknown data type for D3DVSD_REG"); // TODO : Add : 0x % 02X\n", XboxVertexElementDataType);
+			return false;
 		}
 
-		// On X_D3DVSDT_NONE skip this token
-		if (XboxVertexElementDataType == xbox::X_D3DVSDT_NONE)
-		{
-			// Xbox elements with X_D3DVSDT_NONE have size zero, so there's no need to register those.
-			// Note, that for skip tokens, we DO call VshConvert_RegisterVertexElement with a X_D3DVSDT_NONE!
-			return;
+		assert(HostVertexElementDataType > 0);
+		assert(HostVertexElementByteSize > 0);
+
+		// Select new stream, if needed
+		if ((pCurrentVertexShaderStreamInfo == nullptr)
+		 || (pCurrentVertexShaderStreamInfo->XboxStreamIndex != slot.StreamIndex)) {
+			assert(slot.StreamIndex < X_VSH_MAX_STREAMS);
+			assert(pCurrentVertexDeclaration->NumberOfVertexStreams < X_VSH_MAX_STREAMS);
+
+			pCurrentVertexShaderStreamInfo =
+				&(pCurrentVertexDeclaration->VertexStreams[
+					pCurrentVertexDeclaration->NumberOfVertexStreams++]);
+			pCurrentVertexShaderStreamInfo->NeedPatch = FALSE;
+			pCurrentVertexShaderStreamInfo->XboxStreamIndex = (WORD)slot.StreamIndex;
+			pCurrentVertexShaderStreamInfo->HostVertexStride = (WORD)slot.Offset;
+			pCurrentVertexShaderStreamInfo->NumberOfVertexElements = 0;
+			// Dxbx note : Use Dophin(s), FieldRender, MatrixPaletteSkinning and PersistDisplay as a testcase
 		}
 
 		// save patching information
-		VshConvert_RegisterVertexElement(
-			XboxVertexElementDataType,
-			NeedPatching ? XboxVertexElementByteSize : HostVertexElementByteSize,
-			HostVertexElementByteSize,
-			NeedPatching);
+		assert(pCurrentVertexShaderStreamInfo->NumberOfVertexElements < X_VSH_MAX_ATTRIBUTES);
 
-		pRecompiled->Stream = pCurrentVertexShaderStreamInfo->CurrentStreamNumber;
-		pRecompiled->Offset = pCurrentVertexShaderStreamInfo->HostVertexStride;
-		pRecompiled->Type = HostVertexElementDataType;
-		pRecompiled->Method = D3DDECLMETHOD_DEFAULT;
-		pRecompiled->Usage = HostVertexRegisterType;
-		pRecompiled->UsageIndex = Index;
+		CxbxVertexShaderStreamElement* pCurrentVertexShaderStreamElementInfo =
+			&(pCurrentVertexShaderStreamInfo->VertexElements[
+				pCurrentVertexShaderStreamInfo->NumberOfVertexElements++]);
 
-		pRecompiled++;
+		if (XboxVertexElementByteSize == 0) {
+			XboxVertexElementByteSize = HostVertexElementByteSize;
+		} else {
+			pCurrentVertexShaderStreamInfo->NeedPatch |= TRUE;
+		}
+
+		pCurrentVertexShaderStreamElementInfo->XboxType = XboxVertexElementDataType;
+		pCurrentVertexShaderStreamElementInfo->XboxByteSize = XboxVertexElementByteSize;
+		pCurrentVertexShaderStreamElementInfo->HostDataType = HostVertexElementDataType;
+		pCurrentVertexShaderStreamElementInfo->HostByteSize = HostVertexElementByteSize;
+
+		// Convert to host vertex element
+		pCurrentHostVertexElement->Stream = pCurrentVertexShaderStreamInfo->XboxStreamIndex; // Use Xbox stream index on host
+		// FIXME Don't assume vertex elements are contiguous!
+		pCurrentHostVertexElement->Offset = pCurrentVertexShaderStreamInfo->HostVertexStride;
+		pCurrentHostVertexElement->Type = pCurrentVertexShaderStreamElementInfo->HostDataType;
+		pCurrentHostVertexElement->Method = D3DDECLMETHOD_DEFAULT;
+		if (IsFixedFunction) {
+			pCurrentHostVertexElement->Usage = Xb2PCRegisterType(VertexRegister, /*&*/pCurrentHostVertexElement->UsageIndex);
+		}
+		else {
+			// D3DDECLUSAGE_TEXCOORD can be useds for any user-defined data
+			// We need this because there is no reliable way to detect the real usage
+			// Xbox has no concept of 'usage types', it only requires a list of attribute register numbers.
+			// So we treat them all as 'user-defined' with an Index of the Vertex Register Index
+			// this prevents information loss in shaders due to non-matching dcl types!
+			pCurrentHostVertexElement->Usage = D3DDECLUSAGE_TEXCOORD;
+			pCurrentHostVertexElement->UsageIndex = (BYTE)VertexRegister;
+		}
 
 		pCurrentVertexShaderStreamInfo->HostVertexStride += HostVertexElementByteSize;
-	}
 
-	void VshConvertToken_STREAMDATA(DWORD *pXboxToken)
-	{
-		if (*pXboxToken & X_D3DVSD_MASK_SKIP)
-		{
-			// For D3D9, use D3DDECLTYPE_UNUSED ?
-			if (*pXboxToken & X_D3DVSD_MASK_SKIPBYTES) {
-				VshConvertToken_STREAMDATA_SKIPBYTES(pXboxToken);
-			} else {
-				VshConvertToken_STREAMDATA_SKIP(pXboxToken);
-			}
-		}
-		else // D3DVSD_REG
-		{
-			VshConvertToken_STREAMDATA_REG(pXboxToken);
-		}
-	}
-
-	DWORD VshRecompileToken(DWORD *pXboxToken)
-	{
-		DWORD Step = 1;
-
-		switch(VshGetTokenType(*pXboxToken))
-		{
-		case xbox::X_D3DVSD_TOKEN_NOP:
-			VshConvertToken_NOP(pXboxToken);
-			break;
-		case xbox::X_D3DVSD_TOKEN_STREAM:
-		{
-			VshConvertToken_STREAM(pXboxToken);
-			break;
-		}
-		case xbox::X_D3DVSD_TOKEN_STREAMDATA:
-		{
-			VshConvertToken_STREAMDATA(pXboxToken);
-			break;
-		}
-		case xbox::X_D3DVSD_TOKEN_TESSELLATOR:
-		{
-			VshConvertToken_TESSELATOR(pXboxToken);
-			break;
-		}
-		case xbox::X_D3DVSD_TOKEN_CONSTMEM:
-		{
-			Step = VshConvertToken_CONSTMEM(pXboxToken);
-			break;
-		}
-		default:
-			//LOG_TEST_CASE("Unknown token type: %d\n", VshGetTokenType(*pXboxToken));
-			break;
-		}
-
-		return Step;
-	}
-
-	static DWORD* RemoveXboxDeclarationRedefinition(DWORD* pXboxDeclaration)
-	{
-		// Detect and remove register redefinitions by preprocessing the Xbox Vertex Declaration
-		// Test Case: King Kong
-
-		// Find the last token
-		DWORD* pXboxToken = pXboxDeclaration;
-		while (*pXboxToken != X_D3DVSD_END()){
-			pXboxToken++;
-		}
-
-		// Operate on a copy of the Xbox declaration, rather than messing with the Xbox's memory
-		auto declarationBytes = sizeof(DWORD) * (pXboxToken - pXboxDeclaration + 1);
-		auto pXboxDeclarationCopy = (DWORD*)malloc(declarationBytes);
-		memcpy(pXboxDeclarationCopy, pXboxDeclaration, declarationBytes);
-		pXboxToken = pXboxDeclarationCopy + (pXboxToken - pXboxDeclaration); // Move to end of the copy
-
-		// Remember if we've seen a given output register
-		std::bitset<16> seen;
-
-		// We want to keep later definitions, and remove earlier ones
-		// Scan back from the end of the declaration, and replace redefinitions with nops
-		while (pXboxToken > pXboxDeclarationCopy) {
-			auto type = VshGetTokenType(*pXboxToken);
-			if (type == xbox::X_D3DVSD_TOKEN_STREAMDATA && !(*pXboxToken & X_D3DVSD_MASK_SKIP) ||
-				type == xbox::X_D3DVSD_TOKEN_TESSELLATOR)
-			{
-				auto outputRegister = VshGetVertexRegister(*pXboxToken);
-				if (seen[outputRegister])
-				{
-					// Blank out tokens for mapped registers
-					*pXboxToken = X_D3DVSD_NOP();
-					EmuLog(LOG_LEVEL::DEBUG, "Replacing duplicate definition of register %d with D3DVSD_NOP", outputRegister);
-				}
-				else
-				{
-					// Mark register as seen
-					seen[outputRegister] = true;
-				}
-			}
-
-			pXboxToken--;
-		}
-
-		return pXboxDeclarationCopy;
+		return true;
 	}
 
 public:
-	D3DVERTEXELEMENT *Convert(DWORD* pXboxDeclaration, bool bIsFixedFunction, CxbxVertexDeclaration* pCxbxVertexDeclaration)
+	D3DVERTEXELEMENT* Convert(xbox::X_VERTEXATTRIBUTEFORMAT* pXboxDeclaration, bool bIsFixedFunction, CxbxVertexDeclaration* pCxbxVertexDeclaration)
 	{
 		// Get a preprocessed copy of the original Xbox Vertex Declaration
-		auto pXboxVertexDeclarationCopy = RemoveXboxDeclarationRedefinition(pXboxDeclaration);
-
-		pVertexDeclarationToSet = pCxbxVertexDeclaration;
+		pCurrentVertexDeclaration = pCxbxVertexDeclaration;
 
 		IsFixedFunction = bIsFixedFunction;
 
 		RegVIsPresentInDeclaration.fill(false);
 
-		// First of all some info:
-		// We have to figure out which flags are set and then
-		// we have to patch their params
+		// Mapping between Xbox register and the resulting host vertex element
+		D3DVERTEXELEMENT* HostVertexElementPerRegister[X_VSH_MAX_ATTRIBUTES] = { 0 };
 
-		// some token values
-		// 0xFFFFFFFF - end of the declaration
-		// 0x00000000 - nop (means that this value is ignored)
+		// For Direct3D9, we need to reserve the maximum number of elements, plus one token for D3DDECL_END :
+		unsigned HostDeclarationSize = (X_VSH_MAX_ATTRIBUTES + 1) * sizeof(D3DVERTEXELEMENT);
 
-		// Calculate size of declaration
-		XboxDeclarationCount = VshGetDeclarationCount(pXboxVertexDeclarationCopy);
-		// For Direct3D9, we need to reserve at least twice the number of elements, as one token can generate two registers (in and out) :
-		unsigned HostDeclarationSize = XboxDeclarationCount * sizeof(D3DVERTEXELEMENT) * 2;
-	
-		D3DVERTEXELEMENT *Result = (D3DVERTEXELEMENT *)calloc(1, HostDeclarationSize);
-		pRecompiled = Result;
-		uint8_t *pRecompiledBufferOverflow = ((uint8_t*)pRecompiled) + HostDeclarationSize;
+		D3DVERTEXELEMENT* HostVertexElements = (D3DVERTEXELEMENT*)calloc(1, HostDeclarationSize);
+		pCurrentHostVertexElement = HostVertexElements;
 
-		VshDumpXboxDeclaration(pXboxDeclaration);
+		std::array<byte, X_VSH_MAX_ATTRIBUTES> orderedRegisterIndices;
+		for (byte i = 0; i < orderedRegisterIndices.size(); i++)
+			orderedRegisterIndices[i] = i;
 
-		auto pXboxToken = pXboxVertexDeclarationCopy;
-		while (*pXboxToken != X_D3DVSD_END())
-		{
-			if ((uint8_t*)pRecompiled >= pRecompiledBufferOverflow) {
-				DbgVshPrintf("Detected buffer-overflow, breaking out...\n");
-				break;
+		// Make sure we convert registers in order of offset, per stream
+		// TODO fix elements with identical positions?
+		std::sort(orderedRegisterIndices.begin(), orderedRegisterIndices.end(),
+			[pXboxDeclaration](const auto& x, const auto& y)
+			{
+				auto regX = pXboxDeclaration->Slots[x];
+				auto regY = pXboxDeclaration->Slots[y];
+				return std::tie(regX.StreamIndex, regX.Offset)
+					 < std::tie(regY.StreamIndex, regY.Offset);
+			});
+
+		EmuLog(LOG_LEVEL::DEBUG, "Parsing vertex declaration");
+		for (size_t i = 0; i < orderedRegisterIndices.size(); i++) {
+			auto regIndex = orderedRegisterIndices[i];
+			auto &slot = pXboxDeclaration->Slots[regIndex];
+			if (slot.Format > xbox::X_D3DVSDT_NONE) {
+				// Set Direct3D9 vertex element (declaration) members :
+				if (VshConvertToken_STREAMDATA_REG(regIndex, slot)) {
+					// Add this register to the list of declared registers
+					RegVIsPresentInDeclaration[regIndex] = true;
+					// Remember a pointer to this register
+					HostVertexElementPerRegister[regIndex] = pCurrentHostVertexElement;
+					pCurrentHostVertexElement++;
+
+					EmuLog(LOG_LEVEL::DEBUG, "\tXbox Stream %d, Offset %d, Format %d, Slot %d",
+						slot.StreamIndex, slot.Offset, slot.Format, regIndex);
+					EmuLog(LOG_LEVEL::DEBUG, "\tHost Stream %d, Offset %d, Format %d, Usage %d-%d",
+						pCurrentHostVertexElement->Stream, pCurrentHostVertexElement->Offset, pCurrentHostVertexElement->Type, pCurrentHostVertexElement->Usage, pCurrentHostVertexElement->UsageIndex);
+				}
 			}
-
-			DWORD Step = VshRecompileToken(pXboxToken);
-			pXboxToken += Step;
 		}
 
-		*pRecompiled = D3DDECL_END();
+		*pCurrentHostVertexElement = D3DDECL_END();
+
+		// Post-process host vertex elements that have a D3DDECLMETHOD_CROSSUV method :
+		for (int AttributeIndex = 0; AttributeIndex < X_VSH_MAX_ATTRIBUTES; AttributeIndex++) {
+			auto pHostElement = HostVertexElementPerRegister[AttributeIndex];
+			if (pHostElement == nullptr) continue;
+			if (pHostElement->Method == D3DDECLMETHOD_CROSSUV) {
+				int TessellationSource = pXboxDeclaration->Slots[AttributeIndex].TessellationSource;
+				auto pSourceElement = HostVertexElementPerRegister[TessellationSource];
+				// Copy over the Stream, Offset and Type of the host vertex element that serves as 'TessellationSource' :
+				pHostElement->Stream = pSourceElement->Stream;
+				pHostElement->Offset = pSourceElement->Offset;
+				pHostElement->Type = pSourceElement->Type;
+				// Note, the input type for D3DDECLMETHOD_CROSSUV can be D3DDECLTYPE_FLOAT[43], D3DDECLTYPE_D3DCOLOR, D3DDECLTYPE_UBYTE4, or D3DDECLTYPE_SHORT4
+				// (the output type implied by D3DDECLMETHOD_CROSSUV is D3DDECLTYPE_FLOAT3).
+				// TODO : Should we assert this?
+			}
+		}
 
 		// Ensure valid ordering of the vertex declaration (http://doc.51windows.net/Directx9_SDK/graphics/programmingguide/gettingstarted/vertexdeclaration/vertexdeclaration.htm)
 		// In particular "All vertex elements for a stream must be consecutive and sorted by offset"
 		// Test case: King Kong (due to register redefinition)
-		std::sort(Result, pRecompiled, [] (const auto& x, const auto& y)
+		// Note : Xbox slots might use non-ordered stream indices, so we can't rely on the output ordering of our converted elements!
+		std::sort(/*First=*/HostVertexElements, /*Last=*/pCurrentHostVertexElement, /*Pred=*/[] (const auto& x, const auto& y)
 			{ return std::tie(x.Stream, x.Method, x.Offset) < std::tie(y.Stream, y.Method, y.Offset); });
-
-		// Free the preprocessed declaration copy
-		free(pXboxVertexDeclarationCopy);
 
 		// Record which registers are in the vertex declaration
 		for (size_t i = 0; i < RegVIsPresentInDeclaration.size(); i++) {
 			pCxbxVertexDeclaration->vRegisterInDeclaration[i] = RegVIsPresentInDeclaration[i];
 		}
 
-		return Result;
+		return HostVertexElements;
 	}
 };
 
 D3DVERTEXELEMENT *EmuRecompileVshDeclaration
 (
-    DWORD                *pXboxDeclaration,
+	xbox::X_VERTEXATTRIBUTEFORMAT* pXboxDeclaration,
     bool                  bIsFixedFunction,
-    DWORD                *pXboxDeclarationCount,
     CxbxVertexDeclaration *pCxbxVertexDeclaration
 )
 {
@@ -1206,224 +1014,329 @@ D3DVERTEXELEMENT *EmuRecompileVshDeclaration
 
 	D3DVERTEXELEMENT* pHostVertexElements = Converter.Convert(pXboxDeclaration, bIsFixedFunction, pCxbxVertexDeclaration);
 
-	*pXboxDeclarationCount = Converter.XboxDeclarationCount;
-
     return pHostVertexElements;
 }
 
-extern void FreeVertexDynamicPatch(CxbxVertexShader *pVertexShader)
+static bool FreeCxbxVertexDeclaration(CxbxVertexDeclaration *pCxbxVertexDeclaration)
 {
-    pVertexShader->Declaration.NumberOfVertexStreams = 0;
+	LOG_INIT; // Allows use of DEBUG_D3DRESULT
+
+	if (pCxbxVertexDeclaration) {
+		if (pCxbxVertexDeclaration->pHostVertexDeclaration) {
+			HRESULT hRet = pCxbxVertexDeclaration->pHostVertexDeclaration->Release();
+			DEBUG_D3DRESULT(hRet, "g_pD3DDevice->DeleteVertexShader(pHostVertexDeclaration)");
+		}
+		free(pCxbxVertexDeclaration);
+		return true;
+	}
+
+	return false;
 }
 
-// Checks for failed vertex shaders, and shaders that would need patching
-boolean VshHandleIsValidShader(DWORD XboxVertexShaderHandle)
-{
-#if 0
-	//printf( "VS = 0x%.08X\n", XboxVertexShaderHandle );
-
-    CxbxVertexShader *pCxbxVertexShader = GetCxbxVertexShader(XboxVertexShaderHandle);
-    if (pCxbxVertexShader) {
-        if (pCxbxVertexShader->XboxStatus != 0)
-        {
-            return FALSE;
-        }
-        /*
-        for (uint32 i = 0; i < pCxbxVertexShader->VertexShaderInfo.NumberOfVertexStreams; i++)
-        {
-            if (pCxbxVertexShader->VertexShaderInfo.VertexStreams[i].NeedPatch)
-            {
-                // Just for caching purposes
-                pCxbxVertexShader->XboxStatus = 0x80000001;
-                return FALSE;
-            }
-        }
-        */
-    }
-#endif
-    return TRUE;
-}
-
-extern boolean IsValidCurrentShader(void)
-{
-	// Dxbx addition : There's no need to call
-	// XTL_EmuIDirect3DDevice_GetVertexShader, just check g_Xbox_VertexShader_Handle :
-	return VshHandleIsValidShader(g_Xbox_VertexShader_Handle);
-}
-
-// Vertex shader state
-static DWORD g_CxbxVertexShaderSlotAddress = 0;
-static DWORD g_CxbxVertexShaderSlots[X_VSH_MAX_INSTRUCTION_COUNT * X_VSH_INSTRUCTION_SIZE] = { 0 };
-
-DWORD* GetCxbxVertexShaderSlotPtr(const DWORD SlotIndexAddress)
+xbox::dword_xt* GetCxbxVertexShaderSlotPtr(const DWORD SlotIndexAddress)
 {
 	if (SlotIndexAddress < X_VSH_MAX_INSTRUCTION_COUNT) {
-		return &g_CxbxVertexShaderSlots[SlotIndexAddress * X_VSH_INSTRUCTION_SIZE];
+		return &g_Xbox_VertexShader_FunctionSlots[SlotIndexAddress * X_VSH_INSTRUCTION_SIZE];
 	} else {
 		LOG_TEST_CASE("SlotIndexAddress out of range"); // FIXME : extend with value (once supported by LOG_TEST_CASE)
 		return nullptr;
 	}
 }
 
-CxbxVertexDeclaration *GetCxbxVertexDeclaration(DWORD XboxVertexShaderHandle)
+VertexDeclarationKey GetXboxVertexAttributesKey(xbox::X_VERTEXATTRIBUTEFORMAT* pXboxVertexAttributeFormat)
 {
-    CxbxVertexShader *pCxbxVertexShader = GetCxbxVertexShader(XboxVertexShaderHandle);
-
-    for (uint32_t i = 0; i < pCxbxVertexShader->Declaration.NumberOfVertexStreams; i++)
-    {
-        if (pCxbxVertexShader->Declaration.VertexStreams[i].NeedPatch)
-        {
-            return &pCxbxVertexShader->Declaration;
-        }
-    }
-    return nullptr;
+	auto attributeHash = ComputeHash((void*)pXboxVertexAttributeFormat, sizeof(xbox::X_VERTEXATTRIBUTEFORMAT));
+	// For now, we use different declarations depending on if the fixed function pipeline
+	// is in use, even if the attributes are the same
+	return 	attributeHash ^ (VertexDeclarationKey)g_Xbox_VertexShader_IsFixedFunction;
 }
 
-std::unordered_map<DWORD, CxbxVertexShader*> g_CxbxVertexShaders;
+std::unordered_map<VertexDeclarationKey, CxbxVertexDeclaration*> g_CxbxVertexDeclarations;
 
-CxbxVertexShader* GetCxbxVertexShader(DWORD XboxVertexShaderHandle)
+void RegisterCxbxVertexDeclaration(VertexDeclarationKey CacheKey, CxbxVertexDeclaration* pCxbxVertexDeclaration)
 {
-	if (VshHandleIsVertexShader(XboxVertexShaderHandle)) {
-		auto it = g_CxbxVertexShaders.find(XboxVertexShaderHandle);
-		if (it != g_CxbxVertexShaders.end()) {
-			return it->second;
-		}
+	auto it = g_CxbxVertexDeclarations.find(CacheKey);
+	if (it != g_CxbxVertexDeclarations.end() && it->second != nullptr) {
+		LOG_TEST_CASE("Overwriting existing Vertex Declaration");
+		FreeCxbxVertexDeclaration(it->second); // Avoid memory leak
+	}
+
+	g_CxbxVertexDeclarations[CacheKey] = pCxbxVertexDeclaration;
+}
+
+CxbxVertexDeclaration* FetchCachedCxbxVertexDeclaration(VertexDeclarationKey CacheKey)
+{
+	auto it = g_CxbxVertexDeclarations.find(CacheKey);
+	if (it != g_CxbxVertexDeclarations.end()) {
+		return it->second;
 	}
 
 	return nullptr;
 }
 
-void RegisterCxbxVertexShader(DWORD XboxVertexShaderHandle, CxbxVertexShader* shader)
+IDirect3DVertexDeclaration* CxbxCreateHostVertexDeclaration(D3DVERTEXELEMENT *pDeclaration)
 {
-	auto it = g_CxbxVertexShaders.find(XboxVertexShaderHandle);
-	if (it != g_CxbxVertexShaders.end() && it->second != nullptr && shader != nullptr) {
-		LOG_TEST_CASE("Overwriting existing Vertex Shader");
-	}
+	LOG_INIT; // Allows use of DEBUG_D3DRESULT
 
-	g_CxbxVertexShaders[XboxVertexShaderHandle] = shader;
+	IDirect3DVertexDeclaration* pHostVertexDeclaration = nullptr;
+	HRESULT hRet = g_pD3DDevice->CreateVertexDeclaration(pDeclaration, &pHostVertexDeclaration);
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateVertexDeclaration");
+
+	return pHostVertexDeclaration;
 }
 
-void SetCxbxVertexDeclaration(CxbxVertexDeclaration& pCxbxVertexDeclaration) {
-	LOG_INIT
+static IDirect3DVertexShader* passthroughshader;
+void CxbxUpdateHostVertexShader()
+{
+	extern bool g_bUsePassthroughHLSL; // TMP glue
 
-	HRESULT hRet;
+	// TODO Call this when state is dirty
+	// Rather than every time state changes
 
-	// Set vertex declaration
-	hRet = g_pD3DDevice->SetVertexDeclaration(pCxbxVertexDeclaration.pHostVertexDeclaration);
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetVertexDeclaration");
+	LOG_INIT; // Allows use of DEBUG_D3DRESULT
+
+	if (g_Xbox_VertexShader_IsFixedFunction) {
+		HRESULT hRet = g_pD3DDevice->SetVertexShader(nullptr);
+		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetVertexShader");
+		// TODO : Once available, start using host Fixed Function HLSL shader
+		// instead of using deprecated host fixed function (by setting a null
+		// vertex shader).
+		// As for the required host vertex declaration : 
+		// CxbxUpdateHostVertexDeclaration already been
+		// called, which sets host vertex declaration based on the
+		// declaration that XboxVertexShaderFromFVF generated. 
+	}
+	else if (g_Xbox_VertexShader_IsPassthrough && g_bUsePassthroughHLSL) {
+		if (passthroughshader == nullptr) {
+			ID3DBlob* pBlob = nullptr;
+			EmuCompileXboxPassthrough(&pBlob);
+			if (pBlob) {
+				g_pD3DDevice->CreateVertexShader((DWORD*)pBlob->GetBufferPointer(), &passthroughshader);
+			}
+		}
+
+		HRESULT hRet = g_pD3DDevice->SetVertexShader(passthroughshader);
+	}
+	else {
+		auto pTokens = GetCxbxVertexShaderSlotPtr(g_Xbox_VertexShader_FunctionSlots_StartAddress);
+		assert(pTokens);
+		// Create a vertex shader from the tokens
+		DWORD shaderSize;
+		auto VertexShaderKey = g_VertexShaderSource.CreateShader(pTokens, &shaderSize);
+		IDirect3DVertexShader* pHostVertexShader = g_VertexShaderSource.GetShader(VertexShaderKey);
+		HRESULT hRet = g_pD3DDevice->SetVertexShader(pHostVertexShader);
+		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetVertexShader");
+	}
+}
+
+void CxbxSetVertexShaderSlots(DWORD* pTokens, DWORD Address, DWORD NrInstructions)
+{
+	int upToSlot = Address + NrInstructions;
+	if (upToSlot > X_VSH_MAX_INSTRUCTION_COUNT) {
+		LOG_TEST_CASE("Shader does not fit in vertex shader slots");
+		return;
+	}
+
+	auto CxbxVertexShaderSlotPtr = GetCxbxVertexShaderSlotPtr(Address);
+	if (CxbxVertexShaderSlotPtr == nullptr) {
+		return;
+	}
+
+	memcpy(CxbxVertexShaderSlotPtr, pTokens, NrInstructions * X_VSH_INSTRUCTION_SIZE_BYTES);
+
+	// Make sure slot parsing in EmuParseVshFunction (VshConvertToIntermediate) stops after the last slot;
+	// Just setting bit 0 in 3rd DWORD suffices (see XboxVertexShaderDecoder.VshGetField.FieldMapping[FLD_FINAL]) :
+	g_Xbox_VertexShader_FunctionSlots[(X_VSH_MAX_INSTRUCTION_COUNT * X_VSH_INSTRUCTION_SIZE) + 3] = 1;
+}
+
+static void CxbxSetVertexShaderPassthroughProgram()
+{
+	static DWORD XboxShaderBinaryPassthrough[] = {
+		0, 0x0020001B, 0x0836106C, 0x2F100FF8,
+		0, 0x0420061B, 0x083613FC, 0x5011F818,
+		0, 0x002008FF, 0x0836106C, 0x2070F828,
+		0, 0x0240081B, 0x1436186C, 0x2F20F824,
+		0, 0x0060201B, 0x2436106C, 0x3070F800,
+		0, 0x00200200, 0x0836106C, 0x2070F830,
+		0, 0x00200E1B, 0x0836106C, 0x2070F838,
+		0, 0x0020101B, 0x0836106C, 0x2070F840,
+		0, 0x0020121B, 0x0836106C, 0x2070F848,
+		0, 0x0020141B, 0x0836106C, 0x2070F850,
+		0, 0x0020161B, 0x0836106C, 0x2070F858,
+		0, 0x0020181B, 0x0836106C, 0x2070F861 // FLD_FINAL is set here!
+	};
+
+	// LOG_TEST_CASE("Setting Xbox passthrough shader");
+	// Test cases : Many XDK samples & games
+
+	// TODO : Xbox uses three variants;
+	// one for FOGTABLEMODE NONE
+	// one for FOGSOURCEZ
+	// one for WFOG
+
+	CxbxSetVertexShaderSlots(&XboxShaderBinaryPassthrough[0], 0, sizeof(XboxShaderBinaryPassthrough) / X_VSH_INSTRUCTION_SIZE_BYTES);
+
+	extern float g_ZScale; // TMP glue
+	extern float GetMultiSampleOffsetDelta(); // TMP glue
+
+	// Passthrough programs require scale and offset to be set in constants zero and one (both minus 96)
+	// (Note, these are different from GetMultiSampleOffsetAndScale / GetViewPortOffsetAndScale)
+	float scale[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+	float offset[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+#if 0 // Based on (regular) BeginPush XDK and (multisampled) AntiAlias samples, scale and offset should just use above defaults, with both render scale factor 1, but also 2 and higher.
+	scale[0] = (float)g_RenderScaleFactor;
+	scale[1] = (float)g_RenderScaleFactor;
+	scale[2] = 1.0f; // Passthrough should not scale Z (so don't use g_ZScale)
+	scale[3] = 1.0f;
+
+	float MultiSampleBias = 0.0f;
+	if (XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_MULTISAMPLEANTIALIAS) > 0) {
+		MultiSampleBias = GetMultiSampleOffsetDelta();
+	}
+
+	offset[0] = g_Xbox_ScreenSpaceOffset_x - MultiSampleBias;
+	offset[1] = g_Xbox_ScreenSpaceOffset_y - MultiSampleBias;
+	offset[2] = 0.0f;
+	offset[3] = 0.0f;
+#endif
+
+	// Test-case : XDK Ripple sample
+
+	// TODO : Apparently, offset and scale are swapped in some XDK versions, but which?
+	CxbxImpl_SetVertexShaderConstant(0 - X_D3DSCM_CORRECTION, scale, 1);
+	CxbxImpl_SetVertexShaderConstant(1 - X_D3DSCM_CORRECTION, offset, 1);
+}
+
+CxbxVertexDeclaration* CxbxGetVertexDeclaration()
+{
+	LOG_INIT; // Allows use of DEBUG_D3DRESULT
+
+	xbox::X_VERTEXATTRIBUTEFORMAT *pXboxVertexAttributeFormat = GetXboxVertexAttributeFormat();
+
+	auto XboxVertexAttributesKey = GetXboxVertexAttributesKey(pXboxVertexAttributeFormat);
+	CxbxVertexDeclaration* pCxbxVertexDeclaration = FetchCachedCxbxVertexDeclaration(XboxVertexAttributesKey);
+	if (pCxbxVertexDeclaration == nullptr) {
+		pCxbxVertexDeclaration = (CxbxVertexDeclaration*)calloc(1, sizeof(CxbxVertexDeclaration));
+
+		// Convert Xbox vertex attributes towards host Direct3D 9 vertex element
+		D3DVERTEXELEMENT* pRecompiledVertexElements = EmuRecompileVshDeclaration(
+			pXboxVertexAttributeFormat,
+			g_Xbox_VertexShader_IsFixedFunction,
+			pCxbxVertexDeclaration);
+
+		// Create the vertex declaration
+		pCxbxVertexDeclaration->pHostVertexDeclaration = CxbxCreateHostVertexDeclaration(pRecompiledVertexElements);
+
+		free(pRecompiledVertexElements);
+
+		// Cache resulting declarations from given inputs
+		pCxbxVertexDeclaration->Key = XboxVertexAttributesKey;
+		RegisterCxbxVertexDeclaration(XboxVertexAttributesKey, pCxbxVertexDeclaration);
+	}
+
+	return pCxbxVertexDeclaration;
+}
+
+void CxbxUpdateHostVertexDeclaration()
+{
+	CxbxVertexDeclaration* pCxbxVertexDeclaration = CxbxGetVertexDeclaration();
+	HRESULT hRet = g_pD3DDevice->SetVertexDeclaration(pCxbxVertexDeclaration->pHostVertexDeclaration);
 
 	// Titles can specify default values for registers via calls like SetVertexData4f
 	// HLSL shaders need to know whether to use vertex data or default vertex shader values
 	// Any register not in the vertex declaration should be set to the default value
 	float vertexDefaultFlags[X_VSH_MAX_ATTRIBUTES];
 	for (int i = 0; i < X_VSH_MAX_ATTRIBUTES; i++) {
-		vertexDefaultFlags[i] = pCxbxVertexDeclaration.vRegisterInDeclaration[i] ? 0.0f : 1.0f;
+		vertexDefaultFlags[i] = pCxbxVertexDeclaration->vRegisterInDeclaration[i] ? 0.0f : 1.0f;
 	}
-	g_pD3DDevice->SetVertexShaderConstantF(CXBX_D3DVS_CONSTREG_VREGDEFAULTS_FLAG_BASE, vertexDefaultFlags, 4);
+	g_pD3DDevice->SetVertexShaderConstantF(CXBX_D3DVS_CONSTREG_VREGDEFAULTS_FLAG_BASE, vertexDefaultFlags, CXBX_D3DVS_CONSTREG_VREGDEFAULTS_FLAG_SIZE);
 }
 
-// TODO Call this when state is dirty in UpdateNativeD3DResources
-// Rather than every time state changes
-void SetVertexShaderFromSlots() {
-	LOG_INIT
-
-	auto pTokens = GetCxbxVertexShaderSlotPtr(g_CxbxVertexShaderSlotAddress);
-	if (pTokens) {
-		// Create a vertex shader from the tokens
-		DWORD shaderSize;
-		auto shaderKey = g_VertexShaderSource.CreateShader(pTokens, &shaderSize);
-		HRESULT hRet = g_pD3DDevice->SetVertexShader(g_VertexShaderSource.GetShader(shaderKey));
-		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetVertexShader");
-	}
-}
-
-void SetCxbxVertexShaderHandle(CxbxVertexShader* pCxbxVertexShader)
+void CxbxImpl_SetScreenSpaceOffset(float x, float y)
 {
-	LOG_INIT
+	// See https://microsoft.github.io/DirectX-Specs/d3d/archive/D3D11_3_FunctionalSpec.htm#3.3.1%20Pixel%20Coordinate%20System
+	static float PixelOffset = 0.53125f; // 0.5 for pixel center + 1/16?
 
-	HRESULT hRet;
-
-	// Get vertex shader if we have a key
-	auto pHostShader = pCxbxVertexShader->VertexShaderKey
-		? g_VertexShaderSource.GetShader(pCxbxVertexShader->VertexShaderKey)
-		: nullptr;
-
-	// Set vertex shader
-	hRet = g_pD3DDevice->SetVertexShader(pHostShader);
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetVertexShader");
-
-	SetCxbxVertexDeclaration(pCxbxVertexShader->Declaration);
+	g_Xbox_ScreenSpaceOffset_x = x + PixelOffset;
+	g_Xbox_ScreenSpaceOffset_y = y + PixelOffset;
 }
 
-void CxbxImpl_SetVertexShaderInput
-(
-	DWORD              Handle,
-	UINT               StreamCount,
-	xbox::X_STREAMINPUT* pStreamInputs
-)
+// Note : SetVertexShaderInputDirect needs no EMUPATCH CxbxImpl_..., since it just calls SetVertexShaderInput
+
+void CxbxImpl_SetVertexShaderInput(DWORD Handle, UINT StreamCount, xbox::X_STREAMINPUT* pStreamInputs)
 {
-	LOG_INIT
+	using namespace xbox;
 
 	// If Handle is NULL, all VertexShader input state is cleared.
 	// Otherwise, Handle is the address of an Xbox VertexShader struct, or-ed with 1 (X_D3DFVF_RESERVED0)
 	// (Thus, a FVF handle is an invalid argument.)
-	//
 
-	LOG_UNIMPLEMENTED();
+	if (Handle == NULL)
+	{
+		// Xbox doesn't remember a null-handle - this may be an XDK bug!
+		// (Although, if that's skipped intentionally, we'd need to be very carefull about that!)
+		// StreamCount and pStreamInputs arguments are ignored
+		g_Xbox_SetVertexShaderInput_Count = 0;
+	}
+	else
+	{
+		assert(VshHandleIsVertexShader(Handle));
+		assert(StreamCount > 0);
+		assert(StreamCount <= X_VSH_MAX_STREAMS);
+		assert(pStreamInputs != xbox::zeroptr);
+
+		X_D3DVertexShader* pXboxVertexShader = VshHandleToXboxVertexShader(Handle);
+		assert(pXboxVertexShader);
+
+		// Xbox DOES store the Handle, but since it merely returns this through (unpatched) D3DDevice_GetVertexShaderInput, we don't have to.
+
+		g_Xbox_SetVertexShaderInput_Count = StreamCount; // This > 0 indicates g_Xbox_SetVertexShaderInput_Data has to be used
+		memcpy(g_Xbox_SetVertexShaderInput_Data, pStreamInputs, StreamCount * sizeof(xbox::X_STREAMINPUT)); // Make a copy of the supplied StreamInputs array
+
+		g_Xbox_SetVertexShaderInput_Attributes = *CxbxGetVertexShaderAttributes(pXboxVertexShader); // Copy this vertex shaders's attribute slots
+	}
 }
 
-void CxbxImpl_SelectVertexShaderDirect
-(
-	xbox::X_VERTEXATTRIBUTEFORMAT* pVAF,
-	DWORD Address
-)
-{
-	LOG_INIT;
-
-	// When pVAF is non-null, this vertex attribute format takes precedence over the the one	
-	LOG_UNIMPLEMENTED();
-}
+// Note : SelectVertexShaderDirect needs no EMUPATCH CxbxImpl_..., since it just calls SelectVertexShader
 
 void CxbxImpl_SelectVertexShader(DWORD Handle, DWORD Address)
 {
+	LOG_INIT; // Allows use of DEBUG_D3DRESULT
+
 	// Address always indicates a previously loaded vertex shader slot (from where the program is used).
 	// Handle can be null if the current Xbox VertexShader is assigned
 	// Handle can be an address of an Xbox VertexShader struct, or-ed with 1 (X_D3DFVF_RESERVED0)
 	// If Handle is assigned, it becomes the new current Xbox VertexShader,
 	// which resets a bit of state (nv2a execution mode, viewport, ?)
 	// Either way, the given address slot is selected as the start of the current vertex shader program
-	g_Xbox_VertexShader_Handle = Handle;
-	g_CxbxVertexShaderSlotAddress = Address;
+	g_Xbox_VertexShader_FunctionSlots_StartAddress = Address;
 
-	if (VshHandleIsVertexShader(Handle))
-	{
-		auto pCxbxVertexShader = GetCxbxVertexShader(Handle);
-		if (pCxbxVertexShader == nullptr) {
-			LOG_TEST_CASE("Shader handle has not been created");
-		}
-		else {
-			// Set the shader handle declaration
-			SetCxbxVertexDeclaration(pCxbxVertexShader->Declaration);
-		}
+	if (Handle) {
+		if (!VshHandleIsVertexShader(Handle))
+			LOG_TEST_CASE("Non-zero handle must be a VertexShader!");
+
+#ifdef CXBX_USE_GLOBAL_VERTEXSHADER_POINTER
+		g_Xbox_VertexShader_Ptr = VshHandleToXboxVertexShader(Handle);
+#endif
+		g_Xbox_VertexShader_Handle = Handle;
+		g_Xbox_VertexShader_IsFixedFunction = false;
+		g_Xbox_VertexShader_IsPassthrough = false;
 	}
-
-	SetVertexShaderFromSlots();
 }
 
 void CxbxImpl_LoadVertexShaderProgram(CONST DWORD* pFunction, DWORD Address)
 {
+	// pFunction is a X_VSH_SHADER_HEADER pointer
 	// D3DDevice_LoadVertexShaderProgram splits the given function buffer into batch-wise pushes to the NV2A
+	// However, we can suffice by copying the program into our slots (and make sure these slots get converted into a vertex shader)
 
 	// Copy shader instructions to shader slots
-	auto CxbxVertexShaderSlotPtr = GetCxbxVertexShaderSlotPtr(Address);
-	if (CxbxVertexShaderSlotPtr == nullptr)
-		return;
-
 	auto shaderHeader = *((xbox::X_VSH_SHADER_HEADER*) pFunction);
-	auto tokens = &pFunction[1];
-	memcpy(CxbxVertexShaderSlotPtr, tokens, shaderHeader.NumInst * X_VSH_INSTRUCTION_SIZE_BYTES);
+	if (shaderHeader.Version != VERSION_XVS)
+		LOG_TEST_CASE("Non-regular (state or read/write) shader detected!");
 
-	SetVertexShaderFromSlots();
+	auto tokens = (DWORD*)&pFunction[1];
+	CxbxSetVertexShaderSlots(tokens, Address, shaderHeader.NumInst);
 }
 
 void CxbxImpl_LoadVertexShader(DWORD Handle, DWORD Address)
@@ -1431,36 +1344,56 @@ void CxbxImpl_LoadVertexShader(DWORD Handle, DWORD Address)
 	// Handle is always address of an X_D3DVertexShader struct, thus always or-ed with 1 (X_D3DFVF_RESERVED0)
 	// Address is the slot (offset) from which the program must be written onwards (as whole DWORDS)
 	// D3DDevice_LoadVertexShader pushes the program contained in the Xbox VertexShader struct to the NV2A
-	auto CxbxVertexShaderSlotPtr = GetCxbxVertexShaderSlotPtr(Address);
-	if (CxbxVertexShaderSlotPtr) {
-		CxbxVertexShader* pCxbxVertexShader = GetCxbxVertexShader(Handle);
-		if (pCxbxVertexShader) {
-			// Make sure there is a shader function to load
-			// from the shader handle
-			if (pCxbxVertexShader->pXboxFunctionCopy == nullptr) {
-				LOG_TEST_CASE("LoadVertexShader with FVF shader handle");
-				return;
-			}
 
-			int upToSlot = Address + pCxbxVertexShader->XboxNrAddressSlots;
-			if (upToSlot > X_VSH_MAX_INSTRUCTION_COUNT) {
-				LOG_TEST_CASE("Shader does not fit in vertex shader slots");
-				return;
-			}
+	xbox::X_D3DVertexShader* pXboxVertexShader = VshHandleToXboxVertexShader(Handle);
 
-			// Skip the header DWORD at the beginning
-			auto pTokens = &pCxbxVertexShader->pXboxFunctionCopy[1];
-			memcpy(CxbxVertexShaderSlotPtr, pTokens, pCxbxVertexShader->XboxNrAddressSlots * X_VSH_INSTRUCTION_SIZE_BYTES);
+	DWORD NrTokens;
+	DWORD* pNV2ATokens = CxbxGetVertexShaderTokens(pXboxVertexShader, &NrTokens);
+
+#if 1 // TODO : Remove dirty hack (?once CreateVertexShader trampolines to Xbox code that sets ProgramAndConstantsDwords correctly?) :
+	if (NrTokens == 0)
+		NrTokens = 10000;
+#endif
+
+	static unsigned ConstantAddress = 0;
+	DWORD* pEnd = pNV2ATokens + NrTokens;
+	while (pNV2ATokens < pEnd) {
+		DWORD dwMethod, dwSubChannel, nrDWORDS;
+		D3DPUSH_DECODE(*pNV2ATokens++, dwMethod, dwSubChannel, nrDWORDS);
+		if (nrDWORDS == 0) { LOG_TEST_CASE("Zero-length NV2A method detected!"); break; }
+		switch (dwMethod) {
+		case NV2A_VP_UPLOAD_INST(0): { // = 0x00000B00
+			if ((nrDWORDS & 3) != 0) LOG_TEST_CASE("NV2A_VP_UPLOAD_INST arguments should be a multiple of 4!");
+			unsigned nrSlots = nrDWORDS / X_VSH_INSTRUCTION_SIZE;
+			CxbxSetVertexShaderSlots(pNV2ATokens, Address, nrSlots);
+			Address += nrSlots;
+			break;
 		}
-		else {
-			LOG_TEST_CASE("LoadVertexShader called with unrecognized handle"); // FIXME  : extend with value (once supported by LOG_TEST_CASE)
+		case NV2A_VP_UPLOAD_CONST_ID: // = 0x00001EA4
+			if (nrDWORDS != 1) LOG_TEST_CASE("NV2A_VP_UPLOAD_CONST_ID should have one argument!");
+			ConstantAddress = *pNV2ATokens;
+			break;
+		case NV2A_VP_UPLOAD_CONST(0): { // = 0x00000B80
+			if ((nrDWORDS & 3) != 0) LOG_TEST_CASE("NV2A_VP_UPLOAD_CONST arguments should be a multiple of 4!");
+			unsigned nrConstants = nrDWORDS / X_VSH_INSTRUCTION_SIZE;
+			// TODO : FIXME : Implement and call SetVertexShaderConstants(pNV2ATokens, ConstantAddress, nrConstants);
+			ConstantAddress += nrConstants;
+			break;
 		}
+		default:
+			// TODO : Remove this break-out hack once NrTokens is reliable and instead have: DEFAULT_UNREACHABLE;
+			LOG_TEST_CASE("Stopping at unexpected NV2A method");
+			pEnd = pNV2ATokens;
+			break;
+		}
+
+		pNV2ATokens += nrDWORDS;
 	}
 }
 
 void CxbxImpl_SetVertexShader(DWORD Handle)
 {
-	LOG_INIT // Allows use of DEBUG_D3DRESULT
+	LOG_INIT; // Allows use of DEBUG_D3DRESULT
 
 	// Checks if the Handle has bit 0 set - if not, it's a FVF
 	// which is converted to a global Xbox Vertex Shader struct
@@ -1473,209 +1406,126 @@ void CxbxImpl_SetVertexShader(DWORD Handle)
 
 	HRESULT hRet = D3D_OK;
 
-	g_Xbox_VertexShader_Handle = Handle;
-
-	if (VshHandleIsVertexShader(Handle)) {
-		CxbxVertexShader* pCxbxVertexShader = GetCxbxVertexShader(Handle);
-		if (pCxbxVertexShader) {
-			SetCxbxVertexShaderHandle(pCxbxVertexShader);
-
-			// If the shader handle has a shader function
-			// copy it to the shader slots
-			if (pCxbxVertexShader->pXboxFunctionCopy != nullptr) {
-				g_CxbxVertexShaderSlotAddress = 0;
-				auto CxbxVertexShaderSlotPtr = GetCxbxVertexShaderSlotPtr(g_CxbxVertexShaderSlotAddress);
-				if (CxbxVertexShaderSlotPtr) {
-					// Skip the header DWORD at the beginning
-					auto pTokens = &pCxbxVertexShader->pXboxFunctionCopy[1];
-					memcpy(CxbxVertexShaderSlotPtr, pTokens, pCxbxVertexShader->XboxNrAddressSlots * X_VSH_INSTRUCTION_SIZE_BYTES);
-				}
-			}
+	xbox::X_D3DVertexShader* pXboxVertexShader = CxbxGetXboxVertexShaderForHandle(Handle);
+	g_Xbox_VertexShader_IsPassthrough = false;
+	if (pXboxVertexShader->Flags & X_VERTEXSHADER_FLAG_PROGRAM) {
+#if 0 // Since the D3DDevice_SetVertexShader patch already called it's trampoline, these calls have already been executed :
+		CxbxImpl_LoadVertexShader(Handle, 0);
+		CxbxImpl_SelectVertexShader(Handle, 0);
+#else // So let's check if that indeed happened :
+		bool bHackCallSelectAgain = false;
+		if (g_Xbox_VertexShader_Handle != Handle) {
+			LOG_TEST_CASE("g_Xbox_VertexShader_Handle != Handle");
+			bHackCallSelectAgain = true;
 		}
-		else {
-			EmuLog(LOG_LEVEL::DEBUG, "SetVertexShader with shader handle that has not been created");
+		if (g_Xbox_VertexShader_FunctionSlots_StartAddress != 0) {
+			LOG_TEST_CASE("g_Xbox_VertexShader_FunctionSlots_StartAddress != 0");
+			bHackCallSelectAgain = true;
 		}
-	}
-	else {
-		hRet = g_pD3DDevice->SetVertexShader(nullptr);
-		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetVertexShader");
-		hRet = g_pD3DDevice->SetFVF(Handle);
-		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetFVF");
-	}
-}
+		if (g_Xbox_VertexShader_IsFixedFunction != false) {
+			LOG_TEST_CASE("g_Xbox_VertexShader_IsFixedFunction != false");
+			bHackCallSelectAgain = true;
+		}
 
-HRESULT CxbxImpl_CreateVertexShader(CONST DWORD *pDeclaration, CONST DWORD *pFunction, DWORD *pHandle, DWORD Usage)
-{
-	LOG_INIT // Allows use of DEBUG_D3DRESULT
-
-	HRESULT hRet = D3D_OK;
-
-	if (g_pD3DDevice == nullptr) {
-		LOG_TEST_CASE("D3DDevice_CreateVertexShader called before Direct3D_CreateDevice");
-		// We lie to allow the game to continue for now, but it probably won't work well
-		return 0; // == xbox::status_success
-	}
-
-	// HACK: TODO: support this situation
-	if (pDeclaration == nullptr) {
-		LOG_TEST_CASE("Vertex shader without declaration");
-		*pHandle = xbox::zero;
-		return D3D_OK;
-	}
-
-	// Now, we can create the host vertex shader
-	DWORD             XboxDeclarationCount = 0;
-	CxbxVertexShader* pCxbxVertexShader = (CxbxVertexShader*)calloc(1, sizeof(CxbxVertexShader));
-	D3DVERTEXELEMENT* pRecompiledDeclaration = nullptr;
-
-	pRecompiledDeclaration = EmuRecompileVshDeclaration((DWORD*)pDeclaration,
-		/*bIsFixedFunction=*/pFunction == xbox::zeroptr,
-		&XboxDeclarationCount,
-		&pCxbxVertexShader->Declaration);
-
-	// Create the vertex declaration
-	hRet = g_pD3DDevice->CreateVertexDeclaration(pRecompiledDeclaration, &pCxbxVertexShader->Declaration.pHostVertexDeclaration);
-	free(pRecompiledDeclaration);
-
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateVertexDeclaration");
-
-	if (FAILED(hRet)) {
-		// NOTE: This is a fatal error because it ALWAYS triggers a crash within DrawVertices if not set
-		CxbxKrnlCleanup("Failed to create Vertex Declaration");
-	}
-#if 0 // Creating a vertex shader doesn't imply activating it!
-	hRet = g_pD3DDevice->SetVertexDeclaration(pCxbxVertexShader->Declaration.pHostVertexDeclaration);
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetVertexDeclaration");
-	if (FAILED(hRet)) {
-		CxbxKrnlCleanup("Failed to set Vertex Declaration");
-	}
+		if (bHackCallSelectAgain) {
+			// If any of the above test-cases was hit, perhaps our patch on
+			// _SelectVertexShader isn't applied;
+			// 'solve' that by calling it here instead.
+			CxbxImpl_SelectVertexShader(Handle, 0);
+			g_Xbox_VertexShader_IsFixedFunction = false;
+		}
 #endif
+	} else {
+		// A shader without a program won't call LoadVertexShader nor SelectVertexShader
+		// 
+#ifdef CXBX_USE_GLOBAL_VERTEXSHADER_POINTER
+		g_Xbox_VertexShader_Ptr = pXboxVertexShader;
+#endif
+		g_Xbox_VertexShader_Handle = Handle;
+		g_Xbox_VertexShader_FunctionSlots_StartAddress = 0;
 
-	// Set handle declaration properties
-	pCxbxVertexShader->Declaration.pXboxDeclarationCopy = (DWORD*)malloc(XboxDeclarationCount * sizeof(DWORD));
-	memcpy(pCxbxVertexShader->Declaration.pXboxDeclarationCopy, pDeclaration, XboxDeclarationCount * sizeof(DWORD));
-	pCxbxVertexShader->Declaration.XboxDeclarationCount = XboxDeclarationCount;
-
-	if (pFunction != xbox::zeroptr)
-	{
-		// Parse and compile the shader
-		DWORD xboxFunctionSize = 0;
-		pCxbxVertexShader->VertexShaderKey = g_VertexShaderSource.CreateShader(pFunction, &xboxFunctionSize);
-
-		// Set handle shader function properties
-		pCxbxVertexShader->XboxFunctionSize = xboxFunctionSize;
-		pCxbxVertexShader->pXboxFunctionCopy = (DWORD*)malloc(xboxFunctionSize);
-		memcpy(pCxbxVertexShader->pXboxFunctionCopy, pFunction, xboxFunctionSize);
-		pCxbxVertexShader->XboxNrAddressSlots = (xboxFunctionSize - sizeof(xbox::X_VSH_SHADER_HEADER)) / X_VSH_INSTRUCTION_SIZE_BYTES;
-		pCxbxVertexShader->XboxVertexShaderType = X_VST_NORMAL; // TODO : This can vary
-	}
-
-	// Save the status, to remove things later
-	// pCxbxVertexShader->XboxStatus = hRet; // Not even used by VshHandleIsValidShader()
-
-	RegisterCxbxVertexShader(*pHandle, pCxbxVertexShader);
-
-	if (FAILED(hRet))
-	{
-#ifdef _DEBUG_TRACK_VS
-		if (pFunction)
-		{
-			char pFileName[30];
-			static int FailedShaderCount = 0;
-			xbox::X_VSH_SHADER_HEADER* pHeader = (xbox::X_VSH_SHADER_HEADER*)pFunction;
-			EmuLog(LOG_LEVEL::WARNING, "Couldn't create vertex shader!");
-			sprintf(pFileName, "failed%05d.xvu", FailedShaderCount);
-			FILE* f = fopen(pFileName, "wb");
-			if (f)
-			{
-				fwrite(pFunction, sizeof(xbox::X_VSH_SHADER_HEADER) + pHeader->NumInst * 16, 1, f);
-				fclose(f);
-			}
-			FailedShaderCount++;
+		// Only when there's no program, set default values for attributes missing from vertex shader
+		// Note : We avoid calling CxbxImpl_SetVertexData4f here, as that would
+		// start populating g_InlineVertexBuffer_Table, which is not our intend here.
+		if (!(pXboxVertexShader->Flags & X_VERTEXSHADER_FLAG_HASDIFFUSE)) {
+			CxbxSetVertexAttribute(xbox::X_D3DVSDE_DIFFUSE, 1, 1, 1, 1);
 		}
-#endif // _DEBUG_TRACK_VS
-		//hRet = D3D_OK;
-	}
+		if (!(pXboxVertexShader->Flags & X_VERTEXSHADER_FLAG_HASSPECULAR)) {
+			CxbxSetVertexAttribute(xbox::X_D3DVSDE_SPECULAR, 0, 0, 0, 0);
+		}
+		if (!(pXboxVertexShader->Flags & X_VERTEXSHADER_FLAG_HASBACKDIFFUSE)) {
+			CxbxSetVertexAttribute(xbox::X_D3DVSDE_BACKDIFFUSE, 1, 1, 1, 1);
+		}
+		if (!(pXboxVertexShader->Flags & X_VERTEXSHADER_FLAG_HASBACKSPECULAR)) {
+			CxbxSetVertexAttribute(xbox::X_D3DVSDE_BACKSPECULAR, 0, 0, 0, 0);
+		}
 
-	return hRet;
+		// Switch to passthrough program, if so required
+		if (pXboxVertexShader->Flags & X_VERTEXSHADER_FLAG_PASSTHROUGH) {
+			CxbxSetVertexShaderPassthroughProgram();
+			g_Xbox_VertexShader_IsFixedFunction = false;
+			g_Xbox_VertexShader_IsPassthrough = true;
+		} else if (pXboxVertexShader->Flags & X_VERTEXSHADER_FLAG_UNKNOWN) {
+			// Test-case : Amped
+			LOG_TEST_CASE("unknown vertex shader flag (4)");
+		} else {
+			// Test-case : Many XDK samples, Crazy taxi 3
+			//LOG_TEST_CASE("Other or no vertex shader flags");
+			g_Xbox_VertexShader_IsFixedFunction = true;
+		}
+	}
 }
 
 void CxbxImpl_DeleteVertexShader(DWORD Handle)
 {
-	LOG_INIT // Allows use of DEBUG_D3DRESULT
+	LOG_INIT; // Allows use of DEBUG_D3DRESULT
 
 	// Handle is always address of an Xbox VertexShader struct, or-ed with 1 (X_D3DFVF_RESERVED0)
 	// It's reference count is lowered. If it reaches zero (0), the struct is freed.
 
-	if (VshHandleIsVertexShader(Handle))
-	{
-		CxbxVertexShader* pCxbxVertexShader = GetCxbxVertexShader(Handle); // Fetch from cache
-		if (pCxbxVertexShader == nullptr) {
-			return; // Avoid crash if no shader was cached yet
-		}
-
-		RegisterCxbxVertexShader(Handle, nullptr); // Remove from cache
-
-		if (pCxbxVertexShader->Declaration.pHostVertexDeclaration) {
-			HRESULT hRet = pCxbxVertexShader->Declaration.pHostVertexDeclaration->Release();
-			DEBUG_D3DRESULT(hRet, "g_pD3DDevice->DeleteVertexShader(pHostVertexDeclaration)");
-		}
-
-		// Release the host vertex shader
-		g_VertexShaderSource.ReleaseShader(pCxbxVertexShader->VertexShaderKey);
-
-		if (pCxbxVertexShader->Declaration.pXboxDeclarationCopy)
-		{
-			free(pCxbxVertexShader->Declaration.pXboxDeclarationCopy);
-		}
-
-		if (pCxbxVertexShader->pXboxFunctionCopy)
-		{
-			free(pCxbxVertexShader->pXboxFunctionCopy);
-		}
-
-		FreeVertexDynamicPatch(pCxbxVertexShader);
-
-		free(pCxbxVertexShader);
+	xbox::X_D3DVertexShader* pXboxVertexShader = VshHandleToXboxVertexShader(Handle);
+	if (pXboxVertexShader == nullptr) {
+		return;
 	}
+
+	if (pXboxVertexShader->RefCount > 1) {
+		return;
+	}
+
+#if 0 // TODO : Decide and implement what parts to free
+	RegisterCxbxVertexDeclaration(pCxbxVertexDeclaration->Key, nullptr); // Remove from cache (which will free present pCxbxVertexDeclaration)
+
+	// Release the host vertex shader
+	g_VertexShaderSource.ReleaseShader(pCxbxVertexShader->Key);
+#endif
 }
 
+// TODO : Remove SetVertexShaderConstant implementation and the patch once
+// CxbxUpdateHostVertexShaderConstants is reliable (ie. : when we're able to flush the NV2A push buffer)
 void CxbxImpl_SetVertexShaderConstant(INT Register, PVOID pConstantData, DWORD ConstantCount)
 {
-	LOG_INIT // Allows use of DEBUG_D3DRESULT
+	LOG_INIT; // Allows use of DEBUG_D3DRESULT
 
-/*#ifdef _DEBUG_TRACK_VS_CONST
-	for (uint32_t i = 0; i < ConstantCount; i++)
-	{
-		printf("SetVertexShaderConstant, c%d  = { %f, %f, %f, %f }\n",
-			   Register + i,
-			   *((float*)pConstantData + 4 * i),
-			   *((float*)pConstantData + 4 * i + 1),
-			   *((float*)pConstantData + 4 * i + 2),
-			   *((float*)pConstantData + 4 * i + 3));
-	}
-#endif*/ // _DEBUG_TRACK_VS_CONST
-
-// Xbox vertex shader constants range from -96 to 95
-// The host does not support negative, so we adjust to 0..191
+	// Xbox vertex shader constants range from -96 to 95
+	// The host does not support negative, so we adjust to 0..191
 	Register += X_D3DSCM_CORRECTION;
 
 	if (Register < 0) LOG_TEST_CASE("Register < 0");
 	if (Register + ConstantCount > X_D3DVS_CONSTREG_COUNT) LOG_TEST_CASE("Register + ConstantCount > X_D3DVS_CONSTREG_COUNT");
-	HRESULT hRet;
-	hRet = g_pD3DDevice->SetVertexShaderConstantF(
-		Register,
-		(float*)pConstantData,
-		ConstantCount
-	);
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetVertexShaderConstant");
 
-	if (FAILED(hRet))
-	{
-		EmuLog(LOG_LEVEL::WARNING, "We're lying about setting a vertex shader constant!");
-		hRet = D3D_OK;
+	// Write Vertex Shader constants in nv2a
+	extern float* HLE_get_NV2A_vertex_constant_float4_ptr(unsigned const_index); // TMP glue
+	float* constant_floats = HLE_get_NV2A_vertex_constant_float4_ptr(Register);
+	memcpy(constant_floats, pConstantData, ConstantCount * sizeof(float) * 4);
+
+	// Mark the constant as dirty, so that CxbxUpdateHostVertexShaderConstants will pick it up
+	extern NV2ADevice* g_NV2A; // TMP glue
+	auto nv2a = g_NV2A->GetDeviceState();
+	for (DWORD i = 0; i < ConstantCount; i++) {
+		nv2a->pgraph.vsh_constants_dirty[Register + i] = true;
 	}
 }
+
 // parse xbox vertex shader function into an intermediate format
 extern void EmuParseVshFunction
 (
@@ -1704,6 +1554,8 @@ extern void EmuParseVshFunction
 		pShader->Header.NumInst = (uint16_t)pShader->Instructions.size();
 
 		// Decode until we hit a token marked final
+		// Note : CxbxSetVertexShaderSlots makes sure this always stops
+		// after X_VSH_MAX_INSTRUCTION_COUNT, by setting FLD_FINAL in there.
 		while (VshDecoder.VshConvertToIntermediate(pCurToken, pShader)) {
 			pCurToken += X_VSH_INSTRUCTION_SIZE;
 		}

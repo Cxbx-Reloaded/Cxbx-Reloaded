@@ -34,7 +34,7 @@
 #include "core\hle\D3D8\Direct3D9\Direct3D9.h" // For g_pD3DDevice
 #include "core\hle\D3D8\Direct3D9\WalkIndexBuffer.h" // for WalkIndexBuffer
 #include "core\hle\D3D8\ResourceTracker.h"
-#include "core\hle\D3D8\XbPushBuffer.h" // for DxbxFVF_GetNumberOfTextureCoordinates
+#include "core\hle\D3D8\XbPushBuffer.h" // For CxbxDrawPrimitiveUP
 #include "core\hle\D3D8\XbVertexBuffer.h"
 #include "core\hle\D3D8\XbConvert.h"
 
@@ -45,16 +45,15 @@
 #define MAX_STREAM_NOT_USED_TIME (2 * CLOCKS_PER_SEC) // TODO: Trim the not used time
 
 // Inline vertex buffer emulation
-extern xbox::X_D3DPRIMITIVETYPE g_InlineVertexBuffer_PrimitiveType = xbox::X_D3DPT_INVALID;
-extern DWORD                   g_InlineVertexBuffer_FVF = 0;
-       std::vector<_D3DIVB>    g_InlineVertexBuffer_Table;
-extern UINT                    g_InlineVertexBuffer_TableLength = 0;
-extern UINT                    g_InlineVertexBuffer_TableOffset = 0;
-
-FLOAT *g_InlineVertexBuffer_pData = nullptr;
-UINT   g_InlineVertexBuffer_DataSize = 0;
-
-extern DWORD				g_dwPrimPerFrame = 0;
+xbox::X_D3DPRIMITIVETYPE      g_InlineVertexBuffer_PrimitiveType = xbox::X_D3DPT_INVALID;
+uint32_t                      g_InlineVertexBuffer_WrittenRegisters = 0; // A bitmask, indicating which registers have been set in g_InlineVertexBuffer_Table
+xbox::X_VERTEXATTRIBUTEFORMAT g_InlineVertexBuffer_AttributeFormat = {};
+bool                          g_InlineVertexBuffer_DeclarationOverride = false;
+std::vector<D3DIVB>           g_InlineVertexBuffer_Table;
+UINT                          g_InlineVertexBuffer_TableLength = 0;
+UINT                          g_InlineVertexBuffer_TableOffset = 0;
+FLOAT                        *g_InlineVertexBuffer_pData = nullptr;
+UINT                          g_InlineVertexBuffer_DataSize = 0;
 
 // Copy of active Xbox D3D Vertex Streams (and strides), set by [D3DDevice|CxbxImpl]_SetStreamSource*
 xbox::X_STREAMINPUT g_Xbox_SetStreamSource[X_VSH_MAX_STREAMS] = { 0 }; // Note : .Offset member is never set (so always 0)
@@ -63,29 +62,12 @@ extern xbox::X_D3DSurface* g_pXbox_RenderTarget;
 extern xbox::X_D3DSurface* g_pXbox_BackBufferSurface;
 extern xbox::X_D3DMULTISAMPLE_TYPE g_Xbox_MultiSampleType;
 
+extern float *HLE_get_NV2A_vertex_attribute_value_pointer(unsigned VertexSlot); // Declared in PushBuffer.cpp
+
 void *GetDataFromXboxResource(xbox::X_D3DResource *pXboxResource);
 bool GetHostRenderTargetDimensions(DWORD* pHostWidth, DWORD* pHostHeight, IDirect3DSurface* pHostRenderTarget = nullptr);
 uint32_t GetPixelContainerWidth(xbox::X_D3DPixelContainer* pPixelContainer);
 uint32_t GetPixelContainerHeight(xbox::X_D3DPixelContainer* pPixelContainer);
-void ApplyXboxMultiSampleOffsetAndScale(float& x, float& y);
-
-_D3DIVB::_D3DIVB()
-{
-	Position.x = 0.0f;
-	Position.y = 0.0f;
-	Position.z = 0.0f;
-	Rhw = 0.0f;
-	std::fill(std::begin(Blend), std::end(Blend), 0.0f);
-	Normal.x = 0.0f;
-	Normal.y = 0.0f;
-	Normal.z = 0.0f;
-	Diffuse = 0u;
-	Specular = 0u;
-	Fog = 0.0f;
-	BackDiffuse = 0u;
-	BackSpecular = 0u;
-	std::fill(std::begin(TexCoord), std::end(TexCoord), D3DXVECTOR4{ 0.0f , 0.0f, 0.0f, 0.0f });
-}
 
 struct _D3DIVB &_D3DIVB::operator=(const struct _D3DIVB &Val)
 {
@@ -100,14 +82,16 @@ struct _D3DIVB &_D3DIVB::operator=(const struct _D3DIVB &Val)
 	Diffuse = Val.Diffuse;
 	Specular = Val.Specular;
 	Fog = Val.Fog;
+	PointSize = Val.PointSize;
 	BackDiffuse = Val.BackDiffuse;
 	BackSpecular = Val.BackSpecular;
 	std::copy(std::begin(Val.TexCoord), std::end(Val.TexCoord), std::begin(TexCoord));
+	std::copy(std::begin(Val.Reg13Up), std::end(Val.Reg13Up), std::begin(Reg13Up));
 
 	return *this;
 }
 
-void CxbxPatchedStream::Activate(CxbxDrawContext *pDrawContext, UINT uiStream) const
+void CxbxPatchedStream::Activate(CxbxDrawContext *pDrawContext, UINT HostStreamNumber) const
 {
 	//LOG_INIT // Allows use of DEBUG_D3DRESULT
 
@@ -119,7 +103,7 @@ void CxbxPatchedStream::Activate(CxbxDrawContext *pDrawContext, UINT uiStream) c
 	}
 	else {
 		HRESULT hRet = g_pD3DDevice->SetStreamSource(
-			uiStream, 
+			HostStreamNumber,
 			pCachedHostVertexBuffer, 
 			0, // OffsetInBytes
 			uiCachedHostVertexStride);
@@ -136,7 +120,7 @@ CxbxPatchedStream::CxbxPatchedStream()
     isValid = false;
 }
 
-CxbxPatchedStream::~CxbxPatchedStream()
+void CxbxPatchedStream::Clear()
 {
     if (bCachedHostVertexStreamZeroDataIsAllocated) {
         free(pCachedHostVertexStreamZeroData);
@@ -151,25 +135,29 @@ CxbxPatchedStream::~CxbxPatchedStream()
     }
 }
 
+CxbxPatchedStream::~CxbxPatchedStream()
+{
+	Clear();
+}
+
 CxbxVertexBufferConverter::CxbxVertexBufferConverter()
 {
     m_uiNbrStreams = 0;
     m_pCxbxVertexDeclaration = nullptr;
 }
 
+// TODO: CountActiveD3DStreams must be removed once we can rely on CxbxGetVertexDeclaration always being set
 int CountActiveD3DStreams()
 {
-	int lastStreamIndex = 0;
-	for (int i = 0; i < X_VSH_MAX_STREAMS; i++) {
-		if (g_Xbox_SetStreamSource[i].VertexBuffer != xbox::zeroptr) {
-			lastStreamIndex = i + 1;
+	int StreamCount = 0;
+	for (int XboxStreamNumber = 0; XboxStreamNumber < X_VSH_MAX_STREAMS; XboxStreamNumber++) {
+		if (GetXboxVertexStreamInput(XboxStreamNumber).VertexBuffer != xbox::zeroptr) {
+			StreamCount++;
 		}
 	}
 
-	return lastStreamIndex;
+	return StreamCount;
 }
-
-CxbxVertexDeclaration *GetCxbxVertexDeclaration(DWORD XboxVertexShaderHandle); // forward
 
 UINT CxbxVertexBufferConverter::GetNbrStreams(CxbxDrawContext *pDrawContext)
 {
@@ -178,20 +166,12 @@ UINT CxbxVertexBufferConverter::GetNbrStreams(CxbxDrawContext *pDrawContext)
 		return 1;
 	}
 
-    if(VshHandleIsVertexShader(g_Xbox_VertexShader_Handle)) {
-        CxbxVertexDeclaration *pDecl = GetCxbxVertexDeclaration(g_Xbox_VertexShader_Handle);
-		if (pDecl) {
-			if (pDecl->NumberOfVertexStreams <= X_VSH_MAX_STREAMS) {
-				return pDecl->NumberOfVertexStreams;
-			}
-
-			// If we reached here, pDecl was set,but with invalid data
-			LOG_TEST_CASE("NumberOfVertexStreams > 16");
-		}
-
-		return CountActiveD3DStreams();
+	CxbxVertexDeclaration *pDecl = CxbxGetVertexDeclaration();
+	if (pDecl) {
+		return pDecl->NumberOfVertexStreams;
     } 
 	
+	// TODO: This code and CountActiveD3DStreams must be removed once we can rely on CxbxGetVertexDeclaration always being set
 	if (g_Xbox_VertexShader_Handle) {
 		return CountActiveD3DStreams();
     }
@@ -261,60 +241,24 @@ void CxbxVertexBufferConverter::ConvertStream
 )
 {
 	extern D3DCAPS g_D3DCaps;
-
-	bool bVshHandleIsFVF = VshHandleIsFVF(g_Xbox_VertexShader_Handle);
-	DWORD XboxFVF = bVshHandleIsFVF ? g_Xbox_VertexShader_Handle : 0;
-	// Texture normalization can only be set for FVF shaders
-	bool bNeedTextureNormalization = false;
-	struct { int NrTexCoords; bool bTexIsLinear; int Width; int Height; int Depth; } pActivePixelContainer[xbox::X_D3DTS_STAGECOUNT] = { 0 };
-
-	if (bVshHandleIsFVF) {
-		DWORD dwTexN = (XboxFVF & D3DFVF_TEXCOUNT_MASK) >> D3DFVF_TEXCOUNT_SHIFT;
-		if (dwTexN > xbox::X_D3DTS_STAGECOUNT) {
-			LOG_TEST_CASE("FVF,dwTexN > X_D3DTS_STAGECOUNT");
-		}
-
-		// Check for active linear textures.
 		//X_D3DBaseTexture *pLinearBaseTexture[xbox::X_D3DTS_STAGECOUNT];
-		for (unsigned int i = 0; i < xbox::X_D3DTS_STAGECOUNT; i++) {
-			// Only normalize coordinates used by the FVF shader :
-			if (i + 1 <= dwTexN) {
-				pActivePixelContainer[i].NrTexCoords = DxbxFVF_GetNumberOfTextureCoordinates(XboxFVF, i);
-				// TODO : Use GetXboxBaseTexture()
-				xbox::X_D3DBaseTexture *pXboxBaseTexture = g_pXbox_SetTexture[i];
-				if (pXboxBaseTexture != xbox::zeroptr) {
-					extern xbox::X_D3DFORMAT GetXboxPixelContainerFormat(const xbox::X_D3DPixelContainer *pXboxPixelContainer); // TODO : Move to XTL-independent header file
-
-					xbox::X_D3DFORMAT XboxFormat = GetXboxPixelContainerFormat(pXboxBaseTexture);
-					if (EmuXBFormatIsLinear(XboxFormat)) {
-						// This is often hit by the help screen in XDK samples.
-						bNeedTextureNormalization = true;
-						// Remember linearity, width and height :
-						pActivePixelContainer[i].bTexIsLinear = true;
-						// TODO : Use DecodeD3DSize or GetPixelContainerWidth + GetPixelContainerHeight
-						pActivePixelContainer[i].Width = (pXboxBaseTexture->Size & X_D3DSIZE_WIDTH_MASK) + 1;
-						pActivePixelContainer[i].Height = ((pXboxBaseTexture->Size & X_D3DSIZE_HEIGHT_MASK) >> X_D3DSIZE_HEIGHT_SHIFT) + 1;
-						// TODO : Support 3D textures
-					}
-				}
-			}
-		}
-	}
 
 	CxbxVertexShaderStreamInfo *pVertexShaderStreamInfo = nullptr;
+	UINT XboxStreamNumber = uiStream;
 	if (m_pCxbxVertexDeclaration != nullptr) {
-		if (uiStream > m_pCxbxVertexDeclaration->NumberOfVertexStreams + 1) {
+		if (uiStream > m_pCxbxVertexDeclaration->NumberOfVertexStreams) {
 			LOG_TEST_CASE("uiStream > NumberOfVertexStreams");
 			return;
 		}
 
 		pVertexShaderStreamInfo = &(m_pCxbxVertexDeclaration->VertexStreams[uiStream]);
+		XboxStreamNumber = pVertexShaderStreamInfo->XboxStreamIndex;
 	}
 
 	bool bNeedVertexPatching = (pVertexShaderStreamInfo != nullptr && pVertexShaderStreamInfo->NeedPatch);
-	bool bNeedRHWReset = bVshHandleIsFVF && ((XboxFVF & D3DFVF_POSITION_MASK) == D3DFVF_XYZRHW);
-	bool bNeedStreamCopy = bNeedTextureNormalization || bNeedVertexPatching || bNeedRHWReset;
+	bool bNeedStreamCopy = bNeedVertexPatching;
 
+	UINT HostStreamNumber = XboxStreamNumber; // Use Xbox stream index on host
 	uint8_t *pXboxVertexData = xbox::zeroptr;
 	UINT uiXboxVertexStride = 0;
 	UINT uiVertexCount = 0;
@@ -325,7 +269,7 @@ void CxbxVertexBufferConverter::ConvertStream
 
     if (pDrawContext->pXboxVertexStreamZeroData != xbox::zeroptr) {
 		// There should only be one stream (stream zero) in this case
-		if (uiStream != 0) {
+		if (XboxStreamNumber != 0) {
 			CxbxKrnlCleanup("Trying to patch a Draw..UP with more than stream zero!");
 		}
 
@@ -335,23 +279,24 @@ void CxbxVertexBufferConverter::ConvertStream
 		uiHostVertexStride = (bNeedVertexPatching) ? pVertexShaderStreamInfo->HostVertexStride : uiXboxVertexStride;
 		dwHostVertexDataSize = uiVertexCount * uiHostVertexStride;
 	} else {
-		xbox::X_D3DVertexBuffer *pXboxVertexBuffer = g_Xbox_SetStreamSource[uiStream].VertexBuffer;
+		xbox::X_STREAMINPUT& XboxStreamInput = GetXboxVertexStreamInput(XboxStreamNumber);
+		xbox::X_D3DVertexBuffer *pXboxVertexBuffer = XboxStreamInput.VertexBuffer;
         pXboxVertexData = (uint8_t*)GetDataFromXboxResource(pXboxVertexBuffer);
 		if (pXboxVertexData == xbox::zeroptr) {
 			HRESULT hRet = g_pD3DDevice->SetStreamSource(
-				uiStream, 
+				HostStreamNumber,
 				nullptr, 
 				0, // OffsetInBytes
 				0);
 //			DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetStreamSource");
 			if (FAILED(hRet)) {
-				EmuLog(LOG_LEVEL::WARNING, "g_pD3DDevice->SetStreamSource(uiStream, nullptr, 0)");
+				EmuLog(LOG_LEVEL::WARNING, "g_pD3DDevice->SetStreamSource(HostStreamNumber, nullptr, 0)");
 			}
 
 			return;
 		}
 
-		uiXboxVertexStride = g_Xbox_SetStreamSource[uiStream].Stride;
+		uiXboxVertexStride = XboxStreamInput.Stride;
         // Set a new (exact) vertex count
 		uiVertexCount = pDrawContext->VerticesInBuffer;
 		// Dxbx note : Don't overwrite pDrawContext.dwVertexCount with uiVertexCount, because an indexed draw
@@ -376,7 +321,7 @@ void CxbxVertexBufferConverter::ConvertStream
         stream.uiCachedHostVertexStride = uiHostVertexStride;
         stream.bCacheIsStreamZeroDrawUP = true;
         stream.pCachedHostVertexStreamZeroData = pHostVertexData;
-        stream.Activate(pDrawContext, uiStream);
+        stream.Activate(pDrawContext, HostStreamNumber);
         return;
     }
 
@@ -400,26 +345,17 @@ void CxbxVertexBufferConverter::ConvertStream
         patchedStream.uiCachedXboxVertexStride == uiXboxVertexStride && // Make sure the Xbox Stride didn't change
         patchedStream.uiCachedXboxVertexDataSize == xboxVertexDataSize ) { // Make sure the Xbox Data Size also didn't change
         m_TotalCacheHits++;
-        patchedStream.Activate(pDrawContext, uiStream);
+        patchedStream.Activate(pDrawContext, HostStreamNumber);
         return;
     }
 
     m_TotalCacheMisses++;
 
     // If execution reaches here, the cached vertex buffer was not valid and we must reconvert the data
-    if (patchedStream.isValid) {
-        pHostVertexData = (uint8_t*)patchedStream.pCachedHostVertexStreamZeroData;
-        pNewHostVertexBuffer = patchedStream.pCachedHostVertexBuffer;
-
-        // Free the existing buffers
-        if (pHostVertexData != nullptr) {
-            free(pHostVertexData);
-            pHostVertexData = nullptr;
-        } else if (pNewHostVertexBuffer != nullptr) {
-            pNewHostVertexBuffer->Release();
-            pNewHostVertexBuffer = nullptr;
-        }
-    }
+    // Free the existing buffers
+	patchedStream.Clear();
+    assert(pHostVertexData == nullptr);
+	assert(pNewHostVertexBuffer == nullptr);
 
 	// If dwHostVertexDataSize is zero, the allocation/creation will fail
 	// This can be caused by a stride of 0, and 'other' invalid configurations
@@ -478,9 +414,7 @@ void CxbxVertexBufferConverter::ConvertStream
 						// Make it SHORT2N
 						pHostVertexAsShort[0] = pXboxVertexAsShort[0];
 						pHostVertexAsShort[1] = 0;
-					}
-					else
-					{
+					} else {
 						// Make it FLOAT1
 						pHostVertexAsFloat[0] = NormShortToFloat(pXboxVertexAsShort[0]);
 						//pHostVertexAsFloat[1] = 0.0f; // Would be needed for FLOAT2
@@ -496,9 +430,7 @@ void CxbxVertexBufferConverter::ConvertStream
 						// Make it SHORT2N
 						pHostVertexAsShort[0] = pXboxVertexAsShort[0];
 						pHostVertexAsShort[1] = pXboxVertexAsShort[1];
-					}
-					else
-					{
+					} else {
 						// Make it FLOAT2
 						pHostVertexAsFloat[0] = NormShortToFloat(pXboxVertexAsShort[0]);
 						pHostVertexAsFloat[1] = NormShortToFloat(pXboxVertexAsShort[1]);
@@ -513,9 +445,7 @@ void CxbxVertexBufferConverter::ConvertStream
 						pHostVertexAsShort[1] = pXboxVertexAsShort[1];
 						pHostVertexAsShort[2] = pXboxVertexAsShort[2];
 						pHostVertexAsShort[3] = 32767; // TODO : verify
-					}
-					else
-					{
+					} else {
 						// Make it FLOAT3
 						pHostVertexAsFloat[0] = NormShortToFloat(pXboxVertexAsShort[0]);
 						pHostVertexAsFloat[1] = NormShortToFloat(pXboxVertexAsShort[1]);
@@ -534,9 +464,7 @@ void CxbxVertexBufferConverter::ConvertStream
 						pHostVertexAsShort[1] = pXboxVertexAsShort[1];
 						pHostVertexAsShort[2] = pXboxVertexAsShort[2];
 						pHostVertexAsShort[3] = pXboxVertexAsShort[3];
-					}
-					else
-					{
+					} else {
 						// Make it FLOAT4
 						pHostVertexAsFloat[0] = NormShortToFloat(pXboxVertexAsShort[0]);
 						pHostVertexAsFloat[1] = NormShortToFloat(pXboxVertexAsShort[1]);
@@ -586,9 +514,7 @@ void CxbxVertexBufferConverter::ConvertStream
 						pHostVertexAsByte[1] = 0;
 						pHostVertexAsByte[2] = 0;
 						pHostVertexAsByte[3] = 255; // TODO : Verify
-					}
-					else
-					{
+					} else {
 						// Make it FLOAT1
 						pHostVertexAsFloat[0] = ByteToFloat(pXboxVertexAsByte[0]);
 					}
@@ -601,9 +527,7 @@ void CxbxVertexBufferConverter::ConvertStream
 						pHostVertexAsByte[1] = pXboxVertexAsByte[1];
 						pHostVertexAsByte[2] = 0;
 						pHostVertexAsByte[3] = 255; // TODO : Verify
-					}
-					else
-					{
+					} else {
 						// Make it FLOAT2
 						pHostVertexAsFloat[0] = ByteToFloat(pXboxVertexAsByte[0]);
 						pHostVertexAsFloat[1] = ByteToFloat(pXboxVertexAsByte[1]);
@@ -618,9 +542,7 @@ void CxbxVertexBufferConverter::ConvertStream
 						pHostVertexAsByte[1] = pXboxVertexAsByte[1];
 						pHostVertexAsByte[2] = pXboxVertexAsByte[2];
 						pHostVertexAsByte[3] = 255; // TODO : Verify
-					}
-					else
-					{
+					} else {
 						// Make it FLOAT3
 						pHostVertexAsFloat[0] = ByteToFloat(pXboxVertexAsByte[0]);
 						pHostVertexAsFloat[1] = ByteToFloat(pXboxVertexAsByte[1]);
@@ -639,9 +561,7 @@ void CxbxVertexBufferConverter::ConvertStream
 						pHostVertexAsByte[1] = pXboxVertexAsByte[1];
 						pHostVertexAsByte[2] = pXboxVertexAsByte[2];
 						pHostVertexAsByte[3] = pXboxVertexAsByte[3];
-					}
-					else
-					{
+					} else {
 						// Make it FLOAT4
 						pHostVertexAsFloat[0] = ByteToFloat(pXboxVertexAsByte[0]);
 						pHostVertexAsFloat[1] = ByteToFloat(pXboxVertexAsByte[1]);
@@ -685,105 +605,6 @@ void CxbxVertexBufferConverter::ConvertStream
 		}
 	}
 
-	// Xbox FVF shaders are identical to host Direct3D 8.1, however
-	// texture coordinates may need normalization if used with linear textures.
-	if (bNeedTextureNormalization || bNeedRHWReset) {
-		// assert(bVshHandleIsFVF);
-
-		UINT uiTextureCoordinatesByteOffsetInVertex = 0;
-
-		// Locate texture coordinate offset in vertex structure.
-		if (bNeedTextureNormalization) {
-			uiTextureCoordinatesByteOffsetInVertex = DxbxFVFToVertexSizeInBytes(XboxFVF, /*bIncludeTextures=*/false);
-			if (bNeedVertexPatching) {
-				LOG_TEST_CASE("Potential xbox vs host texture-offset difference! (bNeedVertexPatching within bNeedTextureNormalization)");
-			}
-			// As long as vertices aren't resized / patched up until the texture coordinates,
-			// the uiTextureCoordinatesByteOffsetInVertex on host will match Xbox 
-		}
-
-        // If for some reason the Xbox Render Target is not set, fallback to the backbuffer
-        if (g_pXbox_RenderTarget == xbox::zeroptr) {
-            LOG_TEST_CASE("SetRenderTarget fallback to backbuffer");
-            g_pXbox_RenderTarget = g_pXbox_BackBufferSurface;
-        }
-
-		DWORD HostRenderTarget_Width, HostRenderTarget_Height;
-		DWORD XboxRenderTarget_Width = GetPixelContainerWidth(g_pXbox_RenderTarget);
-		DWORD XboxRenderTarget_Height = GetPixelContainerHeight(g_pXbox_RenderTarget);
-		if (!GetHostRenderTargetDimensions(&HostRenderTarget_Width, &HostRenderTarget_Height)) {
-			HostRenderTarget_Width = XboxRenderTarget_Width;
-			HostRenderTarget_Height = XboxRenderTarget_Height;
-		}
-
-		bool bNeedRHWTransform = (g_Xbox_MultiSampleType > xbox::X_D3DMULTISAMPLE_NONE) || (XboxRenderTarget_Width < HostRenderTarget_Width && XboxRenderTarget_Height < HostRenderTarget_Height);
-
-		for (uint32_t uiVertex = 0; uiVertex < uiVertexCount; uiVertex++) {
-			FLOAT *pVertexDataAsFloat = (FLOAT*)(&pHostVertexData[uiVertex * uiHostVertexStride]);
-
-			// Handle pre-transformed vertices (which bypass the vertex shader pipeline)
-			if (bNeedRHWReset) {
-                // We need to transform these vertices only if the host render target was upscaled from the Xbox render target
-                // Transforming always breaks render to non-upscaled textures: Only surfaces are upscaled, intentionally so
-				if (bNeedRHWTransform) {
-					pVertexDataAsFloat[0] *= g_RenderScaleFactor;
-					pVertexDataAsFloat[1] *= g_RenderScaleFactor;
-
-					ApplyXboxMultiSampleOffsetAndScale(pVertexDataAsFloat[0], pVertexDataAsFloat[1]);
-				}
-
-#if 0
-				// Check Z. TODO : Why reset Z from 0.0 to 1.0 ? (Maybe fog-related?)
-				if (pVertexDataAsFloat[2] == 0.0f) {
-					// LOG_TEST_CASE("D3DFVF_XYZRHW (Z)"); // Test-case : Many XDK Samples (AlphaFog, PointSprites)
-					pVertexDataAsFloat[2] = 1.0f;
-				}
-#endif
-#if 1
-				// Check RHW. TODO : Why reset from 0.0 to 1.0 ? (Maybe 1.0 indicates that the vertices are not to be transformed)
-				if (pVertexDataAsFloat[3] == 0.0f) {
-					// LOG_TEST_CASE("D3DFVF_XYZRHW (RHW)"); // Test-case : Many XDK Samples (AlphaFog, PointSprites)
-					pVertexDataAsFloat[3] = 1.0f;
-				}
-#endif
-			}
-
-			// Normalize texture coordinates in FVF stream if needed
-			if (uiTextureCoordinatesByteOffsetInVertex > 0) { // implies bNeedTextureNormalization (using one is more efficient than both)
-				FLOAT *pVertexUVData = (FLOAT*)((uintptr_t)pVertexDataAsFloat + uiTextureCoordinatesByteOffsetInVertex);
-				for (unsigned int i = 0; i < xbox::X_D3DTS_STAGECOUNT; i++) {
-					if (pActivePixelContainer[i].bTexIsLinear) {
-						switch (pActivePixelContainer[i].NrTexCoords) {
-						case 0:
-							LOG_TEST_CASE("Normalize 0D?");
-							break;
-						case 1:
-							LOG_TEST_CASE("Normalize 1D");
-							pVertexUVData[0] /= pActivePixelContainer[i].Width;
-							break;
-						case 2:
-							pVertexUVData[0] /= pActivePixelContainer[i].Width;
-							pVertexUVData[1] /= pActivePixelContainer[i].Height;
-							break;
-						case 3:
-							LOG_TEST_CASE("Normalize 3D");
-							// Test case : HeatShimmer
-							pVertexUVData[0] /= pActivePixelContainer[i].Width;
-							pVertexUVData[1] /= pActivePixelContainer[i].Height;
-							pVertexUVData[2] /= pActivePixelContainer[i].Depth;
-							break;
-						default:
-							LOG_TEST_CASE("Normalize ?D");
-							break;
-						}
-					}
-
-					pVertexUVData += pActivePixelContainer[i].NrTexCoords;
-				}
-			}
-		}
-	}
-
     patchedStream.isValid = true;
     patchedStream.XboxPrimitiveType = pDrawContext->XboxPrimitiveType;
     patchedStream.pCachedXboxVertexData = pXboxVertexData;
@@ -802,7 +623,7 @@ void CxbxVertexBufferConverter::ConvertStream
         patchedStream.pCachedHostVertexBuffer = pNewHostVertexBuffer;
     }
 
-	patchedStream.Activate(pDrawContext, uiStream);
+	patchedStream.Activate(pDrawContext, HostStreamNumber);
 }
 
 void CxbxVertexBufferConverter::Apply(CxbxDrawContext *pDrawContext)
@@ -810,10 +631,7 @@ void CxbxVertexBufferConverter::Apply(CxbxDrawContext *pDrawContext)
 	if ((pDrawContext->XboxPrimitiveType < xbox::X_D3DPT_POINTLIST) || (pDrawContext->XboxPrimitiveType > xbox::X_D3DPT_POLYGON))
 		CxbxKrnlCleanup("Unknown primitive type: 0x%.02X\n", pDrawContext->XboxPrimitiveType);
 
-    m_pCxbxVertexDeclaration = nullptr;
-    if (VshHandleIsVertexShader(g_Xbox_VertexShader_Handle)) {
-        m_pCxbxVertexDeclaration = &(GetCxbxVertexShader(g_Xbox_VertexShader_Handle)->Declaration);
-    }
+	m_pCxbxVertexDeclaration = CxbxGetVertexDeclaration();
 
 	// If we are drawing from an offset, we know that the vertex count must have
 	// 'offset' vertices before the first drawn vertices
@@ -841,8 +659,8 @@ void CxbxVertexBufferConverter::Apply(CxbxDrawContext *pDrawContext)
 		m_uiNbrStreams = X_VSH_MAX_STREAMS;
 	}
 
-    for(UINT uiStream = 0; uiStream < m_uiNbrStreams; uiStream++) {
-		ConvertStream(pDrawContext, uiStream);
+    for(UINT i = 0; i < m_uiNbrStreams; i++) {
+		ConvertStream(pDrawContext, i);
     }
 
 	if (pDrawContext->XboxPrimitiveType == xbox::X_D3DPT_QUADSTRIP) {
@@ -869,48 +687,128 @@ void CxbxVertexBufferConverter::Apply(CxbxDrawContext *pDrawContext)
 	}
 }
 
-void EmuFlushIVB()
+void CxbxSetVertexAttribute(int Register, FLOAT a, FLOAT b, FLOAT c, FLOAT d)
 {
-	CxbxUpdateNativeD3DResources();
-
-    // Parse IVB table with current FVF shader if possible.
-    bool bFVF = VshHandleIsFVF(g_Xbox_VertexShader_Handle);
-    DWORD dwCurFVF = (bFVF) ? g_Xbox_VertexShader_Handle : g_InlineVertexBuffer_FVF;
-
-    EmuLog(LOG_LEVEL::DEBUG, "g_InlineVertexBuffer_TableOffset := %d", g_InlineVertexBuffer_TableOffset);
-
-	// Check the given FVF
-	switch (dwCurFVF & D3DFVF_POSITION_MASK) {
-	case 0: // No position ?
-		if (bFVF) {
-			EmuLog(LOG_LEVEL::WARNING, "EmuFlushIVB(): g_Xbox_VertexShader_Handle isn't a valid FVF - using D3DFVF_XYZRHW instead!");
-			dwCurFVF |= D3DFVF_XYZRHW;
-		}
-		else {
-			EmuLog(LOG_LEVEL::WARNING, "EmuFlushIVB(): using g_InlineVertexBuffer_FVF instead of current FVF!");
-			dwCurFVF = g_InlineVertexBuffer_FVF;
-		}
-		break;
-	case D3DFVF_XYZRHW:
-		// D3DFVF_NORMAL isn't allowed in combination with D3DFVF_XYZRHW 
-		if (dwCurFVF & D3DFVF_NORMAL) {
-			EmuLog(LOG_LEVEL::WARNING, "EmuFlushIVB(): Normal encountered while D3DFVF_XYZRHW is given - switching back to D3DFVF_XYZ!");
-			dwCurFVF &= ~D3DFVF_POSITION_MASK;
-			dwCurFVF |= D3DFVF_XYZ;
-		}
-		break;
+	if (Register < 0) {
+		LOG_TEST_CASE("Register < 0");
+		return;
+	}
+	if (Register >= 16) {
+		LOG_TEST_CASE("Register >= 16");
+		return;
 	}
 
-	DWORD dwPos = dwCurFVF & D3DFVF_POSITION_MASK;
-	DWORD dwTexN = (dwCurFVF & D3DFVF_TEXCOUNT_MASK) >> D3DFVF_TEXCOUNT_SHIFT;
-	size_t TexSize[xbox::X_D3DTS_STAGECOUNT]; // Xbox supports up to 4 textures
+	// Write these values to the NV2A registers, so that we read them back when needed
+	float* attribute_floats = HLE_get_NV2A_vertex_attribute_value_pointer(Register);
+	attribute_floats[0] = a;
+	attribute_floats[1] = b;
+	attribute_floats[2] = c;
+	attribute_floats[3] = d;
 
-	for (unsigned int i = 0; i < dwTexN; i++) {
-		TexSize[i] = DxbxFVF_GetNumberOfTextureCoordinates(dwCurFVF, i);
+	// Also, write the given register value to a matching host vertex shader constant
+	// This allows us to implement Xbox functionality where SetVertexData4f can be used to specify attributes
+	// not present in the vertex declaration.
+	// We use range 193 and up to store these values, as Xbox shaders stop at c192!
+	g_pD3DDevice->SetVertexShaderConstantF(CXBX_D3DVS_CONSTREG_VREGDEFAULTS_BASE + Register, attribute_floats, 1);
+}
+
+DWORD Float4ToDWORD(float* floats)
+{
+	// Inverse of D3DDevice_SetVertexDataColor
+	uint8_t a = uint8_t(floats[0] * 255.0f);
+	uint8_t b = uint8_t(floats[1] * 255.0f);
+	uint8_t c = uint8_t(floats[2] * 255.0f);
+	uint8_t d = uint8_t(floats[3] * 255.0f);
+	uint32_t value = a + (b << 8) + (c << 16) + (d << 24);
+	return value;
+}
+
+void CxbxImpl_Begin(xbox::X_D3DPRIMITIVETYPE PrimitiveType)
+{
+	g_InlineVertexBuffer_PrimitiveType = PrimitiveType;
+	g_InlineVertexBuffer_TableOffset = 0;
+	g_InlineVertexBuffer_WrittenRegisters = 0;
+}
+
+void CxbxImpl_End()
+{
+	using namespace xbox;
+
+#ifndef FIELD_OFFSET
+#define FIELD_OFFSET(type, field)    ((LONG)(LONG_PTR)&(((type *)0)->field))
+#endif
+	static const LONG OffsetPerRegister[X_VSH_MAX_ATTRIBUTES] = {
+		/*X_D3DVSDE_POSITION     =  0:*/FIELD_OFFSET(D3DIVB, Position),
+		/*X_D3DVSDE_BLENDWEIGHT  =  1:*/FIELD_OFFSET(D3DIVB, Blend),
+		/*X_D3DVSDE_NORMAL       =  2:*/FIELD_OFFSET(D3DIVB, Normal),
+		/*X_D3DVSDE_DIFFUSE      =  3:*/FIELD_OFFSET(D3DIVB, Diffuse),
+		/*X_D3DVSDE_SPECULAR     =  4:*/FIELD_OFFSET(D3DIVB, Specular),
+		/*X_D3DVSDE_FOG          =  5:*/FIELD_OFFSET(D3DIVB, Fog),
+		/*X_D3DVSDE_POINTSIZE    =  6:*/FIELD_OFFSET(D3DIVB, PointSize),
+		/*X_D3DVSDE_BACKDIFFUSE  =  7:*/FIELD_OFFSET(D3DIVB, BackDiffuse),
+		/*X_D3DVSDE_BACKSPECULAR =  8:*/FIELD_OFFSET(D3DIVB, BackSpecular),
+		/*X_D3DVSDE_TEXCOORD0    =  9:*/FIELD_OFFSET(D3DIVB, TexCoord[0]),
+		/*X_D3DVSDE_TEXCOORD1    = 10:*/FIELD_OFFSET(D3DIVB, TexCoord[1]),
+		/*X_D3DVSDE_TEXCOORD2    = 11:*/FIELD_OFFSET(D3DIVB, TexCoord[2]),
+		/*X_D3DVSDE_TEXCOORD3    = 12:*/FIELD_OFFSET(D3DIVB, TexCoord[3]),
+		/*                         13:*/FIELD_OFFSET(D3DIVB, Reg13Up[0]),
+		/*                         14:*/FIELD_OFFSET(D3DIVB, Reg13Up[1]),
+		/*                         15:*/FIELD_OFFSET(D3DIVB, Reg13Up[2])
+	};
+	static const LONG FormatPerRegister[X_VSH_MAX_ATTRIBUTES] = {
+		/*X_D3DVSDE_POSITION     =  0:*/X_D3DVSDT_FLOAT4,
+		/*X_D3DVSDE_BLENDWEIGHT  =  1:*/X_D3DVSDT_FLOAT4,
+		/*X_D3DVSDE_NORMAL       =  2:*/X_D3DVSDT_FLOAT3,
+		/*X_D3DVSDE_DIFFUSE      =  3:*/X_D3DVSDT_D3DCOLOR,
+		/*X_D3DVSDE_SPECULAR     =  4:*/X_D3DVSDT_D3DCOLOR,
+		/*X_D3DVSDE_FOG          =  5:*/X_D3DVSDT_FLOAT1,
+		/*X_D3DVSDE_POINTSIZE    =  6:*/X_D3DVSDT_FLOAT1,
+		/*X_D3DVSDE_BACKDIFFUSE  =  7:*/X_D3DVSDT_D3DCOLOR,
+		/*X_D3DVSDE_BACKSPECULAR =  8:*/X_D3DVSDT_D3DCOLOR,
+		/*X_D3DVSDE_TEXCOORD0    =  9:*/X_D3DVSDT_FLOAT4,
+		/*X_D3DVSDE_TEXCOORD1    = 10:*/X_D3DVSDT_FLOAT4,
+		/*X_D3DVSDE_TEXCOORD2    = 11:*/X_D3DVSDT_FLOAT4,
+		/*X_D3DVSDE_TEXCOORD3    = 12:*/X_D3DVSDT_FLOAT4,
+		/*                         13:*/X_D3DVSDT_FLOAT4,
+		/*                         14:*/X_D3DVSDT_FLOAT4,
+		/*                         15:*/X_D3DVSDT_FLOAT4
+	};
+	static const DWORD SizePerRegister[X_VSH_MAX_ATTRIBUTES] = {
+		/*X_D3DVSDE_POSITION     =  0:*/sizeof(float) * 4,
+		/*X_D3DVSDE_BLENDWEIGHT  =  1:*/sizeof(float) * 4,
+		/*X_D3DVSDE_NORMAL       =  2:*/sizeof(float) * 3,
+		/*X_D3DVSDE_DIFFUSE      =  3:*/sizeof(DWORD),
+		/*X_D3DVSDE_SPECULAR     =  4:*/sizeof(DWORD),
+		/*X_D3DVSDE_FOG          =  5:*/sizeof(float) * 1,
+		/*X_D3DVSDE_POINTSIZE    =  6:*/sizeof(float) * 1,
+		/*X_D3DVSDE_BACKDIFFUSE  =  7:*/sizeof(DWORD),
+		/*X_D3DVSDE_BACKSPECULAR =  8:*/sizeof(DWORD),
+		/*X_D3DVSDE_TEXCOORD0    =  9:*/sizeof(float) * 4,
+		/*X_D3DVSDE_TEXCOORD1    = 10:*/sizeof(float) * 4,
+		/*X_D3DVSDE_TEXCOORD2    = 11:*/sizeof(float) * 4,
+		/*X_D3DVSDE_TEXCOORD3    = 12:*/sizeof(float) * 4,
+		/*                         13:*/sizeof(float) * 4,
+		/*                         14:*/sizeof(float) * 4,
+		/*                         15:*/sizeof(float) * 4
+	};
+
+	if (g_InlineVertexBuffer_TableOffset <= 0) {
+		return;
 	}
 
-	// Use a tooling function to determine the vertex stride :
-	UINT uiStride = DxbxFVFToVertexSizeInBytes(dwCurFVF, /*bIncludeTextures=*/true);
+	// Compose an Xbox vertex attribute format according to the registers that have been written to :
+	UINT uiStride = 0;
+	g_InlineVertexBuffer_AttributeFormat = {};
+	for (int reg = 0; reg < X_VSH_MAX_ATTRIBUTES; reg++) {
+		if (g_InlineVertexBuffer_WrittenRegisters & (1 << reg)) {
+			g_InlineVertexBuffer_AttributeFormat.Slots[reg].Format = FormatPerRegister[reg];
+			g_InlineVertexBuffer_AttributeFormat.Slots[reg].Offset = uiStride;
+			uiStride += SizePerRegister[reg];
+		} else {
+			g_InlineVertexBuffer_AttributeFormat.Slots[reg].Format = X_D3DVSDT_NONE;
+		}
+	}
+
 	// Make sure the output buffer is big enough 
 	UINT NeededSize = g_InlineVertexBuffer_TableOffset * uiStride;
 	if (g_InlineVertexBuffer_DataSize < NeededSize) {
@@ -922,101 +820,36 @@ void EmuFlushIVB()
 		g_InlineVertexBuffer_pData = (FLOAT*)malloc(g_InlineVertexBuffer_DataSize);
 	}
 
-	FLOAT *pVertexBufferData = g_InlineVertexBuffer_pData;
-	for(unsigned int v=0;v<g_InlineVertexBuffer_TableOffset;v++) {
-        *pVertexBufferData++ = g_InlineVertexBuffer_Table[v].Position.x;
-        *pVertexBufferData++ = g_InlineVertexBuffer_Table[v].Position.y;
-        *pVertexBufferData++ = g_InlineVertexBuffer_Table[v].Position.z;
-		if (dwPos == D3DFVF_XYZRHW) {
-            *pVertexBufferData++ = g_InlineVertexBuffer_Table[v].Rhw;
-            EmuLog(LOG_LEVEL::DEBUG, "IVB Position := {%f, %f, %f, %f}", g_InlineVertexBuffer_Table[v].Position.x, g_InlineVertexBuffer_Table[v].Position.y, g_InlineVertexBuffer_Table[v].Position.z, g_InlineVertexBuffer_Table[v].Rhw);
-		}
-		else { // XYZRHW cannot be combined with NORMAL, but the other XYZ formats can :
-			switch (dwPos) {
-			case D3DFVF_XYZ:
-				EmuLog(LOG_LEVEL::DEBUG, "IVB Position := {%f, %f, %f}", g_InlineVertexBuffer_Table[v].Position.x, g_InlineVertexBuffer_Table[v].Position.y, g_InlineVertexBuffer_Table[v].Position.z);
-				break;
-			case D3DFVF_XYZB1:
-				*pVertexBufferData++ = g_InlineVertexBuffer_Table[v].Blend[0];
-				EmuLog(LOG_LEVEL::DEBUG, "IVB Position := {%f, %f, %f, %f}", g_InlineVertexBuffer_Table[v].Position.x, g_InlineVertexBuffer_Table[v].Position.y, g_InlineVertexBuffer_Table[v].Position.z, g_InlineVertexBuffer_Table[v].Blend[0]);
-				break;
-			case D3DFVF_XYZB2:
-				*pVertexBufferData++ = g_InlineVertexBuffer_Table[v].Blend[0];
-				*pVertexBufferData++ = g_InlineVertexBuffer_Table[v].Blend[1];
-				EmuLog(LOG_LEVEL::DEBUG, "IVB Position := {%f, %f, %f, %f, %f}", g_InlineVertexBuffer_Table[v].Position.x, g_InlineVertexBuffer_Table[v].Position.y, g_InlineVertexBuffer_Table[v].Position.z, g_InlineVertexBuffer_Table[v].Blend[0], g_InlineVertexBuffer_Table[v].Blend[1]);
-				break;
-			case D3DFVF_XYZB3:
-				*pVertexBufferData++ = g_InlineVertexBuffer_Table[v].Blend[0];
-				*pVertexBufferData++ = g_InlineVertexBuffer_Table[v].Blend[1];
-				*pVertexBufferData++ = g_InlineVertexBuffer_Table[v].Blend[2];
-				EmuLog(LOG_LEVEL::DEBUG, "IVB Position := {%f, %f, %f, %f, %f, %f}", g_InlineVertexBuffer_Table[v].Position.x, g_InlineVertexBuffer_Table[v].Position.y, g_InlineVertexBuffer_Table[v].Position.z, g_InlineVertexBuffer_Table[v].Blend[0], g_InlineVertexBuffer_Table[v].Blend[1], g_InlineVertexBuffer_Table[v].Blend[2]);
-				break;
-			case D3DFVF_XYZB4:
-				*pVertexBufferData++ = g_InlineVertexBuffer_Table[v].Blend[0];
-				*pVertexBufferData++ = g_InlineVertexBuffer_Table[v].Blend[1];
-				*pVertexBufferData++ = g_InlineVertexBuffer_Table[v].Blend[2];
-				*pVertexBufferData++ = g_InlineVertexBuffer_Table[v].Blend[3];
-				EmuLog(LOG_LEVEL::DEBUG, "IVB Position := {%f, %f, %f, %f, %f, %f, %f}", g_InlineVertexBuffer_Table[v].Position.x, g_InlineVertexBuffer_Table[v].Position.y, g_InlineVertexBuffer_Table[v].Position.z, g_InlineVertexBuffer_Table[v].Blend[0], g_InlineVertexBuffer_Table[v].Blend[1], g_InlineVertexBuffer_Table[v].Blend[2], g_InlineVertexBuffer_Table[v].Blend[3]);
-				break;
-			default:
-				CxbxKrnlCleanup("Unsupported Position Mask (FVF := 0x%.08X dwPos := 0x%.08X)", dwCurFVF, dwPos);
-				break;
-			}
-
-			if (dwCurFVF & D3DFVF_NORMAL) {
-				*pVertexBufferData++ = g_InlineVertexBuffer_Table[v].Normal.x;
-				*pVertexBufferData++ = g_InlineVertexBuffer_Table[v].Normal.y;
-				*pVertexBufferData++ = g_InlineVertexBuffer_Table[v].Normal.z;
-				EmuLog(LOG_LEVEL::DEBUG, "IVB Normal := {%f, %f, %f}", g_InlineVertexBuffer_Table[v].Normal.x, g_InlineVertexBuffer_Table[v].Normal.y, g_InlineVertexBuffer_Table[v].Normal.z);
-			}
-		}
-
-#if 0 // TODO : Was this supported on Xbox from some point in time (pun intended)?
-		if (dwCurFVF & D3DFVF_PSIZE) {
-			*(DWORD*)pVertexBufferData++ = g_InlineVertexBuffer_Table[v].PointSize;
-			EmuLog(LOG_LEVEL::DEBUG, "IVB PointSize := 0x%.08X", g_InlineVertexBuffer_Table[v].PointSize);
-		}
-#endif
-
-        if (dwCurFVF & D3DFVF_DIFFUSE) {
-            *(DWORD*)pVertexBufferData++ = g_InlineVertexBuffer_Table[v].Diffuse;
-            EmuLog(LOG_LEVEL::DEBUG, "IVB Diffuse := 0x%.08X", g_InlineVertexBuffer_Table[v].Diffuse);
-        }
-
-		if (dwCurFVF & D3DFVF_SPECULAR) {
-			*(DWORD*)pVertexBufferData++ = g_InlineVertexBuffer_Table[v].Specular;
-			EmuLog(LOG_LEVEL::DEBUG, "IVB Specular := 0x%.08X", g_InlineVertexBuffer_Table[v].Specular);
-		}
-
-		for (unsigned int i = 0; i < dwTexN; i++) {
-            *pVertexBufferData++ = g_InlineVertexBuffer_Table[v].TexCoord[i].x;
-			if (TexSize[i] >= 2) {
-				*pVertexBufferData++ = g_InlineVertexBuffer_Table[v].TexCoord[i].y;
-				if (TexSize[i] >= 3) {
-					*pVertexBufferData++ = g_InlineVertexBuffer_Table[v].TexCoord[i].z;
-					if (TexSize[i] >= 4) {
-						*pVertexBufferData++ = g_InlineVertexBuffer_Table[v].TexCoord[i].w;
-					}
-				}
-			}
-
-			if (g_bPrintfOn) {
-				switch (TexSize[i]) {
-				case 1: EmuLog(LOG_LEVEL::DEBUG, "IVB TexCoord%d := {%f}", i + 1, g_InlineVertexBuffer_Table[v].TexCoord[i].x); break;
-				case 2: EmuLog(LOG_LEVEL::DEBUG, "IVB TexCoord%d := {%f, %f}", i + 1, g_InlineVertexBuffer_Table[v].TexCoord[i].x, g_InlineVertexBuffer_Table[v].TexCoord[i].y); break;
-				case 3: EmuLog(LOG_LEVEL::DEBUG, "IVB TexCoord%d := {%f, %f, %f}", i + 1, g_InlineVertexBuffer_Table[v].TexCoord[i].x, g_InlineVertexBuffer_Table[v].TexCoord[i].y, g_InlineVertexBuffer_Table[v].TexCoord[i].z); break;
-				case 4: EmuLog(LOG_LEVEL::DEBUG, "IVB TexCoord%d := {%f, %f, %f, %f}", i + 1, g_InlineVertexBuffer_Table[v].TexCoord[i].x, g_InlineVertexBuffer_Table[v].TexCoord[i].y, g_InlineVertexBuffer_Table[v].TexCoord[i].z, g_InlineVertexBuffer_Table[v].TexCoord[i].w); break;
-				}
-			}
-        }
-
-		if (v == 0) {
-			unsigned int VertexBufferUsage = (uintptr_t)pVertexBufferData - (uintptr_t)g_InlineVertexBuffer_pData;
-			if (VertexBufferUsage != uiStride) {
-				CxbxKrnlCleanup("EmuFlushIVB uses wrong stride!");
+	// For each register that ever got written, copy the data over from
+	// g_InlineVertexBuffer_Table to pVertexBufferData, but adjacent
+	// to eachother. This, so that host accepts this as a vertex declaration.
+	// Note, that if we figure out how to draw using vertex buffers that
+	// contain gaps, the following copy is no longer needed, and we could
+	// draw straight from g_InlineVertexBuffer_Table instead!
+	uint8_t* pVertexBufferData = (uint8_t*)g_InlineVertexBuffer_pData;
+	for (unsigned int v = 0; v < g_InlineVertexBuffer_TableOffset; v++) {
+		auto vertex_ptr = (uint8_t*)&(g_InlineVertexBuffer_Table[v]);
+		for (unsigned int reg = 0; reg < X_VSH_MAX_ATTRIBUTES; reg++) {
+			if (g_InlineVertexBuffer_WrittenRegisters & (1 << reg)) {
+				auto source = vertex_ptr + OffsetPerRegister[reg];
+				auto size = SizePerRegister[reg];
+				// Note, that g_InlineVertexBuffer_AttributeFormat is declared with
+				// data types (in g_InlineVertexBuffer_Table ) that are host-compatible,
+				// so we can do a straight copy here, there's no conversion needed :
+				memcpy(pVertexBufferData, source, size);
+				pVertexBufferData += size;
 			}
 		}
 	}
+
+	// Arrange for g_InlineVertexBuffer_AttributeFormat to be returned in CxbxGetVertexDeclaration,
+	// so that our above composed declaration will be used for the next draw :
+	g_InlineVertexBuffer_DeclarationOverride = true;
+	// Note, that g_Xbox_VertexShader_IsFixedFunction should be left untouched,
+	// because except for the declaration override, the Xbox shader (either FVF
+	// or a program, or even passthrough shaders) should still be in effect!
+
+	CxbxUpdateNativeD3DResources();
 
 	CxbxDrawContext DrawContext = {};
 
@@ -1025,20 +858,178 @@ void EmuFlushIVB()
 	DrawContext.pXboxVertexStreamZeroData = g_InlineVertexBuffer_pData;
 	DrawContext.uiXboxVertexStreamZeroStride = uiStride;
 
-	HRESULT hRet;
-
-	if (bFVF) {
-		g_pD3DDevice->SetVertexShader(nullptr);
-		hRet = g_pD3DDevice->SetFVF(dwCurFVF);
-		//DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetVertexShader");
-	}
-
 	CxbxDrawPrimitiveUP(DrawContext);
-	if (bFVF) {
-		hRet = g_pD3DDevice->SetFVF(g_Xbox_VertexShader_Handle);
-		//DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetVertexShader");
+
+	// Now that we've drawn, stop our override in CxbxGetVertexDeclaration :
+	g_InlineVertexBuffer_DeclarationOverride = false;
+
+	// TODO: Should technically clean this up at some point..but on XP doesnt matter much
+	//	g_VMManager.Deallocate((VAddr)g_InlineVertexBuffer_pData);
+	//	g_VMManager.Deallocate((VAddr)g_InlineVertexBuffer_Table);
+}
+
+void CxbxImpl_SetVertexData4f(int Register, FLOAT a, FLOAT b, FLOAT c, FLOAT d)
+{
+	using namespace xbox;
+
+	HRESULT hRet = D3D_OK;
+
+	// Always update our attribute storage with the most recently set register value
+	CxbxSetVertexAttribute(Register, a, b, c, d);
+
+	// Grow g_InlineVertexBuffer_Table to contain at least current, and a potentially next vertex
+	if (g_InlineVertexBuffer_TableLength <= g_InlineVertexBuffer_TableOffset + 1) {
+		UINT InlineVertexBuffer_TableLength_Original = g_InlineVertexBuffer_TableLength;
+		if (g_InlineVertexBuffer_TableLength == 0) {
+			g_InlineVertexBuffer_TableLength = PAGE_SIZE / sizeof(D3DIVB);
+		} else {
+			g_InlineVertexBuffer_TableLength *= 2;
+		}
+
+		for (unsigned i = 0; i < (g_InlineVertexBuffer_TableLength - InlineVertexBuffer_TableLength_Original); ++i) {
+			g_InlineVertexBuffer_Table.emplace_back();
+		}
+
+		EmuLog(LOG_LEVEL::DEBUG, "Expanded g_InlineVertexBuffer_Table to %u entries", g_InlineVertexBuffer_TableLength);
+
+		// Sanity check: ensure that g_InlineVertexBuffer_Table is not growing indefinetly. This can happen if D3DDevice_Begin and D3DDevice_End
+		// are not patched, since they both reset g_InlineVertexBuffer_TableOffset back to zero, thus preventing further growth
+		if (g_InlineVertexBuffer_TableLength > 50000) {
+			LOG_TEST_CASE("g_InlineVertexBuffer_TableLength > 50000! This probably means that g_InlineVertexBuffer_Table is growing indefinitely.");
+		}
 	}
-    g_InlineVertexBuffer_TableOffset = 0; // Might not be needed (also cleared in D3DDevice_Begin)
+
+	// Is this the initial call after D3DDevice_Begin() ?
+	if (g_InlineVertexBuffer_WrittenRegisters == 0) {
+		// Read starting values for all inline vertex attributes from HLE NV2A pgraph (converting them to required types) :
+		g_InlineVertexBuffer_Table[0].Position = D3DXVECTOR3(HLE_get_NV2A_vertex_attribute_value_pointer(X_D3DVSDE_POSITION));
+		g_InlineVertexBuffer_Table[0].Rhw = HLE_get_NV2A_vertex_attribute_value_pointer(X_D3DVSDE_POSITION)[3];
+		g_InlineVertexBuffer_Table[0].Blend[0] = HLE_get_NV2A_vertex_attribute_value_pointer(X_D3DVSDE_BLENDWEIGHT)[0];
+		g_InlineVertexBuffer_Table[0].Blend[1] = HLE_get_NV2A_vertex_attribute_value_pointer(X_D3DVSDE_BLENDWEIGHT)[1];
+		g_InlineVertexBuffer_Table[0].Blend[2] = HLE_get_NV2A_vertex_attribute_value_pointer(X_D3DVSDE_BLENDWEIGHT)[2];
+		g_InlineVertexBuffer_Table[0].Blend[3] = HLE_get_NV2A_vertex_attribute_value_pointer(X_D3DVSDE_BLENDWEIGHT)[3];
+		g_InlineVertexBuffer_Table[0].Normal = D3DXVECTOR3(HLE_get_NV2A_vertex_attribute_value_pointer(X_D3DVSDE_NORMAL));
+		g_InlineVertexBuffer_Table[0].Diffuse = Float4ToDWORD(HLE_get_NV2A_vertex_attribute_value_pointer(X_D3DVSDE_DIFFUSE));
+		g_InlineVertexBuffer_Table[0].Specular = Float4ToDWORD(HLE_get_NV2A_vertex_attribute_value_pointer(X_D3DVSDE_SPECULAR));
+		g_InlineVertexBuffer_Table[0].Fog = HLE_get_NV2A_vertex_attribute_value_pointer(X_D3DVSDE_FOG)[0];
+		g_InlineVertexBuffer_Table[0].PointSize = HLE_get_NV2A_vertex_attribute_value_pointer(X_D3DVSDE_POINTSIZE)[0];
+		g_InlineVertexBuffer_Table[0].BackDiffuse = Float4ToDWORD(HLE_get_NV2A_vertex_attribute_value_pointer(X_D3DVSDE_BACKDIFFUSE));
+		g_InlineVertexBuffer_Table[0].BackSpecular = Float4ToDWORD(HLE_get_NV2A_vertex_attribute_value_pointer(X_D3DVSDE_BACKSPECULAR));
+		g_InlineVertexBuffer_Table[0].TexCoord[0] = D3DXVECTOR4(HLE_get_NV2A_vertex_attribute_value_pointer(X_D3DVSDE_TEXCOORD0));
+		g_InlineVertexBuffer_Table[0].TexCoord[1] = D3DXVECTOR4(HLE_get_NV2A_vertex_attribute_value_pointer(X_D3DVSDE_TEXCOORD1));
+		g_InlineVertexBuffer_Table[0].TexCoord[2] = D3DXVECTOR4(HLE_get_NV2A_vertex_attribute_value_pointer(X_D3DVSDE_TEXCOORD2));
+		g_InlineVertexBuffer_Table[0].TexCoord[3] = D3DXVECTOR4(HLE_get_NV2A_vertex_attribute_value_pointer(X_D3DVSDE_TEXCOORD3));
+		g_InlineVertexBuffer_Table[0].Reg13Up[0] = D3DXVECTOR4(HLE_get_NV2A_vertex_attribute_value_pointer(13));
+		g_InlineVertexBuffer_Table[0].Reg13Up[1] = D3DXVECTOR4(HLE_get_NV2A_vertex_attribute_value_pointer(14));
+		g_InlineVertexBuffer_Table[0].Reg13Up[2] = D3DXVECTOR4(HLE_get_NV2A_vertex_attribute_value_pointer(15));
+		// Note : Because all members are assigned an initial value, there's no need for a clearing constructor for _D3DIVB!
+	}
+
+	if (Register == X_D3DVSDE_VERTEX)
+		g_InlineVertexBuffer_WrittenRegisters |= (1 << X_D3DVSDE_POSITION);
+	else if (Register < 16)
+		g_InlineVertexBuffer_WrittenRegisters |= (1 << Register);
+
+	unsigned o = g_InlineVertexBuffer_TableOffset;
+
+	switch (Register)
+	{
+	case X_D3DVSDE_VERTEX:
+	case X_D3DVSDE_POSITION:
+	{
+		// Note : Setting position signals completion of a vertex
+		g_InlineVertexBuffer_Table[o].Position.x = a;
+		g_InlineVertexBuffer_Table[o].Position.y = b;
+		g_InlineVertexBuffer_Table[o].Position.z = c;
+		g_InlineVertexBuffer_Table[o].Rhw = d;
+		// Start a new vertex
+		g_InlineVertexBuffer_TableOffset++;
+		// Copy all attributes of the prior vertex to the new one, to simulate persistent attribute values
+		g_InlineVertexBuffer_Table[g_InlineVertexBuffer_TableOffset] = g_InlineVertexBuffer_Table[o];
+		break;
+	}
+
+	case X_D3DVSDE_BLENDWEIGHT:
+	{
+		g_InlineVertexBuffer_Table[o].Blend[0] = a;
+		g_InlineVertexBuffer_Table[o].Blend[1] = b;
+		g_InlineVertexBuffer_Table[o].Blend[2] = c;
+		g_InlineVertexBuffer_Table[o].Blend[3] = d;
+		break;
+	}
+
+	case X_D3DVSDE_NORMAL:
+	{
+		g_InlineVertexBuffer_Table[o].Normal.x = a;
+		g_InlineVertexBuffer_Table[o].Normal.y = b;
+		g_InlineVertexBuffer_Table[o].Normal.z = c;
+		break;
+	}
+
+	case X_D3DVSDE_DIFFUSE:
+	{
+		g_InlineVertexBuffer_Table[o].Diffuse = D3DCOLOR_COLORVALUE(a, b, c, d);
+		break;
+	}
+
+	case X_D3DVSDE_SPECULAR:
+	{
+		g_InlineVertexBuffer_Table[o].Specular = D3DCOLOR_COLORVALUE(a, b, c, d);
+		break;
+	}
+
+	case X_D3DVSDE_FOG: // Xbox extension
+	{
+		g_InlineVertexBuffer_Table[o].Fog = a; // TODO : What about the other (b, c and d) arguments?
+		break;
+	}
+
+	case X_D3DVSDE_POINTSIZE:
+	{
+		g_InlineVertexBuffer_Table[o].PointSize = a; // TODO : What about the other (b, c and d) arguments?
+		break;
+	}
+
+	case X_D3DVSDE_BACKDIFFUSE: // Xbox extension
+	{
+		g_InlineVertexBuffer_Table[o].BackDiffuse = D3DCOLOR_COLORVALUE(a, b, c, d);
+		break;
+	}
+
+	case X_D3DVSDE_BACKSPECULAR: // Xbox extension
+	{
+		g_InlineVertexBuffer_Table[o].BackSpecular = D3DCOLOR_COLORVALUE(a, b, c, d);
+		break;
+	}
+
+	case X_D3DVSDE_TEXCOORD0:
+	case X_D3DVSDE_TEXCOORD1:
+	case X_D3DVSDE_TEXCOORD2:
+	case X_D3DVSDE_TEXCOORD3:
+	{
+		unsigned i = Register - X_D3DVSDE_TEXCOORD0;
+		g_InlineVertexBuffer_Table[o].TexCoord[i].x = a;
+		g_InlineVertexBuffer_Table[o].TexCoord[i].y = b;
+		g_InlineVertexBuffer_Table[o].TexCoord[i].z = c;
+		g_InlineVertexBuffer_Table[o].TexCoord[i].w = d;
+		break;
+	}
+
+	case 13:
+	case 14:
+	case 15:
+	{
+		unsigned i = Register - 13;
+		g_InlineVertexBuffer_Table[o].Reg13Up[i].x = a;
+		g_InlineVertexBuffer_Table[o].Reg13Up[i].y = b;
+		g_InlineVertexBuffer_Table[o].Reg13Up[i].z = c;
+		g_InlineVertexBuffer_Table[o].Reg13Up[i].w = d;
+		break;
+	}
+
+	default:
+		EmuLog(LOG_LEVEL::WARNING, "Unknown IVB Register : %d", Register);
+	}
 }
 
 void CxbxImpl_SetStreamSource(UINT StreamNumber, xbox::X_D3DVertexBuffer* pStreamData, UINT Stride)

@@ -40,81 +40,11 @@
 #include "Logging.h"
 
 // TODO: Find somewhere to put this that doesn't conflict with xbox::
-extern void EmuUpdateActiveTextureStages();
+extern void CxbxUpdateHostTextures();
 
 const char *NV2AMethodToString(DWORD dwMethod); // forward
 
 static void DbgDumpMesh(WORD *pIndexData, DWORD dwCount);
-
-// Determine the size (in number of floating point texture coordinates) of the texture format (indexed 0 .. 3).
-// This is the reverse of the D3DFVF_TEXCOORDSIZE[0..3] macros.
-int DxbxFVF_GetNumberOfTextureCoordinates(DWORD dwFVF, int aTextureIndex)
-{
-	// See D3DFVF_TEXCOORDSIZE1()
-	switch ((dwFVF >> ((aTextureIndex * 2) + 16)) & 3) {
-	case D3DFVF_TEXTUREFORMAT1: return 1; // One floating point value
-	case D3DFVF_TEXTUREFORMAT2: return 2; // Two floating point values
-	case D3DFVF_TEXTUREFORMAT3: return 3; // Three floating point values
-	case D3DFVF_TEXTUREFORMAT4: return 4; // Four floating point values
-	default:
-		//assert(false || "DxbxFVF_GetNumberOfTextureCoordinates : Unhandled case");
-		return 0;
-	}
-}
-
-// Dxbx Note: This code appeared in EmuExecutePushBufferRaw and occured
-// in EmuFlushIVB too, so it's generalize in this single implementation.
-UINT DxbxFVFToVertexSizeInBytes(DWORD dwFVF, BOOL bIncludeTextures)
-{
-/*
-	X_D3DFVF_POSITION_MASK    = $00E; // Dec  /2  #fl
-
-	X_D3DFVF_XYZ              = $002; //  2 > 1 > 3
-	X_D3DFVF_XYZRHW           = $004; //  4 > 2 > 4
-	X_D3DFVF_XYZB1            = $006; //  6 > 3 > 4
-	X_D3DFVF_XYZB2            = $008; //  8 > 4 > 5
-	X_D3DFVF_XYZB3            = $00a; // 10 > 5 > 6
-	X_D3DFVF_XYZB4            = $00c; // 12 > 6 > 7
-*/
-	// Divide the D3DFVF by two, this gives almost the number of floats needed for the format :
-	UINT Result = (dwFVF & D3DFVF_POSITION_MASK) >> 1;
-	if (Result >= (D3DFVF_XYZB1 >> 1)) {
-		// Any format from D3DFVF_XYZB1 and above need 1 extra float :
-		Result++;
-	}
-	else {
-		// The other formats (XYZ and XYZRHW) need 2 extra floats :
-		Result += 2;
-	}
-
-	// Express the size in bytes, instead of floats :
-	Result *= sizeof(FLOAT);
-
-	// D3DFVF_NORMAL cannot be combined with D3DFVF_XYZRHW :
-	if ((dwFVF & D3DFVF_POSITION_MASK) != D3DFVF_XYZRHW) {
-		if (dwFVF & D3DFVF_NORMAL) {
-			Result += sizeof(FLOAT) * 3;
-		}
-	}
-
-	if (dwFVF & D3DFVF_DIFFUSE) {
-		Result += sizeof(D3DCOLOR);
-	}
-
-	if (dwFVF & D3DFVF_SPECULAR) {
-		Result += sizeof(D3DCOLOR);
-	}
-
-	if (bIncludeTextures) {
-		int NrTextures = ((dwFVF & D3DFVF_TEXCOUNT_MASK) >> D3DFVF_TEXCOUNT_SHIFT);
-		while (NrTextures > 0) {
-			NrTextures--;
-			Result += DxbxFVF_GetNumberOfTextureCoordinates(dwFVF, NrTextures) * sizeof(FLOAT);
-		}
-	}
-
-	return Result;
-}
 
 void EmuExecutePushBuffer
 (
@@ -162,11 +92,11 @@ void EmuExecutePushBuffer
     return;
 }
 
-DWORD CxbxGetStrideFromVertexShaderHandle(DWORD dwVertexShader)
+DWORD CxbxGetStrideFromVertexDeclaration(CxbxVertexDeclaration* pCxbxVertexDeclaration)
 {
 	DWORD Stride = 0;
 
-	if (VshHandleIsVertexShader(dwVertexShader)) {
+	if (pCxbxVertexDeclaration) {
 		// Test-case : Crash 'n' Burn [45530014]
 		// Test-case : CrimsonSea [4B4F0002]
 		// Test-case : Freedom Fighters
@@ -178,24 +108,16 @@ DWORD CxbxGetStrideFromVertexShaderHandle(DWORD dwVertexShader)
 		// Test-case : SpyHunter 2 [4D57001B]
 		//LOG_TEST_CASE("Non-FVF Vertex Shaders not yet (completely) supported for PushBuffer emulation!");
 
-		CxbxVertexShader *pCxbxVertexShader = GetCxbxVertexShader(dwVertexShader);
-		if (pCxbxVertexShader) {
-			if (pCxbxVertexShader->Declaration.NumberOfVertexStreams == 1) {
-				// Note : This assumes that the only stream in use will be stream zero :
-				Stride = pCxbxVertexShader->Declaration.VertexStreams[0].HostVertexStride;
-			}
-			else {
-				LOG_TEST_CASE("Non-FVF Vertex Shaders with multiple streams not supported for PushBuffer emulation!");
-			}
+		if (pCxbxVertexDeclaration->NumberOfVertexStreams == 1) {
+			// Note : This assumes that the only stream in use will be stream zero :
+			Stride = pCxbxVertexDeclaration->VertexStreams[0].HostVertexStride;
+		}
+		else {
+			LOG_TEST_CASE("Non-FVF Vertex Shaders with multiple streams not supported for PushBuffer emulation!");
 		}
 	}
 	else {
-		if (VshHandleIsFVF(dwVertexShader)) {
-			Stride = DxbxFVFToVertexSizeInBytes(dwVertexShader, /*bIncludeTextures=*/true);
-		}
-		else {
-			LOG_TEST_CASE("Invalid Vertex Shader not supported for PushBuffer emulation!");
-		}
+		LOG_TEST_CASE("Missing Vertex Declaration not supported for PushBuffer emulation!");
 	}
 
 	return Stride;
@@ -233,7 +155,7 @@ void HLE_draw_inline_array(NV2AState *d)
 	}
 	// render vertices
 	else {
-		DWORD dwVertexStride = CxbxGetStrideFromVertexShaderHandle(g_Xbox_VertexShader_Handle);
+		DWORD dwVertexStride = CxbxGetStrideFromVertexDeclaration(CxbxGetVertexDeclaration());
 		if (dwVertexStride > 0) {
 			UINT VertexCount = (pg->inline_array_length * sizeof(DWORD)) / dwVertexStride;
 			CxbxDrawContext DrawContext = {};
@@ -252,16 +174,14 @@ void HLE_draw_inline_elements(NV2AState *d)
 {
 	PGRAPHState *pg = &d->pgraph;
 
-	if (IsValidCurrentShader()) {
-		unsigned int uiIndexCount = pg->inline_elements_length;
-		CxbxDrawContext DrawContext = {};
+	unsigned int uiIndexCount = pg->inline_elements_length;
+	CxbxDrawContext DrawContext = {};
 
 		DrawContext.XboxPrimitiveType = (xbox::X_D3DPRIMITIVETYPE)pg->primitive_mode;
-		DrawContext.dwVertexCount = uiIndexCount;
-		DrawContext.pXboxIndexData = d->pgraph.inline_elements;
+	DrawContext.dwVertexCount = uiIndexCount;
+	DrawContext.pXboxIndexData = d->pgraph.inline_elements;
 
-		CxbxDrawIndexed(DrawContext);
-	}
+	CxbxDrawIndexed(DrawContext);
 }
 
 DWORD ABGR_to_ARGB(const uint32_t color)
@@ -357,30 +277,36 @@ uint32_t HLE_read_NV2A_pgraph_register(const int reg)
 	return pg->regs[reg];
 }
 
-void HLE_write_NV2A_vertex_attribute_slot(unsigned slot, uint32_t parameter)
-{
-	// Write value to LLE NV2A device
-	pgraph_handle_method(g_NV2A->GetDeviceState(),
-		/*subchannel=*/0,
-		/*method=*/NV097_SET_VERTEX_DATA4UB + (4 * slot),
-		parameter);
-}
-
-uint32_t HLE_read_NV2A_vertex_attribute_slot(unsigned slot)
+float *HLE_get_NV2A_vertex_attribute_value_pointer(unsigned slot)
 {
 	NV2AState* dev = g_NV2A->GetDeviceState();
 	PGRAPHState *pg = &(dev->pgraph);
 
 	// See CASE_16(NV097_SET_VERTEX_DATA4UB, 4) in LLE pgraph_handle_method()
 	VertexAttribute *vertex_attribute = &pg->vertex_attributes[slot];
-	// Inverse of D3DDevice_SetVertexDataColor
-	uint8_t a = uint8_t(vertex_attribute->inline_value[0] * 255.0f);
-	uint8_t b = uint8_t(vertex_attribute->inline_value[1] * 255.0f);
-	uint8_t c = uint8_t(vertex_attribute->inline_value[2] * 255.0f);
-	uint8_t d = uint8_t(vertex_attribute->inline_value[3] * 255.0f);
-	uint32_t value = a + (b << 8) + (c << 16) + (d << 24);
+	return vertex_attribute->inline_value;
+}
+
+uint32_t HLE_read_NV2A_vertex_program_slot(unsigned program_load, unsigned slot)
+{
+	NV2AState* dev = g_NV2A->GetDeviceState();
+	PGRAPHState* pg = &(dev->pgraph);
+
+	// See CASE_32(NV097_SET_TRANSFORM_PROGRAM, 4) in LLE pgraph_handle_method()
+	assert(program_load < NV2A_MAX_TRANSFORM_PROGRAM_LENGTH);
+	uint32_t value = pg->program_data[program_load][slot % 4];
 
 	return value;
+}
+
+float *HLE_get_NV2A_vertex_constant_float4_ptr(unsigned const_index)
+{
+	NV2AState* dev = g_NV2A->GetDeviceState();
+	PGRAPHState* pg = &(dev->pgraph);
+
+	// See CASE_32(NV097_SET_TRANSFORM_CONSTANT, 4) in LLE pgraph_handle_method()
+	assert(const_index < NV2A_VERTEXSHADER_CONSTANTS);
+	return (float*)&(pg->vsh_constants[const_index][0]);
 }
 
 // For now, skip the cache, but handle the pgraph method directly
@@ -439,8 +365,6 @@ extern void EmuExecutePushBufferRaw
 	uint32_t uSizeInBytes
 )
 {
-	HLE_init_pgraph_plugins(); // TODO : Move to more approriate spot
-
 	// Test-case : Azurik (see https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/issues/360)
 	// Test-case : Crash 'n' Burn [45530014]
 	// Test-case : CrimsonSea [4B4F0002]

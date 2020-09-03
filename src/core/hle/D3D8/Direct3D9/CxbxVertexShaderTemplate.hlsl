@@ -32,8 +32,12 @@ uniform float4 C[X_D3DVS_CONSTREG_COUNT] : register(c0);
 uniform float4 vRegisterDefaultValues[16]  : register(c192);
 uniform float4 vRegisterDefaultFlagsPacked[4]  : register(c208);
 
-uniform float4 xboxViewportScale   : register(c212);
-uniform float4 xboxViewportOffset  : register(c213);
+uniform float4 xboxViewportScaleInverse : register(c212);
+uniform float4 xboxViewportOffset : register(c213);
+
+uniform float4 xboxTextureScale[4] : register(c214);
+
+uniform float4 xboxIsRHWTransformedPosition : register(c218);
 
 // Overloaded casts, assuring all inputs are treated as float4
 float4 _tof4(float  src) { return float4(src, src, src, src); }
@@ -149,17 +153,6 @@ float _dph(float4 src0, float4 src1)
 
 // Xbox ILU Functions
 
-// 2.14.1.10.6  RCP: Reciprocal
-#define x_rcp(dest, mask, src0) dest.mask = _ssss(_rcp(_scalar(src0))).mask
-float _rcp(float src)
-{
-#if 0 // TODO : Enable
-	if (src == 1) return 1;
-	if (src == 0) return 1.#INF;
-#endif
-	return 1/ src;
-}
-
 // 2.14.1.10.7  RSQ: Reciprocal Square Root
 #define x_rsq(dest, mask, src0) dest.mask = _ssss(_rsq(_scalar(src0))).mask
 float _rsq(float src)
@@ -251,6 +244,23 @@ float _rcc(float src)
 		: clamp(r, -1.84467e+019f, -5.42101e-020f); // the IEEE 32-bit binary values 0xDF800000 and 0x9F800000
 }
 
+// 2.14.1.10.6  RCP: Reciprocal
+#define x_rcp(dest, mask, src0) dest.mask = _ssss(_rcp(_scalar(src0))).mask
+float _rcp(float src)
+{
+	// OpenGL/NVidia extension definition
+#if 0 // TODO : Enable?
+	if (src == 1) return 1;
+	if (src == 0) return 1.#INF;
+	return 1 / src;
+#endif
+	// Forward to Xbox clamped reciprocal
+	// So we have defined behaviour with rcp(0)
+	// This prevents issues with XYZRHW modes
+	// where the w component may be 0
+	return _rcc(src);
+}
+
 float4 reverseScreenspaceTransform(float4 oPos)
 {
 	// On Xbox, oPos should contain the vertex position in screenspace
@@ -261,13 +271,19 @@ float4 reverseScreenspaceTransform(float4 oPos)
 	// mad oPos.xyz, r12, r1.x, c-37
 	// where c-37 and c-38 are reserved transform values
 
+	if (xboxIsRHWTransformedPosition.x) {
+		// Detect 0 w and avoid 0 division
+		if (oPos.w == 0) oPos.w = 1; // if else doesn't seem to work here
+		oPos.w = 1 / oPos.w; // flip rhw to w
+	}
+
 	// oPos.w and xboxViewportScale.z might be VERY big when a D24 depth buffer is used
 	// and multiplying oPos.xyz by oPos.w may cause precision issues.
-	// Pre-divide them to help keep the values reasonably small.
 	// Test case: Burnout 3
-	float3 divisor = xboxViewportScale.xyz / oPos.w;
+
 	oPos.xyz -= xboxViewportOffset.xyz; // reverse offset
-	oPos.xyz /= divisor; // reverse scale and perspective divide
+	oPos.xyz *= oPos.w; // reverse perspective divide
+	oPos.xyz *= xboxViewportScaleInverse.xyz; // reverse scale
 
 	return oPos;
 }
@@ -315,14 +331,15 @@ R"DELIMITER(
 	xOut.oPos = reverseScreenspaceTransform(oPos);
 	xOut.oD0 = saturate(oD0);
 	xOut.oD1 = saturate(oD1);
-	xOut.oFog = oFog.x;
+	xOut.oFog = oFog.x; // Note : Xbox clamps fog in pixel shader
 	xOut.oPts = oPts.x;
 	xOut.oB0 = saturate(oB0);
 	xOut.oB1 = saturate(oB1);
-	xOut.oT0 = oT0;
-	xOut.oT1 = oT1;
-	xOut.oT2 = oT2;
-	xOut.oT3 = oT3;
+	// Scale textures (TODO : or should we apply this to the input register values?)
+	xOut.oT0 = oT0 / xboxTextureScale[0];
+	xOut.oT1 = oT1 / xboxTextureScale[1];
+	xOut.oT2 = oT2 / xboxTextureScale[2];
+	xOut.oT3 = oT3 / xboxTextureScale[3];
 
 	return xOut;
 }

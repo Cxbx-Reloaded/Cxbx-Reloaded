@@ -220,44 +220,21 @@ extern ShaderType EmuGetShaderInfo(IntermediateVertexShader* pIntermediateShader
 	return ShaderType::Compilable;
 }
 
-// recompile xbox vertex shader function
-extern HRESULT EmuCompileShader
-(
-	IntermediateVertexShader* pIntermediateShader,
-	ID3DBlob** ppHostShader
-)
+HRESULT CompileHlsl(const std::string& hlsl, ID3DBlob** ppHostShader, const char* pSourceName)
 {
 	// TODO include header in vertex shader
 	//xbox::X_VSH_SHADER_HEADER* pXboxVertexShaderHeader = (xbox::X_VSH_SHADER_HEADER*)pXboxFunction;
 	ID3DBlob* pErrors = nullptr;
+	ID3DBlob* pErrorsCompatibility = nullptr;
 	HRESULT             hRet = 0;
 
-	// Include HLSL header and footer as raw strings :
-	static std::string hlsl_template[2] = {
-		#include "core\hle\D3D8\Direct3D9\CxbxVertexShaderTemplate.hlsl"
-	};
-
-	auto hlsl_stream = std::stringstream();
-	hlsl_stream << hlsl_template[0]; // Start with the HLSL template header
-	assert(pIntermediateShader->Instructions.size() > 0);
-	BuildShader(pIntermediateShader, hlsl_stream);
-
-	hlsl_stream << hlsl_template[1]; // Finish with the HLSL template footer
-	std::string hlsl_str = hlsl_stream.str();
-
-	EmuLog(LOG_LEVEL::DEBUG, "--- HLSL conversion ---");
-	EmuLog(LOG_LEVEL::DEBUG, DebugPrependLineNumbers(hlsl_str).c_str());
-	EmuLog(LOG_LEVEL::DEBUG, "-----------------------");
-
-
-	UINT flags1 = D3DCOMPILE_OPTIMIZATION_LEVEL3 | D3DCOMPILE_AVOID_FLOW_CONTROL;
-
+	UINT flags1 = D3DCOMPILE_OPTIMIZATION_LEVEL3;
 	hRet = D3DCompile(
-		hlsl_str.c_str(),
-		hlsl_str.length(),
-		nullptr, // pSourceName
+		hlsl.c_str(),
+		hlsl.length(),
+		pSourceName, // pSourceName
 		nullptr, // pDefines
-		nullptr, // pInclude // TODO precompile x_* HLSL functions?
+		D3D_COMPILE_STANDARD_FILE_INCLUDE, // pInclude // TODO precompile x_* HLSL functions?
 		"main", // shader entry poiint
 		g_vs_model, // shader profile
 		flags1, // flags1
@@ -266,25 +243,26 @@ extern HRESULT EmuCompileShader
 		&pErrors // ppErrorMsgs out
 	);
 	if (FAILED(hRet)) {
+		EmuLog(LOG_LEVEL::WARNING, "Shader compile failed. Recompiling in compatibility mode");
 		// Attempt to retry in compatibility mode, this allows some vertex-state shaders to compile
 		// Test Case: Spy vs Spy
-		flags1 |= D3DCOMPILE_ENABLE_BACKWARDS_COMPATIBILITY;
+		flags1 |= D3DCOMPILE_ENABLE_BACKWARDS_COMPATIBILITY | D3DCOMPILE_AVOID_FLOW_CONTROL;
 		hRet = D3DCompile(
-			hlsl_str.c_str(),
-			hlsl_str.length(),
-			nullptr, // pSourceName
+			hlsl.c_str(),
+			hlsl.length(),
+			pSourceName, // pSourceName
 			nullptr, // pDefines
-			nullptr, // pInclude // TODO precompile x_* HLSL functions?
+			D3D_COMPILE_STANDARD_FILE_INCLUDE, // pInclude // TODO precompile x_* HLSL functions?
 			"main", // shader entry poiint
 			g_vs_model, // shader profile
 			flags1, // flags1
 			0, // flags2
 			ppHostShader, // out
-			&pErrors // ppErrorMsgs out
+			&pErrorsCompatibility // ppErrorMsgs out
 		);
 
 		if (FAILED(hRet)) {
-			LOG_TEST_CASE("Couldn't assemble recompiled vertex shader");
+			LOG_TEST_CASE("Couldn't assemble vertex shader");
 			//EmuLog(LOG_LEVEL::WARNING, "Couldn't assemble recompiled vertex shader");
 		}
 	}
@@ -296,6 +274,10 @@ extern HRESULT EmuCompileShader
 		EmuLog(hlslErrorLogLevel, "%s", (char*)(pErrors->GetBufferPointer()));
 		pErrors->Release();
 		pErrors = nullptr;
+		if (pErrorsCompatibility != nullptr) {
+			pErrorsCompatibility->Release();
+			pErrorsCompatibility = nullptr;
+		}
 	}
 
 	LOG_CHECK_ENABLED(LOG_LEVEL::DEBUG)
@@ -316,4 +298,157 @@ extern HRESULT EmuCompileShader
 			}
 
 	return hRet;
+}
+
+// recompile xbox vertex shader function
+extern HRESULT EmuCompileShader
+(
+	IntermediateVertexShader* pIntermediateShader,
+	ID3DBlob** ppHostShader
+)
+{
+	// Include HLSL header and footer as raw strings :
+	static std::string hlsl_template[2] = {
+		#include "core\hle\D3D8\Direct3D9\CxbxVertexShaderTemplate.hlsl"
+	};
+
+	auto hlsl_stream = std::stringstream();
+	hlsl_stream << hlsl_template[0]; // Start with the HLSL template header
+	assert(pIntermediateShader->Instructions.size() > 0);
+	BuildShader(pIntermediateShader, hlsl_stream);
+
+	hlsl_stream << hlsl_template[1]; // Finish with the HLSL template footer
+	std::string hlsl_str = hlsl_stream.str();
+
+	EmuLog(LOG_LEVEL::DEBUG, "--- HLSL conversion ---");
+	EmuLog(LOG_LEVEL::DEBUG, DebugPrependLineNumbers(hlsl_str).c_str());
+	EmuLog(LOG_LEVEL::DEBUG, "-----------------------");
+
+	return CompileHlsl(hlsl_str, ppHostShader, "CxbxVertexShaderTemplate.hlsl");
+}
+
+static ID3DBlob* pPassthroughShader = nullptr;
+
+extern HRESULT EmuCompileXboxPassthrough(ID3DBlob** ppHostShader)
+{
+	// TODO does this need to be thread safe?
+	if (pPassthroughShader == nullptr) {
+		auto hlsl =
+R"(
+// Xbox HLSL pretransformed vertex shader
+
+// Default values for vertex registers, and whether to use them
+uniform float4 vRegisterDefaultValues[16]  : register(c192);
+uniform float4 vRegisterDefaultFlagsPacked[4]  : register(c208);
+
+uniform float4 xboxViewportScaleInverse : register(c212);
+uniform float4 xboxViewportOffset : register(c213);
+
+
+uniform float4 xboxTextureScale[4] : register(c214);
+
+uniform float4 xboxIsRHWTransformedPosition : register(c218);
+
+struct VS_INPUT
+{
+	float4 v[16] : TEXCOORD;
+};
+
+// Output registers
+struct VS_OUTPUT
+{
+	float4 oPos : POSITION;  // Homogeneous clip space position
+	float4 oD0  : COLOR0;    // Primary color (front-facing)
+	float4 oD1  : COLOR1;    // Secondary color (front-facing)
+	float  oFog : FOG;       // Fog coordinate
+	float  oPts : PSIZE;	 // Point size
+	float4 oB0  : TEXCOORD4; // Back-facing primary color
+	float4 oB1  : TEXCOORD5; // Back-facing secondary color
+	float4 oT0  : TEXCOORD0; // Texture coordinate set 0
+	float4 oT1  : TEXCOORD1; // Texture coordinate set 1
+	float4 oT2  : TEXCOORD2; // Texture coordinate set 2
+	float4 oT3  : TEXCOORD3; // Texture coordinate set 3
+};
+
+float4 reverseScreenspaceTransform(float4 oPos)
+{
+	// Scale screenspace coordinates (0 to viewport width/height) to -1 to +1 range
+
+	// On Xbox, oPos should contain the vertex position in screenspace
+	// We need to reverse this transformation
+	// Conventionally, each Xbox Vertex Shader includes instructions like this
+	// mul oPos.xyz, r12, c-38
+	// +rcc r1.x, r12.w
+	// mad oPos.xyz, r12, r1.x, c-37
+	// where c-37 and c-38 are reserved transform values
+
+	if (xboxIsRHWTransformedPosition.x) {
+		// Detect 0 w and avoid 0 division
+		if (oPos.w == 0) oPos.w = 1; // if else doesn't seem to work here
+		oPos.w = 1 / oPos.w; // flip rhw to w
+	}
+
+	oPos.xyz -= xboxViewportOffset.xyz; // reverse offset
+	oPos.xyz *= oPos.w; // reverse perspective divide
+	oPos.xyz *= xboxViewportScaleInverse.xyz; // reverse scale
+
+	return oPos;
+}
+
+VS_OUTPUT main(const VS_INPUT xIn)
+{
+	// Input registers
+	float4 v0, v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13, v14, v15;
+
+	// Unpack 16 flags from 4 float4 constant registers
+	float vRegisterDefaultFlags[16] = (float[16])vRegisterDefaultFlagsPacked;
+
+	// Initialize input registers from the vertex buffer data
+	// Or use the register's default value (which can be changed by the title)
+	#define init_v(i) v##i = lerp(xIn.v[i], vRegisterDefaultValues[i], vRegisterDefaultFlags[i]);
+	// Note : unroll manually instead of for-loop, because of the ## concatenation
+	init_v( 0); init_v( 1); init_v( 2); init_v( 3);
+	init_v( 4); init_v( 5); init_v( 6); init_v( 7);
+	init_v( 8); init_v( 9); init_v(10); init_v(11);
+	init_v(12); init_v(13); init_v(14); init_v(15);
+
+	// For passthrough, map output variables to their corresponding input registers
+	float4 oPos = v0;
+	float4 oD0 = v3;
+	float4 oD1 = v4;
+	float4 oFog = v5;
+	float4 oPts = v6;
+	float4 oB0 = v7;
+	float4 oB1 = v8;
+	float4 oT0 = v9;
+	float4 oT1 = v10;
+	float4 oT2 = v11;
+	float4 oT3 = v12;
+
+	// Copy variables to output struct
+	VS_OUTPUT xOut;
+
+	xOut.oPos = reverseScreenspaceTransform(oPos);
+	xOut.oD0 = saturate(oD0);
+	xOut.oD1 = saturate(oD1);
+	xOut.oFog = oFog.x; // Note : Xbox clamps fog in pixel shader
+	xOut.oPts = oPts.x;
+	xOut.oB0 = saturate(oB0);
+	xOut.oB1 = saturate(oB1);
+	// Scale textures (TODO : or should we apply this to the input register values?)
+	xOut.oT0 = oT0 / xboxTextureScale[0];
+	xOut.oT1 = oT1 / xboxTextureScale[1];
+	xOut.oT2 = oT2 / xboxTextureScale[2];
+	xOut.oT3 = oT3 / xboxTextureScale[3];
+
+	return xOut;
+}
+)";
+
+		CompileHlsl(hlsl, &pPassthroughShader, "passthrough.hlsl");
+	}
+
+	*ppHostShader = pPassthroughShader;
+
+	return 0;
 }
