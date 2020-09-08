@@ -52,8 +52,8 @@ struct CUnknownGenericManager {
     // all VMT (Virtual Method Table) are stored in local offset 0x00's pointer
     // TODO: Implement to use derived's override AddRef/Release. Also, each class has its own ref counter and is not shareable.
     virtual ~CUnknownGenericManager() {};                           // 0x00
-    virtual uint32_t WINAPI AddRef() { return ref_count++; };       // 0x04
-    virtual uint32_t WINAPI Release() { return ref_count--; };      // 0x08
+    virtual uint32_t XBOXAPI AddRef() { return ref_count++; };       // 0x04
+    virtual uint32_t XBOXAPI Release() { return ref_count--; };      // 0x08
 
     uint32_t ref_count;                                     // 0x04
 };
@@ -64,14 +64,14 @@ struct CUnknownTemplate {
     // construct vtable (or grab ptr to existing)
     CUnknownTemplate();
 
-    virtual ~CUnknownTemplate() {};                                             // 0x00
-    virtual void WINAPI pUnknown_04() { throw std::exception("pUnknown_04"); }; // 0x04
-    virtual void WINAPI pUnknown_08() { throw std::exception("pUnknown_08"); }; // 0x08
-    virtual void WINAPI pUnknown_0C() { throw std::exception("pUnknown_0C"); }; // 0x0C
-    virtual void WINAPI pUnknown_10() { throw std::exception("pUnknown_10"); }; // 0x10
-    virtual void WINAPI pUnknown_14() { throw std::exception("pUnknown_14"); }; // 0x14
-    virtual void WINAPI pUnknown_18() { throw std::exception("pUnknown_18"); }; // 0x18
-    virtual void WINAPI pUnknown_1C() { throw std::exception("pUnknown_1C"); }; // 0x1C
+    virtual ~CUnknownTemplate() {};                                                 // 0x00
+    virtual void XBOXAPI pUnknown_04() { throw std::exception("pUnknown_04"); };    // 0x04
+    virtual void XBOXAPI pUnknown_08() { throw std::exception("pUnknown_08"); };    // 0x08
+    virtual void XBOXAPI pUnknown_0C() { throw std::exception("pUnknown_0C"); };    // 0x0C
+    virtual void XBOXAPI pUnknown_10() { throw std::exception("pUnknown_10"); };    // 0x10
+    virtual void XBOXAPI pUnknown_14() { throw std::exception("pUnknown_14"); };    // 0x14
+    virtual void XBOXAPI pUnknown_18() { throw std::exception("pUnknown_18"); };    // 0x18
+    virtual void XBOXAPI pUnknown_1C() { throw std::exception("pUnknown_1C"); };    // 0x1C
     // If need to add more VMT (Virtual Method Table), add them above here.
     uint32_t ref_count;                                     // 0x04
 };

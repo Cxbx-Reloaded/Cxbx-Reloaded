@@ -30,12 +30,28 @@
 
 namespace xbox {
 
-#include <dsound.h> // TODO: FIXME after global namespace xbox issue is resolved.
-// TODO: Port PC dsound.h to xbox edition here base on previous research.
 // TODO: Also need to use fixed size to able support cross-platform without extra work.
 //       Such as uint32_t, uint16_t, etc.
 
+typedef struct _XWAVEFORMATEX
+{
+    uint16_t    wFormatTag;
+    uint16_t    nChannels;
+    uint32_t    nSamplesPerSec;
+    uint32_t    nAvgBytesPerSec;
+    uint16_t    nBlockAlign;
+    uint16_t    wBitsPerSample;
+    uint16_t    cbSize;
+} WAVEFORMATEX, *PWAVEFORMATEX, *LPWAVEFORMATEX;
+
+typedef const WAVEFORMATEX *LPCWAVEFORMATEX;
+
+
+
+
+#define WAVE_FORMAT_ADPCM 0x0002
 #define WAVE_FORMAT_XBOX_ADPCM 0x0069
+#define WAVE_FORMAT_EXTENSIBLE 0xFFFE
 
 // Xbox SGE Memory layout
 #define                             XTL_DS_SGE_COUNT_MAX 2047
@@ -162,7 +178,7 @@ struct X_DSENVOLOPEDESC
 #define XTL_DSSCAPS_NOMERGE              0x20000000
 #define XTL_DSSCAPS_ACCURATENOTIFY       0x40000000
 
-typedef VOID(CALLBACK *LPFNXMOCALLBACK)(LPVOID pStreamContext, LPVOID pPacketContext, DWORD dwStatus);
+typedef VOID(XCALLBACK *LPFNXMOCALLBACK)(LPVOID pStreamContext, LPVOID pPacketContext, DWORD dwStatus);
 
 // ******************************************************************
 // * X_DSSTREAMDESC

@@ -133,7 +133,7 @@ static inline void InitVoiceProperties(xbox::X_DSVOICEPROPS& Xb_VoiceProperties)
 
 static inline void GenerateMixBinDefault(
     xbox::X_DSVOICEPROPS    &Xb_VoiceProperties,
-    LPCWAVEFORMATEX         lpwfxFormat,
+    ::LPCWAVEFORMATEX        lpwfxFormat,
     xbox::X_LPDSMIXBINS      mixbins_output,
     bool                    is3D)
 {
@@ -247,7 +247,7 @@ static inline void GenerateMixBinDefault(
 
 static inline void GeneratePCMFormat(
     DSBUFFERDESC   &DSBufferDesc,
-    LPCWAVEFORMATEX Xb_lpwfxFormat,
+    xbox::LPCWAVEFORMATEX Xb_lpwfxFormat,
     DWORD          &Xb_flags,
     DWORD          &dwEmuFlags,
     DWORD           X_BufferSizeRequest,
@@ -258,8 +258,6 @@ static inline void GeneratePCMFormat(
     xbox::CDirectSoundVoice* Xb_Voice)
 {
     bool bIsSpecial = false;
-
-    GenerateMixBinDefault(Xb_VoiceProperties, Xb_lpwfxFormat, mixbins_output, ((DSBufferDesc.dwFlags & DSBCAPS_CTRL3D) > 0));
 
     // convert from Xbox to PC DSound
     {
@@ -326,6 +324,8 @@ static inline void GeneratePCMFormat(
     if (X_BufferCacheSize > 0) {
         DSBufferDesc.dwBufferBytes = DSoundBufferGetPCMBufferSize(dwEmuFlags, X_BufferCacheSize);
     }
+
+    GenerateMixBinDefault(Xb_VoiceProperties, DSBufferDesc.lpwfxFormat, mixbins_output, ((DSBufferDesc.dwFlags& DSBCAPS_CTRL3D) > 0));
 }
 
 static inline void DSoundGenericUnlock(
@@ -951,13 +951,13 @@ static inline HRESULT HybridDirectSound3DBuffer_SetAllParameters(
     HRESULT hRet = DS_OK;
     if (pDS3DBuffer != nullptr) {
 
-        DS3DBUFFER pDS3DBufferParamsTemp;
+        ::DS3DBUFFER pDS3DBufferParamsTemp;
         pDS3DBufferParamsTemp.dwSize = sizeof(DS3DBUFFER);
-        pDS3DBufferParamsTemp.vPosition = pDS3DBufferParams->vPosition;
-        pDS3DBufferParamsTemp.vVelocity = pDS3DBufferParams->vVelocity;
+        CopyD3DVector(pDS3DBufferParamsTemp.vPosition, pDS3DBufferParams->vPosition);
+        CopyD3DVector(pDS3DBufferParamsTemp.vVelocity, pDS3DBufferParams->vVelocity);
         pDS3DBufferParamsTemp.dwInsideConeAngle = pDS3DBufferParams->dwInsideConeAngle;
         pDS3DBufferParamsTemp.dwOutsideConeAngle = pDS3DBufferParams->dwOutsideConeAngle;
-        pDS3DBufferParamsTemp.vConeOrientation = pDS3DBufferParams->vConeOrientation;
+        CopyD3DVector(pDS3DBufferParamsTemp.vConeOrientation, pDS3DBufferParams->vConeOrientation);
         pDS3DBufferParamsTemp.lConeOutsideVolume = pDS3DBufferParams->lConeOutsideVolume;
         pDS3DBufferParamsTemp.flMinDistance = pDS3DBufferParams->flMinDistance;
         pDS3DBufferParamsTemp.flMaxDistance = pDS3DBufferParams->flMaxDistance;
@@ -1109,7 +1109,7 @@ static inline HRESULT HybridDirectSoundBuffer_SetFilter(
 //IDirectSoundBuffer
 static inline HRESULT HybridDirectSoundBuffer_SetFormat(
     LPDIRECTSOUNDBUFFER8   &pDSBuffer,
-    LPCWAVEFORMATEX         Xb_pwfxFormat,
+    xbox::LPCWAVEFORMATEX   Xb_pwfxFormat,
     DWORD                   Xb_flags,
     DSBUFFERDESC           &BufferDesc,
     DWORD                  &dwEmuFlags,
@@ -1255,17 +1255,21 @@ static inline HRESULT HybridDirectSound3DBuffer_SetMinDistance(
 
     RETURN_RESULT_CHECK(hRet);
 }
-/*
-//TODO: PC DirectSound does not have SetMixBins method function.
+
 //IDirectSoundStream
 //IDirectSoundBuffer
 static inline HRESULT HybridDirectSoundBuffer_SetMixBins(
-    LPDIRECTSOUNDBUFFER8 pDSBuffer,
-    PVOID               pMixBins)
+    xbox::X_DSVOICEPROPS&   Xb_VoiceProperties,
+    xbox::X_LPDSMIXBINS     in_MixBins,
+    DSBUFFERDESC&           BufferDesc
+)
 {
+    HRESULT ret = DS_OK;
 
-    return DS_OK;
-}*/
+    GenerateMixBinDefault(Xb_VoiceProperties, BufferDesc.lpwfxFormat, in_MixBins, ((BufferDesc.dwFlags & DSBCAPS_CTRL3D) > 0));
+
+    return ret;
+}
 
 //IDirectSoundStream x2
 //IDirectSoundBuffer x2
@@ -1519,20 +1523,6 @@ static inline HRESULT HybridDirectSoundBuffer_GetVoiceProperties(
     else {
         ret = DSERR_INVALIDPARAM;
     }
-
-    return ret;
-}
-
-static inline HRESULT HybridDirectSoundBuffer_SetMixBins(
-    xbox::X_DSVOICEPROPS& Xb_VoiceProperties,
-    xbox::X_LPDSMIXBINS   in_MixBins,
-    LPCWAVEFORMATEX      pwfxFormat,
-    DSBUFFERDESC&        BufferDesc
-)
-{
-    HRESULT ret = DS_OK;
-
-    GenerateMixBinDefault(Xb_VoiceProperties, pwfxFormat, in_MixBins, ((BufferDesc.dwFlags & DSBCAPS_CTRL3D) > 0));
 
     return ret;
 }
