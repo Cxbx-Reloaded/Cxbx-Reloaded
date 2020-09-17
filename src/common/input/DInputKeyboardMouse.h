@@ -41,7 +41,7 @@ namespace DInput
 	class KeyboardMouse : public InputDevice
 	{
 	public:
-		KeyboardMouse(const LPDIRECTINPUTDEVICE8 kb_device);
+		KeyboardMouse(const LPDIRECTINPUTDEVICE8 kb_device, const LPDIRECTINPUTDEVICE8 mo_device);
 		~KeyboardMouse();
 		std::string GetDeviceName() const override;
 		std::string GetAPI() const override;
@@ -73,33 +73,27 @@ namespace DInput
 			const uint8_t m_index;
 		};
 
-		class Cursor : public Input
+		class Axis : public Input
 		{
 		public:
-			Cursor(uint8_t index, const ControlState& axis, const bool positive)
-				: m_axis(axis), m_index(index), m_positive(positive) {}
+			Axis(uint8_t index, const LONG &axis, LONG range) : m_axis(axis), m_range(range), m_index(index) {}
 			std::string GetName() const override;
-			bool IsDetectable() override { return true; }
 			ControlState GetState() const override;
 
 		private:
-			const ControlState& m_axis;
+			const LONG &m_axis;
+			const LONG m_range;
 			const uint8_t m_index;
-			const bool m_positive;
 		};
 
 		struct State
 		{
 			BYTE keyboard[256];
 			DIMOUSESTATE2 mouse;
-			struct
-			{
-				ControlState x, y, last_x, last_y;
-			} cursor;
 		};
 
 		const LPDIRECTINPUTDEVICE8 m_kb_device;
-		//const LPDIRECTINPUTDEVICE8 m_mo_device;
+		const LPDIRECTINPUTDEVICE8 m_mo_device;
 		State m_state_in;
 	};
 }

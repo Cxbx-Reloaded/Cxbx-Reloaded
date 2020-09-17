@@ -60,26 +60,27 @@ namespace DInput
 		// other devices so there can be a separated Keyboard and mouse, as well as combined KeyboardMouse"
 
 		LPDIRECTINPUTDEVICE8 kb_device = nullptr;
-		//LPDIRECTINPUTDEVICE8 mo_device = nullptr;
+		LPDIRECTINPUTDEVICE8 mo_device = nullptr;
 
 		if (SUCCEEDED(idi8->CreateDevice(GUID_SysKeyboard, &kb_device, nullptr)) &&
 			SUCCEEDED(kb_device->SetDataFormat(&c_dfDIKeyboard)) &&
-			SUCCEEDED(kb_device->SetCooperativeLevel(nullptr, DISCL_BACKGROUND | DISCL_NONEXCLUSIVE))) //&&
-			//SUCCEEDED(idi8->CreateDevice(GUID_SysMouse, &mo_device, nullptr)) &&
-			//SUCCEEDED(mo_device->SetDataFormat(&c_dfDIMouse2)) &&
-			//SUCCEEDED(mo_device->SetCooperativeLevel(nullptr, DISCL_BACKGROUND | DISCL_NONEXCLUSIVE)))
+			SUCCEEDED(kb_device->SetCooperativeLevel(nullptr, DISCL_BACKGROUND | DISCL_NONEXCLUSIVE)) &&
+			SUCCEEDED(idi8->CreateDevice(GUID_SysMouse, &mo_device, nullptr)) &&
+			SUCCEEDED(mo_device->SetDataFormat(&c_dfDIMouse2)) &&
+			SUCCEEDED(mo_device->SetCooperativeLevel(nullptr, DISCL_BACKGROUND | DISCL_NONEXCLUSIVE)))
 		{
-			g_InputDeviceManager.AddDevice(std::make_shared<KeyboardMouse>(kb_device));
+			g_InputDeviceManager.AddDevice(std::make_shared<KeyboardMouse>(kb_device, mo_device));
 			bKbMoEnumerated = true;
 			return;
 		}
 
-		if (kb_device)
+		if (kb_device) {
 			kb_device->Release();
-#if 0
-		if (mo_device)
+		}
+
+		if (mo_device) {
 			mo_device->Release();
-#endif
+		}
 	}
 
 	void PopulateDevices()
@@ -104,36 +105,40 @@ namespace DInput
 		PopulateDevices();
 	}
 
-	KeyboardMouse::KeyboardMouse(const LPDIRECTINPUTDEVICE8 kb_device)
-		: m_kb_device(kb_device)//, m_mo_device(mo_device)
+	KeyboardMouse::KeyboardMouse(const LPDIRECTINPUTDEVICE8 kb_device, const LPDIRECTINPUTDEVICE8 mo_device)
+		: m_kb_device(kb_device), m_mo_device(mo_device)
 	{
 		m_kb_device->Acquire();
-		//m_mo_device->Acquire();
+		m_mo_device->Acquire();
 
-		memset(&m_state_in, 0, sizeof(m_state_in));
+		std::memset(&m_state_in, 0, sizeof(m_state_in));
 
 		// KEYBOARD
 		// add keys
 		for (uint8_t i = 0; i < sizeof(named_keys) / sizeof(*named_keys); ++i) {
 			AddInput(new Key(i, m_state_in.keyboard[named_keys[i].code]));
 		}
-#if 0
+
 		// MOUSE
 		// get caps
 		DIDEVCAPS mouse_caps;
-		memset(&mouse_caps, 0, sizeof(mouse_caps));
+		std::memset(&mouse_caps, 0, sizeof(mouse_caps));
 		mouse_caps.dwSize = sizeof(mouse_caps);
 		m_mo_device->GetCapabilities(&mouse_caps);
+
 		// mouse buttons
 		for (unsigned char i = 0; i < mouse_caps.dwButtons; ++i) {
 			AddInput(new Button(i, m_state_in.mouse.rgbButtons[i]));
 		}
 
-		// cursor, with a hax for-loop
-		for (unsigned int i = 0; i < 4; ++i) {
-			AddInput(new Cursor(!!(i & 2), (&m_state_in.cursor.x)[i / 2], !!(i & 1)));
+		// mouse axes
+		for (unsigned int i = 0; i < mouse_caps.dwAxes; ++i) {
+			const LONG &ax = (&m_state_in.mouse.lX)[i];
+
+			// each axis gets a negative and a positive input instance associated with it
+			AddInput(new Axis(i, ax, (2 == i) ? -10 : -80));
+			AddInput(new Axis(i, ax, -(2 == i) ? 10 : 80));
 		}
-#endif
 	}
 
 	KeyboardMouse::~KeyboardMouse()
@@ -141,85 +146,45 @@ namespace DInput
 		// kb
 		m_kb_device->Unacquire();
 		m_kb_device->Release();
-#if 0
+
 		// mouse
 		m_mo_device->Unacquire();
 		m_mo_device->Release();
-#endif
-	}
-
-	void GetMousePos(ControlState* const x, ControlState* const y)
-	{
-		POINT point = { 1, 1 };
-		GetCursorPos(&point);
-		// Get the cursor position relative to the upper left corner of the current window
-		HWND hwnd = WindowFromPoint(point);
-		DWORD processId;
-		GetWindowThreadProcessId(hwnd, &processId);
-		if (processId == GetCurrentProcessId())
-		{
-			ScreenToClient(hwnd, &point);
-
-			// Get the size of the current window.
-			RECT rect;
-			GetClientRect(hwnd, &rect);
-			// Width and height is the size of the rendering window
-			unsigned int win_width = rect.right - rect.left;
-			unsigned int win_height = rect.bottom - rect.top;
-
-			// Return the mouse position as a range from -1 to 1
-			*x = (ControlState)point.x / (ControlState)win_width * 2 - 1;
-			*y = (ControlState)point.y / (ControlState)win_height * 2 - 1;
-		}
-		else
-		{
-			*x = (ControlState)0;
-			*y = (ControlState)0;
-		}
 	}
 
 	bool KeyboardMouse::UpdateInput()
 	{
-		// Update keyboard and mouse button states
+		DIMOUSESTATE2 tmp_mouse;
+
 		HRESULT kb_hr = m_kb_device->GetDeviceState(sizeof(m_state_in.keyboard), &m_state_in.keyboard);
-		//HRESULT mo_hr = m_mo_device->GetDeviceState(sizeof(m_state_in.mouse), &m_state_in.mouse);
+		HRESULT mo_hr = m_mo_device->GetDeviceState(sizeof(tmp_mouse), &tmp_mouse);
 
 		if (DIERR_INPUTLOST == kb_hr || DIERR_NOTACQUIRED == kb_hr) {
 			m_kb_device->Acquire();
 		}
-#if 0
+
 		if (DIERR_INPUTLOST == mo_hr || DIERR_NOTACQUIRED == mo_hr) {
 			m_mo_device->Acquire();
 		}
-#endif
-		if (SUCCEEDED(kb_hr)) //&& SUCCEEDED(mo_hr))
+
+		if (SUCCEEDED(kb_hr) && SUCCEEDED(mo_hr))
 		{
-#if 0
-			ControlState temp_x, temp_y;
+			// NOTE: the /= 2 will cause the mouse input to naturally decay to zero if the mouse did not change its position
+			for (unsigned int i = 0; i < 3; ++i) {
+				((&m_state_in.mouse.lX)[i] += (&tmp_mouse.lX)[i]) /= 2;
+			}
 
-			// Update absolute mouse position
-			GetMousePos(&m_state_in.cursor.x, &m_state_in.cursor.y);
+			std::memcpy(m_state_in.mouse.rgbButtons, tmp_mouse.rgbButtons, sizeof(m_state_in.mouse.rgbButtons));
 
-			// Save current absolute mouse position
-			temp_x = m_state_in.cursor.x;
-			temp_y = m_state_in.cursor.y;
-
-			// Update relative mouse motion
-			m_state_in.cursor.x -= m_state_in.cursor.last_x;
-			m_state_in.cursor.y -= m_state_in.cursor.last_y;
-
-			// Update previous absolute mouse position
-			m_state_in.cursor.last_x = temp_x;
-			m_state_in.cursor.last_y = temp_y;
-#endif
 			return true;
 		}
+
 		return false;
 	}
 
 	std::string KeyboardMouse::GetDeviceName() const
 	{
-		return "Keyboard";
+		return "KeyboardMouse";
 	}
 
 	std::string KeyboardMouse::GetAPI() const
@@ -237,11 +202,11 @@ namespace DInput
 		return std::string("Click ") + char('0' + m_index);
 	}
 
-	std::string KeyboardMouse::Cursor::GetName() const
+	std::string KeyboardMouse::Axis::GetName() const
 	{
-		static char tmpstr[] = "Cursor ..";
-		tmpstr[7] = (char)('X' + m_index);
-		tmpstr[8] = (m_positive ? '+' : '-');
+		static char tmpstr[] = "Axis ..";
+		tmpstr[5] = (char)('X' + m_index);
+		tmpstr[6] = (m_range < 0 ? '-' : '+');
 		return tmpstr;
 	}
 
@@ -255,8 +220,8 @@ namespace DInput
 		return (m_button != 0);
 	}
 
-	ControlState KeyboardMouse::Cursor::GetState() const
+	ControlState KeyboardMouse::Axis::GetState() const
 	{
-		return std::max(0.0, ControlState(m_axis) / (m_positive ? 1.0 : -1.0));
+		return std::clamp(ControlState(m_axis) / m_range, 0.0, 1.0);
 	}
 }
