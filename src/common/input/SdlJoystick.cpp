@@ -301,7 +301,8 @@ namespace Sdl
 		// get axes
 		for (i = 0; i != NumAxes; ++i) {
 			// each axis gets a negative and a positive input instance associated with it
-			AddAnalogInputs(new Axis(i, m_Joystick, -32768), new Axis(i, m_Joystick, 32767));
+			AddInput(new Axis(i, m_Joystick, -32768));
+			AddInput(new Axis(i, m_Joystick, 32767));
 		}
 
 		// try to get supported ff effects

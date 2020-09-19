@@ -146,31 +146,6 @@ public:
 		m_Bindings[XButton] = Control;
 	}
 
-protected:
-	class FullAnalogSurface : public Input
-	{
-	public:
-		FullAnalogSurface(Input* Low, Input* High) : m_Low(*Low), m_High(*High) {}
-		ControlState GetState() const override
-		{
-			return (1 + m_High.GetState() - m_Low.GetState()) / 2;
-		}
-
-		std::string GetName() const override { return m_Low.GetName() + *m_High.GetName().rbegin(); }
-
-	private:
-		Input& m_Low;
-		Input& m_High;
-	};
-
-	void AddAnalogInputs(Input* Low, Input* High)
-	{
-		AddInput(Low);
-		AddInput(High);
-		AddInput(new FullAnalogSurface(Low, High));
-		AddInput(new FullAnalogSurface(High, Low));
-	}
-
 private:
 	// arbitrary ID assigned by to the device
 	int m_ID;
