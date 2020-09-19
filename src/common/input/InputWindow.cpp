@@ -186,7 +186,7 @@ InputDevice::Input* InputWindow::DetectInput(InputDevice* const Device, int ms)
 		Device->UpdateInput();
 		std::vector<bool>::iterator state = initial_states.begin();
 		for (; i != e && s == e; i++, state++) {
-			if ((*i)->IsDetectable() && (*i)->GetState() > INPUT_DETECT_THRESHOLD) {
+			if ((*i)->GetState() > INPUT_DETECT_THRESHOLD) {
 				if (*state == false) {
 					// input was not initially pressed or it was but released afterwards
 					s = i;
