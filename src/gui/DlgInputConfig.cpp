@@ -37,34 +37,44 @@
 
 // Windows dialog procedure for the input menu
 static INT_PTR CALLBACK DlgInputConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+// Window procedure of the subclass
+LRESULT CALLBACK EditControlSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
 HWND g_ChildWnd = NULL;
+static bool g_bHasOptChanges = false;
 
 
-void SyncInputSettings(int port_num, int dev_type)
+void SyncInputSettings(int port_num, int dev_type, bool is_opt)
 {
 	if (g_ChildWnd) {
-		// Sync updated input to kernel process to use run-time settings.
-		g_EmuShared->SetInputDevTypeSettings(&g_Settings->m_input[port_num].Type, port_num);
+		if (!is_opt) {
+			// Sync updated input to kernel process to use run-time settings.
+			g_EmuShared->SetInputDevTypeSettings(&g_Settings->m_input_port[port_num].Type, port_num);
 
-		if (dev_type != to_underlying(XBOX_INPUT_DEVICE::DEVICE_INVALID)) {
-			std::string dev_name = g_Settings->m_input[port_num].DeviceName;
-			std::string profile_name = g_Settings->m_input[port_num].ProfileName;
+			if (dev_type != to_underlying(XBOX_INPUT_DEVICE::DEVICE_INVALID)) {
+				std::string dev_name = g_Settings->m_input_port[port_num].DeviceName;
+				std::string profile_name = g_Settings->m_input_port[port_num].ProfileName;
 
-			g_EmuShared->SetInputDevNameSettings(dev_name.c_str(), port_num);
-			auto it = std::find_if(g_Settings->m_input_profiles[dev_type].begin(),
-				g_Settings->m_input_profiles[dev_type].end(), [&profile_name](const auto& profile) {
-					if (profile.ProfileName == profile_name) {
-						return true;
+				g_EmuShared->SetInputDevNameSettings(dev_name.c_str(), port_num);
+				auto it = std::find_if(g_Settings->m_input_profiles[dev_type].begin(),
+					g_Settings->m_input_profiles[dev_type].end(), [&profile_name](const auto &profile) {
+						if (profile.ProfileName == profile_name) {
+							return true;
+						}
+						return false;
+					});
+				if (it != g_Settings->m_input_profiles[dev_type].end()) {
+					char controls_name[XBOX_CTRL_NUM_BUTTONS][30];
+					for (int index = 0; index < dev_num_buttons[dev_type]; index++) {
+						strncpy(controls_name[index], it->ControlList[index].c_str(), 30);
 					}
-					return false;
-				});
-			if (it != g_Settings->m_input_profiles[dev_type].end()) {
-				char controls_name[XBOX_CTRL_NUM_BUTTONS][30];
-				for (int index = 0; index < dev_num_buttons[dev_type]; index++) {
-					strncpy(controls_name[index], it->ControlList[index].c_str(), 30);
+					g_EmuShared->SetInputBindingsSettings(controls_name, XBOX_CTRL_NUM_BUTTONS, port_num);
 				}
-				g_EmuShared->SetInputBindingsSettings(controls_name, XBOX_CTRL_NUM_BUTTONS, port_num);
 			}
+		}
+		else {
+			g_EmuShared->SetInputMoAxisSettings(g_Settings->m_input_general.MoAxisRange);
+			g_EmuShared->SetInputMoWheelSettings(g_Settings->m_input_general.MoWheelRange);
+			port_num = PORT_INVALID;
 		}
 #if 0 // lle usb
 		ipc_send_kernel_update(IPC_UPDATE_KERNEL::CONFIG_INPUT_SYNC, PORT_DEC(Gui2XboxPortArray[port_num]),
@@ -73,6 +83,15 @@ void SyncInputSettings(int port_num, int dev_type)
 		ipc_send_kernel_update(IPC_UPDATE_KERNEL::CONFIG_INPUT_SYNC, port_num, reinterpret_cast<std::uintptr_t>(g_ChildWnd));
 #endif
 	}
+}
+
+void UpdateInputOpt(HWND hwnd)
+{
+	char buffer[30];
+	SendMessage(GetDlgItem(hwnd, IDC_MOUSE_RANGE), WM_GETTEXT, 30, reinterpret_cast<LPARAM>(buffer));
+	g_Settings->m_input_general.MoAxisRange = std::stol(buffer);
+	SendMessage(GetDlgItem(hwnd, IDC_WHEEL_RANGE), WM_GETTEXT, 30, reinterpret_cast<LPARAM>(buffer));
+	g_Settings->m_input_general.MoWheelRange = std::stol(buffer);
 }
 
 void ShowInputConfig(HWND hwnd, HWND ChildWnd)
@@ -90,20 +109,18 @@ INT_PTR CALLBACK DlgInputConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPAR
 	{
 	case WM_INITDIALOG:
 	{
-		HWND hHandle;
-
 		// Set window icon
 		SetClassLong(hWndDlg, GCL_HICON, (LONG)LoadIcon(GetModuleHandle(nullptr), MAKEINTRESOURCE(IDI_CXBX)));
 
 		for (int i = 0, j = 0; i != 4; i++) {
-			hHandle = GetDlgItem(hWndDlg, IDC_DEVICE_PORT1 + i);
+			HWND hHandle = GetDlgItem(hWndDlg, IDC_DEVICE_PORT1 + i);
 			for (auto str : { "None", "MS Controller Duke", "MS Controller S" }) {
 				LRESULT index = SendMessage(hHandle, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(str));
 				SendMessage(hHandle, CB_SETITEMDATA, index,
 					to_underlying(XBOX_INPUT_DEVICE::DEVICE_INVALID) + j);
-				if (g_Settings->m_input[i].Type == to_underlying(XBOX_INPUT_DEVICE::DEVICE_INVALID) + j) {
+				if (g_Settings->m_input_port[i].Type == to_underlying(XBOX_INPUT_DEVICE::DEVICE_INVALID) + j) {
 					SendMessage(hHandle, CB_SETCURSEL, index, 0);
-					if (g_Settings->m_input[i].Type == to_underlying(XBOX_INPUT_DEVICE::DEVICE_INVALID)) {
+					if (g_Settings->m_input_port[i].Type == to_underlying(XBOX_INPUT_DEVICE::DEVICE_INVALID)) {
 						EnableWindow(GetDlgItem(hWndDlg, IDC_CONFIGURE_PORT1 + i), FALSE);
 					}
 				}
@@ -111,11 +128,28 @@ INT_PTR CALLBACK DlgInputConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPAR
 			}
 			j = 0;
 		}
+
+		for (auto i : { IDC_MOUSE_RANGE, IDC_WHEEL_RANGE }) {
+			HWND hEditControlArray = GetDlgItem(hWndDlg, i);
+			SetWindowSubclass(hEditControlArray, EditControlSubclassProc, i, 0);
+			SendMessage(hEditControlArray, EM_SETLIMITTEXT, 6, 0);
+			SendMessage(hEditControlArray, WM_SETTEXT, 0, reinterpret_cast<LPARAM>((i == IDC_MOUSE_RANGE) ?
+				std::to_string(g_Settings->m_input_general.MoAxisRange).c_str() :
+				std::to_string(g_Settings->m_input_general.MoWheelRange).c_str()));
+		}
+
+		// Reset option changes flag
+		g_bHasOptChanges = false;
 	}
 	break;
 
 	case WM_CLOSE:
 	{
+		if (g_bHasOptChanges) {
+			UpdateInputOpt(hWndDlg);
+			SyncInputSettings(0, 0, true);
+		}
+
 		g_InputDeviceManager.Shutdown();
 		g_ChildWnd = NULL;
 		EndDialog(hWndDlg, wParam);
@@ -144,6 +178,11 @@ INT_PTR CALLBACK DlgInputConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPAR
 				{
 				case to_underlying(XBOX_INPUT_DEVICE::MS_CONTROLLER_DUKE): 
 				case to_underlying(XBOX_INPUT_DEVICE::MS_CONTROLLER_S): {
+					if (g_bHasOptChanges) {
+						UpdateInputOpt(hWndDlg);
+						g_InputDeviceManager.UpdateOpt(true);
+					}
+
 					DialogBoxParam(GetModuleHandle(nullptr), MAKEINTRESOURCE(IDD_XID_DUKE_CFG), hWndDlg, DlgXidControllerConfigProc,
 						(DeviceType << 8) | port);
 				}
@@ -156,7 +195,7 @@ INT_PTR CALLBACK DlgInputConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPAR
 					DeviceType < to_underlying(XBOX_INPUT_DEVICE::DEVICE_MAX));
 
 				// Also inform the kernel process if it exists
-				SyncInputSettings(port, DeviceType);
+				SyncInputSettings(port, DeviceType, false);
 			}
 		}
 		break;
@@ -183,16 +222,66 @@ INT_PTR CALLBACK DlgInputConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPAR
 					EnableWindow(GetDlgItem(hWndDlg, IDC_CONFIGURE_PORT1 + port), TRUE);
 				}
 
-				g_Settings->m_input[port].Type = dev_type;
+				g_Settings->m_input_port[port].Type = dev_type;
 
 				// Also inform the kernel process if it exists
-				SyncInputSettings(port, dev_type);
+				SyncInputSettings(port, dev_type, false);
 			}
 		}
 		break;
+
+		case IDC_MOUSE_RANGE:
+		case IDC_WHEEL_RANGE:
+		{
+			if (HIWORD(wParam) == EN_CHANGE) {
+				g_bHasOptChanges = true;
+			}
+		}
 		}
 	}
 	break;
 	}
 	return FALSE;
+}
+
+LRESULT CALLBACK EditControlSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam,
+	LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData)
+{
+	switch (uMsg)
+	{
+	// Remove the window subclass when this window is destroyed
+	case WM_NCDESTROY:
+		RemoveWindowSubclass(hWnd, EditControlSubclassProc, uIdSubclass);
+		break;
+
+	// Override the default system behaviour and process WM_CHAR ourselves
+	case WM_GETDLGCODE:
+		if (lParam) {
+			LPMSG lpmsg = reinterpret_cast<LPMSG>(lParam);
+			if (lpmsg->message == WM_CHAR) {
+				return DLGC_WANTCHARS;
+			}
+		}
+		break;
+
+	case WM_CHAR:
+	{
+		// Make sure we only allow decimal numbers and some special keys to delete characters
+		if (!((wParam >= '0' && wParam <= '9')
+			|| wParam == VK_CANCEL
+			|| wParam == VK_CLEAR
+			|| wParam == VK_DELETE
+			|| wParam == VK_BACK))
+		{
+			return FALSE;
+		}
+	}
+	break;
+
+	// Don't allow pasting operations, they can be used to bypass the filtering done in WM_CHAR
+	case WM_PASTE:
+		return FALSE;
+	}
+
+	return DefSubclassProc(hWnd, uMsg, wParam, lParam);
 }

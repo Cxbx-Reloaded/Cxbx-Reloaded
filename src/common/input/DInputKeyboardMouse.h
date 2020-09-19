@@ -34,7 +34,11 @@
 
 namespace DInput
 {
-	extern bool bKbMoEnumerated;
+	inline bool bKbMoEnumerated = false;
+	inline LONG mo_axis_range_pos = 0;
+	inline LONG mo_axis_range_neg = 0;
+	inline LONG mo_wheel_range_pos = 0;
+	inline LONG mo_wheel_range_neg = 0;
 	void GetDeviceChanges();
 	void PopulateDevices();
 
@@ -76,13 +80,13 @@ namespace DInput
 		class Axis : public Input
 		{
 		public:
-			Axis(uint8_t index, const LONG &axis, LONG range) : m_axis(axis), m_range(range), m_index(index) {}
+			Axis(uint8_t index, const LONG &axis, const LONG &range) : m_axis(axis), m_range(range), m_index(index) {}
 			std::string GetName() const override;
 			ControlState GetState() const override;
 
 		private:
 			const LONG &m_axis;
-			const LONG m_range;
+			const LONG &m_range;
 			const uint8_t m_index;
 		};
 

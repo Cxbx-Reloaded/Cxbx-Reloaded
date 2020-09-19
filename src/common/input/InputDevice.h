@@ -48,6 +48,8 @@
 #define DIRECTION_IN      0
 #define DIRECTION_OUT     1
 
+#define MO_AXIS_DEFAULT_RANGE   10l
+#define MO_WHEEL_DEFAULT_RANGE  80l
 
 typedef double ControlState;
 

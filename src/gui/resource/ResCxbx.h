@@ -304,6 +304,9 @@
 #define IDC_RUMBLE_TEST                 1302
 #define IDC_NETWORK_ADAPTER             1303
 #define IDC_LOG_POPUP_TESTCASE          1304
+#define IDC_INPUT_OPTIONS               1305
+#define IDC_MOUSE_RANGE                 1306
+#define IDC_WHEEL_RANGE                 1307
 #define ID_FILE_EXIT                    40005
 #define ID_HELP_ABOUT                   40008
 #define ID_EMULATION_START              40009

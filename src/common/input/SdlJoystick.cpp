@@ -57,7 +57,7 @@ namespace Sdl
 	int SdlInitStatus = SDL_NOT_INIT;
 	bool SdlPopulateOK = false;
 
-	void Init(std::mutex& Mtx, std::condition_variable& Cv)
+	void Init(std::mutex& Mtx, std::condition_variable& Cv, bool is_gui)
 	{
 		SDL_Event Event;
 		uint32_t CustomEvent_t;
@@ -155,9 +155,15 @@ namespace Sdl
 				break;
 			}
 			else if (Event.type == UpdateInputEvent_t) {
-				XInput::GetDeviceChanges();
-				DInput::GetDeviceChanges();
-				g_InputDeviceManager.UpdateDevices(*static_cast<int*>(Event.user.data1), false);
+				if ((*static_cast<int *>(Event.user.data1)) == PORT_INVALID) {
+					g_InputDeviceManager.UpdateOpt(is_gui);
+				}
+				else {
+					XInput::GetDeviceChanges();
+					DInput::GetDeviceChanges();
+					g_InputDeviceManager.UpdateDevices(*static_cast<int *>(Event.user.data1), false);
+				}
+
 				delete Event.user.data1;
 				Event.user.data1 = nullptr;
 			}

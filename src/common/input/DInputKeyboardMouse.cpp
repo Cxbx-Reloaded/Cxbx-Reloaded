@@ -51,8 +51,6 @@ namespace DInput
 #include "DInputKeyboardCodes.h"
 	};
 
-	bool bKbMoEnumerated = false;
-
 	void InitKeyboardMouse(IDirectInput8* idi8)
 	{
 		// From Dolphin: "mouse and keyboard are a combined device, to allow shift+click and stuff
@@ -136,8 +134,8 @@ namespace DInput
 			const LONG &ax = (&m_state_in.mouse.lX)[i];
 
 			// each axis gets a negative and a positive input instance associated with it
-			AddInput(new Axis(i, ax, (2 == i) ? -10 : -80));
-			AddInput(new Axis(i, ax, -(2 == i) ? 10 : 80));
+			AddInput(new Axis(i, ax, (2 == i) ? mo_wheel_range_neg : mo_axis_range_neg));
+			AddInput(new Axis(i, ax, (2 == i) ? mo_wheel_range_pos : mo_axis_range_pos));
 		}
 	}
 
