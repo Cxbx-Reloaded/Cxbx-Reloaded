@@ -38,7 +38,7 @@
 #define OUTPUT_TIMEOUT 3000
 
 
-constexpr ControlState INPUT_DETECT_THRESHOLD = 0.55; // arbitrary number, using what Dolphin uses
+constexpr ControlState INPUT_DETECT_THRESHOLD = 0.35; // NOTE: this should probably be made user configurable
 InputWindow* g_InputWindow = nullptr;
 
 
