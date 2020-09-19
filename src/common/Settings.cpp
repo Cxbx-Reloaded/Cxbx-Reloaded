@@ -923,7 +923,7 @@ void Settings::RemoveLegacyConfigs(unsigned int CurrentRevision)
 
 		for (unsigned port_num = 0; port_num < 4; ++port_num) {
 			std::string current_section = std::string(section_input_port) + std::to_string(port_num);
-			std::string device_name = m_si.GetValue(current_section.c_str(), sect_input_port.device);
+			std::string device_name = m_si.GetValue(current_section.c_str(), sect_input_port.device, "");
 
 			// NOTE: with C++20, this can be simplified by simply calling device_name.ends_with()
 			if (device_name.length() >= kb_str.length()) {
@@ -940,7 +940,7 @@ void Settings::RemoveLegacyConfigs(unsigned int CurrentRevision)
 				break;
 			}
 
-			std::string device_name = m_si.GetValue(current_section.c_str(), sect_input_profiles.device);
+			std::string device_name = m_si.GetValue(current_section.c_str(), sect_input_profiles.device, "");
 
 			// NOTE: with C++20, this can be simplified by simply calling device_name.ends_with()
 			if (device_name.length() >= kb_str.length()) {
