@@ -112,7 +112,7 @@ size_t g_SystemMaxMemory = 0;
 
 HANDLE g_CurrentProcessHandle = 0; // Set in CxbxKrnlMain
 bool g_bIsWine = false;
-
+bool g_bClipCursor = false;
 bool g_CxbxPrintUEM = false;
 ULONG g_CxbxFatalErrorCode = FATAL_ERROR_NONE;
 

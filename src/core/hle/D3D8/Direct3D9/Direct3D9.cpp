@@ -675,6 +675,18 @@ void DrawUEM(HWND hWnd)
 	EndPaint(hWnd, &ps);
 }
 
+void CxbxClipCursor(HWND hWnd)
+{
+	RECT wnd_rect;
+	GetWindowRect(hWnd, &wnd_rect);
+	ClipCursor(&wnd_rect);
+}
+
+void CxbxReleaseCursor()
+{
+	ClipCursor(nullptr);
+}
+
 inline DWORD GetXboxCommonResourceType(const xbox::DWORD XboxResource_Common)
 {
 	DWORD dwCommonType = XboxResource_Common & X_D3DCOMMON_TYPE_MASK;
@@ -1928,6 +1940,17 @@ static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
             {
                 VertexBufferConverter.PrintStats();
             }
+            else if (wParam == VK_F3)
+            {
+                g_bClipCursor = !g_bClipCursor;
+
+                if (g_bClipCursor) {
+                    CxbxClipCursor(hWnd);
+                }
+                else {
+                    CxbxReleaseCursor();
+                }
+            }
             else if (wParam == VK_F6)
             {
                 // For some unknown reason, F6 isn't handled in WndMain::WndProc
@@ -1989,6 +2012,26 @@ static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
                     }
                 }
                 break;
+            }
+
+            if (g_bClipCursor) {
+                CxbxClipCursor(hWnd);
+            }
+        }
+        break;
+
+        case WM_MOVE:
+        {
+            if (g_bClipCursor) {
+                CxbxClipCursor(hWnd);
+            }
+        }
+        break;
+
+        case WM_MOUSEMOVE:
+        {
+            if (g_bClipCursor) {
+                CxbxClipCursor(hWnd);
             }
         }
         break;
