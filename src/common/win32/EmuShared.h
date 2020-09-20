@@ -245,6 +245,12 @@ class EmuShared : public Mutex
 		void SetStorageLocation(const char *path) { Lock(); strncpy(m_core.szStorageLocation, path, MAX_PATH); Unlock(); }
 
 		// ******************************************************************
+		// * ClipCursor flag Accessors
+		// ******************************************************************
+		void GetClipCursorFlag(bool *value) { Lock(); *value = m_bClipCursor; Unlock(); }
+		void SetClipCursorFlag(const bool *value) { Lock(); m_bClipCursor = *value; Unlock(); }
+
+		// ******************************************************************
 		// * Reset specific variables to default for kernel mode.
 		// ******************************************************************
 		void ResetKrnl()
@@ -292,7 +298,7 @@ class EmuShared : public Mutex
 		int          m_Reserved7[4];
 #endif
 		bool         m_bFirstLaunch;
-		bool         m_bReserved2;
+		bool         m_bClipCursor;
 		bool         m_bReserved3;
 		bool         m_bReserved4;
 		unsigned int m_dwKrnlProcID; // Only used for kernel mode level.

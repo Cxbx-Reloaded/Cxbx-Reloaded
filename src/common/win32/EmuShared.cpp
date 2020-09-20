@@ -152,9 +152,9 @@ EmuShared::EmuShared()
 	m_bDebugging = false;
 	m_bEmulating_status = false;
 	m_bFirstLaunch = false;
+	m_bClipCursor = false;
 
 	// Reserve space (default to 0)
-	m_bReserved2 = false;
 	m_bReserved3 = false;
 	m_bReserved4 = false;
 	m_Reserved5 = 0;

@@ -1856,6 +1856,7 @@ static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
     {
         case WM_DESTROY:
         {
+            CxbxReleaseCursor();
             DeleteObject(g_hBgBrush);
             PostQuitMessage(0);
             return D3D_OK; // = 0
@@ -1943,6 +1944,7 @@ static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
             else if (wParam == VK_F3)
             {
                 g_bClipCursor = !g_bClipCursor;
+                g_EmuShared->SetClipCursorFlag(&g_bClipCursor);
 
                 if (g_bClipCursor) {
                     CxbxClipCursor(hWnd);
@@ -2037,6 +2039,7 @@ static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
         break;
 
         case WM_CLOSE:
+            CxbxReleaseCursor();
             DestroyWindow(hWnd);
 			CxbxKrnlShutDown();
             break;
