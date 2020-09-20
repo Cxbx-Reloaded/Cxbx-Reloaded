@@ -35,6 +35,7 @@
 namespace DInput
 {
 	inline bool bKbMoEnumerated = false;
+	inline bool mo_leave_wnd = false;
 	inline LONG mo_axis_range_pos = 0;
 	inline LONG mo_axis_range_neg = 0;
 	inline LONG mo_wheel_range_pos = 0;

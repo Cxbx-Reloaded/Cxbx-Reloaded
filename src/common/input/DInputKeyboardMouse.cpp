@@ -152,6 +152,11 @@ namespace DInput
 
 	bool KeyboardMouse::UpdateInput()
 	{
+		if (mo_leave_wnd) {
+			std::memset(&m_state_in, 0, sizeof(m_state_in));
+			return true;
+		}
+
 		DIMOUSESTATE2 tmp_mouse;
 
 		HRESULT kb_hr = m_kb_device->GetDeviceState(sizeof(m_state_in.keyboard), &m_state_in.keyboard);

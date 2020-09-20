@@ -203,6 +203,8 @@ extern bool g_bIsWine;
 extern bool g_bClipCursor;
 extern bool g_CxbxPrintUEM;
 extern ULONG g_CxbxFatalErrorCode;
+extern bool g_bIsTrackingMoLeave;
+extern bool g_bIsTrackingMoMove;
 
 extern size_t g_SystemMaxMemory;
 

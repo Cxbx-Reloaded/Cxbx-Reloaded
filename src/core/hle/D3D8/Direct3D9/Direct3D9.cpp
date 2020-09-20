@@ -64,6 +64,7 @@
 #include "WalkIndexBuffer.h"
 #include "core\kernel\common\strings.hpp" // For uem_str
 #include "common\input\SdlJoystick.h"
+#include "common\input\DInputKeyboardMouse.h"
 #include "common/util/strConverter.hpp" // for utf8_to_utf16
 #include "VertexShaderSource.h"
 
@@ -2030,10 +2031,32 @@ static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
         }
         break;
 
+        case WM_MOUSELEAVE:
+        {
+            DInput::mo_leave_wnd = true;
+            g_bIsTrackingMoLeave = false;
+            g_bIsTrackingMoMove = true;
+        }
+        break;
+
         case WM_MOUSEMOVE:
         {
             if (g_bClipCursor) {
                 CxbxClipCursor(hWnd);
+            }
+
+            if (!g_bIsTrackingMoLeave) {
+                TRACKMOUSEEVENT tme;
+                tme.cbSize = sizeof(TRACKMOUSEEVENT);
+                tme.hwndTrack = hWnd;
+                tme.dwFlags = TME_LEAVE;
+                TrackMouseEvent(&tme);
+                g_bIsTrackingMoLeave = true;
+
+                if (g_bIsTrackingMoMove) {
+                    DInput::mo_leave_wnd = false;
+                    g_bIsTrackingMoMove = false;
+                }
             }
         }
         break;

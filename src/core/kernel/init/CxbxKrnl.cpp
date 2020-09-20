@@ -115,6 +115,8 @@ bool g_bIsWine = false;
 bool g_bClipCursor = false;
 bool g_CxbxPrintUEM = false;
 ULONG g_CxbxFatalErrorCode = FATAL_ERROR_NONE;
+bool g_bIsTrackingMoLeave = false;
+bool g_bIsTrackingMoMove = false;
 
 // Define function located in EmuXApi so we can call it from here
 void SetupXboxDeviceTypes();
