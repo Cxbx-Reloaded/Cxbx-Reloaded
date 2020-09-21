@@ -67,6 +67,10 @@ typedef enum class _XBOX_INPUT_DEVICE : int {
 }
 XBOX_INPUT_DEVICE;
 
+// Flags that indicate that WM_MOUSELEAVE and WM_MOUSEMOVE respectively are being tracked in the rendering window procedure
+inline bool g_bIsTrackingMoLeave = false;
+inline bool g_bIsTrackingMoMove = false;
+
 // Lookup array used to translate a gui port to an xbox usb port and vice versa
 extern int Gui2XboxPortArray[4];
 
