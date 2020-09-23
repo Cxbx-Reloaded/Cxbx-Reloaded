@@ -148,7 +148,7 @@ typedef long                            NTSTATUS;
 // ******************************************************************
 // * KPROCESSOR_MODE
 // ******************************************************************
-typedef CCHAR KPROCESSOR_MODE;
+typedef cchar_t KPROCESSOR_MODE;
 
 // ******************************************************************
 // * KWAIT_REASON
@@ -353,7 +353,7 @@ typedef struct _FILE_FS_VOLUME_INFORMATION {
 	ULONG			VolumeSerialNumber;
 	ULONG			VolumeLabelLength;
 	BOOLEAN			SupportsObjects;
-	CHAR			VolumeLabel[1];
+	char_t			VolumeLabel[1];
 } FILE_FS_VOLUME_INFORMATION, *PFILE_FS_VOLUME_INFORMATION;
 
 // ******************************************************************
@@ -630,7 +630,7 @@ typedef struct _FILE_DIRECTORY_INFORMATION
 	LARGE_INTEGER   AllocationSize;
 	ULONG           FileAttributes;
 	ULONG           FileNameLength;
-	CHAR            FileName[1];        // Offset: 0x40
+	char_t            FileName[1];        // Offset: 0x40
 }
 FILE_DIRECTORY_INFORMATION;
 
@@ -652,7 +652,7 @@ typedef struct _FILE_LINK_INFORMATION {
 	BOOLEAN         ReplaceIfExists;
 	HANDLE          RootDirectory;
 	ULONG           FileNameLength;
-	CHAR            FileName[1];
+	char_t            FileName[1];
 } FILE_LINK_INFORMATION, *PFILE_LINK_INFORMATION;
 
 // ******************************************************************
@@ -676,7 +676,7 @@ typedef struct _FILE_FULL_EA_INFORMATION {
 	UCHAR Flags;
 	UCHAR EaNameLength;
 	USHORT EaValueLength;
-	CHAR EaName[1];
+	char_t EaName[1];
 } FILE_FULL_EA_INFORMATION, *PFILE_FULL_EA_INFORMATION;
 
 // ******************************************************************
@@ -748,7 +748,7 @@ typedef struct _FILE_ALIGNMENT_INFORMATION {
 // ******************************************************************
 typedef struct _FILE_NAME_INFORMATION {
 	ULONG           FileNameLength;
-	CHAR            FileName[1];
+	char_t            FileName[1];
 } FILE_NAME_INFORMATION, *PFILE_NAME_INFORMATION;
 
 // ******************************************************************
@@ -806,7 +806,7 @@ typedef struct _FILE_MOVE_CLUSTER_INFORMATION {
 	ULONG ClusterCount;
 	HANDLE RootDirectory;
 	ULONG FileNameLength;
-	CHAR FileName[1];
+	char_t FileName[1];
 } FILE_MOVE_CLUSTER_INFORMATION, *PFILE_MOVE_CLUSTER_INFORMATION;
 
 // ******************************************************************
@@ -817,7 +817,7 @@ typedef struct _FILE_STREAM_INFORMATION {
 	ULONG           StreamNameLength;
 	LARGE_INTEGER   StreamSize;
 	LARGE_INTEGER   StreamAllocationSize;
-	CHAR            StreamName[1];
+	char_t            StreamName[1];
 } FILE_STREAM_INFORMATION, *PFILE_STREAM_INFORMATION;
 
 // ******************************************************************
@@ -826,7 +826,7 @@ typedef struct _FILE_STREAM_INFORMATION {
 typedef struct _FILE_TRACKING_INFORMATION {
 	HANDLE          DestinationFile;
 	ULONG           ObjectInformationLength;
-	CHAR            ObjectInformation[1];
+	char_t            ObjectInformation[1];
 } FILE_TRACKING_INFORMATION, *PFILE_TRACKING_INFORMATION;
 
 // ******************************************************************
@@ -1293,8 +1293,8 @@ typedef struct _IRP
 	ULONG                  Flags;               // 0x04
 	LIST_ENTRY             ThreadListEntry;     // 0x08
 	IO_STATUS_BLOCK        IoStatus;            // 0x10
-	CHAR                   StackCount;          // 0x18
-	CHAR                   CurrentLocation;	    // 0x19
+	char_t                   StackCount;          // 0x18
+	char_t                   CurrentLocation;	    // 0x19
 	UCHAR                  PendingReturned;     // 0x1A
 	UCHAR                  Cancel;              // 0x1B
 	PIO_STATUS_BLOCK       UserIosb;            // 0x1C
@@ -1322,7 +1322,7 @@ typedef struct _DEVICE_OBJECT
 	PVOID DeviceExtension;
 	UCHAR DeviceType;
 	UCHAR StartIoFlags;
-	CCHAR StackSize;
+	cchar_t StackSize;
 	BOOLEAN DeletePending;
 	ULONG SectorSize;
 	ULONG AlignmentRequirement;
@@ -1700,10 +1700,10 @@ typedef struct _KPROCESS
 	/* 0x8/8 */ LIST_ENTRY ThreadListHead;
 	/* 0x10/16 */ ULONG StackCount;
 	/* 0x14/20 */ ULONG ThreadQuantum;
-	/* 0x18/24 */ CHAR BasePriority;
-	/* 0x19/25 */ CHAR DisableBoost;
-	/* 0x1A/26 */ CHAR DisableQuantum;
-	/* 0x1B/27 */ CHAR _padding;
+	/* 0x18/24 */ char_t BasePriority;
+	/* 0x19/25 */ char_t DisableBoost;
+	/* 0x1A/26 */ char_t DisableQuantum;
+	/* 0x1B/27 */ char_t _padding;
 }
 KPROCESS, *PKPROCESS;
 
@@ -1873,33 +1873,33 @@ typedef struct _KTHREAD
 	/* 0x20/32 */ void *StackLimit;
 	/* 0x24/36 */ void *KernelStack;
 	/* 0x28/40 */ void *TlsData;
-	/* 0x2C/44 */ CHAR State;
-	/* 0x2D/45 */ CHAR Alerted[2];
-	/* 0x2F/47 */ CHAR Alertable;
-	/* 0x30/48 */ CHAR NpxState;
-	/* 0x31/49 */ CHAR Saturation;
-	/* 0x32/50 */ CHAR Priority;
-	/* 0x33/51 */ CHAR Padding;
+	/* 0x2C/44 */ char_t State;
+	/* 0x2D/45 */ char_t Alerted[2];
+	/* 0x2F/47 */ char_t Alertable;
+	/* 0x30/48 */ char_t NpxState;
+	/* 0x31/49 */ char_t Saturation;
+	/* 0x32/50 */ char_t Priority;
+	/* 0x33/51 */ char_t Padding;
 	/* 0x34/52 */ KAPC_STATE ApcState;
 	/* 0x4C/76 */ ULONG ContextSwitches;
 	/* 0x50/80 */ ULONG WaitStatus;
-	/* 0x54/84 */ CHAR WaitIrql;
-	/* 0x55/85 */ CHAR WaitMode;
-	/* 0x56/86 */ CHAR WaitNext;
-	/* 0x57/87 */ CHAR WaitReason;
+	/* 0x54/84 */ char_t WaitIrql;
+	/* 0x55/85 */ char_t WaitMode;
+	/* 0x56/86 */ char_t WaitNext;
+	/* 0x57/87 */ char_t WaitReason;
 	/* 0x58/88 */ PKWAIT_BLOCK WaitBlockList;
 	/* 0x5C/92 */ LIST_ENTRY WaitListEntry;
 	/* 0x64/100 */ ULONG WaitTime;
 	/* 0x68/104 */ ULONG KernelApcDisable;
 	/* 0x6C/108 */ ULONG Quantum;
-	/* 0x70/112 */ CHAR BasePriority;
-	/* 0x71/113 */ CHAR DecrementCount;
-	/* 0x72/114 */ CHAR PriorityDecrement;
-	/* 0x73/115 */ CHAR DisableBoost;
-	/* 0x74/116 */ CHAR NpxIrql;
-	/* 0x75/117 */ CHAR SuspendCount;
-	/* 0x76/118 */ CHAR Preempted;
-	/* 0x77/119 */ CHAR HasTerminated;
+	/* 0x70/112 */ char_t BasePriority;
+	/* 0x71/113 */ char_t DecrementCount;
+	/* 0x72/114 */ char_t PriorityDecrement;
+	/* 0x73/115 */ char_t DisableBoost;
+	/* 0x74/116 */ char_t NpxIrql;
+	/* 0x75/117 */ char_t SuspendCount;
+	/* 0x76/118 */ char_t Preempted;
+	/* 0x77/119 */ char_t HasTerminated;
 	/* 0x78/120 */ PVOID Queue;
 	/* 0x7C/124 */ LIST_ENTRY QueueListEntry;
 	/* 0x88/136 */ UCHAR rsvd1[4];
@@ -2081,8 +2081,8 @@ typedef struct _XBOX_USER_SETTINGS
 {
 	ULONG Checksum;
 	LONG TimeZoneBias;
-	CHAR TimeZoneStdName[TIME_ZONE_NAME_LENGTH];
-	CHAR TimeZoneDltName[TIME_ZONE_NAME_LENGTH];
+	char_t TimeZoneStdName[TIME_ZONE_NAME_LENGTH];
+	char_t TimeZoneDltName[TIME_ZONE_NAME_LENGTH];
 	ULONG Reserved1[2];
 	XBOX_TIMEZONE_DATE TimeZoneStdDate;
 	XBOX_TIMEZONE_DATE TimeZoneDltDate;

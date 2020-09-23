@@ -44,7 +44,7 @@
 #define FIELD_OFFSET(type,field)  ((ULONG)&(((type *)0)->field))
 
 #define INITIALIZED_OBJECT_STRING(ObjectString, Value)                  \
-	xbox::CHAR ObjectString##Buffer[] = Value;                      \
+	xbox::char_t ObjectString##Buffer[] = Value;                      \
 	xbox::OBJECT_STRING ObjectString = {							\
 	sizeof(Value) - sizeof(CHAR),                                      \
 	sizeof(Value),                                                      \

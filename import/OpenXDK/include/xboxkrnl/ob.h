@@ -12,7 +12,7 @@
 #ifndef XBOXKRNL_OB_H
 #define XBOXKRNL_OB_H
 
-#define OBJ_NAME_PATH_SEPARATOR ((CHAR)L'\\')
+#define OBJ_NAME_PATH_SEPARATOR ((char_t)L'\\')
 
 #define OB_NUMBER_HASH_BUCKETS          11
 typedef struct _OBJECT_DIRECTORY {

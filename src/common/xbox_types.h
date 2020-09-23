@@ -45,7 +45,8 @@ namespace xbox
 	// * Basic types
 	// ******************************************************************
 	using void_t = void;
-	typedef char                CHAR, CCHAR;
+	using char_t = char;
+	using cchar_t = char;
 	typedef short               SHORT, CSHORT;
 	typedef long                LONG;
 	typedef unsigned char       UCHAR;
@@ -76,9 +77,9 @@ namespace xbox
 	// ******************************************************************
 	// * Pointer types
 	// ******************************************************************
-	typedef CHAR *PCHAR;
-	typedef char *PSZ;
-	typedef CHAR *PCSZ;
+	typedef char_t *PCHAR;
+	typedef char_t *PSZ;
+	typedef char_t *PCSZ;
 	typedef BYTE *PBYTE;
 	typedef BOOLEAN *PBOOLEAN;
 	typedef UCHAR *PUCHAR;
@@ -103,8 +104,8 @@ namespace xbox
 	// ******************************************************************
 	// ANSI (Multi-byte Character) types
 	// ******************************************************************
-	typedef CHAR *PCHAR, *LPCH, *PCH;
-	typedef const CHAR *LPCCH, *PCCH;
+	typedef char_t *PCHAR, *LPCH, *PCH;
+	typedef const char_t *LPCCH, *PCCH;
 	typedef WCHAR *LPWSTR, *PWSTR;
 
 	typedef /*_Null_terminated_*/ const WCHAR *LPCWSTR, *PCWSTR;

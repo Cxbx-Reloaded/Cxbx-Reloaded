@@ -17,7 +17,7 @@
 // ******************************************************************
 XBSYSAPI EXPORTNUM(59) PVOID NTAPI IoAllocateIrp
 (
-	IN CCHAR StackSize
+	IN cchar_t StackSize
 );
 
 // ******************************************************************
@@ -160,7 +160,7 @@ XBSYSAPI EXPORTNUM(73) PVOID NTAPI IoInitializeIrp
 (
 	IN PIRP Irp,
 	IN USHORT PacketSize,
-	IN CCHAR StackSize
+	IN cchar_t StackSize
 );
 
 // ******************************************************************
@@ -228,7 +228,7 @@ XBSYSAPI EXPORTNUM(79) NTSTATUS NTAPI IoSetIoCompletion
 // ******************************************************************
 // * 0x0050 - IoSetShareAccess()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(80) CCHAR NTAPI IoSetShareAccess
+XBSYSAPI EXPORTNUM(80) cchar_t NTAPI IoSetShareAccess
 (
 	IN ULONG DesiredAccess,
 	IN ULONG DesiredShareAccess,
@@ -305,7 +305,7 @@ XBSYSAPI EXPORTNUM(86) NTSTATUS FASTCALL IofCallDriver
 XBSYSAPI EXPORTNUM(87) void_t FASTCALL IofCompleteRequest
 (
 	IN PIRP Irp,
-	IN CCHAR PriorityBoost
+	IN cchar_t PriorityBoost
 );
 
 // ******************************************************************
@@ -327,7 +327,7 @@ XBSYSAPI EXPORTNUM(91) NTSTATUS NTAPI IoDismountVolumeByName
 // ******************************************************************
 // * 0x0167 - IoMarkIrpMustComplete()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(359) CCHAR NTAPI IoMarkIrpMustComplete
+XBSYSAPI EXPORTNUM(359) cchar_t NTAPI IoMarkIrpMustComplete
 (
 	IN PIRP Irp
 );

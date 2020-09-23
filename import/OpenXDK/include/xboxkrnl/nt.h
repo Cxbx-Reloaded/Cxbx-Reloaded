@@ -577,7 +577,7 @@ XBSYSAPI EXPORTNUM(233) NTSTATUS NTAPI NtWaitForSingleObject
 XBSYSAPI EXPORTNUM(234) NTSTATUS NTAPI NtWaitForSingleObjectEx
 (
     IN  HANDLE          Handle,
-    IN  CHAR            WaitMode,
+    IN  char_t          WaitMode,
     IN  BOOLEAN         Alertable,
     IN  PLARGE_INTEGER  Timeout
 );
@@ -590,7 +590,7 @@ XBSYSAPI EXPORTNUM(235) NTSTATUS NTAPI NtWaitForMultipleObjectsEx
     IN  ULONG           Count,
     IN  HANDLE         *Handles,
     IN  WAIT_TYPE       WaitType,
-    IN  CHAR            WaitMode,
+    IN  char_t          WaitMode,
     IN  BOOLEAN         Alertable,
     IN  PLARGE_INTEGER  Timeout
 );

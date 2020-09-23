@@ -238,7 +238,7 @@ XBSYSAPI EXPORTNUM(283) LARGE_INTEGER NTAPI RtlExtendedMagicDivide
 (
 	IN	LARGE_INTEGER Dividend,
 	IN	LARGE_INTEGER MagicDivisor,
-	IN	CCHAR ShiftCount
+	IN	cchar_t ShiftCount
 );
 
 // ******************************************************************
@@ -353,7 +353,7 @@ XBSYSAPI EXPORTNUM(295) void_t NTAPI RtlLeaveCriticalSectionAndRegion
 // ******************************************************************
 // * RtlLowerChar
 // ******************************************************************
-XBSYSAPI EXPORTNUM(296) CHAR NTAPI RtlLowerChar(CHAR Character);
+XBSYSAPI EXPORTNUM(296) char_t NTAPI RtlLowerChar(char_t Character);
 
 // ******************************************************************
 // * 0x0129 - RtlMapGenericMask()
@@ -545,9 +545,9 @@ XBSYSAPI EXPORTNUM(315) NTSTATUS NTAPI RtlUpcaseUnicodeToMultiByteN
 // ******************************************************************
 // * 0x013C - RtlUpperChar()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(316) CHAR NTAPI RtlUpperChar
+XBSYSAPI EXPORTNUM(316) char_t NTAPI RtlUpperChar
 (
-	CHAR Character
+	char_t Character
 );
 
 // ******************************************************************

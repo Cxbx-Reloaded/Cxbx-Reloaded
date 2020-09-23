@@ -42,7 +42,7 @@
 // ******************************************************************
 XBSYSAPI EXPORTNUM(59) xbox::PVOID NTAPI xbox::IoAllocateIrp
 (
-	IN CCHAR StackSize
+	IN cchar_t StackSize
 )
 {
 	LOG_FUNC_ONE_ARG(StackSize);
@@ -401,7 +401,7 @@ XBSYSAPI EXPORTNUM(73) xbox::PVOID NTAPI xbox::IoInitializeIrp
 (
 	IN PIRP Irp,
 	IN USHORT PacketSize,
-	IN CCHAR StackSize
+	IN cchar_t StackSize
 )
 {
 	LOG_FUNC_BEGIN
@@ -547,7 +547,7 @@ XBSYSAPI EXPORTNUM(79) xbox::NTSTATUS NTAPI xbox::IoSetIoCompletion
 // ******************************************************************
 // * 0x0050 - IoSetShareAccess()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(80) xbox::CCHAR NTAPI xbox::IoSetShareAccess
+XBSYSAPI EXPORTNUM(80) xbox::cchar_t NTAPI xbox::IoSetShareAccess
 (
 	IN ULONG DesiredAccess,
 	IN ULONG DesiredShareAccess,
@@ -562,7 +562,7 @@ XBSYSAPI EXPORTNUM(80) xbox::CCHAR NTAPI xbox::IoSetShareAccess
 		LOG_FUNC_ARG_OUT(ShareAccess)
 		LOG_FUNC_END;
 
-	xbox::CCHAR ret = 0; // ShareAccess->OpenCount;
+	xbox::cchar_t ret = 0; // ShareAccess->OpenCount;
 
 	LOG_UNIMPLEMENTED();
 	
@@ -704,7 +704,7 @@ XBSYSAPI EXPORTNUM(86) xbox::NTSTATUS FASTCALL xbox::IofCallDriver
 XBSYSAPI EXPORTNUM(87) xbox::void_t FASTCALL xbox::IofCompleteRequest
 (
 	IN PIRP Irp,
-	IN CCHAR PriorityBoost
+	IN cchar_t PriorityBoost
 )
 {
 	LOG_FUNC_BEGIN
@@ -753,14 +753,14 @@ XBSYSAPI EXPORTNUM(91) xbox::NTSTATUS NTAPI xbox::IoDismountVolumeByName
 // ******************************************************************
 // * 0x0167 - IoMarkIrpMustComplete()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(359) xbox::CCHAR NTAPI xbox::IoMarkIrpMustComplete
+XBSYSAPI EXPORTNUM(359) xbox::cchar_t NTAPI xbox::IoMarkIrpMustComplete
 (
 	IN PIRP Irp
 )
 {
 	LOG_FUNC_ONE_ARG(Irp);
 
-	xbox::CCHAR ret = 0; // ShareAccess->OpenCount;
+	xbox::cchar_t ret = 0; // ShareAccess->OpenCount;
 
 	LOG_UNIMPLEMENTED();
 

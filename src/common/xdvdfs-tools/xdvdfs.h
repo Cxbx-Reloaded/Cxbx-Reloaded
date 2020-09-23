@@ -9,7 +9,7 @@
 
 using namespace xbox;
 
-CONST CHAR *XDVDFS_Signature = "MICROSOFT*XBOX*MEDIA";
+CONST char_t *XDVDFS_Signature = "MICROSOFT*XBOX*MEDIA";
 
 //-- Defines ------------------------------------------------------------------
 

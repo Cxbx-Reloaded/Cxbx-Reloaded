@@ -2104,7 +2104,7 @@ XBSYSAPI EXPORTNUM(235) xbox::NTSTATUS NTAPI xbox::NtWaitForMultipleObjectsEx
 	IN  ULONG           Count,
 	IN  HANDLE         *Handles,
 	IN  WAIT_TYPE       WaitType,
-	IN  CHAR            WaitMode,
+	IN  char_t            WaitMode,
 	IN  BOOLEAN         Alertable,
 	IN  PLARGE_INTEGER  Timeout
 )

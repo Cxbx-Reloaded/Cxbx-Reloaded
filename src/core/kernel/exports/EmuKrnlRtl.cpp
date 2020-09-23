@@ -910,7 +910,7 @@ XBSYSAPI EXPORTNUM(283) xbox::LARGE_INTEGER NTAPI xbox::RtlExtendedMagicDivide
 (
 	IN	LARGE_INTEGER Dividend,
 	IN	LARGE_INTEGER MagicDivisor,
-	IN	CCHAR ShiftCount
+	IN	cchar_t ShiftCount
 )
 {
 	LOG_FUNC_BEGIN
@@ -1075,7 +1075,7 @@ XBSYSAPI EXPORTNUM(289) xbox::void_t NTAPI xbox::RtlInitAnsiString
 
 	DestinationString->Buffer = SourceString;
 	if (SourceString != NULL) {
-		CCHAR *pSourceString = (CCHAR*)(SourceString);
+		cchar_t *pSourceString = (cchar_t*)(SourceString);
 		DestinationString->Buffer = SourceString;
 		DestinationString->Length = (USHORT)strlen(pSourceString);
 		DestinationString->MaximumLength = DestinationString->Length + 1;
@@ -1257,9 +1257,9 @@ XBSYSAPI EXPORTNUM(295) xbox::void_t NTAPI xbox::RtlLeaveCriticalSectionAndRegio
 // ******************************************************************
 // * 0x0128 - RtlLowerChar()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(296) xbox::CHAR NTAPI xbox::RtlLowerChar
+XBSYSAPI EXPORTNUM(296) xbox::char_t NTAPI xbox::RtlLowerChar
 (
-	CHAR Character
+	char_t Character
 )
 {
 	LOG_FUNC_ONE_ARG(Character);
@@ -1277,7 +1277,7 @@ XBSYSAPI EXPORTNUM(296) xbox::CHAR NTAPI xbox::RtlLowerChar
 		CharCode ^= 0x20;
 	}
 
-	RETURN((CHAR)CharCode);
+	RETURN((char_t)CharCode);
 }
 
 // ******************************************************************
@@ -2005,9 +2005,9 @@ XBSYSAPI EXPORTNUM(315) xbox::NTSTATUS NTAPI xbox::RtlUpcaseUnicodeToMultiByteN
 // ******************************************************************
 // * 0x013C - RtlUpperChar()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(316) xbox::CHAR NTAPI xbox::RtlUpperChar
+XBSYSAPI EXPORTNUM(316) xbox::char_t NTAPI xbox::RtlUpperChar
 (
-	CHAR Character
+	char_t Character
 )
 {
 	LOG_FUNC_ONE_ARG(Character);
@@ -2030,7 +2030,7 @@ XBSYSAPI EXPORTNUM(316) xbox::CHAR NTAPI xbox::RtlUpperChar
 		CharCode = '?';
 	}
 	
-	RETURN((CHAR)CharCode);
+	RETURN((char_t)CharCode);
 }
 
 // ******************************************************************
@@ -2047,8 +2047,8 @@ XBSYSAPI EXPORTNUM(317) xbox::void_t NTAPI xbox::RtlUpperString
 		LOG_FUNC_ARG(SourceString)
 		LOG_FUNC_END;
 
-	CHAR *pDst = DestinationString->Buffer;
-	CHAR *pSrc = SourceString->Buffer;
+	char_t *pDst = DestinationString->Buffer;
+	char_t *pSrc = SourceString->Buffer;
 	ULONG length = SourceString->Length;
 	if ((USHORT)length > DestinationString->MaximumLength) {
 		length = DestinationString->MaximumLength;
