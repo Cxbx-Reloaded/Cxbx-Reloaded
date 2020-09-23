@@ -2037,6 +2037,7 @@ static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
             DInput::mo_leave_wnd = true;
             g_bIsTrackingMoLeave = false;
             g_bIsTrackingMoMove = true;
+            ShowCursor(TRUE);
         }
         break;
 
@@ -2053,6 +2054,7 @@ static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
                 tme.dwFlags = TME_LEAVE;
                 TrackMouseEvent(&tme);
                 g_bIsTrackingMoLeave = true;
+                ShowCursor(FALSE);
 
                 if (g_bIsTrackingMoMove) {
                     DInput::mo_leave_wnd = false;
