@@ -397,7 +397,7 @@ XBSYSAPI EXPORTNUM(257) xbox::NTSTATUS NTAPI xbox::PsSetCreateThreadNotifyRoutin
 // Exits the current system thread.  Must be called from a system thread.
 //
 // Differences from NT: None.
-XBSYSAPI EXPORTNUM(258) xbox::VOID NTAPI xbox::PsTerminateSystemThread
+XBSYSAPI EXPORTNUM(258) xbox::void_t NTAPI xbox::PsTerminateSystemThread
 (
 	IN NTSTATUS ExitStatus
 )

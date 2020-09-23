@@ -35,6 +35,6 @@ void DumpPixelShaderDefToFile( xbox::X_D3DPIXELSHADERDEF* pPSDef, const char* ps
 void PrintPixelShaderDefContents(xbox::X_D3DPIXELSHADERDEF* pDSDef );
 
 // PatrickvL's Dxbx pixel shader translation
-VOID DxbxUpdateActivePixelShader(); // NOPATCH
+void DxbxUpdateActivePixelShader(); // NOPATCH
 
 #endif // PIXELSHADER_H

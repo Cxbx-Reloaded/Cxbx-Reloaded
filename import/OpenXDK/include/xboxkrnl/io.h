@@ -122,7 +122,7 @@ XBSYSAPI EXPORTNUM(67) NTSTATUS NTAPI IoCreateSymbolicLink
 // ******************************************************************
 // * 0x0044 - IoDeleteDevice()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(68) VOID NTAPI IoDeleteDevice
+XBSYSAPI EXPORTNUM(68) void_t NTAPI IoDeleteDevice
 (
 	IN PDEVICE_OBJECT irql
 );
@@ -148,7 +148,7 @@ XBSYSAPI EXPORTNUM(71) OBJECT_TYPE IoFileObjectType;
 // ******************************************************************
 // * 0x0048 - IoFreeIrp()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(72) VOID NTAPI IoFreeIrp
+XBSYSAPI EXPORTNUM(72) void_t NTAPI IoFreeIrp
 (
 	IN PIRP Irp
 );
@@ -199,7 +199,7 @@ XBSYSAPI EXPORTNUM(76) NTSTATUS NTAPI IoQueryVolumeInformation
 // ******************************************************************
 // * 0x004D - IoQueueThreadIrp()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(77) VOID NTAPI IoQueueThreadIrp
+XBSYSAPI EXPORTNUM(77) void_t NTAPI IoQueueThreadIrp
 (
 	IN PIRP Irp
 );
@@ -207,7 +207,7 @@ XBSYSAPI EXPORTNUM(77) VOID NTAPI IoQueueThreadIrp
 // ******************************************************************
 // * 0x004E - IoRemoveShareAccess()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(78) VOID NTAPI IoRemoveShareAccess
+XBSYSAPI EXPORTNUM(78) void_t NTAPI IoRemoveShareAccess
 (
 	IN PFILE_OBJECT FileObject,
 	IN PSHARE_ACCESS ShareAccess
@@ -239,7 +239,7 @@ XBSYSAPI EXPORTNUM(80) CCHAR NTAPI IoSetShareAccess
 // ******************************************************************
 // * 0x0051 - IoStartNextPacket()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(81) VOID NTAPI IoStartNextPacket
+XBSYSAPI EXPORTNUM(81) void_t NTAPI IoStartNextPacket
 (
 	IN PDEVICE_OBJECT DeviceObject
 );
@@ -247,7 +247,7 @@ XBSYSAPI EXPORTNUM(81) VOID NTAPI IoStartNextPacket
 // ******************************************************************
 // * 0x0052 - IoStartNextPacketByKey()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(82) VOID NTAPI IoStartNextPacketByKey
+XBSYSAPI EXPORTNUM(82) void_t NTAPI IoStartNextPacketByKey
 (
 	IN PDEVICE_OBJECT DeviceObject,
 	IN ULONG Key
@@ -256,7 +256,7 @@ XBSYSAPI EXPORTNUM(82) VOID NTAPI IoStartNextPacketByKey
 // ******************************************************************
 // * 0x0053 - IoStartPacket()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(83) VOID NTAPI IoStartPacket
+XBSYSAPI EXPORTNUM(83) void_t NTAPI IoStartPacket
 (
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp,
@@ -302,7 +302,7 @@ XBSYSAPI EXPORTNUM(86) NTSTATUS FASTCALL IofCallDriver
 // ******************************************************************
 // * 0x0057 - IofCompleteRequest()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(87) VOID FASTCALL IofCompleteRequest
+XBSYSAPI EXPORTNUM(87) void_t FASTCALL IofCompleteRequest
 (
 	IN PIRP Irp,
 	IN CCHAR PriorityBoost

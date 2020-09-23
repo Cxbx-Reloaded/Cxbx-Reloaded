@@ -140,7 +140,7 @@ static bool eeprom_data_is_valid(xbox::XC_VALUE_INDEX index)
 // * 0x000C - ExAcquireReadWriteLockExclusive()
 // ******************************************************************
 // Source:APILogger - Uncertain
-XBSYSAPI EXPORTNUM(12) xbox::VOID NTAPI xbox::ExAcquireReadWriteLockExclusive
+XBSYSAPI EXPORTNUM(12) xbox::void_t NTAPI xbox::ExAcquireReadWriteLockExclusive
 (
 	IN PERWLOCK ReadWriteLock
 )
@@ -169,7 +169,7 @@ XBSYSAPI EXPORTNUM(12) xbox::VOID NTAPI xbox::ExAcquireReadWriteLockExclusive
 // * 0x000D - ExAcquireReadWriteLockShared()
 // ******************************************************************
 // Source:APILogger - Uncertain
-XBSYSAPI EXPORTNUM(13) xbox::VOID NTAPI xbox::ExAcquireReadWriteLockShared
+XBSYSAPI EXPORTNUM(13) xbox::void_t NTAPI xbox::ExAcquireReadWriteLockShared
 (
 	IN PERWLOCK ReadWriteLock
 )
@@ -252,7 +252,7 @@ XBSYSAPI EXPORTNUM(16) xbox::OBJECT_TYPE xbox::ExEventObjectType =
 // ******************************************************************
 // * 0x0011 - ExFreePool()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(17) xbox::VOID NTAPI xbox::ExFreePool
+XBSYSAPI EXPORTNUM(17) xbox::void_t NTAPI xbox::ExFreePool
 (
 	IN PVOID	P
 )
@@ -266,7 +266,7 @@ XBSYSAPI EXPORTNUM(17) xbox::VOID NTAPI xbox::ExFreePool
 // * 0x0012 - ExInitializeReadWriteLock()
 // ******************************************************************
 // Source:APILogger - Uncertain
-XBSYSAPI EXPORTNUM(18) xbox::VOID NTAPI xbox::ExInitializeReadWriteLock
+XBSYSAPI EXPORTNUM(18) xbox::void_t NTAPI xbox::ExInitializeReadWriteLock
 (
 	IN PERWLOCK ReadWriteLock
 )
@@ -321,7 +321,7 @@ XBSYSAPI EXPORTNUM(19) xbox::LARGE_INTEGER NTAPI xbox::ExInterlockedAddLargeInte
 // * 0x0014 - ExInterlockedAddLargeStatistic()
 // ******************************************************************
 // Source:ReactOS
-XBSYSAPI EXPORTNUM(20) xbox::VOID FASTCALL xbox::ExInterlockedAddLargeStatistic
+XBSYSAPI EXPORTNUM(20) xbox::void_t FASTCALL xbox::ExInterlockedAddLargeStatistic
 (
 	IN PLARGE_INTEGER Addend,
 	IN ULONG Increment
@@ -550,7 +550,7 @@ XBSYSAPI EXPORTNUM(25) xbox::NTSTATUS NTAPI xbox::ExReadWriteRefurbInfo
 // * 0x001A - ExRaiseException()
 // ******************************************************************
 // Source:ReactOS
-XBSYSAPI EXPORTNUM(26) xbox::VOID NTAPI xbox::ExRaiseException
+XBSYSAPI EXPORTNUM(26) xbox::void_t NTAPI xbox::ExRaiseException
 (
 	IN PEXCEPTION_RECORD ExceptionRecord
 )
@@ -565,7 +565,7 @@ XBSYSAPI EXPORTNUM(26) xbox::VOID NTAPI xbox::ExRaiseException
 // * 0x001B - ExRaiseStatus()
 // ******************************************************************
 // Source:ReactOS
-XBSYSAPI EXPORTNUM(27) xbox::VOID NTAPI xbox::ExRaiseStatus
+XBSYSAPI EXPORTNUM(27) xbox::void_t NTAPI xbox::ExRaiseStatus
 (
 	IN NTSTATUS Status
 )
@@ -579,7 +579,7 @@ XBSYSAPI EXPORTNUM(27) xbox::VOID NTAPI xbox::ExRaiseStatus
 // * 0x001C - ExReleaseReadWriteLock()
 // ******************************************************************
 // Source:APILogger - Uncertain
-XBSYSAPI EXPORTNUM(28) xbox::VOID NTAPI xbox::ExReleaseReadWriteLock
+XBSYSAPI EXPORTNUM(28) xbox::void_t NTAPI xbox::ExReleaseReadWriteLock
 (
 	IN PERWLOCK ReadWriteLock
 )

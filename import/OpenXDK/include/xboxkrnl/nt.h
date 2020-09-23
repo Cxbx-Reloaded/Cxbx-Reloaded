@@ -548,7 +548,7 @@ XBSYSAPI EXPORTNUM(231) NTSTATUS NTAPI NtSuspendThread
 // ******************************************************************
 // * NtUserIoApcDispatcher
 // ******************************************************************
-XBSYSAPI EXPORTNUM(232) VOID NTAPI NtUserIoApcDispatcher
+XBSYSAPI EXPORTNUM(232) void_t NTAPI NtUserIoApcDispatcher
 (
     PVOID            ApcContext,
     PIO_STATUS_BLOCK IoStatusBlock,
@@ -632,7 +632,7 @@ XBSYSAPI EXPORTNUM(237) NTSTATUS NTAPI NtWriteFileGather
 // ******************************************************************
 // * NtYieldExecution
 // ******************************************************************
-XBSYSAPI EXPORTNUM(238) VOID NTAPI NtYieldExecution(void);
+XBSYSAPI EXPORTNUM(238) void_t NTAPI NtYieldExecution(void);
 
 #endif
 

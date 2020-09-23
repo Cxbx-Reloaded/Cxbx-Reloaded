@@ -12,12 +12,12 @@
 #ifndef XBOXKRNL_EX_H
 #define XBOXKRNL_EX_H
 
-XBSYSAPI EXPORTNUM(12) VOID NTAPI ExAcquireReadWriteLockExclusive
+XBSYSAPI EXPORTNUM(12) void_t NTAPI ExAcquireReadWriteLockExclusive
 (
 	IN PERWLOCK ReadWriteLock
 );
 
-XBSYSAPI EXPORTNUM(13) VOID NTAPI ExAcquireReadWriteLockShared
+XBSYSAPI EXPORTNUM(13) void_t NTAPI ExAcquireReadWriteLockShared
 (
 	IN PERWLOCK ReadWriteLock
 );
@@ -56,7 +56,7 @@ XBSYSAPI EXPORTNUM(16) OBJECT_TYPE ExEventObjectType;
 // * Deallocates a block  of pool memory
 // *
 // ******************************************************************
-XBSYSAPI EXPORTNUM(17) VOID NTAPI ExFreePool
+XBSYSAPI EXPORTNUM(17) void_t NTAPI ExFreePool
 (
     IN PVOID P
 );
@@ -64,7 +64,7 @@ XBSYSAPI EXPORTNUM(17) VOID NTAPI ExFreePool
 // ******************************************************************
 // * 0x0012 - ExInitializeReadWriteLock()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(18) VOID NTAPI ExInitializeReadWriteLock
+XBSYSAPI EXPORTNUM(18) void_t NTAPI ExInitializeReadWriteLock
 (
 	IN PERWLOCK ReadWriteLock
 );
@@ -78,7 +78,7 @@ XBSYSAPI EXPORTNUM(19) LARGE_INTEGER NTAPI ExInterlockedAddLargeInteger
 );
 
 // Source:ReactOS
-XBSYSAPI EXPORTNUM(20) VOID FASTCALL ExInterlockedAddLargeStatistic
+XBSYSAPI EXPORTNUM(20) void_t FASTCALL ExInterlockedAddLargeStatistic
 (
 	IN PLARGE_INTEGER Addend,
 	IN ULONG Increment
@@ -124,17 +124,17 @@ XBSYSAPI EXPORTNUM(25) NTSTATUS NTAPI ExReadWriteRefurbInfo
 	IN BOOLEAN	bIsWriteMode
 );
 
-XBSYSAPI EXPORTNUM(26) VOID NTAPI ExRaiseException
+XBSYSAPI EXPORTNUM(26) void_t NTAPI ExRaiseException
 (
 	IN PEXCEPTION_RECORD ExceptionRecord
 );
 
-XBSYSAPI EXPORTNUM(27) VOID NTAPI ExRaiseStatus
+XBSYSAPI EXPORTNUM(27) void_t NTAPI ExRaiseStatus
 (
 	IN NTSTATUS Status
 );
 
-XBSYSAPI EXPORTNUM(28) VOID NTAPI ExReleaseReadWriteLock
+XBSYSAPI EXPORTNUM(28) void_t NTAPI ExReleaseReadWriteLock
 (
 	IN PERWLOCK ReadWriteLock
 );

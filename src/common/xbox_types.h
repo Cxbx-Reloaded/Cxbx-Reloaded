@@ -31,10 +31,6 @@
 
 namespace xbox
 {
-#ifndef VOID
-	typedef void VOID;
-#endif
-
 	/*! addr is the type of a physical address */
 	using addr = std::uint32_t;
 
@@ -48,6 +44,7 @@ namespace xbox
 	// ******************************************************************
 	// * Basic types
 	// ******************************************************************
+	using void_t = void;
 	typedef char                CHAR, CCHAR;
 	typedef short               SHORT, CSHORT;
 	typedef long                LONG;
@@ -92,7 +89,7 @@ namespace xbox
 	typedef ACCESS_MASK *PACCESS_MASK;
 	typedef LONG *PLONG;
 	typedef int *PINT_PTR;
-	typedef VOID *PVOID, *LPVOID;
+	typedef void_t *PVOID, *LPVOID;
 	typedef void *HANDLE;
 	typedef HANDLE *PHANDLE;
 

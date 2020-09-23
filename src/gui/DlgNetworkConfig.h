@@ -28,6 +28,6 @@
 #include <windows.h>
 
 /*! show network configuration dialog */
-extern VOID ShowNetworkConfig(HWND hwnd);
+extern void ShowNetworkConfig(HWND hwnd);
 
 #endif

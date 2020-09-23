@@ -362,7 +362,7 @@ void WINAPI xbox::EMUPATCH(DirectSoundUseLightHRTF4Channel)
 // ******************************************************************
 // * patch: DirectSoundDoWork
 // ******************************************************************
-VOID WINAPI xbox::EMUPATCH(DirectSoundDoWork)()
+xbox::void_t WINAPI xbox::EMUPATCH(DirectSoundDoWork)()
 {
     DSoundMutexGuardLock;
 

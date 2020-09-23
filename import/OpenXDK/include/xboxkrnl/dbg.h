@@ -12,8 +12,8 @@
 #ifndef XBOXKRNL_DBG_H
 #define XBOXKRNL_DBG_H
 
-XBSYSAPI EXPORTNUM(5) VOID NTAPI DbgBreakPoint();
-XBSYSAPI EXPORTNUM(6) VOID NTAPI DbgBreakPointWithStatus
+XBSYSAPI EXPORTNUM(5) void_t NTAPI DbgBreakPoint();
+XBSYSAPI EXPORTNUM(6) void_t NTAPI DbgBreakPointWithStatus
 (
 	IN ULONG Status
 );
@@ -33,7 +33,7 @@ XBSYSAPI EXPORTNUM(10) ULONG NTAPI DbgPrompt
 	OUT PCH Response,
 	IN ULONG MaximumResponseLength
 );
-XBSYSAPI EXPORTNUM(11) VOID NTAPI DbgUnLoadImageSymbols
+XBSYSAPI EXPORTNUM(11) void_t NTAPI DbgUnLoadImageSymbols
 (
 	IN PANSI_STRING Name,
 	IN PVOID Base,

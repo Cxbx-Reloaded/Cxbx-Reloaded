@@ -28,11 +28,6 @@
 
 #include <mutex>
 
-// Workaround to avoid collisions with the VOID provided by Windows and the one of xboxkrnl
-#ifdef VOID
-#undef VOID
-#endif
-
 // ReactOS uses a size of 512, but disassembling the kernel reveals it to be 32 instead
 #define TIMER_TABLE_SIZE 32
 
@@ -53,41 +48,41 @@ namespace xbox
 	} KI_TIMER_LOCK;
 
 
-	VOID KiInitSystem();
+	xbox::void_t KiInitSystem();
 
-	VOID KiTimerLock();
+	xbox::void_t KiTimerLock();
 
-	VOID KiTimerUnlock();
+	xbox::void_t KiTimerUnlock();
 
-	VOID KiClockIsr
+	xbox::void_t KiClockIsr
 	(
 		IN unsigned int ScalingFactor
 	);
 
-	VOID NTAPI KiCheckTimerTable
+	xbox::void_t NTAPI KiCheckTimerTable
 	(
 		IN ULARGE_INTEGER CurrentTime
 	);
 
-	VOID KxInsertTimer
+	xbox::void_t KxInsertTimer
 	(
 		IN PKTIMER Timer,
 		IN ULONG Hand
 	);
 
-	VOID FASTCALL KiCompleteTimer
+	xbox::void_t FASTCALL KiCompleteTimer
 	(
 		IN PKTIMER Timer,
 		IN ULONG Hand
 	);
 
-	VOID KiRemoveEntryTimer
+	xbox::void_t KiRemoveEntryTimer
 	(
 		IN PKTIMER Timer,
 		IN ULONG Hand
 	);
 
-	VOID KxRemoveTreeTimer
+	xbox::void_t KxRemoveTreeTimer
 	(
 		IN PKTIMER Timer
 	);
@@ -121,7 +116,7 @@ namespace xbox
 		IN PKTIMER Timer
 	);
 
-	VOID NTAPI KiTimerExpiration
+	xbox::void_t NTAPI KiTimerExpiration
 	(
 		IN PKDPC Dpc,
 		IN PVOID DeferredContext,
@@ -129,13 +124,13 @@ namespace xbox
 		IN PVOID SystemArgument2
 	);
 
-	VOID FASTCALL KiTimerListExpire
+	xbox::void_t FASTCALL KiTimerListExpire
 	(
 		IN PLIST_ENTRY ExpiredListHead,
 		IN KIRQL OldIrql
 	);
 
-	VOID FASTCALL KiWaitSatisfyAll
+	xbox::void_t FASTCALL KiWaitSatisfyAll
 	(
 		IN PKWAIT_BLOCK WaitBlock
 	);

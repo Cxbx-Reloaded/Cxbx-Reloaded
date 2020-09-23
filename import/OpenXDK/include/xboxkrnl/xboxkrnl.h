@@ -503,16 +503,16 @@ typedef PVOID(NTAPI *OB_ALLOCATE_METHOD)(
 	IN ULONG Tag
 	);
 
-typedef VOID(NTAPI *OB_FREE_METHOD)(
+typedef void_t(NTAPI *OB_FREE_METHOD)(
 	IN PVOID Pointer
 	);
 
-typedef VOID(NTAPI *OB_CLOSE_METHOD)(
+typedef void_t(NTAPI *OB_CLOSE_METHOD)(
 	IN PVOID Object,
 	IN ULONG SystemHandleCount
 	);
 
-typedef VOID(NTAPI *OB_DELETE_METHOD)(
+typedef void_t(NTAPI *OB_DELETE_METHOD)(
 	IN PVOID Object
 	);
 
@@ -592,7 +592,7 @@ typedef struct _EXCEPTION_RECORD
 	DWORD ExceptionCode;
 	DWORD ExceptionFlags;
 	_EXCEPTION_RECORD *ExceptionRecord;
-	VOID *ExceptionAddress;
+	void_t *ExceptionAddress;
 	DWORD NumberParameters;
 	ULONG_PTR ExceptionInformation[EXCEPTION_MAXIMUM_PARAMETERS];
 }
@@ -941,7 +941,7 @@ IO_STATUS_BLOCK, *PIO_STATUS_BLOCK;
 // ******************************************************************
 // * PIO_APC_ROUTINE
 // ******************************************************************
-typedef VOID (NTAPI *PIO_APC_ROUTINE)
+typedef void_t (NTAPI *PIO_APC_ROUTINE)
 (
     IN PVOID            ApcContext,
     IN PIO_STATUS_BLOCK IoStatusBlock,
@@ -951,7 +951,7 @@ typedef VOID (NTAPI *PIO_APC_ROUTINE)
 // ******************************************************************
 // * PTIMER_APC_ROUTINE *Same as Win2k/XP*
 // ******************************************************************
-typedef VOID(NTAPI *PTIMER_APC_ROUTINE)
+typedef void_t(NTAPI *PTIMER_APC_ROUTINE)
 (
 	IN PVOID	TimerContext,
 	IN ULONG	TimerLowValue,
@@ -1335,7 +1335,7 @@ DEVICE_OBJECT, *PDEVICE_OBJECT;
 // ******************************************************************
 // PDRIVER_OBJECT
 // ******************************************************************
-typedef VOID *PDRIVER_OBJECT;
+typedef void_t *PDRIVER_OBJECT;
 
 // ******************************************************************
 // * IO_COMPLETION_CONTEXT
@@ -1413,7 +1413,7 @@ KTIMER, *PKTIMER;
 // ******************************************************************
 // * PKSTART_ROUTINE
 // ******************************************************************
-typedef VOID (NTAPI *PKSTART_ROUTINE)
+typedef void_t (NTAPI *PKSTART_ROUTINE)
 (
     IN PVOID StartContext
 );
@@ -1429,7 +1429,7 @@ typedef VOID (NTAPI *PKSTART_ROUTINE)
 // *       opposed to 1.
 // *
 // ******************************************************************
-typedef VOID (*PKSYSTEM_ROUTINE)
+typedef void_t (*PKSYSTEM_ROUTINE)
 (
 	IN PKSTART_ROUTINE StartRoutine OPTIONAL,
 	IN PVOID StartContext OPTIONAL
@@ -1440,7 +1440,7 @@ struct _KDPC;
 // ******************************************************************
 // * PKDEFERRED_ROUTINE
 // ******************************************************************
-typedef VOID (__stdcall *PKDEFERRED_ROUTINE)
+typedef void_t (__stdcall *PKDEFERRED_ROUTINE)
 (
     IN struct _KDPC *Dpc,
     IN PVOID         DeferredContext,
@@ -1519,7 +1519,7 @@ KOBJECTS, *PKOBJECTS;
 // ******************************************************************
 // * PKNORMAL_ROUTINE
 // ******************************************************************
-typedef VOID (*PKNORMAL_ROUTINE)
+typedef void_t (*PKNORMAL_ROUTINE)
 (
 	IN PVOID NormalContext,
 	IN PVOID SystemArgument1,
@@ -1529,7 +1529,7 @@ typedef VOID (*PKNORMAL_ROUTINE)
 // ******************************************************************
 // * PKKERNEL_ROUTINE
 // ******************************************************************
-typedef VOID (*PKKERNEL_ROUTINE)
+typedef void_t (*PKKERNEL_ROUTINE)
 (
 	IN struct _KAPC *Apc,
 	IN OUT PKNORMAL_ROUTINE *NormalRoutine,
@@ -1541,7 +1541,7 @@ typedef VOID (*PKKERNEL_ROUTINE)
 // ******************************************************************
 // * PKRUNDOWN_ROUTINE
 // ******************************************************************
-typedef VOID (*PKRUNDOWN_ROUTINE)
+typedef void_t (*PKRUNDOWN_ROUTINE)
 (
 	IN struct _KAPC *Apc
 );
@@ -1930,7 +1930,7 @@ ETHREAD, *PETHREAD;
 // ******************************************************************
 // * PCREATE_THREAD_NOTIFY_ROUTINE
 // ******************************************************************
-typedef VOID(*PCREATE_THREAD_NOTIFY_ROUTINE)
+typedef void_t(*PCREATE_THREAD_NOTIFY_ROUTINE)
 (
 	IN PETHREAD Thread,
 	IN HANDLE ThreadId,
@@ -2349,7 +2349,7 @@ INLINE static ULONG READ_REGISTER_ULONG(PULONG Address)
 // * because the write may not be completed yet.)
 // *
 // ******************************************************************
-static VOID WRITE_REGISTER_UCHAR(PVOID Address, UCHAR Value)
+static void_t WRITE_REGISTER_UCHAR(PVOID Address, UCHAR Value)
 {
     __asm
     {
@@ -2369,7 +2369,7 @@ static VOID WRITE_REGISTER_UCHAR(PVOID Address, UCHAR Value)
 // * because the write may not be completed yet.)
 // *
 // ******************************************************************
-static VOID WRITE_REGISTER_USHORT(PVOID Address, USHORT Value)
+static void_t WRITE_REGISTER_USHORT(PVOID Address, USHORT Value)
 {
     __asm
     {
@@ -2389,7 +2389,7 @@ static VOID WRITE_REGISTER_USHORT(PVOID Address, USHORT Value)
 // * because the write may not be completed yet.)
 // *
 // ******************************************************************
-static VOID WRITE_REGISTER_ULONG(PVOID Address, ULONG Value)
+static void_t WRITE_REGISTER_ULONG(PVOID Address, ULONG Value)
 {
     __asm
     {
@@ -2552,20 +2552,20 @@ typedef struct _IO_COMPLETION_BASIC_INFORMATION {
 	LONG Depth;
 } IO_COMPLETION_BASIC_INFORMATION, *PIO_COMPLETION_BASIC_INFORMATION;
 
-typedef VOID(*PIDE_INTERRUPT_ROUTINE) (void);
+typedef void_t(*PIDE_INTERRUPT_ROUTINE) (void);
 
-typedef VOID(*PIDE_FINISHIO_ROUTINE) (void);
+typedef void_t(*PIDE_FINISHIO_ROUTINE) (void);
 
 typedef BOOLEAN(*PIDE_POLL_RESET_COMPLETE_ROUTINE) (void);
 
-typedef VOID(*PIDE_TIMEOUT_EXPIRED_ROUTINE) (void);
+typedef void_t(*PIDE_TIMEOUT_EXPIRED_ROUTINE) (void);
 
-typedef VOID(*PIDE_START_PACKET_ROUTINE) (
+typedef void_t(*PIDE_START_PACKET_ROUTINE) (
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp
 );
 
-typedef VOID(*PIDE_START_NEXT_PACKET_ROUTINE) (void);
+typedef void_t(*PIDE_START_NEXT_PACKET_ROUTINE) (void);
 
 typedef struct _IDE_CHANNEL_OBJECT
 {

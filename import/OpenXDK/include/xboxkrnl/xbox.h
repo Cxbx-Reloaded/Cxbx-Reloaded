@@ -73,7 +73,7 @@
 #define AV_OPTION_CGMS                    18
 #define AV_OPTION_WIDESCREEN              19
 
-VOID InitializeFscCacheEvent();
+void_t InitializeFscCacheEvent();
 
 // ******************************************************************
 // * 0x0001 - AvGetSavedDataAddress()
@@ -83,7 +83,7 @@ XBSYSAPI EXPORTNUM(1) PVOID NTAPI AvGetSavedDataAddress(void);
 // ******************************************************************
 // * 0x0002 - AvSendTVEncoderOption()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(2) VOID NTAPI AvSendTVEncoderOption
+XBSYSAPI EXPORTNUM(2) void_t NTAPI AvSendTVEncoderOption
 (
     IN  PVOID   RegisterBase,
     IN  ULONG   Option,
@@ -107,7 +107,7 @@ XBSYSAPI EXPORTNUM(3) ULONG NTAPI AvSetDisplayMode
 // ******************************************************************
 // * 0x0004 - AvSetSavedDataAddress()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(4) VOID NTAPI AvSetSavedDataAddress
+XBSYSAPI EXPORTNUM(4) void_t NTAPI AvSetSavedDataAddress
 (
     IN PVOID    Address
 );
@@ -120,7 +120,7 @@ XBSYSAPI EXPORTNUM(35) ULONG NTAPI FscGetCacheSize();
 // ******************************************************************
 // * 0x0024 - FscInvalidateIdleBlocks()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(36) VOID NTAPI FscInvalidateIdleBlocks();
+XBSYSAPI EXPORTNUM(36) void_t NTAPI FscInvalidateIdleBlocks();
 
 // ******************************************************************
 // * 0x0025 - FscSetCacheSize()
@@ -151,7 +151,7 @@ XBSYSAPI EXPORTNUM(160) UCHAR FASTCALL KfRaiseIrql
 // ******************************************************************
 // * 0x00A1 - KfLowerIrql()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(161) VOID FASTCALL KfLowerIrql
+XBSYSAPI EXPORTNUM(161) void_t FASTCALL KfLowerIrql
 (
     IN UCHAR    NewIrql
 );
@@ -169,7 +169,7 @@ void KiLockDispatcherDatabase
 // ******************************************************************
 // * 0x00A3 - KiUnlockDispatcherDatabase()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(163) VOID FASTCALL KiUnlockDispatcherDatabase
+XBSYSAPI EXPORTNUM(163) void_t FASTCALL KiUnlockDispatcherDatabase
 (
 	IN KIRQL OldIrql
 );
@@ -252,7 +252,7 @@ XBSYSAPI EXPORTNUM(328) NTSTATUS NTAPI XeUnloadSection
 // ******************************************************************
 // * 0x014F - XcSHAInit()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(335) VOID NTAPI XcSHAInit
+XBSYSAPI EXPORTNUM(335) void_t NTAPI XcSHAInit
 (
 	IN PUCHAR pbSHAContext
 );
@@ -260,7 +260,7 @@ XBSYSAPI EXPORTNUM(335) VOID NTAPI XcSHAInit
 // ******************************************************************
 // * 0x0150 - XcSHAUpdate()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(336) VOID NTAPI XcSHAUpdate
+XBSYSAPI EXPORTNUM(336) void_t NTAPI XcSHAUpdate
 (
 	IN PUCHAR pbSHAContext,
 	IN PUCHAR pbInput,
@@ -270,7 +270,7 @@ XBSYSAPI EXPORTNUM(336) VOID NTAPI XcSHAUpdate
 // ******************************************************************
 // * 0x0151 - XcSHAFinal()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(337) VOID NTAPI XcSHAFinal
+XBSYSAPI EXPORTNUM(337) void_t NTAPI XcSHAFinal
 (
 	IN PUCHAR pbSHAContext,
 	IN PUCHAR pbDigest
@@ -279,7 +279,7 @@ XBSYSAPI EXPORTNUM(337) VOID NTAPI XcSHAFinal
 // ******************************************************************
 // * 0x0152 - XcRC4Key()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(338) VOID NTAPI XcRC4Key
+XBSYSAPI EXPORTNUM(338) void_t NTAPI XcRC4Key
 (
 	IN PUCHAR pbKeyStruct,
 	IN ULONG dwKeyLength,
@@ -289,7 +289,7 @@ XBSYSAPI EXPORTNUM(338) VOID NTAPI XcRC4Key
 // ******************************************************************
 // * 0x0153 - XcRC4Crypt()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(339) VOID NTAPI XcRC4Crypt
+XBSYSAPI EXPORTNUM(339) void_t NTAPI XcRC4Crypt
 (
 	IN PUCHAR pbKeyStruct,
 	IN ULONG dwInputLength,
@@ -299,7 +299,7 @@ XBSYSAPI EXPORTNUM(339) VOID NTAPI XcRC4Crypt
 // ******************************************************************
 // * 0x0154 - XcHMAC()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(340) VOID NTAPI XcHMAC
+XBSYSAPI EXPORTNUM(340) void_t NTAPI XcHMAC
 (
 	IN PBYTE pbKeyMaterial,
 	IN ULONG cbKeyMaterial,
@@ -363,7 +363,7 @@ XBSYSAPI EXPORTNUM(345) ULONG NTAPI XcModExp
 // ******************************************************************
 // * 0x015A - XcDESKeyParity()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(346) VOID NTAPI XcDESKeyParity
+XBSYSAPI EXPORTNUM(346) void_t NTAPI XcDESKeyParity
 (
 	IN PUCHAR pbKey,
 	IN ULONG dwKeyLength
@@ -372,7 +372,7 @@ XBSYSAPI EXPORTNUM(346) VOID NTAPI XcDESKeyParity
 // ******************************************************************
 // * 0x015B - XcKeyTable()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(347) VOID NTAPI XcKeyTable
+XBSYSAPI EXPORTNUM(347) void_t NTAPI XcKeyTable
 (
 	IN ULONG dwCipher,
 	OUT PUCHAR pbKeyTable,
@@ -382,7 +382,7 @@ XBSYSAPI EXPORTNUM(347) VOID NTAPI XcKeyTable
 // ******************************************************************
 // * 0x015C - XcBlockCrypt()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(348) VOID NTAPI XcBlockCrypt
+XBSYSAPI EXPORTNUM(348) void_t NTAPI XcBlockCrypt
 (
 	IN ULONG dwCipher,
 	OUT PUCHAR pbOutput,
@@ -394,7 +394,7 @@ XBSYSAPI EXPORTNUM(348) VOID NTAPI XcBlockCrypt
 // ******************************************************************
 // * 0x015D - XcBlockCryptCBC()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(349) VOID NTAPI XcBlockCryptCBC
+XBSYSAPI EXPORTNUM(349) void_t NTAPI XcBlockCryptCBC
 (
 	IN ULONG dwCipher,
 	IN ULONG dwInputLength,
@@ -415,21 +415,21 @@ XBSYSAPI EXPORTNUM(350) ULONG NTAPI XcCryptService
 );
 
 /* Function pointers which point to all the kernel crypto functions. Used by PCRYPTO_VECTOR. */
-typedef VOID(NTAPI *pfXcSHAInit)(PUCHAR pbSHAContext);
-typedef VOID(NTAPI *pfXcSHAUpdate)(PUCHAR pbSHAContext, PUCHAR pbInput, ULONG dwInputLength);
-typedef VOID(NTAPI *pfXcSHAFinal)(PUCHAR pbSHAContext, PUCHAR pbDigest);
-typedef VOID(NTAPI *pfXcRC4Key)(PUCHAR pbKeyStruct, ULONG dwKeyLength, PUCHAR pbKey);
-typedef VOID(NTAPI *pfXcRC4Crypt)(PUCHAR pbKeyStruct, ULONG dwInputLength, PUCHAR pbInput);
-typedef VOID(NTAPI *pfXcHMAC)(PBYTE pbKeyMaterial, ULONG cbKeyMaterial, PBYTE pbData, ULONG cbData, PBYTE pbData2, ULONG cbData2, PBYTE HmacData);
+typedef void_t(NTAPI *pfXcSHAInit)(PUCHAR pbSHAContext);
+typedef void_t(NTAPI *pfXcSHAUpdate)(PUCHAR pbSHAContext, PUCHAR pbInput, ULONG dwInputLength);
+typedef void_t(NTAPI *pfXcSHAFinal)(PUCHAR pbSHAContext, PUCHAR pbDigest);
+typedef void_t(NTAPI *pfXcRC4Key)(PUCHAR pbKeyStruct, ULONG dwKeyLength, PUCHAR pbKey);
+typedef void_t(NTAPI *pfXcRC4Crypt)(PUCHAR pbKeyStruct, ULONG dwInputLength, PUCHAR pbInput);
+typedef void_t(NTAPI *pfXcHMAC)(PBYTE pbKeyMaterial, ULONG cbKeyMaterial, PBYTE pbData, ULONG cbData, PBYTE pbData2, ULONG cbData2, PBYTE HmacData);
 typedef ULONG(NTAPI *pfXcPKEncPublic)(PUCHAR pbPubKey, PUCHAR pbInput, PUCHAR pbOutput);
 typedef ULONG(NTAPI *pfXcPKDecPrivate)(PUCHAR pbPrvKey, PUCHAR pbInput, PUCHAR pbOutput);
 typedef ULONG(NTAPI *pfXcPKGetKeyLen)(PUCHAR pbPubKey);
 typedef BOOLEAN(NTAPI *pfXcVerifyPKCS1Signature)(PUCHAR pbSig, PUCHAR pbPubKey, PUCHAR pbDigest);
 typedef ULONG(NTAPI *pfXcModExp)(LPDWORD pA, LPDWORD pB, LPDWORD pC, LPDWORD pD, ULONG dwN);
-typedef VOID(NTAPI *pfXcDESKeyParity)(PUCHAR pbKey, ULONG dwKeyLength);
-typedef VOID(NTAPI *pfXcKeyTable)(ULONG dwCipher, PUCHAR pbKeyTable, PUCHAR pbKey);
-typedef VOID(NTAPI *pfXcBlockCrypt)(ULONG dwCipher, PUCHAR pbOutput, PUCHAR pbInput, PUCHAR pbKeyTable, ULONG dwOp);
-typedef VOID(NTAPI *pfXcBlockCryptCBC)(ULONG dwCipher, ULONG dwInputLength, PUCHAR pbOutput, PUCHAR pbInput, PUCHAR pbKeyTable, ULONG dwOp, PUCHAR pbFeedback);
+typedef void_t(NTAPI *pfXcDESKeyParity)(PUCHAR pbKey, ULONG dwKeyLength);
+typedef void_t(NTAPI *pfXcKeyTable)(ULONG dwCipher, PUCHAR pbKeyTable, PUCHAR pbKey);
+typedef void_t(NTAPI *pfXcBlockCrypt)(ULONG dwCipher, PUCHAR pbOutput, PUCHAR pbInput, PUCHAR pbKeyTable, ULONG dwOp);
+typedef void_t(NTAPI *pfXcBlockCryptCBC)(ULONG dwCipher, ULONG dwInputLength, PUCHAR pbOutput, PUCHAR pbInput, PUCHAR pbKeyTable, ULONG dwOp, PUCHAR pbFeedback);
 typedef ULONG(NTAPI *pfXcCryptService)(ULONG dwOp, PVOID pArgs);
 
 /* Struct which contains all the pointers to the crypto functions */
@@ -455,7 +455,7 @@ typedef struct {
 // ******************************************************************
 // * 0x015F - XcUpdateCrypto()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(351) VOID NTAPI XcUpdateCrypto
+XBSYSAPI EXPORTNUM(351) void_t NTAPI XcUpdateCrypto
 (
 	IN PCRYPTO_VECTOR pNewVector,
 	OUT PCRYPTO_VECTOR pROMVector OPTIONAL

@@ -395,7 +395,7 @@ inline int bsr(const uint32_t a) { DWORD result; _BitScanReverse(&result, a); re
 // ******************************************************************
 // Restores the irq level on the current processor
 // ARGUMENTS NewIrql = Irql to lower to
-XBSYSAPI EXPORTNUM(161) xbox::VOID FASTCALL xbox::KfLowerIrql
+XBSYSAPI EXPORTNUM(161) xbox::void_t FASTCALL xbox::KfLowerIrql
 (
     IN KIRQL NewIrql
 )
@@ -443,7 +443,7 @@ extern xbox::KPRCB *KeGetCurrentPrcb();
 // ******************************************************************
 // * 0x00A3 - KiUnlockDispatcherDatabase()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(163) xbox::VOID FASTCALL xbox::KiUnlockDispatcherDatabase
+XBSYSAPI EXPORTNUM(163) xbox::void_t FASTCALL xbox::KiUnlockDispatcherDatabase
 (
 	IN KIRQL OldIrql
 )

@@ -307,7 +307,7 @@ HRESULT WINAPI xbox::EMUPATCH(IDirectSound_CreateSoundStream)
 // ******************************************************************
 // * patch: CMcpxStream_Dummy_0x10
 // ******************************************************************
-VOID WINAPI xbox::EMUPATCH(CMcpxStream_Dummy_0x10)(DWORD dwDummy1, DWORD dwDummy2)
+xbox::void_t WINAPI xbox::EMUPATCH(CMcpxStream_Dummy_0x10)(DWORD dwDummy1, DWORD dwDummy2)
 {
     DSoundMutexGuardLock;
 

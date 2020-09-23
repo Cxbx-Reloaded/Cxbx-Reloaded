@@ -40,7 +40,7 @@ static INT_PTR CALLBACK DlgAudioConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wPara
 /*! directsound audio devices procedure*/
 static BOOL CALLBACK DSEnumProc(LPGUID lpGUID, LPCTSTR lpszDesc, LPCTSTR lpszDrvName, LPVOID lpContext);
 /*! refresh UI based on selected audio adapter */
-static VOID RefreshAudioAdapter();
+static void RefreshAudioAdapter();
 
 /*! audio configuration */
 static Settings::s_audio g_XBAudio;
@@ -49,7 +49,7 @@ static BOOL g_bHasChanges = FALSE;
 /*! handle to audio adapter list window */
 static HWND g_hAudioAdapter = nullptr;
 
-VOID ShowAudioConfig(HWND hwnd)
+void ShowAudioConfig(HWND hwnd)
 {
     /*! reset changes flag */
     g_bHasChanges = FALSE;
@@ -199,7 +199,7 @@ INT_PTR CALLBACK DlgAudioConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPAR
     return FALSE;
 }
 
-VOID RefreshAudioAdapter()
+void RefreshAudioAdapter()
 {
     /*! save configured audio adapter */
     {

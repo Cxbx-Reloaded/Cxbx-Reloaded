@@ -65,7 +65,7 @@ HRESULT WINAPI XOnlineLaunchNewImage
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(XOnlineLogon)
 (
-    VOID*	pUsers,
+    void_t*	pUsers,
     DWORD*	pdwServiceIDs,
     DWORD	dwServices,
     HANDLE	hEvent,

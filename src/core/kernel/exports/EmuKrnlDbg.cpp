@@ -45,7 +45,7 @@ namespace NtDll
 // ******************************************************************
 // * 0x0005 - DbgBreakPoint()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(5) xbox::VOID NTAPI xbox::DbgBreakPoint()
+XBSYSAPI EXPORTNUM(5) xbox::void_t NTAPI xbox::DbgBreakPoint()
 {
 	LOG_FUNC();
 
@@ -55,7 +55,7 @@ XBSYSAPI EXPORTNUM(5) xbox::VOID NTAPI xbox::DbgBreakPoint()
 // ******************************************************************
 // * 0x0006 - DbgBreakPointWithStatus()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(6) xbox::VOID NTAPI xbox::DbgBreakPointWithStatus
+XBSYSAPI EXPORTNUM(6) xbox::void_t NTAPI xbox::DbgBreakPointWithStatus
 (
 	IN ULONG Status 
 )
@@ -161,7 +161,7 @@ XBSYSAPI EXPORTNUM(10) xbox::ULONG NTAPI xbox::DbgPrompt
 // * 0x000B - DbgUnLoadImageSymbols()
 // ******************************************************************
 // Source:ReactOS
-XBSYSAPI EXPORTNUM(11) xbox::VOID NTAPI xbox::DbgUnLoadImageSymbols
+XBSYSAPI EXPORTNUM(11) xbox::void_t NTAPI xbox::DbgUnLoadImageSymbols
 (
 	IN PANSI_STRING Name,
 	IN PVOID Base,

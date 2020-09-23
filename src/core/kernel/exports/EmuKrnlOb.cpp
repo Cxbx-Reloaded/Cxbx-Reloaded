@@ -342,7 +342,7 @@ xbox::HANDLE xbox::ObpCreateObjectHandle(xbox::PVOID Object)
 	return Handle;
 }
 
-xbox::VOID xbox::ObDissectName(OBJECT_STRING Path, POBJECT_STRING FirstName, POBJECT_STRING RemainingName)
+xbox::void_t xbox::ObDissectName(OBJECT_STRING Path, POBJECT_STRING FirstName, POBJECT_STRING RemainingName)
 {
 	ULONG i = 0;
 	
@@ -745,7 +745,7 @@ CleanupAndExit:
 // ******************************************************************
 // * 0x00F2 - ObMakeTemporaryObject()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(242) xbox::VOID NTAPI xbox::ObMakeTemporaryObject
+XBSYSAPI EXPORTNUM(242) xbox::void_t NTAPI xbox::ObMakeTemporaryObject
 (
 	IN PVOID Object
 )
@@ -936,7 +936,7 @@ XBSYSAPI EXPORTNUM(249) xbox::OBJECT_TYPE xbox::ObSymbolicLinkObjectType =
 // ******************************************************************
 // * 0x00FA - ObfDereferenceObject()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(250) xbox::VOID FASTCALL xbox::ObfDereferenceObject
+XBSYSAPI EXPORTNUM(250) xbox::void_t FASTCALL xbox::ObfDereferenceObject
 (
 	IN PVOID Object
 )
@@ -972,7 +972,7 @@ XBSYSAPI EXPORTNUM(250) xbox::VOID FASTCALL xbox::ObfDereferenceObject
 // ******************************************************************
 // * 0x00FB - ObfReferenceObject()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(251) xbox::VOID FASTCALL xbox::ObfReferenceObject
+XBSYSAPI EXPORTNUM(251) xbox::void_t FASTCALL xbox::ObfReferenceObject
 (
 	IN PVOID Object
 )

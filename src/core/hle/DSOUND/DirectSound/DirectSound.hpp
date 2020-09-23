@@ -165,7 +165,7 @@ class X_CMcpxStream
             // TODO: Function needs X_CMcpxStream "this" pointer (ecx!)
             //
 
-            VOID (WINAPI *Dummy_0x10)(DWORD dwDummy1, DWORD dwDummy2);   // 0x10
+            xbox::void_t (WINAPI *Dummy_0x10)(DWORD dwDummy1, DWORD dwDummy2);   // 0x10
         }
         *pVtbl;
 
@@ -376,7 +376,7 @@ HRESULT WINAPI EMUPATCH(DirectSoundCreate)
 // ******************************************************************
 // * patch: DirectSoundDoWork
 // ******************************************************************
-VOID WINAPI EMUPATCH(DirectSoundDoWork)();
+xbox::void_t WINAPI EMUPATCH(DirectSoundDoWork)();
 
 // ******************************************************************
 // * patch: IDirectSound_AddRef
@@ -777,7 +777,7 @@ HRESULT WINAPI EMUPATCH(IDirectSound_CreateSoundStream)
 // ******************************************************************
 // * patch: CMcpxStream_Dummy_0x10
 // ******************************************************************
-VOID WINAPI EMUPATCH(CMcpxStream_Dummy_0x10)(DWORD dwDummy1, DWORD dwDummy2);
+xbox::void_t WINAPI EMUPATCH(CMcpxStream_Dummy_0x10)(DWORD dwDummy1, DWORD dwDummy2);
 
 // ******************************************************************
 // * patch: CDirectSoundStream_SetRolloffFactor
@@ -1157,7 +1157,7 @@ HRESULT WINAPI EMUPATCH(CDirectSoundStream_SetLFO)
 // ******************************************************************
 // * patch: XAudioCreateAdpcmFormat // NOTE: Not require to patch
 // ******************************************************************
-VOID WINAPI EMUPATCH(XAudioCreateAdpcmFormat)
+xbox::void_t WINAPI EMUPATCH(XAudioCreateAdpcmFormat)
 (
     WORD                        nChannels,
     DWORD                       nSamplesPerSec,
@@ -1484,7 +1484,7 @@ HRESULT WINAPI EMUPATCH(XFileMediaObject_Seek)
 // ******************************************************************
 // * patch: XFileMediaObject_DoWork
 // ******************************************************************
-VOID WINAPI EMUPATCH(XFileMediaObject_DoWork)(X_XFileMediaObject* pThis);
+xbox::void_t WINAPI EMUPATCH(XFileMediaObject_DoWork)(X_XFileMediaObject* pThis);
 
 // ******************************************************************
 // * patch: XFileMediaObject_GetStatus
@@ -1687,7 +1687,7 @@ HRESULT WINAPI EMUPATCH(IDirectSoundStream_SetMixBins)
 // ******************************************************************
 // * patch:  CDirectSound3DCalculator_Calculate3D
 // ******************************************************************
-VOID WINAPI EMUPATCH(CDirectSound3DCalculator_Calculate3D)
+xbox::void_t WINAPI EMUPATCH(CDirectSound3DCalculator_Calculate3D)
 (
     DWORD a1,
     DWORD a2);
@@ -1695,7 +1695,7 @@ VOID WINAPI EMUPATCH(CDirectSound3DCalculator_Calculate3D)
 // ******************************************************************
 // * patch:  CDirectSound3DCalculator_GetVoiceData
 // ******************************************************************
-VOID WINAPI EMUPATCH(CDirectSound3DCalculator_GetVoiceData)
+xbox::void_t WINAPI EMUPATCH(CDirectSound3DCalculator_GetVoiceData)
 (
     DWORD a1,
     DWORD a2,

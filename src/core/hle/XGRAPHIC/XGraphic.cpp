@@ -54,7 +54,7 @@ PVOID WINAPI xbox::EMUPATCH(XGIsSwizzledFormat)
 // ******************************************************************
 // * patch: XGSwizzleRect
 // ******************************************************************
-VOID WINAPI xbox::EMUPATCH(XGSwizzleRect)
+xbox::void_t WINAPI xbox::EMUPATCH(XGSwizzleRect)
 (
     LPCVOID       pSource,
     DWORD         Pitch,
@@ -115,7 +115,7 @@ VOID WINAPI xbox::EMUPATCH(XGSwizzleRect)
 // ******************************************************************
 // * patch: XGSwizzleBox
 // ******************************************************************
-VOID WINAPI xbox::EMUPATCH(XGSwizzleBox)
+xbox::void_t WINAPI xbox::EMUPATCH(XGSwizzleBox)
 (
     LPCVOID          pSource,
     DWORD            RowPitch,
@@ -207,7 +207,7 @@ HRESULT WINAPI xbox::EMUPATCH(XGWriteSurfaceOrTextureToXPR)
 // ******************************************************************
 // * patch: XGSetTextureHeader
 // ******************************************************************
-VOID WINAPI xbox::EMUPATCH(XGSetTextureHeader)
+xbox::void_t WINAPI xbox::EMUPATCH(XGSetTextureHeader)
 (
 	UINT			Width,
 	UINT			Height,

@@ -256,7 +256,7 @@ void SetupXboxDeviceTypes()
 // ******************************************************************
 // * patch: XInitDevices
 // ******************************************************************
-xbox::VOID WINAPI xbox::EMUPATCH(XInitDevices)
+xbox::void_t WINAPI xbox::EMUPATCH(XInitDevices)
 (
     DWORD					dwPreallocTypeCount,
 	PXDEVICE_PREALLOC_TYPE	PreallocTypes
@@ -455,7 +455,7 @@ xbox::HANDLE WINAPI xbox::EMUPATCH(XInputOpen)
 // ******************************************************************
 // * patch: XInputClose
 // ******************************************************************
-xbox::VOID WINAPI xbox::EMUPATCH(XInputClose)
+xbox::void_t WINAPI xbox::EMUPATCH(XInputClose)
 (
     IN HANDLE hDevice
 )
@@ -898,7 +898,7 @@ xbox::BOOL WINAPI xbox::EMUPATCH(GetExitCodeThread)
 // ******************************************************************
 // * patch: XapiThreadStartup
 // ******************************************************************
-xbox::VOID WINAPI xbox::EMUPATCH(XapiThreadStartup)
+xbox::void_t WINAPI xbox::EMUPATCH(XapiThreadStartup)
 (
     DWORD dwDummy1,
     DWORD dwDummy2
@@ -931,7 +931,7 @@ xbox::VOID WINAPI xbox::EMUPATCH(XapiThreadStartup)
 // ******************************************************************
 // * patch: XRegisterThreadNotifyRoutine
 // ******************************************************************
-xbox::VOID WINAPI xbox::EMUPATCH(XRegisterThreadNotifyRoutine)
+xbox::void_t WINAPI xbox::EMUPATCH(XRegisterThreadNotifyRoutine)
 (
     PXTHREAD_NOTIFICATION   pThreadNotification,
     BOOL                    fRegister
@@ -1018,7 +1018,7 @@ xbox::LPVOID WINAPI xbox::EMUPATCH(CreateFiber)
 // ******************************************************************
 // * patch: DeleteFiber
 // ******************************************************************
-xbox::VOID WINAPI xbox::EMUPATCH(DeleteFiber)
+xbox::void_t WINAPI xbox::EMUPATCH(DeleteFiber)
 (
 	LPVOID					lpFiber
 )
@@ -1032,7 +1032,7 @@ xbox::VOID WINAPI xbox::EMUPATCH(DeleteFiber)
 // ******************************************************************
 // * patch: SwitchToFiber
 // ******************************************************************
-xbox::VOID WINAPI xbox::EMUPATCH(SwitchToFiber)
+xbox::void_t WINAPI xbox::EMUPATCH(SwitchToFiber)
 (
 	LPVOID lpFiber 
 )
@@ -1255,7 +1255,7 @@ DWORD WINAPI xbox::EMUPATCH(XGetLaunchInfo)
 // ******************************************************************
 // * patch: XSetProcessQuantumLength
 // ******************************************************************
-xbox::VOID WINAPI xbox::EMUPATCH(XSetProcessQuantumLength)
+xbox::void_t WINAPI xbox::EMUPATCH(XSetProcessQuantumLength)
 (
     DWORD dwMilliseconds
 )
@@ -1338,7 +1338,7 @@ MMRESULT WINAPI xbox::EMUPATCH(timeKillEvent)
 // ******************************************************************
 // * patch: RaiseException
 // ******************************************************************
-xbox::VOID WINAPI xbox::EMUPATCH(RaiseException)
+xbox::void_t WINAPI xbox::EMUPATCH(RaiseException)
 (
 	DWORD			dwExceptionCode,       // exception code
 	DWORD			dwExceptionFlags,      // continuable exception flag
@@ -1448,7 +1448,7 @@ xbox::DWORD WINAPI xbox::EMUPATCH(XMountMURootA)
 // ******************************************************************
 // * patch: OutputDebugStringA
 // ******************************************************************
-xbox::VOID WINAPI xbox::EMUPATCH(OutputDebugStringA)
+xbox::void_t WINAPI xbox::EMUPATCH(OutputDebugStringA)
 (
 	IN LPCSTR lpOutputString
 )

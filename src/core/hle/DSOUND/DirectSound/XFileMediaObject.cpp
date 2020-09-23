@@ -70,7 +70,7 @@ xbox::X_XFileMediaObject::_vtbl xbox::X_XFileMediaObject::vtbl =
 // ******************************************************************
 // * patch: XAudioCreateAdpcmFormat
 // ******************************************************************
-VOID WINAPI xbox::EMUPATCH(XAudioCreateAdpcmFormat)
+xbox::void_t WINAPI xbox::EMUPATCH(XAudioCreateAdpcmFormat)
 (
     WORD                        nChannels,
     DWORD                       nSamplesPerSec,
@@ -294,7 +294,7 @@ HRESULT WINAPI xbox::EMUPATCH(XFileMediaObject_Seek)
 // * patch: XFileMediaObject_DoWork
 // ******************************************************************
 // NOTE: Does not require a patch.
-VOID WINAPI xbox::EMUPATCH(XFileMediaObject_DoWork)(X_XFileMediaObject* pThis)
+xbox::void_t WINAPI xbox::EMUPATCH(XFileMediaObject_DoWork)(X_XFileMediaObject* pThis)
 {
     DSoundMutexGuardLock;
 

@@ -58,7 +58,7 @@ XBSYSAPI EXPORTNUM(35) xbox::ULONG NTAPI xbox::FscGetCacheSize()
 // ******************************************************************
 // * 0x0024 - FscInvalidateIdleBlocks()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(36) xbox::VOID NTAPI xbox::FscInvalidateIdleBlocks()
+XBSYSAPI EXPORTNUM(36) xbox::void_t NTAPI xbox::FscInvalidateIdleBlocks()
 {
 	LOG_FUNC();
 
@@ -67,7 +67,7 @@ XBSYSAPI EXPORTNUM(36) xbox::VOID NTAPI xbox::FscInvalidateIdleBlocks()
 
 static xbox::KEVENT g_FscCacheEvent;
 
-xbox::VOID xbox::InitializeFscCacheEvent()
+xbox::void_t xbox::InitializeFscCacheEvent()
 {
     KeInitializeEvent(&g_FscCacheEvent, SynchronizationEvent, TRUE);
 }

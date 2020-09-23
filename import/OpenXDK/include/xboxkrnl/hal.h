@@ -21,7 +21,7 @@ XBSYSAPI EXPORTNUM(9) NTSTATUS NTAPI HalReadSMCTrayState
 	DWORD*	Count
 );
 
-XBSYSAPI EXPORTNUM(38) VOID FASTCALL HalClearSoftwareInterrupt
+XBSYSAPI EXPORTNUM(38) void_t FASTCALL HalClearSoftwareInterrupt
 (
 	KIRQL Request
 );
@@ -29,7 +29,7 @@ XBSYSAPI EXPORTNUM(38) VOID FASTCALL HalClearSoftwareInterrupt
 // ******************************************************************
 // * 0x0027 - HalDisableSystemInterrupt()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(39) VOID NTAPI HalDisableSystemInterrupt
+XBSYSAPI EXPORTNUM(39) void_t NTAPI HalDisableSystemInterrupt
 (
 	IN ULONG BusInterruptLevel
 );
@@ -41,7 +41,7 @@ XBSYSAPI EXPORTNUM(42) PANSI_STRING HalDiskSerialNumber;
 // ******************************************************************
 // * 0x002B - HalEnableSystemInterrupt()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(43) VOID NTAPI HalEnableSystemInterrupt
+XBSYSAPI EXPORTNUM(43) void_t NTAPI HalEnableSystemInterrupt
 (
 	IN ULONG BusInterruptLevel,
 	IN KINTERRUPT_MODE InterruptMode
@@ -70,7 +70,7 @@ XBSYSAPI EXPORTNUM(45) NTSTATUS NTAPI HalReadSMBusValue
 // ******************************************************************
 // * HalReadWritePCISpace
 // ******************************************************************
-XBSYSAPI EXPORTNUM(46) VOID NTAPI HalReadWritePCISpace
+XBSYSAPI EXPORTNUM(46) void_t NTAPI HalReadWritePCISpace
 (
   IN ULONG   BusNumber,
   IN ULONG   SlotNumber,
@@ -80,7 +80,7 @@ XBSYSAPI EXPORTNUM(46) VOID NTAPI HalReadWritePCISpace
   IN BOOLEAN WritePCISpace
 );
 
-typedef VOID (*PHAL_SHUTDOWN_NOTIFICATION)(
+typedef void_t (*PHAL_SHUTDOWN_NOTIFICATION)(
     IN struct _HAL_SHUTDOWN_REGISTRATION *ShutdownRegistration
 );
 
@@ -90,12 +90,12 @@ typedef struct _HAL_SHUTDOWN_REGISTRATION {
     LIST_ENTRY ListEntry;
 } HAL_SHUTDOWN_REGISTRATION, *PHAL_SHUTDOWN_REGISTRATION;
 
-XBSYSAPI EXPORTNUM(47) VOID NTAPI HalRegisterShutdownNotification(
+XBSYSAPI EXPORTNUM(47) void_t NTAPI HalRegisterShutdownNotification(
     IN PHAL_SHUTDOWN_REGISTRATION ShutdownRegistration,
     IN BOOLEAN Register
 );
 
-XBSYSAPI EXPORTNUM(46) VOID FASTCALL HalRequestSoftwareInterrupt
+XBSYSAPI EXPORTNUM(46) void_t FASTCALL HalRequestSoftwareInterrupt
 (
 	IN KIRQL Request
 );
@@ -107,7 +107,7 @@ XBSYSAPI EXPORTNUM(46) VOID FASTCALL HalRequestSoftwareInterrupt
 // * Reboot / Shutdown / Etc
 // *
 // ******************************************************************
-XBSYSAPI EXPORTNUM(49) VOID DECLSPEC_NORETURN NTAPI HalReturnToFirmware
+XBSYSAPI EXPORTNUM(49) void_t DECLSPEC_NORETURN NTAPI HalReturnToFirmware
 (
     RETURN_FIRMWARE Routine
 );
@@ -126,7 +126,7 @@ XBSYSAPI EXPORTNUM(50) NTSTATUS NTAPI HalWriteSMBusValue
 // ******************************************************************
 // * READ_PORT_BUFFER_UCHAR
 // ******************************************************************
-XBSYSAPI EXPORTNUM(329) VOID NTAPI READ_PORT_BUFFER_UCHAR
+XBSYSAPI EXPORTNUM(329) void_t NTAPI READ_PORT_BUFFER_UCHAR
 (
     IN PUCHAR Port,
     IN PUCHAR Buffer,
@@ -136,7 +136,7 @@ XBSYSAPI EXPORTNUM(329) VOID NTAPI READ_PORT_BUFFER_UCHAR
 // ******************************************************************
 // * READ_PORT_BUFFER_USHORT
 // ******************************************************************
-XBSYSAPI EXPORTNUM(330) VOID NTAPI READ_PORT_BUFFER_USHORT
+XBSYSAPI EXPORTNUM(330) void_t NTAPI READ_PORT_BUFFER_USHORT
 (
     IN PUSHORT Port,
     IN PUSHORT Buffer,
@@ -146,7 +146,7 @@ XBSYSAPI EXPORTNUM(330) VOID NTAPI READ_PORT_BUFFER_USHORT
 // ******************************************************************
 // * READ_PORT_BUFFER_ULONG
 // ******************************************************************
-XBSYSAPI EXPORTNUM(331) VOID NTAPI READ_PORT_BUFFER_ULONG
+XBSYSAPI EXPORTNUM(331) void_t NTAPI READ_PORT_BUFFER_ULONG
 (
     IN PULONG Port,
     IN PULONG Buffer,
@@ -156,7 +156,7 @@ XBSYSAPI EXPORTNUM(331) VOID NTAPI READ_PORT_BUFFER_ULONG
 // ******************************************************************
 // * WRITE_PORT_BUFFER_UCHAR
 // ******************************************************************
-XBSYSAPI EXPORTNUM(332) VOID NTAPI WRITE_PORT_BUFFER_UCHAR
+XBSYSAPI EXPORTNUM(332) void_t NTAPI WRITE_PORT_BUFFER_UCHAR
 (
     IN PUCHAR Port,
     IN PUCHAR Buffer,
@@ -166,7 +166,7 @@ XBSYSAPI EXPORTNUM(332) VOID NTAPI WRITE_PORT_BUFFER_UCHAR
 // ******************************************************************
 // * WRITE_PORT_BUFFER_USHORT
 // ******************************************************************
-XBSYSAPI EXPORTNUM(333) VOID NTAPI WRITE_PORT_BUFFER_USHORT
+XBSYSAPI EXPORTNUM(333) void_t NTAPI WRITE_PORT_BUFFER_USHORT
 (
     IN PUSHORT Port,
     IN PUSHORT Buffer,
@@ -176,7 +176,7 @@ XBSYSAPI EXPORTNUM(333) VOID NTAPI WRITE_PORT_BUFFER_USHORT
 // ******************************************************************
 // * WRITE_PORT_BUFFER_ULONG
 // ******************************************************************
-XBSYSAPI EXPORTNUM(334) VOID NTAPI WRITE_PORT_BUFFER_ULONG
+XBSYSAPI EXPORTNUM(334) void_t NTAPI WRITE_PORT_BUFFER_ULONG
 (
     IN PULONG Port,
     IN PULONG Buffer,
@@ -196,7 +196,7 @@ XBSYSAPI EXPORTNUM(360) NTSTATUS NTAPI HalInitiateShutdown
 (
 );
 
-XBSYSAPI EXPORTNUM(365) VOID NTAPI HalEnableSecureTrayEject
+XBSYSAPI EXPORTNUM(365) void_t NTAPI HalEnableSecureTrayEject
 (
 );
 

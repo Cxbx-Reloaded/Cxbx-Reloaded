@@ -69,7 +69,7 @@ XBSYSAPI EXPORTNUM(169) PVOID NTAPI MmCreateKernelStack
 // ******************************************************************
 // * MmDeleteKernelStack
 // ******************************************************************
-XBSYSAPI EXPORTNUM(170) VOID NTAPI MmDeleteKernelStack
+XBSYSAPI EXPORTNUM(170) void_t NTAPI MmDeleteKernelStack
 (
     IN PVOID StackBase,
     IN PVOID StackLimit
@@ -78,7 +78,7 @@ XBSYSAPI EXPORTNUM(170) VOID NTAPI MmDeleteKernelStack
 // ******************************************************************
 // * MmFreeContiguousMemory
 // ******************************************************************
-XBSYSAPI EXPORTNUM(171) VOID NTAPI MmFreeContiguousMemory
+XBSYSAPI EXPORTNUM(171) void_t NTAPI MmFreeContiguousMemory
 (
     IN PVOID BaseAddress
 );
@@ -111,7 +111,7 @@ XBSYSAPI EXPORTNUM(174) BOOLEAN NTAPI MmIsAddressValid
 // ******************************************************************
 // * MmLockUnlockBufferPages
 // ******************************************************************
-XBSYSAPI EXPORTNUM(175) VOID NTAPI MmLockUnlockBufferPages
+XBSYSAPI EXPORTNUM(175) void_t NTAPI MmLockUnlockBufferPages
 (
     IN PVOID             BaseAddress,
     IN SIZE_T            NumberOfBytes,
@@ -121,7 +121,7 @@ XBSYSAPI EXPORTNUM(175) VOID NTAPI MmLockUnlockBufferPages
 // ******************************************************************
 // * MmLockUnlockPhysicalPage
 // ******************************************************************
-XBSYSAPI EXPORTNUM(176) VOID NTAPI MmLockUnlockPhysicalPage
+XBSYSAPI EXPORTNUM(176) void_t NTAPI MmLockUnlockPhysicalPage
 (
 	IN ULONG_PTR PhysicalAddress,
 	IN BOOLEAN UnlockPage
@@ -140,7 +140,7 @@ XBSYSAPI EXPORTNUM(177) PVOID NTAPI MmMapIoSpace
 // ******************************************************************
 // * MmPersistContiguousMemory
 // ******************************************************************
-XBSYSAPI EXPORTNUM(178) VOID NTAPI MmPersistContiguousMemory
+XBSYSAPI EXPORTNUM(178) void_t NTAPI MmPersistContiguousMemory
 (
     IN PVOID   BaseAddress,
     IN ULONG   NumberOfBytes,
@@ -174,7 +174,7 @@ XBSYSAPI EXPORTNUM(181) NTSTATUS NTAPI MmQueryStatistics
 // ******************************************************************
 // * MmSetAddressProtect
 // ******************************************************************
-XBSYSAPI EXPORTNUM(182) VOID NTAPI MmSetAddressProtect
+XBSYSAPI EXPORTNUM(182) void_t NTAPI MmSetAddressProtect
 (
     IN PVOID BaseAddress,
     IN ULONG NumberOfBytes,
@@ -184,7 +184,7 @@ XBSYSAPI EXPORTNUM(182) VOID NTAPI MmSetAddressProtect
 // ******************************************************************
 // * MmUnmapIoSpace
 // ******************************************************************
-XBSYSAPI EXPORTNUM(183) VOID NTAPI MmUnmapIoSpace
+XBSYSAPI EXPORTNUM(183) void_t NTAPI MmUnmapIoSpace
 (
     IN PVOID BaseAddress,
     IN ULONG NumberOfBytes
@@ -216,7 +216,7 @@ XBSYSAPI EXPORTNUM(376) ULONG NTAPI MmDbgQueryAvailablePages(void);
 // ******************************************************************
 // * MmDbgReleaseAddress
 // ******************************************************************
-XBSYSAPI EXPORTNUM(377) VOID NTAPI MmDbgReleaseAddress
+XBSYSAPI EXPORTNUM(377) void_t NTAPI MmDbgReleaseAddress
 (
 	IN PVOID VirtualAddress,
 	IN PULONG Opaque

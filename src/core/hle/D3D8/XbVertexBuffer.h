@@ -125,9 +125,9 @@ extern struct _D3DIVB
 extern UINT g_InlineVertexBuffer_TableLength;
 extern UINT g_InlineVertexBuffer_TableOffset;
 
-extern VOID EmuFlushIVB();
+extern void EmuFlushIVB();
 
-extern VOID EmuUpdateActiveTexture();
+extern void EmuUpdateActiveTexture();
 
 extern DWORD g_dwPrimPerFrame;
  

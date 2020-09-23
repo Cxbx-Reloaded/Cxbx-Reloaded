@@ -125,7 +125,7 @@ XBSYSAPI EXPORTNUM(9) xbox::NTSTATUS NTAPI xbox::HalReadSMCTrayState
 // * 0x0026 - HalClearSoftwareInterrupt()
 // ******************************************************************
 // Source:ReactOS
-XBSYSAPI EXPORTNUM(38) xbox::VOID FASTCALL xbox::HalClearSoftwareInterrupt
+XBSYSAPI EXPORTNUM(38) xbox::void_t FASTCALL xbox::HalClearSoftwareInterrupt
 (
 	KIRQL Request
 )
@@ -140,7 +140,7 @@ XBSYSAPI EXPORTNUM(38) xbox::VOID FASTCALL xbox::HalClearSoftwareInterrupt
 // ******************************************************************
 // * 0x0027 - HalDisableSystemInterrupt()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(39) xbox::VOID NTAPI xbox::HalDisableSystemInterrupt
+XBSYSAPI EXPORTNUM(39) xbox::void_t NTAPI xbox::HalDisableSystemInterrupt
 (
 	IN ULONG BusInterruptLevel
 )
@@ -172,7 +172,7 @@ XBSYSAPI EXPORTNUM(42) xbox::PANSI_STRING xbox::HalDiskSerialNumber = 0;
 // ******************************************************************
 // * 0x002B - HalEnableSystemInterrupt()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(43) xbox::VOID NTAPI xbox::HalEnableSystemInterrupt
+XBSYSAPI EXPORTNUM(43) xbox::void_t NTAPI xbox::HalEnableSystemInterrupt
 (
 	IN ULONG BusInterruptLevel,
 	IN KINTERRUPT_MODE InterruptMode
@@ -310,7 +310,7 @@ XBSYSAPI EXPORTNUM(45) xbox::NTSTATUS NTAPI xbox::HalReadSMBusValue
 // * 0x002E - HalReadWritePCISpace()
 // ******************************************************************
 // Source:OpenXDK
-XBSYSAPI EXPORTNUM(46) xbox::VOID NTAPI xbox::HalReadWritePCISpace
+XBSYSAPI EXPORTNUM(46) xbox::void_t NTAPI xbox::HalReadWritePCISpace
 (
 	IN ULONG   BusNumber,
 	IN ULONG   SlotNumber,
@@ -386,7 +386,7 @@ XBSYSAPI EXPORTNUM(46) xbox::VOID NTAPI xbox::HalReadWritePCISpace
 // ******************************************************************
 // * 0x002F - HalRegisterShutdownNotification()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(47) xbox::VOID NTAPI xbox::HalRegisterShutdownNotification
+XBSYSAPI EXPORTNUM(47) xbox::void_t NTAPI xbox::HalRegisterShutdownNotification
 (
 	IN PHAL_SHUTDOWN_REGISTRATION ShutdownRegistration,
 	IN BOOLEAN Register
@@ -446,7 +446,7 @@ uint8_t SoftwareInterruptLookupTable[] = {
 // * 0x0030 - HalRequestSoftwareInterrupt()
 // ******************************************************************
 // Source:ReactOS
-XBSYSAPI EXPORTNUM(48) xbox::VOID FASTCALL xbox::HalRequestSoftwareInterrupt
+XBSYSAPI EXPORTNUM(48) xbox::void_t FASTCALL xbox::HalRequestSoftwareInterrupt
 (
 	IN KIRQL Request
 )
@@ -480,7 +480,7 @@ XBSYSAPI EXPORTNUM(48) xbox::VOID FASTCALL xbox::HalRequestSoftwareInterrupt
 // ******************************************************************
 // * 0x0031 - HalReturnToFirmware()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(49) xbox::VOID DECLSPEC_NORETURN NTAPI xbox::HalReturnToFirmware
+XBSYSAPI EXPORTNUM(49) xbox::void_t DECLSPEC_NORETURN NTAPI xbox::HalReturnToFirmware
 (
 	RETURN_FIRMWARE Routine
 )
@@ -694,7 +694,7 @@ XBSYSAPI EXPORTNUM(50) xbox::NTSTATUS NTAPI xbox::HalWriteSMBusValue
 // ******************************************************************
 // * 0x0149 - READ_PORT_BUFFER_UCHAR()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(329) xbox::VOID NTAPI xbox::READ_PORT_BUFFER_UCHAR
+XBSYSAPI EXPORTNUM(329) xbox::void_t NTAPI xbox::READ_PORT_BUFFER_UCHAR
 (
 	IN PUCHAR Port,
 	IN PUCHAR Buffer,
@@ -714,7 +714,7 @@ XBSYSAPI EXPORTNUM(329) xbox::VOID NTAPI xbox::READ_PORT_BUFFER_UCHAR
 // ******************************************************************
 // * 0x014A - READ_PORT_BUFFER_USHORT()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(330) xbox::VOID NTAPI xbox::READ_PORT_BUFFER_USHORT
+XBSYSAPI EXPORTNUM(330) xbox::void_t NTAPI xbox::READ_PORT_BUFFER_USHORT
 (
 	IN PUSHORT Port,
 	IN PUSHORT Buffer,
@@ -734,7 +734,7 @@ XBSYSAPI EXPORTNUM(330) xbox::VOID NTAPI xbox::READ_PORT_BUFFER_USHORT
 // ******************************************************************
 // * 0x014B - READ_PORT_BUFFER_ULONG()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(331) xbox::VOID NTAPI xbox::READ_PORT_BUFFER_ULONG
+XBSYSAPI EXPORTNUM(331) xbox::void_t NTAPI xbox::READ_PORT_BUFFER_ULONG
 (
 	IN PULONG Port,
 	IN PULONG Buffer,
@@ -754,7 +754,7 @@ XBSYSAPI EXPORTNUM(331) xbox::VOID NTAPI xbox::READ_PORT_BUFFER_ULONG
 // ******************************************************************
 // * 0x014C - WRITE_PORT_BUFFER_UCHAR()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(332) xbox::VOID NTAPI xbox::WRITE_PORT_BUFFER_UCHAR
+XBSYSAPI EXPORTNUM(332) xbox::void_t NTAPI xbox::WRITE_PORT_BUFFER_UCHAR
 (
 	IN PUCHAR Port,
 	IN PUCHAR Buffer,
@@ -774,7 +774,7 @@ XBSYSAPI EXPORTNUM(332) xbox::VOID NTAPI xbox::WRITE_PORT_BUFFER_UCHAR
 // ******************************************************************
 // * 0x014D - WRITE_PORT_BUFFER_USHORT()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(333) xbox::VOID NTAPI xbox::WRITE_PORT_BUFFER_USHORT
+XBSYSAPI EXPORTNUM(333) xbox::void_t NTAPI xbox::WRITE_PORT_BUFFER_USHORT
 (
 	IN PUSHORT Port,
 	IN PUSHORT Buffer,
@@ -794,7 +794,7 @@ XBSYSAPI EXPORTNUM(333) xbox::VOID NTAPI xbox::WRITE_PORT_BUFFER_USHORT
 // ******************************************************************
 // * 0x014E - WRITE_PORT_BUFFER_ULONG()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(334) xbox::VOID NTAPI xbox::WRITE_PORT_BUFFER_ULONG
+XBSYSAPI EXPORTNUM(334) xbox::void_t NTAPI xbox::WRITE_PORT_BUFFER_ULONG
 (
 	IN PULONG Port,
 	IN PULONG Buffer,
@@ -859,7 +859,7 @@ XBSYSAPI EXPORTNUM(360) xbox::NTSTATUS NTAPI xbox::HalInitiateShutdown
 //
 // New to the XBOX.
 // Source:XBMC Undocumented.h
-XBSYSAPI EXPORTNUM(365) xbox::VOID NTAPI xbox::HalEnableSecureTrayEject
+XBSYSAPI EXPORTNUM(365) xbox::void_t NTAPI xbox::HalEnableSecureTrayEject
 (
 )
 {

@@ -95,7 +95,7 @@ xbox::KTIMER_TABLE_ENTRY KiTimerTableListHead[TIMER_TABLE_SIZE];
 xbox::LIST_ENTRY KiWaitInListHead;
 
 
-xbox::VOID xbox::KiInitSystem()
+xbox::void_t xbox::KiInitSystem()
 {
 	unsigned int i;
 
@@ -112,19 +112,19 @@ xbox::VOID xbox::KiInitSystem()
 	InitializeListHead(&IdexChannelObject.DeviceQueue.DeviceListHead);
 }
 
-xbox::VOID xbox::KiTimerLock()
+xbox::void_t xbox::KiTimerLock()
 {
 	KiTimerMtx.Mtx.lock();
 	KiTimerMtx.Acquired++;
 }
 
-xbox::VOID xbox::KiTimerUnlock()
+xbox::void_t xbox::KiTimerUnlock()
 {
 	KiTimerMtx.Acquired--;
 	KiTimerMtx.Mtx.unlock();
 }
 
-xbox::VOID xbox::KiClockIsr
+xbox::void_t xbox::KiClockIsr
 (
 	unsigned int ScalingFactor
 )
@@ -175,7 +175,7 @@ xbox::VOID xbox::KiClockIsr
 	KfLowerIrql(OldIrql);
 }
 
-xbox::VOID NTAPI xbox::KiCheckTimerTable
+xbox::void_t NTAPI xbox::KiCheckTimerTable
 (
 	IN xbox::ULARGE_INTEGER CurrentTime
 )
@@ -217,7 +217,7 @@ xbox::VOID NTAPI xbox::KiCheckTimerTable
 	KfLowerIrql(OldIrql);
 }
 
-xbox::VOID xbox::KxInsertTimer
+xbox::void_t xbox::KxInsertTimer
 (
 	IN xbox::PKTIMER Timer,
 	IN xbox::ULONG Hand
@@ -233,7 +233,7 @@ xbox::VOID xbox::KxInsertTimer
 	}
 }
 
-xbox::VOID FASTCALL xbox::KiCompleteTimer
+xbox::void_t FASTCALL xbox::KiCompleteTimer
 (
 	IN xbox::PKTIMER Timer,
 	IN xbox::ULONG Hand
@@ -264,7 +264,7 @@ xbox::VOID FASTCALL xbox::KiCompleteTimer
 	}
 }
 
-xbox::VOID xbox::KiRemoveEntryTimer
+xbox::void_t xbox::KiRemoveEntryTimer
 (
 	IN xbox::PKTIMER Timer,
 	IN xbox::ULONG Hand
@@ -291,7 +291,7 @@ xbox::VOID xbox::KiRemoveEntryTimer
 	Timer->TimerListEntry.Blink = NULL;
 }
 
-xbox::VOID xbox::KxRemoveTreeTimer
+xbox::void_t xbox::KxRemoveTreeTimer
 (
 	IN xbox::PKTIMER Timer
 )
@@ -517,7 +517,7 @@ xbox::BOOLEAN FASTCALL xbox::KiSignalTimer
 	return RequestInterrupt;
 }
 
-xbox::VOID NTAPI xbox::KiTimerExpiration
+xbox::void_t NTAPI xbox::KiTimerExpiration
 (
 	IN xbox::PKDPC Dpc,
 	IN xbox::PVOID DeferredContext,
@@ -746,7 +746,7 @@ xbox::VOID NTAPI xbox::KiTimerExpiration
 	}
 }
 
-xbox::VOID FASTCALL xbox::KiTimerListExpire
+xbox::void_t FASTCALL xbox::KiTimerListExpire
 (
 	IN xbox::PLIST_ENTRY ExpiredListHead,
 	IN xbox::KIRQL OldIrql
@@ -854,7 +854,7 @@ xbox::VOID FASTCALL xbox::KiTimerListExpire
 	}
 }
 
-xbox::VOID FASTCALL xbox::KiWaitSatisfyAll
+xbox::void_t FASTCALL xbox::KiWaitSatisfyAll
 (
 	IN xbox::PKWAIT_BLOCK WaitBlock
 )

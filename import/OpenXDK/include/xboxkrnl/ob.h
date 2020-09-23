@@ -76,7 +76,7 @@ NTSTATUS ObpReferenceObjectByName(
 
 BOOLEAN ObInitSystem();
 BOOLEAN ObpExtendObjectHandleTable();
-VOID ObDissectName(OBJECT_STRING Path, POBJECT_STRING FirstName, POBJECT_STRING RemainingName);
+void_t ObDissectName(OBJECT_STRING Path, POBJECT_STRING FirstName, POBJECT_STRING RemainingName);
 PVOID ObpGetObjectHandleContents(HANDLE Handle);
 PVOID ObpGetObjectHandleReference(HANDLE Handle);
 ULONG FASTCALL ObpComputeHashIndex(IN POBJECT_STRING ElementName);
@@ -118,7 +118,7 @@ XBSYSAPI EXPORTNUM(241) NTSTATUS NTAPI ObInsertObject
 // ******************************************************************
 // * 0x00F2 - ObMakeTemporaryObject()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(242) VOID NTAPI ObMakeTemporaryObject
+XBSYSAPI EXPORTNUM(242) void_t NTAPI ObMakeTemporaryObject
 (
 	IN PVOID Object
 );
@@ -201,7 +201,7 @@ XBSYSAPI EXPORTNUM(249) OBJECT_TYPE ObSymbolicLinkObjectType;
 // ******************************************************************
 // * 0x00FA - ObfDereferenceObject()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(250) VOID FASTCALL ObfDereferenceObject
+XBSYSAPI EXPORTNUM(250) void_t FASTCALL ObfDereferenceObject
 (
 	IN PVOID Object
 );
@@ -209,7 +209,7 @@ XBSYSAPI EXPORTNUM(250) VOID FASTCALL ObfDereferenceObject
 // ******************************************************************
 // * 0x00FB - ObfReferenceObject()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(251) VOID FASTCALL ObfReferenceObject
+XBSYSAPI EXPORTNUM(251) void_t FASTCALL ObfReferenceObject
 (
 	IN PVOID Object
 );

@@ -2021,7 +2021,7 @@ XBSYSAPI EXPORTNUM(231) xbox::NTSTATUS NTAPI xbox::NtSuspendThread
 // ******************************************************************
 // * 0x00E8 - NtUserIoApcDispatcher()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(232) xbox::VOID NTAPI xbox::NtUserIoApcDispatcher
+XBSYSAPI EXPORTNUM(232) xbox::void_t NTAPI xbox::NtUserIoApcDispatcher
 (
 	PVOID            ApcContext,
 	PIO_STATUS_BLOCK IoStatusBlock,
@@ -2219,7 +2219,7 @@ XBSYSAPI EXPORTNUM(237) xbox::NTSTATUS NTAPI xbox::NtWriteFileGather
 // ******************************************************************
 // * 0x00EE - NtYieldExecution()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(238) xbox::VOID NTAPI xbox::NtYieldExecution()
+XBSYSAPI EXPORTNUM(238) xbox::void_t NTAPI xbox::NtYieldExecution()
 {
 	// NOTE: Logging this fills the debug log far too quickly, so don't.
 	// LOG_FUNC();

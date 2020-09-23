@@ -322,7 +322,7 @@ XBSYSAPI EXPORTNUM(67) xbox::NTSTATUS NTAPI xbox::IoCreateSymbolicLink
 // ******************************************************************
 // * 0x0044 - IoDeleteDevice()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(68) xbox::VOID NTAPI xbox::IoDeleteDevice
+XBSYSAPI EXPORTNUM(68) xbox::void_t NTAPI xbox::IoDeleteDevice
 (
 	IN PDEVICE_OBJECT Irql
 )
@@ -384,7 +384,7 @@ XBSYSAPI EXPORTNUM(71) xbox::OBJECT_TYPE xbox::IoFileObjectType =
 // ******************************************************************
 // * 0x0048 - IoFreeIrp()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(72) xbox::VOID NTAPI xbox::IoFreeIrp
+XBSYSAPI EXPORTNUM(72) xbox::void_t NTAPI xbox::IoFreeIrp
 (
 	IN PIRP Irp
 )
@@ -492,7 +492,7 @@ XBSYSAPI EXPORTNUM(76) xbox::NTSTATUS NTAPI xbox::IoQueryVolumeInformation
 // ******************************************************************
 // * 0x004D - IoQueueThreadIrp()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(77) xbox::VOID NTAPI xbox::IoQueueThreadIrp
+XBSYSAPI EXPORTNUM(77) xbox::void_t NTAPI xbox::IoQueueThreadIrp
 (
 	IN PIRP Irp
 )
@@ -505,7 +505,7 @@ XBSYSAPI EXPORTNUM(77) xbox::VOID NTAPI xbox::IoQueueThreadIrp
 // ******************************************************************
 // * 0x004E - IoRemoveShareAccess()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(78) xbox::VOID NTAPI xbox::IoRemoveShareAccess
+XBSYSAPI EXPORTNUM(78) xbox::void_t NTAPI xbox::IoRemoveShareAccess
 (
 	IN PFILE_OBJECT FileObject,
 	IN PSHARE_ACCESS ShareAccess
@@ -572,7 +572,7 @@ XBSYSAPI EXPORTNUM(80) xbox::CCHAR NTAPI xbox::IoSetShareAccess
 // ******************************************************************
 // * 0x0051 - IoStartNextPacket()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(81) xbox::VOID NTAPI xbox::IoStartNextPacket
+XBSYSAPI EXPORTNUM(81) xbox::void_t NTAPI xbox::IoStartNextPacket
 (
 	IN PDEVICE_OBJECT DeviceObject
 )
@@ -585,7 +585,7 @@ XBSYSAPI EXPORTNUM(81) xbox::VOID NTAPI xbox::IoStartNextPacket
 // ******************************************************************
 // * 0x0052 - IoStartNextPacketByKey()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(82) xbox::VOID NTAPI xbox::IoStartNextPacketByKey
+XBSYSAPI EXPORTNUM(82) xbox::void_t NTAPI xbox::IoStartNextPacketByKey
 (
 	IN PDEVICE_OBJECT DeviceObject,
 	IN ULONG Key
@@ -602,7 +602,7 @@ XBSYSAPI EXPORTNUM(82) xbox::VOID NTAPI xbox::IoStartNextPacketByKey
 // ******************************************************************
 // * 0x0053 - IoStartPacket()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(83) xbox::VOID NTAPI xbox::IoStartPacket
+XBSYSAPI EXPORTNUM(83) xbox::void_t NTAPI xbox::IoStartPacket
 (
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp,
@@ -701,7 +701,7 @@ XBSYSAPI EXPORTNUM(86) xbox::NTSTATUS FASTCALL xbox::IofCallDriver
 // ******************************************************************
 // * 0x0057 - IofCompleteRequest()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(87) xbox::VOID FASTCALL xbox::IofCompleteRequest
+XBSYSAPI EXPORTNUM(87) xbox::void_t FASTCALL xbox::IofCompleteRequest
 (
 	IN PIRP Irp,
 	IN CCHAR PriorityBoost

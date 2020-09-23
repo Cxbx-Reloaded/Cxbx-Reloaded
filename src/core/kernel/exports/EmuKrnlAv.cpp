@@ -38,10 +38,6 @@ namespace NtDll
 #include "core\kernel\support\EmuNtDll.h"
 };
 
-#ifndef VOID
-#define VOID void
-#endif
-
 #include "core\kernel\support\Emu.h" // For EmuLog(LOG_LEVEL::WARNING, )
 #include "core\hle\D3D8\Direct3D9\Direct3D9.h"
 #include "devices\x86\EmuX86.h"
@@ -50,10 +46,6 @@ namespace NtDll
 #include "devices\Xbox.h" // For g_NV2A
 #include "devices\video\nv2a_int.h"
 #include "devices\video\nv2a.h" // For NV2ABlockInfo, EmuNV2A_Block()
-
-#ifdef VOID
-#undef VOID
-#endif
 
 
 // HW Register helper functions
@@ -182,7 +174,7 @@ XBSYSAPI EXPORTNUM(1) xbox::PVOID NTAPI xbox::AvGetSavedDataAddress(void)
 // ******************************************************************
 // * 0x0002 - AvSendTVEncoderOption()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(2) xbox::VOID NTAPI xbox::AvSendTVEncoderOption
+XBSYSAPI EXPORTNUM(2) xbox::void_t NTAPI xbox::AvSendTVEncoderOption
 (
 	IN  PVOID   RegisterBase,
 	IN  ULONG   Option,
@@ -409,7 +401,7 @@ XBSYSAPI EXPORTNUM(3) xbox::ULONG NTAPI xbox::AvSetDisplayMode
 // ******************************************************************
 // * 0x0004 - AvSetSavedDataAddress()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(4) xbox::VOID NTAPI xbox::AvSetSavedDataAddress
+XBSYSAPI EXPORTNUM(4) xbox::void_t NTAPI xbox::AvSetSavedDataAddress
 (
 	IN  PVOID   Address
 )

@@ -5941,7 +5941,7 @@ static const
 
 std::vector<PSH_RECOMPILED_SHADER> g_RecompiledPixelShaders;
 
-VOID DxbxUpdateActivePixelShader() // NOPATCH
+void DxbxUpdateActivePixelShader() // NOPATCH
 {
   xbox::X_D3DPIXELSHADERDEF *pPSDef;
   PPSH_RECOMPILED_SHADER RecompiledPixelShader;
