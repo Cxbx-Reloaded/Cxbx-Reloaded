@@ -404,6 +404,6 @@ if(${CMAKE_GENERATOR} MATCHES "Visual Studio ([^9]|[9][0-9])")
 endif()
 
 # Cxbx-Reloaded project with third-party libraries
-set_target_properties(cxbx cxbxr-ldr cxbxr-emu misc-batch subhook XbSymbolDatabase libtommath libtomcrypt
+set_target_properties(cxbx cxbxr-ldr cxbxr-emu misc-batch subhook libXbSymbolDatabase libtommath libtomcrypt
  PROPERTIES FOLDER Cxbx-Reloaded
 )

@@ -156,7 +156,7 @@ set(WINS_LIB
 )
 
 target_link_libraries(cxbxr-emu
- PUBLIC XbSymbolDatabase
+ PUBLIC libXbSymbolDatabase
  subhook
  libtomcrypt
  SDL2

@@ -180,7 +180,7 @@ set(WINS_LIB
 )
 
 target_link_libraries(cxbx
- PUBLIC XbSymbolDatabase
+ PUBLIC libXbSymbolDatabase
  subhook
  libtomcrypt
  SDL2
