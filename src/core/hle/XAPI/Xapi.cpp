@@ -330,7 +330,7 @@ xbox::DWORD WINAPI xbox::EMUPATCH(XGetDevices)
 
 	UpdateConnectedDeviceState(DeviceType);
 
-	UCHAR oldIrql = xbox::KeRaiseIrqlToDpcLevel();
+	uchar_t oldIrql = xbox::KeRaiseIrqlToDpcLevel();
 
 	DWORD ret = DeviceType->CurrentConnected;
 
@@ -374,7 +374,7 @@ xbox::BOOL WINAPI xbox::EMUPATCH(XGetDeviceChanges)
     }
     else
     {
-        UCHAR oldIrql = xbox::KeRaiseIrqlToDpcLevel();
+        uchar_t oldIrql = xbox::KeRaiseIrqlToDpcLevel();
 
 		// Insertions and removals
         *pdwInsertions = (DeviceType->CurrentConnected & ~DeviceType->PreviousConnected);
@@ -503,7 +503,7 @@ xbox::DWORD WINAPI xbox::EMUPATCH(XInputGetCapabilities)
 	int Port = Device->XboxPort;
     if (g_XboxControllerHostBridge[Port].hXboxDevice == hDevice && !g_XboxControllerHostBridge[Port].bPendingRemoval) {
         pCapabilities->SubType = g_XboxControllerHostBridge[Port].XboxDeviceInfo.ucSubType;
-        UCHAR* pCap = (UCHAR*)(&pCapabilities->In);
+        UCHAR* pCap = (uchar_t*)(&pCapabilities->In);
         memset(pCap, 0xFF, g_XboxControllerHostBridge[Port].XboxDeviceInfo.ucInputStateSize + g_XboxControllerHostBridge[Port].XboxDeviceInfo.ucFeedbackSize);
 		ret = ERROR_SUCCESS;
     }

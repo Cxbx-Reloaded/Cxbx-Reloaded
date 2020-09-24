@@ -302,12 +302,12 @@ XBSYSAPI EXPORTNUM(128) void_t NTAPI KeQuerySystemTime
 // ******************************************************************
 // * 0x0081 - KeRaiseIrqlToDpcLevel()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(129) UCHAR NTAPI KeRaiseIrqlToDpcLevel();
+XBSYSAPI EXPORTNUM(129) uchar_t NTAPI KeRaiseIrqlToDpcLevel();
 
 // ******************************************************************
 // * 0x0082 - KeRaiseIrqlToSynchLevel()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(130) UCHAR NTAPI KeRaiseIrqlToSynchLevel();
+XBSYSAPI EXPORTNUM(130) uchar_t NTAPI KeRaiseIrqlToSynchLevel();
 
 XBSYSAPI EXPORTNUM(131) LONG NTAPI KeReleaseMutant
 (

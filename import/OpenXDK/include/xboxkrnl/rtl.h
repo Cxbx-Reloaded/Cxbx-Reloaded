@@ -19,7 +19,7 @@ XBSYSAPI EXPORTNUM(260) NTSTATUS NTAPI RtlAnsiStringToUnicodeString
 (
     PUNICODE_STRING DestinationString,
     PSTRING         SourceString,
-    UCHAR           AllocateDestinationString
+    uchar_t           AllocateDestinationString
 );
 
 // ******************************************************************

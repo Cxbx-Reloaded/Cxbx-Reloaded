@@ -49,7 +49,7 @@ namespace xbox
 	using cchar_t = char;
 	typedef short               SHORT, CSHORT;
 	typedef long                LONG;
-	typedef unsigned char       UCHAR;
+	using uchar_t = std::uint8_t;
 	typedef unsigned char       BYTE;
 	typedef unsigned char       BOOLEAN;
 	typedef unsigned short      USHORT;
@@ -82,7 +82,7 @@ namespace xbox
 	typedef char_t *PCSZ;
 	typedef BYTE *PBYTE;
 	typedef BOOLEAN *PBOOLEAN;
-	typedef UCHAR *PUCHAR;
+	typedef uchar_t *PUCHAR;
 	typedef USHORT *PUSHORT;
 	typedef unsigned int *PUINT;
 	typedef ULONG *PULONG;

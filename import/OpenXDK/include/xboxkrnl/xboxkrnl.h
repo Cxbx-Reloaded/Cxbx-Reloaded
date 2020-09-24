@@ -673,8 +673,8 @@ typedef struct _FILE_NETWORK_OPEN_INFORMATION {
 // ******************************************************************
 typedef struct _FILE_FULL_EA_INFORMATION {
 	ULONG NextEntryOffset;
-	UCHAR Flags;
-	UCHAR EaNameLength;
+	uchar_t Flags;
+	uchar_t EaNameLength;
 	USHORT EaValueLength;
 	char_t EaName[1];
 } FILE_FULL_EA_INFORMATION, *PFILE_FULL_EA_INFORMATION;
@@ -786,10 +786,10 @@ typedef struct _FILE_ALLOCATION_INFORMATION {
 typedef struct _FILE_COMPRESSION_INFORMATION {
 	LARGE_INTEGER   CompressedFileSize;
 	USHORT          CompressionFormat;
-	UCHAR           CompressionUnitShift;
-	UCHAR           ChunkShift;
-	UCHAR           ClusterShift;
-	UCHAR           Reserved[3];
+	uchar_t           CompressionUnitShift;
+	uchar_t           ChunkShift;
+	uchar_t           ClusterShift;
+	uchar_t           Reserved[3];
 } FILE_COMPRESSION_INFORMATION, *PFILE_COMPRESSION_INFORMATION;
 
 // ******************************************************************
@@ -1071,14 +1071,14 @@ typedef struct _PCI_COMMON_CONFIG
     USHORT  DeviceID;                   // 0x02 (ro)
     USHORT  Command;                    // 0x04 Device control
     USHORT  Status;                     // 0x06
-    UCHAR   RevisionID;                 // 0x08 (ro)
-    UCHAR   ProgIf;                     // 0x09 (ro)
-    UCHAR   SubClass;                   // 0x0A (ro)
-    UCHAR   BaseClass;                  // 0x0B (ro)
-    UCHAR   CacheLineSize;              // 0x0C (ro+)
-    UCHAR   LatencyTimer;               // 0x0D (ro+)
-    UCHAR   HeaderType;                 // 0x0E (ro)
-    UCHAR   BIST;                       // 0x0F Built in self test
+    uchar_t   RevisionID;                 // 0x08 (ro)
+    uchar_t   ProgIf;                     // 0x09 (ro)
+    uchar_t   SubClass;                   // 0x0A (ro)
+    uchar_t   BaseClass;                  // 0x0B (ro)
+    uchar_t   CacheLineSize;              // 0x0C (ro+)
+    uchar_t   LatencyTimer;               // 0x0D (ro+)
+    uchar_t   HeaderType;                 // 0x0E (ro)
+    uchar_t   BIST;                       // 0x0F Built in self test
 
     union
     {
@@ -1089,18 +1089,18 @@ typedef struct _PCI_COMMON_CONFIG
             USHORT  SubVendorID;
             USHORT  SubSystemID;
             ULONG   ROMBaseAddress;
-            UCHAR   CapabilitiesPtr;
-            UCHAR   Reserved1[3];
+            uchar_t   CapabilitiesPtr;
+            uchar_t   Reserved1[3];
             ULONG   Reserved2;
-            UCHAR   InterruptLine;      //
-            UCHAR   InterruptPin;       // (ro)
-            UCHAR   MinimumGrant;       // (ro)
-            UCHAR   MaximumLatency;     // (ro)
+            uchar_t   InterruptLine;      //
+            uchar_t   InterruptPin;       // (ro)
+            uchar_t   MinimumGrant;       // (ro)
+            uchar_t   MaximumLatency;     // (ro)
         }
         type0;
     }u;
 
-    UCHAR DeviceSpecific[192];
+    uchar_t DeviceSpecific[192];
 
 }
 PCI_COMMON_CONFIG, *PPCI_COMMON_CONFIG;
@@ -1155,8 +1155,8 @@ LAUNCH_DATA_HEADER, *PLAUNCH_DATA_HEADER;
 typedef struct _LAUNCH_DATA_PAGE
 {
     LAUNCH_DATA_HEADER  Header;
-    UCHAR               Pad[492];
-    UCHAR               LaunchData[3072];
+    uchar_t               Pad[492];
+    uchar_t               LaunchData[3072];
 }
 LAUNCH_DATA_PAGE, *PLAUNCH_DATA_PAGE;
 
@@ -1183,10 +1183,10 @@ extern PVOID AvSavedDataAddress;
 // ******************************************************************
 typedef struct _DISPATCHER_HEADER
 {
-    UCHAR       Type;           // 0x00
-    UCHAR       Absolute;       // 0x01
-    UCHAR       Size;           // 0x02
-    UCHAR       Inserted;       // 0x03
+    uchar_t       Type;           // 0x00
+    uchar_t       Absolute;       // 0x01
+    uchar_t       Size;           // 0x02
+    uchar_t       Inserted;       // 0x03
     LONG        SignalState;    // 0x04
     LIST_ENTRY  WaitListHead;   // 0x08
 }
@@ -1265,7 +1265,7 @@ ERWLOCK, *PERWLOCK;
 typedef struct _KDEVICE_QUEUE
 {
 	CSHORT Type;                // 0x00
-	UCHAR Size;                 // 0x02
+	uchar_t Size;                 // 0x02
 	BOOLEAN Busy;               // 0x04
 	LIST_ENTRY DeviceListHead;  // 0x08
 }
@@ -1295,8 +1295,8 @@ typedef struct _IRP
 	IO_STATUS_BLOCK        IoStatus;            // 0x10
 	char_t                   StackCount;          // 0x18
 	char_t                   CurrentLocation;	    // 0x19
-	UCHAR                  PendingReturned;     // 0x1A
-	UCHAR                  Cancel;              // 0x1B
+	uchar_t                  PendingReturned;     // 0x1A
+	uchar_t                  Cancel;              // 0x1B
 	PIO_STATUS_BLOCK       UserIosb;            // 0x1C
 	PKEVENT                UserEvent;           // 0x20
 	ULONGLONG              Overlay;	            // 0x28
@@ -1320,8 +1320,8 @@ typedef struct _DEVICE_OBJECT
 	PIRP CurrentIrp;
 	ULONG Flags;
 	PVOID DeviceExtension;
-	UCHAR DeviceType;
-	UCHAR StartIoFlags;
+	uchar_t DeviceType;
+	uchar_t StartIoFlags;
 	cchar_t StackSize;
 	BOOLEAN DeletePending;
 	ULONG SectorSize;
@@ -1456,10 +1456,10 @@ typedef struct _KDPC
     CSHORT              Type;               // 0x00
 	union
 	{
-		UCHAR           Number;             // 0x02
+		uchar_t           Number;             // 0x02
 		BOOLEAN         Inserted;           // 0x02
 	};
-	UCHAR               Importance;         // 0x03
+	uchar_t               Importance;         // 0x03
     LIST_ENTRY          DpcListEntry;       // 0x04
     PKDEFERRED_ROUTINE  DeferredRoutine;    // 0x0C
     PVOID               DeferredContext;
@@ -1617,7 +1617,7 @@ KINTERRUPT, *PKINTERRUPT;
 // ******************************************************************
 // * IRQL (Interrupt ReQuest Level) (* same as on win *)
 // ******************************************************************
-typedef UCHAR KIRQL, *PKIRQL;
+typedef uchar_t KIRQL, *PKIRQL;
 
 // ******************************************************************
 // * PS_STATISTICS
@@ -1714,10 +1714,10 @@ typedef struct _KAPC_STATE
 {
 	LIST_ENTRY ApcListHead[2];
 	PKPROCESS Process;
-	UCHAR KernelApcInProgress;
-	UCHAR KernelApcPending;
-	UCHAR UserApcPending;
-	UCHAR ApcQueueable;
+	uchar_t KernelApcInProgress;
+	uchar_t KernelApcPending;
+	uchar_t UserApcPending;
+	uchar_t ApcQueueable;
 }
 KAPC_STATE, *PKAPC_STATE;
 
@@ -1785,8 +1785,8 @@ typedef struct _KTRAP_FRAME
 	ULONG DbgArgMark;
 	ULONG DbgArgPointer;
 	WORD TempSegCs;
-	UCHAR Logging;
-	UCHAR Reserved;
+	uchar_t Logging;
+	uchar_t Reserved;
 	ULONG TempEsp;
 	ULONG Dr0;
 	ULONG Dr1;
@@ -1833,8 +1833,8 @@ typedef struct _KWAIT_BLOCK
 	PVOID Object;
 	struct _KWAIT_BLOCK *NextWaitBlock;
 	WORD WaitKey;
-	UCHAR WaitType;
-	UCHAR SpareByte;
+	uchar_t WaitType;
+	uchar_t SpareByte;
 }
 KWAIT_BLOCK, *PKWAIT_BLOCK;
 
@@ -1902,13 +1902,13 @@ typedef struct _KTHREAD
 	/* 0x77/119 */ char_t HasTerminated;
 	/* 0x78/120 */ PVOID Queue;
 	/* 0x7C/124 */ LIST_ENTRY QueueListEntry;
-	/* 0x88/136 */ UCHAR rsvd1[4];
+	/* 0x88/136 */ uchar_t rsvd1[4];
 	/* 0x88/136 */ KTIMER Timer;
 	/* 0xB0/176 */ KWAIT_BLOCK TimerWaitBlock;
 	/* 0xC8/200 */ KAPC SuspendApc;
 	/* 0xF0/240 */ KSEMAPHORE SuspendSemaphore;
 	/* 0x104/260 */ LIST_ENTRY ThreadListEntry;
-	/* 0x10C/268 */ UCHAR _padding[4];
+	/* 0x10C/268 */ uchar_t _padding[4];
 }
 KTHREAD, *PKTHREAD, *RESTRICTED_POINTER PRKTHREAD;
 
@@ -1922,7 +1922,7 @@ KTHREAD, *PKTHREAD, *RESTRICTED_POINTER PRKTHREAD;
 typedef struct _ETHREAD
 {
     struct _KTHREAD Tcb;
-    UCHAR           UnknownA[0x1C]; // 0x110
+    uchar_t           UnknownA[0x1C]; // 0x110
     DWORD           UniqueThread;   // 0x12C
 }
 ETHREAD, *PETHREAD;
@@ -1956,7 +1956,7 @@ typedef struct _KPRCB
 	ULONG            DpcRoutineActive;                              // 0x30, KPCR : 0x58
 
     // This completes the total size of the structure (presumably)
-    UCHAR            Unknown[0x224];                            
+    uchar_t            Unknown[0x224];                            
 }
 KPRCB, *PKPRCB;
 
@@ -1973,7 +1973,7 @@ typedef struct _KPCR
     struct _NT_TIB  NtTib;                                          // 0x00
     struct _KPCR   *SelfPcr;                                        // 0x1C
     struct _KPRCB  *Prcb;                                           // 0x20
-    UCHAR           Irql;                                           // 0x24
+    uchar_t           Irql;                                           // 0x24
     struct _KPRCB   PrcbData;                                       // 0x28
 }
 KPCR, *PKPCR;
@@ -2023,25 +2023,25 @@ XC_VALUE_INDEX, *PXC_VALUE_INDEX;
 typedef struct _XBOX_HARDWARE_INFO
 {
     ULONG Flags;
-    UCHAR GpuRevision;
-	UCHAR McpRevision;
-    UCHAR Unknown3;
-    UCHAR Unknown4;
+    uchar_t GpuRevision;
+	uchar_t McpRevision;
+    uchar_t Unknown3;
+    uchar_t Unknown4;
 }
 XBOX_HARDWARE_INFO;
 
 const int XBOX_KEY_LENGTH = 16;
 const int ALTERNATE_SIGNATURE_COUNT = 16;
-typedef UCHAR XBOX_KEY_DATA[XBOX_KEY_LENGTH];
+typedef uchar_t XBOX_KEY_DATA[XBOX_KEY_LENGTH];
 
 // ******************************************************************
 // * XBOX_ENCRYPTED_SETTINGS
 // ******************************************************************
 typedef struct _XBOX_ENCRYPTED_SETTINGS
 {
-	UCHAR Checksum[20];
-	UCHAR Confounder[8];
-	UCHAR HDKey[XBOX_KEY_LENGTH];
+	uchar_t Checksum[20];
+	uchar_t Confounder[8];
+	uchar_t HDKey[XBOX_KEY_LENGTH];
 	ULONG GameRegion;
 }
 XBOX_ENCRYPTED_SETTINGS;
@@ -2052,10 +2052,10 @@ XBOX_ENCRYPTED_SETTINGS;
 typedef struct _XBOX_FACTORY_SETTINGS
 {
 	ULONG Checksum;
-	UCHAR SerialNumber[12];
-	UCHAR EthernetAddr[6];
-	UCHAR Reserved1[2];
-	UCHAR OnlineKey[16];
+	uchar_t SerialNumber[12];
+	uchar_t EthernetAddr[6];
+	uchar_t Reserved1[2];
+	uchar_t OnlineKey[16];
 	ULONG AVRegion;
 	ULONG Reserved2;
 }
@@ -2066,10 +2066,10 @@ XBOX_FACTORY_SETTINGS;
 // ******************************************************************
 typedef struct _XBOX_TIMEZONE_DATE
 {
-	UCHAR Month;
-	UCHAR Day;
-	UCHAR DayOfWeek;
-	UCHAR Hour;
+	uchar_t Month;
+	uchar_t Day;
+	uchar_t DayOfWeek;
+	uchar_t Hour;
 }
 XBOX_TIMEZONE_DATE;
 
@@ -2112,9 +2112,9 @@ typedef struct _XBOX_EEPROM
 	XBOX_ENCRYPTED_SETTINGS EncryptedSettings;
 	XBOX_FACTORY_SETTINGS FactorySettings;
 	XBOX_USER_SETTINGS UserSettings;
-	UCHAR Unused[58];
-	UCHAR UEMInfo[4];
-	UCHAR Reserved1[2];
+	uchar_t Unused[58];
+	uchar_t UEMInfo[4];
+	uchar_t Reserved1[2];
 }
 XBOX_EEPROM;
 
@@ -2123,8 +2123,8 @@ XBOX_EEPROM;
 // ******************************************************************
 typedef struct _XBOX_UEM_INFO
 {
-	UCHAR ErrorCode;
-	UCHAR Unused;
+	uchar_t ErrorCode;
+	uchar_t Unused;
 	USHORT History;
 }
 XBOX_UEM_INFO;
@@ -2246,7 +2246,7 @@ GENERIC_MAPPING, *PGENERIC_MAPPING;
 typedef struct _OBJECT_TYPE_INITIALIZER
 {
 	WORD Length;
-	UCHAR ObjectTypeFlags;
+	uchar_t ObjectTypeFlags;
 	ULONG CaseInsensitive: 1;
 	ULONG UnnamedObjectsOnly: 1;
 	ULONG UseDefaultObject: 1;
@@ -2267,7 +2267,7 @@ typedef struct _OBJECT_TYPE_INITIALIZER
 	LONG * ParseProcedure;
 	LONG * SecurityProcedure;
 	LONG * QueryNameProcedure;
-	UCHAR * OkayToCloseProcedure;
+	uchar_t * OkayToCloseProcedure;
 }
 OBJECT_TYPE_INITIALIZER, *POBJECT_TYPE_INITIALIZER;
 
@@ -2311,9 +2311,9 @@ OBJECT_TYPE, *POBJECT_TYPE;
 // * Use this to access I/O mapped memory. Just a good standard.
 // *
 // ******************************************************************
-INLINE static UCHAR READ_REGISTER_UCHAR(PUCHAR Address)
+INLINE static uchar_t READ_REGISTER_UCHAR(PUCHAR Address)
 {
-    return *(volatile UCHAR *)Address;
+    return *(volatile uchar_t *)Address;
 }
 
 // ******************************************************************
@@ -2349,7 +2349,7 @@ INLINE static ULONG READ_REGISTER_ULONG(PULONG Address)
 // * because the write may not be completed yet.)
 // *
 // ******************************************************************
-static void_t WRITE_REGISTER_UCHAR(PVOID Address, UCHAR Value)
+static void_t WRITE_REGISTER_UCHAR(PVOID Address, uchar_t Value)
 {
     __asm
     {
@@ -2405,40 +2405,40 @@ static void_t WRITE_REGISTER_ULONG(PVOID Address, ULONG Value)
 // ******************************************************************
 typedef struct _SCSI_PASS_THROUGH_DIRECT {
 	USHORT Length;
-	UCHAR ScsiStatus;
-	UCHAR PathId;
-	UCHAR TargetId;
-	UCHAR Lun;
-	UCHAR CdbLength;
-	UCHAR SenseInfoLength;
-	UCHAR DataIn;
+	uchar_t ScsiStatus;
+	uchar_t PathId;
+	uchar_t TargetId;
+	uchar_t Lun;
+	uchar_t CdbLength;
+	uchar_t SenseInfoLength;
+	uchar_t DataIn;
 	ULONG DataTransferLength;
 	ULONG TimeOutValue;
 	PVOID DataBuffer;
 	ULONG SenseInfoOffset;
-	UCHAR Cdb[16];
+	uchar_t Cdb[16];
 }SCSI_PASS_THROUGH_DIRECT, *PSCSI_PASS_THROUGH_DIRECT;
 
 // ******************************************************************
 // * MODE_PARAMETER_HEADER10
 // ******************************************************************
 typedef struct _MODE_PARAMETER_HEADER10 {
-	UCHAR ModeDataLength[2];
-	UCHAR MediumType;
-	UCHAR DeviceSpecificParameter;
-	UCHAR Reserved[2];
-	UCHAR BlockDescriptorLength[2];
+	uchar_t ModeDataLength[2];
+	uchar_t MediumType;
+	uchar_t DeviceSpecificParameter;
+	uchar_t Reserved[2];
+	uchar_t BlockDescriptorLength[2];
 }MODE_PARAMETER_HEADER10, *PMODE_PARAMETER_HEADER10;
 
 // ******************************************************************
 // * DVDX2_AUTHENTICATION_PAGE
 // ******************************************************************
 typedef struct _DVDX2_AUTHENTICATION_PAGE {
-	UCHAR Unknown[2];
-    UCHAR PartitionArea;
-    UCHAR CDFValid;
-    UCHAR Authentication;
-	UCHAR Unknown2[3];
+	uchar_t Unknown[2];
+    uchar_t PartitionArea;
+    uchar_t CDFValid;
+    uchar_t Authentication;
+	uchar_t Unknown2[3];
 	ULONG Unknown3[3];
 } DVDX2_AUTHENTICATION_PAGE, *PDVDX2_AUTHENTICATION_PAGE;
 
@@ -2579,9 +2579,9 @@ typedef struct _IDE_CHANNEL_OBJECT
     BOOLEAN ExpectingBusMasterInterrupt;
     BOOLEAN StartPacketBusy;
     BOOLEAN StartPacketRequested;
-    UCHAR Timeout;
-    UCHAR IoRetries;
-    UCHAR MaximumIoRetries;
+    uchar_t Timeout;
+    uchar_t IoRetries;
+    uchar_t MaximumIoRetries;
     PIRP CurrentIrp;
     KDEVICE_QUEUE DeviceQueue;
     ULONG PhysicalRegionDescriptorTablePhysical;

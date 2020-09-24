@@ -143,9 +143,9 @@ XBSYSAPI EXPORTNUM(89) BOOLEAN KdDebuggerNotPresent;
 // ******************************************************************
 // * 0x00A0 - KfRaiseIrql()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(160) UCHAR FASTCALL KfRaiseIrql
+XBSYSAPI EXPORTNUM(160) uchar_t FASTCALL KfRaiseIrql
 (
-    IN UCHAR    NewIrql
+    IN uchar_t    NewIrql
 );
 
 // ******************************************************************
@@ -153,7 +153,7 @@ XBSYSAPI EXPORTNUM(160) UCHAR FASTCALL KfRaiseIrql
 // ******************************************************************
 XBSYSAPI EXPORTNUM(161) void_t FASTCALL KfLowerIrql
 (
-    IN UCHAR    NewIrql
+    IN uchar_t    NewIrql
 );
 
 // ******************************************************************
@@ -199,7 +199,7 @@ XBSYSAPI EXPORTNUM(253) NTSTATUS NTAPI PhyInitialize
 // ******************************************************************
 // * 0x0141 - XboxEEPROMKey
 // ******************************************************************
-XBSYSAPI EXPORTNUM(321) UCHAR XboxEEPROMKey[16];
+XBSYSAPI EXPORTNUM(321) uchar_t XboxEEPROMKey[16];
 
 // ******************************************************************
 // * 0x0142 - XboxHardwareInfo
@@ -209,7 +209,7 @@ XBSYSAPI EXPORTNUM(322) XBOX_HARDWARE_INFO XboxHardwareInfo;
 // ******************************************************************
 // * 0x0143 - XboxHDKey
 // ******************************************************************
-XBSYSAPI EXPORTNUM(323) UCHAR XboxHDKey[16];
+XBSYSAPI EXPORTNUM(323) uchar_t XboxHDKey[16];
 
 typedef struct _XBOX_KRNL_VERSION {
     USHORT Major;
@@ -477,10 +477,10 @@ XBSYSAPI EXPORTNUM(354) XBOX_KEY_DATA XboxAlternateSignatureKeys[ALTERNATE_SIGNA
 // ******************************************************************
 // * 0x0163 - XePublicKeyData
 // ******************************************************************
-XBSYSAPI EXPORTNUM(355) UCHAR XePublicKeyData[284];
-XBSYSAPI EXPORTNUM(355) UCHAR XePublicKeyDataRetail[284];
-XBSYSAPI EXPORTNUM(355) UCHAR XePublicKeyDataChihiroGame[284];
-XBSYSAPI EXPORTNUM(355) UCHAR XePublicKeyDataChihiroBoot[284];
+XBSYSAPI EXPORTNUM(355) uchar_t XePublicKeyData[284];
+XBSYSAPI EXPORTNUM(355) uchar_t XePublicKeyDataRetail[284];
+XBSYSAPI EXPORTNUM(355) uchar_t XePublicKeyDataChihiroGame[284];
+XBSYSAPI EXPORTNUM(355) uchar_t XePublicKeyDataChihiroBoot[284];
 
 // ******************************************************************
 // * 0x0165 - IdexChannelObject

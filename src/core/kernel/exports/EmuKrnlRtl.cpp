@@ -85,7 +85,7 @@ XBSYSAPI EXPORTNUM(260) xbox::NTSTATUS NTAPI xbox::RtlAnsiStringToUnicodeString
 (
 	OUT PUNICODE_STRING DestinationString,
 	IN PSTRING         SourceString,
-	IN UCHAR           AllocateDestinationString
+	IN uchar_t           AllocateDestinationString
 )
 {
 	LOG_FUNC_BEGIN

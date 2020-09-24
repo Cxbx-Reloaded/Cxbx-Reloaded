@@ -89,7 +89,7 @@ XBSYSAPI EXPORTNUM(9) xbox::NTSTATUS NTAPI xbox::HalReadSMCTrayState
 		LOG_FUNC_ARG(Count)
 		LOG_FUNC_END;
 
-	UCHAR orig_irql = KeRaiseIrqlToDpcLevel();
+	uchar_t orig_irql = KeRaiseIrqlToDpcLevel();
 	DWORD TrayState = g_TrayState;
 	DWORD orig_TrayCount = g_TrayCount;
 	KfLowerIrql(orig_irql);
@@ -263,8 +263,8 @@ XBSYSAPI EXPORTNUM(44) xbox::ULONG NTAPI xbox::HalGetInterruptVector
 // ******************************************************************
 XBSYSAPI EXPORTNUM(45) xbox::NTSTATUS NTAPI xbox::HalReadSMBusValue
 (
-	IN  UCHAR               Address,
-	IN  UCHAR               Command,
+	IN  uchar_t               Address,
+	IN  uchar_t               Command,
 	IN  BOOLEAN             ReadWord,
 	OUT PULONG              DataValue
 )
@@ -653,8 +653,8 @@ XBSYSAPI EXPORTNUM(49) xbox::void_t DECLSPEC_NORETURN NTAPI xbox::HalReturnToFir
 // ******************************************************************
 XBSYSAPI EXPORTNUM(50) xbox::NTSTATUS NTAPI xbox::HalWriteSMBusValue
 (
-	IN  UCHAR               Address,
-	IN  UCHAR               Command,
+	IN  uchar_t               Address,
+	IN  uchar_t               Command,
 	IN  BOOLEAN             WriteWord,
 	IN  ULONG               DataValue
 )

@@ -58,10 +58,10 @@ typedef struct _POOL_LOOKASIDE_LIST {
 typedef struct _POOL_HEADER {
 	union {
 		struct {
-			UCHAR PreviousSize;
-			UCHAR PoolIndex;
-			UCHAR PoolType;
-			UCHAR BlockSize;
+			xbox::uchar_t PreviousSize;
+			xbox::uchar_t PoolIndex;
+			xbox::uchar_t PoolType;
+			xbox::uchar_t BlockSize;
 		};
 		ULONG Ulong1;
 	};
@@ -70,7 +70,7 @@ typedef struct _POOL_HEADER {
 
 
 typedef struct _POOL_BLOCK {
-	UCHAR Fill[1 << POOL_BLOCK_SHIFT];
+	xbox::uchar_t Fill[1 << POOL_BLOCK_SHIFT];
 } POOL_BLOCK, *PPOOL_BLOCK;
 
 

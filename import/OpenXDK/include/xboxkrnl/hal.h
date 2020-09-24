@@ -61,8 +61,8 @@ XBSYSAPI EXPORTNUM(44) ULONG  NTAPI HalGetInterruptVector
 // ******************************************************************
 XBSYSAPI EXPORTNUM(45) NTSTATUS NTAPI HalReadSMBusValue
 (
-    IN UCHAR   Address,
-    IN UCHAR   Command,
+    IN uchar_t   Address,
+    IN uchar_t   Command,
     IN BOOLEAN WriteWord,
     OUT PULONG DataValue
 );
@@ -117,8 +117,8 @@ XBSYSAPI EXPORTNUM(49) void_t DECLSPEC_NORETURN NTAPI HalReturnToFirmware
 // ******************************************************************
 XBSYSAPI EXPORTNUM(50) NTSTATUS NTAPI HalWriteSMBusValue
 (
-    UCHAR   Address,
-    UCHAR   Command,
+    uchar_t   Address,
+    uchar_t   Command,
     BOOLEAN WriteWord,
     ULONG   DataValue
 );

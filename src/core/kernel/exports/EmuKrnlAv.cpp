@@ -49,12 +49,12 @@ namespace NtDll
 
 
 // HW Register helper functions
-xbox::UCHAR REG_RD08(void* Ptr, xbox::ULONG Addr)
+xbox::uchar_t REG_RD08(void* Ptr, xbox::ULONG Addr)
 {
 	return EmuX86_Read((xbox::addr)Ptr + Addr, sizeof(uint8_t));
 }
 
-void REG_WR08(void* Ptr, xbox::ULONG Addr, xbox::UCHAR Val)
+void REG_WR08(void* Ptr, xbox::ULONG Addr, xbox::uchar_t Val)
 {
 	EmuX86_Write((xbox::addr)Ptr + Addr, Val, sizeof(uint8_t));
 }
@@ -69,7 +69,7 @@ void REG_WR32(void* Ptr, xbox::ULONG Addr, xbox::ULONG Val)
 	EmuX86_Write((xbox::addr)Ptr + Addr, Val, sizeof(uint32_t));
 }
 
-void CRTC_WR(void* Ptr, xbox::UCHAR i, xbox::UCHAR d)
+void CRTC_WR(void* Ptr, xbox::uchar_t i, xbox::uchar_t d)
 {
 	static const NV2ABlockInfo* block = EmuNV2A_Block(NV_PRMCIO_CRX__COLOR);
 
@@ -77,7 +77,7 @@ void CRTC_WR(void* Ptr, xbox::UCHAR i, xbox::UCHAR d)
 	g_NV2A->BlockWrite(block, NV_PRMCIO_CR__COLOR, d, sizeof(uint8_t));
 }
 
-void SRX_WR(void *Ptr, xbox::UCHAR i, xbox::UCHAR d)
+void SRX_WR(void *Ptr, xbox::uchar_t i, xbox::uchar_t d)
 {
 	static const NV2ABlockInfo* block = EmuNV2A_Block(NV_PRMVIO_SRX);
 
@@ -85,7 +85,7 @@ void SRX_WR(void *Ptr, xbox::UCHAR i, xbox::UCHAR d)
 	g_NV2A->BlockWrite(block, NV_PRMVIO_SR, d, sizeof(uint8_t));
 }
 
-void GRX_WR(void *Ptr, xbox::UCHAR i, xbox::UCHAR d)
+void GRX_WR(void *Ptr, xbox::uchar_t i, xbox::uchar_t d)
 {
 	static const NV2ABlockInfo* block = EmuNV2A_Block(NV_PRMVIO_GRX);
 
@@ -93,7 +93,7 @@ void GRX_WR(void *Ptr, xbox::UCHAR i, xbox::UCHAR d)
 	g_NV2A->BlockWrite(block, NV_PRMVIO_GX, d, sizeof(uint8_t));
 }
 
-void ARX_WR(void *Ptr, xbox::UCHAR i, xbox::UCHAR d)
+void ARX_WR(void *Ptr, xbox::uchar_t i, xbox::uchar_t d)
 {
 	static const NV2ABlockInfo* block = EmuNV2A_Block(NV_PRMCIO_ARX);
 

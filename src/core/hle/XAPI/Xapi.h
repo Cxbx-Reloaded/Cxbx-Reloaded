@@ -109,9 +109,9 @@ XPP_DEVICE_FEEDBACK_DESC, *PXPP_DEVICE_FEEDBACK_DESC;
 // ******************************************************************
 typedef struct _XID_TYPE_INFORMATION
 {
-	UCHAR				ucType;
+	xbox::uchar_t				ucType;
     BYTE				bRemainingHandles;
-	UCHAR				ucUnknown[2];//probably for DWORD align
+	xbox::uchar_t				ucUnknown[2];//probably for DWORD align
 	PXPP_DEVICE_TYPE    XppType;//pointer to DeviceType structure.
     PXPP_DEVICE_INPUTSTATE_DESC pInputStateDesc;//pointer to InputStateDesc structure
     PXPP_DEVICE_FEEDBACK_DESC pFeedbackDesc;//pointer to FeedbackDesc structure
@@ -157,8 +157,8 @@ typedef struct _X_SBC_GAMEPAD {
     WORD    wLeftPedal;//maybe only high byte was used.
     WORD    wMiddlePedal;//maybe only high byte was used.
     WORD    wRightPedal;//maybe only high byte was used.
-    UCHAR   ucTunerDial;//low nibble, The 9 o'clock postion is 0, and the 6 o'clock position is 12. The blank area between the 6 and 9 o'clock positions is 13, 14, and 15 clockwise.
-    UCHAR   ucGearLever;//GearLever 1~5 for gear 1~5, 7~13 for gear R,N,1~5, 15 for gear R. we use the continues range from 7~13
+    xbox::uchar_t   ucTunerDial;//low nibble, The 9 o'clock postion is 0, and the 6 o'clock position is 12. The blank area between the 6 and 9 o'clock positions is 13, 14, and 15 clockwise.
+    xbox::uchar_t   ucGearLever;//GearLever 1~5 for gear 1~5, 7~13 for gear R,N,1~5, 15 for gear R. we use the continues range from 7~13
 }
 X_SBC_GAMEPAD, *PX_SBC_GAMEPAD;
 

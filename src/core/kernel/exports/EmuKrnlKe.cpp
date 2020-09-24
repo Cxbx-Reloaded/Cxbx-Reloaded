@@ -1265,7 +1265,7 @@ XBSYSAPI EXPORTNUM(128) xbox::void_t NTAPI xbox::KeQuerySystemTime
 // ******************************************************************
 // * 0x0081 - KeRaiseIrqlToDpcLevel()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(129) xbox::UCHAR NTAPI xbox::KeRaiseIrqlToDpcLevel()
+XBSYSAPI EXPORTNUM(129) xbox::uchar_t NTAPI xbox::KeRaiseIrqlToDpcLevel()
 {
 	LOG_FORWARD(KfRaiseIrql);
 
@@ -1275,7 +1275,7 @@ XBSYSAPI EXPORTNUM(129) xbox::UCHAR NTAPI xbox::KeRaiseIrqlToDpcLevel()
 // ******************************************************************
 // * 0x0082 - KeRaiseIrqlToSynchLevel()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(130) xbox::UCHAR NTAPI xbox::KeRaiseIrqlToSynchLevel()
+XBSYSAPI EXPORTNUM(130) xbox::uchar_t NTAPI xbox::KeRaiseIrqlToSynchLevel()
 {
 	LOG_FORWARD(KfRaiseIrql);
 
@@ -1317,7 +1317,7 @@ XBSYSAPI EXPORTNUM(132) xbox::LONG NTAPI xbox::KeReleaseSemaphore
 		LOG_FUNC_ARG(Wait)
 		LOG_FUNC_END;
 
-	UCHAR orig_irql = KeRaiseIrqlToDpcLevel();
+	uchar_t orig_irql = KeRaiseIrqlToDpcLevel();
 	LONG initial_state = Semaphore->Header.SignalState;
 	LONG adjusted_signalstate = Semaphore->Header.SignalState + Adjustment;
 
