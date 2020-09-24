@@ -38,7 +38,7 @@
 // Windows dialog procedure for the input menu
 static INT_PTR CALLBACK DlgInputConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 // Window procedure of the subclass
-LRESULT CALLBACK EditControlSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
+LRESULT CALLBACK WindowsCtrlSubProcNumericFilter(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
 HWND g_ChildWnd = NULL;
 static bool g_bHasOptChanges = false;
 
@@ -131,7 +131,7 @@ INT_PTR CALLBACK DlgInputConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPAR
 
 		for (auto i : { IDC_MOUSE_RANGE, IDC_WHEEL_RANGE }) {
 			HWND hEditControlArray = GetDlgItem(hWndDlg, i);
-			SetWindowSubclass(hEditControlArray, EditControlSubclassProc, i, 0);
+			SetWindowSubclass(hEditControlArray, WindowsCtrlSubProcNumericFilter, i, 0);
 			SendMessage(hEditControlArray, EM_SETLIMITTEXT, 6, 0);
 			SendMessage(hEditControlArray, WM_SETTEXT, 0, reinterpret_cast<LPARAM>((i == IDC_MOUSE_RANGE) ?
 				std::to_string(g_Settings->m_input_general.MoAxisRange).c_str() :
@@ -174,15 +174,15 @@ INT_PTR CALLBACK DlgInputConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPAR
 				assert(port != -1);
 				HWND hHandle = GetDlgItem(hWndDlg, IDC_DEVICE_PORT1 + port);
 				int DeviceType = SendMessage(hHandle, CB_GETITEMDATA, SendMessage(hHandle, CB_GETCURSEL, 0, 0), 0);
+				if (g_bHasOptChanges) {
+					UpdateInputOpt(hWndDlg);
+					g_InputDeviceManager.UpdateOpt(true);
+				}
+
 				switch (DeviceType)
 				{
 				case to_underlying(XBOX_INPUT_DEVICE::MS_CONTROLLER_DUKE): 
 				case to_underlying(XBOX_INPUT_DEVICE::MS_CONTROLLER_S): {
-					if (g_bHasOptChanges) {
-						UpdateInputOpt(hWndDlg);
-						g_InputDeviceManager.UpdateOpt(true);
-					}
-
 					DialogBoxParam(GetModuleHandle(nullptr), MAKEINTRESOURCE(IDD_XID_DUKE_CFG), hWndDlg, DlgXidControllerConfigProc,
 						(DeviceType << 8) | port);
 				}
@@ -244,14 +244,14 @@ INT_PTR CALLBACK DlgInputConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPAR
 	return FALSE;
 }
 
-LRESULT CALLBACK EditControlSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam,
+LRESULT CALLBACK WindowsCtrlSubProcNumericFilter(HWND hWnd, UINT uMsg, WPARAM wParam,
 	LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData)
 {
 	switch (uMsg)
 	{
 	// Remove the window subclass when this window is destroyed
 	case WM_NCDESTROY:
-		RemoveWindowSubclass(hWnd, EditControlSubclassProc, uIdSubclass);
+		RemoveWindowSubclass(hWnd, WindowsCtrlSubProcNumericFilter, uIdSubclass);
 		break;
 
 	// Override the default system behaviour and process WM_CHAR ourselves
