@@ -134,12 +134,18 @@ public:
 	} m_audio;
 	static_assert(sizeof(s_audio) == 0x4C, assert_check_shared_memory(s_audio));
 
-	struct s_input {
+	struct s_input_general {
+		long MoAxisRange;
+		long MoWheelRange;
+	};
+	s_input_general m_input_general;
+
+	struct s_input_port {
 		int Type;
 		std::string DeviceName;
 		std::string ProfileName;
 	};
-	std::array<s_input, 4> m_input;
+	std::array<s_input_port, 4> m_input_port;
 
 	struct s_input_profiles {
 		int Type;

@@ -51,7 +51,7 @@ namespace Sdl
 	extern bool SdlPopulateOK;
 
 	// initialize SDL
-	void Init(std::mutex& Mtx, std::condition_variable& Cv);
+	void Init(std::mutex& Mtx, std::condition_variable& Cv, bool is_gui);
 	// shutdown SDL
 	void DeInit(std::thread& Thr);
 	// open the sdl joystick with the specified index

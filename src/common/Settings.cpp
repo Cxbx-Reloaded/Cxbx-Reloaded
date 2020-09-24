@@ -62,8 +62,9 @@ uint16_t g_LibVersion_DSOUND = 0;
 // * 5: (ergo720),   added new input gui settings and revision to core
 // * 6: (RadWolfie), added loader executable member to core, only for clean up loader expertimental setting
 // * 7: (RadWolfie), fix allowAdminPrivilege not align with other boolean members
+// * 8: (ergo720),   added general input settings
 ///////////////////////////
-const unsigned int settings_version = 7;
+const unsigned int settings_version = 8;
 
 Settings* g_Settings = nullptr;
 
@@ -125,15 +126,21 @@ static struct {
 	const char* adapter_name = "adapter_name";
 } sect_network_keys;
 
+static const char *section_input_general = "input-general";
+static struct {
+	const char *mo_axis_range = "MouseAxisRange";
+	const char *mo_wheel_range = "MouseWheelRange";
+} sect_input_general;
+
 static const char* section_controller_dinput = "controller-dinput";
 static const char* section_controller_port = "controller-port";
 
-static const char* section_input = "input-port-";
+static const char* section_input_port = "input-port-";
 static struct {
 	const char* type = "Type";
 	const char* device = "DeviceName";
 	const char* config = "ProfileName";
-} sect_input;
+} sect_input_port;
 
 static const char* section_input_profiles = "input-profile-";
 static struct {
@@ -366,6 +373,10 @@ bool Settings::LoadConfig()
 
 	// ==== Core End ============
 
+	// Delete/update legacy configs from previous revisions
+	RemoveLegacyConfigs(m_core.Revision);
+	m_core.Revision = settings_version;
+
 	// ==== Hack Begin ==========
 
 	m_hacks.DisablePixelShaders = m_si.GetBoolValue(section_hack, sect_hack_keys.DisablePixelShaders, /*Default=*/false);
@@ -435,21 +446,28 @@ bool Settings::LoadConfig()
 
 	// ==== Network End =========
 
-	// ==== Input Begin ====
+	// ==== Input General Begin ====
+
+	m_input_general.MoAxisRange = m_si.GetLongValue(section_input_general, sect_input_general.mo_axis_range, MO_AXIS_DEFAULT_RANGE);
+	m_input_general.MoWheelRange = m_si.GetLongValue(section_input_general, sect_input_general.mo_wheel_range, MO_WHEEL_DEFAULT_RANGE);
+
+	// ==== Input General End ==============
+
+	// ==== Input Port Begin ====
 
 	for (int port_num = 0; port_num < 4; port_num++) {
-		std::string current_section = std::string(section_input) + std::to_string(port_num);
-		int ret = m_si.GetLongValue(current_section.c_str(), sect_input.type, -2);
+		std::string current_section = std::string(section_input_port) + std::to_string(port_num);
+		int ret = m_si.GetLongValue(current_section.c_str(), sect_input_port.type, -2);
 		if (ret == -2) {
-			m_input[port_num].Type = to_underlying(XBOX_INPUT_DEVICE::DEVICE_INVALID);
+			m_input_port[port_num].Type = to_underlying(XBOX_INPUT_DEVICE::DEVICE_INVALID);
 			continue;
 		}
-		m_input[port_num].Type = ret;
-		m_input[port_num].DeviceName = m_si.GetValue(current_section.c_str(), sect_input.device);
-		m_input[port_num].ProfileName = TrimQuoteFromString(m_si.GetValue(current_section.c_str(), sect_input.config));
+		m_input_port[port_num].Type = ret;
+		m_input_port[port_num].DeviceName = m_si.GetValue(current_section.c_str(), sect_input_port.device);
+		m_input_port[port_num].ProfileName = TrimQuoteFromString(m_si.GetValue(current_section.c_str(), sect_input_port.config));
 	}
 
-	// ==== Input End ==============
+	// ==== Input Port End ==============
 
 	// ==== Input Profile Begin ====
 	std::array<std::vector<std::string>, to_underlying(XBOX_INPUT_DEVICE::DEVICE_MAX)> control_names;
@@ -487,10 +505,6 @@ bool Settings::LoadConfig()
 	}
 
 	// ==== Input Profile End ======
-
-	// Delete legacy configs from previous revisions
-	RemoveLegacyConfigs(m_core.Revision);
-	m_core.Revision = settings_version;
 
 	return true;
 }
@@ -582,18 +596,25 @@ bool Settings::Save(std::string file_path)
 	
 	// ==== Network End =========
 
-	// ==== Input Begin ====
+	// ==== Input General Begin =======
+
+	m_si.SetLongValue(section_input_general, sect_input_general.mo_axis_range, m_input_general.MoAxisRange, nullptr, false, true);
+	m_si.SetLongValue(section_input_general, sect_input_general.mo_wheel_range, m_input_general.MoWheelRange, nullptr, false, true);
+
+	// ==== Input General End =========
+
+	// ==== Input Port Begin ====
 
 	for (int port_num = 0; port_num < 4; port_num++) {
-		std::string current_section = std::string(section_input) + std::to_string(port_num);
-		std::string quoted_prf_str = m_input[port_num].ProfileName.insert(0, "\"");
+		std::string current_section = std::string(section_input_port) + std::to_string(port_num);
+		std::string quoted_prf_str = m_input_port[port_num].ProfileName.insert(0, "\"");
 		quoted_prf_str += "\"";
-		m_si.SetLongValue(current_section.c_str(), sect_input.type, m_input[port_num].Type, nullptr, false, true);
-		m_si.SetValue(current_section.c_str(), sect_input.device, m_input[port_num].DeviceName.c_str(), nullptr, true);
-		m_si.SetValue(current_section.c_str(), sect_input.config, quoted_prf_str.c_str(), nullptr, true);
+		m_si.SetLongValue(current_section.c_str(), sect_input_port.type, m_input_port[port_num].Type, nullptr, false, true);
+		m_si.SetValue(current_section.c_str(), sect_input_port.device, m_input_port[port_num].DeviceName.c_str(), nullptr, true);
+		m_si.SetValue(current_section.c_str(), sect_input_port.config, quoted_prf_str.c_str(), nullptr, true);
 	}
 
-	// ==== Input End ==============
+	// ==== Input Port End ==============
 
 	// ==== Input Profile Begin ====
 
@@ -693,25 +714,28 @@ void Settings::SyncToEmulator()
 
 	// register input settings
 	for (int i = 0; i < 4; i++) {
-		g_EmuShared->SetInputDevTypeSettings(&m_input[i].Type, i);
-		if (m_input[i].Type != to_underlying(XBOX_INPUT_DEVICE::DEVICE_INVALID)) {
-			g_EmuShared->SetInputDevNameSettings(m_input[i].DeviceName.c_str(), i);
-			auto it = std::find_if(m_input_profiles[m_input[i].Type].begin(),
-				m_input_profiles[m_input[i].Type].end(), [this, i](const auto& profile) {
-					if (profile.ProfileName == m_input[i].ProfileName) {
+		g_EmuShared->SetInputDevTypeSettings(&m_input_port[i].Type, i);
+		if (m_input_port[i].Type != to_underlying(XBOX_INPUT_DEVICE::DEVICE_INVALID)) {
+			g_EmuShared->SetInputDevNameSettings(m_input_port[i].DeviceName.c_str(), i);
+			auto it = std::find_if(m_input_profiles[m_input_port[i].Type].begin(),
+				m_input_profiles[m_input_port[i].Type].end(), [this, i](const auto& profile) {
+					if (profile.ProfileName == m_input_port[i].ProfileName) {
 						return true;
 					}
 					return false;
 				});
-			if (it != m_input_profiles[m_input[i].Type].end()) {
+			if (it != m_input_profiles[m_input_port[i].Type].end()) {
 				char controls_name[XBOX_CTRL_NUM_BUTTONS][30];
-				for (int index = 0; index < dev_num_buttons[m_input[i].Type]; index++) {
+				for (int index = 0; index < dev_num_buttons[m_input_port[i].Type]; index++) {
 					strncpy(controls_name[index], it->ControlList[index].c_str(), 30);
 				}
 				g_EmuShared->SetInputBindingsSettings(controls_name, XBOX_CTRL_NUM_BUTTONS, i);
 			}
 		}
 	}
+
+	g_EmuShared->SetInputMoAxisSettings(m_input_general.MoAxisRange);
+	g_EmuShared->SetInputMoWheelSettings(m_input_general.MoWheelRange);
 
 	// register Hacks settings
 	g_EmuShared->SetHackSettings(&m_hacks);
@@ -892,5 +916,39 @@ void Settings::RemoveLegacyConfigs(unsigned int CurrentRevision)
 	case 6:
 	default:
 		break;
+	}
+
+	if (CurrentRevision < 8) {
+		const std::string kb_str = "Keyboard";
+
+		for (unsigned port_num = 0; port_num < 4; ++port_num) {
+			std::string current_section = std::string(section_input_port) + std::to_string(port_num);
+			std::string device_name = m_si.GetValue(current_section.c_str(), sect_input_port.device, "");
+
+			// NOTE: with C++20, this can be simplified by simply calling device_name.ends_with()
+			if (device_name.length() >= kb_str.length()) {
+				if (device_name.compare(device_name.length() - kb_str.length(), kb_str.length(), kb_str) == 0) {
+					device_name += "Mouse";
+					m_si.SetValue(current_section.c_str(), sect_input_port.device, device_name.c_str(), nullptr, true);
+				}
+			}
+		}
+
+		for (unsigned index = 0; ; ++index) {
+			std::string current_section = std::string(section_input_profiles) + std::to_string(index);
+			if (m_si.GetSectionSize(current_section.c_str()) == -1) {
+				break;
+			}
+
+			std::string device_name = m_si.GetValue(current_section.c_str(), sect_input_profiles.device, "");
+
+			// NOTE: with C++20, this can be simplified by simply calling device_name.ends_with()
+			if (device_name.length() >= kb_str.length()) {
+				if (device_name.compare(device_name.length() - kb_str.length(), kb_str.length(), kb_str) == 0) {
+					device_name += "Mouse";
+					m_si.SetValue(current_section.c_str(), sect_input_profiles.device, device_name.c_str(), nullptr, true);
+				}
+			}
+		}
 	}
 }

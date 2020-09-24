@@ -200,7 +200,7 @@ bool CxbxIsElevated();
 extern uint32_t CxbxKrnl_KernelThunkTable[379];
 
 extern bool g_bIsWine;
-
+extern bool g_bClipCursor;
 extern bool g_CxbxPrintUEM;
 extern ULONG g_CxbxFatalErrorCode;
 

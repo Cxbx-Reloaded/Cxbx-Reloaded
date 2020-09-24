@@ -82,6 +82,8 @@ public:
 	std::shared_ptr<InputDevice> FindDevice(int usb_port, int dummy) const;
 	// attach/detach guest devices to the emulated machine
 	void UpdateDevices(int port, bool ack);
+	// update input options
+	void UpdateOpt(bool is_gui);
 
 
 private:

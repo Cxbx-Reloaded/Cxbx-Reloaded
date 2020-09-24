@@ -681,6 +681,9 @@ void CxbxKrnlEmulate(unsigned int reserved_systems, blocks_reserved_t blocks_res
 		//g_EmuShared->SetIsReady(true);
 	}
 
+	/* Initialize ClipCursor flag from EmuShared */
+	g_EmuShared->GetClipCursorFlag(&g_bClipCursor);
+
 	/* Initialize popup message management from kernel side. */
 	log_init_popup_msg();
 

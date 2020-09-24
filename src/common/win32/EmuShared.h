@@ -150,6 +150,14 @@ class EmuShared : public Mutex
 		}
 
 		// ******************************************************************
+		// * Input option Accessors
+		// ******************************************************************
+		void GetInputMoAxisSettings(long *axis) { Lock(); *axis = m_MoAxisRange; Unlock(); }
+		void SetInputMoAxisSettings(const long axis) { Lock(); m_MoAxisRange = axis; Unlock(); }
+		void GetInputMoWheelSettings(long *wheel) { Lock(); *wheel = m_MoWheelRange; Unlock(); }
+		void SetInputMoWheelSettings(const long wheel) { Lock(); m_MoWheelRange = wheel; Unlock(); }
+
+		// ******************************************************************
 		// * LLE Flags Accessors
 		// ******************************************************************
 		void GetFlagsLLE(unsigned int *flags) { Lock(); *flags = m_core.FlagsLLE; Unlock(); }
@@ -237,6 +245,12 @@ class EmuShared : public Mutex
 		void SetStorageLocation(const char *path) { Lock(); strncpy(m_core.szStorageLocation, path, MAX_PATH); Unlock(); }
 
 		// ******************************************************************
+		// * ClipCursor flag Accessors
+		// ******************************************************************
+		void GetClipCursorFlag(bool *value) { Lock(); *value = m_bClipCursor; Unlock(); }
+		void SetClipCursorFlag(const bool *value) { Lock(); m_bClipCursor = *value; Unlock(); }
+
+		// ******************************************************************
 		// * Reset specific variables to default for kernel mode.
 		// ******************************************************************
 		void ResetKrnl()
@@ -284,14 +298,16 @@ class EmuShared : public Mutex
 		int          m_Reserved7[4];
 #endif
 		bool         m_bFirstLaunch;
-		bool         m_bReserved2;
+		bool         m_bClipCursor;
 		bool         m_bReserved3;
 		bool         m_bReserved4;
 		unsigned int m_dwKrnlProcID; // Only used for kernel mode level.
 		int          m_DeviceType[4];
 		char         m_DeviceControlNames[4][XBOX_CTRL_NUM_BUTTONS][30]; // macro should be num of buttons of dev with highest num buttons
 		char         m_DeviceName[4][50];
-		int          m_Reserved99[28]; // Reserve space
+		long         m_MoAxisRange;
+		long         m_MoWheelRange;
+		int          m_Reserved99[26]; // Reserve space
 
 		// Settings class in memory should not be tampered by third-party.
 		// Third-party program should only be allow to edit settings.ini file.

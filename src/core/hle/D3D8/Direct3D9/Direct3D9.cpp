@@ -64,6 +64,7 @@
 #include "WalkIndexBuffer.h"
 #include "core\kernel\common\strings.hpp" // For uem_str
 #include "common\input\SdlJoystick.h"
+#include "common\input\DInputKeyboardMouse.h"
 #include "common/util/strConverter.hpp" // for utf8_to_utf16
 #include "VertexShaderSource.h"
 
@@ -81,6 +82,7 @@ using namespace std::literals::chrono_literals;
 
 // Global(s)
 HWND                                g_hEmuWindow   = NULL; // rendering window
+bool                                g_bClipCursor  = false; // indicates that the mouse cursor should be confined inside the rendering window
 IDirect3DDevice                    *g_pD3DDevice   = nullptr; // Direct3D Device
 
 // Static Variable(s)
@@ -673,6 +675,18 @@ void DrawUEM(HWND hWnd)
 		ReleaseDC(hWnd, hDC);
 
 	EndPaint(hWnd, &ps);
+}
+
+void CxbxClipCursor(HWND hWnd)
+{
+	RECT wnd_rect;
+	GetWindowRect(hWnd, &wnd_rect);
+	ClipCursor(&wnd_rect);
+}
+
+void CxbxReleaseCursor()
+{
+	ClipCursor(nullptr);
 }
 
 inline DWORD GetXboxCommonResourceType(const xbox::DWORD XboxResource_Common)
@@ -1844,6 +1858,7 @@ static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
     {
         case WM_DESTROY:
         {
+            CxbxReleaseCursor();
             DeleteObject(g_hBgBrush);
             PostQuitMessage(0);
             return D3D_OK; // = 0
@@ -1928,6 +1943,18 @@ static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
             {
                 VertexBufferConverter.PrintStats();
             }
+            else if (wParam == VK_F3)
+            {
+                g_bClipCursor = !g_bClipCursor;
+                g_EmuShared->SetClipCursorFlag(&g_bClipCursor);
+
+                if (g_bClipCursor) {
+                    CxbxClipCursor(hWnd);
+                }
+                else {
+                    CxbxReleaseCursor();
+                }
+            }
             else if (wParam == VK_F6)
             {
                 // For some unknown reason, F6 isn't handled in WndMain::WndProc
@@ -1990,10 +2017,55 @@ static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
                 }
                 break;
             }
+
+            if (g_bClipCursor) {
+                CxbxClipCursor(hWnd);
+            }
+        }
+        break;
+
+        case WM_MOVE:
+        {
+            if (g_bClipCursor) {
+                CxbxClipCursor(hWnd);
+            }
+        }
+        break;
+
+        case WM_MOUSELEAVE:
+        {
+            DInput::mo_leave_wnd = true;
+            g_bIsTrackingMoLeave = false;
+            g_bIsTrackingMoMove = true;
+            ShowCursor(TRUE);
+        }
+        break;
+
+        case WM_MOUSEMOVE:
+        {
+            if (g_bClipCursor) {
+                CxbxClipCursor(hWnd);
+            }
+
+            if (!g_bIsTrackingMoLeave) {
+                TRACKMOUSEEVENT tme;
+                tme.cbSize = sizeof(TRACKMOUSEEVENT);
+                tme.hwndTrack = hWnd;
+                tme.dwFlags = TME_LEAVE;
+                TrackMouseEvent(&tme);
+                g_bIsTrackingMoLeave = true;
+                ShowCursor(FALSE);
+
+                if (g_bIsTrackingMoMove) {
+                    DInput::mo_leave_wnd = false;
+                    g_bIsTrackingMoMove = false;
+                }
+            }
         }
         break;
 
         case WM_CLOSE:
+            CxbxReleaseCursor();
             DestroyWindow(hWnd);
 			CxbxKrnlShutDown();
             break;

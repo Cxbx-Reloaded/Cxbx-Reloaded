@@ -48,6 +48,8 @@
 #define DIRECTION_IN      0
 #define DIRECTION_OUT     1
 
+#define MO_AXIS_DEFAULT_RANGE   10l
+#define MO_WHEEL_DEFAULT_RANGE  80l
 
 typedef double ControlState;
 
@@ -64,6 +66,10 @@ typedef enum class _XBOX_INPUT_DEVICE : int {
 	DEVICE_MAX,
 }
 XBOX_INPUT_DEVICE;
+
+// Flags that indicate that WM_MOUSELEAVE and WM_MOUSEMOVE respectively are being tracked in the rendering window procedure
+inline bool g_bIsTrackingMoLeave = false;
+inline bool g_bIsTrackingMoMove = false;
 
 // Lookup array used to translate a gui port to an xbox usb port and vice versa
 extern int Gui2XboxPortArray[4];
@@ -87,7 +93,6 @@ public:
 	{
 	public:
 		virtual ControlState GetState() const = 0;
-		virtual bool IsDetectable() { return true; }
 	};
 
 	class Output : public IoControl
@@ -142,31 +147,6 @@ public:
 	void SetBindings(int XButton, IoControl* Control) {
 		std::lock_guard<std::mutex> lck(m_BindingsMtx);
 		m_Bindings[XButton] = Control;
-	}
-
-protected:
-	class FullAnalogSurface : public Input
-	{
-	public:
-		FullAnalogSurface(Input* Low, Input* High) : m_Low(*Low), m_High(*High) {}
-		ControlState GetState() const override
-		{
-			return (1 + m_High.GetState() - m_Low.GetState()) / 2;
-		}
-
-		std::string GetName() const override { return m_Low.GetName() + *m_High.GetName().rbegin(); }
-
-	private:
-		Input& m_Low;
-		Input& m_High;
-	};
-
-	void AddAnalogInputs(Input* Low, Input* High)
-	{
-		AddInput(Low);
-		AddInput(High);
-		AddInput(new FullAnalogSurface(Low, High));
-		AddInput(new FullAnalogSurface(High, Low));
 	}
 
 private:

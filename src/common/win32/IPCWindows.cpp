@@ -76,7 +76,7 @@ void ipc_send_gui_update(IPC_UPDATE_GUI command, const unsigned int value)
 	}
 }
 
-void ipc_send_kernel_update(IPC_UPDATE_KERNEL command, const unsigned int value, const unsigned int hwnd)
+void ipc_send_kernel_update(IPC_UPDATE_KERNEL command, const int value, const unsigned int hwnd)
 {
 	// Don't send if GUI process didn't create kernel process.
 	if (hwnd == NULL) {

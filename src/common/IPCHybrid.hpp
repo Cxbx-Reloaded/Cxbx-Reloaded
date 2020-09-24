@@ -52,6 +52,6 @@ typedef enum class _IPC_UPDATE_KERNEL {
 	, CONFIG_INPUT_SYNC
 } IPC_UPDATE_KERNEL;
 
-void ipc_send_kernel_update(IPC_UPDATE_KERNEL command, const unsigned int value, const unsigned int hwnd);
+void ipc_send_kernel_update(IPC_UPDATE_KERNEL command, const int value, const unsigned int hwnd);
 
 #endif

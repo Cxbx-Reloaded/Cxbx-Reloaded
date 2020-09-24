@@ -38,7 +38,7 @@
 #define OUTPUT_TIMEOUT 3000
 
 
-constexpr ControlState INPUT_DETECT_THRESHOLD = 0.55; // arbitrary number, using what Dolphin uses
+constexpr ControlState INPUT_DETECT_THRESHOLD = 0.35; // NOTE: this should probably be made user configurable
 InputWindow* g_InputWindow = nullptr;
 
 
@@ -186,7 +186,7 @@ InputDevice::Input* InputWindow::DetectInput(InputDevice* const Device, int ms)
 		Device->UpdateInput();
 		std::vector<bool>::iterator state = initial_states.begin();
 		for (; i != e && s == e; i++, state++) {
-			if ((*i)->IsDetectable() && (*i)->GetState() > INPUT_DETECT_THRESHOLD) {
+			if ((*i)->GetState() > INPUT_DETECT_THRESHOLD) {
 				if (*state == false) {
 					// input was not initially pressed or it was but released afterwards
 					s = i;
@@ -337,8 +337,8 @@ void InputWindow::LoadProfile(const std::string& name)
 	for (int index = 0; index < m_max_num_buttons; index++) {
 		m_DeviceConfig->FindButtonByIndex(index)->UpdateText(profile->ControlList[index].c_str());
 	}
-	g_Settings->m_input[m_port_num].DeviceName = profile->DeviceName;
-	g_Settings->m_input[m_port_num].ProfileName = profile->ProfileName;
+	g_Settings->m_input_port[m_port_num].DeviceName = profile->DeviceName;
+	g_Settings->m_input_port[m_port_num].ProfileName = profile->ProfileName;
 	m_bHasChanges = false;
 }
 
@@ -364,8 +364,8 @@ bool InputWindow::SaveProfile(const std::string& name)
 	}
 	SendMessage(m_hwnd_profile_list, CB_SETCURSEL, SendMessage(m_hwnd_profile_list, CB_ADDSTRING, 0,
 		reinterpret_cast<LPARAM>(profile.ProfileName.c_str())), 0);
-	g_Settings->m_input[m_port_num].DeviceName = profile.DeviceName;
-	g_Settings->m_input[m_port_num].ProfileName = profile.ProfileName;
+	g_Settings->m_input_port[m_port_num].DeviceName = profile.DeviceName;
+	g_Settings->m_input_port[m_port_num].ProfileName = profile.ProfileName;
 	g_Settings->m_input_profiles[m_dev_type].push_back(std::move(profile));
 	m_bHasChanges = false;
 	return true;
@@ -379,16 +379,16 @@ void InputWindow::DeleteProfile(const std::string& name)
 	}
 	SendMessage(m_hwnd_profile_list, CB_DELETESTRING, SendMessage(m_hwnd_profile_list, CB_FINDSTRINGEXACT, 1,
 		reinterpret_cast<LPARAM>(profile->ProfileName.c_str())), 0);
-	if (profile->ProfileName == g_Settings->m_input[m_port_num].ProfileName) {
+	if (profile->ProfileName == g_Settings->m_input_port[m_port_num].ProfileName) {
 		SendMessage(m_hwnd_profile_list, CB_SETCURSEL, -1, 0);
 		UpdateCurrentDevice();
 		ClearBindings();
-		g_Settings->m_input[m_port_num].DeviceName = "";
-		g_Settings->m_input[m_port_num].ProfileName = "";
+		g_Settings->m_input_port[m_port_num].DeviceName = "";
+		g_Settings->m_input_port[m_port_num].ProfileName = "";
 		m_bHasChanges = false;
 	}
 	else {
-		LoadProfile(g_Settings->m_input[m_port_num].ProfileName);
+		LoadProfile(g_Settings->m_input_port[m_port_num].ProfileName);
 	}
 	g_Settings->m_input_profiles[m_dev_type].erase(profile);
 }
@@ -411,7 +411,7 @@ void InputWindow::LoadDefaultProfile()
 		SendMessage(m_hwnd_profile_list, CB_ADDSTRING, 0,
 			reinterpret_cast<LPARAM>(g_Settings->m_input_profiles[m_dev_type][index].ProfileName.c_str()));
 	}
-	LoadProfile(g_Settings->m_input[m_port_num].ProfileName);
+	LoadProfile(g_Settings->m_input_port[m_port_num].ProfileName);
 }
 
 void InputWindow::UpdateCurrentDevice()

@@ -78,9 +78,9 @@ void InputDeviceManager::Initialize(bool is_gui)
 	std::unique_lock<std::mutex> lck(m_Mtx);
 	m_bPendingShutdown = false;
 
-	m_PollingThread = std::thread([this]() {
+	m_PollingThread = std::thread([this, is_gui]() {
 		XInput::Init(m_Mtx);
-		Sdl::Init(m_Mtx, m_Cv);
+		Sdl::Init(m_Mtx, m_Cv, is_gui);
 		});
 
 	m_Cv.wait(lck, []() {
@@ -93,6 +93,7 @@ void InputDeviceManager::Initialize(bool is_gui)
 		CxbxKrnlCleanup("Failed to initialize input subsystem! Consult debug log for more information");
 	}
 
+	UpdateOpt(is_gui);
 	RefreshDevices();
 
 	if (!is_gui) {
@@ -517,5 +518,24 @@ std::shared_ptr<InputDevice> InputDeviceManager::FindDevice(int usb_port, int du
 	}
 	else {
 		return nullptr;
+	}
+}
+
+void InputDeviceManager::UpdateOpt(bool is_gui)
+{
+	if (!is_gui) {
+		long axis_range, wheel_range;
+		g_EmuShared->GetInputMoAxisSettings(&axis_range);
+		g_EmuShared->GetInputMoWheelSettings(&wheel_range);
+		DInput::mo_axis_range_pos = axis_range;
+		DInput::mo_wheel_range_pos = wheel_range;
+		DInput::mo_axis_range_neg = -(axis_range);
+		DInput::mo_wheel_range_neg = -(wheel_range);
+	}
+	else {
+		DInput::mo_axis_range_pos = g_Settings->m_input_general.MoAxisRange;
+		DInput::mo_wheel_range_pos = g_Settings->m_input_general.MoWheelRange;
+		DInput::mo_axis_range_neg = -(g_Settings->m_input_general.MoAxisRange);
+		DInput::mo_wheel_range_neg = -(g_Settings->m_input_general.MoWheelRange);
 	}
 }
