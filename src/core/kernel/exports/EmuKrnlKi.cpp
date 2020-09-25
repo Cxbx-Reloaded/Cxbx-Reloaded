@@ -866,7 +866,7 @@ xbox::void_t FASTCALL xbox::KiWaitSatisfyAll
 	WaitBlock1 = WaitBlock;
 	Thread = WaitBlock1->Thread;
 	do {
-		if (WaitBlock1->WaitKey != (CSHORT)STATUS_TIMEOUT) {
+		if (WaitBlock1->WaitKey != (cshort_t)STATUS_TIMEOUT) {
 			Object = (PKMUTANT)WaitBlock1->Object;
 			KiWaitSatisfyAny(Object, Thread);
 		}

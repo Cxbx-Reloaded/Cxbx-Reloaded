@@ -283,7 +283,7 @@ XBSYSAPI EXPORTNUM(265) xbox::void_t NTAPI xbox::RtlCaptureContext
 // ******************************************************************
 // * 0x010A - RtlCaptureStackBackTrace()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(266) xbox::USHORT NTAPI xbox::RtlCaptureStackBackTrace
+XBSYSAPI EXPORTNUM(266) xbox::ushort_t NTAPI xbox::RtlCaptureStackBackTrace
 (
 	IN ULONG FramesToSkip,
 	IN ULONG FramesToCapture,
@@ -1592,7 +1592,7 @@ XBSYSAPI EXPORTNUM(305) xbox::void_t NTAPI xbox::RtlTimeToTimeFields
 
 	/* Extract millisecond from time and convert time into seconds */
 	TimeFields->Millisecond =
-		(CSHORT)((Time->QuadPart % TICKSPERSEC) / TICKSPERMSEC);
+		(cshort_t)((Time->QuadPart % TICKSPERSEC) / TICKSPERMSEC);
 	_Time = Time->QuadPart / TICKSPERSEC;
 
 	/* The native version of RtlTimeToTimeFields does not take leap seconds
@@ -1603,13 +1603,13 @@ XBSYSAPI EXPORTNUM(305) xbox::void_t NTAPI xbox::RtlTimeToTimeFields
 	SecondsInDay = _Time % SECSPERDAY;
 
 	/* compute time of day */
-	TimeFields->Hour = (CSHORT)(SecondsInDay / SECSPERHOUR);
+	TimeFields->Hour = (cshort_t)(SecondsInDay / SECSPERHOUR);
 	SecondsInDay = SecondsInDay % SECSPERHOUR;
-	TimeFields->Minute = (CSHORT)(SecondsInDay / SECSPERMIN);
-	TimeFields->Second = (CSHORT)(SecondsInDay % SECSPERMIN);
+	TimeFields->Minute = (cshort_t)(SecondsInDay / SECSPERMIN);
+	TimeFields->Second = (cshort_t)(SecondsInDay % SECSPERMIN);
 
 	/* compute day of week */
-	TimeFields->Weekday = (CSHORT)((EPOCHWEEKDAY + Days) % DAYSPERWEEK);
+	TimeFields->Weekday = (cshort_t)((EPOCHWEEKDAY + Days) % DAYSPERWEEK);
 
 	/* compute year, month and day of month. */
 	cleaps = (3 * ((4 * Days + 1227) / DAYSPERQUADRICENTENNIUM) + 3) / 4;
@@ -2064,14 +2064,14 @@ XBSYSAPI EXPORTNUM(317) xbox::void_t NTAPI xbox::RtlUpperString
 // ******************************************************************
 // * 0x013E - RtlUshortByteSwap()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(318) xbox::USHORT FASTCALL xbox::RtlUshortByteSwap
+XBSYSAPI EXPORTNUM(318) xbox::ushort_t FASTCALL xbox::RtlUshortByteSwap
 (
-	IN USHORT Source
+	IN ushort_t Source
 )
 {
 	LOG_FUNC_ONE_ARG(Source);
 
-	USHORT ret = (Source >> 8) | ((Source & 0xFF) << 8);
+	ushort_t ret = (Source >> 8) | ((Source & 0xFF) << 8);
 
 	RETURN(ret);
 }

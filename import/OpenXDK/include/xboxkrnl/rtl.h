@@ -70,7 +70,7 @@ XBSYSAPI EXPORTNUM(265) void_t NTAPI RtlCaptureContext
 // ******************************************************************
 // * 0x010A - RtlCaptureStackBackTrace()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(266) USHORT NTAPI RtlCaptureStackBackTrace
+XBSYSAPI EXPORTNUM(266) ushort_t NTAPI RtlCaptureStackBackTrace
 (
 	IN ULONG FramesToSkip,
 	IN ULONG FramesToCapture,
@@ -567,9 +567,9 @@ XBSYSAPI EXPORTNUM(317) void_t NTAPI RtlUpperString
 // ******************************************************************
 // * 0x013E - RtlUshortByteSwap()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(318) USHORT FASTCALL RtlUshortByteSwap
+XBSYSAPI EXPORTNUM(318) ushort_t FASTCALL RtlUshortByteSwap
 (
-	IN USHORT Source
+	IN ushort_t Source
 );
 
 // ******************************************************************

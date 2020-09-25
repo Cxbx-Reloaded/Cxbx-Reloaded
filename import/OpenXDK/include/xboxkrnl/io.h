@@ -164,7 +164,7 @@ XBSYSAPI EXPORTNUM(72) void_t NTAPI IoFreeIrp
 XBSYSAPI EXPORTNUM(73) PVOID NTAPI IoInitializeIrp
 (
 	IN PIRP Irp,
-	IN USHORT PacketSize,
+	IN ushort_t PacketSize,
 	IN cchar_t StackSize
 );
 

@@ -586,9 +586,9 @@ void EmuSBCGetState(xbox::PX_SBC_GAMEPAD pSBCGamepad, xbox::PXINPUT_GAMEPAD pXIG
     pSBCGamepad->sRotationLever = 0;//(pXIGamepad->wButtons & XINPUT_GAMEPAD_LEFT_SHOULDER) ? 255 : 0;
     pSBCGamepad->sSightChangeX = pXIGamepad->sThumbLX;
     pSBCGamepad->sSightChangeY = pXIGamepad->sThumbLY;
-    pSBCGamepad->wLeftPedal = ((SHORT)(pXIGamepad->bAnalogButtons[CXBX_XINPUT_GAMEPAD_LEFT_TRIGGER]))<<8;
+    pSBCGamepad->wLeftPedal = ((xbox::short_t)(pXIGamepad->bAnalogButtons[CXBX_XINPUT_GAMEPAD_LEFT_TRIGGER]))<<8;
     pSBCGamepad->wMiddlePedal=0;// = (pXIGamepad->wButtons & XINPUT_GAMEPAD_RIGHT_SHOULDER) ? 255 : 0;
-    pSBCGamepad->wRightPedal = (SHORT)(pXIGamepad->bAnalogButtons[CXBX_XINPUT_GAMEPAD_RIGHT_TRIGGER])<<8;
+    pSBCGamepad->wRightPedal = (xbox::short_t)(pXIGamepad->bAnalogButtons[CXBX_XINPUT_GAMEPAD_RIGHT_TRIGGER])<<8;
     pSBCGamepad->ucTunerDial=0;//low nibble
 
     

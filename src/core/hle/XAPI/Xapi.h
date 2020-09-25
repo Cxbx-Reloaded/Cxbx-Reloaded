@@ -137,10 +137,10 @@ typedef struct _XINPUT_GAMEPAD
 {
     WORD    wButtons;
     xbox::byte_t    bAnalogButtons[8];
-    SHORT   sThumbLX;
-    SHORT   sThumbLY;
-    SHORT   sThumbRX;
-    SHORT   sThumbRY;
+    xbox::short_t   sThumbLX;
+    xbox::short_t   sThumbLY;
+    xbox::short_t   sThumbRX;
+    xbox::short_t   sThumbRY;
 }
 XINPUT_GAMEPAD, *PXINPUT_GAMEPAD;
 
@@ -149,11 +149,11 @@ XINPUT_GAMEPAD, *PXINPUT_GAMEPAD;
 // ******************************************************************
 typedef struct _X_SBC_GAMEPAD {
     WORD    wButtons[3];
-    SHORT   sAimingX;
-    SHORT   sAimingY;
-    SHORT   sRotationLever;//maybe only high byte was used.
-    SHORT   sSightChangeX;
-    SHORT   sSightChangeY;
+    xbox::short_t   sAimingX;
+    xbox::short_t   sAimingY;
+    xbox::short_t   sRotationLever;//maybe only high byte was used.
+    xbox::short_t   sSightChangeX;
+    xbox::short_t   sSightChangeY;
     WORD    wLeftPedal;//maybe only high byte was used.
     WORD    wMiddlePedal;//maybe only high byte was used.
     WORD    wRightPedal;//maybe only high byte was used.

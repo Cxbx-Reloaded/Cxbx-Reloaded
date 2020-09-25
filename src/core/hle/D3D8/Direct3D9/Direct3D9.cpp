@@ -4474,8 +4474,8 @@ static inline FLOAT DWtoF(DWORD f) { return *((FLOAT*)&f); }
 xbox::void_t WINAPI xbox::EMUPATCH(D3DDevice_SetVertexData2s)
 (
     int     Register,
-    SHORT   a,
-    SHORT   b
+    short_t   a,
+    short_t   b
 )
 {
 	LOG_FORWARD("D3DDevice_SetVertexData4f");
@@ -4825,10 +4825,10 @@ xbox::void_t WINAPI xbox::EMUPATCH(D3DDevice_SetVertexData4ub)
 xbox::void_t WINAPI xbox::EMUPATCH(D3DDevice_SetVertexData4s)
 (
 	INT		Register,
-	SHORT	a,
-	SHORT	b,
-	SHORT	c,
-	SHORT	d
+	short_t	a,
+	short_t	b,
+	short_t	c,
+	short_t	d
 )
 {
 	LOG_FORWARD("D3DDevice_SetVertexData4f");

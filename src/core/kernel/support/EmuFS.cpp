@@ -640,7 +640,7 @@ void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData)
 		xbox::KeInitializeTimer(&Prcb->CurrentThread->Timer);
 		xbox::PKWAIT_BLOCK WaitBlock = &Prcb->CurrentThread->TimerWaitBlock;
 		WaitBlock->Object = &Prcb->CurrentThread->Timer;
-		WaitBlock->WaitKey = (xbox::CSHORT)STATUS_TIMEOUT;
+		WaitBlock->WaitKey = (xbox::cshort_t)STATUS_TIMEOUT;
 		WaitBlock->WaitType = xbox::WaitAny;
 		WaitBlock->Thread = Prcb->CurrentThread;
 		WaitBlock->WaitListEntry.Flink = &Prcb->CurrentThread->Timer.Header.WaitListHead;

@@ -204,8 +204,8 @@ const UCHAR AvpCRTCRegisters[][34] =
 typedef struct
 {
     ULONG  AvInfo;
-    USHORT Width;
-    USHORT Height;
+    xbox::ushort_t Width;
+    xbox::ushort_t Height;
     ULONG  DisplayMode;
 } XB_DisplayMode;
 

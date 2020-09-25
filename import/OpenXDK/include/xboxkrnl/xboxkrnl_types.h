@@ -249,8 +249,8 @@ ULARGE_INTEGER, *PULARGE_INTEGER;
 // ******************************************************************
 typedef struct _STRING
 {
-    USHORT  Length;
-    USHORT  MaximumLength;
+    ushort_t  Length;
+    ushort_t  MaximumLength;
     PCHAR   Buffer;
 }
 STRING, ANSI_STRING, *PSTRING, *PANSI_STRING;
@@ -265,9 +265,9 @@ typedef STRING OBJECT_STRING, *POBJECT_STRING;
 // ******************************************************************
 typedef struct _UNICODE_STRING
 {
-    USHORT  Length;
-    USHORT  MaximumLength;
-    USHORT *Buffer;
+    ushort_t  Length;
+    ushort_t  MaximumLength;
+    ushort_t *Buffer;
 }
 UNICODE_STRING, *PUNICODE_STRING;
 
@@ -292,12 +292,12 @@ typedef union _SLIST_HEADER {
 	ULONGLONG Alignment;
 	struct {
 		SINGLE_LIST_ENTRY Next;
-		USHORT Depth;
-		USHORT Sequence;
+		ushort_t Depth;
+		ushort_t Sequence;
 	};
 } SLIST_HEADER, *PSLIST_HEADER;
 
-#define QUERY_DEPTH_SLIST(_listhead_) (USHORT)(_listhead_)->Depth
+#define QUERY_DEPTH_SLIST(_listhead_) (xbox::ushort_t)(_listhead_)->Depth
 
 /*
  * Disabled as Cxbx-Reloaded does not support Win64 compilation
@@ -675,7 +675,7 @@ typedef struct _FILE_FULL_EA_INFORMATION {
 	ULONG NextEntryOffset;
 	uchar_t Flags;
 	uchar_t EaNameLength;
-	USHORT EaValueLength;
+	ushort_t EaValueLength;
 	char_t EaName[1];
 } FILE_FULL_EA_INFORMATION, *PFILE_FULL_EA_INFORMATION;
 
@@ -785,7 +785,7 @@ typedef struct _FILE_ALLOCATION_INFORMATION {
 // ******************************************************************
 typedef struct _FILE_COMPRESSION_INFORMATION {
 	LARGE_INTEGER   CompressedFileSize;
-	USHORT          CompressionFormat;
+	ushort_t          CompressionFormat;
 	uchar_t           CompressionUnitShift;
 	uchar_t           ChunkShift;
 	uchar_t           ClusterShift;
@@ -1067,10 +1067,10 @@ typedef struct _PCI_TYPE1_CFG_BITS {
 // ******************************************************************
 typedef struct _PCI_COMMON_CONFIG
 {
-    USHORT  VendorID;                   // 0x00 (ro)
-    USHORT  DeviceID;                   // 0x02 (ro)
-    USHORT  Command;                    // 0x04 Device control
-    USHORT  Status;                     // 0x06
+    ushort_t  VendorID;                   // 0x00 (ro)
+    ushort_t  DeviceID;                   // 0x02 (ro)
+    ushort_t  Command;                    // 0x04 Device control
+    ushort_t  Status;                     // 0x06
     uchar_t   RevisionID;                 // 0x08 (ro)
     uchar_t   ProgIf;                     // 0x09 (ro)
     uchar_t   SubClass;                   // 0x0A (ro)
@@ -1086,8 +1086,8 @@ typedef struct _PCI_COMMON_CONFIG
         {
             ULONG   BaseAddresses[PCI_TYPE0_ADDRESSES]; // 0x10
             ULONG   CIS;
-            USHORT  SubVendorID;
-            USHORT  SubSystemID;
+            ushort_t  SubVendorID;
+            ushort_t  SubSystemID;
             ULONG   ROMBaseAddress;
             uchar_t   CapabilitiesPtr;
             uchar_t   Reserved1[3];
@@ -1264,7 +1264,7 @@ ERWLOCK, *PERWLOCK;
 // ******************************************************************
 typedef struct _KDEVICE_QUEUE
 {
-	CSHORT Type;                // 0x00
+	cshort_t Type;                // 0x00
 	uchar_t Size;                 // 0x02
 	boolean_t Busy;               // 0x04
 	LIST_ENTRY DeviceListHead;  // 0x08
@@ -1288,7 +1288,7 @@ typedef PVOID PFILE_SEGMENT_ELEMENT;
 // ******************************************************************
 typedef struct _IRP
 {
-	CSHORT                 Type;                // 0x00
+	cshort_t                 Type;                // 0x00
 	WORD                   Size;                // 0x02
 	ULONG                  Flags;               // 0x04
 	LIST_ENTRY             ThreadListEntry;     // 0x08
@@ -1312,8 +1312,8 @@ IRP, *PIRP;
 // ******************************************************************
 typedef struct _DEVICE_OBJECT
 {
-	CSHORT Type;
-	USHORT Size;
+	cshort_t Type;
+	ushort_t Size;
 	LONG ReferenceCount;
 	struct _DRIVER_OBJECT *DriverObject;
 	struct _DEVICE_OBJECT *MountedOrSelfDevice;
@@ -1350,7 +1350,7 @@ typedef struct _IO_COMPLETION_CONTEXT
 // * FILE_OBJECT
 // ******************************************************************
 typedef struct _FILE_OBJECT {
-	CSHORT                    Type;               // 0x00
+	cshort_t                    Type;               // 0x00
 
 	byte_t                      DeletePending : 1;  // 0x02
 	byte_t                      ReadAccess : 1;     // 0x02
@@ -1453,7 +1453,7 @@ typedef void_t (__stdcall *PKDEFERRED_ROUTINE)
 // ******************************************************************
 typedef struct _KDPC
 {
-    CSHORT              Type;               // 0x00
+    cshort_t              Type;               // 0x00
 	union
 	{
 		uchar_t           Number;             // 0x02
@@ -1843,7 +1843,7 @@ KWAIT_BLOCK, *PKWAIT_BLOCK;
 // ******************************************************************
 typedef struct _KAPC
 {
-	/* 0x0/0 */ USHORT Type;
+	/* 0x0/0 */ ushort_t Type;
 	/* 0x2/2 */ KPROCESSOR_MODE ApcMode;
 	/* 0x3/3 */ boolean_t Inserted;
 	/* 0x4/4 */ PKTHREAD Thread;
@@ -2125,7 +2125,7 @@ typedef struct _XBOX_UEM_INFO
 {
 	uchar_t ErrorCode;
 	uchar_t Unused;
-	USHORT History;
+	ushort_t History;
 }
 XBOX_UEM_INFO;
 
@@ -2161,14 +2161,14 @@ XBOX_UEM_INFO;
 // ******************************************************************
 typedef struct _TIME_FIELDS
 {
-    USHORT  Year;
-    USHORT  Month;
-    USHORT  Day;
-    USHORT  Hour;
-    USHORT  Minute;
-    USHORT  Second;
-    USHORT  Millisecond;
-    USHORT  Weekday;
+    ushort_t  Year;
+    ushort_t  Month;
+    ushort_t  Day;
+    ushort_t  Hour;
+    ushort_t  Minute;
+    ushort_t  Second;
+    ushort_t  Millisecond;
+    ushort_t  Weekday;
 }
 TIME_FIELDS, *PTIME_FIELDS;
 
@@ -2196,7 +2196,7 @@ typedef struct _ERESOURCE
 {
 	LIST_ENTRY SystemResourcesList;
 	POWNER_ENTRY OwnerTable;
-	SHORT ActiveCount;
+	short_t ActiveCount;
 	WORD Flag;
 	PKSEMAPHORE SharedWaiters;
 	PKEVENT ExclusiveWaiters;
@@ -2323,9 +2323,9 @@ INLINE static uchar_t READ_REGISTER_UCHAR(PUCHAR Address)
 // * Use this to access I/O mapped memory. Just a good standard.
 // *
 // ******************************************************************
-INLINE static USHORT READ_REGISTER_USHORT(PUSHORT Address)
+INLINE static ushort_t READ_REGISTER_USHORT(PUSHORT Address)
 {
-    return *(volatile USHORT *)Address;
+    return *(volatile ushort_t *)Address;
 }
 
 // ******************************************************************
@@ -2369,7 +2369,7 @@ static void_t WRITE_REGISTER_UCHAR(PVOID Address, uchar_t Value)
 // * because the write may not be completed yet.)
 // *
 // ******************************************************************
-static void_t WRITE_REGISTER_USHORT(PVOID Address, USHORT Value)
+static void_t WRITE_REGISTER_USHORT(PVOID Address, ushort_t Value)
 {
     __asm
     {
@@ -2404,7 +2404,7 @@ static void_t WRITE_REGISTER_ULONG(PVOID Address, ULONG Value)
 // * SCSI_PASS_THROUGH_DIRECT
 // ******************************************************************
 typedef struct _SCSI_PASS_THROUGH_DIRECT {
-	USHORT Length;
+	ushort_t Length;
 	uchar_t ScsiStatus;
 	uchar_t PathId;
 	uchar_t TargetId;

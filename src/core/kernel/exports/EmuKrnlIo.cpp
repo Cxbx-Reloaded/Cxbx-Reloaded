@@ -400,7 +400,7 @@ XBSYSAPI EXPORTNUM(72) xbox::void_t NTAPI xbox::IoFreeIrp
 XBSYSAPI EXPORTNUM(73) xbox::PVOID NTAPI xbox::IoInitializeIrp
 (
 	IN PIRP Irp,
-	IN USHORT PacketSize,
+	IN ushort_t PacketSize,
 	IN cchar_t StackSize
 )
 {

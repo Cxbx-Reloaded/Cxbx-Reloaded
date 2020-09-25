@@ -666,8 +666,8 @@ xbox::void_t WINAPI EMUPATCH(D3DDevice_SetVertexData2f)
 xbox::void_t WINAPI EMUPATCH(D3DDevice_SetVertexData2s)
 (
     int     Register,
-    SHORT   a,
-    SHORT   b
+    short_t   a,
+    short_t   b
 );
 
 // ******************************************************************
@@ -711,10 +711,10 @@ xbox::void_t WINAPI EMUPATCH(D3DDevice_SetVertexData4ub)
 xbox::void_t WINAPI EMUPATCH(D3DDevice_SetVertexData4s)
 (
 	INT		Register,
-	SHORT	a,
-	SHORT	b,
-	SHORT	c,
-	SHORT	d
+	short_t	a,
+	short_t	b,
+	short_t	c,
+	short_t	d
 );
 
 // ******************************************************************

@@ -48,8 +48,8 @@ typedef struct _POOL_DESCRIPTOR {
 
 typedef struct _POOL_LOOKASIDE_LIST {
 	xbox::SLIST_HEADER ListHead;
-	USHORT Depth;
-	USHORT Padding;
+	xbox::ushort_t Depth;
+	xbox::ushort_t Padding;
 	ULONG TotalAllocates;
 	ULONG AllocateHits;
 } POOL_LOOKASIDE_LIST, *PPOOL_LOOKASIDE_LIST;

@@ -217,10 +217,10 @@ XBSYSAPI EXPORTNUM(322) XBOX_HARDWARE_INFO XboxHardwareInfo;
 XBSYSAPI EXPORTNUM(323) uchar_t XboxHDKey[16];
 
 typedef struct _XBOX_KRNL_VERSION {
-    USHORT Major;
-    USHORT Minor;
-    USHORT Build;
-    USHORT Qfe;
+    ushort_t Major;
+    ushort_t Minor;
+    ushort_t Build;
+    ushort_t Qfe;
 } XBOX_KRNL_VERSION;
 
 // ******************************************************************

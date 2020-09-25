@@ -2050,7 +2050,7 @@ XBSYSAPI EXPORTNUM(158) xbox::NTSTATUS NTAPI xbox::KeWaitForMultipleObjects
 				// If we reached here, the wait could not be satisfied immediately, so we must setup a WaitBlock
 				WaitBlock = &WaitBlockArray[Index];
 				WaitBlock->Object = ObjectMutant;
-				WaitBlock->WaitKey = (CSHORT)(Index);
+				WaitBlock->WaitKey = (cshort_t)(Index);
 				WaitBlock->WaitType = WaitType;
 				WaitBlock->Thread = Thread;
 				WaitBlock->NextWaitBlock = &WaitBlockArray[Index + 1];
@@ -2273,7 +2273,7 @@ XBSYSAPI EXPORTNUM(159) xbox::NTSTATUS NTAPI xbox::KeWaitForSingleObject
 			// If we reached here, the wait could not be satisfied immediately, so we must setup a WaitBlock
 			Thread->WaitBlockList = WaitBlock;
 			WaitBlock->Object = Object;
-			WaitBlock->WaitKey = (CSHORT)(STATUS_SUCCESS);
+			WaitBlock->WaitKey = (cshort_t)(STATUS_SUCCESS);
 			WaitBlock->WaitType = WaitAny;
 			WaitBlock->Thread = Thread;
 
