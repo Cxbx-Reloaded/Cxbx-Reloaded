@@ -73,7 +73,7 @@ typedef const WAVEFORMATEX *LPCWAVEFORMATEX;
 // ******************************************************************
 typedef struct _XDSMIXBINVOLUMEPAIR {
     DWORD       dwMixBin;
-    LONG        lVolume;
+    long_t        lVolume;
 } X_DSMIXBINVOLUMEPAIR, *X_LPDSMIXBINVOLUMEPAIR;
 
 // ******************************************************************
@@ -166,8 +166,8 @@ struct X_DSENVOLOPEDESC
     DWORD           dwDecay;
     DWORD           dwRelease;
     DWORD           dwSustain;
-    LONG            lPitchScale;
-    LONG            lFilterCutOff;
+    long_t            lPitchScale;
+    long_t            lFilterCutOff;
 };
 
 #define XTL_DSSCAPS_CTRL3D               0x00000010
@@ -265,9 +265,9 @@ typedef struct _DSLFODESC
     DWORD dwLFO;
     DWORD dwDelay;
     DWORD dwDelta;
-    LONG lPitchModulation;
-    LONG lFilterCutOffRange;
-    LONG lAmplitudeModulation;
+    long_t lPitchModulation;
+    long_t lFilterCutOffRange;
+    long_t lAmplitudeModulation;
 }
 DSLFODESC, *LPCDSLFODESC;
 
@@ -330,7 +330,7 @@ struct X_DS3DBUFFER {
     DWORD dwInsideConeAngle;
     DWORD  dwOutsideConeAngle;
     D3DVECTOR vConeOrientation;
-    LONG lConeOutsideVolume;
+    long_t lConeOutsideVolume;
     FLOAT flMinDistance;
     FLOAT flMaxDistance;
     DWORD dwMode;
@@ -340,14 +340,14 @@ struct X_DS3DBUFFER {
 };
 
 struct X_DSI3DL2LISTENER {
-    LONG lRoom;
-    LONG lRoomHF;
+    long_t lRoom;
+    long_t lRoomHF;
     FLOAT flRoomRolloffFactor;
     FLOAT flDecayTime;
     FLOAT flDecayHFRatio;
-    LONG  lReflections;
+    long_t  lReflections;
     FLOAT flReflectionsDelay;
-    LONG  lReverb;
+    long_t  lReverb;
     FLOAT flReverbDelay;
     FLOAT flDiffusion;
     FLOAT flDensity;
@@ -355,20 +355,20 @@ struct X_DSI3DL2LISTENER {
 };
 
 struct X_DSI3DL2OBSTRUCTION {
-    LONG            lHFLevel;
+    long_t            lHFLevel;
     FLOAT           flLFRatio;
 };
 
 struct X_DSI3DL2OCCLUSION {
-    LONG            lHFLevel;
+    long_t            lHFLevel;
     FLOAT           flLFRatio;
 };
 
 struct X_DSI3DL2BUFFER {
-    LONG lDirect;
-    LONG lDirectHF;
-    LONG lRoom;
-    LONG lRoomHF;
+    long_t lDirect;
+    long_t lDirectHF;
+    long_t lRoom;
+    long_t lRoomHF;
     FLOAT flRoomRolloffFactor;
     X_DSI3DL2OBSTRUCTION Obstruction;
     X_DSI3DL2OCCLUSION Occlusion;
@@ -380,12 +380,12 @@ typedef IDirectSoundStream *LPDIRECTSOUNDSTREAM;
 struct X_DSVOICEPROPS {
     DWORD dwMixBinCount;
     X_DSMIXBINVOLUMEPAIR MixBinVolumePairs[8];
-    LONG lPitch;
-    LONG l3DDistanceVolume;
-    LONG l3DConeVolume;
-    LONG l3DDopplerPitch;
-    LONG lI3DL2DirectVolume;
-    LONG lI3DL2RoomVolume;
+    long_t lPitch;
+    long_t l3DDistanceVolume;
+    long_t l3DConeVolume;
+    long_t l3DDopplerPitch;
+    long_t lI3DL2DirectVolume;
+    long_t lI3DL2RoomVolume;
 };
 
 } // end of namespace xbox

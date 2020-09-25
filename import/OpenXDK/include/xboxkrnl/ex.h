@@ -185,33 +185,33 @@ XBSYSAPI EXPORTNUM(34) PLIST_ENTRY FASTCALL ExfInterlockedRemoveHeadList
 	IN PLIST_ENTRY ListHead
 );
 
-XBSYSAPI EXPORTNUM(51) LONG FASTCALL KRNL(InterlockedCompareExchange)
+XBSYSAPI EXPORTNUM(51) long_t FASTCALL KRNL(InterlockedCompareExchange)
 (
 	IN OUT volatile PLONG Destination,
-	IN LONG  Exchange,
-	IN LONG  Comparand
+	IN long_t  Exchange,
+	IN long_t  Comparand
 );
 
-XBSYSAPI EXPORTNUM(52) LONG FASTCALL KRNL(InterlockedDecrement)
+XBSYSAPI EXPORTNUM(52) long_t FASTCALL KRNL(InterlockedDecrement)
 (
 	IN OUT PLONG Addend
 );
 
-XBSYSAPI EXPORTNUM(53) LONG FASTCALL KRNL(InterlockedIncrement)
+XBSYSAPI EXPORTNUM(53) long_t FASTCALL KRNL(InterlockedIncrement)
 (
 	IN OUT PLONG Addend
 );
 
-XBSYSAPI EXPORTNUM(54) LONG FASTCALL KRNL(InterlockedExchange)
+XBSYSAPI EXPORTNUM(54) long_t FASTCALL KRNL(InterlockedExchange)
 (
 	IN volatile PLONG Destination,
-	IN LONG Value
+	IN long_t Value
 );
 
-XBSYSAPI EXPORTNUM(55) LONG FASTCALL KRNL(InterlockedExchangeAdd)
+XBSYSAPI EXPORTNUM(55) long_t FASTCALL KRNL(InterlockedExchangeAdd)
 (
 	IN volatile PLONG Addend,
-	IN LONG	Value
+	IN long_t	Value
 );
 
 // Dxbx Note : The Xbox1 SINGLE_LIST strucures are the same as in WinNT

@@ -457,7 +457,7 @@ XBSYSAPI EXPORTNUM(269) xbox::SIZE_T NTAPI xbox::RtlCompareMemoryUlong
 // ******************************************************************
 // * 0x010E - RtlCompareString()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(270) xbox::LONG NTAPI xbox::RtlCompareString
+XBSYSAPI EXPORTNUM(270) xbox::long_t NTAPI xbox::RtlCompareString
 (
 	IN PSTRING String1,
 	IN PSTRING String2,
@@ -470,7 +470,7 @@ XBSYSAPI EXPORTNUM(270) xbox::LONG NTAPI xbox::RtlCompareString
 		LOG_FUNC_ARG(CaseInSensitive)
 		LOG_FUNC_END;
 
-	LONG result;
+	long_t result;
 
 	USHORT l1 = String1->Length;
 	USHORT l2 = String2->Length;
@@ -492,7 +492,7 @@ XBSYSAPI EXPORTNUM(270) xbox::LONG NTAPI xbox::RtlCompareString
 // ******************************************************************
 // * 0x010F - RtlCompareUnicodeString()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(271) xbox::LONG NTAPI xbox::RtlCompareUnicodeString
+XBSYSAPI EXPORTNUM(271) xbox::long_t NTAPI xbox::RtlCompareUnicodeString
 (
 	IN PUNICODE_STRING String1,
 	IN PUNICODE_STRING String2,
@@ -505,7 +505,7 @@ XBSYSAPI EXPORTNUM(271) xbox::LONG NTAPI xbox::RtlCompareUnicodeString
 		LOG_FUNC_ARG(CaseInSensitive)
 		LOG_FUNC_END;
 
-	LONG result;
+	long_t result;
 
 	USHORT l1 = String1->Length;
 	USHORT l2 = String2->Length;
@@ -841,7 +841,7 @@ XBSYSAPI EXPORTNUM(280) xbox::boolean_t NTAPI xbox::RtlEqualUnicodeString
 XBSYSAPI EXPORTNUM(281) xbox::LARGE_INTEGER NTAPI xbox::RtlExtendedIntegerMultiply
 (
 	IN LARGE_INTEGER Multiplicand,
-	IN LONG Multiplier
+	IN long_t Multiplier
 )
 {
 	LOG_FUNC_BEGIN
@@ -1133,7 +1133,7 @@ XBSYSAPI EXPORTNUM(292) xbox::NTSTATUS NTAPI xbox::RtlIntegerToChar
 (
 	IN ULONG Value,
 	IN ULONG Base,
-	IN LONG OutputLength,
+	IN long_t OutputLength,
 	IN PSZ String
 )
 {
@@ -1647,7 +1647,7 @@ XBSYSAPI EXPORTNUM(306) xbox::boolean_t NTAPI xbox::RtlTryEnterCriticalSection
     boolean_t ret = false;
     HANDLE thread = (HANDLE)KeGetCurrentThread();
 
-    if(InterlockedCompareExchange(&CriticalSection->LockCount, 0, -1) == -1) {
+    if(InterlockedCompareExchange((::PLONG)(&CriticalSection->LockCount), 0, -1) == -1) {
         CriticalSection->OwningThread = thread;
         CriticalSection->RecursionCount = 1;
         ret = true;

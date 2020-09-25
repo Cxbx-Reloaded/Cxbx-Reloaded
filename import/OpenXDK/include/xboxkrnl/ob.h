@@ -155,7 +155,7 @@ XBSYSAPI EXPORTNUM(244) NTSTATUS NTAPI ObOpenObjectByPointer
 #define OB_HANDLES_PER_SEGMENT          (OB_TABLES_PER_SEGMENT * OB_HANDLES_PER_TABLE)
 
 typedef struct _OBJECT_HANDLE_TABLE {
-	LONG HandleCount;
+	long_t HandleCount;
 	LONG_PTR FirstFreeTableEntry;
 	HANDLE NextHandleNeedingPool;
 	PVOID **RootTable;

@@ -525,7 +525,7 @@ XBSYSAPI EXPORTNUM(229) NTSTATUS NTAPI NtSetTimerEx
 	IN KPROCESSOR_MODE ApcMode,
 	IN PVOID TimerContext OPTIONAL,
 	IN boolean_t WakeTimer,
-	IN LONG Period OPTIONAL,
+	IN long_t Period OPTIONAL,
 	OUT PBOOLEAN PreviousState OPTIONAL
 );
 

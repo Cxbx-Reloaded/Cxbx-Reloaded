@@ -115,7 +115,7 @@ XBSYSAPI EXPORTNUM(269) SIZE_T NTAPI RtlCompareMemoryUlong
 // ******************************************************************
 // * 0x010E - RtlCompareString()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(270) LONG NTAPI RtlCompareString
+XBSYSAPI EXPORTNUM(270) long_t NTAPI RtlCompareString
 (
 	IN PSTRING String1,
 	IN PSTRING String2,
@@ -125,7 +125,7 @@ XBSYSAPI EXPORTNUM(270) LONG NTAPI RtlCompareString
 // ******************************************************************
 // * 0x010F - RtlCompareUnicodeString()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(271) LONG NTAPI RtlCompareUnicodeString
+XBSYSAPI EXPORTNUM(271) long_t NTAPI RtlCompareUnicodeString
 (
 	IN PUNICODE_STRING String1,
 	IN PUNICODE_STRING String2,
@@ -223,7 +223,7 @@ XBSYSAPI EXPORTNUM(280) boolean_t NTAPI RtlEqualUnicodeString
 XBSYSAPI EXPORTNUM(281) LARGE_INTEGER NTAPI RtlExtendedIntegerMultiply
 (
 	IN LARGE_INTEGER Multiplicand,
-	IN LONG Multiplier
+	IN long_t Multiplier
 );
 
 // ******************************************************************
@@ -325,7 +325,7 @@ XBSYSAPI EXPORTNUM(292) NTSTATUS NTAPI RtlIntegerToChar
 (
 	IN ULONG Value,
 	IN ULONG Base,
-	IN LONG OutputLength,
+	IN long_t OutputLength,
 	IN PSZ String
 );
 

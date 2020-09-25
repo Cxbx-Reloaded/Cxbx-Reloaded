@@ -634,7 +634,7 @@ void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData)
 		Prcb->CurrentThread = (xbox::KTHREAD*)EThread;
 		// Initialize the thread header and its wait list
 		Prcb->CurrentThread->Header.Type = xbox::ThreadObject;
-		Prcb->CurrentThread->Header.Size = sizeof(xbox::KTHREAD) / sizeof(xbox::LONG);
+		Prcb->CurrentThread->Header.Size = sizeof(xbox::KTHREAD) / sizeof(xbox::long_t);
 		InitializeListHead(&Prcb->CurrentThread->Header.WaitListHead);
 		// Also initialize the timer associated with the thread
 		xbox::KeInitializeTimer(&Prcb->CurrentThread->Timer);

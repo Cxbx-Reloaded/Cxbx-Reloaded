@@ -217,11 +217,11 @@ const DWORD IrqlMasks[] = {
 // * 0x0033 - InterlockedCompareExchange()
 // ******************************************************************
 // Source:ReactOS
-XBSYSAPI EXPORTNUM(51) xbox::LONG FASTCALL xbox::KRNL(InterlockedCompareExchange)
+XBSYSAPI EXPORTNUM(51) xbox::long_t FASTCALL xbox::KRNL(InterlockedCompareExchange)
 (
 	IN OUT PLONG VOLATILE Destination,
-	IN LONG  Exchange,
-	IN LONG  Comparand
+	IN long_t  Exchange,
+	IN long_t  Comparand
 )
 {
 	LOG_FUNC_BEGIN
@@ -230,7 +230,7 @@ XBSYSAPI EXPORTNUM(51) xbox::LONG FASTCALL xbox::KRNL(InterlockedCompareExchange
 		LOG_FUNC_ARG(Comparand)
 		LOG_FUNC_END;
 
-	LONG res = InterlockedCompareExchange((NtDll::PLONG)Destination, (NtDll::LONG)Exchange, (NtDll::LONG)Comparand);
+	long_t res = InterlockedCompareExchange((NtDll::PLONG)Destination, (NtDll::LONG)Exchange, (NtDll::LONG)Comparand);
 
 	RETURN(res);
 }
@@ -239,14 +239,14 @@ XBSYSAPI EXPORTNUM(51) xbox::LONG FASTCALL xbox::KRNL(InterlockedCompareExchange
 // * 0x0034 - InterlockedDecrement()
 // ******************************************************************
 // Source:ReactOS
-XBSYSAPI EXPORTNUM(52) xbox::LONG FASTCALL xbox::KRNL(InterlockedDecrement)
+XBSYSAPI EXPORTNUM(52) xbox::long_t FASTCALL xbox::KRNL(InterlockedDecrement)
 (
 	IN OUT PLONG Addend
 )
 {
 	LOG_FUNC_ONE_ARG(Addend);
 
-	LONG res = InterlockedDecrement((NtDll::PLONG)Addend);
+	long_t res = InterlockedDecrement((NtDll::PLONG)Addend);
 
 	RETURN(res);
 }
@@ -255,14 +255,14 @@ XBSYSAPI EXPORTNUM(52) xbox::LONG FASTCALL xbox::KRNL(InterlockedDecrement)
 // * 0x0035 - InterlockedIncrement()
 // ******************************************************************
 // Source:ReactOS
-XBSYSAPI EXPORTNUM(53) xbox::LONG FASTCALL xbox::KRNL(InterlockedIncrement)
+XBSYSAPI EXPORTNUM(53) xbox::long_t FASTCALL xbox::KRNL(InterlockedIncrement)
 (
 	IN OUT PLONG Addend
 )
 {
 	LOG_FUNC_ONE_ARG(Addend);
 
-	LONG res = InterlockedIncrement((NtDll::PLONG)Addend);
+	long_t res = InterlockedIncrement((NtDll::PLONG)Addend);
 
 	RETURN(res);
 }
@@ -271,10 +271,10 @@ XBSYSAPI EXPORTNUM(53) xbox::LONG FASTCALL xbox::KRNL(InterlockedIncrement)
 // * 0x0036 - InterlockedExchange()
 // ******************************************************************
 // Source:ReactOS
-XBSYSAPI EXPORTNUM(54) xbox::LONG FASTCALL xbox::KRNL(InterlockedExchange)
+XBSYSAPI EXPORTNUM(54) xbox::long_t FASTCALL xbox::KRNL(InterlockedExchange)
 (
 	IN PLONG VOLATILE Destination,
-	IN LONG Value
+	IN long_t Value
 )
 {
 	LOG_FUNC_BEGIN
@@ -282,7 +282,7 @@ XBSYSAPI EXPORTNUM(54) xbox::LONG FASTCALL xbox::KRNL(InterlockedExchange)
 		LOG_FUNC_ARG(Value)
 		LOG_FUNC_END;
 
-	LONG res = InterlockedExchange((NtDll::PLONG)Destination, (NtDll::LONG)Value);
+	long_t res = InterlockedExchange((NtDll::PLONG)Destination, (NtDll::LONG)Value);
 
 	RETURN(res);
 }
@@ -291,10 +291,10 @@ XBSYSAPI EXPORTNUM(54) xbox::LONG FASTCALL xbox::KRNL(InterlockedExchange)
 // * 0x0037 - InterlockedExchangeAdd()
 // ******************************************************************
 // Source:ReactOS
-XBSYSAPI EXPORTNUM(55) xbox::LONG FASTCALL xbox::KRNL(InterlockedExchangeAdd)
+XBSYSAPI EXPORTNUM(55) xbox::long_t FASTCALL xbox::KRNL(InterlockedExchangeAdd)
 (
 	IN PLONG VOLATILE Addend,
-	IN LONG	Value
+	IN long_t	Value
 )
 {
 	LOG_FUNC_BEGIN
@@ -302,7 +302,7 @@ XBSYSAPI EXPORTNUM(55) xbox::LONG FASTCALL xbox::KRNL(InterlockedExchangeAdd)
 		LOG_FUNC_ARG(Value)
 		LOG_FUNC_END;
 
-	LONG res = InterlockedExchangeAdd((NtDll::PLONG)Addend, (NtDll::LONG)Value);
+	long_t res = InterlockedExchangeAdd((NtDll::PLONG)Addend, (NtDll::LONG)Value);
 
 	RETURN(res);
 }

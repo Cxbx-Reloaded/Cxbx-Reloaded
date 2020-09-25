@@ -74,7 +74,7 @@ typedef struct _POOL_BLOCK {
 } POOL_BLOCK, *PPOOL_BLOCK;
 
 
-#define POOL_OVERHEAD (static_cast<LONG>(sizeof(POOL_HEADER)))
+#define POOL_OVERHEAD (static_cast<xbox::long_t>(sizeof(POOL_HEADER)))
 #define POOL_SMALLEST_BLOCK (sizeof(POOL_BLOCK))
 #define POOL_BUDDY_MAX (PAGE_SIZE - (POOL_OVERHEAD + POOL_SMALLEST_BLOCK ))
 #define MARK_POOL_HEADER_ALLOCATED(POOLHEADER)      {(POOLHEADER)->PoolIndex = 0x80;}

@@ -38,7 +38,7 @@
 #define LOG_PREFIX CXBXR_MODULE::NV2A
 
 
-#include <xboxkrnl\xboxkrnl.h> // For PKINTERRUPT, etc.
+#include <core/kernel/exports/xboxkrnl.h> // For PKINTERRUPT, etc.
 
 #ifdef _MSC_VER                         // Check if MS Visual C compiler
 #  pragma comment(lib, "opengl32.lib")  // Compiler-specific directive to avoid manually configuration

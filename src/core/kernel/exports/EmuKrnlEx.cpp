@@ -600,7 +600,7 @@ XBSYSAPI EXPORTNUM(28) xbox::void_t NTAPI xbox::ExReleaseReadWriteLock
 			ReadWriteLock->ReadersEntryCount = ReadWriteLock->ReadersWaitingCount;
 			ReadWriteLock->ReadersWaitingCount = 0;
 			RestoreInterruptMode(interrupt_mode);
-			KeReleaseSemaphore(&ReadWriteLock->ReaderSemaphore, 1, (LONG)orig_readers_waiting, 0);
+			KeReleaseSemaphore(&ReadWriteLock->ReaderSemaphore, 1, (long_t)orig_readers_waiting, 0);
 			return;
 		}
 	}

@@ -945,7 +945,7 @@ XBSYSAPI EXPORTNUM(205) xbox::NTSTATUS NTAPI xbox::NtPulseEvent
 	// TODO : Untested
 	NTSTATUS ret = NtDll::NtPulseEvent(
 		EventHandle, 
-		/*OUT*/PreviousState);
+		/*OUT*/(::PLONG)(PreviousState));
 
 	if (FAILED(ret))
 		EmuLog(LOG_LEVEL::WARNING, "NtPulseEvent failed!");
@@ -1712,7 +1712,7 @@ XBSYSAPI EXPORTNUM(221) xbox::NTSTATUS NTAPI xbox::NtReleaseMutant
 		LOG_FUNC_END;
 
 	// redirect to NtCreateMutant
-	NTSTATUS ret = NtDll::NtReleaseMutant(MutantHandle, PreviousCount);
+	NTSTATUS ret = NtDll::NtReleaseMutant(MutantHandle, (::PLONG)(PreviousCount));
 
 	if (FAILED(ret))
 		EmuLog(LOG_LEVEL::WARNING, "NtReleaseMutant Failed!");
@@ -1813,7 +1813,7 @@ XBSYSAPI EXPORTNUM(225) xbox::NTSTATUS NTAPI xbox::NtSetEvent
 
 	NTSTATUS ret = NtDll::NtSetEvent(
 		EventHandle, 
-		PreviousState);
+		(::PLONG)(PreviousState));
 
 	if (FAILED(ret))
 		EmuLog(LOG_LEVEL::WARNING, "NtSetEvent Failed!");
@@ -1938,7 +1938,7 @@ XBSYSAPI EXPORTNUM(229) xbox::NTSTATUS NTAPI xbox::NtSetTimerEx
 	IN KPROCESSOR_MODE ApcMode,
 	IN PVOID TimerContext OPTIONAL,
 	IN boolean_t WakeTimer,
-	IN LONG Period OPTIONAL,
+	IN long_t Period OPTIONAL,
 	OUT PBOOLEAN PreviousState OPTIONAL
 )
 {

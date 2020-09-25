@@ -213,7 +213,7 @@ typedef union _LARGE_INTEGER
     struct
     {
         DWORD   LowPart;
-        LONG    HighPart;
+        long_t    HighPart;
     }
     u;
 
@@ -542,8 +542,8 @@ OBJECT_TYPE, *POBJECT_TYPE;
 // * OBJECT_HEADER
 // ******************************************************************
 typedef struct _OBJECT_HEADER {
-	LONG PointerCount;
-	LONG HandleCount;
+	long_t PointerCount;
+	long_t HandleCount;
 	POBJECT_TYPE Type;
 	ULONG Flags;
 	QUAD Body;
@@ -901,8 +901,8 @@ typedef struct _FILE_REPARSE_POINT_INFORMATION {
 typedef struct _KSYSTEM_TIME
 {
 	/* 0x00 */ ULONG LowPart;
-	/* 0x04 */ LONG High1Time;
-	/* 0x08 */ LONG High2Time;
+	/* 0x04 */ long_t High1Time;
+	/* 0x08 */ long_t High2Time;
 } // Size = 0x0C
 KSYSTEM_TIME, *PKSYSTEM_TIME;
 
@@ -955,7 +955,7 @@ typedef void_t(NTAPI *PTIMER_APC_ROUTINE)
 (
 	IN PVOID	TimerContext,
 	IN ULONG	TimerLowValue,
-	IN LONG		TimerHighValue
+	IN long_t		TimerHighValue
 );
 
 // ******************************************************************
@@ -1105,7 +1105,7 @@ typedef struct _PCI_COMMON_CONFIG
 }
 PCI_COMMON_CONFIG, *PPCI_COMMON_CONFIG;
 
-#define FIELD_OFFSET(type, field)    ((LONG)(LONG_PTR)&(((type *)0)->field))
+#define FIELD_OFFSET(type, field)    ((xbox::long_t)(LONG_PTR)&(((type *)0)->field))
 
 #define PCI_COMMON_HDR_LENGTH (FIELD_OFFSET (PCI_COMMON_CONFIG, DeviceSpecific))
 
@@ -1187,12 +1187,12 @@ typedef struct _DISPATCHER_HEADER
     uchar_t       Absolute;       // 0x01
     uchar_t       Size;           // 0x02
     uchar_t       Inserted;       // 0x03
-    LONG        SignalState;    // 0x04
+    long_t        SignalState;    // 0x04
     LIST_ENTRY  WaitListHead;   // 0x08
 }
 DISPATCHER_HEADER;
 
-typedef LONG KPRIORITY;
+typedef long_t KPRIORITY;
 
 // ******************************************************************
 // * KEVENT
@@ -1210,7 +1210,7 @@ KEVENT, *PKEVENT, *PRKEVENT; // even with undefined RESTRICTED_POINTER, this doe
 typedef struct _EVENT_BASIC_INFORMATION
 {
 	EVENT_TYPE EventType;
-	LONG EventState;
+	long_t EventState;
 }
 EVENT_BASIC_INFORMATION, *PEVENT_BASIC_INFORMATION;
 
@@ -1220,7 +1220,7 @@ EVENT_BASIC_INFORMATION, *PEVENT_BASIC_INFORMATION;
 typedef struct _KSEMAPHORE
 {
 	DISPATCHER_HEADER Header; // 0x00
-	LONG Limit;               // 0x10
+	long_t Limit;               // 0x10
 }                             // 0x14
 KSEMAPHORE, *PKSEMAPHORE, *RESTRICTED_POINTER PRKSEMAPHORE;
 
@@ -1229,8 +1229,8 @@ KSEMAPHORE, *PKSEMAPHORE, *RESTRICTED_POINTER PRKSEMAPHORE;
 // ******************************************************************
 typedef struct _SEMAPHORE_BASIC_INFORMATION
 {
-	LONG CurrentCount;
-	LONG MaximumCount;
+	long_t CurrentCount;
+	long_t MaximumCount;
 }
 SEMAPHORE_BASIC_INFORMATION, *PSEMAPHORE_BASIC_INFORMATION;
 
@@ -1239,7 +1239,7 @@ SEMAPHORE_BASIC_INFORMATION, *PSEMAPHORE_BASIC_INFORMATION;
 // ******************************************************************
 typedef struct _MUTANT_BASIC_INFORMATION
 {
-	LONG CurrentCount;
+	long_t CurrentCount;
 	boolean_t OwnedByCaller;
 	boolean_t AbandonedState;
 }
@@ -1250,7 +1250,7 @@ MUTANT_BASIC_INFORMATION, *PMUTANT_BASIC_INFORMATION;
 // ******************************************************************
 typedef struct _ERWLOCK
 {
-	LONG LockCount;             // 0x00
+	long_t LockCount;             // 0x00
 	ULONG WritersWaitingCount;  // 0x04
 	ULONG ReadersWaitingCount;  // 0x08
 	ULONG ReadersEntryCount;    // 0x0C
@@ -1314,7 +1314,7 @@ typedef struct _DEVICE_OBJECT
 {
 	cshort_t Type;
 	ushort_t Size;
-	LONG ReferenceCount;
+	long_t ReferenceCount;
 	struct _DRIVER_OBJECT *DriverObject;
 	struct _DEVICE_OBJECT *MountedOrSelfDevice;
 	PIRP CurrentIrp;
@@ -1369,7 +1369,7 @@ typedef struct _FILE_OBJECT {
 	LARGE_INTEGER             CurrentByteOffset;  // 0x14
 	struct _FILE_OBJECT *     RelatedFileObject;  // 0x1C
 	PIO_COMPLETION_CONTEXT    CompletionContext;  // 0x20
-	LONG                      LockCount;          // 0x24
+	long_t                      LockCount;          // 0x24
 	KEVENT                    Lock;               // 0x28
 	KEVENT                    Event;              // 0x38
 } FILE_OBJECT, *PFILE_OBJECT;
@@ -1406,7 +1406,7 @@ typedef struct _KTIMER
     ULARGE_INTEGER      DueTime;          // 0x10
     LIST_ENTRY          TimerListEntry;   // 0x18
     struct _KDPC       *Dpc;              // 0x20
-    LONG                Period;           // 0x24
+    long_t                Period;           // 0x24
 }
 KTIMER, *PKTIMER;
 
@@ -1636,8 +1636,8 @@ PS_STATISTICS, *PPS_STATISTICS;
 typedef struct _RTL_CRITICAL_SECTION
 {
 	DISPATCHER_HEADER   Event;                                          // 0x00
-    LONG                LockCount;                                      // 0x10
-    LONG                RecursionCount;                                 // 0x14
+    long_t                LockCount;                                      // 0x10
+    long_t                RecursionCount;                                 // 0x14
     HANDLE              OwningThread;                                   // 0x18
 }
 RTL_CRITICAL_SECTION, *PRTL_CRITICAL_SECTION;
@@ -2080,15 +2080,15 @@ XBOX_TIMEZONE_DATE;
 typedef struct _XBOX_USER_SETTINGS
 {
 	ULONG Checksum;
-	LONG TimeZoneBias;
+	long_t TimeZoneBias;
 	char_t TimeZoneStdName[TIME_ZONE_NAME_LENGTH];
 	char_t TimeZoneDltName[TIME_ZONE_NAME_LENGTH];
 	ULONG Reserved1[2];
 	XBOX_TIMEZONE_DATE TimeZoneStdDate;
 	XBOX_TIMEZONE_DATE TimeZoneDltDate;
 	ULONG Reserved2[2];
-	LONG TimeZoneStdBias;
-	LONG TimeZoneDltBias;
+	long_t TimeZoneStdBias;
+	long_t TimeZoneDltBias;
 	ULONG Language;
 	ULONG VideoFlags;
 	ULONG AudioFlags;
@@ -2186,7 +2186,7 @@ typedef struct _OWNER_ENTRY
 	ULONG OwnerThread;
 	union
 	{
-		LONG OwnerCount;
+		long_t OwnerCount;
 		ULONG TableSize;
 	};
 }
@@ -2261,12 +2261,12 @@ typedef struct _OBJECT_TYPE_INITIALIZER
 	ULONG DefaultPagedPoolCharge;
 	ULONG DefaultNonPagedPoolCharge;
 	PVOID DumpProcedure;
-	LONG * OpenProcedure;
+	long_t * OpenProcedure;
 	PVOID CloseProcedure;
 	PVOID DeleteProcedure;
-	LONG * ParseProcedure;
-	LONG * SecurityProcedure;
-	LONG * QueryNameProcedure;
+	long_t * ParseProcedure;
+	long_t * SecurityProcedure;
+	long_t * QueryNameProcedure;
 	uchar_t * OkayToCloseProcedure;
 }
 OBJECT_TYPE_INITIALIZER, *POBJECT_TYPE_INITIALIZER;
@@ -2549,7 +2549,7 @@ typedef struct _CONTEXT
 
 // This is modeled around the Windows definition
 typedef struct _IO_COMPLETION_BASIC_INFORMATION {
-	LONG Depth;
+	long_t Depth;
 } IO_COMPLETION_BASIC_INFORMATION, *PIO_COMPLETION_BASIC_INFORMATION;
 
 typedef void_t(*PIDE_INTERRUPT_ROUTINE) (void);

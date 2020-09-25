@@ -43,7 +43,7 @@ namespace NtDll
 #define FSCACHE_MAXIMUM_NUMBER_OF_CACHE_PAGES 2048
 
 // global variables
-xbox::LONG g_FscNumberOfCachePages = 16; // 16 = default number of file system cache pages
+xbox::long_t g_FscNumberOfCachePages = 16; // 16 = default number of file system cache pages
 
 // ******************************************************************
 // * 0x0023 - FscGetCacheSize()

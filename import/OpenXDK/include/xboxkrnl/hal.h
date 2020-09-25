@@ -91,7 +91,7 @@ typedef void_t (*PHAL_SHUTDOWN_NOTIFICATION)(
 
 typedef struct _HAL_SHUTDOWN_REGISTRATION {
     PHAL_SHUTDOWN_NOTIFICATION NotificationRoutine;
-    LONG Priority;
+    long_t Priority;
     LIST_ENTRY ListEntry;
 } HAL_SHUTDOWN_REGISTRATION, *PHAL_SHUTDOWN_REGISTRATION;
 

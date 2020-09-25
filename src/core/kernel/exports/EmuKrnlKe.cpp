@@ -748,7 +748,7 @@ XBSYSAPI EXPORTNUM(108) xbox::void_t NTAPI xbox::KeInitializeEvent
 
 	// Setup the Xbox event struct
 	Event->Header.Type = Type;
-	Event->Header.Size = sizeof(KEVENT) / sizeof(LONG);
+	Event->Header.Size = sizeof(KEVENT) / sizeof(long_t);
 	Event->Header.SignalState = SignalState;
 	InitializeListHead(&(Event->Header.WaitListHead)); 
 }
@@ -808,7 +808,7 @@ XBSYSAPI EXPORTNUM(110) xbox::void_t NTAPI xbox::KeInitializeMutant
 
 	// Initialize header :
 	Mutant->Header.Type = MutantObject;
-	Mutant->Header.Size = sizeof(KMUTANT) / sizeof(LONG);
+	Mutant->Header.Size = sizeof(KMUTANT) / sizeof(long_t);
 	InitializeListHead(&Mutant->Header.WaitListHead);
 	// Initialize specific fields :
 	Mutant->Abandoned = FALSE;
@@ -847,7 +847,7 @@ XBSYSAPI EXPORTNUM(111) xbox::void_t NTAPI xbox::KeInitializeQueue
 
 	// Initialize header :
 	Queue->Header.Type = QueueObject;
-	Queue->Header.Size = sizeof(KQUEUE) / sizeof(LONG);
+	Queue->Header.Size = sizeof(KQUEUE) / sizeof(long_t);
 	Queue->Header.SignalState = 0;
 	InitializeListHead(&Queue->Header.WaitListHead);
 	// Initialize specific fields :
@@ -863,8 +863,8 @@ XBSYSAPI EXPORTNUM(111) xbox::void_t NTAPI xbox::KeInitializeQueue
 XBSYSAPI EXPORTNUM(112) xbox::void_t NTAPI xbox::KeInitializeSemaphore
 (
 	IN PRKSEMAPHORE Semaphore,
-	IN LONG Count,
-	IN LONG Limit
+	IN long_t Count,
+	IN long_t Limit
 )
 {
 	LOG_FUNC_BEGIN
@@ -875,7 +875,7 @@ XBSYSAPI EXPORTNUM(112) xbox::void_t NTAPI xbox::KeInitializeSemaphore
 
 	// Initialize header :
 	Semaphore->Header.Type = SemaphoreObject;
-	Semaphore->Header.Size = sizeof(KSEMAPHORE) / sizeof(LONG);
+	Semaphore->Header.Size = sizeof(KSEMAPHORE) / sizeof(long_t);
 	Semaphore->Header.SignalState = Count;
 	InitializeListHead(&Semaphore->Header.WaitListHead);
 	// Initialize specific fields :
@@ -989,7 +989,7 @@ XBSYSAPI EXPORTNUM(115) xbox::boolean_t NTAPI xbox::KeInsertDeviceQueue
 	RETURN(Res);
 }
 
-XBSYSAPI EXPORTNUM(116) xbox::LONG NTAPI xbox::KeInsertHeadQueue
+XBSYSAPI EXPORTNUM(116) xbox::long_t NTAPI xbox::KeInsertHeadQueue
 (
 	IN PRKQUEUE Queue,
 	IN PLIST_ENTRY Entry
@@ -1005,7 +1005,7 @@ XBSYSAPI EXPORTNUM(116) xbox::LONG NTAPI xbox::KeInsertHeadQueue
 	RETURN(0);
 }
 
-XBSYSAPI EXPORTNUM(117) xbox::LONG NTAPI xbox::KeInsertQueue
+XBSYSAPI EXPORTNUM(117) xbox::long_t NTAPI xbox::KeInsertQueue
 (
 	IN PRKQUEUE Queue,
 	IN PLIST_ENTRY Entry
@@ -1123,7 +1123,7 @@ XBSYSAPI EXPORTNUM(122) xbox::void_t NTAPI xbox::KeLeaveCriticalRegion
     }
 }
 
-XBSYSAPI EXPORTNUM(123) xbox::LONG NTAPI xbox::KePulseEvent
+XBSYSAPI EXPORTNUM(123) xbox::long_t NTAPI xbox::KePulseEvent
 (
 	IN PRKEVENT Event,
 	IN KPRIORITY Increment,
@@ -1148,7 +1148,7 @@ XBSYSAPI EXPORTNUM(123) xbox::LONG NTAPI xbox::KePulseEvent
 		return NtDll::NtPulseEvent((HANDLE)Event, nullptr);
 	}
 
-	LONG OldState = Event->Header.SignalState;
+	long_t OldState = Event->Header.SignalState;
 	if ((OldState == 0) && (IsListEmpty(&Event->Header.WaitListHead) == FALSE)) {
 		Event->Header.SignalState = 1;
 		// TODO: KiWaitTest(Event, Increment);
@@ -1171,7 +1171,7 @@ XBSYSAPI EXPORTNUM(123) xbox::LONG NTAPI xbox::KePulseEvent
 	RETURN(OldState);
 }
 
-XBSYSAPI EXPORTNUM(124) xbox::LONG NTAPI xbox::KeQueryBasePriorityThread
+XBSYSAPI EXPORTNUM(124) xbox::long_t NTAPI xbox::KeQueryBasePriorityThread
 (
 	IN PKTHREAD Thread
 )
@@ -1282,7 +1282,7 @@ XBSYSAPI EXPORTNUM(130) xbox::uchar_t NTAPI xbox::KeRaiseIrqlToSynchLevel()
 	return KfRaiseIrql(SYNC_LEVEL);
 }
 
-XBSYSAPI EXPORTNUM(131) xbox::LONG NTAPI xbox::KeReleaseMutant
+XBSYSAPI EXPORTNUM(131) xbox::long_t NTAPI xbox::KeReleaseMutant
 (
 	IN PRKMUTANT Mutant,
 	IN KPRIORITY Increment,
@@ -1302,11 +1302,11 @@ XBSYSAPI EXPORTNUM(131) xbox::LONG NTAPI xbox::KeReleaseMutant
 	RETURN(0);
 }
 
-XBSYSAPI EXPORTNUM(132) xbox::LONG NTAPI xbox::KeReleaseSemaphore
+XBSYSAPI EXPORTNUM(132) xbox::long_t NTAPI xbox::KeReleaseSemaphore
 (
 	IN PRKSEMAPHORE Semaphore,
 	IN KPRIORITY Increment,
-	IN LONG Adjustment,
+	IN long_t Adjustment,
 	IN boolean_t Wait
 )
 {
@@ -1318,7 +1318,7 @@ XBSYSAPI EXPORTNUM(132) xbox::LONG NTAPI xbox::KeReleaseSemaphore
 		LOG_FUNC_END;
 
 	uchar_t orig_irql = KeRaiseIrqlToDpcLevel();
-	LONG initial_state = Semaphore->Header.SignalState;
+	long_t initial_state = Semaphore->Header.SignalState;
 	LONG adjusted_signalstate = Semaphore->Header.SignalState + Adjustment;
 
 	BOOL limit_reached = adjusted_signalstate > Semaphore->Limit;
@@ -1495,7 +1495,7 @@ XBSYSAPI EXPORTNUM(137) xbox::boolean_t NTAPI xbox::KeRemoveQueueDpc
 // ******************************************************************
 // * 0x008A - KeResetEvent()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(138) xbox::LONG NTAPI xbox::KeResetEvent
+XBSYSAPI EXPORTNUM(138) xbox::long_t NTAPI xbox::KeResetEvent
 (
 	IN PRKEVENT Event
 )
@@ -1514,7 +1514,7 @@ XBSYSAPI EXPORTNUM(138) xbox::LONG NTAPI xbox::KeResetEvent
 		return NtDll::NtResetEvent((HANDLE)Event, nullptr);
 	}
 
-	LONG OldState = Event->Header.SignalState;
+	long_t OldState = Event->Header.SignalState;
 	Event->Header.SignalState = 0;
 
 	KiUnlockDispatcherDatabase(OldIrql);
@@ -1587,10 +1587,10 @@ XBSYSAPI EXPORTNUM(142) xbox::NTSTATUS NTAPI xbox::KeSaveFloatingPointState
 // ******************************************************************
 // * 0x008F - KeSetBasePriorityThread()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(143) xbox::LONG NTAPI xbox::KeSetBasePriorityThread
+XBSYSAPI EXPORTNUM(143) xbox::long_t NTAPI xbox::KeSetBasePriorityThread
 (
 	IN PKTHREAD  Thread,
-	IN LONG  Priority
+	IN long_t  Priority
 )
 {
 	LOG_FUNC_BEGIN
@@ -1598,7 +1598,7 @@ XBSYSAPI EXPORTNUM(143) xbox::LONG NTAPI xbox::KeSetBasePriorityThread
 		LOG_FUNC_ARG_OUT(Priority)
 		LOG_FUNC_END;
 
-	LONG ret = GetThreadPriority((HANDLE)Thread);
+	long_t ret = GetThreadPriority((HANDLE)Thread);
 
 	// This would work normally, but it will slow down the emulation, 
 	// don't do that if the priority is higher then normal (so our own)!
@@ -1634,7 +1634,7 @@ XBSYSAPI EXPORTNUM(144) xbox::ULONG NTAPI xbox::KeSetDisableBoostThread
 // ******************************************************************
 // * 0x0091 - KeSetEvent()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(145) xbox::LONG NTAPI xbox::KeSetEvent
+XBSYSAPI EXPORTNUM(145) xbox::long_t NTAPI xbox::KeSetEvent
 (
 	IN PRKEVENT		Event,
 	IN KPRIORITY	Increment,
@@ -1659,7 +1659,7 @@ XBSYSAPI EXPORTNUM(145) xbox::LONG NTAPI xbox::KeSetEvent
 		return NtDll::NtSetEvent((HANDLE)Event, nullptr);
 	}
 
-	LONG OldState = Event->Header.SignalState;
+	long_t OldState = Event->Header.SignalState;
 	if (IsListEmpty(&Event->Header.WaitListHead) != FALSE) {
 		Event->Header.SignalState = 1;
 	} else {
@@ -1756,7 +1756,7 @@ XBSYSAPI EXPORTNUM(147) xbox::KPRIORITY NTAPI xbox::KeSetPriorityProcess
 XBSYSAPI EXPORTNUM(148) xbox::boolean_t NTAPI xbox::KeSetPriorityThread
 (
     IN PKTHREAD  Thread,
-    IN LONG  Priority
+    IN long_t  Priority
 )
 {
 	LOG_FUNC_BEGIN
@@ -1792,7 +1792,7 @@ XBSYSAPI EXPORTNUM(150) xbox::boolean_t NTAPI xbox::KeSetTimerEx
 (
 	IN PKTIMER        Timer,
 	IN LARGE_INTEGER  DueTime,
-	IN LONG           Period OPTIONAL,
+	IN long_t           Period OPTIONAL,
 	IN PKDPC          Dpc OPTIONAL
 )
 {

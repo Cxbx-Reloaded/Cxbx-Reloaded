@@ -307,7 +307,7 @@ HRESULT WINAPI xbox::EMUPATCH(IXACTEngine_SetMasterVolume)
 (
 	X_XACTEngine*	pThis,
     WORD			wCategory,
-    LONG			lVolume
+    long_t			lVolume
 )
 {
 	LOG_FUNC_BEGIN

@@ -49,7 +49,7 @@ namespace xbox
 	using cchar_t = char;
 	using short_t = std::int16_t;
 	using cshort_t = std::int16_t;
-	typedef long                LONG;
+	using long_t = std::int32_t;
 	using uchar_t = std::uint8_t;
 	using byte_t = std::uint8_t;
 	using boolean_t = std::uint8_t;
@@ -68,7 +68,6 @@ namespace xbox
 	typedef wchar_t             WCHAR;
 	typedef unsigned __int64    QUAD; // 8 byte aligned 8 byte long
 	typedef int                 BOOL;
-	typedef LONG                HRESULT;
 	typedef float               FLOAT;
 	// TODO: Remove __stdcall once lib86cpu is implemented.
 	#define XBOXAPI             __stdcall
@@ -89,7 +88,7 @@ namespace xbox
 	typedef ULONG *PULONG;
 	typedef DWORD *PDWORD, *LPDWORD;
 	typedef ACCESS_MASK *PACCESS_MASK;
-	typedef LONG *PLONG;
+	typedef long_t *PLONG;
 	typedef int *PINT_PTR;
 	typedef void_t *PVOID, *LPVOID;
 	typedef void *HANDLE;

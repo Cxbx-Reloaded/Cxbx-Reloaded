@@ -272,7 +272,7 @@ HRESULT WINAPI xbox::EMUPATCH(XWaveFileCreateMediaObjectEx)
 HRESULT WINAPI xbox::EMUPATCH(XFileMediaObject_Seek)
 (
     X_XFileMediaObject* pThis,
-    LONG                lOffset,
+    long_t                lOffset,
     DWORD               dwOrigin,
     LPDWORD             pdwAbsolute)
 {

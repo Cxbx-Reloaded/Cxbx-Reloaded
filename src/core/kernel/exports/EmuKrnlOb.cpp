@@ -832,7 +832,7 @@ XBSYSAPI EXPORTNUM(246) xbox::NTSTATUS NTAPI xbox::ObReferenceObjectByHandle
 		if ((ObjectType == &PsThreadObjectType) || (ObjectType == NULL)) {
 			Object = PsGetCurrentThread();
 			ObjectHeader = OBJECT_TO_OBJECT_HEADER(Object);
-			InterlockedIncrement(&ObjectHeader->PointerCount);
+			InterlockedIncrement((::PLONG)(&ObjectHeader->PointerCount));
 			*ReturnedObject = Object;
 			return STATUS_SUCCESS;
 		} else {
@@ -912,7 +912,7 @@ XBSYSAPI EXPORTNUM(248) xbox::NTSTATUS NTAPI xbox::ObReferenceObjectByPointer
 	POBJECT_HEADER ObjectHeader = OBJECT_TO_OBJECT_HEADER(Object);
 
 	if (ObjectType == ObjectHeader->Type) {
-		InterlockedIncrement(&ObjectHeader->PointerCount);
+		InterlockedIncrement((::PLONG)(&ObjectHeader->PointerCount));
 		RETURN(STATUS_SUCCESS);
 	} 
 	
@@ -953,7 +953,7 @@ XBSYSAPI EXPORTNUM(250) xbox::void_t FASTCALL xbox::ObfDereferenceObject
 
 	POBJECT_HEADER ObjectHeader = OBJECT_TO_OBJECT_HEADER(Object);
 	
-	if (InterlockedDecrement(&ObjectHeader->PointerCount) == 0) {
+	if (InterlockedDecrement((::PLONG)(&ObjectHeader->PointerCount)) == 0) {
 		if (ObjectHeader->Type->DeleteProcedure != NULL) {
 			ObjectHeader->Type->DeleteProcedure(Object);
 		}
@@ -978,5 +978,5 @@ XBSYSAPI EXPORTNUM(251) xbox::void_t FASTCALL xbox::ObfReferenceObject
 )
 {
 	LOG_FUNC_ONE_ARG_OUT(Object);
-	InterlockedIncrement(&OBJECT_TO_OBJECT_HEADER(Object)->PointerCount);
+	InterlockedIncrement((::PLONG)(&OBJECT_TO_OBJECT_HEADER(Object)->PointerCount));
 }
