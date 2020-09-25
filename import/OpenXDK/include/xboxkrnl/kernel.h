@@ -56,7 +56,7 @@ XBSYSAPI EXPORTNUM(95) void_t NTAPI KeBugCheck
 // ******************************************************************
 XBSYSAPI EXPORTNUM(96) NTSTATUS NTAPI KeBugCheckEx
 (
-	IN DWORD BugCheckCode,
+	IN dword_t BugCheckCode,
 	IN PVOID BugCheckParameter1,
 	IN PVOID BugCheckParameter2,
 	IN PVOID BugCheckParameter3,
@@ -508,7 +508,7 @@ XBSYSAPI EXPORTNUM(155) boolean_t NTAPI KeTestAlertThread
 // ******************************************************************
 // * 0x009C - KeTickCount
 // ******************************************************************
-XBSYSAPI EXPORTNUM(156) volatile DWORD KeTickCount;
+XBSYSAPI EXPORTNUM(156) volatile dword_t KeTickCount;
 
 // ******************************************************************
 // * 0x009D - KeTimeIncrement

@@ -150,7 +150,7 @@ HRESULT WINAPI EMUPATCH(IXACTEngine_RegisterWaveBank)
 (
 	X_XACTEngine*		pThis,
 	LPVOID				pvData,
-	DWORD				dwSize,
+	dword_t				dwSize,
 	X_XACTWaveBank**	ppWaveBank
 );
 
@@ -171,7 +171,7 @@ HRESULT WINAPI EMUPATCH(IXACTEngine_CreateSoundBank)
 (
 	X_XACTEngine*		pThis,
 	LPVOID				pvData,
-	DWORD				dwSize,
+	dword_t				dwSize,
 	X_XACTSoundBank**	ppSoundBank
 );
 
@@ -182,7 +182,7 @@ HRESULT WINAPI EMUPATCH(IXACTEngine_DownloadEffectsImage)
 (
 	X_XACTEngine*		pThis,
 	PVOID				pvData,
-	DWORD				dwSize,
+	dword_t				dwSize,
 	LPVOID				pEffectLoc,
 	LPVOID*				ppImageDesc
 );
@@ -193,7 +193,7 @@ HRESULT WINAPI EMUPATCH(IXACTEngine_DownloadEffectsImage)
 HRESULT WINAPI EMUPATCH(IXACTEngine_CreateSoundSource)
 (
 	X_XACTEngine*		pThis,
-	DWORD				dwFlags,
+	dword_t				dwFlags,
 	X_XACTSoundSource** ppSoundSource
 );
 
@@ -218,7 +218,7 @@ HRESULT WINAPI EMUPATCH(IXACTEngine_SetListenerOrientation)
 	float			xTop,
 	float			yTop,
 	float			zTop,
-	DWORD			dwApply
+	dword_t			dwApply
 );
 
 // ******************************************************************
@@ -230,7 +230,7 @@ HRESULT WINAPI EMUPATCH(IXACTEngine_SetListenerPosition)
 	float			x,
 	float			y, 
 	float			z,
-	DWORD			dwApply
+	dword_t			dwApply
 );
 
 // ******************************************************************
@@ -242,7 +242,7 @@ HRESULT WINAPI EMUPATCH(IXACTEngine_SetListenerVelocity)
 	float			x,
 	float			y, 
 	float			z,
-	DWORD			dwApply
+	dword_t			dwApply
 );
 
 // ******************************************************************
@@ -251,7 +251,7 @@ HRESULT WINAPI EMUPATCH(IXACTEngine_SetListenerVelocity)
 HRESULT WINAPI EMUPATCH(IXACTEngine_SetMasterVolume)
 (
 	X_XACTEngine*	pThis,
-    WORD			wCategory,
+    word_t			wCategory,
     long_t			lVolume
 );
 
@@ -267,7 +267,7 @@ HRESULT WINAPI EMUPATCH(IXACTSoundBank_GetSoundCueIndexFromFriendlyName)
 (
 	X_XACTEngine*		pThis,
 	PCSTR				pFriendlyName,
-	DWORD*				pdwSoundCueIndex
+	dword_t*				pdwSoundCueIndex
 );
 
 // ******************************************************************
@@ -276,9 +276,9 @@ HRESULT WINAPI EMUPATCH(IXACTSoundBank_GetSoundCueIndexFromFriendlyName)
 HRESULT WINAPI EMUPATCH(IXACTSoundBank_Play)
 (
 	X_XACTSoundBank*	pThis,
-	DWORD				dwSoundCueIndex,
+	dword_t				dwSoundCueIndex,
 	X_XACTSoundSource*	pSoundSource,
-	DWORD				dwFlags,
+	dword_t				dwFlags,
 	X_XACTSoundCue**	ppSoundCue
 );
 
@@ -288,8 +288,8 @@ HRESULT WINAPI EMUPATCH(IXACTSoundBank_Play)
 HRESULT WINAPI EMUPATCH(IXACTSoundBank_Stop)
 (
 	X_XACTSoundBank*	pThis,
-	DWORD				dwSoundCueIndex,
-	DWORD				dwFlags,
+	dword_t				dwSoundCueIndex,
+	dword_t				dwFlags,
 	X_XACTSoundCue*		pSoundCue
 );
 
@@ -302,7 +302,7 @@ HRESULT WINAPI EMUPATCH(IXACTSoundSource_SetPosition)
     FLOAT				x,
     FLOAT				y,
     FLOAT				z,
-    DWORD				dwApply
+    dword_t				dwApply
 );
 
 // ******************************************************************
@@ -314,7 +314,7 @@ HRESULT WINAPI EMUPATCH(IXACTSoundSource_SetVelocity)
     FLOAT				x,
     FLOAT				y,
     FLOAT				z,
-    DWORD				dwApply
+    dword_t				dwApply
 );
 
 // ******************************************************************

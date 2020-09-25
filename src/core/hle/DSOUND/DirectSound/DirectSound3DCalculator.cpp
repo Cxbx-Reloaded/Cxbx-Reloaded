@@ -51,8 +51,8 @@
 // ******************************************************************
 xbox::void_t WINAPI xbox::EMUPATCH(CDirectSound3DCalculator_Calculate3D)
 (
-    DWORD a1,
-    DWORD a2
+    dword_t a1,
+    dword_t a2
 )
 {
     DSoundMutexGuardLock;
@@ -70,11 +70,11 @@ xbox::void_t WINAPI xbox::EMUPATCH(CDirectSound3DCalculator_Calculate3D)
 // ******************************************************************
 xbox::void_t WINAPI xbox::EMUPATCH(CDirectSound3DCalculator_GetVoiceData)
 (
-    DWORD a1,
-    DWORD a2,
-    DWORD a3,
-    DWORD a4,
-    DWORD a5
+    dword_t a1,
+    dword_t a2,
+    dword_t a3,
+    dword_t a4,
+    dword_t a5
 )
 {
     DSoundMutexGuardLock;

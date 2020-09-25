@@ -395,8 +395,8 @@ XBSYSAPI EXPORTNUM(23) xbox::ULONG NTAPI xbox::ExQueryPoolBlockSize
 // ******************************************************************
 XBSYSAPI EXPORTNUM(24) xbox::NTSTATUS NTAPI xbox::ExQueryNonVolatileSetting
 (
-	IN  DWORD   ValueIndex,
-	OUT DWORD   *Type,
+	IN  dword_t   ValueIndex,
+	OUT dword_t   *Type,
 	OUT PVOID   Value,
 	IN  SIZE_T  ValueLength,
 	OUT PSIZE_T ResultLength OPTIONAL
@@ -622,8 +622,8 @@ XBSYSAPI EXPORTNUM(28) xbox::void_t NTAPI xbox::ExReleaseReadWriteLock
 // ******************************************************************
 XBSYSAPI EXPORTNUM(29) xbox::NTSTATUS NTAPI xbox::ExSaveNonVolatileSetting
 (
-	IN  DWORD			   ValueIndex,
-	IN  DWORD			   Type,
+	IN  dword_t			   ValueIndex,
+	IN  dword_t			   Type,
 	IN  PVOID			   Value,
 	IN  SIZE_T			   ValueLength
 )

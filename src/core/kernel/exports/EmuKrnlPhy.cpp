@@ -209,7 +209,7 @@ BOOL PhyUpdateLinkState()
 // ******************************************************************
 // * 0x00FC - PhyGetLinkState()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(252) xbox::DWORD NTAPI xbox::PhyGetLinkState
+XBSYSAPI EXPORTNUM(252) xbox::dword_t NTAPI xbox::PhyGetLinkState
 (
 	IN ULONG	Mode
 )

@@ -73,7 +73,7 @@ namespace NtDll
 #define EXCEPTION_COLLIDED_UNWIND 0x40
 #define EXCEPTION_UNWIND (EXCEPTION_UNWINDING | EXCEPTION_EXIT_UNWIND | EXCEPTION_TARGET_UNWIND | EXCEPTION_COLLIDED_UNWIND)
 
-DWORD WINAPI RtlAnsiStringToUnicodeSize(const xbox::STRING *str)
+xbox::dword_t WINAPI RtlAnsiStringToUnicodeSize(const xbox::STRING *str)
 {
 	return (str->Length + sizeof(ANSI_NULL)) * sizeof(WCHAR);
 }
@@ -94,7 +94,7 @@ XBSYSAPI EXPORTNUM(260) xbox::NTSTATUS NTAPI xbox::RtlAnsiStringToUnicodeString
 		LOG_FUNC_ARG(AllocateDestinationString)
 		LOG_FUNC_END;
 
-	DWORD total = RtlAnsiStringToUnicodeSize(SourceString);
+	dword_t total = RtlAnsiStringToUnicodeSize(SourceString);
 
 	if (total > 0xffff) {
 		return STATUS_INVALID_PARAMETER_2;
@@ -965,7 +965,7 @@ XBSYSAPI EXPORTNUM(283) xbox::LARGE_INTEGER NTAPI xbox::RtlExtendedMagicDivide
 XBSYSAPI EXPORTNUM(284) xbox::void_t NTAPI xbox::RtlFillMemory
 (
 	IN void_t UNALIGNED *Destination,
-	IN DWORD Length,
+	IN dword_t Length,
 	IN byte_t  Fill
 )
 {
@@ -1678,10 +1678,10 @@ XBSYSAPI EXPORTNUM(307) xbox::ULONG FASTCALL xbox::RtlUlongByteSwap
 	RETURN(ret);
 }
 
-DWORD WINAPI RtlUnicodeStringToAnsiSize(const xbox::UNICODE_STRING *str)
+xbox::dword_t WINAPI RtlUnicodeStringToAnsiSize(const xbox::UNICODE_STRING *str)
 {
 	const wchar_t *src = (const wchar_t *)(str->Buffer);
-	DWORD ret = wcsrtombs(nullptr, &src, (size_t)str->Length, nullptr);
+	xbox::dword_t ret = wcsrtombs(nullptr, &src, (size_t)str->Length, nullptr);
 	return ret + 1; // +1 for the terminating null character
 }
 
@@ -1702,7 +1702,7 @@ XBSYSAPI EXPORTNUM(308) xbox::NTSTATUS NTAPI xbox::RtlUnicodeStringToAnsiString
 		LOG_FUNC_END;
 
     NTSTATUS ret = STATUS_SUCCESS;
-    DWORD len = RtlUnicodeStringToAnsiSize(SourceString);
+    dword_t len = RtlUnicodeStringToAnsiSize(SourceString);
 
 	DestinationString->Length = (USHORT)(len - 1);
     if (AllocateDestinationString) {

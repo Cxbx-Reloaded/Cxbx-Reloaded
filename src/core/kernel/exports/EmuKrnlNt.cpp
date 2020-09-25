@@ -68,8 +68,8 @@ XBSYSAPI EXPORTNUM(184) xbox::NTSTATUS NTAPI xbox::NtAllocateVirtualMemory
 	IN OUT PVOID    *BaseAddress,
 	IN ULONG         ZeroBits,
 	IN OUT PULONG    AllocationSize,
-	IN DWORD         AllocationType,
-	IN DWORD         Protect
+	IN dword_t         AllocationType,
+	IN dword_t         Protect
 )
 {
 	LOG_FUNC_BEGIN
@@ -671,7 +671,7 @@ XBSYSAPI EXPORTNUM(197) xbox::NTSTATUS NTAPI xbox::NtDuplicateObject
 (
 	HANDLE  SourceHandle,
 	HANDLE *TargetHandle,
-	DWORD   Options
+	dword_t   Options
 )
 {
 	LOG_FUNC_BEGIN

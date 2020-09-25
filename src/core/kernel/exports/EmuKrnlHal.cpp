@@ -80,8 +80,8 @@ static DWORD g_TrayCount = 0;
 // ******************************************************************
 XBSYSAPI EXPORTNUM(9) xbox::NTSTATUS NTAPI xbox::HalReadSMCTrayState
 (
-	DWORD*	State,
-	DWORD*	Count
+	dword_t*	State,
+	dword_t*	Count
 )
 {
 	LOG_FUNC_BEGIN
@@ -815,7 +815,7 @@ XBSYSAPI EXPORTNUM(334) xbox::void_t NTAPI xbox::WRITE_PORT_BUFFER_ULONG
 // * 0x0164 - HalBootSMCVideoMode
 // ******************************************************************
 // TODO: This should be set to whichever AV Pack is read from the SMC at boot time
-XBSYSAPI EXPORTNUM(356) xbox::DWORD xbox::HalBootSMCVideoMode = 1; // TODO : AV_PACK_STANDARD?
+XBSYSAPI EXPORTNUM(356) xbox::dword_t xbox::HalBootSMCVideoMode = 1; // TODO : AV_PACK_STANDARD?
 
 // ******************************************************************
 // * 0x0166 - HalIsResetOrShutdownPending()
@@ -874,7 +874,7 @@ XBSYSAPI EXPORTNUM(365) xbox::void_t NTAPI xbox::HalEnableSecureTrayEject
 // Source:Dxbx
 XBSYSAPI EXPORTNUM(366) xbox::NTSTATUS NTAPI xbox::HalWriteSMCScratchRegister
 (
-	IN DWORD ScratchRegister
+	IN dword_t ScratchRegister
 )
 {
 	LOG_FUNC_ONE_ARG(ScratchRegister);

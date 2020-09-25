@@ -132,7 +132,7 @@ ULONG AvQueryAvCapabilities()
 	ULONG avRegion;
 	NTSTATUS result = xbox::ExQueryNonVolatileSetting(
 		xbox::XC_FACTORY_AV_REGION,
-		&type,
+		(xbox::dword_t *)&type,
 		&avRegion,
 		sizeof(ULONG),
 		&resultSize);
@@ -146,7 +146,7 @@ ULONG AvQueryAvCapabilities()
 	ULONG userSettings;
 	result = xbox::ExQueryNonVolatileSetting(
 		xbox::XC_VIDEO,
-		&type,
+		(xbox::dword_t *) &type,
 		&userSettings,
 		sizeof(ULONG),
 		&resultSize);

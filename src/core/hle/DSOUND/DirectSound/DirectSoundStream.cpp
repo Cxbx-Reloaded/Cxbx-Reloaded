@@ -232,7 +232,7 @@ HRESULT WINAPI xbox::EMUPATCH(DirectSoundCreateStream)
         (*ppStream)->Xb_rtFlushEx = 0LL;
 
         // We have to set DSBufferDesc last due to EmuFlags must be either 0 or previously written value to preserve other flags.
-        GeneratePCMFormat(DSBufferDesc, pdssd->lpwfxFormat, pdssd->dwFlags, (*ppStream)->EmuFlags, 0,
+        GeneratePCMFormat(DSBufferDesc, pdssd->lpwfxFormat, (DWORD &)pdssd->dwFlags, (*ppStream)->EmuFlags, 0,
                           xbox::zeroptr, (*ppStream)->X_BufferCacheSize, (*ppStream)->Xb_VoiceProperties, pdssd->lpMixBinsOutput,
                           &(*ppStream)->Xb_Voice);
 
@@ -307,7 +307,7 @@ HRESULT WINAPI xbox::EMUPATCH(IDirectSound_CreateSoundStream)
 // ******************************************************************
 // * patch: CMcpxStream_Dummy_0x10
 // ******************************************************************
-xbox::void_t WINAPI xbox::EMUPATCH(CMcpxStream_Dummy_0x10)(DWORD dwDummy1, DWORD dwDummy2)
+xbox::void_t WINAPI xbox::EMUPATCH(CMcpxStream_Dummy_0x10)(dword_t dwDummy1, dword_t dwDummy2)
 {
     DSoundMutexGuardLock;
 
@@ -371,7 +371,7 @@ HRESULT WINAPI xbox::EMUPATCH(CDirectSoundStream_FlushEx)
 (
     X_CDirectSoundStream*   pThis,
     REFERENCE_TIME          rtTimeStamp,
-    DWORD                   dwFlags)
+    dword_t                   dwFlags)
 {
     DSoundMutexGuardLock;
 
@@ -458,7 +458,7 @@ HRESULT WINAPI xbox::EMUPATCH(CDirectSoundStream_GetInfo)
 HRESULT WINAPI xbox::EMUPATCH(CDirectSoundStream_GetStatus)
 (
     X_CDirectSoundStream*   pThis,
-    OUT DWORD*              pdwStatus)
+    OUT dword_t*              pdwStatus)
 {
     DSoundMutexGuardLock;
 
@@ -526,7 +526,7 @@ HRESULT WINAPI xbox::EMUPATCH(CDirectSoundStream_GetVoiceProperties)
 HRESULT WINAPI xbox::EMUPATCH(CDirectSoundStream_Pause)
 (
     X_CDirectSoundStream*   pThis,
-    DWORD                   dwPause)
+    dword_t                   dwPause)
 {
     DSoundMutexGuardLock;
 
@@ -571,7 +571,7 @@ HRESULT WINAPI xbox::EMUPATCH(CDirectSoundStream_PauseEx)
 (
     X_CDirectSoundStream   *pThis,
     REFERENCE_TIME          rtTimestamp,
-    DWORD                   dwPause)
+    dword_t                   dwPause)
 {
     DSoundMutexGuardLock;
 
@@ -688,7 +688,7 @@ HRESULT WINAPI xbox::EMUPATCH(CDirectSoundStream_SetAllParameters)
 (
     X_CDirectSoundStream*   pThis,
     X_DS3DBUFFER*           pc3DBufferParameters,
-    DWORD                   dwApply)
+    dword_t                   dwApply)
 {
     DSoundMutexGuardLock;
 
@@ -709,9 +709,9 @@ HRESULT WINAPI xbox::EMUPATCH(CDirectSoundStream_SetAllParameters)
 HRESULT WINAPI xbox::EMUPATCH(CDirectSoundStream_SetConeAngles)
 (
     X_CDirectSoundStream*   pThis,
-    DWORD                   dwInsideConeAngle,
-    DWORD                   dwOutsideConeAngle,
-    DWORD                   dwApply)
+    dword_t                   dwInsideConeAngle,
+    dword_t                   dwOutsideConeAngle,
+    dword_t                   dwApply)
 {
     DSoundMutexGuardLock;
 
@@ -736,7 +736,7 @@ HRESULT WINAPI xbox::EMUPATCH(CDirectSoundStream_SetConeOrientation)
     D3DVALUE                x,
     D3DVALUE                y,
     D3DVALUE                z,
-    DWORD                   dwApply)
+    dword_t                   dwApply)
 {
     DSoundMutexGuardLock;
 
@@ -760,7 +760,7 @@ HRESULT WINAPI xbox::EMUPATCH(CDirectSoundStream_SetConeOutsideVolume)
 (
     X_CDirectSoundStream*   pThis,
     long_t                    lConeOutsideVolume,
-    DWORD                   dwApply)
+    dword_t                   dwApply)
 {
     DSoundMutexGuardLock;
 
@@ -782,7 +782,7 @@ HRESULT WINAPI xbox::EMUPATCH(CDirectSoundStream_SetDistanceFactor)
 (
     X_CDirectSoundStream*   pThis,
     FLOAT                   flDistanceFactor,
-    DWORD                   dwApply)
+    dword_t                   dwApply)
 {
     DSoundMutexGuardLock;
 
@@ -804,7 +804,7 @@ HRESULT WINAPI xbox::EMUPATCH(CDirectSoundStream_SetDopplerFactor)
 (
     X_CDirectSoundStream*   pThis,
     FLOAT                   flDopplerFactor,
-    DWORD                   dwApply)
+    dword_t                   dwApply)
 {
     DSoundMutexGuardLock;
 
@@ -927,7 +927,7 @@ HRESULT WINAPI xbox::EMUPATCH(CDirectSoundStream_SetFormat)
 HRESULT WINAPI xbox::EMUPATCH(CDirectSoundStream_SetFrequency)
 (
     X_CDirectSoundStream*   pThis,
-    DWORD                   dwFrequency)
+    dword_t                   dwFrequency)
 {
     DSoundMutexGuardLock;
 
@@ -947,7 +947,7 @@ HRESULT WINAPI xbox::EMUPATCH(CDirectSoundStream_SetFrequency)
 HRESULT WINAPI xbox::EMUPATCH(IDirectSoundStream_SetFrequency)
 (
     X_CDirectSoundStream*   pThis,
-    DWORD                   dwFrequency)
+    dword_t                   dwFrequency)
 {
     DSoundMutexGuardLock;
 
@@ -962,7 +962,7 @@ HRESULT WINAPI xbox::EMUPATCH(IDirectSoundStream_SetFrequency)
 HRESULT WINAPI xbox::EMUPATCH(CDirectSoundStream_SetHeadroom)
 (
     X_CDirectSoundStream*   pThis,
-    DWORD                   dwHeadroom)
+    dword_t                   dwHeadroom)
 {
     DSoundMutexGuardLock;
 
@@ -983,7 +983,7 @@ HRESULT WINAPI xbox::EMUPATCH(CDirectSoundStream_SetHeadroom)
 HRESULT WINAPI xbox::EMUPATCH(IDirectSoundStream_SetHeadroom)
 (
     X_CDirectSoundStream*   pThis,
-    DWORD                   dwHeadroom)
+    dword_t                   dwHeadroom)
 {
     DSoundMutexGuardLock;
 
@@ -999,7 +999,7 @@ HRESULT WINAPI xbox::EMUPATCH(CDirectSoundStream_SetI3DL2Source)
 (
     X_CDirectSoundStream*   pThis,
     X_DSI3DL2BUFFER*        pds3db,
-    DWORD                   dwApply)
+    dword_t                   dwApply)
 {
     DSoundMutexGuardLock;
 
@@ -1062,7 +1062,7 @@ HRESULT WINAPI xbox::EMUPATCH(CDirectSoundStream_SetMaxDistance)
 (
     X_CDirectSoundStream*   pThis,
     D3DVALUE                flMaxDistance,
-    DWORD                   dwApply)
+    dword_t                   dwApply)
 {
     DSoundMutexGuardLock;
 
@@ -1084,7 +1084,7 @@ HRESULT WINAPI xbox::EMUPATCH(CDirectSoundStream_SetMinDistance)
 (
     X_CDirectSoundStream*   pThis,
     D3DVALUE                fMinDistance,
-    DWORD                   dwApply)
+    dword_t                   dwApply)
 {
     DSoundMutexGuardLock;
 
@@ -1105,7 +1105,7 @@ HRESULT WINAPI xbox::EMUPATCH(CDirectSoundStream_SetMinDistance)
 HRESULT WINAPI xbox::EMUPATCH(CDirectSoundStream_SetMixBins)
 (
     X_CDirectSoundStream*   pThis,
-    DWORD                   dwMixBinMask) // Also can be X_LPDSMIXBINS (4039+)
+    dword_t                   dwMixBinMask) // Also can be X_LPDSMIXBINS (4039+)
 {
     DSoundMutexGuardLock;
     HRESULT hRet = DS_OK;
@@ -1138,7 +1138,7 @@ HRESULT WINAPI xbox::EMUPATCH(CDirectSoundStream_SetMixBins)
 HRESULT WINAPI xbox::EMUPATCH(IDirectSoundStream_SetMixBins)
 (
     X_CDirectSoundStream*   pThis,
-    DWORD                   dwMixBinMask) // Also can be X_LPDSMIXBINS (4039+)
+    dword_t                   dwMixBinMask) // Also can be X_LPDSMIXBINS (4039+)
 {
     DSoundMutexGuardLock;
 
@@ -1153,8 +1153,8 @@ HRESULT WINAPI xbox::EMUPATCH(IDirectSoundStream_SetMixBins)
 HRESULT WINAPI xbox::EMUPATCH(CDirectSoundStream_SetMode)
 (
     X_CDirectSoundStream*   pThis,
-    DWORD                   dwMode,
-    DWORD                   dwApply)
+    dword_t                   dwMode,
+    dword_t                   dwApply)
 {
     DSoundMutexGuardLock;
 
@@ -1176,7 +1176,7 @@ HRESULT WINAPI xbox::EMUPATCH(CDirectSoundStream_SetMode)
 HRESULT WINAPI xbox::EMUPATCH(CDirectSoundStream_SetMixBinVolumes_12)
 (
     X_CDirectSoundStream*   pThis,
-    DWORD                   dwMixBinMask,
+    dword_t                   dwMixBinMask,
     const long_t*             alVolumes)
 {
     DSoundMutexGuardLock;
@@ -1285,7 +1285,7 @@ HRESULT WINAPI xbox::EMUPATCH(CDirectSoundStream_SetPosition)
     D3DVALUE                x,
     D3DVALUE                y,
     D3DVALUE                z,
-    DWORD                   dwApply)
+    dword_t                   dwApply)
 {
     DSoundMutexGuardLock;
 
@@ -1309,8 +1309,8 @@ HRESULT WINAPI xbox::EMUPATCH(CDirectSoundStream_SetRolloffCurve)
 (
     X_CDirectSoundStream*   pThis,
     const FLOAT*            pflPoints,
-    DWORD                   dwPointCount,
-    DWORD                   dwApply)
+    dword_t                   dwPointCount,
+    dword_t                   dwApply)
 {
     DSoundMutexGuardLock;
 
@@ -1333,7 +1333,7 @@ HRESULT WINAPI xbox::EMUPATCH(CDirectSoundStream_SetRolloffFactor)
 (
     X_CDirectSoundStream*   pThis,
     FLOAT                   fRolloffFactor,
-    DWORD                   dwApply)
+    dword_t                   dwApply)
 {
     DSoundMutexGuardLock;
 
@@ -1359,7 +1359,7 @@ HRESULT WINAPI xbox::EMUPATCH(CDirectSoundStream_SetVelocity)
     D3DVALUE                x,
     D3DVALUE                y,
     D3DVALUE                z,
-    DWORD                   dwApply)
+    dword_t                   dwApply)
 {
     DSoundMutexGuardLock;
 
@@ -1419,7 +1419,7 @@ HRESULT WINAPI xbox::EMUPATCH(IDirectSoundStream_SetVolume)
 HRESULT WINAPI xbox::EMUPATCH(IDirectSoundStream_Set3DVoiceData)
 (
     X_CDirectSoundStream*   pThis,
-    DWORD a2
+    dword_t a2
 )
 {
     DSoundMutexGuardLock;
@@ -1440,7 +1440,7 @@ HRESULT WINAPI xbox::EMUPATCH(IDirectSoundStream_Set3DVoiceData)
 HRESULT WINAPI xbox::EMUPATCH(IDirectSoundStream_Use3DVoiceData)
 (
     X_CDirectSoundStream*   pThis,
-    DWORD a2
+    dword_t a2
 )
 {
     DSoundMutexGuardLock;

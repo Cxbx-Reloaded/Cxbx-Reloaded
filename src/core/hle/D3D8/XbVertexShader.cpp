@@ -920,7 +920,7 @@ private:
 		case xbox::X_D3DVSDT_NORMPACKED3: // 0x16:
 			HostVertexElementDataType = D3DDECLTYPE_FLOAT3;
 			HostVertexElementByteSize = 3 * sizeof(FLOAT);
-			XboxVertexElementByteSize = 1 * sizeof(xbox::DWORD);
+			XboxVertexElementByteSize = 1 * sizeof(xbox::dword_t);
 			NeedPatching = TRUE;
 			break;
 		case xbox::X_D3DVSDT_SHORT1: // 0x15:

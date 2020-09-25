@@ -20,10 +20,10 @@ namespace xbox
 #define DISK_BUFFER		64
 
 typedef struct {
-	DWORD	SectorList[DISK_BUFFER];		// Ring buffer for buffered disk i/o
-	DWORD	LockList[DISK_BUFFER];			// Lock for each buffered sector
+	xbox::dword_t	SectorList[DISK_BUFFER];		// Ring buffer for buffered disk i/o
+	xbox::dword_t	LockList[DISK_BUFFER];			// Lock for each buffered sector
 	xbox::byte_t	DiskBuffer[SECTOR_SIZE * DISK_BUFFER];	// Storage room for buffered sectors
-	DWORD	WriteIndex;						// Write pointer
+	xbox::dword_t	WriteIndex;						// Write pointer
 
 	// Pointer to arbitrary data passed at init
 	// (usually a file or device handle)
@@ -32,20 +32,20 @@ typedef struct {
 	BOOL	(*Sectors)(						// Routine to get sectors
 				PVOID	Data,				//  Pointer to arbitrary data
 				PVOID	Buffer,				//  Buffer to fill
-				DWORD	StartSector,		//  Start sector
-				DWORD	ReadSize);			//  Number of sectors to read
+				xbox::dword_t	StartSector,		//  Start sector
+				xbox::dword_t	ReadSize);			//  Number of sectors to read
 
 } CDIO_READ, *PCDIO_READ;
 
 // Get a sector from buffer and lock it
 extern PBYTE GetSectorBuffered(
 				PCDIO_READ This,
-				DWORD SectorNumber);
+				xbox::dword_t SectorNumber);
 
 // Release a locked buffer
 extern void ReleaseBufferedSector(
 				PCDIO_READ This,
-				DWORD SectorNumber);
+				xbox::dword_t SectorNumber);
 
 };
 

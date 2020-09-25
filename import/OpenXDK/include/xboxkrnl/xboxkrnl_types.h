@@ -72,39 +72,39 @@ typedef void* LPSECURITY_ATTRIBUTES;
 typedef long                            NTSTATUS;
 
 #define NT_SUCCESS(Status)              ((NTSTATUS) (Status) >= 0)
-#define STATUS_SUCCESS                   ((DWORD   )0x00000000L)
-#define STATUS_ABANDONED                 ((DWORD   )0x00000080L)
-#define STATUS_MUTANT_LIMIT_EXCEEDED     ((DWORD   )0xC0000191L)
+#define STATUS_SUCCESS                   ((xbox::dword_t   )0x00000000L)
+#define STATUS_ABANDONED                 ((xbox::dword_t   )0x00000080L)
+#define STATUS_MUTANT_LIMIT_EXCEEDED     ((xbox::dword_t   )0xC0000191L)
 #ifndef STATUS_PENDING
-#define STATUS_PENDING                   ((DWORD   )0x00000103L)
+#define STATUS_PENDING                   ((xbox::dword_t   )0x00000103L)
 #endif
-#define STATUS_TIMER_RESUME_IGNORED      ((DWORD   )0x40000025L)
-#define STATUS_BUFFER_OVERFLOW           ((DWORD   )0x80000005L)
-#define STATUS_UNSUCCESSFUL              ((DWORD   )0xC0000001)
-#define STATUS_UNRECOGNIZED_MEDIA        ((DWORD   )0xC0000014)
+#define STATUS_TIMER_RESUME_IGNORED      ((xbox::dword_t   )0x40000025L)
+#define STATUS_BUFFER_OVERFLOW           ((xbox::dword_t   )0x80000005L)
+#define STATUS_UNSUCCESSFUL              ((xbox::dword_t   )0xC0000001)
+#define STATUS_UNRECOGNIZED_MEDIA        ((xbox::dword_t   )0xC0000014)
 #ifndef STATUS_NO_MEMORY
-#define STATUS_NO_MEMORY                 ((DWORD   )0xC0000017L)
+#define STATUS_NO_MEMORY                 ((xbox::dword_t   )0xC0000017L)
 #endif
-#define STATUS_BUFFER_TOO_SMALL          ((DWORD   )0xC0000023L)
-#define STATUS_INVALID_PARAMETER_2       ((DWORD   )0xC00000F0L)
-#define STATUS_ALERTED                   ((DWORD   )0x00000101)
-#define STATUS_USER_APC                  ((DWORD   )0x000000C0L)
+#define STATUS_BUFFER_TOO_SMALL          ((xbox::dword_t   )0xC0000023L)
+#define STATUS_INVALID_PARAMETER_2       ((xbox::dword_t   )0xC00000F0L)
+#define STATUS_ALERTED                   ((xbox::dword_t   )0x00000101)
+#define STATUS_USER_APC                  ((xbox::dword_t   )0x000000C0L)
 // The SCSI input buffer was too large (not necessarily an error!)
-#define STATUS_DATA_OVERRUN              ((DWORD   )0xC000003CL)
-#define STATUS_SEMAPHORE_LIMIT_EXCEEDED  ((DWORD   )0xC0000047L)
-#define STATUS_INVALID_IMAGE_FORMAT      ((DWORD   )0xC000007BL)
-#define STATUS_INSUFFICIENT_RESOURCES    ((DWORD   )0xC000009AL)
-#define STATUS_TOO_MANY_SECRETS          ((DWORD   )0xC0000156L)
-#define STATUS_XBE_REGION_MISMATCH       ((DWORD   )0xC0050001L)
-#define STATUS_XBE_MEDIA_MISMATCH        ((DWORD   )0xC0050002L)
-#define STATUS_OBJECT_NAME_NOT_FOUND     ((DWORD   )0xC0000034L)
-#define STATUS_OBJECT_NAME_COLLISION     ((DWORD   )0xC0000035L)
-#define STATUS_INVALID_PAGE_PROTECTION   ((DWORD   )0xC0000045L)
-#define STATUS_CONFLICTING_ADDRESSES     ((DWORD   )0xC0000018L)
-#define STATUS_UNABLE_TO_FREE_VM         ((DWORD   )0xC000001AL)
-#define STATUS_FREE_VM_NOT_AT_BASE       ((DWORD   )0xC000009FL)
-#define STATUS_MEMORY_NOT_ALLOCATED      ((DWORD   )0xC00000A0L)
-#define STATUS_NOT_COMMITTED             ((DWORD   )0xC000002DL)
+#define STATUS_DATA_OVERRUN              ((xbox::dword_t   )0xC000003CL)
+#define STATUS_SEMAPHORE_LIMIT_EXCEEDED  ((xbox::dword_t   )0xC0000047L)
+#define STATUS_INVALID_IMAGE_FORMAT      ((xbox::dword_t   )0xC000007BL)
+#define STATUS_INSUFFICIENT_RESOURCES    ((xbox::dword_t   )0xC000009AL)
+#define STATUS_TOO_MANY_SECRETS          ((xbox::dword_t   )0xC0000156L)
+#define STATUS_XBE_REGION_MISMATCH       ((xbox::dword_t   )0xC0050001L)
+#define STATUS_XBE_MEDIA_MISMATCH        ((xbox::dword_t   )0xC0050002L)
+#define STATUS_OBJECT_NAME_NOT_FOUND     ((xbox::dword_t   )0xC0000034L)
+#define STATUS_OBJECT_NAME_COLLISION     ((xbox::dword_t   )0xC0000035L)
+#define STATUS_INVALID_PAGE_PROTECTION   ((xbox::dword_t   )0xC0000045L)
+#define STATUS_CONFLICTING_ADDRESSES     ((xbox::dword_t   )0xC0000018L)
+#define STATUS_UNABLE_TO_FREE_VM         ((xbox::dword_t   )0xC000001AL)
+#define STATUS_FREE_VM_NOT_AT_BASE       ((xbox::dword_t   )0xC000009FL)
+#define STATUS_MEMORY_NOT_ALLOCATED      ((xbox::dword_t   )0xC00000A0L)
+#define STATUS_NOT_COMMITTED             ((xbox::dword_t   )0xC000002DL)
 
 // ******************************************************************
 // * Registry value types
@@ -212,7 +212,7 @@ typedef union _LARGE_INTEGER
 {
     struct
     {
-        DWORD   LowPart;
+        dword_t   LowPart;
         long_t    HighPart;
     }
     u;
@@ -228,15 +228,15 @@ typedef union _ULARGE_INTEGER
 {
     struct
     {
-        DWORD LowPart;
-        DWORD HighPart;
+        dword_t LowPart;
+        dword_t HighPart;
     }
     u1;
 
     struct
     {
-        DWORD LowPart;
-        DWORD HighPart;
+        dword_t LowPart;
+        dword_t HighPart;
     }
     u;
 
@@ -559,8 +559,8 @@ typedef KSPIN_LOCK *PKSPIN_LOCK;
 // Source : DXBX
 typedef struct _FILETIME
 {
-	DWORD dwLowDateTime;
-	DWORD dwHighDateTime;
+	dword_t dwLowDateTime;
+	dword_t dwHighDateTime;
 }
 FILETIME, *PFILETIME;
 
@@ -570,8 +570,8 @@ FILETIME, *PFILETIME;
 // Source : DXBX (Xbox Refurb Info)
 typedef struct _XBOX_REFURB_INFO
 {
-	DWORD Signature;
-	DWORD PowerCycleCount;
+	dword_t Signature;
+	dword_t PowerCycleCount;
 	FILETIME FirstBootTime;
 }
 XBOX_REFURB_INFO, *PXBOX_REFURB_INFO;
@@ -589,11 +589,11 @@ XBOX_REFURB_INFO, *PXBOX_REFURB_INFO;
 // Source : DXBX
 typedef struct _EXCEPTION_RECORD
 {
-	DWORD ExceptionCode;
-	DWORD ExceptionFlags;
+	dword_t ExceptionCode;
+	dword_t ExceptionFlags;
 	_EXCEPTION_RECORD *ExceptionRecord;
 	void_t *ExceptionAddress;
-	DWORD NumberParameters;
+	dword_t NumberParameters;
 	ULONG_PTR ExceptionInformation[EXCEPTION_MAXIMUM_PARAMETERS];
 }
 EXCEPTION_RECORD, *PEXCEPTION_RECORD;
@@ -975,11 +975,11 @@ typedef struct _MEMORY_BASIC_INFORMATION
 {
     PVOID   BaseAddress;
     PVOID   AllocationBase;
-    DWORD   AllocationProtect;
+    dword_t   AllocationProtect;
     SIZE_T  RegionSize;
-    DWORD   State;
-    DWORD   Protect;
-    DWORD   Type;
+    dword_t   State;
+    dword_t   Protect;
+    dword_t   Type;
 }
 MEMORY_BASIC_INFORMATION, *PMEMORY_BASIC_INFORMATION;
 
@@ -1142,10 +1142,10 @@ RETURN_FIRMWARE, *LPRETURN_FIRMWARE;
 // ******************************************************************
 typedef struct _LAUNCH_DATA_HEADER
 {
-    DWORD   dwLaunchDataType;
-    DWORD   dwTitleId;
+    dword_t   dwLaunchDataType;
+    dword_t   dwTitleId;
     char    szLaunchPath[520];
-    DWORD   dwFlags;
+    dword_t   dwFlags;
 }
 LAUNCH_DATA_HEADER, *PLAUNCH_DATA_HEADER;
 
@@ -1165,10 +1165,10 @@ LAUNCH_DATA_PAGE, *PLAUNCH_DATA_PAGE;
 // ******************************************************************
 typedef struct _DASH_LAUNCH_DATA
 {
-	DWORD dwReason;
-	DWORD dwContext;
-	DWORD dwParameter1;
-	DWORD dwParameter2;
+	dword_t dwReason;
+	dword_t dwContext;
+	dword_t dwParameter1;
+	dword_t dwParameter2;
 	byte_t  Reserved[3072 - 16];
 }
 DASH_LAUNCH_DATA, *PDASH_LAUNCH_DATA;
@@ -1289,7 +1289,7 @@ typedef PVOID PFILE_SEGMENT_ELEMENT;
 typedef struct _IRP
 {
 	cshort_t                 Type;                // 0x00
-	WORD                   Size;                // 0x02
+	word_t                   Size;                // 0x02
 	ULONG                  Flags;               // 0x04
 	LIST_ENTRY             ThreadListEntry;     // 0x08
 	IO_STATUS_BLOCK        IoStatus;            // 0x10
@@ -1664,18 +1664,18 @@ NT_TIB, *PNT_TIB;
 
 // 	typedef struct _KGDTENTRY
 // 	{
-// 		WORD LimitLow;
-// 		WORD BaseLow;
+// 		word_t LimitLow;
+// 		word_t BaseLow;
 // 		ULONG HighWord;
 // 	}
 //  KGDTENTRY, *PKGDTENTRY;
 // 
 // 	typedef struct _KIDTENTRY
 // 	{
-// 		WORD Offset;
-// 		WORD Selector;
-// 		WORD Access;
-// 		WORD ExtendedOffset;
+// 		word_t Offset;
+// 		word_t Selector;
+// 		word_t Access;
+// 		word_t ExtendedOffset;
 // 	}
 //  KIDTENTRY, *PKIDTENTRY;
 // 
@@ -1784,7 +1784,7 @@ typedef struct _KTRAP_FRAME
 	ULONG DbgEip;
 	ULONG DbgArgMark;
 	ULONG DbgArgPointer;
-	WORD TempSegCs;
+	word_t TempSegCs;
 	uchar_t Logging;
 	uchar_t Reserved;
 	ULONG TempEsp;
@@ -1832,7 +1832,7 @@ typedef struct _KWAIT_BLOCK
 	PKTHREAD Thread;
 	PVOID Object;
 	struct _KWAIT_BLOCK *NextWaitBlock;
-	WORD WaitKey;
+	word_t WaitKey;
 	uchar_t WaitType;
 	uchar_t SpareByte;
 }
@@ -1923,7 +1923,7 @@ typedef struct _ETHREAD
 {
     struct _KTHREAD Tcb;
     uchar_t           UnknownA[0x1C]; // 0x110
-    DWORD           UniqueThread;   // 0x12C
+    dword_t           UniqueThread;   // 0x12C
 }
 ETHREAD, *PETHREAD;
 
@@ -2197,7 +2197,7 @@ typedef struct _ERESOURCE
 	LIST_ENTRY SystemResourcesList;
 	POWNER_ENTRY OwnerTable;
 	short_t ActiveCount;
-	WORD Flag;
+	word_t Flag;
 	PKSEMAPHORE SharedWaiters;
 	PKEVENT ExclusiveWaiters;
 	OWNER_ENTRY OwnerEntry;
@@ -2245,7 +2245,7 @@ GENERIC_MAPPING, *PGENERIC_MAPPING;
 
 typedef struct _OBJECT_TYPE_INITIALIZER
 {
-	WORD Length;
+	word_t Length;
 	uchar_t ObjectTypeFlags;
 	ULONG CaseInsensitive: 1;
 	ULONG UnnamedObjectsOnly: 1;
@@ -2466,7 +2466,7 @@ typedef struct _XBE_SECTION // Was _XBE_SECTIONHEADER
 	ULONG SectionReferenceCount; // Section reference count - when >= 1, section is loaded
 	PUSHORT HeadReferenceCount; // Pointer to head shared page reference counter
 	PUSHORT TailReferenceCount; // Pointer to tail shared page reference counter
-	byte_t ShaHash[20];         // SHA hash.  Hash DWORD containing FileSize, then hash section.
+	byte_t ShaHash[20];         // SHA hash.  Hash dword_t containing FileSize, then hash section.
 }
 XBEIMAGE_SECTION, *PXBEIMAGE_SECTION;
 
@@ -2503,48 +2503,48 @@ typedef enum _MEDIA_TYPE {
 typedef struct _DISK_GEOMETRY {
 	LARGE_INTEGER Cylinders;
 	MEDIA_TYPE MediaType;
-	DWORD TracksPerCylinder;
-	DWORD SectorsPerTrack;
-	DWORD BytesPerSector;
+	dword_t TracksPerCylinder;
+	dword_t SectorsPerTrack;
+	dword_t BytesPerSector;
 } DISK_GEOMETRY, *PDISK_GEOMETRY;
 
 // From nxdk
 #pragma pack(push, 1)
 typedef struct _FLOATING_SAVE_AREA
 {
-    WORD ControlWord;
-    WORD StatusWord;
-    WORD TagWord;
-    WORD ErrorOpcode;
-    DWORD ErrorOffset;
-    DWORD ErrorSelector;
-    DWORD DataOffset;
-    DWORD DataSelector;
-    DWORD MXCsr;
-    DWORD Reserved2;
+    word_t ControlWord;
+    word_t StatusWord;
+    word_t TagWord;
+    word_t ErrorOpcode;
+    dword_t ErrorOffset;
+    dword_t ErrorSelector;
+    dword_t DataOffset;
+    dword_t DataSelector;
+    dword_t MXCsr;
+    dword_t Reserved2;
     byte_t RegisterArea[128];
     byte_t XmmRegisterArea[128];
     byte_t Reserved4[224];
-    DWORD Cr0NpxState;
+    dword_t Cr0NpxState;
 } FLOATING_SAVE_AREA, *PFLOATING_SAVE_AREA;
 #pragma pack(pop)
 
 typedef struct _CONTEXT
 {
-    DWORD ContextFlags; // 0x00
+    dword_t ContextFlags; // 0x00
     FLOATING_SAVE_AREA FloatSave; // 0x04
-    DWORD Edi; // 0x208
-    DWORD Esi; // 0x20C
-    DWORD Ebx; // 0x210
-    DWORD Edx; // 0x214
-    DWORD Ecx; // 0x218
-    DWORD Eax; // 0x21C
-    DWORD Ebp; // 0x220
-    DWORD Eip; // 0x224
-    DWORD SegCs; // 0x228
-    DWORD EFlags; // 0x22C
-    DWORD Esp; // 0x230
-    DWORD SegSs; // 0x234
+    dword_t Edi; // 0x208
+    dword_t Esi; // 0x20C
+    dword_t Ebx; // 0x210
+    dword_t Edx; // 0x214
+    dword_t Ecx; // 0x218
+    dword_t Eax; // 0x21C
+    dword_t Ebp; // 0x220
+    dword_t Eip; // 0x224
+    dword_t SegCs; // 0x228
+    dword_t EFlags; // 0x22C
+    dword_t Esp; // 0x230
+    dword_t SegSs; // 0x234
 } CONTEXT, *PCONTEXT;
 
 // This is modeled around the Windows definition

@@ -445,7 +445,7 @@ XBSYSAPI EXPORTNUM(95) xbox::void_t NTAPI xbox::KeBugCheck
 // Source:Dxbx
 XBSYSAPI EXPORTNUM(96) xbox::NTSTATUS NTAPI xbox::KeBugCheckEx
 (
-	IN DWORD BugCheckCode,
+	IN dword_t BugCheckCode,
 	IN PVOID BugCheckParameter1,
 	IN PVOID BugCheckParameter2,
 	IN PVOID BugCheckParameter3,
@@ -1929,7 +1929,7 @@ XBSYSAPI EXPORTNUM(155) xbox::boolean_t NTAPI xbox::KeTestAlertThread
 // ******************************************************************
 // * 0x009C - KeTickCount
 // ******************************************************************
-XBSYSAPI EXPORTNUM(156) xbox::DWORD VOLATILE xbox::KeTickCount = 0;
+XBSYSAPI EXPORTNUM(156) xbox::dword_t VOLATILE xbox::KeTickCount = 0;
 
 // ******************************************************************
 // * 0x009D - KeTimeIncrement

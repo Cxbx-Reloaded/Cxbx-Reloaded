@@ -54,9 +54,9 @@ namespace xbox
 	using byte_t = std::uint8_t;
 	using boolean_t = std::uint8_t;
 	using ushort_t = std::uint16_t;
-	typedef unsigned short      WORD;
+	using word_t = std::uint16_t;
 	typedef unsigned long       ULONG;
-	typedef unsigned long       DWORD;
+	using dword_t = std::uint32_t;
 	typedef unsigned long       SIZE_T, *PSIZE_T;
 	typedef unsigned long       ACCESS_MASK, *PACCESS_MASK;
 	typedef unsigned long       PHYSICAL_ADDRESS;
@@ -86,7 +86,7 @@ namespace xbox
 	typedef ushort_t *PUSHORT;
 	typedef unsigned int *PUINT;
 	typedef ULONG *PULONG;
-	typedef DWORD *PDWORD, *LPDWORD;
+	typedef dword_t *PDWORD, *LPDWORD;
 	typedef ACCESS_MASK *PACCESS_MASK;
 	typedef long_t *PLONG;
 	typedef int *PINT_PTR;

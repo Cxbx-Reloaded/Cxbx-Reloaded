@@ -146,7 +146,7 @@ typedef struct {
 	// Arguments to D3DDevice_InsertCallback :
 	xbox::X_D3DCALLBACK			    pCallback;
 	xbox::X_D3DCALLBACKTYPE          Type;
-	xbox::DWORD                      Context;
+	xbox::dword_t                      Context;
 } s_Xbox_Callback;
 
 static std::queue<s_Xbox_Callback>  g_Xbox_CallbackQueue;
@@ -161,8 +161,8 @@ static std::condition_variable		g_VBConditionVariable;	// Used in BlockUntilVert
 static std::mutex					g_VBConditionMutex;		// Used in BlockUntilVerticalBlank
 static DWORD                        g_VBLastSwap = 0;
 
-static xbox::DWORD                   g_Xbox_PresentationInterval_Default = D3DPRESENT_INTERVAL_IMMEDIATE;
-       xbox::DWORD                   g_Xbox_PresentationInterval_Override = 0;
+static xbox::dword_t                   g_Xbox_PresentationInterval_Default = D3DPRESENT_INTERVAL_IMMEDIATE;
+       xbox::dword_t                   g_Xbox_PresentationInterval_Override = 0;
 static xbox::X_D3DSWAPDATA			g_Xbox_SwapData = {0}; // current swap information
 static xbox::X_D3DSWAPCALLBACK		g_pXbox_SwapCallback = xbox::zeroptr;	// Swap/Present callback routine
 static xbox::X_D3DVBLANKDATA			g_Xbox_VBlankData = {0}; // current vertical blank information
@@ -175,8 +175,8 @@ static xbox::X_D3DSurface           *g_pXbox_DepthStencil = xbox::zeroptr;
        xbox::X_D3DMULTISAMPLE_TYPE   g_Xbox_MultiSampleType = xbox::X_D3DMULTISAMPLE_NONE;
 
        xbox::X_VERTEXSHADERCONSTANTMODE g_Xbox_VertexShaderConstantMode = X_D3DSCM_192CONSTANTS; // Set by D3DDevice_SetShaderConstantMode, TODO : Move to XbVertexShader.cpp
-static xbox::DWORD                   g_Xbox_BaseVertexIndex = 0; // Set by D3DDevice_SetIndices, read by D3DDevice_DrawIndexedVertices : a value that's effectively added to every vertex index (as stored in an index buffer) by multiplying this by vertex stride and added to the vertex buffer start (see BaseVertexIndex in CxbxDrawIndexed)
-static xbox::DWORD                  *g_pXbox_BeginPush_Buffer = xbox::zeroptr; // primary push buffer
+static xbox::dword_t                   g_Xbox_BaseVertexIndex = 0; // Set by D3DDevice_SetIndices, read by D3DDevice_DrawIndexedVertices : a value that's effectively added to every vertex index (as stored in an index buffer) by multiplying this by vertex stride and added to the vertex buffer start (see BaseVertexIndex in CxbxDrawIndexed)
+static xbox::dword_t                  *g_pXbox_BeginPush_Buffer = xbox::zeroptr; // primary push buffer
 
        xbox::X_PixelShader*			g_pXbox_PixelShader = xbox::zeroptr;
 static xbox::PVOID                   g_pXbox_Palette_Data[xbox::X_D3DTS_STAGECOUNT] = { xbox::zeroptr, xbox::zeroptr, xbox::zeroptr, xbox::zeroptr }; // cached palette pointer
@@ -187,12 +187,12 @@ static unsigned                     g_Xbox_Palette_Size[xbox::X_D3DTS_STAGECOUNT
 static xbox::X_D3DBaseTexture        CxbxActiveTextureCopies[xbox::X_D3DTS_STAGECOUNT] = {}; // Set by D3DDevice_SwitchTexture. Cached active texture
 
 /* Unused :
-static xbox::DWORD                  *g_Xbox_D3DDevice; // TODO: This should be a D3DDevice structure
+static xbox::dword_t                  *g_Xbox_D3DDevice; // TODO: This should be a D3DDevice structure
 
 static	DWORD						g_dwVertexShaderUsage = 0; // Unused. If needed, move to XbVertexShader.cpp
 */
 
-       xbox::DWORD                   g_Xbox_VertexShader_Handle = 0;
+       xbox::dword_t                   g_Xbox_VertexShader_Handle = 0;
 
 // Static Function(s)
 static BOOL WINAPI                  EmuEnumDisplayDevices(GUID FAR *lpGUID, LPSTR lpDriverDescription, LPSTR lpDriverName, LPVOID lpContext, HMONITOR hm);
@@ -256,7 +256,7 @@ struct EmuD3D8CreateDeviceProxyData
     volatile bool                    bReady;
     volatile bool                    bCreate;   // false : release
 	// Set by EmuCreateDeviceProxy()
-    xbox::DWORD                       BehaviorFlags;
+    xbox::dword_t                       BehaviorFlags;
 	D3DPRESENT_PARAMETERS            HostPresentationParameters;
     volatile HRESULT                 hRet;
 }
@@ -264,8 +264,8 @@ g_EmuCDPD = {0};
 
 // Declare trampolines
 #define XB_TRAMPOLINES(XB_MACRO)                                                                                                                                       \
-    XB_MACRO(HRESULT,            WINAPI,     D3DDevice_CreateVertexShader,      (CONST DWORD*, CONST DWORD*, DWORD*, DWORD)                                        );  \
-    XB_MACRO(xbox::void_t,               WINAPI,     D3DDevice_DeleteVertexShader,      (DWORD)                                                                            );  \
+    XB_MACRO(HRESULT,            WINAPI,     D3DDevice_CreateVertexShader,      (CONST xbox::dword_t*, CONST xbox::dword_t*, xbox::dword_t*, xbox::dword_t)                                        );  \
+    XB_MACRO(xbox::void_t,               WINAPI,     D3DDevice_DeleteVertexShader,      (xbox::dword_t)                                                                            );  \
     XB_MACRO(xbox::void_t,               WINAPI,     D3DDevice_GetBackBuffer,           (INT, D3DBACKBUFFER_TYPE, xbox::X_D3DSurface**)                                     );  \
     XB_MACRO(xbox::X_D3DSurface*, WINAPI,     D3DDevice_GetBackBuffer2,          (INT)                                                                              );  \
     XB_MACRO(HRESULT,            WINAPI,     D3DDevice_GetDepthStencilSurface,  (xbox::X_D3DSurface**)                                                              );  \
@@ -273,39 +273,39 @@ g_EmuCDPD = {0};
     XB_MACRO(xbox::void_t,               WINAPI,     D3DDevice_GetDisplayMode,          (xbox::X_D3DDISPLAYMODE*)                                                           );  \
     XB_MACRO(HRESULT,            WINAPI,     D3DDevice_GetRenderTarget,         (xbox::X_D3DSurface**)                                                              );  \
     XB_MACRO(xbox::X_D3DSurface*, WINAPI,     D3DDevice_GetRenderTarget2,        (xbox::void_t)                                                                             );  \
-    XB_MACRO(HRESULT,            WINAPI,     D3DDevice_LightEnable,             (DWORD, BOOL)                                                                      );  \
-  /*XB_MACRO(xbox::void_t,               WINAPI,     D3DDevice_LoadVertexShader,        (DWORD, DWORD)                                                                     );*/\
-  /*XB_MACRO(xbox::void_t,               WINAPI,     D3DDevice_LoadVertexShaderProgram, (CONST DWORD*, DWORD)                                                              );*/\
+    XB_MACRO(HRESULT,            WINAPI,     D3DDevice_LightEnable,             (xbox::dword_t, BOOL)                                                                      );  \
+  /*XB_MACRO(xbox::void_t,               WINAPI,     D3DDevice_LoadVertexShader,        (xbox::dword_t, xbox::dword_t)                                                                     );*/\
+  /*XB_MACRO(xbox::void_t,               WINAPI,     D3DDevice_LoadVertexShaderProgram, (CONST xbox::dword_t*, xbox::dword_t)                                                              );*/\
   /*XB_MACRO(xbox::void_t,               __stdcall,  D3DDevice_LoadVertexShader_0,      ()                                                                                 );*/\
-  /*XB_MACRO(xbox::void_t,               WINAPI,     D3DDevice_LoadVertexShader_4,      (DWORD)                                                                            );*/\
+  /*XB_MACRO(xbox::void_t,               WINAPI,     D3DDevice_LoadVertexShader_4,      (xbox::dword_t)                                                                            );*/\
     XB_MACRO(HRESULT,            WINAPI,     D3DDevice_PersistDisplay,          (xbox::void_t)                                                    );  \
     XB_MACRO(HRESULT,            WINAPI,     D3DDevice_Reset,                   (xbox::X_D3DPRESENT_PARAMETERS*)                                                    );  \
-  /*XB_MACRO(xbox::void_t,               WINAPI,     D3DDevice_SelectVertexShader,      (DWORD, DWORD)                                                                     );*/\
+  /*XB_MACRO(xbox::void_t,               WINAPI,     D3DDevice_SelectVertexShader,      (xbox::dword_t, xbox::dword_t)                                                                     );*/\
   /*XB_MACRO(xbox::void_t,               __stdcall,  D3DDevice_SelectVertexShader_0,    ()                                                                                 );*/\
-  /*XB_MACRO(xbox::void_t,               __stdcall,  D3DDevice_SelectVertexShader_4,    (DWORD)                                                                            );*/\
-  /*XB_MACRO(xbox::void_t,               WINAPI,     D3DDevice_SetGammaRamp,            (DWORD, CONST X_D3DGAMMARAMP*)                                                     );*/\
+  /*XB_MACRO(xbox::void_t,               __stdcall,  D3DDevice_SelectVertexShader_4,    (xbox::dword_t)                                                                            );*/\
+  /*XB_MACRO(xbox::void_t,               WINAPI,     D3DDevice_SetGammaRamp,            (xbox::dword_t, CONST X_D3DGAMMARAMP*)                                                     );*/\
     XB_MACRO(xbox::void_t,               WINAPI,     D3DDevice_SetIndices,              (xbox::X_D3DIndexBuffer*, UINT)                                                     );  \
     XB_MACRO(xbox::void_t,               WINAPI,     D3DDevice_SetIndices_4,            (UINT)                                                                             );  \
-    XB_MACRO(HRESULT,            WINAPI,     D3DDevice_SetLight,                (DWORD, CONST xbox::X_D3DLIGHT8*)                                                   );  \
-    XB_MACRO(xbox::void_t,               WINAPI,     D3DDevice_SetPixelShader,          (DWORD)                                                                            );  \
+    XB_MACRO(HRESULT,            WINAPI,     D3DDevice_SetLight,                (xbox::dword_t, CONST xbox::X_D3DLIGHT8*)                                                   );  \
+    XB_MACRO(xbox::void_t,               WINAPI,     D3DDevice_SetPixelShader,          (xbox::dword_t)                                                                            );  \
     XB_MACRO(xbox::void_t,               WINAPI,     D3DDevice_SetPixelShader_0,        ()                                                                                 );  \
-    XB_MACRO(xbox::void_t,               __fastcall, D3DDevice_SetRenderState_Simple,   (DWORD, DWORD)                                                                     );  \
+    XB_MACRO(xbox::void_t,               __fastcall, D3DDevice_SetRenderState_Simple,   (xbox::dword_t, xbox::dword_t)                                                                     );  \
     XB_MACRO(xbox::void_t,               WINAPI,     D3DDevice_SetRenderTarget,         (xbox::X_D3DSurface*, xbox::X_D3DSurface*)                                           );  \
     XB_MACRO(xbox::void_t,               WINAPI,     D3DDevice_SetStreamSource,         (UINT, xbox::X_D3DVertexBuffer*, UINT)                                              );  \
     XB_MACRO(xbox::void_t,               WINAPI,     D3DDevice_SetStreamSource_4,       (UINT, xbox::X_D3DVertexBuffer*, UINT)                                              );  \
     XB_MACRO(xbox::void_t,               WINAPI,     D3DDevice_SetStreamSource_8,       (xbox::X_D3DVertexBuffer*, UINT)                                                    );  \
-    XB_MACRO(xbox::void_t,               WINAPI,     D3DDevice_SetTexture,              (DWORD, xbox::X_D3DBaseTexture*)                                                    );  \
+    XB_MACRO(xbox::void_t,               WINAPI,     D3DDevice_SetTexture,              (xbox::dword_t, xbox::X_D3DBaseTexture*)                                                    );  \
     XB_MACRO(xbox::void_t,               WINAPI,     D3DDevice_SetTexture_4,            (xbox::X_D3DBaseTexture*)                                                           );  \
-  /*XB_MACRO(xbox::void_t,               WINAPI,     D3DDevice_SetVertexShader,         (DWORD)                                                                            );*/\
-  /*XB_MACRO(xbox::void_t,               WINAPI,     D3DDevice_SetVertexShaderInput,    (DWORD, UINT, xbox::X_STREAMINPUT*)                                                 );*/\
+  /*XB_MACRO(xbox::void_t,               WINAPI,     D3DDevice_SetVertexShader,         (xbox::dword_t)                                                                            );*/\
+  /*XB_MACRO(xbox::void_t,               WINAPI,     D3DDevice_SetVertexShaderInput,    (xbox::dword_t, UINT, xbox::X_STREAMINPUT*)                                                 );*/\
     XB_MACRO(xbox::void_t,               WINAPI,     D3DDevice_SetViewport,             (CONST xbox::X_D3DVIEWPORT8*)                                                       );  \
     XB_MACRO(xbox::void_t,               WINAPI,     D3D_DestroyResource,               (xbox::X_D3DResource*)                                                              );  \
     XB_MACRO(xbox::void_t,               WINAPI,     D3D_DestroyResource__LTCG,         (xbox::void_t)                                                                             );  \
-    XB_MACRO(HRESULT,            WINAPI,     Direct3D_CreateDevice,             (UINT, D3DDEVTYPE, HWND, DWORD, xbox::X_D3DPRESENT_PARAMETERS*, IDirect3DDevice**)  );  \
+    XB_MACRO(HRESULT,            WINAPI,     Direct3D_CreateDevice,             (UINT, D3DDEVTYPE, HWND, xbox::dword_t, xbox::X_D3DPRESENT_PARAMETERS*, IDirect3DDevice**)  );  \
     XB_MACRO(HRESULT,            WINAPI,     Direct3D_CreateDevice_16,          (UINT, D3DDEVTYPE, HWND, xbox::X_D3DPRESENT_PARAMETERS*)                            );  \
     XB_MACRO(HRESULT,            WINAPI,     Direct3D_CreateDevice_4,           (xbox::X_D3DPRESENT_PARAMETERS*)                                                    );  \
-    XB_MACRO(xbox::void_t,               WINAPI,     Lock2DSurface,                     (xbox::X_D3DPixelContainer*, D3DCUBEMAP_FACES, UINT, D3DLOCKED_RECT*, RECT*, DWORD) );  \
-    XB_MACRO(xbox::void_t,               WINAPI,     Lock3DSurface,                     (xbox::X_D3DPixelContainer*, UINT, D3DLOCKED_BOX*, D3DBOX*, DWORD)                  );  \
+    XB_MACRO(xbox::void_t,               WINAPI,     Lock2DSurface,                     (xbox::X_D3DPixelContainer*, D3DCUBEMAP_FACES, UINT, D3DLOCKED_RECT*, RECT*, xbox::dword_t) );  \
+    XB_MACRO(xbox::void_t,               WINAPI,     Lock3DSurface,                     (xbox::X_D3DPixelContainer*, UINT, D3DLOCKED_BOX*, D3DBOX*, xbox::dword_t)                  );  \
 
 XB_TRAMPOLINES(XB_trampoline_declare);
 
@@ -689,7 +689,7 @@ void CxbxReleaseCursor()
 	ClipCursor(nullptr);
 }
 
-inline DWORD GetXboxCommonResourceType(const xbox::DWORD XboxResource_Common)
+inline DWORD GetXboxCommonResourceType(const xbox::dword_t XboxResource_Common)
 {
 	DWORD dwCommonType = XboxResource_Common & X_D3DCOMMON_TYPE_MASK;
 	return dwCommonType;
@@ -703,7 +703,7 @@ inline DWORD GetXboxCommonResourceType(const xbox::X_D3DResource* pXboxResource)
 	return GetXboxCommonResourceType(pXboxResource->Common);
 }
 
-xbox::X_D3DFORMAT GetXboxPixelContainerFormat(const xbox::DWORD XboxPixelContainer_Format)
+xbox::X_D3DFORMAT GetXboxPixelContainerFormat(const xbox::dword_t XboxPixelContainer_Format)
 {
 	xbox::X_D3DFORMAT d3d_format = (xbox::X_D3DFORMAT)((XboxPixelContainer_Format & X_D3DFORMAT_FORMAT_MASK) >> X_D3DFORMAT_FORMAT_SHIFT);
 	return d3d_format;
@@ -791,7 +791,7 @@ inline bool IsResourceTypeGPUReadable(const DWORD ResourceType)
 	return false;
 }
 
-inline bool IsPaletizedTexture(const xbox::DWORD XboxPixelContainer_Format)
+inline bool IsPaletizedTexture(const xbox::dword_t XboxPixelContainer_Format)
 {
 	return GetXboxPixelContainerFormat(XboxPixelContainer_Format) == xbox::X_D3DFMT_P8;
 }
@@ -856,7 +856,7 @@ typedef std::unordered_map<resource_key_t, resource_info_t, resource_key_hash> r
 resource_cache_t g_Cxbx_Cached_Direct3DResources;
 resource_cache_t g_Cxbx_Cached_PaletizedTextures;
 
-bool IsResourceAPixelContainer(xbox::DWORD XboxResource_Common)
+bool IsResourceAPixelContainer(xbox::dword_t XboxResource_Common)
 {
 	DWORD Type = GetXboxCommonResourceType(XboxResource_Common);
 	switch (Type)
@@ -3247,7 +3247,7 @@ HRESULT WINAPI xbox::EMUPATCH(Direct3D_CreateDevice)
     UINT                        Adapter,
     D3DDEVTYPE                  DeviceType,
     HWND                        hFocusWindow,
-    DWORD                       BehaviorFlags,
+    dword_t                       BehaviorFlags,
     X_D3DPRESENT_PARAMETERS    *pPresentationParameters,
     IDirect3DDevice           **ppReturnedDeviceInterface
 )
@@ -3352,7 +3352,7 @@ xbox::void_t WINAPI xbox::EMUPATCH(D3DDevice_GetDisplayFieldStatus)(X_D3DFIELD_S
 // Starting from XDK 4531, this changed to 1 parameter only.
 // Is this definition incorrect, or did it change at some point?
 // ******************************************************************
-PDWORD WINAPI xbox::EMUPATCH(D3DDevice_BeginPush)(DWORD Count)
+xbox::PDWORD WINAPI xbox::EMUPATCH(D3DDevice_BeginPush)(dword_t Count)
 {
 	LOG_FUNC_ONE_ARG(Count);
 
@@ -3362,7 +3362,7 @@ PDWORD WINAPI xbox::EMUPATCH(D3DDevice_BeginPush)(DWORD Count)
 		delete[] g_pXbox_BeginPush_Buffer; // prevent a memory leak
 	}
 
-    DWORD *pRet = new DWORD[Count];
+	dword_t *pRet = new dword_t[Count];
 
     g_pXbox_BeginPush_Buffer = pRet;
 
@@ -3374,7 +3374,7 @@ PDWORD WINAPI xbox::EMUPATCH(D3DDevice_BeginPush)(DWORD Count)
 // TODO: Find a test case and verify this: RalliSport Challenge XDK 4134
 // For XDK before 4531
 // ******************************************************************
-xbox::void_t WINAPI xbox::EMUPATCH(D3DDevice_BeginPush2)(DWORD Count, DWORD** ppPush)
+xbox::void_t WINAPI xbox::EMUPATCH(D3DDevice_BeginPush2)(dword_t Count, dword_t** ppPush)
 {
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(Count)
@@ -3387,7 +3387,7 @@ xbox::void_t WINAPI xbox::EMUPATCH(D3DDevice_BeginPush2)(DWORD Count, DWORD** pp
 		delete[] g_pXbox_BeginPush_Buffer; // prevent a memory leak
 	}
 
-	DWORD *pRet = new DWORD[Count];
+	dword_t *pRet = new dword_t[Count];
 
 	g_pXbox_BeginPush_Buffer = pRet;
 
@@ -3397,7 +3397,7 @@ xbox::void_t WINAPI xbox::EMUPATCH(D3DDevice_BeginPush2)(DWORD Count, DWORD** pp
 // ******************************************************************
 // * patch: D3DDevice_EndPush
 // ******************************************************************
-xbox::void_t WINAPI xbox::EMUPATCH(D3DDevice_EndPush)(DWORD *pPush)
+xbox::void_t WINAPI xbox::EMUPATCH(D3DDevice_EndPush)(dword_t *pPush)
 {
 	LOG_FUNC_ONE_ARG(pPush);
 
@@ -3450,7 +3450,7 @@ HRESULT __stdcall xbox::EMUPATCH(D3DDevice_EndVisibilityTest_0)
 (
 )
 {
-	DWORD                       Index;
+	dword_t                       Index;
 
 	__asm {
 		mov Index, eax
@@ -3464,7 +3464,7 @@ HRESULT __stdcall xbox::EMUPATCH(D3DDevice_EndVisibilityTest_0)
 // ******************************************************************
 HRESULT WINAPI xbox::EMUPATCH(D3DDevice_EndVisibilityTest)
 (
-    DWORD                       Index
+    dword_t                       Index
 )
 {
 	LOG_FUNC_ONE_ARG(Index);
@@ -3515,7 +3515,7 @@ xbox::void_t WINAPI xbox::EMUPATCH(D3DDevice_SetBackBufferScale)(FLOAT x, FLOAT 
 // ******************************************************************
 HRESULT WINAPI xbox::EMUPATCH(D3DDevice_GetVisibilityTestResult)
 (
-    DWORD                       Index,
+    dword_t                       Index,
     UINT                       *pResult,
     ULONGLONG                  *pTimeStamp
 )
@@ -3563,8 +3563,8 @@ xbox::void_t __stdcall xbox::EMUPATCH(D3DDevice_LoadVertexShader_0)
 (
 )
 {
-    DWORD                       Handle;
-    DWORD                       Address;
+    dword_t                       Handle;
+    dword_t                       Address;
 
 	__asm {
 		mov Address, eax
@@ -3578,10 +3578,10 @@ xbox::void_t __stdcall xbox::EMUPATCH(D3DDevice_LoadVertexShader_0)
 // Test-case: Ninja Gaiden
 xbox::void_t WINAPI xbox::EMUPATCH(D3DDevice_LoadVertexShader_4)
 (
-    DWORD                       Address
+    dword_t                       Address
 )
 {
-	DWORD           Handle;
+	dword_t           Handle;
 	__asm mov Handle, eax;
 
 	LOG_FORWARD("D3DDevice_LoadVertexShader");
@@ -3593,8 +3593,8 @@ xbox::void_t WINAPI xbox::EMUPATCH(D3DDevice_LoadVertexShader_4)
 // ******************************************************************
 xbox::void_t WINAPI xbox::EMUPATCH(D3DDevice_LoadVertexShader)
 (
-    DWORD                       Handle,
-    DWORD                       Address
+    dword_t                       Handle,
+    dword_t                       Address
 )
 {
 	LOG_FUNC_BEGIN
@@ -3612,8 +3612,8 @@ xbox::void_t __stdcall xbox::EMUPATCH(D3DDevice_SelectVertexShader_0)
 (
 )
 {
-    DWORD                       Handle;
-    DWORD                       Address;
+    dword_t                       Handle;
+    dword_t                       Address;
 
 	__asm {
 		mov Handle, eax
@@ -3628,10 +3628,10 @@ xbox::void_t __stdcall xbox::EMUPATCH(D3DDevice_SelectVertexShader_0)
 // Test-case: Aggressive Inline
 xbox::void_t __stdcall xbox::EMUPATCH(D3DDevice_SelectVertexShader_4)
 (
-    DWORD                       Address
+    dword_t                       Address
 )
 {
-	DWORD           Handle;
+	dword_t           Handle;
 	__asm mov Handle, eax;
 
 	return EMUPATCH(D3DDevice_SelectVertexShader)(Handle, Address);
@@ -3642,8 +3642,8 @@ xbox::void_t __stdcall xbox::EMUPATCH(D3DDevice_SelectVertexShader_4)
 // ******************************************************************
 xbox::void_t WINAPI xbox::EMUPATCH(D3DDevice_SelectVertexShader)
 (
-    DWORD                       Handle,
-    DWORD                       Address
+    dword_t                       Handle,
+    dword_t                       Address
 )
 {
 	LOG_FUNC_BEGIN
@@ -3659,7 +3659,7 @@ xbox::void_t WINAPI xbox::EMUPATCH(D3DDevice_SelectVertexShader)
 // ******************************************************************
 xbox::void_t WINAPI xbox::EMUPATCH(D3DDevice_SetGammaRamp)
 (
-    DWORD                   dwFlags,
+    dword_t                   dwFlags,
     CONST X_D3DGAMMARAMP   *pRamp
 )
 {
@@ -4143,10 +4143,10 @@ xbox::void_t WINAPI xbox::EMUPATCH(D3DDevice_SetShaderConstantMode)
 // ******************************************************************
 HRESULT WINAPI xbox::EMUPATCH(D3DDevice_CreateVertexShader)
 (
-    CONST DWORD    *pDeclaration,
-    CONST DWORD    *pFunction,
-    DWORD          *pHandle,
-    DWORD           Usage
+    CONST dword_t    *pDeclaration,
+    CONST dword_t    *pFunction,
+    dword_t          *pHandle,
+    dword_t           Usage
 )
 {
 	LOG_FUNC_BEGIN
@@ -4184,7 +4184,7 @@ HRESULT WINAPI xbox::EMUPATCH(D3DDevice_CreateVertexShader)
         *pHandle = ((DWORD)malloc(sizeof(X_D3DVertexShader)) & D3DFVF_RESERVED0);
     }
 
-    return CxbxImpl_CreateVertexShader(pDeclaration, pFunction, pHandle, Usage);
+    return CxbxImpl_CreateVertexShader((DWORD *)pDeclaration, (DWORD *)pFunction, (DWORD *)pHandle, Usage);
 }
 
 // LTCG specific D3DDevice_SetVertexShaderConstant function...
@@ -4217,7 +4217,7 @@ xbox::void_t WINAPI xbox::EMUPATCH(D3DDevice_SetVertexShaderConstant)
 (
     INT         Register,
     CONST PVOID pConstantData,
-    DWORD       ConstantCount
+    dword_t       ConstantCount
 )
 {
 	LOG_FUNC_BEGIN
@@ -4287,7 +4287,7 @@ xbox::void_t __fastcall xbox::EMUPATCH(D3DDevice_SetVertexShaderConstantNotInlin
 (
     INT         Register,
     CONST PVOID pConstantData,
-    DWORD       ConstantCount
+    dword_t       ConstantCount
 )
 {
 	LOG_FORWARD("D3DDevice_SetVertexShaderConstant");
@@ -4305,7 +4305,7 @@ xbox::void_t __fastcall xbox::EMUPATCH(D3DDevice_SetVertexShaderConstantNotInlin
 (
     INT         Register,
     CONST PVOID pConstantData,
-    DWORD       ConstantCount
+    dword_t       ConstantCount
 )
 {
 	LOG_FORWARD("D3DDevice_SetVertexShaderConstant");
@@ -4325,7 +4325,7 @@ xbox::void_t WINAPI xbox::EMUPATCH(D3DDevice_SetTexture_4)
 	X_D3DBaseTexture  *pTexture
 )
 {
-	DWORD           Stage;
+	dword_t           Stage;
 	__asm mov Stage, eax;
 
 	//LOG_FUNC_BEGIN
@@ -4345,7 +4345,7 @@ xbox::void_t WINAPI xbox::EMUPATCH(D3DDevice_SetTexture_4)
 // ******************************************************************
 xbox::void_t WINAPI xbox::EMUPATCH(D3DDevice_SetTexture)
 (
-    DWORD           Stage,
+    dword_t           Stage,
 	X_D3DBaseTexture  *pTexture
 )
 {
@@ -4365,9 +4365,9 @@ xbox::void_t WINAPI xbox::EMUPATCH(D3DDevice_SetTexture)
 // ******************************************************************
 xbox::void_t __fastcall xbox::EMUPATCH(D3DDevice_SwitchTexture)
 (
-    DWORD           Method,
-    DWORD           Data,
-    DWORD           Format
+    dword_t           Method,
+    dword_t           Data,
+    dword_t           Format
 )
 {
 	LOG_FUNC_BEGIN
@@ -4474,8 +4474,8 @@ static inline FLOAT DWtoF(DWORD f) { return *((FLOAT*)&f); }
 xbox::void_t WINAPI xbox::EMUPATCH(D3DDevice_SetVertexData2s)
 (
     int     Register,
-    short_t   a,
-    short_t   b
+    SHORT   a,
+    SHORT   b
 )
 {
 	LOG_FORWARD("D3DDevice_SetVertexData4f");
@@ -4825,10 +4825,10 @@ xbox::void_t WINAPI xbox::EMUPATCH(D3DDevice_SetVertexData4ub)
 xbox::void_t WINAPI xbox::EMUPATCH(D3DDevice_SetVertexData4s)
 (
 	INT		Register,
-	short_t	a,
-	short_t	b,
-	short_t	c,
-	short_t	d
+	SHORT	a,
+	SHORT	b,
+	SHORT	c,
+	SHORT	d
 )
 {
 	LOG_FORWARD("D3DDevice_SetVertexData4f");
@@ -4900,12 +4900,12 @@ xbox::void_t WINAPI xbox::EMUPATCH(D3DDevice_RunPushBuffer)
 // ******************************************************************
 xbox::void_t WINAPI xbox::EMUPATCH(D3DDevice_Clear)
 (
-    DWORD           Count,
+    dword_t           Count,
     CONST D3DRECT  *pRects,
-    DWORD           Flags,
+    dword_t           Flags,
     D3DCOLOR        Color,
     float           Z,
-    DWORD           Stencil
+    dword_t           Stencil
 )
 {
 	LOG_FUNC_BEGIN
@@ -5107,7 +5107,7 @@ std::chrono::time_point<std::chrono::steady_clock> frameStartTime;
 // LTCG specific swap function...
 // Massive hack, but could coax some more LTCG titles into booting with HLE
 // This uses a custom calling convention where parameter is passed in EAX
-DWORD xbox::EMUPATCH(D3DDevice_Swap_0)
+xbox::dword_t xbox::EMUPATCH(D3DDevice_Swap_0)
 (
 )
 {
@@ -5122,9 +5122,9 @@ DWORD xbox::EMUPATCH(D3DDevice_Swap_0)
 // ******************************************************************
 // * patch: D3DDevice_Swap
 // ******************************************************************
-DWORD WINAPI xbox::EMUPATCH(D3DDevice_Swap)
+xbox::dword_t WINAPI xbox::EMUPATCH(D3DDevice_Swap)
 (
-	DWORD Flags
+	dword_t Flags
 )
 {
 	LOG_FUNC_ONE_ARG(Flags);
@@ -5367,7 +5367,7 @@ DWORD WINAPI xbox::EMUPATCH(D3DDevice_Swap)
     XboxRenderStates.SetDirty();
 
     // Check if we need to enable our frame-limiter
-    DWORD presentationInverval = g_Xbox_PresentationInterval_Override > 0 ? g_Xbox_PresentationInterval_Override : g_Xbox_PresentationInterval_Default;
+    xbox::dword_t presentationInverval = g_Xbox_PresentationInterval_Override > 0 ? g_Xbox_PresentationInterval_Override : g_Xbox_PresentationInterval_Default;
     if ((presentationInverval != D3DPRESENT_INTERVAL_IMMEDIATE) && !g_bHack_UnlockFramerate) {
         // If the last frame completed faster than the Xbox target swap rate, wait for it
 
@@ -6363,8 +6363,8 @@ xbox::void_t WINAPI xbox::EMUPATCH(D3DDevice_SetVerticalBlankCallback)
 // ******************************************************************
 xbox::void_t __fastcall xbox::EMUPATCH(D3DDevice_SetRenderState_Simple)
 (
-    DWORD Method,
-    DWORD Value
+    dword_t Method,
+    dword_t Value
 )
 {
     LOG_FUNC_BEGIN
@@ -6503,7 +6503,7 @@ xbox::void_t WINAPI xbox::EMUPATCH(Lock2DSurface)
 	UINT                 Level,
 	D3DLOCKED_RECT      *pLockedRect,
 	RECT                *pRect,
-	DWORD                Flags
+	dword_t                Flags
 	)
 {
 	LOG_FUNC_BEGIN
@@ -6533,7 +6533,7 @@ xbox::void_t WINAPI xbox::EMUPATCH(Lock3DSurface)
 	UINT				Level,
 	D3DLOCKED_BOX		*pLockedVolume,
 	D3DBOX				*pBox,
-	DWORD				Flags
+	dword_t				Flags
 	)
 {
 	LOG_FUNC_BEGIN
@@ -6640,7 +6640,7 @@ xbox::void_t WINAPI xbox::EMUPATCH(D3DDevice_SetStreamSource)
 // ******************************************************************
 xbox::void_t WINAPI xbox::EMUPATCH(D3DDevice_SetVertexShader)
 (
-    DWORD Handle
+    dword_t Handle
 )
 {
 	LOG_FUNC_ONE_ARG(Handle);
@@ -7158,7 +7158,7 @@ void CxbxImpl_InsertCallback
 (
 	xbox::X_D3DCALLBACKTYPE	Type,
 	xbox::X_D3DCALLBACK		pCallback,
-	xbox::DWORD				Context
+	xbox::dword_t				Context
 )
 {
 	if (Type > xbox::X_D3DCALLBACK_WRITE) {
@@ -7192,7 +7192,7 @@ void CxbxImpl_InsertCallback
 	}
 }
 
-xbox::void_t __declspec(noinline) D3DDevice_SetPixelShaderCommon(DWORD Handle)
+xbox::void_t __declspec(noinline) D3DDevice_SetPixelShaderCommon(xbox::dword_t Handle)
 {
     // Cache the active shader handle
     g_pXbox_PixelShader = (xbox::X_PixelShader*)Handle;
@@ -7212,7 +7212,7 @@ xbox::void_t __declspec(noinline) D3DDevice_SetPixelShaderCommon(DWORD Handle)
 // Test-case: Lord of the Rings: The Third Age
 xbox::void_t WINAPI D3DDevice_SetPixelShader_0_IMPL
 (
-    DWORD Handle
+    xbox::dword_t Handle
 )
 {
     LOG_FUNC_ONE_ARG(Handle);
@@ -7240,7 +7240,7 @@ xbox::void_t WINAPI xbox::EMUPATCH(D3DDevice_SetPixelShader_0)()
 // ******************************************************************
 xbox::void_t WINAPI xbox::EMUPATCH(D3DDevice_SetPixelShader)
 (
-	DWORD           Handle
+	dword_t           Handle
 )
 {
 	LOG_FUNC_ONE_ARG(Handle);
@@ -7591,7 +7591,7 @@ xbox::void_t WINAPI xbox::EMUPATCH(D3DDevice_DrawIndexedVerticesUP)
 // ******************************************************************
 HRESULT WINAPI xbox::EMUPATCH(D3DDevice_SetLight)
 (
-    DWORD            Index,
+    dword_t            Index,
     CONST X_D3DLIGHT8 *pLight
 )
 {
@@ -7627,7 +7627,7 @@ xbox::void_t WINAPI xbox::EMUPATCH(D3DDevice_SetMaterial)
 // ******************************************************************
 HRESULT WINAPI xbox::EMUPATCH(D3DDevice_LightEnable)
 (
-    DWORD            Index,
+    dword_t            Index,
     BOOL             bEnable
 )
 {
@@ -7753,7 +7753,7 @@ xbox::void_t __stdcall xbox::EMUPATCH(D3DDevice_SetPalette_4)
 // ******************************************************************
 xbox::void_t WINAPI xbox::EMUPATCH(D3DDevice_SetPalette)
 (
-    DWORD         Stage,
+    dword_t         Stage,
     X_D3DPalette *pPalette
 )
 {
@@ -7781,7 +7781,7 @@ xbox::void_t __stdcall xbox::EMUPATCH(D3DDevice_SetFlickerFilter_0)
 (
 )
 {
-	DWORD         Filter;
+	dword_t         Filter;
 
 	__asm {
 		mov Filter, esi
@@ -7795,7 +7795,7 @@ xbox::void_t __stdcall xbox::EMUPATCH(D3DDevice_SetFlickerFilter_0)
 // ******************************************************************
 void WINAPI xbox::EMUPATCH(D3DDevice_SetFlickerFilter)
 (
-    DWORD         Filter
+    dword_t         Filter
 )
 {
 	LOG_FUNC_ONE_ARG(Filter);
@@ -7823,7 +7823,7 @@ xbox::void_t __stdcall xbox::EMUPATCH(D3DDevice_DeleteVertexShader_0)
 (
 )
 {
-	DWORD Handle;
+	dword_t Handle;
 
 	__asm {
 		mov Handle, eax
@@ -7838,7 +7838,7 @@ xbox::void_t __stdcall xbox::EMUPATCH(D3DDevice_DeleteVertexShader_0)
 // ******************************************************************
 xbox::void_t WINAPI xbox::EMUPATCH(D3DDevice_DeleteVertexShader)
 (
-	DWORD Handle
+	dword_t Handle
 )
 {
 	LOG_FUNC_ONE_ARG(Handle);
@@ -7854,7 +7854,7 @@ xbox::void_t WINAPI xbox::EMUPATCH(D3DDevice_DeleteVertexShader)
 xbox::void_t WINAPI xbox::EMUPATCH(D3DDevice_SelectVertexShaderDirect)
 (
     X_VERTEXATTRIBUTEFORMAT *pVAF,
-    DWORD                    Address
+    dword_t                    Address
 )
 {
 	LOG_FUNC_BEGIN
@@ -7870,7 +7870,7 @@ xbox::void_t WINAPI xbox::EMUPATCH(D3DDevice_SelectVertexShaderDirect)
 // ******************************************************************
 xbox::void_t WINAPI xbox::EMUPATCH(D3DDevice_GetShaderConstantMode)
 (
-    DWORD *pMode
+    dword_t *pMode
 )
 {
 	LOG_FUNC_ONE_ARG(pMode);
@@ -7886,7 +7886,7 @@ xbox::void_t WINAPI xbox::EMUPATCH(D3DDevice_GetShaderConstantMode)
 // ******************************************************************
 xbox::void_t WINAPI xbox::EMUPATCH(D3DDevice_GetVertexShader)
 (
-    DWORD *pHandle
+    dword_t *pHandle
 )
 {
 	LOG_FUNC_ONE_ARG(pHandle);
@@ -7904,7 +7904,7 @@ xbox::void_t WINAPI xbox::EMUPATCH(D3DDevice_GetVertexShaderConstant)
 (
     INT   Register,
     void  *pConstantData,
-    DWORD ConstantCount
+    dword_t ConstantCount
 )
 {
 	LOG_FUNC_BEGIN
@@ -7955,7 +7955,7 @@ xbox::void_t WINAPI xbox::EMUPATCH(D3DDevice_SetVertexShaderInputDirect)
 // ******************************************************************
 HRESULT WINAPI xbox::EMUPATCH(D3DDevice_GetVertexShaderInput)
 (
-    DWORD              *pHandle,
+    dword_t              *pHandle,
     UINT               *pStreamCount,
     X_STREAMINPUT      *pStreamInputs
 )
@@ -7976,7 +7976,7 @@ HRESULT WINAPI xbox::EMUPATCH(D3DDevice_GetVertexShaderInput)
 // ******************************************************************
 xbox::void_t WINAPI xbox::EMUPATCH(D3DDevice_SetVertexShaderInput)
 (
-    DWORD              Handle,
+    dword_t              Handle,
     UINT               StreamCount,
     X_STREAMINPUT     *pStreamInputs
 )
@@ -8005,7 +8005,7 @@ xbox::void_t WINAPI xbox::EMUPATCH(D3DDevice_SetVertexShaderInput)
 // ******************************************************************
 xbox::void_t WINAPI xbox::EMUPATCH(D3DDevice_RunVertexStateShader)
 (
-    DWORD Address,
+    dword_t Address,
     CONST FLOAT *pData
 )
 {
@@ -8025,8 +8025,8 @@ xbox::void_t WINAPI xbox::EMUPATCH(D3DDevice_RunVertexStateShader)
 // ******************************************************************
 xbox::void_t WINAPI xbox::EMUPATCH(D3DDevice_LoadVertexShaderProgram)
 (
-	CONST DWORD *pFunction,
-	DWORD        Address
+	CONST dword_t *pFunction,
+	dword_t        Address
 	)
 {
 	LOG_FUNC_BEGIN
@@ -8034,7 +8034,7 @@ xbox::void_t WINAPI xbox::EMUPATCH(D3DDevice_LoadVertexShaderProgram)
 		LOG_FUNC_ARG(Address)
 		LOG_FUNC_END;
 
-	CxbxImpl_LoadVertexShaderProgram(pFunction, Address);
+	CxbxImpl_LoadVertexShaderProgram((DWORD *)pFunction, Address);
 }
 
 // ******************************************************************
@@ -8044,7 +8044,7 @@ HRESULT WINAPI xbox::EMUPATCH(D3DDevice_SetDepthClipPlanes)
 (
     FLOAT Near,
     FLOAT Far,
-    DWORD Flags
+    dword_t Flags
 )
 {
 	LOG_FUNC_BEGIN
@@ -8107,12 +8107,12 @@ HRESULT WINAPI xbox::EMUPATCH(D3DDevice_SetDepthClipPlanes)
 // ******************************************************************
 // * patch: D3DDevice_InsertFence
 // ******************************************************************
-DWORD WINAPI xbox::EMUPATCH(D3DDevice_InsertFence)()
+xbox::dword_t WINAPI xbox::EMUPATCH(D3DDevice_InsertFence)()
 {
 	LOG_FUNC();
 
     // TODO: Actually implement this
-    DWORD dwRet = 0x8000BEEF;
+    dword_t dwRet = 0x8000BEEF;
 
 	LOG_UNIMPLEMENTED();
 
@@ -8124,7 +8124,7 @@ DWORD WINAPI xbox::EMUPATCH(D3DDevice_InsertFence)()
 // ******************************************************************
 BOOL WINAPI xbox::EMUPATCH(D3DDevice_IsFencePending)
 (
-    DWORD Fence
+    dword_t Fence
 )
 {
 	LOG_FUNC_ONE_ARG(Fence);
@@ -8140,7 +8140,7 @@ BOOL WINAPI xbox::EMUPATCH(D3DDevice_IsFencePending)
 // ******************************************************************
 xbox::void_t WINAPI xbox::EMUPATCH(D3DDevice_BlockOnFence)
 (
-    DWORD Fence
+    dword_t Fence
 )
 {
 	LOG_FUNC_ONE_ARG(Fence);
@@ -8188,7 +8188,7 @@ xbox::void_t WINAPI xbox::EMUPATCH(D3DDevice_InsertCallback)
 (
 	X_D3DCALLBACKTYPE	Type,
 	X_D3DCALLBACK		pCallback,
-	DWORD				Context
+	dword_t				Context
 )
 {
 	LOG_FUNC_BEGIN
@@ -8338,7 +8338,7 @@ xbox::void_t WINAPI xbox::EMUPATCH(D3DDevice_SetStateUP)()
 // ******************************************************************
 // * patch: D3DDevice_SetStipple
 // ******************************************************************
-void WINAPI xbox::EMUPATCH(D3DDevice_SetStipple)( DWORD* pPattern )
+void WINAPI xbox::EMUPATCH(D3DDevice_SetStipple)( dword_t* pPattern )
 {
 	LOG_FUNC_ONE_ARG(pPattern);
 
@@ -8485,7 +8485,7 @@ BOOL WINAPI xbox::EMUPATCH(D3DDevice_IsBusy)()
 // ******************************************************************
 // * patch: D3D_BlockOnTime
 // ******************************************************************
-void WINAPI xbox::EMUPATCH(D3D_BlockOnTime)( DWORD Unknown1, int Unknown2 )
+void WINAPI xbox::EMUPATCH(D3D_BlockOnTime)( dword_t Unknown1, int Unknown2 )
 {
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(Unknown1)
@@ -8578,7 +8578,7 @@ xbox::void_t WINAPI xbox::EMUPATCH(D3DDevice_SetRenderTargetFast)
 (
     X_D3DSurface	*pRenderTarget,
     X_D3DSurface	*pNewZStencil,
-    DWORD			Flags
+    dword_t			Flags
 )
 {
 	LOG_FORWARD("D3DDevice_SetRenderTarget");

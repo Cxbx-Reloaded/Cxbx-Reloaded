@@ -22,8 +22,8 @@ namespace xbox
 // ******************************************************************
 XBSYSAPI EXPORTNUM(9) NTSTATUS NTAPI HalReadSMCTrayState
 (
-	DWORD*	State,
-	DWORD*	Count
+	dword_t*	State,
+	dword_t*	Count
 );
 
 XBSYSAPI EXPORTNUM(38) void_t FASTCALL HalClearSoftwareInterrupt
@@ -191,7 +191,7 @@ XBSYSAPI EXPORTNUM(334) void_t NTAPI WRITE_PORT_BUFFER_ULONG
 // ******************************************************************
 // * HalBootSMCVideoMode
 // ******************************************************************
-XBSYSAPI EXPORTNUM(356) DWORD HalBootSMCVideoMode;
+XBSYSAPI EXPORTNUM(356) dword_t HalBootSMCVideoMode;
 
 XBSYSAPI EXPORTNUM(358) boolean_t NTAPI HalIsResetOrShutdownPending
 (
@@ -207,7 +207,7 @@ XBSYSAPI EXPORTNUM(365) void_t NTAPI HalEnableSecureTrayEject
 
 XBSYSAPI EXPORTNUM(366) NTSTATUS NTAPI HalWriteSMCScratchRegister
 (
-	IN DWORD ScratchRegister
+	IN dword_t ScratchRegister
 );
 
 }

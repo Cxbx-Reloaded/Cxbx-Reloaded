@@ -72,8 +72,8 @@ xbox::X_XFileMediaObject::_vtbl xbox::X_XFileMediaObject::vtbl =
 // ******************************************************************
 xbox::void_t WINAPI xbox::EMUPATCH(XAudioCreateAdpcmFormat)
 (
-    WORD                        nChannels,
-    DWORD                       nSamplesPerSec,
+    word_t                        nChannels,
+    dword_t                       nSamplesPerSec,
     OUT LPXBOXADPCMWAVEFORMAT   pwfx)
 {
     DSoundMutexGuardLock;
@@ -103,7 +103,7 @@ HRESULT WINAPI xbox::EMUPATCH(XAudioDownloadEffectsImage)
 (
     LPCSTR      pszImageName,
     LPVOID      pImageLoc,
-    DWORD       dwFlags,
+    dword_t       dwFlags,
     LPVOID*     ppImageDesc)
 {
     DSoundMutexGuardLock;
@@ -125,7 +125,7 @@ HRESULT WINAPI xbox::EMUPATCH(XAudioDownloadEffectsImage)
 // ******************************************************************
 HRESULT WINAPI xbox::EMUPATCH(XAudioSetEffectData)
 (
-    DWORD               dwEffectIndex,
+    dword_t               dwEffectIndex,
     void*               pDesc,
     void*               pRawDesc)
 {
@@ -148,10 +148,10 @@ HRESULT WINAPI xbox::EMUPATCH(XAudioSetEffectData)
 HRESULT WINAPI xbox::EMUPATCH(XFileCreateMediaObject)
 (
     LPCSTR          pstrFileName,
-    DWORD           dwDesiredAccess,
-    DWORD           dwShareMode,
-    DWORD           dwCreationDisposition,
-    DWORD           dwFlagsAndAttributes,
+    dword_t           dwDesiredAccess,
+    dword_t           dwShareMode,
+    dword_t           dwCreationDisposition,
+    dword_t           dwFlagsAndAttributes,
     OUT void**      ppMediaObject)
 {
     DSoundMutexGuardLock;
@@ -177,7 +177,7 @@ HRESULT WINAPI xbox::EMUPATCH(XFileCreateMediaObject)
 HRESULT WINAPI xbox::EMUPATCH(XFileCreateMediaObjectAsync)
 (
     HANDLE      hFile,
-    DWORD       dwMaxPackets,
+    dword_t       dwMaxPackets,
     OUT void**      ppMediaObject)
 {
     DSoundMutexGuardLock;
@@ -273,7 +273,7 @@ HRESULT WINAPI xbox::EMUPATCH(XFileMediaObject_Seek)
 (
     X_XFileMediaObject* pThis,
     long_t                lOffset,
-    DWORD               dwOrigin,
+    dword_t               dwOrigin,
     LPDWORD             pdwAbsolute)
 {
     DSoundMutexGuardLock;

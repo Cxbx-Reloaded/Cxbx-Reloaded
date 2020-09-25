@@ -292,13 +292,13 @@ ULONG WINAPI xbox::EMUPATCH(IDirectSound_Release)
 // ******************************************************************
 // * patch: DirectSoundGetSampleTime
 // ******************************************************************
-DWORD WINAPI xbox::EMUPATCH(DirectSoundGetSampleTime)()
+xbox::dword_t WINAPI xbox::EMUPATCH(DirectSoundGetSampleTime)()
 {
     DSoundMutexGuardLock;
 
 	LOG_FUNC();
 
-	DWORD dwRet = GetAPUTime();
+	dword_t dwRet = GetAPUTime();
 
     return dwRet;
 }
@@ -465,10 +465,10 @@ HRESULT WINAPI xbox::EMUPATCH(IDirectSound_CommitEffectData)
 HRESULT WINAPI xbox::EMUPATCH(IDirectSound_GetEffectData)
 (
     X_CDirectSound* pThis,
-    DWORD           dwEffectIndex,
-    DWORD           dwOffset,
+    dword_t           dwEffectIndex,
+    dword_t           dwOffset,
     OUT LPVOID          pvData,
-    DWORD           dwDataSize)
+    dword_t           dwDataSize)
 {
     DSoundMutexGuardLock;
 
@@ -498,11 +498,11 @@ HRESULT WINAPI xbox::EMUPATCH(IDirectSound_GetEffectData)
 HRESULT WINAPI xbox::EMUPATCH(IDirectSound_SetEffectData)
 (
     LPVOID  pThis,
-    DWORD   dwEffectIndex,
-    DWORD   dwOffset,
+    dword_t   dwEffectIndex,
+    dword_t   dwOffset,
     LPCVOID pvData,
-    DWORD   dwDataSize,
-    DWORD   dwApply)
+    dword_t   dwDataSize,
+    dword_t   dwApply)
 {
     DSoundMutexGuardLock;
 
@@ -529,7 +529,7 @@ HRESULT WINAPI xbox::EMUPATCH(IDirectSound_DownloadEffectsImage)
 (
     LPDIRECTSOUND8  pThis,
     LPCVOID         pvImageBuffer,
-    DWORD           dwImageSize,
+    dword_t           dwImageSize,
     PVOID           pImageLoc,      // TODO: Use this param
     PVOID*          ppImageDesc)    // TODO: Use this param
 {
@@ -684,7 +684,7 @@ HRESULT WINAPI xbox::EMUPATCH(IDirectSound_SetAllParameters)
 (
     LPDIRECTSOUND8          pThis,
     LPCDS3DLISTENER         pDS3DListenerParameters,
-    DWORD                   dwApply)
+    dword_t                   dwApply)
 {
     DSoundMutexGuardLock;
 
@@ -706,7 +706,7 @@ HRESULT WINAPI xbox::EMUPATCH(IDirectSound_SetDistanceFactor)
 (
     LPDIRECTSOUND8  pThis,
     FLOAT           fDistanceFactor,
-    DWORD           dwApply)
+    dword_t           dwApply)
 {
     DSoundMutexGuardLock;
 
@@ -728,7 +728,7 @@ HRESULT WINAPI xbox::EMUPATCH(IDirectSound_SetDopplerFactor)
 (
     LPDIRECTSOUND8  pThis,
     FLOAT           fDopplerFactor,
-    DWORD           dwApply)
+    dword_t           dwApply)
 {
     DSoundMutexGuardLock;
 
@@ -750,7 +750,7 @@ HRESULT WINAPI xbox::EMUPATCH(IDirectSound_SetI3DL2Listener)
 (
     LPDIRECTSOUND8          pThis,
     X_DSI3DL2LISTENER      *pds3dl,
-    DWORD                   dwApply)
+    dword_t                   dwApply)
 {
     DSoundMutexGuardLock;
 
@@ -773,8 +773,8 @@ HRESULT WINAPI xbox::EMUPATCH(IDirectSound_SetI3DL2Listener)
 HRESULT WINAPI xbox::EMUPATCH(IDirectSound_SetMixBinHeadroom)
 (
     LPDIRECTSOUND8          pThis,
-    DWORD                   dwMixBinMask,
-    DWORD                   dwHeadroom)
+    dword_t                   dwMixBinMask,
+    dword_t                   dwHeadroom)
 {
     DSoundMutexGuardLock;
 
@@ -801,7 +801,7 @@ HRESULT WINAPI xbox::EMUPATCH(IDirectSound_SetOrientation)
     FLOAT           xTop,
     FLOAT           yTop,
     FLOAT           zTop,
-    DWORD           dwApply)
+    dword_t           dwApply)
 {
     DSoundMutexGuardLock;
 
@@ -840,7 +840,7 @@ HRESULT WINAPI xbox::EMUPATCH(IDirectSound_SetPosition)
     FLOAT                   x,
     FLOAT                   y,
     FLOAT                   z,
-    DWORD                   dwApply)
+    dword_t                   dwApply)
 {
     DSoundMutexGuardLock;
 
@@ -864,7 +864,7 @@ HRESULT WINAPI xbox::EMUPATCH(IDirectSound_SetRolloffFactor)
 (
     LPDIRECTSOUND8  pThis,
     FLOAT           fRolloffFactor,
-    DWORD           dwApply)
+    dword_t           dwApply)
 {
     DSoundMutexGuardLock;
 
@@ -946,7 +946,7 @@ HRESULT WINAPI xbox::EMUPATCH(IDirectSound_SetVelocity)
     FLOAT                   x,
     FLOAT                   y,
     FLOAT                   z,
-    DWORD                   dwApply)
+    dword_t                   dwApply)
 {
     DSoundMutexGuardLock;
 

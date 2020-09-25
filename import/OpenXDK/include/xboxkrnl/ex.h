@@ -112,8 +112,8 @@ XBSYSAPI EXPORTNUM(23) ULONG NTAPI ExQueryPoolBlockSize
 // ******************************************************************
 XBSYSAPI EXPORTNUM(24) NTSTATUS NTAPI ExQueryNonVolatileSetting
 (
-	IN  DWORD               ValueIndex,
-	OUT DWORD              *Type,
+	IN  dword_t               ValueIndex,
+	OUT dword_t              *Type,
 	OUT PVOID               Value,
 	IN  SIZE_T              ValueLength,
 	OUT PSIZE_T             ResultLength OPTIONAL
@@ -149,8 +149,8 @@ XBSYSAPI EXPORTNUM(28) void_t NTAPI ExReleaseReadWriteLock
 // ******************************************************************
 XBSYSAPI EXPORTNUM(29) NTSTATUS NTAPI ExSaveNonVolatileSetting
 (
-	IN  DWORD               ValueIndex,
-	IN  DWORD               Type,
+	IN  dword_t               ValueIndex,
+	IN  dword_t               Type,
 	IN  PVOID               Value,
 	IN  SIZE_T              ValueLength
 );

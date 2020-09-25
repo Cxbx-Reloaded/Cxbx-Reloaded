@@ -252,7 +252,7 @@ XBSYSAPI EXPORTNUM(283) LARGE_INTEGER NTAPI RtlExtendedMagicDivide
 XBSYSAPI EXPORTNUM(284) void_t NTAPI RtlFillMemory
 (
 	IN void_t UNALIGNED *Destination,
-	IN DWORD Length,
+	IN dword_t Length,
 	IN byte_t  Fill
 );
 

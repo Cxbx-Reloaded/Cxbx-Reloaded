@@ -27,8 +27,8 @@ XBSYSAPI EXPORTNUM(184) NTSTATUS NTAPI NtAllocateVirtualMemory
     IN OUT PVOID    *BaseAddress,
     IN ULONG         ZeroBits,
     IN OUT PULONG    AllocationSize,
-    IN DWORD         AllocationType,
-    IN DWORD         Protect
+    IN dword_t         AllocationType,
+    IN dword_t         Protect
 );
 
 // ******************************************************************
@@ -172,7 +172,7 @@ XBSYSAPI EXPORTNUM(197) NTSTATUS NTAPI NtDuplicateObject
 (
     PVOID   SourceHandle,
     PVOID  *TargetHandle,
-    DWORD   Options
+    dword_t   Options
 );
 
 // ******************************************************************
