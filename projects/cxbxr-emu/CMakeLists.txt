@@ -24,6 +24,7 @@ include_directories(
  "${CXBXR_ROOT_DIR}/import/libtommath"
  "${CXBXR_ROOT_DIR}/import/libtomcrypt/src/headers"
  "${CXBXR_ROOT_DIR}/import/winpcap/Include"
+ "${CXBXR_ROOT_DIR}/import/xxHash"
 )
 
 link_directories(
