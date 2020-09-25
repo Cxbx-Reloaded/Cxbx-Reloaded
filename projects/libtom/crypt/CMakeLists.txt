@@ -17,11 +17,6 @@ add_compile_definitions(
  LTC_NO_PROTOTYPES
 )
 
-include_directories(
- "${CXBXR_ROOT_DIR}/import/libtommath"
- "${CXBXR_ROOT_DIR}/import/libtomcrypt/src/headers"
-)
-
 file (GLOB HEADERS
  "${CXBXR_ROOT_DIR}/import/libtomcrypt/src/headers/tomcrypt.h"
  "${CXBXR_ROOT_DIR}/import/libtomcrypt/src/headers/tomcrypt_argchk.h"
@@ -461,6 +456,10 @@ source_group(TREE ${CXBXR_ROOT_DIR}/import/libtomcrypt/src PREFIX source FILES $
 add_library(libtomcrypt ${HEADERS} ${SOURCES})
 
 target_compile_definitions(libtomcrypt PUBLIC LTM_DESC=1)
+
+target_include_directories(libtomcrypt
+ PUBLIC "${CXBXR_ROOT_DIR}/import/libtomcrypt/src/headers"
+)
 
 target_link_libraries(libtomcrypt
  PUBLIC libtommath
