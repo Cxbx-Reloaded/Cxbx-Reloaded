@@ -40,8 +40,7 @@
 #include "EmuShared.h"
 #include "common\CxbxDebugger.h"
 #include "Logging.h"
-#pragma comment(lib, "XbSymbolDatabase.lib")
-#include "..\..\import\XbSymbolDatabase\XbSymbolDatabase.h"
+#include <libXbSymbolDatabase.h>
 #include "Intercept.hpp"
 #include "Patches.hpp"
 #include "common\util\hasher.h"
