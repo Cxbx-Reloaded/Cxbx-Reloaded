@@ -27,7 +27,7 @@
 // ******************************************************************
 
 
-#include <xboxkrnl/xboxkrnl.h>
+#include <core\kernel\exports\xboxkrnl.h>
 #include "common\xbe\Xbe.h"
 #include "common\util\CxbxUtil.h" // For RoundUp
 #include <filesystem> // filesystem related functions available on C++ 17

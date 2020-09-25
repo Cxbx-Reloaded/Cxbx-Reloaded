@@ -3,7 +3,7 @@
 #ifndef __XDVDFS_H__
 #define __XDVDFS_H__
 
-#include <xboxkrnl/xboxkrnl.h> //#include <stdtypes.h>
+#include <core\kernel\exports\xboxkrnl.h> //#include <stdtypes.h>
 
 #include "buffered_io.h"
 

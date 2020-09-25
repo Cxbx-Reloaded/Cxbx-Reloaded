@@ -12,6 +12,11 @@
 #ifndef XBOXKRNL_EX_H
 #define XBOXKRNL_EX_H
 
+#include "xboxkrnl/xboxkrnl_types.h"
+
+namespace xbox
+{
+
 XBSYSAPI EXPORTNUM(12) void_t NTAPI ExAcquireReadWriteLockExclusive
 (
 	IN PERWLOCK ReadWriteLock
@@ -225,6 +230,8 @@ XBSYSAPI EXPORTNUM(58) SLIST_ENTRY * FASTCALL KRNL(InterlockedPushEntrySList)
 	IN PSLIST_HEADER ListHead,
 	IN PSLIST_ENTRY ListEntry
 );
+
+}
 
 #endif
 

@@ -36,7 +36,7 @@
 #define LOG_PREFIX CXBXR_MODULE::INPSYS
 
 
-#include <xboxkrnl/xboxkrnl.h> // For PKINTERRUPT, etc.
+#include <core\kernel\exports\xboxkrnl.h> // For PKINTERRUPT, etc.
 #include "SdlJoystick.h"
 #include "XInputPad.h"
 #include "DInputKeyboardMouse.h"

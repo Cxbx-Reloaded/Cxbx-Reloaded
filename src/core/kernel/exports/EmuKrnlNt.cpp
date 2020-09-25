@@ -29,7 +29,7 @@
 #define LOG_PREFIX CXBXR_MODULE::NT
 
 
-#include <xboxkrnl/xboxkrnl.h> // For NtAllocateVirtualMemory, etc.
+#include <core\kernel\exports\xboxkrnl.h> // For NtAllocateVirtualMemory, etc.
 #include "Logging.h" // For LOG_FUNC()
 #include "EmuKrnlLogging.h"
 

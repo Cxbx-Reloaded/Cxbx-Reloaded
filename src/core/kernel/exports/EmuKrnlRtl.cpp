@@ -30,7 +30,7 @@
 #define CHECK_ALIGNMENT(size, alignment) (((size) % (alignment)) == 0) // For RtlFillMemoryUlong
 
 
-#include <xboxkrnl/xboxkrnl.h> // For RtlAnsiStringToUnicodeString, etc.
+#include <core\kernel\exports\xboxkrnl.h> // For RtlAnsiStringToUnicodeString, etc.
 #include "Logging.h" // For LOG_FUNC()
 #include "EmuKrnlLogging.h"
 

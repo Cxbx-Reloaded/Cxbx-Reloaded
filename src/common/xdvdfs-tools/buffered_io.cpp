@@ -2,7 +2,7 @@
 // PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 
 
-#include <xboxkrnl/xboxkrnl.h> //#include <stdtypes.h>
+#include <core\kernel\exports\xboxkrnl.h> //#include <stdtypes.h>
 #include "buffered_io.h"
 
 namespace xbox

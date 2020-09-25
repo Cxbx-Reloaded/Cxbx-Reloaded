@@ -28,7 +28,7 @@
 
 #define LOG_PREFIX CXBXR_MODULE::FSC
 
-#include <xboxkrnl/xboxkrnl.h> // For FscGetCacheSize, etc.
+#include <core\kernel\exports\xboxkrnl.h> // For FscGetCacheSize, etc.
 #include "Logging.h" // For LOG_FUNC()
 #include "EmuKrnlLogging.h"
 

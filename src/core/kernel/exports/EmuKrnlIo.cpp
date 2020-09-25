@@ -29,7 +29,7 @@
 #define LOG_PREFIX CXBXR_MODULE::IO
 
 
-#include <xboxkrnl/xboxkrnl.h> // For IoCompletionObjectType, etc.
+#include <core\kernel\exports\xboxkrnl.h> // For IoCompletionObjectType, etc.
 #include "Logging.h" // For LOG_FUNC()
 #include "EmuKrnlLogging.h"
 #include "core\kernel\init\CxbxKrnl.h" // For CxbxKrnlCleanup

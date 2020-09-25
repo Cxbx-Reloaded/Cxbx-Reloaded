@@ -29,7 +29,7 @@
 #define LOG_PREFIX CXBXR_MODULE::EX
 
 
-#include <xboxkrnl/xboxkrnl.h> // For ExAllocatePool, etc.
+#include <core\kernel\exports\xboxkrnl.h> // For ExAllocatePool, etc.
 #include "Logging.h" // For LOG_FUNC()
 #include "EmuEEPROM.h" // For EmuFindEEPROMInfo, EEPROM, XboxFactoryGameRegion
 #include "EmuKrnlLogging.h"

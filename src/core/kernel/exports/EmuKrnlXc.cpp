@@ -31,7 +31,7 @@
 #define LOG_PREFIX CXBXR_MODULE::XC
 
 
-#include <xboxkrnl/xboxkrnl.h> // For XcSHAInit, etc.
+#include <core\kernel\exports\xboxkrnl.h> // For XcSHAInit, etc.
 #include "Logging.h" // For LOG_FUNC()
 #include "EmuKrnlLogging.h"
 #include "common\crypto\EmuSha.h" // For A_SHAInit, etc.

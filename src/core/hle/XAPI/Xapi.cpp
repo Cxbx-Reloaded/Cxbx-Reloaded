@@ -30,7 +30,7 @@
 #undef FIELD_OFFSET     // prevent macro redefinition warnings
 
 
-#include <xboxkrnl\xboxkrnl.h>
+#include <core\kernel\exports\xboxkrnl.h>
 #include "common\input\SdlJoystick.h"
 #include "common\input\InputManager.h"
 #include <Shlwapi.h>

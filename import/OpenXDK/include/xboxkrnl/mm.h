@@ -12,6 +12,11 @@
 #ifndef XBOXKRNL_MM_H
 #define XBOXKRNL_MM_H
 
+#include "xboxkrnl/xboxkrnl_types.h"
+
+namespace xbox
+{
+
 XBSYSAPI EXPORTNUM(102) PVOID MmGlobalData[8];
 
 // ******************************************************************
@@ -230,6 +235,8 @@ XBSYSAPI EXPORTNUM(378) PVOID NTAPI MmDbgWriteCheck
 	IN PVOID VirtualAddress,
 	IN PULONG Opaque
 );
+
+}
 
 #endif
 

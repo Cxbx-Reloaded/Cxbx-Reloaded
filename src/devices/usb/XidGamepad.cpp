@@ -53,7 +53,7 @@
 #define LOG_PREFIX CXBXR_MODULE::XIDCTRL
 
 
-#include <xboxkrnl/xboxkrnl.h> // For PKINTERRUPT, etc.
+#include <core\kernel\exports\xboxkrnl.h> // For PKINTERRUPT, etc.
 #include <cstring>
 #include "XidGamepad.h"
 #include "USBDevice.h"

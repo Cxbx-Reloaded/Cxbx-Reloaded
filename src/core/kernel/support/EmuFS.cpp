@@ -28,7 +28,7 @@
 #define LOG_PREFIX CXBXR_MODULE::FS
 
 
-#include <xboxkrnl/xboxkrnl.h>
+#include <core\kernel\exports\xboxkrnl.h>
 #include "core\kernel\exports\EmuKrnl.h" // For InitializeListHead(), etc.
 #include "core\kernel\exports\EmuKrnlKe.h"
 #include "core\kernel\support\EmuFS.h" // For fs_instruction_t

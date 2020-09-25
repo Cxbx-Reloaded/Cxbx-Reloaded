@@ -12,6 +12,11 @@
 #ifndef XBOXKRNL_RTL_H
 #define XBOXKRNL_RTL_H
 
+#include "xboxkrnl/xboxkrnl_types.h"
+
+namespace xbox
+{
+
 // ******************************************************************
 // * RtlAnsiStringToUnicodeString
 // ******************************************************************
@@ -599,6 +604,8 @@ XBSYSAPI EXPORTNUM(352) void_t NTAPI RtlRip
  PCHAR	Expression,
  PCHAR	Message
 );
+
+}
 
 #endif
 

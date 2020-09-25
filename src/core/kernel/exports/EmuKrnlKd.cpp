@@ -29,7 +29,7 @@
 #define LOG_PREFIX CXBXR_MODULE::KD
 
 
-#include <xboxkrnl/xboxkrnl.h> // For KdDebuggerEnabled, etc.
+#include <core\kernel\exports\xboxkrnl.h> // For KdDebuggerEnabled, etc.
 #include "Logging.h"
 
 // ******************************************************************

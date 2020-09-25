@@ -36,7 +36,7 @@
 #include <stack>
 
 
-#include <xboxkrnl\xboxkrnl.h>
+#include <core\kernel\exports\xboxkrnl.h>
 #include "common\util\CxbxUtil.h"
 #include "CxbxVersion.h"
 #include "core\kernel\init\CxbxKrnl.h"

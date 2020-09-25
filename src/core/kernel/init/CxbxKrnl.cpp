@@ -29,7 +29,7 @@
 #define LOG_PREFIX_INIT CXBXR_MODULE::INIT
 
 
-#include <xboxkrnl/xboxkrnl.h>
+#include <core\kernel\exports\xboxkrnl.h>
 #include "gui/resource/ResCxbx.h"
 #include "core\kernel\init\CxbxKrnl.h"
 #include "common\xbdm\CxbxXbdm.h" // For Cxbx_LibXbdmThunkTable

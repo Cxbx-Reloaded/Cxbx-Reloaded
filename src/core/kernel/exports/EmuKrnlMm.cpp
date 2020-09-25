@@ -30,7 +30,7 @@
 #define LOG_PREFIX CXBXR_MODULE::MM
 
 
-#include <xboxkrnl/xboxkrnl.h> // For MmGlobalData, etc.
+#include <core\kernel\exports\xboxkrnl.h> // For MmGlobalData, etc.
 #include "Logging.h" // For LOG_FUNC()
 #include "EmuKrnl.h" // For DefaultLaunchDataPage
 #include "EmuKrnlLogging.h"

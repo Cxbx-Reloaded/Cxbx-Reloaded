@@ -29,7 +29,7 @@
 #define LOG_PREFIX CXBXR_MODULE::DBG
 
 
-#include <xboxkrnl/xboxkrnl.h> // For DbgPrint, etc.
+#include <core\kernel\exports\xboxkrnl.h> // For DbgPrint, etc.
 #include "Logging.h" // For LOG_FUNC()
 #include "EmuKrnlLogging.h"
 

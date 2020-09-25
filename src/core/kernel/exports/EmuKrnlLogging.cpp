@@ -28,7 +28,7 @@
 #define LOG_PREFIX CXBXR_MODULE::LOG
 
 
-#include <xboxkrnl/xboxkrnl.h>
+#include <core\kernel\exports\xboxkrnl.h>
 #include "Logging.h"
 #include "EmuKrnlLogging.h"
 #include "core\kernel\init\CxbxKrnl.h"

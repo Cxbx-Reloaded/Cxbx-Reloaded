@@ -30,7 +30,7 @@
 #include <common\util\CxbxUtil.h>
 
 
-#include <xboxkrnl/xboxkrnl.h> // For PsCreateSystemThreadEx, etc.
+#include <core\kernel\exports\xboxkrnl.h> // For PsCreateSystemThreadEx, etc.
 #include <process.h> // For __beginthreadex(), etc.
 #include <float.h> // For _controlfp constants
 

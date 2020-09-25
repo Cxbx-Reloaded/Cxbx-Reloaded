@@ -12,6 +12,11 @@
 #ifndef XBOXKRNL_NT_H
 #define XBOXKRNL_NT_H
 
+#include "xboxkrnl/xboxkrnl_types.h"
+
+namespace xbox
+{
+
 #define NtCurrentThread() ((HANDLE)-2)
 
 // ******************************************************************
@@ -633,6 +638,8 @@ XBSYSAPI EXPORTNUM(237) NTSTATUS NTAPI NtWriteFileGather
 // * NtYieldExecution
 // ******************************************************************
 XBSYSAPI EXPORTNUM(238) void_t NTAPI NtYieldExecution(void);
+
+}
 
 #endif
 

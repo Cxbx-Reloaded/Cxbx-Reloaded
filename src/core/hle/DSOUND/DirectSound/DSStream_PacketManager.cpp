@@ -27,7 +27,7 @@
 #define LOG_PREFIX CXBXR_MODULE::DSSTREAM
 
 
-#include <xboxkrnl/xboxkrnl.h>
+#include <core\kernel\exports\xboxkrnl.h>
 #include <dsound.h>
 #include "DirectSoundGlobal.hpp"
 

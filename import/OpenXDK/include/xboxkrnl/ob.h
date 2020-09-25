@@ -12,6 +12,11 @@
 #ifndef XBOXKRNL_OB_H
 #define XBOXKRNL_OB_H
 
+#include "xboxkrnl/xboxkrnl_types.h"
+
+namespace xbox
+{
+
 #define OBJ_NAME_PATH_SEPARATOR ((char_t)L'\\')
 
 #define OB_NUMBER_HASH_BUCKETS          11
@@ -214,6 +219,7 @@ XBSYSAPI EXPORTNUM(251) void_t FASTCALL ObfReferenceObject
 	IN PVOID Object
 );
 
+}
 
 #endif
 

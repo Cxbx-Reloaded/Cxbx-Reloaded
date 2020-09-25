@@ -12,6 +12,11 @@
 #ifndef XBOXKRNL_IO_H
 #define XBOXKRNL_IO_H
 
+#include "xboxkrnl/xboxkrnl_types.h"
+
+namespace xbox
+{
+
 // ******************************************************************
 // * 0x003B - IoAllocateIrp()
 // ******************************************************************
@@ -331,6 +336,8 @@ XBSYSAPI EXPORTNUM(359) cchar_t NTAPI IoMarkIrpMustComplete
 (
 	IN PIRP Irp
 );
+
+}
 
 #endif
 

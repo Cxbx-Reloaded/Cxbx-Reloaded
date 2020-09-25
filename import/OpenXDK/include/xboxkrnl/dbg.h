@@ -12,6 +12,11 @@
 #ifndef XBOXKRNL_DBG_H
 #define XBOXKRNL_DBG_H
 
+#include "xboxkrnl/xboxkrnl_types.h"
+
+namespace xbox
+{
+
 XBSYSAPI EXPORTNUM(5) void_t NTAPI DbgBreakPoint();
 XBSYSAPI EXPORTNUM(6) void_t NTAPI DbgBreakPointWithStatus
 (
@@ -39,6 +44,8 @@ XBSYSAPI EXPORTNUM(11) void_t NTAPI DbgUnLoadImageSymbols
 	IN PVOID Base,
 	IN ULONG_PTR ProcessId
 );
+
+}
 
 #endif
 

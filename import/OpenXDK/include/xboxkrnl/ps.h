@@ -12,6 +12,11 @@
 #ifndef XBOXKRNL_PS_H
 #define XBOXKRNL_PS_H
 
+#include "xboxkrnl/xboxkrnl_types.h"
+
+namespace xbox
+{
+
 #define PsGetCurrentThread() (CONTAINING_RECORD((KeGetCurrentThread()),ETHREAD,Tcb))
 
 // ******************************************************************
@@ -65,6 +70,8 @@ XBSYSAPI EXPORTNUM(257) NTSTATUS NTAPI PsSetCreateThreadNotifyRoutine
 XBSYSAPI EXPORTNUM(258) void_t NTAPI PsTerminateSystemThread(IN NTSTATUS ExitStatus);
 
 XBSYSAPI EXPORTNUM(259) volatile OBJECT_TYPE PsThreadObjectType;
+
+}
 
 #endif
 

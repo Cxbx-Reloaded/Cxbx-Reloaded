@@ -12,6 +12,11 @@
 #ifndef KERNEL_H
 #define KERNEL_H
 
+#include "xboxkrnl/xboxkrnl_types.h"
+
+namespace xbox
+{
+
 // ******************************************************************
 // * 0x005C - KeAlertResumeThread()
 // ******************************************************************
@@ -536,6 +541,8 @@ XBSYSAPI EXPORTNUM(159) NTSTATUS NTAPI KeWaitForSingleObject
     IN boolean_t Alertable,
     IN PLARGE_INTEGER Timeout OPTIONAL
 );
+
+}
 
 #endif
 

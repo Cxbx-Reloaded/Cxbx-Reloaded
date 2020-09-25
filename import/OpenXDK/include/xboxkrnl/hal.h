@@ -12,6 +12,11 @@
 #ifndef XBOXKRNL_HAL_H
 #define XBOXKRNL_HAL_H
 
+#include "xboxkrnl/xboxkrnl_types.h"
+
+namespace xbox
+{
+
 // ******************************************************************
 // * HalReadSMCTrayState
 // ******************************************************************
@@ -204,6 +209,8 @@ XBSYSAPI EXPORTNUM(366) NTSTATUS NTAPI HalWriteSMCScratchRegister
 (
 	IN DWORD ScratchRegister
 );
+
+}
 
 #endif
 

@@ -29,7 +29,7 @@
 #define LOG_PREFIX CXBXR_MODULE::HAL
 
 
-#include <xboxkrnl/xboxkrnl.h> // For HalReadSMCTrayState, etc.
+#include <core\kernel\exports\xboxkrnl.h> // For HalReadSMCTrayState, etc.
 #include <Shlwapi.h> // For PathRemoveFileSpec()
 #include "Logging.h" // For LOG_FUNC()
 #include "EmuKrnl.h" // For InitializeListHead(), etc.

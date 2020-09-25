@@ -28,7 +28,7 @@
 #define LOG_PREFIX CXBXR_MODULE::KRNL
 
 
-#include <xboxkrnl/xboxkrnl.h>
+#include <core\kernel\exports\xboxkrnl.h>
 #include <cstdio>
 #include <cctype>
 #include <clocale>

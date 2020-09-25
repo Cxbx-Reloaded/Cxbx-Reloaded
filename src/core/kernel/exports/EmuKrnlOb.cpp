@@ -29,7 +29,7 @@
 #define LOG_PREFIX CXBXR_MODULE::OB
 
 
-#include <xboxkrnl/xboxkrnl.h> // For ObDirectoryObjectType, etc.
+#include <core\kernel\exports\xboxkrnl.h> // For ObDirectoryObjectType, etc.
 #include "Logging.h" // For LOG_FUNC()
 #include "EmuKrnlLogging.h"
 #include "core\kernel\init\CxbxKrnl.h" // For CxbxKrnlCleanup
